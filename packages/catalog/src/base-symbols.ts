@@ -45,6 +45,17 @@ const BODIES: Partial<Record<SymbolKind, Primitive>> = {
     style: OUTLINE,
   },
   container: { type: 'rect', role: 'body', x: 4, y: 4, width: 24, height: 24, style: OUTLINE },
+  measure: {
+    type: 'polyline',
+    role: 'body',
+    closed: true,
+    points: [
+      [1, 4],
+      [16, 29],
+      [31, 4],
+    ],
+    style: OUTLINE,
+  },
 };
 
 const TITLES: Partial<Record<SymbolKind, string>> = {
@@ -53,6 +64,7 @@ const TITLES: Partial<Record<SymbolKind, string>> = {
   post: 'Funktionsstelle',
   building: 'Gebäude',
   container: 'Behälter, Ressource, Raum, Funkgerät',
+  measure: 'Maßnahme',
 };
 
 const SECTIONS: Partial<Record<SymbolKind, { section: string; asset: string }>> = {
@@ -61,6 +73,7 @@ const SECTIONS: Partial<Record<SymbolKind, { section: string; asset: string }>> 
   post: { section: '1.6', asset: '1.6_Funktionsstelle.svg' },
   building: { section: '1.7', asset: '1.7_Gebäude.svg' },
   container: { section: '1.8', asset: '1.8_Behälter Ressource Raum Funkgerät.svg' },
+  measure: { section: '1.10', asset: '1.10_Maßnahme.svg' },
 };
 
 export function baseDrawing(kind: SymbolKind): Drawing {
@@ -106,4 +119,5 @@ export const BASE_SYMBOLS = {
   post: entry('post'),
   building: entry('building'),
   container: entry('container'),
+  measure: entry('measure'),
 } as const satisfies Partial<Record<SymbolKind, CatalogEntry>>;
