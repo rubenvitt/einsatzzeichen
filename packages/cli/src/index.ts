@@ -1,4 +1,6 @@
 import { auditReference } from './commands/audit-reference.js';
+import { coverage } from './commands/coverage.js';
+import { exportSvg } from './commands/export.js';
 
 class CliUsageError extends Error {}
 
@@ -35,8 +37,25 @@ switch (command) {
     }
     break;
   }
+  case 'coverage':
+    coverage();
+    break;
+  case 'export': {
+    try {
+      exportSvg(flag('out') ?? 'out', Number(flag('size') ?? 64));
+    } catch (error) {
+      if (error instanceof CliUsageError) {
+        console.error(error.message);
+        process.exit(1);
+      }
+      throw error;
+    }
+    break;
+  }
   default:
     console.error(`Unbekanntes Kommando: ${command ?? '(keines)'}`);
-    console.error('Verfügbar: audit:reference [--filter <präfix>] [--print]');
+    console.error(
+      'Verfügbar: audit:reference [--filter <präfix>] [--print] | coverage | export [--out <pfad>] [--size <px>]',
+    );
     process.exit(1);
 }

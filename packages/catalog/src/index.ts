@@ -4,3 +4,4 @@ export * from './organizations.js';
 export * from './strengths.js';
 export * from './capabilities.js';
 export * from './recipes.js';
+export * from './coverage-manifest.js';
