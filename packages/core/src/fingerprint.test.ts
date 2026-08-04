@@ -181,4 +181,29 @@ describe('matchFingerprint', () => {
     });
     expect(result.ok).toBe(false);
   });
+
+  it('meldet, wenn die Hülle des body-Primitivs nicht bestimmbar ist, statt zu werfen', () => {
+    // boundsOfMm lehnt eine gedrehte Gruppe per throw ab (siehe boundsOfMm-Tests oben).
+    // matchFingerprint muss das in einen Befund übersetzen statt die Ausnahme durchzulassen —
+    // sonst reißt ein einzelner nicht vergleichbarer Katalogeintrag den ganzen Testlauf ab.
+    const rotatedGroupBody: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'group',
+          role: 'body',
+          transform: { rotate: { angle: 45, cx: 16, cy: 16 } },
+          children: [{ type: 'rect', x: 1, y: 6, width: 30, height: 20 }],
+        },
+      ],
+    };
+    const fingerprint = { asset: 'x.svg', shapes: [ring(1, 6, 31, 26)] };
+
+    expect(() => matchFingerprint(rotatedGroupBody, fingerprint)).not.toThrow();
+
+    const result = matchFingerprint(rotatedGroupBody, fingerprint);
+    expect(result.ok).toBe(false);
+    expect(result.problems[0]).toContain('Hülle');
+    expect(result.problems[0]).toContain('body');
+  });
 });

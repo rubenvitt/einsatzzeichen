@@ -82,8 +82,27 @@ export function matchFingerprint(
     };
   }
 
+  let actual: BoundsMm;
+  try {
+    actual = boundsOfMm(body);
+  } catch (error) {
+    // Gezielt nur den dokumentierten Fehlermodus von boundsOfMm auffangen (z. B. eine gedrehte
+    // Gruppe als body, die boundsOfMm bewusst ablehnt statt ihre Hülle zu nähern) und in einen
+    // Befund übersetzen — ein einzelner nicht vergleichbarer Katalogeintrag soll den Testlauf
+    // nicht mit einer unbehandelten Ausnahme abreißen. Jeder andere Fehler ist ein echter
+    // Programmierfehler und wird weitergeworfen, nicht verschluckt.
+    if (error instanceof Error && error.message.includes('Drehung von Gruppen')) {
+      return {
+        ok: false,
+        problems: [
+          `${fingerprint.asset}: Hülle des body-Primitivs nicht bestimmbar (${error.message})`,
+        ],
+      };
+    }
+    throw error;
+  }
+
   const reference = boundsOfShape(picked);
-  const actual = boundsOfMm(body);
   const keys: Array<keyof BoundsMm> = ['minX', 'minY', 'maxX', 'maxY'];
 
   for (const key of keys) {
