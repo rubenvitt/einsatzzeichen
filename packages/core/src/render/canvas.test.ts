@@ -143,32 +143,35 @@ describe('renderCanvas — Gruppenstil-Vererbung', () => {
     expect(calls).toContainEqual(['set:strokeStyle', '#fa1919']);
   });
 
-  it('löst denselben Gruppenstil auf wie SVG — dort über CSS-Kaskade, hier explizit', () => {
+  it('löst denselben Gruppenstil in SVG und Canvas auf — Füllung, Kontur und Strichstärke stimmen überein', () => {
     const drawing: Drawing = {
       viewBox: DEFAULT_VIEWBOX_MM,
       children: [
         {
           type: 'group',
-          style: { fill: 'blau', stroke: 'schwarz', strokeWidth: 0.5 },
+          style: { fill: 'blau', stroke: 'schwarz', strokeWidth: 0.7 },
+          // Kein eigener Stil — Füllung, Kontur und Strichstärke müssen vollständig
+          // von der Gruppe geerbt werden.
           children: [{ type: 'rect', x: 0, y: 0, width: 10, height: 10 }],
         },
       ],
     };
 
-    // SVG setzt den Stil auf das <g>-Element und verlässt sich auf die CSS-Kaskade:
-    // das <rect> trägt selbst kein fill/stroke-Attribut.
+    // Zusicherung gilt dem Ergebnis (welche Werte das Kind effektiv trägt), nicht dem
+    // Mechanismus (wo im Dokument das Attribut steht oder in welcher Reihenfolge
+    // Aufrufe erfolgen) — beides bleibt Implementierungsdetail des jeweiligen Renderers.
     const svg = renderSvg(drawing);
-    expect(svg).toContain('<g fill="#003296" stroke="#000000" stroke-width="1.417">');
     const rectTag = svg.match(/<rect[^>]*\/>/)?.[0];
-    expect(rectTag).not.toMatch(/fill=/);
-    expect(rectTag).not.toMatch(/stroke=/);
+    expect(rectTag).toMatch(/fill="#003296"/);
+    expect(rectTag).toMatch(/stroke="#000000"/);
+    expect(rectTag).toMatch(new RegExp(`stroke-width="${formatUnits(mmToUnits(0.7))}"`));
 
-    // Canvas kennt keine Kaskade und muss den geerbten Stil deshalb explizit auf das
-    // Kind anwenden — mit demselben Ergebnis.
     const { ctx, calls } = recordingContext();
     renderCanvas(drawing, ctx);
     expect(calls).toContainEqual(['set:fillStyle', '#003296']);
     expect(calls).toContainEqual(['set:strokeStyle', '#000000']);
+    const lineWidth = calls.find(([name]) => name === 'set:lineWidth');
+    expect(lineWidth?.[1]).toBeCloseTo(mmToUnits(0.7), 9);
   });
 });
 
