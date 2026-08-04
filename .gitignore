@@ -1,0 +1,18 @@
+# Offizielle BABZ-Referenz-SVGs — nur lokale Vergleichsreferenz.
+# Diese Dateien werden NIEMALS eingecheckt (Lizenz-/Nutzungsgrundlage ungeklärt).
+/taktische-zeichen/
+/taktische-zeichen.zip
+
+# Node
+node_modules/
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+
+# Tooling
+.DS_Store
+.env
+.env.*
+!.env.example
+coverage/
