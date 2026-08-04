@@ -100,4 +100,34 @@ describe('renderSvg', () => {
   it('setzt die Pixelgröße, wenn size übergeben wird', () => {
     expect(renderSvg(formation, { size: 64 })).toContain('width="64" height="64"');
   });
+
+  it('skaliert Pfad-Koordinaten über das transform-Attribut und lässt d unverändert', () => {
+    const svg = renderSvg({
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'path',
+          d: 'M1 6 L31 6 L31 26 L1 26 Z',
+          style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+        },
+      ],
+    });
+    expect(svg).toContain('<path d="M1 6 L31 6 L31 26 L1 26 Z"');
+    expect(svg).toContain('transform="scale(2.8346)"');
+    expect(svg).toContain('stroke-width="0.5"');
+  });
+
+  it('wendet bei Pfaden zuerst die Skalierung und danach die Drehung an', () => {
+    const svg = renderSvg({
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'path',
+          d: 'M0 0 L10 0 L10 10 L0 10 Z',
+          transform: { rotate: { angle: 45, cx: 16, cy: 16 } },
+        },
+      ],
+    });
+    expect(svg).toContain('transform="rotate(45 45.354 45.354) scale(2.8346)"');
+  });
 });
