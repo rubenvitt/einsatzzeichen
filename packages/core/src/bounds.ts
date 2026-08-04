@@ -1,4 +1,4 @@
-import type { Point, Primitive } from '@einsatzzeichen/schema';
+import type { Point, Primitive, Rotation } from '@einsatzzeichen/schema';
 
 /** Achsparallele Hülle in Millimetern. */
 export interface BoundsMm {
@@ -8,7 +8,26 @@ export interface BoundsMm {
   maxY: number;
 }
 
+const EMPTY_BOUNDS: BoundsMm = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+
+function rotatePoint([x, y]: Point, rotate: Rotation): Point {
+  const rad = (rotate.angle * Math.PI) / 180;
+  const dx = x - rotate.cx;
+  const dy = y - rotate.cy;
+  return [
+    rotate.cx + dx * Math.cos(rad) - dy * Math.sin(rad),
+    rotate.cy + dx * Math.sin(rad) + dy * Math.cos(rad),
+  ];
+}
+
+function rotatePoints(points: readonly Point[], rotate: Rotation | undefined): readonly Point[] {
+  return rotate ? points.map((point) => rotatePoint(point, rotate)) : points;
+}
+
 function fromPoints(points: readonly Point[]): BoundsMm {
+  if (points.length === 0) {
+    throw new Error('bounds: fromPoints() erwartet mindestens einen Punkt.');
+  }
   const xs = points.map(([x]) => x);
   const ys = points.map(([, y]) => y);
   return {
@@ -19,16 +38,10 @@ function fromPoints(points: readonly Point[]): BoundsMm {
   };
 }
 
-function corners(bounds: BoundsMm): Point[] {
-  return [
-    [bounds.minX, bounds.minY],
-    [bounds.maxX, bounds.minY],
-    [bounds.maxX, bounds.maxY],
-    [bounds.minX, bounds.maxY],
-  ];
-}
-
-function merge(list: BoundsMm[]): BoundsMm {
+function merge(list: readonly BoundsMm[]): BoundsMm {
+  if (list.length === 0) {
+    throw new Error('bounds: merge() erwartet mindestens eine Hülle.');
+  }
   return {
     minX: Math.min(...list.map((b) => b.minX)),
     minY: Math.min(...list.map((b) => b.minY)),
@@ -38,60 +51,79 @@ function merge(list: BoundsMm[]): BoundsMm {
 }
 
 /**
- * Hülle eines Primitivs in Millimetern, inklusive Drehung.
- * Pfad-Primitive liefern eine leere Hülle — Piktogramme werden nicht geometrisch verglichen.
+ * Hülle eines Primitivs in Millimetern, oder `undefined`, wenn das Primitiv keine vergleichbare
+ * Ausdehnung hat (ein Pfad, oder eine Gruppe, die — auch verschachtelt — nur aus solchen
+ * Primitiven besteht). `undefined` wird strukturell weitergereicht, nicht anhand der
+ * resultierenden Zahlenwerte erkannt: so wird eine echte Null-Ausdehnung (z. B. ein entartetes
+ * Rechteck der Breite 0 bei x=0) nie mit "keine Ausdehnung" verwechselt — nur der Primitivtyp
+ * entscheidet, nie der berechnete Wert.
+ *
+ * Drehung wird auf die formdefinierenden Punkte jedes Primitivs angewendet, nicht auf die
+ * Ecken seiner (unrotierten) achsparallelen Hülle — sonst wäre das Ergebnis nur für `rect`
+ * exakt und für `circle`, `line` und `polyline` zu groß.
  */
-export function boundsOfMm(primitive: Primitive): BoundsMm {
-  let base: BoundsMm;
+function rawBoundsOfMm(primitive: Primitive): BoundsMm | undefined {
+  const rotate = primitive.transform?.rotate;
 
   switch (primitive.type) {
-    case 'rect':
-      base = {
-        minX: primitive.x,
-        minY: primitive.y,
-        maxX: primitive.x + primitive.width,
-        maxY: primitive.y + primitive.height,
+    case 'rect': {
+      const points: Point[] = [
+        [primitive.x, primitive.y],
+        [primitive.x + primitive.width, primitive.y],
+        [primitive.x + primitive.width, primitive.y + primitive.height],
+        [primitive.x, primitive.y + primitive.height],
+      ];
+      return fromPoints(rotatePoints(points, rotate));
+    }
+    case 'circle': {
+      const center: Point = rotate
+        ? rotatePoint([primitive.cx, primitive.cy], rotate)
+        : [primitive.cx, primitive.cy];
+      const [cx, cy] = center;
+      return {
+        minX: cx - primitive.r,
+        minY: cy - primitive.r,
+        maxX: cx + primitive.r,
+        maxY: cy + primitive.r,
       };
-      break;
-    case 'circle':
-      base = {
-        minX: primitive.cx - primitive.r,
-        minY: primitive.cy - primitive.r,
-        maxX: primitive.cx + primitive.r,
-        maxY: primitive.cy + primitive.r,
-      };
-      break;
-    case 'line':
-      base = fromPoints([
+    }
+    case 'line': {
+      const points: Point[] = [
         [primitive.x1, primitive.y1],
         [primitive.x2, primitive.y2],
-      ]);
-      break;
+      ];
+      return fromPoints(rotatePoints(points, rotate));
+    }
     case 'polyline':
-      base = fromPoints(primitive.points);
-      break;
-    case 'group':
-      base =
-        primitive.children.length > 0
-          ? merge(primitive.children.map(boundsOfMm))
-          : { minX: 0, minY: 0, maxX: 0, maxY: 0 };
-      break;
+      return fromPoints(rotatePoints(primitive.points, rotate));
     case 'path':
-      base = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
-      break;
+      // Piktogramme werden nicht geometrisch verglichen — keine vergleichbare Ausdehnung.
+      return undefined;
+    case 'group': {
+      if (rotate) {
+        // Eine korrekte Hülle müsste die Drehung in die Geometrie jedes Kindes durchrechnen.
+        // Das ist im aktuellen Referenzbestand kein belegter Fall (keine Gruppe trägt eine
+        // eigene Drehung) — statt das still anzunähern, lehnen wir es explizit ab.
+        throw new Error(
+          'boundsOfMm: Drehung von Gruppen wird nicht unterstützt — dieser Fall ist im ' +
+            'aktuellen Referenzbestand nicht belegt.',
+        );
+      }
+      const childBounds = primitive.children
+        .map(rawBoundsOfMm)
+        .filter((bounds): bounds is BoundsMm => bounds !== undefined);
+      return childBounds.length > 0 ? merge(childBounds) : undefined;
+    }
   }
+}
 
-  const rotate = primitive.transform?.rotate;
-  if (!rotate) return base;
-
-  const rad = (rotate.angle * Math.PI) / 180;
-  const rotated = corners(base).map(([x, y]): Point => {
-    const dx = x - rotate.cx;
-    const dy = y - rotate.cy;
-    return [
-      rotate.cx + dx * Math.cos(rad) - dy * Math.sin(rad),
-      rotate.cy + dx * Math.sin(rad) + dy * Math.cos(rad),
-    ];
-  });
-  return fromPoints(rotated);
+/**
+ * Hülle eines Primitivs in Millimetern, inklusive Drehung.
+ * Pfad-Primitive (und Gruppen, die — auch verschachtelt — nur solche enthalten) liefern die
+ * leere Hülle {0,0,0,0} — Piktogramme werden nicht geometrisch verglichen. Eine leere Gruppe
+ * unter Geschwistern verfälscht deren Hülle nicht: die Nichtvergleichbarkeit wird herausgefiltert,
+ * bevor Geschwister zusammengeführt werden (siehe `rawBoundsOfMm`).
+ */
+export function boundsOfMm(primitive: Primitive): BoundsMm {
+  return rawBoundsOfMm(primitive) ?? EMPTY_BOUNDS;
 }
