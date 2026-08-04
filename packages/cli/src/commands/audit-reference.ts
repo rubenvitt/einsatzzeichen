@@ -12,15 +12,25 @@ export interface AuditOptions {
   print?: boolean;
 }
 
+function isErrnoException(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error && 'code' in error;
+}
+
 export function auditReference(options: AuditOptions = {}): Fingerprint[] {
   let files: string[];
   try {
     files = readdirSync(REFERENCE_DIR).filter((name) => name.endsWith('.svg'));
-  } catch {
-    throw new Error(
-      `Referenzordner "${REFERENCE_DIR}" nicht gefunden. Der Bestand wird nie eingecheckt ` +
-        `und muss lokal vorliegen.`,
-    );
+  } catch (error) {
+    if (isErrnoException(error) && error.code === 'ENOENT') {
+      throw new Error(
+        `Referenzordner "${REFERENCE_DIR}" nicht gefunden. Der Bestand wird nie eingecheckt ` +
+          `und muss lokal vorliegen.`,
+        { cause: error },
+      );
+    }
+    // Andere Ursachen (fehlende Leserechte, kaputter Symlink, kein Verzeichnis …)
+    // sind keine "Bestand fehlt lokal"-Situation und dürfen nicht so ausgegeben werden.
+    throw error;
   }
 
   const selected = options.filter

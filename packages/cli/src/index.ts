@@ -1,19 +1,38 @@
 import { auditReference } from './commands/audit-reference.js';
 
+class CliUsageError extends Error {}
+
 function flag(name: string): string | undefined {
   const index = process.argv.indexOf(`--${name}`);
-  return index === -1 ? undefined : process.argv[index + 1];
+  if (index === -1) return undefined;
+
+  const value = process.argv[index + 1];
+  if (value === undefined) {
+    throw new CliUsageError(`--${name} benötigt einen Wert, aber es folgte keiner.`);
+  }
+  if (value.startsWith('--')) {
+    throw new CliUsageError(`--${name} benötigt einen Wert, aber es folgte die Option "${value}".`);
+  }
+  return value;
 }
 
 const command = process.argv[2];
 
 switch (command) {
   case 'audit:reference': {
-    const filter = flag('filter');
-    auditReference({
-      ...(filter !== undefined ? { filter } : {}),
-      print: process.argv.includes('--print'),
-    });
+    try {
+      const filter = flag('filter');
+      auditReference({
+        ...(filter !== undefined ? { filter } : {}),
+        print: process.argv.includes('--print'),
+      });
+    } catch (error) {
+      if (error instanceof CliUsageError) {
+        console.error(error.message);
+        process.exit(1);
+      }
+      throw error;
+    }
     break;
   }
   default:
