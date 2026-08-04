@@ -81,18 +81,30 @@ const FORMATION_SVG = `<?xml version="1.0" encoding="UTF-8"?>
 
 // ---- „D.3.7" (Rautenform): gedrehtes Quadrat, Stärkepunkt, ein Kurvenpfad ----
 // Halbe Diagonale 13 mm, Mittelpunkt (16 | 18) mm, 45° — Seitenlänge 26 / √2 mm.
-// Herleitung von tx/ty für `translate(tx ty) rotate(45)`: siehe Bericht.
+// Das unrotierte Rechteck liegt bewusst NICHT bei x=0, y=0: mit cx0=cy0 würde bei 45°
+// (cos=sin) der x-Term rx = cx0·cos − cy0·sin identisch zu 0, und der Testfall würde den
+// x-Zweig von resolveRotation nie mit einem Wert ≠ 0 durchlaufen. Herleitung von tx/ty
+// für `translate(tx ty) rotate(45)`, mit x0=9 mm, y0=4 mm (x0 ≠ y0): siehe Bericht.
 const DIAMOND_SIDE_MM = 26 / Math.SQRT2;
+const DIAMOND_RECT_X_MM = 9;
+const DIAMOND_RECT_Y_MM = 4;
+const ROTATION_COS_45 = Math.SQRT1_2; // cos(45°) = sin(45°)
 const diamondSide = mmToUnits(DIAMOND_SIDE_MM);
-const diamondTx = mmToUnits(16);
-const diamondTy = mmToUnits(5);
+const diamondRectX = mmToUnits(DIAMOND_RECT_X_MM);
+const diamondRectY = mmToUnits(DIAMOND_RECT_Y_MM);
+// rx = cos45·(cx0−cy0) = cos45·(x0−y0)   — die Breite/2-Terme heben sich auf, da width=height.
+// ry = cos45·(cx0+cy0) = cos45·(x0+y0+Seite)
+// tx = Zielmitte_x − rx, ty = Zielmitte_y − ry
+const diamondTx = mmToUnits(16) - ROTATION_COS_45 * mmToUnits(DIAMOND_RECT_X_MM - DIAMOND_RECT_Y_MM);
+const diamondTy =
+  mmToUnits(18) - ROTATION_COS_45 * mmToUnits(DIAMOND_RECT_X_MM + DIAMOND_RECT_Y_MM + DIAMOND_SIDE_MM);
 
 const circle = { cx: mmToUnits(16), cy: mmToUnits(2.5), r: mmToUnits(1.5) };
 
 const DIAMOND_SVG = `<svg viewBox="0 0 ${viewBoxUnits} ${viewBoxUnits}">
   <g id="Grundfläche"><rect x="0" y="0" width="${viewBoxUnits}" height="${viewBoxUnits}" fill="none"/></g>
   <g id="Flächige_Fülung">
-    <rect x="0" y="0" width="${diamondSide}" height="${diamondSide}" transform="translate(${diamondTx} ${diamondTy}) rotate(45)" fill="#fa1919"/>
+    <rect x="${diamondRectX}" y="${diamondRectY}" width="${diamondSide}" height="${diamondSide}" transform="translate(${diamondTx} ${diamondTy}) rotate(45)" fill="#fa1919"/>
   </g>
   <g id="Takt_Zeichen__x28_umgewandelt_x29_">
     <circle cx="${circle.cx}" cy="${circle.cy}" r="${circle.r}"/>
