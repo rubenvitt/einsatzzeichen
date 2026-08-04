@@ -45,6 +45,7 @@ describe('geometry', () => {
       ],
     };
     expect(drawing.children).toHaveLength(1);
+    expect(drawing.children[0]?.style?.strokeWidth).toBe(DEFAULT_STROKE_WIDTH_MM);
   });
 
   it('erlaubt ein gedrehtes Quadrat für die Person', () => {
@@ -65,5 +66,6 @@ describe('geometry', () => {
     };
     const first = drawing.children[0];
     expect(first?.transform?.rotate?.angle).toBe(45);
+    expect(first?.transform?.rotate?.cx).toBe(DEFAULT_VIEWBOX_MM.width / 2);
   });
 });
