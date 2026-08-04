@@ -220,6 +220,27 @@ importers:
         specifier: ^3.2.7
         version: 3.2.7(@types/node@22.20.1)(tsx@4.23.5)
 
+  packages/catalog:
+    dependencies:
+      '@einsatzzeichen/core':
+        specifier: workspace:*
+        version: link:../core
+      '@einsatzzeichen/schema':
+        specifier: workspace:*
+        version: link:../schema
+
+  packages/cli:
+    dependencies:
+      '@einsatzzeichen/catalog':
+        specifier: workspace:*
+        version: link:../catalog
+      '@einsatzzeichen/core':
+        specifier: workspace:*
+        version: link:../core
+      '@einsatzzeichen/schema':
+        specifier: workspace:*
+        version: link:../schema
+
   packages/core:
     dependencies:
       '@einsatzzeichen/schema':

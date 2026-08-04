@@ -1,0 +1,12 @@
+{
+  "name": "@einsatzzeichen/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@einsatzzeichen/catalog": "workspace:*",
+    "@einsatzzeichen/core": "workspace:*",
+    "@einsatzzeichen/schema": "workspace:*"
+  }
+}
