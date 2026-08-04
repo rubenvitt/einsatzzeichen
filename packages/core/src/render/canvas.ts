@@ -5,6 +5,7 @@ import {
   type ColorToken,
   type Drawing,
   type Primitive,
+  type Style,
 } from '@einsatzzeichen/schema';
 
 export interface CanvasOptions {
@@ -14,6 +15,17 @@ export interface CanvasOptions {
 
 function color(token: ColorToken | 'none'): string {
   return token === 'none' ? 'transparent' : PALETTE[token];
+}
+
+/**
+ * Verschmilzt den eigenen Stil eines Primitivs mit dem von der Elterngruppe geerbten,
+ * Feld für Feld: eigene Felder überschreiben geerbte, ungesetzte Felder übernehmen den
+ * geerbten Wert. Canvas kennt — anders als SVG — keine Stil-Kaskade; diese Funktion
+ * bildet sie nach, damit dieselbe `Drawing` in beiden Renderern gleich eingefärbt wird.
+ */
+function mergeStyle(own: Style | undefined, inherited: Style | undefined): Style | undefined {
+  if (!own && !inherited) return undefined;
+  return { ...inherited, ...own };
 }
 
 function tracePrimitive(primitive: Primitive, ctx: CanvasRenderingContext2D): void {
@@ -44,7 +56,11 @@ function tracePrimitive(primitive: Primitive, ctx: CanvasRenderingContext2D): vo
   }
 }
 
-function drawPrimitive(primitive: Primitive, ctx: CanvasRenderingContext2D): void {
+function drawPrimitive(
+  primitive: Primitive,
+  ctx: CanvasRenderingContext2D,
+  inheritedStyle?: Style,
+): void {
   ctx.save();
 
   const rotate = primitive.transform?.rotate;
@@ -54,8 +70,10 @@ function drawPrimitive(primitive: Primitive, ctx: CanvasRenderingContext2D): voi
     ctx.translate(-mmToUnits(rotate.cx), -mmToUnits(rotate.cy));
   }
 
+  const style = mergeStyle(primitive.style, inheritedStyle);
+
   if (primitive.type === 'group') {
-    for (const child of primitive.children) drawPrimitive(child, ctx);
+    for (const child of primitive.children) drawPrimitive(child, ctx, style);
     ctx.restore();
     return;
   }
@@ -64,13 +82,15 @@ function drawPrimitive(primitive: Primitive, ctx: CanvasRenderingContext2D): voi
     const path = new Path2D(primitive.d);
     ctx.save();
     ctx.scale(mmToUnits(1), mmToUnits(1));
-    if (primitive.style?.fill !== undefined && primitive.style.fill !== 'none') {
-      ctx.fillStyle = color(primitive.style.fill);
-      ctx.fill(path, primitive.style.fillRule ?? 'nonzero');
+    if (style?.fill !== undefined && style.fill !== 'none') {
+      ctx.fillStyle = color(style.fill);
+      ctx.fill(path, style.fillRule ?? 'nonzero');
     }
-    if (primitive.style?.stroke !== undefined && primitive.style.stroke !== 'none') {
-      ctx.strokeStyle = color(primitive.style.stroke);
-      ctx.lineWidth = primitive.style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
+    if (style?.stroke !== undefined && style.stroke !== 'none') {
+      ctx.strokeStyle = color(style.stroke);
+      // Rohes Millimetermaß: das umgebende scale(mmToUnits(1)) skaliert die Strichstärke
+      // bereits mit. Eine zusätzliche mmToUnits-Umrechnung würde sie doppelt skalieren.
+      ctx.lineWidth = style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
       ctx.stroke(path);
     }
     ctx.restore();
@@ -81,10 +101,9 @@ function drawPrimitive(primitive: Primitive, ctx: CanvasRenderingContext2D): voi
   ctx.beginPath();
   tracePrimitive(primitive, ctx);
 
-  const style = primitive.style;
   if (style?.fill !== undefined && style.fill !== 'none') {
     ctx.fillStyle = color(style.fill);
-    ctx.fill();
+    ctx.fill(style.fillRule ?? 'nonzero');
   }
   if (style?.stroke !== undefined && style.stroke !== 'none') {
     ctx.strokeStyle = color(style.stroke);

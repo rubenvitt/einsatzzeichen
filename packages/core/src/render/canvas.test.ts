@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_VIEWBOX_MM, type Drawing } from '@einsatzzeichen/schema';
 import { renderCanvas } from './canvas.js';
+import { renderSvg } from './svg.js';
 
 type Call = [string, ...unknown[]];
 
@@ -85,5 +86,140 @@ describe('renderCanvas', () => {
     expect(names.filter((n) => n === 'save').length).toBeGreaterThanOrEqual(2);
     expect(names).toContain('rotate');
     expect(names).toContain('arc');
+  });
+});
+
+describe('renderCanvas — Gruppenstil-Vererbung', () => {
+  it('vererbt den Gruppenstil an ein Kind ohne eigenen Stil', () => {
+    const { ctx, calls } = recordingContext();
+    renderCanvas(
+      {
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [
+          {
+            type: 'group',
+            style: { fill: 'blau', stroke: 'schwarz', strokeWidth: 0.5 },
+            children: [{ type: 'circle', cx: 16, cy: 16, r: 10 }],
+          },
+        ],
+      },
+      ctx,
+    );
+    const names = calls.map(([name]) => name);
+    expect(names).toContain('arc');
+    expect(names).toContain('fill');
+    expect(names).toContain('stroke');
+    expect(calls).toContainEqual(['set:fillStyle', '#003296']);
+    expect(calls).toContainEqual(['set:strokeStyle', '#000000']);
+  });
+
+  it('überschreibt nur die vom Kind selbst gesetzten Stilfelder, geerbte Felder bleiben erhalten', () => {
+    const { ctx, calls } = recordingContext();
+    renderCanvas(
+      {
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [
+          {
+            type: 'group',
+            style: { fill: 'blau', stroke: 'schwarz', strokeWidth: 0.5 },
+            children: [
+              {
+                type: 'circle',
+                cx: 16,
+                cy: 16,
+                r: 10,
+                // Setzt nur den Stroke selbst; der Fill muss von der Gruppe geerbt werden.
+                style: { stroke: 'rot' },
+              },
+            ],
+          },
+        ],
+      },
+      ctx,
+    );
+    // Fill kommt von der Gruppe (nicht vom Kind überschrieben).
+    expect(calls).toContainEqual(['set:fillStyle', '#003296']);
+    // Stroke ist das eigene Feld des Kindes, überschreibt die Gruppe.
+    expect(calls).toContainEqual(['set:strokeStyle', '#fa1919']);
+  });
+
+  it('löst denselben Gruppenstil auf wie SVG — dort über CSS-Kaskade, hier explizit', () => {
+    const drawing: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'group',
+          style: { fill: 'blau', stroke: 'schwarz', strokeWidth: 0.5 },
+          children: [{ type: 'rect', x: 0, y: 0, width: 10, height: 10 }],
+        },
+      ],
+    };
+
+    // SVG setzt den Stil auf das <g>-Element und verlässt sich auf die CSS-Kaskade:
+    // das <rect> trägt selbst kein fill/stroke-Attribut.
+    const svg = renderSvg(drawing);
+    expect(svg).toContain('<g fill="#003296" stroke="#000000" stroke-width="1.417">');
+    const rectTag = svg.match(/<rect[^>]*\/>/)?.[0];
+    expect(rectTag).not.toMatch(/fill=/);
+    expect(rectTag).not.toMatch(/stroke=/);
+
+    // Canvas kennt keine Kaskade und muss den geerbten Stil deshalb explizit auf das
+    // Kind anwenden — mit demselben Ergebnis.
+    const { ctx, calls } = recordingContext();
+    renderCanvas(drawing, ctx);
+    expect(calls).toContainEqual(['set:fillStyle', '#003296']);
+    expect(calls).toContainEqual(['set:strokeStyle', '#000000']);
+  });
+});
+
+describe('renderCanvas — fillRule', () => {
+  it('füllt mit nonzero, wenn keine fillRule gesetzt ist', () => {
+    const { ctx, calls } = recordingContext();
+    renderCanvas(
+      {
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [
+          {
+            type: 'polyline',
+            closed: true,
+            points: [
+              [0, 0],
+              [10, 0],
+              [10, 10],
+              [0, 10],
+            ],
+            style: { fill: 'gelb' },
+          },
+        ],
+      },
+      ctx,
+    );
+    const fillCall = calls.find(([name]) => name === 'fill');
+    expect(fillCall).toEqual(['fill', 'nonzero']);
+  });
+
+  it('gibt eine gesetzte fillRule an fill() weiter', () => {
+    const { ctx, calls } = recordingContext();
+    renderCanvas(
+      {
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [
+          {
+            type: 'polyline',
+            closed: true,
+            points: [
+              [0, 0],
+              [10, 0],
+              [10, 10],
+              [0, 10],
+            ],
+            style: { fill: 'gelb', fillRule: 'evenodd' },
+          },
+        ],
+      },
+      ctx,
+    );
+    const fillCall = calls.find(([name]) => name === 'fill');
+    expect(fillCall).toEqual(['fill', 'evenodd']);
   });
 });
