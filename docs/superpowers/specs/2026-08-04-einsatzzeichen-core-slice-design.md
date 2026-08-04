@@ -101,24 +101,49 @@ Ein Zeichen besteht aus drei vertikalen Zonen:
 └─────────────────┘
 ```
 
-**Regel: Zwischen Kopfzone und Körper liegt konstant 1 mm (2,835 Einheiten).** Die Position des
-Körpers folgt aus der Höhe der Kopfzone. Es gibt keine Tabelle pro Grundzeichenart.
+### Layout ist ein Profil pro Grundzeichenart
 
-Empirisch belegt an der Referenz:
+Es gibt **keine einzelne, für alle Grundzeichen gültige Abstandsregel.** Jede Grundzeichenart
+(rechteckiger Körper, gedrehtes Quadrat, Kreis …) trägt ein eigenes **Layoutprofil**, das
+festlegt, wo die Kopfzone sitzt und wie daraus die Körperposition folgt. Der Kompositionsmotor
+implementiert den Profilmechanismus; die Profilwerte stehen im Katalog.
+
+**Profil A — rechteckiger Körper (85,04 × 56,693), „Taktische Formation" und Ableitungen.**
+Zwischen Unterkante Kopfzone und Oberkante Körper liegt konstant 1 mm (2,835 Einheiten). Die
+Körperposition folgt aus der Kopfzonenhöhe.
 
 | Zeichen | Stärkeanordnung | Unterkante Kopfzone | Körper y |
 |---|---|---|---|
-| `C.1.2_Löschgruppe` | 3 Punkte horizontal, `cy=9.921`, `r=4.252` | 14,173 | **17,008** |
-| `C.1.1_Löschstaffel` | 2 Punkte vertikal, `cy=7.087` und `18.425` | 22,677 | **25,512** |
+| `C.1.2_Löschgruppe`, `E.1.18_Fachzug FüK` | 3 Punkte horizontal, `cy = 9,921`, `r = 4,252` | 14,173 | **17,008** |
+| `C.1.1_Löschstaffel`, `C.1.8_Staffel Dekon` | 2 Punkte vertikal, `cy = 7,087` und `18,425` | 22,677 | **25,512** |
 
-In beiden Fällen exakt 2,835 Einheiten Abstand. Die vertikale Stapelung der Staffel ist
-kanonisch und kein Ausreißer — `5.4.2_Staffel.svg` zeigt sie isoliert genauso,
-`5.4.3_Gruppe.svg` die horizontale Reihe.
+Zwei verschiedene Kopfzonenhöhen, beide Male exakt 2,835 Einheiten Abstand — die Regel ist damit
+belegt, nicht interpoliert. Die Dreierreihe ist an `E.1.18` als drei einzeln vermessene Kreise
+(`cx = 31,180 / 45,353 / 59,526`) nachgewiesen; in `C.1.2` liegen sie als zusammengeführter Pfad
+vor. Die vertikale Stapelung der Staffel ist kanonisch: `5.4.2_Staffel.svg` zeigt sie isoliert
+genauso, `5.4.3_Gruppe.svg` die horizontale Reihe.
 
 Ohne Stärkeangabe entfällt die Kopfzone. Der Körper sitzt dann auf der Standardposition
 `y = 17,008` (6 mm vom oberen Rand), belegt durch `1.1_Taktische Formation`. Diese Position ist
-ein eigener Katalogwert und **nicht** aus der 1-mm-Regel abgeleitet — die Regel greift
-ausschließlich, wenn eine Kopfzone vorhanden ist. Der Fingerprint prüft beide Fälle getrennt.
+ein eigener Profilwert und **nicht** aus der 1-mm-Regel abgeleitet.
+
+**Profil B — gedrehtes Quadrat (Person, Funktionsstelle), `D.3.x_Zugführer`.**
+Hier gilt die 1-mm-Regel nicht. Die Stärkepunkte sitzen höher (`cy = 7,086` statt `9,921`,
+Unterkante 11,338), und die Spitze des gedrehten Quadrats liegt bei `y = 13,171` — Abstand 1,833.
+Das ist plausibel, weil die Spitze ein Punkt und keine Kante ist; ein Kante-zu-Kante-Abstand ist
+nicht übertragbar. Profil B wird im Slice implementiert und per Fingerprint belegt, seine
+Herleitung aus der Fachvorschrift bleibt offen und wird im Manifest als `derived` markiert.
+
+### Körper und Innenfläche sind zwei verschiedene Dinge
+
+`E.1.18_Fachzug Führung-Kommunikation` enthält **zwei** Füllflächen: den weißen Körper bei
+`y = 17,008` (85,04 × 56,693) und eine blaue **Innenfläche** bei `y = 26,929` (79,37 × 43,937),
+die vom Rahmen eingerückt ist und die Typografie trägt.
+
+Eine reine Zählung der `Flächige_Fülung`-Rechtecke vermischt beide. Das Modell unterscheidet sie
+deshalb explizit: `body` (durch das Grundzeichen bestimmt) und `innerField` (durch Organisation,
+Fachdienst oder Beschriftung bestimmt). Die Fingerprint-Ableitung muss beide getrennt erfassen,
+sonst vergleicht sie ungleiche Dinge.
 
 ## 5. Geometrie-IR
 
@@ -148,13 +173,17 @@ stehen in CI nicht zur Verfügung.
 ```ts
 type Length = number; // Millimeter
 
-type Primitive =
+type Shape =
   | { type: "rect";     x: Length; y: Length; width: Length; height: Length; rx?: Length }
   | { type: "circle";   cx: Length; cy: Length; r: Length }
   | { type: "line";     x1: Length; y1: Length; x2: Length; y2: Length }
   | { type: "polyline"; points: Array<[Length, Length]>; closed?: boolean }
   | { type: "path";     d: string }   // nur für Piktogramme, Koordinaten in mm
-  | { type: "group";    children: Primitive[]; transform?: Transform };
+  | { type: "group";    children: Primitive[] };
+
+// Transform steht auf jedem Primitiv, nicht nur auf Gruppen: die Referenz
+// zeichnet gedrehte Quadrate als rotierte rects (D.3.x: rotate(45)).
+type Primitive = Shape & { transform?: Transform; role?: "body" | "innerField" | "head" | "foot" };
 
 interface Style {
   fill?: ColorToken | "none";
@@ -230,8 +259,7 @@ interface SourceReference {
 }
 
 interface Depiction {
-  variant: "primary" | "alternative";
-  variantKey?: string;   // stabiler Schlüssel bei mehr als zwei Varianten
+  variant: "primary" | "alternative";   // Manifest-Schlüssel ist (sourceId, variant)
   drawing: Drawing;
   sourceRefs: SourceReference[];
 }
@@ -330,9 +358,10 @@ Die Lösung ist eine zweistufige Trennung.
 - Menge der verwendeten Farben
 - Layerstruktur (Vorhandensein von `Grundfläche`, `Flächige_Fülung`, Typo-Layer)
 - Anzahl Subpfade
-- Bounding-Box je Zone
+- Bounding-Box je Zone, **getrennt nach `body` und `innerField`** (siehe Abschnitt 4)
 - aus dem Ringabstand rekonstruierte Linienstärke
 - Zonenversätze
+- angewandte Transformationen (z. B. `rotate(45)` bei gedrehten Quadraten)
 
 Aus diesen Zahlen ist die Grafik nicht rekonstruierbar. Es sind Spezifikationsfakten
 (0,5 mm Linie, 32 mm Grundfläche), keine schöpferische Ausdrucksform.
@@ -364,16 +393,22 @@ Innenpiktogramme sind erkennbar unsere. Rechtlich sauber, fachlich vertretbar, l
 - Kapitel 1 (14 Grundzeichen), Kapitel 2 (21 Organisationen, Farben, Grenzen), Kapitel 3 (7)
 - `5.1` Fahrzeugkategorien, `5.4` Stärke, `5.7` Verwaltungsstufen
 - Genau ein Piktogramm aus Kapitel 4: `4.3.1 Brandbekämpfung`
-- Genau zwei Zeichen aus Anhang C: `C.1.1_Löschstaffel` und `C.1.2_Löschgruppe`
+- Drei Zeichen aus den Anhängen: `C.1.1_Löschstaffel`, `C.1.2_Löschgruppe`,
+  `D.3.7_Zugführer der Feuerwehr`
 
-Diese beiden Anhangszeichen unterscheiden sich ausschließlich in der Stärkeangabe und beweisen
-damit die Zonenregel aus Abschnitt 4 in beiden Ausprägungen — horizontale Reihe und vertikaler
-Stapel.
+**Kompositionsnachweis auf drei Ebenen:**
 
-**Kompositionsnachweis:** `C.1.1_Löschstaffel` wird end-to-end aus Regeln erzeugt — Grundzeichen
-`formation` + Organisation `feuerwehr` + Stärke `staffel` + Fähigkeit `fire-fighting` — inklusive
-des Körperversatzes auf `y = 25.512`, der aus der Kopfzonenhöhe folgt. Damit enthält das
-Coverage-Manifest von Beginn an beide Eintragsarten.
+1. `C.1.1_Löschstaffel` wird end-to-end aus einer `SymbolSpec` erzeugt — Grundzeichen
+   `formation` + Organisation `feuerwehr` + Stärke `staffel` + Fähigkeit `fire-fighting` —
+   inklusive des Körperversatzes auf `y = 25,512`, der aus der Kopfzonenhöhe folgt.
+2. `C.1.2_Löschgruppe` unterscheidet sich davon **nur** in der Stärkeangabe und trifft
+   `y = 17,008`. Damit ist Profil A in beiden Ausprägungen belegt statt in einer.
+3. `D.3.7_Zugführer der Feuerwehr` nutzt Profil B (gedrehtes Quadrat). Damit ist der
+   **Profilmechanismus** bewiesen und nicht nur eine einzelne fest verdrahtete Regel — der
+   Unterschied, an dem der Kompositionsmotor beim Katalogausbau steht oder fällt.
+
+Das Coverage-Manifest enthält damit von Beginn an beide Eintragsarten (`catalog-entry` und
+`composition-recipe`) und beide Layoutprofile.
 
 **Nicht enthalten:** `@einsatzzeichen/react`, `@einsatzzeichen/web-component`,
 `@einsatzzeichen/maplibre`, `@einsatzzeichen/qgis`, `@einsatzzeichen/docs`, Legacy-Migration.
@@ -402,8 +437,9 @@ Katalogeinträge ist erst nach Abschluss des Quelleninventars belastbar.
 
 1. Alle Grundelemente aus Kapitel 1–3 sind als Katalogeinträge modelliert und bestehen den
    Fingerprint-Gate mit Toleranz 0,01.
-2. `C.1.1_Löschstaffel` wird ausschließlich aus einer `SymbolSpec` erzeugt, ohne hinterlegte
-   Gesamtzeichnung.
+2. `C.1.1_Löschstaffel`, `C.1.2_Löschgruppe` und `D.3.7_Zugführer der Feuerwehr` werden
+   ausschließlich aus einer `SymbolSpec` erzeugt, ohne hinterlegte Gesamtzeichnung — beide
+   Layoutprofile aus Abschnitt 4 sind damit abgedeckt.
 3. Mindestens fünf fachlich unzulässige Kombinationen werden mit strukturiertem Fehler abgelehnt.
 4. Das Coverage-Manifest ist über `(sourceId, variant)` eindeutig keyfähig; alle 31
    Varianten-Dateien haben einen Slot.
