@@ -148,13 +148,33 @@ Sonderregel.
 
 ### Universelle Regel, profilabhängige Anpassung
 
-| | gilt für | Regel |
-|---|---|---|
-| **Abstand** | alle Grundzeichenarten | `Körperanker = Unterkante Kopfzone + 1 mm`, gemessen auf der **Mittellinie** |
-| **Anpassung** | je Profil verschieden | wie der Körper auf eine vorhandene Kopfzone reagiert |
+Die Kopfzone sitzt nicht auf einer festen Höhe. Dieselbe Punktreihe steht bei `E.1.18`
+(rechteckiger Körper) auf `cy = 3,5 mm` und bei `D.3.7` (gedrehtes Quadrat) auf `cy = 2,5 mm`.
+Beide Werte folgen aus einem Algorithmus mit zwei Konstanten — 1 mm oberer Rand, 1 mm Abstand:
+
+```
+headTop    = max(1 mm, defaultAnchor − 1 mm − headHeight)
+headBottom = headTop + headHeight
+bodyAnchor = max(defaultAnchor, headBottom + 1 mm)
+```
 
 Der *Körperanker* ist der oberste Punkt der Körper-Mittellinie: bei Profil A die Oberkante des
 Rechtecks, bei Profil B die Spitze des gedrehten Quadrats, bei einem Kreiskörper der Scheitel.
+Der *Standardanker* ist seine Position ohne Kopfzone: 6 mm bei Profil A (`1.1`), 1 mm bei
+Profil B (`1.2`), 2 mm beim Kreis (`1.6`).
+
+| Konstellation | defaultAnchor | headHeight | headTop / headBottom | bodyAnchor | Referenz |
+|---|---|---|---|---|---|
+| Rechteck + Punktreihe | 6 | 3 | 2 / 5 | **6** | `C.1.2` = 17,008 ✓ |
+| Rechteck + Punktstapel | 6 | 7 | 1 / 8 | **9** | `C.1.1` = 25,512 ✓ |
+| Gedrehtes Quadrat + Reihe | 1 | 3 | 1 / 4 | **5** | `D.3.7` = 14,174 ✓ |
+
+Die erste Zeile erklärt, warum `C.1.2_Löschgruppe` denselben Körperversatz hat wie `1.1` ganz ohne
+Stärkeangabe: die Reihe passt in den vorhandenen Kopfraum, der Körper muss nicht ausweichen. Der
+Stapel passt nicht und schiebt ihn um 3 mm.
+
+**Konsequenz für die Architektur:** Der Katalog liefert die Kopfzone relativ — Marken plus Höhe —
+und das Layoutprofil setzt sie absolut. Absolute `cy`-Werte im Katalog wären falsch.
 
 Die **Anpassung** unterscheidet sich:
 

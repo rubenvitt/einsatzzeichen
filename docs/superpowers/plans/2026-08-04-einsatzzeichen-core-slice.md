@@ -36,10 +36,32 @@ Diese Werte sind bereits aus dem Referenzbestand abgeleitet und im Plan verwende
 | Stärkepunkt | `r = 1,5` |
 | Punktreihe horizontal | `cy = 3,5`, `cx = 11 / 16 / 21`, Unterkante 5 |
 | Punkte vertikal gestapelt | `cx = 16`, `cy = 2,5` und `6,5`, Unterkante 8 |
-| `D.3.7` Kopfzone | Punkte `cy = 2,5`, Unterkante 4 |
+| `D.3.7` Kopfzone | Punktreihe `cy = 2,5`, Unterkante 4 |
 | `D.3.7` Körper | gedrehtes Quadrat, halbe Diagonale 13, Mittelpunkt (16 \| 18), Spitze bei 5 |
 
-Abstandsregel, an drei Konstellationen belegt: **Körperanker = Unterkante Kopfzone + 1 mm.**
+### Die Platzierungsregel
+
+Die Kopfzone sitzt **nicht** an einer festen Höhe. Dieselbe Punktreihe steht bei `E.1.18` (rechteckiger Körper) auf `cy = 3,5` und bei `D.3.7` (gedrehtes Quadrat) auf `cy = 2,5`. Beide Werte folgen aus einem Algorithmus mit zwei Konstanten:
+
+```
+headTop    = max(1 mm, defaultAnchor − 1 mm − headHeight)
+headBottom = headTop + headHeight
+bodyAnchor = max(defaultAnchor, headBottom + 1 mm)
+```
+
+`defaultAnchor` ist der oberste Punkt der Körper-Mittellinie **ohne** Kopfzone: 6 mm beim rechteckigen Körper (`1.1`), 1 mm beim gedrehten Quadrat (`1.2`), 2 mm beim Kreis (`1.6`).
+
+An allen drei vermessenen Konstellationen belegt:
+
+| Konstellation | defaultAnchor | headHeight | headTop | headBottom | bodyAnchor | Referenz |
+|---|---|---|---|---|---|---|
+| Rechteck + Punktreihe | 6 | 3 | 2 | 5 | **6** | `C.1.2` = 17,008 ✓ |
+| Rechteck + Punktstapel | 6 | 7 | 1 | 8 | **9** | `C.1.1` = 25,512 ✓ |
+| Gedrehtes Quadrat + Reihe | 1 | 3 | 1 | 4 | **5** | `D.3.7` = 14,174 ✓ |
+
+Die Zeile „Rechteck + Punktreihe" erklärt, warum `C.1.2_Löschgruppe` denselben Körperversatz hat wie `1.1` ohne jede Stärkeangabe: die Reihe passt in den vorhandenen Kopfraum, der Körper muss nicht ausweichen. Der Stapel passt nicht und schiebt ihn um 3 mm.
+
+**Konsequenz für die Architektur:** Der Katalog liefert die Kopfzone **relativ** (Marken plus Höhe), das Layoutprofil setzt sie absolut. Eine Funktion `strengthHead(id)` mit festen `cy`-Werten wäre falsch.
 
 ---
 
@@ -1615,7 +1637,9 @@ git commit -m "feat: Pfad-Tokenizer und Ringableitung für Referenzkennzahlen"
 
 **Interfaces:**
 - Consumes: `parseRectilinearPath`, `deriveRing` aus Task 6; `unitsToMm` aus `@einsatzzeichen/schema`
-- Produces: `extractFingerprint(svg: string, asset: string): Fingerprint`; Typ `Fingerprint { asset; viewBox: { width; height }; layers: string[]; fills: string[]; fills sorted; shapes: FingerprintShape[]; curvedPaths: number }`; `FingerprintShape` als Union aus `{ kind: 'rect'|'ring'; xMm; yMm; widthMm; heightMm; strokeWidthMm?; rotate?; fill? }` und `{ kind: 'circle'; cxMm; cyMm; rMm; fill? }`
+- Produces: `extractFingerprint(svg: string, asset: string): Fingerprint`; Typen `BoundsMm { minXMm; minYMm; maxXMm; maxYMm }`, `ShapeKind = 'ring' | 'bounds' | 'rect' | 'circle'`, `FingerprintShape { kind; boundsMm; strokeWidthMm?; rotate?; fill? }`, `Fingerprint { asset; viewBox; layers; fills; shapes; curvedPaths }`
+
+**Jede Form trägt ihre fertig gedrehte Hülle in `boundsMm`.** Die Drehung wird hier einmal ausgerechnet, nicht beim Vergleichen — sonst müsste jeder Konsument sie kennen. Ohne das schlägt `1.2_Person` fehl: die Füllfläche steht unrotiert bei 5,393…26,607 mm, gedreht bei 1…31 mm.
 
 - [ ] **Step 1: Den fehlschlagenden Test schreiben**
 
@@ -1657,43 +1681,62 @@ describe('extractFingerprint', () => {
   it('gibt die Füllfläche in Millimetern aus und ignoriert die Grundfläche', () => {
     const fp = extractFingerprint(FORMATION_SVG, 'x.svg');
     const rect = fp.shapes.find((s) => s.kind === 'rect');
-    expect(rect).toMatchObject({ xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 });
+    expect(rect?.boundsMm).toEqual({ minXMm: 1, minYMm: 6, maxXMm: 31, maxYMm: 26 });
   });
 
   it('leitet aus dem Doppelrahmen die Mittellinie in Millimetern ab', () => {
     const fp = extractFingerprint(FORMATION_SVG, 'x.svg');
     const ring = fp.shapes.find((s) => s.kind === 'ring');
-    expect(ring).toBeDefined();
-    expect(ring).toMatchObject({ xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 });
-    if (ring && 'strokeWidthMm' in ring) {
-      expect(ring.strokeWidthMm).toBeCloseTo(0.5, 3);
-    }
+    expect(ring?.boundsMm).toEqual({ minXMm: 1, minYMm: 6, maxXMm: 31, maxYMm: 26 });
+    expect(ring?.strokeWidthMm).toBeCloseTo(0.5, 3);
   });
 
-  it('rechnet ein gedrehtes Quadrat auf Mittelpunkt und Drehwinkel um', () => {
+  it('dreht die Hülle eines rotierten Quadrats mit', () => {
     const fp = extractFingerprint(DIAMOND_SVG, 'D.3.7.svg');
     const rect = fp.shapes.find((s) => s.kind === 'rect');
-    expect(rect).toMatchObject({ widthMm: 18.385, rotate: 45 });
-    if (rect && 'rotateCxMm' in rect) {
-      expect(rect.rotateCxMm).toBeCloseTo(16, 2);
-      expect(rect.rotateCyMm).toBeCloseTo(18, 2);
-    }
+    expect(rect?.rotate).toBe(45);
+    // 18,385 mm Seite um (16 | 18) gedreht ergibt 13 mm halbe Diagonale.
+    expect(rect?.boundsMm.minYMm).toBeCloseTo(5, 2);
+    expect(rect?.boundsMm.maxYMm).toBeCloseTo(31, 2);
+    expect(rect?.boundsMm.minXMm).toBeCloseTo(3, 2);
   });
 
-  it('gibt Kreise in Millimetern aus', () => {
+  it('gibt Kreise als Hülle in Millimetern aus', () => {
     const fp = extractFingerprint(DIAMOND_SVG, 'D.3.7.svg');
     const circle = fp.shapes.find((s) => s.kind === 'circle');
-    expect(circle).toBeDefined();
-    if (circle && 'cxMm' in circle) {
-      expect(circle.cxMm).toBeCloseTo(16, 2);
-      expect(circle.cyMm).toBeCloseTo(2.5, 2);
-      expect(circle.rMm).toBeCloseTo(1.5, 2);
-    }
+    expect(circle?.boundsMm.minXMm).toBeCloseTo(14.5, 2);
+    expect(circle?.boundsMm.maxXMm).toBeCloseTo(17.5, 2);
+    expect(circle?.boundsMm.maxYMm).toBeCloseTo(4, 2);
   });
 
   it('zählt Pfade mit Kurven, ohne ihre Geometrie zu erfassen', () => {
     const fp = extractFingerprint(DIAMOND_SVG, 'D.3.7.svg');
     expect(fp.curvedPaths).toBe(1);
+  });
+
+  it('erfasst Polygone, damit 1.7 Gebäude nicht leer bleibt', () => {
+    const svg = `<svg viewBox="0 0 90.709 90.709">
+      <g id="Flächige_Fülung">
+        <polygon points="45.354 8.504 2.835 28.346 2.835 73.701 87.874 73.701 87.874 28.346" fill="#fff"/>
+      </g>
+    </svg>`;
+    const shape = extractFingerprint(svg, '1.7_Gebäude.svg').shapes[0];
+    expect(shape?.kind).toBe('bounds');
+    expect(shape?.boundsMm).toEqual({ minXMm: 1, minYMm: 3, maxXMm: 31, maxYMm: 26 });
+  });
+
+  it('nimmt bei mehr als zwei Teilpfaden die äußerste Hülle', () => {
+    // 1.7 Gebäude hat drei Teilpfade: Außenring, Innenring und die Dachlinie.
+    const svg = `<svg viewBox="0 0 90.709 90.709">
+      <g id="Takt_Zeichen__x28_umgewandelt_x29_">
+        <path d="M88.583,74.41H2.126V27.895L45.354,7.722l43.229,20.173v46.514ZM3.544,72.992h83.622V29.764H3.544v43.228ZM4.511,28.346h81.687L45.354,9.286,4.511,28.346Z"/>
+      </g>
+    </svg>`;
+    const shape = extractFingerprint(svg, '1.7_Gebäude.svg').shapes[0];
+    // Außenkante, nicht Mittellinie — deshalb eine eigene, schwächere Art.
+    expect(shape?.kind).toBe('outline');
+    expect(shape?.boundsMm.minXMm).toBeCloseTo(0.75, 2);
+    expect(shape?.boundsMm.maxYMm).toBeCloseTo(26.25, 2);
   });
 });
 ```
@@ -1709,30 +1752,34 @@ Expected: FAIL — `Failed to resolve import "./extract.js"`
 
 ```ts
 import { unitsToMm } from '@einsatzzeichen/schema';
-import { deriveRing, parseRectilinearPath } from './path-geometry.js';
+import { deriveRing, parseRectilinearPath, type SubpathBounds } from './path-geometry.js';
 
-export interface RectShape {
-  kind: 'rect' | 'ring';
-  xMm: number;
-  yMm: number;
-  widthMm: number;
-  heightMm: number;
+/** Achsparallele Hülle in Millimetern, Drehung bereits eingerechnet. */
+export interface BoundsMm {
+  minXMm: number;
+  minYMm: number;
+  maxXMm: number;
+  maxYMm: number;
+}
+
+/**
+ * Nach Aussagekraft geordnet:
+ * `ring`    — Mittellinie aus einem Außen-/Innenring-Paar, exakt
+ * `bounds`  — Füllfläche (rect, circle, polygon), exakt
+ * `rect`    — Füllrechteck, gegebenenfalls gedreht
+ * `circle`  — Füllkreis
+ * `outline` — Außenkante eines Pfads mit mehr als zwei Teilpfaden, um halbe Strichstärke zu groß
+ */
+export type ShapeKind = 'ring' | 'bounds' | 'rect' | 'circle' | 'outline';
+
+export interface FingerprintShape {
+  kind: ShapeKind;
+  boundsMm: BoundsMm;
+  /** Nur bei `ring`: aus dem Ringabstand zurückgerechnete Strichstärke. */
   strokeWidthMm?: number;
   rotate?: number;
-  rotateCxMm?: number;
-  rotateCyMm?: number;
   fill?: string;
 }
-
-export interface CircleShape {
-  kind: 'circle';
-  cxMm: number;
-  cyMm: number;
-  rMm: number;
-  fill?: string;
-}
-
-export type FingerprintShape = RectShape | CircleShape;
 
 export interface Fingerprint {
   asset: string;
@@ -1799,6 +1846,55 @@ function resolveRotation(
   return { angle, cx: rx + tx, cy: ry + ty };
 }
 
+function boundsFromPoints(points: ReadonlyArray<readonly [number, number]>): BoundsMm {
+  const xs = points.map(([x]) => x);
+  const ys = points.map(([, y]) => y);
+  return {
+    minXMm: mm(Math.min(...xs)),
+    minYMm: mm(Math.min(...ys)),
+    maxXMm: mm(Math.max(...xs)),
+    maxYMm: mm(Math.max(...ys)),
+  };
+}
+
+/** Hülle eines gegebenenfalls gedrehten Rechtecks, in SVG-Einheiten hinein, in mm hinaus. */
+function rectBounds(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  rotation: { angle: number; cx: number; cy: number } | null,
+): BoundsMm {
+  const corners: Array<readonly [number, number]> = [
+    [x, y],
+    [x + width, y],
+    [x + width, y + height],
+    [x, y + height],
+  ];
+  if (!rotation) return boundsFromPoints(corners);
+
+  const rad = (rotation.angle * Math.PI) / 180;
+  return boundsFromPoints(
+    corners.map(([px, py]) => {
+      const dx = px - (x + width / 2);
+      const dy = py - (y + height / 2);
+      return [
+        rotation.cx + dx * Math.cos(rad) - dy * Math.sin(rad),
+        rotation.cy + dx * Math.sin(rad) + dy * Math.cos(rad),
+      ] as const;
+    }),
+  );
+}
+
+function subpathBounds(subpaths: SubpathBounds[]): BoundsMm {
+  return {
+    minXMm: mm(Math.min(...subpaths.map((s) => s.minX))),
+    minYMm: mm(Math.min(...subpaths.map((s) => s.minY))),
+    maxXMm: mm(Math.max(...subpaths.map((s) => s.maxX))),
+    maxYMm: mm(Math.max(...subpaths.map((s) => s.maxY))),
+  };
+}
+
 export function extractFingerprint(svg: string, asset: string): Fingerprint {
   const viewBoxMatch = /viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(svg);
   const viewBox = {
@@ -1829,32 +1925,43 @@ export function extractFingerprint(svg: string, asset: string): Fingerprint {
     const y = num(a['y']);
     const rotation = resolveRotation(a['transform'], x + width / 2, y + height / 2);
 
-    const shape: RectShape = {
+    const shape: FingerprintShape = {
       kind: 'rect',
-      xMm: mm(x),
-      yMm: mm(y),
-      widthMm: mm(width),
-      heightMm: mm(height),
+      boundsMm: rectBounds(x, y, width, height, rotation),
     };
     if (a['fill'] !== undefined) shape.fill = normalizeFill(a['fill']);
-    if (rotation) {
-      shape.rotate = rotation.angle;
-      shape.rotateCxMm = mm(rotation.cx);
-      shape.rotateCyMm = mm(rotation.cy);
-    }
+    if (rotation) shape.rotate = rotation.angle;
     shapes.push(shape);
   }
 
   for (const match of svg.matchAll(/<circle([^>]*)\/>/g)) {
     const a = attrs(match[1] ?? '');
     if (a['fill'] !== undefined && a['fill'] !== 'none') fills.add(normalizeFill(a['fill']));
-    const shape: CircleShape = {
+    const cx = num(a['cx']);
+    const cy = num(a['cy']);
+    const r = num(a['r']);
+    const shape: FingerprintShape = {
       kind: 'circle',
-      cxMm: mm(num(a['cx'])),
-      cyMm: mm(num(a['cy'])),
-      rMm: mm(num(a['r'])),
+      boundsMm: { minXMm: mm(cx - r), minYMm: mm(cy - r), maxXMm: mm(cx + r), maxYMm: mm(cy + r) },
     };
     if (a['fill'] !== undefined && a['fill'] !== 'none') shape.fill = normalizeFill(a['fill']);
+    shapes.push(shape);
+  }
+
+  // Polygone tragen bei mehreren Grundzeichen die Füllfläche — 1.7 Gebäude etwa
+  // hat gar kein Füllrechteck. Ohne diese Schleife bliebe der Fingerprint leer.
+  for (const match of svg.matchAll(/<polygon([^>]*)\/>/g)) {
+    const a = attrs(match[1] ?? '');
+    if (a['fill'] === 'none') continue;
+    if (a['fill'] !== undefined) fills.add(normalizeFill(a['fill']));
+    const raw = (a['points'] ?? '').trim().split(/[\s,]+/).map(Number);
+    const points: Array<readonly [number, number]> = [];
+    for (let i = 0; i + 1 < raw.length; i += 2) {
+      points.push([raw[i] as number, raw[i + 1] as number] as const);
+    }
+    if (points.length === 0) continue;
+    const shape: FingerprintShape = { kind: 'bounds', boundsMm: boundsFromPoints(points) };
+    if (a['fill'] !== undefined) shape.fill = normalizeFill(a['fill']);
     shapes.push(shape);
   }
 
@@ -1869,17 +1976,27 @@ export function extractFingerprint(svg: string, asset: string): Fingerprint {
       curvedPaths += 1;
       continue;
     }
-    const ring = deriveRing(subpaths);
-    if (!ring) continue;
+    if (subpaths.length === 0) continue;
 
-    shapes.push({
-      kind: 'ring',
-      xMm: mm(ring.x),
-      yMm: mm(ring.y),
-      widthMm: mm(ring.width),
-      heightMm: mm(ring.height),
-      strokeWidthMm: mm(ring.strokeWidth),
-    });
+    const ring = deriveRing(subpaths);
+    if (ring) {
+      shapes.push({
+        kind: 'ring',
+        boundsMm: {
+          minXMm: mm(ring.x),
+          minYMm: mm(ring.y),
+          maxXMm: mm(ring.x + ring.width),
+          maxYMm: mm(ring.y + ring.height),
+        },
+        strokeWidthMm: mm(ring.strokeWidth),
+      });
+      continue;
+    }
+
+    // Mehr als zwei Teilpfade (1.7 Gebäude: Außenring, Innenring, Dachlinie) oder
+    // kein Ringpaar. Die Außenkante ist um eine halbe Strichstärke zu groß und
+    // wird deshalb als schwächere Art `outline` geführt.
+    shapes.push({ kind: 'outline', boundsMm: subpathBounds(subpaths) });
   }
 
   return {
@@ -1979,7 +2096,7 @@ switch (command) {
 - [ ] **Step 6: Kennzahlen erzeugen und Ergebnis prüfen**
 
 Run: `pnpm cli audit:reference --filter "1.1" --print`
-Expected: JSON mit einem Eintrag; `shapes` enthält ein `ring` mit `xMm: 1, yMm: 6, widthMm: 30, heightMm: 20, strokeWidthMm: 0.5`
+Expected: JSON mit einem Eintrag; `shapes` enthält ein `ring` mit `boundsMm: { minXMm: 1, minYMm: 6, maxXMm: 31, maxYMm: 26 }` und `strokeWidthMm: 0.5`
 
 Run: `pnpm cli audit:reference`
 Expected: `661 Kennzahlensätze nach packages/catalog/src/fingerprints.json geschrieben.`
@@ -2059,11 +2176,16 @@ describe('boundsOfMm', () => {
   });
 });
 
+const ring = (minXMm: number, minYMm: number, maxXMm: number, maxYMm: number) => ({
+  kind: 'ring',
+  boundsMm: { minXMm, minYMm, maxXMm, maxYMm },
+});
+
 describe('matchFingerprint', () => {
   it('bestätigt eine übereinstimmende Körpergeometrie', () => {
     const result = matchFingerprint(formation, {
       asset: '1.1_Taktische Formation.svg',
-      shapes: [{ kind: 'ring', xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 }],
+      shapes: [ring(1, 6, 31, 26)],
     });
     expect(result).toEqual({ ok: true, problems: [] });
   });
@@ -2071,25 +2193,33 @@ describe('matchFingerprint', () => {
   it('toleriert das Exportrauschen der Referenz', () => {
     const result = matchFingerprint(formation, {
       asset: 'x.svg',
-      shapes: [{ kind: 'ring', xMm: 0.9997, yMm: 6.0003, widthMm: 30, heightMm: 20 }],
+      shapes: [ring(0.9997, 6.0003, 31, 26)],
     });
     expect(result.ok).toBe(true);
   });
 
   it('meldet eine Abweichung oberhalb der Toleranz mit Zahlen', () => {
-    const result = matchFingerprint(formation, {
-      asset: 'x.svg',
-      shapes: [{ kind: 'ring', xMm: 2, yMm: 6, widthMm: 30, heightMm: 20 }],
-    });
+    const result = matchFingerprint(formation, { asset: 'x.svg', shapes: [ring(2, 6, 31, 26)] });
     expect(result.ok).toBe(false);
     expect(result.problems[0]).toContain('minX');
     expect(result.problems[0]).toContain('2');
   });
 
+  it('bevorzugt die Mittellinie vor der Außenkante', () => {
+    const result = matchFingerprint(formation, {
+      asset: 'x.svg',
+      shapes: [
+        { kind: 'outline', boundsMm: { minXMm: 0.75, minYMm: 5.75, maxXMm: 31.25, maxYMm: 26.25 } },
+        ring(1, 6, 31, 26),
+      ],
+    });
+    expect(result.ok).toBe(true);
+  });
+
   it('meldet, wenn kein Primitiv mit der Rolle body vorhanden ist', () => {
     const result = matchFingerprint(
       { viewBox: DEFAULT_VIEWBOX_MM, children: [] },
-      { asset: 'x.svg', shapes: [{ kind: 'ring', xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 }] },
+      { asset: 'x.svg', shapes: [ring(1, 6, 31, 26)] },
     );
     expect(result.ok).toBe(false);
     expect(result.problems[0]).toContain('body');
@@ -2219,13 +2349,7 @@ import { boundsOfMm, type BoundsMm } from './bounds.js';
 
 export interface FingerprintShapeLike {
   kind: string;
-  xMm?: number;
-  yMm?: number;
-  widthMm?: number;
-  heightMm?: number;
-  cxMm?: number;
-  cyMm?: number;
-  rMm?: number;
+  boundsMm: { minXMm: number; minYMm: number; maxXMm: number; maxYMm: number };
 }
 
 export interface FingerprintLike {
@@ -2240,29 +2364,27 @@ export interface FingerprintResult {
   problems: string[];
 }
 
-function boundsOfShape(shape: FingerprintShapeLike): BoundsMm | null {
-  if (shape.kind === 'circle') {
-    if (shape.cxMm === undefined || shape.cyMm === undefined || shape.rMm === undefined) return null;
-    return {
-      minX: shape.cxMm - shape.rMm,
-      minY: shape.cyMm - shape.rMm,
-      maxX: shape.cxMm + shape.rMm,
-      maxY: shape.cyMm + shape.rMm,
-    };
+/**
+ * Aussagekraft der Formarten, absteigend. `ring` ist eine echte Mittellinie,
+ * `outline` liegt um eine halbe Strichstärke daneben und wird nur genommen,
+ * wenn nichts Besseres da ist.
+ */
+const PRECEDENCE = ['ring', 'bounds', 'rect', 'circle', 'outline'];
+
+function pickShape(shapes: readonly FingerprintShapeLike[]): FingerprintShapeLike | null {
+  for (const kind of PRECEDENCE) {
+    const found = shapes.find((shape) => shape.kind === kind);
+    if (found) return found;
   }
-  if (
-    shape.xMm === undefined ||
-    shape.yMm === undefined ||
-    shape.widthMm === undefined ||
-    shape.heightMm === undefined
-  ) {
-    return null;
-  }
+  return shapes[0] ?? null;
+}
+
+function boundsOfShape(shape: FingerprintShapeLike): BoundsMm {
   return {
-    minX: shape.xMm,
-    minY: shape.yMm,
-    maxX: shape.xMm + shape.widthMm,
-    maxY: shape.yMm + shape.heightMm,
+    minX: shape.boundsMm.minXMm,
+    minY: shape.boundsMm.minYMm,
+    maxX: shape.boundsMm.maxXMm,
+    maxY: shape.boundsMm.maxYMm,
   };
 }
 
@@ -2295,18 +2417,15 @@ export function matchFingerprint(
     };
   }
 
-  const reference = fingerprint.shapes
-    .map(boundsOfShape)
-    .filter((b): b is BoundsMm => b !== null)
-    .find(() => true);
-
-  if (!reference) {
+  const picked = pickShape(fingerprint.shapes);
+  if (!picked) {
     return {
       ok: false,
       problems: [`Keine vergleichbare Form in den Kennzahlen zu ${fingerprint.asset}.`],
     };
   }
 
+  const reference = boundsOfShape(picked);
   const actual = boundsOfMm(body);
   const keys: Array<keyof BoundsMm> = ['minX', 'minY', 'maxX', 'maxY'];
 
@@ -2337,7 +2456,7 @@ export * from './fingerprint.js';
 - [ ] **Step 5: Test laufen lassen und Erfolg bestätigen**
 
 Run: `pnpm vitest run packages/core/src/fingerprint.test.ts && pnpm typecheck`
-Expected: PASS, 7 Tests
+Expected: PASS, 8 Tests
 
 - [ ] **Step 6: Commit**
 
@@ -2602,7 +2721,9 @@ Expected: alle Tests grün, 14 Grundzeichen abgedeckt
 - [ ] **Step 1: Farben aus der Referenz auslesen**
 
 Run: `pnpm cli audit:reference --filter "2." --print`
-Expected: Für jede Organisationsdatei erscheint unter `fills` genau ein Hexwert. Notiere die Zuordnung Datei → Hexwert; `2.1_Feuerwehr.svg` muss `#fa1919` liefern.
+Expected: `2.1_Feuerwehr.svg` liefert unter `fills` den Wert `#fa1919`, `2.3_Technisches Hilfswerk.svg` den Wert `#003296`.
+
+**Nicht jede Organisationsdatei trägt eine Füllfarbe.** Wo die Zeichnung nur aus schwarzen Strichen besteht, fehlt das `fill`-Attribut und `fills` bleibt leer — das bedeutet „weiße Grundfläche", nicht „keine Angabe". Notiere zwei Listen: Dateien **mit** Hexwert und Dateien **ohne**. Die zweite Liste bekommt das Token `weiss`.
 
 - [ ] **Step 2: Den fehlschlagenden Test schreiben**
 
@@ -2614,21 +2735,27 @@ import { PALETTE, type OrganizationId } from '@einsatzzeichen/schema';
 import { ORGANIZATION_COLORS, organizationColor } from './organizations.js';
 import { fingerprintFor } from './fingerprint-index.js';
 
-const REFERENCE: ReadonlyArray<[OrganizationId, string]> = [
+/** Organisationen, deren Referenzdatei eine Füllfarbe trägt. Aus Step 1 ergänzen. */
+const COLORED: ReadonlyArray<[OrganizationId, string]> = [
   ['feuerwehr', '2.1_Feuerwehr.svg'],
   ['thw', '2.3_Technisches Hilfswerk.svg'],
+];
+
+/** Organisationen ohne Füllfarbe in der Referenz — weiße Grundfläche. Aus Step 1 ergänzen. */
+const UNCOLORED: ReadonlyArray<[OrganizationId, string]> = [
   ['fuehrung-leitung', '2.4_Führung Leitung.svg'],
-  ['polizei', '2.5_Polizei.svg'],
-  ['bundeswehr', '2.6_Bundeswehr.svg'],
-  ['sonstige-gefahrenabwehr', '2.7_Sonstige Gefahrenabwehr.svg'],
-  ['zivile-einheiten', '2.8_Zivile Einheiten.svg'],
 ];
 
 describe('Organisationen Kapitel 2', () => {
-  it.each(REFERENCE)('trifft die Referenzfarbe von %s', (id, asset) => {
-    const fills = fingerprintFor(asset).shapes;
-    expect(fills.length).toBeGreaterThan(0);
-    expect(PALETTE[organizationColor(id)]).toBe(fingerprintFor(asset).fills?.[0]);
+  it.each(COLORED)('trifft die Referenzfarbe von %s', (id, asset) => {
+    const fills = fingerprintFor(asset).fills ?? [];
+    expect(fills, `${asset} trägt keine Füllfarbe — gehört die Organisation in UNCOLORED?`)
+      .toContain(PALETTE[organizationColor(id)]);
+  });
+
+  it.each(UNCOLORED)('führt %s ohne Referenzfarbe als weiß', (id, asset) => {
+    expect(fingerprintFor(asset).fills ?? []).toEqual([]);
+    expect(organizationColor(id)).toBe('weiss');
   });
 
   it('definiert für jede Organisation genau ein Farbtoken aus der Palette', () => {
@@ -2673,7 +2800,7 @@ Ersetze jeden Wert, der nicht mit der Ausgabe aus Step 1 übereinstimmt. Der Tes
 - [ ] **Step 5: Test laufen lassen und Erfolg bestätigen**
 
 Run: `pnpm vitest run packages/catalog/src/organizations.test.ts && pnpm typecheck`
-Expected: PASS, 8 Tests
+Expected: PASS — je ein Testfall pro Eintrag in `COLORED` und `UNCOLORED`, plus der Palettentest
 
 - [ ] **Step 6: Commit**
 
@@ -2693,7 +2820,7 @@ git commit -m "feat: Organisationsfarben aus Kapitel 2, gegen Referenz belegt"
 
 **Interfaces:**
 - Consumes: `SymbolKind` aus `@einsatzzeichen/schema`; `boundsOfMm` aus Task 8
-- Produces: `HEAD_GAP_MM = 1`, `LayoutProfileId = 'rect-body' | 'rotated-square-body' | 'circle-body'`, `profileFor(kind: SymbolKind): LayoutProfile`, `LayoutProfile { id; anchorTopMm(hasHead: boolean): number; place(body: Primitive, headBottomMm: number | null): Primitive }`
+- Produces: `HEAD_GAP_MM = 1`, `HEAD_TOP_MARGIN_MM = 1`, `LayoutProfileId = 'rect-body' | 'rotated-square-body' | 'circle-body'`, `profileFor(kind: SymbolKind): LayoutProfile`, `LayoutProfile { id; defaultAnchorMm; place(body: Primitive, headBottomMm: number | null): Primitive }`, `placeHead(profile: LayoutProfile, headHeightMm: number): { topMm: number; bottomMm: number }`
 
 - [ ] **Step 1: Den fehlschlagenden Test schreiben**
 
@@ -2703,7 +2830,7 @@ git commit -m "feat: Organisationsfarben aus Kapitel 2, gegen Referenz belegt"
 import { describe, expect, it } from 'vitest';
 import type { Primitive } from '@einsatzzeichen/schema';
 import { boundsOfMm } from '../bounds.js';
-import { HEAD_GAP_MM, profileFor } from './profiles.js';
+import { HEAD_GAP_MM, HEAD_TOP_MARGIN_MM, placeHead, profileFor } from './profiles.js';
 
 const rectBody: Primitive = { type: 'rect', role: 'body', x: 1, y: 6, width: 30, height: 20 };
 
@@ -2719,8 +2846,15 @@ const diamondBody: Primitive = {
 };
 
 describe('Layoutprofile', () => {
-  it('verwendet 1 mm Abstand zwischen Kopfzone und Körperanker', () => {
+  it('verwendet 1 mm Abstand und 1 mm oberen Rand', () => {
     expect(HEAD_GAP_MM).toBe(1);
+    expect(HEAD_TOP_MARGIN_MM).toBe(1);
+  });
+
+  it('kennt den Standardanker jeder Körperform', () => {
+    expect(profileFor('formation').defaultAnchorMm).toBe(6);
+    expect(profileFor('person').defaultAnchorMm).toBe(1);
+    expect(profileFor('post').defaultAnchorMm).toBe(2);
   });
 
   it('lässt den Körper ohne Kopfzone unverändert', () => {
@@ -2728,22 +2862,30 @@ describe('Layoutprofile', () => {
     expect(boundsOfMm(placed)).toEqual(boundsOfMm(rectBody));
   });
 
-  it('verschiebt den rechteckigen Körper auf Unterkante Kopfzone plus 1 mm', () => {
-    // C.1.1 Löschstaffel: Kopfzone endet bei 8 mm, Körper beginnt bei 9 mm.
-    const placed = profileFor('formation').place(rectBody, 8);
-    const bounds = boundsOfMm(placed);
+  it('setzt die Punktreihe über den Rechteckkörper, ohne ihn zu verschieben', () => {
+    // E.1.18 / C.1.2: Reihe 3 mm hoch, oben bei 2 mm, unten bei 5 mm, Körper bleibt bei 6 mm.
+    const head = placeHead(profileFor('formation'), 3);
+    expect(head).toEqual({ topMm: 2, bottomMm: 5 });
+    expect(boundsOfMm(profileFor('formation').place(rectBody, head.bottomMm)).minY).toBeCloseTo(6, 6);
+  });
+
+  it('schiebt den Rechteckkörper, wenn der Punktstapel nicht darüber passt', () => {
+    // C.1.1 Löschstaffel: Stapel 7 mm hoch, oben bei 1 mm, unten bei 8 mm, Körper bei 9 mm.
+    const head = placeHead(profileFor('formation'), 7);
+    expect(head).toEqual({ topMm: 1, bottomMm: 8 });
+    const bounds = boundsOfMm(profileFor('formation').place(rectBody, head.bottomMm));
     expect(bounds.minY).toBeCloseTo(9, 6);
     expect(bounds.maxY).toBeCloseTo(29, 6);
     expect(bounds.minX).toBeCloseTo(1, 6);
   });
 
-  it('trifft die Körperposition der Punktreihe (C.1.2, Unterkante 5 mm)', () => {
-    const bounds = boundsOfMm(profileFor('formation').place(rectBody, 5));
-    expect(bounds.minY).toBeCloseTo(6, 6);
+  it('setzt dieselbe Punktreihe am gedrehten Quadrat 1 mm höher', () => {
+    // D.3.7: Standardanker 1 mm, Reihe deshalb oben bei 1 mm statt bei 2 mm.
+    const head = placeHead(profileFor('person'), 3);
+    expect(head).toEqual({ topMm: 1, bottomMm: 4 });
   });
 
   it('verkleinert das gedrehte Quadrat von oben und hält die Unterkante', () => {
-    // D.3.7 Zugführer: Kopfzone endet bei 4 mm, Spitze bei 5 mm, Unterkante bleibt 31 mm.
     const bounds = boundsOfMm(profileFor('person').place(diamondBody, 4));
     expect(bounds.minY).toBeCloseTo(5, 3);
     expect(bounds.maxY).toBeCloseTo(31, 3);
@@ -2778,15 +2920,39 @@ import { boundsOfMm } from '../bounds.js';
  */
 export const HEAD_GAP_MM = 1;
 
+/** Kleinster Abstand der Kopfzone zum oberen Rand der Grundfläche. */
+export const HEAD_TOP_MARGIN_MM = 1;
+
 export type LayoutProfileId = 'rect-body' | 'rotated-square-body' | 'circle-body';
 
 export interface LayoutProfile {
   id: LayoutProfileId;
+  /** Oberster Punkt der Körper-Mittellinie ohne Kopfzone. */
+  defaultAnchorMm: number;
   /**
    * Setzt den Körper relativ zur Kopfzone. `headBottomMm === null` bedeutet: keine Kopfzone,
    * der Körper behält seine Standardgeometrie.
    */
   place(body: Primitive, headBottomMm: number | null): Primitive;
+}
+
+/**
+ * Setzt eine Kopfzone bekannter Höhe absolut. Sie wird so tief wie möglich gehängt,
+ * damit der Körper auf seinem Standardanker bleiben kann — passt sie dort nicht,
+ * rutscht sie an den oberen Rand und der Körper weicht aus.
+ *
+ * Belegt an: Rechteck + Reihe (6, 3) → 2/5; Rechteck + Stapel (6, 7) → 1/8;
+ * gedrehtes Quadrat + Reihe (1, 3) → 1/4.
+ */
+export function placeHead(
+  profile: LayoutProfile,
+  headHeightMm: number,
+): { topMm: number; bottomMm: number } {
+  const topMm = Math.max(
+    HEAD_TOP_MARGIN_MM,
+    profile.defaultAnchorMm - HEAD_GAP_MM - headHeightMm,
+  );
+  return { topMm, bottomMm: topMm + headHeightMm };
 }
 
 function shiftY(body: Primitive, deltaMm: number): Primitive {
@@ -2806,12 +2972,16 @@ function shiftY(body: Primitive, deltaMm: number): Primitive {
   }
 }
 
-/** Verschiebt den Körper, ohne seine Größe zu ändern. Belegt an C.1.1 und C.1.2. */
+/**
+ * Verschiebt den Körper, ohne seine Größe zu ändern — und nur so weit wie nötig.
+ * C.1.2 (Reihe) bleibt deshalb bei 6 mm wie 1.1, C.1.1 (Stapel) rückt auf 9 mm.
+ */
 const rectBodyProfile: LayoutProfile = {
   id: 'rect-body',
+  defaultAnchorMm: 6,
   place(body, headBottomMm) {
     if (headBottomMm === null) return body;
-    const target = headBottomMm + HEAD_GAP_MM;
+    const target = Math.max(this.defaultAnchorMm, headBottomMm + HEAD_GAP_MM);
     return shiftY(body, target - boundsOfMm(body).minY);
   },
 };
@@ -2822,6 +2992,7 @@ const rectBodyProfile: LayoutProfile = {
  */
 const rotatedSquareProfile: LayoutProfile = {
   id: 'rotated-square-body',
+  defaultAnchorMm: 1,
   place(body, headBottomMm) {
     if (headBottomMm === null) return body;
     if (body.type !== 'rect' || body.transform?.rotate === undefined) {
@@ -2829,7 +3000,7 @@ const rotatedSquareProfile: LayoutProfile = {
     }
     const bounds = boundsOfMm(body);
     const bottom = bounds.maxY;
-    const apex = headBottomMm + HEAD_GAP_MM;
+    const apex = Math.max(this.defaultAnchorMm, headBottomMm + HEAD_GAP_MM);
     const halfDiagonal = (bottom - apex) / 2;
     const centerY = apex + halfDiagonal;
     const side = halfDiagonal * Math.SQRT2;
@@ -2852,6 +3023,7 @@ const rotatedSquareProfile: LayoutProfile = {
  */
 const circleBodyProfile: LayoutProfile = {
   id: 'circle-body',
+  defaultAnchorMm: 2,
   place(body, headBottomMm) {
     if (headBottomMm === null) return body;
     throw new Error(
@@ -2891,7 +3063,7 @@ export * from './layout/profiles.js';
 - [ ] **Step 4: Test laufen lassen und Erfolg bestätigen**
 
 Run: `pnpm vitest run packages/core/src/layout/profiles.test.ts && pnpm typecheck`
-Expected: PASS, 6 Tests
+Expected: PASS, 8 Tests
 
 - [ ] **Step 5: Commit**
 
@@ -2915,19 +3087,23 @@ git commit -m "feat: Layoutprofile mit 1-mm-Regel und profilabhängiger Anpassun
 
 **Interfaces:**
 - Consumes: `StrengthId`, `AdminLevelId`, `VehicleCategoryId`, `CapabilityId`, `Primitive` aus `@einsatzzeichen/schema`
-- Produces: `strengthHead(id: StrengthId): { primitives: Primitive[]; bottomMm: number }`, `adminLevelHead(id: AdminLevelId): { primitives: Primitive[]; bottomMm: number }`, `vehicleCategoryMarks(id: VehicleCategoryId): Primitive[]`, `capabilityPictogram(id: CapabilityId): Primitive[]`
+- Produces: `strengthHead(id: StrengthId): HeadShape`, `HeadShape { marks: readonly HeadMark[]; heightMm: number }`, `HeadMark { cxMm: number; cyFromTopMm: number; rMm: number }`, `adminLevelHead(id: AdminLevelId): HeadShape`, `vehicleCategoryMarks(id: VehicleCategoryId): Primitive[]`, `capabilityPictogram(id: CapabilityId): Primitive[]`
+
+**Die Kopfzone ist relativ.** `strengthHead` beschreibt die Marken bezogen auf die Oberkante der Kopfzone und ihre Gesamthöhe. Wo diese Oberkante liegt, entscheidet `placeHead` aus Task 11 — dieselbe Punktreihe steht am Rechteckkörper 1 mm tiefer als am gedrehten Quadrat. Absolute `cy`-Werte im Katalog wären falsch.
 
 - [ ] **Step 1: Stärkeangaben aus der Referenz vermessen**
 
 Run: `pnpm cli audit:reference --filter "C.1." --print`
 Run: `pnpm cli audit:reference --filter "E.1.18" --print`
 
-Lies aus den `circle`-Einträgen ab, wie viele Punkte jeder Stärkegrad trägt und wo sie sitzen. **Nicht aus der Bezeichnung schließen** — Illustrator führt benachbarte Kreise zu einem Pfad zusammen, sodass die Anzahl der `<circle>`-Elemente in der Rohdatei irreführt. Belegt sind bereits:
+Lies aus den `circle`-Einträgen ab, wie viele Punkte jeder Stärkegrad trägt und wo sie sitzen. **Nicht aus der Bezeichnung schließen** — Illustrator führt benachbarte Kreise zu einem Pfad zusammen, sodass die Anzahl der `<circle>`-Elemente in der Rohdatei irreführt: `C.1.2_Löschgruppe` hat ein `<circle>`, `C.1.3_Löschzug` deren zwei, bei sonst gleicher Reihengeometrie.
 
-- Punktreihe horizontal: `cy = 3,5`, `cx = 11 / 16 / 21`, Radius 1,5, Unterkante 5
-- Punkte vertikal gestapelt: `cx = 16`, `cy = 2,5` und `6,5`, Radius 1,5, Unterkante 8
+Belegt sind bereits die beiden **Anordnungen**, jeweils relativ zur Oberkante der Kopfzone:
 
-Notiere die Zuordnung Stärkegrad → Anordnung, bevor du weitermachst.
+- Punktreihe waagerecht: `cx = 11 / 16 / 21`, `cyFromTop = 1,5`, Radius 1,5, Gesamthöhe 3
+- Punkte senkrecht gestapelt: `cx = 16`, `cyFromTop = 1,5` und `5,5`, Radius 1,5, Gesamthöhe 7
+
+Notiere für jeden der vier Stärkegrade Anordnung **und** Punktanzahl, bevor du weitermachst. Erst wenn alle vier belegt sind, weiter mit Step 2 — die Zuordnung ist die einzige Stelle im Slice, an der eine unbelegte Annahme still ein falsches Zeichen erzeugen würde.
 
 - [ ] **Step 2: Den fehlschlagenden Test für die Stärke schreiben**
 
@@ -2935,42 +3111,36 @@ Notiere die Zuordnung Stärkegrad → Anordnung, bevor du weitermachst.
 
 ```ts
 import { describe, expect, it } from 'vitest';
-import { boundsOfMm } from '@einsatzzeichen/core';
+import type { StrengthId } from '@einsatzzeichen/schema';
 import { strengthHead } from './strengths.js';
+
+const ALL: readonly StrengthId[] = ['trupp', 'staffel', 'gruppe', 'zug'];
 
 describe('Stärkeangaben', () => {
   it('setzt die Staffel als zwei senkrecht gestapelte Punkte', () => {
     const head = strengthHead('staffel');
-    expect(head.primitives).toHaveLength(2);
-    expect(head.bottomMm).toBeCloseTo(8, 6);
-    for (const point of head.primitives) {
-      expect(point.type).toBe('circle');
-      if (point.type === 'circle') {
-        expect(point.cx).toBeCloseTo(16, 6);
-        expect(point.r).toBeCloseTo(1.5, 6);
-      }
+    expect(head.marks).toHaveLength(2);
+    expect(head.heightMm).toBeCloseTo(7, 6);
+    for (const mark of head.marks) {
+      expect(mark.cxMm).toBeCloseTo(16, 6);
+      expect(mark.rMm).toBeCloseTo(1.5, 6);
     }
+    expect(head.marks.map((m) => m.cyFromTopMm)).toEqual([1.5, 5.5]);
   });
 
-  it('setzt die Punktreihe waagerecht mit Unterkante 5 mm', () => {
+  it('setzt die waagerechte Reihe 3 mm hoch mit Marken auf halber Höhe', () => {
     const head = strengthHead('gruppe');
-    expect(head.bottomMm).toBeCloseTo(5, 6);
-    const bounds = head.primitives.map(boundsOfMm);
-    for (const b of bounds) expect(b.maxY).toBeCloseTo(5, 6);
+    expect(head.heightMm).toBeCloseTo(3, 6);
+    for (const mark of head.marks) expect(mark.cyFromTopMm).toBeCloseTo(1.5, 6);
   });
 
-  it('gibt jedem Punkt die Rolle head', () => {
-    for (const id of ['trupp', 'staffel', 'gruppe', 'zug'] as const) {
-      for (const point of strengthHead(id).primitives) {
-        expect(point.role).toBe('head');
-      }
-    }
+  it('erzeugt für jeden Stärkegrad mindestens eine Marke', () => {
+    for (const id of ALL) expect(strengthHead(id).marks.length).toBeGreaterThan(0);
   });
 
-  it('erzeugt für jeden Stärkegrad mindestens einen Punkt', () => {
-    for (const id of ['trupp', 'staffel', 'gruppe', 'zug'] as const) {
-      expect(strengthHead(id).primitives.length).toBeGreaterThan(0);
-    }
+  it('erzeugt für jeden Stärkegrad eine eigene Kopfzone', () => {
+    const shapes = ALL.map((id) => JSON.stringify(strengthHead(id)));
+    expect(new Set(shapes).size).toBe(ALL.length);
   });
 });
 ```
@@ -2985,54 +3155,83 @@ Expected: FAIL — `Failed to resolve import "./strengths.js"`
 `packages/catalog/src/strengths.ts` — die Punktzahl je Grad aus Step 1 eintragen:
 
 ```ts
-import type { Primitive, StrengthId } from '@einsatzzeichen/schema';
+import type { StrengthId } from '@einsatzzeichen/schema';
 
 const DOT_RADIUS_MM = 1.5;
-const ROW_CY_MM = 3.5;
-const ROW_CX_MM = [11, 16, 21] as const;
-const STACK_CX_MM = 16;
-const STACK_CY_MM = [2.5, 6.5] as const;
+/** Mittelachse der Grundfläche. */
+const CENTER_X_MM = 16;
+/** Abstand benachbarter Punkte einer Reihe. Aus C.1.2 / E.1.18: 11, 16, 21. */
+const ROW_SPACING_MM = 5;
+/** Abstand benachbarter Punkte eines Stapels. Aus C.1.1: cyFromTop 1,5 und 5,5. */
+const STACK_SPACING_MM = 4;
+const MAX_ROW_MARKS = 5;
 
-export interface HeadZone {
-  primitives: Primitive[];
-  /** Unterkante der Kopfzone in Millimetern. Eingabe für das Layoutprofil. */
-  bottomMm: number;
+/** Eine Marke, bezogen auf die Oberkante der Kopfzone. */
+export interface HeadMark {
+  cxMm: number;
+  cyFromTopMm: number;
+  rMm: number;
 }
 
-function dot(cx: number, cy: number): Primitive {
-  return { type: 'circle', role: 'head', cx, cy, r: DOT_RADIUS_MM, style: { fill: 'schwarz' } };
+export interface HeadShape {
+  marks: readonly HeadMark[];
+  heightMm: number;
 }
 
-function row(count: number): HeadZone {
-  const offsets = ROW_CX_MM.slice(0, count);
+/**
+ * Waagerechte Reihe, immer um die Mittelachse zentriert. Bei drei Punkten ergibt
+ * das 11 / 16 / 21 — genau die Werte aus C.1.2 und E.1.18.
+ */
+function row(count: number): HeadShape {
+  if (count < 1 || count > MAX_ROW_MARKS) {
+    throw new Error(
+      `Punktreihe mit ${count} Marken nicht definiert (1 bis ${MAX_ROW_MARKS} möglich). ` +
+        `Anzahl an der Referenz vermessen, nicht raten.`,
+    );
+  }
+  const firstX = CENTER_X_MM - ((count - 1) * ROW_SPACING_MM) / 2;
   return {
-    primitives: offsets.map((cx) => dot(cx, ROW_CY_MM)),
-    bottomMm: ROW_CY_MM + DOT_RADIUS_MM,
+    marks: Array.from({ length: count }, (_, index) => ({
+      cxMm: firstX + index * ROW_SPACING_MM,
+      cyFromTopMm: DOT_RADIUS_MM,
+      rMm: DOT_RADIUS_MM,
+    })),
+    heightMm: DOT_RADIUS_MM * 2,
   };
 }
 
-function stack(): HeadZone {
+/** Senkrechter Stapel. Belegt an C.1.1 und 5.4.2: zwei Punkte, Gesamthöhe 7 mm. */
+function stack(count: number): HeadShape {
+  if (count < 2) throw new Error(`Punktstapel braucht mindestens zwei Marken, nicht ${count}.`);
   return {
-    primitives: STACK_CY_MM.map((cy) => dot(STACK_CX_MM, cy)),
-    bottomMm: STACK_CY_MM[STACK_CY_MM.length - 1]! + DOT_RADIUS_MM,
+    marks: Array.from({ length: count }, (_, index) => ({
+      cxMm: CENTER_X_MM,
+      cyFromTopMm: DOT_RADIUS_MM + index * STACK_SPACING_MM,
+      rMm: DOT_RADIUS_MM,
+    })),
+    heightMm: DOT_RADIUS_MM * 2 + (count - 1) * STACK_SPACING_MM,
   };
 }
 
-export function strengthHead(id: StrengthId): HeadZone {
+/**
+ * Zuordnung Stärkegrad → Anordnung. Die Punktanzahl stammt aus der Vermessung
+ * in Step 1 und darf nicht aus der Bezeichnung geschlossen werden.
+ */
+export function strengthHead(id: StrengthId): HeadShape {
   switch (id) {
     case 'trupp':
       return row(1);
     case 'staffel':
-      return stack();
+      return stack(2);
     case 'gruppe':
       return row(3);
     case 'zug':
-      return row(3);
+      return row(4);
   }
 }
 ```
 
-Korrigiere `gruppe` und `zug` entsprechend der Vermessung aus Step 1, falls die Punktzahl abweicht. Der Test in Step 2 prüft nur die Geometrie der Anordnung, nicht die Anzahl — ergänze nach der Vermessung je einen Testfall mit der belegten Punktzahl und der Referenzdatei im Kommentar.
+Trage bei `gruppe` und `zug` die in Step 1 vermessene Punktanzahl ein. Der Test „erzeugt für jeden Stärkegrad eine eigene Kopfzone" schlägt fehl, solange zwei Grade dieselbe Geometrie liefern — und `row()` wirft, statt stillschweigend zu kürzen, wenn eine Anzahl außerhalb des definierten Bereichs liegt.
 
 - [ ] **Step 5: Test laufen lassen und Erfolg bestätigen**
 
@@ -3304,19 +3503,27 @@ import {
   type SymbolKind,
   type SymbolSpec,
 } from '@einsatzzeichen/schema';
-import { profileFor } from './layout/profiles.js';
+import { placeHead, profileFor } from './layout/profiles.js';
 import { validateSpec } from './validate.js';
 
-export interface HeadZone {
-  primitives: Primitive[];
-  bottomMm: number;
+/** Eine Kopfmarke, bezogen auf die Oberkante der Kopfzone. */
+export interface HeadMark {
+  cxMm: number;
+  cyFromTopMm: number;
+  rMm: number;
+}
+
+/** Kopfzone in relativer Form. Wohin sie absolut kommt, entscheidet das Layoutprofil. */
+export interface HeadShape {
+  marks: readonly HeadMark[];
+  heightMm: number;
 }
 
 /** Zugriffe auf den Katalog. Als Ports übergeben, damit core nicht von catalog abhängt. */
 export interface CatalogPorts {
   baseDrawing(kind: SymbolKind): Drawing;
   organizationColor(id: OrganizationId): ColorToken;
-  strengthHead(id: StrengthId): HeadZone;
+  strengthHead(id: StrengthId): HeadShape;
   capabilityPictogram(id: CapabilityId): Primitive[];
 }
 
@@ -3337,8 +3544,25 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts): Drawing {
   const body = base.children.find((child) => child.role === 'body');
   if (!body) throw new Error(`Grundzeichen "${spec.kind}" hat kein body-Primitiv.`);
 
-  const head = spec.strength !== undefined ? catalog.strengthHead(spec.strength) : null;
-  const placedBody = profileFor(spec.kind).place(body, head?.bottomMm ?? null);
+  const profile = profileFor(spec.kind);
+  const headShape = spec.strength !== undefined ? catalog.strengthHead(spec.strength) : null;
+
+  // Dieselbe Kopfzone sitzt je nach Körperform unterschiedlich hoch — deshalb
+  // rechnet erst placeHead die relativen Marken in absolute Koordinaten um.
+  const headBox = headShape ? placeHead(profile, headShape.heightMm) : null;
+  const headPrimitives: Primitive[] =
+    headShape && headBox
+      ? headShape.marks.map((mark) => ({
+          type: 'circle',
+          role: 'head',
+          cx: mark.cxMm,
+          cy: headBox.topMm + mark.cyFromTopMm,
+          r: mark.rMm,
+          style: { fill: 'schwarz' },
+        }))
+      : [];
+
+  const placedBody = profile.place(body, headBox?.bottomMm ?? null);
 
   const filled: Primitive =
     spec.organization !== undefined
@@ -3352,7 +3576,7 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts): Drawing {
 
   return {
     viewBox: DEFAULT_VIEWBOX_MM,
-    children: [...(head?.primitives ?? []), filled, ...pictograms],
+    children: [...headPrimitives, filled, ...pictograms],
     ...(base.title !== undefined ? { title: base.title } : {}),
   };
 }
@@ -3486,7 +3710,15 @@ export const RECIPES = {
 Run: `pnpm test && pnpm typecheck`
 Expected: alle Tests grün
 
-Schlägt der `D.3.7`-Test fehl, weil `strength: 'zug'` eine andere Kopfzonenhöhe liefert als 4 mm: Die Stärkezuordnung aus Task 12 Step 1 ist dann falsch. Korrigiere sie dort, nicht hier — die Kopfzonenhöhe ist ein Faktum der Referenz, kein Rezeptdetail.
+Rechenweg zur Kontrolle, falls ein Rezept danebenliegt:
+
+| Rezept | Stärke | headHeight | headTop / headBottom | bodyAnchor |
+|---|---|---|---|---|
+| `C.1.2` | `gruppe` → Reihe | 3 | 2 / 5 | max(6, 6) = **6** |
+| `C.1.1` | `staffel` → Stapel(2) | 7 | 1 / 8 | max(6, 9) = **9** |
+| `D.3.7` | `zug` → Reihe | 3 | 1 / 4 | max(1, 5) = **5** |
+
+Weicht ein Wert ab, liegt der Fehler in der **Punktanzahl** aus Task 12 Step 1, nicht im Rezept: die Anordnung bestimmt `headHeight`, und die ist ein Faktum der Referenz. Eine Reihe ist immer 3 mm hoch, ein Stapel aus `n` Punkten `3 + (n − 1) · 4` mm.
 
 - [ ] **Step 9: Commit**
 
@@ -3705,8 +3937,10 @@ Die Hilfezeile anpassen:
 Run: `pnpm cli coverage`
 Expected: `Coverage-Gate bestanden.`, Exit 0
 
-Run: `pnpm cli export --out /tmp/einsatzzeichen --size 128 && ls /tmp/einsatzzeichen`
+Run: `pnpm cli -- export --out /tmp/einsatzzeichen --size 128 && ls /tmp/einsatzzeichen`
 Expected: acht SVG-Dateien
+
+Das `--` trennt die Flags des Skripts von denen von pnpm. Ohne es schluckt pnpm `--out` und `--size`, und der Export landet im Standardverzeichnis `out`.
 
 - [ ] **Step 7: Snapshot-Gate für die eigene SVG-Ausgabe**
 
