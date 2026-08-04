@@ -114,25 +114,58 @@ Körperposition folgt aus der Kopfzonenhöhe.
 
 | Zeichen | Stärkeanordnung | Unterkante Kopfzone | Körper y |
 |---|---|---|---|
-| `C.1.2_Löschgruppe`, `E.1.18_Fachzug FüK` | 3 Punkte horizontal, `cy = 9,921`, `r = 4,252` | 14,173 | **17,008** |
-| `C.1.1_Löschstaffel`, `C.1.8_Staffel Dekon` | 2 Punkte vertikal, `cy = 7,087` und `18,425` | 22,677 | **25,512** |
+| `C.1.2_Löschgruppe`, `E.1.18_Fachzug FüK` | Punktreihe horizontal, `cy = 9,921`, `r = 4,252` | 14,173 | **17,008** |
+| `C.1.1_Löschstaffel`, `C.1.8_Staffel Dekon` | Punkte vertikal gestapelt, `cy = 7,087` und `18,425` | 22,677 | **25,512** |
 
 Zwei verschiedene Kopfzonenhöhen, beide Male exakt 2,835 Einheiten Abstand — die Regel ist damit
-belegt, nicht interpoliert. Die Dreierreihe ist an `E.1.18` als drei einzeln vermessene Kreise
-(`cx = 31,180 / 45,353 / 59,526`) nachgewiesen; in `C.1.2` liegen sie als zusammengeführter Pfad
-vor. Die vertikale Stapelung der Staffel ist kanonisch: `5.4.2_Staffel.svg` zeigt sie isoliert
-genauso, `5.4.3_Gruppe.svg` die horizontale Reihe.
+belegt, nicht interpoliert. Die horizontale Reihe ist an `E.1.18` als drei einzeln vermessene
+Kreise (`cx = 31,180 / 45,353 / 59,526`) nachgewiesen.
+
+**Die Punktanzahl je Stärkegrad ist noch nicht belegt und wird nicht angenommen.** Illustrator
+führt benachbarte Kreise zu einem Pfad zusammen, sodass eine Zählung der `<circle>`-Elemente
+irreführt: `C.1.2_Löschgruppe` hat ein `<circle>`, `C.1.3_Löschzug` deren zwei — bei sonst
+gleicher Reihengeometrie. Die Zuordnung Stärkegrad → Punktanzahl wird bei der Katalogarbeit aus
+der Referenz vermessen, nicht aus der Bezeichnung geschlossen. Für das Layoutmodell ist sie
+irrelevant: die Regel arbeitet auf der Unterkante der Kopfzone, nicht auf ihrem Inhalt.
 
 Ohne Stärkeangabe entfällt die Kopfzone. Der Körper sitzt dann auf der Standardposition
 `y = 17,008` (6 mm vom oberen Rand), belegt durch `1.1_Taktische Formation`. Diese Position ist
 ein eigener Profilwert und **nicht** aus der 1-mm-Regel abgeleitet.
 
-**Profil B — gedrehtes Quadrat (Person, Funktionsstelle), `D.3.x_Zugführer`.**
-Hier gilt die 1-mm-Regel nicht. Die Stärkepunkte sitzen höher (`cy = 7,086` statt `9,921`,
-Unterkante 11,338), und die Spitze des gedrehten Quadrats liegt bei `y = 13,171` — Abstand 1,833.
-Das ist plausibel, weil die Spitze ein Punkt und keine Kante ist; ein Kante-zu-Kante-Abstand ist
-nicht übertragbar. Profil B wird im Slice implementiert und per Fingerprint belegt, seine
-Herleitung aus der Fachvorschrift bleibt offen und wird im Manifest als `derived` markiert.
+**Profil B — gedrehtes Quadrat (Person, Funktionsstelle), `D.3.7_Zugführer der Feuerwehr`.**
+Die 1-mm-Regel gilt auch hier — aber nur, wenn gegen die **Mittellinie** gemessen wird, nicht
+gegen die Außenkante des konvertierten Pfads.
+
+Die Füllfläche ist `rect 52,114 × 52,114` mit `translate(49.363 −17.126) rotate(45)`. Ausgerechnet
+ergibt das ein Quadrat mit Mittelpunkt `(45,354 | 51,024)` = (16 mm | 18 mm) und halber Diagonale
+36,85 Einheiten = 13 mm. Die Spitze der Mittellinie liegt damit bei `y = 14,174` = **5 mm**. Die
+Stärkepunkte enden bei `11,338` = **4 mm**. Abstand: exakt 1 mm.
+
+Der Außenpfad beginnt bei `13,171`; die Differenz von 1,003 Einheiten zur Mittellinie ist genau
+`halbe Strichstärke × √2` — der Betrag, um den eine 45°-Ecke über die Mittellinie hinaussteht.
+Wer gegen den Außenpfad misst, erhält scheinbar 1,833 und schließt fälschlich auf eine
+Sonderregel.
+
+### Universelle Regel, profilabhängige Anpassung
+
+| | gilt für | Regel |
+|---|---|---|
+| **Abstand** | alle Grundzeichenarten | `Körperanker = Unterkante Kopfzone + 1 mm`, gemessen auf der **Mittellinie** |
+| **Anpassung** | je Profil verschieden | wie der Körper auf eine vorhandene Kopfzone reagiert |
+
+Der *Körperanker* ist der oberste Punkt der Körper-Mittellinie: bei Profil A die Oberkante des
+Rechtecks, bei Profil B die Spitze des gedrehten Quadrats, bei einem Kreiskörper der Scheitel.
+
+Die **Anpassung** unterscheidet sich:
+
+- **Profil A verschiebt.** `1.1` hat den Körper bei `y = 6…26 mm`, `C.1.1` bei `9…29 mm` —
+  gleiche Größe (30 × 20 mm), 3 mm nach unten geschoben.
+- **Profil B schrumpft.** `1.2_Person` hat die halbe Diagonale 15 mm um `(16 | 16)`, `D.3.7`
+  13 mm um `(16 | 18)`. Die Unterkante bleibt in beiden Fällen bei 31 mm; der Körper wird von
+  oben verkleinert.
+
+Für einen Kreiskörper mit Kopfzone liegt kein vermessener Beleg vor. Die Anpassung wird bei der
+Katalogarbeit aus der Referenz ermittelt und bis dahin nicht angenommen.
 
 ### Körper und Innenfläche sind zwei verschiedene Dinge
 
