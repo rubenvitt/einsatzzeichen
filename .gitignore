@@ -16,3 +16,6 @@ build/
 .env.*
 !.env.example
 coverage/
+
+# SDD-Arbeitsverzeichnis (Ledger, Briefs, Review-Pakete) — reines Scratch
+.superpowers/
