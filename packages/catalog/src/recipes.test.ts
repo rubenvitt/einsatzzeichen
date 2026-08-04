@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { boundsOfMm, CompositionError, matchFingerprint } from '@einsatzzeichen/core';
+import type { Primitive } from '@einsatzzeichen/schema';
 import { fingerprintFor } from './fingerprint-index.js';
 import { RECIPES, composeFromCatalog } from './recipes.js';
+
+/** Die waagerechte der drei Brandbekämpfungs-Linien — die einzige mit y1 === y2. */
+function isHorizontalPictogramLine(c: Primitive): c is Primitive & { type: 'line' } {
+  return c.role === 'pictogram' && c.type === 'line' && c.y1 === c.y2;
+}
 
 describe('Kompositionsrezepte', () => {
   it('erzeugt die Löschstaffel mit Körper bei 9 mm', () => {
@@ -56,6 +62,46 @@ describe('Kompositionsrezepte', () => {
   it('setzt die Stärkepunkte als eigene Primitive mit der Rolle head', () => {
     const drawing = composeFromCatalog(RECIPES['C.1.1'].spec);
     expect(drawing.children.filter((c) => c.role === 'head')).toHaveLength(2);
+  });
+
+  it('verschiebt das Piktogramm mit der Körpermitte, statt es absolut zu platzieren', () => {
+    // Das Fingerprint-Gate vergleicht ausschließlich role: 'body' — das Piktogramm (role:
+    // 'pictogram') ist davon nicht erfasst. Diese Invariante ist an der Referenz vermessen:
+    // C.1.1 verschiebt den Körper (und mit ihm das Piktogramm) um 3 mm auf Mitte 19, C.1.2
+    // lässt den Körper (und das Piktogramm) bei Mitte 16 unverändert.
+    const cases = [
+      ['C.1.1', 19] as const,
+      ['C.1.2', 16] as const,
+    ];
+    for (const [section, expectedCenterYMm] of cases) {
+      const drawing = composeFromCatalog(RECIPES[section].spec);
+      const body = drawing.children.find((c) => c.role === 'body');
+      const pictogram = drawing.children.filter((c) => c.role === 'pictogram');
+      expect(body).toBeDefined();
+      expect(pictogram.length).toBeGreaterThan(0);
+      if (body === undefined) continue;
+
+      const bodyBounds = boundsOfMm(body);
+      const bodyCenterYMm = (bodyBounds.minY + bodyBounds.maxY) / 2;
+      expect(bodyCenterYMm).toBeCloseTo(expectedCenterYMm, 6);
+
+      const pictogramBounds = pictogram.map(boundsOfMm);
+      const pictogramMinY = Math.min(...pictogramBounds.map((b) => b.minY));
+      const pictogramMaxY = Math.max(...pictogramBounds.map((b) => b.maxY));
+      const pictogramCenterYMm = (pictogramMinY + pictogramMaxY) / 2;
+
+      // Allgemeine Invariante: Das Piktogramm folgt der Körpermitte — unabhängig davon, ob der
+      // Körper verschoben (C.1.1) oder unverändert (C.1.2) platziert wurde.
+      expect(pictogramCenterYMm).toBeCloseTo(bodyCenterYMm, 6);
+
+      // Der an der Referenz konkret vermessene Sollwert, direkt an der waagerechten Linie
+      // geprüft statt nur über die Hüllenmitte des gesamten Piktogramms.
+      const horizontalLine = drawing.children.find(isHorizontalPictogramLine);
+      expect(horizontalLine).toBeDefined();
+      if (horizontalLine !== undefined) {
+        expect(horizontalLine.y1).toBeCloseTo(expectedCenterYMm, 6);
+      }
+    }
   });
 
   it('lehnt eine unzulässige Kombination mit erklärendem Fehler ab', () => {

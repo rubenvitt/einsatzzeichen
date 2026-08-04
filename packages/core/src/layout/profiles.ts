@@ -1,5 +1,5 @@
 import type { Primitive, SymbolKind } from '@einsatzzeichen/schema';
-import { boundsOfMm } from '../bounds.js';
+import { boundsOfMm, shiftY } from '../bounds.js';
 
 /**
  * Abstand zwischen der Unterkante der Kopfzone und dem Körperanker.
@@ -40,23 +40,6 @@ export function placeHead(
     profile.defaultAnchorMm - HEAD_GAP_MM - headHeightMm,
   );
   return { topMm, bottomMm: topMm + headHeightMm };
-}
-
-function shiftY(body: Primitive, deltaMm: number): Primitive {
-  switch (body.type) {
-    case 'rect':
-      return { ...body, y: body.y + deltaMm };
-    case 'circle':
-      return { ...body, cy: body.cy + deltaMm };
-    case 'line':
-      return { ...body, y1: body.y1 + deltaMm, y2: body.y2 + deltaMm };
-    case 'polyline':
-      return { ...body, points: body.points.map(([x, y]) => [x, y + deltaMm] as const) };
-    case 'group':
-      return { ...body, children: body.children.map((c) => shiftY(c, deltaMm)) };
-    case 'path':
-      throw new Error('Pfad-Primitive können nicht als Körper platziert werden.');
-  }
 }
 
 /**

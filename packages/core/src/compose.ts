@@ -10,8 +10,15 @@ import {
   type SymbolKind,
   type SymbolSpec,
 } from '@einsatzzeichen/schema';
+import { boundsOfMm, shiftY } from './bounds.js';
 import { placeHead, profileFor } from './layout/profiles.js';
 import { validateSpec } from './validate.js';
+
+/** Senkrechte Mitte der Hülle eines Primitivs, in Millimetern. */
+function centerYMm(primitive: Primitive): number {
+  const bounds = boundsOfMm(primitive);
+  return (bounds.minY + bounds.maxY) / 2;
+}
 
 /** Zugriffe auf den Katalog. Als Ports übergeben, damit core nicht von catalog abhängt. */
 export interface CatalogPorts {
@@ -66,7 +73,16 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts): Drawing {
         }
       : placedBody;
 
-  const pictograms = (spec.capabilities ?? []).flatMap((id) => catalog.capabilityPictogram(id));
+  // Piktogramme sind auf den unverschobenen Körper hin entworfen (Mitte bei 16 mm). Der
+  // Kompositionsmotor kann den Körper senkrecht verschieben oder verkleinern, um Platz für die
+  // Kopfzone zu schaffen — das Piktogramm muss dieser Körpermitte folgen, sonst sitzt es an der
+  // absoluten Referenzstelle statt an der tatsächlichen Körpermitte. Die Referenz belegt das:
+  // C.1.1 (Stapel, Körper verschoben) verschiebt das Piktogramm um dieselben 3 mm, C.1.2
+  // (Reihe, Körper unverschoben) lässt es unverändert.
+  const pictogramShiftMm = centerYMm(placedBody) - centerYMm(body);
+  const pictograms = (spec.capabilities ?? [])
+    .flatMap((id) => catalog.capabilityPictogram(id))
+    .map((primitive) => shiftY(primitive, pictogramShiftMm));
 
   return {
     viewBox: DEFAULT_VIEWBOX_MM,

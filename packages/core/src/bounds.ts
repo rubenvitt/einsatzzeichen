@@ -127,3 +127,33 @@ function rawBoundsOfMm(primitive: Primitive): BoundsMm | undefined {
 export function boundsOfMm(primitive: Primitive): BoundsMm {
   return rawBoundsOfMm(primitive) ?? EMPTY_BOUNDS;
 }
+
+/**
+ * Verschiebt ein Primitiv senkrecht um `deltaMm`, ohne seine Größe zu ändern. Verwendet sowohl
+ * für die Körperplatzierung (`layout/profiles.ts`) als auch für Piktogramme, die der
+ * Körpermitte folgen müssen (`compose.ts`) — eine Verschiebung entlang der y-Achse ist in
+ * beiden Fällen dieselbe Operation auf derselben Primitivgeometrie.
+ *
+ * Pfad-Primitive haben keine strukturierte Punktgeometrie (ihre Koordinaten liegen im
+ * `d`-String) und werden deshalb nicht verschoben, sondern lehnen explizit ab — ein still
+ * falsch (nicht) verschobenes Pfad-Primitiv wäre schwerer zu bemerken als ein Fehler.
+ */
+export function shiftY(primitive: Primitive, deltaMm: number): Primitive {
+  switch (primitive.type) {
+    case 'rect':
+      return { ...primitive, y: primitive.y + deltaMm };
+    case 'circle':
+      return { ...primitive, cy: primitive.cy + deltaMm };
+    case 'line':
+      return { ...primitive, y1: primitive.y1 + deltaMm, y2: primitive.y2 + deltaMm };
+    case 'polyline':
+      return { ...primitive, points: primitive.points.map(([x, y]) => [x, y + deltaMm] as const) };
+    case 'group':
+      return { ...primitive, children: primitive.children.map((c) => shiftY(c, deltaMm)) };
+    case 'path':
+      throw new Error(
+        'shiftY: Pfad-Primitive haben keine strukturierte Punktgeometrie und können nicht ' +
+          'verschoben werden.',
+      );
+  }
+}
