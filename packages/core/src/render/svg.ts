@@ -9,6 +9,7 @@ import {
   type Transform,
 } from '@einsatzzeichen/schema';
 import { escapeXml, formatUnits } from './format.js';
+import { mergeStyle } from './style.js';
 
 export { formatUnits };
 
@@ -32,16 +33,24 @@ function color(token: ColorToken | 'none'): string {
  * (siehe `pathTransformAttr`) übernimmt bereits die `scale(...)`-Transformation die
  * Umrechnung; würde die Strichstärke zusätzlich über `u` laufen, würde sie doppelt
  * skaliert. Für diesen Fall bleibt sie im Rohmaß Millimeter (`rawStrokeWidth: true`).
+ *
+ * `style` ist hier immer schon der von `renderPrimitive` aufgelöste effektive Stil
+ * (eigener Stil verschmolzen mit geerbtem, siehe `mergeStyle`) — nie die CSS-Kaskade.
+ * `stroke="none"` wird deshalb wie `fill="none"` explizit ausgegeben statt weggelassen:
+ * es gibt keine vererbende `<g>`-Elternattribute mehr, auf die sich ein Weglassen
+ * verlassen könnte.
  */
 function styleAttrs(style: Style | undefined, options: { rawStrokeWidth?: boolean } = {}): string {
   if (!style) return '';
   const parts: string[] = [];
   if (style.fill !== undefined) parts.push(`fill="${color(style.fill)}"`);
-  if (style.stroke !== undefined && style.stroke !== 'none') {
+  if (style.stroke !== undefined) {
     parts.push(`stroke="${color(style.stroke)}"`);
-    const strokeWidthMm = style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
-    const strokeWidth = options.rawStrokeWidth ? formatUnits(strokeWidthMm) : u(strokeWidthMm);
-    parts.push(`stroke-width="${strokeWidth}"`);
+    if (style.stroke !== 'none') {
+      const strokeWidthMm = style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
+      const strokeWidth = options.rawStrokeWidth ? formatUnits(strokeWidthMm) : u(strokeWidthMm);
+      parts.push(`stroke-width="${strokeWidth}"`);
+    }
   }
   if (style.fillRule !== undefined) parts.push(`fill-rule="${style.fillRule}"`);
   return parts.length > 0 ? ` ${parts.join(' ')}` : '';
@@ -85,14 +94,32 @@ function pathTransformAttr(transform: Transform | undefined): string {
   return ` transform="rotate(${formatUnits(rotate.angle)} ${u(rotate.cx)} ${u(rotate.cy)}) ${scale}"`;
 }
 
-function renderPrimitive(primitive: Primitive): string {
+/**
+ * Löst den effektiven Stil eines Primitivs auf (eigener Stil überschreibt geerbten,
+ * Feld für Feld — siehe `mergeStyle`) und gibt ihn selbst dort aus, wo SVG sich sonst
+ * auf die CSS-Attributvererbung über `<g>` verlassen hätte. Grund: bei Pfaden würde die
+ * geerbte `stroke-width` sonst durch die `scale(...)`-Transformation eines `<g>` und
+ * erneut durch die des `<path>` doppelt skaliert (siehe `pathTransformAttr`). Damit
+ * lösen SVG und Canvas (`drawPrimitive` in `canvas.ts`) die Vererbung strukturell
+ * gleich auf: beide werten sie im Renderer aus, keiner verlässt sich auf die
+ * Zielplattform. `<g>` trägt deshalb selbst keinen Stil mehr — nur noch Kinder tun das.
+ */
+function renderPrimitive(primitive: Primitive, inheritedStyle?: Style): string {
+  const style = mergeStyle(primitive.style, inheritedStyle);
+
   if (primitive.type === 'path') {
-    const style = styleAttrs(primitive.style, { rawStrokeWidth: true });
+    const styleStr = styleAttrs(style, { rawStrokeWidth: true });
     const transform = pathTransformAttr(primitive.transform);
-    return `<path d="${escapeXml(primitive.d)}"${style}${transform}/>`;
+    return `<path d="${escapeXml(primitive.d)}"${styleStr}${transform}/>`;
   }
 
-  const tail = `${styleAttrs(primitive.style)}${transformAttr(primitive.transform)}`;
+  if (primitive.type === 'group') {
+    const transform = transformAttr(primitive.transform);
+    const children = primitive.children.map((child) => renderPrimitive(child, style)).join('');
+    return `<g${transform}>${children}</g>`;
+  }
+
+  const tail = `${styleAttrs(style)}${transformAttr(primitive.transform)}`;
 
   switch (primitive.type) {
     case 'rect': {
@@ -108,8 +135,6 @@ function renderPrimitive(primitive: Primitive): string {
       const tag = primitive.closed === true ? 'polygon' : 'polyline';
       return `<${tag} points="${points}"${tail}/>`;
     }
-    case 'group':
-      return `<g${tail}>${primitive.children.map(renderPrimitive).join('')}</g>`;
   }
 }
 
@@ -140,6 +165,6 @@ export function renderSvg(drawing: Drawing, options: SvgOptions = {}): string {
     attrs.push('aria-hidden="true"');
   }
 
-  const body = drawing.children.map(renderPrimitive).join('');
+  const body = drawing.children.map((child) => renderPrimitive(child)).join('');
   return `<svg ${attrs.join(' ')}>${metadata.join('')}${body}</svg>`;
 }

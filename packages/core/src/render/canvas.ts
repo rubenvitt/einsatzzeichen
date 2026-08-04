@@ -7,6 +7,7 @@ import {
   type Primitive,
   type Style,
 } from '@einsatzzeichen/schema';
+import { mergeStyle } from './style.js';
 
 export interface CanvasOptions {
   /** Kantenlänge in Pixeln. Ohne Angabe wird in SVG-Einheiten gezeichnet. */
@@ -15,17 +16,6 @@ export interface CanvasOptions {
 
 function color(token: ColorToken | 'none'): string {
   return token === 'none' ? 'transparent' : PALETTE[token];
-}
-
-/**
- * Verschmilzt den eigenen Stil eines Primitivs mit dem von der Elterngruppe geerbten,
- * Feld für Feld: eigene Felder überschreiben geerbte, ungesetzte Felder übernehmen den
- * geerbten Wert. Canvas kennt — anders als SVG — keine Stil-Kaskade; diese Funktion
- * bildet sie nach, damit dieselbe `Drawing` in beiden Renderern gleich eingefärbt wird.
- */
-function mergeStyle(own: Style | undefined, inherited: Style | undefined): Style | undefined {
-  if (!own && !inherited) return undefined;
-  return { ...inherited, ...own };
 }
 
 function tracePrimitive(primitive: Primitive, ctx: CanvasRenderingContext2D): void {

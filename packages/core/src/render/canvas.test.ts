@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_VIEWBOX_MM, type Drawing } from '@einsatzzeichen/schema';
+import { DEFAULT_VIEWBOX_MM, mmToUnits, type Drawing } from '@einsatzzeichen/schema';
 import { renderCanvas } from './canvas.js';
-import { renderSvg } from './svg.js';
+import { formatUnits, renderSvg } from './svg.js';
 
 type Call = [string, ...unknown[]];
 
@@ -221,5 +221,67 @@ describe('renderCanvas — fillRule', () => {
     );
     const fillCall = calls.find(([name]) => name === 'fill');
     expect(fillCall).toEqual(['fill', 'evenodd']);
+  });
+});
+
+describe('renderCanvas — geerbte Strichstärke (Fix-Runde 2)', () => {
+  it('reicht eine geerbte Strichstärke als dieselbe Millimeterangabe an SVG und Canvas weiter', () => {
+    const drawing: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'group',
+          style: { stroke: 'schwarz', strokeWidth: 0.7 },
+          // Kein eigener strokeWidth — muss von der Gruppe geerbt werden.
+          children: [{ type: 'circle', cx: 16, cy: 16, r: 10, style: { fill: 'gelb' } }],
+        },
+      ],
+    };
+
+    // SVG: das Kind löst den geerbten Millimeterwert selbst über u() auf, ohne Umweg über
+    // eine bereits in Einheiten umgerechnete <g>-Kaskade — deshalb keine Doppel-Skalierung.
+    const svg = renderSvg(drawing);
+    expect(svg).toContain(`stroke-width="${formatUnits(mmToUnits(0.7))}"`);
+
+    // Canvas: derselbe geerbte Millimeterwert, über mmToUnits umgerechnet.
+    const { ctx, calls } = recordingContext();
+    renderCanvas(drawing, ctx);
+    const lineWidth = calls.find(([name]) => name === 'set:lineWidth');
+    expect(lineWidth?.[1]).toBeCloseTo(mmToUnits(0.7), 9);
+  });
+
+  it('lässt ein Kind mit stroke: "none" unter einer umrandeten Gruppe ungestrichelt', () => {
+    const drawing: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'group',
+          style: { stroke: 'schwarz', strokeWidth: 0.5 },
+          children: [
+            {
+              type: 'circle',
+              cx: 16,
+              cy: 16,
+              r: 10,
+              // Überschreibt den geerbten Stroke ausdrücklich mit 'none'.
+              style: { fill: 'gelb', stroke: 'none' },
+            },
+          ],
+        },
+      ],
+    };
+
+    // SVG: das Kind gibt selbst stroke="none" aus (kein stroke-width danach) und
+    // überschreibt damit den geerbten Stroke der Gruppe.
+    const svg = renderSvg(drawing);
+    const circleTag = svg.match(/<circle[^>]*\/>/)?.[0];
+    expect(circleTag).toContain('stroke="none"');
+    expect(circleTag).not.toContain('stroke-width');
+
+    // Canvas: kein stroke()-Aufruf für dieses Kind.
+    const { ctx, calls } = recordingContext();
+    renderCanvas(drawing, ctx);
+    const names = calls.map(([name]) => name);
+    expect(names).not.toContain('stroke');
   });
 });
