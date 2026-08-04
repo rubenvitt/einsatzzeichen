@@ -11,6 +11,7 @@ const REFERENCE = [
   ['container', '1.8_Behälter Ressource Raum Funkgerät.svg'],
   ['measure', '1.10_Maßnahme.svg'],
   ['hazard', '1.11_Gefahr.svg'],
+  ['point', '1.12_Konkreter Punkt.svg'],
 ] as const satisfies ReadonlyArray<[keyof typeof BASE_SYMBOLS, string]>;
 
 /**
