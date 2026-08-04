@@ -75,11 +75,13 @@ export function baseDrawing(kind: SymbolKind): Drawing {
 }
 
 function entry(kind: SymbolKind): CatalogEntry {
+  const title = TITLES[kind];
+  if (title === undefined) throw new Error(`Kein Titel für "${kind}".`);
   const meta = SECTIONS[kind];
   if (!meta) throw new Error(`Keine Quellenangabe für "${kind}".`);
   return {
     id: `base.${kind}`,
-    title: TITLES[kind] ?? kind,
+    title,
     kind,
     depictions: [
       {
