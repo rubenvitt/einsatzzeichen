@@ -3,3 +3,5 @@ export * from './render/canvas.js';
 export * from './bounds.js';
 export * from './fingerprint.js';
 export * from './layout/profiles.js';
+export * from './validate.js';
+export * from './compose.js';
