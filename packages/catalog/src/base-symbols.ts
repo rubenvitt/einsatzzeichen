@@ -124,6 +124,7 @@ function entry(kind: SymbolKind): CatalogEntry {
     id: `base.${kind}`,
     title,
     kind,
+    profile: 'bund',
     depictions: [
       {
         variant: 'primary',

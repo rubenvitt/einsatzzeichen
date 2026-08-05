@@ -1,0 +1,38 @@
+import { describe, expect, it } from 'vitest';
+import { isDataVersion } from '@einsatzzeichen/schema';
+import { PROFILES, profileFor } from './profiles.js';
+import { COVERAGE_MANIFEST } from './coverage-manifest.js';
+
+describe('Profilregister', () => {
+  it('führt den bundesweiten Kern als einziges Profil', () => {
+    expect(Object.keys(PROFILES)).toEqual(['bund']);
+  });
+
+  it('gibt zu jeder ID den Datensatz mit derselben ID zurück', () => {
+    expect(profileFor('bund').id).toBe('bund');
+  });
+
+  it('führt für jedes Profil eine gültige Datenversion und Kernprüfversion', () => {
+    for (const record of Object.values(PROFILES)) {
+      expect(isDataVersion(record.version)).toBe(true);
+      expect(isDataVersion(record.verifiedAgainstCore)).toBe(true);
+    }
+  });
+
+  it('setzt beim Kern Datenversion, Kernprüfversion und Manifestversion gleich', () => {
+    const bund = profileFor('bund');
+    expect(bund.version).toBe(bund.verifiedAgainstCore);
+    expect(bund.version).toBe(COVERAGE_MANIFEST.coreVersion);
+  });
+
+  it('stützt den Kern auf die Baseline und die Referenzdateien', () => {
+    expect(profileFor('bund').sources).toEqual(['bbk-babz-2025', 'babz-svg-2025']);
+  });
+
+  it('trägt am Profil beide Reviewrollen mit offenem fachlichem Review', () => {
+    const review = profileFor('bund').review;
+    expect(review.technical.status).toBe('approved');
+    expect(review.technical.reviewer).toBe('rv');
+    expect(review.domain.status).toBe('pending');
+  });
+});

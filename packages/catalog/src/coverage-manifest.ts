@@ -28,6 +28,7 @@ const catalogEntries: CoverageEntry[] = Object.values(BASE_SYMBOLS).map((entry) 
     implementation: entry.id,
     referenceAsset: ref?.asset ?? '',
     coverage: 'catalog-entry',
+    profile: 'bund',
     fingerprintTest: true,
     snapshotTest: true,
     review: REVIEW,
@@ -41,6 +42,7 @@ const recipeEntries: CoverageEntry[] = Object.entries(RECIPES).map(([section, re
   implementation: `recipe.${section}`,
   referenceAsset: recipe.referenceAsset,
   coverage: 'composition-recipe',
+  profile: 'bund',
   // Task 13 hat alle drei Rezepte per matchFingerprint gegen die Referenz gegated,
   // mit Differenz 0 an allen Kanten — das Manifest bildet das ab, statt es zu untertreiben.
   fingerprintTest: true,
@@ -50,6 +52,12 @@ const recipeEntries: CoverageEntry[] = Object.entries(RECIPES).map(([section, re
 
 export const COVERAGE_MANIFEST: CoverageManifest = {
   baseline: 'bbk-babz-2025',
+  /**
+   * Datenversion des Kerns, unabhängig von den npm-Paketversionen. Ein Profil kann sich ändern,
+   * ohne den Kern zu berühren, und umgekehrt — über Paketversionen wäre das nur darstellbar,
+   * wenn jedes Profil ein eigenes npm-Paket wäre.
+   */
+  coreVersion: '0.1.0',
   // Kapitel 3 (sieben Referenzdateien) setzt dieser Slice nicht um; 5.1.1/5.7 sind entfallen
   // (Verwaltungsstufen/Fahrzeugkategorien: von 16 Referenzdateien nur 2 vermessbar, kein Konsument).
   scope: ['1', '2', '4.3.1', '5.4', 'C.1.1', 'C.1.2', 'D.3.7'],

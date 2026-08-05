@@ -7,6 +7,7 @@ function fixtureEntry(id: string, primaryCount: number): CatalogEntry {
     id,
     title: 'Test',
     kind: 'formation',
+    profile: 'bund',
     depictions: Array.from({ length: primaryCount }, () => ({
       variant: 'primary' as const,
       drawing: { viewBox: DEFAULT_VIEWBOX_MM, children: [] },

@@ -1,4 +1,5 @@
 import type { Drawing } from './geometry.js';
+import type { ProfileId } from './profile.js';
 import type { SymbolKind } from './taxonomy.js';
 
 /**
@@ -51,6 +52,12 @@ export interface CatalogEntry {
   id: string;
   title: string;
   kind: SymbolKind;
+  /**
+   * Profilzugehörigkeit. Pflichtfeld, nicht optional: bei einem optionalen Feld wäre
+   * „kein Profil angegeben" von „gehört zum Kern" nicht unterscheidbar, und die Regel
+   * „kein Profileintrag landet unbemerkt im Kern" damit nicht prüfbar.
+   */
+  profile: ProfileId;
   /** Mindestens eine Darstellung; `primary` genau einmal. */
   depictions: readonly Depiction[];
   synonyms?: readonly string[];
