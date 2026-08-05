@@ -20,13 +20,14 @@ const SOURCE_REVIEW: ReviewSet = {
  * Die elf registrierten Quellen der Referenzhierarchie aus `Vision.md`.
  *
  * `satisfies Record<SourceId, SourceRecord>` erzwingt beide Richtungen: keine deklarierte Quelle
- * ohne Registereintrag, und keine Referenz auf eine nicht deklarierte Quelle. Die vorangestellte
- * Annotation `Record<SourceId, SourceRecord>` ist zusätzlich nötig: `satisfies` allein — auch
- * ohne `as const` — belässt jedem Eintrag seinen literalen Einzeltyp und verengt `geometryUse`
- * dadurch auf je eigene Tupel statt auf `GeometryUse[]`. Iteriert man dann über
- * `Object.values(...)`, erhält `Array#includes` aus der Vereinigung dieser Tupeltypen einen
- * `never`-Parametertyp. Die Annotation weitet jeden Eintrag auf `SourceRecord`, `satisfies`
- * behält die beidseitige Vollständigkeitsprüfung.
+ * ohne Registereintrag, und keine Referenz auf eine nicht deklarierte Quelle. Bewusst ohne
+ * `as const`: das würde jeden Eintrag zusätzlich auf seinen literalen Einzeltyp verengen. Aber
+ * auch ohne `as const` belässt `satisfies` allein jedem Eintrag seinen engsten Typ — bei
+ * `geometryUse` also je eigene Tupel statt `GeometryUse[]`. Iteriert man über
+ * `Object.values(...)`, bildet TypeScript aus der Vereinigung dieser Tupeltypen den Parametertyp
+ * von `Array#includes`, und der kollabiert zu `never`. Konsumenten wie `sources.test.ts` weiten
+ * deshalb am Aufrufort explizit — `Object.values<SourceRecord>(...)` — statt hier an der
+ * Deklaration zu weiten.
  *
  * Zur Lizenzlage: die kostenpflichtigen DIN-Normen tragen `clarified`, weil die Nutzungslage
  * dort eindeutig ist — Nutzung setzt Erwerb voraus, und ohne Erwerb wird nichts übernommen. Bei
@@ -34,7 +35,7 @@ const SOURCE_REVIEW: ReviewSet = {
  * nicht dokumentiert; `unclear` ist dort die ehrliche Angabe und trägt die Begründung für den
  * Fingerprint-Ansatz.
  */
-export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
+export const SOURCE_REGISTRY = {
   'bbk-babz-2025': {
     id: 'bbk-babz-2025',
     kind: 'baseline',
