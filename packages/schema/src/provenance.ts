@@ -4,8 +4,7 @@ import type { SymbolKind } from './taxonomy.js';
 /**
  * Die registrierten Quellen. Die Werte werden hier deklariert, nicht aus `SOURCE_REGISTRY`
  * abgeleitet: `schema` darf nicht von `catalog` abhängen. Die Gegenrichtung — kein Literal ohne
- * Registereintrag — erzwingt die Annotation `Record<SourceId, SourceRecord>` in
- * `catalog/src/sources.ts`.
+ * Registereintrag — erzwingt `satisfies Record<SourceId, SourceRecord>` in `catalog/src/sources.ts`.
  */
 export type SourceId =
   | 'bbk-babz-2025'

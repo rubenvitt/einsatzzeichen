@@ -19,14 +19,14 @@ const SOURCE_REVIEW: ReviewSet = {
 /**
  * Die elf registrierten Quellen der Referenzhierarchie aus `Vision.md`.
  *
- * Die explizite Annotation `Record<SourceId, SourceRecord>` erzwingt beide Richtungen: keine
- * deklarierte Quelle ohne Registereintrag, und keine Referenz auf eine nicht deklarierte Quelle.
- * `as const satisfies Record<SourceId, SourceRecord>` würde dieselbe Prüfung leisten, aber jedem
- * Eintrag seinen literalen Einzeltyp belassen — bei `geometryUse` verengt das jeden Eintrag auf
- * sein eigenes Tupel. Iteriert man dann über `Object.values(...)`, bildet TypeScript aus der
- * Vereinigung dieser Tupeltypen den Parametertyp von `Array#includes`, und der kollabiert zu
- * `never`, weil kein Element allen Einzeltypen gemeinsam ist. Die explizite Annotation weitet
- * jeden Eintrag auf `SourceRecord` und vermeidet das.
+ * `satisfies Record<SourceId, SourceRecord>` erzwingt beide Richtungen: keine deklarierte Quelle
+ * ohne Registereintrag, und keine Referenz auf eine nicht deklarierte Quelle. Die vorangestellte
+ * Annotation `Record<SourceId, SourceRecord>` ist zusätzlich nötig: `satisfies` allein — auch
+ * ohne `as const` — belässt jedem Eintrag seinen literalen Einzeltyp und verengt `geometryUse`
+ * dadurch auf je eigene Tupel statt auf `GeometryUse[]`. Iteriert man dann über
+ * `Object.values(...)`, erhält `Array#includes` aus der Vereinigung dieser Tupeltypen einen
+ * `never`-Parametertyp. Die Annotation weitet jeden Eintrag auf `SourceRecord`, `satisfies`
+ * behält die beidseitige Vollständigkeitsprüfung.
  *
  * Zur Lizenzlage: die kostenpflichtigen DIN-Normen tragen `clarified`, weil die Nutzungslage
  * dort eindeutig ist — Nutzung setzt Erwerb voraus, und ohne Erwerb wird nichts übernommen. Bei
@@ -223,7 +223,7 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
     },
     review: SOURCE_REVIEW,
   },
-};
+} satisfies Record<SourceId, SourceRecord>;
 
 /** Prüft, ob eine Zeichenkette eine registrierte Quelle bezeichnet. Vom Coverage-Gate verwendet. */
 export function isRegisteredSource(id: string): id is SourceId {
