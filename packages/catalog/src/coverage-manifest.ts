@@ -1,13 +1,16 @@
 import {
   entryKey,
+  unattributedRoles,
   type CatalogEntry,
   type CoverageEntry,
   type CoverageManifest,
   type ReviewSet,
+  type SourceId,
 } from '@einsatzzeichen/schema';
 import { BASE_SYMBOLS } from './base-symbols.js';
 import { resolveElement } from './elements.js';
 import { RECIPES } from './recipes.js';
+import { isRegisteredSource } from './sources.js';
 
 /**
  * Migration nach Slice 2: `technical` ist für alle elf Einträge `approved`, weil das Kriterium
@@ -126,13 +129,127 @@ export function findPrimaryViolations(entries: readonly CatalogEntry[]): string[
 }
 
 /**
- * Prüft, ob jeder Manifest-Eintrag eine Referenzdatei nennt, ob die Schlüssel eindeutig sind
- * und ob jeder Katalogeintrag genau eine `primary`-Darstellung hat. Wird als CI-Gate ausgeführt.
+ * Eine Verletzung einer der neun in Slice 2 hinzugekommenen Prüfungen. Eine gemeinsame Liste
+ * statt neun einzelner Arrays: das CLI gibt sie einheitlich aus, und eine zehnte Prüfung kostet
+ * keine Änderung an der Rückgabeform.
+ */
+export interface CoverageViolation {
+  /** Kurzname der Prüfung, z. B. 'baseline-prefix'. */
+  check: string;
+  /** Manifestschlüssel, Katalog-ID oder Registerschlüssel — je nachdem, was geprüft wurde. */
+  key: string;
+  detail: string;
+}
+
+/**
+ * Das Präfix jedes `sourceId` muss die Baseline sein — nicht irgendeine registrierte Quelle.
+ * Das Präfix bezeichnet die Abschnittsnummerierung, und nur im Hauptdokument ist definiert,
+ * dass `5.4.3` „Gruppe" bedeutet.
+ */
+export function checkBaselinePrefix(
+  entries: readonly CoverageEntry[],
+  baseline: SourceId,
+): CoverageViolation[] {
+  const violations: CoverageViolation[] = [];
+  for (const entry of entries) {
+    const separator = entry.sourceId.indexOf(':');
+    const prefix = separator === -1 ? '' : entry.sourceId.slice(0, separator);
+    if (prefix !== baseline) {
+      violations.push({
+        check: 'baseline-prefix',
+        key: entryKey(entry.sourceId, entry.variant),
+        detail: `Präfix "${prefix}" statt der Baseline "${baseline}".`,
+      });
+    }
+  }
+  return violations;
+}
+
+/**
+ * Jede `primary`-Darstellung eines Katalogeintrags muss mindestens einen Quellenbezug auf eine
+ * registrierte Quelle tragen. Das ist die zweite Hälfte der Provenienz: das Manifest-Präfix
+ * nennt die Abschnittsnummerierung, dieser Bezug nennt, woraus die Kennzahlen abgeleitet sind.
+ */
+export function checkCatalogSourceRefs(entries: readonly CatalogEntry[]): CoverageViolation[] {
+  const violations: CoverageViolation[] = [];
+  for (const entry of entries) {
+    const primary = entry.depictions.find((d) => d.variant === 'primary');
+    const registered = primary?.sourceRefs.some((ref) => isRegisteredSource(ref.source)) ?? false;
+    if (!registered) {
+      violations.push({
+        check: 'unregistered-source',
+        key: entry.id,
+        detail: 'Die primary-Darstellung nennt keine registrierte Quelle.',
+      });
+    }
+  }
+  return violations;
+}
+
+/**
+ * Für Zeilen mit `coverage: 'catalog-entry'` ist der Manifestwert `profile` aus dem
+ * Katalogeintrag abgeleitet — hier wird die Gleichheit geprüft. Für Rezepte und Elemente ist der
+ * Manifestwert die einzige Angabe; dort gibt es nichts zu vergleichen.
+ */
+export function checkProfileAgreement(
+  entries: readonly CoverageEntry[],
+  catalog: readonly CatalogEntry[],
+): CoverageViolation[] {
+  const byId = new Map(catalog.map((entry) => [entry.id, entry]));
+  const violations: CoverageViolation[] = [];
+  for (const entry of entries) {
+    if (entry.coverage !== 'catalog-entry') continue;
+    const target = byId.get(entry.implementation);
+    if (target === undefined) {
+      violations.push({
+        check: 'profile-mismatch',
+        key: entryKey(entry.sourceId, entry.variant),
+        detail: `Kein Katalogeintrag "${entry.implementation}" — das Profil ist nicht ableitbar.`,
+      });
+      continue;
+    }
+    if (target.profile !== entry.profile) {
+      violations.push({
+        check: 'profile-mismatch',
+        key: entryKey(entry.sourceId, entry.variant),
+        detail: `Manifest nennt "${entry.profile}", der Katalogeintrag "${target.profile}".`,
+      });
+    }
+  }
+  return violations;
+}
+
+/** Kein `approved` ohne Reviewer und Datum, je Rolle. Ein Status ohne Zurechenbarkeit ist wertlos. */
+export function checkReviewAttribution(entries: readonly CoverageEntry[]): CoverageViolation[] {
+  const violations: CoverageViolation[] = [];
+  for (const entry of entries) {
+    for (const role of unattributedRoles(entry.review)) {
+      violations.push({
+        check: 'review-attribution',
+        key: entryKey(entry.sourceId, entry.variant),
+        detail: `Rolle "${role}": approved ohne Reviewer und Datum.`,
+      });
+    }
+  }
+  return violations;
+}
+
+/** Nur Ausgabe, kein Fehler: wäre sie einer, wäre CI ab dem ersten Tag dauerhaft rot. */
+export function countOpenDomainReviews(entries: readonly CoverageEntry[]): number {
+  return entries.filter((entry) => entry.review.domain.status !== 'approved').length;
+}
+
+/**
+ * Das CI-Gate. Die vier Prüfungen aus Slice 1 (Referenzdatei vorhanden, eindeutige Schlüssel,
+ * genau eine `primary`-Darstellung) bleiben in ihren eigenen Feldern; die in Slice 2
+ * hinzugekommenen Prüfungen sammeln sich in `violations`.
  */
 export function checkCoverage(): {
   missing: string[];
   duplicates: string[];
   invalidPrimary: string[];
+  violations: CoverageViolation[];
+  openDomainReviews: number;
 } {
   const seen = new Set<string>();
   const duplicates: string[] = [];
@@ -145,7 +262,21 @@ export function checkCoverage(): {
     if (entry.referenceAsset === '' || entry.implementation === '') missing.push(key);
   }
 
-  const invalidPrimary = findPrimaryViolations(Object.values(BASE_SYMBOLS));
+  const catalog = Object.values(BASE_SYMBOLS);
+  const invalidPrimary = findPrimaryViolations(catalog);
 
-  return { missing, duplicates, invalidPrimary };
+  const violations = [
+    ...checkBaselinePrefix(COVERAGE_MANIFEST.entries, COVERAGE_MANIFEST.baseline),
+    ...checkCatalogSourceRefs(catalog),
+    ...checkProfileAgreement(COVERAGE_MANIFEST.entries, catalog),
+    ...checkReviewAttribution(COVERAGE_MANIFEST.entries),
+  ];
+
+  return {
+    missing,
+    duplicates,
+    invalidPrimary,
+    violations,
+    openDomainReviews: countOpenDomainReviews(COVERAGE_MANIFEST.entries),
+  };
 }
