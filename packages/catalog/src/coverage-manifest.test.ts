@@ -167,6 +167,10 @@ describe('Gate-Prüfungen zu Quelle, Profil und Review', () => {
     expect(checkProfileAgreement([recipe], [])).toEqual([]);
   });
 
+  it('nimmt einen Eintrag an, dessen approved-Rollen Reviewer und Datum tragen', () => {
+    expect(checkReviewAttribution([fixtureCoverageEntry()])).toEqual([]);
+  });
+
   it('meldet ein approved ohne Reviewer unter Nennung der Rolle', () => {
     const bad = fixtureCoverageEntry({
       review: { technical: { status: 'approved' }, domain: { status: 'pending' } },
