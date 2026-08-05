@@ -10,7 +10,7 @@ import type { ProfileId, ProfileRecord } from '@einsatzzeichen/schema';
  * überschreiben oder ergänzen. Es gibt kein belegtes zweites Profil, gegen das sich eine
  * Auflösungsreihenfolge prüfen ließe.
  */
-export const PROFILES = {
+export const PROFILES: Record<ProfileId, ProfileRecord> = {
   bund: {
     id: 'bund',
     title: 'Bundesweiter Kern',
@@ -27,7 +27,7 @@ export const PROFILES = {
       domain: { status: 'pending' },
     },
   },
-} as const satisfies Record<ProfileId, ProfileRecord>;
+} satisfies Record<ProfileId, ProfileRecord>;
 
 /** Wirft, wenn die ID kein registriertes Profil bezeichnet — wie `organizationColor`. */
 export function profileFor(id: ProfileId): ProfileRecord {

@@ -15,7 +15,10 @@ const REVIEW: ReviewSet = {
 };
 
 const catalogEntries: CoverageEntry[] = Object.values(BASE_SYMBOLS).map((entry) => {
-  const ref = entry.depictions[0]?.sourceRefs[0];
+  // Die Zeile trägt `variant: 'primary'`, also muss sie auch aus der `primary`-Darstellung
+  // abgeleitet sein — nicht aus der ersten. `depictions` ist ungeordnet; sobald ein Eintrag eine
+  // `alternative` zuerst führt, käme Abschnitt und Belegdatei aus der Alternative.
+  const ref = entry.depictions.find((d) => d.variant === 'primary')?.sourceRefs[0];
   return {
     sourceId: `bbk-babz-2025:${ref?.section ?? ''}`,
     variant: 'primary',
@@ -80,7 +83,8 @@ const elementEntries: CoverageEntry[] = Object.entries(ELEMENT_SECTIONS).map(([i
     variant: 'primary',
     title: descriptor.title,
     implementation: id,
-    // Die namensgebende Datei. Das Gate prüft, dass sie in `referenceAssets` vorkommt.
+    // Die namensgebende Datei. Das Gate prüft, dass sie in `referenceAssets` vorkommt und dass
+    // ihr Name mit der Abschnittsnummer aus `sourceId` beginnt.
     referenceAsset: descriptor.referenceAssets[0] ?? '',
     coverage: 'element',
     profile: 'bund',

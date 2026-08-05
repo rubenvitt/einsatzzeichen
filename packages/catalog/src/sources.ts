@@ -19,15 +19,12 @@ const SOURCE_REVIEW: ReviewSet = {
 /**
  * Die elf registrierten Quellen der Referenzhierarchie aus `Vision.md`.
  *
- * `satisfies Record<SourceId, SourceRecord>` erzwingt beide Richtungen: keine deklarierte Quelle
- * ohne Registereintrag, und keine Referenz auf eine nicht deklarierte Quelle. Bewusst ohne
- * `as const`: das würde jeden Eintrag zusätzlich auf seinen literalen Einzeltyp verengen. Aber
- * auch ohne `as const` belässt `satisfies` allein jedem Eintrag seinen engsten Typ — bei
- * `geometryUse` also je eigene Tupel statt `GeometryUse[]`. Iteriert man über
- * `Object.values(...)`, bildet TypeScript aus der Vereinigung dieser Tupeltypen den Parametertyp
- * von `Array#includes`, und der kollabiert zu `never`. Konsumenten wie `sources.test.ts` weiten
- * deshalb am Aufrufort explizit — `Object.values<SourceRecord>(...)` — statt hier an der
- * Deklaration zu weiten.
+ * Typannotation **und** `satisfies` zusammen: die Annotation weitet jeden Eintrag auf
+ * `SourceRecord` — sonst behielte er seinen engsten Typ, bei `geometryUse` also ein eigenes
+ * Tupel, und `Object.values(...).filter((r) => r.geometryUse.includes(...))` kollabierte am
+ * Aufrufort zu `never`. `satisfies` erhält daneben beide Vollständigkeitsrichtungen, die eine
+ * Annotation allein aufgäbe: keine deklarierte Quelle ohne Registereintrag, und kein
+ * Registereintrag ohne deklarierte Quelle. Bewusst ohne `as const`.
  *
  * Zur Lizenzlage: die kostenpflichtigen DIN-Normen tragen `clarified`, weil die Nutzungslage
  * dort eindeutig ist — Nutzung setzt Erwerb voraus, und ohne Erwerb wird nichts übernommen. Bei
@@ -35,7 +32,7 @@ const SOURCE_REVIEW: ReviewSet = {
  * nicht dokumentiert; `unclear` ist dort die ehrliche Angabe und trägt die Begründung für den
  * Fingerprint-Ansatz.
  */
-export const SOURCE_REGISTRY = {
+export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
   'bbk-babz-2025': {
     id: 'bbk-babz-2025',
     kind: 'baseline',

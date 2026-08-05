@@ -60,6 +60,14 @@ describe('Coverage-Manifest', () => {
     });
   });
 
+  it('nennt die BABZ-Empfehlungen als Baseline', () => {
+    // `CoverageManifest.baseline` ist auf `SourceId` getippt, damit nur eine registrierte Quelle
+    // dort stehen kann — welche, sagt der Typ nicht. `checkBaselinePrefix` prüft die Einträge
+    // gegen genau diesen Wert und wäre allein selbstbezüglich: Baseline und Präfixe gemeinsam
+    // umgestellt bliebe das Gate grün. Dieser Test hält den Wert fest.
+    expect(COVERAGE_MANIFEST.baseline).toBe('bbk-babz-2025');
+  });
+
   it('beansprucht nur den Umfang dieses Slice', () => {
     expect(COVERAGE_MANIFEST.scope).toEqual(['1', '2', '4.3.1', '5.4', 'C.1.1', 'C.1.2', 'D.3.7']);
   });

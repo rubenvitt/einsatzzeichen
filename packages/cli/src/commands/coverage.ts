@@ -27,9 +27,9 @@ export function coverage(): void {
   console.log(`Offene fachliche Reviews: ${openDomainReviews}`);
   console.log(`1.0-Blocker: ${blockers.domainReviewPending.length} ohne fachliches Review, ` +
     `${blockers.withoutTestEvidence.length} ohne Testnachweis, ` +
-    `${blockers.uncoveredScope.length} Kapitel ohne Eintrag`);
+    `${blockers.uncoveredScope.length} Kapitel im beanspruchten Umfang ohne Eintrag`);
   for (const chapter of blockers.uncoveredScope) {
-    console.log(`  Kapitel ohne Eintrag: ${chapter}`);
+    console.log(`  Kapitel im beanspruchten Umfang ohne Eintrag: ${chapter}`);
   }
 
   if (

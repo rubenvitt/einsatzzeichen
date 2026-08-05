@@ -16,7 +16,10 @@ export interface Review {
 
 /**
  * Beide Rollen sind Pflicht — eine fehlende Rolle ist kein zulässiger Zustand. Dieselbe Struktur
- * trägt jeder Katalogeintrag, jeder Manifest-Eintrag, jede Quelle und jedes Profil.
+ * tragen genau drei Typen: der Manifest-Eintrag (`CoverageEntry`), die Quelle (`SourceRecord`)
+ * und das Profil (`ProfileRecord`). Ein Katalogeintrag trägt kein eigenes `review`: sein Review
+ * steht auf seiner Manifestzeile, die für `coverage: 'catalog-entry'` 1:1 zu ihm ist und deren
+ * Profilgleichheit das Coverage-Gate prüft.
  */
 export interface ReviewSet {
   technical: Review;

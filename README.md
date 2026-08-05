@@ -29,11 +29,12 @@ externe Pakete.
 
 ## Provenienz
 
-Jeder Katalogeintrag, Manifest-Eintrag, jede Quelle und jedes Profil trägt dieselbe Reviewform:
-ein **technisches** und ein **fachliches** Review, beide Pflicht. Ein `approved` ohne Reviewer und
-Datum lässt das Coverage-Gate fehlschlagen — ein Status ohne Zurechenbarkeit ist wertlos. Das
-fachliche Review steht derzeit bei allen Einträgen offen; die Struktur macht das sichtbar, statt
-es zu verdecken.
+Jeder Manifest-Eintrag, jede Quelle und jedes Profil trägt dieselbe Reviewform: ein
+**technisches** und ein **fachliches** Review, beide Pflicht. Ein `approved` ohne Reviewer und
+Datum lässt das Coverage-Gate für alle drei fehlschlagen — ein Status ohne Zurechenbarkeit ist
+wertlos. Ein Katalogeintrag trägt kein eigenes Review: es steht auf seiner Manifestzeile, die für
+`coverage: 'catalog-entry'` 1:1 zu ihm ist. Das fachliche Review steht derzeit bei allen Einträgen
+offen; die Struktur macht das sichtbar, statt es zu verdecken.
 
 `packages/catalog/src/sources.ts` führt die elf Quellen der Referenzhierarchie mit
 Nutzungsgrundlage, Beschaffungsstand und Umgang mit der Geometrie. Für die BABZ-Assets ist die

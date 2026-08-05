@@ -5,8 +5,11 @@ import {
   type CatalogEntry,
   type CoverageEntry,
   type ProfileId,
+  type ProfileRecord,
+  type SourceRecord,
 } from '@einsatzzeichen/schema';
 import { BASE_SYMBOLS } from './base-symbols.js';
+import { SOURCE_REGISTRY } from './sources.js';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import {
   checkCoverage,
@@ -123,15 +126,39 @@ describe('Gate-Prüfungen zu Quelle, Profil und Review', () => {
   });
 
   it('nimmt einen Eintrag an, dessen approved-Rollen Reviewer und Datum tragen', () => {
-    expect(checkReviewAttribution([fixtureCoverageEntry()])).toEqual([]);
+    expect(
+      checkReviewAttribution([fixtureCoverageEntry()], (e) => entryKey(e.sourceId, e.variant)),
+    ).toEqual([]);
   });
 
   it('meldet ein approved ohne Reviewer unter Nennung der Rolle', () => {
     const bad = fixtureCoverageEntry({
       review: { technical: { status: 'approved' }, domain: { status: 'pending' } },
     });
-    const [violation] = checkReviewAttribution([bad]);
+    const [violation] = checkReviewAttribution([bad], (e) => entryKey(e.sourceId, e.variant));
     expect(violation?.check).toBe('review-attribution');
+    expect(violation?.detail).toContain('technical');
+  });
+
+  it('meldet eine Quelle mit unzurechenbarem technischem Review', () => {
+    const broken: SourceRecord = {
+      ...SOURCE_REGISTRY['bbk-babz-2025'],
+      review: { technical: { status: 'approved' }, domain: { status: 'pending' } },
+    };
+    const [violation] = checkReviewAttribution([broken], (s) => `source:${s.id}`);
+    expect(violation?.check).toBe('review-attribution');
+    expect(violation?.key).toBe('source:bbk-babz-2025');
+    expect(violation?.detail).toContain('technical');
+  });
+
+  it('meldet ein Profil mit unzurechenbarem technischem Review', () => {
+    const broken: ProfileRecord = {
+      ...PROFILES.bund,
+      review: { technical: { status: 'approved' }, domain: { status: 'pending' } },
+    };
+    const [violation] = checkReviewAttribution([broken], (p) => `profile:${p.id}`);
+    expect(violation?.check).toBe('review-attribution');
+    expect(violation?.key).toBe('profile:bund');
     expect(violation?.detail).toContain('technical');
   });
 
@@ -177,12 +204,37 @@ describe('Gate-Prüfungen zu Elementen und Versionen', () => {
 
   it('meldet einen Elementeintrag, dessen Datei das Element nicht belegt', () => {
     const entry = fixtureCoverageEntry({
+      sourceId: 'bbk-babz-2025:5.4.2',
       coverage: 'element',
       implementation: 'strength.staffel',
       referenceAsset: '5.4.4_Zug.svg',
     });
-    const [violation] = checkElementEntries([entry]);
-    expect(violation?.check).toBe('asset-not-in-element');
+    expect(checkElementEntries([entry]).map((v) => v.check)).toEqual(['asset-not-in-element']);
+  });
+
+  it('nimmt einen Elementeintrag an, dessen Abschnittsnummer die namensgebende Datei benennt', () => {
+    const entry = fixtureCoverageEntry({
+      sourceId: 'bbk-babz-2025:2.5',
+      coverage: 'element',
+      implementation: 'organization.polizei',
+      referenceAsset: '2.5_Polizei.svg',
+    });
+    expect(checkElementEntries([entry])).toEqual([]);
+  });
+
+  it('meldet einen Elementeintrag, dessen Abschnittsnummer nicht zur namensgebenden Datei passt', () => {
+    // Belegdatei und Element passen zusammen, nur die Abschnittsnummer ist frei erfunden — ohne
+    // diese Prüfung behauptete das Manifest, Abschnitt 9.9 dokumentiere die Staffel.
+    const entry = fixtureCoverageEntry({
+      sourceId: 'bbk-babz-2025:9.9',
+      coverage: 'element',
+      implementation: 'strength.staffel',
+      referenceAsset: '5.4.2_Staffel.svg',
+    });
+    const violations = checkElementEntries([entry]);
+    expect(violations.map((v) => v.check)).toEqual(['section-mismatch']);
+    expect(violations[0]?.detail).toContain('9.9');
+    expect(violations[0]?.detail).toContain('5.4.2_Staffel.svg');
   });
 
   it('prüft Elemente nur bei coverage element, nicht bei Katalogeinträgen', () => {
@@ -220,7 +272,15 @@ describe('Gate-Prüfungen zu Elementen und Versionen', () => {
   it('meldet ein Profil mit unzulässiger Datenversion', () => {
     const broken = [{ ...PROFILES.bund, version: 'v1' }];
     const checks = checkVersions('0.1.0', broken).map((v) => v.check);
-    expect(checks).toContain('version-format');
+    expect(checks).toEqual(['version-format']);
+  });
+
+  it('meldet ein Profil mit unzulässig geformtem verifiedAgainstCore', () => {
+    // Nicht dieselbe Prüfung wie eine unbekannte Kernversion: eine unzulässige Form erreicht den
+    // Abgleich gegen die bekannten Kernversionen nie.
+    expect(
+      checkVersions('0.1.0', [{ ...PROFILES.bund, verifiedAgainstCore: 'v1' }]).map((v) => v.check),
+    ).toEqual(['version-format']);
   });
 });
 

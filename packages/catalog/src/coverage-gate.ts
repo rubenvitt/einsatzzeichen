@@ -5,13 +5,14 @@ import {
   type CatalogEntry,
   type CoverageEntry,
   type ProfileRecord,
+  type ReviewSet,
   type SourceId,
 } from '@einsatzzeichen/schema';
 import { BASE_SYMBOLS } from './base-symbols.js';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { resolveElement, type ElementDescriptor } from './elements.js';
 import { PROFILES } from './profiles.js';
-import { isRegisteredSource } from './sources.js';
+import { SOURCE_REGISTRY, isRegisteredSource } from './sources.js';
 
 /**
  * Katalogeinträge, die nicht genau eine `primary`-Darstellung haben. `CatalogEntry.depictions`
@@ -29,8 +30,8 @@ export function findPrimaryViolations(entries: readonly CatalogEntry[]): string[
 }
 
 /**
- * Eine Verletzung einer der neun in Slice 2 hinzugekommenen Prüfungen. Eine gemeinsame Liste
- * statt neun einzelner Arrays: das CLI gibt sie einheitlich aus, und eine zehnte Prüfung kostet
+ * Eine Verletzung einer der zehn in Slice 2 hinzugekommenen Prüfungen. Eine gemeinsame Liste
+ * statt zehn einzelner Arrays: das CLI gibt sie einheitlich aus, und eine elfte Prüfung kostet
  * keine Änderung an der Rückgabeform.
  */
 export interface CoverageViolation {
@@ -119,14 +120,24 @@ export function checkProfileAgreement(
   return violations;
 }
 
-/** Kein `approved` ohne Reviewer und Datum, je Rolle. Ein Status ohne Zurechenbarkeit ist wertlos. */
-export function checkReviewAttribution(entries: readonly CoverageEntry[]): CoverageViolation[] {
+/**
+ * Kein `approved` ohne Reviewer und Datum, je Rolle. Ein Status ohne Zurechenbarkeit ist wertlos.
+ *
+ * Generisch über allem, was ein `ReviewSet` trägt — das sind genau die drei Träger
+ * `CoverageEntry`, `SourceRecord` und `ProfileRecord`. Auf `CoverageEntry` verengt hätte die
+ * Prüfung nur einen der drei gedeckt, obwohl die Zusage für alle drei gilt; `key` liefert je
+ * Träger seine eigene Bezeichnung, weil ein Manifestschlüssel für eine Quelle nicht existiert.
+ */
+export function checkReviewAttribution<T extends { review: ReviewSet }>(
+  items: readonly T[],
+  key: (item: T) => string,
+): CoverageViolation[] {
   const violations: CoverageViolation[] = [];
-  for (const entry of entries) {
-    for (const role of unattributedRoles(entry.review)) {
+  for (const item of items) {
+    for (const role of unattributedRoles(item.review)) {
       violations.push({
         check: 'review-attribution',
-        key: entryKey(entry.sourceId, entry.variant),
+        key: key(item),
         detail: `Rolle "${role}": approved ohne Reviewer und Datum.`,
       });
     }
@@ -153,9 +164,25 @@ function tryResolveElement(id: string): ElementDescriptor | undefined {
 }
 
 /**
+ * Abschnittsnummer eines Manifest-Eintrags, also der Teil hinter dem Baseline-Präfix. Wird von
+ * `checkElementEntries` und von `blockersOf` verwendet.
+ */
+function sectionOf(sourceId: string): string {
+  const separator = sourceId.indexOf(':');
+  return separator === -1 ? sourceId : sourceId.slice(separator + 1);
+}
+
+/**
  * Jeder Eintrag mit `coverage: 'element'` muss über `resolveElement` auflösbar sein, und seine
  * genannte Referenzdatei muss in den Belegstellen des Deskriptors vorkommen — damit kann ein
  * Eintrag keine Datei nennen, die das Element nicht belegt.
+ *
+ * Dazu muss die Abschnittsnummer im `sourceId` zu dem Element passen, das der Eintrag
+ * beansprucht. Ohne diese Prüfung ließe sich `'organization.polizei'` von `2.5` auf `9.9` setzen,
+ * und das Gate bliebe grün, während das Manifest behauptet, Abschnitt 9.9 der Baseline
+ * dokumentiere die Polizeifarbe. Die namensgebende Belegdatei ist bauartbedingt die
+ * Abschnittsnummer plus `_` — das gilt für alle zwölf Elemente und ist der prüfbare Anker.
+ * Damit fängt die Prüfung zugleich ein Auseinanderlaufen von `ELEMENTS` und `ELEMENT_SECTIONS`.
  */
 export function checkElementEntries(entries: readonly CoverageEntry[]): CoverageViolation[] {
   const violations: CoverageViolation[] = [];
@@ -176,6 +203,15 @@ export function checkElementEntries(entries: readonly CoverageEntry[]): Coverage
         check: 'asset-not-in-element',
         key,
         detail: `"${entry.referenceAsset}" belegt "${entry.implementation}" nicht.`,
+      });
+    }
+    const section = sectionOf(entry.sourceId);
+    const namesake = descriptor.referenceAssets[0] ?? '';
+    if (!namesake.startsWith(`${section}_`)) {
+      violations.push({
+        check: 'section-mismatch',
+        key,
+        detail: `Abschnitt "${section}" passt nicht zur namensgebenden Belegdatei "${namesake}".`,
       });
     }
   }
@@ -281,7 +317,9 @@ export function checkCoverage(): {
     ...checkBaselinePrefix(COVERAGE_MANIFEST.entries, COVERAGE_MANIFEST.baseline),
     ...checkCatalogSourceRefs(catalog),
     ...checkProfileAgreement(COVERAGE_MANIFEST.entries, catalog),
-    ...checkReviewAttribution(COVERAGE_MANIFEST.entries),
+    ...checkReviewAttribution(COVERAGE_MANIFEST.entries, (e) => entryKey(e.sourceId, e.variant)),
+    ...checkReviewAttribution(Object.values(SOURCE_REGISTRY), (s) => `source:${s.id}`),
+    ...checkReviewAttribution(Object.values(PROFILES), (p) => `profile:${p.id}`),
     ...checkElementEntries(COVERAGE_MANIFEST.entries),
     ...checkProfileRegistry(COVERAGE_MANIFEST.entries, Object.values(PROFILES)),
     ...checkVersions(COVERAGE_MANIFEST.coreVersion, Object.values(PROFILES)),
@@ -305,14 +343,8 @@ export interface ReleaseBlockers {
   uncoveredScope: string[];
 }
 
-/** Abschnittsnummer eines Manifest-Eintrags, also der Teil hinter dem Baseline-Präfix. */
-function sectionOf(sourceId: string): string {
-  const separator = sourceId.indexOf(':');
-  return separator === -1 ? sourceId : sourceId.slice(separator + 1);
-}
-
 /**
- * Der parametrisierte Kern von `releaseBlockers`, im Muster der neun Gate-Prüfungen oben: Eingaben
+ * Der parametrisierte Kern von `releaseBlockers`, im Muster der Gate-Prüfungen oben: Eingaben
  * als Parameter statt als Modul-Singleton, damit Randfälle — die Punkt-Abgrenzung bei
  * Kapitelpräfixen, ein `sourceId` ohne Trenner, jede Seite des Testnachweis-Oder einzeln — sich
  * mit Fixtures nachstellen lassen, ohne das echte Manifest zu verändern.
@@ -346,6 +378,11 @@ export function blockersOf(
  * Ein ungeklärter Lizenzstatus ist ausdrücklich **kein** Blocker. Wäre er einer, wäre
  * `babz-svg-2025` ein dauerhafter Blocker — und die Architektur beantwortet die unklare Lage
  * bereits: abgeleitete Kennzahlen statt Dateien, eigenständige Geometrie statt übernommener Pfade.
+ *
+ * Die Vollständigkeit gegenüber der Baseline wird hier bewusst **nicht** gemessen:
+ * `uncoveredScope` meldet Lücken innerhalb des beanspruchten Umfangs (`COVERAGE_MANIFEST.scope`),
+ * nicht Lücken des Umfangs gegenüber dem Gesamtdokument. Diese zweite Messung bräuchte eine
+ * deklarierte Kapitelliste der Baseline, die es noch nicht gibt.
  */
 export function releaseBlockers(): ReleaseBlockers {
   return blockersOf(COVERAGE_MANIFEST.entries, COVERAGE_MANIFEST.scope);
