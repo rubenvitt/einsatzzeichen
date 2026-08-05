@@ -1186,12 +1186,29 @@ function hasPath(primitives: readonly Primitive[]): boolean {
   );
 }
 
-/** Alle Primitive, die keine Pfade und keine Gruppen sind — also die mit berechenbarer Hülle. */
+/**
+ * Alle Primitive mit berechenbarer Hülle — also alles außer Pfaden, aus Gruppen herausgezogen.
+ *
+ * Wirft für eine Gruppe mit `transform`: `boundsOfMm` auf einem herausgezogenen Kind liest dessen
+ * Rohkoordinaten, die Transformation der Elterngruppe wäre verloren, und die Box-Prüfung liefe
+ * gegen die falschen Zahlen. In D.0 trägt keine Definition eine transformierte Gruppe — genau
+ * deshalb steht der Fehler hier, bevor es in D.1 still falsch werden kann.
+ */
 function measurableOf(primitives: readonly Primitive[]): Primitive[] {
   const measurable: Primitive[] = [];
   for (const primitive of primitives) {
-    if (primitive.type === 'group') measurable.push(...measurableOf(primitive.children));
-    else if (primitive.type !== 'path') measurable.push(primitive);
+    if (primitive.type === 'group') {
+      if (primitive.transform !== undefined) {
+        throw new Error(
+          'pictogram-gate: Eine Gruppe innerhalb einer PictogramDefinition darf keine ' +
+            'Transformation tragen — die Verschiebung der Komposition setzt compose() außen ' +
+            'auf, und eine innere würde die Box-Prüfung gegen die Rohkoordinaten laufen lassen.',
+        );
+      }
+      measurable.push(...measurableOf(primitive.children));
+    } else if (primitive.type !== 'path') {
+      measurable.push(primitive);
+    }
   }
   return measurable;
 }
@@ -1360,11 +1377,11 @@ Das Clipping-Gate prüft **gegen den unverschobenen Körper**. Begründung: Die 
 **Abweichung von der Spec-Tabelle, bewusst:** Die Spec nennt als Eingabe `PictogramDefinition + SymbolKind`. Ein Gate in `core` kann aus einem `SymbolKind` aber keine Körpergeometrie ableiten — die liegt in `catalog`, und die Paketrichtung ist `catalog → core`. Das Gate nimmt deshalb das Körper-**Primitiv**; der Aufrufer holt es aus `baseDrawing(kind)`. Das ist die einzige Variante ohne Abhängigkeitsumkehr.
 
 **Files:**
-- Modify: `packages/core/src/pictogram-gate.ts`
+- Modify: `packages/core/src/pictogram-gate.ts` — **dieselbe Datei wie Tasks 4 und 5, kein neues Modul.** `axesOf`, `within` und `interface Axis` sind dort modullokal und nicht exportiert; ein eigenes Modul für dieses Gate hätte keinen Zugriff darauf.
 - Test: `packages/core/src/pictogram-gate.test.ts` (anfügen)
 
 **Interfaces:**
-- Consumes: `PictogramIssue`, `axesOf`, `within` aus Tasks 4–5; `boundsOfMm`
+- Consumes: `PictogramIssue`, `axesOf`, `within`, `Axis` aus Tasks 4–5 (modullokal); `boundsOfMm`
 - Produces:
   - `checkClipping(definition: PictogramDefinition, body: Primitive): PictogramIssue[]` — wirft für Körperformen, deren Fläche nicht vermessen ist
   - `checkPictogram(definition: PictogramDefinition, body: Primitive): PictogramIssue[]` — die drei Gates zusammen, in der Reihenfolge Kommando, Box, Clipping
@@ -2256,9 +2273,10 @@ describe('Pfad-Piktogramm in beiden Layoutfällen (Spec-Erfolgskriterium 1)', ()
       const [wave] = group.children;
       expect(wave?.type).toBe('path');
       if (wave?.type !== 'path') return;
-      expect(wave.d).toBe(pictogram('capability.service-water').primitives[0]?.type === 'path'
-        ? (pictogram('capability.service-water').primitives[0] as { d: string }).d
-        : '');
+      const source = pictogram('capability.service-water').primitives[0];
+      expect(source?.type).toBe('path');
+      if (source?.type !== 'path') return;
+      expect(wave.d).toBe(source.d);
     },
   );
 
@@ -2795,7 +2813,9 @@ Run: `pnpm vitest run packages/catalog/src/elements.test.ts packages/catalog/src
 Expected: PASS.
 
 Run: `pnpm test && pnpm cli coverage`
-Expected: alles grün, „Coverage-Gate bestanden." Die Ausgabe nennt jetzt `Einträge: 28` (11 bisherige Katalog- und Rezepteinträge, 13 Elemente) und `Umfang: 1, 2, 4.3.1, 4.3.2, 5.4, C.1.1, C.1.2, D.3.7`. Meldet das Gate `section-mismatch` für `4.3.2`, stimmt der Dateiname in `referenceAssets` nicht mit der Abschnittsnummer überein — die Prüfung ist `namesake.startsWith('4.3.2_')`.
+Expected: alles grün, „Coverage-Gate bestanden." Die Ausgabe nennt jetzt `Einträge: 24` (8 Grundzeichen, 3 Rezepte, 13 Elemente — vorher 23) und `Umfang: 1, 2, 4.3.1, 4.3.2, 5.4, C.1.1, C.1.2, D.3.7`. `Quellen: 12` seit Task 10.
+
+**`withoutTestEvidence` steigt von 12 auf 13, und das ist richtig.** `blockersOf` listet einen Eintrag, sobald *einer* der beiden Nachweise fehlt — die Piktogramme tragen jetzt `snapshotTest: true`, aber `fingerprintTest` bleibt `false`, weil `matchFingerprint` nur `role: 'body'` vergleicht. Wer die gestiegene Zahl als Regression liest und „behebt", macht das Manifest unehrlich: die einzige Möglichkeit, sie zu senken, wäre ein `fingerprintTest: true` ohne Fingerprint-Gate. Meldet das Gate `section-mismatch` für `4.3.2`, stimmt der Dateiname in `referenceAssets` nicht mit der Abschnittsnummer überein — die Prüfung ist `namesake.startsWith('4.3.2_')`.
 
 - [ ] **Step 8: Commit**
 
