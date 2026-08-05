@@ -45,7 +45,6 @@ describe('Organisationsfarben Kapitel 2', () => {
 
   it('definiert für jede belegte Organisation genau ein gültiges Palettentoken', () => {
     for (const token of Object.values(ORGANIZATION_COLORS)) {
-      if (token === undefined) continue;
       expect(PALETTE[token]).toMatch(/^#[0-9a-f]{6}$/);
     }
   });
