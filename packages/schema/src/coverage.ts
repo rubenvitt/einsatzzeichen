@@ -2,7 +2,11 @@ import type { ProfileId } from './profile.js';
 import type { DepictionVariant, SourceId } from './provenance.js';
 import type { ReviewSet } from './review.js';
 
-export type CoverageKind = 'catalog-entry' | 'composition-recipe';
+/**
+ * `element` bezeichnet ein Einzelelement, das keine eigene Zeichnung ist, aber eine an der
+ * Referenz belegte Regel trägt: eine Organisationsfarbe, ein Stärkegrad, ein Piktogramm.
+ */
+export type CoverageKind = 'catalog-entry' | 'composition-recipe' | 'element';
 
 export interface CoverageEntry {
   sourceId: string;
