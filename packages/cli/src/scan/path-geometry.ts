@@ -165,6 +165,7 @@ export function parseRectilinearPath(d: string): SubpathBounds[] | null {
         push();
         cursor.x = next();
         cursor.y = next();
+        if (!Number.isFinite(cursor.x) || !Number.isFinite(cursor.y)) return null;
         start.x = cursor.x;
         start.y = cursor.y;
         extend();
@@ -175,6 +176,7 @@ export function parseRectilinearPath(d: string): SubpathBounds[] | null {
         push();
         cursor.x += next();
         cursor.y += next();
+        if (!Number.isFinite(cursor.x) || !Number.isFinite(cursor.y)) return null;
         start.x = cursor.x;
         start.y = cursor.y;
         extend();
@@ -184,32 +186,38 @@ export function parseRectilinearPath(d: string): SubpathBounds[] | null {
       case 'L':
         cursor.x = next();
         cursor.y = next();
+        if (!Number.isFinite(cursor.x) || !Number.isFinite(cursor.y)) return null;
         extend();
         trackSegment(before);
         break;
       case 'l':
         cursor.x += next();
         cursor.y += next();
+        if (!Number.isFinite(cursor.x) || !Number.isFinite(cursor.y)) return null;
         extend();
         trackSegment(before);
         break;
       case 'H':
         cursor.x = next();
+        if (!Number.isFinite(cursor.x)) return null;
         extend();
         trackSegment(before);
         break;
       case 'h':
         cursor.x += next();
+        if (!Number.isFinite(cursor.x)) return null;
         extend();
         trackSegment(before);
         break;
       case 'V':
         cursor.y = next();
+        if (!Number.isFinite(cursor.y)) return null;
         extend();
         trackSegment(before);
         break;
       case 'v':
         cursor.y += next();
+        if (!Number.isFinite(cursor.y)) return null;
         extend();
         trackSegment(before);
         break;

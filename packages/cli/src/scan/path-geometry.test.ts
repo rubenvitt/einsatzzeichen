@@ -175,6 +175,14 @@ describe('parseRectilinearPath', () => {
     expect(subpaths?.[0]?.isAxisAlignedRect).toBe(false);
     expect(subpaths?.[1]?.isAxisAlignedRect).toBe(false);
   });
+
+  it('gibt null zurück, statt NaN aus einem abgeschnittenen Pfad in die Hülle zu übernehmen', () => {
+    // "M 5" bricht nach der x-Koordinate ab: next() liest über das Tokenende hinaus,
+    // Number(undefined) ist NaN. Ohne Wache würde Math.abs(NaN) > TOLERANCE_UNITS
+    // stillschweigend false sein — die kaputte Hülle bestünde jeden Vergleich.
+    expect(parseRectilinearPath('M 5')).toBeNull();
+    expect(parseRectilinearPath('M10,10L20')).toBeNull();
+  });
 });
 
 describe('deriveRing', () => {

@@ -187,6 +187,21 @@ describe('extractFingerprint', () => {
     expect(shape?.boundsMm).toEqual({ minXMm: 1, minYMm: 3, maxXMm: 31, maxYMm: 26 });
   });
 
+  it('überspringt einen malformten Punkt im points-Attribut statt NaN in die Hülle zu übernehmen', () => {
+    // Ein nicht-numerisches Token (hier "x" statt einer Koordinate) würde ohne Wache über
+    // Number.isFinite als NaN in boundsFromPoints einfließen und Math.min/Math.max stumm auf
+    // NaN kippen. Die gültigen Punkte (16|3), (1|10), (1|26), (31|26) müssen trotzdem die
+    // Hülle bestimmen.
+    const svg = `<svg viewBox="0 0 ${viewBoxUnits} ${viewBoxUnits}">
+      <g id="Flächige_Fülung">
+        <polygon points="${mmToUnits(16)} ${mmToUnits(3)} ${mmToUnits(1)} ${mmToUnits(10)} x y ${mmToUnits(1)} ${mmToUnits(26)} ${mmToUnits(31)} ${mmToUnits(26)}" fill="#fff"/>
+      </g>
+    </svg>`;
+    const shape = extractFingerprint(svg, '1.7_Gebäude.svg').shapes[0];
+    expect(shape?.kind).toBe('bounds');
+    expect(shape?.boundsMm).toEqual({ minXMm: 1, minYMm: 3, maxXMm: 31, maxYMm: 26 });
+  });
+
   it('nimmt bei mehr als zwei Teilpfaden die äußerste Hülle', () => {
     // 1.7 Gebäude hat drei Teilpfade: Außenring, Innenring und die Dachlinie.
     // Außenring eine halbe Strichstärke (0,25 mm) außerhalb des Polyzugs, Innenring

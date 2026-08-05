@@ -204,7 +204,10 @@ export function extractFingerprint(svg: string, asset: string): Fingerprint {
     const raw = (a['points'] ?? '').trim().split(/[\s,]+/).map(Number);
     const points: Array<readonly [number, number]> = [];
     for (let i = 0; i + 1 < raw.length; i += 2) {
-      points.push([raw[i] as number, raw[i + 1] as number] as const);
+      const x = raw[i];
+      const y = raw[i + 1];
+      if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+      points.push([x, y] as const);
     }
     if (points.length === 0) continue;
     const shape: FingerprintShape = { kind: 'bounds', boundsMm: boundsFromPoints(points) };

@@ -33,9 +33,8 @@ export function auditReference(options: AuditOptions = {}): Fingerprint[] {
     throw error;
   }
 
-  const selected = options.filter
-    ? files.filter((name) => name.startsWith(options.filter as string))
-    : files;
+  const filter = options.filter;
+  const selected = filter !== undefined ? files.filter((name) => name.startsWith(filter)) : files;
   selected.sort();
 
   const fingerprints = selected.map((name) =>

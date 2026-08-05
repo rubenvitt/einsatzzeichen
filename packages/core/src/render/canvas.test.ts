@@ -5,23 +5,44 @@ import { formatUnits, renderSvg } from './svg.js';
 
 type Call = [string, ...unknown[]];
 
+/**
+ * Prüft nur die Oberfläche, die `drawPrimitive`/`tracePrimitive` (`canvas.ts`) tatsächlich
+ * aufrufen — genug, um den Proxy unten ohne `as <Typ>` auf `CanvasRenderingContext2D` zu
+ * verengen, ohne eine vollständige (und damit unehrliche) Nachbildung der Browser-Schnittstelle
+ * zu behaupten. Derselbe Grenzfall wie bei `fingerprint-index.ts`: eine echte, wenn auch
+ * unvollständige Laufzeitprüfung statt eines Casts.
+ */
+function looksLikeCanvasRenderingContext2D(value: object): value is CanvasRenderingContext2D {
+  return 'save' in value && 'restore' in value && 'fill' in value && 'stroke' in value;
+}
+
 /** Minimaler Aufzeichner. Wir prüfen die Aufrufreihenfolge, nicht gerasterte Pixel. */
 function recordingContext(): { ctx: CanvasRenderingContext2D; calls: Call[] } {
   const calls: Call[] = [];
   const handler: ProxyHandler<Record<string, unknown>> = {
-    get(_target, prop: string) {
+    get(_target, prop: string | symbol) {
       if (prop === 'canvas') return { width: 0, height: 0 };
       return (...args: unknown[]) => {
-        calls.push([prop, ...args]);
+        calls.push([String(prop), ...args]);
       };
     },
-    set(_target, prop: string, value: unknown) {
-      calls.push([`set:${prop}`, value]);
+    set(_target, prop: string | symbol, value: unknown) {
+      calls.push([`set:${String(prop)}`, value]);
+      return true;
+    },
+    // Ohne eigenen `has`-Trap prüft `in` nur das leere Ziel `{}` und würde immer `false`
+    // liefern — der `get`-Trap oben fängt zwar jeden Zugriff ab, aber nicht den `in`-Operator.
+    has() {
       return true;
     },
   };
-  const ctx = new Proxy({}, handler) as unknown as CanvasRenderingContext2D;
-  return { ctx, calls };
+  const candidate: object = new Proxy({}, handler);
+  if (!looksLikeCanvasRenderingContext2D(candidate)) {
+    throw new Error(
+      'recordingContext: Proxy erfüllt nicht die minimale CanvasRenderingContext2D-Oberfläche.',
+    );
+  }
+  return { ctx: candidate, calls };
 }
 
 const formation: Drawing = {
@@ -286,5 +307,26 @@ describe('renderCanvas — geerbte Strichstärke (Fix-Runde 2)', () => {
     renderCanvas(drawing, ctx);
     const names = calls.map(([name]) => name);
     expect(names).not.toContain('stroke');
+  });
+});
+
+describe('renderCanvas — Primitiv ohne style (Fix-Runde 3)', () => {
+  it('malt in SVG und Canvas dasselbe Nichts, wenn ein Primitiv gar keinen Stil trägt', () => {
+    // Ohne explizite Vorgabe wäre dies die dritte Treuelücke zwischen den Renderern: SVGs
+    // implizite Vorgabe für ein fehlendes fill-Attribut ist schwarz, Canvas füllt in diesem
+    // Fall gar nicht (style?.fill !== undefined). Beide müssen "nichts füllen" liefern.
+    const drawing: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [{ type: 'rect', x: 0, y: 0, width: 10, height: 10 }],
+    };
+
+    const svg = renderSvg(drawing);
+    const rectTag = svg.match(/<rect[^>]*\/>/)?.[0];
+    expect(rectTag).toContain('fill="none"');
+
+    const { ctx, calls } = recordingContext();
+    renderCanvas(drawing, ctx);
+    const names = calls.map(([name]) => name);
+    expect(names).not.toContain('fill');
   });
 });
