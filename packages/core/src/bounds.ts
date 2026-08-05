@@ -139,6 +139,19 @@ export function boundsOfMm(primitive: Primitive): BoundsMm {
  * falsch (nicht) verschobenes Pfad-Primitiv wäre schwerer zu bemerken als ein Fehler.
  */
 export function shiftY(primitive: Primitive, deltaMm: number): Primitive {
+  if (primitive.transform?.rotate && primitive.type !== 'group' && primitive.type !== 'path') {
+    // Eine Verschiebung träfe nur die Koordinate, nicht das Rotationszentrum
+    // (`transform.rotate.cx/cy`) — das Primitiv würde verschoben, aber weiterhin um das alte
+    // Zentrum gedreht: still falsch. Genau wie der `path`-Zweig unten lehnen wir das deshalb
+    // explizit ab, statt es anzunähern. `group` bleibt hier bewusst außen vor: eine gedrehte
+    // Gruppe ist im aktuellen Referenzbestand kein belegter Fall (siehe `boundsOfMm`, das
+    // Drehung von Gruppen ebenfalls ablehnt) und war nicht Teil dieses Befunds.
+    throw new Error(
+      'shiftY: gedrehte Primitive können nicht verschoben werden, ohne auch das ' +
+        'Rotationszentrum (transform.rotate.cx/cy) zu verschieben.',
+    );
+  }
+
   switch (primitive.type) {
     case 'rect':
       return { ...primitive, y: primitive.y + deltaMm };
