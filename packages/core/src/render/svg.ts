@@ -39,12 +39,17 @@ function color(token: ColorToken | 'none'): string {
  * `stroke="none"` wird deshalb wie `fill="none"` explizit ausgegeben statt weggelassen:
  * es gibt keine vererbende `<g>`-Elternattribute mehr, auf die sich ein Weglassen
  * verlassen könnte.
+ *
+ * `fill` wird aus demselben Grund nie weggelassen, selbst wenn kein Stil (oder ein Stil
+ * ohne `fill`) vorliegt: SVGs implizite Vorgabe für ein fehlendes `fill`-Attribut ist
+ * **schwarz**, während der Canvas-Renderer (`drawPrimitive` in `canvas.ts`) in genau
+ * diesem Fall gar nicht füllt (`style?.fill !== undefined`-Zweig). Ohne diese explizite
+ * Vorgabe entstünden aus derselben IR zwei verschiedene Bilder — derselbe Fehlermodus wie
+ * bei der Gruppen-Stil-Vererbung und `fillRule`, hier am `fill`-Default.
  */
 function styleAttrs(style: Style | undefined, options: { rawStrokeWidth?: boolean } = {}): string {
-  if (!style) return '';
-  const parts: string[] = [];
-  if (style.fill !== undefined) parts.push(`fill="${color(style.fill)}"`);
-  if (style.stroke !== undefined) {
+  const parts: string[] = [`fill="${style?.fill !== undefined ? color(style.fill) : 'none'}"`];
+  if (style?.stroke !== undefined) {
     parts.push(`stroke="${color(style.stroke)}"`);
     if (style.stroke !== 'none') {
       const strokeWidthMm = style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
@@ -52,8 +57,8 @@ function styleAttrs(style: Style | undefined, options: { rawStrokeWidth?: boolea
       parts.push(`stroke-width="${strokeWidth}"`);
     }
   }
-  if (style.fillRule !== undefined) parts.push(`fill-rule="${style.fillRule}"`);
-  return parts.length > 0 ? ` ${parts.join(' ')}` : '';
+  if (style?.fillRule !== undefined) parts.push(`fill-rule="${style.fillRule}"`);
+  return ` ${parts.join(' ')}`;
 }
 
 function transformAttr(transform: Transform | undefined): string {
