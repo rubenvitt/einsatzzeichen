@@ -398,3 +398,45 @@ export function checkCoverage(): {
     openDomainReviews: countOpenDomainReviews(COVERAGE_MANIFEST.entries),
   };
 }
+
+export interface ReleaseBlockers {
+  /** Manifestschlüssel der Einträge ohne abgeschlossenes fachliches Review. */
+  domainReviewPending: string[];
+  /** Manifestschlüssel der Einträge ohne Fingerprint- oder Snapshot-Nachweis. */
+  withoutTestEvidence: string[];
+  /** Kapitel im Scope, die kein einziger Eintrag trägt. */
+  uncoveredScope: string[];
+}
+
+/** Abschnittsnummer eines Manifest-Eintrags, also der Teil hinter dem Baseline-Präfix. */
+function sectionOf(sourceId: string): string {
+  const separator = sourceId.indexOf(':');
+  return separator === -1 ? sourceId : sourceId.slice(separator + 1);
+}
+
+/**
+ * Was Release 1.0 nach den Vision-Kriterien noch blockiert. Läuft als Test, nicht als CI-Abbruch:
+ * die Ausgabe ist stabil und prüfbar, aber ein offener Punkt lässt die Pipeline nicht scheitern.
+ *
+ * Ein ungeklärter Lizenzstatus ist ausdrücklich **kein** Blocker. Wäre er einer, wäre
+ * `babz-svg-2025` ein dauerhafter Blocker — und die Architektur beantwortet die unklare Lage
+ * bereits: abgeleitete Kennzahlen statt Dateien, eigenständige Geometrie statt übernommener Pfade.
+ */
+export function releaseBlockers(): ReleaseBlockers {
+  const domainReviewPending: string[] = [];
+  const withoutTestEvidence: string[] = [];
+
+  for (const entry of COVERAGE_MANIFEST.entries) {
+    const key = entryKey(entry.sourceId, entry.variant);
+    if (entry.review.domain.status !== 'approved') domainReviewPending.push(key);
+    if (!entry.fingerprintTest || !entry.snapshotTest) withoutTestEvidence.push(key);
+  }
+
+  const sections = COVERAGE_MANIFEST.entries.map((entry) => sectionOf(entry.sourceId));
+  const uncoveredScope = COVERAGE_MANIFEST.scope.filter(
+    (chapter) =>
+      !sections.some((section) => section === chapter || section.startsWith(`${chapter}.`)),
+  );
+
+  return { domainReviewPending, withoutTestEvidence, uncoveredScope };
+}

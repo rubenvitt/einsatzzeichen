@@ -19,6 +19,7 @@ import {
   checkElementEntries,
   checkProfileRegistry,
   checkVersions,
+  releaseBlockers,
 } from './coverage-manifest.js';
 import { PROFILES } from './profiles.js';
 
@@ -270,5 +271,39 @@ describe('Gate-Prüfungen zu Elementen und Versionen', () => {
     const broken = [{ ...PROFILES.bund, version: 'v1' }];
     const checks = checkVersions('0.1.0', broken).map((v) => v.check);
     expect(checks).toContain('version-format');
+  });
+});
+
+describe('Release-Blocker für 1.0', () => {
+  it('führt jeden Eintrag ohne fachliches Review als Blocker', () => {
+    const blockers = releaseBlockers();
+    expect(blockers.domainReviewPending).toHaveLength(COVERAGE_MANIFEST.entries.length);
+  });
+
+  it('führt genau die zwölf Elementeinträge als ohne Testnachweis', () => {
+    const blockers = releaseBlockers();
+    expect(blockers.withoutTestEvidence).toHaveLength(12);
+    for (const key of blockers.withoutTestEvidence) {
+      const entry = COVERAGE_MANIFEST.entries.find(
+        (e) => entryKey(e.sourceId, e.variant) === key,
+      );
+      expect(entry?.coverage).toBe('element');
+    }
+  });
+
+  it('meldet keinen Scope-Eintrag ohne Manifest-Eintrag', () => {
+    expect(releaseBlockers().uncoveredScope).toEqual([]);
+  });
+
+  it('erkennt Kapitelpräfixe und vollständige Abschnittsnummern gleichermaßen als abgedeckt', () => {
+    const sections = COVERAGE_MANIFEST.entries.map((e) => e.sourceId.split(':')[1] ?? '');
+    expect(sections).toContain('1.1');
+    expect(sections).toContain('5.4.2');
+    expect(sections).toContain('C.1.1');
+  });
+
+  it('ist ein Testbefund, kein CI-Abbruch: das Gate bleibt trotz offener Blocker grün', () => {
+    expect(releaseBlockers().domainReviewPending.length).toBeGreaterThan(0);
+    expect(checkCoverage().violations).toEqual([]);
   });
 });
