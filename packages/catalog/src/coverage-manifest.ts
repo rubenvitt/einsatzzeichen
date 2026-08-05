@@ -1,14 +1,17 @@
 import {
   entryKey,
+  isDataVersion,
   unattributedRoles,
   type CatalogEntry,
   type CoverageEntry,
   type CoverageManifest,
+  type ProfileRecord,
   type ReviewSet,
   type SourceId,
 } from '@einsatzzeichen/schema';
 import { BASE_SYMBOLS } from './base-symbols.js';
-import { resolveElement } from './elements.js';
+import { resolveElement, type ElementDescriptor } from './elements.js';
+import { PROFILES } from './profiles.js';
 import { RECIPES } from './recipes.js';
 import { isRegisteredSource } from './sources.js';
 
@@ -240,6 +243,118 @@ export function countOpenDomainReviews(entries: readonly CoverageEntry[]): numbe
 }
 
 /**
+ * `resolveElement` wirft bei unbekannter ID — für das Gate ist eine unbekannte ID aber ein
+ * Befund und kein Abbruch. Dieser Wrapper übersetzt das eine ins andere, ohne dass
+ * `resolveElement` seine Wurf-Semantik aufgeben muss.
+ */
+function tryResolveElement(id: string): ElementDescriptor | undefined {
+  try {
+    return resolveElement(id);
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Jeder Eintrag mit `coverage: 'element'` muss über `resolveElement` auflösbar sein, und seine
+ * genannte Referenzdatei muss in den Belegstellen des Deskriptors vorkommen — damit kann ein
+ * Eintrag keine Datei nennen, die das Element nicht belegt.
+ */
+export function checkElementEntries(entries: readonly CoverageEntry[]): CoverageViolation[] {
+  const violations: CoverageViolation[] = [];
+  for (const entry of entries) {
+    if (entry.coverage !== 'element') continue;
+    const key = entryKey(entry.sourceId, entry.variant);
+    const descriptor = tryResolveElement(entry.implementation);
+    if (descriptor === undefined) {
+      violations.push({
+        check: 'unknown-element',
+        key,
+        detail: `Element "${entry.implementation}" ist im Katalog nicht auflösbar.`,
+      });
+      continue;
+    }
+    if (!descriptor.referenceAssets.includes(entry.referenceAsset)) {
+      violations.push({
+        check: 'asset-not-in-element',
+        key,
+        detail: `"${entry.referenceAsset}" belegt "${entry.implementation}" nicht.`,
+      });
+    }
+  }
+  return violations;
+}
+
+/**
+ * Jeder Eintrag trägt ein im Profilregister existierendes Profil. Der Typ `ProfileId` deckt das
+ * für sauber getippte Daten ab; diese Prüfung fängt Einträge, die über eine Typzusicherung oder
+ * aus einer künftigen externen Quelle ins Manifest gelangen.
+ */
+export function checkProfileRegistry(
+  entries: readonly CoverageEntry[],
+  profiles: readonly ProfileRecord[],
+): CoverageViolation[] {
+  const known = new Set<string>(profiles.map((record) => record.id));
+  const violations: CoverageViolation[] = [];
+  for (const entry of entries) {
+    if (!known.has(entry.profile)) {
+      violations.push({
+        check: 'unknown-profile',
+        key: entryKey(entry.sourceId, entry.variant),
+        detail: `Profil "${entry.profile}" ist nicht registriert.`,
+      });
+    }
+  }
+  return violations;
+}
+
+/**
+ * Jede Datenversion hat die Form `major.minor.patch`, und `verifiedAgainstCore` jedes Profils
+ * nennt eine bekannte Kernversion. Für den Kern selbst gilt
+ * `verifiedAgainstCore === version === coreVersion`; die Menge der bekannten Kernversionen ist
+ * heute einelementig und wächst, sobald eine Versionshistorie geführt wird.
+ */
+export function checkVersions(
+  coreVersion: string,
+  profiles: readonly ProfileRecord[],
+): CoverageViolation[] {
+  const violations: CoverageViolation[] = [];
+  if (!isDataVersion(coreVersion)) {
+    violations.push({
+      check: 'version-format',
+      key: 'coreVersion',
+      detail: `"${coreVersion}" hat nicht die Form major.minor.patch.`,
+    });
+  }
+
+  const knownCoreVersions = new Set([coreVersion]);
+
+  for (const record of profiles) {
+    if (!isDataVersion(record.version)) {
+      violations.push({
+        check: 'version-format',
+        key: `profile:${record.id}`,
+        detail: `version "${record.version}" hat nicht die Form major.minor.patch.`,
+      });
+    }
+    if (!isDataVersion(record.verifiedAgainstCore)) {
+      violations.push({
+        check: 'version-format',
+        key: `profile:${record.id}`,
+        detail: `verifiedAgainstCore "${record.verifiedAgainstCore}" hat nicht die Form major.minor.patch.`,
+      });
+    } else if (!knownCoreVersions.has(record.verifiedAgainstCore)) {
+      violations.push({
+        check: 'unknown-core-version',
+        key: `profile:${record.id}`,
+        detail: `verifiedAgainstCore "${record.verifiedAgainstCore}" ist keine bekannte Kernversion.`,
+      });
+    }
+  }
+  return violations;
+}
+
+/**
  * Das CI-Gate. Die vier Prüfungen aus Slice 1 (Referenzdatei vorhanden, eindeutige Schlüssel,
  * genau eine `primary`-Darstellung) bleiben in ihren eigenen Feldern; die in Slice 2
  * hinzugekommenen Prüfungen sammeln sich in `violations`.
@@ -270,6 +385,9 @@ export function checkCoverage(): {
     ...checkCatalogSourceRefs(catalog),
     ...checkProfileAgreement(COVERAGE_MANIFEST.entries, catalog),
     ...checkReviewAttribution(COVERAGE_MANIFEST.entries),
+    ...checkElementEntries(COVERAGE_MANIFEST.entries),
+    ...checkProfileRegistry(COVERAGE_MANIFEST.entries, Object.values(PROFILES)),
+    ...checkVersions(COVERAGE_MANIFEST.coreVersion, Object.values(PROFILES)),
   ];
 
   return {

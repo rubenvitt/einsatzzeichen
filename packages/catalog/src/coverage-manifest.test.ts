@@ -16,7 +16,11 @@ import {
   checkProfileAgreement,
   checkReviewAttribution,
   countOpenDomainReviews,
+  checkElementEntries,
+  checkProfileRegistry,
+  checkVersions,
 } from './coverage-manifest.js';
+import { PROFILES } from './profiles.js';
 
 function fixtureEntry(id: string, primaryCount: number): CatalogEntry {
   return {
@@ -195,5 +199,76 @@ describe('Gate-Prüfungen zu Quelle, Profil und Review', () => {
     const result = checkCoverage();
     expect(result.violations).toEqual([]);
     expect(result.openDomainReviews).toBe(COVERAGE_MANIFEST.entries.length);
+  });
+});
+
+describe('Gate-Prüfungen zu Elementen und Versionen', () => {
+  it('nimmt einen Elementeintrag an, dessen ID auflösbar ist und dessen Datei ihn belegt', () => {
+    const entry = fixtureCoverageEntry({
+      sourceId: 'bbk-babz-2025:5.4.2',
+      coverage: 'element',
+      implementation: 'strength.staffel',
+      referenceAsset: '5.4.2_Staffel.svg',
+    });
+    expect(checkElementEntries([entry])).toEqual([]);
+  });
+
+  it('meldet einen Elementeintrag mit unbekannter ID', () => {
+    const entry = fixtureCoverageEntry({
+      coverage: 'element',
+      implementation: 'strength.kompanie',
+      referenceAsset: '5.4.5_Kompanie.svg',
+    });
+    const [violation] = checkElementEntries([entry]);
+    expect(violation?.check).toBe('unknown-element');
+    expect(violation?.detail).toContain('strength.kompanie');
+  });
+
+  it('meldet einen Elementeintrag, dessen Datei das Element nicht belegt', () => {
+    const entry = fixtureCoverageEntry({
+      coverage: 'element',
+      implementation: 'strength.staffel',
+      referenceAsset: '5.4.4_Zug.svg',
+    });
+    const [violation] = checkElementEntries([entry]);
+    expect(violation?.check).toBe('asset-not-in-element');
+  });
+
+  it('prüft Elemente nur bei coverage element, nicht bei Katalogeinträgen', () => {
+    expect(checkElementEntries([fixtureCoverageEntry()])).toEqual([]);
+  });
+
+  it('nimmt einen Eintrag mit registriertem Profil an', () => {
+    expect(checkProfileRegistry([fixtureCoverageEntry()], Object.values(PROFILES))).toEqual([]);
+  });
+
+  it('meldet einen Eintrag mit einem nicht registrierten Profil', () => {
+    const entry = fixtureCoverageEntry({ profile: 'laender' as unknown as ProfileId });
+    const [violation] = checkProfileRegistry([entry], Object.values(PROFILES));
+    expect(violation?.check).toBe('unknown-profile');
+    expect(violation?.detail).toContain('laender');
+  });
+
+  it('nimmt Versionen an, die der Form major.minor.patch folgen und den Kern nennen', () => {
+    expect(checkVersions('0.1.0', Object.values(PROFILES))).toEqual([]);
+  });
+
+  it('meldet eine Kernversion mit falscher Form', () => {
+    const [violation] = checkVersions('0.1', Object.values(PROFILES));
+    expect(violation?.check).toBe('version-format');
+    expect(violation?.key).toBe('coreVersion');
+  });
+
+  it('meldet ein Profil, dessen verifiedAgainstCore keine bekannte Kernversion nennt', () => {
+    const stale = [{ ...PROFILES.bund, verifiedAgainstCore: '0.0.9' }];
+    const [violation] = checkVersions('0.1.0', stale);
+    expect(violation?.check).toBe('unknown-core-version');
+    expect(violation?.detail).toContain('0.0.9');
+  });
+
+  it('meldet ein Profil mit unzulässiger Datenversion', () => {
+    const broken = [{ ...PROFILES.bund, version: 'v1' }];
+    const checks = checkVersions('0.1.0', broken).map((v) => v.check);
+    expect(checks).toContain('version-format');
   });
 });
