@@ -344,7 +344,42 @@ Geometrie will, ruft weiterhin `organizationColor`, `strengthHead` oder `capabil
 
 `hilfsorganisation` bekommt **keinen** Elementeintrag: Kapitel 2 der Referenz enthält dafür keine
 Datei, `organizationColor` wirft, und das Manifest behauptet nichts, was der Katalog nicht kann.
-Sieben Organisationsfarben, nicht acht.
+Sieben Organisationsfarben, nicht acht. (`2.2_Organisationen.svg` existiert, trägt aber einen
+generischen Namen, aus dem keine Zuordnung zu `hilfsorganisation` folgt. Diese Zuordnung zu
+vermessen ist eine eigene Aufgabe und nicht Teil dieses Slice.)
+
+### Abschnittsnummern der Elementeinträge
+
+`CoverageEntry.sourceId` behält die Form `"<SourceId>:<Abschnitt>"`, und der Schlüssel bleibt
+`entryKey(sourceId, variant)` — Slice-1-Erfolgskriterium 4. Damit braucht jedes Element eine
+eigene Abschnittsnummer, sonst kollidierten die vier Stärkegrade auf `5.4`. Alle zwölf Nummern
+sind aus den Dateinamen des Referenzbestands belegt, keine ist geschlossen:
+
+| Element-ID | Abschnitt | Namensgebende Referenzdatei |
+|---|---|---|
+| `organization.feuerwehr` | `2.1` | `2.1_Feuerwehr.svg` |
+| `organization.thw` | `2.3` | `2.3_Technisches Hilfswerk.svg` |
+| `organization.fuehrung-leitung` | `2.4` | `2.4_Führung Leitung.svg` |
+| `organization.polizei` | `2.5` | `2.5_Polizei.svg` |
+| `organization.bundeswehr` | `2.6` | `2.6_Bundeswehr.svg` |
+| `organization.sonstige-gefahrenabwehr` | `2.7` | `2.7_Sonstige Gefahrenabwehr.svg` |
+| `organization.zivile-einheiten` | `2.8` | `2.8_Zivile Einheiten.svg` |
+| `strength.trupp` | `5.4.1` | `5.4.1_Trupp.svg` |
+| `strength.staffel` | `5.4.2` | `5.4.2_Staffel.svg` |
+| `strength.gruppe` | `5.4.3` | `5.4.3_Gruppe.svg` |
+| `strength.zug` | `5.4.4` | `5.4.4_Zug.svg` |
+| `capability.fire-fighting` | `4.3.1` | `4.3.1_Brandbekämpfung.svg` |
+
+Die Zuordnung der vier Stärkegrade folgt aus den Dateinamen selbst — sie ist damit belegt und
+nicht aus der Reihenfolge geschlossen. Für die Stärkegrade enthält `referenceAssets` des
+Deskriptors **mehr** als die namensgebende Datei: die `5.4.x`-Dateien sind eigenständige
+Anzeigedarstellungen mit `r = 4` und selbst keine Kopfzonen; die Kopfzonengeometrie ist an den
+`C.1.x`-Dateien vermessen (Entscheidungsnotiz, Abschnitt 5). Beide Belegarten stehen in der Liste,
+und `referenceAsset` des Manifest-Eintrags ist die namensgebende Datei.
+
+**`variant` bleibt Teil des Schlüssels, auch für Elemente.** Es ist kein Füllwert: Kapitel 2
+enthält mit `2.14_Escape Route` und `2.14_Escape Route_2` selbst ein Element in zwei
+Darstellungen. Für die zwölf heutigen Elemente gilt `primary`.
 
 ## 8. Manifest und Gates
 
@@ -370,6 +405,36 @@ interface CoverageEntry {
 }
 ```
 
+### Welche Quelle das Präfix nennt
+
+Heute baut `coverage-manifest.ts:15` den Schlüssel als `bbk-babz-2025:${section}`, während der
+Quellenbezug desselben Katalogeintrags `source: 'babz-svg-2025'` nennt
+(`base-symbols.ts:133`). Beide Werte sind registriert und würden die neue Präfixprüfung bestehen —
+ohne festgelegte Regel entscheidet der Umsetzungsplan willkürlich, und die zwei Angaben driften
+dauerhaft auseinander. Die Regel:
+
+- **Das Manifest-Präfix ist immer die Baseline** (`bbk-babz-2025`). Es bezeichnet die
+  **Abschnittsnummerierung**, und die stammt aus dem Hauptdokument — nur dort ist definiert, dass
+  `5.4.3` „Gruppe" bedeutet.
+- **Die Geometrieprovenienz steht am Katalogeintrag** (`Depiction.sourceRefs`, heute
+  `babz-svg-2025`). Sie bezeichnet, woraus die Kennzahlen abgeleitet sind.
+- `referenceAsset` nennt eine Datei aus `babz-svg-2025`.
+
+Das Gate prüft deshalb nicht „irgendeine registrierte Quelle", sondern **Gleichheit mit
+`COVERAGE_MANIFEST.baseline`** — das ist strenger und trifft die Absicht. Zusätzlich prüft es für
+Zeilen mit `coverage: 'catalog-entry'`, dass die `primary`-Darstellung des Katalogeintrags
+mindestens einen `sourceRef` auf eine registrierte Quelle trägt. Damit sind beide Angaben geprüft,
+ohne fälschlich ihre Gleichheit zu fordern — sie bezeichnen verschiedene Dinge.
+
+### Wo das Profil steht
+
+`profile` steht sowohl an `CatalogEntry` (Abschnitt 5) als an `CoverageEntry`. Das ist keine
+doppelte Wahrheit, sondern nötig, weil Rezepte und Elemente **keine** `CatalogEntry`s sind und
+ihre Zugehörigkeit sonst nirgends stünde. Die Beziehung wird festgelegt statt offengelassen: Für
+Zeilen mit `coverage: 'catalog-entry'` ist der Manifestwert aus dem Katalogeintrag **abgeleitet**,
+und das Gate prüft die Gleichheit. Für Rezepte und Elemente ist der Manifestwert die einzige
+Angabe.
+
 ### Prüfungen
 
 Die vier bestehenden Prüfungen aus `checkCoverage` bleiben unverändert: eindeutige Schlüssel,
@@ -377,7 +442,9 @@ kein unvollständiger Eintrag, genau eine `primary`-Darstellung je Katalogeintra
 
 | Prüfung | Wirkung |
 |---|---|
-| Das Präfix jedes `sourceId` ist eine registrierte Quelle | Fehler |
+| Das Präfix jedes `sourceId` ist gleich `baseline` | Fehler |
+| Jede `primary`-Darstellung eines Katalogeintrags nennt eine registrierte Quelle | Fehler |
+| Bei `coverage: 'catalog-entry'` stimmt `profile` mit dem Katalogeintrag überein | Fehler |
 | Kein `approved` ohne `reviewer` und `date`, je Rolle | Fehler |
 | Jeder Eintrag mit `coverage: 'element'` ist über `resolveElement` auflösbar | Fehler |
 | Der `referenceAsset` eines Elementeintrags kommt in dessen `referenceAssets` vor | Fehler |
@@ -395,8 +462,14 @@ Eine Funktion listet auf, was Release 1.0 nach den Vision-Kriterien noch blockie
 
 - Einträge mit `domain.status !== 'approved'` (heute: alle),
 - Einträge ohne Fingerprint- oder Snapshot-Nachweis,
-- Quellen mit `licence.status: 'unclear'`, aus denen etwas anderes als `none` genutzt wird,
 - Kapitel im Scope ohne einen einzigen Eintrag.
+
+**Ein ungeklärter Lizenzstatus ist ausdrücklich kein Release-Blocker.** Wäre er einer, wäre
+`babz-svg-2025` (`unclear` bei `measured-metrics`) ein dauerhafter Blocker — und das widerspräche
+Abschnitt 13, wo derselbe Status als architektonisch behandelt und folgenlos begründet wird. Die
+Architektur beantwortet die unklare Lage bereits: abgeleitete Kennzahlen statt Dateien,
+eigenständige Geometrie statt übernommener Pfade. Das 1.0-Gate der Vision fragt nach Quellen- und
+Reviewstatus, nicht nach gelösten Lizenzfragen.
 
 Damit ist das 1.0-Gate der Vision erstmals ausführbar, ohne scharf zu sein. Es läuft als Test
 (Ausgabe ist stabil und prüfbar), nicht als CI-Abbruch.
@@ -449,7 +522,7 @@ angefasst — Provenienz ist Katalogsache, nicht Renderersache.
 **Enthalten:** Quellenregister mit elf Quellen; Reviewset mit zwei Pflichtrollen an Eintrag,
 Manifest-Eintrag, Quelle und Profil; Profilregister mit `bund` und `profile` als Pflichtfeld;
 eigene Datenversionen für Kern und Profile; dritte Abdeckungsart mit Element-IDs und Auflösung;
-sieben neue Gate-Prüfungen; `releaseBlockers()`; Migration der elf Einträge und zwölf neue
+neun neue Gate-Prüfungen; `releaseBlockers()`; Migration der elf Einträge und zwölf neue
 Elementeinträge; Entfernung von `'org-profile'` und `'organization-specific'`.
 
 **Nicht enthalten:**
