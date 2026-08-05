@@ -21,11 +21,29 @@ cli → catalog → core → schema
 |---|---|
 | `schema` | Typen der internen Repräsentation (IR), Einheiten, Farbpalette. Null Fremdabhängigkeiten. |
 | `core` | Renderer (SVG, Canvas), Hüllenberechnung, Fingerprint-Vergleich, Layoutprofile, Kompositionsmotor, Regelvalidierung. Hängt **nie** von `catalog` ab. |
-| `catalog` | Grundzeichen, Organisationsfarben, Stärkeangaben, Fähigkeiten, Kompositionsrezepte, Coverage-Manifest. |
+| `catalog` | Grundzeichen, Organisationsfarben, Stärkeangaben, Fähigkeiten, Kompositionsrezepte, Quellenregister, Profilregister, Elementregister, Coverage-Manifest. |
 | `cli` | Kennzahlenableitung aus der lokalen Referenz, Coverage-Gate, SVG-Export. |
 
 `schema` und `core` haben **null Fremdabhängigkeiten** — beide sind reines TypeScript ohne
 externe Pakete.
+
+## Provenienz
+
+Jeder Katalogeintrag, Manifest-Eintrag, jede Quelle und jedes Profil trägt dieselbe Reviewform:
+ein **technisches** und ein **fachliches** Review, beide Pflicht. Ein `approved` ohne Reviewer und
+Datum lässt das Coverage-Gate fehlschlagen — ein Status ohne Zurechenbarkeit ist wertlos. Das
+fachliche Review steht derzeit bei allen Einträgen offen; die Struktur macht das sichtbar, statt
+es zu verdecken.
+
+`packages/catalog/src/sources.ts` führt die elf Quellen der Referenzhierarchie mit
+Nutzungsgrundlage, Beschaffungsstand und Umgang mit der Geometrie. Für die BABZ-Assets ist die
+Lizenzlage `unclear`; die Konsequenz — abgeleitete Kennzahlen statt Dateien — steht damit
+maschinenlesbar im Register und nicht nur in Prosa.
+
+Kern und Profile tragen **eigene Datenversionen** (`CoverageManifest.coreVersion`,
+`ProfileRecord.version`), unabhängig von den npm-Paketversionen. Der bundesweite Kern ist selbst
+das erste registrierte Profil (`bund`); `CatalogEntry.profile` ist Pflichtfeld, damit „kein Profil
+angegeben" nicht mit „gehört zum Kern" verwechselbar ist.
 
 ## Die Millimeter-Regel
 
@@ -73,6 +91,9 @@ pnpm cli export --out <pfad> --size <px>
 - `audit:reference` — Referenzbestand einlesen, Kennzahlen ableiten. `--filter <präfix>` schränkt
   auf Dateinamen mit diesem Präfix ein (z. B. `"1."` oder `"C.1.1"`); `--print` gibt nur aus,
   schreibt nicht nach `fingerprints.json`.
-- `coverage` — prüft das Coverage-Manifest gegen den Katalog (Coverage-Gate).
+- `coverage` — prüft das Coverage-Manifest gegen den Katalog (Coverage-Gate): Schlüssel,
+  Vollständigkeit, Baseline-Präfix, Quellenbezug, Profil, Reviewzurechnung, Elementauflösung und
+  Datenversionen. Gibt zusätzlich die Zahl offener fachlicher Reviews und die 1.0-Blocker aus —
+  beides ohne Fehlerabbruch, weil CI sonst ab dem ersten Tag dauerhaft rot wäre.
 - `export --out <pfad> --size <px>` — rendert alle Grundzeichen und Kompositionsrezepte als SVG
   nach `<pfad>`, mit `<px>` Kantenlänge.
