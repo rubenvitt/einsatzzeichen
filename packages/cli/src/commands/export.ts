@@ -14,7 +14,7 @@ export function exportSvg(outDir: string, size: number): void {
   }
 
   for (const [section, recipe] of Object.entries(RECIPES)) {
-    const svg = renderSvg(composeFromCatalog(recipe.spec), { size });
+    const svg = renderSvg(composeFromCatalog(recipe.spec, recipe.title), { size });
     writeFileSync(join(outDir, `${section}.svg`), svg, 'utf8');
     count += 1;
   }

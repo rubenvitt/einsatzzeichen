@@ -16,7 +16,7 @@ describe('SVG-Snapshots', () => {
   it.each(Object.entries(RECIPES))(
     'rendert das Rezept %s unverändert',
     async (section, recipe) => {
-      const svg = renderSvg(composeFromCatalog(recipe.spec), { size: 64 });
+      const svg = renderSvg(composeFromCatalog(recipe.spec, recipe.title), { size: 64 });
       await expect(svg).toMatchFileSnapshot(`./__snapshots__/${section}.svg`);
     },
   );

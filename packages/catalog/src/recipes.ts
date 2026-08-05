@@ -12,8 +12,8 @@ const PORTS: CatalogPorts = {
   capabilityPictogram,
 };
 
-export function composeFromCatalog(spec: SymbolSpec): Drawing {
-  return compose(spec, PORTS);
+export function composeFromCatalog(spec: SymbolSpec, title?: string): Drawing {
+  return compose(spec, PORTS, { ...(title !== undefined ? { title } : {}) });
 }
 
 export interface Recipe {

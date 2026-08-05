@@ -14,8 +14,9 @@ describe('Kompositionsrezepte', () => {
     const drawing = composeFromCatalog(RECIPES['C.1.1'].spec);
     const body = drawing.children.find((c) => c.role === 'body');
     expect(body).toBeDefined();
-    expect(boundsOfMm(body!).minY).toBeCloseTo(9, 6);
-    expect(body?.style?.fill).toBe('rot');
+    if (body === undefined) return;
+    expect(boundsOfMm(body).minY).toBeCloseTo(9, 6);
+    expect(body.style?.fill).toBe('rot');
   });
 
   it('reproduziert die Referenz C.1.1 (Löschstaffel)', () => {
@@ -28,7 +29,9 @@ describe('Kompositionsrezepte', () => {
   it('erzeugt die Löschgruppe mit Körper bei 6 mm', () => {
     const drawing = composeFromCatalog(RECIPES['C.1.2'].spec);
     const body = drawing.children.find((c) => c.role === 'body');
-    expect(boundsOfMm(body!).minY).toBeCloseTo(6, 6);
+    expect(body).toBeDefined();
+    if (body === undefined) return;
+    expect(boundsOfMm(body).minY).toBeCloseTo(6, 6);
   });
 
   it('reproduziert die Referenz C.1.2 (Löschgruppe)', () => {
@@ -47,7 +50,9 @@ describe('Kompositionsrezepte', () => {
   it('erzeugt den Zugführer mit Spitze bei 5 mm und Unterkante bei 31 mm', () => {
     const drawing = composeFromCatalog(RECIPES['D.3.7'].spec);
     const body = drawing.children.find((c) => c.role === 'body');
-    const bounds = boundsOfMm(body!);
+    expect(body).toBeDefined();
+    if (body === undefined) return;
+    const bounds = boundsOfMm(body);
     expect(bounds.minY).toBeCloseTo(5, 3);
     expect(bounds.maxY).toBeCloseTo(31, 3);
   });
@@ -108,5 +113,20 @@ describe('Kompositionsrezepte', () => {
     expect(() => composeFromCatalog({ kind: 'hazard', strength: 'gruppe' })).toThrow(
       CompositionError,
     );
+  });
+
+  it('trägt den Titel des Rezepts, nicht den des Grundzeichens', () => {
+    // Ohne diese Zusicherung liefe die Regression aus dem Abschlussreview unbemerkt zurück:
+    // die zusammengesetzte Zeichnung übernahm den Titel des Grundzeichens ("Taktische
+    // Formation" bzw. "Person") statt des fachlich richtigen Rezepttitels.
+    for (const [, recipe] of Object.entries(RECIPES)) {
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      expect(drawing.title).toBe(recipe.title);
+    }
+  });
+
+  it('erzeugt keinen Titel, wenn composeFromCatalog ohne Titel aufgerufen wird', () => {
+    const drawing = composeFromCatalog(RECIPES['C.1.1'].spec);
+    expect(drawing.title).toBeUndefined();
   });
 });

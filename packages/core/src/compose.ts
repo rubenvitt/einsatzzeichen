@@ -37,7 +37,18 @@ export class CompositionError extends Error {
   }
 }
 
-export function compose(spec: SymbolSpec, catalog: CatalogPorts): Drawing {
+export interface ComposeOptions {
+  /**
+   * Titel des zusammengesetzten Zeichens. Überschreibt den Titel des Grundzeichens
+   * (`baseDrawing`), der sonst — fachlich irreführend — in die Zeichnung übernommen würde:
+   * eine Löschstaffel ist kein "Taktische Formation" mehr, sobald Stärke und Fähigkeit
+   * sie zu einem eigenständigen Zeichen machen. Ohne Titel bleibt `Drawing.title` unbesetzt,
+   * es entsteht kein leeres `<title>`.
+   */
+  title?: string;
+}
+
+export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: ComposeOptions = {}): Drawing {
   const issues = validateSpec(spec);
   if (issues.length > 0) throw new CompositionError(issues);
 
@@ -87,6 +98,6 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts): Drawing {
   return {
     viewBox: DEFAULT_VIEWBOX_MM,
     children: [...headPrimitives, filled, ...pictograms],
-    ...(base.title !== undefined ? { title: base.title } : {}),
+    ...(options.title !== undefined ? { title: options.title } : {}),
   };
 }
