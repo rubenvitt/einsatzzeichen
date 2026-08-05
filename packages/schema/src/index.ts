@@ -3,5 +3,6 @@ export * from './geometry.js';
 export * from './taxonomy.js';
 export * from './provenance.js';
 export * from './review.js';
+export * from './sources.js';
 export * from './coverage.js';
 export * from './head.js';

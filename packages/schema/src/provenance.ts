@@ -1,15 +1,34 @@
 import type { Drawing } from './geometry.js';
 import type { SymbolKind } from './taxonomy.js';
 
-export type SourceId = 'bbk-babz-2025' | 'babz-svg-2025' | 'skk-2010' | 'org-profile';
+/**
+ * Die registrierten Quellen. Die Werte werden hier deklariert, nicht aus `SOURCE_REGISTRY`
+ * abgeleitet: `schema` darf nicht von `catalog` abhängen. Die Gegenrichtung — kein Literal ohne
+ * Registereintrag — erzwingt die Annotation `Record<SourceId, SourceRecord>` in
+ * `catalog/src/sources.ts`.
+ */
+export type SourceId =
+  | 'bbk-babz-2025'
+  | 'babz-svg-2025'
+  | 'babz-hinweise-2024'
+  | 'skk-2010'
+  | 'fwdv-100'
+  | 'fwdv-800'
+  | 'thw-einheiten'
+  | 'din-14033'
+  | 'din-13050'
+  | 'din-14034-6'
+  | 'din-14095';
 
 /**
  * `verbatim`   — Geometrie entspricht der Referenz und ist per Fingerprint belegt
  * `derived`    — eigenständig konstruiert, fachlich an der Referenz orientiert
  * `legacy`     — aus der SKK-/DV-102-Systematik von 2010/2011
- * `organization-specific` — nur in einem Organisationsprofil gültig
+ *
+ * `'organization-specific'` ist entfallen: die Profilzugehörigkeit hängt am Katalogeintrag
+ * (`CatalogEntry.profile`), nicht am Quellenbezug.
  */
-export type SourceStatus = 'verbatim' | 'derived' | 'legacy' | 'organization-specific';
+export type SourceStatus = 'verbatim' | 'derived' | 'legacy';
 
 export interface SourceReference {
   source: SourceId;

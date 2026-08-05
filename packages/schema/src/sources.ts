@@ -1,0 +1,57 @@
+import type { SourceId } from './provenance.js';
+import type { ReviewSet } from './review.js';
+
+/**
+ * `baseline`         — die verbindliche fachliche Grundlage
+ * `reference-assets` — Grafikdateien zur Baseline
+ * `guidance`         — begleitende Hinweise zur Baseline
+ * `legacy`           — ältere Systematik, für Aliasnamen und Migrationshinweise
+ * `operational-rule` — operatives Regelwerk mit Terminologie und Führungslogik
+ * `standard`         — angrenzende Norm, nicht mit der DV-102-Systematik zu vermischen
+ */
+export type SourceKind =
+  | 'baseline'
+  | 'reference-assets'
+  | 'guidance'
+  | 'legacy'
+  | 'operational-rule'
+  | 'standard';
+
+/** Beschaffungsstand. Trennt „nicht beschafft" von „beschafft und ungenutzt". */
+export type Acquisition = 'local' | 'public-url' | 'not-acquired';
+
+/**
+ * Umgang mit der Geometrie der Quelle. `'compared-only'` fehlt bewusst: ein reiner visueller
+ * Vergleich findet in diesem Slice mit keiner Quelle statt, und ein Wert ohne Konsument ist
+ * genau der Befund, den dieses Projekt vermeidet.
+ */
+export type GeometryUse = 'measured-metrics' | 'reconstructed' | 'none';
+
+export type LicenceStatus = 'clarified' | 'unclear';
+
+export interface Licence {
+  /** Nutzungsgrundlage in einem Satz, prüfbar formuliert. */
+  basis: string;
+  status: LicenceStatus;
+  note?: string;
+}
+
+export interface SourceRecord {
+  id: SourceId;
+  kind: SourceKind;
+  title: string;
+  publisher: string;
+  /** Auflage oder Ausgabedatum, z. B. "1. Auflage 2011" oder "2017-04". */
+  edition?: string;
+  url?: string;
+  /** Fachlicher Geltungsbereich in einem Satz. */
+  scope: string;
+  acquisition: Acquisition;
+  /**
+   * Mehrwertig: aus derselben Quelle können Kennzahlen abgeleitet und Bildideen rekonstruiert
+   * werden. `babz-svg-2025` trägt beides — ein Einzelwert würde eine der Nutzungen verschweigen.
+   */
+  geometryUse: readonly GeometryUse[];
+  licence: Licence;
+  review: ReviewSet;
+}
