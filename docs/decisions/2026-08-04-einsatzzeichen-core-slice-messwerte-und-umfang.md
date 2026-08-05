@@ -58,6 +58,15 @@ fill-lose `<polygon>`-Elemente (die inzwischen korrekt als `outline` statt fäls
 nicht gibt. Das ist eine eigene Aufgabe für den nächsten Slice, kein Nebeneffekt eines
 bestehenden Fixes.
 
+> **Nachtrag vom 5. August 2026** — siehe
+> [`2026-08-05-vermessung-kapitel-1-und-verwaltungsstufen.md`](./2026-08-05-vermessung-kapitel-1-und-verwaltungsstufen.md),
+> Abschnitt 2. Die dort genannte Kennzahlenart ist inzwischen **vermessen**: eine Clusterung der
+> sechs Umrisspunkte liefert die drei Ecken reproduzierbar (bei 1 mm Schwelle liegen die Cluster
+> 21-mal weiter auseinander als die Schwelle). Zwei Korrekturen zu diesem Abschnitt: die oben
+> genannte Abweichung von 0,590 Einheiten ist die `minX`-Abweichung, die größere ist `maxY` mit
+> rund 1,28; und der Polyzug ist **offen** — ein geschlossener hätte dieselbe Hülle *und*
+> dieselben Ecken, kein Gate fängt den Unterschied.
+
 ## 2. Warum Verwaltungsstufen und Fahrzeugkategorien nicht umgesetzt sind
 
 Von 16 Referenzdateien für Verwaltungsstufen (`5.7`) und Fahrzeugkategorien (`5.1.1`) sind nur
@@ -75,6 +84,15 @@ die Validierungsregel `head-zone-conflict` (in `packages/core/src/validate.ts`) 
 eine Verwaltungsstufe oder Fahrzeugkategorie gemeinsam mit einer Stärkeangabe spezifiziert wird.
 **Was fehlt:** `packages/catalog/src/admin-levels.ts`, `packages/catalog/src/vehicle-categories.ts`
 und ihre Kopfmarken-Konstruktion.
+
+> **Nachtrag vom 5. August 2026** — die Geometrie der Verwaltungsstufen ist inzwischen
+> vollständig vermessen, siehe
+> [`2026-08-05-vermessung-kapitel-1-und-verwaltungsstufen.md`](./2026-08-05-vermessung-kapitel-1-und-verwaltungsstufen.md),
+> Abschnitt 3: Sternmarke 5,446 × 6 mm bei `cy = 16`, auf einer um 16 zentrierten Reihe mit 6 mm
+> Abstand — **mit `n = 2` als Ausnahme** (`[10, 22]` statt `[13, 19]`), also demselben Muster wie
+> beim Stärkegrad `gruppe` aus Abschnitt 5. Die Marken sind Sterne, keine Rechtecke. Der Grund,
+> warum `5.7` weiterhin nicht umgesetzt ist, ist damit **nicht mehr die Messbarkeit**, sondern der
+> fehlende Konsument in `CatalogPorts` und der Kopfzone von `compose()`.
 
 ## 3. `deriveRing` gilt nur für achsparallele Rechtecke — warum 91 Ringe entfielen
 

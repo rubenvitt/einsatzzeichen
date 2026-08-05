@@ -19,3 +19,6 @@ coverage/
 
 # SDD-Arbeitsverzeichnis (Ledger, Briefs, Review-Pakete) — reines Scratch
 .superpowers/
+
+# Worktree-Container von Claude Code: eigene Checkouts samt node_modules
+.claude/
