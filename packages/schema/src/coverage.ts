@@ -1,16 +1,7 @@
 import type { DepictionVariant } from './provenance.js';
+import type { ReviewSet } from './review.js';
 
 export type CoverageKind = 'catalog-entry' | 'composition-recipe';
-
-export type ReviewStatus = 'pending' | 'approved' | 'deviation';
-
-export interface Review {
-  status: ReviewStatus;
-  reviewer?: string;
-  /** ISO-Datum, z. B. "2026-08-04". */
-  date?: string;
-  note?: string;
-}
 
 export interface CoverageEntry {
   sourceId: string;
@@ -22,7 +13,7 @@ export interface CoverageEntry {
   coverage: CoverageKind;
   fingerprintTest: boolean;
   snapshotTest: boolean;
-  review: Review;
+  review: ReviewSet;
 }
 
 export interface CoverageManifest {

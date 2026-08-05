@@ -3,11 +3,21 @@ import {
   type CatalogEntry,
   type CoverageEntry,
   type CoverageManifest,
+  type ReviewSet,
 } from '@einsatzzeichen/schema';
 import { BASE_SYMBOLS } from './base-symbols.js';
 import { RECIPES } from './recipes.js';
 
-const REVIEW = { status: 'pending' } as const;
+/**
+ * Migration nach Slice 2: `technical` ist für alle elf Einträge `approved`, weil das Kriterium
+ * aus der Spec (Fingerprint- und Snapshot-Gate für diesen Eintrag grün) erfüllt ist —
+ * Slice-1-Erfolgskriterien 1 und 2. `domain` bleibt offen: eine fachliche Prüfung durch eine
+ * Person mit einsatztaktischer Fachkunde hat nicht stattgefunden, und das Modell verdeckt das nicht.
+ */
+const REVIEW: ReviewSet = {
+  technical: { status: 'approved', reviewer: 'rv', date: '2026-08-05' },
+  domain: { status: 'pending' },
+};
 
 const catalogEntries: CoverageEntry[] = Object.values(BASE_SYMBOLS).map((entry) => {
   const ref = entry.depictions[0]?.sourceRefs[0];

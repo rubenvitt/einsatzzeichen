@@ -27,10 +27,12 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('composition-recipe');
   });
 
-  it('trägt für jeden Eintrag eine Referenzdatei und einen Reviewstatus', () => {
+  it('trägt für jeden Eintrag eine Referenzdatei und beide Reviewrollen', () => {
     for (const entry of COVERAGE_MANIFEST.entries) {
       expect(entry.referenceAsset).toMatch(/\.svg$/);
-      expect(['pending', 'approved', 'deviation']).toContain(entry.review.status);
+      expect(entry.review.technical.status).toBe('approved');
+      expect(entry.review.technical.reviewer).toBe('rv');
+      expect(entry.review.domain.status).toBe('pending');
     }
   });
 
