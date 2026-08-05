@@ -297,6 +297,16 @@ describe('Release-Blocker für 1.0', () => {
   });
 
   it('erkennt Kapitelpräfixe und vollständige Abschnittsnummern gleichermaßen als abgedeckt', () => {
+    // Scope mischt ein Kapitelpräfix ('1', gedeckt über den Punkt-Guard durch '1.1') mit einer
+    // vollständigen Abschnittsnummer ('C.1.1', gedeckt über den Gleichheitszweig) — bricht die
+    // Erkennung in einer der beiden Richtungen, meldet einer der Scope-Einträge fälschlich offen.
+    const prefixEntry = fixtureCoverageEntry({ sourceId: 'bbk-babz-2025:1.1' });
+    const fullSectionEntry = fixtureCoverageEntry({ sourceId: 'bbk-babz-2025:C.1.1' });
+    const blockers = blockersOf([prefixEntry, fullSectionEntry], ['1', 'C.1.1']);
+    expect(blockers.uncoveredScope).toEqual([]);
+  });
+
+  it('das echte Manifest führt sowohl Kapitelpräfixe als auch vollständige Abschnittsnummern', () => {
     const sections = COVERAGE_MANIFEST.entries.map((e) => e.sourceId.split(':')[1] ?? '');
     expect(sections).toContain('1.1');
     expect(sections).toContain('5.4.2');
