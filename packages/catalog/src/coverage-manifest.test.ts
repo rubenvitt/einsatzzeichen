@@ -20,6 +20,7 @@ import {
   checkProfileRegistry,
   checkVersions,
   releaseBlockers,
+  blockersOf,
 } from './coverage-manifest.js';
 import { PROFILES } from './profiles.js';
 
@@ -305,5 +306,33 @@ describe('Release-Blocker für 1.0', () => {
   it('ist ein Testbefund, kein CI-Abbruch: das Gate bleibt trotz offener Blocker grün', () => {
     expect(releaseBlockers().domainReviewPending.length).toBeGreaterThan(0);
     expect(checkCoverage().violations).toEqual([]);
+  });
+});
+
+describe('blockersOf (parametrisierter Kern von releaseBlockers)', () => {
+  it('schützt ein Kapitelpräfix davor, von einer längeren Abschnittsnummer verdeckt zu werden', () => {
+    // '5.41' beginnt zwar mit '5.4', ist aber nicht '5.4' plus Punkt plus Rest — der Scope-Eintrag
+    // '5.4' muss trotz dieses Eintrags als unabgedeckt gelten.
+    const entry = fixtureCoverageEntry({ sourceId: 'bbk-babz-2025:5.41' });
+    expect(blockersOf([entry], ['5.4']).uncoveredScope).toEqual(['5.4']);
+  });
+
+  it('behandelt einen sourceId ohne Präfixtrenner als eigene, vollständige Abschnittsnummer', () => {
+    const entry = fixtureCoverageEntry({ sourceId: 'ohne-trenner' });
+    expect(blockersOf([entry], ['ohne-trenner']).uncoveredScope).toEqual([]);
+  });
+
+  it('meldet einen Eintrag mit Fingerprint-, aber ohne Snapshot-Nachweis', () => {
+    const entry = fixtureCoverageEntry({ fingerprintTest: true, snapshotTest: false });
+    expect(blockersOf([entry], []).withoutTestEvidence).toEqual([
+      entryKey(entry.sourceId, entry.variant),
+    ]);
+  });
+
+  it('meldet einen Eintrag mit Snapshot-, aber ohne Fingerprint-Nachweis', () => {
+    const entry = fixtureCoverageEntry({ fingerprintTest: false, snapshotTest: true });
+    expect(blockersOf([entry], []).withoutTestEvidence).toEqual([
+      entryKey(entry.sourceId, entry.variant),
+    ]);
   });
 });

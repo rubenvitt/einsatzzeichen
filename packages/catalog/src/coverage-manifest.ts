@@ -415,6 +415,34 @@ function sectionOf(sourceId: string): string {
 }
 
 /**
+ * Der parametrisierte Kern von `releaseBlockers`, im Muster der neun Gate-Prüfungen oben: Eingaben
+ * als Parameter statt als Modul-Singleton, damit Randfälle — die Punkt-Abgrenzung bei
+ * Kapitelpräfixen, ein `sourceId` ohne Trenner, jede Seite des Testnachweis-Oder einzeln — sich
+ * mit Fixtures nachstellen lassen, ohne das echte Manifest zu verändern.
+ */
+export function blockersOf(
+  entries: readonly CoverageEntry[],
+  scope: readonly string[],
+): ReleaseBlockers {
+  const domainReviewPending: string[] = [];
+  const withoutTestEvidence: string[] = [];
+
+  for (const entry of entries) {
+    const key = entryKey(entry.sourceId, entry.variant);
+    if (entry.review.domain.status !== 'approved') domainReviewPending.push(key);
+    if (!entry.fingerprintTest || !entry.snapshotTest) withoutTestEvidence.push(key);
+  }
+
+  const sections = entries.map((entry) => sectionOf(entry.sourceId));
+  const uncoveredScope = scope.filter(
+    (chapter) =>
+      !sections.some((section) => section === chapter || section.startsWith(`${chapter}.`)),
+  );
+
+  return { domainReviewPending, withoutTestEvidence, uncoveredScope };
+}
+
+/**
  * Was Release 1.0 nach den Vision-Kriterien noch blockiert. Läuft als Test, nicht als CI-Abbruch:
  * die Ausgabe ist stabil und prüfbar, aber ein offener Punkt lässt die Pipeline nicht scheitern.
  *
@@ -423,20 +451,5 @@ function sectionOf(sourceId: string): string {
  * bereits: abgeleitete Kennzahlen statt Dateien, eigenständige Geometrie statt übernommener Pfade.
  */
 export function releaseBlockers(): ReleaseBlockers {
-  const domainReviewPending: string[] = [];
-  const withoutTestEvidence: string[] = [];
-
-  for (const entry of COVERAGE_MANIFEST.entries) {
-    const key = entryKey(entry.sourceId, entry.variant);
-    if (entry.review.domain.status !== 'approved') domainReviewPending.push(key);
-    if (!entry.fingerprintTest || !entry.snapshotTest) withoutTestEvidence.push(key);
-  }
-
-  const sections = COVERAGE_MANIFEST.entries.map((entry) => sectionOf(entry.sourceId));
-  const uncoveredScope = COVERAGE_MANIFEST.scope.filter(
-    (chapter) =>
-      !sections.some((section) => section === chapter || section.startsWith(`${chapter}.`)),
-  );
-
-  return { domainReviewPending, withoutTestEvidence, uncoveredScope };
+  return blockersOf(COVERAGE_MANIFEST.entries, COVERAGE_MANIFEST.scope);
 }
