@@ -1,3 +1,6 @@
+export * from './sources.js';
+export * from './profiles.js';
+export * from './elements.js';
 export * from './fingerprint-index.js';
 export * from './base-symbols.js';
 export * from './organizations.js';
@@ -5,3 +8,4 @@ export * from './strengths.js';
 export * from './capabilities.js';
 export * from './recipes.js';
 export * from './coverage-manifest.js';
+export * from './coverage-gate.js';

@@ -20,6 +20,7 @@ describe('provenance', () => {
       id: 'hazard.atomic',
       title: 'Atomare Stoffe',
       kind: 'hazard',
+      profile: 'bund',
       depictions: [
         {
           variant: 'primary',

@@ -2,5 +2,8 @@ export * from './units.js';
 export * from './geometry.js';
 export * from './taxonomy.js';
 export * from './provenance.js';
+export * from './review.js';
+export * from './sources.js';
+export * from './profile.js';
 export * from './coverage.js';
 export * from './head.js';
