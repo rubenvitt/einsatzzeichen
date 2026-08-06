@@ -17,8 +17,23 @@ const SOURCE_REVIEW: ReviewSet = {
 };
 
 /**
- * Die zwölf registrierten Quellen der Referenzhierarchie aus `Vision.md`. `phjardas-tz` ist
- * keine Quelle der Referenzhierarchie aus `Vision.md`, sondern ein Vergleichsbestand
+ * Eigene Review-Angabe für `phjardas-tz`: der Eintrag entstand am 2026-08-06, einen Tag nach den
+ * übrigen elf Einträgen. Das Prüfdatum ist eine Aussage über *diesen* Eintrag, nicht über das
+ * Register — deshalb keine gemeinsame Konstante mit `SOURCE_REVIEW`, deren Datum für die elf
+ * anderen Einträge korrekt bleibt.
+ */
+const PHJARDAS_TZ_REVIEW: ReviewSet = {
+  technical: {
+    status: 'approved',
+    reviewer: 'rv',
+    date: '2026-08-06',
+    note: 'Bibliografische Angaben und Bezugsadresse gegen die Quelle geprüft.',
+  },
+  domain: { status: 'pending' },
+};
+
+/**
+ * Elf Quellen der Referenzhierarchie aus `Vision.md`, dazu `phjardas-tz` als Vergleichsbestand
  * (Slice-3-Spec, Abschnitt 4).
  *
  * Typannotation **und** `satisfies` zusammen: die Annotation weitet jeden Eintrag auf
@@ -163,7 +178,7 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
     publisher: 'phjardas (GitHub)',
     url: 'https://github.com/phjardas/taktische-zeichen',
     scope:
-      'Vergleichsbestand für Bildideen der Kapitel 4 und 5.8: 42 Fachaufgaben und 89 Symbole, jedes als handgeschriebener Pfad mit deklarierter Größe.',
+      'Vergleichsbestand für die Bildideen der Kapitel 4 und 5.8: benannte Fachaufgaben und Symbole, jedes als handgeschriebener Pfad mit deklarierter Größe.',
     acquisition: 'public-url',
     geometryUse: ['compared-only'],
     licence: {
@@ -177,7 +192,7 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
         'Copyright-Zeile lautet "Copyright 2022" ohne Rechteinhaber — wäre je etwas zu ' +
         'attribuieren, müsste die Attribution auf das Repository lauten.',
     },
-    review: SOURCE_REVIEW,
+    review: PHJARDAS_TZ_REVIEW,
   },
   'din-14033': {
     id: 'din-14033',

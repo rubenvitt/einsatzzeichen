@@ -58,8 +58,16 @@ describe('Quellenregister', () => {
     for (const record of Object.values(SOURCE_REGISTRY)) {
       expect(record.review.technical.status).toBe('approved');
       expect(record.review.technical.reviewer).toBe('rv');
-      expect(record.review.technical.date).toBe('2026-08-05');
       expect(record.review.domain.status).toBe('pending');
+    }
+  });
+
+  it('datiert das technische Review jeder Quelle auf den Tag ihrer eigenen Prüfung', () => {
+    // phjardas-tz entstand einen Tag nach den übrigen elf Einträgen und trägt deshalb ein eigenes,
+    // späteres Prüfdatum (siehe PHJARDAS_TZ_REVIEW) statt der gemeinsamen SOURCE_REVIEW-Konstante.
+    for (const [id, record] of Object.entries(SOURCE_REGISTRY)) {
+      const expectedDate = id === 'phjardas-tz' ? '2026-08-06' : '2026-08-05';
+      expect(record.review.technical.date).toBe(expectedDate);
     }
   });
 
