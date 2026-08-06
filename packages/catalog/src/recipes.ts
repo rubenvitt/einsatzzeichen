@@ -1,7 +1,7 @@
 import { compose, type CatalogPorts } from '@einsatzzeichen/core';
 import type { Drawing, SymbolSpec } from '@einsatzzeichen/schema';
 import { baseDrawing } from './base-symbols.js';
-import { capabilityPictogram } from './capabilities.js';
+import { capabilityPictogram } from './pictograms/capabilities.js';
 import { organizationColor } from './organizations.js';
 import { strengthHead } from './strengths.js';
 
