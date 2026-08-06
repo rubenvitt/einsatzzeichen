@@ -1,6 +1,7 @@
 import { strokeCapability as icon } from '../authoring.js';
+import { deepFreeze } from '../../readonly-data.js';
 
-export const CBRN_CAPABILITIES = [
+export const CBRN_CAPABILITIES = deepFreeze([
   icon({
     section: '4.1.1', id: 'cbrn-protection', title: 'ABC-/CBRN-Schutz',
     referenceAsset: '4.1.1_ABC_CBRN-Schutz.svg',
@@ -57,4 +58,4 @@ export const CBRN_CAPABILITIES = [
     title: 'Chemische Stoffe', referenceAsset: '4.1.8_Chemische Stoffe_Alternative.svg', color: 'rot',
     d: 'M 16 8 L 5 24 H 27 Z M 20 13 C 18 11 13 11 12 16 C 11 21 17 22 20 19',
   }),
-] as const;
+] as const);

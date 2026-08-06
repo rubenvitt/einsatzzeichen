@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { boundsOfMm, checkBox, checkCommands } from '@einsatzzeichen/core';
 import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
+import { CBRN_CAPABILITIES } from './capabilities/01-cbrn.js';
 import { strokeCapability } from './authoring.js';
 import { defineCapability } from './catalog-definition.js';
 import {
@@ -46,6 +47,7 @@ describe('Fähigkeitspiktogramme', () => {
     const definition = pictogram('capability.fire-fighting');
     const primitive = definition.primitives[0];
     expect(Object.isFrozen(CAPABILITY_PICTOGRAMS)).toBe(true);
+    expect(Object.isFrozen(CBRN_CAPABILITIES)).toBe(true);
     expect(Object.isFrozen(ALL_PICTOGRAMS)).toBe(true);
     expect(Object.isFrozen(definition)).toBe(true);
     expect(Object.isFrozen(definition.box)).toBe(true);
@@ -133,8 +135,7 @@ describe('Fähigkeitspiktogramme', () => {
   });
 
   it('akzeptiert dieselbe ID mit primary und alternative als getrennte Schlüssel', () => {
-    const primary = CAPABILITY_PICTOGRAMS[0];
-    if (primary === undefined) throw new Error('Test-Fixture fehlt.');
+    const primary = pictogram('capability.fire-fighting');
     const alternative = defineCapability({
       section: primary.section,
       id: 'fire-fighting',
@@ -145,6 +146,7 @@ describe('Fähigkeitspiktogramme', () => {
       primitives: primary.primitives,
     });
 
+    expect(primary.id).toBe(alternative.id);
     const registry = buildPictogramRegistry([primary, alternative]);
     expect(registry.get(pictogramVariantKey(primary))).toBe(primary);
     expect(registry.get(pictogramVariantKey(alternative))).toBe(alternative);
@@ -152,8 +154,7 @@ describe('Fähigkeitspiktogramme', () => {
   });
 
   it('weist ein exakt doppeltes ID-Varianten-Paar zurück', () => {
-    const definition = CAPABILITY_PICTOGRAMS[0];
-    if (definition === undefined) throw new Error('Test-Fixture fehlt.');
+    const definition = pictogram('capability.fire-fighting');
     expect(() => buildPictogramRegistry([definition, definition])).toThrow(/Doppeltes Piktogramm/);
   });
 });
