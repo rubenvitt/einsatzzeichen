@@ -23,6 +23,7 @@ import {
   checkVersions,
   releaseBlockers,
   blockersOf,
+  sortedDomainReviewPendingByArea,
 } from './coverage-gate.js';
 import { PROFILES } from './profiles.js';
 
@@ -356,5 +357,87 @@ describe('blockersOf (parametrisierter Kern von releaseBlockers)', () => {
     expect(blockersOf([entry], []).withoutTestEvidence).toEqual([
       entryKey(entry.sourceId, entry.variant),
     ]);
+  });
+});
+
+describe('blockersOf — Zählung nach Bereich', () => {
+  /** Minimaler Eintrag: nur die Felder, die `blockersOf` liest. */
+  function entry(sourceId: string, domainApproved: boolean): CoverageEntry {
+    return {
+      sourceId,
+      variant: 'primary',
+      title: sourceId,
+      implementation: sourceId,
+      referenceAsset: `${sourceId}.svg`,
+      coverage: 'element',
+      profile: 'bund',
+      fingerprintTest: false,
+      snapshotTest: true,
+      review: {
+        technical: { status: 'approved', reviewer: 'rv', date: '2026-08-05' },
+        domain: domainApproved
+          ? { status: 'approved', reviewer: 'rv', date: '2026-08-05' }
+          : { status: 'pending' },
+      },
+    };
+  }
+
+  it('zählt offene fachliche Reviews je Kapitel und Anhang', () => {
+    const result = blockersOf(
+      [
+        entry('bbk-babz-2025:4.3.1', false),
+        entry('bbk-babz-2025:4.3.2', false),
+        entry('bbk-babz-2025:5.8.1.1', false),
+        entry('bbk-babz-2025:C.1.1', true),
+      ],
+      [],
+    );
+    expect(result.domainReviewPendingByArea).toEqual({ '4': 2, '5': 1 });
+  });
+
+  it('zählt einen Abschnitt ohne Punkt als eigenen Bereich', () => {
+    const result = blockersOf([entry('bbk-babz-2025:1', false)], []);
+    expect(result.domainReviewPendingByArea).toEqual({ '1': 1 });
+  });
+
+  it('ordnet einen sourceId ohne Trenner einem Bereich zu, statt ihn zu verlieren', () => {
+    // sectionOf gibt bei fehlendem ':' die ganze Zeichenkette zurück — die Zählung muss auch
+    // diesen Randfall abbilden, sonst verschwindet ein Eintrag stillschweigend aus der Statistik.
+    const result = blockersOf([entry('4.9.1', false)], []);
+    expect(result.domainReviewPendingByArea).toEqual({ '4': 1 });
+  });
+
+  it('sortiert absteigend nach Anzahl und bei Gleichstand alphabetisch', () => {
+    // `domainReviewPendingByArea` selbst trägt keine Reihenfolge: ECMAScript zählt Schlüssel,
+    // die kanonische Ganzzahl-Strings sind ('4', '2', ...), immer aufsteigend numerisch vor
+    // allen anderen Schlüsseln auf — unabhängig von der Einfügereihenfolge. Ein Objekt mit den
+    // Bereichen '4', '2', 'C' liefert über `Object.keys` daher ['2', '4', 'C'], egal wie die
+    // Zählung aufgebaut wurde. Die Sortierung muss deshalb an `sortedDomainReviewPendingByArea`
+    // geprüft werden, nicht am `Record`.
+    const result = blockersOf(
+      [
+        entry('bbk-babz-2025:C.1.1', false),
+        entry('bbk-babz-2025:4.3.1', false),
+        entry('bbk-babz-2025:4.3.2', false),
+        entry('bbk-babz-2025:2.1', false),
+      ],
+      [],
+    );
+    expect(Object.keys(result.domainReviewPendingByArea).sort()).toEqual(['2', '4', 'C']);
+    expect(
+      sortedDomainReviewPendingByArea(result.domainReviewPendingByArea).map(([area]) => area),
+    ).toEqual(['4', '2', 'C']);
+  });
+
+  it('liefert ein leeres Objekt, wenn kein Review offen ist', () => {
+    const result = blockersOf([entry('bbk-babz-2025:4.3.1', true)], []);
+    expect(result.domainReviewPendingByArea).toEqual({});
+  });
+
+  it('lässt die Gesamtzahl und die Bereichssummen übereinstimmen', () => {
+    // Am echten Manifest, damit die beiden Zahlen nicht auseinanderlaufen können.
+    const blockers = releaseBlockers();
+    const sum = Object.values(blockers.domainReviewPendingByArea).reduce((a, b) => a + b, 0);
+    expect(sum).toBe(blockers.domainReviewPending.length);
   });
 });

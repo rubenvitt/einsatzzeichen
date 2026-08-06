@@ -337,10 +337,48 @@ export function checkCoverage(): {
 export interface ReleaseBlockers {
   /** Manifestschlüssel der Einträge ohne abgeschlossenes fachliches Review. */
   domainReviewPending: string[];
+  /**
+   * Dieselben Einträge, gezählt je Kapitel und Anhang. Nach dem vollen Katalogausbau tragen
+   * mehrere hundert Einträge `domain: pending` und dominieren `domainReviewPending` vollständig.
+   * Die Liste bleibt trotzdem ungekürzt — das fachliche Review ist der Engpass zu 1.0, und das
+   * darzustellen ist ihr Zweck. Diese Zählung macht daneben sichtbar, welcher Bereich geprüft
+   * ist und welcher nicht.
+   *
+   * Trägt keine Reihenfolge: ECMAScript zählt Objektschlüssel, die kanonische Ganzzahl-Strings
+   * sind (`'4'`, `'12'`, …), immer aufsteigend numerisch vor allen anderen Schlüsseln auf —
+   * unabhängig von der Einfügereihenfolge. Da Bereiche wie `'1'` bis `'14'` genau solche
+   * Schlüssel sind, kann kein `Record` die gewünschte Sortierung tragen. Wer sie braucht, ruft
+   * `sortedDomainReviewPendingByArea` auf.
+   */
+  domainReviewPendingByArea: Record<string, number>;
   /** Manifestschlüssel der Einträge ohne Fingerprint- oder Snapshot-Nachweis. */
   withoutTestEvidence: string[];
   /** Kapitel im Scope, die kein einziger Eintrag trägt. */
   uncoveredScope: string[];
+}
+
+/**
+ * Bereich einer Abschnittsnummer: der Teil vor dem ersten Punkt. `'4.3.2'` → `'4'`,
+ * `'C.1.1'` → `'C'`, `'1'` → `'1'`. Grob genug, dass die Zählung nach dem vollen Ausbau lesbar
+ * bleibt, und fein genug, dass Kapitel 4 und Anhang C nicht in einen Topf fallen.
+ */
+function areaOf(section: string): string {
+  const dot = section.indexOf('.');
+  return dot === -1 ? section : section.slice(0, dot);
+}
+
+/**
+ * `domainReviewPendingByArea` als Paare, absteigend nach Anzahl und bei Gleichstand alphabetisch
+ * sortiert — die Reihenfolge, die der `Record` selbst nicht tragen kann (siehe dessen
+ * Dokumentation). Einzige Stelle, die diese Sortierung herstellt, damit CLI und Tests dieselbe
+ * Reihenfolge sehen.
+ */
+export function sortedDomainReviewPendingByArea(
+  byArea: Record<string, number>,
+): Array<[area: string, count: number]> {
+  return Object.entries(byArea).sort(([areaA, countA], [areaB, countB]) =>
+    countB - countA !== 0 ? countB - countA : areaA.localeCompare(areaB),
+  );
 }
 
 /**
@@ -355,10 +393,15 @@ export function blockersOf(
 ): ReleaseBlockers {
   const domainReviewPending: string[] = [];
   const withoutTestEvidence: string[] = [];
+  const pendingByArea = new Map<string, number>();
 
   for (const entry of entries) {
     const key = entryKey(entry.sourceId, entry.variant);
-    if (entry.review.domain.status !== 'approved') domainReviewPending.push(key);
+    if (entry.review.domain.status !== 'approved') {
+      domainReviewPending.push(key);
+      const area = areaOf(sectionOf(entry.sourceId));
+      pendingByArea.set(area, (pendingByArea.get(area) ?? 0) + 1);
+    }
     if (!entry.fingerprintTest || !entry.snapshotTest) withoutTestEvidence.push(key);
   }
 
@@ -368,7 +411,11 @@ export function blockersOf(
       !sections.some((section) => section === chapter || section.startsWith(`${chapter}.`)),
   );
 
-  return { domainReviewPending, withoutTestEvidence, uncoveredScope };
+  // Keine Sortierung hier: der `Record` kann sie ohnehin nicht tragen (siehe Dokumentation des
+  // Felds). Wer eine Reihenfolge braucht, ruft `sortedDomainReviewPendingByArea` auf.
+  const domainReviewPendingByArea = Object.fromEntries(pendingByArea);
+
+  return { domainReviewPending, domainReviewPendingByArea, withoutTestEvidence, uncoveredScope };
 }
 
 /**

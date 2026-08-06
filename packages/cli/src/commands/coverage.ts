@@ -4,6 +4,7 @@ import {
   checkCoverage,
   profileFor,
   releaseBlockers,
+  sortedDomainReviewPendingByArea,
 } from '@einsatzzeichen/catalog';
 
 export function coverage(): void {
@@ -28,6 +29,16 @@ export function coverage(): void {
   console.log(`1.0-Blocker: ${blockers.domainReviewPending.length} ohne fachliches Review, ` +
     `${blockers.withoutTestEvidence.length} ohne Testnachweis, ` +
     `${blockers.uncoveredScope.length} Kapitel im beanspruchten Umfang ohne Eintrag`);
+
+  const byArea = sortedDomainReviewPendingByArea(blockers.domainReviewPendingByArea);
+  if (byArea.length > 0) {
+    console.log(
+      `  Offene fachliche Reviews nach Bereich: ${byArea
+        .map(([area, count]) => `${area}: ${count}`)
+        .join(', ')}`,
+    );
+  }
+
   for (const chapter of blockers.uncoveredScope) {
     console.log(`  Kapitel im beanspruchten Umfang ohne Eintrag: ${chapter}`);
   }
