@@ -47,18 +47,28 @@ describe('Kommando-Gate', () => {
   });
 
   it('prüft jeden Pfad einer Definition mit mehreren Primitiven', () => {
+    // primitives[0] und primitives[1] tragen je einen eigenen, unterscheidbaren Fehlgrund
+    // (A vs. relative Kommandos). Ein `pathsOf`, das fehlerhaft nur das letzte Element lieferte,
+    // ergäbe bei zwei gleichartigen Fehlern zufällig dieselbe Gesamtlänge — mit unterscheidbaren
+    // Fehlgründen belegt der Test, dass Befunde aus **beiden** Pfaden stammen, nicht nur einem.
     const definition: PictogramDefinition = {
       id: 'capability.fire-fighting',
       title: 'Zwei Pfade',
       box: { xMm: 4, yMm: 12, widthMm: 24, heightMm: 8 },
       primitives: [
-        { type: 'path', role: 'pictogram', d: 'M 4 12 L 8 12' },
+        { type: 'path', role: 'pictogram', d: 'M 4 12 A 2 2 0 0 1 8 16' },
         { type: 'path', role: 'pictogram', d: 'm 4 12 l 8 0' },
       ],
     };
+    const issues = checkCommands(definition);
     // 'm' und 'l' sind zwei getrennte relative Kommandos, also zwei Befunde (siehe
-    // tokenizePath('m 4 4 l 8 8') in path-commands.test.ts) — nicht einer je Pfad.
-    expect(checkCommands(definition)).toHaveLength(2);
+    // tokenizePath('m 4 4 l 8 8') in path-commands.test.ts) — nicht einer je Pfad. Zusammen mit
+    // dem A-Befund aus primitives[0] macht das drei.
+    expect(issues).toHaveLength(3);
+    const details = issues.map((issue) => issue.detail);
+    expect(details.some((detail) => detail.includes('Unzulässiges Kommando "A"'))).toBe(true);
+    expect(details.some((detail) => detail.includes('Relatives Kommando "m"'))).toBe(true);
+    expect(details.some((detail) => detail.includes('Relatives Kommando "l"'))).toBe(true);
   });
 
   it('steigt in Gruppen ab', () => {

@@ -80,6 +80,19 @@ describe('tokenizePath', () => {
     ]);
   });
 
+  it('liest Exponentialschreibweise als je eine Zahl', () => {
+    // Grund für die Alternationsreihenfolge in TOKEN (Zahl vor Buchstabe): "1e-3" muss als eine
+    // Zahl gelesen werden, nicht als "1", "e", "-3". Ohne diesen Test könnte eine spätere Änderung
+    // an der Regex Exponentialzahlen brechen, ohne dass es auffiele — und genau diese Regex trägt
+    // in Task 5 das Box-Gate.
+    const { commands, problems } = tokenizePath('M 1e-3 -2e+4 L 3E5 4E-2');
+    expect(problems).toEqual([]);
+    expect(commands).toEqual([
+      { command: 'M', numbers: [0.001, -20000] },
+      { command: 'L', numbers: [300000, 0.04] },
+    ]);
+  });
+
   it('meldet eine unpassende Argumentzahl', () => {
     expect(tokenizePath('M 4 4 C 6 6 8 8').problems).toEqual([
       'Kommando "C" erwartet ein Vielfaches von 6 Zahlen, erhielt 4.',
