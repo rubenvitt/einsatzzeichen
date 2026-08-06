@@ -82,3 +82,49 @@ describe('Fähigkeitsinventar Kapitel 4.1', () => {
     ]);
   });
 });
+
+describe('Fähigkeitsinventar Kapitel 4.2', () => {
+  it('bildet die fünf Darstellungen aus Betreuung exakt ab', () => {
+    const actual = CAPABILITY_PICTOGRAMS
+      .filter((definition) => definition.section.startsWith('4.2.'))
+      .map(({ section, id, variant, referenceAsset }) => ({
+        section,
+        id,
+        variant,
+        referenceAsset,
+      }));
+
+    expect(actual).toEqual([
+      {
+        section: '4.2.1',
+        id: 'capability.care',
+        variant: 'primary',
+        referenceAsset: '4.2.1_Betreuung Grundzeichne.svg',
+      },
+      {
+        section: '4.2.2',
+        id: 'capability.psychosocial-emergency-care',
+        variant: 'primary',
+        referenceAsset: '4.2.2_PSNV.svg',
+      },
+      {
+        section: '4.2.3',
+        id: 'capability.pastoral-care',
+        variant: 'primary',
+        referenceAsset: '4.2.3_Seelsorge.svg',
+      },
+      {
+        section: '4.2.4',
+        id: 'capability.temporary-accommodation-resting',
+        variant: 'primary',
+        referenceAsset: '4.2.4_Temporäre Unterbringung mit Ruhemöglichkeit.svg',
+      },
+      {
+        section: '4.2.5',
+        id: 'capability.temporary-accommodation-seating',
+        variant: 'primary',
+        referenceAsset: '4.2.5_Temporäre Unterbringung mit Sitzmöglichkeit.svg',
+      },
+    ]);
+  });
+});

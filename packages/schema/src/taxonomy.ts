@@ -61,6 +61,11 @@ export type CapabilityId =
   | 'radioactive-materials'
   | 'biological-materials'
   | 'chemical-materials'
+  | 'care'
+  | 'psychosocial-emergency-care'
+  | 'pastoral-care'
+  | 'temporary-accommodation-resting'
+  | 'temporary-accommodation-seating'
   | 'fire-fighting'
   | 'service-water';
 
