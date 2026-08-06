@@ -1,9 +1,25 @@
 import { describe, expect, it } from 'vitest';
-import { boundsOfMm } from '@einsatzzeichen/core';
+import { boundsOfMm, checkBox, checkCommands } from '@einsatzzeichen/core';
 import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
+import { strokeCapability } from './authoring.js';
 import { ALL_PICTOGRAMS, pictogram, pictogramVariantKey } from './index.js';
 
 describe('Fähigkeitspiktogramme', () => {
+  it('erzeugt absolute Pfade mit expliziter Standardbox und Piktogrammrolle', () => {
+    const definition = strokeCapability({
+      section: '4.9.1',
+      id: 'fire-fighting',
+      title: 'Test',
+      referenceAsset: '4.9.1_Information und Kommunikation Fernmeldewesen.svg',
+      d: 'M 4 8 L 28 24',
+    });
+    expect(definition.box).toEqual({ xMm: 4, yMm: 8, widthMm: 24, heightMm: 16 });
+    expect(definition.primitives).toHaveLength(1);
+    expect(definition.primitives[0]?.role).toBe('pictogram');
+    expect(checkCommands(definition)).toEqual([]);
+    expect(checkBox(definition)).toEqual([]);
+  });
+
   it('gibt Definitionen als tief readonly typisiert zurück', () => {
     if (false) {
       const definition = pictogram('capability.fire-fighting');
