@@ -43,8 +43,20 @@ export interface Rotation {
   cy: Length;
 }
 
+/**
+ * Verschiebung in Millimetern. Ausschließlich an Gruppen belegt: an einem Primitiv, das zugleich
+ * `rotate` trägt, hätte sie dasselbe Problem wie `shiftY` — sie träfe die Koordinate, nicht das
+ * Rotationszentrum. Auf der Gruppe wirkt sie nach außen auf das fertige Ergebnis und ist damit
+ * von der Drehung der Kinder unabhängig.
+ */
+export interface Translation {
+  dxMm: Length;
+  dyMm: Length;
+}
+
 export interface Transform {
   rotate?: Rotation;
+  translate?: Translation;
 }
 
 /** Fachliche Rolle eines Primitivs. Steuert Fingerprint-Vergleich und Kompositionslogik. */

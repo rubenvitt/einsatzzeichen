@@ -61,9 +61,23 @@ function merge(list: readonly BoundsMm[]): BoundsMm {
  * Drehung wird auf die formdefinierenden Punkte jedes Primitivs angewendet, nicht auf die
  * Ecken seiner (unrotierten) achsparallelen Hülle — sonst wäre das Ergebnis nur für `rect`
  * exakt und für `circle`, `line` und `polyline` zu groß.
+ *
+ * Eine Gruppe mit `transform.translate` verschiebt die Hülle ihrer Kinder; ist diese nicht
+ * vergleichbar, bleibt sie es auch nach der Verschiebung.
  */
 function rawBoundsOfMm(primitive: Primitive): BoundsMm | undefined {
   const rotate = primitive.transform?.rotate;
+  const translate = primitive.transform?.translate;
+  if (translate && primitive.type !== 'group') {
+    // Dasselbe Muster wie die Gruppendrehung unten: `translate` ist nur an Gruppen belegt
+    // (compose() umschließt die Piktogramme mit genau einer). An einem Einzelprimitiv würde
+    // diese Hüllberechnung es still ignorieren, während beide Renderer es anwenden — aus
+    // derselben IR entstünden zwei verschiedene Aussagen. Deshalb explizit ablehnen.
+    throw new Error(
+      'boundsOfMm: transform.translate ist nur an Gruppen belegt, nicht an ' +
+        `"${primitive.type}".`,
+    );
+  }
 
   switch (primitive.type) {
     case 'rect': {
@@ -112,7 +126,15 @@ function rawBoundsOfMm(primitive: Primitive): BoundsMm | undefined {
       const childBounds = primitive.children
         .map(rawBoundsOfMm)
         .filter((bounds): bounds is BoundsMm => bounds !== undefined);
-      return childBounds.length > 0 ? merge(childBounds) : undefined;
+      if (childBounds.length === 0) return undefined;
+      const merged = merge(childBounds);
+      if (!translate) return merged;
+      return {
+        minX: merged.minX + translate.dxMm,
+        minY: merged.minY + translate.dyMm,
+        maxX: merged.maxX + translate.dxMm,
+        maxY: merged.maxY + translate.dyMm,
+      };
     }
   }
 }
