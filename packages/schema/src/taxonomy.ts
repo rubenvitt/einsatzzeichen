@@ -71,7 +71,10 @@ export type CapabilityId =
   | 'foam-agent'
   | 'solid-extinguishing-agent'
   | 'gaseous-extinguishing-agent'
-  | 'respiratory-protection';
+  | 'respiratory-protection'
+  | 'reconnaissance'
+  | 'biological-location'
+  | 'technical-location';
 
 /** Semantische Beschreibung eines Zeichens. Eingabe des Kompositionsmotors. */
 export interface SymbolSpec {

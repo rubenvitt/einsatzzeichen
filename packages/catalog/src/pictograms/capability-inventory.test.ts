@@ -180,3 +180,37 @@ describe('Fähigkeitsinventar Kapitel 4.3', () => {
     ]);
   });
 });
+
+describe('Fähigkeitsinventar Kapitel 4.4', () => {
+  it('bildet die drei Darstellungen aus Erkundung und Ortung exakt ab', () => {
+    const actual = CAPABILITY_PICTOGRAMS
+      .filter((definition) => definition.section.startsWith('4.4.'))
+      .map(({ section, id, variant, referenceAsset }) => ({
+        section,
+        id,
+        variant,
+        referenceAsset,
+      }));
+
+    expect(actual).toEqual([
+      {
+        section: '4.4.1',
+        id: 'capability.reconnaissance',
+        variant: 'primary',
+        referenceAsset: '4.4.1_Erkunden.svg',
+      },
+      {
+        section: '4.4.2',
+        id: 'capability.biological-location',
+        variant: 'primary',
+        referenceAsset: '4.4.2_Orten biologisch.svg',
+      },
+      {
+        section: '4.4.3',
+        id: 'capability.technical-location',
+        variant: 'primary',
+        referenceAsset: '4.4.3_Orten technisch.svg',
+      },
+    ]);
+  });
+});

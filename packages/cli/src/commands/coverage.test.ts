@@ -16,10 +16,10 @@ describe('coverage CLI', () => {
     coverage();
 
     expect(lines).toContain(
-      'Offene fachliche Reviews: 57 (44 Manifestreviews, 12 Quellenreviews, 1 Profilreview)',
+      'Offene fachliche Reviews: 60 (47 Manifestreviews, 12 Quellenreviews, 1 Profilreview)',
     );
     expect(lines).toContain(
-      '1.0-Blocker: 44 Manifestreviews, 12 Quellenreviews und 1 Profilreview noch ohne abgeschlossenes fachliches Review; 0 Manifestabweichungen, 0 Quellenabweichungen und 0 Profilabweichungen mit domain: deviation; 0 ohne Testnachweis, 0 Kapitel im beanspruchten Umfang ohne Eintrag',
+      '1.0-Blocker: 47 Manifestreviews, 12 Quellenreviews und 1 Profilreview noch ohne abgeschlossenes fachliches Review; 0 Manifestabweichungen, 0 Quellenabweichungen und 0 Profilabweichungen mit domain: deviation; 0 ohne Testnachweis, 0 Kapitel im beanspruchten Umfang ohne Eintrag',
     );
     expect(lines.at(-1)).toBe('Coverage-Gate bestanden.');
   });
