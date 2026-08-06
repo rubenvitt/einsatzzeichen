@@ -1,4 +1,5 @@
 import { DEFAULT_STROKE_WIDTH_MM, type Primitive, type Style } from '@einsatzzeichen/schema';
+import { deepFreeze } from '../../readonly-data.js';
 import { defineCapability } from '../catalog-definition.js';
 
 const STROKE: Style = { stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM, fill: 'none' };
@@ -11,7 +12,7 @@ function line(x1: number, y1: number, x2: number, y2: number): Primitive {
  * Piktogramme des Kapitels 4.3 (Fähigkeiten). Alle Geometrien sind eigenständige Konstruktionen
  * nach der Bildidee der Referenz; Maße und Koordinaten stammen nicht aus den Referenzdateien.
  */
-export const FIRE_FIGHTING_PICTOGRAMS = [
+export const FIRE_FIGHTING_PICTOGRAMS = deepFreeze([
   defineCapability({
     section: '4.3.1',
     id: 'fire-fighting',
@@ -50,4 +51,4 @@ export const FIRE_FIGHTING_PICTOGRAMS = [
       },
     ],
   }),
-] as const;
+] as const);

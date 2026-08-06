@@ -27,6 +27,13 @@ describe('Fachreview-Ledger', () => {
     }
   });
 
+  it('hält die vom unveränderlichen Manifest geteilten Ledgerobjekte selbst unveränderlich', () => {
+    expect(Object.isFrozen(MANIFEST_DOMAIN_REVIEWS)).toBe(true);
+    for (const review of Object.values(MANIFEST_DOMAIN_REVIEWS)) {
+      expect(Object.isFrozen(review)).toBe(true);
+    }
+  });
+
   it('ist auch für Quellen und Profile exakt deckungsgleich und korrekt verdrahtet', () => {
     expect(Object.keys(SOURCE_DOMAIN_REVIEWS).sort()).toEqual(Object.keys(SOURCE_REGISTRY).sort());
     expect(Object.keys(PROFILE_DOMAIN_REVIEWS).sort()).toEqual(Object.keys(PROFILES).sort());

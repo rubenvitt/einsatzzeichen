@@ -1,4 +1,5 @@
 import type { ProfileId, Review, SourceId } from '@einsatzzeichen/schema';
+import { deepFreeze, type DeepReadonly } from './readonly-data.js';
 
 /**
  * Fachreview-Ledger des aktuellen Manifests, absichtlich mit genau einem eigenen Objekt je
@@ -9,7 +10,7 @@ import type { ProfileId, Review, SourceId } from '@einsatzzeichen/schema';
  * `domain-reviews.test.ts` in beide Richtungen geprüft. Ein neuer Manifest-Eintrag muss deshalb
  * hier bewusst als `pending` aufgenommen werden, bevor das Gate wieder grün wird.
  */
-export const MANIFEST_DOMAIN_REVIEWS = {
+export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:1.1#primary': { status: 'pending' },
   'bbk-babz-2025:1.2#primary': { status: 'pending' },
   'bbk-babz-2025:1.6#primary': { status: 'pending' },
@@ -34,12 +35,12 @@ export const MANIFEST_DOMAIN_REVIEWS = {
   'bbk-babz-2025:5.4.4#primary': { status: 'pending' },
   'bbk-babz-2025:4.3.1#primary': { status: 'pending' },
   'bbk-babz-2025:4.3.2#primary': { status: 'pending' },
-} satisfies Record<string, Review>;
+} satisfies Record<string, Review>);
 
 export type ManifestDomainReviewKey = keyof typeof MANIFEST_DOMAIN_REVIEWS;
 
 /** Wirft bei einer nicht inventarisierten Manifestzeile statt still ein Sammelreview zu nutzen. */
-export function manifestDomainReviewFor(key: string): Review {
+export function manifestDomainReviewFor(key: string): DeepReadonly<Review> {
   if (!Object.prototype.hasOwnProperty.call(MANIFEST_DOMAIN_REVIEWS, key)) {
     throw new Error(`Kein Fachreview-Ledger-Eintrag für "${key}".`);
   }

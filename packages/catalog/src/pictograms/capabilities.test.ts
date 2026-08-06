@@ -1,9 +1,57 @@
 import { describe, expect, it } from 'vitest';
 import { boundsOfMm } from '@einsatzzeichen/core';
 import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
-import { pictogram, pictogramVariantKey } from './index.js';
+import { ALL_PICTOGRAMS, pictogram, pictogramVariantKey } from './index.js';
 
 describe('Fähigkeitspiktogramme', () => {
+  it('gibt Definitionen als tief readonly typisiert zurück', () => {
+    if (false) {
+      const definition = pictogram('capability.fire-fighting');
+      // @ts-expect-error Katalogmetadaten sind nach der Definition unveränderlich.
+      definition.title = 'Manipuliert';
+      // @ts-expect-error Auch die zugesicherte Box ist tief unveränderlich.
+      definition.box.xMm = 0;
+      const style = definition.primitives[0]?.style;
+      if (style !== undefined) {
+        // @ts-expect-error Auch verschachtelte Primitive-Stile sind tief unveränderlich.
+        style.stroke = 'rot';
+      }
+    }
+    expect(true).toBe(true);
+  });
+
+  it('friert Definitionen und beide öffentlichen Register tief ein', () => {
+    const definition = pictogram('capability.fire-fighting');
+    const primitive = definition.primitives[0];
+    expect(Object.isFrozen(CAPABILITY_PICTOGRAMS)).toBe(true);
+    expect(Object.isFrozen(ALL_PICTOGRAMS)).toBe(true);
+    expect(Object.isFrozen(definition)).toBe(true);
+    expect(Object.isFrozen(definition.box)).toBe(true);
+    expect(Object.isFrozen(definition.primitives)).toBe(true);
+    expect(Object.isFrozen(primitive)).toBe(true);
+    expect(Object.isFrozen(primitive?.style)).toBe(true);
+  });
+
+  it('weist Laufzeitmutationen an Definition und Register zurück', () => {
+    const definition = pictogram('capability.fire-fighting');
+    const originalTitle = definition.title;
+    const originalLength = ALL_PICTOGRAMS.length;
+    const titleWasSet = Reflect.set(definition, 'title', 'Manipuliert');
+    const observedTitle = definition.title;
+    const entryWasAdded = Reflect.set(ALL_PICTOGRAMS, originalLength, definition);
+
+    if (titleWasSet) Reflect.set(definition, 'title', originalTitle);
+    if (entryWasAdded) {
+      Reflect.deleteProperty(ALL_PICTOGRAMS, originalLength);
+      Reflect.set(ALL_PICTOGRAMS, 'length', originalLength);
+    }
+
+    expect(titleWasSet).toBe(false);
+    expect(observedTitle).toBe(originalTitle);
+    expect(entryWasAdded).toBe(false);
+    expect(ALL_PICTOGRAMS).toHaveLength(originalLength);
+  });
+
   it('zeichnet Brandbekämpfung als Strahlrohr mit Sprühkegel', () => {
     const parts = pictogram('capability.fire-fighting').primitives;
     expect(parts).toHaveLength(3);

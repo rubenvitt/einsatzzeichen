@@ -5,30 +5,35 @@ import type {
   PictogramDefinition,
   Primitive,
 } from '@einsatzzeichen/schema';
+import { deepFreeze, type DeepReadonly } from '../readonly-data.js';
 
-export interface CatalogPictogramDefinition extends PictogramDefinition {
-  section: `4.${string}`;
-  referenceAsset: `${string}.svg`;
-}
+export type CatalogPictogramDefinition = DeepReadonly<
+  PictogramDefinition & {
+    section: `4.${string}`;
+    referenceAsset: `${string}.svg`;
+  }
+>;
 
 export interface CapabilityDefinitionInput {
-  section: `4.${string}`;
-  id: CapabilityId;
-  variant?: DepictionVariant;
-  title: string;
-  referenceAsset: `${string}.svg`;
-  box: PictogramBox;
-  primitives: readonly Primitive[];
+  readonly section: `4.${string}`;
+  readonly id: CapabilityId;
+  readonly variant?: DepictionVariant;
+  readonly title: string;
+  readonly referenceAsset: `${string}.svg`;
+  readonly box: PictogramBox;
+  readonly primitives: readonly Primitive[];
 }
 
 export function defineCapability(input: CapabilityDefinitionInput): CatalogPictogramDefinition {
-  return {
+  return deepFreeze({
     section: input.section,
     id: `capability.${input.id}`,
     variant: input.variant ?? 'primary',
     title: input.title,
     referenceAsset: input.referenceAsset,
-    box: input.box,
-    primitives: input.primitives,
-  };
+    // Definitionen übernehmen keine veränderlichen Eingabereferenzen. Der anschließende Freeze
+    // hat dadurch keinen überraschenden Seiteneffekt auf Objekte im Besitz des Aufrufers.
+    box: structuredClone(input.box),
+    primitives: structuredClone(input.primitives),
+  });
 }

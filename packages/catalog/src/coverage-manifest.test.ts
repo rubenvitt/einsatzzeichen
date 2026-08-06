@@ -22,6 +22,41 @@ function fixtureEntry(id: string, primaryCount: number): CatalogEntry {
 }
 
 describe('Coverage-Manifest', () => {
+  it('exportiert Manifestmetadaten als tief readonly Typvertrag', () => {
+    if (false) {
+      // @ts-expect-error Das veröffentlichte Manifest ist unveränderlich.
+      COVERAGE_MANIFEST.coreVersion = 'manipuliert';
+      const entry = COVERAGE_MANIFEST.entries[0];
+      // @ts-expect-error Auch eine einzelne Manifestzeile ist unveränderlich.
+      entry.title = 'Manipuliert';
+      // @ts-expect-error Auch verschachtelte Reviewdaten sind unveränderlich.
+      entry.review.technical.status = 'pending';
+    }
+    expect(true).toBe(true);
+  });
+
+  it('friert Manifest, Zeilen und verschachtelte Metadaten tief ein', () => {
+    const entry = COVERAGE_MANIFEST.entries[0];
+    expect(Object.isFrozen(COVERAGE_MANIFEST)).toBe(true);
+    expect(Object.isFrozen(COVERAGE_MANIFEST.scope)).toBe(true);
+    expect(Object.isFrozen(COVERAGE_MANIFEST.entries)).toBe(true);
+    expect(Object.isFrozen(entry)).toBe(true);
+    expect(Object.isFrozen(entry.testEvidence)).toBe(true);
+    expect(Object.isFrozen(entry.review)).toBe(true);
+    expect(Object.isFrozen(entry.review.technical)).toBe(true);
+  });
+
+  it('weist Laufzeitmutationen an Manifestzeilen zurück', () => {
+    const entry = COVERAGE_MANIFEST.entries[0];
+    const originalTitle = entry.title;
+    const titleWasSet = Reflect.set(entry, 'title', 'Manipuliert');
+    const observedTitle = entry.title;
+    if (titleWasSet) Reflect.set(entry, 'title', originalTitle);
+
+    expect(titleWasSet).toBe(false);
+    expect(observedTitle).toBe(originalTitle);
+  });
+
   it('ist über Quellen-ID und Variante eindeutig keyfähig', () => {
     const keys = COVERAGE_MANIFEST.entries.map((e) => entryKey(e.sourceId, e.variant));
     expect(new Set(keys).size).toBe(keys.length);

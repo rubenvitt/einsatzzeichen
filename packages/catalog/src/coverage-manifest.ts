@@ -10,6 +10,7 @@ import { BASE_SYMBOLS } from './base-symbols.js';
 import { manifestDomainReviewFor } from './domain-reviews.js';
 import { resolveElement } from './elements.js';
 import { ALL_PICTOGRAMS } from './pictograms/index.js';
+import { deepFreeze, type DeepReadonly } from './readonly-data.js';
 import { RECIPES } from './recipes.js';
 
 /**
@@ -163,7 +164,7 @@ const pictogramEntries: CoverageEntry[] = ALL_PICTOGRAMS.map((definition) => {
   };
 });
 
-export const COVERAGE_MANIFEST: CoverageManifest = {
+const COVERAGE_MANIFEST_DATA: CoverageManifest = {
   baseline: 'bbk-babz-2025',
   /**
    * Datenversion des Kerns, unabhängig von den npm-Paketversionen. Ein Profil kann sich ändern,
@@ -176,3 +177,8 @@ export const COVERAGE_MANIFEST: CoverageManifest = {
   scope: ['1', '2', '4.3.1', '4.3.2', '5.4', 'C.1.1', 'C.1.2', 'D.3.7'],
   entries: [...catalogEntries, ...recipeEntries, ...elementEntries, ...pictogramEntries],
 };
+
+// Die Fachreviews sind bereits als unveränderliche Ledgerobjekte ausgewiesen. Alle übrigen
+// Referenzen gehören diesem Modul; das direkte Einfrieren erhält deshalb den geprüften
+// Identitätsvertrag zwischen Manifestzeile und Ledger ohne fremde Eingaben zu verändern.
+export const COVERAGE_MANIFEST: DeepReadonly<CoverageManifest> = deepFreeze(COVERAGE_MANIFEST_DATA);

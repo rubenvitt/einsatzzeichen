@@ -6,6 +6,35 @@ import { fingerprintFor } from './fingerprint-index.js';
 import { ALL_PICTOGRAMS, pictogram } from './pictograms/index.js';
 
 describe('Element-Register', () => {
+  it('gibt Elementdeskriptoren als tief readonly typisiert zurück', () => {
+    if (false) {
+      const descriptor = resolveElement('strength.trupp');
+      // @ts-expect-error Abgeleitete Elementmetadaten sind unveränderlich.
+      descriptor.title = 'Manipuliert';
+      // @ts-expect-error Auch die Liste ihrer Referenzdateien ist unveränderlich.
+      descriptor.referenceAssets[0] = 'manipuliert.svg';
+    }
+    expect(true).toBe(true);
+  });
+
+  it('friert Register, Deskriptoren und Referenzdateien tief ein', () => {
+    const descriptor = resolveElement('strength.trupp');
+    expect(Object.isFrozen(ELEMENTS)).toBe(true);
+    expect(Object.isFrozen(descriptor)).toBe(true);
+    expect(Object.isFrozen(descriptor.referenceAssets)).toBe(true);
+  });
+
+  it('weist Laufzeitmutationen an Elementdeskriptoren zurück', () => {
+    const descriptor = resolveElement('strength.trupp');
+    const originalTitle = descriptor.title;
+    const titleWasSet = Reflect.set(descriptor, 'title', 'Manipuliert');
+    const observedTitle = descriptor.title;
+    if (titleWasSet) Reflect.set(descriptor, 'title', originalTitle);
+
+    expect(titleWasSet).toBe(false);
+    expect(observedTitle).toBe(originalTitle);
+  });
+
   it('führt dreizehn Elemente: sieben Farben, vier Stärkegrade, zwei Piktogramme', () => {
     const byKind = Object.values(ELEMENTS).reduce<Record<string, number>>((acc, el) => {
       acc[el.kind] = (acc[el.kind] ?? 0) + 1;

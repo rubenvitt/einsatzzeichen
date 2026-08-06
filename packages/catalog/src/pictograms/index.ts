@@ -5,6 +5,7 @@ import {
 } from '@einsatzzeichen/schema';
 import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
 import type { CatalogPictogramDefinition } from './catalog-definition.js';
+import { deepFreeze } from '../readonly-data.js';
 
 export function pictogramVariantKey(
   value: Pick<CatalogPictogramDefinition, 'id' | 'variant'>,
@@ -23,7 +24,9 @@ export function pictogramRenderId(
  * `state.`, `comms.`, `damage.` und `wildfire.` kommen in D.2 bis D.4 als eigene Module hinzu und
  * werden hier zusammengeführt.
  */
-export const ALL_PICTOGRAMS: readonly CatalogPictogramDefinition[] = [...CAPABILITY_PICTOGRAMS];
+export const ALL_PICTOGRAMS: readonly CatalogPictogramDefinition[] = deepFreeze([
+  ...CAPABILITY_PICTOGRAMS,
+]);
 
 const PICTOGRAMS = new Map<string, CatalogPictogramDefinition>();
 for (const definition of ALL_PICTOGRAMS) {

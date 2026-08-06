@@ -1,4 +1,5 @@
 import { ALL_PICTOGRAMS, pictogramVariantKey } from './pictograms/index.js';
+import { deepFreeze, type DeepReadonly } from './readonly-data.js';
 
 /**
  * Die Arten von Einzelelementen. Die vier Piktogrammarten neben `capability` haben in D.0 noch
@@ -36,15 +37,15 @@ export const PICTOGRAM_ELEMENT_KINDS: ReadonlySet<ElementKind> = new Set<Element
  * zurück, sondern genau das, was das Coverage-Gate braucht: Existenz, Art und Belegstelle.
  */
 export interface ElementDescriptor {
-  id: string;
-  kind: ElementKind;
-  title: string;
+  readonly id: string;
+  readonly kind: ElementKind;
+  readonly title: string;
   /**
    * Alle Referenzdateien, an denen dieses Element belegt ist. Mindestens eine. Mehrwertig, weil
    * ein Stärkegrad an mehreren Dateien vermessen ist — ein Einzelwert wäre eine willkürliche
    * Auswahl aus gleichwertigen Belegen.
    */
-  referenceAssets: readonly string[];
+  readonly referenceAssets: readonly string[];
 }
 
 /**
@@ -171,8 +172,9 @@ function pictogramElements(): Readonly<Record<string, ElementDescriptor>> {
       }
 
       const ordered = [...definitions].sort((left, right) => {
-        if (left.variant === 'primary') return -1;
-        if (right.variant === 'primary') return 1;
+        const leftIsPrimary = left.variant === 'primary';
+        const rightIsPrimary = right.variant === 'primary';
+        if (leftIsPrimary !== rightIsPrimary) return leftIsPrimary ? -1 : 1;
         return pictogramVariantKey(left).localeCompare(pictogramVariantKey(right));
       });
       const [primaryDefinition] = primary;
@@ -193,23 +195,23 @@ function pictogramElements(): Readonly<Record<string, ElementDescriptor>> {
  * Alle belegten Elemente. Piktogramm-Metadaten stammen ausschließlich aus ihren Definitionen;
  * dadurch können Titel, Referenzdateien und Varianten nicht vom renderbaren Katalog abweichen.
  */
-export const ELEMENTS: Readonly<Record<string, ElementDescriptor>> = {
+export const ELEMENTS: DeepReadonly<Record<string, ElementDescriptor>> = deepFreeze({
   ...STATIC_ELEMENTS,
   ...pictogramElements(),
-};
+});
 
 /**
  * Blick auf `ELEMENTS` für die Suche über beliebige Zeichenketten — dasselbe Muster wie
  * `colorsByOrganization` in `organizations.ts`. Die abgeleiteten Piktogrammschlüssel machen
  * das öffentliche Register bewusst zu einem `Readonly<Record<string, ElementDescriptor>>`.
  */
-const elementsById: Record<string, ElementDescriptor> = ELEMENTS;
+const elementsById: DeepReadonly<Record<string, ElementDescriptor>> = ELEMENTS;
 
 /**
  * Löst eine Element-ID auf und wirft bei unbekannter ID — dasselbe Muster wie `fingerprintFor`
  * und `organizationColor`. Erst damit ist ein Manifest-Eintrag mehr als eine Behauptung.
  */
-export function resolveElement(id: string): ElementDescriptor {
+export function resolveElement(id: string): DeepReadonly<ElementDescriptor> {
   const descriptor = elementsById[id];
   if (descriptor === undefined) {
     throw new Error(`Kein bekanntes Element "${id}" im Katalog.`);
