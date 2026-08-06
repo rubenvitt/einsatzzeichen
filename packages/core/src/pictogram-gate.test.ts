@@ -225,7 +225,6 @@ describe('Box-Gate', () => {
     };
 
     expect(checkBox(onLeftBodyEdge)).toEqual([]);
-    expect(checkClipping(onLeftBodyEdge, formationBody)).toEqual([]);
   });
 
   it('meldet keine Box-Verstöße für einen Pfad, den schon das Kommando-Gate ablehnt', () => {
@@ -379,6 +378,92 @@ describe('Clipping-Gate', () => {
     expect(checkClipping(edgeStroke, formationBody).some((issue) => issue.gate === 'clipping')).toBe(
       true,
     );
+  });
+
+  it('meldet eine aktive Piktogramm-Linie an der Körperkante, ohne den Box-Vertrag zu ändern', () => {
+    const edgeLine: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      title: 'Linie auf linker Körperkante',
+      box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
+      primitives: [
+        { type: 'path', role: 'pictogram', d: 'M 1 6 L 31 26', style: { stroke: 'none' } },
+        {
+          type: 'line',
+          role: 'pictogram',
+          x1: 1,
+          y1: 10,
+          x2: 1,
+          y2: 22,
+          style: { stroke: 'schwarz', strokeWidth: 0.5 },
+        },
+      ],
+    };
+
+    expect(checkBox(edgeLine)).toEqual([]);
+    expect(checkClipping(edgeLine, formationBody)[0]?.detail).toContain('Sichtbare Box-Ecke');
+  });
+
+  it('berücksichtigt geerbte Rolle und Stil für Polylinien, aber nicht none oder reine Füllung', () => {
+    const inheritedPolyline: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      title: 'Geerbte Piktogramm-Polylinie',
+      box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
+      primitives: [
+        {
+          type: 'group',
+          role: 'pictogram',
+          style: { stroke: 'schwarz' },
+          children: [{ type: 'polyline', points: [[1, 10], [1, 22]] }],
+        },
+      ],
+    };
+    const noStroke: PictogramDefinition = {
+      ...inheritedPolyline,
+      title: 'Polylinie ohne Strich',
+      primitives: [
+        {
+          type: 'group',
+          role: 'pictogram',
+          style: { stroke: 'schwarz', strokeWidth: 2 },
+          children: [{ type: 'polyline', points: [[1, 10], [1, 22]], style: { stroke: 'none' } }],
+        },
+      ],
+    };
+    const fillOnly: PictogramDefinition = {
+      ...inheritedPolyline,
+      title: 'Gefülltes Rechteck ohne Strich',
+      primitives: [
+        {
+          type: 'rect',
+          role: 'pictogram',
+          x: 1,
+          y: 10,
+          width: 2,
+          height: 12,
+          style: { fill: 'schwarz' },
+        },
+      ],
+    };
+    const invalidWidth: PictogramDefinition = {
+      ...inheritedPolyline,
+      title: 'Linie mit ungültiger Breite',
+      primitives: [
+        {
+          type: 'line',
+          role: 'pictogram',
+          x1: 1,
+          y1: 10,
+          x2: 1,
+          y2: 22,
+          style: { stroke: 'schwarz', strokeWidth: Number.NaN },
+        },
+      ],
+    };
+
+    expect(checkClipping(inheritedPolyline, formationBody)[0]?.detail).toContain('Sichtbare Box-Ecke');
+    expect(checkClipping(noStroke, formationBody)).toEqual([]);
+    expect(checkClipping(fillOnly, formationBody)).toEqual([]);
+    expect(checkClipping(invalidWidth, formationBody)[0]?.detail).toContain('Strichstärke');
   });
 
   it('bewahrt den geplanten strokeCapability-Vertrag für eine zentrale Pfadbox', () => {

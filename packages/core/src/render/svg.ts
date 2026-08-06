@@ -55,7 +55,7 @@ function styleAttrs(
   options: {
     rawStrokeWidth?: boolean;
     role?: Primitive['role'];
-    pictogramPathStrokeContract?: boolean;
+    pictogramStrokeContract?: boolean;
   } = {},
 ): string {
   const parts: string[] = [
@@ -67,10 +67,10 @@ function styleAttrs(
       const strokeWidthMm = style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
       const strokeWidth = options.rawStrokeWidth ? formatUnits(strokeWidthMm) : u(strokeWidthMm);
       parts.push(`stroke-width="${strokeWidth}"`);
-      if (options.pictogramPathStrokeContract) {
+      if (options.pictogramStrokeContract) {
         // Das Clipping-Gate erweitert die Autorenbox um die halbe Strichstärke. Butt-Kappen
-        // und Round-Joins begrenzen die reale Pfadausdehnung darauf; SVG-Defaults wären beim
-        // Miter-Join nicht ausreichend. Canvas setzt denselben Vertrag in drawPrimitive().
+        // und Round-Joins begrenzen die reale Piktogrammausdehnung darauf; SVG-Defaults wären
+        // beim Miter-Join nicht ausreichend. Canvas setzt denselben Vertrag in drawPrimitive().
         parts.push('stroke-linecap="butt"', 'stroke-linejoin="round"');
       }
       const fillToken = style.fill;
@@ -168,7 +168,7 @@ function renderPrimitive(
     const styleStr = styleAttrs(style, theme, {
       rawStrokeWidth: true,
       role,
-      pictogramPathStrokeContract: role === 'pictogram',
+      pictogramStrokeContract: role === 'pictogram',
     });
     const transform = pathTransformAttr(primitive.transform);
     return `<path d="${escapeXml(primitive.d)}"${styleStr}${transform}/>`;
@@ -182,7 +182,13 @@ function renderPrimitive(
     return `<g${transform}>${children}</g>`;
   }
 
-  const tail = `${styleAttrs(style, theme, { role })}${transformAttr(primitive.transform)}`;
+  // Einzelne SVG-Linien haben bereits Butt-Kappen und keine Joins; das explizite Attribut würde
+  // nur die bestehenden D0-Snapshots byteweise ändern. Alle anderen Piktogramm-Blätter erhalten
+  // den begrenzten Contract explizit, weil sie Joins oder geschlossene Konturen tragen können.
+  const tail = `${styleAttrs(style, theme, {
+    role,
+    pictogramStrokeContract: role === 'pictogram' && primitive.type !== 'line',
+  })}${transformAttr(primitive.transform)}`;
 
   switch (primitive.type) {
     case 'rect': {

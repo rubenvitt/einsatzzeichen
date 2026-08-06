@@ -283,34 +283,35 @@ function cornersOf(box: PictogramBox): readonly Point[] {
   ];
 }
 
-interface PictogramPathStrokeWidths {
+interface PictogramStrokeWidths {
   widths: number[];
   invalid: number[];
 }
 
 /**
- * Liest nur aktive Piktogramm-Pfade und löst ihren Stil genau wie die Renderer feldweise auf.
- * SVG und Canvas setzen für diese Pfade explizit Butt-Kappen und Round-Joins; daher reicht die
- * halbe Strichstärke als konservative Ausdehnung in jede Achsenrichtung aus. Nicht-Pfad- und
- * Nicht-Piktogramm-Geometrie fällt bewusst nicht in diesen kleinen Pfadstrich-Vertrag.
+ * Liest alle aktiven Piktogramm-Blätter und löst ihren Stil genau wie die Renderer feldweise auf.
+ * SVG und Canvas begrenzen mehrsegmentige Piktogramm-Striche auf Butt-Kappen und Round-Joins;
+ * einzelne Linien haben bereits standardmäßig Butt-Kappen und keine Joins. Daher reicht die
+ * halbe Strichstärke als konservative Ausdehnung in jede Achsenrichtung aus. Nicht-
+ * Piktogramm-Geometrie fällt bewusst nicht in diesen kleinen Strichvertrag.
  */
-function pictogramPathStrokeWidths(
+function pictogramStrokeWidths(
   primitives: readonly Primitive[],
   inheritedStyle?: Style,
   inheritedRole?: Primitive['role'],
-): PictogramPathStrokeWidths {
+): PictogramStrokeWidths {
   const widths: number[] = [];
   const invalid: number[] = [];
   for (const primitive of primitives) {
     const style = mergeStyle(primitive.style, inheritedStyle);
     const role = primitive.role ?? inheritedRole;
     if (primitive.type === 'group') {
-      const nested = pictogramPathStrokeWidths(primitive.children, style, role);
+      const nested = pictogramStrokeWidths(primitive.children, style, role);
       widths.push(...nested.widths);
       invalid.push(...nested.invalid);
       continue;
     }
-    if (primitive.type !== 'path' || role !== 'pictogram') continue;
+    if (role !== 'pictogram') continue;
     if (style?.stroke === undefined || style.stroke === 'none') continue;
     const width = style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
     if (!Number.isFinite(width) || width < 0) invalid.push(width);
@@ -565,7 +566,7 @@ function containsPoint(
  * Nimmt das Körper-Primitiv, nicht den `SymbolKind`: die Körpergeometrie liegt in `catalog`, und
  * die Paketrichtung ist `catalog → core`. Der Aufrufer holt sie aus `baseDrawing(kind)`.
  *
- * Aktive Piktogramm-Pfade vergrößern die zu prüfende Autorenbox konservativ um die halbe
+ * Aktive Piktogramm-Striche vergrößern die zu prüfende Autorenbox konservativ um die halbe
  * effektive Strichstärke. Das ergänzt den absichtlich koordinatenbasierten Pfadvertrag von
  * `checkBox()`, statt ihn umzudeuten: Die Koordinaten dürfen auf der Boxkante liegen, aber die
  * tatsächlich sichtbare Tinte darf die Körperfläche nicht verlassen.
@@ -584,17 +585,17 @@ export function checkClipping(
   }
   const contains = containsPoint(definition, body);
   const issues: PictogramIssue[] = [];
-  const pathStrokes = pictogramPathStrokeWidths(definition.primitives);
-  for (const width of pathStrokes.invalid) {
+  const strokes = pictogramStrokeWidths(definition.primitives);
+  for (const width of strokes.invalid) {
     issues.push({
       gate: 'clipping',
       pictogramId: definition.id,
-      detail: `Piktogramm-Pfad: Strichstärke muss endlich und nichtnegativ sein (ist ${String(width)} mm).`,
+      detail: `Piktogramm-Blatt: Strichstärke muss endlich und nichtnegativ sein (ist ${String(width)} mm).`,
     });
   }
-  if (pathStrokes.invalid.length > 0) return issues;
+  if (strokes.invalid.length > 0) return issues;
 
-  const halfStroke = Math.max(0, ...pathStrokes.widths) / 2;
+  const halfStroke = Math.max(0, ...strokes.widths) / 2;
   const visibleBox: PictogramBox = {
     xMm: definition.box.xMm - halfStroke,
     yMm: definition.box.yMm - halfStroke,

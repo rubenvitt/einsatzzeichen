@@ -162,6 +162,28 @@ describe('renderCanvas', () => {
     expect(svg).toContain('stroke-linejoin="round"');
   });
 
+  it('vererbt den begrenzten Piktogramm-Strichvertrag an eine Polyline', () => {
+    const drawing: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'group',
+          role: 'pictogram',
+          style: { stroke: 'schwarz', strokeWidth: 0.5 },
+          children: [{ type: 'polyline', points: [[4, 8], [16, 16], [28, 24]] }],
+        },
+      ],
+    };
+    const { ctx, calls } = recordingContext();
+    renderCanvas(drawing, ctx);
+
+    expect(calls).toContainEqual(['set:lineCap', 'butt']);
+    expect(calls).toContainEqual(['set:lineJoin', 'round']);
+    const polylineTag = renderSvg(drawing).match(/<polyline[^>]*\/>/)?.[0];
+    expect(polylineTag).toContain('stroke-linecap="butt"');
+    expect(polylineTag).toContain('stroke-linejoin="round"');
+  });
+
   it('vererbt die body-Rolle einer Gruppe an ihre Zeichenblätter', () => {
     const theme: RenderTheme = {
       id: 'test',

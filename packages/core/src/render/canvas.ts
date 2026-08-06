@@ -96,8 +96,8 @@ function drawPrimitive(
       // bereits mit. Eine zusätzliche mmToUnits-Umrechnung würde sie doppelt skalieren.
       ctx.lineWidth = style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
       if (role === 'pictogram') {
-        // Entspricht SVGs explizitem Butt/Round-Vertrag für das Clipping-Gate: die halbe
-        // Strichstärke ist damit eine konservative sichtbare Pfadausdehnung.
+        // Entspricht SVGs Butt/Round-Vertrag für das Clipping-Gate: die halbe Strichstärke ist
+        // damit eine konservative sichtbare Piktogrammausdehnung.
         ctx.lineCap = 'butt';
         ctx.lineJoin = 'round';
       }
@@ -125,6 +125,10 @@ function drawPrimitive(
   if (style?.stroke !== undefined && style.stroke !== 'none') {
     ctx.strokeStyle = color(style.stroke, theme);
     ctx.lineWidth = mmToUnits(style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM);
+    if (role === 'pictogram') {
+      ctx.lineCap = 'butt';
+      ctx.lineJoin = 'round';
+    }
     const fillToken = style.fill;
     const dash =
       role === 'body' && fillToken !== undefined && fillToken !== 'none'
