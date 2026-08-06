@@ -1,0 +1,27 @@
+import { describe, expect, it } from 'vitest';
+import { renderSvg } from '@einsatzzeichen/core';
+import { DEFAULT_VIEWBOX_MM, type Drawing } from '@einsatzzeichen/schema';
+import { ALL_PICTOGRAMS } from './index.js';
+
+/**
+ * Ein Piktogramm allein als Zeichnung — ohne Grundzeichen, ohne Kopfzone, ohne Verschiebung.
+ * Das ist der Regressionsschutz, den `matchFingerprint` für Piktogramme strukturell nicht leisten
+ * kann: es vergleicht ausschließlich `role: 'body'`. Der Snapshot ist damit die dritte der vier
+ * Bedingungen, die für Piktogramme an die Stelle von `technical: approved` treten
+ * (Slice-3-Spec, Abschnitt 7).
+ */
+describe('Piktogramm-Snapshots', () => {
+  it.each(ALL_PICTOGRAMS.map((definition) => [definition.id, definition] as const))(
+    'rendert %s unverändert',
+    async (id, definition) => {
+      const drawing: Drawing = {
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: definition.primitives,
+        title: definition.title,
+      };
+      await expect(renderSvg(drawing, { size: 64 })).toMatchFileSnapshot(
+        `./__snapshots__/${id}.svg`,
+      );
+    },
+  );
+});

@@ -1,6 +1,6 @@
 import type { CoverageEntry, CoverageManifest, ReviewSet } from '@einsatzzeichen/schema';
 import { BASE_SYMBOLS } from './base-symbols.js';
-import { resolveElement } from './elements.js';
+import { PICTOGRAM_ELEMENT_KINDS, resolveElement } from './elements.js';
 import { RECIPES } from './recipes.js';
 
 /**
@@ -11,6 +11,25 @@ import { RECIPES } from './recipes.js';
  */
 const REVIEW: ReviewSet = {
   technical: { status: 'approved', reviewer: 'rv', date: '2026-08-05' },
+  domain: { status: 'pending' },
+};
+
+/**
+ * Für Piktogramme ist der erste Teil des Slice-2-Kriteriums für `technical: approved`
+ * — Fingerprint- und Snapshot-Gate grün — strukturell unerreichbar: `matchFingerprint` vergleicht
+ * ausschließlich `role: 'body'`, und das Fingerprint-Gate ist auf Kapitel 1–3 beschränkt. An seine
+ * Stelle treten vier prüfbare Bedingungen. Die `note` hält diese Rollenanpassung fest, damit sie
+ * dokumentiert und nicht stillschweigend ist — dasselbe Muster wie `SOURCE_REVIEW` in `sources.ts`.
+ */
+const PICTOGRAM_REVIEW: ReviewSet = {
+  technical: {
+    status: 'approved',
+    reviewer: 'rv',
+    date: '2026-08-05',
+    note:
+      'Fingerprint-Gate für Piktogramme nicht anwendbar (matchFingerprint vergleicht nur ' +
+      'role: body). An seine Stelle treten vier grüne Gates: Snapshot, Kommando, Box, Clipping.',
+  },
   domain: { status: 'pending' },
 };
 
@@ -51,7 +70,7 @@ const recipeEntries: CoverageEntry[] = Object.entries(RECIPES).map(([section, re
 /**
  * Abschnittsnummer je Element. Jedes Element braucht eine eigene Nummer, sonst kollidierten die
  * vier Stärkegrade auf `5.4` — der Manifestschlüssel bleibt `entryKey(sourceId, variant)`.
- * Alle zwölf Nummern sind aus den Dateinamen des Referenzbestands belegt, keine ist geschlossen.
+ * Alle dreizehn Nummern sind aus den Dateinamen des Referenzbestands belegt, keine ist geschlossen.
  */
 const ELEMENT_SECTIONS: Record<string, string> = {
   'organization.feuerwehr': '2.1',
@@ -66,18 +85,23 @@ const ELEMENT_SECTIONS: Record<string, string> = {
   'strength.gruppe': '5.4.3',
   'strength.zug': '5.4.4',
   'capability.fire-fighting': '4.3.1',
+  'capability.service-water': '4.3.2',
 };
 
 /**
- * `fingerprintTest` und `snapshotTest` sind bei allen zwölf `false` und das ist kein Versäumnis:
- * das Fingerprint-Gate vergleicht ausschließlich `role: 'body'` und erfasst Kopfmarken nie
- * (Entscheidungsnotiz vom 4. August 2026, Abschnitt 5); Snapshots existieren nur für Grundzeichen
- * und Rezepte. Die Elemente sind stattdessen durch `organizations.test.ts`, `strengths.test.ts`
- * und `capabilities.test.ts` festgenagelt — das trägt `review.technical: approved`, aber das
- * Manifest bildet die Testarten ab, statt sie zu überzeichnen.
+ * `fingerprintTest` ist bei allen Elementen `false` und das ist kein Versäumnis: das
+ * Fingerprint-Gate vergleicht ausschließlich `role: 'body'` und erfasst weder Kopfmarken noch
+ * Piktogramme (Entscheidungsnotiz vom 4. August 2026, Abschnitt 5).
+ *
+ * `snapshotTest` folgt der Elementart: Piktogramme tragen eine eigene Geometrie und haben je einen
+ * Dateisnapshot (`pictograms/snapshots.test.ts`); Organisationsfarben und Stärkegrade sind
+ * `ColorToken` bzw. `HeadShape` und damit keine Zeichnung, die sich rendern ließe — sie sind
+ * stattdessen durch `organizations.test.ts` und `strengths.test.ts` festgenagelt. Das Manifest
+ * bildet die Testarten ab, statt sie zu überzeichnen.
  */
 const elementEntries: CoverageEntry[] = Object.entries(ELEMENT_SECTIONS).map(([id, section]) => {
   const descriptor = resolveElement(id);
+  const isPictogram = PICTOGRAM_ELEMENT_KINDS.has(descriptor.kind);
   return {
     sourceId: `bbk-babz-2025:${section}`,
     variant: 'primary',
@@ -89,8 +113,8 @@ const elementEntries: CoverageEntry[] = Object.entries(ELEMENT_SECTIONS).map(([i
     coverage: 'element',
     profile: 'bund',
     fingerprintTest: false,
-    snapshotTest: false,
-    review: REVIEW,
+    snapshotTest: isPictogram,
+    review: isPictogram ? PICTOGRAM_REVIEW : REVIEW,
   };
 });
 
@@ -104,6 +128,6 @@ export const COVERAGE_MANIFEST: CoverageManifest = {
   coreVersion: '0.1.0',
   // Kapitel 3 (sieben Referenzdateien) setzt dieser Slice nicht um; 5.1.1/5.7 sind entfallen
   // (Verwaltungsstufen/Fahrzeugkategorien: von 16 Referenzdateien nur 2 vermessbar, kein Konsument).
-  scope: ['1', '2', '4.3.1', '5.4', 'C.1.1', 'C.1.2', 'D.3.7'],
+  scope: ['1', '2', '4.3.1', '4.3.2', '5.4', 'C.1.1', 'C.1.2', 'D.3.7'],
   entries: [...catalogEntries, ...recipeEntries, ...elementEntries],
 };

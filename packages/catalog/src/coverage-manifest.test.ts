@@ -33,13 +33,13 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('führt 23 Einträge: acht Grundzeichen, drei Rezepte, zwölf Elemente', () => {
+  it('führt 24 Einträge: acht Grundzeichen, drei Rezepte, dreizehn Elemente', () => {
     const counts = COVERAGE_MANIFEST.entries.reduce<Record<string, number>>((acc, e) => {
       acc[e.coverage] = (acc[e.coverage] ?? 0) + 1;
       return acc;
     }, {});
-    expect(counts).toEqual({ 'catalog-entry': 8, 'composition-recipe': 3, element: 12 });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(23);
+    expect(counts).toEqual({ 'catalog-entry': 8, 'composition-recipe': 3, element: 13 });
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(24);
   });
 
   it('trägt für jeden Eintrag eine Referenzdatei und beide Reviewrollen', () => {
@@ -69,7 +69,16 @@ describe('Coverage-Manifest', () => {
   });
 
   it('beansprucht nur den Umfang dieses Slice', () => {
-    expect(COVERAGE_MANIFEST.scope).toEqual(['1', '2', '4.3.1', '5.4', 'C.1.1', 'C.1.2', 'D.3.7']);
+    expect(COVERAGE_MANIFEST.scope).toEqual([
+      '1',
+      '2',
+      '4.3.1',
+      '4.3.2',
+      '5.4',
+      'C.1.1',
+      'C.1.2',
+      'D.3.7',
+    ]);
   });
 
   it('meldet Katalogeinträge ohne genau eine primary-Darstellung', () => {
@@ -78,5 +87,45 @@ describe('Coverage-Manifest', () => {
     const one = fixtureEntry('test.one', 1);
 
     expect(findPrimaryViolations([none, two, one])).toEqual(['test.none', 'test.two']);
+  });
+});
+
+describe('Manifest-Einträge für Piktogramme', () => {
+  function entryFor(section: string) {
+    return COVERAGE_MANIFEST.entries.find((entry) => entry.sourceId === `bbk-babz-2025:${section}`);
+  }
+
+  it('führt 4.3.2 im beanspruchten Umfang und als Eintrag', () => {
+    // Der Scope wächst nie vorauseilend: ein Kapitel im Scope ohne Eintrag ist ein
+    // Release-Blocker, und die Erweiterung vor dem Inhalt erzeugt genau die Falschaussage,
+    // die das Manifest verhindern soll.
+    expect(COVERAGE_MANIFEST.scope).toContain('4.3.2');
+    expect(entryFor('4.3.2')).toBeDefined();
+  });
+
+  it('gibt Piktogrammen einen Snapshot-, aber keinen Fingerprint-Nachweis', () => {
+    for (const section of ['4.3.1', '4.3.2']) {
+      const entry = entryFor(section);
+      expect(entry?.coverage).toBe('element');
+      // matchFingerprint vergleicht ausschließlich role: 'body' — für ein Piktogramm ist das
+      // strukturell unerreichbar und kein Versäumnis.
+      expect(entry?.fingerprintTest).toBe(false);
+      expect(entry?.snapshotTest).toBe(true);
+    }
+  });
+
+  it('lässt Organisationen und Stärken ohne Snapshot-Nachweis', () => {
+    // Für sie existiert kein Dateisnapshot: eine Organisationsfarbe ist ein ColorToken, ein
+    // Stärkegrad eine HeadShape — keine Zeichnung, die sich rendern ließe.
+    expect(entryFor('2.1')?.snapshotTest).toBe(false);
+    expect(entryFor('5.4.1')?.snapshotTest).toBe(false);
+  });
+
+  it('begründet den technical-Status der Piktogramme an den vier Gates', () => {
+    const entry = entryFor('4.3.2');
+    expect(entry?.review.technical.status).toBe('approved');
+    expect(entry?.review.technical.note).toContain('Box');
+    expect(entry?.review.technical.note).toContain('Clipping');
+    expect(entry?.review.domain.status).toBe('pending');
   });
 });

@@ -181,7 +181,7 @@ function sectionOf(sourceId: string): string {
  * beansprucht. Ohne diese Prüfung ließe sich `'organization.polizei'` von `2.5` auf `9.9` setzen,
  * und das Gate bliebe grün, während das Manifest behauptet, Abschnitt 9.9 der Baseline
  * dokumentiere die Polizeifarbe. Die namensgebende Belegdatei ist bauartbedingt die
- * Abschnittsnummer plus `_` — das gilt für alle zwölf Elemente und ist der prüfbare Anker.
+ * Abschnittsnummer plus `_` — das gilt für alle dreizehn Elemente und ist der prüfbare Anker.
  * Damit fängt die Prüfung zugleich ein Auseinanderlaufen von `ELEMENTS` und `ELEMENT_SECTIONS`.
  */
 export function checkElementEntries(entries: readonly CoverageEntry[]): CoverageViolation[] {

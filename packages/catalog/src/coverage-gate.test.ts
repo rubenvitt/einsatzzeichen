@@ -173,7 +173,7 @@ describe('Gate-Prüfungen zu Quelle, Profil und Review', () => {
     expect(countOpenDomainReviews([open, done, open])).toBe(2);
   });
 
-  it('meldet für das echte Manifest keine Verletzung und alle 23 fachlichen Reviews als offen', () => {
+  it('meldet für das echte Manifest keine Verletzung und alle 24 fachlichen Reviews als offen', () => {
     const result = checkCoverage();
     expect(result.violations).toEqual([]);
     expect(result.openDomainReviews).toBe(COVERAGE_MANIFEST.entries.length);
@@ -290,9 +290,12 @@ describe('Release-Blocker für 1.0', () => {
     expect(blockers.domainReviewPending).toHaveLength(COVERAGE_MANIFEST.entries.length);
   });
 
-  it('führt genau die zwölf Elementeinträge als ohne Testnachweis', () => {
+  it('führt genau die dreizehn Elementeinträge als ohne Testnachweis', () => {
+    // Die beiden Piktogramme tragen inzwischen snapshotTest: true, aber fingerprintTest bleibt
+    // false (matchFingerprint vergleicht nur role: 'body') — blockersOf listet einen Eintrag
+    // schon, wenn einer der beiden Nachweise fehlt, also bleiben auch sie hier gelistet.
     const blockers = releaseBlockers();
-    expect(blockers.withoutTestEvidence).toHaveLength(12);
+    expect(blockers.withoutTestEvidence).toHaveLength(13);
     for (const key of blockers.withoutTestEvidence) {
       const entry = COVERAGE_MANIFEST.entries.find(
         (e) => entryKey(e.sourceId, e.variant) === key,

@@ -1,4 +1,30 @@
-export type ElementKind = 'organization' | 'strength' | 'capability';
+/**
+ * Die Arten von Einzelelementen. Die vier Piktogrammarten neben `capability` haben in D.0 noch
+ * keine Einträge und kommen mit D.2 bis D.4 dazu — sie stehen hier, weil `PICTOGRAM_ELEMENT_KINDS`
+ * sie liest und das Manifest daraus den Snapshot-Nachweis ableitet.
+ */
+export type ElementKind =
+  | 'organization'
+  | 'strength'
+  | 'capability'
+  | 'state'
+  | 'comms'
+  | 'damage'
+  | 'wildfire';
+
+/**
+ * Die Elementarten, die eine eigene Geometrie tragen und deshalb einen Dateisnapshot haben können.
+ * Eine Organisationsfarbe ist ein `ColorToken`, ein Stärkegrad eine `HeadShape` — beides keine
+ * Zeichnung, die sich rendern ließe. Das Manifest leitet `snapshotTest` daraus ab, statt eine
+ * Liste von IDs zu führen, die mit jedem Unter-Slice nachgezogen werden müsste.
+ */
+export const PICTOGRAM_ELEMENT_KINDS: ReadonlySet<ElementKind> = new Set<ElementKind>([
+  'capability',
+  'state',
+  'comms',
+  'damage',
+  'wildfire',
+]);
 
 /**
  * Ein Einzelelement, das keine eigene Zeichnung ist, aber eine an der Referenz belegte Regel
@@ -20,7 +46,7 @@ export interface ElementDescriptor {
 }
 
 /**
- * Die zwölf belegten Elemente. `hilfsorganisation` fehlt bewusst: Kapitel 2 enthält dafür keine
+ * Die dreizehn belegten Elemente. `hilfsorganisation` fehlt bewusst: Kapitel 2 enthält dafür keine
  * Datei, `organizationColor` wirft, und das Manifest behauptet nichts, was der Katalog nicht kann.
  * (`2.2_Organisationen.svg` existiert, trägt aber einen generischen Namen, aus dem keine Zuordnung
  * folgt. Diese Zuordnung zu vermessen ist eine eigene Aufgabe.)
@@ -125,6 +151,17 @@ export const ELEMENTS = {
     // Belegstelle der Bildidee. Die Geometrie ist eigenständig konstruiert (`capabilities.ts`),
     // die Quelle führt das als `reconstructed`.
     referenceAssets: ['4.3.1_Brandbekämpfung.svg'],
+  },
+  'capability.service-water': {
+    id: 'capability.service-water',
+    kind: 'capability',
+    title: 'Löschwasser, Brauchwasser',
+    // Belegstelle der Bildidee. Die Geometrie ist eigenständig konstruiert
+    // (`pictograms/capabilities.ts`); der Fingerprint dieser Datei trägt curvedPaths: 1, die
+    // Bildidee enthält also tatsächlich eine Kurve. Zwei Leerzeichen gibt es hier nicht, aber
+    // ein Leerzeichen statt des Schrägstrichs der Kapitelüberschrift — so steht der Name im
+    // Referenzbestand, nicht normalisieren.
+    referenceAssets: ['4.3.2_Löschwasser Brauchwasser.svg'],
   },
 } as const satisfies Record<string, ElementDescriptor>;
 
