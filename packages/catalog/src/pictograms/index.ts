@@ -28,12 +28,19 @@ export const ALL_PICTOGRAMS: readonly CatalogPictogramDefinition[] = deepFreeze(
   ...CAPABILITY_PICTOGRAMS,
 ]);
 
-const PICTOGRAMS = new Map<string, CatalogPictogramDefinition>();
-for (const definition of ALL_PICTOGRAMS) {
-  const key = pictogramVariantKey(definition);
-  if (PICTOGRAMS.has(key)) throw new Error(`Doppeltes Piktogramm "${key}".`);
-  PICTOGRAMS.set(key, definition);
+export function buildPictogramRegistry(
+  definitions: readonly CatalogPictogramDefinition[],
+): ReadonlyMap<string, CatalogPictogramDefinition> {
+  const registry = new Map<string, CatalogPictogramDefinition>();
+  for (const definition of definitions) {
+    const key = pictogramVariantKey(definition);
+    if (registry.has(key)) throw new Error(`Doppeltes Piktogramm "${key}".`);
+    registry.set(key, definition);
+  }
+  return registry;
 }
+
+const PICTOGRAMS = buildPictogramRegistry(ALL_PICTOGRAMS);
 
 /**
  * Löst eine Piktogramm-ID auf und wirft bei einer ID ohne Definition — dasselbe Muster wie

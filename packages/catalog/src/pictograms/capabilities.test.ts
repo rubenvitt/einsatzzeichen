@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { boundsOfMm, checkBox, checkCommands } from '@einsatzzeichen/core';
 import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
 import { strokeCapability } from './authoring.js';
-import { ALL_PICTOGRAMS, pictogram, pictogramVariantKey } from './index.js';
+import { defineCapability } from './catalog-definition.js';
+import {
+  ALL_PICTOGRAMS,
+  buildPictogramRegistry,
+  pictogram,
+  pictogramVariantKey,
+} from './index.js';
 
 describe('Fähigkeitspiktogramme', () => {
   it('erzeugt absolute Pfade mit expliziter Standardbox und Piktogrammrolle', () => {
@@ -124,6 +130,31 @@ describe('Fähigkeitspiktogramme', () => {
     for (const definition of CAPABILITY_PICTOGRAMS) {
       expect(pictogram(definition.id, definition.variant)).toBe(definition);
     }
+  });
+
+  it('akzeptiert dieselbe ID mit primary und alternative als getrennte Schlüssel', () => {
+    const primary = CAPABILITY_PICTOGRAMS[0];
+    if (primary === undefined) throw new Error('Test-Fixture fehlt.');
+    const alternative = defineCapability({
+      section: primary.section,
+      id: 'fire-fighting',
+      variant: 'alternative',
+      title: primary.title,
+      referenceAsset: '4.2.1_Brandbekämpfung_Alternative.svg',
+      box: primary.box,
+      primitives: primary.primitives,
+    });
+
+    const registry = buildPictogramRegistry([primary, alternative]);
+    expect(registry.get(pictogramVariantKey(primary))).toBe(primary);
+    expect(registry.get(pictogramVariantKey(alternative))).toBe(alternative);
+    expect(registry.size).toBe(2);
+  });
+
+  it('weist ein exakt doppeltes ID-Varianten-Paar zurück', () => {
+    const definition = CAPABILITY_PICTOGRAMS[0];
+    if (definition === undefined) throw new Error('Test-Fixture fehlt.');
+    expect(() => buildPictogramRegistry([definition, definition])).toThrow(/Doppeltes Piktogramm/);
   });
 });
 

@@ -52,7 +52,17 @@ export type VehicleCategoryId =
  * Piktogramm wäre eine typsichere Behauptung über eine Fähigkeit, die der Katalog nicht zeichnen
  * kann. D.1 bringt die vollen 88.
  */
-export type CapabilityId = 'fire-fighting' | 'service-water';
+export type CapabilityId =
+  | 'cbrn-protection'
+  | 'cbrn-detection'
+  | 'decontamination'
+  | 'water-environmental-damage-control'
+  | 'drinking-water-treatment'
+  | 'radioactive-materials'
+  | 'biological-materials'
+  | 'chemical-materials'
+  | 'fire-fighting'
+  | 'service-water';
 
 /** Semantische Beschreibung eines Zeichens. Eingabe des Kompositionsmotors. */
 export interface SymbolSpec {

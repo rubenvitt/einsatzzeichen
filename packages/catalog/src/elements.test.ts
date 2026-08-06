@@ -35,12 +35,12 @@ describe('Element-Register', () => {
     expect(observedTitle).toBe(originalTitle);
   });
 
-  it('führt dreizehn Elemente: sieben Farben, vier Stärkegrade, zwei Piktogramme', () => {
+  it('führt 21 Elemente: sieben Farben, vier Stärkegrade, zehn Piktogramme', () => {
     const byKind = Object.values(ELEMENTS).reduce<Record<string, number>>((acc, el) => {
       acc[el.kind] = (acc[el.kind] ?? 0) + 1;
       return acc;
     }, {});
-    expect(byKind).toEqual({ organization: 7, strength: 4, capability: 2 });
+    expect(byKind).toEqual({ organization: 7, strength: 4, capability: 10 });
   });
 
   it('führt genau die Organisationen, für die der Katalog eine Farbe belegt', () => {
@@ -95,6 +95,18 @@ describe('Element-Register', () => {
 });
 
 describe('Piktogramm-Elemente', () => {
+  it('löst reale Alternativen explizit auf und hält primary als Standarddarstellung', () => {
+    const primary = pictogram('capability.radioactive-materials');
+    const alternative = pictogram('capability.radioactive-materials', 'alternative');
+    expect(primary.variant).toBe('primary');
+    expect(alternative).not.toBe(primary);
+    expect(alternative.primitives[0]?.style?.stroke).toBe('rot');
+    expect(resolveElement('capability.radioactive-materials').referenceAssets).toEqual([
+      '4.1.6_Atomare Stoffe.svg',
+      '4.1.6_Atomare Stoffe_Alternative.svg',
+    ]);
+  });
+
   it('leitet Titel und alle Referenzdateien eines Piktogrammelements aus den Definitionen ab', () => {
     const definition = pictogram('capability.service-water');
     const descriptor = resolveElement('capability.service-water');

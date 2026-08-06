@@ -10,6 +10,9 @@ import {
 } from './render-themes.js';
 
 const MINIMUM_NON_TEXT_CONTRAST = 3;
+const PRIMARY_PICTOGRAMS = ALL_PICTOGRAMS.filter(
+  (definition) => definition.variant === 'primary',
+);
 
 function requirements(): ContrastRequirement[] {
   const result: ContrastRequirement[] = [
@@ -28,6 +31,9 @@ function requirements(): ContrastRequirement[] {
         context: `${definition.id} ohne Organisationsfüllung`,
         minimum: MINIMUM_NON_TEXT_CONTRAST,
       });
+      // Nur primary ist die Standarddarstellung in zusammengesetzten Zeichen. Rote Alternativen
+      // werden explizit gewählt und nicht fiktiv auf jede Organisationsfarbe gelegt.
+      if (definition.variant !== 'primary') continue;
       for (const [organization, background] of Object.entries(ORGANIZATION_COLORS)) {
         result.push({
           foreground,
@@ -59,7 +65,7 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     const blue = issues.filter(
       (issue) => issue.foreground === 'schwarz' && issue.background === 'blau',
     );
-    expect(blue).toHaveLength(ALL_PICTOGRAMS.length);
+    expect(blue).toHaveLength(PRIMARY_PICTOGRAMS.length);
     expect(blue.every((issue) => issue.ratio < MINIMUM_NON_TEXT_CONTRAST)).toBe(true);
   });
 

@@ -69,13 +69,13 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('führt 24 Einträge: acht Grundzeichen, drei Rezepte, dreizehn Elemente', () => {
+  it('führt 35 Einträge: acht Grundzeichen, drei Rezepte, 24 Elemente', () => {
     const counts = COVERAGE_MANIFEST.entries.reduce<Record<string, number>>((acc, e) => {
       acc[e.coverage] = (acc[e.coverage] ?? 0) + 1;
       return acc;
     }, {});
-    expect(counts).toEqual({ 'catalog-entry': 8, 'composition-recipe': 3, element: 13 });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(24);
+    expect(counts).toEqual({ 'catalog-entry': 8, 'composition-recipe': 3, element: 24 });
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(35);
   });
 
   it('trägt für jeden Eintrag eine Referenzdatei und beide Reviewrollen', () => {
