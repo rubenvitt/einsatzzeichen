@@ -70,18 +70,9 @@ function hasPath(primitives: readonly Primitive[]): boolean {
  * gegen die falschen Zahlen. In D.0 trägt keine Definition eine transformierte Gruppe — genau
  * deshalb steht der Fehler hier, bevor es in D.1 still falsch werden kann.
  */
-interface MeasurablePrimitive {
-  primitive: Primitive;
-  style: Style | undefined;
-}
-
-function measurableOf(
-  primitives: readonly Primitive[],
-  inheritedStyle?: Style,
-): MeasurablePrimitive[] {
-  const measurable: MeasurablePrimitive[] = [];
+function measurableOf(primitives: readonly Primitive[]): Primitive[] {
+  const measurable: Primitive[] = [];
   for (const primitive of primitives) {
-    const style = mergeStyle(primitive.style, inheritedStyle);
     if (primitive.type === 'group') {
       if (primitive.transform !== undefined) {
         throw new Error(
@@ -90,35 +81,12 @@ function measurableOf(
             'auf, und eine innere würde die Box-Prüfung gegen die Rohkoordinaten laufen lassen.',
         );
       }
-      measurable.push(...measurableOf(primitive.children, style));
+      measurable.push(...measurableOf(primitive.children));
     } else if (primitive.type !== 'path') {
-      measurable.push({ primitive, style });
+      measurable.push(primitive);
     }
   }
   return measurable;
-}
-
-/**
- * Konservative sichtbare Hülle eines Nicht-Pfad-Primitivs. `boundsOfMm()` liefert seine
- * formdefinierenden Koordinaten; ein sichtbarer Strich erweitert diese Hülle um die halbe
- * wirksame Strichstärke. Die vollständige Stilauflösung ist nötig, weil Renderer die
- * Gruppenvererbung feldweise anwenden. Die gleichmäßige Erweiterung bleibt bewusst
- * konservativ (z. B. an Butt-Kappen): Ein Autorengate darf keine sichtbare Überschreitung
- * übersehen, auch wenn die streng exakte Linienkappe enger wäre.
- */
-function visibleBoundsOfMm({ primitive, style }: MeasurablePrimitive): BoundsMm {
-  const bounds = boundsOfMm(primitive);
-  const strokeWidth =
-    style?.stroke !== undefined && style.stroke !== 'none'
-      ? (style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM)
-      : 0;
-  const halfStroke = strokeWidth / 2;
-  return {
-    minX: bounds.minX - halfStroke,
-    minY: bounds.minY - halfStroke,
-    maxX: bounds.maxX + halfStroke,
-    maxY: bounds.maxY + halfStroke,
-  };
 }
 
 interface Axis {
@@ -246,20 +214,8 @@ export function checkBox(definition: PictogramDefinition): PictogramIssue[] {
   }
 
   const measurable = measurableOf(definition.primitives);
-  for (const measurablePrimitive of measurable) {
-    const { primitive, style } = measurablePrimitive;
-    const strokeWidth =
-      style?.stroke !== undefined && style.stroke !== 'none'
-        ? (style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM)
-        : 0;
-    if (!Number.isFinite(strokeWidth) || strokeWidth < 0) {
-      issue(
-        `Primitiv "${primitive.type}": Strichstärke muss endlich und nichtnegativ sein ` +
-          `(ist ${String(strokeWidth)} mm).`,
-      );
-      continue;
-    }
-    const bounds = visibleBoundsOfMm(measurablePrimitive);
+  for (const primitive of measurable) {
+    const bounds = boundsOfMm(primitive);
     const checks: Array<[number, Axis]> = [
       [bounds.minX, axes.x],
       [bounds.maxX, axes.x],
@@ -277,7 +233,7 @@ export function checkBox(definition: PictogramDefinition): PictogramIssue[] {
   }
 
   if (measurable.length > 0 && !hasPath(definition.primitives)) {
-    const hull = measurable.map(visibleBoundsOfMm).reduce<BoundsMm>(
+    const hull = measurable.map(boundsOfMm).reduce<BoundsMm>(
       (acc, next) => ({
         minX: Math.min(acc.minX, next.minX),
         minY: Math.min(acc.minY, next.minY),
@@ -325,6 +281,42 @@ function cornersOf(box: PictogramBox): readonly Point[] {
     [box.xMm + box.widthMm, box.yMm + box.heightMm],
     [box.xMm, box.yMm + box.heightMm],
   ];
+}
+
+interface PictogramPathStrokeWidths {
+  widths: number[];
+  invalid: number[];
+}
+
+/**
+ * Liest nur aktive Piktogramm-Pfade und löst ihren Stil genau wie die Renderer feldweise auf.
+ * SVG und Canvas setzen für diese Pfade explizit Butt-Kappen und Round-Joins; daher reicht die
+ * halbe Strichstärke als konservative Ausdehnung in jede Achsenrichtung aus. Nicht-Pfad- und
+ * Nicht-Piktogramm-Geometrie fällt bewusst nicht in diesen kleinen Pfadstrich-Vertrag.
+ */
+function pictogramPathStrokeWidths(
+  primitives: readonly Primitive[],
+  inheritedStyle?: Style,
+  inheritedRole?: Primitive['role'],
+): PictogramPathStrokeWidths {
+  const widths: number[] = [];
+  const invalid: number[] = [];
+  for (const primitive of primitives) {
+    const style = mergeStyle(primitive.style, inheritedStyle);
+    const role = primitive.role ?? inheritedRole;
+    if (primitive.type === 'group') {
+      const nested = pictogramPathStrokeWidths(primitive.children, style, role);
+      widths.push(...nested.widths);
+      invalid.push(...nested.invalid);
+      continue;
+    }
+    if (primitive.type !== 'path' || role !== 'pictogram') continue;
+    if (style?.stroke === undefined || style.stroke === 'none') continue;
+    const width = style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
+    if (!Number.isFinite(width) || width < 0) invalid.push(width);
+    else widths.push(width);
+  }
+  return { widths, invalid };
 }
 
 function finite(values: readonly number[]): boolean {
@@ -572,6 +564,11 @@ function containsPoint(
  *
  * Nimmt das Körper-Primitiv, nicht den `SymbolKind`: die Körpergeometrie liegt in `catalog`, und
  * die Paketrichtung ist `catalog → core`. Der Aufrufer holt sie aus `baseDrawing(kind)`.
+ *
+ * Aktive Piktogramm-Pfade vergrößern die zu prüfende Autorenbox konservativ um die halbe
+ * effektive Strichstärke. Das ergänzt den absichtlich koordinatenbasierten Pfadvertrag von
+ * `checkBox()`, statt ihn umzudeuten: Die Koordinaten dürfen auf der Boxkante liegen, aber die
+ * tatsächlich sichtbare Tinte darf die Körperfläche nicht verlassen.
  */
 export function checkClipping(
   definition: PictogramDefinition,
@@ -587,12 +584,29 @@ export function checkClipping(
   }
   const contains = containsPoint(definition, body);
   const issues: PictogramIssue[] = [];
-  for (const [x, y] of cornersOf(definition.box)) {
+  const pathStrokes = pictogramPathStrokeWidths(definition.primitives);
+  for (const width of pathStrokes.invalid) {
+    issues.push({
+      gate: 'clipping',
+      pictogramId: definition.id,
+      detail: `Piktogramm-Pfad: Strichstärke muss endlich und nichtnegativ sein (ist ${String(width)} mm).`,
+    });
+  }
+  if (pathStrokes.invalid.length > 0) return issues;
+
+  const halfStroke = Math.max(0, ...pathStrokes.widths) / 2;
+  const visibleBox: PictogramBox = {
+    xMm: definition.box.xMm - halfStroke,
+    yMm: definition.box.yMm - halfStroke,
+    widthMm: definition.box.widthMm + 2 * halfStroke,
+    heightMm: definition.box.heightMm + 2 * halfStroke,
+  };
+  for (const [x, y] of cornersOf(visibleBox)) {
     if (!contains([x, y])) {
       issues.push({
         gate: 'clipping',
         pictogramId: definition.id,
-        detail: `Box-Ecke (${x}, ${y}) mm liegt außerhalb der Körperfläche "${body.type}".`,
+        detail: `Sichtbare Box-Ecke (${x}, ${y}) mm liegt außerhalb der Körperfläche "${body.type}".`,
       });
     }
   }

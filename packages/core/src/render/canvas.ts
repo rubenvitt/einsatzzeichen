@@ -95,6 +95,12 @@ function drawPrimitive(
       // Rohes Millimetermaß: das umgebende scale(mmToUnits(1)) skaliert die Strichstärke
       // bereits mit. Eine zusätzliche mmToUnits-Umrechnung würde sie doppelt skalieren.
       ctx.lineWidth = style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
+      if (role === 'pictogram') {
+        // Entspricht SVGs explizitem Butt/Round-Vertrag für das Clipping-Gate: die halbe
+        // Strichstärke ist damit eine konservative sichtbare Pfadausdehnung.
+        ctx.lineCap = 'butt';
+        ctx.lineJoin = 'round';
+      }
       const fillToken = style.fill;
       const dash =
         role === 'body' && fillToken !== undefined && fillToken !== 'none'

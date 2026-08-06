@@ -52,7 +52,11 @@ function color(token: ColorToken | 'none', theme: RenderTheme): string {
 function styleAttrs(
   style: Style | undefined,
   theme: RenderTheme,
-  options: { rawStrokeWidth?: boolean; role?: Primitive['role'] } = {},
+  options: {
+    rawStrokeWidth?: boolean;
+    role?: Primitive['role'];
+    pictogramPathStrokeContract?: boolean;
+  } = {},
 ): string {
   const parts: string[] = [
     `fill="${style?.fill !== undefined ? color(style.fill, theme) : 'none'}"`,
@@ -63,6 +67,12 @@ function styleAttrs(
       const strokeWidthMm = style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
       const strokeWidth = options.rawStrokeWidth ? formatUnits(strokeWidthMm) : u(strokeWidthMm);
       parts.push(`stroke-width="${strokeWidth}"`);
+      if (options.pictogramPathStrokeContract) {
+        // Das Clipping-Gate erweitert die Autorenbox um die halbe Strichstärke. Butt-Kappen
+        // und Round-Joins begrenzen die reale Pfadausdehnung darauf; SVG-Defaults wären beim
+        // Miter-Join nicht ausreichend. Canvas setzt denselben Vertrag in drawPrimitive().
+        parts.push('stroke-linecap="butt"', 'stroke-linejoin="round"');
+      }
       const fillToken = style.fill;
       const dash =
         options.role === 'body' && fillToken !== undefined && fillToken !== 'none'
@@ -155,7 +165,11 @@ function renderPrimitive(
   const role = primitive.role ?? inheritedRole;
 
   if (primitive.type === 'path') {
-    const styleStr = styleAttrs(style, theme, { rawStrokeWidth: true, role });
+    const styleStr = styleAttrs(style, theme, {
+      rawStrokeWidth: true,
+      role,
+      pictogramPathStrokeContract: role === 'pictogram',
+    });
     const transform = pathTransformAttr(primitive.transform);
     return `<path d="${escapeXml(primitive.d)}"${styleStr}${transform}/>`;
   }

@@ -140,6 +140,28 @@ describe('renderCanvas', () => {
     expect(calls).toContainEqual(['set:lineDashOffset', 0]);
   });
 
+  it('setzt für gestrichene Piktogrammpfade denselben begrenzten Join/Cap-Vertrag wie SVG', () => {
+    const drawing: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'path',
+          role: 'pictogram',
+          d: 'M 4 8 L 28 24',
+          style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+        },
+      ],
+    };
+    const { ctx, calls } = recordingContext();
+    renderCanvas(drawing, ctx);
+
+    expect(calls).toContainEqual(['set:lineCap', 'butt']);
+    expect(calls).toContainEqual(['set:lineJoin', 'round']);
+    const svg = renderSvg(drawing);
+    expect(svg).toContain('stroke-linecap="butt"');
+    expect(svg).toContain('stroke-linejoin="round"');
+  });
+
   it('vererbt die body-Rolle einer Gruppe an ihre Zeichenblätter', () => {
     const theme: RenderTheme = {
       id: 'test',

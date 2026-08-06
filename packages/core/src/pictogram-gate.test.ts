@@ -209,7 +209,7 @@ describe('Box-Gate', () => {
     expect(issues[0]?.detail).toContain('30');
   });
 
-  it('misst die sichtbare, aus einer Gruppe geerbte Strichhülle', () => {
+  it('hält Nicht-Pfad-Geometrie im Box-Vertrag von sichtbaren Strichen getrennt', () => {
     const onLeftBodyEdge: PictogramDefinition = {
       id: 'capability.fire-fighting',
       title: 'Strich auf der linken Körperkante',
@@ -224,8 +224,7 @@ describe('Box-Gate', () => {
       ],
     };
 
-    const issues = checkPictogram(onLeftBodyEdge, formationBody);
-    expect(issues.some((issue) => issue.gate === 'box')).toBe(true);
+    expect(checkBox(onLeftBodyEdge)).toEqual([]);
     expect(checkClipping(onLeftBodyEdge, formationBody)).toEqual([]);
   });
 
@@ -359,6 +358,115 @@ describe('Clipping-Gate', () => {
       primitives: [{ type: 'path', role: 'pictogram', d: 'M 1 6 L 31 26' }],
     };
     expect(checkClipping(flush, formationBody)).toEqual([]);
+  });
+
+  it('meldet einen gestrichenen Pfad, dessen Box bündig an der Körperkante liegt', () => {
+    const edgeStroke: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      title: 'Strich auf linker Körperkante',
+      box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
+      primitives: [
+        {
+          type: 'path',
+          role: 'pictogram',
+          d: 'M 1 10 L 1 22',
+          style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+        },
+      ],
+    };
+
+    expect(checkBox(edgeStroke)).toEqual([]);
+    expect(checkClipping(edgeStroke, formationBody).some((issue) => issue.gate === 'clipping')).toBe(
+      true,
+    );
+  });
+
+  it('bewahrt den geplanten strokeCapability-Vertrag für eine zentrale Pfadbox', () => {
+    const planned: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      title: 'Geplanter Standardfall',
+      box: { xMm: 4, yMm: 8, widthMm: 24, heightMm: 16 },
+      primitives: [
+        {
+          type: 'path',
+          role: 'pictogram',
+          d: 'M 4 8 L 28 24',
+          style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+        },
+      ],
+    };
+
+    expect(checkBox(planned)).toEqual([]);
+    expect(checkClipping(planned, formationBody)).toEqual([]);
+  });
+
+  it('löst den Pfadstrichstil vor dem Clipping wie die Renderer feldweise auf', () => {
+    const ownStrokeWins: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      title: 'Eigener Strich überschreibt Gruppe',
+      box: { xMm: 1.75, yMm: 6.25, widthMm: 29, heightMm: 19.5 },
+      primitives: [
+        {
+          type: 'group',
+          style: { stroke: 'schwarz', strokeWidth: 2 },
+          children: [
+            {
+              type: 'path',
+              role: 'pictogram',
+              d: 'M 1.75 10 L 1.75 22',
+              style: { stroke: 'schwarz', strokeWidth: 0.5 },
+            },
+          ],
+        },
+      ],
+    };
+    const noStroke: PictogramDefinition = {
+      ...ownStrokeWins,
+      title: 'stroke none überschreibt Gruppe',
+      box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
+      primitives: [
+        {
+          type: 'group',
+          style: { stroke: 'schwarz', strokeWidth: 2 },
+          children: [
+            {
+              type: 'path',
+              role: 'pictogram',
+              d: 'M 1 10 L 1 22',
+              style: { stroke: 'none' },
+            },
+          ],
+        },
+      ],
+    };
+    const inheritedDefault: PictogramDefinition = {
+      ...noStroke,
+      title: 'Geerbter Defaultstrich',
+      primitives: [
+        {
+          type: 'group',
+          style: { stroke: 'schwarz' },
+          children: [{ type: 'path', role: 'pictogram', d: 'M 1 10 L 1 22' }],
+        },
+      ],
+    };
+    const invalidWidth: PictogramDefinition = {
+      ...inheritedDefault,
+      title: 'Ungültige Strichstärke',
+      primitives: [
+        {
+          type: 'path',
+          role: 'pictogram',
+          d: 'M 1 10 L 1 22',
+          style: { stroke: 'schwarz', strokeWidth: -0.5 },
+        },
+      ],
+    };
+
+    expect(checkClipping(ownStrokeWins, formationBody)).toEqual([]);
+    expect(checkClipping(noStroke, formationBody)).toEqual([]);
+    expect(checkClipping(inheritedDefault, formationBody)[0]?.detail).toContain('Box-Ecke');
+    expect(checkClipping(invalidWidth, formationBody)[0]?.detail).toContain('Strichstärke');
   });
 
   it.each([
