@@ -74,7 +74,15 @@ export type CapabilityId =
   | 'respiratory-protection'
   | 'reconnaissance'
   | 'biological-location'
-  | 'technical-location';
+  | 'technical-location'
+  | 'recovery'
+  | 'rescue-portable-ladders'
+  | 'rescue-aerial-ladder'
+  | 'rescue-articulated-boom'
+  | 'watercraft-operations'
+  | 'mountain-rescue'
+  | 'special-height-depth-rescue'
+  | 'water-rescue';
 
 /** Semantische Beschreibung eines Zeichens. Eingabe des Kompositionsmotors. */
 export interface SymbolSpec {

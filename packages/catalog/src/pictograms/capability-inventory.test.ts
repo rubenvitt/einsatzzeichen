@@ -214,3 +214,27 @@ describe('Fähigkeitsinventar Kapitel 4.4', () => {
     ]);
   });
 });
+
+describe('Fähigkeitsinventar Kapitel 4.5', () => {
+  it('bildet die acht Darstellungen aus Retten und Bergen exakt ab', () => {
+    const actual = CAPABILITY_PICTOGRAMS
+      .filter((definition) => definition.section.startsWith('4.5.'))
+      .map(({ section, id, variant, referenceAsset }) => ({
+        section,
+        id,
+        variant,
+        referenceAsset,
+      }));
+
+    expect(actual).toEqual([
+      { section: '4.5.1', id: 'capability.recovery', variant: 'primary', referenceAsset: '4.5.1_Bergung.svg' },
+      { section: '4.5.2', id: 'capability.rescue-portable-ladders', variant: 'primary', referenceAsset: '4.5.2_Retten aus Höhen und Tiefen mit tragbaren Leitern.svg' },
+      { section: '4.5.3', id: 'capability.rescue-aerial-ladder', variant: 'primary', referenceAsset: '4.5.3_Retten aus Höhen und Tiefen mit Drehleiter.svg' },
+      { section: '4.5.4', id: 'capability.rescue-articulated-boom', variant: 'primary', referenceAsset: '4.5.4_Retten aus Höhen und Tiefen mit Teleskopgelenkmast.svg' },
+      { section: '4.5.5', id: 'capability.watercraft-operations', variant: 'primary', referenceAsset: '4.5.5_Einsatz von Wasserfahrzeugen.svg' },
+      { section: '4.5.6', id: 'capability.mountain-rescue', variant: 'primary', referenceAsset: '4.5.6_Bergrettung.svg' },
+      { section: '4.5.7', id: 'capability.special-height-depth-rescue', variant: 'primary', referenceAsset: '4.5.7_Spezielle Rettung aus Höhen und Tiefen.svg' },
+      { section: '4.5.8', id: 'capability.water-rescue', variant: 'primary', referenceAsset: '4.5.8_Wasserrettung.svg' },
+    ]);
+  });
+});

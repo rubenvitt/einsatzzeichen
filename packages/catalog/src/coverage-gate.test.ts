@@ -306,7 +306,7 @@ describe('Gate-Prüfungen zu Quelle, Profil und Review', () => {
     expect(blockers.profileDomainReviewDeviations).toEqual([profile.id]);
   });
 
-  it('meldet für den echten Bestand keine Verletzung und alle 37 Reviewträger als offen', () => {
+  it('meldet für den echten Bestand keine Verletzung und alle Reviewträger als offen', () => {
     const result = checkCoverage();
     expect(result.violations).toEqual([]);
     expect(result.openDomainReviews).toBe(
