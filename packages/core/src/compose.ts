@@ -55,6 +55,16 @@ export interface ComposeOptions {
   title?: string;
 }
 
+/**
+ * `SymbolSpec.capabilities` trägt `CapabilityId` (`'fire-fighting'`), der Piktogrammraum trägt
+ * präfigierte IDs (`'capability.fire-fighting'`). Die Abbildung steht hier an einer Stelle und
+ * nicht an jedem Aufrufort: die übrigen vier ID-Räume (Kapitel 5.8, Anhänge J–M) haben in
+ * `SymbolSpec` noch kein Feld und kommen erst mit D.2 bis D.4 dazu.
+ */
+function pictogramIdOf(id: CapabilityId): PictogramId {
+  return `capability.${id}`;
+}
+
 export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: ComposeOptions = {}): Drawing {
   const issues = validateSpec(spec);
   if (issues.length > 0) throw new CompositionError(issues);
@@ -123,14 +133,4 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
     children: [...headPrimitives, filled, ...pictograms],
     ...(options.title !== undefined ? { title: options.title } : {}),
   };
-}
-
-/**
- * `SymbolSpec.capabilities` trägt `CapabilityId` (`'fire-fighting'`), der Piktogrammraum trägt
- * präfigierte IDs (`'capability.fire-fighting'`). Die Abbildung steht hier an einer Stelle und
- * nicht an jedem Aufrufort: die übrigen vier ID-Räume (Kapitel 5.8, Anhänge J–M) haben in
- * `SymbolSpec` noch kein Feld und kommen erst mit D.2 bis D.4 dazu.
- */
-function pictogramIdOf(id: CapabilityId): PictogramId {
-  return `capability.${id}`;
 }
