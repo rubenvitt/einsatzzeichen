@@ -1,4 +1,12 @@
-import { mmToUnits, unitsEqual, type PictogramBox, type PictogramDefinition, type Primitive } from '@einsatzzeichen/schema';
+import {
+  mmToUnits,
+  unitsEqual,
+  type PictogramBox,
+  type PictogramDefinition,
+  type Point,
+  type Primitive,
+  type Transform,
+} from '@einsatzzeichen/schema';
 import { boundsOfMm, type BoundsMm } from './bounds.js';
 import { tokenizePath, type PathCommand } from './path-commands.js';
 
@@ -91,6 +99,27 @@ function axesOf(box: PictogramBox): { x: Axis; y: Axis } {
   };
 }
 
+/** Formale Fehler der zugesicherten Box, bevor aus ihr Achsen oder Ecken abgeleitet werden. */
+function boxGeometryProblems(box: PictogramBox): string[] {
+  const problems: string[] = [];
+  const fields = [
+    ['xMm', box.xMm],
+    ['yMm', box.yMm],
+    ['widthMm', box.widthMm],
+    ['heightMm', box.heightMm],
+  ] as const;
+  for (const [name, value] of fields) {
+    if (!Number.isFinite(value)) problems.push(`${name} muss endlich sein (ist ${String(value)}).`);
+  }
+  if (Number.isFinite(box.widthMm) && box.widthMm < 0) {
+    problems.push(`widthMm darf nicht negativ sein (ist ${box.widthMm}).`);
+  }
+  if (Number.isFinite(box.heightMm) && box.heightMm < 0) {
+    problems.push(`heightMm darf nicht negativ sein (ist ${box.heightMm}).`);
+  }
+  return problems;
+}
+
 /**
  * Ob ein Wert auf seiner Achse innerhalb der Box liegt. Verglichen wird in SVG-Einheiten gegen
  * `TOLERANCE_UNITS` (über `unitsEqual`), nicht mit `<`/`>` auf Millimetern: eine Koordinate genau
@@ -146,12 +175,24 @@ function coordinatesOf(command: PathCommand, axes: { x: Axis; y: Axis }): Array<
  */
 export function checkBox(definition: PictogramDefinition): PictogramIssue[] {
   const issues: PictogramIssue[] = [];
-  const axes = axesOf(definition.box);
   const issue = (detail: string): void => {
     issues.push({ gate: 'box', pictogramId: definition.id, detail });
   };
 
+  const geometryProblems = boxGeometryProblems(definition.box);
+  for (const problem of geometryProblems) issue(`Ungültige Piktogramm-Box: ${problem}`);
+  if (geometryProblems.length > 0) return issues;
+
+  const axes = axesOf(definition.box);
+
   for (const path of pathsOf(definition.primitives)) {
+    if (path.transform !== undefined) {
+      issue(
+        'Pfad-Primitive innerhalb einer PictogramDefinition dürfen keine Transformation ' +
+          'tragen; ihre Box wird aus den geschriebenen Pfadkoordinaten geprüft.',
+      );
+      continue;
+    }
     const { commands, problems } = tokenizePath(path.d);
     // Einen Pfad, den das Kommando-Gate ablehnt, hier nicht zusätzlich bewerten: seine
     // Kommandos sind nicht vollständig zerlegbar, und ein zweiter Befund zum selben Fehler
@@ -229,6 +270,243 @@ export class BodyNotMeasuredError extends Error {
   }
 }
 
+/** Die vier Ecken der zugesicherten, achsparallelen Piktogramm-Box. */
+function cornersOf(box: PictogramBox): readonly Point[] {
+  return [
+    [box.xMm, box.yMm],
+    [box.xMm + box.widthMm, box.yMm],
+    [box.xMm + box.widthMm, box.yMm + box.heightMm],
+    [box.xMm, box.yMm + box.heightMm],
+  ];
+}
+
+function finite(values: readonly number[]): boolean {
+  return values.every((value) => Number.isFinite(value));
+}
+
+function invalidBody(body: Primitive, detail: string): Error {
+  return new Error(`pictogram-gate: Ungültige Körpergeometrie "${body.type}": ${detail}`);
+}
+
+function notMeasured(
+  definition: PictogramDefinition,
+  body: Primitive,
+  detail: string,
+): BodyNotMeasuredError {
+  return new BodyNotMeasuredError(
+    `pictogram-gate: Die Körperfläche von "${body.type}" für "${definition.id}" ist nicht ` +
+      `vermessen — ${detail}`,
+  );
+}
+
+/**
+ * Bringt einen Weltpunkt in das lokale Koordinatensystem des Körpers zurück. Der aktuelle IR-
+ * Vertrag belegt Translation ausschließlich an Gruppen; ein Körper ist ein Blatt und darf sie
+ * deshalb nicht tragen. Rotation ist dagegen am Personenkörper belegt und wird exakt invertiert.
+ */
+function toBodyCoordinates(
+  point: Point,
+  transform: Transform | undefined,
+  body: Primitive,
+  definition: PictogramDefinition,
+): Point {
+  if (transform?.translate !== undefined) {
+    throw notMeasured(
+      definition,
+      body,
+      'transform.translate ist an einem Körperblatt nicht unterstützt.',
+    );
+  }
+  const rotate = transform?.rotate;
+  if (rotate === undefined) return point;
+  if (!finite([rotate.angle, rotate.cx, rotate.cy])) {
+    throw invalidBody(body, 'Rotationswinkel und Rotationszentrum müssen endlich sein.');
+  }
+
+  const radians = (-rotate.angle * Math.PI) / 180;
+  const dx = point[0] - rotate.cx;
+  const dy = point[1] - rotate.cy;
+  return [
+    rotate.cx + dx * Math.cos(radians) - dy * Math.sin(radians),
+    rotate.cy + dx * Math.sin(radians) + dy * Math.cos(radians),
+  ];
+}
+
+/** Vorzeichenbehafteter senkrechter Abstand eines Punkts von einer gerichteten Kante. */
+function edgeDistanceMm(point: Point, from: Point, to: Point): number {
+  const dx = to[0] - from[0];
+  const dy = to[1] - from[1];
+  const length = Math.hypot(dx, dy);
+  if (unitsEqual(mmToUnits(length), 0)) {
+    throw new Error('pictogram-gate: Polygonkante besitzt keine messbare Länge.');
+  }
+  return (dx * (point[1] - from[1]) - dy * (point[0] - from[0])) / length;
+}
+
+function signOutsideTolerance(valueMm: number): -1 | 0 | 1 {
+  if (unitsEqual(mmToUnits(valueMm), 0)) return 0;
+  return valueMm < 0 ? -1 : 1;
+}
+
+/**
+ * Liefert die gemeinsame Orientierung einer konvex und in Randreihenfolge notierten Fläche.
+ * Die stärkere Prüfung "alle übrigen Punkte liegen auf derselben Seite jeder Kante" lehnt neben
+ * Konkavität auch eine Stern-/Selbstschnitt-Reihenfolge ab. Damit darf die anschließende
+ * Eckprüfung die Konvexität wirklich voraussetzen.
+ */
+function convexOrientation(
+  points: readonly Point[],
+  definition: PictogramDefinition,
+  body: Primitive,
+): -1 | 1 {
+  let orientation: -1 | 0 | 1 = 0;
+  for (let edgeIndex = 0; edgeIndex < points.length; edgeIndex += 1) {
+    const from = points[edgeIndex];
+    const to = points[(edgeIndex + 1) % points.length];
+    if (from === undefined || to === undefined) continue;
+
+    for (const point of points) {
+      let side: -1 | 0 | 1;
+      try {
+        side = signOutsideTolerance(edgeDistanceMm(point, from, to));
+      } catch {
+        throw notMeasured(
+          definition,
+          body,
+          'das geschlossene Polygon ist wegen einer entarteten Kante nicht als Fläche messbar.',
+        );
+      }
+      if (side === 0) continue;
+      if (orientation === 0) orientation = side;
+      else if (side !== orientation) {
+        throw notMeasured(
+          definition,
+          body,
+          'nur einfache konvexe Polygone sind als Körperfläche unterstützt.',
+        );
+      }
+    }
+  }
+  if (orientation === 0) {
+    throw notMeasured(
+      definition,
+      body,
+      'das geschlossene Polygon ist entartet und schließt keine Fläche ein.',
+    );
+  }
+  return orientation;
+}
+
+function samePoint(left: Point, right: Point): boolean {
+  return (
+    unitsEqual(mmToUnits(left[0]), mmToUnits(right[0])) &&
+    unitsEqual(mmToUnits(left[1]), mmToUnits(right[1]))
+  );
+}
+
+/** Ein einfacher Polygonumlauf darf keinen Eckpunkt ein zweites Mal besuchen. */
+function assertUniquePolygonPoints(
+  points: readonly Point[],
+  definition: PictogramDefinition,
+  body: Primitive,
+): void {
+  for (let left = 0; left < points.length; left += 1) {
+    for (let right = left + 1; right < points.length; right += 1) {
+      const leftPoint = points[left];
+      const rightPoint = points[right];
+      if (leftPoint !== undefined && rightPoint !== undefined && samePoint(leftPoint, rightPoint)) {
+        throw notMeasured(
+          definition,
+          body,
+          `ein einfacher Polygonumlauf darf den Punkt ${leftPoint[0]},${leftPoint[1]} nicht ` +
+            'mehrfach enthalten.',
+        );
+      }
+    }
+  }
+}
+
+/** Baut genau für die heute belegten konvexen Körperformen einen Punkt-in-Fläche-Test. */
+function containsPoint(
+  definition: PictogramDefinition,
+  body: Primitive,
+): (point: Point) => boolean {
+  if (body.type === 'rect') {
+    if (!finite([body.x, body.y, body.width, body.height]) || body.width <= 0 || body.height <= 0) {
+      throw invalidBody(body, 'x, y, Breite und Höhe müssen endlich; Breite und Höhe positiv sein.');
+    }
+    if (body.rx !== undefined) {
+      if (!Number.isFinite(body.rx) || body.rx < 0) {
+        throw invalidBody(body, 'Der Eckenradius muss endlich und nichtnegativ sein.');
+      }
+      if (body.rx > 0) {
+        throw notMeasured(
+          definition,
+          body,
+          'gerundete Rechtecke benötigen ein eigenes Flächenmodell.',
+        );
+      }
+    }
+    const axes = axesOf({ xMm: body.x, yMm: body.y, widthMm: body.width, heightMm: body.height });
+    return (point) => {
+      const local = toBodyCoordinates(point, body.transform, body, definition);
+      return within(local[0], axes.x) && within(local[1], axes.y);
+    };
+  }
+
+  if (body.type === 'circle') {
+    if (!finite([body.cx, body.cy, body.r]) || body.r <= 0) {
+      throw invalidBody(body, 'Mittelpunkt und Radius müssen endlich; der Radius positiv sein.');
+    }
+    return (point) => {
+      const local = toBodyCoordinates(point, body.transform, body, definition);
+      const overflowMm = Math.hypot(local[0] - body.cx, local[1] - body.cy) - body.r;
+      return overflowMm <= 0 || unitsEqual(mmToUnits(overflowMm), 0);
+    };
+  }
+
+  if (body.type === 'polyline') {
+    if (body.closed !== true) {
+      throw notMeasured(
+        definition,
+        body,
+        'eine offene Polylinie schließt keine Körperfläche ein.',
+      );
+    }
+    if (body.points.length < 3) {
+      throw notMeasured(
+        definition,
+        body,
+        'ein Polygon benötigt mindestens drei Punkte.',
+      );
+    }
+    if (!body.points.every(([x, y]) => finite([x, y]))) {
+      throw invalidBody(body, 'Alle Polygonpunkte müssen endlich sein.');
+    }
+    assertUniquePolygonPoints(body.points, definition, body);
+    // Transformvalidierung geschieht auch ohne Prüfecke sofort und nicht erst im Closure-Aufruf.
+    toBodyCoordinates(body.points[0] as Point, body.transform, body, definition);
+    const orientation = convexOrientation(body.points, definition, body);
+    return (point) => {
+      const local = toBodyCoordinates(point, body.transform, body, definition);
+      for (let index = 0; index < body.points.length; index += 1) {
+        const from = body.points[index];
+        const to = body.points[(index + 1) % body.points.length];
+        if (from === undefined || to === undefined) continue;
+        const side = signOutsideTolerance(edgeDistanceMm(local, from, to));
+        if (side !== 0 && side !== orientation) return false;
+      }
+      return true;
+    };
+  }
+
+  throw notMeasured(
+    definition,
+    body,
+    'unterstützt sind achsparallele oder gedrehte Rechtecke, Kreise und geschlossene konvexe Polygone.',
+  );
+}
+
 /**
  * Prüft, dass die deklarierte Box vollständig innerhalb der Körperfläche des **unverschobenen**
  * Grundzeichens liegt.
@@ -239,12 +517,11 @@ export class BodyNotMeasuredError extends Error {
  * Komposition — die Prüfung braucht keine `SymbolSpec` und läuft einmal je
  * Piktogramm-Grundzeichen-Paar, nicht je Komposition.
  *
- * Nur für ein achsparalleles Rechteck: dort fallen Fläche und achsparallele Hülle zusammen. Bei
- * einem Polygon (`hazard`, `measure`, `point`) oder einem gedrehten Quadrat (`person`) tun sie es
- * nicht — eine Box innerhalb der Hülle kann aus dem Dreieck ragen. Statt eine Hüllenprüfung als
- * Flächenprüfung auszugeben, lehnt das Gate diese Körperformen explizit ab, bis ihre Fläche
- * vermessen ist. Dasselbe Muster wie `circleBodyProfile` (`layout/profiles.ts`) und die
- * Gruppendrehung in `boundsOfMm`.
+ * Alle heute katalogisierten Körperflächen sind konvex. Deshalb ist die vollständige Box genau
+ * dann enthalten, wenn ihre vier Ecken enthalten sind. Rechtecke werden in ihrem lokalen
+ * Koordinatensystem geprüft (damit auch das gedrehte Quadrat der Person), Kreise analytisch und
+ * geschlossene konvexe Polygone gegen ihre gerichteten Kanten. Eine Prüfung nur gegen die
+ * achsparallele Hülle wäre insbesondere bei Dreiecken und dem Personendiamanten falsch.
  *
  * Nimmt das Körper-Primitiv, nicht den `SymbolKind`: die Körpergeometrie liegt in `catalog`, und
  * die Paketrichtung ist `catalog → core`. Der Aufrufer holt sie aus `baseDrawing(kind)`.
@@ -253,39 +530,22 @@ export function checkClipping(
   definition: PictogramDefinition,
   body: Primitive,
 ): PictogramIssue[] {
-  if (body.type !== 'rect' || body.transform !== undefined) {
-    throw new BodyNotMeasuredError(
-      `pictogram-gate: Die Körperfläche von "${body.type}"` +
-        `${body.transform !== undefined ? ' mit Transformation' : ''} für "${definition.id}" ` +
-        'ist nicht vermessen — das Clipping-Gate prüft nur achsparallele Rechtecke, bei denen ' +
-        'Fläche und Hülle zusammenfallen.',
-    );
+  const geometryProblems = boxGeometryProblems(definition.box);
+  if (geometryProblems.length > 0) {
+    return geometryProblems.map((problem) => ({
+      gate: 'clipping',
+      pictogramId: definition.id,
+      detail: `Ungültige Piktogramm-Box: ${problem}`,
+    }));
   }
-
-  const bodyAxes = axesOf({
-    xMm: body.x,
-    yMm: body.y,
-    widthMm: body.width,
-    heightMm: body.height,
-  });
-  const box = axesOf(definition.box);
-
-  const checks: Array<[string, number, Axis]> = [
-    ['x', box.x.min, bodyAxes.x],
-    ['x + width', box.x.max, bodyAxes.x],
-    ['y', box.y.min, bodyAxes.y],
-    ['y + height', box.y.max, bodyAxes.y],
-  ];
-
+  const contains = containsPoint(definition, body);
   const issues: PictogramIssue[] = [];
-  for (const [name, value, axis] of checks) {
-    if (!within(value, axis)) {
+  for (const [x, y] of cornersOf(definition.box)) {
+    if (!contains([x, y])) {
       issues.push({
         gate: 'clipping',
         pictogramId: definition.id,
-        detail:
-          `Box-Kante ${name} = ${value} mm liegt außerhalb des Körpers ` +
-          `(${axis.name} von ${axis.min} bis ${axis.max} mm).`,
+        detail: `Box-Ecke (${x}, ${y}) mm liegt außerhalb der Körperfläche "${body.type}".`,
       });
     }
   }
@@ -297,8 +557,8 @@ export function checkClipping(
  * unerreichbaren Fingerprint-Gates tritt (Spec Abschnitt 7). Reihenfolge: Kommando, Box,
  * Clipping, damit der Autor die Ursache vor ihren Folgen liest.
  *
- * `checkClipping` wirft `BodyNotMeasuredError` für eine nicht vermessene Körperform (Polygon,
- * gedrehtes Rechteck) — richtig für einen direkten Aufrufer, der genau ein
+ * `checkClipping` wirft `BodyNotMeasuredError` für eine nicht vermessene Körperform (etwa eine
+ * offene oder konkave Polylinie) — richtig für einen direkten Aufrufer, der genau ein
  * Piktogramm-Grundzeichen-Paar prüft. Hier würde der Wurf aber die bereits gesammelten Kommando-
  * und Box-Befunde verwerfen und damit dem Grundsatz dieser Datei widersprechen: „Listen von
  * Befunden statt Ausnahmen, ein Autor soll alle Verstöße auf einmal sehen." Genau dieser eine

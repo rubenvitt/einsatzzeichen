@@ -1,21 +1,42 @@
 import { describe, expect, it } from 'vitest';
 import { checkBox, checkClipping, checkCommands } from '@einsatzzeichen/core';
-import type { Primitive } from '@einsatzzeichen/schema';
-import { baseDrawing } from '../base-symbols.js';
+import type { PictogramDefinition, Primitive } from '@einsatzzeichen/schema';
+import { BASE_SYMBOLS, baseDrawing } from '../base-symbols.js';
+import { COVERAGE_MANIFEST } from '../coverage-manifest.js';
 import { ALL_PICTOGRAMS } from './index.js';
 
 /**
- * Die Körperfläche, gegen die alle Piktogramme in D.0 geprüft werden. Weitere Körperformen
- * kommen dazu, sobald ihre Fläche vermessen ist — das Clipping-Gate wirft für Polygone und
- * gedrehte Quadrate ausdrücklich, statt eine Hüllenprüfung als Flächenprüfung auszugeben.
+ * Ein Körper aus dem realen Katalog. Das Gate liest weiterhin das Primitiv statt eines
+ * `SymbolKind`, damit `core` nicht die Paketrichtung zu `catalog` umdrehen muss.
  */
-function formationBody(): Primitive {
-  const body = baseDrawing('formation').children.find((child) => child.role === 'body');
-  if (body === undefined) throw new Error('Grundzeichen "formation" hat kein body-Primitiv.');
+function bodyOf(kind: keyof typeof BASE_SYMBOLS): Primitive {
+  const body = baseDrawing(kind).children.find((child) => child.role === 'body');
+  if (body === undefined) throw new Error(`Grundzeichen "${kind}" hat kein body-Primitiv.`);
   return body;
 }
 
+const BODY_CASES = (Object.keys(BASE_SYMBOLS) as Array<keyof typeof BASE_SYMBOLS>).map(
+  (kind) => [kind, bodyOf(kind)] as const,
+);
+
+/** Kleine reale Box im gemeinsamen Zentrum aller acht heute katalogisierten Körperflächen. */
+const CENTERED_TEST_PICTOGRAM: PictogramDefinition = {
+  id: 'capability.fire-fighting',
+  title: 'Zentrale Testbox',
+  box: { xMm: 14, yMm: 14, widthMm: 4, heightMm: 4 },
+  primitives: [],
+};
+
 describe('Piktogramm-Gates über den Katalogbestand', () => {
+  it('bindet den Vertragsclaim exakt an die ausgeführten Piktogrammfälle', () => {
+    const tested = ALL_PICTOGRAMS.map((definition) => definition.id).sort();
+    const claimed = COVERAGE_MANIFEST.entries
+      .filter((entry) => entry.testEvidence.includes('pictogram-contract'))
+      .map((entry) => entry.implementation)
+      .sort();
+    expect(tested).toEqual(claimed);
+  });
+
   it('hat mindestens ein Piktogramm zu prüfen', () => {
     // Ohne diese Zusicherung wären die drei Tests unten bei leerem Bestand trivial grün.
     expect(ALL_PICTOGRAMS.length).toBeGreaterThan(0);
@@ -38,7 +59,15 @@ describe('Piktogramm-Gates über den Katalogbestand', () => {
   it.each(ALL_PICTOGRAMS.map((definition) => [definition.id, definition] as const))(
     'besteht für %s das Clipping-Gate gegen die Taktische Formation',
     (_id, definition) => {
-      expect(checkClipping(definition, formationBody())).toEqual([]);
+      // Die vorhandenen Kapitel-4-Geometrien sind fachlich weiterhin für `formation`
+      // autorisiert. Ein kartesisches Produkt mit allen Körpern würde diese Aussage erfinden.
+      expect(checkClipping(definition, bodyOf('formation'))).toEqual([]);
     },
   );
+
+  it.each(BODY_CASES)('kann die reale Körperfläche von %s prüfen', (_kind, body) => {
+    // Dieser Test belegt die technische Flächenmodell-Abdeckung, nicht die fachliche
+    // Autorisierung jedes realen Piktogramms für jedes Grundzeichen.
+    expect(checkClipping(CENTERED_TEST_PICTOGRAM, body)).toEqual([]);
+  });
 });

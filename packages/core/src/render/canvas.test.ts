@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_VIEWBOX_MM, mmToUnits, type Drawing } from '@einsatzzeichen/schema';
+import { DEFAULT_VIEWBOX_MM, PALETTE, mmToUnits, type Drawing } from '@einsatzzeichen/schema';
 import { renderCanvas } from './canvas.js';
 import { formatUnits, renderSvg } from './svg.js';
+import type { RenderTheme } from './theme.js';
 
 type Call = [string, ...unknown[]];
 
@@ -62,6 +63,7 @@ const formation: Drawing = {
   children: [
     {
       type: 'rect',
+      role: 'body',
       x: 1,
       y: 6,
       width: 30,
@@ -88,6 +90,78 @@ describe('renderCanvas', () => {
     expect(names).toContain('stroke');
     expect(calls).toContainEqual(['set:fillStyle', '#ffffff']);
     expect(calls).toContainEqual(['set:strokeStyle', '#000000']);
+  });
+
+  it('löst dieselben Themefarben wie der SVG-Renderer auf', () => {
+    const theme: RenderTheme = {
+      id: 'test',
+      palette: { ...PALETTE, weiss: '#eeeeee', schwarz: '#111111' },
+      surface: '#ffffff',
+    };
+    const { ctx, calls } = recordingContext();
+    renderCanvas(formation, ctx, { theme });
+    expect(calls).toContainEqual(['set:fillStyle', '#eeeeee']);
+    expect(calls).toContainEqual(['set:strokeStyle', '#111111']);
+    expect(renderSvg(formation, { theme })).toContain('fill="#eeeeee"');
+  });
+
+  it('setzt dieselbe nicht-farbliche Körperkontur wie der SVG-Renderer', () => {
+    const theme: RenderTheme = {
+      id: 'test',
+      palette: PALETTE,
+      surface: '#ffffff',
+      bodyStrokeDashes: { weiss: [2, 1] },
+    };
+    const { ctx, calls } = recordingContext();
+    renderCanvas(formation, ctx, { theme });
+    expect(calls).toContainEqual(['setLineDash', [mmToUnits(2), mmToUnits(1)]]);
+    expect(renderSvg(formation, { theme })).toContain('stroke-dasharray=');
+  });
+
+  it('setzt für ein solid gerendertes Blatt Strichmuster und -offset explizit zurück', () => {
+    const { ctx, calls } = recordingContext();
+    renderCanvas(formation, ctx);
+    expect(calls).toContainEqual(['setLineDash', []]);
+    expect(calls).toContainEqual(['set:lineDashOffset', 0]);
+  });
+
+  it('setzt auch für einen solid gerenderten Pfad das Caller-Strichmuster zurück', () => {
+    const { ctx, calls } = recordingContext();
+    renderCanvas(
+      {
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [
+          { type: 'path', d: 'M 4 16 L 28 16', style: { stroke: 'schwarz', strokeWidth: 0.5 } },
+        ],
+      },
+      ctx,
+    );
+    expect(calls).toContainEqual(['setLineDash', []]);
+    expect(calls).toContainEqual(['set:lineDashOffset', 0]);
+  });
+
+  it('vererbt die body-Rolle einer Gruppe an ihre Zeichenblätter', () => {
+    const theme: RenderTheme = {
+      id: 'test',
+      palette: PALETTE,
+      surface: '#ffffff',
+      bodyStrokeDashes: { blau: [2, 1] },
+    };
+    const drawing: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'group',
+          role: 'body',
+          style: { fill: 'blau', stroke: 'schwarz', strokeWidth: 0.5 },
+          children: [{ type: 'rect', x: 1, y: 6, width: 30, height: 20 }],
+        },
+      ],
+    };
+    const { ctx, calls } = recordingContext();
+    renderCanvas(drawing, ctx, { theme });
+    expect(calls).toContainEqual(['setLineDash', [mmToUnits(2), mmToUnits(1)]]);
+    expect(renderSvg(drawing, { theme })).toContain('stroke-dasharray=');
   });
 
   it('setzt die Strichstärke in SVG-Einheiten', () => {

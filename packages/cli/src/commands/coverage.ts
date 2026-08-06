@@ -7,6 +7,10 @@ import {
   sortedDomainReviewPendingByArea,
 } from '@einsatzzeichen/catalog';
 
+function counted(count: number, singular: string, plural: string): string {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
 export function coverage(): void {
   const { missing, duplicates, invalidPrimary, violations, openDomainReviews } = checkCoverage();
   const core = profileFor('bund');
@@ -25,10 +29,31 @@ export function coverage(): void {
   // Ab hier nur noch Ausgabe. Wäre ein offenes fachliches Review ein Fehler, wäre CI ab dem
   // ersten Tag dauerhaft rot — genau die Situation, in der Gates ignoriert werden.
   const blockers = releaseBlockers();
-  console.log(`Offene fachliche Reviews: ${openDomainReviews}`);
-  console.log(`1.0-Blocker: ${blockers.domainReviewPending.length} ohne fachliches Review, ` +
-    `${blockers.withoutTestEvidence.length} ohne Testnachweis, ` +
-    `${blockers.uncoveredScope.length} Kapitel im beanspruchten Umfang ohne Eintrag`);
+  const manifestReviews = counted(
+    blockers.domainReviewPending.length,
+    'Manifestreview',
+    'Manifestreviews',
+  );
+  const sourceReviews = counted(
+    blockers.sourceDomainReviewPending.length,
+    'Quellenreview',
+    'Quellenreviews',
+  );
+  const profileReviews = counted(
+    blockers.profileDomainReviewPending.length,
+    'Profilreview',
+    'Profilreviews',
+  );
+  console.log(
+    `Offene fachliche Reviews: ${openDomainReviews} ` +
+      `(${manifestReviews}, ${sourceReviews}, ${profileReviews})`,
+  );
+  console.log(
+    `1.0-Blocker: ${manifestReviews}, ${sourceReviews} und ${profileReviews} ` +
+      `ohne domain: approved, ` +
+      `${blockers.withoutTestEvidence.length} ohne Testnachweis, ` +
+      `${blockers.uncoveredScope.length} Kapitel im beanspruchten Umfang ohne Eintrag`,
+  );
 
   const byArea = sortedDomainReviewPendingByArea(blockers.domainReviewPendingByArea);
   if (byArea.length > 0) {

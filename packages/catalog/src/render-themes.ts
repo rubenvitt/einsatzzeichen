@@ -1,0 +1,68 @@
+import { PALETTE, type ColorPalette } from '@einsatzzeichen/schema';
+import { REFERENCE_THEME, type RenderTheme } from '@einsatzzeichen/core';
+
+const ACCESSIBLE_LIGHT_PALETTE: ColorPalette = {
+  ...PALETTE,
+  // Einzige aktuelle Referenzfarbe unter 3:1 zu schwarzem Piktogramm-Ink. Der neue Wert bleibt
+  // klar blau, erreicht aber 4,75:1. Das Referenztheme bleibt davon vollständig unberührt.
+  blau: '#4a73d9',
+};
+
+const PRINT_MONOCHROME_PALETTE: ColorPalette = {
+  schwarz: '#000000',
+  weiss: '#ffffff',
+  rot: '#666666',
+  blau: '#777777',
+  gelb: '#dddddd',
+  gruen: '#888888',
+  hellgruen: '#cccccc',
+  orange: '#aaaaaa',
+  braun: '#999999',
+  grau: '#5f5f5f',
+  hellgrau: '#bbbbbb',
+  hellblau: '#eeeeee',
+};
+
+/**
+ * Zweiter visueller Kanal neben der Füllfarbe. Ein leerer Wert bedeutet bewusst „durchgezogen“;
+ * alle anderen Signaturen sind in Millimetern angegeben und bleiben beim Skalieren stabil.
+ */
+export const ORGANIZATION_BODY_DASHES = {
+  rot: [],
+  blau: [2, 1.5],
+  gelb: [4, 2],
+  gruen: [6, 2],
+  orange: [6, 2, 1, 2],
+  braun: [2, 2, 2, 4],
+  hellgrau: [8, 2],
+} as const;
+
+export const ACCESSIBLE_LIGHT_THEME: RenderTheme = {
+  id: 'accessible-light',
+  palette: ACCESSIBLE_LIGHT_PALETTE,
+  surface: '#ffffff',
+  bodyStrokeDashes: ORGANIZATION_BODY_DASHES,
+};
+
+export const PRINT_MONOCHROME_THEME: RenderTheme = {
+  id: 'print-monochrome',
+  palette: PRINT_MONOCHROME_PALETTE,
+  surface: '#ffffff',
+  bodyStrokeDashes: ORGANIZATION_BODY_DASHES,
+};
+
+export const RENDER_THEMES = {
+  reference: REFERENCE_THEME,
+  'accessible-light': ACCESSIBLE_LIGHT_THEME,
+  'print-monochrome': PRINT_MONOCHROME_THEME,
+} as const satisfies Record<string, RenderTheme>;
+
+export type RenderThemeId = keyof typeof RENDER_THEMES;
+
+export function isRenderThemeId(value: string): value is RenderThemeId {
+  return Object.hasOwn(RENDER_THEMES, value);
+}
+
+export function renderTheme(id: RenderThemeId): RenderTheme {
+  return RENDER_THEMES[id];
+}

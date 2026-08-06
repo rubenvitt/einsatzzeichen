@@ -1,7 +1,6 @@
 import {
   DEFAULT_STROKE_WIDTH_MM,
   mmToUnits,
-  PALETTE,
   type ColorToken,
   type Drawing,
   type Primitive,
@@ -10,6 +9,7 @@ import {
 } from '@einsatzzeichen/schema';
 import { escapeXml, formatUnits } from './format.js';
 import { mergeStyle } from './style.js';
+import { REFERENCE_THEME, colorFor, type RenderTheme } from './theme.js';
 
 export { formatUnits };
 
@@ -18,14 +18,16 @@ export interface SvgOptions {
   size?: number;
   /** Präfix für erzeugte Element-IDs. Erforderlich, wenn mehrere SVGs im selben DOM liegen. */
   idPrefix?: string;
+  /** Farbprofil der Ausgabe. Ohne Angabe bleibt die BABZ-Referenzpalette bytegleich erhalten. */
+  theme?: RenderTheme;
 }
 
 function u(mm: number): string {
   return formatUnits(mmToUnits(mm));
 }
 
-function color(token: ColorToken | 'none'): string {
-  return token === 'none' ? 'none' : PALETTE[token];
+function color(token: ColorToken | 'none', theme: RenderTheme): string {
+  return token === 'none' ? 'none' : colorFor(theme, token);
 }
 
 /**
@@ -47,14 +49,31 @@ function color(token: ColorToken | 'none'): string {
  * Vorgabe entstünden aus derselben IR zwei verschiedene Bilder — derselbe Fehlermodus wie
  * bei der Gruppen-Stil-Vererbung und `fillRule`, hier am `fill`-Default.
  */
-function styleAttrs(style: Style | undefined, options: { rawStrokeWidth?: boolean } = {}): string {
-  const parts: string[] = [`fill="${style?.fill !== undefined ? color(style.fill) : 'none'}"`];
+function styleAttrs(
+  style: Style | undefined,
+  theme: RenderTheme,
+  options: { rawStrokeWidth?: boolean; role?: Primitive['role'] } = {},
+): string {
+  const parts: string[] = [
+    `fill="${style?.fill !== undefined ? color(style.fill, theme) : 'none'}"`,
+  ];
   if (style?.stroke !== undefined) {
-    parts.push(`stroke="${color(style.stroke)}"`);
+    parts.push(`stroke="${color(style.stroke, theme)}"`);
     if (style.stroke !== 'none') {
       const strokeWidthMm = style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
       const strokeWidth = options.rawStrokeWidth ? formatUnits(strokeWidthMm) : u(strokeWidthMm);
       parts.push(`stroke-width="${strokeWidth}"`);
+      const fillToken = style.fill;
+      const dash =
+        options.role === 'body' && fillToken !== undefined && fillToken !== 'none'
+          ? theme.bodyStrokeDashes?.[fillToken]
+          : undefined;
+      if (dash !== undefined && dash.length > 0) {
+        const values = dash.map((length) =>
+          options.rawStrokeWidth ? formatUnits(length) : u(length),
+        );
+        parts.push(`stroke-dasharray="${values.join(' ')}"`);
+      }
     }
   }
   if (style?.fillRule !== undefined) parts.push(`fill-rule="${style.fillRule}"`);
@@ -126,22 +145,30 @@ function pathTransformAttr(transform: Transform | undefined): string {
  * gleich auf: beide werten sie im Renderer aus, keiner verlässt sich auf die
  * Zielplattform. `<g>` trägt deshalb selbst keinen Stil mehr — nur noch Kinder tun das.
  */
-function renderPrimitive(primitive: Primitive, inheritedStyle?: Style): string {
+function renderPrimitive(
+  primitive: Primitive,
+  theme: RenderTheme,
+  inheritedStyle?: Style,
+  inheritedRole?: Primitive['role'],
+): string {
   const style = mergeStyle(primitive.style, inheritedStyle);
+  const role = primitive.role ?? inheritedRole;
 
   if (primitive.type === 'path') {
-    const styleStr = styleAttrs(style, { rawStrokeWidth: true });
+    const styleStr = styleAttrs(style, theme, { rawStrokeWidth: true, role });
     const transform = pathTransformAttr(primitive.transform);
     return `<path d="${escapeXml(primitive.d)}"${styleStr}${transform}/>`;
   }
 
   if (primitive.type === 'group') {
     const transform = transformAttr(primitive.transform);
-    const children = primitive.children.map((child) => renderPrimitive(child, style)).join('');
+    const children = primitive.children
+      .map((child) => renderPrimitive(child, theme, style, role))
+      .join('');
     return `<g${transform}>${children}</g>`;
   }
 
-  const tail = `${styleAttrs(style)}${transformAttr(primitive.transform)}`;
+  const tail = `${styleAttrs(style, theme, { role })}${transformAttr(primitive.transform)}`;
 
   switch (primitive.type) {
     case 'rect': {
@@ -162,6 +189,7 @@ function renderPrimitive(primitive: Primitive, inheritedStyle?: Style): string {
 
 export function renderSvg(drawing: Drawing, options: SvgOptions = {}): string {
   const prefix = options.idPrefix ?? 'ez';
+  const theme = options.theme ?? REFERENCE_THEME;
   const width = u(drawing.viewBox.width);
   const height = u(drawing.viewBox.height);
 
@@ -187,6 +215,6 @@ export function renderSvg(drawing: Drawing, options: SvgOptions = {}): string {
     attrs.push('aria-hidden="true"');
   }
 
-  const body = drawing.children.map((child) => renderPrimitive(child)).join('');
+  const body = drawing.children.map((child) => renderPrimitive(child, theme)).join('');
   return `<svg ${attrs.join(' ')}>${metadata.join('')}${body}</svg>`;
 }

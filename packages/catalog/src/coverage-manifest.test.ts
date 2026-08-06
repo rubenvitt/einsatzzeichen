@@ -103,22 +103,19 @@ describe('Manifest-Einträge für Piktogramme', () => {
     expect(entryFor('4.3.2')).toBeDefined();
   });
 
-  it('gibt Piktogrammen einen Snapshot-, aber keinen Fingerprint-Nachweis', () => {
+  it('gibt Piktogrammen Snapshot- und Vertragsnachweis statt eines Körper-Fingerprints', () => {
     for (const section of ['4.3.1', '4.3.2']) {
       const entry = entryFor(section);
       expect(entry?.coverage).toBe('element');
       // matchFingerprint vergleicht ausschließlich role: 'body' — für ein Piktogramm ist das
       // strukturell unerreichbar und kein Versäumnis.
-      expect(entry?.fingerprintTest).toBe(false);
-      expect(entry?.snapshotTest).toBe(true);
+      expect(entry?.testEvidence).toEqual(['svg-snapshot', 'pictogram-contract']);
     }
   });
 
-  it('lässt Organisationen und Stärken ohne Snapshot-Nachweis', () => {
-    // Für sie existiert kein Dateisnapshot: eine Organisationsfarbe ist ein ColorToken, ein
-    // Stärkegrad eine HeadShape — keine Zeichnung, die sich rendern ließe.
-    expect(entryFor('2.1')?.snapshotTest).toBe(false);
-    expect(entryFor('5.4.1')?.snapshotTest).toBe(false);
+  it('weist Organisationen und Stärken mit ihrer arteigenen Evidenz nach', () => {
+    expect(entryFor('2.1')?.testEvidence).toEqual(['reference-fill']);
+    expect(entryFor('5.4.1')?.testEvidence).toEqual(['head-shape-regression']);
   });
 
   it('begründet den technical-Status der Piktogramme an den vier Gates', () => {
@@ -126,6 +123,8 @@ describe('Manifest-Einträge für Piktogramme', () => {
     expect(entry?.review.technical.status).toBe('approved');
     expect(entry?.review.technical.note).toContain('Box');
     expect(entry?.review.technical.note).toContain('Clipping');
+    expect(entry?.review.technical.note).toContain('Mehrgrößen');
+    expect(entry?.review.technical.note).toContain('viewBox');
     expect(entry?.review.domain.status).toBe('pending');
   });
 });

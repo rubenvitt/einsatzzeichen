@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { matchFingerprint } from '@einsatzzeichen/core';
 import { BASE_SYMBOLS } from './base-symbols.js';
+import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { fingerprintFor } from './fingerprint-index.js';
 
 const REFERENCE = [
@@ -39,6 +40,19 @@ function primaryDepiction(kind: (typeof REFERENCE)[number][0]) {
 }
 
 describe('Grundzeichen Kapitel 1', () => {
+  it('bindet den Körper-Fingerprint-Claim exakt an die ausgeführten Grundzeichenfälle', () => {
+    const tested = REFERENCE.map(([kind]) => BASE_SYMBOLS[kind].id).sort();
+    const claimed = COVERAGE_MANIFEST.entries
+      .filter(
+        (entry) =>
+          entry.coverage === 'catalog-entry' &&
+          entry.testEvidence.includes('body-fingerprint'),
+      )
+      .map((entry) => entry.implementation)
+      .sort();
+    expect(tested).toEqual(claimed);
+  });
+
   it.each(REFERENCE)('trifft die Referenzgeometrie von %s', (kind, asset) => {
     // Geprüft wird die Geometrie des Katalogeintrags selbst (depictions[0].drawing), nicht der
     // Rückgabewert von baseDrawing() — beides deckt sich nur, solange entry() intern baseDrawing()

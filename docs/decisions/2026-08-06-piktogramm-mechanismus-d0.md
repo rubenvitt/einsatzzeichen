@@ -127,3 +127,16 @@ Erinnerung für den nächsten Plan:
    ECMAScript sortiert Ganzzahl-Schlüssel immer numerisch aufsteigend — das konnte nie funktionieren.
 
 Punkt 4 ist noch offen und in der Ledger-Liste der aufgeschobenen Minors vermerkt.
+
+## 8. Nachtrag nach der Gate-Härtung
+
+Die Aussagen in Abschnitt 5 sowie der erste offene Punkt aus Abschnitt 6 beschreiben den
+damaligen D.0-Abschluss. Der integrierte Stand vom 6. August 2026 ersetzt sie wie folgt:
+
+- arteigene, typisierte Testevidenz statt `fingerprintTest`/`snapshotTest`; dadurch null echte
+  technische Nachweislücken;
+- exakte Clipping-Flächenmodelle für alle acht aktuellen Grundkörper;
+- weiterhin keine pauschale fachliche Autorisierung jedes Piktogramms für jeden Grundkörper.
+
+Maßgeblich sind die Entscheidungsnotiz `2026-08-06-gate-haertung-vor-d1.md`, Abschnitt 9, und die
+Spec `2026-08-06-technische-restpunkte-und-review-uebergabe-design.md`.

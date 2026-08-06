@@ -8,4 +8,7 @@ export * from './strengths.js';
 export * from './pictograms/index.js';
 export * from './recipes.js';
 export * from './coverage-manifest.js';
+export * from './domain-reviews.js';
 export * from './coverage-gate.js';
+export * from './render-themes.js';
+export * from './labels.js';

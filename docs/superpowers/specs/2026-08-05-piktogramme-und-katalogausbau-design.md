@@ -27,7 +27,7 @@ Die Entscheidungsnotiz vom 5. August 2026 ordnet vor „Inhalt" die **Gate-Härt
 (Mehrgrößen-Regression, Druckprofil, Clipping- und viewBox-Prüfung, A11y-Kontrast). Diese
 Reihenfolge wird hier nicht umgekehrt, sondern **teilweise eingelöst**: Abschnitt 7 zieht genau
 das Clipping-Gate vor, weil es an Pfad-Piktogrammen hängt und ohne es die erste Kurve unbemerkt
-über den Körperrand laufen kann. Die übrigen drei Gate-Lücken bleiben offen und behalten ihren
+über den Körperrand laufen kann. Die übrigen vier Gate-Lücken bleiben offen und behalten ihren
 Platz vor dem Massenausbau (Abschnitt 10, Reihenfolgeregel).
 
 Die zweite Vorbedingung der Notiz — „wer zeichnet die über 400 Piktogramme" — beantwortet
@@ -171,8 +171,9 @@ Die Pfaddaten selbst werden **nicht** übernommen. Drei Gründe, jeder allein hi
    Koordinate — genau die Arbeit, die das Neuschreiben ohnehin ausmacht. Der Wert liegt in der
    Bildidee, nicht in den Zahlen.
 2. **Andere Baseline.** Der Upstream rekonstruiert die SKK-/DV-102-Systematik von 2010/2011. Die
-   verbindliche Baseline ist die BBK/BABZ-Fassung 2025 (`Vision.md`, Referenzhierarchie 1). Wo die
-   Bildidee sich geändert hat, wäre eine übernommene Geometrie eine belegte Falschaussage.
+   für das Projekt festgelegte Coverage-Baseline ist der lokal archivierte BBK/BABZ-Arbeitsstand
+   (`Vision.md`, Referenzhierarchie 1); das behauptet keine amtliche Geltung. Wo die Bildidee sich
+   geändert hat, wäre eine übernommene Geometrie eine belegte Falschaussage.
 3. **Stilbruch.** Slice-1-Spec Abschnitt 9 verlangt für Kapitel 4/5 und die Anhänge einen
    „konsistenten hauseigenen Stil". Ein Bestand, der teils übernommen und teils eigen ist, hat
    zwei Stile. Der Upstream verwendet zudem durchgängig relative Pfadkommandos und
@@ -473,9 +474,14 @@ Spec**, alles Weitere bekommt einen eigenen Umsetzungsplan.
 
 ### Reihenfolgeregel
 
+> **Nachtrag vom 6. August 2026:** Die Gate-Härtung ist über
+> `docs/decisions/2026-08-06-gate-haertung-vor-d1.md` abgeschlossen. Die dort dokumentierten
+> Mehrgrößen-, Theme-/Druck-, A11y- und globalen viewBox-Gates geben D.1 frei.
+
 1. **D.0 zuerst**, weil ohne es kein Pfad-Piktogramm existieren kann (Abschnitt 2).
-2. **Gate-Härtung vor D.1.** Die drei verbleibenden Lücken der Entscheidungsnotiz —
-   Mehrgrößen-Regression 16…256, Druckprofil, A11y-Kontrast — bleiben *vor* dem Massenausbau. Ein
+2. **Gate-Härtung vor D.1.** Die vier verbleibenden Arbeitsbereiche der Entscheidungsnotiz —
+   Mehrgrößen-Regression 16…256, Druckprofil, A11y-Kontrast und die globale viewBox-Prüfung —
+   bleiben *vor* dem Massenausbau. Ein
    Piktogramm, das bei 16 px zuläuft oder in Schwarz-Weiß verschwindet, ist bei 88 Einträgen ein
    Fund und bei 500 eine Nacharbeitswelle. Diese Reihenfolge ist der Grund, warum D.0 den
    Mechanismus baut und nicht schon Kapitel 4.
@@ -549,8 +555,8 @@ Piktogramme.
 **Nicht enthalten:**
 
 - Der Inhalt von D.1 bis D.5 — 249 der 250 Piktogrammabschnitte
-- Die drei verbleibenden Gate-Lücken: Mehrgrößen-Regression 16…256, Theme- und Druckprofile,
-  A11y-Kontrastprüfung. Ebenso die viewBox-Konsistenzprüfung über den Gesamtbestand
+- Die vier verbleibenden Gate-Lücken: Mehrgrößen-Regression 16…256, Theme- und Druckprofile,
+  A11y-Kontrastprüfung sowie die viewBox-Konsistenzprüfung über den Gesamtbestand
 - Kapitel 3 (Ergänzungseigenschaften): `PropertyId` existiert weiterhin nicht, `'3'` bleibt außer
   Scope. Kapitel 3 hat nach der Entscheidungsnotiz vom 5. August **keinen Owner** und bekommt
   hier keinen — es ist keine Piktogrammfrage

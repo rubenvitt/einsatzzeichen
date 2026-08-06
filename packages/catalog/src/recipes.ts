@@ -4,6 +4,7 @@ import { baseDrawing } from './base-symbols.js';
 import { organizationColor } from './organizations.js';
 import { pictogram } from './pictograms/index.js';
 import { strengthHead } from './strengths.js';
+import { describeSymbolSpec } from './labels.js';
 
 const PORTS: CatalogPorts = {
   baseDrawing,
@@ -13,7 +14,10 @@ const PORTS: CatalogPorts = {
 };
 
 export function composeFromCatalog(spec: SymbolSpec, title?: string): Drawing {
-  return compose(spec, PORTS, { ...(title !== undefined ? { title } : {}) });
+  return compose(spec, PORTS, {
+    ...(title !== undefined ? { title } : {}),
+    description: describeSymbolSpec(spec),
+  });
 }
 
 export interface Recipe {

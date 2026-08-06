@@ -1,6 +1,7 @@
+import { isRenderThemeId, renderTheme } from '@einsatzzeichen/catalog';
 import { auditReference } from './commands/audit-reference.js';
 import { coverage } from './commands/coverage.js';
-import { exportSvg } from './commands/export.js';
+import { InvalidExportSizeError, exportSvg, parseExportSize } from './commands/export.js';
 
 class CliUsageError extends Error {}
 
@@ -42,9 +43,15 @@ switch (command) {
     break;
   case 'export': {
     try {
-      exportSvg(flag('out') ?? 'out', Number(flag('size') ?? 64));
+      const themeId = flag('theme') ?? 'reference';
+      if (!isRenderThemeId(themeId)) {
+        throw new CliUsageError(
+          `Unbekanntes Theme "${themeId}". Zulässig: reference, accessible-light, print-monochrome.`,
+        );
+      }
+      exportSvg(flag('out') ?? 'out', parseExportSize(flag('size') ?? '64'), renderTheme(themeId));
     } catch (error) {
-      if (error instanceof CliUsageError) {
+      if (error instanceof CliUsageError || error instanceof InvalidExportSizeError) {
         console.error(error.message);
         process.exit(1);
       }
@@ -55,7 +62,9 @@ switch (command) {
   default:
     console.error(`Unbekanntes Kommando: ${command ?? '(keines)'}`);
     console.error(
-      'Verfügbar: audit:reference [--filter <präfix>] [--print] | coverage | export [--out <pfad>] [--size <px>]',
+      'Verfügbar: audit:reference [--filter <präfix>] [--print] | coverage | ' +
+        'export [--out <pfad>] [--size <px>] ' +
+        '[--theme <reference|accessible-light|print-monochrome>]',
     );
     process.exit(1);
 }

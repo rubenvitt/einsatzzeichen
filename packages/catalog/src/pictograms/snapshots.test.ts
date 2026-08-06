@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderSvg } from '@einsatzzeichen/core';
 import { DEFAULT_VIEWBOX_MM, type Drawing } from '@einsatzzeichen/schema';
 import { ALL_PICTOGRAMS } from './index.js';
+import { describePictogram } from '../labels.js';
 
 /**
  * Ein Piktogramm allein als Zeichnung — ohne Grundzeichen, ohne Kopfzone, ohne Verschiebung.
@@ -18,6 +19,7 @@ describe('Piktogramm-Snapshots', () => {
         viewBox: DEFAULT_VIEWBOX_MM,
         children: definition.primitives,
         title: definition.title,
+        description: describePictogram(definition),
       };
       await expect(renderSvg(drawing, { size: 64 })).toMatchFileSnapshot(
         `./__snapshots__/${id}.svg`,

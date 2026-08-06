@@ -112,6 +112,9 @@ export function baseDrawing(kind: SymbolKind): Drawing {
     viewBox: DEFAULT_VIEWBOX_MM,
     children: [body],
     ...(title !== undefined ? { title } : {}),
+    ...(title !== undefined
+      ? { description: `Grundzeichen: ${title}. BABZ-Abschnitt ${SECTIONS[kind]?.section ?? ''}.` }
+      : {}),
   };
 }
 

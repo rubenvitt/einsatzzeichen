@@ -53,6 +53,8 @@ export interface ComposeOptions {
    * es entsteht kein leeres `<title>`.
    */
   title?: string;
+  /** Semantische Beschreibung; wird wie der Titel vom Katalog geliefert, nie aus Geometrie geraten. */
+  description?: string;
 }
 
 /**
@@ -132,5 +134,6 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
     viewBox: DEFAULT_VIEWBOX_MM,
     children: [...headPrimitives, filled, ...pictograms],
     ...(options.title !== undefined ? { title: options.title } : {}),
+    ...(options.description !== undefined ? { description: options.description } : {}),
   };
 }

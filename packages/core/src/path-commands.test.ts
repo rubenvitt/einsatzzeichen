@@ -53,6 +53,16 @@ describe('tokenizePath', () => {
     ]);
   });
 
+  it('liest ein explizites positives Vorzeichen', () => {
+    expect(tokenizePath('M +4 +5').commands).toEqual([{ command: 'M', numbers: [4, 5] }]);
+  });
+
+  it('meldet fremde Interpunktion statt sie still zu überspringen', () => {
+    expect(tokenizePath('M 1 1 ??? L 2 2').problems).toEqual([
+      'Unzulässige Zeichenfolge " ??? " in Pfaddaten.',
+    ]);
+  });
+
   it('meldet ein relatives Kommando und verwirft seine Zahlen still', () => {
     const { problems } = tokenizePath('m 4 4 l 8 8');
     expect(problems).toEqual([

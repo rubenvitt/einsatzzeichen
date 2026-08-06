@@ -12,6 +12,7 @@
     "cli": "tsx packages/cli/src/index.ts"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "2.6.2",
     "@types/node": "^22.20.1",
     "tsx": "^4.23.5",
     "typescript": "^5.9.3",
@@ -20,7 +21,7 @@
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
-      "version": "^11.10.0",
+      "version": "11.20.0",
       "onFail": "download"
     }
   }

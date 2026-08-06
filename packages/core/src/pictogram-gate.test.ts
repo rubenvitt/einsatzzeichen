@@ -12,6 +12,16 @@ function withPath(d: string): PictogramDefinition {
   };
 }
 
+/** Minimale Definition für reine Flächenprüfungen; die Primitive sind dafür unerheblich. */
+function withBox(box: PictogramDefinition['box']): PictogramDefinition {
+  return {
+    id: 'capability.fire-fighting',
+    title: 'Testbox',
+    box,
+    primitives: [],
+  };
+}
+
 describe('Kommando-Gate', () => {
   it('lässt die sieben zugelassenen absoluten Kommandos durch', () => {
     const issues = checkCommands(withPath('M 4 12 L 8 12 H 12 V 16 C 14 16 16 20 18 20 Q 20 20 22 16 Z'));
@@ -204,6 +214,52 @@ describe('Box-Gate', () => {
     // zweiter Befund zum selben Fehler hilft dem Autor nicht.
     expect(checkBox(withPath('m 4 12 l 8 0'))).toEqual([]);
   });
+
+  it('lehnt eine Transformation direkt am Pfad ab, statt Rohkoordinaten freizugeben', () => {
+    const transformed: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      title: 'Transformierter Pfad',
+      box: { xMm: 1, yMm: 6, widthMm: 10, heightMm: 10 },
+      primitives: [
+        {
+          type: 'path',
+          role: 'pictogram',
+          d: 'M 2 7 L 8 7',
+          // Die geschriebenen Koordinaten liegen in der Box; gerendert dreht der erste Punkt
+          // jedoch auf x = 0 heraus. Ohne explizite Ablehnung wäre checkPictogram() falsch grün.
+          transform: { rotate: { angle: 90, cx: 1, cy: 6 } },
+        },
+      ],
+    };
+    const boxIssues = checkBox(transformed);
+    expect(boxIssues).toHaveLength(1);
+    expect(boxIssues[0]?.detail).toContain('Transformation');
+    expect(checkPictogram(transformed, formationBody).some((issue) => issue.gate === 'box')).toBe(
+      true,
+    );
+  });
+
+  it.each([
+    ['negative Breite', { xMm: 18, yMm: 14, widthMm: -4, heightMm: 4 }],
+    ['negative Höhe', { xMm: 14, yMm: 18, widthMm: 4, heightMm: -4 }],
+    ['NaN-Koordinate', { xMm: Number.NaN, yMm: 14, widthMm: 4, heightMm: 4 }],
+    ['unendliche Breite', { xMm: 14, yMm: 14, widthMm: Infinity, heightMm: 4 }],
+  ] as const)('lehnt eine formal ungültige Box ab: %s', (_name, box) => {
+    const definition = withBox(box);
+    expect(checkBox(definition)[0]?.detail).toContain('Ungültige Piktogramm-Box');
+    expect(checkClipping(definition, formationBody)[0]?.detail).toContain(
+      'Ungültige Piktogramm-Box',
+    );
+    expect(new Set(checkPictogram(definition, formationBody).map((issue) => issue.gate))).toEqual(
+      new Set(['box', 'clipping']),
+    );
+  });
+
+  it('erlaubt eine Box mit Nullausdehnung, solange ihre Koordinate im Körper liegt', () => {
+    const definition = withBox({ xMm: 16, yMm: 16, widthMm: 0, heightMm: 0 });
+    expect(checkBox(definition)).toEqual([]);
+    expect(checkClipping(definition, formationBody)).toEqual([]);
+  });
 });
 
 /** Der Körper der Taktischen Formation, wie `base-symbols.ts` ihn führt. */
@@ -221,6 +277,35 @@ const hazardBody: Primitive = {
   type: 'polyline',
   role: 'body',
   closed: true,
+  points: [
+    [1, 28],
+    [16, 3],
+    [31, 28],
+  ],
+};
+
+const personHalfSide = (15 * Math.SQRT2) / 2;
+const personBody: Primitive = {
+  type: 'rect',
+  role: 'body',
+  x: 16 - personHalfSide,
+  y: 16 - personHalfSide,
+  width: personHalfSide * 2,
+  height: personHalfSide * 2,
+  transform: { rotate: { angle: 45, cx: 16, cy: 16 } },
+};
+
+const postBody: Primitive = {
+  type: 'circle',
+  role: 'body',
+  cx: 16,
+  cy: 16,
+  r: 14,
+};
+
+const openBody: Primitive = {
+  type: 'polyline',
+  role: 'body',
   points: [
     [1, 28],
     [16, 3],
@@ -256,34 +341,153 @@ describe('Clipping-Gate', () => {
     expect(checkClipping(flush, formationBody)).toEqual([]);
   });
 
-  it('lehnt einen Körper ab, dessen Fläche nicht vermessen ist', () => {
-    // Bei einem Polygon oder einem gedrehten Quadrat fällt Fläche und achsparallele Hülle nicht
-    // zusammen: eine Box innerhalb der Hülle kann aus dem Dreieck ragen. Eine hüllenbasierte
-    // Prüfung als Flächenprüfung auszugeben wäre genau die Behauptung, die dieses Projekt
-    // vermeidet — dasselbe Muster wie `circleBodyProfile` und die Gruppendrehung in `boundsOfMm`.
-    //
-    // Belegt zugleich: `checkClipping` selbst wirft weiterhin uneingeschränkt — nur
-    // `checkPictogram` fängt den Wurf (siehe checkPictogram-Suite unten). Die Semantik des
-    // Gates bleibt unangetastet.
-    //
-    // Die Klasse gehört zur Aussage: `checkPictogram` unterscheidet per `instanceof
-    // BodyNotMeasuredError`, nicht per Textvergleich — dieser Test belegt, dass tatsächlich diese
-    // Klasse geworfen wird und nicht irgendein `Error` mit passendem Text.
-    expect(() => checkClipping(withPath('M 4 12 L 28 20'), hazardBody)).toThrow(BodyNotMeasuredError);
-    expect(() => checkClipping(withPath('M 4 12 L 28 20'), hazardBody)).toThrow(/nicht vermessen/);
+  it.each([
+    ['Rechteck', formationBody],
+    ['Kreis', postBody],
+    ['gedrehtes Rechteck', personBody],
+    ['konvexes Polygon', hazardBody],
+  ] as const)('nimmt eine zentrale Box im Körper %s an', (_name, body) => {
+    expect(checkClipping(withBox({ xMm: 14, yMm: 14, widthMm: 4, heightMm: 4 }), body)).toEqual(
+      [],
+    );
   });
 
-  it('lehnt ein gedrehtes Rechteck als Körper ab', () => {
-    const personBody: Primitive = {
+  it.each([
+    ['Kreis', postBody, { xMm: 2, yMm: 2, widthMm: 1, heightMm: 1 }],
+    ['Personendiamant', personBody, { xMm: 1, yMm: 1, widthMm: 1, heightMm: 1 }],
+    ['Gefahrendreieck', hazardBody, { xMm: 1, yMm: 3, widthMm: 1, heightMm: 1 }],
+  ] as const)(
+    'lehnt beim %s eine Box ab, die nur in dessen achsparalleler Hülle liegt',
+    (_name, body, box) => {
+      const issues = checkClipping(withBox(box), body);
+      expect(issues.length).toBeGreaterThan(0);
+      expect(issues[0]?.gate).toBe('clipping');
+      expect(issues[0]?.detail).toContain('Box-Ecke');
+    },
+  );
+
+  it('nimmt beim Kreis eine Box an, deren äußerste Ecke exakt auf dem Rand liegt', () => {
+    const side = 14 / Math.SQRT2;
+    expect(
+      checkClipping(withBox({ xMm: 16, yMm: 16, widthMm: side, heightMm: side }), postBody),
+    ).toEqual([]);
+  });
+
+  it('nimmt beim Personendiamanten eine Box an, deren äußerste Ecke exakt auf dem Rand liegt', () => {
+    expect(
+      checkClipping(withBox({ xMm: 16, yMm: 16, widthMm: 7.5, heightMm: 7.5 }), personBody),
+    ).toEqual([]);
+  });
+
+  it('invertiert die Drehrichtung an einem asymmetrischen Rechteck korrekt', () => {
+    const body: Primitive = {
       type: 'rect',
       role: 'body',
-      x: 5.393,
-      y: 5.393,
-      width: 21.213,
-      height: 21.213,
-      transform: { rotate: { angle: 45, cx: 16, cy: 16 } },
+      x: 10,
+      y: 14,
+      width: 12,
+      height: 4,
+      transform: { rotate: { angle: 30, cx: 16, cy: 16 } },
     };
-    expect(() => checkClipping(withPath('M 4 12 L 28 20'), personBody)).toThrow(/nicht vermessen/);
+    // Lokaler Innenpunkt (20,16), vorwärts um +30° gedreht. Eine irrtümliche Inversion mit
+    // +30° statt -30° bildet ihn auf y ≈ 19,46 ab und würde diese Box ablehnen.
+    const centerX = 16 + 4 * Math.cos(Math.PI / 6);
+    const centerY = 16 + 4 * Math.sin(Math.PI / 6);
+    expect(
+      checkClipping(
+        withBox({ xMm: centerX - 0.05, yMm: centerY - 0.05, widthMm: 0.1, heightMm: 0.1 }),
+        body,
+      ),
+    ).toEqual([]);
+  });
+
+  it('behandelt ein konvexes Polygon in beiden Umlaufrichtungen gleich', () => {
+    if (hazardBody.type !== 'polyline') throw new Error('Testfixture ist keine Polylinie.');
+    const reversed: Primitive = { ...hazardBody, points: [...hazardBody.points].reverse() };
+    const definition = withBox({ xMm: 14, yMm: 14, widthMm: 4, heightMm: 4 });
+    expect(checkClipping(definition, hazardBody)).toEqual([]);
+    expect(checkClipping(definition, reversed)).toEqual([]);
+  });
+
+  it.each([
+    ['offene Polylinie', openBody],
+    [
+      'konkaves Polygon',
+      {
+        type: 'polyline',
+        closed: true,
+        points: [
+          [0, 0],
+          [10, 0],
+          [5, 5],
+          [10, 10],
+          [0, 10],
+        ],
+      } satisfies Primitive,
+    ],
+    [
+      'selbstüberschneidendes Polygon',
+      {
+        type: 'polyline',
+        closed: true,
+        points: [
+          [0, 0],
+          [10, 10],
+          [0, 10],
+          [10, 0],
+        ],
+      } satisfies Primitive,
+    ],
+    [
+      'entartetes Polygon',
+      {
+        type: 'polyline',
+        closed: true,
+        points: [
+          [0, 0],
+          [5, 5],
+          [10, 10],
+        ],
+      } satisfies Primitive,
+    ],
+    [
+      'gerundetes Rechteck',
+      { type: 'rect', x: 1, y: 1, width: 30, height: 30, rx: 2 } satisfies Primitive,
+    ],
+    [
+      'verschobenes Körperblatt',
+      {
+        type: 'rect',
+        x: 1,
+        y: 1,
+        width: 30,
+        height: 30,
+        transform: { translate: { dxMm: 1, dyMm: 1 } },
+      } satisfies Primitive,
+    ],
+  ] as const)('lehnt die nicht vermessene Fläche %s explizit ab', (_name, body) => {
+    expect(() =>
+      checkClipping(withBox({ xMm: 4, yMm: 4, widthMm: 8, heightMm: 8 }), body),
+    ).toThrow(BodyNotMeasuredError);
+  });
+
+  it('lehnt einen mehrfach notierten Polygonumlauf als nicht einfach ab', () => {
+    const doubled: Primitive = {
+      type: 'polyline',
+      role: 'body',
+      closed: true,
+      points: [
+        [1, 28],
+        [16, 3],
+        [31, 28],
+        [1, 28],
+        [16, 3],
+        [31, 28],
+      ],
+    };
+    expect(() =>
+      checkClipping(withBox({ xMm: 14, yMm: 14, widthMm: 4, heightMm: 4 }), doubled),
+    ).toThrow(/mehrfach/);
   });
 });
 
@@ -308,7 +512,7 @@ describe('checkPictogram', () => {
   });
 
   it('bewahrt Kommando- und Box-Befunde, wenn das Clipping-Gate wirft', () => {
-    // Der Körper (hazardBody, ein Dreieck) ist nicht vermessen — checkClipping wirft. Würde
+    // Der Körper (openBody, eine offene Polylinie) ist nicht vermessen — checkClipping wirft. Würde
     // checkPictogram den Wurf durchreichen, gingen die bereits berechneten Kommando- und
     // Box-Befunde verloren: genau das widerspräche dem Grundsatz dieser Datei, alle Verstöße
     // auf einmal zu melden.
@@ -321,22 +525,20 @@ describe('checkPictogram', () => {
         { type: 'line', role: 'pictogram', x1: 4, y1: 12, x2: 30, y2: 12 },
       ],
     };
-    const issues = checkPictogram(broken, hazardBody);
+    const issues = checkPictogram(broken, openBody);
     const gates = new Set(issues.map((issue) => issue.gate));
     expect(gates).toEqual(new Set(['command', 'box', 'clipping']));
     const clippingIssue = issues.find((issue) => issue.gate === 'clipping');
     expect(clippingIssue?.detail).toContain('nicht vermessen');
   });
 
-  it('reicht einen fremden Fehler durch, statt ihn als Befund zu melden', () => {
-    // checkClipping hat heute genau einen Wurfpfad (BodyNotMeasuredError für eine nicht
-    // vermessene Körperform). Um zu belegen, dass checkPictogram jeden ANDEREN Fehler
+  it('reicht ungültige Körpergeometrie durch, statt sie als Befund zu melden', () => {
+    // checkClipping hat einen erwarteten Wurfpfad (BodyNotMeasuredError für eine nicht
+    // vermessene Körperfläche). Um zu belegen, dass checkPictogram jeden ANDEREN Fehler
     // durchreicht statt ihn wie eine BodyNotMeasuredError einzusammeln, wird hier ein
     // Programmierfehler nachgestellt: ein Körper, dessen `width` zur Laufzeit kein `Length`
-    // (Zahl) ist, obwohl der Typ es zusichert. Bei der Achsberechnung wertet `axesOf` das mit
-    // `+` aus — `1 + Symbol()` wirft einen echten `TypeError` der JS-Laufzeit, keinen
-    // konstruierten. `body.type` bleibt `'rect'` ohne `transform`, besteht also die
-    // BodyNotMeasuredError-Prüfung und erreicht diesen Code wirklich.
+    // (Zahl) ist, obwohl der Typ es zusichert. Die normale Geometrievalidierung meldet ihn als
+    // ungültigen Körper und nicht als bloß noch nicht vermessene, fachlich unterstützbare Form.
     const malformedBody: Primitive = {
       type: 'rect',
       role: 'body',
@@ -345,6 +547,8 @@ describe('checkPictogram', () => {
       width: Symbol('nicht vermessbar, Programmierfehler') as unknown as number,
       height: 20,
     };
-    expect(() => checkPictogram(withPath('M 4 12 L 28 20'), malformedBody)).toThrow(TypeError);
+    expect(() => checkPictogram(withPath('M 4 12 L 28 20'), malformedBody)).toThrow(
+      /Ungültige Körpergeometrie/,
+    );
   });
 });

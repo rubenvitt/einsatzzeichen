@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PALETTE, type OrganizationId } from '@einsatzzeichen/schema';
+import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { ORGANIZATION_COLORS, organizationColor } from './organizations.js';
 import { fingerprintFor } from './fingerprint-index.js';
 
@@ -32,6 +33,15 @@ const referenceCoversAllOrganizationColors: AssertTrue<
 void referenceCoversAllOrganizationColors;
 
 describe('Organisationsfarben Kapitel 2', () => {
+  it('bindet den Referenzfüllungs-Claim exakt an die ausgeführten Organisationsfälle', () => {
+    const tested = COLORED.map(([id]) => `organization.${id}`).sort();
+    const claimed = COVERAGE_MANIFEST.entries
+      .filter((entry) => entry.testEvidence.includes('reference-fill'))
+      .map((entry) => entry.implementation)
+      .sort();
+    expect(tested).toEqual(claimed);
+  });
+
   it.each(COLORED)('trifft die Referenzfarbe von %s', (id, asset) => {
     const fills = fingerprintFor(asset).fills ?? [];
     expect(fills, `${asset} trägt keine Füllfarbe — stimmt der Eintrag noch mit dem Artefakt?`)

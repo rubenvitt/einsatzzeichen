@@ -12,11 +12,10 @@
     "verbatimModuleSyntax": true,
     "noEmit": true,
     "types": ["node"],
-    "baseUrl": ".",
     "paths": {
-      "@einsatzzeichen/schema": ["packages/schema/src/index.ts"],
-      "@einsatzzeichen/core": ["packages/core/src/index.ts"],
-      "@einsatzzeichen/catalog": ["packages/catalog/src/index.ts"]
+      "@einsatzzeichen/schema": ["./packages/schema/src/index.ts"],
+      "@einsatzzeichen/core": ["./packages/core/src/index.ts"],
+      "@einsatzzeichen/catalog": ["./packages/catalog/src/index.ts"]
     }
   },
   "include": ["packages/*/src/**/*.ts", "vitest.config.ts"]

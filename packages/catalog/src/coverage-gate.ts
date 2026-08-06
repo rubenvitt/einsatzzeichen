@@ -1,12 +1,15 @@
 import {
   entryKey,
   isDataVersion,
-  unattributedRoles,
+  reviewIssues,
   type CatalogEntry,
   type CoverageEntry,
   type ProfileRecord,
+  type ReviewIssueCode,
   type ReviewSet,
   type SourceId,
+  type SourceRecord,
+  type TestEvidenceKind,
 } from '@einsatzzeichen/schema';
 import { BASE_SYMBOLS } from './base-symbols.js';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
@@ -121,7 +124,8 @@ export function checkProfileAgreement(
 }
 
 /**
- * Kein `approved` ohne Reviewer und Datum, je Rolle. Ein Status ohne Zurechenbarkeit ist wertlos.
+ * Kein abgeschlossenes Review ohne Reviewer und gültiges ISO-Datum; eine Abweichung braucht
+ * zusätzlich eine Begründung. Ein formell unvollständiger Status ist wertlos.
  *
  * Generisch über allem, was ein `ReviewSet` trägt — das sind genau die drei Träger
  * `CoverageEntry`, `SourceRecord` und `ProfileRecord`. Auf `CoverageEntry` verengt hätte die
@@ -134,20 +138,37 @@ export function checkReviewAttribution<T extends { review: ReviewSet }>(
 ): CoverageViolation[] {
   const violations: CoverageViolation[] = [];
   for (const item of items) {
-    for (const role of unattributedRoles(item.review)) {
+    for (const issue of reviewIssues(item.review)) {
+      const details: Record<ReviewIssueCode, string> = {
+        'missing-reviewer': `Rolle "${issue.role}": abgeschlossenes Review ohne Reviewer.`,
+        'invalid-date':
+          `Rolle "${issue.role}": abgeschlossenes Review ohne gültiges ISO-Datum YYYY-MM-DD.`,
+        'missing-domain-note':
+          `Rolle "${issue.role}": fachliche Freigabe ohne Befundnotiz oder Protokollverweis.`,
+        'missing-deviation-note':
+          `Rolle "${issue.role}": Abweichung ohne begründende Notiz.`,
+      };
       violations.push({
         check: 'review-attribution',
         key: key(item),
-        detail: `Rolle "${role}": approved ohne Reviewer und Datum.`,
+        detail: details[issue.code],
       });
     }
   }
   return violations;
 }
 
+/** Nur ein formal vollständiges `approved` schließt den fachlichen Release-Blocker. */
+function hasApprovedDomainReview(review: ReviewSet): boolean {
+  return (
+    review.domain.status === 'approved' &&
+    !reviewIssues(review).some((issue) => issue.role === 'domain')
+  );
+}
+
 /** Nur Ausgabe, kein Fehler: wäre sie einer, wäre CI ab dem ersten Tag dauerhaft rot. */
-export function countOpenDomainReviews(entries: readonly CoverageEntry[]): number {
-  return entries.filter((entry) => entry.review.domain.status !== 'approved').length;
+export function countOpenDomainReviews<T extends { review: ReviewSet }>(items: readonly T[]): number {
+  return items.filter((item) => !hasApprovedDomainReview(item.review)).length;
 }
 
 /**
@@ -213,6 +234,94 @@ export function checkElementEntries(entries: readonly CoverageEntry[]): Coverage
         key,
         detail: `Abschnitt "${section}" passt nicht zur namensgebenden Belegdatei "${namesake}".`,
       });
+    }
+  }
+  return violations;
+}
+
+const DRAWING_EVIDENCE = [
+  'body-fingerprint',
+  'svg-snapshot',
+] as const satisfies readonly TestEvidenceKind[];
+const PICTOGRAM_EVIDENCE = [
+  'svg-snapshot',
+  'pictogram-contract',
+] as const satisfies readonly TestEvidenceKind[];
+
+/**
+ * Pflichtnachweise nach der Form der Implementierung. Ein universelles Fingerprint-plus-Snapshot-
+ * Kriterium wäre für Elemente falsch: Farben und Kopfzonen besitzen keinen eigenen SVG-Output,
+ * Piktogramme keinen `body`, den `matchFingerprint` vergleichen könnte.
+ */
+export function requiredTestEvidence(entry: CoverageEntry): readonly TestEvidenceKind[] {
+  if (entry.coverage === 'catalog-entry' || entry.coverage === 'composition-recipe') {
+    return DRAWING_EVIDENCE;
+  }
+
+  const descriptor = tryResolveElement(entry.implementation);
+  if (descriptor === undefined) return [];
+  switch (descriptor.kind) {
+    case 'organization':
+      return ['reference-fill'];
+    case 'strength':
+      return ['head-shape-regression'];
+    case 'capability':
+    case 'state':
+    case 'comms':
+    case 'damage':
+    case 'wildfire':
+      return PICTOGRAM_EVIDENCE;
+    default: {
+      const exhaustive: never = descriptor.kind;
+      throw new Error(`Keine Testevidenz-Policy für Elementart "${String(exhaustive)}".`);
+    }
+  }
+}
+
+/** Fehlende Pflichtnachweise einer Manifestzeile; zusätzliche Claims zählen nicht als Ersatz. */
+export function missingTestEvidence(entry: CoverageEntry): TestEvidenceKind[] {
+  const claimed = new Set(entry.testEvidence);
+  return requiredTestEvidence(entry).filter((kind) => !claimed.has(kind));
+}
+
+/**
+ * Hält Evidenzclaims exakt an ihrer Policy. Fehlende, zusätzliche und doppelte Arten sind eigene
+ * Befunde; die Set-Gleichheit zu den ausgeführten Testfällen sitzt in den jeweiligen Testsuiten.
+ */
+export function checkTestEvidence(entries: readonly CoverageEntry[]): CoverageViolation[] {
+  const violations: CoverageViolation[] = [];
+  for (const entry of entries) {
+    const key = entryKey(entry.sourceId, entry.variant);
+    const required = requiredTestEvidence(entry);
+    const requiredSet = new Set<TestEvidenceKind>(required);
+    const claimedSet = new Set<TestEvidenceKind>();
+
+    for (const kind of entry.testEvidence) {
+      if (claimedSet.has(kind)) {
+        violations.push({
+          check: 'duplicate-test-evidence',
+          key,
+          detail: `Nachweisart "${kind}" ist doppelt eingetragen.`,
+        });
+      }
+      claimedSet.add(kind);
+      if (!requiredSet.has(kind)) {
+        violations.push({
+          check: 'unexpected-test-evidence',
+          key,
+          detail: `Nachweisart "${kind}" ist für diese Implementierungsart nicht vorgesehen.`,
+        });
+      }
+    }
+
+    for (const kind of required) {
+      if (!claimedSet.has(kind)) {
+        violations.push({
+          check: 'missing-test-evidence',
+          key,
+          detail: `Pflichtnachweis "${kind}" fehlt.`,
+        });
+      }
     }
   }
   return violations;
@@ -321,6 +430,7 @@ export function checkCoverage(): {
     ...checkReviewAttribution(Object.values(SOURCE_REGISTRY), (s) => `source:${s.id}`),
     ...checkReviewAttribution(Object.values(PROFILES), (p) => `profile:${p.id}`),
     ...checkElementEntries(COVERAGE_MANIFEST.entries),
+    ...checkTestEvidence(COVERAGE_MANIFEST.entries),
     ...checkProfileRegistry(COVERAGE_MANIFEST.entries, Object.values(PROFILES)),
     ...checkVersions(COVERAGE_MANIFEST.coreVersion, Object.values(PROFILES)),
   ];
@@ -330,12 +440,15 @@ export function checkCoverage(): {
     duplicates,
     invalidPrimary,
     violations,
-    openDomainReviews: countOpenDomainReviews(COVERAGE_MANIFEST.entries),
+    openDomainReviews:
+      countOpenDomainReviews(COVERAGE_MANIFEST.entries) +
+      countOpenDomainReviews(Object.values(SOURCE_REGISTRY)) +
+      countOpenDomainReviews(Object.values(PROFILES)),
   };
 }
 
 export interface ReleaseBlockers {
-  /** Manifestschlüssel der Einträge ohne abgeschlossenes fachliches Review. */
+  /** Manifestschlüssel der Einträge ohne `domain: approved`. */
   domainReviewPending: string[];
   /**
    * Dieselben Einträge, gezählt je Kapitel und Anhang. Nach dem vollen Katalogausbau tragen
@@ -351,7 +464,11 @@ export interface ReleaseBlockers {
    * `sortedDomainReviewPendingByArea` auf.
    */
   domainReviewPendingByArea: Record<string, number>;
-  /** Manifestschlüssel der Einträge ohne Fingerprint- oder Snapshot-Nachweis. */
+  /** Quellen-IDs ohne `domain: approved`. */
+  sourceDomainReviewPending: string[];
+  /** Profil-IDs ohne `domain: approved`. */
+  profileDomainReviewPending: string[];
+  /** Manifestschlüssel der Einträge, denen mindestens eine arteigene Pflichtnachweisart fehlt. */
   withoutTestEvidence: string[];
   /** Kapitel im Scope, die kein einziger Eintrag trägt. */
   uncoveredScope: string[];
@@ -384,12 +501,14 @@ export function sortedDomainReviewPendingByArea(
 /**
  * Der parametrisierte Kern von `releaseBlockers`, im Muster der Gate-Prüfungen oben: Eingaben
  * als Parameter statt als Modul-Singleton, damit Randfälle — die Punkt-Abgrenzung bei
- * Kapitelpräfixen, ein `sourceId` ohne Trenner, jede Seite des Testnachweis-Oder einzeln — sich
+ * Kapitelpräfixen, ein `sourceId` ohne Trenner und fehlende einzelne Pflichtnachweisarten — sich
  * mit Fixtures nachstellen lassen, ohne das echte Manifest zu verändern.
  */
 export function blockersOf(
   entries: readonly CoverageEntry[],
   scope: readonly string[],
+  sources: readonly SourceRecord[] = [],
+  profiles: readonly ProfileRecord[] = [],
 ): ReleaseBlockers {
   const domainReviewPending: string[] = [];
   const withoutTestEvidence: string[] = [];
@@ -397,12 +516,12 @@ export function blockersOf(
 
   for (const entry of entries) {
     const key = entryKey(entry.sourceId, entry.variant);
-    if (entry.review.domain.status !== 'approved') {
+    if (!hasApprovedDomainReview(entry.review)) {
       domainReviewPending.push(key);
       const area = areaOf(sectionOf(entry.sourceId));
       pendingByArea.set(area, (pendingByArea.get(area) ?? 0) + 1);
     }
-    if (!entry.fingerprintTest || !entry.snapshotTest) withoutTestEvidence.push(key);
+    if (missingTestEvidence(entry).length > 0) withoutTestEvidence.push(key);
   }
 
   const sections = entries.map((entry) => sectionOf(entry.sourceId));
@@ -414,8 +533,21 @@ export function blockersOf(
   // Keine Sortierung hier: der `Record` kann sie ohnehin nicht tragen (siehe Dokumentation des
   // Felds). Wer eine Reihenfolge braucht, ruft `sortedDomainReviewPendingByArea` auf.
   const domainReviewPendingByArea = Object.fromEntries(pendingByArea);
+  const sourceDomainReviewPending = sources
+    .filter((source) => !hasApprovedDomainReview(source.review))
+    .map((source) => source.id);
+  const profileDomainReviewPending = profiles
+    .filter((profile) => !hasApprovedDomainReview(profile.review))
+    .map((profile) => profile.id);
 
-  return { domainReviewPending, domainReviewPendingByArea, withoutTestEvidence, uncoveredScope };
+  return {
+    domainReviewPending,
+    domainReviewPendingByArea,
+    sourceDomainReviewPending,
+    profileDomainReviewPending,
+    withoutTestEvidence,
+    uncoveredScope,
+  };
 }
 
 /**
@@ -432,5 +564,10 @@ export function blockersOf(
  * deklarierte Kapitelliste der Baseline, die es noch nicht gibt.
  */
 export function releaseBlockers(): ReleaseBlockers {
-  return blockersOf(COVERAGE_MANIFEST.entries, COVERAGE_MANIFEST.scope);
+  return blockersOf(
+    COVERAGE_MANIFEST.entries,
+    COVERAGE_MANIFEST.scope,
+    Object.values(SOURCE_REGISTRY),
+    Object.values(PROFILES),
+  );
 }

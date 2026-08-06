@@ -1,21 +1,21 @@
 # TAKTIK — Vision für ein vollständiges digitales System taktischer Zeichen
 
-> Stand der Quellenrecherche: 4. August 2026
+> Stand der Quellenrecherche: 6. August 2026
 
 ## Produktvision
 
 TAKTIK wird die verlässliche, offene und entwicklerfreundliche Grundlage für taktische Zeichen in digitalen Anwendungen der Gefahrenabwehr. Statt einer Sammlung isolierter SVG-Dateien entsteht ein **semantisches und quellengebundenes Symbolsystem**: Anwendungen beschreiben, was dargestellt werden soll; TAKTIK erzeugt daraus konsistent SVG, Canvas-Ausgaben, MapLibre-Symbole oder Framework-Komponenten.
 
-Der Anspruch ist nicht, nur die häufigsten Zeichen attraktiv darzustellen. **Version 1.0 darf erst veröffentlicht werden, wenn die öffentlich dokumentierte Systematik der nicht-polizeilichen Gefahrenabwehr vollständig abgedeckt ist.** Teilmengen sind als Alpha- oder Beta-Versionen erlaubt, aber nicht als vollständiger Katalog zu bezeichnen.
+Der Anspruch ist nicht, nur die häufigsten Zeichen attraktiv darzustellen. **Version 1.0 darf erst veröffentlicht werden, wenn der dafür projektintern festgelegte und fachlich validierte Referenzstand der nicht-polizeilichen Gefahrenabwehr vollständig abgedeckt ist.** Teilmengen sind als Alpha- oder Beta-Versionen erlaubt, aber nicht als vollständiger Katalog zu bezeichnen. Die Festlegung eines Referenzstands ist keine Behauptung, dieser sei eine geltende Dienstvorschrift.
 
 ## Was „vollständige Abdeckung“ konkret bedeutet
 
 Vollständigkeit bezieht sich nicht auf jede theoretisch mögliche Kombination. Das System ist ausdrücklich offen und kombinatorisch. Vollständig ist TAKTIK dann, wenn:
 
-1. alle Grundelemente, Farben, Ergänzungseigenschaften und Kombinationsregeln der aktuellen BBK/BABZ-Empfehlung modelliert sind;
+1. alle Grundelemente, Farben, Ergänzungseigenschaften und Kombinationsregeln des versionierten, projektinternen BBK/BABZ-Referenzstands modelliert sind;
 2. alle dort aufgeführten einsatztaktischen Fähigkeiten, Zusatzzeichen, Zustände, Tendenzen, Gefahren- und Schadendarstellungen renderbar sind;
 3. alle fachlichen Anhänge und Anwendungsbereiche abgedeckt sind: Feuerwehr, Führung, THW, Sanitäts-, Rettungs- und Betreuungswesen, Versorgung/Logistik/Infrastruktur, Veterinärwesen, Wasserrettung, IuK, Bauwerksschäden, Deichverteidigung, Vegetationsbrandbekämpfung und sonstige Einsatzmittel;
-4. jedes offizielle Referenz-SVG der BABZ einem stabilen Katalogeintrag oder einem dokumentierten Kompositionsrezept zugeordnet ist;
+4. jedes im lokalen BABZ-Referenzbestand enthaltene SVG einem stabilen Katalogeintrag oder einem dokumentierten Kompositionsrezept zugeordnet ist;
 5. alle Beispiele aus der Referenz als automatisierte Conformance Fixtures reproduzierbar sind;
 6. jede nicht unterstützte oder fachlich unzulässige Kombination explizit validiert wird, statt stillschweigend ein plausibel aussehendes Zeichen zu erzeugen;
 7. Legacy-Zeichen aus der SKK-/DV-102-Systematik von 2010/2011 über Migrationsregeln auffindbar bleiben;
@@ -23,21 +23,20 @@ Vollständigkeit bezieht sich nicht auf jede theoretisch mögliche Kombination. 
 
 ### Ehrliche Abgrenzung bei „BOS"
 
-Die öffentlich verfügbare aktuelle Referenz ist auf die **nicht-polizeiliche Gefahrenabwehr** ausgerichtet. Polizei und Bundeswehr werden deshalb nicht pauschal als „vollständig abgedeckt“ behauptet. Öffentlich belegbare interoperable Elemente können im Kern enthalten sein; vollständige organisationsspezifische Profile benötigen jedoch autorisierte, zugängliche Quellen und eine geklärte Nutzungsgrundlage.
+Der projektintern verwendete BABZ-Arbeitsstand ist auf die **nicht-polizeiliche Gefahrenabwehr** ausgerichtet. Polizei und Bundeswehr werden deshalb nicht pauschal als „vollständig abgedeckt“ behauptet. Öffentlich belegbare interoperable Elemente können im Kern enthalten sein; vollständige organisationsspezifische Profile benötigen jedoch autorisierte, zugängliche Quellen und eine geklärte Nutzungsgrundlage.
 
-## Verbindliche Referenzhierarchie
+## Projektinterne Referenzhierarchie
 
 ### 1. Primäre fachliche Grundlage
 
 **BBK/BABZ: „Taktische Zeichen im Bevölkerungsschutz – Empfehlungen zur Einführung einer FwDV 102/DV 102“**  
-Aktualisierte, organisationsübergreifende Referenz mit Hauptteil, Regeln und umfangreichen Anhängen. Sie ist die verbindliche Baseline für TAKTIK 1.0.
+TAKTIK verwendet den lokal archivierten Arbeitsstand als **projektinterne Coverage- und Vergleichsbaseline**. Das ist eine Versionierungsentscheidung des Projekts, keine Aussage über normative Geltung: Der AFKzV hob in seiner 57. Sitzung am 13./14.03.2025 den Beschluss zur vorläufigen Anwendung auf. Die BABZ beschreibt das Ergebnis der Überarbeitungsgruppe als Diskussionsgrundlage für eine zukünftige FwDV 102/DV 102, nicht als eigenständige Dienstvorschrift; weitere Veröffentlichung und Verbreitung sind bis zum Abschluss der Beratungen ausgesetzt.
 
-- [Hauptdokument auf der BABZ-Lernplattform](https://lernplattform-babz-bund.de/ilias.php?baseClass=ilrepositorygui&cmd=sendfile&ref_id=150034)
-- [Freigestellte SVG-Grafikdateien der enthaltenen Zeichen](https://lernplattform-babz-bund.de/ilias.php?baseClass=ilrepositorygui&ref_id=147616)
-- [SVG-Grafikdateien auf weißer Hintergrundfläche](https://lernplattform-babz-bund.de/ilias.php?baseClass=ilrepositorygui&cmdClass=ilobjcategorygui&cmdNode=wv%3Ald&item_ref_id=0&ref_id=147615)
+- [Offizielle BABZ-Seite mit aktuellem Statushinweis](https://lernplattform-babz-bund.de/goto.php?target=cat_109540)
+- Lokal archivierter Referenzbestand: 661 damals von der BABZ bereitgestellte SVG-Dateien; wegen ungeklärter Nutzungsgrundlage nicht eingecheckt.
 - [Begleitende Hinweise zur Überarbeitung vom 12.02.2024](https://www.lv-saarland.drk.de/fileadmin/user_upload/Begleitende_Hinweise_zur_%C3%9Cberarbeitung.pdf)
 
-Das Hauptdokument enthält unter anderem Grundelemente, Organisationsfarben, besondere Grundeigenschaften, zehn Fähigkeitsbereiche, Fahrzeug- und Beweglichkeitsangaben, Stärkeangaben, taktische Einheiten und Verbände, Zeit- und Verwaltungsangaben, Gefahren- und Schadendarstellung sowie fachliche Anhänge von Feuerwehr bis IuK und Vegetationsbrandbekämpfung.
+Der lokal archivierte Arbeitsstand enthält unter anderem Grundelemente, Organisationsfarben, besondere Grundeigenschaften, zehn Fähigkeitsbereiche, Fahrzeug- und Beweglichkeitsangaben, Stärkeangaben, taktische Einheiten und Verbände, Zeit- und Verwaltungsangaben, Gefahren- und Schadendarstellung sowie fachliche Anhänge von Feuerwehr bis IuK und Vegetationsbrandbekämpfung.
 
 ### 2. Legacy- und Migrationsreferenz
 
@@ -45,7 +44,6 @@ Das Hauptdokument enthält unter anderem Grundelemente, Organisationsfarben, bes
 Diese Fassung ist wichtig, weil bestehende Anwendungen, Ausbildungsmaterialien und ältere Symbolsammlungen häufig darauf beruhen. Sie dient nicht als neue Hauptbaseline, sondern für Aliasnamen, Migrationshinweise und visuelle Differenzdarstellungen.
 
 - [DLRG DV 102: Taktische Zeichen im Bevölkerungsschutz](https://www.dlrg.de/fileadmin/user_upload/DLRG.de/Fuer-Mitglieder/Einsatz_und_Medizin/kats/Download_Dateien/Formulare_E008/DV102_TaktischeZeichen_DLRG110826.pdf)
-- [Älteres freies Lernangebot der BABZ zur SKK-Systematik](https://lernplattform-babz-bund.de/ilias.php?baseClass=ilstartupgui&client_id=BBKILIAS&cmdClass=ilaccessibilitycontrolconceptgui&cmdNode=zy%3A1t&lang=de&target=cat_109540)
 
 ### 3. Ergänzende operative Regelwerke
 
@@ -78,7 +76,7 @@ DIN 14034-6 und DIN 14095 gehören in ein eigenes Profil für Feuerwehr- und Obj
 
 **Was TAKTIK davon übernehmen sollte:** die Idee eines kombinatorischen Generators, getrennte Pakete, ein dependency-freier Core und die Unterstützung mehrerer Ausgabekanäle.
 
-**Was TAKTIK darüber hinaus leisten muss:** nachvollziehbare Abdeckung der aktuellen BBK/BABZ-Fassung, Quellenangaben pro Element, Coverage-Matrix, MapLibre-Integration, semantische Validierung, Legacy-Migration und eine deutlich interaktivere Dokumentation.
+**Was TAKTIK darüber hinaus leisten muss:** nachvollziehbare Abdeckung des projektintern versionierten BBK/BABZ-Referenzstands, Quellenangaben pro Element, Coverage-Matrix, MapLibre-Integration, semantische Validierung, Legacy-Migration und eine deutlich interaktivere Dokumentation.
 
 ### `jonas-koeritz/Taktische-Zeichen`
 
@@ -99,34 +97,33 @@ TAKTIK sollte die beiden Projekte nicht ignorieren oder unnötig duplizieren. Si
 - visuelle Vergleichstests gegen vorhandene Assets;
 - dokumentierte Lizenz- und Herkunftsprüfung;
 - Kooperation oder Upstream-Beiträge, wo die Projektziele kompatibel sind;
-- ein eigener neutraler Katalog nur dort, wo die neue 2025er Baseline, Provenienz und API-Architektur dies erfordern.
+- ein eigener neutraler Katalog nur dort, wo der lokal archivierte BABZ-Arbeitsstand, Provenienz und API-Architektur dies erfordern.
 
 ## Fachliches Datenmodell
 
 Jedes atomare Element und jedes zusammengesetzte Zeichen erhält eine stabile ID und explizite Quellenbezüge.
 
 ```ts
+type SourceStatus = "verbatim" | "derived" | "legacy";
+
 interface SourceReference {
-  source: "bbk-babz-2025" | "babz-svg-2025" | "skk-2010" | "org-profile";
+  source: SourceId;
   section?: string;
   page?: number;
   asset?: string;
-  status: "verbatim" | "derived" | "legacy" | "organization-specific";
+  status: SourceStatus;
 }
 
-interface TacticalSymbolDefinition {
+interface CatalogEntry {
   id: string;
-  kind: "formation" | "person" | "facility" | "vehicle" | "measure" | "hazard";
-  organization?: string;
-  capabilities?: string[];
-  properties?: string[];
-  modifiers?: string[];
-  designation?: string;
-  sourceRefs: SourceReference[];
+  title: string;
+  kind: SymbolKind;
+  profile: ProfileId;
+  depictions: readonly Depiction[];
 }
 ```
 
-Beispiel:
+Zielbild der späteren semantischen Komfort-API (noch nicht der heutige Core-Vertrag):
 
 ```ts
 const symbol = createSymbol({
@@ -147,15 +144,26 @@ Die Vollständigkeit wird nicht in einer README behauptet, sondern aus einem ver
 ```json
 {
   "baseline": "bbk-babz-2025",
+  "coreVersion": "0.1.0",
+  "scope": ["4.3.1"],
   "entries": [
     {
-      "sourceId": "bbk-babz-2025:4.7.10",
-      "title": "Heben von Lasten oder Personen",
-      "implementation": "capability.lifting",
-      "referenceAsset": "4.7.10_Heben von Lasten oder Personen.svg",
-      "semanticTest": true,
-      "visualTest": true,
-      "review": "approved"
+      "sourceId": "bbk-babz-2025:4.3.1",
+      "variant": "primary",
+      "title": "Brandbekämpfung",
+      "implementation": "capability.fire-fighting",
+      "referenceAsset": "4.3.1_Brandbekämpfung.svg",
+      "coverage": "element",
+      "profile": "bund",
+      "testEvidence": ["svg-snapshot", "pictogram-contract"],
+      "review": {
+        "technical": {
+          "status": "approved",
+          "reviewer": "rv",
+          "date": "2026-08-06"
+        },
+        "domain": { "status": "pending" }
+      }
     }
   ]
 }
@@ -167,7 +175,7 @@ Die Dokumentationswebsite generiert daraus:
 - fehlende oder ungeprüfte Einträge;
 - Abweichungen zwischen 2010/2011 und 2025;
 - Links zu Quelle, Seite und Referenzdatei;
-- Status `verbatim`, `derived`, `legacy`, `profile` oder `experimental`;
+- Quellenstatus `verbatim`, `derived` oder `legacy` sowie getrennte Profil- und Reviewangaben;
 - Release-Gates für Alpha, Beta und 1.0.
 
 ## Vorgeschlagene Pakete
@@ -245,7 +253,7 @@ Normtexte und nicht eindeutig lizenzierte Grafiken werden nicht ungeprüft in da
 
 ### Phase 0 — Quellen- und Lizenzinventar
 
-Alle Einträge des BBK/BABZ-Dokuments, offiziellen SVG-Dateien, Legacy-Referenzen und vorhandenen Open-Source-Korpora werden in einer Coverage-Matrix inventarisiert. Ergebnis ist eine belastbare Zahl statt einer Schätzung.
+Alle Einträge des projektinternen BBK/BABZ-Referenzstands, lokal archivierten SVG-Dateien, Legacy-Referenzen und vorhandenen Open-Source-Korpora werden in einer Coverage-Matrix inventarisiert. Ergebnis ist eine belastbare Zahl statt einer Schätzung.
 
 ### Phase 1 — Vertikale Alpha-Slices
 
@@ -253,7 +261,7 @@ Je ein vollständiger fachlicher Slice für Grundelemente, Feuerwehr, THW, Rettu
 
 ### Phase 2 — Vollständiger Katalog und Profile
 
-Alle Kapitel und Anhänge der aktuellen Empfehlung werden implementiert, geprüft und mit Referenzassets abgeglichen. Legacy-Migration, QGIS-Export und Organisationsprofile kommen hinzu.
+Alle Kapitel und Anhänge des versionierten Referenzstands werden implementiert, geprüft und mit Referenzassets abgeglichen. Legacy-Migration, QGIS-Export und Organisationsprofile kommen hinzu.
 
 ### Phase 3 — MapLibre und Einsatzfähigkeit
 
@@ -261,12 +269,12 @@ MapLibre-Symbol-Layer, Clustering, Offline-Sprites, Druckexport, PWA und Perform
 
 ### Phase 4 — Release 1.0
 
-1.0 wird nur freigegeben, wenn die Coverage-Matrix für die definierte öffentliche Baseline 100 % erreicht, alle Einträge Quellenbezug besitzen und die fachlichen Reviews abgeschlossen sind.
+1.0 wird nur freigegeben, wenn die Coverage-Matrix für den projektintern definierten, versionierten Referenzstand 100 % erreicht, alle Einträge Quellenbezug besitzen, die fachlichen Reviews abgeschlossen sind und der dann aktuelle fachliche beziehungsweise normative Status der Grundlage erneut geprüft wurde.
 
 ## Erfolgskriterien
 
-- 100 % Abdeckung aller in Scope befindlichen Einträge der aktuellen BBK/BABZ-Baseline
-- 100 % Zuordnung der offiziellen BABZ-SVG-Dateien zu Katalogeinträgen oder Kompositionsrezepten
+- 100 % Abdeckung aller in Scope befindlichen Einträge des versionierten BBK/BABZ-Referenzstands
+- 100 % Zuordnung der lokal archivierten BABZ-SVG-Dateien zu Katalogeinträgen oder Kompositionsrezepten
 - keine ausgelieferte Definition ohne Quellen- und Reviewstatus
 - ein Entwickler findet ein Zeichen oder eine Fachregel in weniger als 30 Sekunden
 - 10.000 Zeichen sind über MapLibre-Symbol-Layer performant darstellbar

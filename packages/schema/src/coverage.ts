@@ -8,6 +8,18 @@ import type { ReviewSet } from './review.js';
  */
 export type CoverageKind = 'catalog-entry' | 'composition-recipe' | 'element';
 
+/**
+ * Maschineller Nachweis, der eine Manifestzeile tatsächlich absichert. Die Arten sind bewusst
+ * fachlich enger als ein allgemeines `tested: boolean`: Nicht jede Implementierung besitzt einen
+ * `body`, und nicht jedes Element ist eine eigenständig renderbare Zeichnung.
+ */
+export type TestEvidenceKind =
+  | 'body-fingerprint'
+  | 'svg-snapshot'
+  | 'reference-fill'
+  | 'head-shape-regression'
+  | 'pictogram-contract';
+
 export interface CoverageEntry {
   sourceId: string;
   variant: DepictionVariant;
@@ -23,8 +35,8 @@ export interface CoverageEntry {
    * Coverage-Gate prüft die Gleichheit.
    */
   profile: ProfileId;
-  fingerprintTest: boolean;
-  snapshotTest: boolean;
+  /** Nachweisarten, deren Testfallmengen gegen das Manifest gegatet werden. */
+  testEvidence: readonly TestEvidenceKind[];
   review: ReviewSet;
 }
 

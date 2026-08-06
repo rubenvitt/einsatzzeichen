@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_VIEWBOX_MM, mmToUnits, type Drawing } from '@einsatzzeichen/schema';
+import { DEFAULT_VIEWBOX_MM, PALETTE, mmToUnits, type Drawing } from '@einsatzzeichen/schema';
 import { formatUnits, renderSvg } from './svg.js';
+import type { RenderTheme } from './theme.js';
 
 const formation: Drawing = {
   viewBox: DEFAULT_VIEWBOX_MM,
@@ -44,11 +45,44 @@ describe('renderSvg', () => {
     expect(svg).toContain('stroke-width="1.417"');
   });
 
+  it('löst Farben aus dem übergebenen Theme auf', () => {
+    const theme: RenderTheme = {
+      id: 'test',
+      palette: { ...PALETTE, weiss: '#eeeeee', schwarz: '#111111' },
+      surface: '#ffffff',
+    };
+    const svg = renderSvg(formation, { theme });
+    expect(svg).toContain('fill="#eeeeee"');
+    expect(svg).toContain('stroke="#111111"');
+  });
+
+  it('gibt im alternativen Theme eine nicht-farbliche Körperkontur in Millimetern aus', () => {
+    const theme: RenderTheme = {
+      id: 'test',
+      palette: PALETTE,
+      surface: '#ffffff',
+      bodyStrokeDashes: { weiss: [2, 1] },
+    };
+    const svg = renderSvg(formation, { theme });
+    expect(svg).toContain(
+      `stroke-dasharray="${formatUnits(mmToUnits(2))} ${formatUnits(mmToUnits(1))}"`,
+    );
+  });
+
   it('gibt A11y-Metadaten aus, wenn ein Titel gesetzt ist', () => {
     const svg = renderSvg(formation, { idPrefix: 'ez' });
     expect(svg).toContain('role="img"');
     expect(svg).toContain('aria-labelledby="ez-title"');
     expect(svg).toContain('<title id="ez-title">Taktische Formation</title>');
+  });
+
+  it('verknüpft Titel und Beschreibung gemeinsam in aria-labelledby', () => {
+    const svg = renderSvg(
+      { ...formation, description: 'Eine taktische Formation.' },
+      { idPrefix: 'symbol' },
+    );
+    expect(svg).toContain('aria-labelledby="symbol-title symbol-desc"');
+    expect(svg).toContain('<desc id="symbol-desc">Eine taktische Formation.</desc>');
   });
 
   it('lässt A11y-Metadaten weg, wenn kein Titel gesetzt ist', () => {

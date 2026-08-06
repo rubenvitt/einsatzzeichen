@@ -3087,7 +3087,7 @@ Expected: die Meldung.
 Beim Abschlussreview gegenprüfen, dass keines davon versehentlich mitgebaut wurde — jedes wäre Scope-Ausweitung, nicht Zugabe:
 
 - Der Inhalt von D.1 bis D.5 — 249 der 250 Piktogrammabschnitte
-- Die drei verbleibenden Gate-Lücken: Mehrgrößen-Regression 16…256, Theme- und Druckprofile, A11y-Kontrastprüfung, viewBox-Konsistenz über den Gesamtbestand
+- Die vier verbleibenden Gate-Lücken: Mehrgrößen-Regression 16…256, Theme- und Druckprofile, A11y-Kontrastprüfung, viewBox-Konsistenz über den Gesamtbestand
 - Kapitel 3: `PropertyId` existiert weiterhin nicht
 - Die Fußzone: `designation` bleibt validiert und ungerendert, `role: 'foot'` ungenutzt
 - Die sechs fehlenden Grundzeichen, das `1.13`-Gate, Verwaltungsstufen- und Fahrzeugkategorie-Kopfmarken
@@ -3147,4 +3147,3 @@ Kein Abschnitt ohne Task. Abschnitt 3 (Bestandsmessung), 12 (Umfang) und 14 (Ris
 - `'4.3.2_Löschwasser Brauchwasser.svg'` — mit Leerzeichen, in `ELEMENTS` und im Test identisch; `'4.3.2'` in `ELEMENT_SECTIONS` und `scope`.
 
 **Abhängigkeitsreihenfolge:** 1 → 2 → 3 (translate vollständig) → 4 → 5 → 6 (Gates) → 7 (Katalog, braucht 4–6) → 8 (compose, braucht 1–3 und 7) → 9 (braucht 7, 8) → 10 (unabhängig) → 11 (braucht 9) → 12 (braucht 11). Tasks 10 und 12 sind die einzigen, die vorgezogen werden könnten; die Reihenfolge oben hält die Commit-Historie thematisch geschlossen.
-

@@ -2,7 +2,8 @@ import type { SourceId } from './provenance.js';
 import type { ReviewSet } from './review.js';
 
 /**
- * `baseline`            — die verbindliche fachliche Grundlage
+ * `baseline`            — der projektintern festgelegte Referenzstand für Coverage und Vergleiche;
+ *                         keine Aussage über normative Geltung oder den Status als Dienstvorschrift
  * `reference-assets`    — Grafikdateien zur Baseline
  * `guidance`            — begleitende Hinweise zur Baseline
  * `legacy`              — ältere Systematik, für Aliasnamen und Migrationshinweise

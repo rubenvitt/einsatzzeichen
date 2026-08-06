@@ -1,21 +1,23 @@
 import {
   DEFAULT_STROKE_WIDTH_MM,
   mmToUnits,
-  PALETTE,
   type ColorToken,
   type Drawing,
   type Primitive,
   type Style,
 } from '@einsatzzeichen/schema';
 import { mergeStyle } from './style.js';
+import { REFERENCE_THEME, colorFor, type RenderTheme } from './theme.js';
 
 export interface CanvasOptions {
   /** Kantenlänge in Pixeln. Ohne Angabe wird in SVG-Einheiten gezeichnet. */
   size?: number;
+  /** Farbprofil der Ausgabe. Ohne Angabe wird die unveränderte Referenzpalette verwendet. */
+  theme?: RenderTheme;
 }
 
-function color(token: ColorToken | 'none'): string {
-  return token === 'none' ? 'transparent' : PALETTE[token];
+function color(token: ColorToken | 'none', theme: RenderTheme): string {
+  return token === 'none' ? 'transparent' : colorFor(theme, token);
 }
 
 function tracePrimitive(primitive: Primitive, ctx: CanvasRenderingContext2D): void {
@@ -49,7 +51,9 @@ function tracePrimitive(primitive: Primitive, ctx: CanvasRenderingContext2D): vo
 function drawPrimitive(
   primitive: Primitive,
   ctx: CanvasRenderingContext2D,
+  theme: RenderTheme,
   inheritedStyle?: Style,
+  inheritedRole?: Primitive['role'],
 ): void {
   ctx.save();
 
@@ -70,9 +74,10 @@ function drawPrimitive(
   }
 
   const style = mergeStyle(primitive.style, inheritedStyle);
+  const role = primitive.role ?? inheritedRole;
 
   if (primitive.type === 'group') {
-    for (const child of primitive.children) drawPrimitive(child, ctx, style);
+    for (const child of primitive.children) drawPrimitive(child, ctx, theme, style, role);
     ctx.restore();
     return;
   }
@@ -82,14 +87,21 @@ function drawPrimitive(
     ctx.save();
     ctx.scale(mmToUnits(1), mmToUnits(1));
     if (style?.fill !== undefined && style.fill !== 'none') {
-      ctx.fillStyle = color(style.fill);
+      ctx.fillStyle = color(style.fill, theme);
       ctx.fill(path, style.fillRule ?? 'nonzero');
     }
     if (style?.stroke !== undefined && style.stroke !== 'none') {
-      ctx.strokeStyle = color(style.stroke);
+      ctx.strokeStyle = color(style.stroke, theme);
       // Rohes Millimetermaß: das umgebende scale(mmToUnits(1)) skaliert die Strichstärke
       // bereits mit. Eine zusätzliche mmToUnits-Umrechnung würde sie doppelt skalieren.
       ctx.lineWidth = style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
+      const fillToken = style.fill;
+      const dash =
+        role === 'body' && fillToken !== undefined && fillToken !== 'none'
+          ? theme.bodyStrokeDashes?.[fillToken]
+          : undefined;
+      ctx.setLineDash(dash === undefined ? [] : [...dash]);
+      ctx.lineDashOffset = 0;
       ctx.stroke(path);
     }
     ctx.restore();
@@ -101,12 +113,19 @@ function drawPrimitive(
   tracePrimitive(primitive, ctx);
 
   if (style?.fill !== undefined && style.fill !== 'none') {
-    ctx.fillStyle = color(style.fill);
+    ctx.fillStyle = color(style.fill, theme);
     ctx.fill(style.fillRule ?? 'nonzero');
   }
   if (style?.stroke !== undefined && style.stroke !== 'none') {
-    ctx.strokeStyle = color(style.stroke);
+    ctx.strokeStyle = color(style.stroke, theme);
     ctx.lineWidth = mmToUnits(style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM);
+    const fillToken = style.fill;
+    const dash =
+      role === 'body' && fillToken !== undefined && fillToken !== 'none'
+        ? theme.bodyStrokeDashes?.[fillToken]
+        : undefined;
+    ctx.setLineDash(dash === undefined ? [] : dash.map(mmToUnits));
+    ctx.lineDashOffset = 0;
     ctx.stroke();
   }
 
@@ -119,9 +138,10 @@ export function renderCanvas(
   options: CanvasOptions = {},
 ): void {
   ctx.save();
+  const theme = options.theme ?? REFERENCE_THEME;
   if (options.size !== undefined) {
     ctx.scale(options.size / mmToUnits(drawing.viewBox.width), options.size / mmToUnits(drawing.viewBox.height));
   }
-  for (const child of drawing.children) drawPrimitive(child, ctx);
+  for (const child of drawing.children) drawPrimitive(child, ctx, theme);
   ctx.restore();
 }

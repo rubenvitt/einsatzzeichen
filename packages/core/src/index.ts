@@ -1,5 +1,6 @@
 export * from './render/svg.js';
 export * from './render/canvas.js';
+export * from './render/theme.js';
 export * from './bounds.js';
 export * from './fingerprint.js';
 export * from './layout/profiles.js';
@@ -7,3 +8,6 @@ export * from './validate.js';
 export * from './compose.js';
 export * from './path-commands.js';
 export * from './pictogram-gate.js';
+export * from './a11y/contrast.js';
+export * from './a11y/metadata.js';
+export * from './viewbox-gate.js';

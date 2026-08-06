@@ -22,6 +22,7 @@ describe('geometry', () => {
       hellgrau: '#bebebe',
       hellblau: '#3264fa',
     });
+    expect(Object.values(PALETTE).every((value) => /^#[0-9a-f]{6}$/.test(value))).toBe(true);
   });
 
   it('nutzt 0,5 mm Strichstärke und 32 mm Grundfläche als Vorgabe', () => {

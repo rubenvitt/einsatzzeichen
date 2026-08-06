@@ -15,8 +15,8 @@ export type ElementKind =
 /**
  * Die Elementarten, die eine eigene Geometrie tragen und deshalb einen Dateisnapshot haben können.
  * Eine Organisationsfarbe ist ein `ColorToken`, ein Stärkegrad eine `HeadShape` — beides keine
- * Zeichnung, die sich rendern ließe. Das Manifest leitet `snapshotTest` daraus ab, statt eine
- * Liste von IDs zu führen, die mit jedem Unter-Slice nachgezogen werden müsste.
+ * Zeichnung, die sich rendern ließe. Das Manifest leitet die passende `testEvidence` daraus ab,
+ * statt eine Liste von IDs zu führen, die mit jedem Unter-Slice nachgezogen werden müsste.
  */
 export const PICTOGRAM_ELEMENT_KINDS: ReadonlySet<ElementKind> = new Set<ElementKind>([
   'capability',

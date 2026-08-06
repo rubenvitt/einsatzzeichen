@@ -17,8 +17,14 @@ export type ColorToken =
   | 'hellgrau'
   | 'hellblau';
 
+/** Hexfarbe am Rendererrand. Das IR selbst trägt weiterhin ausschließlich semantische Tokens. */
+export type RgbHex = `#${string}`;
+
+/** Ein Theme muss jeden Farbtoken auflösen; partielle Paletten würden still auf Defaults fallen. */
+export type ColorPalette = Readonly<Record<ColorToken, RgbHex>>;
+
 /** Aus dem BABZ-Referenzbestand abgeleitete Organisations- und Signalfarben. */
-export const PALETTE: Record<ColorToken, string> = {
+export const PALETTE: ColorPalette = {
   schwarz: '#000000',
   weiss: '#ffffff',
   rot: '#fa1919',

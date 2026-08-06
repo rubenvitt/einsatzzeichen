@@ -39,6 +39,26 @@ describe('Quellenregister', () => {
     ]);
   });
 
+  it('führt den BABZ-Arbeitsstand nur als projektinterne Baseline mit offiziellem Statushinweis', () => {
+    const baseline = SOURCE_REGISTRY['bbk-babz-2025'];
+    expect(baseline.url).toBe('https://lernplattform-babz-bund.de/goto.php?target=cat_109540');
+    expect(baseline.scope).toContain('Projektinterne Coverage-Baseline');
+    expect(baseline.scope).toContain('Keine geltende eigenständige Dienstvorschrift');
+    expect(baseline.scope).toContain('Diskussionsgrundlage');
+    expect(baseline.licence.note).toContain('Statusprüfung: 2026-08-06');
+    expect(baseline.licence.note).toContain('13./14.03.2025');
+    expect(baseline.licence.note).toContain('vorläufige Anwendung');
+    expect(baseline.licence.note).toContain('Veröffentlichung und Verbreitung');
+    expect(baseline.licence.note).toContain('ausgesetzt');
+  });
+
+  it('kennzeichnet die lokal archivierten BABZ-Grafiken nicht als aktuell veröffentlicht', () => {
+    const assets = SOURCE_REGISTRY['babz-svg-2025'];
+    expect(assets.scope).toContain('damaligen BABZ-Arbeitsstands');
+    expect(assets.scope).toContain('derzeit ausgesetzt');
+    expect(assets.acquisition).toBe('local');
+  });
+
   it('führt die unklare Lizenzlage von babz-svg-2025 maschinenlesbar', () => {
     expect(SOURCE_REGISTRY['babz-svg-2025'].licence.status).toBe('unclear');
   });
@@ -55,9 +75,9 @@ describe('Quellenregister', () => {
   });
 
   it('trägt an jeder Quelle beide Reviewrollen mit zurechenbarem technischem Review', () => {
-    for (const record of Object.values(SOURCE_REGISTRY)) {
+    for (const [id, record] of Object.entries(SOURCE_REGISTRY)) {
       expect(record.review.technical.status).toBe('approved');
-      expect(record.review.technical.reviewer).toBe('rv');
+      expect(record.review.technical.reviewer).toBe(id === 'bbk-babz-2025' ? 'codex' : 'rv');
       expect(record.review.domain.status).toBe('pending');
     }
   });
@@ -66,7 +86,8 @@ describe('Quellenregister', () => {
     // phjardas-tz entstand einen Tag nach den übrigen elf Einträgen und trägt deshalb ein eigenes,
     // späteres Prüfdatum (siehe PHJARDAS_TZ_REVIEW) statt der gemeinsamen SOURCE_REVIEW-Konstante.
     for (const [id, record] of Object.entries(SOURCE_REGISTRY)) {
-      const expectedDate = id === 'phjardas-tz' ? '2026-08-06' : '2026-08-05';
+      const expectedDate =
+        id === 'phjardas-tz' || id === 'bbk-babz-2025' ? '2026-08-06' : '2026-08-05';
       expect(record.review.technical.date).toBe(expectedDate);
     }
   });

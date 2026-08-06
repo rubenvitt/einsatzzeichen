@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { unattributedRoles, type ReviewSet } from './review.js';
+import { reviewIssues, unattributedRoles, type ReviewSet } from './review.js';
 
 const approved = { status: 'approved', reviewer: 'rv', date: '2026-08-05' } as const;
 
@@ -27,8 +27,58 @@ describe('Reviewmodell', () => {
     expect(unattributedRoles(set)).toEqual(['technical', 'domain']);
   });
 
-  it('verlangt Zurechnung nur bei approved, nicht bei deviation oder pending', () => {
+  it('verlangt bei deviation dieselbe Zurechnung und zusätzlich eine Begründung', () => {
     const set: ReviewSet = { technical: { status: 'deviation' }, domain: { status: 'pending' } };
-    expect(unattributedRoles(set)).toEqual([]);
+    expect(reviewIssues(set)).toEqual([
+      { role: 'technical', code: 'missing-reviewer' },
+      { role: 'technical', code: 'invalid-date' },
+      { role: 'technical', code: 'missing-deviation-note' },
+    ]);
+    expect(unattributedRoles(set)).toEqual(['technical']);
+  });
+
+  it('lehnt leere Reviewer und kalendarisch ungültige ISO-Daten ab', () => {
+    const set: ReviewSet = {
+      technical: { status: 'approved', reviewer: '   ', date: '2026-02-30' },
+      domain: { status: 'pending' },
+    };
+    expect(reviewIssues(set)).toEqual([
+      { role: 'technical', code: 'missing-reviewer' },
+      { role: 'technical', code: 'invalid-date' },
+    ]);
+  });
+
+  it('akzeptiert eine zurechenbare und begründete Abweichung', () => {
+    const set: ReviewSet = {
+      technical: {
+        status: 'deviation',
+        reviewer: 'rv',
+        date: '2026-08-06',
+        note: 'Bewusste Abweichung.',
+      },
+      domain: { status: 'pending' },
+    };
+    expect(reviewIssues(set)).toEqual([]);
+  });
+
+  it('verlangt für eine fachliche Freigabe einen versionierbaren Befund', () => {
+    const set: ReviewSet = {
+      technical: approved,
+      domain: { status: 'approved', reviewer: 'fachreview', date: '2026-08-06' },
+    };
+    expect(reviewIssues(set)).toEqual([{ role: 'domain', code: 'missing-domain-note' }]);
+  });
+
+  it('akzeptiert eine fachliche Freigabe mit Befundnotiz', () => {
+    const set: ReviewSet = {
+      technical: approved,
+      domain: {
+        status: 'approved',
+        reviewer: 'fachreview',
+        date: '2026-08-06',
+        note: 'Geprüfter Stand und Protokoll: reviews/fachreview-1.md.',
+      },
+    };
+    expect(reviewIssues(set)).toEqual([]);
   });
 });

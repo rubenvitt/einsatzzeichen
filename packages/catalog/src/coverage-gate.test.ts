@@ -17,6 +17,7 @@ import {
   checkCatalogSourceRefs,
   checkProfileAgreement,
   checkReviewAttribution,
+  checkTestEvidence,
   countOpenDomainReviews,
   checkElementEntries,
   checkProfileRegistry,
@@ -53,8 +54,7 @@ function fixtureCoverageEntry(overrides: Partial<CoverageEntry> = {}): CoverageE
     referenceAsset: '1.1_Taktische Formation.svg',
     coverage: 'catalog-entry',
     profile: 'bund',
-    fingerprintTest: true,
-    snapshotTest: true,
+    testEvidence: ['body-fingerprint', 'svg-snapshot'],
     review: {
       technical: { status: 'approved', reviewer: 'rv', date: '2026-08-05' },
       domain: { status: 'pending' },
@@ -141,6 +141,50 @@ describe('Gate-Prüfungen zu Quelle, Profil und Review', () => {
     expect(violation?.detail).toContain('technical');
   });
 
+  it('meldet ein kalendarisch ungültiges Datum', () => {
+    const bad = fixtureCoverageEntry({
+      review: {
+        technical: { status: 'approved', reviewer: 'rv', date: '2026-02-30' },
+        domain: { status: 'pending' },
+      },
+    });
+    const [violation] = checkReviewAttribution([bad], (e) =>
+      entryKey(e.sourceId, e.variant),
+    );
+    expect(violation?.detail).toContain('ISO-Datum');
+  });
+
+  it('meldet eine Abweichung ohne Begründung', () => {
+    const bad = fixtureCoverageEntry({
+      review: {
+        technical: {
+          status: 'deviation',
+          reviewer: 'rv',
+          date: '2026-08-06',
+        },
+        domain: { status: 'pending' },
+      },
+    });
+    const [violation] = checkReviewAttribution([bad], (e) =>
+      entryKey(e.sourceId, e.variant),
+    );
+    expect(violation?.detail).toContain('Abweichung');
+    expect(violation?.detail).toContain('Notiz');
+  });
+
+  it('meldet eine fachliche Freigabe ohne Befundnotiz', () => {
+    const bad = fixtureCoverageEntry({
+      review: {
+        technical: { status: 'approved', reviewer: 'rv', date: '2026-08-05' },
+        domain: { status: 'approved', reviewer: 'fachreview', date: '2026-08-06' },
+      },
+    });
+    const [violation] = checkReviewAttribution([bad], (e) =>
+      entryKey(e.sourceId, e.variant),
+    );
+    expect(violation?.detail).toContain('Befundnotiz');
+  });
+
   it('meldet eine Quelle mit unzurechenbarem technischem Review', () => {
     const broken: SourceRecord = {
       ...SOURCE_REGISTRY['bbk-babz-2025'],
@@ -168,16 +212,36 @@ describe('Gate-Prüfungen zu Quelle, Profil und Review', () => {
     const done = fixtureCoverageEntry({
       review: {
         technical: { status: 'approved', reviewer: 'rv', date: '2026-08-05' },
-        domain: { status: 'approved', reviewer: 'rv', date: '2026-08-05' },
+        domain: {
+          status: 'approved',
+          reviewer: 'rv',
+          date: '2026-08-05',
+          note: 'Fachlicher Befund im Test.',
+        },
       },
     });
     expect(countOpenDomainReviews([open, done, open])).toBe(2);
   });
 
-  it('meldet für das echte Manifest keine Verletzung und alle 24 fachlichen Reviews als offen', () => {
+  it('zählt ein formal unvollständiges approved weiter als offen', () => {
+    const malformed = fixtureCoverageEntry({
+      review: {
+        technical: { status: 'approved', reviewer: 'rv', date: '2026-08-05' },
+        domain: { status: 'approved' },
+      },
+    });
+    expect(countOpenDomainReviews([malformed])).toBe(1);
+    expect(blockersOf([malformed], []).domainReviewPending).toEqual([
+      entryKey(malformed.sourceId, malformed.variant),
+    ]);
+  });
+
+  it('meldet für den echten Bestand keine Verletzung und alle 37 Reviewträger als offen', () => {
     const result = checkCoverage();
     expect(result.violations).toEqual([]);
-    expect(result.openDomainReviews).toBe(COVERAGE_MANIFEST.entries.length);
+    expect(result.openDomainReviews).toBe(
+      COVERAGE_MANIFEST.entries.length + Object.keys(SOURCE_REGISTRY).length + Object.keys(PROFILES).length,
+    );
   });
 });
 
@@ -242,6 +306,42 @@ describe('Gate-Prüfungen zu Elementen und Versionen', () => {
     expect(checkElementEntries([fixtureCoverageEntry()])).toEqual([]);
   });
 
+  it('meldet jede fehlende Pflichtnachweisart einzeln', () => {
+    const entry = fixtureCoverageEntry({ testEvidence: [] });
+    const violations = checkTestEvidence([entry]);
+    expect(violations.map((violation) => violation.check)).toEqual([
+      'missing-test-evidence',
+      'missing-test-evidence',
+    ]);
+    expect(violations.map((violation) => violation.detail)).toEqual([
+      'Pflichtnachweis "body-fingerprint" fehlt.',
+      'Pflichtnachweis "svg-snapshot" fehlt.',
+    ]);
+  });
+
+  it('lässt einen artfremden Nachweis keinen Pflichtnachweis ersetzen', () => {
+    const entry = fixtureCoverageEntry({
+      sourceId: 'bbk-babz-2025:2.5',
+      coverage: 'element',
+      implementation: 'organization.polizei',
+      referenceAsset: '2.5_Polizei.svg',
+      testEvidence: ['svg-snapshot'],
+    });
+    expect(checkTestEvidence([entry]).map((violation) => violation.check)).toEqual([
+      'unexpected-test-evidence',
+      'missing-test-evidence',
+    ]);
+  });
+
+  it('meldet einen doppelt behaupteten Nachweis', () => {
+    const entry = fixtureCoverageEntry({
+      testEvidence: ['body-fingerprint', 'body-fingerprint', 'svg-snapshot'],
+    });
+    expect(checkTestEvidence([entry]).map((violation) => violation.check)).toEqual([
+      'duplicate-test-evidence',
+    ]);
+  });
+
   it('nimmt einen Eintrag mit registriertem Profil an', () => {
     expect(checkProfileRegistry([fixtureCoverageEntry()], Object.values(PROFILES))).toEqual([]);
   });
@@ -291,18 +391,14 @@ describe('Release-Blocker für 1.0', () => {
     expect(blockers.domainReviewPending).toHaveLength(COVERAGE_MANIFEST.entries.length);
   });
 
-  it('führt genau die dreizehn Elementeinträge als ohne Testnachweis', () => {
-    // Die beiden Piktogramme tragen inzwischen snapshotTest: true, aber fingerprintTest bleibt
-    // false (matchFingerprint vergleicht nur role: 'body') — blockersOf listet einen Eintrag
-    // schon, wenn einer der beiden Nachweise fehlt, also bleiben auch sie hier gelistet.
+  it('führt offene Quellen- und Profilreviews als eigene Blocker', () => {
     const blockers = releaseBlockers();
-    expect(blockers.withoutTestEvidence).toHaveLength(13);
-    for (const key of blockers.withoutTestEvidence) {
-      const entry = COVERAGE_MANIFEST.entries.find(
-        (e) => entryKey(e.sourceId, e.variant) === key,
-      );
-      expect(entry?.coverage).toBe('element');
-    }
+    expect(blockers.sourceDomainReviewPending.sort()).toEqual(Object.keys(SOURCE_REGISTRY).sort());
+    expect(blockers.profileDomainReviewPending.sort()).toEqual(Object.keys(PROFILES).sort());
+  });
+
+  it('meldet keinen Eintrag ohne seinen arteigenen Pflichtnachweis', () => {
+    expect(releaseBlockers().withoutTestEvidence).toEqual([]);
   });
 
   it('meldet keinen Scope-Eintrag ohne Manifest-Eintrag', () => {
@@ -345,18 +441,62 @@ describe('blockersOf (parametrisierter Kern von releaseBlockers)', () => {
     expect(blockersOf([entry], ['ohne-trenner']).uncoveredScope).toEqual([]);
   });
 
-  it('meldet einen Eintrag mit Fingerprint-, aber ohne Snapshot-Nachweis', () => {
-    const entry = fixtureCoverageEntry({ fingerprintTest: true, snapshotTest: false });
+  it('behandelt eine dokumentierte Abweichung weiterhin als 1.0-Blocker', () => {
+    const entry = fixtureCoverageEntry({
+      review: {
+        technical: { status: 'approved', reviewer: 'rv', date: '2026-08-05' },
+        domain: {
+          status: 'deviation',
+          reviewer: 'fachreview',
+          date: '2026-08-06',
+          note: 'Bewusste fachliche Abweichung.',
+        },
+      },
+    });
+    expect(blockersOf([entry], []).domainReviewPending).toEqual([
+      entryKey(entry.sourceId, entry.variant),
+    ]);
+  });
+
+  it('meldet einen Katalogeintrag mit Fingerprint-, aber ohne Snapshot-Nachweis', () => {
+    const entry = fixtureCoverageEntry({ testEvidence: ['body-fingerprint'] });
     expect(blockersOf([entry], []).withoutTestEvidence).toEqual([
       entryKey(entry.sourceId, entry.variant),
     ]);
   });
 
-  it('meldet einen Eintrag mit Snapshot-, aber ohne Fingerprint-Nachweis', () => {
-    const entry = fixtureCoverageEntry({ fingerprintTest: false, snapshotTest: true });
+  it('meldet einen Katalogeintrag mit Snapshot-, aber ohne Fingerprint-Nachweis', () => {
+    const entry = fixtureCoverageEntry({ testEvidence: ['svg-snapshot'] });
     expect(blockersOf([entry], []).withoutTestEvidence).toEqual([
       entryKey(entry.sourceId, entry.variant),
     ]);
+  });
+
+  it('akzeptiert die arteigenen Pflichtnachweise aller drei Elementformen', () => {
+    const entries = [
+      fixtureCoverageEntry({
+        sourceId: 'bbk-babz-2025:2.5',
+        coverage: 'element',
+        implementation: 'organization.polizei',
+        referenceAsset: '2.5_Polizei.svg',
+        testEvidence: ['reference-fill'],
+      }),
+      fixtureCoverageEntry({
+        sourceId: 'bbk-babz-2025:5.4.2',
+        coverage: 'element',
+        implementation: 'strength.staffel',
+        referenceAsset: '5.4.2_Staffel.svg',
+        testEvidence: ['head-shape-regression'],
+      }),
+      fixtureCoverageEntry({
+        sourceId: 'bbk-babz-2025:4.3.1',
+        coverage: 'element',
+        implementation: 'capability.fire-fighting',
+        referenceAsset: '4.3.1_Brandbekämpfung.svg',
+        testEvidence: ['svg-snapshot', 'pictogram-contract'],
+      }),
+    ];
+    expect(blockersOf(entries, []).withoutTestEvidence).toEqual([]);
   });
 });
 
@@ -371,12 +511,16 @@ describe('blockersOf — Zählung nach Bereich', () => {
       referenceAsset: `${sourceId}.svg`,
       coverage: 'element',
       profile: 'bund',
-      fingerprintTest: false,
-      snapshotTest: true,
+      testEvidence: [],
       review: {
         technical: { status: 'approved', reviewer: 'rv', date: '2026-08-05' },
         domain: domainApproved
-          ? { status: 'approved', reviewer: 'rv', date: '2026-08-05' }
+          ? {
+              status: 'approved',
+              reviewer: 'rv',
+              date: '2026-08-05',
+              note: 'Fachlicher Befund im Test.',
+            }
           : { status: 'pending' },
       },
     };

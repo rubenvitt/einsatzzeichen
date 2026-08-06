@@ -1,4 +1,5 @@
-import type { ReviewSet, SourceId, SourceRecord } from '@einsatzzeichen/schema';
+import type { Review, ReviewSet, SourceId, SourceRecord } from '@einsatzzeichen/schema';
+import { sourceDomainReviewFor } from './domain-reviews.js';
 
 /**
  * Für eine Quelle ist das Gate-Kriterium aus der Spec (Fingerprint- und Snapshot-Gate grün)
@@ -6,31 +7,42 @@ import type { ReviewSet, SourceId, SourceRecord } from '@einsatzzeichen/schema';
  * Angaben und die Bezugsadresse sind gegen die Quelle geprüft. Die `note` hält diese
  * Rollenanpassung fest, damit sie dokumentiert und nicht stillschweigend ist.
  */
-const SOURCE_REVIEW: ReviewSet = {
-  technical: {
-    status: 'approved',
-    reviewer: 'rv',
-    date: '2026-08-05',
-    note: 'Bibliografische Angaben und Bezugsadresse gegen die Quelle geprüft.',
-  },
-  domain: { status: 'pending' },
+const SOURCE_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-05',
+  note: 'Bibliografische Angaben und Bezugsadresse gegen die Quelle geprüft.',
+};
+
+/**
+ * Der Baseline-Eintrag wurde am 2026-08-06 auf die aktuelle Statusseite umgestellt und deshalb
+ * neu technisch geprüft. Die Zurechnung zu `codex` bezeichnet nur URL-, Text- und Registerprüfung;
+ * das fachliche beziehungsweise normative Review bleibt ausdrücklich offen.
+ */
+const BASELINE_SOURCE_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'codex',
+  date: '2026-08-06',
+  note:
+    'Offizielle BABZ-URL, Statushinweis und Registeraussagen am 2026-08-06 technisch ' +
+    'geprüft; keine fachliche oder normative Freigabe.',
 };
 
 /**
  * Eigene Review-Angabe für `phjardas-tz`: der Eintrag entstand am 2026-08-06, einen Tag nach den
- * übrigen elf Einträgen. Das Prüfdatum ist eine Aussage über *diesen* Eintrag, nicht über das
- * Register — deshalb keine gemeinsame Konstante mit `SOURCE_REVIEW`, deren Datum für die elf
- * anderen Einträge korrekt bleibt.
+ * damals vorhandenen Einträgen. Das Prüfdatum ist eine Aussage über *diesen* Eintrag, nicht über
+ * das Register — deshalb keine gemeinsame Konstante mit `SOURCE_TECHNICAL_REVIEW`.
  */
-const PHJARDAS_TZ_REVIEW: ReviewSet = {
-  technical: {
-    status: 'approved',
-    reviewer: 'rv',
-    date: '2026-08-06',
-    note: 'Bibliografische Angaben und Bezugsadresse gegen die Quelle geprüft.',
-  },
-  domain: { status: 'pending' },
+const PHJARDAS_TZ_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-06',
+  note: 'Bibliografische Angaben und Bezugsadresse gegen die Quelle geprüft.',
 };
+
+function sourceReviewFor(id: SourceId, technical: Review): ReviewSet {
+  return { technical, domain: sourceDomainReviewFor(id) };
+}
 
 /**
  * Elf Quellen der Referenzhierarchie aus `Vision.md`, dazu `phjardas-tz` als Vergleichsbestand
@@ -56,18 +68,28 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
     title:
       'Taktische Zeichen im Bevölkerungsschutz — Empfehlungen zur Einführung einer FwDV 102/DV 102',
     publisher: 'BBK / BABZ',
-    url: 'https://lernplattform-babz-bund.de/ilias.php?baseClass=ilrepositorygui&cmd=sendfile&ref_id=150034',
+    url: 'https://lernplattform-babz-bund.de/goto.php?target=cat_109540',
     scope:
-      'Verbindliche Baseline: Grundelemente, Organisationsfarben, Fähigkeiten, Stärkeangaben, taktische Einheiten und fachliche Anhänge.',
+      'Projektinterne Coverage-Baseline für Grundelemente, Organisationsfarben, Fähigkeiten, ' +
+      'Stärkeangaben, taktische Einheiten und fachliche Anhänge. Keine geltende eigenständige ' +
+      'Dienstvorschrift; die BABZ führt den Stand als Diskussionsgrundlage für eine künftige ' +
+      'FwDV 102/DV 102.',
     acquisition: 'public-url',
     geometryUse: ['none'],
     licence: {
       basis:
-        'Frei abrufbare Veröffentlichung der BABZ-Lernplattform; Weiterverwendung und Ableitung sind nicht dokumentiert.',
+        'Die offizielle BABZ-Statusseite ist frei abrufbar. Weiterverwendung und Ableitung des ' +
+        'lokal archivierten Arbeitsstands sind nicht dokumentiert.',
       status: 'unclear',
-      note: 'Liefert die Abschnittsnummerierung des Coverage-Manifests, keine Geometrie.',
+      note:
+        'Stand der Statusprüfung: 2026-08-06. Der AFKzV hob in seiner 57. Sitzung am ' +
+        '13./14.03.2025 die vorläufige Anwendung auf. ' +
+        'Nach Angabe der BABZ sind weitere Veröffentlichung und Verbreitung des Ergebnisses bis ' +
+        'zum Abschluss der Beratungen ausgesetzt. Die Quelle liefert im Projekt weiterhin die ' +
+        'Abschnittsnummerierung des Coverage-Manifests, aber keine Geometrie und keine Behauptung ' +
+        'normativer Geltung.',
     },
-    review: SOURCE_REVIEW,
+    review: sourceReviewFor('bbk-babz-2025', BASELINE_SOURCE_TECHNICAL_REVIEW),
   },
   'babz-svg-2025': {
     id: 'babz-svg-2025',
@@ -75,16 +97,22 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
     title: 'Freigestellte SVG-Grafikdateien der enthaltenen Zeichen',
     publisher: 'BBK / BABZ',
     url: 'https://lernplattform-babz-bund.de/ilias.php?baseClass=ilrepositorygui&ref_id=147616',
-    scope: '661 Referenzdateien zu den Zeichen der Baseline, lokal unter taktische-zeichen/.',
+    scope:
+      '661 lokal archivierte Referenzdateien des damaligen BABZ-Arbeitsstands unter ' +
+      'taktische-zeichen/. Die BABZ-Veröffentlichung und -Verbreitung dieses Stands ist derzeit ' +
+      'ausgesetzt.',
     acquisition: 'local',
     geometryUse: ['measured-metrics', 'reconstructed'],
     licence: {
       basis:
-        'Nutzungsgrundlage ungeklärt; deshalb werden ausschließlich Kennzahlen abgeleitet und keine Dateien eingecheckt.',
+        'Nutzungsgrundlage des lokal archivierten Arbeitsstands ungeklärt; deshalb werden ' +
+        'ausschließlich Kennzahlen abgeleitet und keine Dateien eingecheckt.',
       status: 'unclear',
-      note: 'Zweite Bezugsadresse derselben Quelle, auf weißer Hintergrundfläche: https://lernplattform-babz-bund.de/ilias.php?baseClass=ilrepositorygui&cmdClass=ilobjcategorygui&cmdNode=wv%3Ald&item_ref_id=0&ref_id=147615',
+      note:
+        'Offizielle Statusseite des zugehörigen Empfehlungsstands, geprüft am 2026-08-06: ' +
+        'https://lernplattform-babz-bund.de/goto.php?target=cat_109540',
     },
-    review: SOURCE_REVIEW,
+    review: sourceReviewFor('babz-svg-2025', SOURCE_TECHNICAL_REVIEW),
   },
   'babz-hinweise-2024': {
     id: 'babz-hinweise-2024',
@@ -93,7 +121,7 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
     publisher: 'BBK / BABZ',
     edition: '2024-02-12',
     url: 'https://www.lv-saarland.drk.de/fileadmin/user_upload/Begleitende_Hinweise_zur_%C3%9Cberarbeitung.pdf',
-    scope: 'Erläutert die Änderungen der aktuellen Fassung gegenüber der Vorgängerfassung.',
+    scope: 'Erläutert die Änderungen des damaligen Überarbeitungsstands gegenüber der Vorgängerfassung.',
     acquisition: 'public-url',
     geometryUse: ['none'],
     licence: {
@@ -101,7 +129,7 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
         'Frei abrufbares Begleitdokument; Weiterverwendung und Ableitung sind nicht dokumentiert.',
       status: 'unclear',
     },
-    review: SOURCE_REVIEW,
+    review: sourceReviewFor('babz-hinweise-2024', SOURCE_TECHNICAL_REVIEW),
   },
   'skk-2010': {
     id: 'skk-2010',
@@ -119,9 +147,8 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
       basis:
         'Frei abrufbare Dienstvorschrift; Weiterverwendung und Ableitung sind nicht dokumentiert.',
       status: 'unclear',
-      note: 'Zweite Fundstelle derselben Systematik, älteres freies Lernangebot der BABZ: https://lernplattform-babz-bund.de/ilias.php?baseClass=ilstartupgui&client_id=BBKILIAS&cmdClass=ilaccessibilitycontrolconceptgui&cmdNode=zy%3A1t&lang=de&target=cat_109540',
     },
-    review: SOURCE_REVIEW,
+    review: sourceReviewFor('skk-2010', SOURCE_TECHNICAL_REVIEW),
   },
   'fwdv-100': {
     id: 'fwdv-100',
@@ -137,7 +164,7 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
         'Frei abrufbare Dienstvorschrift; Weiterverwendung und Ableitung sind nicht dokumentiert.',
       status: 'unclear',
     },
-    review: SOURCE_REVIEW,
+    review: sourceReviewFor('fwdv-100', SOURCE_TECHNICAL_REVIEW),
   },
   'fwdv-800': {
     id: 'fwdv-800',
@@ -153,7 +180,7 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
         'Frei abrufbare Dienstvorschrift; Weiterverwendung und Ableitung sind nicht dokumentiert.',
       status: 'unclear',
     },
-    review: SOURCE_REVIEW,
+    review: sourceReviewFor('fwdv-800', SOURCE_TECHNICAL_REVIEW),
   },
   'thw-einheiten': {
     id: 'thw-einheiten',
@@ -169,7 +196,7 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
         'Frei abrufbare Veröffentlichung; Weiterverwendung und Ableitung sind nicht dokumentiert.',
       status: 'unclear',
     },
-    review: SOURCE_REVIEW,
+    review: sourceReviewFor('thw-einheiten', SOURCE_TECHNICAL_REVIEW),
   },
   'phjardas-tz': {
     id: 'phjardas-tz',
@@ -192,7 +219,7 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
         'Copyright-Zeile lautet "Copyright 2022" ohne Rechteinhaber — wäre je etwas zu ' +
         'attribuieren, müsste die Attribution auf das Repository lauten.',
     },
-    review: PHJARDAS_TZ_REVIEW,
+    review: sourceReviewFor('phjardas-tz', PHJARDAS_TZ_TECHNICAL_REVIEW),
   },
   'din-14033': {
     id: 'din-14033',
@@ -208,7 +235,7 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
       basis: 'Kostenpflichtige Norm: Nutzung setzt Erwerb voraus, ohne Erwerb wird nichts übernommen.',
       status: 'clarified',
     },
-    review: SOURCE_REVIEW,
+    review: sourceReviewFor('din-14033', SOURCE_TECHNICAL_REVIEW),
   },
   'din-13050': {
     id: 'din-13050',
@@ -224,7 +251,7 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
       basis: 'Kostenpflichtige Norm: Nutzung setzt Erwerb voraus, ohne Erwerb wird nichts übernommen.',
       status: 'clarified',
     },
-    review: SOURCE_REVIEW,
+    review: sourceReviewFor('din-13050', SOURCE_TECHNICAL_REVIEW),
   },
   'din-14034-6': {
     id: 'din-14034-6',
@@ -242,7 +269,7 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
       basis: 'Kostenpflichtige Norm: Nutzung setzt Erwerb voraus, ohne Erwerb wird nichts übernommen.',
       status: 'clarified',
     },
-    review: SOURCE_REVIEW,
+    review: sourceReviewFor('din-14034-6', SOURCE_TECHNICAL_REVIEW),
   },
   'din-14095': {
     id: 'din-14095',
@@ -259,7 +286,7 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
       basis: 'Kostenpflichtige Norm: Nutzung setzt Erwerb voraus, ohne Erwerb wird nichts übernommen.',
       status: 'clarified',
     },
-    review: SOURCE_REVIEW,
+    review: sourceReviewFor('din-14095', SOURCE_TECHNICAL_REVIEW),
   },
 } satisfies Record<SourceId, SourceRecord>;
 

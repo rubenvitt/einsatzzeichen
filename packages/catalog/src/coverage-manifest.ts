@@ -1,5 +1,13 @@
-import type { CoverageEntry, CoverageManifest, ReviewSet } from '@einsatzzeichen/schema';
+import {
+  entryKey,
+  type Review,
+  type CoverageEntry,
+  type CoverageManifest,
+  type ReviewSet,
+  type TestEvidenceKind,
+} from '@einsatzzeichen/schema';
 import { BASE_SYMBOLS } from './base-symbols.js';
+import { manifestDomainReviewFor } from './domain-reviews.js';
 import { PICTOGRAM_ELEMENT_KINDS, resolveElement } from './elements.js';
 import { RECIPES } from './recipes.js';
 
@@ -9,63 +17,80 @@ import { RECIPES } from './recipes.js';
  * Slice-1-Erfolgskriterien 1 und 2. `domain` bleibt offen: eine fachliche Prüfung durch eine
  * Person mit einsatztaktischer Fachkunde hat nicht stattgefunden, und das Modell verdeckt das nicht.
  */
-const REVIEW: ReviewSet = {
-  technical: { status: 'approved', reviewer: 'rv', date: '2026-08-05' },
-  domain: { status: 'pending' },
+const TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-05',
 };
 
 /**
  * Für Piktogramme ist der erste Teil des Slice-2-Kriteriums für `technical: approved`
  * — Fingerprint- und Snapshot-Gate grün — strukturell unerreichbar: `matchFingerprint` vergleicht
  * ausschließlich `role: 'body'`, und das Fingerprint-Gate ist auf Kapitel 1–3 beschränkt. An seine
- * Stelle treten vier prüfbare Bedingungen. Die `note` hält diese Rollenanpassung fest, damit sie
- * dokumentiert und nicht stillschweigend ist — dasselbe Muster wie `SOURCE_REVIEW` in `sources.ts`.
+ * Stelle treten vier lokale, piktogrammspezifische Bedingungen. Die globalen Mehrgrößen-,
+ * viewBox-, Metadaten- und Kontrast-Gates kommen seit der Härtung vor D.1 hinzu. Die `note` hält
+ * beide Ebenen getrennt fest, statt ein globales Gate als Eigenschaft eines einzelnen Elements
+ * auszugeben — dasselbe Muster wie `SOURCE_REVIEW` in `sources.ts`.
  */
-const PICTOGRAM_REVIEW: ReviewSet = {
-  technical: {
-    status: 'approved',
-    reviewer: 'rv',
-    date: '2026-08-05',
-    note:
-      'Fingerprint-Gate für Piktogramme nicht anwendbar (matchFingerprint vergleicht nur ' +
-      'role: body). An seine Stelle treten vier grüne Gates: Snapshot, Kommando, Box, Clipping.',
-  },
-  domain: { status: 'pending' },
+const PICTOGRAM_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-06',
+  note:
+    'Fingerprint-Gate für Piktogramme nicht anwendbar (matchFingerprint vergleicht nur ' +
+    'role: body). Lokal treten vier grüne Gates an seine Stelle: Snapshot, Kommando, Box, ' +
+    'Clipping. Zusätzlich bestehen die globalen Mehrgrößen-, viewBox-, Metadaten- und ' +
+    'Kontrast-Gates des renderbaren Katalogbestands.',
 };
+
+/** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
+function reviewFor(sourceId: string, technical: Review): ReviewSet {
+  return {
+    technical,
+    domain: manifestDomainReviewFor(entryKey(sourceId, 'primary')),
+  };
+}
+
+const DRAWING_EVIDENCE = [
+  'body-fingerprint',
+  'svg-snapshot',
+] as const satisfies readonly TestEvidenceKind[];
 
 const catalogEntries: CoverageEntry[] = Object.values(BASE_SYMBOLS).map((entry) => {
   // Die Zeile trägt `variant: 'primary'`, also muss sie auch aus der `primary`-Darstellung
   // abgeleitet sein — nicht aus der ersten. `depictions` ist ungeordnet; sobald ein Eintrag eine
   // `alternative` zuerst führt, käme Abschnitt und Belegdatei aus der Alternative.
   const ref = entry.depictions.find((d) => d.variant === 'primary')?.sourceRefs[0];
+  const sourceId = `bbk-babz-2025:${ref?.section ?? ''}`;
   return {
-    sourceId: `bbk-babz-2025:${ref?.section ?? ''}`,
+    sourceId,
     variant: 'primary',
     title: entry.title,
     implementation: entry.id,
     referenceAsset: ref?.asset ?? '',
     coverage: 'catalog-entry',
     profile: 'bund',
-    fingerprintTest: true,
-    snapshotTest: true,
-    review: REVIEW,
+    testEvidence: DRAWING_EVIDENCE,
+    review: reviewFor(sourceId, TECHNICAL_REVIEW),
   };
 });
 
-const recipeEntries: CoverageEntry[] = Object.entries(RECIPES).map(([section, recipe]) => ({
-  sourceId: `bbk-babz-2025:${section}`,
-  variant: 'primary',
-  title: recipe.title,
-  implementation: `recipe.${section}`,
-  referenceAsset: recipe.referenceAsset,
-  coverage: 'composition-recipe',
-  profile: 'bund',
-  // Task 13 hat alle drei Rezepte per matchFingerprint gegen die Referenz gegated,
-  // mit Differenz 0 an allen Kanten — das Manifest bildet das ab, statt es zu untertreiben.
-  fingerprintTest: true,
-  snapshotTest: true,
-  review: REVIEW,
-}));
+const recipeEntries: CoverageEntry[] = Object.entries(RECIPES).map(([section, recipe]) => {
+  const sourceId = `bbk-babz-2025:${section}`;
+  return {
+    sourceId,
+    variant: 'primary',
+    title: recipe.title,
+    implementation: `recipe.${section}`,
+    referenceAsset: recipe.referenceAsset,
+    coverage: 'composition-recipe',
+    profile: 'bund',
+    // Task 13 hat alle drei Rezepte per matchFingerprint gegen die Referenz gegated,
+    // mit Differenz 0 an allen Kanten — das Manifest bildet das ab, statt es zu untertreiben.
+    testEvidence: DRAWING_EVIDENCE,
+    review: reviewFor(sourceId, TECHNICAL_REVIEW),
+  };
+});
 
 /**
  * Abschnittsnummer je Element. Jedes Element braucht eine eigene Nummer, sonst kollidierten die
@@ -89,21 +114,24 @@ const ELEMENT_SECTIONS: Record<string, string> = {
 };
 
 /**
- * `fingerprintTest` ist bei allen Elementen `false` und das ist kein Versäumnis: das
- * Fingerprint-Gate vergleicht ausschließlich `role: 'body'` und erfasst weder Kopfmarken noch
- * Piktogramme (Entscheidungsnotiz vom 4. August 2026, Abschnitt 5).
- *
- * `snapshotTest` folgt der Elementart: Piktogramme tragen eine eigene Geometrie und haben je einen
- * Dateisnapshot (`pictograms/snapshots.test.ts`); Organisationsfarben und Stärkegrade sind
- * `ColorToken` bzw. `HeadShape` und damit keine Zeichnung, die sich rendern ließe — sie sind
- * stattdessen durch `organizations.test.ts` und `strengths.test.ts` festgenagelt. Das Manifest
- * bildet die Testarten ab, statt sie zu überzeichnen.
+ * Elemente tragen die zu ihrer Datenform passende Evidenz statt zwei universelle Booleans:
+ * Organisationsfarben werden gegen die Referenzfüllung geprüft, Stärkegrade als vollständige
+ * `HeadShape`, Piktogramme durch eigene SVG-Snapshots und ihren Kommando-/Box-/Clipping-Vertrag.
+ * Globale Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates bleiben globale Aussagen und
+ * werden nicht als Eigenschaft jeder einzelnen Manifestzeile ausgegeben.
  */
 const elementEntries: CoverageEntry[] = Object.entries(ELEMENT_SECTIONS).map(([id, section]) => {
   const descriptor = resolveElement(id);
   const isPictogram = PICTOGRAM_ELEMENT_KINDS.has(descriptor.kind);
+  const sourceId = `bbk-babz-2025:${section}`;
+  const testEvidence: readonly TestEvidenceKind[] =
+    descriptor.kind === 'organization'
+      ? ['reference-fill']
+      : descriptor.kind === 'strength'
+        ? ['head-shape-regression']
+        : ['svg-snapshot', 'pictogram-contract'];
   return {
-    sourceId: `bbk-babz-2025:${section}`,
+    sourceId,
     variant: 'primary',
     title: descriptor.title,
     implementation: id,
@@ -112,9 +140,11 @@ const elementEntries: CoverageEntry[] = Object.entries(ELEMENT_SECTIONS).map(([i
     referenceAsset: descriptor.referenceAssets[0] ?? '',
     coverage: 'element',
     profile: 'bund',
-    fingerprintTest: false,
-    snapshotTest: isPictogram,
-    review: isPictogram ? PICTOGRAM_REVIEW : REVIEW,
+    testEvidence,
+    review: reviewFor(
+      sourceId,
+      isPictogram ? PICTOGRAM_TECHNICAL_REVIEW : TECHNICAL_REVIEW,
+    ),
   };
 });
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { boundsOfMm, CompositionError, formatUnits, matchFingerprint, renderSvg } from '@einsatzzeichen/core';
 import { mmToUnits, type Drawing, type Primitive } from '@einsatzzeichen/schema';
+import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { fingerprintFor } from './fingerprint-index.js';
 import { pictogram } from './pictograms/index.js';
 import { RECIPES, composeFromCatalog } from './recipes.js';
@@ -24,6 +25,28 @@ function horizontalPictogramLineYMm(drawing: Drawing): number | undefined {
 }
 
 describe('Kompositionsrezepte', () => {
+  const fingerprintCases = Object.entries(RECIPES);
+
+  it('bindet den Körper-Fingerprint-Claim exakt an die ausgeführten Rezeptfälle', () => {
+    const tested = fingerprintCases.map(([section]) => `recipe.${section}`).sort();
+    const claimed = COVERAGE_MANIFEST.entries
+      .filter(
+        (entry) =>
+          entry.coverage === 'composition-recipe' &&
+          entry.testEvidence.includes('body-fingerprint'),
+      )
+      .map((entry) => entry.implementation)
+      .sort();
+    expect(tested).toEqual(claimed);
+  });
+
+  it.each(fingerprintCases)('reproduziert die Referenz %s', (_section, recipe) => {
+    const drawing = composeFromCatalog(recipe.spec);
+    const result = matchFingerprint(drawing, fingerprintFor(recipe.referenceAsset));
+    expect(result.problems).toEqual([]);
+    expect(result.ok).toBe(true);
+  });
+
   it('erzeugt die Löschstaffel mit Körper bei 9 mm', () => {
     const drawing = composeFromCatalog(RECIPES['C.1.1'].spec);
     const body = drawing.children.find((c) => c.role === 'body');
@@ -33,26 +56,12 @@ describe('Kompositionsrezepte', () => {
     expect(body.style?.fill).toBe('rot');
   });
 
-  it('reproduziert die Referenz C.1.1 (Löschstaffel)', () => {
-    const drawing = composeFromCatalog(RECIPES['C.1.1'].spec);
-    const result = matchFingerprint(drawing, fingerprintFor(RECIPES['C.1.1'].referenceAsset));
-    expect(result.problems).toEqual([]);
-    expect(result.ok).toBe(true);
-  });
-
   it('erzeugt die Löschgruppe mit Körper bei 6 mm', () => {
     const drawing = composeFromCatalog(RECIPES['C.1.2'].spec);
     const body = drawing.children.find((c) => c.role === 'body');
     expect(body).toBeDefined();
     if (body === undefined) return;
     expect(boundsOfMm(body).minY).toBeCloseTo(6, 6);
-  });
-
-  it('reproduziert die Referenz C.1.2 (Löschgruppe)', () => {
-    const drawing = composeFromCatalog(RECIPES['C.1.2'].spec);
-    const result = matchFingerprint(drawing, fingerprintFor(RECIPES['C.1.2'].referenceAsset));
-    expect(result.problems).toEqual([]);
-    expect(result.ok).toBe(true);
   });
 
   it('unterscheidet Löschstaffel und Löschgruppe nur in der Stärke', () => {
@@ -69,13 +78,6 @@ describe('Kompositionsrezepte', () => {
     const bounds = boundsOfMm(body);
     expect(bounds.minY).toBeCloseTo(5, 3);
     expect(bounds.maxY).toBeCloseTo(31, 3);
-  });
-
-  it('reproduziert die Referenz D.3.7 (Zugführer der Feuerwehr)', () => {
-    const drawing = composeFromCatalog(RECIPES['D.3.7'].spec);
-    const result = matchFingerprint(drawing, fingerprintFor(RECIPES['D.3.7'].referenceAsset));
-    expect(result.problems).toEqual([]);
-    expect(result.ok).toBe(true);
   });
 
   it('setzt die Stärkepunkte als eigene Primitive mit der Rolle head', () => {

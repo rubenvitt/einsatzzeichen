@@ -33,7 +33,7 @@ const ARITY: Record<PathCommandName, number> = { M: 2, L: 2, H: 1, V: 1, C: 6, Q
  * Zahl **vor** Buchstabe: `1e-3` muss als eine Zahl gelesen werden und nicht als `1`, `e`, `-3`.
  * Die Alternation greift links zuerst, und ein Match beginnt an der jeweiligen Position.
  */
-const TOKEN = /-?\d*\.?\d+(?:[eE][-+]?\d+)?|[A-Za-z]/g;
+const TOKEN = /[+-]?\d*\.?\d+(?:[eE][-+]?\d+)?|[A-Za-z]/g;
 
 function isCommandName(value: string): value is PathCommandName {
   return Object.hasOwn(ARITY, value);
@@ -73,7 +73,20 @@ export function tokenizePath(d: string): TokenizeResult {
     numbers = [];
   }
 
-  for (const token of d.match(TOKEN) ?? []) {
+  let cursor = 0;
+
+  function inspectGap(start: number, end: number): void {
+    const gap = d.slice(start, end);
+    if (!/^[\s,]*$/.test(gap)) {
+      problems.push(`Unzulässige Zeichenfolge "${gap}" in Pfaddaten.`);
+    }
+  }
+
+  for (const match of d.matchAll(TOKEN)) {
+    const token = match[0];
+    const index = match.index;
+    inspectGap(cursor, index);
+    cursor = index + token.length;
     if (/^[A-Za-z]$/.test(token)) {
       flush();
       const upper = token.toUpperCase();
@@ -95,6 +108,7 @@ export function tokenizePath(d: string): TokenizeResult {
       problems.push(`Zahl "${token}" ohne vorangehendes Kommando.`);
     }
   }
+  inspectGap(cursor, d.length);
   flush();
 
   return { commands, problems };

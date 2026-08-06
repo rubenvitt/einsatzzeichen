@@ -1,4 +1,5 @@
 import type { ProfileId, ProfileRecord } from '@einsatzzeichen/schema';
+import { profileDomainReviewFor } from './domain-reviews.js';
 
 /**
  * Die registrierten Profile. Der bundesweite Kern ist der erste Eintrag — ein Profilfeld ohne
@@ -24,7 +25,7 @@ export const PROFILES: Record<ProfileId, ProfileRecord> = {
         date: '2026-08-05',
         note: 'Versionsfelder und Quellenbezüge sind vom Coverage-Gate geprüft.',
       },
-      domain: { status: 'pending' },
+      domain: profileDomainReviewFor('bund'),
     },
   },
 } satisfies Record<ProfileId, ProfileRecord>;
