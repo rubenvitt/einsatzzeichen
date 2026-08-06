@@ -216,6 +216,18 @@ const formationBody: Primitive = {
   height: 20,
 };
 
+/** Der Körper von `hazard`, wie `base-symbols.ts` ihn führt — ein Dreieck, keine Fläche. */
+const hazardBody: Primitive = {
+  type: 'polyline',
+  role: 'body',
+  closed: true,
+  points: [
+    [1, 28],
+    [16, 3],
+    [31, 28],
+  ],
+};
+
 describe('Clipping-Gate', () => {
   it('nimmt eine Box an, die vollständig im Körper liegt', () => {
     expect(checkClipping(withPath('M 4 12 L 28 20'), formationBody)).toEqual([]);
@@ -249,16 +261,10 @@ describe('Clipping-Gate', () => {
     // zusammen: eine Box innerhalb der Hülle kann aus dem Dreieck ragen. Eine hüllenbasierte
     // Prüfung als Flächenprüfung auszugeben wäre genau die Behauptung, die dieses Projekt
     // vermeidet — dasselbe Muster wie `circleBodyProfile` und die Gruppendrehung in `boundsOfMm`.
-    const hazardBody: Primitive = {
-      type: 'polyline',
-      role: 'body',
-      closed: true,
-      points: [
-        [1, 28],
-        [16, 3],
-        [31, 28],
-      ],
-    };
+    //
+    // Belegt zugleich: `checkClipping` selbst wirft weiterhin uneingeschränkt — nur
+    // `checkPictogram` fängt den Wurf (siehe checkPictogram-Suite unten). Die Semantik des
+    // Gates bleibt unangetastet.
     expect(() => checkClipping(withPath('M 4 12 L 28 20'), hazardBody)).toThrow(/nicht vermessen/);
   });
 
@@ -294,5 +300,26 @@ describe('checkPictogram', () => {
 
   it('meldet nichts für ein Piktogramm, das alle drei Gates besteht', () => {
     expect(checkPictogram(withPath('M 4 12 C 8 20 20 20 28 12 Z'), formationBody)).toEqual([]);
+  });
+
+  it('bewahrt Kommando- und Box-Befunde, wenn das Clipping-Gate wirft', () => {
+    // Der Körper (hazardBody, ein Dreieck) ist nicht vermessen — checkClipping wirft. Würde
+    // checkPictogram den Wurf durchreichen, gingen die bereits berechneten Kommando- und
+    // Box-Befunde verloren: genau das widerspräche dem Grundsatz dieser Datei, alle Verstöße
+    // auf einmal zu melden.
+    const broken: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      title: 'Kommando- und Box-Verstoß, Körper nicht vermessen',
+      box: { xMm: 4, yMm: 12, widthMm: 24, heightMm: 8 },
+      primitives: [
+        { type: 'path', role: 'pictogram', d: 'm 4 12 l 24 8' },
+        { type: 'line', role: 'pictogram', x1: 4, y1: 12, x2: 30, y2: 12 },
+      ],
+    };
+    const issues = checkPictogram(broken, hazardBody);
+    const gates = new Set(issues.map((issue) => issue.gate));
+    expect(gates).toEqual(new Set(['command', 'box', 'clipping']));
+    const clippingIssue = issues.find((issue) => issue.gate === 'clipping');
+    expect(clippingIssue?.detail).toContain('nicht vermessen');
   });
 });

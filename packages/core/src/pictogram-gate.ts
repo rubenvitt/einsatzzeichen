@@ -244,9 +244,9 @@ export function checkClipping(
   if (body.type !== 'rect' || body.transform !== undefined) {
     throw new Error(
       `pictogram-gate: Die Körperfläche von "${body.type}"` +
-        `${body.transform !== undefined ? ' mit Transformation' : ''} ist nicht vermessen — ` +
-        'das Clipping-Gate prüft nur achsparallele Rechtecke, bei denen Fläche und Hülle ' +
-        'zusammenfallen.',
+        `${body.transform !== undefined ? ' mit Transformation' : ''} für "${definition.id}" ` +
+        'ist nicht vermessen — das Clipping-Gate prüft nur achsparallele Rechtecke, bei denen ' +
+        'Fläche und Hülle zusammenfallen.',
     );
   }
 
@@ -284,14 +284,28 @@ export function checkClipping(
  * Die drei Gates zusammen — das Kriterium, das für Piktogramme an die Stelle des strukturell
  * unerreichbaren Fingerprint-Gates tritt (Spec Abschnitt 7). Reihenfolge: Kommando, Box,
  * Clipping, damit der Autor die Ursache vor ihren Folgen liest.
+ *
+ * `checkClipping` wirft für eine nicht vermessene Körperform (Polygon, gedrehtes Rechteck) —
+ * richtig für einen direkten Aufrufer, der genau ein Piktogramm-Grundzeichen-Paar prüft. Hier
+ * würde der Wurf aber die bereits gesammelten Kommando- und Box-Befunde verwerfen und damit dem
+ * Grundsatz dieser Datei widersprechen: „Listen von Befunden statt Ausnahmen, ein Autor soll alle
+ * Verstöße auf einmal sehen." Der Wurf wird deshalb gefangen und als eigener `clipping`-Befund
+ * gemeldet — sonst verlöre, wer `checkPictogram` über mehrere Grundzeichen laufen lässt, beim
+ * ersten Polygon jede Kommando- und Box-Rückmeldung des gesamten Durchlaufs.
  */
 export function checkPictogram(
   definition: PictogramDefinition,
   body: Primitive,
 ): PictogramIssue[] {
-  return [
-    ...checkCommands(definition),
-    ...checkBox(definition),
-    ...checkClipping(definition, body),
-  ];
+  const issues = [...checkCommands(definition), ...checkBox(definition)];
+  try {
+    issues.push(...checkClipping(definition, body));
+  } catch (error) {
+    issues.push({
+      gate: 'clipping',
+      pictogramId: definition.id,
+      detail: error instanceof Error ? error.message : String(error),
+    });
+  }
+  return issues;
 }
