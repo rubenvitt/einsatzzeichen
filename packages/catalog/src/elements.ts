@@ -1,7 +1,9 @@
+import { ALL_PICTOGRAMS, pictogramVariantKey } from './pictograms/index.js';
+
 /**
  * Die Arten von Einzelelementen. Die vier Piktogrammarten neben `capability` haben in D.0 noch
- * keine Einträge und kommen mit D.2 bis D.4 dazu — sie stehen hier, weil `PICTOGRAM_ELEMENT_KINDS`
- * sie liest und das Manifest daraus den Snapshot-Nachweis ableitet.
+ * keine Einträge und kommen mit D.2 bis D.4 dazu — sie stehen hier, weil
+ * `PICTOGRAM_ELEMENT_KINDS` sie für renderbare Elementarten ausweist.
  */
 export type ElementKind =
   | 'organization'
@@ -15,8 +17,8 @@ export type ElementKind =
 /**
  * Die Elementarten, die eine eigene Geometrie tragen und deshalb einen Dateisnapshot haben können.
  * Eine Organisationsfarbe ist ein `ColorToken`, ein Stärkegrad eine `HeadShape` — beides keine
- * Zeichnung, die sich rendern ließe. Das Manifest leitet die passende `testEvidence` daraus ab,
- * statt eine Liste von IDs zu führen, die mit jedem Unter-Slice nachgezogen werden müsste.
+ * Zeichnung, die sich rendern ließe. Die Menge hält die Elementarten als Katalogvertrag fest,
+ * statt eine Liste konkreter IDs mit jedem Unter-Slice nachziehen zu müssen.
  */
 export const PICTOGRAM_ELEMENT_KINDS: ReadonlySet<ElementKind> = new Set<ElementKind>([
   'capability',
@@ -46,8 +48,9 @@ export interface ElementDescriptor {
 }
 
 /**
- * Die dreizehn belegten Elemente. `hilfsorganisation` fehlt bewusst: Kapitel 2 enthält dafür keine
- * Datei, `organizationColor` wirft, und das Manifest behauptet nichts, was der Katalog nicht kann.
+ * Die statisch belegten Organisations- und Stärkeelemente. `hilfsorganisation` fehlt bewusst:
+ * Kapitel 2 enthält dafür keine Datei, `organizationColor` wirft, und das Manifest behauptet
+ * nichts, was der Katalog nicht kann.
  * (`2.2_Organisationen.svg` existiert, trägt aber einen generischen Namen, aus dem keine Zuordnung
  * folgt. Diese Zuordnung zu vermessen ist eine eigene Aufgabe.)
  *
@@ -57,7 +60,7 @@ export interface ElementDescriptor {
  * (Entscheidungsnotiz vom 4. August 2026, Abschnitt 5, und die Konstanten in `strengths.ts`).
  * Die namensgebende Datei steht jeweils zuerst.
  */
-export const ELEMENTS = {
+const STATIC_ELEMENTS = {
   'organization.feuerwehr': {
     id: 'organization.feuerwehr',
     kind: 'organization',
@@ -144,31 +147,61 @@ export const ELEMENTS = {
       'E.1.18_Fachzug Führung-Kommunikation.svg',
     ],
   },
-  'capability.fire-fighting': {
-    id: 'capability.fire-fighting',
-    kind: 'capability',
-    title: 'Brandbekämpfung',
-    // Belegstelle der Bildidee. Die Geometrie ist eigenständig konstruiert (`capabilities.ts`),
-    // die Quelle führt das als `reconstructed`.
-    referenceAssets: ['4.3.1_Brandbekämpfung.svg'],
-  },
-  'capability.service-water': {
-    id: 'capability.service-water',
-    kind: 'capability',
-    title: 'Löschwasser, Brauchwasser',
-    // Belegstelle der Bildidee. Die Geometrie ist eigenständig konstruiert
-    // (`pictograms/capabilities.ts`); der Fingerprint dieser Datei trägt curvedPaths: 1, die
-    // Bildidee enthält also tatsächlich eine Kurve. Zwei Leerzeichen gibt es hier nicht, aber
-    // ein Leerzeichen statt des Schrägstrichs der Kapitelüberschrift — so steht der Name im
-    // Referenzbestand, nicht normalisieren.
-    referenceAssets: ['4.3.2_Löschwasser Brauchwasser.svg'],
-  },
 } as const satisfies Record<string, ElementDescriptor>;
 
+function pictogramElements(): Readonly<Record<string, ElementDescriptor>> {
+  const byId = new Map<string, typeof ALL_PICTOGRAMS>();
+  for (const definition of ALL_PICTOGRAMS) {
+    const definitions = byId.get(definition.id) ?? [];
+    byId.set(definition.id, [...definitions, definition]);
+  }
+
+  return Object.fromEntries(
+    [...byId.entries()].map(([id, definitions]) => {
+      const primary = definitions.filter((definition) => definition.variant === 'primary');
+      if (primary.length !== 1) {
+        throw new Error(
+          `Piktogramm "${id}" benötigt genau eine primary-Darstellung (erhalten: ${primary.length}).`,
+        );
+      }
+
+      const titles = new Set(definitions.map((definition) => definition.title));
+      if (titles.size !== 1) {
+        throw new Error(`Piktogramm "${id}" hat Varianten mit unterschiedlichen Titeln.`);
+      }
+
+      const ordered = [...definitions].sort((left, right) => {
+        if (left.variant === 'primary') return -1;
+        if (right.variant === 'primary') return 1;
+        return pictogramVariantKey(left).localeCompare(pictogramVariantKey(right));
+      });
+      const [primaryDefinition] = primary;
+      return [
+        id,
+        {
+          id,
+          kind: id.slice(0, id.indexOf('.')) as ElementKind,
+          title: primaryDefinition.title,
+          referenceAssets: ordered.map((definition) => definition.referenceAsset),
+        },
+      ];
+    }),
+  );
+}
+
 /**
- * Weit getypter Blick auf `ELEMENTS` für die Suche über beliebige Zeichenketten — dasselbe
- * Muster wie `colorsByOrganization` in `organizations.ts`. `ELEMENTS` selbst bleibt eng getypt,
- * damit die Tests an den Literalschlüsseln greifen.
+ * Alle belegten Elemente. Piktogramm-Metadaten stammen ausschließlich aus ihren Definitionen;
+ * dadurch können Titel, Referenzdateien und Varianten nicht vom renderbaren Katalog abweichen.
+ */
+export const ELEMENTS: Readonly<Record<string, ElementDescriptor>> = {
+  ...STATIC_ELEMENTS,
+  ...pictogramElements(),
+};
+
+/**
+ * Blick auf `ELEMENTS` für die Suche über beliebige Zeichenketten — dasselbe Muster wie
+ * `colorsByOrganization` in `organizations.ts`. Die abgeleiteten Piktogrammschlüssel machen
+ * das öffentliche Register bewusst zu einem `Readonly<Record<string, ElementDescriptor>>`.
  */
 const elementsById: Record<string, ElementDescriptor> = ELEMENTS;
 

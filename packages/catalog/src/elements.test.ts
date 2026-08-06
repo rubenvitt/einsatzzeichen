@@ -3,7 +3,7 @@ import type { StrengthId } from '@einsatzzeichen/schema';
 import { ELEMENTS, PICTOGRAM_ELEMENT_KINDS, resolveElement } from './elements.js';
 import { ORGANIZATION_COLORS } from './organizations.js';
 import { fingerprintFor } from './fingerprint-index.js';
-import { ALL_PICTOGRAMS } from './pictograms/index.js';
+import { ALL_PICTOGRAMS, pictogram } from './pictograms/index.js';
 
 describe('Element-Register', () => {
   it('führt dreizehn Elemente: sieben Farben, vier Stärkegrade, zwei Piktogramme', () => {
@@ -66,6 +66,16 @@ describe('Element-Register', () => {
 });
 
 describe('Piktogramm-Elemente', () => {
+  it('leitet Titel und alle Referenzdateien eines Piktogrammelements aus den Definitionen ab', () => {
+    const definition = pictogram('capability.service-water');
+    const descriptor = resolveElement('capability.service-water');
+    expect(definition.section).toBe('4.3.2');
+    expect(definition.referenceAsset).toBe('4.3.2_Löschwasser Brauchwasser.svg');
+    expect(descriptor.title).toBe('Löschwasser, Brauchwasser');
+    expect(descriptor.title).toBe(definition.title);
+    expect(descriptor.referenceAssets).toEqual([definition.referenceAsset]);
+  });
+
   it('löst das neue Piktogramm mit seiner namensgebenden Belegdatei auf', () => {
     const descriptor = resolveElement('capability.service-water');
     expect(descriptor.kind).toBe('capability');

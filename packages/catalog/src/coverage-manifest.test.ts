@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_VIEWBOX_MM, entryKey, type CatalogEntry } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { checkCoverage, findPrimaryViolations } from './coverage-gate.js';
+import { ALL_PICTOGRAMS, pictogramVariantKey } from './pictograms/index.js';
 
 // Dieselbe Vorlage wie in `coverage-gate.test.ts`: beide Dateien brauchen einen Katalogeintrag
 // mit einstellbarer Zahl von `primary`-Darstellungen, und ein gemeinsames Testmodul für eine
@@ -91,6 +92,30 @@ describe('Coverage-Manifest', () => {
 });
 
 describe('Manifest-Einträge für Piktogramme', () => {
+  it('bindet jede Piktogrammdefinition an genau eine Manifestzeile', () => {
+    const definitions = ALL_PICTOGRAMS.map(pictogramVariantKey).sort();
+    const rows = COVERAGE_MANIFEST.entries
+      .filter((entry) => entry.coverage === 'element' && entry.implementation.startsWith('capability.'))
+      .map((entry) => entryKey(entry.implementation, entry.variant))
+      .sort();
+    expect(rows).toEqual(definitions);
+  });
+
+  it('leitet Abschnitt, Titel und Referenzdatei jeder Piktogrammzeile aus ihrer Definition ab', () => {
+    for (const definition of ALL_PICTOGRAMS) {
+      const entry = COVERAGE_MANIFEST.entries.find(
+        (candidate) =>
+          entryKey(candidate.implementation, candidate.variant) === pictogramVariantKey(definition),
+      );
+      expect(entry).toMatchObject({
+        sourceId: `bbk-babz-2025:${definition.section}`,
+        variant: definition.variant,
+        title: definition.title,
+        referenceAsset: definition.referenceAsset,
+      });
+    }
+  });
+
   function entryFor(section: string) {
     return COVERAGE_MANIFEST.entries.find((entry) => entry.sourceId === `bbk-babz-2025:${section}`);
   }

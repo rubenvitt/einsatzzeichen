@@ -1,12 +1,14 @@
 import {
   entryKey,
   type DepictionVariant,
-  type PictogramDefinition,
   type PictogramId,
 } from '@einsatzzeichen/schema';
 import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
+import type { CatalogPictogramDefinition } from './catalog-definition.js';
 
-export function pictogramVariantKey(value: Pick<PictogramDefinition, 'id' | 'variant'>): string {
+export function pictogramVariantKey(
+  value: Pick<CatalogPictogramDefinition, 'id' | 'variant'>,
+): string {
   return entryKey(value.id, value.variant);
 }
 
@@ -21,9 +23,9 @@ export function pictogramRenderId(
  * `state.`, `comms.`, `damage.` und `wildfire.` kommen in D.2 bis D.4 als eigene Module hinzu und
  * werden hier zusammengeführt.
  */
-export const ALL_PICTOGRAMS: readonly PictogramDefinition[] = [...CAPABILITY_PICTOGRAMS];
+export const ALL_PICTOGRAMS: readonly CatalogPictogramDefinition[] = [...CAPABILITY_PICTOGRAMS];
 
-const PICTOGRAMS = new Map<string, PictogramDefinition>();
+const PICTOGRAMS = new Map<string, CatalogPictogramDefinition>();
 for (const definition of ALL_PICTOGRAMS) {
   const key = pictogramVariantKey(definition);
   if (PICTOGRAMS.has(key)) throw new Error(`Doppeltes Piktogramm "${key}".`);
@@ -38,7 +40,7 @@ for (const definition of ALL_PICTOGRAMS) {
 export function pictogram(
   id: PictogramId,
   variant: DepictionVariant = 'primary',
-): PictogramDefinition {
+): CatalogPictogramDefinition {
   const definition = PICTOGRAMS.get(entryKey(id, variant));
   if (definition === undefined) {
     throw new Error(`Kein Piktogramm "${id}" in Variante "${variant}" im Katalog.`);

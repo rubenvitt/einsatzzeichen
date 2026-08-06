@@ -8,7 +8,8 @@ import {
 } from '@einsatzzeichen/schema';
 import { BASE_SYMBOLS } from './base-symbols.js';
 import { manifestDomainReviewFor } from './domain-reviews.js';
-import { PICTOGRAM_ELEMENT_KINDS, resolveElement } from './elements.js';
+import { resolveElement } from './elements.js';
+import { ALL_PICTOGRAMS } from './pictograms/index.js';
 import { RECIPES } from './recipes.js';
 
 /**
@@ -44,10 +45,14 @@ const PICTOGRAM_TECHNICAL_REVIEW: Review = {
 };
 
 /** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
-function reviewFor(sourceId: string, technical: Review): ReviewSet {
+function reviewFor(
+  sourceId: string,
+  variant: CoverageEntry['variant'],
+  technical: Review,
+): ReviewSet {
   return {
     technical,
-    domain: manifestDomainReviewFor(entryKey(sourceId, 'primary')),
+    domain: manifestDomainReviewFor(entryKey(sourceId, variant)),
   };
 }
 
@@ -71,7 +76,7 @@ const catalogEntries: CoverageEntry[] = Object.values(BASE_SYMBOLS).map((entry) 
     coverage: 'catalog-entry',
     profile: 'bund',
     testEvidence: DRAWING_EVIDENCE,
-    review: reviewFor(sourceId, TECHNICAL_REVIEW),
+    review: reviewFor(sourceId, 'primary', TECHNICAL_REVIEW),
   };
 });
 
@@ -88,14 +93,14 @@ const recipeEntries: CoverageEntry[] = Object.entries(RECIPES).map(([section, re
     // Task 13 hat alle drei Rezepte per matchFingerprint gegen die Referenz gegated,
     // mit Differenz 0 an allen Kanten — das Manifest bildet das ab, statt es zu untertreiben.
     testEvidence: DRAWING_EVIDENCE,
-    review: reviewFor(sourceId, TECHNICAL_REVIEW),
+    review: reviewFor(sourceId, 'primary', TECHNICAL_REVIEW),
   };
 });
 
 /**
  * Abschnittsnummer je Element. Jedes Element braucht eine eigene Nummer, sonst kollidierten die
  * vier Stärkegrade auf `5.4` — der Manifestschlüssel bleibt `entryKey(sourceId, variant)`.
- * Alle dreizehn Nummern sind aus den Dateinamen des Referenzbestands belegt, keine ist geschlossen.
+ * Alle elf Nummern sind aus den Dateinamen des Referenzbestands belegt, keine ist geschlossen.
  */
 const ELEMENT_SECTIONS: Record<string, string> = {
   'organization.feuerwehr': '2.1',
@@ -109,20 +114,18 @@ const ELEMENT_SECTIONS: Record<string, string> = {
   'strength.staffel': '5.4.2',
   'strength.gruppe': '5.4.3',
   'strength.zug': '5.4.4',
-  'capability.fire-fighting': '4.3.1',
-  'capability.service-water': '4.3.2',
 };
 
 /**
  * Elemente tragen die zu ihrer Datenform passende Evidenz statt zwei universelle Booleans:
  * Organisationsfarben werden gegen die Referenzfüllung geprüft, Stärkegrade als vollständige
- * `HeadShape`, Piktogramme durch eigene SVG-Snapshots und ihren Kommando-/Box-/Clipping-Vertrag.
+ * `HeadShape`. Piktogramme werden unmittelbar unterhalb aus ihren Definitionen mit eigenen
+ * SVG-Snapshots und ihrem Kommando-/Box-/Clipping-Vertrag abgeleitet.
  * Globale Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates bleiben globale Aussagen und
  * werden nicht als Eigenschaft jeder einzelnen Manifestzeile ausgegeben.
  */
 const elementEntries: CoverageEntry[] = Object.entries(ELEMENT_SECTIONS).map(([id, section]) => {
   const descriptor = resolveElement(id);
-  const isPictogram = PICTOGRAM_ELEMENT_KINDS.has(descriptor.kind);
   const sourceId = `bbk-babz-2025:${section}`;
   const testEvidence: readonly TestEvidenceKind[] =
     descriptor.kind === 'organization'
@@ -141,10 +144,22 @@ const elementEntries: CoverageEntry[] = Object.entries(ELEMENT_SECTIONS).map(([i
     coverage: 'element',
     profile: 'bund',
     testEvidence,
-    review: reviewFor(
-      sourceId,
-      isPictogram ? PICTOGRAM_TECHNICAL_REVIEW : TECHNICAL_REVIEW,
-    ),
+    review: reviewFor(sourceId, 'primary', TECHNICAL_REVIEW),
+  };
+});
+
+const pictogramEntries: CoverageEntry[] = ALL_PICTOGRAMS.map((definition) => {
+  const sourceId = `bbk-babz-2025:${definition.section}`;
+  return {
+    sourceId,
+    variant: definition.variant,
+    title: definition.title,
+    implementation: definition.id,
+    referenceAsset: definition.referenceAsset,
+    coverage: 'element',
+    profile: 'bund',
+    testEvidence: ['svg-snapshot', 'pictogram-contract'],
+    review: reviewFor(sourceId, definition.variant, PICTOGRAM_TECHNICAL_REVIEW),
   };
 });
 
@@ -159,5 +174,5 @@ export const COVERAGE_MANIFEST: CoverageManifest = {
   // Kapitel 3 (sieben Referenzdateien) setzt dieser Slice nicht um; 5.1.1/5.7 sind entfallen
   // (Verwaltungsstufen/Fahrzeugkategorien: von 16 Referenzdateien nur 2 vermessbar, kein Konsument).
   scope: ['1', '2', '4.3.1', '4.3.2', '5.4', 'C.1.1', 'C.1.2', 'D.3.7'],
-  entries: [...catalogEntries, ...recipeEntries, ...elementEntries],
+  entries: [...catalogEntries, ...recipeEntries, ...elementEntries, ...pictogramEntries],
 };
