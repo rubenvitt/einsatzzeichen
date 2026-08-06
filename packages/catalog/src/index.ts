@@ -5,7 +5,7 @@ export * from './fingerprint-index.js';
 export * from './base-symbols.js';
 export * from './organizations.js';
 export * from './strengths.js';
-export * from './pictograms/capabilities.js';
+export * from './pictograms/index.js';
 export * from './recipes.js';
 export * from './coverage-manifest.js';
 export * from './coverage-gate.js';
