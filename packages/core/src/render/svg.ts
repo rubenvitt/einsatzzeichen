@@ -61,10 +61,27 @@ function styleAttrs(style: Style | undefined, options: { rawStrokeWidth?: boolea
   return ` ${parts.join(' ')}`;
 }
 
+/**
+ * SVG-Transformationen wirken von rechts nach links auf die Koordinaten. `translate` steht
+ * deshalb links von `rotate`: die Drehung trifft zuerst die Kindkoordinaten (um ihr eigenes,
+ * unverschobenes Zentrum), die Verschiebung wirkt danach nach außen auf das Ergebnis. Rechts
+ * gestellt verschöbe sie das Rotationszentrum mit.
+ *
+ * Eine Verschiebung von (0, 0) wird nicht weggelassen: eine Nullprüfung wäre ein zweiter
+ * Codepfad, den `drawPrimitive` in `canvas.ts` ebenfalls kennen müsste, damit die Renderer
+ * nicht auseinanderlaufen — dieselbe Begründung wie beim `fill`-Default.
+ */
 function transformAttr(transform: Transform | undefined): string {
+  const parts: string[] = [];
+  const translate = transform?.translate;
+  if (translate) {
+    parts.push(`translate(${u(translate.dxMm)} ${u(translate.dyMm)})`);
+  }
   const rotate = transform?.rotate;
-  if (!rotate) return '';
-  return ` transform="rotate(${formatUnits(rotate.angle)} ${u(rotate.cx)} ${u(rotate.cy)})"`;
+  if (rotate) {
+    parts.push(`rotate(${formatUnits(rotate.angle)} ${u(rotate.cx)} ${u(rotate.cy)})`);
+  }
+  return parts.length === 0 ? '' : ` transform="${parts.join(' ')}"`;
 }
 
 /**

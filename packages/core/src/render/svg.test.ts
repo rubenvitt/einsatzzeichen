@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_VIEWBOX_MM, type Drawing } from '@einsatzzeichen/schema';
+import { DEFAULT_VIEWBOX_MM, mmToUnits, type Drawing } from '@einsatzzeichen/schema';
 import { formatUnits, renderSvg } from './svg.js';
 
 const formation: Drawing = {
@@ -129,5 +129,59 @@ describe('renderSvg', () => {
       ],
     });
     expect(svg).toContain('transform="rotate(45 45.354 45.354) scale(2.8346)"');
+  });
+});
+
+describe('renderSvg — Verschiebung von Gruppen', () => {
+  it('gibt die Verschiebung in SVG-Einheiten aus', () => {
+    const svg = renderSvg({
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'group',
+          transform: { translate: { dxMm: 0, dyMm: 3 } },
+          children: [{ type: 'line', x1: 3, y1: 16, x2: 26, y2: 16, style: { stroke: 'schwarz' } }],
+        },
+      ],
+    });
+    expect(svg).toContain(`<g transform="translate(0 ${formatUnits(mmToUnits(3))})">`);
+    // Die Koordinaten des Kindes bleiben unangetastet — die Verschiebung sitzt an der Gruppe.
+    expect(svg).toContain(`y1="${formatUnits(mmToUnits(16))}"`);
+  });
+
+  it('setzt die Verschiebung links von einer Drehung', () => {
+    // SVG-Transformationen wirken von rechts nach links: rotate muss zuerst auf die
+    // Kindkoordinaten wirken, die Verschiebung danach auf das gedrehte Ergebnis. Steht sie
+    // rechts, verschiebt sie das Rotationszentrum mit — ein anderes Bild.
+    const svg = renderSvg({
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'group',
+          transform: { translate: { dxMm: 1, dyMm: 2 }, rotate: { angle: 45, cx: 16, cy: 16 } },
+          children: [{ type: 'rect', x: 0, y: 0, width: 4, height: 4 }],
+        },
+      ],
+    });
+    const attr = svg.match(/<g transform="([^"]*)">/)?.[1];
+    expect(attr).toBeDefined();
+    expect(attr?.indexOf('translate(')).toBe(0);
+    expect(attr?.indexOf('rotate(')).toBeGreaterThan(0);
+  });
+
+  it('gibt eine Verschiebung von null unverkürzt aus', () => {
+    // Keine Sonderbehandlung für dx = dy = 0: eine Nullprüfung wäre ein zweiter Codepfad,
+    // den der Canvas-Renderer ebenfalls kennen müsste, sonst divergiert die Aufrufspur.
+    const svg = renderSvg({
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'group',
+          transform: { translate: { dxMm: 0, dyMm: 0 } },
+          children: [{ type: 'rect', x: 0, y: 0, width: 4, height: 4 }],
+        },
+      ],
+    });
+    expect(svg).toContain('<g transform="translate(0 0)">');
   });
 });
