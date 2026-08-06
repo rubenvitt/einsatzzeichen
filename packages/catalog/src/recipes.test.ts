@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { boundsOfMm, CompositionError, matchFingerprint } from '@einsatzzeichen/core';
-import type { Drawing, Primitive } from '@einsatzzeichen/schema';
+import { boundsOfMm, CompositionError, formatUnits, matchFingerprint, renderSvg } from '@einsatzzeichen/core';
+import { mmToUnits, type Drawing, type Primitive } from '@einsatzzeichen/schema';
 import { fingerprintFor } from './fingerprint-index.js';
+import { pictogram } from './pictograms/index.js';
 import { RECIPES, composeFromCatalog } from './recipes.js';
 
 /**
@@ -174,5 +175,125 @@ describe('Piktogramm-Platzierung als Gruppe', () => {
   it('erzeugt keine Gruppe, wenn die Spec keine Fähigkeit nennt', () => {
     const drawing = composeFromCatalog(RECIPES['D.3.7'].spec);
     expect(drawing.children.filter((c) => c.role === 'pictogram')).toHaveLength(0);
+  });
+});
+
+describe('Pfad-Piktogramm in beiden Layoutfällen (Spec-Erfolgskriterium 1)', () => {
+  /**
+   * Die beiden Layoutfälle der Referenz, mit dem Kurven-Piktogramm statt der Brandbekämpfung:
+   * Staffel (Stapel) verschiebt den Körper von Anker 6 auf 9, Gruppe (Reihe) lässt ihn bei 6.
+   *
+   * Bewusst als Testkompositionen und nicht als Erweiterung von RECIPES: eine Löschstaffel hat
+   * kein Brauchwasser-Piktogramm, und RECIPES['C.1.1'] beansprucht, C.1.1_Löschstaffel.svg zu
+   * reproduzieren. Was hier belegt wird, ist der Mechanismus, nicht ein Zeichen der Baseline.
+   */
+  const cases = [
+    ['staffel', 'staffel', 19, 3] as const,
+    ['gruppe', 'gruppe', 16, 0] as const,
+  ];
+
+  it.each(cases)(
+    'platziert das Kurven-Piktogramm bei Stärke %s auf Körpermitte %d mm',
+    (_name, strength, expectedCenterYMm, expectedShiftMm) => {
+      const drawing = composeFromCatalog({
+        kind: 'formation',
+        organization: 'feuerwehr',
+        strength,
+        capabilities: ['service-water'],
+      });
+
+      const body = drawing.children.find((c) => c.role === 'body');
+      expect(body).toBeDefined();
+      if (body === undefined) return;
+      const bodyBounds = boundsOfMm(body);
+      expect((bodyBounds.minY + bodyBounds.maxY) / 2).toBeCloseTo(expectedCenterYMm, 6);
+
+      const group = drawing.children.find(
+        (c): c is Primitive & { type: 'group' } => c.type === 'group' && c.role === 'pictogram',
+      );
+      expect(group).toBeDefined();
+      if (group === undefined) return;
+
+      // Die Verschiebung folgt der Körpermitte …
+      expect(group.transform?.translate?.dyMm).toBeCloseTo(expectedShiftMm, 6);
+      // … und der Pfad selbst bleibt unangetastet. Genau das konnte die frühere primitivweise
+      // Verschiebung nicht: shiftY wirft für Pfade bedingungslos.
+      const [wave] = group.children;
+      expect(wave?.type).toBe('path');
+      if (wave?.type !== 'path') return;
+      const source = pictogram('capability.service-water').primitives[0];
+      expect(source?.type).toBe('path');
+      if (source?.type !== 'path') return;
+      expect(wave.d).toBe(source.d);
+    },
+  );
+
+  it('hält die effektive Piktogramm-Box in beiden Fällen im verschobenen Körper', () => {
+    // Die Invariante, die das Clipping-Gate gegen den unverschobenen Körper prüfbar macht:
+    // Körper und Piktogramm bewegen sich um dasselbe Delta, die relative Lage bleibt gleich.
+    for (const [, strength] of cases) {
+      const drawing = composeFromCatalog({
+        kind: 'formation',
+        organization: 'feuerwehr',
+        strength,
+        capabilities: ['service-water'],
+      });
+      const body = drawing.children.find((c) => c.role === 'body');
+      const group = drawing.children.find(
+        (c): c is Primitive & { type: 'group' } => c.type === 'group' && c.role === 'pictogram',
+      );
+      expect(body).toBeDefined();
+      expect(group).toBeDefined();
+      if (body === undefined || group === undefined) continue;
+
+      const shiftMm = group.transform?.translate?.dyMm ?? 0;
+      const box = pictogram('capability.service-water').box;
+      const bodyBounds = boundsOfMm(body);
+      expect(box.yMm + shiftMm).toBeGreaterThanOrEqual(bodyBounds.minY);
+      expect(box.yMm + box.heightMm + shiftMm).toBeLessThanOrEqual(bodyBounds.maxY);
+    }
+  });
+
+  it('rendert den Pfad in der verschobenen Gruppe, ohne die Skalierung zu doppeln', () => {
+    const svg = renderSvg(
+      composeFromCatalog({
+        kind: 'formation',
+        organization: 'feuerwehr',
+        strength: 'staffel',
+        capabilities: ['service-water'],
+      }),
+      { size: 64 },
+    );
+    // Die Gruppe trägt die Verschiebung in Einheiten …
+    expect(svg).toContain(`<g transform="translate(0 ${formatUnits(mmToUnits(3))})">`);
+    // … der Pfad ausschließlich seine Millimeter-Skalierung, mit unverändertem d-String.
+    const pathTag = svg.match(/<path[^>]*\/>/)?.[0];
+    expect(pathTag).toBeDefined();
+    expect(pathTag).toContain('transform="scale(');
+    expect(pathTag).not.toContain('translate(');
+    expect(pathTag).toContain('fill="#000000"');
+  });
+
+  it('wirft nicht, wenn zwei Fähigkeiten zusammen platziert werden', () => {
+    // Beide Piktogramme landen in derselben Gruppe — ein Strich- und ein Kurvenpiktogramm
+    // nebeneinander, die frühere shiftY-Abbildung wäre hier gescheitert.
+    const drawing = composeFromCatalog({
+      kind: 'formation',
+      organization: 'feuerwehr',
+      strength: 'staffel',
+      capabilities: ['fire-fighting', 'service-water'],
+    });
+    // Ergänzung gegenüber dem Brief: `find` liefert nur die erste Gruppe und würde eine zweite
+    // Gruppe daneben nicht ausschließen. Erst diese Zusicherung schließt die aus Task 8 offene
+    // Frage wirklich — beide Fähigkeiten landen in genau einer Gruppe, nicht in je einer eigenen.
+    expect(drawing.children.filter((c) => c.role === 'pictogram')).toHaveLength(1);
+    const group = drawing.children.find(
+      (c): c is Primitive & { type: 'group' } => c.type === 'group' && c.role === 'pictogram',
+    );
+    expect(group?.children).toHaveLength(4);
+    // Vier Kinder sind drei Linien (Brandbekämpfung) plus ein Pfad (Löschwasser/Brauchwasser),
+    // nicht irgendeine Vierergruppe.
+    expect(group?.children.filter((c) => c.type === 'path')).toHaveLength(1);
+    expect(group?.children.filter((c) => c.type === 'line')).toHaveLength(3);
   });
 });

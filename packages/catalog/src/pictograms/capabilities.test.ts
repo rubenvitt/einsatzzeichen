@@ -54,3 +54,34 @@ describe('Fähigkeitspiktogramme', () => {
     }
   });
 });
+
+describe('Löschwasser/Brauchwasser (4.3.2)', () => {
+  it('zeichnet die Doppelwelle als einen gefüllten Pfad', () => {
+    const definition = pictogram('capability.service-water');
+    expect(definition.title).toBe('Löschwasser, Brauchwasser');
+    expect(definition.primitives).toHaveLength(1);
+    const [wave] = definition.primitives;
+    expect(wave?.type).toBe('path');
+    expect(wave?.role).toBe('pictogram');
+    // Eine gefüllte Fläche, keine Strichzeichnung: die Bildidee der Referenz ist ein Wasserband.
+    expect(wave?.style?.fill).toBe('schwarz');
+    expect(wave?.style?.stroke).toBe('none');
+  });
+
+  it('verwendet ausschließlich absolute Kommandos aus M L H V C Q Z', () => {
+    const [wave] = pictogram('capability.service-water').primitives;
+    expect(wave?.type).toBe('path');
+    if (wave?.type !== 'path') return;
+    // Direkt am String, zusätzlich zum Gate: ein relatives Kommando wäre hier ein Kleinbuchstabe.
+    expect(wave.d).toMatch(/^[MLHVCQZ0-9.,\s-]+$/);
+    expect(wave.d).toContain('C');
+  });
+
+  it('enthält Kurven — sonst wäre der Nachweis für Pfad-Piktogramme keiner', () => {
+    // Der Fingerprint der Referenzdatei trägt curvedPaths: 1. Ein geradliniges Piktogramm hier
+    // würde den Mechanismus nicht belegen, für den dieser Slice existiert.
+    const [wave] = pictogram('capability.service-water').primitives;
+    if (wave?.type !== 'path') return;
+    expect((wave.d.match(/C/g) ?? []).length).toBeGreaterThan(1);
+  });
+});

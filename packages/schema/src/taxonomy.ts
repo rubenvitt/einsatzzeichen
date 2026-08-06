@@ -47,8 +47,12 @@ export type VehicleCategoryId =
   | 'kettenfahrzeug'
   | 'schienenfahrzeug';
 
-/** Fähigkeiten nach Kapitel 4. Im Slice ist nur Brandbekämpfung (4.3.1) umgesetzt. */
-export type CapabilityId = 'fire-fighting';
+/**
+ * Fähigkeiten nach Kapitel 4. Wächst je Unter-Slice, nicht vorauseilend: ein Literal ohne
+ * Piktogramm wäre eine typsichere Behauptung über eine Fähigkeit, die der Katalog nicht zeichnen
+ * kann. D.1 bringt die vollen 88.
+ */
+export type CapabilityId = 'fire-fighting' | 'service-water';
 
 /** Semantische Beschreibung eines Zeichens. Eingabe des Kompositionsmotors. */
 export interface SymbolSpec {
