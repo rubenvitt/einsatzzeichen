@@ -1,7 +1,7 @@
 # Fachreview-Übergabe für den aktuellen Katalogstand
 
-> Stand: 6. August 2026  
-> Ergebnis dieses Dokuments: **Reviewpaket vorbereitet, keine fachliche Freigabe erteilt.**  
+> Stand: 6. August 2026
+> Ergebnis dieses Dokuments: **Reviewpaket vorbereitet, keine fachliche Freigabe erteilt.**
 > Offener externer Blocker: Prüfung durch eine benannte Person mit einsatztaktischer Fachkunde.
 
 ## 1. Was diese Übergabe ist — und was nicht

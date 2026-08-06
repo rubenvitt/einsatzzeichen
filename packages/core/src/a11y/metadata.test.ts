@@ -23,4 +23,3 @@ describe('A11y-Metadaten-Gate', () => {
     ]);
   });
 });
-

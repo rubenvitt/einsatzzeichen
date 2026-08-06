@@ -89,4 +89,3 @@ export function describeSymbolSpec(spec: SymbolSpec): string {
 export function describePictogram(definition: PictogramDefinition): string {
   return `Eigenständiges Piktogramm: ${definition.title}.`;
 }
-

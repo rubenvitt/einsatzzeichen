@@ -14,4 +14,3 @@ describe('RenderTheme', () => {
     expect(colorFor(theme, 'blau')).toBe('#abcdef');
   });
 });
-

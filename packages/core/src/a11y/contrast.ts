@@ -92,4 +92,3 @@ export function paintTokensOf(primitives: readonly Primitive[]): readonly ColorT
   for (const primitive of primitives) visit(primitive);
   return [...tokens];
 }
-

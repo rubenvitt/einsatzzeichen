@@ -22,4 +22,3 @@ export function checkA11yMetadata(drawing: Drawing): A11yMetadataIssue[] {
   }
   return issues;
 }
-

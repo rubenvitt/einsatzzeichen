@@ -56,4 +56,3 @@ describe('paintTokensOf', () => {
     expect(new Set(paintTokensOf(primitives))).toEqual(new Set(['blau', 'schwarz', 'rot']));
   });
 });
-

@@ -43,4 +43,3 @@ const pictograms: RenderCase[] = ALL_PICTOGRAMS.map((definition) => ({
 export const RENDER_CASES: readonly RenderCase[] = [...bases, ...recipes, ...pictograms].sort(
   (first, second) => first.id.localeCompare(second.id),
 );
-
