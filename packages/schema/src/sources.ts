@@ -2,12 +2,13 @@ import type { SourceId } from './provenance.js';
 import type { ReviewSet } from './review.js';
 
 /**
- * `baseline`         — die verbindliche fachliche Grundlage
- * `reference-assets` — Grafikdateien zur Baseline
- * `guidance`         — begleitende Hinweise zur Baseline
- * `legacy`           — ältere Systematik, für Aliasnamen und Migrationshinweise
- * `operational-rule` — operatives Regelwerk mit Terminologie und Führungslogik
- * `standard`         — angrenzende Norm, nicht mit der DV-102-Systematik zu vermischen
+ * `baseline`            — die verbindliche fachliche Grundlage
+ * `reference-assets`    — Grafikdateien zur Baseline
+ * `guidance`            — begleitende Hinweise zur Baseline
+ * `legacy`              — ältere Systematik, für Aliasnamen und Migrationshinweise
+ * `operational-rule`    — operatives Regelwerk mit Terminologie und Führungslogik
+ * `standard`            — angrenzende Norm, nicht mit der DV-102-Systematik zu vermischen
+ * `open-source-corpus`  — frei lizenzierter Fremdbestand, zum Vergleich der Bildideen
  */
 export type SourceKind =
   | 'baseline'
@@ -15,17 +16,18 @@ export type SourceKind =
   | 'guidance'
   | 'legacy'
   | 'operational-rule'
-  | 'standard';
+  | 'standard'
+  | 'open-source-corpus';
 
 /** Beschaffungsstand. Trennt „nicht beschafft" von „beschafft und ungenutzt". */
 export type Acquisition = 'local' | 'public-url' | 'not-acquired';
 
 /**
- * Umgang mit der Geometrie der Quelle. `'compared-only'` fehlt bewusst: ein reiner visueller
- * Vergleich findet in diesem Slice mit keiner Quelle statt, und ein Wert ohne Konsument ist
- * genau der Befund, den dieses Projekt vermeidet.
+ * Umgang mit der Geometrie der Quelle. `'compared-only'` heißt: die Bildideen wurden gelesen und
+ * gegen den Bestand gehalten, aber keine Koordinate übernommen — auch dort nicht, wo die Lizenz
+ * es erlaubt hätte.
  */
-export type GeometryUse = 'measured-metrics' | 'reconstructed' | 'none';
+export type GeometryUse = 'measured-metrics' | 'reconstructed' | 'compared-only' | 'none';
 
 export type LicenceStatus = 'clarified' | 'unclear';
 

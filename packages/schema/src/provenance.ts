@@ -15,6 +15,7 @@ export type SourceId =
   | 'fwdv-100'
   | 'fwdv-800'
   | 'thw-einheiten'
+  | 'phjardas-tz'
   | 'din-14033'
   | 'din-13050'
   | 'din-14034-6'

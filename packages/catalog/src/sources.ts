@@ -17,7 +17,9 @@ const SOURCE_REVIEW: ReviewSet = {
 };
 
 /**
- * Die elf registrierten Quellen der Referenzhierarchie aus `Vision.md`.
+ * Die zwölf registrierten Quellen der Referenzhierarchie aus `Vision.md`. `phjardas-tz` ist
+ * keine Quelle der Referenzhierarchie aus `Vision.md`, sondern ein Vergleichsbestand
+ * (Slice-3-Spec, Abschnitt 4).
  *
  * Typannotation **und** `satisfies` zusammen: die Annotation weitet jeden Eintrag auf
  * `SourceRecord` — sonst behielte er seinen engsten Typ, bei `geometryUse` also ein eigenes
@@ -151,6 +153,29 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
       basis:
         'Frei abrufbare Veröffentlichung; Weiterverwendung und Ableitung sind nicht dokumentiert.',
       status: 'unclear',
+    },
+    review: SOURCE_REVIEW,
+  },
+  'phjardas-tz': {
+    id: 'phjardas-tz',
+    kind: 'open-source-corpus',
+    title: 'phjardas/taktische-zeichen — JavaScript-Generator nach DV 102',
+    publisher: 'phjardas (GitHub)',
+    url: 'https://github.com/phjardas/taktische-zeichen',
+    scope:
+      'Vergleichsbestand für Bildideen der Kapitel 4 und 5.8: 42 Fachaufgaben und 89 Symbole, jedes als handgeschriebener Pfad mit deklarierter Größe.',
+    acquisition: 'public-url',
+    geometryUse: ['compared-only'],
+    licence: {
+      basis: 'MIT-Lizenz, in LICENSE und packages/core/LICENSE gleichlautend.',
+      status: 'clarified',
+      note:
+        'Übernommen wird die Methode (Piktogramme als geschriebene Pfade), keine Geometrie: ' +
+        'der Upstream rechnet in Pixeln auf zeichenspezifischen Boxen, rekonstruiert die ' +
+        'Systematik von 2010/2011 und verwendet relative Kommandos samt Ellipsenbögen. Da ' +
+        'keine Geometrie übernommen wird, entsteht keine Attributionspflicht. Die ' +
+        'Copyright-Zeile lautet "Copyright 2022" ohne Rechteinhaber — wäre je etwas zu ' +
+        'attribuieren, müsste die Attribution auf das Repository lauten.',
     },
     review: SOURCE_REVIEW,
   },
