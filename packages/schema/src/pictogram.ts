@@ -1,4 +1,5 @@
 import type { Length, Primitive } from './geometry.js';
+import type { DepictionVariant } from './provenance.js';
 import type { CapabilityId } from './taxonomy.js';
 
 /**
@@ -48,6 +49,7 @@ export type PictogramId =
  */
 export interface PictogramDefinition {
   id: PictogramId;
+  variant: DepictionVariant;
   /** Deutsche Bezeichnung der Referenz. Die ID bleibt englisch (wie `SymbolKind`, `PrimitiveRole`). */
   title: string;
   box: PictogramBox;

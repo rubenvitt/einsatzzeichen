@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { boundsOfMm } from '@einsatzzeichen/core';
 import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
-import { pictogram } from './index.js';
+import { pictogram, pictogramVariantKey } from './index.js';
 
 describe('Fähigkeitspiktogramme', () => {
   it('zeichnet Brandbekämpfung als Strahlrohr mit Sprühkegel', () => {
@@ -46,11 +46,19 @@ describe('Fähigkeitspiktogramme', () => {
     expect(() => pictogram('capability.not-a-capability' as never)).toThrow(/Kein Piktogramm/);
   });
 
-  it('trägt für jeden Eintrag die ID als Schlüssel und im Feld', () => {
-    // Ohne diese Prüfung könnte ein Eintrag unter fremdem Schlüssel stehen, und jede Meldung
-    // eines Gates nennte die falsche ID.
-    for (const [key, definition] of Object.entries(CAPABILITY_PICTOGRAMS)) {
-      expect(definition?.id).toBe(key);
+  it('liefert ohne Variantenargument weiterhin primary', () => {
+    expect(pictogram('capability.fire-fighting').variant).toBe('primary');
+  });
+
+  it('wirft für eine nicht vorhandene Alternative', () => {
+    expect(() => pictogram('capability.fire-fighting', 'alternative')).toThrow(/alternative/);
+  });
+
+  it('hat eindeutige Varianten-Schlüssel und löst alle Einträge auf', () => {
+    const keys = CAPABILITY_PICTOGRAMS.map(pictogramVariantKey);
+    expect(new Set(keys).size).toBe(keys.length);
+    for (const definition of CAPABILITY_PICTOGRAMS) {
+      expect(pictogram(definition.id, definition.variant)).toBe(definition);
     }
   });
 });

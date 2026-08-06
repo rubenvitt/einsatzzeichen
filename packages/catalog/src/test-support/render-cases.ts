@@ -1,7 +1,7 @@
 import { DEFAULT_VIEWBOX_MM, type CatalogEntry, type Drawing } from '@einsatzzeichen/schema';
 import { BASE_SYMBOLS } from '../base-symbols.js';
 import { describePictogram } from '../labels.js';
-import { ALL_PICTOGRAMS } from '../pictograms/index.js';
+import { ALL_PICTOGRAMS, pictogramRenderId } from '../pictograms/index.js';
 import { RECIPES, composeFromCatalog } from '../recipes.js';
 
 export interface RenderCase {
@@ -30,7 +30,7 @@ const recipes: RenderCase[] = Object.entries(RECIPES).map(([section, recipe]) =>
 }));
 
 const pictograms: RenderCase[] = ALL_PICTOGRAMS.map((definition) => ({
-  id: definition.id,
+  id: pictogramRenderId(definition),
   drawing: {
     viewBox: DEFAULT_VIEWBOX_MM,
     children: definition.primitives,

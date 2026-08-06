@@ -1,29 +1,47 @@
-import type { PictogramDefinition, PictogramId } from '@einsatzzeichen/schema';
+import {
+  entryKey,
+  type DepictionVariant,
+  type PictogramDefinition,
+  type PictogramId,
+} from '@einsatzzeichen/schema';
 import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
+
+export function pictogramVariantKey(value: Pick<PictogramDefinition, 'id' | 'variant'>): string {
+  return entryKey(value.id, value.variant);
+}
+
+export function pictogramRenderId(
+  value: { readonly id: string; readonly variant: DepictionVariant },
+): string {
+  return value.variant === 'primary' ? value.id : `${value.id}.${value.variant}`;
+}
 
 /**
  * Alle Piktogramme des Katalogs, ein Modul je Bereich. In D.0 trägt nur `capability.` Einträge;
  * `state.`, `comms.`, `damage.` und `wildfire.` kommen in D.2 bis D.4 als eigene Module hinzu und
  * werden hier zusammengeführt.
  */
-const PICTOGRAMS: Partial<Record<PictogramId, PictogramDefinition>> = {
-  ...CAPABILITY_PICTOGRAMS,
-};
+export const ALL_PICTOGRAMS: readonly PictogramDefinition[] = [...CAPABILITY_PICTOGRAMS];
+
+const PICTOGRAMS = new Map<string, PictogramDefinition>();
+for (const definition of ALL_PICTOGRAMS) {
+  const key = pictogramVariantKey(definition);
+  if (PICTOGRAMS.has(key)) throw new Error(`Doppeltes Piktogramm "${key}".`);
+  PICTOGRAMS.set(key, definition);
+}
 
 /**
  * Löst eine Piktogramm-ID auf und wirft bei einer ID ohne Definition — dasselbe Muster wie
  * `organizationColor`, `baseDrawing` und `resolveElement`. Ein stilles `undefined` würde als
  * leeres Piktogramm gerendert und wäre schwerer zu bemerken als ein Fehler.
  */
-export function pictogram(id: PictogramId): PictogramDefinition {
-  const definition = PICTOGRAMS[id];
+export function pictogram(
+  id: PictogramId,
+  variant: DepictionVariant = 'primary',
+): PictogramDefinition {
+  const definition = PICTOGRAMS.get(entryKey(id, variant));
   if (definition === undefined) {
-    throw new Error(`Kein Piktogramm "${id}" im Katalog.`);
+    throw new Error(`Kein Piktogramm "${id}" in Variante "${variant}" im Katalog.`);
   }
   return definition;
 }
-
-/** Alle definierten Piktogramme. Eingabe der Gate-Tests. */
-export const ALL_PICTOGRAMS: readonly PictogramDefinition[] = Object.values(PICTOGRAMS).filter(
-  (definition): definition is PictogramDefinition => definition !== undefined,
-);

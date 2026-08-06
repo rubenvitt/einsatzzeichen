@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderSvg } from '@einsatzzeichen/core';
 import { DEFAULT_VIEWBOX_MM, type Drawing } from '@einsatzzeichen/schema';
-import { ALL_PICTOGRAMS } from './index.js';
+import { ALL_PICTOGRAMS, pictogramRenderId } from './index.js';
 import { describePictogram } from '../labels.js';
 
 /**
@@ -12,7 +12,7 @@ import { describePictogram } from '../labels.js';
  * (Slice-3-Spec, Abschnitt 7).
  */
 describe('Piktogramm-Snapshots', () => {
-  it.each(ALL_PICTOGRAMS.map((definition) => [definition.id, definition] as const))(
+  it.each(ALL_PICTOGRAMS.map((definition) => [pictogramRenderId(definition), definition] as const))(
     'rendert %s unverändert',
     async (id, definition) => {
       const drawing: Drawing = {

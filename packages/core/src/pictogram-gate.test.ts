@@ -6,6 +6,7 @@ import { BodyNotMeasuredError, checkBox, checkClipping, checkCommands, checkPict
 function withPath(d: string): PictogramDefinition {
   return {
     id: 'capability.fire-fighting',
+    variant: 'primary',
     title: 'Testpiktogramm',
     box: { xMm: 4, yMm: 12, widthMm: 24, heightMm: 8 },
     primitives: [{ type: 'path', role: 'pictogram', d, style: { fill: 'schwarz', stroke: 'none' } }],
@@ -16,6 +17,7 @@ function withPath(d: string): PictogramDefinition {
 function withBox(box: PictogramDefinition['box']): PictogramDefinition {
   return {
     id: 'capability.fire-fighting',
+    variant: 'primary',
     title: 'Testbox',
     box,
     primitives: [],
@@ -63,6 +65,7 @@ describe('Kommando-Gate', () => {
     // Fehlgründen belegt der Test, dass Befunde aus **beiden** Pfaden stammen, nicht nur einem.
     const definition: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      variant: 'primary',
       title: 'Zwei Pfade',
       box: { xMm: 4, yMm: 12, widthMm: 24, heightMm: 8 },
       primitives: [
@@ -88,6 +91,7 @@ describe('Kommando-Gate', () => {
     };
     const definition: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      variant: 'primary',
       title: 'Pfad in Gruppe',
       box: { xMm: 4, yMm: 12, widthMm: 24, heightMm: 8 },
       primitives: [nested],
@@ -98,6 +102,7 @@ describe('Kommando-Gate', () => {
   it('meldet nichts für ein Piktogramm ohne Pfade', () => {
     const definition: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      variant: 'primary',
       title: 'Nur Linien',
       box: { xMm: 3, yMm: 9, widthMm: 23, heightMm: 14 },
       primitives: [{ type: 'line', role: 'pictogram', x1: 3, y1: 16, x2: 26, y2: 16 }],
@@ -134,6 +139,7 @@ describe('Box-Gate', () => {
     // würde diesen validen Pfad ablehnen.
     const narrow: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      variant: 'primary',
       title: 'Schmal und hoch',
       box: { xMm: 2, yMm: 2, widthMm: 8, heightMm: 26 },
       primitives: [{ type: 'path', role: 'pictogram', d: 'M 2 2 V 25 H 4 Z' }],
@@ -144,6 +150,7 @@ describe('Box-Gate', () => {
   it('lehnt V ab, wenn der Wert die Höhe übersteigt', () => {
     const narrow: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      variant: 'primary',
       title: 'Schmal und hoch',
       box: { xMm: 2, yMm: 2, widthMm: 8, heightMm: 26 },
       primitives: [{ type: 'path', role: 'pictogram', d: 'M 2 2 V 29 Z' }],
@@ -156,6 +163,7 @@ describe('Box-Gate', () => {
   it('fordert bei einer Definition ohne Pfade Gleichheit von Hülle und Box', () => {
     const tooLarge: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      variant: 'primary',
       title: 'Nur Linien, Box zu groß',
       box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
       primitives: [{ type: 'line', role: 'pictogram', x1: 3, y1: 16, x2: 26, y2: 16 }],
@@ -168,6 +176,7 @@ describe('Box-Gate', () => {
   it('nimmt eine Definition ohne Pfade an, deren Box genau der Hülle entspricht', () => {
     const exact: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      variant: 'primary',
       title: 'Nur Linien, Box exakt',
       box: { xMm: 3, yMm: 9, widthMm: 23, heightMm: 14 },
       primitives: [
@@ -184,6 +193,7 @@ describe('Box-Gate', () => {
     // muss. Gleichheit zu fordern wäre hier unerfüllbar.
     const mixed: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      variant: 'primary',
       title: 'Linie und Pfad',
       box: { xMm: 3, yMm: 9, widthMm: 23, heightMm: 14 },
       primitives: [
@@ -197,6 +207,7 @@ describe('Box-Gate', () => {
   it('lehnt ein Nicht-Pfad-Primitiv ab, das aus der Box ragt', () => {
     const outside: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      variant: 'primary',
       title: 'Linie ragt heraus',
       box: { xMm: 4, yMm: 12, widthMm: 24, heightMm: 8 },
       primitives: [
@@ -212,6 +223,7 @@ describe('Box-Gate', () => {
   it('hält Nicht-Pfad-Geometrie im Box-Vertrag von sichtbaren Strichen getrennt', () => {
     const onLeftBodyEdge: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      variant: 'primary',
       title: 'Strich auf der linken Körperkante',
       box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
       primitives: [
@@ -236,6 +248,7 @@ describe('Box-Gate', () => {
   it('lehnt eine Transformation direkt am Pfad ab, statt Rohkoordinaten freizugeben', () => {
     const transformed: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      variant: 'primary',
       title: 'Transformierter Pfad',
       box: { xMm: 1, yMm: 6, widthMm: 10, heightMm: 10 },
       primitives: [
@@ -339,6 +352,7 @@ describe('Clipping-Gate', () => {
   it('lehnt eine Box ab, die über den Körper hinausragt', () => {
     const tall: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      variant: 'primary',
       title: 'Box ragt oben heraus',
       box: { xMm: 4, yMm: 3, widthMm: 24, heightMm: 8 },
       primitives: [{ type: 'path', role: 'pictogram', d: 'M 4 3 L 28 11' }],
@@ -352,6 +366,7 @@ describe('Clipping-Gate', () => {
   it('nimmt eine Box an, deren Kante genau auf der Körperkante liegt', () => {
     const flush: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      variant: 'primary',
       title: 'Box auf der Körperkante',
       box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
       primitives: [{ type: 'path', role: 'pictogram', d: 'M 1 6 L 31 26' }],
@@ -362,6 +377,7 @@ describe('Clipping-Gate', () => {
   it('meldet einen gestrichenen Pfad, dessen Box bündig an der Körperkante liegt', () => {
     const edgeStroke: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      variant: 'primary',
       title: 'Strich auf linker Körperkante',
       box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
       primitives: [
@@ -383,6 +399,7 @@ describe('Clipping-Gate', () => {
   it('meldet eine aktive Piktogramm-Linie an der Körperkante, ohne den Box-Vertrag zu ändern', () => {
     const edgeLine: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      variant: 'primary',
       title: 'Linie auf linker Körperkante',
       box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
       primitives: [
@@ -406,6 +423,7 @@ describe('Clipping-Gate', () => {
   it('berücksichtigt geerbte Rolle und Stil für Polylinien, aber nicht none oder reine Füllung', () => {
     const inheritedPolyline: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      variant: 'primary',
       title: 'Geerbte Piktogramm-Polylinie',
       box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
       primitives: [
@@ -469,6 +487,7 @@ describe('Clipping-Gate', () => {
   it('bewahrt den geplanten strokeCapability-Vertrag für eine zentrale Pfadbox', () => {
     const planned: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      variant: 'primary',
       title: 'Geplanter Standardfall',
       box: { xMm: 4, yMm: 8, widthMm: 24, heightMm: 16 },
       primitives: [
@@ -488,6 +507,7 @@ describe('Clipping-Gate', () => {
   it('löst den Pfadstrichstil vor dem Clipping wie die Renderer feldweise auf', () => {
     const ownStrokeWins: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      variant: 'primary',
       title: 'Eigener Strich überschreibt Gruppe',
       box: { xMm: 1.75, yMm: 6.25, widthMm: 29, heightMm: 19.5 },
       primitives: [
@@ -708,6 +728,7 @@ describe('checkPictogram', () => {
   it('führt die drei Gates zusammen und meldet Befunde aller drei', () => {
     const broken: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      variant: 'primary',
       title: 'Dreifach kaputt',
       // Box ragt über den Körper (y ab 3), und die Linie liegt außerhalb der Box.
       box: { xMm: 4, yMm: 3, widthMm: 24, heightMm: 8 },
@@ -731,6 +752,7 @@ describe('checkPictogram', () => {
     // auf einmal zu melden.
     const broken: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      variant: 'primary',
       title: 'Kommando- und Box-Verstoß, Körper nicht vermessen',
       box: { xMm: 4, yMm: 12, widthMm: 24, heightMm: 8 },
       primitives: [
