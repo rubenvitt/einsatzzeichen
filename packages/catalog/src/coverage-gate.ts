@@ -158,17 +158,21 @@ export function checkReviewAttribution<T extends { review: ReviewSet }>(
   return violations;
 }
 
-/** Nur ein formal vollständiges `approved` schließt den fachlichen Release-Blocker. */
-function hasApprovedDomainReview(review: ReviewSet): boolean {
+/** Nur ein zurechenbares abgeschlossenes Review ist nicht mehr offen. */
+function hasCompletedDomainReview(review: ReviewSet): boolean {
   return (
-    review.domain.status === 'approved' &&
+    review.domain.status !== 'pending' &&
     !reviewIssues(review).some((issue) => issue.role === 'domain')
   );
 }
 
+function hasDomainDeviation(review: ReviewSet): boolean {
+  return review.domain.status === 'deviation' && hasCompletedDomainReview(review);
+}
+
 /** Nur Ausgabe, kein Fehler: wäre sie einer, wäre CI ab dem ersten Tag dauerhaft rot. */
 export function countOpenDomainReviews<T extends { review: ReviewSet }>(items: readonly T[]): number {
-  return items.filter((item) => !hasApprovedDomainReview(item.review)).length;
+  return items.filter((item) => !hasCompletedDomainReview(item.review)).length;
 }
 
 /**
@@ -448,11 +452,11 @@ export function checkCoverage(): {
 }
 
 export interface ReleaseBlockers {
-  /** Manifestschlüssel der Einträge ohne `domain: approved`. */
-  domainReviewPending: string[];
+  /** Manifestschlüssel der noch offenen oder formal unvollständigen Domain-Reviews. */
+  domainReviewOpen: string[];
   /**
    * Dieselben Einträge, gezählt je Kapitel und Anhang. Nach dem vollen Katalogausbau tragen
-   * mehrere hundert Einträge `domain: pending` und dominieren `domainReviewPending` vollständig.
+   * mehrere hundert Einträge `domain: pending` und dominieren `domainReviewOpen` vollständig.
    * Die Liste bleibt trotzdem ungekürzt — das fachliche Review ist der Engpass zu 1.0, und das
    * darzustellen ist ihr Zweck. Diese Zählung macht daneben sichtbar, welcher Bereich geprüft
    * ist und welcher nicht.
@@ -461,13 +465,19 @@ export interface ReleaseBlockers {
    * sind (`'4'`, `'12'`, …), immer aufsteigend numerisch vor allen anderen Schlüsseln auf —
    * unabhängig von der Einfügereihenfolge. Da Bereiche wie `'1'` bis `'14'` genau solche
    * Schlüssel sind, kann kein `Record` die gewünschte Sortierung tragen. Wer sie braucht, ruft
-   * `sortedDomainReviewPendingByArea` auf.
+   * `sortedDomainReviewOpenByArea` auf.
    */
-  domainReviewPendingByArea: Record<string, number>;
-  /** Quellen-IDs ohne `domain: approved`. */
-  sourceDomainReviewPending: string[];
-  /** Profil-IDs ohne `domain: approved`. */
-  profileDomainReviewPending: string[];
+  domainReviewOpenByArea: Record<string, number>;
+  /** Formal zurechenbar geprüfte Manifestabweichungen, die ohne `approved` 1.0 blockieren. */
+  domainReviewDeviations: string[];
+  /** Quellen-IDs mit noch offenem oder formal unvollständigem Domain-Review. */
+  sourceDomainReviewOpen: string[];
+  /** Formal zurechenbar geprüfte Quellenabweichungen, die ohne `approved` 1.0 blockieren. */
+  sourceDomainReviewDeviations: string[];
+  /** Profil-IDs mit noch offenem oder formal unvollständigem Domain-Review. */
+  profileDomainReviewOpen: string[];
+  /** Formal zurechenbar geprüfte Profilabweichungen, die ohne `approved` 1.0 blockieren. */
+  profileDomainReviewDeviations: string[];
   /** Manifestschlüssel der Einträge, denen mindestens eine arteigene Pflichtnachweisart fehlt. */
   withoutTestEvidence: string[];
   /** Kapitel im Scope, die kein einziger Eintrag trägt. */
@@ -485,12 +495,12 @@ function areaOf(section: string): string {
 }
 
 /**
- * `domainReviewPendingByArea` als Paare, absteigend nach Anzahl und bei Gleichstand alphabetisch
+ * `domainReviewOpenByArea` als Paare, absteigend nach Anzahl und bei Gleichstand alphabetisch
  * sortiert — die Reihenfolge, die der `Record` selbst nicht tragen kann (siehe dessen
  * Dokumentation). Einzige Stelle, die diese Sortierung herstellt, damit CLI und Tests dieselbe
  * Reihenfolge sehen.
  */
-export function sortedDomainReviewPendingByArea(
+export function sortedDomainReviewOpenByArea(
   byArea: Record<string, number>,
 ): Array<[area: string, count: number]> {
   return Object.entries(byArea).sort(([areaA, countA], [areaB, countB]) =>
@@ -510,16 +520,19 @@ export function blockersOf(
   sources: readonly SourceRecord[] = [],
   profiles: readonly ProfileRecord[] = [],
 ): ReleaseBlockers {
-  const domainReviewPending: string[] = [];
+  const domainReviewOpen: string[] = [];
+  const domainReviewDeviations: string[] = [];
   const withoutTestEvidence: string[] = [];
   const pendingByArea = new Map<string, number>();
 
   for (const entry of entries) {
     const key = entryKey(entry.sourceId, entry.variant);
-    if (!hasApprovedDomainReview(entry.review)) {
-      domainReviewPending.push(key);
+    if (!hasCompletedDomainReview(entry.review)) {
+      domainReviewOpen.push(key);
       const area = areaOf(sectionOf(entry.sourceId));
       pendingByArea.set(area, (pendingByArea.get(area) ?? 0) + 1);
+    } else if (hasDomainDeviation(entry.review)) {
+      domainReviewDeviations.push(key);
     }
     if (missingTestEvidence(entry).length > 0) withoutTestEvidence.push(key);
   }
@@ -531,20 +544,29 @@ export function blockersOf(
   );
 
   // Keine Sortierung hier: der `Record` kann sie ohnehin nicht tragen (siehe Dokumentation des
-  // Felds). Wer eine Reihenfolge braucht, ruft `sortedDomainReviewPendingByArea` auf.
-  const domainReviewPendingByArea = Object.fromEntries(pendingByArea);
-  const sourceDomainReviewPending = sources
-    .filter((source) => !hasApprovedDomainReview(source.review))
+  // Felds). Wer eine Reihenfolge braucht, ruft `sortedDomainReviewOpenByArea` auf.
+  const domainReviewOpenByArea = Object.fromEntries(pendingByArea);
+  const sourceDomainReviewOpen = sources
+    .filter((source) => !hasCompletedDomainReview(source.review))
     .map((source) => source.id);
-  const profileDomainReviewPending = profiles
-    .filter((profile) => !hasApprovedDomainReview(profile.review))
+  const sourceDomainReviewDeviations = sources
+    .filter((source) => hasDomainDeviation(source.review))
+    .map((source) => source.id);
+  const profileDomainReviewOpen = profiles
+    .filter((profile) => !hasCompletedDomainReview(profile.review))
+    .map((profile) => profile.id);
+  const profileDomainReviewDeviations = profiles
+    .filter((profile) => hasDomainDeviation(profile.review))
     .map((profile) => profile.id);
 
   return {
-    domainReviewPending,
-    domainReviewPendingByArea,
-    sourceDomainReviewPending,
-    profileDomainReviewPending,
+    domainReviewOpen,
+    domainReviewOpenByArea,
+    domainReviewDeviations,
+    sourceDomainReviewOpen,
+    sourceDomainReviewDeviations,
+    profileDomainReviewOpen,
+    profileDomainReviewDeviations,
     withoutTestEvidence,
     uncoveredScope,
   };

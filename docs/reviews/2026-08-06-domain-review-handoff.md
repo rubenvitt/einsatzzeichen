@@ -192,7 +192,8 @@ Richtigkeit und die Entscheidung, ob eine Abweichung einsatztaktisch akzeptabel 
 
 Neben den 24 Manifest-Einträgen tragen auch alle zwölf Quellen und das Profil `bund` ein offenes
 fachliches Review. `releaseBlockers()` weist diese 13 Träger nun in
-`sourceDomainReviewPending` und `profileDomainReviewPending` separat aus; die Coverage-CLI nennt
+`sourceDomainReviewOpen` und `profileDomainReviewOpen` separat aus; zurechenbar abgeschlossene
+`domain: deviation`-Befunde erscheinen getrennt als 1.0-Freigabeblocker. Die Coverage-CLI nennt
 alle drei Gruppen und die Gesamtsumme.
 
 Quellen:

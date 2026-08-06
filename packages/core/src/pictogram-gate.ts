@@ -1,14 +1,17 @@
 import {
+  DEFAULT_STROKE_WIDTH_MM,
   mmToUnits,
   unitsEqual,
   type PictogramBox,
   type PictogramDefinition,
   type Point,
   type Primitive,
+  type Style,
   type Transform,
 } from '@einsatzzeichen/schema';
 import { boundsOfMm, type BoundsMm } from './bounds.js';
 import { tokenizePath, type PathCommand } from './path-commands.js';
+import { mergeStyle } from './render/style.js';
 
 /**
  * Ein Befund eines der drei Piktogramm-Gates. Eine gemeinsame Form statt dreier eigener: das
@@ -67,9 +70,18 @@ function hasPath(primitives: readonly Primitive[]): boolean {
  * gegen die falschen Zahlen. In D.0 trägt keine Definition eine transformierte Gruppe — genau
  * deshalb steht der Fehler hier, bevor es in D.1 still falsch werden kann.
  */
-function measurableOf(primitives: readonly Primitive[]): Primitive[] {
-  const measurable: Primitive[] = [];
+interface MeasurablePrimitive {
+  primitive: Primitive;
+  style: Style | undefined;
+}
+
+function measurableOf(
+  primitives: readonly Primitive[],
+  inheritedStyle?: Style,
+): MeasurablePrimitive[] {
+  const measurable: MeasurablePrimitive[] = [];
   for (const primitive of primitives) {
+    const style = mergeStyle(primitive.style, inheritedStyle);
     if (primitive.type === 'group') {
       if (primitive.transform !== undefined) {
         throw new Error(
@@ -78,12 +90,35 @@ function measurableOf(primitives: readonly Primitive[]): Primitive[] {
             'auf, und eine innere würde die Box-Prüfung gegen die Rohkoordinaten laufen lassen.',
         );
       }
-      measurable.push(...measurableOf(primitive.children));
+      measurable.push(...measurableOf(primitive.children, style));
     } else if (primitive.type !== 'path') {
-      measurable.push(primitive);
+      measurable.push({ primitive, style });
     }
   }
   return measurable;
+}
+
+/**
+ * Konservative sichtbare Hülle eines Nicht-Pfad-Primitivs. `boundsOfMm()` liefert seine
+ * formdefinierenden Koordinaten; ein sichtbarer Strich erweitert diese Hülle um die halbe
+ * wirksame Strichstärke. Die vollständige Stilauflösung ist nötig, weil Renderer die
+ * Gruppenvererbung feldweise anwenden. Die gleichmäßige Erweiterung bleibt bewusst
+ * konservativ (z. B. an Butt-Kappen): Ein Autorengate darf keine sichtbare Überschreitung
+ * übersehen, auch wenn die streng exakte Linienkappe enger wäre.
+ */
+function visibleBoundsOfMm({ primitive, style }: MeasurablePrimitive): BoundsMm {
+  const bounds = boundsOfMm(primitive);
+  const strokeWidth =
+    style?.stroke !== undefined && style.stroke !== 'none'
+      ? (style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM)
+      : 0;
+  const halfStroke = strokeWidth / 2;
+  return {
+    minX: bounds.minX - halfStroke,
+    minY: bounds.minY - halfStroke,
+    maxX: bounds.maxX + halfStroke,
+    maxY: bounds.maxY + halfStroke,
+  };
 }
 
 interface Axis {
@@ -211,8 +246,20 @@ export function checkBox(definition: PictogramDefinition): PictogramIssue[] {
   }
 
   const measurable = measurableOf(definition.primitives);
-  for (const primitive of measurable) {
-    const bounds = boundsOfMm(primitive);
+  for (const measurablePrimitive of measurable) {
+    const { primitive, style } = measurablePrimitive;
+    const strokeWidth =
+      style?.stroke !== undefined && style.stroke !== 'none'
+        ? (style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM)
+        : 0;
+    if (!Number.isFinite(strokeWidth) || strokeWidth < 0) {
+      issue(
+        `Primitiv "${primitive.type}": Strichstärke muss endlich und nichtnegativ sein ` +
+          `(ist ${String(strokeWidth)} mm).`,
+      );
+      continue;
+    }
+    const bounds = visibleBoundsOfMm(measurablePrimitive);
     const checks: Array<[number, Axis]> = [
       [bounds.minX, axes.x],
       [bounds.maxX, axes.x],
@@ -230,7 +277,7 @@ export function checkBox(definition: PictogramDefinition): PictogramIssue[] {
   }
 
   if (measurable.length > 0 && !hasPath(definition.primitives)) {
-    const hull = measurable.map(boundsOfMm).reduce<BoundsMm>(
+    const hull = measurable.map(visibleBoundsOfMm).reduce<BoundsMm>(
       (acc, next) => ({
         minX: Math.min(acc.minX, next.minX),
         minY: Math.min(acc.minY, next.minY),

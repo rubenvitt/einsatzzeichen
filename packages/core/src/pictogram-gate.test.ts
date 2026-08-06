@@ -209,6 +209,26 @@ describe('Box-Gate', () => {
     expect(issues[0]?.detail).toContain('30');
   });
 
+  it('misst die sichtbare, aus einer Gruppe geerbte Strichhülle', () => {
+    const onLeftBodyEdge: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      title: 'Strich auf der linken Körperkante',
+      box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
+      primitives: [
+        { type: 'path', role: 'pictogram', d: 'M 1 6 L 31 26' },
+        {
+          type: 'group',
+          style: { stroke: 'schwarz', strokeWidth: 0.5 },
+          children: [{ type: 'line', role: 'pictogram', x1: 1, y1: 10, x2: 1, y2: 22 }],
+        },
+      ],
+    };
+
+    const issues = checkPictogram(onLeftBodyEdge, formationBody);
+    expect(issues.some((issue) => issue.gate === 'box')).toBe(true);
+    expect(checkClipping(onLeftBodyEdge, formationBody)).toEqual([]);
+  });
+
   it('meldet keine Box-Verstöße für einen Pfad, den schon das Kommando-Gate ablehnt', () => {
     // Arbeitsteilung: die Kommandos eines abgelehnten Pfades sind nicht zerlegbar, und ein
     // zweiter Befund zum selben Fehler hilft dem Autor nicht.

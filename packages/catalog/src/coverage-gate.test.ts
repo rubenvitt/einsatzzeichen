@@ -24,7 +24,7 @@ import {
   checkVersions,
   releaseBlockers,
   blockersOf,
-  sortedDomainReviewPendingByArea,
+  sortedDomainReviewOpenByArea,
 } from './coverage-gate.js';
 import { PROFILES } from './profiles.js';
 
@@ -231,9 +231,79 @@ describe('Gate-Prüfungen zu Quelle, Profil und Review', () => {
       },
     });
     expect(countOpenDomainReviews([malformed])).toBe(1);
-    expect(blockersOf([malformed], []).domainReviewPending).toEqual([
+    expect(blockersOf([malformed], []).domainReviewOpen).toEqual([
       entryKey(malformed.sourceId, malformed.variant),
     ]);
+  });
+
+  it('zählt eine zurechenbare Abweichung als abgeschlossen, aber behält sie getrennt als Freigabeblocker', () => {
+    const deviation = fixtureCoverageEntry({
+      review: {
+        technical: { status: 'approved', reviewer: 'rv', date: '2026-08-05' },
+        domain: {
+          status: 'deviation',
+          reviewer: 'fachreview',
+          date: '2026-08-06',
+          note: 'Bewusste fachliche Abweichung.',
+        },
+      },
+    });
+
+    expect(countOpenDomainReviews([deviation])).toBe(0);
+    const blockers = blockersOf([deviation], []);
+    expect(blockers.domainReviewOpen).toEqual([]);
+    expect(blockers.domainReviewDeviations).toEqual([
+      entryKey(deviation.sourceId, deviation.variant),
+    ]);
+  });
+
+  it('lässt eine formell unvollständige Abweichung offen und aus der Deviation-Liste', () => {
+    const malformed = fixtureCoverageEntry({
+      review: {
+        technical: { status: 'approved', reviewer: 'rv', date: '2026-08-05' },
+        domain: { status: 'deviation', reviewer: 'fachreview', date: '2026-08-06' },
+      },
+    });
+
+    expect(countOpenDomainReviews([malformed])).toBe(1);
+    const blockers = blockersOf([malformed], []);
+    expect(blockers.domainReviewOpen).toEqual([entryKey(malformed.sourceId, malformed.variant)]);
+    expect(blockers.domainReviewDeviations).toEqual([]);
+    expect(checkReviewAttribution([malformed], (e) => entryKey(e.sourceId, e.variant))).toHaveLength(1);
+  });
+
+  it('trennt zurechenbare Abweichungen auch bei Quellen und Profilen von offenen Reviews', () => {
+    const source: SourceRecord = {
+      ...SOURCE_REGISTRY['bbk-babz-2025'],
+      review: {
+        technical: { status: 'approved', reviewer: 'rv', date: '2026-08-05' },
+        domain: {
+          status: 'deviation',
+          reviewer: 'fachreview',
+          date: '2026-08-06',
+          note: 'Bewusste Quellenabweichung.',
+        },
+      },
+    };
+    const profile: ProfileRecord = {
+      ...PROFILES.bund,
+      review: {
+        technical: { status: 'approved', reviewer: 'rv', date: '2026-08-05' },
+        domain: {
+          status: 'deviation',
+          reviewer: 'fachreview',
+          date: '2026-08-06',
+          note: 'Bewusste Profilabweichung.',
+        },
+      },
+    };
+
+    expect(countOpenDomainReviews([source, profile])).toBe(0);
+    const blockers = blockersOf([], [], [source], [profile]);
+    expect(blockers.sourceDomainReviewOpen).toEqual([]);
+    expect(blockers.sourceDomainReviewDeviations).toEqual([source.id]);
+    expect(blockers.profileDomainReviewOpen).toEqual([]);
+    expect(blockers.profileDomainReviewDeviations).toEqual([profile.id]);
   });
 
   it('meldet für den echten Bestand keine Verletzung und alle 37 Reviewträger als offen', () => {
@@ -388,13 +458,13 @@ describe('Gate-Prüfungen zu Elementen und Versionen', () => {
 describe('Release-Blocker für 1.0', () => {
   it('führt jeden Eintrag ohne fachliches Review als Blocker', () => {
     const blockers = releaseBlockers();
-    expect(blockers.domainReviewPending).toHaveLength(COVERAGE_MANIFEST.entries.length);
+    expect(blockers.domainReviewOpen).toHaveLength(COVERAGE_MANIFEST.entries.length);
   });
 
   it('führt offene Quellen- und Profilreviews als eigene Blocker', () => {
     const blockers = releaseBlockers();
-    expect(blockers.sourceDomainReviewPending.sort()).toEqual(Object.keys(SOURCE_REGISTRY).sort());
-    expect(blockers.profileDomainReviewPending.sort()).toEqual(Object.keys(PROFILES).sort());
+    expect(blockers.sourceDomainReviewOpen.sort()).toEqual(Object.keys(SOURCE_REGISTRY).sort());
+    expect(blockers.profileDomainReviewOpen.sort()).toEqual(Object.keys(PROFILES).sort());
   });
 
   it('meldet keinen Eintrag ohne seinen arteigenen Pflichtnachweis', () => {
@@ -423,7 +493,7 @@ describe('Release-Blocker für 1.0', () => {
   });
 
   it('ist ein Testbefund, kein CI-Abbruch: das Gate bleibt trotz offener Blocker grün', () => {
-    expect(releaseBlockers().domainReviewPending.length).toBeGreaterThan(0);
+    expect(releaseBlockers().domainReviewOpen.length).toBeGreaterThan(0);
     expect(checkCoverage().violations).toEqual([]);
   });
 });
@@ -453,7 +523,7 @@ describe('blockersOf (parametrisierter Kern von releaseBlockers)', () => {
         },
       },
     });
-    expect(blockersOf([entry], []).domainReviewPending).toEqual([
+    expect(blockersOf([entry], []).domainReviewDeviations).toEqual([
       entryKey(entry.sourceId, entry.variant),
     ]);
   });
@@ -536,27 +606,27 @@ describe('blockersOf — Zählung nach Bereich', () => {
       ],
       [],
     );
-    expect(result.domainReviewPendingByArea).toEqual({ '4': 2, '5': 1 });
+    expect(result.domainReviewOpenByArea).toEqual({ '4': 2, '5': 1 });
   });
 
   it('zählt einen Abschnitt ohne Punkt als eigenen Bereich', () => {
     const result = blockersOf([entry('bbk-babz-2025:1', false)], []);
-    expect(result.domainReviewPendingByArea).toEqual({ '1': 1 });
+    expect(result.domainReviewOpenByArea).toEqual({ '1': 1 });
   });
 
   it('ordnet einen sourceId ohne Trenner einem Bereich zu, statt ihn zu verlieren', () => {
     // sectionOf gibt bei fehlendem ':' die ganze Zeichenkette zurück — die Zählung muss auch
     // diesen Randfall abbilden, sonst verschwindet ein Eintrag stillschweigend aus der Statistik.
     const result = blockersOf([entry('4.9.1', false)], []);
-    expect(result.domainReviewPendingByArea).toEqual({ '4': 1 });
+    expect(result.domainReviewOpenByArea).toEqual({ '4': 1 });
   });
 
   it('sortiert absteigend nach Anzahl und bei Gleichstand alphabetisch', () => {
-    // `domainReviewPendingByArea` selbst trägt keine Reihenfolge: ECMAScript zählt Schlüssel,
+    // `domainReviewOpenByArea` selbst trägt keine Reihenfolge: ECMAScript zählt Schlüssel,
     // die kanonische Ganzzahl-Strings sind ('4', '2', ...), immer aufsteigend numerisch vor
     // allen anderen Schlüsseln auf — unabhängig von der Einfügereihenfolge. Ein Objekt mit den
     // Bereichen '4', '2', 'C' liefert über `Object.keys` daher ['2', '4', 'C'], egal wie die
-    // Zählung aufgebaut wurde. Die Sortierung muss deshalb an `sortedDomainReviewPendingByArea`
+    // Zählung aufgebaut wurde. Die Sortierung muss deshalb an `sortedDomainReviewOpenByArea`
     // geprüft werden, nicht am `Record`.
     const result = blockersOf(
       [
@@ -567,21 +637,21 @@ describe('blockersOf — Zählung nach Bereich', () => {
       ],
       [],
     );
-    expect(Object.keys(result.domainReviewPendingByArea).sort()).toEqual(['2', '4', 'C']);
+    expect(Object.keys(result.domainReviewOpenByArea).sort()).toEqual(['2', '4', 'C']);
     expect(
-      sortedDomainReviewPendingByArea(result.domainReviewPendingByArea).map(([area]) => area),
+      sortedDomainReviewOpenByArea(result.domainReviewOpenByArea).map(([area]) => area),
     ).toEqual(['4', '2', 'C']);
   });
 
   it('liefert ein leeres Objekt, wenn kein Review offen ist', () => {
     const result = blockersOf([entry('bbk-babz-2025:4.3.1', true)], []);
-    expect(result.domainReviewPendingByArea).toEqual({});
+    expect(result.domainReviewOpenByArea).toEqual({});
   });
 
   it('lässt die Gesamtzahl und die Bereichssummen übereinstimmen', () => {
     // Am echten Manifest, damit die beiden Zahlen nicht auseinanderlaufen können.
     const blockers = releaseBlockers();
-    const sum = Object.values(blockers.domainReviewPendingByArea).reduce((a, b) => a + b, 0);
-    expect(sum).toBe(blockers.domainReviewPending.length);
+    const sum = Object.values(blockers.domainReviewOpenByArea).reduce((a, b) => a + b, 0);
+    expect(sum).toBe(blockers.domainReviewOpen.length);
   });
 });

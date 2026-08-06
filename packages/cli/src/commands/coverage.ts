@@ -4,7 +4,7 @@ import {
   checkCoverage,
   profileFor,
   releaseBlockers,
-  sortedDomainReviewPendingByArea,
+  sortedDomainReviewOpenByArea,
 } from '@einsatzzeichen/catalog';
 
 function counted(count: number, singular: string, plural: string): string {
@@ -30,19 +30,34 @@ export function coverage(): void {
   // ersten Tag dauerhaft rot — genau die Situation, in der Gates ignoriert werden.
   const blockers = releaseBlockers();
   const manifestReviews = counted(
-    blockers.domainReviewPending.length,
+    blockers.domainReviewOpen.length,
     'Manifestreview',
     'Manifestreviews',
   );
   const sourceReviews = counted(
-    blockers.sourceDomainReviewPending.length,
+    blockers.sourceDomainReviewOpen.length,
     'Quellenreview',
     'Quellenreviews',
   );
   const profileReviews = counted(
-    blockers.profileDomainReviewPending.length,
+    blockers.profileDomainReviewOpen.length,
     'Profilreview',
     'Profilreviews',
+  );
+  const manifestDeviations = counted(
+    blockers.domainReviewDeviations.length,
+    'Manifestabweichung',
+    'Manifestabweichungen',
+  );
+  const sourceDeviations = counted(
+    blockers.sourceDomainReviewDeviations.length,
+    'Quellenabweichung',
+    'Quellenabweichungen',
+  );
+  const profileDeviations = counted(
+    blockers.profileDomainReviewDeviations.length,
+    'Profilabweichung',
+    'Profilabweichungen',
   );
   console.log(
     `Offene fachliche Reviews: ${openDomainReviews} ` +
@@ -50,12 +65,13 @@ export function coverage(): void {
   );
   console.log(
     `1.0-Blocker: ${manifestReviews}, ${sourceReviews} und ${profileReviews} ` +
-      `ohne domain: approved, ` +
+      `noch ohne abgeschlossenes fachliches Review; ${manifestDeviations}, ${sourceDeviations} ` +
+      `und ${profileDeviations} mit domain: deviation; ` +
       `${blockers.withoutTestEvidence.length} ohne Testnachweis, ` +
       `${blockers.uncoveredScope.length} Kapitel im beanspruchten Umfang ohne Eintrag`,
   );
 
-  const byArea = sortedDomainReviewPendingByArea(blockers.domainReviewPendingByArea);
+  const byArea = sortedDomainReviewOpenByArea(blockers.domainReviewOpenByArea);
   if (byArea.length > 0) {
     console.log(
       `  Offene fachliche Reviews nach Bereich: ${byArea

@@ -29,7 +29,7 @@ export const CAPABILITY_PICTOGRAMS: Partial<
     title: 'Brandbekämpfung',
     // Zusicherung des Autors, vom Box-Gate gegen die Geometrie geprüft. Ohne Pfad-Primitive ist
     // die Hülle vollständig berechenbar, das Gate fordert deshalb Gleichheit statt Enthaltung.
-    box: { xMm: 3, yMm: 9, widthMm: 23, heightMm: 14 },
+    box: { xMm: 2.75, yMm: 8.75, widthMm: 23.5, heightMm: 14.5 },
     primitives: [line(3, 16, 26, 16), line(16, 16, 26, 9), line(16, 16, 26, 23)],
   },
   'capability.service-water': {

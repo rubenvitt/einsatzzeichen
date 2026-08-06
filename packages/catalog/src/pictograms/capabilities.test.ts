@@ -14,9 +14,21 @@ describe('Fähigkeitspiktogramme', () => {
     }
   });
 
-  it('deklariert für Brandbekämpfung die Hülle, die die Geometrie tatsächlich hat', () => {
+  it('deklariert für Brandbekämpfung die konservative sichtbare Strichhülle', () => {
     const definition = pictogram('capability.fire-fighting');
-    const hull = definition.primitives.map(boundsOfMm);
+    const hull = definition.primitives.map((primitive) => {
+      const bounds = boundsOfMm(primitive);
+      const halfStroke =
+        primitive.style?.stroke !== undefined && primitive.style.stroke !== 'none'
+          ? (primitive.style.strokeWidth ?? 0.5) / 2
+          : 0;
+      return {
+        minX: bounds.minX - halfStroke,
+        minY: bounds.minY - halfStroke,
+        maxX: bounds.maxX + halfStroke,
+        maxY: bounds.maxY + halfStroke,
+      };
+    });
     expect(Math.min(...hull.map((b) => b.minX))).toBeCloseTo(definition.box.xMm, 6);
     expect(Math.min(...hull.map((b) => b.minY))).toBeCloseTo(definition.box.yMm, 6);
     expect(Math.max(...hull.map((b) => b.maxX))).toBeCloseTo(
