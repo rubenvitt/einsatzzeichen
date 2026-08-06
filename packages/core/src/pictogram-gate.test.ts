@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PictogramDefinition, Primitive } from '@einsatzzeichen/schema';
-import { checkCommands } from './pictogram-gate.js';
+import { checkBox, checkCommands } from './pictogram-gate.js';
 
 /** Ein Piktogramm mit genau einem Pfad, Box und Titel unverändert — nur der `d`-String variiert. */
 function withPath(d: string): PictogramDefinition {
@@ -93,5 +93,115 @@ describe('Kommando-Gate', () => {
       primitives: [{ type: 'line', role: 'pictogram', x1: 3, y1: 16, x2: 26, y2: 16 }],
     };
     expect(checkCommands(definition)).toEqual([]);
+  });
+});
+
+describe('Box-Gate', () => {
+  it('nimmt einen Pfad an, dessen Kontrollpunkte alle in der Box liegen', () => {
+    // Alle x in [4, 28], alle y in [12, 20] — die Box ist { 4, 12, 24, 8 }.
+    expect(checkBox(withPath('M 4 12 C 8 20 20 20 28 12 Z'))).toEqual([]);
+  });
+
+  it('lehnt eine Koordinate außerhalb der Box ab und nennt sie', () => {
+    const issues = checkBox(withPath('M 4 12 L 30 12'));
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.gate).toBe('box');
+    expect(issues[0]?.detail).toContain('30');
+    expect(issues[0]?.detail).toContain('x');
+  });
+
+  it('lehnt einen Kontrollpunkt außerhalb der Box ab, auch wenn beide Endpunkte darin liegen', () => {
+    // Die Kurve selbst bleibt vielleicht innen — das Gate ist konservativ und lehnt ab. Eine
+    // Bezierkurve verlässt die konvexe Hülle ihrer Kontrollpunkte nie; umgekehrt gilt das nicht.
+    const issues = checkBox(withPath('M 4 12 C 8 40 20 40 28 12'));
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues[0]?.detail).toContain('40');
+  });
+
+  it('prüft V gegen die Höhe und H gegen die Breite, nicht gegen beide Achsen', () => {
+    // Der Nachweis, dass das Gate Koordinaten je Kommando liest: in einer schmalen, hohen Box
+    // ist V 25 zulässig, obwohl 25 die Breite (8 mm) weit übersteigt. Ein Zahlenstrom-Leser
+    // würde diesen validen Pfad ablehnen.
+    const narrow: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      title: 'Schmal und hoch',
+      box: { xMm: 2, yMm: 2, widthMm: 8, heightMm: 26 },
+      primitives: [{ type: 'path', role: 'pictogram', d: 'M 2 2 V 25 H 4 Z' }],
+    };
+    expect(checkBox(narrow)).toEqual([]);
+  });
+
+  it('lehnt V ab, wenn der Wert die Höhe übersteigt', () => {
+    const narrow: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      title: 'Schmal und hoch',
+      box: { xMm: 2, yMm: 2, widthMm: 8, heightMm: 26 },
+      primitives: [{ type: 'path', role: 'pictogram', d: 'M 2 2 V 29 Z' }],
+    };
+    const issues = checkBox(narrow);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.detail).toContain('y');
+  });
+
+  it('fordert bei einer Definition ohne Pfade Gleichheit von Hülle und Box', () => {
+    const tooLarge: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      title: 'Nur Linien, Box zu groß',
+      box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
+      primitives: [{ type: 'line', role: 'pictogram', x1: 3, y1: 16, x2: 26, y2: 16 }],
+    };
+    const issues = checkBox(tooLarge);
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues[0]?.detail).toContain('berechenbar');
+  });
+
+  it('nimmt eine Definition ohne Pfade an, deren Box genau der Hülle entspricht', () => {
+    const exact: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      title: 'Nur Linien, Box exakt',
+      box: { xMm: 3, yMm: 9, widthMm: 23, heightMm: 14 },
+      primitives: [
+        { type: 'line', role: 'pictogram', x1: 3, y1: 16, x2: 26, y2: 16 },
+        { type: 'line', role: 'pictogram', x1: 16, y1: 16, x2: 26, y2: 9 },
+        { type: 'line', role: 'pictogram', x1: 16, y1: 16, x2: 26, y2: 23 },
+      ],
+    };
+    expect(checkBox(exact)).toEqual([]);
+  });
+
+  it('fordert bei gemischten Definitionen nur Enthaltung, nicht Gleichheit', () => {
+    // Die Linienhülle (3…26 × 16…16) ist kleiner als die Box, weil diese auch den Pfad fassen
+    // muss. Gleichheit zu fordern wäre hier unerfüllbar.
+    const mixed: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      title: 'Linie und Pfad',
+      box: { xMm: 3, yMm: 9, widthMm: 23, heightMm: 14 },
+      primitives: [
+        { type: 'line', role: 'pictogram', x1: 3, y1: 16, x2: 26, y2: 16 },
+        { type: 'path', role: 'pictogram', d: 'M 3 9 L 26 23' },
+      ],
+    };
+    expect(checkBox(mixed)).toEqual([]);
+  });
+
+  it('lehnt ein Nicht-Pfad-Primitiv ab, das aus der Box ragt', () => {
+    const outside: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      title: 'Linie ragt heraus',
+      box: { xMm: 4, yMm: 12, widthMm: 24, heightMm: 8 },
+      primitives: [
+        { type: 'path', role: 'pictogram', d: 'M 4 12 L 28 20' },
+        { type: 'line', role: 'pictogram', x1: 4, y1: 12, x2: 30, y2: 12 },
+      ],
+    };
+    const issues = checkBox(outside);
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues[0]?.detail).toContain('30');
+  });
+
+  it('meldet keine Box-Verstöße für einen Pfad, den schon das Kommando-Gate ablehnt', () => {
+    // Arbeitsteilung: die Kommandos eines abgelehnten Pfades sind nicht zerlegbar, und ein
+    // zweiter Befund zum selben Fehler hilft dem Autor nicht.
+    expect(checkBox(withPath('m 4 12 l 8 0'))).toEqual([]);
   });
 });
