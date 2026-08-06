@@ -128,3 +128,55 @@ describe('Fähigkeitsinventar Kapitel 4.2', () => {
     ]);
   });
 });
+
+describe('Fähigkeitsinventar Kapitel 4.3', () => {
+  it('bildet die sechs Darstellungen aus Brandbekämpfung exakt ab', () => {
+    const actual = CAPABILITY_PICTOGRAMS
+      .filter((definition) => definition.section.startsWith('4.3.'))
+      .map(({ section, id, variant, referenceAsset }) => ({
+        section,
+        id,
+        variant,
+        referenceAsset,
+      }));
+
+    expect(actual).toEqual([
+      {
+        section: '4.3.1',
+        id: 'capability.fire-fighting',
+        variant: 'primary',
+        referenceAsset: '4.3.1_Brandbekämpfung.svg',
+      },
+      {
+        section: '4.3.2',
+        id: 'capability.service-water',
+        variant: 'primary',
+        referenceAsset: '4.3.2_Löschwasser Brauchwasser.svg',
+      },
+      {
+        section: '4.3.3',
+        id: 'capability.foam-agent',
+        variant: 'primary',
+        referenceAsset: '4.3.3_Schaummittel.svg',
+      },
+      {
+        section: '4.3.4',
+        id: 'capability.solid-extinguishing-agent',
+        variant: 'primary',
+        referenceAsset: '4.3.4_Sonderlöschmittel fest.svg',
+      },
+      {
+        section: '4.3.5',
+        id: 'capability.gaseous-extinguishing-agent',
+        variant: 'primary',
+        referenceAsset: '4.3.5_Sonderlöschmittel gasförmig.svg',
+      },
+      {
+        section: '4.3.6',
+        id: 'capability.respiratory-protection',
+        variant: 'primary',
+        referenceAsset: '4.3.6_Atemschutz.svg',
+      },
+    ]);
+  });
+});

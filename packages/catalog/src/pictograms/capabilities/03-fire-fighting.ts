@@ -1,5 +1,6 @@
 import { DEFAULT_STROKE_WIDTH_MM, type Primitive, type Style } from '@einsatzzeichen/schema';
 import { deepFreeze } from '../../readonly-data.js';
+import { strokeCapability as icon } from '../authoring.js';
 import { defineCapability } from '../catalog-definition.js';
 
 const STROKE: Style = { stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM, fill: 'none' };
@@ -51,4 +52,14 @@ export const FIRE_FIGHTING_PICTOGRAMS = deepFreeze([
       },
     ],
   }),
+  icon({ section: '4.3.3', id: 'foam-agent', title: 'Schaummittel',
+    referenceAsset: '4.3.3_Schaummittel.svg', d: 'M 8 9 H 24 L 16 23 Z' }),
+  icon({ section: '4.3.4', id: 'solid-extinguishing-agent', title: 'Sonderlöschmittel, fest',
+    referenceAsset: '4.3.4_Sonderlöschmittel fest.svg', d: 'M 10 10 H 22 V 22 H 10 Z' }),
+  icon({ section: '4.3.5', id: 'gaseous-extinguishing-agent', title: 'Sonderlöschmittel, gasförmig',
+    referenceAsset: '4.3.5_Sonderlöschmittel gasförmig.svg',
+    d: 'M 16 10 C 12 10 10 12 10 16 C 10 20 12 22 16 22 C 20 22 22 20 22 16 C 22 12 20 10 16 10 Z' }),
+  icon({ section: '4.3.6', id: 'respiratory-protection', title: 'Atemschutz',
+    referenceAsset: '4.3.6_Atemschutz.svg',
+    d: 'M 13 8 H 19 Q 21 8 21 10 V 19 Q 21 22 18 22 H 14 Q 11 22 11 19 V 10 Q 11 8 13 8 Z M 16 22 V 24 M 14 24 H 18' }),
 ] as const);

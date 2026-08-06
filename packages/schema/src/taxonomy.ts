@@ -67,7 +67,11 @@ export type CapabilityId =
   | 'temporary-accommodation-resting'
   | 'temporary-accommodation-seating'
   | 'fire-fighting'
-  | 'service-water';
+  | 'service-water'
+  | 'foam-agent'
+  | 'solid-extinguishing-agent'
+  | 'gaseous-extinguishing-agent'
+  | 'respiratory-protection';
 
 /** Semantische Beschreibung eines Zeichens. Eingabe des Kompositionsmotors. */
 export interface SymbolSpec {
