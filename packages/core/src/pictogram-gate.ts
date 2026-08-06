@@ -218,6 +218,18 @@ export function checkBox(definition: PictogramDefinition): PictogramIssue[] {
 }
 
 /**
+ * Die Körperfläche dieses Grundzeichens ist nicht vermessen. Eine eigene Klasse und keine
+ * Textprüfung: `checkPictogram` fängt genau diesen Fall und reicht jeden anderen Fehler weiter,
+ * damit ein Programmierfehler in `checkClipping` nicht als harmloser Piktogramm-Befund erscheint.
+ */
+export class BodyNotMeasuredError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'BodyNotMeasuredError';
+  }
+}
+
+/**
  * Prüft, dass die deklarierte Box vollständig innerhalb der Körperfläche des **unverschobenen**
  * Grundzeichens liegt.
  *
@@ -242,7 +254,7 @@ export function checkClipping(
   body: Primitive,
 ): PictogramIssue[] {
   if (body.type !== 'rect' || body.transform !== undefined) {
-    throw new Error(
+    throw new BodyNotMeasuredError(
       `pictogram-gate: Die Körperfläche von "${body.type}"` +
         `${body.transform !== undefined ? ' mit Transformation' : ''} für "${definition.id}" ` +
         'ist nicht vermessen — das Clipping-Gate prüft nur achsparallele Rechtecke, bei denen ' +
@@ -285,13 +297,20 @@ export function checkClipping(
  * unerreichbaren Fingerprint-Gates tritt (Spec Abschnitt 7). Reihenfolge: Kommando, Box,
  * Clipping, damit der Autor die Ursache vor ihren Folgen liest.
  *
- * `checkClipping` wirft für eine nicht vermessene Körperform (Polygon, gedrehtes Rechteck) —
- * richtig für einen direkten Aufrufer, der genau ein Piktogramm-Grundzeichen-Paar prüft. Hier
- * würde der Wurf aber die bereits gesammelten Kommando- und Box-Befunde verwerfen und damit dem
- * Grundsatz dieser Datei widersprechen: „Listen von Befunden statt Ausnahmen, ein Autor soll alle
- * Verstöße auf einmal sehen." Der Wurf wird deshalb gefangen und als eigener `clipping`-Befund
- * gemeldet — sonst verlöre, wer `checkPictogram` über mehrere Grundzeichen laufen lässt, beim
- * ersten Polygon jede Kommando- und Box-Rückmeldung des gesamten Durchlaufs.
+ * `checkClipping` wirft `BodyNotMeasuredError` für eine nicht vermessene Körperform (Polygon,
+ * gedrehtes Rechteck) — richtig für einen direkten Aufrufer, der genau ein
+ * Piktogramm-Grundzeichen-Paar prüft. Hier würde der Wurf aber die bereits gesammelten Kommando-
+ * und Box-Befunde verwerfen und damit dem Grundsatz dieser Datei widersprechen: „Listen von
+ * Befunden statt Ausnahmen, ein Autor soll alle Verstöße auf einmal sehen." Genau dieser eine
+ * Fall wird deshalb gefangen und als eigener `clipping`-Befund gemeldet — sonst verlöre, wer
+ * `checkPictogram` über mehrere Grundzeichen laufen lässt, beim ersten Polygon jede Kommando- und
+ * Box-Rückmeldung des gesamten Durchlaufs.
+ *
+ * Jeder andere Fehler wird durchgereicht, nicht eingesammelt: ein Programmierfehler in
+ * `checkClipping` — etwa ein künftiger Zugriff auf ein noch nicht unterstütztes Feld einer neuen
+ * Körperform — soll sichtbar scheitern, nicht als harmloser Piktogramm-Befund erscheinen. Ein
+ * still falsches Ergebnis ist schwerer zu bemerken als ein Fehler; dasselbe Prinzip wie `shiftY`,
+ * das Pfade ablehnt, und die Gruppendrehung in `boundsOfMm`, die gedrehte Gruppen ablehnt.
  */
 export function checkPictogram(
   definition: PictogramDefinition,
@@ -301,11 +320,8 @@ export function checkPictogram(
   try {
     issues.push(...checkClipping(definition, body));
   } catch (error) {
-    issues.push({
-      gate: 'clipping',
-      pictogramId: definition.id,
-      detail: error instanceof Error ? error.message : String(error),
-    });
+    if (!(error instanceof BodyNotMeasuredError)) throw error;
+    issues.push({ gate: 'clipping', pictogramId: definition.id, detail: error.message });
   }
   return issues;
 }

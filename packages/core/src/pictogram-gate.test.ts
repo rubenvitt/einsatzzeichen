@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PictogramDefinition, Primitive } from '@einsatzzeichen/schema';
-import { checkBox, checkClipping, checkCommands, checkPictogram } from './pictogram-gate.js';
+import { BodyNotMeasuredError, checkBox, checkClipping, checkCommands, checkPictogram } from './pictogram-gate.js';
 
 /** Ein Piktogramm mit genau einem Pfad, Box und Titel unverändert — nur der `d`-String variiert. */
 function withPath(d: string): PictogramDefinition {
@@ -265,6 +265,11 @@ describe('Clipping-Gate', () => {
     // Belegt zugleich: `checkClipping` selbst wirft weiterhin uneingeschränkt — nur
     // `checkPictogram` fängt den Wurf (siehe checkPictogram-Suite unten). Die Semantik des
     // Gates bleibt unangetastet.
+    //
+    // Die Klasse gehört zur Aussage: `checkPictogram` unterscheidet per `instanceof
+    // BodyNotMeasuredError`, nicht per Textvergleich — dieser Test belegt, dass tatsächlich diese
+    // Klasse geworfen wird und nicht irgendein `Error` mit passendem Text.
+    expect(() => checkClipping(withPath('M 4 12 L 28 20'), hazardBody)).toThrow(BodyNotMeasuredError);
     expect(() => checkClipping(withPath('M 4 12 L 28 20'), hazardBody)).toThrow(/nicht vermessen/);
   });
 
@@ -321,5 +326,25 @@ describe('checkPictogram', () => {
     expect(gates).toEqual(new Set(['command', 'box', 'clipping']));
     const clippingIssue = issues.find((issue) => issue.gate === 'clipping');
     expect(clippingIssue?.detail).toContain('nicht vermessen');
+  });
+
+  it('reicht einen fremden Fehler durch, statt ihn als Befund zu melden', () => {
+    // checkClipping hat heute genau einen Wurfpfad (BodyNotMeasuredError für eine nicht
+    // vermessene Körperform). Um zu belegen, dass checkPictogram jeden ANDEREN Fehler
+    // durchreicht statt ihn wie eine BodyNotMeasuredError einzusammeln, wird hier ein
+    // Programmierfehler nachgestellt: ein Körper, dessen `width` zur Laufzeit kein `Length`
+    // (Zahl) ist, obwohl der Typ es zusichert. Bei der Achsberechnung wertet `axesOf` das mit
+    // `+` aus — `1 + Symbol()` wirft einen echten `TypeError` der JS-Laufzeit, keinen
+    // konstruierten. `body.type` bleibt `'rect'` ohne `transform`, besteht also die
+    // BodyNotMeasuredError-Prüfung und erreicht diesen Code wirklich.
+    const malformedBody: Primitive = {
+      type: 'rect',
+      role: 'body',
+      x: 1,
+      y: 6,
+      width: Symbol('nicht vermessbar, Programmierfehler') as unknown as number,
+      height: 20,
+    };
+    expect(() => checkPictogram(withPath('M 4 12 L 28 20'), malformedBody)).toThrow(TypeError);
   });
 });
