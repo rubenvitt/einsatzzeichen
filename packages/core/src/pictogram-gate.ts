@@ -216,3 +216,82 @@ export function checkBox(definition: PictogramDefinition): PictogramIssue[] {
 
   return issues;
 }
+
+/**
+ * Prüft, dass die deklarierte Box vollständig innerhalb der Körperfläche des **unverschobenen**
+ * Grundzeichens liegt.
+ *
+ * Unverschoben, weil die Referenz belegt, dass das Piktogramm der Körpermitte folgt: `C.1.1`
+ * verschiebt Körper und Piktogramm um dieselben 3 mm (Entscheidungsnotiz vom 4. August 2026,
+ * Abschnitt 8). Die Lage der Box relativ zum Körper ist damit invariant gegenüber der
+ * Komposition — die Prüfung braucht keine `SymbolSpec` und läuft einmal je
+ * Piktogramm-Grundzeichen-Paar, nicht je Komposition.
+ *
+ * Nur für ein achsparalleles Rechteck: dort fallen Fläche und achsparallele Hülle zusammen. Bei
+ * einem Polygon (`hazard`, `measure`, `point`) oder einem gedrehten Quadrat (`person`) tun sie es
+ * nicht — eine Box innerhalb der Hülle kann aus dem Dreieck ragen. Statt eine Hüllenprüfung als
+ * Flächenprüfung auszugeben, lehnt das Gate diese Körperformen explizit ab, bis ihre Fläche
+ * vermessen ist. Dasselbe Muster wie `circleBodyProfile` (`layout/profiles.ts`) und die
+ * Gruppendrehung in `boundsOfMm`.
+ *
+ * Nimmt das Körper-Primitiv, nicht den `SymbolKind`: die Körpergeometrie liegt in `catalog`, und
+ * die Paketrichtung ist `catalog → core`. Der Aufrufer holt sie aus `baseDrawing(kind)`.
+ */
+export function checkClipping(
+  definition: PictogramDefinition,
+  body: Primitive,
+): PictogramIssue[] {
+  if (body.type !== 'rect' || body.transform !== undefined) {
+    throw new Error(
+      `pictogram-gate: Die Körperfläche von "${body.type}"` +
+        `${body.transform !== undefined ? ' mit Transformation' : ''} ist nicht vermessen — ` +
+        'das Clipping-Gate prüft nur achsparallele Rechtecke, bei denen Fläche und Hülle ' +
+        'zusammenfallen.',
+    );
+  }
+
+  const bodyAxes = axesOf({
+    xMm: body.x,
+    yMm: body.y,
+    widthMm: body.width,
+    heightMm: body.height,
+  });
+  const box = axesOf(definition.box);
+
+  const checks: Array<[string, number, Axis]> = [
+    ['x', box.x.min, bodyAxes.x],
+    ['x + width', box.x.max, bodyAxes.x],
+    ['y', box.y.min, bodyAxes.y],
+    ['y + height', box.y.max, bodyAxes.y],
+  ];
+
+  const issues: PictogramIssue[] = [];
+  for (const [name, value, axis] of checks) {
+    if (!within(value, axis)) {
+      issues.push({
+        gate: 'clipping',
+        pictogramId: definition.id,
+        detail:
+          `Box-Kante ${name} = ${value} mm liegt außerhalb des Körpers ` +
+          `(${axis.name} von ${axis.min} bis ${axis.max} mm).`,
+      });
+    }
+  }
+  return issues;
+}
+
+/**
+ * Die drei Gates zusammen — das Kriterium, das für Piktogramme an die Stelle des strukturell
+ * unerreichbaren Fingerprint-Gates tritt (Spec Abschnitt 7). Reihenfolge: Kommando, Box,
+ * Clipping, damit der Autor die Ursache vor ihren Folgen liest.
+ */
+export function checkPictogram(
+  definition: PictogramDefinition,
+  body: Primitive,
+): PictogramIssue[] {
+  return [
+    ...checkCommands(definition),
+    ...checkBox(definition),
+    ...checkClipping(definition, body),
+  ];
+}

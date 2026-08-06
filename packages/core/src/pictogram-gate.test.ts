@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PictogramDefinition, Primitive } from '@einsatzzeichen/schema';
-import { checkBox, checkCommands } from './pictogram-gate.js';
+import { checkBox, checkClipping, checkCommands, checkPictogram } from './pictogram-gate.js';
 
 /** Ein Piktogramm mit genau einem Pfad, Box und Titel unverändert — nur der `d`-String variiert. */
 function withPath(d: string): PictogramDefinition {
@@ -203,5 +203,96 @@ describe('Box-Gate', () => {
     // Arbeitsteilung: die Kommandos eines abgelehnten Pfades sind nicht zerlegbar, und ein
     // zweiter Befund zum selben Fehler hilft dem Autor nicht.
     expect(checkBox(withPath('m 4 12 l 8 0'))).toEqual([]);
+  });
+});
+
+/** Der Körper der Taktischen Formation, wie `base-symbols.ts` ihn führt. */
+const formationBody: Primitive = {
+  type: 'rect',
+  role: 'body',
+  x: 1,
+  y: 6,
+  width: 30,
+  height: 20,
+};
+
+describe('Clipping-Gate', () => {
+  it('nimmt eine Box an, die vollständig im Körper liegt', () => {
+    expect(checkClipping(withPath('M 4 12 L 28 20'), formationBody)).toEqual([]);
+  });
+
+  it('lehnt eine Box ab, die über den Körper hinausragt', () => {
+    const tall: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      title: 'Box ragt oben heraus',
+      box: { xMm: 4, yMm: 3, widthMm: 24, heightMm: 8 },
+      primitives: [{ type: 'path', role: 'pictogram', d: 'M 4 3 L 28 11' }],
+    };
+    const issues = checkClipping(tall, formationBody);
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues[0]?.gate).toBe('clipping');
+    expect(issues[0]?.detail).toContain('3');
+  });
+
+  it('nimmt eine Box an, deren Kante genau auf der Körperkante liegt', () => {
+    const flush: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      title: 'Box auf der Körperkante',
+      box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
+      primitives: [{ type: 'path', role: 'pictogram', d: 'M 1 6 L 31 26' }],
+    };
+    expect(checkClipping(flush, formationBody)).toEqual([]);
+  });
+
+  it('lehnt einen Körper ab, dessen Fläche nicht vermessen ist', () => {
+    // Bei einem Polygon oder einem gedrehten Quadrat fällt Fläche und achsparallele Hülle nicht
+    // zusammen: eine Box innerhalb der Hülle kann aus dem Dreieck ragen. Eine hüllenbasierte
+    // Prüfung als Flächenprüfung auszugeben wäre genau die Behauptung, die dieses Projekt
+    // vermeidet — dasselbe Muster wie `circleBodyProfile` und die Gruppendrehung in `boundsOfMm`.
+    const hazardBody: Primitive = {
+      type: 'polyline',
+      role: 'body',
+      closed: true,
+      points: [
+        [1, 28],
+        [16, 3],
+        [31, 28],
+      ],
+    };
+    expect(() => checkClipping(withPath('M 4 12 L 28 20'), hazardBody)).toThrow(/nicht vermessen/);
+  });
+
+  it('lehnt ein gedrehtes Rechteck als Körper ab', () => {
+    const personBody: Primitive = {
+      type: 'rect',
+      role: 'body',
+      x: 5.393,
+      y: 5.393,
+      width: 21.213,
+      height: 21.213,
+      transform: { rotate: { angle: 45, cx: 16, cy: 16 } },
+    };
+    expect(() => checkClipping(withPath('M 4 12 L 28 20'), personBody)).toThrow(/nicht vermessen/);
+  });
+});
+
+describe('checkPictogram', () => {
+  it('führt die drei Gates zusammen und meldet Befunde aller drei', () => {
+    const broken: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      title: 'Dreifach kaputt',
+      // Box ragt über den Körper (y ab 3), und die Linie liegt außerhalb der Box.
+      box: { xMm: 4, yMm: 3, widthMm: 24, heightMm: 8 },
+      primitives: [
+        { type: 'path', role: 'pictogram', d: 'm 4 3 l 24 8' },
+        { type: 'line', role: 'pictogram', x1: 4, y1: 3, x2: 30, y2: 3 },
+      ],
+    };
+    const gates = new Set(checkPictogram(broken, formationBody).map((issue) => issue.gate));
+    expect(gates).toEqual(new Set(['command', 'box', 'clipping']));
+  });
+
+  it('meldet nichts für ein Piktogramm, das alle drei Gates besteht', () => {
+    expect(checkPictogram(withPath('M 4 12 C 8 20 20 20 28 12 Z'), formationBody)).toEqual([]);
   });
 });
