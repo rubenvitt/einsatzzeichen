@@ -1,4 +1,9 @@
-import type { CapabilityId, PictogramDefinition, PictogramId, Primitive } from '@einsatzzeichen/schema';
+import type {
+  CapabilityId,
+  PictogramDefinition,
+  PictogramId,
+  Primitive,
+} from '@einsatzzeichen/schema';
 import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
 
 /**
