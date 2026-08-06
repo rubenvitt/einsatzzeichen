@@ -5,12 +5,14 @@ import {
   type Drawing,
   type HeadShape,
   type OrganizationId,
+  type PictogramDefinition,
+  type PictogramId,
   type Primitive,
   type StrengthId,
   type SymbolKind,
   type SymbolSpec,
 } from '@einsatzzeichen/schema';
-import { boundsOfMm, shiftY } from './bounds.js';
+import { boundsOfMm } from './bounds.js';
 import { placeHead, profileFor } from './layout/profiles.js';
 import { validateSpec } from './validate.js';
 
@@ -25,7 +27,12 @@ export interface CatalogPorts {
   baseDrawing(kind: SymbolKind): Drawing;
   organizationColor(id: OrganizationId): ColorToken;
   strengthHead(id: StrengthId): HeadShape;
-  capabilityPictogram(id: CapabilityId): Primitive[];
+  /**
+   * Liefert die volle Definition, nicht nur die Primitive: die deklarierte Box trägt die drei
+   * Gates. Damit hat `PictogramDefinition` von Beginn an zwei Konsumenten und ist kein
+   * vorbereitetes Feld.
+   */
+  pictogram(id: PictogramId): PictogramDefinition;
 }
 
 export class CompositionError extends Error {
@@ -90,14 +97,40 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
   // absoluten Referenzstelle statt an der tatsächlichen Körpermitte. Die Referenz belegt das:
   // C.1.1 (Stapel, Körper verschoben) verschiebt das Piktogramm um dieselben 3 mm, C.1.2
   // (Reihe, Körper unverschoben) lässt es unverändert.
+  //
+  // Die Verschiebung sitzt an genau einer Gruppe und nicht an jedem Primitiv: ein Pfad trägt
+  // seine Koordinaten unzerlegt im `d`-String und kann nicht primitivweise verschoben werden
+  // (`shiftY` lehnt das ausdrücklich ab). Auf der Gruppe wirkt die Verschiebung nach außen auf
+  // das fertige Ergebnis und ist damit von einer Drehung der Kinder unabhängig.
   const pictogramShiftMm = centerYMm(placedBody) - centerYMm(body);
-  const pictograms = (spec.capabilities ?? [])
-    .flatMap((id) => catalog.capabilityPictogram(id))
-    .map((primitive) => shiftY(primitive, pictogramShiftMm));
+  const pictogramPrimitives = (spec.capabilities ?? []).flatMap(
+    (id) => catalog.pictogram(pictogramIdOf(id)).primitives,
+  );
+  const pictograms: Primitive[] =
+    pictogramPrimitives.length > 0
+      ? [
+          {
+            type: 'group',
+            role: 'pictogram',
+            transform: { translate: { dxMm: 0, dyMm: pictogramShiftMm } },
+            children: pictogramPrimitives,
+          },
+        ]
+      : [];
 
   return {
     viewBox: DEFAULT_VIEWBOX_MM,
     children: [...headPrimitives, filled, ...pictograms],
     ...(options.title !== undefined ? { title: options.title } : {}),
   };
+}
+
+/**
+ * `SymbolSpec.capabilities` trägt `CapabilityId` (`'fire-fighting'`), der Piktogrammraum trägt
+ * präfigierte IDs (`'capability.fire-fighting'`). Die Abbildung steht hier an einer Stelle und
+ * nicht an jedem Aufrufort: die übrigen vier ID-Räume (Kapitel 5.8, Anhänge J–M) haben in
+ * `SymbolSpec` noch kein Feld und kommen erst mit D.2 bis D.4 dazu.
+ */
+function pictogramIdOf(id: CapabilityId): PictogramId {
+  return `capability.${id}`;
 }

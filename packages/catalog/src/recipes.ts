@@ -1,15 +1,15 @@
 import { compose, type CatalogPorts } from '@einsatzzeichen/core';
 import type { Drawing, SymbolSpec } from '@einsatzzeichen/schema';
 import { baseDrawing } from './base-symbols.js';
-import { capabilityPictogram } from './pictograms/index.js';
 import { organizationColor } from './organizations.js';
+import { pictogram } from './pictograms/index.js';
 import { strengthHead } from './strengths.js';
 
 const PORTS: CatalogPorts = {
   baseDrawing,
   organizationColor,
   strengthHead,
-  capabilityPictogram,
+  pictogram,
 };
 
 export function composeFromCatalog(spec: SymbolSpec, title?: string): Drawing {

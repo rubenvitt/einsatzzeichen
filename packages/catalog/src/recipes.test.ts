@@ -1,12 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import { boundsOfMm, CompositionError, matchFingerprint } from '@einsatzzeichen/core';
-import type { Primitive } from '@einsatzzeichen/schema';
+import type { Drawing, Primitive } from '@einsatzzeichen/schema';
 import { fingerprintFor } from './fingerprint-index.js';
 import { RECIPES, composeFromCatalog } from './recipes.js';
 
-/** Die waagerechte der drei Brandbekämpfungs-Linien — die einzige mit y1 === y2. */
-function isHorizontalPictogramLine(c: Primitive): c is Primitive & { type: 'line' } {
-  return c.role === 'pictogram' && c.type === 'line' && c.y1 === c.y2;
+/**
+ * Effektive y-Lage der waagerechten Brandbekämpfungs-Linie: ihre Autorenkoordinate plus die
+ * Verschiebung ihrer Gruppe. Seit die Piktogramme von einer Gruppe mit `transform.translate`
+ * umschlossen werden, steht der an der Referenz vermessene Sollwert nicht mehr am Primitiv —
+ * die fachliche Aussage ist unverändert, sie wird eine Ebene tiefer gelesen.
+ */
+function horizontalPictogramLineYMm(drawing: Drawing): number | undefined {
+  const group = drawing.children.find(
+    (c): c is Primitive & { type: 'group' } => c.type === 'group' && c.role === 'pictogram',
+  );
+  if (group === undefined) return undefined;
+  const line = group.children.find(
+    (c): c is Primitive & { type: 'line' } => c.type === 'line' && c.y1 === c.y2,
+  );
+  if (line === undefined) return undefined;
+  return line.y1 + (group.transform?.translate?.dyMm ?? 0);
 }
 
 describe('Kompositionsrezepte', () => {
@@ -101,10 +114,10 @@ describe('Kompositionsrezepte', () => {
 
       // Der an der Referenz konkret vermessene Sollwert, direkt an der waagerechten Linie
       // geprüft statt nur über die Hüllenmitte des gesamten Piktogramms.
-      const horizontalLine = drawing.children.find(isHorizontalPictogramLine);
-      expect(horizontalLine).toBeDefined();
-      if (horizontalLine !== undefined) {
-        expect(horizontalLine.y1).toBeCloseTo(expectedCenterYMm, 6);
+      const lineYMm = horizontalPictogramLineYMm(drawing);
+      expect(lineYMm).toBeDefined();
+      if (lineYMm !== undefined) {
+        expect(lineYMm).toBeCloseTo(expectedCenterYMm, 6);
       }
     }
   });
@@ -128,5 +141,38 @@ describe('Kompositionsrezepte', () => {
   it('erzeugt keinen Titel, wenn composeFromCatalog ohne Titel aufgerufen wird', () => {
     const drawing = composeFromCatalog(RECIPES['C.1.1'].spec);
     expect(drawing.title).toBeUndefined();
+  });
+});
+
+describe('Piktogramm-Platzierung als Gruppe', () => {
+  it('erzeugt genau eine Piktogramm-Gruppe mit der Verschiebung als Transformation', () => {
+    const drawing = composeFromCatalog(RECIPES['C.1.1'].spec);
+    const pictograms = drawing.children.filter((c) => c.role === 'pictogram');
+    expect(pictograms).toHaveLength(1);
+    const group = pictograms[0];
+    expect(group?.type).toBe('group');
+    if (group?.type !== 'group') return;
+    // C.1.1 verschiebt den Körper um 3 mm (Anker 6 → 9); das Piktogramm folgt der Körpermitte.
+    expect(group.transform?.translate?.dxMm).toBe(0);
+    expect(group.transform?.translate?.dyMm).toBeCloseTo(3, 6);
+    // Die Kinder tragen ihre Autorenkoordinaten unverändert — die Verschiebung sitzt außen.
+    expect(group.children).toHaveLength(3);
+    for (const child of group.children) {
+      expect(child.role).toBe('pictogram');
+    }
+  });
+
+  it('verschiebt die Gruppe bei unverändertem Körper um null, statt sie weglassen', () => {
+    // C.1.2 (Reihe) lässt den Körper bei Anker 6. Die Gruppe entsteht trotzdem: eine
+    // Sonderbehandlung für Delta 0 wäre ein zweiter Codepfad ohne fachlichen Anlass.
+    const drawing = composeFromCatalog(RECIPES['C.1.2'].spec);
+    const group = drawing.children.find((c) => c.role === 'pictogram');
+    expect(group?.type).toBe('group');
+    expect(group?.transform?.translate?.dyMm).toBeCloseTo(0, 6);
+  });
+
+  it('erzeugt keine Gruppe, wenn die Spec keine Fähigkeit nennt', () => {
+    const drawing = composeFromCatalog(RECIPES['D.3.7'].spec);
+    expect(drawing.children.filter((c) => c.role === 'pictogram')).toHaveLength(0);
   });
 });

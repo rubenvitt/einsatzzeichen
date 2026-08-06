@@ -1,9 +1,4 @@
-import type {
-  CapabilityId,
-  PictogramDefinition,
-  PictogramId,
-  Primitive,
-} from '@einsatzzeichen/schema';
+import type { PictogramDefinition, PictogramId } from '@einsatzzeichen/schema';
 import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
 
 /**
@@ -32,15 +27,3 @@ export function pictogram(id: PictogramId): PictogramDefinition {
 export const ALL_PICTOGRAMS: readonly PictogramDefinition[] = Object.values(PICTOGRAMS).filter(
   (definition): definition is PictogramDefinition => definition !== undefined,
 );
-
-/**
- * Übergangswrapper für den bestehenden `capabilityPictogram`-Port in `compose`. Entfällt, sobald
- * `CatalogPorts` auf `pictogram` umgestellt ist.
- *
- * Kopiert flach in ein mutables Array: `CatalogPorts.capabilityPictogram` in `core` verlangt
- * unverändert `Primitive[]`, `PictogramDefinition.primitives` ist aber `readonly Primitive[]`.
- * `compose` bleibt in diesem Task unberührt, die Kopie überbrückt den Unterschied an dieser Stelle.
- */
-export function capabilityPictogram(id: CapabilityId): Primitive[] {
-  return [...pictogram(`capability.${id}`).primitives];
-}
