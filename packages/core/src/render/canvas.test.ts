@@ -5,6 +5,18 @@ import { formatUnits, renderSvg } from './svg.js';
 
 type Call = [string, ...unknown[]];
 
+// Node stellt kein Path2D bereit — `drawPrimitive` (canvas.ts) übergibt es nur als Träger
+// an ctx.fill/ctx.stroke, die hier ohnehin nur aufgezeichnet, nie gerastert werden. Ein
+// leerer Stub genügt also, ohne dass wir eine echte Canvas-Umgebung (jsdom o.Ä.) hinzuziehen.
+if (typeof globalThis.Path2D === 'undefined') {
+  class Path2DStub {
+    constructor(_d?: string) {}
+  }
+  // @ts-expect-error: Path2DStub bildet nur den Konstruktor nach, nicht die volle
+  // CanvasPath-Schnittstelle, die das DOM-lib für Path2D erwartet.
+  globalThis.Path2D = Path2DStub;
+}
+
 /**
  * Prüft nur die Oberfläche, die `drawPrimitive`/`tracePrimitive` (`canvas.ts`) tatsächlich
  * aufrufen — genug, um den Proxy unten ohne `as <Typ>` auf `CanvasRenderingContext2D` zu
@@ -328,5 +340,119 @@ describe('renderCanvas — Primitiv ohne style (Fix-Runde 3)', () => {
     renderCanvas(drawing, ctx);
     const names = calls.map(([name]) => name);
     expect(names).not.toContain('fill');
+  });
+});
+
+describe('renderCanvas — Verschiebung von Gruppen', () => {
+  it('verschiebt in SVG-Einheiten innerhalb von save/restore', () => {
+    const { ctx, calls } = recordingContext();
+    renderCanvas(
+      {
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [
+          {
+            type: 'group',
+            transform: { translate: { dxMm: 0, dyMm: 3 } },
+            children: [{ type: 'rect', x: 1, y: 6, width: 30, height: 20, style: { fill: 'rot' } }],
+          },
+        ],
+      },
+      ctx,
+    );
+    const names = calls.map(([name]) => name);
+    const translateIndex = names.indexOf('translate');
+    expect(translateIndex).toBeGreaterThan(names.indexOf('save'));
+    const translateCall = calls[translateIndex];
+    expect(translateCall?.[1]).toBe(0);
+    expect(translateCall?.[2]).toBeCloseTo(mmToUnits(3), 9);
+    expect(names).toContain('restore');
+  });
+
+  it('verschiebt vor der Drehung, damit die Matrix zu SVGs translate-vor-rotate passt', () => {
+    // Canvas-Transformationen wirken in Aufrufreihenfolge auf die CTM: translate zuerst
+    // ergibt T·R und damit dieselbe Abbildung wie SVGs transform="translate(...) rotate(...)".
+    // Nach der Drehung aufgerufen ergäbe es R·T — ein anderes Bild aus derselben IR.
+    const { ctx, calls } = recordingContext();
+    renderCanvas(
+      {
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [
+          {
+            type: 'group',
+            transform: { translate: { dxMm: 1, dyMm: 2 }, rotate: { angle: 45, cx: 16, cy: 16 } },
+            children: [{ type: 'rect', x: 0, y: 0, width: 4, height: 4, style: { fill: 'rot' } }],
+          },
+        ],
+      },
+      ctx,
+    );
+    const names = calls.map(([name]) => name);
+    // Die Drehung ruft selbst zweimal translate auf (Zentrum hin und zurück) — der erste
+    // translate-Aufruf muss die Gruppenverschiebung sein, nicht das Rotationszentrum.
+    const firstTranslate = calls.find(([name]) => name === 'translate');
+    expect(firstTranslate?.[1]).toBeCloseTo(mmToUnits(1), 9);
+    expect(firstTranslate?.[2]).toBeCloseTo(mmToUnits(2), 9);
+    expect(names.indexOf('translate')).toBeLessThan(names.indexOf('rotate'));
+  });
+});
+
+describe('renderCanvas — Renderer-Parität bei translate (Spec-Erfolgskriterium 3)', () => {
+  it('bildet dieselbe IR in SVG und Canvas auf dieselbe Verschiebung ab', () => {
+    const drawing: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'group',
+          role: 'pictogram',
+          transform: { translate: { dxMm: 0, dyMm: 3 } },
+          children: [
+            { type: 'line', x1: 3, y1: 16, x2: 26, y2: 16, style: { stroke: 'schwarz', strokeWidth: 0.5 } },
+          ],
+        },
+      ],
+    };
+
+    // Zusicherung gilt der Abbildung, nicht dem Mechanismus: beide Renderer müssen denselben
+    // Millimeterwert auf denselben Einheitenwert bringen, egal ob als Attribut oder als Aufruf.
+    const svg = renderSvg(drawing);
+    expect(svg).toContain(`translate(0 ${formatUnits(mmToUnits(3))})`);
+
+    const { ctx, calls } = recordingContext();
+    renderCanvas(drawing, ctx);
+    const translateCall = calls.find(([name]) => name === 'translate');
+    expect(translateCall?.[1]).toBe(0);
+    expect(translateCall?.[2]).toBeCloseTo(mmToUnits(3), 9);
+  });
+
+  it('verschiebt einen Pfad in beiden Renderern, ohne die Skalierung zu doppeln', () => {
+    // Der kritische Fall: der Pfad trägt seine eigene scale(...)-Umrechnung. Die Verschiebung
+    // sitzt eine Ebene darüber und darf nicht durch diese Skalierung laufen.
+    const drawing: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'group',
+          role: 'pictogram',
+          transform: { translate: { dxMm: 0, dyMm: 3 } },
+          children: [{ type: 'path', d: 'M 4 16 L 28 16', style: { stroke: 'schwarz', strokeWidth: 0.5 } }],
+        },
+      ],
+    };
+
+    const svg = renderSvg(drawing);
+    // Die Gruppe trägt die Verschiebung in Einheiten …
+    expect(svg).toContain(`<g transform="translate(0 ${formatUnits(mmToUnits(3))})">`);
+    // … der Pfad ausschließlich seine Skalierung, unverändert.
+    const pathTag = svg.match(/<path[^>]*\/>/)?.[0];
+    expect(pathTag).toContain('transform="scale(');
+    expect(pathTag).not.toContain('translate(');
+
+    const { ctx, calls } = recordingContext();
+    renderCanvas(drawing, ctx);
+    const names = calls.map(([name]) => name);
+    // Canvas: die Verschiebung steht vor der Pfad-Skalierung.
+    expect(names.indexOf('translate')).toBeLessThan(names.indexOf('scale'));
+    const translateCall = calls.find(([name]) => name === 'translate');
+    expect(translateCall?.[2]).toBeCloseTo(mmToUnits(3), 9);
   });
 });

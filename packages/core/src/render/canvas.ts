@@ -53,6 +53,15 @@ function drawPrimitive(
 ): void {
   ctx.save();
 
+  // Reihenfolge ist tragend: Canvas-Transformationen wirken in Aufrufreihenfolge auf die CTM.
+  // translate zuerst ergibt T·R und damit dieselbe Abbildung wie SVGs
+  // transform="translate(...) rotate(...)" (siehe `transformAttr` in svg.ts). Nach der Drehung
+  // aufgerufen ergäbe es R·T — aus derselben IR entstünden zwei verschiedene Bilder.
+  const translate = primitive.transform?.translate;
+  if (translate) {
+    ctx.translate(mmToUnits(translate.dxMm), mmToUnits(translate.dyMm));
+  }
+
   const rotate = primitive.transform?.rotate;
   if (rotate) {
     ctx.translate(mmToUnits(rotate.cx), mmToUnits(rotate.cy));
