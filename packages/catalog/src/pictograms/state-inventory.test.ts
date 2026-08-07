@@ -6,6 +6,7 @@ import type { CatalogPictogramDefinition } from './catalog-definition.js';
 import { pictogram, pictogramRenderId } from './index.js';
 import {
   ACTIVITY_STATES,
+  ANIMAL_STATES,
   DAMAGE_STATES,
   FIRE_STATES,
   STATE_PICTOGRAMS,
@@ -100,6 +101,13 @@ describe('State-Piktogramminventur', () => {
         '5.8.5.2_fortentwickelter Brand.svg',
       ],
       ['5.8.5.3', 'state.fully-developed-fire', 'primary', '5.8.5.3_Vollbrand.svg'],
+      ['5.8.6.1', 'state.sick-animal', 'primary', '5.8.6.1_erkranktes Tier.svg'],
+      [
+        '5.8.6.2',
+        'state.contaminated-animal',
+        'primary',
+        '5.8.6.2_kontaminiertes Tier.svg',
+      ],
     ] as const;
 
     expect(STATE_PICTOGRAMS.map(inventoryTuple)).toEqual(expected);
@@ -108,6 +116,8 @@ describe('State-Piktogramminventur', () => {
     expect(() => pictogram('state.tendency-rising')).not.toThrow();
     expect(() => pictogram('state.damaged')).not.toThrow();
     expect(() => pictogram('state.incipient-fire')).not.toThrow();
+    expect(() => pictogram('state.sick-animal')).not.toThrow();
+    expect(() => pictogram('state.contaminated-animal')).not.toThrow();
   });
 
   it('hält Primär- und Alternativdarstellung je taktischem Hinweis eindeutig und titelgleich', () => {
@@ -156,6 +166,7 @@ describe('State-Piktogramminventur', () => {
     expect(Object.isFrozen(TENDENCY_STATES)).toBe(true);
     expect(Object.isFrozen(DAMAGE_STATES)).toBe(true);
     expect(Object.isFrozen(FIRE_STATES)).toBe(true);
+    expect(Object.isFrozen(ANIMAL_STATES)).toBe(true);
     expect(Object.isFrozen(STATE_PICTOGRAMS)).toBe(true);
 
     const mutableStates = STATE_PICTOGRAMS as unknown as CatalogPictogramDefinition[];

@@ -158,6 +158,8 @@ export const STATE_IDS = Object.freeze([
   'incipient-fire',
   'developed-fire',
   'fully-developed-fire',
+  'sick-animal',
+  'contaminated-animal',
 ] as const);
 
 export type StateId = (typeof STATE_IDS)[number];
