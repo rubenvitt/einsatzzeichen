@@ -80,6 +80,19 @@ fachlichen Reviews sind in
 [`docs/reviews/2026-08-06-domain-review-handoff.md`](./docs/reviews/2026-08-06-domain-review-handoff.md)
 dokumentiert.
 
+## D.1: Kapitel 4 technisch vollständig
+
+D.1 deckt Kapitel 4 der projektinternen Coverage-Baseline technisch vollständig ab: 88
+Abschnitte sind als 92 Darstellungen umgesetzt, darunter vier getrennt adressierbare
+Alternativdarstellungen. Alle 92 Renderfälle bestehen die globalen Kommando-, Box-, Clipping-,
+Snapshot-, Mehrgrößen-, Theme-, Metadaten- und viewBox-Gates.
+
+Diese technische Abdeckung ist weder eine fachliche Freigabe noch eine normative Behauptung. Alle
+92 Kapitel-4-Domainreviews bleiben `pending`; ihre fachliche Bedeutung, Verwechslungsfreiheit,
+Profilzuordnung und einsatztaktische Eignung müssen weiterhin einzeln durch eine entsprechend
+fachkundige Person geprüft werden. Die Abschlussentscheidung für D.1 steht in
+[`docs/decisions/2026-08-06-kapitel-4-faehigkeiten-d1.md`](./docs/decisions/2026-08-06-kapitel-4-faehigkeiten-d1.md).
+
 ## Der lokale Referenzbestand
 
 `taktische-zeichen/` ist ein **lokaler Ordner mit 661 damals von der BABZ bereitgestellten
