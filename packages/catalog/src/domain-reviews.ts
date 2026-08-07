@@ -149,6 +149,8 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:5.8.8.1#primary': { status: 'pending' },
   'bbk-babz-2025:5.8.8.2#primary': { status: 'pending' },
   'bbk-babz-2025:5.8.8.3#primary': { status: 'pending' },
+  'bbk-babz-2025:5.8.8.4#primary': { status: 'pending' },
+  'bbk-babz-2025:5.8.8.5#primary': { status: 'pending' },
 } satisfies Record<string, Review>);
 
 export type ManifestDomainReviewKey = keyof typeof MANIFEST_DOMAIN_REVIEWS;

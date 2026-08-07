@@ -77,6 +77,13 @@ const DELIVERED_BATCHES = [
       'state.person-injured#primary',
     ],
   },
+  {
+    batch: 'P2',
+    keys: [
+      'state.person-injured-triage-category#primary',
+      'state.person-injured-transport-priority#primary',
+    ],
+  },
 ] as const;
 
 describe('DELIVERED_BATCHES', () => {
