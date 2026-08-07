@@ -262,7 +262,7 @@ describe('Fähigkeitsinventar Kapitel 4.6', () => {
 });
 
 describe('Fähigkeitsinventar Kapitel 4.7', () => {
-  it('bildet die ersten 21 Darstellungen aus Technischer Hilfeleistung exakt ab', () => {
+  it('bildet die 29 Darstellungen aus Technischer Hilfeleistung exakt ab', () => {
     const actual = CAPABILITY_PICTOGRAMS
       .filter((definition) => definition.section.startsWith('4.7.'))
       .map(({ section, id, variant, referenceAsset }) => ({
@@ -294,6 +294,14 @@ describe('Fähigkeitsinventar Kapitel 4.7', () => {
       { section: '4.7.18', id: 'capability.technical-assistance', variant: 'primary', referenceAsset: '4.7.18_Technische Hilfeleistung.svg' },
       { section: '4.7.19', id: 'capability.transport', variant: 'primary', referenceAsset: '4.7.19_Transportieren.svg' },
       { section: '4.7.20', id: 'capability.door-opening', variant: 'primary', referenceAsset: '4.7.20_Türöffnung.svg' },
+      { section: '4.7.21', id: 'capability.overcoming-height-differences', variant: 'primary', referenceAsset: '4.7.21_Höhenunterschiede überwinden.svg' },
+      { section: '4.7.22', id: 'capability.securing', variant: 'primary', referenceAsset: '4.7.22_Absicherung.svg' },
+      { section: '4.7.23', id: 'capability.optical-warning', variant: 'primary', referenceAsset: '4.7.23_Warnen mit optischen Anzeigen.svg' },
+      { section: '4.7.24', id: 'capability.loudspeaker-warning', variant: 'primary', referenceAsset: '4.7.24_Warnen mit Lautsprecherdurchsagen.svg' },
+      { section: '4.7.25', id: 'capability.siren-warning', variant: 'primary', referenceAsset: '4.7.25_Warnen mit Sirenen.svg' },
+      { section: '4.7.26', id: 'capability.water-conveyance', variant: 'primary', referenceAsset: '4.7.26_Wasserförderung.svg' },
+      { section: '4.7.27', id: 'capability.water-retention', variant: 'primary', referenceAsset: '4.7.27_Wasserrückhaltung.svg' },
+      { section: '4.7.28', id: 'capability.load-pulling', variant: 'primary', referenceAsset: '4.7.28_Ziehen von Lasten.svg' },
     ]);
   });
 });

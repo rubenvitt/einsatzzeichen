@@ -108,7 +108,15 @@ export type CapabilityId =
   | 'blasting'
   | 'technical-assistance'
   | 'transport'
-  | 'door-opening';
+  | 'door-opening'
+  | 'overcoming-height-differences'
+  | 'securing'
+  | 'optical-warning'
+  | 'loudspeaker-warning'
+  | 'siren-warning'
+  | 'water-conveyance'
+  | 'water-retention'
+  | 'load-pulling';
 
 /** Semantische Beschreibung eines Zeichens. Eingabe des Kompositionsmotors. */
 export interface SymbolSpec {
