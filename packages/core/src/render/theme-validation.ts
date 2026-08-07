@@ -29,6 +29,9 @@ export function assertValidRenderTheme(theme: RenderTheme): void {
   if (typeof theme !== 'object' || theme === null) {
     throw new TypeError(`RenderTheme muss ein Objekt sein (ist ${displayed(theme)}).`);
   }
+  if (typeof theme.id !== 'string') {
+    invalid(theme, 'id', 'muss eine Zeichenkette sein', theme.id);
+  }
 
   const palette: unknown = theme.palette;
   if (typeof palette !== 'object' || palette === null || Array.isArray(palette)) {

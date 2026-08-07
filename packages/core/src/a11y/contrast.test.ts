@@ -51,6 +51,14 @@ describe('Kontrastrechnung', () => {
       'RenderTheme "test": surface muss eine RGB-Hexfarbe im Format #RRGGBB sein (ist "#fff").',
     );
   });
+
+  it('lehnt eine nicht-string RenderTheme-ID ab', () => {
+    const invalidTheme = { ...theme, id: 42 } as unknown as RenderTheme;
+
+    expect(() => checkContrast(invalidTheme, [])).toThrow(
+      'RenderTheme: id muss eine Zeichenkette sein (ist 42).',
+    );
+  });
 });
 
 describe('paintTokensOf', () => {

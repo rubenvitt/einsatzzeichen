@@ -7,7 +7,7 @@ import {
   type Style,
 } from '@einsatzzeichen/schema';
 import { mergeStyle } from './style.js';
-import { REFERENCE_THEME, colorFor, type RenderTheme } from './theme.js';
+import { REFERENCE_THEME, type RenderTheme } from './theme.js';
 import { assertValidRenderTheme } from './theme-validation.js';
 
 export interface CanvasOptions {
@@ -18,7 +18,7 @@ export interface CanvasOptions {
 }
 
 function color(token: ColorToken | 'none', theme: RenderTheme): string {
-  return token === 'none' ? 'transparent' : colorFor(theme, token);
+  return token === 'none' ? 'transparent' : theme.palette[token];
 }
 
 function tracePrimitive(primitive: Primitive, ctx: CanvasRenderingContext2D): void {
@@ -148,7 +148,7 @@ export function renderCanvas(
   ctx: CanvasRenderingContext2D,
   options: CanvasOptions = {},
 ): void {
-  const theme = options.theme ?? REFERENCE_THEME;
+  const theme = options.theme === undefined ? REFERENCE_THEME : options.theme;
   assertValidRenderTheme(theme);
   ctx.save();
   if (options.size !== undefined) {

@@ -9,7 +9,7 @@ import {
 } from '@einsatzzeichen/schema';
 import { escapeXml, formatUnits } from './format.js';
 import { mergeStyle } from './style.js';
-import { REFERENCE_THEME, colorFor, type RenderTheme } from './theme.js';
+import { REFERENCE_THEME, type RenderTheme } from './theme.js';
 import { assertValidRenderTheme } from './theme-validation.js';
 
 export { formatUnits };
@@ -28,7 +28,7 @@ function u(mm: number): string {
 }
 
 function color(token: ColorToken | 'none', theme: RenderTheme): string {
-  return token === 'none' ? 'none' : escapeXml(colorFor(theme, token));
+  return token === 'none' ? 'none' : escapeXml(theme.palette[token]);
 }
 
 /**
@@ -210,7 +210,7 @@ function renderPrimitive(
 
 export function renderSvg(drawing: Drawing, options: SvgOptions = {}): string {
   const prefix = options.idPrefix ?? 'ez';
-  const theme = options.theme ?? REFERENCE_THEME;
+  const theme = options.theme === undefined ? REFERENCE_THEME : options.theme;
   assertValidRenderTheme(theme);
   const width = u(drawing.viewBox.width);
   const height = u(drawing.viewBox.height);

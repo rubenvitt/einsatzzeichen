@@ -13,4 +13,16 @@ describe('RenderTheme', () => {
     const theme: RenderTheme = { id: 'test', palette, surface: '#ffffff' };
     expect(colorFor(theme, 'blau')).toBe('#abcdef');
   });
+
+  it('lehnt ein injizierbares Theme am öffentlichen colorFor-Export ab', () => {
+    const theme: RenderTheme = {
+      id: 'injected',
+      palette: { ...PALETTE, blau: '#003296" data-injected="yes' },
+      surface: '#ffffff',
+    };
+
+    expect(() => colorFor(theme, 'blau')).toThrow(
+      'RenderTheme "injected": palette.blau muss eine RGB-Hexfarbe im Format #RRGGBB sein (ist "#003296\\" data-injected=\\"yes").',
+    );
+  });
 });

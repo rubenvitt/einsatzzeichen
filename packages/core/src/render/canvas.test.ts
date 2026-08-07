@@ -120,6 +120,19 @@ describe('renderCanvas', () => {
     expect(calls).toEqual([]);
   });
 
+  it('lehnt ein explizites null-Theme in SVG und Canvas vor jeder Ausgabe ab', () => {
+    const nullTheme = null as unknown as RenderTheme;
+    const { ctx, calls } = recordingContext();
+
+    expect(() => renderSvg(formation, { theme: nullTheme })).toThrow(
+      'RenderTheme muss ein Objekt sein (ist null).',
+    );
+    expect(() => renderCanvas(formation, ctx, { theme: nullTheme })).toThrow(
+      'RenderTheme muss ein Objekt sein (ist null).',
+    );
+    expect(calls).toEqual([]);
+  });
+
   it('setzt dieselbe nicht-farbliche Körperkontur wie der SVG-Renderer', () => {
     const theme: RenderTheme = {
       id: 'test',

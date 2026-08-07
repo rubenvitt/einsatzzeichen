@@ -4,6 +4,7 @@ import {
   type ColorToken,
   type RgbHex,
 } from '@einsatzzeichen/schema';
+import { assertValidRenderTheme } from './theme-validation.js';
 
 /**
  * Farbvertrag am Rendererrand. `surface` ist der Untergrund, gegen den Kontrast zugesichert wird;
@@ -28,5 +29,6 @@ export const REFERENCE_THEME: RenderTheme = {
 };
 
 export function colorFor(theme: RenderTheme, token: ColorToken): RgbHex {
+  assertValidRenderTheme(theme);
   return theme.palette[token];
 }
