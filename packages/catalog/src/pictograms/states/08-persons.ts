@@ -5,7 +5,7 @@ import {
   type CatalogPictogramDefinition,
   type PictogramContrastPair,
 } from '../catalog-definition.js';
-import { stateLine, statePath } from './authoring.js';
+import { STATE_BLACK_FILL, stateCircle, stateLine, statePath } from './authoring.js';
 
 const PERSON_CONTRAST = [
   {
@@ -89,6 +89,36 @@ export const PERSON_STATES = deepFreeze([
       injuryMark(),
       statePath('M 24.5 2.5 H 27.5 M 26 2.5 V 10.5'),
       statePath('M 28.5 10.5 V 2.5 H 29.5 C 31 2.5 31 6.5 29.5 6.5 H 28.5'),
+    ],
+  }),
+  defineState({
+    section: '5.8.8.6',
+    id: 'person-contaminated',
+    title: 'Person kontaminiert',
+    referenceAsset: '5.8.8.6_Person Kontaminiert.svg',
+    box: { xMm: 5, yMm: 2.5, widthMm: 26.5, heightMm: 23.5 },
+    contrastPairs: PERSON_CONTRAST,
+    primitives: [
+      personDiamond(),
+      injuryMark(),
+      stateCircle(26.5, 4, 1.5, STATE_BLACK_FILL),
+      stateCircle(30, 4, 1.5, STATE_BLACK_FILL),
+      stateLine(26.5, 5.5, 30.5, 10.5),
+      stateLine(30, 5.5, 25.5, 10.5),
+    ],
+  }),
+  defineState({
+    section: '5.8.8.6',
+    id: 'person-contaminated',
+    variant: 'alternative',
+    title: 'Person kontaminiert',
+    referenceAsset: '5.8.8.6_Person Kontaminiert_Alternative.svg',
+    box: { xMm: 5, yMm: 2.5, widthMm: 26, heightMm: 23.5 },
+    contrastPairs: PERSON_CONTRAST,
+    primitives: [
+      personDiamond(),
+      injuryMark(),
+      statePath('M 27.5 2.5 V 10.5 M 31 2.5 L 27.5 6.5 L 31 10.5'),
     ],
   }),
 ] satisfies readonly CatalogPictogramDefinition[]);
