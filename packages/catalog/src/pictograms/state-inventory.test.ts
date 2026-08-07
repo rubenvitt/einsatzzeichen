@@ -3,12 +3,13 @@ import { DEFAULT_VIEWBOX_MM, type Drawing } from '@einsatzzeichen/schema';
 import { renderSvg } from '@einsatzzeichen/core';
 import { PRINT_MONOCHROME_THEME } from '../render-themes.js';
 import type { CatalogPictogramDefinition } from './catalog-definition.js';
-import { pictogram } from './index.js';
+import { pictogram, pictogramRenderId } from './index.js';
 import {
   ACTIVITY_STATES,
   DAMAGE_STATES,
   FIRE_STATES,
   STATE_PICTOGRAMS,
+  TACTICS_HAZARDS_STATES,
   TENDENCY_STATES,
 } from './states/index.js';
 
@@ -32,6 +33,18 @@ function monochromeSvg(definition: CatalogPictogramDefinition): string {
 describe('State-Piktogramminventur', () => {
   it('enthält exakt die ausgelieferten States in Kapitelreihenfolge', () => {
     const expected = [
+      [
+        '5.8.1.13',
+        'state.suspected-situation',
+        'primary',
+        '5.8.1.13_Hinweis auf Vermutung.svg',
+      ],
+      [
+        '5.8.1.13',
+        'state.suspected-situation',
+        'alternative',
+        '5.8.1.13_Hinweis auf Vermutung_2.svg',
+      ],
       [
         '5.8.2.1',
         'state.activity-slightly-increased-outage-up-to-25-percent',
@@ -78,9 +91,28 @@ describe('State-Piktogramminventur', () => {
     ] as const;
 
     expect(STATE_PICTOGRAMS.map(inventoryTuple)).toEqual(expected);
+    expect(() => pictogram('state.suspected-situation')).not.toThrow();
     expect(() => pictogram('state.tendency-rising')).not.toThrow();
     expect(() => pictogram('state.damaged')).not.toThrow();
     expect(() => pictogram('state.incipient-fire')).not.toThrow();
+  });
+
+  it('hält Primär- und Alternativdarstellung je taktischem Hinweis eindeutig und titelgleich', () => {
+    const definitionsById = new Map<string, CatalogPictogramDefinition[]>();
+    for (const definition of TACTICS_HAZARDS_STATES) {
+      const definitions = definitionsById.get(definition.id) ?? [];
+      definitions.push(definition);
+      definitionsById.set(definition.id, definitions);
+    }
+
+    for (const definitions of definitionsById.values()) {
+      expect(definitions.map(({ variant }) => variant).sort()).toEqual([
+        'alternative',
+        'primary',
+      ]);
+      expect(new Set(definitions.map(({ title }) => title)).size).toBe(1);
+      expect(new Set(definitions.map(pictogramRenderId)).size).toBe(2);
+    }
   });
 
   it('kodiert die Aktivitätsgrade geometrisch und im Monochromtheme unterscheidbar', () => {
@@ -107,6 +139,7 @@ describe('State-Piktogramminventur', () => {
 
   it('friert Familien- und Gesamtregister tief ein und weist Erweiterungen zur Laufzeit zurück', () => {
     expect(Object.isFrozen(ACTIVITY_STATES)).toBe(true);
+    expect(Object.isFrozen(TACTICS_HAZARDS_STATES)).toBe(true);
     expect(Object.isFrozen(TENDENCY_STATES)).toBe(true);
     expect(Object.isFrozen(DAMAGE_STATES)).toBe(true);
     expect(Object.isFrozen(FIRE_STATES)).toBe(true);

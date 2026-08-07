@@ -41,6 +41,13 @@ const DELIVERED_BATCHES = [
       'state.fully-developed-fire#primary',
     ],
   },
+  {
+    batch: 'H1',
+    keys: [
+      'state.suspected-situation#primary',
+      'state.suspected-situation#alternative',
+    ],
+  },
 ] as const;
 
 describe('DELIVERED_BATCHES', () => {
