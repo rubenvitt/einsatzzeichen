@@ -46,6 +46,18 @@ describe('State-Piktogramminventur', () => {
         '5.8.1.13_Hinweis auf Vermutung_2.svg',
       ],
       [
+        '5.8.1.14',
+        'state.acute-situation',
+        'primary',
+        '5.8.1.14_Hinweis auf akute Situation.svg',
+      ],
+      [
+        '5.8.1.14',
+        'state.acute-situation',
+        'alternative',
+        '5.8.1.14_Hinweis auf akute Situation_2.svg',
+      ],
+      [
         '5.8.2.1',
         'state.activity-slightly-increased-outage-up-to-25-percent',
         'primary',
@@ -92,6 +104,7 @@ describe('State-Piktogramminventur', () => {
 
     expect(STATE_PICTOGRAMS.map(inventoryTuple)).toEqual(expected);
     expect(() => pictogram('state.suspected-situation')).not.toThrow();
+    expect(() => pictogram('state.acute-situation')).not.toThrow();
     expect(() => pictogram('state.tendency-rising')).not.toThrow();
     expect(() => pictogram('state.damaged')).not.toThrow();
     expect(() => pictogram('state.incipient-fire')).not.toThrow();

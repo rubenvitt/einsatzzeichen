@@ -52,6 +52,14 @@ function filledSignalCircle(cx: number, cy: number, r: number): Primitive {
   });
 }
 
+function filledSignalPath(d: string): Primitive {
+  return statePath(d, {
+    fill: 'rot',
+    stroke: 'schwarz',
+    strokeWidth: 0.5,
+  });
+}
+
 const SIGNAL_CONTRAST = [
   {
     foreground: 'schwarz',
@@ -103,6 +111,21 @@ function suspectedAlternativePrimitives(): readonly Primitive[] {
   ];
 }
 
+function acutePrimaryPrimitives(): readonly Primitive[] {
+  return [
+    filledSignalPath('M 15 5 H 17 V 23 H 15 Z'),
+    filledSignalCircle(16, 28, 1.5),
+  ];
+}
+
+function acuteAlternativePrimitives(): readonly Primitive[] {
+  return [
+    ...framedStroke(TRIANGLE, 'rot'),
+    filledSignalPath('M 15 8 H 17 V 21 H 15 Z'),
+    filledSignalCircle(16, 25, 1.2),
+  ];
+}
+
 export const TACTICS_HAZARDS_STATES = deepFreeze([
   defineState({
     section: '5.8.1.13',
@@ -122,5 +145,24 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
     contrastPairs: SIGNAL_CONTRAST,
     primitives: suspectedAlternativePrimitives(),
+  }),
+  defineState({
+    section: '5.8.1.14',
+    id: 'acute-situation',
+    title: 'Hinweis auf akute Situation',
+    referenceAsset: '5.8.1.14_Hinweis auf akute Situation.svg',
+    box: { xMm: 14.5, yMm: 5, widthMm: 3, heightMm: 24.5 },
+    contrastPairs: FREE_SIGNAL_CONTRAST,
+    primitives: acutePrimaryPrimitives(),
+  }),
+  defineState({
+    section: '5.8.1.14',
+    id: 'acute-situation',
+    variant: 'alternative',
+    title: 'Hinweis auf akute Situation',
+    referenceAsset: '5.8.1.14_Hinweis auf akute Situation_2.svg',
+    box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
+    contrastPairs: SIGNAL_CONTRAST,
+    primitives: acuteAlternativePrimitives(),
   }),
 ] satisfies readonly CatalogPictogramDefinition[]);

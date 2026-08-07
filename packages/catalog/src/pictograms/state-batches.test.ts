@@ -48,6 +48,13 @@ const DELIVERED_BATCHES = [
       'state.suspected-situation#alternative',
     ],
   },
+  {
+    batch: 'H2',
+    keys: [
+      'state.acute-situation#primary',
+      'state.acute-situation#alternative',
+    ],
+  },
 ] as const;
 
 describe('DELIVERED_BATCHES', () => {
