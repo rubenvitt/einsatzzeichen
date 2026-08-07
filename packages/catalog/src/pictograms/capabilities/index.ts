@@ -6,6 +6,7 @@ import { RESCUE_CAPABILITIES } from './05-rescue.js';
 import { MEDICAL_CAPABILITIES } from './06-medical.js';
 import { TECHNICAL_ASSISTANCE_CAPABILITIES } from './07-technical-assistance.js';
 import { LOGISTICS_CAPABILITIES } from './08-logistics.js';
+import { INFORMATION_COMMUNICATIONS_CAPABILITIES } from './09-information-communications.js';
 import type { CatalogPictogramDefinition } from '../catalog-definition.js';
 import { deepFreeze } from '../../readonly-data.js';
 
@@ -18,4 +19,5 @@ export const CAPABILITY_PICTOGRAMS: readonly CatalogPictogramDefinition[] = deep
   ...MEDICAL_CAPABILITIES,
   ...TECHNICAL_ASSISTANCE_CAPABILITIES,
   ...LOGISTICS_CAPABILITIES,
+  ...INFORMATION_COMMUNICATIONS_CAPABILITIES,
 ]);

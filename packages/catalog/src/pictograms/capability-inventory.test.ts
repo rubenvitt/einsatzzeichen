@@ -337,3 +337,25 @@ describe('Fähigkeitsinventar Kapitel 4.8', () => {
     ]);
   });
 });
+
+describe('Fähigkeitsinventar Kapitel 4.9', () => {
+  it('bildet die Darstellung aus Information und Kommunikation exakt ab', () => {
+    const actual = CAPABILITY_PICTOGRAMS
+      .filter((definition) => definition.section.startsWith('4.9.'))
+      .map(({ section, id, variant, referenceAsset }) => ({
+        section,
+        id,
+        variant,
+        referenceAsset,
+      }));
+
+    expect(actual).toEqual([
+      {
+        section: '4.9.1',
+        id: 'capability.information-communications',
+        variant: 'primary',
+        referenceAsset: '4.9.1_Information und Kommunikation Fernmeldewesen.svg',
+      },
+    ]);
+  });
+});

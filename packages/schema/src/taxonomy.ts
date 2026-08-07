@@ -132,7 +132,8 @@ export type CapabilityId =
   | 'catering'
   | 'meal-preparation'
   | 'rapid-deployment-tent'
-  | 'frame-tent';
+  | 'frame-tent'
+  | 'information-communications';
 
 /** Semantische Beschreibung eines Zeichens. Eingabe des Kompositionsmotors. */
 export interface SymbolSpec {
