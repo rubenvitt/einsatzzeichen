@@ -33,6 +33,14 @@ const DELIVERED_BATCHES = [
       'state.destroyed#primary',
     ],
   },
+  {
+    batch: 'F1',
+    keys: [
+      'state.incipient-fire#primary',
+      'state.developed-fire#primary',
+      'state.fully-developed-fire#primary',
+    ],
+  },
 ] as const;
 
 describe('DELIVERED_BATCHES', () => {

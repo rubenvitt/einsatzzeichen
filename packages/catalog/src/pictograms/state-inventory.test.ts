@@ -7,6 +7,7 @@ import { pictogram } from './index.js';
 import {
   ACTIVITY_STATES,
   DAMAGE_STATES,
+  FIRE_STATES,
   STATE_PICTOGRAMS,
   TENDENCY_STATES,
 } from './states/index.js';
@@ -66,11 +67,20 @@ describe('State-Piktogramminventur', () => {
         '5.8.4.2_Teilzerstört.svg',
       ],
       ['5.8.4.3', 'state.destroyed', 'primary', '5.8.4.3_Total zerstört.svg'],
+      ['5.8.5.1', 'state.incipient-fire', 'primary', '5.8.5.1_Entstehungsbrand.svg'],
+      [
+        '5.8.5.2',
+        'state.developed-fire',
+        'primary',
+        '5.8.5.2_fortentwickelter Brand.svg',
+      ],
+      ['5.8.5.3', 'state.fully-developed-fire', 'primary', '5.8.5.3_Vollbrand.svg'],
     ] as const;
 
     expect(STATE_PICTOGRAMS.map(inventoryTuple)).toEqual(expected);
     expect(() => pictogram('state.tendency-rising')).not.toThrow();
     expect(() => pictogram('state.damaged')).not.toThrow();
+    expect(() => pictogram('state.incipient-fire')).not.toThrow();
   });
 
   it('kodiert die Aktivitätsgrade geometrisch und im Monochromtheme unterscheidbar', () => {
@@ -99,6 +109,7 @@ describe('State-Piktogramminventur', () => {
     expect(Object.isFrozen(ACTIVITY_STATES)).toBe(true);
     expect(Object.isFrozen(TENDENCY_STATES)).toBe(true);
     expect(Object.isFrozen(DAMAGE_STATES)).toBe(true);
+    expect(Object.isFrozen(FIRE_STATES)).toBe(true);
     expect(Object.isFrozen(STATE_PICTOGRAMS)).toBe(true);
 
     const mutableStates = STATE_PICTOGRAMS as unknown as CatalogPictogramDefinition[];
