@@ -60,8 +60,9 @@ export interface ComposeOptions {
 /**
  * `SymbolSpec.capabilities` trägt `CapabilityId` (`'fire-fighting'`), der Piktogrammraum trägt
  * präfigierte IDs (`'capability.fire-fighting'`). Die Abbildung steht hier an einer Stelle und
- * nicht an jedem Aufrufort: die übrigen vier ID-Räume (Kapitel 5.8, Anhänge J–M) haben in
- * `SymbolSpec` noch kein Feld und kommen erst mit D.2 bis D.4 dazu.
+ * nicht an jedem Aufrufort. Kapitel 5.8 bleibt bewusst ein eigenständiger Piktogrammkatalog ohne
+ * `SymbolSpec.states` und ohne Integration in `compose()`. Weitere ID-Räume erhalten erst dann
+ * `SymbolSpec`-Felder, wenn ein realer Konsument fachlich freigegeben ist.
  */
 function pictogramIdOf(id: CapabilityId): PictogramId {
   return `capability.${id}`;
