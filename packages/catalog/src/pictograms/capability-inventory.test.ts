@@ -1,5 +1,69 @@
 import { describe, expect, it } from 'vitest';
+import { CAPABILITY_IDS } from '@einsatzzeichen/schema';
+import { fingerprintFor } from '../fingerprint-index.js';
 import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
+import { pictogram, pictogramVariantKey } from './index.js';
+
+describe('Abschlussinventar Kapitel 4', () => {
+  it('deklariert exakt 88 eindeutige Capability-IDs', () => {
+    expect(CAPABILITY_IDS).toHaveLength(88);
+    expect(new Set(CAPABILITY_IDS)).toHaveLength(88);
+  });
+
+  it('führt 92 Darstellungen mit 88 Primär- und vier Alternativvarianten', () => {
+    expect(CAPABILITY_PICTOGRAMS).toHaveLength(92);
+    expect(CAPABILITY_PICTOGRAMS.filter(({ variant }) => variant === 'primary')).toHaveLength(88);
+    expect(CAPABILITY_PICTOGRAMS.filter(({ variant }) => variant === 'alternative')).toHaveLength(4);
+  });
+
+  it('deckt als Primärvarianten exakt die vollständige Taxonomie ab', () => {
+    const actual = CAPABILITY_PICTOGRAMS
+      .filter(({ variant }) => variant === 'primary')
+      .map(({ id }) => id.slice('capability.'.length))
+      .sort();
+
+    expect(actual).toEqual([...CAPABILITY_IDS].sort());
+  });
+
+  it('führt ausschließlich die vier belegten Alternativdarstellungen', () => {
+    const actual = CAPABILITY_PICTOGRAMS
+      .filter(({ variant }) => variant === 'alternative')
+      .map(({ section, referenceAsset }) => `${section}:${referenceAsset}`);
+
+    expect(actual).toEqual([
+      '4.1.6:4.1.6_Atomare Stoffe_Alternative.svg',
+      '4.1.7:4.1.7_Biologische Stoffe_Alternative.svg',
+      '4.1.8:4.1.8_Chemische Stoffe_Alternative.svg',
+      '4.7.10:4.7.10_Heben von Lasten oder Personen_Alternative.svg',
+    ]);
+  });
+
+  it('hat eindeutige Varianten-Schlüssel und löst jede Darstellung identisch auf', () => {
+    const keys = CAPABILITY_PICTOGRAMS.map(pictogramVariantKey);
+    expect(new Set(keys)).toHaveLength(92);
+
+    for (const definition of CAPABILITY_PICTOGRAMS) {
+      expect(pictogram(definition.id, definition.variant)).toBe(definition);
+    }
+  });
+
+  it('belegt jede Darstellung mit passender Referenzdatei und Fingerprint', () => {
+    for (const definition of CAPABILITY_PICTOGRAMS) {
+      expect(definition.referenceAsset.startsWith(`${definition.section}_`)).toBe(true);
+      expect(() => fingerprintFor(definition.referenceAsset)).not.toThrow();
+    }
+  });
+
+  it('hält Titel über Varianten stabil und hat genau eine Primärvariante je Capability-ID', () => {
+    for (const capabilityId of CAPABILITY_IDS) {
+      const definitions = CAPABILITY_PICTOGRAMS.filter(
+        ({ id }) => id === `capability.${capabilityId}`,
+      );
+      expect(definitions.filter(({ variant }) => variant === 'primary')).toHaveLength(1);
+      expect(new Set(definitions.map(({ title }) => title))).toHaveLength(1);
+    }
+  });
+});
 
 describe('Fähigkeitsinventar Kapitel 4.1', () => {
   it('bildet die elf Darstellungen aus ABC-/CBRN-Schutz exakt ab', () => {

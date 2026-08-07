@@ -174,7 +174,7 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
   coreVersion: '0.1.0',
   // Kapitel 3 (sieben Referenzdateien) setzt dieser Slice nicht um; 5.1.1/5.7 sind entfallen
   // (Verwaltungsstufen/Fahrzeugkategorien: von 16 Referenzdateien nur 2 vermessbar, kein Konsument).
-  scope: ['1', '2', '4.3.1', '4.3.2', '5.4', 'C.1.1', 'C.1.2', 'D.3.7'],
+  scope: ['1', '2', '4', '5.4', 'C.1.1', 'C.1.2', 'D.3.7'],
   entries: [...catalogEntries, ...recipeEntries, ...elementEntries, ...pictogramEntries],
 };
 

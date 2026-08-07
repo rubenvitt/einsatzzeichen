@@ -11,7 +11,7 @@ import { VETERINARY_CAPABILITIES } from './10-veterinary.js';
 import type { CatalogPictogramDefinition } from '../catalog-definition.js';
 import { deepFreeze } from '../../readonly-data.js';
 
-export const CAPABILITY_PICTOGRAMS: readonly CatalogPictogramDefinition[] = deepFreeze([
+export const CAPABILITY_PICTOGRAMS = deepFreeze([
   ...CBRN_CAPABILITIES,
   ...CARE_CAPABILITIES,
   ...FIRE_FIGHTING_PICTOGRAMS,
@@ -22,4 +22,4 @@ export const CAPABILITY_PICTOGRAMS: readonly CatalogPictogramDefinition[] = deep
   ...LOGISTICS_CAPABILITIES,
   ...INFORMATION_COMMUNICATIONS_CAPABILITIES,
   ...VETERINARY_CAPABILITIES,
-]);
+] satisfies readonly CatalogPictogramDefinition[]);

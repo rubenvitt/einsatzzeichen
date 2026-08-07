@@ -55,11 +55,13 @@ describe('Fachreview-Ledger', () => {
   });
 
   it('erfindet keine Fachfreigabe', () => {
-    const reviews = [
-      ...Object.values(MANIFEST_DOMAIN_REVIEWS),
-      ...Object.values(SOURCE_DOMAIN_REVIEWS),
-      ...Object.values(PROFILE_DOMAIN_REVIEWS),
-    ];
+    const manifestReviews = Object.values(MANIFEST_DOMAIN_REVIEWS);
+    const sourceReviews = Object.values(SOURCE_DOMAIN_REVIEWS);
+    const profileReviews = Object.values(PROFILE_DOMAIN_REVIEWS);
+    const reviews = [...manifestReviews, ...sourceReviews, ...profileReviews];
+    expect(manifestReviews).toHaveLength(114);
+    expect(sourceReviews).toHaveLength(12);
+    expect(profileReviews).toHaveLength(1);
     expect(reviews).toHaveLength(127);
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
   });

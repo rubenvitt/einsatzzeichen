@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_VIEWBOX_MM, entryKey, type CatalogEntry } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
-import { checkCoverage, findPrimaryViolations } from './coverage-gate.js';
+import { checkCoverage, findPrimaryViolations, releaseBlockers } from './coverage-gate.js';
 import { ALL_PICTOGRAMS, pictogramVariantKey } from './pictograms/index.js';
 
 // Dieselbe Vorlage wie in `coverage-gate.test.ts`: beide Dateien brauchen einen Katalogeintrag
@@ -88,12 +88,22 @@ describe('Coverage-Manifest', () => {
   });
 
   it('meldet keine fehlenden, doppelten oder primary-verletzenden Einträge', () => {
-    const { missing, duplicates, invalidPrimary } = checkCoverage();
-    expect({ missing, duplicates, invalidPrimary }).toEqual({
+    const { missing, duplicates, invalidPrimary, violations } = checkCoverage();
+    expect({ missing, duplicates, invalidPrimary, violations }).toEqual({
       missing: [],
       duplicates: [],
       invalidPrimary: [],
+      violations: [],
     });
+  });
+
+  it('hat keine Abweichungen, Evidenzlücken oder Scope-Lücken', () => {
+    const blockers = releaseBlockers();
+    expect(blockers.domainReviewDeviations).toEqual([]);
+    expect(blockers.sourceDomainReviewDeviations).toEqual([]);
+    expect(blockers.profileDomainReviewDeviations).toEqual([]);
+    expect(blockers.withoutTestEvidence).toEqual([]);
+    expect(blockers.uncoveredScope).toEqual([]);
   });
 
   it('nennt die BABZ-Empfehlungen als Baseline', () => {
@@ -108,8 +118,7 @@ describe('Coverage-Manifest', () => {
     expect(COVERAGE_MANIFEST.scope).toEqual([
       '1',
       '2',
-      '4.3.1',
-      '4.3.2',
+      '4',
       '5.4',
       'C.1.1',
       'C.1.2',
@@ -133,6 +142,7 @@ describe('Manifest-Einträge für Piktogramme', () => {
       .filter((entry) => entry.coverage === 'element' && entry.implementation.startsWith('capability.'))
       .map((entry) => entryKey(entry.implementation, entry.variant))
       .sort();
+    expect(rows).toHaveLength(92);
     expect(rows).toEqual(definitions);
   });
 
@@ -155,11 +165,11 @@ describe('Manifest-Einträge für Piktogramme', () => {
     return COVERAGE_MANIFEST.entries.find((entry) => entry.sourceId === `bbk-babz-2025:${section}`);
   }
 
-  it('führt 4.3.2 im beanspruchten Umfang und als Eintrag', () => {
+  it('führt das vollständige Kapitel 4 im beanspruchten Umfang und 4.3.2 als Eintrag', () => {
     // Der Scope wächst nie vorauseilend: ein Kapitel im Scope ohne Eintrag ist ein
     // Release-Blocker, und die Erweiterung vor dem Inhalt erzeugt genau die Falschaussage,
     // die das Manifest verhindern soll.
-    expect(COVERAGE_MANIFEST.scope).toContain('4.3.2');
+    expect(COVERAGE_MANIFEST.scope).toContain('4');
     expect(entryFor('4.3.2')).toBeDefined();
   });
 
