@@ -169,6 +169,24 @@ describe('State-Piktogramminventur', () => {
         'primary',
         '5.8.8.12_Person zu transportieren.svg',
       ],
+      [
+        '5.8.8.13',
+        'state.person-in-transport',
+        'primary',
+        '5.8.8.13_Transport einer Person.svg',
+      ],
+      [
+        '5.8.8.14',
+        'state.person-transported',
+        'primary',
+        '5.8.8.14_Person transportiert.svg',
+      ],
+      [
+        '5.8.8.15',
+        'state.person-needing-special-care',
+        'primary',
+        '5.8.8.15_Person besonders betreuungsbedürftig.svg',
+      ],
     ] as const;
 
     expect(STATE_PICTOGRAMS.map(inventoryTuple)).toEqual(expected);
@@ -194,6 +212,9 @@ describe('State-Piktogramminventur', () => {
     expect(() => pictogram('state.person-in-distress')).not.toThrow();
     expect(() => pictogram('state.person-rescued')).not.toThrow();
     expect(() => pictogram('state.person-to-be-transported')).not.toThrow();
+    expect(() => pictogram('state.person-in-transport')).not.toThrow();
+    expect(() => pictogram('state.person-transported')).not.toThrow();
+    expect(() => pictogram('state.person-needing-special-care')).not.toThrow();
   });
 
   it('hält Primär- und Alternativdarstellung je taktischem Hinweis eindeutig und titelgleich', () => {
