@@ -101,7 +101,7 @@ Darstellungen ab, darunter sechs getrennt adressierbare Alternativdarstellungen.
 der Katalog insgesamt 159 Piktogrammdarstellungen: 92 Capabilities und 67 States. Die 170 globalen
 Renderfälle setzen sich aus acht Grundzeichen, drei Rezepten und diesen 159 Piktogrammen zusammen.
 
-Alle 67 States sind eigenständige Zeichen mit kanonischer 32×32-mm-Platzierung und
+Alle 67 State-Darstellungen sind eigenständige Zeichen mit kanonischer 32×32-mm-Platzierung und
 Standalone-Clipping. D.2 führt weder eine allgemeine State-Komposition noch eine Integration in
 `SymbolSpec.states` oder `compose()` ein. Die technische D.2-Evidenz einschließlich der 67/67-
 Kontaktbogenprüfung wurde in Task 15 abgeschlossen und technisch freigegeben; die Sichtprüfung ist
