@@ -60,6 +60,18 @@ describe('State-Piktogramminventur', () => {
         '5.8.1.4_Einsatztaktik_Rückzug.svg',
       ],
       [
+        '5.8.1.5',
+        'state.flooded-area',
+        'primary',
+        '5.8.1.5_Überschwemmtes Gebiet.svg',
+      ],
+      [
+        '5.8.1.6',
+        'state.water-ingress-hazard',
+        'primary',
+        '5.8.1.6_Gefahr durch Wassereinbruch.svg',
+      ],
+      [
         '5.8.1.13',
         'state.suspected-situation',
         'primary',
@@ -230,6 +242,8 @@ describe('State-Piktogramminventur', () => {
     expect(() => pictogram('state.tactical-attack')).not.toThrow();
     expect(() => pictogram('state.tactical-defense')).not.toThrow();
     expect(() => pictogram('state.tactical-retreat')).not.toThrow();
+    expect(() => pictogram('state.flooded-area')).not.toThrow();
+    expect(() => pictogram('state.water-ingress-hazard')).not.toThrow();
     expect(() => pictogram('state.suspected-situation')).not.toThrow();
     expect(() => pictogram('state.acute-situation')).not.toThrow();
     expect(() => pictogram('state.tendency-rising')).not.toThrow();

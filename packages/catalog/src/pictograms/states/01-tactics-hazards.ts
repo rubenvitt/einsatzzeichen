@@ -78,6 +78,24 @@ const TACTICAL_CONTRAST = [
   },
 ] as const satisfies readonly [PictogramContrastPair, ...PictogramContrastPair[]];
 
+const WATER_CONTRAST = [
+  {
+    foreground: 'schwarz',
+    background: 'surface',
+    context: 'Schwarze Aussenkontur des Wasserzeichens',
+  },
+  {
+    foreground: 'schwarz',
+    background: 'weiss',
+    context: 'Schwarze Kontur auf weisser Innenflaeche',
+  },
+  {
+    foreground: 'schwarz',
+    background: 'hellblau',
+    context: 'Schwarzer Halo an blauer Wassergeometrie',
+  },
+] as const satisfies readonly [PictogramContrastPair, ...PictogramContrastPair[]];
+
 const SIGNAL_CONTRAST = [
   {
     foreground: 'schwarz',
@@ -110,6 +128,8 @@ const FREE_SIGNAL_CONTRAST = [
 ] as const satisfies readonly [PictogramContrastPair, ...PictogramContrastPair[]];
 
 const TRIANGLE = 'M 16 2 L 30 29 H 2 Z';
+const FLOOD_OVAL =
+  'M 2 16 C 2 8 8 3 16 3 C 24 3 30 8 30 16 C 30 24 24 29 16 29 C 8 29 2 24 2 16 Z';
 
 const TACTIC_GEOMETRY = {
   rescue: {
@@ -149,6 +169,32 @@ function tacticalPrimitives(kind: TacticKind): readonly Primitive[] {
   return [
     ...haloStroke(geometry.boundary, geometry.boundaryColor),
     ...haloStroke(geometry.arrow, geometry.arrowColor),
+  ];
+}
+
+function floodedAreaPrimitives(): readonly Primitive[] {
+  const waves =
+    'M 7 9 C 8 9 8.5 7 10 7 C 11.5 7 12 9 13 9 ' +
+    'M 19 9 C 20 9 20.5 7 22 7 C 23.5 7 24 9 25 9 ' +
+    'M 5 16 C 6.5 16 7 14 8.5 14 C 10 14 10.5 16 12 16 ' +
+    'M 20 16 C 21.5 16 22 14 23.5 14 C 25 14 25.5 16 27 16 ' +
+    'M 7 23 C 8 23 8.5 21 10 21 C 11.5 21 12 23 13 23 ' +
+    'M 19 23 C 20 23 20.5 21 22 21 C 23.5 21 24 23 25 23';
+  const waterInitial = 'M 12 12 L 14.5 21 L 16 16 L 17.5 21 L 20 12';
+  return [
+    ...framedStroke(FLOOD_OVAL, 'hellblau'),
+    ...haloStroke(waves, 'hellblau'),
+    ...haloStroke(waterInitial, 'hellblau'),
+  ];
+}
+
+function waterIngressPrimitives(): readonly Primitive[] {
+  const waves =
+    'M 8 18 C 10 16 12 16 14 18 C 16 20 18 20 20 18 C 22 16 24 16 26 18 ' +
+    'M 8 22 C 10 20 12 20 14 22 C 16 24 18 24 20 22 C 22 20 24 20 26 22';
+  return [
+    ...framedStroke(TRIANGLE, 'hellblau'),
+    ...haloStroke(waves, 'hellblau'),
   ];
 }
 
@@ -221,6 +267,24 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     box: { xMm: 3, yMm: 4, widthMm: 27, heightMm: 24 },
     contrastPairs: TACTICAL_CONTRAST,
     primitives: tacticalPrimitives('retreat'),
+  }),
+  defineState({
+    section: '5.8.1.5',
+    id: 'flooded-area',
+    title: 'Überschwemmtes Gebiet',
+    referenceAsset: '5.8.1.5_Überschwemmtes Gebiet.svg',
+    box: { xMm: 2, yMm: 3, widthMm: 28, heightMm: 26 },
+    contrastPairs: WATER_CONTRAST,
+    primitives: floodedAreaPrimitives(),
+  }),
+  defineState({
+    section: '5.8.1.6',
+    id: 'water-ingress-hazard',
+    title: 'Gefahr durch Wassereinbruch',
+    referenceAsset: '5.8.1.6_Gefahr durch Wassereinbruch.svg',
+    box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
+    contrastPairs: WATER_CONTRAST,
+    primitives: waterIngressPrimitives(),
   }),
   defineState({
     section: '5.8.1.13',
