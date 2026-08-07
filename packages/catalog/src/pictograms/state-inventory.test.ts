@@ -193,6 +193,46 @@ describe('State-Piktogramminventur', () => {
     }
   });
 
+  it('hält die außenliegenden P2-Marken in den exakten Autorenboxen', () => {
+    const triage = PERSON_STATES.find(
+      ({ id }) => id === 'state.person-injured-triage-category',
+    );
+    const transportPriority = PERSON_STATES.find(
+      ({ id }) => id === 'state.person-injured-transport-priority',
+    );
+
+    expect(triage?.box).toEqual({ xMm: 1.5, yMm: 4, widthMm: 25.5, heightMm: 27 });
+    expect(transportPriority?.box).toEqual({
+      xMm: 5,
+      yMm: 2.5,
+      widthMm: 26,
+      heightMm: 23.5,
+    });
+  });
+
+  it('deklariert keine Personenzustandsprimitive als Fußzone', () => {
+    for (const definition of PERSON_STATES) {
+      for (const primitive of definition.primitives) {
+        expect(primitive.role, `${definition.id}#${definition.variant}`).toBe('pictogram');
+      }
+    }
+  });
+
+  it('hält die beiden Kontaminationsdarstellungen titelgleich und renderseitig eindeutig', () => {
+    const definitions = PERSON_STATES.filter(
+      ({ id }) => id === 'state.person-contaminated',
+    );
+
+    expect(definitions.map(({ variant }) => variant)).toEqual(['primary', 'alternative']);
+    expect([...new Set(definitions.map(({ title }) => title))]).toEqual([
+      'Person kontaminiert',
+    ]);
+    expect(definitions.map(pictogramRenderId)).toEqual([
+      'state.person-contaminated',
+      'state.person-contaminated.alternative',
+    ]);
+  });
+
   it('kodiert die Aktivitätsgrade geometrisch und im Monochromtheme unterscheidbar', () => {
     const outageSectorCounts = ACTIVITY_STATES.map((definition) =>
       definition.primitives.filter(
