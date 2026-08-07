@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { checkContrast, paintTokensOf, relativeLuminance, type ContrastRequirement } from '@einsatzzeichen/core';
+import { checkContrast, relativeLuminance, type ContrastRequirement } from '@einsatzzeichen/core';
 import { ORGANIZATION_COLORS } from './organizations.js';
 import { ALL_PICTOGRAMS } from './pictograms/index.js';
+import { MINIMUM_NON_TEXT_CONTRAST, contrastRequirementsFor } from './pictograms/contrast-contract.js';
 import {
   ACCESSIBLE_LIGHT_THEME,
   PRINT_MONOCHROME_THEME,
@@ -9,42 +10,19 @@ import {
   ORGANIZATION_BODY_DASHES,
 } from './render-themes.js';
 
-const MINIMUM_NON_TEXT_CONTRAST = 3;
 const PRIMARY_PICTOGRAMS = ALL_PICTOGRAMS.filter(
-  (definition) => definition.variant === 'primary',
+  (definition) => definition.variant === 'primary' && definition.placement.mode === 'in-body',
 );
 
+const BASE_CONTRAST_REQUIREMENT: ContrastRequirement = {
+  foreground: 'schwarz',
+  background: 'surface',
+  context: 'schwarze Kontur und Kopfmarke auf der Ausgabeoberfläche',
+  minimum: MINIMUM_NON_TEXT_CONTRAST,
+};
+
 function requirements(): ContrastRequirement[] {
-  const result: ContrastRequirement[] = [
-    {
-      foreground: 'schwarz',
-      background: 'surface',
-      context: 'schwarze Kontur und Kopfmarke auf der Ausgabeoberfläche',
-      minimum: MINIMUM_NON_TEXT_CONTRAST,
-    },
-  ];
-  for (const definition of ALL_PICTOGRAMS) {
-    for (const foreground of paintTokensOf(definition.primitives)) {
-      result.push({
-        foreground,
-        background: 'surface',
-        context: `${definition.id} ohne Organisationsfüllung`,
-        minimum: MINIMUM_NON_TEXT_CONTRAST,
-      });
-      // Nur primary ist die Standarddarstellung in zusammengesetzten Zeichen. Rote Alternativen
-      // werden explizit gewählt und nicht fiktiv auf jede Organisationsfarbe gelegt.
-      if (definition.variant !== 'primary') continue;
-      for (const [organization, background] of Object.entries(ORGANIZATION_COLORS)) {
-        result.push({
-          foreground,
-          background,
-          context: `${definition.id} auf Organisation ${organization}`,
-          minimum: MINIMUM_NON_TEXT_CONTRAST,
-        });
-      }
-    }
-  }
-  return result;
+  return [BASE_CONTRAST_REQUIREMENT, ...ALL_PICTOGRAMS.flatMap(contrastRequirementsFor)];
 }
 
 describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
@@ -67,6 +45,14 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     );
     expect(blue).toHaveLength(PRIMARY_PICTOGRAMS.length);
     expect(blue.every((issue) => issue.ratio < MINIMUM_NON_TEXT_CONTRAST)).toBe(true);
+  });
+
+  it('behält die feste Körper- und Kopf-Anforderung genau einmal', () => {
+    expect(
+      requirements().filter(
+        (requirement) => requirement.context === BASE_CONTRAST_REQUIREMENT.context,
+      ),
+    ).toEqual([BASE_CONTRAST_REQUIREMENT]);
   });
 
   it('bildet das Drucktheme vollständig achromatisch ab', () => {

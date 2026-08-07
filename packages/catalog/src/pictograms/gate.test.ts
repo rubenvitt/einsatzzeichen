@@ -1,8 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { checkBox, checkClipping, checkCommands } from '@einsatzzeichen/core';
-import { entryKey, type PictogramDefinition, type Primitive } from '@einsatzzeichen/schema';
+import {
+  DEFAULT_VIEWBOX_MM,
+  entryKey,
+  type PictogramBox,
+  type PictogramDefinition,
+  type Primitive,
+} from '@einsatzzeichen/schema';
 import { BASE_SYMBOLS, baseDrawing } from '../base-symbols.js';
 import { COVERAGE_MANIFEST } from '../coverage-manifest.js';
+import { deepFreeze } from '../readonly-data.js';
+import type { CatalogPictogramDefinition } from './catalog-definition.js';
+import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
 import { ALL_PICTOGRAMS, pictogramVariantKey } from './index.js';
 
 /**
@@ -28,6 +37,37 @@ const CENTERED_TEST_PICTOGRAM: PictogramDefinition = {
   primitives: [],
 };
 
+const VIEWBOX_BODY: Primitive = {
+  type: 'rect',
+  role: 'body',
+  x: 0,
+  y: 0,
+  width: DEFAULT_VIEWBOX_MM.width,
+  height: DEFAULT_VIEWBOX_MM.height,
+};
+
+function clippingBodyFor(definition: CatalogPictogramDefinition): Primitive {
+  return definition.placement.mode === 'in-body'
+    ? bodyOf(definition.placement.bodyKind)
+    : VIEWBOX_BODY;
+}
+
+function standaloneFixture(box: PictogramBox): CatalogPictogramDefinition {
+  return deepFreeze({
+    section: '4.fixture',
+    id: 'capability.fire-fighting',
+    variant: 'primary',
+    title: 'Standalone-Testfixture',
+    referenceAsset: 'fixture.svg',
+    placement: { mode: 'standalone' } as const,
+    contrastPairs: [
+      { foreground: 'schwarz', background: 'surface', context: 'Testfixture' },
+    ],
+    box,
+    primitives: [],
+  });
+}
+
 describe('Piktogramm-Gates über den Katalogbestand', () => {
   it('bindet den Vertragsclaim exakt an die ausgeführten Piktogrammfälle', () => {
     const tested = ALL_PICTOGRAMS.map(pictogramVariantKey).sort();
@@ -41,6 +81,13 @@ describe('Piktogramm-Gates über den Katalogbestand', () => {
   it('hat mindestens ein Piktogramm zu prüfen', () => {
     // Ohne diese Zusicherung wären die drei Tests unten bei leerem Bestand trivial grün.
     expect(ALL_PICTOGRAMS.length).toBeGreaterThan(0);
+  });
+
+  it('deklariert alle Kapitel-4-Definitionen als in-body für formation', () => {
+    expect(CAPABILITY_PICTOGRAMS).toHaveLength(92);
+    for (const definition of CAPABILITY_PICTOGRAMS) {
+      expect(definition.placement).toEqual({ mode: 'in-body', bodyKind: 'formation' });
+    }
   });
 
   it.each(ALL_PICTOGRAMS.map((definition) => [pictogramVariantKey(definition), definition] as const))(
@@ -58,13 +105,22 @@ describe('Piktogramm-Gates über den Katalogbestand', () => {
   );
 
   it.each(ALL_PICTOGRAMS.map((definition) => [pictogramVariantKey(definition), definition] as const))(
-    'besteht für %s das Clipping-Gate gegen die Taktische Formation',
+    'besteht für %s das Clipping-Gate im deklarierten Platzierungskontext',
     (_id, definition) => {
-      // Die vorhandenen Kapitel-4-Geometrien sind fachlich weiterhin für `formation`
-      // autorisiert. Ein kartesisches Produkt mit allen Körpern würde diese Aussage erfinden.
-      expect(checkClipping(definition, bodyOf('formation'))).toEqual([]);
+      expect(checkClipping(definition, clippingBodyFor(definition))).toEqual([]);
     },
   );
+
+  it('akzeptiert standalone außerhalb der Formation, solange die sichtbare Box in der ViewBox liegt', () => {
+    const definition = standaloneFixture({ xMm: 1, yMm: 1, widthMm: 3, heightMm: 3 });
+    expect(checkClipping(definition, bodyOf('formation'))).not.toEqual([]);
+    expect(checkClipping(definition, clippingBodyFor(definition))).toEqual([]);
+  });
+
+  it('lehnt standalone-Tinte außerhalb der 32×32-mm-ViewBox ab', () => {
+    const definition = standaloneFixture({ xMm: 31, yMm: 31, widthMm: 2, heightMm: 2 });
+    expect(checkClipping(definition, clippingBodyFor(definition))).not.toEqual([]);
+  });
 
   it.each(BODY_CASES)('kann die reale Körperfläche von %s prüfen', (_kind, body) => {
     // Dieser Test belegt die technische Flächenmodell-Abdeckung, nicht die fachliche

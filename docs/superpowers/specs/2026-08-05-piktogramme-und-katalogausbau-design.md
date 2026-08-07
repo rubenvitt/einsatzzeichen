@@ -355,6 +355,13 @@ wo eine Änderung der Referenzterminologie keine ID bricht.
 
 ## 7. Gates: was ein Piktogramm prüfbar macht
 
+> **Nachtrag vom 7. August 2026:** Kapitel-4-Fähigkeiten sind in-body-Piktogramme im
+> Grundzeichen formation. Kapitel-5.8-Zustände sind eigenständige taktische Zeichen; ihr
+> Clippingziel ist die kanonische 32×32-mm-ViewBox. D.2 fügt deshalb kein SymbolSpec.states und
+> keine State-Komposition in compose() hinzu. Für Standalone-Zeichen werden die tatsächlich
+> benachbarten Farbpaare je Definition deklariert; das bisherige Organisationsfarbenprodukt gilt
+> nur für in-body primary.
+
 ### Die Reduktion, die niemand nachträglich erfinden soll
 
 Slice 2, Abschnitt 4 definiert `technical: approved` als „Fingerprint- und Snapshot-Gate für
@@ -400,7 +407,9 @@ Komposition. Wäre die Invarianz nicht belegt, müsste sie pro Komposition laufe
 
 Das Clipping-Gate ist der vorgezogene Teil der Gate-Härtung (Abschnitt 1). Es prüft in diesem
 Slice die Piktogramm-Box gegen den Körper, **nicht** die viewBox-Konsistenz des Gesamtbestands —
-das bleibt bei der Gate-Härtung.
+das bleibt bei der Gate-Härtung. Für die in D.2 hinzukommenden Standalone-Zeichen gilt dagegen
+der Nachtrag vom 7. August 2026: Das Clippingziel ist die kanonische 32×32-mm-ViewBox; die
+Farbkontraste folgen ausschließlich den je Zeichen deklarierten Nachbarschaftspaaren.
 
 **Alle drei Gates lesen die Blätter, nicht die Gruppe.** `role: 'pictogram'` steht an jedem
 Primitiv einer `PictogramDefinition` (wie heute in `capabilities.ts:11`); die von `compose`
@@ -478,6 +487,9 @@ Spec**, alles Weitere bekommt einen eigenen Umsetzungsplan.
 > `docs/decisions/2026-08-06-gate-haertung-vor-d1.md` abgeschlossen. Die dort dokumentierten
 > Mehrgrößen-, Theme-/Druck-, A11y- und globalen viewBox-Gates geben D.1 frei.
 
+Der Nachtrag vom 7. August 2026 grenzt D.2 vor dem Ausbau ab: Kapitel 5.8 wird standalone
+katalogisiert, ohne `SymbolSpec.states` oder eine State-Komposition in `compose()` vorwegzunehmen.
+
 1. **D.0 zuerst**, weil ohne es kein Pfad-Piktogramm existieren kann (Abschnitt 2).
 2. **Gate-Härtung vor D.1.** Die vier verbleibenden Arbeitsbereiche der Entscheidungsnotiz —
    Mehrgrößen-Regression 16…256, Druckprofil, A11y-Kontrast und die globale viewBox-Prüfung —
@@ -530,7 +542,7 @@ Keine neue Paketebene. Richtung `cli → catalog → core → schema` unverände
 | `packages/schema/src/taxonomy.ts` | `CapabilityId` wächst; vier neue ID-Räume | erweitert |
 | `packages/schema/src/sources.ts` | `'open-source-corpus'`, `'compared-only'` | erweitert |
 | `packages/core/src/bounds.ts` | `translate` in `rawBoundsOfMm` für Gruppen | erweitert |
-| `packages/core/src/compose.ts` | Piktogramm-Gruppe statt `shiftY`-Abbildung; `pictogram`-Port | erweitert |
+| `packages/core/src/compose.ts` | Piktogramm-Gruppe statt `shiftY`-Abbildung; `pictogram`-Port; für D.2 keine State-Komposition (Nachtrag vom 7. August 2026) | erweitert |
 | `packages/core/src/render/svg.ts` | `translate` in `transformAttr` | erweitert |
 | `packages/core/src/render/canvas.ts` | `translate` in `drawPrimitive` | erweitert |
 | `packages/core/src/pictogram-gate.ts` | Kommando-, Box- und Clipping-Prüfung | neu |
@@ -540,6 +552,11 @@ Keine neue Paketebene. Richtung `cli → catalog → core → schema` unverände
 
 `schema` und `core` behalten null Laufzeitabhängigkeiten. Das Box-Gate liest Zahlen aus einem
 String — kein Parser, keine Abhängigkeit.
+
+Für D.2 ergänzt der Katalog an dieser Naht einen diskriminierten Platzierungs- und
+Kontrastvertrag: in-body bleibt auf `formation` beschränkt, während Standalone-Definitionen
+gegen die ViewBox clippen und ihre tatsächlichen Farbpaare deklarieren (Nachtrag vom 7. August
+2026).
 
 ## 12. Umfang
 
@@ -553,6 +570,9 @@ bereichsweise Zählung in `releaseBlockers()`; Manifest-Einträge für die in D.
 Piktogramme.
 
 **Nicht enthalten:**
+
+- Eine Erweiterung von `SymbolSpec` um `states` oder eine State-Komposition in `compose()`;
+  Kapitel 5.8 bleibt nach dem Nachtrag vom 7. August 2026 ein standalone Katalogbereich
 
 - Der Inhalt von D.1 bis D.5 — 249 der 250 Piktogrammabschnitte
 - Die vier verbleibenden Gate-Lücken: Mehrgrößen-Regression 16…256, Theme- und Druckprofile,
@@ -591,6 +611,9 @@ Piktogramme.
    referenziert übernommene Geometrie.
 8. CI läuft vollständig grün auf einem Rechner ohne Referenzbestand; `schema` und `core` haben
    weiterhin null Laufzeitabhängigkeiten.
+9. Der Nachtrag vom 7. August 2026 ist erfüllt: D.1-Piktogramme bleiben in-body in `formation`,
+   und D.2-Standalone-Zeichen wählen ViewBox-Clipping sowie deklarierte tatsächliche
+   Kontrastnachbarschaften ohne `SymbolSpec.states` oder `compose()`-Integration.
 
 ## 14. Risiken und offene Punkte
 

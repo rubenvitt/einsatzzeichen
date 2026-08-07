@@ -137,7 +137,7 @@ describe('Fähigkeitspiktogramme', () => {
   it('akzeptiert dieselbe ID mit primary und alternative als getrennte Schlüssel', () => {
     const primary = pictogram('capability.fire-fighting');
     const alternative = defineCapability({
-      section: primary.section,
+      section: '4.3.1',
       id: 'fire-fighting',
       variant: 'alternative',
       title: primary.title,
