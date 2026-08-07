@@ -94,7 +94,8 @@ describe('Coverage-Manifest', () => {
     for (const entry of COVERAGE_MANIFEST.entries) {
       expect(entry.referenceAsset).toMatch(/\.svg$/);
       if (entry.implementation.startsWith('state.')) {
-        expect(entry.review.technical).toEqual({ status: 'pending' });
+        expect(entry.review.technical.status).toBe('approved');
+        expect(entry.review.technical.reviewer).toBe('rv');
       } else {
         expect(entry.review.technical.status).toBe('approved');
         expect(entry.review.technical.reviewer).toBe('rv');
@@ -136,6 +137,7 @@ describe('Coverage-Manifest', () => {
       '2',
       '4',
       '5.4',
+      '5.8',
       'C.1.1',
       'C.1.2',
       'D.3.7',
@@ -214,7 +216,7 @@ describe('Manifest-Einträge für Piktogramme', () => {
     expect(entry?.review.domain.status).toBe('pending');
   });
 
-  it('trennt den freigegebenen D.1-Review identisch vom offenen State-Technikreview', () => {
+  it('trennt den freigegebenen D.1-Review identisch vom freigegebenen State-Technikreview', () => {
     const capabilityRows = COVERAGE_MANIFEST.entries.filter((entry) =>
       entry.implementation.startsWith('capability.'),
     );
@@ -232,7 +234,16 @@ describe('Manifest-Einträge für Piktogramme', () => {
       date: '2026-08-06',
     });
     expect(stateRows.every((entry) => entry.review.technical === stateReview)).toBe(true);
-    expect(stateReview).toEqual({ status: 'pending' });
+    expect(stateReview).toEqual({
+      status: 'approved',
+      reviewer: 'rv',
+      date: '2026-08-07',
+      note:
+        'Fingerprint-Gate für Piktogramme nicht anwendbar. Für Kapitel 5.8 bestehen Snapshot, ' +
+        'Kommando, Box und Standalone-Clipping gegen die 32×32-mm-ViewBox sowie die globalen ' +
+        'Mehrgrößen-, viewBox-, Metadaten- und expliziten Kontrast-Gates; die 67/67-Sichtprüfung ' +
+        'ist in docs/reviews/2026-08-07-d2-visual-qa.md dokumentiert.',
+    });
     expect(stateReview).not.toBe(capabilityReview);
   });
 });

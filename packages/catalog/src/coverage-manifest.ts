@@ -46,7 +46,14 @@ const PICTOGRAM_TECHNICAL_REVIEW: Review = {
 };
 
 const STATE_PICTOGRAM_TECHNICAL_REVIEW: Review = {
-  status: 'pending',
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-07',
+  note:
+    'Fingerprint-Gate für Piktogramme nicht anwendbar. Für Kapitel 5.8 bestehen Snapshot, ' +
+    'Kommando, Box und Standalone-Clipping gegen die 32×32-mm-ViewBox sowie die globalen ' +
+    'Mehrgrößen-, viewBox-, Metadaten- und expliziten Kontrast-Gates; die 67/67-Sichtprüfung ' +
+    'ist in docs/reviews/2026-08-07-d2-visual-qa.md dokumentiert.',
 };
 
 /** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
@@ -181,7 +188,7 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
   coreVersion: '0.1.0',
   // Kapitel 3 (sieben Referenzdateien) setzt dieser Slice nicht um; 5.1.1/5.7 sind entfallen
   // (Verwaltungsstufen/Fahrzeugkategorien: von 16 Referenzdateien nur 2 vermessbar, kein Konsument).
-  scope: ['1', '2', '4', '5.4', 'C.1.1', 'C.1.2', 'D.3.7'],
+  scope: ['1', '2', '4', '5.4', '5.8', 'C.1.1', 'C.1.2', 'D.3.7'],
   entries: [...catalogEntries, ...recipeEntries, ...elementEntries, ...pictogramEntries],
 };
 
