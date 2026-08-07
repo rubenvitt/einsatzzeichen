@@ -99,6 +99,14 @@ const DELIVERED_BATCHES = [
       'state.person-in-water-danger#primary',
     ],
   },
+  {
+    batch: 'P5',
+    keys: [
+      'state.person-in-distress#primary',
+      'state.person-rescued#primary',
+      'state.person-to-be-transported#primary',
+    ],
+  },
 ] as const;
 
 describe('DELIVERED_BATCHES', () => {

@@ -5,7 +5,13 @@ import {
   type CatalogPictogramDefinition,
   type PictogramContrastPair,
 } from '../catalog-definition.js';
-import { STATE_BLACK_FILL, stateCircle, stateLine, statePath } from './authoring.js';
+import {
+  STATE_BLACK_FILL,
+  stateCircle,
+  stateLine,
+  statePath,
+  statePolyline,
+} from './authoring.js';
 
 const PERSON_CONTRAST = [
   {
@@ -154,6 +160,38 @@ export const PERSON_STATES = deepFreeze([
       waterPersonDiamond(),
       statePath('M 4 3.5 C 7 1 10 1 13 3.5 C 16 6 19 6 22 3.5 C 25 1 28 1 31 3.5'),
       statePath('M 4 7 C 7 4.5 10 4.5 13 7 C 16 9.5 19 9.5 22 7 C 25 4.5 28 4.5 31 7'),
+    ],
+  }),
+  defineState({
+    section: '5.8.8.10',
+    id: 'person-in-distress',
+    title: 'Person in Zwangslage',
+    referenceAsset: '5.8.8.10_Person in Zwangslage.svg',
+    box: { xMm: 3, yMm: 4, widthMm: 26, heightMm: 22 },
+    contrastPairs: PERSON_CONTRAST,
+    primitives: [personDiamond(), stateLine(3, 4, 29, 4)],
+  }),
+  defineState({
+    section: '5.8.8.11',
+    id: 'person-rescued',
+    title: 'Person gerettet',
+    referenceAsset: '5.8.8.11_Person gerettet.svg',
+    box: { xMm: 3, yMm: 4, widthMm: 26, heightMm: 22 },
+    contrastPairs: PERSON_CONTRAST,
+    primitives: [personDiamond(), stateLine(3, 26, 29, 26)],
+  }),
+  defineState({
+    section: '5.8.8.12',
+    id: 'person-to-be-transported',
+    title: 'Person zu transportieren',
+    referenceAsset: '5.8.8.12_Person zu transportieren.svg',
+    box: { xMm: 3, yMm: 2, widthMm: 27, heightMm: 27 },
+    contrastPairs: PERSON_CONTRAST,
+    primitives: [
+      personDiamond(-2),
+      stateLine(3, 24, 30, 24),
+      stateLine(3, 19, 3, 29),
+      statePolyline([[26, 20], [30, 24], [26, 28]]),
     ],
   }),
 ] satisfies readonly CatalogPictogramDefinition[]);

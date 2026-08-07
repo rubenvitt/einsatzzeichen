@@ -170,6 +170,9 @@ export const STATE_IDS = Object.freeze([
   'person-dead',
   'person-missing',
   'person-in-water-danger',
+  'person-in-distress',
+  'person-rescued',
+  'person-to-be-transported',
 ] as const);
 
 export type StateId = (typeof STATE_IDS)[number];
