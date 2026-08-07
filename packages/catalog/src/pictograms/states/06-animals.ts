@@ -80,4 +80,32 @@ export const ANIMAL_STATES = deepFreeze([
       animalLine(19.5, 6.5, 12.5, 13.5),
     ],
   }),
+  defineState({
+    section: '5.8.6.2',
+    id: 'contaminated-animal',
+    variant: 'alternative',
+    title: 'Kontaminiertes Tier',
+    referenceAsset: '5.8.6.2_kontaminiertes Tier_K.svg',
+    box: { xMm: 4, yMm: 3, widthMm: 24, heightMm: 24 },
+    contrastPairs: ANIMAL_CONTRAST,
+    primitives: [
+      animalSilhouette(),
+      animalLine(6, 3, 6, 8.5),
+      animalLine(6, 5.75, 11, 3),
+      animalLine(6, 5.75, 11, 8.5),
+    ],
+  }),
+  defineState({
+    section: '5.8.6.3',
+    id: 'dead-animal',
+    title: 'Totes Tier',
+    referenceAsset: '5.8.6.3_Totes Tier.svg',
+    box: { xMm: 4, yMm: 2, widthMm: 24, heightMm: 25 },
+    contrastPairs: ANIMAL_CONTRAST,
+    primitives: [
+      animalSilhouette(),
+      animalLine(16, 2, 16, 13),
+      animalLine(10.5, 7.5, 21.5, 7.5),
+    ],
+  }),
 ] satisfies readonly CatalogPictogramDefinition[]);

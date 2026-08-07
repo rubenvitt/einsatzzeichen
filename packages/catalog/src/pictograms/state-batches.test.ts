@@ -62,6 +62,13 @@ const DELIVERED_BATCHES = [
       'state.contaminated-animal#primary',
     ],
   },
+  {
+    batch: 'T2',
+    keys: [
+      'state.contaminated-animal#alternative',
+      'state.dead-animal#primary',
+    ],
+  },
 ] as const;
 
 describe('DELIVERED_BATCHES', () => {

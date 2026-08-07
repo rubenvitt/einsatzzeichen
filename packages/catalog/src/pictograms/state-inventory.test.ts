@@ -108,6 +108,13 @@ describe('State-Piktogramminventur', () => {
         'primary',
         '5.8.6.2_kontaminiertes Tier.svg',
       ],
+      [
+        '5.8.6.2',
+        'state.contaminated-animal',
+        'alternative',
+        '5.8.6.2_kontaminiertes Tier_K.svg',
+      ],
+      ['5.8.6.3', 'state.dead-animal', 'primary', '5.8.6.3_Totes Tier.svg'],
     ] as const;
 
     expect(STATE_PICTOGRAMS.map(inventoryTuple)).toEqual(expected);
@@ -118,6 +125,8 @@ describe('State-Piktogramminventur', () => {
     expect(() => pictogram('state.incipient-fire')).not.toThrow();
     expect(() => pictogram('state.sick-animal')).not.toThrow();
     expect(() => pictogram('state.contaminated-animal')).not.toThrow();
+    expect(() => pictogram('state.contaminated-animal', 'alternative')).not.toThrow();
+    expect(() => pictogram('state.dead-animal')).not.toThrow();
   });
 
   it('hält Primär- und Alternativdarstellung je taktischem Hinweis eindeutig und titelgleich', () => {
