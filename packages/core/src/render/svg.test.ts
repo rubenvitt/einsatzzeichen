@@ -1,3 +1,4 @@
+import { Resvg } from '@resvg/resvg-js';
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_VIEWBOX_MM,
@@ -8,6 +9,7 @@ import {
 } from '@einsatzzeichen/schema';
 import { formatUnits, renderSvg } from './svg.js';
 import type { RenderTheme } from './theme.js';
+import { checkViewBox } from '../viewbox-gate.js';
 
 const formation: Drawing = {
   viewBox: DEFAULT_VIEWBOX_MM,
@@ -169,6 +171,30 @@ describe('renderSvg', () => {
     expect(svg).toContain('transform="scale(2.8346)"');
     expect(svg).toContain('stroke-width="0.5"');
   });
+
+  it.each(['M\f4\f12 L\f28\f20', 'M 4\f,\f12 L 28\f,\f20'])(
+    'serialisiert SVG-wsp Form Feed in %j als parsebares XML',
+    (d) => {
+      const drawing: Drawing = {
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [
+          {
+            type: 'path',
+            d,
+            style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+          },
+        ],
+      };
+      expect(checkViewBox(drawing)).toEqual([]);
+
+      const svg = renderSvg(drawing, { size: 32 });
+      const image = new Resvg(svg, { font: { loadSystemFonts: false } }).render();
+      expect(svg).not.toContain('\f');
+      expect(image.width).toBe(32);
+      expect(image.height).toBe(32);
+      expect(image.asPng().byteLength).toBeGreaterThan(0);
+    },
+  );
 
   it('gibt geerbte Nullstriche für normale Primitive und Pfade als unsichtbare Breite aus', () => {
     const svg = renderSvg({

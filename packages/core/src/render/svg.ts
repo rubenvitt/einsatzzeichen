@@ -132,6 +132,15 @@ function pathScaleFactor(): string {
 }
 
 /**
+ * SVG 2 erlaubt Form Feed als `wsp` in Pfaddaten, XML 1.0 jedoch nicht als Zeichen. Der
+ * Autorenvertrag bleibt deshalb unverändert; erst die XML-Serialisierung normalisiert U+000C
+ * deterministisch auf das semantisch gleichwertige U+0020.
+ */
+function pathDataForXml(d: string): string {
+  return escapeXml(d.replaceAll('\u000c', ' '));
+}
+
+/**
  * Pfad-Primitive tragen ihre Koordinaten unzerlegt im `d`-String (in Millimetern) und
  * werden deshalb nicht wie die anderen Primitive einzeln über `u` umgerechnet, sondern
  * per `scale(...)` skaliert. SVG-Transformationen wirken von rechts nach links auf die
@@ -172,7 +181,7 @@ function renderPrimitive(
       pictogramStrokeContract: role === 'pictogram',
     });
     const transform = pathTransformAttr(primitive.transform);
-    return `<path d="${escapeXml(primitive.d)}"${styleStr}${transform}/>`;
+    return `<path d="${pathDataForXml(primitive.d)}"${styleStr}${transform}/>`;
   }
 
   if (primitive.type === 'group') {
