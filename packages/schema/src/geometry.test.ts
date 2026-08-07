@@ -25,6 +25,24 @@ describe('geometry', () => {
     expect(Object.values(PALETTE).every((value) => /^#[0-9a-f]{6}$/.test(value))).toBe(true);
   });
 
+  it('stellt die Referenzpalette zur Laufzeit unveränderlich bereit', () => {
+    const mutablePalette = PALETTE as { blau: string };
+    const originalBlue = mutablePalette.blau;
+    let mutationError: unknown;
+
+    try {
+      mutablePalette.blau = '#ffffff';
+    } catch (error) {
+      mutationError = error;
+    } finally {
+      if (!Object.isFrozen(PALETTE)) mutablePalette.blau = originalBlue;
+    }
+
+    expect(Object.isFrozen(PALETTE)).toBe(true);
+    expect(mutationError).toBeInstanceOf(TypeError);
+    expect(PALETTE.blau).toBe(originalBlue);
+  });
+
   it('nutzt 0,5 mm Strichstärke und 32 mm Grundfläche als Vorgabe', () => {
     expect(DEFAULT_STROKE_WIDTH_MM).toBe(0.5);
     expect(DEFAULT_VIEWBOX_MM).toEqual({ width: 32, height: 32 });

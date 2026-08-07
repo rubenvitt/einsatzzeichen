@@ -27,11 +27,35 @@ describe('Fachreview-Ledger', () => {
     }
   });
 
-  it('hält die vom unveränderlichen Manifest geteilten Ledgerobjekte selbst unveränderlich', () => {
-    expect(Object.isFrozen(MANIFEST_DOMAIN_REVIEWS)).toBe(true);
-    for (const review of Object.values(MANIFEST_DOMAIN_REVIEWS)) {
-      expect(Object.isFrozen(review)).toBe(true);
+  it('hält alle Ledgerwurzeln und ihre einzelnen Reviewobjekte unveränderlich', () => {
+    for (const ledger of [
+      MANIFEST_DOMAIN_REVIEWS,
+      SOURCE_DOMAIN_REVIEWS,
+      PROFILE_DOMAIN_REVIEWS,
+    ]) {
+      expect(Object.isFrozen(ledger)).toBe(true);
+      for (const review of Object.values(ledger)) {
+        expect(Object.isFrozen(review)).toBe(true);
+      }
     }
+  });
+
+  it('weist die Mutation eines Quellenreviews fail-closed ab', () => {
+    const review = SOURCE_DOMAIN_REVIEWS['bbk-babz-2025'];
+    const mutableReview = review as { status: string };
+    const originalStatus = mutableReview.status;
+    let mutationError: unknown;
+
+    try {
+      mutableReview.status = 'approved';
+    } catch (error) {
+      mutationError = error;
+    } finally {
+      if (!Object.isFrozen(review)) mutableReview.status = originalStatus;
+    }
+
+    expect(mutationError).toBeInstanceOf(TypeError);
+    expect(review.status).toBe('pending');
   });
 
   it('ist auch für Quellen und Profile exakt deckungsgleich und korrekt verdrahtet', () => {

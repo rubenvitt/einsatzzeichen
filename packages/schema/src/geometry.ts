@@ -24,7 +24,7 @@ export type RgbHex = `#${string}`;
 export type ColorPalette = Readonly<Record<ColorToken, RgbHex>>;
 
 /** Aus dem BABZ-Referenzbestand abgeleitete Organisations- und Signalfarben. */
-export const PALETTE: ColorPalette = {
+export const PALETTE: ColorPalette = Object.freeze({
   schwarz: '#000000',
   weiss: '#ffffff',
   rot: '#fa1919',
@@ -37,7 +37,7 @@ export const PALETTE: ColorPalette = {
   grau: '#787878',
   hellgrau: '#bebebe',
   hellblau: '#3264fa',
-};
+});
 
 export const DEFAULT_STROKE_WIDTH_MM = 0.5;
 export const DEFAULT_VIEWBOX_MM = { width: 32, height: 32 } as const;

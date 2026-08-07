@@ -8,6 +8,25 @@ describe('RenderTheme', () => {
     expect(REFERENCE_THEME.surface).toBe('#ffffff');
   });
 
+  it('hält das öffentliche Referenztheme zur Laufzeit unveränderlich', () => {
+    const mutableTheme = REFERENCE_THEME as { surface: string };
+    const originalSurface = mutableTheme.surface;
+    let mutationError: unknown;
+
+    try {
+      mutableTheme.surface = '#000000';
+    } catch (error) {
+      mutationError = error;
+    } finally {
+      if (!Object.isFrozen(REFERENCE_THEME)) mutableTheme.surface = originalSurface;
+    }
+
+    expect(Object.isFrozen(REFERENCE_THEME)).toBe(true);
+    expect(Object.isFrozen(REFERENCE_THEME.palette)).toBe(true);
+    expect(mutationError).toBeInstanceOf(TypeError);
+    expect(REFERENCE_THEME.surface).toBe(originalSurface);
+  });
+
   it('löst Tokens aus dem übergebenen Theme statt aus einem globalen Fallback auf', () => {
     const palette: ColorPalette = { ...PALETTE, blau: '#abcdef' };
     const theme: RenderTheme = { id: 'test', palette, surface: '#ffffff' };

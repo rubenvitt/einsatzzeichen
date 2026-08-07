@@ -48,7 +48,7 @@ export type VehicleCategoryId =
   | 'schienenfahrzeug';
 
 /** Fähigkeiten nach Kapitel 4 in verbindlicher Kapitelreihenfolge. */
-export const CAPABILITY_IDS = [
+export const CAPABILITY_IDS = Object.freeze([
   'cbrn-protection',
   'cbrn-detection',
   'decontamination',
@@ -137,7 +137,7 @@ export const CAPABILITY_IDS = [
   'cattle',
   'sheep',
   'pig',
-] as const;
+] as const);
 
 export type CapabilityId = (typeof CAPABILITY_IDS)[number];
 

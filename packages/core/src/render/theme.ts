@@ -22,11 +22,11 @@ export interface RenderTheme {
 }
 
 /** Unveränderte, aus dem BABZ-Referenzbestand extrahierte Darstellung. */
-export const REFERENCE_THEME: RenderTheme = {
+export const REFERENCE_THEME: RenderTheme = Object.freeze({
   id: 'reference',
   palette: PALETTE,
   surface: '#ffffff',
-};
+});
 
 export function colorFor(theme: RenderTheme, token: ColorToken): RgbHex {
   assertValidRenderTheme(theme);

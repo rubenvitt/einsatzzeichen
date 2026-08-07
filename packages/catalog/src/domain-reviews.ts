@@ -138,7 +138,7 @@ export function manifestDomainReviewFor(key: string): DeepReadonly<Review> {
 }
 
 /** Eigene fachliche Reviewentscheidung je Quelle; technische Reviews bleiben separat. */
-export const SOURCE_DOMAIN_REVIEWS = {
+export const SOURCE_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025': { status: 'pending' },
   'babz-svg-2025': { status: 'pending' },
   'babz-hinweise-2024': { status: 'pending' },
@@ -151,17 +151,17 @@ export const SOURCE_DOMAIN_REVIEWS = {
   'din-13050': { status: 'pending' },
   'din-14034-6': { status: 'pending' },
   'din-14095': { status: 'pending' },
-} satisfies Record<SourceId, Review>;
+} satisfies Record<SourceId, Review>);
 
-export function sourceDomainReviewFor(id: SourceId): Review {
+export function sourceDomainReviewFor(id: SourceId): DeepReadonly<Review> {
   return SOURCE_DOMAIN_REVIEWS[id];
 }
 
 /** Auch Profile besitzen einen expliziten Ledgerplatz; heute existiert nur der Bundeskern. */
-export const PROFILE_DOMAIN_REVIEWS = {
+export const PROFILE_DOMAIN_REVIEWS = deepFreeze({
   bund: { status: 'pending' },
-} satisfies Record<ProfileId, Review>;
+} satisfies Record<ProfileId, Review>);
 
-export function profileDomainReviewFor(id: ProfileId): Review {
+export function profileDomainReviewFor(id: ProfileId): DeepReadonly<Review> {
   return PROFILE_DOMAIN_REVIEWS[id];
 }

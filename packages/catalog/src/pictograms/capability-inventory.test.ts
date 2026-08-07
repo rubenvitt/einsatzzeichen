@@ -4,10 +4,36 @@ import { fingerprintFor } from '../fingerprint-index.js';
 import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
 import { pictogram, pictogramVariantKey } from './index.js';
 
+type CapabilityDefinition = (typeof CAPABILITY_PICTOGRAMS)[number];
+
+function primaryCapabilityIds(definitions: readonly CapabilityDefinition[]): string[] {
+  return definitions
+    .filter(({ variant }) => variant === 'primary')
+    .map(({ id }) => id.slice('capability.'.length));
+}
+
 describe('Abschlussinventar Kapitel 4', () => {
   it('deklariert exakt 88 eindeutige Capability-IDs', () => {
     expect(CAPABILITY_IDS).toHaveLength(88);
     expect(new Set(CAPABILITY_IDS)).toHaveLength(88);
+  });
+
+  it('hält die verbindliche Kapitelreihenfolge zur Laufzeit unveränderlich', () => {
+    const mutableIds = CAPABILITY_IDS as unknown as string[];
+    const firstId = mutableIds[0];
+    let mutationError: unknown;
+
+    try {
+      mutableIds[0] = 'care';
+    } catch (error) {
+      mutationError = error;
+    } finally {
+      if (!Object.isFrozen(CAPABILITY_IDS) && firstId !== undefined) mutableIds[0] = firstId;
+    }
+
+    expect(Object.isFrozen(CAPABILITY_IDS)).toBe(true);
+    expect(mutationError).toBeInstanceOf(TypeError);
+    expect(CAPABILITY_IDS[0]).toBe(firstId);
   });
 
   it('führt 92 Darstellungen mit 88 Primär- und vier Alternativvarianten', () => {
@@ -17,12 +43,22 @@ describe('Abschlussinventar Kapitel 4', () => {
   });
 
   it('deckt als Primärvarianten exakt die vollständige Taxonomie ab', () => {
-    const actual = CAPABILITY_PICTOGRAMS
-      .filter(({ variant }) => variant === 'primary')
-      .map(({ id }) => id.slice('capability.'.length))
-      .sort();
+    const actual = primaryCapabilityIds(CAPABILITY_PICTOGRAMS);
 
-    expect(actual).toEqual([...CAPABILITY_IDS].sort());
+    expect(actual).toEqual(CAPABILITY_IDS);
+  });
+
+  it('erkennt eine vertauschte Primärreihenfolge auf einer mutierten Kopie', () => {
+    const swapped = [...CAPABILITY_PICTOGRAMS];
+    const first = swapped[0];
+    const second = swapped[1];
+    expect(first?.variant).toBe('primary');
+    expect(second?.variant).toBe('primary');
+    if (first === undefined || second === undefined) throw new Error('Mindestens zwei Einträge erwartet.');
+    swapped[0] = second;
+    swapped[1] = first;
+
+    expect(primaryCapabilityIds(swapped)).not.toEqual(CAPABILITY_IDS);
   });
 
   it('führt ausschließlich die vier belegten Alternativdarstellungen', () => {
