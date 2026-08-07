@@ -193,6 +193,13 @@ const DELIVERED_BATCHES = [
       'state.one-way-traffic#primary',
     ],
   },
+  {
+    batch: 'V2',
+    keys: [
+      'state.route-difficult-to-pass#primary',
+      'state.route-impassable#primary',
+    ],
+  },
 ] as const;
 
 describe('DELIVERED_BATCHES', () => {

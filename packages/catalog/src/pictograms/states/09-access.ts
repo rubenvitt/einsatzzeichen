@@ -41,4 +41,30 @@ export const ACCESS_STATES = deepFreeze([
       stateLine(16, 5, 21, 14),
     ],
   }),
+  defineState({
+    section: '5.8.9.3',
+    id: 'route-difficult-to-pass',
+    title: 'Schwierig befahrbar - teilblockiert',
+    referenceAsset: '5.8.9.3_Schwierig befahrbar_Teilblockiert.svg',
+    box: { xMm: 12, yMm: 2, widthMm: 8, heightMm: 28 },
+    contrastPairs: ACCESS_CONTRAST,
+    primitives: [
+      stateLine(12, 2, 12, 30),
+      stateLine(20, 2, 20, 30),
+    ],
+  }),
+  defineState({
+    section: '5.8.9.4',
+    id: 'route-impassable',
+    title: 'Unbefahrbar - blockiert',
+    referenceAsset: '5.8.9.4_Unbefahrbar_Blockiert.svg',
+    box: { xMm: 8, yMm: 2, widthMm: 16, heightMm: 28 },
+    contrastPairs: ACCESS_CONTRAST,
+    primitives: [
+      stateLine(8, 2, 8, 30),
+      stateLine(13, 2, 13, 30),
+      stateLine(19, 2, 19, 30),
+      stateLine(24, 2, 24, 30),
+    ],
+  }),
 ] satisfies readonly CatalogPictogramDefinition[]);

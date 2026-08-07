@@ -305,6 +305,18 @@ describe('State-Piktogramminventur', () => {
         'primary',
         '5.8.9.2_Einbahnstraßenregelung.svg',
       ],
+      [
+        '5.8.9.3',
+        'state.route-difficult-to-pass',
+        'primary',
+        '5.8.9.3_Schwierig befahrbar_Teilblockiert.svg',
+      ],
+      [
+        '5.8.9.4',
+        'state.route-impassable',
+        'primary',
+        '5.8.9.4_Unbefahrbar_Blockiert.svg',
+      ],
     ] as const;
 
     expect(STATE_PICTOGRAMS.map(inventoryTuple)).toEqual(expected);
