@@ -305,3 +305,35 @@ describe('Fähigkeitsinventar Kapitel 4.7', () => {
     ]);
   });
 });
+
+describe('Fähigkeitsinventar Kapitel 4.8', () => {
+  it('bildet die 16 Darstellungen aus Versorgung, Logistik und Infrastruktur exakt ab', () => {
+    const actual = CAPABILITY_PICTOGRAMS
+      .filter((definition) => definition.section.startsWith('4.8.'))
+      .map(({ section, id, variant, referenceAsset }) => ({
+        section,
+        id,
+        variant,
+        referenceAsset,
+      }));
+
+    expect(actual).toEqual([
+      { section: '4.8.1', id: 'capability.container-resource', variant: 'primary', referenceAsset: '4.8.1_Behälter.svg' },
+      { section: '4.8.2', id: 'capability.fuels-consumables', variant: 'primary', referenceAsset: '4.8.2_Betriebsstoffe Verbrauchsgüter.svg' },
+      { section: '4.8.3', id: 'capability.bridge', variant: 'primary', referenceAsset: '4.8.3_Brücke.svg' },
+      { section: '4.8.4', id: 'capability.temporary-bridge-construction', variant: 'primary', referenceAsset: '4.8.4_Behelfsbrückenbau.svg' },
+      { section: '4.8.5', id: 'capability.waste-disposal', variant: 'primary', referenceAsset: '4.8.5_Entsorgung.svg' },
+      { section: '4.8.6', id: 'capability.maintenance', variant: 'primary', referenceAsset: '4.8.6_Instandhaltung.svg' },
+      { section: '4.8.7', id: 'capability.sandbag', variant: 'primary', referenceAsset: '4.8.7_Sandsack.svg' },
+      { section: '4.8.8', id: 'capability.sandbag-filling', variant: 'primary', referenceAsset: '4.8.8_Sandsackbefüllung.svg' },
+      { section: '4.8.9', id: 'capability.washing-facility', variant: 'primary', referenceAsset: '4.8.9_Sanitäre Einrichtung_Waschmöglichkeit.svg' },
+      { section: '4.8.10', id: 'capability.toilet-facility', variant: 'primary', referenceAsset: '4.8.10_Sanitäre Einrichtung_WC.svg' },
+      { section: '4.8.11', id: 'capability.power-supply', variant: 'primary', referenceAsset: '4.8.11_Stromversorgung.svg' },
+      { section: '4.8.12', id: 'capability.drinking-water', variant: 'primary', referenceAsset: '4.8.12_Trinkwasser.svg' },
+      { section: '4.8.13', id: 'capability.catering', variant: 'primary', referenceAsset: '4.8.13_Verpflegung.svg' },
+      { section: '4.8.14', id: 'capability.meal-preparation', variant: 'primary', referenceAsset: '4.8.14_Verpflegung_Zubereitung.svg' },
+      { section: '4.8.15', id: 'capability.rapid-deployment-tent', variant: 'primary', referenceAsset: '4.8.15_Schnelleinsatzzelt.svg' },
+      { section: '4.8.16', id: 'capability.frame-tent', variant: 'primary', referenceAsset: '4.8.16_Stangengerüstzelt.svg' },
+    ]);
+  });
+});

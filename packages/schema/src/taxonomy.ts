@@ -116,7 +116,23 @@ export type CapabilityId =
   | 'siren-warning'
   | 'water-conveyance'
   | 'water-retention'
-  | 'load-pulling';
+  | 'load-pulling'
+  | 'container-resource'
+  | 'fuels-consumables'
+  | 'bridge'
+  | 'temporary-bridge-construction'
+  | 'waste-disposal'
+  | 'maintenance'
+  | 'sandbag'
+  | 'sandbag-filling'
+  | 'washing-facility'
+  | 'toilet-facility'
+  | 'power-supply'
+  | 'drinking-water'
+  | 'catering'
+  | 'meal-preparation'
+  | 'rapid-deployment-tent'
+  | 'frame-tent';
 
 /** Semantische Beschreibung eines Zeichens. Eingabe des Kompositionsmotors. */
 export interface SymbolSpec {
