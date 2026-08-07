@@ -156,6 +156,14 @@ const DELIVERED_BATCHES = [
       'state.person-mobility-impaired#primary',
     ],
   },
+  {
+    batch: 'W1',
+    keys: [
+      'state.weather-sunny#primary',
+      'state.weather-cloudy#primary',
+      'state.weather-cloud-cover-four-eighths#primary',
+    ],
+  },
 ] as const;
 
 describe('DELIVERED_BATCHES', () => {
