@@ -39,6 +39,18 @@ describe('Kontrastrechnung', () => {
       ]),
     ).toThrow(/größer als 1/);
   });
+
+  it('lehnt ein ungültiges surface am öffentlichen Theme-Rand ab', () => {
+    const invalidTheme: RenderTheme = { ...theme, surface: '#fff' };
+
+    expect(() =>
+      checkContrast(invalidTheme, [
+        { foreground: 'schwarz', background: 'weiss', context: 'Kontur auf Fläche', minimum: 3 },
+      ]),
+    ).toThrow(
+      'RenderTheme "test": surface muss eine RGB-Hexfarbe im Format #RRGGBB sein (ist "#fff").',
+    );
+  });
 });
 
 describe('paintTokensOf', () => {

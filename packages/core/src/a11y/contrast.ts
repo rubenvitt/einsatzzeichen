@@ -1,6 +1,7 @@
 import type { ColorToken, Primitive, RgbHex, Style } from '@einsatzzeichen/schema';
 import { mergeStyle } from '../render/style.js';
 import type { RenderTheme } from '../render/theme.js';
+import { assertValidRenderTheme } from '../render/theme-validation.js';
 
 const HEX = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i;
 
@@ -54,6 +55,7 @@ export function checkContrast(
   theme: RenderTheme,
   requirements: readonly ContrastRequirement[],
 ): ContrastIssue[] {
+  assertValidRenderTheme(theme);
   return requirements.flatMap((requirement) => {
     if (!Number.isFinite(requirement.minimum) || requirement.minimum <= 1) {
       throw new RangeError(

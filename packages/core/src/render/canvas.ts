@@ -8,6 +8,7 @@ import {
 } from '@einsatzzeichen/schema';
 import { mergeStyle } from './style.js';
 import { REFERENCE_THEME, colorFor, type RenderTheme } from './theme.js';
+import { assertValidRenderTheme } from './theme-validation.js';
 
 export interface CanvasOptions {
   /** Kantenlänge in Pixeln. Ohne Angabe wird in SVG-Einheiten gezeichnet. */
@@ -147,8 +148,9 @@ export function renderCanvas(
   ctx: CanvasRenderingContext2D,
   options: CanvasOptions = {},
 ): void {
-  ctx.save();
   const theme = options.theme ?? REFERENCE_THEME;
+  assertValidRenderTheme(theme);
+  ctx.save();
   if (options.size !== undefined) {
     ctx.scale(options.size / mmToUnits(drawing.viewBox.width), options.size / mmToUnits(drawing.viewBox.height));
   }

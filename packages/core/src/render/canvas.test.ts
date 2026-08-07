@@ -105,6 +105,21 @@ describe('renderCanvas', () => {
     expect(renderSvg(formation, { theme })).toContain('fill="#eeeeee"');
   });
 
+  it('lehnt eine injizierbare Themefarbe in SVG und Canvas vor jeder Ausgabe ab', () => {
+    const theme: RenderTheme = {
+      id: 'injected',
+      palette: { ...PALETTE, schwarz: '#000000" data-injected="yes' },
+      surface: '#ffffff',
+    };
+    const expected =
+      'RenderTheme "injected": palette.schwarz muss eine RGB-Hexfarbe im Format #RRGGBB sein (ist "#000000\\" data-injected=\\"yes").';
+    const { ctx, calls } = recordingContext();
+
+    expect(() => renderSvg(formation, { theme })).toThrow(expected);
+    expect(() => renderCanvas(formation, ctx, { theme })).toThrow(expected);
+    expect(calls).toEqual([]);
+  });
+
   it('setzt dieselbe nicht-farbliche Körperkontur wie der SVG-Renderer', () => {
     const theme: RenderTheme = {
       id: 'test',
@@ -116,6 +131,56 @@ describe('renderCanvas', () => {
     renderCanvas(formation, ctx, { theme });
     expect(calls).toContainEqual(['setLineDash', [mmToUnits(2), mmToUnits(1)]]);
     expect(renderSvg(formation, { theme })).toContain('stroke-dasharray=');
+  });
+
+  it.each([
+    ['negativ', -1],
+    ['null', 0],
+    ['unendlich', Number.POSITIVE_INFINITY],
+    ['NaN', Number.NaN],
+  ])('lehnt %s Körperkontur-Dashwerte in SVG und Canvas ab', (_label, dash) => {
+    const theme: RenderTheme = {
+      id: 'invalid-dash',
+      palette: PALETTE,
+      surface: '#ffffff',
+      bodyStrokeDashes: { weiss: [dash] },
+    };
+    const expected = `RenderTheme "invalid-dash": bodyStrokeDashes.weiss[0] muss eine endliche Zahl größer als 0 sein (ist ${String(dash)}).`;
+    const { ctx, calls } = recordingContext();
+
+    expect(() => renderSvg(formation, { theme })).toThrow(expected);
+    expect(() => renderCanvas(formation, ctx, { theme })).toThrow(expected);
+    expect(calls).toEqual([]);
+  });
+
+  it('lehnt eine Körperkontur ab, die kein Array ist', () => {
+    const theme: RenderTheme = {
+      id: 'invalid-dash-array',
+      palette: PALETTE,
+      surface: '#ffffff',
+      bodyStrokeDashes: { weiss: 2 as unknown as readonly number[] },
+    };
+    const expected =
+      'RenderTheme "invalid-dash-array": bodyStrokeDashes.weiss muss ein Array sein (ist 2).';
+    const { ctx, calls } = recordingContext();
+
+    expect(() => renderSvg(formation, { theme })).toThrow(expected);
+    expect(() => renderCanvas(formation, ctx, { theme })).toThrow(expected);
+    expect(calls).toEqual([]);
+  });
+
+  it('akzeptiert eine leere Körperkontur-Dashfolge als durchgezogen', () => {
+    const theme: RenderTheme = {
+      id: 'solid',
+      palette: PALETTE,
+      surface: '#ffffff',
+      bodyStrokeDashes: { weiss: [] },
+    };
+    const { ctx, calls } = recordingContext();
+
+    expect(renderSvg(formation, { theme })).not.toContain('stroke-dasharray=');
+    expect(() => renderCanvas(formation, ctx, { theme })).not.toThrow();
+    expect(calls).toContainEqual(['setLineDash', []]);
   });
 
   it('setzt für ein solid gerendertes Blatt Strichmuster und -offset explizit zurück', () => {

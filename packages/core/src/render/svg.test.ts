@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_VIEWBOX_MM, PALETTE, mmToUnits, type Drawing } from '@einsatzzeichen/schema';
+import {
+  DEFAULT_VIEWBOX_MM,
+  PALETTE,
+  mmToUnits,
+  type ColorToken,
+  type Drawing,
+} from '@einsatzzeichen/schema';
 import { formatUnits, renderSvg } from './svg.js';
 import type { RenderTheme } from './theme.js';
 
@@ -55,6 +61,19 @@ describe('renderSvg', () => {
     expect(svg).toContain('fill="#eeeeee"');
     expect(svg).toContain('stroke="#111111"');
   });
+
+  it.each(Object.keys(PALETTE) as ColorToken[])(
+    'lehnt ein Theme mit fehlendem palette.%s ab',
+    (token) => {
+      const palette = { ...PALETTE };
+      Reflect.deleteProperty(palette, token);
+      const theme: RenderTheme = { id: 'unvollständig', palette, surface: '#ffffff' };
+
+      expect(() => renderSvg(formation, { theme })).toThrow(
+        `RenderTheme "unvollständig": palette.${token} muss eine RGB-Hexfarbe im Format #RRGGBB sein (ist undefined).`,
+      );
+    },
+  );
 
   it('gibt im alternativen Theme eine nicht-farbliche Körperkontur in Millimetern aus', () => {
     const theme: RenderTheme = {
