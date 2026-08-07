@@ -94,6 +94,26 @@ Profilzuordnung und einsatztaktische Eignung müssen weiterhin einzeln durch ein
 fachkundige Person geprüft werden. Die Abschlussentscheidung für D.1 steht in
 [`docs/decisions/2026-08-06-kapitel-4-faehigkeiten-d1.md`](./docs/decisions/2026-08-06-kapitel-4-faehigkeiten-d1.md).
 
+## D.2: Kapitel 5.8 technisch vollständig
+
+D.2 deckt Kapitel 5.8 der projektinternen Coverage-Baseline technisch mit 61 State-IDs und 67
+Darstellungen ab, darunter sechs getrennt adressierbare Alternativdarstellungen. Damit enthält
+der Katalog insgesamt 159 Piktogrammdarstellungen: 92 Capabilities und 67 States. Die 170 globalen
+Renderfälle setzen sich aus acht Grundzeichen, drei Rezepten und diesen 159 Piktogrammen zusammen.
+
+Alle 67 States sind eigenständige Zeichen mit kanonischer 32×32-mm-Platzierung und
+Standalone-Clipping. D.2 führt weder eine allgemeine State-Komposition noch eine Integration in
+`SymbolSpec.states` oder `compose()` ein. Die technische D.2-Evidenz einschließlich der 67/67-
+Kontaktbogenprüfung wurde in Task 15 abgeschlossen und technisch freigegeben; die Sichtprüfung ist
+in
+[`docs/reviews/2026-08-07-d2-visual-qa.md`](./docs/reviews/2026-08-07-d2-visual-qa.md)
+dokumentiert.
+
+Diese technische Freigabe ist keine fachliche Einsatzfreigabe und keine Aussage normativer
+Geltung oder zur Nutzungs- und Lizenzgrundlage der Quellen. Alle 67 getrennten fachlichen
+State-Reviews bleiben `pending`; ihre Bedeutung, Abgrenzung, Lesbarkeit und einsatztaktische
+Eignung müssen weiterhin einzeln durch eine fachkundige Person geprüft werden.
+
 ## Der lokale Referenzbestand
 
 `taktische-zeichen/` ist ein **lokaler Ordner mit 661 damals von der BABZ bereitgestellten

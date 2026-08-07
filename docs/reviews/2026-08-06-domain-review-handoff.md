@@ -1,14 +1,15 @@
 # Fachreview-Übergabe für den aktuellen Katalogstand
 
-> Stand: 6. August 2026
+> Stand: 7. August 2026
 > Reviewpaket vorbereitet, keine fachliche Freigabe erteilt.
-> Offen: 114 Manifestreviews, 12 Quellenreviews, 1 Profilreview = 127 Reviewträger.
+> Offen: 181 Manifestreviews, 12 Quellenreviews, 1 Profilreview = 194 Reviewträger.
+> Kapitel 5.8: 61 Abschnitte, 67 Darstellungen, alle domain: pending.
 > Kapitel 4: 88 Abschnitte, 92 Darstellungen, alle domain: pending.
 > Offener externer Blocker: Prüfung durch eine benannte Person mit einsatztaktischer Fachkunde.
 
 ## 1. Was diese Übergabe ist — und was nicht
 
-Alle 114 Manifest-Einträge tragen weiterhin `domain: { status: 'pending' }`. Automatisierte
+Alle 181 Manifest-Einträge tragen weiterhin `domain: { status: 'pending' }`. Automatisierte
 Geometrie-, Raster-, Kontrast-, Metadaten-, Box- und Clipping-Prüfungen belegen technische
 Eigenschaften. Sie können weder die fachliche Bedeutung einer Bildidee noch ihre
 Verwechslungsfreiheit oder einsatztaktische Eignung freigeben.
@@ -19,9 +20,9 @@ Automatisierung darf das Dossier vorbereiten, Abweichungen markieren und Ergebni
 aber nicht als Fachreviewer signieren oder einen Reviewer erfinden.
 
 Eine schrittweise Freigabe ist vorbereitet: `packages/catalog/src/domain-reviews.ts` enthält für
-jeden der 114 Manifest-, zwölf Quellen- und einen Profilträger ein eigenes Reviewobjekt. Ein Test
+jeden der 181 Manifest-, zwölf Quellen- und einen Profilträger ein eigenes Reviewobjekt. Ein Test
 erzwingt die Deckungsgleichheit in beide Richtungen und verhindert gemeinsam referenzierte
-Sammelreviews. Alle 127 Statuswerte bleiben bis zur tatsächlichen Einzelprüfung unverändert
+Sammelreviews. Alle 194 Statuswerte bleiben bis zur tatsächlichen Einzelprüfung unverändert
 `pending`.
 
 ## 2. Status der projektinternen Baseline
@@ -65,12 +66,13 @@ Kapitel 4 bleiben ebenfalls ausschließlich lokal; ihre Bildideen wurden als una
 Millimeterkonstruktionen umgesetzt. Wegen der ungeklärten Nutzungsgrundlage werden die
 Referenzdateien nicht eingecheckt.
 
-## 4. Die 114 offenen Manifest-Reviews
+## 4. Die 181 offenen Manifest-Reviews
 
 Alle Schlüssel verwenden das Profil `bund`. Die ersten 24 Zeilen bleiben aus dem bisherigen
 Dossier erhalten; `4.3.1` und `4.3.2` zählen darin bereits zu Kapitel 4. Die anschließend
 ergänzten 90 Zeilen vervollständigen das Kapitel-4-Inventar auf 92 Darstellungen. Vier dieser
-Darstellungen verwenden die Variante `alternative`, alle übrigen `primary`.
+Darstellungen verwenden die Variante `alternative`, alle übrigen `primary`. Danach folgen die
+67 Kapitel-5.8-Darstellungen mit sechs separaten Alternativzeilen.
 
 | Manifestschlüssel | Titel | Implementierung | Referenzasset | technische Hilfe |
 |---|---|---|---|---|
@@ -188,6 +190,73 @@ Darstellungen verwenden die Variante `alternative`, alle übrigen `primary`.
 | `bbk-babz-2025:4.10.5#primary` | Rind | `capability.cattle` | `4.10.5_Rind.svg` | PG, RS |
 | `bbk-babz-2025:4.10.6#primary` | Schaf | `capability.sheep` | `4.10.6_Schaf.svg` | PG, RS |
 | `bbk-babz-2025:4.10.7#primary` | Schwein | `capability.pig` | `4.10.7_Schwein.svg` | PG, RS |
+| `bbk-babz-2025:5.8.1.1#primary` | Einsatztaktik: Retten | `state.tactical-rescue` | `5.8.1.1_Einsatztaktik_Retten.svg` | PG, RS |
+| `bbk-babz-2025:5.8.1.2#primary` | Einsatztaktik: Angreifen | `state.tactical-attack` | `5.8.1.2_Einsatztaktik_Angreifen.svg` | PG, RS |
+| `bbk-babz-2025:5.8.1.3#primary` | Einsatztaktik: Verteidigen | `state.tactical-defense` | `5.8.1.3_Einsatztaktik_Verteidigen.svg` | PG, RS |
+| `bbk-babz-2025:5.8.1.4#primary` | Einsatztaktik: Rückzug | `state.tactical-retreat` | `5.8.1.4_Einsatztaktik_Rückzug.svg` | PG, RS |
+| `bbk-babz-2025:5.8.1.5#primary` | Überschwemmtes Gebiet | `state.flooded-area` | `5.8.1.5_Überschwemmtes Gebiet.svg` | PG, RS |
+| `bbk-babz-2025:5.8.1.6#primary` | Gefahr durch Wassereinbruch | `state.water-ingress-hazard` | `5.8.1.6_Gefahr durch Wassereinbruch.svg` | PG, RS |
+| `bbk-babz-2025:5.8.1.7#primary` | Gefährliche Stoffe | `state.hazardous-substances` | `5.8.1.7_Gefährliche Stoffe.svg` | PG, RS |
+| `bbk-babz-2025:5.8.1.7#alternative` | Gefährliche Stoffe | `state.hazardous-substances` | `5.8.1.7_Gefährliche Stoffe_Chlor.svg` | PG, RS |
+| `bbk-babz-2025:5.8.1.8#primary` | Gefahr durch Radioaktivität | `state.radioactivity-hazard` | `5.8.1.8_Gefahr durch Radioaktivität.svg` | PG, RS |
+| `bbk-babz-2025:5.8.1.8#alternative` | Gefahr durch Radioaktivität | `state.radioactivity-hazard` | `5.8.1.8_Gefahr durch Radioaktivität _A.svg` | PG, RS |
+| `bbk-babz-2025:5.8.1.9#primary` | Gefahr durch elektrische Energie | `state.electrical-energy-hazard` | `5.8.1.9_Gefahr durch elektrische Energie.svg` | PG, RS |
+| `bbk-babz-2025:5.8.1.10#primary` | Gefahr durch Mineralöl | `state.mineral-oil-hazard` | `5.8.1.10_Gefahr durch Mineralöl.svg` | PG, RS |
+| `bbk-babz-2025:5.8.1.11#primary` | Gefahr durch Explosion | `state.explosion-hazard` | `5.8.1.11_Gefahr durch Explosion.svg` | PG, RS |
+| `bbk-babz-2025:5.8.1.12#primary` | Gefahr durch explosionsfähige Kampfmittel | `state.explosive-ordnance-hazard` | `5.8.1.12_Gefahr durch explosionsfähige Kampfmittel.svg` | PG, RS |
+| `bbk-babz-2025:5.8.1.13#primary` | Hinweis auf Vermutung | `state.suspected-situation` | `5.8.1.13_Hinweis auf Vermutung.svg` | PG, RS |
+| `bbk-babz-2025:5.8.1.13#alternative` | Hinweis auf Vermutung | `state.suspected-situation` | `5.8.1.13_Hinweis auf Vermutung_2.svg` | PG, RS |
+| `bbk-babz-2025:5.8.1.14#primary` | Hinweis auf akute Situation | `state.acute-situation` | `5.8.1.14_Hinweis auf akute Situation.svg` | PG, RS |
+| `bbk-babz-2025:5.8.1.14#alternative` | Hinweis auf akute Situation | `state.acute-situation` | `5.8.1.14_Hinweis auf akute Situation_2.svg` | PG, RS |
+| `bbk-babz-2025:5.8.2.1#primary` | Geringfügig erhöhte Aktivität / bis 25 Prozent Ausfall | `state.activity-slightly-increased-outage-up-to-25-percent` | `5.8.2.1_geringfügig erhöhte Aktivität_bis 25 Prozent Ausfall.svg` | PG, RS |
+| `bbk-babz-2025:5.8.2.2#primary` | Moderat erhöhte Aktivität / bis 50 Prozent Ausfall | `state.activity-moderately-increased-outage-up-to-50-percent` | `5.8.2.2_moderat erhöhte Aktivität_bis 50 Prozent Ausfall.svg` | PG, RS |
+| `bbk-babz-2025:5.8.2.3#primary` | Deutlich erhöhte Aktivität / bis 75 Prozent Ausfall | `state.activity-significantly-increased-outage-up-to-75-percent` | `5.8.2.3_deutlich erhöhte Aktivität_bis 75 Prozent Ausfall.svg` | PG, RS |
+| `bbk-babz-2025:5.8.2.4#primary` | Stark erhöhte Aktivität / Totalausfall | `state.activity-strongly-increased-total-outage` | `5.8.2.4_Stark erhöhte Aktivität_Totalausfall.svg` | PG, RS |
+| `bbk-babz-2025:5.8.3.1#primary` | Tendenz steigend | `state.tendency-rising` | `5.8.3.1_Tendenz steigend.svg` | PG, RS |
+| `bbk-babz-2025:5.8.3.2#primary` | Tendenz unverändert | `state.tendency-unchanged` | `5.8.3.2_Tendenz unverändert.svg` | PG, RS |
+| `bbk-babz-2025:5.8.3.3#primary` | Tendenz fallend | `state.tendency-falling` | `5.8.3.3_Tendenz fallend.svg` | PG, RS |
+| `bbk-babz-2025:5.8.4.1#primary` | Angeschlagen | `state.damaged` | `5.8.4.1_Angeschlagen.svg` | PG, RS |
+| `bbk-babz-2025:5.8.4.2#primary` | Teilzerstört | `state.partially-destroyed` | `5.8.4.2_Teilzerstört.svg` | PG, RS |
+| `bbk-babz-2025:5.8.4.3#primary` | Total zerstört | `state.destroyed` | `5.8.4.3_Total zerstört.svg` | PG, RS |
+| `bbk-babz-2025:5.8.5.1#primary` | Entstehungsbrand | `state.incipient-fire` | `5.8.5.1_Entstehungsbrand.svg` | PG, RS |
+| `bbk-babz-2025:5.8.5.2#primary` | Fortentwickelter Brand | `state.developed-fire` | `5.8.5.2_fortentwickelter Brand.svg` | PG, RS |
+| `bbk-babz-2025:5.8.5.3#primary` | Vollbrand | `state.fully-developed-fire` | `5.8.5.3_Vollbrand.svg` | PG, RS |
+| `bbk-babz-2025:5.8.6.1#primary` | Erkranktes Tier | `state.sick-animal` | `5.8.6.1_erkranktes Tier.svg` | PG, RS |
+| `bbk-babz-2025:5.8.6.2#primary` | Kontaminiertes Tier | `state.contaminated-animal` | `5.8.6.2_kontaminiertes Tier.svg` | PG, RS |
+| `bbk-babz-2025:5.8.6.2#alternative` | Kontaminiertes Tier | `state.contaminated-animal` | `5.8.6.2_kontaminiertes Tier_K.svg` | PG, RS |
+| `bbk-babz-2025:5.8.6.3#primary` | Totes Tier | `state.dead-animal` | `5.8.6.3_Totes Tier.svg` | PG, RS |
+| `bbk-babz-2025:5.8.7.1#primary` | Sonnig | `state.weather-sunny` | `5.8.7.1_Sonnig.svg` | PG, RS |
+| `bbk-babz-2025:5.8.7.2#primary` | Wolkig | `state.weather-cloudy` | `5.8.7.2_Wolkig.svg` | PG, RS |
+| `bbk-babz-2025:5.8.7.3#primary` | Bedeckung des Himmels 4 von 8 | `state.weather-cloud-cover-four-eighths` | `5.8.7.3_Bedeckung des Himmels 4 von 8.svg` | PG, RS |
+| `bbk-babz-2025:5.8.7.4#primary` | Nebelig | `state.weather-foggy` | `5.8.7.4_Nebelig.svg` | PG, RS |
+| `bbk-babz-2025:5.8.7.5#primary` | Regnerisch | `state.weather-rainy` | `5.8.7.5_Regnerisch.svg` | PG, RS |
+| `bbk-babz-2025:5.8.7.6#primary` | Hagelnd | `state.weather-hailing` | `5.8.7.6_Hagelnd.svg` | PG, RS |
+| `bbk-babz-2025:5.8.7.7#primary` | Gewittrig | `state.weather-thunderstorm` | `5.8.7.7_Gewittrig.svg` | PG, RS |
+| `bbk-babz-2025:5.8.7.8#primary` | Schneiend | `state.weather-snowing` | `5.8.7.8_Schneiend.svg` | PG, RS |
+| `bbk-babz-2025:5.8.7.9#primary` | Temperatur | `state.weather-temperature` | `5.8.7.9_Temperatur.svg` | PG, RS |
+| `bbk-babz-2025:5.8.7.10#primary` | Windig | `state.weather-windy` | `5.8.7.10_Windig.svg` | PG, RS |
+| `bbk-babz-2025:5.8.8.1#primary` | Person unverletzt | `state.person-uninjured` | `5.8.8.1_Person Unverletz.svg` | PG, RS |
+| `bbk-babz-2025:5.8.8.2#primary` | Person betroffen | `state.person-affected` | `5.8.8.2_Person Betroffen.svg` | PG, RS |
+| `bbk-babz-2025:5.8.8.3#primary` | Person verletzt | `state.person-injured` | `5.8.8.3_Person Verletzt.svg` | PG, RS |
+| `bbk-babz-2025:5.8.8.4#primary` | Person verletzt - Sichtungskategorie | `state.person-injured-triage-category` | `5.8.8.4_Person Verletzt_Sichtungskategorie.svg` | PG, RS |
+| `bbk-babz-2025:5.8.8.5#primary` | Person verletzt - Transportpriorität | `state.person-injured-transport-priority` | `5.8.8.5_Person Verletzt_Transportpriorität.svg` | PG, RS |
+| `bbk-babz-2025:5.8.8.6#primary` | Person kontaminiert | `state.person-contaminated` | `5.8.8.6_Person Kontaminiert.svg` | PG, RS |
+| `bbk-babz-2025:5.8.8.6#alternative` | Person kontaminiert | `state.person-contaminated` | `5.8.8.6_Person Kontaminiert_Alternative.svg` | PG, RS |
+| `bbk-babz-2025:5.8.8.7#primary` | Person tot | `state.person-dead` | `5.8.8.7_Person Tot.svg` | PG, RS |
+| `bbk-babz-2025:5.8.8.8#primary` | Person vermisst | `state.person-missing` | `5.8.8.8_Person Vermisst.svg` | PG, RS |
+| `bbk-babz-2025:5.8.8.9#primary` | Person in Wassergefahr | `state.person-in-water-danger` | `5.8.8.9_Person in Wassergefahr.svg` | PG, RS |
+| `bbk-babz-2025:5.8.8.10#primary` | Person in Zwangslage | `state.person-in-distress` | `5.8.8.10_Person in Zwangslage.svg` | PG, RS |
+| `bbk-babz-2025:5.8.8.11#primary` | Person gerettet | `state.person-rescued` | `5.8.8.11_Person gerettet.svg` | PG, RS |
+| `bbk-babz-2025:5.8.8.12#primary` | Person zu transportieren | `state.person-to-be-transported` | `5.8.8.12_Person zu transportieren.svg` | PG, RS |
+| `bbk-babz-2025:5.8.8.13#primary` | Transport einer Person | `state.person-in-transport` | `5.8.8.13_Transport einer Person.svg` | PG, RS |
+| `bbk-babz-2025:5.8.8.14#primary` | Person transportiert | `state.person-transported` | `5.8.8.14_Person transportiert.svg` | PG, RS |
+| `bbk-babz-2025:5.8.8.15#primary` | Person besonders betreuungsbedürftig | `state.person-needing-special-care` | `5.8.8.15_Person besonders betreuungsbedürftig.svg` | PG, RS |
+| `bbk-babz-2025:5.8.8.16#primary` | Person pflegebedürftig | `state.person-care-dependent` | `5.8.8.16_Person pflegebedürftig.svg` | PG, RS |
+| `bbk-babz-2025:5.8.8.17#primary` | Person mobilitätseingeschränkt | `state.person-mobility-impaired` | `5.8.8.17_Person mobilitätseingeschränkt.svg` | PG, RS |
+| `bbk-babz-2025:5.8.9.1#primary` | Gesperrt | `state.route-closed` | `5.8.9.1_Gesperrt.svg` | PG, RS |
+| `bbk-babz-2025:5.8.9.2#primary` | Einbahnstraßenregelung | `state.one-way-traffic` | `5.8.9.2_Einbahnstraßenregelung.svg` | PG, RS |
+| `bbk-babz-2025:5.8.9.3#primary` | Schwierig befahrbar - teilblockiert | `state.route-difficult-to-pass` | `5.8.9.3_Schwierig befahrbar_Teilblockiert.svg` | PG, RS |
+| `bbk-babz-2025:5.8.9.4#primary` | Unbefahrbar - blockiert | `state.route-impassable` | `5.8.9.4_Unbefahrbar_Blockiert.svg` | PG, RS |
 
 ## 5. Fachliche Prüfkriterien
 
@@ -254,6 +323,25 @@ Darstellungen verwenden die Variante `alternative`, alle übrigen `primary`.
 - Festhalten, ob die unabhängige Rekonstruktion mit Quellenstatus `derived` bestehen bleibt oder
   eine bewusste Abweichung als `deviation` konkret dokumentiert werden muss.
 
+### Zustände
+
+- Die fachliche Bedeutung jeder der 67 Darstellungen einzeln gegen den identifizierten
+  Referenzstand prüfen.
+- Jeden Zustand gegenüber fachlich oder visuell benachbarten Zuständen abgrenzen.
+- Bei den sechs Alternativen das Primary-/Alternative-Verhältnis prüfen: gleiche Bedeutung,
+  getrennte und nachvollziehbare Darstellungen.
+- Die Vollständigkeit außenliegender Marken prüfen, insbesondere Sichtungs-, Transport-,
+  Kontaminations-, Betreuungs- und Mobilitätsmarken.
+- Die Lesbarkeit in den Einsatzgrößen 16, 24, 32, 64, 128 und 256 Pixel fachlich bewerten.
+- Die monochrome Unterscheidbarkeit fachlich bewerten; Farbe darf nicht der einzige
+  Bedeutungskanal sein.
+- Bestätigen, dass der Quellenstatus der unabhängigen Konstruktionen korrekt `derived` bleibt,
+  oder eine konkrete Abweichung als `deviation` dokumentieren.
+
+Die sieben Beispielassets aus 5.8.1 und 5.8.7 erhalten keine State-ID und keine Manifest- oder
+Dossierzeile. Sie sind einer späteren Rezept-/Conformance-Coverageaufgabe zugeordnet und werden
+nicht als bereits fachlich oder technisch abgedeckt behandelt.
+
 ## 6. Erforderlicher Reviewbefund je Eintrag
 
 Ein abgeschlossener Befund muss mindestens enthalten:
@@ -295,7 +383,7 @@ Richtigkeit und die Entscheidung, ob eine Abweichung einsatztaktisch akzeptabel 
 
 ## 8. Weitere offene Reviewträger
 
-Neben den 114 Manifest-Einträgen tragen auch alle zwölf Quellen und das Profil `bund` ein offenes
+Neben den 181 Manifest-Einträgen tragen auch alle zwölf Quellen und das Profil `bund` ein offenes
 fachliches Review. `releaseBlockers()` weist diese 13 Träger nun in
 `sourceDomainReviewOpen` und `profileDomainReviewOpen` separat aus; zurechenbar abgeschlossene
 `domain: deviation`-Befunde erscheinen getrennt als 1.0-Freigabeblocker. Die Coverage-CLI nennt
@@ -321,6 +409,6 @@ Profil:
 - `bund` — fachlich zu prüfen sind insbesondere Geltungsbereich, Quellenwahl und die Abgrenzung
   gegenüber organisationsspezifischen beziehungsweise künftig normativ geänderten Profilen.
 
-Damit sind insgesamt **127 fachliche Reviewträger offen**: 114 Manifest-Einträge, zwölf Quellen und
-ein Profil. Die Zahl ist eine Übergabeinventur, keine Freigabe und keine Aussage, dass alle 127
+Damit sind insgesamt **194 fachliche Reviewträger offen**: 181 Manifest-Einträge, zwölf Quellen und
+ein Profil. Die Zahl ist eine Übergabeinventur, keine Freigabe und keine Aussage, dass alle 194
 Prüfungen dieselben Kriterien haben.
