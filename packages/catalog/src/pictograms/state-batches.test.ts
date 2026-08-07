@@ -25,6 +25,14 @@ const DELIVERED_BATCHES = [
       'state.activity-strongly-increased-total-outage#primary',
     ],
   },
+  {
+    batch: 'D1',
+    keys: [
+      'state.damaged#primary',
+      'state.partially-destroyed#primary',
+      'state.destroyed#primary',
+    ],
+  },
 ] as const;
 
 describe('DELIVERED_BATCHES', () => {

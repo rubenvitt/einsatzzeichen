@@ -150,6 +150,9 @@ export const STATE_IDS = Object.freeze([
   'tendency-rising',
   'tendency-unchanged',
   'tendency-falling',
+  'damaged',
+  'partially-destroyed',
+  'destroyed',
 ] as const);
 
 export type StateId = (typeof STATE_IDS)[number];

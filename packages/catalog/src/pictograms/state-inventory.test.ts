@@ -4,7 +4,12 @@ import { renderSvg } from '@einsatzzeichen/core';
 import { PRINT_MONOCHROME_THEME } from '../render-themes.js';
 import type { CatalogPictogramDefinition } from './catalog-definition.js';
 import { pictogram } from './index.js';
-import { ACTIVITY_STATES, STATE_PICTOGRAMS, TENDENCY_STATES } from './states/index.js';
+import {
+  ACTIVITY_STATES,
+  DAMAGE_STATES,
+  STATE_PICTOGRAMS,
+  TENDENCY_STATES,
+} from './states/index.js';
 
 function inventoryTuple(definition: CatalogPictogramDefinition) {
   return [
@@ -24,7 +29,7 @@ function monochromeSvg(definition: CatalogPictogramDefinition): string {
 }
 
 describe('State-Piktogramminventur', () => {
-  it('enthält exakt die ausgelieferten Aktivitätsgrade und Tendenzen in Kapitelreihenfolge', () => {
+  it('enthält exakt die ausgelieferten States in Kapitelreihenfolge', () => {
     const expected = [
       [
         '5.8.2.1',
@@ -53,10 +58,19 @@ describe('State-Piktogramminventur', () => {
       ['5.8.3.1', 'state.tendency-rising', 'primary', '5.8.3.1_Tendenz steigend.svg'],
       ['5.8.3.2', 'state.tendency-unchanged', 'primary', '5.8.3.2_Tendenz unverändert.svg'],
       ['5.8.3.3', 'state.tendency-falling', 'primary', '5.8.3.3_Tendenz fallend.svg'],
+      ['5.8.4.1', 'state.damaged', 'primary', '5.8.4.1_Angeschlagen.svg'],
+      [
+        '5.8.4.2',
+        'state.partially-destroyed',
+        'primary',
+        '5.8.4.2_Teilzerstört.svg',
+      ],
+      ['5.8.4.3', 'state.destroyed', 'primary', '5.8.4.3_Total zerstört.svg'],
     ] as const;
 
     expect(STATE_PICTOGRAMS.map(inventoryTuple)).toEqual(expected);
     expect(() => pictogram('state.tendency-rising')).not.toThrow();
+    expect(() => pictogram('state.damaged')).not.toThrow();
   });
 
   it('kodiert die Aktivitätsgrade geometrisch und im Monochromtheme unterscheidbar', () => {
@@ -84,6 +98,7 @@ describe('State-Piktogramminventur', () => {
   it('friert Familien- und Gesamtregister tief ein und weist Erweiterungen zur Laufzeit zurück', () => {
     expect(Object.isFrozen(ACTIVITY_STATES)).toBe(true);
     expect(Object.isFrozen(TENDENCY_STATES)).toBe(true);
+    expect(Object.isFrozen(DAMAGE_STATES)).toBe(true);
     expect(Object.isFrozen(STATE_PICTOGRAMS)).toBe(true);
 
     const mutableStates = STATE_PICTOGRAMS as unknown as CatalogPictogramDefinition[];
