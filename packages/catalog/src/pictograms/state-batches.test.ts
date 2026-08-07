@@ -186,6 +186,13 @@ const DELIVERED_BATCHES = [
       'state.weather-windy#primary',
     ],
   },
+  {
+    batch: 'V1',
+    keys: [
+      'state.route-closed#primary',
+      'state.one-way-traffic#primary',
+    ],
+  },
 ] as const;
 
 describe('DELIVERED_BATCHES', () => {

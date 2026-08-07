@@ -298,6 +298,13 @@ describe('State-Piktogramminventur', () => {
         'primary',
         '5.8.8.17_Person mobilitätseingeschränkt.svg',
       ],
+      ['5.8.9.1', 'state.route-closed', 'primary', '5.8.9.1_Gesperrt.svg'],
+      [
+        '5.8.9.2',
+        'state.one-way-traffic',
+        'primary',
+        '5.8.9.2_Einbahnstraßenregelung.svg',
+      ],
     ] as const;
 
     expect(STATE_PICTOGRAMS.map(inventoryTuple)).toEqual(expected);

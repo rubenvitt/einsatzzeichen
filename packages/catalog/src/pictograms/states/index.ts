@@ -8,6 +8,7 @@ import { FIRE_STATES } from './05-fire.js';
 import { ANIMAL_STATES } from './06-animals.js';
 import { WEATHER_STATES } from './07-weather.js';
 import { PERSON_STATES } from './08-persons.js';
+import { ACCESS_STATES } from './09-access.js';
 
 export { TACTICS_HAZARDS_STATES } from './01-tactics-hazards.js';
 export { ACTIVITY_STATES } from './02-activity.js';
@@ -17,6 +18,7 @@ export { FIRE_STATES } from './05-fire.js';
 export { ANIMAL_STATES } from './06-animals.js';
 export { WEATHER_STATES } from './07-weather.js';
 export { PERSON_STATES } from './08-persons.js';
+export { ACCESS_STATES } from './09-access.js';
 
 export const STATE_PICTOGRAMS = deepFreeze([
   ...TACTICS_HAZARDS_STATES,
@@ -27,4 +29,5 @@ export const STATE_PICTOGRAMS = deepFreeze([
   ...ANIMAL_STATES,
   ...WEATHER_STATES,
   ...PERSON_STATES,
+  ...ACCESS_STATES,
 ] satisfies readonly CatalogPictogramDefinition[]);
