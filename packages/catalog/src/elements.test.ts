@@ -4,6 +4,7 @@ import { ELEMENTS, PICTOGRAM_ELEMENT_KINDS, resolveElement } from './elements.js
 import { ORGANIZATION_COLORS } from './organizations.js';
 import { fingerprintFor } from './fingerprint-index.js';
 import { ALL_PICTOGRAMS, pictogram } from './pictograms/index.js';
+import { STATE_PICTOGRAMS } from './pictograms/states/index.js';
 
 describe('Element-Register', () => {
   it('gibt Elementdeskriptoren als tief readonly typisiert zurück', () => {
@@ -35,12 +36,14 @@ describe('Element-Register', () => {
     expect(observedTitle).toBe(originalTitle);
   });
 
-  it('führt 99 Elemente: sieben Farben, vier Stärkegrade, 88 Piktogramme', () => {
+  it('wächst von 99 Elementen um jede primäre State-ID', () => {
+    const stateIds = STATE_PICTOGRAMS.filter((item) => item.variant === 'primary').length;
     const byKind = Object.values(ELEMENTS).reduce<Record<string, number>>((acc, el) => {
       acc[el.kind] = (acc[el.kind] ?? 0) + 1;
       return acc;
     }, {});
-    expect(byKind).toEqual({ organization: 7, strength: 4, capability: 88 });
+    expect(byKind).toEqual({ organization: 7, strength: 4, capability: 88, state: stateIds });
+    expect(Object.keys(ELEMENTS)).toHaveLength(99 + stateIds);
   });
 
   it('führt genau die Organisationen, für die der Katalog eine Farbe belegt', () => {

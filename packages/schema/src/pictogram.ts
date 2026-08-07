@@ -1,6 +1,6 @@
 import type { Length, Primitive } from './geometry.js';
 import type { DepictionVariant } from './provenance.js';
-import type { CapabilityId } from './taxonomy.js';
+import type { CapabilityId, StateId } from './taxonomy.js';
 
 /**
  * Zugesicherte Hülle eines Piktogramms: linke obere Ecke und Maße in Millimetern.
@@ -21,14 +21,12 @@ export interface PictogramBox {
  * ein Trümmerkegel ist keine Fähigkeit einer Einheit — sie unter `capability.` zu führen wäre
  * eine Falschaussage in der ID.
  *
- * Vier der fünf Räume haben in D.0 noch keine Literale und sind deshalb `never`; die Union
- * kollabiert dadurch auf `capability.*`. Sie stehen hier trotzdem, weil sie der Vertrag sind,
- * an dem D.1 bis D.4 anknüpfen, ohne die Aufteilung je neu zu entscheiden — und weil ein
+ * Drei der fünf Räume haben noch keine Literale und sind deshalb `never`. Sie stehen hier
+ * trotzdem, weil sie der Vertrag sind, an dem D.3 bis D.4 anknüpfen, ohne die Aufteilung je neu
+ * zu entscheiden — und weil ein
  * `never`-Alias mit dieser Begründung ehrlicher ist als ein `string`, der jede ID durchlässt.
  */
 
-/** Kapitel 5.8: Zustände, Tendenzen, Gefahren, Wetter, Personen. Literale entstehen in D.2. */
-export type StateId = never;
 /** Anhang J: IuK. Literale entstehen in D.3. */
 export type CommsId = never;
 /** Anhänge K und L: Bauwerksschäden, Deichverteidigung. Literale entstehen in D.4. */

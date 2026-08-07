@@ -3,6 +3,7 @@ import { DEFAULT_VIEWBOX_MM, entryKey, type CatalogEntry } from '@einsatzzeichen
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { checkCoverage, findPrimaryViolations, releaseBlockers } from './coverage-gate.js';
 import { ALL_PICTOGRAMS, pictogramVariantKey } from './pictograms/index.js';
+import { STATE_PICTOGRAMS } from './pictograms/states/index.js';
 
 // Dieselbe Vorlage wie in `coverage-gate.test.ts`: beide Dateien brauchen einen Katalogeintrag
 // mit einstellbarer Zahl von `primary`-Darstellungen, und ein gemeinsames Testmodul für eine
@@ -69,20 +70,29 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('führt 114 Einträge: acht Grundzeichen, drei Rezepte, 103 Elemente', () => {
+  it('wächst von 114 Einträgen um jede ausgelieferte State-Darstellung', () => {
+    const stateDepictions = STATE_PICTOGRAMS.length;
     const counts = COVERAGE_MANIFEST.entries.reduce<Record<string, number>>((acc, e) => {
       acc[e.coverage] = (acc[e.coverage] ?? 0) + 1;
       return acc;
     }, {});
-    expect(counts).toEqual({ 'catalog-entry': 8, 'composition-recipe': 3, element: 103 });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(114);
+    expect(counts).toEqual({
+      'catalog-entry': 8,
+      'composition-recipe': 3,
+      element: 103 + stateDepictions,
+    });
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(114 + stateDepictions);
   });
 
   it('trägt für jeden Eintrag eine Referenzdatei und beide Reviewrollen', () => {
     for (const entry of COVERAGE_MANIFEST.entries) {
       expect(entry.referenceAsset).toMatch(/\.svg$/);
-      expect(entry.review.technical.status).toBe('approved');
-      expect(entry.review.technical.reviewer).toBe('rv');
+      if (entry.implementation.startsWith('state.')) {
+        expect(entry.review.technical).toEqual({ status: 'pending' });
+      } else {
+        expect(entry.review.technical.status).toBe('approved');
+        expect(entry.review.technical.reviewer).toBe('rv');
+      }
       expect(entry.review.domain.status).toBe('pending');
     }
   });
@@ -137,13 +147,14 @@ describe('Coverage-Manifest', () => {
 
 describe('Manifest-Einträge für Piktogramme', () => {
   it('bindet jede Piktogrammdefinition an genau eine Manifestzeile', () => {
-    const definitions = ALL_PICTOGRAMS.map(pictogramVariantKey).sort();
+    const stateDepictions = STATE_PICTOGRAMS.length;
+    const definitionKeys = new Set(ALL_PICTOGRAMS.map(pictogramVariantKey));
     const rows = COVERAGE_MANIFEST.entries
-      .filter((entry) => entry.coverage === 'element' && entry.implementation.startsWith('capability.'))
+      .filter((entry) => definitionKeys.has(entryKey(entry.implementation, entry.variant)))
       .map((entry) => entryKey(entry.implementation, entry.variant))
       .sort();
-    expect(rows).toHaveLength(92);
-    expect(rows).toEqual(definitions);
+    expect(rows).toHaveLength(92 + stateDepictions);
+    expect(rows).toEqual([...definitionKeys].sort());
   });
 
   it('leitet Abschnitt, Titel und Referenzdatei jeder Piktogrammzeile aus ihrer Definition ab', () => {
@@ -196,5 +207,21 @@ describe('Manifest-Einträge für Piktogramme', () => {
     expect(entry?.review.technical.note).toContain('Mehrgrößen');
     expect(entry?.review.technical.note).toContain('viewBox');
     expect(entry?.review.domain.status).toBe('pending');
+  });
+
+  it('trennt den freigegebenen D.1-Review identisch vom offenen State-Technikreview', () => {
+    const firstCapability = entryFor('4.3.1');
+    const secondCapability = entryFor('4.3.2');
+    const firstState = entryFor('5.8.3.1');
+    const secondState = entryFor('5.8.3.2');
+
+    expect(firstCapability?.review.technical).toBe(secondCapability?.review.technical);
+    expect(firstCapability?.review.technical).toMatchObject({
+      status: 'approved',
+      date: '2026-08-06',
+    });
+    expect(firstState?.review.technical).toBe(secondState?.review.technical);
+    expect(firstState?.review.technical).toEqual({ status: 'pending' });
+    expect(firstState?.review.technical).not.toBe(firstCapability?.review.technical);
   });
 });

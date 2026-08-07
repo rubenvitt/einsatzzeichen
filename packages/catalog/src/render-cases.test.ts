@@ -3,6 +3,7 @@ import { checkA11yMetadata, checkViewBox } from '@einsatzzeichen/core';
 import { DEFAULT_VIEWBOX_MM } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { pictogramRenderId } from './pictograms/index.js';
+import { STATE_PICTOGRAMS } from './pictograms/states/index.js';
 import { RENDER_CASES } from './test-support/render-cases.js';
 
 describe('vollständige Renderfallmenge', () => {
@@ -16,11 +17,20 @@ describe('vollständige Renderfallmenge', () => {
   });
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
+    const stateDepictions = STATE_PICTOGRAMS.length;
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    expect(ids).toHaveLength(103);
+    expect(ids).toHaveLength(103 + stateDepictions);
     expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(3);
     expect(ids.filter((id) => id.startsWith('capability.'))).toHaveLength(92);
-    expect(ids.filter((id) => !id.startsWith('recipe.') && !id.startsWith('capability.'))).toHaveLength(8);
+    expect(ids.filter((id) => id.startsWith('state.'))).toHaveLength(stateDepictions);
+    expect(
+      ids.filter(
+        (id) =>
+          !id.startsWith('recipe.') &&
+          !id.startsWith('capability.') &&
+          !id.startsWith('state.'),
+      ),
+    ).toHaveLength(8);
     expect(new Set(ids).size).toBe(ids.length);
   });
 

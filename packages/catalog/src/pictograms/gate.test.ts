@@ -13,6 +13,7 @@ import { deepFreeze } from '../readonly-data.js';
 import type { CatalogPictogramDefinition } from './catalog-definition.js';
 import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
 import { ALL_PICTOGRAMS, pictogramVariantKey } from './index.js';
+import { STATE_PICTOGRAMS } from './states/index.js';
 
 /**
  * Ein Körper aus dem realen Katalog. Das Gate liest weiterhin das Primitiv statt eines
@@ -87,6 +88,13 @@ describe('Piktogramm-Gates über den Katalogbestand', () => {
     expect(CAPABILITY_PICTOGRAMS).toHaveLength(92);
     for (const definition of CAPABILITY_PICTOGRAMS) {
       expect(definition.placement).toEqual({ mode: 'in-body', bodyKind: 'formation' });
+    }
+  });
+
+  it('deklariert alle State-Definitionen als eigenständige ViewBox-Piktogramme', () => {
+    expect(STATE_PICTOGRAMS).toHaveLength(3);
+    for (const definition of STATE_PICTOGRAMS) {
+      expect(definition.placement).toEqual({ mode: 'standalone' });
     }
   });
 

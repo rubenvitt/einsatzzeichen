@@ -45,6 +45,10 @@ const PICTOGRAM_TECHNICAL_REVIEW: Review = {
     'Kontrast-Gates des renderbaren Katalogbestands.',
 };
 
+const STATE_PICTOGRAM_TECHNICAL_REVIEW: Review = {
+  status: 'pending',
+};
+
 /** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
 function reviewFor(
   sourceId: string,
@@ -151,6 +155,9 @@ const elementEntries: CoverageEntry[] = Object.entries(ELEMENT_SECTIONS).map(([i
 
 const pictogramEntries: CoverageEntry[] = ALL_PICTOGRAMS.map((definition) => {
   const sourceId = `bbk-babz-2025:${definition.section}`;
+  const technicalReview = definition.id.startsWith('state.')
+    ? STATE_PICTOGRAM_TECHNICAL_REVIEW
+    : PICTOGRAM_TECHNICAL_REVIEW;
   return {
     sourceId,
     variant: definition.variant,
@@ -160,7 +167,7 @@ const pictogramEntries: CoverageEntry[] = ALL_PICTOGRAMS.map((definition) => {
     coverage: 'element',
     profile: 'bund',
     testEvidence: ['svg-snapshot', 'pictogram-contract'],
-    review: reviewFor(sourceId, definition.variant, PICTOGRAM_TECHNICAL_REVIEW),
+    review: reviewFor(sourceId, definition.variant, technicalReview),
   };
 });
 

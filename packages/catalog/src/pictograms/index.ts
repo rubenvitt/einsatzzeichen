@@ -4,6 +4,7 @@ import {
   type PictogramId,
 } from '@einsatzzeichen/schema';
 import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
+import { STATE_PICTOGRAMS } from './states/index.js';
 import type { CatalogPictogramDefinition } from './catalog-definition.js';
 import { deepFreeze } from '../readonly-data.js';
 
@@ -26,7 +27,10 @@ export function pictogramRenderId(
  */
 export const ALL_PICTOGRAMS: readonly CatalogPictogramDefinition[] = deepFreeze([
   ...CAPABILITY_PICTOGRAMS,
+  ...STATE_PICTOGRAMS,
 ]);
+
+export { STATE_PICTOGRAMS } from './states/index.js';
 
 export function buildPictogramRegistry(
   definitions: readonly CatalogPictogramDefinition[],

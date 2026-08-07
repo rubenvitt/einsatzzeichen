@@ -141,6 +141,15 @@ export const CAPABILITY_IDS = Object.freeze([
 
 export type CapabilityId = (typeof CAPABILITY_IDS)[number];
 
+/** Zustände nach Kapitel 5.8 in verbindlicher Kapitelreihenfolge. */
+export const STATE_IDS = Object.freeze([
+  'tendency-rising',
+  'tendency-unchanged',
+  'tendency-falling',
+] as const);
+
+export type StateId = (typeof STATE_IDS)[number];
+
 /** Semantische Beschreibung eines Zeichens. Eingabe des Kompositionsmotors. */
 export interface SymbolSpec {
   kind: SymbolKind;
