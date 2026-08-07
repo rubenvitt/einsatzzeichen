@@ -75,6 +75,13 @@ const DELIVERED_BATCHES = [
     ],
   },
   {
+    batch: 'G3',
+    keys: [
+      'state.radioactivity-hazard#primary',
+      'state.radioactivity-hazard#alternative',
+    ],
+  },
+  {
     batch: 'T1',
     keys: [
       'state.sick-animal#primary',

@@ -84,6 +84,18 @@ describe('State-Piktogramminventur', () => {
         '5.8.1.7_Gefährliche Stoffe_Chlor.svg',
       ],
       [
+        '5.8.1.8',
+        'state.radioactivity-hazard',
+        'primary',
+        '5.8.1.8_Gefahr durch Radioaktivität.svg',
+      ],
+      [
+        '5.8.1.8',
+        'state.radioactivity-hazard',
+        'alternative',
+        '5.8.1.8_Gefahr durch Radioaktivität _A.svg',
+      ],
+      [
         '5.8.1.13',
         'state.suspected-situation',
         'primary',
@@ -258,6 +270,8 @@ describe('State-Piktogramminventur', () => {
     expect(() => pictogram('state.water-ingress-hazard')).not.toThrow();
     expect(() => pictogram('state.hazardous-substances')).not.toThrow();
     expect(() => pictogram('state.hazardous-substances', 'alternative')).not.toThrow();
+    expect(() => pictogram('state.radioactivity-hazard')).not.toThrow();
+    expect(() => pictogram('state.radioactivity-hazard', 'alternative')).not.toThrow();
     expect(() => pictogram('state.suspected-situation')).not.toThrow();
     expect(() => pictogram('state.acute-situation')).not.toThrow();
     expect(() => pictogram('state.tendency-rising')).not.toThrow();

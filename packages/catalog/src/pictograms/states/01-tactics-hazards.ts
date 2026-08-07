@@ -219,6 +219,32 @@ function hazardousSubstancesAlternativePrimitives(): readonly Primitive[] {
   return [...framedStroke(TRIANGLE, 'rot'), ...haloStroke(glyph, 'rot')];
 }
 
+function radioactivityPrimaryPrimitives(): readonly Primitive[] {
+  return [
+    ...framedStroke(TRIANGLE, 'rot'),
+    ...haloStroke('M 10 24 L 16 8 L 22 24 M 12 19 H 20', 'rot'),
+  ];
+}
+
+function radioactivityAlternativePrimitives(): readonly Primitive[] {
+  return [
+    ...framedStroke(TRIANGLE, 'rot'),
+    filledSignalPath(
+      'M 14.5 15.2 C 12.8 12.8 12.5 9.2 14 6 C 14.8 4.6 17.2 4.6 18 6 ' +
+        'C 19.5 9.2 19.2 12.8 17.5 15.2 C 16.6 14.8 15.4 14.8 14.5 15.2 Z',
+    ),
+    filledSignalPath(
+      'M 13.8 17 C 10.8 16.4 7.6 17.4 5.5 20 C 4.6 21.2 5.8 23.4 7.4 23.6 ' +
+        'C 10.9 24 13.8 22.2 15 19.5 C 14.3 18.8 14 17.9 13.8 17 Z',
+    ),
+    filledSignalPath(
+      'M 18.2 17 C 21.2 16.4 24.4 17.4 26.5 20 C 27.4 21.2 26.2 23.4 24.6 23.6 ' +
+        'C 21.1 24 18.2 22.2 17 19.5 C 17.7 18.8 18 17.9 18.2 17 Z',
+    ),
+    filledSignalCircle(16, 18, 1.4),
+  ];
+}
+
 function suspectedPrimaryPrimitives(): readonly Primitive[] {
   const question =
     'M 8 9 C 9 5 12 4 16 4 C 21 4 24 7 24 11 ' +
@@ -325,6 +351,25 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
     contrastPairs: SIGNAL_CONTRAST,
     primitives: hazardousSubstancesAlternativePrimitives(),
+  }),
+  defineState({
+    section: '5.8.1.8',
+    id: 'radioactivity-hazard',
+    title: 'Gefahr durch Radioaktivität',
+    referenceAsset: '5.8.1.8_Gefahr durch Radioaktivität.svg',
+    box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
+    contrastPairs: SIGNAL_CONTRAST,
+    primitives: radioactivityPrimaryPrimitives(),
+  }),
+  defineState({
+    section: '5.8.1.8',
+    id: 'radioactivity-hazard',
+    variant: 'alternative',
+    title: 'Gefahr durch Radioaktivität',
+    referenceAsset: '5.8.1.8_Gefahr durch Radioaktivität _A.svg',
+    box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
+    contrastPairs: SIGNAL_CONTRAST,
+    primitives: radioactivityAlternativePrimitives(),
   }),
   defineState({
     section: '5.8.1.13',
