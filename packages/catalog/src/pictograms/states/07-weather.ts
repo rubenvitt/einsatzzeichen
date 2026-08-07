@@ -232,4 +232,38 @@ export const WEATHER_STATES = deepFreeze([
     contrastPairs: BLACK_ON_SURFACE,
     primitives: snowPrimitives(),
   }),
+  defineState({
+    section: '5.8.7.9',
+    id: 'weather-temperature',
+    title: 'Temperatur',
+    referenceAsset: '5.8.7.9_Temperatur.svg',
+    box: { xMm: 6, yMm: 3, widthMm: 23, heightMm: 28 },
+    contrastPairs: BLACK_ON_WHITE_AND_SURFACE,
+    primitives: [
+      weatherPath(
+        'M 10 20 V 6 C 10 4 11 3 13 3 C 15 3 16 4 16 6 V 20 ' +
+          'C 19 22 20 25 18 28 C 16 31 12 31 9 29 C 6 27 6 23 10 20 Z',
+        WEATHER_WHITE,
+      ),
+      weatherLine(22, 7, 29, 7),
+      weatherLine(22, 12, 27, 12),
+      weatherLine(22, 17, 29, 17),
+      weatherLine(22, 22, 27, 22),
+    ],
+  }),
+  defineState({
+    section: '5.8.7.10',
+    id: 'weather-windy',
+    title: 'Windig',
+    referenceAsset: '5.8.7.10_Windig.svg',
+    box: { xMm: 4, yMm: 13, widthMm: 25, heightMm: 12 },
+    contrastPairs: BLACK_ON_SURFACE,
+    primitives: [
+      weatherLine(4, 20, 27, 20),
+      weatherPolyline([[23, 15], [29, 20], [23, 25]]),
+      weatherLine(7, 13, 11, 20),
+      weatherLine(12, 13, 16, 20),
+      weatherLine(17, 13, 21, 20),
+    ],
+  }),
 ] satisfies readonly CatalogPictogramDefinition[]);

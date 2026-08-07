@@ -179,6 +179,13 @@ const DELIVERED_BATCHES = [
       'state.weather-snowing#primary',
     ],
   },
+  {
+    batch: 'W4',
+    keys: [
+      'state.weather-temperature#primary',
+      'state.weather-windy#primary',
+    ],
+  },
 ] as const;
 
 describe('DELIVERED_BATCHES', () => {

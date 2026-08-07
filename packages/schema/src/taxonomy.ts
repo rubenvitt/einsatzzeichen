@@ -181,6 +181,8 @@ export const STATE_IDS = Object.freeze([
   'weather-hailing',
   'weather-thunderstorm',
   'weather-snowing',
+  'weather-temperature',
+  'weather-windy',
   'person-uninjured',
   'person-affected',
   'person-injured',

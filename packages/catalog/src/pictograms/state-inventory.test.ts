@@ -213,6 +213,8 @@ describe('State-Piktogramminventur', () => {
       ['5.8.7.6', 'state.weather-hailing', 'primary', '5.8.7.6_Hagelnd.svg'],
       ['5.8.7.7', 'state.weather-thunderstorm', 'primary', '5.8.7.7_Gewittrig.svg'],
       ['5.8.7.8', 'state.weather-snowing', 'primary', '5.8.7.8_Schneiend.svg'],
+      ['5.8.7.9', 'state.weather-temperature', 'primary', '5.8.7.9_Temperatur.svg'],
+      ['5.8.7.10', 'state.weather-windy', 'primary', '5.8.7.10_Windig.svg'],
       ['5.8.8.1', 'state.person-uninjured', 'primary', '5.8.8.1_Person Unverletz.svg'],
       ['5.8.8.2', 'state.person-affected', 'primary', '5.8.8.2_Person Betroffen.svg'],
       ['5.8.8.3', 'state.person-injured', 'primary', '5.8.8.3_Person Verletzt.svg'],
