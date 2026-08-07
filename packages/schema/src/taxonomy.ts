@@ -98,7 +98,17 @@ export type CapabilityId =
   | 'hand-tools'
   | 'forklift-lifting'
   | 'crane-lifting'
-  | 'lifting-loads-persons';
+  | 'lifting-loads-persons'
+  | 'lifting-clearing'
+  | 'remote-manipulation'
+  | 'chainsaw'
+  | 'pumping'
+  | 'mechanized-clearing'
+  | 'safety'
+  | 'blasting'
+  | 'technical-assistance'
+  | 'transport'
+  | 'door-opening';
 
 /** Semantische Beschreibung eines Zeichens. Eingabe des Kompositionsmotors. */
 export interface SymbolSpec {

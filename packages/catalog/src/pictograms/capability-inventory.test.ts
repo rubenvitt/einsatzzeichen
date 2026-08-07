@@ -262,7 +262,7 @@ describe('Fähigkeitsinventar Kapitel 4.6', () => {
 });
 
 describe('Fähigkeitsinventar Kapitel 4.7', () => {
-  it('bildet die ersten elf Darstellungen aus Technischer Hilfeleistung exakt ab', () => {
+  it('bildet die ersten 21 Darstellungen aus Technischer Hilfeleistung exakt ab', () => {
     const actual = CAPABILITY_PICTOGRAMS
       .filter((definition) => definition.section.startsWith('4.7.'))
       .map(({ section, id, variant, referenceAsset }) => ({
@@ -284,6 +284,16 @@ describe('Fähigkeitsinventar Kapitel 4.7', () => {
       { section: '4.7.9', id: 'capability.crane-lifting', variant: 'primary', referenceAsset: '4.7.9_Hebearbeit mit Kran.svg' },
       { section: '4.7.10', id: 'capability.lifting-loads-persons', variant: 'primary', referenceAsset: '4.7.10_Heben von Lasten oder Personen.svg' },
       { section: '4.7.10', id: 'capability.lifting-loads-persons', variant: 'alternative', referenceAsset: '4.7.10_Heben von Lasten oder Personen_Alternative.svg' },
+      { section: '4.7.11', id: 'capability.lifting-clearing', variant: 'primary', referenceAsset: '4.7.11_Heben-Räumen.svg' },
+      { section: '4.7.12', id: 'capability.remote-manipulation', variant: 'primary', referenceAsset: '4.7.12_Fernmanipulieren.svg' },
+      { section: '4.7.13', id: 'capability.chainsaw', variant: 'primary', referenceAsset: '4.7.13_Motorsägearbeiten.svg' },
+      { section: '4.7.14', id: 'capability.pumping', variant: 'primary', referenceAsset: '4.7.14_Pumpen.svg' },
+      { section: '4.7.15', id: 'capability.mechanized-clearing', variant: 'primary', referenceAsset: '4.7.15_Räumarbeiten mit Maschine.svg' },
+      { section: '4.7.16', id: 'capability.safety', variant: 'primary', referenceAsset: '4.7.16_Sicherheit.svg' },
+      { section: '4.7.17', id: 'capability.blasting', variant: 'primary', referenceAsset: '4.7.17_Sprengen.svg' },
+      { section: '4.7.18', id: 'capability.technical-assistance', variant: 'primary', referenceAsset: '4.7.18_Technische Hilfeleistung.svg' },
+      { section: '4.7.19', id: 'capability.transport', variant: 'primary', referenceAsset: '4.7.19_Transportieren.svg' },
+      { section: '4.7.20', id: 'capability.door-opening', variant: 'primary', referenceAsset: '4.7.20_Türöffnung.svg' },
     ]);
   });
 });
