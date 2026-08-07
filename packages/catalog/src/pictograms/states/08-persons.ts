@@ -234,4 +234,26 @@ export const PERSON_STATES = deepFreeze([
       stateLine(16, 4, 28, 31),
     ],
   }),
+  defineState({
+    section: '5.8.8.16',
+    id: 'person-care-dependent',
+    title: 'Person pflegebedürftig',
+    referenceAsset: '5.8.8.16_Person pflegebedürftig.svg',
+    box: { xMm: 5, yMm: 4, widthMm: 22, heightMm: 22 },
+    contrastPairs: PERSON_CONTRAST,
+    primitives: [personDiamond(), stateLine(5, 8, 5, 22)],
+  }),
+  defineState({
+    section: '5.8.8.17',
+    id: 'person-mobility-impaired',
+    title: 'Person mobilitätseingeschränkt',
+    referenceAsset: '5.8.8.17_Person mobilitätseingeschränkt.svg',
+    box: { xMm: 5, yMm: 4, widthMm: 22, heightMm: 26.5 },
+    contrastPairs: PERSON_CONTRAST,
+    primitives: [
+      personDiamond(),
+      stateCircle(8, 28.5, 2),
+      stateCircle(24, 28.5, 2),
+    ],
+  }),
 ] satisfies readonly CatalogPictogramDefinition[]);
