@@ -26,6 +26,10 @@ function injuryMark(yOffsetMm = 0): Primitive {
   return stateLine(16, 4 + yOffsetMm, 16, 26 + yOffsetMm);
 }
 
+function waterPersonDiamond(): Primitive {
+  return statePath('M 16 10 L 27 20.5 L 16 31 L 5 20.5 Z');
+}
+
 export const PERSON_STATES = deepFreeze([
   defineState({
     section: '5.8.8.1',
@@ -119,6 +123,37 @@ export const PERSON_STATES = deepFreeze([
       personDiamond(),
       injuryMark(),
       statePath('M 27.5 2.5 V 10.5 M 31 2.5 L 27.5 6.5 L 31 10.5'),
+    ],
+  }),
+  defineState({
+    section: '5.8.8.7',
+    id: 'person-dead',
+    title: 'Person tot',
+    referenceAsset: '5.8.8.7_Person Tot.svg',
+    box: { xMm: 5, yMm: 4, widthMm: 22, heightMm: 22 },
+    contrastPairs: PERSON_CONTRAST,
+    primitives: [personDiamond(), injuryMark(), stateLine(10.5, 9.5, 21.5, 9.5)],
+  }),
+  defineState({
+    section: '5.8.8.8',
+    id: 'person-missing',
+    title: 'Person vermisst',
+    referenceAsset: '5.8.8.8_Person Vermisst.svg',
+    box: { xMm: 3, yMm: 3, widthMm: 26, heightMm: 26 },
+    contrastPairs: PERSON_CONTRAST,
+    primitives: [personDiamond(), stateLine(3, 10, 10, 3), stateLine(22, 29, 29, 22)],
+  }),
+  defineState({
+    section: '5.8.8.9',
+    id: 'person-in-water-danger',
+    title: 'Person in Wassergefahr',
+    referenceAsset: '5.8.8.9_Person in Wassergefahr.svg',
+    box: { xMm: 4, yMm: 1, widthMm: 27, heightMm: 30 },
+    contrastPairs: PERSON_CONTRAST,
+    primitives: [
+      waterPersonDiamond(),
+      statePath('M 4 3.5 C 7 1 10 1 13 3.5 C 16 6 19 6 22 3.5 C 25 1 28 1 31 3.5'),
+      statePath('M 4 7 C 7 4.5 10 4.5 13 7 C 16 9.5 19 9.5 22 7 C 25 4.5 28 4.5 31 7'),
     ],
   }),
 ] satisfies readonly CatalogPictogramDefinition[]);

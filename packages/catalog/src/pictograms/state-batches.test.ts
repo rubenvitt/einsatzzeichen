@@ -91,6 +91,14 @@ const DELIVERED_BATCHES = [
       'state.person-contaminated#alternative',
     ],
   },
+  {
+    batch: 'P4',
+    keys: [
+      'state.person-dead#primary',
+      'state.person-missing#primary',
+      'state.person-in-water-danger#primary',
+    ],
+  },
 ] as const;
 
 describe('DELIVERED_BATCHES', () => {

@@ -143,6 +143,14 @@ describe('State-Piktogramminventur', () => {
         'alternative',
         '5.8.8.6_Person Kontaminiert_Alternative.svg',
       ],
+      ['5.8.8.7', 'state.person-dead', 'primary', '5.8.8.7_Person Tot.svg'],
+      ['5.8.8.8', 'state.person-missing', 'primary', '5.8.8.8_Person Vermisst.svg'],
+      [
+        '5.8.8.9',
+        'state.person-in-water-danger',
+        'primary',
+        '5.8.8.9_Person in Wassergefahr.svg',
+      ],
     ] as const;
 
     expect(STATE_PICTOGRAMS.map(inventoryTuple)).toEqual(expected);
@@ -162,6 +170,9 @@ describe('State-Piktogramminventur', () => {
     expect(() => pictogram('state.person-injured-transport-priority')).not.toThrow();
     expect(() => pictogram('state.person-contaminated')).not.toThrow();
     expect(() => pictogram('state.person-contaminated', 'alternative')).not.toThrow();
+    expect(() => pictogram('state.person-dead')).not.toThrow();
+    expect(() => pictogram('state.person-missing')).not.toThrow();
+    expect(() => pictogram('state.person-in-water-danger')).not.toThrow();
   });
 
   it('hält Primär- und Alternativdarstellung je taktischem Hinweis eindeutig und titelgleich', () => {
