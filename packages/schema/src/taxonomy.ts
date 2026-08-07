@@ -82,7 +82,13 @@ export type CapabilityId =
   | 'watercraft-operations'
   | 'mountain-rescue'
   | 'special-height-depth-rescue'
-  | 'water-rescue';
+  | 'water-rescue'
+  | 'medical-service'
+  | 'nursing'
+  | 'intensive-care'
+  | 'physician'
+  | 'patient-transport'
+  | 'hospital';
 
 /** Semantische Beschreibung eines Zeichens. Eingabe des Kompositionsmotors. */
 export interface SymbolSpec {

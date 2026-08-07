@@ -238,3 +238,25 @@ describe('Fähigkeitsinventar Kapitel 4.5', () => {
     ]);
   });
 });
+
+describe('Fähigkeitsinventar Kapitel 4.6', () => {
+  it('bildet die sechs Darstellungen aus Sanitäts- und Rettungswesen exakt ab', () => {
+    const actual = CAPABILITY_PICTOGRAMS
+      .filter((definition) => definition.section.startsWith('4.6.'))
+      .map(({ section, id, variant, referenceAsset }) => ({
+        section,
+        id,
+        variant,
+        referenceAsset,
+      }));
+
+    expect(actual).toEqual([
+      { section: '4.6.1', id: 'capability.medical-service', variant: 'primary', referenceAsset: '4.6.1_Sanität Grundzeichen.svg' },
+      { section: '4.6.2', id: 'capability.nursing', variant: 'primary', referenceAsset: '4.6.2_Pflege.svg' },
+      { section: '4.6.3', id: 'capability.intensive-care', variant: 'primary', referenceAsset: '4.6.3_Rettungswesen_Intensivmedizin.svg' },
+      { section: '4.6.4', id: 'capability.physician', variant: 'primary', referenceAsset: '4.6.4_Arztwesen.svg' },
+      { section: '4.6.5', id: 'capability.patient-transport', variant: 'primary', referenceAsset: '4.6.5_Patiententransport.svg' },
+      { section: '4.6.6', id: 'capability.hospital', variant: 'primary', referenceAsset: '4.6.6_Krankenhaus.svg' },
+    ]);
+  });
+});

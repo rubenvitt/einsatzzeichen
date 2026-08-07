@@ -60,7 +60,7 @@ describe('Fachreview-Ledger', () => {
       ...Object.values(SOURCE_DOMAIN_REVIEWS),
       ...Object.values(PROFILE_DOMAIN_REVIEWS),
     ];
-    expect(reviews).toHaveLength(68);
+    expect(reviews).toHaveLength(74);
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
   });
 
