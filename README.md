@@ -84,8 +84,9 @@ dokumentiert.
 
 D.1 deckt Kapitel 4 der projektinternen Coverage-Baseline technisch vollständig ab: 88
 Abschnitte sind als 92 Darstellungen umgesetzt, darunter vier getrennt adressierbare
-Alternativdarstellungen. Alle 92 Renderfälle bestehen die globalen Kommando-, Box-, Clipping-,
-Snapshot-, Mehrgrößen-, Theme-, Metadaten- und viewBox-Gates.
+Alternativdarstellungen. Alle 92 Darstellungen bestehen ihre lokalen Kommando-, Box-, Clipping-
+und Snapshot-Gates; die 92 zugehörigen Renderfälle bestehen zusätzlich die globalen Mehrgrößen-,
+Theme-, Metadaten- und viewBox-Gates.
 
 Diese technische Abdeckung ist weder eine fachliche Freigabe noch eine normative Behauptung. Alle
 92 Kapitel-4-Domainreviews bleiben `pending`; ihre fachliche Bedeutung, Verwechslungsfreiheit,
