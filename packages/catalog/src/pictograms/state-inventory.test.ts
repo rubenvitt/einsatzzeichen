@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_VIEWBOX_MM, type Drawing } from '@einsatzzeichen/schema';
+import { DEFAULT_VIEWBOX_MM, STATE_IDS, type Drawing } from '@einsatzzeichen/schema';
 import { renderSvg } from '@einsatzzeichen/core';
 import { PRINT_MONOCHROME_THEME } from '../render-themes.js';
 import type { CatalogPictogramDefinition } from './catalog-definition.js';
@@ -211,6 +211,8 @@ describe('State-Piktogramminventur', () => {
       ['5.8.7.4', 'state.weather-foggy', 'primary', '5.8.7.4_Nebelig.svg'],
       ['5.8.7.5', 'state.weather-rainy', 'primary', '5.8.7.5_Regnerisch.svg'],
       ['5.8.7.6', 'state.weather-hailing', 'primary', '5.8.7.6_Hagelnd.svg'],
+      ['5.8.7.7', 'state.weather-thunderstorm', 'primary', '5.8.7.7_Gewittrig.svg'],
+      ['5.8.7.8', 'state.weather-snowing', 'primary', '5.8.7.8_Schneiend.svg'],
       ['5.8.8.1', 'state.person-uninjured', 'primary', '5.8.8.1_Person Unverletz.svg'],
       ['5.8.8.2', 'state.person-affected', 'primary', '5.8.8.2_Person Betroffen.svg'],
       ['5.8.8.3', 'state.person-injured', 'primary', '5.8.8.3_Person Verletzt.svg'],
@@ -338,6 +340,19 @@ describe('State-Piktogramminventur', () => {
     expect(() => pictogram('state.person-needing-special-care')).not.toThrow();
     expect(() => pictogram('state.person-care-dependent')).not.toThrow();
     expect(() => pictogram('state.person-mobility-impaired')).not.toThrow();
+  });
+
+  it('führt Schneeintensitätsbeispiele nicht als eigenständige State-IDs', () => {
+    const nonIdSnowExamples = [
+      '5.8.7_Beispiel_Schneiend_schwach.svg',
+      '5.8.7_Beispiel_Schneiend_mittel.svg',
+      '5.8.7_Beispiel_Schneiend_stark.svg',
+      '5.8.7_Beispiel_Schneiend_extrem.svg',
+    ] as const;
+
+    const registeredAssets = new Set(STATE_PICTOGRAMS.map((item) => item.referenceAsset));
+    for (const example of nonIdSnowExamples) expect(registeredAssets).not.toContain(example);
+    expect(STATE_IDS.some((id) => id.startsWith('weather-snowing-'))).toBe(false);
   });
 
   it('hält vorhandene Primär- und Alternativdarstellungen eindeutig und titelgleich', () => {

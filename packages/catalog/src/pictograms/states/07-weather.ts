@@ -1,4 +1,4 @@
-import type { Primitive, Style } from '@einsatzzeichen/schema';
+import type { Point, Primitive, Style } from '@einsatzzeichen/schema';
 import { deepFreeze } from '../../readonly-data.js';
 import { defineState, type CatalogPictogramDefinition } from '../catalog-definition.js';
 
@@ -17,6 +17,12 @@ const WEATHER_WHITE = {
 const WEATHER_BLACK = {
   fill: 'schwarz',
   stroke: 'none',
+} as const satisfies Style;
+
+const SNOW_STROKE = {
+  fill: 'none',
+  stroke: 'schwarz',
+  strokeWidth: 1.8,
 } as const satisfies Style;
 
 const BLACK_ON_SURFACE = [
@@ -48,6 +54,28 @@ function weatherLine(x1: number, y1: number, x2: number, y2: number): Primitive 
     y1,
     x2,
     y2,
+    style: WEATHER_STROKE,
+  };
+}
+
+function snowLine(x1: number, y1: number, x2: number, y2: number): Primitive {
+  return {
+    type: 'line',
+    role: 'pictogram',
+    x1,
+    y1,
+    x2,
+    y2,
+    style: SNOW_STROKE,
+  };
+}
+
+function weatherPolyline(points: readonly Point[], closed = false): Primitive {
+  return {
+    type: 'polyline',
+    role: 'pictogram',
+    points,
+    closed,
     style: WEATHER_STROKE,
   };
 }
@@ -90,6 +118,26 @@ function hailPrimitives(): readonly Primitive[] {
     weatherLine(x + 1, 4, x - 1, 12),
     weatherCircle(x, 16, 2),
     weatherLine(x + 1, 20, x - 1, 28),
+  ]);
+}
+
+function lightning(offsetX: number): Primitive {
+  return weatherPolyline([
+    [offsetX + 3, 4],
+    [offsetX, 15],
+    [offsetX + 4, 15],
+    [offsetX + 1, 28],
+    [offsetX + 8, 13],
+    [offsetX + 4, 13],
+    [offsetX + 7, 4],
+  ]);
+}
+
+function snowPrimitives(): readonly Primitive[] {
+  return [6.5, 16, 25.5].flatMap((cx) => [
+    snowLine(cx, 11, cx, 21),
+    snowLine(cx - 3, 13, cx + 3, 19),
+    snowLine(cx - 3, 19, cx + 3, 13),
   ]);
 }
 
@@ -165,5 +213,23 @@ export const WEATHER_STATES = deepFreeze([
     box: { xMm: 6, yMm: 4, widthMm: 20, heightMm: 24 },
     contrastPairs: BLACK_ON_SURFACE,
     primitives: hailPrimitives(),
+  }),
+  defineState({
+    section: '5.8.7.7',
+    id: 'weather-thunderstorm',
+    title: 'Gewittrig',
+    referenceAsset: '5.8.7.7_Gewittrig.svg',
+    box: { xMm: 2, yMm: 4, widthMm: 26, heightMm: 24 },
+    contrastPairs: BLACK_ON_SURFACE,
+    primitives: [lightning(2), lightning(11), lightning(20)],
+  }),
+  defineState({
+    section: '5.8.7.8',
+    id: 'weather-snowing',
+    title: 'Schneiend',
+    referenceAsset: '5.8.7.8_Schneiend.svg',
+    box: { xMm: 3.5, yMm: 11, widthMm: 25, heightMm: 10 },
+    contrastPairs: BLACK_ON_SURFACE,
+    primitives: snowPrimitives(),
   }),
 ] satisfies readonly CatalogPictogramDefinition[]);
