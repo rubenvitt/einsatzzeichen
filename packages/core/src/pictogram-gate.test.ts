@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import type { PictogramDefinition, Primitive } from '@einsatzzeichen/schema';
+import {
+  DEFAULT_VIEWBOX_MM,
+  type PictogramDefinition,
+  type Primitive,
+  type PrimitiveRole,
+} from '@einsatzzeichen/schema';
+import { compose, type CatalogPorts } from './compose.js';
 import { BodyNotMeasuredError, checkBox, checkClipping, checkCommands, checkPictogram } from './pictogram-gate.js';
+import { renderSvg } from './render/svg.js';
 
 /** Ein Piktogramm mit genau einem Pfad, Box und Titel unverändert — nur der `d`-String variiert. */
 function withPath(d: string): PictogramDefinition {
@@ -418,6 +425,119 @@ describe('Clipping-Gate', () => {
 
     expect(checkBox(edgeLine)).toEqual([]);
     expect(checkClipping(edgeLine, formationBody)[0]?.detail).toContain('Sichtbare Box-Ecke');
+  });
+
+  it('erbt für ein rollenloses Definitionsblatt die Piktogrammrolle der Kompositionswurzel', () => {
+    const rolelessEdgeStroke: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      variant: 'primary',
+      title: 'Rollenloser Strich auf linker Körperkante',
+      box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
+      primitives: [
+        {
+          type: 'path',
+          d: 'M 1 10 L 1 22',
+          style: { fill: 'none', stroke: 'schwarz', strokeWidth: 2 },
+        },
+      ],
+    };
+    const catalog: CatalogPorts = {
+      baseDrawing: () => ({ viewBox: DEFAULT_VIEWBOX_MM, children: [formationBody] }),
+      organizationColor: () => {
+        throw new Error('Für diesen Test nicht aufgerufen.');
+      },
+      strengthHead: () => {
+        throw new Error('Für diesen Test nicht aufgerufen.');
+      },
+      pictogram: () => rolelessEdgeStroke,
+    };
+
+    // Reale Laufzeitsemantik: compose() hängt die unveränderten, rollenlosen Definitionen unter
+    // genau eine Gruppe role:pictogram. Beide Renderer lösen danach `eigene Rolle ?? geerbte
+    // Rolle` auf; der SVG-Nachweis des Butt/Round-Vertrags zeigt, dass dieses Blatt tatsächlich
+    // als Piktogramm gerendert wird. checkClipping() muss dieselbe implizite Wurzelrolle ansetzen.
+    const drawing = compose(
+      { kind: 'formation', capabilities: ['fire-fighting'] },
+      catalog,
+    );
+    const group = drawing.children.find(
+      (primitive) => primitive.type === 'group' && primitive.role === 'pictogram',
+    );
+    expect(group?.type).toBe('group');
+    if (group?.type !== 'group') throw new Error('compose() hat keine Piktogrammgruppe erzeugt.');
+    expect(group.children[0]?.role).toBeUndefined();
+    const svg = renderSvg(drawing);
+    expect(svg).toContain('stroke-linecap="butt"');
+    expect(svg).toContain('stroke-linejoin="round"');
+
+    expect(checkClipping(rolelessEdgeStroke, formationBody)[0]?.detail).toContain(
+      'Sichtbare Box-Ecke',
+    );
+  });
+
+  it('vererbt die implizite Piktogrammrolle durch rollenlose Gruppen bis zum Blatt', () => {
+    const nestedRolelessEdgeStroke: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      variant: 'primary',
+      title: 'Verschachtelter rollenloser Strich auf linker Körperkante',
+      box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
+      primitives: [
+        {
+          type: 'group',
+          style: { stroke: 'schwarz', strokeWidth: 2 },
+          children: [{ type: 'path', d: 'M 1 10 L 1 22', style: { fill: 'none' } }],
+        },
+      ],
+    };
+
+    expect(checkClipping(nestedRolelessEdgeStroke, formationBody)[0]?.detail).toContain(
+      'Sichtbare Box-Ecke',
+    );
+  });
+
+  it.each(['body', 'innerField', 'head', 'foot'] satisfies readonly PrimitiveRole[])(
+    'meldet die explizite Fremdrolle %s als Clipping-Befund',
+    (role) => {
+      const conflictingRole: PictogramDefinition = {
+        id: 'capability.fire-fighting',
+        variant: 'primary',
+        title: `Piktogramm mit Fremdrolle ${role}`,
+        box: { xMm: 4, yMm: 8, widthMm: 24, heightMm: 16 },
+        primitives: [
+          {
+            type: 'path',
+            role,
+            d: 'M 4 8 L 28 24',
+            style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+          },
+        ],
+      };
+
+      const issues = checkClipping(conflictingRole, formationBody);
+      expect(issues).toHaveLength(1);
+      expect(issues[0]).toMatchObject({ gate: 'clipping', pictogramId: conflictingRole.id });
+      expect(issues[0]?.detail).toContain(`Fremdrolle "${role}"`);
+      expect(issues[0]?.detail).toContain('pictogram');
+    },
+  );
+
+  it('akzeptiert eine explizite Piktogrammrolle weiterhin', () => {
+    const explicitPictogramRole: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      variant: 'primary',
+      title: 'Explizite Piktogrammrolle',
+      box: { xMm: 4, yMm: 8, widthMm: 24, heightMm: 16 },
+      primitives: [
+        {
+          type: 'path',
+          role: 'pictogram',
+          d: 'M 4 8 L 28 24',
+          style: { fill: 'none', stroke: 'schwarz', strokeWidth: 2 },
+        },
+      ],
+    };
+
+    expect(checkClipping(explicitPictogramRole, formationBody)).toEqual([]);
   });
 
   it('berücksichtigt geerbte Rolle und Stil für Polylinien, aber nicht none oder reine Füllung', () => {

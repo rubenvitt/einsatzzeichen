@@ -6,6 +6,7 @@ import {
   type PictogramDefinition,
   type Point,
   type Primitive,
+  type PrimitiveRole,
   type Style,
   type Transform,
 } from '@einsatzzeichen/schema';
@@ -286,10 +287,16 @@ function cornersOf(box: PictogramBox): readonly Point[] {
 interface PictogramStrokeWidths {
   widths: number[];
   invalid: number[];
+  foreignRoles: PrimitiveRole[];
 }
 
 /**
  * Liest alle aktiven Piktogramm-Blätter und löst ihren Stil genau wie die Renderer feldweise auf.
+ * Die Definitionswurzel erbt implizit `pictogram`, weil `compose()` dieselben Primitive unter
+ * genau eine Gruppe dieser Rolle hängt. Rollenlose Gruppen und Blätter erben sie deshalb bis zum
+ * Blatt. Eine explizite andere Rolle wird dagegen als Vertragsbruch gesammelt: sie würde im
+ * Renderer Kappen-, Join- oder Dash-Semantik außerhalb des kleinen Piktogrammvertrags aktivieren.
+ *
  * SVG und Canvas begrenzen mehrsegmentige Piktogramm-Striche auf Butt-Kappen und Round-Joins;
  * einzelne Linien haben bereits standardmäßig Butt-Kappen und keine Joins. Daher reicht die
  * halbe Strichstärke als konservative Ausdehnung in jede Achsenrichtung aus. Nicht-
@@ -298,17 +305,22 @@ interface PictogramStrokeWidths {
 function pictogramStrokeWidths(
   primitives: readonly Primitive[],
   inheritedStyle?: Style,
-  inheritedRole?: Primitive['role'],
+  inheritedRole: Primitive['role'] = 'pictogram',
 ): PictogramStrokeWidths {
   const widths: number[] = [];
   const invalid: number[] = [];
+  const foreignRoles: PrimitiveRole[] = [];
   for (const primitive of primitives) {
     const style = mergeStyle(primitive.style, inheritedStyle);
     const role = primitive.role ?? inheritedRole;
+    if (primitive.role !== undefined && primitive.role !== 'pictogram') {
+      foreignRoles.push(primitive.role);
+    }
     if (primitive.type === 'group') {
       const nested = pictogramStrokeWidths(primitive.children, style, role);
       widths.push(...nested.widths);
       invalid.push(...nested.invalid);
+      foreignRoles.push(...nested.foreignRoles);
       continue;
     }
     if (role !== 'pictogram') continue;
@@ -317,7 +329,7 @@ function pictogramStrokeWidths(
     if (!Number.isFinite(width) || width < 0) invalid.push(width);
     else widths.push(width);
   }
-  return { widths, invalid };
+  return { widths, invalid, foreignRoles };
 }
 
 function finite(values: readonly number[]): boolean {
@@ -586,6 +598,16 @@ export function checkClipping(
   const contains = containsPoint(definition, body);
   const issues: PictogramIssue[] = [];
   const strokes = pictogramStrokeWidths(definition.primitives);
+  for (const role of new Set(strokes.foreignRoles)) {
+    issues.push({
+      gate: 'clipping',
+      pictogramId: definition.id,
+      detail:
+        `Piktogrammdefinition: Explizite Fremdrolle "${role}" ist unzulässig; ` +
+        `compose() verleiht der Definitionswurzel die Rolle "pictogram", deren ` +
+        `konservativer Strichvertrag hier geprüft wird.`,
+    });
+  }
   for (const width of strokes.invalid) {
     issues.push({
       gate: 'clipping',
@@ -593,7 +615,7 @@ export function checkClipping(
       detail: `Piktogramm-Blatt: Strichstärke muss endlich und nichtnegativ sein (ist ${String(width)} mm).`,
     });
   }
-  if (strokes.invalid.length > 0) return issues;
+  if (strokes.foreignRoles.length > 0 || strokes.invalid.length > 0) return issues;
 
   const halfStroke = Math.max(0, ...strokes.widths) / 2;
   const visibleBox: PictogramBox = {
