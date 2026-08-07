@@ -35,6 +35,12 @@ const ARITY: Record<PathCommandName, number> = { M: 2, L: 2, H: 1, V: 1, C: 6, Q
  */
 const TOKEN = /[+-]?\d*\.?\d+(?:[eE][-+]?\d+)?|[A-Za-z]/g;
 
+type PathTokenKind = 'command' | 'number';
+
+function tokenKind(token: string): PathTokenKind {
+  return /^[A-Za-z]$/.test(token) ? 'command' : 'number';
+}
+
 function isCommandName(value: string): value is PathCommandName {
   return Object.hasOwn(ARITY, value);
 }
@@ -74,19 +80,34 @@ export function tokenizePath(d: string): TokenizeResult {
   }
 
   let cursor = 0;
+  let previousTokenKind: PathTokenKind | null = null;
 
-  function inspectGap(start: number, end: number): void {
+  function inspectGap(
+    start: number,
+    end: number,
+    before: PathTokenKind | null,
+    after: PathTokenKind | null,
+  ): void {
     const gap = d.slice(start, end);
-    if (!/^[\s,]*$/.test(gap)) {
-      problems.push(`Unzulässige Zeichenfolge "${gap}" in Pfaddaten.`);
+    if (/^\s*$/.test(gap)) return;
+    if (before === 'number' && after === 'number' && /^\s*,\s*$/.test(gap)) return;
+    if (gap.includes(',')) {
+      problems.push(
+        `Unzulässiger Pfadseparator "${gap}" in Pfaddaten; ` +
+          'ein einzelnes Komma ist nur zwischen zwei Zahlen zulässig.',
+      );
+      return;
     }
+    problems.push(`Unzulässige Zeichenfolge "${gap}" in Pfaddaten.`);
   }
 
   for (const match of d.matchAll(TOKEN)) {
     const token = match[0];
     const index = match.index;
-    inspectGap(cursor, index);
+    const kind = tokenKind(token);
+    inspectGap(cursor, index, previousTokenKind, kind);
     cursor = index + token.length;
+    previousTokenKind = kind;
     if (/^[A-Za-z]$/.test(token)) {
       flush();
       const upper = token.toUpperCase();
@@ -108,7 +129,7 @@ export function tokenizePath(d: string): TokenizeResult {
       problems.push(`Zahl "${token}" ohne vorangehendes Kommando.`);
     }
   }
-  inspectGap(cursor, d.length);
+  inspectGap(cursor, d.length, previousTokenKind, null);
   flush();
 
   return { commands, problems };

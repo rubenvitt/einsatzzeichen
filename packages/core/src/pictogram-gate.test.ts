@@ -845,6 +845,19 @@ describe('Clipping-Gate', () => {
 });
 
 describe('checkPictogram', () => {
+  it.each(['M,4 12 L 28 20', 'M 4,,12 L 28 20'])(
+    'meldet den ungültigen Pfadseparator in %s genau einmal als Kommando-Befund',
+    (d) => {
+      const issues = checkPictogram(withPath(d), formationBody);
+      expect(issues).toHaveLength(1);
+      expect(issues[0]).toMatchObject({
+        gate: 'command',
+        pictogramId: 'capability.fire-fighting',
+      });
+      expect(issues[0]?.detail).toContain('Unzulässiger Pfadseparator');
+    },
+  );
+
   it('führt die drei Gates zusammen und meldet Befunde aller drei', () => {
     const broken: PictogramDefinition = {
       id: 'capability.fire-fighting',

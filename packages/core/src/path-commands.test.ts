@@ -53,8 +53,30 @@ describe('tokenizePath', () => {
     ]);
   });
 
+  it('akzeptiert ein einzelnes Komma zwischen zwei Zahlen', () => {
+    const { commands, problems } = tokenizePath('M 4,12 L 28,20');
+    expect(problems).toEqual([]);
+    expect(commands).toEqual([
+      { command: 'M', numbers: [4, 12] },
+      { command: 'L', numbers: [28, 20] },
+    ]);
+  });
+
+  it.each([
+    ['M,4 12 L 28 20', ','],
+    ['M 4 12,L 28 20', ','],
+    ['M 4,,12 L 28 20', ',,'],
+    ['M 4 12,', ','],
+  ])('lehnt den ungültigen Pfadseparator in %s ab', (d, separator) => {
+    expect(tokenizePath(d).problems).toEqual([
+      `Unzulässiger Pfadseparator "${separator}" in Pfaddaten; ein einzelnes Komma ist nur zwischen zwei Zahlen zulässig.`,
+    ]);
+  });
+
   it('liest ein explizites positives Vorzeichen', () => {
-    expect(tokenizePath('M +4 +5').commands).toEqual([{ command: 'M', numbers: [4, 5] }]);
+    const { commands, problems } = tokenizePath('M +4 +5');
+    expect(problems).toEqual([]);
+    expect(commands).toEqual([{ command: 'M', numbers: [4, 5] }]);
   });
 
   it('meldet fremde Interpunktion statt sie still zu überspringen', () => {

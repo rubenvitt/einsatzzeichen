@@ -120,6 +120,16 @@ describe('viewBox-Gate', () => {
     expect(issues.some((issue) => issue.rule === 'path-syntax')).toBe(true);
   });
 
+  it.each(['M,4 12 L 28 20', 'M 4,,12 L 28 20'])(
+    'meldet den ungültigen Pfadseparator in %s genau einmal als Pfadsyntax-Befund',
+    (d) => {
+      const issues = checkViewBox(drawing({ type: 'path', d, style: { fill: 'rot' } }));
+      expect(issues).toHaveLength(1);
+      expect(issues[0]?.rule).toBe('path-syntax');
+      expect(issues[0]?.detail).toContain('Unzulässiger Pfadseparator');
+    },
+  );
+
   it('meldet translate an einem Blatt als unbelegten IR-Fall', () => {
     const issues = checkViewBox(
       drawing({
