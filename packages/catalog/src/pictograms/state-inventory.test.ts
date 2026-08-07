@@ -38,6 +38,18 @@ describe('State-Piktogramminventur', () => {
         'primary',
         '5.8.2.2_moderat erhöhte Aktivität_bis 50 Prozent Ausfall.svg',
       ],
+      [
+        '5.8.2.3',
+        'state.activity-significantly-increased-outage-up-to-75-percent',
+        'primary',
+        '5.8.2.3_deutlich erhöhte Aktivität_bis 75 Prozent Ausfall.svg',
+      ],
+      [
+        '5.8.2.4',
+        'state.activity-strongly-increased-total-outage',
+        'primary',
+        '5.8.2.4_Stark erhöhte Aktivität_Totalausfall.svg',
+      ],
       ['5.8.3.1', 'state.tendency-rising', 'primary', '5.8.3.1_Tendenz steigend.svg'],
       ['5.8.3.2', 'state.tendency-unchanged', 'primary', '5.8.3.2_Tendenz unverändert.svg'],
       ['5.8.3.3', 'state.tendency-falling', 'primary', '5.8.3.3_Tendenz fallend.svg'],
@@ -55,8 +67,8 @@ describe('State-Piktogramminventur', () => {
     );
     const monochromeSvgs = ACTIVITY_STATES.map(monochromeSvg);
 
-    expect(outageSectorCounts).toEqual([1, 2]);
-    expect(new Set(monochromeSvgs).size).toBe(2);
+    expect(outageSectorCounts).toEqual([1, 2, 3, 4]);
+    expect(new Set(monochromeSvgs).size).toBe(4);
   });
 
   it('hält die drei Richtungen geometrisch und im Monochromtheme unterscheidbar', () => {

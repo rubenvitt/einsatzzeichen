@@ -18,6 +18,13 @@ const DELIVERED_BATCHES = [
       'state.activity-moderately-increased-outage-up-to-50-percent#primary',
     ],
   },
+  {
+    batch: 'A2',
+    keys: [
+      'state.activity-significantly-increased-outage-up-to-75-percent#primary',
+      'state.activity-strongly-increased-total-outage#primary',
+    ],
+  },
 ] as const;
 
 describe('DELIVERED_BATCHES', () => {

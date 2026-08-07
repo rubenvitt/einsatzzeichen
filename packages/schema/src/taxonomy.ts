@@ -145,6 +145,8 @@ export type CapabilityId = (typeof CAPABILITY_IDS)[number];
 export const STATE_IDS = Object.freeze([
   'activity-slightly-increased-outage-up-to-25-percent',
   'activity-moderately-increased-outage-up-to-50-percent',
+  'activity-significantly-increased-outage-up-to-75-percent',
+  'activity-strongly-increased-total-outage',
   'tendency-rising',
   'tendency-unchanged',
   'tendency-falling',
