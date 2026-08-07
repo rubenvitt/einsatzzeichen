@@ -79,6 +79,20 @@ function sunPrimitives(): readonly Primitive[] {
   ];
 }
 
+function rainPrimitives(): readonly Primitive[] {
+  return [7, 16, 25].flatMap((x) =>
+    [4, 10, 16, 22].map((y) => weatherLine(x + 1, y, x - 1, y + 5)),
+  );
+}
+
+function hailPrimitives(): readonly Primitive[] {
+  return [8, 16, 24].flatMap((x) => [
+    weatherLine(x + 1, 4, x - 1, 12),
+    weatherCircle(x, 16, 2),
+    weatherLine(x + 1, 20, x - 1, 28),
+  ]);
+}
+
 export const WEATHER_STATES = deepFreeze([
   defineState({
     section: '5.8.7.1',
@@ -120,5 +134,36 @@ export const WEATHER_STATES = deepFreeze([
       ),
       weatherLine(16, 5, 16, 27),
     ],
+  }),
+  defineState({
+    section: '5.8.7.4',
+    id: 'weather-foggy',
+    title: 'Nebelig',
+    referenceAsset: '5.8.7.4_Nebelig.svg',
+    box: { xMm: 4, yMm: 10, widthMm: 24, heightMm: 12 },
+    contrastPairs: BLACK_ON_SURFACE,
+    primitives: [
+      weatherLine(4, 10, 28, 10),
+      weatherLine(4, 16, 28, 16),
+      weatherLine(4, 22, 28, 22),
+    ],
+  }),
+  defineState({
+    section: '5.8.7.5',
+    id: 'weather-rainy',
+    title: 'Regnerisch',
+    referenceAsset: '5.8.7.5_Regnerisch.svg',
+    box: { xMm: 6, yMm: 4, widthMm: 20, heightMm: 23 },
+    contrastPairs: BLACK_ON_SURFACE,
+    primitives: rainPrimitives(),
+  }),
+  defineState({
+    section: '5.8.7.6',
+    id: 'weather-hailing',
+    title: 'Hagelnd',
+    referenceAsset: '5.8.7.6_Hagelnd.svg',
+    box: { xMm: 6, yMm: 4, widthMm: 20, heightMm: 24 },
+    contrastPairs: BLACK_ON_SURFACE,
+    primitives: hailPrimitives(),
   }),
 ] satisfies readonly CatalogPictogramDefinition[]);

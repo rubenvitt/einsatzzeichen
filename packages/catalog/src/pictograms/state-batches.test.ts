@@ -164,6 +164,14 @@ const DELIVERED_BATCHES = [
       'state.weather-cloud-cover-four-eighths#primary',
     ],
   },
+  {
+    batch: 'W2',
+    keys: [
+      'state.weather-foggy#primary',
+      'state.weather-rainy#primary',
+      'state.weather-hailing#primary',
+    ],
+  },
 ] as const;
 
 describe('DELIVERED_BATCHES', () => {
