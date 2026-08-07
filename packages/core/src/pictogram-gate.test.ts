@@ -863,6 +863,26 @@ describe('Clipping-Gate', () => {
 });
 
 describe('checkPictogram', () => {
+  it.each([
+    ['U+00A0', '\u00a0'],
+    ['U+2003', '\u2003'],
+    ['U+2028', '\u2028'],
+    ['U+000B', '\u000b'],
+  ])('meldet Nicht-SVG-Whitespace %s genau einmal als Kommando-Befund', (_name, whitespace) => {
+    const issues = checkPictogram(withPath(`M 4${whitespace}12 L 28 20`), formationBody);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({ gate: 'command' });
+  });
+
+  it.each(['', 'L 4 12', 'Z', 'M 4 12', 'M 4 12 Z', 'M 4 12 L 4 12'])(
+    'meldet den nicht rendernden Pfad %j genau einmal als Kommando-Befund',
+    (d) => {
+      const issues = checkPictogram(withPath(d), formationBody);
+      expect(issues).toHaveLength(1);
+      expect(issues[0]).toMatchObject({ gate: 'command' });
+    },
+  );
+
   it.each(['M,4 12 L 28 20', 'M 4,,12 L 28 20'])(
     'meldet den ungültigen Pfadseparator in %s genau einmal als Kommando-Befund',
     (d) => {

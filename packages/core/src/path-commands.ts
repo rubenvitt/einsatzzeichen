@@ -34,6 +34,9 @@ const ARITY: Record<PathCommandName, number> = { M: 2, L: 2, H: 1, V: 1, C: 6, Q
  * Die Alternation greift links zuerst, und ein Match beginnt an der jeweiligen Position.
  */
 const TOKEN = /[+-]?\d*\.?\d+(?:[eE][-+]?\d+)?|[A-Za-z]/g;
+/** SVG 2 `wsp`: ausschließlich Space, Tab, CR und LF — nicht JavaScripts breiteres `\s`. */
+const SVG_WSP_ONLY = /^[\u0009\u000a\u000d\u0020]*$/;
+const SVG_COMMA_WSP = /^[\u0009\u000a\u000d\u0020]*,[\u0009\u000a\u000d\u0020]*$/;
 
 type PathTokenKind = 'command' | 'number';
 
@@ -43,6 +46,91 @@ function tokenKind(token: string): PathTokenKind {
 
 function isCommandName(value: string): value is PathCommandName {
   return Object.hasOwn(ARITY, value);
+}
+
+type PathPoint = readonly [number, number];
+
+function samePoint(left: PathPoint, right: PathPoint): boolean {
+  return left[0] === right[0] && left[1] === right[1];
+}
+
+function pointAt(numbers: readonly number[], offset: number): PathPoint | null {
+  const x = numbers[offset];
+  const y = numbers[offset + 1];
+  return x === undefined || y === undefined ? null : [x, y];
+}
+
+/** Ob die vollständig zerlegten Kommandos wenigstens ein geometrisch wirksames Segment tragen. */
+function hasDrawingSegment(commands: readonly PathCommand[]): boolean {
+  let current: PathPoint | null = null;
+  let subpathStart: PathPoint | null = null;
+
+  for (const command of commands) {
+    const numbers = command.numbers;
+    switch (command.command) {
+      case 'M': {
+        current = pointAt(numbers, 0);
+        subpathStart = current;
+        break;
+      }
+      case 'L': {
+        const end = pointAt(numbers, 0);
+        if (current === null || end === null) break;
+        if (!samePoint(current, end)) return true;
+        current = end;
+        break;
+      }
+      case 'H': {
+        const x = numbers[0];
+        if (current === null || x === undefined) break;
+        const end: PathPoint = [x, current[1]];
+        if (!samePoint(current, end)) return true;
+        current = end;
+        break;
+      }
+      case 'V': {
+        const y = numbers[0];
+        if (current === null || y === undefined) break;
+        const end: PathPoint = [current[0], y];
+        if (!samePoint(current, end)) return true;
+        current = end;
+        break;
+      }
+      case 'C': {
+        const first = pointAt(numbers, 0);
+        const second = pointAt(numbers, 2);
+        const end = pointAt(numbers, 4);
+        if (current === null || first === null || second === null || end === null) break;
+        if (
+          !samePoint(current, first) ||
+          !samePoint(current, second) ||
+          !samePoint(current, end)
+        ) {
+          return true;
+        }
+        current = end;
+        break;
+      }
+      case 'Q': {
+        const control = pointAt(numbers, 0);
+        const end = pointAt(numbers, 2);
+        if (current === null || control === null || end === null) break;
+        if (!samePoint(current, control) || !samePoint(current, end)) {
+          return true;
+        }
+        current = end;
+        break;
+      }
+      case 'Z': {
+        if (current !== null && subpathStart !== null && !samePoint(current, subpathStart)) {
+          return true;
+        }
+        current = subpathStart;
+        break;
+      }
+    }
+  }
+  return false;
 }
 
 export function tokenizePath(d: string): TokenizeResult {
@@ -89,8 +177,8 @@ export function tokenizePath(d: string): TokenizeResult {
     after: PathTokenKind | null,
   ): void {
     const gap = d.slice(start, end);
-    if (/^\s*$/.test(gap)) return;
-    if (before === 'number' && after === 'number' && /^\s*,\s*$/.test(gap)) return;
+    if (SVG_WSP_ONLY.test(gap)) return;
+    if (before === 'number' && after === 'number' && SVG_COMMA_WSP.test(gap)) return;
     if (gap.includes(',')) {
       problems.push(
         `Unzulässiger Pfadseparator "${gap}" in Pfaddaten; ` +
@@ -131,6 +219,18 @@ export function tokenizePath(d: string): TokenizeResult {
   }
   inspectGap(cursor, d.length, previousTokenKind, null);
   flush();
+
+  // Lexikalische oder Arity-Fehler sind bereits die Wurzelursache. Der Zustandsvertrag ergänzt
+  // dann keinen Folgefehler, damit beide konsumierenden Gates denselben kleinen Befundsatz sehen.
+  if (problems.length === 0) {
+    if (commands.length === 0) {
+      problems.push('Pfaddaten dürfen nicht leer sein.');
+    } else if (commands[0]?.command !== 'M') {
+      problems.push('Der Pfad muss mit Kommando "M" beginnen.');
+    } else if (!hasDrawingSegment(commands)) {
+      problems.push('Der Pfad muss mindestens ein nichtdegeneriertes zeichnendes Segment enthalten.');
+    }
+  }
 
   return { commands, problems };
 }

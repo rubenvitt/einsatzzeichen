@@ -85,8 +85,7 @@ describe('viewBox-Gate', () => {
 
   it('meldet relative Pfade statt sie als leere Hülle grün zu lassen', () => {
     const issues = checkViewBox(drawing({ type: 'path', d: 'm 2 2 l 4 4' }));
-    expect(issues.some((issue) => issue.rule === 'path-syntax')).toBe(true);
-    expect(issues.some((issue) => issue.rule === 'invalid-geometry')).toBe(true);
+    expect(issues.map((issue) => issue.rule)).toEqual(['path-syntax', 'path-syntax']);
   });
 
   it.each(['L 4 4', 'C 1 1 2 2 3 3', 'Q 1 1 2 2', 'Z'])(
@@ -142,6 +141,28 @@ describe('viewBox-Gate', () => {
       expect(issues).toHaveLength(1);
       expect(issues[0]?.rule).toBe('path-syntax');
       expect(issues[0]?.detail).toContain('Unzulässiger Pfadseparator');
+    },
+  );
+
+  it.each([
+    ['U+00A0', '\u00a0'],
+    ['U+2003', '\u2003'],
+    ['U+2028', '\u2028'],
+    ['U+000B', '\u000b'],
+  ])('meldet Nicht-SVG-Whitespace %s genau einmal als Pfadsyntax-Befund', (_name, whitespace) => {
+    const issues = checkViewBox(
+      drawing({ type: 'path', d: `M 4${whitespace}12 L 28 20`, style: { fill: 'rot' } }),
+    );
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.rule).toBe('path-syntax');
+  });
+
+  it.each(['', 'L 4 12', 'Z', 'M 4 12', 'M 4 12 Z', 'M 4 12 L 4 12'])(
+    'meldet den nicht rendernden Pfad %j genau einmal als Pfadsyntax-Befund',
+    (d) => {
+      const issues = checkViewBox(drawing({ type: 'path', d, style: { fill: 'rot' } }));
+      expect(issues).toHaveLength(1);
+      expect(issues[0]?.rule).toBe('path-syntax');
     },
   );
 

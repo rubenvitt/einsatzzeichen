@@ -26,9 +26,10 @@ describe('tokenizePath', () => {
   });
 
   it('zerlegt ein wiederholtes Kommando in einzelne Kommandos', () => {
-    const { commands, problems } = tokenizePath('C 1 1 2 2 3 3 4 4 5 5 6 6');
+    const { commands, problems } = tokenizePath('M 0 0 C 1 1 2 2 3 3 4 4 5 5 6 6');
     expect(problems).toEqual([]);
     expect(commands).toEqual([
+      { command: 'M', numbers: [0, 0] },
       { command: 'C', numbers: [1, 1, 2, 2, 3, 3] },
       { command: 'C', numbers: [4, 4, 5, 5, 6, 6] },
     ]);
@@ -62,6 +63,30 @@ describe('tokenizePath', () => {
     ]);
   });
 
+  it('akzeptiert SVG-wsp beidseits eines Kommas', () => {
+    expect(tokenizePath('M 4\t,\r12 L 28 ,\n20').problems).toEqual([]);
+  });
+
+  it.each([
+    ['Space', ' '],
+    ['Tab', '\t'],
+    ['Carriage Return', '\r'],
+    ['Line Feed', '\n'],
+  ])('akzeptiert SVG-wsp %s als Trennzeichen', (_name, wsp) => {
+    expect(tokenizePath(`M${wsp}4${wsp}12${wsp}L${wsp}28${wsp}20`).problems).toEqual([]);
+  });
+
+  it.each([
+    ['U+00A0', '\u00a0'],
+    ['U+2003', '\u2003'],
+    ['U+2028', '\u2028'],
+    ['U+000B', '\u000b'],
+  ])('lehnt Nicht-SVG-Whitespace %s ab', (_name, whitespace) => {
+    const { problems } = tokenizePath(`M 4${whitespace}12 L 28 20`);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toContain('Unzulässige Zeichenfolge');
+  });
+
   it.each([
     ['M,4 12 L 28 20', ','],
     ['M 4 12,L 28 20', ','],
@@ -74,9 +99,12 @@ describe('tokenizePath', () => {
   });
 
   it('liest ein explizites positives Vorzeichen', () => {
-    const { commands, problems } = tokenizePath('M +4 +5');
+    const { commands, problems } = tokenizePath('M +4 +5 L +6 +7');
     expect(problems).toEqual([]);
-    expect(commands).toEqual([{ command: 'M', numbers: [4, 5] }]);
+    expect(commands).toEqual([
+      { command: 'M', numbers: [4, 5] },
+      { command: 'L', numbers: [6, 7] },
+    ]);
   });
 
   it('meldet fremde Interpunktion statt sie still zu überspringen', () => {
@@ -132,5 +160,51 @@ describe('tokenizePath', () => {
     expect(tokenizePath('M 4 4 Z 9').problems).toEqual([
       'Kommando "Z" erwartet keine Zahlen, erhielt 1.',
     ]);
+  });
+
+  it.each([
+    ['', 'Pfaddaten dürfen nicht leer sein.'],
+    ['L 4 12', 'Der Pfad muss mit Kommando "M" beginnen.'],
+    ['Z', 'Der Pfad muss mit Kommando "M" beginnen.'],
+    ['M 4 12', 'Der Pfad muss mindestens ein nichtdegeneriertes zeichnendes Segment enthalten.'],
+    ['M 4 12 Z', 'Der Pfad muss mindestens ein nichtdegeneriertes zeichnendes Segment enthalten.'],
+    [
+      'M 4 12 L 4 12',
+      'Der Pfad muss mindestens ein nichtdegeneriertes zeichnendes Segment enthalten.',
+    ],
+    [
+      'M 4 12 H 4 V 12',
+      'Der Pfad muss mindestens ein nichtdegeneriertes zeichnendes Segment enthalten.',
+    ],
+    [
+      'M 4 12 C 4 12 4 12 4 12 Q 4 12 4 12',
+      'Der Pfad muss mindestens ein nichtdegeneriertes zeichnendes Segment enthalten.',
+    ],
+    [
+      'M 4 12 M 8 12 Z',
+      'Der Pfad muss mindestens ein nichtdegeneriertes zeichnendes Segment enthalten.',
+    ],
+    [
+      'M 4 12 4 12',
+      'Der Pfad muss mindestens ein nichtdegeneriertes zeichnendes Segment enthalten.',
+    ],
+  ])('lehnt einen nicht rendernden Pfad %j ab', (d, problem) => {
+    expect(tokenizePath(d).problems).toEqual([problem]);
+  });
+
+  it.each([
+    'M 4 12 L 5 12',
+    'M 4 12 H 5',
+    'M 4 12 V 13',
+    'M 4 12 C 5 12 4 12 4 12',
+    'M 4 12 C 4 12 5 12 4 12',
+    'M 4 12 C 4 12 4 12 5 12',
+    'M 4 12 Q 5 12 4 12',
+    'M 4 12 Q 4 12 5 12',
+    'M 4 12 5 12',
+    'M 4 12 L 4 12 H 5',
+    'M 4 12 M 8 12 L 9 12',
+  ])('erkennt den zeichnenden Zustand in %s', (d) => {
+    expect(tokenizePath(d).problems).toEqual([]);
   });
 });

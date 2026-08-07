@@ -287,6 +287,7 @@ export function checkViewBox(drawing: Drawing): ViewBoxIssue[] {
     } else {
       const tokenized = tokenizePath(primitive.d);
       for (const problem of tokenized.problems) issue('path-syntax', problem);
+      if (tokenized.problems.length > 0) return;
       points = pathPoints(tokenized.commands, issue);
     }
 
