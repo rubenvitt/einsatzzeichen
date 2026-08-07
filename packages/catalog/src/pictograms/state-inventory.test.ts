@@ -9,6 +9,7 @@ import {
   ANIMAL_STATES,
   DAMAGE_STATES,
   FIRE_STATES,
+  PERSON_STATES,
   STATE_PICTOGRAMS,
   TACTICS_HAZARDS_STATES,
   TENDENCY_STATES,
@@ -115,6 +116,9 @@ describe('State-Piktogramminventur', () => {
         '5.8.6.2_kontaminiertes Tier_K.svg',
       ],
       ['5.8.6.3', 'state.dead-animal', 'primary', '5.8.6.3_Totes Tier.svg'],
+      ['5.8.8.1', 'state.person-uninjured', 'primary', '5.8.8.1_Person Unverletz.svg'],
+      ['5.8.8.2', 'state.person-affected', 'primary', '5.8.8.2_Person Betroffen.svg'],
+      ['5.8.8.3', 'state.person-injured', 'primary', '5.8.8.3_Person Verletzt.svg'],
     ] as const;
 
     expect(STATE_PICTOGRAMS.map(inventoryTuple)).toEqual(expected);
@@ -127,6 +131,9 @@ describe('State-Piktogramminventur', () => {
     expect(() => pictogram('state.contaminated-animal')).not.toThrow();
     expect(() => pictogram('state.contaminated-animal', 'alternative')).not.toThrow();
     expect(() => pictogram('state.dead-animal')).not.toThrow();
+    expect(() => pictogram('state.person-uninjured')).not.toThrow();
+    expect(() => pictogram('state.person-affected')).not.toThrow();
+    expect(() => pictogram('state.person-injured')).not.toThrow();
   });
 
   it('hält Primär- und Alternativdarstellung je taktischem Hinweis eindeutig und titelgleich', () => {
@@ -176,6 +183,7 @@ describe('State-Piktogramminventur', () => {
     expect(Object.isFrozen(DAMAGE_STATES)).toBe(true);
     expect(Object.isFrozen(FIRE_STATES)).toBe(true);
     expect(Object.isFrozen(ANIMAL_STATES)).toBe(true);
+    expect(Object.isFrozen(PERSON_STATES)).toBe(true);
     expect(Object.isFrozen(STATE_PICTOGRAMS)).toBe(true);
 
     const mutableStates = STATE_PICTOGRAMS as unknown as CatalogPictogramDefinition[];

@@ -1,0 +1,62 @@
+import type { Primitive } from '@einsatzzeichen/schema';
+import { deepFreeze } from '../../readonly-data.js';
+import {
+  defineState,
+  type CatalogPictogramDefinition,
+  type PictogramContrastPair,
+} from '../catalog-definition.js';
+import { stateLine, statePath } from './authoring.js';
+
+const PERSON_CONTRAST = [
+  {
+    foreground: 'schwarz',
+    background: 'surface',
+    context: 'Personendiamant und Zustandsmarke auf Ausgabeoberfläche',
+  },
+] as const satisfies readonly [PictogramContrastPair, ...PictogramContrastPair[]];
+
+function personDiamond(yOffsetMm = 0): Primitive {
+  const top = 4 + yOffsetMm;
+  const middle = 15 + yOffsetMm;
+  const bottom = 26 + yOffsetMm;
+  return statePath(`M 16 ${top} L 27 ${middle} L 16 ${bottom} L 5 ${middle} Z`);
+}
+
+function injuryMark(yOffsetMm = 0): Primitive {
+  return stateLine(16, 4 + yOffsetMm, 16, 26 + yOffsetMm);
+}
+
+export const PERSON_STATES = deepFreeze([
+  defineState({
+    section: '5.8.8.1',
+    id: 'person-uninjured',
+    title: 'Person unverletzt',
+    referenceAsset: '5.8.8.1_Person Unverletz.svg',
+    box: { xMm: 5, yMm: 4, widthMm: 22, heightMm: 22 },
+    contrastPairs: PERSON_CONTRAST,
+    primitives: [personDiamond()],
+  }),
+  defineState({
+    section: '5.8.8.2',
+    id: 'person-affected',
+    title: 'Person betroffen',
+    referenceAsset: '5.8.8.2_Person Betroffen.svg',
+    box: { xMm: 5, yMm: 2.5, widthMm: 26, heightMm: 23.5 },
+    contrastPairs: PERSON_CONTRAST,
+    primitives: [
+      personDiamond(),
+      statePath(
+        'M 27.5 2.5 V 10.5 M 27.5 2.5 H 29.25 C 31 2.5 31 6.5 29.25 6.5 H 27.5 M 29.25 6.5 C 31 6.5 31 10.5 29.25 10.5 H 27.5',
+      ),
+    ],
+  }),
+  defineState({
+    section: '5.8.8.3',
+    id: 'person-injured',
+    title: 'Person verletzt',
+    referenceAsset: '5.8.8.3_Person Verletzt.svg',
+    box: { xMm: 5, yMm: 4, widthMm: 22, heightMm: 22 },
+    contrastPairs: PERSON_CONTRAST,
+    primitives: [personDiamond(), injuryMark()],
+  }),
+] satisfies readonly CatalogPictogramDefinition[]);
