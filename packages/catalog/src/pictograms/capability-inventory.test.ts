@@ -260,3 +260,30 @@ describe('Fähigkeitsinventar Kapitel 4.6', () => {
     ]);
   });
 });
+
+describe('Fähigkeitsinventar Kapitel 4.7', () => {
+  it('bildet die ersten elf Darstellungen aus Technischer Hilfeleistung exakt ab', () => {
+    const actual = CAPABILITY_PICTOGRAMS
+      .filter((definition) => definition.section.startsWith('4.7.'))
+      .map(({ section, id, variant, referenceAsset }) => ({
+        section,
+        id,
+        variant,
+        referenceAsset,
+      }));
+
+    expect(actual).toEqual([
+      { section: '4.7.1', id: 'capability.water-hazard-control', variant: 'primary', referenceAsset: '4.7.1_Abwehr von Wassergefahren.svg' },
+      { section: '4.7.2', id: 'capability.excavation', variant: 'primary', referenceAsset: '4.7.2_Baggerarbeiten.svg' },
+      { section: '4.7.3', id: 'capability.lighting', variant: 'primary', referenceAsset: '4.7.3_Beleuchten.svg' },
+      { section: '4.7.4', id: 'capability.ventilation', variant: 'primary', referenceAsset: '4.7.4_Belüften.svg' },
+      { section: '4.7.5', id: 'capability.air-extraction', variant: 'primary', referenceAsset: '4.7.5_Entlüften.svg' },
+      { section: '4.7.6', id: 'capability.explosive-ordnance-clearance', variant: 'primary', referenceAsset: '4.7.6_Kampfmittelräumung.svg' },
+      { section: '4.7.7', id: 'capability.hand-tools', variant: 'primary', referenceAsset: '4.7.7_Einsatz von Handwerkzeugen.svg' },
+      { section: '4.7.8', id: 'capability.forklift-lifting', variant: 'primary', referenceAsset: '4.7.8_Hebearbeit mit Gabelstapler.svg' },
+      { section: '4.7.9', id: 'capability.crane-lifting', variant: 'primary', referenceAsset: '4.7.9_Hebearbeit mit Kran.svg' },
+      { section: '4.7.10', id: 'capability.lifting-loads-persons', variant: 'primary', referenceAsset: '4.7.10_Heben von Lasten oder Personen.svg' },
+      { section: '4.7.10', id: 'capability.lifting-loads-persons', variant: 'alternative', referenceAsset: '4.7.10_Heben von Lasten oder Personen_Alternative.svg' },
+    ]);
+  });
+});

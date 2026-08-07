@@ -72,6 +72,17 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:4.6.4#primary': { status: 'pending' },
   'bbk-babz-2025:4.6.5#primary': { status: 'pending' },
   'bbk-babz-2025:4.6.6#primary': { status: 'pending' },
+  'bbk-babz-2025:4.7.1#primary': { status: 'pending' },
+  'bbk-babz-2025:4.7.2#primary': { status: 'pending' },
+  'bbk-babz-2025:4.7.3#primary': { status: 'pending' },
+  'bbk-babz-2025:4.7.4#primary': { status: 'pending' },
+  'bbk-babz-2025:4.7.5#primary': { status: 'pending' },
+  'bbk-babz-2025:4.7.6#primary': { status: 'pending' },
+  'bbk-babz-2025:4.7.7#primary': { status: 'pending' },
+  'bbk-babz-2025:4.7.8#primary': { status: 'pending' },
+  'bbk-babz-2025:4.7.9#primary': { status: 'pending' },
+  'bbk-babz-2025:4.7.10#primary': { status: 'pending' },
+  'bbk-babz-2025:4.7.10#alternative': { status: 'pending' },
 } satisfies Record<string, Review>);
 
 export type ManifestDomainReviewKey = keyof typeof MANIFEST_DOMAIN_REVIEWS;

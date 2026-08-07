@@ -88,7 +88,17 @@ export type CapabilityId =
   | 'intensive-care'
   | 'physician'
   | 'patient-transport'
-  | 'hospital';
+  | 'hospital'
+  | 'water-hazard-control'
+  | 'excavation'
+  | 'lighting'
+  | 'ventilation'
+  | 'air-extraction'
+  | 'explosive-ordnance-clearance'
+  | 'hand-tools'
+  | 'forklift-lifting'
+  | 'crane-lifting'
+  | 'lifting-loads-persons';
 
 /** Semantische Beschreibung eines Zeichens. Eingabe des Kompositionsmotors. */
 export interface SymbolSpec {
