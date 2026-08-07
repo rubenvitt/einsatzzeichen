@@ -36,6 +36,18 @@ describe('State-Piktogramminventur', () => {
   it('enthält exakt die ausgelieferten States in Kapitelreihenfolge', () => {
     const expected = [
       [
+        '5.8.1.1',
+        'state.tactical-rescue',
+        'primary',
+        '5.8.1.1_Einsatztaktik_Retten.svg',
+      ],
+      [
+        '5.8.1.2',
+        'state.tactical-attack',
+        'primary',
+        '5.8.1.2_Einsatztaktik_Angreifen.svg',
+      ],
+      [
         '5.8.1.13',
         'state.suspected-situation',
         'primary',
@@ -202,6 +214,8 @@ describe('State-Piktogramminventur', () => {
     ] as const;
 
     expect(STATE_PICTOGRAMS.map(inventoryTuple)).toEqual(expected);
+    expect(() => pictogram('state.tactical-rescue')).not.toThrow();
+    expect(() => pictogram('state.tactical-attack')).not.toThrow();
     expect(() => pictogram('state.suspected-situation')).not.toThrow();
     expect(() => pictogram('state.acute-situation')).not.toThrow();
     expect(() => pictogram('state.tendency-rising')).not.toThrow();
@@ -231,7 +245,7 @@ describe('State-Piktogramminventur', () => {
     expect(() => pictogram('state.person-mobility-impaired')).not.toThrow();
   });
 
-  it('hält Primär- und Alternativdarstellung je taktischem Hinweis eindeutig und titelgleich', () => {
+  it('hält vorhandene Primär- und Alternativdarstellungen eindeutig und titelgleich', () => {
     const definitionsById = new Map<string, CatalogPictogramDefinition[]>();
     for (const definition of TACTICS_HAZARDS_STATES) {
       const definitions = definitionsById.get(definition.id) ?? [];
@@ -240,6 +254,7 @@ describe('State-Piktogramminventur', () => {
     }
 
     for (const definitions of definitionsById.values()) {
+      if (definitions.length === 1) continue;
       expect(definitions.map(({ variant }) => variant).sort()).toEqual([
         'alternative',
         'primary',

@@ -60,6 +60,24 @@ function filledSignalPath(d: string): Primitive {
   });
 }
 
+const TACTICAL_CONTRAST = [
+  {
+    foreground: 'schwarz',
+    background: 'surface',
+    context: 'Schwarzer Aussenhalo der freistehenden Taktikmarke',
+  },
+  {
+    foreground: 'schwarz',
+    background: 'rot',
+    context: 'Schwarzer Halo an der roten Taktikmarke',
+  },
+  {
+    foreground: 'schwarz',
+    background: 'hellblau',
+    context: 'Schwarzer Halo am blauen Richtungselement',
+  },
+] as const satisfies readonly [PictogramContrastPair, ...PictogramContrastPair[]];
+
 const SIGNAL_CONTRAST = [
   {
     foreground: 'schwarz',
@@ -92,6 +110,47 @@ const FREE_SIGNAL_CONTRAST = [
 ] as const satisfies readonly [PictogramContrastPair, ...PictogramContrastPair[]];
 
 const TRIANGLE = 'M 16 2 L 30 29 H 2 Z';
+
+const TACTIC_GEOMETRY = {
+  rescue: {
+    boundary: 'M 8 4 L 4 7 V 25 L 8 28',
+    boundaryColor: 'rot',
+    arrow:
+      'M 8 8 C 13 11 17 12 21 12 L 21 8 L 29 16 L 21 24 L 21 20 C 17 20 13 21 8 24',
+    arrowColor: 'hellblau',
+  },
+  attack: {
+    boundary: 'M 24 4 L 28 7 V 25 L 24 28',
+    boundaryColor: 'rot',
+    arrow:
+      'M 4 8 C 10 11 14 12 19 12 L 19 8 L 25 16 L 19 24 L 19 20 C 14 20 10 21 4 24',
+    arrowColor: 'hellblau',
+  },
+  defense: {
+    boundary: 'M 28 4 L 24 7 V 25 L 28 28',
+    boundaryColor: 'hellblau',
+    arrow:
+      'M 3 8 C 9 11 13 12 17 12 L 17 8 L 23 16 L 17 24 L 17 20 C 13 20 9 21 3 24',
+    arrowColor: 'rot',
+  },
+  retreat: {
+    boundary: 'M 3 4 L 7 7 V 25 L 3 28',
+    boundaryColor: 'rot',
+    arrow:
+      'M 10 8 C 15 11 19 12 23 12 L 23 8 L 30 16 L 23 24 L 23 20 C 19 20 15 21 10 24',
+    arrowColor: 'hellblau',
+  },
+} as const;
+
+type TacticKind = keyof typeof TACTIC_GEOMETRY;
+
+function tacticalPrimitives(kind: TacticKind): readonly Primitive[] {
+  const geometry = TACTIC_GEOMETRY[kind];
+  return [
+    ...haloStroke(geometry.boundary, geometry.boundaryColor),
+    ...haloStroke(geometry.arrow, geometry.arrowColor),
+  ];
+}
 
 function suspectedPrimaryPrimitives(): readonly Primitive[] {
   const question =
@@ -127,6 +186,24 @@ function acuteAlternativePrimitives(): readonly Primitive[] {
 }
 
 export const TACTICS_HAZARDS_STATES = deepFreeze([
+  defineState({
+    section: '5.8.1.1',
+    id: 'tactical-rescue',
+    title: 'Einsatztaktik: Retten',
+    referenceAsset: '5.8.1.1_Einsatztaktik_Retten.svg',
+    box: { xMm: 4, yMm: 4, widthMm: 25, heightMm: 24 },
+    contrastPairs: TACTICAL_CONTRAST,
+    primitives: tacticalPrimitives('rescue'),
+  }),
+  defineState({
+    section: '5.8.1.2',
+    id: 'tactical-attack',
+    title: 'Einsatztaktik: Angreifen',
+    referenceAsset: '5.8.1.2_Einsatztaktik_Angreifen.svg',
+    box: { xMm: 4, yMm: 4, widthMm: 24, heightMm: 24 },
+    contrastPairs: TACTICAL_CONTRAST,
+    primitives: tacticalPrimitives('attack'),
+  }),
   defineState({
     section: '5.8.1.13',
     id: 'suspected-situation',

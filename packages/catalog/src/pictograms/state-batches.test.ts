@@ -56,6 +56,10 @@ const DELIVERED_BATCHES = [
     ],
   },
   {
+    batch: 'E1',
+    keys: ['state.tactical-rescue#primary', 'state.tactical-attack#primary'],
+  },
+  {
     batch: 'T1',
     keys: [
       'state.sick-animal#primary',

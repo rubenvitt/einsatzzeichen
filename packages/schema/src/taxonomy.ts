@@ -143,6 +143,8 @@ export type CapabilityId = (typeof CAPABILITY_IDS)[number];
 
 /** Zustände nach Kapitel 5.8 in verbindlicher Kapitelreihenfolge. */
 export const STATE_IDS = Object.freeze([
+  'tactical-rescue',
+  'tactical-attack',
   'suspected-situation',
   'acute-situation',
   'activity-slightly-increased-outage-up-to-25-percent',

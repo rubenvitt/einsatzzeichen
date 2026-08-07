@@ -125,6 +125,8 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:4.10.5#primary': { status: 'pending' },
   'bbk-babz-2025:4.10.6#primary': { status: 'pending' },
   'bbk-babz-2025:4.10.7#primary': { status: 'pending' },
+  'bbk-babz-2025:5.8.1.1#primary': { status: 'pending' },
+  'bbk-babz-2025:5.8.1.2#primary': { status: 'pending' },
   'bbk-babz-2025:5.8.1.13#primary': { status: 'pending' },
   'bbk-babz-2025:5.8.1.13#alternative': { status: 'pending' },
   'bbk-babz-2025:5.8.1.14#primary': { status: 'pending' },
