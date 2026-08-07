@@ -48,6 +48,18 @@ describe('State-Piktogramminventur', () => {
         '5.8.1.2_Einsatztaktik_Angreifen.svg',
       ],
       [
+        '5.8.1.3',
+        'state.tactical-defense',
+        'primary',
+        '5.8.1.3_Einsatztaktik_Verteidigen.svg',
+      ],
+      [
+        '5.8.1.4',
+        'state.tactical-retreat',
+        'primary',
+        '5.8.1.4_Einsatztaktik_Rückzug.svg',
+      ],
+      [
         '5.8.1.13',
         'state.suspected-situation',
         'primary',
@@ -216,6 +228,8 @@ describe('State-Piktogramminventur', () => {
     expect(STATE_PICTOGRAMS.map(inventoryTuple)).toEqual(expected);
     expect(() => pictogram('state.tactical-rescue')).not.toThrow();
     expect(() => pictogram('state.tactical-attack')).not.toThrow();
+    expect(() => pictogram('state.tactical-defense')).not.toThrow();
+    expect(() => pictogram('state.tactical-retreat')).not.toThrow();
     expect(() => pictogram('state.suspected-situation')).not.toThrow();
     expect(() => pictogram('state.acute-situation')).not.toThrow();
     expect(() => pictogram('state.tendency-rising')).not.toThrow();

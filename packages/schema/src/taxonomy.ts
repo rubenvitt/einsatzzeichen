@@ -145,6 +145,8 @@ export type CapabilityId = (typeof CAPABILITY_IDS)[number];
 export const STATE_IDS = Object.freeze([
   'tactical-rescue',
   'tactical-attack',
+  'tactical-defense',
+  'tactical-retreat',
   'suspected-situation',
   'acute-situation',
   'activity-slightly-increased-outage-up-to-25-percent',
