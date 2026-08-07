@@ -35,12 +35,12 @@ describe('Element-Register', () => {
     expect(observedTitle).toBe(originalTitle);
   });
 
-  it('führt 92 Elemente: sieben Farben, vier Stärkegrade, 81 Piktogramme', () => {
+  it('führt 99 Elemente: sieben Farben, vier Stärkegrade, 88 Piktogramme', () => {
     const byKind = Object.values(ELEMENTS).reduce<Record<string, number>>((acc, el) => {
       acc[el.kind] = (acc[el.kind] ?? 0) + 1;
       return acc;
     }, {});
-    expect(byKind).toEqual({ organization: 7, strength: 4, capability: 81 });
+    expect(byKind).toEqual({ organization: 7, strength: 4, capability: 88 });
   });
 
   it('führt genau die Organisationen, für die der Katalog eine Farbe belegt', () => {

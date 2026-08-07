@@ -359,3 +359,26 @@ describe('Fähigkeitsinventar Kapitel 4.9', () => {
     ]);
   });
 });
+
+describe('Fähigkeitsinventar Kapitel 4.10', () => {
+  it('bildet die sieben Darstellungen aus Veterinärwesen exakt ab', () => {
+    const actual = CAPABILITY_PICTOGRAMS
+      .filter((definition) => definition.section.startsWith('4.10.'))
+      .map(({ section, id, variant, referenceAsset }) => ({
+        section,
+        id,
+        variant,
+        referenceAsset,
+      }));
+
+    expect(actual).toEqual([
+      { section: '4.10.1', id: 'capability.veterinary', variant: 'primary', referenceAsset: '4.10.1_Veterinärwesen.svg' },
+      { section: '4.10.2', id: 'capability.slaughter-culling', variant: 'primary', referenceAsset: '4.10.2_Schlachten_Keulen.svg' },
+      { section: '4.10.3', id: 'capability.chicken', variant: 'primary', referenceAsset: '4.10.3_Huhn.svg' },
+      { section: '4.10.4', id: 'capability.horse', variant: 'primary', referenceAsset: '4.10.4_Pferd.svg' },
+      { section: '4.10.5', id: 'capability.cattle', variant: 'primary', referenceAsset: '4.10.5_Rind.svg' },
+      { section: '4.10.6', id: 'capability.sheep', variant: 'primary', referenceAsset: '4.10.6_Schaf.svg' },
+      { section: '4.10.7', id: 'capability.pig', variant: 'primary', referenceAsset: '4.10.7_Schwein.svg' },
+    ]);
+  });
+});

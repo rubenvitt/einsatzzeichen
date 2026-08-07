@@ -133,7 +133,14 @@ export type CapabilityId =
   | 'meal-preparation'
   | 'rapid-deployment-tent'
   | 'frame-tent'
-  | 'information-communications';
+  | 'information-communications'
+  | 'veterinary'
+  | 'slaughter-culling'
+  | 'chicken'
+  | 'horse'
+  | 'cattle'
+  | 'sheep'
+  | 'pig';
 
 /** Semantische Beschreibung eines Zeichens. Eingabe des Kompositionsmotors. */
 export interface SymbolSpec {
