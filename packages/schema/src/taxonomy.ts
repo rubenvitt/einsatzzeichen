@@ -143,6 +143,8 @@ export type CapabilityId = (typeof CAPABILITY_IDS)[number];
 
 /** Zustände nach Kapitel 5.8 in verbindlicher Kapitelreihenfolge. */
 export const STATE_IDS = Object.freeze([
+  'activity-slightly-increased-outage-up-to-25-percent',
+  'activity-moderately-increased-outage-up-to-50-percent',
   'tendency-rising',
   'tendency-unchanged',
   'tendency-falling',

@@ -4,7 +4,7 @@ import { renderSvg } from '@einsatzzeichen/core';
 import { PRINT_MONOCHROME_THEME } from '../render-themes.js';
 import type { CatalogPictogramDefinition } from './catalog-definition.js';
 import { pictogram } from './index.js';
-import { STATE_PICTOGRAMS, TENDENCY_STATES } from './states/index.js';
+import { ACTIVITY_STATES, STATE_PICTOGRAMS, TENDENCY_STATES } from './states/index.js';
 
 function inventoryTuple(definition: CatalogPictogramDefinition) {
   return [
@@ -24,8 +24,20 @@ function monochromeSvg(definition: CatalogPictogramDefinition): string {
 }
 
 describe('State-Piktogramminventur', () => {
-  it('enthält als ersten Slice exakt die drei Tendenzen aus Kapitel 5.8.3', () => {
+  it('enthält exakt die ausgelieferten Aktivitätsgrade und Tendenzen in Kapitelreihenfolge', () => {
     const expected = [
+      [
+        '5.8.2.1',
+        'state.activity-slightly-increased-outage-up-to-25-percent',
+        'primary',
+        '5.8.2.1_geringfügig erhöhte Aktivität_bis 25 Prozent Ausfall.svg',
+      ],
+      [
+        '5.8.2.2',
+        'state.activity-moderately-increased-outage-up-to-50-percent',
+        'primary',
+        '5.8.2.2_moderat erhöhte Aktivität_bis 50 Prozent Ausfall.svg',
+      ],
       ['5.8.3.1', 'state.tendency-rising', 'primary', '5.8.3.1_Tendenz steigend.svg'],
       ['5.8.3.2', 'state.tendency-unchanged', 'primary', '5.8.3.2_Tendenz unverändert.svg'],
       ['5.8.3.3', 'state.tendency-falling', 'primary', '5.8.3.3_Tendenz fallend.svg'],
@@ -33,6 +45,18 @@ describe('State-Piktogramminventur', () => {
 
     expect(STATE_PICTOGRAMS.map(inventoryTuple)).toEqual(expected);
     expect(() => pictogram('state.tendency-rising')).not.toThrow();
+  });
+
+  it('kodiert die Aktivitätsgrade geometrisch und im Monochromtheme unterscheidbar', () => {
+    const outageSectorCounts = ACTIVITY_STATES.map((definition) =>
+      definition.primitives.filter(
+        (primitive) => primitive.type === 'path' && primitive.style?.fill === 'rot',
+      ).length,
+    );
+    const monochromeSvgs = ACTIVITY_STATES.map(monochromeSvg);
+
+    expect(outageSectorCounts).toEqual([1, 2]);
+    expect(new Set(monochromeSvgs).size).toBe(2);
   });
 
   it('hält die drei Richtungen geometrisch und im Monochromtheme unterscheidbar', () => {
@@ -46,6 +70,7 @@ describe('State-Piktogramminventur', () => {
   });
 
   it('friert Familien- und Gesamtregister tief ein und weist Erweiterungen zur Laufzeit zurück', () => {
+    expect(Object.isFrozen(ACTIVITY_STATES)).toBe(true);
     expect(Object.isFrozen(TENDENCY_STATES)).toBe(true);
     expect(Object.isFrozen(STATE_PICTOGRAMS)).toBe(true);
 
