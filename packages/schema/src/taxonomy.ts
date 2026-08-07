@@ -151,6 +151,8 @@ export const STATE_IDS = Object.freeze([
   'water-ingress-hazard',
   'hazardous-substances',
   'radioactivity-hazard',
+  'electrical-energy-hazard',
+  'mineral-oil-hazard',
   'suspected-situation',
   'acute-situation',
   'activity-slightly-increased-outage-up-to-25-percent',

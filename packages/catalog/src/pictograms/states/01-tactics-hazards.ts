@@ -245,6 +245,25 @@ function radioactivityAlternativePrimitives(): readonly Primitive[] {
   ];
 }
 
+function electricalEnergyPrimitives(): readonly Primitive[] {
+  return [
+    ...framedStroke(TRIANGLE, 'rot'),
+    filledSignalPath('M 16 7 L 11 16 L 16 15 L 13 25 L 22 14 L 17 15 L 20 7 Z'),
+  ];
+}
+
+function mineralOilPrimitives(): readonly Primitive[] {
+  const letter =
+    'M 11 16 C 11 11 13 9 16 9 C 19 9 21 11 21 16 ' +
+    'C 21 21 19 23 16 23 C 13 23 11 21 11 16 Z';
+  return [
+    ...framedStroke(TRIANGLE, 'rot'),
+    ...haloStroke(letter, 'rot'),
+    filledSignalCircle(14, 6.5, 0.8),
+    filledSignalCircle(18, 6.5, 0.8),
+  ];
+}
+
 function suspectedPrimaryPrimitives(): readonly Primitive[] {
   const question =
     'M 8 9 C 9 5 12 4 16 4 C 21 4 24 7 24 11 ' +
@@ -370,6 +389,24 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
     contrastPairs: SIGNAL_CONTRAST,
     primitives: radioactivityAlternativePrimitives(),
+  }),
+  defineState({
+    section: '5.8.1.9',
+    id: 'electrical-energy-hazard',
+    title: 'Gefahr durch elektrische Energie',
+    referenceAsset: '5.8.1.9_Gefahr durch elektrische Energie.svg',
+    box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
+    contrastPairs: SIGNAL_CONTRAST,
+    primitives: electricalEnergyPrimitives(),
+  }),
+  defineState({
+    section: '5.8.1.10',
+    id: 'mineral-oil-hazard',
+    title: 'Gefahr durch Mineralöl',
+    referenceAsset: '5.8.1.10_Gefahr durch Mineralöl.svg',
+    box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
+    contrastPairs: SIGNAL_CONTRAST,
+    primitives: mineralOilPrimitives(),
   }),
   defineState({
     section: '5.8.1.13',

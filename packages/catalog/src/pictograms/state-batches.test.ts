@@ -82,6 +82,10 @@ const DELIVERED_BATCHES = [
     ],
   },
   {
+    batch: 'G4',
+    keys: ['state.electrical-energy-hazard#primary', 'state.mineral-oil-hazard#primary'],
+  },
+  {
     batch: 'T1',
     keys: [
       'state.sick-animal#primary',
