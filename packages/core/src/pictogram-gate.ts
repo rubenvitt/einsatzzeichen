@@ -2,8 +2,10 @@ import {
   DEFAULT_STROKE_WIDTH_MM,
   mmToUnits,
   unitsEqual,
+  type DepictionVariant,
   type PictogramBox,
   type PictogramDefinition,
+  type PictogramId,
   type Point,
   type Primitive,
   type PrimitiveRole,
@@ -20,11 +22,13 @@ import { mergeStyle } from './render/style.js';
  * keine Änderung an der Rückgabeform — dasselbe Muster wie `CoverageViolation` in `catalog`.
  *
  * Listen von Befunden statt Ausnahmen, wie `validateSpec`: ein Autor will alle Verstöße seines
- * Piktogramms auf einmal sehen, nicht den ersten.
+ * Piktogramms auf einmal sehen, nicht den ersten. Weil Primär- und Alternativdarstellung dieselbe
+ * ID teilen, gehört die Variante ausdrücklich zur Befundidentität.
  */
 export interface PictogramIssue {
   gate: 'command' | 'box' | 'clipping';
-  pictogramId: string;
+  pictogramId: PictogramId;
+  variant: DepictionVariant;
   detail: string;
 }
 
@@ -48,7 +52,12 @@ export function checkCommands(definition: PictogramDefinition): PictogramIssue[]
   const issues: PictogramIssue[] = [];
   for (const path of pathsOf(definition.primitives)) {
     for (const problem of tokenizePath(path.d).problems) {
-      issues.push({ gate: 'command', pictogramId: definition.id, detail: problem });
+      issues.push({
+        gate: 'command',
+        pictogramId: definition.id,
+        variant: definition.variant,
+        detail: problem,
+      });
     }
   }
   return issues;
@@ -180,7 +189,12 @@ function coordinatesOf(command: PathCommand, axes: { x: Axis; y: Axis }): Array<
 export function checkBox(definition: PictogramDefinition): PictogramIssue[] {
   const issues: PictogramIssue[] = [];
   const issue = (detail: string): void => {
-    issues.push({ gate: 'box', pictogramId: definition.id, detail });
+    issues.push({
+      gate: 'box',
+      pictogramId: definition.id,
+      variant: definition.variant,
+      detail,
+    });
   };
 
   const geometryProblems = boxGeometryProblems(definition.box);
@@ -592,6 +606,7 @@ export function checkClipping(
     return geometryProblems.map((problem) => ({
       gate: 'clipping',
       pictogramId: definition.id,
+      variant: definition.variant,
       detail: `Ungültige Piktogramm-Box: ${problem}`,
     }));
   }
@@ -602,6 +617,7 @@ export function checkClipping(
     issues.push({
       gate: 'clipping',
       pictogramId: definition.id,
+      variant: definition.variant,
       detail:
         `Piktogrammdefinition: Explizite Fremdrolle "${role}" ist unzulässig; ` +
         `compose() verleiht der Definitionswurzel die Rolle "pictogram", deren ` +
@@ -612,6 +628,7 @@ export function checkClipping(
     issues.push({
       gate: 'clipping',
       pictogramId: definition.id,
+      variant: definition.variant,
       detail: `Piktogramm-Blatt: Strichstärke muss endlich und nichtnegativ sein (ist ${String(width)} mm).`,
     });
   }
@@ -629,6 +646,7 @@ export function checkClipping(
       issues.push({
         gate: 'clipping',
         pictogramId: definition.id,
+        variant: definition.variant,
         detail: `Sichtbare Box-Ecke (${x}, ${y}) mm liegt außerhalb der Körperfläche "${body.type}".`,
       });
     }
@@ -665,7 +683,12 @@ export function checkPictogram(
     issues.push(...checkClipping(definition, body));
   } catch (error) {
     if (!(error instanceof BodyNotMeasuredError)) throw error;
-    issues.push({ gate: 'clipping', pictogramId: definition.id, detail: error.message });
+    issues.push({
+      gate: 'clipping',
+      pictogramId: definition.id,
+      variant: definition.variant,
+      detail: error.message,
+    });
   }
   return issues;
 }

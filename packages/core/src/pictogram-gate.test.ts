@@ -45,6 +45,24 @@ describe('Kommando-Gate', () => {
     expect(issues[0]?.detail).toContain('Relatives Kommando "l"');
   });
 
+  it('unterscheidet aggregierte Befunde derselben ID über die Darstellungsvariante', () => {
+    const primary = withPath('M 4 12 l 4 0');
+    const alternative: PictogramDefinition = {
+      ...primary,
+      variant: 'alternative',
+      title: 'Alternatives Testpiktogramm',
+    };
+
+    const issues = [primary, alternative].flatMap(checkCommands);
+
+    expect(issues).toHaveLength(2);
+    expect(issues[0]?.detail).toBe(issues[1]?.detail);
+    expect(issues.map(({ pictogramId, variant }) => ({ pictogramId, variant }))).toEqual([
+      { pictogramId: 'capability.fire-fighting', variant: 'primary' },
+      { pictogramId: 'capability.fire-fighting', variant: 'alternative' },
+    ]);
+  });
+
   it('lehnt A ab, weil seine Parameter keine Koordinaten sind', () => {
     // A rx ry rotation large-arc sweep x y: ein Schalter 0/1 besteht jede Box, eine Drehung 45
     // liest sich als 45 mm, und der Bogen kann weit außerhalb der geschriebenen Zahlen ausschlagen.
