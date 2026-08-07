@@ -108,6 +108,18 @@ describe('State-Piktogramminventur', () => {
         '5.8.1.10_Gefahr durch Mineralöl.svg',
       ],
       [
+        '5.8.1.11',
+        'state.explosion-hazard',
+        'primary',
+        '5.8.1.11_Gefahr durch Explosion.svg',
+      ],
+      [
+        '5.8.1.12',
+        'state.explosive-ordnance-hazard',
+        'primary',
+        '5.8.1.12_Gefahr durch explosionsfähige Kampfmittel.svg',
+      ],
+      [
         '5.8.1.13',
         'state.suspected-situation',
         'primary',
@@ -286,6 +298,8 @@ describe('State-Piktogramminventur', () => {
     expect(() => pictogram('state.radioactivity-hazard', 'alternative')).not.toThrow();
     expect(() => pictogram('state.electrical-energy-hazard')).not.toThrow();
     expect(() => pictogram('state.mineral-oil-hazard')).not.toThrow();
+    expect(() => pictogram('state.explosion-hazard')).not.toThrow();
+    expect(() => pictogram('state.explosive-ordnance-hazard')).not.toThrow();
     expect(() => pictogram('state.suspected-situation')).not.toThrow();
     expect(() => pictogram('state.acute-situation')).not.toThrow();
     expect(() => pictogram('state.tendency-rising')).not.toThrow();

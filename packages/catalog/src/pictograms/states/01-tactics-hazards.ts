@@ -60,6 +60,26 @@ function filledSignalPath(d: string): Primitive {
   });
 }
 
+function haloCircleStroke(
+  cx: number,
+  cy: number,
+  r: number,
+  color: ColorToken,
+): readonly Primitive[] {
+  return [
+    stateCircle(cx, cy, r, {
+      fill: 'none',
+      stroke: 'schwarz',
+      strokeWidth: SIGNAL_BLACK_WIDTH,
+    }),
+    stateCircle(cx, cy, r, {
+      fill: 'none',
+      stroke: color,
+      strokeWidth: SIGNAL_COLOR_WIDTH,
+    }),
+  ];
+}
+
 const TACTICAL_CONTRAST = [
   {
     foreground: 'schwarz',
@@ -264,6 +284,22 @@ function mineralOilPrimitives(): readonly Primitive[] {
   ];
 }
 
+function explosionPrimitives(): readonly Primitive[] {
+  const glyph =
+    'M 9 9 H 16 M 9 9 V 23 M 9 16 H 15 M 9 23 H 16 ' +
+    'M 18 12 L 25 23 M 25 12 L 18 23';
+  return [...framedStroke(TRIANGLE, 'rot'), ...haloStroke(glyph, 'rot')];
+}
+
+function explosiveOrdnancePrimitives(): readonly Primitive[] {
+  return [
+    ...framedStroke(TRIANGLE, 'rot'),
+    ...haloCircleStroke(16, 17, 5, 'rot'),
+    filledSignalCircle(16, 17, 3),
+    ...haloStroke('M 11.5 12.5 L 9 10 M 20.5 12.5 L 23 10', 'rot'),
+  ];
+}
+
 function suspectedPrimaryPrimitives(): readonly Primitive[] {
   const question =
     'M 8 9 C 9 5 12 4 16 4 C 21 4 24 7 24 11 ' +
@@ -407,6 +443,24 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
     contrastPairs: SIGNAL_CONTRAST,
     primitives: mineralOilPrimitives(),
+  }),
+  defineState({
+    section: '5.8.1.11',
+    id: 'explosion-hazard',
+    title: 'Gefahr durch Explosion',
+    referenceAsset: '5.8.1.11_Gefahr durch Explosion.svg',
+    box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
+    contrastPairs: SIGNAL_CONTRAST,
+    primitives: explosionPrimitives(),
+  }),
+  defineState({
+    section: '5.8.1.12',
+    id: 'explosive-ordnance-hazard',
+    title: 'Gefahr durch explosionsfähige Kampfmittel',
+    referenceAsset: '5.8.1.12_Gefahr durch explosionsfähige Kampfmittel.svg',
+    box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
+    contrastPairs: SIGNAL_CONTRAST,
+    primitives: explosiveOrdnancePrimitives(),
   }),
   defineState({
     section: '5.8.1.13',
