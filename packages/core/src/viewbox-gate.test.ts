@@ -42,6 +42,21 @@ describe('viewBox-Gate', () => {
     expect(issues[0]?.detail).toContain('minX');
   });
 
+  it('behandelt einen geerbten Nullstrich an der viewBox-Kante als unsichtbar', () => {
+    expect(
+      checkViewBox(
+        drawing({
+          type: 'group',
+          style: { stroke: 'schwarz', strokeWidth: 0 },
+          children: [
+            { type: 'line', x1: 0, y1: 0, x2: 32, y2: 32 },
+            { type: 'path', d: 'M 0 32 L 32 0' },
+          ],
+        }),
+      ),
+    ).toEqual([]);
+  });
+
   it('wendet Gruppen-Translation und Rotation auf Kindgeometrie an', () => {
     const issues = checkViewBox(
       drawing({

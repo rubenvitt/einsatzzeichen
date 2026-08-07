@@ -8,7 +8,7 @@ import {
   type Transform,
 } from '@einsatzzeichen/schema';
 import { escapeXml, formatUnits } from './format.js';
-import { mergeStyle } from './style.js';
+import { assertValidActiveStrokeWidths, mergeStyle } from './style.js';
 import { REFERENCE_THEME, type RenderTheme } from './theme.js';
 import { assertValidRenderTheme } from './theme-validation.js';
 
@@ -212,6 +212,7 @@ export function renderSvg(drawing: Drawing, options: SvgOptions = {}): string {
   const prefix = options.idPrefix ?? 'ez';
   const theme = options.theme === undefined ? REFERENCE_THEME : options.theme;
   assertValidRenderTheme(theme);
+  assertValidActiveStrokeWidths(drawing);
   const width = u(drawing.viewBox.width);
   const height = u(drawing.viewBox.height);
 

@@ -6,7 +6,7 @@ import {
   type Primitive,
   type Style,
 } from '@einsatzzeichen/schema';
-import { mergeStyle } from './style.js';
+import { assertValidActiveStrokeWidths, mergeStyle } from './style.js';
 import { REFERENCE_THEME, type RenderTheme } from './theme.js';
 import { assertValidRenderTheme } from './theme-validation.js';
 
@@ -92,24 +92,27 @@ function drawPrimitive(
       ctx.fill(path, style.fillRule ?? 'nonzero');
     }
     if (style?.stroke !== undefined && style.stroke !== 'none') {
-      ctx.strokeStyle = color(style.stroke, theme);
-      // Rohes Millimetermaß: das umgebende scale(mmToUnits(1)) skaliert die Strichstärke
-      // bereits mit. Eine zusätzliche mmToUnits-Umrechnung würde sie doppelt skalieren.
-      ctx.lineWidth = style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
-      if (role === 'pictogram') {
-        // Entspricht SVGs Butt/Round-Vertrag für das Clipping-Gate: die halbe Strichstärke ist
-        // damit eine konservative sichtbare Piktogrammausdehnung.
-        ctx.lineCap = 'butt';
-        ctx.lineJoin = 'round';
+      const strokeWidth = style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
+      if (strokeWidth > 0) {
+        ctx.strokeStyle = color(style.stroke, theme);
+        // Rohes Millimetermaß: das umgebende scale(mmToUnits(1)) skaliert die Strichstärke
+        // bereits mit. Eine zusätzliche mmToUnits-Umrechnung würde sie doppelt skalieren.
+        ctx.lineWidth = strokeWidth;
+        if (role === 'pictogram') {
+          // Entspricht SVGs Butt/Round-Vertrag für das Clipping-Gate: die halbe Strichstärke ist
+          // damit eine konservative sichtbare Piktogrammausdehnung.
+          ctx.lineCap = 'butt';
+          ctx.lineJoin = 'round';
+        }
+        const fillToken = style.fill;
+        const dash =
+          role === 'body' && fillToken !== undefined && fillToken !== 'none'
+            ? theme.bodyStrokeDashes?.[fillToken]
+            : undefined;
+        ctx.setLineDash(dash === undefined ? [] : [...dash]);
+        ctx.lineDashOffset = 0;
+        ctx.stroke(path);
       }
-      const fillToken = style.fill;
-      const dash =
-        role === 'body' && fillToken !== undefined && fillToken !== 'none'
-          ? theme.bodyStrokeDashes?.[fillToken]
-          : undefined;
-      ctx.setLineDash(dash === undefined ? [] : [...dash]);
-      ctx.lineDashOffset = 0;
-      ctx.stroke(path);
     }
     ctx.restore();
     ctx.restore();
@@ -124,20 +127,23 @@ function drawPrimitive(
     ctx.fill(style.fillRule ?? 'nonzero');
   }
   if (style?.stroke !== undefined && style.stroke !== 'none') {
-    ctx.strokeStyle = color(style.stroke, theme);
-    ctx.lineWidth = mmToUnits(style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM);
-    if (role === 'pictogram') {
-      ctx.lineCap = 'butt';
-      ctx.lineJoin = 'round';
+    const strokeWidth = style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
+    if (strokeWidth > 0) {
+      ctx.strokeStyle = color(style.stroke, theme);
+      ctx.lineWidth = mmToUnits(strokeWidth);
+      if (role === 'pictogram') {
+        ctx.lineCap = 'butt';
+        ctx.lineJoin = 'round';
+      }
+      const fillToken = style.fill;
+      const dash =
+        role === 'body' && fillToken !== undefined && fillToken !== 'none'
+          ? theme.bodyStrokeDashes?.[fillToken]
+          : undefined;
+      ctx.setLineDash(dash === undefined ? [] : dash.map(mmToUnits));
+      ctx.lineDashOffset = 0;
+      ctx.stroke();
     }
-    const fillToken = style.fill;
-    const dash =
-      role === 'body' && fillToken !== undefined && fillToken !== 'none'
-        ? theme.bodyStrokeDashes?.[fillToken]
-        : undefined;
-    ctx.setLineDash(dash === undefined ? [] : dash.map(mmToUnits));
-    ctx.lineDashOffset = 0;
-    ctx.stroke();
   }
 
   ctx.restore();
@@ -150,6 +156,7 @@ export function renderCanvas(
 ): void {
   const theme = options.theme === undefined ? REFERENCE_THEME : options.theme;
   assertValidRenderTheme(theme);
+  assertValidActiveStrokeWidths(drawing);
   ctx.save();
   if (options.size !== undefined) {
     ctx.scale(options.size / mmToUnits(drawing.viewBox.width), options.size / mmToUnits(drawing.viewBox.height));

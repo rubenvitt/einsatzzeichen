@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_VIEWBOX_MM, PALETTE, mmToUnits, type Drawing } from '@einsatzzeichen/schema';
+import {
+  DEFAULT_STROKE_WIDTH_MM,
+  DEFAULT_VIEWBOX_MM,
+  PALETTE,
+  mmToUnits,
+  type Drawing,
+  type Primitive,
+} from '@einsatzzeichen/schema';
 import { renderCanvas } from './canvas.js';
 import { formatUnits, renderSvg } from './svg.js';
 import type { RenderTheme } from './theme.js';
@@ -56,6 +63,51 @@ function recordingContext(): { ctx: CanvasRenderingContext2D; calls: Call[] } {
     );
   }
   return { ctx: candidate, calls };
+}
+
+/**
+ * Browser ignorieren Zuweisungen von 0, negativen und nichtendlichen Werten an `lineWidth`.
+ * Dieser Aufzeichner bildet genau diese Settersemantik ab, damit ein anschließendes `stroke()`
+ * mit der alten, weiterhin sichtbaren Breite nicht fälschlich wie ein Nullstrich wirkt.
+ */
+function browserSemanticsContext(): {
+  ctx: CanvasRenderingContext2D;
+  calls: Call[];
+  currentLineWidth: () => number;
+} {
+  const calls: Call[] = [];
+  let lineWidth = 1;
+  const handler: ProxyHandler<Record<string, unknown>> = {
+    get(_target, prop: string | symbol) {
+      if (prop === 'canvas') return { width: 0, height: 0 };
+      if (prop === 'lineWidth') return lineWidth;
+      return (...args: unknown[]) => {
+        if (prop === 'stroke') calls.push(['stroke', lineWidth, ...args]);
+        else calls.push([String(prop), ...args]);
+      };
+    },
+    set(_target, prop: string | symbol, value: unknown) {
+      if (prop === 'lineWidth') {
+        if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+          lineWidth = value;
+          calls.push(['set:lineWidth', value]);
+        }
+        return true;
+      }
+      calls.push([`set:${String(prop)}`, value]);
+      return true;
+    },
+    has() {
+      return true;
+    },
+  };
+  const candidate: object = new Proxy({}, handler);
+  if (!looksLikeCanvasRenderingContext2D(candidate)) {
+    throw new Error(
+      'browserSemanticsContext: Proxy erfüllt nicht die minimale CanvasRenderingContext2D-Oberfläche.',
+    );
+  }
+  return { ctx: candidate, calls, currentLineWidth: () => lineWidth };
 }
 
 const formation: Drawing = {
@@ -650,5 +702,135 @@ describe('renderCanvas — Renderer-Parität bei translate (Spec-Erfolgskriteriu
     expect(names.indexOf('translate')).toBeLessThan(names.indexOf('scale'));
     const translateCall = calls.find(([name]) => name === 'translate');
     expect(translateCall?.[2]).toBeCloseTo(mmToUnits(3), 9);
+  });
+});
+
+describe('renderCanvas — Nullstriche und ungültige aktive Strichstärken', () => {
+  it('modelliert die Browser-Semantik, die nichtpositive und nichtendliche lineWidth-Werte ignoriert', () => {
+    const { ctx, currentLineWidth } = browserSemanticsContext();
+    ctx.lineWidth = 2;
+    ctx.lineWidth = 0;
+    ctx.lineWidth = -1;
+    ctx.lineWidth = Number.NaN;
+    ctx.lineWidth = Number.POSITIVE_INFINITY;
+    expect(currentLineWidth()).toBe(2);
+  });
+
+  it.each([
+    [
+      'Rechteck',
+      {
+        type: 'rect',
+        x: 4,
+        y: 4,
+        width: 24,
+        height: 24,
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0 },
+      },
+    ],
+    [
+      'Pfad',
+      {
+        type: 'path',
+        d: 'M 4 16 L 28 16',
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0 },
+      },
+    ],
+  ] satisfies readonly (readonly [string, Primitive])[])(
+    'ruft für einen Nullstrich am %s kein stroke() auf',
+    (_label, primitive) => {
+      const { ctx, calls } = browserSemanticsContext();
+      renderCanvas({ viewBox: DEFAULT_VIEWBOX_MM, children: [primitive] }, ctx);
+      expect(calls.some(([name]) => name === 'stroke')).toBe(false);
+    },
+  );
+
+  it('unterdrückt einen von der Gruppe geerbten Nullstrich bei normalen Primitiven und Pfaden', () => {
+    const drawing: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'group',
+          style: { stroke: 'schwarz', strokeWidth: 0 },
+          children: [
+            { type: 'line', x1: 4, y1: 8, x2: 28, y2: 8 },
+            { type: 'path', d: 'M 4 24 L 28 24' },
+          ],
+        },
+      ],
+    };
+    const { ctx, calls } = browserSemanticsContext();
+    renderCanvas(drawing, ctx);
+    expect(calls.some(([name]) => name === 'stroke')).toBe(false);
+  });
+
+  it.each([
+    ['negativ', -1],
+    ['NaN', Number.NaN],
+    ['unendlich', Number.POSITIVE_INFINITY],
+  ])(
+    'lehnt eine %s geerbte aktive Strichstärke in beiden Renderern vor jeder Canvas-Ausgabe ab',
+    (_label, strokeWidth) => {
+      const drawing: Drawing = {
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [
+          { type: 'rect', x: 1, y: 1, width: 2, height: 2, style: { fill: 'rot' } },
+          {
+            type: 'group',
+            style: { stroke: 'schwarz', strokeWidth },
+            children: [{ type: 'path', d: 'M 4 16 L 28 16' }],
+          },
+        ],
+      };
+      const expected =
+        `Aktive Strichstärke in children[1].children[0] muss endlich und nichtnegativ sein ` +
+        `(ist ${String(strokeWidth)}).`;
+      const { ctx, calls } = browserSemanticsContext();
+
+      expect(() => renderSvg(drawing)).toThrow(expected);
+      expect(() => renderCanvas(drawing, ctx)).toThrow(expected);
+      expect(calls).toEqual([]);
+    },
+  );
+
+  it('ignoriert ungültige Strichstärken bei stroke none und ohne aktiven Stroke', () => {
+    const drawing: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'path',
+          d: 'M 4 8 L 28 8',
+          style: { stroke: 'none', strokeWidth: Number.NaN },
+        },
+        {
+          type: 'group',
+          style: { strokeWidth: -1 },
+          children: [{ type: 'line', x1: 4, y1: 24, x2: 28, y2: 24 }],
+        },
+      ],
+    };
+    const { ctx } = browserSemanticsContext();
+    expect(() => renderSvg(drawing)).not.toThrow();
+    expect(() => renderCanvas(drawing, ctx)).not.toThrow();
+  });
+
+  it.each([
+    ['Vorgabebreite', undefined, DEFAULT_STROKE_WIDTH_MM],
+    ['positive Breite', 0.7, 0.7],
+  ])('zeichnet mit %s weiterhin genau einen sichtbaren Strich', (_label, strokeWidth, expected) => {
+    const style =
+      strokeWidth === undefined
+        ? { stroke: 'schwarz' as const }
+        : { stroke: 'schwarz' as const, strokeWidth };
+    const drawing: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [{ type: 'line', x1: 4, y1: 16, x2: 28, y2: 16, style }],
+    };
+    const { ctx, calls } = browserSemanticsContext();
+    renderCanvas(drawing, ctx);
+    const strokes = calls.filter(([name]) => name === 'stroke');
+    expect(strokes).toHaveLength(1);
+    expect(strokes[0]?.[1]).toBeCloseTo(mmToUnits(expected), 9);
+    expect(renderSvg(drawing)).toContain(`stroke-width="${formatUnits(mmToUnits(expected))}"`);
   });
 });

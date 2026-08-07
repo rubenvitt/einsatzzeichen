@@ -170,6 +170,26 @@ describe('renderSvg', () => {
     expect(svg).toContain('stroke-width="0.5"');
   });
 
+  it('gibt geerbte Nullstriche für normale Primitive und Pfade als unsichtbare Breite aus', () => {
+    const svg = renderSvg({
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'group',
+          style: { stroke: 'schwarz', strokeWidth: 0 },
+          children: [
+            { type: 'line', x1: 4, y1: 8, x2: 28, y2: 8 },
+            { type: 'path', d: 'M 4 24 L 28 24' },
+          ],
+        },
+      ],
+    });
+    const lineTag = svg.match(/<line[^>]*\/>/)?.[0];
+    const pathTag = svg.match(/<path[^>]*\/>/)?.[0];
+    expect(lineTag).toContain('stroke-width="0"');
+    expect(pathTag).toContain('stroke-width="0"');
+  });
+
   it('wendet bei Pfaden zuerst die Skalierung und danach die Drehung an', () => {
     const svg = renderSvg({
       viewBox: DEFAULT_VIEWBOX_MM,
