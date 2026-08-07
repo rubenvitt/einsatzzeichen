@@ -72,6 +72,18 @@ describe('State-Piktogramminventur', () => {
         '5.8.1.6_Gefahr durch Wassereinbruch.svg',
       ],
       [
+        '5.8.1.7',
+        'state.hazardous-substances',
+        'primary',
+        '5.8.1.7_Gefährliche Stoffe.svg',
+      ],
+      [
+        '5.8.1.7',
+        'state.hazardous-substances',
+        'alternative',
+        '5.8.1.7_Gefährliche Stoffe_Chlor.svg',
+      ],
+      [
         '5.8.1.13',
         'state.suspected-situation',
         'primary',
@@ -244,6 +256,8 @@ describe('State-Piktogramminventur', () => {
     expect(() => pictogram('state.tactical-retreat')).not.toThrow();
     expect(() => pictogram('state.flooded-area')).not.toThrow();
     expect(() => pictogram('state.water-ingress-hazard')).not.toThrow();
+    expect(() => pictogram('state.hazardous-substances')).not.toThrow();
+    expect(() => pictogram('state.hazardous-substances', 'alternative')).not.toThrow();
     expect(() => pictogram('state.suspected-situation')).not.toThrow();
     expect(() => pictogram('state.acute-situation')).not.toThrow();
     expect(() => pictogram('state.tendency-rising')).not.toThrow();

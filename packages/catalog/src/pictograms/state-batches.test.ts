@@ -68,6 +68,13 @@ const DELIVERED_BATCHES = [
     keys: ['state.flooded-area#primary', 'state.water-ingress-hazard#primary'],
   },
   {
+    batch: 'G2',
+    keys: [
+      'state.hazardous-substances#primary',
+      'state.hazardous-substances#alternative',
+    ],
+  },
+  {
     batch: 'T1',
     keys: [
       'state.sick-animal#primary',

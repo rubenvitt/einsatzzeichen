@@ -149,6 +149,7 @@ export const STATE_IDS = Object.freeze([
   'tactical-retreat',
   'flooded-area',
   'water-ingress-hazard',
+  'hazardous-substances',
   'suspected-situation',
   'acute-situation',
   'activity-slightly-increased-outage-up-to-25-percent',

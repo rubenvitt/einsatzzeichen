@@ -198,6 +198,27 @@ function waterIngressPrimitives(): readonly Primitive[] {
   ];
 }
 
+function hazardousSubstancesPrimaryPrimitives(): readonly Primitive[] {
+  const glyph =
+    'M 13 11 C 12 9 10.5 8 9 8 C 6 8 5 11 5 16 C 5 21 6.5 24 10 24 ' +
+    'C 12 24 13.5 23 14 21 V 16 H 10 ' +
+    'M 26 10 C 24 8 20 8 18 10 C 16 12 17 14 20 15 L 23 16 ' +
+    'C 26 17 26 21 24 23 C 22 25 18 24 16 22';
+  return [...framedStroke(TRIANGLE, 'rot'), ...haloStroke(glyph, 'rot')];
+}
+
+function hazardousSubstancesAlternativePrimitives(): readonly Primitive[] {
+  const glyph =
+    'M 11.2 14 H 10 Q 9 14 9 17.5 Q 9 21 10 21 H 11.2 ' +
+    'M 11.8 14 V 21 M 14 14 V 21 M 11.8 17.5 H 14 ' +
+    'M 14.6 14 V 21 H 16.8 ' +
+    'M 17.4 17.5 Q 17.4 14 18.6 14 Q 19.8 14 19.8 17.5 ' +
+    'Q 19.8 21 18.6 21 Q 17.4 21 17.4 17.5 ' +
+    'M 20.5 21 V 14 H 21.8 Q 23 14 23 16 Q 23 18 21.8 18 H 20.5 ' +
+    'M 21.8 18 L 23.2 21';
+  return [...framedStroke(TRIANGLE, 'rot'), ...haloStroke(glyph, 'rot')];
+}
+
 function suspectedPrimaryPrimitives(): readonly Primitive[] {
   const question =
     'M 8 9 C 9 5 12 4 16 4 C 21 4 24 7 24 11 ' +
@@ -285,6 +306,25 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
     contrastPairs: WATER_CONTRAST,
     primitives: waterIngressPrimitives(),
+  }),
+  defineState({
+    section: '5.8.1.7',
+    id: 'hazardous-substances',
+    title: 'Gefährliche Stoffe',
+    referenceAsset: '5.8.1.7_Gefährliche Stoffe.svg',
+    box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
+    contrastPairs: SIGNAL_CONTRAST,
+    primitives: hazardousSubstancesPrimaryPrimitives(),
+  }),
+  defineState({
+    section: '5.8.1.7',
+    id: 'hazardous-substances',
+    variant: 'alternative',
+    title: 'Gefährliche Stoffe',
+    referenceAsset: '5.8.1.7_Gefährliche Stoffe_Chlor.svg',
+    box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
+    contrastPairs: SIGNAL_CONTRAST,
+    primitives: hazardousSubstancesAlternativePrimitives(),
   }),
   defineState({
     section: '5.8.1.13',
