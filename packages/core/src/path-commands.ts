@@ -34,9 +34,9 @@ const ARITY: Record<PathCommandName, number> = { M: 2, L: 2, H: 1, V: 1, C: 6, Q
  * Die Alternation greift links zuerst, und ein Match beginnt an der jeweiligen Position.
  */
 const TOKEN = /[+-]?\d*\.?\d+(?:[eE][-+]?\d+)?|[A-Za-z]/g;
-/** SVG 2 `wsp`: ausschließlich Space, Tab, CR und LF — nicht JavaScripts breiteres `\s`. */
-const SVG_WSP_ONLY = /^[\u0009\u000a\u000d\u0020]*$/;
-const SVG_COMMA_WSP = /^[\u0009\u000a\u000d\u0020]*,[\u0009\u000a\u000d\u0020]*$/;
+/** SVG 2 `wsp`: Tab, LF, Form Feed, CR und Space — nicht JavaScripts breiteres `\s`. */
+const SVG_WSP_ONLY = /^[\u0009\u000a\u000c\u000d\u0020]*$/;
+const SVG_COMMA_WSP = /^[\u0009\u000a\u000c\u000d\u0020]*,[\u0009\u000a\u000c\u000d\u0020]*$/;
 
 type PathTokenKind = 'command' | 'number';
 

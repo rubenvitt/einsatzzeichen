@@ -227,6 +227,15 @@ export function checkViewBox(drawing: Drawing): ViewBoxIssue[] {
       return;
     }
 
+    const strokeWidth =
+      style?.stroke !== undefined && style.stroke !== 'none'
+        ? (style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM)
+        : 0;
+    const strokeWidthProblem =
+      !Number.isFinite(strokeWidth) || strokeWidth < 0
+        ? `Strichstärke muss endlich und nichtnegativ sein, ist aber ${strokeWidth}.`
+        : undefined;
+
     let points: Point[];
     if (primitive.type === 'rect') {
       if (
@@ -250,17 +259,12 @@ export function checkViewBox(drawing: Drawing): ViewBoxIssue[] {
       ];
     } else if (primitive.type === 'circle') {
       const center = transformed([primitive.cx, primitive.cy], chain);
-      const strokeWidth =
-        style?.stroke !== undefined && style.stroke !== 'none'
-          ? (style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM)
-          : 0;
       if (
         !Number.isFinite(primitive.r) ||
         primitive.r < 0 ||
         !Number.isFinite(center[0]) ||
         !Number.isFinite(center[1]) ||
-        !Number.isFinite(strokeWidth) ||
-        strokeWidth < 0
+        strokeWidthProblem !== undefined
       ) {
         issue(
           'invalid-geometry',
@@ -287,16 +291,15 @@ export function checkViewBox(drawing: Drawing): ViewBoxIssue[] {
     } else {
       const tokenized = tokenizePath(primitive.d);
       for (const problem of tokenized.problems) issue('path-syntax', problem);
-      if (tokenized.problems.length > 0) return;
+      if (tokenized.problems.length > 0) {
+        if (strokeWidthProblem !== undefined) issue('invalid-geometry', strokeWidthProblem);
+        return;
+      }
       points = pathPoints(tokenized.commands, issue);
     }
 
-    const strokeWidth =
-      style?.stroke !== undefined && style.stroke !== 'none'
-        ? (style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM)
-        : 0;
-    if (!Number.isFinite(strokeWidth) || strokeWidth < 0) {
-      issue('invalid-geometry', `Strichstärke muss endlich und nichtnegativ sein, ist aber ${strokeWidth}.`);
+    if (strokeWidthProblem !== undefined) {
+      issue('invalid-geometry', strokeWidthProblem);
       return;
     }
     const transformedPoints = points.map((point) => transformed(point, chain));

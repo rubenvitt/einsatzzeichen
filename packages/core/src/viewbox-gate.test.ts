@@ -166,6 +166,18 @@ describe('viewBox-Gate', () => {
     },
   );
 
+  it('meldet bei Pfadsyntaxfehlern eine unabhängige aktive negative Strichstärke mit', () => {
+    const issues = checkViewBox(
+      drawing({
+        type: 'path',
+        d: 'M 4 12',
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: -1 },
+      }),
+    );
+    expect(issues.map((issue) => issue.rule)).toEqual(['path-syntax', 'invalid-geometry']);
+    expect(issues[1]?.detail).toContain('Strichstärke');
+  });
+
   it('meldet translate an einem Blatt als unbelegten IR-Fall', () => {
     const issues = checkViewBox(
       drawing({

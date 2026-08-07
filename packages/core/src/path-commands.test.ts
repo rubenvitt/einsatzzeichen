@@ -67,11 +67,17 @@ describe('tokenizePath', () => {
     expect(tokenizePath('M 4\t,\r12 L 28 ,\n20').problems).toEqual([]);
   });
 
+  it('akzeptiert Form Feed direkt und beidseits eines Kommas als SVG-wsp', () => {
+    expect(tokenizePath('M\f4\f12 L\f28\f20').problems).toEqual([]);
+    expect(tokenizePath('M 4\f,\f12 L 28\f,\f20').problems).toEqual([]);
+  });
+
   it.each([
     ['Space', ' '],
     ['Tab', '\t'],
     ['Carriage Return', '\r'],
     ['Line Feed', '\n'],
+    ['Form Feed', '\f'],
   ])('akzeptiert SVG-wsp %s als Trennzeichen', (_name, wsp) => {
     expect(tokenizePath(`M${wsp}4${wsp}12${wsp}L${wsp}28${wsp}20`).problems).toEqual([]);
   });
