@@ -1,10 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_VIEWBOX_MM, STATE_IDS, type Drawing } from '@einsatzzeichen/schema';
-import { renderSvg } from '@einsatzzeichen/core';
-import { PRINT_MONOCHROME_THEME } from '../render-themes.js';
-import type { CatalogPictogramDefinition } from './catalog-definition.js';
-import { pictogram, pictogramRenderId } from './index.js';
 import {
+  DEFAULT_VIEWBOX_MM,
+  STATE_IDS,
+  type ColorToken,
+  type Drawing,
+  type PictogramBox,
+  type Primitive,
+} from '@einsatzzeichen/schema';
+import { paintTokensOf, renderSvg } from '@einsatzzeichen/core';
+import { fingerprintFor } from '../fingerprint-index.js';
+import { PRINT_MONOCHROME_THEME } from '../render-themes.js';
+import {
+  defineState,
+  type CatalogPictogramDefinition,
+  type PictogramContrastPair,
+} from './catalog-definition.js';
+import { pictogram, pictogramRenderId, pictogramVariantKey } from './index.js';
+import {
+  ACCESS_STATES,
   ACTIVITY_STATES,
   ANIMAL_STATES,
   DAMAGE_STATES,
@@ -13,7 +26,72 @@ import {
   STATE_PICTOGRAMS,
   TACTICS_HAZARDS_STATES,
   TENDENCY_STATES,
+  WEATHER_STATES,
 } from './states/index.js';
+
+const EXPECTED_STATE_IDS = [
+  'tactical-rescue',
+  'tactical-attack',
+  'tactical-defense',
+  'tactical-retreat',
+  'flooded-area',
+  'water-ingress-hazard',
+  'hazardous-substances',
+  'radioactivity-hazard',
+  'electrical-energy-hazard',
+  'mineral-oil-hazard',
+  'explosion-hazard',
+  'explosive-ordnance-hazard',
+  'suspected-situation',
+  'acute-situation',
+  'activity-slightly-increased-outage-up-to-25-percent',
+  'activity-moderately-increased-outage-up-to-50-percent',
+  'activity-significantly-increased-outage-up-to-75-percent',
+  'activity-strongly-increased-total-outage',
+  'tendency-rising',
+  'tendency-unchanged',
+  'tendency-falling',
+  'damaged',
+  'partially-destroyed',
+  'destroyed',
+  'incipient-fire',
+  'developed-fire',
+  'fully-developed-fire',
+  'sick-animal',
+  'contaminated-animal',
+  'dead-animal',
+  'weather-sunny',
+  'weather-cloudy',
+  'weather-cloud-cover-four-eighths',
+  'weather-foggy',
+  'weather-rainy',
+  'weather-hailing',
+  'weather-thunderstorm',
+  'weather-snowing',
+  'weather-temperature',
+  'weather-windy',
+  'person-uninjured',
+  'person-affected',
+  'person-injured',
+  'person-injured-triage-category',
+  'person-injured-transport-priority',
+  'person-contaminated',
+  'person-dead',
+  'person-missing',
+  'person-in-water-danger',
+  'person-in-distress',
+  'person-rescued',
+  'person-to-be-transported',
+  'person-in-transport',
+  'person-transported',
+  'person-needing-special-care',
+  'person-care-dependent',
+  'person-mobility-impaired',
+  'route-closed',
+  'one-way-traffic',
+  'route-difficult-to-pass',
+  'route-impassable',
+] as const;
 
 function inventoryTuple(definition: CatalogPictogramDefinition) {
   return [
@@ -32,7 +110,44 @@ function monochromeSvg(definition: CatalogPictogramDefinition): string {
   return renderSvg(drawing, { size: 64, theme: PRINT_MONOCHROME_THEME });
 }
 
+function expectDeepFrozen(value: unknown): void {
+  if (value === null || typeof value !== 'object') return;
+  expect(Object.isFrozen(value)).toBe(true);
+  for (const child of Object.values(value)) expectDeepFrozen(child);
+}
+
 describe('State-Piktogramminventur', () => {
+  it('hält exakt 61 eindeutige State-IDs in Kapitelreihenfolge fest', () => {
+    expect(STATE_IDS).toEqual(EXPECTED_STATE_IDS);
+    expect(STATE_IDS).toHaveLength(61);
+    expect(new Set(STATE_IDS).size).toBe(61);
+    expect(Object.isFrozen(STATE_IDS)).toBe(true);
+  });
+
+  it('schließt die neun Kapitelmodule mit exakt 61 Primär- und sechs Alternativdarstellungen', () => {
+    expect([
+      TACTICS_HAZARDS_STATES.length,
+      ACTIVITY_STATES.length,
+      TENDENCY_STATES.length,
+      DAMAGE_STATES.length,
+      FIRE_STATES.length,
+      ANIMAL_STATES.length,
+      WEATHER_STATES.length,
+      PERSON_STATES.length,
+      ACCESS_STATES.length,
+    ]).toEqual([18, 4, 3, 3, 3, 4, 10, 18, 4]);
+    expect(STATE_PICTOGRAMS).toHaveLength(67);
+    expect(STATE_PICTOGRAMS.filter((item) => item.variant === 'primary')).toHaveLength(61);
+    expect(STATE_PICTOGRAMS.filter((item) => item.variant === 'alternative')).toHaveLength(6);
+    expect(STATE_PICTOGRAMS.every((item) => item.placement.mode === 'standalone')).toBe(true);
+
+    const primaryIds = STATE_PICTOGRAMS
+      .filter((item) => item.variant === 'primary')
+      .map((item) => item.id.slice('state.'.length))
+      .sort();
+    expect(primaryIds).toEqual([...EXPECTED_STATE_IDS].sort());
+  });
+
   it('enthält exakt die ausgelieferten States in Kapitelreihenfolge', () => {
     const expected = [
       [
@@ -363,8 +478,19 @@ describe('State-Piktogramminventur', () => {
     expect(() => pictogram('state.person-mobility-impaired')).not.toThrow();
   });
 
-  it('führt Schneeintensitätsbeispiele nicht als eigenständige State-IDs', () => {
-    const nonIdSnowExamples = [
+  it('führt exakt die sechs Alternativen und keine der sieben Beispielgrafiken im Register', () => {
+    const alternativeAssets = [
+      '5.8.1.7_Gefährliche Stoffe_Chlor.svg',
+      '5.8.1.8_Gefahr durch Radioaktivität _A.svg',
+      '5.8.1.13_Hinweis auf Vermutung_2.svg',
+      '5.8.1.14_Hinweis auf akute Situation_2.svg',
+      '5.8.6.2_kontaminiertes Tier_K.svg',
+      '5.8.8.6_Person Kontaminiert_Alternative.svg',
+    ] as const;
+    const nonIdExamples = [
+      '5.8.1_Beispiel 1.svg',
+      '5.8.1_Beispiel 2.svg',
+      '5.8.1_Beispiel 3.svg',
       '5.8.7_Beispiel_Schneiend_schwach.svg',
       '5.8.7_Beispiel_Schneiend_mittel.svg',
       '5.8.7_Beispiel_Schneiend_stark.svg',
@@ -372,27 +498,121 @@ describe('State-Piktogramminventur', () => {
     ] as const;
 
     const registeredAssets = new Set(STATE_PICTOGRAMS.map((item) => item.referenceAsset));
-    for (const example of nonIdSnowExamples) expect(registeredAssets).not.toContain(example);
+    expect(
+      STATE_PICTOGRAMS.filter((item) => item.variant === 'alternative').map(
+        (item) => item.referenceAsset,
+      ),
+    ).toEqual(alternativeAssets);
+    for (const example of nonIdExamples) expect(registeredAssets).not.toContain(example);
     expect(STATE_IDS.some((id) => id.startsWith('weather-snowing-'))).toBe(false);
   });
 
   it('hält vorhandene Primär- und Alternativdarstellungen eindeutig und titelgleich', () => {
     const definitionsById = new Map<string, CatalogPictogramDefinition[]>();
-    for (const definition of TACTICS_HAZARDS_STATES) {
+    for (const definition of STATE_PICTOGRAMS) {
       const definitions = definitionsById.get(definition.id) ?? [];
       definitions.push(definition);
       definitionsById.set(definition.id, definitions);
     }
 
     for (const definitions of definitionsById.values()) {
-      if (definitions.length === 1) continue;
-      expect(definitions.map(({ variant }) => variant).sort()).toEqual([
-        'alternative',
-        'primary',
-      ]);
+      expect(definitions.filter(({ variant }) => variant === 'primary')).toHaveLength(1);
       expect(new Set(definitions.map(({ title }) => title)).size).toBe(1);
-      expect(new Set(definitions.map(pictogramRenderId)).size).toBe(2);
+      expect(new Set(definitions.map(pictogramRenderId)).size).toBe(definitions.length);
     }
+  });
+
+  it('löst alle 67 eindeutigen Variantenschlüssel identisch aus dem globalen Register auf', () => {
+    const keys = STATE_PICTOGRAMS.map(pictogramVariantKey);
+    expect(new Set(keys).size).toBe(67);
+
+    for (const definition of STATE_PICTOGRAMS) {
+      expect(pictogram(definition.id, definition.variant)).toBe(definition);
+      expectDeepFrozen(definition);
+    }
+  });
+
+  it('belegt jedes atomare State-Asset im Kennzahlenartefakt und unter seinem Abschnitt', () => {
+    for (const definition of STATE_PICTOGRAMS) {
+      expect(definition.referenceAsset.startsWith(`${definition.section}_`)).toBe(true);
+      expect(() => fingerprintFor(definition.referenceAsset)).not.toThrow();
+    }
+  });
+
+  it('deklariert nichtleere Kontrastpaare für jeden tatsächlich malenden Farbtoken', () => {
+    for (const definition of STATE_PICTOGRAMS) {
+      if (definition.placement.mode !== 'standalone') {
+        throw new Error(`${pictogramVariantKey(definition)} ist nicht standalone.`);
+      }
+      expect(definition.contrastPairs).toBeDefined();
+      if (definition.contrastPairs === undefined) {
+        throw new Error(`${pictogramVariantKey(definition)} deklariert keine contrastPairs.`);
+      }
+      expect(definition.contrastPairs.length).toBeGreaterThan(0);
+      const declared = new Set(
+        definition.contrastPairs.flatMap((pair) => [
+          pair.foreground,
+          ...(pair.background === 'surface' ? [] : [pair.background]),
+        ]),
+      );
+      expect(
+        [...paintTokensOf(definition.primitives)].filter((token) => !declared.has(token)),
+        pictogramVariantKey(definition),
+      ).toEqual([]);
+    }
+  });
+
+  it('isoliert und friert alle veränderlichen Eingaben von defineState tief ein', () => {
+    const box: PictogramBox = { xMm: 1, yMm: 2, widthMm: 3, heightMm: 4 };
+    const primitives: Primitive[] = [
+      {
+        type: 'path',
+        role: 'pictogram',
+        d: 'M 1 1 H 2',
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: 1 },
+      },
+    ];
+    const contrastPairs: [
+      {
+        foreground: ColorToken;
+        background: ColorToken | 'surface';
+        context: string;
+      },
+    ] = [
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Testkontrast',
+      },
+    ];
+    const definition = defineState({
+      section: '5.8.1.1',
+      id: 'tactical-rescue',
+      title: 'Testzustand',
+      referenceAsset: '5.8.1.1_Einsatztaktik_Retten.svg',
+      box,
+      primitives,
+      contrastPairs: contrastPairs satisfies [PictogramContrastPair],
+    });
+
+    box.xMm = 9;
+    primitives[0]!.style!.stroke = 'rot';
+    contrastPairs[0].foreground = 'rot';
+
+    expect(definition.box.xMm).toBe(1);
+    expect(definition.primitives[0]?.style?.stroke).toBe('schwarz');
+    expect(definition.contrastPairs?.[0].foreground).toBe('schwarz');
+    expectDeepFrozen(definition);
+    expect(() =>
+      (definition.primitives as unknown as Primitive[]).push(primitives[0]!),
+    ).toThrow(TypeError);
+    expect(
+      Reflect.set(
+        definition.primitives[0]!.style as { stroke?: ColorToken },
+        'stroke',
+        'rot',
+      ),
+    ).toBe(false);
   });
 
   it('hält die außenliegenden P2-Marken in den exakten Autorenboxen', () => {
@@ -464,7 +684,9 @@ describe('State-Piktogramminventur', () => {
     expect(Object.isFrozen(DAMAGE_STATES)).toBe(true);
     expect(Object.isFrozen(FIRE_STATES)).toBe(true);
     expect(Object.isFrozen(ANIMAL_STATES)).toBe(true);
+    expect(Object.isFrozen(WEATHER_STATES)).toBe(true);
     expect(Object.isFrozen(PERSON_STATES)).toBe(true);
+    expect(Object.isFrozen(ACCESS_STATES)).toBe(true);
     expect(Object.isFrozen(STATE_PICTOGRAMS)).toBe(true);
 
     const mutableStates = STATE_PICTOGRAMS as unknown as CatalogPictogramDefinition[];

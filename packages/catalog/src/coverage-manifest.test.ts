@@ -3,7 +3,6 @@ import { DEFAULT_VIEWBOX_MM, entryKey, type CatalogEntry } from '@einsatzzeichen
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { checkCoverage, findPrimaryViolations, releaseBlockers } from './coverage-gate.js';
 import { ALL_PICTOGRAMS, pictogramVariantKey } from './pictograms/index.js';
-import { STATE_PICTOGRAMS } from './pictograms/states/index.js';
 
 // Dieselbe Vorlage wie in `coverage-gate.test.ts`: beide Dateien brauchen einen Katalogeintrag
 // mit einstellbarer Zahl von `primary`-Darstellungen, und ein gemeinsames Testmodul für eine
@@ -70,8 +69,12 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('wächst von 114 Einträgen um jede ausgelieferte State-Darstellung', () => {
-    const stateDepictions = STATE_PICTOGRAMS.length;
+  it('enthält exakt 181 Zeilen mit 170 Elementdarstellungen', () => {
+    const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
+    const pictogramRows = elementRows.filter(
+      (entry) =>
+        entry.implementation.startsWith('capability.') || entry.implementation.startsWith('state.'),
+    );
     const counts = COVERAGE_MANIFEST.entries.reduce<Record<string, number>>((acc, e) => {
       acc[e.coverage] = (acc[e.coverage] ?? 0) + 1;
       return acc;
@@ -79,9 +82,12 @@ describe('Coverage-Manifest', () => {
     expect(counts).toEqual({
       'catalog-entry': 8,
       'composition-recipe': 3,
-      element: 103 + stateDepictions,
+      element: 170,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(114 + stateDepictions);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(181);
+    expect(elementRows).toHaveLength(170);
+    expect(pictogramRows).toHaveLength(159);
+    expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(11);
   });
 
   it('trägt für jeden Eintrag eine Referenzdatei und beide Reviewrollen', () => {
@@ -147,13 +153,12 @@ describe('Coverage-Manifest', () => {
 
 describe('Manifest-Einträge für Piktogramme', () => {
   it('bindet jede Piktogrammdefinition an genau eine Manifestzeile', () => {
-    const stateDepictions = STATE_PICTOGRAMS.length;
     const definitionKeys = new Set(ALL_PICTOGRAMS.map(pictogramVariantKey));
     const rows = COVERAGE_MANIFEST.entries
       .filter((entry) => definitionKeys.has(entryKey(entry.implementation, entry.variant)))
       .map((entry) => entryKey(entry.implementation, entry.variant))
       .sort();
-    expect(rows).toHaveLength(92 + stateDepictions);
+    expect(rows).toHaveLength(159);
     expect(rows).toEqual([...definitionKeys].sort());
   });
 
@@ -210,18 +215,24 @@ describe('Manifest-Einträge für Piktogramme', () => {
   });
 
   it('trennt den freigegebenen D.1-Review identisch vom offenen State-Technikreview', () => {
-    const firstCapability = entryFor('4.3.1');
-    const secondCapability = entryFor('4.3.2');
-    const firstState = entryFor('5.8.3.1');
-    const secondState = entryFor('5.8.3.2');
+    const capabilityRows = COVERAGE_MANIFEST.entries.filter((entry) =>
+      entry.implementation.startsWith('capability.'),
+    );
+    const stateRows = COVERAGE_MANIFEST.entries.filter((entry) =>
+      entry.implementation.startsWith('state.'),
+    );
+    const capabilityReview = capabilityRows[0]!.review.technical;
+    const stateReview = stateRows[0]!.review.technical;
 
-    expect(firstCapability?.review.technical).toBe(secondCapability?.review.technical);
-    expect(firstCapability?.review.technical).toMatchObject({
+    expect(capabilityRows).toHaveLength(92);
+    expect(stateRows).toHaveLength(67);
+    expect(capabilityRows.every((entry) => entry.review.technical === capabilityReview)).toBe(true);
+    expect(capabilityReview).toMatchObject({
       status: 'approved',
       date: '2026-08-06',
     });
-    expect(firstState?.review.technical).toBe(secondState?.review.technical);
-    expect(firstState?.review.technical).toEqual({ status: 'pending' });
-    expect(firstState?.review.technical).not.toBe(firstCapability?.review.technical);
+    expect(stateRows.every((entry) => entry.review.technical === stateReview)).toBe(true);
+    expect(stateReview).toEqual({ status: 'pending' });
+    expect(stateReview).not.toBe(capabilityReview);
   });
 });

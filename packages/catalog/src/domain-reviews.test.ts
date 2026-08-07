@@ -11,7 +11,6 @@ import {
 } from './domain-reviews.js';
 import { PROFILES } from './profiles.js';
 import { SOURCE_REGISTRY } from './sources.js';
-import { STATE_PICTOGRAMS } from './pictograms/states/index.js';
 
 describe('Fachreview-Ledger', () => {
   it('ist exakt deckungsgleich mit allen Manifestzeilen', () => {
@@ -80,15 +79,14 @@ describe('Fachreview-Ledger', () => {
   });
 
   it('erfindet keine Fachfreigabe', () => {
-    const stateDepictions = STATE_PICTOGRAMS.length;
     const manifestReviews = Object.values(MANIFEST_DOMAIN_REVIEWS);
     const sourceReviews = Object.values(SOURCE_DOMAIN_REVIEWS);
     const profileReviews = Object.values(PROFILE_DOMAIN_REVIEWS);
     const reviews = [...manifestReviews, ...sourceReviews, ...profileReviews];
-    expect(manifestReviews).toHaveLength(114 + stateDepictions);
+    expect(manifestReviews).toHaveLength(181);
     expect(sourceReviews).toHaveLength(12);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(127 + stateDepictions);
+    expect(reviews).toHaveLength(194);
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
   });
 

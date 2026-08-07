@@ -4,7 +4,6 @@ import { ELEMENTS, PICTOGRAM_ELEMENT_KINDS, resolveElement } from './elements.js
 import { ORGANIZATION_COLORS } from './organizations.js';
 import { fingerprintFor } from './fingerprint-index.js';
 import { ALL_PICTOGRAMS, pictogram } from './pictograms/index.js';
-import { STATE_PICTOGRAMS } from './pictograms/states/index.js';
 
 describe('Element-Register', () => {
   it('gibt Elementdeskriptoren als tief readonly typisiert zurück', () => {
@@ -36,14 +35,32 @@ describe('Element-Register', () => {
     expect(observedTitle).toBe(originalTitle);
   });
 
-  it('wächst von 99 Elementen um jede primäre State-ID', () => {
-    const stateIds = STATE_PICTOGRAMS.filter((item) => item.variant === 'primary').length;
+  it('enthält exakt 160 Deskriptoren mit den festen Artenzahlen', () => {
     const byKind = Object.values(ELEMENTS).reduce<Record<string, number>>((acc, el) => {
       acc[el.kind] = (acc[el.kind] ?? 0) + 1;
       return acc;
     }, {});
-    expect(byKind).toEqual({ organization: 7, strength: 4, capability: 88, state: stateIds });
-    expect(Object.keys(ELEMENTS)).toHaveLength(99 + stateIds);
+    expect(byKind).toEqual({ organization: 7, strength: 4, capability: 88, state: 61 });
+    expect(Object.keys(ELEMENTS)).toHaveLength(160);
+  });
+
+  it('kollabiert 67 State-Darstellungen auf exakt 61 semantische Deskriptoren', () => {
+    const capabilityDefinitions = ALL_PICTOGRAMS.filter((definition) =>
+      definition.id.startsWith('capability.'),
+    );
+    const stateDescriptors = Object.values(ELEMENTS).filter((element) => element.kind === 'state');
+    const stateDefinitions = ALL_PICTOGRAMS.filter((definition) =>
+      definition.id.startsWith('state.'),
+    );
+
+    expect(ALL_PICTOGRAMS).toHaveLength(159);
+    expect(new Set(ALL_PICTOGRAMS.map((definition) => definition.id)).size).toBe(149);
+    expect(capabilityDefinitions).toHaveLength(92);
+    expect(new Set(capabilityDefinitions.map((definition) => definition.id)).size).toBe(88);
+    expect(stateDefinitions).toHaveLength(67);
+    expect(stateDescriptors).toHaveLength(61);
+    expect(new Set(stateDefinitions.map((definition) => definition.id)).size).toBe(61);
+    expect(stateDescriptors.flatMap((descriptor) => descriptor.referenceAssets)).toHaveLength(67);
   });
 
   it('führt genau die Organisationen, für die der Katalog eine Farbe belegt', () => {
