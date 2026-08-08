@@ -174,14 +174,22 @@ Gilt für jede der 53 Darstellungen in den Tasks 2 bis 8.
 3. **Box deklarieren.** `box` ist die zugesicherte Hülle der eigenen Konstruktion, nicht die der
    Referenz. Das Box-Gate prüft sie gegen die tatsächliche Geometrie; eine zu große Box ist ein
    Befund.
-4. **Kontrastpaare deklarieren.** Nur tatsächlich benachbarte Farbflächen und Striche. Für ein
+4. **Die Strichbreite zählt zur Hülle.** `viewbox-gate.ts:58-62` rechnet die halbe Strichbreite in
+   die Bounds ein. Bei `COMMS_STROKE_WIDTH_MM = 1` reicht eine Mittellinie auf `x = 0` bis
+   `x = -0,5` und liegt damit **außerhalb** der 32 × 32-mm-Fläche. Jede Mittellinie hält deshalb
+   mindestens 0,5 mm Abstand zum Rand; der Bestand arbeitet durchgängig im Feld 1 … 31.
+
+   Das gilt auch dort, wo die Referenz den Rand berührt — `J.2.1_Wechselverkehr.svg` läuft von
+   `x = 0` bis `x = 90,709`, zeichnet aber gefüllte Polygone ohne Strichbreite. Diese Fassung ist
+   nicht übertragbar.
+5. **Kontrastpaare deklarieren.** Nur tatsächlich benachbarte Farbflächen und Striche. Für ein
    rein schwarzes Zeichen auf der Ausgabeoberfläche ist das genau ein Paar.
-5. **Keine Beschriftungsglyphen.** Bei `J.4.8` („L") und `J.4.17` („8") wird die Trägergeometrie
+6. **Keine Beschriftungsglyphen.** Bei `J.4.8` („L") und `J.4.17` („8") wird die Trägergeometrie
    ohne Glyphe gezeichnet. Bei `J.1.14` bleibt der graue Erklärtext der Referenz weg.
-6. **Ledgerplatz mitliefern.** Jede neue Darstellung braucht in derselben Task ihren Eintrag in
+7. **Ledgerplatz mitliefern.** Jede neue Darstellung braucht in derselben Task ihren Eintrag in
    `MANIFEST_DOMAIN_REVIEWS` unter `bbk-babz-2025:${section}#${variant}` mit
    `{ status: 'pending' }`. Ohne ihn ist `domain-reviews.test.ts` rot.
-7. **ID mitliefern.** Jede neue ID wird in derselben Task an ihrer kapitelrichtigen Stelle in
+8. **ID mitliefern.** Jede neue ID wird in derselben Task an ihrer kapitelrichtigen Stelle in
    `COMMS_IDS` eingefügt.
 
 ### Formfamilien des Bestands
@@ -515,10 +523,10 @@ export const OPERATING_MODE_COMMS = deepFreeze([
     id: 'half-duplex-operation',
     title: 'Wechselverkehr',
     referenceAsset: 'J.2.1_Wechselverkehr.svg',
-    box: { xMm: 0, yMm: 12, widthMm: 32, heightMm: 8 },
+    box: { xMm: 0.5, yMm: 11.5, widthMm: 31, heightMm: 9 },
     contrastPairs: CONNECTION_CONTRAST,
     primitives: [
-      commsLine(0, 16, 32, 16),
+      commsLine(1, 16, 31, 16),
       commsLine(7, 12, 11, 16),
       commsLine(7, 20, 11, 16),
       commsLine(25, 12, 21, 16),
@@ -530,10 +538,10 @@ export const OPERATING_MODE_COMMS = deepFreeze([
     id: 'duplex-operation',
     title: 'Gegenverkehr',
     referenceAsset: 'J.2.2_Gegenverkehr.svg',
-    box: { xMm: 0, yMm: 12, widthMm: 32, heightMm: 8 },
+    box: { xMm: 0.5, yMm: 11.5, widthMm: 31, heightMm: 9 },
     contrastPairs: CONNECTION_CONTRAST,
     primitives: [
-      commsLine(0, 16, 32, 16),
+      commsLine(1, 16, 31, 16),
       commsLine(11, 12, 7, 16),
       commsLine(11, 20, 7, 16),
       commsLine(21, 12, 25, 16),
@@ -766,7 +774,7 @@ export const DEVICE_COMMS = deepFreeze([
     id: 'telecom-device',
     title: 'Fernmeldegerät (Grundzeichen)',
     referenceAsset: 'J.3.1_Fernmeldegerät Grundzeichen.svg',
-    box: { xMm: 4, yMm: 4, widthMm: 24, heightMm: 24 },
+    box: { xMm: 3.5, yMm: 3.5, widthMm: 25, heightMm: 25 },
     contrastPairs: DEVICE_CONTRAST,
     primitives: [deviceBody()],
   }),
@@ -818,6 +826,9 @@ Erwartet: grün, `Einträge: 191`, `Offene fachliche Reviews: 204`.
 
 Sieh die acht neuen Snapshots an. Prüfe: Körper mittig, Marken innerhalb der ViewBox, die sieben
 Zeichen untereinander eindeutig unterscheidbar.
+
+Lege alle acht nebeneinander — sie teilen denselben Körper und dürfen sich allein über die Marke
+unterscheiden. Prüfe das auch in der Print-Monochrome-Ansicht, bevor du committest.
 
 - [ ] **Step 10: Commit**
 
@@ -923,7 +934,7 @@ Muster für eine freie Marke:
     id: 'antenna',
     title: 'Antenne',
     referenceAsset: 'J.3.10_Antenne.svg',
-    box: { xMm: 6, yMm: 2, widthMm: 20, heightMm: 28 },
+    box: { xMm: 5.5, yMm: 1.5, widthMm: 21, heightMm: 29 },
     contrastPairs: CONNECTION_CONTRAST,
     primitives: [
       commsLine(16, 2, 16, 30),
@@ -959,6 +970,10 @@ rtk pnpm cli coverage
 Erwartet: grün, `Einträge: 198`, `Offene fachliche Reviews: 211`.
 
 - [ ] **Step 9: Snapshots visuell prüfen**
+
+Kritisches Paar dieser Task: **J.3.14 gegen J.3.15**. Beide sind Fernsprechvermittlung; der
+Unterschied ist allein die VoIP-Kennzeichnung. Lege sie nebeneinander, auch in
+Print-Monochrome.
 
 - [ ] **Step 10: Commit**
 
@@ -1078,7 +1093,7 @@ export const NETWORK_COMMS = deepFreeze([
     id: 'router',
     title: 'Router',
     referenceAsset: 'J.4.1_Router.svg',
-    box: { xMm: 4, yMm: 4, widthMm: 24, heightMm: 24 },
+    box: { xMm: 3.5, yMm: 3.5, widthMm: 25, heightMm: 25 },
     contrastPairs: NETWORK_CONTRAST,
     primitives: [
       commsCircle(16, 16, 12, COMMS_WHITE_BODY),
@@ -1125,6 +1140,9 @@ rtk pnpm cli coverage
 Erwartet: grün, `Einträge: 205`, `Offene fachliche Reviews: 218`.
 
 - [ ] **Step 9: Snapshots visuell prüfen**
+
+Prüfe die sieben Netzkörper nebeneinander: die Flächenform (Kreis, Quadrat, Wolke) muss die erste
+Unterscheidung tragen, die Marke die zweite. Auch in Print-Monochrome.
 
 - [ ] **Step 10: Commit**
 
@@ -1239,7 +1257,7 @@ Muster für eine Kabelmarke:
     id: 'cable-temporary',
     title: 'Kabel, temporär verlegt',
     referenceAsset: 'J.4.14_Kabel_temporär verlegt.svg',
-    box: { xMm: 1, yMm: 11, widthMm: 30, heightMm: 10 },
+    box: { xMm: 0.5, yMm: 10.5, widthMm: 31, heightMm: 11 },
     contrastPairs: CONNECTION_CONTRAST,
     primitives: [
       commsLine(1, 16, 31, 16),
@@ -1401,7 +1419,7 @@ export const CONNECTION_COMMS = deepFreeze([
     id: 'voice',
     title: 'Sprache',
     referenceAsset: 'J.1.1_Sprache.svg',
-    box: { xMm: 3, yMm: 12, widthMm: 26, heightMm: 10 },
+    box: { xMm: 2.5, yMm: 12.5, widthMm: 27, heightMm: 9 },
     contrastPairs: CONNECTION_CONTRAST,
     primitives: [commsLine(3, 13, 29, 13), radioWave()],
   }),
@@ -1411,7 +1429,7 @@ export const CONNECTION_COMMS = deepFreeze([
     variant: 'alternative',
     title: 'Sprache, leitergebunden',
     referenceAsset: 'J.1.1_Sprache_leitergebunden.svg',
-    box: { xMm: 3, yMm: 15, widthMm: 26, heightMm: 2 },
+    box: { xMm: 2.5, yMm: 15.5, widthMm: 27, heightMm: 1 },
     contrastPairs: CONNECTION_CONTRAST,
     primitives: [commsLine(3, 16, 29, 16)],
   }),
@@ -1463,6 +1481,11 @@ rtk pnpm cli coverage
 Erwartet: grün, `Einträge: 223`, `Offene fachliche Reviews: 236`.
 
 - [ ] **Step 9: Snapshots visuell prüfen**
+
+Kritische Paare dieser Task: **J.1.3 gegen J.1.4** (DMO gegen TMO) und **J.1.5 gegen J.1.6**
+(SDS im DMO gegen SDS im TMO). Beide Paare unterscheiden sich in der Referenz allein durch eine
+Marke. Dazu **J.1.1 primary gegen alternative** — der Unterschied muss genau die Wellenlinie sein.
+Prüfe alle drei Paare nebeneinander, auch in Print-Monochrome.
 
 - [ ] **Step 10: Commit**
 
@@ -1622,6 +1645,10 @@ Erwartet: grün, `Einträge: 234`, `Offene fachliche Reviews: 247`.
 
 - [ ] **Step 8: Snapshots visuell prüfen**
 
+Kritische Paare dieser Task: die vier **primary gegen alternative**-Paare (J.1.8, J.1.9, J.1.10,
+J.1.11) sowie **J.1.10 gegen J.1.11** (Bild gegen Livestream) und **J.1.12 gegen J.1.13**
+(Satellit Sprache gegen Daten). Prüfe sie nebeneinander, auch in Print-Monochrome.
+
 - [ ] **Step 9: Commit**
 
 ```bash
@@ -1747,7 +1774,19 @@ rtk pnpm typecheck
 
 Erwartet: alles grün.
 
-- [ ] **Step 5: Coverage-CLI gegen die Zielzahlen prüfen**
+- [ ] **Step 5: Alle 53 Belegdateinamen gegen das Archiv prüfen**
+
+```bash
+rtk pnpm cli audit:reference --filter J
+```
+
+Das `section-mismatch`-Gate prüft nur den Präfix `${section}_`; ein Tippfehler dahinter — in
+`Überspannschutz`, `temporär`, `Fernmeldegerät` oder dem eingebetteten Leerzeichen von
+`J.1.10_ Bildübertragung_leitergebunden.svg` — bleibt ihm verborgen. Dieser Schritt fängt ihn.
+
+Erwartet: keine unaufgelösten Belegdateien.
+
+- [ ] **Step 6: Coverage-CLI gegen die Zielzahlen prüfen**
 
 ```bash
 rtk pnpm cli coverage
@@ -1760,7 +1799,7 @@ Erwartet exakt:
 - `0` ohne Testnachweis, `0` Kapitel im beanspruchten Umfang ohne Eintrag, `0` Abweichungen
 - `Coverage-Gate bestanden.`
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 rtk git add packages/catalog/src
