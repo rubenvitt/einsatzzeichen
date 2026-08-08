@@ -22,39 +22,48 @@ Der lokale Referenzbestand umfasst 56 Dateien mit `J`-Präfix. Daraus folgt das 
 
 | Unterkapitel | Abschnitte | IDs | Darstellungen |
 |---|---|---|---|
-| J.1 Verbindungsarten | J.1.1 – J.1.14 (14) | 19 | 19 |
+| J.1 Verbindungsarten | J.1.1 – J.1.14 (14) | 14 | 19 |
 | J.2 Betriebsarten | J.2.1 – J.2.2 (2) | 2 | 2 |
 | J.3 Fernmeldebetriebsmittel | J.3.1 – J.3.15 (15) | 15 | 15 |
 | J.4 Netz- und Kabelzeichen | J.4.1 – J.4.17 (17) | 17 | 17 |
-| **Summe** | **48** | **53** | **53** |
+| **Summe** | **48** | **48** | **53** |
 
-Jede ID trägt genau eine Darstellung in `variant: 'primary'`. D.3 legt **keine**
-`alternate`-Varianten an.
+**53 Darstellungen auf 48 IDs.** Fünf IDs aus J.1 tragen neben ihrer `primary`-Darstellung eine
+zweite in `variant: 'alternative'`. Alle übrigen 43 IDs tragen genau eine Darstellung.
 
-### 2.1 Warum „leitergebunden" eigene IDs bekommt und keine Varianten
+### 2.1 Warum „leitergebunden" eine `alternative` ist und keine eigene ID
 
 Fünf Abschnitte des Unterkapitels J.1 haben eine zweite Datei mit dem Zusatz `_leitergebunden`:
 J.1.1, J.1.8, J.1.9, J.1.10 und J.1.11.
 
-Der Vergleich der Referenzgeometrien zeigt: Die leitergebundene Fassung ist **nicht** dieselbe
-Aussage anders gezeichnet. `J.1.1_Sprache.svg` besteht aus einem waagerechten Balken **und** einer
-Wellenlinie; `J.1.1_Sprache_leitergebunden.svg` besteht nur aus dem Balken. `J.1.8` verhält sich
-gleich: die drahtlose Fassung trägt die Wellenlinie, die leitergebundene nicht. Die Wellenlinie ist
-also ein bedeutungstragendes Element für „nicht leitergebunden".
+Der Vergleich der Referenzgeometrien zeigt einen bedeutungstragenden Unterschied.
+`J.1.1_Sprache.svg` besteht aus einem waagerechten Balken **und** einer Wellenlinie;
+`J.1.1_Sprache_leitergebunden.svg` besteht nur aus dem Balken. `J.1.8` verhält sich gleich: die
+drahtlose Fassung trägt die Wellenlinie, die leitergebundene nicht. Die Wellenlinie ist der Marker
+für „nicht leitergebunden".
 
-`DepictionVariant` bedeutet in diesem Repository zwei Darstellungen **derselben** Sache — so sind
-die sechs `alternate` aus D.2 belegt. Zwei verschiedene Übertragungswege unter einer ID zu führen,
-weil sie sich eine Abschnittsnummer der Baseline teilen, wäre eine Falschaussage im ID-Raum. Genau
-dagegen argumentiert der Kommentar in `pictogram.ts`, der die fünf ID-Räume überhaupt erst trennt.
+Trotzdem bekommen die fünf Fassungen keine eigene ID, denn der Manifestschlüssel lässt es nicht
+zu. `entryKey(sourceId, variant)` in `provenance.ts:72` bildet den Schlüssel aus
+`bbk-babz-2025:${section}` und der Variante; `coverage-gate.ts:235` bindet die `section` über den
+Dateinamenpräfix `${section}_` an die Belegdatei. Beide Fassungen eines Paares tragen damit
+zwingend dieselbe `section`. Zwei `primary`-Zeilen auf `J.1.1` hätten denselben Ledger-Schlüssel,
+würden dasselbe Reviewobjekt teilen und `domain-reviews.test.ts` in beide Richtungen brechen.
 
-Beide IDs eines Paares tragen dieselbe `section` (etwa `J.1.1`) und damit dieselbe Quelle
-`bbk-babz-2025:J.1.1`. Ihre `referenceAsset`-Werte unterscheiden sich und erfüllen beide die
-`section-mismatch`-Prüfung aus `coverage-gate.ts:235`, die den Dateinamenpräfix `${section}_`
-verlangt.
+Die tragfähige Modellierung ist deshalb `variant: 'alternative'` — dieselbe Form, mit der `4.1.6`
+und die sechs Doppeldarstellungen aus D.2 geführt werden. Der Manifestschlüssel ist bewusst der
+Quellenabschnitt, und die Baseline führt beide Fassungen unter einer Abschnittsnummer.
+`alternative` ist damit die getreue Abbildung der Quelle.
 
-Diese Zuordnung ist eine **technische Modellierungsentscheidung**. Ob die Baseline die beiden
-Fassungen fachlich als ein Zeichen mit zwei Medien oder als zwei Zeichen versteht, entscheidet das
-Fachreview, nicht D.3.
+**Der Preis ist explizit:** Die Variante trägt keine Semantik im ID-Raum. Ein Konsument, der
+„leitergebundene Sprache" ausdrücken will, bekommt `variant: 'alternative'` — also nur „die
+andere". Wer das Übertragungsmedium semantisch adressieren will, braucht einen **Ledger-Schlüssel
+auf Implementierungsebene** statt auf Abschnittsebene. Das ist ein Eingriff in alle 181
+bestehenden Manifestzeilen und gehört in den Schemaform-Bereich der Reihenfolge vom 5. August,
+nicht in einen Katalogausbau. Der Nachfolger ist hiermit benannt.
+
+Ob die Baseline die beiden Fassungen fachlich als ein Zeichen mit zwei Medien oder als zwei Zeichen
+versteht, entscheidet das Fachreview — der Geometriebefund oben ist der Grund, warum diese Frage
+gestellt gehört, nicht der Grund, den ID-Raum jetzt zu spalten.
 
 ### 2.2 Was ausdrücklich nicht ins Inventar kommt
 
@@ -138,7 +147,7 @@ D.3 folgt der Bauform, die D.2 etabliert hat. Kein Modul wird umgebaut.
 
 ### 5.1 `packages/schema`
 
-- `taxonomy.ts`: neue `COMMS_IDS`-Konstante mit 53 Literalen in Kapitelreihenfolge, dazu
+- `taxonomy.ts`: neue `COMMS_IDS`-Konstante mit 48 Literalen in Kapitelreihenfolge, dazu
   `export type CommsId = (typeof COMMS_IDS)[number]`.
 - `pictogram.ts`: `CommsId` wird aus `taxonomy.ts` importiert; der `never`-Alias und sein
   Kommentar entfallen. `DamageId` und `WildfireId` bleiben unverändert `never`.
@@ -200,9 +209,10 @@ Register legt:
 | Scope-Gate | vier neue Präfixe, jedes belegt |
 
 Ein eigenes Inventar-Testmodul (`comms-inventory.test.ts`) prüft nach dem Muster von
-`state-inventory.test.ts`: 53 IDs, Kapitelreihenfolge, Eindeutigkeit, Abschnitt-zu-Datei-Zuordnung,
-Vollständigkeit gegenüber der deklarierten Abschnittsliste und die Abwesenheit von
-`alternate`-Varianten.
+`state-inventory.test.ts`: 48 IDs und 53 Darstellungen, Kapitelreihenfolge, Eindeutigkeit je
+`entryKey`, Abschnitt-zu-Datei-Zuordnung, Vollständigkeit gegenüber der deklarierten
+Abschnittsliste sowie die namentliche Festlegung, dass genau die fünf Abschnitte J.1.1, J.1.8,
+J.1.9, J.1.10 und J.1.11 eine `alternative` tragen und alle übrigen 43 IDs nicht.
 
 ## 8. Verifikation
 
@@ -230,6 +240,7 @@ benannte Person mit einsatztaktischer Fachkunde.
 ## 10. Ausdrücklich nicht in D.3
 
 - Verbindungs- und Kantengeometrie zwischen zwei Punkten (Abschnitt 3.1)
+- Ledger-Schlüssel auf Implementierungs- statt Abschnittsebene (Abschnitt 2.1)
 - Wertbeschriftung für `J.4.8` und `J.4.17`, Fußzone allgemein (Abschnitt 2.3)
 - `J_Bedienungszeichen.svg`, die beiden J.2.3-Beispiele, Abschnitt J.2.3 (Abschnitt 2.2)
 - `SymbolSpec`- oder `compose()`-Integration der `comms.`-Zeichen
