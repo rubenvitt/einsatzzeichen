@@ -81,3 +81,63 @@ export function effectiveTextPx(sizeMm: number, renderPx: number, viewBoxMm: num
  * beiden Messpunkten 7,5 und 10,0 px, nicht auf einem von ihnen.
  */
 export const MINIMUM_TEXT_RENDER_PX = 8;
+
+/**
+ * Zuschlag für Großbuchstaben-Diakritika (Ä/Ö/Ü), die bei `baseline: 'hanging'` über die
+ * deklarierte `boxMm`-Oberkante hinausragen — Befund aus Task 9 der Textprimitiv-Slice
+ * (`outsideBoxCount: 24` für „Übung"). `dominant-baseline="hanging"` positioniert den
+ * Ankerpunkt an der Hanging-Metrik der Schrift, die bei Arimo unterhalb der tatsächlichen
+ * Diakritikaoberkante liegt: der Akzent auf Ü/Ö/Ä ragt darüber hinaus.
+ *
+ * **Gemessen für Arimo** (`resvgFontOptions()`, einzelne Buchstaben Ä/Ö/Ü sowie „Übung",
+ * `baseline: 'hanging'`), zwei Schriftgrade:
+ * - Asymptotisch (hochauflösend gerastert, 1024–4096 px auf 32-mm-viewBox, damit
+ *   Pixelraster-Rauschen herausgemittelt ist): der Überstand konvergiert auf **11,3–11,4 %**
+ *   von `sizeMm`, für 4 mm wie für 10 mm gleichermaßen — der Wert ist relativ zu `sizeMm`,
+ *   nicht absolut.
+ * - Bei der Auflösung, mit der die Rasterevidenz in `fonts.test.ts` tatsächlich prüft
+ *   (256 px auf 32-mm-viewBox = 8 px/mm) rundet das Pixelraster ungünstiger: bei 4 mm
+ *   Schriftgrad braucht es exakt 0,5 mm (12,5 % von `sizeMm`) Zuschlag, damit kein Ink-Pixel
+ *   mehr außerhalb der Box liegt — der 10-mm-Fall braucht bei derselben Auflösung nur 11,25 %.
+ *   Der 4-mm-Fall ist damit der bindende, nicht der asymptotische Wert.
+ *
+ * Eine andere Schrift als Arimo hätte andere Akzenthöhen und bräuchte eine eigene Messung —
+ * dieser Wert ist keine Konstante der Textprimitiv-Spezifikation, sondern eine Eigenschaft der
+ * konkret eingebundenen Schriftdatei.
+ *
+ * Bei der bindenden Auflösung (4 mm, 8 px/mm) landet die neue Boxoberkante exakt auf der
+ * obersten Ink-Zeile — null Pixel Spielraum, kein zusätzliches Polster. Das ist beabsichtigt und
+ * kein Bug: `resvg-js` ist auf 2.6.2 gepinnt, die Schriftdatei über `TEXT_FONT_SHA256`, also
+ * deterministisch. Eine künftige Schrift mit höheren Akzenten lässt die Rasterprüfung in
+ * `fonts.test.ts` sofort wieder anschlagen (Task 4: "muss bei einem Schriftwechsel wieder
+ * anschlagen") — genau das ist der Zweck, kein Grund, den Bruch vorsorglich höher zu setzen.
+ */
+export const DIACRITIC_HEADROOM_FRACTION = 0.125;
+
+/**
+ * Vertikale `boxMm`-Ausdehnung, die ein Textprimitiv braucht, um Diakritika über
+ * Großbuchstaben nicht abzuschneiden — Gegenstück zur reinen `effectiveTextPx`-Rechnung oben,
+ * die absichtlich keine Fontmetrik kennt. Diese Funktion kennt auch keine echte Fontmetrik,
+ * sondern nur den einen gemessenen Zuschlag (`DIACRITIC_HEADROOM_FRACTION`) und wendet ihn an,
+ * statt ihn an jeder Aufrufstelle einzeln zu wiederholen (aktuell nur `compose.ts`s Fußzone,
+ * aber ein zweiter Aufrufer würde sonst denselben Bruch erneut hinschreiben müssen).
+ *
+ * Nur für `baseline: 'hanging'` gemessen und implementiert — der einzige Fall, den `compose.ts`
+ * heute erzeugt. `alphabetic`/`middle` bräuchten eine eigene Messreihe (Kapitälchenhöhe bzw.
+ * Über-/Unterlänge relativ zur Grundlinie sind andere Größen als der Hanging-Überstand) und
+ * werfen deshalb bewusst, statt eine ungeprüfte Zahl zu raten.
+ */
+export function verticalTextBoxMm(
+  anchorYMm: number,
+  sizeMm: number,
+  baseline: TextBaseline,
+): { topMm: number; heightMm: number } {
+  if (baseline !== 'hanging') {
+    throw new Error(
+      `verticalTextBoxMm: kein gemessener Diakritika-Zuschlag für baseline "${baseline}" — ` +
+        'erst messen (siehe DIACRITIC_HEADROOM_FRACTION-Kommentar), bevor ein Aufrufer sie nutzt.',
+    );
+  }
+  const headroomMm = sizeMm * DIACRITIC_HEADROOM_FRACTION;
+  return { topMm: anchorYMm - headroomMm, heightMm: sizeMm + headroomMm };
+}

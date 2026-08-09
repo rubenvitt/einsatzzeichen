@@ -14,6 +14,7 @@ import {
 } from '@einsatzzeichen/schema';
 import { boundsOfMm } from './bounds.js';
 import { HEAD_GAP_MM, placeHead, profileFor } from './layout/profiles.js';
+import { verticalTextBoxMm } from './render/text-policy.js';
 import { validateSpec } from './validate.js';
 
 /** Senkrechte Mitte der Hülle eines Primitivs, in Millimetern. */
@@ -164,6 +165,15 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
   // hält Kopf- und Fußzone auch dann überschneidungsfrei, wenn ein Zeichen künftig beides trägt.
   const bodyBoundsMm = boundsOfMm(placedBody);
   const footTopMm = bodyBoundsMm.maxY + HEAD_GAP_MM;
+  // `boxMm` ist bei Text eine Zusicherung des Autors, keine Messung (siehe Primitive-Kommentar
+  // in geometry.ts) — sie muss deshalb selbst den Diakritika-Überstand einkalkulieren, den kein
+  // Gate mehr erkennt. `verticalTextBoxMm` liefert die dafür nötige Ober­kante/Höhe aus Anker,
+  // Schriftgrad und `baseline` (Task-9-Befund, siehe DIACRITIC_HEADROOM_FRACTION in
+  // text-policy.ts). Nur die Oberkante wandert nach oben, die Unterkante bleibt bei
+  // `footTopMm + FOOT_TEXT_SIZE_MM`: Unterlängen passen dort bereits ohne Zuschlag (siehe
+  // Rasterevidenz in fonts.test.ts), ein zusätzlicher Zuschlag nach unten würde die Box nur
+  // unnötig weiter Richtung viewBox-Rand wachsen lassen.
+  const footBoxMm = verticalTextBoxMm(footTopMm, FOOT_TEXT_SIZE_MM, 'hanging');
   const footPrimitives: Primitive[] =
     spec.designation !== undefined
       ? [
@@ -178,9 +188,9 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
             baseline: 'hanging',
             boxMm: {
               xMm: bodyBoundsMm.minX,
-              yMm: footTopMm,
+              yMm: footBoxMm.topMm,
               widthMm: bodyBoundsMm.maxX - bodyBoundsMm.minX,
-              heightMm: FOOT_TEXT_SIZE_MM,
+              heightMm: footBoxMm.heightMm,
             },
             style: { fill: 'schwarz' },
           },

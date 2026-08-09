@@ -177,19 +177,28 @@ describe('Rasterevidenz für Text (resvgFontOptions())', () => {
     expect(outsideBoxCount).toBe(0);
   });
 
-  it('dokumentiert eine offene Lücke: Umlaut-Diakritika ragen über die deklarierte Box hinaus', () => {
-    // Kein Bestehen-Test, sondern eine Charakterisierung des IST-Zustands (Zusatzauftrag 1 aus
-    // dem Task-9-Brief, über den dort ausdrücklich benannten Unterlängen-Fall hinaus geprüft):
-    // Anders als Unterlängen (Test oben, hält robust auch mit allen fünf Buchstaben) ragen
-    // Diakritika über Großbuchstaben — Ü, Ä, Ö, in deutschen Bezeichnungen nicht selten (z. B.
-    // „Übung") — über die Kapitälchenhöhe und damit über die deklarierte boxMm-Oberkante hinaus.
-    // Gemessen bei 256 px (32-mm-viewBox, 8 px/mm): mindestens 24 von rund 1100 Ink-Pixeln liegen
-    // außerhalb der Box, mit einem Überstand von 4 px (0,5 mm) oben. Bewusst nicht behoben — die
-    // Box wird nicht stillschweigend vergrößert (siehe FOOT_TEXT_SIZE_MM-Begründung in
-    // compose.ts) — sondern hier festgehalten, damit der Befund nicht erneut entdeckt werden
-    // muss. Kandidat für Task 10 oder eine eigene Folgeaufgabe.
-    const { inkPixelCount, outsideBoxCount } = footInkAgainstBox('Übung');
-    expect(inkPixelCount).toBeGreaterThan(0);
-    expect(outsideBoxCount).toBeGreaterThan(0);
+  it('hält die deklarierte boxMm auch für Umlaut-Diakritika ein („Übung", „ÄÖÜ")', () => {
+    // Task-9-Befund, jetzt behoben (Task-9-Fix): `boxMm` ist bei Text eine Zusicherung des
+    // Autors, keine Messung (siehe Primitive-Kommentar in geometry.ts) — bei `baseline:
+    // 'hanging'` ragten Großbuchstaben-Diakritika (Ä/Ö/Ü) über die deklarierte Boxoberkante
+    // hinaus, weil die Hanging-Metrik von Arimo unterhalb der tatsächlichen Akzenthöhe liegt.
+    // Dieser Test pinnte ursprünglich den fehlerhaften IST-Zustand: „Übung" bei 256 px
+    // (32-mm-viewBox, 8 px/mm) hatte `outsideBoxCount: 24` von rund 1100 Ink-Pixeln, mit einem
+    // Überstand von 4 px (0,5 mm) oben. Der Fix führt den gemessenen Zuschlag
+    // `DIACRITIC_HEADROOM_FRACTION` in `text-policy.ts` ein (11,3–12,5 % von `sizeMm`, siehe
+    // Kommentar dort) und wendet ihn über `verticalTextBoxMm` auf die Fußzonen-`boxMm` in
+    // `compose.ts` an. „ÄÖÜ" deckt zusätzlich alle drei deutschen Großbuchstaben-Umlaute ab,
+    // nicht nur den in „Übung" enthaltenen Ü-Fall — bei einem künftigen Schriftwechsel bestünde
+    // sonst ein Test, der zufällig nur den milderen der drei Akzente prüft. Beide Strings
+    // bleiben absichtlich kurz genug, um innerhalb der 30-mm-Breite des `formation`-Körpers zu
+    // bleiben — ein zu langes Wort überschritte die Box seitlich, was mit Diakritika nichts zu
+    // tun hat und eine eigene, hier nicht behobene Grenze ist (siehe Task-9-Fix-Bericht).
+    const umlaut = footInkAgainstBox('Übung');
+    expect(umlaut.inkPixelCount).toBeGreaterThan(0);
+    expect(umlaut.outsideBoxCount).toBe(0);
+
+    const alleUmlaute = footInkAgainstBox('ÄÖÜ');
+    expect(alleUmlaute.inkPixelCount).toBeGreaterThan(0);
+    expect(alleUmlaute.outsideBoxCount).toBe(0);
   });
 });
