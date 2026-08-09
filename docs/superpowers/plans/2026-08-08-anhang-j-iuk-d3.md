@@ -171,17 +171,30 @@ Gilt für jede der 53 Darstellungen in den Tasks 2 bis 8.
    und Koordinaten werden nicht übernommen.
 2. **Millimeter, absolut.** Die kanonische Fläche ist 32 × 32 mm. Pfade nutzen ausschließlich
    `M L H V C Q Z` in Großschreibung.
-3. **Box deklarieren.** `box` ist die zugesicherte Hülle der eigenen Konstruktion, nicht die der
-   Referenz. Das Box-Gate prüft sie gegen die tatsächliche Geometrie; eine zu große Box ist ein
-   Befund.
-4. **Die Strichbreite zählt zur Hülle.** `viewbox-gate.ts:58-62` rechnet die halbe Strichbreite in
-   die Bounds ein. Bei `COMMS_STROKE_WIDTH_MM = 1` reicht eine Mittellinie auf `x = 0` bis
-   `x = -0,5` und liegt damit **außerhalb** der 32 × 32-mm-Fläche. Jede Mittellinie hält deshalb
-   mindestens 0,5 mm Abstand zum Rand; der Bestand arbeitet durchgängig im Feld 1 … 31.
+3. **Box deklarieren — ohne Strichbreite.** `box` ist die zugesicherte Hülle der eigenen
+   Konstruktion, nicht die der Referenz. `checkBox` in `pictogram-gate.ts:230-270` misst mit
+   `boundsOfMm` die **reine Geometrie**; die Strichbreite geht nicht ein. Enthält eine Definition
+   **keinen** Pfad, fordert das Gate sogar **Gleichheit** von Hülle und Box — eine zu große Box ist
+   dort ebenso ein Befund wie eine zu kleine. Mit Pfad genügt Enthaltung, weil die Koordinaten im
+   `d`-String liegen und nur kommandoweise geprüft werden.
 
-   Das gilt auch dort, wo die Referenz den Rand berührt — `J.2.1_Wechselverkehr.svg` läuft von
-   `x = 0` bis `x = 90,709`, zeichnet aber gefüllte Polygone ohne Strichbreite. Diese Fassung ist
-   nicht übertragbar.
+   Für Linien von `x = 1` bis `x = 31` auf `y = 12 … 20` lautet die Box also
+   `{ xMm: 1, yMm: 12, widthMm: 30, heightMm: 8 }` — nicht `{ 0.5, 11.5, 31, 9 }`. Besteht eine
+   Definition nur aus waagerechten Linien, ist `heightMm: 0` die richtige und zulässige Zusicherung
+   (`boxGeometryProblems` verbietet nur negative Werte).
+4. **Der Rand rechnet mit Strichbreite — ein anderes Gate.** `viewbox-gate.ts:58-62` rechnet die
+   halbe Strichbreite in die Bounds ein. Bei `COMMS_STROKE_WIDTH_MM = 1` reicht eine Mittellinie
+   auf `x = 0` bis `x = -0,5` und liegt damit **außerhalb** der 32 × 32-mm-Fläche. Jede Mittellinie
+   hält deshalb mindestens 0,5 mm Abstand zum Rand; der Bestand arbeitet durchgängig im Feld
+   1 … 31.
+
+   Box-Gate und viewBox-Gate messen verschieden: die Box beschreibt die Geometrie, die ViewBox muss
+   das **gezeichnete** Zeichen fassen. Beide Regeln gelten gleichzeitig und widersprechen sich
+   nicht.
+
+   Die Randregel gilt auch dort, wo die Referenz den Rand berührt — `J.2.1_Wechselverkehr.svg`
+   läuft von `x = 0` bis `x = 90,709`, zeichnet aber gefüllte Polygone ohne Strichbreite. Diese
+   Fassung ist nicht übertragbar.
 5. **Kontrastpaare deklarieren.** Nur tatsächlich benachbarte Farbflächen und Striche. Für ein
    rein schwarzes Zeichen auf der Ausgabeoberfläche ist das genau ein Paar.
 6. **Keine Beschriftungsglyphen.** Bei `J.4.8` („L") und `J.4.17` („8") wird die Trägergeometrie
@@ -523,7 +536,7 @@ export const OPERATING_MODE_COMMS = deepFreeze([
     id: 'half-duplex-operation',
     title: 'Wechselverkehr',
     referenceAsset: 'J.2.1_Wechselverkehr.svg',
-    box: { xMm: 0.5, yMm: 11.5, widthMm: 31, heightMm: 9 },
+    box: { xMm: 1, yMm: 12, widthMm: 30, heightMm: 8 },
     contrastPairs: CONNECTION_CONTRAST,
     primitives: [
       commsLine(1, 16, 31, 16),
@@ -538,7 +551,7 @@ export const OPERATING_MODE_COMMS = deepFreeze([
     id: 'duplex-operation',
     title: 'Gegenverkehr',
     referenceAsset: 'J.2.2_Gegenverkehr.svg',
-    box: { xMm: 0.5, yMm: 11.5, widthMm: 31, heightMm: 9 },
+    box: { xMm: 1, yMm: 12, widthMm: 30, heightMm: 8 },
     contrastPairs: CONNECTION_CONTRAST,
     primitives: [
       commsLine(1, 16, 31, 16),
@@ -774,7 +787,7 @@ export const DEVICE_COMMS = deepFreeze([
     id: 'telecom-device',
     title: 'Fernmeldegerät (Grundzeichen)',
     referenceAsset: 'J.3.1_Fernmeldegerät Grundzeichen.svg',
-    box: { xMm: 3.5, yMm: 3.5, widthMm: 25, heightMm: 25 },
+    box: { xMm: 4, yMm: 4, widthMm: 24, heightMm: 24 },
     contrastPairs: DEVICE_CONTRAST,
     primitives: [deviceBody()],
   }),
@@ -934,7 +947,7 @@ Muster für eine freie Marke:
     id: 'antenna',
     title: 'Antenne',
     referenceAsset: 'J.3.10_Antenne.svg',
-    box: { xMm: 5.5, yMm: 1.5, widthMm: 21, heightMm: 29 },
+    box: { xMm: 6, yMm: 2, widthMm: 20, heightMm: 28 },
     contrastPairs: CONNECTION_CONTRAST,
     primitives: [
       commsLine(16, 2, 16, 30),
@@ -1093,7 +1106,7 @@ export const NETWORK_COMMS = deepFreeze([
     id: 'router',
     title: 'Router',
     referenceAsset: 'J.4.1_Router.svg',
-    box: { xMm: 3.5, yMm: 3.5, widthMm: 25, heightMm: 25 },
+    box: { xMm: 4, yMm: 4, widthMm: 24, heightMm: 24 },
     contrastPairs: NETWORK_CONTRAST,
     primitives: [
       commsCircle(16, 16, 12, COMMS_WHITE_BODY),
@@ -1257,7 +1270,7 @@ Muster für eine Kabelmarke:
     id: 'cable-temporary',
     title: 'Kabel, temporär verlegt',
     referenceAsset: 'J.4.14_Kabel_temporär verlegt.svg',
-    box: { xMm: 0.5, yMm: 10.5, widthMm: 31, heightMm: 11 },
+    box: { xMm: 1, yMm: 11, widthMm: 30, heightMm: 10 },
     contrastPairs: CONNECTION_CONTRAST,
     primitives: [
       commsLine(1, 16, 31, 16),
@@ -1419,7 +1432,7 @@ export const CONNECTION_COMMS = deepFreeze([
     id: 'voice',
     title: 'Sprache',
     referenceAsset: 'J.1.1_Sprache.svg',
-    box: { xMm: 2.5, yMm: 12.5, widthMm: 27, heightMm: 9 },
+    box: { xMm: 3, yMm: 13, widthMm: 26, heightMm: 8 },
     contrastPairs: CONNECTION_CONTRAST,
     primitives: [commsLine(3, 13, 29, 13), radioWave()],
   }),
@@ -1429,7 +1442,7 @@ export const CONNECTION_COMMS = deepFreeze([
     variant: 'alternative',
     title: 'Sprache, leitergebunden',
     referenceAsset: 'J.1.1_Sprache_leitergebunden.svg',
-    box: { xMm: 2.5, yMm: 15.5, widthMm: 27, heightMm: 1 },
+    box: { xMm: 3, yMm: 16, widthMm: 26, heightMm: 0 },
     contrastPairs: CONNECTION_CONTRAST,
     primitives: [commsLine(3, 16, 29, 16)],
   }),
