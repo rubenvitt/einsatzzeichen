@@ -113,6 +113,26 @@ function rawBoundsOfMm(primitive: Primitive): BoundsMm | undefined {
     case 'path':
       // Piktogramme werden nicht geometrisch verglichen — keine vergleichbare Ausdehnung.
       return undefined;
+    case 'text': {
+      // Text ist die einzige Primitivart, deren Ausdehnung nicht aus ihrer Geometrie berechenbar
+      // ist — sie hängt an Fontmetrik, Schriftgrad und Laufweite, die hier nicht verfügbar sind.
+      // `boxMm` ist deshalb keine Messung, sondern die einzige verfügbare Wahrheit: eine
+      // Zusicherung des Autors (siehe Typkommentar in geometry.ts), die unverändert als Hülle
+      // zurückgegeben wird.
+      if (rotate) {
+        // rawBoundsOfMm gibt boxMm unverändert zurück, dreht ihre Ecken also nicht — beide
+        // Renderer werten transform.rotate aber sehr wohl aus (transformAttr in svg.ts). Eine
+        // gedrehte Box hier unrotiert zurückzugeben wiche still von der tatsächlichen
+        // Bildschirmausdehnung ab, derselbe Fehlermodus wie bei der oben abgelehnten
+        // Gruppendrehung — deshalb dieselbe explizite Ablehnung statt einer Näherung.
+        throw new Error(
+          'boundsOfMm: Drehung von Text wird nicht unterstützt — die deklarierte Box würde ' +
+            'unrotiert zurückgegeben, während beide Renderer das Primitiv tatsächlich drehen.',
+        );
+      }
+      const { xMm, yMm, widthMm, heightMm } = primitive.boxMm;
+      return { minX: xMm, minY: yMm, maxX: xMm + widthMm, maxY: yMm + heightMm };
+    }
     case 'group': {
       if (rotate) {
         // Eine korrekte Hülle müsste die Drehung in die Geometrie jedes Kindes durchrechnen.
@@ -145,6 +165,9 @@ function rawBoundsOfMm(primitive: Primitive): BoundsMm | undefined {
  * leere Hülle {0,0,0,0} — Piktogramme werden nicht geometrisch verglichen. Eine leere Gruppe
  * unter Geschwistern verfälscht deren Hülle nicht: die Nichtvergleichbarkeit wird herausgefiltert,
  * bevor Geschwister zusammengeführt werden (siehe `rawBoundsOfMm`).
+ *
+ * Text-Primitive liefern `boxMm` unverändert zurück — die einzige Primitivart, bei der die Hülle
+ * eine Zusicherung des Autors ist, keine Messung (siehe Typkommentar in geometry.ts).
  */
 export function boundsOfMm(primitive: Primitive): BoundsMm {
   return rawBoundsOfMm(primitive) ?? EMPTY_BOUNDS;
@@ -185,6 +208,18 @@ export function shiftY(primitive: Primitive, deltaMm: number): Primitive {
       return { ...primitive, points: primitive.points.map(([x, y]) => [x, y + deltaMm] as const) };
     case 'group':
       return { ...primitive, children: primitive.children.map((c) => shiftY(c, deltaMm)) };
+    case 'text':
+      // Anders als bei path liegen Texts Koordinaten strukturiert vor (x/y und boxMm), nicht
+      // unzerlegt in einem d-String — eine Verschiebung ist deshalb möglich und nicht wie bei
+      // path abzulehnen. Beide Koordinatenquellen müssen mitwandern: der Ankerpunkt (y) UND die
+      // Box (boxMm.yMm), sonst desynchronisierte sich die gerenderte Textposition von der
+      // Fläche, gegen die die Gates prüfen — ein still auseinanderlaufendes Primitiv wäre hier
+      // genau der Fehlermodus, den path bewusst durch Ablehnen vermeidet.
+      return {
+        ...primitive,
+        y: primitive.y + deltaMm,
+        boxMm: { ...primitive.boxMm, yMm: primitive.boxMm.yMm + deltaMm },
+      };
     case 'path':
       throw new Error(
         'shiftY: Pfad-Primitive haben keine strukturierte Punktgeometrie und können nicht ' +

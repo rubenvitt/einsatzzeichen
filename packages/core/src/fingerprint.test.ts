@@ -206,4 +206,35 @@ describe('matchFingerprint', () => {
     expect(result.problems[0]).toContain('Hülle');
     expect(result.problems[0]).toContain('body');
   });
+
+  it('vergleicht ein Textprimitiv als body gegen seine deklarierte Box', () => {
+    // matchFingerprint kennt keinen Textbegriff — findBody() greift ohnehin nur `role: 'body'`
+    // ab (siehe Task-3-Bericht: fingerprint.ts verzweigt nur auf 'group' vs. Blatt und ist damit
+    // unverändert korrekt). Was hier tatsächlich getestet wird, ist boundsOfMm über den Umweg
+    // von matchFingerprint: erst mit der Textbehandlung in Schritt 4 liefert boundsOfMm die
+    // deklarierte Box statt der leeren Hülle, und der Vergleich geht auf. Text als body ist
+    // fachlich kein vorgesehener Fall (siehe pictogram-gate.ts) — dieser Test prüft den
+    // Mechanismus, nicht eine reale Katalogkonfiguration.
+    const textBody: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'text',
+          role: 'body',
+          content: 'HRT',
+          x: 16,
+          y: 20,
+          sizeMm: 10,
+          anchor: 'middle',
+          baseline: 'alphabetic',
+          boxMm: { xMm: 6, yMm: 12, widthMm: 20, heightMm: 10 },
+        },
+      ],
+    };
+    const result = matchFingerprint(textBody, {
+      asset: 'x.svg',
+      shapes: [ring(6, 12, 26, 22)],
+    });
+    expect(result).toEqual({ ok: true, problems: [] });
+  });
 });

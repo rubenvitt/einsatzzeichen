@@ -9,6 +9,7 @@ import {
 } from '@einsatzzeichen/schema';
 import { escapeXml, formatUnits } from './format.js';
 import { assertValidActiveStrokeWidths, mergeStyle } from './style.js';
+import { baselineAttr, TEXT_FONT_FAMILY_ATTR } from './text-policy.js';
 import { REFERENCE_THEME, type RenderTheme } from './theme.js';
 import { assertValidRenderTheme } from './theme-validation.js';
 
@@ -49,6 +50,13 @@ function color(token: ColorToken | 'none', theme: RenderTheme): string {
  * diesem Fall gar nicht füllt (`style?.fill !== undefined`-Zweig). Ohne diese explizite
  * Vorgabe entstünden aus derselben IR zwei verschiedene Bilder — derselbe Fehlermodus wie
  * bei der Gruppen-Stil-Vererbung und `fillRule`, hier am `fill`-Default.
+ *
+ * `fillOnly` unterdrückt den gesamten Stroke-Zweig unabhängig von einem gesetzten
+ * `style.stroke` — für Text (siehe `renderPrimitive`), der als Fläche gefüllt wird und keine
+ * Kontur kennt: Canvas ruft für Text nie `strokeText()` auf (`drawPrimitive` in `canvas.ts`),
+ * würde `styleAttrs` hier trotzdem `stroke="..."` ausgeben, striche SVG etwas, das Canvas aus
+ * derselben IR nie zeichnet. Vorgabe `false`, damit kein bestehender Aufrufer (rect/circle/
+ * line/polyline/path) sein Ergebnis ändert.
  */
 function styleAttrs(
   style: Style | undefined,
@@ -57,12 +65,13 @@ function styleAttrs(
     rawStrokeWidth?: boolean;
     role?: Primitive['role'];
     pictogramStrokeContract?: boolean;
+    fillOnly?: boolean;
   } = {},
 ): string {
   const parts: string[] = [
     `fill="${style?.fill !== undefined ? color(style.fill, theme) : 'none'}"`,
   ];
-  if (style?.stroke !== undefined) {
+  if (style?.stroke !== undefined && !options.fillOnly) {
     parts.push(`stroke="${color(style.stroke, theme)}"`);
     if (style.stroke !== 'none') {
       const strokeWidthMm = style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
@@ -190,6 +199,23 @@ function renderPrimitive(
       .map((child) => renderPrimitive(child, theme, style, role))
       .join('');
     return `<g${transform}>${children}</g>`;
+  }
+
+  if (primitive.type === 'text') {
+    // Text wird gefüllt, nicht gestrichen — kein pictogramStrokeContract wie bei Piktogrammpfaden
+    // (der Butt-Cap/Round-Join-Vertrag ist für eine gefüllte Glyphenfläche bedeutungslos) und
+    // fillOnly: true, damit ein gesetzter style.stroke gar nicht erst als stroke="..." ausgegeben
+    // wird — Canvas kennt für Text kein strokeText() (siehe drawPrimitive in canvas.ts), ein
+    // gestrichener <text> striche also etwas, das Canvas aus derselben IR nie zeichnet. Ein
+    // eigener styleAttrs()-Aufruf statt der geteilten `tail` unten: die wäre für role: 'pictogram'
+    // mit gesetztem pictogramStrokeContract berechnet, genau das, was Text nicht tragen soll.
+    const styleStr = styleAttrs(style, theme, { role, fillOnly: true });
+    const transform = transformAttr(primitive.transform);
+    const attrs =
+      `x="${u(primitive.x)}" y="${u(primitive.y)}" text-anchor="${primitive.anchor}" ` +
+      `dominant-baseline="${baselineAttr(primitive.baseline)}" font-family="${TEXT_FONT_FAMILY_ATTR}" ` +
+      `font-size="${u(primitive.sizeMm)}"`;
+    return `<text ${attrs}${styleStr}${transform}>${escapeXml(primitive.content)}</text>`;
   }
 
   // Einzelne SVG-Linien haben bereits Butt-Kappen und keine Joins; das explizite Attribut würde

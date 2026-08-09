@@ -7,6 +7,7 @@ import {
   type Style,
 } from '@einsatzzeichen/schema';
 import { assertValidActiveStrokeWidths, mergeStyle } from './style.js';
+import { canvasBaseline, canvasTextAlign, TEXT_FONT_FAMILY_ATTR } from './text-policy.js';
 import { REFERENCE_THEME, type RenderTheme } from './theme.js';
 import { assertValidRenderTheme } from './theme-validation.js';
 
@@ -44,7 +45,10 @@ function tracePrimitive(primitive: Primitive, ctx: CanvasRenderingContext2D): vo
     }
     case 'path':
     case 'group':
-      // Werden in drawPrimitive gesondert behandelt und erreichen tracePrimitive nie.
+    case 'text':
+      // Werden in drawPrimitive gesondert behandelt und erreichen tracePrimitive nie. Text
+      // insbesondere braucht ctx.fillText() statt Pfadaufbau + ctx.fill() — es gibt keinen
+      // Canvas-Pfadbefehl, der eine Glyphenkontur nachzeichnet.
       break;
   }
 }
@@ -115,6 +119,23 @@ function drawPrimitive(
       }
     }
     ctx.restore();
+    ctx.restore();
+    return;
+  }
+
+  if (primitive.type === 'text') {
+    // Text wird ausschließlich gefüllt, nie gestrichen (siehe TEXT_FONT_FAMILY_ATTR-Kommentar
+    // in text-policy.ts) — deshalb kein Stroke-Zweig wie beim generischen Fall unten. ctx.fillText
+    // ist ein eigenständiger Zeichenbefehl, kein Pfadaufbau: tracePrimitive() bleibt hier bewusst
+    // ungenutzt, damit SVG und Canvas beide dieselbe Renderpolitik (text-policy.ts) für Anker und
+    // Grundlinie auswerten statt eine Plattformkonvention zu erraten.
+    if (style?.fill !== undefined && style.fill !== 'none') {
+      ctx.fillStyle = color(style.fill, theme);
+      ctx.font = `${mmToUnits(primitive.sizeMm)}px ${TEXT_FONT_FAMILY_ATTR}`;
+      ctx.textAlign = canvasTextAlign(primitive.anchor);
+      ctx.textBaseline = canvasBaseline(primitive.baseline);
+      ctx.fillText(primitive.content, mmToUnits(primitive.x), mmToUnits(primitive.y));
+    }
     ctx.restore();
     return;
   }

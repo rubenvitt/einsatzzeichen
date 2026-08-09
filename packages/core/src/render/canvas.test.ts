@@ -705,6 +705,104 @@ describe('renderCanvas — Renderer-Parität bei translate (Spec-Erfolgskriteriu
   });
 });
 
+describe('renderCanvas — Text', () => {
+  const textDrawing: Drawing = {
+    viewBox: DEFAULT_VIEWBOX_MM,
+    children: [
+      {
+        type: 'text',
+        role: 'pictogram',
+        content: 'HRT',
+        x: 16,
+        y: 20,
+        sizeMm: 10,
+        anchor: 'middle',
+        baseline: 'alphabetic',
+        boxMm: { xMm: 6, yMm: 12, widthMm: 20, heightMm: 10 },
+        style: { fill: 'schwarz' },
+      },
+    ],
+  };
+
+  it('zeichnet mit fillText statt Pfadaufbau, in derselben Position wie SVG', () => {
+    const { ctx, calls } = recordingContext();
+    renderCanvas(textDrawing, ctx);
+    const names = calls.map(([name]) => name);
+    expect(names).toContain('fillText');
+    expect(names).not.toContain('fill');
+    expect(names).not.toContain('stroke');
+    const fillText = calls.find(([name]) => name === 'fillText');
+    expect(fillText).toEqual(['fillText', 'HRT', mmToUnits(16), mmToUnits(20)]);
+    expect(calls).toContainEqual(['set:fillStyle', '#000000']);
+  });
+
+  it('löst Anker und Grundlinie über dieselbe Renderpolitik wie SVG auf', () => {
+    const { ctx, calls } = recordingContext();
+    renderCanvas(textDrawing, ctx);
+    expect(calls).toContainEqual(['set:textAlign', 'center']);
+    expect(calls).toContainEqual(['set:textBaseline', 'alphabetic']);
+    expect(renderSvg(textDrawing)).toContain('text-anchor="middle"');
+  });
+
+  it('setzt kein font-weight — Arimo[wght].ttf ist eine variable Schrift', () => {
+    const { ctx, calls } = recordingContext();
+    renderCanvas(textDrawing, ctx);
+    const font = calls.find(([name]) => name === 'set:font');
+    expect(font?.[1]).toBe(`${mmToUnits(10)}px Arimo`);
+  });
+
+  it('ignoriert einen gesetzten stroke — dasselbe fillOnly-Verhalten wie SVG', () => {
+    // Parität zu svg.ts' fillOnly: true (styleAttrs) — ein style.stroke an Text darf in keinem
+    // der beiden Renderer eine Kontur erzeugen, sonst zeichnete SVG etwas, das Canvas nie tut.
+    const drawing: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'text',
+          content: 'HRT',
+          x: 16,
+          y: 20,
+          sizeMm: 10,
+          anchor: 'start',
+          baseline: 'alphabetic',
+          boxMm: { xMm: 6, yMm: 12, widthMm: 20, heightMm: 10 },
+          style: { fill: 'schwarz', stroke: 'rot', strokeWidth: 0.5 },
+        },
+      ],
+    };
+    const { ctx, calls } = recordingContext();
+    renderCanvas(drawing, ctx);
+    const names = calls.map(([name]) => name);
+    expect(names).toContain('fillText');
+    expect(names).not.toContain('stroke');
+    expect(names).not.toContain('setLineDash');
+    const textTag = renderSvg(drawing).match(/<text[^>]*>/)?.[0];
+    expect(textTag).not.toContain('stroke');
+  });
+
+  it('füllt nicht, wenn der Text keinen Fill trägt, wie SVGs fill="none"', () => {
+    const drawing: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'text',
+          content: 'HRT',
+          x: 16,
+          y: 20,
+          sizeMm: 10,
+          anchor: 'start',
+          baseline: 'alphabetic',
+          boxMm: { xMm: 6, yMm: 12, widthMm: 20, heightMm: 10 },
+        },
+      ],
+    };
+    const { ctx, calls } = recordingContext();
+    renderCanvas(drawing, ctx);
+    expect(calls.some(([name]) => name === 'fillText')).toBe(false);
+    expect(renderSvg(drawing)).toContain('fill="none"');
+  });
+});
+
 describe('renderCanvas — Nullstriche und ungültige aktive Strichstärken', () => {
   it('modelliert die Browser-Semantik, die nichtpositive und nichtendliche lineWidth-Werte ignoriert', () => {
     const { ctx, currentLineWidth } = browserSemanticsContext();

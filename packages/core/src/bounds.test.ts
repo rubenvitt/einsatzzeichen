@@ -47,6 +47,80 @@ describe('shiftY — Drehung', () => {
   });
 });
 
+describe('boundsOfMm — Text', () => {
+  it('gibt für Text die deklarierte Fläche zurück, nicht die Glyphenhülle', () => {
+    const bounds = boundsOfMm({
+      type: 'text',
+      content: 'HRT',
+      x: 16,
+      y: 20,
+      sizeMm: 10,
+      anchor: 'middle',
+      baseline: 'alphabetic',
+      boxMm: { xMm: 6, yMm: 12, widthMm: 20, heightMm: 10 },
+    });
+    expect(bounds).toEqual({ minX: 6, minY: 12, maxX: 26, maxY: 22 });
+  });
+
+  it('lehnt eine Drehung an Text ab, statt die Box unrotiert zurückzugeben', () => {
+    // rawBoundsOfMm gibt boxMm unverändert zurück (siehe bounds.ts), führt also keine
+    // Drehung der Boxecken durch — die Renderer drehen aber sehr wohl (transformAttr
+    // wertet transform.rotate für jedes Primitiv aus). Ohne diese Ablehnung wichen
+    // Hülle und Rendering für ein gedrehtes Textprimitiv still voneinander ab, derselbe
+    // Fehlermodus, den boundsOfMm für gedrehte Gruppen bereits ablehnt (siehe oben).
+    const primitive: Primitive = {
+      type: 'text',
+      content: 'HRT',
+      x: 16,
+      y: 20,
+      sizeMm: 10,
+      anchor: 'middle',
+      baseline: 'alphabetic',
+      boxMm: { xMm: 6, yMm: 12, widthMm: 20, heightMm: 10 },
+      transform: { rotate },
+    };
+    expect(() => boundsOfMm(primitive)).toThrow(/Text/);
+  });
+});
+
+describe('shiftY — Text', () => {
+  it('verschiebt sowohl den Ankerpunkt als auch die deklarierte Box', () => {
+    // Anders als bei Pfaden liegen bei Text alle Koordinaten strukturiert vor (x, y und
+    // boxMm) — beide müssen mitwandern, sonst desynchronisiert die verschobene Glyphen-
+    // position von der Box, gegen die die Gates prüfen.
+    const primitive: Primitive = {
+      type: 'text',
+      content: 'HRT',
+      x: 16,
+      y: 20,
+      sizeMm: 10,
+      anchor: 'middle',
+      baseline: 'alphabetic',
+      boxMm: { xMm: 6, yMm: 12, widthMm: 20, heightMm: 10 },
+    };
+    const shifted = shiftY(primitive, 3);
+    expect(shifted.type).toBe('text');
+    if (shifted.type !== 'text') throw new Error('unreachable');
+    expect(shifted.y).toBe(23);
+    expect(shifted.boxMm).toEqual({ xMm: 6, yMm: 15, widthMm: 20, heightMm: 10 });
+  });
+
+  it('wirft für gedrehten Text, statt das Rotationszentrum zurückzulassen', () => {
+    const primitive: Primitive = {
+      type: 'text',
+      content: 'HRT',
+      x: 16,
+      y: 20,
+      sizeMm: 10,
+      anchor: 'middle',
+      baseline: 'alphabetic',
+      boxMm: { xMm: 6, yMm: 12, widthMm: 20, heightMm: 10 },
+      transform: { rotate },
+    };
+    expect(() => shiftY(primitive, 3)).toThrow(/gedrehte Primitive/);
+  });
+});
+
 describe('boundsOfMm — Verschiebung von Gruppen', () => {
   it('verschiebt die Hülle einer Gruppe um dxMm und dyMm', () => {
     const group: Primitive = {

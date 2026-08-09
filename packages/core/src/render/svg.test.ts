@@ -284,3 +284,94 @@ describe('renderSvg — Verschiebung von Gruppen', () => {
     expect(svg).toContain('<g transform="translate(0 0)">');
   });
 });
+
+describe('renderSvg — Text', () => {
+  it('gibt ein Textprimitiv mit Anker, Grundlinie und Schriftfamilie aus', () => {
+    const svg = renderSvg({
+      viewBox: { width: 32, height: 32 },
+      children: [
+        {
+          type: 'text',
+          role: 'pictogram',
+          content: 'HRT',
+          x: 16,
+          y: 20,
+          sizeMm: 10,
+          anchor: 'middle',
+          baseline: 'alphabetic',
+          boxMm: { xMm: 6, yMm: 12, widthMm: 20, heightMm: 10 },
+        },
+      ],
+    });
+    expect(svg).toContain('<text');
+    expect(svg).toContain('text-anchor="middle"');
+    expect(svg).toContain('font-family="Arimo"');
+    expect(svg).toContain('>HRT</text>');
+    expect(svg).not.toContain('font-weight');
+  });
+
+  it('maskiert Sonderzeichen im Textinhalt', () => {
+    const svg = renderSvg({
+      viewBox: { width: 32, height: 32 },
+      children: [
+        {
+          type: 'text',
+          content: 'A&B<C',
+          x: 16,
+          y: 20,
+          sizeMm: 10,
+          anchor: 'middle',
+          baseline: 'alphabetic',
+          boxMm: { xMm: 6, yMm: 12, widthMm: 20, heightMm: 10 },
+        },
+      ],
+    });
+    expect(svg).toContain('A&amp;B&lt;C');
+  });
+
+  it('wird gefüllt statt gestrichen und trägt keinen Piktogramm-Strichvertrag', () => {
+    // Anders als Piktogrammpfade (siehe styleAttrs/pictogramStrokeContract in svg.ts): Text hat
+    // keine Kontur, die von butt-caps/round-joins profitiert — er wird als Fläche gefüllt.
+    const svg = renderSvg({
+      viewBox: { width: 32, height: 32 },
+      children: [
+        {
+          type: 'text',
+          role: 'pictogram',
+          content: 'HRT',
+          x: 16,
+          y: 20,
+          sizeMm: 10,
+          anchor: 'middle',
+          baseline: 'alphabetic',
+          boxMm: { xMm: 6, yMm: 12, widthMm: 20, heightMm: 10 },
+          style: { fill: 'schwarz', stroke: 'rot', strokeWidth: 0.5 },
+        },
+      ],
+    });
+    const textTag = svg.match(/<text[^>]*>/)?.[0];
+    // Nicht nur der Piktogramm-Strichvertrag fehlt — stroke selbst darf trotz gesetztem
+    // style.stroke gar nicht erst ausgegeben werden. Sonst striche SVG etwas, das Canvas aus
+    // derselben IR nie zeichnet (drawPrimitive in canvas.ts ruft für Text nie strokeText auf).
+    expect(textTag).not.toContain('stroke');
+  });
+
+  it('bildet die mittige Grundlinie auf dominant-baseline="central" ab', () => {
+    const svg = renderSvg({
+      viewBox: { width: 32, height: 32 },
+      children: [
+        {
+          type: 'text',
+          content: 'HRT',
+          x: 16,
+          y: 16,
+          sizeMm: 10,
+          anchor: 'middle',
+          baseline: 'middle',
+          boxMm: { xMm: 6, yMm: 11, widthMm: 20, heightMm: 10 },
+        },
+      ],
+    });
+    expect(svg).toContain('dominant-baseline="central"');
+  });
+});
