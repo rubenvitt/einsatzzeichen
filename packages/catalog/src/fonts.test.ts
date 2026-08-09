@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { Resvg, type RenderedImage } from '@resvg/resvg-js';
 import { describe, expect, it } from 'vitest';
 import { compose, renderSvg, type CatalogPorts } from '@einsatzzeichen/core';
-import { DEFAULT_VIEWBOX_MM, type Primitive } from '@einsatzzeichen/schema';
+import { DEFAULT_VIEWBOX_MM, type Primitive, type Drawing } from '@einsatzzeichen/schema';
 import { TEXT_FONT_FAMILY, TEXT_FONT_PATH, TEXT_FONT_SHA256, resvgFontOptions } from './fonts.js';
 
 describe('Textschrift', () => {
@@ -73,6 +73,71 @@ function countDarkInkPixels(image: RenderedImage): number {
   return dark;
 }
 
+/**
+ * Katalog-Doppel für die Fußzonen-Ratserprüfungen unten: liefert ausschließlich den Körper der
+ * Taktischen Formation aus `base-symbols.ts` (`x:1, y:6, width:30, height:20`), alles andere ist
+ * für diese Prüfungen unerheblich und lehnt einen Aufruf explizit ab, statt still einen falschen
+ * Wert zu liefern — dasselbe Muster wie in `compose.test.ts`.
+ */
+const formationCatalog: CatalogPorts = {
+  baseDrawing: () => ({
+    viewBox: DEFAULT_VIEWBOX_MM,
+    children: [{ type: 'rect', role: 'body', x: 1, y: 6, width: 30, height: 20 } satisfies Primitive],
+  }),
+  organizationColor: () => {
+    throw new Error('Für diese Prüfung nicht aufgerufen.');
+  },
+  strengthHead: () => {
+    throw new Error('Für diese Prüfung nicht aufgerufen.');
+  },
+  pictogram: () => {
+    throw new Error('Für diese Prüfung nicht aufgerufen.');
+  },
+};
+
+interface InkAgainstBox {
+  /** Anzahl deckender (Alpha > 0) Pixel im gesamten Bild. */
+  inkPixelCount: number;
+  /** Davon außerhalb der deklarierten `boxMm`, in Pixelkoordinaten umgerechnet. */
+  outsideBoxCount: number;
+}
+
+/**
+ * Rastert die Fußzone einer `compose()`-Zeichnung isoliert (ohne Körper/Kopf/Piktogramm — die
+ * würden bei der Innerhalb-Prüfung nur stören) und vergleicht die tatsächliche Tinte gegen die
+ * vom Primitiv deklarierte `boxMm`. Das ist der Ersatz für die verlorene geometrische Messung
+ * aus Task 8 (siehe Primitive-Kommentar in geometry.ts: `boxMm` ist bei Text eine Zusicherung
+ * des Autors, keine Messung — kein Gate prüft mehr, ob Glyphen über sie hinausragen).
+ */
+function footInkAgainstBox(designation: string): InkAgainstBox {
+  const drawing = compose({ kind: 'formation', designation }, formationCatalog);
+  const foot = drawing.children.find((primitive) => primitive.role === 'foot');
+  if (foot?.type !== 'text') throw new Error('compose() hat keine Text-Fußzone erzeugt.');
+
+  const size = 256;
+  const isolated: Drawing = { viewBox: drawing.viewBox, children: [foot] };
+  const svg = renderSvg(isolated, { size });
+  const image = new Resvg(svg, { font: resvgFontOptions() }).render();
+  const pixels = image.pixels; // einmal abgreifen, siehe countDarkInkPixels oben.
+  const scale = size / drawing.viewBox.width;
+  const boxMinXPx = foot.boxMm.xMm * scale;
+  const boxMaxXPx = (foot.boxMm.xMm + foot.boxMm.widthMm) * scale;
+  const boxMinYPx = foot.boxMm.yMm * scale;
+  const boxMaxYPx = (foot.boxMm.yMm + foot.boxMm.heightMm) * scale;
+
+  let inkPixelCount = 0;
+  let outsideBoxCount = 0;
+  for (let y = 0; y < image.height; y++) {
+    for (let x = 0; x < image.width; x++) {
+      const alpha = pixels[(y * image.width + x) * 4 + 3] ?? 0;
+      if (alpha === 0) continue;
+      inkPixelCount++;
+      if (x < boxMinXPx || x > boxMaxXPx || y < boxMinYPx || y > boxMaxYPx) outsideBoxCount++;
+    }
+  }
+  return { inkPixelCount, outsideBoxCount };
+}
+
 describe('Rasterevidenz für Text (resvgFontOptions())', () => {
   it('rastert dieselbe Textzeichnung zweimal byteidentisch', () => {
     const svg = sampleTextSvg();
@@ -98,52 +163,33 @@ describe('Rasterevidenz für Text (resvgFontOptions())', () => {
     expect(countDarkInkPixels(image)).toBeGreaterThan(100);
   });
 
-  it('hält die deklarierte boxMm auch für eine Unterlänge ein („g" in „2. Zug")', () => {
+  it('hält die deklarierte boxMm auch für Unterlängen ein („g"/„j"/„p"/„q"/„y" in „Zug jgpqy")', () => {
     // Offener Punkt aus Task 8: `boxMm` ist bei Text eine Zusicherung des Autors, keine Messung
     // (siehe Primitive-Kommentar in geometry.ts). Kein Gate prüft mehr, ob Glyphen über sie
-    // hinausragen — am ehesten gefährdet: Unterlängen wie das „g" in „2. Zug", das unter die
-    // Grundlinie reicht. Diese Rasterprüfung ist der Ersatz für die verlorene geometrische
-    // Messung: sie rastert den echten `compose()`-Ausgang und vergleicht die tatsächliche Tinte
-    // (Alpha-Kanal) gegen die deklarierte Box in Pixelkoordinaten.
-    const formationBody: Primitive = { type: 'rect', role: 'body', x: 1, y: 6, width: 30, height: 20 };
-    const catalog: CatalogPorts = {
-      baseDrawing: () => ({ viewBox: DEFAULT_VIEWBOX_MM, children: [formationBody] }),
-      organizationColor: () => {
-        throw new Error('Für diesen Test nicht aufgerufen.');
-      },
-      strengthHead: () => {
-        throw new Error('Für diesen Test nicht aufgerufen.');
-      },
-      pictogram: () => {
-        throw new Error('Für diesen Test nicht aufgerufen.');
-      },
-    };
-    const drawing = compose({ kind: 'formation', designation: '2. Zug' }, catalog);
-    const foot = drawing.children.find((primitive) => primitive.role === 'foot');
-    if (foot?.type !== 'text') throw new Error('compose() hat keine Text-Fußzone erzeugt.');
-
-    const size = 256;
-    const svg = renderSvg({ viewBox: drawing.viewBox, children: [foot] }, { size });
-    const image = new Resvg(svg, { font: resvgFontOptions() }).render();
-    const pixels = image.pixels; // einmal abgreifen, siehe countDarkInkPixels oben.
-    const scale = size / drawing.viewBox.width;
-    const boxMinXPx = foot.boxMm.xMm * scale;
-    const boxMaxXPx = (foot.boxMm.xMm + foot.boxMm.widthMm) * scale;
-    const boxMinYPx = foot.boxMm.yMm * scale;
-    const boxMaxYPx = (foot.boxMm.yMm + foot.boxMm.heightMm) * scale;
-
-    let inkPixelCount = 0;
-    let outsideBoxCount = 0;
-    for (let y = 0; y < image.height; y++) {
-      for (let x = 0; x < image.width; x++) {
-        const alpha = pixels[(y * image.width + x) * 4 + 3] ?? 0;
-        if (alpha === 0) continue;
-        inkPixelCount++;
-        if (x < boxMinXPx || x > boxMaxXPx || y < boxMinYPx || y > boxMaxYPx) outsideBoxCount++;
-      }
-    }
-
+    // hinausragen — am ehesten gefährdet: Unterlängen, die unter die Grundlinie reichen. Diese
+    // Rasterprüfung ist der Ersatz für die verlorene geometrische Messung: sie rastert den echten
+    // `compose()`-Ausgang und vergleicht die tatsächliche Tinte (Alpha-Kanal) gegen die
+    // deklarierte Box in Pixelkoordinaten. Absichtlich alle fünf Unterlängen-Buchstaben des
+    // lateinischen Alphabets in einem String, nicht nur „g" (wie im Brief für „2. Zug"
+    // vorgeschlagen) — die Grenze soll nicht am zufällig mildesten Fall bestehen.
+    const { inkPixelCount, outsideBoxCount } = footInkAgainstBox('Zug jgpqy');
     expect(inkPixelCount).toBeGreaterThan(0);
     expect(outsideBoxCount).toBe(0);
+  });
+
+  it('dokumentiert eine offene Lücke: Umlaut-Diakritika ragen über die deklarierte Box hinaus', () => {
+    // Kein Bestehen-Test, sondern eine Charakterisierung des IST-Zustands (Zusatzauftrag 1 aus
+    // dem Task-9-Brief, über den dort ausdrücklich benannten Unterlängen-Fall hinaus geprüft):
+    // Anders als Unterlängen (Test oben, hält robust auch mit allen fünf Buchstaben) ragen
+    // Diakritika über Großbuchstaben — Ü, Ä, Ö, in deutschen Bezeichnungen nicht selten (z. B.
+    // „Übung") — über die Kapitälchenhöhe und damit über die deklarierte boxMm-Oberkante hinaus.
+    // Gemessen bei 256 px (32-mm-viewBox, 8 px/mm): mindestens 24 von rund 1100 Ink-Pixeln liegen
+    // außerhalb der Box, mit einem Überstand von 4 px (0,5 mm) oben. Bewusst nicht behoben — die
+    // Box wird nicht stillschweigend vergrößert (siehe FOOT_TEXT_SIZE_MM-Begründung in
+    // compose.ts) — sondern hier festgehalten, damit der Befund nicht erneut entdeckt werden
+    // muss. Kandidat für Task 10 oder eine eigene Folgeaufgabe.
+    const { inkPixelCount, outsideBoxCount } = footInkAgainstBox('Übung');
+    expect(inkPixelCount).toBeGreaterThan(0);
+    expect(outsideBoxCount).toBeGreaterThan(0);
   });
 });
