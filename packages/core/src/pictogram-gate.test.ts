@@ -6,8 +6,16 @@ import {
   type PrimitiveRole,
 } from '@einsatzzeichen/schema';
 import { compose, type CatalogPorts } from './compose.js';
-import { BodyNotMeasuredError, checkBox, checkClipping, checkCommands, checkPictogram } from './pictogram-gate.js';
+import {
+  BodyNotMeasuredError,
+  checkBox,
+  checkClipping,
+  checkCommands,
+  checkPictogram,
+  checkTextLegibility,
+} from './pictogram-gate.js';
 import { renderSvg } from './render/svg.js';
+import { MINIMUM_TEXT_RENDER_PX } from './render/text-policy.js';
 
 /** Ein Piktogramm mit genau einem Pfad, Box und Titel unverändert — nur der `d`-String variiert. */
 function withPath(d: string): PictogramDefinition {
@@ -1127,5 +1135,92 @@ describe('checkPictogram', () => {
     expect(() => checkPictogram(withPath('M 4 12 L 28 20'), malformedBody)).toThrow(
       /Ungültige Körpergeometrie/,
     );
+  });
+});
+
+/** Ein Textprimitiv wie „HRT" aus Anhang J: Schriftgrad 10 mm auf der 32-mm-Standard-viewBox. */
+function withText(content: string): PictogramDefinition {
+  return withTextSize(content, 10);
+}
+
+/** Wie `withText`, aber mit frei wählbarem Schriftgrad — für die Schwellenwert-Randfälle. */
+function withTextSize(content: string, sizeMm: number): PictogramDefinition {
+  return {
+    id: 'capability.fire-fighting',
+    variant: 'primary',
+    title: content,
+    box: { xMm: 2, yMm: 12, widthMm: 28, heightMm: 10 },
+    primitives: [
+      {
+        type: 'text',
+        role: 'pictogram',
+        content,
+        x: 16,
+        y: 20,
+        sizeMm,
+        anchor: 'middle',
+        baseline: 'alphabetic',
+        boxMm: { xMm: 2, yMm: 12, widthMm: 28, heightMm: 10 },
+      },
+    ],
+  };
+}
+
+describe('Text-Legibility-Gate', () => {
+  // Bei 10 mm Schriftgrad auf der 32-mm-viewBox ergibt eine 16-px-Rendergröße einen effektiven
+  // Schriftgrad von 5,0 px — deutlich unter MINIMUM_TEXT_RENDER_PX (siehe text-policy.ts, Step 1
+  // dieser Task: visuell geprüft, nicht nur nachgerechnet).
+  it('meldet unterhalb der Schwelle genau einen Befund mit Zeichen, Rendergröße und Pixelwert', () => {
+    const issues = checkTextLegibility(withText('HRT'), [16]);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({
+      gate: 'text-legibility',
+      pictogramId: 'capability.fire-fighting',
+      variant: 'primary',
+    });
+    expect(issues[0]!.detail).toContain('HRT');
+    expect(issues[0]!.detail).toContain('16');
+    expect(issues[0]!.detail).toContain('5');
+  });
+
+  // Dieselbe Definition, aber bei 32 px Rendergröße (effektiv 10,0 px) — oberhalb der Schwelle
+  // meldet das Gate nichts.
+  it('meldet nichts oberhalb der Schwelle', () => {
+    expect(checkTextLegibility(withText('HRT'), [32])).toEqual([]);
+  });
+
+  it('prüft jede Rendergröße einzeln, statt nur die kleinste oder größte zu bewerten', () => {
+    const issues = checkTextLegibility(withText('VoIP'), [16, 24, 32, 64, 128, 256]);
+    // 16 px (5,0 px effektiv) und 24 px (7,5 px effektiv) liegen unter der Schwelle, die vier
+    // größeren Snapshotgrößen darüber — siehe die Bildreihe aus Step 1.
+    expect(issues.map((issue) => issue.detail)).toEqual([
+      expect.stringContaining('16'),
+      expect.stringContaining('24'),
+    ]);
+  });
+
+  it('meldet keinen Befund für ein Piktogramm ohne Textprimitive', () => {
+    expect(checkTextLegibility(withPath('M 4 12 L 28 20'), [16, 24, 32])).toEqual([]);
+  });
+
+  it('formuliert den Befund als dokumentierte Einsatzgrenze, nicht als Fehler des Zeichens', () => {
+    const [issue] = checkTextLegibility(withText('HRT'), [16]);
+    expect(issue!.detail).not.toMatch(/kaputt|fehlerhaft|defekt/i);
+    expect(issue!.detail).toContain(String(MINIMUM_TEXT_RENDER_PX));
+  });
+
+  it('behandelt die Schwelle als Untergrenze: genau MINIMUM_TEXT_RENDER_PX zählt noch als lesbar', () => {
+    // sizeMm = MINIMUM_TEXT_RENDER_PX auf der 32-mm-viewBox bei 32 px Rendergröße ergibt exakt
+    // effectiveTextPx === MINIMUM_TEXT_RENDER_PX. Pins die >=-Konvention: ein Umschlag auf ">"
+    // würde hier fälschlich einen Befund melden.
+    expect(
+      checkTextLegibility(withTextSize('HRT', MINIMUM_TEXT_RENDER_PX), [32]),
+    ).toEqual([]);
+  });
+
+  it('meldet knapp unterhalb der Schwelle weiterhin einen Befund', () => {
+    const issues = checkTextLegibility(withTextSize('HRT', MINIMUM_TEXT_RENDER_PX - 0.1), [32]);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]!.gate).toBe('text-legibility');
   });
 });

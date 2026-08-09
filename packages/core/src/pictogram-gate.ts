@@ -1,5 +1,6 @@
 import {
   DEFAULT_STROKE_WIDTH_MM,
+  DEFAULT_VIEWBOX_MM,
   mmToUnits,
   unitsEqual,
   type DepictionVariant,
@@ -14,6 +15,7 @@ import {
 } from '@einsatzzeichen/schema';
 import { boundsOfMm, type BoundsMm } from './bounds.js';
 import { tokenizePath, type PathCommand } from './path-commands.js';
+import { effectiveTextPx, MINIMUM_TEXT_RENDER_PX } from './render/text-policy.js';
 import { mergeStyle } from './render/style.js';
 
 /**
@@ -26,7 +28,7 @@ import { mergeStyle } from './render/style.js';
  * ID teilen, gehört die Variante ausdrücklich zur Befundidentität.
  */
 export interface PictogramIssue {
-  gate: 'command' | 'box' | 'clipping';
+  gate: 'command' | 'box' | 'clipping' | 'text-legibility';
   pictogramId: PictogramId;
   variant: DepictionVariant;
   detail: string;
@@ -360,6 +362,50 @@ export function checkBox(definition: PictogramDefinition): PictogramIssue[] {
     }
   }
 
+  return issues;
+}
+
+/**
+ * Prüft, ob jedes Textprimitiv bei jeder angegebenen Rendergröße den effektiven Mindestschriftgrad
+ * `MINIMUM_TEXT_RENDER_PX` erreicht (siehe dort für die visuelle Herleitung des Werts).
+ *
+ * Der Befund ist eine andere Aussageart als `command`, `box` und `clipping`: die drei anderen
+ * Gates melden einen Vertragsbruch der Definition selbst — falsche Koordinaten, eine Box, die den
+ * Körper verlässt. Eine Unterschreitung hier ist kein Fehler der Definition; „HRT" bei 10 mm ist
+ * bei jeder Rendergröße dieselbe korrekte Definition. Der Befund sagt aus, dass dieses Zeichen bei
+ * dieser konkreten Rendergröße eine dokumentierte untere Einsatzgrenze hat — eine fachliche
+ * Aussage über das taktische Zeichen, keine technische Ausrede für ein kaputtes Rendering.
+ *
+ * Nimmt bewusst die Liste der Rendergrößen entgegen statt eine feste Größenreihe zu unterstellen:
+ * `core` kennt die sechs Snapshotgrößen der Mehrgrößenregression nicht — die liegt in `catalog`
+ * (Task 9) — und soll sie auch nicht kennen, um die Paketrichtung `catalog → core` nicht umzukehren.
+ *
+ * `viewBoxMm` ist nicht Teil von `PictogramDefinition` (siehe dort) und deshalb nicht Parameter
+ * dieser Funktion: die Standard-viewBox ist im gesamten Referenzbestand `DEFAULT_VIEWBOX_MM`, und
+ * `compose()` setzt sie fest.
+ */
+export function checkTextLegibility(
+  definition: PictogramDefinition,
+  renderSizesPx: readonly number[],
+): PictogramIssue[] {
+  const issues: PictogramIssue[] = [];
+  for (const text of textsOf(definition.primitives)) {
+    for (const renderPx of renderSizesPx) {
+      const effectivePx = effectiveTextPx(text.sizeMm, renderPx, DEFAULT_VIEWBOX_MM.width);
+      if (effectivePx >= MINIMUM_TEXT_RENDER_PX) continue;
+      issues.push({
+        gate: 'text-legibility',
+        pictogramId: definition.id,
+        variant: definition.variant,
+        detail:
+          `Zeichen "${definition.id}", Text "${text.content}": bei ${renderPx} px Rendergröße ` +
+          `beträgt der effektive Schriftgrad ${effectivePx.toFixed(1)} px und liegt unter der ` +
+          `dokumentierten Lesbarkeitsgrenze von ${MINIMUM_TEXT_RENDER_PX} px ` +
+          `(MINIMUM_TEXT_RENDER_PX) — eine dokumentierte untere Einsatzgrenze dieses Zeichens bei ` +
+          `dieser Rendergröße, kein Darstellungsfehler.`,
+      });
+    }
+  }
   return issues;
 }
 
