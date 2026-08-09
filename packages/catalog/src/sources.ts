@@ -40,13 +40,28 @@ const PHJARDAS_TZ_TECHNICAL_REVIEW: Review = {
   note: 'Bibliografische Angaben und Bezugsadresse gegen die Quelle geprüft.',
 };
 
+/**
+ * Eigene Review-Angabe für `arimo-ofl`: der Eintrag entstand am 2026-08-09, drei Tage nach den
+ * übrigen Quellen, als Registrierung der Textschrift aus `fonts.ts` — deshalb ein eigenes
+ * Prüfdatum statt der gemeinsamen `SOURCE_TECHNICAL_REVIEW`-Konstante.
+ */
+const ARIMO_OFL_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-09',
+  note:
+    'Bezugs-URL, SHA-256-Prüfsumme der Schriftdatei und OFL-Lizenztext am 2026-08-09 technisch ' +
+    'geprüft; keine fachliche oder normative Freigabe.',
+};
+
 function sourceReviewFor(id: SourceId, technical: Review): ReviewSet {
   return { technical, domain: sourceDomainReviewFor(id) };
 }
 
 /**
  * Elf Quellen der Referenzhierarchie aus `Vision.md`, dazu `phjardas-tz` als Vergleichsbestand
- * (Slice-3-Spec, Abschnitt 4).
+ * (Slice-3-Spec, Abschnitt 4) und `arimo-ofl` als Schriftquelle des Textprimitivs
+ * (siehe `packages/catalog/src/fonts.ts`).
  *
  * Typannotation **und** `satisfies` zusammen: die Annotation weitet jeden Eintrag auf
  * `SourceRecord` — sonst behielte er seinen engsten Typ, bei `geometryUse` also ein eigenes
@@ -287,6 +302,26 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
       status: 'clarified',
     },
     review: sourceReviewFor('din-14095', SOURCE_TECHNICAL_REVIEW),
+  },
+  'arimo-ofl': {
+    id: 'arimo-ofl',
+    kind: 'open-source-corpus',
+    title: 'Arimo (Variable Font)',
+    publisher: 'Google Fonts / The Arimo Project Authors',
+    edition: '1.341',
+    url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/arimo/Arimo%5Bwght%5D.ttf',
+    scope:
+      'Einzige Textschrift des Projekts für das Textprimitiv aus Anhang J. Metrisch ' +
+      'Arial-kompatibel, siehe packages/catalog/assets/README.md.',
+    acquisition: 'local',
+    geometryUse: ['none'],
+    licence: {
+      basis:
+        'SIL Open Font License 1.1, vollständiger Text in packages/catalog/assets/Arimo-OFL.txt; ' +
+        'erlaubt Einbettung, Verbreitung und Modifikation der Schrift.',
+      status: 'clarified',
+    },
+    review: sourceReviewFor('arimo-ofl', ARIMO_OFL_TECHNICAL_REVIEW),
   },
 } satisfies Record<SourceId, SourceRecord>;
 

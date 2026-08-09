@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { SOURCE_REGISTRY, isRegisteredSource } from './sources.js';
 
 describe('Quellenregister', () => {
-  it('führt zwölf Quellen', () => {
-    expect(Object.keys(SOURCE_REGISTRY)).toHaveLength(12);
+  it('führt dreizehn Quellen', () => {
+    expect(Object.keys(SOURCE_REGISTRY)).toHaveLength(13);
   });
 
   it('trägt an jeder Quelle den eigenen Schlüssel als id', () => {
@@ -85,9 +85,15 @@ describe('Quellenregister', () => {
   it('datiert das technische Review jeder Quelle auf den Tag ihrer eigenen Prüfung', () => {
     // phjardas-tz entstand einen Tag nach den übrigen elf Einträgen und trägt deshalb ein eigenes,
     // späteres Prüfdatum (siehe PHJARDAS_TZ_REVIEW) statt der gemeinsamen SOURCE_REVIEW-Konstante.
+    // arimo-ofl entstand drei Tage später als Registrierung der Textschrift (siehe
+    // ARIMO_OFL_TECHNICAL_REVIEW) und trägt aus demselben Grund ein eigenes Prüfdatum.
     for (const [id, record] of Object.entries(SOURCE_REGISTRY)) {
       const expectedDate =
-        id === 'phjardas-tz' || id === 'bbk-babz-2025' ? '2026-08-06' : '2026-08-05';
+        id === 'arimo-ofl'
+          ? '2026-08-09'
+          : id === 'phjardas-tz' || id === 'bbk-babz-2025'
+            ? '2026-08-06'
+            : '2026-08-05';
       expect(record.review.technical.date).toBe(expectedDate);
     }
   });

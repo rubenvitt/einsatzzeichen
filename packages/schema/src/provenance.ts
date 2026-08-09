@@ -19,7 +19,8 @@ export type SourceId =
   | 'din-14033'
   | 'din-13050'
   | 'din-14034-6'
-  | 'din-14095';
+  | 'din-14095'
+  | 'arimo-ofl';
 
 /**
  * `verbatim`   — Geometrie entspricht der Referenz und ist per Fingerprint belegt

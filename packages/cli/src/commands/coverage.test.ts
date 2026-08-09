@@ -25,9 +25,9 @@ describe('coverage CLI', () => {
     coverage();
 
     expect(manifestReviews).toBe(181);
-    expect(sourceReviews).toBe(12);
+    expect(sourceReviews).toBe(13);
     expect(profileReviews).toBe(1);
-    expect(openReviews).toBe(194);
+    expect(openReviews).toBe(195);
     expect(lines).toContain('Umfang:      1, 2, 4, 5.4, 5.8, C.1.1, C.1.2, D.3.7');
     expect(lines).toContain(
       `Offene fachliche Reviews: ${openReviews} ` +

@@ -218,6 +218,7 @@ export const SOURCE_DOMAIN_REVIEWS = deepFreeze({
   'din-13050': { status: 'pending' },
   'din-14034-6': { status: 'pending' },
   'din-14095': { status: 'pending' },
+  'arimo-ofl': { status: 'pending' },
 } satisfies Record<SourceId, Review>);
 
 export function sourceDomainReviewFor(id: SourceId): DeepReadonly<Review> {
