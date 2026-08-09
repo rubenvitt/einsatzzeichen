@@ -13,8 +13,8 @@ Terminal) und `J.3.8` (Fixed Radio Terminal) geometrisch identisch — dreimal d
 Quadrat. Belegt in `docs/decisions/2026-08-09-anhang-j-ist-typografisch.md`. D.3 pausierte deshalb
 nach Task 2 auf `d0532ee` (zwei J.2-Betriebsarten).
 
-Die Fußzone war seit dem 5. August offen. `designation` steht in `packages/schema/src/pictogram.ts`
-im Typ, `validate.ts` prüft es auf „nicht leer", `labels.ts` nimmt es in die
+Die Fußzone war seit dem 5. August offen. `designation` steht in `packages/schema/src/taxonomy.ts`
+(Zeile 219, im `SymbolSpec`), `validate.ts` prüft es auf „nicht leer", `labels.ts` nimmt es in die
 Barrierefreiheitstexte auf — aber kein Renderer hat es je ausgegeben. `role: 'foot'` war in
 `geometry.ts` deklariert und ungenutzt.
 
@@ -102,12 +102,15 @@ Die Schwelle 8 px liegt bewusst zwischen den beiden Messpunkten 7,5 und 10,0 px,
 von ihnen. Die eigene visuelle Nachprüfung in Abschnitt „Belegzeichen" unten reproduziert dieses
 Bild an einem eigenen Beispiel.
 
-Eine Unterschreitung ist ein **benannter Gate-Befund einer eigenen Klasse**
-(`text-below-minimum-size`), keine stille Ausnahme aus der Mehrgrößen-Regression und kein
-übersprungener Testfall — die Regression fährt weiterhin alle sechs Größen für jedes Textzeichen.
-Ein Zeichen unterhalb der Schwelle bei 16 px ist damit nicht kaputt: es ist ein Zeichen mit
-dokumentierter unterer Einsatzgrenze, eine fachlich relevante Aussage über ein taktisches Zeichen
-und keine technische Ausrede.
+Eine Unterschreitung ist ein **benannter Gate-Befund einer eigenen Klasse** — implementiert als
+`checkTextLegibility()` in `packages/core/src/pictogram-gate.ts`, Befundtyp `gate:
+'text-legibility'` — keine stille Ausnahme aus der Mehrgrößen-Regression und kein übersprungener
+Testfall: die Regression fährt weiterhin alle sechs Größen für jedes Textzeichen. Der Kommentar an
+der Funktion hält die Aussageart ausdrücklich von den anderen drei Gates ab: „Eine Unterschreitung
+hier ist kein Fehler der Definition; „HRT" bei 10 mm ist bei jeder Rendergröße dieselbe korrekte
+Definition." Ein Zeichen unterhalb der Schwelle bei 16 px ist damit nicht kaputt: es ist ein
+Zeichen mit dokumentierter unterer Einsatzgrenze, eine fachlich relevante Aussage über ein
+taktisches Zeichen und keine technische Ausrede.
 
 ## 5. Kontrast
 
@@ -220,9 +223,15 @@ Gemessen am 9. August 2026, `HEAD 26e39ab`:
   derselben Textzeichnung: beide grün, Teil der 1874 Tests oben.
 
 Diese Zahlen sind selbst gemessen, keine aus Spec oder Plan übernommenen Planwerte — der Plan
-nannte „Einträge: 181, Quellen: 13, Offene fachliche Reviews: 195", die Design-Spec dagegen noch
-„183"/„196" auf Grundlage eines älteren Zwischenstands; der tatsächlich gemessene Lauf bestätigt
-die Plan-Erwartung.
+nannte „Einträge: 181, Quellen: 13, Offene fachliche Reviews: 195" und der tatsächlich gemessene
+Lauf bestätigt diese Erwartung exakt. Die Design-Spec nannte dagegen noch „Einträge: 183",
+„Offene fachliche Reviews: 196"; das reicht auf ein anderes Manifest zurück, keinen Rechenfehler:
+Die Spec-Zahlen setzen die beiden `comms.`-Betriebsarten J.2.1/J.2.2 aus D.3 Task 2 voraus
+(Commit `0e57b93`), die ausschließlich auf dem geparkten Worktree `worktree-anhang-j-d3` existieren
+und **nicht** Vorfahre dieses Branches sind (`git merge-base --is-ancestor 0e57b93 HEAD` schlägt
+fehl). Die Differenz reconciled exakt: 183 − 2 (comms-Manifesteinträge, nicht auf diesem Branch)
+= 181 Einträge; 12 + 1 (`arimo-ofl`) = 13 Quellen; 196 − 2 (comms-Manifestreviews) + 1
+(Arimo-Quellenreview) = 195 offene fachliche Reviews.
 
 **Belegzeichen, visuell geprüft** (Wegwerf-Skript unter dem Scratchpad, nicht im Repo): ein
 Textprimitiv „HRT" (`sizeMm: 10`, `baseline: 'alphabetic'`) auf einem einfachen Rechteckkörper,
@@ -245,14 +254,17 @@ Fußzone (`formation`-Körperdoppel, `designation: 'Übung'`) bei 256 px.
   verschiedene Bilder (unterschiedliche PNG-Hashes): Referenzblau, das aufgehellte
   Accessible-Light-Blau (`#4a73d9`) und ein mittleres Print-Monochrome-Grau (`#777777`) — die
   Glyphenform selbst bleibt in allen drei identisch, nur die Körperfarbe wandert. Das bestätigt,
-  dass die Textfarbauflösung genauso themeabhängig funktioniert wie bei jeder anderen Primitivart,
-  ist aber kein Kontrastnachweis für dieses konkrete Tokenpaar — Schwarz auf `#777777` liegt nahe
-  an, nicht sauber über der `MINIMUM_TEXT_CONTRAST`-Schwelle und wurde hier nicht gegen den
-  offiziellen Kontrastvertrag geprüft, nur visuell verglichen.
+  dass die Textfarbauflösung genauso themeabhängig funktioniert wie bei jeder anderen Primitivart.
+  Rechnerisch liegt Schwarz auf `#777777` bei ≈4,7:1 (WCAG-Relativluminanzformel), knapp über der
+  `MINIMUM_TEXT_CONTRAST`-Schwelle von 4,5 — das ist aber kein Kontrastnachweis: `blau`/`schwarz`
+  ist kein Paar aus dem offiziellen Kontrastvertrag eines Katalogzeichens, nur von Hand
+  nachgerechnet an diesem Demonstrationsbeispiel.
 - **Fußzone:** „Übung" unter dem `formation`-Körperdoppel bei 256 px zeigt beide Ü-Punkte
   vollständig und mit sichtbarem Abstand zur Körperunterkante — nicht angeschnitten, nicht mit dem
-  Körper überlappend. Das deckt sich mit dem in Abschnitt 7 beschriebenen Fix: der Zuschlag lässt
-  keinen Spielraum, aber schneidet auch nichts ab.
+  Körper überlappend. Die PNG zeichnet `boxMm` nicht und der Renderer clippt nicht auf sie; das
+  Bild belegt also „nichts abgeschnitten", nicht Enthaltung in der deklarierten Box. Die Enthaltung
+  selbst — `outsideBoxCount: 0` für „Übung" und „ÄÖÜ" — kommt aus der Rasterprüfung in
+  `fonts.test.ts` (Abschnitt 7), nicht aus diesem Bild.
 
 ## 9. Nicht in diesem Slice
 
