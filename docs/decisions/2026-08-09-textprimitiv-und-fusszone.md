@@ -152,6 +152,35 @@ Rand, dass unterhalb kein Platz für eine zusätzliche Textzeile bleibt —, kei
 dieses Slice und keine Regression durch ihn: mit und ohne den Diakritika-Fix ist das Ergebnis
 identisch (Task-9-Fix-Bericht).
 
+**Diese Grenze gilt für das unbewegte Grundzeichen, nicht für jede Komposition darüber.** Trägt
+ein `SymbolSpec` zusätzlich zu `designation` eine `strength`, verschiebt `rectBodyProfile.place()`
+(`packages/core/src/layout/profiles.ts`) den Körper nach unten, sobald die Kopfzone auf dem
+Standardanker (6 mm) keinen Platz hat — und die Fußzone hängt sich an die tatsächlich platzierte
+Körperunterkante (`compose.ts`: `footTopMm = bodyBoundsMm.maxY + HEAD_GAP_MM`), nicht an die
+Standardgeometrie. Für `formation` (`defaultAnchorMm: 6`) reichen die drei Reihen-Stärkegrade
+(`trupp`, `gruppe`, `zug`; Kopfzonenhöhe 3 mm, `packages/catalog/src/strengths.ts`) nicht aus, um
+diese Verschiebung auszulösen: `placeHead` hängt die Reihe so, dass ihre Unterkante bei 5 mm liegt
+(`topMm = max(1, 6 − 1 − 3) = 2`, `bottomMm = 5`), `target = max(6, 5 + 1) = 6` entspricht bereits
+`defaultAnchorMm` — der Körper bleibt auf `minY = 6` stehen, die Fußzone unverändert bei Boxunterkante
+31 mm (wie ohne jede Stärkeangabe). Für `staffel` (Stapel, Kopfzonenhöhe 7 mm) dagegen: `placeHead`
+ergibt `topMm = max(1, 6 − 1 − 7) = 1`, `bottomMm = 8`; `target = max(6, 8 + 1) = 9` > 6, der Körper
+rutscht 3 mm nach unten (`minY` 6 → 9, `maxY` 26 → 29). `footTopMm` wandert von 27 auf 30 mm,
+`verticalTextBoxMm(30, 4, 'hanging')` liefert `{ topMm: 29.5, heightMm: 4.5 }` — Boxunterkante
+34 mm, mehr als die 32-mm-viewBox-Höhe: `outside-viewbox`. Das ist die Form des realen Rezepts
+C.1.1 („Löschstaffel"), sobald es zusätzlich eine `designation` trägt; nachgerechnet und als Test
+festgehalten in `compose.test.ts` („meldet einen viewBox-Gate-Befund für formation + staffel +
+designation — Kopfzone verdrängt die Fußzone"). Das Verhalten ist **richtig** — ein lauter
+`outside-viewbox`-Befund statt einer lautlos zu klein geratenen oder überlappenden Fußzone —, nur
+die Beschreibung oben war zu eng: sie beschrieb ausschließlich das Grundzeichen ohne Kopfzone.
+
+`building` kann diese Wechselwirkung gar nicht erst erreichen: `validate.ts`s
+`strength-requires-unit`-Regel lässt `strength` nur an `formation` und `person` zu (`UNIT_KINDS`,
+`packages/core/src/validate.ts`) — ein `SymbolSpec` mit `kind: 'building'` und `strength` ist
+bereits keine gültige Komposition, unabhängig von der Fußzone. Für `person` stellt sich die Frage
+ebenfalls nicht: Es scheitert, wie oben festgehalten, bereits im unbewegten Grundzustand ohne jede
+Kopfzone am `outside-viewbox`-Gate. `formation` ist damit der einzige Katalogkörper, an dem sich
+die Wechselwirkung Kopfzone × Fußzone heute überhaupt beobachten lässt.
+
 `FOOT_TEXT_SIZE_MM = 4` (in `packages/core/src/compose.ts`) ist bewusst fix und nicht von der
 verfügbaren Restfläche abhängig konzipiert: Ein Renderer, der die Fußzonenschrift bei knappem Platz
 stillschweigend auf 0 verkleinert hätte, hätte eine Fußzone erzeugt, die lautlos verschwindet,

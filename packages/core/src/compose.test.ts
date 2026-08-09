@@ -87,4 +87,46 @@ describe('compose() — Fußzone', () => {
     const issues = checkViewBox(drawing);
     expect(issues.some((issue) => issue.rule === 'outside-viewbox')).toBe(true);
   });
+
+  it('meldet einen viewBox-Gate-Befund für formation + staffel + designation — Kopfzone verdrängt die Fußzone', () => {
+    // Anders als die beiden Fälle oben (Grundzeichen ohne Kopfzone, das schon in seiner
+    // Standardlage keinen Platz für eine Fußzone hat) belegt dieser Fall die Wechselwirkung
+    // zwischen Kopf- und Fußzone: `formation` allein trägt eine Fußzone anstandslos (siehe die
+    // Tests oben), aber eine Stärkeangabe kann den Körper so weit nach unten verschieben, dass die
+    // Fußzone danach nicht mehr passt. `strengthHead('staffel')` liefert nach
+    // `packages/catalog/src/strengths.ts` einen senkrechten Stapel zweier Marken (cyFromTopMm 1.5
+    // und 5.5, rMm 1.5) mit `heightMm: 7` (STACK_CY_FROM_TOP_MM[1] + DOT_RADIUS_MM) — dieselben
+    // Zahlen hier fest verdrahtet, weil `core` nicht von `catalog` abhängen darf.
+    //
+    // Nachgerechnet (Entscheidungsnotiz docs/decisions/2026-08-09-textprimitiv-und-fusszone.md,
+    // §6): `placeHead(rectBodyProfile, 7)` ergibt `topMm = max(1, 6 − 1 − 7) = 1`,
+    // `bottomMm = 8`. `rectBodyProfile.place()` verschiebt den Körper auf
+    // `target = max(6, 8 + 1) = 9`, also 3 mm tiefer (`minY` 6 → 9, `maxY` 26 → 29). Die Fußzone
+    // hängt sich an die tatsächliche Körperunterkante: `footTopMm` 27 → 30 mm,
+    // `verticalTextBoxMm(30, 4, 'hanging')` ergibt eine Boxunterkante von 34 mm — über der
+    // 32-mm-viewBox-Höhe.
+    const staffelCatalog: CatalogPorts = {
+      ...catalog,
+      strengthHead: () => ({
+        marks: [
+          { cxMm: 16, cyFromTopMm: 1.5, rMm: 1.5 },
+          { cxMm: 16, cyFromTopMm: 5.5, rMm: 1.5 },
+        ],
+        heightMm: 7,
+      }),
+    };
+    const drawing = compose(
+      { kind: 'formation', strength: 'staffel', designation: 'Löschstaffel' },
+      staffelCatalog,
+    );
+    const foot = drawing.children.find((p) => p.role === 'foot');
+    if (foot?.type !== 'text') throw new Error('compose() hat keine Text-Fußzone erzeugt.');
+    // Belegt die nachgerechneten Zahlen aus der Entscheidungsnotiz, nicht nur den Endbefund.
+    expect(foot.boxMm).toEqual({ xMm: 1, yMm: 29.5, widthMm: 30, heightMm: 4.5 });
+
+    const issues = checkViewBox(drawing);
+    const outside = issues.filter((issue) => issue.rule === 'outside-viewbox');
+    expect(outside).toHaveLength(1);
+    expect(outside[0]?.detail).toContain('maxY 34');
+  });
 });

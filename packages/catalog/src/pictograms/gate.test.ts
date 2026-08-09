@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkBox, checkClipping, checkCommands } from '@einsatzzeichen/core';
+import { checkBox, checkClipping, checkCommands, checkTextLegibility } from '@einsatzzeichen/core';
 import {
   DEFAULT_VIEWBOX_MM,
   entryKey,
@@ -37,6 +37,13 @@ const CENTERED_TEST_PICTOGRAM: PictogramDefinition = {
   box: { xMm: 14, yMm: 14, widthMm: 4, heightMm: 4 },
   primitives: [],
 };
+
+/**
+ * Dieselben sechs Snapshotgrößen wie `multi-size-snapshots.test.ts:13`. `core` kennt die
+ * Rendergrößenreihe bewusst nicht (siehe `checkTextLegibility`-Kommentar in `pictogram-gate.ts`)
+ * — sie steht deshalb hier als eigener, katalogseitiger Wert und nicht als Import aus `core`.
+ */
+const RENDER_SIZES_PX = [16, 24, 32, 64, 128, 256] as const;
 
 const VIEWBOX_BODY: Primitive = {
   type: 'rect',
@@ -116,6 +123,20 @@ describe('Piktogramm-Gates über den Katalogbestand', () => {
     'besteht für %s das Clipping-Gate im deklarierten Platzierungskontext',
     (_id, definition) => {
       expect(checkClipping(definition, clippingBodyFor(definition))).toEqual([]);
+    },
+  );
+
+  // Ohne diese Verdrahtung liefe checkTextLegibility außerhalb seines eigenen Unittests nie —
+  // checkPictogram fasst nur Kommando-, Box- und Clipping-Gate zusammen (siehe dessen Kommentar
+  // in pictogram-gate.ts), das Lesbarkeits-Gate ist bewusst kein vierter Baustein davon, weil es
+  // die Rendergrößenreihe braucht, die core absichtlich nicht kennt. Heute trägt kein
+  // ALL_PICTOGRAMS-Eintrag Text, der Test ist also grün, weil er nichts zu melden hat — nicht,
+  // weil er nichts prüft. Sobald ein künftiges Textpiktogramm dazukommt, prüft genau dieser Lauf
+  // es gegen alle sechs Snapshotgrößen.
+  it.each(ALL_PICTOGRAMS.map((definition) => [pictogramVariantKey(definition), definition] as const))(
+    'besteht für %s das Text-Legibility-Gate über alle sechs Rendergrößen',
+    (_id, definition) => {
+      expect(checkTextLegibility(definition, RENDER_SIZES_PX)).toEqual([]);
     },
   );
 

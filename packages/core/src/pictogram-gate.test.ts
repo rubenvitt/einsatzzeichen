@@ -379,6 +379,81 @@ describe('Box-Gate', () => {
     expect(issues.length).toBeGreaterThan(0);
     expect(issues[0]!.gate).toBe('box');
   });
+
+  it('lehnt eine formal ungültige Textbox ab, statt sie stillschweigend als enthalten zu werten', () => {
+    // `boundsOfMm` gibt für Text `{ minX: xMm, maxX: xMm + widthMm, ... }` unverändert zurück
+    // (keine Messung, siehe measurableOf-Kommentar) — bei `widthMm: -5` liegt `maxX` dadurch
+    // LINKS von `minX`. `containmentDetails` prüft beide Werte unabhängig gegen die Achse und
+    // bemerkt die Vertauschung nicht: mit Piktogramm-Box 0..32 liegen sowohl 20 (minX) als auch 15
+    // (maxX) für sich innerhalb, die Prüfung würde ohne den Geometrie-Vorcheck fälschlich grün
+    // bleiben, obwohl die Textbox strukturell ungültig ist — schwächer statt strenger, das
+    // Gegenteil dessen, was ein Gate leisten soll. `rect` bekommt für denselben Fehler
+    // (`widthMm < 0`) eine `invalid-geometry`-Meldung im viewBox-Gate; Text bislang keine.
+    const definition: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      variant: 'primary',
+      title: 'Textbox mit negativer Breite',
+      box: { xMm: 0, yMm: 0, widthMm: 32, heightMm: 32 },
+      primitives: [
+        {
+          type: 'text',
+          role: 'pictogram',
+          content: 'HRT',
+          x: 20,
+          y: 12,
+          sizeMm: 4,
+          anchor: 'start',
+          baseline: 'alphabetic',
+          boxMm: { xMm: 20, yMm: 10, widthMm: -5, heightMm: 4 },
+        },
+      ],
+    };
+    const issues = checkBox(definition);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.gate).toBe('box');
+    expect(issues[0]?.detail).toContain('Ungültige Textbox von "HRT"');
+    expect(issues[0]?.detail).toContain('widthMm darf nicht negativ sein');
+  });
+
+  it('meldet gedrehten Text als box-Befund statt zu werfen', () => {
+    // Der Primitivtyp erlaubt `transform.rotate` an Text, `checkViewBox` unterstützt ihn (dreht
+    // die Ecken mit) und beide Renderer wenden ihn an — aber `boundsOfMm` lehnt Drehung von Text
+    // ausdrücklich ab (siehe dort). Ohne diesen Guard würde `checkBox` hier einen rohen `Error`
+    // werfen, den nur `checkPictogram`s BodyNotMeasuredError-Fang nicht auffängt (der ist an
+    // `checkClipping` gebunden) — ein Programmierabbruch statt eines Befunds, dem Grundsatz dieser
+    // Datei entgegen. Analog zum transformierten Pfad oben (`checkBox` meldet, statt zu werfen).
+    const definition: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      variant: 'primary',
+      title: 'Gedrehter Text',
+      box: { xMm: 4, yMm: 12, widthMm: 24, heightMm: 8 },
+      primitives: [
+        {
+          type: 'text',
+          role: 'pictogram',
+          content: 'HRT',
+          x: 16,
+          y: 16,
+          sizeMm: 4,
+          anchor: 'middle',
+          baseline: 'alphabetic',
+          boxMm: { xMm: 10, yMm: 13, widthMm: 12, heightMm: 5 },
+          transform: { rotate: { angle: 15, cx: 16, cy: 16 } },
+        },
+      ],
+    };
+    expect(() => checkBox(definition)).not.toThrow();
+    const issues = checkBox(definition);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.gate).toBe('box');
+    expect(issues[0]?.detail).toContain('Transformation');
+
+    // checkPictogram fasst auch diesen Fall als Liste von Befunden zusammen statt abzubrechen.
+    expect(() => checkPictogram(definition, formationBody)).not.toThrow();
+    expect(checkPictogram(definition, formationBody).some((issue) => issue.gate === 'box')).toBe(
+      true,
+    );
+  });
 });
 
 /** Der Körper der Taktischen Formation, wie `base-symbols.ts` ihn führt. */

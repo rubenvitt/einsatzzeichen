@@ -331,6 +331,32 @@ export function checkBox(definition: PictogramDefinition): PictogramIssue[] {
   // `measurableOf`) — dieselbe Prüflogik wie oben (`containmentDetails`), aber strukturell
   // getrennt von der Sammlung, die in die Gleichheitsprüfung einfließt.
   for (const text of textsOf(definition.primitives)) {
+    // `boxMm` ist bei Text eine Zusicherung des Autors, keine Messung — anders als bei
+    // `definition.box` oben lief sie nie durch `boxGeometryProblems`. Ein `widthMm: -5` vertauscht
+    // in `boundsOfMm` (bzw. hier direkt in `containmentDetails` über die min/max-Auswertung) still
+    // min und max und ergibt eine KLEINERE Hülle: Enthaltung würde dadurch schwächer geprüft statt
+    // gemeldet — derselbe Fehlermodus, den `rect` an derselben Stelle als `invalid-geometry`
+    // bekommt (`viewbox-gate.ts`). Dieselbe Funktion wie bei `definition.box`, kein neuer Begriff.
+    const textGeometryProblems = boxGeometryProblems(text.boxMm);
+    for (const problem of textGeometryProblems) {
+      issue(`Ungültige Textbox von "${text.content}": ${problem}`);
+    }
+    if (textGeometryProblems.length > 0) continue;
+
+    // Text erlaubt am Typ eine Transformation (`transform.rotate` ist an `checkViewBox` und
+    // beiden Renderern belegt), aber `boundsOfMm` lehnt jede Transformation an Text ab (siehe
+    // dort) — ein roher Wurf statt eines Befunds, dem Grundsatz dieser Datei entgegen. Analog zum
+    // transformierten Pfad oben: gemeldet statt geworfen, und `boundsOfMm` wird für diesen Fall
+    // gar nicht erst aufgerufen.
+    if (text.transform !== undefined) {
+      issue(
+        `Textprimitiv "${text.content}": Eine Transformation an Text innerhalb einer ` +
+          'PictogramDefinition wird von diesem Gate nicht unterstützt; die Enthaltung wird aus ' +
+          'der unverschobenen boxMm geprüft.',
+      );
+      continue;
+    }
+
     for (const detail of containmentDetails(text.type, boundsOfMm(text), axes)) {
       issue(detail);
     }
