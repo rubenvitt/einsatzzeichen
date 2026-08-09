@@ -90,10 +90,13 @@ Die Schrift ist damit ein **registrierter Quellenträger**, kein stiller Anhang.
 
 ### 3.3 Was nicht in diesem Slice liegt
 
-- **Font-Subsetting.** Die volle Datei liegt bei rund 350 KB. Eine Reduktion auf die tatsächlich
-  benutzten Glyphen wäre kleiner, braucht aber ein Werkzeug in der Build-Kette. Benannter
+- **Font-Subsetting.** Die Datei liegt bei 484 KB. Eine Reduktion auf die tatsächlich benutzten
+  Glyphen wäre erheblich kleiner, braucht aber ein Werkzeug in der Build-Kette. Benannter
   Nachfolger.
-- **Mehrere Schnitte.** Nur `Regular`. Fett oder kursiv sind kein Bedarf dieses Slice.
+- **Andere Schnitte als der Standardschnitt.** `Arimo[wght].ttf` ist eine variable Schrift; der
+  Renderer setzt keinen `font-weight` und nutzt damit ihre Standardinstanz. Fett oder kursiv sind
+  kein Bedarf dieses Slice, und ein nicht gesetztes Gewicht ist eine Achse weniger, die einen
+  Snapshot verschieben kann.
 
 ## 4. Die Entwurfsentscheidung: die Box kehrt ihre Rolle um
 
