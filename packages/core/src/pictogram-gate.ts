@@ -42,12 +42,45 @@ function pathsOf(primitives: readonly Primitive[]): Array<Primitive & { type: 'p
   return paths;
 }
 
-/** Alle Text-Primitive einer Definition, auch verschachtelte. */
+/**
+ * Wirft, wenn eine Gruppe innerhalb einer PictogramDefinition eine Transformation trägt. Geteilt
+ * zwischen `measurableOf` und `textsOf`: beide steigen in verschachtelte Gruppen ab und lesen die
+ * Rohkoordinaten ihrer Blätter weiter oben oder unten über `boundsOfMm` — eine transformierte
+ * Gruppe ginge dabei verloren, und die Box- oder Clipping-Prüfung liefe gegen die falschen Zahlen.
+ * compose() setzt die Verschiebung der Komposition außen auf; eine innere Transformation ist im
+ * aktuellen Referenzbestand kein belegter Fall — genau deshalb hier ein Wurf statt einer stillen
+ * Näherung.
+ */
+function rejectGroupTransform(group: Primitive & { type: 'group' }): void {
+  if (group.transform !== undefined) {
+    throw new Error(
+      'pictogram-gate: Eine Gruppe innerhalb einer PictogramDefinition darf keine ' +
+        'Transformation tragen — die Verschiebung der Komposition setzt compose() außen auf, ' +
+        'und eine innere würde die Box- oder Clipping-Prüfung gegen die Rohkoordinaten laufen ' +
+        'lassen.',
+    );
+  }
+}
+
+/**
+ * Alle Text-Primitive einer Definition, auch verschachtelte.
+ *
+ * Trägt denselben Transform-Guard wie `measurableOf` (`rejectGroupTransform`), nicht nur, weil
+ * `checkBox` beide Sammlungen nacheinander abfragt: `checkClipping` ruft `measurableOf` nie auf
+ * und wäre ohne einen eigenen Guard hier ungeschützt — ein Text-Primitiv unter einer
+ * transformierten Gruppe würde dort mit seinen unverschobenen `boxMm`-Rohkoordinaten gegen den
+ * Körper geprüft: ein stiller Fehlbefund oder eine stille Nichterkennung, kein Wurf. Der Schutz
+ * muss deshalb hier selbst stehen, nicht nur zufällig aus der Aufrufreihenfolge in `checkBox`
+ * folgen.
+ */
 function textsOf(primitives: readonly Primitive[]): Array<Primitive & { type: 'text' }> {
   const texts: Array<Primitive & { type: 'text' }> = [];
   for (const primitive of primitives) {
     if (primitive.type === 'text') texts.push(primitive);
-    else if (primitive.type === 'group') texts.push(...textsOf(primitive.children));
+    else if (primitive.type === 'group') {
+      rejectGroupTransform(primitive);
+      texts.push(...textsOf(primitive.children));
+    }
   }
   return texts;
 }
@@ -94,10 +127,11 @@ function hasText(primitives: readonly Primitive[]): boolean {
 /**
  * Alle Primitive mit berechenbarer Hülle — also alles außer Pfaden, aus Gruppen herausgezogen.
  *
- * Wirft für eine Gruppe mit `transform`: `boundsOfMm` auf einem herausgezogenen Kind liest dessen
- * Rohkoordinaten, die Transformation der Elterngruppe wäre verloren, und die Box-Prüfung liefe
- * gegen die falschen Zahlen. In D.0 trägt keine Definition eine transformierte Gruppe — genau
- * deshalb steht der Fehler hier, bevor es in D.1 still falsch werden kann.
+ * Wirft für eine Gruppe mit `transform` (über `rejectGroupTransform`): `boundsOfMm` auf einem
+ * herausgezogenen Kind liest dessen Rohkoordinaten, die Transformation der Elterngruppe wäre
+ * verloren, und die Box-Prüfung liefe gegen die falschen Zahlen. In D.0 trägt keine Definition
+ * eine transformierte Gruppe — genau deshalb steht der Fehler hier, bevor es in D.1 still falsch
+ * werden kann.
  *
  * Text bleibt hier bewusst außen vor, obwohl `boundsOfMm` für Text anstandslos eine Hülle liefert
  * und `primitive.type !== 'path'` es sonst kommentarlos durchließe. Der Unterschied ist, WAS diese
@@ -114,13 +148,7 @@ function measurableOf(primitives: readonly Primitive[]): Primitive[] {
   const measurable: Primitive[] = [];
   for (const primitive of primitives) {
     if (primitive.type === 'group') {
-      if (primitive.transform !== undefined) {
-        throw new Error(
-          'pictogram-gate: Eine Gruppe innerhalb einer PictogramDefinition darf keine ' +
-            'Transformation tragen — die Verschiebung der Komposition setzt compose() außen ' +
-            'auf, und eine innere würde die Box-Prüfung gegen die Rohkoordinaten laufen lassen.',
-        );
-      }
+      rejectGroupTransform(primitive);
       measurable.push(...measurableOf(primitive.children));
     } else if (primitive.type !== 'path' && primitive.type !== 'text') {
       measurable.push(primitive);

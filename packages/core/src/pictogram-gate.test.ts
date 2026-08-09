@@ -997,6 +997,40 @@ describe('Clipping-Gate', () => {
     };
     expect(checkClipping(definition, formationBody)).toEqual([]);
   });
+
+  it('lehnt eine transformierte Gruppe um Text ab, auch wenn checkClipping unabhängig von checkBox läuft', () => {
+    // checkClipping ruft measurableOf nie auf (siehe die Kommentare dort und an textsOf) — ohne
+    // einen eigenen Guard in textsOf würde eine transformierte Elterngruppe hier still ignoriert:
+    // text.boxMm käme unverschoben zur Prüfung, ein falscher Befund oder eine falsche
+    // Nichterkennung, aber kein Fehler. Der Test ruft deshalb checkClipping direkt auf, nicht über
+    // checkPictogram/checkBox, um den unabhängigen Aufrufpfad tatsächlich zu treffen.
+    const groupedText: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      variant: 'primary',
+      title: 'Text in transformierter Gruppe',
+      box: { xMm: 4, yMm: 12, widthMm: 24, heightMm: 8 },
+      primitives: [
+        {
+          type: 'group',
+          transform: { translate: { dxMm: 2, dyMm: 0 } },
+          children: [
+            {
+              type: 'text',
+              role: 'pictogram',
+              content: 'X',
+              x: 16,
+              y: 16,
+              sizeMm: 4,
+              anchor: 'middle',
+              baseline: 'alphabetic',
+              boxMm: { xMm: 10, yMm: 12, widthMm: 8, heightMm: 6 },
+            },
+          ],
+        },
+      ],
+    };
+    expect(() => checkClipping(groupedText, formationBody)).toThrow(/Transformation/);
+  });
 });
 
 describe('checkPictogram', () => {
