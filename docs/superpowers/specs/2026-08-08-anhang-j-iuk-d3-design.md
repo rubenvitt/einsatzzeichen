@@ -1,6 +1,12 @@
 # Anhang J — Informations- und Kommunikationstechnik (D.3)
 
 > Design-Spec · 8. August 2026
+> **Status: pausiert nach Task 2 (9. August 2026).** 16 der 53 Darstellungen sind typografisch —
+> ihr Bedeutungsträger ist ein Buchstabenkürzel, und das Schema hat kein Textprimitiv. Abschnitt
+> 2.3 unterschätzt das als Randfall zweier Zeichen. Der Befund, der Beleg und die Folgen stehen in
+> `docs/decisions/2026-08-09-anhang-j-ist-typografisch.md`. Vor der Wiederaufnahme entsteht ein
+> Schemaform-Slice für Text. Ebenfalls dort korrigiert: der Kontrastvertrag für Körper mit weißer
+> Fläche (`weiss`/`surface` ist bei Verhältnis 1:1 unerfüllbar).
 
 ## 1. Zweck und Abgrenzung
 
