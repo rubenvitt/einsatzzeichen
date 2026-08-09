@@ -25,6 +25,47 @@ describe('J-Bestand', () => {
     );
     expect(sections).toEqual(['J.2.1', 'J.2.2']);
   });
+
+  it('liefert die acht Gerätekörper J.3.1 bis J.3.8', () => {
+    const sections = COMMS_PICTOGRAMS.filter((d) => d.section.startsWith('J.3.')).map(
+      (d) => d.section,
+    );
+    expect(sections).toEqual([
+      'J.3.1',
+      'J.3.2',
+      'J.3.3',
+      'J.3.4',
+      'J.3.5',
+      'J.3.6',
+      'J.3.7',
+      'J.3.8',
+    ]);
+  });
+
+  it('deklariert für jeden Gerätekörper beide Farbnachbarschaften', () => {
+    // Abweichung vom Brief: statt „weiss/surface" prüft dies „schwarz/surface" — siehe die
+    // Begründung bei DEVICE_CONTRAST in comms/03-devices.ts. Eine weiße Füllung auf weißer
+    // Ausgabeoberfläche hat Kontrastverhältnis 1 und wäre vom globalen Kontrastgate nie erfüllbar;
+    // sichtbar wird der Körper durch seine schwarze Kontur.
+    const devices = COMMS_PICTOGRAMS.filter((d) => d.section.startsWith('J.3.'));
+    expect(devices.length).toBeGreaterThan(0);
+    for (const device of devices) {
+      const pairs = device.contrastPairs ?? [];
+      expect(pairs.some((p) => p.foreground === 'schwarz' && p.background === 'surface')).toBe(true);
+      expect(pairs.some((p) => p.foreground === 'schwarz' && p.background === 'weiss')).toBe(true);
+    }
+  });
+
+  it('unterscheidet die sieben Gerätezeichen vom Grundzeichen J.3.1', () => {
+    const base = COMMS_PICTOGRAMS.find((d) => d.section === 'J.3.1');
+    const others = COMMS_PICTOGRAMS.filter(
+      (d) => d.section.startsWith('J.3.') && d.section !== 'J.3.1',
+    );
+    expect(base).toBeDefined();
+    for (const other of others) {
+      expect(other.primitives.length).toBeGreaterThan(base!.primitives.length);
+    }
+  });
 });
 
 describe('J.2: Pfeilrichtung als nichtfarblicher Bedeutungskanal', () => {
