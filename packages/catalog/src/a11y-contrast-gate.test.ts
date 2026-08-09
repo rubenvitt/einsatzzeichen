@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { checkContrast, relativeLuminance, type ContrastRequirement } from '@einsatzzeichen/core';
 import { ORGANIZATION_COLORS } from './organizations.js';
 import { ALL_PICTOGRAMS } from './pictograms/index.js';
-import { MINIMUM_NON_TEXT_CONTRAST, contrastRequirementsFor } from './pictograms/contrast-contract.js';
+import {
+  MINIMUM_NON_TEXT_CONTRAST,
+  contrastPairProblems,
+  contrastRequirementsFor,
+} from './pictograms/contrast-contract.js';
 import {
   ACCESSIBLE_LIGHT_THEME,
   PRINT_MONOCHROME_THEME,
@@ -37,6 +41,14 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
       expect(checkContrast(theme, requirements())).toEqual([]);
     },
   );
+
+  it('deklariert kein Kontrastpaar mit zwei Token, die in irgendeinem Theme dieselbe Farbe ergeben', () => {
+    // Deckt sowohl die von Standalone-Zeichen deklarierten contrastPairs als auch die für
+    // In-Body-Zeichen synthetisierten (Ink, Organisationsfarbe)-Paare ab — ContrastRequirement
+    // trägt foreground/background/context strukturell wie PictogramContrastPair, nur mit
+    // zusätzlichem minimum, das contrastPairProblems nicht braucht und ignoriert.
+    expect(contrastPairProblems(requirements())).toEqual([]);
+  });
 
   it('hält Schwarz auf BABZ-Blau im Referenztheme als bekannten Negativbefund fest', () => {
     const issues = checkContrast(RENDER_THEMES.reference, requirements());
