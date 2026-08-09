@@ -316,6 +316,61 @@ describe('Box-Gate', () => {
     expect(checkBox(definition)).toEqual([]);
     expect(checkClipping(definition, formationBody)).toEqual([]);
   });
+
+  it('fordert bei Text Enthaltung statt Gleichheit', () => {
+    // boxMm (die Textbox) ist echt kleiner als die Piktogramm-Box — Gleichheit wäre hier
+    // unerfüllbar, obwohl die Definition fachlich korrekt ist. `boundsOfMm` liefert für Text nur
+    // die deklarierte boxMm zurück (keine Messung), deshalb darf checkBox hier nur Enthaltung
+    // verlangen (siehe measurableOf-Kommentar zur Zirkularitätsgefahr).
+    const definition: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      variant: 'primary',
+      title: 'Text kleiner als die Piktogramm-Box',
+      box: { xMm: 4, yMm: 10, widthMm: 24, heightMm: 14 },
+      primitives: [
+        {
+          type: 'text',
+          role: 'pictogram',
+          content: 'HRT',
+          x: 16,
+          y: 20,
+          sizeMm: 10,
+          anchor: 'middle',
+          baseline: 'alphabetic',
+          boxMm: { xMm: 6, yMm: 12, widthMm: 20, heightMm: 10 },
+        },
+      ],
+    };
+    expect(checkBox(definition)).toEqual([]);
+  });
+
+  it('meldet Text außerhalb der Piktogramm-Box', () => {
+    // Dieselbe Textbox wie im Enthaltungstest, aber eine Piktogramm-Box, die sie nicht mehr fasst
+    // (8x8 statt 24x14) — der eigentliche Nachweis, dass die Enthaltungsprüfung Text wirklich
+    // gegen die deklarierte Box prüft und nicht bloß immer grün bleibt.
+    const definition: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      variant: 'primary',
+      title: 'Text außerhalb der Piktogramm-Box',
+      box: { xMm: 10, yMm: 10, widthMm: 8, heightMm: 8 },
+      primitives: [
+        {
+          type: 'text',
+          role: 'pictogram',
+          content: 'HRT',
+          x: 16,
+          y: 20,
+          sizeMm: 10,
+          anchor: 'middle',
+          baseline: 'alphabetic',
+          boxMm: { xMm: 6, yMm: 12, widthMm: 20, heightMm: 10 },
+        },
+      ],
+    };
+    const issues = checkBox(definition);
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues[0]!.gate).toBe('box');
+  });
 });
 
 /** Der Körper der Taktischen Formation, wie `base-symbols.ts` ihn führt. */
@@ -859,6 +914,88 @@ describe('Clipping-Gate', () => {
     expect(() =>
       checkClipping(withBox({ xMm: 14, yMm: 14, widthMm: 4, heightMm: 4 }), doubled),
     ).toThrow(/mehrfach/);
+  });
+
+  it('nimmt eine Textbox an, die vollständig im Körper liegt', () => {
+    const definition: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      variant: 'primary',
+      title: 'Text im Körper',
+      box: { xMm: 4, yMm: 12, widthMm: 24, heightMm: 8 },
+      primitives: [
+        {
+          type: 'text',
+          role: 'pictogram',
+          content: 'OK',
+          x: 16,
+          y: 18,
+          sizeMm: 4,
+          anchor: 'middle',
+          baseline: 'alphabetic',
+          boxMm: { xMm: 10, yMm: 14, widthMm: 12, heightMm: 4 },
+        },
+      ],
+    };
+    expect(checkClipping(definition, formationBody)).toEqual([]);
+  });
+
+  it('meldet eine Textbox, die über den Körper hinausragt', () => {
+    // boxMm beginnt bei y = 0, der Körper (formationBody) erst bei y = 6 — die Textbox ragt oben
+    // heraus. definition.box selbst liegt bewusst im Körper, damit der Befund eindeutig von der
+    // Textbox stammt und nicht von der bereits an anderer Stelle geprüften Gesamt-Box.
+    const definition: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      variant: 'primary',
+      title: 'Text ragt oben aus dem Körper',
+      box: { xMm: 4, yMm: 12, widthMm: 24, heightMm: 8 },
+      primitives: [
+        {
+          type: 'text',
+          role: 'pictogram',
+          content: 'X',
+          x: 16,
+          y: 3,
+          sizeMm: 4,
+          anchor: 'middle',
+          baseline: 'alphabetic',
+          boxMm: { xMm: 10, yMm: 0, widthMm: 12, heightMm: 4 },
+        },
+      ],
+    };
+    const issues = checkClipping(definition, formationBody);
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues[0]?.gate).toBe('clipping');
+    expect(issues[0]?.detail).toContain('Textbox');
+  });
+
+  it('lässt eine gesetzte Textstrichstärke die Piktogramm-Box nicht aufblähen', () => {
+    // Ohne die Ausnahme in pictogramStrokeWidths würde der gesetzte 4-mm-Strich auf dem Text eine
+    // halbe Strichbreite von 2 mm auf die gesamte Piktogramm-Box aufschlagen — obwohl weder SVG
+    // noch Canvas Text je stricheln (siehe svg.ts fillOnly, canvas.ts ohne strokeText). Die Box
+    // liegt hier bündig am Körper (wie im Flush-Test oben ohne Text): mit dem Fix bleibt
+    // halfStroke 0 und die Prüfung bleibt grün; ohne den Fix würde sie über den Körper hinausragen.
+    const definition: PictogramDefinition = {
+      id: 'capability.fire-fighting',
+      variant: 'primary',
+      title: 'Text mit Strichstil, Box bündig am Körper',
+      box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
+      primitives: [
+        { type: 'path', role: 'pictogram', d: 'M 1 6 L 31 26' },
+        {
+          type: 'text',
+          role: 'pictogram',
+          content: 'X',
+          x: 16,
+          y: 16,
+          sizeMm: 4,
+          anchor: 'middle',
+          baseline: 'alphabetic',
+          boxMm: { xMm: 12, yMm: 12, widthMm: 8, heightMm: 6 },
+          style: { stroke: 'schwarz', strokeWidth: 4 },
+        },
+      ],
+    };
+    expect(checkClipping(definition, formationBody)).toEqual([]);
   });
 });
 

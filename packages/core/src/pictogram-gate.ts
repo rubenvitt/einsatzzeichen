@@ -42,6 +42,16 @@ function pathsOf(primitives: readonly Primitive[]): Array<Primitive & { type: 'p
   return paths;
 }
 
+/** Alle Text-Primitive einer Definition, auch verschachtelte. */
+function textsOf(primitives: readonly Primitive[]): Array<Primitive & { type: 'text' }> {
+  const texts: Array<Primitive & { type: 'text' }> = [];
+  for (const primitive of primitives) {
+    if (primitive.type === 'text') texts.push(primitive);
+    else if (primitive.type === 'group') texts.push(...textsOf(primitive.children));
+  }
+  return texts;
+}
+
 /**
  * Prüft, dass jeder `d`-String der Definition ausschließlich die sieben zugelassenen absoluten
  * Kommandos verwendet (Spec Abschnitt 5). Diese Beschränkung ist nicht stilistisch: sie ist die
@@ -72,6 +82,15 @@ function hasPath(primitives: readonly Primitive[]): boolean {
   );
 }
 
+/** Ob eine Definition — auch verschachtelt — mindestens ein Text-Primitiv enthält. */
+function hasText(primitives: readonly Primitive[]): boolean {
+  return primitives.some(
+    (primitive) =>
+      primitive.type === 'text' ||
+      (primitive.type === 'group' && hasText(primitive.children)),
+  );
+}
+
 /**
  * Alle Primitive mit berechenbarer Hülle — also alles außer Pfaden, aus Gruppen herausgezogen.
  *
@@ -79,6 +98,17 @@ function hasPath(primitives: readonly Primitive[]): boolean {
  * Rohkoordinaten, die Transformation der Elterngruppe wäre verloren, und die Box-Prüfung liefe
  * gegen die falschen Zahlen. In D.0 trägt keine Definition eine transformierte Gruppe — genau
  * deshalb steht der Fehler hier, bevor es in D.1 still falsch werden kann.
+ *
+ * Text bleibt hier bewusst außen vor, obwohl `boundsOfMm` für Text anstandslos eine Hülle liefert
+ * und `primitive.type !== 'path'` es sonst kommentarlos durchließe. Der Unterschied ist, WAS diese
+ * Hülle bedeutet: für ein Rechteck, einen Kreis oder eine Polylinie ist sie eine Messung, für Text
+ * gibt `boundsOfMm` unverändert die deklarierte `boxMm` zurück — dieselbe Zusicherung, die geprüft
+ * werden soll, nicht ihr Ergebnis. Bliebe Text hier drin, würde die Gleichheitsprüfung weiter unten
+ * (Hülle == Box) für eine reine Textdefinition zu "boxMm == box" entarten: eine Zusicherung gegen
+ * sich selbst, die nur noch verlangt, dass der Autor dieselben Zahlen zweimal schreibt — kein Gate
+ * mehr, das etwas über die Piktogrammgeometrie aussagt. `checkBox()` prüft Textenthaltung deshalb
+ * über einen eigenen Pfad (`textsOf`), der dieselbe Prüflogik wiederverwendet, aber strukturell nie
+ * in die Gleichheitsprüfung einfließen kann.
  */
 function measurableOf(primitives: readonly Primitive[]): Primitive[] {
   const measurable: Primitive[] = [];
@@ -92,7 +122,7 @@ function measurableOf(primitives: readonly Primitive[]): Primitive[] {
         );
       }
       measurable.push(...measurableOf(primitive.children));
-    } else if (primitive.type !== 'path') {
+    } else if (primitive.type !== 'path' && primitive.type !== 'text') {
       measurable.push(primitive);
     }
   }
@@ -171,6 +201,31 @@ function coordinatesOf(command: PathCommand, axes: { x: Axis; y: Axis }): Array<
 }
 
 /**
+ * Meldet jede Achse einer Hülle, die außerhalb der Box liegt. Geteilt zwischen echten
+ * Primitivhüllen (`measurable`, unten in `checkBox`) und Textboxen (`textsOf`): beide werden
+ * gegen dieselbe Box auf dieselbe Weise auf Enthaltung geprüft, nur was hinter `bounds` steckt
+ * unterscheidet sich — eine Messung dort, eine Zusicherung hier (siehe `measurableOf`).
+ */
+function containmentDetails(label: string, bounds: BoundsMm, axes: { x: Axis; y: Axis }): string[] {
+  const details: string[] = [];
+  const checks: Array<[number, Axis]> = [
+    [bounds.minX, axes.x],
+    [bounds.maxX, axes.x],
+    [bounds.minY, axes.y],
+    [bounds.maxY, axes.y],
+  ];
+  for (const [value, axis] of checks) {
+    if (!within(value, axis)) {
+      details.push(
+        `Primitiv "${label}": ${axis.name} = ${value} mm liegt außerhalb der Box ` +
+          `(${axis.name} von ${axis.min} bis ${axis.max} mm).`,
+      );
+    }
+  }
+  return details;
+}
+
+/**
  * Prüft, dass jede Koordinate innerhalb der deklarierten Box liegt.
  *
  * Für Pfade ist das konservativ korrekt, ohne die Kurven auszurechnen: eine Bezierkurve verlässt
@@ -185,6 +240,12 @@ function coordinatesOf(command: PathCommand, axes: { x: Axis; y: Axis }): Array<
  * unnötige Zusicherung, die das Clipping-Gate strenger macht als die Geometrie es verlangt. Bei
  * gemischten Definitionen ist Gleichheit unerfüllbar (die Box muss auch den Pfad fassen) — dort
  * bleibt es bei der Enthaltung.
+ *
+ * Text bekommt in dieser Gleichheitsprüfung nie eine Stimme (siehe `measurableOf`): seine Box ist
+ * eine Zusicherung des Autors, keine Messung, und Gleichheit wäre dort unerfüllbar verlangt oder
+ * bedeutungslos erfüllt — je nachdem, ob boxMm zufällig mit der Piktogramm-Box übereinstimmt. Für
+ * Text gilt deshalb, wie für Pfade, nur Enthaltung: geprüft über `textsOf`, unabhängig von
+ * `measurable`.
  */
 export function checkBox(definition: PictogramDefinition): PictogramIssue[] {
   const issues: PictogramIssue[] = [];
@@ -230,24 +291,22 @@ export function checkBox(definition: PictogramDefinition): PictogramIssue[] {
 
   const measurable = measurableOf(definition.primitives);
   for (const primitive of measurable) {
-    const bounds = boundsOfMm(primitive);
-    const checks: Array<[number, Axis]> = [
-      [bounds.minX, axes.x],
-      [bounds.maxX, axes.x],
-      [bounds.minY, axes.y],
-      [bounds.maxY, axes.y],
-    ];
-    for (const [value, axis] of checks) {
-      if (!within(value, axis)) {
-        issue(
-          `Primitiv "${primitive.type}": ${axis.name} = ${value} mm liegt außerhalb der Box ` +
-            `(${axis.name} von ${axis.min} bis ${axis.max} mm).`,
-        );
-      }
+    for (const detail of containmentDetails(primitive.type, boundsOfMm(primitive), axes)) {
+      issue(detail);
     }
   }
 
-  if (measurable.length > 0 && !hasPath(definition.primitives)) {
+  // Text-Enthaltung, unabhängig von `measurable`: `textsOf` statt der Box-Gleichheitsprüfung
+  // unten, weil `boundsOfMm` für Text nur die deklarierte `boxMm` zurückgibt (siehe
+  // `measurableOf`) — dieselbe Prüflogik wie oben (`containmentDetails`), aber strukturell
+  // getrennt von der Sammlung, die in die Gleichheitsprüfung einfließt.
+  for (const text of textsOf(definition.primitives)) {
+    for (const detail of containmentDetails(text.type, boundsOfMm(text), axes)) {
+      issue(detail);
+    }
+  }
+
+  if (measurable.length > 0 && !hasPath(definition.primitives) && !hasText(definition.primitives)) {
     const hull = measurable.map(boundsOfMm).reduce<BoundsMm>(
       (acc, next) => ({
         minX: Math.min(acc.minX, next.minX),
@@ -315,6 +374,12 @@ interface PictogramStrokeWidths {
  * einzelne Linien haben bereits standardmäßig Butt-Kappen und keine Joins. Daher reicht die
  * halbe Strichstärke als konservative Ausdehnung in jede Achsenrichtung aus. Nicht-
  * Piktogramm-Geometrie fällt bewusst nicht in diesen kleinen Strichvertrag.
+ *
+ * Text trägt zu keiner Strichbreite bei, unabhängig von seinem `style.stroke`: `svg.ts` gibt
+ * `<text>` immer mit `fillOnly: true` aus, und `canvas.ts` kennt für Text kein `strokeText()` —
+ * ein gesetzter Strich wird also nie sichtbar. Ihn hier trotzdem einzurechnen würde `halfStroke`
+ * unten aufblähen und die gesamte Piktogramm-Box strenger gegen den Körper prüfen, als tatsächlich
+ * gerendert wird — genau der Fehlermodus, den dieser Vertrag ausschließen soll.
  */
 function pictogramStrokeWidths(
   primitives: readonly Primitive[],
@@ -337,6 +402,7 @@ function pictogramStrokeWidths(
       foreignRoles.push(...nested.foreignRoles);
       continue;
     }
+    if (primitive.type === 'text') continue;
     if (role !== 'pictogram') continue;
     if (style?.stroke === undefined || style.stroke === 'none') continue;
     const width = style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
@@ -651,6 +717,30 @@ export function checkClipping(
       });
     }
   }
+
+  // Text hat keine messbare Fläche (`boundsOfMm` gibt für Text nur `boxMm` zurück, siehe
+  // `measurableOf`) — geprüft wird deshalb die deklarierte Box gegen den Körper, nicht die
+  // Glyphen. Ohne halbe Strichbreite: Text wird gefüllt, nicht gestrichen (siehe
+  // `pictogramStrokeWidths` oben), seine sichtbare Ausdehnung endet exakt an `boxMm`. Geprüft wird
+  // jede Textbox einzeln statt nur über die bereits geprüfte Gesamt-`visibleBox`: `checkBox`
+  // erzwingt zwar, dass jede Textbox innerhalb von `definition.box` liegt, aber diese Funktion
+  // läuft auch unabhängig von `checkBox` (siehe die Tests dazu) — die Garantie soll hier lokal
+  // stehen, nicht nur aus der Zusammensetzung der beiden Gates folgen.
+  for (const text of textsOf(definition.primitives)) {
+    for (const [x, y] of cornersOf(text.boxMm)) {
+      if (!contains([x, y])) {
+        issues.push({
+          gate: 'clipping',
+          pictogramId: definition.id,
+          variant: definition.variant,
+          detail:
+            `Textbox von "${text.content}": Ecke (${x}, ${y}) mm liegt außerhalb der ` +
+            `Körperfläche "${body.type}".`,
+        });
+      }
+    }
+  }
+
   return issues;
 }
 

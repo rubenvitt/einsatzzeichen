@@ -200,4 +200,42 @@ describe('viewBox-Gate', () => {
       ),
     ).toEqual([]);
   });
+
+  it('behandelt eine Textbox als ihre eigene Hülle, ohne halbe Strichbreite zu addieren', () => {
+    // boxMm liegt mit xMm: 0 bündig an der linken viewBox-Kante. Ein gesetzter 4-mm-Strich würde,
+    // fälschlich mit halber Breite eingerechnet, minX auf -2 drücken und einen Befund auslösen —
+    // Text wird gefüllt, nicht gestrichen, also darf der Strich hier keine Rolle spielen.
+    expect(
+      checkViewBox(
+        drawing({
+          type: 'text',
+          content: 'X',
+          x: 4,
+          y: 8,
+          sizeMm: 4,
+          anchor: 'start',
+          baseline: 'alphabetic',
+          boxMm: { xMm: 0, yMm: 4, widthMm: 8, heightMm: 4 },
+          style: { stroke: 'schwarz', strokeWidth: 4 },
+        }),
+      ),
+    ).toEqual([]);
+  });
+
+  it('meldet eine Textbox außerhalb der viewBox', () => {
+    const issues = checkViewBox(
+      drawing({
+        type: 'text',
+        content: 'X',
+        x: 4,
+        y: 8,
+        sizeMm: 4,
+        anchor: 'start',
+        baseline: 'alphabetic',
+        boxMm: { xMm: -4, yMm: 4, widthMm: 8, heightMm: 4 },
+      }),
+    );
+    expect(issues[0]?.rule).toBe('outside-viewbox');
+    expect(issues[0]?.detail).toContain('minX');
+  });
 });

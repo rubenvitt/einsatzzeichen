@@ -227,8 +227,13 @@ export function checkViewBox(drawing: Drawing): ViewBoxIssue[] {
       return;
     }
 
+    // Text wird gefüllt, nicht gestrichen — dieselbe Politik wie `svg.ts` (das `<text>` immer mit
+    // `fillOnly: true` ausgibt) und `canvas.ts` (das kein `strokeText()` kennt); siehe auch
+    // `pictogram-gate.ts`, `pictogramStrokeWidths`, für dieselbe Regel im Clipping-Gate. Ein
+    // gesetztes `style.stroke` an Text wird deshalb hier unabhängig vom Stil auf 0 erzwungen —
+    // sonst würde `boundsOfPoints` unten eine nie sichtbare halbe Strichbreite addieren.
     const strokeWidth =
-      style?.stroke !== undefined && style.stroke !== 'none'
+      primitive.type !== 'text' && style?.stroke !== undefined && style.stroke !== 'none'
         ? (style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM)
         : 0;
     const strokeWidthProblem =
@@ -288,6 +293,21 @@ export function checkViewBox(drawing: Drawing): ViewBoxIssue[] {
       ];
     } else if (primitive.type === 'polyline') {
       points = [...primitive.points];
+    } else if (primitive.type === 'text') {
+      // Text hat keine berechenbare Geometrie (siehe `bounds.ts`) — `boxMm` ist die einzig
+      // verfügbare Wahrheit, eine Zusicherung des Autors statt einer Messung. Die vier Ecken
+      // fließen unverändert in dieselbe Transformations- und Hüllenberechnung wie jedes andere
+      // Primitiv unten (`transformed`, `boundsOfPoints`) — anders als `boundsOfMm` lehnt dieses
+      // Gate eine Drehung von Text nicht ab, sondern dreht ihre Ecken ehrlich mit: `boundsOfMm`
+      // müsste sonst die gedrehte Box unrotiert zurückgeben (dort nicht belegt), während hier die
+      // tatsächliche Bildschirmausdehnung ohnehin über `chain` berechnet wird.
+      const { xMm, yMm, widthMm, heightMm } = primitive.boxMm;
+      points = [
+        [xMm, yMm],
+        [xMm + widthMm, yMm],
+        [xMm + widthMm, yMm + heightMm],
+        [xMm, yMm + heightMm],
+      ];
     } else {
       const tokenized = tokenizePath(primitive.d);
       for (const problem of tokenized.problems) issue('path-syntax', problem);
