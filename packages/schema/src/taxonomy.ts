@@ -208,6 +208,14 @@ export const STATE_IDS = Object.freeze([
 
 export type StateId = (typeof STATE_IDS)[number];
 
+/** IuK-Zeichen nach Anhang J in verbindlicher Kapitelreihenfolge. */
+export const COMMS_IDS = Object.freeze([
+  'half-duplex-operation',
+  'duplex-operation',
+] as const);
+
+export type CommsId = (typeof COMMS_IDS)[number];
+
 /** Semantische Beschreibung eines Zeichens. Eingabe des Kompositionsmotors. */
 export interface SymbolSpec {
   kind: SymbolKind;

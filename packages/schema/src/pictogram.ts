@@ -1,6 +1,6 @@
 import type { Length, Primitive } from './geometry.js';
 import type { DepictionVariant } from './provenance.js';
-import type { CapabilityId, StateId } from './taxonomy.js';
+import type { CapabilityId, CommsId, StateId } from './taxonomy.js';
 
 /**
  * Zugesicherte Hülle eines Piktogramms: linke obere Ecke und Maße in Millimetern.
@@ -21,14 +21,12 @@ export interface PictogramBox {
  * ein Trümmerkegel ist keine Fähigkeit einer Einheit — sie unter `capability.` zu führen wäre
  * eine Falschaussage in der ID.
  *
- * Drei der fünf Räume haben noch keine Literale und sind deshalb `never`. Sie stehen hier
- * trotzdem, weil sie der Vertrag sind, an dem D.3 bis D.4 anknüpfen, ohne die Aufteilung je neu
+ * Zwei der fünf Räume haben noch keine Literale und sind deshalb `never`. Sie stehen hier
+ * trotzdem, weil sie der Vertrag sind, an dem D.4 anknüpft, ohne die Aufteilung je neu
  * zu entscheiden — und weil ein
  * `never`-Alias mit dieser Begründung ehrlicher ist als ein `string`, der jede ID durchlässt.
  */
 
-/** Anhang J: IuK. Literale entstehen in D.3. */
-export type CommsId = never;
 /** Anhänge K und L: Bauwerksschäden, Deichverteidigung. Literale entstehen in D.4. */
 export type DamageId = never;
 /** Anhang M: Vegetationsbrand. Literale entstehen in D.4. */

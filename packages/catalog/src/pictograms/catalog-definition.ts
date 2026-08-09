@@ -1,6 +1,7 @@
 import type {
   CapabilityId,
   ColorToken,
+  CommsId,
   DepictionVariant,
   PictogramBox,
   PictogramDefinition,
@@ -9,7 +10,7 @@ import type {
 } from '@einsatzzeichen/schema';
 import { deepFreeze, type DeepReadonly } from '../readonly-data.js';
 
-export type PictogramSection = `4.${string}` | `5.8.${string}`;
+export type PictogramSection = `4.${string}` | `5.8.${string}` | `J.${string}`;
 
 export interface PictogramContrastPair {
   readonly foreground: ColorToken;
@@ -77,6 +78,31 @@ export function defineState(input: StateDefinitionInput): CatalogPictogramDefini
   return deepFreeze({
     section: input.section,
     id: `state.${input.id}`,
+    variant: input.variant ?? 'primary',
+    title: input.title,
+    referenceAsset: input.referenceAsset,
+    placement: { mode: 'standalone' } as const,
+    contrastPairs: structuredClone(input.contrastPairs),
+    box: structuredClone(input.box),
+    primitives: structuredClone(input.primitives),
+  });
+}
+
+export interface CommsDefinitionInput {
+  readonly section: `J.${string}`;
+  readonly id: CommsId;
+  readonly variant?: DepictionVariant;
+  readonly title: string;
+  readonly referenceAsset: `${string}.svg`;
+  readonly box: PictogramBox;
+  readonly primitives: readonly Primitive[];
+  readonly contrastPairs: readonly [PictogramContrastPair, ...PictogramContrastPair[]];
+}
+
+export function defineComms(input: CommsDefinitionInput): CatalogPictogramDefinition {
+  return deepFreeze({
+    section: input.section,
+    id: `comms.${input.id}`,
     variant: input.variant ?? 'primary',
     title: input.title,
     referenceAsset: input.referenceAsset,
