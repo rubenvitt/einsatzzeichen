@@ -13,7 +13,7 @@ import {
   type SymbolSpec,
 } from '@einsatzzeichen/schema';
 import { boundsOfMm } from './bounds.js';
-import { placeHead, profileFor } from './layout/profiles.js';
+import { HEAD_GAP_MM, placeHead, profileFor } from './layout/profiles.js';
 import { validateSpec } from './validate.js';
 
 /** Senkrechte Mitte der Hülle eines Primitivs, in Millimetern. */
@@ -21,6 +21,31 @@ function centerYMm(primitive: Primitive): number {
   const bounds = boundsOfMm(primitive);
   return (bounds.minY + bounds.maxY) / 2;
 }
+
+/**
+ * Schriftgrad der Fußzone. Gespiegelt aus derselben Rechnung wie `placeHead` — nicht neu
+ * erfunden: die Kopfzone darf beim Rechteck-Körper (`defaultAnchorMm` 6) bis zu
+ * `defaultAnchorMm - HEAD_GAP_MM - HEAD_TOP_MARGIN_MM` = 4 mm hoch werden, ohne den Körper zu
+ * verschieben (siehe `placeHead`, `topMm = max(HEAD_TOP_MARGIN_MM, defaultAnchorMm - HEAD_GAP_MM
+ * - headHeightMm)`). Dieselben 4 mm sind der gespiegelte Freiraum unterhalb der
+ * Standard-Körperunterkante bis zum gespiegelten Rand (`viewBoxHeight - HEAD_TOP_MARGIN_MM`).
+ *
+ * Bewusst ein einziger, fixer Wert und keine Herleitung je `LayoutProfile.defaultAnchorMm`: für
+ * `person` (1) und `post` (2) ginge dieselbe Formel auf null oder negativ. Ein bedingungsloses
+ * Abschneiden auf 0 würde dort einen unsichtbaren `sizeMm: 0`-Text erzeugen — eine Fußzone, die
+ * lautlos verschwindet, statt als Geometriebefund aufzufallen. Mit dem festen Wert produziert
+ * `person`/`post` stattdessen eine Box, die über die viewBox hinausragt: ein `outside-viewbox`-
+ * Befund im viewBox-Gate aus Task 5, wie jede andere zu große Geometrie — belegt in
+ * `compose.test.ts`.
+ *
+ * Bei 4 mm Schriftgrad auf der 32-mm-Standard-viewBox erreicht `effectiveTextPx` erst ab 64 px
+ * Rendergröße die Lesbarkeitsschwelle `MINIMUM_TEXT_RENDER_PX` (8 px): 16→2, 24→3, 32→4, 64→8,
+ * 128→16, 256→32 px. Der Rückstand unter 64 px ist geometrisch erzwungen, nicht durch zu
+ * vorsichtige Wahl entstanden — 4 mm ist der größte Schriftgrad, den der gespiegelte
+ * Rand-plus-Abstand für den Rechteck-Körper zulässt, bevor die Fußzone selbst zum Gate-Befund
+ * würde.
+ */
+const FOOT_TEXT_SIZE_MM = 4;
 
 /** Zugriffe auf den Katalog. Als Ports übergeben, damit core nicht von catalog abhängt. */
 export interface CatalogPorts {
@@ -131,9 +156,40 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
         ]
       : [];
 
+  // Fußzone: dieselbe Spiegelung wie oben bei `pictogramShiftMm` — an der tatsächlich platzierten
+  // Körperhülle (`placedBody`), nicht an der unverschobenen Standardgeometrie. Anders als die
+  // Kopfzone (deren `headBox` unabhängig vom Körper berechnet wird, weil der Körper ihr erst noch
+  // ausweichen muss) konkurriert die Fußzone mit nichts um denselben Platz — sie hängt sich an die
+  // Unterkante des Körpers, wo immer die nach einer eventuellen Kopfzonen-Verschiebung liegt. Das
+  // hält Kopf- und Fußzone auch dann überschneidungsfrei, wenn ein Zeichen künftig beides trägt.
+  const bodyBoundsMm = boundsOfMm(placedBody);
+  const footTopMm = bodyBoundsMm.maxY + HEAD_GAP_MM;
+  const footPrimitives: Primitive[] =
+    spec.designation !== undefined
+      ? [
+          {
+            type: 'text',
+            role: 'foot',
+            content: spec.designation,
+            x: (bodyBoundsMm.minX + bodyBoundsMm.maxX) / 2,
+            y: footTopMm,
+            sizeMm: FOOT_TEXT_SIZE_MM,
+            anchor: 'middle',
+            baseline: 'hanging',
+            boxMm: {
+              xMm: bodyBoundsMm.minX,
+              yMm: footTopMm,
+              widthMm: bodyBoundsMm.maxX - bodyBoundsMm.minX,
+              heightMm: FOOT_TEXT_SIZE_MM,
+            },
+            style: { fill: 'schwarz' },
+          },
+        ]
+      : [];
+
   return {
     viewBox: DEFAULT_VIEWBOX_MM,
-    children: [...headPrimitives, filled, ...pictograms],
+    children: [...headPrimitives, filled, ...pictograms, ...footPrimitives],
     ...(options.title !== undefined ? { title: options.title } : {}),
     ...(options.description !== undefined ? { description: options.description } : {}),
   };
