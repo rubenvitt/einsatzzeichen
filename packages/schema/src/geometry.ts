@@ -94,6 +94,25 @@ export type Primitive =
   | (PrimitiveBase & { type: 'line'; x1: Length; y1: Length; x2: Length; y2: Length })
   | (PrimitiveBase & { type: 'polyline'; points: readonly Point[]; closed?: boolean })
   | (PrimitiveBase & { type: 'path'; d: string })
+  /**
+   * Text. Die einzige Primitivart, deren Ausdehnung nicht berechenbar ist — sie hängt an
+   * Fontmetrik, Schriftgrad und Laufweite. `boxMm` ist deshalb **keine Messung**, sondern eine
+   * Zusicherung des Autors, in die der Text zu passen hat; `boundsOfMm` gibt sie unverändert
+   * zurück, und die Gates prüfen gegen sie statt gegen die Glyphen.
+   *
+   * Die Schriftfamilie steht bewusst nicht hier: es gibt genau eine, und sie gehört in die
+   * Renderpolitik, nicht in jedes Primitiv.
+   */
+  | (PrimitiveBase & {
+      type: 'text';
+      content: string;
+      x: Length;
+      y: Length;
+      sizeMm: Length;
+      anchor: 'start' | 'middle' | 'end';
+      baseline: 'alphabetic' | 'middle' | 'hanging';
+      boxMm: { xMm: Length; yMm: Length; widthMm: Length; heightMm: Length };
+    })
   | (PrimitiveBase & { type: 'group'; children: readonly Primitive[] });
 
 export interface Drawing {

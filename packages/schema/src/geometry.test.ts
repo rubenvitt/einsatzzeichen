@@ -4,6 +4,7 @@ import {
   DEFAULT_VIEWBOX_MM,
   PALETTE,
   type Drawing,
+  type Primitive,
 } from './geometry.js';
 
 describe('geometry', () => {
@@ -86,5 +87,21 @@ describe('geometry', () => {
     const first = drawing.children[0];
     expect(first?.transform?.rotate?.angle).toBe(45);
     expect(first?.transform?.rotate?.cx).toBe(DEFAULT_VIEWBOX_MM.width / 2);
+  });
+
+  it('trägt ein Textprimitiv mit deklarierter Fläche', () => {
+    const text: Primitive = {
+      type: 'text',
+      role: 'pictogram',
+      content: 'HRT',
+      x: 16,
+      y: 20,
+      sizeMm: 10,
+      anchor: 'middle',
+      baseline: 'alphabetic',
+      boxMm: { xMm: 6, yMm: 12, widthMm: 20, heightMm: 10 },
+    };
+    expect(text.type).toBe('text');
+    expect(text.boxMm.widthMm).toBe(20);
   });
 });
