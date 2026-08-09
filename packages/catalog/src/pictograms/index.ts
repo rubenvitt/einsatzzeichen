@@ -5,6 +5,7 @@ import {
 } from '@einsatzzeichen/schema';
 import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
 import { STATE_PICTOGRAMS } from './states/index.js';
+import { COMMS_PICTOGRAMS } from './comms/index.js';
 import type { CatalogPictogramDefinition } from './catalog-definition.js';
 import { deepFreeze } from '../readonly-data.js';
 
@@ -21,16 +22,18 @@ export function pictogramRenderId(
 }
 
 /**
- * Alle Piktogramme des Katalogs, ein Modul je Bereich. In D.0 trägt nur `capability.` Einträge;
- * `state.`, `comms.`, `damage.` und `wildfire.` kommen in D.2 bis D.4 als eigene Module hinzu und
- * werden hier zusammengeführt.
+ * Alle Piktogramme des Katalogs, ein Modul je Bereich. `capability.`, `state.` und `comms.`
+ * tragen bereits Einträge; `damage.` und `wildfire.` kommen in D.4 als eigene Module hinzu und
+ * werden dann hier ergänzt.
  */
 export const ALL_PICTOGRAMS: readonly CatalogPictogramDefinition[] = deepFreeze([
   ...CAPABILITY_PICTOGRAMS,
   ...STATE_PICTOGRAMS,
+  ...COMMS_PICTOGRAMS,
 ]);
 
 export { STATE_PICTOGRAMS } from './states/index.js';
+export { COMMS_PICTOGRAMS } from './comms/index.js';
 
 export function buildPictogramRegistry(
   definitions: readonly CatalogPictogramDefinition[],
