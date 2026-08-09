@@ -212,14 +212,6 @@ export type StateId = (typeof STATE_IDS)[number];
 export const COMMS_IDS = Object.freeze([
   'half-duplex-operation',
   'duplex-operation',
-  'telecom-device',
-  'base-station',
-  'mobile-base-station',
-  'gateway',
-  'repeater',
-  'handheld-radio-terminal',
-  'mobile-radio-terminal',
-  'fixed-radio-terminal',
 ] as const);
 
 export type CommsId = (typeof COMMS_IDS)[number];
