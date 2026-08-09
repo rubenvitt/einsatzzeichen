@@ -9,7 +9,11 @@ import type { ReviewSet } from './review.js';
  * `legacy`              — ältere Systematik, für Aliasnamen und Migrationshinweise
  * `operational-rule`    — operatives Regelwerk mit Terminologie und Führungslogik
  * `standard`            — angrenzende Norm, nicht mit der DV-102-Systematik zu vermischen
- * `open-source-corpus`  — frei lizenzierter Fremdbestand, zum Vergleich der Bildideen
+ * `open-source-corpus`  — frei lizenzierter Fremdbestand *taktischer Zeichen*, zum Vergleich der
+ *                         Bildideen (z. B. `phjardas-tz`)
+ * `typeface`            — eine Schrift ist ein Werkzeug der Darstellung, keine Zeichenquelle: sie
+ *                         trägt keine taktische Bedeutung, braucht aber dieselbe Lizenz- und
+ *                         Herkunftsprüfung wie jede andere Fremdquelle
  */
 export type SourceKind =
   | 'baseline'
@@ -18,7 +22,8 @@ export type SourceKind =
   | 'legacy'
   | 'operational-rule'
   | 'standard'
-  | 'open-source-corpus';
+  | 'open-source-corpus'
+  | 'typeface';
 
 /** Beschaffungsstand. Trennt „nicht beschafft" von „beschafft und ungenutzt". */
 export type Acquisition = 'local' | 'public-url' | 'not-acquired';

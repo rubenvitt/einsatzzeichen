@@ -305,7 +305,7 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
   },
   'arimo-ofl': {
     id: 'arimo-ofl',
-    kind: 'open-source-corpus',
+    kind: 'typeface',
     title: 'Arimo (Variable Font)',
     publisher: 'Google Fonts / The Arimo Project Authors',
     edition: '1.341',
