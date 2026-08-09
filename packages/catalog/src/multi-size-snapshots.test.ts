@@ -8,6 +8,7 @@ import {
 } from './render-themes.js';
 import { RENDER_CASES, type RenderCase } from './test-support/render-cases.js';
 import { composeFromCatalog } from './recipes.js';
+import { resvgFontOptions } from './fonts.js';
 
 const SIZES = [16, 24, 32, 64, 128, 256] as const;
 const GAP = 12;
@@ -25,9 +26,14 @@ function rasterize(renderCase: RenderCase, size: number, theme: RenderTheme): Ra
     idPrefix: `${renderCase.id}-${theme.id}-${size}`,
   });
   const image = new Resvg(svg, {
-    // Die Zeichnungen enthalten kein sichtbares Textprimitiv. Systemfonts auszuschalten macht
-    // die Rasterung schneller und unabhängig vom Rechner, ohne die Ausgabe zu verändern.
-    font: { loadSystemFonts: false },
+    // Seit Task 9 ist die Schriftbindung verpflichtend (`resvgFontOptions()`, `fontFiles` +
+    // `loadSystemFonts: false`): `@resvg/resvg-js` rastert Text ohne Fontdatei zu null Pixeln
+    // (siehe `fonts.test.ts`, „rastert Text überhaupt"), Systemschriften wären dagegen
+    // maschinenabhängig. Beide Konfigurationen würden hier stillschweigend bestehen — ein
+    // Zeichen mit unsichtbarem oder rechnerabhängigem Text bliebe ein grüner Snapshot. Die
+    // Zeichnungen in `RENDER_CASES` enthalten aktuell kein Textprimitiv; diese Umstellung
+    // ändert die bestehenden Snapshots deshalb nicht.
+    font: resvgFontOptions(),
   }).render();
   expect(image.width, `${renderCase.id}/${theme.id}/${size}: Breite`).toBe(size);
   expect(image.height, `${renderCase.id}/${theme.id}/${size}: Höhe`).toBe(size);

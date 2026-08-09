@@ -70,4 +70,21 @@ describe('compose() — Fußzone', () => {
     const issues = checkViewBox(drawing);
     expect(issues.some((issue) => issue.rule === 'outside-viewbox')).toBe(true);
   });
+
+  it('meldet denselben viewBox-Gate-Befund für "person" (defaultAnchorMm 1)', () => {
+    // Analog zum post-Fall oben, aber für `person` (rotatedSquareProfile, defaultAnchorMm 1 statt
+    // 2). Der Kommentar zu FOOT_TEXT_SIZE_MM in compose.ts behauptet den outside-viewbox-Befund
+    // für beide Symbolarten — bis hierher war nur `post` belegt. Ohne Stärke (kein `strength` im
+    // Spec) ruft `profile.place()` für `person` den Rotations-Zweig gar nicht auf (siehe
+    // rotatedSquareProfile in layout/profiles.ts: `if (headBottomMm === null) return body;`), ein
+    // einfacher rect-Körper genügt deshalb als Katalog-Doppel.
+    const personBody: Primitive = { type: 'rect', role: 'body', x: 1, y: 1, width: 30, height: 29 };
+    const personCatalog: CatalogPorts = {
+      ...catalog,
+      baseDrawing: () => ({ viewBox: DEFAULT_VIEWBOX_MM, children: [personBody] }),
+    };
+    const drawing = compose({ kind: 'person', designation: 'Verletzter' }, personCatalog);
+    const issues = checkViewBox(drawing);
+    expect(issues.some((issue) => issue.rule === 'outside-viewbox')).toBe(true);
+  });
 });

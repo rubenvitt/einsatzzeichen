@@ -2,6 +2,11 @@
  * Renderpolitik für Text. Sie steht hier und nicht im Primitiv, weil sie für jeden Text
  * dieselbe ist: eine Schriftfamilie, kein gesetztes Gewicht. Ein nicht gesetztes Gewicht ist
  * eine Achse weniger, die einen Snapshot verschieben kann.
+ *
+ * Einzige Quelle des Literals: `catalog`s `TEXT_FONT_FAMILY` (fonts.ts, für `resvgFontOptions()`)
+ * bezieht seinen Wert von hier über den Reexport in core/src/index.ts, statt ihn zu wiederholen —
+ * die Abhängigkeitsrichtung catalog → core ist bereits gegeben. Eine künftige Umbenennung der
+ * Schriftfamilie kann so nicht mehr in den beiden Paketen auseinanderlaufen.
  */
 export const TEXT_FONT_FAMILY_ATTR = 'Arimo';
 
