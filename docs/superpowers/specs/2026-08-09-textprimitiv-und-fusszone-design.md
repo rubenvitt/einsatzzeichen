@@ -60,7 +60,8 @@ Snapshot-Evidenz nicht entwertet.
 
 ### 3.2 Welche Schrift und auf welcher Lizenzgrundlage
 
-**Liberation Sans Regular**, SIL Open Font License 1.1.
+**Arimo**, SIL Open Font License 1.1, bezogen aus dem Google-Fonts-Repository
+(`ofl/arimo/Arimo[wght].ttf`, 484 KB, variabler Schnitt).
 
 Drei Gründe:
 
@@ -68,9 +69,15 @@ Drei Gründe:
    auch eingebettet, solange die Lizenzdatei mitgeliefert wird und die Schrift nicht allein
    verkauft wird. Beides ist hier erfüllbar.
 2. **Metrisch Arial-kompatibel.** Die Baseline-Referenzen setzen ihre Kürzel in einer
-   Helvetica/Arial-artigen Grotesk. Eine metrisch kompatible Schrift kommt der Referenz näher als
-   jede andere freie Wahl.
-3. **Stabile, belegbare Herkunft.** Bezugsquelle und Prüfsumme werden im Repo dokumentiert.
+   Helvetica/Arial-artigen Grotesk. Arimo ist metrisch Arial-kompatibel und kommt der Referenz
+   damit näher als jede andere freie Wahl.
+3. **Stabile, belegbare Herkunft.** Google Fonts liefert die Datei unter einer festen Raw-URL samt
+   `OFL.txt`. Liberation Sans — die naheliegende Alternative und Arimos Vorläufer — hat **keine**
+   stabile TTF-Bezugsquelle: sein GitHub-Release trägt keine Assets, geprüft am 9. August 2026.
+   Das ist der Grund für Arimo statt Liberation Sans.
+
+Verifiziert am 9. August 2026: Arimo rasterisiert mit `fontFiles` und `loadSystemFonts: false`
+über alle sechs Snapshotgrößen (16 … 256 px) und ist dabei lauf-zu-lauf byteidentisch.
 
 In einem Projekt, das `taktische-zeichen/` genau wegen ungeklärter Nutzungsgrundlage aussperrt,
 wäre eine stillschweigend eingecheckte Schriftdatei inkonsequent. Die Datei kommt deshalb mit:
@@ -160,8 +167,17 @@ Die Regel: Ein Textprimitiv mit Schriftgrad `sizeMm` auf einer 32-mm-Fläche wir
 `s` px mit `sizeMm / 32 * s` px gesetzt. Unterhalb einer festzulegenden Schwelle in Pixeln meldet
 das Gate den Befund `text-below-minimum-size` mit Zeichen, Größe und errechnetem Pixelwert.
 
-Die Schwelle wird im Plan aus einer Rasterprüfung bestimmt und dann als benannte Konstante
-festgeschrieben, nicht geraten. Sie ist eine Aussage über Lesbarkeit und gehört dokumentiert wie
+Die Messreihe vom 9. August für „HRT" bei Schriftgrad 10 mm zeigt den Verlauf:
+
+| Rendergröße | effektiver Schriftgrad | dunkle Pixel |
+|---|---|---|
+| 16 px | 5,0 px | 13 |
+| 24 px | 7,5 px | 33 |
+| 32 px | 10,0 px | 47 |
+| 64 px | 20,0 px | 201 |
+
+Die Schwelle wird im Plan aus einer visuellen Rasterprüfung dieser Reihe bestimmt und dann als
+benannte Konstante festgeschrieben, nicht geraten. Sie ist eine Aussage über Lesbarkeit und gehört dokumentiert wie
 `MINIMUM_NON_TEXT_CONTRAST`.
 
 Ein Zeichen, das die Mindestgröße bei 16 px unterschreitet, ist damit **nicht kaputt** — es ist
@@ -224,7 +240,7 @@ andere Geometrie.
 | `packages/core/src/compose.ts` | Fußzone aus `designation` |
 | `packages/catalog/src/pictograms/contrast-contract.ts` | `MINIMUM_TEXT_CONTRAST`, Prüfung identischer Tokenpaare |
 | `packages/catalog/src/multi-size-snapshots.test.ts` | `fontFiles`, Mindestgrößenbefund |
-| `packages/catalog/assets/` | Schriftdatei, OFL-Lizenztext, Herkunftsnachweis |
+| `packages/catalog/assets/` | `Arimo[wght].ttf`, `OFL.txt`, Herkunfts- und Prüfsummennachweis |
 | `packages/catalog/src/sources.ts` | Quelleneintrag für die Schrift |
 
 ## 11. Verifikation
