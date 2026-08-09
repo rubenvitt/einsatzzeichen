@@ -38,9 +38,11 @@ seiner Manifestzeile, die für `coverage: 'catalog-entry'` 1:1 zu ihm ist. Das f
 steht derzeit bei allen Einträgen offen; die Struktur macht das sichtbar, statt es zu verdecken.
 
 `packages/catalog/src/sources.ts` führt elf Quellen der Referenzhierarchie plus `phjardas-tz` als
-Vergleichsbestand, jeweils mit Nutzungsgrundlage, Beschaffungsstand und Umgang mit der Geometrie.
-Für die BABZ-Assets ist die Lizenzlage `unclear`; die Konsequenz — abgeleitete Kennzahlen statt
-Dateien — steht damit maschinenlesbar im Register und nicht nur in Prosa.
+Vergleichsbestand und `arimo-ofl` als registrierten Schriftquellenträger (eigener `SourceKind
+'typeface'`, kein Teil der Referenzhierarchie) — insgesamt 13 Quellen, jeweils mit
+Nutzungsgrundlage, Beschaffungsstand und Umgang mit der Geometrie. Für die BABZ-Assets ist die
+Lizenzlage `unclear`; die Konsequenz — abgeleitete Kennzahlen statt Dateien — steht damit
+maschinenlesbar im Register und nicht nur in Prosa.
 
 Kern und Profile tragen **eigene Datenversionen** (`CoverageManifest.coreVersion`,
 `ProfileRecord.version`), unabhängig von den npm-Paketversionen. Der bundesweite Kern ist selbst
