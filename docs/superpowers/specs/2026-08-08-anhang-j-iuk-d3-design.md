@@ -1,12 +1,14 @@
 # Anhang J — Informations- und Kommunikationstechnik (D.3)
 
 > Design-Spec · 8. August 2026
-> **Status: pausiert nach Task 2 (9. August 2026).** 16 der 53 Darstellungen sind typografisch —
-> ihr Bedeutungsträger ist ein Buchstabenkürzel, und das Schema hat kein Textprimitiv. Abschnitt
-> 2.3 unterschätzt das als Randfall zweier Zeichen. Der Befund, der Beleg und die Folgen stehen in
-> `docs/decisions/2026-08-09-anhang-j-ist-typografisch.md`. Vor der Wiederaufnahme entsteht ein
-> Schemaform-Slice für Text. Ebenfalls dort korrigiert: der Kontrastvertrag für Körper mit weißer
-> Fläche (`weiss`/`surface` ist bei Verhältnis 1:1 unerfüllbar).
+> **Status: wieder aufgenommen (10. August 2026).** Die Pause nach Task 2 ist beendet: das
+> Textprimitiv liegt vor (`docs/decisions/2026-08-09-textprimitiv-und-fusszone.md`), die
+> deklarierbare Einsatzgrenze am Textlauf ebenfalls. **Abschnitt 2.3 ist überholt** — er behandelt
+> Beschriftungsglyphen als Randfall zweier Zeichen und setzt das Fehlen eines Textprimitivs
+> voraus; maßgeblich ist Abschnitt 2.4. Ebenfalls korrigiert: der Kontrastvertrag für Körper mit
+> weißer Fläche — `weiss`/`surface` ist bei Verhältnis 1:1 unerfüllbar, richtig sind
+> `schwarz`/`surface` für die Kontur auf der Ausgabeoberfläche und `schwarz`/`weiss` für die Marke
+> auf dem Körper. Die Prüfung dafür steht seit demselben Slice als `contrastPairProblems` im Code.
 
 ## 1. Zweck und Abgrenzung
 
@@ -87,7 +89,11 @@ sieben Kapitel-5.8-Beispielassets gegeben hat: benannt, zugeordnet, nicht still 
 Die drei Dateien und der Abschnitt J.2.3 gehen an dieselbe spätere
 **Rezept- und Conformance-Coverageaufgabe**, die schon die sieben 5.8-Beispielassets trägt.
 
-### 2.3 Beschriftungsglyphen
+### 2.3 Beschriftungsglyphen ~~(überholt, siehe 2.4)~~
+
+> Dieser Abschnitt bleibt als Beleg dafür stehen, was am 8. August angenommen wurde. Er ist in
+> zwei Punkten falsch: es sind nicht zwei Dateien, sondern zwanzig, und das Schema kennt seit dem
+> 9. August ein `text`-Primitiv. Maßgeblich ist Abschnitt 2.4.
 
 Zwei Referenzdateien enthalten Textglyphen als Teil des Zeichens:
 
@@ -105,6 +111,60 @@ Stelle verwiesen wie die seit der Lückenanalyse vom 5. August offene Fußzone (
 
 `J.1.14_Richtfunkverbindung.svg` enthält grauen Fließtext in `#787878`. Das ist Beschriftung des
 Referenzblatts, kein Zeichenbestandteil, und wird nicht übernommen.
+
+### 2.4 Anhang J ist zu einem Drittel typografisch
+
+**20 der 56 Referenzdateien** tragen Buchstaben- oder Ziffernglyphen als Pfade, bei **16 der 53
+Darstellungen** ist die Glyphe der Bedeutungsträger und nicht Beiwerk. Belegt in
+`docs/decisions/2026-08-09-anhang-j-ist-typografisch.md`: entfernt man aus den Referenzen alle
+Pfade mit zehn oder mehr Kommandos, sind `J.3.6`, `J.3.7` und `J.3.8` geometrisch identisch —
+dreimal dasselbe leere Quadrat. Ihre gesamte Unterscheidung liegt im Kürzel.
+
+Die Referenzen halten die Glyphen sauber in einer eigenen Gruppe `Takt._Zeichen__x28_Typo_x29_`.
+Daraus die Zuordnung von Abschnitt zu Kürzel und Schriftgrad:
+
+| Abschnitt | Läufe | Kürzel | `sizeMm` |
+|---|---|---|---|
+| J.1.3 | 1 | DMO | ~6,8 |
+| J.1.4 | 1 | TMO | ~6,8 |
+| J.1.5 | 2 | SDS (im Körper), DMO (darunter) | ~6,8 / ~10,2 |
+| J.1.6 | 2 | SDS, TMO | ~6,8 / ~10,2 |
+| J.1.7 | 1 | DMO | ~10,2 |
+| J.1.9 `primary` | 1 | Fax | ~10,2 |
+| J.1.9 `alternative` | 1 | Fax — **sonst keine Geometrie** | ~10,2 |
+| J.3.2 | 1 | BS | ~10,2 |
+| J.3.3 | 1 | drei Glyphen | ~10,2 |
+| J.3.4 | 2 | TMO (oben), DMO (unten) | ~6,8 |
+| J.3.5 | 1 | DMO | ~6,8 |
+| J.3.6 / J.3.7 / J.3.8 | 1 | HRT / MRT / FRT | ~10,2 |
+| J.3.9 | 1 | APRT | ~10,2 |
+| J.3.15 | 2 | VoIP, ein Großglyph | ~4,1 / ~14,4 |
+| J.4.8 | 1 | L | ~6,8 |
+| J.4.17 | 1 | 8 | ~6,7 |
+
+Was das Textprimitiv **nicht** leisten muss: keiner dieser Läufe ist mehrzeilig, keiner sitzt auf
+einem Pfad, keiner trägt Diakritika. Zwei Läufe an verschiedenen Stellen eines Zeichens sind zwei
+eigenständige `text`-Primitive mit eigener `boxMm`, keine zwei Zeilen eines Primitivs.
+
+**J.4.8 und J.4.17 fallen auseinander.** Abschnitt 2.3 hat beide gleich behandelt, weil beide als
+Pfad problematisch waren. Mit dem Textprimitiv gilt das nur noch für eines: „L" (Länge) ist eine
+feste Kennzeichnung, der Wert selbst steht in der Referenz gar nicht — als Text setzbar. Die „8"
+in J.4.17 bleibt ein Beispielwert; sie als Text zu setzen erklärt denselben Wert zur
+Zeichenbedeutung, den 2.3 als Pfad verboten hat. `content` ist ein festes `string`-Feld, einen
+Platzhalterbegriff gibt es nicht. **Offene Fachfrage, vor Task 6 zu entscheiden.**
+
+**Offene Zählfrage: 16 oder 17.** `J.3.14_Fernsprechvermittlung.svg` enthält ebenfalls genau ein
+Glyph in der Typo-Gruppe; nach dessen Entfernung unterscheidet sich seine Geometrie von `J.3.15`
+nur in Rundungsstellen (`28.346` gegen `28.347`). Die Tabelle in
+`docs/decisions/2026-08-09-anhang-j-ist-typografisch.md` führt J.3.14 nicht und behauptet dort
+einen „kleinen geometrischen Unterschied", der dem Dateivergleich nicht standhält. Vor Task 4 zu
+klären.
+
+**Untere Einsatzgrenze.** Kein Kürzel des Anhangs erreicht die kleinste Snapshotgröße lesbar: bei
+`MINIMUM_TEXT_RENDER_PX = 8` verlangt eine 16-px-Rendergröße einen Schriftgrad von 16 mm, das
+breiteste Kürzel misst ~10,3 mm. Jeder typografische Lauf deklariert deshalb sein `minRenderPx`
+(Pixel, nicht Millimeter — das einzige solche Feld im IR). Oberhalb der Grenze gilt die Schwelle
+unverändert; die Deklaration ist kein Freibrief.
 
 ## 3. Platzierung
 
@@ -188,6 +248,12 @@ Modulaufteilung prüfbar.
 Alle Geometrien sind eigenständige Millimeterkonstruktionen auf der kanonischen 32 × 32-mm-ViewBox
 mit ausschließlich absoluten Pfadkommandos `M L H V C Q Z`.
 
+Für die Kürzel aus Abschnitt 2.4 gilt das nicht, weil ein Textlauf kein Pfad ist und nicht durch
+das Kommando-Gate läuft: er wird als `text`-Primitiv gesetzt, mit deklarierter `boxMm` und
+deklariertem `minRenderPx`. Genau darin liegt sein Zweck — ein nachgezeichnetes „HRT" wäre eine
+Schriftschnitt-Nachbildung ohne Lizenzgrundlage, eine erfundene Marke ein Zeichen, das die
+Baseline nicht kennt.
+
 Die lokalen Referenzdateien dienen der visuellen und semantischen Prüfung. Pfade, Koordinaten,
 Transformationen und Geometrie werden weder kopiert noch extrahiert. `taktische-zeichen/` und das
 zugehörige ZIP bleiben ignoriert und uncommitted; ihre Nutzungs- und Lizenzgrundlage ist weiterhin
@@ -200,17 +266,19 @@ bestehenden Arten aus der Notiz vom 6. August — `pictogram-contract` und `svg-
 Set-Gleichheit an die tatsächlich iterierten Testfälle. Fehlende, doppelte und artfremde Claims
 bleiben Gate-Befunde.
 
-Die bestehenden Gates greifen ohne Anpassung, weil D.3 nur neue Definitionen in ein vorhandenes
-Register legt:
+Die bestehenden Gates greifen weitgehend ohne Anpassung, weil D.3 nur neue Definitionen in ein
+vorhandenes Register legt. Die 16 typografischen Darstellungen sind die Ausnahme: für sie messen
+Box-Gate und Kontrast-Gate anders, und ein siebtes Gate kommt hinzu:
 
 | Gate | Wirkung auf D.3 |
 |---|---|
-| Kommando-Gate | absolute Pfadkommandos in allen 53 Definitionen |
-| Box-Gate | deklarierte Hüllbox gegen tatsächliche Geometrie |
-| Clipping-Gate (standalone) | Geometrie innerhalb der 32 × 32-mm-ViewBox |
-| viewBox-Gate | einheitliches Ausgabeformat |
-| Kontrast-Gate | `accessible-light` und `print-monochrome`, mindestens 3:1 |
-| Mehrgrößen-Snapshots | 16 bis 256 px |
+| Kommando-Gate | absolute Pfadkommandos in allen Pfaden; Textläufe laufen nicht hindurch |
+| Box-Gate | deklarierte Hüllbox gegen tatsächliche Geometrie. **Bei Textdefinitionen entfällt die Gleichheitsforderung**: `checkBox` fordert Gleichheit von Hülle und Box nur noch ohne Pfad **und** ohne Text; für Textläufe bleibt die Enthaltungsprüfung gegen die deklarierte `boxMm`. Damit ist die Box der 16 Zeichen eine ungeprüfte Zusicherung — siehe Abschnitt 12 |
+| Clipping-Gate (standalone) | Geometrie innerhalb der 32 × 32-mm-ViewBox; für Text die deklarierte `boxMm` |
+| viewBox-Gate | einheitliches Ausgabeformat. Für Text ohne halbe Strichbreite, weil Text gefüllt und nicht gestrichen wird — die Randregel „mindestens 0,5 mm Abstand" gilt für Textboxen nicht |
+| Kontrast-Gate | `accessible-light` und `print-monochrome`. **Für textmalende Token 4,5:1** (`MINIMUM_TEXT_CONTRAST`), sonst 3:1. Zusätzlich meldet `contrastPairProblems` jedes Paar, dessen Token in einem Theme dieselbe Farbe auflösen |
+| **Text-Legibility-Gate** | `checkTextLegibility` über die sechs Snapshotgrößen, verdrahtet in `gate.test.ts` über `ALL_PICTOGRAMS`. Jeder Lauf deklariert sein `minRenderPx`; unterhalb davon beansprucht er keine Lesbarkeit, oberhalb gilt `MINIMUM_TEXT_RENDER_PX = 8` |
+| Mehrgrößen-Snapshots | 16 bis 256 px, mit fest gebundener Schriftdatei (`resvgFontOptions()`, keine Systemschrift) |
 | Metadaten-Gate | `<title>`, `<desc>`, `role="img"` |
 | Scope-Gate | vier neue Präfixe, jedes belegt |
 
@@ -228,7 +296,9 @@ Umgesetzt gilt D.3, wenn alle folgenden Punkte zutreffen:
 - `pnpm typecheck` ohne Fehler
 - `pnpm cli coverage` meldet Coverage-Gate bestanden, `0` Testnachweislücken, `0` Scope-Lücken,
   `0` Abweichungen, Umfang enthält `J.1`, `J.2`, `J.3`, `J.4`
-- Einträge steigen von 181 auf 234, offene Fachreviews von 194 auf 247
+- Einträge steigen von 181 auf 234, offene Fachreviews von 195 auf 248. Beide Zahlen sind
+  gegenüber dem 8. August nachgezogen: der Textslice hat `arimo-ofl` als 13. Quelle mit eigenem
+  offenen Quellenreview eingeführt, deshalb 195 statt 194 als Ausgangswert
 - `git diff --check` sauber
 - Kontaktbogen: 53 von 53 Darstellungen in Referenz-, Accessible-Light- und
   Print-Monochrome-Ansicht visuell geprüft und protokolliert unter
@@ -236,8 +306,8 @@ Umgesetzt gilt D.3, wenn alle folgenden Punkte zutreffen:
 
 ## 9. Reviewgrenze
 
-Alle 53 neuen Domainreviews bleiben `pending`. Nach D.3 sind 234 Manifestreviews, zwölf
-Quellenreviews und ein Profilreview offen — 247 fachliche Reviewträger.
+Alle 53 neuen Domainreviews bleiben `pending`. Nach D.3 sind 234 Manifestreviews, dreizehn
+Quellenreviews und ein Profilreview offen — 248 fachliche Reviewträger.
 
 Die technische Evidenz behauptet weder fachliche Bedeutung und Verwechslungsfreiheit noch normative
 Geltung, Quellenfreigabe oder geklärte Lizenzrechte. Sie ersetzt kein Fachreview durch eine
@@ -247,7 +317,15 @@ benannte Person mit einsatztaktischer Fachkunde.
 
 - Verbindungs- und Kantengeometrie zwischen zwei Punkten (Abschnitt 3.1)
 - Ledger-Schlüssel auf Implementierungs- statt Abschnittsebene (Abschnitt 2.1)
-- Wertbeschriftung für `J.4.8` und `J.4.17`, Fußzone allgemein (Abschnitt 2.3)
+- Wertbeschriftung für `J.4.17` — die „8" bleibt ein Beispielwert ohne Platzhalterbegriff im Typ
+  (Abschnitt 2.4). `J.4.8` fällt **nicht** mehr darunter: „L" ist eine feste Kennzeichnung und als
+  Text setzbar
+- Die Fußzone. Sie ist seit dem Textslice implementiert, für D.3 aber ohne Bedeutung: alle 53
+  Darstellungen sind standalone und keine `SymbolSpec`-Kompositionen
+- Ein Textmetrik-Gate, das die deklarierte `boxMm` gegen die tatsächliche Tinte vermisst. Die
+  Lücke ist in `docs/decisions/2026-08-09-textprimitiv-und-fusszone.md` benannt und bleibt offen;
+  für die 16 Zeichen heißt das: die Box ist eine Zusicherung, die nur die visuelle Prüfung
+  kontrolliert
 - `J_Bedienungszeichen.svg`, die beiden J.2.3-Beispiele, Abschnitt J.2.3 (Abschnitt 2.2)
 - `SymbolSpec`- oder `compose()`-Integration der `comms.`-Zeichen
 - `DamageId` und `WildfireId` — Anhänge K, L, M bleiben D.4

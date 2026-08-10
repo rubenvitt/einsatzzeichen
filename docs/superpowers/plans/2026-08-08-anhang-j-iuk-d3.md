@@ -19,14 +19,18 @@ Paketrichtung `cli → catalog → core → schema`
 
 ## Global Constraints
 
-- Ausgangspunkt ist `main` auf Commit `0451219` oder dessen geradliniger Nachfolger mit unverändert
-  grüner D.2-Evidenz; die Umsetzung läuft in einem isolierten D.3-Worktree.
+- Ausgangspunkt ist `main` auf Commit `70f7cc3` — der Slice „Textprimitiv und Fußzone" ist gemergt.
+  Der D.3-Worktree ist darauf rebased (Branch `worktree-anhang-j-d3`); Task 1 und Task 2 sind
+  erledigt, das Revert-Paar der erfundenen Marken ist beim Rebase entfallen und liegt als Tag
+  `archiv/d3-erfundene-marken-zurueckgerollt`.
 - Jeder Shellbefehl wird gemäß Repository-Anweisung mit `rtk` ausgeführt.
 - Die lokalen Referenz-SVGs unter `taktische-zeichen/` dienen ausschließlich der visuellen und
   semantischen Prüfung. Keine Pfaddaten, Koordinaten oder transformierte Referenzgeometrie werden
   übernommen oder eingecheckt. `taktische-zeichen/` und das ZIP bleiben ignoriert und uncommitted.
 - Jede neue Geometrie ist eine eigenständige Millimeterkonstruktion auf der kanonischen
   32 × 32-mm-ViewBox und verwendet für Pfade ausschließlich absolute `M L H V C Q Z`-Kommandos.
+  Textläufe sind keine Pfade und laufen nicht durch das Kommando-Gate; sie tragen stattdessen
+  `boxMm` und `minRenderPx`.
 - Alle 53 Darstellungen sind `placement.mode: 'standalone'`. Sie werden katalogisiert, aufgelöst
   und eigenständig gerendert, aber in D.3 nicht als Zusätze in `SymbolSpec` oder `compose()`
   eingeführt.
@@ -39,8 +43,13 @@ Paketrichtung `cli → catalog → core → schema`
 - Der Manifest-Scope wächst erst in Task 9 um `'J.1'`, `'J.2'`, `'J.3'`, `'J.4'`, nachdem das
   Inventar vollständig ist. Ein beanspruchter Präfix ohne Eintrag ist ein Release-Blocker
   (`coverage-gate.ts:541-544`).
-- Kein `text`-Primitiv: `geometry.ts:86-97` kennt `rect`, `circle`, `line`, `polyline`, `path`,
-  `group`. Beschriftungsglyphen der Referenz werden nicht nachgezeichnet.
+- Das `text`-Primitiv liegt vor (`geometry.ts`, seit dem Slice vom 9. August) und trägt die 16
+  typografischen Darstellungen aus Spec-Abschnitt 2.4. Jeder Lauf deklariert `boxMm` und
+  `minRenderPx`; die Schriftfamilie steht nicht am Primitiv, sondern in der Renderpolitik.
+- Kein Zeichen erreicht die 16-px-Snapshotgröße lesbar: bei `MINIMUM_TEXT_RENDER_PX = 8` verlangt
+  sie 16 mm Schriftgrad, das breiteste Kürzel misst 10,3 mm. `minRenderPx` ist deshalb an jedem
+  typografischen Lauf Pflicht, nicht Kür — ohne es meldet `gate.test.ts` das Zeichen bei jeder
+  Rendergröße unterhalb der Schwelle.
 
 ---
 
@@ -174,9 +183,13 @@ Gilt für jede der 53 Darstellungen in den Tasks 2 bis 8.
 3. **Box deklarieren — ohne Strichbreite.** `box` ist die zugesicherte Hülle der eigenen
    Konstruktion, nicht die der Referenz. `checkBox` in `pictogram-gate.ts:230-270` misst mit
    `boundsOfMm` die **reine Geometrie**; die Strichbreite geht nicht ein. Enthält eine Definition
-   **keinen** Pfad, fordert das Gate sogar **Gleichheit** von Hülle und Box — eine zu große Box ist
-   dort ebenso ein Befund wie eine zu kleine. Mit Pfad genügt Enthaltung, weil die Koordinaten im
-   `d`-String liegen und nur kommandoweise geprüft werden.
+   **weder** einen Pfad **noch** einen Textlauf, fordert das Gate sogar **Gleichheit** von Hülle
+   und Box — eine zu große Box ist dort ebenso ein Befund wie eine zu kleine. Mit Pfad genügt
+   Enthaltung, weil die Koordinaten im `d`-String liegen und nur kommandoweise geprüft werden. Mit
+   Text genügt sie ebenfalls, aus einem anderen Grund: die Glyphenhülle ist ohne Fontmetrik nicht
+   berechenbar, `boundsOfMm` gibt für Text die deklarierte `boxMm` unverändert zurück. **Für die
+   16 typografischen Darstellungen ist die Box damit eine ungeprüfte Zusicherung** — falsch
+   deklariert fällt sie erst in der visuellen Prüfung auf.
 
    Für Linien von `x = 1` bis `x = 31` auf `y = 12 … 20` lautet die Box also
    `{ xMm: 1, yMm: 12, widthMm: 30, heightMm: 8 }` — nicht `{ 0.5, 11.5, 31, 9 }`. Besteht eine
@@ -195,10 +208,31 @@ Gilt für jede der 53 Darstellungen in den Tasks 2 bis 8.
    Die Randregel gilt auch dort, wo die Referenz den Rand berührt — `J.2.1_Wechselverkehr.svg`
    läuft von `x = 0` bis `x = 90,709`, zeichnet aber gefüllte Polygone ohne Strichbreite. Diese
    Fassung ist nicht übertragbar.
+
+   **Für Textboxen gilt sie nicht.** `viewbox-gate.ts` setzt für Text `strokeWidth = 0`, weil Text
+   gefüllt und nicht gestrichen wird; eine Textbox darf den Rand berühren.
 5. **Kontrastpaare deklarieren.** Nur tatsächlich benachbarte Farbflächen und Striche. Für ein
    rein schwarzes Zeichen auf der Ausgabeoberfläche ist das genau ein Paar.
-6. **Keine Beschriftungsglyphen.** Bei `J.4.8` („L") und `J.4.17` („8") wird die Trägergeometrie
-   ohne Glyphe gezeichnet. Bei `J.1.14` bleibt der graue Erklärtext der Referenz weg.
+
+   **Nie ein Paar aus zwei Token, die dieselbe Farbe auflösen.** `weiss`/`surface` sind beide
+   `#ffffff`, das Verhältnis ist exakt 1:1 und die Zusicherung damit unerfüllbar. Für einen Körper
+   mit weißer Fläche sind es zwei andere Paare: `schwarz`/`surface` für die Kontur auf der
+   Ausgabeoberfläche und `schwarz`/`weiss` für die Marke auf dem Körper — so führt es
+   `states/07-weather.ts` bereits. `contrastPairProblems` meldet solche Nulltoken-Paare seit dem
+   Textslice als Befund.
+
+   **Textmalende Token tragen die höhere Schwelle**: `MINIMUM_TEXT_CONTRAST = 4.5` statt 3:1, weil
+   WCAG Text und Nichttext unterscheidet.
+6. **Beschriftungsglyphen sind Text, keine erfundenen Marken.** Die 16 typografischen
+   Darstellungen aus Spec-Abschnitt 2.4 tragen ihr Kürzel als `text`-Primitiv mit deklarierter
+   `boxMm` und deklariertem `minRenderPx`. Weder Glyphen als Pfade nachzeichnen (eine
+   Schriftschnitt-Nachbildung ohne Lizenzgrundlage) noch eigene Marken erfinden — ein früherer
+   Commit dieses Branches hat Letzteres für `J.3.4` bis `J.3.8` getan und wurde deshalb
+   zurückgerollt (Tag `archiv/d3-erfundene-marken-zurueckgerollt`).
+
+   Zwei Ausnahmen: Bei `J.4.17` („8") bleibt die Trägergeometrie ohne Glyphe — ein Beispielwert
+   wird nicht zur Zeichenbedeutung erklärt. Bei `J.1.14` bleibt der graue Erklärtext der Referenz
+   weg; er ist Blattbeschriftung, kein Zeicheninhalt.
 7. **Ledgerplatz mitliefern.** Jede neue Darstellung braucht in derselben Task ihren Eintrag in
    `MANIFEST_DOMAIN_REVIEWS` unter `bbk-babz-2025:${section}#${variant}` mit
    `{ status: 'pending' }`. Ohne ihn ist `domain-reviews.test.ts` rot.
@@ -211,8 +245,8 @@ Der Strukturbefund der Referenzen ergibt vier Familien. Sie bestimmen den Kontra
 
 | Familie | Mitglieder | Aufbau | Kontrastpaare |
 |---|---|---|---|
-| **Gerätekörper** | J.3.1–J.3.9, J.3.13–J.3.15 | weiße Fläche mit schwarzer Kontur, darin schwarze Marken | `weiss`/`surface`, `schwarz`/`weiss` |
-| **Netzkörper** | J.4.1–J.4.7, J.4.12, J.4.13 | weiße Fläche (Kreis oder Quadrat) mit schwarzer Kontur, darin schwarze Marken | `weiss`/`surface`, `schwarz`/`weiss` |
+| **Gerätekörper** | J.3.1–J.3.9, J.3.13–J.3.15 | weiße Fläche mit schwarzer Kontur, darin schwarze Marken oder Kürzel | `schwarz`/`surface`, `schwarz`/`weiss` |
+| **Netzkörper** | J.4.1–J.4.7, J.4.12, J.4.13 | weiße Fläche (Kreis oder Quadrat) mit schwarzer Kontur, darin schwarze Marken | `schwarz`/`surface`, `schwarz`/`weiss` |
 | **Freie Marke** | J.3.10–J.3.12 | schwarze Striche ohne Körper | `schwarz`/`surface` |
 | **Verbindungsmarke** | J.1 (außer J.1.5, J.1.6), J.2, J.4.8–J.4.11, J.4.14–J.4.17 | schwarze Linien-, Wellen- und Pfeilmarken ohne Körper | `schwarz`/`surface` |
 
@@ -261,14 +295,14 @@ rtk pnpm cli coverage
 ```
 
 Erwartet: Testsuite grün, keine TypeScript-Fehler, `Coverage-Gate bestanden.` mit
-`Einträge: 181`, `Offene fachliche Reviews: 194` und Umfang ohne J-Präfixe.
+`Einträge: 181`, `Offene fachliche Reviews: 195` und Umfang ohne J-Präfixe.
 
 Wenn eine dieser drei Ausgaben abweicht: **abbrechen und melden**. D.3 baut auf grüner D.2-Evidenz
 auf; ein rotes Fundament wird nicht überbaut.
 
 - [ ] **Step 5: Ausgangsstand notieren**
 
-Halte die drei Zahlen (181 Einträge, 194 offene Reviews, 41 Testdateien) fest. Task 9 vergleicht
+Halte die drei Zahlen (181 Einträge, 195 offene Reviews, 56 Testdateien) fest. Task 9 vergleicht
 gegen sie.
 
 ---
@@ -629,7 +663,7 @@ sie visuell, bevor du sie committest.
 rtk pnpm cli coverage
 ```
 
-Erwartet: `Einträge: 183`, `Offene fachliche Reviews: 196`, `Coverage-Gate bestanden.` Der Umfang
+Erwartet: `Einträge: 183`, `Offene fachliche Reviews: 197`, `Coverage-Gate bestanden.` Der Umfang
 enthält **noch keine** J-Präfixe — das ist beabsichtigt und wird in Task 9 nachgezogen.
 
 - [ ] **Step 13: Commit**
@@ -657,25 +691,39 @@ rtk git commit -m "feat(catalog): comms-Vertrag und die beiden Betriebsarten aus
 
 **Referenzbefund und Konstruktionsauftrag:**
 
-Alle acht Zeichen teilen einen Körper: ein weißes Quadrat mit schwarzer Kontur, mittig auf der
+Alle acht Zeichen teilen einen Körper: eine weiße Fläche mit schwarzer Kontur, mittig auf der
 32 × 32-mm-Fläche. `J.3.1` ist das Grundzeichen und trägt **nur** diesen Körper. Die übrigen sieben
-setzen schwarze Marken hinein oder darauf.
+unterscheiden sich von ihm **durch ihr Kürzel**, nicht durch Marken.
+
+> **Korrektur vom 10. August.** Die ursprüngliche Tabelle las „Körper + 2/3/6 Marken" aus den
+> Referenzen und leitete daraus Aufträge wie „Antennenmarke", „Wiederholermarke" oder
+> „Handsprechfunkgerät" ab. Diese Zahlen waren die **Glyphenzahlen**: J.3.2 = „BS" = 2, J.3.4 =
+> „TMO" + „DMO" = 6, J.3.6 = „HRT" = 3. Keine dieser Marken existiert in der Referenz. Ein früherer
+> Commit dieses Branches hat sie erfunden und wurde zurückgerollt
+> (Tag `archiv/d3-erfundene-marken-zurueckgerollt`).
+>
+> Der Beleg ist zwingend: Entfernt man die Glyphen, sind `J.3.6`, `J.3.7` und `J.3.8` geometrisch
+> **identisch** — dreimal dasselbe leere Quadrat. Erfundene Marken erzeugten hier drei Zeichen, die
+> die Baseline nicht kennt, in einem Katalog, dessen Zweck belegte Quellentreue ist.
 
 | Abschnitt | Referenzstruktur | Konstruktionsauftrag |
 |---|---|---|
 | J.3.1 | Körper allein | weißes Quadrat mit schwarzer Kontur, mittig |
-| J.3.2 | Körper + 2 Marken | Körper mit Antennenmarke — ortsfeste Basisstation |
-| J.3.3 | Körper + 3 Marken | wie J.3.2, zusätzliche Marke für Mobilität |
-| J.3.4 | Körper + 6 Marken | Körper mit Übergangsmarke zwischen zwei Netzen |
-| J.3.5 | Körper + 3 Marken | Körper mit Wiederholermarke |
-| J.3.6 | Körper + 3 Marken | Körper mit Handsprechfunkgerät |
-| J.3.7 | Körper + 3 Marken | Körper mit fahrzeuggebundenem Gerät |
-| J.3.8 | Körper + 3 Marken | Körper mit ortsfestem Gerät |
+| J.3.2 | **Kreiskörper** + „BS" | Körperform am Bild prüfen: `J.3.2_Basisstation.svg` trägt `<circle r="34.016">`, kein Quadrat. Ein Lauf, ~10,2 mm |
+| J.3.3 | Körper + drei Glyphen | Kürzel am Referenzbild ablesen, ein Lauf, ~10,2 mm |
+| J.3.4 | Körper + „TMO" oben + „DMO" unten | **zwei** Läufe, je ~6,8 mm, jeder mit eigener `boxMm` |
+| J.3.5 | Körper + „DMO" | ein Lauf, ~6,8 mm |
+| J.3.6 | Körper + „HRT" | ein Lauf, ~10,2 mm |
+| J.3.7 | Körper + „MRT" | ein Lauf, ~10,2 mm |
+| J.3.8 | Körper + „FRT" | ein Lauf, ~10,2 mm |
 
-Der Auftrag steht bewusst auf dieser Ebene: Die konkrete Markenform wird **am rasterisierten
-Referenzbild** abgelesen und selbst konstruiert. Entscheidend ist, dass J.3.2 bis J.3.8 sich
-untereinander in Form, Anzahl oder Lage der Marken unterscheiden — sie teilen denselben Körper und
-dürfen ohne Beschriftung nicht verwechselbar sein.
+Die Kürzel werden **am rasterisierten Referenzbild** abgelesen und als `text`-Primitiv gesetzt, nie
+als Pfad nachgezeichnet. Jeder Lauf deklariert seine `boxMm` und sein `minRenderPx`. Die
+Schriftgrade oben sind aus den Kaphöhen der Typo-Gruppe umgerechnet und beim Konstruieren am Bild
+zu bestätigen — sie sind Ausgangswerte, keine Messvorgabe.
+
+Für die Kürzel gilt zusätzlich `MINIMUM_TEXT_CONTRAST = 4.5`. Bei `schwarz` auf `weiss` (21:1) ist
+das folgenlos, auch in `print-monochrome`.
 
 - [ ] **Step 1: Den fehlgeschlagenen Test schreiben**
 
@@ -703,20 +751,26 @@ In `packages/catalog/src/pictograms/comms-families.test.ts` ergänzen:
     expect(devices.length).toBeGreaterThan(0);
     for (const device of devices) {
       const pairs = device.contrastPairs ?? [];
-      expect(pairs.some((p) => p.foreground === 'weiss' && p.background === 'surface')).toBe(true);
+      expect(pairs.some((p) => p.foreground === 'schwarz' && p.background === 'surface')).toBe(true);
       expect(pairs.some((p) => p.foreground === 'schwarz' && p.background === 'weiss')).toBe(true);
     }
   });
 
-  it('unterscheidet die sieben Gerätezeichen vom Grundzeichen J.3.1', () => {
+  it('unterscheidet die sieben Gerätezeichen durch ihr Kürzel vom Grundzeichen J.3.1', () => {
     const base = COMMS_PICTOGRAMS.find((d) => d.section === 'J.3.1');
     const others = COMMS_PICTOGRAMS.filter(
       (d) => d.section.startsWith('J.3.') && d.section !== 'J.3.1',
     );
     expect(base).toBeDefined();
-    for (const other of others) {
-      expect(other.primitives.length).toBeGreaterThan(base!.primitives.length);
-    }
+    expect(base!.primitives.some((p) => p.type === 'text')).toBe(false);
+    // Der Unterschied liegt im Kürzel, nicht in der Primitivzahl: J.3.6, J.3.7 und J.3.8 sind
+    // ohne ihre Glyphen dieselbe Geometrie. Ein Test auf primitives.length wäre auch dann grün,
+    // wenn jemand statt der Kürzel wieder Marken erfindet — genau der zurückgerollte Fehler.
+    const kuerzel = others.map(
+      (d) => d.primitives.filter((p) => p.type === 'text').map((p) => p.content).join(' '),
+    );
+    expect(kuerzel.every((k) => k.length > 0)).toBe(true);
+    expect(new Set(kuerzel).size).toBe(others.length);
   });
 ```
 
@@ -765,9 +819,9 @@ import { commsRect, COMMS_WHITE_BODY } from './authoring.js';
 
 const DEVICE_CONTRAST = [
   {
-    foreground: 'weiss',
+    foreground: 'schwarz',
     background: 'surface',
-    context: 'Gerätekörper auf Ausgabeoberfläche',
+    context: 'Kontur des Gerätekörpers auf der Ausgabeoberfläche',
   },
   {
     foreground: 'schwarz',
@@ -833,7 +887,7 @@ rtk pnpm typecheck
 rtk pnpm cli coverage
 ```
 
-Erwartet: grün, `Einträge: 191`, `Offene fachliche Reviews: 204`.
+Erwartet: grün, `Einträge: 191`, `Offene fachliche Reviews: 205`.
 
 - [ ] **Step 9: Snapshots visuell prüfen**
 
@@ -871,13 +925,26 @@ Diese Gruppe zerfällt in zwei Familien.
 
 | Abschnitt | Familie | Konstruktionsauftrag |
 |---|---|---|
-| J.3.9 | Gerätekörper | Körper + Marke für Meldeempfänger |
+| J.3.9 | Gerätekörper | Körper + Kürzel „APRT", ein Lauf, ~10,2 mm |
 | J.3.10 Antenne | freie Marke | senkrechter Mast mit zwei nach oben gespreizten Schrägen, **kein** Körper |
 | J.3.11 Kabelbau | freie Marke | Kabelmarke ohne Körper |
 | J.3.12 Funk | freie Marke | Funkmarke ohne Körper |
 | J.3.13 Übergänge | Gerätekörper | Körper + Übergangsmarke |
-| J.3.14 Fernsprechvermittlung | Gerätekörper | Körper + Vermittlungsmarke |
-| J.3.15 Fernsprechvermittlung VoIP | Gerätekörper | wie J.3.14 mit zusätzlicher VoIP-Kennzeichnung |
+| J.3.14 Fernsprechvermittlung | Gerätekörper | Körper + **ein Glyph** (Typo-Gruppe) — vor dem Konstruieren klären, siehe unten |
+| J.3.15 Fernsprechvermittlung VoIP | Gerätekörper | Körper + **zwei** Läufe: „VoIP" (~4,1 mm) und ein Großglyph (~14,4 mm) |
+
+**Vor dieser Task zu klären: trägt J.3.14 ein Kürzel?** Die Entscheidungsnotiz vom 9. August führt
+J.3.14 nicht in ihrer Tabelle der 16 typografischen Darstellungen und behauptet, nach Entfernung
+der Glyphen bleibe zwischen J.3.14 und J.3.15 „ein kleiner geometrischer Unterschied". Der
+Dateivergleich widerspricht: `J.3.14…svg:13-15` enthält ebenfalls genau ein Glyph in der
+Typo-Gruppe, und nach dessen Entfernung unterscheiden sich beide Pfade nur in Rundungsstellen
+(`28.346` gegen `28.347`, `10.63` gegen `10.631`). Trifft das zu, sind es **17** typografische
+Darstellungen, nicht 16, und der Unterschied zwischen J.3.14 und J.3.15 liegt vollständig in der
+Beschriftung. Am Referenzbild entscheiden, bevor eine „Vermittlungsmarke" konstruiert wird.
+
+Der ursprüngliche Auftrag für J.3.15 lautete „wie J.3.14 mit zusätzlicher VoIP-Kennzeichnung". Das
+war insofern richtig, als die Kennzeichnung tatsächlich der Unterschied ist — nur ist sie kein
+Zeichenelement, sondern das Wort „VoIP".
 
 J.3.10 bis J.3.12 nutzen `CONNECTION_CONTRAST` (nur `schwarz`/`surface`), nicht `DEVICE_CONTRAST` —
 sie haben keine weiße Fläche. Exportiere `CONNECTION_CONTRAST` dafür aus
@@ -980,7 +1047,7 @@ rtk pnpm typecheck
 rtk pnpm cli coverage
 ```
 
-Erwartet: grün, `Einträge: 198`, `Offene fachliche Reviews: 211`.
+Erwartet: grün, `Einträge: 198`, `Offene fachliche Reviews: 212`.
 
 - [ ] **Step 9: Snapshots visuell prüfen**
 
@@ -1044,7 +1111,7 @@ Bestands mit gekrümmter Außenkontur ohne Kreis.
       const body = COMMS_PICTOGRAMS.find((d) => d.section === section);
       expect(body, section).toBeDefined();
       const pairs = body!.contrastPairs ?? [];
-      expect(pairs.some((p) => p.foreground === 'weiss' && p.background === 'surface')).toBe(true);
+      expect(pairs.some((p) => p.foreground === 'schwarz' && p.background === 'surface')).toBe(true);
       expect(pairs.some((p) => p.foreground === 'schwarz' && p.background === 'weiss')).toBe(true);
     }
   });
@@ -1089,9 +1156,9 @@ import { commsCircle, commsPath, commsRect, COMMS_BLACK_FILL, COMMS_WHITE_BODY }
 
 const NETWORK_CONTRAST = [
   {
-    foreground: 'weiss',
+    foreground: 'schwarz',
     background: 'surface',
-    context: 'Netzkörper auf Ausgabeoberfläche',
+    context: 'Kontur des Netzkörpers auf der Ausgabeoberfläche',
   },
   {
     foreground: 'schwarz',
@@ -1150,7 +1217,7 @@ rtk pnpm typecheck
 rtk pnpm cli coverage
 ```
 
-Erwartet: grün, `Einträge: 205`, `Offene fachliche Reviews: 218`.
+Erwartet: grün, `Einträge: 205`, `Offene fachliche Reviews: 219`.
 
 - [ ] **Step 9: Snapshots visuell prüfen**
 
@@ -1185,7 +1252,7 @@ Zehn Marken ohne Fläche. Zwei tragen in der Referenz Ausnahmen, die **nicht** �
 
 | Abschnitt | Konstruktionsauftrag |
 |---|---|
-| J.4.8 Längenverbindung | waagerechte Linie mit Doppelpfeil und senkrechtem Pfeil. Das „L" der Referenz ist ein Wertplatzhalter und wird **nicht** gezeichnet |
+| J.4.8 Längenverbindung | waagerechte Linie mit Doppelpfeil und senkrechtem Pfeil, dazu das „L" als Textlauf (~6,8 mm). **Kein Wertplatzhalter**: „L" steht für Länge und ist eine feste Kennzeichnung, der Wert selbst steht in der Referenz gar nicht. Fachfrage, vor dieser Task am Bild zu bestätigen |
 | J.4.9 Abholpunkt | Linienmarke für den Abholpunkt |
 | J.4.10 Anschlusspunkt | Linienmarke für den Anschlusspunkt, von J.4.9 unterscheidbar |
 | J.4.11 Kreuzung von Verbindungen | waagerechte und senkrechte Linie, die sich mit einem Bogen ausweichen — die Kreuzung ohne Verbindung |
@@ -1194,7 +1261,7 @@ Zehn Marken ohne Fläche. Zwei tragen in der Referenz Ausnahmen, die **nicht** �
 | J.4.14 Kabel, temporär verlegt | waagerechte Linie mit zwei senkrechten Querstrichen |
 | J.4.15 Glasfaser, temporär verlegt | wie J.4.14, andere Anzahl oder Form der Querstriche |
 | J.4.16 Netzwerkkabel, temporär verlegt | wie J.4.14, wieder andere Querstrichform |
-| J.4.17 Anzahl Doppeladern | waagerechte Linie mit zwei Schrägstrichen. Die „8" der Referenz ist ein Wertplatzhalter und wird **nicht** gezeichnet |
+| J.4.17 Anzahl Doppeladern | waagerechte Linie mit zwei Schrägstrichen. Die „8" der Referenz ist ein Wertplatzhalter und wird **nicht** gezeichnet — auch nicht als Text: `content` ist ein festes `string`-Feld, eine gesetzte „8" erklärte denselben Beispielwert zur Zeichenbedeutung, den die Spec als Pfad verboten hat |
 
 J.4.14, J.4.15 und J.4.16 sind die kritische Gruppe: drei Kabelarten, die sich allein über die
 Querstrichmarke unterscheiden. Prüfe alle drei nebeneinander, bevor du konstruierst. Dasselbe gilt
@@ -1209,10 +1276,13 @@ entsprechend.
 Erweitere die J.4-Abschnittsliste auf alle 17 und ergänze:
 
 ```typescript
-  it('zeichnet keine Wertplatzhalter in J.4.8 und J.4.17', () => {
-    for (const section of ['J.4.8', 'J.4.17']) {
+  it('zeichnet in J.4.17 keinen Wertplatzhalter', () => {
+    // Nur J.4.17. J.4.8 traegt seit dem Textprimitiv das feste L als Textlauf; die beiden Faelle
+    // sind auseinandergefallen, siehe Spec 2.4.
+    for (const section of ['J.4.17']) {
       const mark = COMMS_PICTOGRAMS.find((d) => d.section === section);
       expect(mark, section).toBeDefined();
+      expect(mark!.primitives.some((p) => p.type === 'text'), section).toBe(false);
       // Beschriftungsglyphen der Referenz bleiben weg; die Trägergeometrie kommt mit wenigen
       // Primitiven aus. Eine nachgezeichnete Glyphe wäre daran erkennbar, dass sie diese
       // Grenze sprengt.
@@ -1305,7 +1375,7 @@ rtk pnpm typecheck
 rtk pnpm cli coverage
 ```
 
-Erwartet: grün, `Einträge: 215`, `Offene fachliche Reviews: 228`.
+Erwartet: grün, `Einträge: 215`, `Offene fachliche Reviews: 229`.
 
 - [ ] **Step 8: Snapshots visuell prüfen**
 
@@ -1346,14 +1416,16 @@ besteht nur aus dem Balken. Diese Regel gilt für alle fünf Paare des Unterkapi
 |---|---|---|
 | J.1.1 | primary + alternative | primary: waagerechter Balken + Wellenlinie. alternative: nur der Balken |
 | J.1.2 | primary | Sprechfunk: Balken, Wellenlinie und Zusatzmarke |
-| J.1.3 | primary | wie J.1.2 mit DMO-Kennzeichnung |
-| J.1.4 | primary | wie J.1.2 mit TMO-Kennzeichnung, von J.1.3 unterscheidbar |
-| J.1.5 | primary | SDS im DMO — trägt eine weiße Fläche, deshalb `DEVICE_CONTRAST`-Form |
-| J.1.6 | primary | SDS im TMO — weiße Fläche, von J.1.5 unterscheidbar |
-| J.1.7 | primary | Sprechfunk im DMO über Repeater: J.1.3 mit Repeatermarke |
+| J.1.3 | primary | wie J.1.2, dazu der Textlauf „DMO" (~6,8 mm) |
+| J.1.4 | primary | wie J.1.2, dazu der Textlauf „TMO" (~6,8 mm) — der Unterschied zu J.1.3 ist genau dieses Kürzel |
+| J.1.5 | primary | SDS im DMO — weiße Fläche, deshalb `DEVICE_CONTRAST`-Form. **Zwei** Textläufe: „SDS" im Körper (~6,8 mm), „DMO" darunter (~10,2 mm), je eigene `boxMm` |
+| J.1.6 | primary | SDS im TMO — weiße Fläche. **Zwei** Läufe: „SDS" und „TMO"; der Unterschied zu J.1.5 liegt allein im zweiten Kürzel |
+| J.1.7 | primary | Sprechfunk im DMO über Repeater: Repeatergeometrie plus Textlauf „DMO" (~10,2 mm, größer als in J.1.3) |
 
 J.1.3 gegen J.1.4 und J.1.5 gegen J.1.6 sind die kritischen Paare: DMO und TMO unterscheiden sich
-in der Referenz allein durch eine Marke. Prüfe sie nebeneinander.
+in der Referenz allein durch **das Kürzel**, nicht durch eine Marke. Prüfe sie nebeneinander —
+insbesondere, ob beide Kürzel bei ihrem Schriftgrad in jeder beanspruchten Rendergröße
+auseinanderzuhalten sind. Genau diese Frage beantwortet `minRenderPx`.
 
 - [ ] **Step 1: Den fehlgeschlagenen Test schreiben**
 
@@ -1491,7 +1563,7 @@ rtk pnpm typecheck
 rtk pnpm cli coverage
 ```
 
-Erwartet: grün, `Einträge: 223`, `Offene fachliche Reviews: 236`.
+Erwartet: grün, `Einträge: 223`, `Offene fachliche Reviews: 237`.
 
 - [ ] **Step 9: Snapshots visuell prüfen**
 
@@ -1528,7 +1600,7 @@ Vier der fünf `alternative`-Darstellungen des Slice liegen hier.
 | Abschnitt | Darstellungen | Konstruktionsauftrag |
 |---|---|---|
 | J.1.8 Datenübertragung | primary + alternative | primary: Datenmarke + Wellenlinie. alternative: nur Datenmarke |
-| J.1.9 Faxübertragung | primary + alternative | dieselbe Regel |
+| J.1.9 Faxübertragung | primary + alternative | **Ausnahme von der Regel.** Beide Fassungen tragen den Textlauf „Fax" (~10,2 mm); die `alternative` besteht **ausschließlich** daraus und hat keine Datenmarke (`J.1.9_Faxübertragung_leitergebunden.svg:7-13`) |
 | J.1.10 Bildübertragung | primary + alternative | dieselbe Regel. Belegdatei der alternative: `J.1.10_ Bildübertragung_leitergebunden.svg` mit Leerzeichen nach dem Unterstrich |
 | J.1.11 Livestreamübertragung | primary + alternative | dieselbe Regel, von J.1.10 unterscheidbar |
 | J.1.12 Satellitenverbindung Sprache | primary | Satellitenmarke, sprachbezogen |
@@ -1561,6 +1633,17 @@ Vier der fünf `alternative`-Darstellungen des Slice liegen hier.
       expect(wired, section).toBeDefined();
       expect(wired!.primitives.length, section).toBeLessThan(primary!.primitives.length);
     }
+  });
+
+  it('fuehrt die J.1.9-alternative als reines Textzeichen', () => {
+    // Sonderfall unter den fuenf Paaren: J.1.9_Faxuebertragung_leitergebunden.svg besteht
+    // ausschliesslich aus dem Wort Fax und hat keine Datenmarke. Der Laengenvergleich oben
+    // waere hier mit 1 < 2 zufaellig gruen und belegte nichts.
+    const wired = COMMS_PICTOGRAMS.find(
+      (d) => d.section === 'J.1.9' && d.variant === 'alternative',
+    );
+    expect(wired!.primitives).toHaveLength(1);
+    expect(wired!.primitives[0]!.type).toBe('text');
   });
 
   it('nimmt den Dateinamen der J.1.10-alternative unverändert auf', () => {
@@ -1654,7 +1737,7 @@ rtk pnpm typecheck
 rtk pnpm cli coverage
 ```
 
-Erwartet: grün, `Einträge: 234`, `Offene fachliche Reviews: 247`.
+Erwartet: grün, `Einträge: 234`, `Offene fachliche Reviews: 248`.
 
 - [ ] **Step 8: Snapshots visuell prüfen**
 
@@ -1807,7 +1890,7 @@ rtk pnpm cli coverage
 
 Erwartet exakt:
 - `Einträge: 234`
-- `Offene fachliche Reviews: 247 (234 Manifestreviews, 12 Quellenreviews, 1 Profilreview)`
+- `Offene fachliche Reviews: 248 (234 Manifestreviews, 13 Quellenreviews, 1 Profilreview)`
 - `Umfang:` enthält `J.1, J.2, J.3, J.4`
 - `0` ohne Testnachweis, `0` Kapitel im beanspruchten Umfang ohne Eintrag, `0` Abweichungen
 - `Coverage-Gate bestanden.`
@@ -1909,9 +1992,9 @@ Create `docs/decisions/2026-08-08-anhang-j-iuk-d3.md` nach dem Muster von
 4. **Kontrast** — vier Formfamilien, reale Farbnachbarschaften, nichtfarblicher Kanal
 5. **Autorenschaft** — eigenständige Millimeterkonstruktionen, keine Geometrieübernahme,
    `taktische-zeichen/` weiterhin ungeklärt und uncommitted
-6. **Beschriftungsglyphen** — J.4.8 und J.4.17 ohne Wertplatzhalter, J.1.14 ohne Erklärtext
+6. **Beschriftungsglyphen** — die 16 (moeglicherweise 17) typografischen Darstellungen als Textlaeufe, J.4.17 ohne Wertplatzhalter, J.1.14 ohne Erklärtext
 7. **Evidenz** — die tatsächlich gemessenen Zahlen aus Task 10, keine übernommenen Planwerte
-8. **Reviewgrenze** — 247 offene fachliche Reviewträger, keine Einsatzfreigabe
+8. **Reviewgrenze** — 248 offene fachliche Reviewträger, keine Einsatzfreigabe
 9. **Nicht im Inventar** — `J_Bedienungszeichen.svg`, die beiden J.2.3-Beispiele, Abschnitt J.2.3
 10. **Nächster Slice** — D.4 (Anhänge K, L, M) als *vorgeschlagener* nächster Slice, ausdrücklich
     nicht begonnen und nicht genehmigt
@@ -1936,7 +2019,7 @@ rtk git diff --check
 rtk git status --short
 ```
 
-Erwartet: alles grün, `Einträge: 234`, `Offene fachliche Reviews: 247`, sauberer Baum nach dem
+Erwartet: alles grün, `Einträge: 234`, `Offene fachliche Reviews: 248`, sauberer Baum nach dem
 Commit.
 
 - [ ] **Step 5: Commit**
@@ -1963,7 +2046,8 @@ entscheiden.
 | 2 Inventar (48/53) | Zielinventar, Tasks 2–8, geschlossen in Task 9 |
 | 2.1 `alternative` statt eigener ID | Tasks 7, 8; dokumentiert in Task 11 |
 | 2.2 Nicht im Inventar | Zielinventar, geprüft in Task 9 Step 1 |
-| 2.3 Beschriftungsglyphen | Task 6 (J.4.8, J.4.17), Task 8 (J.1.14) |
+| 2.3 Beschriftungsglyphen ~~(überholt)~~ | — |
+| 2.4 Anhang J ist typografisch | Autorenvertrag Punkt 6, Tasks 3, 4, 6, 7, 8 |
 | 3 Platzierung standalone | `defineComms` in Task 2, geprüft in `comms-families.test.ts` |
 | 3.1 Verbindungszeichen und Grenze | Tasks 6, 8; dokumentiert in Task 11 |
 | 4 Kontrast | vier Formfamilien, Tasks 2–8, geprüft je Gruppe |
@@ -1984,7 +2068,7 @@ definiert und werden danach unverändert benutzt. `DepictionVariant` ist durchge
 `'primary' | 'alternative'`.
 
 **Zahlenkette:** 181 → 183 (T2) → 191 (T3) → 198 (T4) → 205 (T5) → 215 (T6) → 223 (T7) → 234 (T8).
-Offene Reviews laufen parallel: 194 → 196 → 204 → 211 → 218 → 228 → 236 → 247.
+Offene Reviews laufen parallel: 195 → 197 → 205 → 212 → 219 → 229 → 237 → 248.
 
 **Bekannte Grenze des Plans:** Die Konstruktionsaufträge der Tasks 3 bis 8 benennen Formfamilie,
 Aufbau und Unterscheidungsmerkmal, nicht die fertige Millimetergeometrie jedes Zeichens. Das ist

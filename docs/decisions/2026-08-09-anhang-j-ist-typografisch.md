@@ -33,8 +33,16 @@ Bei `J.1.3` gegen `J.1.4`, `J.1.5` gegen `J.1.6` und `J.3.14` gegen `J.3.15` ble
 Entfernen der Glyphen ein kleiner geometrischer Unterschied, aber der Hauptträger ist auch dort das
 Kürzel.
 
-`packages/schema/src/geometry.ts:86-97` kennt sechs Primitivarten — `rect`, `circle`, `line`,
-`polyline`, `path`, `group` — und **kein** `text`.
+> **Anmerkung vom 10. August: `J.3.14` gegen `J.3.15` hält dem Dateivergleich nicht stand.** Beide
+> Pfade unterscheiden sich nach Entfernung der Glyphen nur in Rundungsstellen (`28.346` gegen
+> `28.347`, `10.63` gegen `10.631`, `66.614` gegen `66.615`) — also praktisch gar nicht. Und
+> `J.3.14_Fernsprechvermittlung.svg` trägt selbst ein Glyph in der Typo-Gruppe, obwohl die Tabelle
+> oben es nicht führt. Trifft das zu, sind es **17** typografische Darstellungen statt 16. Vor
+> D.3-Task 4 am Referenzbild zu klären; die Tabelle in Abschnitt 1 ist dann nachzuziehen.
+
+`packages/schema/src/geometry.ts:86-97` kannte zum Zeitpunkt dieser Notiz sechs Primitivarten —
+`rect`, `circle`, `line`, `polyline`, `path`, `group` — und **kein** `text`. Der Slice vom
+9. August hat die siebte ergänzt; die Zeilenangabe ist historisch.
 
 ## 3. Warum das ein Blocker ist und keine Detailfrage
 
@@ -73,8 +81,14 @@ die Struktur jedes künftigen Eintrags an; es nach dem Katalogausbau nachzurüst
 **Der Kontrastvertrag für Körper mit weißer Fläche war falsch.** Der Plan verlangte das Paar
 `weiss`/`surface`. Das ist mathematisch unerfüllbar: beide Token sind `#ffffff`, das Verhältnis ist
 exakt 1:1. Richtig ist `schwarz`/`surface` für die Kontur auf der Ausgabeoberfläche und
-`schwarz`/`weiss` für die Marke auf dem Körper — so führt es `states/07-weather.ts` bereits. Das
-betrifft im Plan die Tasks 4, 5 und 7.
+`schwarz`/`weiss` für die Marke auf dem Körper — so führt es `states/07-weather.ts` bereits.
+
+> **Fundstellen berichtigt am 10. August.** Der Satz nannte „die Tasks 4, 5 und 7". Wörtlich steht
+> das falsche Paar in der Formfamilien-Tabelle sowie in den Tasks **3** und **5** (je einmal im
+> Test und einmal im Musterkode `DEVICE_CONTRAST`/`NETWORK_CONTRAST`); die Tasks 4, 6 und 7
+> verweisen nur darauf. Alle sechs Stellen sind bei der Wiederaufnahme korrigiert. Die Prüfung
+> selbst steht seit dem Textslice als `contrastPairProblems` im Code und meldet jedes Paar, dessen
+> Token in einem Theme dieselbe Farbe auflösen.
 
 **Box-Gate und viewBox-Gate messen verschieden.** `checkBox`
 (`packages/core/src/pictogram-gate.ts:230-270`) misst mit `boundsOfMm` die reine Geometrie **ohne**
