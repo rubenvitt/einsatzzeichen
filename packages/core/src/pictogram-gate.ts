@@ -417,6 +417,10 @@ export function checkTextLegibility(
   const issues: PictogramIssue[] = [];
   for (const text of textsOf(definition.primitives)) {
     for (const renderPx of renderSizesPx) {
+      // Unterhalb seiner deklarierten Einsatzgrenze beansprucht der Lauf keine Lesbarkeit; dort
+      // gibt es nichts zu melden. Ohne diesen Zweig wäre kein Kürzel aus Anhang J je befundfrei:
+      // die 16-px-Snapshotgröße verlangt 16 mm Schriftgrad, das breiteste Kürzel misst 10,3 mm.
+      if (text.minRenderPx !== undefined && renderPx < text.minRenderPx) continue;
       const effectivePx = effectiveTextPx(text.sizeMm, renderPx, DEFAULT_VIEWBOX_MM.width);
       if (effectivePx >= MINIMUM_TEXT_RENDER_PX) continue;
       issues.push({

@@ -112,6 +112,19 @@ export type Primitive =
       anchor: 'start' | 'middle' | 'end';
       baseline: 'alphabetic' | 'middle' | 'hanging';
       boxMm: { xMm: Length; yMm: Length; widthMm: Length; heightMm: Length };
+      /**
+       * Untere Einsatzgrenze dieses Laufs: die kleinste Rendergröße, für die der Autor Lesbarkeit
+       * beansprucht. **Pixel, nicht Millimeter** — das einzige Feld im IR, das keine Länge ist,
+       * weil es keine Eigenschaft der Zeichnung beschreibt, sondern ihrer Ausgabe.
+       *
+       * Sie sitzt am Lauf und nicht an der Definition, weil ein Zeichen mehrere Läufe
+       * verschiedener Größe tragen kann (J.3.15: „VoIP" bei ~4 mm neben einem Großglyph bei
+       * ~10 mm) — eine Grenze je Zeichen zwänge beide auf den Wert des schwächeren Laufs.
+       *
+       * Kein Freibrief: oberhalb der Grenze gilt `MINIMUM_TEXT_RENDER_PX` unverändert. Nicht
+       * gesetzt heißt „beansprucht Lesbarkeit in jeder Rendergröße".
+       */
+      minRenderPx?: number;
     })
   | (PrimitiveBase & { type: 'group'; children: readonly Primitive[] });
 

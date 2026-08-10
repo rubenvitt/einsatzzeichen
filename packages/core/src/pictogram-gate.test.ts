@@ -1299,3 +1299,53 @@ describe('Text-Legibility-Gate', () => {
     expect(issues[0]!.gate).toBe('text-legibility');
   });
 });
+
+/** Wie `withTextSize`, aber mit deklarierter unterer Einsatzgrenze am Textlauf. */
+function withTextFloor(
+  content: string,
+  sizeMm: number,
+  minRenderPx: number,
+): PictogramDefinition {
+  const definition = withTextSize(content, sizeMm);
+  return {
+    ...definition,
+    primitives: definition.primitives.map((primitive) =>
+      primitive.type === 'text' ? { ...primitive, minRenderPx } : primitive,
+    ),
+  };
+}
+
+describe('Deklarierte Einsatzgrenze eines Textlaufs', () => {
+  // Die Kürzel aus Anhang J messen zwischen 4,1 und 10,3 mm. Bei keiner dieser Größen erreicht
+  // ein Zeichen die 16-px-Snapshotgröße lesbar — „HRT" müsste dafür 16 mm groß sein und wäre
+  // damit breiter als die viewBox. Ohne eine deklarierbare Untergrenze wäre jedes typografische
+  // Zeichen des Anhangs J dauerhaft im Befund.
+  it('überspringt Rendergrößen unterhalb der deklarierten Grenze', () => {
+    expect(checkTextLegibility(withTextFloor('HRT', 10, 32), [16, 24, 32])).toEqual([]);
+  });
+
+  it('prüft ab der deklarierten Grenze einschließlich', () => {
+    // 4 mm Schriftgrad ergeben bei 32 px Rendergröße 4,0 px effektiv — unter der Schwelle. Die
+    // Grenze ist kein Freibrief: im beanspruchten Einsatzbereich gilt MINIMUM_TEXT_RENDER_PX
+    // unverändert, sonst könnte ein Autor jeden Befund wegdeklarieren.
+    const issues = checkTextLegibility(withTextFloor('VoIP', 4, 32), [32]);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]!.gate).toBe('text-legibility');
+  });
+
+  it('entscheidet je Textlauf und nicht je Zeichen', () => {
+    // J.3.15 trägt zwei Läufe verschiedener Größe. Eine Grenze je Zeichen zwänge beide auf den
+    // Wert des schwächeren Laufs und verlöre damit genau die Aussage, die sie festhalten soll.
+    const zweiLaeufe = withTextFloor('VoIP', 10, 32);
+    const definition: PictogramDefinition = {
+      ...zweiLaeufe,
+      primitives: [
+        ...zweiLaeufe.primitives,
+        { ...(zweiLaeufe.primitives[0] as Primitive & { type: 'text' }), content: 'HRT', minRenderPx: undefined },
+      ],
+    };
+    const issues = checkTextLegibility(definition, [16]);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]!.detail).toContain('HRT');
+  });
+});
