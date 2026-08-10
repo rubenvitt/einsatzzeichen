@@ -1,4 +1,5 @@
 import { deepFreeze } from '../../readonly-data.js';
+import type { CommsId, Primitive } from '@einsatzzeichen/schema';
 import { defineComms, type CatalogPictogramDefinition } from '../catalog-definition.js';
 import {
   commsLine,
@@ -73,6 +74,51 @@ function modeLabel(content: string, baselineMm: number, boxTopMm: number) {
     boxMm: { xMm: 6, yMm: boxTopMm, widthMm: 20, heightMm: 7 },
     minRenderPx: 64,
   });
+}
+
+/**
+ * Die Satellitenschüssel als Viertelkreis mit Strahl. Sie trägt keine eigene Aussage über den
+ * Inhalt — den macht erst das, was rechts danebensteht.
+ */
+function satelliteDish() {
+  return [commsPath('M 2 3 C 2 17 11 26 25 26'), commsLine(8.5, 19.5, 28, 4)];
+}
+
+/**
+ * Ein Übertragungspaar: dieselbe Marke einmal mit und einmal ohne Zickzack. Der Zickzack ist der
+ * gesamte Unterschied zwischen drahtlos und leitergebunden, und beide Fassungen tragen laut
+ * Katalogvertrag denselben Titel — die Variante allein trägt die Unterscheidung.
+ */
+function transmissionPair(
+  section: `J.${string}`,
+  id: CommsId,
+  title: string,
+  mark: readonly Primitive[],
+  wiredAsset: `${string}.svg`,
+  box: { xMm: number; yMm: number; widthMm: number; heightMm: number },
+  wiredBox: { xMm: number; yMm: number; widthMm: number; heightMm: number },
+): readonly CatalogPictogramDefinition[] {
+  return [
+    defineComms({
+      section,
+      id,
+      title,
+      referenceAsset: `${section}_${title}.svg`,
+      box,
+      contrastPairs: CONNECTION_CONTRAST,
+      primitives: [...mark, wirelessZigzag(20, 26)],
+    }),
+    defineComms({
+      section,
+      id,
+      variant: 'alternative',
+      title,
+      referenceAsset: wiredAsset,
+      box: wiredBox,
+      contrastPairs: CONNECTION_CONTRAST,
+      primitives: [...mark],
+    }),
+  ];
 }
 
 export const CONNECTION_COMMS = deepFreeze([
@@ -194,6 +240,92 @@ export const CONNECTION_COMMS = deepFreeze([
         minRenderPx: 32,
       }),
       ...radioArcs(20, 26),
+    ],
+  }),
+  /**
+   * Ab J.1.8 trägt die Marke oben, **was** übertragen wird, und der Zickzack darunter, **dass**
+   * es drahtlos geschieht. Die leitergebundene Fassung lässt genau den Zickzack weg — dieselbe
+   * Regel wie bei J.1.1, jetzt viermal.
+   */
+  ...transmissionPair('J.1.8', 'data-transmission', 'Datenübertragung', [
+    commsPolyline([
+      [4, 8],
+      [9, 8],
+      [9, 16],
+      [23, 16],
+      [23, 8],
+      [28, 8],
+    ]),
+  ], 'J.1.8_Datenübertragung_leitergebunden.svg', { xMm: 4, yMm: 8, widthMm: 24, heightMm: 18 }, { xMm: 4, yMm: 8, widthMm: 24, heightMm: 8 }),
+  ...transmissionPair('J.1.9', 'fax-transmission', 'Faxübertragung', [
+    commsText('Fax', {
+      x: 16,
+      y: 16,
+      sizeMm: 9,
+      boxMm: { xMm: 8, yMm: 7, widthMm: 16, heightMm: 9 },
+      minRenderPx: 32,
+    }),
+  ], 'J.1.9_Faxübertragung_leitergebunden.svg', { xMm: 4, yMm: 7, widthMm: 24, heightMm: 19 }, { xMm: 8, yMm: 7, widthMm: 16, heightMm: 9 }),
+  ...transmissionPair('J.1.10', 'image-transmission', 'Bildübertragung', [
+    commsRect(4, 5, 24, 15, COMMS_WHITE_BODY, 2),
+  ], 'J.1.10_ Bildübertragung_leitergebunden.svg', { xMm: 4, yMm: 5, widthMm: 24, heightMm: 21 }, { xMm: 4, yMm: 5, widthMm: 24, heightMm: 15 }),
+  ...transmissionPair('J.1.11', 'livestream-transmission', 'Livestreamübertragung', [
+    commsRect(11, 5, 17, 14, COMMS_WHITE_BODY),
+    commsPolyline([
+      [11, 9],
+      [4, 4],
+      [4, 20],
+      [11, 15],
+    ]),
+  ], 'J.1.11_Livestreamübertragung_leitergebunden.svg', { xMm: 4, yMm: 4, widthMm: 24, heightMm: 22 }, { xMm: 4, yMm: 4, widthMm: 24, heightMm: 16 }),
+  /**
+   * Satellitenverbindung: die Schüssel als Viertelkreis, der Strahl als Diagonale. Was übertragen
+   * wird, steht rechts daneben — eine gerade Linie für Sprache, eine Rechteckwelle für Daten.
+   */
+  defineComms({
+    section: 'J.1.12',
+    id: 'satellite-voice',
+    title: 'Satellitenverbindung Sprache',
+    referenceAsset: 'J.1.12_Satellitenverbindung_Sprache.svg',
+    box: { xMm: 2, yMm: 3, widthMm: 28, heightMm: 25 },
+    contrastPairs: CONNECTION_CONTRAST,
+    primitives: [...satelliteDish(), commsLine(19, 16, 30, 16)],
+  }),
+  defineComms({
+    section: 'J.1.13',
+    id: 'satellite-data',
+    title: 'Satellitenverbindung Daten',
+    referenceAsset: 'J.1.13_Satellitenverbindung_Daten.svg',
+    box: { xMm: 2, yMm: 3, widthMm: 28, heightMm: 25 },
+    contrastPairs: CONNECTION_CONTRAST,
+    primitives: [
+      ...satelliteDish(),
+      commsPolyline([
+        [19, 14],
+        [22, 14],
+        [22, 19],
+        [27, 19],
+        [27, 14],
+        [30, 14],
+      ]),
+    ],
+  }),
+  /**
+   * Richtfunk: zwei gegenüberliegende Schalen. Der graue Erklärtext der Referenzdatei
+   * („Information") ist Blattbeschriftung und kein Zeicheninhalt — er bleibt weg.
+   */
+  defineComms({
+    section: 'J.1.14',
+    id: 'directional-radio',
+    title: 'Richtfunkverbindung',
+    referenceAsset: 'J.1.14_Richtfunkverbindung.svg',
+    box: { xMm: 3.5, yMm: 6, widthMm: 25, heightMm: 20 },
+    contrastPairs: CONNECTION_CONTRAST,
+    primitives: [
+      commsPath('M 6 6 C 3.5 10 3.5 22 6 26'),
+      commsLine(4.5, 16, 12, 16),
+      commsPath('M 26 6 C 28.5 10 28.5 22 26 26'),
+      commsLine(20, 16, 27.5, 16),
     ],
   }),
 ] satisfies readonly CatalogPictogramDefinition[]);
