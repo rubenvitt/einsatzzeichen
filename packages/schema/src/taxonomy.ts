@@ -234,6 +234,16 @@ export const COMMS_IDS = Object.freeze([
   'wan',
   'firewall',
   'printer',
+  'connection-length',
+  'pickup-point',
+  'connection-point',
+  'connection-crossing',
+  'distributor',
+  'distributor-with-surge-protection',
+  'cable-temporary',
+  'fiber-temporary',
+  'network-cable-temporary',
+  'twisted-pair-count',
 ] as const);
 
 export type CommsId = (typeof COMMS_IDS)[number];
