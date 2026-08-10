@@ -114,8 +114,9 @@ Referenzblatts, kein Zeichenbestandteil, und wird nicht übernommen.
 
 ### 2.4 Anhang J ist zu einem Drittel typografisch
 
-**20 der 56 Referenzdateien** tragen Buchstaben- oder Ziffernglyphen als Pfade, bei **16 der 53
-Darstellungen** ist die Glyphe der Bedeutungsträger und nicht Beiwerk. Belegt in
+**20 der 56 Referenzdateien** tragen Buchstaben- oder Ziffernglyphen als Pfade, bei **17 der 53
+Darstellungen** ist die Glyphe der Bedeutungsträger und nicht Beiwerk. (Die Entscheidungsnotiz vom
+9. August nennt 16; die visuelle Prüfung vom 10. August hat `J.3.14` nachgetragen.) Belegt in
 `docs/decisions/2026-08-09-anhang-j-ist-typografisch.md`: entfernt man aus den Referenzen alle
 Pfade mit zehn oder mehr Kommandos, sind `J.3.6`, `J.3.7` und `J.3.8` geometrisch identisch —
 dreimal dasselbe leere Quadrat. Ihre gesamte Unterscheidung liegt im Kürzel.
@@ -132,13 +133,14 @@ Daraus die Zuordnung von Abschnitt zu Kürzel und Schriftgrad:
 | J.1.7 | 1 | DMO | ~10,2 |
 | J.1.9 `primary` | 1 | Fax | ~10,2 |
 | J.1.9 `alternative` | 1 | Fax — **sonst keine Geometrie** | ~10,2 |
-| J.3.2 | 1 | BS | ~10,2 |
+| J.3.2 | 1 | BS — **auf Kreiskörper mit Giebelmarke**, kein Quadrat | ~10,2 |
 | J.3.3 | 1 | drei Glyphen | ~10,2 |
 | J.3.4 | 2 | TMO (oben), DMO (unten) | ~6,8 |
 | J.3.5 | 1 | DMO | ~6,8 |
 | J.3.6 / J.3.7 / J.3.8 | 1 | HRT / MRT / FRT | ~10,2 |
 | J.3.9 | 1 | APRT | ~10,2 |
-| J.3.15 | 2 | VoIP, ein Großglyph | ~4,1 / ~14,4 |
+| J.3.14 | 1 | „C" mit Überstrich — der Überstrich ist eine eigene Linie, nicht Teil der Glyphe | ~14,4 |
+| J.3.15 | 2 | dasselbe „C" mit Überstrich, dazu „VoIP" unten links | ~14,4 / ~4,1 |
 | J.4.8 | 1 | L | ~6,8 |
 | J.4.17 | 1 | 8 | ~6,7 |
 
@@ -146,19 +148,22 @@ Was das Textprimitiv **nicht** leisten muss: keiner dieser Läufe ist mehrzeilig
 einem Pfad, keiner trägt Diakritika. Zwei Läufe an verschiedenen Stellen eines Zeichens sind zwei
 eigenständige `text`-Primitive mit eigener `boxMm`, keine zwei Zeilen eines Primitivs.
 
-**J.4.8 und J.4.17 fallen auseinander.** Abschnitt 2.3 hat beide gleich behandelt, weil beide als
+**J.4.8 und J.4.17 fallen auseinander — am Bild bestätigt (10. August).** Abschnitt 2.3 hat beide gleich behandelt, weil beide als
 Pfad problematisch waren. Mit dem Textprimitiv gilt das nur noch für eines: „L" (Länge) ist eine
 feste Kennzeichnung, der Wert selbst steht in der Referenz gar nicht — als Text setzbar. Die „8"
 in J.4.17 bleibt ein Beispielwert; sie als Text zu setzen erklärt denselben Wert zur
 Zeichenbedeutung, den 2.3 als Pfad verboten hat. `content` ist ein festes `string`-Feld, einen
 Platzhalterbegriff gibt es nicht. **Offene Fachfrage, vor Task 6 zu entscheiden.**
 
-**Offene Zählfrage: 16 oder 17.** `J.3.14_Fernsprechvermittlung.svg` enthält ebenfalls genau ein
-Glyph in der Typo-Gruppe; nach dessen Entfernung unterscheidet sich seine Geometrie von `J.3.15`
-nur in Rundungsstellen (`28.346` gegen `28.347`). Die Tabelle in
-`docs/decisions/2026-08-09-anhang-j-ist-typografisch.md` führt J.3.14 nicht und behauptet dort
-einen „kleinen geometrischen Unterschied", der dem Dateivergleich nicht standhält. Vor Task 4 zu
-klären.
+**Zählfrage geklärt: 17.** `J.3.14_Fernsprechvermittlung.svg` trägt ebenfalls genau ein Glyph in
+der Typo-Gruppe. Die visuelle Prüfung vom 10. August zeigt: beide Zeichen sind ein Quadrat mit
+einem großen „C" unter einem waagerechten Überstrich; `J.3.15` fügt dem nichts hinzu außer dem Wort
+„VoIP" unten links. Der Unterschied zwischen beiden liegt damit **vollständig** in der Beschriftung —
+die in der Entscheidungsnotiz behauptete geometrische Differenz sind Rundungsstellen (`28.346`
+gegen `28.347`). Damit sind es 17 typografische Darstellungen, nicht 16.
+
+Der Überstrich über dem „C" ist **Geometrie, nicht Typografie**: er liegt außerhalb der Typo-Gruppe und
+wird als eigene `line` konstruiert. Nur das „C" selbst ist ein Textlauf.
 
 **Untere Einsatzgrenze.** Kein Kürzel des Anhangs erreicht die kleinste Snapshotgröße lesbar: bei
 `MINIMUM_TEXT_RENDER_PX = 8` verlangt eine 16-px-Rendergröße einen Schriftgrad von 16 mm, das

@@ -9,15 +9,15 @@ Zeichen: `J.4.8` trägt ein „L", `J.4.17` eine „8", beide als Wertplatzhalte
 Unterschätzung.
 
 Tatsächlich tragen **20 der 56 Referenzdateien** des Anhangs J Buchstaben- oder Ziffernglyphen als
-Pfade. Bei **16 der 53 geplanten Darstellungen** ist die Glyphe nicht Beiwerk, sondern der
+Pfade. Bei **17 der 53 geplanten Darstellungen** ist die Glyphe nicht Beiwerk, sondern der
 Bedeutungsträger:
 
 | Bereich | Abschnitte | Darstellungen |
 |---|---|---|
 | J.1 Verbindungsarten | J.1.3, J.1.4, J.1.5, J.1.6, J.1.7 | 5 |
 | J.1 Faxübertragung | J.1.9 `primary` und `alternative` | 2 |
-| J.3 Fernmeldebetriebsmittel | J.3.2 – J.3.9, J.3.15 | 9 |
-| **Summe** | | **16** |
+| J.3 Fernmeldebetriebsmittel | J.3.2 – J.3.9, J.3.14, J.3.15 | 10 |
+| **Summe** | | **17** |
 
 Dazu die beiden bereits geparkten Wertplatzhalter `J.4.8` und `J.4.17`. Der graue Erklärtext in
 `J.1.14` ist davon unberührt — er ist Blattbeschriftung und war nie Zeicheninhalt.
@@ -33,12 +33,11 @@ Bei `J.1.3` gegen `J.1.4`, `J.1.5` gegen `J.1.6` und `J.3.14` gegen `J.3.15` ble
 Entfernen der Glyphen ein kleiner geometrischer Unterschied, aber der Hauptträger ist auch dort das
 Kürzel.
 
-> **Anmerkung vom 10. August: `J.3.14` gegen `J.3.15` hält dem Dateivergleich nicht stand.** Beide
-> Pfade unterscheiden sich nach Entfernung der Glyphen nur in Rundungsstellen (`28.346` gegen
-> `28.347`, `10.63` gegen `10.631`, `66.614` gegen `66.615`) — also praktisch gar nicht. Und
-> `J.3.14_Fernsprechvermittlung.svg` trägt selbst ein Glyph in der Typo-Gruppe, obwohl die Tabelle
-> oben es nicht führt. Trifft das zu, sind es **17** typografische Darstellungen statt 16. Vor
-> D.3-Task 4 am Referenzbild zu klären; die Tabelle in Abschnitt 1 ist dann nachzuziehen.
+> **Berichtigt am 10. August: `J.3.14` gehört dazu, es sind 17.** Die visuelle Prüfung zeigt beide
+> Zeichen als Quadrat mit einem großen „C" unter einem waagerechten Überstrich; `J.3.15` fügt nur das
+> Wort „VoIP" unten links hinzu. Der oben behauptete kleine geometrische Unterschied sind
+> Rundungsstellen (`28.346` gegen `28.347`, `10.63` gegen `10.631`, `66.614` gegen `66.615`). Die
+> Tabelle in Abschnitt 1 ist entsprechend nachgezogen.
 
 `packages/schema/src/geometry.ts:86-97` kannte zum Zeitpunkt dieser Notiz sechs Primitivarten —
 `rect`, `circle`, `line`, `polyline`, `path`, `group` — und **kein** `text`. Der Slice vom
@@ -46,7 +45,7 @@ Kürzel.
 
 ## 3. Warum das ein Blocker ist und keine Detailfrage
 
-Ohne Textprimitiv gibt es für diese 16 Darstellungen nur drei Wege, und zwei davon sind keine:
+Ohne Textprimitiv gibt es für diese 17 Darstellungen nur drei Wege, und zwei davon sind keine:
 
 - **Glyphen als Pfade nachzeichnen.** Das wäre eine Schriftschnitt-Nachbildung ohne Lizenzgrundlage
   und würde ein Kürzel zur unveränderlichen Geometrie einfrieren.

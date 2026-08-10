@@ -709,7 +709,7 @@ unterscheiden sich von ihm **durch ihr Kürzel**, nicht durch Marken.
 | Abschnitt | Referenzstruktur | Konstruktionsauftrag |
 |---|---|---|
 | J.3.1 | Körper allein | weißes Quadrat mit schwarzer Kontur, mittig |
-| J.3.2 | **Kreiskörper** + „BS" | Körperform am Bild prüfen: `J.3.2_Basisstation.svg` trägt `<circle r="34.016">`, kein Quadrat. Ein Lauf, ~10,2 mm |
+| J.3.2 | **Kreiskörper + Giebelmarke** + „BS" | Am Bild bestätigt: weißer Kreis (`<circle r="34.016">`), darüber zwei nach oben zusammenlaufende Schrägen wie ein Dach, im Kreis das Kürzel. **Kein Quadrat** — die alte Tabelle war hier falsch. Ein Lauf, ~10,2 mm |
 | J.3.3 | Körper + drei Glyphen | Kürzel am Referenzbild ablesen, ein Lauf, ~10,2 mm |
 | J.3.4 | Körper + „TMO" oben + „DMO" unten | **zwei** Läufe, je ~6,8 mm, jeder mit eigener `boxMm` |
 | J.3.5 | Körper + „DMO" | ein Lauf, ~6,8 mm |
@@ -930,26 +930,18 @@ Diese Gruppe zerfällt in zwei Familien.
 | J.3.11 Kabelbau | freie Marke | Kabelmarke ohne Körper |
 | J.3.12 Funk | freie Marke | Funkmarke ohne Körper |
 | J.3.13 Übergänge | Gerätekörper | Körper + Übergangsmarke |
-| J.3.14 Fernsprechvermittlung | Gerätekörper | Körper + **ein Glyph** (Typo-Gruppe) — vor dem Konstruieren klären, siehe unten |
-| J.3.15 Fernsprechvermittlung VoIP | Gerätekörper | Körper + **zwei** Läufe: „VoIP" (~4,1 mm) und ein Großglyph (~14,4 mm) |
+| J.3.14 Fernsprechvermittlung | Gerätekörper | Körper + waagerechter Überstrich (`line`) + Textlauf „C" darunter (~14,4 mm). Der Überstrich ist Geometrie, nur das „C" ist Text |
+| J.3.15 Fernsprechvermittlung VoIP | Gerätekörper | **identisch zu J.3.14**, zusätzlich der Textlauf „VoIP" unten links (~4,1 mm). Zwei Läufe |
 
-**Vor dieser Task zu klären: trägt J.3.14 ein Kürzel?** Die Entscheidungsnotiz vom 9. August führt
-J.3.14 nicht in ihrer Tabelle der 16 typografischen Darstellungen und behauptet, nach Entfernung
-der Glyphen bleibe zwischen J.3.14 und J.3.15 „ein kleiner geometrischer Unterschied". Der
-Dateivergleich widerspricht: `J.3.14…svg:13-15` enthält ebenfalls genau ein Glyph in der
-Typo-Gruppe, und nach dessen Entfernung unterscheiden sich beide Pfade nur in Rundungsstellen
-(`28.346` gegen `28.347`, `10.63` gegen `10.631`). Trifft das zu, sind es **17** typografische
-Darstellungen, nicht 16, und der Unterschied zwischen J.3.14 und J.3.15 liegt vollständig in der
-Beschriftung. Am Referenzbild entscheiden, bevor eine „Vermittlungsmarke" konstruiert wird.
+**Am Bild geklärt (10. August): J.3.14 trägt ein Kürzel, es sind 17 typografische Darstellungen.**
+Beide Zeichen sind ein Quadrat mit einem großen „C" unter einem waagerechten Überstrich. J.3.15
+fügt dem nichts hinzu außer dem Wort „VoIP" unten links. Der in der Entscheidungsnotiz behauptete
+kleine geometrische Unterschied sind Rundungsstellen (`28.346` gegen `28.347`); der tatsächliche
+Unterschied liegt **vollständig** in der Beschriftung.
 
-Der ursprüngliche Auftrag für J.3.15 lautete „wie J.3.14 mit zusätzlicher VoIP-Kennzeichnung". Das
-war insofern richtig, als die Kennzeichnung tatsächlich der Unterschied ist — nur ist sie kein
-Zeichenelement, sondern das Wort „VoIP".
-
-J.3.10 bis J.3.12 nutzen `CONNECTION_CONTRAST` (nur `schwarz`/`surface`), nicht `DEVICE_CONTRAST` —
-sie haben keine weiße Fläche. Exportiere `CONNECTION_CONTRAST` dafür aus
-`02-operating-modes.ts` oder ziehe es in `authoring.ts`; letzteres ist sauberer, weil es dann von
-drei Modulen genutzt wird.
+Damit entfällt der ursprüngliche Auftrag „Körper + Vermittlungsmarke" für J.3.14 — eine solche Marke
+gibt es nicht. Der Überstrich ist keine Marke, sondern das Makron über dem „C"; er wird als eigene
+`line` konstruiert, weil er außerhalb der Typo-Gruppe der Referenz liegt.
 
 - [ ] **Step 1: Den fehlgeschlagenen Test schreiben**
 
@@ -1252,7 +1244,7 @@ Zehn Marken ohne Fläche. Zwei tragen in der Referenz Ausnahmen, die **nicht** �
 
 | Abschnitt | Konstruktionsauftrag |
 |---|---|
-| J.4.8 Längenverbindung | waagerechte Linie mit Doppelpfeil und senkrechtem Pfeil, dazu das „L" als Textlauf (~6,8 mm). **Kein Wertplatzhalter**: „L" steht für Länge und ist eine feste Kennzeichnung, der Wert selbst steht in der Referenz gar nicht. Fachfrage, vor dieser Task am Bild zu bestätigen |
+| J.4.8 Längenverbindung | **am Bild korrigiert:** waagerechte Linie, darauf ein kurzer senkrechter Strich, darunter ein nach oben zeigender Pfeil auf diesen Strich — **kein Doppelpfeil**. Rechts daneben das „L" als Textlauf (~6,8 mm). **Kein Wertplatzhalter**: das Bild enthält keine Zahl, „L" bezeichnet die Größe Länge |
 | J.4.9 Abholpunkt | Linienmarke für den Abholpunkt |
 | J.4.10 Anschlusspunkt | Linienmarke für den Anschlusspunkt, von J.4.9 unterscheidbar |
 | J.4.11 Kreuzung von Verbindungen | waagerechte und senkrechte Linie, die sich mit einem Bogen ausweichen — die Kreuzung ohne Verbindung |
@@ -1261,7 +1253,7 @@ Zehn Marken ohne Fläche. Zwei tragen in der Referenz Ausnahmen, die **nicht** �
 | J.4.14 Kabel, temporär verlegt | waagerechte Linie mit zwei senkrechten Querstrichen |
 | J.4.15 Glasfaser, temporär verlegt | wie J.4.14, andere Anzahl oder Form der Querstriche |
 | J.4.16 Netzwerkkabel, temporär verlegt | wie J.4.14, wieder andere Querstrichform |
-| J.4.17 Anzahl Doppeladern | waagerechte Linie mit zwei Schrägstrichen. Die „8" der Referenz ist ein Wertplatzhalter und wird **nicht** gezeichnet — auch nicht als Text: `content` ist ein festes `string`-Feld, eine gesetzte „8" erklärte denselben Beispielwert zur Zeichenbedeutung, den die Spec als Pfad verboten hat |
+| J.4.17 Anzahl Doppeladern | **am Bild korrigiert:** waagerechte Linie mit **einem** Schrägstrich, nicht zwei. Die „8" darüber ist ein Wertplatzhalter (die Anzahl selbst) und wird **nicht** gezeichnet — auch nicht als Text: `content` ist ein festes `string`-Feld, eine gesetzte „8" erklärte denselben Beispielwert zur Zeichenbedeutung |
 
 J.4.14, J.4.15 und J.4.16 sind die kritische Gruppe: drei Kabelarten, die sich allein über die
 Querstrichmarke unterscheiden. Prüfe alle drei nebeneinander, bevor du konstruierst. Dasselbe gilt
