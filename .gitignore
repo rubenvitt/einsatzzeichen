@@ -22,3 +22,5 @@ coverage/
 
 # Worktree-Container von Claude Code: eigene Checkouts samt node_modules
 .claude/
+
+out
