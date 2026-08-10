@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { renderSvg } from '@einsatzzeichen/core';
+import { effectiveTextPx, MINIMUM_TEXT_RENDER_PX, renderSvg } from '@einsatzzeichen/core';
 import { DEFAULT_VIEWBOX_MM, type Primitive } from '@einsatzzeichen/schema';
 import { PRINT_MONOCHROME_THEME } from '../render-themes.js';
 import { COMMS_PICTOGRAMS } from './comms/index.js';
@@ -24,6 +24,56 @@ describe('J-Bestand', () => {
       (d) => d.section,
     );
     expect(sections).toEqual(['J.2.1', 'J.2.2']);
+  });
+});
+
+describe('J.3: Gerätekörper', () => {
+  function textsOf(section: string): readonly Extract<Primitive, { type: 'text' }>[] {
+    const definition = COMMS_PICTOGRAMS.find((d) => d.section === section);
+    if (definition === undefined) throw new Error(`${section} fehlt im Bestand.`);
+    return definition.primitives.filter(
+      (p): p is Extract<Primitive, { type: 'text' }> => p.type === 'text',
+    );
+  }
+
+  it('führt das Grundzeichen J.3.1 ohne Kürzel', () => {
+    expect(textsOf('J.3.1')).toEqual([]);
+  });
+
+  it('trägt in J.3.6 das Kürzel HRT als Textlauf', () => {
+    const texts = textsOf('J.3.6');
+    expect(texts).toHaveLength(1);
+    expect(texts[0]!.content).toBe('HRT');
+  });
+
+  // Ohne role: 'pictogram' zählt pictogramStrokeWidths den Lauf als foreignRole und
+  // checkClipping macht daraus einen Befund. Der Helfer muss die Rolle setzen, nicht der
+  // Aufrufer — sonst haengt die Gate-Tauglichkeit an der Disziplin jeder einzelnen Definition.
+  it('setzt an jedem Kürzel die Piktogrammrolle', () => {
+    for (const definition of COMMS_PICTOGRAMS) {
+      for (const primitive of definition.primitives) {
+        if (primitive.type !== 'text') continue;
+        expect(primitive.role, `${definition.section} ${primitive.content}`).toBe('pictogram');
+      }
+    }
+  });
+
+  // Kein Kuerzel des Anhangs erreicht die 16-px-Snapshotgroesse lesbar. Jeder Lauf deklariert
+  // deshalb seine untere Einsatzgrenze, und sie muss zum eigenen Schriftgrad passen: bei
+  // MINIMUM_TEXT_RENDER_PX = 8 traegt ein 10-mm-Lauf ab 32 px, ein 6,8-mm-Lauf erst ab 64 px.
+  // Ein pauschaler Wert fuer alle waere entweder zu streng oder eine leere Zusicherung.
+  it('deklariert an jedem Kürzel eine zum Schriftgrad passende Einsatzgrenze', () => {
+    for (const definition of COMMS_PICTOGRAMS) {
+      for (const text of definition.primitives) {
+        if (text.type !== 'text') continue;
+        const label = `${definition.section} ${text.content}`;
+        expect(text.minRenderPx, label).toBeDefined();
+        expect(
+          effectiveTextPx(text.sizeMm, text.minRenderPx!, DEFAULT_VIEWBOX_MM.width),
+          label,
+        ).toBeGreaterThanOrEqual(MINIMUM_TEXT_RENDER_PX);
+      }
+    }
   });
 });
 
