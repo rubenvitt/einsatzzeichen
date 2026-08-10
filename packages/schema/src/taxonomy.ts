@@ -210,6 +210,13 @@ export type StateId = (typeof STATE_IDS)[number];
 
 /** IuK-Zeichen nach Anhang J in verbindlicher Kapitelreihenfolge. */
 export const COMMS_IDS = Object.freeze([
+  'voice',
+  'voice-radio',
+  'voice-radio-dmo',
+  'voice-radio-tmo',
+  'sds-dmo',
+  'sds-tmo',
+  'voice-radio-dmo-repeater',
   'half-duplex-operation',
   'duplex-operation',
   'telecom-device',
