@@ -7,6 +7,7 @@ import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
 import { STATE_PICTOGRAMS } from './states/index.js';
 import { COMMS_PICTOGRAMS } from './comms/index.js';
 import { DAMAGE_PICTOGRAMS } from './damage/index.js';
+import { WILDFIRE_PICTOGRAMS } from './wildfire/index.js';
 import type { CatalogPictogramDefinition } from './catalog-definition.js';
 import { deepFreeze } from '../readonly-data.js';
 
@@ -28,11 +29,13 @@ export const ALL_PICTOGRAMS: readonly CatalogPictogramDefinition[] = deepFreeze(
   ...STATE_PICTOGRAMS,
   ...COMMS_PICTOGRAMS,
   ...DAMAGE_PICTOGRAMS,
+  ...WILDFIRE_PICTOGRAMS,
 ]);
 
 export { STATE_PICTOGRAMS } from './states/index.js';
 export { COMMS_PICTOGRAMS } from './comms/index.js';
 export { DAMAGE_PICTOGRAMS } from './damage/index.js';
+export { WILDFIRE_PICTOGRAMS } from './wildfire/index.js';
 
 export function buildPictogramRegistry(
   definitions: readonly CatalogPictogramDefinition[],

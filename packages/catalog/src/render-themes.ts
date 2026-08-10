@@ -21,7 +21,12 @@ const PRINT_MONOCHROME_PALETTE: ColorPalette = deepFreeze({
   braun: '#999999',
   grau: '#5f5f5f',
   hellgrau: '#bbbbbb',
-  hellblau: '#eeeeee',
+  // Anhang M setzt in M.12 bis M.14 hellblaue Geometrie ohne schwarze Kontur direkt auf die
+  // Oberfläche. Mit dem früheren #eeeeee erreichte sie dort 1,16:1 und wäre im Druck praktisch
+  // unsichtbar gewesen. #808080 ist zweiseitig gebunden: 3,95:1 gegen die weisse Oberfläche und
+  // 5,32:1 gegen Schwarz — letzteres fordern die bestehenden Paare der Zustandszeichen, die
+  // schwarze Kontur an blauer Wassergeometrie führen.
+  hellblau: '#808080',
 } satisfies ColorPalette);
 
 /**

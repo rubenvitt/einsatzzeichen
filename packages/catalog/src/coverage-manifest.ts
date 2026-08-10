@@ -226,6 +226,7 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'J.4',
     'K',
     'L',
+    'M',
   ],
   entries: [...catalogEntries, ...recipeEntries, ...elementEntries, ...pictogramEntries],
 };

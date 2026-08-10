@@ -69,7 +69,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 262 Zeilen mit 251 Elementdarstellungen', () => {
+  it('enthält exakt 276 Zeilen mit 265 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -86,11 +86,11 @@ describe('Coverage-Manifest', () => {
     expect(counts).toEqual({
       'catalog-entry': 8,
       'composition-recipe': 3,
-      element: 251,
+      element: 265,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(262);
-    expect(elementRows).toHaveLength(251);
-    expect(pictogramRows).toHaveLength(240);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(276);
+    expect(elementRows).toHaveLength(265);
+    expect(pictogramRows).toHaveLength(254);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(11);
   });
 
@@ -151,6 +151,7 @@ describe('Coverage-Manifest', () => {
       'J.4',
       'K',
       'L',
+      'M',
     ]);
   });
 
@@ -170,7 +171,7 @@ describe('Manifest-Einträge für Piktogramme', () => {
       .filter((entry) => definitionKeys.has(entryKey(entry.implementation, entry.variant)))
       .map((entry) => entryKey(entry.implementation, entry.variant))
       .sort();
-    expect(rows).toHaveLength(240);
+    expect(rows).toHaveLength(254);
     expect(rows).toEqual([...definitionKeys].sort());
   });
 
