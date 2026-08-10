@@ -56,6 +56,25 @@ const STATE_PICTOGRAM_TECHNICAL_REVIEW: Review = {
     'ist in docs/reviews/2026-08-07-d2-visual-qa.md dokumentiert.',
 };
 
+/**
+ * Schadens- und Vegetationsbrandzeichen der Anhänge K, L und M. Dieselben lokalen Gates wie bei
+ * den Zuständen und den IuK-Zeichen; die Note nennt zusätzlich die beiden Farbentscheidungen, die
+ * D.4 treffen musste, damit sie nicht nur in der Entscheidungsnotiz stehen.
+ */
+const DAMAGE_PICTOGRAM_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-10',
+  note:
+    'Fingerprint-Gate für Piktogramme nicht anwendbar. Für K, L und M bestehen Snapshot, ' +
+    'Kommando, Box und Standalone-Clipping gegen die 32×32-mm-ViewBox sowie die globalen ' +
+    'Mehrgrößen-, viewBox-, Metadaten- und expliziten Kontrast-Gates. Zwei Farbbefunde sind ' +
+    'behoben statt umgangen: die Ziffern in L.10 stehen schwarz statt rot (Rot verfehlt als ' +
+    'Text 4,5:1), und hellblau trägt im Druckmonochrom #808080 statt #eeeeee (M.12 bis M.14 ' +
+    'setzen blaue Geometrie ohne schwarze Kontur auf die Oberfläche). Die Sichtprüfung aller ' +
+    '42 ist in docs/reviews/2026-08-10-d4-visual-qa.md dokumentiert.',
+};
+
 /** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
 function reviewFor(
   sourceId: string,
@@ -164,7 +183,9 @@ const pictogramEntries: CoverageEntry[] = ALL_PICTOGRAMS.map((definition) => {
   const sourceId = `bbk-babz-2025:${definition.section}`;
   const technicalReview = definition.id.startsWith('state.')
     ? STATE_PICTOGRAM_TECHNICAL_REVIEW
-    : PICTOGRAM_TECHNICAL_REVIEW;
+    : definition.id.startsWith('damage.') || definition.id.startsWith('wildfire.')
+      ? DAMAGE_PICTOGRAM_TECHNICAL_REVIEW
+      : PICTOGRAM_TECHNICAL_REVIEW;
   return {
     sourceId,
     variant: definition.variant,
@@ -188,7 +209,24 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
   coreVersion: '0.1.0',
   // Kapitel 3 (sieben Referenzdateien) setzt dieser Slice nicht um; 5.1.1/5.7 sind entfallen
   // (Verwaltungsstufen/Fahrzeugkategorien: von 16 Referenzdateien nur 2 vermessbar, kein Konsument).
-  scope: ['1', '2', '4', '5.4', '5.8', 'C.1.1', 'C.1.2', 'D.3.7', 'J.1', 'J.2', 'J.3', 'J.4'],
+  // K, L und M stehen einbuchstabig im Umfang, weil ihre Nummerierung flach ist: `K` deckt
+  // K.1 bis K.18 ab, wo `J` vier Unterkapitel gebraucht hätte.
+  scope: [
+    '1',
+    '2',
+    '4',
+    '5.4',
+    '5.8',
+    'C.1.1',
+    'C.1.2',
+    'D.3.7',
+    'J.1',
+    'J.2',
+    'J.3',
+    'J.4',
+    'K',
+    'L',
+  ],
   entries: [...catalogEntries, ...recipeEntries, ...elementEntries, ...pictogramEntries],
 };
 

@@ -17,18 +17,22 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    expect(ids).toHaveLength(223);
+    expect(ids).toHaveLength(251);
     expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(3);
     expect(ids.filter((id) => id.startsWith('capability.'))).toHaveLength(92);
     expect(ids.filter((id) => id.startsWith('state.'))).toHaveLength(67);
     expect(ids.filter((id) => id.startsWith('comms.'))).toHaveLength(53);
+    expect(ids.filter((id) => id.startsWith('damage.'))).toHaveLength(28);
+    // Was übrig bleibt, sind die acht Grundzeichen — die einzigen Renderfälle ohne Artpräfix.
     expect(
       ids.filter(
         (id) =>
           !id.startsWith('recipe.') &&
           !id.startsWith('capability.') &&
           !id.startsWith('state.') &&
-          !id.startsWith('comms.'),
+          !id.startsWith('comms.') &&
+          !id.startsWith('damage.') &&
+          !id.startsWith('wildfire.'),
       ),
     ).toHaveLength(8);
     expect(new Set(ids).size).toBe(ids.length);

@@ -262,6 +262,70 @@ export const COMMS_IDS = Object.freeze([
 
 export type CommsId = (typeof COMMS_IDS)[number];
 
+/**
+ * Schadenszeichen nach den Anhängen K (Bauwerksschäden) und L (Deichverteidigung), in
+ * verbindlicher Kapitelreihenfolge — erst K.1 bis K.18, dann L.1 bis L.10.
+ *
+ * **Zwei Anhänge, ein ID-Raum.** Das ist keine nachträgliche Zusammenlegung, sondern die
+ * Aufteilung, die `pictogram.ts` seit D.0 als Vertrag führt: `DamageId` deckt K und L ab,
+ * `WildfireId` allein M. Beide Anhänge beschreiben denselben Gegenstand — einen Schaden an einem
+ * Bauwerk, den ein Erkundungstrupp in eine Lagekarte einträgt; ein Deich ist dabei nichts anderes
+ * als ein sehr langes Bauwerk. Getrennte Räume hätten eine Grenze behauptet, die die Zeichen
+ * selbst nicht ziehen.
+ */
+export const DAMAGE_IDS = Object.freeze([
+  'room-blocked',
+  'room-damaged',
+  'half-room-damaged',
+  'room-damaged-swallow-nest',
+  'room-filled',
+  'room-filled-fine-debris',
+  'room-filled-layered',
+  'room-filled-water',
+  'slip-surface',
+  'layering',
+  'edge-debris',
+  'upper-floors',
+  'middle-floors',
+  'lower-floors',
+  'timber-beam-ceiling',
+  'girder-ceiling',
+  'solid-slab-ceiling',
+  'vaulted-ceiling',
+  'imminent-overflow',
+  'overflow',
+  'local-through-flow',
+  'through-flow',
+  'local-undercutting',
+  'undercutting',
+  'slope-slippage',
+  'outer-dyke-damage',
+  'dyke-breach',
+  'seepage-line-marker',
+] as const);
+
+export type DamageId = (typeof DAMAGE_IDS)[number];
+
+/** Vegetationsbrandzeichen nach Anhang M in verbindlicher Kapitelreihenfolge. */
+export const WILDFIRE_IDS = Object.freeze([
+  'anchor-point',
+  'lookout',
+  'safety-zone',
+  'spot-fire',
+  'ground-fire',
+  'acute-spot-fire',
+  'peat-ground-fire',
+  'crown-fire',
+  'fire-spread-uphill',
+  'fire-spread-downhill',
+  'water-extraction-point',
+  'aerial-firefighting',
+  'water-supply-operation',
+  'water-supply-operation-vehicles',
+] as const);
+
+export type WildfireId = (typeof WILDFIRE_IDS)[number];
+
 /** Semantische Beschreibung eines Zeichens. Eingabe des Kompositionsmotors. */
 export interface SymbolSpec {
   kind: SymbolKind;
