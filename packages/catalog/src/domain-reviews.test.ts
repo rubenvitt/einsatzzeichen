@@ -83,10 +83,10 @@ describe('Fachreview-Ledger', () => {
     const sourceReviews = Object.values(SOURCE_DOMAIN_REVIEWS);
     const profileReviews = Object.values(PROFILE_DOMAIN_REVIEWS);
     const reviews = [...manifestReviews, ...sourceReviews, ...profileReviews];
-    expect(manifestReviews).toHaveLength(198);
+    expect(manifestReviews).toHaveLength(205);
     expect(sourceReviews).toHaveLength(13);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(212);
+    expect(reviews).toHaveLength(219);
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
   });
 

@@ -227,6 +227,13 @@ export const COMMS_IDS = Object.freeze([
   'transitions',
   'telephone-exchange',
   'telephone-exchange-voip',
+  'router',
+  'switch',
+  'server',
+  'access-point',
+  'wan',
+  'firewall',
+  'printer',
 ] as const);
 
 export type CommsId = (typeof COMMS_IDS)[number];
