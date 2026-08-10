@@ -1,6 +1,20 @@
 import type { Point, Primitive, Style } from '@einsatzzeichen/schema';
+import type { PictogramContrastPair } from '../catalog-definition.js';
 
 export const COMMS_STROKE_WIDTH_MM = 1;
+
+/**
+ * Ein Zeichen ohne Körper — nur schwarze Striche auf der Ausgabeoberfläche. Genau ein Paar; es
+ * gibt keine zweite Farbnachbarschaft zu deklarieren. Liegt hier und nicht in einem der
+ * Kapitelmodule, weil J.2, J.3 und J.4 es gleichermaßen brauchen.
+ */
+export const CONNECTION_CONTRAST = [
+  {
+    foreground: 'schwarz',
+    background: 'surface',
+    context: 'Verbindungsmarke auf Ausgabeoberfläche',
+  },
+] as const satisfies readonly [PictogramContrastPair, ...PictogramContrastPair[]];
 
 export const COMMS_BLACK_STROKE = Object.freeze({
   fill: 'none',

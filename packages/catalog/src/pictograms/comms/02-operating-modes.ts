@@ -1,18 +1,6 @@
 import { deepFreeze } from '../../readonly-data.js';
-import {
-  defineComms,
-  type CatalogPictogramDefinition,
-  type PictogramContrastPair,
-} from '../catalog-definition.js';
-import { commsLine } from './authoring.js';
-
-const CONNECTION_CONTRAST = [
-  {
-    foreground: 'schwarz',
-    background: 'surface',
-    context: 'Verbindungsmarke auf Ausgabeoberfläche',
-  },
-] as const satisfies readonly [PictogramContrastPair, ...PictogramContrastPair[]];
+import { defineComms, type CatalogPictogramDefinition } from '../catalog-definition.js';
+import { commsLine, CONNECTION_CONTRAST } from './authoring.js';
 
 /**
  * Beide Zeichen sind eine waagerechte Verbindungslinie mit zwei offenen Pfeilspitzen. Der

@@ -36,8 +36,45 @@ describe('J.3: Gerätekörper', () => {
     );
   }
 
+  it('führt alle fünfzehn Abschnitte in Kapitelreihenfolge', () => {
+    const sections = COMMS_PICTOGRAMS.filter((d) => d.section.startsWith('J.3.')).map(
+      (d) => d.section,
+    );
+    expect(sections).toEqual([
+      'J.3.1',
+      'J.3.2',
+      'J.3.3',
+      'J.3.4',
+      'J.3.5',
+      'J.3.6',
+      'J.3.7',
+      'J.3.8',
+      'J.3.9',
+      'J.3.10',
+      'J.3.11',
+      'J.3.12',
+      'J.3.13',
+      'J.3.14',
+      'J.3.15',
+    ]);
+  });
+
   it('führt das Grundzeichen J.3.1 ohne Kürzel', () => {
     expect(textsOf('J.3.1')).toEqual([]);
+  });
+
+  // J.3.14 und J.3.15 sind ohne ihre Beschriftung dieselbe Zeichnung — die Referenzen
+  // unterscheiden sich nur in Rundungsstellen. Das Wort VoIP ist der ganze Unterschied.
+  it('unterscheidet die beiden Fernsprechvermittlungen allein durch VoIP', () => {
+    const ohneText = (section: string) =>
+      JSON.stringify(
+        COMMS_PICTOGRAMS.find((d) => d.section === section)!.primitives.filter(
+          (p) => p.type !== 'text',
+        ),
+      );
+    expect(ohneText('J.3.14')).toBe(ohneText('J.3.15'));
+    expect(textsOf('J.3.14').map((t) => t.content)).toEqual(['C']);
+    expect(textsOf('J.3.15').map((t) => t.content)).toEqual(['C', 'VoIP']);
   });
 
   it('trägt in J.3.6 das Kürzel HRT als Textlauf', () => {

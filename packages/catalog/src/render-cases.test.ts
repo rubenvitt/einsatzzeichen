@@ -17,11 +17,11 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    expect(ids).toHaveLength(180);
+    expect(ids).toHaveLength(187);
     expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(3);
     expect(ids.filter((id) => id.startsWith('capability.'))).toHaveLength(92);
     expect(ids.filter((id) => id.startsWith('state.'))).toHaveLength(67);
-    expect(ids.filter((id) => id.startsWith('comms.'))).toHaveLength(10);
+    expect(ids.filter((id) => id.startsWith('comms.'))).toHaveLength(17);
     expect(
       ids.filter(
         (id) =>

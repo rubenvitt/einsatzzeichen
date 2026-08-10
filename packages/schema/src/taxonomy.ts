@@ -220,6 +220,13 @@ export const COMMS_IDS = Object.freeze([
   'handheld-radio-terminal',
   'mobile-radio-terminal',
   'fixed-radio-terminal',
+  'active-paging-radio-terminal',
+  'antenna',
+  'cable-construction',
+  'radio',
+  'transitions',
+  'telephone-exchange',
+  'telephone-exchange-voip',
 ] as const);
 
 export type CommsId = (typeof COMMS_IDS)[number];
