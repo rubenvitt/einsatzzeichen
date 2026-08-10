@@ -100,8 +100,9 @@ fachkundige Person geprüft werden. Die Abschlussentscheidung für D.1 steht in
 
 D.2 deckt Kapitel 5.8 der projektinternen Coverage-Baseline technisch mit 61 State-IDs und 67
 Darstellungen ab, darunter sechs getrennt adressierbare Alternativdarstellungen. Damit enthält
-der Katalog insgesamt 159 Piktogrammdarstellungen: 92 Capabilities und 67 States. Die 170 globalen
-Renderfälle setzen sich aus acht Grundzeichen, drei Rezepten und diesen 159 Piktogrammen zusammen.
+der Katalog zusammen mit D.3 insgesamt 212 Piktogrammdarstellungen: 92 Capabilities, 67 States und
+53 IuK-Zeichen. Die 223 globalen Renderfälle setzen sich aus acht Grundzeichen, drei Rezepten und
+diesen 212 Piktogrammen zusammen.
 
 Alle 67 State-Darstellungen sind eigenständige Zeichen mit kanonischer 32×32-mm-Platzierung und
 Standalone-Clipping. D.2 führt weder eine allgemeine State-Komposition noch eine Integration in
@@ -111,9 +112,16 @@ in
 [`docs/reviews/2026-08-07-d2-visual-qa.md`](./docs/reviews/2026-08-07-d2-visual-qa.md)
 dokumentiert.
 
+D.3 deckt Anhang J (Informations- und Kommunikationstechnik) mit 48 IDs und 53 Darstellungen ab,
+darunter fünf leitergebundene Alternativdarstellungen. Rund ein Drittel der Zeichen trägt seine
+Bedeutung in einem Buchstabenkürzel statt in der Geometrie — ohne ihre Kürzel sind `J.3.6`,
+`J.3.7` und `J.3.8` dasselbe leere Quadrat. Möglich wurde das durch das `text`-Primitiv aus dem
+Slice vom 9. August; die Sichtprüfung aller 53 steht in
+[`docs/reviews/2026-08-08-d3-visual-qa.md`](./docs/reviews/2026-08-08-d3-visual-qa.md).
+
 Diese technische Freigabe ist keine fachliche Einsatzfreigabe und keine Aussage normativer
 Geltung oder zur Nutzungs- und Lizenzgrundlage der Quellen. Alle 67 getrennten fachlichen
-State-Reviews bleiben `pending`; ihre Bedeutung, Abgrenzung, Lesbarkeit und einsatztaktische
+State-Reviews und alle 53 IuK-Reviews bleiben `pending`; ihre Bedeutung, Abgrenzung, Lesbarkeit und einsatztaktische
 Eignung müssen weiterhin einzeln durch eine fachkundige Person geprüft werden.
 
 ## Der lokale Referenzbestand

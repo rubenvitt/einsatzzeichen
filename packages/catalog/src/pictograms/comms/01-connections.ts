@@ -267,17 +267,17 @@ export const CONNECTION_COMMS = deepFreeze([
     }),
   ], 'J.1.9_Faxübertragung_leitergebunden.svg', { xMm: 4, yMm: 7, widthMm: 24, heightMm: 19 }, { xMm: 8, yMm: 7, widthMm: 16, heightMm: 9 }),
   ...transmissionPair('J.1.10', 'image-transmission', 'Bildübertragung', [
-    commsRect(4, 5, 24, 15, COMMS_WHITE_BODY, 2),
-  ], 'J.1.10_ Bildübertragung_leitergebunden.svg', { xMm: 4, yMm: 5, widthMm: 24, heightMm: 21 }, { xMm: 4, yMm: 5, widthMm: 24, heightMm: 15 }),
+    commsRect(4, 5, 24, 13, COMMS_WHITE_BODY, 2),
+  ], 'J.1.10_ Bildübertragung_leitergebunden.svg', { xMm: 4, yMm: 5, widthMm: 24, heightMm: 21 }, { xMm: 4, yMm: 5, widthMm: 24, heightMm: 13 }),
   ...transmissionPair('J.1.11', 'livestream-transmission', 'Livestreamübertragung', [
-    commsRect(11, 5, 17, 14, COMMS_WHITE_BODY),
+    commsRect(11, 5, 17, 12, COMMS_WHITE_BODY),
     commsPolyline([
-      [11, 9],
+      [11, 8],
       [4, 4],
-      [4, 20],
-      [11, 15],
+      [4, 18],
+      [11, 14],
     ]),
-  ], 'J.1.11_Livestreamübertragung_leitergebunden.svg', { xMm: 4, yMm: 4, widthMm: 24, heightMm: 22 }, { xMm: 4, yMm: 4, widthMm: 24, heightMm: 16 }),
+  ], 'J.1.11_Livestreamübertragung_leitergebunden.svg', { xMm: 4, yMm: 4, widthMm: 24, heightMm: 22 }, { xMm: 4, yMm: 4, widthMm: 24, heightMm: 14 }),
   /**
    * Satellitenverbindung: die Schüssel als Viertelkreis, der Strahl als Diagonale. Was übertragen
    * wird, steht rechts daneben — eine gerade Linie für Sprache, eine Rechteckwelle für Daten.
