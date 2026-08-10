@@ -47,15 +47,23 @@ function rasterize(renderCase: RenderCase, size: number, theme: RenderTheme): Ra
   return { size, pngBase64: image.asPng().toString('base64') };
 }
 
+// `image.pixels` einmal abgreifen — derselbe teure Getter wie in `fonts.test.ts`
+// (`countDarkInkPixels`): jeder Zugriff kopiert den vollständigen RGBA-Puffer. In der
+// Schleifenbedingung bzw. im Pixel-Zugriff aufgerufen wird daraus eine quadratische Laufzeit mit
+// zweistelligen Gigabyte an Müll pro Bild; nachgemessen 592 s und 19,6 GB Spitzenspeicher für
+// diese Datei gegenüber 1,6 s und 183 MB danach. Auf einem 16-GB-Runner wurde der Prozess dabei
+// vom OOM-Killer beendet, was die gesamte CI-Maschine mitnahm.
 function hasVisiblePixel(image: RenderedImage): boolean {
-  for (let index = 3; index < image.pixels.length; index += 4) {
-    if ((image.pixels[index] ?? 0) > 0) return true;
+  const pixels = image.pixels;
+  for (let index = 3; index < pixels.length; index += 4) {
+    if ((pixels[index] ?? 0) > 0) return true;
   }
   return false;
 }
 
 function touchesOuterBorder(image: RenderedImage): boolean {
-  const alphaAt = (x: number, y: number): number => image.pixels[(y * image.width + x) * 4 + 3] ?? 0;
+  const pixels = image.pixels;
+  const alphaAt = (x: number, y: number): number => pixels[(y * image.width + x) * 4 + 3] ?? 0;
   for (let x = 0; x < image.width; x += 1) {
     if (alphaAt(x, 0) > 0 || alphaAt(x, image.height - 1) > 0) return true;
   }
