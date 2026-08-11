@@ -330,7 +330,7 @@ export type WildfireId = (typeof WILDFIRE_IDS)[number];
  * Beschriftungen **im** Körper, in den drei Zonen, die Anhang E belegt. Die Zonen sind nach
  * ihrer Lage benannt und nicht nach einer Bedeutung: vermessen ist die Position, nicht die
  * Semantik. Anhang E legt in `center` das Kürzel der Einheit („B", „ENT", „Öl"), in
- * `bottomRight` das Organisationskürzel („THW") und in `bottomLeft` eine Zusatzkennzeichnung
+ * `bottomRight` das Trägerkürzel („THW") und in `bottomLeft` eine Zusatzkennzeichnung
  * („A" für Typ A, „ASH" für Abstützsystem Holz) — dass diese Zuordnung über Anhang E hinaus
  * gilt, behauptet dieser Typ nicht.
  *

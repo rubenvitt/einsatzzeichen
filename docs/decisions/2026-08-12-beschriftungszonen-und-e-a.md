@@ -134,9 +134,11 @@ die Vollständigkeit — und wäre genau deshalb eine Behauptung, die kein Gate 
 
 Zwei Referenzdateien tragen eine zu kurze blaue Füllfläche (`E.1.6`: 3 mm, `E.1.14`: 2,5 mm) mit
 entsprechend nach oben verschobener Beschriftung, bei normalem Rahmen und normaler Kopfzone. Der
-Katalog baut beide wie die 14 fehlerfreien; der Befund steht in ihren Manifestzeilen. Das
-Fingerprint-Gate hätte ihn nie gefunden: es vergleicht die `ring`-Form, und die ist in allen 16
-Dateien gleich.
+Katalog baut beide wie die 14 fehlerfreien; der Befund steht in der `note` des technischen Reviews
+ihrer Manifestzeilen — nicht als `deviation`, denn der Status bezeichnet eine bewusste Abweichung
+der Umsetzung von ihrer Quelle, und hier weicht die Quelle von sich selbst ab. Dieselbe Einordnung
+wie bei den beiden Farbbefunden aus D.4. Das Fingerprint-Gate hätte den Fehler nie gefunden: es
+vergleicht die `ring`-Form, und die ist in allen 16 Dateien gleich.
 
 **Keine fachliche Freigabe.** Alle 16 Zeichen sind `domain: pending`, und bei ihnen wiegt das
 schwerer als sonst: ihre gesamte fachliche Unterscheidung liegt in einem Buchstabenkürzel, das am
@@ -162,6 +164,10 @@ Gemessen am 12. August 2026 auf `claude/lfh-440-3253b1`:
 - **Kein Lesbarkeits-Gate über Kompositionen.** `checkTextLegibility` läuft heute nur über
   Piktogrammdefinitionen. Die 16 Zeichen tragen ihr `minRenderPx` korrekt, aber nichts prüft es.
   Für die Piktogramme mit Kürzeln aus Anhang J tut es das — die Lücke ist die Kompositionsseite.
+- **Nichts prüft, ob eine Beschriftungsbox im Körper liegt.** Die Rasterprüfung belegt Tinte ⊂ Box;
+  dass Box ⊂ Körper gilt, folgt hier aus der Vermessung und nicht aus einem Gate. Ein Kürzel, dessen
+  Box über die Körperkante hinausreichte, würde weder vom Clipping- noch vom viewBox-Gate gemeldet,
+  solange es innerhalb der viewBox bleibt. Geschwisterlücke zur fehlenden Lesbarkeitsprüfung oben.
 - **Kein allgemeines Textmetrik-Gate.** Unverändert die Lücke aus Abschnitt 2 des Slice vom
   9. August: `boxMm` bleibt bei Text eine Zusicherung. Die Rasterprüfungen decken die konkret
   geprüften Fälle ab — jetzt einschließlich aller 16 Kürzelsätze —, sind aber kein Gate, das jede

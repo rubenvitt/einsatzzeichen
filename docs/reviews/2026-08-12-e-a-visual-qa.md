@@ -63,9 +63,11 @@ dem unteren Rahmen; ihre gesamte Beschriftung sitzt entsprechend höher.
 Rahmen und Kopfzone stehen in beiden Dateien normal, und die Verschiebung der Beschriftung
 entspricht exakt der Verkürzung der Füllfläche — das Bild ist in sich stimmig, aber gegenüber den
 14 fehlerfreien Dateien um denselben Betrag verrutscht. **Der Katalog baut beide wie die anderen
-14.** Die Abweichung steht in ihren Manifestzeilen (`coverage-manifest.ts`, `technicalReviewFor`)
-und als Datum in `ANHANG_E_A_FILL_DEFECTS`; ein Test hält fest, dass genau diese zwei Dateien
-betroffen sind.
+14.** Der Befund steht in der `note` des technischen Reviews ihrer Manifestzeilen
+(`coverage-manifest.ts`, `technicalReviewFor`) und als Datum in `ANHANG_E_A_FILL_DEFECTS`; ein
+Test hält fest, dass genau diese zwei Dateien betroffen sind. Kein `deviation`-Status: der
+bezeichnet eine bewusste Abweichung der Umsetzung von ihrer Quelle, hier weicht die Quelle von
+sich selbst ab.
 
 Das Fingerprint-Gate greift hier nicht: `matchFingerprint` wählt die `ring`-Form (den Rahmen), und
 der ist in allen 16 Dateien gleich. Die zu kurze Füllfläche wäre ohne Sichtprüfung unentdeckt

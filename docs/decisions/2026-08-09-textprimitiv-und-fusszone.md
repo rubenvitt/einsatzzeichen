@@ -288,6 +288,12 @@ Fußzone (`formation`-Körperdoppel, `designation: 'Übung'`) bei 256 px.
   `MINIMUM_TEXT_CONTRAST`-Schwelle von 4,5 — das ist aber kein Kontrastnachweis: `blau`/`schwarz`
   ist kein Paar aus dem offiziellen Kontrastvertrag eines Katalogzeichens, nur von Hand
   nachgerechnet an diesem Demonstrationsbeispiel.
+  <br>**Nachtrag 12.08.2026:** Beide hier genannten Hexwerte sind seither nachgezogen —
+  `#4a73d9` → `#4970d2` und `#777777` → `#767676`. Anhang E setzt als erster **weissen** Text auf
+  die Körperfarbe; in dieser Richtung verfehlten beide alten Werte 4,5:1
+  ([`2026-08-12-beschriftungszonen-und-e-a.md`](./2026-08-12-beschriftungszonen-und-e-a.md),
+  Abschnitt 4). Die Beobachtung dieses Abschnitts — drei Themes, drei Bilder, gleiche Glyphenform
+  — bleibt davon unberührt.
 - **Fußzone:** „Übung" unter dem `formation`-Körperdoppel bei 256 px zeigt beide Ü-Punkte
   vollständig und mit sichtbarem Abstand zur Körperunterkante — nicht angeschnitten, nicht mit dem
   Körper überlappend. Die PNG zeichnet `boxMm` nicht und der Renderer clippt nicht auf sie; das

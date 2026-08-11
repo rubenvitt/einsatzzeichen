@@ -101,8 +101,9 @@ fachkundige Person geprüft werden. Die Abschlussentscheidung für D.1 steht in
 D.2 deckt Kapitel 5.8 der projektinternen Coverage-Baseline technisch mit 61 State-IDs und 67
 Darstellungen ab, darunter sechs getrennt adressierbare Alternativdarstellungen. Damit enthält
 der Katalog zusammen mit D.3 und D.4 insgesamt 254 Piktogrammdarstellungen: 92 Capabilities, 67
-States, 53 IuK-, 28 Schadens- und 14 Vegetationsbrandzeichen. Die 265 globalen Renderfälle setzen
-sich aus acht Grundzeichen, drei Rezepten und diesen 254 Piktogrammen zusammen.
+States, 53 IuK-, 28 Schadens- und 14 Vegetationsbrandzeichen. Die 281 globalen Renderfälle setzen
+sich aus acht Grundzeichen, 19 Rezepten und diesen 254 Piktogrammen zusammen — drei Rezepte
+belegen den Kompositionsmotor, die übrigen 16 sind der Teilslice E-a (siehe unten).
 
 Alle 67 State-Darstellungen sind eigenständige Zeichen mit kanonischer 32×32-mm-Platzierung und
 Standalone-Clipping. D.2 führt weder eine allgemeine State-Komposition noch eine Integration in

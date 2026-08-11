@@ -84,8 +84,12 @@ export const ANHANG_E_A_RECIPES = {
    * 42,52 statt 51,024 Einheiten hoch (3 mm zu kurz), und die gesamte Beschriftung ist um
    * dieselben 3 mm nach oben verschoben — der Rahmen und die Kopfzone stehen dagegen normal.
    * Gerastert zeigt die Datei einen weißen Streifen zwischen Innenfeld und unterem Rahmen.
-   * Der Katalog baut sie wie die anderen 14; die Abweichung steht als `deviation` in der
-   * Manifestzeile (siehe `coverage-manifest.ts`) und im Sichtprüfungsbericht.
+   * Der Katalog baut sie wie die anderen 14; der Befund steht in der `note` des technischen
+   * Reviews ihrer Manifestzeile (`technicalReviewFor` in `coverage-manifest.ts`) und im
+   * Sichtprüfungsbericht. **Kein `deviation`-Status:** der bezeichnet im Reviewmodell eine
+   * bewusste Abweichung der Umsetzung von ihrer Quelle. Hier weicht die Quelle von sich selbst
+   * ab, und die Umsetzung folgt den 14 fehlerfreien Dateien — dieselbe Einordnung wie bei den
+   * beiden Farbbefunden aus D.4.
    */
   'E.1.6': {
     title: 'Fachgruppe Elektroversorgung',
@@ -202,8 +206,8 @@ export const ANHANG_E_A_RECIPES = {
 
 /**
  * Die beiden Referenzdateien, deren blaue Füllfläche zu kurz ist. Sie stehen hier als Datum und
- * nicht nur im Prosakommentar, damit die Manifestzeile ihre `deviation` daraus ableitet statt
- * sie ein zweites Mal zu behaupten.
+ * nicht nur im Prosakommentar, damit die Manifestzeile ihren Reviewvermerk daraus ableitet statt
+ * den Befund ein zweites Mal zu behaupten.
  */
 export const ANHANG_E_A_FILL_DEFECTS: Readonly<Record<string, string>> = Object.freeze({
   'E.1.6':
