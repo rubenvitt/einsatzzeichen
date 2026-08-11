@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { checkContrast, relativeLuminance, type ContrastRequirement } from '@einsatzzeichen/core';
 import { ORGANIZATION_COLORS } from './organizations.js';
 import { ALL_PICTOGRAMS } from './pictograms/index.js';
+import { labelContrastRequirements } from './recipes.js';
 import {
   MINIMUM_NON_TEXT_CONTRAST,
   contrastPairProblems,
@@ -26,7 +27,11 @@ const BASE_CONTRAST_REQUIREMENT: ContrastRequirement = {
 };
 
 function requirements(): ContrastRequirement[] {
-  return [BASE_CONTRAST_REQUIREMENT, ...ALL_PICTOGRAMS.flatMap(contrastRequirementsFor)];
+  return [
+    BASE_CONTRAST_REQUIREMENT,
+    ...ALL_PICTOGRAMS.flatMap(contrastRequirementsFor),
+    ...labelContrastRequirements(),
+  ];
 }
 
 describe('A11y-Kontrast-Gate über den Katalogbestand', () => {

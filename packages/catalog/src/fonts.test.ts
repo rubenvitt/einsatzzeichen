@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { compose, renderSvg, type CatalogPorts } from '@einsatzzeichen/core';
 import { DEFAULT_VIEWBOX_MM, type Primitive, type Drawing } from '@einsatzzeichen/schema';
 import { TEXT_FONT_FAMILY, TEXT_FONT_PATH, TEXT_FONT_SHA256, resvgFontOptions } from './fonts.js';
+import { RECIPES, composeFromCatalog, type Recipe } from './recipes.js';
 
 describe('Textschrift', () => {
   it('liegt im Repository und hat die erwartete Prüfsumme', () => {
@@ -138,6 +139,47 @@ function footInkAgainstBox(designation: string): InkAgainstBox {
   return { inkPixelCount, outsideBoxCount };
 }
 
+/**
+ * Dieselbe Prüfung wie `footInkAgainstBox`, aber für die Beschriftungen **im** Körper und am
+ * echten Katalogausgang statt an einem Doppel: `composeFromCatalog` liefert die Zeichnung, die
+ * auch exportiert und gerastert wird. Jeder `role: 'label'`-Lauf wird einzeln isoliert — ein
+ * gemeinsames Bild könnte einen Überstand des einen Laufs mit der Tinte des anderen verdecken.
+ *
+ * Der Ersatz für die verlorene geometrische Messung ist hier besonders nötig: die Boxen sind
+ * seitlich eng gefasst (der mittige Lauf bekommt die Körperbreite abzüglich beider Ränder, die
+ * beiden unteren je ihre Hälfte bis zur Körpermitte), und keines der vier Gates prüft bei Text
+ * gegen die Glyphen.
+ */
+function labelInkAgainstBox(drawing: Drawing): InkAgainstBox[] {
+  const labels = drawing.children.filter((primitive) => primitive.role === 'label');
+  if (labels.length === 0) throw new Error('Die Zeichnung trägt keinen Beschriftungslauf.');
+
+  const size = 256;
+  return labels.map((label) => {
+    if (label.type !== 'text') throw new Error('Ein label-Primitiv ist kein Textprimitiv.');
+    const svg = renderSvg({ viewBox: drawing.viewBox, children: [label] }, { size });
+    const image = new Resvg(svg, { font: resvgFontOptions() }).render();
+    const pixels = image.pixels; // einmal abgreifen, siehe countDarkInkPixels oben.
+    const scale = size / drawing.viewBox.width;
+    const boxMinXPx = label.boxMm.xMm * scale;
+    const boxMaxXPx = (label.boxMm.xMm + label.boxMm.widthMm) * scale;
+    const boxMinYPx = label.boxMm.yMm * scale;
+    const boxMaxYPx = (label.boxMm.yMm + label.boxMm.heightMm) * scale;
+
+    let inkPixelCount = 0;
+    let outsideBoxCount = 0;
+    for (let y = 0; y < image.height; y++) {
+      for (let x = 0; x < image.width; x++) {
+        const alpha = pixels[(y * image.width + x) * 4 + 3] ?? 0;
+        if (alpha === 0) continue;
+        inkPixelCount++;
+        if (x < boxMinXPx || x > boxMaxXPx || y < boxMinYPx || y > boxMaxYPx) outsideBoxCount++;
+      }
+    }
+    return { inkPixelCount, outsideBoxCount };
+  });
+}
+
 describe('Rasterevidenz für Text (resvgFontOptions())', () => {
   it('rastert dieselbe Textzeichnung zweimal byteidentisch', () => {
     const svg = sampleTextSvg();
@@ -201,4 +243,30 @@ describe('Rasterevidenz für Text (resvgFontOptions())', () => {
     expect(alleUmlaute.inkPixelCount).toBeGreaterThan(0);
     expect(alleUmlaute.outsideBoxCount).toBe(0);
   });
+
+  const labelRecipes = Object.entries<Recipe>(RECIPES).filter(
+    ([, recipe]) => recipe.spec.labels !== undefined,
+  );
+
+  it('prüft alle Zeichen mit Beschriftungszonen, nicht nur eine Auswahl', () => {
+    // Sonst bliebe die Prüfung unten still grün, falls die Rezepte einmal ohne Beschriftung
+    // dastünden — dieselbe Rolle wie „rastert Text überhaupt" für die Schriftbindung.
+    expect(labelRecipes).toHaveLength(16);
+  });
+
+  it.each(labelRecipes)(
+    'hält bei %s die deklarierte boxMm jedes Beschriftungslaufs ein',
+    (_section, recipe) => {
+      // Der schärfste Fall des Bestands ist „Öl": der Umlautpunkt steht über der Versalhöhe und
+      // war beim Hanging-Zuschlag (Task 9) genau der Befund, den kein Gate gefunden hat. Hier
+      // deckt ihn `ALPHABETIC_ASCENT_FRACTION` ab, „Sp" die Unterlänge nach unten und „ASH"/
+      // „THW" die seitliche Grenze der halbierten unteren Boxen.
+      for (const { inkPixelCount, outsideBoxCount } of labelInkAgainstBox(
+        composeFromCatalog(recipe.spec, recipe.title),
+      )) {
+        expect(inkPixelCount).toBeGreaterThan(0);
+        expect(outsideBoxCount).toBe(0);
+      }
+    },
+  );
 });

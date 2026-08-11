@@ -24,11 +24,15 @@ describe('coverage CLI', () => {
 
     coverage();
 
-    expect(manifestReviews).toBe(276);
+    expect(manifestReviews).toBe(292);
     expect(sourceReviews).toBe(13);
     expect(profileReviews).toBe(1);
-    expect(openReviews).toBe(290);
-    expect(lines).toContain('Umfang:      1, 2, 4, 5.4, 5.8, C.1.1, C.1.2, D.3.7, J.1, J.2, J.3, J.4, K, L, M');
+    expect(openReviews).toBe(306);
+    expect(lines).toContain(
+      'Umfang:      1, 2, 4, 5.4, 5.8, C.1.1, C.1.2, D.3.7, E.1.1, E.1.2, E.1.3, E.1.4, ' +
+        'E.1.5, E.1.6, E.1.7, E.1.8, E.1.9, E.1.10, E.1.11, E.1.12, E.1.13, E.1.14, E.1.15, ' +
+        'E.1.16, J.1, J.2, J.3, J.4, K, L, M',
+    );
     expect(lines).toContain(
       `Offene fachliche Reviews: ${openReviews} ` +
         `(${manifestReviews} Manifestreviews, ${sourceReviews} Quellenreviews, ` +

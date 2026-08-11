@@ -65,8 +65,18 @@ export interface Transform {
   translate?: Translation;
 }
 
-/** Fachliche Rolle eines Primitivs. Steuert Fingerprint-Vergleich und Kompositionslogik. */
-export type PrimitiveRole = 'body' | 'innerField' | 'head' | 'foot' | 'pictogram';
+/**
+ * Fachliche Rolle eines Primitivs. Steuert Fingerprint-Vergleich und Kompositionslogik.
+ *
+ * `label` trägt die Beschriftungen **im** Körper (Anhang E: Kürzel in der Mitte,
+ * Organisations- und Zusatzkürzel unten) und ist damit von `foot` unterschieden, das den
+ * Textlauf **unterhalb** des Körpers bezeichnet. Beide sind Text, aber nicht dieselbe Zone:
+ * `foot` hängt außen an der Körperunterkante, `label` liegt innen auf der Körperfläche und
+ * trägt deshalb auch eine andere Farbe (weiß auf der Organisationsfarbe statt schwarz auf der
+ * Oberfläche). `innerField` bleibt weiterhin unbelegt — es bezeichnet die *Fläche* des
+ * Innenfelds, nicht ihre Beschriftung.
+ */
+export type PrimitiveRole = 'body' | 'innerField' | 'head' | 'foot' | 'label' | 'pictogram';
 
 export interface Style {
   fill?: ColorToken | 'none';

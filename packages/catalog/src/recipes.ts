@@ -1,10 +1,12 @@
-import { compose, type CatalogPorts } from '@einsatzzeichen/core';
-import type { Drawing, SymbolSpec } from '@einsatzzeichen/schema';
+import { compose, type CatalogPorts, type ContrastRequirement } from '@einsatzzeichen/core';
+import type { Drawing, OrganizationId, SymbolSpec } from '@einsatzzeichen/schema';
 import { baseDrawing } from './base-symbols.js';
 import { organizationColor } from './organizations.js';
+import { MINIMUM_TEXT_CONTRAST } from './pictograms/contrast-contract.js';
 import { pictogram } from './pictograms/index.js';
 import { strengthHead } from './strengths.js';
 import { describeSymbolSpec } from './labels.js';
+import { ANHANG_E_A_RECIPES } from './recipes-anhang-e.js';
 
 const PORTS: CatalogPorts = {
   baseDrawing,
@@ -26,8 +28,16 @@ export interface Recipe {
   spec: SymbolSpec;
 }
 
-/** Zusammengesetzte Zeichen, die den Kompositionsmotor gegen die Referenz belegen. */
+/**
+ * Zusammengesetzte Zeichen, die den Kompositionsmotor gegen die Referenz belegen.
+ *
+ * Die drei Einträge unten sind die Belegfälle des Motors aus dem Kernslice — je einer für
+ * Kopfzone als Stapel (C.1.1), als Reihe (C.1.2) und am gedrehten Quadrat (D.3.7). Die 16
+ * Einträge aus `ANHANG_E_A_RECIPES` sind der erste Bestand, der über Belegfälle hinausgeht:
+ * ein vollständiger Abschnitt der Baseline, gebaut aus denselben Mechanismen.
+ */
 export const RECIPES = {
+  ...ANHANG_E_A_RECIPES,
   'C.1.1': {
     title: 'Löschstaffel',
     referenceAsset: 'C.1.1_Löschstaffel.svg',
@@ -58,3 +68,29 @@ export const RECIPES = {
     },
   },
 } as const satisfies Record<string, Recipe>;
+
+/**
+ * Kontrastvertrag der Beschriftungszonen. Ein Piktogramm deklariert seine Paare selbst
+ * (`contrastPairs`), eine Komposition kann das nicht: ihre Farben entstehen erst beim
+ * Zusammensetzen aus Grundzeichen, Organisation und Beschriftung. Diese Funktion leitet die
+ * Anforderung deshalb aus dem Bestand ab statt sie zu wiederholen — jede Organisation, für die
+ * ein Rezept eine Beschriftung im Körper führt, bekommt eine Anforderung „weiss auf ihrer
+ * Körperfarbe" mit der **Textschwelle** 4,5:1, nicht mit den 3:1 für grafische Objekte.
+ *
+ * Ohne diese Ableitung wäre der weisse Text der einzige Ink im Katalog ohne Kontrastvertrag —
+ * die Piktogrammpaare decken ihn nicht ab, weil er zu keinem Piktogramm gehört. Genau diese
+ * Anforderung hat `blau` in beiden Alternativthemes nachgezogen (siehe `render-themes.ts`).
+ */
+export function labelContrastRequirements(): readonly ContrastRequirement[] {
+  const organizations = new Set<OrganizationId>();
+  for (const recipe of Object.values<Recipe>(RECIPES)) {
+    if (recipe.spec.labels === undefined || recipe.spec.organization === undefined) continue;
+    organizations.add(recipe.spec.organization);
+  }
+  return [...organizations].map((organization) => ({
+    foreground: 'weiss',
+    background: organizationColor(organization),
+    context: `Beschriftung im Körper auf Organisation ${organization}`,
+    minimum: MINIMUM_TEXT_CONTRAST,
+  }));
+}

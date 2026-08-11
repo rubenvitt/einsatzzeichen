@@ -17,8 +17,10 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    expect(ids).toHaveLength(265);
-    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(3);
+    expect(ids).toHaveLength(281);
+    // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a.
+    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(19);
+    expect(ids.filter((id) => id.startsWith('recipe.E.1.'))).toHaveLength(16);
     expect(ids.filter((id) => id.startsWith('capability.'))).toHaveLength(92);
     expect(ids.filter((id) => id.startsWith('state.'))).toHaveLength(67);
     expect(ids.filter((id) => id.startsWith('comms.'))).toHaveLength(53);

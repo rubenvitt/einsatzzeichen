@@ -12,6 +12,7 @@ import { resolveElement } from './elements.js';
 import { ALL_PICTOGRAMS } from './pictograms/index.js';
 import { deepFreeze, type DeepReadonly } from './readonly-data.js';
 import { RECIPES } from './recipes.js';
+import { ANHANG_E_A_FILL_DEFECTS, ANHANG_E_A_RECIPES } from './recipes-anhang-e.js';
 
 /**
  * Migration nach Slice 2: `technical` ist für alle elf Einträge `approved`, weil das Kriterium
@@ -111,6 +112,42 @@ const catalogEntries: CoverageEntry[] = Object.values(BASE_SYMBOLS).map((entry) 
   };
 });
 
+/**
+ * Technisches Review der 16 Zeichen aus E-a. Eigener Eintrag statt des allgemeinen
+ * `TECHNICAL_REVIEW`, weil sie als erste Kompositionen Beschriftungszonen im Körper tragen: das
+ * Fingerprint-Gate erreicht davon nichts (`matchFingerprint` vergleicht ausschließlich
+ * `role: 'body'`), an seine Stelle tritt für den Text die Rasterprüfung gegen die deklarierte
+ * Box. Die Note hält beides getrennt fest — dasselbe Muster wie bei den Piktogrammreviews oben.
+ */
+const ANHANG_E_A_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-12',
+  note:
+    'Körperhülle per matchFingerprint gegen die Referenz gegated (Differenz 0 an allen vier ' +
+    'Kanten). Die Beschriftungszonen erreicht das Fingerprint-Gate nicht; für sie prüft die ' +
+    'Rasterprüfung in fonts.test.ts die tatsächliche Tinte aller 16 Kürzelsätze gegen die ' +
+    'deklarierte boxMm. Dazu die globalen Mehrgrößen-, viewBox-, Metadaten- und ' +
+    'Kontrast-Gates; weisser Text auf der Organisationsfarbe steht als eigene 4,5:1-' +
+    'Anforderung im A11y-Gate und hat blau in beiden Alternativthemes nachgezogen. Die ' +
+    'Sichtprüfung aller 16 ist in docs/reviews/2026-08-12-e-a-visual-qa.md dokumentiert.',
+};
+
+/**
+ * Zwei der 16 Referenzdateien tragen eine zu kurze blaue Füllfläche (siehe
+ * `ANHANG_E_A_FILL_DEFECTS`). Der Katalog baut sie wie die 14 fehlerfreien; die Abweichung
+ * gehört damit in ihre Manifestzeile und nicht nur in einen Quellkommentar.
+ */
+function technicalReviewFor(section: string): Review {
+  if (!Object.hasOwn(ANHANG_E_A_RECIPES, section)) return TECHNICAL_REVIEW;
+  const defect = ANHANG_E_A_FILL_DEFECTS[section];
+  if (defect === undefined) return ANHANG_E_A_TECHNICAL_REVIEW;
+  return {
+    ...ANHANG_E_A_TECHNICAL_REVIEW,
+    note: `${ANHANG_E_A_TECHNICAL_REVIEW.note ?? ''} Befund an der Referenzdatei: ${defect}`,
+  };
+}
+
 const recipeEntries: CoverageEntry[] = Object.entries(RECIPES).map(([section, recipe]) => {
   const sourceId = `bbk-babz-2025:${section}`;
   return {
@@ -123,8 +160,9 @@ const recipeEntries: CoverageEntry[] = Object.entries(RECIPES).map(([section, re
     profile: 'bund',
     // Task 13 hat alle drei Rezepte per matchFingerprint gegen die Referenz gegated,
     // mit Differenz 0 an allen Kanten — das Manifest bildet das ab, statt es zu untertreiben.
+    // Für die 16 Zeichen aus E-a gilt dasselbe, geprüft in recipes.test.ts.
     testEvidence: DRAWING_EVIDENCE,
-    review: reviewFor(sourceId, 'primary', TECHNICAL_REVIEW),
+    review: reviewFor(sourceId, 'primary', technicalReviewFor(section)),
   };
 });
 
@@ -211,6 +249,12 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
   // (Verwaltungsstufen/Fahrzeugkategorien: von 16 Referenzdateien nur 2 vermessbar, kein Konsument).
   // K, L und M stehen einbuchstabig im Umfang, weil ihre Nummerierung flach ist: `K` deckt
   // K.1 bis K.18 ab, wo `J` vier Unterkapitel gebraucht hätte.
+  // Anhang E steht abschnittsweise und **nicht** als `E.1`: der Teilslice E-a deckt 16 der 37
+  // E.1-Abschnitte ab. `E.1` würde das Gate zwar bestehen — `uncoveredScope` prüft nur, ob zu
+  // jedem beanspruchten Präfix mindestens eine Zeile existiert, nicht die Vollständigkeit —,
+  // aber genau deshalb wäre es eine Behauptung, die kein Gate widerlegt. Dieselbe Wahl wie bei
+  // C.1.1/C.1.2/D.3.7 (einzeln, weil Belegfälle) statt bei K/L/M (einbuchstabig, weil
+  // vollständig). Wenn E-b und E-c gelandet sind, treten die 37 Zeilen an `E.1` zurück.
   scope: [
     '1',
     '2',
@@ -220,6 +264,22 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'C.1.1',
     'C.1.2',
     'D.3.7',
+    'E.1.1',
+    'E.1.2',
+    'E.1.3',
+    'E.1.4',
+    'E.1.5',
+    'E.1.6',
+    'E.1.7',
+    'E.1.8',
+    'E.1.9',
+    'E.1.10',
+    'E.1.11',
+    'E.1.12',
+    'E.1.13',
+    'E.1.14',
+    'E.1.15',
+    'E.1.16',
     'J.1',
     'J.2',
     'J.3',

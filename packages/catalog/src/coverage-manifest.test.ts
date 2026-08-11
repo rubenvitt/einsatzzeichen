@@ -69,7 +69,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 276 Zeilen mit 265 Elementdarstellungen', () => {
+  it('enthält exakt 292 Zeilen mit 265 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -85,10 +85,11 @@ describe('Coverage-Manifest', () => {
     }, {});
     expect(counts).toEqual({
       'catalog-entry': 8,
-      'composition-recipe': 3,
+      // 3 Belegfälle des Kompositionsmotors plus die 16 Zeichen aus Anhang E, Teilslice E-a.
+      'composition-recipe': 19,
       element: 265,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(276);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(292);
     expect(elementRows).toHaveLength(265);
     expect(pictogramRows).toHaveLength(254);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(11);
@@ -145,6 +146,24 @@ describe('Coverage-Manifest', () => {
       'C.1.1',
       'C.1.2',
       'D.3.7',
+      // Anhang E abschnittsweise: E-a deckt 16 der 37 E.1-Abschnitte ab, `E.1` wäre eine
+      // Vollständigkeitsbehauptung, die das Gate nicht widerlegen würde.
+      'E.1.1',
+      'E.1.2',
+      'E.1.3',
+      'E.1.4',
+      'E.1.5',
+      'E.1.6',
+      'E.1.7',
+      'E.1.8',
+      'E.1.9',
+      'E.1.10',
+      'E.1.11',
+      'E.1.12',
+      'E.1.13',
+      'E.1.14',
+      'E.1.15',
+      'E.1.16',
       'J.1',
       'J.2',
       'J.3',

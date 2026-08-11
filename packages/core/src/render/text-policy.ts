@@ -115,29 +115,82 @@ export const MINIMUM_TEXT_RENDER_PX = 8;
 export const DIACRITIC_HEADROOM_FRACTION = 0.125;
 
 /**
- * Vertikale `boxMm`-Ausdehnung, die ein Textprimitiv braucht, um Diakritika über
- * Großbuchstaben nicht abzuschneiden — Gegenstück zur reinen `effectiveTextPx`-Rechnung oben,
- * die absichtlich keine Fontmetrik kennt. Diese Funktion kennt auch keine echte Fontmetrik,
- * sondern nur den einen gemessenen Zuschlag (`DIACRITIC_HEADROOM_FRACTION`) und wendet ihn an,
- * statt ihn an jeder Aufrufstelle einzeln zu wiederholen (aktuell nur `compose.ts`s Fußzone,
- * aber ein zweiter Aufrufer würde sonst denselben Bruch erneut hinschreiben müssen).
+ * Tinte oberhalb der Grundlinie bei `baseline: 'alphabetic'`, als Anteil von `sizeMm` — die
+ * eigene Messreihe, die der `hanging`-Kommentar oben für diesen Fall verlangt. Die
+ * Beschriftungszonen aus Anhang E sind an ihrer **Grundlinie** vermessen (18 mm bzw. 24 mm in
+ * allen 16 E.1-Dateien des ersten Teilslice); `alphabetic` ist damit die Baseline, die die
+ * Messung wörtlich wiedergibt, statt sie über eine zweite Metrik umzurechnen.
  *
- * Nur für `baseline: 'hanging'` gemessen und implementiert — der einzige Fall, den `compose.ts`
- * heute erzeugt. `alphabetic`/`middle` bräuchten eine eigene Messreihe (Kapitälchenhöhe bzw.
- * Über-/Unterlänge relativ zur Grundlinie sind andere Größen als der Hanging-Überstand) und
- * werfen deshalb bewusst, statt eine ungeprüfte Zahl zu raten.
+ * **Gemessen für Arimo** (`resvgFontOptions()`, Grundlinie fest, Ink-Hülle über den Alphakanal),
+ * an den beiden Schriftgraden dieses Slice (7,08 mm und 4,24 mm) über „Öl", „ÄÖÜ", „Sp",
+ * „jgpqy", „Qj", „B" und „THW":
+ * - Asymptotisch (1024–4096 px auf der 32-mm-viewBox): **0,838** von `sizeMm`, bindend „Öl" —
+ *   der Umlautpunkt, nicht die Versalhöhe (0,688).
+ * - Bei der Auflösung der Rasterevidenz in `fonts.test.ts` (256 px auf 32 mm = 8 px/mm):
+ *   **0,8563**. Das ist der bindende Wert.
+ *
+ * 0,86 rundet ihn auf die nächste saubere Stelle auf, im selben Stil wie
+ * `DIACRITIC_HEADROOM_FRACTION` (0,125 für einen bindenden Wert von 0,113–0,125). Der Wert
+ * bleibt unterhalb von Arimos deklariertem hhea-Ascender (0,9053) — die Box ist also enger als
+ * die Zeilenmetrik der Schrift und keine bloße Übernahme ihrer Tabellenwerte.
+ */
+export const ALPHABETIC_ASCENT_FRACTION = 0.86;
+
+/**
+ * Versalhöhe von Arimo als Anteil des Schriftgrads. Aus der Schriftdatei selbst gelesen
+ * (`OS/2.sCapHeight` 1409 bei `head.unitsPerEm` 2048) und gegen die Rasterung gegengeprüft:
+ * 4,875 mm Ink-Höhe für „B" bei 7,08 mm Schriftgrad, 256 px auf der 32-mm-viewBox.
+ *
+ * Sie steht hier, weil die Referenzvermessung Zeichen **misst**, aber Schriftgrade **setzt**:
+ * an den Referenzdateien ist die Versalhöhe eines Kürzels ablesbar, der Schriftgrad nicht (die
+ * Glyphen liegen in Kurven umgewandelt vor, ohne Fontbindung). Ein Aufrufer rechnet mit dieser
+ * Konstante von der gemessenen Größe auf die zu setzende um, statt einen Schriftgrad zu raten,
+ * der zufällig ähnlich aussieht.
+ */
+export const ARIMO_CAP_HEIGHT_FRACTION = 1409 / 2048;
+
+/**
+ * Tinte unterhalb der Grundlinie bei `baseline: 'alphabetic'`, als Anteil von `sizeMm`.
+ * Dieselbe Messreihe wie `ALPHABETIC_ASCENT_FRACTION`: asymptotisch **0,208**, bindend bei
+ * 8 px/mm **0,21186**, jeweils an „Sp" — die Unterlänge des p, nicht der Rundungsüberstand.
+ *
+ * 0,212 rundet den bindenden Wert auf und trifft damit auf drei Nachkommastellen genau Arimos
+ * deklarierten hhea-Descender (434/2048 = 0,21191). Diese Übereinstimmung ist ein Befund der
+ * Messung, keine Herleitung aus der Tabelle: der Wert steht hier, weil er gemessen wurde, und
+ * die Tabelle bestätigt ihn. Eine andere Schrift bräuchte — wie beim Hanging-Zuschlag — eine
+ * eigene Messung.
+ */
+export const ALPHABETIC_DESCENT_FRACTION = 0.212;
+
+/**
+ * Vertikale `boxMm`-Ausdehnung, die ein Textprimitiv braucht, um seine Tinte nicht
+ * abzuschneiden — Gegenstück zur reinen `effectiveTextPx`-Rechnung oben, die absichtlich keine
+ * Fontmetrik kennt. Diese Funktion kennt auch keine echte Fontmetrik, sondern nur die
+ * gemessenen Anteile (`DIACRITIC_HEADROOM_FRACTION`, `ALPHABETIC_ASCENT_FRACTION`,
+ * `ALPHABETIC_DESCENT_FRACTION`) und wendet sie an, statt sie an jeder Aufrufstelle einzeln zu
+ * wiederholen.
+ *
+ * Zwei der drei Baselines sind gemessen: `hanging` (Fußzone, Slice vom 9. August 2026) und
+ * `alphabetic` (Beschriftungszonen im Körper, Anhang E). `middle` bleibt ungemessen und wirft
+ * weiterhin bewusst, statt eine ungeprüfte Zahl zu raten — Arimos Central-Metrik liegt weder
+ * auf der Grundlinie noch auf der Hanging-Linie.
  */
 export function verticalTextBoxMm(
   anchorYMm: number,
   sizeMm: number,
   baseline: TextBaseline,
 ): { topMm: number; heightMm: number } {
-  if (baseline !== 'hanging') {
-    throw new Error(
-      `verticalTextBoxMm: kein gemessener Diakritika-Zuschlag für baseline "${baseline}" — ` +
-        'erst messen (siehe DIACRITIC_HEADROOM_FRACTION-Kommentar), bevor ein Aufrufer sie nutzt.',
-    );
+  if (baseline === 'hanging') {
+    const headroomMm = sizeMm * DIACRITIC_HEADROOM_FRACTION;
+    return { topMm: anchorYMm - headroomMm, heightMm: sizeMm + headroomMm };
   }
-  const headroomMm = sizeMm * DIACRITIC_HEADROOM_FRACTION;
-  return { topMm: anchorYMm - headroomMm, heightMm: sizeMm + headroomMm };
+  if (baseline === 'alphabetic') {
+    const ascentMm = sizeMm * ALPHABETIC_ASCENT_FRACTION;
+    const descentMm = sizeMm * ALPHABETIC_DESCENT_FRACTION;
+    return { topMm: anchorYMm - ascentMm, heightMm: ascentMm + descentMm };
+  }
+  throw new Error(
+    `verticalTextBoxMm: keine gemessene Textmetrik für baseline "${baseline}" — ` +
+      'erst messen (siehe die Anteils-Konstanten oben), bevor ein Aufrufer sie nutzt.',
+  );
 }

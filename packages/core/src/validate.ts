@@ -46,5 +46,17 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
     });
   }
 
+  // Dieselbe Regel wie für `designation`, je Zone einzeln benannt: ein leerer Lauf erzeugte ein
+  // Textprimitiv ohne Tinte, das jedes Gate besteht und im Bild fehlt — genau der lautlose
+  // Ausfall, den die Fußzone mit ihrem festen Schriftgrad vermeidet.
+  for (const [zone, value] of Object.entries(spec.labels ?? {})) {
+    if (typeof value === 'string' && value.trim() === '') {
+      issues.push({
+        rule: 'label-not-blank',
+        message: `Die Beschriftungszone "${zone}" darf nicht leer oder nur aus Leerzeichen bestehen.`,
+      });
+    }
+  }
+
   return issues;
 }
