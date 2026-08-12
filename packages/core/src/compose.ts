@@ -12,9 +12,13 @@ import {
   type SymbolKind,
   type SymbolSpec,
 } from '@einsatzzeichen/schema';
-import { boundsOfMm } from './bounds.js';
+import { boundsOfMm, type BoundsMm } from './bounds.js';
 import { HEAD_GAP_MM, placeHead, profileFor } from './layout/profiles.js';
-import { verticalTextBoxMm } from './render/text-policy.js';
+import {
+  ARIMO_CAP_HEIGHT_FRACTION,
+  MINIMUM_TEXT_RENDER_PX,
+  verticalTextBoxMm,
+} from './render/text-policy.js';
 import { validateSpec } from './validate.js';
 
 /** Senkrechte Mitte der Hülle eines Primitivs, in Millimetern. */
@@ -47,6 +51,153 @@ function centerYMm(primitive: Primitive): number {
  * würde.
  */
 const FOOT_TEXT_SIZE_MM = 4;
+
+/**
+ * Die drei Beschriftungszonen **im** Körper, vermessen an den 16 Referenzdateien E.1.1 bis
+ * E.1.16 (11./12. August 2026). Alle 16 tragen dieselben Werte auf zwei Nachkommastellen — die
+ * Zonen sind deshalb hier als Layoutregel formuliert und nicht 16-mal am einzelnen Zeichen
+ * platziert. Bezugsrahmen ist die Hülle des **tatsächlich platzierten** Körpers, wie bei der
+ * Fußzone: verschiebt eine Kopfzone den Körper, wandern die Beschriftungen mit.
+ *
+ * | Zone | Referenzmessung (Körper 1/6 bis 31/26 mm) | Regel |
+ * |---|---|---|
+ * | Mitte | Grundlinie 18,00; Versalhöhe 4,87; Mitte x 16,00 | 12 mm unter der Körperoberkante, waagerecht mittig |
+ * | unten links | Grundlinie 24,00; Versalhöhe 2,92; linke Kante 3,03 | 2 mm über der Unterkante, 2 mm von der linken Kante |
+ * | unten rechts | Grundlinie 24,00; Versalhöhe 2,92; rechte Kante 29,03 | 2 mm über der Unterkante, 2 mm von der rechten Kante |
+ *
+ * Die Referenz zieht ihre Ränder gegen ein weißes Innenfeld, das 1 mm in den Körper eingerückt
+ * ist (`rect` 2/7 bis 30/25 neben dem Körper 1/6 bis 31/26). Der Katalog kennt dieses Innenfeld
+ * nicht — `base-symbols.ts` führt die Taktische Formation als **ein** Rechteck, das der
+ * Kompositionsmotor mit der Organisationsfarbe füllt. Gegen die Körperkante gerechnet sind es
+ * deshalb 2 mm statt 1 mm; der sichtbare Abstand ist derselbe wie in der Referenz.
+ */
+const CENTER_LABEL_BASELINE_FROM_BODY_TOP_MM = 12;
+const BOTTOM_LABEL_BASELINE_FROM_BODY_BOTTOM_MM = 2;
+const LABEL_SIDE_MARGIN_MM = 2;
+
+/** Versalhöhen der beiden Schriftgrade, gemessen an allen 16 Dateien (siehe Tabelle oben). */
+const CENTER_LABEL_CAP_HEIGHT_MM = 4.87;
+const BOTTOM_LABEL_CAP_HEIGHT_MM = 2.92;
+
+/**
+ * Aus der gemessenen Versalhöhe abgeleitete Schriftgrade — 7,08 mm und 4,24 mm. Der Umweg über
+ * `ARIMO_CAP_HEIGHT_FRACTION` ist der Punkt: an der Referenz ist die Versalhöhe ablesbar, der
+ * Schriftgrad nicht (die Kürzel liegen dort in Kurven umgewandelt vor). Ein direkt
+ * hingeschriebener Schriftgrad wäre eine geratene Zahl, die zufällig ähnlich aussieht.
+ */
+const CENTER_LABEL_SIZE_MM = CENTER_LABEL_CAP_HEIGHT_MM / ARIMO_CAP_HEIGHT_FRACTION;
+const BOTTOM_LABEL_SIZE_MM = BOTTOM_LABEL_CAP_HEIGHT_MM / ARIMO_CAP_HEIGHT_FRACTION;
+
+/**
+ * Untere Einsatzgrenze eines Beschriftungslaufs: die kleinste Rendergröße, bei der sein
+ * effektiver Schriftgrad `MINIMUM_TEXT_RENDER_PX` erreicht. Gerechnet statt gewählt — bei
+ * 7,08 mm sind das 37 px, bei 4,24 mm 61 px, auf der Snapshot-Leiter also erst 64 px für beide.
+ *
+ * Das ist keine Ausrede für zu kleine Schrift: die Größen stammen aus der Vermessung, nicht aus
+ * einer Platzabwägung. Ein Zeichen, dessen Kürzel bei 32 px nicht mehr lesbar ist, trägt hier
+ * eine dokumentierte Aussage darüber statt eines stillen Anspruchs auf jede Rendergröße.
+ */
+function minRenderPxFor(sizeMm: number, viewBoxWidthMm: number): number {
+  return Math.ceil((MINIMUM_TEXT_RENDER_PX * viewBoxWidthMm) / sizeMm);
+}
+
+/**
+ * Ein Beschriftungslauf im Körper. `boxMm` ist wie bei jedem Textprimitiv eine Zusicherung des
+ * Autors, keine Messung — die waagerechte Ausdehnung ist deshalb bewusst eng gefasst: der
+ * mittige Lauf bekommt die Körperbreite abzüglich beider Ränder, die beiden unteren je ihre
+ * Hälfte bis zur Körpermitte. Damit ist „passt in seine Zone" eine prüfbare Aussage und die
+ * beiden unteren Läufe können sich nicht überlappen, ohne dass ein Gate es meldet
+ * (Rasterprüfung in `fonts.test.ts`).
+ */
+function labelPrimitive(
+  content: string,
+  sizeMm: number,
+  baselineYMm: number,
+  anchor: 'start' | 'middle' | 'end',
+  xMm: number,
+  boxXMm: number,
+  boxWidthMm: number,
+  viewBoxWidthMm: number,
+): Primitive {
+  const box = verticalTextBoxMm(baselineYMm, sizeMm, 'alphabetic');
+  return {
+    type: 'text',
+    role: 'label',
+    content,
+    x: xMm,
+    y: baselineYMm,
+    sizeMm,
+    anchor,
+    baseline: 'alphabetic',
+    boxMm: { xMm: boxXMm, yMm: box.topMm, widthMm: boxWidthMm, heightMm: box.heightMm },
+    minRenderPx: minRenderPxFor(sizeMm, viewBoxWidthMm),
+    style: { fill: 'weiss' },
+  };
+}
+
+/**
+ * Die Beschriftungen der drei Zonen, gegen die Hülle des platzierten Körpers gerechnet. Die
+ * Farbe ist fest `weiss`: alle 37 Zeichen aus E.1 setzen ihre Kürzel auf die gefüllte
+ * Körperfläche, nicht auf die Oberfläche. Sie ist damit — anders als bei der schwarzen Fußzone
+ * — auf einen Kontrastvertrag gegen die Organisationsfarbe angewiesen; der steht im
+ * A11y-Gate des Katalogs.
+ */
+function labelPrimitives(
+  labels: NonNullable<SymbolSpec['labels']>,
+  bodyBoundsMm: BoundsMm,
+  viewBoxWidthMm: number,
+): Primitive[] {
+  const centerXMm = (bodyBoundsMm.minX + bodyBoundsMm.maxX) / 2;
+  const leftMm = bodyBoundsMm.minX + LABEL_SIDE_MARGIN_MM;
+  const rightMm = bodyBoundsMm.maxX - LABEL_SIDE_MARGIN_MM;
+  const centerBaselineMm = bodyBoundsMm.minY + CENTER_LABEL_BASELINE_FROM_BODY_TOP_MM;
+  const bottomBaselineMm = bodyBoundsMm.maxY - BOTTOM_LABEL_BASELINE_FROM_BODY_BOTTOM_MM;
+
+  const primitives: Primitive[] = [];
+  if (labels.center !== undefined) {
+    primitives.push(
+      labelPrimitive(
+        labels.center,
+        CENTER_LABEL_SIZE_MM,
+        centerBaselineMm,
+        'middle',
+        centerXMm,
+        leftMm,
+        rightMm - leftMm,
+        viewBoxWidthMm,
+      ),
+    );
+  }
+  if (labels.bottomLeft !== undefined) {
+    primitives.push(
+      labelPrimitive(
+        labels.bottomLeft,
+        BOTTOM_LABEL_SIZE_MM,
+        bottomBaselineMm,
+        'start',
+        leftMm,
+        leftMm,
+        centerXMm - leftMm,
+        viewBoxWidthMm,
+      ),
+    );
+  }
+  if (labels.bottomRight !== undefined) {
+    primitives.push(
+      labelPrimitive(
+        labels.bottomRight,
+        BOTTOM_LABEL_SIZE_MM,
+        bottomBaselineMm,
+        'end',
+        rightMm,
+        centerXMm,
+        rightMm - centerXMm,
+        viewBoxWidthMm,
+      ),
+    );
+  }
+  return primitives;
+}
 
 /** Zugriffe auf den Katalog. Als Ports übergeben, damit core nicht von catalog abhängt. */
 export interface CatalogPorts {
@@ -197,9 +348,15 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
         ]
       : [];
 
+  // Beschriftungen liegen **auf** dem Körper und stehen deshalb nach ihm in der Kinderliste;
+  // die Fußzone dahinter, weil sie unterhalb von ihm liegt und mit ihm nicht konkurriert.
+  const labels = spec.labels !== undefined
+    ? labelPrimitives(spec.labels, bodyBoundsMm, DEFAULT_VIEWBOX_MM.width)
+    : [];
+
   return {
     viewBox: DEFAULT_VIEWBOX_MM,
-    children: [...headPrimitives, filled, ...pictograms, ...footPrimitives],
+    children: [...headPrimitives, filled, ...pictograms, ...labels, ...footPrimitives],
     ...(options.title !== undefined ? { title: options.title } : {}),
     ...(options.description !== undefined ? { description: options.description } : {}),
   };

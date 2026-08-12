@@ -83,6 +83,19 @@ export function describeSymbolSpec(spec: SymbolSpec): string {
     parts.push(`Fähigkeit: ${pictogram(`capability.${capability}`).title}`);
   }
   if (spec.designation !== undefined) parts.push(`Bezeichnung: ${spec.designation}`);
+  // Die Beschriftungen tragen bei Anhang E die gesamte fachliche Unterscheidung — ohne sie sind
+  // E.1.1 und E.1.7 dasselbe blaue Rechteck. Sie gehören deshalb in die Beschreibung, die
+  // Bildschirmleser vorlesen, und nicht nur ins Bild. Die Zonennamen sind ausgeschrieben statt
+  // als `center`/`bottomLeft` durchgereicht: eine Vorlesestimme sagt „Kürzel", nicht „center".
+  const zones: Array<[keyof NonNullable<SymbolSpec['labels']>, string]> = [
+    ['center', 'Kürzel'],
+    ['bottomLeft', 'Zusatzkennzeichnung'],
+    ['bottomRight', 'Trägerkürzel'],
+  ];
+  for (const [zone, label] of zones) {
+    const value = spec.labels?.[zone];
+    if (value !== undefined) parts.push(`${label}: ${value}`);
+  }
   return `${parts.join('. ')}.`;
 }
 

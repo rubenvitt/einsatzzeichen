@@ -101,8 +101,9 @@ fachkundige Person geprüft werden. Die Abschlussentscheidung für D.1 steht in
 D.2 deckt Kapitel 5.8 der projektinternen Coverage-Baseline technisch mit 61 State-IDs und 67
 Darstellungen ab, darunter sechs getrennt adressierbare Alternativdarstellungen. Damit enthält
 der Katalog zusammen mit D.3 und D.4 insgesamt 254 Piktogrammdarstellungen: 92 Capabilities, 67
-States, 53 IuK-, 28 Schadens- und 14 Vegetationsbrandzeichen. Die 265 globalen Renderfälle setzen
-sich aus acht Grundzeichen, drei Rezepten und diesen 254 Piktogrammen zusammen.
+States, 53 IuK-, 28 Schadens- und 14 Vegetationsbrandzeichen. Die 281 globalen Renderfälle setzen
+sich aus acht Grundzeichen, 19 Rezepten und diesen 254 Piktogrammen zusammen — drei Rezepte
+belegen den Kompositionsmotor, die übrigen 16 sind der Teilslice E-a (siehe unten).
 
 Alle 67 State-Darstellungen sind eigenständige Zeichen mit kanonischer 32×32-mm-Platzierung und
 Standalone-Clipping. D.2 führt weder eine allgemeine State-Komposition noch eine Integration in
@@ -143,6 +144,25 @@ Diese technische Freigabe ist keine fachliche Einsatzfreigabe und keine Aussage 
 Geltung oder zur Nutzungs- und Lizenzgrundlage der Quellen. Alle 67 getrennten fachlichen
 State-Reviews, alle 53 IuK-Reviews und alle 42 Reviews aus K, L und M bleiben `pending`; ihre Bedeutung, Abgrenzung, Lesbarkeit und einsatztaktische
 Eignung müssen weiterhin einzeln durch eine fachkundige Person geprüft werden.
+
+## E-a: Anhang E, die ersten 16 THW-Zeichen
+
+E.1.1 bis E.1.16 sind der erste Bestand, der als **Komposition** in den Katalog kommt statt als
+Piktogramm: Grundzeichen `formation`, Körperfarbe des THW, Kopfzone `gruppe` aus `strengths.ts` —
+und danach liegt ihre gesamte Unterscheidung in einem Buchstabenkürzel. Ohne sein Kürzel ist die
+Bergungsgruppe von der Fachgruppe Infrastruktur nicht zu unterscheiden.
+
+Dafür fehlte ein Mechanismus. Die Aufgabe erwartete keinen Schemaschritt, aber Anhang E setzt
+seine Kürzel **im** Körper — mittig, dazu `THW` unten rechts und bei sieben Zeichen eine
+Zusatzkennzeichnung unten links —, während `compose()` bis dahin nur die Fußzone *unterhalb* des
+Körpers kannte. `SymbolSpec.labels` und die drei Zonen in `compose()` schließen diese Lücke; der
+Renderer blieb unberührt. Nebenbei fiel auf, dass `blau` in beiden Alternativthemes gegen weißen
+Text 4,5:1 knapp verfehlte — beide Werte sind nachgezogen. Alles in
+[`docs/decisions/2026-08-12-beschriftungszonen-und-e-a.md`](./docs/decisions/2026-08-12-beschriftungszonen-und-e-a.md).
+
+Die paarweise Sichtprüfung gegen die Referenz fand zwei Referenzdateien mit zu kurzer Füllfläche,
+die jedes Gate bestanden hatten:
+[`docs/reviews/2026-08-12-e-a-visual-qa.md`](./docs/reviews/2026-08-12-e-a-visual-qa.md).
 
 ## Der lokale Referenzbestand
 

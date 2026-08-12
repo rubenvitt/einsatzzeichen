@@ -326,6 +326,25 @@ export const WILDFIRE_IDS = Object.freeze([
 
 export type WildfireId = (typeof WILDFIRE_IDS)[number];
 
+/**
+ * Beschriftungen **im** Körper, in den drei Zonen, die Anhang E belegt. Die Zonen sind nach
+ * ihrer Lage benannt und nicht nach einer Bedeutung: vermessen ist die Position, nicht die
+ * Semantik. Anhang E legt in `center` das Kürzel der Einheit („B", „ENT", „Öl"), in
+ * `bottomRight` das Trägerkürzel („THW") und in `bottomLeft` eine Zusatzkennzeichnung
+ * („A" für Typ A, „ASH" für Abstützsystem Holz) — dass diese Zuordnung über Anhang E hinaus
+ * gilt, behauptet dieser Typ nicht.
+ *
+ * Getrennt von `SymbolSpec.designation`: das trägt den Textlauf **unterhalb** des Körpers
+ * (`role: 'foot'`, schwarz auf der Oberfläche, Slice vom 9. August 2026). Die 37 Zeichen aus
+ * E.1 setzen keinen einzigen Text unterhalb ihres Körpers; beide Zonen bestehen deshalb
+ * nebeneinander, statt dass eine die andere umdeutet.
+ */
+export interface BodyLabels {
+  readonly center?: string;
+  readonly bottomLeft?: string;
+  readonly bottomRight?: string;
+}
+
 /** Semantische Beschreibung eines Zeichens. Eingabe des Kompositionsmotors. */
 export interface SymbolSpec {
   kind: SymbolKind;
@@ -335,4 +354,5 @@ export interface SymbolSpec {
   vehicleCategory?: VehicleCategoryId;
   capabilities?: readonly CapabilityId[];
   designation?: string;
+  labels?: BodyLabels;
 }

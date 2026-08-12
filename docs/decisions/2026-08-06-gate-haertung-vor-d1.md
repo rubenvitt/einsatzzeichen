@@ -30,6 +30,11 @@ Stattdessen existieren zwei ausdrücklich andere Darstellungen:
 
 - die Palette von `accessible-light` ersetzt nur `blau` durch `#4a73d9` und erreicht damit rund
   4,75:1 zu Schwarz;
+  <br>**Nachtrag 12.08.2026:** Der Wert steht heute auf `#4970d2` (4,53:1 zu Schwarz). Der alte war
+  allein auf schwarzen Ink hin gewählt und verfehlte gegen **weissen** Text 4,5:1 — eine Richtung,
+  die erst Anhang E stellt. Beide Grenzen zusammen und die Herleitung des neuen Werts stehen in
+  [`2026-08-12-beschriftungszonen-und-e-a.md`](./2026-08-12-beschriftungszonen-und-e-a.md),
+  Abschnitt 4; dasselbe gilt für `print-monochrome`s `blau` (`#777777` → `#767676`).
 - `print-monochrome` bildet alle zwölf Tokens auf Grauwerte ab. Die sieben belegten
   Organisationsfarben bleiben als sieben verschiedene Helligkeiten erhalten; jede erreicht
   mindestens 3:1 zu schwarzem Ink;

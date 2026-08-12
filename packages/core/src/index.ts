@@ -17,6 +17,7 @@ export * from './pictogram-gate.js';
 // text-policy.ts (Baseline-/Anker-Abbildungen) bleiben bewusst intern — sie sind Renderdetail von
 // svg.ts/canvas.ts, keine fremdpaketige Schnittstelle.
 export {
+  ARIMO_CAP_HEIGHT_FRACTION,
   effectiveTextPx,
   MINIMUM_TEXT_RENDER_PX,
   TEXT_FONT_FAMILY_ATTR,

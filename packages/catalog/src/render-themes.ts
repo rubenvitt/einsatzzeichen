@@ -4,16 +4,36 @@ import { deepFreeze } from './readonly-data.js';
 
 const ACCESSIBLE_LIGHT_PALETTE: ColorPalette = deepFreeze({
   ...PALETTE,
-  // Einzige aktuelle Referenzfarbe unter 3:1 zu schwarzem Piktogramm-Ink. Der neue Wert bleibt
-  // klar blau, erreicht aber 4,75:1. Das Referenztheme bleibt davon vollständig unberührt.
-  blau: '#4a73d9',
+  /**
+   * Einzige Referenzfarbe unter 3:1 zu schwarzem Piktogramm-Ink; der Ersatzwert bleibt klar
+   * blau und erreicht 4,53:1 gegen Schwarz. Das Referenztheme bleibt davon unberührt.
+   *
+   * **Nachgezogen mit Anhang E (12.08.2026):** Der vorherige Wert `#4a73d9` war allein auf
+   * schwarzen Ink hin gewählt (4,75:1) und verfehlte gegen **weissen** Text 4,5:1 knapp — er
+   * erreichte 4,425:1. Die 16 Zeichen aus E-a setzen ihre Kürzel weiss auf die Körperfläche und
+   * sind damit die ersten Katalogzeichen, für die diese Richtung überhaupt eine Anforderung ist.
+   * Beide Richtungen zugleich lassen nur ein schmales Fenster zu: Weiss ≥ 4,5:1 verlangt eine
+   * Relativluminanz ≤ 0,1833, Schwarz ≥ 3:1 eine ≥ 0,1. `#4970d2` liegt mit 0,1766 darin und
+   * erfüllt beide Richtungen (weiss 4,63:1, schwarz 4,53:1). Derselbe Befundtyp wie `hellblau`
+   * im Drucktheme unten — eine neue Zeichenklasse deckt eine Farbanforderung auf, die vorher
+   * niemand stellte.
+   */
+  blau: '#4970d2',
 } satisfies ColorPalette);
 
 const PRINT_MONOCHROME_PALETTE: ColorPalette = deepFreeze({
   schwarz: '#000000',
   weiss: '#ffffff',
   rot: '#666666',
-  blau: '#777777',
+  /**
+   * **Nachgezogen mit Anhang E (12.08.2026):** `#777777` erreichte gegen weissen Text 4,478:1
+   * und verfehlte die Textschwelle von 4,5:1 um 0,022 — unauffällig, solange kein Zeichen weisse
+   * Schrift auf die Organisationsfarbe setzte. Die 16 Zeichen aus E-a tun genau das.
+   * `#767676` erreicht 4,54:1 gegen Weiss und 4,62:1 gegen Schwarz und hält den geforderten
+   * Helligkeitsabstand zu den übrigen Organisationsgrauwerten (0,0483 zu `rot` `#666666`,
+   * gefordert > 0,045) — der knappste der sechs Abstände, deshalb hier und nicht dunkler.
+   */
+  blau: '#767676',
   gelb: '#dddddd',
   gruen: '#888888',
   hellgruen: '#cccccc',

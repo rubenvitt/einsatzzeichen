@@ -1,10 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { boundsOfMm, CompositionError, formatUnits, matchFingerprint, renderSvg } from '@einsatzzeichen/core';
+import {
+  ARIMO_CAP_HEIGHT_FRACTION,
+  boundsOfMm,
+  CompositionError,
+  formatUnits,
+  matchFingerprint,
+  renderSvg,
+} from '@einsatzzeichen/core';
 import { mmToUnits, type Drawing, type Primitive } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { fingerprintFor } from './fingerprint-index.js';
 import { pictogram } from './pictograms/index.js';
-import { RECIPES, composeFromCatalog } from './recipes.js';
+import {
+  RECIPES,
+  composeFromCatalog,
+  labelContrastRequirements,
+  type Recipe,
+} from './recipes.js';
+import { ANHANG_E_A_FILL_DEFECTS, ANHANG_E_A_RECIPES } from './recipes-anhang-e.js';
 
 /**
  * Effektive y-Lage der waagerechten Brandbekämpfungs-Linie: ihre Autorenkoordinate plus die
@@ -144,6 +157,143 @@ describe('Kompositionsrezepte', () => {
   it('erzeugt keinen Titel, wenn composeFromCatalog ohne Titel aufgerufen wird', () => {
     const drawing = composeFromCatalog(RECIPES['C.1.1'].spec);
     expect(drawing.title).toBeUndefined();
+  });
+});
+
+describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
+  const cases = Object.entries<Recipe>(ANHANG_E_A_RECIPES);
+
+  function labelsOf(section: keyof typeof ANHANG_E_A_RECIPES) {
+    const drawing = composeFromCatalog(
+      ANHANG_E_A_RECIPES[section].spec,
+      ANHANG_E_A_RECIPES[section].title,
+    );
+    return drawing.children.filter(
+      (child): child is Primitive & { type: 'text' } =>
+        child.type === 'text' && child.role === 'label',
+    );
+  }
+
+  it('deckt genau die 16 Abschnitte E.1.1 bis E.1.16 ab', () => {
+    expect(cases.map(([section]) => section)).toEqual(
+      Array.from({ length: 16 }, (_, index) => `E.1.${index + 1}`),
+    );
+  });
+
+  it.each(cases)('%s steht auf blauem formation-Körper mit Trägerkürzel THW', (_section, recipe) => {
+    const drawing = composeFromCatalog(recipe.spec, recipe.title);
+    const body = drawing.children.find((c) => c.role === 'body');
+    expect(body?.style?.fill).toBe('blau');
+    expect(recipe.spec.kind).toBe('formation');
+    expect(recipe.spec.labels?.bottomRight).toBe('THW');
+    expect(recipe.referenceAsset.startsWith(`${_section}_`)).toBe(true);
+  });
+
+  it('trägt bei 15 von 16 die Kopfzone der Gruppe — und bei E.1.3 keine', () => {
+    // Der Sonderfall ist an der Referenzdatei belegt: E.1.3 führt in der Ebene
+    // `Takt_Zeichen (umgewandelt)` nur den Rahmenpfad, die 15 anderen zusätzlich zwei Kopfmarken.
+    for (const [section, recipe] of cases) {
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      const head = drawing.children.filter((c) => c.role === 'head');
+      expect(head, section).toHaveLength(section === 'E.1.3' ? 0 : 2);
+    }
+  });
+
+  it('setzt keinen Text unterhalb des Körpers', () => {
+    // Die Fußzone bleibt für Anhang E unbelegt. Stünde hier ein `foot`-Lauf, hätte jemand
+    // `designation` mit den Beschriftungszonen verwechselt — die Zeichnung sähe dann anders aus
+    // als die Referenz, ohne dass ein Geometriegate anschlüge.
+    for (const [section, recipe] of cases) {
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      expect(drawing.children.filter((c) => c.role === 'foot'), section).toHaveLength(0);
+    }
+  });
+
+  it('platziert die drei Zonen auf den vermessenen Grundlinien und Rändern', () => {
+    // Werte aus der Vermessung aller 16 Referenzdateien: Kürzel mittig auf Grundlinie 18 mm,
+    // beide unteren Läufe auf 24 mm, linke Kante 3 mm, rechte Kante 29 mm.
+    const [center, bottomLeft, bottomRight] = labelsOf('E.1.9');
+    expect(center?.content).toBe('Öl');
+    expect(center?.anchor).toBe('middle');
+    expect(center?.x).toBeCloseTo(16, 6);
+    expect(center?.y).toBeCloseTo(18, 6);
+
+    expect(bottomLeft?.content).toBe('A');
+    expect(bottomLeft?.anchor).toBe('start');
+    expect(bottomLeft?.x).toBeCloseTo(3, 6);
+    expect(bottomLeft?.y).toBeCloseTo(24, 6);
+
+    expect(bottomRight?.content).toBe('THW');
+    expect(bottomRight?.anchor).toBe('end');
+    expect(bottomRight?.x).toBeCloseTo(29, 6);
+    expect(bottomRight?.y).toBeCloseTo(24, 6);
+  });
+
+  it('trifft mit den abgeleiteten Schriftgraden die vermessenen Versalhöhen', () => {
+    const [center, , bottomRight] = labelsOf('E.1.9');
+    // 4,87 mm und 2,92 mm sind die an der Referenz gemessenen Versalhöhen; der Schriftgrad
+    // entsteht daraus über Arimos Versalhöhenanteil, statt geraten zu werden.
+    expect((center?.sizeMm ?? 0) * ARIMO_CAP_HEIGHT_FRACTION).toBeCloseTo(4.87, 6);
+    expect((bottomRight?.sizeMm ?? 0) * ARIMO_CAP_HEIGHT_FRACTION).toBeCloseTo(2.92, 6);
+  });
+
+  it('malt alle Beschriftungen weiss und nennt ihre untere Einsatzgrenze', () => {
+    for (const [section, recipe] of cases) {
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      const labels = drawing.children.filter((c) => c.role === 'label');
+      expect(labels.length, section).toBeGreaterThan(0);
+      for (const label of labels) {
+        expect(label.style?.fill, section).toBe('weiss');
+        if (label.type !== 'text') continue;
+        // Unterhalb dieser Grenze unterschreitet der Lauf MINIMUM_TEXT_RENDER_PX. Beide
+        // Schriftgrade landen damit auf der Snapshot-Leiter erst bei 64 px.
+        expect(label.minRenderPx, `${section} ${label.content}`).toBeGreaterThan(32);
+        expect(label.minRenderPx, `${section} ${label.content}`).toBeLessThanOrEqual(64);
+      }
+    }
+  });
+
+  it('hält die Zusatzkennzeichnung genau an den sechs Typ-A-Zeichen und an E.1.2', () => {
+    const withBottomLeft = cases
+      .filter(([, recipe]) => recipe.spec.labels?.bottomLeft !== undefined)
+      .map(([section]) => section);
+    expect(withBottomLeft).toEqual([
+      'E.1.2',
+      'E.1.9',
+      'E.1.10',
+      'E.1.11',
+      'E.1.12',
+      'E.1.15',
+      'E.1.16',
+    ]);
+    // Sechs „Typ A", dazu E.1.2 mit „ASH" — die einzige Zusatzkennzeichnung des Blocks, die
+    // keinen Typ bezeichnet, sondern eine Ausstattung (Abstützsystem Holz).
+    for (const [section, recipe] of cases) {
+      if (section === 'E.1.2') continue;
+      if (recipe.spec.labels?.bottomLeft === undefined) continue;
+      expect(recipe.spec.labels?.bottomLeft, section).toBe('A');
+      expect(recipe.title, section).toMatch(/Typ A$/);
+    }
+  });
+
+  it('nennt die beiden Referenzdateien mit fehlerhafter Füllfläche und keine weitere', () => {
+    // Ihre Abweichung steht in der Manifestzeile; dieser Test hält fest, dass genau diese zwei
+    // Dateien betroffen sind, damit die Notiz dort nicht zur Behauptung ohne Beleg wird.
+    expect(Object.keys(ANHANG_E_A_FILL_DEFECTS)).toEqual(['E.1.6', 'E.1.14']);
+    for (const section of Object.keys(ANHANG_E_A_FILL_DEFECTS)) {
+      expect(Object.hasOwn(ANHANG_E_A_RECIPES, section)).toBe(true);
+    }
+  });
+
+  it('verlangt für weissen Text auf der Körperfarbe die Textschwelle, nicht die Nichttextschwelle', () => {
+    const requirements = labelContrastRequirements();
+    expect(requirements).toHaveLength(1);
+    expect(requirements[0]).toEqual({
+      foreground: 'weiss',
+      background: 'blau',
+      context: 'Beschriftung im Körper auf Organisation thw',
+      minimum: 4.5,
+    });
   });
 });
 
