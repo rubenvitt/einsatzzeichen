@@ -101,9 +101,9 @@ fachkundige Person geprüft werden. Die Abschlussentscheidung für D.1 steht in
 D.2 deckt Kapitel 5.8 der projektinternen Coverage-Baseline technisch mit 61 State-IDs und 67
 Darstellungen ab, darunter sechs getrennt adressierbare Alternativdarstellungen. Damit enthält
 der Katalog zusammen mit D.3 und D.4 insgesamt 254 Piktogrammdarstellungen: 92 Capabilities, 67
-States, 53 IuK-, 28 Schadens- und 14 Vegetationsbrandzeichen. Die 293 globalen Renderfälle setzen
-sich aus acht Grundzeichen, 31 Rezepten und diesen 254 Piktogrammen zusammen — drei Rezepte
-belegen den Kompositionsmotor, die übrigen 28 sind die Teilslices E-a und E-b (siehe unten).
+States, 53 IuK-, 28 Schadens- und 14 Vegetationsbrandzeichen. Die 302 globalen Renderfälle setzen
+sich aus acht Grundzeichen, 40 Rezepten und diesen 254 Piktogrammen zusammen — drei Rezepte
+belegen den Kompositionsmotor, die übrigen 37 sind die Teilslices E-a, E-b und E-c (siehe unten).
 
 Alle 67 State-Darstellungen sind eigenständige Zeichen mit kanonischer 32×32-mm-Platzierung und
 Standalone-Clipping. D.2 führt weder eine allgemeine State-Komposition noch eine Integration in
@@ -190,6 +190,50 @@ Zehn der zwölf Referenzdateien tragen Befunde an der Füllfläche; nur E.1.17 u
 normgerecht. Die Sichtprüfung aller zwölf fand keinen Fehler an der Umsetzung und belegt, dass
 `minRenderPx` auch bei den längsten Kürzeln des Bestands eine ehrliche Angabe ist:
 [`docs/reviews/2026-08-17-e-b-visual-qa.md`](./docs/reviews/2026-08-17-e-b-visual-qa.md).
+
+## E-c: die letzten neun THW-Zeichen, damit E.1 vollständig
+
+E.1.29 bis E.1.37 schließen Anhang E.1: den 37 Referenzdateien stehen jetzt 37 Rezepte gegenüber,
+lückenlos von E.1.1 bis E.1.37. Vier Trupps, eine Gruppe, zwei Züge — und zwei Zeichen, die im
+Rezept keine Kopfzone tragen, aus zwei verschiedenen Gründen. Das Coverage-Manifest führt seither
+die eine Umfangszeile `E.1` statt der 37 Einzelabschnitte; dass dahinter wirklich alle 37 stehen,
+hält ein eigener Test fest, denn die Umfangsprüfung sieht Vollständigkeit nicht.
+
+**Die mittige Grundlinie rechnet jetzt gegen die Körperunterkante.** E.1.37 („Ortsverband") ist das
+einzige Zeichen des Anhangs auf dem Gebäudekörper — im Referenzbestand tragen zwei der 661 Dateien
+diese Hülle. Am `formation`-Körper (Hülle 6…26 mm) sind „12 mm unter der Oberkante" und „8 mm über
+der Unterkante" dieselbe Zahl, 18,0 mm; am Gebäudekörper (Hülle 3…26 mm) sind es 15,0 gegen
+18,0 mm, und die Referenz steht bei 18,9999 mm. Die beiden anderen gegen die Unterkante gerechneten
+Anker treffen die Referenz dort exakt — `THW`-Grundlinie 23,9995 mm, Füllfläche unten 24,9999 mm —,
+der obere lag um 4 mm daneben und schob die Beschriftungsbox nach oben über die Traufe hinaus: sie
+begann bei 8,9124 statt bei 11,9124 mm, während das blaue Rechteck der Referenz erst bei 11,0000 mm
+anfängt. Kein Snapshot der 28 Bestandszeichen ändert sich dadurch; sie stehen alle auf `formation`.
+Damit ist auch die Prognose der E-b-Notiz widerlegt, für E-c sei kein Kernschritt mehr in Sicht —
+sie trägt dazu einen datierten Nachtrag.
+
+**E.1.31 ist die vierte bewusste Abweichung des Katalogs**, nach E.1.17, E.1.19 und E.1.24.
+„System Bereitstellungsraum 500" trägt an der Stelle der Kopfzone keinen Stärkegrad, sondern zwei
+senkrechte Balken; der Katalog baut das Zeichen ohne Kopfzone und trägt dafür ein technisches
+`deviation`. Nicht die Fallzahl ist der Grund — den Balkenpfad führen drei der 661 Referenzdateien
+byteidentisch (E.1.31 sowie F.1.1 und F.1.3, die beide noch kein Rezept haben), die Geometrie ist
+also eine vermessene Konstante. Es fehlt die Bedeutung: `StrengthId` ist ein Fachbegriff, und
+welchen die Balken tragen, entscheidet die Datei nicht; eine ID zu vergeben hieße, einen Begriff zu
+behaupten, den die Quelle nicht führt. E.1.37 hat dagegen wirklich keine Kopfzone — seine
+Strichebene trägt nur den Rahmen, wie bei genau drei der 37 E.1-Dateien (E.1.3, E.1.21, E.1.37).
+
+Sechs der neun Referenzdateien sind normgerecht. E.1.29 und E.1.31 haben eine unten verkürzte
+Füllfläche (22,4998 bzw. 22,0003 statt 25,0 mm) und eine entsprechend nach oben gewanderte
+Beschriftung; E.1.37 setzt seine mittige Grundlinie auf 18,9999 mm und damit den Grundlinienabstand
+auf 5,0 mm, wo 30 der 37 E.1-Dateien 6,0 mm führen. Der Katalog folgt der Mehrheit und baut alle
+drei wie die normgerechten Dateien — bei E.1.37 bleibt dadurch eine Differenz von 1,0 mm zur
+Referenz stehen. Die Befunde sind Daten in `ANHANG_E_C_FILL_FINDINGS` und keine Abweichung der
+Umsetzung. Die Entscheidungsnotiz steht in
+[`2026-08-17-anhang-e-c.md`](./docs/decisions/2026-08-17-anhang-e-c.md), die paarweise Sichtprüfung
+in [`2026-08-17-e-c-visual-qa.md`](./docs/reviews/2026-08-17-e-c-visual-qa.md). Nachgezogen sind die drei
+Notizen, deren Aussagen dieser Slice widerlegt hat — der
+[Zuschnitt](./docs/decisions/2026-08-11-anhang-e-zuschnitt.md) („zeichengleich" gilt nur für die
+Füllebene), die [E-a-Notiz](./docs/decisions/2026-08-12-beschriftungszonen-und-e-a.md) und die
+[E-b-Notiz](./docs/decisions/2026-08-17-anhang-e-b.md), alle drei mit datiertem Nachtrag.
 
 ## Der lokale Referenzbestand
 

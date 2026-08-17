@@ -62,6 +62,23 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:E.1.26#primary': { status: 'pending' },
   'bbk-babz-2025:E.1.27#primary': { status: 'pending' },
   'bbk-babz-2025:E.1.28#primary': { status: 'pending' },
+  // Anhang E, Teilslice E-c: Trupps, Teams und der Ortsverband. Wieder ein eigener Block, weil
+  // die offenen Fragen andere sind als in E-a und E-b: bei E.1.30 und E.1.36 trägt der Dateiname
+  // kein Stärkewort und die Einordnung als Gruppe bzw. Zug ruht allein auf der Kopfgeometrie; bei
+  // E.1.31 baut der Katalog die Balkenkopfzone der Referenz nicht, und ob „SysBR" ohne die Zahl
+  // 500 des Dateinamens dieselbe Einheit bezeichnet, entscheidet keine Messung; bei E.1.37 steht
+  // mit dem Ortsverband erstmals eine Einrichtung statt einer Einheit im Anhang. Dazu bei allen
+  // neun die Frage, ob die runde Versalie in „VOST" und „OV" ein O ist — im gesamten E.1-Bestand
+  // kommt keine Ziffer vor, es gibt also keine Negativkontrolle gegen die Null.
+  'bbk-babz-2025:E.1.29#primary': { status: 'pending' },
+  'bbk-babz-2025:E.1.30#primary': { status: 'pending' },
+  'bbk-babz-2025:E.1.31#primary': { status: 'pending' },
+  'bbk-babz-2025:E.1.32#primary': { status: 'pending' },
+  'bbk-babz-2025:E.1.33#primary': { status: 'pending' },
+  'bbk-babz-2025:E.1.34#primary': { status: 'pending' },
+  'bbk-babz-2025:E.1.35#primary': { status: 'pending' },
+  'bbk-babz-2025:E.1.36#primary': { status: 'pending' },
+  'bbk-babz-2025:E.1.37#primary': { status: 'pending' },
   'bbk-babz-2025:2.1#primary': { status: 'pending' },
   'bbk-babz-2025:2.3#primary': { status: 'pending' },
   'bbk-babz-2025:2.4#primary': { status: 'pending' },

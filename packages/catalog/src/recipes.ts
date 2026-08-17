@@ -6,7 +6,11 @@ import { MINIMUM_TEXT_CONTRAST } from './pictograms/contrast-contract.js';
 import { pictogram } from './pictograms/index.js';
 import { strengthHead } from './strengths.js';
 import { describeSymbolSpec } from './labels.js';
-import { ANHANG_E_A_RECIPES, ANHANG_E_B_RECIPES } from './recipes-anhang-e.js';
+import {
+  ANHANG_E_A_RECIPES,
+  ANHANG_E_B_RECIPES,
+  ANHANG_E_C_RECIPES,
+} from './recipes-anhang-e.js';
 
 const PORTS: CatalogPorts = {
   baseDrawing,
@@ -37,10 +41,14 @@ export interface Recipe {
  * ein vollständiger Abschnitt der Baseline, gebaut aus denselben Mechanismen. Die zwölf aus
  * `ANHANG_E_B_RECIPES` setzen ihn fort und belegen zusätzlich, dass die Zonenregel gegen alle
  * Kopfzonenbreiten trägt — E-a war ein Block aus `gruppe`, E-b bringt `zug` und `trupp` dazu.
+ * Mit den neun aus `ANHANG_E_C_RECIPES` ist E.1 mit 37 Darstellungen vollständig; sie belegen
+ * als erste, dass die Zonenregel auch gegen eine **zweite Körperform** trägt (E.1.37 auf
+ * `building`).
  */
 export const RECIPES = {
   ...ANHANG_E_A_RECIPES,
   ...ANHANG_E_B_RECIPES,
+  ...ANHANG_E_C_RECIPES,
   'C.1.1': {
     title: 'Löschstaffel',
     referenceAsset: 'C.1.1_Löschstaffel.svg',

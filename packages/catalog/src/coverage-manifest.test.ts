@@ -69,7 +69,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 304 Zeilen mit 265 Elementdarstellungen', () => {
+  it('enthält exakt 313 Zeilen mit 265 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -85,32 +85,39 @@ describe('Coverage-Manifest', () => {
     }, {});
     expect(counts).toEqual({
       'catalog-entry': 8,
-      // 3 Belegfälle des Kompositionsmotors plus die 16 Zeichen aus Anhang E, Teilslice E-a, und
-      // die zwölf aus Teilslice E-b.
-      'composition-recipe': 31,
+      // 3 Belegfälle des Kompositionsmotors plus die 37 Zeichen aus Anhang E — 16 aus Teilslice
+      // E-a, zwölf aus E-b und neun aus E-c, womit E.1 vollständig ist.
+      'composition-recipe': 40,
       element: 265,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(304);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(313);
     expect(elementRows).toHaveLength(265);
     expect(pictogramRows).toHaveLength(254);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(11);
   });
 
   /**
-   * Die drei Zeichen aus dem Teilslice E-b, deren **Umsetzung** von der Referenzdatei abweicht und
-   * die deshalb ein technisches Review mit `status: 'deviation'` tragen: E.1.17 (mittiges Kürzel
-   * der Referenz 2,0009 mm links der Körpermitte) sowie E.1.19 und E.1.24 (drei Marken im Körper,
-   * die der Katalog nicht abbildet). Die zehn Füllflächenbefunde von E-b sind hier **nicht**
-   * aufgeführt: dort weicht die Quelle von sich selbst ab und die Umsetzung folgt der Mehrheit der
-   * Quelle, ihr Review bleibt `approved` mit Befundvermerk.
+   * Die vier Zeichen, deren **Umsetzung** von der Referenzdatei abweicht und die deshalb ein
+   * technisches Review mit `status: 'deviation'` tragen: aus E-b E.1.17 (mittiges Kürzel der
+   * Referenz 2,0009 mm links der Körpermitte) sowie E.1.19 und E.1.24 (drei Marken im Körper, die
+   * der Katalog nicht abbildet), aus E-c E.1.31 (zwei senkrechte Balken an der Stelle der
+   * Kopfzone, für die es keinen StrengthId gibt). Die dreizehn Füllflächen- und
+   * Grundlinienbefunde beider Teilslices sind hier **nicht** aufgeführt: dort weicht die Quelle
+   * von sich selbst ab und die Umsetzung folgt der Mehrheit der Quelle, ihr Review bleibt
+   * `approved` mit Befundvermerk.
    */
-  const TECHNICAL_DEVIATIONS = ['bbk-babz-2025:E.1.17', 'bbk-babz-2025:E.1.19', 'bbk-babz-2025:E.1.24'];
+  const TECHNICAL_DEVIATIONS = [
+    'bbk-babz-2025:E.1.17',
+    'bbk-babz-2025:E.1.19',
+    'bbk-babz-2025:E.1.24',
+    'bbk-babz-2025:E.1.31',
+  ];
 
   it('trägt für jeden Eintrag eine Referenzdatei und beide Reviewrollen', () => {
     // Die Zusage ist „kein Eintrag ohne zurechenbares technisches Review", nicht „jeder Eintrag
-    // approved". Sie wird deshalb nicht auf eine Statusmenge aufgeweicht, sondern nennt die drei
-    // Abweichungen einzeln: jede andere Zeile muss `approved` sein, und die drei genannten müssen
-    // zusätzlich eine Notiz führen. Ein viertes `deviation` fällt hier auf, ein weggefallenes
+    // approved". Sie wird deshalb nicht auf eine Statusmenge aufgeweicht, sondern nennt die vier
+    // Abweichungen einzeln: jede andere Zeile muss `approved` sein, und die vier genannten müssen
+    // zusätzlich eine Notiz führen. Ein fünftes `deviation` fällt hier auf, ein weggefallenes
     // ebenso.
     for (const entry of COVERAGE_MANIFEST.entries) {
       expect(entry.referenceAsset).toMatch(/\.svg$/);
@@ -126,7 +133,7 @@ describe('Coverage-Manifest', () => {
     }
   });
 
-  it('führt genau drei technische Abweichungen, alle aus dem Teilslice E-b', () => {
+  it('führt genau vier technische Abweichungen, drei aus E-b und eine aus E-c', () => {
     // Gegenrichtung des Tests oben: dort wird für bekannte Schlüssel `deviation` verlangt, hier,
     // dass es keine weiteren gibt. Ohne diese Hälfte bliebe eine still hinzugekommene Abweichung
     // an einer anderen Zeile unbemerkt, weil der `else`-Zweig sie nie zu sehen bekäme.
@@ -173,37 +180,11 @@ describe('Coverage-Manifest', () => {
       'C.1.1',
       'C.1.2',
       'D.3.7',
-      // Anhang E abschnittsweise: E-a und E-b decken zusammen 28 der 37 E.1-Abschnitte ab, `E.1`
-      // wäre eine Vollständigkeitsbehauptung, die das Gate nicht widerlegen würde. Es fehlt nur
-      // noch E-c.
-      'E.1.1',
-      'E.1.2',
-      'E.1.3',
-      'E.1.4',
-      'E.1.5',
-      'E.1.6',
-      'E.1.7',
-      'E.1.8',
-      'E.1.9',
-      'E.1.10',
-      'E.1.11',
-      'E.1.12',
-      'E.1.13',
-      'E.1.14',
-      'E.1.15',
-      'E.1.16',
-      'E.1.17',
-      'E.1.18',
-      'E.1.19',
-      'E.1.20',
-      'E.1.21',
-      'E.1.22',
-      'E.1.23',
-      'E.1.24',
-      'E.1.25',
-      'E.1.26',
-      'E.1.27',
-      'E.1.28',
+      // Anhang E seit E-c als `E.1`: die drei Teilslices decken alle 37 Abschnitte ab, und
+      // `recipes.test.ts` hält die Lückenlosigkeit fest — `uncoveredScope` allein täte das nicht.
+      // Nicht `E`: E.2 ist mit 31 Zeichen unabgedeckt und auf zwei fehlende Grundzeichen
+      // blockiert.
+      'E.1',
       'J.1',
       'J.2',
       'J.3',

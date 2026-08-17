@@ -13,10 +13,32 @@ const formationBody: Primitive = {
   height: 20,
 };
 
+/**
+ * Der Gebäudekörper, wie `base-symbols.ts` ihn führt (Hülle 1/3 bis 31/26 mm). Er steht hier,
+ * weil er die einzige Körperform des Bestands ist, an der die beiden Lesarten der mittigen
+ * Grundlinie auseinandergehen — siehe die Zusicherung „rechnet die mittige Grundlinie gegen die
+ * Körperunterkante" weiter unten.
+ */
+const buildingBody: Primitive = {
+  type: 'polyline',
+  role: 'body',
+  closed: true,
+  points: [
+    [16, 3],
+    [1, 10],
+    [1, 26],
+    [31, 26],
+    [31, 10],
+  ],
+};
+
 /** Katalog-Doppel: liefert ausschließlich das Grundzeichen, alles andere ist für diese Tests
  * unerheblich und lehnt einen Aufruf explizit ab, statt still einen falschen Wert zu liefern. */
 const catalog: CatalogPorts = {
-  baseDrawing: () => ({ viewBox: DEFAULT_VIEWBOX_MM, children: [formationBody] }),
+  baseDrawing: (kind) => ({
+    viewBox: DEFAULT_VIEWBOX_MM,
+    children: [kind === 'building' ? buildingBody : formationBody],
+  }),
   organizationColor: () => {
     throw new Error('Für diesen Test nicht aufgerufen.');
   },
@@ -169,6 +191,41 @@ describe('compose() — Beschriftungszonen', () => {
     expect(bottomLeft.boxMm).toMatchObject({ xMm: 3, widthMm: 13 });
     expect(bottomRight.x).toBe(29);
     expect(bottomRight.boxMm).toMatchObject({ xMm: 16, widthMm: 13 });
+  });
+
+  it('rechnet die mittige Grundlinie gegen die Körperunterkante, nicht gegen die Oberkante', () => {
+    // Die eigentliche Zusicherung steht in der **zweiten** Hälfte. An `formation` (Hülle
+    // 6…26 mm) liefern „12 mm unter der Oberkante" und „8 mm über der Unterkante" beide 18 mm —
+    // eine Prüfung allein an dieser Körperform hielte die Kante gar nicht fest, obwohl 36 der 37
+    // E.1-Dateien auf ihr stehen. Erst der Gebäudekörper (Hülle 3…26 mm) trennt die beiden
+    // Lesarten: gegen die Oberkante wären es 15,0 mm, gegen die Unterkante 18,0 mm. Die Referenz
+    // E.1.37 setzt ihre mittige Grundlinie auf 18,9999 mm und ihre `THW`-Grundlinie auf
+    // 23,9995 mm = maxY − 2; von den beiden möglichen Ankern trifft nur der untere in dieselbe
+    // Größenordnung. Wer die Konstante zurückdreht, fällt hier auf und nicht erst im Bild.
+    const formation = compose(labelSpec, catalog);
+    const formationCenter = formation.children.find((p) => p.role === 'label');
+    expect(formationCenter?.type).toBe('text');
+    if (formationCenter?.type !== 'text') return;
+    expect(formationCenter.y).toBeCloseTo(18, 6);
+
+    const building = compose(
+      { kind: 'building', labels: { center: 'OV', bottomRight: 'THW' } },
+      catalog,
+    );
+    const [buildingCenter, buildingBottomRight] = building.children.filter(
+      (p) => p.role === 'label',
+    );
+    expect(buildingCenter?.type).toBe('text');
+    expect(buildingBottomRight?.type).toBe('text');
+    if (buildingCenter?.type !== 'text' || buildingBottomRight?.type !== 'text') return;
+    expect(buildingCenter.y).toBeCloseTo(18, 6);
+    expect(buildingBottomRight.y).toBeCloseTo(24, 6);
+
+    // Und die Folge, die kein Gate prüft (offene Kante „nichts prüft, ob eine Beschriftungsbox im
+    // Körper liegt"): mit dem oberen Anker lag die Boxoberkante bei 8,9124 mm und damit über der
+    // Traufe des Gebäudekörpers, ihre beiden oberen Ecken außerhalb des Polygons. Ab y 10 mm
+    // führt das Polygon die volle Breite 1…31 mm — die Box 2…30 mm liegt darin.
+    expect(buildingCenter.boxMm.yMm).toBeGreaterThan(10);
   });
 
   it('passiert das viewBox-Gate mit allen drei Beschriftungszonen', () => {

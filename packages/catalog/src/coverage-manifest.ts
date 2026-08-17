@@ -17,6 +17,8 @@ import {
   ANHANG_E_A_RECIPES,
   ANHANG_E_B_FILL_FINDINGS,
   ANHANG_E_B_RECIPES,
+  ANHANG_E_C_FILL_FINDINGS,
+  ANHANG_E_C_RECIPES,
 } from './recipes-anhang-e.js';
 
 /**
@@ -207,15 +209,90 @@ const ANHANG_E_B_DEVIATIONS: Readonly<Record<string, string>> = Object.freeze({
 });
 
 /**
+ * Technisches Review der neun Zeichen aus E-c. Wie bei E-b ein eigener Eintrag mit eigenem Datum:
+ * die neun Referenzdateien sind an diesem Tag vermessen worden, die 28 älteren nicht noch einmal.
+ * Die Note nennt zusätzlich, was an diesem Teilslice technisch neu ist — die zweite Körperform und
+ * die Konstante, die sie bindend gemacht hat.
+ */
+const ANHANG_E_C_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-17',
+  note:
+    'Körperhülle per matchFingerprint gegen die Referenz gegated — für E.1.37 erstmals gegen den ' +
+    'Gebäudekörper und nicht gegen die ring-Form der Taktischen Formation. Was das Gate dabei ' +
+    'nicht sieht, bleibt unverändert: `pickShape` greift eine Form je Zeichnung, die verkürzten ' +
+    'Füllflächen und die Balkenkopfzone von E.1.31 erreicht es gar nicht. Für die ' +
+    'Beschriftungszonen prüft die Rasterprüfung in fonts.test.ts die tatsächliche Tinte aller 37 ' +
+    'Kürzelsätze aus E-a, E-b und E-c gegen die deklarierte boxMm. Neu ist ein Kernschritt in ' +
+    'compose.ts: die mittige Grundlinie rechnet seit E.1.37 gegen die Körperunterkante (maxY − 8) ' +
+    'statt gegen die Oberkante (minY + 12) — an `formation` dieselbe Zahl, am Gebäudekörper 18,0 ' +
+    'statt 15,0 mm. Kein Snapshot der 28 Bestandszeichen hat sich dadurch geändert. Dazu die ' +
+    'globalen Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates; ein neuer Kontrastvertrag ' +
+    'entsteht nicht, weisser Text auf blau steht seit E-a als eigene 4,5:1-Anforderung im ' +
+    'A11y-Gate. Die neun Referenzdateien sind einzeln vermessen; daraus stammen die drei Befunde ' +
+    'und die eine deklarierte Abweichung.',
+};
+
+/**
+ * Die eine Zeile aus E-c, bei der die **Umsetzung von der Quelle** abweicht. Wie bei E-b setzt nur
+ * diese Richtung den Status um; die drei Füllflächen- und Grundlinienbefunde bleiben `approved`
+ * mit Befundvermerk, weil dort die Quelle von sich selbst abweicht.
+ */
+const ANHANG_E_C_DEVIATIONS: Readonly<Record<string, string>> = Object.freeze({
+  'E.1.31':
+    'Der Katalog baut das Zeichen ohne Kopfzone, weil die Referenz an dieser Stelle keinen ' +
+    'Stärkegrad trägt: zwei senkrechte Balken von je 1,500 × 4,000 mm bei cx 12,000 und ' +
+    '20,000 mm, y 1,000…5,000 mm (Pfad „M54.567,2.835h4.252v11.339h-4.252V2.835Z' +
+    'M31.89,14.173h4.252V2.835h-4.252v11.339Z"), Mitte also bei cy 3,000 mm. Alle vier ' +
+    'Stärkegrade sind dagegen aus Kreisen r 1,500 mm gebaut und keiner aus einem Rechteck: ' +
+    'trupp, gruppe und zug als Reihe auf den Plätzen 11/16/21 mm mit cyFromTopMm 1,5 (absolut ' +
+    'cy 3,500 mm), staffel als senkrechter Stapel zweier Marken auf der Mittelachse ' +
+    '(cyFromTopMm 1,5 und 5,5, vermessen an C.1.1/C.1.8 und in E.1 nicht vorkommend). Weder Form ' +
+    'noch Lage stimmen überein, und StrengthId kennt nur diese vier. Grund ist hier ' +
+    'ausdrücklich **nicht** die Fallzahl, anders als bei der Innenreihe von E.1.19/E.1.24: der ' +
+    'Balkenpfad kommt in genau drei von 661 Referenzdateien vor — E.1.31, ' +
+    '„F.1.1_Medizinische Task Force.svg" und „F.1.3_Mobiles Betreuungsmodul 5000.svg" — und dort ' +
+    'byteweise identisch, die Geometrie ist also eine vermessene Konstante. Was fehlt, ist die ' +
+    'Bedeutung: StrengthId ist ein Fachbegriff, und welchen Begriff diese Balken tragen, ' +
+    'entscheidet die Datei nicht. Die Zahl der Balken trifft „5.5.2_Bereitschaft (Verband II)", ' +
+    'das Maß nicht — dort 4,000 × 10,000 mm bei cx 7,000 und 25,000 mm, also Breite ×0,375, Höhe ' +
+    '×0,400 und Achsabstand ×0,444: keine gleichmäßige Verkleinerung. Eine ID zu vergeben hieße ' +
+    'einen Begriff zu behaupten, den die Quelle nicht trägt — dieselbe Falschaussage, aus der ' +
+    'E-b den capability.*-Weg verworfen hat. Die Platzierung wäre dabei nicht das Hindernis: die ' +
+    'Balken sind mit den Kreiskopfzonen aller acht anderen bündig unten auf 5,000 mm und wachsen ' +
+    'nur nach oben in freien Raum. Es fehlt eine Markenform (HeadMark ist {cxMm, cyFromTopMm, ' +
+    'rMm} und kann kein Rechteck ausdrücken) und ein Begriff, keine Platzierungsmathematik.',
+});
+
+/**
+ * Befund und Abweichung sind zwei unabhängige Achsen und werden deshalb **addiert, nicht
+ * verzweigt**: sieben der 21 Zeichen aus E-b und E-c tragen keines von beidem, zehn nur einen
+ * Befund an der Referenzdatei, E.1.17 nur eine Abweichung der Umsetzung, und E.1.19, E.1.24 sowie
+ * E.1.31 beides. Eine `else if`-Kette verlöre bei diesen dreien den Befund.
+ */
+function withFindingAndDeviation(
+  base: Review,
+  finding: string | undefined,
+  deviation: string | undefined,
+): Review {
+  if (finding === undefined && deviation === undefined) return base;
+  return {
+    ...base,
+    ...(deviation === undefined ? {} : { status: 'deviation' as const }),
+    note: [
+      base.note ?? '',
+      ...(finding === undefined ? [] : [`Befund an der Referenzdatei: ${finding}`]),
+      ...(deviation === undefined ? [] : [`Abweichung der Umsetzung: ${deviation}`]),
+    ].join(' '),
+  };
+}
+
+/**
  * Provenienz des technischen Reviews je Rezeptzeile. Die Verzweigung ist **nicht** Buchführung:
- * ohne sie fielen die zwölf E-b-Abschnitte durch den ersten `return` und behaupteten das
- * Slice-2-Migrationsreview vom 5. August als ihre technische Provenienz — ein `approved` von
- * `rv`, an dem kein Test etwas auffällig fände.
- *
- * Befund und Abweichung sind zwei unabhängige Achsen und werden deshalb addiert, nicht
- * verzweigt: E.1.22 trägt keines von beidem, acht Zeichen nur einen Befund an der Referenzdatei,
- * E.1.17 nur eine Abweichung der Umsetzung, E.1.19 und E.1.24 beides. Eine `else if`-Kette
- * verlöre bei den letzten zwei den Befund.
+ * ohne sie fielen die zwölf E-b- und die neun E-c-Abschnitte durch den letzten `return` und
+ * behaupteten das Slice-2-Migrationsreview vom 5. August als ihre technische Provenienz — ein
+ * `approved` von `rv`, an dem kein Test etwas auffällig fände.
  */
 function technicalReviewFor(section: string): Review {
   if (Object.hasOwn(ANHANG_E_A_RECIPES, section)) {
@@ -226,19 +303,21 @@ function technicalReviewFor(section: string): Review {
       note: `${ANHANG_E_A_TECHNICAL_REVIEW.note ?? ''} Befund an der Referenzdatei: ${defect}`,
     };
   }
-  if (!Object.hasOwn(ANHANG_E_B_RECIPES, section)) return TECHNICAL_REVIEW;
-  const finding = ANHANG_E_B_FILL_FINDINGS[section];
-  const deviation = ANHANG_E_B_DEVIATIONS[section];
-  if (finding === undefined && deviation === undefined) return ANHANG_E_B_TECHNICAL_REVIEW;
-  return {
-    ...ANHANG_E_B_TECHNICAL_REVIEW,
-    ...(deviation === undefined ? {} : { status: 'deviation' as const }),
-    note: [
-      ANHANG_E_B_TECHNICAL_REVIEW.note ?? '',
-      ...(finding === undefined ? [] : [`Befund an der Referenzdatei: ${finding}`]),
-      ...(deviation === undefined ? [] : [`Abweichung der Umsetzung: ${deviation}`]),
-    ].join(' '),
-  };
+  if (Object.hasOwn(ANHANG_E_B_RECIPES, section)) {
+    return withFindingAndDeviation(
+      ANHANG_E_B_TECHNICAL_REVIEW,
+      ANHANG_E_B_FILL_FINDINGS[section],
+      ANHANG_E_B_DEVIATIONS[section],
+    );
+  }
+  if (Object.hasOwn(ANHANG_E_C_RECIPES, section)) {
+    return withFindingAndDeviation(
+      ANHANG_E_C_TECHNICAL_REVIEW,
+      ANHANG_E_C_FILL_FINDINGS[section],
+      ANHANG_E_C_DEVIATIONS[section],
+    );
+  }
+  return TECHNICAL_REVIEW;
 }
 
 const recipeEntries: CoverageEntry[] = Object.entries(RECIPES).map(([section, recipe]) => {
@@ -342,13 +421,20 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
   // (Verwaltungsstufen/Fahrzeugkategorien: von 16 Referenzdateien nur 2 vermessbar, kein Konsument).
   // K, L und M stehen einbuchstabig im Umfang, weil ihre Nummerierung flach ist: `K` deckt
   // K.1 bis K.18 ab, wo `J` vier Unterkapitel gebraucht hätte.
-  // Anhang E steht abschnittsweise und **nicht** als `E.1`: die Teilslices E-a und E-b decken
-  // zusammen 28 der 37 E.1-Abschnitte ab. `E.1` würde das Gate zwar bestehen —
-  // `uncoveredScope` prüft nur, ob zu jedem beanspruchten Präfix mindestens eine Zeile existiert,
-  // nicht die Vollständigkeit —, aber genau deshalb wäre es eine Behauptung, die kein Gate
-  // widerlegt. Dieselbe Wahl wie bei C.1.1/C.1.2/D.3.7 (einzeln, weil Belegfälle) statt bei
-  // K/L/M (einbuchstabig, weil vollständig). Es fehlt nur noch E-c; wenn es gelandet ist, treten
-  // die 37 Zeilen an `E.1` zurück.
+  // Anhang E steht seit dem Teilslice E-c als `E.1` und nicht mehr abschnittsweise: E-a, E-b und
+  // E-c decken zusammen alle 37 E.1-Abschnitte ab, das Kapitel ist vollständig. Bis dahin standen
+  // die Abschnitte einzeln, weil `uncoveredScope` nur prüft, ob zu jedem beanspruchten Präfix
+  // mindestens eine Zeile existiert, und `E.1` deshalb auch bei 16 von 37 Zeilen bestanden hätte —
+  // eine Behauptung, die kein Gate widerlegt. Jetzt trägt sie ein Gate: `recipes.test.ts` hält
+  // fest, dass die drei Blöcke zusammen genau E.1.1 bis E.1.37 ergeben.
+  //
+  // **`E.1` und ausdrücklich nicht `E`.** Auch `E` bestünde `uncoveredScope` (jede E.1-Zeile
+  // beginnt mit `E.`), während von den 31 Zeichen aus E.2 kein einziges gebaut ist — sie warten
+  // auf `vehicle-land`, `vehicle-water` und die Fahrwerksmarken aus Kapitel 5.1. Genau diese
+  // unwiderlegbare Behauptung sollte die abschnittsweise Führung verhindern, und sie bliebe mit
+  // `E` bestehen. Damit steht Anhang E jetzt bei K/L/M (einbuchstabig, weil vollständig) und
+  // nicht mehr bei C.1.1/C.1.2/D.3.7 (einzeln, weil Belegfälle) — auf der Ebene, die vollständig
+  // belegt ist, und keine darüber.
   scope: [
     '1',
     '2',
@@ -358,34 +444,7 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'C.1.1',
     'C.1.2',
     'D.3.7',
-    'E.1.1',
-    'E.1.2',
-    'E.1.3',
-    'E.1.4',
-    'E.1.5',
-    'E.1.6',
-    'E.1.7',
-    'E.1.8',
-    'E.1.9',
-    'E.1.10',
-    'E.1.11',
-    'E.1.12',
-    'E.1.13',
-    'E.1.14',
-    'E.1.15',
-    'E.1.16',
-    'E.1.17',
-    'E.1.18',
-    'E.1.19',
-    'E.1.20',
-    'E.1.21',
-    'E.1.22',
-    'E.1.23',
-    'E.1.24',
-    'E.1.25',
-    'E.1.26',
-    'E.1.27',
-    'E.1.28',
+    'E.1',
     'J.1',
     'J.2',
     'J.3',

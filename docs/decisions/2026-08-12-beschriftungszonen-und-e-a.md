@@ -197,6 +197,28 @@ Gemessen am 12. August 2026 auf `claude/lfh-440-3253b1`:
 > [`2026-08-17-anhang-e-b.md`](./2026-08-17-anhang-e-b.md). Die Aussagen bleiben hier stehen, damit
 > sichtbar ist, dass der Folgeslice sie berichtigt hat.
 
+> **Nachtrag vom 17. August 2026 (Teilslice E-c, LFH-442).** Zwei Angaben sind nachzuziehen, eine
+> davon ist die zweite Hälfte des Nachtrags darüber:
+>
+> 1. Die Einschätzung des letzten Absatzes von Abschnitt 7, **E-c** brauche „keinen weiteren
+>    Schema- oder Kernschritt", hat ebenfalls **nicht gehalten** — der E-b-Nachtrag hat sie nur für
+>    E-b berichtigt und die E-c-Hälfte stehen lassen. Ein Schemaschritt war tatsächlich nicht nötig,
+>    ein **Kernschritt** schon: `compose.ts` rechnete die mittige Grundlinie mit `minY + 12` gegen
+>    die Körper**ober**kante und rechnet sie seit E-c mit `maxY − 8` gegen die **Unter**kante. An
+>    `formation` (Hülle 6…26 mm) ist das dieselbe Zahl 18 — und alle 16 Zeichen dieser Notiz stehen
+>    auf dieser Form, ihr Bild ist unberührt. Am Gebäudekörper von E.1.37 (Hülle 3…26 mm) sind es
+>    15,0 gegen 18,0 mm, und dort schob der alte Anker die Beschriftungsbox aus dem Körperpolygon
+>    heraus. Die Zonentabelle aus Abschnitt 1 war also an **einer** Körperform vermessen, ohne dass
+>    das ihre Bezugskante festgelegt hätte.
+> 2. Abschnitt 5, „Sobald E-b (LFH-441) und E-c (LFH-442) gelandet sind, treten die 16 Zeilen an
+>    `E.1` zurück": das ist mit E-c **eingetreten**. Der Manifest-`scope` führt jetzt die eine Zeile
+>    `E.1`, und ein eigener Test hält fest, dass dahinter genau E.1.1 bis E.1.37 lückenlos stehen —
+>    denn `uncoveredScope` sieht Vollständigkeit nicht, so wie dieser Abschnitt es beschrieben hat.
+>
+> Die Messung und die Begründung stehen in
+> [`2026-08-17-anhang-e-c.md`](./2026-08-17-anhang-e-c.md). Die Aussagen bleiben hier stehen, damit
+> sichtbar ist, dass der Folgeslice sie berichtigt hat.
+
 ## 8. Reviewgrenze
 
 Diese Notiz trifft **keine fachliche Aussage** über Anhang E. Sie hält fest, wie die 16 Zeichen
