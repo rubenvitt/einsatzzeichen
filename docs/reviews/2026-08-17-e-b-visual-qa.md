@@ -127,10 +127,14 @@ Deklariert: **37 px** für den mittigen Lauf, **61 px** für `THW`. Gemessen am 
 | 32 px | lesbar, grenzwertig — das `W` verschwimmt | nicht lesbar |
 | 48 px | klar lesbar | gerade lesbar |
 
-Beide Zusicherungen halten und sind **konservativ**: `Log-MW` wird zwischen 32 und 37 px lesbar,
-`THW` zwischen 48 und 61 px. Was der deklarierte Wert ausschließt — 24 px und darunter — ist
-tatsächlich unlesbar. Damit ist `minRenderPx` bei den längsten Kürzeln des Bestands eine ehrliche
-Angabe und nicht eine übernommene.
+Beide Zusicherungen halten und sind **konservativ**: `Log-MW` ist bereits bei 32 px lesbar, wo 37 px
+deklariert sind, und `THW` bei 48 px, wo 61 px deklariert sind. Was der deklarierte Wert ausschließt
+— 24 px und darunter — ist tatsächlich unlesbar. Damit ist `minRenderPx` bei den längsten Kürzeln
+des Bestands eine ehrliche Angabe und nicht eine übernommene.
+
+Die genauen Schwellen, an denen die Lesbarkeit umschlägt, sind damit **nicht** bestimmt: gerastert
+wurden 16, 24, 32 und 48 px, nicht 37 und 61. Für die Frage, ob die deklarierten Werte tragen,
+genügt das — sie liegen beide auf der sicheren Seite der gemessenen Punkte.
 
 ## 7. Die sechzehn Zeichen aus E-a sind unberührt
 
