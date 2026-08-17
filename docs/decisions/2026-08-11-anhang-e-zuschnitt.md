@@ -44,6 +44,21 @@ Scheinunterschied auftrat. Der Wasserfahrzeugrumpf entspricht `1.5_Wasserfahrzeu
 sitzt aber 1 mm höher und ist 0,02 mm schmaler; das ist Vermessungsarbeit im Teilslice, keine
 zweite Form.
 
+> **Nachtrag vom 17. August 2026 (Teilslice E-c, LFH-442).** „`E.1.37_Ortsverband.svg` trägt das
+> Polygon aus `1.7_Gebäude.svg` zeichengleich" gilt **nur für die Füllebene** — dort ist der
+> Punktezug byteidentisch, und `grep -l` darauf trifft genau zwei der 661 Dateien. Für die
+> **Strichebene** stimmt es nicht: `1.7` führt dort drei Teilpfade (Außenkontur, Innenrechteck ab
+> y 29,764 Einheiten, getrennt geschlossenes Dachdreieck mit Basis y 28,346) und zieht damit eine
+> waagerechte Traufkante bei y 10,000…10,500 mm; E.1.37 führt zwei Teilpfade (Außenkontur,
+> durchgehende Hauskontur mit Traufknick bei 28,798 Einheiten) und hat diese Kante nicht. Der
+> Katalogkörper `BODIES.building` zeichnet ebenfalls keine Traufkante und folgt damit E.1.37, nicht
+> `1.7`. Die Restdifferenz der Außenkontur (74,410 gegen 74,409 Einheiten = 0,00035 mm) ist
+> dasselbe Rundungsrauschen, das diese Notiz für 1.3/E.2 dokumentiert. Diese Notiz hat die
+> Körperform aus der **Füllebene** bestimmt (Abschnitt 1) — für ihre Aussage über den Zuschnitt
+> ändert die Berichtigung nichts, für die Bauart von E.1.37 schon. Die Messung steht in
+> [`2026-08-17-anhang-e-c.md`](./2026-08-17-anhang-e-c.md). Die Aussage bleibt stehen, damit
+> sichtbar ist, dass sie zur Hälfte zu weit ging.
+
 **`BODIES` in [`packages/catalog/src/base-symbols.ts`](../../packages/catalog/src/base-symbols.ts)
 trägt acht der 14 `SymbolKind`-Werte.** Es fehlen genau `vehicle-land`, `vehicle-air`,
 `vehicle-water`, `area`, `event` und `spontaneous-helper` — die „sechs fehlenden Grundzeichen" aus

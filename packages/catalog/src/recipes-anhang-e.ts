@@ -517,13 +517,270 @@ export const ANHANG_E_B_FILL_FINDINGS: Readonly<Record<string, string>> = Object
     'Beschriftung nach oben verschoben (mittige Grundlinie 14,5, THW-Grundlinie 21,5 mm); ' +
     'Rahmen und Kopfzone stehen normal. Im Grundsatz das Muster von E.1.6/E.1.14 aus E-a, mit ' +
     'einem zusätzlichen Befund: der Abstand zwischen mittiger und THW-Grundlinie ist 7,0 mm, wo ' +
-    'alle anderen E.1-Dateien 6,0 mm führen. Der Katalog baut das Zeichen wie die 22 ' +
+    '30 der 37 E.1-Dateien 6,0 mm führen. Der Katalog baut das Zeichen wie die 22 ' +
     'normgerechten E.1-Dateien.',
   'E.1.28':
     'Blaue Füllfläche der Referenz unten um 2,5 mm verkürzt (22,5 statt 25,0 mm), die ' +
     'Beschriftung nach oben verschoben (mittige Grundlinie 14,5, THW-Grundlinie 21,5 mm); ' +
     'Rahmen und Kopfzone stehen normal. Im Grundsatz das Muster von E.1.6/E.1.14 aus E-a, mit ' +
     'einem zusätzlichen Befund: der Abstand zwischen mittiger und THW-Grundlinie ist 7,0 mm, wo ' +
-    'alle anderen E.1-Dateien 6,0 mm führen. Der Katalog baut das Zeichen wie die 22 ' +
+    '30 der 37 E.1-Dateien 6,0 mm führen. Der Katalog baut das Zeichen wie die 22 ' +
     'normgerechten E.1-Dateien.',
+});
+
+/**
+ * Anhang E, Teilslice E-c: die Trupps, Teams und der Ortsverband E.1.29 bis E.1.37 des THW —
+ * die letzten neun der 37 E.1-Abschnitte. Mit ihnen ist E.1 vollständig, und der Manifest-`scope`
+ * führt seither `E.1` statt der 37 Einzelabschnitte.
+ *
+ * **Acht der neun sind wie E-a und E-b gebaut:** Grundzeichen `formation`, Körperfarbe `blau` der
+ * Organisation `thw`, Kopfzone aus `strengths.ts` und die Bedeutung in den Beschriftungszonen. Vier
+ * Dinge kommen hinzu, und das erste ist das schwerste:
+ *
+ * **Erstens E.1.37 („Ortsverband") auf dem Gebäudekörper.** Es ist das einzige Zeichen des Anhangs
+ * mit dieser Hülle — ihr Füllpolygon steht byteidentisch in genau zwei der 661 Referenzdateien,
+ * `1.7_Gebäude.svg` und E.1.37 selbst — und zugleich das erste Zeichen des Katalogs überhaupt, das
+ * eine Beschriftung auf eine **andere** Körperform als `formation` setzt. Damit ist eine Zahl bindend geworden, die
+ * bis dahin an zwei Lesarten zugleich passte: die mittige Grundlinie rechnet in `compose.ts` seit
+ * diesem Teilslice gegen die Körper**unter**kante (`maxY − 8`) statt gegen die Oberkante
+ * (`minY + 12`). An `formation` sind beide dieselbe Zahl, am Gebäudekörper stehen 18,0 gegen
+ * 15,0 mm — die Begründung steht dort, der verbleibende Millimeter Unterschied zur Referenz in
+ * `ANHANG_E_C_FILL_FINDINGS`.
+ *
+ * **Zweitens die Kopfzone von E.1.31, die keine ist.** Wo die anderen acht einen Stärkegrad tragen,
+ * führt „System Bereitstellungsraum 500" zwei senkrechte Balken, für die es keinen `StrengthId`
+ * gibt. Der Katalog baut das Zeichen ohne Kopfzone; das ist die einzige deklarierte Abweichung
+ * dieses Teilslice und trägt ein technisches Review mit `status: 'deviation'` (Note in
+ * `coverage-manifest.ts`).
+ *
+ * **Drittens hängt die Einordnung zweier Zeichen allein an der Geometrie.** E.1.30 („Media Team")
+ * und E.1.36 („Virtual Operations Support Team") tragen kein Stärkewort im Dateinamen und dennoch
+ * eine volle Kopfreihe — E.1.30 zwei Marken bei cx 11,0000 und 21,0002 mm, E.1.36 alle drei bei
+ * 11,0000/15,9999/21,0002 mm, beide bei cy 3,4999 mm und r 1,5 mm. Die Zuordnung zu `gruppe` bzw.
+ * `zug` ruht damit auf Zahl und Lage der Teilpfade und nicht auf dem Titel. Geometrisch ist sie
+ * eindeutig, fachlich ist sie ungeprüft.
+ *
+ * **Viertens eine Falle im Quelltext, die einmal genannt gehört statt dreimal:** E.1.33, E.1.34 und
+ * E.1.35 führen ihre `trupp`-Marke als `<circle cx="45.354" cy="9.921" r="4.252"/>` und nicht als
+ * Pfad. Wer die Strichebene nur nach `<path>` absucht, hält diese drei fälschlich für
+ * kopfzonenlos — und spräche zugleich E.1.37 fälschlich frei, dessen Kopfzone tatsächlich fehlt.
+ * Die belastbare Prüfung ist die Teilpfad-Buchführung: bei E.1.29 bis E.1.36 führt die Strichebene
+ * genau zwei Formen (Rahmen und Kopfform), bei E.1.37 genau eine mit zwei Teilpfaden — Außen- und
+ * Innenkontur des 0,5-mm-Strichs, und damit ist sie restlos erklärt.
+ *
+ * **Drei der neun Referenzdateien tragen Befunde** (`ANHANG_E_C_FILL_FINDINGS`), sechs sind
+ * normgerecht — E.1.30 und E.1.32 bis E.1.36. Über alle 37 E.1-Dateien gemessen sind es 22
+ * normgerechte; der Katalog baut auch die 15 übrigen auf deren Werten. Neu gegenüber E-b ist keine
+ * Bauart, sondern nur die Zahl: die Norm ist jetzt an allen 37 Dateien belegt statt an 28.
+ *
+ * Wie die 22 zustande kommen, gehört dazu, weil die Zahl seit E-a in mehreren Notizen steht: **19**
+ * sind direkt an einer flachfüßigen Glyphe des mittigen Laufs abgelesen. Drei weitere führen dort
+ * keine solche Glyphe (E.1.9 „Öl", E.1.10 „O", E.1.13 „Sp") und stehen mit 18,0848 mm scheinbar
+ * 0,0848 mm zu tief — im Band des Bogenunterschnitts runder Füße, der an drei Läufen dieses
+ * Teilslice gemessen ist, die beides zugleich führen: E.1.29 S 14,5849 gegen T 14,4999, E.1.31 S
+ * 15,0844 gegen B/R 15,0001, E.1.37 O 19,0846 gegen V 18,9999 — 0,0850/0,0843/0,0847 mm. Abzüglich
+ * ihres eigenen Überschusses liegen alle drei auf 18,0000 mm. Das `l` von „Öl" taugt dafür übrigens nicht: sein Fuß läuft in
+ * eine Kurve aus und endet bei 18,0633 mm, also in einer dritten, nirgends sonst gemessenen
+ * Klasse — abgelesen wird deshalb am Ö.
+ */
+export const ANHANG_E_C_RECIPES = {
+  'E.1.29': {
+    title: 'Trupp Schwerer Transport',
+    referenceAsset: 'E.1.29_Trupp Schwerer Transport.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'thw',
+      strength: 'trupp',
+      labels: { center: 'TS', bottomRight: 'THW' },
+    },
+  },
+  /**
+   * Kein Stärkewort im Dateinamen und dennoch die volle `gruppe`-Reihe: zwei Marken r 1,5 mm bei
+   * cx 11,0000 und 21,0002 mm, cy 3,4999 mm, Mittelplatz frei. Die Einordnung ruht auf Zahl und
+   * Lage der Teilpfade, nicht auf dem Titel — wer die Kopfzone aus dem Dateinamen ableitet, liegt
+   * hier falsch. Ob ein „Media Team" fachlich eine Gruppe ist, entscheidet die Datei nicht.
+   */
+  'E.1.30': {
+    title: 'Media Team',
+    referenceAsset: 'E.1.30_Media Team.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'thw',
+      strength: 'gruppe',
+      labels: { center: 'MT', bottomRight: 'THW' },
+    },
+  },
+  /**
+   * Deklarierte Abweichung, die einzige dieses Teilslice. Die Referenz trägt an der Stelle der
+   * Kopfzone **keinen Stärkegrad**, sondern zwei senkrechte Balken: je 1,500 × 4,000 mm bei
+   * cx 12,000 und 20,000 mm, y 1,000…5,000 mm, Mitte also bei cy 3,000 mm. Alle vier Stärkegrade
+   * sind dagegen aus Kreisen r 1,500 mm gebaut und keiner aus einem Rechteck: `trupp`, `gruppe`
+   * und `zug` als Reihe auf den Plätzen 11/16/21 mm (absolut cy 3,500 mm), `staffel` als
+   * senkrechter Stapel zweier Marken auf der Mittelachse — weder Form noch Lage stimmen überein,
+   * und `StrengthId` kennt nur diese vier. Der Katalog baut das Zeichen
+   * deshalb ohne Kopfzone; `spec.strength` fehlt hier als Abweichung und nicht als Versehen. Die
+   * vollständige Begründung steht in der Note ihres technischen Reviews (`coverage-manifest.ts`).
+   *
+   * **Nicht die Fallzahl ist der Grund, sondern die fehlende Bedeutung** — das unterscheidet den
+   * Fall von der Innenreihe aus E-b. Der Balkenpfad kommt in genau drei von 661 Referenzdateien vor
+   * (E.1.31, `F.1.1_Medizinische Task Force.svg`, `F.1.3_Mobiles Betreuungsmodul 5000.svg`) und
+   * dort byteweise identisch; eine vermessene Konstante liegt also vor. Was fehlt, ist der Begriff,
+   * den diese Balken tragen — und den vergibt keine Messung.
+   *
+   * Die Zahl 500 des Dateinamens erscheint im Zeichen nicht: die Typo-Ebene führt genau acht
+   * Glyphenpfade, fünf im mittigen Lauf und drei im `THW`-Lauf, und im gesamten E.1 kommt keine
+   * Ziffer vor. Der Titel folgt deshalb dem Dateinamen, das Kürzel dem Bild.
+   *
+   * Die Groß- und Kleinschreibung ist dabei nicht geschätzt, sondern an den Glyphenhüllen
+   * gemessen: S, B und R stehen auf Versalhöhe (Oberkanten 10,0457 bzw. zweimal 10,1307 mm bei
+   * Grundlinie 15,0001 mm), y und s auf x-Höhe (y 11,5919, s 11,5069 mm — der Unterschied von
+   * 0,0850 mm ist derselbe Bogenüberschuss, den die runden Füße nach unten zeigen, hier am
+   * Scheitel des s nach oben), und das y trägt eine Unterlänge bis 16,4539 mm.
+   */
+  'E.1.31': {
+    title: 'System Bereitstellungsraum 500',
+    referenceAsset: 'E.1.31_System Bereitstellungsraum 500.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'thw',
+      labels: { center: 'SysBR', bottomRight: 'THW' },
+    },
+  },
+  'E.1.32': {
+    title: 'Technischer Zug',
+    referenceAsset: 'E.1.32_Technischer Zug.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'thw',
+      strength: 'zug',
+      labels: { center: 'TZ', bottomRight: 'THW' },
+    },
+  },
+  'E.1.33': {
+    title: 'Trupp Einsatzstellensicherung',
+    referenceAsset: 'E.1.33_Trupp Einsatzstellensicherung.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'thw',
+      strength: 'trupp',
+      labels: { center: 'ESS', bottomRight: 'THW' },
+    },
+  },
+  'E.1.34': {
+    title: 'Trupp Mobiler Hochwasserpegel',
+    referenceAsset: 'E.1.34_Trupp Mobiler Hochwasserpegel.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'thw',
+      strength: 'trupp',
+      labels: { center: 'MHP', bottomRight: 'THW' },
+    },
+  },
+  'E.1.35': {
+    title: 'Trupp Unbemannte Luftfahrtsysteme',
+    referenceAsset: 'E.1.35_Trupp Unbemannte Luftfahrtsysteme.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'thw',
+      strength: 'trupp',
+      labels: { center: 'UL', bottomRight: 'THW' },
+    },
+  },
+  /**
+   * Wie E.1.30 ein Zeichen ohne Stärkewort im Dateinamen, das dennoch eine volle Kopfreihe führt —
+   * hier alle drei Plätze (cx 11,0000/15,9999/21,0002 mm, cy 3,4999 mm, r 1,5 mm), also `zug`.
+   * Mit vier Glyphen das zweitlängste Kürzel dieses Teilslice — **nicht** das längste, wie hier
+   * zunächst stand: `SysBR` (E.1.31) führt fünf Glyphen und ist auch an der Tinte breiter
+   * (Referenzlauf 7,4344…24,7287 = 17,294 mm gegen 7,7347…24,4076 = 16,673 mm). Die Sichtprüfung
+   * hat die Kleinrasterung deshalb an `SysBR` geführt und `VOST` daneben gestellt.
+   */
+  'E.1.36': {
+    title: 'Virtual Operations Support Team',
+    referenceAsset: 'E.1.36_Virtual Operations Support Team.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'thw',
+      strength: 'zug',
+      labels: { center: 'VOST', bottomRight: 'THW' },
+    },
+  },
+  /**
+   * Das einzige Zeichen des Anhangs mit **Gebäudekörper** und der dritte Fall in E.1 ohne
+   * Kopfzone nach E.1.3 und E.1.21 — `spec.strength` fehlt hier bewusst. Belegt ist das über die
+   * Teilpfad-Buchführung und nicht über die Abwesenheit eines Elementtyps: die Ebene
+   * `Takt_Zeichen (umgewandelt)` trägt genau einen Pfad mit zwei Teilpfaden, Außen- und
+   * Innenkontur des 0,5-mm-Strichs, und ist damit restlos erklärt.
+   *
+   * **Die Zuschnittsnotiz vom 11. August ist hier zur Hälfte zu berichtigen.** Sie sagt, E.1.37
+   * trage das Polygon aus `1.7_Gebäude.svg` „zeichengleich". Für die **Füllebene** stimmt das: der
+   * Punktezug ist in beiden Dateien byteidentisch und kommt in genau zwei der 661 Dateien vor. Für
+   * die **Strichebene** nicht: `1.7` führt dort drei Teilpfade und zieht damit eine waagerechte
+   * Traufkante bei y 10,000…10,500 mm, E.1.37 führt zwei mit durchgehender Hauskontur und hat diese
+   * Kante nicht. `BODIES.building` zeichnet ebenfalls keine Traufkante — der Katalogkörper folgt
+   * E.1.37 und nicht `1.7`.
+   *
+   * Die Füllfläche der Referenz ist zweiteilig (Dachdreieck 4,1035…10,0002 mm, Rechteck
+   * 11,0000…24,9999 mm, dazwischen ein weißes Band von 1,0 mm Höhe); `BODIES.building` bildet sie
+   * wie überall als **eine** Fläche ab — dieselbe geerbte Eigenschaft von `base-symbols.ts`, die
+   * schon in E-a und E-b das weiße Innenfeld der Referenz nicht abbildet, und keine Entscheidung
+   * dieses Teilslice.
+   */
+  'E.1.37': {
+    title: 'Ortsverband',
+    referenceAsset: 'E.1.37_Ortsverband.svg',
+    spec: {
+      kind: 'building',
+      organization: 'thw',
+      labels: { center: 'OV', bottomRight: 'THW' },
+    },
+  },
+} as const satisfies Record<string, Recipe>;
+
+/**
+ * Die drei Referenzdateien dieses Teilslice, deren Füllfläche oder Grundlinien von der Norm der 22
+ * normgerechten E.1-Dateien abweichen (Füllfläche 7,0…25,0 mm, mittige Grundlinie 18,0 mm,
+ * `THW`-Grundlinie 24,0 mm, Grundlinienabstand 6,0 mm). Wie `ANHANG_E_A_FILL_DEFECTS` und
+ * `ANHANG_E_B_FILL_FINDINGS` stehen sie hier als Datum, damit die Manifestzeile ihren Reviewvermerk
+ * daraus ableitet statt den Befund ein zweites Mal zu behaupten. Die sechs übrigen — E.1.30 und
+ * E.1.32 bis E.1.36 — sind normgerecht und fehlen hier deshalb.
+ *
+ * **`FINDINGS` wie in E-b und nicht `DEFECTS` wie in E-a:** bei E.1.29 folgt die Verschiebung im
+ * Grundsatz dem Muster von E.1.6/E.1.14, trägt aber einen Grundlinienabstand, den die Verschiebung
+ * nicht erklärt; und bei E.1.37 ist die Abweichung bei n = 1 im gesamten Bestand gar nicht als
+ * Defekt entscheidbar. Die Benennung des Exports soll das nicht überschreiben.
+ */
+export const ANHANG_E_C_FILL_FINDINGS: Readonly<Record<string, string>> = Object.freeze({
+  'E.1.29':
+    'Blaue Füllfläche der Referenz unten um 2,5 mm verkürzt (22,5 statt 25,0 mm), die ' +
+    'Beschriftung nach oben verschoben (mittige Grundlinie 14,5, THW-Grundlinie 21,5 mm); ' +
+    'Rahmen und Kopfzone stehen normal. Im Grundsatz das Muster von E.1.6/E.1.14 aus E-a, mit ' +
+    'demselben zusätzlichen Befund wie E.1.27 und E.1.28: der Abstand zwischen mittiger und ' +
+    'THW-Grundlinie ist 7,0 mm, wo 30 der 37 E.1-Dateien 6,0 mm führen — und die Verschiebung ' +
+    'der Fläche erklärt ihn nicht (die Fläche fehlt unten um 2,5 mm, die THW-Zeile wandert um ' +
+    '2,5 mm mit, der mittige Lauf um 3,5 mm). Diese Klasse ist mit E.1.29 dreifach belegt. Der ' +
+    'Katalog baut das Zeichen wie die 22 normgerechten E.1-Dateien.',
+  'E.1.31':
+    'Blaue Füllfläche der Referenz unten um 3,0 mm verkürzt (22,0 statt 25,0 mm), die gesamte ' +
+    'Beschriftung um dieselben 3,0 mm nach oben verschoben (mittige Grundlinie 15,0, ' +
+    'THW-Grundlinie 21,0 mm), Grundlinienabstand normgerecht 6,0 mm; der Rahmen steht normal. ' +
+    'Das Muster von E.1.6/E.1.14 aus E-a, in allen vier Größen zahlengleich mit E.1.23 aus E-b — ' +
+    'dessen Klasse steigt damit von einem auf zwei Fälle. Der Katalog baut das Zeichen wie die ' +
+    '22 normgerechten E.1-Dateien. Die Kopfzone ist von diesem Befund unberührt und eine eigene, ' +
+    'schwerere Sache; sie trägt ein technisches Review mit status: deviation.',
+  'E.1.37':
+    'Das einzige Zeichen des Anhangs mit Gebäudekörper, und der Befund liegt allein an der ' +
+    'mittigen Grundlinie: sie steht bei 19,0 statt 18,0 mm, der Grundlinienabstand damit bei 5,0 ' +
+    'statt 6,0 mm — das Gegenstück zu den 7,0 mm von E.1.27/E.1.28/E.1.29, während 30 der 37 ' +
+    'E.1-Dateien 6,0 mm führen. Drei der vier Normwerte stehen: THW-Grundlinie 23,9995 ≈ 24,0 mm, ' +
+    'Unterkante der Füllfläche 24,9999 ≈ 25,0 mm, rechte Tintenkante des THW-Laufs 29,027 mm wie ' +
+    'in allen 37 Dateien. Die Oberkante der Füllfläche ist gegen die 7,0 mm der Norm nicht ' +
+    'vergleichbar, weil die Füllung bei dieser Körperform zweiteilig ist (Dachdreieck ' +
+    '4,1035…10,0002 mm, Rechteck 11,0000…24,9999 mm, dazwischen ein weißes Band von 1,0 mm). Der ' +
+    'Katalog folgt der Mehrheit und setzt die mittige Grundlinie auf 18,0 mm; er weicht damit um ' +
+    '1,0 mm von der Referenz ab, und das ist im Paarbild sichtbar. E.1.37 ist dabei der einzige ' +
+    'Befund des Anhangs, dessen Unterschied allein an der Lage der Beschriftung hängt: die 14 ' +
+    'übrigen Befunddateien tragen eine verkürzte Füllfläche und zeigen sie als weißen Streifen, ' +
+    'der das Auge führt — hier ist die Fläche unten normgerecht. Ob die 19,0 mm die ' +
+    'Konvention des Gebäudekörpers sind oder ein Defekt dieser einen Datei, entscheidet bei n = 1 ' +
+    'keine Messung — deshalb steht dies als Befund und nicht als Abweichung der Umsetzung.',
 });

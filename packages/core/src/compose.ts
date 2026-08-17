@@ -72,7 +72,7 @@ const FOOT_TEXT_SIZE_MM = 4;
  *
  * | Zone | Referenzmessung (Körper 1/6 bis 31/26 mm) | Regel |
  * |---|---|---|
- * | Mitte | Grundlinie 18,00; Versalhöhe 4,87; Mitte x 16,00 — **keine waagerechte Randvermessung** | 12 mm unter der Körperoberkante, waagerecht mittig; Box 1 mm von beiden Körperkanten (`CENTER_LABEL_BOX_MARGIN_MM`) |
+ * | Mitte | Grundlinie 18,00; Versalhöhe 4,87; Mitte x 16,00 — **keine waagerechte Randvermessung** | 8 mm über der Körperunterkante, waagerecht mittig; Box 1 mm von beiden Körperkanten (`CENTER_LABEL_BOX_MARGIN_MM`) |
  * | unten links | Grundlinie 24,00; Versalhöhe 2,92; linke Kante 3,03 | 2 mm über der Unterkante, 2 mm von der linken Kante (`LABEL_SIDE_MARGIN_MM`) |
  * | unten rechts | Grundlinie 24,00; Versalhöhe 2,92; rechte Kante 29,03 | 2 mm über der Unterkante, 2 mm von der rechten Kante (`LABEL_SIDE_MARGIN_MM`) |
  *
@@ -92,9 +92,40 @@ const FOOT_TEXT_SIZE_MM = 4;
  * Referenz. Für die **Box** des mittigen Laufs gilt diese Übertragung seit E-b nicht mehr, siehe
  * `CENTER_LABEL_BOX_MARGIN_MM`.
  */
-const CENTER_LABEL_BASELINE_FROM_BODY_TOP_MM = 12;
 const BOTTOM_LABEL_BASELINE_FROM_BODY_BOTTOM_MM = 2;
 const LABEL_SIDE_MARGIN_MM = 2;
+
+/**
+ * Die Grundlinie des mittigen Laufs, gerechnet gegen die **Unterkante** der Körperhülle. Bis zum
+ * Teilslice E-c (17. August 2026) stand hier `minY + 12` gegen die Oberkante; an der Körperform
+ * `formation` (Hülle 6…26 mm, Höhe 20 mm) sind „12 mm unter der Oberkante" und „8 mm über der
+ * Unterkante" dieselbe Zahl, und 36 der 37 E.1-Dateien stehen auf dieser einen Form. Die Kante war
+ * damit nie vermessen — sie war gewählt.
+ *
+ * **E.1.37 („Ortsverband") ist die erste Datei des Bestands, an der die beiden Lesarten
+ * auseinandergehen**, und sie entscheidet an gemessenen Werten zugunsten der Unterkante. Der
+ * Gebäudekörper reicht von 3 bis 26 mm; gegen `maxY` gerechnet treffen beide anderen Anker dieser
+ * Datei exakt — `THW`-Grundlinie 23,9995 = maxY − 2 und Unterkante der Füllfläche 24,9999 =
+ * maxY − 1 —, während `minY + 12` die mittige Grundlinie auf 15,000 mm setzte und damit um 4,0 mm
+ * danebenlag (Referenz: 18,9999 mm). Die Box des Laufs verließ dort zusätzlich das Körperpolygon:
+ * ihre Oberkante lag bei 8,9124 mm, ihre beiden oberen Ecken außerhalb von
+ * [16,3] [1,10] [1,26] [31,26] [31,10] — der erste tatsächliche Fall der offenen Kante „nichts
+ * prüft, ob eine Beschriftungsbox im Körper liegt". Mit `maxY − 8` sind es 18,000 mm, Boxoberkante
+ * 11,9124 mm, und alle vier Boxecken liegen innen; ab y 10 mm führt das Polygon die volle Breite.
+ *
+ * **Das ist eine Umformulierung derselben Vermessung gegen die andere Hüllenkante, keine neue
+ * Messung am Gebäudekörper.** Die verbleibende Differenz von 1,0 mm zur Referenz bleibt: E.1.37
+ * setzt seine mittige Grundlinie auf 19,0 mm und führt damit als einzige der 37 Dateien einen
+ * Grundlinienabstand von 5,0 mm, wo 30 von ihnen 6,0 mm führen. Der Katalog folgt der Mehrheit —
+ * der Befund steht in `ANHANG_E_C_FILL_FINDINGS`.
+ *
+ * **Der Preis, benannt:** für die sechs bisher unbeschrifteten Körperformen ändert die Konstante
+ * ihren Wert (`person` und `point` 13 → 23, `post` 14 → 22, `container` 16 → 20, `measure`
+ * 16 → 21, `hazard` 15 → 20). Beide Werte sind dort unvermessen; es geht keine Messung verloren,
+ * aber die Zahl ist eine andere. `compose.test.ts` hält die Konstante an `formation` **und** am
+ * Gebäudekörper fest — nur die zweite Zeile fällt bei einer Rückkehr zur Oberkante.
+ */
+const CENTER_LABEL_BASELINE_FROM_BODY_BOTTOM_MM = 8;
 
 /**
  * Eigene Marge der **Box** des mittigen Laufs gegen die Körperkante: 1 mm statt der 2 mm der
@@ -212,7 +243,7 @@ function labelPrimitives(
   const rightMm = bodyBoundsMm.maxX - LABEL_SIDE_MARGIN_MM;
   const centerBoxLeftMm = bodyBoundsMm.minX + CENTER_LABEL_BOX_MARGIN_MM;
   const centerBoxRightMm = bodyBoundsMm.maxX - CENTER_LABEL_BOX_MARGIN_MM;
-  const centerBaselineMm = bodyBoundsMm.minY + CENTER_LABEL_BASELINE_FROM_BODY_TOP_MM;
+  const centerBaselineMm = bodyBoundsMm.maxY - CENTER_LABEL_BASELINE_FROM_BODY_BOTTOM_MM;
   const bottomBaselineMm = bodyBoundsMm.maxY - BOTTOM_LABEL_BASELINE_FROM_BODY_BOTTOM_MM;
 
   const primitives: Primitive[] = [];

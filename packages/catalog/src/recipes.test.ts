@@ -22,6 +22,8 @@ import {
   ANHANG_E_A_RECIPES,
   ANHANG_E_B_FILL_FINDINGS,
   ANHANG_E_B_RECIPES,
+  ANHANG_E_C_FILL_FINDINGS,
+  ANHANG_E_C_RECIPES,
 } from './recipes-anhang-e.js';
 
 /**
@@ -441,6 +443,149 @@ describe('Anhang E, Teilslice E-b (E.1.17 bis E.1.28)', () => {
     expect(withBottomLeft.map(([section]) => section)).toEqual(['E.1.22']);
     expect(ANHANG_E_B_RECIPES['E.1.22'].spec.labels.bottomLeft).toBe('A');
     expect(ANHANG_E_B_RECIPES['E.1.22'].title).toMatch(/Typ A$/);
+  });
+});
+
+describe('Anhang E, Teilslice E-c (E.1.29 bis E.1.37)', () => {
+  const cases = Object.entries<Recipe>(ANHANG_E_C_RECIPES);
+
+  it('deckt genau die neun Abschnitte E.1.29 bis E.1.37 ab', () => {
+    expect(cases.map(([section]) => section)).toEqual(
+      Array.from({ length: 9 }, (_, index) => `E.1.${index + 29}`),
+    );
+  });
+
+  it('führt E.1 mit E-a und E-b zusammen zu genau 37 lückenlosen Abschnitten', () => {
+    // Diese Zusicherung trägt den Manifest-`scope`: seit E-c steht dort `E.1` statt der 37
+    // Einzelabschnitte, und `uncoveredScope` prüft an einem Präfix nur, ob **eine** Zeile
+    // existiert — nicht die Vollständigkeit. Ohne diesen Test wäre der Zusammenzug genau die
+    // unwiderlegbare Behauptung, die die abschnittsweise Führung bis hierher verhindert hat.
+    const sections = [
+      ...Object.keys(ANHANG_E_A_RECIPES),
+      ...Object.keys(ANHANG_E_B_RECIPES),
+      ...Object.keys(ANHANG_E_C_RECIPES),
+    ];
+    expect(sections).toEqual(Array.from({ length: 37 }, (_, index) => `E.1.${index + 1}`));
+    // Und die Gegenrichtung: kein Rezept des Katalogs beansprucht einen E-Abschnitt außerhalb
+    // von E.1. Anhang E.2 ist auf `vehicle-land`/`vehicle-water` blockiert, und ein `E`-Scope
+    // wäre deshalb falsch — dieser Test hält den Unterschied zwischen `E.1` und `E` fest.
+    const alleE = Object.keys(RECIPES).filter((section) => section.startsWith('E.'));
+    expect(alleE).toEqual(sections);
+  });
+
+  it.each(cases)('%s trägt THW-Blau, das Trägerkürzel THW und seine eigene Referenzdatei', (_section, recipe) => {
+    const drawing = composeFromCatalog(recipe.spec, recipe.title);
+    const body = drawing.children.find((c) => c.role === 'body');
+    expect(body?.style?.fill).toBe('blau');
+    expect(recipe.spec.labels?.bottomRight).toBe('THW');
+    expect(recipe.referenceAsset.startsWith(`${_section}_`)).toBe(true);
+  });
+
+  it('stellt acht Zeichen auf formation und E.1.37 als einziges auf den Gebäudekörper', () => {
+    // Die Körperform ist an der Referenz belegt: 36 der 37 E.1-Dateien tragen dasselbe
+    // Formationsrechteck, und die Gebäudehülle kommt im gesamten Referenzbestand nur in
+    // `1.7_Gebäude.svg` und E.1.37 vor.
+    const gebaeude = cases.filter(([, recipe]) => recipe.spec.kind === 'building');
+    expect(gebaeude.map(([section]) => section)).toEqual(['E.1.37']);
+    for (const [section, recipe] of cases) {
+      if (section === 'E.1.37') continue;
+      expect(recipe.spec.kind, section).toBe('formation');
+    }
+  });
+
+  it('setzt die Beschriftung des Gebäudekörpers auf dieselben Grundlinien wie die Formation', () => {
+    // Der Kernschritt dieses Teilslice, an der Katalogausgabe statt am Kompositionsmotor geprüft:
+    // die mittige Grundlinie rechnet gegen die Körperunterkante. Der Gebäudekörper reicht von 3
+    // bis 26 mm — gegen die Oberkante gerechnet stünde der Lauf bei 15,0 mm, gegen die Unterkante
+    // bei 18,0 mm. Die Referenz setzt ihn auf 18,9999 mm und ihr `THW` auf 23,9995 mm; der
+    // Katalog folgt mit 18,0 mm der Mehrheit der 37 Dateien, der verbleibende Millimeter steht
+    // als Befund in ANHANG_E_C_FILL_FINDINGS.
+    const drawing = composeFromCatalog(
+      ANHANG_E_C_RECIPES['E.1.37'].spec,
+      ANHANG_E_C_RECIPES['E.1.37'].title,
+    );
+    const body = drawing.children.find((c) => c.role === 'body');
+    expect(body).toBeDefined();
+    if (body === undefined) return;
+    expect(boundsOfMm(body)).toMatchObject({ minY: 3, maxY: 26 });
+
+    const [center, bottomRight] = drawing.children.filter(
+      (child): child is Primitive & { type: 'text' } =>
+        child.type === 'text' && child.role === 'label',
+    );
+    expect(center?.content).toBe('OV');
+    expect(center?.y).toBeCloseTo(18, 6);
+    expect(center?.x).toBeCloseTo(16, 6);
+    expect(bottomRight?.content).toBe('THW');
+    expect(bottomRight?.y).toBeCloseTo(24, 6);
+    // Die Box liegt im Körper: ab y 10 mm führt das Gebäudepolygon die volle Breite 1…31 mm, die
+    // Box läuft von 2 bis 30 mm. Mit dem alten Anker lag ihre Oberkante bei 8,9124 mm und ihre
+    // beiden oberen Ecken außerhalb der Hülle — geprüft wird das nach wie vor von keinem Gate.
+    expect(center?.boxMm.yMm).toBeGreaterThan(10);
+  });
+
+  it('trägt drei Kopfzonenbreiten und bei E.1.31 und E.1.37 keine', () => {
+    // Wie in E-b aus `spec.strength` abgeleitet und nicht aus einer Abschnittsliste. Der
+    // Sonderfall ist hier ein doppelter: E.1.37 trägt keine Kopfzone, weil seine Strichebene
+    // außer dem Rahmen nichts führt, und E.1.31 keine, weil die Referenz dort zwei senkrechte
+    // Balken statt eines Stärkegrads setzt — eine deklarierte Abweichung mit eigener Note im
+    // Manifest. Beide fehlenden `strength`-Felder sind Absicht.
+    const marksByStrength: Record<string, number> = { zug: 3, gruppe: 2, trupp: 1 };
+    for (const [section, recipe] of cases) {
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      const head = drawing.children.filter((c) => c.role === 'head');
+      const strength = recipe.spec.strength;
+      expect(head, section).toHaveLength(strength === undefined ? 0 : marksByStrength[strength]);
+    }
+    const ohneKopfzone = cases
+      .filter(([, recipe]) => recipe.spec.strength === undefined)
+      .map(([section]) => section);
+    expect(ohneKopfzone).toEqual(['E.1.31', 'E.1.37']);
+  });
+
+  it('setzt keinen Text unterhalb des Körpers und keine Zusatzkennzeichnung unten links', () => {
+    // Wie in E-a und E-b bleibt die Fußzone unbelegt. Neu ist die zweite Hälfte: „Typ A" kommt
+    // in diesem Block nicht vor, die linke untere Zone bleibt in allen neun Zeichen leer.
+    for (const [section, recipe] of cases) {
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      expect(drawing.children.filter((c) => c.role === 'foot'), section).toHaveLength(0);
+      expect(recipe.spec.labels?.bottomLeft, section).toBeUndefined();
+    }
+  });
+
+  it('nennt die drei Referenzdateien mit Befund und die sechs normgerechten nicht', () => {
+    // Gegenstück zu den Tests über `ANHANG_E_A_FILL_DEFECTS` und `ANHANG_E_B_FILL_FINDINGS`: die
+    // Befunde stehen in den Manifestzeilen, und dieser Test hält fest, welche Dateien betroffen
+    // sind. Die sechs normgerechten werden ausdrücklich als **nicht** betroffen geprüft — sonst
+    // bliebe ein versehentlich ergänzter Befund an ihnen unbemerkt.
+    expect(Object.keys(ANHANG_E_C_FILL_FINDINGS)).toEqual(['E.1.29', 'E.1.31', 'E.1.37']);
+    for (const section of ['E.1.30', 'E.1.32', 'E.1.33', 'E.1.34', 'E.1.35', 'E.1.36']) {
+      expect(Object.hasOwn(ANHANG_E_C_FILL_FINDINGS, section), section).toBe(false);
+    }
+    for (const section of Object.keys(ANHANG_E_C_FILL_FINDINGS)) {
+      expect(Object.hasOwn(ANHANG_E_C_RECIPES, section)).toBe(true);
+    }
+  });
+
+  it('hält die drei Präzisierungen der Befundtexte fest', () => {
+    // Dieselbe Rolle wie der gleichnamige Test in E-b: geprüft wird der **Inhalt** der
+    // Präzisierung, nicht ihr Satzbau. E.1.29 trägt den Grundlinienabstand 7,0 mm, den die
+    // verschobene Fläche nicht erklärt; E.1.31 hat einen normgerechten Abstand und trennt den
+    // Flächenbefund ausdrücklich von der Kopfzone; E.1.37 ist bei n = 1 nicht als Defekt
+    // entscheidbar und sagt das.
+    expect(ANHANG_E_C_FILL_FINDINGS['E.1.29']).toMatch(/7,0 mm/u);
+    expect(ANHANG_E_C_FILL_FINDINGS['E.1.29']).toMatch(/30 der 37/u);
+    expect(ANHANG_E_C_FILL_FINDINGS['E.1.29']).toMatch(/erklärt ihn nicht/u);
+    expect(ANHANG_E_C_FILL_FINDINGS['E.1.31']).toMatch(/normgerecht 6,0 mm/u);
+    expect(ANHANG_E_C_FILL_FINDINGS['E.1.31']).toMatch(/Kopfzone/u);
+    expect(ANHANG_E_C_FILL_FINDINGS['E.1.37']).toMatch(/19,0/u);
+    expect(ANHANG_E_C_FILL_FINDINGS['E.1.37']).toMatch(/5,0/u);
+    expect(ANHANG_E_C_FILL_FINDINGS['E.1.37']).toMatch(/n = 1/u);
+    // Kein Befundtext behauptet eine Absicht der Quelle — wie in E-b wäre das ein Motivsatz in
+    // einem Messbericht und von keiner Messung getragen.
+    for (const [section, text] of Object.entries(ANHANG_E_C_FILL_FINDINGS)) {
+      expect(text, section).not.toMatch(/funktional/iu);
+    }
   });
 });
 
