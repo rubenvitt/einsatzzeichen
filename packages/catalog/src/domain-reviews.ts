@@ -42,6 +42,26 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:E.1.14#primary': { status: 'pending' },
   'bbk-babz-2025:E.1.15#primary': { status: 'pending' },
   'bbk-babz-2025:E.1.16#primary': { status: 'pending' },
+  // Anhang E, Teilslice E-b: Fachzüge, Zugtrupps, Stab und die Logistikeinheiten des THW. Ein
+  // eigener Block und keine erweiterte Zahl oben, weil der E-a-Satz „Bergungs- und Fachgruppen"
+  // diese Einheiten fachlich nicht deckt: hier stehen Führungs- und Unterstellungsverhältnisse
+  // zur Prüfung, nicht nur die Zuordnung eines Kürzels zu einer Gruppe. Drei Fragen sind
+  // ausdrücklich offen und in keinem technischen Gate beantwortbar — ob „FZ-" als Kürzel eines
+  // Musterblatts überhaupt eine Einheit bezeichnet (E.1.17), ob ein Zugtrupp ohne die
+  // Unterstellungsmarke seiner Referenz noch dieselbe Einheit bezeichnet (E.1.19, E.1.24), und
+  // ob „Stab" ohne Stärkeangabe von einem Fachzug unterscheidbar bleibt (E.1.21).
+  'bbk-babz-2025:E.1.17#primary': { status: 'pending' },
+  'bbk-babz-2025:E.1.18#primary': { status: 'pending' },
+  'bbk-babz-2025:E.1.19#primary': { status: 'pending' },
+  'bbk-babz-2025:E.1.20#primary': { status: 'pending' },
+  'bbk-babz-2025:E.1.21#primary': { status: 'pending' },
+  'bbk-babz-2025:E.1.22#primary': { status: 'pending' },
+  'bbk-babz-2025:E.1.23#primary': { status: 'pending' },
+  'bbk-babz-2025:E.1.24#primary': { status: 'pending' },
+  'bbk-babz-2025:E.1.25#primary': { status: 'pending' },
+  'bbk-babz-2025:E.1.26#primary': { status: 'pending' },
+  'bbk-babz-2025:E.1.27#primary': { status: 'pending' },
+  'bbk-babz-2025:E.1.28#primary': { status: 'pending' },
   'bbk-babz-2025:2.1#primary': { status: 'pending' },
   'bbk-babz-2025:2.3#primary': { status: 'pending' },
   'bbk-babz-2025:2.4#primary': { status: 'pending' },

@@ -54,28 +54,78 @@ const FOOT_TEXT_SIZE_MM = 4;
 
 /**
  * Die drei Beschriftungszonen **im** Körper, vermessen an den 16 Referenzdateien E.1.1 bis
- * E.1.16 (11./12. August 2026). Alle 16 tragen dieselben Werte auf zwei Nachkommastellen — die
+ * E.1.16 (11./12. August 2026). Diese 16 tragen dieselben Werte auf zwei Nachkommastellen — die
  * Zonen sind deshalb hier als Layoutregel formuliert und nicht 16-mal am einzelnen Zeichen
  * platziert. Bezugsrahmen ist die Hülle des **tatsächlich platzierten** Körpers, wie bei der
  * Fußzone: verschiebt eine Kopfzone den Körper, wandern die Beschriftungen mit.
  *
+ * Geltungsbereich der Zahlen, seit dem Teilslice E-b (17. August 2026) genauer zu fassen: die
+ * Regel stammt aus den 16 Dateien E.1.1 bis E.1.16, sie ist **keine** Aussage über E.1 insgesamt.
+ * Von den zwölf E-b-Dateien E.1.17 bis E.1.28 weichen zehn ab, und nicht alle im selben Punkt:
+ * E.1.19 und E.1.24 nur bei der Füllfläche (oben 10,0 statt 7,0 mm) und mit normgerechten
+ * Grundlinien 18,0/24,0; E.1.18, E.1.20 und E.1.21 bei der Füllfläche (oben 9,5 mm) und der
+ * mittigen Grundlinie (17,5); E.1.23 sowie E.1.25 bis E.1.28 bei beidem (unten 22,0 oder 22,5
+ * statt 25,0 mm; mittig 14,5 bis 15,5 statt 18,0; `THW` 21,0 oder 21,5 statt 24,0). Nur E.1.17 und
+ * E.1.22 tragen die Werte dieser Tabelle unverändert. Der Katalog bildet auch die abweichenden
+ * Dateien auf die Werte dieser Tabelle ab — dieselbe Entscheidung, die E-a für E.1.6 und E.1.14
+ * getroffen hat.
+ *
  * | Zone | Referenzmessung (Körper 1/6 bis 31/26 mm) | Regel |
  * |---|---|---|
- * | Mitte | Grundlinie 18,00; Versalhöhe 4,87; Mitte x 16,00 | 12 mm unter der Körperoberkante, waagerecht mittig |
- * | unten links | Grundlinie 24,00; Versalhöhe 2,92; linke Kante 3,03 | 2 mm über der Unterkante, 2 mm von der linken Kante |
- * | unten rechts | Grundlinie 24,00; Versalhöhe 2,92; rechte Kante 29,03 | 2 mm über der Unterkante, 2 mm von der rechten Kante |
+ * | Mitte | Grundlinie 18,00; Versalhöhe 4,87; Mitte x 16,00 — **keine waagerechte Randvermessung** | 12 mm unter der Körperoberkante, waagerecht mittig; Box 1 mm von beiden Körperkanten (`CENTER_LABEL_BOX_MARGIN_MM`) |
+ * | unten links | Grundlinie 24,00; Versalhöhe 2,92; linke Kante 3,03 | 2 mm über der Unterkante, 2 mm von der linken Kante (`LABEL_SIDE_MARGIN_MM`) |
+ * | unten rechts | Grundlinie 24,00; Versalhöhe 2,92; rechte Kante 29,03 | 2 mm über der Unterkante, 2 mm von der rechten Kante (`LABEL_SIDE_MARGIN_MM`) |
  *
- * Die Referenz zieht ihre Ränder gegen ein weißes Innenfeld, das 1 mm in den Körper eingerückt
- * ist (`rect` 2/7 bis 30/25 neben dem Körper 1/6 bis 31/26). Der Katalog kennt dieses Innenfeld
- * nicht — `base-symbols.ts` führt die Taktische Formation als **ein** Rechteck, das der
- * Kompositionsmotor mit der Organisationsfarbe füllt. Gegen die Körperkante gerechnet sind es
- * deshalb 2 mm statt 1 mm; der sichtbare Abstand ist derselbe wie in der Referenz.
+ * In der Tabelle stehen damit **zwei** waagerechte Margen, wo bis E-a eine stand, und sie
+ * unterscheiden sich aus einem Grund: die 2 mm sind an den **unteren** Läufen gemessen (linke
+ * Kante 3,03, rechte Kante 29,03). Für die Zone „Mitte" gibt es keine vergleichbare Messung — dort
+ * sind nur Grundlinie, Versalhöhe und Mittenlage ablesbar, kein waagerechter Rand. Die 2 mm waren
+ * für die mittige Box eine von den unteren Läufen übernommene Annahme; ihre vermessene Grenze ist
+ * das weiße Innenfeld der Referenz, also 1 mm Marge und 28 mm Breite — belegt an dessen `rect`
+ * (2/7 bis 30/25) und nicht aus dem Überstand zurückgerechnet.
+ *
+ * Die Referenz zieht ihre Ränder gegen dieses weiße Innenfeld, das 1 mm in den Körper eingerückt
+ * ist (`rect` 2/7 bis 30/25 neben dem Körper 1/6 bis 31/26). Der Katalog kennt das Innenfeld als
+ * eigene Fläche nicht — `base-symbols.ts` führt die Taktische Formation als **ein** Rechteck, das
+ * der Kompositionsmotor mit der Organisationsfarbe füllt. Für die **Anker** der unteren Läufe sind
+ * es gegen die Körperkante deshalb 2 mm statt 1 mm; der sichtbare Abstand ist derselbe wie in der
+ * Referenz. Für die **Box** des mittigen Laufs gilt diese Übertragung seit E-b nicht mehr, siehe
+ * `CENTER_LABEL_BOX_MARGIN_MM`.
  */
 const CENTER_LABEL_BASELINE_FROM_BODY_TOP_MM = 12;
 const BOTTOM_LABEL_BASELINE_FROM_BODY_BOTTOM_MM = 2;
 const LABEL_SIDE_MARGIN_MM = 2;
 
-/** Versalhöhen der beiden Schriftgrade, gemessen an allen 16 Dateien (siehe Tabelle oben). */
+/**
+ * Eigene Marge der **Box** des mittigen Laufs gegen die Körperkante: 1 mm statt der 2 mm der
+ * unteren Läufe, die Box läuft damit von 2 bis 30 mm und ist 28 mm breit. Betroffen ist
+ * ausschließlich die zugesicherte Box — Lage und Anker des mittigen Laufs (`anchor: 'middle'` auf
+ * der Körpermitte) bleiben unverändert, ebenso Anker und Boxen der beiden unteren Läufe. Deshalb
+ * eine zweite Konstante und nicht ein gesenktes `LABEL_SIDE_MARGIN_MM`: das würde die vermessenen
+ * unteren Anker 3,03/29,03 still mitverschieben.
+ *
+ * Der Anlass ist eine Messung an der **eigenen** Ausgabe (Teilslice E-b, 17. August 2026):
+ * `Log-MW` (E.1.26) braucht in Arimo bei Schriftgrad 7,0786 mm **26,156 mm** Tinte, die bis dahin
+ * zugesicherte Box war **26,000 mm** breit — 0,359 mm Überstand rechts, bei 2048 px und bei 256 px
+ * reproduziert. Der Lauf passt auch perfekt zentriert nicht (0,078 mm je Seite), und der Überstand
+ * ist strichunabhängig (gleich mit U+002D, U+2010 und U+2011). Die Referenz setzt denselben Lauf
+ * mit 25,13 mm; die Ursache ist ausschließlich die Schriftwahl, nicht die Ablesung. Alle 22
+ * anderen Läufe der zwölf E-b-Zeichen halten die alte Box ein, nächster Fall ist `Log-VG` mit
+ * 23,297 mm.
+ *
+ * Die Kehrseite gehört in denselben Kommentar: der längste mittige Lauf der **Referenz** ist
+ * `Log-MW` mit 25,13 mm. Die 28 mm sind damit eine **Hüllengrenze, keine Referenzlaufgrenze** —
+ * sie lassen Läufe zu, die die Referenz nie setzt. Das sichtbar zu machen ist billiger, als es zu
+ * verdecken: wer diese Box als Aussage darüber liest, wie breit die Referenz ihre Kürzel setzt,
+ * liest sie falsch.
+ *
+ * Der verworfene Weg war, den Schriftgrad des Laufs auf 7,036 mm zu senken (26,000/26,156 ×
+ * 7,0786). Er kollidiert mit der E-a-Linie „Schriftgrad ist aus der Versalhöhe abgeleitet, nicht
+ * gewählt" (siehe `CENTER_LABEL_SIZE_MM`).
+ */
+const CENTER_LABEL_BOX_MARGIN_MM = 1;
+
+/** Versalhöhen der beiden Schriftgrade, gemessen an den 16 Dateien E.1.1 bis E.1.16 (Tabelle oben). */
 const CENTER_LABEL_CAP_HEIGHT_MM = 4.87;
 const BOTTOM_LABEL_CAP_HEIGHT_MM = 2.92;
 
@@ -84,6 +134,11 @@ const BOTTOM_LABEL_CAP_HEIGHT_MM = 2.92;
  * `ARIMO_CAP_HEIGHT_FRACTION` ist der Punkt: an der Referenz ist die Versalhöhe ablesbar, der
  * Schriftgrad nicht (die Kürzel liegen dort in Kurven umgewandelt vor). Ein direkt
  * hingeschriebener Schriftgrad wäre eine geratene Zahl, die zufällig ähnlich aussieht.
+ *
+ * Mitzuprüfen bei jeder Änderung dieser Schriftgrade: die senkrechte Luft ist knapp. Die
+ * `Log`-Läufe aus E-b enden bei 19,469 mm gegen eine Boxunterkante von 19,501 mm — 0,032 mm bei
+ * `ALPHABETIC_DESCENT_FRACTION` = 0,212. Waagerecht ist nach der Weitung auf 28 mm Platz, senkrecht
+ * praktisch keiner.
  */
 const CENTER_LABEL_SIZE_MM = CENTER_LABEL_CAP_HEIGHT_MM / ARIMO_CAP_HEIGHT_FRACTION;
 const BOTTOM_LABEL_SIZE_MM = BOTTOM_LABEL_CAP_HEIGHT_MM / ARIMO_CAP_HEIGHT_FRACTION;
@@ -104,8 +159,10 @@ function minRenderPxFor(sizeMm: number, viewBoxWidthMm: number): number {
 /**
  * Ein Beschriftungslauf im Körper. `boxMm` ist wie bei jedem Textprimitiv eine Zusicherung des
  * Autors, keine Messung — die waagerechte Ausdehnung ist deshalb bewusst eng gefasst: der
- * mittige Lauf bekommt die Körperbreite abzüglich beider Ränder, die beiden unteren je ihre
- * Hälfte bis zur Körpermitte. Damit ist „passt in seine Zone" eine prüfbare Aussage und die
+ * mittige Lauf bekommt die Körperbreite abzüglich zweimal `CENTER_LABEL_BOX_MARGIN_MM` (also das
+ * vermessene Innenfeld, 28 mm), die beiden unteren je ihre Hälfte von ihrem Anker
+ * (`LABEL_SIDE_MARGIN_MM`) bis zur Körpermitte. Damit ist „passt in seine Zone" eine prüfbare
+ * Aussage — für den mittigen Lauf gegen das Innenfeld, für die unteren gegen ihre Ränder — und die
  * beiden unteren Läufe können sich nicht überlappen, ohne dass ein Gate es meldet
  * (Rasterprüfung in `fonts.test.ts`).
  */
@@ -148,8 +205,13 @@ function labelPrimitives(
   viewBoxWidthMm: number,
 ): Primitive[] {
   const centerXMm = (bodyBoundsMm.minX + bodyBoundsMm.maxX) / 2;
+  // `leftMm`/`rightMm` sind die **Anker** der unteren Läufe und zugleich die Kanten ihrer Boxen.
+  // Die Box des mittigen Laufs rechnet seit E-b mit der eigenen Marge — deshalb zwei Paare und
+  // nicht ein umgerechnetes: sonst wanderten die vermessenen unteren Anker 3,03/29,03 mit.
   const leftMm = bodyBoundsMm.minX + LABEL_SIDE_MARGIN_MM;
   const rightMm = bodyBoundsMm.maxX - LABEL_SIDE_MARGIN_MM;
+  const centerBoxLeftMm = bodyBoundsMm.minX + CENTER_LABEL_BOX_MARGIN_MM;
+  const centerBoxRightMm = bodyBoundsMm.maxX - CENTER_LABEL_BOX_MARGIN_MM;
   const centerBaselineMm = bodyBoundsMm.minY + CENTER_LABEL_BASELINE_FROM_BODY_TOP_MM;
   const bottomBaselineMm = bodyBoundsMm.maxY - BOTTOM_LABEL_BASELINE_FROM_BODY_BOTTOM_MM;
 
@@ -162,8 +224,8 @@ function labelPrimitives(
         centerBaselineMm,
         'middle',
         centerXMm,
-        leftMm,
-        rightMm - leftMm,
+        centerBoxLeftMm,
+        centerBoxRightMm - centerBoxLeftMm,
         viewBoxWidthMm,
       ),
     );

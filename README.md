@@ -101,9 +101,9 @@ fachkundige Person geprüft werden. Die Abschlussentscheidung für D.1 steht in
 D.2 deckt Kapitel 5.8 der projektinternen Coverage-Baseline technisch mit 61 State-IDs und 67
 Darstellungen ab, darunter sechs getrennt adressierbare Alternativdarstellungen. Damit enthält
 der Katalog zusammen mit D.3 und D.4 insgesamt 254 Piktogrammdarstellungen: 92 Capabilities, 67
-States, 53 IuK-, 28 Schadens- und 14 Vegetationsbrandzeichen. Die 281 globalen Renderfälle setzen
-sich aus acht Grundzeichen, 19 Rezepten und diesen 254 Piktogrammen zusammen — drei Rezepte
-belegen den Kompositionsmotor, die übrigen 16 sind der Teilslice E-a (siehe unten).
+States, 53 IuK-, 28 Schadens- und 14 Vegetationsbrandzeichen. Die 293 globalen Renderfälle setzen
+sich aus acht Grundzeichen, 31 Rezepten und diesen 254 Piktogrammen zusammen — drei Rezepte
+belegen den Kompositionsmotor, die übrigen 28 sind die Teilslices E-a und E-b (siehe unten).
 
 Alle 67 State-Darstellungen sind eigenständige Zeichen mit kanonischer 32×32-mm-Platzierung und
 Standalone-Clipping. D.2 führt weder eine allgemeine State-Komposition noch eine Integration in
@@ -163,6 +163,33 @@ Text 4,5:1 knapp verfehlte — beide Werte sind nachgezogen. Alles in
 Die paarweise Sichtprüfung gegen die Referenz fand zwei Referenzdateien mit zu kurzer Füllfläche,
 die jedes Gate bestanden hatten:
 [`docs/reviews/2026-08-12-e-a-visual-qa.md`](./docs/reviews/2026-08-12-e-a-visual-qa.md).
+
+## E-b: zwölf weitere THW-Zeichen, damit 28 von 37
+
+E.1.17 bis E.1.28 — drei Fachzüge, zwei Zugtrupps, ein Stab, vier Fachgruppen, zwei Trupps. Sie
+brauchten keinen neuen Stärkegrad und keine neue Farbe, aber zwei Entscheidungen, die über sie
+hinausreichen.
+
+**Die Box des mittigen Beschriftungslaufs ist jetzt 28 statt 26 mm breit.** `Log-MW` (E.1.26)
+braucht in Arimo 26,156 mm, wo die Referenzschrift 25,13 mm setzt — der Lauf passte auch perfekt
+zentriert nicht in seine Box. Die 2 mm Marge waren an den **unteren** Läufen gemessen (linke Kante
+3,03 mm) und für die mittige Zone eine übernommene Annahme; deren vermessene Grenze ist das weiße
+Innenfeld der Referenz. Die Box ist damit eine Hüllengrenze und keine Referenzlaufgrenze, und die
+16 Zeichen aus E-a sind im Bild unberührt.
+
+**Drei Zeichen weichen bewusst von ihrer Referenz ab** und tragen dafür ein technisches
+`deviation`. E.1.19 und E.1.24 bilden je drei Marken *im* Körper nicht ab — die
+Unterstellungsmarke des Zugtrupps —, weil der Bestand für eine Platzierungsregel keine vermessene
+Konstante hergibt: drei Fälle über drei Kapitel, in drei verschiedenen Konstruktionen, und `D.1.9`
+trägt bei gleichem Begriff keine. E.1.17 setzt sein Kürzel mittig, wo die Referenz 2,0 mm nach
+links abweicht. Nebenbei widerlegt der Slice die Annahme seiner eigenen Aufgabenstellung: E.1.18
+trägt keine Zusatzgeometrie, nur eine deckungsgleiche Rahmendublette. Alles in
+[`docs/decisions/2026-08-17-anhang-e-b.md`](./docs/decisions/2026-08-17-anhang-e-b.md).
+
+Zehn der zwölf Referenzdateien tragen Befunde an der Füllfläche; nur E.1.17 und E.1.22 sind
+normgerecht. Die Sichtprüfung aller zwölf fand keinen Fehler an der Umsetzung und belegt, dass
+`minRenderPx` auch bei den längsten Kürzeln des Bestands eine ehrliche Angabe ist:
+[`docs/reviews/2026-08-17-e-b-visual-qa.md`](./docs/reviews/2026-08-17-e-b-visual-qa.md).
 
 ## Der lokale Referenzbestand
 

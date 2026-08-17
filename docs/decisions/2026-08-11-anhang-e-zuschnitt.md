@@ -81,6 +81,16 @@ Die Grenzen folgen der Kapitelreihenfolge, liegen aber dort, wo die Bauart wechs
 | **E-b** Züge, Zugtrupps, Logistik | E.1.17 – E.1.28 | 12 | Enthält die drei Zeichen mit Zusatzgeometrie (E.1.18, E.1.19, E.1.24) und E.1.21 ohne Kopfzone. |
 | **E-c** Trupps, Teams, Ortsverband | E.1.29 – E.1.37 | 9 | Enthält als einziges Zeichen des Anhangs den Gebäudekörper (E.1.37). |
 
+> **Nachtrag vom 17. August 2026 (Teilslice E-b, LFH-441).** Die Angabe „die drei Zeichen mit
+> Zusatzgeometrie (E.1.18, E.1.19, E.1.24)" in der E-b-Zeile ist **für E.1.18 falsch**. Seine
+> Strichebene trägt den Rahmenpfad, eine deckungsgleiche Rahmendublette (Differenz 0,001 Einheiten
+> = 0,00035 mm) und eine gewöhnliche `zug`-Kopfreihe bei cy 9,921 — sonst nichts. Zusatzgeometrie
+> tragen nur **E.1.19 und E.1.24**: je drei Marken r 1,5 mm bei cy 8,100 mm, zeichenidentisch mit
+> der `zug`-Kopfreihe und um 4,600 mm nach unten versetzt. Diese Notiz hat die Zusatzgeometrie
+> nicht vermessen, sondern aus dem Vorkommen von Zusatzpfaden geschlossen; die Messung steht in
+> [`2026-08-17-anhang-e-b.md`](./2026-08-17-anhang-e-b.md). Die Aussage bleibt hier stehen, damit
+> sichtbar ist, dass sie es war.
+
 ### Blockiert auf LFH-424
 
 | Teilslice | Abschnitte | Zeichen | Fehlt vorher |

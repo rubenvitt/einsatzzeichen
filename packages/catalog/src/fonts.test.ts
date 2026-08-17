@@ -251,7 +251,9 @@ describe('Rasterevidenz für Text (resvgFontOptions())', () => {
   it('prüft alle Zeichen mit Beschriftungszonen, nicht nur eine Auswahl', () => {
     // Sonst bliebe die Prüfung unten still grün, falls die Rezepte einmal ohne Beschriftung
     // dastünden — dieselbe Rolle wie „rastert Text überhaupt" für die Schriftbindung.
-    expect(labelRecipes).toHaveLength(16);
+    // 16 Zeichen aus E-a plus die zwölf aus E-b; die Prüfung unten läuft generisch über
+    // `RECIPES` und braucht für die neuen Kürzelsätze keine eigene Verdrahtung.
+    expect(labelRecipes).toHaveLength(28);
   });
 
   it.each(labelRecipes)(

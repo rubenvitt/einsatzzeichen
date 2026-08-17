@@ -24,20 +24,26 @@ describe('coverage CLI', () => {
 
     coverage();
 
-    expect(manifestReviews).toBe(292);
+    expect(manifestReviews).toBe(304);
     expect(sourceReviews).toBe(13);
     expect(profileReviews).toBe(1);
-    expect(openReviews).toBe(306);
+    expect(openReviews).toBe(318);
     expect(lines).toContain(
       'Umfang:      1, 2, 4, 5.4, 5.8, C.1.1, C.1.2, D.3.7, E.1.1, E.1.2, E.1.3, E.1.4, ' +
         'E.1.5, E.1.6, E.1.7, E.1.8, E.1.9, E.1.10, E.1.11, E.1.12, E.1.13, E.1.14, E.1.15, ' +
-        'E.1.16, J.1, J.2, J.3, J.4, K, L, M',
+        'E.1.16, E.1.17, E.1.18, E.1.19, E.1.20, E.1.21, E.1.22, E.1.23, E.1.24, E.1.25, ' +
+        'E.1.26, E.1.27, E.1.28, J.1, J.2, J.3, J.4, K, L, M',
     );
     expect(lines).toContain(
       `Offene fachliche Reviews: ${openReviews} ` +
         `(${manifestReviews} Manifestreviews, ${sourceReviews} Quellenreviews, ` +
         `${profileReviews} Profilreview)`,
     );
+    // Die Zeile bleibt nach E-b wortgleich, obwohl das Manifest seit dem Teilslice drei
+    // technische Abweichungen führt (E.1.17, E.1.19, E.1.24): `ReleaseBlockers` liest
+    // ausschließlich `review.domain`, und die Zeile sagt das mit „mit domain: deviation" auch.
+    // Sie ist damit korrekt und zugleich die Stelle, an der technische Abweichungen im Betrieb
+    // unsichtbar bleiben — auffindbar sind sie nur in der Note ihrer Manifestzeile.
     expect(lines).toContain(
       `1.0-Blocker: ${manifestReviews} Manifestreviews, ${sourceReviews} Quellenreviews und ` +
         `${profileReviews} Profilreview noch ohne abgeschlossenes fachliches Review; ` +
