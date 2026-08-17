@@ -179,6 +179,24 @@ Gemessen am 12. August 2026 auf `claude/lfh-440-3253b1`:
   Schema- oder Kernschritt — mit einer Einschränkung: E-b enthält laut Zuschnitt drei Zeichen mit
   Zusatzgeometrie (E.1.18, E.1.19, E.1.24), die dieser Teilslice nicht berührt hat.
 
+> **Nachtrag vom 17. August 2026 (Teilslice E-b, LFH-441).** Drei Angaben dieser Notiz sind
+> nachzuziehen:
+>
+> 1. Die aus dem Zuschnitt übernommene Zahl **drei** Zeichen mit Zusatzgeometrie ist falsch. E.1.18
+>    trägt keine: nur Rahmenpfad, eine deckungsgleiche Rahmendublette (Differenz 0,00035 mm) und
+>    eine gewöhnliche `zug`-Kopfreihe. Es sind **zwei** — E.1.19 und E.1.24.
+> 2. Die Einschätzung „brauchen keinen weiteren Schema- oder Kernschritt" hat für E-b **nicht**
+>    gehalten, allerdings aus einem anderen Grund als der Zusatzgeometrie: `Log-MW` (E.1.26)
+>    braucht in Arimo 26,156 mm, wo die Beschriftungsbox 26,000 mm breit war. Die Box des mittigen
+>    Laufs rechnet seit E-b mit einer eigenen Marge von 1 mm (28 mm statt 26 mm); die Anker der
+>    unteren Läufe sind unverändert. Die 16 Zeichen dieses Slice sind davon im Bild unberührt.
+> 3. Abschnitt 5: E-a deckte 16 der 37 E.1-Abschnitte ab, mit E-b sind es **28**. Nur E-c
+>    (LFH-442) fehlt noch, bevor die Einzelabschnitte an `E.1` zurücktreten.
+>
+> Die Messung und die Begründung stehen in
+> [`2026-08-17-anhang-e-b.md`](./2026-08-17-anhang-e-b.md). Die Aussagen bleiben hier stehen, damit
+> sichtbar ist, dass der Folgeslice sie berichtigt hat.
+
 ## 8. Reviewgrenze
 
 Diese Notiz trifft **keine fachliche Aussage** über Anhang E. Sie hält fest, wie die 16 Zeichen

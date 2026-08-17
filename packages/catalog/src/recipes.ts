@@ -6,7 +6,7 @@ import { MINIMUM_TEXT_CONTRAST } from './pictograms/contrast-contract.js';
 import { pictogram } from './pictograms/index.js';
 import { strengthHead } from './strengths.js';
 import { describeSymbolSpec } from './labels.js';
-import { ANHANG_E_A_RECIPES } from './recipes-anhang-e.js';
+import { ANHANG_E_A_RECIPES, ANHANG_E_B_RECIPES } from './recipes-anhang-e.js';
 
 const PORTS: CatalogPorts = {
   baseDrawing,
@@ -34,10 +34,13 @@ export interface Recipe {
  * Die drei Einträge unten sind die Belegfälle des Motors aus dem Kernslice — je einer für
  * Kopfzone als Stapel (C.1.1), als Reihe (C.1.2) und am gedrehten Quadrat (D.3.7). Die 16
  * Einträge aus `ANHANG_E_A_RECIPES` sind der erste Bestand, der über Belegfälle hinausgeht:
- * ein vollständiger Abschnitt der Baseline, gebaut aus denselben Mechanismen.
+ * ein vollständiger Abschnitt der Baseline, gebaut aus denselben Mechanismen. Die zwölf aus
+ * `ANHANG_E_B_RECIPES` setzen ihn fort und belegen zusätzlich, dass die Zonenregel gegen alle
+ * Kopfzonenbreiten trägt — E-a war ein Block aus `gruppe`, E-b bringt `zug` und `trupp` dazu.
  */
 export const RECIPES = {
   ...ANHANG_E_A_RECIPES,
+  ...ANHANG_E_B_RECIPES,
   'C.1.1': {
     title: 'Löschstaffel',
     referenceAsset: 'C.1.1_Löschstaffel.svg',

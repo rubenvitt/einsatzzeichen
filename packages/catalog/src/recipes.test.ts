@@ -17,7 +17,12 @@ import {
   labelContrastRequirements,
   type Recipe,
 } from './recipes.js';
-import { ANHANG_E_A_FILL_DEFECTS, ANHANG_E_A_RECIPES } from './recipes-anhang-e.js';
+import {
+  ANHANG_E_A_FILL_DEFECTS,
+  ANHANG_E_A_RECIPES,
+  ANHANG_E_B_FILL_FINDINGS,
+  ANHANG_E_B_RECIPES,
+} from './recipes-anhang-e.js';
 
 /**
  * Effektive y-Lage der waagerechten Brandbekämpfungs-Linie: ihre Autorenkoordinate plus die
@@ -294,6 +299,148 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
       context: 'Beschriftung im Körper auf Organisation thw',
       minimum: 4.5,
     });
+  });
+});
+
+describe('Anhang E, Teilslice E-b (E.1.17 bis E.1.28)', () => {
+  const cases = Object.entries<Recipe>(ANHANG_E_B_RECIPES);
+
+  it('deckt genau die zwölf Abschnitte E.1.17 bis E.1.28 ab', () => {
+    expect(cases.map(([section]) => section)).toEqual(
+      Array.from({ length: 12 }, (_, index) => `E.1.${index + 17}`),
+    );
+  });
+
+  it.each(cases)('%s steht auf blauem formation-Körper mit Trägerkürzel THW', (_section, recipe) => {
+    const drawing = composeFromCatalog(recipe.spec, recipe.title);
+    const body = drawing.children.find((c) => c.role === 'body');
+    expect(body?.style?.fill).toBe('blau');
+    expect(recipe.spec.kind).toBe('formation');
+    expect(recipe.spec.labels?.bottomRight).toBe('THW');
+    expect(recipe.referenceAsset.startsWith(`${_section}_`)).toBe(true);
+  });
+
+  it('führt drei Kopfzonenbreiten und bei E.1.21 keine', () => {
+    // E-a konnte diese Zusage mit einer Konstante führen (zwei Marken, eine Ausnahme); hier ist
+    // sie es nicht mehr: der Block belegt erstmals alle drei Reihenbreiten des Kompositionsmotors
+    // in einem Kapitel. Die Erwartung leitet sich deshalb aus `spec.strength` ab statt aus einer
+    // Abschnittsliste — sonst wäre sie eine zweite Abschrift derselben Rezepte.
+    //
+    // `Stab` trägt keine Kopfzone: ein Führungsgremium hat keine Mannschaftsstärke, das fehlende
+    // `strength` ist Absicht (wie E.1.3 in E-a) und dieser Test hält das fest, damit ein später
+    // ergänzter Grad als Änderung auffällt und nicht als Vervollständigung durchgeht.
+    const marksByStrength: Record<string, number> = { zug: 3, gruppe: 2, trupp: 1 };
+    for (const [section, recipe] of cases) {
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      const head = drawing.children.filter((c) => c.role === 'head');
+      const strength = recipe.spec.strength;
+      expect(head, section).toHaveLength(strength === undefined ? 0 : marksByStrength[strength]);
+    }
+    // Eine Zusicherung „E.1.21 trägt kein `strength`" ist hier bewusst **nicht** geschrieben: sie
+    // lässt sich nicht einmal formulieren. `ANHANG_E_B_RECIPES` ist `as const satisfies`, der
+    // Literaltyp dieses Rezepts kennt das Feld gar nicht, und `.spec.strength` scheitert am
+    // Typcheck (TS2339) statt zur Laufzeit `undefined` zu liefern. Der Compiler hält den
+    // Sonderfall damit strenger fest als ein Test es könnte; die Zeile darüber prüft die sichtbare
+    // Folge — keine Kopfmarke.
+  });
+
+  it('setzt die Bindestriche der Kürzel als U+002D und keinen anderen Strich', () => {
+    // Gemessen, nicht gewählt: die Hyphenklasse (U+002D / U+2010 / U+2011, in Arimo bildgleich,
+    // 1,750 × 0,563 mm) trifft den Referenzbalken (1,933 × 0,579 mm) auf 0,18 mm, der
+    // Halbgeviertstrich U+2013 verfehlt ihn mit Faktor 2,0. Zwischen den drei bildgleichen Formen
+    // entscheidet nichts am Bild — dieser Test hält deshalb nur fest, dass kein Strich aus einer
+    // anderen Klasse hineingerät, etwa durch eine Autokorrektur beim Bearbeiten der Kürzel.
+    const withHyphen = cases.filter(([, recipe]) => /-/u.test(recipe.spec.labels?.center ?? ''));
+    expect(withHyphen.map(([section]) => section)).toEqual([
+      'E.1.17',
+      'E.1.18',
+      'E.1.19',
+      'E.1.23',
+      'E.1.24',
+      'E.1.25',
+      'E.1.26',
+      'E.1.27',
+      'E.1.28',
+    ]);
+    for (const [section, recipe] of cases) {
+      expect(recipe.spec.labels?.center, section).not.toMatch(/[‐‑–—−]/u);
+    }
+  });
+
+  it('nennt die zehn Referenzdateien mit Befund an der Füllfläche und keine weitere', () => {
+    // Gegenstück zum E-a-Test über `ANHANG_E_A_FILL_DEFECTS`: die Befunde stehen in den
+    // Manifestzeilen, und dieser Test hält fest, welche Dateien betroffen sind, damit die Notiz
+    // dort nicht zur Behauptung ohne Beleg wird. Die beiden normgerechten Dateien werden
+    // ausdrücklich als **nicht** betroffen geprüft — sonst bliebe ein versehentlich ergänzter
+    // Befund an E.1.17 oder E.1.22 unbemerkt.
+    expect(Object.keys(ANHANG_E_B_FILL_FINDINGS)).toEqual([
+      'E.1.18',
+      'E.1.19',
+      'E.1.20',
+      'E.1.21',
+      'E.1.23',
+      'E.1.24',
+      'E.1.25',
+      'E.1.26',
+      'E.1.27',
+      'E.1.28',
+    ]);
+    expect(Object.hasOwn(ANHANG_E_B_FILL_FINDINGS, 'E.1.17')).toBe(false);
+    expect(Object.hasOwn(ANHANG_E_B_FILL_FINDINGS, 'E.1.22')).toBe(false);
+    for (const section of Object.keys(ANHANG_E_B_FILL_FINDINGS)) {
+      expect(Object.hasOwn(ANHANG_E_B_RECIPES, section)).toBe(true);
+    }
+  });
+
+  it('hält die drei Präzisierungen der Befundtexte fest', () => {
+    // Die drei Sätze sind das Ergebnis der Messphase und die Stellen, an denen ein Befundtext am
+    // leichtesten zu einer Aussage wird, die die Messung nicht deckt. Der Test prüft sie am Text,
+    // weil der Text die Reviewnote ist: E.1.18/E.1.20/E.1.21 folgen ausdrücklich **nicht** dem
+    // E-a-Muster (2,5 mm Fläche gegen 0,5 mm Grundlinie) und bleiben in der Einordnung offen;
+    // E.1.27/E.1.28 tragen zusätzlich den Grundlinienabstand 7,0 statt 6,0 mm; bei E.1.19/E.1.24
+    // ist die Gleichzeitigkeit gemessen, nicht eine Absicht.
+    // Geprüft wird der **Inhalt** der Präzisierung, nicht ihr Satzbau: die Verneinung, der
+    // Bezug auf das E-a-Muster und die offene Einordnung. Eine Bindung an einen ganzen Satz wäre
+    // hier die falsche Strenge — sie bräche beim Umformulieren, ohne dass die Aussage sich ändert.
+    for (const section of ['E.1.18', 'E.1.20', 'E.1.21']) {
+      const text = ANHANG_E_B_FILL_FINDINGS[section];
+      expect(text, section).toMatch(/\*\*nicht\*\*/u);
+      expect(text, section).toMatch(/E\.1\.6\/E\.1\.14/u);
+      expect(text, section).toMatch(/offen/u);
+      // Der Kern des Befunds: 2,5 mm Fläche gegen 0,5 mm Grundlinie, nicht der gleiche Betrag.
+      expect(text, section).toMatch(/9,5/u);
+      expect(text, section).toMatch(/17,5/u);
+    }
+    for (const section of ['E.1.27', 'E.1.28']) {
+      expect(ANHANG_E_B_FILL_FINDINGS[section], section).toMatch(/7,0 mm/u);
+      expect(ANHANG_E_B_FILL_FINDINGS[section], section).toMatch(/6,0 mm/u);
+    }
+    for (const section of ['E.1.19', 'E.1.24']) {
+      expect(ANHANG_E_B_FILL_FINDINGS[section], section).toMatch(/Gleichzeitigkeit/u);
+      expect(ANHANG_E_B_FILL_FINDINGS[section], section).toMatch(/nicht eine Absicht/u);
+    }
+    // Kein Befundtext behauptet eine Funktion der Verkürzung — das wäre ein Motivsatz in einem
+    // Messbericht und von keiner Messung getragen.
+    for (const [section, text] of Object.entries(ANHANG_E_B_FILL_FINDINGS)) {
+      expect(text, section).not.toMatch(/funktional/iu);
+    }
+  });
+
+  it('setzt keinen Text unterhalb des Körpers', () => {
+    // Wie in E-a: die Fußzone bleibt für Anhang E unbelegt. Stünde hier ein `foot`-Lauf, hätte
+    // jemand `designation` mit den Beschriftungszonen verwechselt.
+    for (const [section, recipe] of cases) {
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      expect(drawing.children.filter((c) => c.role === 'foot'), section).toHaveLength(0);
+    }
+  });
+
+  it('führt die Zusatzkennzeichnung unten links nur bei E.1.22', () => {
+    // „Typ A" ist im ganzen Block einmal belegt; ein Typ B existiert im Referenzbestand nicht.
+    const withBottomLeft = cases.filter(([, recipe]) => recipe.spec.labels?.bottomLeft !== undefined);
+    expect(withBottomLeft.map(([section]) => section)).toEqual(['E.1.22']);
+    expect(ANHANG_E_B_RECIPES['E.1.22'].spec.labels.bottomLeft).toBe('A');
+    expect(ANHANG_E_B_RECIPES['E.1.22'].title).toMatch(/Typ A$/);
   });
 });
 

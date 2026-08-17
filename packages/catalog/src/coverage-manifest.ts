@@ -12,7 +12,12 @@ import { resolveElement } from './elements.js';
 import { ALL_PICTOGRAMS } from './pictograms/index.js';
 import { deepFreeze, type DeepReadonly } from './readonly-data.js';
 import { RECIPES } from './recipes.js';
-import { ANHANG_E_A_FILL_DEFECTS, ANHANG_E_A_RECIPES } from './recipes-anhang-e.js';
+import {
+  ANHANG_E_A_FILL_DEFECTS,
+  ANHANG_E_A_RECIPES,
+  ANHANG_E_B_FILL_FINDINGS,
+  ANHANG_E_B_RECIPES,
+} from './recipes-anhang-e.js';
 
 /**
  * Migration nach Slice 2: `technical` ist für alle elf Einträge `approved`, weil das Kriterium
@@ -134,17 +139,105 @@ const ANHANG_E_A_TECHNICAL_REVIEW: Review = {
 };
 
 /**
- * Zwei der 16 Referenzdateien tragen eine zu kurze blaue Füllfläche (siehe
- * `ANHANG_E_A_FILL_DEFECTS`). Der Katalog baut sie wie die 14 fehlerfreien; die Abweichung
- * gehört damit in ihre Manifestzeile und nicht nur in einen Quellkommentar.
+ * Technisches Review der zwölf Zeichen aus E-b. Eigener Eintrag statt einer erweiterten
+ * E-a-Konstante, weil das Datum die Provenienz trägt: die 16 E-a-Zeilen sind am 12. August
+ * gegengelesen worden, die zwölf hier am 17. Eine gemeinsame Konstante hätte dieselbe Prüfung
+ * für beide behauptet.
+ */
+const ANHANG_E_B_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-17',
+  note:
+    'Körperhülle per matchFingerprint gegen die Referenz gegated. Was dieses Gate dabei nicht ' +
+    'sieht, gehört zur Aussage: `pickShape` greift bei allen E.1-Kennzahlensätzen die ring-Form ' +
+    '1/6 bis 31/26, die in allen 37 Dateien dieselbe ist — die verkürzten Füllflächen und die ' +
+    'Marken im Körper erreicht es gar nicht. Für die Beschriftungszonen prüft die Rasterprüfung ' +
+    'in fonts.test.ts die tatsächliche Tinte aller 28 Kürzelsätze aus E-a und E-b gegen die ' +
+    'deklarierte boxMm; der längste Lauf `Log-MW` hat dabei die Box des mittigen Laufs von 26 ' +
+    'auf 28 mm geweitet (er braucht 26,156 mm Tinte). Dazu die globalen Mehrgrößen-, viewBox-, ' +
+    'Metadaten- und Kontrast-Gates; ein neuer Kontrastvertrag entsteht nicht, weisser Text auf ' +
+    'blau steht seit E-a als eigene 4,5:1-Anforderung im A11y-Gate. Die zwölf Referenzdateien ' +
+    'sind einzeln vermessen und doppelt gegengelesen; daraus stammen die zehn ' +
+    'Füllflächenbefunde und die drei deklarierten Abweichungen.',
+};
+
+/**
+ * Die drei Zeichen aus E-b, bei denen die **Umsetzung von der Quelle** abweicht — im Unterschied
+ * zu den zehn Füllflächenbefunden, wo die Quelle von sich selbst abweicht und die Umsetzung der
+ * Mehrheit der Quelle folgt. Genau diese Richtung bezeichnet `deviation` im Reviewmodell, deshalb
+ * setzen nur diese drei den Status um.
+ *
+ * Was das Gate damit leistet und was nicht: `reviewIssues` erzwingt zu einem `deviation` einen
+ * Reviewer, ein gültiges ISO-Datum und eine begründende Notiz — dass die Begründung stimmt,
+ * prüft es nicht. Und `ReleaseBlockers` kennt ausschließlich `review.domain`: diese drei
+ * Abweichungen erscheinen in **keinem** Blocker und in **keiner** CLI-Zeile. Wer sie nach diesem
+ * Slice noch finden können soll, findet sie hier und in der Entscheidungsnotiz.
+ */
+const ANHANG_E_B_DEVIATIONS: Readonly<Record<string, string>> = Object.freeze({
+  'E.1.17':
+    'Der mittige Referenzlauf steht 2,0009 mm links der Körpermitte (sein „F" beginnt bei ' +
+    'x 15,913 Einheiten, das von E.1.18 bei 21,585); der Katalog setzt ihn mittig, weil ' +
+    'labelPrimitives für die mittige Zone nur anchor: middle auf die Körpermitte kennt. Für ' +
+    'n = 1 wird dafür kein Mechanismus gebaut, und diese eine Datei ist die schwächste denkbare ' +
+    'Stütze für einen: „Fachzug Grundzeichen" ist ein Musterblatt, dessen Kürzel „FZ-" mit dem ' +
+    'Trennstrich endet.',
+  'E.1.19':
+    'Der Katalog bildet zwei Merkmale der Referenz nicht ab — die drei Marken im Körper ' +
+    '(Kreise r 1,5 mm bei cy 8,100 mm, cx 11/16/21 mm, zeichenidentisch mit der zug-Kopfreihe ' +
+    'und um 4,600 mm nach unten versetzt) fehlen, und das Innenfeld ist normgerecht bei ' +
+    '7,0…25,0 mm gebaut, wo die Referenz oben 10,0 mm führt. Grund für die fehlenden Marken: ' +
+    'n = 3 über drei Kapitel mit drei verschiedenen Konstruktionen — E.1.19 und E.1.24 bei ' +
+    'cy 8,100 mm mit oben verkürzter Füllfläche, „I.1.5_Zugtrupp Wasserrettungszug.svg" bei ' +
+    'cy 7,750 mm mit um 3,45 mm nach unten versetzter Rahmeninnenkante und ohne farbige ' +
+    'Füllfläche, während „D.1.9_Zugtrupp einer Sanitätseinheit.svg" bei gleichem Begriff keine ' +
+    'Reihe trägt. Es gibt damit keine vermessene Konstante, auf die eine Platzierungsregel sich ' +
+    'stützen könnte.',
+  'E.1.24':
+    'Der Katalog bildet zwei Merkmale der Referenz nicht ab — die drei Marken im Körper ' +
+    '(Kreise r 1,5 mm bei cy 8,100 mm, cx 11,047/16,047/21,047 mm, dieselbe Form wie bei ' +
+    'E.1.19 um 0,047 mm versetzt eingesetzt) fehlen, und das Innenfeld ist normgerecht bei ' +
+    '7,0…25,0 mm gebaut, wo die Referenz oben 10,0 mm führt. Grund für die fehlenden Marken: ' +
+    'n = 3 über drei Kapitel mit drei verschiedenen Konstruktionen — E.1.19 und E.1.24 bei ' +
+    'cy 8,100 mm mit oben verkürzter Füllfläche, „I.1.5_Zugtrupp Wasserrettungszug.svg" bei ' +
+    'cy 7,750 mm mit um 3,45 mm nach unten versetzter Rahmeninnenkante und ohne farbige ' +
+    'Füllfläche, während „D.1.9_Zugtrupp einer Sanitätseinheit.svg" bei gleichem Begriff keine ' +
+    'Reihe trägt. Es gibt damit keine vermessene Konstante, auf die eine Platzierungsregel sich ' +
+    'stützen könnte.',
+});
+
+/**
+ * Provenienz des technischen Reviews je Rezeptzeile. Die Verzweigung ist **nicht** Buchführung:
+ * ohne sie fielen die zwölf E-b-Abschnitte durch den ersten `return` und behaupteten das
+ * Slice-2-Migrationsreview vom 5. August als ihre technische Provenienz — ein `approved` von
+ * `rv`, an dem kein Test etwas auffällig fände.
+ *
+ * Befund und Abweichung sind zwei unabhängige Achsen und werden deshalb addiert, nicht
+ * verzweigt: E.1.22 trägt keines von beidem, acht Zeichen nur einen Befund an der Referenzdatei,
+ * E.1.17 nur eine Abweichung der Umsetzung, E.1.19 und E.1.24 beides. Eine `else if`-Kette
+ * verlöre bei den letzten zwei den Befund.
  */
 function technicalReviewFor(section: string): Review {
-  if (!Object.hasOwn(ANHANG_E_A_RECIPES, section)) return TECHNICAL_REVIEW;
-  const defect = ANHANG_E_A_FILL_DEFECTS[section];
-  if (defect === undefined) return ANHANG_E_A_TECHNICAL_REVIEW;
+  if (Object.hasOwn(ANHANG_E_A_RECIPES, section)) {
+    const defect = ANHANG_E_A_FILL_DEFECTS[section];
+    if (defect === undefined) return ANHANG_E_A_TECHNICAL_REVIEW;
+    return {
+      ...ANHANG_E_A_TECHNICAL_REVIEW,
+      note: `${ANHANG_E_A_TECHNICAL_REVIEW.note ?? ''} Befund an der Referenzdatei: ${defect}`,
+    };
+  }
+  if (!Object.hasOwn(ANHANG_E_B_RECIPES, section)) return TECHNICAL_REVIEW;
+  const finding = ANHANG_E_B_FILL_FINDINGS[section];
+  const deviation = ANHANG_E_B_DEVIATIONS[section];
+  if (finding === undefined && deviation === undefined) return ANHANG_E_B_TECHNICAL_REVIEW;
   return {
-    ...ANHANG_E_A_TECHNICAL_REVIEW,
-    note: `${ANHANG_E_A_TECHNICAL_REVIEW.note ?? ''} Befund an der Referenzdatei: ${defect}`,
+    ...ANHANG_E_B_TECHNICAL_REVIEW,
+    ...(deviation === undefined ? {} : { status: 'deviation' as const }),
+    note: [
+      ANHANG_E_B_TECHNICAL_REVIEW.note ?? '',
+      ...(finding === undefined ? [] : [`Befund an der Referenzdatei: ${finding}`]),
+      ...(deviation === undefined ? [] : [`Abweichung der Umsetzung: ${deviation}`]),
+    ].join(' '),
   };
 }
 
@@ -249,12 +342,13 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
   // (Verwaltungsstufen/Fahrzeugkategorien: von 16 Referenzdateien nur 2 vermessbar, kein Konsument).
   // K, L und M stehen einbuchstabig im Umfang, weil ihre Nummerierung flach ist: `K` deckt
   // K.1 bis K.18 ab, wo `J` vier Unterkapitel gebraucht hätte.
-  // Anhang E steht abschnittsweise und **nicht** als `E.1`: der Teilslice E-a deckt 16 der 37
-  // E.1-Abschnitte ab. `E.1` würde das Gate zwar bestehen — `uncoveredScope` prüft nur, ob zu
-  // jedem beanspruchten Präfix mindestens eine Zeile existiert, nicht die Vollständigkeit —,
-  // aber genau deshalb wäre es eine Behauptung, die kein Gate widerlegt. Dieselbe Wahl wie bei
-  // C.1.1/C.1.2/D.3.7 (einzeln, weil Belegfälle) statt bei K/L/M (einbuchstabig, weil
-  // vollständig). Wenn E-b und E-c gelandet sind, treten die 37 Zeilen an `E.1` zurück.
+  // Anhang E steht abschnittsweise und **nicht** als `E.1`: die Teilslices E-a und E-b decken
+  // zusammen 28 der 37 E.1-Abschnitte ab. `E.1` würde das Gate zwar bestehen —
+  // `uncoveredScope` prüft nur, ob zu jedem beanspruchten Präfix mindestens eine Zeile existiert,
+  // nicht die Vollständigkeit —, aber genau deshalb wäre es eine Behauptung, die kein Gate
+  // widerlegt. Dieselbe Wahl wie bei C.1.1/C.1.2/D.3.7 (einzeln, weil Belegfälle) statt bei
+  // K/L/M (einbuchstabig, weil vollständig). Es fehlt nur noch E-c; wenn es gelandet ist, treten
+  // die 37 Zeilen an `E.1` zurück.
   scope: [
     '1',
     '2',
@@ -280,6 +374,18 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'E.1.14',
     'E.1.15',
     'E.1.16',
+    'E.1.17',
+    'E.1.18',
+    'E.1.19',
+    'E.1.20',
+    'E.1.21',
+    'E.1.22',
+    'E.1.23',
+    'E.1.24',
+    'E.1.25',
+    'E.1.26',
+    'E.1.27',
+    'E.1.28',
     'J.1',
     'J.2',
     'J.3',

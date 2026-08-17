@@ -130,3 +130,52 @@ describe('compose() — Fußzone', () => {
     expect(outside[0]?.detail).toContain('maxY 34');
   });
 });
+
+describe('compose() — Beschriftungszonen', () => {
+  /** Alle drei Zonen belegt; ohne `organization`, das Katalog-Doppel liefert keine Farbe. */
+  const labelSpec = { kind: 'formation', labels: { center: 'K', bottomLeft: 'A', bottomRight: 'THW' } } as const;
+
+  function labelsOf(): { center: Primitive; bottomLeft: Primitive; bottomRight: Primitive } {
+    const drawing = compose(labelSpec, catalog);
+    const labels = drawing.children.filter((p) => p.role === 'label');
+    if (labels.length !== 3) throw new Error(`compose() hat ${labels.length} statt 3 Beschriftungen erzeugt.`);
+    const [center, bottomLeft, bottomRight] = labels as [Primitive, Primitive, Primitive];
+    return { center, bottomLeft, bottomRight };
+  }
+
+  it('hält die zwei waagerechten Margen getrennt — mittige Box 1 mm, untere Anker 2 mm', () => {
+    // Der Punkt dieses Tests ist die **Trennung**, nicht der Einzelwert: seit dem Teilslice E-b
+    // (17. August 2026) rechnet die Box des mittigen Laufs mit CENTER_LABEL_BOX_MARGIN_MM (1 mm,
+    // vermessenes Innenfeld 2…30 mm), die Anker und Boxen der unteren Läufe mit
+    // LABEL_SIDE_MARGIN_MM (2 mm, an den unteren Läufen gemessene Kanten 3,03/29,03). Wer die
+    // beiden Margen künftig wieder zu einer Konstante vereinheitlicht, verschiebt zwangsläufig
+    // eine der beiden Seiten — und fällt genau hier auf.
+    //
+    // Geprüft werden ausschließlich die **waagerechten** Felder. `yMm`/`heightMm` stammen aus
+    // `verticalTextBoxMm` (Diakritika-Rechnung, irrationale Werte bei Versalhöhe 4,87); sie hier
+    // gegen dieselbe Funktion zu prüfen wäre ein Kreisschluss und keine Zusicherung.
+    const { center, bottomLeft, bottomRight } = labelsOf();
+    if (center.type !== 'text' || bottomLeft.type !== 'text' || bottomRight.type !== 'text') {
+      throw new Error('compose() hat für eine Zone kein Textprimitiv erzeugt.');
+    }
+
+    // Körper 1…31 mm: mittige Box 1+1 = 2 bis 31−1 = 30, also 28 mm breit.
+    expect(center.boxMm).toMatchObject({ xMm: 2, widthMm: 28 });
+    expect(center.anchor).toBe('middle');
+    expect(center.x).toBe(16);
+
+    // Untere Läufe unverändert: Anker 3 und 29, Boxen je bis zur Körpermitte 16.
+    expect(bottomLeft.x).toBe(3);
+    expect(bottomLeft.boxMm).toMatchObject({ xMm: 3, widthMm: 13 });
+    expect(bottomRight.x).toBe(29);
+    expect(bottomRight.boxMm).toMatchObject({ xMm: 16, widthMm: 13 });
+  });
+
+  it('passiert das viewBox-Gate mit allen drei Beschriftungszonen', () => {
+    // Das viewBox-Gate ist das einzige Gate, das `boxMm` eines Beschriftungslaufs überhaupt
+    // ansieht (`viewbox-gate.ts` nimmt die vier Boxecken in die Hüllenrechnung). Es belegt
+    // deshalb, dass die auf 2…30 mm geweitete Box zulässig bleibt.
+    const drawing = compose(labelSpec, catalog);
+    expect(checkViewBox(drawing)).toEqual([]);
+  });
+});
