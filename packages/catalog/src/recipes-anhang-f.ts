@@ -2,9 +2,12 @@ import type { Recipe } from './recipes.js';
 
 /**
  * Anhang F, Teilslice F-a: die sanitätsdienstlichen Einheiten F.1.1 bis F.1.11 — elf Abschnitte
- * in zwölf Dateien (F.1.11 trägt eine Alternativdarstellung).
+ * in zwölf Dateien (F.1.11 trägt eine Alternativdarstellung). **Dieses Register führt elf davon.**
+ * `F.1.3` ist vermessen und nicht gebaut: es bringt drei Zeichnungen mit, die kein anderes Zeichen
+ * des Teilslice teilt (Zelt mit anderer Schenkelneigung als F.1.4, schwarzes Fußband, Bett). Die
+ * Maße stehen in der Entscheidungsnotiz, Abschnitt 9.
  *
- * **Alle zwölf stehen auf demselben Rechteckkörper** (`formation`, Hülle 1/6 bis 31/26 mm) und
+ * **Alle elf stehen auf demselben Rechteckkörper** (`formation`, Hülle 1/6 bis 31/26 mm) und
  * tragen ihre Bedeutung in der randbündigen Fachdienstteilung (`bodyMarks`, siehe
  * `body-marks.ts`) und im Kürzel oben links. Der Zuschnitt vom 18. August 2026
  * (`docs/decisions/2026-08-18-anhang-f-zuschnitt.md`) hat für diesen Teilslice zwei fehlende
@@ -13,7 +16,7 @@ import type { Recipe } from './recipes.js';
  *
  * **Die Organisation ist eine Entscheidung, keine Messung.** Alle 66 F-Dateien führen
  * ausschließlich `#fff`; ob das `hilfsorganisation` (= `weiss`) oder gar keine Organisation
- * bedeutet, sagt die Datei nicht. Der Katalog trägt `hilfsorganisation`: alle 71 bestehenden
+ * bedeutet, sagt die Datei nicht. Der Katalog trägt `hilfsorganisation`: alle 71 bis dahin bestehenden
  * Rezepte führen eine Organisation, `F.1.5_Sanitätszug ASB` benennt eine Hilfsorganisation im
  * Titel, und im Referenztheme ist das Bild in beiden Lesarten dasselbe (`ORGANIZATION_COLORS`
  * bildet `hilfsorganisation` auf `weiss` ab). Sichtbar wird der Unterschied allein in den beiden

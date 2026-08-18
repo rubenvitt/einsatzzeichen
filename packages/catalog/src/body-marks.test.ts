@@ -164,6 +164,153 @@ describe('bodyMark() — die Zeltmarke der Betreuung', () => {
   });
 });
 
+describe('bodyMark() — der zusammengefasste Eintrag von F.1.2', () => {
+  /**
+   * `cbrn-protection` zeichnet drei Dinge in **einem** Eintrag: die Fachdienstteilung mit zwei
+   * Fenstern, die Arztleiste und das Innenzeichen 4.1.1. Das ist keine vermeidbare Bündelung.
+   * Die vier Fenstergrenzen folgen aus keiner der drei Einzelzeichnungen: die beiden Fenster sind
+   * **verschieden groß** (waagerecht Mitte ± 6,0, senkrecht Mitte ± 2,0), und nur die eine der
+   * beiden Grenzen richtet sich nach dem Innenzeichen — siehe die Zusicherung „nur eine der
+   * beiden Fenstergrenzen folgt der Tinte" weiter unten. Ein Zeichen, das die drei Marken
+   * nebeneinander in `bodyMarks` führte, könnte die Unterbrechung gar nicht ausdrücken: die
+   * Teilung wüsste nichts vom Innenzeichen.
+   */
+  const marks = bodyMark('cbrn-protection', formationBodyMm);
+
+  /** Die Abschnitte, die die Striche des Eintrags auf einer der beiden Mittellinien belegen. */
+  function coveredOn(axis: 'horizontal' | 'vertical', atMm: number): number[][] {
+    const segments: number[][] = [];
+    for (const primitive of marks) {
+      if (primitive.type !== 'line') continue;
+      const { x1, y1, x2, y2 } = primitive;
+      if (axis === 'horizontal' && y1 === atMm && y2 === atMm) {
+        segments.push([Math.min(x1, x2), Math.max(x1, x2)]);
+      }
+      if (axis === 'vertical' && x1 === atMm && x2 === atMm) {
+        segments.push([Math.min(y1, y2), Math.max(y1, y2)]);
+      }
+    }
+    return segments.sort((a, b) => (a[0] as number) - (b[0] as number));
+  }
+
+  /** Die beiden Schäfte des Innenzeichens: die einzigen schrägen Striche des Eintrags. */
+  const shafts = marks.filter(
+    (primitive) => primitive.type === 'line' && primitive.x1 !== primitive.x2 && primitive.y1 !== primitive.y2,
+  );
+  /** Die beiden Köpfe: die einzigen **gefüllten** Kreise des Eintrags. */
+  const heads = marks.filter(
+    (primitive) => primitive.type === 'circle' && primitive.style?.fill === 'schwarz',
+  );
+
+  it('lässt das waagerechte Fenster 10…22 frei — Mitte ± 6,0 mm', () => {
+    // Gemessen am Umriss der Ebene `Takt_Zeichen` von `F.1.2_Dekontaminationseinheit für
+    // Verletzte.svg` (Strichbänder 15,75…16,25 um die Mittellinie 16,0): der waagerechte Arm
+    // steht als **zwei** Stücke x 1…10 und x 22…31.
+    //
+    // Die Prüfung ist absichtlich als Belegung der ganzen Mittellinie formuliert und nicht als
+    // Vergleich zweier Striche: sie sammelt **jeden** Strich des Eintrags, der auf y 16 liegt.
+    // Ein später „vereinfachter" Eintrag, der wieder die durchgezogene Teilung nähme, fiele damit
+    // auf — auch dann, wenn er sie zusätzlich zu den beiden Stücken zeichnete.
+    expect(coveredOn('horizontal', 16)).toEqual([
+      [1, 10],
+      [22, 31],
+    ]);
+  });
+
+  it('lässt das senkrechte Fenster 14…18 frei — Mitte ± 2,0 mm', () => {
+    // Dieselbe Vermessung, andere Achse: der senkrechte Arm steht als y 6…14 und y 18…26. Die
+    // beiden Fenster sind damit **verschieden groß**, 12,0 gegen 4,0 mm — der erste Grund, warum
+    // dieser Eintrag die Teilung nicht von `quartering()` beziehen kann.
+    expect(coveredOn('vertical', 16)).toEqual([
+      [6, 14],
+      [18, 26],
+    ]);
+    const [waagerecht, senkrecht] = [coveredOn('horizontal', 16), coveredOn('vertical', 16)];
+    expect((waagerecht[1]?.[0] as number) - (waagerecht[0]?.[1] as number)).toBe(12);
+    expect((senkrecht[1]?.[0] as number) - (senkrecht[0]?.[1] as number)).toBe(4);
+  });
+
+  it('richtet nur eine der beiden Fenstergrenzen nach der Tinte des Innenzeichens', () => {
+    // **Der Kern der Sache — hier wird die Nicht-Ableitbarkeit prüfbar.** Wäre das Fenster eine
+    // Aussparung um das Innenzeichen, müssten beide Grenzen in derselben Beziehung zu dessen
+    // Tinte stehen. Sie tun es nicht:
+    //
+    // - waagerecht reicht die Tinte (die beiden Kopfkreise) von 10,5 bis 21,5; das Fenster
+    //   10…22 steht auf beiden Seiten genau 0,5 mm — eine Strichbreite — **außerhalb** davon;
+    // - senkrecht liegt das Fenster 14…18 **innerhalb** der Ausdehnung des Innenzeichens: dessen
+    //   Kopfoberkanten stehen auf 12,25 und damit über dem Fenster, seine Schaftspitzen auf 20,0
+    //   und damit darunter. Der Arm ist dort weiter zurückgenommen, als das Zeichen es verlangt.
+    //
+    // Aus der einen Regel folgt die andere also nicht. Genau deshalb sind die vier Zahlen an
+    // F.1.2 gemessen und nicht aus dem Innenzeichen gerechnet — und genau deshalb steht alles
+    // in einem Eintrag.
+    expect(heads).toHaveLength(2);
+    const headXs = heads.flatMap((head) =>
+      head.type === 'circle' ? [head.cx - head.r, head.cx + head.r] : [],
+    );
+    expect(Math.min(...headXs)).toBeCloseTo(10.5, 9);
+    expect(Math.max(...headXs)).toBeCloseTo(21.5, 9);
+    // Das Fenster steht je eine Strichbreite außerhalb der waagerechten Tinte.
+    expect(Math.min(...headXs) - 10).toBeCloseTo(0.5, 9);
+    expect(22 - Math.max(...headXs)).toBeCloseTo(0.5, 9);
+
+    // Senkrecht umgekehrt: das Innenzeichen ragt oben **und** unten über das Fenster hinaus.
+    const headTopMm = Math.min(
+      ...heads.flatMap((head) => (head.type === 'circle' ? [head.cy - head.r] : [])),
+    );
+    const shaftBottomMm = Math.max(
+      ...shafts.flatMap((shaft) => (shaft.type === 'line' ? [shaft.y1, shaft.y2] : [])),
+    );
+    expect(headTopMm).toBeLessThan(14);
+    expect(shaftBottomMm).toBeGreaterThan(18);
+  });
+
+  it('stellt das Innenzeichen genau in die beiden Fenster', () => {
+    // Die Gegenprobe zu den drei Zusicherungen darüber: die Fenster sind kein Loch im Bild,
+    // sondern der Platz des Innenzeichens. Beide Schäfte laufen durch die Körpermitte (16|16) —
+    // den Punkt, den beide Fenster gemeinsam haben. Ohne diese Prüfung bliebe „das Fenster ist
+    // frei" auch dann grün, wenn das Innenzeichen ganz fehlte.
+    expect(shafts).toHaveLength(2);
+    for (const shaft of shafts) {
+      if (shaft.type !== 'line') throw new Error('unreachable');
+      // Die Körpermitte liegt auf der Geraden des Schafts …
+      const crossMm =
+        (16 - shaft.x1) * (shaft.y2 - shaft.y1) - (16 - shaft.y1) * (shaft.x2 - shaft.x1);
+      expect(crossMm).toBeCloseTo(0, 9);
+      // … und zwischen seinen beiden Enden, nicht auf ihrer Verlängerung.
+      expect(Math.min(shaft.x1, shaft.x2)).toBeLessThan(16);
+      expect(Math.max(shaft.x1, shaft.x2)).toBeGreaterThan(16);
+      expect(Math.min(shaft.y1, shaft.y2)).toBeLessThan(16);
+      expect(Math.max(shaft.y1, shaft.y2)).toBeGreaterThan(16);
+    }
+    // Zwei ausgefüllte Köpfe, kein Umriss: die Referenz führt sie als Fläche.
+    for (const head of heads) {
+      expect(head.style).toMatchObject({ fill: 'schwarz', stroke: 'none' });
+    }
+  });
+
+  it('trägt die Arztleiste mit — dieselbe wie bei `physician`', () => {
+    // 8 mm breit auf der Mittellinie y 22,0, also x 12…20 und 4 mm über der Körperunterkante. An
+    // dieser Datei nachgemessen und nicht aus F.1.7 übernommen — dass beide Zahlenpaare gleich
+    // ausfallen, ist das Ergebnis und nicht die Annahme. Sie gehört in **diesen** Eintrag und
+    // ist nicht daneben komponierbar: ein Zeichen mit `bodyMarks: ['physician', ...]` brächte
+    // die durchgezogene Teilung mit und schlösse die beiden Fenster.
+    const bar = line(12, 22, 20, 22);
+    expect(marks).toContainEqual(bar);
+    expect(bodyMark('physician', formationBodyMm)).toContainEqual(bar);
+  });
+
+  it('setzt die Teilung des Eintrags nicht aus der durchgezogenen zusammen', () => {
+    // Die ausdrückliche Gegenprobe zur „Vereinfachung": keiner der beiden durchgezogenen Arme
+    // aus `quartering()` steht im Eintrag. Ein Eintrag, der sie zusätzlich zu den vier Stücken
+    // führte, sähe im Bild aus wie eine geschlossene Teilung — und die Fensterprüfungen oben
+    // fielen darauf herein, wären sie als Vergleich einzelner Striche geschrieben.
+    for (const arm of quartering) {
+      expect(marks).not.toContainEqual(arm);
+    }
+  });
+});
+
 /**
  * Die beiden Würfe dieser Datei werden **an ihrer Prosa** erkannt und nicht an einem Regelkode —
  * anders als die Ablehnungen in `validateSpec` (`top-left-label-requires-measured-body` und
