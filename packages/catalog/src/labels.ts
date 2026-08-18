@@ -24,6 +24,11 @@ const KIND_LABELS: Record<SymbolKind, string> = {
   point: 'Konkreter Punkt',
   event: 'Ereignis',
   'spontaneous-helper': 'Spontanhelfende',
+  trailer: 'Anhänger',
+  'swap-loader-vehicle': 'Wechselladerfahrzeug',
+  // Nach der Zeichnung benannt und nicht nach der Trinkwasseraufbereitungsanlage, für die
+  // `E.2.26` sie verwendet: was diese Form fachlich bezeichnet, sagt die Datei nicht.
+  'upright-rectangle': 'Hochkantrechteck',
 };
 
 const ORGANIZATION_LABELS: Record<OrganizationId, string> = {
@@ -60,6 +65,9 @@ const VEHICLE_CATEGORY_LABELS: Record<VehicleCategoryId, string> = {
   amphibienfahrzeug: 'Amphibienfahrzeug',
   kettenfahrzeug: 'Kettenfahrzeug',
   schienenfahrzeug: 'Schienenfahrzeug',
+  // Nach der Zeichnung benannt: „von PKW/LKW gezogen" wäre an drei der vier E.2-Anhänger falsch.
+  'anhaenger-ein-rad': 'Anhänger mit einem Rad',
+  'anhaenger-zwei-raeder': 'Anhänger mit zwei Rädern',
 };
 
 export function symbolKindLabel(kind: SymbolKind): string {
@@ -87,14 +95,25 @@ export function describeSymbolSpec(spec: SymbolSpec): string {
   // E.1.1 und E.1.7 dasselbe blaue Rechteck. Sie gehören deshalb in die Beschreibung, die
   // Bildschirmleser vorlesen, und nicht nur ins Bild. Die Zonennamen sind ausgeschrieben statt
   // als `center`/`bottomLeft` durchgereicht: eine Vorlesestimme sagt „Kürzel", nicht „center".
+  //
+  // `belowRight` steht hier gleichrangig neben `bottomRight`: die fünf Wasserfahrzeuge aus
+  // Anhang E.2 setzen ihr Trägerkürzel unterhalb des Rumpfes statt in ihn hinein, und für eine
+  // Vorlesestimme ist das derselbe Sachverhalt. Die Zone unterscheidet sich in der Lage und in
+  // der Farbe, nicht in der Bedeutung — deshalb dasselbe Wort.
+  //
+  // Ausdrücklich **nicht** in der Liste: `centerCapHeightMm`. Es ist eine Maßangabe und kein
+  // Text; eine Zahl in der Vorlesebeschreibung wäre Rauschen. Die Liste ist deshalb explizit
+  // aufgezählt und nicht aus `Object.entries(spec.labels)` erzeugt — sonst stünde sie dort seit
+  // dem Teilslice E.2.
   const zones: Array<[keyof NonNullable<SymbolSpec['labels']>, string]> = [
     ['center', 'Kürzel'],
     ['bottomLeft', 'Zusatzkennzeichnung'],
     ['bottomRight', 'Trägerkürzel'],
+    ['belowRight', 'Trägerkürzel'],
   ];
   for (const [zone, label] of zones) {
     const value = spec.labels?.[zone];
-    if (value !== undefined) parts.push(`${label}: ${value}`);
+    if (typeof value === 'string') parts.push(`${label}: ${value}`);
   }
   return `${parts.join('. ')}.`;
 }

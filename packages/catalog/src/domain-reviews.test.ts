@@ -83,12 +83,16 @@ describe('Fachreview-Ledger', () => {
     const sourceReviews = Object.values(SOURCE_DOMAIN_REVIEWS);
     const profileReviews = Object.values(PROFILE_DOMAIN_REVIEWS);
     const reviews = [...manifestReviews, ...sourceReviews, ...profileReviews];
-    // 325 seit LFH-424: sechs Grundzeichen aus Kapitel 1, die achte Organisation (2.2) und die
-    // fünf vermessenen Fahrzeugkategorien aus 5.1.1.
-    expect(manifestReviews).toHaveLength(325);
+    // 357 nach dem Teilslice E.2: 325 nach LFH-424 (sechs Grundzeichen aus Kapitel 1, die achte
+    // Organisation und die fünf vermessenen Fahrzeugkategorien aus 5.1.1), plus die beiden
+    // Anhängerfahrwerke aus 5.1.2.4 und 5.1.2.5 aus seiner ersten Bauphase, plus die 30 Zeichen
+    // aus E-d, E-e und E-f. **30 und nicht 31:** E.2.6 hat keine Manifestzeile und deshalb auch
+    // keinen Ledgerplatz — es ist als einziger Abschnitt des Anhangs nicht gebaut
+    // (`ANHANG_E_D_UNGEBAUT`).
+    expect(manifestReviews).toHaveLength(357);
     expect(sourceReviews).toHaveLength(13);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(339);
+    expect(reviews).toHaveLength(371);
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
   });
 

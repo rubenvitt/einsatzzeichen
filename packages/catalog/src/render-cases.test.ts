@@ -17,12 +17,18 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 308 seit LFH-424: sechs weitere Grundzeichen aus Kapitel 1.
-    expect(ids).toHaveLength(308);
+    // 338 seit dem Teilslice E.2: 308 nach LFH-424 plus die 30 gebauten Zeichen aus E.2.
+    expect(ids).toHaveLength(338);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
-    // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig.
-    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(40);
+    // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
+    // dazu 20 aus E-d, fünf aus E-e und fünf aus E-f.
+    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(70);
     expect(ids.filter((id) => id.startsWith('recipe.E.1.'))).toHaveLength(37);
+    // **30 und nicht 31.** E.2.6 ist als einziger Abschnitt des Anhangs nicht gebaut; die
+    // Begründung steht in `ANHANG_E_D_UNGEBAUT`, die Zahlen in `a11y-contrast-gate.test.ts`.
+    // Diese Zeile ist die Stelle, an der die Lücke auffällt, sobald jemand sie schließt.
+    expect(ids.filter((id) => id.startsWith('recipe.E.2.'))).toHaveLength(30);
+    expect(ids).not.toContain('recipe.E.2.6');
     expect(ids.filter((id) => id.startsWith('capability.'))).toHaveLength(92);
     expect(ids.filter((id) => id.startsWith('state.'))).toHaveLength(67);
     expect(ids.filter((id) => id.startsWith('comms.'))).toHaveLength(53);

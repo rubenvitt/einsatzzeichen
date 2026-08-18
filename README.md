@@ -102,9 +102,10 @@ fachkundige Person geprüft werden. Die Abschlussentscheidung für D.1 steht in
 D.2 deckt Kapitel 5.8 der projektinternen Coverage-Baseline technisch mit 61 State-IDs und 67
 Darstellungen ab, darunter sechs getrennt adressierbare Alternativdarstellungen. Damit enthält
 der Katalog zusammen mit D.3 und D.4 insgesamt 254 Piktogrammdarstellungen: 92 Capabilities, 67
-States, 53 IuK-, 28 Schadens- und 14 Vegetationsbrandzeichen. Die 308 globalen Renderfälle setzen
-sich aus vierzehn Grundzeichen, 40 Rezepten und diesen 254 Piktogrammen zusammen — drei Rezepte
-belegen den Kompositionsmotor, die übrigen 37 sind die Teilslices E-a, E-b und E-c (siehe unten).
+States, 53 IuK-, 28 Schadens- und 14 Vegetationsbrandzeichen. Die 338 globalen Renderfälle setzen
+sich aus vierzehn Grundzeichen, 70 Rezepten und diesen 254 Piktogrammen zusammen — drei Rezepte
+belegen den Kompositionsmotor, die übrigen 67 gehören zu Anhang E, dessen 68. Abschnitt begründet
+offen ist (siehe unten).
 
 Alle 67 State-Darstellungen sind eigenständige Zeichen mit kanonischer 32×32-mm-Platzierung und
 Standalone-Clipping. D.2 führt weder eine allgemeine State-Komposition noch eine Integration in
@@ -241,9 +242,10 @@ Füllebene), die [E-a-Notiz](./docs/decisions/2026-08-12-beschriftungszonen-und-
 Der Katalog führte acht der vierzehn Grundzeichen aus Kapitel 1; die sechs fehlenden — Landfahrzeug
 (1.3), Luftfahrzeug (1.4), Wasserfahrzeug (1.5), Gebiet (1.9), Ereignis (1.13) und Spontanhelfer
 (1.14) — galten als **nicht vermessbar**. Das war eine Aussage über das Werkzeug, nicht über die
-Quelle: der Extraktor legt für Kurvenpfade keine Form ab, und `fingerprints.json` führt für 1.3,
-1.4, 1.5, 1.9 und 1.14 bis heute `shapes: []`. Vermessen sind sie jetzt mit einem eigenen
-Pfadparser mit analytischen Kubik-Extrema, wie ihn E-c für die 37 E.1-Dateien gebaut hat. Vier von
+Quelle: der Extraktor legte für Kurvenpfade keine Form ab, und `fingerprints.json` führte für 1.3,
+1.4, 1.5, 1.9 und 1.14 `shapes: []` — seit dem Teilslice E.2 nur noch für 1.14, siehe unten.
+Vermessen sind sie jetzt mit einem eigenen Pfadparser mit analytischen Kubik-Extrema, wie ihn E-c
+für die 37 E.1-Dateien gebaut hat. Vier von
 ihnen tragen ihre Mittellinie in der Ebene `Flächige_Fülung` verbatim — 1.3 mit
 0,9998/5,7499/31,0000/26,0001, 1.4 mit 1,0001/7,9999/31,0003/23,0001, 1.5 mit
 1,0001/9,0001/31,0000/24,0002 und 1.9 mit 1,5199/3,2298/30,9993/28,3237. 1.13 und 1.14 sind die
@@ -251,12 +253,16 @@ beiden einzigen Dateien des Kapitels ganz ohne Füllebene; bei 1.14 trägt statt
 (außen 1,7501/1,7498/30,2500/30,2500, innen 2,2500/2,2500/29,7497/29,7497 → Mittellinie 2/2/30/30
 bei Strich 0,5).
 
-**Neun der vierzehn Grundzeichen stehen damit am Fingerprint-Gate, fünf nicht.** Für die fünf
-Kurvenkörper bricht `matchFingerprint` ab, bevor es den Körper ansieht — ihr Artefakteintrag führt
-keine vergleichbare Form. Ihre Manifestzeile behauptet dieses Gate deshalb nicht, sondern trägt die
-neue Nachweisart `body-geometry-regression` neben dem Snapshot, nach dem Vorbild von
-`head-shape-regression`. Die Unterscheidung fällt am Artefakt (`shapes: []`) und nicht an einer
-gepflegten Liste, damit ein späterer Extraktorausbau sie von selbst auflöst.
+**Neun der vierzehn Grundzeichen standen damit am Fingerprint-Gate, fünf nicht** — heute sind es
+dreizehn gegen eines. Für die fünf Kurvenkörper brach `matchFingerprint` ab, bevor es den Körper
+ansah: ihr Artefakteintrag führte keine vergleichbare Form. Ihre Manifestzeile behauptete dieses
+Gate deshalb nicht, sondern trug die Nachweisart `body-geometry-regression` neben dem Snapshot,
+nach dem Vorbild von `head-shape-regression`. Die Unterscheidung fällt am Artefakt (`shapes: []`)
+und nicht an einer gepflegten Liste, damit ein späterer Extraktorausbau sie von selbst auflöst —
+**und genau das ist mit dem Teilslice E.2 eingetreten.** Seither trägt nur noch `1.14 Spontanhelfer`
+diese Nachweisart, 1.3, 1.4, 1.5 und 1.9 stehen auf `body-fingerprint`. Bei 1.14 ist der Grund ein
+anderer und von keinem Extraktorausbau zu beheben: die Datei führt als einzige des Kapitels neben
+1.13 überhaupt keine Ebene `Flächige_Fülung`.
 
 **1.13 Ereignis ist das erste Grundzeichen, das keine Organisationsfarbe annehmen darf.** Sein
 Körper ist ein offener Polyzug, und SVG schließt einen gefüllten Polyzug implizit — aus dem Haken
@@ -296,25 +302,124 @@ Kompositionsmotors neben Kopf- und Fußzone und die erste, die an der Körper**u
 statt an der Oberkante ihrer eigenen Zone: `ChassisShape` ist deshalb ein eigener Typ neben
 `HeadShape` und kennt neben dem Kreis auch das Stadion (Kette) und den waagerechten Strich.
 
-Fünf der sechs Fahrzeugkategorien sind vermessen und gebaut (5.1.1.1, .2, .3, .5 und .6);
-`amphibienfahrzeug` wirft, weil von seiner Wellenlinie nur die Strichhülle ablesbar ist. Die Zone
-ist nicht auf die Musterblätter beschränkt: 25 der 31 Zeichen aus Anhang E.2 tragen sie überhaupt,
-21 davon in einer der fünf gebauten Kategorien und 20 auf genau dem Landfahrzeugkörper aus 1.3 — ein
-E.2-Rezept erreicht sie über `SymbolSpec` wie E.1 seine Kopfzone. Vollständig ist E.2 damit nicht:
-neben dem Landfahrzeug führen die 31 Dateien vier weitere Körperformen (der Wechsellader E.2.15, die
-vier Anhänger, die Trinkwasseraufbereitungsanlage E.2.26 und der eigene Wasserfahrzeugkörper von
-E.2.27 bis E.2.31, der **nicht** der aus 1.5 ist), und für die Anhängerfahrwerke fehlen zwei
-Taxonomie-IDs.
+Fünf der damals sechs Fahrzeugkategorien waren vermessen und gebaut (5.1.1.1, .2, .3, .5 und .6);
+`amphibienfahrzeug` wirft, weil von seiner Wellenlinie nur die Strichhülle ablesbar ist. Seit dem
+Teilslice E.2 sind es **sieben der acht** — die beiden Anhängerfahrwerke sind dazugekommen, und
+`amphibienfahrzeug` ist weiterhin das einzige, das wirft. Die Zone ist nicht auf die Musterblätter
+beschränkt: 25 der 31 Zeichen aus Anhang E.2 tragen sie überhaupt, 21 davon in einer der fünf
+damals gebauten Kategorien und 20 auf genau dem Landfahrzeugkörper aus 1.3 — ein E.2-Rezept
+erreicht sie über `SymbolSpec` wie E.1 seine Kopfzone. Vollständig war E.2 damit nicht: neben dem
+Landfahrzeug führen die 31 Dateien vier weitere Körperformen (der Wechsellader E.2.15, die vier
+Anhänger, die Trinkwasseraufbereitungsanlage E.2.26 und der eigene Wasserfahrzeugkörper von E.2.27
+bis E.2.31, der **nicht** der aus 1.5 ist), und für die Anhängerfahrwerke fehlten zwei
+Taxonomie-IDs. Jeder dieser Posten ist mit E-d, E-e und E-f geschlossen (siehe unten).
 
 Die Umfangszeile führt dafür seither `5.1.1` — bewusst den Unterabschnitt und nicht das ganze
-Kapitel 5.1, von dem allein die Fahrzeugkategorien umgesetzt sind.
+Kapitel 5.1, von dem allein die Fahrzeugkategorien umgesetzt sind. Sie ist auch mit den beiden
+Anhängerfahrwerken aus E.2 nicht gewachsen: `5.1.2.4` und `5.1.2.5` tragen seither eine
+Manifestzeile, aber `5.1.2` steht nicht im Umfang, weil von dessen fünf Abschnitten nur diese
+zwei umgesetzt sind.
 
-Zwei Nebenbefunde gehören dazu. Eine Fahrzeugkategorie ist seither nur am **Landfahrzeug** zulässig
-(keine der drei Luftfahrzeugdateien und keines der fünf E.2-Wasserfahrzeuge trägt ein Fahrwerk),
-und sie schließt eine Fußzone aus, weil beide denselben Streifen unterhalb des Körpers belegen.
+Zwei Nebenbefunde gehören dazu. Eine Fahrzeugkategorie war seither nur am **Landfahrzeug** zulässig
+(keine der drei Luftfahrzeugdateien und keines der fünf E.2-Wasserfahrzeuge trägt ein Fahrwerk) —
+seit E.2 kommen der Anhänger- und der Wechselladerrumpf dazu, `CHASSIS_KINDS` führt drei Arten
+statt einer. Und sie schließt eine Fußzone aus, weil beide denselben Streifen unterhalb des Körpers
+belegen.
 Verwaltungsstufen (Kapitel 5.7) und das Kreiskörperprofil bleiben begründet offen; beide Urteile
 stehen mit ihren Messwerten in
 [`2026-08-18-grundlagen-restpunkte.md`](./docs/decisions/2026-08-18-grundlagen-restpunkte.md).
+
+## E-d, E-e und E-f: Anhang E.2, damit 67 der 68 Zeichen des Anhangs E
+
+E.2 ist die zweite Hälfte von Anhang E und der erste Rezeptblock, der Fahrzeuge führt: 21
+Landfahrzeuge (E-d), fünf Anhänger und Sonderkörper (E-e), fünf Wasserfahrzeuge (E-f).
+**30 der 31 sind gebaut; `E.2.6` fehlt begründet** — den 68 Referenzdateien des Anhangs stehen damit
+67 Rezepte gegenüber, lückenlos von E.1.1 bis E.1.37 und von E.2.1 bis E.2.31 mit dieser einen
+Ausnahme. Der Katalog führt seither 70 Rezepte und 338 Renderfälle, 357 Manifestzeilen und 371
+offene fachliche Reviews, davon 67 im Bereich E.
+
+**E.2 ist der erste Block, dessen Zeichen nicht alle auf demselben Körper stehen.** Wo E.1 alle 37
+Zeichen auf `formation` setzt und ihre ganze Unterscheidung in ein Kürzel legt, verteilen sich die 30
+E.2-Rezepte auf **fünf Körperformen**: 19 Landfahrzeuge, fünf Wasserfahrzeuge, vier Anhänger, ein
+Wechsellader und ein hochkantes Rechteck. Drei davon sind neu — `trailer`, `swap-loader-vehicle` und
+`upright-rectangle` —, `SymbolKind` führt damit 17 Werte statt vierzehn. **`BASE_SYMBOLS` bleibt
+trotzdem bei vierzehn**, und das ist die Absicht und kein Versäumnis: dieses Register ist Kapitel 1,
+und zwei der drei neuen Formen haben dort keinen Abschnitt — ihre einzige Belegdatei ist das
+E.2-Zeichen selbst. Ein erfundener Abschnitt wäre eine Quellenangabe, die die Quelle nicht macht.
+Die drei Formen stehen deshalb ohne eigene Manifestzeile und sind stattdessen gegen ihre
+E.2-Referenzdatei gegatet. Dazu kommt die erste **Körpervariante** des Schemas: `raised-hull`, der
+Rumpf von E.2.27 bis E.2.31, gegenüber `1.5` angehoben und leicht verkleinert. Sie ist bewusst keine
+zweite Grundzeichenart — es ist dasselbe Grundzeichen in einer zweiten, in der Quelle belegten
+Zeichnung, und `vehicle-water` selbst darf nicht auf diese Maße wandern, weil es `1.5` als
+Belegdatei beansprucht und seit diesem Slice dagegen gegatet ist.
+
+**Der Kennwertextraktor erfasst jetzt gekrümmte Füllpfade, und das musste vor dem ersten Rezept
+passieren.** Für einen Kurvenkörper legte er bisher keine Form ab; `matchFingerprint` griff im
+Rezeptpfad deshalb die erste Form, die das Artefakt überhaupt führte — bei den meisten E.2-Dateien
+eine Glyphenhülle statt des Körpers. Ein Rezept hätte damit seinen Körper gegen einen Buchstaben
+verglichen, ohne dass ein Gate etwas gemeldet hätte. Der Ausbau ist am ganzen Bestand messbar: von
+den 661 Kennwertsätzen ändern **151** ihre Formzahl, 60 wechseln von keiner Form auf eine, 91 wählen
+eine andere erste Form als vorher, und die Zahl der Sätze ganz ohne Form fällt von 138 auf 78. Die
+Auswahlregel ist dabei nicht „der erste", sondern „der einschließende" — in 27 der 31 E.2-Dateien
+liegt das Farbfeld als zweiter gekrümmter Füllpfad neben dem Körper, und welcher davon zuerst käme,
+wäre eine Aussage über die Exportreihenfolge des Zeichenprogramms. In Kapitel 1 löst der Ausbau
+vier der fünf ungegateten Körper auf (siehe oben).
+
+Drei Mechanismen kommen aus den Zeichen selbst. **Eine vierte Beschriftungszone** trägt das
+Trägerkürzel *unterhalb* des Körpers in der Organisationsfarbe statt weiß darin — fünf Rezepte
+nutzen sie, alle in E-f, und ohne sie setzte der Katalog ein Kürzel dorthin, wo die Referenz keines
+hat. **Der Schriftgrad des mittigen Laufs ist jetzt ein Wert am Rezept**: neun der 30 Läufe sind in
+der Referenz kleiner gesetzt und tragen ihre gemessene Kappenhöhe zwischen 3,40995 und 4,38290 mm,
+die übrigen 19 den Normwert 4,87 (28 der 30 Zeichen tragen überhaupt einen mittigen Lauf — E.2.22
+und E.2.27 führen keinen). Eine Auslöseregel dafür gibt es nicht, und der Katalog behauptet
+auch keine — er trägt Werte. Und **die mittige Grundlinie ist eine Eigenschaft des Körperprofils**
+geworden: die feste Vorgabe von 8 mm über der Körperunterkante trifft drei der fünf E.2-Formen
+nicht (Wasserrumpf 6,9896, Wechsellader 7,5, Hochkantrechteck 13). Alle 67 beschrifteten Rezepte
+halten damit ihre 28-mm-Box exakt ein.
+
+Beim Fahrwerk wachsen die vermessenen Fahrzeugkategorien von fünf auf **sieben von acht**. Die
+beiden neuen heißen `anhaenger-ein-rad` und `anhaenger-zwei-raeder` — **nach der Zeichnung benannt
+und nicht nach dem Quellbegriff.** Die Quelle führt ihre beiden Anhängerfahrwerke als „von PKW
+gezogen" (5.1.2.4) und „von LKW gezogen" (5.1.2.5). Der Teilpfadzensus der Strichebene sagt etwas
+anderes: 5.1.2.1 „allgemein" führt drei Teilpfade und damit **kein** Rad, 5.1.2.4 vier und 5.1.2.5
+fünf — und von den vier E.2-Anhängern tragen E.2.22 („Grundzeichen"), E.2.23 („von LKW gezogen")
+und E.2.25 die Vier-Teilpfad-Form, allein E.2.24 die mit fünf. Eine ID aus dem Quellbegriff wäre an drei der vier E.2-Anhänger eine
+Falschaussage gewesen — dieselbe Zurückhaltung, mit der E.1.31 seinen Stärkegrad verweigert hat. 24
+der 30 Rezepte tragen ein Fahrwerk, und `CHASSIS_KINDS` lässt es seither an drei Körperarten zu.
+
+**E.2.26 ist die fünfte bewusste Abweichung des Katalogs**, nach E.1.17, E.1.19, E.1.24 und E.1.31.
+Die Trinkwasseraufbereitungsanlage setzt ihr `THW` 1,0 mm weiter links, als `LABEL_SIDE_MARGIN_MM`
+ergibt — bei n = 1 und zwei gleich guten Lesarten. Dafür wird kein Mechanismus gebaut; die Zeile
+trägt ein technisches `deviation` und die Messung in der Notiz, wie E.1.17 seine 2,0 mm trägt.
+
+**`E.2.6` ist der eine Abschnitt, der offen bleibt, und der Grund ist kein Messproblem.** Der
+Gabelstapler der öffentlichen Gefahrenabwehr ist das einzige Zeichen des Anhangs mit orangem Körper
+und trägt zugleich ein weißes `THW`. `labelContrastRequirements()` leitet daraus die Anforderung
+„weiß auf orange" mit `MINIMUM_TEXT_CONTRAST` = 4,5:1 ab, sobald das Rezept existiert — erreicht
+werden 2,3820:1 im Referenz- und im Accessible-Theme (`orange` = `#fa8c00`) und 2,3231:1 im
+Drucktheme (`#aaaaaa`). Das a11y-Gate fiele damit in beiden Alternativthemes. Es ließe sich lösen,
+aber nur durch eine Änderung an einem Gate-Vertrag, und die ist eine Entscheidung und keine Messung.
+Solange sie aussteht, ist E.2.6 nicht gebaut, sondern in `ANHANG_E_D_UNGEBAUT` mit seiner Begründung
+deklariert; mehrere Tests über drei Dateien halten fest, dass es genau dieser eine Abschnitt ist —
+darunter einer, der `recipe.E.2.6` ausdrücklich aus den Renderfällen ausschließt.
+
+**Die Umfangszeile ist deshalb nicht zusammengezogen.** E-c durfte die 37 Einzelabschnitte zu `E.1`
+zusammenziehen, weil ein eigener Test die Lückenlosigkeit trägt — die Umfangsprüfung selbst sieht
+Vollständigkeit nicht, sie prüft an einem Präfix nur, ob *eine* Zeile existiert. `E` bestünde
+deshalb schon mit den 37 E.1-Zeilen allein und `E.2` mit 30 von 31; beides wäre genau die
+unwiderlegbare Behauptung, die die abschnittsweise Führung verhindern soll. Der Umfang führt daher
+`E.1` plus die 30 E.2-Abschnitte einzeln und ist auf 47 Einträge gewachsen. Der Zusammenzug zu `E`
+ist der eine Schritt, der mit E.2.6 fällig wird.
+
+Die Befunde an der Quelle stehen als eigene Exporte im Katalog: 15 über die drei Blöcke, darunter
+sieben Zeichen, deren Bild ein anderes Kürzel führt als ihr Dateiname: E.2.7 „Telelader" gegen
+„Teleskopstapler", E.2.8 „Radlader" und E.2.9 „Bagger" jeweils ohne „BRmG", E.2.13 und E.2.14 mit
+römischer statt arabischer Ziffer, E.2.15 „LKW" für das Wechselladerfahrzeug und E.2.25 „0,6 t" für
+das Leergewicht. Die Begründungen stehen in
+[`docs/decisions/2026-08-18-anhang-e2.md`](docs/decisions/2026-08-18-anhang-e2.md), im
+Sichtprüfungsprotokoll
+[`docs/reviews/2026-08-18-anhang-e2-visual-qa.md`](docs/reviews/2026-08-18-anhang-e2-visual-qa.md),
+in `packages/catalog/src/recipes-anhang-e.ts` und im Coverage-Manifest.
 
 ## Der lokale Referenzbestand
 

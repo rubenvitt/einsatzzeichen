@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { mmToUnits } from '@einsatzzeichen/schema';
-import { deriveRing, parseRectilinearPath } from './path-geometry.js';
+import { boundsOfMm } from '@einsatzzeichen/core';
+import { BASE_SYMBOLS } from '@einsatzzeichen/catalog';
+import type { Primitive } from '@einsatzzeichen/schema';
+import { deriveRing, parsePathBounds, parseRectilinearPath } from './path-geometry.js';
 
 /**
  * Konstruierte Testeingabe für „1.1 Taktische Formation" — enthält keine Bytes aus der
@@ -220,5 +223,124 @@ describe('deriveRing', () => {
 
   it('gibt null zurück für ein um 45° gedrehtes Quadratpaar', () => {
     expect(deriveRing(parseRectilinearPath(DIAMONDS) ?? [])).toBeNull();
+  });
+});
+
+/**
+ * `parsePathBounds` — die Hülle eines Pfads **mit** Kurven. Sie ist die Voraussetzung dafür, dass
+ * der Kennwertextraktor die Körperfläche der Ebene `Flächige_Fülung` überhaupt sehen kann; bis
+ * zum Teilslice E.2 legte er für einen Kurvenpfad nichts ab.
+ *
+ * Auch hier stammt keine Zahl als Byte aus einer Referenzdatei: die Pfade unten sind die
+ * **Katalogkörper** aus `base-symbols.ts` — dieselben `d`-Strings, die `boundsOfMm` in `core`
+ * vermisst. Das macht die Prüfung schärfer als eine konstruierte Eingabe: sie stellt zwei
+ * unabhängig geschriebene Implementierungen desselben Problems gegeneinander.
+ */
+describe('parsePathBounds', () => {
+  /**
+   * Die vier Kurvenkörper des Katalogs, als reine `d`-Strings. Sie sind hier **wörtlich
+   * eingetragen und nicht aus `@einsatzzeichen/catalog` importiert**: `cli` hängt zwar von
+   * `catalog` ab, aber ein Import machte den Test gegen eine spätere Änderung an `base-symbols.ts`
+   * blind — er prüfte dann nur noch, dass zwei Implementierungen dasselbe rechnen, ohne dass
+   * jemand merkt, wenn sich die Eingabe verschiebt.
+   */
+  const CURVED_BODIES: ReadonlyArray<readonly [string, string]> = [
+    ['1.3 Landfahrzeug', 'M 16 8 C 10 8, 5 7.089, 1 5.75 L 1 26 L 31 26 L 31 5.75 C 27 7.089, 22 8, 16 8 Z'],
+    ['1.4 Luftfahrzeug', 'M 31 23 L 1 23 C 1 14.7157, 7.7157 8, 16 8 C 24.2843 8, 31 14.7157, 31 23 Z'],
+    ['1.5 Wasserfahrzeug', 'M 1 9 L 31 9 C 31 17.2843, 24.2843 24, 16 24 C 7.7157 24, 1 17.2843, 1 9 Z'],
+    [
+      '1.14 Spontanhelfer',
+      'M 8.5644 8.5644 C 9.0329 4.8143, 12.2207 2, 16 2 C 19.7793 2, 22.9671 4.8143, ' +
+        '23.4356 8.5644 C 27.1857 9.0329, 30 12.2207, 30 16 C 30 19.7793, 27.1857 22.9671, ' +
+        '23.4356 23.4356 C 22.9671 27.1857, 19.7793 30, 16 30 C 12.2207 30, 9.0329 27.1857, ' +
+        '8.5644 23.4356 C 4.8143 22.9671, 2 19.7793, 2 16 C 2 12.2207, 4.8143 9.0329, ' +
+        '8.5644 8.5644 Z',
+    ],
+  ];
+
+  it.each(CURVED_BODIES)('rechnet für %s dieselbe Hülle wie boundsOfMm', (_name, d) => {
+    const primitive: Primitive = { type: 'path', role: 'body', d };
+    const expected = boundsOfMm(primitive);
+    const actual = parsePathBounds(d);
+    expect(actual).not.toBeNull();
+    if (actual === null) throw new Error('unreachable');
+    // **Ziffernidentisch**, nicht „nah genug": beide Rechnungen setzen die Extrema analytisch an
+    // und dürfen deshalb an keiner Stelle auseinandergehen. Eine Toleranz hier verdeckte genau
+    // den Fehler, für den dieser Test da ist.
+    expect(actual.minX).toBe(expected.minX);
+    expect(actual.minY).toBe(expected.minY);
+    expect(actual.maxX).toBe(expected.maxX);
+    expect(actual.maxY).toBe(expected.maxY);
+  });
+
+  it('trifft ein Kurvenextremum, das auf keinem Ankerpunkt liegt', () => {
+    // Kubik von (0|0) nach (10|0) mit Kontrollpunkten (0|-9) und (10|-9). Ihr Scheitel liegt bei
+    // t = 0,5 auf y = -6,75 — die Ankerpunkte allein ergäben 0. Der Wert ist von Hand gerechnet:
+    // y(0,5) = 3·0,25·0,5·(-9) + 3·0,5·0,25·(-9) = -6,75.
+    const bounds = parsePathBounds('M 0 0 C 0 -9, 10 -9, 10 0 Z');
+    expect(bounds).not.toBeNull();
+    expect(bounds?.minY).toBeCloseTo(-6.75, 12);
+    expect(bounds?.maxY).toBe(0);
+    expect(bounds?.minX).toBe(0);
+    expect(bounds?.maxX).toBe(10);
+  });
+
+  it('spiegelt den Kontrollpunkt eines S-Segments am aktuellen Punkt', () => {
+    // `S` ohne Kurvenvorgänger setzt den ersten Kontrollpunkt auf den aktuellen Punkt; mit
+    // Vorgänger spiegelt es dessen zweiten. Beide Fassungen beschreiben hier dieselbe Kurve:
+    // die zweite Kubik hat (20|-9) als ersten Kontrollpunkt, weil (0|-9) am Punkt (10|0) liegt.
+    const explicit = parsePathBounds('M 0 0 C 0 -9, 10 -9, 10 0 C 10 9, 20 9, 20 0');
+    const smooth = parsePathBounds('M 0 0 C 0 -9, 10 -9, 10 0 S 20 9, 20 0');
+    expect(smooth).toEqual(explicit);
+    expect(smooth?.minY).toBeCloseTo(-6.75, 12);
+    expect(smooth?.maxY).toBeCloseTo(6.75, 12);
+  });
+
+  it('überführt ein quadratisches Segment verlustfrei in eine Kubik', () => {
+    // Quadrat mit Kontrollpunkt (5|-8) von (0|0) nach (10|0): Scheitel bei t = 0,5 auf y = -4.
+    const bounds = parsePathBounds('M 0 0 Q 5 -8, 10 0');
+    expect(bounds?.minY).toBeCloseTo(-4, 12);
+    expect(bounds?.maxX).toBe(10);
+  });
+
+  it('lehnt einen Bogen ab, statt ihn zu nähern', () => {
+    // `A`/`a` kommen im gesamten Referenzbestand nicht vor (gezählt über alle 661 Dateien und
+    // alle vier Ebenen). Eine Bogenzerlegung wäre damit unbelegter Kode; `null` erzeugt
+    // stattdessen denselben lauten Ausfall wie ein unbekanntes Kommando.
+    expect(parsePathBounds('M 0 0 A 5 5 0 0 1 10 0 Z')).toBeNull();
+  });
+
+  it('liefert null für einen leeren Pfad', () => {
+    expect(parsePathBounds('')).toBeNull();
+    expect(parsePathBounds('Z')).toBeNull();
+  });
+
+  it('rundet nicht — die Eichung gegen boundsOfMm hängt an den hinteren Stellen', () => {
+    // `parseRectilinearPath` rundet auf drei Einheitenstellen, weil seine Werte Ankerkoordinaten
+    // aus der Datei sind. Ein Kurvenextremum ist eine gerechnete Zahl; gerundet verlöre sie die
+    // Ziffernidentität mit `boundsOfMm`, und damit den einzigen Beleg dafür, dass zwei
+    // unabhängige Implementierungen dasselbe rechnen.
+    const bounds = parsePathBounds('M 0 0 C 0 -9, 10 -9, 10 0 Z');
+    expect(bounds?.minY).toBe(-6.75);
+    expect(String(parsePathBounds('M 0 0 C 0 -1, 10 -1, 10 0 Z')?.minY)).toBe('-0.75');
+  });
+
+  it('rechnet für jeden Pfadkörper des Katalogs dieselbe Hülle wie boundsOfMm', () => {
+    // Die Gegenprobe zu den vier festgeschriebenen Körpern oben, und sie wächst mit: sie zieht
+    // die Pfadkörper aus `BASE_SYMBOLS` und deckt damit auch `1.9 Gebiet` ab — den schärfsten
+    // Fall des Bestands mit zehn Eckrundungen, also **zwanzig** Kurvenextrema, von denen keines
+    // auf einem Ankerpunkt liegt. Sein `d`-String wird aus Ecken und Radien abgeleitet (629
+    // Zeichen) und ließe sich hier nicht sinnvoll wörtlich eintragen.
+    const paths = Object.values(BASE_SYMBOLS)
+      .flatMap((entry) => entry.depictions)
+      .flatMap((depiction) => depiction.drawing.children)
+      .filter((child): child is Extract<Primitive, { type: 'path' }> => child.type === 'path');
+    expect(paths.length).toBeGreaterThan(0);
+    for (const path of paths) {
+      const expected = boundsOfMm(path);
+      const actual = parsePathBounds(path.d);
+      expect(actual, path.d).not.toBeNull();
+      expect({ ...actual }).toEqual({ ...expected } as unknown as Record<string, number>);
+    }
   });
 });

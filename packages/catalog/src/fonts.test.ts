@@ -3,7 +3,12 @@ import { createHash } from 'node:crypto';
 import { Resvg, type RenderedImage } from '@resvg/resvg-js';
 import { describe, expect, it } from 'vitest';
 import { compose, renderSvg, type CatalogPorts } from '@einsatzzeichen/core';
-import { DEFAULT_VIEWBOX_MM, type Primitive, type Drawing } from '@einsatzzeichen/schema';
+import {
+  DEFAULT_VIEWBOX_MM,
+  type Drawing,
+  type Primitive,
+  type SymbolSpec,
+} from '@einsatzzeichen/schema';
 import { TEXT_FONT_FAMILY, TEXT_FONT_PATH, TEXT_FONT_SHA256, resvgFontOptions } from './fonts.js';
 import { RECIPES, composeFromCatalog, type Recipe } from './recipes.js';
 
@@ -254,10 +259,190 @@ describe('Rasterevidenz für Text (resvgFontOptions())', () => {
   it('prüft alle Zeichen mit Beschriftungszonen, nicht nur eine Auswahl', () => {
     // Sonst bliebe die Prüfung unten still grün, falls die Rezepte einmal ohne Beschriftung
     // dastünden — dieselbe Rolle wie „rastert Text überhaupt" für die Schriftbindung.
-    // 16 Zeichen aus E-a, zwölf aus E-b und neun aus E-c, also alle 37 Abschnitte aus E.1; die
-    // Prüfung unten läuft generisch über `RECIPES` und braucht für die neuen Kürzelsätze keine
-    // eigene Verdrahtung.
-    expect(labelRecipes).toHaveLength(37);
+    // 16 Zeichen aus E-a, zwölf aus E-b und neun aus E-c (alle 37 Abschnitte aus E.1), dazu 20
+    // aus E-d, fünf aus E-e und fünf aus E-f — 67 der 68 Abschnitte des Anhangs E. Die Prüfung
+    // unten läuft generisch über `RECIPES` und braucht für die neuen Kürzelsätze keine eigene
+    // Verdrahtung; die neun je Zeichen gemessenen Kappenhöhen aus E-d sind genau der Grund, aus
+    // dem sie hier grün ist (ohne sie treten sechs Läufe aus ihrer Box).
+    expect(labelRecipes).toHaveLength(67);
+  });
+
+  /**
+   * Die **vierte** Beschriftungszone. Sie steht hier und nicht bei den Rezepten, weil die 31
+   * Zeichen aus E.2 erst die zweite Bauphase einträgt — der Mechanismus muss vorher gegatet sein,
+   * sonst fiele die Prüfung genau dann, wenn niemand mehr damit rechnet.
+   *
+   * Gemessen an den fünf Referenzdateien E.2.27 bis E.2.31 (byteidentisch bis auf 0,0003 mm):
+   * Tinte 22,5379 / 24,0806 / 31,5778 / 26,9998 mm.
+   */
+  const BELOW_RIGHT_SPEC = {
+    kind: 'vehicle-water',
+    bodyVariant: 'raised-hull',
+    organization: 'thw',
+    labels: { belowRight: 'THW' },
+  } as const satisfies SymbolSpec;
+
+  /** Hülle der deckenden Pixel eines isolierten Laufs, zurück in Millimeter gerechnet. */
+  function runInkBoxMm(drawing: Drawing, size: number): {
+    minXMm: number;
+    minYMm: number;
+    maxXMm: number;
+    maxYMm: number;
+  } {
+    const run = drawing.children.find((primitive) => primitive.role === 'label');
+    if (run?.type !== 'text') throw new Error('Die Zeichnung trägt keinen Beschriftungslauf.');
+    const image = new Resvg(renderSvg({ viewBox: drawing.viewBox, children: [run] }, { size }), {
+      font: resvgFontOptions(),
+    }).render();
+    const pixels = image.pixels;
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (let y = 0; y < image.height; y++) {
+      for (let x = 0; x < image.width; x++) {
+        if ((pixels[(y * image.width + x) * 4 + 3] ?? 0) < 128) continue;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+    const mm = (value: number): number => (value * drawing.viewBox.width) / size;
+    return { minXMm: mm(minX), minYMm: mm(minY), maxXMm: mm(maxX + 1), maxYMm: mm(maxY + 1) };
+  }
+
+  it('setzt die vierte Zone an die vermessene Stelle unterhalb des Rumpfes', () => {
+    const drawing = composeFromCatalog(BELOW_RIGHT_SPEC, 'Wasserfahrzeug allgemein');
+    const ink = runInkBoxMm(drawing, 4096);
+
+    // **Rechte Kante, Grundlinie und Oberkante treffen die Referenz.** Die linke Kante tut es
+    // nicht, und das ist kein Zonenfehler: Arimo setzt `THW` 0,499 mm breiter als die Schrift der
+    // Referenz (9,539 gegen 9,040 mm). Gegenprobe an der bestehenden Zone unten rechts, wo
+    // dieselbe Differenz an derselben Stelle auftritt — sie ist damit eine Eigenschaft der
+    // Schriftwahl und nicht dieser Zone.
+    expect(ink.maxXMm).toBeCloseTo(31.578, 1);
+    expect(ink.minYMm).toBeCloseTo(24.081, 1);
+    expect(ink.maxYMm).toBeCloseTo(27.0, 1);
+    // Vollständig **unterhalb** des Rumpfes: dessen Unterkante liegt bei 22,9896 mm.
+    expect(ink.minYMm).toBeGreaterThan(22.9896);
+
+    const inBody = runInkBoxMm(
+      composeFromCatalog(
+        { kind: 'vehicle-land', organization: 'thw', labels: { bottomRight: 'THW' } },
+        'Vergleichslauf',
+      ),
+      4096,
+    );
+    // Derselbe Lauf im selben Grad: gleiche Breite, gleiche Höhe, nur versetzt. Verglichen wird
+    // auf **ein Rasterpixel** genau (32 mm / 4096 px = 0,0078 mm) — feiner kann eine Messung am
+    // Raster nicht sein, und eine engere Zusicherung wäre eine Behauptung über die Rundung des
+    // Rasterers.
+    const pixelMm = 32 / 4096;
+    expect(Math.abs(ink.maxXMm - ink.minXMm - (inBody.maxXMm - inBody.minXMm))).toBeLessThanOrEqual(
+      pixelMm,
+    );
+    expect(Math.abs(ink.maxYMm - ink.minYMm - (inBody.maxYMm - inBody.minYMm))).toBeLessThanOrEqual(
+      pixelMm,
+    );
+    // Eigener Zeitrahmen: dieser Test rastert **zweimal** bei 4096 px und tastet dabei je
+    // 16,8 Millionen Pixel ab. Auf der CI-Maschine reicht das über die Vorgabe von 5 s hinaus
+    // (gemessen: der Lauf fiel dort als Zeitüberschreitung, während er lokal in unter 2 s
+    // durchläuft). Die Rastergröße bleibt, weil die Zusicherung über die Laufbreite auf **ein**
+    // Rasterpixel genau greift — 32 mm / 4096 px = 0,0078 mm; eine kleinere Rasterung würde die
+    // Toleranz verdoppeln und damit die Aussage schwächen.
+  }, 30_000);
+
+  /**
+   * **Die Zusatzgeometrie des Grundzeichens ist der einzige neue Renderpfad ohne Koordinaten-
+   * gate.** `matchFingerprint` sieht nur `role: 'body'`, `checkViewBox` prüft nur das Clipping,
+   * und `labelInkAgainstBox` nur `role: 'label'` — eine Deichsel, die gar nicht malt, bestünde
+   * alle drei. Deshalb hier eine Rasterprüfung: sie zählt tatsächlich schwarze, deckende Pixel in
+   * dem Band, in dem die Referenz Geometrie zeichnet.
+   *
+   * Die Bänder sind so gewählt, dass **allein** die Zusatzgeometrie hineinfällt: bei der Deichsel
+   * x 1,5…3,5 mm (die Körperkante des Anhängerrumpfs liegt bei 4,0 mit Strich 0,5, also ab
+   * 3,75), beim L-Rahmen die senkrechte Bahn x 0,75…1,25 mm, die 1,25 mm links der Körperkante
+   * 2,5 endet.
+   */
+  function darkInkInBandCount(
+    spec: SymbolSpec,
+    band: { x0: number; x1: number; y0: number; y1: number },
+  ): number {
+    const size = 512;
+    const drawing = composeFromCatalog(spec, 'Rasterprüfung');
+    const image = new Resvg(renderSvg(drawing, { size }), { font: resvgFontOptions() }).render();
+    const pixels = image.pixels;
+    const scale = size / drawing.viewBox.width;
+    let count = 0;
+    for (let y = Math.floor(band.y0 * scale); y < Math.ceil(band.y1 * scale); y++) {
+      for (let x = Math.floor(band.x0 * scale); x < Math.ceil(band.x1 * scale); x++) {
+        const index = (y * image.width + x) * 4;
+        const alpha = pixels[index + 3] ?? 0;
+        if (alpha <= 200) continue;
+        if ((pixels[index] ?? 255) < 80 && (pixels[index + 1] ?? 255) < 80 && (pixels[index + 2] ?? 255) < 80) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
+  it('malt die Deichsel des Anhängers wirklich', () => {
+    const band = { x0: 1.5, x1: 3.5, y0: 14, y1: 16 };
+    const drawn = darkInkInBandCount(
+      {
+        kind: 'trailer',
+        organization: 'thw',
+        vehicleCategory: 'anhaenger-ein-rad',
+        labels: { bottomRight: 'THW' },
+      },
+      band,
+    );
+    // Zwei waagerechte Bahnen von je 0,5 mm Höhe über 2 mm Breite bei 16 px/mm — das sind
+    // 2 · 8 · 32 = 512 Pixel als Sollwert. Geprüft wird gegen die Hälfte davon, damit die Zeile
+    // an der Kantenglättung nicht wackelt; ihr Zweck ist die Unterscheidung „malt" von „malt
+    // nicht", nicht eine zweite Geometriemessung.
+    expect(drawn).toBeGreaterThan(256);
+
+    // Gegenprobe: derselbe Streifen am Landfahrzeug ist leer — dort liegt die blaue Körperfläche.
+    expect(
+      darkInkInBandCount(
+        {
+          kind: 'vehicle-land',
+          organization: 'thw',
+          vehicleCategory: 'kfz-kategorie-1',
+          labels: { bottomRight: 'THW' },
+        },
+        band,
+      ),
+    ).toBe(0);
+  });
+
+  it('malt den L-Rahmen des Wechselladers wirklich', () => {
+    const swapLoader = {
+      kind: 'swap-loader-vehicle',
+      organization: 'thw',
+      vehicleCategory: 'kfz-kategorie-1',
+      labels: { center: 'LKW', bottomRight: 'THW' },
+    } as const satisfies SymbolSpec;
+    // Senkrechte Bahn: 0,5 mm breit über 20 mm bei 16 px/mm — Sollwert 8 · 320 = 2560 Pixel.
+    expect(darkInkInBandCount(swapLoader, { x0: 0.75, x1: 1.25, y0: 6, y1: 26 })).toBeGreaterThan(
+      1280,
+    );
+    // Waagerechte Bahn unterhalb des Körpers (dessen Unterkante liegt bei 24,5).
+    expect(
+      darkInkInBandCount(swapLoader, { x0: 2.5, x1: 30, y0: 25.75, y1: 26.25 }),
+    ).toBeGreaterThan(1760);
+  });
+
+  it('hält bei der vierten Zone die deklarierte boxMm ein', () => {
+    for (const { inkPixelCount, outsideBoxCount } of labelInkAgainstBox(
+      composeFromCatalog(BELOW_RIGHT_SPEC, 'Wasserfahrzeug allgemein'),
+    )) {
+      expect(inkPixelCount).toBeGreaterThan(0);
+      expect(outsideBoxCount).toBe(0);
+    }
   });
 
   it.each(labelRecipes)(

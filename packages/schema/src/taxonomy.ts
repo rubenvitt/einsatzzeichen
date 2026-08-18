@@ -1,4 +1,20 @@
-/** Grundzeichenart nach Kapitel 1 der BBK/BABZ-Empfehlung. */
+/**
+ * Körperform eines Zeichens. Die ersten vierzehn Werte sind die Grundzeichen aus Kapitel 1 der
+ * BBK/BABZ-Empfehlung und stehen als `CatalogEntry` in `BASE_SYMBOLS`.
+ *
+ * **Die letzten drei sind Körperformen ohne Kapitel-1-Abschnitt.** Der Anhang E.2 trägt sie, und
+ * die Zuschnittsnotiz vom 11. August 2026 hat sie vorhergesagt („für die letzten drei nennt der
+ * Zuschnitt kein Grundzeichen aus Kapitel 1"). Sie stehen bewusst **nicht** in `BASE_SYMBOLS`:
+ * dessen Register ist das Kapitel 1, und ein Eintrag dort verlangte einen Abschnitt, den zwei von
+ * ihnen nicht haben (ihre einzige Belegdatei ist das E.2-Zeichen selbst, je 1 von 661).
+ *
+ * - `trailer` — Anhängerrumpf. Belegt an `5.1.2.1_Anhänger_allgemein.svg`; sein Füllpfad kommt in
+ *   17 der 661 Referenzdateien byteidentisch vor (selbst gezählt).
+ * - `swap-loader-vehicle` — Rumpf des Wechselladerfahrzeugs `E.2.15`. Genau 1 von 661.
+ * - `upright-rectangle` — hochkantes Rechteck 26 × 28 mm von `E.2.26`. Genau 1 von 661. Nach der
+ *   Zeichnung benannt und nicht nach der Trinkwasseraufbereitungsanlage: was die Form fachlich
+ *   bezeichnet, sagt die Datei nicht.
+ */
 export type SymbolKind =
   | 'formation'
   | 'person'
@@ -13,7 +29,31 @@ export type SymbolKind =
   | 'hazard'
   | 'point'
   | 'event'
-  | 'spontaneous-helper';
+  | 'spontaneous-helper'
+  | 'trailer'
+  | 'swap-loader-vehicle'
+  | 'upright-rectangle';
+
+/**
+ * Eine **zweite, in der Quelle belegte Zeichnung desselben Grundzeichens** — keine zweite
+ * Grundzeichenart. Bisher gibt es genau eine.
+ *
+ * `raised-hull` ist der Rumpf der fünf Wasserfahrzeuge `E.2.27` bis `E.2.31`. Gegenüber
+ * `1.5_Wasserfahrzeug.svg` liegt er 1,0002 mm höher (Sehne auf y 7,9999 statt 9,0001) und ist um
+ * den Faktor 0,999318 kleiner (Sehnenlänge 29,9794 gegen 29,9999 mm) — beides selbst vermessen.
+ * Der Name beschreibt die **sichtbare** Differenz: die Anhebung, und die schafft genau den
+ * Freiraum, in dem das blaue Trägerkürzel steht (1,0908 mm unter der Rumpfunterkante).
+ *
+ * **Warum eine Variante und keine eigene `SymbolKind`:** es ist fachlich dasselbe Grundzeichen,
+ * und eine eigene Art bräuchte einen eigenen Abschnitt — der wäre 1.5, den `vehicle-water`
+ * bereits beansprucht und gegen den es seit dem Teilslice E.2 selbst gegatet ist. Umgekehrt darf
+ * `vehicle-water` nicht auf diese Maße geändert werden: es fiele dann gegen `1.5` um 2,8
+ * Einheiten bei einer Toleranz von 0,01.
+ *
+ * Ob „raised-hull" der fachlich richtige Name ist, entscheidet die Datei nicht; die Geometrie ist
+ * gemessen, die Benennung ist eine Entscheidung.
+ */
+export type BodyVariantId = 'raised-hull';
 
 /** Organisationen nach Kapitel 2. Bestimmen die Körperfarbe. */
 export type OrganizationId =
@@ -38,14 +78,35 @@ export type AdminLevelId =
   | 'nationalstaat'
   | 'europaeische-union';
 
-/** Fahrzeugkategorien nach Kapitel 5.1. */
+/**
+ * Fahrzeugkategorien nach Kapitel 5.1 — die Fahrwerkszone, die ein Zeichen unterhalb seines
+ * Körpers trägt.
+ *
+ * **Die beiden Anhängerfahrwerke sind nach der Zeichnung benannt und nicht nach dem Quellbegriff,
+ * und das ist gemessen begründet.** Die Quelle nennt sie „von PKW gezogen" (`5.1.2.4`, ein Rad)
+ * und „von LKW gezogen" (`5.1.2.5`, zwei Räder). Diese Begriffe als IDs zu vergeben, hieße an
+ * drei von vier E.2-Anhängern etwas zu behaupten, was die Datei nicht sagt:
+ *
+ * - `E.2.22_Anhänger Grundzeichen.svg` trägt die **Ein-Rad**-Form (Innenring
+ *   15,5000/26,2505/19,5001/30,2503, selbst vermessen) — obwohl es das Grundzeichen ist;
+ * - `5.1.2.1_Anhänger_allgemein.svg` trägt **überhaupt kein Rad** (selbst nachgemessen: seine
+ *   Strichebene führt drei Teilpfade, keiner davon ein Ring);
+ * - `E.2.23_Anhänger Netzersatzanlage_von LKW gezogen.svg` trägt die **Ein-Rad**-Form, obwohl
+ *   sein Name „von LKW gezogen" sagt.
+ *
+ * Damit ist die Gleichung „ein Rad = von PKW gezogen" aus der Quelle selbst widerlegt. Gezählt
+ * sind **Räder**, keine Achsen; ob ein Anhänger mit einem Rad fachlich etwas anderes bezeichnet
+ * als einer mit zweien, entscheidet eine fachkundige Person und nicht diese Datei.
+ */
 export type VehicleCategoryId =
   | 'kfz-kategorie-1'
   | 'kfz-kategorie-2'
   | 'kfz-kategorie-3'
   | 'amphibienfahrzeug'
   | 'kettenfahrzeug'
-  | 'schienenfahrzeug';
+  | 'schienenfahrzeug'
+  | 'anhaenger-ein-rad'
+  | 'anhaenger-zwei-raeder';
 
 /** Fähigkeiten nach Kapitel 4 in verbindlicher Kapitelreihenfolge. */
 export const CAPABILITY_IDS = Object.freeze([
@@ -343,11 +404,56 @@ export interface BodyLabels {
   readonly center?: string;
   readonly bottomLeft?: string;
   readonly bottomRight?: string;
+  /**
+   * Die **vierte** Zone, und die einzige **außerhalb** des Körpers: rechtsbündig unterhalb seiner
+   * Unterkante, in der Organisationsfarbe statt in Weiß. Belegt an den fünf Wasserfahrzeugen
+   * `E.2.27` bis `E.2.31`, deren Typo-Ebene diesen Lauf byteidentisch führt (Tinte
+   * 22,5379/24,0806/31,5778/26,9998 mm, Füllung #003296, Versalhöhe 2,9192 — selbst vermessen,
+   * in allen fünf Dateien gleich bis auf 0,0003 mm an der T-Glyphe von E.2.28).
+   *
+   * **Nicht dasselbe wie `bottomRight` mit anderer Farbe.** Der Lauf liegt vollständig unter dem
+   * Rumpf: seine Oberkante 24,0806 mm steht 1,0908 mm unter der Rumpfunterkante 22,9898 mm. Ein
+   * `bottomRight` setzte ihn weiß **in** den Rumpf — das ist ein anderes Bild, und kein Gate
+   * meldete es (der Fingerprint sieht nur `role: 'body'`, die Rasterprüfung nur die selbst
+   * deklarierte Box).
+   *
+   * **Auch nicht dasselbe wie `SymbolSpec.designation`.** Die Fußzone steht mittig, schwarz und
+   * mit festem Schriftgrad 4 mm; dieser Lauf steht rechtsbündig, farbig und im Schriftgrad der
+   * unteren Zonen.
+   */
+  readonly belowRight?: string;
+  /**
+   * **Gemessene Versalhöhe** des mittigen Laufs in Millimetern. Fehlt sie, gilt der Normwert aus
+   * `compose.ts` (4,87 mm, an den 16 Dateien E.1.1 bis E.1.16 vermessen).
+   *
+   * Anhang E.2 setzt seine mittigen Kürzel **nicht** durchgehend im Normgrad. Selbst vermessen
+   * (18. August 2026, Grundlinie 18,0 mm, Versalhöhe der ersten Versalie des Laufs): neun der 30
+   * mittigen Läufe sind kleiner gesetzt — 4,3829 (E.2.7 „T", E.2.16 „L", E.2.17 „L", E.2.19 „F"),
+   * 4,3826 (E.2.8 „R", E.2.21 „M"), 3,6513 (E.2.20 „F") und 3,4099 (E.2.12 „M", E.2.13 „M")
+   * gegen den Normwert 4,8694 (E.2.1 „P").
+   *
+   * **Es gibt keine Auslöseregel, und das ist gemessen, nicht offen.** Von den neun bräuchten nur
+   * drei die Verkleinerung, um in die 28-mm-Box zu passen; E.2.17 käme bei voller Größe auf
+   * 27,2 mm und E.2.19 auf 17,2 mm. Eine Breitenschwelle ist damit widerlegt. Der Katalog trägt
+   * deshalb je Zeichen die gemessene Zahl und behauptet keine Regel — genau die Bauart, die
+   * `MEASURED_VEHICLE_CATEGORIES` für die Fahrwerke wählt.
+   *
+   * **Ablesevorschrift für den Nachbau:** die Grundlinie ist der maxY der **flachfüßigen**
+   * Glyphen, nicht der häufigste und nicht der größte. Runde Glyphen (e, a, o, d) überschießen
+   * sie um bis zu 0,08 mm; wer den häufigsten maxY nimmt, misst bei E.2.7 („Telelader", fünf
+   * runde von neun Glyphen) 18,0763 statt 18,0001 und bekommt 4,4593 statt 4,3829.
+   */
+  readonly centerCapHeightMm?: number;
 }
 
 /** Semantische Beschreibung eines Zeichens. Eingabe des Kompositionsmotors. */
 export interface SymbolSpec {
   kind: SymbolKind;
+  /**
+   * Zweite belegte Zeichnung derselben Grundzeichenart. Fehlt sie, gilt die Zeichnung aus
+   * Kapitel 1. Ein Wert, den die Art nicht führt, ist kein stiller Rückfall: `baseDrawing` wirft.
+   */
+  bodyVariant?: BodyVariantId;
   organization?: OrganizationId;
   strength?: StrengthId;
   administrativeLevel?: AdminLevelId;

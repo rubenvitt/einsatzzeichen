@@ -59,6 +59,29 @@ zweite Form.
 > [`2026-08-17-anhang-e-c.md`](./2026-08-17-anhang-e-c.md). Die Aussage bleibt stehen, damit
 > sichtbar ist, dass sie zur Hälfte zu weit ging.
 
+> **Nachtrag vom 18. August 2026 (Teilslices E-d/E-e/E-f, LFH-443 bis LFH-445).** Zwei Angaben
+> dieses Abschnitts sind mit der Vermessung von E.2 aufgelöst.
+>
+> **Erstens:** „Der Wasserfahrzeugrumpf entspricht `1.5_Wasserfahrzeug.svg` in der Form, sitzt aber
+> 1 mm höher und ist 0,02 mm schmaler; **das ist Vermessungsarbeit im Teilslice, keine zweite
+> Form**." Die beiden Maße stimmen — selbst gemessen 1,0002 mm höher und 0,0205 mm schmaler (`1.5`
+> 1,0001/9,0001/31,0000/24,0002 gegen 1,0100/7,9999/30,9894/22,9898 mm) —, der Schluss nicht. Der
+> Katalogkörper aus Kapitel 1 fällt gegen den Kennwert von `E.2.27` um bis zu **2,8630 Einheiten**
+> bei einer Toleranz von 0,01 und umgekehrt um 2,8641. Es sind zwei Zeichnungen, die nebeneinander
+> stehen müssen; der Katalog führt die zweite als `BodyVariantId` `raised-hull`. Dieselbe
+> verkleinerte Hülle tragen 16 der 661 Dateien (fünf aus E.2, elf aus I.3) — die Verkleinerung ist
+> die Regel dieser Zeichnungsfamilie, allein die Anhebung ist die E.2-Eigenheit.
+>
+> **Zweitens:** „Anhängerrumpf — Grundzeichen: keins." Für Kapitel 1 gilt das unverändert. Für die
+> Belegbarkeit nicht: sein Füllpfad kommt **byteidentisch in 17 der 661 Dateien** vor, darunter
+> `5.1.2.1_Anhänger_allgemein.svg`. Diese Notiz zählt vier, weil sie innerhalb von Anhang E gezählt
+> hat. Der Katalog gatet die Form deshalb gegen zwei Belegdateien. Für Wechselladerrumpf und
+> Hochkantrechteck bleibt es bei je einer Datei im gesamten Bestand — und der Wechselladerrumpf ist
+> ausdrücklich **nicht** deckungsgleich mit `5.1.1.8` (dessen Füllkörper misst
+> 3,9998/6,0000/31,0000/24,9999 mm). Die Messungen stehen in
+> [`2026-08-18-anhang-e2.md`](./2026-08-18-anhang-e2.md). Beide Aussagen bleiben stehen, damit
+> sichtbar ist, dass sie es waren.
+
 **`BODIES` in [`packages/catalog/src/base-symbols.ts`](../../packages/catalog/src/base-symbols.ts)
 trägt acht der 14 `SymbolKind`-Werte.** Es fehlen genau `vehicle-land`, `vehicle-air`,
 `vehicle-water`, `area`, `event` und `spontaneous-helper` — die „sechs fehlenden Grundzeichen" aus
@@ -144,6 +167,12 @@ plant diesen Schritt vor der ersten Zeile Kode ein.
 
 - **Körperform von E.2.26** (Trinkwasseraufbereitungsanlage, hochkantes Rechteck 26 × 28 mm) hat im
   gesamten Bestand keine zweite Verwendung und kein Kapitel-1-Vorbild. Zu klären in E-e.
+
+  > **Nachtrag vom 18. August 2026 (Teilslice E-e, LFH-444).** Bestätigt und geklärt: die Form kommt
+  > in genau einer der 661 Dateien vor. Der Katalog führt sie als `SymbolKind` `upright-rectangle`,
+  > Mittellinie 3,0000/1,9999/29,0001/29,9999 mm, gegatet gegen `E.2.26` selbst. **`container`
+  > schied aus** — der misst 4/4/28/28. Was die Form fachlich darstellt, entscheidet die Datei
+  > weiterhin nicht; die Frage steht als offenes Fachreview an der Manifestzeile.
 - **Die Fahrwerkszuordnung ist zur Hälfte belegt und zur Hälfte offen.** Vergleicht man die
   Teilpfade der Strichebene jedes E.2-Landfahrzeugs mit denen von `1.3_Landfahrzeug.svg`, bleibt
   genau die Fahrwerksmarke übrig. Diese Restmenge ist bei sieben Zeichen **mengengleich** mit der
@@ -158,6 +187,21 @@ plant diesen Schritt vor der ersten Zeile Kode ein.
   („geländefähig") die Form von `E.2.6` und `E.2.8` („geländegängig") trägt. E-d klärt diese
   Zuordnung am Referenzbild, bevor die erste Marke entsteht — welche der beiden Angaben trägt, ist
   nicht aus den Dateinamen entscheidbar.
+
+  > **Nachtrag vom 18. August 2026 (Teilslice E-d, LFH-443).** Die belegte Hälfte hält: die beiden
+  > Siebenergruppen sind zeichengenau bestätigt. Die offene Hälfte ist geschlossen, und dabei sind
+  > **drei Angaben dieses Absatzes gefallen**. „Die restlichen sieben (E.2.4, E.2.6, E.2.7, E.2.8,
+  > E.2.9, E.2.11, E.2.15) sind mit **keiner** 5.1.1-Datei mengengleich" — fünf von ihnen sind es
+  > mit `5.1.1.3`, `E.2.9` mit `5.1.1.5`, und `E.2.15` trägt auf seinen Radplätzen die Marke von
+  > `5.1.1.1`. „Die fünf mit je sieben Teilpfaden zerfallen ihrerseits in zwei verschiedene Formen,
+  > wobei `E.2.11` die Form von `E.2.6` und `E.2.8` trägt" — alle fünf tragen **dieselbe**
+  > Strichebene, untereinander punktgleich: Radringe bei 1,7501…5,7503, 14,0000…18,0001 und
+  > 26,2498…30,2500 mm plus zwei Balken mit den Lücken 5,2433…14,5062 und 17,4932…26,7561 mm bei
+  > y 26,2502…28,0000. Und die Vermutung, `5.1.1.8` sei die Vorlage für `E.2.15`, trägt nicht: die
+  > beiden Körper sind nicht deckungsgleich. Diese Notiz hat die Fahrwerke aus der Teilpfadzahl
+  > geschlossen und nicht vermessen; die Messung steht in
+  > [`2026-08-18-anhang-e2.md`](./2026-08-18-anhang-e2.md). Die Aussagen bleiben stehen, damit
+  > sichtbar ist, dass sie es waren.
 - **`hilfsorganisation` bleibt unberührt.** Anhang E braucht nur `blau` (THW) und `orange` — letzteres
   für `E.2.6`, das als einziges Zeichen des Anhangs `#fa8c00` führt. Beide Farben stehen in
   `organizations.ts`. Posten 3 von LFH-424 ist für E kein Blocker.

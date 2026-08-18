@@ -342,3 +342,285 @@ describe('compose() — Beschriftungszonen', () => {
     expect(checkViewBox(drawing)).toEqual([]);
   });
 });
+
+/**
+ * Der Wechselladerrumpf und sein L-Rahmen — die einzige Konstellation des Bestands, in der die
+ * Unterkante des **Körpers** und die des **Grundzeichens** auseinandergehen. Die Zahlen sind die
+ * vermessenen aus `base-symbols.ts` (Körper 2,5001/6,0000/31,0000/24,5004; Rahmen-Mittellinie
+ * (1|6) → (1|26) → (31|26)).
+ */
+const swapLoaderBody: Primitive = {
+  type: 'path',
+  role: 'body',
+  d: 'M 16.75 8.25 C 11.05 8.25, 6.3 7.339, 2.5 6 L 2.5 24.5 L 31 24.5 L 31 6 C 27.2 7.339, 22.45 8.25, 16.75 8.25 Z',
+};
+const swapLoaderFrame: Primitive = {
+  type: 'polyline',
+  role: 'bodyExtra',
+  closed: false,
+  points: [
+    [1, 6],
+    [1, 26],
+    [31, 26],
+  ],
+};
+
+/** Der angehobene Wasserrumpf der fünf Zeichen E.2.27 bis E.2.31 (Hülle 1,01/7,9999/30,9894/22,9896). */
+const raisedHull: Primitive = {
+  type: 'path',
+  role: 'body',
+  d: 'M 1.01 7.9999 L 30.9894 7.9999 C 30.9894 16.2785, 24.2783 22.9896, 15.9997 22.9896 C 7.7211 22.9896, 1.01 16.2785, 1.01 7.9999 Z',
+};
+
+const e2Catalog: CatalogPorts = {
+  ...catalog,
+  baseDrawing: (kind, variant) => {
+    if (kind === 'swap-loader-vehicle') {
+      return { viewBox: DEFAULT_VIEWBOX_MM, children: [swapLoaderBody, swapLoaderFrame] };
+    }
+    if (kind === 'vehicle-water' && variant === 'raised-hull') {
+      return { viewBox: DEFAULT_VIEWBOX_MM, children: [raisedHull] };
+    }
+    if (variant !== undefined) throw new Error(`Keine Körpervariante "${variant}" für "${kind}".`);
+    return { viewBox: DEFAULT_VIEWBOX_MM, children: [formationBody] };
+  },
+  organizationColor: () => 'blau',
+  vehicleChassis: () => ({
+    marks: [{ type: 'wheel', cxMm: 3.75, cyFromTopMm: 2.25, rMm: 2.25 }],
+    heightMm: 4.75,
+  }),
+};
+
+describe('compose() — Zusatzgeometrie des Grundzeichens', () => {
+  it('trägt die Nicht-Körper-Primitive des Grundzeichens mit', () => {
+    // Bis zum Teilslice E.2 nahm `compose()` allein den Körper: eine Deichsel oder ein L-Rahmen
+    // verschwand still. Genau diese Bauart verbietet dieses Projekt.
+    const drawing = compose({ kind: 'swap-loader-vehicle' }, e2Catalog);
+    const extras = drawing.children.filter((child) => child.role === 'bodyExtra');
+    expect(extras).toHaveLength(1);
+    expect(extras[0]).toMatchObject({ type: 'polyline', closed: false });
+  });
+
+  it('zeichnet die Zusatzgeometrie nach dem gefüllten Körper', () => {
+    // Die Deichsel endet auf der Körpermittellinie; eine Organisationsfüllung zeichnete darüber,
+    // wenn sie danach käme. Dieselbe Begründung wie beim Fahrwerk.
+    const drawing = compose({ kind: 'swap-loader-vehicle', organization: 'thw' }, e2Catalog);
+    const bodyIndex = drawing.children.findIndex((child) => child.role === 'body');
+    const extraIndex = drawing.children.findIndex((child) => child.role === 'bodyExtra');
+    expect(bodyIndex).toBeGreaterThanOrEqual(0);
+    expect(extraIndex).toBeGreaterThan(bodyIndex);
+  });
+
+  it('färbt die Zusatzgeometrie nicht mit der Organisationsfarbe ein', () => {
+    const drawing = compose({ kind: 'swap-loader-vehicle', organization: 'thw' }, e2Catalog);
+    const body = drawing.children.find((child) => child.role === 'body');
+    const extra = drawing.children.find((child) => child.role === 'bodyExtra');
+    expect(body?.style?.fill).toBe('blau');
+    expect(extra?.style?.fill).toBeUndefined();
+  });
+});
+
+describe('compose() — Fahrwerk hängt am Grundzeichen, nicht am Körper', () => {
+  it('setzt die Zonenoberkante auf die Unterkante des Grundzeichens', () => {
+    // Gemessen an drei Dateien mit abweichender Körperunterkante: E.2.15 (Körper bis 24,5004),
+    // 5.1.1.8 (24,9999) und 5.1.1.9 (24,9999) hängen ihre Räder alle drei auf 26,0 — die
+    // Unterkante ihres L-Rahmens. Der Versatz ist damit keine Konstante (1,5 / 1,0005 / 1,0005),
+    // die Zonenoberkante schon.
+    const drawing = compose(
+      { kind: 'swap-loader-vehicle', vehicleCategory: 'kfz-kategorie-1' },
+      e2Catalog,
+    );
+    const wheel = drawing.children.find((child) => child.role === 'chassis');
+    expect(wheel?.type).toBe('circle');
+    if (wheel?.type !== 'circle') throw new Error('unreachable');
+    // Zonenoberkante 26,0 + cyFromTopMm 2,25 = Radmitte 28,25 — die gemessene 28,2501.
+    expect(wheel.cy).toBe(28.25);
+    // Am Körper allein gerechnet säße sie auf 26,75 und damit 1,5 mm daneben.
+    expect(wheel.cy).not.toBe(26.75);
+  });
+
+  it('lässt die Zone für alle Körper ohne Zusatzgeometrie unverändert', () => {
+    // Für dreizehn der vierzehn Grundzeichen sind Körper- und Grundzeichenunterkante dieselbe
+    // Zahl; die Umformulierung darf dort nichts verschieben.
+    const drawing = compose({ kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-1' }, {
+      ...e2Catalog,
+      // Ein Körper ohne Zusatzgeometrie mit derselben Unterkante 26,0 wie der Landfahrzeugkörper.
+      baseDrawing: () => ({ viewBox: DEFAULT_VIEWBOX_MM, children: [formationBody] }),
+    });
+    const wheel = drawing.children.find((child) => child.role === 'chassis');
+    if (wheel?.type !== 'circle') throw new Error('unreachable');
+    expect(wheel.cy).toBe(28.25);
+  });
+});
+
+describe('compose() — vierte Beschriftungszone', () => {
+  const waterSpec = {
+    kind: 'vehicle-water',
+    bodyVariant: 'raised-hull',
+    organization: 'thw',
+    labels: { belowRight: 'THW' },
+  } as const;
+
+  it('setzt den Lauf unterhalb des Körpers in der Organisationsfarbe', () => {
+    const drawing = compose(waterSpec, e2Catalog);
+    const label = drawing.children.filter((child) => child.role === 'label');
+    expect(label).toHaveLength(1);
+    const run = label[0];
+    if (run?.type !== 'text') throw new Error('unreachable');
+    expect(run.content).toBe('THW');
+    expect(run.anchor).toBe('end');
+    expect(run.style?.fill).toBe('blau');
+    // Grundlinie 22,9896 + 4,01 = 26,9996 gegen die gemessenen 26,9998 der fünf Referenzdateien.
+    expect(run.y).toBeCloseTo(26.9996, 4);
+    // Anker 30,9894 + 0,5618 = 31,5512; die gemessene Tintenkante 31,5778 liegt 0,0266 mm
+    // rechts davon, so viel wie die Schrift der Referenz ihren Anker auch in E.2.1 überragt.
+    expect(run.x).toBeCloseTo(31.5512, 4);
+    // Der Lauf steht **vollständig** unter dem Rumpf: seine Oberkante 24,0806 mm liegt 1,0908 mm
+    // unter dessen Unterkante 22,9898.
+    expect(run.boxMm.yMm).toBeGreaterThan(22.9896);
+  });
+
+  it('benutzt den Schriftgrad der unteren Zonen unverändert', () => {
+    // Gemessene Versalhöhe 2,9192 mm — derselbe Wert wie in den beiden Zonen im Körper. Der Lauf
+    // `THW` ist in E.2.1 und E.2.27 gleich breit (9,0399 mm): es ist derselbe Lauf, versetzt.
+    const below = compose(waterSpec, e2Catalog).children.find((child) => child.role === 'label');
+    const inBody = compose(
+      { kind: 'formation', organization: 'thw', labels: { bottomRight: 'THW' } },
+      e2Catalog,
+    ).children.find((child) => child.role === 'label');
+    if (below?.type !== 'text' || inBody?.type !== 'text') throw new Error('unreachable');
+    expect(below.sizeMm).toBe(inBody.sizeMm);
+  });
+
+  it('lehnt die Zone an jeder anderen Körperform ab', () => {
+    // n = 5, alle auf einer Körperform. Ohne die Ablehnung setzte der Katalog einen blauen Lauf
+    // unter eine Taktische Formation — und kein Gate meldete ihn.
+    expect(() =>
+      compose({ kind: 'formation', organization: 'thw', labels: { belowRight: 'THW' } }, e2Catalog),
+    ).toThrow(/below-right-label-requires-measured-body/);
+    expect(() =>
+      compose({ kind: 'vehicle-water', organization: 'thw', labels: { belowRight: 'THW' } }, e2Catalog),
+    ).toThrow(/below-right-label-requires-measured-body/);
+  });
+
+  it('lehnt die Zone ohne Organisation ab', () => {
+    expect(() =>
+      compose({ kind: 'vehicle-water', bodyVariant: 'raised-hull', labels: { belowRight: 'THW' } }, e2Catalog),
+    ).toThrow(/below-right-label-requires-organization/);
+  });
+
+  it('reicht die Körpervariante an den Katalog durch', () => {
+    // Ohne die Durchreichung bekäme ein E.2-Wasserfahrzeug den Rumpf von 1.5 — 1,0 mm zu tief,
+    // und vor dem Extraktorausbau meldete das kein Gate.
+    expect(() => compose({ kind: 'formation', bodyVariant: 'raised-hull' }, e2Catalog)).toThrow(
+      /Körpervariante/,
+    );
+  });
+});
+
+describe('compose() — Schriftgrad des mittigen Laufs', () => {
+  /** Der Normfall: ohne Angabe bleibt alles wie vor dem Teilslice E.2. */
+  it('setzt ohne Angabe den Normgrad aus der Versalhöhe 4,87 mm', () => {
+    const drawing = compose(
+      { kind: 'formation', organization: 'thw', labels: { center: 'B' } },
+      e2Catalog,
+    );
+    const label = drawing.children.find((child) => child.role === 'label');
+    if (label?.type !== 'text') throw new Error('unreachable');
+    // 4,87 / ARIMO_CAP_HEIGHT_FRACTION — dieselbe Rechnung wie vor dem Teilslice.
+    expect(label.sizeMm).toBeCloseTo(7.0786, 3);
+  });
+
+  it('leitet den Grad aus der übergebenen Versalhöhe ab', () => {
+    // Selbst vermessen an E.2.12 („MzGW Lbw", erste Versalie M): 3,4099 mm bei Grundlinie 18,0.
+    // Das sind 0,7003 der Norm — ohne diese Zahl träte der Lauf aus der 28-mm-Box.
+    const drawing = compose(
+      {
+        kind: 'formation',
+        organization: 'thw',
+        labels: { center: 'MzGW Lbw', centerCapHeightMm: 3.4099 },
+      },
+      e2Catalog,
+    );
+    const label = drawing.children.find((child) => child.role === 'label');
+    if (label?.type !== 'text') throw new Error('unreachable');
+    const normal = compose(
+      { kind: 'formation', organization: 'thw', labels: { center: 'MzGW Lbw' } },
+      e2Catalog,
+    ).children.find((child) => child.role === 'label');
+    if (normal?.type !== 'text') throw new Error('unreachable');
+    expect(label.sizeMm / normal.sizeMm).toBeCloseTo(3.4099 / 4.87, 6);
+  });
+
+  it('lässt die unteren Zonen davon unberührt', () => {
+    // Gemessen: alle 31 E.2-Dateien setzen ihren THW-Lauf in derselben Versalhöhe 2,9192 mm,
+    // unabhängig vom Grad des mittigen Laufs.
+    const drawing = compose(
+      {
+        kind: 'formation',
+        organization: 'thw',
+        labels: { center: 'MzGW Lbw', centerCapHeightMm: 3.4099, bottomRight: 'THW' },
+      },
+      e2Catalog,
+    );
+    const [, bottom] = drawing.children.filter((child) => child.role === 'label');
+    const reference = compose(
+      { kind: 'formation', organization: 'thw', labels: { center: 'B', bottomRight: 'THW' } },
+      e2Catalog,
+    ).children.filter((child) => child.role === 'label')[1];
+    if (bottom?.type !== 'text' || reference?.type !== 'text') throw new Error('unreachable');
+    expect(bottom.sizeMm).toBe(reference.sizeMm);
+  });
+
+  it('lehnt eine Versalhöhe ohne mittigen Lauf ab', () => {
+    expect(() =>
+      compose(
+        { kind: 'formation', organization: 'thw', labels: { bottomRight: 'THW', centerCapHeightMm: 3.4 } },
+        e2Catalog,
+      ),
+    ).toThrow(/center-cap-height-requires-center-label/);
+  });
+
+  it('lehnt eine unmögliche Versalhöhe ab', () => {
+    expect(() =>
+      compose({ kind: 'formation', labels: { center: 'B', centerCapHeightMm: 0 } }, e2Catalog),
+    ).toThrow(/center-cap-height-positive/);
+    expect(() =>
+      compose(
+        { kind: 'formation', labels: { center: 'B', centerCapHeightMm: Number.NaN } },
+        e2Catalog,
+      ),
+    ).toThrow(/center-cap-height-positive/);
+  });
+});
+
+describe('compose() — mittige Grundlinie je Körperform', () => {
+  it('hält den Normwert 8 mm für die Körperformen aus Kapitel 1', () => {
+    const drawing = compose({ kind: 'formation', labels: { center: 'B' } }, e2Catalog);
+    const label = drawing.children.find((child) => child.role === 'label');
+    if (label?.type !== 'text') throw new Error('unreachable');
+    // Körperunterkante 26 − 8 = 18, die an 18 E.2-Dateien und an E.1 gemessene Grundlinie.
+    expect(label.y).toBe(18);
+  });
+
+  it('nimmt für den Wechselladerrumpf die gemessenen 7,5 mm', () => {
+    // E.2.15: Grundlinie 17,0000 bei Körperunterkante 24,5004. Mit dem Normwert läge sie auf
+    // 16,5 — 0,5 mm daneben, und kein Gate meldete es.
+    const drawing = compose({ kind: 'swap-loader-vehicle', labels: { center: 'LKW' } }, e2Catalog);
+    const label = drawing.children.find((child) => child.role === 'label');
+    if (label?.type !== 'text') throw new Error('unreachable');
+    expect(label.y).toBe(17);
+  });
+
+  it('nimmt für den angehobenen Wasserrumpf die gemessenen 6,9896 mm', () => {
+    // E.2.28 bis E.2.31: Grundlinie 16,0002 bei Körperunterkante 22,9898. Mit dem Normwert läge
+    // sie auf 14,99 — 1,01 mm daneben.
+    const drawing = compose(
+      { kind: 'vehicle-water', bodyVariant: 'raised-hull', labels: { center: 'MzB' } },
+      e2Catalog,
+    );
+    const label = drawing.children.find((child) => child.role === 'label');
+    if (label?.type !== 'text') throw new Error('unreachable');
+    expect(label.y).toBeCloseTo(16, 3);
+  });
+});

@@ -91,6 +91,68 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:E.1.35#primary': { status: 'pending' },
   'bbk-babz-2025:E.1.36#primary': { status: 'pending' },
   'bbk-babz-2025:E.1.37#primary': { status: 'pending' },
+  // Anhang E, Teilslice E-d: die 20 gebauten Landfahrzeuge des THW. Ein eigener Block, weil die
+  // offenen Fragen hier zum ersten Mal nicht die Einheit betreffen, sondern das **Gerät** und
+  // seine Benennung. Vier stehen ausdrücklich aus und sind in keinem technischen Gate
+  // beantwortbar: ob „Telelader" (Bild) oder „Teleskopstapler" (Dateiname) das fachlich
+  // tragende Kürzel für E.2.7 ist; ob „Bagger" ohne die Kurzform „BRmG" die
+  // Bergungsräumgeräte E.2.9 und E.2.10 hinreichend bezeichnet (im Bild kommt „BRmG" in keinem
+  // der drei vor); ob die Zuordnung „Kategorie 1/2/3 = straßenfähig/geländefähig/geländegängig"
+  // trägt, die aus der Mehrheit der Dateinamen abgeleitet ist und der E.2.12, E.2.13 und E.2.18
+  // widersprechen; und ob E.2.9 und E.2.10, die dasselbe Kürzel und verschiedene Fahrwerke
+  // führen, im Einsatz verwechslungsfrei bleiben.
+  //
+  // **E.2.6 fehlt hier, weil es keine Manifestzeile hat** — es ist als einziger Abschnitt des
+  // Anhangs nicht gebaut. Die Begründung steht in `ANHANG_E_D_UNGEBAUT`; sie ist keine
+  // fachliche, sondern eine offene Entscheidung über einen Gate-Vertrag.
+  'bbk-babz-2025:E.2.1#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.2#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.3#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.4#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.5#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.7#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.8#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.9#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.10#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.11#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.12#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.13#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.14#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.15#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.16#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.17#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.18#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.19#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.20#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.21#primary': { status: 'pending' },
+  // Anhang E, Teilslice E-e: Anhänger und Sonderkörper. Wieder ein eigener Block, weil hier zwei
+  // Fragen zusammenkommen, die es in E.1 nicht gab. Erstens: **bezeichnet ein Anhänger mit einem
+  // Rad etwas anderes als einer mit zweien?** Die Zeichnung unterscheidet sie, die Quelle
+  // benennt sie widersprüchlich (E.2.22 „Grundzeichen" und E.2.23 „von LKW gezogen" tragen beide
+  // ein Rad, E.2.24 mit demselben Namenszusatz zwei), und der Katalog benennt deshalb die Räder
+  // statt des Zugfahrzeugs — dieselbe Frage steht an 5.1.2.4 und 5.1.2.5. Zweitens: ob die
+  // Trinkwasseraufbereitungsanlage (E.2.26) mit ihrem hochkanten Rechteck ein eigenes
+  // Grundzeichen verdient; ihre Körperform kommt in genau einer der 661 Referenzdateien vor, und
+  // was sie fachlich bezeichnet, sagt die Datei nicht. Dazu bei E.2.22 die Frage, ob ein Zeichen
+  // ohne mittiges Kürzel — das einzige des Anhangs — überhaupt eine Einheit bezeichnet oder wie
+  // E.1.17 ein Musterblatt ist.
+  'bbk-babz-2025:E.2.22#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.23#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.24#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.25#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.26#primary': { status: 'pending' },
+  // Anhang E, Teilslice E-f: die Wasserfahrzeuge. Eigener Block wegen einer Frage, die keine der
+  // 66 übrigen E-Zeilen stellt: **sind E.2.29 bis E.2.31 dieselben Einheiten wie I.3.5 bis
+  // I.3.7?** Ihre mittigen Läufe sind bis auf 0,00035 mm deckungsgleich, sie tragen dieselben
+  // Namen, und sie unterscheiden sich allein in der Farbe. Heute kollidiert nichts, weil Anhang
+  // I nicht im beanspruchten Umfang steht — die Antwort entscheidet aber, ob dort
+  // Alternativdarstellungen entstehen oder eigene IDs. Dazu bei E.2.27 die Frage, ob ein
+  // Wasserfahrzeug ohne jedes Kürzel im Körper mehr bezeichnet als das Grundzeichen 1.5 selbst.
+  'bbk-babz-2025:E.2.27#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.28#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.29#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.30#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.31#primary': { status: 'pending' },
   'bbk-babz-2025:2.1#primary': { status: 'pending' },
   // 2.2 seit LFH-424. Fachlich besonders zu prüfen: die Zuordnung „HiOrg = Hilfsorganisation" ist
   // aus dem gerasterten Bild abgelesen, nicht aus dem Dateinamen — der ist generisch
@@ -119,6 +181,14 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:5.1.1.3#primary': { status: 'pending' },
   'bbk-babz-2025:5.1.1.5#primary': { status: 'pending' },
   'bbk-babz-2025:5.1.1.6#primary': { status: 'pending' },
+  // Die beiden Anhängerfahrwerke aus Kapitel 5.1.2. Fachlich offen ist hier zusätzlich, **ob ein
+  // Anhänger mit einem Rad etwas anderes bezeichnet als einer mit zweien** — die Zeichnung
+  // unterscheidet sie, die Quelle benennt sie widersprüchlich: `5.1.2.4` heißt „von PKW gezogen"
+  // und `5.1.2.5` „von LKW gezogen", aber `E.2.23` („von LKW gezogen") trägt ein Rad und
+  // `5.1.2.1` („allgemein") gar keines. Der Katalog benennt deshalb die Räder und nicht das
+  // Zugfahrzeug; welche der beiden Lesarten fachlich trägt, entscheidet dieses Review.
+  'bbk-babz-2025:5.1.2.4#primary': { status: 'pending' },
+  'bbk-babz-2025:5.1.2.5#primary': { status: 'pending' },
   'bbk-babz-2025:4.3.1#primary': { status: 'pending' },
   'bbk-babz-2025:4.3.2#primary': { status: 'pending' },
   'bbk-babz-2025:4.3.3#primary': { status: 'pending' },

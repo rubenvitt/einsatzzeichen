@@ -1052,6 +1052,24 @@ stammt aus dem Bau und ist von mir nicht wiederholt.
 Entscheidung über 5.1.2 bis 5.1.4, die Vermessung der vier Körperformen, die fachliche Klärung der
 Anhänger-IDs und eine Entscheidung zur vierten Beschriftungszone.
 
+> **Nachtrag vom 18. August 2026 (Teilslices E-d/E-e/E-f, LFH-443 bis LFH-445).** Dieser Ausblick
+> hat gehalten und ist abgearbeitet. Die vier Körperformen sind vermessen und gebaut — die vier
+> Füllhüllen dieser Notiz stimmen mit meiner unabhängigen Vermessung auf die angegebene Stelle. Die
+> zwei Taxonomie-IDs heißen `anhaenger-ein-rad` und `anhaenger-zwei-raeder`; sie folgen der
+> **Zeichnung** und nicht dem Quellbegriff, und Befund 6 dieser Notiz ist der Grund dafür —
+> `5.1.2.1_Anhänger_allgemein.svg` trägt selbst nachgemessen überhaupt kein Rad, „von PKW gezogen"
+> wäre an drei von vier E.2-Anhängern eine Falschaussage. Die Zonenfrage ist entschieden: die
+> vierte Beschriftungszone steht als `BodyLabels.belowRight`, Tinte 22,5379/24,0806/31,5778/26,9998
+> mm in `#003296`, in allen fünf Dateien identisch bis auf 0,0003 mm. Der Satz „Diese Messung
+> stammt aus dem Bau und ist von mir nicht wiederholt" gilt für sie nicht mehr.
+>
+> **Eine Zahl dieses Ausblicks ist überholt:** „20 der 31 sind nach diesem Stand als Komposition
+> spezifizierbar" — es sind heute 30 gebaut. Der elfte Fall, `E.2.6`, hängt nicht an einer
+> Körperform, sondern an einer Entscheidung zum Kontrastvertrag. Und `5.1.2` ist **nicht** in den
+> Umfang gekommen: von seinen fünf Abschnitten sind nur die beiden Fahrwerke umgesetzt, sie stehen
+> als eigene Manifestzeilen `5.1.2.4` und `5.1.2.5`. Die Messungen stehen in
+> [`2026-08-18-anhang-e2.md`](./2026-08-18-anhang-e2.md).
+
 ---
 
 ## Reviewgrenze

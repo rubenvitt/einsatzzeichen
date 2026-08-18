@@ -10,16 +10,30 @@ export interface ValidationIssue {
 const UNIT_KINDS = new Set<SymbolKind>(['formation', 'person']);
 
 /**
- * Grundzeichenarten, an denen die Referenz eine Fahrwerkszone zeichnet. Das ist **allein** das
- * Landfahrzeug, und das ist gemessen, nicht angenommen (18. August 2026): von den 31 Zeichen des
- * Anhangs E.2 tragen 25 ein Fahrwerk, alle auf einem Landfahrzeugkörper; die fünf Wasserfahrzeuge
- * E.2.27 bis E.2.31 tragen keines, und keine der drei Luftfahrzeugdateien 5.1.4.1 bis 5.1.4.3
- * trägt eines.
+ * Grundzeichenarten, an denen die Referenz eine Fahrwerkszone zeichnet. Gemessen, nicht
+ * angenommen (18. August 2026): von den 31 Zeichen des Anhangs E.2 tragen **25** ein Fahrwerk —
+ * 20 auf dem Landfahrzeugkörper, vier auf dem Anhängerrumpf, eines auf dem Wechselladerrumpf. Die
+ * fünf Wasserfahrzeuge E.2.27 bis E.2.31 tragen keines, E.2.26 auf dem Hochkantrechteck auch
+ * nicht, und keine der drei Luftfahrzeugdateien 5.1.4.1 bis 5.1.4.3 trägt eines.
  *
  * Bis LFH-424 hieß diese Menge „Fahrzeuge" und enthielt alle drei Fahrzeugarten. Das war eine
- * Annahme aus dem Wort „Fahrzeugkategorie" — die Referenz stützt sie nicht.
+ * Annahme aus dem Wort „Fahrzeugkategorie" — die Referenz stützt sie nicht. LFH-424 zog sie auf
+ * das Landfahrzeug zusammen; der Teilslice E.2 fügt die beiden Körperformen hinzu, die er
+ * vermessen hat.
+ *
+ * **Was diese Menge ausdrücklich NICHT erzwingt: die Paarung von Kategorie und Körperform.** Eine
+ * Fahrzeugkategorie, die im Bestand nur an einer dieser drei Formen vorkommt, lässt sich an jeder
+ * der drei spezifizieren, ohne dass eine Regel widerspricht — der Katalog liefert dann klaglos
+ * eine Zeichnung, die an keiner Referenzdatei belegt ist. Das ist bewusst nicht gebaut: bei vier
+ * Belegdateien je Paarung wäre die Regel geraten und nicht vermessen
+ * (`docs/decisions/2026-08-18-anhang-e2.md`, Abschnitt „Offene Kanten"). Wer die Lücke schließt,
+ * schließt sie dort und nicht hier.
  */
-const CHASSIS_KINDS = new Set<SymbolKind>(['vehicle-land']);
+const CHASSIS_KINDS = new Set<SymbolKind>([
+  'vehicle-land',
+  'trailer',
+  'swap-loader-vehicle',
+]);
 
 export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
@@ -37,8 +51,8 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
     issues.push({
       rule: 'vehicle-category-requires-vehicle',
       message:
-        `Eine Fahrzeugkategorie ist nur am Landfahrzeug belegt. "${spec.kind}" trägt in der ` +
-        'Referenz keine Fahrwerkszone.',
+        'Eine Fahrzeugkategorie ist nur am Landfahrzeug, am Anhängerrumpf und am ' +
+        `Wechselladerrumpf belegt. "${spec.kind}" trägt in der Referenz keine Fahrwerkszone.`,
     });
   }
 
@@ -112,6 +126,65 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
     issues.push({
       rule: 'designation-not-blank',
       message: 'Eine Bezeichnung darf nicht leer oder nur aus Leerzeichen bestehen.',
+    });
+  }
+
+  // Die vierte Beschriftungszone steht **unterhalb** des Körpers, in der Organisationsfarbe.
+  // Vermessen ist sie an genau einer Körperform: dem angehobenen Wasserrumpf der fünf Zeichen
+  // E.2.27 bis E.2.31 (Tinte 22,5379/24,0806/31,5778/26,9998 mm, Füllung #003296, in allen fünf
+  // Dateien gleich bis auf 0,0003 mm).
+  //
+  // Deshalb eine Ablehnung und keine Übertragung auf jede Körperform: die beiden Abstände, aus
+  // denen der Katalog den Lauf setzt (4,01 mm unter der Körperunterkante, 0,5615 mm rechts der
+  // Körperkante), sind an **dieser** Hülle gemessen. Auf einer `formation` erzeugten sie einen
+  // blauen Lauf, den keine Referenzdatei zeigt — und kein Gate meldete ihn: der Fingerprint sieht
+  // nur `role: 'body'`, die Rasterprüfung nur die selbst deklarierte Box.
+  if (
+    spec.labels?.belowRight !== undefined &&
+    !(spec.kind === 'vehicle-water' && spec.bodyVariant === 'raised-hull')
+  ) {
+    issues.push({
+      rule: 'below-right-label-requires-measured-body',
+      message:
+        'Die Beschriftungszone unterhalb des Körpers ist allein am angehobenen Wasserrumpf ' +
+        '(kind "vehicle-water", bodyVariant "raised-hull") vermessen — an den fünf Zeichen ' +
+        `E.2.27 bis E.2.31. Für "${spec.kind}" gibt es keine Messung, aus der ihre Lage folgte.`,
+    });
+  }
+
+  // Ohne Organisation gibt es keine Farbe, die diese Zone tragen dürfte: gemessen ist sie in
+  // #003296, und das ist `organizationColor('thw')`. Ein schwarzer oder weißer Lauf an derselben
+  // Stelle wäre eine andere Zeichnung.
+  if (spec.labels?.belowRight !== undefined && spec.organization === undefined) {
+    issues.push({
+      rule: 'below-right-label-requires-organization',
+      message:
+        'Die Beschriftungszone unterhalb des Körpers ist nur in der Organisationsfarbe belegt ' +
+        '(#003296 an E.2.27 bis E.2.31). Ohne Organisation hat sie keine gemessene Farbe.',
+    });
+  }
+
+  // Die gemessene Versalhöhe des mittigen Laufs. Ohne mittigen Lauf hätte sie keine Wirkung —
+  // und eine Angabe ohne Wirkung ist genau der stille Ausfall, den `administrative-level` und
+  // `label-not-blank` an anderer Stelle abfangen.
+  if (spec.labels?.centerCapHeightMm !== undefined && spec.labels.center === undefined) {
+    issues.push({
+      rule: 'center-cap-height-requires-center-label',
+      message:
+        'Eine Versalhöhe für den mittigen Lauf ohne mittigen Lauf hat keine Wirkung und würde ' +
+        'still verschluckt.',
+    });
+  }
+
+  if (
+    spec.labels?.centerCapHeightMm !== undefined &&
+    !(Number.isFinite(spec.labels.centerCapHeightMm) && spec.labels.centerCapHeightMm > 0)
+  ) {
+    issues.push({
+      rule: 'center-cap-height-positive',
+      message:
+        'Die Versalhöhe des mittigen Laufs muss endlich und größer als null sein; sie ist eine ' +
+        `Messung an der Referenzdatei (erhalten: ${String(spec.labels.centerCapHeightMm)}).`,
     });
   }
 

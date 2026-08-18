@@ -216,6 +216,30 @@ const STATIC_ELEMENTS = {
     title: 'Schienenfahrzeug',
     referenceAssets: ['5.1.1.6_Schienenfahrzeug.svg'],
   },
+  // Die beiden Anhängerfahrwerke. **Titel und ID nennen die Räder, nicht das Zugfahrzeug** — die
+  // Quelle nennt `5.1.2.4` „von PKW gezogen" und `5.1.2.5` „von LKW gezogen", und beides ist an
+  // den E.2-Trägern widerlegt: `E.2.22` („Grundzeichen") und `E.2.23` („von LKW gezogen") tragen
+  // beide die Ein-Rad-Form, und `5.1.2.1_Anhänger_allgemein.svg` trägt gar kein Rad (alle drei
+  // selbst nachgemessen). Die Begründung steht ausführlich an `VehicleCategoryId`.
+  'vehicle-category.anhaenger-ein-rad': {
+    id: 'vehicle-category.anhaenger-ein-rad',
+    kind: 'vehicle-category',
+    title: 'Anhänger mit einem Rad',
+    referenceAssets: [
+      '5.1.2.4_Anhänger_von PKW gezogen.svg',
+      'E.2.22_Anhänger Grundzeichen.svg',
+      'E.2.23_Anhänger Netzersatzanlage_von LKW gezogen.svg',
+    ],
+  },
+  'vehicle-category.anhaenger-zwei-raeder': {
+    id: 'vehicle-category.anhaenger-zwei-raeder',
+    kind: 'vehicle-category',
+    title: 'Anhänger mit zwei Rädern',
+    referenceAssets: [
+      '5.1.2.5_Anhänger_von LKW gezogen.svg',
+      'E.2.24_Anhänger Führung und Lage_von LKW gezogen.svg',
+    ],
+  },
 } as const satisfies Record<string, ElementDescriptor>;
 
 function pictogramElements(): Readonly<Record<string, ElementDescriptor>> {

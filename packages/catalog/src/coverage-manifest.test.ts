@@ -69,7 +69,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 325 Zeilen mit 271 Elementdarstellungen', () => {
+  it('enthält exakt 357 Zeilen mit 273 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -86,58 +86,72 @@ describe('Coverage-Manifest', () => {
     expect(counts).toEqual({
       // Seit LFH-424 alle vierzehn Grundzeichen aus Kapitel 1 statt acht.
       'catalog-entry': 14,
-      // 3 Belegfälle des Kompositionsmotors plus die 37 Zeichen aus Anhang E — 16 aus Teilslice
-      // E-a, zwölf aus E-b und neun aus E-c, womit E.1 vollständig ist.
-      'composition-recipe': 40,
+      // 3 Belegfälle des Kompositionsmotors plus die 67 gebauten Zeichen aus Anhang E — 16 aus
+      // Teilslice E-a, zwölf aus E-b und neun aus E-c (damit ist E.1 vollständig), 20 aus E-d,
+      // fünf aus E-e und fünf aus E-f. **67 und nicht 68:** E.2.6 ist als einziger Abschnitt des
+      // Anhangs nicht gebaut, weil es eine offene Entscheidung über einen Gate-Vertrag erzwingt
+      // (`ANHANG_E_D_UNGEBAUT`, Zahlen in `a11y-contrast-gate.test.ts`).
+      'composition-recipe': 70,
       // 254 Piktogramme plus acht Organisationen (seit LFH-424 mit hilfsorganisation), vier
-      // Stärkegrade und fünf Fahrzeugkategorien. Fünf und nicht sechs: `amphibienfahrzeug` hat
-      // keinen Eintrag, weil seine Wellenlinie nur als Strichhülle vermessen ist.
-      element: 271,
+      // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
+      // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
+      // `amphibienfahrzeug` hat weiterhin keinen Eintrag, weil seine Wellenlinie nur als
+      // Strichhülle vermessen ist.
+      element: 273,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(325);
-    expect(elementRows).toHaveLength(271);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(357);
+    expect(elementRows).toHaveLength(273);
     expect(pictogramRows).toHaveLength(254);
-    expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(17);
+    expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
   });
 
-  it('trägt für die fünf Kurvenkörper die Geometrieregression statt eines Körper-Fingerprints', () => {
-    // Ihr Kennwertartefakt führt shapes: [] — matchFingerprint bricht ab, bevor es den Körper
+  it('trägt für 1.14 die Geometrieregression statt eines Körper-Fingerprints', () => {
+    // Sein Kennwertartefakt führt shapes: [] — matchFingerprint bricht ab, bevor es den Körper
     // ansieht. Eine Zeile mit `body-fingerprint` behauptete dort ein Gate, das nicht läuft.
+    // 1.14 ist seit dem Teilslice E.2 der **einzige** solche Fall: als einzige Datei des
+    // Kapitels neben 1.13 führt sie überhaupt keine Ebene `Flächige_Fülung`, es gibt also keine
+    // Körperfläche zu erfassen. Das behebt kein Extraktorausbau.
     const bySection = (section: string) =>
       COVERAGE_MANIFEST.entries.find((entry) => entry.sourceId === `bbk-babz-2025:${section}`);
-    for (const section of ['1.3', '1.4', '1.5', '1.9', '1.14']) {
-      expect(bySection(section)?.testEvidence, section).toEqual([
-        'body-geometry-regression',
-        'svg-snapshot',
-      ]);
+    expect(bySection('1.14')?.testEvidence).toEqual(['body-geometry-regression', 'svg-snapshot']);
+
+    // Die vier Kurvenkörper 1.3, 1.4, 1.5 und 1.9 sind seit dem Extraktorausbau gegatet: ihre
+    // Füllebene liefert `kind: 'bounds'`, matchFingerprint läuft und besteht. 1.13 war es schon
+    // vorher — sein Artefakt führt die Strichhülle, verglichen mit `bodyGeometry:
+    // 'stroke-outline'`.
+    for (const section of ['1.3', '1.4', '1.5', '1.9', '1.13']) {
+      expect(bySection(section)?.testEvidence, section).toEqual(['body-fingerprint', 'svg-snapshot']);
     }
-    // 1.13 dagegen ist gegatet: sein Artefakt führt eine Form (die Strichhülle), und
-    // matchFingerprint vergleicht sie mit `bodyGeometry: 'stroke-outline'`.
-    expect(bySection('1.13')?.testEvidence).toEqual(['body-fingerprint', 'svg-snapshot']);
   });
 
   /**
-   * Die vier Zeichen, deren **Umsetzung** von der Referenzdatei abweicht und die deshalb ein
+   * Die fünf Zeichen, deren **Umsetzung** von der Referenzdatei abweicht und die deshalb ein
    * technisches Review mit `status: 'deviation'` tragen: aus E-b E.1.17 (mittiges Kürzel der
    * Referenz 2,0009 mm links der Körpermitte) sowie E.1.19 und E.1.24 (drei Marken im Körper, die
    * der Katalog nicht abbildet), aus E-c E.1.31 (zwei senkrechte Balken an der Stelle der
-   * Kopfzone, für die es keinen StrengthId gibt). Die dreizehn Füllflächen- und
-   * Grundlinienbefunde beider Teilslices sind hier **nicht** aufgeführt: dort weicht die Quelle
-   * von sich selbst ab und die Umsetzung folgt der Mehrheit der Quelle, ihr Review bleibt
-   * `approved` mit Befundvermerk.
+   * Kopfzone, für die es keinen StrengthId gibt), aus E-e E.2.26 (Anker des THW-Laufs 1,0 mm
+   * weiter rechts als in der Referenz). Die 28 Füllflächen-, Grundlinien- und Kürzelbefunde der
+   * sechs Teilslices sind hier **nicht** aufgeführt: dort weicht die Quelle von sich selbst ab
+   * und die Umsetzung folgt der Mehrheit der Quelle, ihr Review bleibt `approved` mit
+   * Befundvermerk.
+   *
+   * **Dass 30 neue Zeilen nur eine einzige Abweichung hinzufügen, ist das Ergebnis der ersten
+   * Bauphase dieses Slice** und keine Nachlässigkeit der zweiten: E.2.15 wäre ohne den L-Rahmen
+   * als Zusatzprimitiv der zweite Fall nach dem Muster von E.1.19/E.1.24 gewesen.
    */
   const TECHNICAL_DEVIATIONS = [
     'bbk-babz-2025:E.1.17',
     'bbk-babz-2025:E.1.19',
     'bbk-babz-2025:E.1.24',
     'bbk-babz-2025:E.1.31',
+    'bbk-babz-2025:E.2.26',
   ];
 
   it('trägt für jeden Eintrag eine Referenzdatei und beide Reviewrollen', () => {
     // Die Zusage ist „kein Eintrag ohne zurechenbares technisches Review", nicht „jeder Eintrag
-    // approved". Sie wird deshalb nicht auf eine Statusmenge aufgeweicht, sondern nennt die vier
-    // Abweichungen einzeln: jede andere Zeile muss `approved` sein, und die vier genannten müssen
-    // zusätzlich eine Notiz führen. Ein fünftes `deviation` fällt hier auf, ein weggefallenes
+    // approved". Sie wird deshalb nicht auf eine Statusmenge aufgeweicht, sondern nennt die fünf
+    // Abweichungen einzeln: jede andere Zeile muss `approved` sein, und die fünf genannten müssen
+    // zusätzlich eine Notiz führen. Ein sechstes `deviation` fällt hier auf, ein weggefallenes
     // ebenso.
     for (const entry of COVERAGE_MANIFEST.entries) {
       expect(entry.referenceAsset).toMatch(/\.svg$/);
@@ -153,7 +167,7 @@ describe('Coverage-Manifest', () => {
     }
   });
 
-  it('führt genau vier technische Abweichungen, drei aus E-b und eine aus E-c', () => {
+  it('führt genau fünf technische Abweichungen, drei aus E-b, eine aus E-c und eine aus E-e', () => {
     // Gegenrichtung des Tests oben: dort wird für bekannte Schlüssel `deviation` verlangt, hier,
     // dass es keine weiteren gibt. Ohne diese Hälfte bliebe eine still hinzugekommene Abweichung
     // an einer anderen Zeile unbemerkt, weil der `else`-Zweig sie nie zu sehen bekäme.
@@ -205,11 +219,17 @@ describe('Coverage-Manifest', () => {
       'C.1.1',
       'C.1.2',
       'D.3.7',
-      // Anhang E seit E-c als `E.1`: die drei Teilslices decken alle 37 Abschnitte ab, und
-      // `recipes.test.ts` hält die Lückenlosigkeit fest — `uncoveredScope` allein täte das nicht.
-      // Nicht `E`: E.2 ist mit 31 Zeichen unabgedeckt und auf zwei fehlende Grundzeichen
-      // blockiert.
+      // Anhang E seit E-c als `E.1`: die drei Teilslices E-a bis E-c decken alle 37 Abschnitte
+      // ab, und `recipes.test.ts` hält die Lückenlosigkeit fest — `uncoveredScope` allein täte
+      // das nicht.
       'E.1',
+      // E.2 seit dem Teilslice E.2 **abschnittsweise** und nicht als `E.2` oder `E`: 30 der 31
+      // Abschnitte sind gebaut, und ein Präfix bestünde `uncoveredScope` auch mit einem
+      // fehlenden. Solange E.2.6 fehlt, lässt sich die Lückenlosigkeit nicht zusichern, und die
+      // 30 Zeilen unten sind die einzige Form, in der der Umfang genau das behauptet, was gilt.
+      ...Array.from({ length: 31 }, (_, index) => `E.2.${index + 1}`).filter(
+        (section) => section !== 'E.2.6',
+      ),
       'J.1',
       'J.2',
       'J.3',
