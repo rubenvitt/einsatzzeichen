@@ -35,21 +35,25 @@ describe('Element-Register', () => {
     expect(observedTitle).toBe(originalTitle);
   });
 
-  it('enthält exakt 250 Deskriptoren mit den festen Artenzahlen', () => {
+  it('enthält exakt 256 Deskriptoren mit den festen Artenzahlen', () => {
     const byKind = Object.values(ELEMENTS).reduce<Record<string, number>>((acc, el) => {
       acc[el.kind] = (acc[el.kind] ?? 0) + 1;
       return acc;
     }, {});
     expect(byKind).toEqual({
-      organization: 7,
+      // Acht seit LFH-424: 2.2_Organisationen.svg ist der Fleck der Hilfsorganisationen.
+      organization: 8,
       strength: 4,
+      // Fünf der sechs Fahrzeugkategorien aus Kapitel 5.1.1. `amphibienfahrzeug` fehlt: seine
+      // Wellenlinie ist nur als Strichhülle vermessen, `vehicleChassis` wirft dafür.
+      'vehicle-category': 5,
       capability: 88,
       state: 61,
       comms: 48,
       damage: 28,
       wildfire: 14,
     });
-    expect(Object.keys(ELEMENTS)).toHaveLength(250);
+    expect(Object.keys(ELEMENTS)).toHaveLength(256);
   });
 
   it('kollabiert 67 State-Darstellungen auf exakt 61 semantische Deskriptoren', () => {
@@ -112,8 +116,12 @@ describe('Element-Register', () => {
     expect(resolveElement('strength.zug').referenceAssets[0]).toBe('5.4.4_Zug.svg');
   });
 
-  it('führt hilfsorganisation nicht als Element', () => {
-    expect(() => resolveElement('organization.hilfsorganisation')).toThrow(/hilfsorganisation/);
+  it('führt hilfsorganisation als achtes Organisationselement', () => {
+    // Bis LFH-424 sicherte diese Stelle das Gegenteil zu. 2.2_Organisationen.svg ist die
+    // Belegdatei; ihr generischer Name hatte die Zuordnung verdeckt.
+    const descriptor = resolveElement('organization.hilfsorganisation');
+    expect(descriptor.kind).toBe('organization');
+    expect(descriptor.referenceAssets).toEqual(['2.2_Organisationen.svg']);
   });
 
   it('wirft bei einer unbekannten Element-ID', () => {

@@ -75,8 +75,21 @@ export interface Transform {
  * trägt deshalb auch eine andere Farbe (weiß auf der Organisationsfarbe statt schwarz auf der
  * Oberfläche). `innerField` bleibt weiterhin unbelegt — es bezeichnet die *Fläche* des
  * Innenfelds, nicht ihre Beschriftung.
+ *
+ * `chassis` trägt die Fahrwerksmarken aus Kapitel 5.1 (Räder, Kette, Verbindungsstrich). Es ist
+ * **nicht** `head` und **nicht** `foot`: `head` verankert an der Oberkante seiner Zone, `foot`
+ * bezeichnet den Textlauf unterhalb des Körpers. Die Fahrwerkszone hängt an der
+ * Körper**unterkante** und ist Geometrie, kein Text — gemessen an `5.1.1.x`:
+ * Körperunterkante 26,0004 mm, Markenmitte 28,2501 mm, Markenradius 2,2501 mm.
  */
-export type PrimitiveRole = 'body' | 'innerField' | 'head' | 'foot' | 'label' | 'pictogram';
+export type PrimitiveRole =
+  | 'body'
+  | 'innerField'
+  | 'head'
+  | 'chassis'
+  | 'foot'
+  | 'label'
+  | 'pictogram';
 
 export interface Style {
   fill?: ColorToken | 'none';

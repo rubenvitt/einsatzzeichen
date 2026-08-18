@@ -5,6 +5,7 @@ import { organizationColor } from './organizations.js';
 import { MINIMUM_TEXT_CONTRAST } from './pictograms/contrast-contract.js';
 import { pictogram } from './pictograms/index.js';
 import { strengthHead } from './strengths.js';
+import { vehicleChassis } from './vehicle-categories.js';
 import { describeSymbolSpec } from './labels.js';
 import {
   ANHANG_E_A_RECIPES,
@@ -16,6 +17,7 @@ const PORTS: CatalogPorts = {
   baseDrawing,
   organizationColor,
   strengthHead,
+  vehicleChassis,
   pictogram,
 };
 

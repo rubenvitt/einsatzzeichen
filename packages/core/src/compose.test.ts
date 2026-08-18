@@ -45,6 +45,9 @@ const catalog: CatalogPorts = {
   strengthHead: () => {
     throw new Error('Für diesen Test nicht aufgerufen.');
   },
+  vehicleChassis: () => {
+    throw new Error('Für diesen Test nicht aufgerufen.');
+  },
   pictogram: () => {
     throw new Error('Für diesen Test nicht aufgerufen.');
   },
@@ -150,6 +153,109 @@ describe('compose() — Fußzone', () => {
     const outside = issues.filter((issue) => issue.rule === 'outside-viewbox');
     expect(outside).toHaveLength(1);
     expect(outside[0]?.detail).toContain('maxY 34');
+  });
+});
+
+describe('compose() — Fahrwerkszone', () => {
+  /**
+   * Der Landfahrzeugkörper aus `base-symbols.ts` (Hülle 1/5,75 bis 31/26 mm). Hier als Rechteck
+   * mit derselben Unterkante gedoppelt: geprüft wird die **Verankerung** an der Körperunterkante,
+   * nicht die Kurvenform der Oberkante, und `core` darf nicht von `catalog` abhängen.
+   */
+  const vehicleBody: Primitive = {
+    type: 'rect',
+    role: 'body',
+    x: 1,
+    y: 5.75,
+    width: 30,
+    height: 20.25,
+  };
+
+  /**
+   * Die Fahrwerkszone der Kategorie 3 mit den Zahlen aus `packages/catalog/src/vehicle-categories.ts`
+   * — hier fest verdrahtet, aus demselben Grund wie die Stapelkopfzone oben.
+   */
+  const vehicleCatalog: CatalogPorts = {
+    ...catalog,
+    baseDrawing: () => ({ viewBox: DEFAULT_VIEWBOX_MM, children: [vehicleBody] }),
+    vehicleChassis: () => ({
+      heightMm: 4.75,
+      marks: [
+        { type: 'bar', fromXMm: 6, toXMm: 13.75, cyFromTopMm: 2.25 },
+        { type: 'wheel', cxMm: 3.75, cyFromTopMm: 2.25, rMm: 2.25 },
+        { type: 'track', leftCxMm: 20, rightCxMm: 28, cyFromTopMm: 2.25, rMm: 2.25 },
+      ],
+    }),
+  };
+
+  it('hängt jede Marke an die Unterkante der Körperhülle', () => {
+    const drawing = compose(
+      { kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-3' },
+      vehicleCatalog,
+    );
+    const chassis = drawing.children.filter((child) => child.role === 'chassis');
+    expect(chassis).toHaveLength(3);
+    // Körperunterkante 26 mm + cyFromTopMm 2,25 = 28,25 mm — der an 5.1.1.x gemessene Wert.
+    expect(chassis[0]).toEqual({
+      type: 'line',
+      role: 'chassis',
+      x1: 6,
+      y1: 28.25,
+      x2: 13.75,
+      y2: 28.25,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+    });
+    expect(chassis[1]).toEqual({
+      type: 'circle',
+      role: 'chassis',
+      cx: 3.75,
+      cy: 28.25,
+      r: 2.25,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+    });
+    // Das Stadion als Rechteck mit `rx` = halbe Höhe: x = linke Endmitte − r, Breite =
+    // Endmittenabstand + 2r.
+    expect(chassis[2]).toEqual({
+      type: 'rect',
+      role: 'chassis',
+      x: 17.75,
+      y: 26,
+      width: 12.5,
+      height: 4.5,
+      rx: 2.25,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+    });
+  });
+
+  it('zeichnet das Fahrwerk nach dem gefüllten Körper', () => {
+    // Sonst zeichnete eine Organisationsfüllung über die Radkontur. Die Reihenfolge ist die
+    // einzige Stelle, an der die Zerlegung in Primitive die verschmolzene Kontur der Referenz
+    // nachbilden kann.
+    const filledCatalog: CatalogPorts = { ...vehicleCatalog, organizationColor: () => 'blau' };
+    const drawing = compose(
+      { kind: 'vehicle-land', organization: 'thw', vehicleCategory: 'kfz-kategorie-3' },
+      filledCatalog,
+    );
+    const roles = drawing.children.map((child) => child.role);
+    expect(roles.indexOf('body')).toBeLessThan(roles.indexOf('chassis'));
+  });
+
+  it('lässt das Fahrwerk innerhalb der Grundfläche', () => {
+    const drawing = compose(
+      { kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-3' },
+      vehicleCatalog,
+    );
+    expect(checkViewBox(drawing)).toEqual([]);
+  });
+
+  it('erzeugt ohne Fahrzeugkategorie kein Fahrwerk und ruft den Port nicht', () => {
+    // `catalog.vehicleChassis` wirft im Doppel — der Test belegt damit zugleich, dass der Port
+    // nur bei gesetzter Kategorie überhaupt gefragt wird.
+    const drawing = compose({ kind: 'vehicle-land' }, {
+      ...catalog,
+      baseDrawing: () => ({ viewBox: DEFAULT_VIEWBOX_MM, children: [vehicleBody] }),
+    });
+    expect(drawing.children.filter((child) => child.role === 'chassis')).toHaveLength(0);
   });
 });
 

@@ -9,6 +9,7 @@ import {
 import { BASE_SYMBOLS } from './base-symbols.js';
 import { manifestDomainReviewFor } from './domain-reviews.js';
 import { resolveElement } from './elements.js';
+import { referenceLacksComparableShape } from './fingerprint-index.js';
 import { ALL_PICTOGRAMS } from './pictograms/index.js';
 import { deepFreeze, type DeepReadonly } from './readonly-data.js';
 import { RECIPES } from './recipes.js';
@@ -100,22 +101,65 @@ const DRAWING_EVIDENCE = [
   'svg-snapshot',
 ] as const satisfies readonly TestEvidenceKind[];
 
+/**
+ * Für Grundzeichen, deren Kennwertartefakt keine vergleichbare Form führt (`shapes: []`, weil der
+ * Extraktor für Kurvenpfade nichts ablegt). Ein einheitliches `DRAWING_EVIDENCE` über alle
+ * vierzehn Arten behauptete für sie ein Fingerprint-Gate, das `matchFingerprint` gar nicht
+ * ausführen kann — es bricht vorher mit „Keine vergleichbare Form" ab.
+ */
+const UNGATED_DRAWING_EVIDENCE = [
+  'body-geometry-regression',
+  'svg-snapshot',
+] as const satisfies readonly TestEvidenceKind[];
+
+/**
+ * Technisches Review der fünf Kurvenkörper aus Kapitel 1. Eigener Eintrag statt des allgemeinen
+ * `TECHNICAL_REVIEW`, dessen Begründung („Fingerprint- und Snapshot-Gate für diesen Eintrag grün")
+ * für sie nicht zutrifft: ihr Kennwertartefakt führt `shapes: []`, `matchFingerprint` bricht ab,
+ * bevor es den Körper ansieht. Die Note nennt, was stattdessen trägt — dasselbe Muster wie bei den
+ * Piktogrammreviews.
+ */
+const CURVED_BODY_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-18',
+  note:
+    'Fingerprint-Gate nicht anwendbar: das Kennwertartefakt führt für diese Datei keine ' +
+    'vergleichbare Form (shapes: [], curvedPaths > 0), matchFingerprint bricht vor dem ' +
+    'Körpervergleich ab. An seine Stelle tritt ein an den vermessenen Zahlen festgenagelter ' +
+    'Test in base-symbols.test.ts (Hülle und Formmerkmale gegen die eigene Vermessung der ' +
+    'Referenzdatei vom 18. August 2026) plus SVG-Snapshot. Dazu die globalen Mehrgrößen-, ' +
+    'viewBox-, Metadaten- und Kontrast-Gates.',
+};
+
+function technicalReviewForBaseSymbol(referenceAsset: string): Review {
+  return referenceLacksComparableShape(referenceAsset)
+    ? CURVED_BODY_TECHNICAL_REVIEW
+    : TECHNICAL_REVIEW;
+}
+
 const catalogEntries: CoverageEntry[] = Object.values(BASE_SYMBOLS).map((entry) => {
   // Die Zeile trägt `variant: 'primary'`, also muss sie auch aus der `primary`-Darstellung
   // abgeleitet sein — nicht aus der ersten. `depictions` ist ungeordnet; sobald ein Eintrag eine
   // `alternative` zuerst führt, käme Abschnitt und Belegdatei aus der Alternative.
   const ref = entry.depictions.find((d) => d.variant === 'primary')?.sourceRefs[0];
   const sourceId = `bbk-babz-2025:${ref?.section ?? ''}`;
+  const referenceAsset = ref?.asset ?? '';
   return {
     sourceId,
     variant: 'primary',
     title: entry.title,
     implementation: entry.id,
-    referenceAsset: ref?.asset ?? '',
+    referenceAsset,
     coverage: 'catalog-entry',
     profile: 'bund',
-    testEvidence: DRAWING_EVIDENCE,
-    review: reviewFor(sourceId, 'primary', TECHNICAL_REVIEW),
+    // Je Art statt einheitlich: sonst behauptete die Zeile ein Gate, das für ihre Referenzdatei
+    // strukturell nicht ausführbar ist. Die Unterscheidung wird am Artefakt getroffen, nicht an
+    // einer Liste — siehe `referenceLacksComparableShape`.
+    testEvidence: referenceLacksComparableShape(referenceAsset)
+      ? UNGATED_DRAWING_EVIDENCE
+      : DRAWING_EVIDENCE,
+    review: reviewFor(sourceId, 'primary', technicalReviewForBaseSymbol(referenceAsset)),
   };
 });
 
@@ -351,10 +395,16 @@ const ELEMENT_SECTIONS: Record<string, string> = {
   'organization.bundeswehr': '2.6',
   'organization.sonstige-gefahrenabwehr': '2.7',
   'organization.zivile-einheiten': '2.8',
+  'organization.hilfsorganisation': '2.2',
   'strength.trupp': '5.4.1',
   'strength.staffel': '5.4.2',
   'strength.gruppe': '5.4.3',
   'strength.zug': '5.4.4',
+  'vehicle-category.kfz-kategorie-1': '5.1.1.1',
+  'vehicle-category.kfz-kategorie-2': '5.1.1.2',
+  'vehicle-category.kfz-kategorie-3': '5.1.1.3',
+  'vehicle-category.kettenfahrzeug': '5.1.1.5',
+  'vehicle-category.schienenfahrzeug': '5.1.1.6',
 };
 
 /**
@@ -373,7 +423,9 @@ const elementEntries: CoverageEntry[] = Object.entries(ELEMENT_SECTIONS).map(([i
       ? ['reference-fill']
       : descriptor.kind === 'strength'
         ? ['head-shape-regression']
-        : ['svg-snapshot', 'pictogram-contract'];
+        : descriptor.kind === 'vehicle-category'
+          ? ['chassis-shape-regression']
+          : ['svg-snapshot', 'pictogram-contract'];
   return {
     sourceId,
     variant: 'primary',
@@ -417,8 +469,21 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
    * wenn jedes Profil ein eigenes npm-Paket wäre.
    */
   coreVersion: '0.1.0',
-  // Kapitel 3 (sieben Referenzdateien) setzt dieser Slice nicht um; 5.1.1/5.7 sind entfallen
-  // (Verwaltungsstufen/Fahrzeugkategorien: von 16 Referenzdateien nur 2 vermessbar, kein Konsument).
+  // Kapitel 3 (sieben Referenzdateien) setzt dieser Slice nicht um.
+  //
+  // **`5.1.1` und ausdrücklich nicht `5.1`.** Fünf der sechs Fahrzeugkategorien aus 5.1.1 sind
+  // seit LFH-424 vermessen und gebaut; die übrigen Abschnitte von Kapitel 5.1 sind es nicht —
+  // 5.1.2 (Anhänger, eigener Körper mit Deichsel), 5.1.3 (Behälter) und 5.1.4 (Luftfahrzeuge)
+  // tragen Körperformen, die der Katalog nicht führt. `5.1` bestünde `uncoveredScope` trotzdem,
+  // weil jede 5.1.1.x-Zeile mit `5.1.` beginnt — dieselbe unwiderlegbare Behauptung, die weiter
+  // unten für `E` gegen `E.1` beschrieben ist. Und innerhalb von 5.1.1 fehlen 5.1.1.4
+  // (Amphibienfahrzeug: Wellenlinie nur als Strichhülle vermessen) sowie 5.1.1.7 bis 5.1.1.9;
+  // dass `uncoveredScope` das nicht meldet, ist der Grund, warum die Zuordnung in
+  // `vehicle-categories.test.ts` zusätzlich an den Zahlen festgenagelt ist.
+  //
+  // 5.7 (Verwaltungsstufen) bleibt außerhalb: drei der sechs Stufen haben in Kopfform überhaupt
+  // keine Referenz, und keines der 320 Zeichen im Umfang braucht sie
+  // (`docs/decisions/2026-08-18-grundlagen-restpunkte.md`).
   // K, L und M stehen einbuchstabig im Umfang, weil ihre Nummerierung flach ist: `K` deckt
   // K.1 bis K.18 ab, wo `J` vier Unterkapitel gebraucht hätte.
   // Anhang E steht seit dem Teilslice E-c als `E.1` und nicht mehr abschnittsweise: E-a, E-b und
@@ -439,6 +504,7 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     '1',
     '2',
     '4',
+    '5.1.1',
     '5.4',
     '5.8',
     'C.1.1',

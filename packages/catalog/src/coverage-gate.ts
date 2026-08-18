@@ -14,6 +14,7 @@ import {
 import { BASE_SYMBOLS } from './base-symbols.js';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { resolveElement, type ElementDescriptor } from './elements.js';
+import { referenceLacksComparableShape } from './fingerprint-index.js';
 import { PROFILES } from './profiles.js';
 import { SOURCE_REGISTRY, isRegisteredSource } from './sources.js';
 
@@ -247,6 +248,16 @@ const DRAWING_EVIDENCE = [
   'body-fingerprint',
   'svg-snapshot',
 ] as const satisfies readonly TestEvidenceKind[];
+/**
+ * Für Zeichnungen, deren Kennwertartefakt keine vergleichbare Form führt. Die Unterscheidung wird
+ * **am Artefakt** getroffen und nicht an einer gepflegten Liste: `shapes: []` ist eine Eigenschaft
+ * des Generats, und ein späterer Extraktorausbau löst die Ausnahme dann von selbst auf, statt eine
+ * Liste zurückzulassen, die niemand mehr prüft.
+ */
+const UNGATED_DRAWING_EVIDENCE = [
+  'body-geometry-regression',
+  'svg-snapshot',
+] as const satisfies readonly TestEvidenceKind[];
 const PICTOGRAM_EVIDENCE = [
   'svg-snapshot',
   'pictogram-contract',
@@ -259,7 +270,9 @@ const PICTOGRAM_EVIDENCE = [
  */
 export function requiredTestEvidence(entry: CoverageEntry): readonly TestEvidenceKind[] {
   if (entry.coverage === 'catalog-entry' || entry.coverage === 'composition-recipe') {
-    return DRAWING_EVIDENCE;
+    return referenceLacksComparableShape(entry.referenceAsset)
+      ? UNGATED_DRAWING_EVIDENCE
+      : DRAWING_EVIDENCE;
   }
 
   const descriptor = tryResolveElement(entry.implementation);
@@ -269,6 +282,8 @@ export function requiredTestEvidence(entry: CoverageEntry): readonly TestEvidenc
       return ['reference-fill'];
     case 'strength':
       return ['head-shape-regression'];
+    case 'vehicle-category':
+      return ['chassis-shape-regression'];
     case 'capability':
     case 'state':
     case 'comms':

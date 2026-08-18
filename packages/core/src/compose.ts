@@ -1,6 +1,9 @@
 import {
+  DEFAULT_STROKE_WIDTH_MM,
   DEFAULT_VIEWBOX_MM,
   type CapabilityId,
+  type ChassisMark,
+  type ChassisShape,
   type ColorToken,
   type Drawing,
   type HeadShape,
@@ -11,6 +14,7 @@ import {
   type StrengthId,
   type SymbolKind,
   type SymbolSpec,
+  type VehicleCategoryId,
 } from '@einsatzzeichen/schema';
 import { boundsOfMm, type BoundsMm } from './bounds.js';
 import { HEAD_GAP_MM, placeHead, profileFor } from './layout/profiles.js';
@@ -20,6 +24,15 @@ import {
   verticalTextBoxMm,
 } from './render/text-policy.js';
 import { validateSpec } from './validate.js';
+
+/**
+ * Ob ein Körper ein Polyzug ist, den die Zeichnung **nicht** schließt. `closed` ist optional; die
+ * Prüfung fragt deshalb nach `!== true` und nicht nach `=== false` — ein weggelassenes Feld ist
+ * ein offener Polyzug.
+ */
+function isOpenPolyline(primitive: Primitive): boolean {
+  return primitive.type === 'polyline' && primitive.closed !== true;
+}
 
 /** Senkrechte Mitte der Hülle eines Primitivs, in Millimetern. */
 function centerYMm(primitive: Primitive): number {
@@ -298,6 +311,12 @@ export interface CatalogPorts {
   organizationColor(id: OrganizationId): ColorToken;
   strengthHead(id: StrengthId): HeadShape;
   /**
+   * Fahrwerkszone je Fahrzeugkategorie (Kapitel 5.1). Neben `strengthHead` und nicht in ihm: die
+   * Kopfzone verankert an der Oberkante ihrer Zone, die Fahrwerkszone an der Körperunterkante,
+   * und ihre Marken sind nicht auf Kreise beschränkt.
+   */
+  vehicleChassis(id: VehicleCategoryId): ChassisShape;
+  /**
    * Liefert die volle Definition, nicht nur die Primitive: die deklarierte Box trägt die drei
    * Gates. Damit hat `PictogramDefinition` von Beginn an zwei Konsumenten und ist kein
    * vorbereitetes Feld.
@@ -338,6 +357,57 @@ function pictogramIdOf(id: CapabilityId): PictogramId {
   return `capability.${id}`;
 }
 
+/**
+ * Setzt eine Fahrwerksmarke absolut. `topMm` ist die Oberkante der Zone, also die Unterkante der
+ * Körperhülle — anders als bei der Kopfzone gibt es hier nichts zu verhandeln: der Körper weicht
+ * dem Fahrwerk nicht aus, es hängt an ihm.
+ *
+ * Alle drei Formen tragen dieselbe Kontur wie der Körper (schwarzer Strich 0,5 mm, keine
+ * Füllung). Das ist gemessen und nicht übernommen: die Radinnenflächen sind in jeder der 26
+ * Fahrwerksdateien aus E.2 und in `5.1.1.1` bis `5.1.1.6` Löcher im Umriss, keine gefüllten
+ * Scheiben — eine Füllung `weiss` sähe auf der Referenzfläche gleich aus und wäre in jedem
+ * anderen Theme eine Behauptung.
+ */
+function chassisPrimitive(mark: ChassisMark, topMm: number): Primitive {
+  // Strichbreite 0,5 mm, an jedem Ring- und Kettenpaar der Referenz gemessen (Außenkante 30,7502
+  // gegen Innenkante 30,2500 bei Markenmitte 28,2501) — nicht vom Körper geerbt, auch wenn beide
+  // heute denselben Wert tragen.
+  const style = {
+    fill: 'none',
+    stroke: 'schwarz',
+    strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+  } as const;
+  const cyMm = topMm + mark.cyFromTopMm;
+  switch (mark.type) {
+    case 'wheel':
+      return { type: 'circle', role: 'chassis', cx: mark.cxMm, cy: cyMm, r: mark.rMm, style };
+    case 'track':
+      // Ein Stadion ist ein Rechteck mit `rx` = halbe Höhe. Kein Pfad mit genäherten Halbkreisen:
+      // `rx` ist im IR vorhanden und wird vom Renderer exakt gezeichnet, eine Kubik-Näherung wäre
+      // eine vermeidbare Abweichung von der vermessenen Form.
+      return {
+        type: 'rect',
+        role: 'chassis',
+        x: mark.leftCxMm - mark.rMm,
+        y: cyMm - mark.rMm,
+        width: mark.rightCxMm - mark.leftCxMm + 2 * mark.rMm,
+        height: 2 * mark.rMm,
+        rx: mark.rMm,
+        style,
+      };
+    case 'bar':
+      return {
+        type: 'line',
+        role: 'chassis',
+        x1: mark.fromXMm,
+        y1: cyMm,
+        x2: mark.toXMm,
+        y2: cyMm,
+        style,
+      };
+  }
+}
+
 export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: ComposeOptions = {}): Drawing {
   const issues = validateSpec(spec);
   if (issues.length > 0) throw new CompositionError(issues);
@@ -365,6 +435,25 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
       : [];
 
   const placedBody = profile.place(body, headBox?.bottomMm ?? null);
+
+  if (spec.organization !== undefined && isOpenPolyline(placedBody)) {
+    // SVG (und `canvas.ts` genauso) schließt einen gefüllten Polyzug implizit: aus dem Haken von
+    // `1.13 Ereignis` würde ein volles Dreieck. Selbst gerastert (18. August 2026): derselbe
+    // Polyzug mit `fill: 'rot'` deckt 936 Pixel bei 64 px Kantenlänge statt der 142 des reinen
+    // Strichs, und (16|14) mm liegt mit #fa1919 mitten in einer Fläche, die die Zeichnung nicht
+    // hat.
+    //
+    // Der Katalog erfindet diese Fläche nicht. Gegenprobe an der Quelle: der Haken kommt in genau
+    // **einer** der 661 Referenzdateien vor — in `1.13` selbst (Suche über seine Punktfolge, ein
+    // Treffer); kein zusammengesetztes Zeichen des Bestands trägt ihn eingefärbt. Es gibt also
+    // keinen Beleg für ein organisationsgefärbtes Ereignis. Werfen statt raten, dasselbe Muster
+    // wie `organizationColor` und `circleBodyProfile.place`.
+    throw new Error(
+      `Eine Organisationsfarbe an "${spec.kind}" ist nicht belegt: der Körper ist ein offener ` +
+        'Polyzug, und eine Füllung schlösse ihn implizit zu einer Fläche, die die Referenz nicht ' +
+        'zeichnet.',
+    );
+  }
 
   const filled: Primitive =
     spec.organization !== undefined
@@ -408,6 +497,18 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
   // Unterkante des Körpers, wo immer die nach einer eventuellen Kopfzonen-Verschiebung liegt. Das
   // hält Kopf- und Fußzone auch dann überschneidungsfrei, wenn ein Zeichen künftig beides trägt.
   const bodyBoundsMm = boundsOfMm(placedBody);
+
+  // Fahrwerkszone: hängt an der Unterkante der **platzierten** Körperhülle, wie die Fußzone auch.
+  // Anders als die Kopfzone verhandelt sie nichts — der Körper weicht ihr nicht aus. Gemessen an
+  // `5.1.1.1` bis `5.1.1.6` und an allen 25 E.2-Zeichen mit Fahrwerk: Körperunterkante 26,0004 mm,
+  // Markenmitte 28,2501 mm, Unterkante der Zone 30,7502 mm. Sie bleibt damit innerhalb der
+  // 32-mm-Grundfläche; `validateSpec` hält sie von der Fußzone frei, mit der sie sich sonst
+  // überschnitte.
+  const chassisShape: ChassisShape | null =
+    spec.vehicleCategory !== undefined ? catalog.vehicleChassis(spec.vehicleCategory) : null;
+  const chassisPrimitives: Primitive[] =
+    chassisShape?.marks.map((mark) => chassisPrimitive(mark, bodyBoundsMm.maxY)) ?? [];
+
   const footTopMm = bodyBoundsMm.maxY + HEAD_GAP_MM;
   // `boxMm` ist bei Text eine Zusicherung des Autors, keine Messung (siehe Primitive-Kommentar
   // in geometry.ts) — sie muss deshalb selbst den Diakritika-Überstand einkalkulieren, den kein
@@ -447,9 +548,21 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
     ? labelPrimitives(spec.labels, bodyBoundsMm, DEFAULT_VIEWBOX_MM.width)
     : [];
 
+  // Das Fahrwerk steht **nach** dem gefüllten Körper: seine Marken ragen 0,25 mm in dessen
+  // Strichband hinein (Radaußenkante 25,75 mm gegen Körperunterkante 26,0 bei Strich 0,5), und
+  // dort deckt der Körperstrich sie ab. Umgekehrt zeichnete eine Organisationsfüllung über die
+  // Radkontur. Die Referenz zeigt beides als eine verschmolzene Kontur; die Reihenfolge ist die
+  // einzige Stelle, an der die Zerlegung in Primitive das nachbilden kann.
   return {
     viewBox: DEFAULT_VIEWBOX_MM,
-    children: [...headPrimitives, filled, ...pictograms, ...labels, ...footPrimitives],
+    children: [
+      ...headPrimitives,
+      filled,
+      ...chassisPrimitives,
+      ...pictograms,
+      ...labels,
+      ...footPrimitives,
+    ],
     ...(options.title !== undefined ? { title: options.title } : {}),
     ...(options.description !== undefined ? { description: options.description } : {}),
   };

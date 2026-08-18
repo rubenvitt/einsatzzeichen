@@ -24,15 +24,18 @@ describe('coverage CLI', () => {
 
     coverage();
 
-    expect(manifestReviews).toBe(313);
+    // 325 seit LFH-424: sechs Grundzeichen aus Kapitel 1, die achte Organisation (2.2) und die
+    // fünf vermessenen Fahrzeugkategorien aus 5.1.1.
+    expect(manifestReviews).toBe(325);
     expect(sourceReviews).toBe(13);
     expect(profileReviews).toBe(1);
-    expect(openReviews).toBe(327);
+    expect(openReviews).toBe(339);
     // Seit dem Teilslice E-c steht Anhang E einzeilig im Umfang: E.1 ist mit 37 Abschnitten
     // vollständig, die 37 Einzelzeilen sind an `E.1` zurückgetreten. Die Zeile ist damit wieder
     // lesbar — und sie behauptet nicht mehr, als `recipes.test.ts` belegt.
     expect(lines).toContain(
-      'Umfang:      1, 2, 4, 5.4, 5.8, C.1.1, C.1.2, D.3.7, E.1, J.1, J.2, J.3, J.4, K, L, M',
+      'Umfang:      1, 2, 4, 5.1.1, 5.4, 5.8, C.1.1, C.1.2, D.3.7, E.1, J.1, J.2, J.3, J.4, ' +
+        'K, L, M',
     );
     expect(lines).toContain(
       `Offene fachliche Reviews: ${openReviews} ` +

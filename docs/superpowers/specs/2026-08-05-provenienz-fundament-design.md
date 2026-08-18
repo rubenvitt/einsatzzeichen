@@ -348,6 +348,15 @@ Sieben Organisationsfarben, nicht acht. (`2.2_Organisationen.svg` existiert, tr�
 generischen Namen, aus dem keine Zuordnung zu `hilfsorganisation` folgt. Diese Zuordnung zu
 vermessen ist eine eigene Aufgabe und nicht Teil dieses Slice.)
 
+> **Nachtrag vom 18. August 2026 (LFH-424).** Die Zuordnung ist inzwischen vermessen und der
+> Absatz damit **überholt**: `2.2_Organisationen.svg` trägt einen vollflächigen Fleck `#ffffff`
+> über 0/0/32/32 mm — die Bauform von 2.1 und 2.3 bis 2.8 —, und seine gerasterte Typo-Ebene liest
+> „HiOrg". Genau acht Dateien des Kapitels tragen Fleck **und** Typo-Ebene. Der Katalog führt
+> seither **acht** Organisationsfarben und acht Elementeinträge; `organizationColor` wirft nicht
+> mehr. Beleg in
+> [`docs/decisions/2026-08-18-grundlagen-restpunkte.md`](../../decisions/2026-08-18-grundlagen-restpunkte.md),
+> Abschnitt 4.
+
 ### Abschnittsnummern der Elementeinträge
 
 `CoverageEntry.sourceId` behält die Form `"<SourceId>:<Abschnitt>"`, und der Schlüssel bleibt

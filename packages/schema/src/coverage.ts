@@ -15,9 +15,32 @@ export type CoverageKind = 'catalog-entry' | 'composition-recipe' | 'element';
  */
 export type TestEvidenceKind =
   | 'body-fingerprint'
+  /**
+   * Steht an die Stelle von `body-fingerprint`, wo das Kennwertartefakt **keine vergleichbare
+   * Form** führt: der Extraktor legt für einen Kurvenpfad nichts ab (`shapes: []`), und
+   * `matchFingerprint` bricht dann ab, bevor es den Körper überhaupt ansieht. Betroffen sind seit
+   * LFH-424 die fünf Kurvenkörper aus Kapitel 1 (1.3, 1.4, 1.5, 1.9, 1.14). An seine Stelle tritt
+   * ein an den vermessenen Zahlen festgenagelter Test — dasselbe Muster wie
+   * `head-shape-regression`, das aus demselben Grund existiert (Kopfmarken tragen `role: 'head'`
+   * und werden vom Fingerprint-Gate nie erfasst).
+   *
+   * Der Unterschied zu `body-fingerprint` ist kein Verfahrensdetail, sondern die Provenienz des
+   * Erwartungswerts: dort steht er im eingecheckten Artefakt, hier in der Testdatei.
+   */
+  | 'body-geometry-regression'
   | 'svg-snapshot'
   | 'reference-fill'
   | 'head-shape-regression'
+  /**
+   * Das Gegenstück zu `head-shape-regression` für die Fahrwerkszone aus Kapitel 5.1. Aus
+   * demselben Grund eine eigene Art und keine Wiederverwendung: `matchFingerprint` vergleicht
+   * ausschließlich `role: 'body'` und sieht Marken mit `role: 'chassis'` nie — und eine
+   * `ChassisShape` ist keine `HeadShape`, sie verankert an der Körperunterkante und kennt neben
+   * dem Kreis auch das Stadion und den Verbindungsstrich. Zwei Arten unter einem Namen ließen
+   * die Mengengleichheit „geprüfte Fälle = beanspruchte Zeilen" beide zugleich behaupten, ohne
+   * dass eine der beiden Testsuiten sie allein einhalten müsste.
+   */
+  | 'chassis-shape-regression'
   | 'pictogram-contract';
 
 export interface CoverageEntry {

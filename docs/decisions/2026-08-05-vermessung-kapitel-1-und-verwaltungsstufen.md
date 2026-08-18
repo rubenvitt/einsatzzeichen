@@ -49,6 +49,20 @@ Aufweichung der Treueentscheidung und braucht eine eigene Festlegung.
 `1.9 Gebiet` fällt auch damit heraus: seine Extrema liegen nicht auf glatten Entwurfsmaßen, es
 gibt also keinen Sollwert, gegen den eine eigene Zeichnung gegatet werden könnte.
 
+> **Nachtrag vom 18. August 2026 (LFH-424).** Die Tabelle dieses Abschnitts ist in jeder Zahl
+> richtig und in ihrer Spalte „belegbar?" **widerlegt**. Alle sechs Grundzeichen stehen inzwischen
+> im Katalog, jedes mit vermessener Geometrie. Der Grund, den keine der beiden Notizen kannte: die
+> Ebene `Flächige_Fülung` trägt bei 1.3, 1.4, 1.5 und 1.9 die **Mittellinie verbatim** — sie war
+> nur vom damaligen Extraktor nicht lesbar, der für einen Kurvenpfad `null` liefert.
+>
+> Insbesondere `1.9 Gebiet` ist ein Zehneck mit zehn Eckradien: die Extrema
+> 1,5199/3,2298/30,9993/28,3237 liegen auf Eckrundungen und sind deshalb keine Entwurfsmaße. Die
+> zehn Ecken liegen auf ganzen Millimetern, die zehn Radien auf einem 0,6-mm-Raster. Und
+> „Form nein" für 1.4 und 1.5 ist ebenso widerlegt: es sind Halbkreise mit r = 15 um (16|23) bzw.
+> (16|9) in der üblichen Zwei-Kubiken-Näherung. Belege in
+> [`2026-08-18-grundlagen-restpunkte.md`](./2026-08-18-grundlagen-restpunkte.md), Abschnitte 1
+> und 2.
+
 ### Kapitel 3 ebenso
 
 | Datei | gemessene Form | glatte Entwurfsmaße? |
@@ -99,6 +113,18 @@ geprüft werden.
 Die größere ist `maxY` mit rund 1,28 Einheiten. Die Schlussfolgerung dort bleibt richtig, die
 Zahl war nur die kleinere von zwei.
 
+> **Nachtrag vom 18. August 2026 (LFH-424).** Zwei Angaben dieses Abschnitts sind nachzuziehen.
+>
+> 1. **Es sind vier Kanten, nicht zwei.** Selbst ausgeführt: minX 0,5896 / minY 0,3912 /
+>    maxX −0,5868 / maxY −1,2784 Einheiten. Beide Notizen nennen je eine und beide sind
+>    unvollständig.
+> 2. **Die Pflicht „muss von Hand am Snapshot geprüft werden" ist eingelöst — durch ein Gate.**
+>    Der Satz „ein geschlossener hätte dieselbe Hülle *und* dieselben Ecken — kein Gate fängt den
+>    Unterschied" gilt für **Mittellinien**vergleiche, nicht allgemein. Die analytische
+>    Strichaufweitung des offenen Polyzugs liefert 3,7920/6,8613/28,2080/25,4507 und trifft den
+>    eingecheckten Kennwert auf 0,0029 Einheiten; die des geschlossenen liefert
+>    3,5329/6,7500/28,4671/25,4507 und liegt damit 0,73 Einheiten daneben.
+
 ## 3. Die Verwaltungsstufen `5.7` sind Sterne auf einer zentrierten Reihe
 
 Vermessen an allen sechs Dateien. Die Marke ist immer gleich: **5,446 × 6 mm**, senkrechte Mitte
@@ -125,6 +151,26 @@ von 0,01.
 
 Die Marken sind **keine Rechtecke**, sondern sechsstrahlige Sterne aus gekreuzten Strichen
 (`5.7.1` als Polygon mit 19 Punkten). Ein Rechteck-Test auf ihre Teilpfade ergibt **0 von n**.
+
+> **Nachtrag vom 18. August 2026 (LFH-424).** Dieser Abschnitt ist in jeder Zahl richtig und in
+> seiner **Überschrift** falsch: er vermisst nicht die Kopfmarke einer Verwaltungsstufe, sondern
+> die **Eigendarstellung** 5.7.x — ein Zeichen ohne Körper, das sich zur Kopfzone verhält wie
+> 5.4.1 bis 5.4.4 zur Stärkekopfzone.
+>
+> Die Kopfmarken stehen in acht Dateien, die diese Notiz nicht nennt: `D.3.1`, `D.3.3`, `D.3.4`
+> und `D.4.1` bis `D.4.5`. Zwei der drei tragenden Zahlen sind dort andere — Markenhülle
+> **3,7137 × 4,0001** statt 5,4458 × 6,0004, Teilung **5** statt 6, dazu Zonenoberkante y = 0
+> statt `cy = 16`. Belegt sind nur n = 2 (`[11, 21]`), n = 5 (`[6, 11, 16, 21, 26]`) und n = 6
+> (dreireihig); `gemeinde`, `bezirk` und `bundesland` haben in Kopfform **überhaupt keine
+> Referenz**. Deshalb bleiben die Verwaltungsstufen auch nach LFH-424 offen, und `validateSpec`
+> lehnt `spec.administrativeLevel` seither ab, statt sie still zu verschlucken.
+>
+> Zwei Verwechslungsbefunde gehören dazu: die Kopfmarken der Stufe `kreis` liegen auf denselben
+> x-Werten wie der Stärkegrad `gruppe` und in einer überlappenden Zone (Unterschied nur die
+> Markenform), und dieselbe 5.7-Sternform steht in den vier Dateien
+> `5.8.7_Beispiel_Schneiend_*` als Schneefallstärke — dort bei cy 26,011 und mit Teilung 8.
+> Vollständige Messwerte in
+> [`2026-08-18-grundlagen-restpunkte.md`](./2026-08-18-grundlagen-restpunkte.md), Abschnitt 6.
 
 ## 4. Der Extraktionsbestand: zwei Zahlen, die vor jeder Planung nötig sind
 

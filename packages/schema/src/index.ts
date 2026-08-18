@@ -8,3 +8,4 @@ export * from './sources.js';
 export * from './profile.js';
 export * from './coverage.js';
 export * from './head.js';
+export * from './chassis.js';
