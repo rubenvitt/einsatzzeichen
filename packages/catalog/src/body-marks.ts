@@ -1,5 +1,6 @@
 import type { BoundsMm } from '@einsatzzeichen/core';
 import {
+  CAPABILITY_IDS,
   DEFAULT_STROKE_WIDTH_MM,
   type CapabilityId,
   type Primitive,
@@ -352,7 +353,15 @@ export function bodyMark(id: CapabilityId, bodyBoundsMm: BoundsMm): readonly Pri
   return build(bodyBoundsMm);
 }
 
-/** Die Fähigkeiten mit vermessener randbündiger Fassung, in Kapitelreihenfolge. */
+/**
+ * Die Fähigkeiten mit vermessener randbündiger Fassung, in **Kapitelreihenfolge**.
+ *
+ * Aus `CAPABILITY_IDS` gefiltert und nicht aus `Object.keys(MARKS)` gelesen: die Einträge oben
+ * stehen in der Reihenfolge, in der die Teilslices sie vermessen haben (erst 4.6, dann 4.2, dann
+ * 4.1), und das ist nicht die Kapitelreihenfolge. Die Zusage „in Kapitelreihenfolge" wäre damit
+ * eine Behauptung über eine Deklarationsreihenfolge, die niemand pflegt — so ist sie strukturell
+ * erzwungen und überlebt jede weitere Marke, an welcher Stelle der Datei sie auch landet.
+ */
 export const BODY_MARK_IDS: readonly CapabilityId[] = Object.freeze(
-  Object.keys(MARKS) as CapabilityId[],
+  CAPABILITY_IDS.filter((id) => Object.hasOwn(MARKS, id)),
 );

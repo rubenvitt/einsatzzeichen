@@ -225,9 +225,13 @@ export const ANHANG_F_A_FINDINGS: Readonly<Record<string, string>> = Object.free
     '„ASB" ist ein Trägerkürzel — der Arbeiter-Samariter-Bund. Damit ist es zugleich das einzige ' +
     'F-Zeichen, das eine bestimmte Hilfsorganisation benennt.',
   'F.1.8':
-    'Der waagerechte Arm der Teilung ist links nur bis zum Transportring gezeichnet (Rechteck ' +
-    '1,0…10,5 mm auf y 15,75…16,25), rechts fehlt er ganz. Der Katalog zieht ihn durch; im Bild ' +
-    'ist das derselbe Strich, weil die Speichen im Ring auf denselben Linien liegen.',
+    'Der waagerechte Arm der Teilung steht in der Quelle in zwei Bauformen: links als eigenes ' +
+    'Rechteck (1,0…10,5 mm auf y 15,75…16,25) neben der Ebene, rechts als Zwischenraum zweier ' +
+    'weisser Felder innerhalb desselben Pfades (21,7375…30,75 auf derselben Höhe). Beide Arme ' +
+    'reichen von der Körperkante bis an den Ring und nicht durch ihn. Der Katalog zieht den Arm ' +
+    'durch; im Bild ist das derselbe Strich, weil die acht Speichen im Ring auf den beiden ' +
+    'Mittellinien und den beiden Diagonalen liegen — die Durchzeichnung deckt sich dort mit dem, ' +
+    'was die Referenz als Feldgrenzen zeichnet.',
 });
 
 /**

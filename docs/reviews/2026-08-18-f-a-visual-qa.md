@@ -55,5 +55,7 @@ der Grund für den Schnitt und alle Maße stehen in der Entscheidungsnotiz, Absc
   Schenkel des Zelts treffen die unteren Körperecken und schneiden die Felder der Teilung genau
   dort, wo die Referenz sie schneidet.
 - **Der Transportring** (F.1.8) steht mit r 5,5 mm auf der Körpermitte; die acht Speichen entstehen
-  aus den beiden Armen der Teilung und den zwei Diagonalen. Die Referenz zeichnet den linken Arm
-  nur bis zum Ring — im Bild ist das derselbe Strich.
+  aus den beiden Armen der Teilung und den zwei Diagonalen. Die Referenz führt ihre beiden
+  waagerechten Armstücke bis an den Ring und nicht durch ihn — links als eigenes Rechteck
+  (1,0…10,5 mm), rechts als Zwischenraum zweier Felder (21,7375…30,75). Der Katalog zieht den Arm
+  durch; im Bild ist es derselbe Strich, weil die Speichen im Ring auf denselben Linien liegen.
