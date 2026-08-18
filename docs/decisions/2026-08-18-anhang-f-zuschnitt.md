@@ -53,12 +53,14 @@ deshalb Dateien und nennt sie „Zeichen". Für F fallen sie auseinander. **Die 
 LFH-404 sind eine Dateizahl** — wer daraus Manifestzeilen ableitet, rechnet für F acht zu wenig
 (jede Alternative bekommt ihre eigene Zeile) und zugleich acht Abschnitte zu viel.
 
-## 3. Der Befund: sechs Körperformen, vier davon im Katalog
+## 3. Der Befund: sechs Körperformen in sieben Ausprägungen, vier davon im Katalog
+
+Sechs Formen — der Kreiskörper kommt in zwei Lagen vor, die Tabelle führt ihn deshalb zweimal.
 
 | Körperform | Dateien aus F | im Gesamtbestand | Grundzeichen | im Katalog |
 |---|---|---|---|---|
 | `formation` Rechteck 30 × 20 mm bei 1/6 | 25 — ganz F.1 | 48 | `1.1` | **ja** |
-| `vehicle-land` Rumpf 30 mm | 18 — F.2.1–2.5 (+Alt), 2.8, 2.10–2.14, 2.16, 2.17 | 66 | `1.3` | **ja** |
+| `vehicle-land` Rumpf 30 mm | 18 — F.2.1–2.5 (+Alt), 2.8, 2.10–2.14, 2.16, 2.17 | 84 | `1.3` | **ja** |
 | Kreis r 12,0 mm, Mitte 16/16 | 15 — F.3.1–3.4, 3.6–3.13, 3.17–3.19 | 23 | keins | **nein** |
 | Kreis r 12,0 mm, Mitte 16/**18** | 2 — F.3.5, F.3.14 | 6 | keins | **nein** |
 | `vehicle-air` | 2 — F.2.6, F.2.7 | 5 | `1.4` | **ja** |
@@ -71,7 +73,7 @@ Belege, jede Zeile einzeln nachvollziehbar:
 ```bash
 cd taktische-zeichen
 grep -l 'rect x="2.834" y="17.008" width="85.04" height="56.693"' *.svg | wc -l          # 48
-grep -l 'M45.355,22.678c-17.008,0-31.181-2.582-42.52-6.378v57.402h85.04V16.3' F.*.svg | wc -l  # 18
+grep -l 'M45.355,22.678c-17.008,0-31.181-2.582-42.52-6.378v57.402h85.04V16.3' *.svg | wc -l   # 84
 grep -l '<circle cx="45.356" cy="45.354" r="34.016"' *.svg | wc -l                       # 23
 grep -l '<circle cx="45.356" cy="51.024" r="34.016"' *.svg | wc -l                       #  6
 grep -l 'M87.845,59.499H2.863c0-23.467' *.svg | wc -l                                    #  5
@@ -233,12 +235,14 @@ Stück. Das ist Arbeit **in** F und keine Abhängigkeit **von** LFH-408.
 
 ```bash
 cd taktische-zeichen
-grep -ho 'fill="#[0-9a-fA-F]*"' F.*.svg | sort -u   # nur fill="#fff"
-grep -ho 'fill="#[0-9a-fA-F]*"' E.*.svg | sort -u   # #003296, #fa8c00, #fff
+for L in C D E F G H I J K L M N; do
+  printf "%-2s: " "$L"; grep -ho 'fill="#[0-9a-fA-F]*"' $L.*.svg | sort -u | tr '\n' ' '; echo
+done
 ```
 
-Alle 66 F-Dateien führen ausschließlich `#fff`. Anhang E führt 83-mal THW-Blau, `C.1.2` führt
-Feuerwehr-Rot. **Anhang F ist der erste Bestand ohne Organisationsfarbe.**
+Alle 66 F-Dateien führen ausschließlich `#fff`. **Über alle zwölf Anhänge gezählt ist F der einzige,
+für den das gilt** — `K` führt gar keine Farbangabe, `J` neben `#fff` noch `#787878`, und die
+übrigen neun führen mindestens eine Organisationsfarbe (E 83-mal THW-Blau, `C.1.2` Feuerwehr-Rot).
 
 Aus der Datei ist damit nicht entscheidbar, ob diese Zeichen `organization: 'hilfsorganisation'`
 tragen oder gar keine Organisation. `ORGANIZATION_COLORS` bildet `hilfsorganisation` seit LFH-424
@@ -273,7 +277,8 @@ ohne sie ist keiner der übrigen fünf Teilslices baubar. Danach ist die Reihenf
 F-b hängt an F-a, F-c an F-a, F-d an F-c (nur der Bequemlichkeit halber), F-e an F-a, F-f an F-e
 (Kreiskörper).
 
-**Warum die drei fehlenden Körperformen in F liegen und nicht in einem eigenen Grundlagenposten.**
+**Warum die drei fehlenden Körperausprägungen in F liegen und nicht in einem eigenen
+Grundlagenposten.**
 Bei Anhang E lagen sie in LFH-424, einem Geschwistertask. Hier gibt es keinen — der Kreiskörper ist
 in `profiles.ts` als „eigenes Ticket" angekündigt und nie angelegt worden. Sie in F-e und F-f zu
 legen, hält die Arbeit an ihrem ersten Verbraucher. **Sie nützen darüber hinaus:** derselbe
