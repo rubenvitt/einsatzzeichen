@@ -26,10 +26,17 @@ const raw: unknown = fingerprints;
 const index = new Map<string, FingerprintLike>(assertFingerprints(raw).map((fp) => [fp.asset, fp]));
 
 /**
- * Ob das Kennwertartefakt zu dieser Datei **keine vergleichbare Form** führt (`shapes: []`). Der
- * Extraktor legt für einen Kurvenpfad nichts ab und zählt nur `curvedPaths` hoch; `matchFingerprint`
- * bricht dann mit „Keine vergleichbare Form in den Kennzahlen zu …" ab, bevor es den Körper
- * ansieht. Betroffen sind im Bestand vom 18. August 2026 unter anderem 1.3, 1.4, 1.5, 1.9 und 1.14.
+ * Ob das Kennwertartefakt zu dieser Datei **keine vergleichbare Form** führt (`shapes: []`).
+ * `matchFingerprint` bricht dann mit „Keine vergleichbare Form in den Kennzahlen zu …" ab, bevor
+ * es den Körper ansieht.
+ *
+ * **Der Grund hat sich mit dem Teilslice E.2 verschoben.** Bis dahin war es der Extraktor: er
+ * legte für einen Kurvenpfad nichts ab und zählte nur `curvedPaths` hoch, wovon 1.3, 1.4, 1.5 und
+ * 1.9 betroffen waren. Seit er die Körperfläche der Ebene `Flächige_Fülung` als `kind: 'bounds'`
+ * erfasst, führen diese vier eine Form und sind gegatet. Was bleibt, ist der Fall, in dem die
+ * **Quelle** keine Körperfläche zeichnet: `1.14 Spontanhelfer` führt als einzige Datei des
+ * Kapitels neben `1.13` überhaupt keine Ebene `Flächige_Fülung`. Das behebt kein
+ * Extraktorausbau.
  *
  * Eine **unbekannte** Datei liefert bewusst `false`: die Frage „trägt das Artefakt eine Form?" ist
  * für sie nicht beantwortet, und eine Lockerung der Nachweispflicht darf nicht daraus folgen, dass

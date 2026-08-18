@@ -20,6 +20,12 @@ import {
   ANHANG_E_B_RECIPES,
   ANHANG_E_C_FILL_FINDINGS,
   ANHANG_E_C_RECIPES,
+  ANHANG_E_D_FINDINGS,
+  ANHANG_E_D_RECIPES,
+  ANHANG_E_E_FINDINGS,
+  ANHANG_E_E_RECIPES,
+  ANHANG_E_F_FINDINGS,
+  ANHANG_E_F_RECIPES,
 } from './recipes-anhang-e.js';
 
 /**
@@ -102,8 +108,8 @@ const DRAWING_EVIDENCE = [
 ] as const satisfies readonly TestEvidenceKind[];
 
 /**
- * Für Grundzeichen, deren Kennwertartefakt keine vergleichbare Form führt (`shapes: []`, weil der
- * Extraktor für Kurvenpfade nichts ablegt). Ein einheitliches `DRAWING_EVIDENCE` über alle
+ * Für Grundzeichen, deren Kennwertartefakt keine vergleichbare Form führt (`shapes: []`, weil die
+ * Referenzdatei keine Körperfläche zeichnet). Ein einheitliches `DRAWING_EVIDENCE` über alle
  * vierzehn Arten behauptete für sie ein Fingerprint-Gate, das `matchFingerprint` gar nicht
  * ausführen kann — es bricht vorher mit „Keine vergleichbare Form" ab.
  */
@@ -113,11 +119,17 @@ const UNGATED_DRAWING_EVIDENCE = [
 ] as const satisfies readonly TestEvidenceKind[];
 
 /**
- * Technisches Review der fünf Kurvenkörper aus Kapitel 1. Eigener Eintrag statt des allgemeinen
- * `TECHNICAL_REVIEW`, dessen Begründung („Fingerprint- und Snapshot-Gate für diesen Eintrag grün")
- * für sie nicht zutrifft: ihr Kennwertartefakt führt `shapes: []`, `matchFingerprint` bricht ab,
- * bevor es den Körper ansieht. Die Note nennt, was stattdessen trägt — dasselbe Muster wie bei den
- * Piktogrammreviews.
+ * Technisches Review der Körper ohne vergleichbare Form im Kennwertartefakt. Eigener Eintrag statt
+ * des allgemeinen `TECHNICAL_REVIEW`, dessen Begründung („Fingerprint- und Snapshot-Gate für
+ * diesen Eintrag grün") für sie nicht zutrifft: ihr Kennwertartefakt führt `shapes: []`,
+ * `matchFingerprint` bricht ab, bevor es den Körper ansieht. Die Note nennt, was stattdessen
+ * trägt — dasselbe Muster wie bei den Piktogrammreviews.
+ *
+ * **Seit dem Teilslice E.2 trifft das nur noch `1.14 Spontanhelfer`.** Die vier Kurvenkörper 1.3,
+ * 1.4, 1.5 und 1.9, die diesen Eintrag bis dahin mittrugen, sind gegatet, seit der Extraktor die
+ * Körperfläche der Ebene `Flächige_Fülung` erfasst; sie tragen wieder `TECHNICAL_REVIEW`. Welcher
+ * Eintrag gilt, entscheidet weiterhin `referenceLacksComparableShape` am Artefakt und keine Liste
+ * — deshalb hat diese Verschiebung hier keine Zeile gekostet.
  */
 const CURVED_BODY_TECHNICAL_REVIEW: Review = {
   status: 'approved',
@@ -125,11 +137,11 @@ const CURVED_BODY_TECHNICAL_REVIEW: Review = {
   date: '2026-08-18',
   note:
     'Fingerprint-Gate nicht anwendbar: das Kennwertartefakt führt für diese Datei keine ' +
-    'vergleichbare Form (shapes: [], curvedPaths > 0), matchFingerprint bricht vor dem ' +
-    'Körpervergleich ab. An seine Stelle tritt ein an den vermessenen Zahlen festgenagelter ' +
-    'Test in base-symbols.test.ts (Hülle und Formmerkmale gegen die eigene Vermessung der ' +
-    'Referenzdatei vom 18. August 2026) plus SVG-Snapshot. Dazu die globalen Mehrgrößen-, ' +
-    'viewBox-, Metadaten- und Kontrast-Gates.',
+    'vergleichbare Form (shapes: []), matchFingerprint bricht vor dem Körpervergleich ab — die ' +
+    'Referenzdatei zeichnet gar keine Ebene "Flächige_Fülung". An seine Stelle tritt ein an den ' +
+    'vermessenen Zahlen festgenagelter Test in base-symbols.test.ts (Hülle und Formmerkmale ' +
+    'gegen die eigene Vermessung der Referenzdatei vom 18. August 2026) plus SVG-Snapshot. Dazu ' +
+    'die globalen Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates.',
 };
 
 function technicalReviewForBaseSymbol(referenceAsset: string): Review {
@@ -310,6 +322,104 @@ const ANHANG_E_C_DEVIATIONS: Readonly<Record<string, string>> = Object.freeze({
 });
 
 /**
+ * Technisches Review der 20 Zeichen aus E-d. Eigener Eintrag mit eigenem Datum wie bei E-b und
+ * E-c; die Note nennt zusätzlich, was an diesem Teilslice technisch neu ist, weil hier zum ersten
+ * Mal ein Gate greift, das es in E.1 nicht gab.
+ */
+const ANHANG_E_D_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-18',
+  note:
+    'Körperhülle per matchFingerprint gegen die Referenz gegated — und das ist hier erstmals eine ' +
+    'Aussage über den Körper und nicht über einen Buchstaben: bis zum Ausbau des ' +
+    'Kennwertextraktors legte dieser für gekrümmte Füllpfade keine Form ab, und `pickShape` griff ' +
+    'in 30 der 31 E.2-Kennwertsätze die erste fremde Form — in 27 davon eine Glyphenhülle, in drei '
+    + 'das zurückgesetzte Farbfeld. Was das Gate weiterhin nicht sieht: ' +
+    'die zurückgesetzten Farbfelder von E.2.19 und E.2.20 und die Lage der Beschriftung. Für die ' +
+    'Beschriftungszonen prüft die Rasterprüfung in fonts.test.ts die tatsächliche Tinte jedes ' +
+    'Kürzelsatzes gegen die deklarierte boxMm; ohne die je Zeichen gemessenen Kappenhöhen treten ' +
+    'in diesem Block sechs Läufe aus der 28-mm-Box (16/6/430/520/313/464 Tintenpixel bei 256 px, ' +
+    'selbst nachgerastert), mit ihnen null. Neu gegated ist außerdem die Fahrwerkszone: sie hängt ' +
+    'an der Unterkante des platzierten Grundzeichens und nicht an der des Körperprimitivs, was ' +
+    'allein E.2.15 von 26,75 auf die gemessenen 28,2504 mm Radmitte bringt. Dazu die globalen ' +
+    'Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates; ein neuer Kontrastvertrag entsteht ' +
+    'nicht, weisser Text auf blau steht seit E-a als eigene 4,5:1-Anforderung im A11y-Gate. Alle ' +
+    '20 Referenzdateien sind einzeln vermessen und zweimal unabhängig gerastert; daraus stammen ' +
+    'die neun Befunde. Deklarierte Abweichungen trägt dieser Block keine.',
+};
+
+/**
+ * Technisches Review der fünf Zeichen aus E-e. Eigener Eintrag, weil dieser Block als einziger
+ * eine deklarierte Abweichung trägt und weil die drei Körperformen ihre eigenen Belegdateien
+ * haben.
+ */
+const ANHANG_E_E_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-18',
+  note:
+    'Körperhülle per matchFingerprint gegen die Referenz gegated, für `trailer` und ' +
+    '`upright-rectangle` erstmals gegen Körperformen ohne Kapitel-1-Abschnitt. Der Anhängerrumpf ' +
+    'ist dabei gegen zwei Belegdateien gegated (E.2.22 und 5.1.2.1), das Hochkantrechteck gegen ' +
+    'E.2.26 — als einzige der 31 E.2-Dateien führt es einen ring-Kennwert und war damit auch vor ' +
+    'dem Extraktorausbau gegated. Was kein Gate sieht: die Deichsel (role bodyExtra) erreicht ' +
+    'matchFingerprint nicht, das nur role: body vergleicht; für sie steht eine eigene ' +
+    'Rasterprüfung im Band x 1,5…3,5 / y 14…16 mm. Für die Beschriftungszonen prüft die ' +
+    'Rasterprüfung in fonts.test.ts die Tinte gegen die deklarierte boxMm. Dazu die globalen ' +
+    'Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates. Alle fünf Referenzdateien sind einzeln ' +
+    'vermessen; daraus stammen die vier Befunde und die eine deklarierte Abweichung.',
+};
+
+/**
+ * Technisches Review der fünf Zeichen aus E-f. Eigener Eintrag, weil hier als einzigem Block des
+ * Anhangs eine Beschriftung **außerhalb** des Körpers steht und damit ein zweiter Kontrastvertrag
+ * greift.
+ */
+const ANHANG_E_F_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-18',
+  note:
+    'Körperhülle per matchFingerprint gegen die Referenz gegated, und zwar gegen die zweite in ' +
+    'der Quelle belegte Zeichnung des Wasserfahrzeugs (bodyVariant raised-hull, Füllhülle ' +
+    '1,0100/7,9999/30,9894/22,9898 mm). Die Zeichnung aus Kapitel 1 fiele hier um 2,8 Einheiten ' +
+    'bei einer Toleranz von 0,01 — sie bleibt unverändert, weil sie 1.5_Wasserfahrzeug.svg als ' +
+    'Belegdatei beansprucht und selbst dagegen gegatet ist. Neu ist ein zweiter Kontrastvertrag: ' +
+    'labelContrastRequirements() leitet für die vierte Beschriftungszone „Organisationsfarbe auf ' +
+    'der Ausgabeoberfläche" ab, weil ihr Untergrund nicht die Körperfläche ist. Selbst ' +
+    'nachgerechnet und im A11y-Gate festgehalten: blau auf surface erreicht 11,072:1 im ' +
+    'Referenztheme, 4,634:1 in accessible-light und 4,542:1 im Drucktheme gegen eine Textschwelle ' +
+    'von 4,5:1 — keine Palettenänderung nötig. Die Lage der Zone selbst erreicht kein ' +
+    'Fingerprint-Gate; für sie steht eine Rasterprüfung bei 4096 px in fonts.test.ts. Dazu die ' +
+    'globalen Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates. Alle fünf Referenzdateien ' +
+    'sind einzeln vermessen; daraus stammen die zwei Befunde. Deklarierte Abweichungen trägt ' +
+    'dieser Block keine.',
+};
+
+/**
+ * Die eine Zeile aus E.2, bei der die **Umsetzung von der Quelle** abweicht — im Unterschied zu
+ * den 15 Befunden, wo die Quelle von sich selbst abweicht und die Umsetzung ihrer Mehrheit folgt.
+ * Dass es über 30 Zeichen und fünf Körperformen genau eine ist, liegt daran, dass dieser Slice
+ * die Mechanismen gebaut hat, die E.1 noch als Abweichung tragen musste: E.2.15 wäre ohne den
+ * L-Rahmen der zweite Fall nach dem Muster von E.1.19/E.1.24 gewesen.
+ */
+const ANHANG_E_2_DEVIATIONS: Readonly<Record<string, string>> = Object.freeze({
+  'E.2.26':
+    'Der THW-Lauf der Referenz endet rechts bei 26,0269 mm bei einer Körperkante von 29,0001 mm; ' +
+    'da die Referenzschrift ihren Anker um 0,0269 mm überragt (an E.2.1 gemessen: Tinte 29,0269 ' +
+    'bei Anker 29,0003), steht ihr Anker auf 26,0. Der Katalog setzt ihn auf 27,0, weil ' +
+    'LABEL_SIDE_MARGIN_MM = 2 gegen die rechte Körperkante rechnet — 1,0 mm Unterschied, im ' +
+    'Paarbild sichtbar. Für einen Mechanismus fehlt die Grundlage: n = 1 im gesamten Bestand ' +
+    '(diese Körperform kommt in genau einer der 661 Referenzdateien vor), und zwei gleich gute ' +
+    'Lesarten stehen nebeneinander — maxX − 3,0 oder rechte Kante der Farbfläche (28,0000) − ' +
+    '2,0. Beide erzeugen dasselbe Bild, belegt ist das Bild und nicht die Kante. Die Marge selbst ' +
+    'ist an 30 anderen Zeichen des Anhangs belegt (Tinte 19,9870…29,0269 bei Körperkante ' +
+    '31,0003 mm) und wird für einen Einzelfall nicht aufgebrochen. Dieselbe Einordnung wie bei ' +
+    'E.1.17, das seine 2,0009 mm waagerecht aus demselben Grund trägt.',
+});
+
+/**
  * Befund und Abweichung sind zwei unabhängige Achsen und werden deshalb **addiert, nicht
  * verzweigt**: sieben der 21 Zeichen aus E-b und E-c tragen keines von beidem, zehn nur einen
  * Befund an der Referenzdatei, E.1.17 nur eine Abweichung der Umsetzung, und E.1.19, E.1.24 sowie
@@ -361,6 +471,27 @@ function technicalReviewFor(section: string): Review {
       ANHANG_E_C_DEVIATIONS[section],
     );
   }
+  if (Object.hasOwn(ANHANG_E_D_RECIPES, section)) {
+    return withFindingAndDeviation(
+      ANHANG_E_D_TECHNICAL_REVIEW,
+      ANHANG_E_D_FINDINGS[section],
+      ANHANG_E_2_DEVIATIONS[section],
+    );
+  }
+  if (Object.hasOwn(ANHANG_E_E_RECIPES, section)) {
+    return withFindingAndDeviation(
+      ANHANG_E_E_TECHNICAL_REVIEW,
+      ANHANG_E_E_FINDINGS[section],
+      ANHANG_E_2_DEVIATIONS[section],
+    );
+  }
+  if (Object.hasOwn(ANHANG_E_F_RECIPES, section)) {
+    return withFindingAndDeviation(
+      ANHANG_E_F_TECHNICAL_REVIEW,
+      ANHANG_E_F_FINDINGS[section],
+      ANHANG_E_2_DEVIATIONS[section],
+    );
+  }
   return TECHNICAL_REVIEW;
 }
 
@@ -405,6 +536,11 @@ const ELEMENT_SECTIONS: Record<string, string> = {
   'vehicle-category.kfz-kategorie-3': '5.1.1.3',
   'vehicle-category.kettenfahrzeug': '5.1.1.5',
   'vehicle-category.schienenfahrzeug': '5.1.1.6',
+  // Zwei Zeilen aus Kapitel 5.1.2. Sie erweitern den beanspruchten **Umfang** nicht: `scope`
+  // führt weiterhin `5.1.1` und ausdrücklich nicht `5.1.2` — von dessen fünf Abschnitten sind
+  // nur die beiden Fahrwerke umgesetzt, die Anhängerzeichen selbst nicht.
+  'vehicle-category.anhaenger-ein-rad': '5.1.2.4',
+  'vehicle-category.anhaenger-zwei-raeder': '5.1.2.5',
 };
 
 /**
@@ -493,13 +629,23 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
   // eine Behauptung, die kein Gate widerlegt. Jetzt trägt sie ein Gate: `recipes.test.ts` hält
   // fest, dass die drei Blöcke zusammen genau E.1.1 bis E.1.37 ergeben.
   //
-  // **`E.1` und ausdrücklich nicht `E`.** Auch `E` bestünde `uncoveredScope` (jede E.1-Zeile
-  // beginnt mit `E.`), während von den 31 Zeichen aus E.2 kein einziges gebaut ist — sie warten
-  // auf `vehicle-land`, `vehicle-water` und die Fahrwerksmarken aus Kapitel 5.1. Genau diese
-  // unwiderlegbare Behauptung sollte die abschnittsweise Führung verhindern, und sie bliebe mit
-  // `E` bestehen. Damit steht Anhang E jetzt bei K/L/M (einbuchstabig, weil vollständig) und
-  // nicht mehr bei C.1.1/C.1.2/D.3.7 (einzeln, weil Belegfälle) — auf der Ebene, die vollständig
-  // belegt ist, und keine darüber.
+  // **Weiterhin `E.1` und ausdrücklich nicht `E` — aber aus einem neuen Grund.** Bis zum
+  // Teilslice E.2 war E.2 vollständig ungebaut; seither sind 30 seiner 31 Abschnitte gebaut, und
+  // sie stehen unten **einzeln**. Das ist dieselbe Bewegung wie vor E-c, nur rückwärts gelesen:
+  // `uncoveredScope` prüft an einem Präfix nur, ob **eine** Zeile mit ihm beginnt, nicht die
+  // Vollständigkeit. `E` bestünde deshalb schon mit den 37 E.1-Zeilen, und `E.2` bestünde mit 30
+  // von 31 — beides wäre genau die unwiderlegbare Behauptung, die die abschnittsweise Führung
+  // verhindern soll. Für `E.1` trägt sie ein Gate (`recipes.test.ts` hält fest, dass E-a bis E-c
+  // genau E.1.1 bis E.1.37 ergeben); für `E.2` ließe sich dieses Gate nicht schreiben, solange
+  // ein Abschnitt fehlt.
+  //
+  // Es fehlt genau einer: **E.2.6**. Der Grund ist keine Messlücke, sondern eine offene
+  // Entscheidung über einen Gate-Vertrag — weisser Text auf der Organisationsfarbe orange
+  // erreicht 2,382:1 bzw. 2,323:1 gegen eine geforderte Textschwelle von 4,5:1, und im
+  // Drucktheme ist das Fenster beweisbar leer. Die vollständige Begründung steht in
+  // `ANHANG_E_D_UNGEBAUT`, die Zahlen als Test in `a11y-contrast-gate.test.ts`. Sobald die
+  // Entscheidung gefallen ist, werden aus `E.1` und den 30 Einzelzeilen unten **ein** `E` — in
+  // einem Schritt, mit einem Test, der die 68 Abschnitte lückenlos festhält.
   scope: [
     '1',
     '2',
@@ -511,6 +657,36 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'C.1.2',
     'D.3.7',
     'E.1',
+    'E.2.1',
+    'E.2.2',
+    'E.2.3',
+    'E.2.4',
+    'E.2.5',
+    'E.2.7',
+    'E.2.8',
+    'E.2.9',
+    'E.2.10',
+    'E.2.11',
+    'E.2.12',
+    'E.2.13',
+    'E.2.14',
+    'E.2.15',
+    'E.2.16',
+    'E.2.17',
+    'E.2.18',
+    'E.2.19',
+    'E.2.20',
+    'E.2.21',
+    'E.2.22',
+    'E.2.23',
+    'E.2.24',
+    'E.2.25',
+    'E.2.26',
+    'E.2.27',
+    'E.2.28',
+    'E.2.29',
+    'E.2.30',
+    'E.2.31',
     'J.1',
     'J.2',
     'J.3',

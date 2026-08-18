@@ -66,6 +66,21 @@ const EXPECTED_CHASSIS = {
       { type: 'wheel', cxMm: 28.25, cyFromTopMm: 2.25, rMm: 2.25 },
     ],
   },
+  // 5.1.2.4: ein Rad. Gemessener Innenring 15,5000/26,2505/19,4998/30,2503, Mitte 17,4999 —
+  // an `E.2.22`, `E.2.23` und `E.2.25` zahlengleich wiedergefunden.
+  'anhaenger-ein-rad': {
+    heightMm: 4.75,
+    marks: [{ type: 'wheel', cxMm: 17.5, cyFromTopMm: 2.25, rMm: 2.25 }],
+  },
+  // 5.1.2.5: zwei Räder. Gemessene Innenringe 12,2502/26,2505/16,2500/30,2503 und
+  // 17,7504/26,2505/21,7502/30,2503, Mitten 14,2501 und 19,7503 — an `E.2.24` wiedergefunden.
+  'anhaenger-zwei-raeder': {
+    heightMm: 4.75,
+    marks: [
+      { type: 'wheel', cxMm: 14.25, cyFromTopMm: 2.25, rMm: 2.25 },
+      { type: 'wheel', cxMm: 19.75, cyFromTopMm: 2.25, rMm: 2.25 },
+    ],
+  },
 } as const satisfies Record<Exclude<VehicleCategoryId, 'amphibienfahrzeug'>, ChassisShape>;
 
 const CHASSIS_CASES = Object.entries(EXPECTED_CHASSIS) as Array<

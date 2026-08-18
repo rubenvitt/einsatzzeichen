@@ -28,6 +28,17 @@ export interface Ring {
 
 const RECTILINEAR = new Set(['M', 'm', 'L', 'l', 'H', 'h', 'V', 'v', 'Z', 'z']);
 
+/**
+ * Kommandos, für die `parsePathBounds` eine Hülle bestimmen kann. `A`/`a` fehlen bewusst: der
+ * Referenzbestand enthält keinen einzigen Bogen (gezählt über alle 661 Dateien und alle vier
+ * Ebenen — vorkommende Kommandos sind `M H V Z L C S` und ihre relativen Formen), und eine
+ * Bogenzerlegung, die nie an einer Referenzdatei läuft, wäre unbelegter Kode. Ein Bogen liefert
+ * deshalb `null` und damit denselben lauten Ausfall wie ein unbekanntes Kommando.
+ */
+const BOUNDABLE = new Set([
+  'M', 'm', 'L', 'l', 'H', 'h', 'V', 'v', 'C', 'c', 'S', 's', 'Q', 'q', 'T', 't', 'Z', 'z',
+]);
+
 interface Cursor {
   x: number;
   y: number;
@@ -228,6 +239,234 @@ export function parseRectilinearPath(d: string): SubpathBounds[] | null {
 
   push();
   return subpaths;
+}
+
+/** Hülle eines Pfads in SVG-Einheiten. Anders als `SubpathBounds` ohne Teilpfadzerlegung. */
+export interface PathBounds {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+}
+
+/**
+ * Nullstellen der Ableitung einer Kubik in **einer** Achse, auf das offene Intervall (0;1)
+ * beschränkt. Die Endpunkte stehen ohnehin als Ankerpunkte in der Hülle; nur die inneren
+ * Extrema fehlen ihr.
+ *
+ * Das ist der Unterschied zwischen einer analytischen Hülle und einer abgetasteten: eine
+ * Abtastung verfehlt den Scheitel um einen Betrag, der von der Schrittweite abhängt und den
+ * niemand angeben kann. Bei 1.4 Luftfahrzeug liegt der Scheitel exakt auf t = 0,5, bei den
+ * Deckkurven der Landfahrzeuge nicht — dort trägt die Rechnung.
+ */
+function cubicExtremaParameters(p0: number, p1: number, p2: number, p3: number): number[] {
+  const a = -p0 + 3 * p1 - 3 * p2 + p3;
+  const b = 2 * (p0 - 2 * p1 + p2);
+  const c = -p0 + p1;
+  const result: number[] = [];
+  if (Math.abs(a) < 1e-12) {
+    if (Math.abs(b) > 1e-12) result.push(-c / b);
+  } else {
+    const discriminant = b * b - 4 * a * c;
+    if (discriminant >= 0) {
+      const root = Math.sqrt(discriminant);
+      result.push((-b + root) / (2 * a), (-b - root) / (2 * a));
+    }
+  }
+  return result.filter((t) => t > 0 && t < 1);
+}
+
+function cubicAt(p0: number, p1: number, p2: number, p3: number, t: number): number {
+  const mt = 1 - t;
+  return mt * mt * mt * p0 + 3 * mt * mt * t * p1 + 3 * mt * t * t * p2 + t * t * t * p3;
+}
+
+/**
+ * Hülle eines **beliebigen** Pfads, Kurven eingeschlossen — die Ergänzung zu
+ * `parseRectilinearPath`, das bei der ersten Kurve `null` liefert und den Pfad damit
+ * unvermessen lässt.
+ *
+ * Kubische Segmente gehen mit ihren **analytischen** Extrema ein (Nullstellen der
+ * Ableitungsquadratik je Achse), quadratische verlustfrei in Kubiken überführt. Es wird nicht
+ * abgetastet: eine Abtastung liefert eine Hülle, die um einen unbekannten Betrag zu klein ist,
+ * und genau solche Zahlen darf dieses Projekt nicht in ein Kennwertartefakt schreiben.
+ *
+ * Geeicht am Körper von `1.9 Gebiet` (zwanzig echte Kurvenextrema): diese Rechnung liefert
+ * 1,5201535819656435 / 3,2298000848139514 / 31 / 28,32344610585691 mm und ist damit
+ * ziffernidentisch mit `boundsOfMm` aus `core` — zwei unabhängig geschriebene Implementierungen
+ * auf demselben Ergebnis. Der Vergleich steht in `path-geometry.test.ts`.
+ *
+ * Liefert `null` bei einem Kommando außerhalb von `BOUNDABLE` (in der Praxis: einem Bogen) und
+ * bei einem leeren Pfad.
+ */
+export function parsePathBounds(d: string): PathBounds | null {
+  const tokens = d.match(/[A-Za-z]|-?\d*\.?\d+(?:e[-+]?\d+)?/gi);
+  if (!tokens) return null;
+
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  let x = 0;
+  let y = 0;
+  let startX = 0;
+  let startY = 0;
+  let lastCubicControl: [number, number] | null = null;
+  let lastQuadraticControl: [number, number] | null = null;
+  let command = '';
+  let index = 0;
+  let sawPoint = false;
+
+  const next = (): number => Number(tokens[index++]);
+  const include = (px: number, py: number): void => {
+    minX = Math.min(minX, px);
+    maxX = Math.max(maxX, px);
+    minY = Math.min(minY, py);
+    maxY = Math.max(maxY, py);
+    sawPoint = true;
+  };
+  const cubic = (x1: number, y1: number, x2: number, y2: number, tx: number, ty: number): void => {
+    for (const t of cubicExtremaParameters(x, x1, x2, tx)) include(cubicAt(x, x1, x2, tx, t), y);
+    for (const t of cubicExtremaParameters(y, y1, y2, ty)) include(x, cubicAt(y, y1, y2, ty, t));
+    include(tx, ty);
+  };
+
+  while (index < tokens.length) {
+    const token = tokens[index];
+    if (token === undefined) break;
+    if (/^[A-Za-z]$/.test(token)) {
+      if (!BOUNDABLE.has(token)) return null;
+      command = token;
+      index += 1;
+      if (command === 'Z' || command === 'z') {
+        x = startX;
+        y = startY;
+        lastCubicControl = null;
+        lastQuadraticControl = null;
+      }
+      continue;
+    }
+
+    switch (command) {
+      case 'M':
+      case 'm': {
+        const relative = command === 'm';
+        x = (relative ? x : 0) + next();
+        y = (relative ? y : 0) + next();
+        startX = x;
+        startY = y;
+        include(x, y);
+        command = relative ? 'l' : 'L';
+        lastCubicControl = null;
+        lastQuadraticControl = null;
+        break;
+      }
+      case 'L':
+      case 'l': {
+        const relative = command === 'l';
+        x = (relative ? x : 0) + next();
+        y = (relative ? y : 0) + next();
+        include(x, y);
+        lastCubicControl = null;
+        lastQuadraticControl = null;
+        break;
+      }
+      case 'H':
+      case 'h': {
+        x = (command === 'h' ? x : 0) + next();
+        include(x, y);
+        lastCubicControl = null;
+        lastQuadraticControl = null;
+        break;
+      }
+      case 'V':
+      case 'v': {
+        y = (command === 'v' ? y : 0) + next();
+        include(x, y);
+        lastCubicControl = null;
+        lastQuadraticControl = null;
+        break;
+      }
+      case 'C':
+      case 'c': {
+        const relative = command === 'c';
+        const x1 = (relative ? x : 0) + next();
+        const y1 = (relative ? y : 0) + next();
+        const x2 = (relative ? x : 0) + next();
+        const y2 = (relative ? y : 0) + next();
+        const tx = (relative ? x : 0) + next();
+        const ty = (relative ? y : 0) + next();
+        cubic(x1, y1, x2, y2, tx, ty);
+        x = tx;
+        y = ty;
+        lastCubicControl = [x2, y2];
+        lastQuadraticControl = null;
+        break;
+      }
+      case 'S':
+      case 's': {
+        const relative = command === 's';
+        // Der erste Kontrollpunkt ist die Spiegelung des zweiten des Vorgängersegments am
+        // aktuellen Punkt; ohne Kurvenvorgänger fällt er auf den aktuellen Punkt (SVG 1.1).
+        const x1 = lastCubicControl ? 2 * x - lastCubicControl[0] : x;
+        const y1 = lastCubicControl ? 2 * y - lastCubicControl[1] : y;
+        const x2 = (relative ? x : 0) + next();
+        const y2 = (relative ? y : 0) + next();
+        const tx = (relative ? x : 0) + next();
+        const ty = (relative ? y : 0) + next();
+        cubic(x1, y1, x2, y2, tx, ty);
+        x = tx;
+        y = ty;
+        lastCubicControl = [x2, y2];
+        lastQuadraticControl = null;
+        break;
+      }
+      case 'Q':
+      case 'q':
+      case 'T':
+      case 't': {
+        const relative = command === 'q' || command === 't';
+        const smooth = command === 'T' || command === 't';
+        let qx: number;
+        let qy: number;
+        if (smooth) {
+          qx = lastQuadraticControl ? 2 * x - lastQuadraticControl[0] : x;
+          qy = lastQuadraticControl ? 2 * y - lastQuadraticControl[1] : y;
+        } else {
+          qx = (relative ? x : 0) + next();
+          qy = (relative ? y : 0) + next();
+        }
+        const tx = (relative ? x : 0) + next();
+        const ty = (relative ? y : 0) + next();
+        // Quadratisch nach kubisch, verlustfrei: die Kontrollpunkte liegen auf zwei Dritteln
+        // der Strecke von den Endpunkten zum quadratischen Kontrollpunkt.
+        cubic(
+          x + (2 / 3) * (qx - x),
+          y + (2 / 3) * (qy - y),
+          tx + (2 / 3) * (qx - tx),
+          ty + (2 / 3) * (qy - ty),
+          tx,
+          ty,
+        );
+        x = tx;
+        y = ty;
+        lastQuadraticControl = [qx, qy];
+        lastCubicControl = null;
+        break;
+      }
+      default:
+        return null;
+    }
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+  }
+
+  if (!sawPoint) return null;
+  // **Ungerundet**, anders als `parseRectilinearPath`: dort sind die Werte Ankerkoordinaten aus
+  // der Datei und drei Nachkommastellen geben sie exakt wieder; ein Kurvenextremum ist dagegen
+  // eine gerechnete Zahl. Wer sie hier rundete, verlöre die Eichung gegen `boundsOfMm` an der
+  // fünfzehnten Stelle — und damit den einzigen Beleg, dass zwei unabhängige Implementierungen
+  // dasselbe rechnen. Gerundet wird beim Verbraucher (`extract.ts` auf drei Millimeterstellen).
+  return { minX, minY, maxX, maxY };
 }
 
 /**

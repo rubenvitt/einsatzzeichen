@@ -24,6 +24,13 @@ import {
   ANHANG_E_B_RECIPES,
   ANHANG_E_C_FILL_FINDINGS,
   ANHANG_E_C_RECIPES,
+  ANHANG_E_D_FINDINGS,
+  ANHANG_E_D_RECIPES,
+  ANHANG_E_D_UNGEBAUT,
+  ANHANG_E_E_FINDINGS,
+  ANHANG_E_E_RECIPES,
+  ANHANG_E_F_FINDINGS,
+  ANHANG_E_F_RECIPES,
 } from './recipes-anhang-e.js';
 
 /**
@@ -294,13 +301,30 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
 
   it('verlangt für weissen Text auf der Körperfarbe die Textschwelle, nicht die Nichttextschwelle', () => {
     const requirements = labelContrastRequirements();
-    expect(requirements).toHaveLength(1);
-    expect(requirements[0]).toEqual({
-      foreground: 'weiss',
-      background: 'blau',
-      context: 'Beschriftung im Körper auf Organisation thw',
-      minimum: 4.5,
-    });
+    // **Zwei** seit dem Teilslice E-f und nicht mehr eine: die vierte Beschriftungszone steht
+    // außerhalb des Körpers und trägt die Organisationsfarbe auf der Ausgabeoberfläche. Beide
+    // Richtungen stehen hier nebeneinander, weil die zweite die erste nicht ersetzt — der
+    // gesamte Bestand außer den fünf Wasserfahrzeugen setzt weiterhin weiss in den Körper.
+    //
+    // Dass es bei zwei bleibt und nicht drei werden, hängt an einer offenen Entscheidung: E.2.6
+    // trüge `sonstige-gefahrenabwehr` mit Beschriftung und erzeugte damit „weiss auf orange" mit
+    // 2,382:1 gegen die Textschwelle 4,5:1. Es ist als einziger Abschnitt des Anhangs nicht
+    // gebaut (`ANHANG_E_D_UNGEBAUT`), und diese Zeile ist die Stelle, an der das mechanisch
+    // sichtbar wird.
+    expect(requirements).toEqual([
+      {
+        foreground: 'weiss',
+        background: 'blau',
+        context: 'Beschriftung im Körper auf Organisation thw',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'blau',
+        background: 'surface',
+        context: 'Trägerkürzel unterhalb des Körpers, Organisation thw',
+        minimum: 4.5,
+      },
+    ]);
   });
 });
 
@@ -466,11 +490,12 @@ describe('Anhang E, Teilslice E-c (E.1.29 bis E.1.37)', () => {
       ...Object.keys(ANHANG_E_C_RECIPES),
     ];
     expect(sections).toEqual(Array.from({ length: 37 }, (_, index) => `E.1.${index + 1}`));
-    // Und die Gegenrichtung: kein Rezept des Katalogs beansprucht einen E-Abschnitt außerhalb
-    // von E.1. Anhang E.2 ist auf `vehicle-land`/`vehicle-water` blockiert, und ein `E`-Scope
-    // wäre deshalb falsch — dieser Test hält den Unterschied zwischen `E.1` und `E` fest.
-    const alleE = Object.keys(RECIPES).filter((section) => section.startsWith('E.'));
-    expect(alleE).toEqual(sections);
+    // Und die Gegenrichtung: kein Rezept des Katalogs beansprucht einen E.1-Abschnitt außerhalb
+    // dieser drei Blöcke. Sie ist seit dem Teilslice E.2 auf `E.1.` eingeschränkt und nicht mehr
+    // auf `E.` — die Blöcke E-d bis E-f beanspruchen E.2-Abschnitte, und der Test dafür steht
+    // unten in ihrem eigenen `describe`.
+    const alleE1 = Object.keys(RECIPES).filter((section) => section.startsWith('E.1.'));
+    expect(alleE1).toEqual(sections);
   });
 
   it.each(cases)('%s trägt THW-Blau, das Trägerkürzel THW und seine eigene Referenzdatei', (_section, recipe) => {
@@ -584,6 +609,364 @@ describe('Anhang E, Teilslice E-c (E.1.29 bis E.1.37)', () => {
     // Kein Befundtext behauptet eine Absicht der Quelle — wie in E-b wäre das ein Motivsatz in
     // einem Messbericht und von keiner Messung getragen.
     for (const [section, text] of Object.entries(ANHANG_E_C_FILL_FINDINGS)) {
+      expect(text, section).not.toMatch(/funktional/iu);
+    }
+  });
+});
+
+describe('Anhang E, Teilslice E-d (E.2.1 bis E.2.21 ohne E.2.6)', () => {
+  const cases = Object.entries<Recipe>(ANHANG_E_D_RECIPES);
+
+  it('deckt genau die 20 gebauten Abschnitte E.2.1 bis E.2.21 ab und lässt E.2.6 aus', () => {
+    expect(cases.map(([section]) => section)).toEqual(
+      Array.from({ length: 21 }, (_, index) => `E.2.${index + 1}`).filter(
+        (section) => section !== 'E.2.6',
+      ),
+    );
+    // Die Lücke ist deklariert und nicht stillschweigend: `ANHANG_E_D_UNGEBAUT` trägt genau den
+    // einen Abschnitt, den dieser Slice nicht baut, samt Begründung. Ohne diese beiden Zeilen
+    // wäre eine fehlende Manifestzeile von einem vergessenen Rezept nicht zu unterscheiden.
+    expect(Object.keys(ANHANG_E_D_UNGEBAUT)).toEqual(['E.2.6']);
+    expect(Object.hasOwn(ANHANG_E_D_RECIPES, 'E.2.6')).toBe(false);
+    expect(Object.hasOwn(RECIPES, 'E.2.6')).toBe(false);
+  });
+
+  it('nennt in der Begründung für E.2.6 die gemessenen Kontrastwerte und den Gate-Vertrag', () => {
+    // Die Begründung darf nicht auf „geht nicht" schrumpfen: sie muss die drei selbst
+    // nachgerechneten Verhältnisse und die geforderte Schwelle tragen, sonst ließe sie sich
+    // weder prüfen noch widerlegen.
+    const note = ANHANG_E_D_UNGEBAUT['E.2.6'] ?? '';
+    expect(note).toMatch(/2,382:1/u);
+    expect(note).toMatch(/2,323:1/u);
+    expect(note).toMatch(/4,5:1/u);
+    expect(note).toMatch(/#fa8c00/u);
+    expect(note).toMatch(/Entscheidung/u);
+    // Und die Fahrwerksangabe, weil der Baubeschluss dieses Slice sie falsch übergeben hat:
+    // „Fahrwerk und Beschriftung sind zeichengleich mit E.2.5". Für die Beschriftung stimmt
+    // das (Δ höchstens 0,0007 mm), für das Fahrwerk nicht — E.2.5 führt vier Teilpfade in der
+    // Strichebene und damit zwei Räder, E.2.6 sieben und damit drei mit Verbindungsbalken. Ohne
+    // diese Zeile stünde die widerlegte Behauptung unwidersprochen im einzigen Text, den es zu
+    // E.2.6 gibt; ein Gate erreicht sie nicht, weil es zu E.2.6 kein Rezept gibt.
+    expect(note).toMatch(/kfz-kategorie-1/u);
+    expect(note).toMatch(/kfz-kategorie-3/u);
+    expect(note).toMatch(/E\.2\.4, E\.2\.7, E\.2\.8 und E\.2\.11/u);
+    expect(note).not.toMatch(/mit E\.2\.5 bis auf/u);
+  });
+
+  it.each(cases)('%s steht auf einem Fahrzeugkörper, trägt THW-Blau und seine eigene Referenzdatei', (section, recipe) => {
+    const drawing = composeFromCatalog(recipe.spec, recipe.title);
+    const body = drawing.children.find((c) => c.role === 'body');
+    expect(body?.style?.fill).toBe('blau');
+    expect(recipe.spec.labels?.bottomRight).toBe('THW');
+    expect(recipe.referenceAsset.startsWith(`${section}_`)).toBe(true);
+  });
+
+  it('stellt 19 Zeichen auf vehicle-land und E.2.15 als einziges auf den Wechselladerrumpf', () => {
+    const wechsellader = cases.filter(([, recipe]) => recipe.spec.kind === 'swap-loader-vehicle');
+    expect(wechsellader.map(([section]) => section)).toEqual(['E.2.15']);
+    for (const [section, recipe] of cases) {
+      if (section === 'E.2.15') continue;
+      expect(recipe.spec.kind, section).toBe('vehicle-land');
+    }
+  });
+
+  it('trägt an jedem Zeichen eine Fahrwerkszone und an keinem eine Kopfzone', () => {
+    // Der Bruch mit E.1 in einer Zeile: dort trug jedes Zeichen bis auf drei eine Kopfzone und
+    // keines ein Fahrwerk, hier ist es genau umgekehrt. Beides aus der Zeichnung gemessen und
+    // nicht aus dem Dateinamen — keine der 31 E.2-Referenzdateien führt eine Kopfmarke.
+    const markenJeKategorie: Record<string, number> = {
+      'kfz-kategorie-1': 2,
+      'kfz-kategorie-2': 3,
+      'kfz-kategorie-3': 5,
+      kettenfahrzeug: 1,
+    };
+    for (const [section, recipe] of cases) {
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      expect(drawing.children.filter((c) => c.role === 'head'), section).toHaveLength(0);
+      expect(recipe.spec.strength, section).toBeUndefined();
+      const kategorie = recipe.spec.vehicleCategory;
+      expect(kategorie, section).toBeDefined();
+      expect(drawing.children.filter((c) => c.role === 'chassis'), section).toHaveLength(
+        markenJeKategorie[kategorie ?? ''] ?? -1,
+      );
+    }
+  });
+
+  it('hängt die Fahrwerkszone von E.2.15 an das Grundzeichen und nicht an den Körper', () => {
+    // Der Fall, an dem die beiden Lesarten auseinandergehen: der Wechselladerrumpf endet bei
+    // 24,5 mm, sein L-Rahmen bei 26,0 mm. Gemessen ist die Radmitte 28,2504 mm — dieselbe wie in
+    // allen 25 Fahrwerkszeichen. An der Körperunterkante gerechnet läge sie auf 26,75 mm.
+    const drawing = composeFromCatalog(
+      ANHANG_E_D_RECIPES['E.2.15'].spec,
+      ANHANG_E_D_RECIPES['E.2.15'].title,
+    );
+    const body = drawing.children.find((c) => c.role === 'body');
+    expect(body).toBeDefined();
+    if (body === undefined) return;
+    expect(boundsOfMm(body).maxY).toBeCloseTo(24.5, 6);
+    const extras = drawing.children.filter((c) => c.role === 'bodyExtra');
+    expect(extras).toHaveLength(1);
+    expect(boundsOfMm(extras[0]!).maxY).toBeCloseTo(26, 6);
+    for (const mark of drawing.children.filter((c) => c.role === 'chassis')) {
+      const bounds = boundsOfMm(mark);
+      expect((bounds.minY + bounds.maxY) / 2).toBeCloseTo(28.25, 6);
+    }
+  });
+
+  it('setzt neun der 20 mittigen Läufe kleiner und die übrigen elf im Normgrad', () => {
+    // Die gemessenen Kappenhöhen stehen je Zeichen und nicht als Stufenleiter: eine Auslöseregel
+    // ist widerlegt (von den neun bräuchten nur drei die Verkleinerung, um in die 28-mm-Box zu
+    // passen). Dieser Test hält deshalb die Zahlen fest und keine Regel.
+    const gemessen = Object.fromEntries(
+      cases
+        .filter(([, recipe]) => recipe.spec.labels?.centerCapHeightMm !== undefined)
+        .map(([section, recipe]) => [section, recipe.spec.labels?.centerCapHeightMm]),
+    );
+    expect(gemessen).toEqual({
+      'E.2.7': 4.3829,
+      'E.2.8': 4.3826,
+      'E.2.12': 3.40995,
+      'E.2.13': 3.40995,
+      'E.2.16': 4.38273,
+      'E.2.17': 4.38273,
+      'E.2.19': 4.3829,
+      'E.2.20': 3.65125,
+      'E.2.21': 4.3826,
+    });
+    // Und die Gegenrichtung: die elf übrigen tragen das Feld gar nicht und laufen damit auf dem
+    // Normwert aus compose.ts. Ein `centerCapHeightMm: 4.87` an ihnen wäre eine Messung, die
+    // niemand gemacht hat — der Normwert steht dort und nicht hier.
+    expect(cases.length - Object.keys(gemessen).length).toBe(11);
+  });
+
+  it('setzt keinen Text unterhalb des Körpers und keine Zusatzkennzeichnung unten links', () => {
+    for (const [section, recipe] of cases) {
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      expect(drawing.children.filter((c) => c.role === 'foot'), section).toHaveLength(0);
+      expect(recipe.spec.labels?.bottomLeft, section).toBeUndefined();
+      expect(recipe.spec.labels?.belowRight, section).toBeUndefined();
+    }
+  });
+
+  it('nennt die neun Referenzdateien mit Befund und die elf normgerechten nicht', () => {
+    expect(Object.keys(ANHANG_E_D_FINDINGS)).toEqual([
+      'E.2.7',
+      'E.2.8',
+      'E.2.9',
+      'E.2.10',
+      'E.2.13',
+      'E.2.14',
+      'E.2.15',
+      'E.2.19',
+      'E.2.20',
+    ]);
+    for (const section of ['E.2.1', 'E.2.2', 'E.2.3', 'E.2.4', 'E.2.5', 'E.2.11', 'E.2.12', 'E.2.16', 'E.2.17', 'E.2.18', 'E.2.21']) {
+      expect(Object.hasOwn(ANHANG_E_D_FINDINGS, section), section).toBe(false);
+    }
+    for (const section of Object.keys(ANHANG_E_D_FINDINGS)) {
+      expect(Object.hasOwn(ANHANG_E_D_RECIPES, section)).toBe(true);
+    }
+  });
+
+  it('hält fest, dass sechs der neun Befunde das Kürzel gegen den Dateinamen betreffen', () => {
+    // Die neue Befundklasse dieses Blocks, die es in E.1 nicht gab. Geprüft wird der Inhalt und
+    // nicht der Satzbau: jede der sechs Zeilen muss das Bildkürzel nennen, das der Katalog baut.
+    expect(ANHANG_E_D_FINDINGS['E.2.7']).toMatch(/Telelader/u);
+    expect(ANHANG_E_D_FINDINGS['E.2.8']).toMatch(/BRmG/u);
+    expect(ANHANG_E_D_FINDINGS['E.2.9']).toMatch(/BRmG R/u);
+    expect(ANHANG_E_D_FINDINGS['E.2.13']).toMatch(/geländegänig/u);
+    expect(ANHANG_E_D_FINDINGS['E.2.14']).toMatch(/römisch/u);
+    expect(ANHANG_E_D_FINDINGS['E.2.15']).toMatch(/LKW/u);
+    // E.2.10 ist der einzige Befund zur Lage eines Laufs, E.2.19 und E.2.20 die zur Füllfläche.
+    expect(ANHANG_E_D_FINDINGS['E.2.10']).toMatch(/0,7691 mm/u);
+    expect(ANHANG_E_D_FINDINGS['E.2.19']).toMatch(/2,0002\/9,9998\/30,0002\/25,0003/u);
+    expect(ANHANG_E_D_FINDINGS['E.2.20']).toMatch(/8,5002/u);
+    // Kein Befundtext behauptet eine Absicht der Quelle — wie in E-b und E-c.
+    for (const [section, text] of Object.entries(ANHANG_E_D_FINDINGS)) {
+      expect(text, section).not.toMatch(/funktional/iu);
+    }
+  });
+});
+
+describe('Anhang E, Teilslice E-e (E.2.22 bis E.2.26)', () => {
+  const cases = Object.entries<Recipe>(ANHANG_E_E_RECIPES);
+
+  it('deckt genau die fünf Abschnitte E.2.22 bis E.2.26 ab', () => {
+    expect(cases.map(([section]) => section)).toEqual(
+      Array.from({ length: 5 }, (_, index) => `E.2.${index + 22}`),
+    );
+  });
+
+  it('führt drei Körperformen über fünf Zeichen', () => {
+    // Der formenreichste Block des Anhangs, und beide neuen Formen tragen keinen
+    // Kapitel-1-Abschnitt: `trailer` ist an 5.1.2.1 belegt, `upright-rectangle` nur an E.2.26.
+    const nachForm = cases.map(([section, recipe]) => [section, recipe.spec.kind]);
+    expect(nachForm).toEqual([
+      ['E.2.22', 'trailer'],
+      ['E.2.23', 'trailer'],
+      ['E.2.24', 'trailer'],
+      ['E.2.25', 'trailer'],
+      ['E.2.26', 'upright-rectangle'],
+    ]);
+  });
+
+  it('trägt an den vier Anhängern die Deichsel und an E.2.26 keine Zusatzgeometrie', () => {
+    for (const [section, recipe] of cases) {
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      const extras = drawing.children.filter((c) => c.role === 'bodyExtra');
+      expect(extras, section).toHaveLength(section === 'E.2.26' ? 0 : 1);
+    }
+  });
+
+  it('ordnet drei Anhänger dem Ein-Rad-Fahrwerk zu und einen dem Zwei-Räder-Fahrwerk', () => {
+    // Nach der Zeichnung und nicht nach dem Dateinamen: E.2.23 heißt „von LKW gezogen" und trägt
+    // ein Rad, E.2.25 heißt „von PKW gezogen" und trägt ebenfalls eines. Nur E.2.24 passt.
+    const einRad = cases
+      .filter(([, recipe]) => recipe.spec.vehicleCategory === 'anhaenger-ein-rad')
+      .map(([section]) => section);
+    const zweiRaeder = cases
+      .filter(([, recipe]) => recipe.spec.vehicleCategory === 'anhaenger-zwei-raeder')
+      .map(([section]) => section);
+    expect(einRad).toEqual(['E.2.22', 'E.2.23', 'E.2.25']);
+    expect(zweiRaeder).toEqual(['E.2.24']);
+    // E.2.26 trägt kein Fahrwerk: seine Strichebene führt nur das Ringpaar des Körperumrisses.
+    expect(ANHANG_E_E_RECIPES['E.2.26'].spec).not.toHaveProperty('vehicleCategory');
+    const raeder = composeFromCatalog(ANHANG_E_E_RECIPES['E.2.26'].spec).children.filter(
+      (c) => c.role === 'chassis',
+    );
+    expect(raeder).toHaveLength(0);
+  });
+
+  it('lässt bei E.2.22 als einzigem Zeichen des Anhangs die mittige Zone leer', () => {
+    const ohneMitte = cases
+      .filter(([, recipe]) => recipe.spec.labels?.center === undefined)
+      .map(([section]) => section);
+    expect(ohneMitte).toEqual(['E.2.22']);
+    const alleRezepte = Object.entries<Recipe>(RECIPES).filter(
+      ([section, recipe]) => section.startsWith('E.') && recipe.spec.labels?.center === undefined,
+    );
+    // E.2.27 ist das zweite und letzte — es trägt seinen einzigen Lauf unterhalb des Körpers.
+    expect(alleRezepte.map(([section]) => section)).toEqual(['E.2.22', 'E.2.27']);
+  });
+
+  it('setzt die mittige Grundlinie von E.2.26 auf die gemessenen 13 mm über der Unterkante', () => {
+    // Der größte Abstand aller fünf Körperformen aus E.2 und der Beleg, dass die Grundlinie eine
+    // Eigenschaft des Körperprofils ist: mit der festen 8 stünde der Lauf auf 22,0 statt 17,0 mm.
+    const drawing = composeFromCatalog(
+      ANHANG_E_E_RECIPES['E.2.26'].spec,
+      ANHANG_E_E_RECIPES['E.2.26'].title,
+    );
+    const body = drawing.children.find((c) => c.role === 'body');
+    expect(body).toBeDefined();
+    if (body === undefined) return;
+    expect(boundsOfMm(body)).toMatchObject({ minY: 2, maxY: 30 });
+    const [center, bottomRight] = drawing.children.filter(
+      (child): child is Primitive & { type: 'text' } =>
+        child.type === 'text' && child.role === 'label',
+    );
+    expect(center?.content).toBe('TW AA');
+    expect(center?.y).toBeCloseTo(17, 6);
+    expect(bottomRight?.content).toBe('THW');
+    expect(bottomRight?.y).toBeCloseTo(28, 6);
+    // Die deklarierte Abweichung, an der Ausgabe festgehalten: die Referenz ankert bei 26,0 mm.
+    expect(bottomRight?.x).toBeCloseTo(27, 6);
+  });
+
+  it('nennt die vier Referenzdateien mit Befund und E.2.26 nicht', () => {
+    // E.2.26 fehlt hier, weil seine Besonderheit eine Abweichung der Umsetzung ist und kein
+    // Befund an der Quelle — sie steht als deviation im Manifest.
+    expect(Object.keys(ANHANG_E_E_FINDINGS)).toEqual(['E.2.22', 'E.2.23', 'E.2.24', 'E.2.25']);
+    expect(Object.hasOwn(ANHANG_E_E_FINDINGS, 'E.2.26')).toBe(false);
+    expect(ANHANG_E_E_FINDINGS['E.2.22']).toMatch(/5\.1\.2\.1/u);
+    expect(ANHANG_E_E_FINDINGS['E.2.23']).toMatch(/von LKW gezogen/u);
+    expect(ANHANG_E_E_FINDINGS['E.2.24']).toMatch(/zweimal byteidentisch/u);
+    expect(ANHANG_E_E_FINDINGS['E.2.25']).toMatch(/keine flachfüßige Glyphe/u);
+    for (const [section, text] of Object.entries(ANHANG_E_E_FINDINGS)) {
+      expect(text, section).not.toMatch(/funktional/iu);
+    }
+  });
+});
+
+describe('Anhang E, Teilslice E-f (E.2.27 bis E.2.31)', () => {
+  const cases = Object.entries<Recipe>(ANHANG_E_F_RECIPES);
+
+  it('deckt genau die fünf Abschnitte E.2.27 bis E.2.31 ab', () => {
+    expect(cases.map(([section]) => section)).toEqual(
+      Array.from({ length: 5 }, (_, index) => `E.2.${index + 27}`),
+    );
+  });
+
+  it('führt Anhang E damit auf 67 der 68 Abschnitte, lückenlos bis auf E.2.6', () => {
+    // Das Gegenstück zur 37er-Zusicherung aus E-c und die Zusicherung, die der Manifest-`scope`
+    // heute **noch nicht** tragen darf: `uncoveredScope` prüft an einem Präfix nur die Existenz
+    // einer Zeile, und `E` bestünde schon mit E.1 allein. Solange E.2.6 fehlt, stehen die 30
+    // E.2-Abschnitte deshalb einzeln im scope — dieser Test hält fest, welche 30 das sind.
+    const alleE = Object.keys(RECIPES).filter((section) => section.startsWith('E.'));
+    const erwartet = [
+      ...Array.from({ length: 37 }, (_, index) => `E.1.${index + 1}`),
+      ...Array.from({ length: 31 }, (_, index) => `E.2.${index + 1}`).filter(
+        (section) => section !== 'E.2.6',
+      ),
+    ];
+    expect(alleE).toEqual(erwartet);
+    expect(alleE).toHaveLength(67);
+  });
+
+  it.each(cases)('%s steht auf dem angehobenen Rumpf und trägt sein Kürzel unterhalb des Körpers', (section, recipe) => {
+    expect(recipe.spec.kind).toBe('vehicle-water');
+    expect(recipe.spec.bodyVariant).toBe('raised-hull');
+    expect(recipe.spec.labels?.belowRight).toBe('THW');
+    // Kein `bottomRight`: derselbe Lauf **im** Körper wäre ein anderes Bild, und kein Gate
+    // meldete es.
+    expect(recipe.spec.labels?.bottomRight).toBeUndefined();
+    expect(recipe.referenceAsset.startsWith(`${section}_`)).toBe(true);
+  });
+
+  it('malt den Lauf unterhalb des Körpers blau und den mittigen weiss', () => {
+    for (const [section, recipe] of cases) {
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      const body = drawing.children.find((c) => c.role === 'body');
+      expect(boundsOfMm(body!).maxY, section).toBeCloseTo(22.9896, 4);
+      const labels = drawing.children.filter(
+        (child): child is Primitive & { type: 'text' } =>
+          child.type === 'text' && child.role === 'label',
+      );
+      const unten = labels.find((label) => label.content === 'THW');
+      expect(unten?.style?.fill, section).toBe('blau');
+      // Er liegt vollständig **unter** dem Rumpf: gemessen 24,0806 mm Oberkante gegen
+      // 22,9898 mm Rumpfunterkante.
+      expect(unten?.boxMm.yMm, section).toBeGreaterThan(22.9896);
+      for (const label of labels) {
+        if (label === unten) continue;
+        expect(label.style?.fill, section).toBe('weiss');
+        expect(label.y, section).toBeCloseTo(16, 6);
+      }
+    }
+  });
+
+  it('lässt bei E.2.27 als einzigem der fünf die mittige Zone leer', () => {
+    const ohneMitte = cases
+      .filter(([, recipe]) => recipe.spec.labels?.center === undefined)
+      .map(([section]) => section);
+    expect(ohneMitte).toEqual(['E.2.27']);
+    // Und es bleibt trotzdem beschrieben: `describeSymbolSpec` nimmt die vierte Zone auf, sonst
+    // verlöre dieses Zeichen seine einzige fachliche Angabe in der Vorlesebeschreibung.
+    const drawing = composeFromCatalog(
+      ANHANG_E_F_RECIPES['E.2.27'].spec,
+      ANHANG_E_F_RECIPES['E.2.27'].title,
+    );
+    expect(drawing.description).toMatch(/THW/u);
+  });
+
+  it('nennt die beiden Referenzdateien mit Befund und die drei übrigen nicht', () => {
+    expect(Object.keys(ANHANG_E_F_FINDINGS)).toEqual(['E.2.27', 'E.2.31']);
+    for (const section of ['E.2.28', 'E.2.29', 'E.2.30']) {
+      expect(Object.hasOwn(ANHANG_E_F_FINDINGS, section), section).toBe(false);
+    }
+    expect(ANHANG_E_F_FINDINGS['E.2.27']).toMatch(/1,0002 mm/u);
+    expect(ANHANG_E_F_FINDINGS['E.2.27']).toMatch(/0,999318/u);
+    expect(ANHANG_E_F_FINDINGS['E.2.31']).toMatch(/I\.3\.7/u);
+    for (const [section, text] of Object.entries(ANHANG_E_F_FINDINGS)) {
       expect(text, section).not.toMatch(/funktional/iu);
     }
   });

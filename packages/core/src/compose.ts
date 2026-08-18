@@ -1,6 +1,7 @@
 import {
   DEFAULT_STROKE_WIDTH_MM,
   DEFAULT_VIEWBOX_MM,
+  type BodyVariantId,
   type CapabilityId,
   type ChassisMark,
   type ChassisShape,
@@ -137,8 +138,13 @@ const LABEL_SIDE_MARGIN_MM = 2;
  * 16 → 21, `hazard` 15 → 20). Beide Werte sind dort unvermessen; es geht keine Messung verloren,
  * aber die Zahl ist eine andere. `compose.test.ts` hält die Konstante an `formation` **und** am
  * Gebäudekörper fest — nur die zweite Zeile fällt bei einer Rückkehr zur Oberkante.
+ *
+ * **Seit dem Teilslice E.2 ist es keine Konstante mehr, sondern eine Eigenschaft des
+ * Körperprofils** (`LayoutProfile.centerBaselineFromBodyBottomMm`). Der Normwert 8 gilt
+ * unverändert für alle Körperformen aus Kapitel 1; drei der fünf E.2-Körperformen tragen einen
+ * anderen, an ihrer eigenen Referenzdatei gemessenen Wert. Die Tabelle mit allen vier Zahlen und
+ * ihren Belegdateien steht am Feld selbst.
  */
-const CENTER_LABEL_BASELINE_FROM_BODY_BOTTOM_MM = 8;
 
 /**
  * Eigene Marge der **Box** des mittigen Laufs gegen die Körperkante: 1 mm statt der 2 mm der
@@ -165,16 +171,61 @@ const CENTER_LABEL_BASELINE_FROM_BODY_BOTTOM_MM = 8;
  *
  * Der verworfene Weg war, den Schriftgrad des Laufs auf 7,036 mm zu senken (26,000/26,156 ×
  * 7,0786). Er kollidiert mit der E-a-Linie „Schriftgrad ist aus der Versalhöhe abgeleitet, nicht
- * gewählt" (siehe `CENTER_LABEL_SIZE_MM`).
+ * gewählt" (siehe `centerLabelSizeMm`).
  */
 const CENTER_LABEL_BOX_MARGIN_MM = 1;
+
+/**
+ * Die **vierte** Beschriftungszone: das Trägerkürzel **unterhalb** des Körpers, rechtsbündig, in
+ * der Organisationsfarbe statt in Weiß. Belegt an den fünf Wasserfahrzeugen `E.2.27` bis
+ * `E.2.31`, deren Typo-Ebene diesen Lauf byteidentisch führt (eigene Vermessung, 18. August 2026;
+ * die fünf unterscheiden sich um höchstens 0,0003 mm an der T-Glyphe von `E.2.28`):
+ *
+ * | Größe | Messung |
+ * |---|---|
+ * | Tinte des Laufs | 22,5379 / 24,0806 / 31,5778 / 26,9998 mm |
+ * | Füllung | `#003296` = `organizationColor('thw')` |
+ * | Versalhöhe | 2,9192 mm — derselbe Grad wie die beiden unteren Zonen |
+ * | Rumpfunterkante | 22,9898 mm, also 1,0908 mm über der Oberkante der Tinte |
+ * | rechte Rumpfkante | 30,9894 mm, also 0,5884 mm links der rechten Tintenkante |
+ *
+ * **Gemessen ist die Tinte, nicht der Anker.** Fünf byteidentische Platzierungen lassen die
+ * Grundlinie auf mindestens fünf Weisen lesen (32 − 5,0002; Rumpfunterkante + 4,0100;
+ * I.3-Unterkante + 3,0099; 1.5-Unterkante + 2,9996; Standardlauf + 3,0000) und die rechte Kante
+ * auf drei. **Alle erzeugen dasselbe Bild.** Der Katalog wählt die Lesart gegen die Hülle des
+ * platzierten Körpers, weil das die einzige ist, die mit dem Körper mitwandert statt eine
+ * absolute Stelle der Grundfläche zu behaupten — das ist eine **Entscheidung** und keine
+ * Messung, und sie steht hier, damit der nächste Agent sie nicht für belegt hält.
+ *
+ * Der Schriftgrad ist **nicht** gewählt: die gemessene Versalhöhe 2,9192 ist der Wert der unteren
+ * Zonen, der Lauf benutzt deshalb `BOTTOM_LABEL_SIZE_MM` unverändert. Gegenprobe an derselben
+ * Vermessung: der `THW`-Lauf von `E.2.1` ist 9,0399 mm breit, der von `E.2.27` ebenfalls
+ * 9,0399 mm — es ist derselbe Lauf im selben Grad, nur versetzt.
+ *
+ * **Der waagerechte Wert ist der Anker, nicht die Tintenkante** — und der Abstand zwischen beiden
+ * ist an derselben Quelle gemessen, nicht geschätzt. In `E.2.1` steht derselbe `THW`-Lauf in der
+ * Zone unten rechts: Körperkante 31,0003, Anker nach der Zonenregel 29,0003, gemessene rechte
+ * Tintenkante 29,0269 — die Schrift der Referenz überragt ihren Anker also um 0,0266 mm. Für die
+ * vierte Zone folgt daraus der Anker 31,5778 − 0,0266 = 31,5512 und damit der Überstand
+ * 31,5512 − 30,9894 = 0,5618 mm über die Körperkante.
+ *
+ * Die eigene Ausgabe trifft die Zonenlage, **nicht** die Laufbreite: bei 4096 px gerastert liegt
+ * die Tinte dieses Laufs auf 21,984…31,531 mm, die der Referenz auf 22,538…31,578. Der
+ * Unterschied ist 0,499 mm Laufbreite (9,539 gegen 9,040 mm) und **kein** Zonenfehler — dieselbe
+ * Arimo-Differenz, die schon der `Log-MW`-Befund aus E-b beziffert hat; die rechte Kante trifft
+ * auf 0,047 mm. Gegenprobe an der bestehenden Zone: derselbe Lauf rendert dort 19,438…28,977 bei
+ * einer Referenz von 19,987…29,027 — dieselbe Differenz an derselben Stelle.
+ */
+const BELOW_BODY_LABEL_BASELINE_FROM_BODY_BOTTOM_MM = 4.01;
+const BELOW_BODY_LABEL_RIGHT_OVERHANG_MM = 0.5618;
 
 /** Versalhöhen der beiden Schriftgrade, gemessen an den 16 Dateien E.1.1 bis E.1.16 (Tabelle oben). */
 const CENTER_LABEL_CAP_HEIGHT_MM = 4.87;
 const BOTTOM_LABEL_CAP_HEIGHT_MM = 2.92;
 
 /**
- * Aus der gemessenen Versalhöhe abgeleitete Schriftgrade — 7,08 mm und 4,24 mm. Der Umweg über
+ * Aus der gemessenen Versalhöhe abgeleiteter Schriftgrad der unteren Zonen — 4,24 mm. Der Grad
+ * des mittigen Laufs steht in `centerLabelSizeMm`, weil er je Zeichen gemessen sein kann. Der Umweg über
  * `ARIMO_CAP_HEIGHT_FRACTION` ist der Punkt: an der Referenz ist die Versalhöhe ablesbar, der
  * Schriftgrad nicht (die Kürzel liegen dort in Kurven umgewandelt vor). Ein direkt
  * hingeschriebener Schriftgrad wäre eine geratene Zahl, die zufällig ähnlich aussieht.
@@ -184,8 +235,20 @@ const BOTTOM_LABEL_CAP_HEIGHT_MM = 2.92;
  * `ALPHABETIC_DESCENT_FRACTION` = 0,212. Waagerecht ist nach der Weitung auf 28 mm Platz, senkrecht
  * praktisch keiner.
  */
-const CENTER_LABEL_SIZE_MM = CENTER_LABEL_CAP_HEIGHT_MM / ARIMO_CAP_HEIGHT_FRACTION;
 const BOTTOM_LABEL_SIZE_MM = BOTTOM_LABEL_CAP_HEIGHT_MM / ARIMO_CAP_HEIGHT_FRACTION;
+
+/**
+ * Schriftgrad des mittigen Laufs aus seiner **gemessenen** Versalhöhe. Ohne Angabe gilt der
+ * Normwert `CENTER_LABEL_CAP_HEIGHT_MM`; damit bleibt jede Zeichnung, die keine eigene Höhe
+ * führt, byteidentisch zu vorher.
+ *
+ * Der Umweg über `ARIMO_CAP_HEIGHT_FRACTION` ist derselbe wie oben und aus demselben Grund: an
+ * der Referenz ist die Versalhöhe ablesbar, der Schriftgrad nicht — die Kürzel liegen dort in
+ * Kurven umgewandelt vor.
+ */
+function centerLabelSizeMm(capHeightMm: number | undefined): number {
+  return (capHeightMm ?? CENTER_LABEL_CAP_HEIGHT_MM) / ARIMO_CAP_HEIGHT_FRACTION;
+}
 
 /**
  * Untere Einsatzgrenze eines Beschriftungslaufs: die kleinste Rendergröße, bei der sein
@@ -219,6 +282,7 @@ function labelPrimitive(
   boxXMm: number,
   boxWidthMm: number,
   viewBoxWidthMm: number,
+  fill: ColorToken = 'weiss',
 ): Primitive {
   const box = verticalTextBoxMm(baselineYMm, sizeMm, 'alphabetic');
   return {
@@ -232,7 +296,7 @@ function labelPrimitive(
     baseline: 'alphabetic',
     boxMm: { xMm: boxXMm, yMm: box.topMm, widthMm: boxWidthMm, heightMm: box.heightMm },
     minRenderPx: minRenderPxFor(sizeMm, viewBoxWidthMm),
-    style: { fill: 'weiss' },
+    style: { fill },
   };
 }
 
@@ -247,6 +311,8 @@ function labelPrimitives(
   labels: NonNullable<SymbolSpec['labels']>,
   bodyBoundsMm: BoundsMm,
   viewBoxWidthMm: number,
+  belowRightFill: ColorToken | null,
+  centerBaselineFromBodyBottomMm: number,
 ): Primitive[] {
   const centerXMm = (bodyBoundsMm.minX + bodyBoundsMm.maxX) / 2;
   // `leftMm`/`rightMm` sind die **Anker** der unteren Läufe und zugleich die Kanten ihrer Boxen.
@@ -256,7 +322,7 @@ function labelPrimitives(
   const rightMm = bodyBoundsMm.maxX - LABEL_SIDE_MARGIN_MM;
   const centerBoxLeftMm = bodyBoundsMm.minX + CENTER_LABEL_BOX_MARGIN_MM;
   const centerBoxRightMm = bodyBoundsMm.maxX - CENTER_LABEL_BOX_MARGIN_MM;
-  const centerBaselineMm = bodyBoundsMm.maxY - CENTER_LABEL_BASELINE_FROM_BODY_BOTTOM_MM;
+  const centerBaselineMm = bodyBoundsMm.maxY - centerBaselineFromBodyBottomMm;
   const bottomBaselineMm = bodyBoundsMm.maxY - BOTTOM_LABEL_BASELINE_FROM_BODY_BOTTOM_MM;
 
   const primitives: Primitive[] = [];
@@ -264,7 +330,7 @@ function labelPrimitives(
     primitives.push(
       labelPrimitive(
         labels.center,
-        CENTER_LABEL_SIZE_MM,
+        centerLabelSizeMm(labels.centerCapHeightMm),
         centerBaselineMm,
         'middle',
         centerXMm,
@@ -302,12 +368,45 @@ function labelPrimitives(
       ),
     );
   }
+  if (labels.belowRight !== undefined) {
+    if (belowRightFill === null) {
+      // Unerreichbar über `compose()` — `validateSpec` lehnt die Zone ohne Organisation ab. Die
+      // Zeile hält die Bedingung trotzdem am Ort ihrer Wirkung fest: die Zone ist in der
+      // Organisationsfarbe gemessen, eine schwarze oder weiße Fassung von ihr ist es nicht.
+      throw new Error(
+        'Die Zone "belowRight" ist nur in der Organisationsfarbe belegt (#003296 an E.2.27 bis ' +
+          'E.2.31); ohne Organisation gibt es keine Farbe, die sie tragen dürfte.',
+      );
+    }
+    const anchorXMm = bodyBoundsMm.maxX + BELOW_BODY_LABEL_RIGHT_OVERHANG_MM;
+    const baselineMm = bodyBoundsMm.maxY + BELOW_BODY_LABEL_BASELINE_FROM_BODY_BOTTOM_MM;
+    primitives.push(
+      labelPrimitive(
+        labels.belowRight,
+        BOTTOM_LABEL_SIZE_MM,
+        baselineMm,
+        'end',
+        anchorXMm,
+        centerXMm,
+        anchorXMm - centerXMm,
+        viewBoxWidthMm,
+        belowRightFill,
+      ),
+    );
+  }
   return primitives;
 }
 
 /** Zugriffe auf den Katalog. Als Ports übergeben, damit core nicht von catalog abhängt. */
 export interface CatalogPorts {
-  baseDrawing(kind: SymbolKind): Drawing;
+  /**
+   * Die Zeichnung des Grundzeichens — **alle** ihre Primitive, nicht nur der Körper. Neben ihm
+   * kann sie Zusatzgeometrie führen (Deichsel, L-Rahmen); `compose()` trägt sie mit.
+   *
+   * `variant` wählt eine zweite, in der Quelle belegte Zeichnung derselben Art. Ein Wert, den die
+   * Art nicht führt, muss werfen und darf nicht auf die Kapitel-1-Zeichnung zurückfallen.
+   */
+  baseDrawing(kind: SymbolKind, variant?: BodyVariantId): Drawing;
   organizationColor(id: OrganizationId): ColorToken;
   strengthHead(id: StrengthId): HeadShape;
   /**
@@ -412,9 +511,14 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
   const issues = validateSpec(spec);
   if (issues.length > 0) throw new CompositionError(issues);
 
-  const base = catalog.baseDrawing(spec.kind);
+  const base = catalog.baseDrawing(spec.kind, spec.bodyVariant);
   const body = base.children.find((child) => child.role === 'body');
   if (!body) throw new Error(`Grundzeichen "${spec.kind}" hat kein body-Primitiv.`);
+  // Zusatzgeometrie des Grundzeichens — Deichsel, L-Rahmen. Bis zum Teilslice E.2 nahm
+  // `compose()` allein den Körper und ließ alles andere **stillschweigend** fallen: ein Anhänger
+  // hätte seine Deichsel verloren, ohne dass ein Gate es meldet. Genau diese Bauart verbietet
+  // dieses Projekt.
+  const extras = base.children.filter((child) => child !== body);
 
   const profile = profileFor(spec.kind);
   const headShape = spec.strength !== undefined ? catalog.strengthHead(spec.strength) : null;
@@ -435,6 +539,17 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
       : [];
 
   const placedBody = profile.place(body, headBox?.bottomMm ?? null);
+
+  if (extras.length > 0 && headBox !== null) {
+    // Wie Zusatzgeometrie einer Kopfzone ausweicht, ist **nicht** belegt: kein Zeichen des
+    // Referenzbestands trägt beides. Der Anhang E.2 führt überhaupt keine Kopfzone (an allen 31
+    // Dateien nachgesehen), und `validateSpec` lehnt eine Stärkeangabe an diesen Körperformen
+    // ohnehin ab. Werfen statt raten — ein mitgeschobener L-Rahmen wäre eine erfundene Geometrie.
+    throw new Error(
+      `Das Grundzeichen "${spec.kind}" führt Zusatzgeometrie, und wie die einer Kopfzone ` +
+        'ausweicht, ist an der Referenz nicht belegt: kein Zeichen des Bestands trägt beides.',
+    );
+  }
 
   if (spec.organization !== undefined && isOpenPolyline(placedBody)) {
     // SVG (und `canvas.ts` genauso) schließt einen gefüllten Polyzug implizit: aus dem Haken von
@@ -498,6 +613,24 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
   // hält Kopf- und Fußzone auch dann überschneidungsfrei, wenn ein Zeichen künftig beides trägt.
   const bodyBoundsMm = boundsOfMm(placedBody);
 
+  /**
+   * Unterkante des **Grundzeichens**, also aller seiner Primitive — nicht die des Körpers. Für
+   * dreizehn der vierzehn Grundzeichen sind das dieselbe Zahl; für den Wechselladerrumpf nicht,
+   * und dort entscheidet sie das Bild.
+   *
+   * Gemessen an **drei** Dateien mit abweichender Körperunterkante (eigene Vermessung,
+   * 18. August 2026): `E.2.15` (Körper bis 24,5004), `5.1.1.8` (bis 24,9999) und `5.1.1.9` (bis
+   * 24,9999) hängen ihre Räder alle drei auf Zonenoberkante 26,0 — dieselbe Zahl wie die
+   * Unterkante ihres L-Rahmens. Der **Versatz** zur Körperunterkante ist damit widerlegt (1,5 /
+   * 1,0005 / 1,0005 — keine Konstante); die Zonenoberkante ist belegt (26,0 in allen 25
+   * E.2-Zeichen mit Fahrwerk). Ohne diese Formulierung säße das Fahrwerk von `E.2.15` auf 26,75
+   * statt 28,2504 — 1,5 mm daneben, und kein Gate meldete es.
+   */
+  const baseBottomMm = [placedBody, ...extras].reduce(
+    (bottom, primitive) => Math.max(bottom, boundsOfMm(primitive).maxY),
+    bodyBoundsMm.maxY,
+  );
+
   // Fahrwerkszone: hängt an der Unterkante der **platzierten** Körperhülle, wie die Fußzone auch.
   // Anders als die Kopfzone verhandelt sie nichts — der Körper weicht ihr nicht aus. Gemessen an
   // `5.1.1.1` bis `5.1.1.6` und an allen 25 E.2-Zeichen mit Fahrwerk: Körperunterkante 26,0004 mm,
@@ -507,7 +640,7 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
   const chassisShape: ChassisShape | null =
     spec.vehicleCategory !== undefined ? catalog.vehicleChassis(spec.vehicleCategory) : null;
   const chassisPrimitives: Primitive[] =
-    chassisShape?.marks.map((mark) => chassisPrimitive(mark, bodyBoundsMm.maxY)) ?? [];
+    chassisShape?.marks.map((mark) => chassisPrimitive(mark, baseBottomMm)) ?? [];
 
   const footTopMm = bodyBoundsMm.maxY + HEAD_GAP_MM;
   // `boxMm` ist bei Text eine Zusicherung des Autors, keine Messung (siehe Primitive-Kommentar
@@ -545,7 +678,13 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
   // Beschriftungen liegen **auf** dem Körper und stehen deshalb nach ihm in der Kinderliste;
   // die Fußzone dahinter, weil sie unterhalb von ihm liegt und mit ihm nicht konkurriert.
   const labels = spec.labels !== undefined
-    ? labelPrimitives(spec.labels, bodyBoundsMm, DEFAULT_VIEWBOX_MM.width)
+    ? labelPrimitives(
+        spec.labels,
+        bodyBoundsMm,
+        DEFAULT_VIEWBOX_MM.width,
+        spec.organization !== undefined ? catalog.organizationColor(spec.organization) : null,
+        profile.centerBaselineFromBodyBottomMm,
+      )
     : [];
 
   // Das Fahrwerk steht **nach** dem gefüllten Körper: seine Marken ragen 0,25 mm in dessen
@@ -558,6 +697,11 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
     children: [
       ...headPrimitives,
       filled,
+      // Zusatzgeometrie **nach** dem gefüllten Körper, aus demselben Grund wie das Fahrwerk: die
+      // Deichsel endet innerhalb des Körperstrichs (rechtes Ende auf der Körpermittellinie 4,0),
+      // und eine Organisationsfüllung zeichnete darüber. Sie nimmt die Farbe selbst nicht an —
+      // `role: 'bodyExtra'` schließt das im Renderer aus.
+      ...extras,
       ...chassisPrimitives,
       ...pictograms,
       ...labels,

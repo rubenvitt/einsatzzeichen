@@ -13,9 +13,50 @@ export const HEAD_TOP_MARGIN_MM = 1;
 export type LayoutProfileId = 'rect-body' | 'rotated-square-body' | 'circle-body';
 
 export interface LayoutProfile {
+  /**
+   * Das **Platzierungsverhalten**, nicht das ganze Profil: zwei Körperformen können dasselbe
+   * `place` haben und trotzdem verschiedene Zonenmaße führen. Seit dem Teilslice E.2 ist das der
+   * Fall — vier Rechteckkörper unterscheiden sich allein in
+   * `centerBaselineFromBodyBottomMm`.
+   */
   id: LayoutProfileId;
   /** Oberster Punkt der Körper-Mittellinie ohne Kopfzone. */
   defaultAnchorMm: number;
+  /**
+   * Grundlinie des mittigen Beschriftungslaufs, gerechnet **von der Körperunterkante nach oben**.
+   *
+   * Bis zum Teilslice E.2 stand hier für jede Körperform dieselbe 8 — gemessen an `formation`
+   * (Unterkante 26,0004, Grundlinie 18,0001) und an `building`. Die Zeile für das Landfahrzeug
+   * ist beim Eintragen der Rezepte nachgezählt worden: der Quellblock E.2.1 bis E.2.21 führt
+   * **20** Landfahrzeuge (alle außer E.2.15), und 19 davon setzen ihre mittige Grundlinie auf
+   * 18,0 mm; allein E.2.20 steht auf 17,5002 mm und ist damit der Ausreißer der letzten Zeile
+   * dieses Kommentars. Drei der fünf Körperformen aus
+   * Anhang E.2 treffen sie nicht, und der Fehler ist groß genug, um das Bild zu ändern (alle
+   * Zahlen selbst vermessen, 18. August 2026):
+   *
+   * | Körperform | Unterkante | Grundlinie | Abstand | Belegdateien |
+   * |---|---|---|---|---|
+   * | Landfahrzeug und die übrigen | 26,0004 | 18,0001 | **8,0** | 19 der 20 E.2-Landfahrzeuge |
+   * | angehobener Wasserrumpf | 22,9898 | 16,0002 | **6,9896** | E.2.28 bis E.2.31 |
+   * | Wechselladerrumpf | 24,5004 | 17,0000 | **7,5004** | E.2.15 (n = 1) |
+   * | Hochkantrechteck | 29,9999 | 17,0000 | **12,9999** | E.2.26 (n = 1) |
+   *
+   * **Die zweite Lesart des Wasserrumpfs gehört daneben, weil sie gemessen ist und nicht
+   * ausgeschlossen werden kann.** Die elf I.3-Dateien tragen denselben Rumpf 1,0002 mm tiefer
+   * (Unterkante 23,9899) und ihre mittige Grundlinie auf **derselben** absoluten Höhe 15,9999 —
+   * also mit Abstand 7,9900, dem Normwert. Der E.2-Lauf ist der Anhebung des Rumpfes also
+   * **nicht gefolgt**. Man kann das als „6,9896 ist die Eigenschaft dieser Körperform" lesen oder
+   * als „die Grundlinie steht absolut auf 16,0 und die Anhebung ist ein Exportartefakt". Für die
+   * fünf E.2-Zeichen erzeugen beide Lesarten dasselbe Bild; der Katalog folgt der ersten, weil
+   * sie den bestehenden Mechanismus fortschreibt statt einen zweiten daneben zu stellen.
+   *
+   * Ausdrücklich **nicht** hier abgebildet: E.2.20 (Abstand 8,5005) und E.2.23. E.2.20 steht auf
+   * demselben Landfahrzeugkörper wie die 19 anderen Landfahrzeuge und ist dort der einzige
+   * Ausreißer; E.2.23 ist **kein** Landfahrzeug, sondern ein Anhänger, und weicht innerhalb seiner
+   * eigenen Körperform ab. In beiden Fällen weicht die Quelle von sich selbst ab, und der Katalog
+   * folgt der Mehrheit — dieselbe Einordnung wie bei E.1.18/E.1.20/E.1.21.
+   */
+  centerBaselineFromBodyBottomMm: number;
   /**
    * Setzt den Körper relativ zur Kopfzone. `headBottomMm === null` bedeutet: keine Kopfzone,
    * der Körper behält seine Standardgeometrie.
@@ -46,15 +87,21 @@ export function placeHead(
  * Verschiebt den Körper, ohne seine Größe zu ändern — und nur so weit wie nötig.
  * C.1.2 (Reihe) bleibt deshalb bei 6 mm wie 1.1, C.1.1 (Stapel) rückt auf 9 mm.
  */
-const rectBodyProfile: LayoutProfile = {
-  id: 'rect-body',
-  defaultAnchorMm: 6,
-  place(body, headBottomMm) {
-    if (headBottomMm === null) return body;
-    const target = Math.max(this.defaultAnchorMm, headBottomMm + HEAD_GAP_MM);
-    return shiftY(body, target - boundsOfMm(body).minY);
-  },
-};
+function rectBody(centerBaselineFromBodyBottomMm: number): LayoutProfile {
+  return {
+    id: 'rect-body',
+    defaultAnchorMm: 6,
+    centerBaselineFromBodyBottomMm,
+    place(body, headBottomMm) {
+      if (headBottomMm === null) return body;
+      const target = Math.max(this.defaultAnchorMm, headBottomMm + HEAD_GAP_MM);
+      return shiftY(body, target - boundsOfMm(body).minY);
+    },
+  };
+}
+
+/** Der Normfall: mittige Grundlinie 8 mm über der Körperunterkante. */
+const rectBodyProfile: LayoutProfile = rectBody(8);
 
 /**
  * Verkleinert das gedrehte Quadrat von oben und hält die Unterkante.
@@ -63,6 +110,9 @@ const rectBodyProfile: LayoutProfile = {
 const rotatedSquareProfile: LayoutProfile = {
   id: 'rotated-square-body',
   defaultAnchorMm: 1,
+  // Unvermessen: kein Zeichen des Bestands beschriftet ein gedrehtes Quadrat mittig. Der Normwert
+  // steht hier, damit die Zahl nicht fehlt — er ist keine Messung an dieser Körperform.
+  centerBaselineFromBodyBottomMm: 8,
   place(body, headBottomMm) {
     if (headBottomMm === null) return body;
     if (body.type !== 'rect' || body.transform?.rotate === undefined) {
@@ -117,6 +167,8 @@ const rotatedSquareProfile: LayoutProfile = {
 const circleBodyProfile: LayoutProfile = {
   id: 'circle-body',
   defaultAnchorMm: 2,
+  // Unvermessen, wie bei `rotated-square-body`.
+  centerBaselineFromBodyBottomMm: 8,
   place(body, headBottomMm) {
     if (headBottomMm === null) return body;
     throw new Error(
@@ -130,9 +182,25 @@ const circleBodyProfile: LayoutProfile = {
 
 const PROFILES: Record<SymbolKind, LayoutProfile> = {
   formation: rectBodyProfile,
+  // Die drei Körperformen ohne Kapitel-1-Abschnitt. `rectBodyProfile` und kein eigenes Profil:
+  // sein `place` greift **nur** mit Kopfzone, und keine der drei kann eine tragen — `validateSpec`
+  // lehnt eine Stärkeangabe an allem außer `formation` und `person` ab (`strength-requires-unit`).
+  // Kein Zeichen des Anhangs E.2 trägt überhaupt eine Kopfzone (selbst nachgesehen an allen 31).
+  // Ohne Kopfzone gibt `place` den Körper unverändert zurück; `defaultAnchorMm` bleibt damit
+  // unerreichbar und ist für diese drei keine Behauptung.
+  trailer: rectBodyProfile,
+  // 7,5004 gemessen an E.2.15 (Grundlinie 17,0000 bei Körperunterkante 24,5004) — n = 1. Das ist
+  // ein **Wert** in einem stehenden Mechanismus und kein eigener Mechanismus; die Fallzahlregel
+  // des Projekts trifft ihn nicht.
+  'swap-loader-vehicle': rectBody(7.5),
+  // 12,9999 gemessen an E.2.26 (Grundlinie 17,0000 bei Körperunterkante 29,9999) — n = 1.
+  'upright-rectangle': rectBody(13),
   'vehicle-land': rectBodyProfile,
   'vehicle-air': rectBodyProfile,
-  'vehicle-water': rectBodyProfile,
+  // 6,9896 gemessen an E.2.28 bis E.2.31 (Grundlinie 16,0002 bei Körperunterkante 22,9898).
+  // Gilt hier für **beide** Zeichnungen der Art: der Rumpf aus Kapitel 1 trägt im gesamten
+  // Bestand keinen mittigen Lauf, für ihn ist keine der beiden Zahlen gemessen.
+  'vehicle-water': rectBody(6.9896),
   building: rectBodyProfile,
   container: rectBodyProfile,
   area: rectBodyProfile,

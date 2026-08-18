@@ -202,6 +202,103 @@ describe('extractFingerprint', () => {
     expect(shape?.boundsMm).toEqual({ minXMm: 1, minYMm: 3, maxXMm: 31, maxYMm: 26 });
   });
 
+  /**
+   * Der Körperfüllpfad — der Ausbau aus dem Teilslice E.2. Bis dahin legte der Extraktor für
+   * einen Kurvenpfad **nichts** ab: `shapes` blieb für 151 der 661 Referenzdateien ohne
+   * Körperform, und `pickShape` in `matchFingerprint` griff stattdessen die erste Glyphenhülle
+   * der Typo-Ebene. Gemessen am Bestand: für `E.2.1_Personenkraftwagen_straßenfähig.svg` verglich
+   * das Gate die Körperhülle gegen 19,987/21,081/22,238/24 mm — das „T" von „THW".
+   *
+   * Der Nachbau unten ist konstruiert: die Deckkurve ist die von `1.3 Landfahrzeug`
+   * (Sehne y 5,75 mm, Scheitel y 8 mm, Kontrollpunkte auf y 7,089 — die Zahlen aus
+   * `base-symbols.ts`), das Farbfeld die vermessene Lage 2/7,1138/30/25,0007 der elf
+   * E.2-Landfahrzeuge, die Glyphe die vermessene Hülle des „T" aus E.2.1. Kein Byte stammt aus
+   * einer Referenzdatei.
+   */
+  const bodyCurveD = (topMm: number, apexMm: number, bottomMm: number, leftMm: number, rightMm: number): string => {
+    const midMm = (leftMm + rightMm) / 2;
+    const controlMm = topMm + (apexMm - topMm) * 0.595;
+    const u = (value: number): number => mmToUnits(value);
+    return (
+      `M${u(midMm)},${u(apexMm)}` +
+      `C${u(midMm - 6)},${u(apexMm)} ${u(midMm - 11)},${u(controlMm)} ${u(leftMm)},${u(topMm)}` +
+      `V${u(bottomMm)}H${u(rightMm)}V${u(topMm)}` +
+      `C${u(midMm + 11)},${u(controlMm)} ${u(midMm + 6)},${u(apexMm)} ${u(midMm)},${u(apexMm)}Z`
+    );
+  };
+
+  const LAND_VEHICLE_SVG = `<svg viewBox="0 0 ${viewBoxUnits} ${viewBoxUnits}">
+    <g id="Grundfläche"><rect x="0" y="0" width="${viewBoxUnits}" height="${viewBoxUnits}" fill="none"/></g>
+    <g id="Flächige_Fülung">
+      <path d="${bodyCurveD(5.75, 8, 26, 1, 31)}" fill="#fff"/>
+      <path d="${bodyCurveD(7.1138, 9, 25.0007, 2, 30)}" fill="#003296"/>
+    </g>
+    <g id="Takt._Zeichen__x28_Typo_x29_">
+      <path d="${toPathSegment([[19.987, 21.081], [22.238, 21.081], [22.238, 24], [19.987, 24]], true)}" fill="#fff"/>
+    </g>
+  </svg>`;
+
+  it('erfasst den gekrümmten Körperfüllpfad als bounds — sonst greift das Gate eine Glyphe', () => {
+    const fp = extractFingerprint(LAND_VEHICLE_SVG, 'E.2.x.svg');
+    const [first] = fp.shapes;
+    expect(first?.kind).toBe('bounds');
+    expect(first?.boundsMm.minXMm).toBeCloseTo(1, 3);
+    expect(first?.boundsMm.minYMm).toBeCloseTo(5.75, 3);
+    expect(first?.boundsMm.maxXMm).toBeCloseTo(31, 3);
+    expect(first?.boundsMm.maxYMm).toBeCloseTo(26, 3);
+    expect(first?.fill).toBe('#ffffff');
+  });
+
+  it('nimmt den einschließenden Füllpfad und nicht den ersten — das Farbfeld liegt daneben', () => {
+    // Das Farbfeld ist der **zweite** Pfad der Ebene und läge 1,3638 mm zu tief, wenn der
+    // Extraktor nach Reihenfolge statt nach Einschließung entschiede. Im Bestand fallen beide
+    // Regeln zusammen (151 von 151 Dateien), aber „der erste" wäre eine Aussage über die
+    // Exportreihenfolge des Zeichenprogramms, die niemand gemessen hat.
+    const swapped = LAND_VEHICLE_SVG.replace(
+      `<path d="${bodyCurveD(5.75, 8, 26, 1, 31)}" fill="#fff"/>\n      <path d="${bodyCurveD(7.1138, 9, 25.0007, 2, 30)}" fill="#003296"/>`,
+      `<path d="${bodyCurveD(7.1138, 9, 25.0007, 2, 30)}" fill="#003296"/>\n      <path d="${bodyCurveD(5.75, 8, 26, 1, 31)}" fill="#fff"/>`,
+    );
+    expect(swapped).not.toBe(LAND_VEHICLE_SVG);
+    const [first] = extractFingerprint(swapped, 'E.2.x.svg').shapes;
+    expect(first?.kind).toBe('bounds');
+    expect(first?.boundsMm.minXMm).toBeCloseTo(1, 3);
+    expect(first?.boundsMm.maxYMm).toBeCloseTo(26, 3);
+  });
+
+  it('zählt den Körperfüllpfad nicht mehr als unerfassten Kurvenpfad', () => {
+    // `curvedPaths` bleibt lesbar als „so viel Geometrie sieht das Artefakt nicht": das Farbfeld
+    // ist weiter dabei, der Körper nicht mehr.
+    expect(extractFingerprint(LAND_VEHICLE_SVG, 'E.2.x.svg').curvedPaths).toBe(1);
+  });
+
+  it('lässt eine Kurve außerhalb der Körperebene unberührt', () => {
+    // Nur die Ebene `Flächige_Fülung` trägt die Körperfläche. Eine gefüllte Kurve in der
+    // Typo-Ebene ist eine Glyphe und darf niemals als Körper ausgegeben werden.
+    const glyphOnly = `<svg viewBox="0 0 ${viewBoxUnits} ${viewBoxUnits}">
+      <g id="Takt._Zeichen__x28_Typo_x29_">
+        <path d="${bodyCurveD(5.75, 8, 26, 1, 31)}" fill="#fff"/>
+      </g>
+    </svg>`;
+    const fp = extractFingerprint(glyphOnly, 'x.svg');
+    expect(fp.shapes.filter((shape) => shape.kind === 'bounds')).toEqual([]);
+    expect(fp.curvedPaths).toBe(1);
+  });
+
+  it('gibt keine Körperform aus, wenn kein Füllpfad die übrigen einschließt', () => {
+    // Zwei gleich große, nebeneinanderliegende Kurvenflächen: keine schließt die andere ein.
+    // Dann bleibt das Artefakt ohne Körperform, `matchFingerprint` bricht mit „Keine
+    // vergleichbare Form" ab — der laute Ausfall statt einer Notwahl.
+    const ambiguous = `<svg viewBox="0 0 ${viewBoxUnits} ${viewBoxUnits}">
+      <g id="Flächige_Fülung">
+        <path d="${bodyCurveD(5.75, 8, 26, 1, 15)}" fill="#fff"/>
+        <path d="${bodyCurveD(5.75, 8, 26, 17, 31)}" fill="#fff"/>
+      </g>
+    </svg>`;
+    const fp = extractFingerprint(ambiguous, 'x.svg');
+    expect(fp.shapes.filter((shape) => shape.kind === 'bounds')).toEqual([]);
+    expect(fp.curvedPaths).toBe(2);
+  });
+
   it('nimmt bei mehr als zwei Teilpfaden die äußerste Hülle', () => {
     // 1.7 Gebäude hat drei Teilpfade: Außenring, Innenring und die Dachlinie.
     // Außenring eine halbe Strichstärke (0,25 mm) außerhalb des Polyzugs, Innenring

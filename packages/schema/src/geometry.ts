@@ -82,8 +82,16 @@ export interface Transform {
  * Körper**unterkante** und ist Geometrie, kein Text — gemessen an `5.1.1.x`:
  * Körperunterkante 26,0004 mm, Markenmitte 28,2501 mm, Markenradius 2,2501 mm.
  */
+/**
+ * `bodyExtra` ist Geometrie, die zum **Grundzeichen** gehört, aber nicht sein farbtragender
+ * Körper ist: die Deichsel des Anhängers und der L-Rahmen des Wechselladers. Sie nimmt keine
+ * Organisationsfarbe an (das tut allein `body`, siehe `svg.ts` und `canvas.ts`), und sie ist für
+ * `findBody` unsichtbar — sonst könnte der Fingerprintvergleich statt des Körpers eine Deichsel
+ * greifen.
+ */
 export type PrimitiveRole =
   | 'body'
+  | 'bodyExtra'
   | 'innerField'
   | 'head'
   | 'chassis'

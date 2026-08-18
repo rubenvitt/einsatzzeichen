@@ -11,6 +11,9 @@ import {
   ANHANG_E_A_RECIPES,
   ANHANG_E_B_RECIPES,
   ANHANG_E_C_RECIPES,
+  ANHANG_E_D_RECIPES,
+  ANHANG_E_E_RECIPES,
+  ANHANG_E_F_RECIPES,
 } from './recipes-anhang-e.js';
 
 const PORTS: CatalogPorts = {
@@ -46,11 +49,22 @@ export interface Recipe {
  * Mit den neun aus `ANHANG_E_C_RECIPES` ist E.1 mit 37 Darstellungen vollständig; sie belegen
  * als erste, dass die Zonenregel auch gegen eine **zweite Körperform** trägt (E.1.37 auf
  * `building`).
+ *
+ * Die 30 aus `ANHANG_E_D_RECIPES`, `ANHANG_E_E_RECIPES` und `ANHANG_E_F_RECIPES` verlassen als
+ * erste den Rechteckkörper der taktischen Formation. Sie tragen **fünf** Körperformen statt
+ * zweier, drei davon ohne Kapitel-1-Abschnitt, dazu die Fahrwerkszone unterhalb des Körpers, eine
+ * Zusatzgeometrie am Grundzeichen (Deichsel, L-Rahmen), die vierte Beschriftungszone außerhalb des
+ * Körpers und einen je Zeichen gemessenen Schriftgrad des mittigen Laufs. Damit sind 67 der 68
+ * Abschnitte des Anhangs E gebaut; das fehlende E.2.6 steht mit seiner Begründung in
+ * `ANHANG_E_D_UNGEBAUT`.
  */
 export const RECIPES = {
   ...ANHANG_E_A_RECIPES,
   ...ANHANG_E_B_RECIPES,
   ...ANHANG_E_C_RECIPES,
+  ...ANHANG_E_D_RECIPES,
+  ...ANHANG_E_E_RECIPES,
+  ...ANHANG_E_F_RECIPES,
   'C.1.1': {
     title: 'Löschstaffel',
     referenceAsset: 'C.1.1_Löschstaffel.svg',
@@ -93,17 +107,50 @@ export const RECIPES = {
  * Ohne diese Ableitung wäre der weisse Text der einzige Ink im Katalog ohne Kontrastvertrag —
  * die Piktogrammpaare decken ihn nicht ab, weil er zu keinem Piktogramm gehört. Genau diese
  * Anforderung hat `blau` in beiden Alternativthemes nachgezogen (siehe `render-themes.ts`).
+ *
+ * **Seit dem Teilslice E.2 gibt es eine zweite Richtung.** Die vierte Beschriftungszone setzt das
+ * Trägerkürzel in der **Organisationsfarbe** unter den Körper, also auf die Ausgabeoberfläche.
+ * Selbst gerechnet, damit es nicht übernommen ist: `blau` gegen `surface` erreicht 11,072:1 im
+ * Referenztheme, 4,634:1 in `accessible-light` und 4,542:1 im Drucktheme — alle drei über der
+ * Textschwelle 4,5:1, keine Palettenänderung nötig.
+ *
+ * Der Parameter ist da, damit die Ableitung selbst prüfbar ist: ohne ihn ließe sich nur
+ * feststellen, was der heutige Bestand hergibt, nicht, was die Funktion aus einer Beschriftung
+ * ableitet, die es noch nicht gibt.
  */
-export function labelContrastRequirements(): readonly ContrastRequirement[] {
-  const organizations = new Set<OrganizationId>();
-  for (const recipe of Object.values<Recipe>(RECIPES)) {
-    if (recipe.spec.labels === undefined || recipe.spec.organization === undefined) continue;
-    organizations.add(recipe.spec.organization);
+export function labelContrastRequirements(
+  recipes: Iterable<Recipe> = Object.values<Recipe>(RECIPES),
+): readonly ContrastRequirement[] {
+  const inBody = new Set<OrganizationId>();
+  const belowBody = new Set<OrganizationId>();
+  for (const recipe of recipes) {
+    const { labels, organization } = recipe.spec;
+    if (labels === undefined || organization === undefined) continue;
+    if (
+      labels.center !== undefined ||
+      labels.bottomLeft !== undefined ||
+      labels.bottomRight !== undefined
+    ) {
+      inBody.add(organization);
+    }
+    // Die vierte Zone steht **unter** dem Körper und trägt die Organisationsfarbe selbst. Ihr
+    // Untergrund ist deshalb die Ausgabeoberfläche und nicht die Körperfläche — ein Paar, das die
+    // Ableitung oben nie erzeugt, weil sie ausschließlich „weiss auf Körperfarbe" kennt. Ohne
+    // diese zweite Schleife wäre der einzige farbige Text des Katalogs ohne Kontrastvertrag.
+    if (labels.belowRight !== undefined) belowBody.add(organization);
   }
-  return [...organizations].map((organization) => ({
-    foreground: 'weiss',
-    background: organizationColor(organization),
-    context: `Beschriftung im Körper auf Organisation ${organization}`,
-    minimum: MINIMUM_TEXT_CONTRAST,
-  }));
+  return [
+    ...[...inBody].map<ContrastRequirement>((organization) => ({
+      foreground: 'weiss',
+      background: organizationColor(organization),
+      context: `Beschriftung im Körper auf Organisation ${organization}`,
+      minimum: MINIMUM_TEXT_CONTRAST,
+    })),
+    ...[...belowBody].map<ContrastRequirement>((organization) => ({
+      foreground: organizationColor(organization),
+      background: 'surface',
+      context: `Trägerkürzel unterhalb des Körpers, Organisation ${organization}`,
+      minimum: MINIMUM_TEXT_CONTRAST,
+    })),
+  ];
 }

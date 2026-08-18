@@ -35,7 +35,7 @@ describe('Element-Register', () => {
     expect(observedTitle).toBe(originalTitle);
   });
 
-  it('enthält exakt 256 Deskriptoren mit den festen Artenzahlen', () => {
+  it('enthält exakt 258 Deskriptoren mit den festen Artenzahlen', () => {
     const byKind = Object.values(ELEMENTS).reduce<Record<string, number>>((acc, el) => {
       acc[el.kind] = (acc[el.kind] ?? 0) + 1;
       return acc;
@@ -44,16 +44,17 @@ describe('Element-Register', () => {
       // Acht seit LFH-424: 2.2_Organisationen.svg ist der Fleck der Hilfsorganisationen.
       organization: 8,
       strength: 4,
-      // Fünf der sechs Fahrzeugkategorien aus Kapitel 5.1.1. `amphibienfahrzeug` fehlt: seine
-      // Wellenlinie ist nur als Strichhülle vermessen, `vehicleChassis` wirft dafür.
-      'vehicle-category': 5,
+      // Fünf der sechs Fahrzeugkategorien aus Kapitel 5.1.1 plus die beiden Anhängerfahrwerke
+      // aus 5.1.2.4 und 5.1.2.5, die der Teilslice E.2 vermessen hat. `amphibienfahrzeug` fehlt
+      // weiterhin: seine Wellenlinie ist nur als Strichhülle vermessen, `vehicleChassis` wirft.
+      'vehicle-category': 7,
       capability: 88,
       state: 61,
       comms: 48,
       damage: 28,
       wildfire: 14,
     });
-    expect(Object.keys(ELEMENTS)).toHaveLength(256);
+    expect(Object.keys(ELEMENTS)).toHaveLength(258);
   });
 
   it('kollabiert 67 State-Darstellungen auf exakt 61 semantische Deskriptoren', () => {

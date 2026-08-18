@@ -47,6 +47,29 @@ const KFZ_SLOTS_MM = [3.75, 16, 28.25] as const;
 const RAIL_SLOTS_MM = [3.75, 9.25, 22.75, 28.25] as const;
 
 /**
+ * Radplatz des Anhängers mit **einem** Rad, vermessen an `5.1.2.4_Anhänger_von PKW gezogen.svg`
+ * (Innenring 15,5000/26,2505/19,4998/30,2503 → cx 17,4999) und an `E.2.22`, `E.2.23`, `E.2.25`
+ * zahlengleich wiedergefunden.
+ *
+ * Er fällt mit dem Scheitel der Anhängerdeckkurve zusammen (17,4999) — das ist ein Befund an der
+ * Referenz und **keine** Rechenregel: es gibt im Bestand keine zweite Anhängerbreite, an der sich
+ * eine Kopplung prüfen ließe.
+ */
+const TRAILER_SINGLE_SLOT_MM = [17.5] as const;
+
+/**
+ * Radplätze des Anhängers mit **zwei** Rädern, vermessen an
+ * `5.1.2.5_Anhänger_von LKW gezogen.svg` (Innenringe 12,2502/26,2505/16,2500/30,2503 und
+ * 17,7504/26,2505/21,7502/30,2503 → cx 14,2501 und 19,7503) und an `E.2.24` zahlengleich
+ * wiedergefunden.
+ *
+ * Ihr Abstand 5,5 mm wiederholt den Abstand innerhalb eines Drehgestellpaars von `5.1.1.6`; als
+ * Regel ist das weiterhin nicht belegt — beide Fälle zeigen dieselbe Zahl nur je einmal, und
+ * keiner variiert sie (siehe `RAIL_SLOTS_MM`).
+ */
+const TRAILER_PAIR_SLOTS_MM = [14.25, 19.75] as const;
+
+/**
  * Endmitten des Kettenstadions (`5.1.1.5`), vermessen am Innenstadion
  * 2,2500/26,2502/29,7501/30,2500: Innenradius 2,0001, Endmitten 4,2500 und 27,7500.
  *
@@ -149,6 +172,10 @@ export function vehicleChassis(id: VehicleCategoryId): ChassisShape {
       };
     case 'schienenfahrzeug':
       return { marks: wheels([...RAIL_SLOTS_MM]), heightMm: ZONE_HEIGHT_MM };
+    case 'anhaenger-ein-rad':
+      return { marks: wheels([...TRAILER_SINGLE_SLOT_MM]), heightMm: ZONE_HEIGHT_MM };
+    case 'anhaenger-zwei-raeder':
+      return { marks: wheels([...TRAILER_PAIR_SLOTS_MM]), heightMm: ZONE_HEIGHT_MM };
     case 'amphibienfahrzeug':
       // `5.1.1.4` trägt dieselben zwei Radplätze wie Kategorie 1 (gemessen: 3,7502 / 28,2499)
       // **und** eine Wellenlinie, die den Unterschied ausmacht. Von ihr ist die Strichhülle
@@ -178,4 +205,6 @@ export const MEASURED_VEHICLE_CATEGORIES: readonly VehicleCategoryId[] = Object.
   'kfz-kategorie-3',
   'kettenfahrzeug',
   'schienenfahrzeug',
+  'anhaenger-ein-rad',
+  'anhaenger-zwei-raeder',
 ]);

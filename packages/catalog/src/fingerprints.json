@@ -222,8 +222,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "1.4_Luftfahrzeug.svg",
@@ -239,8 +250,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 8,
+          "maxXMm": 31,
+          "maxYMm": 23
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "1.5_Wasserfahrzeug.svg",
@@ -256,8 +278,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 9,
+          "maxXMm": 31,
+          "maxYMm": 24
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "1.6_Funktionsstelle.svg",
@@ -376,8 +409,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.52,
+          "minYMm": 3.23,
+          "maxXMm": 30.999,
+          "maxYMm": 28.324
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "2.10_Blau.svg",
@@ -3199,8 +3243,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.1.1.2_Kfz_Kategorie 2.svg",
@@ -3216,8 +3271,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.1.1.3_Kfz_Kategorie 3.svg",
@@ -3233,8 +3299,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.1.1.4_Amphibienfahrzeug.svg",
@@ -3250,8 +3327,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 3
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 2
   },
   {
     "asset": "5.1.1.5_Kettenfahrzeug.svg",
@@ -3267,8 +3355,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.1.1.6_Schienenfahrzeug.svg",
@@ -3284,8 +3383,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.1.1.7_Kraftfahrzeug_aufgleisbar.svg",
@@ -3301,8 +3411,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.1.1.8_Kraftfahrzeug_straßenfähig_Wechsellader.svg",
@@ -3318,8 +3439,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 4,
+          "minYMm": 6,
+          "maxXMm": 31,
+          "maxYMm": 25
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.1.1.9_Kraftfahrzeug_straßenfähig_Wechselbehälter.svg",
@@ -3363,8 +3495,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.1.2.1_Anhänger_allgemein.svg",
@@ -3380,8 +3523,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 4,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.1.2.2_Anhänger_Abrollbehälter.svg",
@@ -3397,8 +3551,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 7,
+          "minYMm": 6,
+          "maxXMm": 31,
+          "maxYMm": 24
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.1.2.3_Anhänger_Wechselbehälter.svg",
@@ -3442,8 +3607,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 4,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.1.2.5_Anhänger_von LKW gezogen.svg",
@@ -3459,8 +3635,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 4,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.1.2_Fahrzeug_geschützt.svg",
@@ -3476,8 +3663,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 6.25,
+          "maxXMm": 31,
+          "maxYMm": 26.25
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.1.3.1_Abrollbehälter.svg",
@@ -3493,8 +3691,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 4,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.1.3.2_Wechselbehälter.svg",
@@ -3575,8 +3784,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 9,
+          "minYMm": 6,
+          "maxXMm": 23,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.1.4.1_Einsatz Luftfahrzeuge.svg",
@@ -4398,8 +4618,19 @@
       "#3264fa",
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 4,
+          "maxXMm": 31,
+          "maxYMm": 28
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.8.1.6_Gefahr durch Wassereinbruch.svg",
@@ -5412,8 +5643,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 0.999,
+          "minYMm": 6,
+          "maxXMm": 31,
+          "maxYMm": 24
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.8.7.3_Bedeckung des Himmels 4 von 8.svg",
@@ -5585,8 +5827,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 7,
+          "minYMm": 3,
+          "maxXMm": 18,
+          "maxYMm": 29
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.8.7_Beispiel_Schneiend_extrem.svg",
@@ -5602,8 +5855,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 3,
+          "maxXMm": 31,
+          "maxYMm": 21.001
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.8.7_Beispiel_Schneiend_mittel.svg",
@@ -5619,8 +5883,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 3,
+          "maxXMm": 31,
+          "maxYMm": 21.001
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.8.7_Beispiel_Schneiend_schwach.svg",
@@ -5636,8 +5911,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 3,
+          "maxXMm": 31,
+          "maxYMm": 21.001
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.8.7_Beispiel_Schneiend_stark.svg",
@@ -5653,8 +5939,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 3,
+          "maxXMm": 31,
+          "maxYMm": 21.001
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "5.8.8.10_Person in Zwangslage.svg",
@@ -7175,6 +7472,16 @@
     ],
     "shapes": [
       {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
+      {
         "kind": "outline",
         "boundsMm": {
           "minXMm": 2.868,
@@ -7202,7 +7509,7 @@
         }
       }
     ],
-    "curvedPaths": 7
+    "curvedPaths": 6
   },
   {
     "asset": "C.2.11_Tanklöschfahrzeug 2000.svg",
@@ -7221,6 +7528,16 @@
     ],
     "shapes": [
       {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
+      {
         "kind": "outline",
         "boundsMm": {
           "minXMm": 2.589,
@@ -7248,7 +7565,7 @@
         }
       }
     ],
-    "curvedPaths": 7
+    "curvedPaths": 6
   },
   {
     "asset": "C.2.12_Tanklöschfahrzeug 3000.svg",
@@ -7267,6 +7584,16 @@
     ],
     "shapes": [
       {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
+      {
         "kind": "outline",
         "boundsMm": {
           "minXMm": 2.589,
@@ -7294,7 +7621,7 @@
         }
       }
     ],
-    "curvedPaths": 7
+    "curvedPaths": 6
   },
   {
     "asset": "C.2.13_Tanklöschfahrzeug 4000.svg",
@@ -7312,6 +7639,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -7349,7 +7686,7 @@
         }
       }
     ],
-    "curvedPaths": 6
+    "curvedPaths": 5
   },
   {
     "asset": "C.2.14_Automatikdrehleiter_12-9.svg",
@@ -7367,6 +7704,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -7386,7 +7733,7 @@
         }
       }
     ],
-    "curvedPaths": 4
+    "curvedPaths": 3
   },
   {
     "asset": "C.2.14_Automatikdrehleiter_12-9_Alternative.svg",
@@ -7404,6 +7751,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -7459,7 +7816,7 @@
         }
       }
     ],
-    "curvedPaths": 5
+    "curvedPaths": 4
   },
   {
     "asset": "C.2.15_Automatikdrehleiter_18-12.svg",
@@ -7477,6 +7834,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -7505,7 +7872,7 @@
         }
       }
     ],
-    "curvedPaths": 4
+    "curvedPaths": 3
   },
   {
     "asset": "C.2.15_Automatikdrehleiter_18-12_Alternative.svg",
@@ -7523,6 +7890,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -7578,7 +7955,7 @@
         }
       }
     ],
-    "curvedPaths": 5
+    "curvedPaths": 4
   },
   {
     "asset": "C.2.16_Automatikdrehleiter_23-12.svg",
@@ -7596,6 +7973,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -7615,7 +8002,7 @@
         }
       }
     ],
-    "curvedPaths": 5
+    "curvedPaths": 4
   },
   {
     "asset": "C.2.16_Automatikdrehleiter_23-12_Alternative.svg",
@@ -7633,6 +8020,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -7688,7 +8085,7 @@
         }
       }
     ],
-    "curvedPaths": 6
+    "curvedPaths": 5
   },
   {
     "asset": "C.2.17_Hubarbeitsbühne.svg",
@@ -7706,6 +8103,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -7734,7 +8141,7 @@
         }
       }
     ],
-    "curvedPaths": 3
+    "curvedPaths": 2
   },
   {
     "asset": "C.2.17_Hubarbeitsbühne_Alternative.svg",
@@ -7752,6 +8159,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -7771,7 +8188,7 @@
         }
       }
     ],
-    "curvedPaths": 4
+    "curvedPaths": 3
   },
   {
     "asset": "C.2.18_Rüstwagen.svg",
@@ -7787,8 +8204,19 @@
     "fills": [
       "#fa1919"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "C.2.19_Wechselladerfahrzeug.svg",
@@ -7804,8 +8232,19 @@
     "fills": [
       "#fa1919"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 4,
+          "minYMm": 6,
+          "maxXMm": 31,
+          "maxYMm": 25
+        },
+        "fill": "#fa1919"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "C.2.1_Kommandowagen.svg",
@@ -7823,6 +8262,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -7842,7 +8291,7 @@
         }
       }
     ],
-    "curvedPaths": 4
+    "curvedPaths": 3
   },
   {
     "asset": "C.2.20_Gerätewagen Gefahrgut.svg",
@@ -7860,6 +8309,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -7879,7 +8338,7 @@
         }
       }
     ],
-    "curvedPaths": 5
+    "curvedPaths": 4
   },
   {
     "asset": "C.2.20_Gerätewagen Gefahrgut_Alternative.svg",
@@ -7895,8 +8354,19 @@
     "fills": [
       "#fa1919"
     ],
-    "shapes": [],
-    "curvedPaths": 3
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      }
+    ],
+    "curvedPaths": 2
   },
   {
     "asset": "C.2.21_Gerätewagen Logistik 1.svg",
@@ -7914,6 +8384,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -7951,7 +8431,7 @@
         }
       }
     ],
-    "curvedPaths": 3
+    "curvedPaths": 2
   },
   {
     "asset": "C.2.21_Gerätewagen Logistik 1_Alternative.svg",
@@ -7969,6 +8449,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -7988,7 +8478,7 @@
         }
       }
     ],
-    "curvedPaths": 2
+    "curvedPaths": 1
   },
   {
     "asset": "C.2.22_Gerätewagen Logistik 2.svg",
@@ -8006,6 +8496,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -8034,7 +8534,7 @@
         }
       }
     ],
-    "curvedPaths": 4
+    "curvedPaths": 3
   },
   {
     "asset": "C.2.22_Gerätewagen Logistik 2_Alternative.svg",
@@ -8053,6 +8553,16 @@
     ],
     "shapes": [
       {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
+      {
         "kind": "outline",
         "boundsMm": {
           "minXMm": 2.868,
@@ -8062,7 +8572,7 @@
         }
       }
     ],
-    "curvedPaths": 3
+    "curvedPaths": 2
   },
   {
     "asset": "C.2.23_Mannschaftstransportfahrzeug 9-sitzig.svg",
@@ -8080,6 +8590,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -8108,7 +8628,7 @@
         }
       }
     ],
-    "curvedPaths": 2
+    "curvedPaths": 1
   },
   {
     "asset": "C.2.23_Mannschaftstransportfahrzeug 9-sitzig_Alternative.svg",
@@ -8125,8 +8645,19 @@
     "fills": [
       "#fa1919"
     ],
-    "shapes": [],
-    "curvedPaths": 3
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      }
+    ],
+    "curvedPaths": 2
   },
   {
     "asset": "C.2.24_CBRN-Erkundungswagen.svg",
@@ -8144,6 +8675,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -8181,7 +8722,7 @@
         }
       }
     ],
-    "curvedPaths": 6
+    "curvedPaths": 5
   },
   {
     "asset": "C.2.24_CBRN-Erkundungswagen_Alternative.svg",
@@ -8197,8 +8738,19 @@
     "fills": [
       "#fa1919"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "C.2.25_Gerätewagen Dekontamination Personal.svg",
@@ -8216,6 +8768,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -8235,7 +8797,7 @@
         }
       }
     ],
-    "curvedPaths": 8
+    "curvedPaths": 7
   },
   {
     "asset": "C.2.25_Gerätewagen Dekontamination Personal_Alternative.svg",
@@ -8252,8 +8814,19 @@
     "fills": [
       "#fa1919"
     ],
-    "shapes": [],
-    "curvedPaths": 3
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      }
+    ],
+    "curvedPaths": 2
   },
   {
     "asset": "C.2.26_Schlauchwagen Katastrophenschutz.svg",
@@ -8271,6 +8844,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -8290,7 +8873,7 @@
         }
       }
     ],
-    "curvedPaths": 6
+    "curvedPaths": 5
   },
   {
     "asset": "C.2.26_Schlauchwagen Katastrophenschutz_Alternative.svg",
@@ -8306,8 +8889,19 @@
     "fills": [
       "#fa1919"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "C.2.27_Feuerwehrkran 30.svg",
@@ -8325,6 +8919,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -8353,7 +8957,7 @@
         }
       }
     ],
-    "curvedPaths": 4
+    "curvedPaths": 3
   },
   {
     "asset": "C.2.27_Feuerwehrkran 30_Alternative.svg",
@@ -8370,8 +8974,19 @@
     "fills": [
       "#fa1919"
     ],
-    "shapes": [],
-    "curvedPaths": 5
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      }
+    ],
+    "curvedPaths": 4
   },
   {
     "asset": "C.2.28_Teleskoplader.svg",
@@ -8390,6 +9005,16 @@
     ],
     "shapes": [
       {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
+      {
         "kind": "outline",
         "boundsMm": {
           "minXMm": 2.589,
@@ -8399,7 +9024,7 @@
         }
       }
     ],
-    "curvedPaths": 10
+    "curvedPaths": 9
   },
   {
     "asset": "C.2.28_Teleskoplader_Alternative.svg",
@@ -8415,8 +9040,19 @@
     "fills": [
       "#fa1919"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "C.2.29_Tragkraftspritzenanhänger.svg",
@@ -8432,8 +9068,19 @@
     "fills": [
       "#fa1919"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 4,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "C.2.2_Einsatzleitwagen 1.svg",
@@ -8451,6 +9098,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -8488,7 +9145,7 @@
         }
       }
     ],
-    "curvedPaths": 2
+    "curvedPaths": 1
   },
   {
     "asset": "C.2.30_Feuerwehr Netzersatzanlage 120 kVA.svg",
@@ -8507,6 +9164,16 @@
     ],
     "shapes": [
       {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 4,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
+      {
         "kind": "outline",
         "boundsMm": {
           "minXMm": 5.762,
@@ -8516,7 +9183,7 @@
         }
       }
     ],
-    "curvedPaths": 4
+    "curvedPaths": 3
   },
   {
     "asset": "C.2.31_geschützte Löschdrohne.svg",
@@ -8532,8 +9199,19 @@
     "fills": [
       "#fa1919"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 6,
+          "maxXMm": 31,
+          "maxYMm": 25.75
+        },
+        "fill": "#fa1919"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "C.2.3_Einsatzleitwagen 2.svg",
@@ -8551,6 +9229,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -8579,7 +9267,7 @@
         }
       }
     ],
-    "curvedPaths": 3
+    "curvedPaths": 2
   },
   {
     "asset": "C.2.4_Tragkraftspritzenfahrzeug.svg",
@@ -8597,6 +9285,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -8616,7 +9314,7 @@
         }
       }
     ],
-    "curvedPaths": 3
+    "curvedPaths": 2
   },
   {
     "asset": "C.2.5_Tragkraftspritzenfahrzeug mit Wasser.svg",
@@ -8634,6 +9332,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -8671,7 +9379,7 @@
         }
       }
     ],
-    "curvedPaths": 3
+    "curvedPaths": 2
   },
   {
     "asset": "C.2.6_Kleinlöschfahrzeug.svg",
@@ -8689,6 +9397,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -8717,7 +9435,7 @@
         }
       }
     ],
-    "curvedPaths": 2
+    "curvedPaths": 1
   },
   {
     "asset": "C.2.7_Mittleres Löschfahrzeug.svg",
@@ -8735,6 +9453,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -8763,7 +9491,7 @@
         }
       }
     ],
-    "curvedPaths": 2
+    "curvedPaths": 1
   },
   {
     "asset": "C.2.8_Löschfahrzeug 10.svg",
@@ -8781,6 +9509,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -8818,7 +9556,7 @@
         }
       }
     ],
-    "curvedPaths": 5
+    "curvedPaths": 4
   },
   {
     "asset": "C.2.9_Löschfahrzeug 20.svg",
@@ -8836,6 +9574,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -8864,7 +9612,7 @@
         }
       }
     ],
-    "curvedPaths": 6
+    "curvedPaths": 5
   },
   {
     "asset": "D.1.1_Befehlsstelle im Einsatz.svg",
@@ -14486,6 +15234,16 @@
     ],
     "shapes": [
       {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
+      {
         "kind": "outline",
         "boundsMm": {
           "minXMm": 19.987,
@@ -14513,7 +15271,7 @@
         }
       }
     ],
-    "curvedPaths": 9
+    "curvedPaths": 8
   },
   {
     "asset": "E.2.11_Einsatz-Rettungs-Spinne_geländefähig.svg",
@@ -14532,6 +15290,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -14569,7 +15337,7 @@
         }
       }
     ],
-    "curvedPaths": 5
+    "curvedPaths": 4
   },
   {
     "asset": "E.2.12_Mehrzweckgerätewagen Ladebordwand_geländegängig.svg",
@@ -14588,6 +15356,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -14661,7 +15439,7 @@
         }
       }
     ],
-    "curvedPaths": 5
+    "curvedPaths": 4
   },
   {
     "asset": "E.2.13_Mannschaftslastwagen 4 Ladebordwand_geländegänig.svg",
@@ -14680,6 +15458,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -14771,7 +15559,7 @@
         }
       }
     ],
-    "curvedPaths": 4
+    "curvedPaths": 3
   },
   {
     "asset": "E.2.14_Mannschaftslastwagen 5_straßenfähig.svg",
@@ -14790,6 +15578,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -14854,7 +15652,7 @@
         }
       }
     ],
-    "curvedPaths": 3
+    "curvedPaths": 2
   },
   {
     "asset": "E.2.15_Wechselladerfahrzeug_straßenfähig.svg",
@@ -14873,6 +15671,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 2.5,
+          "minYMm": 6,
+          "maxXMm": 31,
+          "maxYMm": 24.5
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -14928,7 +15736,7 @@
         }
       }
     ],
-    "curvedPaths": 3
+    "curvedPaths": 2
   },
   {
     "asset": "E.2.16_Lastkraftwagen Ladekran_straßenfähig.svg",
@@ -14947,6 +15755,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -15020,7 +15838,7 @@
         }
       }
     ],
-    "curvedPaths": 4
+    "curvedPaths": 3
   },
   {
     "asset": "E.2.17_Lastkraftwagen Ladebordwand_straßenfähig.svg",
@@ -15039,6 +15857,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -15112,7 +15940,7 @@
         }
       }
     ],
-    "curvedPaths": 4
+    "curvedPaths": 3
   },
   {
     "asset": "E.2.18_Lastkraftwagen Kipper_geländefähig.svg",
@@ -15131,6 +15959,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -15204,7 +16042,7 @@
         }
       }
     ],
-    "curvedPaths": 3
+    "curvedPaths": 2
   },
   {
     "asset": "E.2.19_Führungskraftwagen_geländefähig.svg",
@@ -15223,6 +16061,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "rect",
         "boundsMm": {
@@ -15288,7 +16136,7 @@
         }
       }
     ],
-    "curvedPaths": 3
+    "curvedPaths": 2
   },
   {
     "asset": "E.2.1_Personenkraftwagen_straßenfähig.svg",
@@ -15307,6 +16155,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -15353,7 +16211,7 @@
         }
       }
     ],
-    "curvedPaths": 4
+    "curvedPaths": 3
   },
   {
     "asset": "E.2.20_Führungs- Kommunikationskraftwagen_straßenfähig.svg",
@@ -15372,6 +16230,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "rect",
         "boundsMm": {
@@ -15446,7 +16314,7 @@
         }
       }
     ],
-    "curvedPaths": 5
+    "curvedPaths": 4
   },
   {
     "asset": "E.2.21_Mastkraftwagen_geländefähig.svg",
@@ -15465,6 +16333,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -15520,7 +16398,7 @@
         }
       }
     ],
-    "curvedPaths": 6
+    "curvedPaths": 5
   },
   {
     "asset": "E.2.22_Anhänger Grundzeichen.svg",
@@ -15539,6 +16417,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 4,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -15567,7 +16455,7 @@
         }
       }
     ],
-    "curvedPaths": 3
+    "curvedPaths": 2
   },
   {
     "asset": "E.2.23_Anhänger Netzersatzanlage_von LKW gezogen.svg",
@@ -15586,6 +16474,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 4,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -15641,7 +16539,7 @@
         }
       }
     ],
-    "curvedPaths": 3
+    "curvedPaths": 2
   },
   {
     "asset": "E.2.24_Anhänger Führung und Lage_von LKW gezogen.svg",
@@ -15660,6 +16558,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 4,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "rect",
         "boundsMm": {
@@ -15743,7 +16651,7 @@
         }
       }
     ],
-    "curvedPaths": 4
+    "curvedPaths": 3
   },
   {
     "asset": "E.2.25_Anhänger 0,6 t Leergewicht_von PKW gezogen.svg",
@@ -15762,6 +16670,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 4,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -15790,7 +16708,7 @@
         }
       }
     ],
-    "curvedPaths": 7
+    "curvedPaths": 6
   },
   {
     "asset": "E.2.26_Trinkwasseraufbereitungsanlage.svg",
@@ -15923,6 +16841,16 @@
     ],
     "shapes": [
       {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.01,
+          "minYMm": 8,
+          "maxXMm": 30.989,
+          "maxYMm": 22.99
+        },
+        "fill": "#ffffff"
+      },
+      {
         "kind": "outline",
         "boundsMm": {
           "minXMm": 22.538,
@@ -15950,7 +16878,7 @@
         }
       }
     ],
-    "curvedPaths": 3
+    "curvedPaths": 2
   },
   {
     "asset": "E.2.28_Kleines Boot.svg",
@@ -15969,6 +16897,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.01,
+          "minYMm": 8,
+          "maxXMm": 30.989,
+          "maxYMm": 22.99
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -16006,7 +16944,7 @@
         }
       }
     ],
-    "curvedPaths": 8
+    "curvedPaths": 7
   },
   {
     "asset": "E.2.29_Mehrzweckboot.svg",
@@ -16025,6 +16963,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.01,
+          "minYMm": 8,
+          "maxXMm": 30.989,
+          "maxYMm": 22.99
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -16071,7 +17019,7 @@
         }
       }
     ],
-    "curvedPaths": 4
+    "curvedPaths": 3
   },
   {
     "asset": "E.2.2_Mannschaftstransportwagen_straßenfähig.svg",
@@ -16090,6 +17038,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -16145,7 +17103,7 @@
         }
       }
     ],
-    "curvedPaths": 3
+    "curvedPaths": 2
   },
   {
     "asset": "E.2.30_Mehrzweckarbeitsboot.svg",
@@ -16164,6 +17122,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.01,
+          "minYMm": 8,
+          "maxXMm": 30.989,
+          "maxYMm": 22.99
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -16219,7 +17187,7 @@
         }
       }
     ],
-    "curvedPaths": 4
+    "curvedPaths": 3
   },
   {
     "asset": "E.2.31_Mehrzweckponton.svg",
@@ -16238,6 +17206,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.01,
+          "minYMm": 8,
+          "maxXMm": 30.989,
+          "maxYMm": 22.99
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -16284,7 +17262,7 @@
         }
       }
     ],
-    "curvedPaths": 5
+    "curvedPaths": 4
   },
   {
     "asset": "E.2.3_Gerätekraftwagen_geländefähig.svg",
@@ -16303,6 +17281,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -16349,7 +17337,7 @@
         }
       }
     ],
-    "curvedPaths": 4
+    "curvedPaths": 3
   },
   {
     "asset": "E.2.4_All Terrain Vehicle_geländegängig.svg",
@@ -16368,6 +17356,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -16423,7 +17421,7 @@
         }
       }
     ],
-    "curvedPaths": 3
+    "curvedPaths": 2
   },
   {
     "asset": "E.2.5_Gabelstapler_straßenfähig.svg",
@@ -16442,6 +17440,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -16470,7 +17478,7 @@
         }
       }
     ],
-    "curvedPaths": 10
+    "curvedPaths": 9
   },
   {
     "asset": "E.2.6_Gabelstapler öffentliche Gefahrenabwehr_THW betrieben_geländegängig.svg",
@@ -16489,6 +17497,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -16517,7 +17535,7 @@
         }
       }
     ],
-    "curvedPaths": 10
+    "curvedPaths": 9
   },
   {
     "asset": "E.2.7_Teleskopstapler_geländegängig.svg",
@@ -16536,6 +17554,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -16573,7 +17601,7 @@
         }
       }
     ],
-    "curvedPaths": 11
+    "curvedPaths": 10
   },
   {
     "asset": "E.2.8_Bergungsräumgerät Radlader_geländegängig.svg",
@@ -16593,6 +17621,16 @@
     ],
     "shapes": [
       {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
+      {
         "kind": "outline",
         "boundsMm": {
           "minXMm": 19.987,
@@ -16620,7 +17658,7 @@
         }
       }
     ],
-    "curvedPaths": 11
+    "curvedPaths": 10
   },
   {
     "asset": "E.2.9_Bergungsräumgerät Bagger_Kettenantrieb.svg",
@@ -16640,6 +17678,16 @@
     ],
     "shapes": [
       {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
+      {
         "kind": "outline",
         "boundsMm": {
           "minXMm": 19.987,
@@ -16667,7 +17715,7 @@
         }
       }
     ],
-    "curvedPaths": 9
+    "curvedPaths": 8
   },
   {
     "asset": "F.1.10_Schnelleinsatzgruppe Rettungsdienst.svg",
@@ -17835,6 +18883,16 @@
     ],
     "shapes": [
       {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
+      {
         "kind": "outline",
         "boundsMm": {
           "minXMm": 3.3,
@@ -17853,7 +18911,7 @@
         }
       }
     ],
-    "curvedPaths": 7
+    "curvedPaths": 6
   },
   {
     "asset": "F.2.11_Betreuungskombi mit Material zum Einrichten einer Anlaufstelle.svg",
@@ -17871,6 +18929,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "bounds",
         "boundsMm": {
@@ -17899,7 +18967,7 @@
         }
       }
     ],
-    "curvedPaths": 8
+    "curvedPaths": 7
   },
   {
     "asset": "F.2.12_Gerätewagen Betreuung.svg",
@@ -17918,6 +18986,16 @@
     ],
     "shapes": [
       {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
+      {
         "kind": "outline",
         "boundsMm": {
           "minXMm": 4.751,
@@ -17936,7 +19014,7 @@
         }
       }
     ],
-    "curvedPaths": 4
+    "curvedPaths": 3
   },
   {
     "asset": "F.2.13_Betreuungs-LKW mit mobiler Einsatzküche.svg",
@@ -17955,6 +19033,16 @@
     ],
     "shapes": [
       {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
+      {
         "kind": "outline",
         "boundsMm": {
           "minXMm": 4.751,
@@ -17973,7 +19061,7 @@
         }
       }
     ],
-    "curvedPaths": 4
+    "curvedPaths": 3
   },
   {
     "asset": "F.2.14_Gerätewagen Logistik der Betreuung.svg",
@@ -17991,6 +19079,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -18010,7 +19108,7 @@
         }
       }
     ],
-    "curvedPaths": 5
+    "curvedPaths": 4
   },
   {
     "asset": "F.2.15_Geräteanhänger Betreuung.svg",
@@ -18026,8 +19124,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 4,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "F.2.16_Fahrzeug der Betreuung_Transport 40 Betroffene.svg",
@@ -18046,6 +19155,16 @@
     ],
     "shapes": [
       {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
+      {
         "kind": "outline",
         "boundsMm": {
           "minXMm": 2.589,
@@ -18055,7 +19174,7 @@
         }
       }
     ],
-    "curvedPaths": 3
+    "curvedPaths": 2
   },
   {
     "asset": "F.2.17_Betreuungs-LKW_Trinkwasserversorgung.svg",
@@ -18073,6 +19192,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -18101,7 +19230,7 @@
         }
       }
     ],
-    "curvedPaths": 4
+    "curvedPaths": 3
   },
   {
     "asset": "F.2.1_KTW.svg",
@@ -18119,6 +19248,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -18147,7 +19286,7 @@
         }
       }
     ],
-    "curvedPaths": 2
+    "curvedPaths": 1
   },
   {
     "asset": "F.2.1_KTW_Alternative.svg",
@@ -18163,8 +19302,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "F.2.2_NKTW.svg",
@@ -18182,6 +19332,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "bounds",
         "boundsMm": {
@@ -18237,7 +19397,7 @@
         }
       }
     ],
-    "curvedPaths": 3
+    "curvedPaths": 2
   },
   {
     "asset": "F.2.2_NKTW_Alternative.svg",
@@ -18254,8 +19414,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 3
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 2
   },
   {
     "asset": "F.2.3_RTW.svg",
@@ -18273,6 +19444,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -18292,7 +19473,7 @@
         }
       }
     ],
-    "curvedPaths": 3
+    "curvedPaths": 2
   },
   {
     "asset": "F.2.3_RTW_Alternative.svg",
@@ -18308,8 +19489,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "F.2.4_NEF.svg",
@@ -18327,6 +19519,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -18355,7 +19557,7 @@
         }
       }
     ],
-    "curvedPaths": 2
+    "curvedPaths": 1
   },
   {
     "asset": "F.2.4_NEF_Alternative.svg",
@@ -18371,8 +19573,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "F.2.5_NAW.svg",
@@ -18390,6 +19603,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -18418,7 +19641,7 @@
         }
       }
     ],
-    "curvedPaths": 2
+    "curvedPaths": 1
   },
   {
     "asset": "F.2.5_NAW_Alternative.svg",
@@ -18434,8 +19657,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "F.2.6_Rettungstransporthubschrauber mit Winschmöglichkeit.svg",
@@ -18451,8 +19685,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.01,
+          "minYMm": 6,
+          "maxXMm": 30.99,
+          "maxYMm": 20.99
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "F.2.7_Intensivtransporthubschrauber.svg",
@@ -18470,6 +19715,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.01,
+          "minYMm": 6,
+          "maxXMm": 30.99,
+          "maxYMm": 20.99
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -18498,7 +19753,7 @@
         }
       }
     ],
-    "curvedPaths": 2
+    "curvedPaths": 1
   },
   {
     "asset": "F.2.8_Gerätewagen Sanitätsdienst.svg",
@@ -18516,6 +19771,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -18535,7 +19800,7 @@
         }
       }
     ],
-    "curvedPaths": 8
+    "curvedPaths": 7
   },
   {
     "asset": "F.2.9_Unfallhilfsstelle.svg",
@@ -18551,8 +19816,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 4,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "F.3.10_Ladezone.svg",
@@ -19331,8 +20607,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "G.2.2_Anhänger Technik Sicherheit.svg",
@@ -19348,8 +20635,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 4,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "G.2.3_Geräteanhänger Feldkochherd.svg",
@@ -19365,8 +20663,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 4,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "G.2_Versorgung mit Trinkwasser.svg",
@@ -20592,6 +21901,16 @@
     ],
     "shapes": [
       {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
+      {
         "kind": "outline",
         "boundsMm": {
           "minXMm": 5.315,
@@ -20601,7 +21920,7 @@
         }
       }
     ],
-    "curvedPaths": 3
+    "curvedPaths": 2
   },
   {
     "asset": "I.2.2_Gerätewagen Tauchen.svg",
@@ -20619,6 +21938,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -20638,7 +21967,7 @@
         }
       }
     ],
-    "curvedPaths": 9
+    "curvedPaths": 8
   },
   {
     "asset": "I.2.3_Gerätewagen Strömungsrettung.svg",
@@ -20657,6 +21986,16 @@
     ],
     "shapes": [
       {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
+      {
         "kind": "outline",
         "boundsMm": {
           "minXMm": 5.315,
@@ -20666,7 +22005,7 @@
         }
       }
     ],
-    "curvedPaths": 5
+    "curvedPaths": 4
   },
   {
     "asset": "I.2.4_Anhänger Wasserrettung.svg",
@@ -20682,8 +22021,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 4,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "I.2.5_Anhänger Tauchen.svg",
@@ -20702,6 +22052,16 @@
     ],
     "shapes": [
       {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 4,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      },
+      {
         "kind": "outline",
         "boundsMm": {
           "minXMm": 5.088,
@@ -20711,7 +22071,7 @@
         }
       }
     ],
-    "curvedPaths": 8
+    "curvedPaths": 7
   },
   {
     "asset": "I.2.6_Anhänger Strömungsrettung.svg",
@@ -20728,8 +22088,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 18
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 4,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 17
   },
   {
     "asset": "I.2.7_Bootsanhänger.svg",
@@ -20745,8 +22116,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 4,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "I.3.10_Raft.svg",
@@ -20763,8 +22145,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 6
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.01,
+          "minYMm": 9,
+          "maxXMm": 30.989,
+          "maxYMm": 23.99
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 5
   },
   {
     "asset": "I.3.11_Feuerlöschboot.svg",
@@ -20780,8 +22173,19 @@
     "fills": [
       "#fa1919"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.01,
+          "minYMm": 9,
+          "maxXMm": 30.989,
+          "maxYMm": 23.99
+        },
+        "fill": "#fa1919"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "I.3.1_Boot allgemein.svg",
@@ -20797,8 +22201,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.01,
+          "minYMm": 9,
+          "maxXMm": 30.989,
+          "maxYMm": 23.99
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "I.3.2_Schlauchboot.svg",
@@ -20815,8 +22230,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 10
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.01,
+          "minYMm": 9,
+          "maxXMm": 30.989,
+          "maxYMm": 23.99
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 9
   },
   {
     "asset": "I.3.3_Festrumpfschlauchboot.svg",
@@ -20835,6 +22261,16 @@
     ],
     "shapes": [
       {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.01,
+          "minYMm": 9,
+          "maxXMm": 30.989,
+          "maxYMm": 23.99
+        },
+        "fill": "#ffffff"
+      },
+      {
         "kind": "outline",
         "boundsMm": {
           "minXMm": 15.058,
@@ -20844,7 +22280,7 @@
         }
       }
     ],
-    "curvedPaths": 4
+    "curvedPaths": 3
   },
   {
     "asset": "I.3.4_Hochwasserboot.svg",
@@ -20862,6 +22298,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.01,
+          "minYMm": 9,
+          "maxXMm": 30.989,
+          "maxYMm": 23.99
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -20881,7 +22327,7 @@
         }
       }
     ],
-    "curvedPaths": 2
+    "curvedPaths": 1
   },
   {
     "asset": "I.3.5_Mehrzweckboot.svg",
@@ -20899,6 +22345,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.01,
+          "minYMm": 9,
+          "maxXMm": 30.989,
+          "maxYMm": 23.99
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -20918,7 +22374,7 @@
         }
       }
     ],
-    "curvedPaths": 3
+    "curvedPaths": 2
   },
   {
     "asset": "I.3.6_Mehrzweckarbeitsboot.svg",
@@ -20936,6 +22392,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.01,
+          "minYMm": 9,
+          "maxXMm": 30.989,
+          "maxYMm": 23.99
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -20964,7 +22430,7 @@
         }
       }
     ],
-    "curvedPaths": 3
+    "curvedPaths": 2
   },
   {
     "asset": "I.3.7_Mehrzweckponton.svg",
@@ -20982,6 +22448,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.01,
+          "minYMm": 9,
+          "maxXMm": 30.989,
+          "maxYMm": 23.99
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -21001,7 +22477,7 @@
         }
       }
     ],
-    "curvedPaths": 4
+    "curvedPaths": 3
   },
   {
     "asset": "I.3.8_Rettungsboot_Typ 1.svg",
@@ -21019,6 +22495,16 @@
       "#ffffff"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.01,
+          "minYMm": 9,
+          "maxXMm": 30.989,
+          "maxYMm": 23.99
+        },
+        "fill": "#ffffff"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -21038,7 +22524,7 @@
         }
       }
     ],
-    "curvedPaths": 4
+    "curvedPaths": 3
   },
   {
     "asset": "I.3.9_Rettungsboot_Typ 2.svg",
@@ -21057,6 +22543,16 @@
     ],
     "shapes": [
       {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.01,
+          "minYMm": 9,
+          "maxXMm": 30.989,
+          "maxYMm": 23.99
+        },
+        "fill": "#ffffff"
+      },
+      {
         "kind": "outline",
         "boundsMm": {
           "minXMm": 11.587,
@@ -21066,7 +22562,7 @@
         }
       }
     ],
-    "curvedPaths": 5
+    "curvedPaths": 4
   },
   {
     "asset": "I.4.1_Wasserrettungsstation_ortsgebunden.svg",
@@ -23097,8 +24593,19 @@
     "fills": [
       "#ffffff"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 0.999,
+          "minYMm": 4,
+          "maxXMm": 31,
+          "maxYMm": 28
+        },
+        "fill": "#ffffff"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "J.4.6_Firewall.svg",
@@ -24535,8 +26042,19 @@
     "fills": [
       "#b4783c"
     ],
-    "shapes": [],
-    "curvedPaths": 2
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 6,
+          "maxXMm": 31,
+          "maxYMm": 25.75
+        },
+        "fill": "#b4783c"
+      }
+    ],
+    "curvedPaths": 1
   },
   {
     "asset": "N.1.2_Transportfahrzeug_kommunaler Bauhof_geländegängig.svg",
@@ -24555,6 +26073,16 @@
     ],
     "shapes": [
       {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#fa8c00"
+      },
+      {
         "kind": "outline",
         "boundsMm": {
           "minXMm": 2.868,
@@ -24564,7 +26092,7 @@
         }
       }
     ],
-    "curvedPaths": 11
+    "curvedPaths": 10
   },
   {
     "asset": "N.1.3_Einsatzfahrzeug_Bundespolizei.svg",
@@ -24581,8 +26109,19 @@
     "fills": [
       "#64dc32"
     ],
-    "shapes": [],
-    "curvedPaths": 7
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1,
+          "minYMm": 5.75,
+          "maxXMm": 31,
+          "maxYMm": 26
+        },
+        "fill": "#64dc32"
+      }
+    ],
+    "curvedPaths": 6
   },
   {
     "asset": "N.1.4_Drehflügler_Bundeswehr_CH-53_Außentraglast 7t.svg",
@@ -24600,6 +26139,16 @@
       "#b4783c"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.01,
+          "minYMm": 6,
+          "maxXMm": 30.99,
+          "maxYMm": 20.99
+        },
+        "fill": "#b4783c"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -24637,7 +26186,7 @@
         }
       }
     ],
-    "curvedPaths": 6
+    "curvedPaths": 5
   },
   {
     "asset": "N.1.5_Löschflugzeug_Beauftragter Dritter_5.000l.svg",
@@ -24654,8 +26203,19 @@
     "fills": [
       "#fa8c00"
     ],
-    "shapes": [],
-    "curvedPaths": 7
+    "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.01,
+          "minYMm": 6,
+          "maxXMm": 30.99,
+          "maxYMm": 20.99
+        },
+        "fill": "#fa8c00"
+      }
+    ],
+    "curvedPaths": 6
   },
   {
     "asset": "N.1.6_Erkundungsflugzeug_Feuerwehr_Cessna 172.svg",
@@ -24673,6 +26233,16 @@
       "#fa1919"
     ],
     "shapes": [
+      {
+        "kind": "bounds",
+        "boundsMm": {
+          "minXMm": 1.01,
+          "minYMm": 6,
+          "maxXMm": 30.99,
+          "maxYMm": 20.99
+        },
+        "fill": "#fa1919"
+      },
       {
         "kind": "outline",
         "boundsMm": {
@@ -24692,7 +26262,7 @@
         }
       }
     ],
-    "curvedPaths": 9
+    "curvedPaths": 8
   },
   {
     "asset": "N.2.1_Sammelraum_Spontanhelfer.svg",

@@ -784,3 +784,845 @@ export const ANHANG_E_C_FILL_FINDINGS: Readonly<Record<string, string>> = Object
     'Konvention des Gebäudekörpers sind oder ein Defekt dieser einen Datei, entscheidet bei n = 1 ' +
     'keine Messung — deshalb steht dies als Befund und nicht als Abweichung der Umsetzung.',
 });
+
+/**
+ * Anhang E, Teilslice E-d: die Landfahrzeuge E.2.1 bis E.2.21 des THW — der erste der drei
+ * Blöcke aus E.2 und der erste des Anhangs, der nicht auf `formation` steht.
+ *
+ * **Was gleich bleibt wie in E.1:** es sind Kompositionen und keine Piktogramme, sie tragen die
+ * Körperfarbe `blau` der Organisation `thw`, ihre Bedeutung liegt in den Beschriftungszonen, und
+ * die Kürzel sind am Referenzbild abgelesen und nicht aus der Datei gelesen — die Glyphen liegen
+ * auch hier in Kurven umgewandelt vor. Abgelesen wurde aus zwei eigenen Rasterungen
+ * (Kontaktbogen 620 px je Zeichen, Ausschnittsbogen 1500 px je Lauf) und gegen den Dateinamen
+ * gehalten.
+ *
+ * **Was neu ist, und zwar viererlei.**
+ *
+ * **Erstens der Körper und die Zone unter ihm.** 19 der 20 gebauten Zeichen stehen auf
+ * `vehicle-land`, E.2.15 auf dem eigenen `swap-loader-vehicle`. Die Landfahrzeughülle misst in
+ * **allen 20** Landfahrzeugen des Quellblocks E.2.1 bis E.2.21 zahlengleich
+ * 1,0001/5,7503/31,0003/26,0004 mm (selbst nachgezählt), der Wechselladerrumpf
+ * 2,5001/6,0000/31,0000/24,5004 mm — genau 1 der 661 Referenzdateien. Statt einer Kopfzone tragen sie eine
+ * **Fahrwerkszone** unterhalb der Körperunterkante; keines der 31 Zeichen aus E.2 führt
+ * überhaupt eine Kopfzone, und `strength` fehlt deshalb in allen 30 Rezepten dieses Slice als
+ * Sachaussage und nicht als Lücke.
+ *
+ * **Zweitens ist die Fahrzeugkategorie an der Strichebene gemessen und nicht aus dem Dateinamen
+ * gelesen.** Übrig bleibt nach Abzug des Rahmens genau die Fahrwerksmarke: zwei Ringe auf
+ * cx 3,7502/28,2499 (`kfz-kategorie-1`), drei auf 3,7502/16,0001/28,2499 ohne Verbindungsstrich
+ * (`kfz-kategorie-2`), dieselben drei mit zwei Balken in den Lücken 5,2433…14,5062 und
+ * 17,4932…26,7561 bei y 26,2502…28,0000 (`kfz-kategorie-3`) und ein Stadion
+ * 2,2500/26,2502/29,7501/30,2500 (`kettenfahrzeug`). Die Zuschnittsnotiz vom 11. August ist damit
+ * in ihrem Abschnitt 6 zu berichtigen: sie hält E.2.4, E.2.6, E.2.7, E.2.8, E.2.9, E.2.11 und
+ * E.2.15 für „mit keiner 5.1.1-Datei mengengleich" und trennt E.2.11 von E.2.4/E.2.7. Selbst
+ * vermessen tragen E.2.4, E.2.6, E.2.7, E.2.8 und E.2.11 **dieselbe** Strichebene, untereinander
+ * punktgleich und mit `5.1.1.3` mengengleich. E.2.9 trägt die Kette und ist mit `5.1.1.5`
+ * mengengleich — es ist das einzige Kettenfahrzeug des Anhangs. Damit bleibt allein E.2.15
+ * übrig, und auch dort ist die Restmenge das Radpaar der Kategorie 1; der Rest ist sein eigener
+ * Körper.
+ *
+ * **Drittens setzt E.2 seine mittigen Kürzel nicht durchgehend im Normgrad.** Neun der 19
+ * mittigen Läufe dieses Blocks sind kleiner gesetzt und tragen deshalb ein gemessenes
+ * `centerCapHeightMm`; die übrigen bleiben beim Normwert. Selbst gerastert als Gegenprobe: ohne
+ * die gemessenen Zahlen treten sechs Läufe aus der 28-mm-Box, mit 16/6/430/520/313/464
+ * Tintenpixeln bei 256 px — mit ihnen null. Eine **Auslöseregel gibt es nicht**, und das ist
+ * gemessen und nicht offen: von den neun bräuchten nur drei die Verkleinerung überhaupt.
+ *
+ * **Viertens ist E.2 nicht durchgehend versal.** `Stapler`, `Telelader`, `Radlader`, `Bagger` und
+ * `MastKW` schreiben aus oder beginnen klein, wo E.1 ausschließlich Versalkürzel führt. Eine
+ * Kürzelregel „nur Großbuchstaben" wäre an diesem Block falsch. Ebenfalls neu und nur hier: kein
+ * einziges Zeichen des Anhangs E.2 belegt die Zone unten links.
+ *
+ * **E.2.6 fehlt in diesem Block, und zwar begründet** — siehe `ANHANG_E_D_UNGEBAUT`. Damit trägt
+ * E-d 20 statt 21 Zeichen und Anhang E 67 statt 68.
+ */
+export const ANHANG_E_D_RECIPES = {
+  'E.2.1': {
+    title: 'Personenkraftwagen, straßenfähig',
+    referenceAsset: 'E.2.1_Personenkraftwagen_straßenfähig.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'thw',
+      vehicleCategory: 'kfz-kategorie-1',
+      labels: { center: 'PKW', bottomRight: 'THW' },
+    },
+  },
+  'E.2.2': {
+    title: 'Mannschaftstransportwagen, straßenfähig',
+    referenceAsset: 'E.2.2_Mannschaftstransportwagen_straßenfähig.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'thw',
+      vehicleCategory: 'kfz-kategorie-1',
+      labels: { center: 'MTW', bottomRight: 'THW' },
+    },
+  },
+  /**
+   * Drei Radringe auf cx 3,7502 / 16,0001 / 28,2499 mm und **kein** Verbindungsstrich — das
+   * trennt `kfz-kategorie-2` von `kfz-kategorie-3`, deren Ringe an denselben Stellen stehen. Der
+   * Dateiname („geländefähig") sagt dasselbe, entscheidet es aber nicht: E.2.12 und E.2.13 heißen
+   * „geländegängig" und tragen dieselbe Marke.
+   */
+  'E.2.3': {
+    title: 'Gerätekraftwagen, geländefähig',
+    referenceAsset: 'E.2.3_Gerätekraftwagen_geländefähig.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'thw',
+      vehicleCategory: 'kfz-kategorie-2',
+      labels: { center: 'GKW', bottomRight: 'THW' },
+    },
+  },
+  /**
+   * Das erste Zeichen des Anhangs mit Verbindungsstrichen zwischen den Radringen: die Strichebene
+   * führt sieben Teilpfade, darunter die beiden Balken 5,2433…14,5062 und 17,4932…26,7561 bei
+   * y 26,2502…28,0000 mm. Zeichengleich mit E.2.7, E.2.8 und E.2.11 (und mit E.2.6, das dieser
+   * Block nicht baut).
+   */
+  'E.2.4': {
+    title: 'All Terrain Vehicle, geländegängig',
+    referenceAsset: 'E.2.4_All Terrain Vehicle_geländegängig.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'thw',
+      vehicleCategory: 'kfz-kategorie-3',
+      labels: { center: 'ATV', bottomRight: 'THW' },
+    },
+  },
+  /**
+   * Das erste Zeichen des Anhangs mit einem **ausgeschriebenen Wort** statt eines
+   * Versalienkürzels. Sein Schriftgrad ist der Normwert, und das ist bei einem Lauf ohne
+   * flachfüßige **und** flachköpfige Versalie nicht direkt ablesbar: das `S` überschießt oben wie
+   * unten um 0,0850 bzw. 0,0843 mm. Belegt ist der Grad deshalb an zwei anderen Glyphen desselben
+   * Laufs — das `t` misst 4,4316 mm, zahlengleich mit dem `t` von `MzPt` (E.2.31), das neben
+   * einem flachen `M` von 4,8694 mm steht; und das `r` steht mit maxY 18,0001 mm auf der
+   * Normgrundlinie.
+   */
+  'E.2.5': {
+    title: 'Gabelstapler, straßenfähig',
+    referenceAsset: 'E.2.5_Gabelstapler_straßenfähig.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'thw',
+      vehicleCategory: 'kfz-kategorie-1',
+      labels: { center: 'Stapler', bottomRight: 'THW' },
+    },
+  },
+  /**
+   * Kappenhöhe 4,3829 mm, gemessen an der einzigen flachen Versalie des Laufs (`T`, Glyphenhülle
+   * 4,1035/13,6169/7,4828/17,9998 mm) — 0,9001 des Normwerts.
+   *
+   * **Das Kürzel widerspricht dem Dateinamen, und der Katalog folgt dem Bild.** Die Datei heißt
+   * „Teleskopstapler", gezeichnet ist `Telelader`. Aus zwei eigenen Rasterungen abgelesen und am
+   * Glyphenzensus bestätigt: die Typo-Ebene führt neun Glyphen im mittigen Lauf, „Teleskopstapler"
+   * hätte vierzehn. Welche der beiden Angaben fachlich trägt, entscheidet die Datei nicht; der
+   * Befund steht in `ANHANG_E_D_FINDINGS`.
+   */
+  'E.2.7': {
+    title: 'Teleskopstapler, geländegängig',
+    referenceAsset: 'E.2.7_Teleskopstapler_geländegängig.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'thw',
+      vehicleCategory: 'kfz-kategorie-3',
+      labels: { center: 'Telelader', bottomRight: 'THW', centerCapHeightMm: 4.3829 },
+    },
+  },
+  /**
+   * Kappenhöhe 4,3826 mm (`R`, n = 1) — 0,9000 des Normwerts. Acht Glyphen; die Kurzform „BRmG"
+   * des Dateinamens erscheint im Bild **nicht**, und zwar in keinem der drei Bergungsräumgeräte
+   * (E.2.8 `Radlader`, E.2.9 und E.2.10 je `Bagger`).
+   */
+  'E.2.8': {
+    title: 'Bergungsräumgerät Radlader, geländegängig',
+    referenceAsset: 'E.2.8_Bergungsräumgerät Radlader_geländegängig.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'thw',
+      vehicleCategory: 'kfz-kategorie-3',
+      labels: { center: 'Radlader', bottomRight: 'THW', centerCapHeightMm: 4.3826 },
+    },
+  },
+  /**
+   * Das einzige Kettenfahrzeug des Anhangs. Seine Strichebene führt drei Teilpfade, der dritte
+   * ist das Stadion 2,2500/26,2502/29,7501/30,2500 mm — die Katalogausgabe (`rect` 2/26,
+   * 28 × 4,5 mm, `rx` 2,25) trifft es auf 0,0002 mm.
+   *
+   * **Das Kürzel ist `Bagger` und nicht „BRmG R".** Die Spezifikation, die dieser Slice aus der
+   * Gegenprüfung von LFH-424 übernommen bekommen hat, gibt die Datei nicht wieder; das ist die
+   * dritte unabhängige Ablesung mit demselben Ergebnis. Der Glyphenzensus schließt: die Typo-Ebene
+   * führt sechs Glyphen im mittigen Lauf und drei im `THW`-Lauf, „BRmG R" hätte fünf getinte
+   * Glyphen im mittigen.
+   */
+  'E.2.9': {
+    title: 'Bergungsräumgerät Bagger, Kettenantrieb',
+    referenceAsset: 'E.2.9_Bergungsräumgerät Bagger_Kettenantrieb.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'thw',
+      vehicleCategory: 'kettenfahrzeug',
+      labels: { center: 'Bagger', bottomRight: 'THW' },
+    },
+  },
+  /**
+   * Derselbe Lauf `Bagger` wie E.2.9 in derselben Breite (19,4596 mm), aber 0,7691 mm weiter
+   * links: Tintenmitte 15,4744 gegen 16,2435 mm. Der Katalog setzt ihn mittig, weil
+   * `labelPrimitives` für die mittige Zone nur `anchor: 'middle'` auf die Körpermitte kennt —
+   * und weil die Quelle hier von sich selbst abweicht: die 20 übrigen mittigen Läufe des
+   * Quellblocks E.2.1 bis E.2.21 liegen zwischen 16,0099 und 16,3781 mm, E.2.10 ist der einzige
+   * Ausreißer. Befund, keine
+   * Abweichung der Umsetzung.
+   */
+  'E.2.10': {
+    title: 'Bergungsräumgerät Bagger, Radantrieb',
+    referenceAsset: 'E.2.10_Bergungsräumgerät Bagger_Radantrieb.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'thw',
+      vehicleCategory: 'kfz-kategorie-2',
+      labels: { center: 'Bagger', bottomRight: 'THW' },
+    },
+  },
+  /** Die Bindestriche des Dateinamens erscheinen im Bild nicht: drei Glyphen, `ERS`. */
+  'E.2.11': {
+    title: 'Einsatz-Rettungs-Spinne, geländefähig',
+    referenceAsset: 'E.2.11_Einsatz-Rettungs-Spinne_geländefähig.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'thw',
+      vehicleCategory: 'kfz-kategorie-3',
+      labels: { center: 'ERS', bottomRight: 'THW' },
+    },
+  },
+  /**
+   * Kappenhöhe 3,40995 mm — 0,7003 des Normwerts und die kleinste Stufe des Anhangs, einstimmig
+   * an `M`, `W` und `L` gemessen. Ohne diese Zahl treten 430 Tintenpixel aus der 28-mm-Box, selbst
+   * gerastert bei 256 px: der lauteste der sechs Ausfälle, die der Normgrad in diesem Block
+   * erzeugt.
+   */
+  'E.2.12': {
+    title: 'Mehrzweckgerätewagen Ladebordwand, geländegängig',
+    referenceAsset: 'E.2.12_Mehrzweckgerätewagen Ladebordwand_geländegängig.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'thw',
+      vehicleCategory: 'kfz-kategorie-2',
+      labels: { center: 'MzGW Lbw', bottomRight: 'THW', centerCapHeightMm: 3.40995 },
+    },
+  },
+  /**
+   * Kappenhöhe 3,40995 mm (0,7002), gemessen an fünf der sechs flachen Versalien; das `I` liegt
+   * mit 3,4096 mm eine Exportrundungsstufe darunter. Der breiteste mittige Lauf des Slice.
+   *
+   * **Zwei Befunde am Dateinamen:** er schreibt die Zahl arabisch („Mannschaftslastwagen 4"), das
+   * Bild römisch (`IV`, zwei getrennte Versalien 14,878…16,257 und 16,529…19,429 mm); und er trägt
+   * den Tippfehler „geländegänig".
+   */
+  'E.2.13': {
+    title: 'Mannschaftslastwagen 4 Ladebordwand, geländegängig',
+    referenceAsset: 'E.2.13_Mannschaftslastwagen 4 Ladebordwand_geländegänig.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'thw',
+      vehicleCategory: 'kfz-kategorie-2',
+      labels: { center: 'MLW IV Lbw', bottomRight: 'THW', centerCapHeightMm: 3.40995 },
+    },
+  },
+  /**
+   * Der sauberste Beleg dafür, dass die E.2-Landfahrzeuge auf den heutigen Konstanten stehen:
+   * vier flache Versalien, alle vier 4,8694 mm hoch, Grundlinien 18,0001 und 23,9998 mm bei
+   * Körperunterkante 26,0004 mm. Wie E.2.13 schreibt der Dateiname die Zahl arabisch und das Bild
+   * römisch (`V`, auf Versalhöhe wie `M`, `L` und `W`).
+   */
+  'E.2.14': {
+    title: 'Mannschaftslastwagen 5, straßenfähig',
+    referenceAsset: 'E.2.14_Mannschaftslastwagen 5_straßenfähig.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'thw',
+      vehicleCategory: 'kfz-kategorie-1',
+      labels: { center: 'MLW V', bottomRight: 'THW' },
+    },
+  },
+  /**
+   * Das schwierigste Zeichen dieses Blocks — vier Dinge stehen hier gleichzeitig anders als bei
+   * den 19 übrigen, und alle vier sind gemessen:
+   *
+   * 1. **eigene Körperform** `swap-loader-vehicle` (Füllhülle 2,5001/6,0000/31,0000/24,5004 mm,
+   *    genau 1 der 661 Referenzdateien und **nicht** deckungsgleich mit `5.1.1.8`, dessen
+   *    Füllkörper 3,9998/6,0000/31,0000/24,9999 misst);
+   * 2. **L-Rahmen als Zusatzprimitiv** am Grundzeichen (Innenkontur 1,2499/6,2502/30,7499/25,7503,
+   *    Knick auf x 2,2500 und y 24,7505 mm) — er ist der Grund, warum diese Zeile **keine**
+   *    `deviation` trägt;
+   * 3. **Fahrwerk an der Unterkante des Grundzeichens** (26,0) und nicht an der des Körpers
+   *    (24,5004): Radmitte 28,2504 mm wie in allen 25 Fahrwerkszeichen. Ohne diese Bindung säßen
+   *    die Räder auf 26,75 mm, 1,5 mm daneben;
+   * 4. **mittige Grundlinie 7,5 mm** über der Körperunterkante statt 8,0 — gemessen 17,0000 mm bei
+   *    24,5004 mm, als Wert im Profil und nicht als eigener Mechanismus.
+   *
+   * Das Kürzel ist `LKW`, drei Glyphen; „WLF" oder „Wechsellader" kommen im Bild nicht vor. Die
+   * `THW`-Zeile steht dabei regelgerecht 2,0002 mm über der Körperunterkante — die Sonderlage der
+   * Beschriftung betrifft allein die mittige Zone.
+   */
+  'E.2.15': {
+    title: 'Wechselladerfahrzeug, straßenfähig',
+    referenceAsset: 'E.2.15_Wechselladerfahrzeug_straßenfähig.svg',
+    spec: {
+      kind: 'swap-loader-vehicle',
+      organization: 'thw',
+      vehicleCategory: 'kfz-kategorie-1',
+      labels: { center: 'LKW', bottomRight: 'THW' },
+    },
+  },
+  /**
+   * Kappenhöhe 4,38273 mm. Die vier flachen Versalien des Laufs teilen sich 2:2 auf zwei Werte,
+   * die genau **eine** Exportrundungsstufe auseinanderliegen (`L` zweimal 4,382911, `K` und `W` je
+   * 4,382558; Schrittweite 0,001 Einheiten = 0,000353 mm). Gegenprobe gegen eine Buchstabenneigung:
+   * an den Normläufen E.2.15 und E.2.18 messen `L`, `K` und `W` alle drei exakt 4,869392 mm — es
+   * gibt keine, und der Eintrag steht deshalb auf der Mitte der beiden gemessenen Werte.
+   *
+   * Ohne die Zahl bleibt der Lauf in der Box und ist trotzdem 11 % zu groß — der stille Teil des
+   * Befunds, den kein Gate meldet.
+   */
+  'E.2.16': {
+    title: 'Lastkraftwagen Ladekran, straßenfähig',
+    referenceAsset: 'E.2.16_Lastkraftwagen Ladekran_straßenfähig.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'thw',
+      vehicleCategory: 'kfz-kategorie-1',
+      labels: { center: 'LKW Lkr', bottomRight: 'THW', centerCapHeightMm: 4.38273 },
+    },
+  },
+  /**
+   * Kappenhöhe 4,38273 mm, dieselbe 2:2-Bindung wie bei E.2.16 und aus demselben Grund aufgelöst.
+   *
+   * Dieser Lauf **widerlegt die Breitenschwelle**: bei voller Größe bräuchte er in der Referenz
+   * 27,16 mm und passte damit in die 28-mm-Box — verkleinert ist er trotzdem. Von den neun
+   * verkleinerten Läufen des Anhangs bräuchten nur drei die Verkleinerung.
+   */
+  'E.2.17': {
+    title: 'Lastkraftwagen Ladebordwand, straßenfähig',
+    referenceAsset: 'E.2.17_Lastkraftwagen Ladebordwand_straßenfähig.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'thw',
+      vehicleCategory: 'kfz-kategorie-1',
+      labels: { center: 'LKW Lbw', bottomRight: 'THW', centerCapHeightMm: 4.38273 },
+    },
+  },
+  /**
+   * Der Bindestrich ist Teil des mittigen Laufs und **keine eigene Zone**: eigener Glyphenpfad
+   * 19,944…21,878 mm bei y 15,551…16,130 mm, also mitten im Lauf. Wer die Grundlinie als kleinstes
+   * maxY der Glyphen liest, trennt ihn fälschlich ab und misst 16,1297 statt 18,0001 mm. Wie in
+   * E-b setzt der Katalog U+002D.
+   */
+  'E.2.18': {
+    title: 'Lastkraftwagen Kipper, geländefähig',
+    referenceAsset: 'E.2.18_Lastkraftwagen Kipper_geländefähig.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'thw',
+      vehicleCategory: 'kfz-kategorie-2',
+      labels: { center: 'LKW-K', bottomRight: 'THW' },
+    },
+  },
+  /**
+   * Kappenhöhe 4,3829 mm, gemessen an `K` und `W`; das `F` liegt mit 4,3833 mm eine
+   * Exportrundungsstufe darüber, die Mehrheit entscheidet.
+   *
+   * **Das abschließende `W` ist eine Versalie** (4,3829 mm wie `K`, Oberkante 13,6172 mm wie `F`
+   * und `K`) — die geläufige Schreibung „FüKw" gibt das Bild nicht her; bei 1500 px nachgesehen.
+   * Das `ü` ist **ein** Glyph mit zwei Punkten und nicht zwei.
+   */
+  'E.2.19': {
+    title: 'Führungskraftwagen, geländefähig',
+    referenceAsset: 'E.2.19_Führungskraftwagen_geländefähig.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'thw',
+      vehicleCategory: 'kfz-kategorie-2',
+      labels: { center: 'FüKW', bottomRight: 'THW', centerCapHeightMm: 4.3829 },
+    },
+  },
+  /**
+   * Kappenhöhe 3,65125 mm — 0,7498 des Normwerts, einstimmig an allen vier flachen Versalien
+   * (`F`, `K`, `K`, `W`). Sieben Glyphen; `o` und `m` stehen auf x-Höhe, das abschließende `W` ist
+   * wie bei E.2.19 versal.
+   */
+  'E.2.20': {
+    title: 'Führungs- Kommunikationskraftwagen, straßenfähig',
+    referenceAsset: 'E.2.20_Führungs- Kommunikationskraftwagen_straßenfähig.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'thw',
+      vehicleCategory: 'kfz-kategorie-1',
+      labels: { center: 'FüKomKW', bottomRight: 'THW', centerCapHeightMm: 3.65125 },
+    },
+  },
+  /**
+   * Kappenhöhe 4,3826 mm, einstimmig an `M`, `K` und `W`. Der Mast ist nicht gezeichnet — die
+   * Strichebene führt außer Rahmen und Fahrwerk nichts, und die Bedeutung liegt allein im Kürzel.
+   */
+  'E.2.21': {
+    title: 'Mastkraftwagen, geländefähig',
+    referenceAsset: 'E.2.21_Mastkraftwagen_geländefähig.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'thw',
+      vehicleCategory: 'kfz-kategorie-2',
+      labels: { center: 'MastKW', bottomRight: 'THW', centerCapHeightMm: 4.3826 },
+    },
+  },
+} as const satisfies Record<string, Recipe>;
+
+/**
+ * **Das eine Zeichen des Anhangs E, das dieser Slice nicht baut, und der Grund dafür.**
+ *
+ * Es steht als eigener Export und nicht als Kommentarzeile, damit ein Test es lesen kann: eine
+ * fehlende Manifestzeile ist sonst genau die Art Lücke, die niemand bemerkt. Sobald die Zustimmung
+ * zur Gate-Änderung vorliegt, wird aus diesem Eintrag ein Rezept, aus `E.1` plus 30 Einzelzeilen
+ * ein `E` im Manifest-`scope`, und dieser Export verschwindet.
+ */
+export const ANHANG_E_D_UNGEBAUT: Readonly<Record<string, string>> = Object.freeze({
+  'E.2.6':
+    'Gabelstapler öffentliche Gefahrenabwehr, THW betrieben, geländegängig — nicht gebaut, weil ' +
+    'die Umsetzung eine Änderung an einem Gate-Vertrag erzwingen würde, für die keine ' +
+    'ausdrückliche Zustimmung vorliegt. Gemessen ist alles Übrige. Die **Beschriftung** ist die ' +
+    'von E.2.5 („Stapler" mittig, „THW" unten rechts) und weicht von ihr um höchstens 0,0007 mm ' +
+    'ab (THW-Lauf 19,9877 gegen 19,9870 an der linken Tintenkante, mittiger Lauf 5,9736 gegen ' +
+    '5,9739). Das **Fahrwerk** ist es ausdrücklich nicht: E.2.5 führt vier Teilpfade in der ' +
+    'Strichebene und damit zwei Räder (kfz-kategorie-1), E.2.6 sieben und damit drei Räder mit ' +
+    'zwei Verbindungsbalken (kfz-kategorie-3, zeichengleich mit E.2.4, E.2.7, E.2.8 und E.2.11). ' +
+    'Der Baubeschluss dieses Slice sagt „Fahrwerk und Beschriftung sind zeichengleich mit E.2.5" ' +
+    '— die zweite Hälfte hält, die erste ist an der Datei widerlegt. Der zweite Füllpfad trägt ' +
+    '#fa8c00 = ' +
+    'organizationColor("sonstige-gefahrenabwehr") auf der Hülle 2,0002/7,1138/30,0002/25,0007 mm ' +
+    '— punktgleich mit dem blauen Farbfeld der zehn übrigen Landfahrzeuge des Blocks. Damit ist ' +
+    'es das einzige Zeichen des Anhangs mit orangem Körper und zugleich weissem Trägerkürzel. ' +
+    'Sobald ein Rezept organization: "sonstige-gefahrenabwehr" mit Beschriftung führt, leitet ' +
+    'labelContrastRequirements() daraus die Anforderung „weiss auf orange" mit der Textschwelle ' +
+    '4,5:1 ab, und die fällt in jedem Theme: selbst nachgerechnet 2,382:1 im Referenz- und im ' +
+    'accessible-light-Theme, 2,323:1 im Drucktheme (die Zahlen stehen als Test in ' +
+    'a11y-contrast-gate.test.ts). Für accessible-light wäre das lösbar, für print-monochrome ' +
+    'nicht: weiss ab 4,5:1 verlangt eine Relativluminanz von höchstens 0,1833, die ' +
+    'Piktogrammpaare „schwarz auf orange" verlangen mindestens 0,1000, und der eigene ' +
+    'Helligkeitsabstand von mehr als 0,045 je Organisation verlangt Abstand zu rot und blau — das ' +
+    'Fenster ist leer. Der Ausweg wäre ein zweiter erklärter Negativbefund im Drucktheme nach dem ' +
+    'Muster von „hält Schwarz auf BABZ-Blau im Referenztheme als bekannten Negativbefund fest"; ' +
+    'das ändert einen Gate-Vertrag und ist deshalb keine Messfrage, sondern eine Entscheidung.',
+});
+
+/**
+ * Die neun Referenzdateien aus E-d, deren Bild von ihrem Dateinamen oder deren Geometrie von der
+ * Norm der 18 zahlengleichen Landfahrzeuge abweicht. Wie `ANHANG_E_A_FILL_DEFECTS`,
+ * `ANHANG_E_B_FILL_FINDINGS` und `ANHANG_E_C_FILL_FINDINGS` stehen sie hier als Datum, damit die
+ * Manifestzeile ihren Reviewvermerk daraus ableitet statt den Befund ein zweites Mal zu behaupten.
+ *
+ * **`FINDINGS` und nicht `FILL_FINDINGS`:** in E.1 betraf jeder Befund die Füllfläche oder eine
+ * Grundlinie. Hier sind es drei Klassen, und zwei davon sind in E.1 nicht vorgekommen — ein
+ * Kürzel, das dem Dateinamen widerspricht (E.2.7, E.2.8, E.2.9, E.2.13, E.2.14, E.2.15), und ein
+ * mittiger Lauf, der nicht auf der Körpermitte steht (E.2.10). Die dritte ist die bekannte:
+ * zurückgesetztes Farbfeld und verschobene Grundlinie (E.2.19, E.2.20).
+ *
+ * Bei allen neun weicht die **Quelle von sich selbst** ab, nicht die Umsetzung von der Quelle. Der
+ * Katalog folgt der Mehrheit der Quelle und exportiert den Befund; keine der neun Zeilen trägt
+ * deshalb `status: 'deviation'`. E-d hat überhaupt keine deklarierte Abweichung — die einzige des
+ * ganzen Teilslice E.2 steht bei E.2.26.
+ */
+export const ANHANG_E_D_FINDINGS: Readonly<Record<string, string>> = Object.freeze({
+  'E.2.7':
+    'Der Dateiname führt „Teleskopstapler", das Bild „Telelader". Aus zwei eigenen Rasterungen ' +
+    'abgelesen (620 px Kontaktbogen, 1500 px Ausschnitt) und am Glyphenzensus bestätigt: der ' +
+    'mittige Lauf führt neun Glyphen, „Teleskopstapler" hätte vierzehn. Der Katalog folgt dem ' +
+    'Bild. Welche der beiden Angaben fachlich trägt, entscheidet die Datei nicht.',
+  'E.2.8':
+    'Der Dateiname führt „Bergungsräumgerät Radlader", das Bild nur „Radlader" (acht Glyphen). ' +
+    'Die Kurzform „BRmG" erscheint in keinem der drei Bergungsräumgeräte E.2.8, E.2.9 und ' +
+    'E.2.10. Der Katalog folgt dem Bild.',
+  'E.2.9':
+    'Der Dateiname führt „Bergungsräumgerät Bagger", das Bild „Bagger" (sechs Glyphen im ' +
+    'mittigen Lauf, drei im THW-Lauf). Damit ist zugleich die Spezifikation widerlegt, die dieser ' +
+    'Slice aus der Gegenprüfung von LFH-424 übernommen bekommen hat und die „BRmG R" nennt — sie ' +
+    'hätte fünf getinte Glyphen im mittigen Lauf. Zweimal unabhängig gerastert und abgelesen; die ' +
+    'Fahrwerksangabe derselben Spezifikation (Kette, zahlengleich mit 5.1.1.5) stimmt dagegen.',
+  'E.2.10':
+    'Der mittige Lauf „Bagger" ist mit dem von E.2.9 zeichengleich und in derselben Breite ' +
+    'gesetzt (19,4596 mm), steht aber 0,7691 mm weiter links: Tintenmitte 15,4744 gegen ' +
+    '16,2435 mm. Die 20 übrigen mittigen Läufe des Quellblocks E.2.1 bis E.2.21 liegen zwischen ' +
+    '16,0099 und 16,3781 mm — die Quelle weicht hier von sich selbst ab, und der Katalog folgt ' +
+    'der Mehrheit und setzt den Lauf mittig. Der Dateiname trägt zusätzlich „Bergungsräumgerät", ' +
+    'was im Bild nicht vorkommt.',
+  'E.2.13':
+    'Zwei Befunde am Dateinamen: er schreibt die Zahl arabisch („Mannschaftslastwagen 4"), das ' +
+    'Bild römisch („IV", zwei getrennte Versalien 14,878…16,257 und 16,529…19,429 mm bei je ' +
+    '3,4096 bzw. 3,4100 mm Höhe); und er trägt den Tippfehler „geländegänig". Der Katalog folgt ' +
+    'beim Kürzel dem Bild und beim Titel der berichtigten Schreibung.',
+  'E.2.14':
+    'Der Dateiname schreibt die Zahl arabisch („Mannschaftslastwagen 5"), das Bild römisch („V", ' +
+    'Versalhöhe 4,8694 mm wie M, L und W). Zusammen mit E.2.13 der einzige Fall dieser Art im ' +
+    'Anhang; die einzigen echten Ziffern in ganz Anhang E stehen in E.2.25.',
+  'E.2.15':
+    'Der Dateiname führt „Wechselladerfahrzeug", das Bild „LKW" — die Wechseleigenschaft steckt ' +
+    'ausschließlich in der Geometrie (eigene Körperform und L-Rahmen), nicht im Kürzel. Zweiter ' +
+    'Befund: die mittige Grundlinie liegt 7,5004 mm über der Behälterunterkante (17,0000 bei ' +
+    '24,5004 mm) statt der 8,0 mm, die 19 der 20 Landfahrzeuge des Quellblocks führen. Anders ' +
+    'als bei E.2.20 ist das kein Ausreißer auf gleichem Körper, sondern eine eigene Körperform ' +
+    'mit n = 1 — der Katalog bildet die 7,5 mm deshalb als Wert des Körperprofils ab und weicht ' +
+    'hier nicht von der Referenz ab.',
+  'E.2.19':
+    'Die Organisationsfarbe liegt als Rechteck 2,0002/9,9998/30,0002/25,0003 mm im Körper statt ' +
+    'als um 1 mm eingerückte Körperform (Regelfall 2,0002/7,1138/30,0002/25,0007 mm); oberhalb ' +
+    'bleibt ein leeres weisses Band. Beide Grundlinien stehen normgerecht. Dieselbe Klasse wie ' +
+    'E.1.19 und E.1.24 aus E-b, dort aber gepaart mit einer Markenreihe im Körper, die hier ' +
+    'fehlt — die Paarung, die E-b noch vermutet hat, trägt damit nicht. Der Katalog färbt den ' +
+    'ganzen Körperpfad, wie in allen 67 Zeichen des Anhangs.',
+  'E.2.20':
+    'Zwei Befunde in einer Datei. Erstens dasselbe zurückgesetzte Farbfeld wie E.2.19 ' +
+    '(2,0002/9,9998/30,0002/25,0003 mm). Zweitens steht die mittige Grundlinie auf 17,5002 mm, ' +
+    'also 8,5002 mm über der Körperunterkante statt der 8,0 mm, die 19 der 20 Landfahrzeuge des ' +
+    'Quellblocks auf demselben Körper führen. Der Katalog baut 18,0 mm — dieselbe Einordnung wie bei ' +
+    'E.1.18/E.1.20/E.1.21 in E-b: weicht die Quelle von sich selbst ab, folgt die Umsetzung der ' +
+    'Mehrheit der Quelle. Die Kappenhöhe 3,65125 mm ist davon unberührt und gemessen abgebildet.',
+});
+
+/**
+ * Anhang E, Teilslice E-e: die Anhänger und Sonderkörper E.2.22 bis E.2.26 des THW — fünf Zeichen
+ * und **drei** Körperformen, der formenreichste Block des ganzen Anhangs.
+ *
+ * **Was gleich bleibt wie in E-d:** Körperfarbe `blau` der Organisation `thw`, Trägerkürzel `THW`
+ * unten rechts, keine Kopfzone, keine Zone unten links, Kürzel aus der eigenen Rasterung
+ * abgelesen.
+ *
+ * **Was neu ist.**
+ *
+ * **Erstens zwei Körperformen ohne Kapitel-1-Abschnitt.** Vier Zeichen stehen auf `trailer`
+ * (Füllhülle 3,9998/5,7503/31,0000/26,0004 mm; der Füllpfad kommt in 17 der 661 Referenzdateien
+ * byteidentisch vor, mit `5.1.2.1_Anhänger_allgemein.svg` als Quellabschnitt), E.2.26 auf
+ * `upright-rectangle` (Mittellinie 3,0000/2,0001/29,0003/30,0001 mm, genau 1 von 661). Die
+ * Zuschnittsnotiz vom 11. August hat für beide „kein Grundzeichen" vermerkt; für Kapitel 1 stimmt
+ * das, für die Ableitbarkeit nicht — der Anhängerrumpf ist die Deckkurve von `1.3` waagerecht
+ * 0,9-fach um x = 31 gestreckt.
+ *
+ * **Zweitens eine Zusatzgeometrie am Grundzeichen, die keine Beschriftung ist:** die **Deichsel**
+ * der vier Anhänger (Innenloch 1,2499/14,7500/3,7500/15,2502 mm, in allen vier E.2-Anhängern und
+ * in `5.1.2.1` bis `5.1.2.5` zahlengleich). Sie fährt als `role: 'bodyExtra'` mit und nimmt die
+ * Organisationsfarbe **nicht** an.
+ *
+ * **Drittens zwei neue Fahrwerke, benannt nach der Zeichnung und nicht nach dem Quellbegriff.**
+ * Drei der vier Anhänger tragen `anhaenger-ein-rad` (Innenring 15,5000/26,2505/19,5001/30,2503),
+ * einer `anhaenger-zwei-raeder` (12,2502/26,2505/16,2500/30,2503 und
+ * 17,7504/26,2505/21,7502/30,2503). Warum die Quellbegriffe nicht als IDs taugen, steht in
+ * `VehicleCategoryId` — und E.2.22 und E.2.23 sind zwei der drei Belege dafür.
+ *
+ * **Viertens ist E.2.22 das einzige Zeichen des ganzen Anhangs ohne mittige Beschriftung.** Seine
+ * Typo-Ebene führt genau eine Untergruppe mit drei Glyphen, und das ist der `THW`-Lauf. Ein
+ * Rezept mit mittigem Kürzel erfände es.
+ *
+ * **E.2.26 trägt die einzige deklarierte Abweichung des gesamten Teilslice E.2** (Note in
+ * `coverage-manifest.ts`): sein `THW`-Lauf steht 1,0 mm weiter links, als
+ * `LABEL_SIDE_MARGIN_MM = 2` ergibt. Bei n = 1 und zwei gleich guten Lesarten wird dafür kein
+ * Mechanismus gebaut — dieselbe Einordnung wie bei E.1.17.
+ */
+export const ANHANG_E_E_RECIPES = {
+  /**
+   * Das **einzige Zeichen des Anhangs E ohne mittige Beschriftung**: seine Typo-Ebene führt genau
+   * eine Untergruppe mit drei Glyphen, den `THW`-Lauf (Tinte 19,9873…29,0276 mm bei Grundlinie
+   * 23,9998 mm, wie in allen Landfahrzeugen).
+   *
+   * Und zugleich der erste von drei Belegen dafür, dass die Quellbegriffe der Anhängerfahrwerke
+   * nicht als IDs taugen: das **Grundzeichen** trägt die Ein-Rad-Form, die `5.1.2.4` als „von PKW
+   * gezogen" führt, während `5.1.2.1_Anhänger_allgemein.svg` selbst nachgemessen überhaupt kein
+   * Rad trägt.
+   */
+  'E.2.22': {
+    title: 'Anhänger Grundzeichen',
+    referenceAsset: 'E.2.22_Anhänger Grundzeichen.svg',
+    spec: {
+      kind: 'trailer',
+      organization: 'thw',
+      vehicleCategory: 'anhaenger-ein-rad',
+      labels: { bottomRight: 'THW' },
+    },
+  },
+  /**
+   * Der zweite Beleg gegen die Quellbegriffe: der Dateiname sagt „von LKW gezogen", gezeichnet ist
+   * die **Ein-Rad**-Form (cx 17,4999 mm) — dieselbe wie beim Grundzeichen E.2.22 und beim
+   * „von PKW gezogen" heißenden E.2.25. Der Katalog folgt der Zeichnung.
+   *
+   * Zweiter Befund, und er betrifft die Lagen: die Farbfläche endet unten bei 22,5002 statt
+   * 25,0 mm, und beide Läufe stehen entsprechend höher (Grundlinien 16,5001 und 21,5000 statt
+   * 18,0 und 24,0 mm). Der Katalog baut die Normlagen — dieselbe Einordnung wie bei E.1.6/E.1.14
+   * in E-a. Weil er den ganzen Körperpfad färbt, steht der `THW`-Lauf dabei auf Blau und nicht,
+   * wie in der Referenz, auf dem weissen Rest.
+   */
+  'E.2.23': {
+    title: 'Anhänger Netzersatzanlage, von LKW gezogen',
+    referenceAsset: 'E.2.23_Anhänger Netzersatzanlage_von LKW gezogen.svg',
+    spec: {
+      kind: 'trailer',
+      organization: 'thw',
+      vehicleCategory: 'anhaenger-ein-rad',
+      labels: { center: 'NEA', bottomRight: 'THW' },
+    },
+  },
+  /**
+   * Der einzige der vier Anhänger, bei dem Zeichnung und Dateiname zusammenpassen: zwei Räder auf
+   * cx 14,2501 und 19,7503 mm, zahlengleich mit `5.1.2.5` („von LKW gezogen").
+   *
+   * Das abschließende `a` ist ein **Gemeinbuchstabe** — seine Tinte beginnt bei y 13,2080 mm,
+   * unterhalb der Versallinie 13,1304 mm der drei anderen Glyphen; bei 1500 px nachgesehen. Also
+   * `FüLa` und nicht „FüLA".
+   */
+  'E.2.24': {
+    title: 'Anhänger Führung und Lage, von LKW gezogen',
+    referenceAsset: 'E.2.24_Anhänger Führung und Lage_von LKW gezogen.svg',
+    spec: {
+      kind: 'trailer',
+      organization: 'thw',
+      vehicleCategory: 'anhaenger-zwei-raeder',
+      labels: { center: 'FüLa', bottomRight: 'THW' },
+    },
+  },
+  /**
+   * Das **einzige Zeichen in ganz Anhang E mit Ziffern**. Vier Glyphen: Null, ein **Komma** (Tinte
+   * 14,4286…15,4940 mm bei y 17,1178…19,0091 mm, also mit Unterlänge unter die Grundlinie — kein
+   * Punkt), Sechs und ein kleines `t` nach einem Leerzeichen.
+   *
+   * Der Grad ist der Normwert, und wie bei E.2.5 ist er nicht direkt ablesbar: der Lauf führt
+   * **keine** flachfüßige Glyphe, weshalb sein kleinstes Glyphen-maxY mit 18,0777 mm um den
+   * Bogenüberschuss zu tief liegt. Belegt ist der Grad am `t`, das mit 4,4316 mm zahlengleich mit
+   * dem `t` von „Stapler" (E.2.5) und „MzPt" (E.2.31) ist — beide stehen im Normgrad.
+   */
+  'E.2.25': {
+    title: 'Anhänger 0,6 t Leergewicht, von PKW gezogen',
+    referenceAsset: 'E.2.25_Anhänger 0,6 t Leergewicht_von PKW gezogen.svg',
+    spec: {
+      kind: 'trailer',
+      organization: 'thw',
+      vehicleCategory: 'anhaenger-ein-rad',
+      labels: { center: '0,6 t', bottomRight: 'THW' },
+    },
+  },
+  /**
+   * Das einzige hochkante Zeichen des Anhangs und das einzige ohne jede Zone unterhalb des
+   * Körpers: **kein Fahrwerk, keine Deichsel**, und `vehicleCategory` fehlt deshalb als
+   * Sachaussage. Die Strichebene führt genau ein Ringpaar (außen 2,7499/1,7501/29,2502/30,2500,
+   * innen 3,2501/2,2500/28,7503/29,7501 mm) und ist damit restlos erklärt.
+   *
+   * Die mittige Grundlinie steht auf 17,0000 mm, also **12,9999 mm** über der Körperunterkante
+   * 29,9999 — der größte Abstand aller fünf Körperformen aus E.2 und wie bei E.2.15 ein Wert im
+   * Profilmechanismus, kein eigener Mechanismus. Mit `container` (4/4 bis 28/28 mm) ist die Form
+   * ausdrücklich nicht deckungsgleich.
+   *
+   * **Das Leerzeichen im Kürzel ist gemessen und nicht geraten:** die Lücke zwischen dem `W` und
+   * dem ersten `A` misst 1,3395 mm, die beiden Lücken innerhalb der Wörter 0,2530 und 0,1126 mm.
+   * Bei 1500 px nachgesehen.
+   *
+   * **Deklarierte Abweichung, die einzige des Teilslice E.2** (Note in `coverage-manifest.ts`):
+   * der `THW`-Lauf der Referenz endet rechts bei 26,0269 mm bei einer Körperkante von
+   * 29,0001 mm — sein Anker steht also auf 26,0, wo `LABEL_SIDE_MARGIN_MM = 2` die 27,0 ergibt.
+   * Zwei gleich gute Lesarten bei n = 1 (maxX − 3,0 oder rechte Kante der Farbfläche − 2,0), und
+   * die Marge ist an 30 anderen Zeichen belegt; für einen Einzelfall wird sie nicht aufgebrochen.
+   */
+  'E.2.26': {
+    title: 'Trinkwasseraufbereitungsanlage',
+    referenceAsset: 'E.2.26_Trinkwasseraufbereitungsanlage.svg',
+    spec: {
+      kind: 'upright-rectangle',
+      organization: 'thw',
+      labels: { center: 'TW AA', bottomRight: 'THW' },
+    },
+  },
+} as const satisfies Record<string, Recipe>;
+
+/**
+ * Die vier Referenzdateien aus E-e mit einem Befund; nur E.2.26 fehlt hier, weil seine
+ * Besonderheit eine **Abweichung der Umsetzung** ist und keine Abweichung der Quelle von sich
+ * selbst — sie steht als `deviation` in `coverage-manifest.ts`.
+ *
+ * Wie in E-d gilt: bei allen vieren folgt der Katalog der Mehrheit der Quelle und exportiert den
+ * Befund; keine der vier Zeilen setzt den Reviewstatus um.
+ */
+export const ANHANG_E_E_FINDINGS: Readonly<Record<string, string>> = Object.freeze({
+  'E.2.22':
+    'Das „Anhänger Grundzeichen" trägt die Ein-Rad-Form, die 5.1.2.4 als „von PKW gezogen" ' +
+    'führt (Innenring 15,5000/26,2505/19,5001/30,2503 mm), während 5.1.2.1_Anhänger_allgemein.svg ' +
+    'selbst nachgemessen überhaupt kein Rad trägt — seine Strichebene führt drei Teilpfade, ' +
+    'keinen Ring. Damit ist die Gleichung „ein Rad = von PKW gezogen" aus der Quelle selbst ' +
+    'widerlegt; das ist der Grund, warum die beiden Fahrwerks-IDs nach der Zeichnung benannt ' +
+    'sind und nicht nach dem Zugfahrzeug. Zweiter Befund, ohne Baufolge: als einziges der 67 ' +
+    'gebauten Zeichen des Anhangs trägt es keine mittige Beschriftung.',
+  'E.2.23':
+    'Zwei Befunde. Erstens sagt der Dateiname „von LKW gezogen", gezeichnet ist die Ein-Rad-Form ' +
+    '(cx 17,4999 mm) — dieselbe wie beim Grundzeichen E.2.22 und beim „von PKW gezogen" ' +
+    'heißenden E.2.25, während das Schwesterzeichen E.2.24 mit demselben Namenszusatz die zwei ' +
+    'Räder von 5.1.2.5 trägt. Der Katalog folgt der Zeichnung. Zweitens endet die Farbfläche ' +
+    'unten bei 22,5002 statt 25,0 mm, und beide Läufe stehen um 1,5 bzw. 2,5 mm höher ' +
+    '(Grundlinien 16,5001 und 21,5000 statt 18,0 und 24,0 mm; Grundlinienabstand damit 5,0 statt ' +
+    '6,0 mm). Der Katalog baut die Normlagen — dieselbe Einordnung wie E.1.6/E.1.14. Weil er den ' +
+    'ganzen Körperpfad färbt, steht der THW-Lauf dabei auf Blau und nicht auf dem weissen Rest.',
+  'E.2.24':
+    'Zwei Befunde. Erstens ist der THW-Lauf zweimal byteidentisch übereinander gezeichnet: die ' +
+    'Typo-Ebene führt drei Untergruppen, zwei davon mit derselben Hülle ' +
+    '19,9870/21,0806/29,0269/23,9998 mm. Ein Rezept mit einem Lauf gibt die Datei nicht ' +
+    'zeichengleich wieder — sichtbar ist der Unterschied nicht, messbar schon. Zweitens liegt die ' +
+    'Organisationsfarbe als Rechteck 4,9999/10,0002/30,0002/25,0007 mm im Körper statt als um ' +
+    '1 mm eingerückte Körperform; das ist dieselbe Klasse wie E.2.19, E.2.20, E.1.19 und E.1.24, ' +
+    'und mit E.2.24 steigt sie auf fünf Fälle über zwei Kapitel. Der Katalog färbt den ganzen ' +
+    'Körperpfad.',
+  'E.2.25':
+    'Der Dateiname führt „Anhänger 0,6 t Leergewicht", das Bild nur „0,6 t" — vier Glyphen, ' +
+    'darunter das einzige Komma und die einzigen Ziffern in ganz Anhang E. Zweiter Befund ohne ' +
+    'Baufolge, aber als Falle beim Nachmessen: der Lauf führt keine flachfüßige Glyphe, sein ' +
+    'kleinstes Glyphen-maxY liegt deshalb mit 18,0777 mm um den Bogenüberschuss unter der ' +
+    'tatsächlichen Grundlinie 18,0 mm. Der Schriftgrad ist der Normwert, belegt am t (4,4316 mm, ' +
+    'zahlengleich mit dem t in „Stapler" und „MzPt").',
+});
+
+/**
+ * Anhang E, Teilslice E-f: die Wasserfahrzeuge E.2.27 bis E.2.31 des THW — die letzten fünf
+ * Zeichen des Anhangs. Mit ihnen ist Anhang E bei 67 von 68 Abschnitten; es fehlt allein E.2.6
+ * (siehe `ANHANG_E_D_UNGEBAUT`).
+ *
+ * **Was gleich bleibt:** Kompositionen auf einem Grundzeichen, Organisation `thw`, Kürzel aus der
+ * eigenen Rasterung, keine Kopfzone, keine Zone unten links, kein Fahrwerk.
+ *
+ * **Was neu ist, und beides gilt nur für diese fünf.**
+ *
+ * **Erstens eine zweite, in der Quelle belegte Zeichnung desselben Grundzeichens.** Alle fünf
+ * stehen auf `vehicle-water` mit `bodyVariant: 'raised-hull'` (Füllhülle
+ * 1,0100/7,9999/30,9894/22,9898 mm, in allen fünf Dateien byteidentisch). Gegenüber
+ * `1.5_Wasserfahrzeug.svg` (1,0001/9,0001/31,0000/24,0002) liegt der Rumpf 1,0002 mm höher und ist
+ * um den Faktor 0,999318 kleiner. Es ist **keine** eigene `SymbolKind`: fachlich dasselbe
+ * Grundzeichen, und `vehicle-water` beansprucht den Abschnitt 1.5 bereits und ist seit LFH-424
+ * selbst dagegen gegatet — geändert werden darf es deshalb nicht, es fiele um 2,8 Einheiten bei
+ * einer Toleranz von 0,01.
+ *
+ * **Zweitens die vierte Beschriftungszone.** Alle fünf setzen ihr Trägerkürzel `THW` **unterhalb**
+ * des Rumpfes und in der Organisationsfarbe statt weiss im Körper (Tinte
+ * 22,5379/24,0806/31,5778/26,9998 mm, Füllung #003296, Versalhöhe 2,9192 mm — in allen fünf gleich
+ * bis auf 0,0003 mm an der T-Glyphe von E.2.28). Ein `bottomRight` setzte denselben Lauf weiss in
+ * den Rumpf; das ist ein anderes Bild, und kein Gate meldete es. Deshalb `belowRight`, und deshalb
+ * trägt keines der fünf Rezepte ein `bottomRight`.
+ *
+ * Der Zusammenhang zwischen beidem ist gemessen: die Anhebung des Rumpfes um 1,0002 mm schafft
+ * genau den Freiraum, in dem dieser Lauf steht: 1,0908 mm zwischen Rumpfunterkante und
+ * Textoberkante. Am tieferen Rumpf der elf I.3-Dateien blieben davon 0,0907 mm — das ist eine
+ * Rechnung mit dem gemessenen Lauf an einem anderen Rumpf und keine Messung an I.3, denn keine
+ * der elf trägt dort einen Lauf.
+ *
+ * **E.2.27 trägt als einziges der fünf gar kein mittiges Kürzel** — seine Typo-Ebene führt genau
+ * einen Lauf, und der steht blau unter dem Rumpf. Die Vorgabe dieses Slice sagt dazu, „das Kürzel
+ * stehe weiss im Körper statt blau unter ihm"; das beschreibt die frühere Katalogausgabe und nicht
+ * die Quelle. Ein Rezept mit mittigem Kürzel erfände es.
+ */
+export const ANHANG_E_F_RECIPES = {
+  /**
+   * Das einzige der fünf **ohne** mittiges Kürzel: eine Typo-Ebene, ein Lauf, und der ist der
+   * blaue `THW`-Lauf unterhalb des Rumpfes. Damit ist es zugleich das einzige Zeichen des ganzen
+   * Anhangs, dessen einzige fachliche Angabe außerhalb des Körpers steht — `describeSymbolSpec`
+   * nimmt die vierte Zone deshalb in die Vorlesebeschreibung auf.
+   */
+  'E.2.27': {
+    title: 'Wasserfahrzeug allgemein',
+    referenceAsset: 'E.2.27_Wasserfahrzeug allgemein.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'raised-hull',
+      organization: 'thw',
+      labels: { belowRight: 'THW' },
+    },
+  },
+  /**
+   * Sechs Glyphen mit zwei Oberlängen: `k` und `l` reichen bis y 10,947 mm und stehen damit
+   * **über** der Versallinie 11,1308 mm des `B`. Die Kappenhöhe ist trotzdem der Normwert,
+   * gemessen am `B` (4,8694 mm); die mittige Grundlinie steht auf 16,0002 mm, also 6,9896 mm über
+   * der Rumpfunterkante 22,9898 mm.
+   */
+  'E.2.28': {
+    title: 'Kleines Boot',
+    referenceAsset: 'E.2.28_Kleines Boot.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'raised-hull',
+      organization: 'thw',
+      labels: { center: 'kl Boot', belowRight: 'THW' },
+    },
+  },
+  /** Kleines `z` zwischen zwei Versalien: 3,4085 mm gegen 4,8694 mm. Grundlinie 16,0002 mm. */
+  'E.2.29': {
+    title: 'Mehrzweckboot',
+    referenceAsset: 'E.2.29_Mehrzweckboot.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'raised-hull',
+      organization: 'thw',
+      labels: { center: 'MzB', belowRight: 'THW' },
+    },
+  },
+  'E.2.30': {
+    title: 'Mehrzweckarbeitsboot',
+    referenceAsset: 'E.2.30_Mehrzweckarbeitsboot.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'raised-hull',
+      organization: 'thw',
+      labels: { center: 'MzAB', belowRight: 'THW' },
+    },
+  },
+  /**
+   * Groß-`M`, klein-`z`, Groß-`P`, klein-`t`; das `t` misst 4,4315 mm und ist damit zahlengleich
+   * mit dem `t` in „Stapler" (E.2.5) und „0,6 t" (E.2.25) — der Beleg, an dem der Normgrad jener
+   * beiden Läufe hängt, die selbst keine flache Versalie führen.
+   */
+  'E.2.31': {
+    title: 'Mehrzweckponton',
+    referenceAsset: 'E.2.31_Mehrzweckponton.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'raised-hull',
+      organization: 'thw',
+      labels: { center: 'MzPt', belowRight: 'THW' },
+    },
+  },
+} as const satisfies Record<string, Recipe>;
+
+/**
+ * Die Befunde aus E-f. Anders als in E-d und E-e betrifft **kein einziger** eine Abweichung der
+ * Quelle von sich selbst: innerhalb der fünf Dateien ist die Quelle einstimmig, Füll- und
+ * Strichebene sind byteidentisch. Die zwei Zeilen halten stattdessen fest, was diese fünf gegen
+ * den **übrigen Bestand** unterscheidet — und beides ist eine Fachfrage, die keine Messung
+ * beantwortet.
+ *
+ * Sie stehen deshalb an nur zwei Abschnitten und nicht an allen fünf: E.2.27 trägt den Befund zum
+ * Rumpf, weil er dort erstmals auftritt und dort auch die Praemisse dieses Slice widerlegt wird;
+ * E.2.31 den zur Doppelung mit Anhang I, weil er dort am schärfsten messbar ist.
+ */
+export const ANHANG_E_F_FINDINGS: Readonly<Record<string, string>> = Object.freeze({
+  'E.2.27':
+    'Zwei Befunde. Erstens ist der Rumpf dieser fünf Dateien gegenüber 1.5_Wasserfahrzeug.svg um ' +
+    '1,0002 mm angehoben (Sehne auf y 7,9999 statt 9,0001 mm) UND um den Faktor 0,999318 ' +
+    'verkleinert (Sehnenlänge 29,9794 gegen 29,9999 mm). Die elf Dateien aus Anhang I.3 teilen ' +
+    'die Verkleinerung, nicht die Anhebung: selbst nachgemessen führen alle elf die Füllhülle ' +
+    '1,0100/9,0001/30,9894/23,9899 mm. Ob die Anhebung Absicht oder Exportartefakt ist, lässt ' +
+    'sich nicht entscheiden; gemessen ist, dass sie genau den Freiraum schafft, in dem das blaue ' +
+    'Trägerkürzel steht — 1,0908 mm zwischen Rumpfunterkante 22,9898 und Textoberkante ' +
+    '24,0806 mm. Am tieferen I.3-Rumpf blieben davon 0,0907 mm; das ist eine Rechnung und keine ' +
+    'Messung an I.3, denn keine der elf I.3-Dateien führt überhaupt einen Lauf unterhalb ihres ' +
+    'Rumpfes. Zweitens trägt E.2.27 als einziges der fünf überhaupt kein mittiges Kürzel — seine ' +
+    'Typo-Ebene führt genau einen Lauf, und der ist der blaue THW-Lauf unterhalb des Rumpfes. ' +
+    'Die Vorgabe dieses Slice, das Kürzel stehe „weiss im Körper statt blau unter ihm", ' +
+    'beschreibt damit die frühere Katalogausgabe und nicht die Quelle.',
+  'E.2.31':
+    'Der mittige Lauf ist mit dem von I.3.7_Mehrzweckponton.svg bis auf 0,000353 mm — eine ' +
+    'einzige Exportrundungsstufe — deckungsgleich, dort schwarz statt weiss, und I.3.7 trägt ' +
+    'denselben Namen; für E.2.29 gegen I.3.5 und E.2.30 gegen I.3.6 gilt dasselbe auf dieselbe ' +
+    'Stufe genau (selbst nachgemessen). Ob das dieselben Zeichen in zwei Anhängen sind, ist eine ' +
+    'Fachfrage — heute kollidiert nichts, weil Anhang I nicht im beanspruchten Umfang steht. ' +
+    'Dazu ein zweiter, gemessener Unterschied zwischen den beiden Kapiteln: die I.3-Dateien ' +
+    'tragen denselben Rumpf 1,0002 mm tiefer (Unterkante 23,9899 mm) und ihre mittige Grundlinie ' +
+    'auf derselben absoluten Höhe (15,9999 mm an den fünf I.3-Läufen mit flachfüßiger Glyphe) — ' +
+    'ihr Abstand zur Rumpfunterkante ist damit 7,9900 mm, der Normwert, und ihr Lauf ist der ' +
+    'Anhebung nicht gefolgt. Für die fünf E.2-Zeichen erzeugen beide Lesarten dasselbe Bild.',
+});
