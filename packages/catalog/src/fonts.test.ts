@@ -345,7 +345,13 @@ describe('Rasterevidenz für Text (resvgFontOptions())', () => {
     expect(Math.abs(ink.maxYMm - ink.minYMm - (inBody.maxYMm - inBody.minYMm))).toBeLessThanOrEqual(
       pixelMm,
     );
-  });
+    // Eigener Zeitrahmen: dieser Test rastert **zweimal** bei 4096 px und tastet dabei je
+    // 16,8 Millionen Pixel ab. Auf der CI-Maschine reicht das über die Vorgabe von 5 s hinaus
+    // (gemessen: der Lauf fiel dort als Zeitüberschreitung, während er lokal in unter 2 s
+    // durchläuft). Die Rastergröße bleibt, weil die Zusicherung über die Laufbreite auf **ein**
+    // Rasterpixel genau greift — 32 mm / 4096 px = 0,0078 mm; eine kleinere Rasterung würde die
+    // Toleranz verdoppeln und damit die Aussage schwächen.
+  }, 30_000);
 
   /**
    * **Die Zusatzgeometrie des Grundzeichens ist der einzige neue Renderpfad ohne Koordinaten-
