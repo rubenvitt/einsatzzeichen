@@ -13,12 +13,24 @@ import { deepFreeze, type DeepReadonly } from './readonly-data.js';
 export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:1.1#primary': { status: 'pending' },
   'bbk-babz-2025:1.2#primary': { status: 'pending' },
+  // Die sechs Grundzeichen aus LFH-424. Bei ihnen steht über die übliche fachliche Prüfung hinaus
+  // je eine eigene Frage aus: ob `1.13 Ereignis` fachlich zu Recht als einziges Grundzeichen keine
+  // Organisation annehmen darf (der Katalog wirft dafür, belegt allein daraus, dass die Referenz
+  // den Haken in keinem zusammengesetzten Zeichen führt), und ob `1.3` bis `1.5` ohne die
+  // Fahrwerksmarken aus Kapitel 5.1 als vollständige Zeichen gelten — sie sind vermessen, aber
+  // nicht umgesetzt, und `validateSpec` lehnt eine Fahrzeugkategorie deshalb ab.
+  'bbk-babz-2025:1.3#primary': { status: 'pending' },
+  'bbk-babz-2025:1.4#primary': { status: 'pending' },
+  'bbk-babz-2025:1.5#primary': { status: 'pending' },
   'bbk-babz-2025:1.6#primary': { status: 'pending' },
   'bbk-babz-2025:1.7#primary': { status: 'pending' },
   'bbk-babz-2025:1.8#primary': { status: 'pending' },
+  'bbk-babz-2025:1.9#primary': { status: 'pending' },
   'bbk-babz-2025:1.10#primary': { status: 'pending' },
   'bbk-babz-2025:1.11#primary': { status: 'pending' },
   'bbk-babz-2025:1.12#primary': { status: 'pending' },
+  'bbk-babz-2025:1.13#primary': { status: 'pending' },
+  'bbk-babz-2025:1.14#primary': { status: 'pending' },
   'bbk-babz-2025:C.1.1#primary': { status: 'pending' },
   'bbk-babz-2025:C.1.2#primary': { status: 'pending' },
   'bbk-babz-2025:D.3.7#primary': { status: 'pending' },
@@ -80,6 +92,12 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:E.1.36#primary': { status: 'pending' },
   'bbk-babz-2025:E.1.37#primary': { status: 'pending' },
   'bbk-babz-2025:2.1#primary': { status: 'pending' },
+  // 2.2 seit LFH-424. Fachlich besonders zu prüfen: die Zuordnung „HiOrg = Hilfsorganisation" ist
+  // aus dem gerasterten Bild abgelesen, nicht aus dem Dateinamen — der ist generisch
+  // („Organisationen") und hatte die Zuordnung bisher verdeckt. Dazu die Frage, ob eine
+  // Organisation, deren Farbe mit der neutralen Grundfüllung zusammenfällt, im Einsatz
+  // verwechslungsfrei bleibt.
+  'bbk-babz-2025:2.2#primary': { status: 'pending' },
   'bbk-babz-2025:2.3#primary': { status: 'pending' },
   'bbk-babz-2025:2.4#primary': { status: 'pending' },
   'bbk-babz-2025:2.5#primary': { status: 'pending' },
@@ -90,6 +108,17 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:5.4.2#primary': { status: 'pending' },
   'bbk-babz-2025:5.4.3#primary': { status: 'pending' },
   'bbk-babz-2025:5.4.4#primary': { status: 'pending' },
+  // Die fünf Fahrzeugkategorien aus LFH-424. Über die übliche fachliche Prüfung hinaus stehen bei
+  // ihnen zwei Fragen aus, die keine Messung beantwortet: ob die Zuordnung „Kategorie 1/2/3 =
+  // straßenfähig/geländefähig/geländegängig" stimmt (sie ist aus der Mehrheit der E.2-Dateinamen
+  // abgeleitet, und vier der 31 E.2-Dateien widersprechen ihrem eigenen Namen), und ob die
+  // Endpunkte des Verbindungsstrichs der Kategorie 3 fachlich auf der Ringmittellinie liegen
+  // sollen — vermessen ist nur das Band, in dem sie liegen müssen (siehe `vehicle-categories.ts`).
+  'bbk-babz-2025:5.1.1.1#primary': { status: 'pending' },
+  'bbk-babz-2025:5.1.1.2#primary': { status: 'pending' },
+  'bbk-babz-2025:5.1.1.3#primary': { status: 'pending' },
+  'bbk-babz-2025:5.1.1.5#primary': { status: 'pending' },
+  'bbk-babz-2025:5.1.1.6#primary': { status: 'pending' },
   'bbk-babz-2025:4.3.1#primary': { status: 'pending' },
   'bbk-babz-2025:4.3.2#primary': { status: 'pending' },
   'bbk-babz-2025:4.3.3#primary': { status: 'pending' },

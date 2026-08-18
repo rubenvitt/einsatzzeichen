@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_VIEWBOX_MM, TOLERANCE_UNITS, unitsToMm, type Drawing } from '@einsatzzeichen/schema';
-import { boundsOfMm } from './bounds.js';
+import {
+  DEFAULT_VIEWBOX_MM,
+  TOLERANCE_UNITS,
+  mmToUnits,
+  unitsToMm,
+  type Drawing,
+  type Primitive,
+} from '@einsatzzeichen/schema';
+import { boundsOfMm, strokeBoundsOfMm } from './bounds.js';
 import { matchFingerprint } from './fingerprint.js';
 
 const formation: Drawing = {
@@ -101,19 +108,31 @@ describe('boundsOfMm', () => {
   });
 
   it('lässt Kinder ohne eigene Ausdehnung die Hülle ihrer Geschwister nicht verfälschen', () => {
-    // Zwei unabhängige Wege zu "keine Ausdehnung": eine leere Gruppe und ein Pfad. Beide
-    // liefern strukturell (nicht anhand von Zahlenwerten) `undefined` und werden vor dem
+    // "Keine Ausdehnung" trägt seit dem Pfadzweig (LFH-424) nur noch die kinderlose Gruppe: sie
+    // liefert strukturell (nicht anhand von Zahlenwerten) `undefined` und wird vor dem
     // Zusammenführen herausgefiltert — sonst ginge der Phantompunkt (0,0,0,0) über Math.min/
     // Math.max in die Geschwister-Hülle ein und minX/minY würden fälschlich 0.
     const bounds = boundsOfMm({
       type: 'group',
       children: [
         { type: 'group', children: [] },
-        { type: 'path', d: 'M0 0 L1 1' },
         { type: 'rect', x: 5, y: 5, width: 10, height: 10 },
       ],
     });
     expect(bounds).toEqual({ minX: 5, minY: 5, maxX: 15, maxY: 15 });
+  });
+
+  it('führt einen Pfad unter Geschwistern mit seiner berechneten Hülle zusammen', () => {
+    // Die Gegenprobe zur Zeile darüber: der Pfad ist jetzt vergleichbar und **soll** die Hülle
+    // seiner Geschwister erweitern. Vor LFH-424 wäre das Ergebnis 5/5/15/15 gewesen.
+    const bounds = boundsOfMm({
+      type: 'group',
+      children: [
+        { type: 'path', d: 'M 0 0 L 1 1' },
+        { type: 'rect', x: 5, y: 5, width: 10, height: 10 },
+      ],
+    });
+    expect(bounds).toEqual({ minX: 0, minY: 0, maxX: 15, maxY: 15 });
   });
 });
 
@@ -236,5 +255,147 @@ describe('matchFingerprint', () => {
       shapes: [ring(6, 12, 26, 22)],
     });
     expect(result).toEqual({ ok: true, problems: [] });
+  });
+});
+
+describe('strokeBoundsOfMm — Strichfläche eines Polyzugs', () => {
+  const ereignis: Primitive = {
+    type: 'polyline',
+    role: 'body',
+    closed: false,
+    points: [
+      [4, 7],
+      [16, 25],
+      [28, 7],
+    ],
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+  };
+
+  it('trifft die Strichhülle von 1.13 Ereignis auf 0,003 Einheiten', () => {
+    // Erwartungswert aus dem eingecheckten Kennwertartefakt (1.13_Ereignis.svg, kind "bounds"),
+    // nicht aus einer von Hand getippten Zahl.
+    const bounds = strokeBoundsOfMm(ereignis);
+    for (const [key, expected] of [
+      ['minX', 3.792],
+      ['minY', 6.862],
+      ['maxX', 28.207],
+      ['maxY', 25.451],
+    ] as const) {
+      const differenceUnits = Math.abs(mmToUnits(bounds[key]) - mmToUnits(expected));
+      expect(differenceUnits, `${key}: ${bounds[key]} mm gegen ${expected} mm`).toBeLessThan(
+        TOLERANCE_UNITS,
+      );
+    }
+  });
+
+  it('trifft die Strichhülle des geschlossenen Polyzugs 1.7 Gebäude', () => {
+    const bounds = strokeBoundsOfMm({
+      type: 'polyline',
+      role: 'body',
+      closed: true,
+      points: [
+        [16, 3],
+        [1, 10],
+        [1, 26],
+        [31, 26],
+        [31, 10],
+      ],
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+    });
+    for (const [key, expected] of [
+      ['minX', 0.75],
+      ['minY', 2.724],
+      ['maxX', 31.25],
+      ['maxY', 26.25],
+    ] as const) {
+      const differenceUnits = Math.abs(mmToUnits(bounds[key]) - mmToUnits(expected));
+      expect(differenceUnits, `${key}: ${bounds[key]} mm gegen ${expected} mm`).toBeLessThan(
+        TOLERANCE_UNITS,
+      );
+    }
+  });
+
+  it('unterscheidet den offenen vom geschlossenen Polyzug', () => {
+    // Die Mittellinienhüllen sind identisch — genau deshalb hielt die Notiz vom 5. August fest,
+    // kein Gate könne den Unterschied fangen. Für die Strichfläche gilt das nicht: die
+    // Schlusskante bringt zwei weitere Gehrungen und verschiebt drei der vier Kanten.
+    const open = strokeBoundsOfMm(ereignis);
+    const closed = strokeBoundsOfMm({ ...ereignis, closed: true });
+    expect(boundsOfMm(ereignis)).toEqual(boundsOfMm({ ...ereignis, closed: true }));
+    expect(Math.abs(mmToUnits(open.minX) - mmToUnits(closed.minX))).toBeGreaterThan(0.7);
+    expect(Math.abs(mmToUnits(open.maxX) - mmToUnits(closed.maxX))).toBeGreaterThan(0.7);
+  });
+
+  it('lehnt jede Primitivart ab, für die die Strichfläche nicht vermessen ist', () => {
+    expect(() => strokeBoundsOfMm({ type: 'rect', x: 1, y: 6, width: 30, height: 20 })).toThrow(
+      /nur für Polyzüge vermessen/,
+    );
+  });
+
+  it('hält den Gegenfall 1.10 Maßnahme als Negativbefund fest', () => {
+    // Der Grund, warum diese Funktion nicht pauschal über die Formklasse "outline" laufen darf:
+    // 1.10 ist derselbe Polyzugtyp, die Referenz zeichnet ihn aber mit Fase und 1,0 mm Strich.
+    // Mit Gehrung bei 0,5 mm liegt minY um mehr als 0,7 Einheiten neben dem Kennwert
+    // 0,571/3,5/31,428/29,257.
+    const bounds = strokeBoundsOfMm({
+      type: 'polyline',
+      role: 'body',
+      closed: true,
+      points: [
+        [1, 4],
+        [16, 29],
+        [31, 4],
+      ],
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+    });
+    expect(Math.abs(mmToUnits(bounds.minY) - mmToUnits(3.5))).toBeGreaterThan(0.7);
+  });
+});
+
+describe('matchFingerprint — bodyGeometry', () => {
+  const ereignis: Drawing = {
+    viewBox: DEFAULT_VIEWBOX_MM,
+    children: [
+      {
+        type: 'polyline',
+        role: 'body',
+        closed: false,
+        points: [
+          [4, 7],
+          [16, 25],
+          [28, 7],
+        ],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+      },
+    ],
+  };
+  const strichkennwert = {
+    asset: '1.13_Ereignis.svg',
+    shapes: [
+      { kind: 'bounds', boundsMm: { minXMm: 3.792, minYMm: 6.862, maxXMm: 28.207, maxYMm: 25.451 } },
+    ],
+  };
+
+  it('scheitert an allen vier Kanten, wenn die Mittellinie gegen einen Strichkennwert steht', () => {
+    const result = matchFingerprint(ereignis, strichkennwert);
+    expect(result.ok).toBe(false);
+    expect(result.problems).toHaveLength(4);
+  });
+
+  it('besteht mit bodyGeometry "stroke-outline"', () => {
+    const result = matchFingerprint(ereignis, strichkennwert, { bodyGeometry: 'stroke-outline' });
+    expect(result.problems).toEqual([]);
+    expect(result.ok).toBe(true);
+  });
+
+  it('meldet den geschlossenen Polyzug gegen denselben Kennwert als Befund', () => {
+    const closed: Drawing = {
+      ...ereignis,
+      children: ereignis.children.map((child) =>
+        child.type === 'polyline' ? { ...child, closed: true } : child,
+      ),
+    };
+    const result = matchFingerprint(closed, strichkennwert, { bodyGeometry: 'stroke-outline' });
+    expect(result.ok).toBe(false);
   });
 });

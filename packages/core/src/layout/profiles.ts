@@ -88,8 +88,31 @@ const rotatedSquareProfile: LayoutProfile = {
 };
 
 /**
- * Kreiskörper mit Kopfzone ist in der Referenz nicht belegt. Bis eine Vermessung vorliegt,
- * wird die Anpassung nicht geraten, sondern abgelehnt.
+ * Kreiskörper mit Kopfzone ist in der Referenz nicht belegt — und das ist seit dem 18. August 2026
+ * ein **gemessenes Negativ** und kein offener Platzhalter. Über alle 661 Referenzdateien gezählt,
+ * mit einem eigenen Pfadparser und ohne Abtastung:
+ *
+ * - 109 Dateien tragen eine Marke von 3 mm Mittelliniendurchmesser mit Mittelpunkt oberhalb
+ *   y = 8 mm, also im Kopfzonenraster — 80 zeichnen sie als Pfad, 43 als `<circle>`-Element,
+ *   und 14 Dateien führen **beide** Formen, was die Vereinigung auf 109 bringt (80 + 43 − 14).
+ *   Wer nur nach `<path>` sucht, sieht 80 und übersieht 29 — dieselbe Falle, die die E-c-Notiz
+ *   für die Kopfmarken von E.1.33 bis E.1.35 benennt (Nachzählung vom 18. August 2026);
+ * - 36 Dateien tragen einen echten Kreiskörper (geschlossener Subpfad nur aus Kubiken,
+ *   quadratische Hülle mit 22 bis 31 mm Kantenlänge, kreisförmig auf 0,05 mm);
+ * - **die Schnittmenge ist leer.**
+ *
+ * Der Unterschied zwischen „nicht belegt" und „gemessen leer" ist der Grund, warum diese Zahlen
+ * hier stehen: das erste lädt zum Nachschauen ein, das zweite hält fest, dass nachgeschaut wurde.
+ * Ein gedrehtes Quadrat hat dieselbe quadratische Hülle wie ein Kreis; die Kreisförmigkeit ist
+ * deshalb geprüft und nicht aus der Hülle geschlossen — ohne diese Prüfung erschienen die acht
+ * `D.3.x`-Zeichen mit Rautenkörper fälschlich als Schnittmenge.
+ *
+ * Der Radienzensus derselben Zählung gehört daneben, weil er eine zweite Frage offen zeigt:
+ * 32 Kreise mit r 12,25 mm und sechs mit r 11,75 mm (Ringpaare zur Mittellinie r 12,0), dazu
+ * je einer mit r 13,75 und 14,24 (Ringpaar zur Mittellinie r 14,0 — `1.6_Funktionsstelle.svg`,
+ * das `post` deckt). Ein aus `post` zusammengesetztes Zeichen läge damit gegen jede Referenzdatei
+ * mit Kreiskörper 2 mm zu groß. Die Regel zwischen 12 und 14 ist nicht vermessen; sie ist ein
+ * eigenes Ticket.
  */
 const circleBodyProfile: LayoutProfile = {
   id: 'circle-body',
@@ -97,7 +120,10 @@ const circleBodyProfile: LayoutProfile = {
   place(body, headBottomMm) {
     if (headBottomMm === null) return body;
     throw new Error(
-      'Kreiskörper mit Kopfzone ist nicht belegt. Vor der Umsetzung an der Referenz vermessen.',
+      'Kein Zeichen des Referenzbestands führt eine Kopfzone über einem Kreiskörper: 109 der 661 ' +
+        'Dateien tragen eine 3-mm-Marke im Kopfzonenraster, 36 tragen einen Kreiskörper, die ' +
+        'Schnittmenge ist leer (Vermessung vom 18. August 2026). Wie ein Kreiskörper einer ' +
+        'Kopfzone ausweicht, ist damit nicht ableitbar und wird nicht geraten.',
     );
   },
 };

@@ -69,7 +69,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 313 Zeilen mit 265 Elementdarstellungen', () => {
+  it('enthält exakt 325 Zeilen mit 271 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -84,16 +84,36 @@ describe('Coverage-Manifest', () => {
       return acc;
     }, {});
     expect(counts).toEqual({
-      'catalog-entry': 8,
+      // Seit LFH-424 alle vierzehn Grundzeichen aus Kapitel 1 statt acht.
+      'catalog-entry': 14,
       // 3 Belegfälle des Kompositionsmotors plus die 37 Zeichen aus Anhang E — 16 aus Teilslice
       // E-a, zwölf aus E-b und neun aus E-c, womit E.1 vollständig ist.
       'composition-recipe': 40,
-      element: 265,
+      // 254 Piktogramme plus acht Organisationen (seit LFH-424 mit hilfsorganisation), vier
+      // Stärkegrade und fünf Fahrzeugkategorien. Fünf und nicht sechs: `amphibienfahrzeug` hat
+      // keinen Eintrag, weil seine Wellenlinie nur als Strichhülle vermessen ist.
+      element: 271,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(313);
-    expect(elementRows).toHaveLength(265);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(325);
+    expect(elementRows).toHaveLength(271);
     expect(pictogramRows).toHaveLength(254);
-    expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(11);
+    expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(17);
+  });
+
+  it('trägt für die fünf Kurvenkörper die Geometrieregression statt eines Körper-Fingerprints', () => {
+    // Ihr Kennwertartefakt führt shapes: [] — matchFingerprint bricht ab, bevor es den Körper
+    // ansieht. Eine Zeile mit `body-fingerprint` behauptete dort ein Gate, das nicht läuft.
+    const bySection = (section: string) =>
+      COVERAGE_MANIFEST.entries.find((entry) => entry.sourceId === `bbk-babz-2025:${section}`);
+    for (const section of ['1.3', '1.4', '1.5', '1.9', '1.14']) {
+      expect(bySection(section)?.testEvidence, section).toEqual([
+        'body-geometry-regression',
+        'svg-snapshot',
+      ]);
+    }
+    // 1.13 dagegen ist gegatet: sein Artefakt führt eine Form (die Strichhülle), und
+    // matchFingerprint vergleicht sie mit `bodyGeometry: 'stroke-outline'`.
+    expect(bySection('1.13')?.testEvidence).toEqual(['body-fingerprint', 'svg-snapshot']);
   });
 
   /**
@@ -175,6 +195,11 @@ describe('Coverage-Manifest', () => {
       '1',
       '2',
       '4',
+      // `5.1.1` und nicht `5.1`: von Kapitel 5.1 sind allein die Fahrzeugkategorien aus 5.1.1
+      // umgesetzt, und auch dort nicht alle — 5.1.1.4 (Amphibienfahrzeug), 5.1.1.7 bis 5.1.1.9
+      // fehlen. `5.1` bestünde `uncoveredScope` trotzdem, weil jede 5.1.1.x-Zeile mit `5.1.`
+      // beginnt.
+      '5.1.1',
       '5.4',
       '5.8',
       'C.1.1',

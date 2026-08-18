@@ -26,7 +26,21 @@ function tracePrimitive(primitive: Primitive, ctx: CanvasRenderingContext2D): vo
   const u = mmToUnits;
   switch (primitive.type) {
     case 'rect':
-      ctx.rect(u(primitive.x), u(primitive.y), u(primitive.width), u(primitive.height));
+      // `rx` gehört seit jeher zum IR und wird von `renderSvg` ausgegeben; hier fehlte es. Ein
+      // Stadion (Rechteck mit `rx` = halbe Höhe, so trägt die Kette aus 5.1.1.5 ihre Form) wäre
+      // auf der Leinwand still mit scharfen Ecken erschienen — dieselbe Zeichnung, zwei Bilder.
+      // Kein Fall des Bestands war betroffen, solange kein Primitiv `rx` setzte.
+      if (primitive.rx !== undefined) {
+        ctx.roundRect(
+          u(primitive.x),
+          u(primitive.y),
+          u(primitive.width),
+          u(primitive.height),
+          u(primitive.rx),
+        );
+      } else {
+        ctx.rect(u(primitive.x), u(primitive.y), u(primitive.width), u(primitive.height));
+      }
       break;
     case 'circle':
       ctx.arc(u(primitive.cx), u(primitive.cy), u(primitive.r), 0, Math.PI * 2);

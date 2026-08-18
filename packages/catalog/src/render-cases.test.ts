@@ -17,7 +17,8 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    expect(ids).toHaveLength(302);
+    // 308 seit LFH-424: sechs weitere Grundzeichen aus Kapitel 1.
+    expect(ids).toHaveLength(308);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig.
     expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(40);
@@ -27,7 +28,8 @@ describe('vollständige Renderfallmenge', () => {
     expect(ids.filter((id) => id.startsWith('comms.'))).toHaveLength(53);
     expect(ids.filter((id) => id.startsWith('damage.'))).toHaveLength(28);
     expect(ids.filter((id) => id.startsWith('wildfire.'))).toHaveLength(14);
-    // Was übrig bleibt, sind die acht Grundzeichen — die einzigen Renderfälle ohne Artpräfix.
+    // Was übrig bleibt, sind die vierzehn Grundzeichen aus Kapitel 1 — die einzigen
+    // Renderfälle ohne Artpräfix. Seit LFH-424 ist das Kapitel vollständig.
     expect(
       ids.filter(
         (id) =>
@@ -38,7 +40,7 @@ describe('vollständige Renderfallmenge', () => {
           !id.startsWith('damage.') &&
           !id.startsWith('wildfire.'),
       ),
-    ).toHaveLength(8);
+    ).toHaveLength(14);
     expect(new Set(ids).size).toBe(ids.length);
   });
 

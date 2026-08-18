@@ -25,11 +25,35 @@ function bodyOf(kind: keyof typeof BASE_SYMBOLS): Primitive {
   return body;
 }
 
-const BODY_CASES = (Object.keys(BASE_SYMBOLS) as Array<keyof typeof BASE_SYMBOLS>).map(
-  (kind) => [kind, bodyOf(kind)] as const,
-);
+/**
+ * Die Grundzeichen, für die `checkClipping` ein Flächenmodell hat: achsparallele oder gedrehte
+ * Rechtecke, Kreise und **geschlossene konvexe** Polygone.
+ *
+ * Sechs der vierzehn fallen seit LFH-424 heraus, und zwar hart — `checkClipping` wirft für sie,
+ * es scheitert nicht bloß:
+ * - `event` ist ein **offener** Polyzug und schließt keine Körperfläche ein.
+ * - `vehicle-land`, `vehicle-air`, `vehicle-water`, `area` und `spontaneous-helper` sind Pfade.
+ *   Ein Polygonersatz löste das nicht: `area` (Zehneck mit Einbuchtung) und `spontaneous-helper`
+ *   (Vierlappen) sind nicht konvex.
+ *
+ * Die Liste steht deshalb explizit und wird nicht aus `BASE_SYMBOLS` abgeleitet: eine Ableitung
+ * über den Primitivtyp verschöbe die Aussage von „diese Körper sind geprüft" zu „geprüft ist, was
+ * sich prüfen ließ", und ein künftiger Kurvenkörper fiele lautlos heraus.
+ */
+const CLIPPING_BODY_KINDS = [
+  'formation',
+  'person',
+  'post',
+  'building',
+  'container',
+  'measure',
+  'hazard',
+  'point',
+] as const satisfies ReadonlyArray<keyof typeof BASE_SYMBOLS>;
 
-/** Kleine reale Box im gemeinsamen Zentrum aller acht heute katalogisierten Körperflächen. */
+const BODY_CASES = CLIPPING_BODY_KINDS.map((kind) => [kind, bodyOf(kind)] as const);
+
+/** Kleine reale Box im gemeinsamen Zentrum der acht Körperflächen mit Flächenmodell. */
 const CENTERED_TEST_PICTOGRAM: PictogramDefinition = {
   id: 'capability.fire-fighting',
   variant: 'primary',

@@ -1,5 +1,5 @@
 import { TOLERANCE_UNITS, mmToUnits, type Drawing, type Primitive } from '@einsatzzeichen/schema';
-import { boundsOfMm, type BoundsMm } from './bounds.js';
+import { boundsOfMm, strokeBoundsOfMm, type BoundsMm } from './bounds.js';
 
 // Kein Re-Export von boundsOfMm/BoundsMm: der Paket-Index exportiert bereits ./bounds.js,
 // ein zweiter Pfad erzeugte einen mehrdeutigen Export.
@@ -57,14 +57,37 @@ function findBody(children: readonly Primitive[]): Primitive | null {
 }
 
 /**
+ * Welche Geometrie des Körpers gegen den Kennwert gestellt wird.
+ *
+ * `centerline` ist der Regelfall: der Kennwert stammt aus einem `ring`, einem Füllpolygon oder
+ * einem Rechteck der Referenz und beschreibt dieselbe Linie, die das Katalogprimitiv trägt.
+ *
+ * `stroke-outline` ist die **einzeln zu begründende Ausnahme**. Sie gehört an Zeichen, deren
+ * Kennwert die Hülle des zu einer Fläche umgewandelten Strichs ist. Sie wird bewusst **nicht**
+ * aus der Formklasse des Kennwerts abgeleitet (etwa „alles mit `kind: 'outline'`"): der
+ * Referenzbestand mischt die Fugenmodelle, und eine solche Ableitung wäre für `1.10 Maßnahme`
+ * (Fase, 1,0 mm Strich) um 0,71 Einheiten falsch. Wer sie setzt, muss den vermessenen Fall
+ * benennen — siehe `strokeBoundsOfMm`.
+ *
+ * Im Bestand vom 18. August 2026 trägt genau **ein** Fall diese Einstellung: `1.13 Ereignis`.
+ */
+export type BodyGeometryMode = 'centerline' | 'stroke-outline';
+
+export interface MatchFingerprintOptions {
+  bodyGeometry?: BodyGeometryMode;
+}
+
+/**
  * Vergleicht die Körpergeometrie einer Zeichnung mit den aus der Referenz abgeleiteten
  * Kennzahlen. Verglichen wird in SVG-Einheiten mit der Exporttoleranz von 0,01.
  */
 export function matchFingerprint(
   drawing: Drawing,
   fingerprint: FingerprintLike,
+  options: MatchFingerprintOptions = {},
 ): FingerprintResult {
   const problems: string[] = [];
+  const bodyGeometry: BodyGeometryMode = options.bodyGeometry ?? 'centerline';
 
   const body = findBody(drawing.children);
   if (!body) {
@@ -84,7 +107,7 @@ export function matchFingerprint(
 
   let actual: BoundsMm;
   try {
-    actual = boundsOfMm(body);
+    actual = bodyGeometry === 'stroke-outline' ? strokeBoundsOfMm(body) : boundsOfMm(body);
   } catch (error) {
     // Gezielt nur den dokumentierten Fehlermodus von boundsOfMm auffangen (z. B. eine gedrehte
     // Gruppe als body, die boundsOfMm bewusst ablehnt statt ihre Hülle zu nähern) und in einen

@@ -64,6 +64,14 @@ export const ORGANIZATION_BODY_DASHES = deepFreeze({
   orange: [6, 2, 1, 2],
   braun: [2, 2, 2, 4],
   hellgrau: [8, 2],
+  /**
+   * `hilfsorganisation` (Kapitel 2.2), seit LFH-424. Hier trägt die Signatur mehr als bei den
+   * übrigen sieben: `weiss` ist im Bestand zugleich die neutrale Grundfüllung, ein Körper mit
+   * dieser Organisation ist farblich also von einem organisationslosen nicht zu unterscheiden.
+   * Der zweite Kanal ist damit der einzige. Eine feine Punktreihe, eindeutig gegen alle sieben
+   * bestehenden Signaturen.
+   */
+  weiss: [1, 2],
 } as const);
 
 export const ACCESSIBLE_LIGHT_THEME: RenderTheme = deepFreeze({

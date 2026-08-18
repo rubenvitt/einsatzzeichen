@@ -67,6 +67,27 @@ bestehenden Fixes.
 > rund 1,28; und der Polyzug ist **offen** — ein geschlossener hätte dieselbe Hülle *und*
 > dieselben Ecken, kein Gate fängt den Unterschied.
 
+> **Nachtrag vom 18. August 2026 (LFH-424).** Vier Angaben dieses Abschnitts sind nachzuziehen;
+> die falschen Sätze bleiben stehen, damit sichtbar ist, dass sie es waren. Belege in
+> [`2026-08-18-grundlagen-restpunkte.md`](./2026-08-18-grundlagen-restpunkte.md), Abschnitte 1, 3
+> und 8.
+>
+> 1. **„Mit dem heutigen Extraktionswerkzeug nicht vermessbar" war eine Aussage über das
+>    Werkzeug, nicht über die Quelle.** Alle sechs fehlenden Grundzeichen sind inzwischen
+>    vermessen und gebaut. Der Schlüssel ist die Ebene `Flächige_Fülung`, die bei 1.3, 1.4, 1.5
+>    und 1.9 die **Mittellinie verbatim** trägt; 1.13 und 1.14 führen als einzige des Kapitels
+>    gar keine Füllebene, bei 1.14 trägt das Ringpaar.
+> 2. **Der angekündigte Fix für fill-lose `<polygon>`-Elemente existiert nicht.** `extract.ts`
+>    überspringt nur `fill="none"`; ein **fehlendes** `fill` bekommt weiterhin `kind: 'bounds'`.
+>    Ohne Wirkung auf die Schlussfolgerung dieses Abschnitts, aber ihre Begründung trägt nicht.
+> 3. **Am Mittellinienvergleich scheitern alle vier Kanten von `1.13`, nicht eine.** Gemessen:
+>    minX 0,5896 / minY 0,3912 / maxX −0,5868 / maxY −1,2784 Einheiten. Der Nachtrag vom
+>    5. August nennt `maxY` als „die größere von zwei" — es sind vier.
+> 4. **Der Polyzug ist gateable geworden.** Ein strichbewusster Vergleich (`matchFingerprint` mit
+>    `bodyGeometry: 'stroke-outline'`) trifft den eingecheckten Kennwert auf 0,0029 Einheiten und
+>    unterscheidet dabei offen von geschlossen um 0,73 Einheiten. Die Warnung „kein Gate fängt den
+>    Unterschied" gilt nur für Mittellinienvergleiche.
+
 ## 2. Warum Verwaltungsstufen und Fahrzeugkategorien nicht umgesetzt sind
 
 Von 16 Referenzdateien für Verwaltungsstufen (`5.7`) und Fahrzeugkategorien (`5.1.1`) sind nur
@@ -93,6 +114,24 @@ und ihre Kopfmarken-Konstruktion.
 > beim Stärkegrad `gruppe` aus Abschnitt 5. Die Marken sind Sterne, keine Rechtecke. Der Grund,
 > warum `5.7` weiterhin nicht umgesetzt ist, ist damit **nicht mehr die Messbarkeit**, sondern der
 > fehlende Konsument in `CatalogPorts` und der Kopfzone von `compose()`.
+
+> **Nachtrag vom 18. August 2026 (LFH-424).** Drei Angaben dieses Abschnitts sind nachzuziehen.
+> Belege in [`2026-08-18-grundlagen-restpunkte.md`](./2026-08-18-grundlagen-restpunkte.md),
+> Abschnitte 5, 6 und 8.
+>
+> 1. **Die Fahrzeugkategorien sind gebaut.** `packages/catalog/src/vehicle-categories.ts`
+>    existiert; fünf der sechs IDs tragen eine vollständig vermessene Fahrwerkszone, das
+>    Amphibienfahrzeug wirft. Der Konsument steht in `CatalogPorts.vehicleChassis` und in
+>    `compose()`. Die Zone hängt an der Körper**unterkante** und ist deshalb kein `HeadShape`.
+> 2. **Der Nachtrag oben ist für seinen eigenen Zweck falsch.** Was er als
+>    Verwaltungsstufen-Kopfmarke vermisst, ist die **Eigendarstellung** 5.7.x. Die echten
+>    Kopfmarken stehen in acht Dateien (D.3.1, D.3.3, D.3.4, D.4.1 bis D.4.5) und tragen andere
+>    Zahlen: Markenhülle 3,7137 × 4,0001 statt 5,4458 × 6,0004, Teilung 5 statt 6, Zonenoberkante
+>    y = 0 statt `cy = 16`. Es fehlte also nicht nur noch der Konsument.
+> 3. **`head-zone-conflict` deckt die Fahrzeugkategorie nicht ab.** Die Regel prüft ausschließlich
+>    `spec.strength` gegen `spec.administrativeLevel`. Ihre Begründung („belegen beide die
+>    Kopfzone") trüge für Fahrzeugkategorien geometrisch auch nicht: die Stärke sitzt oben, das
+>    Fahrwerk unten.
 
 ## 3. `deriveRing` gilt nur für achsparallele Rechtecke — warum 91 Ringe entfielen
 
@@ -147,6 +186,17 @@ nötig. (`2.3` trägt zusätzlich `weiss` als Innenfläche; maßgeblich für `or
 `blau`.) Für `hilfsorganisation` gibt es in Kapitel 2 der lokalen Referenz keine Datei;
 `organizationColor('hilfsorganisation')` **wirft** statt eine Farbe zu erfinden — dasselbe Muster,
 das `baseDrawing` für nicht belegte `SymbolKind`-Werte schon verwendet.
+
+> **Nachtrag vom 18. August 2026 (LFH-424).** Der Satz „Für `hilfsorganisation` gibt es in
+> Kapitel 2 der lokalen Referenz keine Datei" ist **widerlegt**. `2.2_Organisationen.svg` trägt
+> entgegen seinem generischen Namen einen vollflächigen Fleck `#ffffff` über 0/0/32/32 mm — die
+> Bauform von 2.1 und 2.3 bis 2.8 —, und seine gerasterte Typo-Ebene liest **„HiOrg"**.
+> Nachgezählt: genau acht Dateien des Kapitels tragen Fleck **und** Typo-Ebene, für acht
+> `OrganizationId`-Werte. `ORGANIZATION_COLORS.hilfsorganisation` ist seither `weiss`.
+> Der Vorbehalt gehört dazu: `#ffffff` ist im Bestand zugleich die neutrale Grundfüllung, ein
+> gerendertes Zeichen mit `hilfsorganisation` ist von einem organisationslosen farblich nicht zu
+> unterscheiden. Das ist eine Eigenschaft der Quelle. Belege in
+> [`2026-08-18-grundlagen-restpunkte.md`](./2026-08-18-grundlagen-restpunkte.md), Abschnitt 4.
 
 ## 5. Das Drei-Plätze-Modell der Stärkereihe
 

@@ -13,6 +13,9 @@ const COLORED = [
   ['bundeswehr', '2.6_Bundeswehr.svg'],
   ['sonstige-gefahrenabwehr', '2.7_Sonstige Gefahrenabwehr.svg'],
   ['zivile-einheiten', '2.8_Zivile Einheiten.svg'],
+  // Seit LFH-424: 2.2 ist keine Legende, sondern der Fleck der Hilfsorganisationen — vollflächig
+  // #ffffff wie 2.1 und 2.3 bis 2.8 gebaut, Typo-Ebene liest „HiOrg".
+  ['hilfsorganisation', '2.2_Organisationen.svg'],
 ] as const satisfies ReadonlyArray<[keyof typeof ORGANIZATION_COLORS, string]>;
 
 /**
@@ -48,9 +51,29 @@ describe('Organisationsfarben Kapitel 2', () => {
       .toContain(PALETTE[organizationColor(id)]);
   });
 
-  it('wirft für eine im Referenzumfang nicht belegte Organisation', () => {
-    const hilfsorganisation: OrganizationId = 'hilfsorganisation';
-    expect(() => organizationColor(hilfsorganisation)).toThrow(/hilfsorganisation/);
+  it('belegt jede der acht Organisationen der Taxonomie', () => {
+    // Bis LFH-424 sicherte diese Stelle das Gegenteil zu: `organizationColor('hilfsorganisation')`
+    // warf, weil Kapitel 2 angeblich keine Referenzdatei dafür führte. 2.2_Organisationen.svg ist
+    // die Datei — vollflächiger Fleck #ffffff, Typo-Ebene liest „HiOrg".
+    const all: readonly OrganizationId[] = [
+      'feuerwehr',
+      'thw',
+      'fuehrung-leitung',
+      'polizei',
+      'bundeswehr',
+      'sonstige-gefahrenabwehr',
+      'zivile-einheiten',
+      'hilfsorganisation',
+    ];
+    for (const id of all) expect(() => organizationColor(id)).not.toThrow();
+    expect(Object.keys(ORGANIZATION_COLORS)).toHaveLength(all.length);
+  });
+
+  it('hält fest, dass hilfsorganisation dieselbe Farbe trägt wie die neutrale Grundfüllung', () => {
+    // Kein Umsetzungsfehler, sondern eine Eigenschaft der Quelle: ein Zeichen mit
+    // `hilfsorganisation` ist von einem organisationslosen farblich nicht unterscheidbar. Genau
+    // deshalb trägt die Kontursignatur hier mehr als bei den übrigen sieben.
+    expect(PALETTE[organizationColor('hilfsorganisation')]).toBe('#ffffff');
   });
 
   it('definiert für jede belegte Organisation genau ein gültiges Palettentoken', () => {

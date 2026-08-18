@@ -64,6 +64,17 @@ describe('Layoutprofile', () => {
     expect(bounds.maxX).toBeCloseTo(29, 3);
   });
 
+  it('lehnt einen Kreiskörper mit Kopfzone mit dem gemessenen Negativ ab', () => {
+    // Der Wurftext behauptet nicht „nicht belegt", sondern nennt die Zählung, die das belegt:
+    // 109 Dateien mit 3-mm-Marke im Kopfzonenraster, 36 mit Kreiskörper, Schnittmenge leer. Der
+    // Test hält beide Zahlen fest, damit sie nicht unbemerkt zu einer Behauptung zurückfallen.
+    const circleBody: Primitive = { type: 'circle', role: 'body', cx: 16, cy: 16, r: 14 };
+    expect(profileFor('post').place(circleBody, null)).toBe(circleBody);
+    expect(() => profileFor('post').place(circleBody, 4)).toThrow(
+      /109 der 661 Dateien .* 36 tragen einen Kreiskörper, die Schnittmenge ist leer/s,
+    );
+  });
+
   it('ordnet jeder Grundzeichenart ein Profil zu', () => {
     expect(profileFor('formation').id).toBe('rect-body');
     expect(profileFor('person').id).toBe('rotated-square-body');

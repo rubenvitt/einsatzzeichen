@@ -83,10 +83,12 @@ describe('Fachreview-Ledger', () => {
     const sourceReviews = Object.values(SOURCE_DOMAIN_REVIEWS);
     const profileReviews = Object.values(PROFILE_DOMAIN_REVIEWS);
     const reviews = [...manifestReviews, ...sourceReviews, ...profileReviews];
-    expect(manifestReviews).toHaveLength(313);
+    // 325 seit LFH-424: sechs Grundzeichen aus Kapitel 1, die achte Organisation (2.2) und die
+    // fünf vermessenen Fahrzeugkategorien aus 5.1.1.
+    expect(manifestReviews).toHaveLength(325);
     expect(sourceReviews).toHaveLength(13);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(327);
+    expect(reviews).toHaveLength(339);
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
   });
 

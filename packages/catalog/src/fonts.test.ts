@@ -91,6 +91,9 @@ const formationCatalog: CatalogPorts = {
   strengthHead: () => {
     throw new Error('Für diese Prüfung nicht aufgerufen.');
   },
+  vehicleChassis: () => {
+    throw new Error('Für diese Prüfung nicht aufgerufen.');
+  },
   pictogram: () => {
     throw new Error('Für diese Prüfung nicht aufgerufen.');
   },

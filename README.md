@@ -6,8 +6,9 @@ Statt einzelner SVG-Dateien beschreibt eine Anwendung, **was** dargestellt werde
 gemeinsamen internen Repräsentation (IR), nicht aus zwei parallel gepflegten Renderern.
 
 Details zur Produktvision: [`Vision.md`](./Vision.md). Umfangs- und Messentscheidungen dieses
-Slice (welche Grundzeichen fehlen und warum, die vermessene Kopfmarken- und Piktogrammgeometrie,
-der Coverage-Manifest-Scope): [`docs/decisions/`](./docs/decisions/).
+Slice (die vermessene Grundzeichen-, Kopfmarken- und Piktogrammgeometrie, welche Zonen belegt sind
+und welche begründet offen bleiben, der Coverage-Manifest-Scope):
+[`docs/decisions/`](./docs/decisions/).
 
 ## Pakete
 
@@ -101,8 +102,8 @@ fachkundige Person geprüft werden. Die Abschlussentscheidung für D.1 steht in
 D.2 deckt Kapitel 5.8 der projektinternen Coverage-Baseline technisch mit 61 State-IDs und 67
 Darstellungen ab, darunter sechs getrennt adressierbare Alternativdarstellungen. Damit enthält
 der Katalog zusammen mit D.3 und D.4 insgesamt 254 Piktogrammdarstellungen: 92 Capabilities, 67
-States, 53 IuK-, 28 Schadens- und 14 Vegetationsbrandzeichen. Die 302 globalen Renderfälle setzen
-sich aus acht Grundzeichen, 40 Rezepten und diesen 254 Piktogrammen zusammen — drei Rezepte
+States, 53 IuK-, 28 Schadens- und 14 Vegetationsbrandzeichen. Die 308 globalen Renderfälle setzen
+sich aus vierzehn Grundzeichen, 40 Rezepten und diesen 254 Piktogrammen zusammen — drei Rezepte
 belegen den Kompositionsmotor, die übrigen 37 sind die Teilslices E-a, E-b und E-c (siehe unten).
 
 Alle 67 State-Darstellungen sind eigenständige Zeichen mit kanonischer 32×32-mm-Platzierung und
@@ -235,6 +236,86 @@ Notizen, deren Aussagen dieser Slice widerlegt hat — der
 Füllebene), die [E-a-Notiz](./docs/decisions/2026-08-12-beschriftungszonen-und-e-a.md) und die
 [E-b-Notiz](./docs/decisions/2026-08-17-anhang-e-b.md), alle drei mit datiertem Nachtrag.
 
+## LFH-424: Kapitel 1 vollständig, sechs Grundzeichen mehr
+
+Der Katalog führte acht der vierzehn Grundzeichen aus Kapitel 1; die sechs fehlenden — Landfahrzeug
+(1.3), Luftfahrzeug (1.4), Wasserfahrzeug (1.5), Gebiet (1.9), Ereignis (1.13) und Spontanhelfer
+(1.14) — galten als **nicht vermessbar**. Das war eine Aussage über das Werkzeug, nicht über die
+Quelle: der Extraktor legt für Kurvenpfade keine Form ab, und `fingerprints.json` führt für 1.3,
+1.4, 1.5, 1.9 und 1.14 bis heute `shapes: []`. Vermessen sind sie jetzt mit einem eigenen
+Pfadparser mit analytischen Kubik-Extrema, wie ihn E-c für die 37 E.1-Dateien gebaut hat. Vier von
+ihnen tragen ihre Mittellinie in der Ebene `Flächige_Fülung` verbatim — 1.3 mit
+0,9998/5,7499/31,0000/26,0001, 1.4 mit 1,0001/7,9999/31,0003/23,0001, 1.5 mit
+1,0001/9,0001/31,0000/24,0002 und 1.9 mit 1,5199/3,2298/30,9993/28,3237. 1.13 und 1.14 sind die
+beiden einzigen Dateien des Kapitels ganz ohne Füllebene; bei 1.14 trägt stattdessen das Ringpaar
+(außen 1,7501/1,7498/30,2500/30,2500, innen 2,2500/2,2500/29,7497/29,7497 → Mittellinie 2/2/30/30
+bei Strich 0,5).
+
+**Neun der vierzehn Grundzeichen stehen damit am Fingerprint-Gate, fünf nicht.** Für die fünf
+Kurvenkörper bricht `matchFingerprint` ab, bevor es den Körper ansieht — ihr Artefakteintrag führt
+keine vergleichbare Form. Ihre Manifestzeile behauptet dieses Gate deshalb nicht, sondern trägt die
+neue Nachweisart `body-geometry-regression` neben dem Snapshot, nach dem Vorbild von
+`head-shape-regression`. Die Unterscheidung fällt am Artefakt (`shapes: []`) und nicht an einer
+gepflegten Liste, damit ein späterer Extraktorausbau sie von selbst auflöst.
+
+**1.13 Ereignis ist das erste Grundzeichen, das keine Organisationsfarbe annehmen darf.** Sein
+Körper ist ein offener Polyzug, und SVG schließt einen gefüllten Polyzug implizit — aus dem Haken
+würde eine volle Dreiecksfläche. Der Haken kommt in genau einer der 661 Referenzdateien vor, in
+1.13 selbst, und in keinem zusammengesetzten Zeichen; es gibt also keinen Beleg für ein eingefärbtes
+Ereignis, und `compose()` wirft statt zu füllen. Seine Offenheit ist dabei nicht nur am Snapshot
+geprüft, sondern **gegatet**: die analytische Strichhülle des offenen Polyzugs liefert
+3,7920/6,8613/28,2080/25,4507 gegen den eingecheckten Kennwert 3,792/6,862/28,207/25,451 (höchstens
+0,0029 Einheiten), die des geschlossenen 3,5329/6,7500/28,4671/25,4507 und damit bis zu 0,7374
+Einheiten daneben. Der Mechanismus ist bewusst eng gefasst: 1.10 Maßnahme ist derselbe Polyzugtyp,
+wird aber mit Fase gezeichnet, und dieselbe Rechnung landet dort mit 0,5585/3,7500/31,4415/29,4859
+gegen 0,571/3,5/31,428/29,257 um 0,7087 Einheiten daneben. Der Vergleichsmodus steht deshalb je
+Zeile in der Prüftabelle und wird nicht aus der Formklasse abgeleitet.
+
+**`hilfsorganisation` hat eine Farbe: Weiß.** Zwei Notizen und zwei Kodekommentare hielten fest, für
+sie gebe es in Kapitel 2 keine Referenzdatei — `2.2_Organisationen.svg` ist sie. Genau acht der 21
+Dateien aus Kapitel 2 tragen einen vollflächigen Fleck über 0/0/32/32 **und** eine Typo-Ebene,
+nämlich 2.1 bis 2.8: acht Flecken für acht `OrganizationId`-Werte, und 2.2 trägt `#ffffff`. Der
+Katalog kennt seither acht Organisationsfarben statt sieben. Was die Quelle mitliefert, ist ein
+Vorbehalt: Weiß ist im Bestand zugleich die neutrale Grundfüllung, ein Körper mit dieser
+Organisation ist farblich von einem organisationslosen nicht zu unterscheiden. Der nicht-farbliche
+Kanal trägt hier deshalb mehr als bei den übrigen sieben — und `weiss` ist die einzige der acht
+Kontursignaturen, die in keinem eingecheckten Bild vorkommt, weil kein Katalogeintrag diese
+Organisation setzt.
+
+Die Umfangszeile bleibt davon unberührt: sie führt seit jeher die ganzen Kapitel `1` und `2`, und
+die sechs neuen Zeichen füllen diesen Anspruch, statt ihn zu erweitern. Was wächst, sind die
+Manifestzeilen — Kapitel 1 trägt jetzt 14 statt acht, Kapitel 2 acht statt sieben. Die Messwerte,
+die Berichtigungen an den älteren Notizen und die drei Posten, die begründet offen bleiben, stehen
+in [`2026-08-18-grundlagen-restpunkte.md`](./docs/decisions/2026-08-18-grundlagen-restpunkte.md).
+
+## LFH-424: die Fahrwerkszone aus Kapitel 5.1
+
+Nach Kapitel 1 ist die zweite Hälfte von LFH-424 die **Fahrwerkszone** — die Räder, Ketten und
+Verbindungsstriche, die ein Landfahrzeug in eine Kategorie einordnen. Sie ist die dritte Zone des
+Kompositionsmotors neben Kopf- und Fußzone und die erste, die an der Körper**unterkante** hängt
+statt an der Oberkante ihrer eigenen Zone: `ChassisShape` ist deshalb ein eigener Typ neben
+`HeadShape` und kennt neben dem Kreis auch das Stadion (Kette) und den waagerechten Strich.
+
+Fünf der sechs Fahrzeugkategorien sind vermessen und gebaut (5.1.1.1, .2, .3, .5 und .6);
+`amphibienfahrzeug` wirft, weil von seiner Wellenlinie nur die Strichhülle ablesbar ist. Die Zone
+ist nicht auf die Musterblätter beschränkt: 25 der 31 Zeichen aus Anhang E.2 tragen sie überhaupt,
+21 davon in einer der fünf gebauten Kategorien und 20 auf genau dem Landfahrzeugkörper aus 1.3 — ein
+E.2-Rezept erreicht sie über `SymbolSpec` wie E.1 seine Kopfzone. Vollständig ist E.2 damit nicht:
+neben dem Landfahrzeug führen die 31 Dateien vier weitere Körperformen (der Wechsellader E.2.15, die
+vier Anhänger, die Trinkwasseraufbereitungsanlage E.2.26 und der eigene Wasserfahrzeugkörper von
+E.2.27 bis E.2.31, der **nicht** der aus 1.5 ist), und für die Anhängerfahrwerke fehlen zwei
+Taxonomie-IDs.
+
+Die Umfangszeile führt dafür seither `5.1.1` — bewusst den Unterabschnitt und nicht das ganze
+Kapitel 5.1, von dem allein die Fahrzeugkategorien umgesetzt sind.
+
+Zwei Nebenbefunde gehören dazu. Eine Fahrzeugkategorie ist seither nur am **Landfahrzeug** zulässig
+(keine der drei Luftfahrzeugdateien und keines der fünf E.2-Wasserfahrzeuge trägt ein Fahrwerk),
+und sie schließt eine Fußzone aus, weil beide denselben Streifen unterhalb des Körpers belegen.
+Verwaltungsstufen (Kapitel 5.7) und das Kreiskörperprofil bleiben begründet offen; beide Urteile
+stehen mit ihren Messwerten in
+[`2026-08-18-grundlagen-restpunkte.md`](./docs/decisions/2026-08-18-grundlagen-restpunkte.md).
+
 ## Der lokale Referenzbestand
 
 `taktische-zeichen/` ist ein **lokaler Ordner mit 661 damals von der BABZ bereitgestellten
@@ -283,8 +364,10 @@ Jede renderbare Manifest-Implementierung durchläuft echte PNG-Regressionen bei 
 128 und 256 Pixeln. Zusätzlich werden Accessible- und Schwarz-Weiß-Ausgabe gerastert,
 semantischer Titel und Beschreibung verlangt und die sichtbare Geometrie gegen die kanonische
 32×32-mm-viewBox geprüft. Die Rasterungen liegen als direkt sichtbare SVG-Kontaktbögen unter
-`packages/catalog/src/__snapshots__/multi-size/`; ein eigener Profilbogen zeigt alle sieben
-Organisationen in beiden Alternativthemes bei 64 px.
+`packages/catalog/src/__snapshots__/multi-size/`; ein eigener Profilbogen zeigt sieben der acht
+Organisationen in beiden Alternativthemes bei 64 px. Die achte, `hilfsorganisation` aus LFH-424,
+fehlt darin — sie hat noch keinen Katalogeintrag, der sie setzt, und ihre Kontursignatur ist damit
+allein von der Eindeutigkeitsprüfung gedeckt, nicht von einem Bild.
 
 Die unveränderte Referenzpalette wird nicht pauschal als barrierefrei bezeichnet: Schwarz auf dem
 originalen BABZ-Blau unterschreitet 3:1. Für diesen Fall ist `accessible-light` das geprüfte

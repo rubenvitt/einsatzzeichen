@@ -9,6 +9,7 @@ import { deepFreeze, type DeepReadonly } from './readonly-data.js';
 export type ElementKind =
   | 'organization'
   | 'strength'
+  | 'vehicle-category'
   | 'capability'
   | 'state'
   | 'comms'
@@ -49,11 +50,11 @@ export interface ElementDescriptor {
 }
 
 /**
- * Die statisch belegten Organisations- und Stärkeelemente. `hilfsorganisation` fehlt bewusst:
- * Kapitel 2 enthält dafür keine Datei, `organizationColor` wirft, und das Manifest behauptet
- * nichts, was der Katalog nicht kann.
- * (`2.2_Organisationen.svg` existiert, trägt aber einen generischen Namen, aus dem keine Zuordnung
- * folgt. Diese Zuordnung zu vermessen ist eine eigene Aufgabe.)
+ * Die statisch belegten Organisations- und Stärkeelemente. Seit LFH-424 führt Kapitel 2 hier alle
+ * **acht** Organisationen: `2.2_Organisationen.svg` trägt entgegen seinem generischen Namen den
+ * Fleck der Hilfsorganisationen (vollflächig `#ffffff` wie 2.1 und 2.3 bis 2.8, Typo-Ebene liest
+ * gerastert „HiOrg"). Die frühere Annahme, aus dem Namen folge keine Zuordnung, ist damit
+ * widerlegt — nachgezählt: genau acht Dateien des Kapitels tragen Fleck **und** Typo-Ebene.
  *
  * Bei den Stärkegraden enthält `referenceAssets` mehr als die namensgebende Datei: die
  * `5.4.x`-Dateien sind eigenständige Anzeigedarstellungen mit r = 4 und selbst keine Kopfzonen;
@@ -104,6 +105,12 @@ const STATIC_ELEMENTS = {
     title: 'Zivile Einheiten',
     referenceAssets: ['2.8_Zivile Einheiten.svg'],
   },
+  'organization.hilfsorganisation': {
+    id: 'organization.hilfsorganisation',
+    kind: 'organization',
+    title: 'Hilfsorganisation',
+    referenceAssets: ['2.2_Organisationen.svg'],
+  },
   'strength.trupp': {
     id: 'strength.trupp',
     kind: 'strength',
@@ -147,6 +154,67 @@ const STATIC_ELEMENTS = {
       'D.3.7_Zugführer der Feuerwehr.svg',
       'E.1.18_Fachzug Führung-Kommunikation.svg',
     ],
+  },
+  // Fahrzeugkategorien nach Kapitel 5.1.1. `referenceAssets` führt die namensgebende Datei zuerst
+  // und danach die Zeichen aus Anhang E.2, an denen dieselbe Zone unabhängig vermessen ist —
+  // dieselbe Begründung wie bei den Stärkegraden. Genannt sind je Kategorie die ersten beiden
+  // E.2-Träger in Abschnittsreihenfolge; die vollständige Zuordnung aller 21 E.2-Zeichen mit
+  // Fahrzeugkategorie (und der vier Anhänger ohne ID)
+  // steht in `docs/decisions/2026-08-18-grundlagen-restpunkte.md`.
+  //
+  // `amphibienfahrzeug` steht **nicht** hier: seine Wellenlinie ist nur als Strichhülle vermessen,
+  // `vehicleChassis` wirft dafür. Ein Elementeintrag behauptete eine Umsetzung, die es nicht gibt.
+  'vehicle-category.kfz-kategorie-1': {
+    id: 'vehicle-category.kfz-kategorie-1',
+    kind: 'vehicle-category',
+    title: 'Kraftfahrzeug Kategorie 1 (straßenfähig)',
+    referenceAssets: [
+      '5.1.1.1_Kfz_Kategorie 1.svg',
+      'E.2.1_Personenkraftwagen_straßenfähig.svg',
+      'E.2.2_Mannschaftstransportwagen_straßenfähig.svg',
+    ],
+  },
+  'vehicle-category.kfz-kategorie-2': {
+    id: 'vehicle-category.kfz-kategorie-2',
+    kind: 'vehicle-category',
+    title: 'Kraftfahrzeug Kategorie 2 (geländefähig)',
+    referenceAssets: [
+      '5.1.1.2_Kfz_Kategorie 2.svg',
+      'E.2.3_Gerätekraftwagen_geländefähig.svg',
+      'E.2.10_Bergungsräumgerät Bagger_Radantrieb.svg',
+    ],
+  },
+  'vehicle-category.kfz-kategorie-3': {
+    id: 'vehicle-category.kfz-kategorie-3',
+    kind: 'vehicle-category',
+    title: 'Kraftfahrzeug Kategorie 3 (geländegängig)',
+    referenceAssets: [
+      '5.1.1.3_Kfz_Kategorie 3.svg',
+      'E.2.4_All Terrain Vehicle_geländegängig.svg',
+      'E.2.7_Teleskopstapler_geländegängig.svg',
+    ],
+  },
+  'vehicle-category.kettenfahrzeug': {
+    id: 'vehicle-category.kettenfahrzeug',
+    kind: 'vehicle-category',
+    title: 'Kettenfahrzeug',
+    referenceAssets: [
+      '5.1.1.5_Kettenfahrzeug.svg',
+      'E.2.9_Bergungsräumgerät Bagger_Kettenantrieb.svg',
+    ],
+  },
+  // Der einzige Eintrag mit **einer** Belegstelle, und das ist die wahre Aussage: kein Zeichen des
+  // Bestands außerhalb von 5.1.1.6 stellt ein Schienenfahrzeug dar.
+  // `5.1.1.7_Kraftfahrzeug_aufgleisbar.svg` zeigt dieselben vier Radplätze plus einen fünften bei
+  // cx 16 und bestätigt sie damit; es steht trotzdem **nicht** hier, weil `referenceAssets` liest
+  // wie „diese Datei stellt dieses Element dar" und ein aufgleisbares Kraftfahrzeug kein
+  // Schienenfahrzeug ist. Die Gegenmessung steht in
+  // `docs/decisions/2026-08-18-grundlagen-restpunkte.md`, Abschnitt 1.2.
+  'vehicle-category.schienenfahrzeug': {
+    id: 'vehicle-category.schienenfahrzeug',
+    kind: 'vehicle-category',
+    title: 'Schienenfahrzeug',
+    referenceAssets: ['5.1.1.6_Schienenfahrzeug.svg'],
   },
 } as const satisfies Record<string, ElementDescriptor>;
 

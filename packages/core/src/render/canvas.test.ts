@@ -144,6 +144,35 @@ describe('renderCanvas', () => {
     expect(calls).toContainEqual(['set:strokeStyle', '#000000']);
   });
 
+  it('zeichnet ein Rechteck mit rx als abgerundetes Rechteck', () => {
+    // Die Kette aus 5.1.1.5 ist ein Stadion, also ein Rechteck mit `rx` = halbe Höhe.
+    // `renderSvg` gibt `rx` seit jeher aus; auf der Leinwand fehlte es und dieselbe Zeichnung
+    // ergab zwei Bilder — hier mit scharfen Ecken. Kein Fall des Bestands war betroffen, solange
+    // kein Primitiv `rx` setzte, und genau deshalb fiel es nicht auf.
+    const stadium: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [{ type: 'rect', role: 'chassis', x: 2, y: 26, width: 28, height: 4.5, rx: 2.25 }],
+    };
+    const { ctx, calls } = recordingContext();
+    renderCanvas(stadium, ctx);
+    const names = calls.map(([name]) => name);
+    expect(names).toContain('roundRect');
+    expect(names).not.toContain('rect');
+    expect(calls.find(([name]) => name === 'roundRect')?.slice(1)).toEqual([
+      mmToUnits(2),
+      mmToUnits(26),
+      mmToUnits(28),
+      mmToUnits(4.5),
+      mmToUnits(2.25),
+    ]);
+  });
+
+  it('zeichnet ein Rechteck ohne rx weiterhin scharfkantig', () => {
+    const { ctx, calls } = recordingContext();
+    renderCanvas(formation, ctx);
+    expect(calls.map(([name]) => name)).not.toContain('roundRect');
+  });
+
   it('löst dieselben Themefarben wie der SVG-Renderer auf', () => {
     const theme: RenderTheme = {
       id: 'test',
