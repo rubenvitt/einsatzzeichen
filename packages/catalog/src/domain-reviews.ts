@@ -91,25 +91,30 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:E.1.35#primary': { status: 'pending' },
   'bbk-babz-2025:E.1.36#primary': { status: 'pending' },
   'bbk-babz-2025:E.1.37#primary': { status: 'pending' },
-  // Anhang E, Teilslice E-d: die 20 gebauten Landfahrzeuge des THW. Ein eigener Block, weil die
-  // offenen Fragen hier zum ersten Mal nicht die Einheit betreffen, sondern das **Gerät** und
-  // seine Benennung. Vier stehen ausdrücklich aus und sind in keinem technischen Gate
-  // beantwortbar: ob „Telelader" (Bild) oder „Teleskopstapler" (Dateiname) das fachlich
+  // Anhang E, Teilslice E-d: die 21 Landfahrzeuge E.2.1 bis E.2.21, davon 20 des THW. Ein
+  // eigener Block, weil die offenen Fragen hier zum ersten Mal nicht die Einheit betreffen,
+  // sondern das **Gerät** und seine Benennung. Fünf stehen ausdrücklich aus und sind in keinem
+  // technischen Gate beantwortbar: ob „Telelader" (Bild) oder „Teleskopstapler" (Dateiname) das fachlich
   // tragende Kürzel für E.2.7 ist; ob „Bagger" ohne die Kurzform „BRmG" die
   // Bergungsräumgeräte E.2.9 und E.2.10 hinreichend bezeichnet (im Bild kommt „BRmG" in keinem
   // der drei vor); ob die Zuordnung „Kategorie 1/2/3 = straßenfähig/geländefähig/geländegängig"
   // trägt, die aus der Mehrheit der Dateinamen abgeleitet ist und der E.2.12, E.2.13 und E.2.18
   // widersprechen; und ob E.2.9 und E.2.10, die dasselbe Kürzel und verschiedene Fahrwerke
-  // führen, im Einsatz verwechslungsfrei bleiben.
+  // führen, im Einsatz verwechslungsfrei bleiben; und — die fünfte, seit E.2.6 am 18. August 2026
+  // nachgezogen wurde — ob der orange Körper der `sonstige-gefahrenabwehr` bei zugleich
+  // gezeichnetem Trägerkürzel `THW` die Zuordnung oder den Betreiber bezeichnet. Der Dateiname
+  // („öffentliche Gefahrenabwehr, THW betrieben") legt das Zweite nahe, entschieden ist es von
+  // keiner Messung.
   //
-  // **E.2.6 fehlt hier, weil es keine Manifestzeile hat** — es ist als einziger Abschnitt des
-  // Anhangs nicht gebaut. Die Begründung steht in `ANHANG_E_D_UNGEBAUT`; sie ist keine
-  // fachliche, sondern eine offene Entscheidung über einen Gate-Vertrag.
+  // Die **Kontrastlage** von E.2.6 gehört ausdrücklich nicht hierher: weiss auf orange verfehlt
+  // die Textschwelle in jedem Theme, das ist gemessen und als Ausnahme in `CONTRAST_EXCEPTIONS`
+  // entschieden — keine fachliche Frage an ein Review.
   'bbk-babz-2025:E.2.1#primary': { status: 'pending' },
   'bbk-babz-2025:E.2.2#primary': { status: 'pending' },
   'bbk-babz-2025:E.2.3#primary': { status: 'pending' },
   'bbk-babz-2025:E.2.4#primary': { status: 'pending' },
   'bbk-babz-2025:E.2.5#primary': { status: 'pending' },
+  'bbk-babz-2025:E.2.6#primary': { status: 'pending' },
   'bbk-babz-2025:E.2.7#primary': { status: 'pending' },
   'bbk-babz-2025:E.2.8#primary': { status: 'pending' },
   'bbk-babz-2025:E.2.9#primary': { status: 'pending' },

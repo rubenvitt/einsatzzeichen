@@ -12,3 +12,4 @@ export * from './domain-reviews.js';
 export * from './coverage-gate.js';
 export * from './render-themes.js';
 export * from './labels.js';
+export * from './contrast-exceptions.js';

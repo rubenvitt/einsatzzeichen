@@ -796,15 +796,15 @@ export const ANHANG_E_C_FILL_FINDINGS: Readonly<Record<string, string>> = Object
  * (Kontaktbogen 620 px je Zeichen, Ausschnittsbogen 1500 px je Lauf) und gegen den Dateinamen
  * gehalten.
  *
- * **Was neu ist, und zwar viererlei.**
+ * **Was neu ist, und zwar fünferlei.**
  *
- * **Erstens der Körper und die Zone unter ihm.** 19 der 20 gebauten Zeichen stehen auf
+ * **Erstens der Körper und die Zone unter ihm.** 20 der 21 gebauten Zeichen stehen auf
  * `vehicle-land`, E.2.15 auf dem eigenen `swap-loader-vehicle`. Die Landfahrzeughülle misst in
  * **allen 20** Landfahrzeugen des Quellblocks E.2.1 bis E.2.21 zahlengleich
  * 1,0001/5,7503/31,0003/26,0004 mm (selbst nachgezählt), der Wechselladerrumpf
  * 2,5001/6,0000/31,0000/24,5004 mm — genau 1 der 661 Referenzdateien. Statt einer Kopfzone tragen sie eine
  * **Fahrwerkszone** unterhalb der Körperunterkante; keines der 31 Zeichen aus E.2 führt
- * überhaupt eine Kopfzone, und `strength` fehlt deshalb in allen 30 Rezepten dieses Slice als
+ * überhaupt eine Kopfzone, und `strength` fehlt deshalb in allen 31 Rezepten dieses Slice als
  * Sachaussage und nicht als Lücke.
  *
  * **Zweitens ist die Fahrzeugkategorie an der Strichebene gemessen und nicht aus dem Dateinamen
@@ -833,8 +833,17 @@ export const ANHANG_E_C_FILL_FINDINGS: Readonly<Record<string, string>> = Object
  * Kürzelregel „nur Großbuchstaben" wäre an diesem Block falsch. Ebenfalls neu und nur hier: kein
  * einziges Zeichen des Anhangs E.2 belegt die Zone unten links.
  *
- * **E.2.6 fehlt in diesem Block, und zwar begründet** — siehe `ANHANG_E_D_UNGEBAUT`. Damit trägt
- * E-d 20 statt 21 Zeichen und Anhang E 67 statt 68.
+ * **E.2.6 ist am 18. August 2026 nachgezogen worden und schließt den Anhang.** Es war bis dahin
+ * der einzige ungebaute Abschnitt — nicht aus einer Messlücke, sondern weil sein oranger Körper
+ * mit weisser Beschriftung die Textschwelle 4,5:1 in keinem Theme erreicht und die Entscheidung
+ * darüber keine Messfrage war. Sie ist gefallen: der Katalog baut das Zeichen wie die Referenz es
+ * zeigt und führt den Befund als Ausnahme in `CONTRAST_EXCEPTIONS`. Damit trägt E-d 21 Zeichen
+ * und Anhang E alle 68.
+ *
+ * **Fünftens, und erst mit E.2.6:** dieser Block ist der einzige des Anhangs, der nicht
+ * durchgehend `thw` führt. 20 der 21 Zeichen tragen den blauen THW-Körper, E.2.6 den orangen der
+ * `sonstige-gefahrenabwehr` — und trotzdem das Trägerkürzel `THW`, weil die Quelle Betreiber und
+ * Zuordnung hier trennt.
  */
 export const ANHANG_E_D_RECIPES = {
   'E.2.1': {
@@ -876,8 +885,8 @@ export const ANHANG_E_D_RECIPES = {
   /**
    * Das erste Zeichen des Anhangs mit Verbindungsstrichen zwischen den Radringen: die Strichebene
    * führt sieben Teilpfade, darunter die beiden Balken 5,2433…14,5062 und 17,4932…26,7561 bei
-   * y 26,2502…28,0000 mm. Zeichengleich mit E.2.7, E.2.8 und E.2.11 (und mit E.2.6, das dieser
-   * Block nicht baut).
+   * y 26,2502…28,0000 mm. Zeichengleich mit E.2.6, E.2.7, E.2.8 und E.2.11 — auf vier
+   * Nachkommastellen punktgleich, je Teilpfad nachgezählt.
    */
   'E.2.4': {
     title: 'All Terrain Vehicle, geländegängig',
@@ -905,6 +914,50 @@ export const ANHANG_E_D_RECIPES = {
       kind: 'vehicle-land',
       organization: 'thw',
       vehicleCategory: 'kfz-kategorie-1',
+      labels: { center: 'Stapler', bottomRight: 'THW' },
+    },
+  },
+  /**
+   * **Das einzige Zeichen des Anhangs mit orangem Körper und zugleich weisser Beschriftung — und
+   * damit das einzige, dessen Kontrastlage eine Entscheidung gebraucht hat.**
+   *
+   * Der zweite Füllpfad trägt `#fa8c00` = `organizationColor('sonstige-gefahrenabwehr')` auf der
+   * Hülle 2,0002/7,1138/30,0002/25,0007 mm — punktgleich mit dem blauen Farbfeld der übrigen
+   * Landfahrzeuge des Blocks. Die Organisation steht also im Bild und nicht nur im Dateinamen;
+   * das Trägerkürzel `THW` widerspricht ihr nicht, sondern nennt den Betreiber.
+   *
+   * **Die Beschriftung ist die von E.2.5**, und zwar nachgemessen: zehn Glyphen in zwei Läufen,
+   * größte Einzeldifferenz aller vierzig Hüllenkanten 0,00071 mm (`THW`-Lauf 19,9877 gegen
+   * 19,9870 an der linken Tintenkante, mittiger Lauf 5,9736 gegen 5,9739). Der Schriftgrad ist
+   * wie dort der Normwert — das `t` misst in beiden Dateien 4,4316 mm, das `r` steht auf der
+   * Normgrundlinie 18,0001 mm —, deshalb trägt das Rezept **kein** `centerCapHeightMm`.
+   *
+   * **Das Fahrwerk ist ausdrücklich nicht das von E.2.5.** Der Baubeschluss des E.2-Slice hat
+   * „Fahrwerk und Beschriftung sind zeichengleich mit E.2.5" übergeben; die zweite Hälfte hält,
+   * die erste ist an der Datei widerlegt. E.2.5 führt vier Teilpfade in der Strichebene und damit
+   * zwei Räder (`kfz-kategorie-1`), E.2.6 sieben und damit drei Räder auf cx 3,7502/16,0001/28,2499
+   * mit den beiden Verbindungsbalken 5,2433…14,5062 und 17,4932…26,7561 bei y 26,2502…28,0000 mm
+   * (`kfz-kategorie-3`). Nachgezählt an den `M`-Kommandos **eines** Pfadelements: die Strichebene
+   * ist in allen Dateien ein einziges `<path>`, ein Zählen der Elemente ergäbe überall 1. Die
+   * fünf Teilpfade unterhalb des Rahmens sind mit E.2.4 und E.2.7 auf vier Nachkommastellen
+   * punktgleich, ebenso mit E.2.8 und E.2.11.
+   *
+   * **Die Kontrastlage und ihre Entscheidung.** `labelContrastRequirements` leitet aus diesem
+   * Rezept „weiss auf orange" mit der Textschwelle 4,5:1 ab. Das erreicht 2,382:1 im Referenz-
+   * und im accessible-light-Theme und 2,323:1 im Drucktheme. Der Katalog baut das Zeichen
+   * trotzdem so, wie die Referenz es zeigt: der Befund steht als entschiedene Ausnahme in
+   * `CONTRAST_EXCEPTIONS` (18.08.2026), mit den drei geprüften und verworfenen Alternativen und
+   * dem Nachweis, dass das Fenster im Drucktheme leer ist. Das Zeichen trägt deshalb **keine**
+   * `deviation` — abweichend ist nicht die Umsetzung von der Quelle, sondern die eigene Schwelle
+   * des Katalogs vom Bild.
+   */
+  'E.2.6': {
+    title: 'Gabelstapler öffentliche Gefahrenabwehr, THW betrieben, geländegängig',
+    referenceAsset: 'E.2.6_Gabelstapler öffentliche Gefahrenabwehr_THW betrieben_geländegängig.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'sonstige-gefahrenabwehr',
+      vehicleCategory: 'kfz-kategorie-3',
       labels: { center: 'Stapler', bottomRight: 'THW' },
     },
   },
@@ -1177,43 +1230,6 @@ export const ANHANG_E_D_RECIPES = {
 } as const satisfies Record<string, Recipe>;
 
 /**
- * **Das eine Zeichen des Anhangs E, das dieser Slice nicht baut, und der Grund dafür.**
- *
- * Es steht als eigener Export und nicht als Kommentarzeile, damit ein Test es lesen kann: eine
- * fehlende Manifestzeile ist sonst genau die Art Lücke, die niemand bemerkt. Sobald die Zustimmung
- * zur Gate-Änderung vorliegt, wird aus diesem Eintrag ein Rezept, aus `E.1` plus 30 Einzelzeilen
- * ein `E` im Manifest-`scope`, und dieser Export verschwindet.
- */
-export const ANHANG_E_D_UNGEBAUT: Readonly<Record<string, string>> = Object.freeze({
-  'E.2.6':
-    'Gabelstapler öffentliche Gefahrenabwehr, THW betrieben, geländegängig — nicht gebaut, weil ' +
-    'die Umsetzung eine Änderung an einem Gate-Vertrag erzwingen würde, für die keine ' +
-    'ausdrückliche Zustimmung vorliegt. Gemessen ist alles Übrige. Die **Beschriftung** ist die ' +
-    'von E.2.5 („Stapler" mittig, „THW" unten rechts) und weicht von ihr um höchstens 0,0007 mm ' +
-    'ab (THW-Lauf 19,9877 gegen 19,9870 an der linken Tintenkante, mittiger Lauf 5,9736 gegen ' +
-    '5,9739). Das **Fahrwerk** ist es ausdrücklich nicht: E.2.5 führt vier Teilpfade in der ' +
-    'Strichebene und damit zwei Räder (kfz-kategorie-1), E.2.6 sieben und damit drei Räder mit ' +
-    'zwei Verbindungsbalken (kfz-kategorie-3, zeichengleich mit E.2.4, E.2.7, E.2.8 und E.2.11). ' +
-    'Der Baubeschluss dieses Slice sagt „Fahrwerk und Beschriftung sind zeichengleich mit E.2.5" ' +
-    '— die zweite Hälfte hält, die erste ist an der Datei widerlegt. Der zweite Füllpfad trägt ' +
-    '#fa8c00 = ' +
-    'organizationColor("sonstige-gefahrenabwehr") auf der Hülle 2,0002/7,1138/30,0002/25,0007 mm ' +
-    '— punktgleich mit dem blauen Farbfeld der zehn übrigen Landfahrzeuge des Blocks. Damit ist ' +
-    'es das einzige Zeichen des Anhangs mit orangem Körper und zugleich weissem Trägerkürzel. ' +
-    'Sobald ein Rezept organization: "sonstige-gefahrenabwehr" mit Beschriftung führt, leitet ' +
-    'labelContrastRequirements() daraus die Anforderung „weiss auf orange" mit der Textschwelle ' +
-    '4,5:1 ab, und die fällt in jedem Theme: selbst nachgerechnet 2,382:1 im Referenz- und im ' +
-    'accessible-light-Theme, 2,323:1 im Drucktheme (die Zahlen stehen als Test in ' +
-    'a11y-contrast-gate.test.ts). Für accessible-light wäre das lösbar, für print-monochrome ' +
-    'nicht: weiss ab 4,5:1 verlangt eine Relativluminanz von höchstens 0,1833, die ' +
-    'Piktogrammpaare „schwarz auf orange" verlangen mindestens 0,1000, und der eigene ' +
-    'Helligkeitsabstand von mehr als 0,045 je Organisation verlangt Abstand zu rot und blau — das ' +
-    'Fenster ist leer. Der Ausweg wäre ein zweiter erklärter Negativbefund im Drucktheme nach dem ' +
-    'Muster von „hält Schwarz auf BABZ-Blau im Referenztheme als bekannten Negativbefund fest"; ' +
-    'das ändert einen Gate-Vertrag und ist deshalb keine Messfrage, sondern eine Entscheidung.',
-});
-
-/**
  * Die neun Referenzdateien aus E-d, deren Bild von ihrem Dateinamen oder deren Geometrie von der
  * Norm der 18 zahlengleichen Landfahrzeuge abweicht. Wie `ANHANG_E_A_FILL_DEFECTS`,
  * `ANHANG_E_B_FILL_FINDINGS` und `ANHANG_E_C_FILL_FINDINGS` stehen sie hier als Datum, damit die
@@ -1276,7 +1292,7 @@ export const ANHANG_E_D_FINDINGS: Readonly<Record<string, string>> = Object.free
     'bleibt ein leeres weisses Band. Beide Grundlinien stehen normgerecht. Dieselbe Klasse wie ' +
     'E.1.19 und E.1.24 aus E-b, dort aber gepaart mit einer Markenreihe im Körper, die hier ' +
     'fehlt — die Paarung, die E-b noch vermutet hat, trägt damit nicht. Der Katalog färbt den ' +
-    'ganzen Körperpfad, wie in allen 67 Zeichen des Anhangs.',
+    'ganzen Körperpfad, wie in allen 68 Zeichen des Anhangs.',
   'E.2.20':
     'Zwei Befunde in einer Datei. Erstens dasselbe zurückgesetzte Farbfeld wie E.2.19 ' +
     '(2,0002/9,9998/30,0002/25,0003 mm). Zweitens steht die mittige Grundlinie auf 17,5002 mm, ' +
@@ -1451,8 +1467,9 @@ export const ANHANG_E_E_FINDINGS: Readonly<Record<string, string>> = Object.free
     'selbst nachgemessen überhaupt kein Rad trägt — seine Strichebene führt drei Teilpfade, ' +
     'keinen Ring. Damit ist die Gleichung „ein Rad = von PKW gezogen" aus der Quelle selbst ' +
     'widerlegt; das ist der Grund, warum die beiden Fahrwerks-IDs nach der Zeichnung benannt ' +
-    'sind und nicht nach dem Zugfahrzeug. Zweiter Befund, ohne Baufolge: als einziges der 67 ' +
-    'gebauten Zeichen des Anhangs trägt es keine mittige Beschriftung.',
+    'sind und nicht nach dem Zugfahrzeug. Zweiter Befund, ohne Baufolge: es trägt keine mittige ' +
+    'Beschriftung — eines von zwei Zeichen des Anhangs, auf die das zutrifft (das andere ist ' +
+    'E.2.27).',
   'E.2.23':
     'Zwei Befunde. Erstens sagt der Dateiname „von LKW gezogen", gezeichnet ist die Ein-Rad-Form ' +
     '(cx 17,4999 mm) — dieselbe wie beim Grundzeichen E.2.22 und beim „von PKW gezogen" ' +
@@ -1482,8 +1499,8 @@ export const ANHANG_E_E_FINDINGS: Readonly<Record<string, string>> = Object.free
 
 /**
  * Anhang E, Teilslice E-f: die Wasserfahrzeuge E.2.27 bis E.2.31 des THW — die letzten fünf
- * Zeichen des Anhangs. Mit ihnen ist Anhang E bei 67 von 68 Abschnitten; es fehlt allein E.2.6
- * (siehe `ANHANG_E_D_UNGEBAUT`).
+ * Zeichen des Anhangs. Mit ihnen und dem am 18. August 2026 nachgezogenen E.2.6 ist Anhang E mit
+ * 68 von 68 Abschnitten vollständig.
  *
  * **Was gleich bleibt:** Kompositionen auf einem Grundzeichen, Organisation `thw`, Kürzel aus der
  * eigenen Rasterung, keine Kopfzone, keine Zone unten links, kein Fahrwerk.

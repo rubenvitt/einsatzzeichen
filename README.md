@@ -102,10 +102,10 @@ fachkundige Person geprüft werden. Die Abschlussentscheidung für D.1 steht in
 D.2 deckt Kapitel 5.8 der projektinternen Coverage-Baseline technisch mit 61 State-IDs und 67
 Darstellungen ab, darunter sechs getrennt adressierbare Alternativdarstellungen. Damit enthält
 der Katalog zusammen mit D.3 und D.4 insgesamt 254 Piktogrammdarstellungen: 92 Capabilities, 67
-States, 53 IuK-, 28 Schadens- und 14 Vegetationsbrandzeichen. Die 338 globalen Renderfälle setzen
-sich aus vierzehn Grundzeichen, 70 Rezepten und diesen 254 Piktogrammen zusammen — drei Rezepte
-belegen den Kompositionsmotor, die übrigen 67 gehören zu Anhang E, dessen 68. Abschnitt begründet
-offen ist (siehe unten).
+States, 53 IuK-, 28 Schadens- und 14 Vegetationsbrandzeichen. Die 339 globalen Renderfälle setzen
+sich aus vierzehn Grundzeichen, 71 Rezepten und diesen 254 Piktogrammen zusammen — drei Rezepte
+belegen den Kompositionsmotor, die übrigen 68 sind Anhang E, seit dem 18. August 2026 vollständig
+(siehe unten).
 
 Alle 67 State-Darstellungen sind eigenständige Zeichen mit kanonischer 32×32-mm-Platzierung und
 Standalone-Clipping. D.2 führt weder eine allgemeine State-Komposition noch eine Integration in
@@ -329,18 +329,19 @@ Verwaltungsstufen (Kapitel 5.7) und das Kreiskörperprofil bleiben begründet of
 stehen mit ihren Messwerten in
 [`2026-08-18-grundlagen-restpunkte.md`](./docs/decisions/2026-08-18-grundlagen-restpunkte.md).
 
-## E-d, E-e und E-f: Anhang E.2, damit 67 der 68 Zeichen des Anhangs E
+## E-d, E-e und E-f: Anhang E.2, damit alle 68 Zeichen des Anhangs E
 
 E.2 ist die zweite Hälfte von Anhang E und der erste Rezeptblock, der Fahrzeuge führt: 21
 Landfahrzeuge (E-d), fünf Anhänger und Sonderkörper (E-e), fünf Wasserfahrzeuge (E-f).
-**30 der 31 sind gebaut; `E.2.6` fehlt begründet** — den 68 Referenzdateien des Anhangs stehen damit
-67 Rezepte gegenüber, lückenlos von E.1.1 bis E.1.37 und von E.2.1 bis E.2.31 mit dieser einen
-Ausnahme. Der Katalog führt seither 70 Rezepte und 338 Renderfälle, 357 Manifestzeilen und 371
-offene fachliche Reviews, davon 67 im Bereich E.
+**Alle 31 sind gebaut** — den 68 Referenzdateien des Anhangs stehen damit 68 Rezepte gegenüber,
+lückenlos von E.1.1 bis E.1.37 und von E.2.1 bis E.2.31. Der Katalog führt seither 71 Rezepte und
+339 Renderfälle, 358 Manifestzeilen und 372 offene fachliche Reviews, davon 68 im Bereich E (eigener
+Lauf `pnpm cli coverage`). `E.2.6` ist am 18. August 2026 nachgezogen worden und war bis dahin der
+einzige offene Abschnitt; der Grund und seine Auflösung stehen weiter unten.
 
 **E.2 ist der erste Block, dessen Zeichen nicht alle auf demselben Körper stehen.** Wo E.1 alle 37
-Zeichen auf `formation` setzt und ihre ganze Unterscheidung in ein Kürzel legt, verteilen sich die 30
-E.2-Rezepte auf **fünf Körperformen**: 19 Landfahrzeuge, fünf Wasserfahrzeuge, vier Anhänger, ein
+Zeichen auf `formation` setzt und ihre ganze Unterscheidung in ein Kürzel legt, verteilen sich die 31
+E.2-Rezepte auf **fünf Körperformen**: 20 Landfahrzeuge, fünf Wasserfahrzeuge, vier Anhänger, ein
 Wechsellader und ein hochkantes Rechteck. Drei davon sind neu — `trailer`, `swap-loader-vehicle` und
 `upright-rectangle` —, `SymbolKind` führt damit 17 Werte statt vierzehn. **`BASE_SYMBOLS` bleibt
 trotzdem bei vierzehn**, und das ist die Absicht und kein Versäumnis: dieses Register ist Kapitel 1,
@@ -368,13 +369,13 @@ vier der fünf ungegateten Körper auf (siehe oben).
 Drei Mechanismen kommen aus den Zeichen selbst. **Eine vierte Beschriftungszone** trägt das
 Trägerkürzel *unterhalb* des Körpers in der Organisationsfarbe statt weiß darin — fünf Rezepte
 nutzen sie, alle in E-f, und ohne sie setzte der Katalog ein Kürzel dorthin, wo die Referenz keines
-hat. **Der Schriftgrad des mittigen Laufs ist jetzt ein Wert am Rezept**: neun der 30 Läufe sind in
+hat. **Der Schriftgrad des mittigen Laufs ist jetzt ein Wert am Rezept**: neun der 31 Läufe sind in
 der Referenz kleiner gesetzt und tragen ihre gemessene Kappenhöhe zwischen 3,40995 und 4,38290 mm,
-die übrigen 19 den Normwert 4,87 (28 der 30 Zeichen tragen überhaupt einen mittigen Lauf — E.2.22
+die übrigen 20 den Normwert 4,87 (29 der 31 Zeichen tragen überhaupt einen mittigen Lauf — E.2.22
 und E.2.27 führen keinen). Eine Auslöseregel dafür gibt es nicht, und der Katalog behauptet
 auch keine — er trägt Werte. Und **die mittige Grundlinie ist eine Eigenschaft des Körperprofils**
 geworden: die feste Vorgabe von 8 mm über der Körperunterkante trifft drei der fünf E.2-Formen
-nicht (Wasserrumpf 6,9896, Wechsellader 7,5, Hochkantrechteck 13). Alle 67 beschrifteten Rezepte
+nicht (Wasserrumpf 6,9896, Wechsellader 7,5, Hochkantrechteck 13). Alle 68 beschrifteten Rezepte
 halten damit ihre 28-mm-Box exakt ein.
 
 Beim Fahrwerk wachsen die vermessenen Fahrzeugkategorien von fünf auf **sieben von acht**. Die
@@ -384,32 +385,44 @@ gezogen" (5.1.2.4) und „von LKW gezogen" (5.1.2.5). Der Teilpfadzensus der Str
 anderes: 5.1.2.1 „allgemein" führt drei Teilpfade und damit **kein** Rad, 5.1.2.4 vier und 5.1.2.5
 fünf — und von den vier E.2-Anhängern tragen E.2.22 („Grundzeichen"), E.2.23 („von LKW gezogen")
 und E.2.25 die Vier-Teilpfad-Form, allein E.2.24 die mit fünf. Eine ID aus dem Quellbegriff wäre an drei der vier E.2-Anhänger eine
-Falschaussage gewesen — dieselbe Zurückhaltung, mit der E.1.31 seinen Stärkegrad verweigert hat. 24
-der 30 Rezepte tragen ein Fahrwerk, und `CHASSIS_KINDS` lässt es seither an drei Körperarten zu.
+Falschaussage gewesen — dieselbe Zurückhaltung, mit der E.1.31 seinen Stärkegrad verweigert hat. 25
+der 31 Rezepte tragen ein Fahrwerk, und `CHASSIS_KINDS` lässt es seither an drei Körperarten zu.
 
 **E.2.26 ist die fünfte bewusste Abweichung des Katalogs**, nach E.1.17, E.1.19, E.1.24 und E.1.31.
 Die Trinkwasseraufbereitungsanlage setzt ihr `THW` 1,0 mm weiter links, als `LABEL_SIDE_MARGIN_MM`
 ergibt — bei n = 1 und zwei gleich guten Lesarten. Dafür wird kein Mechanismus gebaut; die Zeile
 trägt ein technisches `deviation` und die Messung in der Notiz, wie E.1.17 seine 2,0 mm trägt.
 
-**`E.2.6` ist der eine Abschnitt, der offen bleibt, und der Grund ist kein Messproblem.** Der
-Gabelstapler der öffentlichen Gefahrenabwehr ist das einzige Zeichen des Anhangs mit orangem Körper
-und trägt zugleich ein weißes `THW`. `labelContrastRequirements()` leitet daraus die Anforderung
-„weiß auf orange" mit `MINIMUM_TEXT_CONTRAST` = 4,5:1 ab, sobald das Rezept existiert — erreicht
-werden 2,3820:1 im Referenz- und im Accessible-Theme (`orange` = `#fa8c00`) und 2,3231:1 im
-Drucktheme (`#aaaaaa`). Das a11y-Gate fiele damit in beiden Alternativthemes. Es ließe sich lösen,
-aber nur durch eine Änderung an einem Gate-Vertrag, und die ist eine Entscheidung und keine Messung.
-Solange sie aussteht, ist E.2.6 nicht gebaut, sondern in `ANHANG_E_D_UNGEBAUT` mit seiner Begründung
-deklariert; mehrere Tests über drei Dateien halten fest, dass es genau dieser eine Abschnitt ist —
-darunter einer, der `recipe.E.2.6` ausdrücklich aus den Renderfällen ausschließt.
+**`E.2.6` war der eine offene Abschnitt, und der Grund war kein Messproblem.** Der Gabelstapler der
+öffentlichen Gefahrenabwehr ist das einzige Zeichen des Anhangs mit orangem Körper und trägt
+zugleich ein weißes `Stapler` und `THW`. `labelContrastRequirements()` leitet daraus die Anforderung
+„weiß auf orange" mit `MINIMUM_TEXT_CONTRAST` = 4,5:1 ab — erreicht werden 2,3820:1 im Referenz- und
+im Accessible-Theme (`orange` = `#fa8c00`) und 2,3231:1 im Drucktheme (`#aaaaaa`), nachgerechnet aus
+der Palette **und** aus den gerasterten Pixeln bei 256 px. Lösbar wäre das nur in
+`accessible-light`: im Drucktheme ist die Palette achromatisch, und von allen 256 Grauwerten
+erfüllt **keiner** zugleich 4,5:1 gegen Weiß, 3:1 gegen Schwarz und den geforderten
+Helligkeitsabstand von mehr als 0,045 zu den sieben übrigen Organisationsfarben. Das Fenster ist
+nicht eng, sondern leer.
 
-**Die Umfangszeile ist deshalb nicht zusammengezogen.** E-c durfte die 37 Einzelabschnitte zu `E.1`
-zusammenziehen, weil ein eigener Test die Lückenlosigkeit trägt — die Umfangsprüfung selbst sieht
-Vollständigkeit nicht, sie prüft an einem Präfix nur, ob *eine* Zeile existiert. `E` bestünde
-deshalb schon mit den 37 E.1-Zeilen allein und `E.2` mit 30 von 31; beides wäre genau die
-unwiderlegbare Behauptung, die die abschnittsweise Führung verhindern soll. Der Umfang führt daher
-`E.1` plus die 30 E.2-Abschnitte einzeln und ist auf 47 Einträge gewachsen. Der Zusammenzug zu `E`
-ist der eine Schritt, der mit E.2.6 fällig wird.
+**Entschieden am 18. August 2026 durch den Projektinhaber:** der Katalog baut das Zeichen so, wie
+die Referenz es zeigt, und führt „weiß auf orange" als bekannten, begründeten Negativbefund. E.2.6
+trägt deshalb **keine** `deviation` — abweichend ist nicht die Umsetzung von der Quelle, sondern
+die eigene Kontrastschwelle des Katalogs vom Bild. Die Ausnahme steht als Datum im Paket
+(`CONTRAST_EXCEPTIONS` mit Paar, Themes, Abschnitten, Entscheidungsdatum, Begründung und den drei
+geprüften und verworfenen Wegen) und ist im Betrieb sichtbar: `pnpm cli coverage` gibt
+`Kontrastausnahmen: weiss auf orange (E.2.6, entschieden am 2026-08-18 durch Projektinhaber)` aus.
+Sie ist ausdrücklich **kein** Freigabeblocker — ein Blocker ist ein offener Punkt, diese Ausnahme
+ist ein entschiedener. Das a11y-Gate bleibt scharf: die Ausnahme wirkt paarweise und themeweise,
+die Zahl der gedeckten Befunde ist auf **genau einen je Theme** gepinnt, und ein zweites oranges
+Rezept fällt an einer eigenen Zusage auf.
+
+**Die Umfangszeile ist damit zusammengezogen: aus `E.1` plus 30 E.2-Einzelzeilen wird `E`**, 47
+Einträge werden 17. Das ging vorher nicht: die Umfangsprüfung sieht Vollständigkeit nicht, sie
+prüft an einem Präfix nur, ob *eine* Zeile existiert — `E` bestünde deshalb schon mit den 37
+E.1-Zeilen allein. Getragen wird die Zeile jetzt von zwei Tests, die die Lückenlosigkeit aus zwei
+verschiedenen Quellen ableiten: `recipes.test.ts` aus den Rezepten, `coverage-manifest.test.ts` aus
+den Manifesteinträgen. Zwei Wege zu derselben 68, weil ein Rezept ohne Manifestzeile auf dem ersten
+Weg allein nicht auffiele.
 
 Die Befunde an der Quelle stehen als eigene Exporte im Katalog: 15 über die drei Blöcke, darunter
 sieben Zeichen, deren Bild ein anderes Kürzel führt als ihr Dateiname: E.2.7 „Telelader" gegen
@@ -455,7 +468,10 @@ pnpm cli export --out <pfad> --size <px> \
 - `coverage` — prüft das Coverage-Manifest gegen den Katalog (Coverage-Gate): Schlüssel,
   Vollständigkeit, Baseline-Präfix, Quellenbezug, Profil, Reviewzurechnung, Elementauflösung und
   Datenversionen. Gibt zusätzlich die Zahl offener fachlicher Reviews und die 1.0-Blocker aus —
-  beides ohne Fehlerabbruch, weil CI sonst ab dem ersten Tag dauerhaft rot wäre.
+  beides ohne Fehlerabbruch, weil CI sonst ab dem ersten Tag dauerhaft rot wäre. Seit dem
+  18. August 2026 auch die Zeile `Kontrastausnahmen:` — entschiedene Kontrastpaare unterhalb der
+  eigenen Schwelle, mit Abschnitt, Datum und Entscheider. Sie steht bewusst nicht bei den
+  Blockern: ein Blocker ist ein offener Punkt, eine Ausnahme ein entschiedener.
 - `export --out <pfad> --size <px> [--theme …]` — rendert alle Grundzeichen und
   Kompositionsrezepte als SVG nach `<pfad>`, mit `<px>` Kantenlänge. Ohne Theme gilt die
   unveränderte Referenzpalette. `accessible-light` hellt das kontrastkritische Blau auf;

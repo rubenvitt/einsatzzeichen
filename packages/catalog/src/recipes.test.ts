@@ -26,7 +26,6 @@ import {
   ANHANG_E_C_RECIPES,
   ANHANG_E_D_FINDINGS,
   ANHANG_E_D_RECIPES,
-  ANHANG_E_D_UNGEBAUT,
   ANHANG_E_E_FINDINGS,
   ANHANG_E_E_RECIPES,
   ANHANG_E_F_FINDINGS,
@@ -301,21 +300,27 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
 
   it('verlangt für weissen Text auf der Körperfarbe die Textschwelle, nicht die Nichttextschwelle', () => {
     const requirements = labelContrastRequirements();
-    // **Zwei** seit dem Teilslice E-f und nicht mehr eine: die vierte Beschriftungszone steht
-    // außerhalb des Körpers und trägt die Organisationsfarbe auf der Ausgabeoberfläche. Beide
-    // Richtungen stehen hier nebeneinander, weil die zweite die erste nicht ersetzt — der
-    // gesamte Bestand außer den fünf Wasserfahrzeugen setzt weiterhin weiss in den Körper.
+    // **Drei seit dem 18. August 2026**, und die dritte ist die einzige, die nicht besteht. Zwei
+    // Richtungen und zwei Organisationen kommen hier zusammen: weiss im Körper (der gesamte
+    // Bestand außer den fünf Wasserfahrzeugen) und die Organisationsfarbe auf der
+    // Ausgabeoberfläche (die vierte Beschriftungszone, seit E-f).
     //
-    // Dass es bei zwei bleibt und nicht drei werden, hängt an einer offenen Entscheidung: E.2.6
-    // trüge `sonstige-gefahrenabwehr` mit Beschriftung und erzeugte damit „weiss auf orange" mit
-    // 2,382:1 gegen die Textschwelle 4,5:1. Es ist als einziger Abschnitt des Anhangs nicht
-    // gebaut (`ANHANG_E_D_UNGEBAUT`), und diese Zeile ist die Stelle, an der das mechanisch
-    // sichtbar wird.
+    // Die zweite Zeile ist E.2.6: das einzige Rezept mit `sonstige-gefahrenabwehr` und
+    // Beschriftung. Die Ableitung meldet „weiss auf orange" unverändert — 2,382:1 bzw. 2,323:1
+    // gegen die Textschwelle 4,5:1 —, und sie wird nicht hier unterdrückt, sondern in
+    // `CONTRAST_EXCEPTIONS` als entschiedene Ausnahme gezählt. Diese Zeile ist die Stelle, an der
+    // ein zweites solches Rezept mechanisch sichtbar würde.
     expect(requirements).toEqual([
       {
         foreground: 'weiss',
         background: 'blau',
         context: 'Beschriftung im Körper auf Organisation thw',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'weiss',
+        background: 'orange',
+        context: 'Beschriftung im Körper auf Organisation sonstige-gefahrenabwehr',
         minimum: 4.5,
       },
       {
@@ -614,54 +619,52 @@ describe('Anhang E, Teilslice E-c (E.1.29 bis E.1.37)', () => {
   });
 });
 
-describe('Anhang E, Teilslice E-d (E.2.1 bis E.2.21 ohne E.2.6)', () => {
+describe('Anhang E, Teilslice E-d (E.2.1 bis E.2.21)', () => {
   const cases = Object.entries<Recipe>(ANHANG_E_D_RECIPES);
 
-  it('deckt genau die 20 gebauten Abschnitte E.2.1 bis E.2.21 ab und lässt E.2.6 aus', () => {
+  it('deckt die 21 Abschnitte E.2.1 bis E.2.21 lückenlos ab', () => {
+    // **Diese Zeile hielt bis zum 18. August 2026 die Lücke fest** („…und lässt E.2.6 aus", dazu
+    // `ANHANG_E_D_UNGEBAUT` mit genau einem Schlüssel). Seit E.2.6 gebaut ist, hält sie die
+    // Vollständigkeit — die Zusage hat die Richtung gewechselt, nicht die Stelle.
     expect(cases.map(([section]) => section)).toEqual(
-      Array.from({ length: 21 }, (_, index) => `E.2.${index + 1}`).filter(
-        (section) => section !== 'E.2.6',
-      ),
+      Array.from({ length: 21 }, (_, index) => `E.2.${index + 1}`),
     );
-    // Die Lücke ist deklariert und nicht stillschweigend: `ANHANG_E_D_UNGEBAUT` trägt genau den
-    // einen Abschnitt, den dieser Slice nicht baut, samt Begründung. Ohne diese beiden Zeilen
-    // wäre eine fehlende Manifestzeile von einem vergessenen Rezept nicht zu unterscheiden.
-    expect(Object.keys(ANHANG_E_D_UNGEBAUT)).toEqual(['E.2.6']);
-    expect(Object.hasOwn(ANHANG_E_D_RECIPES, 'E.2.6')).toBe(false);
-    expect(Object.hasOwn(RECIPES, 'E.2.6')).toBe(false);
+    expect(Object.hasOwn(RECIPES, 'E.2.6')).toBe(true);
   });
 
-  it('nennt in der Begründung für E.2.6 die gemessenen Kontrastwerte und den Gate-Vertrag', () => {
-    // Die Begründung darf nicht auf „geht nicht" schrumpfen: sie muss die drei selbst
-    // nachgerechneten Verhältnisse und die geforderte Schwelle tragen, sonst ließe sie sich
-    // weder prüfen noch widerlegen.
-    const note = ANHANG_E_D_UNGEBAUT['E.2.6'] ?? '';
-    expect(note).toMatch(/2,382:1/u);
-    expect(note).toMatch(/2,323:1/u);
-    expect(note).toMatch(/4,5:1/u);
-    expect(note).toMatch(/#fa8c00/u);
-    expect(note).toMatch(/Entscheidung/u);
-    // Und die Fahrwerksangabe, weil der Baubeschluss dieses Slice sie falsch übergeben hat:
-    // „Fahrwerk und Beschriftung sind zeichengleich mit E.2.5". Für die Beschriftung stimmt
-    // das (Δ höchstens 0,0007 mm), für das Fahrwerk nicht — E.2.5 führt vier Teilpfade in der
-    // Strichebene und damit zwei Räder, E.2.6 sieben und damit drei mit Verbindungsbalken. Ohne
-    // diese Zeile stünde die widerlegte Behauptung unwidersprochen im einzigen Text, den es zu
-    // E.2.6 gibt; ein Gate erreicht sie nicht, weil es zu E.2.6 kein Rezept gibt.
-    expect(note).toMatch(/kfz-kategorie-1/u);
-    expect(note).toMatch(/kfz-kategorie-3/u);
-    expect(note).toMatch(/E\.2\.4, E\.2\.7, E\.2\.8 und E\.2\.11/u);
-    expect(note).not.toMatch(/mit E\.2\.5 bis auf/u);
+  it('baut E.2.6 mit orangem Körper, dem Fahrwerk von E.2.4 und der Beschriftung von E.2.5', () => {
+    // Das einzige Zeichen des Anhangs, das nicht `thw` trägt — deshalb steht es hier einzeln und
+    // nicht als gelockerte Bedingung in der Schleife unten. Eine Schleife, die „blau oder orange"
+    // zuließe, schwächte die Zusage für die übrigen 20.
+    const recipe: Recipe = ANHANG_E_D_RECIPES['E.2.6'];
+    const drawing = composeFromCatalog(recipe.spec, recipe.title);
+    expect(drawing.children.find((c) => c.role === 'body')?.style?.fill).toBe('orange');
+    expect(recipe.spec.organization).toBe('sonstige-gefahrenabwehr');
+    // Fahrwerk **nicht** wie E.2.5: der Baubeschluss des E.2-Slice hat „Fahrwerk und
+    // Beschriftung sind zeichengleich mit E.2.5" übergeben, und die erste Hälfte ist an der Datei
+    // widerlegt — E.2.5 führt vier Teilpfade in der Strichebene (zwei Räder), E.2.6 sieben (drei
+    // Räder mit zwei Verbindungsbalken). Ohne diese Zeile stünde die Berichtigung nur im
+    // Fließtext.
+    expect(recipe.spec.vehicleCategory).toBe('kfz-kategorie-3');
+    expect(ANHANG_E_D_RECIPES['E.2.5'].spec.vehicleCategory).toBe('kfz-kategorie-1');
+    // Beschriftung dagegen zeichengleich mit E.2.5, einschließlich des fehlenden
+    // `centerCapHeightMm`: beide Läufe stehen im Normgrad (`t` je 4,4316 mm gemessen).
+    expect(recipe.spec.labels).toEqual(ANHANG_E_D_RECIPES['E.2.5'].spec.labels);
+    expect(recipe.spec.labels?.centerCapHeightMm).toBeUndefined();
   });
 
-  it.each(cases)('%s steht auf einem Fahrzeugkörper, trägt THW-Blau und seine eigene Referenzdatei', (section, recipe) => {
+  it.each(cases)('%s steht auf einem Fahrzeugkörper und trägt seine eigene Referenzdatei', (section, recipe) => {
     const drawing = composeFromCatalog(recipe.spec, recipe.title);
     const body = drawing.children.find((c) => c.role === 'body');
-    expect(body?.style?.fill).toBe('blau');
+    // **Ausnahme E.2.6, und nur diese eine:** es trägt als einziges Zeichen des Anhangs den
+    // orangen Körper der `sonstige-gefahrenabwehr`. Sein Trägerkürzel bleibt trotzdem `THW` —
+    // die Quelle trennt hier Zuordnung und Betreiber.
+    expect(body?.style?.fill).toBe(section === 'E.2.6' ? 'orange' : 'blau');
     expect(recipe.spec.labels?.bottomRight).toBe('THW');
     expect(recipe.referenceAsset.startsWith(`${section}_`)).toBe(true);
   });
 
-  it('stellt 19 Zeichen auf vehicle-land und E.2.15 als einziges auf den Wechselladerrumpf', () => {
+  it('stellt 20 Zeichen auf vehicle-land und E.2.15 als einziges auf den Wechselladerrumpf', () => {
     const wechsellader = cases.filter(([, recipe]) => recipe.spec.kind === 'swap-loader-vehicle');
     expect(wechsellader.map(([section]) => section)).toEqual(['E.2.15']);
     for (const [section, recipe] of cases) {
@@ -713,7 +716,7 @@ describe('Anhang E, Teilslice E-d (E.2.1 bis E.2.21 ohne E.2.6)', () => {
     }
   });
 
-  it('setzt neun der 20 mittigen Läufe kleiner und die übrigen elf im Normgrad', () => {
+  it('setzt neun der 21 mittigen Läufe kleiner und die übrigen zwölf im Normgrad', () => {
     // Die gemessenen Kappenhöhen stehen je Zeichen und nicht als Stufenleiter: eine Auslöseregel
     // ist widerlegt (von den neun bräuchten nur drei die Verkleinerung, um in die 28-mm-Box zu
     // passen). Dieser Test hält deshalb die Zahlen fest und keine Regel.
@@ -733,10 +736,12 @@ describe('Anhang E, Teilslice E-d (E.2.1 bis E.2.21 ohne E.2.6)', () => {
       'E.2.20': 3.65125,
       'E.2.21': 4.3826,
     });
-    // Und die Gegenrichtung: die elf übrigen tragen das Feld gar nicht und laufen damit auf dem
-    // Normwert aus compose.ts. Ein `centerCapHeightMm: 4.87` an ihnen wäre eine Messung, die
-    // niemand gemacht hat — der Normwert steht dort und nicht hier.
-    expect(cases.length - Object.keys(gemessen).length).toBe(11);
+    // Und die Gegenrichtung: die zwölf übrigen tragen das Feld gar nicht und laufen damit auf
+    // dem Normwert aus compose.ts. Ein `centerCapHeightMm: 4.87` an ihnen wäre eine Messung, die
+    // niemand gemacht hat — der Normwert steht dort und nicht hier. Zwölf und nicht mehr elf seit
+    // E.2.6: sein mittiger Lauf `Stapler` steht im Normgrad, zeichengleich mit E.2.5 (`t` je
+    // 4,4316 mm gemessen).
+    expect(cases.length - Object.keys(gemessen).length).toBe(12);
   });
 
   it('setzt keinen Text unterhalb des Körpers und keine Zusatzkennzeichnung unten links', () => {
@@ -748,7 +753,7 @@ describe('Anhang E, Teilslice E-d (E.2.1 bis E.2.21 ohne E.2.6)', () => {
     }
   });
 
-  it('nennt die neun Referenzdateien mit Befund und die elf normgerechten nicht', () => {
+  it('nennt die neun Referenzdateien mit Befund und die zwölf normgerechten nicht', () => {
     expect(Object.keys(ANHANG_E_D_FINDINGS)).toEqual([
       'E.2.7',
       'E.2.8',
@@ -760,7 +765,10 @@ describe('Anhang E, Teilslice E-d (E.2.1 bis E.2.21 ohne E.2.6)', () => {
       'E.2.19',
       'E.2.20',
     ]);
-    for (const section of ['E.2.1', 'E.2.2', 'E.2.3', 'E.2.4', 'E.2.5', 'E.2.11', 'E.2.12', 'E.2.16', 'E.2.17', 'E.2.18', 'E.2.21']) {
+    // E.2.6 steht hier und nicht oben: seine Datei ist normgerecht — Hülle, Grundlinie und
+    // Beschriftung sind mit E.2.5 zeichengleich, die Strichebene mit E.2.4. Was an ihm besonders
+    // ist, ist die Farbe und ihre Kontrastlage, und das ist kein Befund an der Quelle.
+    for (const section of ['E.2.1', 'E.2.2', 'E.2.3', 'E.2.4', 'E.2.5', 'E.2.6', 'E.2.11', 'E.2.12', 'E.2.16', 'E.2.17', 'E.2.18', 'E.2.21']) {
       expect(Object.hasOwn(ANHANG_E_D_FINDINGS, section), section).toBe(false);
     }
     for (const section of Object.keys(ANHANG_E_D_FINDINGS)) {
@@ -896,20 +904,20 @@ describe('Anhang E, Teilslice E-f (E.2.27 bis E.2.31)', () => {
     );
   });
 
-  it('führt Anhang E damit auf 67 der 68 Abschnitte, lückenlos bis auf E.2.6', () => {
-    // Das Gegenstück zur 37er-Zusicherung aus E-c und die Zusicherung, die der Manifest-`scope`
-    // heute **noch nicht** tragen darf: `uncoveredScope` prüft an einem Präfix nur die Existenz
-    // einer Zeile, und `E` bestünde schon mit E.1 allein. Solange E.2.6 fehlt, stehen die 30
-    // E.2-Abschnitte deshalb einzeln im scope — dieser Test hält fest, welche 30 das sind.
+  it('führt Anhang E damit auf alle 68 Abschnitte, lückenlos', () => {
+    // Das Gegenstück zur 37er-Zusicherung aus E-c, an den **Rezepten** gemessen. Seit E.2.6 am
+    // 18. August 2026 nachgezogen wurde, ist sie die Zusage, die der Manifest-`scope` mit `E`
+    // beansprucht: `uncoveredScope` prüft an einem Präfix nur die Existenz einer Zeile, `E`
+    // bestünde also schon mit E.1 allein. Die zweite Hälfte dieser Absicherung steht in
+    // `coverage-manifest.test.ts` und leitet dieselbe Aussage aus den Manifesteinträgen ab —
+    // zwei Wege zu einer Zahl, weil ein Rezept ohne Manifestzeile hier nicht auffiele.
     const alleE = Object.keys(RECIPES).filter((section) => section.startsWith('E.'));
     const erwartet = [
       ...Array.from({ length: 37 }, (_, index) => `E.1.${index + 1}`),
-      ...Array.from({ length: 31 }, (_, index) => `E.2.${index + 1}`).filter(
-        (section) => section !== 'E.2.6',
-      ),
+      ...Array.from({ length: 31 }, (_, index) => `E.2.${index + 1}`),
     ];
     expect(alleE).toEqual(erwartet);
-    expect(alleE).toHaveLength(67);
+    expect(alleE).toHaveLength(68);
   });
 
   it.each(cases)('%s steht auf dem angehobenen Rumpf und trägt sein Kürzel unterhalb des Körpers', (section, recipe) => {

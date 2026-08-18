@@ -259,12 +259,14 @@ describe('Rasterevidenz für Text (resvgFontOptions())', () => {
   it('prüft alle Zeichen mit Beschriftungszonen, nicht nur eine Auswahl', () => {
     // Sonst bliebe die Prüfung unten still grün, falls die Rezepte einmal ohne Beschriftung
     // dastünden — dieselbe Rolle wie „rastert Text überhaupt" für die Schriftbindung.
-    // 16 Zeichen aus E-a, zwölf aus E-b und neun aus E-c (alle 37 Abschnitte aus E.1), dazu 20
-    // aus E-d, fünf aus E-e und fünf aus E-f — 67 der 68 Abschnitte des Anhangs E. Die Prüfung
-    // unten läuft generisch über `RECIPES` und braucht für die neuen Kürzelsätze keine eigene
-    // Verdrahtung; die neun je Zeichen gemessenen Kappenhöhen aus E-d sind genau der Grund, aus
-    // dem sie hier grün ist (ohne sie treten sechs Läufe aus ihrer Box).
-    expect(labelRecipes).toHaveLength(67);
+    // 16 Zeichen aus E-a, zwölf aus E-b und neun aus E-c (alle 37 Abschnitte aus E.1), dazu 21
+    // aus E-d, fünf aus E-e und fünf aus E-f — **alle 68** Abschnitte des Anhangs E, seit E.2.6
+    // am 18. August 2026 nachgezogen wurde. Die Prüfung unten läuft generisch über `RECIPES` und
+    // braucht für die neuen Kürzelsätze keine eigene Verdrahtung; die neun je Zeichen gemessenen
+    // Kappenhöhen aus E-d sind genau der Grund, aus dem sie hier grün ist (ohne sie treten sechs
+    // Läufe aus ihrer Box). E.2.6 braucht keine: sein `Stapler` steht im Normgrad und bleibt in
+    // der Box, hier gerastert und nicht angenommen.
+    expect(labelRecipes).toHaveLength(68);
   });
 
   /**

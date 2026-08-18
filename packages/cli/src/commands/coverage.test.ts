@@ -24,22 +24,26 @@ describe('coverage CLI', () => {
 
     coverage();
 
-    // 357 nach dem Teilslice E.2: 325 nach LFH-424, plus die beiden Anhängerfahrwerke aus
-    // 5.1.2.4 und 5.1.2.5, plus die 30 gebauten E.2-Zeichen. E.2.6 fehlt und hat deshalb weder
-    // Manifestzeile noch Ledgerplatz.
-    expect(manifestReviews).toBe(357);
+    // 358 mit E.2.6: 325 nach LFH-424, plus die beiden Anhängerfahrwerke aus 5.1.2.4 und
+    // 5.1.2.5, plus die 31 Zeichen aus E.2. Mit dem am 18. August 2026 nachgezogenen E.2.6 hat
+    // jeder Abschnitt des Anhangs E eine Manifestzeile und einen Ledgerplatz.
+    expect(manifestReviews).toBe(358);
     expect(sourceReviews).toBe(13);
     expect(profileReviews).toBe(1);
-    expect(openReviews).toBe(371);
-    // Die Umfangszeile ist mit dem Teilslice E.2 wieder lang geworden, und das ist gewollt: E.1
-    // steht seit E-c einzeilig, weil seine 37 Abschnitte vollständig sind, E.2 dagegen
-    // abschnittsweise, weil einer der 31 fehlt. Ein `E.2` oder `E` wäre kürzer und behauptete
-    // eine Vollständigkeit, die `recipes.test.ts` nicht belegen kann.
+    expect(openReviews).toBe(372);
+    // **Die Umfangszeile ist wieder kurz.** Der Teilslice E.2 hatte sie auf 47 Einträge gedehnt,
+    // weil E.2 mit einem fehlenden Abschnitt nur abschnittsweise behauptbar war. Seit E.2.6
+    // gebaut ist, tragen zwei Tests die Lückenlosigkeit — an den Rezepten (`recipes.test.ts`)
+    // und an den Manifesteinträgen (`coverage-manifest.test.ts`) —, und erst damit ist das eine
+    // `E` eine widerlegbare Aussage statt einer kürzeren.
     expect(lines).toContain(
-      'Umfang:      1, 2, 4, 5.1.1, 5.4, 5.8, C.1.1, C.1.2, D.3.7, E.1, E.2.1, E.2.2, E.2.3, ' +
-        'E.2.4, E.2.5, E.2.7, E.2.8, E.2.9, E.2.10, E.2.11, E.2.12, E.2.13, E.2.14, E.2.15, ' +
-        'E.2.16, E.2.17, E.2.18, E.2.19, E.2.20, E.2.21, E.2.22, E.2.23, E.2.24, E.2.25, ' +
-        'E.2.26, E.2.27, E.2.28, E.2.29, E.2.30, E.2.31, J.1, J.2, J.3, J.4, K, L, M',
+      'Umfang:      1, 2, 4, 5.1.1, 5.4, 5.8, C.1.1, C.1.2, D.3.7, E, J.1, J.2, J.3, J.4, K, L, M',
+    );
+    // Die Ausnahme ist im Betrieb sichtbar und nicht nur im Gate. Sie steht bewusst **nicht** in
+    // der Blockerzeile darunter: ein Blocker ist ein offener Punkt, diese Ausnahme ist ein
+    // entschiedener.
+    expect(lines).toContain(
+      'Kontrastausnahmen: weiss auf orange (E.2.6, entschieden am 2026-08-18 durch Projektinhaber)',
     );
     expect(lines).toContain(
       `Offene fachliche Reviews: ${openReviews} ` +

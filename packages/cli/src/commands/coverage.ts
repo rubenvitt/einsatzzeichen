@@ -1,4 +1,5 @@
 import {
+  CONTRAST_EXCEPTIONS,
   COVERAGE_MANIFEST,
   SOURCE_REGISTRY,
   checkCoverage,
@@ -20,6 +21,28 @@ export function coverage(): void {
   console.log(`Umfang:      ${COVERAGE_MANIFEST.scope.join(', ')}`);
   console.log(`Einträge:    ${COVERAGE_MANIFEST.entries.length}`);
   console.log(`Quellen:     ${Object.keys(SOURCE_REGISTRY).length}`);
+
+  // **Die Kontrastausnahmen gehören in die Betriebsausgabe und nicht nur in einen Test.** Ein
+  // Kontrastpaar unterhalb der eigenen Schwelle ist eine Eigenschaft der Auslieferung: wer den
+  // Katalog druckt, bekommt bei diesen Zeichen eine schlechter lesbare Beschriftung als bei allen
+  // anderen. Stünde das nur in `a11y-contrast-gate.test.ts`, wäre es für jeden unsichtbar, der
+  // das Paket benutzt statt es zu bauen.
+  //
+  // Ausdrücklich **kein** Freigabeblocker und deshalb nicht in `ReleaseBlockers`: ein Blocker ist
+  // ein offener Punkt, eine Ausnahme ist ein entschiedener. Sie steht hier als Tatsache neben
+  // Baseline und Umfang, nicht in der Blockerzeile.
+  console.log(
+    `Kontrastausnahmen: ${
+      CONTRAST_EXCEPTIONS.length === 0
+        ? 'keine'
+        : CONTRAST_EXCEPTIONS.map(
+            (exception) =>
+              `${exception.foreground} auf ${exception.background} ` +
+              `(${exception.sections.join(', ')}, entschieden am ${exception.decidedOn} ` +
+              `durch ${exception.decidedBy})`,
+          ).join('; ')
+    }`,
+  );
 
   for (const key of duplicates) console.error(`Doppelter Schlüssel: ${key}`);
   for (const key of missing) console.error(`Unvollständiger Eintrag: ${key}`);

@@ -17,18 +17,22 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 338 seit dem Teilslice E.2: 308 nach LFH-424 plus die 30 gebauten Zeichen aus E.2.
-    expect(ids).toHaveLength(338);
+    // 339 seit E.2.6: 308 nach LFH-424 plus die 31 Zeichen aus E.2.
+    expect(ids).toHaveLength(339);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
-    // dazu 20 aus E-d, fünf aus E-e und fünf aus E-f.
-    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(70);
+    // dazu 21 aus E-d, fünf aus E-e und fünf aus E-f.
+    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(71);
     expect(ids.filter((id) => id.startsWith('recipe.E.1.'))).toHaveLength(37);
-    // **30 und nicht 31.** E.2.6 ist als einziger Abschnitt des Anhangs nicht gebaut; die
-    // Begründung steht in `ANHANG_E_D_UNGEBAUT`, die Zahlen in `a11y-contrast-gate.test.ts`.
-    // Diese Zeile ist die Stelle, an der die Lücke auffällt, sobald jemand sie schließt.
-    expect(ids.filter((id) => id.startsWith('recipe.E.2.'))).toHaveLength(30);
-    expect(ids).not.toContain('recipe.E.2.6');
+    // **31 und damit lückenlos**, seit E.2.6 am 18. August 2026 nachgezogen wurde. Diese Zeile
+    // hielt vorher die Lücke fest (`not.toContain('recipe.E.2.6')`); sie hält jetzt die
+    // Vollständigkeit fest, und zwar an den Renderfällen statt an einer Zahl — ein Zeichen ohne
+    // Renderfall hätte keinen Snapshot, kein Raster- und kein Metadaten-Gate.
+    const e2 = ids.filter((id) => id.startsWith('recipe.E.2.'));
+    expect(e2).toHaveLength(31);
+    expect(new Set(e2)).toEqual(
+      new Set(Array.from({ length: 31 }, (_, index) => `recipe.E.2.${index + 1}`)),
+    );
     expect(ids.filter((id) => id.startsWith('capability.'))).toHaveLength(92);
     expect(ids.filter((id) => id.startsWith('state.'))).toHaveLength(67);
     expect(ids.filter((id) => id.startsWith('comms.'))).toHaveLength(53);
