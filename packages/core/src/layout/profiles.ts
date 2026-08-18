@@ -58,6 +58,19 @@ export interface LayoutProfile {
    */
   centerBaselineFromBodyBottomMm: number;
   /**
+   * Grundlinie des Laufs oben links, gerechnet **von der Körperoberkante nach unten**. Fehlt sie,
+   * ist die Zone an dieser Körperform nicht vermessen und `compose()` wirft, statt eine Lage zu
+   * raten.
+   *
+   * Gemessen ist bisher genau eine Zahl: **5,0 mm** an den neun beschrifteten Zeichen aus
+   * F.1.1 bis F.1.11 (Körperoberkante 6,0, Grundlinie 11,0 — eigene Vermessung, 18. August 2026).
+   * Sie steht deshalb an einem eigenen Profil für `formation` und nicht am geteilten
+   * `rectBodyProfile`: der Landfahrzeugrumpf trägt denselben Lauf auf Grundlinie 12,5 mm bei
+   * Oberkante 5,75 (F.2.1 bis F.2.5), also 6,75 mm — die Zahl gehört dorthin, sobald der
+   * Teilslice F-c sie einträgt, und nicht als stille Miterbschaft dieser.
+   */
+  topLeftBaselineFromBodyTopMm?: number;
+  /**
    * Setzt den Körper relativ zur Kopfzone. `headBottomMm === null` bedeutet: keine Kopfzone,
    * der Körper behält seine Standardgeometrie.
    */
@@ -102,6 +115,13 @@ function rectBody(centerBaselineFromBodyBottomMm: number): LayoutProfile {
 
 /** Der Normfall: mittige Grundlinie 8 mm über der Körperunterkante. */
 const rectBodyProfile: LayoutProfile = rectBody(8);
+
+/**
+ * Die taktische Formation trägt zusätzlich die vermessene Zone oben links (Anhang F). Ein eigenes
+ * Profilobjekt und keine Ergänzung an `rectBodyProfile`: das teilen sich zehn Körperformen, und
+ * für neun davon ist diese Grundlinie unvermessen.
+ */
+const formationProfile: LayoutProfile = { ...rectBody(8), topLeftBaselineFromBodyTopMm: 5 };
 
 /**
  * Verkleinert das gedrehte Quadrat von oben und hält die Unterkante.
@@ -181,7 +201,7 @@ const circleBodyProfile: LayoutProfile = {
 };
 
 const PROFILES: Record<SymbolKind, LayoutProfile> = {
-  formation: rectBodyProfile,
+  formation: formationProfile,
   // Die drei Körperformen ohne Kapitel-1-Abschnitt. `rectBodyProfile` und kein eigenes Profil:
   // sein `place` greift **nur** mit Kopfzone, und keine der drei kann eine tragen — `validateSpec`
   // lehnt eine Stärkeangabe an allem außer `formation` und `person` ab (`strength-requires-unit`).

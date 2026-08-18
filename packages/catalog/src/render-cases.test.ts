@@ -17,13 +17,20 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 339 seit E.2.6: 308 nach LFH-424 plus die 31 Zeichen aus E.2.
-    expect(ids).toHaveLength(339);
+    // 350 seit F-a: 308 nach LFH-424, plus die 31 Zeichen aus E.2, plus die elf aus F-a.
+    expect(ids).toHaveLength(350);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
-    // dazu 21 aus E-d, fünf aus E-e und fünf aus E-f.
-    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(71);
+    // dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Seit F-a elf mehr.
+    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(82);
     expect(ids.filter((id) => id.startsWith('recipe.E.1.'))).toHaveLength(37);
+    // Anhang F, Teilslice F-a: zehn Abschnitte in elf Renderfällen. Der elfte ist
+    // `recipe.F.1.11#alternative` — der **erste Renderfall des Katalogs, dessen Darstellung im
+    // Rezeptschlüssel steht** statt in einem Suffix aus `pictogramRenderId` (siehe die
+    // Ableitung im Test darunter).
+    const f1 = ids.filter((id) => id.startsWith('recipe.F.1.'));
+    expect(f1).toHaveLength(11);
+    expect(f1).toContain('recipe.F.1.11#alternative');
     // **31 und damit lückenlos**, seit E.2.6 am 18. August 2026 nachgezogen wurde. Diese Zeile
     // hielt vorher die Lücke fest (`not.toContain('recipe.E.2.6')`); sie hält jetzt die
     // Vollständigkeit fest, und zwar an den Renderfällen statt an einer Zahl — ein Zeichen ohne
@@ -58,7 +65,19 @@ describe('vollständige Renderfallmenge', () => {
     const cases = RENDER_CASES.map((renderCase) => renderCase.id).sort();
     const claimed = COVERAGE_MANIFEST.entries
       .filter((entry) => entry.testEvidence.includes('svg-snapshot'))
-      .map((entry) => pictogramRenderId({ id: entry.implementation, variant: entry.variant }))
+      // Zwei Ableitungen, weil es zwei Namensregeln gibt. Ein Piktogramm trägt seine ID ohne
+      // Darstellung und bekommt das Suffix hier angehängt (`capability.x` +
+      // `capability.x.alternative`). Ein Rezept trägt sie seit F-a **im Schlüssel** — die
+      // Implementierungs-ID lautet `recipe.F.1.11#alternative`, weil `RECIPES` beide
+      // Darstellungen als eigene Einträge führt und der Schlüssel deshalb eindeutig sein muss.
+      // Beide durch `pictogramRenderId` zu schicken hinge dem Rezept die Darstellung ein
+      // zweites Mal an (`…#alternative.alternative`) und vergliche eine ID, die es nirgends
+      // gibt.
+      .map((entry) =>
+        entry.coverage === 'composition-recipe'
+          ? entry.implementation
+          : pictogramRenderId({ id: entry.implementation, variant: entry.variant }),
+      )
       .sort();
     expect(cases).toEqual(claimed);
   });

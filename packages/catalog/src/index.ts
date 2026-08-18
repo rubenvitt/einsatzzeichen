@@ -3,6 +3,7 @@ export * from './profiles.js';
 export * from './elements.js';
 export * from './fingerprint-index.js';
 export * from './base-symbols.js';
+export * from './body-marks.js';
 export * from './organizations.js';
 export * from './strengths.js';
 export * from './pictograms/index.js';

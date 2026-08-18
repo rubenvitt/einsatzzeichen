@@ -110,6 +110,21 @@ const BOTTOM_LABEL_BASELINE_FROM_BODY_BOTTOM_MM = 2;
 const LABEL_SIDE_MARGIN_MM = 2;
 
 /**
+ * Anker des Laufs oben links gegen die linke Körperkante. **Zurückgerechnet und nicht abgelesen**:
+ * die linke Tintenkante der Referenz hängt von der linken Seitenlage ihrer ersten Glyphe ab, und
+ * die ist an einer in Kurven umgewandelten Schrift nicht ablesbar. Dieselben Läufe mit Anker
+ * 3,0 mm gerastert (4096 px, 18. August 2026) und die Differenz abgezogen ergibt 2,524 mm für
+ * `MTF`/`RettD`, 2,498 für `SEG` und 2,442 für `10` — vier der fünf F-a-Läufe auf 2,5 mm, also
+ * 1,5 mm rechts der Körperkante 1,0.
+ *
+ * **Eine eigene Marge und keine Übernahme der 2 mm der unteren Zonen.** Die wären an derselben
+ * Rasterung um 0,48 mm zu weit rechts; der Unterschied ist bei 30 mm Körperbreite sichtbar und
+ * an fünf Läufen gleichgerichtet. Der Ausreißer ist `F.1.3` („5.000", zurückgerechnet 2,022) —
+ * er steht als Befund an seiner Manifestzeile.
+ */
+const TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM = 1.5;
+
+/**
  * Die Grundlinie des mittigen Laufs, gerechnet gegen die **Unterkante** der Körperhülle. Bis zum
  * Teilslice E-c (17. August 2026) stand hier `minY + 12` gegen die Oberkante; an der Körperform
  * `formation` (Hülle 6…26 mm, Höhe 20 mm) sind „12 mm unter der Oberkante" und „8 mm über der
@@ -301,11 +316,44 @@ function labelPrimitive(
 }
 
 /**
- * Die Beschriftungen der drei Zonen, gegen die Hülle des platzierten Körpers gerechnet. Die
- * Farbe ist fest `weiss`: alle 37 Zeichen aus E.1 setzen ihre Kürzel auf die gefüllte
- * Körperfläche, nicht auf die Oberfläche. Sie ist damit — anders als bei der schwarzen Fußzone
- * — auf einen Kontrastvertrag gegen die Organisationsfarbe angewiesen; der steht im
- * A11y-Gate des Katalogs.
+ * Schriftfarbe der Läufe **im** Körper: `schwarz` auf weisser Körperfläche, sonst `weiss`.
+ *
+ * **Bis Anhang F stand hier fest `weiss`**, mit der Begründung, alle 37 Zeichen aus E.1 setzten
+ * ihre Kürzel weiss auf die gefüllte Fläche. Das stimmt für E und ist für F falsch: alle 66
+ * F-Dateien führen die Füllung `#fff` und ihre Typo-Ebene **ohne** `fill`, also in Schwarz
+ * (nachgesehen an allen zwölf Dateien aus F.1.1 bis F.1.11). Ein weisser Lauf auf weissem Körper
+ * wäre unsichtbar — und zwar unbemerkt: das A11y-Gate prüft die Paare, die der Katalog anmeldet,
+ * und ein Zeichen, das seinen eigenen Lauf verschluckt, meldet kein Paar an.
+ *
+ * **Nicht die Farbe mit dem besseren Kontrast, sondern die, die die Quelle setzt.** Eine
+ * Kontrastableitung („von weiss und schwarz gewinnt das höhere Verhältnis") ist an der eigenen
+ * Ausgabe widerlegt: sie kippte `E.2.6` von weiss auf schwarz (orange `#fa8c00` trägt gegen
+ * schwarz 9,6 : 1 und gegen weiss 2,2 : 1). Die Referenz setzt dort trotzdem weiss, und der
+ * Katalog führt das seit dem 18. August 2026 als **entschiedene Ausnahme** in
+ * `CONTRAST_EXCEPTIONS`. Die Quelle optimiert ihre Schriftfarbe also nicht auf Lesbarkeit; sie
+ * setzt weiss auf jede Organisationsfarbe und schwarz allein auf die weisse Fläche. Genau das
+ * bildet diese Regel ab — eine Ableitung nach Kontrast hätte eine getroffene Entscheidung still
+ * überschrieben.
+ *
+ * **Eine Ableitung und kein neues Feld am `SymbolSpec`.** Die Farbe ist an beiden Anhängen keine
+ * Wahl der Zeichnung, sondern eine Folge der Körperfarbe; ein Feld hätte sie zu einer Angabe
+ * gemacht, die 58 F-Rezepte mitschleppen müssten.
+ *
+ * **Exportiert, weil der Kontrastvertrag dieselbe Regel braucht.** Der Katalog leitet in
+ * `labelContrastRequirements()` ab, welches Paar aus einer Beschriftung im Körper überhaupt
+ * entsteht; träfe er die Farbwahl dort ein zweites Mal, könnten Zeichnung und Vertrag
+ * auseinanderlaufen — genau der Fehler, den dieser Teilslice behoben hat (der Vertrag behauptete
+ * `weiss`, während der Lauf schwarz gezeichnet wurde). Eine Funktion, zwei Aufrufer.
+ */
+export function bodyLabelInk(bodyFill: ColorToken): ColorToken {
+  return bodyFill === 'weiss' ? 'schwarz' : 'weiss';
+}
+
+/**
+ * Die Beschriftungen der fünf Zonen, gegen die Hülle des platzierten Körpers gerechnet. Die
+ * Läufe **im** Körper tragen die aus der Körperfüllung abgeleitete Tinte (`bodyLabelInk`), der
+ * Lauf **unter** dem Körper die Organisationsfarbe. Beide sind auf einen Kontrastvertrag
+ * angewiesen; der steht im A11y-Gate des Katalogs.
  */
 function labelPrimitives(
   labels: NonNullable<SymbolSpec['labels']>,
@@ -313,6 +361,8 @@ function labelPrimitives(
   viewBoxWidthMm: number,
   belowRightFill: ColorToken | null,
   centerBaselineFromBodyBottomMm: number,
+  topLeftBaselineFromBodyTopMm: number | undefined,
+  ink: ColorToken,
 ): Primitive[] {
   const centerXMm = (bodyBoundsMm.minX + bodyBoundsMm.maxX) / 2;
   // `leftMm`/`rightMm` sind die **Anker** der unteren Läufe und zugleich die Kanten ihrer Boxen.
@@ -337,6 +387,37 @@ function labelPrimitives(
         centerBoxLeftMm,
         centerBoxRightMm - centerBoxLeftMm,
         viewBoxWidthMm,
+        ink,
+      ),
+    );
+  }
+  if (labels.topLeft !== undefined) {
+    if (topLeftBaselineFromBodyTopMm === undefined) {
+      // Unerreichbar über `compose()` — `validateSpec` lehnt die Zone an jeder Körperform ohne
+      // gemessene Grundlinie ab (`top-left-label-requires-measured-body`). Die Zeile hält die
+      // Bedingung trotzdem am Ort ihrer Wirkung fest, wie beim Geschwisterfall `belowRight`.
+      throw new Error(
+        'Die Zone "topLeft" ist an dieser Körperform nicht vermessen: ihre Grundlinie steht nur ' +
+          'für die taktische Formation fest (5,0 mm unter der Körperoberkante, gemessen an ' +
+          'F.1.1 bis F.1.11). Wo sie an anderen Körperformen liegt, misst der Teilslice, der sie ' +
+          'zuerst braucht.',
+      );
+    }
+    const anchorXMm = bodyBoundsMm.minX + TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM;
+    primitives.push(
+      labelPrimitive(
+        labels.topLeft,
+        BOTTOM_LABEL_SIZE_MM,
+        bodyBoundsMm.minY + topLeftBaselineFromBodyTopMm,
+        'start',
+        anchorXMm,
+        anchorXMm,
+        // Die Zone endet an der senkrechten Mittellinie: dort steht bei jedem F-Zeichen der Arm
+        // der Fachdienstteilung, und kein Lauf aus F.1.1 bis F.1.11 überschreitet sie (der
+        // breiteste ist „RettD" mit Tinte bis 12,548 mm bei einer Mitte von 16,0).
+        centerXMm - anchorXMm,
+        viewBoxWidthMm,
+        ink,
       ),
     );
   }
@@ -351,6 +432,7 @@ function labelPrimitives(
         leftMm,
         centerXMm - leftMm,
         viewBoxWidthMm,
+        ink,
       ),
     );
   }
@@ -365,6 +447,7 @@ function labelPrimitives(
         centerXMm,
         rightMm - centerXMm,
         viewBoxWidthMm,
+        ink,
       ),
     );
   }
@@ -421,6 +504,21 @@ export interface CatalogPorts {
    * vorbereitetes Feld.
    */
   pictogram(id: PictogramId): PictogramDefinition;
+  /**
+   * Die **randbündige** Fassung eines Fähigkeitszeichens, gerechnet gegen die Hülle des
+   * platzierten Körpers — die Fachdienstteilung des Anhangs F und ihre Zusätze.
+   *
+   * Anders als `pictogram` liefert dieser Port fertige Primitive und keine Definition mit Box:
+   * eine Box gibt es hier nicht, die Zeichnung **ist** die Körperfläche. Die Hülle geht deshalb
+   * als Parameter hinein statt als Verschiebung hinterher — ein randbündiges Kreuz lässt sich
+   * nicht aus einer festen Zeichnung schieben, es muss auf die tatsächliche Kante gerechnet
+   * werden.
+   *
+   * Wirft für jede Fähigkeit ohne vermessene randbündige Fassung. Kein Rückfall auf die
+   * Boxfassung: die beiden Zeichnungen unterscheiden sich in ihren Maßen und nicht nur in ihrer
+   * Größe (Arztleiste 8 gegen 10 mm, Transportring r 5,5 gegen r 7,0).
+   */
+  bodyMark(id: CapabilityId, bodyBoundsMm: BoundsMm): readonly Primitive[];
 }
 
 export class CompositionError extends Error {
@@ -677,6 +775,26 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
 
   // Beschriftungen liegen **auf** dem Körper und stehen deshalb nach ihm in der Kinderliste;
   // die Fußzone dahinter, weil sie unterhalb von ihm liegt und mit ihm nicht konkurriert.
+  // Die Körperfüllung, wie sie am Körperprimitiv steht — nicht die Organisationsfarbe: ein
+  // Zeichen ohne Organisation trägt die Grundfüllung des Grundzeichens, und auch auf ihr steht
+  // die Beschriftung.
+  // `'none'` und „kein Stil" fallen auf `weiss`: der Lauf steht dann auf der Ausgabeoberfläche,
+  // und die ist in allen drei Themes weiss.
+  const declaredFill = filled.style?.fill;
+  const bodyFill: ColorToken =
+    spec.organization !== undefined
+      ? catalog.organizationColor(spec.organization)
+      : declaredFill === undefined || declaredFill === 'none'
+        ? 'weiss'
+        : declaredFill;
+
+  // Randbündige Fachdienstzeichen: gegen die Hülle des **platzierten** Körpers gerechnet, nicht
+  // gegen die Standardgeometrie. Deshalb ohne die Verschiebung, die die Boxpiktogramme brauchen —
+  // sie sind bereits an der richtigen Stelle gerechnet.
+  const bodyMarkPrimitives = (spec.bodyMarks ?? []).flatMap((id) => [
+    ...catalog.bodyMark(id, bodyBoundsMm),
+  ]);
+
   const labels = spec.labels !== undefined
     ? labelPrimitives(
         spec.labels,
@@ -684,6 +802,8 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
         DEFAULT_VIEWBOX_MM.width,
         spec.organization !== undefined ? catalog.organizationColor(spec.organization) : null,
         profile.centerBaselineFromBodyBottomMm,
+        profile.topLeftBaselineFromBodyTopMm,
+        bodyLabelInk(bodyFill),
       )
     : [];
 
@@ -704,6 +824,10 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
       ...extras,
       ...chassisPrimitives,
       ...pictograms,
+      // Die randbündigen Fachdienstzeichen stehen **nach** den Boxpiktogrammen und **vor** den
+      // Beschriftungen: sie liegen auf der Körperfläche wie diese, und die Kürzel liegen auf
+      // ihnen (Anhang F setzt „MTF" über das obere linke Viertel der Teilung).
+      ...bodyMarkPrimitives,
       ...labels,
       ...footPrimitives,
     ],

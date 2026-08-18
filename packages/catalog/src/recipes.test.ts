@@ -298,19 +298,33 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
     }
   });
 
-  it('verlangt für weissen Text auf der Körperfarbe die Textschwelle, nicht die Nichttextschwelle', () => {
+  it('verlangt für die Beschriftung auf der Körperfarbe die Textschwelle, nicht die Nichttextschwelle', () => {
     const requirements = labelContrastRequirements();
-    // **Drei seit dem 18. August 2026**, und die dritte ist die einzige, die nicht besteht. Zwei
-    // Richtungen und zwei Organisationen kommen hier zusammen: weiss im Körper (der gesamte
-    // Bestand außer den fünf Wasserfahrzeugen) und die Organisationsfarbe auf der
-    // Ausgabeoberfläche (die vierte Beschriftungszone, seit E-f).
+    // **Vier seit dem Teilslice F-a**, und nur eine davon besteht nicht. Zwei Richtungen und drei
+    // Organisationen kommen hier zusammen: die Beschriftung im Körper (der gesamte Bestand außer
+    // den fünf Wasserfahrzeugen) und die Organisationsfarbe auf der Ausgabeoberfläche (die vierte
+    // Beschriftungszone, seit E-f).
     //
-    // Die zweite Zeile ist E.2.6: das einzige Rezept mit `sonstige-gefahrenabwehr` und
+    // **Die erste Zeile ist neu und war vorher falsch.** Bis F-a behauptete die Ableitung fest
+    // `foreground: 'weiss'`; für `hilfsorganisation` (= `weiss`) hätte das „weiss auf weiss"
+    // ergeben — ein Paar mit 1:1, das kein Theme lösen kann und das zugleich das Gegenteil des
+    // Gezeichneten wäre, denn `compose.ts` setzt den Lauf auf dem weissen Körper schwarz
+    // (`bodyLabelInk`). Die Ableitung ruft jetzt dieselbe Funktion; schwarz auf weiss erreicht
+    // 21:1 in allen drei Themes. Sie steht **vor** den THW-Zeilen, weil `RECIPES` Anhang F vor
+    // Anhang E einreiht.
+    //
+    // Die dritte Zeile ist E.2.6: das einzige Rezept mit `sonstige-gefahrenabwehr` und
     // Beschriftung. Die Ableitung meldet „weiss auf orange" unverändert — 2,382:1 bzw. 2,323:1
     // gegen die Textschwelle 4,5:1 —, und sie wird nicht hier unterdrückt, sondern in
     // `CONTRAST_EXCEPTIONS` als entschiedene Ausnahme gezählt. Diese Zeile ist die Stelle, an der
     // ein zweites solches Rezept mechanisch sichtbar würde.
     expect(requirements).toEqual([
+      {
+        foreground: 'schwarz',
+        background: 'weiss',
+        context: 'Beschriftung im Körper auf Organisation hilfsorganisation',
+        minimum: 4.5,
+      },
       {
         foreground: 'weiss',
         background: 'blau',

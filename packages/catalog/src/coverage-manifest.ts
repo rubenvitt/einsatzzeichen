@@ -27,6 +27,11 @@ import {
   ANHANG_E_F_FINDINGS,
   ANHANG_E_F_RECIPES,
 } from './recipes-anhang-e.js';
+import {
+  ANHANG_F_A_DEVIATIONS,
+  ANHANG_F_A_FINDINGS,
+  ANHANG_F_A_RECIPES,
+} from './recipes-anhang-f.js';
 
 /**
  * Migration nach Slice 2: `technical` ist für alle elf Einträge `approved`, weil das Kriterium
@@ -88,6 +93,29 @@ const DAMAGE_PICTOGRAM_TECHNICAL_REVIEW: Review = {
     'Text 4,5:1), und hellblau trägt im Druckmonochrom #808080 statt #eeeeee (M.12 bis M.14 ' +
     'setzen blaue Geometrie ohne schwarze Kontur auf die Oberfläche). Die Sichtprüfung aller ' +
     '42 ist in docs/reviews/2026-08-10-d4-visual-qa.md dokumentiert.',
+};
+
+/**
+ * Technisches Review der zwölf Zeichen aus F-a. Eigener Eintrag, weil dieser Teilslice als erster
+ * drei Mechanismen zugleich einführt: die randbündige Fachdienstteilung (`body-marks.ts`), die
+ * Beschriftungszone oben links und die aus der Körperfüllung abgeleitete Schriftfarbe. Die dritte
+ * ist ein **Fehlerbefund am Bestand** und keine Ergänzung: bis dahin stand die Farbe der Läufe im
+ * Körper fest auf `weiss`, und ein weisser Lauf auf dem weissen F-Körper wäre unsichtbar
+ * gewesen — ohne dass ein Gate es gemeldet hätte.
+ */
+const ANHANG_F_A_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-18',
+  note:
+    'Körperhülle per matchFingerprint gegen die Referenz gegated (Füllhülle 1/6 bis 31/26 mm, ' +
+    'Differenz 0 an allen Kanten), dazu die globalen Mehrgrößen-, viewBox-, Metadaten- und ' +
+    'Kontrast-Gates. Die randbündigen Fachdienstzeichen sind vom Fingerprint-Gate nicht erfasst ' +
+    '(matchFingerprint vergleicht nur role: body); ihre Maße sind an F.1.7, F.1.8, F.1.10 und ' +
+    'F.1.11 einzeln vermessen und in der Sichtprüfung gegengeprüft ' +
+    '(docs/reviews/2026-08-18-f-a-visual-qa.md). Die Organisation hilfsorganisation ist eine ' +
+    'Entscheidung dieses Teilslice und keine Messung: alle 66 F-Dateien führen ausschließlich ' +
+    '#fff, und ob das eine Organisation oder keine bedeutet, sagt die Quelle nicht.',
 };
 
 /** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
@@ -502,16 +530,47 @@ function technicalReviewFor(section: string): Review {
       ANHANG_E_2_DEVIATIONS[section],
     );
   }
+  if (Object.hasOwn(ANHANG_F_A_RECIPES, section)) {
+    return withFindingAndDeviation(
+      ANHANG_F_A_TECHNICAL_REVIEW,
+      ANHANG_F_A_FINDINGS[section],
+      ANHANG_F_A_DEVIATIONS[section],
+    );
+  }
   return TECHNICAL_REVIEW;
 }
 
-const recipeEntries: CoverageEntry[] = Object.entries(RECIPES).map(([section, recipe]) => {
+/**
+ * Zerlegt den Rezeptschlüssel in Abschnitt und Darstellung. Bis zum Teilslice F-a war der
+ * Schlüssel der bloße Abschnitt und die Darstellung immer `primary`; Anhang F trägt acht
+ * Alternativdarstellungen, die keinen eigenen Abschnitt eröffnen — `F.1.11` und
+ * `F.1.11#alternative` sind derselbe Rettungsdienst, einmal mit Kürzel und einmal mit dem
+ * Zeichen aus 4.6.3.
+ *
+ * Der Manifestschlüssel bleibt `entryKey(sourceId, variant)` und damit unverändert; neu ist
+ * allein, dass `variant` nicht mehr konstant `primary` ist.
+ */
+function splitRecipeKey(key: string): { section: string; variant: CoverageEntry['variant'] } {
+  const separator = key.indexOf('#');
+  if (separator === -1) return { section: key, variant: 'primary' };
+  const suffix = key.slice(separator + 1);
+  if (suffix !== 'alternative') {
+    throw new Error(
+      `Rezeptschlüssel "${key}": nach dem Doppelkreuz steht die Darstellung, und die einzige ` +
+        'neben der stillschweigenden `primary` ist `alternative`.',
+    );
+  }
+  return { section: key.slice(0, separator), variant: 'alternative' };
+}
+
+const recipeEntries: CoverageEntry[] = Object.entries(RECIPES).map(([key, recipe]) => {
+  const { section, variant } = splitRecipeKey(key);
   const sourceId = `bbk-babz-2025:${section}`;
   return {
     sourceId,
-    variant: 'primary',
+    variant,
     title: recipe.title,
-    implementation: `recipe.${section}`,
+    implementation: `recipe.${key}`,
     referenceAsset: recipe.referenceAsset,
     coverage: 'composition-recipe',
     profile: 'bund',
@@ -519,7 +578,7 @@ const recipeEntries: CoverageEntry[] = Object.entries(RECIPES).map(([section, re
     // mit Differenz 0 an allen Kanten — das Manifest bildet das ab, statt es zu untertreiben.
     // Für die 16 Zeichen aus E-a gilt dasselbe, geprüft in recipes.test.ts.
     testEvidence: DRAWING_EVIDENCE,
-    review: reviewFor(sourceId, 'primary', technicalReviewFor(section)),
+    review: reviewFor(sourceId, variant, technicalReviewFor(key)),
   };
 });
 

@@ -609,6 +609,9 @@ describe('Clipping-Gate', () => {
         throw new Error('Für diesen Test nicht aufgerufen.');
       },
       pictogram: () => rolelessEdgeStroke,
+      bodyMark: () => {
+        throw new Error('Für diesen Test nicht aufgerufen.');
+      },
     };
 
     // Reale Laufzeitsemantik: compose() hängt die unveränderten, rollenlosen Definitionen unter

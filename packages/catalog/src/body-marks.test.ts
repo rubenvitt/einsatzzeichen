@@ -1,0 +1,375 @@
+import { describe, expect, it } from 'vitest';
+import type { BoundsMm } from '@einsatzzeichen/core';
+import { DEFAULT_STROKE_WIDTH_MM, type Primitive } from '@einsatzzeichen/schema';
+import { BODY_MARK_IDS, bodyMark } from './body-marks.js';
+
+/**
+ * Die einzige vermessene Körperhülle dieser Zeichnungen: das Rechteck 30 × 20 mm der taktischen
+ * Formation (1/6 bis 31/26 mm, Mitte 16|16), wie `base-symbols.ts` es führt und wie die zwölf
+ * Dateien aus F.1.1 bis F.1.11 es zeigen.
+ */
+const formationBodyMm: BoundsMm = { minX: 1, minY: 6, maxX: 31, maxY: 26 };
+
+/** Der Strichstil, den `body-marks.ts` an jede Linie schreibt — Kontur, keine Füllung. */
+const strokeStyle = { stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM } as const;
+
+function line(x1: number, y1: number, x2: number, y2: number): Primitive {
+  return { type: 'line', role: 'pictogram', x1, y1, x2, y2, style: strokeStyle };
+}
+
+/** Die Fachdienstteilung, die jede der vier Fassungen als erste beiden Primitive trägt. */
+const quartering: readonly Primitive[] = [line(16, 6, 16, 26), line(1, 16, 31, 16)];
+
+describe('bodyMark() — die Fachdienstteilung', () => {
+  it('legt beide Arme auf die Mittellinien und bis an die Körperkanten', () => {
+    // Gemessen an `F.1.11_Rettungsdienst allgemein.svg`: senkrechter Arm 15,75…16,25 mm um die
+    // Mittellinie 16,0 über die **volle** Körperhöhe 6…26, waagerechter Arm ebenso um 16,0 über
+    // die volle Körperbreite 1…31. Das ist der Unterschied zur Boxfassung aus Kapitel 4, deren
+    // beide Arme auf 2…30 mm enden — die randbündige Fassung stößt an die Hülle.
+    expect(bodyMark('medical-service', formationBodyMm)).toEqual(quartering);
+  });
+});
+
+describe('bodyMark() — die Zusätze je Fachdienst', () => {
+  it('setzt die Arztleiste 8 mm breit auf 4 mm über der Körperunterkante', () => {
+    // Gemessen an `F.1.7_Sanitätsgruppe_arztbesetzt.svg` (und gleichlautend an `F.1.1`): Leiste
+    // 12,0…20,0 mm auf der Mittellinie y 22,0 (Strichband 21,75…22,25), also mittig zur
+    // Körpermitte 16,0 und 4 mm über der Unterkante 26,0. Die Boxfassung von 4.6.4 trägt eine
+    // **10 mm** breite Leiste auf y 24 — die beiden Zeichnungen sind nicht ineinander
+    // umrechenbar, und dieser Test hält fest, welche der beiden hier gilt.
+    expect(bodyMark('physician', formationBodyMm)).toEqual([...quartering, line(12, 22, 20, 22)]);
+  });
+
+  it('setzt den Intensivbalken 8 mm hoch auf die Mittellinie der rechten Körperhälfte', () => {
+    // Gemessen an `F.1.10_Schnelleinsatzgruppe Rettungsdienst.svg` und
+    // `F.1.11_Rettungsdienst allgemein_Alternative.svg`: Balken 12,0…20,0 mm auf der Mittellinie
+    // x 23,5 (Strichband 23,25…23,75) — also mittig zur Körpermitte 16,0 und auf der halben
+    // Strecke zwischen Mittellinie 16,0 und rechter Kante 31,0. Die Boxfassung von 4.6.3 setzt
+    // ihn 10 mm hoch auf x 24.
+    expect(bodyMark('intensive-care', formationBodyMm)).toEqual([
+      ...quartering,
+      line(23.5, 12, 23.5, 20),
+    ]);
+  });
+
+  it('setzt den Transportring auf r 5,5 mm um die Körpermitte', () => {
+    // Gemessen an `F.1.8_Patiententransportgruppe.svg`: die weißen Viertelfelder enden auf
+    // r 5,75 mm um (16|16), die Tortenstücke im Ring beginnen auf r 5,2376 — Mittellinie r 5,5
+    // bei 0,5 mm Strich. Die Boxfassung von 4.6.5 trägt r ≈ 7 mm.
+    const marks = bodyMark('patient-transport', formationBodyMm);
+    const ring = marks.find((primitive) => primitive.type === 'circle');
+    expect(ring).toEqual({
+      type: 'circle',
+      role: 'pictogram',
+      cx: 16,
+      cy: 16,
+      r: 5.5,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    });
+  });
+
+  it('führt die beiden Diagonalen des Transportrings unter ±45° als Durchmesser', () => {
+    // Die acht Speichen der Referenzdatei sind vier Linien: die beiden Arme der Teilung und zwei
+    // Diagonalen. Geprüft wird die **Aussage** — durch die Körpermitte, Steigung ±1, Endpunkte
+    // auf dem Ring — und nicht der Dezimalwert 3,8891, der nur ihre Folge ist. Endeten die
+    // Diagonalen kürzer oder länger als r 5,5, träten die Speichen nicht bündig aus dem Ring.
+    const diagonals = bodyMark('patient-transport', formationBodyMm)
+      .filter((primitive) => primitive.type === 'line')
+      .slice(2);
+    expect(diagonals).toHaveLength(2);
+
+    const slopes: number[] = [];
+    for (const diagonal of diagonals) {
+      if (diagonal.type !== 'line') throw new Error('unreachable');
+      // Mittig zur Körpermitte: die beiden Endpunkte spiegeln sich an (16|16).
+      expect((diagonal.x1 + diagonal.x2) / 2).toBeCloseTo(16, 9);
+      expect((diagonal.y1 + diagonal.y2) / 2).toBeCloseTo(16, 9);
+      // Beide Endpunkte liegen auf dem Ring r 5,5 — die Diagonale ist sein Durchmesser.
+      expect(Math.hypot(diagonal.x1 - 16, diagonal.y1 - 16)).toBeCloseTo(5.5, 9);
+      expect(Math.hypot(diagonal.x2 - 16, diagonal.y2 - 16)).toBeCloseTo(5.5, 9);
+      slopes.push((diagonal.y2 - diagonal.y1) / (diagonal.x2 - diagonal.x1));
+    }
+    // Je einmal +45° und einmal −45°, nicht zweimal dieselbe Richtung.
+    expect(slopes.map((slope) => Math.round(slope)).sort()).toEqual([-1, 1]);
+  });
+});
+
+describe('bodyMark() — die Zeltmarke der Betreuung', () => {
+  /** Das Zelt aus F.1.4: von der linken unteren Körperecke über die Mitte der Oberkante zurück. */
+  const tent: Primitive = {
+    type: 'polyline',
+    role: 'pictogram',
+    points: [
+      [1, 26],
+      [16, 6],
+      [31, 26],
+    ],
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  };
+
+  it('spannt den Polyzug von Ecke zu Ecke über die Mitte der Oberkante', () => {
+    // 4.2.1 Betreuung, randbündig. Gemessen an `F.1.4_Einsatzeinheit.svg`: die beiden Schenkel
+    // laufen in die **Körperecken** unten und in die **Mitte der Oberkante**, nicht in eine
+    // eingerückte Box — dasselbe Randbündigkeitsmerkmal wie beim Kreuz, das die Kanten 1…31 und
+    // 6…26 nimmt statt der 2…30 der Boxfassung. Ohne Füllung: das Zelt ist eine Kontur, keine
+    // Fläche, und eine Füllung deckte die Teilung darunter ab.
+    expect(bodyMark('care', formationBodyMm)).toEqual([tent]);
+  });
+
+  it('trifft mit dem linken Schenkel die beiden vermessenen Innenkanten des Strichbands', () => {
+    // Die eigentliche Herleitung, nachgerechnet statt geglaubt. Die Referenz gibt nicht die
+    // Mittellinie, sondern die Kanten des 0,5-mm-Strichbands: der linke Schenkel läuft durch
+    // (1,5|25,75) und (9,0|15,75). Bei der Steigung dieses Schenkels (15 mm waagerecht auf 20 mm
+    // senkrecht) entspricht ein halber Strich von 0,25 mm einem waagerechten Versatz von
+    // 0,25 · sqrt(1 + 0,75²) = 0,3125 mm. Auf die Mittellinie zurückgerechnet sind die beiden
+    // gemessenen Punkte damit (1,1875|25,75) und (8,6875|15,75) — und genau die liefert der
+    // Polyzug von (1|26) nach (16|6).
+    //
+    // Wer die Zahlen aus dem Bild direkt als Mittellinie nähme, legte das Zelt 0,3125 mm nach
+    // rechts und verfehlte beide unteren Ecken; genau davor warnt der Dateikopf.
+    const [leg] = bodyMark('care', formationBodyMm);
+    if (leg?.type !== 'polyline') throw new Error('bodyMark("care") liefert keinen Polyzug.');
+    const [[x0, y0], [x1, y1]] = leg.points as [[number, number], [number, number]];
+    const xAt = (yMm: number): number => x0 + ((x1 - x0) * (yMm - y0)) / (y1 - y0);
+    const halfStrokeOffsetMm = 0.25 * Math.sqrt(1 + 0.75 ** 2);
+    expect(halfStrokeOffsetMm).toBeCloseTo(0.3125, 9);
+    expect(xAt(25.75) + halfStrokeOffsetMm).toBeCloseTo(1.5, 9);
+    expect(xAt(15.75) + halfStrokeOffsetMm).toBeCloseTo(9.0, 9);
+  });
+
+  it('trägt die Fachdienstteilung nicht mit', () => {
+    // **Die Aussage dieses Blocks.** `physician` und `intensive-care` bringen das Kreuz mit, weil
+    // ihre Kapitel-4-Zeichen (4.6.4, 4.6.3) es führen; `care` (4.2.1) führt es nicht. Belegt an
+    // der Referenz selbst: `F.1.3` zeigt das Zelt **ohne** Kreuz, `F.1.4` zeigt beide. Jede Marke
+    // ist genau ihr Kapitel-4-Zeichen, randbündig — und nicht „was auf dem Bild sonst noch steht".
+    //
+    // Ohne diesen Test zöge der nächste Bearbeiter das Kreuz der Bequemlichkeit halber in die
+    // Zeltmarke (drei der fünf Fassungen führen es, das lädt dazu ein) — und `F.1.3` bekäme still
+    // ein Kreuz, das seine Referenzdatei nicht zeigt. Kein Gate meldete das: der Fingerprint
+    // sieht nur `role: 'body'`.
+    const care = bodyMark('care', formationBodyMm);
+    expect(care).toHaveLength(1);
+    expect(care.some((primitive) => primitive.type === 'line')).toBe(false);
+  });
+
+  it('ergibt mit der Teilung zusammen das Bild von F.1.4 — zwei Marken nebeneinander', () => {
+    // Die Gegenprobe zur Zusicherung darüber: `F.1.4` entsteht als **Liste zweier Marken**
+    // (`bodyMarks: ['medical-service', 'care']`) und nicht dadurch, dass eine die andere
+    // enthielte. Beide Fassungen bleiben dabei unverändert die, die ihr eigener Test festhält.
+    const combined = [
+      ...bodyMark('medical-service', formationBodyMm),
+      ...bodyMark('care', formationBodyMm),
+    ];
+    expect(combined).toEqual([...quartering, tent]);
+  });
+});
+
+describe('bodyMark() — der zusammengefasste Eintrag von F.1.2', () => {
+  /**
+   * `cbrn-protection` zeichnet drei Dinge in **einem** Eintrag: die Fachdienstteilung mit zwei
+   * Fenstern, die Arztleiste und das Innenzeichen 4.1.1. Das ist keine vermeidbare Bündelung.
+   * Die vier Fenstergrenzen folgen aus keiner der drei Einzelzeichnungen: die beiden Fenster sind
+   * **verschieden groß** (waagerecht Mitte ± 6,0, senkrecht Mitte ± 2,0), und nur die eine der
+   * beiden Grenzen richtet sich nach dem Innenzeichen — siehe die Zusicherung „nur eine der
+   * beiden Fenstergrenzen folgt der Tinte" weiter unten. Ein Zeichen, das die drei Marken
+   * nebeneinander in `bodyMarks` führte, könnte die Unterbrechung gar nicht ausdrücken: die
+   * Teilung wüsste nichts vom Innenzeichen.
+   */
+  const marks = bodyMark('cbrn-protection', formationBodyMm);
+
+  /** Die Abschnitte, die die Striche des Eintrags auf einer der beiden Mittellinien belegen. */
+  function coveredOn(axis: 'horizontal' | 'vertical', atMm: number): number[][] {
+    const segments: number[][] = [];
+    for (const primitive of marks) {
+      if (primitive.type !== 'line') continue;
+      const { x1, y1, x2, y2 } = primitive;
+      if (axis === 'horizontal' && y1 === atMm && y2 === atMm) {
+        segments.push([Math.min(x1, x2), Math.max(x1, x2)]);
+      }
+      if (axis === 'vertical' && x1 === atMm && x2 === atMm) {
+        segments.push([Math.min(y1, y2), Math.max(y1, y2)]);
+      }
+    }
+    return segments.sort((a, b) => (a[0] as number) - (b[0] as number));
+  }
+
+  /** Die beiden Schäfte des Innenzeichens: die einzigen schrägen Striche des Eintrags. */
+  const shafts = marks.filter(
+    (primitive) => primitive.type === 'line' && primitive.x1 !== primitive.x2 && primitive.y1 !== primitive.y2,
+  );
+  /** Die beiden Köpfe: die einzigen **gefüllten** Kreise des Eintrags. */
+  const heads = marks.filter(
+    (primitive) => primitive.type === 'circle' && primitive.style?.fill === 'schwarz',
+  );
+
+  it('lässt das waagerechte Fenster 10…22 frei — Mitte ± 6,0 mm', () => {
+    // Gemessen am Umriss der Ebene `Takt_Zeichen` von `F.1.2_Dekontaminationseinheit für
+    // Verletzte.svg` (Strichbänder 15,75…16,25 um die Mittellinie 16,0): der waagerechte Arm
+    // steht als **zwei** Stücke x 1…10 und x 22…31.
+    //
+    // Die Prüfung ist absichtlich als Belegung der ganzen Mittellinie formuliert und nicht als
+    // Vergleich zweier Striche: sie sammelt **jeden** Strich des Eintrags, der auf y 16 liegt.
+    // Ein später „vereinfachter" Eintrag, der wieder die durchgezogene Teilung nähme, fiele damit
+    // auf — auch dann, wenn er sie zusätzlich zu den beiden Stücken zeichnete.
+    expect(coveredOn('horizontal', 16)).toEqual([
+      [1, 10],
+      [22, 31],
+    ]);
+  });
+
+  it('lässt das senkrechte Fenster 14…18 frei — Mitte ± 2,0 mm', () => {
+    // Dieselbe Vermessung, andere Achse: der senkrechte Arm steht als y 6…14 und y 18…26. Die
+    // beiden Fenster sind damit **verschieden groß**, 12,0 gegen 4,0 mm — der erste Grund, warum
+    // dieser Eintrag die Teilung nicht von `quartering()` beziehen kann.
+    expect(coveredOn('vertical', 16)).toEqual([
+      [6, 14],
+      [18, 26],
+    ]);
+    const [waagerecht, senkrecht] = [coveredOn('horizontal', 16), coveredOn('vertical', 16)];
+    expect((waagerecht[1]?.[0] as number) - (waagerecht[0]?.[1] as number)).toBe(12);
+    expect((senkrecht[1]?.[0] as number) - (senkrecht[0]?.[1] as number)).toBe(4);
+  });
+
+  it('richtet nur eine der beiden Fenstergrenzen nach der Tinte des Innenzeichens', () => {
+    // **Der Kern der Sache — hier wird die Nicht-Ableitbarkeit prüfbar.** Wäre das Fenster eine
+    // Aussparung um das Innenzeichen, müssten beide Grenzen in derselben Beziehung zu dessen
+    // Tinte stehen. Sie tun es nicht:
+    //
+    // - waagerecht reicht die Tinte (die beiden Kopfkreise) von 10,5 bis 21,5; das Fenster
+    //   10…22 steht auf beiden Seiten genau 0,5 mm — eine Strichbreite — **außerhalb** davon;
+    // - senkrecht liegt das Fenster 14…18 **innerhalb** der Ausdehnung des Innenzeichens: dessen
+    //   Kopfoberkanten stehen auf 12,25 und damit über dem Fenster, seine Schaftspitzen auf 20,0
+    //   und damit darunter. Der Arm ist dort weiter zurückgenommen, als das Zeichen es verlangt.
+    //
+    // Aus der einen Regel folgt die andere also nicht. Genau deshalb sind die vier Zahlen an
+    // F.1.2 gemessen und nicht aus dem Innenzeichen gerechnet — und genau deshalb steht alles
+    // in einem Eintrag.
+    expect(heads).toHaveLength(2);
+    const headXs = heads.flatMap((head) =>
+      head.type === 'circle' ? [head.cx - head.r, head.cx + head.r] : [],
+    );
+    expect(Math.min(...headXs)).toBeCloseTo(10.5, 9);
+    expect(Math.max(...headXs)).toBeCloseTo(21.5, 9);
+    // Das Fenster steht je eine Strichbreite außerhalb der waagerechten Tinte.
+    expect(Math.min(...headXs) - 10).toBeCloseTo(0.5, 9);
+    expect(22 - Math.max(...headXs)).toBeCloseTo(0.5, 9);
+
+    // Senkrecht umgekehrt: das Innenzeichen ragt oben **und** unten über das Fenster hinaus.
+    const headTopMm = Math.min(
+      ...heads.flatMap((head) => (head.type === 'circle' ? [head.cy - head.r] : [])),
+    );
+    const shaftBottomMm = Math.max(
+      ...shafts.flatMap((shaft) => (shaft.type === 'line' ? [shaft.y1, shaft.y2] : [])),
+    );
+    expect(headTopMm).toBeLessThan(14);
+    expect(shaftBottomMm).toBeGreaterThan(18);
+  });
+
+  it('stellt das Innenzeichen genau in die beiden Fenster', () => {
+    // Die Gegenprobe zu den drei Zusicherungen darüber: die Fenster sind kein Loch im Bild,
+    // sondern der Platz des Innenzeichens. Beide Schäfte laufen durch die Körpermitte (16|16) —
+    // den Punkt, den beide Fenster gemeinsam haben. Ohne diese Prüfung bliebe „das Fenster ist
+    // frei" auch dann grün, wenn das Innenzeichen ganz fehlte.
+    expect(shafts).toHaveLength(2);
+    for (const shaft of shafts) {
+      if (shaft.type !== 'line') throw new Error('unreachable');
+      // Die Körpermitte liegt auf der Geraden des Schafts …
+      const crossMm =
+        (16 - shaft.x1) * (shaft.y2 - shaft.y1) - (16 - shaft.y1) * (shaft.x2 - shaft.x1);
+      expect(crossMm).toBeCloseTo(0, 9);
+      // … und zwischen seinen beiden Enden, nicht auf ihrer Verlängerung.
+      expect(Math.min(shaft.x1, shaft.x2)).toBeLessThan(16);
+      expect(Math.max(shaft.x1, shaft.x2)).toBeGreaterThan(16);
+      expect(Math.min(shaft.y1, shaft.y2)).toBeLessThan(16);
+      expect(Math.max(shaft.y1, shaft.y2)).toBeGreaterThan(16);
+    }
+    // Zwei ausgefüllte Köpfe, kein Umriss: die Referenz führt sie als Fläche.
+    for (const head of heads) {
+      expect(head.style).toMatchObject({ fill: 'schwarz', stroke: 'none' });
+    }
+  });
+
+  it('trägt die Arztleiste mit — dieselbe wie bei `physician`', () => {
+    // 8 mm breit auf der Mittellinie y 22,0, also x 12…20 und 4 mm über der Körperunterkante. An
+    // dieser Datei nachgemessen und nicht aus F.1.7 übernommen — dass beide Zahlenpaare gleich
+    // ausfallen, ist das Ergebnis und nicht die Annahme. Sie gehört in **diesen** Eintrag und
+    // ist nicht daneben komponierbar: ein Zeichen mit `bodyMarks: ['physician', ...]` brächte
+    // die durchgezogene Teilung mit und schlösse die beiden Fenster.
+    const bar = line(12, 22, 20, 22);
+    expect(marks).toContainEqual(bar);
+    expect(bodyMark('physician', formationBodyMm)).toContainEqual(bar);
+  });
+
+  it('setzt die Teilung des Eintrags nicht aus der durchgezogenen zusammen', () => {
+    // Die ausdrückliche Gegenprobe zur „Vereinfachung": keiner der beiden durchgezogenen Arme
+    // aus `quartering()` steht im Eintrag. Ein Eintrag, der sie zusätzlich zu den vier Stücken
+    // führte, sähe im Bild aus wie eine geschlossene Teilung — und die Fensterprüfungen oben
+    // fielen darauf herein, wären sie als Vergleich einzelner Striche geschrieben.
+    for (const arm of quartering) {
+      expect(marks).not.toContainEqual(arm);
+    }
+  });
+});
+
+/**
+ * Die beiden Würfe dieser Datei werden **an ihrer Prosa** erkannt und nicht an einem Regelkode —
+ * anders als die Ablehnungen in `validateSpec` (`top-left-label-requires-measured-body` und
+ * ihresgleichen), die als Kode geprüft gehören. Das ist Absicht und keine Nachlässigkeit: die
+ * Würfe sind katalogseitig, und im Katalog trägt kein Wurf einen Kode — `organizationColor` und
+ * `baseDrawing` werfen genauso in Prosa. Ein einzelner Kode allein in `body-marks.ts` wäre eine
+ * neue Bauart mit n = 1. Wer die Meldungen umformuliert, passt hier die Muster mit an.
+ */
+describe('bodyMark() — was nicht fortgeschrieben wird', () => {
+  it('wirft für eine Fähigkeit ohne vermessene randbündige Fassung', () => {
+    // `fire-fighting` steht in `CAPABILITY_IDS` und hat ein Boxpiktogramm, aber keine an einer
+    // F-Datei vermessene randbündige Fassung. Ein stiller Rückfall auf die Boxfassung wäre der
+    // eigentliche Fehler: die beiden Zeichnungen unterscheiden sich in ihren **Maßen** (Kreuz
+    // 2…30 gegen 1…31, Leiste 10 gegen 8 mm) und nicht nur in ihrer Größe — das Ergebnis sähe
+    // plausibel aus und wäre an keiner Referenzdatei belegt.
+    expect(() => bodyMark('fire-fighting', formationBodyMm)).toThrow(
+      /keine randbündige Fassung vermessen/,
+    );
+  });
+
+  it('wirft für eine Körperhülle, die nicht 30 × 20 mm misst', () => {
+    // Der Landfahrzeugrumpf (1/5,75 bis 31/26 mm = 30 × 20,25 mm) — genau die Hülle, auf die
+    // Anhang F.2 dieselbe Teilung trägt, und genau der Fall, den ein Weiterrechnen erwischte:
+    // 0,25 mm Unterschied, das Bild bliebe unauffällig. Anhang F misst dort **eigene** Zahlen
+    // für Leiste, Balken und Ring; der Wurf hält fest, dass sie noch nicht vorliegen.
+    expect(() =>
+      bodyMark('medical-service', { minX: 1, minY: 5.75, maxX: 31, maxY: 26 }),
+    ).toThrow(/nur am Rechteckkörper 30 × 20 mm/);
+  });
+
+  it('meldet die tatsächlichen Hüllenmaße im Wurf', () => {
+    // Ohne die Zahlen im Text stünde der nächste Leser vor „passt nicht" ohne zu wissen, um
+    // wie viel — bei 0,25 mm Unterschied ist das der ganze Befund.
+    expect(() => bodyMark('medical-service', { minX: 1, minY: 5.75, maxX: 31, maxY: 26 })).toThrow(
+      /30\.000 × 20\.250 mm/,
+    );
+  });
+});
+
+describe('BODY_MARK_IDS', () => {
+  it('führt jede an Anhang F.1 vermessene Fähigkeit, und jede davon zeichnet auch', () => {
+    // Enthaltensein und nicht Gleichheit — und der Zuwachs hat die Bauart schon bestätigt: mit
+    // `care` (F.1.4) kam ein fünfter vermessener Fachdienst dazu, ohne dass dieser Test dafür
+    // rot werden musste. Was er festhält, ist die Zusicherung, dass jede aufgeführte Kennung
+    // auch tatsächlich eine Zeichnung liefert — eine Kennung in der Liste, die im Aufruf wirft
+    // oder nichts liefert, wäre ein Katalog, der eine Fassung anmeldet, die er nicht hat.
+    for (const id of [
+      'medical-service',
+      'physician',
+      'intensive-care',
+      'patient-transport',
+      'care',
+    ]) {
+      expect(BODY_MARK_IDS).toContain(id);
+    }
+    for (const id of BODY_MARK_IDS) {
+      // Kein Mindestmaß von zwei Primitiven: `care` steht mit **einem** Polyzug ohne Teilung da,
+      // und genau das ist an F.1.3 belegt (siehe den Block zur Zeltmarke oben).
+      expect(bodyMark(id, formationBodyMm).length).toBeGreaterThanOrEqual(1);
+    }
+  });
+});

@@ -1,4 +1,5 @@
 import type { SymbolKind, SymbolSpec } from '@einsatzzeichen/schema';
+import { profileFor } from './layout/profiles.js';
 
 export interface ValidationIssue {
   /** Stabile Regel-ID. Wird später in der Dokumentation verlinkt. */
@@ -149,6 +150,26 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
         'Die Beschriftungszone unterhalb des Körpers ist allein am angehobenen Wasserrumpf ' +
         '(kind "vehicle-water", bodyVariant "raised-hull") vermessen — an den fünf Zeichen ' +
         `E.2.27 bis E.2.31. Für "${spec.kind}" gibt es keine Messung, aus der ihre Lage folgte.`,
+    });
+  }
+
+  // Dieselbe Bauart eine Zone weiter oben: die Grundlinie des Laufs oben links ist an genau einer
+  // Körperform gemessen (5,0 mm unter der Oberkante, an den neun beschrifteten Zeichen aus F.1.1
+  // bis F.1.11). Sie auf jede andere zu übertragen, wäre eine erfundene Lage — und zwar eine
+  // unauffällige: der Lauf stünde irgendwo im Körper und keine Prüfung fragte nach, ob er dort
+  // hingehört. Am Gebäudekörper führte der Anker 2,5 mm zusätzlich aus dem Polygon heraus
+  // (dessen Kante läuft dort erst ab 5,286 mm).
+  if (
+    spec.labels?.topLeft !== undefined &&
+    profileFor(spec.kind).topLeftBaselineFromBodyTopMm === undefined
+  ) {
+    issues.push({
+      rule: 'top-left-label-requires-measured-body',
+      message:
+        'Die Beschriftungszone oben links ist allein an der taktischen Formation vermessen ' +
+        '(Grundlinie 5,0 mm unter der Körperoberkante, an F.1.1 bis F.1.11). Für ' +
+        `"${spec.kind}" gibt es keine Messung, aus der ihre Lage folgte — der Landfahrzeugrumpf ` +
+        'trägt denselben Lauf 1,5 mm tiefer, und diese Zahl misst der Teilslice, der sie braucht.',
     });
   }
 

@@ -1,6 +1,12 @@
-import { compose, type CatalogPorts, type ContrastRequirement } from '@einsatzzeichen/core';
+import {
+  bodyLabelInk,
+  compose,
+  type CatalogPorts,
+  type ContrastRequirement,
+} from '@einsatzzeichen/core';
 import type { Drawing, OrganizationId, SymbolSpec } from '@einsatzzeichen/schema';
 import { baseDrawing } from './base-symbols.js';
+import { bodyMark } from './body-marks.js';
 import { organizationColor } from './organizations.js';
 import { MINIMUM_TEXT_CONTRAST } from './pictograms/contrast-contract.js';
 import { pictogram } from './pictograms/index.js';
@@ -15,9 +21,11 @@ import {
   ANHANG_E_E_RECIPES,
   ANHANG_E_F_RECIPES,
 } from './recipes-anhang-e.js';
+import { ANHANG_F_A_RECIPES } from './recipes-anhang-f.js';
 
 const PORTS: CatalogPorts = {
   baseDrawing,
+  bodyMark,
   organizationColor,
   strengthHead,
   vehicleChassis,
@@ -60,6 +68,7 @@ export interface Recipe {
  * (`CONTRAST_EXCEPTIONS`).
  */
 export const RECIPES = {
+  ...ANHANG_F_A_RECIPES,
   ...ANHANG_E_A_RECIPES,
   ...ANHANG_E_B_RECIPES,
   ...ANHANG_E_C_RECIPES,
@@ -102,12 +111,23 @@ export const RECIPES = {
  * (`contrastPairs`), eine Komposition kann das nicht: ihre Farben entstehen erst beim
  * Zusammensetzen aus Grundzeichen, Organisation und Beschriftung. Diese Funktion leitet die
  * Anforderung deshalb aus dem Bestand ab statt sie zu wiederholen — jede Organisation, für die
- * ein Rezept eine Beschriftung im Körper führt, bekommt eine Anforderung „weiss auf ihrer
+ * ein Rezept eine Beschriftung im Körper führt, bekommt eine Anforderung „Schriftfarbe auf ihrer
  * Körperfarbe" mit der **Textschwelle** 4,5:1, nicht mit den 3:1 für grafische Objekte.
  *
  * Ohne diese Ableitung wäre der weisse Text der einzige Ink im Katalog ohne Kontrastvertrag —
  * die Piktogrammpaare decken ihn nicht ab, weil er zu keinem Piktogramm gehört. Genau diese
  * Anforderung hat `blau` in beiden Alternativthemes nachgezogen (siehe `render-themes.ts`).
+ *
+ * **Seit dem Teilslice F-a steht der Vordergrund nicht mehr fest auf `weiss`.** Bis dahin
+ * behauptete diese Ableitung „weiss auf Körperfarbe" für jede Organisation — eine Behauptung,
+ * die für Anhang E zutraf und die die zwölf F-Zeichen widerlegen: ihr Körper ist weiss
+ * (`hilfsorganisation`), und `compose.ts` zeichnet den Lauf darauf schwarz. Der Vertrag hätte
+ * also „weiss auf weiss" verlangt — ein Paar mit dem Verhältnis 1:1, das kein Theme lösen kann
+ * und das zugleich das Gegenteil dessen ist, was gezeichnet wird. Die Farbe kommt deshalb aus
+ * derselben Funktion wie die Zeichnung selbst (`bodyLabelInk`); zwei Kopien derselben Regel
+ * wären genau die Drift, die den Fehler erzeugt hat. Für `hilfsorganisation` ergibt das schwarz
+ * auf weiss und damit 21:1 in allen drei Themes — die Anforderung entfällt nicht, sie ist
+ * erfüllt.
  *
  * **Seit dem Teilslice E.2 gibt es eine zweite Richtung.** Die vierte Beschriftungszone setzt das
  * Trägerkürzel in der **Organisationsfarbe** unter den Körper, also auf die Ausgabeoberfläche.
@@ -133,9 +153,16 @@ export function labelContrastRequirements(
   const belowBody = new Set<OrganizationId>();
   for (const recipe of recipes) {
     const { labels, organization } = recipe.spec;
+    // Ein Rezept ohne Organisation bleibt hier aussen vor, obwohl `compose.ts` auch ihm eine
+    // Körperfüllung gibt (die Grundfüllung des Grundzeichens, ersatzweise `weiss`). Der Bestand
+    // kennt heute kein solches Rezept — alle 80 führen eine Organisation —, und ein Paar aus
+    // einer Farbe zu bilden, die kein Zeichen trägt, hiesse eine Anforderung zu erfinden. Kommt
+    // das erste organisationslose Rezept mit Beschriftung, fällt es hier still durch; deshalb
+    // steht es hier als benannte Kante und nicht als Auslassung.
     if (labels === undefined || organization === undefined) continue;
     if (
       labels.center !== undefined ||
+      labels.topLeft !== undefined ||
       labels.bottomLeft !== undefined ||
       labels.bottomRight !== undefined
     ) {
@@ -149,7 +176,10 @@ export function labelContrastRequirements(
   }
   return [
     ...[...inBody].map<ContrastRequirement>((organization) => ({
-      foreground: 'weiss',
+      // Dieselbe Ableitung, die `compose.ts` beim Zeichnen anwendet: schwarz auf weissem Körper,
+      // sonst weiss. Aufgerufen und nicht nachgebaut, damit Vertrag und Zeichnung nicht
+      // auseinanderlaufen können.
+      foreground: bodyLabelInk(organizationColor(organization)),
       background: organizationColor(organization),
       context: `Beschriftung im Körper auf Organisation ${organization}`,
       minimum: MINIMUM_TEXT_CONTRAST,

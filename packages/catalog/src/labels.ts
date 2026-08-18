@@ -90,6 +90,12 @@ export function describeSymbolSpec(spec: SymbolSpec): string {
   for (const capability of spec.capabilities ?? []) {
     parts.push(`Fähigkeit: ${pictogram(`capability.${capability}`).title}`);
   }
+  // Randbündige Fachdienstzeichen tragen denselben Begriff wie die Boxfassung und werden für eine
+  // Vorlesestimme deshalb gleich benannt — der Unterschied ist die Zeichnung, nicht die Sache. Der
+  // Titel kommt aus demselben Piktogrammregister, damit beide Fassungen nicht auseinanderlaufen.
+  for (const mark of spec.bodyMarks ?? []) {
+    parts.push(`Fachdienst: ${pictogram(`capability.${mark}`).title}`);
+  }
   if (spec.designation !== undefined) parts.push(`Bezeichnung: ${spec.designation}`);
   // Die Beschriftungen tragen bei Anhang E die gesamte fachliche Unterscheidung — ohne sie sind
   // E.1.1 und E.1.7 dasselbe blaue Rechteck. Sie gehören deshalb in die Beschreibung, die
@@ -106,6 +112,12 @@ export function describeSymbolSpec(spec: SymbolSpec): string {
   // aufgezählt und nicht aus `Object.entries(spec.labels)` erzeugt — sonst stünde sie dort seit
   // dem Teilslice E.2.
   const zones: Array<[keyof NonNullable<SymbolSpec['labels']>, string]> = [
+    // Oben links steht in Anhang F dasselbe, was Anhang E mittig setzt: das Kürzel der Einheit.
+    // Deshalb dasselbe Wort — und deshalb zuerst, weil eine Vorlesestimme das Bild von oben nach
+    // unten liest. Ohne diese Zeile fiele bei elf F-Rezepten der einzige Text aus der
+    // Beschreibung, den das Bild zeigt: `F.1.9` und `F.1.11` wären dort nicht mehr zu
+    // unterscheiden, obwohl sie „SEG" gegen „RettD" tragen.
+    ['topLeft', 'Kürzel'],
     ['center', 'Kürzel'],
     ['bottomLeft', 'Zusatzkennzeichnung'],
     ['bottomRight', 'Trägerkürzel'],

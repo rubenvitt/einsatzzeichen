@@ -405,6 +405,28 @@ export interface BodyLabels {
   readonly bottomLeft?: string;
   readonly bottomRight?: string;
   /**
+   * Die **fünfte** Zone: linksbündig im **oberen linken Viertel** des Körpers. Anhang F setzt
+   * dort sein Kürzel — „MTF", „SEG", „RettD", „10" —, weil die Fachdienstteilung
+   * (`SymbolSpec.bodyMarks`) die Mitte belegt und ein mittiger Lauf über dem waagerechten Arm
+   * des Kreuzes läge.
+   *
+   * **Gemessen an den neun beschrifteten Zeichen aus F.1.1 bis F.1.11** (eigene Vermessung,
+   * 18. August 2026, Tinte der Typo-Ebene in Millimetern):
+   *
+   * | Größe | Messung |
+   * |---|---|
+   * | Grundlinie | 11,0 mm — maxY der flachfüßigen Glyphen (`M`, `T`, `F`, `D`, `E`) |
+   * | Versalhöhe | 2,9192 mm — derselbe Grad wie die beiden unteren Zonen |
+   * | linke Tintenkante | 2,686 (`S`) · 2,762 (`1`) · 2,868 (`M`, `R`) · 2,186 (`5`) |
+   *
+   * **Der Anker ist zurückgerechnet, nicht abgelesen.** Die Tintenkante hängt von der linken
+   * Seitenlage der ersten Glyphe ab; gegen die eigene Rasterung derselben Läufe (Anker 3,0 mm,
+   * 4096 px) ergibt sich der Anker zu 2,524 (`M`, `R`), 2,498 (`S`) und 2,442 (`1`) — vier von
+   * fünf Läufen auf 2,5 mm, also 1,5 mm rechts der Körperkante. Der fünfte ist `F.1.3` („5.000",
+   * Anker 2,022); er steht als Befund an seiner Manifestzeile und nicht in dieser Zahl.
+   */
+  readonly topLeft?: string;
+  /**
    * Die **vierte** Zone, und die einzige **außerhalb** des Körpers: rechtsbündig unterhalb seiner
    * Unterkante, in der Organisationsfarbe statt in Weiß. Belegt an den fünf Wasserfahrzeugen
    * `E.2.27` bis `E.2.31`, deren Typo-Ebene diesen Lauf byteidentisch führt (Tinte
@@ -459,6 +481,25 @@ export interface SymbolSpec {
   administrativeLevel?: AdminLevelId;
   vehicleCategory?: VehicleCategoryId;
   capabilities?: readonly CapabilityId[];
+  /**
+   * Dieselben Fähigkeiten wie `capabilities`, aber in ihrer **randbündigen** Darstellung: das
+   * Zeichen läuft über die volle Körperfläche statt in der Standardbox 4/8/24/16 mm zu stehen.
+   * Anhang F trägt seine Fachdienstzeichen ausschließlich so — die Fachdienstteilung ist das
+   * Kreuz auf den beiden Mittellinien des Körpers, von Kante zu Kante.
+   *
+   * **Warum ein zweites Feld und keine zweite Piktogrammdarstellung.** Eine Piktogrammdefinition
+   * trägt eine feste Box; randbündig heißt aber „gegen die Hülle des platzierten Körpers", und
+   * die ist je Körperform eine andere (Rechteck 30 × 20 mm, Landfahrzeugrumpf, Kreis). Zudem sind
+   * die Maße der randbündigen Fassung **nicht** aus der Boxfassung skaliert: die Arztleiste misst
+   * eigenständig 8 mm bei 10 mm im Kapitel-4-Zeichen, der Transportring r 5,5 statt r 7,0 (eigene
+   * Vermessung an F.1.7, F.1.8 und 4.6.4/4.6.5, 18. August 2026). Die Zeichnung wird deshalb aus
+   * der Körperhülle gerechnet und nicht aus einer Box skaliert.
+   *
+   * Die IDs bleiben die der Fähigkeiten, damit beide Darstellungen desselben Kapitel-4-Abschnitts
+   * unter derselben Bezeichnung adressierbar sind. Eine Fähigkeit ohne vermessene randbündige
+   * Fassung wirft; sie fällt **nicht** auf die Boxfassung zurück.
+   */
+  bodyMarks?: readonly CapabilityId[];
   designation?: string;
   labels?: BodyLabels;
 }
