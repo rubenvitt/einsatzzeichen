@@ -434,6 +434,65 @@ Sichtprüfungsprotokoll
 [`docs/reviews/2026-08-18-anhang-e2-visual-qa.md`](docs/reviews/2026-08-18-anhang-e2-visual-qa.md),
 in `packages/catalog/src/recipes-anhang-e.ts` und im Coverage-Manifest.
 
+## F-a: Anhang F, die sanitätsdienstlichen Einheiten
+
+F-a ist der erste Teilslice des Anhangs F und sein **Tor**: die beiden Mechanismen, die er baut,
+tragen auch F.1.12 bis F.1.22, alle 17 Fahrzeuge aus F.2 und alle 19 Orte aus F.3. Von den zwölf
+Referenzdateien der Abschnitte F.1.1 bis F.1.11 sind **elf gebaut**; `F.1.3` ist vermessen und
+bewusst nicht gebaut (siehe unten). Der Katalog führt seither 82 Rezepte, 350 Renderfälle und
+369 Manifestzeilen.
+
+**Der Zuschnitt nannte zwei fehlende Mechanismen, gemessen sind es drei.**
+
+1. **Die Fachdienstteilung ist randbündig** — das Kreuz läuft über die volle Körperfläche, nicht
+   in der Standardbox 4/8/24/16 mm der Kapitel-4-Piktogramme. Sie ist deshalb eine
+   Körpereigenschaft (`SymbolSpec.bodyMarks`, Port `CatalogPorts.bodyMark`) und keine zweite
+   Piktogrammdarstellung: die Maße der randbündigen Fassung sind aus der Boxfassung nicht
+   skalierbar (Arztleiste 8 gegen 10 mm, Transportring r 5,5 gegen r 7). Die 92 bestehenden
+   Kapitel-4-Darstellungen bleiben unberührt — belegt daran, dass dieser Teilslice **keine
+   einzige** bestehende Snapshotdatei verändert.
+2. **Eine fünfte Beschriftungszone oben links** (`BodyLabels.topLeft`). Ihr Anker ist
+   zurückgerechnet und nicht abgelesen: dieselben Läufe mit bekanntem Anker gerastert und die
+   Differenz abgezogen ergibt 2,5 mm bei vier der fünf F-a-Läufe. Ihre Grundlinie hängt am
+   Körperprofil, wie die des mittigen Laufs seit E.2 — vermessen ist genau eine Zahl, und an jeder
+   anderen Körperform wirft `validateSpec`.
+3. **Die Schriftfarbe war ein Fehler im Bestand.** `compose()` setzte die Läufe im Körper fest auf
+   Weiß, belegt an den 37 Zeichen aus E.1. Anhang F setzt sie schwarz auf weißem Körper — ein
+   weißer Lauf wäre dort unsichtbar gewesen, und kein Gate hätte es gemeldet: das A11y-Gate prüft
+   die Paare, die der Katalog selbst anmeldet, und ein Zeichen, das seinen eigenen Lauf verschluckt,
+   meldet keines an. Die Farbe kommt jetzt aus einer Ableitung — **nicht** aus dem Kontrastverhältnis:
+   das hätte `E.2.6` von Weiß auf Schwarz gekippt und damit die dort entschiedene Ausnahme still
+   überschrieben. Aufgefallen ist der Unterschied an genau einer verschobenen Snapshotdatei.
+
+Dazu kommt die erste **Alternativdarstellung auf Rezeptebene**: der Rezeptschlüssel
+`F.1.11#alternative` erzeugt die Manifestzeile `bbk-babz-2025:F.1.11#alternative` neben `#primary`.
+Bis dahin trug keine Manifestzeile außerhalb der Piktogrammregister `variant: 'alternative'`. Anhang
+F braucht die Form acht Mal; LFH-408 ist dafür keine Vorbedingung.
+
+**Die Organisation ist eine Entscheidung und keine Messung.** Alle 66 F-Dateien führen ausschließlich
+`#fff`; ob das `hilfsorganisation` bedeutet oder gar keine Organisation, sagt die Quelle nicht. Der
+Katalog trägt `hilfsorganisation` — im Referenztheme ist das Bild in beiden Lesarten dasselbe, und
+`ORGANIZATION_COLORS` bildet die Organisation auf `weiss` ab. Damit hat die achte Organisationsfarbe
+aus LFH-424 erstmals Katalogeinträge, die sie setzen.
+
+**`F.1.3` ist vermessen und nicht gebaut.** Es bringt drei Zeichnungen mit, die kein anderes Zeichen
+dieses Teilslice teilt: ein Zelt mit anderer Schenkelneigung als `F.1.4` (Mittellinie durch (16|6)
+und (1|23) statt (1|26)), ein schwarzes Fußband ab y 23 und ein Bett in eigenen Maßen. Alle drei
+treffen in F-b wieder auf — dort mit mehr als einer Belegdatei je Form, wo die Grenze belegbar ist
+statt geraten. Die Maße stehen in der Entscheidungsnotiz, damit F-b sie nicht wiederholen muss.
+
+**Drei Befunde an einer einzigen Datei** stehen an `F.1.2`: die Datei heißt
+„Dekontaminationseinheit für Verletzte", zeichnet aber `4.1.1 ABC-/CBRN-Schutz` und nicht `4.1.3
+Dekontaminieren` (der Unterschied ist allein das Häkchenpaar an den Schaftenden); ihr Kürzel `MTF`
+ist mit dem von `F.1.1` zeichengleich; und ihr Innenzeichen steht um 2,3° schief. Der Katalog
+zeichnet es symmetrisch und erklärt das als Abweichung — 0,164 mm sind dreizehnmal der
+Näherungsfehler, den derselbe Teilslice andernorts als Exportartefakt abtut.
+
+Die Begründungen stehen in
+[`docs/decisions/2026-08-18-anhang-f-a.md`](docs/decisions/2026-08-18-anhang-f-a.md), die
+Sichtprüfung aller gebauten Zeichen in
+[`docs/reviews/2026-08-18-f-a-visual-qa.md`](docs/reviews/2026-08-18-f-a-visual-qa.md).
+
 ## Der lokale Referenzbestand
 
 `taktische-zeichen/` ist ein **lokaler Ordner mit 661 damals von der BABZ bereitgestellten
@@ -487,8 +546,9 @@ semantischer Titel und Beschreibung verlangt und die sichtbare Geometrie gegen d
 32×32-mm-viewBox geprüft. Die Rasterungen liegen als direkt sichtbare SVG-Kontaktbögen unter
 `packages/catalog/src/__snapshots__/multi-size/`; ein eigener Profilbogen zeigt sieben der acht
 Organisationen in beiden Alternativthemes bei 64 px. Die achte, `hilfsorganisation` aus LFH-424,
-fehlt darin — sie hat noch keinen Katalogeintrag, der sie setzt, und ihre Kontursignatur ist damit
-allein von der Eindeutigkeitsprüfung gedeckt, nicht von einem Bild.
+fehlt **auf dem Profilbogen** weiterhin — Katalogeinträge, die sie setzen, gibt es seit dem
+Teilslice F-a allerdings: die elf F-Rezepte tragen sie, und mit ihnen steht ihre Punktsignatur in
+den Mehrgrößenbögen dieser Zeichen.
 
 Die unveränderte Referenzpalette wird nicht pauschal als barrierefrei bezeichnet: Schwarz auf dem
 originalen BABZ-Blau unterschreitet 3:1. Für diesen Fall ist `accessible-light` das geprüfte

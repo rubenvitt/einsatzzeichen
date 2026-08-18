@@ -102,6 +102,9 @@ const formationCatalog: CatalogPorts = {
   pictogram: () => {
     throw new Error('Für diese Prüfung nicht aufgerufen.');
   },
+  bodyMark: () => {
+    throw new Error('Für diese Prüfung nicht aufgerufen.');
+  },
 };
 
 interface InkAgainstBox {
@@ -266,7 +269,13 @@ describe('Rasterevidenz für Text (resvgFontOptions())', () => {
     // Kappenhöhen aus E-d sind genau der Grund, aus dem sie hier grün ist (ohne sie treten sechs
     // Läufe aus ihrer Box). E.2.6 braucht keine: sein `Stapler` steht im Normgrad und bleibt in
     // der Box, hier gerastert und nicht angenommen.
-    expect(labelRecipes).toHaveLength(68);
+    //
+    // **75 seit dem Teilslice F-a**: sieben der elf F-Zeichen tragen einen Lauf — F.1.1 und F.1.2
+    // (beide „MTF", zeichengleich), F.1.5 („ASB", als einziges unten rechts), F.1.8 („10"), F.1.9
+    // und F.1.10 (beide „SEG") und F.1.11 („RettD"). Die vier übrigen (F.1.4, F.1.6, F.1.7,
+    // `F.1.11#alternative`) tragen ihre Bedeutung allein in den randbündigen Fachdienstzeichen und
+    // haben deshalb hier nichts zu rastern.
+    expect(labelRecipes).toHaveLength(75);
   });
 
   /**

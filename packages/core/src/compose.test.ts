@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_VIEWBOX_MM, type Primitive } from '@einsatzzeichen/schema';
+import { DEFAULT_VIEWBOX_MM, type ColorToken, type Primitive } from '@einsatzzeichen/schema';
+import type { BoundsMm } from './bounds.js';
 import { compose, type CatalogPorts } from './compose.js';
 import { checkViewBox } from './viewbox-gate.js';
 
@@ -49,6 +50,9 @@ const catalog: CatalogPorts = {
     throw new Error('Für diesen Test nicht aufgerufen.');
   },
   pictogram: () => {
+    throw new Error('Für diesen Test nicht aufgerufen.');
+  },
+  bodyMark: () => {
     throw new Error('Für diesen Test nicht aufgerufen.');
   },
 };
@@ -622,5 +626,216 @@ describe('compose() — mittige Grundlinie je Körperform', () => {
     const label = drawing.children.find((child) => child.role === 'label');
     if (label?.type !== 'text') throw new Error('unreachable');
     expect(label.y).toBeCloseTo(16, 3);
+  });
+});
+
+describe('compose() — Beschriftungszone oben links', () => {
+  /** Die F.1-Konstellation: weisser Körper, Fachdienstkürzel im oberen linken Viertel. */
+  const topLeftSpec = { kind: 'formation', labels: { topLeft: 'MTF' } } as const;
+
+  it('setzt Anker und Grundlinie auf die an F.1.1 bis F.1.11 vermessenen Zahlen', () => {
+    // Eigene Vermessung vom 18. August 2026 an den neun beschrifteten Zeichen aus F.1.1 bis
+    // F.1.11: Anker 1,5 mm rechts der linken Körperkante, Grundlinie 5,0 mm unter der
+    // Körperoberkante. Am Formationskörper (Hülle 1/6 bis 31/26) sind das die absoluten Werte
+    // 2,5 und 11,0. Gerechnet wird gegen die **Hülle**, nicht gegen die Grundfläche — sonst
+    // wanderte der Lauf nicht mit, wenn eine Kopfzone den Körper nach unten schiebt.
+    const label = compose(topLeftSpec, catalog).children.find((child) => child.role === 'label');
+    if (label?.type !== 'text') throw new Error('compose() hat keinen Lauf oben links erzeugt.');
+    expect(label.content).toBe('MTF');
+    expect(label.anchor).toBe('start');
+    expect(label.x).toBe(2.5);
+    expect(label.y).toBe(11);
+  });
+
+  it('beendet die Zonenbox an der senkrechten Mittellinie', () => {
+    // Dort steht bei jedem F-Zeichen der senkrechte Arm der Fachdienstteilung; kein Lauf aus
+    // F.1.1 bis F.1.11 überschreitet ihn (der breiteste ist „RettD" mit Tinte bis 12,548 mm bei
+    // einer Mitte von 16,0). Die Box 2,5…16,0 macht „passt in sein Viertel" damit zu einer
+    // prüfbaren Aussage — geprüft werden wie bei den unteren Zonen nur die **waagerechten**
+    // Felder, weil `yMm`/`heightMm` aus `verticalTextBoxMm` stammen und eine Prüfung gegen
+    // dieselbe Funktion ein Kreisschluss wäre.
+    const label = compose(topLeftSpec, catalog).children.find((child) => child.role === 'label');
+    if (label?.type !== 'text') throw new Error('unreachable');
+    expect(label.boxMm).toMatchObject({ xMm: 2.5, widthMm: 13.5 });
+  });
+
+  it('benutzt den Schriftgrad der unteren Zonen unverändert', () => {
+    // Gemessene Versalhöhe 2,92 mm — derselbe Grad wie unten links und unten rechts. Geprüft
+    // gegen den bestehenden unteren Lauf und nicht gegen die Konstante: die Zusicherung ist
+    // „derselbe Grad", nicht „diese Zahl".
+    const [topLeft, bottomLeft] = compose(
+      { kind: 'formation', labels: { topLeft: 'MTF', bottomLeft: 'A' } },
+      catalog,
+    ).children.filter((child) => child.role === 'label');
+    if (topLeft?.type !== 'text' || bottomLeft?.type !== 'text') throw new Error('unreachable');
+    expect(topLeft.sizeMm).toBe(bottomLeft.sizeMm);
+  });
+
+  it('lehnt die Zone an jeder Körperform ohne vermessene Grundlinie ab', () => {
+    // `building` läuft über `rectBodyProfile`, das die Zahl nicht führt — sie steht allein am
+    // eigenen Profil der taktischen Formation. Ohne den Wurf wäre die geratene Grundlinie
+    // minY + 5 = 8 mm, und auf y = 8 führt das Gebäudepolygon nur die Breite 5,286…26,714
+    // (Traufkante von (16|3) nach (1|10)): der Anker 2,5 läge **außerhalb** des Umrisses, und
+    // kein Gate meldete es. Der Landfahrzeugrumpf trägt denselben Lauf auf 6,75 mm unter seiner
+    // Oberkante (F.2.1 bis F.2.5) — die Zahl ist je Körperform eine eigene Messung.
+    //
+    // Geprüft wird der Regelkode und nicht die Prosa: die Ablehnung steht seit dem Teilslice F-a
+    // in `validateSpec` und trägt damit dieselbe maschinenlesbare Kennung wie ihr Geschwisterfall
+    // `below-right-label-requires-measured-body`. Der Wurf in `compose.ts` bleibt als
+    // unerreichbare Zusicherung stehen.
+    expect(() => compose({ kind: 'building', labels: { topLeft: 'MTF' } }, catalog)).toThrow(
+      /top-left-label-requires-measured-body/,
+    );
+  });
+
+  it('passiert das viewBox-Gate mit allen vier Zonen im Körper', () => {
+    const drawing = compose(
+      { kind: 'formation', labels: { topLeft: 'MTF', center: 'K', bottomLeft: 'A', bottomRight: 'THW' } },
+      catalog,
+    );
+    expect(checkViewBox(drawing)).toEqual([]);
+  });
+});
+
+describe('compose() — Schriftfarbe der Läufe im Körper', () => {
+  function inkOf(
+    spec: Parameters<typeof compose>[0],
+    bodyFill?: ColorToken,
+  ): ColorToken | 'none' | undefined {
+    const drawing = compose(spec, {
+      ...catalog,
+      ...(bodyFill !== undefined ? { organizationColor: () => bodyFill } : {}),
+    });
+    return drawing.children.find((child) => child.role === 'label')?.style?.fill;
+  }
+
+  it('setzt schwarz auf die weisse Körperfläche', () => {
+    // Der Regelfall des Anhangs F: alle 66 F-Dateien führen die Füllung `#fff` und ihre
+    // Typo-Ebene ohne `fill`, also in Schwarz (nachgesehen an allen zwölf Dateien aus F.1.1 bis
+    // F.1.11). Bis Anhang F stand die Tinte fest auf `weiss` — ein weisser Lauf auf weissem
+    // Körper wäre unsichtbar, und zwar unbemerkt: das A11y-Gate prüft die Paare, die der Katalog
+    // anmeldet, und ein Zeichen, das seinen eigenen Lauf verschluckt, meldet kein Paar an.
+    expect(inkOf({ kind: 'formation', labels: { topLeft: 'MTF' } })).toBe('schwarz');
+  });
+
+  it('setzt weiss auf die Organisationsfarbe blau', () => {
+    // Der Regelfall des Anhangs E: alle 37 Zeichen aus E.1 setzen ihre Kürzel weiss auf die
+    // gefüllte Fläche. `thw` (`#003296`) ist der Fall, der beide Anhänge auseinanderhält.
+    expect(inkOf({ kind: 'formation', organization: 'thw', labels: { center: 'B' } }, 'blau')).toBe(
+      'weiss',
+    );
+  });
+
+  it('setzt weiss auch auf orange — die entschiedene Ausnahme E.2.6 bleibt unberührt', () => {
+    // Der eigentliche Punkt dieses Blocks. Eine Ableitung nach Kontrastverhältnis („von weiss
+    // und schwarz gewinnt das höhere Verhältnis") kippte genau dieses Zeichen: orange `#fa8c00`
+    // trägt gegen schwarz 9,6:1 und gegen weiss 2,2:1. Die Referenz setzt dort trotzdem weiss,
+    // und der Katalog führt das seit dem 18. August 2026 als entschiedene Ausnahme in
+    // `CONTRAST_EXCEPTIONS` (`contrast-exceptions.ts`) — mit der ausdrücklich verworfenen
+    // Gegenoption „dunkles statt weisses Trägerkürzel". Eine Kontrastableitung hätte diese
+    // Entscheidung still überschrieben, ohne dass ein Gate anschlüge: das A11y-Gate wäre danach
+    // grün gewesen und das Bild falsch. Die Regel lautet deshalb „die Farbe, die die Quelle
+    // setzt", nicht „die mit dem besseren Kontrast".
+    expect(
+      inkOf(
+        { kind: 'formation', organization: 'sonstige-gefahrenabwehr', labels: { center: 'B' } },
+        'orange',
+      ),
+    ).toBe('weiss');
+  });
+});
+
+describe('compose() — randbündige Fachdienstzeichen', () => {
+  it('reicht die Hülle des platzierten Körpers an den Port, nicht die Standardgeometrie', () => {
+    // Der Unterschied ist nur mit Kopfzone sichtbar: ohne sie liefern beide Lesarten dieselbe
+    // Hülle. Mit `strengthHead('staffel')` (Stapel zweier Marken, `heightMm` 7 — dieselben
+    // Zahlen wie im Fußzonenblock oben, fest verdrahtet, weil `core` nicht von `catalog`
+    // abhängen darf) verschiebt `rectBodyProfile.place()` den Körper um 3 mm nach unten:
+    // minY 6 → 9, maxY 26 → 29. Bekäme `bodyMark()` die Standardhülle, läge die
+    // Fachdienstteilung 3 mm über dem Körper — und weil `body-marks.ts` jede Hülle außer
+    // 30 × 20 mm ablehnt, fiele das dort gerade **nicht** auf: die verschobene Hülle misst
+    // dieselben 30 × 20 mm.
+    const seen: BoundsMm[] = [];
+    const markCatalog: CatalogPorts = {
+      ...catalog,
+      strengthHead: () => ({
+        marks: [
+          { cxMm: 16, cyFromTopMm: 1.5, rMm: 1.5 },
+          { cxMm: 16, cyFromTopMm: 5.5, rMm: 1.5 },
+        ],
+        heightMm: 7,
+      }),
+      bodyMark: (_id, bodyBoundsMm) => {
+        seen.push(bodyBoundsMm);
+        return [];
+      },
+    };
+    compose(
+      { kind: 'formation', strength: 'staffel', bodyMarks: ['medical-service'] },
+      markCatalog,
+    );
+    expect(seen).toEqual([{ minX: 1, minY: 9, maxX: 31, maxY: 29 }]);
+  });
+
+  it('zeichnet die Marken nach Körper und Boxpiktogramm und vor den Beschriftungen', () => {
+    // Die Zusicherung aus `compose.ts` ist **dreiteilig**: die randbündigen Marken stehen nach
+    // dem gefüllten Körper, nach den Boxpiktogrammen und vor den Beschriftungen. Anhang F setzt
+    // „MTF" über das obere linke Viertel der Teilung — die Marken liegen auf der Körperfläche
+    // wie die Kürzel, und die Kürzel liegen auf ihnen; ein Boxpiktogramm im selben Zeichen liegt
+    // unter beiden.
+    //
+    // Geprüft **per Bauform und nicht per Rolle**: Boxpiktogramm und randbündige Marke tragen
+    // beide `role: 'pictogram'`, `indexOf('pictogram')` träfe deshalb immer nur das erste der
+    // beiden, und die mittlere der drei Kanten bliebe unbelegt — ein Test, der die Umstellung
+    // „Marke vor Piktogramm" gar nicht bemerkte. Unterscheidbar sind sie an ihrer Bauform:
+    // `compose()` fasst die Boxpiktogramme in eine `group` mit Verschiebung, die randbündigen
+    // Marken übernimmt es einzeln so, wie der Port sie liefert.
+    const markCatalog: CatalogPorts = {
+      ...catalog,
+      organizationColor: () => 'blau',
+      pictogram: (id) => ({
+        id,
+        variant: 'primary',
+        title: 'Doppel',
+        box: { xMm: 4, yMm: 8, widthMm: 24, heightMm: 16 },
+        primitives: [{ type: 'circle', role: 'pictogram', cx: 16, cy: 16, r: 3 }],
+      }),
+      bodyMark: () => [
+        { type: 'line', role: 'pictogram', x1: 16, y1: 6, x2: 16, y2: 26, style: { stroke: 'schwarz', strokeWidth: 0.5 } },
+      ],
+    };
+    const children = compose(
+      {
+        kind: 'formation',
+        organization: 'thw',
+        capabilities: ['fire-fighting'],
+        bodyMarks: ['medical-service'],
+        labels: { topLeft: 'MTF' },
+      },
+      markCatalog,
+    ).children;
+    const bodyIndex = children.findIndex((child) => child.role === 'body');
+    const boxIndex = children.findIndex(
+      (child) => child.role === 'pictogram' && child.type === 'group',
+    );
+    const markIndex = children.findIndex(
+      (child) => child.role === 'pictogram' && child.type === 'line',
+    );
+    const labelIndex = children.findIndex((child) => child.role === 'label');
+    // Erst die Anwesenheit: ein fehlendes Stück ergäbe −1 und machte jeden Größenvergleich
+    // darunter zu einer wahren Aussage über nichts.
+    expect([bodyIndex, boxIndex, markIndex, labelIndex]).not.toContain(-1);
+    expect(bodyIndex).toBeLessThan(boxIndex);
+    expect(boxIndex).toBeLessThan(markIndex);
+    expect(markIndex).toBeLessThan(labelIndex);
+  });
+
+  it('fragt den Port ohne `bodyMarks` gar nicht', () => {
+    // Das Katalog-Doppel `catalog` wirft in `bodyMark` — der Test belegt damit zugleich, dass
+    // ein Zeichen ohne randbündige Marken den Port nicht anfasst.
+    // Dass `compose()` überhaupt zurückkehrt, **ist** die Zusicherung — eine Zählung der
+    // Kinderliste bewiese sie nicht: ein Doppel, das statt zu werfen `[]` lieferte, ergäbe
+    // dieselbe leere Liste.
+    expect(() => compose({ kind: 'formation', labels: { topLeft: 'MTF' } }, catalog)).not.toThrow();
   });
 });

@@ -158,6 +158,48 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:E.2.29#primary': { status: 'pending' },
   'bbk-babz-2025:E.2.30#primary': { status: 'pending' },
   'bbk-babz-2025:E.2.31#primary': { status: 'pending' },
+  // Anhang F, Teilslice F-a: die sanitätsdienstlichen Einheiten F.1.1 bis F.1.11 — elf Zeilen
+  // für zehn Abschnitte, weil F.1.11 als erster Abschnitt des Katalogs eine Alternativdarstellung
+  // führt. Der Zuschnitt (`docs/decisions/2026-08-18-anhang-f-zuschnitt.md`) rechnet F-a elf
+  // Abschnitte zu; F.1.3 hat heute kein Rezept und deshalb hier keinen Platz — der
+  // Ledger ist mit dem **Manifest** deckungsgleich und nicht mit dem Zuschnitt, und diese
+  // Deckungsgleichheit prüft `domain-reviews.test.ts` in beide Richtungen. Eigener Block, weil hier zum ersten Mal
+  // die **Organisation selbst** zur Frage steht: alle 66 F-Dateien führen ausschliesslich `#fff`,
+  // und ob das `hilfsorganisation` bedeutet oder gar keine Organisation, sagt die Quelle nicht —
+  // der Katalog hat sich für `hilfsorganisation` entschieden (Begründung in
+  // `recipes-anhang-f.ts`), und diese Entscheidung ist genau das, was ein Fachreview bestätigen
+  // oder umstossen muss. Sie wiegt schwerer als bei E, weil sie in den beiden Alternativthemes
+  // sichtbar wird: `weiss` trägt dort die Punktsignatur aus `ORGANIZATION_BODY_DASHES`.
+  //
+  // Vier weitere Fragen, die keine Messung beantwortet: ob die am Bild abgelesenen Kürzel „MTF",
+  // „SEG" und „RettD" fachlich tragen; ob die beiden Kopfbalken von F.1.1 einen fünften
+  // Stärkegrad bezeichnen, den Kapitel 5.4 nicht führt (der Katalog zeichnet sie nicht, siehe
+  // `ANHANG_F_A_DEVIATIONS`); ob F.1.9 und F.1.10 — beide „SEG", verschieden allein in der
+  // Fachdienstteilung — im Einsatz verwechslungsfrei bleiben; und ob `F.1.11#alternative`
+  // wirklich dasselbe bezeichnet wie `F.1.11` und deshalb zu Recht dessen Abschnitt teilt statt
+  // einen eigenen zu bekommen.
+  'bbk-babz-2025:F.1.1#primary': { status: 'pending' },
+  // F.1.2 zeichnet als einziges Zeichen des Teilslices ein Fähigkeitszeichen aus Kapitel 4.1 im
+  // Körper — und die Datei zeigt dabei 4.1.1 (ABC-/CBRN-Schutz), obwohl sie
+  // „Dekontaminationseinheit" heißt; 4.1.3 (Dekontaminieren) trüge zusätzlich das Häkchenpaar an
+  // den Schaftenden. Fachlich zu prüfen ist, welche der beiden Lesarten gilt: eine Einheit, die
+  // ABC-Schutz leistet, oder eine, die dekontaminiert. Dazu die Frage, ob „MTF" hier richtig
+  // steht — der Lauf ist zeichengleich mit dem von F.1.1, die Einheit trägt also das Kürzel
+  // ihrer Task Force und kein eigenes.
+  'bbk-babz-2025:F.1.2#primary': { status: 'pending' },
+  // F.1.4 führt zwei randbündige Fachdienstzeichen zugleich — Teilung und Zelt, Sanitätsdienst
+  // und Betreuung. Fachlich zu prüfen ist, ob die Nebeneinanderstellung dasselbe aussagt wie der
+  // eine Umriss, den die Referenz zeichnet.
+  'bbk-babz-2025:F.1.4#primary': { status: 'pending' },
+  'bbk-babz-2025:F.1.5#primary': { status: 'pending' },
+  'bbk-babz-2025:F.1.6#primary': { status: 'pending' },
+  'bbk-babz-2025:F.1.7#primary': { status: 'pending' },
+  'bbk-babz-2025:F.1.8#primary': { status: 'pending' },
+  'bbk-babz-2025:F.1.9#primary': { status: 'pending' },
+  'bbk-babz-2025:F.1.10#primary': { status: 'pending' },
+  'bbk-babz-2025:F.1.11#primary': { status: 'pending' },
+  // Die erste Ledgerzeile des Katalogs, die keine `primary`-Darstellung führt.
+  'bbk-babz-2025:F.1.11#alternative': { status: 'pending' },
   'bbk-babz-2025:2.1#primary': { status: 'pending' },
   // 2.2 seit LFH-424. Fachlich besonders zu prüfen: die Zuordnung „HiOrg = Hilfsorganisation" ist
   // aus dem gerasterten Bild abgelesen, nicht aus dem Dateinamen — der ist generisch

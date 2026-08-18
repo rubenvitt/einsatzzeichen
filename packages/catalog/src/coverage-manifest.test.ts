@@ -69,7 +69,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 358 Zeilen mit 273 Elementdarstellungen', () => {
+  it('enthält exakt 369 Zeilen mit 273 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -90,8 +90,12 @@ describe('Coverage-Manifest', () => {
       // Teilslice E-a, zwölf aus E-b und neun aus E-c (damit ist E.1 vollständig), 21 aus E-d,
       // fünf aus E-e und fünf aus E-f. **68 und damit vollständig** seit E.2.6 am 18. August 2026
       // nachgezogen wurde; die Lückenlosigkeit hält der Test „führt Anhang E lückenlos" unten
-      // fest, und erst er trägt das `E` im `scope`.
-      'composition-recipe': 71,
+      // fest, und erst er trägt das `E` im `scope`. Dazu die elf Zeilen aus F-a: zehn
+      // Abschnitte, denn `F.1.11` führt als erster Abschnitt des Katalogs neben `primary` eine
+      // `alternative` — die Zeile zählt einzeln, weil das Manifest Darstellungen zählt und nicht
+      // Abschnitte. Zehn und nicht elf: `F.1.3` ist vermessen und nicht gebaut
+      // (`docs/decisions/2026-08-18-anhang-f-a.md`, Abschnitt 8).
+      'composition-recipe': 82,
       // 254 Piktogramme plus acht Organisationen (seit LFH-424 mit hilfsorganisation), vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
@@ -99,7 +103,7 @@ describe('Coverage-Manifest', () => {
       // Strichhülle vermessen ist.
       element: 273,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(358);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(369);
     expect(elementRows).toHaveLength(273);
     expect(pictogramRows).toHaveLength(254);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
@@ -174,7 +178,12 @@ describe('Coverage-Manifest', () => {
    * Bauphase dieses Slice** und keine Nachlässigkeit der zweiten: E.2.15 wäre ohne den L-Rahmen
    * als Zusatzprimitiv der zweite Fall nach dem Muster von E.1.19/E.1.24 gewesen.
    */
+  // In der Reihenfolge des Manifests und nicht alphabetisch: die Rezeptzeilen entstehen aus
+  // `RECIPES`, und dort steht Anhang F vor Anhang E. Der Test unten vergleicht die Liste als
+  // Folge, damit eine still verschobene Zeile auffällt.
   const TECHNICAL_DEVIATIONS = [
+    'bbk-babz-2025:F.1.1',
+    'bbk-babz-2025:F.1.2',
     'bbk-babz-2025:E.1.17',
     'bbk-babz-2025:E.1.19',
     'bbk-babz-2025:E.1.24',
@@ -184,10 +193,10 @@ describe('Coverage-Manifest', () => {
 
   it('trägt für jeden Eintrag eine Referenzdatei und beide Reviewrollen', () => {
     // Die Zusage ist „kein Eintrag ohne zurechenbares technisches Review", nicht „jeder Eintrag
-    // approved". Sie wird deshalb nicht auf eine Statusmenge aufgeweicht, sondern nennt die fünf
-    // Abweichungen einzeln: jede andere Zeile muss `approved` sein, und die fünf genannten müssen
-    // zusätzlich eine Notiz führen. Ein sechstes `deviation` fällt hier auf, ein weggefallenes
-    // ebenso.
+    // approved". Sie wird deshalb nicht auf eine Statusmenge aufgeweicht, sondern nennt die sieben
+    // Abweichungen einzeln: jede andere Zeile muss `approved` sein, und die sieben genannten
+    // müssen zusätzlich eine Notiz führen. Ein achtes `deviation` fällt hier auf, ein
+    // weggefallenes ebenso.
     for (const entry of COVERAGE_MANIFEST.entries) {
       expect(entry.referenceAsset).toMatch(/\.svg$/);
       if (TECHNICAL_DEVIATIONS.includes(entry.sourceId)) {
@@ -202,10 +211,15 @@ describe('Coverage-Manifest', () => {
     }
   });
 
-  it('führt genau fünf technische Abweichungen, drei aus E-b, eine aus E-c und eine aus E-e', () => {
+  it('führt genau sieben technische Abweichungen, drei aus E-b, je eine aus E-c und E-e, zwei aus F-a', () => {
     // Gegenrichtung des Tests oben: dort wird für bekannte Schlüssel `deviation` verlangt, hier,
     // dass es keine weiteren gibt. Ohne diese Hälfte bliebe eine still hinzugekommene Abweichung
     // an einer anderen Zeile unbemerkt, weil der `else`-Zweig sie nie zu sehen bekäme.
+    //
+    // Die sechste ist F.1.1: seine zwei Kopfbalken werden nicht gezeichnet, weil der Katalog für
+    // sie keinen Begriff hat (dieselbe Abweichung wie an E.1.31). Die siebte ist F.1.2: sein
+    // Innenzeichen steht symmetrisch zur Körpermitte, während die Referenz es um 2,3° schief
+    // zeichnet — beide in `ANHANG_F_A_DEVIATIONS` begründet.
     const deviations = COVERAGE_MANIFEST.entries
       .filter((entry) => entry.review.technical.status === 'deviation')
       .map((entry) => entry.sourceId);
