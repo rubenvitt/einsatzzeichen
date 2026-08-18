@@ -5,9 +5,15 @@ import {
   relativeLuminance,
   type ContrastRequirement,
 } from '@einsatzzeichen/core';
-import { ORGANIZATION_COLORS } from './organizations.js';
+import {
+  CONTRAST_EXCEPTIONS,
+  contrastExceptionFor,
+  knownContrastIssues,
+  unexpectedContrastIssues,
+} from './contrast-exceptions.js';
+import { organizationColor, ORGANIZATION_COLORS } from './organizations.js';
 import { ALL_PICTOGRAMS } from './pictograms/index.js';
-import { labelContrastRequirements } from './recipes.js';
+import { RECIPES, labelContrastRequirements, type Recipe } from './recipes.js';
 import {
   MINIMUM_NON_TEXT_CONTRAST,
   MINIMUM_TEXT_CONTRAST,
@@ -47,9 +53,19 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
   });
 
   it.each([ACCESSIBLE_LIGHT_THEME, PRINT_MONOCHROME_THEME])(
-    '$id besteht alle expliziten 3:1-Anforderungen',
+    '$id besteht alle expliziten Anforderungen bis auf die eine entschiedene Ausnahme',
     (theme) => {
-      expect(checkContrast(theme, requirements())).toEqual([]);
+      const issues = checkContrast(theme, requirements());
+      // Die Ausnahme wirkt paarweise und themeweise (`contrastExceptionFor`), nicht als
+      // gelockerte Schwelle: jedes andere Paar und jedes andere Theme fällt weiter auf.
+      expect(unexpectedContrastIssues(issues)).toEqual([]);
+      // Und die Zahl der gedeckten Befunde ist **gepinnt**, nicht toleriert — dasselbe Muster
+      // wie beim blauen Negativbefund weiter unten. Genau einer je Theme: weiss auf orange aus
+      // der Beschriftung von E.2.6.
+      expect(knownContrastIssues(issues)).toHaveLength(1);
+      expect(knownContrastIssues(issues).map((issue) => issue.context)).toEqual([
+        'Beschriftung im Körper auf Organisation sonstige-gefahrenabwehr',
+      ]);
     },
   );
 
@@ -114,15 +130,16 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
       .toBeCloseTo(4.542, 3);
   });
 
-  it('hält weiss auf orange als offenen Punkt fest, den kein Theme heute löst', () => {
-    // `E.2.6` ist das einzige Zeichen des Anhangs E mit orangem Körper **und** weissem
-    // Trägerkürzel. Sobald ein Rezept `organization: 'sonstige-gefahrenabwehr'` mit einer
-    // Beschriftung führt, leitet `labelContrastRequirements` „weiss auf orange" ab — und das
-    // fällt. Selbst gerechnet: 2,382:1 im Referenz- und im accessible-light-Theme, 2,323:1 im
-    // Drucktheme, gefordert sind 4,5:1.
+  it('hält weiss auf orange als entschiedene Ausnahme fest, die kein Theme löst', () => {
+    // **Diese Zeile hat ihre Rolle gewechselt, nicht ihre Zahlen.** Bis zum 18. August 2026 hielt
+    // sie einen offenen Punkt fest und E.2.6 blieb ungebaut. Seither ist entschieden (Nutzer,
+    // 18.08.2026, Weg 1 von vier): der Katalog baut E.2.6 so, wie die Referenz es zeichnet —
+    // oranger Körper, weisses Kürzel —, und führt „weiss auf orange" als bekannten, begründeten
+    // Negativbefund. Keine `deviation`: die Umsetzung folgt der Quelle punktgenau, abweichend ist
+    // die eigene Kontrastschwelle des Katalogs.
     //
-    // Diese Zeile baut nichts und lockert nichts. Sie hält die Zahl fest, damit die zweite
-    // Bauphase nicht in ein unerklärtes rotes Gate läuft.
+    // Selbst nachgerechnet, unverändert gegenüber der offenen Fassung: 2,382:1 im Referenz- und
+    // im accessible-light-Theme, 2,323:1 im Drucktheme, gefordert sind 4,5:1.
     for (const [theme, expected] of [
       [RENDER_THEMES.reference, 2.382],
       [ACCESSIBLE_LIGHT_THEME, 2.382],
@@ -133,7 +150,88 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
         3,
       );
       expect(expected).toBeLessThan(MINIMUM_TEXT_CONTRAST);
+      expect(
+        contrastExceptionFor({ foreground: 'weiss', background: 'orange', themeId: theme.id }),
+        theme.id,
+      ).toBeDefined();
     }
+
+    const exception = CONTRAST_EXCEPTIONS[0];
+    expect(CONTRAST_EXCEPTIONS).toHaveLength(1);
+    expect(exception?.decidedOn).toBe('2026-08-18');
+    expect(exception?.decidedBy).toBe('Projektinhaber');
+    // Drei geprüfte und verworfene Wege, nicht einer: ohne sie wäre die Entscheidung eine
+    // Behauptung ohne Alternative.
+    expect(exception?.rejected).toHaveLength(3);
+
+    // **Der Begründungstext selbst ist gegatet, nicht nur gezählt.** Ohne diese Zeilen ließe sich
+    // `rationale` auf „geht nicht" eindampfen, ohne dass ein Gate zuckt — und dann stünde die
+    // Ausnahme im Betrieb ohne die Zahlen da, die sie tragen. Geprüft wird, was ein späterer
+    // Leser braucht, um die Entscheidung nachzurechnen: beide gemessenen Verhältnisse, die
+    // Schwelle, und dass das leere Fenster des Drucktheme benannt ist.
+    for (const fragment of ['2,382:1', '2,323:1', '4,5:1', 'Drucktheme', '0,1833', '0,1000']) {
+      expect(exception?.rationale, fragment).toContain(fragment);
+    }
+    // Jeder verworfene Weg nennt seinen Grund und nicht nur seinen Namen. Die Schranke ist die
+    // Länge des kürzesten Textes, der das leisten kann — sie hält die Aufzählung davon ab, zu
+    // einer Liste von Stichworten zu verkommen.
+    for (const rejected of exception?.rejected ?? []) {
+      expect(rejected.length, rejected).toBeGreaterThan(80);
+    }
+  });
+
+  it('belegt, dass das Fenster im Drucktheme leer ist, statt es zu behaupten', () => {
+    // Die tragende Hälfte der Begründung. Für `accessible-light` wäre der Befund lösbar — ein
+    // dunkleres Orange im Farbton von #fa8c00 erfüllt beide Richtungen (nachgerechnet: #b06300
+    // erreicht 4,535:1 gegen Weiss und 4,631:1 gegen Schwarz). Im Drucktheme nicht, und das ist
+    // hier ausgerechnet und nicht geglaubt: die Palette ist vollständig achromatisch, es gibt
+    // also genau 256 mögliche Werte, und keiner erfüllt alle drei Bedingungen zugleich.
+    const weissSchwelle = 1.05 / MINIMUM_TEXT_CONTRAST - 0.05;
+    const schwarzSchwelle = MINIMUM_NON_TEXT_CONTRAST * 0.05 - 0.05;
+    expect(weissSchwelle).toBeCloseTo(0.1833, 4);
+    expect(schwarzSchwelle).toBeCloseTo(0.1, 4);
+
+    // Die belegten Grauwerte der übrigen sieben Organisationen; zu ihnen fordert das Gate
+    // „eigener Grauwert mit sichtbarem Helligkeitsabstand" mehr als 0,045 Abstand.
+    const belegt = Object.values(ORGANIZATION_COLORS)
+      .filter((token) => token !== 'orange')
+      .map((token) => relativeLuminance(PRINT_MONOCHROME_THEME.palette[token]));
+    // rot und blau liegen selbst im Band — deshalb ist es leer und nicht nur eng.
+    expect(belegt.filter((l) => l >= schwarzSchwelle && l <= weissSchwelle)).toHaveLength(2);
+
+    const moeglich = Array.from({ length: 256 }, (_, value) => {
+      const channel = value.toString(16).padStart(2, '0');
+      return `#${channel}${channel}${channel}` as `#${string}`;
+    }).filter((grau) => {
+      const luminanz = relativeLuminance(grau);
+      return (
+        contrastRatio(PRINT_MONOCHROME_THEME.palette.weiss, grau) >= MINIMUM_TEXT_CONTRAST &&
+        contrastRatio(PRINT_MONOCHROME_THEME.palette.schwarz, grau) >= MINIMUM_NON_TEXT_CONTRAST &&
+        belegt.every((andere) => Math.abs(andere - luminanz) > 0.045)
+      );
+    });
+    expect(moeglich).toEqual([]);
+  });
+
+  it('nennt in der Ausnahme genau die Abschnitte, aus denen das Paar entsteht', () => {
+    // Der Pin, der ein **zweites** oranges Zeichen auffallen lässt. Über die Befundzahl geht das
+    // nicht: `labelContrastRequirements` sammelt je Organisation in ein `Set`, ein zweites
+    // oranges Rezept erzeugte also keine zweite Anforderung und keinen zweiten Befund. Diese
+    // Zeile zählt deshalb die Rezepte und nicht die Befunde.
+    const orangeMitBeschriftung = Object.entries<Recipe>(RECIPES)
+      .filter(([, recipe]) => {
+        const { organization, labels } = recipe.spec;
+        if (organization === undefined || labels === undefined) return false;
+        if (organizationColor(organization) !== 'orange') return false;
+        return (
+          labels.center !== undefined ||
+          labels.bottomLeft !== undefined ||
+          labels.bottomRight !== undefined
+        );
+      })
+      .map(([section]) => section);
+    expect(orangeMitBeschriftung).toEqual(['E.2.6']);
+    expect(CONTRAST_EXCEPTIONS[0]?.sections).toEqual(orangeMitBeschriftung);
   });
 
   it('behält die feste Körper- und Kopf-Anforderung genau einmal', () => {

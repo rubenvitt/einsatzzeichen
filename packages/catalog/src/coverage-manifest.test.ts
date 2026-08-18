@@ -69,7 +69,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 357 Zeilen mit 273 Elementdarstellungen', () => {
+  it('enthält exakt 358 Zeilen mit 273 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -86,12 +86,12 @@ describe('Coverage-Manifest', () => {
     expect(counts).toEqual({
       // Seit LFH-424 alle vierzehn Grundzeichen aus Kapitel 1 statt acht.
       'catalog-entry': 14,
-      // 3 Belegfälle des Kompositionsmotors plus die 67 gebauten Zeichen aus Anhang E — 16 aus
-      // Teilslice E-a, zwölf aus E-b und neun aus E-c (damit ist E.1 vollständig), 20 aus E-d,
-      // fünf aus E-e und fünf aus E-f. **67 und nicht 68:** E.2.6 ist als einziger Abschnitt des
-      // Anhangs nicht gebaut, weil es eine offene Entscheidung über einen Gate-Vertrag erzwingt
-      // (`ANHANG_E_D_UNGEBAUT`, Zahlen in `a11y-contrast-gate.test.ts`).
-      'composition-recipe': 70,
+      // 3 Belegfälle des Kompositionsmotors plus die 68 Zeichen aus Anhang E — 16 aus
+      // Teilslice E-a, zwölf aus E-b und neun aus E-c (damit ist E.1 vollständig), 21 aus E-d,
+      // fünf aus E-e und fünf aus E-f. **68 und damit vollständig** seit E.2.6 am 18. August 2026
+      // nachgezogen wurde; die Lückenlosigkeit hält der Test „führt Anhang E lückenlos" unten
+      // fest, und erst er trägt das `E` im `scope`.
+      'composition-recipe': 71,
       // 254 Piktogramme plus acht Organisationen (seit LFH-424 mit hilfsorganisation), vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
@@ -99,10 +99,45 @@ describe('Coverage-Manifest', () => {
       // Strichhülle vermessen ist.
       element: 273,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(357);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(358);
     expect(elementRows).toHaveLength(273);
     expect(pictogramRows).toHaveLength(254);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
+  });
+
+  it('führt Anhang E lückenlos und trägt damit das `E` im beanspruchten Umfang', () => {
+    // **Der Test, ohne den das `E` im `scope` eine unwiderlegbare Behauptung wäre.**
+    // `uncoveredScope` prüft an einem Präfix nur, ob **eine** Zeile mit ihm beginnt; `E` bestünde
+    // also schon mit einer einzigen E.1-Zeile. Genau deshalb standen die Abschnitte bis zum
+    // 18. August 2026 einzeln. Diese Zeile ersetzt 31 Umfangszeilen durch eine geprüfte Aussage.
+    //
+    // Abgeleitet aus den **Manifesteinträgen** und nicht aus `RECIPES`, weil der `scope` eine
+    // Aussage über das Manifest ist und hier neben der Lückenlosigkeit auch `scope` und
+    // `uncoveredScope` geprüft werden — beides gibt es in `RECIPES` nicht.
+    //
+    // Was diese Zeile ausdrücklich **nicht** ist: eine zweite, unabhängige Quelle. Die E-Zeilen
+    // des Manifests entstehen aus `RECIPES`; ein Rezept ohne Manifestzeile ist strukturell
+    // unmöglich, und die abgeleitete Abschnittsmenge ist deshalb mengengleich mit der aus
+    // `RECIPES`. Der Schwestertest in `recipes.test.ts` ist Redundanz und keine Gegenprobe. Wer
+    // eine echte zweite Quelle will, müsste gegen `taktische-zeichen/` zählen.
+    const abschnitte = COVERAGE_MANIFEST.entries
+      .map((entry) => entry.sourceId.slice(entry.sourceId.indexOf(':') + 1))
+      .filter((section) => section.startsWith('E.'));
+    const erwartet = [
+      ...Array.from({ length: 37 }, (_, index) => `E.1.${index + 1}`),
+      ...Array.from({ length: 31 }, (_, index) => `E.2.${index + 1}`),
+    ];
+    // Numerisch und nicht lexikografisch sortiert — `localeCompare` stellt `E.1.10` vor `E.1.2`
+    // und machte jeden Fehlschlag unlesbar.
+    const numerisch = (section: string) =>
+      section.split('.').slice(1).map(Number).reduce((acc, part) => acc * 1000 + part, 0);
+    expect([...abschnitte].sort((a, b) => numerisch(a) - numerisch(b))).toEqual(erwartet);
+    expect(abschnitte).toHaveLength(68);
+    expect(new Set(abschnitte).size).toBe(68);
+
+    // Und der Umfang führt `E` genau einmal, ohne Rest aus der abschnittsweisen Zeit.
+    expect(COVERAGE_MANIFEST.scope.filter((chapter) => chapter.startsWith('E'))).toEqual(['E']);
+    expect(releaseBlockers().uncoveredScope).toEqual([]);
   });
 
   it('trägt für 1.14 die Geometrieregression statt eines Körper-Fingerprints', () => {
@@ -219,17 +254,13 @@ describe('Coverage-Manifest', () => {
       'C.1.1',
       'C.1.2',
       'D.3.7',
-      // Anhang E seit E-c als `E.1`: die drei Teilslices E-a bis E-c decken alle 37 Abschnitte
-      // ab, und `recipes.test.ts` hält die Lückenlosigkeit fest — `uncoveredScope` allein täte
-      // das nicht.
-      'E.1',
-      // E.2 seit dem Teilslice E.2 **abschnittsweise** und nicht als `E.2` oder `E`: 30 der 31
-      // Abschnitte sind gebaut, und ein Präfix bestünde `uncoveredScope` auch mit einem
-      // fehlenden. Solange E.2.6 fehlt, lässt sich die Lückenlosigkeit nicht zusichern, und die
-      // 30 Zeilen unten sind die einzige Form, in der der Umfang genau das behauptet, was gilt.
-      ...Array.from({ length: 31 }, (_, index) => `E.2.${index + 1}`).filter(
-        (section) => section !== 'E.2.6',
-      ),
+      // Anhang E seit dem 18. August 2026 als **ein** `E` statt `E.1` plus 30 E.2-Einzelzeilen.
+      // Die Zusammenziehung hängt nicht daran, dass sie kürzer ist, sondern daran, dass sie
+      // widerlegbar wurde: `uncoveredScope` prüft an einem Präfix nur, ob **eine** Zeile mit ihm
+      // beginnt, und `E` bestünde deshalb schon mit einer einzigen E.1-Zeile. Getragen wird die
+      // Aussage vom Test „führt Anhang E lückenlos" weiter oben, der die 68 Abschnitte aus den
+      // Manifesteinträgen ableitet. Bis E.2.6 fehlte, ließ sich dieser Test nicht schreiben.
+      'E',
       'J.1',
       'J.2',
       'J.3',

@@ -643,3 +643,145 @@ Fragen entscheidet eine Zeichnung.
 
 Anhang E steht damit bei **67 von 68** Abschnitten. LFH-444 (E-e) und LFH-445 (E-f) sind mit je 5
 von 5 vollständig; LFH-443 (E-d) steht bei 20 von 21.
+
+---
+
+## 15. Nachtrag vom 18. August 2026 — E.2.6 ist gebaut, das Paarbild existiert
+
+> Nachtrag · 18. August 2026 · Branch `claude/lfh-443-e26` · LFH-443, LFH-416
+
+Abschnitt 5 hielt fest, was ohne Rezept prüfbar war: Referenz gegen Referenz. Diese Prüfung ist
+seither möglich geworden. Der Nutzer hat am 18. August 2026 entschieden (Weg 1 von vier), den
+Kontrastvertrag „weiss auf orange" als bekannten, begründeten **Negativbefund** zu führen und das
+Zeichen so zu bauen, wie die Referenz es zeigt. Damit hat E.2.6 eine Katalogausgabe, und der
+Nachtrag holt das nach, was Abschnitt 5 nicht leisten konnte.
+
+**Alles hier ist ein eigener Lauf.** Methode wie in Abschnitt 1: Referenz und Katalogausgabe in
+**einem** Wrapper-SVG, beide als verschachteltes `<svg>` und nicht als `<image href="data:…">`,
+**einmal** gerastert mit `@resvg/resvg-js` und `resvgFontOptions()`, 900 px breit, 450 px je Kachel,
+rote Trennlinie.
+
+### 15.1 Das Paarbild
+
+**Beide Seiten zeigen dasselbe Zeichen:** oranger Körper, weißes `Stapler` mittig, weißes `THW`
+unten rechts, drei Radringe mit zwei Verbindungsbalken. Der einzige sichtbare Unterschied ist der,
+den alle 67 anderen Paarbilder dieses Protokolls auch zeigen — die Referenz setzt ihre Farbfläche
+um 1 mm eingerückt (Hülle 2,0002/7,1138/30,0002/25,0007 mm) und lässt einen weißen Streifen zum
+Rahmen stehen, der Katalog färbt den ganzen Körperpfad. E.2.6 ist darin Regelfall und nicht
+Ausnahme; ein eigener Befund entsteht daraus nicht.
+
+**Glyphenzählung mit einem Verfahren auf beiden Seiten** (weiße Zusammenhangskomponenten in der
+Körperinnenfläche 3…29 mm, 1200 px Rasterung):
+
+| Zone | Referenz | Katalog |
+|---|---|---|
+| mittig (`Stapler`) | 7 | 7 |
+| unten rechts (`THW`) | 3 | 3 |
+
+Das ist die dritte unabhängige Ablesung der beiden Läufe und die erste, die Referenz und Katalog
+mit demselben Verfahren gegeneinanderstellt.
+
+**Tintenhüllen der Läufe, 3200 px gerastert, in mm:**
+
+| Zone | Referenz | Katalog | Δ links / oben / rechts / unten |
+|---|---|---|---|
+| mittig | 5,9800/12,9500/26,2100/19,4100 | 5,1100/12,8700/27,0900/19,4700 | 0,8700 / 0,0800 / 0,8800 / 0,0600 |
+| unten rechts | 19,9900/21,0800/29,0000/24,0000 | 19,4400/21,0800/28,9800/24,0000 | 0,5500 / 0,0000 / 0,0200 / 0,0000 |
+
+Der mittige Lauf des Katalogs ist beidseitig um rund 0,87 mm breiter, seine **Mitte** aber
+deckungsgleich (16,095 gegen 16,100 mm). Das ist kein Befund an E.2.6: dieselbe Messung an E.2.4
+liefert 0,66 / 0,44 mm, und **an E.2.5 auf allen acht Kanten exakt dieselben Zahlen wie an E.2.6**.
+Die Arimo-Umsetzung des Katalogs setzt etwas breiter als die in Kurven umgewandelte Referenzschrift
+— eine Eigenschaft des ganzen Anhangs, die dieses Protokoll in Abschnitt 9 bereits am Bestand
+festgehalten hat.
+
+**Die Zahlengleichheit von E.2.5 und E.2.6 ist damit auf drei Wegen belegt:** an den 40
+Glyphenhüllenkanten der Quelldateien (größte Einzeldifferenz **0,000706 mm**, eigener Pfadparser
+mit analytischen Bézier-Extrema), an der Glyphenzahl und an der Rasterhülle beider Läufe.
+
+### 15.2 Das Fahrwerk, ein drittes Mal gezählt
+
+Abschnitt 5 hat vier gegen sieben Teilpfade gezählt. Der Nachtrag zählt sie mit einem eigenen
+Parser noch einmal — und zwar an den **`M`-Kommandos innerhalb eines Pfadelements**, weil die
+Strichebene jeder Referenzdatei genau ein `<path>` ist und ein Zählen der Elemente überall 1
+ergäbe:
+
+| Datei | `<path>`-Elemente | `M`-Kommandos | Lesart |
+|---|---|---|---|
+| E.2.5 | 1 | 4 | 2 Ringe → `kfz-kategorie-1` |
+| E.2.6 | 1 | **7** | 3 Ringe + 2 Balken → `kfz-kategorie-3` |
+| E.2.4 | 1 | 7 | dieselbe Marke |
+| E.2.7 | 1 | 7 | dieselbe Marke |
+| E.2.8 | 1 | 7 | dieselbe Marke |
+| E.2.11 | 1 | 7 | dieselbe Marke |
+
+Die fünf Teilpfade unterhalb des Rahmens sind bei allen fünf Dateien auf vier
+Nachkommastellen punktgleich — jeder Wert je Datei einzeln nachgezählt, nicht aus einer Notiz
+übernommen: Ringe 1,7501…5,7503 / 14,0000…18,0001 / 26,2498…30,2500 bei
+y 26,2502…30,2500, Balken 5,2433…14,5062 und 17,4932…26,7561 bei y 26,2502…28,0000 mm. Die
+Berichtigung des Baubeschlusses steht damit nicht mehr nur in einer Notiz, sondern im Rezept und in
+einem Gate (`recipes.test.ts`, „baut E.2.6 mit orangem Körper, dem Fahrwerk von E.2.4 und der
+Beschriftung von E.2.5").
+
+### 15.3 Die beiden Alternativthemes bei 256 px — der Grund der ganzen Übung
+
+Hier ist der Befund zu sehen und nicht nur zu rechnen. Gerastert je 256 px, Schrift gebunden.
+
+**Was das Bild zeigt.** In `accessible-light` steht das weiße `Stapler` auf unverändertem `#fa8c00`
+— lesbar, aber sichtbar flauer als dasselbe Wort auf THW-Blau in jeder Nachbarkachel. Im
+Drucktheme wird der Körper zu `#aaaaaa`, und die weiße Beschriftung verliert weiter: sie steht als
+hellerer Schleier auf hellem Grau, während die schwarze Kontur und das Fahrwerk unverändert
+kräftig bleiben. Das ist die ehrliche Darstellung der entschiedenen Ausnahme — sie sieht aus, wie
+2,3:1 aussieht.
+
+**Aus der Rasterung selbst nachgemessen** (Histogramm der Körperfläche, die beiden häufigsten
+Farben sind Körper und Beschriftung; 21.954 Körper- gegen 2.283 Textpixel je Theme):
+
+| Theme | Körper | Beschriftung | Verhältnis aus dem Bild |
+|---|---|---|---|
+| `reference` | `#fa8c00` | `#ffffff` | **2,3820:1** |
+| `accessible-light` | `#fa8c00` | `#ffffff` | **2,3820:1** |
+| `print-monochrome` | `#aaaaaa` | `#ffffff` | **2,3231:1** |
+
+Diese drei Zahlen stammen aus den **gerasterten Pixeln** und nicht aus der Palette. Sie stimmen mit
+der Palettenrechnung aus Abschnitt 5 auf vier Nachkommastellen überein — die Ausnahme beschreibt
+also, was tatsächlich gemalt wird.
+
+**Die Kontursignatur trägt hier mehr als sonst.** Orange führt `[6, 2, 1, 2]` und ist damit die
+einzige Organisation mit einer vierteiligen Strichfolge; im Drucktheme, wo die Fläche nur noch ein
+Grauwert unter acht ist, ist sie der verlässlichere der beiden Kanäle. Die Beobachtung aus
+Abschnitt 10 — jede eckige Körperform hat mindestens eine Ecke in einer Strichlücke — gilt für
+E.2.6 unverändert; sein Körper ist der der 20 anderen Landfahrzeuge.
+
+### 15.4 Bestandsprüfung
+
+- **Snapshots:** `git status --porcelain -- packages/catalog/src/__snapshots__` liefert **zwei
+  neue (`??`) und null geänderte (`M`)** Dateien — `E.2.6.svg` und `multi-size/recipe.E.2.6.svg`.
+  Selbst gezählt: 85 Einzel-Snapshots (14 Grundzeichen, 71 Rezepte) und 340 Mehrgrößen-Snapshots
+  (339 Renderfälle plus `organization-profiles` aus `render-themes.test.ts`) — davon sind 84 bzw.
+  339 unverändert. `git diff --stat` auf dasselbe Verzeichnis ist leer.
+- **`zaehl.tmp.ts` ist fort.** Punkt 2 der Reviewgrenze oben ist erledigt: `git status --porcelain`
+  führt im Wurzelverzeichnis keine unversionierte Datei mehr. Die Wegwerfskripte dieses Nachtrags
+  liegen im Scratchpad und nicht im Repo.
+- **Gates**, eigene Läufe: `pnpm typecheck` ohne Ausgabe (Exitcode 0); `pnpm test` **59
+  Testdateien, 3520 Tests**, alle grün; `pnpm cli coverage` **358 Einträge**, 13 Quellen, **372
+  offene fachliche Reviews**, davon **68 im Bereich E**, Umfangszeile `… D.3.7, E, J.1 …`, Gate
+  bestanden; `git diff --check` ohne Ausgabe.
+
+### 15.5 Was dieser Nachtrag an der Reviewgrenze ändert
+
+Punkt 6 der Reviewgrenze („E.2.6 fehlt") ist erledigt. Die Fahrwerksberichtigung erreicht jetzt ein
+Gate, wie dort gefordert. Punkt 2 ist erledigt. Die Punkte 1, 3, 4 und 5 stehen unverändert; E.2.6
+ändert an keinem von ihnen etwas — sein mittiger Lauf steht auf der Körpermitte (Punkt 1 betrifft
+nur die vier unsymmetrischen Körper), und seine vierte Zone gibt es nicht (Punkt 5).
+
+**Neu und ohne Befundcharakter:** E.2.6 ist das einzige Zeichen des Katalogs mit einem
+Kontrastpaar unterhalb der eigenen Schwelle. Das ist entschieden, nicht offen — und seit diesem
+Nachtrag auch im Betrieb sichtbar: `pnpm cli coverage` gibt die Zeile
+`Kontrastausnahmen: weiss auf orange (E.2.6, entschieden am 2026-08-18 durch Projektinhaber)` aus.
+
+**Die fachliche Frage, die das Bild aufwirft und keine Messung entscheidet:** die Datei trägt den
+orangen Körper der `sonstige-gefahrenabwehr` **und** das Trägerkürzel `THW`. Ob damit die Zuordnung
+zur öffentlichen Gefahrenabwehr oder der Betreiber bezeichnet ist, steht als fünfte offene Frage im
+E-d-Block von `domain-reviews.ts`. Anhang E steht mit diesem Nachtrag bei **68 von 68** Abschnitten;
+LFH-443 (E-d) ist mit 21 von 21 vollständig.

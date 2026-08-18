@@ -322,9 +322,14 @@ const ANHANG_E_C_DEVIATIONS: Readonly<Record<string, string>> = Object.freeze({
 });
 
 /**
- * Technisches Review der 20 Zeichen aus E-d. Eigener Eintrag mit eigenem Datum wie bei E-b und
+ * Technisches Review der 21 Zeichen aus E-d. Eigener Eintrag mit eigenem Datum wie bei E-b und
  * E-c; die Note nennt zusätzlich, was an diesem Teilslice technisch neu ist, weil hier zum ersten
  * Mal ein Gate greift, das es in E.1 nicht gab.
+ *
+ * **Am 18. August 2026 um E.2.6 erweitert.** Es teilt dieses Review mit den 20 anderen — sein
+ * Nachweis ist derselbe —, bringt aber als einziges Zeichen des Katalogs ein Kontrastpaar mit,
+ * das die eigene Schwelle nicht erreicht. Das steht unten in der Note und nicht als
+ * `deviation`: die Umsetzung folgt der Quelle punktgenau.
  */
 const ANHANG_E_D_TECHNICAL_REVIEW: Review = {
   status: 'approved',
@@ -343,10 +348,15 @@ const ANHANG_E_D_TECHNICAL_REVIEW: Review = {
     'selbst nachgerastert), mit ihnen null. Neu gegated ist außerdem die Fahrwerkszone: sie hängt ' +
     'an der Unterkante des platzierten Grundzeichens und nicht an der des Körperprimitivs, was ' +
     'allein E.2.15 von 26,75 auf die gemessenen 28,2504 mm Radmitte bringt. Dazu die globalen ' +
-    'Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates; ein neuer Kontrastvertrag entsteht ' +
-    'nicht, weisser Text auf blau steht seit E-a als eigene 4,5:1-Anforderung im A11y-Gate. Alle ' +
-    '20 Referenzdateien sind einzeln vermessen und zweimal unabhängig gerastert; daraus stammen ' +
-    'die neun Befunde. Deklarierte Abweichungen trägt dieser Block keine.',
+    'Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates. Der Kontrastvertrag ist mit E.2.6 um ' +
+    'ein Paar gewachsen: weisser Text auf blau steht seit E-a als eigene 4,5:1-Anforderung, ' +
+    'weisser Text auf orange kam am 18.08.2026 dazu und erreicht 2,382:1 bzw. 2,323:1. Er ist ' +
+    'als entschiedene Ausnahme in CONTRAST_EXCEPTIONS geführt und paarweise wie themeweise ' +
+    'begrenzt; die Schwelle selbst bleibt unverändert. Alle 21 Referenzdateien sind einzeln ' +
+    'vermessen und zweimal unabhängig gerastert; daraus stammen die neun Befunde. E.2.6 trägt ' +
+    'keinen — seine Hülle, seine Grundlinie und seine Beschriftung sind mit E.2.5 zeichengleich ' +
+    '(größte Einzeldifferenz 0,000706 mm), seine Strichebene mit E.2.4, E.2.7, E.2.8 und E.2.11. ' +
+    'Deklarierte Abweichungen trägt dieser Block keine.',
 };
 
 /**
@@ -400,7 +410,7 @@ const ANHANG_E_F_TECHNICAL_REVIEW: Review = {
 /**
  * Die eine Zeile aus E.2, bei der die **Umsetzung von der Quelle** abweicht — im Unterschied zu
  * den 15 Befunden, wo die Quelle von sich selbst abweicht und die Umsetzung ihrer Mehrheit folgt.
- * Dass es über 30 Zeichen und fünf Körperformen genau eine ist, liegt daran, dass dieser Slice
+ * Dass es über 31 Zeichen und fünf Körperformen genau eine ist, liegt daran, dass dieser Slice
  * die Mechanismen gebaut hat, die E.1 noch als Abweichung tragen musste: E.2.15 wäre ohne den
  * L-Rahmen der zweite Fall nach dem Muster von E.1.19/E.1.24 gewesen.
  */
@@ -622,30 +632,28 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
   // (`docs/decisions/2026-08-18-grundlagen-restpunkte.md`).
   // K, L und M stehen einbuchstabig im Umfang, weil ihre Nummerierung flach ist: `K` deckt
   // K.1 bis K.18 ab, wo `J` vier Unterkapitel gebraucht hätte.
-  // Anhang E steht seit dem Teilslice E-c als `E.1` und nicht mehr abschnittsweise: E-a, E-b und
-  // E-c decken zusammen alle 37 E.1-Abschnitte ab, das Kapitel ist vollständig. Bis dahin standen
-  // die Abschnitte einzeln, weil `uncoveredScope` nur prüft, ob zu jedem beanspruchten Präfix
-  // mindestens eine Zeile existiert, und `E.1` deshalb auch bei 16 von 37 Zeilen bestanden hätte —
-  // eine Behauptung, die kein Gate widerlegt. Jetzt trägt sie ein Gate: `recipes.test.ts` hält
-  // fest, dass die drei Blöcke zusammen genau E.1.1 bis E.1.37 ergeben.
+  // **Anhang E steht seit dem 18. August 2026 als ein einziges `E`.** Die Bewegung dorthin ist
+  // in drei Schritten gelaufen, und jeder hatte denselben Grund: `uncoveredScope` prüft an einem
+  // Präfix nur, ob **eine** Zeile mit ihm beginnt, nie die Vollständigkeit. `E` bestünde deshalb
+  // schon mit einer einzigen E.1-Zeile — eine Behauptung, die kein Gate widerlegt. Ein Präfix
+  // darf hier also erst stehen, wenn ein Test die Lückenlosigkeit trägt.
   //
-  // **Weiterhin `E.1` und ausdrücklich nicht `E` — aber aus einem neuen Grund.** Bis zum
-  // Teilslice E.2 war E.2 vollständig ungebaut; seither sind 30 seiner 31 Abschnitte gebaut, und
-  // sie stehen unten **einzeln**. Das ist dieselbe Bewegung wie vor E-c, nur rückwärts gelesen:
-  // `uncoveredScope` prüft an einem Präfix nur, ob **eine** Zeile mit ihm beginnt, nicht die
-  // Vollständigkeit. `E` bestünde deshalb schon mit den 37 E.1-Zeilen, und `E.2` bestünde mit 30
-  // von 31 — beides wäre genau die unwiderlegbare Behauptung, die die abschnittsweise Führung
-  // verhindern soll. Für `E.1` trägt sie ein Gate (`recipes.test.ts` hält fest, dass E-a bis E-c
-  // genau E.1.1 bis E.1.37 ergeben); für `E.2` ließe sich dieses Gate nicht schreiben, solange
-  // ein Abschnitt fehlt.
+  // Bis E-c standen die 37 E.1-Abschnitte einzeln; mit E-c wurden sie zu `E.1`, weil
+  // `recipes.test.ts` seither festhält, dass E-a bis E-c genau E.1.1 bis E.1.37 ergeben. Der
+  // Teilslice E.2 baute 30 seiner 31 Abschnitte und musste sie **einzeln** führen: für `E.2`
+  // ließ sich das Gate nicht schreiben, solange E.2.6 fehlte. Mit E.2.6 ist E.2 lückenlos, und
+  // `coverage-manifest.test.ts` hält beides fest — E.2.1 bis E.2.31 ohne Lücke und der ganze
+  // Anhang mit genau 68 Abschnitten, abgeleitet aus den Manifesteinträgen und nicht aus den
+  // Rezepten. Erst dieser Test macht `E` widerlegbar; ohne ihn wäre die Zusammenziehung eine
+  // Verschlechterung und keine Vereinfachung.
   //
-  // Es fehlt genau einer: **E.2.6**. Der Grund ist keine Messlücke, sondern eine offene
-  // Entscheidung über einen Gate-Vertrag — weisser Text auf der Organisationsfarbe orange
-  // erreicht 2,382:1 bzw. 2,323:1 gegen eine geforderte Textschwelle von 4,5:1, und im
-  // Drucktheme ist das Fenster beweisbar leer. Die vollständige Begründung steht in
-  // `ANHANG_E_D_UNGEBAUT`, die Zahlen als Test in `a11y-contrast-gate.test.ts`. Sobald die
-  // Entscheidung gefallen ist, werden aus `E.1` und den 30 Einzelzeilen unten **ein** `E` — in
-  // einem Schritt, mit einem Test, der die 68 Abschnitte lückenlos festhält.
+  // E.2.6 war der letzte offene Abschnitt — nicht aus einer Messlücke, sondern weil weisser Text
+  // auf der Organisationsfarbe orange 2,382:1 bzw. 2,323:1 gegen eine geforderte Textschwelle von
+  // 4,5:1 erreicht und im Drucktheme kein Grauwert existiert, der das löst. Entschieden am
+  // 18. August 2026: der Katalog baut das Zeichen wie die Referenz es zeigt und führt den Befund
+  // als erklärte Ausnahme (`CONTRAST_EXCEPTIONS`, Zahlen als Test in `a11y-contrast-gate.test.ts`).
+  // Es trägt deshalb keine `deviation` — abweichend ist die eigene Schwelle des Katalogs, nicht
+  // die Umsetzung von der Quelle.
   scope: [
     '1',
     '2',
@@ -656,37 +664,7 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'C.1.1',
     'C.1.2',
     'D.3.7',
-    'E.1',
-    'E.2.1',
-    'E.2.2',
-    'E.2.3',
-    'E.2.4',
-    'E.2.5',
-    'E.2.7',
-    'E.2.8',
-    'E.2.9',
-    'E.2.10',
-    'E.2.11',
-    'E.2.12',
-    'E.2.13',
-    'E.2.14',
-    'E.2.15',
-    'E.2.16',
-    'E.2.17',
-    'E.2.18',
-    'E.2.19',
-    'E.2.20',
-    'E.2.21',
-    'E.2.22',
-    'E.2.23',
-    'E.2.24',
-    'E.2.25',
-    'E.2.26',
-    'E.2.27',
-    'E.2.28',
-    'E.2.29',
-    'E.2.30',
-    'E.2.31',
+    'E',
     'J.1',
     'J.2',
     'J.3',

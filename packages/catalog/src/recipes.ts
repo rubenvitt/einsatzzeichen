@@ -50,13 +50,14 @@ export interface Recipe {
  * als erste, dass die Zonenregel auch gegen eine **zweite Körperform** trägt (E.1.37 auf
  * `building`).
  *
- * Die 30 aus `ANHANG_E_D_RECIPES`, `ANHANG_E_E_RECIPES` und `ANHANG_E_F_RECIPES` verlassen als
+ * Die 31 aus `ANHANG_E_D_RECIPES`, `ANHANG_E_E_RECIPES` und `ANHANG_E_F_RECIPES` verlassen als
  * erste den Rechteckkörper der taktischen Formation. Sie tragen **fünf** Körperformen statt
  * zweier, drei davon ohne Kapitel-1-Abschnitt, dazu die Fahrwerkszone unterhalb des Körpers, eine
  * Zusatzgeometrie am Grundzeichen (Deichsel, L-Rahmen), die vierte Beschriftungszone außerhalb des
- * Körpers und einen je Zeichen gemessenen Schriftgrad des mittigen Laufs. Damit sind 67 der 68
- * Abschnitte des Anhangs E gebaut; das fehlende E.2.6 steht mit seiner Begründung in
- * `ANHANG_E_D_UNGEBAUT`.
+ * Körpers und einen je Zeichen gemessenen Schriftgrad des mittigen Laufs. Mit dem am 18. August
+ * 2026 nachgezogenen E.2.6 sind damit **alle 68** Abschnitte des Anhangs E gebaut. Es ist zugleich
+ * das einzige Zeichen des Katalogs, dessen Kontrastpaar eine erklärte Ausnahme trägt
+ * (`CONTRAST_EXCEPTIONS`).
  */
 export const RECIPES = {
   ...ANHANG_E_A_RECIPES,
@@ -113,6 +114,13 @@ export const RECIPES = {
  * Selbst gerechnet, damit es nicht übernommen ist: `blau` gegen `surface` erreicht 11,072:1 im
  * Referenztheme, 4,634:1 in `accessible-light` und 4,542:1 im Drucktheme — alle drei über der
  * Textschwelle 4,5:1, keine Palettenänderung nötig.
+ *
+ * **Seit dem 18. August 2026 leitet sie eine dritte Anforderung ab, die nicht besteht.** E.2.6
+ * trägt als einziges Rezept `sonstige-gefahrenabwehr` mit Beschriftung; daraus entsteht „weiss
+ * auf orange" mit 2,382:1 bzw. 2,323:1 gegen dieselbe Textschwelle. Die Ableitung bleibt
+ * unverändert und meldet den Befund weiter — er wird nicht hier unterdrückt, sondern in
+ * `CONTRAST_EXCEPTIONS` als entschiedene Ausnahme geführt und dort gezählt. Eine Ableitung, die
+ * ihre eigene Ausnahme kennt, wäre die stillste Art, den Vertrag zu verlieren.
  *
  * Der Parameter ist da, damit die Ableitung selbst prüfbar ist: ohne ihn ließe sich nur
  * feststellen, was der heutige Bestand hergibt, nicht, was die Funktion aus einer Beschriftung
