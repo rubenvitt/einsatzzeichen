@@ -536,6 +536,39 @@ aller 14 Paare in
 Sichtung ist nicht der finale Kontaktbogen des späteren Task 6. Alle 14 Domain-Reviews bleiben
 `pending`; der beanspruchte Gesamtscope bleibt vor Abschluss von Anhang F geschlossen.
 
+## F-d: F.2.10 bis F.2.17
+
+F-d ergänzt acht Betreuungsfahrzeuge und führt den Katalog auf 118 Rezepte, 386 Renderfälle und
+405 Manifestzeilen. F.2.10 bis F.2.14 sowie F.2.16/F.2.17 sind Landfahrzeuge; F.2.15 verwendet
+die eigene Anhängerhülle. Die Kategorien sind literal gebunden: sechsmal `kfz-kategorie-1`,
+einmal `kfz-kategorie-2` und einmal `anhaenger-ein-rad`. F.2.13, F.2.14 und F.2.17 tragen das
+separat am Fahrzeug vermessene schwarze `foot-band` x = 1…31 mm, y = 23…26 mm.
+
+Die vorhandenen Semantiken `care`, `meal-preparation` und `drinking-water` erhalten ausschließlich
+quellenvermessene Land-/Anhängerfassungen. Die Vierwegeform aus F.2.11 und der um 3 mm nach unten
+versetzte Acht-Speichen-Ring aus F.2.16 bleiben neutrale `TechnicalBodyMarkId`s mit geometrischer
+A11y-Beschreibung. Bei der mobilen Küche folgt die Löffeltinte den gemessenen Grenzen
+x = 12,113991…13,886340 mm und y = 14,267800…21,600150 mm; die Schüssel verwendet die aus
+Außen-/Innenkontur gemittelte Mittellinie r ≈ 3,5 mm. Die Trinkwasserarmatur aus F.2.17 setzt den
+Stamm auf x = 18 mm, den oberen Balken auf x = 16,5…19,5 mm und erhält die sichtbare Bogenendkappe
+bis y = 20,5 mm.
+
+Sieben Beschriftungen widerlegen einen gemeinsamen Schriftgrad oder ein textabhängiges Auto-Fit.
+Das optionale `topLeftMetrics` hält deshalb am vorhandenen Lauf genau die gemessene Versalhöhe,
+Grundlinie ab Körperoberkante und den Anker ab linker Körperkante. Es ist nur für normalen und
+gebänderten F.2-Landrumpf zulässig; partielle, nicht endliche oder hüllenfremde Werte sowie
+`plain-wheel-pair`, Formation und andere Arten werden abgelehnt. Ohne Override bleiben die
+bisherigen F-a-/F-c-Ausgaben bytegleich.
+
+F.2.17 beginnt seine innere Quellkontur bei y = 6,096 mm. Das ist ein Manifest-Finding und keine
+eigene Körpervariante; die gemeinsame Fahrzeughülle steht getrennt als Katalogabweichung. Die
+exakte Acht-Rezept-Matrix, alle sieben Beschriftungsmessungen und die weiteren Geometriewerte
+stehen in
+[`docs/decisions/2026-08-25-anhang-f-d.md`](docs/decisions/2026-08-25-anhang-f-d.md), die
+Einzelsichtung aller acht 900-px-Paare in
+[`docs/reviews/2026-08-25-f-d-visual-qa.md`](docs/reviews/2026-08-25-f-d-visual-qa.md). Diese
+Sichtung ist nicht der finale Task-6-Kontaktbogen; alle acht Domain-Reviews bleiben `pending`.
+
 ## Der lokale Referenzbestand
 
 `taktische-zeichen/` ist ein **lokaler Ordner mit 661 damals von der BABZ bereitgestellten
