@@ -446,9 +446,11 @@ describe('Körperformen des Anhangs E.2', () => {
     ]);
   });
 
-  it('ergänzt foot-band nur an formation und lässt den normalen Körper unverändert', () => {
+  it('vermisst foot-band getrennt an Formation und Landfahrzeug und lässt beide Normalkörper unverändert', () => {
     const normal = baseDrawing('formation');
     const footBand = baseDrawing('formation', 'foot-band');
+    const normalVehicle = baseDrawing('vehicle-land');
+    const vehicleFootBand = baseDrawing('vehicle-land', 'foot-band');
 
     expect(footBand.children[0]).toEqual(normal.children[0]);
     expect(normal.children).toHaveLength(1);
@@ -463,7 +465,25 @@ describe('Körperformen des Anhangs E.2', () => {
       style: { fill: 'schwarz', stroke: 'none' },
     });
     expect(boundsOfMm(footBand.children[0]!)).toEqual({ minX: 1, minY: 6, maxX: 31, maxY: 26 });
-    expect(() => baseDrawing('vehicle-land', 'foot-band')).toThrow(/Körpervariante/);
+
+    expect(vehicleFootBand.children[0]).toEqual(normalVehicle.children[0]);
+    expect(normalVehicle.children).toHaveLength(1);
+    expect(vehicleFootBand.children).toHaveLength(2);
+    expect(vehicleFootBand.children[1]).toEqual({
+      type: 'rect',
+      role: 'pictogram',
+      x: 1,
+      y: 23,
+      width: 30,
+      height: 3,
+      style: { fill: 'schwarz', stroke: 'none' },
+    });
+    expect(boundsOfMm(vehicleFootBand.children[0]!)).toEqual({
+      minX: 1,
+      minY: 5.75,
+      maxX: 31,
+      maxY: 26,
+    });
   });
 
   it('wirft für eine Körpervariante, die die Art nicht führt', () => {

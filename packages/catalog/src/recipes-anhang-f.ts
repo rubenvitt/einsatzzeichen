@@ -443,6 +443,167 @@ export const ANHANG_F_C_DEVIATIONS: Readonly<Record<string, string>> = Object.fr
     'behauptet ausschließlich ihre Geometrie.',
 });
 
+/** F.2.10 bis F.2.17: Betreuung auf normalem, gebändertem Land- und Anhängerfahrzeug. */
+export const ANHANG_F_D_RECIPES = {
+  'F.2.10': {
+    title: 'Betreuungskombi',
+    referenceAsset: 'F.2.10_Betreuungskombi.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'hilfsorganisation',
+      vehicleCategory: 'kfz-kategorie-1',
+      bodyMarks: ['care'],
+      labels: {
+        topLeft: 'BTKombi',
+        topLeftMetrics: {
+          capHeightMm: 2.191447,
+          baselineFromBodyTopMm: 5.249923,
+          anchorFromBodyLeftMm: 0.51423,
+        },
+      },
+    },
+  },
+  'F.2.11': {
+    title: 'Betreuungskombi mit Material zum Einrichten einer Anlaufstelle',
+    referenceAsset: 'F.2.11_Betreuungskombi mit Material zum Einrichten einer Anlaufstelle.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'hilfsorganisation',
+      vehicleCategory: 'kfz-kategorie-1',
+      bodyMarks: ['care', 'ring-6mm-offset-down-3mm-four-way-stem'],
+      labels: {
+        topLeft: 'BTKombi',
+        topLeftMetrics: {
+          capHeightMm: 2.191447,
+          baselineFromBodyTopMm: 5.249923,
+          anchorFromBodyLeftMm: 0.51423,
+        },
+      },
+    },
+  },
+  'F.2.12': {
+    title: 'Gerätewagen Betreuung',
+    referenceAsset: 'F.2.12_Gerätewagen Betreuung.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'hilfsorganisation',
+      vehicleCategory: 'kfz-kategorie-2',
+      bodyMarks: ['care'],
+      labels: {
+        topLeft: 'GwBT',
+        topLeftMetrics: {
+          capHeightMm: 2.919225,
+          baselineFromBodyTopMm: 6.249691,
+          anchorFromBodyLeftMm: 1.010503,
+        },
+      },
+    },
+  },
+  'F.2.13': {
+    title: 'Betreuungs-LKW mit mobiler Einsatzküche',
+    referenceAsset: 'F.2.13_Betreuungs-LKW mit mobiler Einsatzküche.svg',
+    spec: {
+      kind: 'vehicle-land',
+      bodyVariant: 'foot-band',
+      organization: 'hilfsorganisation',
+      vehicleCategory: 'kfz-kategorie-1',
+      bodyMarks: ['care', 'meal-preparation'],
+      labels: {
+        topLeft: 'GwBT',
+        topLeftMetrics: {
+          capHeightMm: 2.919225,
+          baselineFromBodyTopMm: 6.249691,
+          anchorFromBodyLeftMm: 1.010503,
+        },
+      },
+    },
+  },
+  'F.2.14': {
+    title: 'Gerätewagen Logistik der Betreuung',
+    referenceAsset: 'F.2.14_Gerätewagen Logistik der Betreuung.svg',
+    spec: {
+      kind: 'vehicle-land',
+      bodyVariant: 'foot-band',
+      organization: 'hilfsorganisation',
+      vehicleCategory: 'kfz-kategorie-1',
+      bodyMarks: ['care'],
+      labels: {
+        topLeft: 'GwLog',
+        topLeftMetrics: {
+          capHeightMm: 2.432746,
+          baselineFromBodyTopMm: 5.249923,
+          anchorFromBodyLeftMm: 1.009024,
+        },
+      },
+    },
+  },
+  'F.2.15': {
+    title: 'Geräteanhänger Betreuung',
+    referenceAsset: 'F.2.15_Geräteanhänger Betreuung.svg',
+    spec: {
+      kind: 'trailer',
+      organization: 'hilfsorganisation',
+      vehicleCategory: 'anhaenger-ein-rad',
+      bodyMarks: ['care'],
+    },
+  },
+  'F.2.16': {
+    title: 'Fahrzeug der Betreuung, Transport 40 Betroffene',
+    referenceAsset: 'F.2.16_Fahrzeug der Betreuung_Transport 40 Betroffene.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'hilfsorganisation',
+      vehicleCategory: 'kfz-kategorie-1',
+      bodyMarks: ['care', 'ring-5mm-offset-down-3mm-eight-spokes'],
+      labels: {
+        topLeft: '40',
+        topLeftMetrics: {
+          capHeightMm: 2.749893,
+          baselineFromBodyTopMm: 6.749576,
+          anchorFromBodyLeftMm: 1.497298,
+        },
+      },
+    },
+  },
+  'F.2.17': {
+    title: 'Betreuungs-LKW Trinkwasserversorgung',
+    referenceAsset: 'F.2.17_Betreuungs-LKW_Trinkwasserversorgung.svg',
+    spec: {
+      kind: 'vehicle-land',
+      bodyVariant: 'foot-band',
+      organization: 'hilfsorganisation',
+      vehicleCategory: 'kfz-kategorie-1',
+      bodyMarks: ['care', 'drinking-water'],
+      labels: {
+        topLeft: 'BtlLKW',
+        topLeftMetrics: {
+          capHeightMm: 2.432746,
+          baselineFromBodyTopMm: 5.749807,
+          anchorFromBodyLeftMm: 0.766269,
+        },
+      },
+    },
+  },
+} as const satisfies Record<string, Recipe>;
+
+export const ANHANG_F_D_FINDINGS: Readonly<Record<string, string>> = Object.freeze({
+  'F.2.11':
+    'Der Ring um (16|19) führt eine sichtbare Vierwegeform mit unterem Gabelsteg. Die Quelle ' +
+    'benennt dafür keine Capability; die Umsetzung bleibt deshalb rein geometrisch.',
+  'F.2.16':
+    'Der Acht-Speichen-Ring liegt um (16|19) und damit 3 mm unter dem Fahrzeugring aus F-c. ' +
+    'Die abweichende Fassung erhält eine eigene rein geometrische TechnicalBodyMarkId.',
+  'F.2.17':
+    'Die innere Rumpfkontur beginnt in der Referenz bei y 6,096 mm statt am gemeinsamen ' +
+    'Fahrzeugwert. Dieser Quellenbefund begründet allein keine eigene Körpervariante.',
+});
+
+export const ANHANG_F_D_DEVIATIONS: Readonly<Record<string, string>> = Object.freeze({
+  'F.2.17':
+    'Der Katalog verwendet die gemeinsame vermessene Fahrzeughülle und führt für den ' +
+    'quellenspezifischen Innenkonturwert keine eigene Rumpfvariante ein.',
+});
+
 export const ANHANG_F_B_FINDINGS: Readonly<Record<string, string>> = Object.freeze({
   'F.1.3':
     'Die Bettzeichnung ist bildgleich mit F.1.19; allein F.1.3 führt zusätzlich das schwarze ' +

@@ -18,11 +18,11 @@ describe('vollständige Renderfallmenge', () => {
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
     // 350 seit F-a: 308 nach LFH-424, plus die 31 Zeichen aus E.2, plus die elf aus F-a.
-    expect(ids).toHaveLength(378);
+    expect(ids).toHaveLength(386);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
     // dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Seit F-a elf mehr.
-    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(110);
+    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(118);
     expect(ids.filter((id) => id.startsWith('recipe.E.1.'))).toHaveLength(37);
     // Anhang F, Teilslice F-a: zehn Abschnitte in elf Renderfällen. Der elfte ist
     // `recipe.F.1.11#alternative` — der **erste Renderfall des Katalogs, dessen Darstellung im
@@ -31,7 +31,7 @@ describe('vollständige Renderfallmenge', () => {
     const f1 = ids.filter((id) => id.startsWith('recipe.F.1.'));
     expect(f1).toHaveLength(25);
     expect(f1).toContain('recipe.F.1.11#alternative');
-    expect(ids.filter((id) => id.startsWith('recipe.F.2.'))).toHaveLength(14);
+    expect(ids.filter((id) => id.startsWith('recipe.F.2.'))).toHaveLength(22);
     // **31 und damit lückenlos**, seit E.2.6 am 18. August 2026 nachgezogen wurde. Diese Zeile
     // hielt vorher die Lücke fest (`not.toContain('recipe.E.2.6')`); sie hält jetzt die
     // Vollständigkeit fest, und zwar an den Renderfällen statt an einer Zahl — ein Zeichen ohne

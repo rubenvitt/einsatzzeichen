@@ -39,16 +39,29 @@ describe('semantische Zeichenbeschreibungen', () => {
     );
   });
 
-  it('nimmt die gemessene Versalhöhe nicht in die Vorlesebeschreibung auf', () => {
-    // `centerCapHeightMm` ist eine Maßangabe und kein Text. Stünde sie in der Beschreibung,
-    // läse eine Vorlesestimme „3.4099" mitten im Kürzel vor.
+  it('nimmt gemessene Labelmetriken nicht in die Vorlesebeschreibung auf', () => {
+    // Metriken sind Maßangaben und kein Text. Stünden sie in der Beschreibung, läse eine
+    // Vorlesestimme Dezimalzahlen mitten im Kürzel vor.
     const description = describeSymbolSpec({
       kind: 'formation',
       organization: 'thw',
-      labels: { center: 'MzGW Lbw', centerCapHeightMm: 3.4099 },
+      labels: {
+        center: 'MzGW Lbw',
+        centerCapHeightMm: 3.4099,
+        topLeft: 'BTKombi',
+        topLeftMetrics: {
+          capHeightMm: 2.191447,
+          baselineFromBodyTopMm: 5.249923,
+          anchorFromBodyLeftMm: 0.51423,
+        },
+      },
     });
     expect(description).toContain('Kürzel: MzGW Lbw');
+    expect(description).toContain('Kürzel: BTKombi');
     expect(description).not.toContain('3.4099');
+    expect(description).not.toContain('2.191447');
+    expect(description).not.toContain('5.249923');
+    expect(description).not.toContain('0.51423');
     expect(description).not.toMatch(/\d+\.\d+/);
   });
 
@@ -71,6 +84,14 @@ describe('semantische Zeichenbeschreibungen', () => {
       kind: 'vehicle-air', bodyVariant: 'raised-hull',
       bodyMarks: ['air-winch-chevron-diamond'],
     })).not.toContain('Fachdienst:');
+    expect(describeSymbolSpec({
+      kind: 'vehicle-land',
+      bodyMarks: ['ring-6mm-offset-down-3mm-four-way-stem'],
+    })).toContain('Technische Körpermarke: Ring 6 mm mit Vierwegeform und unterem Gabelsteg');
+    expect(describeSymbolSpec({
+      kind: 'vehicle-land',
+      bodyMarks: ['ring-5mm-offset-down-3mm-eight-spokes'],
+    })).toContain('Technische Körpermarke: Ring 5 mm mit acht Speichen, 3 mm nach unten versetzt');
   });
 
   it('beschreibt ein eigenständiges Piktogramm aus seiner Definition', () => {

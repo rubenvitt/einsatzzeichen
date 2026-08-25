@@ -55,6 +55,99 @@ describe('validateSpec', () => {
       .map((issue) => issue.rule)).toContain('top-left-lines-require-measured-body');
   });
 
+  it('lässt den einzeiligen F.2-Fahrzeuglauf an normaler und foot-band-Hülle zu', () => {
+    expect(validateSpec({
+      kind: 'vehicle-land', labels: { topLeft: 'BTKombi' },
+    })).toEqual([]);
+    expect(validateSpec({
+      kind: 'vehicle-land', bodyVariant: 'foot-band', labels: { topLeft: 'GwBT' },
+    })).toEqual([]);
+    expect(validateSpec({ kind: 'trailer', labels: { topLeft: 'BT' } })
+      .map((issue) => issue.rule)).toContain('top-left-label-requires-measured-body');
+    expect(validateSpec({ kind: 'vehicle-air', labels: { topLeft: 'BT' } })
+      .map((issue) => issue.rule)).toContain('top-left-label-requires-measured-body');
+  });
+
+  const topLeftMetrics = {
+    capHeightMm: 2.191447,
+    baselineFromBodyTopMm: 5.249923,
+    anchorFromBodyLeftMm: 0.51423,
+  };
+
+  function withRuntimeTopLeftMetrics(
+    kind: SymbolSpec['kind'],
+    bodyVariant: SymbolSpec['bodyVariant'],
+    metrics: unknown,
+    topLeft: string | undefined = 'BTKombi',
+  ): SymbolSpec {
+    return {
+      kind,
+      ...(bodyVariant === undefined ? {} : { bodyVariant }),
+      labels: { topLeft, topLeftMetrics: metrics },
+    } as unknown as SymbolSpec;
+  }
+
+  it('lässt gemessene topLeft-Metriken nur an normalem und gebändertem Landfahrzeug zu', () => {
+    expect(validateSpec(withRuntimeTopLeftMetrics(
+      'vehicle-land', undefined, topLeftMetrics,
+    ))).toEqual([]);
+    expect(validateSpec(withRuntimeTopLeftMetrics(
+      'vehicle-land', 'foot-band', topLeftMetrics,
+    ))).toEqual([]);
+
+    for (const spec of [
+      withRuntimeTopLeftMetrics('vehicle-land', 'plain-wheel-pair', topLeftMetrics),
+      withRuntimeTopLeftMetrics('formation', undefined, topLeftMetrics),
+      withRuntimeTopLeftMetrics('trailer', undefined, topLeftMetrics),
+    ]) {
+      expect(validateSpec(spec).map((issue) => issue.rule)).toContain(
+        'top-left-metrics-require-measured-vehicle-land',
+      );
+    }
+  });
+
+  it('verlangt für topLeft-Metriken einen nichtleeren Lauf und alle drei Werte', () => {
+    const withoutTopLeft = {
+      kind: 'vehicle-land', labels: { topLeftMetrics },
+    } as unknown as SymbolSpec;
+    expect(validateSpec(withoutTopLeft).map((issue) => issue.rule)).toContain(
+      'top-left-metrics-require-top-left-label',
+    );
+    expect(validateSpec(withRuntimeTopLeftMetrics(
+      'vehicle-land', undefined, topLeftMetrics, '   ',
+    )).map((issue) => issue.rule)).toContain('top-left-metrics-require-top-left-label');
+    expect(validateSpec(withRuntimeTopLeftMetrics(
+      'vehicle-land', undefined, { capHeightMm: 2.191447 },
+    )).map((issue) => issue.rule)).toContain('top-left-metrics-complete');
+  });
+
+  it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])(
+    'lehnt die topLeft-Versalhöhe %s ab',
+    (capHeightMm) => {
+      expect(validateSpec(withRuntimeTopLeftMetrics(
+        'vehicle-land', undefined, { ...topLeftMetrics, capHeightMm },
+      )).map((issue) => issue.rule)).toContain('top-left-cap-height-positive');
+    },
+  );
+
+  it.each([-1, 2, 20.26, Number.NaN, Number.POSITIVE_INFINITY])(
+    'lehnt die topLeft-Grundlinie %s außerhalb der Landfahrzeughülle ab',
+    (baselineFromBodyTopMm) => {
+      expect(validateSpec(withRuntimeTopLeftMetrics(
+        'vehicle-land', undefined, { ...topLeftMetrics, baselineFromBodyTopMm },
+      )).map((issue) => issue.rule)).toContain('top-left-baseline-within-body');
+    },
+  );
+
+  it.each([-0.01, 28.01, Number.NaN, Number.POSITIVE_INFINITY])(
+    'lehnt den topLeft-Anker %s außerhalb der inneren Landfahrzeughülle ab',
+    (anchorFromBodyLeftMm) => {
+      expect(validateSpec(withRuntimeTopLeftMetrics(
+        'vehicle-land', undefined, { ...topLeftMetrics, anchorFromBodyLeftMm },
+      )).map((issue) => issue.rule)).toContain('top-left-anchor-within-body');
+    },
+  );
+
   it('bindet beide F.2-Sonderzonen an das exakte Art-/Variantenpaar', () => {
     expect(validateSpec({
       kind: 'vehicle-land', bodyVariant: 'raised-hull',

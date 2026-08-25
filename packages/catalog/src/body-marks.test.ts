@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { BoundsMm } from '@einsatzzeichen/core';
+import { boundsOfMm, type BoundsMm } from '@einsatzzeichen/core';
 import { DEFAULT_STROKE_WIDTH_MM, type Primitive } from '@einsatzzeichen/schema';
 import { BODY_MARK_IDS, bodyMark as bodyMarkWithContext } from './body-marks.js';
 
@@ -418,6 +418,159 @@ describe('bodyMark() — die beiden Sondermarken aus F.2', () => {
   });
 });
 
+describe('bodyMark() — F.2.10 bis F.2.17 auf normalen, gebänderten und Anhängerkörpern', () => {
+  const outlineStyle = {
+    fill: 'none',
+    stroke: 'schwarz',
+    strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+  } as const;
+
+  it('vermisst care separat am normalen und gebänderten Landfahrzeug sowie am Anhänger', () => {
+    expect(bodyMarkWithContext('care', { kind: 'vehicle-land' }, landBodyMm)).toEqual([{
+      type: 'polyline', role: 'pictogram',
+      points: [[1, 26], [16, 8], [31, 26]],
+      style: outlineStyle,
+    }]);
+    expect(bodyMarkWithContext(
+      'care', { kind: 'vehicle-land', bodyVariant: 'foot-band' }, landBodyMm,
+    )).toEqual([{
+      type: 'polyline', role: 'pictogram',
+      points: [[1, 23], [16, 8], [31, 23]],
+      style: outlineStyle,
+    }]);
+    expect(bodyMarkWithContext('care', { kind: 'trailer' }, trailerBodyMm)).toEqual([{
+      type: 'polyline', role: 'pictogram',
+      points: [[4, 26], [17.5, 8], [31, 26]],
+      style: outlineStyle,
+    }]);
+  });
+
+  it('zeichnet F.2.11s Ring mit Vierwegeform unter einer neutralen technischen ID', () => {
+    expect(bodyMarkWithContext(
+      'ring-6mm-offset-down-3mm-four-way-stem', { kind: 'vehicle-land' }, landBodyMm,
+    )).toEqual([
+      {
+        type: 'circle', role: 'pictogram', cx: 16, cy: 19, r: 6,
+        style: outlineStyle,
+      },
+      line(12, 17, 20, 17),
+      line(16, 15, 16, 23),
+      {
+        type: 'polyline', role: 'pictogram', points: [[14, 15], [12, 17], [14, 19]],
+        style: outlineStyle,
+      },
+      {
+        type: 'polyline', role: 'pictogram', points: [[18, 15], [20, 17], [18, 19]],
+        style: outlineStyle,
+      },
+      {
+        type: 'polyline', role: 'pictogram', points: [[14, 24], [16, 23], [18, 24]],
+        style: outlineStyle,
+      },
+    ]);
+    expect(() => bodyMarkWithContext(
+      'ring-6mm-offset-down-3mm-four-way-stem',
+      { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' },
+      landBodyMm,
+    )).toThrow(/nicht vermessen/);
+  });
+
+  it('zeichnet F.2.16s nach unten versetzten Acht-Speichen-Ring getrennt vom Task-2-Ring', () => {
+    const diagonal = 5 / Math.SQRT2;
+    expect(bodyMarkWithContext(
+      'ring-5mm-offset-down-3mm-eight-spokes', { kind: 'vehicle-land' }, landBodyMm,
+    )).toEqual([
+      {
+        type: 'circle', role: 'pictogram', cx: 16, cy: 19, r: 5,
+        style: outlineStyle,
+      },
+      line(11, 19, 21, 19),
+      line(16, 14, 16, 24),
+      line(16 - diagonal, 19 - diagonal, 16 + diagonal, 19 + diagonal),
+      line(16 + diagonal, 19 - diagonal, 16 - diagonal, 19 + diagonal),
+    ]);
+    expect(() => bodyMarkWithContext(
+      'ring-5mm-offset-down-3mm-eight-spokes',
+      { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' },
+      landBodyMm,
+    )).toThrow(/nicht vermessen/);
+  });
+
+  it('konstruiert mobile Küche und Trinkwasser nur an der vermessenen Fahrzeug-Fußbandfassung', () => {
+    const meal = bodyMarkWithContext(
+      'meal-preparation', { kind: 'vehicle-land', bodyVariant: 'foot-band' }, landBodyMm,
+    );
+    expect(meal).toHaveLength(2);
+    const [spoon, bowl] = meal;
+    if (spoon?.type !== 'path' || bowl?.type !== 'path') {
+      throw new Error('Mobile Küche muss aus Löffelsilhouette und Schüsselpfad bestehen.');
+    }
+    expect(spoon.style).toEqual({ fill: 'schwarz', stroke: 'none' });
+    expect(boundsOfMm(spoon)).toEqual({
+      minX: 12.113991, minY: 14.2678, maxX: 13.88634, maxY: 21.60015,
+    });
+    expect(boundsOfMm(bowl)).toEqual({
+      minX: 14.500171, minY: 14.500347, maxX: 21.068339, maxY: 21.500138,
+    });
+    expect(bowl.d).toBe(
+      'M 21.068339 16.327377 ' +
+      'C 20.454508 15.197434, 19.289464 14.500347, 18.000243 14.500347 ' +
+      'C 16.070379 14.500347, 14.500171 16.070732, 14.500171 18.000419 ' +
+      'C 14.500171 19.930106, 16.070379 21.500138, 18.000243 21.500138 ' +
+      'C 19.269532 21.500138, 20.425404 20.819808, 21.045233 19.716853 ' +
+      'L 18 18 Z',
+    );
+    expect(bowl.style).toEqual(outlineStyle);
+
+    expect(bodyMarkWithContext(
+      'drinking-water', { kind: 'vehicle-land', bodyVariant: 'foot-band' }, landBodyMm,
+    )).toEqual([
+      // Aus den Füllkanten der Quelle zurückgerechnete Mittellinien: Stamm 17,75…18,25,
+      // Oberbalken 16,5…19,5 bei y 15,25…15,75 und Rohr 17,25…17,75. Der Bogen nutzt das
+      // arithmetische Mittel seiner beiden Konturen. Die letzten 0,1 mm bilden die sichtbare
+      // senkrechte Endkappe y 20,4…20,5 ab; sie dürfen nicht in einem zu kurzen Bogen verschwinden.
+      line(18, 15.5, 18, 18.5),
+      line(16.5, 15.5, 19.5, 15.5),
+      {
+        type: 'path', role: 'pictogram',
+        d: 'M 11 17.5 L 19.1 17.5 C 20.995 17.5, 22 18.505, 22 20.4 L 22 20.5',
+        style: outlineStyle,
+      },
+    ]);
+
+    expect(() => bodyMarkWithContext('meal-preparation', { kind: 'vehicle-land' }, landBodyMm))
+      .toThrow(/nicht vermessen/);
+    expect(() => bodyMarkWithContext('drinking-water', { kind: 'formation' }, formationBodyMm))
+      .toThrow(/nicht vermessen/);
+  });
+
+  it('verschiebt die neuen technischen Marken ausschließlich über die platzierte Hülle', () => {
+    const shifted: BoundsMm = { minX: 4, minY: 7.75, maxX: 34, maxY: 28 };
+    const marks = bodyMarkWithContext(
+      'ring-6mm-offset-down-3mm-four-way-stem', { kind: 'vehicle-land' }, shifted,
+    );
+    expect(marks[0]).toMatchObject({ type: 'circle', cx: 19, cy: 21, r: 6 });
+    expect(marks).toContainEqual(line(15, 19, 23, 19));
+    expect(marks).toContainEqual(line(19, 17, 19, 25));
+  });
+
+  it('verschiebt auch Löffelsilhouette und 3,5-mm-Schüssel nur über die platzierte Hülle', () => {
+    const shifted: BoundsMm = { minX: 4, minY: 7.75, maxX: 34, maxY: 28 };
+    const [spoon, bowl] = bodyMarkWithContext(
+      'meal-preparation', { kind: 'vehicle-land', bodyVariant: 'foot-band' }, shifted,
+    );
+    if (spoon === undefined || bowl === undefined) throw new Error('unreachable');
+    expect(boundsOfMm(spoon)).toEqual({
+      minX: 15.113991, minY: 16.2678, maxX: 16.88634, maxY: 23.60015,
+    });
+    const bowlBounds = boundsOfMm(bowl);
+    expect(bowlBounds.minX).toBeCloseTo(17.500171, 9);
+    expect(bowlBounds.minY).toBeCloseTo(16.500347, 9);
+    expect(bowlBounds.maxX).toBeCloseTo(24.068339, 9);
+    expect(bowlBounds.maxY).toBeCloseTo(23.500138, 9);
+  });
+});
+
 describe('bodyMark() — der zusammengefasste Eintrag von F.1.2', () => {
   /**
    * `cbrn-protection` zeichnet drei Dinge in **einem** Eintrag: die Fachdienstteilung mit zwei
@@ -655,10 +808,15 @@ describe('BODY_MARK_IDS', () => {
       // und genau das ist an F.1.3 belegt (siehe den Block zur Zeltmarke oben).
       const invocation = id === 'catering'
         ? [{ kind: 'formation', bodyVariant: 'foot-band' } as const, formationBodyMm] as const
+        : id === 'meal-preparation' || id === 'drinking-water'
+          ? [{ kind: 'vehicle-land', bodyVariant: 'foot-band' } as const, landBodyMm] as const
         : id === 'air-winch-chevron-diamond'
           ? [{ kind: 'vehicle-air', bodyVariant: 'raised-hull' } as const, raisedAirBodyMm] as const
           : id === 'top-center-rect-0-5x0-6mm'
             ? [{ kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' } as const, landBodyMm] as const
+            : id === 'ring-6mm-offset-down-3mm-four-way-stem' ||
+                id === 'ring-5mm-offset-down-3mm-eight-spokes'
+              ? [{ kind: 'vehicle-land' } as const, landBodyMm] as const
           : [{ kind: 'formation' } as const, formationBodyMm] as const;
       expect(bodyMarkWithContext(id, invocation[0], invocation[1]).length).toBeGreaterThanOrEqual(1);
     }

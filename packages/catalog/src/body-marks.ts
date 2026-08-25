@@ -479,7 +479,9 @@ function landPatientTransport(bounds: BoundsMm): Primitive[] {
   ];
 }
 
-const VEHICLE_LAND_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
+const VEHICLE_LAND_PLAIN_WHEEL_PAIR_MARKS: Partial<
+  Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
+> = {
   'medical-service': landQuartering,
   physician: (bounds) => {
     const cx = (bounds.minX + bounds.maxX) / 2;
@@ -499,6 +501,149 @@ const VEHICLE_LAND_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primi
     height: 0.6,
     style: { fill: 'schwarz', stroke: 'none' },
   }],
+};
+
+function landCare(bounds: BoundsMm, bottomYMm: number): Primitive[] {
+  const cx = (bounds.minX + bounds.maxX) / 2;
+  return [outline([
+    [bounds.minX, bottomYMm],
+    [cx, bounds.minY + 2.25],
+    [bounds.maxX, bottomYMm],
+  ])];
+}
+
+function landFourWayStem(bounds: BoundsMm): Primitive[] {
+  const cx = (bounds.minX + bounds.maxX) / 2;
+  const cy = bounds.maxY - 7;
+  return [
+    {
+      type: 'circle',
+      role: 'pictogram',
+      cx,
+      cy,
+      r: 6,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+    stroke(cx - 4, cy - 2, cx + 4, cy - 2),
+    stroke(cx, cy - 4, cx, cy + 4),
+    outline([[cx - 2, cy - 4], [cx - 4, cy - 2], [cx - 2, cy]]),
+    outline([[cx + 2, cy - 4], [cx + 4, cy - 2], [cx + 2, cy]]),
+    outline([[cx - 2, cy + 5], [cx, cy + 4], [cx + 2, cy + 5]]),
+  ];
+}
+
+function landShiftedEightSpokes(bounds: BoundsMm): Primitive[] {
+  const cx = (bounds.minX + bounds.maxX) / 2;
+  const cy = bounds.maxY - 7;
+  const radiusMm = 5;
+  const diagonalMm = radiusMm / Math.SQRT2;
+  return [
+    {
+      type: 'circle',
+      role: 'pictogram',
+      cx,
+      cy,
+      r: radiusMm,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+    stroke(cx - radiusMm, cy, cx + radiusMm, cy),
+    stroke(cx, cy - radiusMm, cx, cy + radiusMm),
+    stroke(cx - diagonalMm, cy - diagonalMm, cx + diagonalMm, cy + diagonalMm),
+    stroke(cx + diagonalMm, cy - diagonalMm, cx - diagonalMm, cy + diagonalMm),
+  ];
+}
+
+function landMealPreparation(bounds: BoundsMm): Primitive[] {
+  const dxMm = bounds.minX - 1;
+  const dyMm = bounds.minY - 5.75;
+  return [
+    {
+      // Die Quelle führt keine Kreis-plus-Rechteck-Abkürzung, sondern eine asymmetrische
+      // Löffelsilhouette. Ihre vier Tintenkanten sind 12,113991/14,2678/13,886340/21,600150 mm.
+      type: 'path', role: 'pictogram',
+      d:
+        `M ${13.88634 + dxMm} ${15.563792 + dyMm} ` +
+        `C ${13.88634 + dxMm} ${15.965957 + dyMm}, ` +
+        `${13.646805 + dxMm} ${16.24712 + dyMm}, ` +
+        `${13.391747 + dxMm} ${16.400225 + dyMm} ` +
+        `L ${13.391747 + dxMm} ${21.200101 + dyMm} ` +
+        `C ${13.391747 + dxMm} ${21.442812 + dyMm}, ` +
+        `${13.214653 + dxMm} ${21.60015 + dyMm}, ` +
+        `${13.000165 + dxMm} ${21.60015 + dyMm} ` +
+        `L ${13.000165 + dxMm} ${14.2678 + dyMm} ` +
+        `C ${13.510986 + dxMm} ${14.2678 + dyMm}, ` +
+        `${13.88634 + dxMm} ${14.680792 + dyMm}, ` +
+        `${13.88634 + dxMm} ${15.563792 + dyMm} Z ` +
+        `M ${13.000165 + dxMm} ${14.2678 + dyMm} ` +
+        `L ${13.000165 + dxMm} ${21.60015 + dyMm} ` +
+        `C ${12.785677 + dxMm} ${21.60015 + dyMm}, ` +
+        `${12.608583 + dxMm} ${21.442459 + dyMm}, ` +
+        `${12.608583 + dxMm} ${21.200101 + dyMm} ` +
+        `L ${12.608583 + dxMm} ${16.400225 + dyMm} ` +
+        `C ${12.353879 + dxMm} ${16.24712 + dyMm}, ` +
+        `${12.113991 + dxMm} ${15.965957 + dyMm}, ` +
+        `${12.113991 + dxMm} ${15.563792 + dyMm} ` +
+        `C ${12.113991 + dxMm} ${14.681145 + dyMm}, ` +
+        `${12.488992 + dxMm} ${14.2678 + dyMm}, ` +
+        `${13.000165 + dxMm} ${14.2678 + dyMm} Z`,
+      style: { fill: 'schwarz', stroke: 'none' },
+    },
+    {
+      // Mittelpunkt (18|18), Außen-/Innenradius 3,7496/3,2501 mm: die Mittellinie ist r 3,5.
+      // Die vier Kubiken und beide Keilübergänge sind Punkt für Punkt aus dem arithmetischen
+      // Mittel der äußeren und inneren Quellkontur rekonstruiert, nicht aus dem alten r=3,75-Pfad.
+      type: 'path', role: 'pictogram',
+      d:
+        `M ${21.068339 + dxMm} ${16.327377 + dyMm} ` +
+        `C ${20.454508 + dxMm} ${15.197434 + dyMm}, ` +
+        `${19.289464 + dxMm} ${14.500347 + dyMm}, ` +
+        `${18.000243 + dxMm} ${14.500347 + dyMm} ` +
+        `C ${16.070379 + dxMm} ${14.500347 + dyMm}, ` +
+        `${14.500171 + dxMm} ${16.070732 + dyMm}, ` +
+        `${14.500171 + dxMm} ${18.000419 + dyMm} ` +
+        `C ${14.500171 + dxMm} ${19.930106 + dyMm}, ` +
+        `${16.070379 + dxMm} ${21.500138 + dyMm}, ` +
+        `${18.000243 + dxMm} ${21.500138 + dyMm} ` +
+        `C ${19.269532 + dxMm} ${21.500138 + dyMm}, ` +
+        `${20.425404 + dxMm} ${20.819808 + dyMm}, ` +
+        `${21.045233 + dxMm} ${19.716853 + dyMm} ` +
+        `L ${18 + dxMm} ${18 + dyMm} Z`,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+  ];
+}
+
+function landDrinkingWater(bounds: BoundsMm): Primitive[] {
+  const dxMm = bounds.minX - 1;
+  const dyMm = bounds.minY - 5.75;
+  return [
+    stroke(18 + dxMm, 15.5 + dyMm, 18 + dxMm, 18.5 + dyMm),
+    stroke(16.5 + dxMm, 15.5 + dyMm, 19.5 + dxMm, 15.5 + dyMm),
+    {
+      type: 'path', role: 'pictogram',
+      d:
+        `M ${11 + dxMm} ${17.5 + dyMm} L ${19.1 + dxMm} ${17.5 + dyMm} ` +
+        `C ${20.995 + dxMm} ${17.5 + dyMm}, ${22 + dxMm} ${18.505 + dyMm}, ` +
+        `${22 + dxMm} ${20.4 + dyMm} L ${22 + dxMm} ${20.5 + dyMm}`,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+  ];
+}
+
+const VEHICLE_LAND_NORMAL_MARKS: Partial<
+  Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
+> = {
+  care: (bounds) => landCare(bounds, bounds.maxY),
+  'ring-6mm-offset-down-3mm-four-way-stem': landFourWayStem,
+  'ring-5mm-offset-down-3mm-eight-spokes': landShiftedEightSpokes,
+};
+
+const VEHICLE_LAND_FOOT_BAND_MARKS: Partial<
+  Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
+> = {
+  care: (bounds) => landCare(bounds, bounds.maxY - 3),
+  'meal-preparation': landMealPreparation,
+  'drinking-water': landDrinkingWater,
 };
 
 function airQuartering(bounds: BoundsMm): Primitive[] {
@@ -554,6 +699,7 @@ const TRAILER_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[
       },
     ];
   },
+  care: (bounds) => landCare(bounds, bounds.maxY),
 };
 
 export function bodyMark(
@@ -568,14 +714,25 @@ export function bodyMark(
           (id === 'care' || id === 'temporary-accommodation-resting' || id === 'catering')
         ? MARKS[id]
         : undefined
-    : context.kind === 'vehicle-land' && context.bodyVariant === 'plain-wheel-pair'
-      ? VEHICLE_LAND_MARKS[id]
+    : context.kind === 'vehicle-land' && context.bodyVariant === undefined
+      ? VEHICLE_LAND_NORMAL_MARKS[id]
+      : context.kind === 'vehicle-land' && context.bodyVariant === 'foot-band'
+        ? VEHICLE_LAND_FOOT_BAND_MARKS[id]
+        : context.kind === 'vehicle-land' && context.bodyVariant === 'plain-wheel-pair'
+          ? VEHICLE_LAND_PLAIN_WHEEL_PAIR_MARKS[id]
       : context.kind === 'vehicle-air' && context.bodyVariant === 'raised-hull'
         ? VEHICLE_AIR_MARKS[id]
         : context.kind === 'trailer' && context.bodyVariant === undefined
           ? TRAILER_MARKS[id]
           : undefined;
-  const hasAnyBuild = [MARKS, VEHICLE_LAND_MARKS, VEHICLE_AIR_MARKS, TRAILER_MARKS]
+  const hasAnyBuild = [
+    MARKS,
+    VEHICLE_LAND_NORMAL_MARKS,
+    VEHICLE_LAND_FOOT_BAND_MARKS,
+    VEHICLE_LAND_PLAIN_WHEEL_PAIR_MARKS,
+    VEHICLE_AIR_MARKS,
+    TRAILER_MARKS,
+  ]
     .some((candidate) => Object.hasOwn(candidate, id));
   if (!hasAnyBuild) {
     throw new Error(
@@ -615,7 +772,7 @@ export function bodyMark(
   }
 
   const marks = build(bodyBoundsMm);
-  if (id === 'care' && context.bodyVariant === 'foot-band') {
+  if (id === 'care' && context.kind === 'formation' && context.bodyVariant === 'foot-band') {
     return [
       {
         type: 'polyline',
@@ -647,6 +804,13 @@ export function bodyMark(
  */
 export const BODY_MARK_IDS: readonly BodyMarkId[] = Object.freeze(
   [...CAPABILITY_IDS, ...TECHNICAL_BODY_MARK_IDS].filter((id) =>
-    [MARKS, VEHICLE_LAND_MARKS, VEHICLE_AIR_MARKS, TRAILER_MARKS]
+    [
+      MARKS,
+      VEHICLE_LAND_NORMAL_MARKS,
+      VEHICLE_LAND_FOOT_BAND_MARKS,
+      VEHICLE_LAND_PLAIN_WHEEL_PAIR_MARKS,
+      VEHICLE_AIR_MARKS,
+      TRAILER_MARKS,
+    ]
       .some((registry) => Object.hasOwn(registry, id))),
 );

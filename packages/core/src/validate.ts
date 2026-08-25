@@ -36,6 +36,11 @@ const CHASSIS_KINDS = new Set<SymbolKind>([
   'swap-loader-vehicle',
 ]);
 
+/** Vermessene Normalhülle des F.2-Landfahrzeugs: x 1…31 / y 5,75…26 mm. */
+const F2_VEHICLE_LAND_BODY_HEIGHT_MM = 20.25;
+/** Rechte Innenmarge der bestehenden `topLeft`-Box: absolut x 29, relativ zur linken Hülle 28. */
+const F2_TOP_LEFT_BOX_RIGHT_FROM_BODY_LEFT_MM = 28;
+
 export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
 
@@ -177,12 +182,11 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
     });
   }
 
-  // Dieselbe Bauart eine Zone weiter oben: die Grundlinie des Laufs oben links ist an genau einer
-  // Körperform gemessen (5,0 mm unter der Oberkante, an den neun beschrifteten Zeichen aus F.1.1
-  // bis F.1.11). Sie auf jede andere zu übertragen, wäre eine erfundene Lage — und zwar eine
-  // unauffällige: der Lauf stünde irgendwo im Körper und keine Prüfung fragte nach, ob er dort
-  // hingehört. Am Gebäudekörper führte der Anker 2,5 mm zusätzlich aus dem Polygon heraus
-  // (dessen Kante läuft dort erst ab 5,286 mm).
+  // Dieselbe Bauart eine Zone weiter oben: die Grundlinie des Laufs oben links ist an der
+  // Formation (5,0 mm unter der Oberkante) und an den F.2-Landfahrzeugen (Profildefault 6,75 mm)
+  // gemessen. Andere Körperprofile führen keinen Wert und werden abgelehnt statt still einen der
+  // beiden zu erben. Am Gebäudekörper führte schon der Formationsanker 2,5 mm aus dem Polygon
+  // heraus (dessen Kante läuft dort erst ab 5,286 mm).
   if (
     spec.labels?.topLeft !== undefined &&
     profileFor(spec.kind, spec.bodyVariant).topLeftBaselineFromBodyTopMm === undefined
@@ -190,11 +194,89 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
     issues.push({
       rule: 'top-left-label-requires-measured-body',
       message:
-        'Die Beschriftungszone oben links ist allein an der taktischen Formation vermessen ' +
-        '(Grundlinie 5,0 mm unter der Körperoberkante, an F.1.1 bis F.1.11). Für ' +
-        `"${spec.kind}" gibt es keine Messung, aus der ihre Lage folgte — der Landfahrzeugrumpf ` +
-        'trägt denselben Lauf 1,5 mm tiefer, und diese Zahl misst der Teilslice, der sie braucht.',
+        'Die Beschriftungszone oben links ist an der taktischen Formation und an den ' +
+        'F.2-Landfahrzeugprofilen vermessen. Für ' +
+        `"${spec.kind}" mit Variante "${spec.bodyVariant ?? 'normal'}" gibt es keine Messung, ` +
+        'aus der ihre Lage folgte.',
     });
+  }
+
+  const topLeftMetrics = spec.labels?.topLeftMetrics as unknown;
+  if (topLeftMetrics !== undefined) {
+    const metricsRecord = typeof topLeftMetrics === 'object' && topLeftMetrics !== null &&
+        !Array.isArray(topLeftMetrics)
+      ? topLeftMetrics as Record<string, unknown>
+      : undefined;
+    const capHeightMm = metricsRecord?.capHeightMm;
+    const baselineFromBodyTopMm = metricsRecord?.baselineFromBodyTopMm;
+    const anchorFromBodyLeftMm = metricsRecord?.anchorFromBodyLeftMm;
+
+    if (spec.labels?.topLeft === undefined || spec.labels.topLeft.trim() === '') {
+      issues.push({
+        rule: 'top-left-metrics-require-top-left-label',
+        message:
+          'Gemessene Metriken der oberen linken Zone verlangen einen nichtleeren topLeft-Lauf; ' +
+          'ohne ihn würden alle drei Maße still verschluckt.',
+      });
+    }
+    if (
+      spec.kind !== 'vehicle-land' ||
+      !(spec.bodyVariant === undefined || spec.bodyVariant === 'foot-band')
+    ) {
+      issues.push({
+        rule: 'top-left-metrics-require-measured-vehicle-land',
+        message:
+          'Individuelle topLeft-Metriken sind nur am normalen und gebänderten F.2-Landfahrzeug ' +
+          'vermessen. Andere Arten und Varianten behalten ihre eigenen Profilwerte.',
+      });
+    }
+    if (
+      metricsRecord === undefined ||
+      !Object.hasOwn(metricsRecord, 'capHeightMm') ||
+      !Object.hasOwn(metricsRecord, 'baselineFromBodyTopMm') ||
+      !Object.hasOwn(metricsRecord, 'anchorFromBodyLeftMm')
+    ) {
+      issues.push({
+        rule: 'top-left-metrics-complete',
+        message:
+          'Gemessene topLeft-Metriken müssen Versalhöhe, Grundlinie und Anker gemeinsam führen; ' +
+          'ein partielles Objekt würde unbelegte Profilwerte hineinmischen.',
+      });
+    }
+    if (!(typeof capHeightMm === 'number' && Number.isFinite(capHeightMm) && capHeightMm > 0)) {
+      issues.push({
+        rule: 'top-left-cap-height-positive',
+        message: 'Die Versalhöhe des topLeft-Laufs muss endlich und größer als null sein.',
+      });
+    }
+    if (
+      !(typeof baselineFromBodyTopMm === 'number' &&
+        Number.isFinite(baselineFromBodyTopMm) &&
+        typeof capHeightMm === 'number' &&
+        Number.isFinite(capHeightMm) &&
+        baselineFromBodyTopMm >= capHeightMm &&
+        baselineFromBodyTopMm <= F2_VEHICLE_LAND_BODY_HEIGHT_MM)
+    ) {
+      issues.push({
+        rule: 'top-left-baseline-within-body',
+        message:
+          'Die topLeft-Grundlinie muss mindestens eine Versalhöhe unter der Körperoberkante und ' +
+          `höchstens ${F2_VEHICLE_LAND_BODY_HEIGHT_MM} mm darunter liegen.`,
+      });
+    }
+    if (
+      !(typeof anchorFromBodyLeftMm === 'number' &&
+        Number.isFinite(anchorFromBodyLeftMm) &&
+        anchorFromBodyLeftMm >= 0 &&
+        anchorFromBodyLeftMm <= F2_TOP_LEFT_BOX_RIGHT_FROM_BODY_LEFT_MM)
+    ) {
+      issues.push({
+        rule: 'top-left-anchor-within-body',
+        message:
+          'Der topLeft-Anker muss endlich sein und innerhalb der vermessenen Landfahrzeugbox ' +
+          `zwischen 0 und ${F2_TOP_LEFT_BOX_RIGHT_FROM_BODY_LEFT_MM} mm liegen.`,
+      });
+    }
   }
 
   if (

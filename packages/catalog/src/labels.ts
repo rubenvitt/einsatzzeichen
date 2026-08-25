@@ -83,6 +83,10 @@ export const TECHNICAL_BODY_MARK_LABELS = Object.freeze({
   'ring-6-5mm-offset-down-2mm-with-roof': 'Ring 6,5 mm mit Dach und eingeschriebenem Dreieck',
   'top-center-rect-0-5x0-6mm': 'Rechteck 0,5 × 0,6 mm oben mittig',
   'air-winch-chevron-diamond': 'Winschform aus Pfeilwinkel und Raute',
+  'ring-6mm-offset-down-3mm-four-way-stem':
+    'Ring 6 mm mit Vierwegeform und unterem Gabelsteg',
+  'ring-5mm-offset-down-3mm-eight-spokes':
+    'Ring 5 mm mit acht Speichen, 3 mm nach unten versetzt',
 } satisfies Record<TechnicalBodyMarkId, string>);
 
 const TECHNICAL_BODY_MARK_ID_SET = new Set<string>(TECHNICAL_BODY_MARK_IDS);
@@ -132,10 +136,9 @@ export function describeSymbolSpec(spec: SymbolSpec): string {
   // Vorlesestimme ist das derselbe Sachverhalt. Die Zone unterscheidet sich in der Lage und in
   // der Farbe, nicht in der Bedeutung — deshalb dasselbe Wort.
   //
-  // Ausdrücklich **nicht** in der Liste: `centerCapHeightMm`. Es ist eine Maßangabe und kein
-  // Text; eine Zahl in der Vorlesebeschreibung wäre Rauschen. Die Liste ist deshalb explizit
-  // aufgezählt und nicht aus `Object.entries(spec.labels)` erzeugt — sonst stünde sie dort seit
-  // dem Teilslice E.2.
+  // Ausdrücklich **nicht** in der Liste: `centerCapHeightMm` und `topLeftMetrics`. Beides sind
+  // Maßangaben und kein Text; Versalhöhe, Grundlinie oder Anker in der Vorlesebeschreibung wären
+  // Rauschen. Die Liste ist deshalb explizit aufgezählt und nicht aus `Object.entries` erzeugt.
   const zones: Array<[keyof NonNullable<SymbolSpec['labels']>, string]> = [
     // Oben links steht in Anhang F dasselbe, was Anhang E mittig setzt: das Kürzel der Einheit.
     // Deshalb dasselbe Wort — und deshalb zuerst, weil eine Vorlesestimme das Bild von oben nach

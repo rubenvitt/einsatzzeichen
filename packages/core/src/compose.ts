@@ -427,18 +427,24 @@ function labelPrimitives(
       // gemessene Grundlinie ab (`top-left-label-requires-measured-body`). Die Zeile hält die
       // Bedingung trotzdem am Ort ihrer Wirkung fest, wie beim Geschwisterfall `belowRight`.
       throw new Error(
-        'Die Zone "topLeft" ist an dieser Körperform nicht vermessen: ihre Grundlinie steht nur ' +
-          'für die taktische Formation fest (5,0 mm unter der Körperoberkante, gemessen an ' +
-          'F.1.1 bis F.1.11). Wo sie an anderen Körperformen liegt, misst der Teilslice, der sie ' +
-          'zuerst braucht.',
+        'Die Zone "topLeft" ist an dieser Körperform nicht vermessen. Eine Grundlinie führen ' +
+          'nur die taktische Formation und die belegten F.2-Landfahrzeugprofile; andere ' +
+          'Körperformen fallen nicht auf einen dieser Werte zurück.',
       );
     }
-    const anchorXMm = bodyBoundsMm.minX + TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM;
+    const topLeftMetrics = labels.topLeftMetrics;
+    const anchorXMm = bodyBoundsMm.minX +
+      (topLeftMetrics?.anchorFromBodyLeftMm ?? TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM);
+    const baselineYMm = bodyBoundsMm.minY +
+      (topLeftMetrics?.baselineFromBodyTopMm ?? topLeftBaselineFromBodyTopMm);
+    const sizeMm = topLeftMetrics === undefined
+      ? BOTTOM_LABEL_SIZE_MM
+      : topLeftMetrics.capHeightMm / ARIMO_CAP_HEIGHT_FRACTION;
     primitives.push(
       labelPrimitive(
         labels.topLeft,
-        BOTTOM_LABEL_SIZE_MM,
-        bodyBoundsMm.minY + topLeftBaselineFromBodyTopMm,
+        sizeMm,
+        baselineYMm,
         'start',
         anchorXMm,
         anchorXMm,

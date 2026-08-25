@@ -53,9 +53,11 @@ export type SymbolKind =
  *
  * F.2.6/F.2.7 belegen dieselbe Kennung am separat vermessenen, um 2 mm angehobenen
  * Luftfahrzeugrumpf; die Kennung erlaubt keine Übertragung der Maße zwischen den Arten.
- * `foot-band` bezeichnet die F.1-Formation mit schwarzem Fußband. `plain-wheel-pair` hält die
- * zwei schlichten Radringe der elf F.2-Landdarstellungen getrennt von `vehicleCategory`: das Bild
- * gleicht Kategorie 1, die Quelle belegt hier aber keine Kategorie-Semantik.
+ * `foot-band` bezeichnet ausschließlich ein schwarzes 3-mm-Fußband. Formation und
+ * Landfahrzeug führen dafür getrennt vermessene Körperfassungen; die gemeinsame Kennung erlaubt
+ * keine Übertragung ihrer übrigen Maße. `plain-wheel-pair` hält die zwei schlichten Radringe der
+ * elf F.2-Landdarstellungen getrennt von `vehicleCategory`: das Bild gleicht Kategorie 1, die
+ * Quelle belegt hier aber keine Kategorie-Semantik.
  */
 export type BodyVariantId = 'raised-hull' | 'foot-band' | 'plain-wheel-pair';
 
@@ -221,6 +223,8 @@ export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
   'ring-6-5mm-offset-down-2mm-with-roof',
   'top-center-rect-0-5x0-6mm',
   'air-winch-chevron-diamond',
+  'ring-6mm-offset-down-3mm-four-way-stem',
+  'ring-5mm-offset-down-3mm-eight-spokes',
 ] as const);
 
 export type TechnicalBodyMarkId = (typeof TECHNICAL_BODY_MARK_IDS)[number];
@@ -458,6 +462,33 @@ export interface BodyLabels {
    * deshalb endet die deklarierte Box erst an der rechten Innenmarge des Körpers.
    */
   readonly topLeft?: string;
+  /**
+   * Drei **gemeinsam erforderliche Quellenmaße** für einen einzelnen `topLeft`-Lauf. Fehlt das
+   * Objekt, gelten unverändert Schriftgrad, Grundlinie und Anker des Körperprofils. Es ist kein
+   * Auto-Fit und keine Stilkennung: jede Zahl stammt aus dem jeweiligen, in Pfade umgewandelten
+   * Quellenlauf. `compose()` akzeptiert den Override fail-closed nur am normalen und gebänderten
+   * F.2-Landfahrzeug; `plain-wheel-pair`, Formation und andere Körperarten behalten ihre eigenen
+   * vermessenen Defaults.
+   *
+   * Ablesung in 90,709 / 32 SVG-Einheiten pro Millimeter; Grundlinie aus flachfüßigen Glyphen,
+   * Versalhöhe ohne runden Overshoot. Weil die Quelle nur Pfade speichert, ist der Anker aus der
+   * linken Tintenkante und dem Arimo-Seitenlager bei dieser Versalhöhe zurückgerechnet:
+   *
+   * | Quelle | Lauf | Versalhöhe | Grundlinie absolut / ab Körperoberkante | Tintenkante links | Anker absolut / ab linker Körperkante | Breite bis x=29 |
+   * |---|---|---:|---:|---:|---:|---:|
+   * | F.2.10 | `BTKombi` | 2,191447 | 10,999923 / 5,249923 | 1,775524 | 1,514230 / 0,514230 | 27,485770 |
+   * | F.2.11 | `BTKombi` | 2,191447 | 10,999923 / 5,249923 | 1,775524 | 1,514230 / 0,514230 | 27,485770 |
+   * | F.2.12 | `GwBT` | 2,919225 | 11,999691 / 6,249691 | 2,223903 | 2,010503 / 1,010503 | 26,989497 |
+   * | F.2.13 | `GwBT` | 2,919225 | 11,999691 / 6,249691 | 2,223903 | 2,010503 / 1,010503 | 26,989497 |
+   * | F.2.14 | `GwLog` | 2,432746 | 10,999923 / 5,249923 | 2,186861 | 2,009024 / 1,009024 | 26,990976 |
+   * | F.2.16 | `40` | 2,749893 | 12,499576 / 6,749576 | 2,589026 | 2,497298 / 1,497298 | 26,502702 |
+   * | F.2.17 | `BtlLKW` | 2,432746 | 11,499807 / 5,749807 | 2,056334 | 1,766269 / 0,766269 | 27,233731 |
+   */
+  readonly topLeftMetrics?: {
+    readonly capHeightMm: number;
+    readonly baselineFromBodyTopMm: number;
+    readonly anchorFromBodyLeftMm: number;
+  };
   /**
    * Linksbündiger Lauf vollständig oberhalb der Körperhülle. Belegt an F.2.7: `ITH` endet auf
    * Grundlinie y = 6 mm, zwei Millimeter oberhalb des Luftfahrzeugrumpfs aus Kapitel 1.

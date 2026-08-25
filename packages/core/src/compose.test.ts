@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_VIEWBOX_MM, type ColorToken, type Primitive } from '@einsatzzeichen/schema';
+import {
+  DEFAULT_VIEWBOX_MM,
+  type ColorToken,
+  type Primitive,
+  type SymbolSpec,
+} from '@einsatzzeichen/schema';
 import type { BoundsMm } from './bounds.js';
 import { compose, type CatalogPorts } from './compose.js';
 import { checkViewBox } from './viewbox-gate.js';
@@ -725,6 +730,34 @@ describe('compose() — Beschriftungszone oben links', () => {
     );
     const label = drawing.children.find((child) => child.role === 'label');
     expect(label).toMatchObject({ type: 'text', content: 'KTW', x: 2.5, y: 12.5 });
+  });
+
+  it('setzt die drei explizit gemessenen F-d-Metriken am bestehenden topLeft-Lauf', () => {
+    const spec = {
+      kind: 'vehicle-land',
+      labels: {
+        topLeft: 'BTKombi',
+        topLeftMetrics: {
+          capHeightMm: 2.191447,
+          baselineFromBodyTopMm: 5.249923,
+          anchorFromBodyLeftMm: 0.51423,
+        },
+      },
+    } as unknown as SymbolSpec;
+    const drawing = compose(spec, f2Catalog);
+    const label = drawing.children.find((child) => child.role === 'label');
+    if (label?.type !== 'text') throw new Error('compose() hat den F-d-Lauf nicht erzeugt.');
+
+    expect(label).toMatchObject({
+      content: 'BTKombi',
+      anchor: 'start',
+      x: 1.51423,
+      boxMm: { xMm: 1.51423, widthMm: 27.48577 },
+    });
+    expect(label.y).toBeCloseTo(10.999923, 9);
+    // 2.191447 mm Versalhöhe / (1409/2048) — der Faktor ist aus der eingebetteten Arimo-Datei
+    // vermessen. Ein direkter Schriftgrad wäre nicht die Quellenmessung.
+    expect(label.sizeMm).toBeCloseTo(3.1852969879, 9);
   });
 });
 

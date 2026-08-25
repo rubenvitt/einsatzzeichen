@@ -669,7 +669,7 @@ describe('Anhang F, Teilslice F-b einschließlich F.1.3', () => {
 
 describe('Anhang F, Teilslice F-c', () => {
   it('deckt F.2.1 bis F.2.9 mit fünf Alternativdarstellungen ab', () => {
-    const keys = Object.keys(RECIPES).filter((key) => key.startsWith('F.2.'));
+    const keys = Object.keys(RECIPES).filter((key) => /^F\.2\.[1-9](?:#|$)/.test(key));
     expect(keys).toEqual([
       'F.2.1',
       'F.2.1#alternative',
@@ -686,12 +686,12 @@ describe('Anhang F, Teilslice F-c', () => {
       'F.2.8',
       'F.2.9',
     ]);
-    expect(Object.keys(RECIPES)).toHaveLength(110);
+    expect(keys).toHaveLength(14);
   });
 
   it('bindet die 14 Darstellungen literal an die Referenzmatrix', () => {
     expect(Object.fromEntries(
-      Object.entries<Recipe>(RECIPES).filter(([key]) => key.startsWith('F.2.')),
+      Object.entries<Recipe>(RECIPES).filter(([key]) => /^F\.2\.[1-9](?:#|$)/.test(key)),
     )).toEqual({
       'F.2.1': {
         title: 'KTW',
@@ -767,7 +767,9 @@ describe('Anhang F, Teilslice F-c', () => {
   });
 
   it('setzt in keinem F-c-Rezept eine unbelegte Fahrzeugkategorie', () => {
-    const f2 = Object.values<Recipe>(RECIPES).filter((recipe) => recipe.referenceAsset.startsWith('F.2.'));
+    const f2 = Object.entries<Recipe>(RECIPES)
+      .filter(([key]) => /^F\.2\.[1-9](?:#|$)/.test(key))
+      .map(([, recipe]) => recipe);
     expect(f2).toHaveLength(14);
     expect(f2.every((recipe) => recipe.spec.vehicleCategory === undefined)).toBe(true);
   });
@@ -792,6 +794,179 @@ describe('Anhang F, Teilslice F-c', () => {
       )).toHaveLength(1);
     },
   );
+});
+
+describe('Anhang F, Teilslice F-d', () => {
+  const recipes: Record<string, Recipe> = RECIPES;
+  const expected = {
+    'F.2.10': {
+      title: 'Betreuungskombi',
+      referenceAsset: 'F.2.10_Betreuungskombi.svg',
+      spec: {
+        kind: 'vehicle-land', organization: 'hilfsorganisation',
+        vehicleCategory: 'kfz-kategorie-1', bodyMarks: ['care'], labels: {
+          topLeft: 'BTKombi',
+          topLeftMetrics: {
+            capHeightMm: 2.191447, baselineFromBodyTopMm: 5.249923,
+            anchorFromBodyLeftMm: 0.51423,
+          },
+        },
+      },
+    },
+    'F.2.11': {
+      title: 'Betreuungskombi mit Material zum Einrichten einer Anlaufstelle',
+      referenceAsset: 'F.2.11_Betreuungskombi mit Material zum Einrichten einer Anlaufstelle.svg',
+      spec: {
+        kind: 'vehicle-land', organization: 'hilfsorganisation',
+        vehicleCategory: 'kfz-kategorie-1',
+        bodyMarks: ['care', 'ring-6mm-offset-down-3mm-four-way-stem'],
+        labels: {
+          topLeft: 'BTKombi',
+          topLeftMetrics: {
+            capHeightMm: 2.191447, baselineFromBodyTopMm: 5.249923,
+            anchorFromBodyLeftMm: 0.51423,
+          },
+        },
+      },
+    },
+    'F.2.12': {
+      title: 'Gerätewagen Betreuung',
+      referenceAsset: 'F.2.12_Gerätewagen Betreuung.svg',
+      spec: {
+        kind: 'vehicle-land', organization: 'hilfsorganisation',
+        vehicleCategory: 'kfz-kategorie-2', bodyMarks: ['care'], labels: {
+          topLeft: 'GwBT',
+          topLeftMetrics: {
+            capHeightMm: 2.919225, baselineFromBodyTopMm: 6.249691,
+            anchorFromBodyLeftMm: 1.010503,
+          },
+        },
+      },
+    },
+    'F.2.13': {
+      title: 'Betreuungs-LKW mit mobiler Einsatzküche',
+      referenceAsset: 'F.2.13_Betreuungs-LKW mit mobiler Einsatzküche.svg',
+      spec: {
+        kind: 'vehicle-land', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        vehicleCategory: 'kfz-kategorie-1', bodyMarks: ['care', 'meal-preparation'],
+        labels: {
+          topLeft: 'GwBT',
+          topLeftMetrics: {
+            capHeightMm: 2.919225, baselineFromBodyTopMm: 6.249691,
+            anchorFromBodyLeftMm: 1.010503,
+          },
+        },
+      },
+    },
+    'F.2.14': {
+      title: 'Gerätewagen Logistik der Betreuung',
+      referenceAsset: 'F.2.14_Gerätewagen Logistik der Betreuung.svg',
+      spec: {
+        kind: 'vehicle-land', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        vehicleCategory: 'kfz-kategorie-1', bodyMarks: ['care'], labels: {
+          topLeft: 'GwLog',
+          topLeftMetrics: {
+            capHeightMm: 2.432746, baselineFromBodyTopMm: 5.249923,
+            anchorFromBodyLeftMm: 1.009024,
+          },
+        },
+      },
+    },
+    'F.2.15': {
+      title: 'Geräteanhänger Betreuung',
+      referenceAsset: 'F.2.15_Geräteanhänger Betreuung.svg',
+      spec: {
+        kind: 'trailer', organization: 'hilfsorganisation',
+        vehicleCategory: 'anhaenger-ein-rad', bodyMarks: ['care'],
+      },
+    },
+    'F.2.16': {
+      title: 'Fahrzeug der Betreuung, Transport 40 Betroffene',
+      referenceAsset: 'F.2.16_Fahrzeug der Betreuung_Transport 40 Betroffene.svg',
+      spec: {
+        kind: 'vehicle-land', organization: 'hilfsorganisation',
+        vehicleCategory: 'kfz-kategorie-1',
+        bodyMarks: ['care', 'ring-5mm-offset-down-3mm-eight-spokes'],
+        labels: {
+          topLeft: '40',
+          topLeftMetrics: {
+            capHeightMm: 2.749893, baselineFromBodyTopMm: 6.749576,
+            anchorFromBodyLeftMm: 1.497298,
+          },
+        },
+      },
+    },
+    'F.2.17': {
+      title: 'Betreuungs-LKW Trinkwasserversorgung',
+      referenceAsset: 'F.2.17_Betreuungs-LKW_Trinkwasserversorgung.svg',
+      spec: {
+        kind: 'vehicle-land', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        vehicleCategory: 'kfz-kategorie-1', bodyMarks: ['care', 'drinking-water'],
+        labels: {
+          topLeft: 'BtlLKW',
+          topLeftMetrics: {
+            capHeightMm: 2.432746, baselineFromBodyTopMm: 5.749807,
+            anchorFromBodyLeftMm: 0.766269,
+          },
+        },
+      },
+    },
+  } as const;
+
+  it('deckt F.2.10 bis F.2.17 lückenlos ab und erreicht den Zählpunkt 118', () => {
+    const keys = Object.keys(RECIPES).filter((key) => /^F\.2\.(1[0-7])$/.test(key));
+    expect(keys).toEqual(Object.keys(expected));
+    expect(Object.keys(RECIPES)).toHaveLength(118);
+  });
+
+  it('bindet alle acht Darstellungen literal an Referenz, Kategorie, Marken und Label', () => {
+    expect(Object.fromEntries(
+      Object.entries<Recipe>(RECIPES).filter(([key]) => /^F\.2\.(1[0-7])$/.test(key)),
+    )).toEqual(expected);
+    for (const key of Object.keys(expected)) {
+      const recipe = recipes[key];
+      expect(recipe?.spec.strength, key).toBeUndefined();
+      expect(recipe?.spec.organization, key).toBe('hilfsorganisation');
+    }
+  });
+
+  it('hält das Fahrzeug-Fußband oberhalb der nur tangierenden Fahrwerkszone', () => {
+    for (const key of ['F.2.13', 'F.2.14', 'F.2.17'] as const) {
+      const recipe = recipes[key];
+      expect(recipe, key).toBeDefined();
+      if (recipe === undefined) continue;
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      const band = drawing.children.find((primitive) =>
+        primitive.type === 'rect' && primitive.role === 'pictogram' && primitive.y === 23,
+      );
+      expect(band, key).toMatchObject({ x: 1, y: 23, width: 30, height: 3 });
+      const wheels = drawing.children.filter(
+        (primitive): primitive is Extract<Primitive, { type: 'circle' }> =>
+          primitive.type === 'circle' && primitive.role === 'chassis',
+      );
+      expect(wheels, key).toHaveLength(2);
+      expect(wheels.every((wheel) => wheel.cy - wheel.r === 26), key).toBe(true);
+    }
+  });
+
+  it('zeichnet kombinierte Care- und Zusatzmarken ohne doppelte gemeinsam gedachte Primitive', () => {
+    for (const key of ['F.2.11', 'F.2.13', 'F.2.16', 'F.2.17'] as const) {
+      const recipe = recipes[key];
+      expect(recipe, key).toBeDefined();
+      if (recipe === undefined) continue;
+      const pictograms = composeFromCatalog(recipe.spec, recipe.title).children.filter(
+        (primitive) => primitive.role === 'pictogram',
+      );
+      const serialized = pictograms.map((primitive) => JSON.stringify(primitive));
+      expect(new Set(serialized).size, key).toBe(serialized.length);
+      expect(pictograms.filter((primitive) =>
+        primitive.type === 'polyline' && JSON.stringify(primitive.points) ===
+          JSON.stringify(key === 'F.2.13' || key === 'F.2.17'
+            ? [[1, 23], [16, 8], [31, 23]]
+            : [[1, 26], [16, 8], [31, 26]]),
+      ), key).toHaveLength(1);
+    }
+  });
 });
 
 describe('Anhang E, Teilslice E-c (E.1.29 bis E.1.37)', () => {

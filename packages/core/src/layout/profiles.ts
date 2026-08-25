@@ -141,15 +141,19 @@ const formationProfile: LayoutProfile = {
   bottomCenterBaselineFromBodyBottomMm: 2,
 };
 
-/** Das Kapitel-1-Landfahrzeug belegt keine obere Beschriftungszone. */
+/**
+ * F.2-Landfahrzeuge mit normaler oder gebänderter Hülle: obere Grundlinie 6,75 mm unter der
+ * Körperoberkante. Das Kapitel-1-Grundzeichen selbst trägt keinen Lauf; der Wert wird nur
+ * erreicht, wenn ein SymbolSpec die Zone ausdrücklich belegt.
+ */
 const vehicleLandProfile: LayoutProfile = {
   ...rectBody(8),
+  topLeftBaselineFromBodyTopMm: 6.75,
 };
 
 /** F.2-Landfahrzeuge: Grundlinie 12,5 mm und die zweizeilige F.2.8-Zone. */
 const plainWheelVehicleLandProfile: LayoutProfile = {
-  ...rectBody(8),
-  topLeftBaselineFromBodyTopMm: 6.75,
+  ...vehicleLandProfile,
   // F.2.8: Grundlinien 11,54/15,07 mm; gemeinsame Versalhöhe 2,43 mm.
   topLeftLines: { baselinesFromBodyTopMm: [5.79, 9.32], capHeightMm: 2.43 },
 };

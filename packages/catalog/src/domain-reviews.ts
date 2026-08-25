@@ -234,6 +234,18 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:F.2.7#primary': { status: 'pending' },
   'bbk-babz-2025:F.2.8#primary': { status: 'pending' },
   'bbk-babz-2025:F.2.9#primary': { status: 'pending' },
+  // Anhang F, Teilslice F-d: Die acht Betreuungsfahrzeuge verwenden die technisch vermessenen
+  // Fassungen aus F.2.10 bis F.2.17. Offen bleiben insbesondere die fachliche Bedeutung der
+  // Vierwegeform aus F.2.11, die Einordnung des verschobenen Rings aus F.2.16 und weiterhin die
+  // organisationssemantische Aussage der ausschließlich weißen Quelle.
+  'bbk-babz-2025:F.2.10#primary': { status: 'pending' },
+  'bbk-babz-2025:F.2.11#primary': { status: 'pending' },
+  'bbk-babz-2025:F.2.12#primary': { status: 'pending' },
+  'bbk-babz-2025:F.2.13#primary': { status: 'pending' },
+  'bbk-babz-2025:F.2.14#primary': { status: 'pending' },
+  'bbk-babz-2025:F.2.15#primary': { status: 'pending' },
+  'bbk-babz-2025:F.2.16#primary': { status: 'pending' },
+  'bbk-babz-2025:F.2.17#primary': { status: 'pending' },
   'bbk-babz-2025:2.1#primary': { status: 'pending' },
   // 2.2 seit LFH-424. Fachlich besonders zu prüfen: die Zuordnung „HiOrg = Hilfsorganisation" ist
   // aus dem gerasterten Bild abgelesen, nicht aus dem Dateinamen — der ist generisch

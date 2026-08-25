@@ -82,8 +82,11 @@ describe('Layoutprofile', () => {
   });
 
   it('führt die gemessenen F.2-Beschriftungszonen ausschließlich an ihren Fahrzeugprofilen', () => {
-    expect(profileFor('vehicle-land').topLeftBaselineFromBodyTopMm).toBeUndefined();
+    expect(profileFor('vehicle-land').topLeftBaselineFromBodyTopMm).toBe(6.75);
+    expect(profileFor('vehicle-land', 'foot-band').topLeftBaselineFromBodyTopMm).toBe(6.75);
     expect(profileFor('vehicle-land', 'plain-wheel-pair').topLeftBaselineFromBodyTopMm).toBe(6.75);
+    expect(profileFor('vehicle-land').topLeftLines).toBeUndefined();
+    expect(profileFor('vehicle-land', 'foot-band').topLeftLines).toBeUndefined();
     expect(profileFor('vehicle-land', 'plain-wheel-pair').topLeftLines).toEqual({
       baselinesFromBodyTopMm: [5.79, 9.32],
       capHeightMm: 2.43,
@@ -93,5 +96,6 @@ describe('Layoutprofile', () => {
     expect(profileFor('vehicle-air', 'raised-hull').aboveLeftAnchorFromBodyLeftMm).toBe(-0.01);
     expect(profileFor('formation').topLeftLines).toBeUndefined();
     expect(profileFor('formation').aboveLeftBaselineFromBodyTopMm).toBeUndefined();
+    expect(profileFor('trailer').topLeftBaselineFromBodyTopMm).toBeUndefined();
   });
 });

@@ -279,7 +279,8 @@ describe('Rasterevidenz für Text (resvgFontOptions())', () => {
     // Ausnahmen sind F.1.12#alternative, F.1.15, F.1.15#alternative und F.1.16.
     // **93 seit F-c:** acht der 14 Fahrzeugdarstellungen tragen mindestens einen Lauf; F.2.7
     // belegt die oberhalb liegende Zone und F.2.8 zwei getrennt gerasterte Textprimitive.
-    expect(labelRecipes).toHaveLength(93);
+    // F-d ergänzt sieben beschriftete Fahrzeuge; allein F.2.15 trägt keinen Lauf.
+    expect(labelRecipes).toHaveLength(100);
   });
 
   /**

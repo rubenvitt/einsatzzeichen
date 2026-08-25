@@ -548,6 +548,17 @@ const VARIANT_EXTRA_PRIMITIVES: Partial<
     ],
   },
   'vehicle-land': {
+    'foot-band': [
+      {
+        type: 'rect',
+        role: 'pictogram',
+        x: 1,
+        y: 23,
+        width: 30,
+        height: 3,
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+    ],
     'plain-wheel-pair': [
       {
         type: 'circle', role: 'bodyExtra', cx: 3.75, cy: 28.25, r: 2.25,
@@ -606,6 +617,7 @@ const VARIANT_BODIES: Partial<Record<SymbolKind, Partial<Record<BodyVariantId, P
     },
   },
   'vehicle-land': {
+    'foot-band': BODIES['vehicle-land']!,
     'plain-wheel-pair': BODIES['vehicle-land']!,
   },
 };
