@@ -34,6 +34,62 @@ describe('validateSpec', () => {
     expect(validateSpec({ kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-1' })).toEqual([]);
   });
 
+  it('lässt die oberhalb liegende F.2.7-Zone nur am Luftfahrzeug zu', () => {
+    expect(validateSpec({
+      kind: 'vehicle-air', bodyVariant: 'raised-hull', labels: { aboveLeft: 'ITH' },
+    })).toEqual([]);
+    expect(validateSpec({ kind: 'vehicle-air', labels: { aboveLeft: 'ITH' } })
+      .map((issue) => issue.rule)).toContain('above-left-label-requires-measured-body');
+    expect(validateSpec({ kind: 'formation', labels: { aboveLeft: 'ITH' } }).map((issue) => issue.rule))
+      .toContain('above-left-label-requires-measured-body');
+  });
+
+  it('lässt die zweizeilige F.2.8-Zone nur am Landfahrzeug zu', () => {
+    expect(validateSpec({
+      kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', labels: { topLeftLines: ['GW-San', '50'] },
+    }))
+      .toEqual([]);
+    expect(validateSpec({ kind: 'vehicle-land', labels: { topLeftLines: ['GW-San', '50'] } })
+      .map((issue) => issue.rule)).toContain('top-left-lines-require-measured-body');
+    expect(validateSpec({ kind: 'trailer', labels: { topLeftLines: ['GW-San', '50'] } })
+      .map((issue) => issue.rule)).toContain('top-left-lines-require-measured-body');
+  });
+
+  it('bindet beide F.2-Sonderzonen an das exakte Art-/Variantenpaar', () => {
+    expect(validateSpec({
+      kind: 'vehicle-land', bodyVariant: 'raised-hull',
+      labels: { topLeftLines: ['GW-San', '50'] },
+    }).map((issue) => issue.rule)).toContain('top-left-lines-require-measured-body');
+    expect(validateSpec({
+      kind: 'vehicle-air', bodyVariant: 'plain-wheel-pair', labels: { aboveLeft: 'ITH' },
+    }).map((issue) => issue.rule)).toContain('above-left-label-requires-measured-body');
+  });
+
+  it('lehnt überlagerte Fahrwerks- und Fußzonen an F.2-Körpervarianten ab', () => {
+    expect(validateSpec({
+      kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair',
+      vehicleCategory: 'kfz-kategorie-1',
+    }).map((issue) => issue.rule)).toContain('plain-wheel-pair-chassis-conflict');
+    expect(validateSpec({
+      kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', designation: 'Reserve',
+    }).map((issue) => issue.rule)).toContain('body-variant-foot-conflict');
+    expect(validateSpec({
+      kind: 'vehicle-air', bodyVariant: 'raised-hull', designation: 'RTH',
+    }).map((issue) => issue.rule)).toContain('body-variant-foot-conflict');
+  });
+
+  it('lehnt eine leere Einzelzeile der zweizeiligen Zone ab', () => {
+    expect(validateSpec({ kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', labels: { topLeftLines: ['GW-San', '  '] } })
+      .map((issue) => issue.rule)).toContain('label-not-blank');
+  });
+
+  it('verlangt auch zur Laufzeit exakt zwei Zeilen statt zusätzliche still zu verlieren', () => {
+    const invalid = ['GW-San', '50', 'Reserve'] as unknown as readonly [string, string];
+    expect(validateSpec({
+      kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', labels: { topLeftLines: invalid },
+    }).map((issue) => issue.rule)).toContain('top-left-lines-exactly-two');
+  });
+
   it.each(['vehicle-air', 'vehicle-water'] as const)(
     'lehnt eine Fahrzeugkategorie an "%s" ab',
     (kind) => {

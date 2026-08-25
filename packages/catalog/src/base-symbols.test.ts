@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { boundsOfMm, matchFingerprint, type BodyGeometryMode } from '@einsatzzeichen/core';
 import {
+  DEFAULT_STROKE_WIDTH_MM,
   TOLERANCE_UNITS,
   mmToUnits,
   type BodyVariantId,
@@ -337,6 +338,18 @@ describe('Körperformen des Anhangs E.2', () => {
       'E.2.27_Wasserfahrzeug allgemein.svg',
       'E.2.31_Mehrzweckponton.svg',
     ],
+    [
+      'vehicle-air',
+      'raised-hull',
+      'F.2.6_Rettungstransporthubschrauber mit Winschmöglichkeit.svg',
+      'F.2.7_Intensivtransporthubschrauber.svg',
+    ],
+    [
+      'vehicle-land',
+      'plain-wheel-pair',
+      'F.2.1_KTW.svg',
+      'F.2.8_Gerätewagen Sanitätsdienst.svg',
+    ],
   ] as const satisfies ReadonlyArray<
     [SymbolKind, BodyVariantId | undefined, string, string | undefined]
   >;
@@ -399,6 +412,40 @@ describe('Körperformen des Anhangs E.2', () => {
     expect(mmToUnits(chapterOne.maxY - raised.maxY)).toBeGreaterThan(TOLERANCE_UNITS);
   });
 
+  it('führt am angehobenen F.2-Luftkörper den Rotor als Grundzeichenextra und nicht als Chassis', () => {
+    const air = baseDrawing('vehicle-air', 'raised-hull');
+    expect(air.children.filter((child) => child.role === 'body')).toHaveLength(1);
+    const rotor = air.children.filter((child) => child.role === 'bodyExtra');
+    expect(rotor).toHaveLength(2);
+    expect(rotor).toEqual([
+      {
+        type: 'polyline', role: 'bodyExtra', closed: true,
+        points: [[9, 23], [16, 25], [9, 27]],
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+      {
+        type: 'polyline', role: 'bodyExtra', closed: true,
+        points: [[23, 23], [16, 25], [23, 27]],
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+    ]);
+  });
+
+  it('führt die zwei schlichten F.2-Radringe als neutrale Grundzeichenextras ohne Kategorie', () => {
+    const land = baseDrawing('vehicle-land', 'plain-wheel-pair');
+    expect(land.children[0]).toEqual(baseDrawing('vehicle-land').children[0]);
+    expect(land.children.slice(1)).toEqual([
+      {
+        type: 'circle', role: 'bodyExtra', cx: 3.75, cy: 28.25, r: 2.25,
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      {
+        type: 'circle', role: 'bodyExtra', cx: 28.25, cy: 28.25, r: 2.25,
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+    ]);
+  });
+
   it('ergänzt foot-band nur an formation und lässt den normalen Körper unverändert', () => {
     const normal = baseDrawing('formation');
     const footBand = baseDrawing('formation', 'foot-band');
@@ -424,6 +471,7 @@ describe('Körperformen des Anhangs E.2', () => {
     // beseitigt — ein E.2-Wasserfahrzeug auf dem Rumpf von 1.5 läge 1,0 mm zu tief.
     expect(() => baseDrawing('vehicle-land', 'raised-hull')).toThrow(/Körpervariante/);
     expect(() => baseDrawing('formation', 'raised-hull')).toThrow(/Körpervariante/);
+    expect(() => baseDrawing('vehicle-air', 'plain-wheel-pair')).toThrow(/Körpervariante/);
   });
 
   it('trägt die Zusatzprimitive der Grundzeichen mit', () => {

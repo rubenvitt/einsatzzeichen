@@ -36,9 +36,10 @@ export type SymbolKind =
 
 /**
  * Eine **zweite, in der Quelle belegte Zeichnung desselben Grundzeichens** — keine zweite
- * Grundzeichenart. Bisher gibt es genau eine.
+ * Grundzeichenart.
  *
- * `raised-hull` ist der Rumpf der fünf Wasserfahrzeuge `E.2.27` bis `E.2.31`. Gegenüber
+ * `raised-hull` ist eine an der jeweiligen Art separat vermessene angehobene Rumpfform. Am
+ * Wasserfahrzeug belegen sie die fünf Dateien `E.2.27` bis `E.2.31`. Gegenüber
  * `1.5_Wasserfahrzeug.svg` liegt er 1,0002 mm höher (Sehne auf y 7,9999 statt 9,0001) und ist um
  * den Faktor 0,999318 kleiner (Sehnenlänge 29,9794 gegen 29,9999 mm) — beides selbst vermessen.
  * Der Name beschreibt die **sichtbare** Differenz: die Anhebung, und die schafft genau den
@@ -50,10 +51,13 @@ export type SymbolKind =
  * `vehicle-water` nicht auf diese Maße geändert werden: es fiele dann gegen `1.5` um 2,8
  * Einheiten bei einer Toleranz von 0,01.
  *
- * Ob „raised-hull" der fachlich richtige Name ist, entscheidet die Datei nicht; die Geometrie ist
- * gemessen, die Benennung ist eine Entscheidung.
+ * F.2.6/F.2.7 belegen dieselbe Kennung am separat vermessenen, um 2 mm angehobenen
+ * Luftfahrzeugrumpf; die Kennung erlaubt keine Übertragung der Maße zwischen den Arten.
+ * `foot-band` bezeichnet die F.1-Formation mit schwarzem Fußband. `plain-wheel-pair` hält die
+ * zwei schlichten Radringe der elf F.2-Landdarstellungen getrennt von `vehicleCategory`: das Bild
+ * gleicht Kategorie 1, die Quelle belegt hier aber keine Kategorie-Semantik.
  */
-export type BodyVariantId = 'raised-hull' | 'foot-band';
+export type BodyVariantId = 'raised-hull' | 'foot-band' | 'plain-wheel-pair';
 
 /** Organisationen nach Kapitel 2. Bestimmen die Körperfarbe. */
 export type OrganizationId =
@@ -203,18 +207,20 @@ export const CAPABILITY_IDS = Object.freeze([
 export type CapabilityId = (typeof CAPABILITY_IDS)[number];
 
 /**
- * Rein geometrische Körpermarken ohne behauptete Kapitel-4-Bedeutung. Sie schließen genau die
- * drei zentralen F.1-Zeichnungen, deren sichtbare Form aus der Referenz messbar ist, deren
+ * Rein geometrische Körpermarken ohne behauptete Kapitel-4-Bedeutung. Sie schließen die
+ * zentralen F-Zeichnungen, deren sichtbare Form aus der Referenz messbar ist, deren
  * fachlicher Begriff aber nicht belegt ist. Die IDs beschreiben deshalb ausschließlich Maße und
  * Gestalt. Sie sind weder `CapabilityId` noch Ersatz für ein noch ausstehendes Domain-Review.
  *
- * Jede Fassung ist am 30 × 20-mm-Körper der taktischen Formation vermessen und muss in jedem
- * anderen Art-/Variantenkontext fail-closed ablehnen.
+ * Jede Fassung ist an genau einem Körper-/Variantenkontext vermessen und muss in jedem anderen
+ * Kontext fail-closed ablehnen. Die Kennung selbst behauptet keine Übertragbarkeit.
  */
 export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
   'ring-7mm-offset-down-1mm',
   'chevron-over-opposed-triangles',
   'ring-6-5mm-offset-down-2mm-with-roof',
+  'top-center-rect-0-5x0-6mm',
+  'air-winch-chevron-diamond',
 ] as const);
 
 export type TechnicalBodyMarkId = (typeof TECHNICAL_BODY_MARK_IDS)[number];
@@ -452,6 +458,16 @@ export interface BodyLabels {
    * deshalb endet die deklarierte Box erst an der rechten Innenmarge des Körpers.
    */
   readonly topLeft?: string;
+  /**
+   * Linksbündiger Lauf vollständig oberhalb der Körperhülle. Belegt an F.2.7: `ITH` endet auf
+   * Grundlinie y = 6 mm, zwei Millimeter oberhalb des Luftfahrzeugrumpfs aus Kapitel 1.
+   */
+  readonly aboveLeft?: string;
+  /**
+   * Zwei linksbündige Läufe im oberen linken Körperfeld. Belegt nur an F.2.8 (`GW-San` / `50`)
+   * mit getrennten Grundlinien und kleinerem, gemeinsam vermessenem Schriftgrad.
+   */
+  readonly topLeftLines?: readonly [string, string];
   /**
    * Die **vierte** Zone, und die einzige **außerhalb** des Körpers: rechtsbündig unterhalb seiner
    * Unterkante, in der Organisationsfarbe statt in Weiß. Belegt an den fünf Wasserfahrzeugen

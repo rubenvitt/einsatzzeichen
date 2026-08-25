@@ -1,4 +1,4 @@
-import type { Primitive, SymbolKind } from '@einsatzzeichen/schema';
+import type { BodyVariantId, Primitive, SymbolKind } from '@einsatzzeichen/schema';
 import { boundsOfMm, shiftY } from '../bounds.js';
 
 /**
@@ -70,6 +70,15 @@ export interface LayoutProfile {
    * Teilslice F-c sie einträgt, und nicht als stille Miterbschaft dieser.
    */
   topLeftBaselineFromBodyTopMm?: number;
+  /** Grundlinie eines linksbündigen Laufs oberhalb des Körpers, gegen dessen Oberkante. */
+  aboveLeftBaselineFromBodyTopMm?: number;
+  /** Waagerechter Anker des oberhalb liegenden Laufs relativ zur linken Körperhüllenkante. */
+  aboveLeftAnchorFromBodyLeftMm?: number;
+  /** Zwei gemeinsam vermessene obere Läufe mit ihren Grundlinien und ihrer Versalhöhe. */
+  topLeftLines?: {
+    readonly baselinesFromBodyTopMm: readonly [number, number];
+    readonly capHeightMm: number;
+  };
   /**
    * Grundlinie des unten mittigen Laufs, gerechnet von der Körperunterkante nach oben. Bisher
    * allein an F.1.18 und F.1.20 auf der taktischen Formation gemessen.
@@ -130,6 +139,31 @@ const formationProfile: LayoutProfile = {
   ...rectBody(8),
   topLeftBaselineFromBodyTopMm: 5,
   bottomCenterBaselineFromBodyBottomMm: 2,
+};
+
+/** Das Kapitel-1-Landfahrzeug belegt keine obere Beschriftungszone. */
+const vehicleLandProfile: LayoutProfile = {
+  ...rectBody(8),
+};
+
+/** F.2-Landfahrzeuge: Grundlinie 12,5 mm und die zweizeilige F.2.8-Zone. */
+const plainWheelVehicleLandProfile: LayoutProfile = {
+  ...rectBody(8),
+  topLeftBaselineFromBodyTopMm: 6.75,
+  // F.2.8: Grundlinien 11,54/15,07 mm; gemeinsame Versalhöhe 2,43 mm.
+  topLeftLines: { baselinesFromBodyTopMm: [5.79, 9.32], capHeightMm: 2.43 },
+};
+
+/** Das Kapitel-1-Luftfahrzeug belegt keine Beschriftungszone. */
+const vehicleAirProfile: LayoutProfile = {
+  ...rectBody(8),
+};
+
+/** F.2.6/F.2.7: dieselbe absolute ITH-Grundlinie y=6 am auf y=6 angehobenen Rumpf. */
+const raisedVehicleAirProfile: LayoutProfile = {
+  ...rectBody(8),
+  aboveLeftBaselineFromBodyTopMm: 0,
+  aboveLeftAnchorFromBodyLeftMm: -0.01,
 };
 
 /**
@@ -224,8 +258,8 @@ const PROFILES: Record<SymbolKind, LayoutProfile> = {
   'swap-loader-vehicle': rectBody(7.5),
   // 12,9999 gemessen an E.2.26 (Grundlinie 17,0000 bei Körperunterkante 29,9999) — n = 1.
   'upright-rectangle': rectBody(13),
-  'vehicle-land': rectBodyProfile,
-  'vehicle-air': rectBodyProfile,
+  'vehicle-land': vehicleLandProfile,
+  'vehicle-air': vehicleAirProfile,
   // 6,9896 gemessen an E.2.28 bis E.2.31 (Grundlinie 16,0002 bei Körperunterkante 22,9898).
   // Gilt hier für **beide** Zeichnungen der Art: der Rumpf aus Kapitel 1 trägt im gesamten
   // Bestand keinen mittigen Lauf, für ihn ist keine der beiden Zahlen gemessen.
@@ -242,6 +276,10 @@ const PROFILES: Record<SymbolKind, LayoutProfile> = {
   post: circleBodyProfile,
 };
 
-export function profileFor(kind: SymbolKind): LayoutProfile {
+export function profileFor(kind: SymbolKind, variant?: BodyVariantId): LayoutProfile {
+  if (kind === 'vehicle-air' && variant === 'raised-hull') return raisedVehicleAirProfile;
+  if (kind === 'vehicle-land' && variant === 'plain-wheel-pair') {
+    return plainWheelVehicleLandProfile;
+  }
   return PROFILES[kind];
 }

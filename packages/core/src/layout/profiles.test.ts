@@ -80,4 +80,18 @@ describe('Layoutprofile', () => {
     expect(profileFor('person').id).toBe('rotated-square-body');
     expect(profileFor('post').id).toBe('circle-body');
   });
+
+  it('führt die gemessenen F.2-Beschriftungszonen ausschließlich an ihren Fahrzeugprofilen', () => {
+    expect(profileFor('vehicle-land').topLeftBaselineFromBodyTopMm).toBeUndefined();
+    expect(profileFor('vehicle-land', 'plain-wheel-pair').topLeftBaselineFromBodyTopMm).toBe(6.75);
+    expect(profileFor('vehicle-land', 'plain-wheel-pair').topLeftLines).toEqual({
+      baselinesFromBodyTopMm: [5.79, 9.32],
+      capHeightMm: 2.43,
+    });
+    expect(profileFor('vehicle-air').aboveLeftBaselineFromBodyTopMm).toBeUndefined();
+    expect(profileFor('vehicle-air', 'raised-hull').aboveLeftBaselineFromBodyTopMm).toBe(0);
+    expect(profileFor('vehicle-air', 'raised-hull').aboveLeftAnchorFromBodyLeftMm).toBe(-0.01);
+    expect(profileFor('formation').topLeftLines).toBeUndefined();
+    expect(profileFor('formation').aboveLeftBaselineFromBodyTopMm).toBeUndefined();
+  });
 });

@@ -2,9 +2,9 @@ import type { BoundsMm } from '@einsatzzeichen/core';
 import {
   CAPABILITY_IDS,
   DEFAULT_STROKE_WIDTH_MM,
+  TECHNICAL_BODY_MARK_IDS,
   type BodyMarkId,
   type BodyVariantId,
-  type CapabilityId,
   type Primitive,
   type SymbolKind,
 } from '@einsatzzeichen/schema';
@@ -46,8 +46,6 @@ import {
  * Ein stilles Weiterrechnen dieser Zahlen auf eine andere Hülle behauptete eine Messung, die es
  * nicht gibt.
  */
-const MEASURED_BODY_WIDTH_MM = 30;
-const MEASURED_BODY_HEIGHT_MM = 20;
 const BODY_TOLERANCE_MM = 0.01;
 
 function stroke(x1: number, y1: number, x2: number, y2: number): Primitive {
@@ -433,13 +431,142 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
   },
 };
 
+function outline(points: readonly (readonly [number, number])[]): Primitive {
+  return {
+    type: 'polyline',
+    role: 'pictogram',
+    points,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  };
+}
+
+function landQuartering(bounds: BoundsMm): Primitive[] {
+  const cx = (bounds.minX + bounds.maxX) / 2;
+  return [
+    stroke(cx, bounds.minY + 2.25, cx, bounds.maxY),
+    stroke(bounds.minX, bounds.maxY - 10, bounds.maxX, bounds.maxY - 10),
+  ];
+}
+
+function landPatientTransport(bounds: BoundsMm): Primitive[] {
+  const cx = (bounds.minX + bounds.maxX) / 2;
+  const cy = bounds.maxY - 10;
+  const radiusMm = 5;
+  const diagonalMm = radiusMm / Math.SQRT2;
+  return [
+    ...landQuartering(bounds),
+    {
+      type: 'circle',
+      role: 'pictogram',
+      cx,
+      cy,
+      r: radiusMm,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+    stroke(cx - diagonalMm, cy - diagonalMm, cx + diagonalMm, cy + diagonalMm),
+    stroke(cx + diagonalMm, cy - diagonalMm, cx - diagonalMm, cy + diagonalMm),
+  ];
+}
+
+const VEHICLE_LAND_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
+  'medical-service': landQuartering,
+  physician: (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    return [...landQuartering(bounds), stroke(cx - 4, bounds.maxY - 4, cx + 4, bounds.maxY - 4)];
+  },
+  'intensive-care': (bounds) => {
+    const cy = bounds.maxY - 10;
+    return [...landQuartering(bounds), stroke(bounds.maxX - 5.5, cy - 4, bounds.maxX - 5.5, cy + 4)];
+  },
+  'patient-transport': landPatientTransport,
+  'top-center-rect-0-5x0-6mm': (bounds) => [{
+    type: 'rect',
+    role: 'pictogram',
+    x: (bounds.minX + bounds.maxX) / 2 - 0.25,
+    y: bounds.minY + 2.5,
+    width: 0.5,
+    height: 0.6,
+    style: { fill: 'schwarz', stroke: 'none' },
+  }],
+};
+
+function airQuartering(bounds: BoundsMm): Primitive[] {
+  const cx = (bounds.minX + bounds.maxX) / 2;
+  const cy = bounds.maxY;
+  const radiusMm = (bounds.maxX - bounds.minX) / 2;
+  const horizontalYMm = bounds.minY + 8;
+  const halfChordMm = Math.sqrt(radiusMm ** 2 - (horizontalYMm - cy) ** 2);
+  return [
+    stroke(cx, bounds.minY, cx, bounds.maxY),
+    stroke(
+      Number((cx - halfChordMm).toFixed(2)),
+      horizontalYMm,
+      Number((cx + halfChordMm).toFixed(2)),
+      horizontalYMm,
+    ),
+  ];
+}
+
+const VEHICLE_AIR_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
+  'medical-service': airQuartering,
+  physician: (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    return [...airQuartering(bounds), stroke(cx - 4, bounds.minY + 11.75, cx + 4, bounds.minY + 11.75)];
+  },
+  'air-winch-chevron-diamond': (bounds) => {
+    const dxMm = bounds.minX - 1.01;
+    const dyMm = bounds.minY - 6;
+    const shifted = (points: readonly (readonly [number, number])[]) =>
+      points.map(([xMm, yMm]) => [xMm + dxMm, yMm + dyMm] as const);
+    return [
+      stroke(24 + dxMm, 9.65 + dyMm, 24 + dxMm, 15.9 + dyMm),
+      outline(shifted([[21.82, 11.82], [24, 9.65], [26.18, 11.82]])),
+      outline(shifted([[24, 15.9], [26.35, 18], [24, 19.65], [21.65, 18], [24, 15.9]])),
+    ];
+  },
+};
+
+const TRAILER_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
+  'medical-service': (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    const cy = bounds.maxY - 9;
+    return [
+      stroke(cx, bounds.minY + 2.25, cx, bounds.maxY),
+      stroke(bounds.minX, cy, bounds.maxX, cy),
+      {
+        type: 'circle',
+        role: 'pictogram',
+        cx,
+        cy,
+        r: 5.5,
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+    ];
+  },
+};
+
 export function bodyMark(
   id: BodyMarkId,
   context: { kind: SymbolKind; bodyVariant?: BodyVariantId },
   bodyBoundsMm: BoundsMm,
 ): readonly Primitive[] {
-  const build = MARKS[id];
-  if (build === undefined) {
+  const build = context.kind === 'formation'
+    ? context.bodyVariant === undefined && id !== 'catering'
+      ? MARKS[id]
+      : context.bodyVariant === 'foot-band' &&
+          (id === 'care' || id === 'temporary-accommodation-resting' || id === 'catering')
+        ? MARKS[id]
+        : undefined
+    : context.kind === 'vehicle-land' && context.bodyVariant === 'plain-wheel-pair'
+      ? VEHICLE_LAND_MARKS[id]
+      : context.kind === 'vehicle-air' && context.bodyVariant === 'raised-hull'
+        ? VEHICLE_AIR_MARKS[id]
+        : context.kind === 'trailer' && context.bodyVariant === undefined
+          ? TRAILER_MARKS[id]
+          : undefined;
+  const hasAnyBuild = [MARKS, VEHICLE_LAND_MARKS, VEHICLE_AIR_MARKS, TRAILER_MARKS]
+    .some((candidate) => Object.hasOwn(candidate, id));
+  if (!hasAnyBuild) {
     throw new Error(
       `Für die Fähigkeit "${id}" ist keine randbündige Fassung vermessen. Sie fällt nicht auf ` +
         'die Boxfassung zurück: beide Zeichnungen unterscheiden sich in ihren Maßen und nicht ' +
@@ -447,14 +574,7 @@ export function bodyMark(
     );
   }
 
-  const isMeasuredNormalFormation =
-    context.kind === 'formation' && context.bodyVariant === undefined && id !== 'catering';
-  const isMeasuredFootBandFormation =
-    context.kind === 'formation' &&
-    context.bodyVariant === 'foot-band' &&
-    (id === 'care' || id === 'temporary-accommodation-resting' || id === 'catering');
-  const isMeasuredContext = isMeasuredNormalFormation || isMeasuredFootBandFormation;
-  if (!isMeasuredContext) {
+  if (build === undefined) {
     const variant = context.bodyVariant ?? 'normal';
     throw new Error(
       `Das Art-/Varianten-/Fähigkeitspaar ${context.kind}/${variant}/${id} ist nicht vermessen. ` +
@@ -464,15 +584,22 @@ export function bodyMark(
 
   const widthMm = bodyBoundsMm.maxX - bodyBoundsMm.minX;
   const heightMm = bodyBoundsMm.maxY - bodyBoundsMm.minY;
+  const expected = context.kind === 'formation'
+    ? { width: 30, height: 20, label: '30 × 20 mm' }
+    : context.kind === 'vehicle-land'
+      ? { width: 30, height: 20.25, label: '30 × 20,25 mm' }
+    : context.kind === 'vehicle-air'
+        ? { width: 29.98, height: 14.99, label: '29,98 × 14,99 mm' }
+        : { width: 27, height: 20.25, label: '27 × 20,25 mm' };
   if (
-    Math.abs(widthMm - MEASURED_BODY_WIDTH_MM) > BODY_TOLERANCE_MM ||
-    Math.abs(heightMm - MEASURED_BODY_HEIGHT_MM) > BODY_TOLERANCE_MM
+    Math.abs(widthMm - expected.width) > BODY_TOLERANCE_MM ||
+    Math.abs(heightMm - expected.height) > BODY_TOLERANCE_MM
   ) {
     throw new Error(
-      `Randbündige Fachdienstzeichen sind bisher nur am Rechteckkörper 30 × 20 mm der taktischen ` +
-        `Formation vermessen (Anhang F.1). Diese Hülle misst ${widthMm.toFixed(3)} × ` +
+      `Randbündige Fachdienstzeichen für "${context.kind}" sind nur an der Hülle ` +
+        `${expected.label} vermessen. Diese Hülle misst ${widthMm.toFixed(3)} × ` +
         `${heightMm.toFixed(3)} mm; ihre Leisten- und Ringmaße sind eigene Messungen und werden ` +
-        'nicht aus den F.1-Zahlen fortgeschrieben.',
+        'nicht aus einer anderen Körperart fortgeschrieben.',
     );
   }
 
@@ -507,6 +634,8 @@ export function bodyMark(
  * eine Behauptung über eine Deklarationsreihenfolge, die niemand pflegt — so ist sie strukturell
  * erzwungen und überlebt jede weitere Marke, an welcher Stelle der Datei sie auch landet.
  */
-export const BODY_MARK_IDS: readonly CapabilityId[] = Object.freeze(
-  CAPABILITY_IDS.filter((id) => Object.hasOwn(MARKS, id)),
+export const BODY_MARK_IDS: readonly BodyMarkId[] = Object.freeze(
+  [...CAPABILITY_IDS, ...TECHNICAL_BODY_MARK_IDS].filter((id) =>
+    [MARKS, VEHICLE_LAND_MARKS, VEHICLE_AIR_MARKS, TRAILER_MARKS]
+      .some((registry) => Object.hasOwn(registry, id))),
 );

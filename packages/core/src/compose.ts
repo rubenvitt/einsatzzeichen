@@ -351,10 +351,10 @@ export function bodyLabelInk(bodyFill: ColorToken): ColorToken {
 }
 
 /**
- * Die Beschriftungen der sechs Zonen, gegen die Hülle des platzierten Körpers gerechnet. Die
- * Läufe **im** Körper tragen die aus der Körperfüllung abgeleitete Tinte (`bodyLabelInk`), der
- * Lauf **unter** dem Körper die Organisationsfarbe. Beide sind auf einen Kontrastvertrag
- * angewiesen; der steht im A11y-Gate des Katalogs.
+ * Die Beschriftungszonen gegen die Hülle des platzierten Körpers gerechnet. Läufe **im** Körper
+ * tragen die aus der Körperfüllung abgeleitete Tinte (`bodyLabelInk`). `aboveLeft` steht dagegen
+ * schwarz auf der Ausgabeoberfläche, `belowRight` trägt dort die Organisationsfarbe. Alle drei
+ * Nachbarschaften stehen im Kontrastvertrag des Katalogs.
  */
 function labelPrimitives(
   labels: NonNullable<SymbolSpec['labels']>,
@@ -363,6 +363,12 @@ function labelPrimitives(
   belowRightFill: ColorToken | null,
   centerBaselineFromBodyBottomMm: number,
   topLeftBaselineFromBodyTopMm: number | undefined,
+  aboveLeftBaselineFromBodyTopMm: number | undefined,
+  aboveLeftAnchorFromBodyLeftMm: number | undefined,
+  topLeftLines: {
+    readonly baselinesFromBodyTopMm: readonly [number, number];
+    readonly capHeightMm: number;
+  } | undefined,
   bottomCenterBaselineFromBodyBottomMm: number | undefined,
   ink: ColorToken,
 ): Primitive[] {
@@ -390,6 +396,28 @@ function labelPrimitives(
         centerBoxRightMm - centerBoxLeftMm,
         viewBoxWidthMm,
         ink,
+      ),
+    );
+  }
+  if (labels.aboveLeft !== undefined) {
+    if (
+      aboveLeftBaselineFromBodyTopMm === undefined ||
+      aboveLeftAnchorFromBodyLeftMm === undefined
+    ) {
+      throw new Error('Die Zone "aboveLeft" ist an dieser Körperform nicht vermessen.');
+    }
+    const anchorXMm = bodyBoundsMm.minX + aboveLeftAnchorFromBodyLeftMm;
+    primitives.push(
+      labelPrimitive(
+        labels.aboveLeft,
+        BOTTOM_LABEL_SIZE_MM,
+        bodyBoundsMm.minY + aboveLeftBaselineFromBodyTopMm,
+        'start',
+        anchorXMm,
+        anchorXMm,
+        rightMm - anchorXMm,
+        viewBoxWidthMm,
+        'schwarz',
       ),
     );
   }
@@ -423,6 +451,35 @@ function labelPrimitives(
         ink,
       ),
     );
+  }
+  if (labels.topLeftLines !== undefined) {
+    if (topLeftLines === undefined) {
+      throw new Error('Die Zone "topLeftLines" ist an dieser Körperform nicht vermessen.');
+    }
+    if (labels.topLeftLines.length !== 2) {
+      throw new Error('Die Zone "topLeftLines" muss exakt zwei nichtleere Zeilen enthalten.');
+    }
+    const anchorXMm = bodyBoundsMm.minX + TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM;
+    const sizeMm = centerLabelSizeMm(topLeftLines.capHeightMm);
+    for (const [index, content] of labels.topLeftLines.entries()) {
+      const baseline = topLeftLines.baselinesFromBodyTopMm[index];
+      if (baseline === undefined) {
+        throw new Error('Unreachable: exakt zweizeilige Zone ohne vermessene Grundlinie.');
+      }
+      primitives.push(
+        labelPrimitive(
+          content,
+          sizeMm,
+          bodyBoundsMm.minY + baseline,
+          'start',
+          anchorXMm,
+          anchorXMm,
+          rightMm - anchorXMm,
+          viewBoxWidthMm,
+          ink,
+        ),
+      );
+    }
   }
   if (labels.bottomLeft !== undefined) {
     primitives.push(
@@ -506,6 +563,11 @@ function labelPrimitives(
 }
 
 /** Zugriffe auf den Katalog. Als Ports übergeben, damit core nicht von catalog abhängt. */
+export interface BodyMarkContext {
+  readonly kind: SymbolKind;
+  readonly bodyVariant?: BodyVariantId;
+}
+
 export interface CatalogPorts {
   /**
    * Die Zeichnung des Grundzeichens — **alle** ihre Primitive, nicht nur der Körper. Neben ihm
@@ -545,7 +607,7 @@ export interface CatalogPorts {
    */
   bodyMark(
     id: BodyMarkId,
-    context: { kind: SymbolKind; bodyVariant?: BodyVariantId },
+    context: BodyMarkContext,
     bodyBoundsMm: BoundsMm,
   ): readonly Primitive[];
 }
@@ -647,7 +709,7 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
   // dieses Projekt.
   const extras = base.children.filter((child) => child !== body);
 
-  const profile = profileFor(spec.kind);
+  const profile = profileFor(spec.kind, spec.bodyVariant);
   const headShape = spec.strength !== undefined ? catalog.strengthHead(spec.strength) : null;
 
   // Dieselbe Kopfzone sitzt je nach Körperform unterschiedlich hoch — deshalb
@@ -839,6 +901,9 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
         spec.organization !== undefined ? catalog.organizationColor(spec.organization) : null,
         profile.centerBaselineFromBodyBottomMm,
         profile.topLeftBaselineFromBodyTopMm,
+        profile.aboveLeftBaselineFromBodyTopMm,
+        profile.aboveLeftAnchorFromBodyLeftMm,
+        profile.topLeftLines,
         profile.bottomCenterBaselineFromBodyBottomMm,
         bodyLabelInk(bodyFill),
       )

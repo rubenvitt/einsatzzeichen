@@ -14,6 +14,14 @@ const formationBody: Primitive = {
   height: 20,
 };
 
+/** Gemessene Hüllen der beiden F.2-Fahrzeugkörper; die Form selbst ist für diese Porttests egal. */
+const vehicleLandBody: Primitive = {
+  type: 'rect', role: 'body', x: 1, y: 5.75, width: 30, height: 20.25,
+};
+const vehicleAirBody: Primitive = {
+  type: 'rect', role: 'body', x: 1.01, y: 6, width: 29.98, height: 14.99,
+};
+
 /**
  * Der Gebäudekörper, wie `base-symbols.ts` ihn führt (Hülle 1/3 bis 31/26 mm). Er steht hier,
  * weil er die einzige Körperform des Bestands ist, an der die beiden Lesarten der mittigen
@@ -395,6 +403,14 @@ const e2Catalog: CatalogPorts = {
   }),
 };
 
+const f2Catalog: CatalogPorts = {
+  ...e2Catalog,
+  baseDrawing: (kind) => ({
+    viewBox: DEFAULT_VIEWBOX_MM,
+    children: [kind === 'vehicle-air' ? vehicleAirBody : vehicleLandBody],
+  }),
+};
+
 describe('compose() — Zusatzgeometrie des Grundzeichens', () => {
   it('trägt die Nicht-Körper-Primitive des Grundzeichens mit', () => {
     // Bis zum Teilslice E.2 nahm `compose()` allein den Körper: eine Deichsel oder ein L-Rahmen
@@ -693,6 +709,62 @@ describe('compose() — Beschriftungszone oben links', () => {
       catalog,
     );
     expect(checkViewBox(drawing)).toEqual([]);
+  });
+
+  it('setzt das Landfahrzeugkürzel auf die um 6,75 mm versetzte Grundlinie', () => {
+    const drawing = compose(
+      { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', labels: { topLeft: 'KTW' }, bodyMarks: ['medical-service'] },
+      {
+        ...f2Catalog,
+        bodyMark: (_id, context, bounds) => {
+          expect(context).toEqual({ kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' });
+          expect(bounds).toEqual({ minX: 1, minY: 5.75, maxX: 31, maxY: 26 });
+          return [];
+        },
+      },
+    );
+    const label = drawing.children.find((child) => child.role === 'label');
+    expect(label).toMatchObject({ type: 'text', content: 'KTW', x: 2.5, y: 12.5 });
+  });
+});
+
+describe('compose() — die beiden expliziten F.2-Sonderzonen', () => {
+  it('setzt ITH oberhalb des Luftfahrzeugkörpers statt in eine Seitenzone', () => {
+    const drawing = compose(
+      { kind: 'vehicle-air', bodyVariant: 'raised-hull', labels: { aboveLeft: 'ITH' } },
+      f2Catalog,
+    );
+    const label = drawing.children.find((child) => child.role === 'label');
+    expect(label).toMatchObject({
+      type: 'text', content: 'ITH', anchor: 'start', x: 1, y: 6,
+      style: { fill: 'schwarz' },
+    });
+    expect(checkViewBox(drawing)).toEqual([]);
+  });
+
+  it('setzt GW-San und 50 als zwei linksbündige Läufe auf getrennte Grundlinien', () => {
+    const drawing = compose(
+      { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', labels: { topLeftLines: ['GW-San', '50'] } },
+      f2Catalog,
+    );
+    const labels = drawing.children.filter((child) => child.role === 'label');
+    expect(labels).toMatchObject([
+      { type: 'text', content: 'GW-San', anchor: 'start', x: 2.5, y: 11.54 },
+      { type: 'text', content: '50', anchor: 'start', x: 2.5, y: 15.07 },
+    ]);
+    expect(labels).toHaveLength(2);
+    expect(checkViewBox(drawing)).toEqual([]);
+  });
+
+  it('verschluckt bei einem Runtime-Vertragsbruch keine dritte Zeile', () => {
+    const invalid = ['GW-San', '50', 'Reserve'] as unknown as readonly [string, string];
+    expect(() => compose(
+      {
+        kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair',
+        labels: { topLeftLines: invalid },
+      },
+      f2Catalog,
+    )).toThrow(/exakt zwei/);
   });
 });
 

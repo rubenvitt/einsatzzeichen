@@ -130,6 +130,33 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
       .toBeCloseTo(4.542, 3);
   });
 
+  it('trennt den oberhalb liegenden F.2-Lauf von zweizeiligem Text im Körper', () => {
+    const derived = labelContrastRequirements([
+      {
+        title: 'ITH',
+        referenceAsset: 'F.2.7_Intensivtransporthubschrauber.svg',
+        spec: { kind: 'vehicle-air', bodyVariant: 'raised-hull', organization: 'hilfsorganisation', labels: { aboveLeft: 'ITH' } },
+      },
+      {
+        title: 'GW-San',
+        referenceAsset: 'F.2.8_Gerätewagen Sanitätsdienst.svg',
+        spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', labels: { topLeftLines: ['GW-San', '50'] } },
+      },
+    ]);
+    expect(derived).toContainEqual({
+      foreground: 'schwarz',
+      background: 'weiss',
+      context: 'Beschriftung im Körper auf Organisation hilfsorganisation',
+      minimum: MINIMUM_TEXT_CONTRAST,
+    });
+    expect(derived).toContainEqual({
+      foreground: 'schwarz',
+      background: 'surface',
+      context: 'Beschriftung oberhalb des Körpers auf der Ausgabeoberfläche',
+      minimum: MINIMUM_TEXT_CONTRAST,
+    });
+  });
+
   it('hält weiss auf orange als entschiedene Ausnahme fest, die kein Theme löst', () => {
     // **Diese Zeile hat ihre Rolle gewechselt, nicht ihre Zahlen.** Bis zum 18. August 2026 hielt
     // sie einen offenen Punkt fest und E.2.6 blieb ungebaut. Seither ist entschieden (Nutzer,

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { describePictogram, describeSymbolSpec } from './labels.js';
+import { TECHNICAL_BODY_MARK_IDS } from '@einsatzzeichen/schema';
+import {
+  describePictogram,
+  describeSymbolSpec,
+  TECHNICAL_BODY_MARK_LABELS,
+} from './labels.js';
 import { pictogram } from './pictograms/index.js';
 
 describe('semantische Zeichenbeschreibungen', () => {
@@ -45,6 +50,27 @@ describe('semantische Zeichenbeschreibungen', () => {
     expect(description).toContain('Kürzel: MzGW Lbw');
     expect(description).not.toContain('3.4099');
     expect(description).not.toMatch(/\d+\.\d+/);
+  });
+
+  it('liest die oberhalb liegende und die zweizeilige Fahrzeugbeschriftung vollständig vor', () => {
+    expect(describeSymbolSpec({ kind: 'vehicle-air', labels: { aboveLeft: 'ITH' } }))
+      .toContain('Kürzel oberhalb: ITH');
+    expect(describeSymbolSpec({ kind: 'vehicle-land', labels: { topLeftLines: ['GW-San', '50'] } }))
+      .toContain('Kürzel zweizeilig: GW-San / 50');
+  });
+
+  it('beschreibt jede technische Körpermarke aus einer erschöpfenden neutralen Metadatenmap', () => {
+    expect(Object.keys(TECHNICAL_BODY_MARK_LABELS).sort()).toEqual(
+      [...TECHNICAL_BODY_MARK_IDS].sort(),
+    );
+    expect(describeSymbolSpec({
+      kind: 'vehicle-air', bodyVariant: 'raised-hull',
+      bodyMarks: ['air-winch-chevron-diamond'],
+    })).toContain('Technische Körpermarke: Winschform aus Pfeilwinkel und Raute');
+    expect(describeSymbolSpec({
+      kind: 'vehicle-air', bodyVariant: 'raised-hull',
+      bodyMarks: ['air-winch-chevron-diamond'],
+    })).not.toContain('Fachdienst:');
   });
 
   it('beschreibt ein eigenständiges Piktogramm aus seiner Definition', () => {

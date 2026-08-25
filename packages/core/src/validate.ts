@@ -78,6 +78,30 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
     });
   }
 
+  if (spec.bodyVariant === 'plain-wheel-pair' && spec.vehicleCategory !== undefined) {
+    issues.push({
+      rule: 'plain-wheel-pair-chassis-conflict',
+      message:
+        'Die Variante plain-wheel-pair zeichnet bereits zwei vermessene Radringe. Eine ' +
+        'Fahrzeugkategorie würde eine zweite, nicht belegte Fahrwerksgeometrie darüberlegen.',
+    });
+  }
+
+  if (
+    spec.designation !== undefined &&
+    (
+      (spec.kind === 'vehicle-land' && spec.bodyVariant === 'plain-wheel-pair') ||
+      (spec.kind === 'vehicle-air' && spec.bodyVariant === 'raised-hull')
+    )
+  ) {
+    issues.push({
+      rule: 'body-variant-foot-conflict',
+      message:
+        'Die sichtbare Zusatzgeometrie dieser Körpervariante belegt den Streifen unterhalb des ' +
+        'Körpers. Eine Bezeichnung in der Fußzone würde sie überlagern oder die viewBox verlassen.',
+    });
+  }
+
   // Verwaltungsstufen sind vermessen, aber nicht gebaut: `compose()` liest für die Kopfzone
   // ausschließlich `spec.strength`, und `CatalogPorts` kennt keine Marken für Verwaltungsstufen.
   // Ohne diese Regel liefert `validateSpec` für `{kind:'formation', administrativeLevel:'kreis'}`
@@ -161,7 +185,7 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
   // (dessen Kante läuft dort erst ab 5,286 mm).
   if (
     spec.labels?.topLeft !== undefined &&
-    profileFor(spec.kind).topLeftBaselineFromBodyTopMm === undefined
+    profileFor(spec.kind, spec.bodyVariant).topLeftBaselineFromBodyTopMm === undefined
   ) {
     issues.push({
       rule: 'top-left-label-requires-measured-body',
@@ -174,8 +198,39 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
   }
 
   if (
+    spec.labels?.aboveLeft !== undefined &&
+    profileFor(spec.kind, spec.bodyVariant).aboveLeftBaselineFromBodyTopMm === undefined
+  ) {
+    issues.push({
+      rule: 'above-left-label-requires-measured-body',
+      message:
+        'Die Beschriftungszone oberhalb links ist allein am Luftfahrzeug aus F.2.7 vermessen. ' +
+        `Für "${spec.kind}" gibt es keine Messung, aus der ihre Lage folgte.`,
+    });
+  }
+
+  if (
+    spec.labels?.topLeftLines !== undefined &&
+    profileFor(spec.kind, spec.bodyVariant).topLeftLines === undefined
+  ) {
+    issues.push({
+      rule: 'top-left-lines-require-measured-body',
+      message:
+        'Die zweizeilige obere Beschriftungszone ist allein am Landfahrzeug aus F.2.8 ' +
+        `vermessen. Für "${spec.kind}" gibt es keine Messung, aus der ihre Lage folgte.`,
+    });
+  }
+
+  if (spec.labels?.topLeftLines !== undefined && spec.labels.topLeftLines.length !== 2) {
+    issues.push({
+      rule: 'top-left-lines-exactly-two',
+      message: 'Die zweizeilige obere Beschriftungszone muss exakt zwei Zeilen enthalten.',
+    });
+  }
+
+  if (
     spec.labels?.bottomCenter !== undefined &&
-    profileFor(spec.kind).bottomCenterBaselineFromBodyBottomMm === undefined
+    profileFor(spec.kind, spec.bodyVariant).bottomCenterBaselineFromBodyBottomMm === undefined
   ) {
     issues.push({
       rule: 'bottom-center-label-requires-measured-body',
@@ -231,6 +286,16 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
         rule: 'label-not-blank',
         message: `Die Beschriftungszone "${zone}" darf nicht leer oder nur aus Leerzeichen bestehen.`,
       });
+    }
+    if (Array.isArray(value)) {
+      for (const line of value) {
+        if (typeof line === 'string' && line.trim() === '') {
+          issues.push({
+            rule: 'label-not-blank',
+            message: `Die Beschriftungszone "${zone}" darf keine leere Einzelzeile enthalten.`,
+          });
+        }
+      }
     }
   }
 

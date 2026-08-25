@@ -21,7 +21,10 @@ import {
   ANHANG_E_E_RECIPES,
   ANHANG_E_F_RECIPES,
 } from './recipes-anhang-e.js';
-import { ANHANG_F_A_RECIPES, ANHANG_F_B_RECIPES } from './recipes-anhang-f.js';
+import {
+  ANHANG_F_A_RECIPES,
+  ANHANG_F_B_RECIPES,
+} from './recipes-anhang-f.js';
 
 const PORTS: CatalogPorts = {
   baseDrawing,
@@ -152,6 +155,7 @@ export function labelContrastRequirements(
 ): readonly ContrastRequirement[] {
   const inBody = new Set<OrganizationId>();
   const belowBody = new Set<OrganizationId>();
+  let aboveBody = false;
   for (const recipe of recipes) {
     const { labels, organization } = recipe.spec;
     // Ein Rezept ohne Organisation bleibt hier aussen vor, obwohl `compose.ts` auch ihm eine
@@ -166,7 +170,8 @@ export function labelContrastRequirements(
       labels.topLeft !== undefined ||
       labels.bottomLeft !== undefined ||
       labels.bottomCenter !== undefined ||
-      labels.bottomRight !== undefined
+      labels.bottomRight !== undefined ||
+      labels.topLeftLines !== undefined
     ) {
       inBody.add(organization);
     }
@@ -175,6 +180,7 @@ export function labelContrastRequirements(
     // Ableitung oben nie erzeugt, weil sie ausschließlich „weiss auf Körperfarbe" kennt. Ohne
     // diese zweite Schleife wäre der einzige farbige Text des Katalogs ohne Kontrastvertrag.
     if (labels.belowRight !== undefined) belowBody.add(organization);
+    if (labels.aboveLeft !== undefined) aboveBody = true;
   }
   return [
     ...[...inBody].map<ContrastRequirement>((organization) => ({
@@ -192,5 +198,11 @@ export function labelContrastRequirements(
       context: `Trägerkürzel unterhalb des Körpers, Organisation ${organization}`,
       minimum: MINIMUM_TEXT_CONTRAST,
     })),
+    ...(aboveBody ? [{
+      foreground: 'schwarz' as const,
+      background: 'surface' as const,
+      context: 'Beschriftung oberhalb des Körpers auf der Ausgabeoberfläche',
+      minimum: MINIMUM_TEXT_CONTRAST,
+    }] : []),
   ];
 }

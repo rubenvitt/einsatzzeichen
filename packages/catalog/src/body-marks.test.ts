@@ -9,6 +9,10 @@ import { BODY_MARK_IDS, bodyMark as bodyMarkWithContext } from './body-marks.js'
  * Dateien aus F.1.1 bis F.1.11 es zeigen.
  */
 const formationBodyMm: BoundsMm = { minX: 1, minY: 6, maxX: 31, maxY: 26 };
+const landBodyMm: BoundsMm = { minX: 1, minY: 5.75, maxX: 31, maxY: 26 };
+const airBodyMm: BoundsMm = { minX: 1, minY: 8, maxX: 31, maxY: 23 };
+const raisedAirBodyMm: BoundsMm = { minX: 1.01, minY: 6, maxX: 30.99, maxY: 20.99 };
+const trailerBodyMm: BoundsMm = { minX: 4, minY: 5.75, maxX: 31, maxY: 26 };
 const bodyMark = (id: Parameters<typeof bodyMarkWithContext>[0], bounds: BoundsMm) =>
   bodyMarkWithContext(id, { kind: 'formation' }, bounds);
 
@@ -287,6 +291,133 @@ describe('bodyMark() — rein geometrische technische Marken aus F.1', () => {
   });
 });
 
+describe('bodyMark() — die drei getrennt vermessenen Fahrzeugkörper aus F.2', () => {
+  it('setzt die Landfahrzeugteilung auf Dachscheitel, Körpermittellinie und Seitenkanten', () => {
+    expect(bodyMarkWithContext(
+      'medical-service', { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' }, landBodyMm,
+    )).toEqual([
+      line(16, 8, 16, 26),
+      line(1, 16, 31, 16),
+    ]);
+  });
+
+  it('setzt den Patiententransportring des Landfahrzeugs auf r 5 mm', () => {
+    const marks = bodyMarkWithContext(
+      'patient-transport', { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' }, landBodyMm,
+    );
+    expect(marks).toContainEqual({
+      type: 'circle',
+      role: 'pictogram',
+      cx: 16,
+      cy: 16,
+      r: 5,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    });
+  });
+
+  it('setzt die Luftfahrzeugteilung und die Arztleiste auf ihre eigenen Messwerte', () => {
+    expect(bodyMarkWithContext(
+      'physician',
+      { kind: 'vehicle-air', bodyVariant: 'raised-hull' },
+      raisedAirBodyMm,
+    )).toEqual([
+      line(16, 6, 16, 20.99),
+      line(2.74, 14, 29.26, 14),
+      line(12, 17.75, 20, 17.75),
+    ]);
+    expect(() => bodyMarkWithContext('physician', { kind: 'vehicle-air' }, airBodyMm))
+      .toThrow(/nicht vermessen/);
+  });
+
+  it('setzt die Anhängerteilung mit eigenem Ring und ohne Diagonalen', () => {
+    const marks = bodyMarkWithContext('medical-service', { kind: 'trailer' }, trailerBodyMm);
+    expect(marks).toEqual([
+      line(17.5, 8, 17.5, 26),
+      line(4, 17, 31, 17),
+      {
+        type: 'circle',
+        role: 'pictogram',
+        cx: 17.5,
+        cy: 17,
+        r: 5.5,
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+    ]);
+    expect(marks.filter((mark) => mark.type === 'line')).toHaveLength(2);
+  });
+});
+
+describe('bodyMark() — die beiden Sondermarken aus F.2', () => {
+  it('zeichnet F.2.2s ungeklärte Kopfmarke als neutrale technische Geometrie', () => {
+    expect(bodyMarkWithContext(
+      'top-center-rect-0-5x0-6mm',
+      { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' },
+      landBodyMm,
+    )).toEqual([
+      {
+        type: 'rect',
+        role: 'pictogram',
+        x: 15.75,
+        y: 8.25,
+        width: 0.5,
+        height: 0.6,
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+    ]);
+    expect(() => bodyMarkWithContext(
+      'top-center-rect-0-5x0-6mm',
+      { kind: 'formation' },
+      formationBodyMm,
+    )).toThrow(/nicht vermessen/);
+  });
+
+  it('zeichnet F.2.6s unbegriffene Winschform als neutrale technische Luftfahrzeugmarke', () => {
+    const marks = bodyMarkWithContext(
+      'air-winch-chevron-diamond',
+      { kind: 'vehicle-air', bodyVariant: 'raised-hull' },
+      raisedAirBodyMm,
+    );
+    expect(marks).toEqual([
+      line(24, 9.65, 24, 15.9),
+      {
+        type: 'polyline',
+        role: 'pictogram',
+        points: [[21.82, 11.82], [24, 9.65], [26.18, 11.82]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      {
+        type: 'polyline',
+        role: 'pictogram',
+        points: [[24, 15.9], [26.35, 18], [24, 19.65], [21.65, 18], [24, 15.9]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+    ]);
+    expect(BODY_MARK_IDS).toContain('air-winch-chevron-diamond');
+    expect(BODY_MARK_IDS).not.toContain('lifting-loads-persons');
+  });
+
+  it('verschiebt F.2.6s Hebezeichen vollständig mit der bereits platzierten Luftfahrzeughülle', () => {
+    const shifted: BoundsMm = { minX: 4.01, minY: 8, maxX: 33.99, maxY: 22.99 };
+    expect(bodyMarkWithContext(
+      'air-winch-chevron-diamond',
+      { kind: 'vehicle-air', bodyVariant: 'raised-hull' },
+      shifted,
+    )).toEqual([
+      line(27, 11.65, 27, 17.9),
+      {
+        type: 'polyline', role: 'pictogram',
+        points: [[24.82, 13.82], [27, 11.65], [29.18, 13.82]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      {
+        type: 'polyline', role: 'pictogram',
+        points: [[27, 17.9], [29.35, 20], [27, 21.65], [24.65, 20], [27, 17.9]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+    ]);
+  });
+});
+
 describe('bodyMark() — der zusammengefasste Eintrag von F.1.2', () => {
   /**
    * `cbrn-protection` zeichnet drei Dinge in **einem** Eintrag: die Fachdienstteilung mit zwei
@@ -444,8 +575,19 @@ describe('bodyMark() — der zusammengefasste Eintrag von F.1.2', () => {
  */
 describe('bodyMark() — was nicht fortgeschrieben wird', () => {
   it('wirft für jedes nicht vermessene Art-/Varianten-/Fähigkeitspaar', () => {
+    expect(() => bodyMarkWithContext('medical-service', { kind: 'vehicle-land' }, landBodyMm))
+      .toThrow(/nicht vermessen/);
+    expect(() => bodyMarkWithContext(
+      'medical-service', { kind: 'vehicle-land', bodyVariant: 'raised-hull' }, landBodyMm,
+    )).toThrow(/nicht vermessen/);
+    expect(() => bodyMarkWithContext(
+      'physician', { kind: 'vehicle-air', bodyVariant: 'plain-wheel-pair' }, raisedAirBodyMm,
+    )).toThrow(/nicht vermessen/);
+    expect(() => bodyMarkWithContext(
+      'medical-service', { kind: 'trailer', bodyVariant: 'plain-wheel-pair' }, trailerBodyMm,
+    )).toThrow(/nicht vermessen/);
     expect(() =>
-      bodyMarkWithContext('medical-service', { kind: 'vehicle-land' }, formationBodyMm),
+      bodyMarkWithContext('medical-service', { kind: 'vehicle-water' }, formationBodyMm),
     ).toThrow(/nicht vermessen/);
     expect(() =>
       bodyMarkWithContext('medical-service', { kind: 'formation', bodyVariant: 'raised-hull' }, formationBodyMm),
@@ -469,21 +611,25 @@ describe('bodyMark() — was nicht fortgeschrieben wird', () => {
     );
   });
 
-  it('wirft für eine Körperhülle, die nicht 30 × 20 mm misst', () => {
-    // Der Landfahrzeugrumpf (1/5,75 bis 31/26 mm = 30 × 20,25 mm) — genau die Hülle, auf die
-    // Anhang F.2 dieselbe Teilung trägt, und genau der Fall, den ein Weiterrechnen erwischte:
-    // 0,25 mm Unterschied, das Bild bliebe unauffällig. Anhang F misst dort **eigene** Zahlen
-    // für Leiste, Balken und Ring; der Wurf hält fest, dass sie noch nicht vorliegen.
+  it('wirft für eine Hülle, die nicht zum gewählten Fahrzeugkörper passt', () => {
     expect(() =>
-      bodyMark('medical-service', { minX: 1, minY: 5.75, maxX: 31, maxY: 26 }),
-    ).toThrow(/nur am Rechteckkörper 30 × 20 mm/);
+      bodyMarkWithContext(
+        'medical-service',
+        { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' },
+        formationBodyMm,
+      ),
+    ).toThrow(/30 × 20,25 mm/);
   });
 
   it('meldet die tatsächlichen Hüllenmaße im Wurf', () => {
     // Ohne die Zahlen im Text stünde der nächste Leser vor „passt nicht" ohne zu wissen, um
     // wie viel — bei 0,25 mm Unterschied ist das der ganze Befund.
-    expect(() => bodyMark('medical-service', { minX: 1, minY: 5.75, maxX: 31, maxY: 26 })).toThrow(
-      /30\.000 × 20\.250 mm/,
+    expect(() => bodyMarkWithContext(
+      'medical-service',
+      { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' },
+      formationBodyMm,
+    )).toThrow(
+      /30\.000 × 20\.000 mm/,
     );
   });
 });
@@ -507,10 +653,14 @@ describe('BODY_MARK_IDS', () => {
     for (const id of BODY_MARK_IDS) {
       // Kein Mindestmaß von zwei Primitiven: `care` steht mit **einem** Polyzug ohne Teilung da,
       // und genau das ist an F.1.3 belegt (siehe den Block zur Zeltmarke oben).
-      const context = id === 'catering'
-        ? { kind: 'formation', bodyVariant: 'foot-band' } as const
-        : { kind: 'formation' } as const;
-      expect(bodyMarkWithContext(id, context, formationBodyMm).length).toBeGreaterThanOrEqual(1);
+      const invocation = id === 'catering'
+        ? [{ kind: 'formation', bodyVariant: 'foot-band' } as const, formationBodyMm] as const
+        : id === 'air-winch-chevron-diamond'
+          ? [{ kind: 'vehicle-air', bodyVariant: 'raised-hull' } as const, raisedAirBodyMm] as const
+          : id === 'top-center-rect-0-5x0-6mm'
+            ? [{ kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' } as const, landBodyMm] as const
+          : [{ kind: 'formation' } as const, formationBodyMm] as const;
+      expect(bodyMarkWithContext(id, invocation[0], invocation[1]).length).toBeGreaterThanOrEqual(1);
     }
   });
 });

@@ -251,6 +251,21 @@ function halfCircleBelowChord(cxMm: number, chordYMm: number, rMm: number): stri
   );
 }
 
+/** Halbkreis oberhalb der Sehne; dieselbe Kubikregel wie beim Kapitel-1-Luftfahrzeug. */
+function halfCircleAboveChord(cxMm: number, chordYMm: number, rMm: number): string {
+  const control = round(rMm * CIRCLE_CONTROL_FRACTION);
+  const left = round(cxMm - rMm);
+  const right = round(cxMm + rMm);
+  const chord = round(chordYMm);
+  const apex = round(chordYMm - rMm);
+  const controlY = round(chordYMm - control);
+  return (
+    `M ${right} ${chord} L ${left} ${chord} ` +
+    `C ${left} ${controlY}, ${round(cxMm - control)} ${apex}, ${round(cxMm)} ${apex} ` +
+    `C ${round(cxMm + control)} ${apex}, ${right} ${controlY}, ${right} ${chord} Z`
+  );
+}
+
 const BODIES: Partial<Record<SymbolKind, Primitive>> = {
   formation: { type: 'rect', role: 'body', x: 1, y: 6, width: 30, height: 20, style: OUTLINE },
   person: {
@@ -518,10 +533,36 @@ const VARIANT_EXTRA_PRIMITIVES: Partial<
       },
     ],
   },
+  'vehicle-air': {
+    'raised-hull': [
+      {
+        type: 'polyline', role: 'bodyExtra', closed: true,
+        points: [[9, 23], [16, 25], [9, 27]],
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+      {
+        type: 'polyline', role: 'bodyExtra', closed: true,
+        points: [[23, 23], [16, 25], [23, 27]],
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+    ],
+  },
+  'vehicle-land': {
+    'plain-wheel-pair': [
+      {
+        type: 'circle', role: 'bodyExtra', cx: 3.75, cy: 28.25, r: 2.25,
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      {
+        type: 'circle', role: 'bodyExtra', cx: 28.25, cy: 28.25, r: 2.25,
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+    ],
+  },
 };
 
 /**
- * Zweite, in der Quelle belegte Zeichnungen desselben Grundzeichens. Bisher genau eine.
+ * Weitere, in der Quelle belegte Zeichnungen desselben Grundzeichens.
  *
  * `vehicle-water` / `raised-hull` ist der Rumpf der fünf Wasserfahrzeuge `E.2.27` bis `E.2.31`.
  * Gemessene Füllhülle 1,0100/7,9999/30,9894/22,9898 mm — gegenüber `1.5_Wasserfahrzeug.svg`
@@ -555,6 +596,17 @@ const VARIANT_BODIES: Partial<Record<SymbolKind, Partial<Record<BodyVariantId, P
       d: halfCircleBelowChord(15.9997, 7.9999, 14.9897),
       style: OUTLINE,
     },
+  },
+  'vehicle-air': {
+    'raised-hull': {
+      type: 'path',
+      role: 'body',
+      d: halfCircleAboveChord(15.9997, 20.9898, 14.9897),
+      style: OUTLINE,
+    },
+  },
+  'vehicle-land': {
+    'plain-wheel-pair': BODIES['vehicle-land']!,
   },
 };
 

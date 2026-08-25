@@ -15,7 +15,7 @@ import {
   checkTextLegibility,
 } from './pictogram-gate.js';
 import { renderSvg } from './render/svg.js';
-import { MINIMUM_TEXT_RENDER_PX } from './render/text-policy.js';
+import { ARIMO_CAP_HEIGHT_FRACTION, MINIMUM_TEXT_RENDER_PX } from './render/text-policy.js';
 
 /** Ein Piktogramm mit genau einem Pfad, Box und Titel unverändert — nur der `d`-String variiert. */
 function withPath(d: string): PictogramDefinition {
@@ -1322,6 +1322,15 @@ function withTextFloor(
 }
 
 describe('Deklarierte Einsatzgrenze eines Textlaufs', () => {
+  it('gated den kleineren F.2.8-Lauf ab seiner aus 2,43 mm Versalhöhe berechneten Grenze', () => {
+    const sizeMm = 2.43 / ARIMO_CAP_HEIGHT_FRACTION;
+    const minRenderPx = Math.ceil((MINIMUM_TEXT_RENDER_PX * 32) / sizeMm);
+    expect(minRenderPx).toBe(73);
+    expect(
+      checkTextLegibility(withTextFloor('GW-San', sizeMm, minRenderPx), [16, 24, 32, 64, 128, 256]),
+    ).toEqual([]);
+  });
+
   // Die Kürzel aus Anhang J messen zwischen 4,1 und 10,3 mm. Bei keiner dieser Größen erreicht
   // ein Zeichen die 16-px-Snapshotgröße lesbar — „HRT" müsste dafür 16 mm groß sein und wäre
   // damit breiter als die viewBox. Ohne eine deklarierbare Untergrenze wäre jedes typografische

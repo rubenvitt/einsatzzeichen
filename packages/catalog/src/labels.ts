@@ -1,10 +1,13 @@
+import { TECHNICAL_BODY_MARK_IDS } from '@einsatzzeichen/schema';
 import type {
   AdminLevelId,
+  BodyMarkId,
   OrganizationId,
   PictogramDefinition,
   StrengthId,
   SymbolKind,
   SymbolSpec,
+  TechnicalBodyMarkId,
   VehicleCategoryId,
 } from '@einsatzzeichen/schema';
 import { pictogram } from './pictograms/index.js';
@@ -70,6 +73,24 @@ const VEHICLE_CATEGORY_LABELS: Record<VehicleCategoryId, string> = {
   'anhaenger-zwei-raeder': 'Anhänger mit zwei Rädern',
 };
 
+/**
+ * Neutrale Vorlesetexte aller technischen Körpermarken. Der vollständige Record macht neue IDs
+ * zum Typfehler, bis ihre nicht-semantische Beschreibung ausdrücklich ergänzt ist.
+ */
+export const TECHNICAL_BODY_MARK_LABELS = Object.freeze({
+  'ring-7mm-offset-down-1mm': 'Ring 7 mm, Mittelpunkt 1 mm unter Körpermitte',
+  'chevron-over-opposed-triangles': 'Winkel über gegenüberliegenden Dreiecken',
+  'ring-6-5mm-offset-down-2mm-with-roof': 'Ring 6,5 mm mit Dach und eingeschriebenem Dreieck',
+  'top-center-rect-0-5x0-6mm': 'Rechteck 0,5 × 0,6 mm oben mittig',
+  'air-winch-chevron-diamond': 'Winschform aus Pfeilwinkel und Raute',
+} satisfies Record<TechnicalBodyMarkId, string>);
+
+const TECHNICAL_BODY_MARK_ID_SET = new Set<string>(TECHNICAL_BODY_MARK_IDS);
+
+function isTechnicalBodyMarkId(mark: BodyMarkId): mark is TechnicalBodyMarkId {
+  return TECHNICAL_BODY_MARK_ID_SET.has(mark);
+}
+
 export function symbolKindLabel(kind: SymbolKind): string {
   return KIND_LABELS[kind];
 }
@@ -94,12 +115,8 @@ export function describeSymbolSpec(spec: SymbolSpec): string {
   // Vorlesestimme deshalb gleich benannt — der Unterschied ist die Zeichnung, nicht die Sache. Der
   // Titel kommt aus demselben Piktogrammregister, damit beide Fassungen nicht auseinanderlaufen.
   for (const mark of spec.bodyMarks ?? []) {
-    if (mark === 'ring-7mm-offset-down-1mm') {
-      parts.push('Technische Körpermarke: Ring 7 mm, Mittelpunkt 1 mm unter Körpermitte');
-    } else if (mark === 'chevron-over-opposed-triangles') {
-      parts.push('Technische Körpermarke: Winkel über gegenüberliegenden Dreiecken');
-    } else if (mark === 'ring-6-5mm-offset-down-2mm-with-roof') {
-      parts.push('Technische Körpermarke: Ring 6,5 mm mit Dach und eingeschriebenem Dreieck');
+    if (isTechnicalBodyMarkId(mark)) {
+      parts.push(`Technische Körpermarke: ${TECHNICAL_BODY_MARK_LABELS[mark]}`);
     } else {
       parts.push(`Fachdienst: ${pictogram(`capability.${mark}`).title}`);
     }
@@ -135,6 +152,12 @@ export function describeSymbolSpec(spec: SymbolSpec): string {
   for (const [zone, label] of zones) {
     const value = spec.labels?.[zone];
     if (typeof value === 'string') parts.push(`${label}: ${value}`);
+  }
+  if (spec.labels?.aboveLeft !== undefined) {
+    parts.push(`Kürzel oberhalb: ${spec.labels.aboveLeft}`);
+  }
+  if (spec.labels?.topLeftLines !== undefined) {
+    parts.push(`Kürzel zweizeilig: ${spec.labels.topLeftLines.join(' / ')}`);
   }
   return `${parts.join('. ')}.`;
 }
