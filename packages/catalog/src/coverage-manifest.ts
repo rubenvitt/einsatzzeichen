@@ -34,6 +34,9 @@ import {
   ANHANG_F_B_RECIPES,
   ANHANG_F_B_FINDINGS,
   ANHANG_F_B_DEVIATIONS,
+  ANHANG_F_C_RECIPES,
+  ANHANG_F_C_FINDINGS,
+  ANHANG_F_C_DEVIATIONS,
 } from './recipes-anhang-f.js';
 
 /**
@@ -138,6 +141,26 @@ const ANHANG_F_B_TECHNICAL_REVIEW: Review = {
     'Metadaten- und Kontrast-Gates prüfen den renderbaren Bestand. Der finale Task-6-Kontaktbogen ' +
     'war zu diesem Zeitpunkt noch nicht erzeugt oder gesichtet. Die Organisation ' +
     'hilfsorganisation bleibt eine technische Entscheidung, das Domain-Review pending.',
+};
+
+/**
+ * Eigenes technisches Review für F-c: Landfahrzeug, Luftfahrzeug und Anhänger verwenden drei
+ * getrennt vermessene Body-Mark-Kontexte; ITH und GW-San/50 belegen außerdem zwei neue,
+ * körperbezogene Beschriftungsregeln. Die Note behauptet ausdrücklich keinen finalen
+ * Task-6-Kontaktbogen.
+ */
+const ANHANG_F_C_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-25',
+  note:
+    'Alle 14 Originalreferenzen aus F.2.1 bis F.2.9 wurden einzeln gerastert und gegen die ' +
+    'Rezeptmatrix geprüft. Lokale Geometrietests halten die getrennten Land-, Luft- und ' +
+    'Anhänger-BodyMarks, die oberhalb liegende ITH-Zone und die zweizeilige GW-San/50-Zone ' +
+    'fest; Snapshot-, Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates prüfen den ' +
+    'renderbaren Bestand. Der finale Task-6-Kontaktbogen war zu diesem Zeitpunkt noch nicht ' +
+    'erzeugt oder gesichtet. Die Organisation hilfsorganisation bleibt eine technische ' +
+    'Entscheidung, das Domain-Review pending.',
 };
 
 /** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
@@ -564,6 +587,13 @@ function technicalReviewFor(section: string): Review {
       ANHANG_F_B_TECHNICAL_REVIEW,
       ANHANG_F_B_FINDINGS[section],
       ANHANG_F_B_DEVIATIONS[section],
+    );
+  }
+  if (Object.hasOwn(ANHANG_F_C_RECIPES, section)) {
+    return withFindingAndDeviation(
+      ANHANG_F_C_TECHNICAL_REVIEW,
+      ANHANG_F_C_FINDINGS[section],
+      ANHANG_F_C_DEVIATIONS[section],
     );
   }
   return TECHNICAL_REVIEW;

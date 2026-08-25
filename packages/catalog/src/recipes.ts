@@ -24,6 +24,7 @@ import {
 import {
   ANHANG_F_A_RECIPES,
   ANHANG_F_B_RECIPES,
+  ANHANG_F_C_RECIPES,
 } from './recipes-anhang-f.js';
 
 const PORTS: CatalogPorts = {
@@ -73,6 +74,7 @@ export interface Recipe {
 export const RECIPES = {
   ...ANHANG_F_A_RECIPES,
   ...ANHANG_F_B_RECIPES,
+  ...ANHANG_F_C_RECIPES,
   ...ANHANG_E_A_RECIPES,
   ...ANHANG_E_B_RECIPES,
   ...ANHANG_E_C_RECIPES,

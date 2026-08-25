@@ -277,7 +277,9 @@ describe('Rasterevidenz für Text (resvgFontOptions())', () => {
     // haben deshalb hier nichts zu rastern.
     // **85 seit F-b:** zehn der 14 neuen Darstellungen tragen mindestens einen Lauf. Die vier
     // Ausnahmen sind F.1.12#alternative, F.1.15, F.1.15#alternative und F.1.16.
-    expect(labelRecipes).toHaveLength(85);
+    // **93 seit F-c:** acht der 14 Fahrzeugdarstellungen tragen mindestens einen Lauf; F.2.7
+    // belegt die oberhalb liegende Zone und F.2.8 zwei getrennt gerasterte Textprimitive.
+    expect(labelRecipes).toHaveLength(93);
   });
 
   /**

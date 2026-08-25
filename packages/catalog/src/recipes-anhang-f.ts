@@ -345,6 +345,104 @@ export const ANHANG_F_B_RECIPES = {
   },
 } as const satisfies Record<string, Recipe>;
 
+/** F.2.1 bis F.2.9: neun Fahrzeugzeichen und fünf bildlich getrennte Alternativen. */
+export const ANHANG_F_C_RECIPES = {
+  'F.2.1': {
+    title: 'KTW',
+    referenceAsset: 'F.2.1_KTW.svg',
+    spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', bodyMarks: ['medical-service'], labels: { topLeft: 'KTW' } },
+  },
+  'F.2.1#alternative': {
+    title: 'KTW',
+    referenceAsset: 'F.2.1_KTW_Alternative.svg',
+    spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', bodyMarks: ['patient-transport'] },
+  },
+  'F.2.2': {
+    title: 'NKTW',
+    referenceAsset: 'F.2.2_NKTW.svg',
+    spec: {
+      kind: 'vehicle-land',
+      bodyVariant: 'plain-wheel-pair',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['medical-service', 'top-center-rect-0-5x0-6mm'],
+      labels: { topLeft: 'N-KTW_B' },
+    },
+  },
+  'F.2.2#alternative': {
+    title: 'NKTW',
+    referenceAsset: 'F.2.2_NKTW_Alternative.svg',
+    spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', bodyMarks: ['patient-transport'], labels: { topLeft: '2' } },
+  },
+  'F.2.3': {
+    title: 'RTW',
+    referenceAsset: 'F.2.3_RTW.svg',
+    spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', bodyMarks: ['medical-service'], labels: { topLeft: 'RTW' } },
+  },
+  'F.2.3#alternative': {
+    title: 'RTW',
+    referenceAsset: 'F.2.3_RTW_Alternative.svg',
+    spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', bodyMarks: ['patient-transport', 'intensive-care'] },
+  },
+  'F.2.4': {
+    title: 'NEF',
+    referenceAsset: 'F.2.4_NEF.svg',
+    spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', bodyMarks: ['medical-service'], labels: { topLeft: 'NEF' } },
+  },
+  'F.2.4#alternative': {
+    title: 'NEF',
+    referenceAsset: 'F.2.4_NEF_Alternative.svg',
+    spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', bodyMarks: ['physician'] },
+  },
+  'F.2.5': {
+    title: 'NAW',
+    referenceAsset: 'F.2.5_NAW.svg',
+    spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', bodyMarks: ['medical-service'], labels: { topLeft: 'NAW' } },
+  },
+  'F.2.5#alternative': {
+    title: 'NAW',
+    referenceAsset: 'F.2.5_NAW_Alternative.svg',
+    spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', bodyMarks: ['patient-transport', 'intensive-care', 'physician'] },
+  },
+  'F.2.6': {
+    title: 'Rettungstransporthubschrauber mit Winschmöglichkeit',
+    referenceAsset: 'F.2.6_Rettungstransporthubschrauber mit Winschmöglichkeit.svg',
+    spec: { kind: 'vehicle-air', bodyVariant: 'raised-hull', organization: 'hilfsorganisation', bodyMarks: ['medical-service', 'air-winch-chevron-diamond'] },
+  },
+  'F.2.7': {
+    title: 'Intensivtransporthubschrauber',
+    referenceAsset: 'F.2.7_Intensivtransporthubschrauber.svg',
+    spec: { kind: 'vehicle-air', bodyVariant: 'raised-hull', organization: 'hilfsorganisation', bodyMarks: ['physician'], labels: { aboveLeft: 'ITH' } },
+  },
+  'F.2.8': {
+    title: 'Gerätewagen Sanitätsdienst',
+    referenceAsset: 'F.2.8_Gerätewagen Sanitätsdienst.svg',
+    spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', bodyMarks: ['medical-service'], labels: { topLeftLines: ['GW-San', '50'] } },
+  },
+  'F.2.9': {
+    title: 'Unfallhilfsstelle',
+    referenceAsset: 'F.2.9_Unfallhilfsstelle.svg',
+    spec: { kind: 'trailer', organization: 'hilfsorganisation', bodyMarks: ['medical-service'] },
+  },
+} as const satisfies Record<string, Recipe>;
+
+export const ANHANG_F_C_FINDINGS: Readonly<Record<string, string>> = Object.freeze({
+  'F.2.2':
+    'Die kleine obere Rechteckmarke ist sichtbar und vermessen, aber in der Quelle nicht ' +
+    'begrifflich benannt. Sie bleibt deshalb eine rein geometrische TechnicalBodyMarkId.',
+  'F.2.6':
+    'Die Pfeil-und-Rauten-Topologie des Winschzeichens ist sichtbar und vermessen; die Quelle ' +
+    'belegt aber keine Gleichsetzung mit der Capability lifting-loads-persons. Sie bleibt eine ' +
+    'neutrale TechnicalBodyMarkId.',
+  'F.2.7': 'Der Lauf „ITH“ liegt vollständig oberhalb der Luftfahrzeughülle.',
+  'F.2.8': '„GW-San“ und „50“ sind zwei getrennte linksbündige Läufe mit kleinerem Schriftgrad.',
+});
+
+export const ANHANG_F_C_DEVIATIONS: Readonly<Record<string, string>> = Object.freeze({
+  'F.2.2':
+    'Die fachliche Bedeutung der oberen Rechteckmarke bleibt offen; der technische Name ' +
+    'behauptet ausschließlich ihre Geometrie.',
+});
+
 export const ANHANG_F_B_FINDINGS: Readonly<Record<string, string>> = Object.freeze({
   'F.1.3':
     'Die Bettzeichnung ist bildgleich mit F.1.19; allein F.1.3 führt zusätzlich das schwarze ' +

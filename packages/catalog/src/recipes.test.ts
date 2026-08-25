@@ -344,6 +344,12 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
         context: 'Trägerkürzel unterhalb des Körpers, Organisation thw',
         minimum: 4.5,
       },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Beschriftung oberhalb des Körpers auf der Ausgabeoberfläche',
+        minimum: 4.5,
+      },
     ]);
   });
 });
@@ -658,6 +664,112 @@ describe('Anhang F, Teilslice F-b einschließlich F.1.3', () => {
         },
       },
     });
+  });
+});
+
+describe('Anhang F, Teilslice F-c', () => {
+  it('deckt F.2.1 bis F.2.9 mit fünf Alternativdarstellungen ab', () => {
+    const keys = Object.keys(RECIPES).filter((key) => key.startsWith('F.2.'));
+    expect(keys).toEqual([
+      'F.2.1',
+      'F.2.1#alternative',
+      'F.2.2',
+      'F.2.2#alternative',
+      'F.2.3',
+      'F.2.3#alternative',
+      'F.2.4',
+      'F.2.4#alternative',
+      'F.2.5',
+      'F.2.5#alternative',
+      'F.2.6',
+      'F.2.7',
+      'F.2.8',
+      'F.2.9',
+    ]);
+    expect(Object.keys(RECIPES)).toHaveLength(110);
+  });
+
+  it('bindet die 14 Darstellungen literal an die Referenzmatrix', () => {
+    expect(Object.fromEntries(
+      Object.entries<Recipe>(RECIPES).filter(([key]) => key.startsWith('F.2.')),
+    )).toEqual({
+      'F.2.1': {
+        title: 'KTW',
+        referenceAsset: 'F.2.1_KTW.svg',
+        spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', bodyMarks: ['medical-service'], labels: { topLeft: 'KTW' } },
+      },
+      'F.2.1#alternative': {
+        title: 'KTW',
+        referenceAsset: 'F.2.1_KTW_Alternative.svg',
+        spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', bodyMarks: ['patient-transport'] },
+      },
+      'F.2.2': {
+        title: 'NKTW',
+        referenceAsset: 'F.2.2_NKTW.svg',
+        spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', bodyMarks: ['medical-service', 'top-center-rect-0-5x0-6mm'], labels: { topLeft: 'N-KTW_B' } },
+      },
+      'F.2.2#alternative': {
+        title: 'NKTW',
+        referenceAsset: 'F.2.2_NKTW_Alternative.svg',
+        spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', bodyMarks: ['patient-transport'], labels: { topLeft: '2' } },
+      },
+      'F.2.3': {
+        title: 'RTW',
+        referenceAsset: 'F.2.3_RTW.svg',
+        spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', bodyMarks: ['medical-service'], labels: { topLeft: 'RTW' } },
+      },
+      'F.2.3#alternative': {
+        title: 'RTW',
+        referenceAsset: 'F.2.3_RTW_Alternative.svg',
+        spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', bodyMarks: ['patient-transport', 'intensive-care'] },
+      },
+      'F.2.4': {
+        title: 'NEF',
+        referenceAsset: 'F.2.4_NEF.svg',
+        spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', bodyMarks: ['medical-service'], labels: { topLeft: 'NEF' } },
+      },
+      'F.2.4#alternative': {
+        title: 'NEF',
+        referenceAsset: 'F.2.4_NEF_Alternative.svg',
+        spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', bodyMarks: ['physician'] },
+      },
+      'F.2.5': {
+        title: 'NAW',
+        referenceAsset: 'F.2.5_NAW.svg',
+        spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', bodyMarks: ['medical-service'], labels: { topLeft: 'NAW' } },
+      },
+      'F.2.5#alternative': {
+        title: 'NAW',
+        referenceAsset: 'F.2.5_NAW_Alternative.svg',
+        spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', bodyMarks: ['patient-transport', 'intensive-care', 'physician'] },
+      },
+      'F.2.6': {
+        title: 'Rettungstransporthubschrauber mit Winschmöglichkeit',
+        referenceAsset: 'F.2.6_Rettungstransporthubschrauber mit Winschmöglichkeit.svg',
+        spec: { kind: 'vehicle-air', bodyVariant: 'raised-hull', organization: 'hilfsorganisation', bodyMarks: ['medical-service', 'air-winch-chevron-diamond'] },
+      },
+      'F.2.7': {
+        title: 'Intensivtransporthubschrauber',
+        referenceAsset: 'F.2.7_Intensivtransporthubschrauber.svg',
+        spec: { kind: 'vehicle-air', bodyVariant: 'raised-hull', organization: 'hilfsorganisation', bodyMarks: ['physician'], labels: { aboveLeft: 'ITH' } },
+      },
+      'F.2.8': {
+        title: 'Gerätewagen Sanitätsdienst',
+        referenceAsset: 'F.2.8_Gerätewagen Sanitätsdienst.svg',
+        spec: { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', organization: 'hilfsorganisation', bodyMarks: ['medical-service'], labels: { topLeftLines: ['GW-San', '50'] } },
+      },
+      'F.2.9': {
+        title: 'Unfallhilfsstelle',
+        referenceAsset: 'F.2.9_Unfallhilfsstelle.svg',
+        spec: { kind: 'trailer', organization: 'hilfsorganisation', bodyMarks: ['medical-service'] },
+      },
+    });
+  });
+
+  it('setzt in keinem F-c-Rezept eine unbelegte Fahrzeugkategorie', () => {
+    const f2 = Object.values<Recipe>(RECIPES).filter((recipe) => recipe.referenceAsset.startsWith('F.2.'));
+    expect(f2).toHaveLength(14);
+    expect(f2.every((recipe) => recipe.spec.vehicleCategory === undefined)).toBe(true);
   });
 });
 

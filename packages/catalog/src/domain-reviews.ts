@@ -214,6 +214,26 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:F.1.20#primary': { status: 'pending' },
   'bbk-babz-2025:F.1.21#primary': { status: 'pending' },
   'bbk-babz-2025:F.1.22#primary': { status: 'pending' },
+  // Anhang F, Teilslice F-c: Fahrzeuge und Anhänger des Sanitätsdienstes. Fachlich offen ist,
+  // ob die rein aus der Grafik abgelesenen Fähigkeitskombinationen der fünf direkten
+  // Alternativdarstellungen tatsächlich dieselben Fahrzeuge bezeichnen; insbesondere darf aus
+  // dem Ring der Referenz nicht pauschal Intensivtransport abgeleitet werden. Ebenfalls zu
+  // bestätigen sind die kleine obere Marke von F.2.2, die Hebe-/Winschform von F.2.6 und die
+  // Bedeutung der oberhalb gesetzten Abkürzung ITH. Alle 14 bleiben deshalb einzeln pending.
+  'bbk-babz-2025:F.2.1#primary': { status: 'pending' },
+  'bbk-babz-2025:F.2.1#alternative': { status: 'pending' },
+  'bbk-babz-2025:F.2.2#primary': { status: 'pending' },
+  'bbk-babz-2025:F.2.2#alternative': { status: 'pending' },
+  'bbk-babz-2025:F.2.3#primary': { status: 'pending' },
+  'bbk-babz-2025:F.2.3#alternative': { status: 'pending' },
+  'bbk-babz-2025:F.2.4#primary': { status: 'pending' },
+  'bbk-babz-2025:F.2.4#alternative': { status: 'pending' },
+  'bbk-babz-2025:F.2.5#primary': { status: 'pending' },
+  'bbk-babz-2025:F.2.5#alternative': { status: 'pending' },
+  'bbk-babz-2025:F.2.6#primary': { status: 'pending' },
+  'bbk-babz-2025:F.2.7#primary': { status: 'pending' },
+  'bbk-babz-2025:F.2.8#primary': { status: 'pending' },
+  'bbk-babz-2025:F.2.9#primary': { status: 'pending' },
   'bbk-babz-2025:2.1#primary': { status: 'pending' },
   // 2.2 seit LFH-424. Fachlich besonders zu prüfen: die Zuordnung „HiOrg = Hilfsorganisation" ist
   // aus dem gerasterten Bild abgelesen, nicht aus dem Dateinamen — der ist generisch

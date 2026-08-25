@@ -69,7 +69,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 383 Zeilen mit 273 Elementdarstellungen', () => {
+  it('enthält exakt 397 Zeilen mit 273 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -96,7 +96,7 @@ describe('Coverage-Manifest', () => {
       // Abschnitte, denn `F.1.11` führt als erster Abschnitt des Katalogs neben `primary` eine
       // `alternative` — die Zeile zählt einzeln, weil das Manifest Darstellungen zählt und nicht
       // Abschnitte, weil F.1.3 dort noch bewusst offen blieb; F-b baut es mit `foot-band`.
-      'composition-recipe': 96,
+      'composition-recipe': 110,
       // 254 Piktogramme plus acht Organisationen (seit LFH-424 mit hilfsorganisation), vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
@@ -104,7 +104,7 @@ describe('Coverage-Manifest', () => {
       // Strichhülle vermessen ist.
       element: 273,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(383);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(397);
     expect(elementRows).toHaveLength(273);
     expect(pictogramRows).toHaveLength(254);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
@@ -165,7 +165,7 @@ describe('Coverage-Manifest', () => {
   });
 
   /**
-   * Die fünf Zeichen, deren **Umsetzung** von der Referenzdatei abweicht und die deshalb ein
+   * Die elf Zeichen, deren **Umsetzung** von der Referenzdatei abweicht und die deshalb ein
    * technisches Review mit `status: 'deviation'` tragen: aus E-b E.1.17 (mittiges Kürzel der
    * Referenz 2,0009 mm links der Körpermitte) sowie E.1.19 und E.1.24 (drei Marken im Körper, die
    * der Katalog nicht abbildet), aus E-c E.1.31 (zwei senkrechte Balken an der Stelle der
@@ -183,27 +183,28 @@ describe('Coverage-Manifest', () => {
   // `RECIPES`, und dort steht Anhang F vor Anhang E. Der Test unten vergleicht die Liste als
   // Folge, damit eine still verschobene Zeile auffällt.
   const TECHNICAL_DEVIATIONS = [
-    'bbk-babz-2025:F.1.1',
-    'bbk-babz-2025:F.1.2',
-    'bbk-babz-2025:F.1.3',
-    'bbk-babz-2025:F.1.13',
-    'bbk-babz-2025:F.1.21',
-    'bbk-babz-2025:E.1.17',
-    'bbk-babz-2025:E.1.19',
-    'bbk-babz-2025:E.1.24',
-    'bbk-babz-2025:E.1.31',
-    'bbk-babz-2025:E.2.26',
+    'bbk-babz-2025:F.1.1#primary',
+    'bbk-babz-2025:F.1.2#primary',
+    'bbk-babz-2025:F.1.3#primary',
+    'bbk-babz-2025:F.1.13#primary',
+    'bbk-babz-2025:F.1.21#primary',
+    'bbk-babz-2025:F.2.2#primary',
+    'bbk-babz-2025:E.1.17#primary',
+    'bbk-babz-2025:E.1.19#primary',
+    'bbk-babz-2025:E.1.24#primary',
+    'bbk-babz-2025:E.1.31#primary',
+    'bbk-babz-2025:E.2.26#primary',
   ];
 
   it('trägt für jeden Eintrag eine Referenzdatei und beide Reviewrollen', () => {
     // Die Zusage ist „kein Eintrag ohne zurechenbares technisches Review", nicht „jeder Eintrag
-    // approved". Sie wird deshalb nicht auf eine Statusmenge aufgeweicht, sondern nennt die zehn
-    // Abweichungen einzeln: jede andere Zeile muss `approved` sein, und die zehn genannten
-    // müssen zusätzlich eine Notiz führen. Eine elfte `deviation` fällt hier auf, eine
+    // approved". Sie wird deshalb nicht auf eine Statusmenge aufgeweicht, sondern nennt die elf
+    // Abweichungen einzeln: jede andere Zeile muss `approved` sein, und die elf genannten
+    // müssen zusätzlich eine Notiz führen. Eine zwölfte `deviation` fällt hier auf, eine
     // weggefallenes ebenso.
     for (const entry of COVERAGE_MANIFEST.entries) {
       expect(entry.referenceAsset).toMatch(/\.svg$/);
-      if (TECHNICAL_DEVIATIONS.includes(entry.sourceId)) {
+      if (TECHNICAL_DEVIATIONS.includes(entryKey(entry.sourceId, entry.variant))) {
         expect(entry.review.technical.status).toBe('deviation');
         expect(entry.review.technical.note?.trim()).not.toBe('');
         expect(entry.review.technical.note).toBeDefined();
@@ -215,7 +216,7 @@ describe('Coverage-Manifest', () => {
     }
   });
 
-  it('führt genau zehn technische Abweichungen: fünf aus F, drei aus E-b und je eine aus E-c/E-e', () => {
+  it('führt genau elf technische Abweichungen: sechs aus F, drei aus E-b und je eine aus E-c/E-e', () => {
     // Gegenrichtung des Tests oben: dort wird für bekannte Schlüssel `deviation` verlangt, hier,
     // dass es keine weiteren gibt. Ohne diese Hälfte bliebe eine still hinzugekommene Abweichung
     // an einer anderen Zeile unbemerkt, weil der `else`-Zweig sie nie zu sehen bekäme.
@@ -225,7 +226,7 @@ describe('Coverage-Manifest', () => {
     // sind dagegen als rein geometrische TechnicalBodyMarkIds gebaut.
     const deviations = COVERAGE_MANIFEST.entries
       .filter((entry) => entry.review.technical.status === 'deviation')
-      .map((entry) => entry.sourceId);
+      .map((entry) => entryKey(entry.sourceId, entry.variant));
     expect(deviations).toEqual(TECHNICAL_DEVIATIONS);
   });
 
@@ -238,6 +239,18 @@ describe('Coverage-Manifest', () => {
     for (const row of rows) {
       expect(row.review.technical.date).toBe('2026-08-25');
       expect(row.review.technical.note).toContain('finale Task-6-Kontaktbogen');
+    }
+  });
+
+  it('trägt für alle 14 F-c-Darstellungen das eigene Review vom 25. August', () => {
+    const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
+      /^bbk-babz-2025:F\.2\.[1-9]$/.test(entry.sourceId),
+    );
+    expect(rows).toHaveLength(14);
+    for (const row of rows) {
+      expect(row.review.technical.date).toBe('2026-08-25');
+      expect(row.review.technical.note).toContain('finale Task-6-Kontaktbogen');
+      expect(row.review.domain.status).toBe('pending');
     }
   });
 

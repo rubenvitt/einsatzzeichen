@@ -95,10 +95,10 @@ describe('Fachreview-Ledger', () => {
     // über die Darstellung entscheidet und nicht über den Abschnitt. Zehn und nicht elf, weil
     // F.1.3 in F-a vermessen und nicht gebaut war. F-b ergänzt 14 Reviewplätze: F.1.3, F.1.12
     // bis F.1.22 und die beiden Alternativdarstellungen; damit sind es hier 383.
-    expect(manifestReviews).toHaveLength(383);
+    expect(manifestReviews).toHaveLength(397);
     expect(sourceReviews).toHaveLength(13);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(397);
+    expect(reviews).toHaveLength(411);
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
   });
 
