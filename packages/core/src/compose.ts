@@ -696,6 +696,28 @@ function chassisPrimitive(mark: ChassisMark, topMm: number): Primitive {
   }
 }
 
+/**
+ * Fügt randbündige Marken als getrennte Gruppen zusammen. Eine Primitive-Referenz, die ein Port
+ * bewusst in mehreren Gruppen wiederverwendet, bezeichnet dieselbe gemeinsame Schicht und wird
+ * ab der zweiten Gruppe nicht erneut gezeichnet. Innerhalb einer Gruppe bleibt eine Wiederholung
+ * erhalten; ebenso bleiben separat erzeugte, bloß strukturell gleiche Primitive erhalten. Damit
+ * kann der Katalog gemeinsame Grundlinien idempotent komponieren, ohne echte Deckzeichnungen zu
+ * verschlucken oder den Core an konkrete Marken-IDs zu koppeln.
+ */
+function composeBodyMarkPrimitives(groups: readonly (readonly Primitive[])[]): Primitive[] {
+  const seenInPreviousGroups = new Set<Primitive>();
+  const result: Primitive[] = [];
+
+  for (const group of groups) {
+    for (const primitive of group) {
+      if (!seenInPreviousGroups.has(primitive)) result.push(primitive);
+    }
+    for (const primitive of group) seenInPreviousGroups.add(primitive);
+  }
+
+  return result;
+}
+
 export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: ComposeOptions = {}): Drawing {
   const issues = validateSpec(spec);
   if (issues.length > 0) throw new CompositionError(issues);
@@ -889,9 +911,10 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
   // Randbündige Fachdienstzeichen: gegen die Hülle des **platzierten** Körpers gerechnet, nicht
   // gegen die Standardgeometrie. Deshalb ohne die Verschiebung, die die Boxpiktogramme brauchen —
   // sie sind bereits an der richtigen Stelle gerechnet.
-  const bodyMarkPrimitives = (spec.bodyMarks ?? []).flatMap((id) => [
-    ...catalog.bodyMark(id, { kind: spec.kind, bodyVariant: spec.bodyVariant }, bodyBoundsMm),
-  ]);
+  const bodyMarkPrimitives = composeBodyMarkPrimitives(
+    (spec.bodyMarks ?? []).map((id) =>
+      catalog.bodyMark(id, { kind: spec.kind, bodyVariant: spec.bodyVariant }, bodyBoundsMm)),
+  );
 
   const labels = spec.labels !== undefined
     ? labelPrimitives(

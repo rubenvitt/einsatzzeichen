@@ -1,7 +1,7 @@
 # Visual QA: Anhang F-c
 
-Datum: 26. August 2026  
-Scope: F.2.1 bis F.2.9 einschließlich fünf Alternativdarstellungen  
+Datum: 26. August 2026
+Scope: F.2.1 bis F.2.9 einschließlich fünf Alternativdarstellungen
 Status: technische Einzelsichtung abgeschlossen; Domain-Review pending
 
 ## Prüfaufbau

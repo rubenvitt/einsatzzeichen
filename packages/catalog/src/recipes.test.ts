@@ -771,6 +771,27 @@ describe('Anhang F, Teilslice F-c', () => {
     expect(f2).toHaveLength(14);
     expect(f2.every((recipe) => recipe.spec.vehicleCategory === undefined)).toBe(true);
   });
+
+  it.each([
+    ['F.2.3#alternative', 5],
+    ['F.2.5#alternative', 6],
+  ] as const)(
+    '%s zeichnet die gemeinsame Landteilung genau einmal bei insgesamt %i Linien',
+    (key, expectedLineCount) => {
+      const recipe = RECIPES[key];
+      const lines = composeFromCatalog(recipe.spec, recipe.title).children.filter(
+        (primitive): primitive is Extract<Primitive, { type: 'line' }> =>
+          primitive.type === 'line' && primitive.role === 'pictogram',
+      );
+      expect(lines).toHaveLength(expectedLineCount);
+      expect(lines.filter((line) =>
+        line.x1 === 16 && line.y1 === 8 && line.x2 === 16 && line.y2 === 26,
+      )).toHaveLength(1);
+      expect(lines.filter((line) =>
+        line.x1 === 1 && line.y1 === 16 && line.x2 === 31 && line.y2 === 16,
+      )).toHaveLength(1);
+    },
+  );
 });
 
 describe('Anhang E, Teilslice E-c (E.1.29 bis E.1.37)', () => {

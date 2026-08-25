@@ -953,6 +953,42 @@ describe('compose() — randbündige Fachdienstzeichen', () => {
     expect(markIndex).toBeLessThan(labelIndex);
   });
 
+  it('setzt bewusst geteilte Primitive einmal, ohne bloß gleiche Geometrie zu verschlucken', () => {
+    const sharedQuartering: Primitive = {
+      type: 'line',
+      role: 'pictogram',
+      x1: 16,
+      y1: 6,
+      x2: 16,
+      y2: 26,
+      style: { stroke: 'schwarz', strokeWidth: 0.5 },
+    };
+    const sameGeometry = (): Primitive => ({
+      type: 'line',
+      role: 'pictogram',
+      x1: 16,
+      y1: 6,
+      x2: 16,
+      y2: 26,
+      style: { stroke: 'schwarz', strokeWidth: 0.5 },
+    });
+    const markCatalog: CatalogPorts = {
+      ...catalog,
+      bodyMark: () => [sharedQuartering, sameGeometry()],
+    };
+
+    const lines = compose(
+      { kind: 'formation', bodyMarks: ['medical-service', 'physician'] },
+      markCatalog,
+    ).children.filter((child) => child.type === 'line' && child.role === 'pictogram');
+
+    // Nur dieselbe, bewusst zwischen den beiden Markengruppen geteilte Referenz ist
+    // idempotent. Die beiden separat erzeugten, geometrisch identischen Linien bleiben beide
+    // erhalten: eine strukturelle Deduplizierung könnte echte Deckzeichnungen verschlucken.
+    expect(lines).toHaveLength(3);
+    expect(lines.filter((line) => line === sharedQuartering)).toHaveLength(1);
+  });
+
   it('fragt den Port ohne `bodyMarks` gar nicht', () => {
     // Das Katalog-Doppel `catalog` wirft in `bodyMark` — der Test belegt damit zugleich, dass
     // ein Zeichen ohne randbündige Marken den Port nicht anfasst.

@@ -440,12 +440,23 @@ function outline(points: readonly (readonly [number, number])[]): Primitive {
   };
 }
 
+// `compose()` behandelt dieselbe Primitive-Referenz in mehreren Markengruppen als bewusst
+// gemeinsam genutzte Schicht. Der Cache macht genau die zwei Linien der Landteilung für dieselbe
+// platzierte Körperhülle zu solchen Referenzen; separat erzeugte, nur geometrisch gleiche Linien
+// bleiben davon unberührt.
+const LAND_QUARTERING_BY_BOUNDS = new WeakMap<BoundsMm, Primitive[]>();
+
 function landQuartering(bounds: BoundsMm): Primitive[] {
+  const cached = LAND_QUARTERING_BY_BOUNDS.get(bounds);
+  if (cached !== undefined) return cached;
+
   const cx = (bounds.minX + bounds.maxX) / 2;
-  return [
+  const primitives = [
     stroke(cx, bounds.minY + 2.25, cx, bounds.maxY),
     stroke(bounds.minX, bounds.maxY - 10, bounds.maxX, bounds.maxY - 10),
   ];
+  LAND_QUARTERING_BY_BOUNDS.set(bounds, primitives);
+  return primitives;
 }
 
 function landPatientTransport(bounds: BoundsMm): Primitive[] {
