@@ -69,7 +69,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 369 Zeilen mit 273 Elementdarstellungen', () => {
+  it('enthält exakt 383 Zeilen mit 273 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -90,12 +90,13 @@ describe('Coverage-Manifest', () => {
       // Teilslice E-a, zwölf aus E-b und neun aus E-c (damit ist E.1 vollständig), 21 aus E-d,
       // fünf aus E-e und fünf aus E-f. **68 und damit vollständig** seit E.2.6 am 18. August 2026
       // nachgezogen wurde; die Lückenlosigkeit hält der Test „führt Anhang E lückenlos" unten
-      // fest, und erst er trägt das `E` im `scope`. Dazu die elf Zeilen aus F-a: zehn
+      // fest, und erst er trägt das `E` im `scope`. Dazu elf Zeilen aus F-a und 14 aus F-b:
+      // F.1.3 sowie F.1.12 bis F.1.22 einschließlich der Alternativen von F.1.12 und F.1.15.
+      // F-a umfasst zehn
       // Abschnitte, denn `F.1.11` führt als erster Abschnitt des Katalogs neben `primary` eine
       // `alternative` — die Zeile zählt einzeln, weil das Manifest Darstellungen zählt und nicht
-      // Abschnitte. Zehn und nicht elf: `F.1.3` ist vermessen und nicht gebaut
-      // (`docs/decisions/2026-08-18-anhang-f-a.md`, Abschnitt 8).
-      'composition-recipe': 82,
+      // Abschnitte, weil F.1.3 dort noch bewusst offen blieb; F-b baut es mit `foot-band`.
+      'composition-recipe': 96,
       // 254 Piktogramme plus acht Organisationen (seit LFH-424 mit hilfsorganisation), vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
@@ -103,7 +104,7 @@ describe('Coverage-Manifest', () => {
       // Strichhülle vermessen ist.
       element: 273,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(369);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(383);
     expect(elementRows).toHaveLength(273);
     expect(pictogramRows).toHaveLength(254);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
@@ -184,6 +185,9 @@ describe('Coverage-Manifest', () => {
   const TECHNICAL_DEVIATIONS = [
     'bbk-babz-2025:F.1.1',
     'bbk-babz-2025:F.1.2',
+    'bbk-babz-2025:F.1.3',
+    'bbk-babz-2025:F.1.13',
+    'bbk-babz-2025:F.1.21',
     'bbk-babz-2025:E.1.17',
     'bbk-babz-2025:E.1.19',
     'bbk-babz-2025:E.1.24',
@@ -193,9 +197,9 @@ describe('Coverage-Manifest', () => {
 
   it('trägt für jeden Eintrag eine Referenzdatei und beide Reviewrollen', () => {
     // Die Zusage ist „kein Eintrag ohne zurechenbares technisches Review", nicht „jeder Eintrag
-    // approved". Sie wird deshalb nicht auf eine Statusmenge aufgeweicht, sondern nennt die sieben
-    // Abweichungen einzeln: jede andere Zeile muss `approved` sein, und die sieben genannten
-    // müssen zusätzlich eine Notiz führen. Ein achtes `deviation` fällt hier auf, ein
+    // approved". Sie wird deshalb nicht auf eine Statusmenge aufgeweicht, sondern nennt die zehn
+    // Abweichungen einzeln: jede andere Zeile muss `approved` sein, und die zehn genannten
+    // müssen zusätzlich eine Notiz führen. Eine elfte `deviation` fällt hier auf, eine
     // weggefallenes ebenso.
     for (const entry of COVERAGE_MANIFEST.entries) {
       expect(entry.referenceAsset).toMatch(/\.svg$/);
@@ -211,19 +215,30 @@ describe('Coverage-Manifest', () => {
     }
   });
 
-  it('führt genau sieben technische Abweichungen, drei aus E-b, je eine aus E-c und E-e, zwei aus F-a', () => {
+  it('führt genau zehn technische Abweichungen: fünf aus F, drei aus E-b und je eine aus E-c/E-e', () => {
     // Gegenrichtung des Tests oben: dort wird für bekannte Schlüssel `deviation` verlangt, hier,
     // dass es keine weiteren gibt. Ohne diese Hälfte bliebe eine still hinzugekommene Abweichung
     // an einer anderen Zeile unbemerkt, weil der `else`-Zweig sie nie zu sehen bekäme.
     //
-    // Die sechste ist F.1.1: seine zwei Kopfbalken werden nicht gezeichnet, weil der Katalog für
-    // sie keinen Begriff hat (dieselbe Abweichung wie an E.1.31). Die siebte ist F.1.2: sein
-    // Innenzeichen steht symmetrisch zur Körpermitte, während die Referenz es um 2,3° schief
-    // zeichnet — beide in `ANHANG_F_A_DEVIATIONS` begründet.
+    // F-a führt F.1.1 (Kopfbalken) und F.1.2 (Symmetrieabweichung). F-b ergänzt F.1.3, F.1.13
+    // und F.1.21: jeweils unbegriffene Kopfbalken; die zentralen Innenformen von F.1.13/F.1.21
+    // sind dagegen als rein geometrische TechnicalBodyMarkIds gebaut.
     const deviations = COVERAGE_MANIFEST.entries
       .filter((entry) => entry.review.technical.status === 'deviation')
       .map((entry) => entry.sourceId);
     expect(deviations).toEqual(TECHNICAL_DEVIATIONS);
+  });
+
+  it('trägt für alle 14 F-b-Darstellungen das eigene Review vom 25. August', () => {
+    const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
+      entry.sourceId === 'bbk-babz-2025:F.1.3' ||
+      /^bbk-babz-2025:F\.1\.(1[2-9]|2[0-2])$/.test(entry.sourceId),
+    );
+    expect(rows).toHaveLength(14);
+    for (const row of rows) {
+      expect(row.review.technical.date).toBe('2026-08-25');
+      expect(row.review.technical.note).toContain('finale Task-6-Kontaktbogen');
+    }
   });
 
   it('meldet keine fehlenden, doppelten oder primary-verletzenden Einträge', () => {
@@ -283,6 +298,14 @@ describe('Coverage-Manifest', () => {
       'L',
       'M',
     ]);
+  });
+
+  it('führt F.1 vollständig, ohne Anhang F vorzeitig zu beanspruchen', () => {
+    const sections = COVERAGE_MANIFEST.entries
+      .filter((entry) => entry.sourceId.startsWith('bbk-babz-2025:F.1.'))
+      .map((entry) => entry.sourceId.slice('bbk-babz-2025:'.length).replace(/#.*$/, ''));
+    expect(new Set(sections)).toEqual(new Set(Array.from({ length: 22 }, (_, index) => `F.1.${index + 1}`)));
+    expect(COVERAGE_MANIFEST.scope).not.toContain('F');
   });
 
   it('meldet Katalogeinträge ohne genau eine primary-Darstellung', () => {

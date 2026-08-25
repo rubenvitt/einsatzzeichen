@@ -2,6 +2,7 @@ import {
   DEFAULT_STROKE_WIDTH_MM,
   DEFAULT_VIEWBOX_MM,
   type BodyVariantId,
+  type BodyMarkId,
   type CapabilityId,
   type ChassisMark,
   type ChassisShape,
@@ -350,7 +351,7 @@ export function bodyLabelInk(bodyFill: ColorToken): ColorToken {
 }
 
 /**
- * Die Beschriftungen der fünf Zonen, gegen die Hülle des platzierten Körpers gerechnet. Die
+ * Die Beschriftungen der sechs Zonen, gegen die Hülle des platzierten Körpers gerechnet. Die
  * Läufe **im** Körper tragen die aus der Körperfüllung abgeleitete Tinte (`bodyLabelInk`), der
  * Lauf **unter** dem Körper die Organisationsfarbe. Beide sind auf einen Kontrastvertrag
  * angewiesen; der steht im A11y-Gate des Katalogs.
@@ -362,6 +363,7 @@ function labelPrimitives(
   belowRightFill: ColorToken | null,
   centerBaselineFromBodyBottomMm: number,
   topLeftBaselineFromBodyTopMm: number | undefined,
+  bottomCenterBaselineFromBodyBottomMm: number | undefined,
   ink: ColorToken,
 ): Primitive[] {
   const centerXMm = (bodyBoundsMm.minX + bodyBoundsMm.maxX) / 2;
@@ -412,10 +414,11 @@ function labelPrimitives(
         'start',
         anchorXMm,
         anchorXMm,
-        // Die Zone endet an der senkrechten Mittellinie: dort steht bei jedem F-Zeichen der Arm
-        // der Fachdienstteilung, und kein Lauf aus F.1.1 bis F.1.11 überschreitet sie (der
-        // breiteste ist „RettD" mit Tinte bis 12,548 mm bei einer Mitte von 16,0).
-        centerXMm - anchorXMm,
+        // F.1.12 führt „ÜMANV-S" sichtbar über die senkrechte Mittellinie hinaus. Der Anker
+        // bleibt derselbe wie in F-a; die Box endet deshalb erst an der rechten Innenmarge des
+        // Körpers. Eine Begrenzung auf das obere linke Viertel wäre seit F-b eine falsche
+        // Clipping-Zusage, obwohl die Zone weiterhin durch ihren linken Anker benannt ist.
+        rightMm - anchorXMm,
         viewBoxWidthMm,
         ink,
       ),
@@ -431,6 +434,28 @@ function labelPrimitives(
         leftMm,
         leftMm,
         centerXMm - leftMm,
+        viewBoxWidthMm,
+        ink,
+      ),
+    );
+  }
+  if (labels.bottomCenter !== undefined) {
+    if (bottomCenterBaselineFromBodyBottomMm === undefined) {
+      throw new Error(
+        'Die Zone "bottomCenter" ist an dieser Körperform nicht vermessen: ihre Grundlinie ' +
+          'steht nur für die taktische Formation fest (2,0 mm über der Körperunterkante, ' +
+          'gemessen an F.1.18 und F.1.20).',
+      );
+    }
+    primitives.push(
+      labelPrimitive(
+        labels.bottomCenter,
+        BOTTOM_LABEL_SIZE_MM,
+        bodyBoundsMm.maxY - bottomCenterBaselineFromBodyBottomMm,
+        'middle',
+        centerXMm,
+        centerBoxLeftMm,
+        centerBoxRightMm - centerBoxLeftMm,
         viewBoxWidthMm,
         ink,
       ),
@@ -518,7 +543,11 @@ export interface CatalogPorts {
    * Boxfassung: die beiden Zeichnungen unterscheiden sich in ihren Maßen und nicht nur in ihrer
    * Größe (Arztleiste 8 gegen 10 mm, Transportring r 5,5 gegen r 7,0).
    */
-  bodyMark(id: CapabilityId, bodyBoundsMm: BoundsMm): readonly Primitive[];
+  bodyMark(
+    id: BodyMarkId,
+    context: { kind: SymbolKind; bodyVariant?: BodyVariantId },
+    bodyBoundsMm: BoundsMm,
+  ): readonly Primitive[];
 }
 
 export class CompositionError extends Error {
@@ -638,7 +667,14 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
 
   const placedBody = profile.place(body, headBox?.bottomMm ?? null);
 
-  if (extras.length > 0 && headBox !== null) {
+  // Einzige belegte Ausnahme: F.1.17 führt `foot-band` zusammen mit der Kopfzone `gruppe`.
+  // Diese Kopfzone verschiebt den Formationskörper nicht; Band und Hülle bleiben auf y 23…26.
+  // Weder andere Stärken noch andere Zusatzgeometrien werden daraus fortgeschrieben.
+  const isMeasuredFootBandWithGroup =
+    spec.kind === 'formation' &&
+    spec.bodyVariant === 'foot-band' &&
+    spec.strength === 'gruppe';
+  if (extras.length > 0 && headBox !== null && !isMeasuredFootBandWithGroup) {
     // Wie Zusatzgeometrie einer Kopfzone ausweicht, ist **nicht** belegt: kein Zeichen des
     // Referenzbestands trägt beides. Der Anhang E.2 führt überhaupt keine Kopfzone (an allen 31
     // Dateien nachgesehen), und `validateSpec` lehnt eine Stärkeangabe an diesen Körperformen
@@ -792,7 +828,7 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
   // gegen die Standardgeometrie. Deshalb ohne die Verschiebung, die die Boxpiktogramme brauchen —
   // sie sind bereits an der richtigen Stelle gerechnet.
   const bodyMarkPrimitives = (spec.bodyMarks ?? []).flatMap((id) => [
-    ...catalog.bodyMark(id, bodyBoundsMm),
+    ...catalog.bodyMark(id, { kind: spec.kind, bodyVariant: spec.bodyVariant }, bodyBoundsMm),
   ]);
 
   const labels = spec.labels !== undefined
@@ -803,6 +839,7 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
         spec.organization !== undefined ? catalog.organizationColor(spec.organization) : null,
         profile.centerBaselineFromBodyBottomMm,
         profile.topLeftBaselineFromBodyTopMm,
+        profile.bottomCenterBaselineFromBodyBottomMm,
         bodyLabelInk(bodyFill),
       )
     : [];

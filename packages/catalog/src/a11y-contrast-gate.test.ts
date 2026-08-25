@@ -226,6 +226,7 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
         return (
           labels.center !== undefined ||
           labels.bottomLeft !== undefined ||
+          labels.bottomCenter !== undefined ||
           labels.bottomRight !== undefined
         );
       })

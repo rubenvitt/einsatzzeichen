@@ -193,6 +193,192 @@ export const ANHANG_F_A_RECIPES = {
   },
 } as const satisfies Record<string, Recipe>;
 
+export const ANHANG_F_B_RECIPES = {
+  'F.1.3': {
+    title: 'Mobiles Betreuungsmodul 5000',
+    referenceAsset: 'F.1.3_Mobiles Betreuungsmodul 5000.svg',
+    spec: {
+      kind: 'formation',
+      bodyVariant: 'foot-band',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['care', 'temporary-accommodation-resting'],
+      labels: { topLeft: '5.000' },
+    },
+  },
+  'F.1.12': {
+    title: 'Nachbarschaftliche Soforthilfe',
+    referenceAsset: 'F.1.12_Nachbarschaftliche Soforthilfe.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'gruppe',
+      bodyMarks: ['medical-service'],
+      labels: { topLeft: 'ÜMANV-S' },
+    },
+  },
+  'F.1.12#alternative': {
+    title: 'Nachbarschaftliche Soforthilfe',
+    referenceAsset: 'F.1.12_Nachbarschaftliche Soforthilfe_Alternative.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'gruppe',
+      bodyMarks: ['patient-transport', 'physician', 'intensive-care'],
+    },
+  },
+  'F.1.13': {
+    title: 'Behandlungsplatz-Bereitschaft',
+    referenceAsset: 'F.1.13_Behandlungsplatz-Bereitschaft.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['care', 'physician', 'ring-7mm-offset-down-1mm'],
+      labels: { topLeft: '50' },
+    },
+  },
+  'F.1.14': {
+    title: 'Erstversorgungstrupp',
+    referenceAsset: 'F.1.14_Erstversorgungstrupp.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'trupp',
+      bodyMarks: ['medical-service'],
+      labels: { topLeft: 'EVT' },
+    },
+  },
+  'F.1.15': {
+    title: 'Arzttrupp',
+    referenceAsset: 'F.1.15_Arzttrupp.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'trupp',
+      bodyMarks: ['physician'],
+    },
+  },
+  'F.1.15#alternative': {
+    title: 'Arzttrupp',
+    referenceAsset: 'F.1.15_Arzttrupp_Alternative.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'trupp',
+      bodyMarks: ['physician', 'intensive-care'],
+    },
+  },
+  'F.1.16': {
+    title: 'Drohnentrupp',
+    referenceAsset: 'F.1.16_Drohnentrupp.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'trupp',
+      bodyMarks: ['chevron-over-opposed-triangles'],
+    },
+  },
+  'F.1.17': {
+    title: 'Gruppe Verpflegung',
+    referenceAsset: 'F.1.17_Gruppe Verpflegung.svg',
+    spec: {
+      kind: 'formation',
+      bodyVariant: 'foot-band',
+      organization: 'hilfsorganisation',
+      strength: 'gruppe',
+      bodyMarks: ['care', 'catering'],
+      labels: { topLeft: '250' },
+    },
+  },
+  'F.1.18': {
+    title: 'Gruppe für soziale Betreuung',
+    referenceAsset: 'F.1.18_Gruppe für soziale Betreuung.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'gruppe',
+      bodyMarks: ['care'],
+      labels: { topLeft: '100', bottomCenter: 'SOZ' },
+    },
+  },
+  'F.1.19': {
+    title: 'Gruppe zur Herrichtung von Notunterkünften',
+    referenceAsset: 'F.1.19_Gruppe zur Herrichtung von Notunterkünften.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'gruppe',
+      bodyMarks: ['care', 'temporary-accommodation-resting'],
+      labels: { topLeft: '120' },
+    },
+  },
+  'F.1.20': {
+    title: 'Schnelleinsatzgruppe soziale Betreuung',
+    referenceAsset: 'F.1.20_Schnelleinsatzgruppe soziale Betreuung.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'gruppe',
+      bodyMarks: ['care'],
+      labels: { topLeft: '100', bottomCenter: 'SEG' },
+    },
+  },
+  'F.1.21': {
+    title: 'Betreuungsplatzbereitschaft 500',
+    referenceAsset: 'F.1.21_Betreuungsplatzbereitschaft 500.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['ring-6-5mm-offset-down-2mm-with-roof'],
+      labels: { topLeft: '500' },
+    },
+  },
+  'F.1.22': {
+    title: 'Transportzug bis 50 Betroffene',
+    referenceAsset: 'F.1.22_Transportzug bis 50 Betroffene.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'zug',
+      bodyMarks: ['care', 'patient-transport'],
+      labels: { topLeft: '50' },
+    },
+  },
+} as const satisfies Record<string, Recipe>;
+
+export const ANHANG_F_B_FINDINGS: Readonly<Record<string, string>> = Object.freeze({
+  'F.1.3':
+    'Die Bettzeichnung ist bildgleich mit F.1.19; allein F.1.3 führt zusätzlich das schwarze ' +
+    'Fußband. Der Lauf „5.000“ beginnt in der Quelle rund 0,48 mm weiter links als die vier ' +
+    'Vergleichsläufe, die den gemeinsamen topLeft-Anker auf 2,5 mm belegen.',
+  'F.1.16':
+    'Die Körpermarke kombiniert die gefüllte Drohnenmarke aus 3.6 mit einer zweiten gefüllten ' +
+    'Doppelkeilform. Sie wird als rein geometrische TechnicalBodyMarkId gebaut; der Katalog ' +
+    'behauptet damit weder SymbolKind noch CapabilityId, denn ihre fachliche Benennung ist aus ' +
+    'dem Bild allein nicht ableitbar.',
+  'F.1.17':
+    'Neben Zelt, Fußband und Lauf „250“ steht eine gegenüber 4.8.13 deutlich verkleinerte ' +
+    'Verpflegungszeichnung. Sie bleibt dieselbe Capability `catering`, erhält aber eine eigene ' +
+    'am F.1.17-Raster belegte randbündige Fassung statt eines Rückfalls auf die Boxfassung.',
+  'F.1.13':
+    'F.1.13 umschließt Teilung und Arztleiste mit einem Kreis r 7 mm um (16|17). F.1.21 trägt ' +
+    'dagegen r 6,5 mm um (16|18) mit eigener Innenzeichnung; beide werden als getrennte rein ' +
+    'geometrische TechnicalBodyMarkIds gebaut, ohne Capability-Semantik zu behaupten.',
+  'F.1.21':
+    'F.1.21 führt einen Kreis r 6,5 mm um (16|18), ein Dach (7|15–16|8–25|15) und ein ' +
+    'eingeschriebenes Dreieck. Die sichtbare Verwandtschaft mit F.1.13 belegt wegen der ' +
+    'abweichenden Maße keinen gemeinsamen Capability-Begriff.',
+});
+export const ANHANG_F_B_DEVIATIONS: Readonly<Record<string, string>> = Object.freeze({
+  'F.1.3': 'Die zwei Kopfbalken werden ohne begrifflich belegte StrengthId nicht gezeichnet.',
+  'F.1.13':
+    'Der einzelne Kopfbalken wird ohne begrifflich belegte StrengthId nicht gezeichnet. Der ' +
+    'Kreis ist als rein geometrische TechnicalBodyMarkId gebaut, nicht als CapabilityId.',
+  'F.1.21':
+    'Der einzelne Kopfbalken wird ohne begrifflich belegte StrengthId nicht gezeichnet. Die ' +
+    'komplexe Innenform ist als rein geometrische TechnicalBodyMarkId gebaut, nicht als ' +
+    'CapabilityId.',
+});
+
 /**
  * Befunde an den Referenzdateien selbst — in der Bauart von `ANHANG_E_C_FILL_FINDINGS`: was die
  * Quelle anders macht als ihre eigene Systematik, steht an der Manifestzeile und nicht nur im

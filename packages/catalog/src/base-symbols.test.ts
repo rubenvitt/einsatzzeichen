@@ -399,6 +399,26 @@ describe('Körperformen des Anhangs E.2', () => {
     expect(mmToUnits(chapterOne.maxY - raised.maxY)).toBeGreaterThan(TOLERANCE_UNITS);
   });
 
+  it('ergänzt foot-band nur an formation und lässt den normalen Körper unverändert', () => {
+    const normal = baseDrawing('formation');
+    const footBand = baseDrawing('formation', 'foot-band');
+
+    expect(footBand.children[0]).toEqual(normal.children[0]);
+    expect(normal.children).toHaveLength(1);
+    expect(footBand.children).toHaveLength(2);
+    expect(footBand.children[1]).toEqual({
+      type: 'rect',
+      role: 'pictogram',
+      x: 1,
+      y: 23,
+      width: 30,
+      height: 3,
+      style: { fill: 'schwarz', stroke: 'none' },
+    });
+    expect(boundsOfMm(footBand.children[0]!)).toEqual({ minX: 1, minY: 6, maxX: 31, maxY: 26 });
+    expect(() => baseDrawing('vehicle-land', 'foot-band')).toThrow(/Körpervariante/);
+  });
+
   it('wirft für eine Körpervariante, die die Art nicht führt', () => {
     // Der stille Rückfall auf die Kapitel-1-Zeichnung ist genau der Fehler, den dieser Teilslice
     // beseitigt — ein E.2-Wasserfahrzeug auf dem Rumpf von 1.5 läge 1,0 mm zu tief.

@@ -2,8 +2,11 @@ import type { BoundsMm } from '@einsatzzeichen/core';
 import {
   CAPABILITY_IDS,
   DEFAULT_STROKE_WIDTH_MM,
+  type BodyMarkId,
+  type BodyVariantId,
   type CapabilityId,
   type Primitive,
+  type SymbolKind,
 } from '@einsatzzeichen/schema';
 
 /**
@@ -158,7 +161,7 @@ function crossedSwabs(cx: number, cy: number): Primitive[] {
  * Die Zusatzstriche zur Teilung, je Fähigkeit. Alle Zahlen sind an den F-Dateien gemessen und
  * gegen die Hülle formuliert; die Herleitungen stehen an der jeweiligen Zeile.
  */
-const MARKS: Partial<Record<CapabilityId, (bounds: BoundsMm) => Primitive[]>> = {
+const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
   /** 4.6.1 Sanität, Grundzeichen — die Teilung allein. F.1.5, F.1.6, F.1.9, F.1.11. */
   'medical-service': (bounds) => quartering(bounds),
 
@@ -223,6 +226,25 @@ const MARKS: Partial<Record<CapabilityId, (bounds: BoundsMm) => Primitive[]>> = 
       },
     ];
   },
+  'temporary-accommodation-resting': (bounds) => [
+    stroke(bounds.minX + 10, bounds.minY + 8.5, bounds.minX + 10, bounds.minY + 14),
+    stroke(bounds.minX + 20, bounds.minY + 8.5, bounds.minX + 20, bounds.minY + 14),
+    {
+      type: 'path',
+      role: 'pictogram',
+      d:
+        `M ${bounds.minX + 10} ${bounds.minY + 12.75} ` +
+        `C ${bounds.minX + 12} ${bounds.minY + 10.5}, ` +
+        `${bounds.minX + 18} ${bounds.minY + 10.5}, ` +
+        `${bounds.minX + 20} ${bounds.minY + 12.75}`,
+      style: {
+        fill: 'none',
+        stroke: 'schwarz',
+        strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+      },
+    },
+    stroke(bounds.minX + 10, bounds.minY + 12.75, bounds.minX + 20, bounds.minY + 12.75),
+  ],
 
   /**
    * 4.6.5 Patiententransport — Teilung mit Ring und Diagonalkreuz um die Körpermitte. Gemessen an
@@ -324,15 +346,119 @@ const MARKS: Partial<Record<CapabilityId, (bounds: BoundsMm) => Primitive[]>> = 
       ...crossedSwabs(cx, cy),
     ];
   },
+
+  /**
+   * F.1.17: gegenüber der Boxfassung 4.8.13 um die Körpermitte halbierte Verpflegungskontur.
+   * Die F.1-Rastermessung bestätigt die Zielbox 10,5…20,5 × 12…20 mm. Die Kontrollpunkte sind
+   * aus der eigenen, bereits katalogisierten 4.8.13-Kontur transformiert; keine Pfaddaten der
+   * Referenzdatei werden übernommen.
+   */
+  catering: (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    const cy = (bounds.minY + bounds.maxY) / 2;
+    return [
+      {
+        type: 'path',
+        role: 'pictogram',
+        d:
+          `M ${cx} ${cy - 4} C ${cx - 3.5} ${cy - 4} ${cx - 5.5} ${cy - 2.5} ` +
+          `${cx - 5.5} ${cy} C ${cx - 5.5} ${cy + 2.5} ${cx - 3.5} ${cy + 4} ${cx} ${cy + 4} ` +
+          `C ${cx + 2} ${cy + 4} ${cx + 3.5} ${cy + 3} ${cx + 4.5} ${cy + 1.5} ` +
+          `L ${cx} ${cy} L ${cx + 4.5} ${cy - 2.5} C ${cx + 3.5} ${cy - 3.5} ` +
+          `${cx + 2} ${cy - 4} ${cx} ${cy - 4} Z`,
+        style: { fill: 'schwarz' },
+      },
+    ];
+  },
+
+  /** F.1.13: Kreis r 7 mm, Mittelpunkt 1 mm unter der Körpermitte. */
+  'ring-7mm-offset-down-1mm': (bounds) => [
+    {
+      type: 'circle',
+      role: 'pictogram',
+      cx: (bounds.minX + bounds.maxX) / 2,
+      cy: (bounds.minY + bounds.maxY) / 2 + 1,
+      r: 7,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+  ],
+
+  /** F.1.16: ein gefüllter Winkel über zwei zur Körpermitte gerichteten Dreiecken. */
+  'chevron-over-opposed-triangles': (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    const cy = (bounds.minY + bounds.maxY) / 2;
+    const filled = (points: readonly (readonly [number, number])[]): Primitive => ({
+      type: 'polyline',
+      role: 'pictogram',
+      points,
+      closed: true,
+      style: { fill: 'schwarz', stroke: 'none' },
+    });
+    return [
+      filled([
+        [cx, cy],
+        [cx - 8, cy - 6],
+        [cx - 8, cy - 7.5],
+        [cx, cy - 3],
+        [cx + 8, cy - 7.5],
+        [cx + 8, cy - 6],
+      ]),
+      filled([[cx, cy + 4], [cx - 8, cy + 6.667], [cx - 8, cy + 1.333]]),
+      filled([[cx, cy + 4], [cx + 8, cy + 1.333], [cx + 8, cy + 6.667]]),
+    ];
+  },
+
+  /** F.1.21: eigener Ring r 6,5 mm, Dach und eingeschriebenes Dreieck. */
+  'ring-6-5mm-offset-down-2mm-with-roof': (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    const cy = (bounds.minY + bounds.maxY) / 2;
+    const outline = (points: readonly (readonly [number, number])[]): Primitive => ({
+      type: 'polyline',
+      role: 'pictogram',
+      points,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    });
+    return [
+      outline([[cx - 9, cy - 1], [cx, cy - 8], [cx + 9, cy - 1]]),
+      {
+        type: 'circle',
+        role: 'pictogram',
+        cx,
+        cy: cy + 2,
+        r: 6.5,
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      outline([[cx - 4.5, cy + 6.5], [cx, cy - 4.5], [cx + 4.5, cy + 6.5]]),
+    ];
+  },
 };
 
-export function bodyMark(id: CapabilityId, bodyBoundsMm: BoundsMm): readonly Primitive[] {
+export function bodyMark(
+  id: BodyMarkId,
+  context: { kind: SymbolKind; bodyVariant?: BodyVariantId },
+  bodyBoundsMm: BoundsMm,
+): readonly Primitive[] {
   const build = MARKS[id];
   if (build === undefined) {
     throw new Error(
       `Für die Fähigkeit "${id}" ist keine randbündige Fassung vermessen. Sie fällt nicht auf ` +
         'die Boxfassung zurück: beide Zeichnungen unterscheiden sich in ihren Maßen und nicht ' +
         'nur in ihrer Größe.',
+    );
+  }
+
+  const isMeasuredNormalFormation =
+    context.kind === 'formation' && context.bodyVariant === undefined && id !== 'catering';
+  const isMeasuredFootBandFormation =
+    context.kind === 'formation' &&
+    context.bodyVariant === 'foot-band' &&
+    (id === 'care' || id === 'temporary-accommodation-resting' || id === 'catering');
+  const isMeasuredContext = isMeasuredNormalFormation || isMeasuredFootBandFormation;
+  if (!isMeasuredContext) {
+    const variant = context.bodyVariant ?? 'normal';
+    throw new Error(
+      `Das Art-/Varianten-/Fähigkeitspaar ${context.kind}/${variant}/${id} ist nicht vermessen. ` +
+        'Randbündige Fachdienstzeichen fallen nicht auf eine andere Körperform oder Variante zurück.',
     );
   }
 
@@ -350,7 +476,26 @@ export function bodyMark(id: CapabilityId, bodyBoundsMm: BoundsMm): readonly Pri
     );
   }
 
-  return build(bodyBoundsMm);
+  const marks = build(bodyBoundsMm);
+  if (id === 'care' && context.bodyVariant === 'foot-band') {
+    return [
+      {
+        type: 'polyline',
+        role: 'pictogram',
+        points: [
+          [bodyBoundsMm.minX, bodyBoundsMm.maxY - 3],
+          [(bodyBoundsMm.minX + bodyBoundsMm.maxX) / 2, bodyBoundsMm.minY],
+          [bodyBoundsMm.maxX, bodyBoundsMm.maxY - 3],
+        ],
+        style: {
+          fill: 'none',
+          stroke: 'schwarz',
+          strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+        },
+      },
+    ];
+  }
+  return marks;
 }
 
 /**

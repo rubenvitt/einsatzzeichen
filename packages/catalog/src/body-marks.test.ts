@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { BoundsMm } from '@einsatzzeichen/core';
 import { DEFAULT_STROKE_WIDTH_MM, type Primitive } from '@einsatzzeichen/schema';
-import { BODY_MARK_IDS, bodyMark } from './body-marks.js';
+import { BODY_MARK_IDS, bodyMark as bodyMarkWithContext } from './body-marks.js';
 
 /**
  * Die einzige vermessene Körperhülle dieser Zeichnungen: das Rechteck 30 × 20 mm der taktischen
@@ -9,6 +9,8 @@ import { BODY_MARK_IDS, bodyMark } from './body-marks.js';
  * Dateien aus F.1.1 bis F.1.11 es zeigen.
  */
 const formationBodyMm: BoundsMm = { minX: 1, minY: 6, maxX: 31, maxY: 26 };
+const bodyMark = (id: Parameters<typeof bodyMarkWithContext>[0], bounds: BoundsMm) =>
+  bodyMarkWithContext(id, { kind: 'formation' }, bounds);
 
 /** Der Strichstil, den `body-marks.ts` an jede Linie schreibt — Kontur, keine Füllung. */
 const strokeStyle = { stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM } as const;
@@ -161,6 +163,127 @@ describe('bodyMark() — die Zeltmarke der Betreuung', () => {
       ...bodyMark('care', formationBodyMm),
     ];
     expect(combined).toEqual([...quartering, tent]);
+  });
+});
+
+describe('bodyMark() — F.1.3-Mobilmodul', () => {
+  it('zeichnet das vom F.1.4-Zelt getrennte Giebelprofil und das schwarze Fußband', () => {
+    expect(bodyMarkWithContext('care', { kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm)).toEqual([
+      {
+        type: 'polyline', role: 'pictogram', points: [[1, 23], [16, 6], [31, 23]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+    ]);
+  });
+
+  it('zeichnet das Ruhebett mit Pfosten, gewölbter Liegefläche und Mittellinie', () => {
+    const marks = bodyMark('temporary-accommodation-resting', formationBodyMm);
+    expect(marks).toEqual(expect.arrayContaining([
+      line(11, 14.5, 11, 20), line(21, 14.5, 21, 20), line(11, 18.75, 21, 18.75),
+    ]));
+  });
+});
+
+describe('bodyMark() — reduzierte Verpflegungsmarke aus F.1.17', () => {
+  it('setzt die vorhandene Capability als eigene randbündige Fassung mittig in das Zelt', () => {
+    // Eigene Rastermessung an F.1.17: die Tinte liegt ungefähr in der Box 10,5…20,5 ×
+    // 12…20 mm. Das ist nicht die 20 × 16 mm große Boxfassung aus 4.8.13. Die kubischen
+    // Kontrollpunkte unten sind die um die Körpermitte halbierte, bereits katalogisierte
+    // 4.8.13-Kontur; es werden keine Pfaddaten aus der Referenzdatei übernommen.
+    expect(bodyMarkWithContext(
+      'catering',
+      { kind: 'formation', bodyVariant: 'foot-band' },
+      formationBodyMm,
+    )).toEqual([
+      {
+        type: 'path',
+        role: 'pictogram',
+        d:
+          'M 16 12 C 12.5 12 10.5 13.5 10.5 16 C 10.5 18.5 12.5 20 16 20 ' +
+          'C 18 20 19.5 19 20.5 17.5 L 16 16 L 20.5 13.5 C 19.5 12.5 18 12 16 12 Z',
+        style: { fill: 'schwarz' },
+      },
+    ]);
+  });
+});
+
+describe('bodyMark() — rein geometrische technische Marken aus F.1', () => {
+  it('setzt den F.1.13-Ring mit eigenem Mittelpunkt und Radius um die vorhandenen Marken', () => {
+    expect(bodyMark('ring-7mm-offset-down-1mm', formationBodyMm)).toEqual([
+      {
+        type: 'circle',
+        role: 'pictogram',
+        cx: 16,
+        cy: 17,
+        r: 7,
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+    ]);
+  });
+
+  it('setzt die drei gefüllten F.1.16-Polygone auf ihre vermessenen Eckpunkte', () => {
+    expect(bodyMark('chevron-over-opposed-triangles', formationBodyMm)).toEqual([
+      {
+        type: 'polyline',
+        role: 'pictogram',
+        points: [[16, 16], [8, 10], [8, 8.5], [16, 13], [24, 8.5], [24, 10]],
+        closed: true,
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+      {
+        type: 'polyline',
+        role: 'pictogram',
+        points: [[16, 20], [8, 22.667], [8, 17.333]],
+        closed: true,
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+      {
+        type: 'polyline',
+        role: 'pictogram',
+        points: [[16, 20], [24, 17.333], [24, 22.667]],
+        closed: true,
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+    ]);
+  });
+
+  it('setzt F.1.21 als gemessenen Ring mit äußerem Dach und eingeschriebenem Dreieck', () => {
+    expect(bodyMark('ring-6-5mm-offset-down-2mm-with-roof', formationBodyMm)).toEqual([
+      {
+        type: 'polyline',
+        role: 'pictogram',
+        points: [[7, 15], [16, 8], [25, 15]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      {
+        type: 'circle',
+        role: 'pictogram',
+        cx: 16,
+        cy: 18,
+        r: 6.5,
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      {
+        type: 'polyline',
+        role: 'pictogram',
+        points: [[11.5, 22.5], [16, 11.5], [20.5, 22.5]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+    ]);
+  });
+
+  it('lehnt technische IDs außerhalb der konkret vermessenen Formationsfassung ab', () => {
+    expect(() => bodyMarkWithContext(
+      'chevron-over-opposed-triangles',
+      { kind: 'vehicle-land' },
+      formationBodyMm,
+    )).toThrow(/nicht vermessen/);
+    expect(() => bodyMarkWithContext(
+      'ring-7mm-offset-down-1mm',
+      { kind: 'formation', bodyVariant: 'foot-band' },
+      formationBodyMm,
+    )).toThrow(/nicht vermessen/);
+    expect(() => bodyMark('catering', formationBodyMm)).toThrow(/nicht vermessen/);
   });
 });
 
@@ -320,6 +443,21 @@ describe('bodyMark() — der zusammengefasste Eintrag von F.1.2', () => {
  * neue Bauart mit n = 1. Wer die Meldungen umformuliert, passt hier die Muster mit an.
  */
 describe('bodyMark() — was nicht fortgeschrieben wird', () => {
+  it('wirft für jedes nicht vermessene Art-/Varianten-/Fähigkeitspaar', () => {
+    expect(() =>
+      bodyMarkWithContext('medical-service', { kind: 'vehicle-land' }, formationBodyMm),
+    ).toThrow(/nicht vermessen/);
+    expect(() =>
+      bodyMarkWithContext('medical-service', { kind: 'formation', bodyVariant: 'raised-hull' }, formationBodyMm),
+    ).toThrow(/nicht vermessen/);
+    expect(() =>
+      bodyMarkWithContext('medical-service', { kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm),
+    ).toThrow(/nicht vermessen/);
+    expect(() =>
+      bodyMarkWithContext('fire-fighting', { kind: 'formation' }, formationBodyMm),
+    ).toThrow(/keine randbündige Fassung vermessen/);
+  });
+
   it('wirft für eine Fähigkeit ohne vermessene randbündige Fassung', () => {
     // `fire-fighting` steht in `CAPABILITY_IDS` und hat ein Boxpiktogramm, aber keine an einer
     // F-Datei vermessene randbündige Fassung. Ein stiller Rückfall auf die Boxfassung wäre der
@@ -369,7 +507,10 @@ describe('BODY_MARK_IDS', () => {
     for (const id of BODY_MARK_IDS) {
       // Kein Mindestmaß von zwei Primitiven: `care` steht mit **einem** Polyzug ohne Teilung da,
       // und genau das ist an F.1.3 belegt (siehe den Block zur Zeltmarke oben).
-      expect(bodyMark(id, formationBodyMm).length).toBeGreaterThanOrEqual(1);
+      const context = id === 'catering'
+        ? { kind: 'formation', bodyVariant: 'foot-band' } as const
+        : { kind: 'formation' } as const;
+      expect(bodyMarkWithContext(id, context, formationBodyMm).length).toBeGreaterThanOrEqual(1);
     }
   });
 });

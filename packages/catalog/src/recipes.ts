@@ -21,7 +21,7 @@ import {
   ANHANG_E_E_RECIPES,
   ANHANG_E_F_RECIPES,
 } from './recipes-anhang-e.js';
-import { ANHANG_F_A_RECIPES } from './recipes-anhang-f.js';
+import { ANHANG_F_A_RECIPES, ANHANG_F_B_RECIPES } from './recipes-anhang-f.js';
 
 const PORTS: CatalogPorts = {
   baseDrawing,
@@ -69,6 +69,7 @@ export interface Recipe {
  */
 export const RECIPES = {
   ...ANHANG_F_A_RECIPES,
+  ...ANHANG_F_B_RECIPES,
   ...ANHANG_E_A_RECIPES,
   ...ANHANG_E_B_RECIPES,
   ...ANHANG_E_C_RECIPES,
@@ -164,6 +165,7 @@ export function labelContrastRequirements(
       labels.center !== undefined ||
       labels.topLeft !== undefined ||
       labels.bottomLeft !== undefined ||
+      labels.bottomCenter !== undefined ||
       labels.bottomRight !== undefined
     ) {
       inBody.add(organization);

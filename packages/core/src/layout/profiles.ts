@@ -71,6 +71,11 @@ export interface LayoutProfile {
    */
   topLeftBaselineFromBodyTopMm?: number;
   /**
+   * Grundlinie des unten mittigen Laufs, gerechnet von der Körperunterkante nach oben. Bisher
+   * allein an F.1.18 und F.1.20 auf der taktischen Formation gemessen.
+   */
+  bottomCenterBaselineFromBodyBottomMm?: number;
+  /**
    * Setzt den Körper relativ zur Kopfzone. `headBottomMm === null` bedeutet: keine Kopfzone,
    * der Körper behält seine Standardgeometrie.
    */
@@ -121,7 +126,11 @@ const rectBodyProfile: LayoutProfile = rectBody(8);
  * Profilobjekt und keine Ergänzung an `rectBodyProfile`: das teilen sich zehn Körperformen, und
  * für neun davon ist diese Grundlinie unvermessen.
  */
-const formationProfile: LayoutProfile = { ...rectBody(8), topLeftBaselineFromBodyTopMm: 5 };
+const formationProfile: LayoutProfile = {
+  ...rectBody(8),
+  topLeftBaselineFromBodyTopMm: 5,
+  bottomCenterBaselineFromBodyBottomMm: 2,
+};
 
 /**
  * Verkleinert das gedrehte Quadrat von oben und hält die Unterkante.

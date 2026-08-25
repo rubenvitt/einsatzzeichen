@@ -200,6 +200,20 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:F.1.11#primary': { status: 'pending' },
   // Die erste Ledgerzeile des Katalogs, die keine `primary`-Darstellung führt.
   'bbk-babz-2025:F.1.11#alternative': { status: 'pending' },
+  'bbk-babz-2025:F.1.3#primary': { status: 'pending' },
+  'bbk-babz-2025:F.1.12#primary': { status: 'pending' },
+  'bbk-babz-2025:F.1.12#alternative': { status: 'pending' },
+  'bbk-babz-2025:F.1.13#primary': { status: 'pending' },
+  'bbk-babz-2025:F.1.14#primary': { status: 'pending' },
+  'bbk-babz-2025:F.1.15#primary': { status: 'pending' },
+  'bbk-babz-2025:F.1.15#alternative': { status: 'pending' },
+  'bbk-babz-2025:F.1.16#primary': { status: 'pending' },
+  'bbk-babz-2025:F.1.17#primary': { status: 'pending' },
+  'bbk-babz-2025:F.1.18#primary': { status: 'pending' },
+  'bbk-babz-2025:F.1.19#primary': { status: 'pending' },
+  'bbk-babz-2025:F.1.20#primary': { status: 'pending' },
+  'bbk-babz-2025:F.1.21#primary': { status: 'pending' },
+  'bbk-babz-2025:F.1.22#primary': { status: 'pending' },
   'bbk-babz-2025:2.1#primary': { status: 'pending' },
   // 2.2 seit LFH-424. Fachlich besonders zu prüfen: die Zuordnung „HiOrg = Hilfsorganisation" ist
   // aus dem gerasterten Bild abgelesen, nicht aus dem Dateinamen — der ist generisch

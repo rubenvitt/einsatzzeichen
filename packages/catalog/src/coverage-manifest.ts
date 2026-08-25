@@ -31,6 +31,9 @@ import {
   ANHANG_F_A_DEVIATIONS,
   ANHANG_F_A_FINDINGS,
   ANHANG_F_A_RECIPES,
+  ANHANG_F_B_RECIPES,
+  ANHANG_F_B_FINDINGS,
+  ANHANG_F_B_DEVIATIONS,
 } from './recipes-anhang-f.js';
 
 /**
@@ -116,6 +119,25 @@ const ANHANG_F_A_TECHNICAL_REVIEW: Review = {
     '(docs/reviews/2026-08-18-f-a-visual-qa.md). Die Organisation hilfsorganisation ist eine ' +
     'Entscheidung dieses Teilslice und keine Messung: alle 66 F-Dateien führen ausschließlich ' +
     '#fff, und ob das eine Organisation oder keine bedeutet, sagt die Quelle nicht.',
+};
+
+/**
+ * Eigenes technisches Review für F-b: Dieser Teilslice ergänzt nicht nur Rezepte, sondern die
+ * Formationsvariante `foot-band`, die unten mittige Beschriftungszone und rein geometrische
+ * TechnicalBodyMarkIds. Die Note behauptet ausdrücklich keinen bereits gesehenen finalen
+ * Task-6-Kontaktbogen; sie benennt nur die lokalen, in diesem Teilslice ausgeführten Gates.
+ */
+const ANHANG_F_B_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-25',
+  note:
+    'Alle 14 Originalreferenzen aus F.1.3 und F.1.12 bis F.1.22 wurden einzeln gerastert und ' +
+    'gegen die Rezeptmatrix geprüft. Lokale Geometrietests halten foot-band, bottomCenter, die ' +
+    'kontextgebundenen BodyMarks und alle 14 Specs fest; Snapshot-, Mehrgrößen-, viewBox-, ' +
+    'Metadaten- und Kontrast-Gates prüfen den renderbaren Bestand. Der finale Task-6-Kontaktbogen ' +
+    'war zu diesem Zeitpunkt noch nicht erzeugt oder gesichtet. Die Organisation ' +
+    'hilfsorganisation bleibt eine technische Entscheidung, das Domain-Review pending.',
 };
 
 /** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
@@ -535,6 +557,13 @@ function technicalReviewFor(section: string): Review {
       ANHANG_F_A_TECHNICAL_REVIEW,
       ANHANG_F_A_FINDINGS[section],
       ANHANG_F_A_DEVIATIONS[section],
+    );
+  }
+  if (Object.hasOwn(ANHANG_F_B_RECIPES, section)) {
+    return withFindingAndDeviation(
+      ANHANG_F_B_TECHNICAL_REVIEW,
+      ANHANG_F_B_FINDINGS[section],
+      ANHANG_F_B_DEVIATIONS[section],
     );
   }
   return TECHNICAL_REVIEW;

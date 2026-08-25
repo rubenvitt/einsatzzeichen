@@ -89,16 +89,16 @@ describe('Fachreview-Ledger', () => {
     // und E-f. **31 und nicht mehr 30:** E.2.6 ist am 18. August 2026 nachgezogen worden und hat
     // damit Manifestzeile und Ledgerplatz.
     //
-    // **369 seit dem Teilslice F-a:** elf Zeilen für zehn Abschnitte — F.1.1, F.1.2, F.1.4 und
+    // **369 nach F-a:** elf Zeilen für zehn Abschnitte — F.1.1, F.1.2, F.1.4 und
     // F.1.5 bis F.1.11. Neun statt acht, weil `F.1.11` als erster Abschnitt des Katalogs eine zweite
     // Darstellung führt: `#alternative` bekommt einen eigenen Ledgerplatz, weil das Fachreview
     // über die Darstellung entscheidet und nicht über den Abschnitt. Zehn und nicht elf, weil
-    // F.1.3 vermessen und nicht gebaut ist; die Zahl folgt dem Manifest und nicht dem
-    // Zuschnitt.
-    expect(manifestReviews).toHaveLength(369);
+    // F.1.3 in F-a vermessen und nicht gebaut war. F-b ergänzt 14 Reviewplätze: F.1.3, F.1.12
+    // bis F.1.22 und die beiden Alternativdarstellungen; damit sind es hier 383.
+    expect(manifestReviews).toHaveLength(383);
     expect(sourceReviews).toHaveLength(13);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(383);
+    expect(reviews).toHaveLength(397);
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
   });
 

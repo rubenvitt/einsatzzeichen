@@ -173,6 +173,19 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
     });
   }
 
+  if (
+    spec.labels?.bottomCenter !== undefined &&
+    profileFor(spec.kind).bottomCenterBaselineFromBodyBottomMm === undefined
+  ) {
+    issues.push({
+      rule: 'bottom-center-label-requires-measured-body',
+      message:
+        'Die Beschriftungszone unten mittig ist allein an der taktischen Formation vermessen ' +
+        '(Grundlinie 2,0 mm über der Körperunterkante, an F.1.18 und F.1.20). Für ' +
+        `"${spec.kind}" gibt es keine Messung, aus der ihre Lage folgte.`,
+    });
+  }
+
   // Ohne Organisation gibt es keine Farbe, die diese Zone tragen dürfte: gemessen ist sie in
   // #003296, und das ist `organizationColor('thw')`. Ein schwarzer oder weißer Lauf an derselben
   // Stelle wäre eine andere Zeichnung.

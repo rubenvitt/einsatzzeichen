@@ -630,7 +630,7 @@ describe('compose() — mittige Grundlinie je Körperform', () => {
 });
 
 describe('compose() — Beschriftungszone oben links', () => {
-  /** Die F.1-Konstellation: weisser Körper, Fachdienstkürzel im oberen linken Viertel. */
+  /** Die F.1-Konstellation: weisser Körper, links verankertes Fachdienstkürzel im oberen Feld. */
   const topLeftSpec = { kind: 'formation', labels: { topLeft: 'MTF' } } as const;
 
   it('setzt Anker und Grundlinie auf die an F.1.1 bis F.1.11 vermessenen Zahlen', () => {
@@ -647,16 +647,15 @@ describe('compose() — Beschriftungszone oben links', () => {
     expect(label.y).toBe(11);
   });
 
-  it('beendet die Zonenbox an der senkrechten Mittellinie', () => {
-    // Dort steht bei jedem F-Zeichen der senkrechte Arm der Fachdienstteilung; kein Lauf aus
-    // F.1.1 bis F.1.11 überschreitet ihn (der breiteste ist „RettD" mit Tinte bis 12,548 mm bei
-    // einer Mitte von 16,0). Die Box 2,5…16,0 macht „passt in sein Viertel" damit zu einer
-    // prüfbaren Aussage — geprüft werden wie bei den unteren Zonen nur die **waagerechten**
+  it('führt die Zonenbox bis zur rechten Innenmarge des Körpers', () => {
+    // F.1.12 erweitert die Evidenz aus F-a: „ÜMANV-S" überschreitet die senkrechte Mittellinie
+    // sichtbar. Der Anker bleibt auf x = 2,5 mm; die Box 2,5…29,0 mm hält den längsten Lauf,
+    // ohne eine falsche Clipping-Grenze am Kreuz zu behaupten. Geprüft werden wie bei den unteren Zonen nur die **waagerechten**
     // Felder, weil `yMm`/`heightMm` aus `verticalTextBoxMm` stammen und eine Prüfung gegen
     // dieselbe Funktion ein Kreisschluss wäre.
     const label = compose(topLeftSpec, catalog).children.find((child) => child.role === 'label');
     if (label?.type !== 'text') throw new Error('unreachable');
-    expect(label.boxMm).toMatchObject({ xMm: 2.5, widthMm: 13.5 });
+    expect(label.boxMm).toMatchObject({ xMm: 2.5, widthMm: 26.5 });
   });
 
   it('benutzt den Schriftgrad der unteren Zonen unverändert', () => {
@@ -694,6 +693,30 @@ describe('compose() — Beschriftungszone oben links', () => {
       catalog,
     );
     expect(checkViewBox(drawing)).toEqual([]);
+  });
+});
+
+describe('compose() — Beschriftungszone unten mittig', () => {
+  it('setzt SOZ auf die an F.1.18 und F.1.20 vermessene untere Mitte', () => {
+    // Beide Referenzen führen den Lauf auf derselben Grundlinie wie die unteren E-Zonen, aber
+    // waagerecht um x = 16 mm zentriert. `bottomLeft` wäre ein anderes Bild: Anker x = 3 mm.
+    const label = compose(
+      { kind: 'formation', labels: { bottomCenter: 'SOZ' } },
+      catalog,
+    ).children.find((child) => child.role === 'label');
+    if (label?.type !== 'text') throw new Error('compose() hat keinen Lauf unten mittig erzeugt.');
+    expect(label.content).toBe('SOZ');
+    expect(label.anchor).toBe('middle');
+    expect(label.x).toBe(16);
+    expect(label.y).toBe(24);
+    expect(label.boxMm).toMatchObject({ xMm: 2, widthMm: 28 });
+  });
+
+  it('lehnt die Zone an jeder Körperform ohne vermessene Grundlinie ab', () => {
+    expect(() => compose(
+      { kind: 'building', labels: { bottomCenter: 'SOZ' } },
+      catalog,
+    )).toThrow(/bottom-center-label-requires-measured-body/);
   });
 });
 
@@ -746,6 +769,34 @@ describe('compose() — Schriftfarbe der Läufe im Körper', () => {
 });
 
 describe('compose() — randbündige Fachdienstzeichen', () => {
+  it('reicht Art und Körpervariante als expliziten Portkontext weiter', () => {
+    const seen: unknown[] = [];
+    const markCatalog: CatalogPorts = {
+      ...catalog,
+      baseDrawing: (_kind, variant) => ({
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [formationBody, ...(variant === 'foot-band' ? [{
+          type: 'rect' as const,
+          role: 'pictogram' as const,
+          x: 1,
+          y: 23,
+          width: 30,
+          height: 3,
+        }] : [])],
+      }),
+      bodyMark: (_id, context) => {
+        seen.push(context);
+        return [];
+      },
+    };
+
+    compose(
+      { kind: 'formation', bodyVariant: 'foot-band', bodyMarks: ['care'] },
+      markCatalog,
+    );
+    expect(seen).toEqual([{ kind: 'formation', bodyVariant: 'foot-band' }]);
+  });
+
   it('reicht die Hülle des platzierten Körpers an den Port, nicht die Standardgeometrie', () => {
     // Der Unterschied ist nur mit Kopfzone sichtbar: ohne sie liefern beide Lesarten dieselbe
     // Hülle. Mit `strengthHead('staffel')` (Stapel zweier Marken, `heightMm` 7 — dieselben
@@ -765,7 +816,7 @@ describe('compose() — randbündige Fachdienstzeichen', () => {
         ],
         heightMm: 7,
       }),
-      bodyMark: (_id, bodyBoundsMm) => {
+      bodyMark: (_id, _context, bodyBoundsMm) => {
         seen.push(bodyBoundsMm);
         return [];
       },

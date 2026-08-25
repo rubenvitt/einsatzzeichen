@@ -94,7 +94,15 @@ export function describeSymbolSpec(spec: SymbolSpec): string {
   // Vorlesestimme deshalb gleich benannt — der Unterschied ist die Zeichnung, nicht die Sache. Der
   // Titel kommt aus demselben Piktogrammregister, damit beide Fassungen nicht auseinanderlaufen.
   for (const mark of spec.bodyMarks ?? []) {
-    parts.push(`Fachdienst: ${pictogram(`capability.${mark}`).title}`);
+    if (mark === 'ring-7mm-offset-down-1mm') {
+      parts.push('Technische Körpermarke: Ring 7 mm, Mittelpunkt 1 mm unter Körpermitte');
+    } else if (mark === 'chevron-over-opposed-triangles') {
+      parts.push('Technische Körpermarke: Winkel über gegenüberliegenden Dreiecken');
+    } else if (mark === 'ring-6-5mm-offset-down-2mm-with-roof') {
+      parts.push('Technische Körpermarke: Ring 6,5 mm mit Dach und eingeschriebenem Dreieck');
+    } else {
+      parts.push(`Fachdienst: ${pictogram(`capability.${mark}`).title}`);
+    }
   }
   if (spec.designation !== undefined) parts.push(`Bezeichnung: ${spec.designation}`);
   // Die Beschriftungen tragen bei Anhang E die gesamte fachliche Unterscheidung — ohne sie sind
@@ -120,6 +128,7 @@ export function describeSymbolSpec(spec: SymbolSpec): string {
     ['topLeft', 'Kürzel'],
     ['center', 'Kürzel'],
     ['bottomLeft', 'Zusatzkennzeichnung'],
+    ['bottomCenter', 'Zusatzkennzeichnung'],
     ['bottomRight', 'Trägerkürzel'],
     ['belowRight', 'Trägerkürzel'],
   ];

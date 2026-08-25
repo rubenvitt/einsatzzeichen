@@ -53,7 +53,7 @@ export type SymbolKind =
  * Ob „raised-hull" der fachlich richtige Name ist, entscheidet die Datei nicht; die Geometrie ist
  * gemessen, die Benennung ist eine Entscheidung.
  */
-export type BodyVariantId = 'raised-hull';
+export type BodyVariantId = 'raised-hull' | 'foot-band';
 
 /** Organisationen nach Kapitel 2. Bestimmen die Körperfarbe. */
 export type OrganizationId =
@@ -201,6 +201,24 @@ export const CAPABILITY_IDS = Object.freeze([
 ] as const);
 
 export type CapabilityId = (typeof CAPABILITY_IDS)[number];
+
+/**
+ * Rein geometrische Körpermarken ohne behauptete Kapitel-4-Bedeutung. Sie schließen genau die
+ * drei zentralen F.1-Zeichnungen, deren sichtbare Form aus der Referenz messbar ist, deren
+ * fachlicher Begriff aber nicht belegt ist. Die IDs beschreiben deshalb ausschließlich Maße und
+ * Gestalt. Sie sind weder `CapabilityId` noch Ersatz für ein noch ausstehendes Domain-Review.
+ *
+ * Jede Fassung ist am 30 × 20-mm-Körper der taktischen Formation vermessen und muss in jedem
+ * anderen Art-/Variantenkontext fail-closed ablehnen.
+ */
+export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
+  'ring-7mm-offset-down-1mm',
+  'chevron-over-opposed-triangles',
+  'ring-6-5mm-offset-down-2mm-with-roof',
+] as const);
+
+export type TechnicalBodyMarkId = (typeof TECHNICAL_BODY_MARK_IDS)[number];
+export type BodyMarkId = CapabilityId | TechnicalBodyMarkId;
 
 /** Zustände nach Kapitel 5.8 in verbindlicher Kapitelreihenfolge. */
 export const STATE_IDS = Object.freeze([
@@ -403,9 +421,15 @@ export type WildfireId = (typeof WILDFIRE_IDS)[number];
 export interface BodyLabels {
   readonly center?: string;
   readonly bottomLeft?: string;
+  /**
+   * Unten mittig im Formationskörper. Gemessen an F.1.18 und F.1.20: Grundlinie 24,0 mm,
+   * Mittelpunkt x = 16,0 mm und derselbe Schriftgrad wie `bottomLeft`/`bottomRight`.
+   * An anderen Körperformen fehlt die Messung; `compose()` lehnt dort fail-closed ab.
+   */
+  readonly bottomCenter?: string;
   readonly bottomRight?: string;
   /**
-   * Die **fünfte** Zone: linksbündig im **oberen linken Viertel** des Körpers. Anhang F setzt
+   * Die **fünfte** Zone: linksbündig im oberen Bereich des Körpers. Anhang F setzt
    * dort sein Kürzel — „MTF", „SEG", „RettD", „10" —, weil die Fachdienstteilung
    * (`SymbolSpec.bodyMarks`) die Mitte belegt und ein mittiger Lauf über dem waagerechten Arm
    * des Kreuzes läge.
@@ -424,6 +448,8 @@ export interface BodyLabels {
    * 4096 px) ergibt sich der Anker zu 2,524 (`M`, `R`), 2,498 (`S`) und 2,442 (`1`) — vier von
    * fünf Läufen auf 2,5 mm, also 1,5 mm rechts der Körperkante. Der fünfte ist `F.1.3` („5.000",
    * Anker 2,022); er steht als Befund an seiner Manifestzeile und nicht in dieser Zahl.
+   * F.1.12 erweitert die waagerechte Evidenz: „ÜMANV-S" überschreitet die Mittellinie sichtbar,
+   * deshalb endet die deklarierte Box erst an der rechten Innenmarge des Körpers.
    */
   readonly topLeft?: string;
   /**
@@ -495,11 +521,12 @@ export interface SymbolSpec {
    * Vermessung an F.1.7, F.1.8 und 4.6.4/4.6.5, 18. August 2026). Die Zeichnung wird deshalb aus
    * der Körperhülle gerechnet und nicht aus einer Box skaliert.
    *
-   * Die IDs bleiben die der Fähigkeiten, damit beide Darstellungen desselben Kapitel-4-Abschnitts
-   * unter derselben Bezeichnung adressierbar sind. Eine Fähigkeit ohne vermessene randbündige
-   * Fassung wirft; sie fällt **nicht** auf die Boxfassung zurück.
+   * Fähigkeiten behalten ihre `CapabilityId`. Daneben darf `BodyMarkId` rein geometrische
+   * `TechnicalBodyMarkId`s führen, wenn das Bild vermessen, aber keine Kapitel-4-Semantik belegt
+   * ist. Eine ID ohne vermessene randbündige Fassung wirft; sie fällt **nicht** auf eine andere
+   * Fassung zurück.
    */
-  bodyMarks?: readonly CapabilityId[];
+  bodyMarks?: readonly BodyMarkId[];
   designation?: string;
   labels?: BodyLabels;
 }

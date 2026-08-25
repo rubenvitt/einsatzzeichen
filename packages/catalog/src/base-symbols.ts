@@ -502,6 +502,24 @@ const BODIES: Partial<Record<SymbolKind, Primitive>> = {
   },
 };
 
+const VARIANT_EXTRA_PRIMITIVES: Partial<
+  Record<SymbolKind, Partial<Record<BodyVariantId, readonly Primitive[]>>>
+> = {
+  formation: {
+    'foot-band': [
+      {
+        type: 'rect',
+        role: 'pictogram',
+        x: 1,
+        y: 23,
+        width: 30,
+        height: 3,
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+    ],
+  },
+};
+
 /**
  * Zweite, in der Quelle belegte Zeichnungen desselben Grundzeichens. Bisher genau eine.
  *
@@ -527,6 +545,9 @@ const BODIES: Partial<Record<SymbolKind, Primitive>> = {
  * `I.3.5_Mehrzweckboot.svg`, dessen Rumpf 1,0100/9,0001/30,9894/23,9899 misst.
  */
 const VARIANT_BODIES: Partial<Record<SymbolKind, Partial<Record<BodyVariantId, Primitive>>>> = {
+  formation: {
+    'foot-band': { type: 'rect', role: 'body', x: 1, y: 6, width: 30, height: 20, style: OUTLINE },
+  },
   'vehicle-water': {
     'raised-hull': {
       type: 'path',
@@ -666,7 +687,11 @@ export function baseDrawing(kind: SymbolKind, variant?: BodyVariantId): Drawing 
   const section = SECTIONS[kind]?.section;
   return {
     viewBox: DEFAULT_VIEWBOX_MM,
-    children: [body, ...(EXTRA_PRIMITIVES[kind] ?? [])],
+    children: [
+      body,
+      ...(EXTRA_PRIMITIVES[kind] ?? []),
+      ...(variant === undefined ? [] : VARIANT_EXTRA_PRIMITIVES[kind]?.[variant] ?? []),
+    ],
     ...(title !== undefined ? { title } : {}),
     ...(title !== undefined
       ? {

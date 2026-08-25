@@ -31,6 +31,7 @@ import {
   ANHANG_E_F_FINDINGS,
   ANHANG_E_F_RECIPES,
 } from './recipes-anhang-e.js';
+import { ANHANG_F_B_RECIPES } from './recipes-anhang-f.js';
 
 /**
  * Effektive y-Lage der waagerechten Brandbekämpfungs-Linie: ihre Autorenkoordinate plus die
@@ -486,6 +487,177 @@ describe('Anhang E, Teilslice E-b (E.1.17 bis E.1.28)', () => {
     expect(withBottomLeft.map(([section]) => section)).toEqual(['E.1.22']);
     expect(ANHANG_E_B_RECIPES['E.1.22'].spec.labels.bottomLeft).toBe('A');
     expect(ANHANG_E_B_RECIPES['E.1.22'].title).toMatch(/Typ A$/);
+  });
+});
+
+describe('Anhang F, Teilslice F-b einschließlich F.1.3', () => {
+  it('deckt F.1.1 bis F.1.22 einschließlich aller drei Alternativen lückenlos ab', () => {
+    const f1 = Object.keys(RECIPES).filter((key) => key.startsWith('F.1.'));
+    const primary = f1.filter((key) => !key.includes('#'));
+    expect(primary.sort((a, b) => Number(a.slice(4)) - Number(b.slice(4)))).toEqual(
+      Array.from({ length: 22 }, (_, index) => `F.1.${index + 1}`),
+    );
+    expect(f1.filter((key) => key.includes('#')).sort()).toEqual([
+      'F.1.11#alternative',
+      'F.1.12#alternative',
+      'F.1.15#alternative',
+    ]);
+  });
+
+  it('bindet alle 14 Darstellungen an die am Raster belegten Specs', () => {
+    // Literale statt aus den Recipes abgeleiteter Erwartungen: der Test soll falsche Zuordnungen
+    // wie den bisher oben links gesetzten Lauf "SEG" oder das fehlende Zelt von F.1.22 erkennen.
+    expect(ANHANG_F_B_RECIPES).toEqual({
+      'F.1.3': {
+        title: 'Mobiles Betreuungsmodul 5000',
+        referenceAsset: 'F.1.3_Mobiles Betreuungsmodul 5000.svg',
+        spec: {
+          kind: 'formation',
+          bodyVariant: 'foot-band',
+          organization: 'hilfsorganisation',
+          bodyMarks: ['care', 'temporary-accommodation-resting'],
+          labels: { topLeft: '5.000' },
+        },
+      },
+      'F.1.12': {
+        title: 'Nachbarschaftliche Soforthilfe',
+        referenceAsset: 'F.1.12_Nachbarschaftliche Soforthilfe.svg',
+        spec: {
+          kind: 'formation',
+          organization: 'hilfsorganisation',
+          strength: 'gruppe',
+          bodyMarks: ['medical-service'],
+          labels: { topLeft: 'ÜMANV-S' },
+        },
+      },
+      'F.1.12#alternative': {
+        title: 'Nachbarschaftliche Soforthilfe',
+        referenceAsset: 'F.1.12_Nachbarschaftliche Soforthilfe_Alternative.svg',
+        spec: {
+          kind: 'formation',
+          organization: 'hilfsorganisation',
+          strength: 'gruppe',
+          bodyMarks: ['patient-transport', 'physician', 'intensive-care'],
+        },
+      },
+      'F.1.13': {
+        title: 'Behandlungsplatz-Bereitschaft',
+        referenceAsset: 'F.1.13_Behandlungsplatz-Bereitschaft.svg',
+        spec: {
+          kind: 'formation',
+          organization: 'hilfsorganisation',
+          bodyMarks: ['care', 'physician', 'ring-7mm-offset-down-1mm'],
+          labels: { topLeft: '50' },
+        },
+      },
+      'F.1.14': {
+        title: 'Erstversorgungstrupp',
+        referenceAsset: 'F.1.14_Erstversorgungstrupp.svg',
+        spec: {
+          kind: 'formation',
+          organization: 'hilfsorganisation',
+          strength: 'trupp',
+          bodyMarks: ['medical-service'],
+          labels: { topLeft: 'EVT' },
+        },
+      },
+      'F.1.15': {
+        title: 'Arzttrupp',
+        referenceAsset: 'F.1.15_Arzttrupp.svg',
+        spec: {
+          kind: 'formation',
+          organization: 'hilfsorganisation',
+          strength: 'trupp',
+          bodyMarks: ['physician'],
+        },
+      },
+      'F.1.15#alternative': {
+        title: 'Arzttrupp',
+        referenceAsset: 'F.1.15_Arzttrupp_Alternative.svg',
+        spec: {
+          kind: 'formation',
+          organization: 'hilfsorganisation',
+          strength: 'trupp',
+          bodyMarks: ['physician', 'intensive-care'],
+        },
+      },
+      'F.1.16': {
+        title: 'Drohnentrupp',
+        referenceAsset: 'F.1.16_Drohnentrupp.svg',
+        spec: {
+          kind: 'formation',
+          organization: 'hilfsorganisation',
+          strength: 'trupp',
+          bodyMarks: ['chevron-over-opposed-triangles'],
+        },
+      },
+      'F.1.17': {
+        title: 'Gruppe Verpflegung',
+        referenceAsset: 'F.1.17_Gruppe Verpflegung.svg',
+        spec: {
+          kind: 'formation',
+          bodyVariant: 'foot-band',
+          organization: 'hilfsorganisation',
+          strength: 'gruppe',
+          bodyMarks: ['care', 'catering'],
+          labels: { topLeft: '250' },
+        },
+      },
+      'F.1.18': {
+        title: 'Gruppe für soziale Betreuung',
+        referenceAsset: 'F.1.18_Gruppe für soziale Betreuung.svg',
+        spec: {
+          kind: 'formation',
+          organization: 'hilfsorganisation',
+          strength: 'gruppe',
+          bodyMarks: ['care'],
+          labels: { topLeft: '100', bottomCenter: 'SOZ' },
+        },
+      },
+      'F.1.19': {
+        title: 'Gruppe zur Herrichtung von Notunterkünften',
+        referenceAsset: 'F.1.19_Gruppe zur Herrichtung von Notunterkünften.svg',
+        spec: {
+          kind: 'formation',
+          organization: 'hilfsorganisation',
+          strength: 'gruppe',
+          bodyMarks: ['care', 'temporary-accommodation-resting'],
+          labels: { topLeft: '120' },
+        },
+      },
+      'F.1.20': {
+        title: 'Schnelleinsatzgruppe soziale Betreuung',
+        referenceAsset: 'F.1.20_Schnelleinsatzgruppe soziale Betreuung.svg',
+        spec: {
+          kind: 'formation',
+          organization: 'hilfsorganisation',
+          strength: 'gruppe',
+          bodyMarks: ['care'],
+          labels: { topLeft: '100', bottomCenter: 'SEG' },
+        },
+      },
+      'F.1.21': {
+        title: 'Betreuungsplatzbereitschaft 500',
+        referenceAsset: 'F.1.21_Betreuungsplatzbereitschaft 500.svg',
+        spec: {
+          kind: 'formation',
+          organization: 'hilfsorganisation',
+          bodyMarks: ['ring-6-5mm-offset-down-2mm-with-roof'],
+          labels: { topLeft: '500' },
+        },
+      },
+      'F.1.22': {
+        title: 'Transportzug bis 50 Betroffene',
+        referenceAsset: 'F.1.22_Transportzug bis 50 Betroffene.svg',
+        spec: {
+          kind: 'formation',
+          organization: 'hilfsorganisation',
+          strength: 'zug',
+          bodyMarks: ['care', 'patient-transport'],
+          labels: { topLeft: '50' },
+        },
+      },
+    });
   });
 });
 

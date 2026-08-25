@@ -275,7 +275,9 @@ describe('Rasterevidenz für Text (resvgFontOptions())', () => {
     // und F.1.10 (beide „SEG") und F.1.11 („RettD"). Die vier übrigen (F.1.4, F.1.6, F.1.7,
     // `F.1.11#alternative`) tragen ihre Bedeutung allein in den randbündigen Fachdienstzeichen und
     // haben deshalb hier nichts zu rastern.
-    expect(labelRecipes).toHaveLength(75);
+    // **85 seit F-b:** zehn der 14 neuen Darstellungen tragen mindestens einen Lauf. Die vier
+    // Ausnahmen sind F.1.12#alternative, F.1.15, F.1.15#alternative und F.1.16.
+    expect(labelRecipes).toHaveLength(85);
   });
 
   /**
