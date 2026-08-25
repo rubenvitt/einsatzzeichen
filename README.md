@@ -493,6 +493,28 @@ Die Begründungen stehen in
 Sichtprüfung aller gebauten Zeichen in
 [`docs/reviews/2026-08-18-f-a-visual-qa.md`](docs/reviews/2026-08-18-f-a-visual-qa.md).
 
+## F-b: F.1.3 und F.1.12 bis F.1.22
+
+F-b ergänzt 14 Darstellungen und schließt damit die Rezeptlücke F.1.3 sowie F.1.12 bis F.1.22.
+Der Katalog führt nun 96 Rezepte, 364 Renderfälle und 383 Manifestzeilen. Zu den bestehenden
+randbündigen Fähigkeiten kommen drei eng begrenzte Mechanismen:
+
+- `bodyVariant: foot-band` für das schwarze Fußband von F.1.3 und F.1.17;
+- `BodyLabels.bottomCenter` für `SOZ` und `SEG` auf der vermessenen unteren Mitte der Formation;
+- rein geometrische `TechnicalBodyMarkId`s für die zentralen, sichtbaren Innenformen von F.1.13,
+  F.1.16 und F.1.21, ohne daraus eine neue Capability- oder Strength-Semantik abzuleiten.
+
+Alle Varianten und technischen Marken sind fail-closed an den vermessenen Formationskontext
+gebunden. F.1.17 nutzt die bestehende Capability `catering` in einer eigenen reduzierten
+randbündigen Fassung; F.1.18 und F.1.20 missbrauchen weder `bottomLeft` noch `topLeft` für ihren
+unteren mittigen Lauf. F.1.4 und F.1.19 sowie alle bisherigen Capability-IDs bleiben unverändert.
+
+Die exakte Referenz-/Rezeptmatrix und die Messentscheidungen stehen in
+[`docs/decisions/2026-08-25-anhang-f-b.md`](docs/decisions/2026-08-25-anhang-f-b.md), die
+Einzelsichtung in
+[`docs/reviews/2026-08-25-f-b-visual-qa.md`](docs/reviews/2026-08-25-f-b-visual-qa.md). Diese
+Sichtung ist nicht der finale Kontaktbogen des späteren Task 6. Das Domain-Review bleibt offen.
+
 ## Der lokale Referenzbestand
 
 `taktische-zeichen/` ist ein **lokaler Ordner mit 661 damals von der BABZ bereitgestellten
