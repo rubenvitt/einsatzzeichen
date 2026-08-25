@@ -515,6 +515,27 @@ Einzelsichtung in
 [`docs/reviews/2026-08-25-f-b-visual-qa.md`](docs/reviews/2026-08-25-f-b-visual-qa.md). Diese
 Sichtung ist nicht der finale Kontaktbogen des späteren Task 6. Das Domain-Review bleibt offen.
 
+## F-c: F.2.1 bis F.2.9
+
+F-c ergänzt 14 Fahrzeugdarstellungen und führt den Katalog auf 110 Rezepte, 378 Renderfälle und
+397 Manifestzeilen. Landfahrzeug, Luftfahrzeug und Anhänger verwenden getrennte, an ihrer eigenen
+Hülle vermessene Body-Mark-Builder. Ein unbekanntes Tripel aus Art, Körpervariante und Marke wird
+abgelehnt; die Formation, `foot-band` und F-b bleiben unverändert.
+
+Die elf Landdarstellungen tragen die neutrale Variante `plain-wheel-pair`: zwei sichtbare
+Radringe, aber ausdrücklich keine `vehicleCategory`. F.2.6 und F.2.7 verwenden die separat
+vermessene Luftvariante `raised-hull` mit Rotor. Die Winschform aus F.2.6 bleibt eine geometrische
+`TechnicalBodyMarkId`, weil die Quelle ihre Gleichheit mit einer Kapitel-4-Capability nicht
+belegt. `ITH` steht schwarz oberhalb des Luftkörpers auf der Ausgabeoberfläche; `GW-San` und `50`
+sind zwei explizite, nicht austauschbare Zeilen im Landkörper.
+
+Die exakte Referenzmatrix und alle Messwerte stehen in
+[`docs/decisions/2026-08-25-anhang-f-c.md`](docs/decisions/2026-08-25-anhang-f-c.md), die Sichtung
+aller 14 Paare in
+[`docs/reviews/2026-08-25-f-c-visual-qa.md`](docs/reviews/2026-08-25-f-c-visual-qa.md). Diese
+Sichtung ist nicht der finale Kontaktbogen des späteren Task 6. Alle 14 Domain-Reviews bleiben
+`pending`; der beanspruchte Gesamtscope bleibt vor Abschluss von Anhang F geschlossen.
+
 ## Der lokale Referenzbestand
 
 `taktische-zeichen/` ist ein **lokaler Ordner mit 661 damals von der BABZ bereitgestellten
