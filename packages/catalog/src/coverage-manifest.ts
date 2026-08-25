@@ -174,7 +174,7 @@ const ANHANG_F_C_TECHNICAL_REVIEW: Review = {
 const ANHANG_F_D_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
-  date: '2026-08-25',
+  date: '2026-08-26',
   note:
     'Alle acht Originalreferenzen aus F.2.10 bis F.2.17 wurden einzeln gerastert und gegen die ' +
     'literal gebundene Rezeptmatrix geprüft. Lokale Geometrietests halten Land- und ' +

@@ -258,13 +258,13 @@ describe('Coverage-Manifest', () => {
     }
   });
 
-  it('trägt für alle acht F-d-Darstellungen das eigene Review vom 25. August', () => {
+  it('trägt für alle acht F-d-Darstellungen das eigene Review vom 26. August', () => {
     const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
       /^bbk-babz-2025:F\.2\.(1[0-7])$/.test(entry.sourceId),
     );
     expect(rows).toHaveLength(8);
     for (const row of rows) {
-      expect(row.review.technical.date).toBe('2026-08-25');
+      expect(row.review.technical.date).toBe('2026-08-26');
       expect(row.review.technical.note).toContain('finale Task-6-Kontaktbogen');
       expect(row.review.domain.status).toBe('pending');
     }
