@@ -72,8 +72,8 @@ export interface Recipe {
  * zweier, drei davon ohne Kapitel-1-Abschnitt, dazu die Fahrwerkszone unterhalb des Körpers, eine
  * Zusatzgeometrie am Grundzeichen (Deichsel, L-Rahmen), die vierte Beschriftungszone außerhalb des
  * Körpers und einen je Zeichen gemessenen Schriftgrad des mittigen Laufs. Mit dem am 18. August
- * 2026 nachgezogenen E.2.6 sind damit **alle 68** Abschnitte des Anhangs E gebaut. Es ist zugleich
- * E.2.6 ist das einzige Zeichen des Anhangs E, dessen Kontrastpaar eine erklärte Ausnahme trägt
+ * 2026 nachgezogenen E.2.6 sind damit **alle 68** Abschnitte des Anhangs E gebaut. E.2.6 ist
+ * zugleich das einzige Zeichen des Anhangs E, dessen Kontrastpaar eine erklärte Ausnahme trägt
  * (`CONTRAST_EXCEPTIONS`).
  */
 export const RECIPES = {
