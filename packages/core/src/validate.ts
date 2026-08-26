@@ -52,6 +52,7 @@ const F3_CIRCLE_TOP_LEFT_BOX_RIGHT_MM = 26;
 /** Exakte, aus den Quellen vermessene Art-/Variantenpaare; alle anderen bleiben fail-closed. */
 const BODY_VARIANT_KINDS: Readonly<Record<BodyVariantId, ReadonlySet<SymbolKind>>> = {
   'raised-hull': new Set<SymbolKind>(['vehicle-air', 'vehicle-water']),
+  'inset-hull': new Set<SymbolKind>(['vehicle-water']),
   'foot-band': new Set<SymbolKind>(['formation', 'vehicle-land']),
   'plain-wheel-pair': new Set<SymbolKind>(['vehicle-land']),
   'raised-gable': new Set<SymbolKind>(['circle-12']),

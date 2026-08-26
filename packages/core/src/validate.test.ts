@@ -210,6 +210,14 @@ describe('validateSpec', () => {
     );
   });
 
+  it('lässt inset-hull ausschließlich am Wasserfahrzeug zu', () => {
+    const insetHull = 'inset-hull' as SymbolSpec['bodyVariant'];
+    expect(validateSpec({ kind: 'vehicle-water', bodyVariant: insetHull })
+      .map((issue) => issue.rule)).not.toContain('body-variant-requires-measured-kind');
+    expect(validateSpec({ kind: 'vehicle-land', bodyVariant: insetHull })
+      .map((issue) => issue.rule)).toContain('body-variant-requires-measured-kind');
+  });
+
   it('bindet reduced-house auch ohne Label an HiOrg und lehnt jede Variante ab', () => {
     const reducedHouse = 'reduced-house' as SymbolSpec['kind'];
     expect(validateSpec({ kind: reducedHouse, organization: 'hilfsorganisation' })).toEqual([]);
