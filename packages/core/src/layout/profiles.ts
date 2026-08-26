@@ -87,6 +87,14 @@ export interface LayoutProfile {
    * `circle-12/foot-band`; andere Körperprofile führen keinen Wert.
    */
   bottomCenterBaselineFromBodyBottomMm?: number;
+  /** Tinte des unten mittigen Laufs; ohne Angabe gilt weiter die Körperfarben-Ableitung. */
+  bottomCenterInk?: 'body' | 'black';
+  /**
+   * Öffnet die obere Körperkontur, wenn weder Kopfzone noch Beschriftung belegt sind. Das Profil
+   * beschreibt damit die acht unbeschrifteten Logistikformationen, ohne Kapitel-IDs zu kennen;
+   * beschriftete oder kopftragende Nutzer desselben Körpers behalten die geschlossene Kontur.
+   */
+  openTopWhenHeadlessAndUnlabelled?: boolean;
   /** Vermessene Zone rechts unterhalb des Körpers. Fehlt sie, ist die Zone nicht zulässig. */
   belowRight?: {
     readonly baselineFromBodyBottomMm: number;
@@ -155,6 +163,7 @@ const formationFootBandProfile: LayoutProfile = {
   ...formationProfile,
   // G.1.2: DLRG-Grundlinie 21 mm bei Körperunterkante 26 mm.
   bottomLabelBaselineFromBodyBottomMm: 5,
+  openTopWhenHeadlessAndUnlabelled: true,
 };
 
 /**
@@ -294,6 +303,8 @@ const footBandCircle12Profile: LayoutProfile = {
   ...circleBodyProfile,
   // G.3.5: Diesel auf y=22, Bw rechts außen auf (31|29), Körperhülle 4…28 mm.
   bottomCenterBaselineFromBodyBottomMm: 6,
+  // G.3.5: Der in Pfade umgewandelte Diesel-Lauf ist in der Referenz schwarz, nicht weiss.
+  bottomCenterInk: 'black',
   belowRight: {
     baselineFromBodyBottomMm: 1,
     anchorFromBodyRightMm: 3,

@@ -166,6 +166,7 @@ export function labelContrastRequirements(
   recipes: Iterable<Recipe> = Object.values<Recipe>(RECIPES),
 ): readonly ContrastRequirement[] {
   const inBody = new Set<OrganizationId>();
+  const blackBottomCenter = new Set<OrganizationId>();
   const belowBody = new Set<OrganizationId>();
   let blackBelowBody = false;
   let aboveBody = false;
@@ -173,6 +174,7 @@ export function labelContrastRequirements(
   for (const recipe of recipes) {
     const { labels, organization } = recipe.spec;
     if (labels === undefined) continue;
+    const profile = profileFor(recipe.spec.kind, recipe.spec.bodyVariant);
     // Körperbeschriftungen ohne Organisation bleiben außen vor: ohne Organisationsfarbe ist
     // kein belastbares Körperfarbenpaar ableitbar. Schwarzes `belowRight` ist davon unabhängig,
     // weil sein Profil Vorder- und Hintergrundtoken vollständig festlegt.
@@ -181,11 +183,14 @@ export function labelContrastRequirements(
         labels.center !== undefined ||
         labels.topLeft !== undefined ||
         labels.bottomLeft !== undefined ||
-        labels.bottomCenter !== undefined ||
+        (labels.bottomCenter !== undefined && profile.bottomCenterInk !== 'black') ||
         labels.bottomRight !== undefined ||
         labels.topLeftLines !== undefined
       ) {
         inBody.add(organization);
+      }
+      if (labels.bottomCenter !== undefined && profile.bottomCenterInk === 'black') {
+        blackBottomCenter.add(organization);
       }
       if (labels.aboveLeft !== undefined) aboveBody = true;
       if (recipe.spec.kind === 'circle-12' && labels.topLeft !== undefined) {
@@ -193,7 +198,7 @@ export function labelContrastRequirements(
       }
     }
     if (labels.belowRight !== undefined) {
-      const ink = profileFor(recipe.spec.kind, recipe.spec.bodyVariant).belowRight?.ink;
+      const ink = profile.belowRight?.ink;
       if (ink === 'organization' && organization !== undefined) belowBody.add(organization);
       if (ink === 'black') blackBelowBody = true;
     }
@@ -206,6 +211,12 @@ export function labelContrastRequirements(
       foreground: bodyLabelInk(organizationColor(organization)),
       background: organizationColor(organization),
       context: `Beschriftung im Körper auf Organisation ${organization}`,
+      minimum: MINIMUM_TEXT_CONTRAST,
+    })),
+    ...[...blackBottomCenter].map<ContrastRequirement>((organization) => ({
+      foreground: 'schwarz',
+      background: organizationColor(organization),
+      context: `Schwarze Beschriftung im Körper auf Organisation ${organization}`,
       minimum: MINIMUM_TEXT_CONTRAST,
     })),
     ...[...belowBody].map<ContrastRequirement>((organization) => ({

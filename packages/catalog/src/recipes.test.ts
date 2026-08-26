@@ -544,7 +544,7 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
 
   it('verlangt für die Beschriftung auf der Körperfarbe die Textschwelle, nicht die Nichttextschwelle', () => {
     const requirements = labelContrastRequirements();
-    // **Acht seit Anhang G**, und nur zwei davon bestehen nicht. Vier Nachbarschaften
+    // **Acht seit Anhang G**, und nur eine davon besteht nicht. Vier Nachbarschaften
     // und vier Organisationen kommen hier zusammen: die Beschriftung im Körper, die
     // Organisationsfarbe auf der Ausgabeoberfläche sowie die schwarzen Kreislabels, die
     // teilweise außerhalb der weißen Körperfläche auf `surface` stehen.
@@ -561,18 +561,13 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
     // Beschriftung. Die Ableitung meldet „weiss auf orange" unverändert — 2,382:1 bzw. 2,323:1
     // gegen die Textschwelle 4,5:1 —, und sie wird nicht hier unterdrückt, sondern in
     // `CONTRAST_EXCEPTIONS` als entschiedene Ausnahme gezählt. Diese Zeile ist die Stelle, an der
-    // ein zweites solches Rezept mechanisch sichtbar würde.
+    // ein zweites solches Rezept mechanisch sichtbar würde. Die vierte Zeile ist G.3.5:
+    // `circle-12/foot-band` setzt `bottomCenter` wie die visuell geprüfte Quelle schwarz.
     expect(requirements).toEqual([
       {
         foreground: 'schwarz',
         background: 'weiss',
         context: 'Beschriftung im Körper auf Organisation hilfsorganisation',
-        minimum: 4.5,
-      },
-      {
-        foreground: 'weiss',
-        background: 'braun',
-        context: 'Beschriftung im Körper auf Organisation bundeswehr',
         minimum: 4.5,
       },
       {
@@ -585,6 +580,12 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
         foreground: 'weiss',
         background: 'orange',
         context: 'Beschriftung im Körper auf Organisation sonstige-gefahrenabwehr',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'braun',
+        context: 'Schwarze Beschriftung im Körper auf Organisation bundeswehr',
         minimum: 4.5,
       },
       {

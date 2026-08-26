@@ -68,18 +68,17 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
   });
 
   it.each([ACCESSIBLE_LIGHT_THEME, PRINT_MONOCHROME_THEME])(
-    '$id besteht alle expliziten Anforderungen bis auf die zwei entschiedenen Ausnahmen',
+    '$id besteht alle expliziten Anforderungen bis auf die entschiedene Ausnahme',
     (theme) => {
       const issues = checkContrast(theme, requirements());
       // Die Ausnahme wirkt paarweise und themeweise (`contrastExceptionFor`), nicht als
       // gelockerte Schwelle: jedes andere Paar und jedes andere Theme fällt weiter auf.
       expect(unexpectedContrastIssues(issues)).toEqual([]);
       // Und die Zahl der gedeckten Befunde ist **gepinnt**, nicht toleriert — dasselbe Muster
-      // wie beim blauen Negativbefund weiter unten. Genau zwei je Theme: weiss auf orange aus
-      // E.2.6 und weiss auf braun aus dem Diesel-Lauf von G.3.5.
-      expect(knownContrastIssues(issues)).toHaveLength(2);
+      // wie beim blauen Negativbefund weiter unten. Genau eine je Theme: weiss auf orange aus
+      // E.2.6. Diesel ist nach der visuellen Prüfung schwarz und erfüllt die Schwelle auf Braun.
+      expect(knownContrastIssues(issues)).toHaveLength(1);
       expect(knownContrastIssues(issues).map((issue) => issue.context)).toEqual([
-        'Beschriftung im Körper auf Organisation bundeswehr',
         'Beschriftung im Körper auf Organisation sonstige-gefahrenabwehr',
       ]);
     },
@@ -225,7 +224,7 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     }
 
     const exception = CONTRAST_EXCEPTIONS[0];
-    expect(CONTRAST_EXCEPTIONS).toHaveLength(2);
+    expect(CONTRAST_EXCEPTIONS).toHaveLength(1);
     expect(exception?.decidedOn).toBe('2026-08-18');
     expect(exception?.decidedBy).toBe('Projektinhaber');
     // Drei geprüfte und verworfene Wege, nicht einer: ohne sie wäre die Entscheidung eine
@@ -248,34 +247,20 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     }
   });
 
-  it('hält den quellengebundenen Diesel-Lauf als zweite sichtbare Kontrastausnahme fest', () => {
-    for (const [theme, expected] of [
-      [RENDER_THEMES.reference, 3.689],
-      [ACCESSIBLE_LIGHT_THEME, 3.689],
-      [PRINT_MONOCHROME_THEME, 2.849],
-    ] as const) {
-      expect(contrastRatio(theme.palette.weiss, theme.palette.braun), theme.id).toBeCloseTo(
-        expected,
-        3,
-      );
-      expect(expected).toBeLessThan(MINIMUM_TEXT_CONTRAST);
-      expect(
-        contrastExceptionFor({ foreground: 'weiss', background: 'braun', themeId: theme.id }),
-        theme.id,
-      ).toBeDefined();
+  it('leitet den schwarzen Diesel-Lauf profilabhängig als reguläre Kontrastanforderung ab', () => {
+    const dieselRequirements = labelContrastRequirements([RECIPES['G.3.5']]);
+    expect(dieselRequirements).toContainEqual({
+      foreground: 'schwarz',
+      background: 'braun',
+      context: 'Schwarze Beschriftung im Körper auf Organisation bundeswehr',
+      minimum: MINIMUM_TEXT_CONTRAST,
+    });
+    for (const theme of [RENDER_THEMES.reference, ACCESSIBLE_LIGHT_THEME, PRINT_MONOCHROME_THEME]) {
+      expect(checkContrast(theme, dieselRequirements), theme.id).toEqual([]);
     }
-
-    const exception = CONTRAST_EXCEPTIONS[1];
-    expect(exception?.sections).toEqual(['G.3.5']);
-    expect(exception?.decidedOn).toBe('2026-08-26');
-    expect(exception?.decidedBy).toBe('Projektvorgabe LFH-421');
-    for (const fragment of ['3,689:1', '2,849:1', '4,5:1', 'Drucktheme', '0,1833', '0,1000']) {
-      expect(exception?.rationale, fragment).toContain(fragment);
-    }
-    expect(exception?.rejected).toHaveLength(3);
-    for (const rejected of exception?.rejected ?? []) {
-      expect(rejected.length, rejected).toBeGreaterThan(100);
-    }
+    expect(
+      contrastExceptionFor({ foreground: 'weiss', background: 'braun', themeId: 'reference' }),
+    ).toBeUndefined();
   });
 
   it('belegt, dass das Fenster im Drucktheme leer ist, statt es zu behaupten', () => {
@@ -318,7 +303,6 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     // zweite Anforderung noch einen zweiten bekannten Befund. Diese Zeile zählt die Rezepte.
     const expectedByPair = {
       'weiss:orange': ['E.2.6'],
-      'weiss:braun': ['G.3.5'],
     } as const;
     expect(CONTRAST_EXCEPTIONS).toHaveLength(Object.keys(expectedByPair).length);
     for (const exception of CONTRAST_EXCEPTIONS) {
@@ -328,30 +312,6 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
       expect(sections, pair).toEqual(expectedByPair[pair]);
       expect(exception.sections, pair).toEqual(sections);
     }
-  });
-
-  it('erkennt in einer Fixture ein weiteres Weiss-auf-Braun-Innenlabel trotz Paardeduplizierung', () => {
-    const brown = CONTRAST_EXCEPTIONS.find(
-      (exception) => exception.foreground === 'weiss' && exception.background === 'braun',
-    );
-    expect(brown).toBeDefined();
-    if (brown === undefined) return;
-
-    const fixture = {
-      'G.3.5': RECIPES['G.3.5'],
-      'fixture.weiss-auf-braun': {
-        title: 'Zusätzlicher brauner Innenlauf',
-        referenceAsset: 'G.3.5_Mobiler Tankpunkt Diesel_betrieben durch Bundeswehr.svg',
-        spec: {
-          kind: 'formation', organization: 'bundeswehr', labels: { center: 'X' },
-        },
-      },
-    } satisfies Record<string, Recipe>;
-    expect(exceptionSectionsFromRecipes(brown, fixture)).toEqual([
-      'G.3.5',
-      'fixture.weiss-auf-braun',
-    ]);
-    expect(exceptionSectionsFromRecipes(brown, fixture)).not.toEqual(brown.sections);
   });
 
   it('behält die feste Körper- und Kopf-Anforderung genau einmal', () => {

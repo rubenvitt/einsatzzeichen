@@ -644,7 +644,10 @@ describe('compose() — gebänderte Logistikprofile', () => {
     }, logisticsCatalog);
     const labels = drawing.children.filter((child) => child.role === 'label');
     expect(labels).toMatchObject([
-      { type: 'text', content: 'Diesel', anchor: 'middle', x: 16, y: 22 },
+      {
+        type: 'text', content: 'Diesel', anchor: 'middle', x: 16, y: 22,
+        style: { fill: 'schwarz' },
+      },
       { type: 'text', content: 'Bw', anchor: 'end', x: 31, y: 29, style: { fill: 'schwarz' } },
     ]);
     expect(checkViewBox(drawing)).toEqual([]);

@@ -409,11 +409,10 @@ die Referenz es zeigt, und führt „weiß auf orange" als bekannten, begründet
 trägt deshalb **keine** `deviation` — abweichend ist nicht die Umsetzung von der Quelle, sondern
 die eigene Kontrastschwelle des Katalogs vom Bild. Die Ausnahme steht als Datum im Paket
 (`CONTRAST_EXCEPTIONS` mit Paar, Themes, Abschnitten, Entscheidungsdatum, Begründung und den
-geprüften und verworfenen Wegen) und ist im Betrieb sichtbar. Seit Anhang G nennt
-`pnpm cli coverage` daneben den quellengebundenen Weiss-auf-Braun-Befund von G.3.5. Die
-Ausnahmen sind ausdrücklich **keine** Freigabeblocker — ein Blocker ist ein offener Punkt, diese
-Paare sind entschieden. Das a11y-Gate bleibt scharf: jede Ausnahme wirkt paarweise und
-themeweise, die Zahl der gedeckten Befunde ist auf **genau zwei je Theme** gepinnt, und ein
+geprüften und verworfenen Wegen) und ist im Betrieb sichtbar. Die Ausnahme ist ausdrücklich
+**kein** Freigabeblocker — ein Blocker ist ein offener Punkt, dieses Paar ist entschieden. Das
+a11y-Gate bleibt scharf: die Ausnahme wirkt paarweise und themeweise, die Zahl der gedeckten
+Befunde ist auf **genau einen je Theme** gepinnt, und ein
 weiteres oranges Rezept fällt weiterhin an einer eigenen Zusage auf.
 
 **Die Umfangszeile ist damit zusammengezogen: aus `E.1` plus 30 E.2-Einzelzeilen wird `E`**, 47
@@ -659,18 +658,25 @@ Quellen- und das eine Profilreview bleiben offen, insgesamt 459 fachliche Review
 Zwanzig G-Rezepte besitzen den Körper-Fingerprint- plus Snapshot-Nachweis. `G.1.5` ist der
 ehrliche Sonderfall: seine Referenz führt keine vergleichbare Füllfläche, deshalb trägt die
 Manifestzeile `body-geometry-regression` plus `svg-snapshot` und keinen erfundenen
-Fingerprint-Claim. Die Entscheidung und die noch nicht abgeschlossene visuelle Prüfung stehen
+Fingerprint-Claim. Die Entscheidung und die abgeschlossene technische Sichtprüfung stehen
 in [`docs/decisions/2026-08-26-anhang-g.md`](docs/decisions/2026-08-26-anhang-g.md) und
 [`docs/reviews/2026-08-26-anhang-g-visual-qa.md`](docs/reviews/2026-08-26-anhang-g-visual-qa.md).
-Der 21-Karten-Referenzvergleich und seine visuelle Akzeptanz folgen erst in Task 3; Task 2
-behauptet weder einen erzeugten Kontaktbogen noch eine Sichtfreigabe.
+Der Task-3-Kontaktbogen stellt alle 21 Paare in Rezeptreihenfolge gegenüber. Die technische
+Sichtprüfung ist abgeschlossen; die 21 fachlichen Domain-Reviews bleiben davon unberührt.
 
-Der innenliegende weisse `Diesel`-Lauf von G.3.5 erreicht auf dem bestehenden Bundeswehr-Braun
-3,689:1 im Referenz- und accessible-light-Theme sowie 2,849:1 im Drucktheme statt der
-Textschwelle 4,5:1. Der Katalog erfindet dafür weder schwarze Tinte noch eine neue
-Organisationsfarbe: `CONTRAST_EXCEPTIONS` führt den gemessenen Befund für G.3.5 explizit, während
-der außenliegende Lauf `Bw` wie vermessen schwarz bleibt. Das ist eine technische
-Kontrastentscheidung und keine fachliche oder visuelle Freigabe.
+Der Task-3-Paarvergleich hat die Task-2-Annahme zum `Diesel`-Lauf widerlegt: die lokale Referenz
+zeichnet ihn schwarz, nicht weiss. Das Profil `circle-12/foot-band` führt deshalb für seine
+vermessene `bottomCenter`-Zone schwarze Tinte; die Formation behält die körperfarbenabhängige
+Regel. `labelContrastRequirements()` liest dieselbe Profilangabe. Schwarz auf Bundeswehr-Braun
+besteht die Textschwelle in allen Themes, daher gibt es für G.3.5 keine Kontrastausnahme mehr;
+das außenliegende `Bw` bleibt wie vermessen schwarz.
+
+Dieselbe Paarprüfung hat das vorläufige Task-1-Modell einer stets geschlossenen
+`formation/foot-band`-Oberkante präzisiert: die acht kopflosen und unbeschrifteten
+Logistikformationen G.1 bis G.8 sind in den Quellen oben offen. Das generische Profil öffnet die
+Kontur deshalb nur ohne Kopf und ohne Labels. G.1.1 bis G.1.5 sowie F.1.3/F.1.17 und die übrigen
+Körpervarianten behalten durch diese Oberkantenkorrektur ihre geschlossene Kontur und ihre
+bestehenden Snapshotbytes.
 
 ## Der lokale Referenzbestand
 

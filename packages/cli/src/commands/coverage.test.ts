@@ -50,8 +50,7 @@ describe('coverage CLI', () => {
     // der Blockerzeile darunter: ein Blocker ist ein offener Punkt, diese Ausnahme ist ein
     // entschiedener.
     expect(lines).toContain(
-      'Kontrastausnahmen: weiss auf orange (E.2.6, entschieden am 2026-08-18 durch Projektinhaber); ' +
-        'weiss auf braun (G.3.5, entschieden am 2026-08-26 durch Projektvorgabe LFH-421)',
+      'Kontrastausnahmen: weiss auf orange (E.2.6, entschieden am 2026-08-18 durch Projektinhaber)',
     );
     expect(lines).toContain(
       `Offene fachliche Reviews: ${openReviews} ` +

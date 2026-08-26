@@ -121,6 +121,10 @@ describe('Layoutprofile', () => {
 
     const circleFootBand = profileFor('circle-12', 'foot-band');
     expect(circleFootBand.bottomCenterBaselineFromBodyBottomMm).toBe(6);
+    expect(circleFootBand.bottomCenterInk).toBe('black');
+    expect(profileFor('formation').bottomCenterInk).toBeUndefined();
+    expect(circleFootBand.openTopWhenHeadlessAndUnlabelled).toBeUndefined();
+    expect(profileFor('formation', 'foot-band').openTopWhenHeadlessAndUnlabelled).toBe(true);
     expect(circleFootBand.belowRight).toEqual({
       baselineFromBodyBottomMm: 1,
       anchorFromBodyRightMm: 3,
