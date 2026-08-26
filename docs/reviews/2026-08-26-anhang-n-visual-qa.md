@@ -73,9 +73,11 @@ Originalauflösungsprüfung sind im folgenden Abschnitt getrennt belegt.
 
 Der abschließende technische Kontaktbogen wurde aus den neun live in `RECIPES` registrierten
 N-Schlüsseln erzeugt; Schlüssel, Titel und exakte Referenzdateinamen stammen nicht aus einer
-zweiten, manuell gepflegten Matrix. Seine Katalogbasis ist der additive Merge-HEAD
-`d96c4bb319f69ae0887524c7f170fdafc668b649`. Generator und Ergebnis bleiben wie vorgesehen
-ignoriert:
+zweiten, manuell gepflegten Matrix. Die `origin/main`-Integrationsbasis des Branches ist der
+additive Merge-HEAD `d96c4bb319f69ae0887524c7f170fdafc668b649`. Der final gerasterte
+technische Geometriestand und die `gitSha` des Manifests sind nach dem reviewten
+One-Boundary-`inset-hull`-Fix `4d33e928543bea2ec000228e1aa6778c92f59c19`. Generator und
+Ergebnis bleiben wie vorgesehen ignoriert:
 
 - Generator: `out/tools/generate-lfh-422-contact-sheet.ts`;
 - PNG: `out/lfh-422/contact-sheets/LFH-422-anhang-n.png`;
@@ -94,11 +96,13 @@ Der Generator beginnt jeden Lauf mit dem Entfernen genau der beiden bekannten Au
 führt anschließend zwei vollständige Erzeugungspässe aus. Zwei abschließende externe
 Generatoraufrufe waren jeweils intern und untereinander byteidentisch; damit stimmen PNG und
 Manifest über vier saubere Pässe überein. Der Manifest-SHA-256 lautet
-`ca8f9888822ba85790e415478db8e72cfe372ba5947ec534e64550253b42198c`; das Manifest enthält den
+`2027b6bcd5ac4c4a20a2b2746153fd6c0e6c93a2daa3a1283b403005e29241c8`; das Manifest enthält den
 Ticketwert, die Katalogbasis, die Generatorversion, Layout und Schriftbindung sowie für alle neun
 Paare Rezept-, Quellen-SVG-, Quellen-PNG-, Katalog-SVG- und Katalog-PNG-Hashes und den
 vollständigen Ausgabehash. Das PNG blieb gegenüber dem Vor-Merge-Beleg byteidentisch; der
-Manifesthash änderte sich erwartungsgemäß mit der auf den Merge-HEAD aktualisierten `gitSha`.
+Manifesthash änderte sich erwartungsgemäß mit der auf den finalen technischen Geometriestand
+aktualisierten `gitSha`. Der vollständige frische Testlauf dieses Stands umfasst 61 bestandene
+Testdateien mit 4.267 bestandenen Tests.
 
 Das finale PNG wurde mit `view_image` im Modus `original` geprüft. Ergebnis:
 
