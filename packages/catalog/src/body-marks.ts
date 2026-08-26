@@ -180,8 +180,6 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
   'h-veterinary-decontamination': (bounds) => {
     const { minX, minY, maxX, maxY } = bounds;
     const cx = (minX + maxX) / 2;
-    const compactX = minX + 10.75;
-    const compactY = maxY - 8;
     const ink = { fill: 'schwarz', stroke: 'none' } as const;
     return [
       outline([
@@ -191,12 +189,12 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
         [maxX - 7.75, minY + 2.75],
         [maxX - 4, minY + 2.75],
       ]),
-      { type: 'circle', role: 'pictogram', cx: compactX - 3, cy: compactY, r: 1.25, style: ink },
-      { type: 'circle', role: 'pictogram', cx: compactX + 3, cy: compactY, r: 1.25, style: ink },
-      outline([[compactX - 6, compactY + 5.25], [compactX, compactY - 0.5], [compactX + 6, compactY + 5.25]]),
-      outline([[compactX - 6, compactY - 5.25], [compactX, compactY + 0.5], [compactX + 6, compactY - 5.25]]),
-      outline([[compactX - 8, compactY + 2.75], [compactX - 6, compactY + 5.25], [compactX - 8, compactY + 7.75]]),
-      outline([[compactX + 8, compactY + 2.75], [compactX + 6, compactY + 5.25], [compactX + 8, compactY + 7.75]]),
+      { type: 'circle', role: 'pictogram', cx: minX + 3.583, cy: maxY - 8, r: 1.25, style: ink },
+      { type: 'circle', role: 'pictogram', cx: minX + 9.417, cy: maxY - 8, r: 1.25, style: ink },
+      outline([[minX + 4.818, maxY - 7.833], [minX + 9.75, maxY - 3.6]]),
+      outline([[minX + 2.75, maxY - 5.25], [minX + 2.75, maxY - 2.75], [minX + 5, maxY - 2.75]]),
+      outline([[minX + 8.182, maxY - 7.833], [minX + 3.25, maxY - 3.6]]),
+      outline([[minX + 8, maxY - 2.75], [minX + 10.25, maxY - 2.75], [minX + 10.25, maxY - 5.25]]),
     ];
   },
 
@@ -215,11 +213,14 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
       outline([
         [minX + 2, maxY - 5.25],
         [minX + 14, maxY - 5.25],
-        [minX + 11.25, maxY - 3],
-        [minX + 4.75, maxY - 3],
-        [minX + 2, maxY - 5.25],
       ]),
-      outline([[minX + 4.5, maxY - 6.75], [minX + 7.5, maxY - 10.25], [minX + 10.5, maxY - 6.75]]),
+      {
+        type: 'polyline',
+        role: 'pictogram',
+        points: [[minX + 3.5, maxY - 2.75], [minX + 5, maxY - 4.6], [minX + 6.5, maxY - 2.75]],
+        closed: true,
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
     ];
   },
 

@@ -48,22 +48,72 @@ describe('bodyMark() — die Fachdienstteilung', () => {
 });
 
 describe('bodyMark() — H.2 Tierdekontamination', () => {
-  it('hält die linke kompakte Pfeilspitze innerhalb der Formationskörpergrenze', () => {
-    // In H.2 beginnt die linke kompakte Pfeilspitze bei 10,630 SVG-Einheiten. Bei 2,834656
-    // Einheiten/mm sind das 3,75 mm — sie liegt damit deutlich innerhalb der Füllfläche
-    // 1…31 × 6…26 mm. Ein Ansatz bei 0,5 mm wäre keine gemessene Überragung, sondern eine
-    // Rekonstruktionsverschiebung.
+  it('hält die zwei kurzen kreuzenden Pfeildiagonalen kompakt links unten und vom Veterinär-V getrennt', () => {
+    // Sichtbare H.2-Quelle: die zwei Punkte um (4,583|18) und (10,417|18) tragen nur zwei
+    // kurze kreuzende Pfeildiagonalen in x = 3,75…11,25 und y = 16,75…23,25 mm. Sie reichen
+    // nicht bis zum Veterinär-V, dessen linker Schenkel in dieser unteren Zone erst deutlich
+    // rechts davon liegt. Die frühere globale compactX-Verschiebung erzeugte dagegen Diagonalen
+    // bis x = 19,75 und ließ sie das V kreuzen.
     const marks = bodyMark('h-veterinary-decontamination', formationBodyMm);
-    expect(marks[5]).toEqual({
+    expect(marks.slice(1)).toEqual([
+      {
+        type: 'circle', role: 'pictogram', cx: 4.583, cy: 18, r: 1.25,
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+      {
+        type: 'circle', role: 'pictogram', cx: 10.417, cy: 18, r: 1.25,
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+      {
+        type: 'polyline', role: 'pictogram',
+        points: [[5.818, 18.167], [10.75, 22.4]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      {
+        type: 'polyline', role: 'pictogram',
+        points: [[3.75, 20.75], [3.75, 23.25], [6, 23.25]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      {
+        type: 'polyline', role: 'pictogram',
+        points: [[9.182, 18.167], [4.25, 22.4]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      {
+        type: 'polyline', role: 'pictogram',
+        points: [[9, 23.25], [11.25, 23.25], [11.25, 20.75]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+    ]);
+  });
+});
+
+describe('bodyMark() — H.3 Schlacht- und Untersuchungsgruppe', () => {
+  it('zeichnet die lange waagerechte Linie und das kleine geschlossene Dreieck darunter', () => {
+    // Sichtbare H.3-Quelle: eine einzelne lange Linie x = 3…15 auf y = 20,75 mm, darunter
+    // ein geschlossenes Dreieck mit Spitze (6|21,4) und Basis y = 23,25. Die frühere Bootform
+    // und ihr oberhalb liegendes offenes Dreieck veränderten Topologie, Lage und Orientierung.
+    const marks = bodyMark('h-veterinary-slaughter', formationBodyMm);
+    expect(marks.slice(1)).toEqual([{
       type: 'polyline',
       role: 'pictogram',
-      points: [[3.75, 20.75], [5.75, 23.25], [3.75, 25.75]],
+      points: [[3, 20.75], [15, 20.75]],
       style: {
         fill: 'none',
         stroke: 'schwarz',
         strokeWidth: DEFAULT_STROKE_WIDTH_MM,
       },
-    });
+    }, {
+      type: 'polyline',
+      role: 'pictogram',
+      points: [[4.5, 23.25], [6, 21.4], [7.5, 23.25]],
+      closed: true,
+      style: {
+        fill: 'none',
+        stroke: 'schwarz',
+        strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+      },
+    }]);
   });
 });
 
