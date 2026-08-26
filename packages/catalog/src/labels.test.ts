@@ -101,6 +101,10 @@ describe('semantische Zeichenbeschreibungen', () => {
         'Raute mit zwei inneren Diagonalen, Anschlag und Rechtspfeil',
       'circle-transport-diamond-wheels-arrows':
         'Raute mit zwei Ringen, Anschlag und Rechtspfeil',
+      'h-veterinary-decontamination':
+        'Veterinär-V mit kompakter Tierdekontaminationsmarke unten links',
+      'h-veterinary-slaughter':
+        'Veterinär-V mit Schlacht- und Untersuchungsmarke unten links',
     });
     const task4TechnicalIds = [
       'ring-7mm-offset-down-1mm',
@@ -123,6 +127,8 @@ describe('semantische Zeichenbeschreibungen', () => {
       'circle-information-stem',
       'circle-transport-diamond-arrows',
       'circle-transport-diamond-wheels-arrows',
+      'h-veterinary-decontamination',
+      'h-veterinary-slaughter',
     ] as const;
     expect(TECHNICAL_BODY_MARK_IDS).toEqual([...task4TechnicalIds, ...task5TechnicalIds]);
   });

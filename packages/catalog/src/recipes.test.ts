@@ -54,6 +54,56 @@ function horizontalPictogramLineYMm(drawing: Drawing): number | undefined {
 describe('Kompositionsrezepte', () => {
   const fingerprintCases = Object.entries(RECIPES);
 
+  it('bindet Anhang H mit drei orangefarbenen Formationen an die Originaldateien', () => {
+    expect(RECIPES['H.1']).toEqual({
+      title: 'Veterinärzug',
+      referenceAsset: 'H.1_Veterinärzug.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'sonstige-gefahrenabwehr',
+        strength: 'zug',
+        bodyMarks: ['veterinary'],
+      },
+    });
+    expect(RECIPES['H.2']).toEqual({
+      title: 'Tier-Dekontaminationsgruppe',
+      referenceAsset: 'H.2_Tier-Dekontaminationsgruppe.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'sonstige-gefahrenabwehr',
+        strength: 'gruppe',
+        bodyMarks: ['h-veterinary-decontamination'],
+      },
+    });
+    expect(RECIPES['H.3']).toEqual({
+      title: 'Schlacht- und Untersuchungsgruppe',
+      referenceAsset: 'H.3_Schlacht- und Untersuchungsgruppe.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'sonstige-gefahrenabwehr',
+        strength: 'gruppe',
+        bodyMarks: ['h-veterinary-slaughter'],
+      },
+    });
+  });
+
+  it('zeichnet die H-spezifische kompakte Tierdekontaminationsmarke', () => {
+    const h2 = composeFromCatalog(RECIPES['H.2']!.spec).children.filter(
+      (child) => child.role === 'pictogram',
+    );
+
+    expect(h2).toHaveLength(7);
+    expect(h2.map((child) => child.type)).toEqual([
+      'polyline',
+      'circle',
+      'circle',
+      'polyline',
+      'polyline',
+      'polyline',
+      'polyline',
+    ]);
+  });
+
   it('bindet den Körper-Fingerprint-Claim exakt an die ausgeführten Rezeptfälle', () => {
     const tested = fingerprintCases.map(([section]) => `recipe.${section}`).sort();
     const claimed = COVERAGE_MANIFEST.entries
@@ -1160,12 +1210,12 @@ describe('Anhang F, Teilslice F-f', () => {
     },
   } as const;
 
-  it('deckt F.3.12 bis F.3.19 lückenlos ohne Alternative ab und erreicht 137 Rezepte', () => {
+  it('deckt F.3.12 bis F.3.19 lückenlos ohne Alternative ab und erreicht mit H 140 Rezepte', () => {
     const entries = Object.entries<Recipe>(RECIPES)
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(137);
+    expect(Object.keys(RECIPES)).toHaveLength(140);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {

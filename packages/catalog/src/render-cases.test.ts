@@ -17,12 +17,17 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 405 seit F-f: 308 nach LFH-424, plus die 31 Zeichen aus E.2 und alle 66 F-Rezepte.
-    expect(ids).toHaveLength(405);
+    // 408 seit H: 308 nach LFH-424, plus die 31 Zeichen aus E.2, alle 66 F-Rezepte und H.1 bis H.3.
+    expect(ids).toHaveLength(408);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
     // dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66 weitere.
-    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(137);
+    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(140);
+    expect(ids.filter((id) => id.startsWith('recipe.H.'))).toEqual([
+      'recipe.H.1',
+      'recipe.H.2',
+      'recipe.H.3',
+    ]);
     expect(ids.filter((id) => id.startsWith('recipe.E.1.'))).toHaveLength(37);
     // Anhang F, Teilslice F-a: zehn Abschnitte in elf Renderfällen. Der elfte ist
     // `recipe.F.1.11#alternative` — der **erste Renderfall des Katalogs, dessen Darstellung im

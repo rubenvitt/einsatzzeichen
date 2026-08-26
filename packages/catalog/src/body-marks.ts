@@ -160,6 +160,69 @@ function crossedSwabs(cx: number, cy: number): Primitive[] {
  * gegen die Hülle formuliert; die Herleitungen stehen an der jeweiligen Zeile.
  */
 const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
+  /** H.1: die separat vermessene, randbündige Veterinärmarke. */
+  veterinary: (bounds) => {
+    const { minX, minY, maxX, maxY } = bounds;
+    const cx = (minX + maxX) / 2;
+    return [outline([
+      [minX + 6, minY + 2.75],
+      [minX + 10, minY + 2.75],
+      [cx, maxY - 2.4],
+      [maxX - 10, minY + 2.75],
+      [maxX - 6, minY + 2.75],
+    ])];
+  },
+
+  /**
+   * H.2: Veterinär- und Tierdekontaminationsmarke. Die kompakte linke Anordnung wurde für
+   * Anhang H neu konstruiert; sie ist keine Übernahme der Human-Dekontaminationsmarke.
+   */
+  'h-veterinary-decontamination': (bounds) => {
+    const { minX, minY, maxX, maxY } = bounds;
+    const cx = (minX + maxX) / 2;
+    const compactX = minX + 7.5;
+    const compactY = maxY - 8;
+    const ink = { fill: 'schwarz', stroke: 'none' } as const;
+    return [
+      outline([
+        [minX + 8, minY + 2.75],
+        [minX + 11.25, minY + 2.75],
+        [cx + 2, maxY - 2.4],
+        [maxX - 7.75, minY + 2.75],
+        [maxX - 4, minY + 2.75],
+      ]),
+      { type: 'circle', role: 'pictogram', cx: compactX - 3, cy: compactY, r: 1.25, style: ink },
+      { type: 'circle', role: 'pictogram', cx: compactX + 3, cy: compactY, r: 1.25, style: ink },
+      outline([[compactX - 6, compactY + 5.25], [compactX, compactY - 0.5], [compactX + 6, compactY + 5.25]]),
+      outline([[compactX - 6, compactY - 5.25], [compactX, compactY + 0.5], [compactX + 6, compactY - 5.25]]),
+      outline([[compactX - 8, compactY + 2.75], [compactX - 6, compactY + 5.25], [compactX - 8, compactY + 7.75]]),
+      outline([[compactX + 8, compactY + 2.75], [compactX + 6, compactY + 5.25], [compactX + 8, compactY + 7.75]]),
+    ];
+  },
+
+  /** H.3: Veterinär-V mit der eigenständig vermessenen Schlacht-/Untersuchungsmarke links. */
+  'h-veterinary-slaughter': (bounds) => {
+    const { minX, minY, maxX, maxY } = bounds;
+    const cx = (minX + maxX) / 2;
+    return [
+      outline([
+        [minX + 8, minY + 2.75],
+        [minX + 11.25, minY + 2.75],
+        [cx + 2, maxY - 2.4],
+        [maxX - 7.75, minY + 2.75],
+        [maxX - 4, minY + 2.75],
+      ]),
+      outline([
+        [minX + 2, maxY - 5.25],
+        [minX + 14, maxY - 5.25],
+        [minX + 11.25, maxY - 3],
+        [minX + 4.75, maxY - 3],
+        [minX + 2, maxY - 5.25],
+      ]),
+      outline([[minX + 4.5, maxY - 6.75], [minX + 7.5, maxY - 10.25], [minX + 10.5, maxY - 6.75]]),
+    ];
+  },
+
   /** 4.6.1 Sanität, Grundzeichen — die Teilung allein. F.1.5, F.1.6, F.1.9, F.1.11. */
   'medical-service': (bounds) => quartering(bounds),
 
