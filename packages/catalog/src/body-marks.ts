@@ -948,8 +948,8 @@ function logisticsFuels(bounds: BoundsMm, shiftYMm = 0): Primitive[] {
   }];
 }
 
-function logisticsCatering(bounds: BoundsMm, shiftYMm = 0): Primitive[] {
-  const cx = (bounds.minX + bounds.maxX) / 2;
+function logisticsCatering(bounds: BoundsMm, shiftYMm = 0, shiftXMm = 0): Primitive[] {
+  const cx = (bounds.minX + bounds.maxX) / 2 + shiftXMm;
   const cy = 15 + shiftYMm;
   return [{
     type: 'path', role: 'pictogram',
@@ -963,27 +963,83 @@ function logisticsCatering(bounds: BoundsMm, shiftYMm = 0): Primitive[] {
   }];
 }
 
-function logisticsMaintenance(bounds: BoundsMm): Primitive[] {
+/**
+ * G.7/G.2.1/G.2.2/G.3.4: durchgehende Mittellinie zwischen zwei offenen 3-mm-Endbögen. Der
+ * Kreis-Kontext liegt 0,5 mm tiefer; die übrigen Profile teilen y=15.
+ */
+function logisticsMaintenance(bounds: BoundsMm, centerYMm = 15): Primitive[] {
   const cx = (bounds.minX + bounds.maxX) / 2;
   return [{
     type: 'path', role: 'pictogram',
     d:
-      `M ${cx - 9} 13 C ${cx - 6} 10 ${cx - 3} 11 ${cx - 2} 14 H ${cx + 2} ` +
-      `C ${cx + 3} 11 ${cx + 6} 10 ${cx + 9} 13 ` +
-      `M ${cx - 9} 17 C ${cx - 6} 20 ${cx - 3} 19 ${cx - 2} 16 H ${cx + 2} ` +
-      `C ${cx + 3} 19 ${cx + 6} 20 ${cx + 9} 17 M ${cx - 2} 14 V 16 M ${cx + 2} 14 V 16`,
+      `M ${cx - 9} ${centerYMm - 3} ` +
+      `C ${cx - 7.343} ${centerYMm - 3} ${cx - 6} ${centerYMm - 1.657} ${cx - 6} ${centerYMm} ` +
+      `H ${cx + 6} ` +
+      `C ${cx + 6} ${centerYMm - 1.657} ${cx + 7.343} ${centerYMm - 3} ${cx + 9} ${centerYMm - 3} ` +
+      `M ${cx - 9} ${centerYMm + 3} ` +
+      `C ${cx - 7.343} ${centerYMm + 3} ${cx - 6} ${centerYMm + 1.657} ${cx - 6} ${centerYMm} ` +
+      `M ${cx + 6} ${centerYMm} ` +
+      `C ${cx + 6} ${centerYMm + 1.657} ${cx + 7.343} ${centerYMm + 3} ${cx + 9} ${centerYMm + 3}`,
     style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
   }];
 }
 
-function logisticsMealPreparation(bounds: BoundsMm): Primitive[] {
-  const translated: BoundsMm = {
-    minX: bounds.minX - ((bounds.minX + bounds.maxX) / 2 - 16),
-    minY: 5.75,
-    maxX: bounds.maxX - ((bounds.minX + bounds.maxX) / 2 - 16),
-    maxY: 26,
+/**
+ * G.8: Mülltonne aus sechs getrennten Mittellinien-Primitiven. Griff y=7 und Deckel y=8 stehen
+ * oberhalb des Behälters; die frühere Trapezabkürzung ab y=11 ließ beide sichtbaren Teile aus.
+ */
+function logisticsWasteDisposal(): Primitive[] {
+  return [
+    stroke(14, 7, 18, 7),
+    stroke(10, 8, 22, 8),
+    {
+      type: 'path',
+      role: 'pictogram',
+      d: 'M 11.5 8 V 19 C 11.5 19.552 11.948 20 12.5 20 H 19.5 ' +
+        'C 20.052 20 20.5 19.552 20.5 19 V 8',
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+    stroke(13.5, 10, 13.5, 18),
+    stroke(16, 10, 16, 18),
+    stroke(18.5, 10, 18.5, 18),
+  ];
+}
+
+/**
+ * Die große G-Löffelsilhouette, rekonstruiert aus G.6/G.3.2/G.2.3. Sie ist nicht die kleinere
+ * F.2.13-Silhouette: Kopfbreite 3 mm statt 1,772 mm, Unterkante y=20 statt y=21,60015.
+ */
+function logisticsSpoon(cx: number): Primitive {
+  return {
+    type: 'path',
+    role: 'pictogram',
+    d:
+      `M ${cx - 0.7} 12.86 C ${cx - 0.573} 12.953 ${cx - 0.5} 13.103 ${cx - 0.5} 13.26 ` +
+      `V 19.5 C ${cx - 0.5} 19.776 ${cx - 0.276} 20 ${cx} 20 ` +
+      `C ${cx + 0.276} 20 ${cx + 0.5} 19.776 ${cx + 0.5} 19.5 V 13.26 ` +
+      `C ${cx + 0.5} 13.103 ${cx + 0.573} 12.953 ${cx + 0.7} 12.86 ` +
+      `C ${cx + 1.164} 12.521 ${cx + 1.5} 12.139 ${cx + 1.5} 11.5 ` +
+      `C ${cx + 1.5} 10.262 ${cx + 0.846} 9.5 ${cx} 9.5 ` +
+      `C ${cx - 0.846} 9.5 ${cx - 1.5} 10.262 ${cx - 1.5} 11.5 ` +
+      `C ${cx - 1.5} 12.139 ${cx - 1.164} 12.521 ${cx - 0.7} 12.86 Z`,
+    style: { fill: 'schwarz', stroke: 'none' },
   };
-  return landMealPreparation(translated);
+}
+
+/**
+ * Löffel und Schüssel behalten ihre je Körperprofil vermessenen horizontalen Abstände zur
+ * Körpermitte. Formation und Kreis teilen -5/+3 mm; der Anhänger führt -5,5/+2,5 mm.
+ */
+function logisticsMealPreparation(
+  bounds: BoundsMm,
+  spoonCenterFromBodyCenterMm: number,
+  bowlCenterFromBodyCenterMm: number,
+): Primitive[] {
+  const bodyCenterXMm = (bounds.minX + bounds.maxX) / 2;
+  return [
+    logisticsSpoon(bodyCenterXMm + spoonCenterFromBodyCenterMm),
+    ...logisticsCatering(bounds, 0, bowlCenterFromBodyCenterMm),
+  ];
 }
 
 const FORMATION_FOOT_BAND_LOGISTICS_MARKS: Partial<
@@ -1005,34 +1061,25 @@ const FORMATION_FOOT_BAND_LOGISTICS_MARKS: Partial<
     return [outline([[cx, 10], [cx - 3, 16], [cx + 1, 15], [cx - 2, 21], [cx + 4, 14], [cx, 15]])];
   },
   catering: (bounds) => logisticsCatering(bounds),
-  'meal-preparation': logisticsMealPreparation,
+  'meal-preparation': (bounds) => logisticsMealPreparation(bounds, -5, 3),
   maintenance: logisticsMaintenance,
-  'waste-disposal': (bounds) => {
-    const cx = (bounds.minX + bounds.maxX) / 2;
-    return [
-      outline([[cx - 5, 11], [cx - 4, 21], [cx + 4, 21], [cx + 5, 11], [cx - 5, 11]]),
-      stroke(cx - 6, 11, cx + 6, 11),
-      stroke(cx - 3, 14, cx - 3, 19),
-      stroke(cx, 14, cx, 19),
-      stroke(cx + 3, 14, cx + 3, 19),
-    ];
-  },
+  'waste-disposal': logisticsWasteDisposal,
 };
 
 const TRAILER_FOOT_BAND_LOGISTICS_MARKS: Partial<
   Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
 > = {
   maintenance: logisticsMaintenance,
-  'meal-preparation': logisticsMealPreparation,
+  'meal-preparation': (bounds) => logisticsMealPreparation(bounds, -5.5, 2.5),
 };
 
 const CIRCLE_FOOT_BAND_LOGISTICS_MARKS: Partial<
   Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
 > = {
   catering: (bounds) => logisticsCatering(bounds),
-  'meal-preparation': logisticsMealPreparation,
+  'meal-preparation': (bounds) => logisticsMealPreparation(bounds, -5, 3),
   'fuels-consumables': (bounds) => logisticsFuels(bounds, 0),
-  maintenance: logisticsMaintenance,
+  maintenance: (bounds) => logisticsMaintenance(bounds, 15.5),
 };
 
 function airQuartering(bounds: BoundsMm): Primitive[] {
@@ -1113,7 +1160,11 @@ export function bodyMark(
       ? MARKS[id]
       : context.bodyVariant === 'foot-band'
         ? id === 'catering'
-          ? context.strength === 'zug' ? FORMATION_FOOT_BAND_LOGISTICS_MARKS[id] : MARKS[id]
+          ? context.strength === 'gruppe'
+            ? MARKS[id]
+            : context.strength === undefined || context.strength === 'zug'
+              ? FORMATION_FOOT_BAND_LOGISTICS_MARKS[id]
+              : undefined
           : FORMATION_FOOT_BAND_LOGISTICS_MARKS[id] ?? (
               id === 'care' || id === 'temporary-accommodation-resting' ? MARKS[id] : undefined
             )
