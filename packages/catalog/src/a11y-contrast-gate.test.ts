@@ -59,9 +59,8 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
       // Die Ausnahme wirkt paarweise und themeweise (`contrastExceptionFor`), nicht als
       // gelockerte Schwelle: jedes andere Paar und jedes andere Theme fällt weiter auf.
       expect(unexpectedContrastIssues(issues)).toEqual([]);
-      // Und die Zahl der gedeckten Befunde ist **gepinnt**, nicht toleriert — dasselbe Muster
-      // wie beim blauen Negativbefund weiter unten. Genau einer je Theme: weiss auf orange aus
-      // der Beschriftung von E.2.6.
+      // Und die Zahl der gedeckten Befunde ist **gepinnt**, nicht toleriert — genau einer je
+      // Theme: weiss auf orange aus E.2.6. Die quellenvermessenen schwarzen N-Läufe bestehen.
       expect(knownContrastIssues(issues)).toHaveLength(1);
       expect(knownContrastIssues(issues).map((issue) => issue.context)).toEqual([
         'Beschriftung im Körper auf Organisation sonstige-gefahrenabwehr',
@@ -184,7 +183,7 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     }
 
     const exception = CONTRAST_EXCEPTIONS[0];
-    expect(CONTRAST_EXCEPTIONS).toHaveLength(1);
+    expect(exception?.sections).toEqual(['E.2.6']);
     expect(exception?.decidedOn).toBe('2026-08-18');
     expect(exception?.decidedBy).toBe('Projektinhaber');
     // Drei geprüfte und verworfene Wege, nicht einer: ohne sie wäre die Entscheidung eine
@@ -205,6 +204,39 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     for (const rejected of exception?.rejected ?? []) {
       expect(rejected.length, rejected).toBeGreaterThan(80);
     }
+  });
+
+  it('leitet die quellenvermessene schwarze Tinte der N-Körperläufe ohne Ausnahme ab', () => {
+    const nRecipes = Object.entries<Recipe>(RECIPES)
+      .filter(([section]) => section.startsWith('N.'))
+      .map(([, recipe]) => recipe);
+    const inBody = labelContrastRequirements(nRecipes).filter(
+      (requirement) => requirement.context.startsWith('Beschriftung im Körper'),
+    );
+    expect(inBody).toEqual([
+      {
+        foreground: 'schwarz',
+        background: 'orange',
+        context: 'Beschriftung im Körper auf Organisation sonstige-gefahrenabwehr',
+        minimum: MINIMUM_TEXT_CONTRAST,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'hellgruen',
+        context: 'Beschriftung im Körper auf Organisation bundespolizei',
+        minimum: MINIMUM_TEXT_CONTRAST,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'braun',
+        context: 'Beschriftung im Körper auf Organisation bundeswehr',
+        minimum: MINIMUM_TEXT_CONTRAST,
+      },
+    ]);
+    for (const theme of [RENDER_THEMES.reference, ACCESSIBLE_LIGHT_THEME, PRINT_MONOCHROME_THEME]) {
+      expect(checkContrast(theme, inBody), theme.id).toEqual([]);
+    }
+    expect(CONTRAST_EXCEPTIONS).toHaveLength(1);
   });
 
   it('belegt, dass das Fenster im Drucktheme leer ist, statt es zu behaupten', () => {

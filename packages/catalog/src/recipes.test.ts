@@ -301,8 +301,8 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
 
   it('verlangt für die Beschriftung auf der Körperfarbe die Textschwelle, nicht die Nichttextschwelle', () => {
     const requirements = labelContrastRequirements();
-    // **Sechs seit dem Teilslice F-e**, und nur eine davon besteht nicht. Drei Nachbarschaften
-    // und drei Organisationen kommen hier zusammen: die Beschriftung im Körper, die
+    // **Neun seit LFH-422**, und nur eine davon besteht nicht. Drei Nachbarschaften und sechs
+    // Körper-Farb/Tinten-Paare kommen hier zusammen: die Beschriftung im Körper, die
     // Organisationsfarbe auf der Ausgabeoberfläche sowie die schwarzen Kreislabels, die
     // teilweise außerhalb der weißen Körperfläche auf `surface` stehen.
     //
@@ -314,11 +314,11 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
     // 21:1 in allen drei Themes. Sie steht **vor** den THW-Zeilen, weil `RECIPES` Anhang F vor
     // Anhang E einreiht.
     //
-    // Die dritte Zeile ist E.2.6: das einzige Rezept mit `sonstige-gefahrenabwehr` und
-    // Beschriftung. Die Ableitung meldet „weiss auf orange" unverändert — 2,382:1 bzw. 2,323:1
-    // gegen die Textschwelle 4,5:1 —, und sie wird nicht hier unterdrückt, sondern in
-    // `CONTRAST_EXCEPTIONS` als entschiedene Ausnahme gezählt. Diese Zeile ist die Stelle, an der
-    // ein zweites solches Rezept mechanisch sichtbar würde.
+    // Die dritte Zeile ist E.2.6 mit dem unveränderten Default „weiss auf orange" — 2,382:1
+    // bzw. 2,323:1 und deshalb die einzige entschiedene Ausnahme. Anhang N setzt auf derselben
+    // orangefarbenen Fläche sowie auf hellgruen und braun die jeweils an der Quelle vermessene
+    // schwarze Tinte. Diese drei Paare stehen separat, obwohl eines denselben Organisationskontext
+    // wie E.2.6 trägt; sonst würde der Resolveroverride im Kontrastvertrag unsichtbar.
     expect(requirements).toEqual([
       {
         foreground: 'schwarz',
@@ -336,6 +336,24 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
         foreground: 'weiss',
         background: 'orange',
         context: 'Beschriftung im Körper auf Organisation sonstige-gefahrenabwehr',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'orange',
+        context: 'Beschriftung im Körper auf Organisation sonstige-gefahrenabwehr',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'hellgruen',
+        context: 'Beschriftung im Körper auf Organisation bundespolizei',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'braun',
+        context: 'Beschriftung im Körper auf Organisation bundeswehr',
         minimum: 4.5,
       },
       {
@@ -1160,12 +1178,11 @@ describe('Anhang F, Teilslice F-f', () => {
     },
   } as const;
 
-  it('deckt F.3.12 bis F.3.19 lückenlos ohne Alternative ab und erreicht 137 Rezepte', () => {
+  it('deckt F.3.12 bis F.3.19 lückenlos ohne Alternative ab', () => {
     const entries = Object.entries<Recipe>(RECIPES)
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(137);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {

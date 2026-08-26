@@ -275,6 +275,22 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:F.3.17#primary': { status: 'pending' },
   'bbk-babz-2025:F.3.18#primary': { status: 'pending' },
   'bbk-babz-2025:F.3.19#primary': { status: 'pending' },
+  // Anhang N: neun Fahrzeuge und Anlaufstellen weiterer Träger. Technisch gemessen sind Form,
+  // Füllung, Fahrwerk, Marken und Text. Fachlich offen bleiben die Zuordnung von kommunalem
+  // Bauhof und Beauftragtem Dritten zur sonstigen Gefahrenabwehr, die getrennte Bundespolizei-
+  // Organisation, die Bundeswehr-/Feuerwehr-/ZIV-Zuordnungen sowie die Einsatzbedeutung der drei
+  // N.2-Marken. „Geländegängig“ aus dem Dateinamen von N.1.2 ist ausdrücklich keine neue
+  // Katalogsemantik. Die schwarzen Körperläufe bestehen den technischen Kontrastvertrag und
+  // ersetzen keine fachliche Freigabe.
+  'bbk-babz-2025:N.1.1#primary': { status: 'pending' },
+  'bbk-babz-2025:N.1.2#primary': { status: 'pending' },
+  'bbk-babz-2025:N.1.3#primary': { status: 'pending' },
+  'bbk-babz-2025:N.1.4#primary': { status: 'pending' },
+  'bbk-babz-2025:N.1.5#primary': { status: 'pending' },
+  'bbk-babz-2025:N.1.6#primary': { status: 'pending' },
+  'bbk-babz-2025:N.2.1#primary': { status: 'pending' },
+  'bbk-babz-2025:N.2.2#primary': { status: 'pending' },
+  'bbk-babz-2025:N.2.3#primary': { status: 'pending' },
   'bbk-babz-2025:2.1#primary': { status: 'pending' },
   // 2.2 seit LFH-424. Fachlich besonders zu prüfen: die Zuordnung „HiOrg = Hilfsorganisation" ist
   // aus dem gerasterten Bild abgelesen, nicht aus dem Dateinamen — der ist generisch

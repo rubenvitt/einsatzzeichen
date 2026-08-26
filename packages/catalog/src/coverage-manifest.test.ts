@@ -69,7 +69,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 424 Zeilen mit 273 Elementdarstellungen', () => {
+  it('enthält exakt 433 Zeilen mit 273 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -97,7 +97,7 @@ describe('Coverage-Manifest', () => {
       // `alternative` — die Zeile zählt einzeln, weil das Manifest Darstellungen zählt und nicht
       // Abschnitte, weil F.1.3 dort noch bewusst offen blieb; F-b baut es mit `foot-band`.
       // F-d ergänzt F.2.10 bis F.2.17 als acht reine Anwendungen des Fahrzeugvertrags.
-      'composition-recipe': 137,
+      'composition-recipe': 146,
       // 254 Piktogramme plus acht Organisationen (seit LFH-424 mit hilfsorganisation), vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
@@ -105,7 +105,7 @@ describe('Coverage-Manifest', () => {
       // Strichhülle vermessen ist.
       element: 273,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(424);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(433);
     expect(elementRows).toHaveLength(273);
     expect(pictogramRows).toHaveLength(254);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
@@ -397,7 +397,26 @@ describe('Coverage-Manifest', () => {
       'K',
       'L',
       'M',
+      'N',
     ]);
+  });
+
+  it('führt Anhang N mit neun primary-Zeilen und eigenem technischem Review', () => {
+    const rows = COVERAGE_MANIFEST.entries.filter(
+      (entry) => entry.coverage === 'composition-recipe' && entry.sourceId.startsWith('bbk-babz-2025:N.'),
+    );
+    expect(rows.map((entry) => entry.sourceId)).toEqual([
+      'bbk-babz-2025:N.1.1', 'bbk-babz-2025:N.1.2', 'bbk-babz-2025:N.1.3',
+      'bbk-babz-2025:N.1.4', 'bbk-babz-2025:N.1.5', 'bbk-babz-2025:N.1.6',
+      'bbk-babz-2025:N.2.1', 'bbk-babz-2025:N.2.2', 'bbk-babz-2025:N.2.3',
+    ]);
+    expect(rows.every((entry) => entry.variant === 'primary')).toBe(true);
+    expect(rows.every((entry) => entry.testEvidence.includes('body-fingerprint'))).toBe(true);
+    expect(rows.every((entry) => entry.review.technical.status === 'approved')).toBe(true);
+    expect(rows.every((entry) => entry.review.technical.date === '2026-08-26')).toBe(true);
+    expect(rows.every((entry) => entry.review.technical.note?.includes('kommunaler Bauhof') === true)).toBe(true);
+    expect(rows.every((entry) => entry.review.technical.note?.includes('Beauftragter Dritter') === true)).toBe(true);
+    expect(rows.every((entry) => entry.review.domain.status === 'pending')).toBe(true);
   });
 
   it('führt F.1 vollständig innerhalb des nun mengenexakt belegten F-Scope', () => {
