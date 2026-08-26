@@ -12,6 +12,8 @@ export const LEADERSHIP_IDS = [
   'control-center',
   'helicopter-landing-zone',
   'helicopter-landing-site',
+  'technical-advisor-thw',
+  'red-cross-commissioner',
 ] as const;
 
 export type LeadershipId = (typeof LEADERSHIP_IDS)[number];

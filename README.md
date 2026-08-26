@@ -683,6 +683,26 @@ Piktogramme, 422 Renderfälle, 441 Manifestzeilen, 423 Mehrgrößen-Sheets und 4
 281 Manifestzeilen repräsentieren auflösbare Elemente. Alle sieben D.2-Domainreviews bleiben
 `pending`, und der beanspruchte D-Scope bleibt bis zum vollständigen Anhang bei `D.3.7`.
 
+## LFH-420 Task 5: Anhang D.3 Funktionen
+
+D.3 ist mit fünfzehn Darstellungen vollständig: D.3.1 bis D.3.13 sind Kompositionen aus den
+bereits einzeln vermessenen Funktionsträgerrollen; D.3.14 und D.3.15 bleiben direkte
+`leadership`-Definitionen mit einer ausschließlich privat geteilten offenen Kappengeometrie.
+Die beiden Directs erhalten keine erfundene `functionRole` oder Organisation. D.3.7 bleibt
+dasselbe Rezept und behält Manifestkey, Domainstatus sowie direkte und Mehrgrößen-Snapshotbytes;
+nur sein technischer Nachweis beschreibt nun die vollständige D.3-Prüfmatrix.
+
+Die Matrix unterscheidet drei kopflose Standardkörper, drei Standardkörper mit Zwei-Stern-Kopf,
+vier neue abgesenkte Zugkörper mit Dreipunktkopf sowie die separat vermessenen Standardkörper
+von D.3.12/D.3.13 mit Zweipunktkopf. Brandbekämpfung, Sanität und Betreuung werden gegen die
+jeweilige endgültige Körperhülle gerechnet. `AW`, `ASB`, `DRK`, `MHD` und `JUH` bleiben
+sichtbarer Text und werden nicht zu Organisationen umgedeutet.
+
+Der Zwischenstand umfasst 158 Rezepte, 172 Rezept-/Basis-Snapshots, 264 Piktogramme, 436
+Renderfälle, 455 Manifestzeilen, 437 Mehrgrößen-Sheets und 469 Reviewobjekte; 283 Manifestzeilen
+repräsentieren auflösbare Elemente. Alle fünfzehn D.3-Domainreviews bleiben `pending`, und der
+beanspruchte D-Scope bleibt bis zur vollständigen Umsetzung von D.4 bei `D.3.7`.
+
 ## Der lokale Referenzbestand
 
 `taktische-zeichen/` ist ein **lokaler Ordner mit 661 damals von der BABZ bereitgestellten

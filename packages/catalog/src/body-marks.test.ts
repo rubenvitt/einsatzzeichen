@@ -37,6 +37,57 @@ function line(x1: number, y1: number, x2: number, y2: number): Primitive {
 /** Die Fachdienstteilung, die jede der vier Fassungen als erste beiden Primitive trägt. */
 const quartering: readonly Primitive[] = [line(16, 6, 16, 26), line(1, 16, 31, 16)];
 
+function outline(points: readonly (readonly [number, number])[], closed = false): Primitive {
+  return {
+    type: 'polyline',
+    role: 'pictogram',
+    points,
+    ...(closed ? { closed: true } : {}),
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  };
+}
+
+describe('bodyMark() — D.3-Funktionskoerper', () => {
+  const standardPersonBodyMm: BoundsMm = { minX: 3, minY: 3, maxX: 29, maxY: 29 };
+  const loweredPersonBodyMm: BoundsMm = { minX: 3, minY: 5, maxX: 29, maxY: 31 };
+  const personMark = (id: BodyMarkId, bounds: BoundsMm) =>
+    bodyMarkWithContext(id, { kind: 'person' }, bounds);
+
+  it('zeichnet Brandbekaempfung auf dem abgesenkten D.3.7-Koerper', () => {
+    expect(personMark('fire-fighting', loweredPersonBodyMm)).toEqual([
+      line(3, 18, 29, 18),
+      outline([[25, 14], [29, 18], [25, 22], [21, 18]], true),
+    ]);
+  });
+
+  it('zeichnet Sanitaet auf dem abgesenkten D.3.9/D.3.10-Koerper', () => {
+    expect(personMark('medical-service', loweredPersonBodyMm)).toEqual([
+      line(16, 10, 16, 31),
+      line(3, 18, 29, 18),
+    ]);
+  });
+
+  it('kombiniert Sanitaet und Betreuung fuer D.3.10 ohne implizite Zusatzmarke', () => {
+    expect([
+      ...personMark('medical-service', loweredPersonBodyMm),
+      ...personMark('care', loweredPersonBodyMm),
+    ]).toEqual([
+      line(16, 10, 16, 31),
+      line(3, 18, 29, 18),
+      outline([[9.5, 24.5], [16, 18], [22.5, 24.5]]),
+    ]);
+  });
+
+  it('unterscheidet die Betreuungsmarke des abgesenkten Zugs vom Standardkoerper D.3.12', () => {
+    expect(personMark('care', loweredPersonBodyMm)).toEqual([
+      outline([[9.5, 24.5], [16, 18], [22.5, 24.5]]),
+    ]);
+    expect(personMark('care', standardPersonBodyMm)).toEqual([
+      outline([[9.5, 22.5], [16, 16], [22.5, 22.5]]),
+    ]);
+  });
+});
+
 describe('bodyMark() — die Fachdienstteilung', () => {
   it('legt beide Arme auf die Mittellinien und bis an die Körperkanten', () => {
     // Gemessen an `F.1.11_Rettungsdienst allgemein.svg`: senkrechter Arm 15,75…16,25 mm um die

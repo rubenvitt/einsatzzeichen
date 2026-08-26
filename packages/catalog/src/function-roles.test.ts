@@ -48,6 +48,65 @@ describe('functionRole()', () => {
       .toMatchObject([{ content: 'EAL' }, { content: 'Nord' }]);
   });
 
+  it('bindet D.3.1 bis D.3.13 an exakt ihre gemessenen Kopf-, Text- und Markenvertraege', () => {
+    const cases = [
+      ['technical-incident-commander', 'administrative', ['TEL'], 'AW', []],
+      ['incident-commander', 'none', ['EL'], undefined, []],
+      ['lead-emergency-physician', 'administrative', ['LNA'], undefined, []],
+      ['organizational-incident-commander', 'administrative', ['OrgL'], undefined, []],
+      ['incident-section-commander', 'none', ['EAL'], undefined, []],
+      ['incident-subsection-commander', 'none', ['UEAL'], undefined, []],
+      ['fire-service-platoon-commander', 'strength', [], undefined, ['fire-fighting']],
+      ['technical-platoon-commander', 'strength', ['TZ'], undefined, []],
+      ['medical-platoon-commander', 'strength', [], 'ASB', ['medical-service']],
+      [
+        'operational-unit-platoon-commander',
+        'strength',
+        [],
+        'DRK',
+        ['medical-service', 'care'],
+      ],
+      ['care-platoon-commander', 'strength', [], 'ASB', ['care']],
+      ['care-group-commander', 'strength', [], 'MHD', ['care']],
+      ['rapid-response-group-commander', 'strength', ['SEG'], 'JUH', []],
+    ] as const;
+
+    for (const [id, expectedHead, roleRuns, carrierRun, allowedBodyMarks] of cases) {
+      const definition = functionRole(id);
+      expect(definition.kind, id).toBe('person');
+      expect(definition.expectedHead, id).toBe(expectedHead);
+      expect(definition.layout.roleRuns.map((run) => run.content), id).toEqual(roleRuns);
+      expect(definition.layout.carrierRun?.content, id).toBe(carrierRun);
+      expect(definition.allowedBodyMarks, id).toEqual(allowedBodyMarks);
+    }
+  });
+
+  it('bewahrt no-head, Zwei-Stern, abgesenkte Dreipunkt- und Standard-Zweipunktkoerper', () => {
+    const cases = [
+      ['incident-commander', [3, 3, 29, 29], undefined],
+      ['incident-section-commander', [3, 3, 29, 29], undefined],
+      ['incident-subsection-commander', [3, 3, 29, 29], undefined],
+      ['technical-incident-commander', [3, 3, 29, 29], 0],
+      ['lead-emergency-physician', [3, 3, 29, 29], 0],
+      ['organizational-incident-commander', [3, 3, 29, 29], 0],
+      ['technical-platoon-commander', [3, 5, 29, 31], 1],
+      ['medical-platoon-commander', [3, 5, 29, 31], 1],
+      ['operational-unit-platoon-commander', [3, 5, 29, 31], 1],
+      ['care-platoon-commander', [3, 5, 29, 31], 1],
+      ['care-group-commander', [3, 3, 29, 29], 1],
+      ['rapid-response-group-commander', [3, 3, 29, 29], 1],
+    ] as const;
+
+    for (const [id, expectedBounds, headTopMm] of cases) {
+      const definition = functionRole(id);
+      const bounds = boundsOfMm(definition.layout.body);
+      expect([bounds.minX, bounds.minY, bounds.maxX, bounds.maxY], id).toEqual(
+        expectedBounds.map((value) => expect.closeTo(value, 9)),
+      );
+      expect(definition.layout.headTopMm, id).toBe(headTopMm);
+    }
+  });
+
   it('bindet D.1.2 bis D.1.8 an die gemessenen Rollenläufe und ausschließlich die Gruppenköpfe', () => {
     const cases = [
       ['disaster-control-command', ['KatSL'], 'none'],

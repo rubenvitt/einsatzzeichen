@@ -104,3 +104,130 @@ export const ANHANG_D_TASK_2_RECIPES = {
     },
   },
 } as const satisfies Record<string, Recipe>;
+
+/** D.3.1 bis D.3.13 vollständig; D.3.7 bleibt dasselbe migrierte Rezeptobjekt aus Task 2. */
+export const ANHANG_D_TASK_5_RECIPES = {
+  ...ANHANG_D_TASK_3_RECIPES,
+  'D.3.1': {
+    title: 'Technischer Einsatzleiter',
+    referenceAsset: 'D.3.1_Technischer Einsatzleiter LK Ahrweiler.svg',
+    spec: {
+      kind: 'person',
+      organization: 'fuehrung-leitung',
+      administrativeLevel: 'kreis',
+      functionRole: 'technical-incident-commander',
+    },
+  },
+  'D.3.2': {
+    title: 'Einsatzleiter',
+    referenceAsset: 'D.3.2_Einsatzleiter.svg',
+    spec: {
+      kind: 'person',
+      organization: 'fuehrung-leitung',
+      functionRole: 'incident-commander',
+    },
+  },
+  'D.3.3': {
+    title: 'Leitender Notarzt',
+    referenceAsset: 'D.3.3_Leitender Notarzt.svg',
+    spec: {
+      kind: 'person',
+      organization: 'fuehrung-leitung',
+      administrativeLevel: 'kreis',
+      functionRole: 'lead-emergency-physician',
+    },
+  },
+  'D.3.4': {
+    title: 'Organisatorischer Leiter',
+    referenceAsset: 'D.3.4_Organisatorischer Leiter.svg',
+    spec: {
+      kind: 'person',
+      organization: 'fuehrung-leitung',
+      administrativeLevel: 'kreis',
+      functionRole: 'organizational-incident-commander',
+    },
+  },
+  'D.3.5': {
+    title: 'Einsatzabschnittsleiter',
+    referenceAsset: 'D.3.5_Einsatzabschnittsleiter.svg',
+    spec: {
+      kind: 'person',
+      organization: 'fuehrung-leitung',
+      functionRole: 'incident-section-commander',
+    },
+  },
+  'D.3.6': {
+    title: 'Untereinsatzabschnittsleiter',
+    referenceAsset: 'D.3.6_Untereinsatzabschnittsleiter.svg',
+    spec: {
+      kind: 'person',
+      organization: 'fuehrung-leitung',
+      functionRole: 'incident-subsection-commander',
+    },
+  },
+  'D.3.7': ANHANG_D_TASK_2_RECIPES['D.3.7'],
+  'D.3.8': {
+    title: 'Zugführer Technischer Zug',
+    referenceAsset: 'D.3.8_Zugführer Technischer Zug THW.svg',
+    spec: {
+      kind: 'person',
+      organization: 'thw',
+      strength: 'zug',
+      functionRole: 'technical-platoon-commander',
+    },
+  },
+  'D.3.9': {
+    title: 'Zugführer Sanitätszug',
+    referenceAsset: 'D.3.9_Zugführer Sanitätszug ASB.svg',
+    spec: {
+      kind: 'person',
+      organization: 'hilfsorganisation',
+      strength: 'zug',
+      functionRole: 'medical-platoon-commander',
+      bodyMarks: ['medical-service'],
+    },
+  },
+  'D.3.10': {
+    title: 'Zugführer Einsatzeinheit',
+    referenceAsset: 'D.3.10_Zugführer Einsatzeinheit DRK.svg',
+    spec: {
+      kind: 'person',
+      organization: 'hilfsorganisation',
+      strength: 'zug',
+      functionRole: 'operational-unit-platoon-commander',
+      bodyMarks: ['medical-service', 'care'],
+    },
+  },
+  'D.3.11': {
+    title: 'Zugführer Betreuungszug',
+    referenceAsset: 'D.3.11_Zugführer Betreuungszug ASB.svg',
+    spec: {
+      kind: 'person',
+      organization: 'hilfsorganisation',
+      strength: 'zug',
+      functionRole: 'care-platoon-commander',
+      bodyMarks: ['care'],
+    },
+  },
+  'D.3.12': {
+    title: 'Gruppenführer Betreuungsgruppe',
+    referenceAsset: 'D.3.12_Gruppenführer Betreuungsgruppe Malteser.svg',
+    spec: {
+      kind: 'person',
+      organization: 'hilfsorganisation',
+      strength: 'gruppe',
+      functionRole: 'care-group-commander',
+      bodyMarks: ['care'],
+    },
+  },
+  'D.3.13': {
+    title: 'Gruppenführer Schnell-Einsatzgruppe',
+    referenceAsset: 'D.3.13_Gruppenführer Schnell-Einsatzgruppe Johanniter.svg',
+    spec: {
+      kind: 'person',
+      organization: 'hilfsorganisation',
+      strength: 'gruppe',
+      functionRole: 'rapid-response-group-commander',
+    },
+  },
+} as const satisfies Record<string, Recipe>;

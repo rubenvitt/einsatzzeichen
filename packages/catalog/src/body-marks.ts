@@ -461,7 +461,12 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
   },
 };
 
-/** Eigenstaendige randbuendige Fassungen am 26 x 26-mm-Personenkoerper aus D.3. */
+/**
+ * Eigenstaendige randbuendige Fassungen am 26 x 26-mm-Personenkoerper aus D.3.
+ * Die uebergebene Huelle behaelt die getrennt vermessene Lage: D.3.9 bis D.3.11 liegen auf
+ * y=5…31, D.3.12 auf y=3…29. Gleiche Breite und Hoehe sind kein Grund, den Mittelpunkt zu
+ * vereinheitlichen.
+ */
 const PERSON_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
   'fire-fighting': (bounds) => {
     const cx = (bounds.minX + bounds.maxX) / 2;

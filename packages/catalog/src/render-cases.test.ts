@@ -18,12 +18,12 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 422 nach D.2: 415 seit D.1 plus sieben direkte Ortsdefinitionen.
-    expect(ids).toHaveLength(422);
+    // 436 nach D.3: 422 seit D.2 plus zwölf Rezepte und zwei direkte Funktionen.
+    expect(ids).toHaveLength(436);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
     // dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66 weitere.
-    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(146);
+    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(158);
     expect(ids.filter((id) => id.startsWith('recipe.E.1.'))).toHaveLength(37);
     // Anhang F, Teilslice F-a: zehn Abschnitte in elf Renderfällen. Der elfte ist
     // `recipe.F.1.11#alternative` — der **erste Renderfall des Katalogs, dessen Darstellung im
@@ -54,9 +54,11 @@ describe('vollständige Renderfallmenge', () => {
       'leadership.guide-post',
       'leadership.helicopter-landing-site',
       'leadership.helicopter-landing-zone',
+      'leadership.red-cross-commissioner',
       'leadership.reporting-head',
       'leadership.staging-area',
       'leadership.staging-area-with-reporting-head',
+      'leadership.technical-advisor-thw',
     ]);
     // Was übrig bleibt, sind die vierzehn Grundzeichen aus Kapitel 1 — die einzigen
     // Renderfälle ohne Artpräfix. Seit LFH-424 ist das Kapitel vollständig.

@@ -65,10 +65,25 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:D.2.5#primary': { status: 'pending' },
   'bbk-babz-2025:D.2.6#primary': { status: 'pending' },
   'bbk-babz-2025:D.2.7#primary': { status: 'pending' },
-  // D.3.7 ist technisch auf die gemessene Funktionsfassung migriert. Ob die Rolle
-  // „Zugführer der Feuerwehr" und die innere Brandbekämpfungsmarke fachlich genau diese
-  // Semantik tragen, bleibt ausdrücklich der Fachprüfung vorbehalten.
+  // Anhang D.3: dreizehn komponierte Funktionsträger und zwei direkte offene Kappen. Die
+  // englischen Rollen-IDs sind technische Schlüssel; AW/ASB/DRK/MHD/JUH bleiben sichtbarer
+  // Text. Insbesondere D.3.14/D.3.15 erhalten keine erfundene functionRole. D.3.7 behält sein
+  // vorhandenes Reviewobjekt und bleibt trotz der erweiterten technischen Evidenz fachlich offen.
+  'bbk-babz-2025:D.3.1#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.2#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.3#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.4#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.5#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.6#primary': { status: 'pending' },
   'bbk-babz-2025:D.3.7#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.8#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.9#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.10#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.11#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.12#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.13#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.14#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.15#primary': { status: 'pending' },
   // Anhang E, Teilslice E-a: die 16 Bergungs- und Fachgruppen des THW. Ihre Bedeutung liegt
   // vollständig in einem Buchstabenkürzel, das am Referenzbild abgelesen wurde — die fachliche
   // Prüfung, ob „B" tatsächlich die Bergungsgruppe und nicht etwa den Bergungstrupp bezeichnet,

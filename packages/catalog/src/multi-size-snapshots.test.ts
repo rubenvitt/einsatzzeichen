@@ -19,6 +19,11 @@ import { resvgFontOptions } from './fonts.js';
 const SIZES = [16, 24, 32, 64, 128, 256] as const;
 const GAP = 12;
 const LARGE = 256;
+const MEASURED_TOP_EDGE_HEADS = new Set([
+  'recipe.D.3.1',
+  'recipe.D.3.3',
+  'recipe.D.3.4',
+]);
 
 const RECTANGULAR_FIXTURE: Drawing = {
   viewBox: { width: 32, height: 46 },
@@ -62,7 +67,7 @@ function rasterize(renderCase: RenderCase, size: number, theme: RenderTheme): Ra
   expect(hasVisiblePixel(image), `${renderCase.id}/${theme.id}/${size}: leere Rasterung`).toBe(true);
   if (size === LARGE) {
     expect(
-      touchesOuterBorder(image),
+      touchesOuterBorder(image, MEASURED_TOP_EDGE_HEADS.has(renderCase.id)),
       `${renderCase.id}/${theme.id}/${size}: sichtbare Tinte berührt den Außenrand`,
     ).toBe(false);
   }
@@ -87,11 +92,13 @@ function hasVisiblePixel(image: RenderedImage): boolean {
   return false;
 }
 
-function touchesOuterBorder(image: RenderedImage): boolean {
+function touchesOuterBorder(image: RenderedImage, allowTopBorder = false): boolean {
   const pixels = image.pixels;
   const alphaAt = (x: number, y: number): number => pixels[(y * image.width + x) * 4 + 3] ?? 0;
   for (let x = 0; x < image.width; x += 1) {
-    if (alphaAt(x, 0) > 0 || alphaAt(x, image.height - 1) > 0) return true;
+    // Die zwei vermessenen Kreis-Sterne reichen bei D.3.1/.3/.4 absichtlich bis y=0. Nur
+    // dieser obere Rand ist zulässig; Seiten und Unterkante bleiben unverändert fail-closed.
+    if ((!allowTopBorder && alphaAt(x, 0) > 0) || alphaAt(x, image.height - 1) > 0) return true;
   }
   for (let y = 0; y < image.height; y += 1) {
     if (alphaAt(0, y) > 0 || alphaAt(image.width - 1, y) > 0) return true;
@@ -247,11 +254,11 @@ describe('echte Mehrgrößen- und Profilregression', () => {
     expect(image.height).toBe(92);
   });
 
-  it('schreibt exakt 423 Mehrgrößen-Snapshots', () => {
+  it('schreibt exakt 437 Mehrgrößen-Snapshots', () => {
     const snapshots = readdirSync(new URL('./__snapshots__/multi-size/', import.meta.url), {
       withFileTypes: true,
     }).filter((entry) => entry.isFile() && entry.name.endsWith('.svg'));
-    expect(snapshots).toHaveLength(423);
+    expect(snapshots).toHaveLength(437);
   });
 
   it.each(RENDER_CASES)(

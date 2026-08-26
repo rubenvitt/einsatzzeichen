@@ -230,7 +230,7 @@ describe('Anhang D.1, Führungsstellen im Einsatz', () => {
 
   it('führt exakt die neun komponierten D.1-Darstellungen', () => {
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('D.1.'))).toEqual(expectedKeys);
-    expect(Object.keys(RECIPES)).toHaveLength(146);
+    expect(Object.keys(RECIPES)).toHaveLength(158);
   });
 
   it('bindet D.1.2 bis D.1.8 an die sieben gemessenen Formationsrollen', () => {
@@ -287,6 +287,175 @@ describe('Anhang D.1, Führungsstellen im Einsatz', () => {
       const drawing = composeFromCatalog(recipe.spec, recipe.title);
       expect(drawing.children.filter((child) => child.role === 'head')).toHaveLength(1);
     }
+  });
+});
+
+describe('Anhang D.3, Funktionen', () => {
+  const expected = {
+    'D.3.1': {
+      title: 'Technischer Einsatzleiter',
+      referenceAsset: 'D.3.1_Technischer Einsatzleiter LK Ahrweiler.svg',
+      spec: {
+        kind: 'person', organization: 'fuehrung-leitung', administrativeLevel: 'kreis',
+        functionRole: 'technical-incident-commander',
+      },
+    },
+    'D.3.2': {
+      title: 'Einsatzleiter', referenceAsset: 'D.3.2_Einsatzleiter.svg',
+      spec: {
+        kind: 'person', organization: 'fuehrung-leitung',
+        functionRole: 'incident-commander',
+      },
+    },
+    'D.3.3': {
+      title: 'Leitender Notarzt', referenceAsset: 'D.3.3_Leitender Notarzt.svg',
+      spec: {
+        kind: 'person', organization: 'fuehrung-leitung', administrativeLevel: 'kreis',
+        functionRole: 'lead-emergency-physician',
+      },
+    },
+    'D.3.4': {
+      title: 'Organisatorischer Leiter', referenceAsset: 'D.3.4_Organisatorischer Leiter.svg',
+      spec: {
+        kind: 'person', organization: 'fuehrung-leitung', administrativeLevel: 'kreis',
+        functionRole: 'organizational-incident-commander',
+      },
+    },
+    'D.3.5': {
+      title: 'Einsatzabschnittsleiter', referenceAsset: 'D.3.5_Einsatzabschnittsleiter.svg',
+      spec: {
+        kind: 'person', organization: 'fuehrung-leitung',
+        functionRole: 'incident-section-commander',
+      },
+    },
+    'D.3.6': {
+      title: 'Untereinsatzabschnittsleiter',
+      referenceAsset: 'D.3.6_Untereinsatzabschnittsleiter.svg',
+      spec: {
+        kind: 'person', organization: 'fuehrung-leitung',
+        functionRole: 'incident-subsection-commander',
+      },
+    },
+    'D.3.7': {
+      title: 'Zugführer der Feuerwehr',
+      referenceAsset: 'D.3.7_Zugführer der Feuerwehr.svg',
+      spec: {
+        kind: 'person', organization: 'feuerwehr', strength: 'zug',
+        functionRole: 'fire-service-platoon-commander', bodyMarks: ['fire-fighting'],
+      },
+    },
+    'D.3.8': {
+      title: 'Zugführer Technischer Zug',
+      referenceAsset: 'D.3.8_Zugführer Technischer Zug THW.svg',
+      spec: {
+        kind: 'person', organization: 'thw', strength: 'zug',
+        functionRole: 'technical-platoon-commander',
+      },
+    },
+    'D.3.9': {
+      title: 'Zugführer Sanitätszug',
+      referenceAsset: 'D.3.9_Zugführer Sanitätszug ASB.svg',
+      spec: {
+        kind: 'person', organization: 'hilfsorganisation', strength: 'zug',
+        functionRole: 'medical-platoon-commander', bodyMarks: ['medical-service'],
+      },
+    },
+    'D.3.10': {
+      title: 'Zugführer Einsatzeinheit',
+      referenceAsset: 'D.3.10_Zugführer Einsatzeinheit DRK.svg',
+      spec: {
+        kind: 'person', organization: 'hilfsorganisation', strength: 'zug',
+        functionRole: 'operational-unit-platoon-commander',
+        bodyMarks: ['medical-service', 'care'],
+      },
+    },
+    'D.3.11': {
+      title: 'Zugführer Betreuungszug',
+      referenceAsset: 'D.3.11_Zugführer Betreuungszug ASB.svg',
+      spec: {
+        kind: 'person', organization: 'hilfsorganisation', strength: 'zug',
+        functionRole: 'care-platoon-commander', bodyMarks: ['care'],
+      },
+    },
+    'D.3.12': {
+      title: 'Gruppenführer Betreuungsgruppe',
+      referenceAsset: 'D.3.12_Gruppenführer Betreuungsgruppe Malteser.svg',
+      spec: {
+        kind: 'person', organization: 'hilfsorganisation', strength: 'gruppe',
+        functionRole: 'care-group-commander', bodyMarks: ['care'],
+      },
+    },
+    'D.3.13': {
+      title: 'Gruppenführer Schnell-Einsatzgruppe',
+      referenceAsset: 'D.3.13_Gruppenführer Schnell-Einsatzgruppe Johanniter.svg',
+      spec: {
+        kind: 'person', organization: 'hilfsorganisation', strength: 'gruppe',
+        functionRole: 'rapid-response-group-commander',
+      },
+    },
+  } as const satisfies Record<string, Recipe>;
+
+  it('führt D.3.1 bis D.3.13 vollständig und D.3.7 genau einmal', () => {
+    const actual = Object.fromEntries(
+      Object.entries<Recipe>(RECIPES).filter(([key]) => key.startsWith('D.3.')),
+    );
+    expect(actual).toEqual(expected);
+    expect(Object.keys(actual).filter((key) => key === 'D.3.7')).toHaveLength(1);
+  });
+
+  it('bewahrt no-head, Zwei-Stern, abgesenkte Dreipunkt- und Standard-Zweipunktgeometrie', () => {
+    const cases = [
+      ['D.3.2', [3, 3, 29, 29], 0],
+      ['D.3.5', [3, 3, 29, 29], 0],
+      ['D.3.6', [3, 3, 29, 29], 0],
+      ['D.3.1', [3, 3, 29, 29], 6],
+      ['D.3.3', [3, 3, 29, 29], 6],
+      ['D.3.4', [3, 3, 29, 29], 6],
+      ['D.3.8', [3, 5, 29, 31], 3],
+      ['D.3.9', [3, 5, 29, 31], 3],
+      ['D.3.10', [3, 5, 29, 31], 3],
+      ['D.3.11', [3, 5, 29, 31], 3],
+      ['D.3.12', [3, 3, 29, 29], 2],
+      ['D.3.13', [3, 3, 29, 29], 2],
+    ] as const;
+
+    for (const [section, expectedBounds, expectedHeadLeaves] of cases) {
+      const recipe = RECIPES[section];
+      expect(recipe, `${section} fehlt`).toBeDefined();
+      if (recipe === undefined) continue;
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      const body = drawing.children.find((child) => child.role === 'body');
+      expect(body, section).toBeDefined();
+      if (body === undefined) continue;
+      const bounds = boundsOfMm(body);
+      expect([bounds.minX, bounds.minY, bounds.maxX, bounds.maxY], section).toEqual(
+        expectedBounds.map((value) => expect.closeTo(value, 9)),
+      );
+      const headLeaves = drawing.children
+        .filter((child) => child.role === 'head')
+        .flatMap((child) => child.type === 'group' ? child.children : [child]);
+      expect(headLeaves, section).toHaveLength(expectedHeadLeaves);
+    }
+  });
+
+  it('zeichnet D.3.13s SEG- und JUH-Laeufe an den gemessenen Positionen', () => {
+    const recipe = RECIPES['D.3.13'];
+    expect(recipe).toBeDefined();
+    if (recipe === undefined) return;
+    const drawing = composeFromCatalog(recipe.spec, recipe.title);
+    const labels = drawing.children.filter(
+      (child): child is Primitive & { type: 'text' } => child.type === 'text',
+    );
+    expect(labels).toMatchObject([
+      {
+        content: 'SEG', x: 16, y: 18.5, sizeMm: 7.08, anchor: 'middle',
+        boxMm: { xMm: 8.5, yMm: 13.3, widthMm: 14.75, heightMm: 5.5 }, minRenderPx: 37,
+      },
+      {
+        content: 'JUH', x: 30.5, y: 29, sizeMm: 4.243, anchor: 'end',
+        boxMm: { xMm: 22.1, yMm: 25.8, widthMm: 8.3, heightMm: 3.5 }, minRenderPx: 61,
+      },
+    ]);
   });
 });
 
@@ -417,8 +586,9 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
 
   it('verlangt für die Beschriftung auf der Körperfarbe die Textschwelle, nicht die Nichttextschwelle', () => {
     const requirements = labelContrastRequirements();
-    // **Fünfzehn seit Anhang D.1**, und nur eine davon besteht nicht. Neun Anforderungen
-    // stammen aus den einzeln vermessenen Rollenläufen, sechs aus den bisherigen Labelzonen.
+    // **Neunundzwanzig seit Anhang D.3**, und nur eine davon besteht nicht. Dreiundzwanzig
+    // Anforderungen stammen aus den einzeln vermessenen Rollenläufen, sechs aus den bisherigen
+    // Labelzonen.
     // Drei Nachbarschaften und drei Organisationen kommen bei den Labelzonen zusammen: die Beschriftung im Körper, die
     // Organisationsfarbe auf der Ausgabeoberfläche sowie die schwarzen Kreislabels, die
     // teilweise außerhalb der weißen Körperfläche auf `surface` stehen.
@@ -489,6 +659,90 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
         foreground: 'funktionslauf-kontrast',
         background: 'rot',
         context: 'Funktionslauf fire-service-readiness-command-group: Ber',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf technical-incident-commander: TEL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf technical-incident-commander: AW',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf incident-commander: EL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf lead-emergency-physician: LNA',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf organizational-incident-commander: OrgL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf incident-section-commander: EAL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf incident-subsection-commander: UEAL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'weiss',
+        background: 'blau',
+        context: 'Funktionslauf technical-platoon-commander: TZ',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf medical-platoon-commander: ASB',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf operational-unit-platoon-commander: DRK',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf care-platoon-commander: ASB',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf care-group-commander: MHD',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'weiss',
+        context: 'Funktionslauf rapid-response-group-commander: SEG',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf rapid-response-group-commander: JUH',
         minimum: 4.5,
       },
       {
@@ -1331,12 +1585,12 @@ describe('Anhang F, Teilslice F-f', () => {
     },
   } as const;
 
-  it('deckt F.3.12 bis F.3.19 lückenlos ohne Alternative ab und erreicht mit D.1 146 Rezepte', () => {
+  it('deckt F.3.12 bis F.3.19 lückenlos ohne Alternative ab und erreicht mit D.3 158 Rezepte', () => {
     const entries = Object.entries<Recipe>(RECIPES)
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(146);
+    expect(Object.keys(RECIPES)).toHaveLength(158);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {

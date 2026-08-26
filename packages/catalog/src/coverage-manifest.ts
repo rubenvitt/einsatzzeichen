@@ -14,8 +14,8 @@ import { ALL_PICTOGRAMS } from './pictograms/index.js';
 import { deepFreeze, type DeepReadonly } from './readonly-data.js';
 import { RECIPES } from './recipes.js';
 import {
-  ANHANG_D_TASK_2_RECIPES,
   ANHANG_D_TASK_3_RECIPES,
+  ANHANG_D_TASK_5_RECIPES,
 } from './recipes-anhang-d.js';
 import {
   ANHANG_E_A_FILL_DEFECTS,
@@ -64,19 +64,21 @@ const TECHNICAL_REVIEW: Review = {
   date: '2026-08-05',
 };
 
-/** D.3.7 prueft erstmals den gemessenen Funktionsvertrag statt die generische Personenfassung. */
-const ANHANG_D_TASK_2_TECHNICAL_REVIEW: Review = {
+/** D.3 prueft den vollständigen gemessenen Funktionsvertrag statt generischer Personenfassungen. */
+const ANHANG_D_TASK_5_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
   date: '2026-08-26',
   note:
-    'D.3.7 konsumiert den gemessenen Funktionsvertrag und ist direkt gegen die ' +
-    'Originalreferenz vermessen: abgesenkter 26-mm-Rautenkörper ' +
-    'mit Spitze y 5 und Unterkante y 31, drei Stärkepunkte ab Kopfoberkante y 1, schwarze ' +
-    'Kappe bis y 10 sowie waagerechte Teilung und rechte geschlossene Raute. Rollen-, ' +
-    'Body-Mark- und Kompositionsreihenfolge sind lokal gegatet; Fingerprint-, Snapshot-, ' +
-    'Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates prüfen den renderbaren Eintrag. ' +
-    'Die fachliche Rollenbezeichnung bleibt im Domain-Review pending.',
+    'D.3.1 bis D.3.13 konsumieren die dreizehn einzeln vermessenen Funktionsrollen: drei ' +
+    'rollenlose Kopfzonen, drei Zwei-Stern-Köpfe, fünf abgesenkte Zugkörper und zwei getrennt ' +
+    'vermessene Gruppenkörper. AW, ASB, DRK, MHD und JUH bleiben sichtbare Trägertexte; ' +
+    'Brandbekämpfung, Sanität und Betreuung verwenden ihre körperlageabhängigen Innenmarken. ' +
+    'D.3.7 behält Schlüssel und Domainstatus, konsumiert aber weiterhin den gemessenen ' +
+    'Funktionsvertrag: abgesenkter 26-mm-Rautenkörper mit drei Stärkepunkten, schwarzer Kappe, ' +
+    'waagerechte Teilung und rechte geschlossene Raute. Fingerprint-, Snapshot-, ' +
+    'Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates prüfen alle dreizehn renderbaren ' +
+    'Rezepte; Rollenbenennungen und Organisationszuordnungen bleiben im Domain-Review pending.',
 };
 
 const ANHANG_D_TASK_3_TECHNICAL_REVIEW: Review = {
@@ -117,6 +119,19 @@ const LEADERSHIP_LOCATION_TECHNICAL_REVIEW: Review = {
     'Box, Standalone-Clipping, Textlesbarkeit, Mehrgrößen-, Metadaten- und explizite ' +
     'Kontrast-Gates prüfen alle sieben renderbaren Einträge. Benennung und fachliche Bedeutung ' +
     'bleiben pending.',
+};
+
+const LEADERSHIP_OPEN_CAP_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'D.3.14 und D.3.15 bleiben zwei direkte 32×32-mm-Leadership-Definitionen. Sie teilen nur ' +
+    'den privat vermessenen offenen Kappenrahmen; daraus entsteht weder eine functionRole noch ' +
+    'eine Organisationszuordnung. Rollen- und Trägertext, Körperfarbe, Texttinte und ihre ' +
+    'Kontrasthintergründe sind je Definition explizit. Snapshot, Kommando, Box, ' +
+    'Standalone-Clipping, Textlesbarkeit, Mehrgrößen-, Metadaten- und Kontrast-Gates prüfen ' +
+    'beide renderbaren Einträge; Benennung und Bedeutung der offenen Kappe bleiben pending.',
 };
 
 /**
@@ -675,8 +690,8 @@ function technicalReviewFor(section: string): Review {
   if (Object.hasOwn(ANHANG_D_TASK_3_RECIPES, section)) {
     return ANHANG_D_TASK_3_TECHNICAL_REVIEW;
   }
-  if (Object.hasOwn(ANHANG_D_TASK_2_RECIPES, section)) {
-    return ANHANG_D_TASK_2_TECHNICAL_REVIEW;
+  if (Object.hasOwn(ANHANG_D_TASK_5_RECIPES, section)) {
+    return ANHANG_D_TASK_5_TECHNICAL_REVIEW;
   }
   if (Object.hasOwn(ANHANG_E_A_RECIPES, section)) {
     const defect = ANHANG_E_A_FILL_DEFECTS[section];
@@ -877,9 +892,11 @@ const pictogramEntries: CoverageEntry[] = ALL_PICTOGRAMS.map((definition) => {
   const technicalReview = definition.id.startsWith('state.')
     ? STATE_PICTOGRAM_TECHNICAL_REVIEW
     : definition.id.startsWith('leadership.')
-      ? definition.section.startsWith('D.2.')
-        ? LEADERSHIP_LOCATION_TECHNICAL_REVIEW
-        : LEADERSHIP_PICTOGRAM_TECHNICAL_REVIEW
+      ? definition.section.startsWith('D.3.')
+        ? LEADERSHIP_OPEN_CAP_TECHNICAL_REVIEW
+        : definition.section.startsWith('D.2.')
+          ? LEADERSHIP_LOCATION_TECHNICAL_REVIEW
+          : LEADERSHIP_PICTOGRAM_TECHNICAL_REVIEW
     : definition.id.startsWith('damage.') || definition.id.startsWith('wildfire.')
       ? DAMAGE_PICTOGRAM_TECHNICAL_REVIEW
       : PICTOGRAM_TECHNICAL_REVIEW;

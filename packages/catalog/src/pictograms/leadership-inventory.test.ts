@@ -74,7 +74,7 @@ const D2_EXPECTED = [
 ] as const;
 
 describe('Leadership-Inventar nach D.2', () => {
-  it('führt D.1.1 und exakt die sieben inkrementellen D.2-IDs', () => {
+  it('führt D.1.1, die sieben D.2-IDs und die zwei direkten D.3-Funktionen', () => {
     expect(LEADERSHIP_IDS).toEqual([
       'command-post-in-operation',
       'staging-area',
@@ -84,8 +84,10 @@ describe('Leadership-Inventar nach D.2', () => {
       'control-center',
       'helicopter-landing-zone',
       'helicopter-landing-site',
+      'technical-advisor-thw',
+      'red-cross-commissioner',
     ]);
-    expect(LEADERSHIP_PICTOGRAMS).toHaveLength(8);
+    expect(LEADERSHIP_PICTOGRAMS).toHaveLength(10);
     expect(Object.isFrozen(LEADERSHIP_PICTOGRAMS)).toBe(true);
   });
 
@@ -135,9 +137,10 @@ describe('Leadership-Inventar nach D.2', () => {
   });
 
   it('bindet D.2.1 bis D.2.7 exakt als primäre 32×32-mm-Ortsdefinitionen', () => {
-    expect(LEADERSHIP_PICTOGRAMS.slice(1)).toHaveLength(7);
+    const d2Definitions = LEADERSHIP_PICTOGRAMS.slice(1, 8);
+    expect(d2Definitions).toHaveLength(7);
     for (const [index, expected] of D2_EXPECTED.entries()) {
-      expect(LEADERSHIP_PICTOGRAMS[index + 1]).toMatchObject({
+      expect(d2Definitions[index]).toMatchObject({
         ...expected,
         variant: 'primary',
         viewBox: { width: 32, height: 32 },
@@ -182,6 +185,76 @@ describe('Leadership-Inventar nach D.2', () => {
     for (const definition of definitions) {
       expect(JSON.stringify(definition)).not.toContain('circle-12');
       expect('organization' in definition).toBe(false);
+    }
+  });
+
+  it('bindet D.3.14 und D.3.15 als getrennte offene Kappen ohne erfundene Funktionsrolle', () => {
+    const expected = [
+      {
+        id: 'leadership.technical-advisor-thw',
+        section: 'D.3.14',
+        title: 'Fachberater THW',
+        referenceAsset: 'D.3.14_Fachberater THW.svg',
+        box: { xMm: 2.397, yMm: 2.397, widthMm: 29.105, heightMm: 27.207 },
+        bodyFill: 'blau',
+        role: ['THW', 'weiss', 16, 18.5, 7.08, 'middle'],
+        carrier: ['stv OB', 'schwarz', 31.5, 29, 4.243, 'end'],
+      },
+      {
+        id: 'leadership.red-cross-commissioner',
+        section: 'D.3.15',
+        title: 'Rotkreuzbeauftragter',
+        referenceAsset: 'D.3.15_Rotkreuzbeauftragter.svg',
+        box: { xMm: 2.397, yMm: 2.397, widthMm: 28.603, heightMm: 27.207 },
+        bodyFill: 'weiss',
+        role: ['RKB', 'schwarz', 16, 18.5, 7.08, 'middle'],
+        carrier: ['DRK', 'schwarz', 31, 29, 4.243, 'end'],
+      },
+    ] as const;
+
+    const definitions = LEADERSHIP_PICTOGRAMS.slice(8);
+    expect(definitions).toHaveLength(2);
+    for (const [index, contract] of expected.entries()) {
+      const definition = definitions[index];
+      expect(definition).toMatchObject({
+        id: contract.id,
+        section: contract.section,
+        title: contract.title,
+        referenceAsset: contract.referenceAsset,
+        variant: 'primary',
+        viewBox: { width: 32, height: 32 },
+        placement: { mode: 'standalone' },
+        box: contract.box,
+      });
+      expect(JSON.stringify(definition)).not.toContain('functionRole');
+      expect(JSON.stringify(definition)).not.toContain('organization');
+
+      const body = definition?.primitives[0];
+      expect(body).toMatchObject({
+        type: 'rect', role: 'pictogram',
+        transform: { rotate: { angle: 45, cx: 16, cy: 16 } },
+        style: { fill: contract.bodyFill, stroke: 'none' },
+      });
+      const [outer, shoulder] = definition?.primitives.slice(1, 3) ?? [];
+      expect(outer).toMatchObject({
+        type: 'polyline', role: 'pictogram', closed: true,
+        points: [[16, 2.647], [29.354, 16], [16, 29.354], [2.647, 16]],
+      });
+      expect(shoulder).toMatchObject({
+        type: 'line', role: 'pictogram', x1: 11.603, y1: 7.75, x2: 20.396, y2: 7.75,
+      });
+
+      const texts = definition?.primitives.filter((primitive) => primitive.type === 'text') ?? [];
+      expect(texts).toHaveLength(2);
+      for (const [textIndex, [content, fill, x, y, sizeMm, anchor]] of [
+        contract.role,
+        contract.carrier,
+      ].entries()) {
+        expect(texts[textIndex]).toMatchObject({
+          type: 'text', role: 'pictogram', content, x, y, sizeMm, anchor,
+          baseline: 'alphabetic', style: { fill, stroke: 'none' },
+        });
+      }
     }
   });
 
