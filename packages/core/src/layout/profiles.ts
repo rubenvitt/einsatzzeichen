@@ -82,8 +82,9 @@ export interface LayoutProfile {
     readonly capHeightMm: number;
   };
   /**
-   * Grundlinie des unten mittigen Laufs, gerechnet von der Körperunterkante nach oben. Bisher
-   * allein an F.1.18 und F.1.20 auf der taktischen Formation gemessen.
+   * Grundlinie des unten mittigen Laufs, gerechnet von der Körperunterkante nach oben. Gemessen
+   * sind 2,0 mm an F.1.18/F.1.20 für die Formation und davon unabhängig 6,0 mm an G.3.5 für
+   * `circle-12/foot-band`; andere Körperprofile führen keinen Wert.
    */
   bottomCenterBaselineFromBodyBottomMm?: number;
   /** Vermessene Zone rechts unterhalb des Körpers. Fehlt sie, ist die Zone nicht zulässig. */

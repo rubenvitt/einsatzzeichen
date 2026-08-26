@@ -200,16 +200,16 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
     });
   }
 
-  // Die vierte Beschriftungszone steht **unterhalb** des Körpers, in der Organisationsfarbe.
-  // Vermessen ist sie an genau einer Körperform: dem angehobenen Wasserrumpf der fünf Zeichen
-  // E.2.27 bis E.2.31 (Tinte 22,5379/24,0806/31,5778/26,9998 mm, Füllung #003296, in allen fünf
-  // Dateien gleich bis auf 0,0003 mm).
+  // Die Beschriftungszone steht **unterhalb** des Körpers; Lage und Tinte sind profilabhängig.
+  // Der angehobene Wasserrumpf E.2.27 bis E.2.31 führt sie 4,01 mm unter und 0,5618 mm rechts der
+  // Körperkante in Organisationsfarbe (Tinte 22,5379/24,0806/31,5778/26,9998 mm, Füllung
+  // #003296, in allen fünf Dateien gleich bis auf 0,0003 mm). G.3.5 belegt am gebänderten
+  // 12-mm-Kreis eine eigene schwarze Lage 1,0 mm unter und 3,0 mm rechts der Körperkante.
   //
-  // Deshalb eine Ablehnung und keine Übertragung auf jede Körperform: die beiden Abstände, aus
-  // denen der Katalog den Lauf setzt (4,01 mm unter der Körperunterkante, 0,5615 mm rechts der
-  // Körperkante), sind an **dieser** Hülle gemessen. Auf einer `formation` erzeugten sie einen
-  // blauen Lauf, den keine Referenzdatei zeigt — und kein Gate meldete ihn: der Fingerprint sieht
-  // nur `role: 'body'`, die Rasterprüfung nur die selbst deklarierte Box.
+  // Deshalb eine Ablehnung und keine Übertragung auf weitere Körperformen: beide Abstandspaare
+  // sind nur an ihrer jeweiligen Hülle gemessen. Auf einer `formation` erzeugten sie einen Lauf,
+  // den keine Referenzdatei zeigt — und kein Gate meldete ihn: der Fingerprint sieht nur
+  // `role: 'body'`, die Rasterprüfung nur die selbst deklarierte Box.
   if (
     spec.labels?.belowRight !== undefined &&
     profileFor(spec.kind, spec.bodyVariant).belowRight === undefined
