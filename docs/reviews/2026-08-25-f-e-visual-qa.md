@@ -20,7 +20,7 @@ Prüfung ist kein Kontaktbogen und nicht der finale Task-6-Kontaktbogen.
 | `F.3.2_Patientenablage_arztbesetzt.svg` | `F.3.2` | Wie F.3.1 plus Arztleiste x = 12…20 auf y = 22. Die Teilung wird trotz zweier Marken nicht doppelt überzeichnet. |
 | `F.3.3_Unfallhilfsstelle_Sanitätsstation.svg` | `F.3.3` | Kreis und Teilung stimmen; `UHS` steht schwarz mit gemessener Versalhöhe, Grundlinie y = 5,000254 und Anker x = 1,015316. Die Arimo-Laufbreite ist sichtbar etwas größer als die konturierte Quellschrift, Lage und Höhe bleiben korrekt und ungeclippt. |
 | `F.3.4_Unfallhilfsstelle_Sanitätsstation_arztbesetzt.svg` | `F.3.4` | Wie F.3.3 plus Arztleiste; Teilung und Schrift bleiben jeweils eine Schicht. Derselbe erwartete Breitenunterschied der Arimo-Glyphen ist sichtbar, ohne Lageabweichung oder Clipping. |
-| `F.3.5_Behandlungsplatz 50_ortsgebunden.svg` | `F.3.5` | Abgesenkter Kreis r 12 um (16|18), Giebel (3|11)–(16|1)–(29|11), Teilung und Arztleiste stimmen. `50` steht schwarz auf Grundlinie y = 5,000254 bei Anker x = 1,025998; die Schriftsilhouette unterscheidet sich leicht von den Quellpfaden, die gemessene Kappe und Lage stimmen. |
+| `F.3.5_Behandlungsplatz 50_ortsgebunden.svg` | `F.3.5` | Abgesenkter Kreis r 12 um (16|18), Giebel (3|11)–(16|1)–(29|11), Teilung und Arztleiste stimmen. Kreis und Giebel sind quellgleich mit J.3.2; nicht wiederverwendet wird nur dessen abweichende bestehende Katalogapproximation (16|17), r 11,5. `50` steht schwarz auf Grundlinie y = 5,000254 bei Anker x = 1,025998; die Schriftsilhouette unterscheidet sich leicht von den Quellpfaden, die gemessene Kappe und Lage stimmen. |
 | `F.3.6_Sammelstelle allgemein.svg` | `F.3.6` | Sammelpfeil und Ring r 2 um (23|16) stimmen in Lage, Größe und Topologie; kein Clipping. |
 | `F.3.7_Sammelraum Einsatzfahrzeuge.svg` | `F.3.7` | Gewölbter Rahmen, Rechtspfeil und kleiner Ring stimmen. Die Pfadlinien sind glatt und bleiben vollständig innerhalb der Kreisfassung. |
 | `F.3.8_Bereitstellungsraum.svg` | `F.3.8` | Der eigenständige tiefere Rahmen trifft Oberkurve, Seiten und Boden der Quelle; er wird nicht auf die Pfeilfassung F.3.7 reduziert. |
@@ -38,6 +38,9 @@ Prüfung ist kein Kontaktbogen und nicht der finale Task-6-Kontaktbogen.
 - Normaler Kreis und `raised-gable` verwenden getrennte, bounds-relative Registry-Zweige.
   Unbekannte Art-/Varianten-/Markenpaare sowie ungültige, partielle oder boxfremde
   `topLeftMetrics` werden abgelehnt.
+- Ein Regressionstest hält den quellgleichen F.3.5-/J.3.2-Giebel und den allein im bestehenden
+  J.3.2-Katalogkörper liegenden Unterschied fest. Die Korrektur dieser Approximation ist nicht
+  Bestandteil von LFH-451.
 - Die Kreislabels werden profilgebunden schwarz gerendert. Ihr Kontrast ist gegen die weiße
   HiOrg-Fläche und gegen `surface` belegt; andere oder fehlende Organisationen werden für jede
   gemessene Kreisfassung auch ohne Label abgelehnt.

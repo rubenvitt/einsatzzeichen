@@ -60,8 +60,9 @@ export type SymbolKind =
  * keine Übertragung ihrer übrigen Maße. `plain-wheel-pair` hält die zwei schlichten Radringe der
  * elf F.2-Landdarstellungen getrennt von `vehicleCategory`: das Bild gleicht Kategorie 1, die
  * Quelle belegt hier aber keine Kategorie-Semantik. `raised-gable` bezeichnet den F.3-Kreis
- * mit Mittelpunkt (16|18) und seinem separat vermessenen Giebel; die Kennung behauptet weder
- * Standortsemantik noch Gleichheit mit der abweichenden Katalogfassung von J.3.2.
+ * mit Mittelpunkt (16|18) und seinem separat vermessenen Giebel. Seine Quellgeometrie ist mit
+ * J.3.2 identisch; die Kennung behauptet aber keine Standortsemantik und verwendet nicht dessen
+ * abweichend approximierte bestehende Katalogfassung `stationBody(17, 11.5)`.
  */
 export type BodyVariantId = 'raised-hull' | 'foot-band' | 'plain-wheel-pair' | 'raised-gable';
 

@@ -10,6 +10,7 @@ import {
 import { BASE_SYMBOLS, baseDrawing } from './base-symbols.js';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { fingerprintFor } from './fingerprint-index.js';
+import { DEVICE_COMMS } from './pictograms/comms/03-devices.js';
 
 /**
  * Die dreizehn Grundzeichen, deren Körper **am Kennwertartefakt** gegatet ist. Die dritte Spalte
@@ -576,6 +577,29 @@ describe('Körperformen des Anhangs F.3', () => {
       },
     ]);
     expect(baseDrawing(circleKind).children).toHaveLength(1);
+  });
+
+  it('pinnt den quellgleichen J.3.2-Giebel und grenzt nur dessen aktuelle Katalogapproximation ab', () => {
+    const f35 = baseDrawing(circleKind, raisedGable);
+    const f35Body = f35.children.find((primitive) => primitive.role === 'body');
+    const f35Gable = f35.children.find((primitive) => primitive.role === 'bodyExtra');
+    const j32 = DEVICE_COMMS.find((definition) => definition.section === 'J.3.2');
+    if (j32 === undefined) throw new Error('J.3.2 fehlt im Piktogrammkatalog.');
+    const j32Body = j32.primitives.find((primitive) => primitive.type === 'circle');
+    const j32Gable = j32.primitives.find((primitive) => primitive.type === 'polyline');
+    if (
+      f35Body?.type !== 'circle' ||
+      f35Gable?.type !== 'polyline' ||
+      j32Body?.type !== 'circle' ||
+      j32Gable?.type !== 'polyline'
+    ) {
+      throw new Error('F.3.5/J.3.2-Kreis oder -Giebel fehlt.');
+    }
+
+    expect(j32Gable.points).toEqual(f35Gable.points);
+    expect(f35Body).toMatchObject({ cx: 16, cy: 18, r: 12 });
+    expect(j32Body).toMatchObject({ cx: 16, cy: 17, r: 11.5 });
+    expect(j32Body).not.toMatchObject({ cx: f35Body.cx, cy: f35Body.cy, r: f35Body.r });
   });
 
   it('fällt mit raised-gable weder auf post noch auf eine andere Körperart zurück', () => {

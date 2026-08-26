@@ -190,8 +190,10 @@ const ANHANG_F_D_TECHNICAL_REVIEW: Review = {
 };
 
 /**
- * Eigenes technisches Review für F-e: Der 12-mm-Kreis ist weder die 14-mm-Funktionsstelle noch
- * die Gebäudefassung J.3.2. Die Note trennt die elf einzeln geprüften Raster ausdrücklich vom
+ * Eigenes technisches Review für F-e: Der 12-mm-Kreis ist nicht die 14-mm-Funktionsstelle.
+ * F.3.5 und J.3.2 tragen in den Quellen denselben Kreis und Giebel; nur die bereits bestehende
+ * Katalogfassung J.3.2 nähert den Kreis mit `stationBody(17, 11.5)` anders an. Die Note trennt
+ * diese außerhalb des Teilslices liegende Korrektur und die elf einzeln geprüften Raster vom
  * späteren Task-6-Kontaktbogen.
  */
 const ANHANG_F_E_TECHNICAL_REVIEW: Review = {
@@ -203,6 +205,9 @@ const ANHANG_F_E_TECHNICAL_REVIEW: Review = {
     'vermessen und gegen die literal gebundene Rezeptmatrix geprüft. Lokale Geometrietests ' +
     'halten den Kreis r 12 mm, die abgesenkte raised-gable-Fassung, den separat vermessenen ' +
     'Giebel und alle semantischen wie technischen Kreis-BodyMarks fail-closed fest. Die ' +
+    'Quellgeometrie von F.3.5 ist mit J.3.2 identisch; die bestehende Katalogfassung J.3.2 ' +
+    'bleibt mit stationBody(17, 11.5) abweichend und ihre Korrektur liegt außerhalb dieses ' +
+    'Teilslices. Die ' +
     'vollständigen UHS-/50-Metriken werden gegen die ViewBox geprüft und profilgebunden schwarz ' +
     'gezeichnet; der Kontrastvertrag deckt sowohl die weiße HiOrg-Körperfläche als auch surface. ' +
     'Snapshot-, Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates prüfen den renderbaren ' +

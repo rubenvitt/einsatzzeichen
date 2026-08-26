@@ -119,6 +119,11 @@ describe('Coverage-Manifest', () => {
       Array.from({ length: 11 }, (_, index) => `bbk-babz-2025:F.3.${index + 1}`),
     );
     expect(entries.every((entry) => entry.review.technical.status === 'approved')).toBe(true);
+    expect(entries.every((entry) => entry.review.technical.note?.includes(
+      'Die Quellgeometrie von F.3.5 ist mit J.3.2 identisch; die bestehende ' +
+        'Katalogfassung J.3.2 bleibt mit stationBody(17, 11.5) abweichend und ihre Korrektur ' +
+        'liegt außerhalb dieses Teilslices.',
+    ) === true)).toBe(true);
     expect(entries.every((entry) => entry.review.domain.status === 'pending')).toBe(true);
     expect(COVERAGE_MANIFEST.scope).not.toContain('F');
   });

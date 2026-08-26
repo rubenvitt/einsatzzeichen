@@ -647,7 +647,9 @@ const VARIANT_BODIES: Partial<Record<SymbolKind, Partial<Record<BodyVariantId, P
   'circle-12': {
     /**
      * F.3.5: derselbe 12-mm-Kreis, zwei Millimeter abgesenkt. Der separat vermessene Giebel
-     * steht in `VARIANT_EXTRA_PRIMITIVES`; die Katalogfassung J.3.2 ist keine Vorlage dafür.
+     * steht in `VARIANT_EXTRA_PRIMITIVES`. Die Quellgeometrie ist mit J.3.2 identisch; dessen
+     * bestehende Katalogfassung `stationBody(17, 11.5)` ist jedoch eine abweichende Approximation
+     * und wird hier nicht als Vorlage wiederverwendet.
      */
     'raised-gable': {
       type: 'circle',

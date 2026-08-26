@@ -576,7 +576,9 @@ F-e ergänzt elf Platzzeichen und führt den Katalog auf 129 Rezepte, 397 Render
 F.3.1 bis F.3.4 sowie F.3.6 bis F.3.11 liegen um (16|16), F.3.5 verwendet als einzige Fassung
 `raised-gable` mit abgesenktem Kreis um (16|18) und dem unabhängig vermessenen Giebel
 (3|11)–(16|1)–(29|11). Kein Platzzeichen trägt einen Stärkegrad, und weder Formations- noch
-Fahrzeuggeometrie wird auf den Kreis skaliert.
+Fahrzeuggeometrie wird auf den Kreis skaliert. F.3.5 und J.3.2 sind in den Quellen geometrisch
+gleich; die bestehende J.3.2-Katalogapproximation um (16|17) mit r = 11,5 wird hier nicht
+wiederverwendet und bleibt außerhalb des LFH-451-Scopes.
 
 `medical-service` und `physician` bleiben die belegten semantischen Marken. Die sieben nur
 bildlich benannten Innenformen erhalten dagegen neutrale `TechnicalBodyMarkId`s mit vollständiger
