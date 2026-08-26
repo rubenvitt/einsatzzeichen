@@ -42,10 +42,15 @@ wurden die Rezepte und Snapshots korrigiert und alle neun Paare neu erzeugt und 
 - Die vier schwarzen Körperläufe aus N.1.2 bis N.1.5 bestehen den Textkontrast in Referenz-,
   accessible-light- und Drucktheme. Es kam keine neue Kontrastausnahme hinzu; die bestehende
   weiss/orange-Ausnahme bleibt auf E.2.6 begrenzt.
-- Es liegen 160 direkte und 415 Mehrgrößen-Snapshotdateien vor. Der Task-2-Diff enthält genau
-  neun neue Dateien je Snapshotbaum und 0 geänderte oder gelöschte Alt-Snapshots.
-- Der Katalog umfasst 146 Rezepte, 414 Renderfälle und 433 Manifestzeilen. Alle neun technischen
-  Manifestreviews sind vom 26. August 2026; alle neun Domain-Reviews bleiben `pending`.
+- Es liegen 167 direkte und 422 Mehrgrößen-Snapshotdateien vor. Der Branch-Diff gegen die
+  integrierte `origin/main`-Basis enthält neun neue direkte N-Snapshots sowie neun neue
+  N-Rezeptsnapshots im Mehrgrößenbaum. Dort ist zusätzlich der bestehende Sammelbeleg
+  `organization-profiles.svg` für das neue öffentliche Profil `bundespolizei` aktualisiert; andere
+  bestehende Snapshots wurden nicht geändert und keine Snapshotdatei wurde gelöscht.
+- Der Katalog umfasst 153 Rezepte, 421 Renderfälle, 440 Manifestzeilen und 113 beschriftete
+  Rezepte. Die Coverageausgabe führt 454 offene Reviews: 440 Manifest-, 13 Quellen- und ein
+  Profilreview. Alle neun technischen N-Manifestreviews sind vom 26. August 2026; alle neun
+  N-Domain-Reviews bleiben `pending`.
 
 ## Offene fachliche und visuelle Punkte
 
@@ -62,14 +67,14 @@ Task 2 verändert dafür weder den globalen Renderer noch dessen Join-Policy.
 Eine fachkundige Person muss weiterhin Organisation, Trägerzuordnung und Einsatzbedeutung der
 neutral benannten Marken bestätigen. Die technische Einzelprüfung ist keine professionelle oder
 fachliche Freigabe. Der deterministische LFH-422-Kontaktbogen, sein Hash und die abschließende
-Originalauflösungsprüfung gehören zu Task 3 und sind hier ausdrücklich noch nicht behauptet.
+Originalauflösungsprüfung sind im folgenden Abschnitt getrennt belegt.
 
 ## Finaler Task-3-Kontaktbogen
 
 Der abschließende technische Kontaktbogen wurde aus den neun live in `RECIPES` registrierten
 N-Schlüsseln erzeugt; Schlüssel, Titel und exakte Referenzdateinamen stammen nicht aus einer
-zweiten, manuell gepflegten Matrix. Seine Katalogbasis ist
-`bd3aad8df6b43f0976c94854a4ff3b4b28cb4341`. Generator und Ergebnis bleiben wie vorgesehen
+zweiten, manuell gepflegten Matrix. Seine Katalogbasis ist der additive Merge-HEAD
+`d96c4bb319f69ae0887524c7f170fdafc668b649`. Generator und Ergebnis bleiben wie vorgesehen
 ignoriert:
 
 - Generator: `out/tools/generate-lfh-422-contact-sheet.ts`;
@@ -86,12 +91,14 @@ Montage jeweils separat auf `420 × 420` px gerastert. Auch der Kataloglauf und 
 Kontaktbogenbeschriftung binden die eingecheckte Arimo-Datei; `loadSystemFonts` ist `false`.
 
 Der Generator beginnt jeden Lauf mit dem Entfernen genau der beiden bekannten Ausgabedateien und
-führt anschließend zwei vollständige Erzeugungspässe aus. Beim finalen Lauf waren PNG und
-Manifest zwischen Pass 1 und Pass 2 byteidentisch. Der Manifest-SHA-256 lautet
-`7a411bcfb12ff30394329c8236ac49f7866aa8e0945e0691af9b8d6b5e38c673`; das Manifest enthält den
+führt anschließend zwei vollständige Erzeugungspässe aus. Zwei abschließende externe
+Generatoraufrufe waren jeweils intern und untereinander byteidentisch; damit stimmen PNG und
+Manifest über vier saubere Pässe überein. Der Manifest-SHA-256 lautet
+`ca8f9888822ba85790e415478db8e72cfe372ba5947ec534e64550253b42198c`; das Manifest enthält den
 Ticketwert, die Katalogbasis, die Generatorversion, Layout und Schriftbindung sowie für alle neun
 Paare Rezept-, Quellen-SVG-, Quellen-PNG-, Katalog-SVG- und Katalog-PNG-Hashes und den
-vollständigen Ausgabehash.
+vollständigen Ausgabehash. Das PNG blieb gegenüber dem Vor-Merge-Beleg byteidentisch; der
+Manifesthash änderte sich erwartungsgemäß mit der auf den Merge-HEAD aktualisierten `gitSha`.
 
 Das finale PNG wurde mit `view_image` im Modus `original` geprüft. Ergebnis:
 
