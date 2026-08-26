@@ -6,6 +6,7 @@ import {
   formatUnits,
   matchFingerprint,
   renderSvg,
+  validateSpec,
 } from '@einsatzzeichen/core';
 import { mmToUnits, type Drawing, type Primitive } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
@@ -172,6 +173,73 @@ describe('Kompositionsrezepte', () => {
     const drawing = composeFromCatalog(RECIPES['C.1.1'].spec);
     expect(drawing.title).toBeUndefined();
   });
+});
+
+describe('Anhang I, Teilslice I-a (I.3.5 bis I.3.7)', () => {
+  const expected = {
+    'I.3.5': ['Mehrzweckboot', 'I.3.5_Mehrzweckboot.svg', 'MzB'],
+    'I.3.6': ['Mehrzweckarbeitsboot', 'I.3.6_Mehrzweckarbeitsboot.svg', 'MzAB'],
+    'I.3.7': ['Mehrzweckponton', 'I.3.7_Mehrzweckponton.svg', 'MzPt'],
+  } as const;
+  const recipes: Record<string, Recipe> = RECIPES;
+
+  it('bindet ausschließlich die drei vermessenen Wasserfahrzeuge an ihre Referenzmatrix', () => {
+    // Diese Literale schützen die Zuordnung von Abschnitt, Name, Quelldatei und Kürzel: etwa
+    // ein vertauschtes MzAB/MzPt ergäbe weiter eine valide Komposition, aber ein falsches Bild.
+    const actual = Object.fromEntries(
+      Object.entries(recipes)
+        .filter(([section]) => section.startsWith('I.'))
+        .map(([section, recipe]) => {
+        return [
+          section,
+          [recipe.title, recipe.referenceAsset, recipe.spec.labels?.center],
+        ];
+      }),
+    );
+    expect(actual).toEqual(expected);
+  });
+
+  it.each(Object.entries(expected))(
+    '%s kompositioniert den gemessenen inset-hull mit ausschließlich schwarzem Mittellabel',
+    (section, [_title, referenceAsset, center]) => {
+      const recipe = recipes[section];
+      expect(recipe).toBeDefined();
+      if (recipe === undefined) return;
+
+      expect(recipe.spec.kind).toBe('vehicle-water');
+      expect(recipe.spec.bodyVariant).toBe('inset-hull');
+      expect(recipe.spec.organization).toBe('hilfsorganisation');
+      expect(recipe.spec.labels).toEqual({ center });
+      expect(recipe.spec.designation).toBeUndefined();
+      expect(validateSpec(recipe.spec)).toEqual([]);
+
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      const body = drawing.children.find((child) => child.role === 'body');
+      expect(body).toBeDefined();
+      expect(body?.type).toBe('path');
+      if (body?.type === 'path') {
+        expect(body.d).toBe(
+          'M 1.01 9.0001 L 30.9894 9.0001 C 30.9894 17.2787, 24.2783 23.9898, 15.9997 23.9898 C 7.7211 23.9898, 1.01 17.2787, 1.01 9.0001 Z',
+        );
+      }
+
+      // Der Rezeptweg muss die benannte lokale Quelldatei treffen; der Grundzeichen-Test allein
+      // deckt weder Registrierung noch Komposition ab.
+      expect(matchFingerprint(drawing, fingerprintFor(referenceAsset))).toEqual({
+        ok: true,
+        problems: [],
+      });
+
+      const labels = drawing.children.filter(
+        (child): child is Primitive & { type: 'text' } =>
+          child.type === 'text' && child.role === 'label',
+      );
+      expect(labels).toHaveLength(1);
+      expect(labels[0]?.content).toBe(center);
+      expect(labels[0]?.style?.fill).toBe('schwarz');
+      expect(labels[0]?.y).toBeCloseTo(15.9999, 3);
+    },
+  );
 });
 
 describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
@@ -1160,12 +1228,12 @@ describe('Anhang F, Teilslice F-f', () => {
     },
   } as const;
 
-  it('deckt F.3.12 bis F.3.19 lückenlos ohne Alternative ab und erreicht 137 Rezepte', () => {
+  it('deckt F.3.12 bis F.3.19 lückenlos ohne Alternative ab und erreicht 140 Rezepte', () => {
     const entries = Object.entries<Recipe>(RECIPES)
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(137);
+    expect(Object.keys(RECIPES)).toHaveLength(140);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {

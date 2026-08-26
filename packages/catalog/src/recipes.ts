@@ -29,6 +29,7 @@ import {
   ANHANG_F_E_RECIPES,
   ANHANG_F_F_RECIPES,
 } from './recipes-anhang-f.js';
+import { ANHANG_I_A_RECIPES } from './recipes-anhang-i.js';
 
 const PORTS: CatalogPorts = {
   baseDrawing,
@@ -81,6 +82,7 @@ export const RECIPES = {
   ...ANHANG_F_D_RECIPES,
   ...ANHANG_F_E_RECIPES,
   ...ANHANG_F_F_RECIPES,
+  ...ANHANG_I_A_RECIPES,
   ...ANHANG_E_A_RECIPES,
   ...ANHANG_E_B_RECIPES,
   ...ANHANG_E_C_RECIPES,
