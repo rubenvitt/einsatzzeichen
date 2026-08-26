@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { boundsOfMm, matchFingerprint, type BoundsMm } from '@einsatzzeichen/core';
-import type { Primitive } from '@einsatzzeichen/schema';
+import type { Primitive, SymbolSpec } from '@einsatzzeichen/schema';
 import { fingerprintFor } from './fingerprint-index.js';
 import { RECIPES, composeFromCatalog, type Recipe } from './recipes.js';
 
@@ -337,5 +337,216 @@ describe('Anhang N — Fahrzeuge weiterer Träger', () => {
         expect(drawing.description, section).not.toMatch(/Kürzel|Trägerkürzel/);
       }
     }
+  });
+});
+
+describe('Anhang N — gemessene Labelmetriken bleiben fail-closed', () => {
+  const fixedWingTopLeft = {
+    kind: 'vehicle-air',
+    bodyVariant: 'fixed-wing-hull',
+    organization: 'sonstige-gefahrenabwehr',
+    bodyMarks: ['air-horizontal-left-chevron'],
+  } as const;
+
+  function fixedWingWithMetrics(metrics?: unknown): SymbolSpec {
+    return {
+      ...fixedWingTopLeft,
+      labels: {
+        topLeft: '5.000',
+        ...(metrics === undefined ? {} : { topLeftMetrics: metrics }),
+      },
+    } as unknown as SymbolSpec;
+  }
+
+  it('verlangt am Festflügelrumpf den vollständigen quellenspezifischen topLeft-Metriksatz', () => {
+    expect(() => composeFromCatalog(fixedWingWithMetrics())).toThrow(
+      /top-left-metrics-required-by-profile/,
+    );
+    expect(() => composeFromCatalog(fixedWingWithMetrics({ capHeightMm: 2.919225 }))).toThrow(
+      /top-left-metrics-complete/,
+    );
+  });
+
+  it.each([
+    [
+      'NaN-Grundlinie',
+      { capHeightMm: 2.919225, baselineFromBodyTopMm: Number.NaN, anchorFromBodyLeftMm: 5.99 },
+    ],
+    [
+      'unendlicher Anker',
+      {
+        capHeightMm: 2.919225,
+        baselineFromBodyTopMm: 7,
+        anchorFromBodyLeftMm: Number.POSITIVE_INFINITY,
+      },
+    ],
+    [
+      'Textbox oberhalb des Körpers',
+      { capHeightMm: 2.919225, baselineFromBodyTopMm: 1, anchorFromBodyLeftMm: 5.99 },
+    ],
+    [
+      'Anker links außerhalb des Körpers',
+      { capHeightMm: 2.919225, baselineFromBodyTopMm: 7, anchorFromBodyLeftMm: -0.01 },
+    ],
+    [
+      'Anker rechts außerhalb der deklarierten Körperbox',
+      { capHeightMm: 2.919225, baselineFromBodyTopMm: 7, anchorFromBodyLeftMm: 28 },
+    ],
+  ] as const)('lehnt %s vor der Festflügel-Komposition ab', (_case, topLeftMetrics) => {
+    expect(() => composeFromCatalog(fixedWingWithMetrics(topLeftMetrics))).toThrow(
+      /top-left-metrics-within-body/,
+    );
+  });
+
+  function raisedHullWithAboveMetrics(metrics: unknown): SymbolSpec {
+    return {
+      kind: 'vehicle-air',
+      bodyVariant: 'raised-hull',
+      organization: 'bundeswehr',
+      bodyMarks: ['air-quartering-up-arrow-box'],
+      labels: { aboveLeft: 'CH-53', aboveLeftMetrics: metrics },
+    } as unknown as SymbolSpec;
+  }
+
+  it.each([
+    ['partielles Objekt', { capHeightMm: 2.919225 }, 'above-left-metrics-complete'],
+    [
+      'NaN-Versalhöhe',
+      { capHeightMm: Number.NaN, baselineFromBodyTopMm: -1, anchorFromBodyLeftMm: -0.01 },
+      'above-left-metrics-complete',
+    ],
+    [
+      'unendliche Grundlinie',
+      {
+        capHeightMm: 2.919225,
+        baselineFromBodyTopMm: Number.POSITIVE_INFINITY,
+        anchorFromBodyLeftMm: -0.01,
+      },
+      'above-left-metrics-complete',
+    ],
+    [
+      'Textbox oberhalb der ViewBox',
+      { capHeightMm: 2.919225, baselineFromBodyTopMm: -5, anchorFromBodyLeftMm: -0.01 },
+      'above-left-metrics-within-viewbox',
+    ],
+    [
+      'Anker links außerhalb der ViewBox',
+      { capHeightMm: 2.919225, baselineFromBodyTopMm: -1, anchorFromBodyLeftMm: -1.02 },
+      'above-left-metrics-within-viewbox',
+    ],
+    [
+      'Anker rechts außerhalb der Profilbox',
+      { capHeightMm: 2.919225, baselineFromBodyTopMm: -1, anchorFromBodyLeftMm: 28 },
+      'above-left-metrics-within-viewbox',
+    ],
+  ] as const)('lehnt aboveLeft-%s vor der Komposition ab', (_case, metrics, rule) => {
+    expect(() => composeFromCatalog(raisedHullWithAboveMetrics(metrics))).toThrow(
+      new RegExp(rule),
+    );
+  });
+
+  function landWithCenterBaseline(centerBaselineFromBodyBottomMm: number): SymbolSpec {
+    return {
+      kind: 'vehicle-land',
+      organization: 'bundespolizei',
+      vehicleCategory: 'kfz-kategorie-1',
+      labels: { center: 'BuPol', centerBaselineFromBodyBottomMm },
+    };
+  }
+
+  it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])(
+    'lehnt die nichtpositive oder nichtendliche mittige Grundlinie %s vor der Komposition ab',
+    (centerBaselineFromBodyBottomMm) => {
+      expect(() => composeFromCatalog(landWithCenterBaseline(
+        centerBaselineFromBodyBottomMm,
+      ))).toThrow(/center-baseline-positive/);
+    },
+  );
+
+  it.each([0.1, 100])(
+    'lehnt die aus der Landfahrzeughülle laufende mittige Textbox bei Abstand %s ab',
+    (centerBaselineFromBodyBottomMm) => {
+      expect(() => composeFromCatalog(landWithCenterBaseline(
+        centerBaselineFromBodyBottomMm,
+      ))).toThrow(/center-label-within-body/);
+    },
+  );
+});
+
+describe('Anhang N — belegte Ausgabezonen dürfen sich nicht überlagern', () => {
+  it('lehnt die Fußzone am Festflügelrumpf statt einer unbelegten Umplatzierung ab', () => {
+    expect(() => composeFromCatalog({
+      kind: 'vehicle-air',
+      bodyVariant: 'fixed-wing-hull',
+      organization: 'feuerwehr',
+      bodyMarks: ['air-rising-diagonal'],
+      designation: 'Cessna 172',
+    })).toThrow(/body-variant-foot-conflict/);
+  });
+
+  it.each([
+    {
+      kind: 'vehicle-air',
+      bodyVariant: 'raised-hull',
+      organization: 'bundeswehr',
+      bodyMarks: ['air-quartering-up-arrow-box'],
+      designation: 'CH-53',
+      labels: { surfaceBelowRight: 'BW' },
+    },
+    {
+      kind: 'circle-12',
+      bodyVariant: 'raised-circle-1mm',
+      organization: 'zivile-einheiten',
+      bodyMarks: ['circle-information-stem'],
+      designation: 'Notfallinformationspunkt',
+      labels: { surfaceBelowLeft: '291300', surfaceBelowRight: 'ZIV' },
+    },
+  ] as const)('lehnt designation zusammen mit schwarzen Oberflächenläufen ab', (spec) => {
+    expect(() => composeFromCatalog(spec as SymbolSpec)).toThrow(/surface-label-foot-conflict/);
+  });
+});
+
+describe('Anhang N — farbige Kreisverträge erben keine weißen F.3-Labelmetriken', () => {
+  const f3NormalMetrics = {
+    capHeightMm: 2.919225,
+    baselineFromBodyTopMm: 1.000254,
+    anchorFromBodyLeftMm: -2.984684,
+  };
+
+  it.each([
+    {
+      kind: 'circle-12',
+      organization: 'zivile-einheiten',
+      bodyMarks: ['spontaneous-helper-collection-arrow'],
+      labels: { topLeft: 'UHS', topLeftMetrics: f3NormalMetrics },
+    },
+    {
+      kind: 'circle-12',
+      organization: 'feuerwehr',
+      bodyMarks: ['spontaneous-helper-contact-double-arrow'],
+      labels: { topLeft: 'UHS', topLeftMetrics: f3NormalMetrics },
+    },
+    {
+      kind: 'circle-12',
+      bodyVariant: 'raised-circle-1mm',
+      organization: 'zivile-einheiten',
+      bodyMarks: ['circle-information-stem'],
+      labels: { topLeft: 'UHS', topLeftMetrics: f3NormalMetrics },
+    },
+    {
+      kind: 'circle-12',
+      organization: 'zivile-einheiten',
+      bodyMarks: ['spontaneous-helper-collection-arrow'],
+      labels: { topLeftMetrics: f3NormalMetrics },
+    },
+  ] as const)('lehnt topLeft und topLeftMetrics am exakten farbigen Kreisvertrag ab', (spec) => {
+    expect(() => composeFromCatalog(spec as unknown as SymbolSpec)).toThrow(
+      /colored-circle-top-left-not-measured/,
+    );
+  });
+
+  it('erhält die realen weißen HiOrg-Kreislabels in normaler und raised-gable-Fassung', () => {
+    expect(() => composeFromCatalog(RECIPES['F.3.3'].spec, RECIPES['F.3.3'].title)).not.toThrow();
+    expect(() => composeFromCatalog(RECIPES['F.3.5'].spec, RECIPES['F.3.5'].title)).not.toThrow();
   });
 });

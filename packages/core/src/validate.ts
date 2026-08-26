@@ -48,6 +48,10 @@ const F2_VEHICLE_LAND_BODY_HEIGHT_MM = 20.25;
 const F2_TOP_LEFT_BOX_RIGHT_FROM_BODY_LEFT_MM = 28;
 /** Rechte Kante der F.3-`topLeft`-Box: Kreis maxX 28 minus 2-mm-Innenmarge. */
 const F3_CIRCLE_TOP_LEFT_BOX_RIGHT_MM = 26;
+/** Rechte Innenmarge der einzeiligen oberen Labelboxen, identisch zur Komposition. */
+const TOP_LABEL_BOX_RIGHT_INSET_MM = 2;
+/** Bestehende Default-Versalhöhe des mittigen Laufs in der Komposition. */
+const DEFAULT_CENTER_LABEL_CAP_HEIGHT_MM = 4.87;
 
 /** Exakte, aus den Quellen vermessene Art-/Variantenpaare; alle anderen bleiben fail-closed. */
 const BODY_VARIANT_KINDS: Readonly<Record<BodyVariantId, ReadonlySet<SymbolKind>>> = {
@@ -93,15 +97,19 @@ const COLORED_NORMAL_CIRCLE_ONLY_MARKS = new Set<
   'spontaneous-helper-contact-double-arrow',
 ]);
 
-function hasMeasuredCircleOrganizationContract(spec: SymbolSpec): boolean {
+function hasMeasuredColoredCircleContract(spec: SymbolSpec): boolean {
   if (spec.kind !== 'circle-12') return false;
   const [bodyMark, ...additionalBodyMarks] = spec.bodyMarks ?? [];
-  const matchesColoredContract = additionalBodyMarks.length === 0 && bodyMark !== undefined &&
+  return additionalBodyMarks.length === 0 && bodyMark !== undefined &&
     MEASURED_COLORED_CIRCLE_CONTRACTS.some((contract) =>
       contract.bodyVariant === spec.bodyVariant &&
       contract.organization === spec.organization &&
       contract.bodyMark === bodyMark);
-  if (matchesColoredContract) return true;
+}
+
+function hasMeasuredCircleOrganizationContract(spec: SymbolSpec): boolean {
+  if (spec.kind !== 'circle-12') return false;
+  if (hasMeasuredColoredCircleContract(spec)) return true;
 
   const isWhiteF3Contract = spec.organization === 'hilfsorganisation' &&
     (spec.bodyVariant === undefined || spec.bodyVariant === 'raised-gable');
@@ -111,6 +119,7 @@ function hasMeasuredCircleOrganizationContract(spec: SymbolSpec): boolean {
 
 export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
+  const profile = profileFor(spec.kind, spec.bodyVariant);
 
   if (
     spec.bodyVariant !== undefined &&
@@ -176,7 +185,8 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
     spec.designation !== undefined &&
     (
       (spec.kind === 'vehicle-land' && spec.bodyVariant === 'plain-wheel-pair') ||
-      (spec.kind === 'vehicle-air' && spec.bodyVariant === 'raised-hull')
+      (spec.kind === 'vehicle-air' &&
+        (spec.bodyVariant === 'raised-hull' || spec.bodyVariant === 'fixed-wing-hull'))
     )
   ) {
     issues.push({
@@ -184,6 +194,18 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
       message:
         'Die sichtbare Zusatzgeometrie dieser Körpervariante belegt den Streifen unterhalb des ' +
         'Körpers. Eine Bezeichnung in der Fußzone würde sie überlagern oder die viewBox verlassen.',
+    });
+  }
+
+  if (
+    spec.designation !== undefined &&
+    (spec.labels?.surfaceBelowLeft !== undefined || spec.labels?.surfaceBelowRight !== undefined)
+  ) {
+    issues.push({
+      rule: 'surface-label-foot-conflict',
+      message:
+        'Bezeichnung und schwarze Oberflächenläufe belegen denselben Streifen unterhalb des ' +
+        'Körpers. Ohne vermessene Ausweichposition schließen sie sich aus.',
     });
   }
 
@@ -269,7 +291,7 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
   // heraus (dessen Kante läuft dort erst ab 5,286 mm).
   if (
     spec.labels?.topLeft !== undefined &&
-    profileFor(spec.kind, spec.bodyVariant).topLeftBaselineFromBodyTopMm === undefined
+    profile.topLeftBaselineFromBodyTopMm === undefined
   ) {
     issues.push({
       rule: 'top-left-label-requires-measured-body',
@@ -296,6 +318,18 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
         'Metriksatz; die beiden Kreisfassungen haben keinen allgemeinen Profildefault.',
     });
   }
+  if (
+    spec.labels?.topLeft !== undefined &&
+    profile.requiresTopLeftMetrics === true &&
+    spec.labels.topLeftMetrics === undefined
+  ) {
+    issues.push({
+      rule: 'top-left-metrics-required-by-profile',
+      message:
+        'Dieses Körperprofil belegt den topLeft-Lauf ausschließlich mit einem vollständigen ' +
+        'quellenspezifischen Metriksatz; ein Profildefault wäre nur eine Teilmessung.',
+    });
+  }
   if (isCircle12 && !hasMeasuredCircleOrganizationContract(spec)) {
     issues.push({
       rule: 'circle-12-requires-hilfsorganisation',
@@ -303,6 +337,17 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
         'Der 12-mm-Kreis verlangt einen vollständig vermessenen Organisationsvertrag: die ' +
         'weiße HiOrg-Fassung aus F.3 oder genau eine der farbigen technischen ' +
         'Art-/Varianten-/Markenfassungen. Fehlende oder vertauschte Werte sind nicht belegt.',
+    });
+  }
+  if (
+    hasMeasuredColoredCircleContract(spec) &&
+    (spec.labels?.topLeft !== undefined || spec.labels?.topLeftMetrics !== undefined)
+  ) {
+    issues.push({
+      rule: 'colored-circle-top-left-not-measured',
+      message:
+        'Die exakt vermessenen farbigen Kreisverträge führen keinen topLeft-Lauf und keine ' +
+        'zugehörigen F.3-Metriken. Diese weißen Kreislabelverträge werden nicht vererbt.',
     });
   }
   if (
@@ -345,8 +390,8 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
         rule: 'top-left-metrics-require-measured-vehicle-land',
         message:
           'Individuelle topLeft-Metriken sind nur am normalen und gebänderten F.2-Landfahrzeug ' +
-          'sowie den beiden F.3-Kreisfassungen vermessen. Andere Arten und Varianten behalten ' +
-          'ihre eigenen Profilwerte.',
+          'sowie den beiden F.3-Kreisfassungen und am Festflügel-Luftfahrzeug vermessen. Andere ' +
+          'Arten und Varianten behalten ihre eigenen Profilwerte.',
       });
     }
     if (
@@ -399,6 +444,37 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
       }
     }
 
+    if (isMeasuredFixedWing) {
+      const bodyBounds = profile.measuredBodyBoundsMm;
+      let metricsWithinBody = false;
+      if (
+        bodyBounds !== undefined &&
+        typeof capHeightMm === 'number' && Number.isFinite(capHeightMm) && capHeightMm > 0 &&
+        typeof baselineFromBodyTopMm === 'number' && Number.isFinite(baselineFromBodyTopMm) &&
+        typeof anchorFromBodyLeftMm === 'number' && Number.isFinite(anchorFromBodyLeftMm)
+      ) {
+        const anchorXMm = bodyBounds.minX + anchorFromBodyLeftMm;
+        const baselineYMm = bodyBounds.minY + baselineFromBodyTopMm;
+        const box = verticalTextBoxMm(
+          baselineYMm,
+          capHeightMm / ARIMO_CAP_HEIGHT_FRACTION,
+          'alphabetic',
+        );
+        metricsWithinBody = anchorXMm >= bodyBounds.minX &&
+          anchorXMm <= bodyBounds.maxX - TOP_LABEL_BOX_RIGHT_INSET_MM &&
+          box.topMm >= bodyBounds.minY &&
+          box.topMm + box.heightMm <= bodyBounds.maxY;
+      }
+      if (!metricsWithinBody) {
+        issues.push({
+          rule: 'top-left-metrics-within-body',
+          message:
+            'Der vollständige topLeft-Lauf muss mit endlichem Anker und seiner abgeleiteten ' +
+            'vertikalen Textbox innerhalb der vermessenen Körperhülle liegen.',
+        });
+      }
+    }
+
     if (isMeasuredCircleVariant) {
       const circleMinXMm = 4;
       const circleMinYMm = spec.bodyVariant === 'raised-gable' ? 6 : 4;
@@ -447,7 +523,7 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
 
   if (
     spec.labels?.aboveLeft !== undefined &&
-    profileFor(spec.kind, spec.bodyVariant).aboveLeftBaselineFromBodyTopMm === undefined
+    profile.aboveLeftBaselineFromBodyTopMm === undefined
   ) {
     issues.push({
       rule: 'above-left-label-requires-measured-body',
@@ -463,7 +539,7 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
       !Array.isArray(aboveLeftMetrics)
       ? aboveLeftMetrics as Record<string, unknown>
       : undefined;
-    if (
+    const invalidOrIncomplete =
       spec.labels?.aboveLeft === undefined ||
       record === undefined ||
       !Object.hasOwn(record, 'capHeightMm') ||
@@ -474,12 +550,40 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
       !(typeof record.baselineFromBodyTopMm === 'number' &&
         Number.isFinite(record.baselineFromBodyTopMm)) ||
       !(typeof record.anchorFromBodyLeftMm === 'number' &&
-        Number.isFinite(record.anchorFromBodyLeftMm))
-    ) {
+        Number.isFinite(record.anchorFromBodyLeftMm));
+    if (invalidOrIncomplete) {
       issues.push({
         rule: 'above-left-metrics-complete',
         message: 'Gemessene aboveLeft-Metriken verlangen Lauf, Versalhöhe, Grundlinie und Anker.',
       });
+    }
+    if (!invalidOrIncomplete && record !== undefined) {
+      const bodyBounds = profile.measuredBodyBoundsMm;
+      const capHeightMm = record.capHeightMm as number;
+      const baselineYMm = (bodyBounds?.minY ?? Number.NaN) +
+        (record.baselineFromBodyTopMm as number);
+      const anchorXMm = (bodyBounds?.minX ?? Number.NaN) +
+        (record.anchorFromBodyLeftMm as number);
+      const box = verticalTextBoxMm(
+        baselineYMm,
+        capHeightMm / ARIMO_CAP_HEIGHT_FRACTION,
+        'alphabetic',
+      );
+      const boxRightXMm = (bodyBounds?.maxX ?? Number.NaN) - TOP_LABEL_BOX_RIGHT_INSET_MM;
+      if (
+        bodyBounds === undefined ||
+        anchorXMm < 0 ||
+        anchorXMm > boxRightXMm ||
+        box.topMm < 0 ||
+        box.topMm + box.heightMm > DEFAULT_VIEWBOX_MM.height
+      ) {
+        issues.push({
+          rule: 'above-left-metrics-within-viewbox',
+          message:
+            'Der abgeleitete aboveLeft-Lauf muss mit seinem Anker innerhalb der vermessenen ' +
+            'Profilbox und mit seiner vollständigen Textbox innerhalb der 32-mm-ViewBox liegen.',
+        });
+      }
     }
   }
 
@@ -556,12 +660,41 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
   }
   if (
     spec.labels?.centerBaselineFromBodyBottomMm !== undefined &&
-    profileFor(spec.kind, spec.bodyVariant).allowsCenterBaselineOverride !== true
+    profile.allowsCenterBaselineOverride !== true
   ) {
     issues.push({
       rule: 'center-baseline-override-requires-measured-body',
       message: 'Eine abweichende mittige Grundlinie ist nur an einem dafür vermessenen Körperprofil zulässig.',
     });
+  }
+  if (
+    spec.labels?.centerBaselineFromBodyBottomMm !== undefined &&
+    profile.allowsCenterBaselineOverride === true
+  ) {
+    const bodyBounds = profile.measuredBodyBoundsMm;
+    const capHeightMm = spec.labels.centerCapHeightMm ?? DEFAULT_CENTER_LABEL_CAP_HEIGHT_MM;
+    const baselineYMm = (bodyBounds?.maxY ?? Number.NaN) -
+      spec.labels.centerBaselineFromBodyBottomMm;
+    const box = verticalTextBoxMm(
+      baselineYMm,
+      capHeightMm / ARIMO_CAP_HEIGHT_FRACTION,
+      'alphabetic',
+    );
+    if (
+      bodyBounds === undefined ||
+      !Number.isFinite(baselineYMm) ||
+      !Number.isFinite(capHeightMm) ||
+      capHeightMm <= 0 ||
+      box.topMm < bodyBounds.minY ||
+      box.topMm + box.heightMm > bodyBounds.maxY
+    ) {
+      issues.push({
+        rule: 'center-label-within-body',
+        message:
+          'Die aus Grundlinie und Versalhöhe abgeleitete mittige Textbox muss vollständig ' +
+          'innerhalb der vermessenen Landfahrzeughülle liegen.',
+      });
+    }
   }
 
   if (

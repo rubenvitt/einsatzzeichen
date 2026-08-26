@@ -480,7 +480,10 @@ export interface BodyLabels {
    */
   readonly inBodyInk?: BodyLabelInk;
   readonly center?: string;
-  /** Individuell vermessener Abstand der mittigen Grundlinie von der Körperunterkante. */
+  /**
+   * Individuell vermessener Abstand der mittigen Grundlinie von der Körperunterkante. Der
+   * vollständige abgeleitete Textlauf muss innerhalb der dafür vermessenen Körperhülle bleiben.
+   */
   readonly centerBaselineFromBodyBottomMm?: number;
   readonly bottomLeft?: string;
   /**
@@ -534,8 +537,9 @@ export interface BodyLabels {
    * F.2-Landfahrzeug sowie zwingend an den beiden F.3-Kreisprofilen. Die Kreiswerte dürfen
    * negativ relativ zur Körperhülle sein, weil `UHS` und `50` sichtbar auf der weissen
    * Ausgabeoberfläche beginnen; sie werden stattdessen gegen die 32-mm-ViewBox geprüft.
-   * `plain-wheel-pair`, Formation und alle anderen Körperarten behalten ihre eigenen
-   * vermessenen Defaults.
+   * Am Festflügel-Luftfahrzeug ist der vollständige Satz zwingend; dort ist kein unabhängiger
+   * Default für den Lauf belegt. `plain-wheel-pair`, Formation und alle anderen Körperarten
+   * behalten ihre eigenen vermessenen Defaults.
    *
    * Ablesung in 90,709 / 32 SVG-Einheiten pro Millimeter; Grundlinie aus flachfüßigen Glyphen,
    * Versalhöhe ohne runden Overshoot. Weil die Quelle nur Pfade speichert, ist der Anker aus der
@@ -561,7 +565,10 @@ export interface BodyLabels {
    * Grundlinie y = 6 mm, zwei Millimeter oberhalb des Luftfahrzeugrumpfs aus Kapitel 1.
    */
   readonly aboveLeft?: string;
-  /** Vollständiger Metriksatz eines oberhalb links liegenden Laufs. */
+  /**
+   * Vollständiger Metriksatz eines oberhalb links liegenden Laufs. Endlicher Anker und die aus
+   * Versalhöhe/Grundlinie abgeleitete Textbox müssen in Profilbox und 32-mm-ViewBox bleiben.
+   */
   readonly aboveLeftMetrics?: {
     readonly capHeightMm: number;
     readonly baselineFromBodyTopMm: number;

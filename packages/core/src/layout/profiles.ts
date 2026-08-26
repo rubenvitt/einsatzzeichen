@@ -1,5 +1,5 @@
 import type { BodyVariantId, Primitive, SymbolKind } from '@einsatzzeichen/schema';
-import { boundsOfMm, shiftY } from '../bounds.js';
+import { boundsOfMm, shiftY, type BoundsMm } from '../bounds.js';
 
 /**
  * Abstand zwischen der Unterkante der Kopfzone und dem Körperanker.
@@ -60,6 +60,11 @@ export interface LayoutProfile {
   /** Erlaubt einen je Zeichen vermessenen Abstand anstelle des Profilwerts. */
   allowsCenterBaselineOverride?: true;
   /**
+   * Absolute vermessene Körperhülle für vollständige je-Spec-Textmetriken. Fehlt sie, darf
+   * die Validierung keine relativen Metriken gegen eine angenommene Hülle freigeben.
+   */
+  measuredBodyBoundsMm?: Readonly<BoundsMm>;
+  /**
    * Grundlinie des Laufs oben links, gerechnet **von der Körperoberkante nach unten**. Fehlt sie,
    * ist die Zone an dieser Körperform nicht vermessen und `compose()` wirft, statt eine Lage zu
    * raten.
@@ -72,6 +77,8 @@ export interface LayoutProfile {
    * Teilslice F-c sie einträgt, und nicht als stille Miterbschaft dieser.
    */
   topLeftBaselineFromBodyTopMm?: number;
+  /** Dieses Profil belegt `topLeft` ausschließlich mit einem vollständigen je-Spec-Metriksatz. */
+  requiresTopLeftMetrics?: true;
   /** Grundlinie eines linksbündigen Laufs oberhalb des Körpers, gegen dessen Oberkante. */
   aboveLeftBaselineFromBodyTopMm?: number;
   /** Waagerechter Anker des oberhalb liegenden Laufs relativ zur linken Körperhüllenkante. */
@@ -165,6 +172,7 @@ const formationProfile: LayoutProfile = {
 const vehicleLandProfile: LayoutProfile = {
   ...rectBody(8),
   allowsCenterBaselineOverride: true,
+  measuredBodyBoundsMm: { minX: 1, minY: 5.75, maxX: 31, maxY: 26 },
   topLeftBaselineFromBodyTopMm: 6.75,
   topLeftLines: { baselinesFromBodyTopMm: [6.75, 10.75], capHeightMm: 2.919225 },
 };
@@ -186,6 +194,7 @@ const plainWheelVehicleLandProfile: LayoutProfile = {
 const invertedHullVehicleLandProfile: LayoutProfile = {
   ...vehicleLandProfile,
   allowsCenterBaselineOverride: undefined,
+  measuredBodyBoundsMm: undefined,
 };
 
 /** Das Kapitel-1-Luftfahrzeug belegt keine Beschriftungszone. */
@@ -196,6 +205,7 @@ const vehicleAirProfile: LayoutProfile = {
 /** F.2.6/F.2.7: dieselbe absolute ITH-Grundlinie y=6 am auf y=6 angehobenen Rumpf. */
 const raisedVehicleAirProfile: LayoutProfile = {
   ...rectBody(8),
+  measuredBodyBoundsMm: { minX: 1.01, minY: 6.0001, maxX: 30.9894, maxY: 20.9898 },
   aboveLeftBaselineFromBodyTopMm: 0,
   aboveLeftAnchorFromBodyLeftMm: -0.01,
   surfaceLabels: {
@@ -208,7 +218,9 @@ const raisedVehicleAirProfile: LayoutProfile = {
 
 const fixedWingVehicleAirProfile: LayoutProfile = {
   ...rectBody(8),
+  measuredBodyBoundsMm: { minX: 1.01, minY: 6.0001, maxX: 30.9894, maxY: 20.9898 },
   topLeftBaselineFromBodyTopMm: 7,
+  requiresTopLeftMetrics: true,
   aboveLeftBaselineFromBodyTopMm: -1,
   aboveLeftAnchorFromBodyLeftMm: -0.01,
 };

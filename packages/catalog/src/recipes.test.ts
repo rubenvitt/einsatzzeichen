@@ -382,6 +382,33 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
       },
     ]);
   });
+
+  it('leitet die Tinte eines überstehenden Kreislabels über denselben Body-Resolver ab', () => {
+    const requirements = labelContrastRequirements([{
+      title: 'synthetischer Resolververtrag',
+      referenceAsset: 'synthetic.svg',
+      spec: {
+        kind: 'circle-12',
+        organization: 'hilfsorganisation',
+        labels: {
+          topLeft: 'UHS',
+          topLeftMetrics: {
+            capHeightMm: 2.919225,
+            baselineFromBodyTopMm: 1.000254,
+            anchorFromBodyLeftMm: -2.984684,
+          },
+          inBodyInk: 'weiss',
+        },
+      },
+    }]);
+
+    expect(requirements).toContainEqual({
+      foreground: 'weiss',
+      background: 'surface',
+      context: 'Kreislabel teilweise außerhalb der Körperfläche',
+      minimum: 4.5,
+    });
+  });
 });
 
 describe('Anhang E, Teilslice E-b (E.1.17 bis E.1.28)', () => {

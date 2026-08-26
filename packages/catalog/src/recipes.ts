@@ -181,7 +181,7 @@ export function labelContrastRequirements(
   const belowBody = new Set<OrganizationId>();
   let aboveBody = false;
   let surfaceBelowBody = false;
-  let circleTopLeftOnSurface = false;
+  const circleTopLeftOnSurface = new Set<BodyLabelInk>();
   for (const recipe of recipes) {
     const { labels, organization } = recipe.spec;
     // Ein Rezept ohne Organisation bleibt hier aussen vor, obwohl `compose.ts` auch ihm eine
@@ -221,7 +221,10 @@ export function labelContrastRequirements(
       surfaceBelowBody = true;
     }
     if (recipe.spec.kind === 'circle-12' && labels.topLeft !== undefined) {
-      circleTopLeftOnSurface = true;
+      circleTopLeftOnSurface.add(bodyLabelInk(
+        organizationColor(organization),
+        labels.inBodyInk,
+      ));
     }
   }
   return [
@@ -252,11 +255,11 @@ export function labelContrastRequirements(
       context: 'Beschriftung unterhalb des Körpers auf der Ausgabeoberfläche',
       minimum: MINIMUM_TEXT_CONTRAST,
     }] : []),
-    ...(circleTopLeftOnSurface ? [{
-      foreground: 'schwarz' as const,
+    ...[...circleTopLeftOnSurface].map<ContrastRequirement>((foreground) => ({
+      foreground,
       background: 'surface' as const,
       context: 'Kreislabel teilweise außerhalb der Körperfläche',
       minimum: MINIMUM_TEXT_CONTRAST,
-    }] : []),
+    })),
   ];
 }
