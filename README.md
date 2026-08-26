@@ -592,8 +592,9 @@ Die Läufe `UHS` und `50` beginnen links der jeweiligen Kreisfläche. Der additi
 `topLeftMetrics`-Vertrag akzeptiert deshalb am normalen und am Giebelkreis nur das vollständige
 quellenvermessene Objekt. Negative Relativwerte bleiben erlaubt, solange die resultierende
 Textbox vollständig in der ViewBox liegt und ihr Anker die deklarierte rechte Boxkante x = 26 mm
-nicht überschreitet. Die Schrift steht profilgebunden schwarz und wird sowohl gegen die weiße
-HiOrg-Körperfläche als auch gegen `surface` geprüft. Jeder gemessene `circle-12` verlangt auch
+nicht überschreitet. Die Schriftfarbe folgt dem bestehenden `bodyLabelInk()`-Pfad und wird wegen
+der zwingend weißen HiOrg-Körperfläche schwarz; der Kontrast wird gegen diese Fläche und gegen
+`surface` geprüft. Jeder gemessene `circle-12` verlangt auch
 ohne Label `organization: hilfsorganisation`; andere oder fehlende Zuordnungen bleiben
 fail-closed.
 

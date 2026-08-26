@@ -208,8 +208,9 @@ const ANHANG_F_E_TECHNICAL_REVIEW: Review = {
     'Quellgeometrie von F.3.5 ist mit J.3.2 identisch; die bestehende Katalogfassung J.3.2 ' +
     'bleibt mit stationBody(17, 11.5) abweichend und ihre Korrektur liegt außerhalb dieses ' +
     'Teilslices. Die ' +
-    'vollständigen UHS-/50-Metriken werden gegen die ViewBox geprüft und profilgebunden schwarz ' +
-    'gezeichnet; der Kontrastvertrag deckt sowohl die weiße HiOrg-Körperfläche als auch surface. ' +
+    'vollständigen UHS-/50-Metriken werden gegen die ViewBox geprüft; der bestehende ' +
+    'bodyLabelInk-Pfad leitet ihre Tinte aus der zwingend weißen HiOrg-Körperfläche als schwarz ' +
+    'ab. Der Kontrastvertrag deckt sowohl diese Körperfläche als auch surface. ' +
     'Snapshot-, Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates prüfen den renderbaren ' +
     'Bestand. Der finale Task-6-Kontaktbogen war zu diesem Zeitpunkt noch nicht erzeugt oder ' +
     'gesichtet. Die Organisation hilfsorganisation und sämtliche Fachzuordnungen bleiben im ' +

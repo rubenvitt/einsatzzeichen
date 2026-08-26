@@ -802,7 +802,7 @@ describe('compose() — die beiden expliziten F.2-Sonderzonen', () => {
   });
 });
 
-describe('compose() — die profilgebundenen F.3-Kreislabels', () => {
+describe('compose() — die aus der weißen Körperfläche abgeleiteten F.3-Kreislabels', () => {
   const circleCatalog: CatalogPorts = {
     ...catalog,
     baseDrawing: (_kind, variant) => ({

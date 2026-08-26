@@ -1,4 +1,4 @@
-import type { BodyVariantId, ColorToken, Primitive, SymbolKind } from '@einsatzzeichen/schema';
+import type { BodyVariantId, Primitive, SymbolKind } from '@einsatzzeichen/schema';
 import { boundsOfMm, shiftY } from '../bounds.js';
 
 /**
@@ -70,12 +70,6 @@ export interface LayoutProfile {
    * Teilslice F-c sie einträgt, und nicht als stille Miterbschaft dieser.
    */
   topLeftBaselineFromBodyTopMm?: number;
-  /**
-   * Optional profilgebundene Tinte des oberen linken Laufs. Normalerweise folgt er dem
-   * Körperkontrast; die F.3-Kreislabels stehen dagegen schwarz zugleich auf der weißen
-   * HiOrg-Fläche und auf der Ausgabeoberfläche.
-   */
-  topLeftInk?: ColorToken;
   /** Grundlinie eines linksbündigen Laufs oberhalb des Körpers, gegen dessen Oberkante. */
   aboveLeftBaselineFromBodyTopMm?: number;
   /** Waagerechter Anker des oberhalb liegenden Laufs relativ zur linken Körperhüllenkante. */
@@ -256,18 +250,17 @@ const circleBodyProfile: LayoutProfile = {
 /**
  * Die Kreislabels aus F.3 sind keine Ableitung des 14-mm-`post`-Profils. Ihre Grundlinien sind
  * unmittelbar an F.3.3/F.3.4 beziehungsweise F.3.5 gemessen und liegen teilweise außerhalb der
- * Kreisfläche; die schwarze Tinte ist deshalb ebenfalls Teil des Profils.
+ * Kreisfläche. Ihre Tinte folgt wie bei allen Körperlabels privat aus `bodyLabelInk()`; da
+ * `validateSpec()` beide Kreisfassungen an die weiße HiOrg-Fläche bindet, ergibt das schwarz.
  */
 const circle12Profile: LayoutProfile = {
   ...circleBodyProfile,
   topLeftBaselineFromBodyTopMm: 1.000254,
-  topLeftInk: 'schwarz',
 };
 
 const raisedGableCircle12Profile: LayoutProfile = {
   ...circleBodyProfile,
   topLeftBaselineFromBodyTopMm: -0.999746,
-  topLeftInk: 'schwarz',
 };
 
 const PROFILES: Record<SymbolKind, LayoutProfile> = {

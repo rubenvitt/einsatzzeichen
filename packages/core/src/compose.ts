@@ -351,6 +351,18 @@ export function bodyLabelInk(bodyFill: ColorToken): ColorToken {
 }
 
 /**
+ * Nur die beiden vermessenen F.3-Kreisfassungen tragen negative körperrelative Labelmaße.
+ * Ihre sechs Dezimalstellen werden privat am exakten Art-/Variantenpaar normalisiert; das ist
+ * keine öffentliche Profil- oder Stilsteuerung.
+ */
+function normalizesMeasuredCircleTopLeftCoordinates(
+  kind: SymbolKind,
+  variant: BodyVariantId | undefined,
+): boolean {
+  return kind === 'circle-12' && (variant === undefined || variant === 'raised-gable');
+}
+
+/**
  * Die Beschriftungszonen gegen die Hülle des platzierten Körpers gerechnet. Läufe **im** Körper
  * tragen die aus der Körperfüllung abgeleitete Tinte (`bodyLabelInk`). `aboveLeft` steht dagegen
  * schwarz auf der Ausgabeoberfläche, `belowRight` trägt dort die Organisationsfarbe. Alle drei
@@ -363,7 +375,7 @@ function labelPrimitives(
   belowRightFill: ColorToken | null,
   centerBaselineFromBodyBottomMm: number,
   topLeftBaselineFromBodyTopMm: number | undefined,
-  topLeftInk: ColorToken | undefined,
+  normalizeTopLeftCoordinatePrecision: boolean,
   aboveLeftBaselineFromBodyTopMm: number | undefined,
   aboveLeftAnchorFromBodyLeftMm: number | undefined,
   topLeftLines: {
@@ -438,14 +450,17 @@ function labelPrimitives(
       (topLeftMetrics?.anchorFromBodyLeftMm ?? TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM);
     const baselineRawMm = bodyBoundsMm.minY +
       (topLeftMetrics?.baselineFromBodyTopMm ?? topLeftBaselineFromBodyTopMm);
-    // Die profilgebundenen F.3-Werte sind auf sechs Dezimalstellen vermessen. Ihre negative
+    // Die privat kind-/variantengebundenen F.3-Werte sind auf sechs Dezimalstellen vermessen.
+    // Ihre negative
     // Relativkoordinate erzeugt bei binärer Addition sonst 1.0153159999999999 und damit eine
     // andere SVG-Koordinate als die gemessene absolute 1.015316. Andere Profile bleiben
     // bytegleich auf ihrem bisherigen Rechenweg.
-    const anchorXMm = topLeftInk === undefined ? anchorRawMm : Number(anchorRawMm.toFixed(6));
-    const baselineYMm = topLeftInk === undefined
-      ? baselineRawMm
-      : Number(baselineRawMm.toFixed(6));
+    const anchorXMm = normalizeTopLeftCoordinatePrecision
+      ? Number(anchorRawMm.toFixed(6))
+      : anchorRawMm;
+    const baselineYMm = normalizeTopLeftCoordinatePrecision
+      ? Number(baselineRawMm.toFixed(6))
+      : baselineRawMm;
     const sizeMm = topLeftMetrics === undefined
       ? BOTTOM_LABEL_SIZE_MM
       : topLeftMetrics.capHeightMm / ARIMO_CAP_HEIGHT_FRACTION;
@@ -463,7 +478,7 @@ function labelPrimitives(
         // Clipping-Zusage, obwohl die Zone weiterhin durch ihren linken Anker benannt ist.
         rightMm - anchorXMm,
         viewBoxWidthMm,
-        topLeftInk ?? ink,
+        ink,
       ),
     );
   }
@@ -939,7 +954,7 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
         spec.organization !== undefined ? catalog.organizationColor(spec.organization) : null,
         profile.centerBaselineFromBodyBottomMm,
         profile.topLeftBaselineFromBodyTopMm,
-        profile.topLeftInk,
+        normalizesMeasuredCircleTopLeftCoordinates(spec.kind, spec.bodyVariant),
         profile.aboveLeftBaselineFromBodyTopMm,
         profile.aboveLeftAnchorFromBodyLeftMm,
         profile.topLeftLines,

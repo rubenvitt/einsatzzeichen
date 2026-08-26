@@ -41,11 +41,12 @@ Prüfung ist kein Kontaktbogen und nicht der finale Task-6-Kontaktbogen.
 - Ein Regressionstest hält den quellgleichen F.3.5-/J.3.2-Giebel und den allein im bestehenden
   J.3.2-Katalogkörper liegenden Unterschied fest. Die Korrektur dieser Approximation ist nicht
   Bestandteil von LFH-451.
-- Die Kreislabels werden profilgebunden schwarz gerendert. Ihr Kontrast ist gegen die weiße
-  HiOrg-Fläche und gegen `surface` belegt; andere oder fehlende Organisationen werden für jede
-  gemessene Kreisfassung auch ohne Label abgelehnt.
-- Der Bestand erreicht 129 Rezepte, 397 Renderfälle und 416 Manifestzeilen; der Coverage-CLI
-  zählt 416 katalogisierte von 430 Referenzdarstellungen.
+- Die Kreislabels werden über den bestehenden `bodyLabelInk()`-Pfad aus der zwingend weißen
+  HiOrg-Fläche schwarz abgeleitet. Ihr Kontrast ist gegen diese Fläche und gegen `surface`
+  belegt; andere oder fehlende Organisationen werden für jede gemessene Kreisfassung auch ohne
+  Label abgelehnt.
+- Der Bestand erreicht 129 Rezepte, 397 Renderfälle und 416 Manifesteinträge. Der Coverage-CLI
+  meldet 430 offene fachliche Reviews: 416 Manifestreviews, 13 Quellenreviews und 1 Profilreview.
 
 ## Offene fachliche Punkte
 

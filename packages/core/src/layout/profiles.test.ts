@@ -99,7 +99,7 @@ describe('Layoutprofile', () => {
     expect(profileFor('trailer').topLeftBaselineFromBodyTopMm).toBeUndefined();
   });
 
-  it('führt getrennte, schwarz gesetzte topLeft-Profile für beide F.3-Kreisfassungen', () => {
+  it('führt getrennte topLeft-Profile ohne öffentliche Stilsteuerung für beide F.3-Kreisfassungen', () => {
     const circleKind = 'circle-12' as SymbolKind;
     const raisedGable = 'raised-gable' as BodyVariantId;
     const normal = profileFor(circleKind);
@@ -110,9 +110,8 @@ describe('Layoutprofile', () => {
     expect(raised.id).toBe('circle-body');
     expect(normal.topLeftBaselineFromBodyTopMm).toBeCloseTo(1.000254, 6);
     expect(raised.topLeftBaselineFromBodyTopMm).toBeCloseTo(-0.999746, 6);
-    expect(normal.topLeftInk).toBe('schwarz');
-    expect(raised.topLeftInk).toBe('schwarz');
+    expect(normal).not.toHaveProperty('topLeftInk');
+    expect(raised).not.toHaveProperty('topLeftInk');
     expect(profileFor('post').topLeftBaselineFromBodyTopMm).toBeUndefined();
-    expect(profileFor('post').topLeftInk).toBeUndefined();
   });
 });
