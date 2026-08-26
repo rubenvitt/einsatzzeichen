@@ -392,6 +392,24 @@ describe('validateSpec', () => {
     ).map((issue) => issue.rule)).toContain('administrative-level-not-measured');
   });
 
+  it.each(['kreis', 'nationalstaat', 'europaeische-union'] as const)(
+    'lehnt die aufgelöste Verwaltungsstufe %s ohne gemessene Funktionsrolle ab',
+    (administrativeLevel) => {
+      const issues = validateRuntime(
+        { kind: 'person', administrativeLevel },
+        {
+          administrativeHead: {
+            box: { xMm: 0, yMm: 0, widthMm: 32, heightMm: 4 },
+            heightMm: 4,
+            primitives: [],
+          },
+        },
+      );
+
+      expect(issues.map((issue) => issue.rule)).toContain('administrative-level-not-measured');
+    },
+  );
+
   it('lehnt eine Rolle ab, wenn Art, Definition oder Kopf nicht zur Messung passen', () => {
     expect(validateRuntime(
       { kind: 'building', functionRole: 'fire-service-platoon-commander' },
@@ -492,6 +510,52 @@ describe('validateSpec', () => {
     });
     expect(validateRuntime(spec, { functionRole: hiddenText }).map((issue) => issue.rule))
       .toContain('function-role-requires-measured-layout');
+  });
+
+  it.each([
+    ['fehlendes Layout', runtimeRoleDefinition({ layout: undefined })],
+    ['fehlende Rollenläufe', runtimeRoleDefinition({
+      layout: {
+        headTopMm: 1,
+        body: { type: 'rect', role: 'body', x: 3, y: 5, width: 26, height: 26 },
+        bodyAdditions: [], decorations: [],
+      },
+    })],
+    ['nicht-arrayförmige Rollenläufe', runtimeRoleDefinition({
+      layout: {
+        headTopMm: 1,
+        body: { type: 'rect', role: 'body', x: 3, y: 5, width: 26, height: 26 },
+        bodyAdditions: [], decorations: [], roleRuns: {},
+      },
+    })],
+  ])('meldet für %s stabil ein unvollständiges Rollenlayout', (_name, functionRole) => {
+    const issues = validateRuntime(
+      {
+        kind: 'person', functionRole: 'fire-service-platoon-commander', strength: 'zug',
+      },
+      { functionRole },
+    );
+
+    expect(issues.map((issue) => issue.rule)).toContain('function-role-requires-measured-layout');
+  });
+
+  it('meldet einen malformed Rollenlauf mit der stabilen Metrikregel', () => {
+    const functionRole = runtimeRoleDefinition({
+      layout: {
+        headTopMm: 1,
+        body: { type: 'rect', role: 'body', x: 3, y: 5, width: 26, height: 26 },
+        bodyAdditions: [], decorations: [], roleRuns: [null],
+      },
+    });
+
+    const issues = validateRuntime(
+      {
+        kind: 'person', functionRole: 'fire-service-platoon-commander', strength: 'zug',
+      },
+      { functionRole },
+    );
+
+    expect(issues.map((issue) => issue.rule)).toContain('function-role-label-metrics-required');
   });
 
   it('lehnt Stärke und Verwaltungsstufe gleichzeitig ab', () => {

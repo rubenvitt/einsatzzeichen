@@ -4,7 +4,6 @@ import {
   type FunctionRoleDefinition,
   type FunctionRoleTextRun,
   type AdministrativeHeadShape,
-  type Primitive,
   type SymbolKind,
   type SymbolSpec,
 } from '@einsatzzeichen/schema';
@@ -70,13 +69,21 @@ function finite(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
-function containsText(primitive: Primitive): boolean {
-  return primitive.type === 'text' ||
-    (primitive.type === 'group' && primitive.children.some(containsText));
+function record(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }
 
-function validRoleRun(run: FunctionRoleTextRun): boolean {
+function containsText(primitive: unknown): boolean {
+  if (!record(primitive)) return false;
+  return primitive.type === 'text' ||
+    (primitive.type === 'group' && Array.isArray(primitive.children) &&
+      primitive.children.some(containsText));
+}
+
+function validRoleRun(run: unknown): run is FunctionRoleTextRun {
+  if (!record(run)) return false;
   const box = run.boxMm;
+  if (!record(box)) return false;
   return typeof run.content === 'string' && run.content.trim() !== '' &&
     finite(run.anchorXMm) && finite(run.baselineYMm) && finite(run.sizeMm) && run.sizeMm > 0 &&
     (run.anchor === 'start' || run.anchor === 'middle' || run.anchor === 'end') &&
@@ -85,7 +92,8 @@ function validRoleRun(run: FunctionRoleTextRun): boolean {
     box.xMm >= 0 && box.yMm >= 0 &&
     box.xMm + box.widthMm <= DEFAULT_VIEWBOX_MM.width &&
     box.yMm + box.heightMm <= DEFAULT_VIEWBOX_MM.height &&
-    Number.isInteger(run.minRenderPx) && run.minRenderPx > 0 &&
+    typeof run.minRenderPx === 'number' && Number.isInteger(run.minRenderPx) &&
+    run.minRenderPx > 0 &&
     (run.ink === 'body-contrast' || run.ink === 'schwarz' || run.ink === 'weiss' ||
       run.ink === 'rot' || run.ink === 'blau' || run.ink === 'gelb' ||
       run.ink === 'gruen' || run.ink === 'hellgruen' || run.ink === 'orange' ||
@@ -112,65 +120,83 @@ export function validateSpec(
   context: ValidationContext = {},
 ): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
+  const definitionValue: unknown = context.functionRole;
+  const resolvedFunctionRole = spec.functionRole !== undefined &&
+    record(definitionValue) && definitionValue.id === spec.functionRole;
 
   if (spec.functionRole !== undefined) {
-    const definition = context.functionRole;
     if (spec.kind !== 'formation' && spec.kind !== 'person') {
       issues.push({
         rule: 'function-role-requires-measured-kind',
         message: 'Eine gemessene Funktion ist nur an Formation oder Person belegt.',
       });
     }
-    if (definition === undefined || definition.id !== spec.functionRole) {
+    if (!resolvedFunctionRole) {
       issues.push({
         rule: 'function-role-requires-measured-layout',
         message: 'Die Funktion verlangt ihre exakt aufgeloeste gemessene Layoutdefinition.',
       });
     } else {
-      if (definition.kind !== spec.kind) {
+      if (definitionValue.kind !== spec.kind) {
         issues.push({
           rule: 'function-role-requires-measured-kind',
-          message: `Die Funktion "${definition.id}" ist nicht fuer "${spec.kind}" vermessen.`,
+          message: `Die Funktion "${spec.functionRole}" ist nicht fuer "${spec.kind}" vermessen.`,
         });
       }
-      const headMatches = definition.expectedHead === 'none'
+      const layout = record(definitionValue.layout) ? definitionValue.layout : undefined;
+      const headTopMm = layout?.headTopMm;
+      const expectedHead = definitionValue.expectedHead;
+      const headMatches = expectedHead === 'none'
         ? spec.strength === undefined && spec.administrativeLevel === undefined &&
-          definition.layout.headTopMm === undefined
-        : definition.expectedHead === 'strength'
+          headTopMm === undefined
+        : expectedHead === 'strength'
           ? spec.strength !== undefined && spec.administrativeLevel === undefined &&
-            finite(definition.layout.headTopMm)
-          : spec.strength === undefined && spec.administrativeLevel !== undefined &&
-            finite(definition.layout.headTopMm) && context.administrativeHead !== undefined;
+            finite(headTopMm)
+          : expectedHead === 'administrative' && spec.strength === undefined &&
+            spec.administrativeLevel !== undefined && finite(headTopMm) &&
+            context.administrativeHead !== undefined;
       if (!headMatches) {
         issues.push({
           rule: 'function-role-head-mismatch',
-          message: `Die Kopfzone entspricht nicht der vermessenen Fassung "${definition.expectedHead}".`,
+          message: `Die Kopfzone entspricht nicht der vermessenen Fassung "${String(expectedHead)}".`,
         });
       }
-      const layout = definition.layout;
-      const body = layout.body;
+      const body = record(layout?.body) ? layout.body : undefined;
+      const bodyAdditions = layout?.bodyAdditions;
+      const decorations = layout?.decorations;
+      const roleRuns = layout?.roleRuns;
       const layoutValid = body?.type === 'rect' && body.role === 'body' &&
         finite(body.x) && finite(body.y) && finite(body.width) && finite(body.height) &&
-        body.width > 0 && body.height > 0 && Array.isArray(layout.bodyAdditions) &&
-        Array.isArray(layout.decorations) && Array.isArray(layout.roleRuns) &&
-        layout.roleRuns.length <= 2 && !layout.decorations.some(containsText);
+        body.width > 0 && body.height > 0 && Array.isArray(bodyAdditions) &&
+        Array.isArray(decorations) && Array.isArray(roleRuns) &&
+        roleRuns.length <= 2 && !decorations.some(containsText);
       if (!layoutValid) {
         issues.push({
           rule: 'function-role-requires-measured-layout',
           message: 'Die Funktionsfassung muss einen vollstaendigen, textfreien Geometrieplan liefern.',
         });
       }
-      const runs = [...layout.roleRuns, ...(layout.carrierRun === undefined ? [] : [layout.carrierRun])];
-      if (
-        runs.some((run) => !validRoleRun(run)) ||
-        runs.some((run, index) => runs.slice(index + 1).some((other) => roleRunsOverlap(run, other)))
-      ) {
-        issues.push({
-          rule: 'function-role-label-metrics-required',
-          message: 'Jeder Funktionslauf braucht vollstaendige sichtbare Metriken ohne Boxueberlagerung.',
-        });
+      if (Array.isArray(roleRuns)) {
+        const runs: unknown[] = [
+          ...roleRuns,
+          ...(layout?.carrierRun === undefined ? [] : [layout.carrierRun]),
+        ];
+        const validRuns = runs.filter(validRoleRun);
+        if (
+          validRuns.length !== runs.length ||
+          validRuns.some((run, index) =>
+            validRuns.slice(index + 1).some((other) => roleRunsOverlap(run, other)))
+        ) {
+          issues.push({
+            rule: 'function-role-label-metrics-required',
+            message: 'Jeder Funktionslauf braucht vollstaendige sichtbare Metriken ohne Boxueberlagerung.',
+          });
+        }
       }
-      if (spec.bodyMarks?.some((id) => !definition.allowedBodyMarks.includes(id))) {
+      const allowedBodyMarks = definitionValue.allowedBodyMarks;
+      if (spec.bodyMarks?.some(
+        (id) => !Array.isArray(allowedBodyMarks) || !allowedBodyMarks.includes(id),
+      )) {
         issues.push({
           rule: 'function-role-body-mark-mismatch',
           message: 'Mindestens eine Koerpermarke ist fuer diese Funktionsfassung nicht vermessen.',
@@ -268,7 +294,10 @@ export function validateSpec(
 
   // Nur die drei in D.3/D.4 vermessenen Verwaltungskoepfe werden aufgeloest. Die unbelegten
   // Stufen gemeinde, bezirk und bundesland bleiben ohne Schaetzung fail-closed.
-  if (spec.administrativeLevel !== undefined && context.administrativeHead === undefined) {
+  if (
+    spec.administrativeLevel !== undefined &&
+    (context.administrativeHead === undefined || !resolvedFunctionRole)
+  ) {
     issues.push({
       rule: 'administrative-level-not-measured',
       message:

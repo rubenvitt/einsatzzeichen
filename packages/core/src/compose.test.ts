@@ -6,7 +6,7 @@ import {
   type SymbolSpec,
 } from '@einsatzzeichen/schema';
 import type { BoundsMm } from './bounds.js';
-import { compose, type CatalogPorts } from './compose.js';
+import { compose, CompositionError, type CatalogPorts } from './compose.js';
 import { ARIMO_CAP_HEIGHT_FRACTION } from './render/text-policy.js';
 import { checkViewBox } from './viewbox-gate.js';
 
@@ -1163,5 +1163,72 @@ describe('compose() — gemessene Funktionsträger', () => {
     expect(markIndex).toBeLessThan(decorationIndex);
     expect(decorationIndex).toBeLessThan(roleIndex);
     expect(roleIndex).toBeLessThan(carrierIndex);
+  });
+
+  it('zeichnet einen aufgelösten Verwaltungskopf vor dem gemessenen Rollenkörper', () => {
+    const administrativeRoleCatalog: CatalogPorts = {
+      ...catalog,
+      functionRole: () => ({
+        id: 'technical-incident-commander',
+        title: 'Technischer Einsatzleiter',
+        kind: 'person',
+        expectedHead: 'administrative',
+        allowedBodyMarks: [],
+        layout: {
+          headTopMm: 0,
+          body: { type: 'rect', role: 'body', x: 3, y: 3, width: 26, height: 26 },
+          bodyAdditions: [],
+          decorations: [],
+          roleRuns: [],
+        },
+      }),
+      administrativeHead: () => ({
+        box: { xMm: 9, yMm: 0, widthMm: 14, heightMm: 4 },
+        heightMm: 4,
+        primitives: [{
+          type: 'rect', role: 'head', x: 10.75, y: 0, width: 0.5, height: 4,
+          style: { fill: 'schwarz' },
+        }],
+      }),
+    };
+    const drawing = compose({
+      kind: 'person',
+      functionRole: 'technical-incident-commander',
+      administrativeLevel: 'kreis',
+    }, administrativeRoleCatalog);
+
+    expect(drawing.children[0]).toMatchObject({
+      type: 'group',
+      role: 'head',
+      transform: { translate: { dxMm: 0, dyMm: 0 } },
+      children: [{ type: 'rect', role: 'head' }],
+    });
+    expect(drawing.children[1]).toMatchObject({ type: 'rect', role: 'body' });
+  });
+
+  it('wandelt eine runtime-malformed Rollenfassung in einen CompositionError um', () => {
+    const malformedCatalog = {
+      ...catalog,
+      functionRole: () => ({
+        id: 'incident-commander',
+        title: 'Einsatzleiter',
+        kind: 'person',
+        expectedHead: 'none',
+        allowedBodyMarks: [],
+      }),
+    };
+    let thrown: unknown;
+
+    try {
+      Reflect.apply(compose, undefined, [{
+        kind: 'person', functionRole: 'incident-commander',
+      }, malformedCatalog]);
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(CompositionError);
+    expect((thrown as CompositionError).issues.map((issue) => issue.rule))
+      .toContain('function-role-requires-measured-layout');
   });
 });
