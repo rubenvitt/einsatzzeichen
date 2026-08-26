@@ -252,6 +252,8 @@ export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
   'circle-information-stem',
   'circle-transport-diamond-arrows',
   'circle-transport-diamond-wheels-arrows',
+  'h-veterinary-decontamination',
+  'h-veterinary-slaughter',
 ] as const);
 
 export type TechnicalBodyMarkId = (typeof TECHNICAL_BODY_MARK_IDS)[number];

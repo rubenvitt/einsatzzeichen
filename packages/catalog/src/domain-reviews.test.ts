@@ -111,11 +111,11 @@ describe('Fachreview-Ledger', () => {
     // bis F.1.22 und die beiden Alternativdarstellungen; damit sind es hier 383.
     // F-d ergänzt acht einzelne, weiterhin offene Reviewplätze für F.2.10 bis F.2.17. F-e
     // ergänzt elf für F.3.1 bis F.3.11 und F-f die acht verbleibenden für F.3.12 bis F.3.19.
-    // I-a ergänzt drei technisch belegte, fachlich weiterhin offene Wasserfahrzeuge.
-    expect(manifestReviews).toHaveLength(427);
+    // Anhang H und I-a ergänzen je drei technisch belegte, fachlich weiterhin offene Zeichen.
+    expect(manifestReviews).toHaveLength(430);
     expect(sourceReviews).toHaveLength(13);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(441);
+    expect(reviews).toHaveLength(444);
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
   });
 

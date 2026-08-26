@@ -29,6 +29,7 @@ import {
   ANHANG_F_E_RECIPES,
   ANHANG_F_F_RECIPES,
 } from './recipes-anhang-f.js';
+import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
 import { ANHANG_I_A_RECIPES } from './recipes-anhang-i.js';
 
 const PORTS: CatalogPorts = {
@@ -89,6 +90,7 @@ export const RECIPES = {
   ...ANHANG_E_D_RECIPES,
   ...ANHANG_E_E_RECIPES,
   ...ANHANG_E_F_RECIPES,
+  ...ANHANG_H_RECIPES,
   'C.1.1': {
     title: 'Löschstaffel',
     referenceAsset: 'C.1.1_Löschstaffel.svg',

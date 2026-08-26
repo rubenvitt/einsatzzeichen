@@ -97,8 +97,9 @@ describe('Coverage-Manifest', () => {
       // `alternative` — die Zeile zählt einzeln, weil das Manifest Darstellungen zählt und nicht
       // Abschnitte, weil F.1.3 dort noch bewusst offen blieb; F-b baut es mit `foot-band`.
       // F-d ergänzt F.2.10 bis F.2.17 als acht reine Anwendungen des Fahrzeugvertrags.
-      // Anhang I, Teilslice I-a ergänzt die drei vermessenen Wasserfahrzeuge I.3.5 bis I.3.7.
-      'composition-recipe': 140,
+      // Anhang H ergänzt drei veterinärmedizinische Formationen; Anhang I, Teilslice I-a ergänzt
+      // die drei vermessenen Wasserfahrzeuge I.3.5 bis I.3.7.
+      'composition-recipe': 143,
       // 254 Piktogramme plus acht Organisationen (seit LFH-424 mit hilfsorganisation), vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
@@ -106,7 +107,7 @@ describe('Coverage-Manifest', () => {
       // Strichhülle vermessen ist.
       element: 273,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(427);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(430);
     expect(elementRows).toHaveLength(273);
     expect(pictogramRows).toHaveLength(254);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
@@ -427,6 +428,7 @@ describe('Coverage-Manifest', () => {
       // Manifesteinträgen ableitet. Bis E.2.6 fehlte, ließ sich dieser Test nicht schreiben.
       'E',
       'F',
+      'H',
       'I.3.5',
       'I.3.6',
       'I.3.7',

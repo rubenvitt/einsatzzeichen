@@ -47,6 +47,7 @@ import {
   ANHANG_F_F_FINDINGS,
   ANHANG_F_F_DEVIATIONS,
 } from './recipes-anhang-f.js';
+import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
 import { ANHANG_I_A_RECIPES } from './recipes-anhang-i.js';
 
 /**
@@ -243,6 +244,18 @@ const ANHANG_F_F_TECHNICAL_REVIEW: Review = {
     'vorbestehenden Snapshots bleiben hashgleich. Der finale Task-6-Kontaktbogen war zu diesem ' +
     'Zeitpunkt noch nicht erzeugt oder gesichtet. Die Organisation hilfsorganisation und ' +
     'sämtliche Fachzuordnungen bleiben im Domain-Review pending.',
+};
+
+const ANHANG_H_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'Die drei H-Originale wurden einzeln vermessen und aus Linien, Polylinien und Kreisen ' +
+    'unabhängig rekonstruiert. H.2 verwendet eine eigene veterinärmedizinische kompakte ' +
+    'Dekontaminationsmarke statt der Human-Dekontamination aus Kapitel 4. Snapshot-, ' +
+    'Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates prüfen den renderbaren Bestand; die ' +
+    'fachliche Zuordnung bleibt im Domain-Review pending.',
 };
 
 const ANHANG_I_A_TECHNICAL_REVIEW: Review = {
@@ -707,6 +720,7 @@ function technicalReviewFor(section: string): Review {
       ANHANG_F_F_DEVIATIONS[section],
     );
   }
+  if (Object.hasOwn(ANHANG_H_RECIPES, section)) return ANHANG_H_TECHNICAL_REVIEW;
   if (Object.hasOwn(ANHANG_I_A_RECIPES, section)) {
     return ANHANG_I_A_TECHNICAL_REVIEW;
   }
@@ -898,6 +912,7 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'D.3.7',
     'E',
     'F',
+    'H',
     'I.3.5',
     'I.3.6',
     'I.3.7',
