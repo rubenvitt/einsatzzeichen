@@ -201,13 +201,15 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
   }
 
   // Die Beschriftungszone steht **unterhalb** des Körpers; Lage und Tinte sind profilabhängig.
-  // Der angehobene Wasserrumpf E.2.27 bis E.2.31 führt sie 4,01 mm unter und 0,5618 mm rechts der
-  // Körperkante in Organisationsfarbe (Tinte 22,5379/24,0806/31,5778/26,9998 mm, Füllung
-  // #003296, in allen fünf Dateien gleich bis auf 0,0003 mm). G.3.5 belegt am gebänderten
-  // 12-mm-Kreis eine eigene schwarze Lage 1,0 mm unter und 3,0 mm rechts der Körperkante.
+  // E.2.27 bis E.2.31 belegen die tatsächliche Tintenlage und Organisationsfarbe am angehobenen
+  // Wasserrumpf (Tinte 22,5379/24,0806/31,5778/26,9998 mm, Füllung #003296, in allen fünf
+  // Dateien gleich bis auf 0,0003 mm). Das Profil modelliert diese Lage körperrelativ mit
+  // 4,01 mm vertikal und 0,5618 mm horizontal; wie `compose.ts` dokumentiert, ist diese Zerlegung
+  // eine Modellierungsentscheidung und keine direkte Messung der beiden Abstände. G.3.5 führt
+  // am gebänderten 12-mm-Kreis eigene schwarze Profilwerte von 1,0 mm und 3,0 mm.
   //
-  // Deshalb eine Ablehnung und keine Übertragung auf weitere Körperformen: beide Abstandspaare
-  // sind nur an ihrer jeweiligen Hülle gemessen. Auf einer `formation` erzeugten sie einen Lauf,
+  // Beide Wertesätze bleiben auf ihr jeweiliges Profil und dessen Hülle begrenzt; daraus folgt
+  // keine Übertragung auf weitere Körperformen. Auf einer `formation` erzeugten sie einen Lauf,
   // den keine Referenzdatei zeigt — und kein Gate meldete ihn: der Fingerprint sieht nur
   // `role: 'body'`, die Rasterprüfung nur die selbst deklarierte Box.
   if (

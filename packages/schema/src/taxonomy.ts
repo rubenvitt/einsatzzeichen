@@ -452,11 +452,12 @@ export interface BodyLabels {
   readonly center?: string;
   readonly bottomLeft?: string;
   /**
-   * Unten mittig im Körper, mit profilabhängiger Grundlinie. An F.1.18 und F.1.20 ist sie für
-   * die Formation 2,0 mm über der Körperunterkante gemessen (absolut y = 24,0 mm). G.3.5 belegt
-   * für `circle-12/foot-band` einen eigenen Abstand von 6,0 mm (absolut y = 22,0 mm). Beide
-   * Läufe sind um x = 16,0 mm zentriert und verwenden den Schriftgrad der unteren Zonen.
-   * An anderen Körperprofilen fehlt die Messung; `compose()` lehnt dort fail-closed ab.
+   * Unten mittig im Körper, mit profilabhängiger Grundlinie. Die Formation einschließlich
+   * `formation/foot-band` verwendet den an F.1.18 und F.1.20 gemessenen Abstand von 2,0 mm über
+   * der Körperunterkante (absolut y = 24,0 mm). G.3.5 belegt für `circle-12/foot-band` einen
+   * eigenen Abstand von 6,0 mm (absolut y = 22,0 mm). Beide Läufe sind um x = 16,0 mm zentriert
+   * und verwenden den Schriftgrad der unteren Zonen. Profile ohne eingetragene `bottomCenter`-
+   * Zone lehnt `compose()` fail-closed ab.
    */
   readonly bottomCenter?: string;
   readonly bottomRight?: string;
@@ -525,7 +526,7 @@ export interface BodyLabels {
    */
   readonly topLeftLines?: readonly [string, string];
   /**
-   * Rechtsbündiger Lauf unterhalb des Körpers; Lage und Tinte bestimmt das Körperprofil. Die
+   * Rechtsbündiger Lauf unterhalb des Körpers; Lage und Tinte bestimmen das Körperprofil. Die
    * angehobenen Wasserfahrzeuge E.2.27 bis E.2.31 führen ihn 4,01 mm unter der Körperunterkante
    * und 0,5618 mm rechts der Körperkante in der Organisationsfarbe (Tinte
    * 22,5379/24,0806/31,5778/26,9998 mm, Füllung #003296, Versalhöhe 2,9192 — selbst vermessen,
