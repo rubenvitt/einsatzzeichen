@@ -569,6 +569,38 @@ Einzelsichtung aller acht 900-px-Paare in
 [`docs/reviews/2026-08-25-f-d-visual-qa.md`](docs/reviews/2026-08-25-f-d-visual-qa.md). Diese
 Sichtung ist nicht der finale Task-6-Kontaktbogen; alle acht Domain-Reviews bleiben `pending`.
 
+## F-e: F.3.1 bis F.3.11
+
+F-e ergänzt elf Platzzeichen und führt den Katalog auf 129 Rezepte, 397 Renderfälle und
+416 Manifestzeilen. Alle elf verwenden den separat vermessenen `circle-12` mit Radius 12 mm;
+F.3.1 bis F.3.4 sowie F.3.6 bis F.3.11 liegen um (16|16), F.3.5 verwendet als einzige Fassung
+`raised-gable` mit abgesenktem Kreis um (16|18) und dem unabhängig vermessenen Giebel
+(3|11)–(16|1)–(29|11). Kein Platzzeichen trägt einen Stärkegrad, und weder Formations- noch
+Fahrzeuggeometrie wird auf den Kreis skaliert.
+
+`medical-service` und `physician` bleiben die belegten semantischen Marken. Die sieben nur
+bildlich benannten Innenformen erhalten dagegen neutrale `TechnicalBodyMarkId`s mit vollständiger
+geometrischer A11y-Beschreibung. Ihre Registry dispatcht exakt nach Art, Variante und Marke;
+unbekannte Paare werfen. Gemeinsame Teilungslinien von kombinierter Sanitäts-/Arztmarke werden
+referenzidentisch nur einmal gezeichnet. F.3.10 verwendet die aus gegenüberliegenden Konturseiten
+gemittelte Raute (16|6)–(22,5|12,5)–(16|19)–(9,5|12,5), nicht eine auf ganze Außenkanten
+vergrößerte Näherung.
+
+Die Läufe `UHS` und `50` beginnen links der jeweiligen Kreisfläche. Der additive
+`topLeftMetrics`-Vertrag akzeptiert deshalb am normalen und am Giebelkreis nur das vollständige
+quellenvermessene Objekt. Negative Relativwerte bleiben erlaubt, solange die resultierende
+Textbox vollständig in der ViewBox liegt und ihr Anker die deklarierte rechte Boxkante x = 26 mm
+nicht überschreitet. Die Schrift steht profilgebunden schwarz und wird sowohl gegen die weiße
+HiOrg-Körperfläche als auch gegen `surface` geprüft. Jeder gemessene `circle-12` verlangt auch
+ohne Label `organization: hilfsorganisation`; andere oder fehlende Zuordnungen bleiben
+fail-closed.
+
+Die exakte Elf-Rezept-Matrix, Messwerte und Vertragsgrenzen stehen in
+[`docs/decisions/2026-08-25-anhang-f-e.md`](docs/decisions/2026-08-25-anhang-f-e.md), die
+Einzelsichtung aller elf 900-px-Paare in
+[`docs/reviews/2026-08-25-f-e-visual-qa.md`](docs/reviews/2026-08-25-f-e-visual-qa.md). Diese
+Sichtung ist nicht der finale Task-6-Kontaktbogen; alle elf Domain-Reviews bleiben `pending`.
+
 ## Der lokale Referenzbestand
 
 `taktische-zeichen/` ist ein **lokaler Ordner mit 661 damals von der BABZ bereitgestellten
