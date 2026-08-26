@@ -906,9 +906,10 @@ export const ANHANG_F_B_FINDINGS: Readonly<Record<string, string>> = Object.free
     'behauptet damit weder SymbolKind noch CapabilityId, denn ihre fachliche Benennung ist aus ' +
     'dem Bild allein nicht ableitbar.',
   'F.1.17':
-    'Neben Zelt, Fußband und Lauf „250“ steht eine gegenüber 4.8.13 deutlich verkleinerte ' +
-    'Verpflegungszeichnung. Sie bleibt dieselbe Capability `catering`, erhält aber eine eigene ' +
-    'am F.1.17-Raster belegte randbündige Fassung statt eines Rückfalls auf die Boxfassung.',
+    'Neben Zelt, Fußband und Lauf „250“ steht eine gegenüber 4.8.13 deutlich verkleinerte, ' +
+    'hohle Verpflegungskontur. Sie bleibt dieselbe Capability `catering`, wird aber als eigene ' +
+    'schwarze 0,5-mm-Outline auf der am F.1.17-Raster belegten Mittellinienbox ' +
+    '(11|11,5)–(20,5|21,5) gebaut statt auf die Boxfassung zurückzufallen.',
   'F.1.13':
     'F.1.13 umschließt Teilung und Arztleiste mit einem Kreis r 7 mm um (16|17). F.1.21 trägt ' +
     'dagegen r 6,5 mm um (16|18) mit eigener Innenzeichnung; beide werden als getrennte rein ' +

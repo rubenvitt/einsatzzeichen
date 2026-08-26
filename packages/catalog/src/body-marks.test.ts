@@ -200,25 +200,60 @@ describe('bodyMark() — F.1.3-Mobilmodul', () => {
 });
 
 describe('bodyMark() — reduzierte Verpflegungsmarke aus F.1.17', () => {
-  it('setzt die vorhandene Capability als eigene randbündige Fassung mittig in das Zelt', () => {
-    // Eigene Rastermessung an F.1.17: die Tinte liegt ungefähr in der Box 10,5…20,5 ×
-    // 12…20 mm. Das ist nicht die 20 × 16 mm große Boxfassung aus 4.8.13. Die kubischen
-    // Kontrollpunkte unten sind die um die Körpermitte halbierte, bereits katalogisierte
-    // 4.8.13-Kontur; es werden keine Pfaddaten aus der Referenzdatei übernommen.
-    expect(bodyMarkWithContext(
+  const sourceContractMark = (): Primitive => {
+    const marks = bodyMarkWithContext(
       'catering',
       { kind: 'formation', bodyVariant: 'foot-band' },
       formationBodyMm,
-    )).toEqual([
-      {
-        type: 'path',
-        role: 'pictogram',
-        d:
-          'M 16 12 C 12.5 12 10.5 13.5 10.5 16 C 10.5 18.5 12.5 20 16 20 ' +
-          'C 18 20 19.5 19 20.5 17.5 L 16 16 L 20.5 13.5 C 19.5 12.5 18 12 16 12 Z',
-        style: { fill: 'schwarz' },
-      },
-    ]);
+    );
+    expect(marks).toHaveLength(1);
+    return marks[0] as Primitive;
+  };
+
+  it('zeichnet die gemessene F.1.17-Kontur als schwarzen 0,5-mm-Umriss', () => {
+    // Unabhängig aus den expandierten Quellkonturen zurückgerechnet: außen/innen liegen
+    // oben bei y=11,25/11,75, unten bei y=21,75/21,25 und links bei x=10,75/11,25 mm.
+    // Die Miterkanten der rechten Spitze liegen bei x≈20,80/20,12 um den Konstruktionsanker
+    // x=20,5. Daraus folgen die Mittellinienbox (11|11,5)–(20,5|21,5) und (16|16,5) als Lage.
+    const mark = sourceContractMark();
+
+    expect(mark).toMatchObject({
+      type: 'path',
+      role: 'pictogram',
+    });
+    expect(mark.style).toEqual({
+      fill: 'none',
+      stroke: 'schwarz',
+      strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+    });
+    expect(boundsOfMm(mark)).toEqual({ minX: 11, minY: 11.5, maxX: 20.5, maxY: 21.5 });
+  });
+
+  it('lässt den Ringinnenraum weiß und setzt nur die gemessene Kontur schwarz', () => {
+    const mark = sourceContractMark();
+    const image = new Resvg(renderSvg({
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'rect', role: 'body', x: 0, y: 0,
+          width: DEFAULT_VIEWBOX_MM.width, height: DEFAULT_VIEWBOX_MM.height,
+          style: { fill: 'weiss' },
+        },
+        mark,
+      ],
+    }, { size: 2048 })).render();
+    const pixels = image.pixels;
+    const rgbaAtMm = (xMm: number, yMm: number): readonly number[] => {
+      const pixelsPerMm = image.width / DEFAULT_VIEWBOX_MM.width;
+      const x = Math.round(xMm * pixelsPerMm);
+      const y = Math.round(yMm * pixelsPerMm);
+      const offset = (y * image.width + x) * 4;
+      return Array.from(pixels.slice(offset, offset + 4));
+    };
+
+    expect(rgbaAtMm(16, 14)).toEqual([255, 255, 255, 255]);
+    expect(rgbaAtMm(16, 11.5)).toEqual([0, 0, 0, 255]);
+    expect(rgbaAtMm(11, 16.5)).toEqual([0, 0, 0, 255]);
   });
 });
 

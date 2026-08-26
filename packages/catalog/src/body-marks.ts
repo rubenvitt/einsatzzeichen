@@ -346,25 +346,30 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
   },
 
   /**
-   * F.1.17: gegenüber der Boxfassung 4.8.13 um die Körpermitte halbierte Verpflegungskontur.
-   * Die F.1-Rastermessung bestätigt die Zielbox 10,5…20,5 × 12…20 mm. Die Kontrollpunkte sind
-   * aus der eigenen, bereits katalogisierten 4.8.13-Kontur transformiert; keine Pfaddaten der
-   * Referenzdatei werden übernommen.
+   * F.1.17: gegenüber der Boxfassung 4.8.13 verkleinerte, nach unten versetzte
+   * Verpflegungskontur. Die expandierten Quellkonturen belegen eine schwarze 0,5-mm-Linie um
+   * die Mittellinienbox 11…20,5 × 11,5…21,5 mm und einen weißen Innenraum. Die lesbaren
+   * Kontrollpunkte konstruieren diese C-/Ringtopologie neu; Pfaddaten der Referenzdatei werden
+   * nicht übernommen.
    */
   catering: (bounds) => {
     const cx = (bounds.minX + bounds.maxX) / 2;
-    const cy = (bounds.minY + bounds.maxY) / 2;
+    const cy = (bounds.minY + bounds.maxY) / 2 + 0.5;
     return [
       {
         type: 'path',
         role: 'pictogram',
         d:
-          `M ${cx} ${cy - 4} C ${cx - 3.5} ${cy - 4} ${cx - 5.5} ${cy - 2.5} ` +
-          `${cx - 5.5} ${cy} C ${cx - 5.5} ${cy + 2.5} ${cx - 3.5} ${cy + 4} ${cx} ${cy + 4} ` +
-          `C ${cx + 2} ${cy + 4} ${cx + 3.5} ${cy + 3} ${cx + 4.5} ${cy + 1.5} ` +
-          `L ${cx} ${cy} L ${cx + 4.5} ${cy - 2.5} C ${cx + 3.5} ${cy - 3.5} ` +
-          `${cx + 2} ${cy - 4} ${cx} ${cy - 4} Z`,
-        style: { fill: 'schwarz' },
+          `M ${cx} ${cy - 5} C ${cx - 2.75} ${cy - 5} ${cx - 5} ${cy - 2.75} ` +
+          `${cx - 5} ${cy} C ${cx - 5} ${cy + 2.75} ${cx - 2.75} ${cy + 5} ${cx} ${cy + 5} ` +
+          `C ${cx + 2} ${cy + 5} ${cx + 3.5} ${cy + 4} ${cx + 4.5} ${cy + 2.25} ` +
+          `L ${cx} ${cy} L ${cx + 4.5} ${cy - 2.25} C ${cx + 3.5} ${cy - 4} ` +
+          `${cx + 2} ${cy - 5} ${cx} ${cy - 5} Z`,
+        style: {
+          fill: 'none',
+          stroke: 'schwarz',
+          strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+        },
       },
     ];
   },

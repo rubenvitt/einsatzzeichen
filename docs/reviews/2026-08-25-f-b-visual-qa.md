@@ -1,7 +1,7 @@
 # Visual QA: Anhang F-b
 
-Datum: 25. August 2026  
-Scope: F.1.3, F.1.12 bis F.1.22 einschließlich zwei Alternativdarstellungen  
+Datum: 25. August 2026
+Scope: F.1.3, F.1.12 bis F.1.22 einschließlich zwei Alternativdarstellungen
 Status: technische Einzelprüfung abgeschlossen; Domain-Review pending
 
 ## Prüfaufbau
@@ -24,7 +24,7 @@ gesehen behauptet.
 | `F.1.15_Arzttrupp.svg` | `F.1.15` | `trupp` und Arztteilung bestätigt. |
 | `F.1.15_Arzttrupp_Alternative.svg` | `F.1.15#alternative` | `trupp`, Arztteilung und Intensivbalken bestätigt. |
 | `F.1.16_Drohnentrupp.svg` | `F.1.16` | `trupp`; Winkel und beide gefüllten Dreiecke als technische Geometrie gebaut, nicht still ausgelassen. Keine Capability-Semantik behauptet. |
-| `F.1.17_Gruppe Verpflegung.svg` | `F.1.17` | `gruppe`, Fußband, Lauf `250`, Zelt und reduzierte `catering`-Kontur bestätigt. |
+| `F.1.17_Gruppe Verpflegung.svg` | `F.1.17` | Die ursprüngliche Einzelprüfung bestätigte die reduzierte `catering`-Form zu früh. Der Task-6-Gesamtreview fand den fehlenden weißen Innenraum; korrigiert ist eine schwarze 0,5-mm-Outline um (16|16,5). |
 | `F.1.18_Gruppe für soziale Betreuung.svg` | `F.1.18` | `gruppe`, Zelt, `100` oben links und `SOZ` unten mittig bestätigt; kein `bottomLeft`-Ersatz. |
 | `F.1.19_Gruppe zur Herrichtung von Notunterkünften.svg` | `F.1.19` | `gruppe`, unverändertes normales Zelt, Bett und `120` bestätigt. |
 | `F.1.20_Schnelleinsatzgruppe soziale Betreuung.svg` | `F.1.20` | `gruppe`, Zelt, `100` oben links und `SEG` unten mittig bestätigt; kein zweiter `topLeft`- oder `bottomLeft`-Lauf. |
@@ -49,7 +49,7 @@ F.1.16 und F.1.21 etablierte fachliche Begriffe tragen und ob die weißen F-Kör
 `hilfsorganisation` ausdrücken. Bis dahin bleibt das Domain-Review jeder neuen Manifestzeile
 `pending`.
 
-## Finaler Task-6-Kontaktbogen
+## Task-6-Kontaktbogen und Reviewkorrektur
 
 Am 26. August 2026 wurde
 `out/lfh-417/contact-sheets/LFH-448-f-b.png` einzeln in Originalauflösung
@@ -58,5 +58,9 @@ Am 26. August 2026 wurde
 Alternativen sind getrennt, vollständig beschriftet und ungeclippt. F.1.3 zeigt hier ausdrücklich
 den echten gebauten Katalogstand mit Badge `DEFERRED CARRY-IN AUS F-a`; er ist damit nicht mit dem
 historischen LFH-447-Platzhalter zu verwechseln. Kopf-, Fuß- und Innenmarken sowie die langen
-Beschriftungen bleiben vollständig sichtbar. Kein neuer technischer Blocker; Domain-Reviews
-bleiben `pending`.
+Beschriftungen bleiben vollständig sichtbar. Gerade dieser am damaligen HEAD `ca4d6fb0340c`
+erzeugte Bogen deckte jedoch den zuvor übersehenen F.1.17-Blocker auf: Die Referenz zeigt eine
+hohle C-/Ringkontur, die damalige Katalogseite eine vollständig schwarze Füllung. Der Builder und
+exakt die beiden F.1.17-Snapshots sind auf die vermessene 0,5-mm-Outline mit weißem Innenraum
+korrigiert. Der alte Bogen belegt damit den Fund, nicht den korrigierten Stand; dessen neu
+erzeugter Task-6-Bogen ist ein separater Evidence-Schritt. Das Domain-Review bleibt `pending`.

@@ -161,8 +161,9 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   // Anhang F, Teilslice F-a: die sanitätsdienstlichen Einheiten F.1.1 bis F.1.11 — elf Zeilen
   // für zehn Abschnitte, weil F.1.11 als erster Abschnitt des Katalogs eine Alternativdarstellung
   // führt. Der Zuschnitt (`docs/decisions/2026-08-18-anhang-f-zuschnitt.md`) rechnet F-a elf
-  // Abschnitte zu; F.1.3 hat heute kein Rezept und deshalb hier keinen Platz — der
-  // Ledger ist mit dem **Manifest** deckungsgleich und nicht mit dem Zuschnitt, und diese
+  // Abschnitte zu; im damaligen F-a-Stand hatte F.1.3 noch kein Rezept und deshalb in diesem
+  // Block keinen Platz. F-b hat es später als aufgeschobenen Carry-in ergänzt. Der Ledger ist
+  // mit dem **Manifest** deckungsgleich und nicht mit dem historischen Zuschnitt, und diese
   // Deckungsgleichheit prüft `domain-reviews.test.ts` in beide Richtungen. Eigener Block, weil hier zum ersten Mal
   // die **Organisation selbst** zur Frage steht: alle 66 F-Dateien führen ausschliesslich `#fff`,
   // und ob das `hilfsorganisation` bedeutet oder gar keine Organisation, sagt die Quelle nicht —
