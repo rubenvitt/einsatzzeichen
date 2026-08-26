@@ -103,8 +103,8 @@ Artefakte belegt sind:
    `git diff --check` sind grün.
 9. Ein unabhängiger Code- und Spec-Review findet keinen offenen Pflichtbefund.
 
-Die unveränderte Baseline am Branch-Start lautet: 60 Testdateien,
-4.052 Tests, Typecheck ohne Fehler, 424 Manifesteinträge und bestandenes
+Die nach dem Rebase auf den aktuellen `origin/main` erneut geprüfte Baseline lautet:
+60 Testdateien, 4.074 Tests, Typecheck ohne Fehler, 427 Manifesteinträge und bestandenes
 Coverage-Gate.
 
 ## 6. Visueller Nachweis und Lizenzgrenze
