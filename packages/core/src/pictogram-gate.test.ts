@@ -627,6 +627,10 @@ describe('Clipping-Gate', () => {
       strengthHead: () => {
         throw new Error('Für diesen Test nicht aufgerufen.');
       },
+      functionRole: () => {
+        throw new Error('Für diesen Test nicht aufgerufen.');
+      },
+      administrativeHead: () => undefined,
       vehicleChassis: () => {
         throw new Error('Für diesen Test nicht aufgerufen.');
       },

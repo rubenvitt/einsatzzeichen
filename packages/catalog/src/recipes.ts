@@ -1,12 +1,15 @@
 import {
   bodyLabelInk,
   compose,
+  functionRoleTextInk,
   type CatalogPorts,
   type ContrastRequirement,
 } from '@einsatzzeichen/core';
 import type { Drawing, OrganizationId, SymbolSpec } from '@einsatzzeichen/schema';
 import { baseDrawing } from './base-symbols.js';
 import { bodyMark } from './body-marks.js';
+import { administrativeHead } from './administrative-heads.js';
+import { functionRole } from './function-roles.js';
 import { organizationColor } from './organizations.js';
 import { MINIMUM_TEXT_CONTRAST } from './pictograms/contrast-contract.js';
 import { pictogram } from './pictograms/index.js';
@@ -29,12 +32,15 @@ import {
   ANHANG_F_E_RECIPES,
   ANHANG_F_F_RECIPES,
 } from './recipes-anhang-f.js';
+import { ANHANG_D_TASK_2_RECIPES } from './recipes-anhang-d.js';
 
 const PORTS: CatalogPorts = {
   baseDrawing,
   bodyMark,
   organizationColor,
   strengthHead,
+  functionRole,
+  administrativeHead,
   vehicleChassis,
   pictogram,
 };
@@ -75,6 +81,7 @@ export interface Recipe {
  * (`CONTRAST_EXCEPTIONS`).
  */
 export const RECIPES = {
+  ...ANHANG_D_TASK_2_RECIPES,
   ...ANHANG_F_A_RECIPES,
   ...ANHANG_F_B_RECIPES,
   ...ANHANG_F_C_RECIPES,
@@ -105,15 +112,6 @@ export const RECIPES = {
       organization: 'feuerwehr',
       strength: 'gruppe',
       capabilities: ['fire-fighting'],
-    },
-  },
-  'D.3.7': {
-    title: 'Zugführer der Feuerwehr',
-    referenceAsset: 'D.3.7_Zugführer der Feuerwehr.svg',
-    spec: {
-      kind: 'person',
-      organization: 'feuerwehr',
-      strength: 'zug',
     },
   },
 } as const satisfies Record<string, Recipe>;
@@ -163,10 +161,31 @@ export function labelContrastRequirements(
 ): readonly ContrastRequirement[] {
   const inBody = new Set<OrganizationId>();
   const belowBody = new Set<OrganizationId>();
+  const roleText = new Map<string, ContrastRequirement>();
   let aboveBody = false;
   let circleTopLeftOnSurface = false;
   for (const recipe of recipes) {
     const { labels, organization } = recipe.spec;
+    if (recipe.spec.functionRole !== undefined) {
+      const definition = functionRole(recipe.spec.functionRole);
+      const bodyFill = organization === undefined ? 'weiss' : organizationColor(organization);
+      for (const run of [
+        ...definition.layout.roleRuns,
+        ...(definition.layout.carrierRun === undefined ? [] : [definition.layout.carrierRun]),
+      ]) {
+        const foreground = functionRoleTextInk(run, bodyFill);
+        const background = run.contrastBackground === 'body'
+          ? bodyFill
+          : run.contrastBackground;
+        const context = `Funktionslauf ${definition.id}: ${run.content}`;
+        roleText.set(`${foreground}/${background}/${context}`, {
+          foreground,
+          background,
+          context,
+          minimum: MINIMUM_TEXT_CONTRAST,
+        });
+      }
+    }
     // Ein Rezept ohne Organisation bleibt hier aussen vor, obwohl `compose.ts` auch ihm eine
     // Körperfüllung gibt (die Grundfüllung des Grundzeichens, ersatzweise `weiss`). Der Bestand
     // kennt heute kein solches Rezept — alle 80 führen eine Organisation —, und ein Paar aus
@@ -195,6 +214,7 @@ export function labelContrastRequirements(
     }
   }
   return [
+    ...roleText.values(),
     ...[...inBody].map<ContrastRequirement>((organization) => ({
       // Dieselbe Ableitung, die `compose.ts` beim Zeichnen anwendet: schwarz auf weissem Körper,
       // sonst weiss. Aufgerufen und nicht nachgebaut, damit Vertrag und Zeichnung nicht

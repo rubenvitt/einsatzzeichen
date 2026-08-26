@@ -1153,6 +1153,30 @@ describe('bodyMark() — F.3.1 bis F.3.19 auf Kreis und reduziertem Haus', () =>
 });
 
 describe('BODY_MARK_IDS', () => {
+  it('zeichnet die beiden D.1.9-Kappen als getrennt vermessene technische Marken', () => {
+    const primary = Reflect.apply(bodyMarkWithContext, undefined, [
+      'formation-solid-cap-3mm', { kind: 'formation' }, formationBodyMm,
+    ]);
+    expect(primary).toEqual([
+      {
+        type: 'rect', role: 'pictogram', x: 1, y: 6, width: 30, height: 3,
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+    ]);
+
+    const alternative = Reflect.apply(bodyMarkWithContext, undefined, [
+      'formation-solid-cap-4mm-three-hole-row', { kind: 'formation' }, formationBodyMm,
+    ]);
+    expect(alternative).toHaveLength(4);
+    expect(alternative[0]).toMatchObject({
+      type: 'rect', role: 'pictogram', x: 1, y: 6, width: 30, height: 4,
+    });
+    expect(alternative.slice(1)).toEqual([11, 16, 21].map((cx) => ({
+      type: 'circle', role: 'pictogram', cx, cy: 7.75, r: 1.5,
+      style: { fill: 'weiss', stroke: 'none' },
+    })));
+  });
+
   it('führt jede an Anhang F.1 vermessene Fähigkeit, und jede davon zeichnet auch', () => {
     // Enthaltensein und nicht Gleichheit — und der Zuwachs hat die Bauart schon bestätigt: mit
     // `care` (F.1.4) kam ein fünfter vermessener Fachdienst dazu, ohne dass dieser Test dafür

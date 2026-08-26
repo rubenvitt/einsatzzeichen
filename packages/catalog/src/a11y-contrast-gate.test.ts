@@ -157,6 +157,29 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     });
   });
 
+  it('leitet Rollen- und Trägertext aus derselben Rollenfassung und Hintergrundangabe ab', () => {
+    const derived = labelContrastRequirements([{
+      title: 'Technischer Einsatzleiter',
+      referenceAsset: 'D.3.1_Technischer Einsatzleiter LK Ahrweiler.svg',
+      spec: {
+        kind: 'person', organization: 'fuehrung-leitung', administrativeLevel: 'kreis',
+        functionRole: 'technical-incident-commander',
+      },
+    }]);
+    expect(derived).toEqual([
+      {
+        foreground: 'schwarz', background: 'gelb',
+        context: 'Funktionslauf technical-incident-commander: TEL',
+        minimum: MINIMUM_TEXT_CONTRAST,
+      },
+      {
+        foreground: 'schwarz', background: 'surface',
+        context: 'Funktionslauf technical-incident-commander: AW',
+        minimum: MINIMUM_TEXT_CONTRAST,
+      },
+    ]);
+  });
+
   it('hält weiss auf orange als entschiedene Ausnahme fest, die kein Theme löst', () => {
     // **Diese Zeile hat ihre Rolle gewechselt, nicht ihre Zahlen.** Bis zum 18. August 2026 hielt
     // sie einen offenen Punkt fest und E.2.6 blieb ungebaut. Seither ist entschieden (Nutzer,

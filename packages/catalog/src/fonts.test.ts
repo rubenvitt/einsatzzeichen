@@ -11,6 +11,7 @@ import {
 } from '@einsatzzeichen/schema';
 import { TEXT_FONT_FAMILY, TEXT_FONT_PATH, TEXT_FONT_SHA256, resvgFontOptions } from './fonts.js';
 import { RECIPES, composeFromCatalog, type Recipe } from './recipes.js';
+import { FUNCTION_ROLE_DEFINITIONS } from './function-roles.js';
 
 describe('Textschrift', () => {
   it('liegt im Repository und hat die erwartete Prüfsumme', () => {
@@ -96,6 +97,10 @@ const formationCatalog: CatalogPorts = {
   strengthHead: () => {
     throw new Error('Für diese Prüfung nicht aufgerufen.');
   },
+  functionRole: () => {
+    throw new Error('Für diese Prüfung nicht aufgerufen.');
+  },
+  administrativeHead: () => undefined,
   vehicleChassis: () => {
     throw new Error('Für diese Prüfung nicht aufgerufen.');
   },
@@ -478,4 +483,28 @@ describe('Rasterevidenz für Text (resvgFontOptions())', () => {
       }
     },
   );
+
+  it('hält die deklarierte boxMm aller gemessenen Funktionsläufe ein', () => {
+    for (const definition of Object.values(FUNCTION_ROLE_DEFINITIONS)) {
+      const runs = [
+        ...definition.layout.roleRuns,
+        ...(definition.layout.carrierRun === undefined ? [] : [definition.layout.carrierRun]),
+      ];
+      if (runs.length === 0) continue;
+      const drawing: Drawing = {
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: runs.map((run) => ({
+          type: 'text', role: 'label', content: run.content,
+          x: run.anchorXMm, y: run.baselineYMm, sizeMm: run.sizeMm,
+          anchor: run.anchor, baseline: 'alphabetic', boxMm: run.boxMm,
+          minRenderPx: run.minRenderPx,
+          style: { fill: run.ink === 'body-contrast' ? 'schwarz' : run.ink },
+        })),
+      };
+      for (const { inkPixelCount, outsideBoxCount } of labelInkAgainstBox(drawing)) {
+        expect(inkPixelCount, definition.id).toBeGreaterThan(0);
+        expect(outsideBoxCount, definition.id).toBe(0);
+      }
+    }
+  });
 });

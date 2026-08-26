@@ -367,6 +367,17 @@ describe('Coverage-Manifest', () => {
     expect(COVERAGE_MANIFEST.baseline).toBe('bbk-babz-2025');
   });
 
+  it('haelt D.3.7 unter stabilem Manifestkey mit eigenem Funktionsreview', () => {
+    const entry = COVERAGE_MANIFEST.entries.find(
+      (candidate) => candidate.sourceId === 'bbk-babz-2025:D.3.7',
+    );
+    expect(entry).toMatchObject({
+      variant: 'primary', implementation: 'recipe.D.3.7', coverage: 'composition-recipe',
+    });
+    expect(entry?.review.technical.note).toContain('gemessenen Funktionsvertrag');
+    expect(entry?.review.technical.note).toContain('rechte geschlossene Raute');
+  });
+
   it('beansprucht nur den Umfang dieses Slice', () => {
     expect(COVERAGE_MANIFEST.scope).toEqual([
       '1',

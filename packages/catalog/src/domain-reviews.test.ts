@@ -104,6 +104,11 @@ describe('Fachreview-Ledger', () => {
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
   });
 
+  it('laesst den stabilen D.3.7-Schluessel trotz technischer Migration fachlich offen', () => {
+    expect(MANIFEST_DOMAIN_REVIEWS['bbk-babz-2025:D.3.7#primary'])
+      .toEqual({ status: 'pending' });
+  });
+
   it('wirft für einen nicht inventarisierten Manifestschlüssel', () => {
     expect(() => manifestDomainReviewFor('bbk-babz-2025:9.9#primary')).toThrow(/9\.9/);
   });

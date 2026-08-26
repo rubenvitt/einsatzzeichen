@@ -8,7 +8,12 @@ import {
   type ChassisShape,
   type ColorToken,
   type Drawing,
+  type FunctionRoleDefinition,
+  type FunctionRoleId,
+  type FunctionRoleTextRun,
   type HeadShape,
+  type AdminLevelId,
+  type AdministrativeHeadShape,
   type OrganizationId,
   type PictogramDefinition,
   type PictogramId,
@@ -350,6 +355,14 @@ export function bodyLabelInk(bodyFill: ColorToken): ColorToken {
   return bodyFill === 'weiss' ? 'schwarz' : 'weiss';
 }
 
+/** Tinte eines gemessenen Funktionslaufs; nur `body-contrast` wird aus der Flaeche abgeleitet. */
+export function functionRoleTextInk(
+  run: FunctionRoleTextRun,
+  bodyFill: ColorToken,
+): ColorToken {
+  return run.ink === 'body-contrast' ? bodyLabelInk(bodyFill) : run.ink;
+}
+
 /**
  * Nur die beiden vermessenen F.3-Kreisfassungen tragen negative körperrelative Labelmaße.
  * Ihre sechs Dezimalstellen werden privat am exakten Art-/Variantenpaar normalisiert; das ist
@@ -609,6 +622,10 @@ export interface CatalogPorts {
   baseDrawing(kind: SymbolKind, variant?: BodyVariantId): Drawing;
   organizationColor(id: OrganizationId): ColorToken;
   strengthHead(id: StrengthId): HeadShape;
+  /** Totaler Resolver fuer alle 25 vollstaendig vermessenen Funktionsfassungen. */
+  functionRole(id: FunctionRoleId): FunctionRoleDefinition;
+  /** Partieller Resolver: nur Kreis, Nationalstaat und EU sind als Kopf vermessen. */
+  administrativeHead(id: AdminLevelId): AdministrativeHeadShape | undefined;
   /**
    * Fahrwerkszone je Fahrzeugkategorie (Kapitel 5.1). Neben `strengthHead` und nicht in ihm: die
    * Kopfzone verankert an der Oberkante ihrer Zone, die Fahrwerkszone an der Körperunterkante,
@@ -749,10 +766,21 @@ function composeBodyMarkPrimitives(groups: readonly (readonly Primitive[])[]): P
 }
 
 export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: ComposeOptions = {}): Drawing {
-  const issues = validateSpec(spec);
+  const roleDefinition = spec.functionRole !== undefined
+    ? catalog.functionRole(spec.functionRole)
+    : undefined;
+  const administrativeHead = spec.administrativeLevel !== undefined
+    ? catalog.administrativeHead(spec.administrativeLevel)
+    : undefined;
+  const issues = validateSpec(spec, { functionRole: roleDefinition, administrativeHead });
   if (issues.length > 0) throw new CompositionError(issues);
 
-  const base = catalog.baseDrawing(spec.kind, spec.bodyVariant);
+  const base = roleDefinition === undefined
+    ? catalog.baseDrawing(spec.kind, spec.bodyVariant)
+    : {
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [roleDefinition.layout.body, ...roleDefinition.layout.bodyAdditions],
+      };
   const body = base.children.find((child) => child.role === 'body');
   if (!body) throw new Error(`Grundzeichen "${spec.kind}" hat kein body-Primitiv.`);
   // Zusatzgeometrie des Grundzeichens — Deichsel, L-Rahmen. Bis zum Teilslice E.2 nahm
@@ -766,7 +794,14 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
 
   // Dieselbe Kopfzone sitzt je nach Körperform unterschiedlich hoch — deshalb
   // rechnet erst placeHead die relativen Marken in absolute Koordinaten um.
-  const headBox = headShape ? placeHead(profile, headShape.heightMm) : null;
+  const headBox = headShape
+    ? roleDefinition === undefined
+      ? placeHead(profile, headShape.heightMm)
+      : {
+          topMm: roleDefinition.layout.headTopMm!,
+          bottomMm: roleDefinition.layout.headTopMm! + headShape.heightMm,
+        }
+    : null;
   const headPrimitives: Primitive[] =
     headShape && headBox
       ? headShape.marks.map((mark) => ({
@@ -779,7 +814,20 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
         }))
       : [];
 
-  const placedBody = profile.place(body, headBox?.bottomMm ?? null);
+  if (administrativeHead !== undefined && roleDefinition !== undefined) {
+    headPrimitives.push({
+      type: 'group',
+      role: 'head',
+      transform: {
+        translate: { dxMm: 0, dyMm: roleDefinition.layout.headTopMm! },
+      },
+      children: administrativeHead.primitives,
+    });
+  }
+
+  const placedBody = roleDefinition === undefined
+    ? profile.place(body, headBox?.bottomMm ?? null)
+    : body;
 
   // Einzige belegte Ausnahme: F.1.17 führt `foot-band` zusammen mit der Kopfzone `gruppe`.
   // Diese Kopfzone verschiebt den Formationskörper nicht; Band und Hülle bleiben auf y 23…26.
@@ -962,6 +1010,45 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
         bodyLabelInk(bodyFill),
       )
     : [];
+
+  const roleTextPrimitives: Primitive[] = roleDefinition === undefined
+    ? []
+    : [
+        ...roleDefinition.layout.roleRuns,
+        ...(roleDefinition.layout.carrierRun === undefined
+          ? []
+          : [roleDefinition.layout.carrierRun]),
+      ].map((run) => ({
+        type: 'text',
+        role: 'label',
+        content: run.content,
+        x: run.anchorXMm,
+        y: run.baselineYMm,
+        sizeMm: run.sizeMm,
+        anchor: run.anchor,
+        baseline: 'alphabetic',
+        boxMm: run.boxMm,
+        minRenderPx: run.minRenderPx,
+        style: { fill: functionRoleTextInk(run, bodyFill) },
+      }));
+
+  if (roleDefinition !== undefined) {
+    return {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        ...headPrimitives,
+        filled,
+        ...extras,
+        ...bodyMarkPrimitives,
+        ...roleDefinition.layout.decorations,
+        ...roleTextPrimitives,
+        ...labels,
+        ...footPrimitives,
+      ],
+      ...(options.title !== undefined ? { title: options.title } : {}),
+      ...(options.description !== undefined ? { description: options.description } : {}),
+    };
+  }
 
   // Das Fahrwerk steht **nach** dem gefüllten Körper: seine Marken ragen 0,25 mm in dessen
   // Strichband hinein (Radaußenkante 25,75 mm gegen Körperunterkante 26,0 bei Strich 0,5), und

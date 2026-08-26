@@ -2,6 +2,42 @@ import { describe, expect, it } from 'vitest';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 import { validateSpec } from './validate.js';
 
+const runtimeRoleRun = (overrides: Record<string, unknown> = {}) => ({
+  content: 'TEL',
+  anchorXMm: 16,
+  baselineYMm: 18.5,
+  sizeMm: 7,
+  anchor: 'middle',
+  boxMm: { xMm: 10, yMm: 13, widthMm: 12, heightMm: 6 },
+  minRenderPx: 37,
+  ink: 'schwarz',
+  contrastBackground: 'body',
+  ...overrides,
+});
+
+const runtimeRoleDefinition = (overrides: Record<string, unknown> = {}) => ({
+  id: 'fire-service-platoon-commander',
+  title: 'Zugführer der Feuerwehr',
+  kind: 'person',
+  expectedHead: 'strength',
+  allowedBodyMarks: ['fire-fighting'],
+  layout: {
+    headTopMm: 1,
+    body: { type: 'rect', role: 'body', x: 3, y: 5, width: 26, height: 26 },
+    bodyAdditions: [],
+    decorations: [],
+    roleRuns: [],
+  },
+  ...overrides,
+});
+
+function validateRuntime(
+  spec: Record<string, unknown>,
+  context: Record<string, unknown> = {},
+): ReturnType<typeof validateSpec> {
+  return Reflect.apply(validateSpec, undefined, [spec, context]);
+}
+
 describe('validateSpec', () => {
   it('akzeptiert eine Löschstaffel', () => {
     const spec: SymbolSpec = {
@@ -328,11 +364,134 @@ describe('validateSpec', () => {
     ).toEqual([]);
   });
 
-  it('lehnt eine Verwaltungsstufe ab, solange sie nichts zeichnet', () => {
-    // Vorbestehender stiller Ausfall, nicht von LFH-424 erzeugt: bis hierher lieferte
-    // `validateSpec` [] und `compose()` byteidentisches SVG mit und ohne das Feld.
-    const issues = validateSpec({ kind: 'formation', administrativeLevel: 'kreis' });
-    expect(issues.map((i) => i.rule)).toEqual(['administrative-level-not-implemented']);
+  it('akzeptiert ausschließlich eine aufgelöste, vermessene Verwaltungsstufe', () => {
+    const supportedSpec = {
+      kind: 'person',
+      administrativeLevel: 'kreis',
+      functionRole: 'technical-incident-commander',
+    };
+    const supportedRole = runtimeRoleDefinition({
+      id: 'technical-incident-commander',
+      title: 'Technischer Einsatzleiter',
+      expectedHead: 'administrative',
+      allowedBodyMarks: [],
+    });
+    const administrativeHead = {
+      box: { xMm: 9.143, yMm: 0, widthMm: 13.714, heightMm: 4 },
+      heightMm: 4,
+      primitives: [],
+    };
+
+    expect(validateRuntime(supportedSpec, {
+      functionRole: supportedRole,
+      administrativeHead,
+    })).toEqual([]);
+    expect(validateRuntime(
+      { kind: 'person', administrativeLevel: 'gemeinde' },
+      { administrativeHead: undefined },
+    ).map((issue) => issue.rule)).toContain('administrative-level-not-measured');
+  });
+
+  it('lehnt eine Rolle ab, wenn Art, Definition oder Kopf nicht zur Messung passen', () => {
+    expect(validateRuntime(
+      { kind: 'building', functionRole: 'fire-service-platoon-commander' },
+      { functionRole: runtimeRoleDefinition() },
+    ).map((issue) => issue.rule)).toContain('function-role-requires-measured-kind');
+    expect(validateRuntime(
+      { kind: 'person', functionRole: 'fire-service-platoon-commander', strength: 'zug' },
+    ).map((issue) => issue.rule)).toContain('function-role-requires-measured-layout');
+    expect(validateRuntime(
+      { kind: 'person', functionRole: 'fire-service-platoon-commander' },
+      { functionRole: runtimeRoleDefinition() },
+    ).map((issue) => issue.rule)).toContain('function-role-head-mismatch');
+    expect(validateRuntime(
+      { kind: 'person', functionRole: 'fire-service-platoon-commander', strength: 'zug' },
+      { functionRole: runtimeRoleDefinition({ id: 'incident-commander' }) },
+    ).map((issue) => issue.rule)).toContain('function-role-requires-measured-layout');
+  });
+
+  it('schließt nicht vermessene Rollenachsen und Körpermarken fail-closed aus', () => {
+    const context = { functionRole: runtimeRoleDefinition() };
+    const base = {
+      kind: 'person',
+      functionRole: 'fire-service-platoon-commander',
+      strength: 'zug',
+    };
+    expect(validateRuntime({ ...base, bodyVariant: 'raised-hull' }, context)
+      .map((issue) => issue.rule)).toContain('function-role-body-variant-not-measured');
+    expect(validateRuntime({ ...base, capabilities: ['fire-fighting'] }, context)
+      .map((issue) => issue.rule)).toContain('function-role-capabilities-not-measured');
+    expect(validateRuntime({ ...base, bodyMarks: ['care'] }, context)
+      .map((issue) => issue.rule)).toContain('function-role-body-mark-mismatch');
+  });
+
+  it('verlangt vollständige sichtbare Rollenmetriken und getrennte Textboxen', () => {
+    const spec = {
+      kind: 'person',
+      functionRole: 'fire-service-platoon-commander',
+      strength: 'zug',
+    };
+    const invalidDefinitions = [
+      runtimeRoleDefinition({
+        layout: {
+          headTopMm: 1,
+          body: { type: 'rect', role: 'body', x: 3, y: 5, width: 26, height: 26 },
+          bodyAdditions: [], decorations: [], roleRuns: [runtimeRoleRun({ content: '   ' })],
+        },
+      }),
+      runtimeRoleDefinition({
+        layout: {
+          headTopMm: 1,
+          body: { type: 'rect', role: 'body', x: 3, y: 5, width: 26, height: 26 },
+          bodyAdditions: [], decorations: [],
+          roleRuns: [runtimeRoleRun({ sizeMm: Number.NaN, minRenderPx: 0 })],
+        },
+      }),
+      runtimeRoleDefinition({
+        layout: {
+          headTopMm: 1,
+          body: { type: 'rect', role: 'body', x: 3, y: 5, width: 26, height: 26 },
+          bodyAdditions: [], decorations: [], roleRuns: [runtimeRoleRun()],
+          carrierRun: runtimeRoleRun({ content: 'AW' }),
+        },
+      }),
+    ];
+    for (const definition of invalidDefinitions) {
+      expect(validateRuntime(spec, { functionRole: definition }).map((issue) => issue.rule))
+        .toContain('function-role-label-metrics-required');
+    }
+  });
+
+  it('lehnt unvollständige Layouts, falsche Kopfanker und versteckten Dekorationstext ab', () => {
+    const spec = {
+      kind: 'person',
+      functionRole: 'fire-service-platoon-commander',
+      strength: 'zug',
+    };
+    const withoutHeadTop = runtimeRoleDefinition({
+      layout: {
+        body: { type: 'rect', role: 'body', x: 3, y: 5, width: 26, height: 26 },
+        bodyAdditions: [], decorations: [], roleRuns: [],
+      },
+    });
+    expect(validateRuntime(spec, { functionRole: withoutHeadTop }).map((issue) => issue.rule))
+      .toContain('function-role-head-mismatch');
+
+    const hiddenText = runtimeRoleDefinition({
+      layout: {
+        headTopMm: 1,
+        body: { type: 'rect', role: 'body', x: 3, y: 5, width: 26, height: 26 },
+        bodyAdditions: [],
+        decorations: [{
+          type: 'text', content: 'versteckt', x: 16, y: 18, sizeMm: 4,
+          anchor: 'middle', baseline: 'alphabetic',
+          boxMm: { xMm: 10, yMm: 14, widthMm: 12, heightMm: 5 },
+        }],
+        roleRuns: [],
+      },
+    });
+    expect(validateRuntime(spec, { functionRole: hiddenText }).map((issue) => issue.rule))
+      .toContain('function-role-requires-measured-layout');
   });
 
   it('lehnt Stärke und Verwaltungsstufe gleichzeitig ab', () => {

@@ -107,6 +107,38 @@ describe('Kompositionsrezepte', () => {
     expect(bounds.maxY).toBeCloseTo(31, 3);
   });
 
+  it('migriert D.3.7 auf Funktionsträgerkappe, Stärke und innere Brandbekämpfungsmarke', () => {
+    const recipe = RECIPES['D.3.7'];
+    expect(recipe.spec).toMatchObject({
+      kind: 'person',
+      organization: 'feuerwehr',
+      strength: 'zug',
+      functionRole: 'fire-service-platoon-commander',
+      bodyMarks: ['fire-fighting'],
+    });
+
+    const drawing = composeFromCatalog(recipe.spec, recipe.title);
+    expect(drawing.viewBox).toEqual({ width: 32, height: 32 });
+    expect(drawing.children.filter((child) => child.role === 'head')).toHaveLength(3);
+    expect(drawing.children.some(
+      (child) => child.role === 'pictogram' && child.style?.fill === 'schwarz',
+    )).toBe(true);
+    expect(drawing.children).toContainEqual(expect.objectContaining({
+      type: 'line', role: 'pictogram', y1: 18, y2: 18,
+    }));
+    expect(drawing.children).toContainEqual(expect.objectContaining({
+      type: 'polyline', role: 'pictogram', closed: true,
+      points: [[25, 14], [29, 18], [25, 22], [21, 18]],
+    }));
+    const body = drawing.children.find((child) => child.role === 'body');
+    expect(body?.style?.fill).toBe('rot');
+
+    const formerSimplified = composeFromCatalog({
+      kind: 'person', organization: 'feuerwehr', strength: 'zug',
+    }, recipe.title);
+    expect(renderSvg(drawing)).not.toBe(renderSvg(formerSimplified));
+  });
+
   it('setzt die Stärkepunkte als eigene Primitive mit der Rolle head', () => {
     const drawing = composeFromCatalog(RECIPES['C.1.1'].spec);
     expect(drawing.children.filter((c) => c.role === 'head')).toHaveLength(2);
@@ -1758,7 +1790,9 @@ describe('Piktogramm-Platzierung als Gruppe', () => {
 
   it('erzeugt keine Gruppe, wenn die Spec keine Fähigkeit nennt', () => {
     const drawing = composeFromCatalog(RECIPES['D.3.7'].spec);
-    expect(drawing.children.filter((c) => c.role === 'pictogram')).toHaveLength(0);
+    expect(drawing.children.filter(
+      (child) => child.role === 'pictogram' && child.type === 'group',
+    )).toHaveLength(0);
   });
 });
 

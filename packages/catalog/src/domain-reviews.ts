@@ -33,6 +33,9 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:1.14#primary': { status: 'pending' },
   'bbk-babz-2025:C.1.1#primary': { status: 'pending' },
   'bbk-babz-2025:C.1.2#primary': { status: 'pending' },
+  // D.3.7 ist technisch auf die gemessene Funktionsfassung migriert. Ob die Rolle
+  // „Zugführer der Feuerwehr" und die innere Brandbekämpfungsmarke fachlich genau diese
+  // Semantik tragen, bleibt ausdrücklich der Fachprüfung vorbehalten.
   'bbk-babz-2025:D.3.7#primary': { status: 'pending' },
   // Anhang E, Teilslice E-a: die 16 Bergungs- und Fachgruppen des THW. Ihre Bedeutung liegt
   // vollständig in einem Buchstabenkürzel, das am Referenzbild abgelesen wurde — die fachliche

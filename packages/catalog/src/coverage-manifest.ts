@@ -13,6 +13,7 @@ import { referenceLacksComparableShape } from './fingerprint-index.js';
 import { ALL_PICTOGRAMS } from './pictograms/index.js';
 import { deepFreeze, type DeepReadonly } from './readonly-data.js';
 import { RECIPES } from './recipes.js';
+import { ANHANG_D_TASK_2_RECIPES } from './recipes-anhang-d.js';
 import {
   ANHANG_E_A_FILL_DEFECTS,
   ANHANG_E_A_RECIPES,
@@ -58,6 +59,21 @@ const TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
   date: '2026-08-05',
+};
+
+/** D.3.7 prueft erstmals den gemessenen Funktionsvertrag statt die generische Personenfassung. */
+const ANHANG_D_TASK_2_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'D.3.7 konsumiert den gemessenen Funktionsvertrag und ist direkt gegen die ' +
+    'Originalreferenz vermessen: abgesenkter 26-mm-Rautenkörper ' +
+    'mit Spitze y 5 und Unterkante y 31, drei Stärkepunkte ab Kopfoberkante y 1, schwarze ' +
+    'Kappe bis y 10 sowie waagerechte Teilung und rechte geschlossene Raute. Rollen-, ' +
+    'Body-Mark- und Kompositionsreihenfolge sind lokal gegatet; Fingerprint-, Snapshot-, ' +
+    'Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates prüfen den renderbaren Eintrag. ' +
+    'Die fachliche Rollenbezeichnung bleibt im Domain-Review pending.',
 };
 
 /**
@@ -613,6 +629,9 @@ function withFindingAndDeviation(
  * `approved` von `rv`, an dem kein Test etwas auffällig fände.
  */
 function technicalReviewFor(section: string): Review {
+  if (Object.hasOwn(ANHANG_D_TASK_2_RECIPES, section)) {
+    return ANHANG_D_TASK_2_TECHNICAL_REVIEW;
+  }
   if (Object.hasOwn(ANHANG_E_A_RECIPES, section)) {
     const defect = ANHANG_E_A_FILL_DEFECTS[section];
     if (defect === undefined) return ANHANG_E_A_TECHNICAL_REVIEW;

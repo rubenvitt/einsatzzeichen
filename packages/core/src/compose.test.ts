@@ -60,6 +60,10 @@ const catalog: CatalogPorts = {
   strengthHead: () => {
     throw new Error('Für diesen Test nicht aufgerufen.');
   },
+  functionRole: () => {
+    throw new Error('Für diesen Test nicht aufgerufen.');
+  },
+  administrativeHead: () => undefined,
   vehicleChassis: () => {
     throw new Error('Für diesen Test nicht aufgerufen.');
   },
@@ -1087,5 +1091,77 @@ describe('compose() — randbündige Fachdienstzeichen', () => {
     // Kinderliste bewiese sie nicht: ein Doppel, das statt zu werfen `[]` lieferte, ergäbe
     // dieselbe leere Liste.
     expect(() => compose({ kind: 'formation', labels: { topLeft: 'MTF' } }, catalog)).not.toThrow();
+  });
+});
+
+describe('compose() — gemessene Funktionsträger', () => {
+  it('konsumiert die aufgelöste Rolle und hält die gemessene Kindreihenfolge', () => {
+    const roleDefinition = {
+      id: 'incident-command',
+      title: 'Einsatzleitung',
+      kind: 'formation',
+      expectedHead: 'none',
+      allowedBodyMarks: ['care'],
+      layout: {
+        body: {
+          type: 'rect', role: 'body', x: 2, y: 8, width: 28, height: 16,
+          style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+        },
+        bodyAdditions: [
+          { type: 'line', role: 'bodyExtra', x1: 2, y1: 24, x2: 30, y2: 24 },
+        ],
+        decorations: [
+          { type: 'rect', role: 'pictogram', x: 2, y: 8, width: 28, height: 3 },
+        ],
+        roleRuns: [{
+          content: 'EL', anchorXMm: 16, baselineYMm: 19, sizeMm: 7,
+          anchor: 'middle', boxMm: { xMm: 10, yMm: 13, widthMm: 12, heightMm: 6 },
+          minRenderPx: 37, ink: 'schwarz', contrastBackground: 'body',
+        }],
+        carrierRun: {
+          content: 'AW', anchorXMm: 29, baselineYMm: 23, sizeMm: 4,
+          anchor: 'end', boxMm: { xMm: 22, yMm: 19.5, widthMm: 8, heightMm: 4 },
+          minRenderPx: 64, ink: 'schwarz', contrastBackground: 'surface',
+        },
+      },
+    };
+    const roleCatalog = Object.assign({}, catalog, {
+      functionRole: () => roleDefinition,
+      administrativeHead: () => undefined,
+      bodyMark: () => [
+        { type: 'line' as const, role: 'pictogram' as const, x1: 2, y1: 16, x2: 30, y2: 16 },
+      ],
+    });
+    const spec = {
+      kind: 'formation',
+      functionRole: 'incident-command',
+      bodyMarks: ['care'],
+    } as unknown as SymbolSpec;
+
+    const drawing = Reflect.apply(compose, undefined, [spec, roleCatalog]);
+    const body = drawing.children.find((child) => child.role === 'body');
+    expect(body).toMatchObject({ type: 'rect', x: 2, y: 8, width: 28, height: 16 });
+
+    const bodyIndex = drawing.children.findIndex((child) => child.role === 'body');
+    const additionIndex = drawing.children.findIndex((child) => child.role === 'bodyExtra');
+    const markIndex = drawing.children.findIndex(
+      (child) => child.type === 'line' && child.role === 'pictogram' && child.y1 === 16,
+    );
+    const decorationIndex = drawing.children.findIndex(
+      (child) => child.type === 'rect' && child.role === 'pictogram',
+    );
+    const roleIndex = drawing.children.findIndex(
+      (child) => child.type === 'text' && child.content === 'EL',
+    );
+    const carrierIndex = drawing.children.findIndex(
+      (child) => child.type === 'text' && child.content === 'AW',
+    );
+    expect([bodyIndex, additionIndex, markIndex, decorationIndex, roleIndex, carrierIndex])
+      .not.toContain(-1);
+    expect(bodyIndex).toBeLessThan(additionIndex);
+    expect(additionIndex).toBeLessThan(markIndex);
+    expect(markIndex).toBeLessThan(decorationIndex);
+    expect(decorationIndex).toBeLessThan(roleIndex);
+    expect(roleIndex).toBeLessThan(carrierIndex);
   });
 });
