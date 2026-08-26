@@ -450,6 +450,79 @@ describe('validateSpec', () => {
     expect(issues.map((i) => i.rule)).toContain('designation-not-blank');
   });
 
+  it('bindet den Körperlabel-Tintenoverride an tatsächlich gesetzten Text im Körper', () => {
+    expect(validateSpec({
+      kind: 'formation', labels: { center: 'BuPol', inBodyInk: 'schwarz' },
+    } as unknown as SymbolSpec)).toEqual([]);
+    expect(validateSpec({
+      kind: 'vehicle-air', bodyVariant: 'raised-hull',
+      labels: { aboveLeft: 'CH-53', surfaceBelowRight: 'BW', inBodyInk: 'schwarz' },
+    } as unknown as SymbolSpec).map((issue) => issue.rule)).toContain(
+      'in-body-ink-requires-in-body-label',
+    );
+  });
+
+  const bottomRightMetrics = {
+    capHeightMm: 2.750245,
+    baselineFromBodyTopMm: 13.000087,
+    anchorFromBodyLeftMm: 21.99,
+    boxLeftFromBodyLeftMm: 19.24,
+    boxWidthMm: 5.5,
+  };
+
+  function withBottomRightMetrics(
+    metrics: unknown,
+    bottomRight: string | null = '7',
+    kind: SymbolSpec['kind'] = 'vehicle-air',
+    bodyVariant: SymbolSpec['bodyVariant'] = 'raised-hull',
+  ): SymbolSpec {
+    return {
+      kind, bodyVariant,
+      labels: {
+        ...(bottomRight === null ? {} : { bottomRight }),
+        bottomRightMetrics: metrics,
+      },
+    } as unknown as SymbolSpec;
+  }
+
+  it('bindet vollständige bottomRight-Metriken an das gemessene Körperprofil und den Lauf', () => {
+    expect(validateSpec(withBottomRightMetrics(bottomRightMetrics))).toEqual([]);
+    expect(validateSpec(withBottomRightMetrics(bottomRightMetrics, null)).map(
+      (issue) => issue.rule,
+    )).toContain('bottom-right-metrics-require-bottom-right-label');
+    expect(validateSpec(withBottomRightMetrics(
+      bottomRightMetrics, '7', 'formation', undefined,
+    )).map((issue) => issue.rule)).toContain('bottom-right-metrics-require-measured-body');
+    expect(validateSpec(withBottomRightMetrics(
+      bottomRightMetrics, '7', 'vehicle-air', 'fixed-wing-hull',
+    )).map((issue) => issue.rule)).toContain('bottom-right-metrics-require-measured-body');
+  });
+
+  it('lehnt unvollständige und außerhalb der Körperhülle liegende bottomRight-Metriken ab', () => {
+    expect(validateSpec(withBottomRightMetrics({ capHeightMm: 2.750245 })).map(
+      (issue) => issue.rule,
+    )).toContain('bottom-right-metrics-complete');
+
+    for (const metrics of [
+      { ...bottomRightMetrics, capHeightMm: 0 },
+      { ...bottomRightMetrics, baselineFromBodyTopMm: 3 },
+      { ...bottomRightMetrics, anchorFromBodyLeftMm: 24.75 },
+      { ...bottomRightMetrics, boxLeftFromBodyLeftMm: -0.01 },
+      { ...bottomRightMetrics, boxWidthMm: 0 },
+      { ...bottomRightMetrics, boxLeftFromBodyLeftMm: 25, boxWidthMm: 5.5 },
+      {
+        ...bottomRightMetrics,
+        anchorFromBodyLeftMm: 27.2295,
+        boxLeftFromBodyLeftMm: 24.4795,
+        boxWidthMm: 5.5,
+      },
+      { ...bottomRightMetrics, anchorFromBodyLeftMm: Number.NaN },
+    ]) {
+      expect(validateSpec(withBottomRightMetrics(metrics)).map((issue) => issue.rule))
+        .toContain('bottom-right-metrics-within-body');
+    }
+  });
+
   it('nennt in jeder Meldung Regel und Begründung', () => {
     for (const issue of validateSpec({ kind: 'hazard', strength: 'gruppe' })) {
       expect(issue.rule).not.toBe('');

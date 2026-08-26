@@ -450,6 +450,9 @@ export const WILDFIRE_IDS = Object.freeze([
 
 export type WildfireId = (typeof WILDFIRE_IDS)[number];
 
+/** Quellenvermessene Tinte eines Textlaufs innerhalb der Körperfläche. */
+export type BodyLabelInk = 'schwarz' | 'weiss';
+
 /**
  * Beschriftungen **im** Körper, in den drei Zonen, die Anhang E belegt. Die Zonen sind nach
  * ihrer Lage benannt und nicht nach einer Bedeutung: vermessen ist die Position, nicht die
@@ -464,6 +467,12 @@ export type WildfireId = (typeof WILDFIRE_IDS)[number];
  * nebeneinander, statt dass eine die andere umdeutet.
  */
 export interface BodyLabels {
+  /**
+   * Explizite, an der Quelle vermessene Tinte aller gesetzten Läufe **im** Körper. Fehlt sie,
+   * leitet `bodyLabelInk()` die Tinte unverändert aus der Körperfüllung ab. Läufe oberhalb oder
+   * auf der Ausgabeoberfläche gehören nicht zu diesem Override.
+   */
+  readonly inBodyInk?: BodyLabelInk;
   readonly center?: string;
   /** Individuell vermessener Abstand der mittigen Grundlinie von der Körperunterkante. */
   readonly centerBaselineFromBodyBottomMm?: number;
@@ -475,6 +484,18 @@ export interface BodyLabels {
    */
   readonly bottomCenter?: string;
   readonly bottomRight?: string;
+  /**
+   * Vollständiger, körperrelativer Metriksatz für einen einzeln vermessenen `bottomRight`-Lauf.
+   * Der waagerechte Anker liegt in diesem Vertrag mittig in der angegebenen Box; ohne das Objekt
+   * bleiben Endanker, Grundlinie, Schriftgrad und Halbzonenbox unverändert.
+   */
+  readonly bottomRightMetrics?: {
+    readonly capHeightMm: number;
+    readonly baselineFromBodyTopMm: number;
+    readonly anchorFromBodyLeftMm: number;
+    readonly boxLeftFromBodyLeftMm: number;
+    readonly boxWidthMm: number;
+  };
   /**
    * Die **fünfte** Zone: linksbündig im oberen Bereich des Körpers. Anhang F setzt
    * dort sein Kürzel — „MTF", „SEG", „RettD", „10" —, weil die Fachdienstteilung

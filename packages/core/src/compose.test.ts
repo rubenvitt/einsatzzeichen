@@ -6,7 +6,7 @@ import {
   type SymbolSpec,
 } from '@einsatzzeichen/schema';
 import type { BoundsMm } from './bounds.js';
-import { compose, type CatalogPorts } from './compose.js';
+import { bodyLabelInk, compose, type CatalogPorts } from './compose.js';
 import { ARIMO_CAP_HEIGHT_FRACTION } from './render/text-policy.js';
 import { checkViewBox } from './viewbox-gate.js';
 
@@ -26,6 +26,12 @@ const vehicleLandBody: Primitive = {
 };
 const vehicleAirBody: Primitive = {
   type: 'rect', role: 'body', x: 1.01, y: 6, width: 29.98, height: 14.99,
+};
+/** Exakter `raised-hull`-Körperpfad aus `base-symbols.ts` für die quellennahe Komposition. */
+const measuredRaisedVehicleAirBody: Primitive = {
+  type: 'path',
+  role: 'body',
+  d: 'M 30.9894 20.9898 L 1.01 20.9898 C 1.01 12.7112, 7.7211 6.0001, 15.9997 6.0001 C 24.2783 6.0001, 30.9894 12.7112, 30.9894 20.9898 Z',
 };
 
 /**
@@ -1019,6 +1025,110 @@ describe('compose() — Schriftfarbe der Läufe im Körper', () => {
         'orange',
       ),
     ).toBe('weiss');
+  });
+
+  it('behält ohne Override die bestehende Ableitung am exportierten Resolver bei', () => {
+    expect(bodyLabelInk('weiss')).toBe('schwarz');
+    expect(bodyLabelInk('braun')).toBe('weiss');
+    expect(bodyLabelInk('braun', 'schwarz')).toBe('schwarz');
+  });
+
+  it('setzt den gemessenen schwarzen Override in Mitte und oberen Körperzonen', () => {
+    const specs = [
+      {
+        kind: 'formation', organization: 'bundeswehr',
+        labels: { center: 'BuPol', inBodyInk: 'schwarz' },
+      },
+      {
+        kind: 'formation', organization: 'bundeswehr',
+        labels: { topLeft: '5.000', inBodyInk: 'schwarz' },
+      },
+      {
+        kind: 'vehicle-land', organization: 'bundeswehr',
+        labels: { topLeftLines: ['Kipper,', '26 t'], inBodyInk: 'schwarz' },
+      },
+    ] as unknown as SymbolSpec[];
+
+    for (const spec of specs) {
+      const labels = compose(spec, {
+        ...catalog,
+        organizationColor: () => 'braun',
+      }).children.filter((child) => child.role === 'label');
+      expect(labels.length).toBeGreaterThan(0);
+      expect(labels.every((label) => label.style?.fill === 'schwarz')).toBe(true);
+    }
+  });
+
+  it('lässt oberhalb und auf der Oberfläche liegende Tinten vom Override unberührt', () => {
+    const drawing = compose({
+      kind: 'vehicle-air', bodyVariant: 'raised-hull', organization: 'hilfsorganisation',
+      labels: {
+        center: 'Innen', aboveLeft: 'Oben', surfaceBelowRight: 'Außen', inBodyInk: 'weiss',
+      },
+    } as unknown as SymbolSpec, {
+      ...catalog,
+      baseDrawing: () => ({
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [measuredRaisedVehicleAirBody],
+      }),
+      organizationColor: () => 'weiss',
+    });
+    const fills = Object.fromEntries(drawing.children
+      .filter((child): child is Extract<Primitive, { type: 'text' }> => child.type === 'text')
+      .map((label) => [label.content, label.style?.fill]));
+    expect(fills).toEqual({ Innen: 'weiss', Oben: 'schwarz', Außen: 'schwarz' });
+  });
+});
+
+describe('compose() — vollständig vermessener Lauf unten rechts', () => {
+  const bottomRightMetrics = {
+    capHeightMm: 2.750245,
+    baselineFromBodyTopMm: 13.000087,
+    anchorFromBodyLeftMm: 21.99,
+    boxLeftFromBodyLeftMm: 19.24,
+    boxWidthMm: 5.5,
+  };
+
+  it('setzt die schwarze 7 quellengenau und mittig in das 5,5-mm-Feld', () => {
+    const measuredBox: Primitive = {
+      type: 'rect', role: 'pictogram', x: 20.25, y: 15, width: 5.5, height: 5.5,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+    };
+    const drawing = compose({
+      kind: 'vehicle-air', bodyVariant: 'raised-hull', organization: 'bundeswehr',
+      bodyMarks: ['air-quartering-up-arrow-box'],
+      labels: {
+        bottomRight: '7', bottomRightMetrics, inBodyInk: 'schwarz',
+      },
+    } as unknown as SymbolSpec, {
+      ...catalog,
+      baseDrawing: () => ({
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [measuredRaisedVehicleAirBody],
+      }),
+      organizationColor: () => 'braun',
+      bodyMark: (id) => {
+        if (id !== 'air-quartering-up-arrow-box') {
+          throw new Error(`Unerwartete Körpermarke: ${id}`);
+        }
+        return [measuredBox];
+      },
+    });
+
+    const label = drawing.children.find(
+      (child): child is Extract<Primitive, { type: 'text' }> =>
+        child.type === 'text' && child.content === '7',
+    );
+    if (label === undefined) throw new Error('compose() hat den gemessenen Lauf nicht erzeugt.');
+    expect(label).toMatchObject({
+      anchor: 'middle', x: 23, y: 19.000187,
+      boxMm: { xMm: 20.25, widthMm: 5.5 },
+      style: { fill: 'schwarz' },
+    });
+    expect(label.sizeMm * ARIMO_CAP_HEIGHT_FRACTION).toBeCloseTo(2.750245, 9);
+    expect(label.boxMm.yMm).toBeGreaterThanOrEqual(measuredBox.y);
+    expect(label.boxMm.yMm + label.boxMm.heightMm)
+      .toBeLessThanOrEqual(measuredBox.y + measuredBox.height);
   });
 });
 

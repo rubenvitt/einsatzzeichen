@@ -88,6 +88,14 @@ export interface LayoutProfile {
     readonly rightAnchorFromBodyRightMm?: number;
   };
   /**
+   * Körperhülle, innerhalb der ein vollständiger je-Spec-Metriksatz für `bottomRight` belegt ist.
+   * Fehlt der Wert, lehnt `validateSpec()` den Metriksatz statt einer Profilübertragung ab.
+   */
+  bottomRightMetricsBounds?: {
+    readonly widthMm: number;
+    readonly heightMm: number;
+  };
+  /**
    * Grundlinie des unten mittigen Laufs, gerechnet von der Körperunterkante nach oben. Bisher
    * allein an F.1.18 und F.1.20 auf der taktischen Formation gemessen.
    */
@@ -194,6 +202,8 @@ const raisedVehicleAirProfile: LayoutProfile = {
     baselineFromBodyBottomMm: 8.01,
     rightAnchorFromBodyRightMm: 0.01,
   },
+  // Der reale Katalogpfad spannt 1,0100…30,9894 × 6,0001…20,9898 mm auf.
+  bottomRightMetricsBounds: { widthMm: 29.9794, heightMm: 14.9897 },
 };
 
 const fixedWingVehicleAirProfile: LayoutProfile = {

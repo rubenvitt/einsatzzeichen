@@ -2,6 +2,7 @@ import {
   DEFAULT_STROKE_WIDTH_MM,
   DEFAULT_VIEWBOX_MM,
   type BodyVariantId,
+  type BodyLabelInk,
   type BodyMarkId,
   type CapabilityId,
   type ChassisMark,
@@ -336,18 +337,21 @@ function labelPrimitive(
  * bildet diese Regel ab — eine Ableitung nach Kontrast hätte eine getroffene Entscheidung still
  * überschrieben.
  *
- * **Eine Ableitung und kein neues Feld am `SymbolSpec`.** Die Farbe ist an beiden Anhängen keine
- * Wahl der Zeichnung, sondern eine Folge der Körperfarbe; ein Feld hätte sie zu einer Angabe
- * gemacht, die 58 F-Rezepte mitschleppen müssten.
+ * **Die Ableitung bleibt der Default.** Ein optionaler `BodyLabels.inBodyInk`-Wert überschreibt
+ * sie nur dort, wo eine konkrete Quelle eine andere schwarze oder weisse Tinte vermisst. Specs
+ * ohne diese Messung behalten denselben Rückgabewert und dieselben gerenderten Bytes.
  *
- * **Exportiert, weil der Kontrastvertrag dieselbe Regel braucht.** Der Katalog leitet in
+ * **Exportiert, weil der Kontrastvertrag denselben Resolver braucht.** Der Katalog leitet in
  * `labelContrastRequirements()` ab, welches Paar aus einer Beschriftung im Körper überhaupt
  * entsteht; träfe er die Farbwahl dort ein zweites Mal, könnten Zeichnung und Vertrag
  * auseinanderlaufen — genau der Fehler, den dieser Teilslice behoben hat (der Vertrag behauptete
  * `weiss`, während der Lauf schwarz gezeichnet wurde). Eine Funktion, zwei Aufrufer.
  */
-export function bodyLabelInk(bodyFill: ColorToken): ColorToken {
-  return bodyFill === 'weiss' ? 'schwarz' : 'weiss';
+export function bodyLabelInk(
+  bodyFill: ColorToken,
+  measuredOverride?: BodyLabelInk,
+): BodyLabelInk {
+  return measuredOverride ?? (bodyFill === 'weiss' ? 'schwarz' : 'weiss');
 }
 
 /**
@@ -559,15 +563,28 @@ function labelPrimitives(
     );
   }
   if (labels.bottomRight !== undefined) {
+    const metrics = labels.bottomRightMetrics;
+    const sizeMm = metrics === undefined
+      ? BOTTOM_LABEL_SIZE_MM
+      : metrics.capHeightMm / ARIMO_CAP_HEIGHT_FRACTION;
+    const baselineYMm = metrics === undefined
+      ? bottomBaselineMm
+      : bodyBoundsMm.minY + metrics.baselineFromBodyTopMm;
+    const anchorXMm = metrics === undefined
+      ? rightMm
+      : bodyBoundsMm.minX + metrics.anchorFromBodyLeftMm;
+    const boxXMm = metrics === undefined
+      ? centerXMm
+      : bodyBoundsMm.minX + metrics.boxLeftFromBodyLeftMm;
     primitives.push(
       labelPrimitive(
         labels.bottomRight,
-        BOTTOM_LABEL_SIZE_MM,
-        bottomBaselineMm,
-        'end',
-        rightMm,
-        centerXMm,
-        rightMm - centerXMm,
+        sizeMm,
+        baselineYMm,
+        metrics === undefined ? 'end' : 'middle',
+        anchorXMm,
+        boxXMm,
+        metrics?.boxWidthMm ?? (rightMm - centerXMm),
         viewBoxWidthMm,
         ink,
       ),
@@ -1012,7 +1029,7 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
         profile.surfaceLabels,
         profile.topLeftLines,
         profile.bottomCenterBaselineFromBodyBottomMm,
-        bodyLabelInk(bodyFill),
+        bodyLabelInk(bodyFill, spec.labels.inBodyInk),
       )
     : [];
 

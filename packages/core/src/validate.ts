@@ -613,10 +613,117 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
     });
   }
 
+  const hasInBodyLabel = [
+    spec.labels?.center,
+    spec.labels?.topLeft,
+    spec.labels?.bottomLeft,
+    spec.labels?.bottomCenter,
+    spec.labels?.bottomRight,
+    ...(spec.labels?.topLeftLines ?? []),
+  ].some((value) => typeof value === 'string' && value.trim() !== '');
+  if (spec.labels?.inBodyInk !== undefined && !hasInBodyLabel) {
+    issues.push({
+      rule: 'in-body-ink-requires-in-body-label',
+      message:
+        'Ein gemessener Tintenoverride verlangt mindestens einen nichtleeren Textlauf im Körper; ' +
+        'oberhalb oder auf der Ausgabeoberfläche liegende Läufe verwenden eigene Tintenverträge.',
+    });
+  }
+
+  const bottomRightMetrics = spec.labels?.bottomRightMetrics as unknown;
+  if (bottomRightMetrics !== undefined) {
+    const record = typeof bottomRightMetrics === 'object' && bottomRightMetrics !== null &&
+        !Array.isArray(bottomRightMetrics)
+      ? bottomRightMetrics as Record<string, unknown>
+      : undefined;
+    const required = [
+      'capHeightMm',
+      'baselineFromBodyTopMm',
+      'anchorFromBodyLeftMm',
+      'boxLeftFromBodyLeftMm',
+      'boxWidthMm',
+    ] as const;
+    const complete = record !== undefined && required.every((field) =>
+      Object.hasOwn(record, field));
+    const profileBounds = profileFor(spec.kind, spec.bodyVariant).bottomRightMetricsBounds;
+
+    if (spec.labels?.bottomRight === undefined || spec.labels.bottomRight.trim() === '') {
+      issues.push({
+        rule: 'bottom-right-metrics-require-bottom-right-label',
+        message:
+          'Gemessene bottomRight-Metriken verlangen einen nichtleeren Lauf; ohne ihn würden ' +
+          'Versalhöhe, Grundlinie, Anker und Box still verschluckt.',
+      });
+    }
+    if (profileBounds === undefined) {
+      issues.push({
+        rule: 'bottom-right-metrics-require-measured-body',
+        message:
+          'Individuelle bottomRight-Metriken sind nur an einem Körperprofil mit vollständig ' +
+          'vermessener relativer Textbox zulässig.',
+      });
+    }
+    if (!complete) {
+      issues.push({
+        rule: 'bottom-right-metrics-complete',
+        message:
+          'Gemessene bottomRight-Metriken müssen Versalhöhe, Grundlinie, Anker, Boxanfang und ' +
+          'Boxbreite gemeinsam führen.',
+      });
+    }
+
+    if (complete && profileBounds !== undefined && record !== undefined) {
+      const capHeightMm = record.capHeightMm;
+      const baselineFromBodyTopMm = record.baselineFromBodyTopMm;
+      const anchorFromBodyLeftMm = record.anchorFromBodyLeftMm;
+      const boxLeftFromBodyLeftMm = record.boxLeftFromBodyLeftMm;
+      const boxWidthMm = record.boxWidthMm;
+      const finiteNumbers = [
+        capHeightMm,
+        baselineFromBodyTopMm,
+        anchorFromBodyLeftMm,
+        boxLeftFromBodyLeftMm,
+        boxWidthMm,
+      ].every((value) => typeof value === 'number' && Number.isFinite(value));
+      let withinBody = false;
+      if (
+        finiteNumbers &&
+        typeof capHeightMm === 'number' && capHeightMm > 0 &&
+        typeof baselineFromBodyTopMm === 'number' &&
+        typeof anchorFromBodyLeftMm === 'number' &&
+        typeof boxLeftFromBodyLeftMm === 'number' &&
+        typeof boxWidthMm === 'number' && boxWidthMm > 0
+      ) {
+        const boxRightFromBodyLeftMm = boxLeftFromBodyLeftMm + boxWidthMm;
+        const sizeMm = capHeightMm / ARIMO_CAP_HEIGHT_FRACTION;
+        const verticalBox = verticalTextBoxMm(
+          baselineFromBodyTopMm,
+          sizeMm,
+          'alphabetic',
+        );
+        withinBody = boxLeftFromBodyLeftMm >= 0 &&
+          boxRightFromBodyLeftMm <= profileBounds.widthMm &&
+          anchorFromBodyLeftMm >= boxLeftFromBodyLeftMm &&
+          anchorFromBodyLeftMm <= boxRightFromBodyLeftMm &&
+          verticalBox.topMm >= 0 &&
+          verticalBox.topMm + verticalBox.heightMm <= profileBounds.heightMm;
+      }
+      if (!withinBody) {
+        issues.push({
+          rule: 'bottom-right-metrics-within-body',
+          message:
+            'Die vollständige bottomRight-Textbox einschließlich Anker und vertikaler ' +
+            'Schriftmetriken muss innerhalb der vermessenen Körperhülle liegen.',
+        });
+      }
+    }
+  }
+
   // Dieselbe Regel wie für `designation`, je Zone einzeln benannt: ein leerer Lauf erzeugte ein
   // Textprimitiv ohne Tinte, das jedes Gate besteht und im Bild fehlt — genau der lautlose
   // Ausfall, den die Fußzone mit ihrem festen Schriftgrad vermeidet.
   for (const [zone, value] of Object.entries(spec.labels ?? {})) {
+    if (zone === 'inBodyInk') continue;
     if (typeof value === 'string' && value.trim() === '') {
       issues.push({
         rule: 'label-not-blank',
