@@ -69,7 +69,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 424 Zeilen mit 273 Elementdarstellungen', () => {
+  it('enthält exakt 427 Zeilen mit 273 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -97,7 +97,8 @@ describe('Coverage-Manifest', () => {
       // `alternative` — die Zeile zählt einzeln, weil das Manifest Darstellungen zählt und nicht
       // Abschnitte, weil F.1.3 dort noch bewusst offen blieb; F-b baut es mit `foot-band`.
       // F-d ergänzt F.2.10 bis F.2.17 als acht reine Anwendungen des Fahrzeugvertrags.
-      'composition-recipe': 137,
+      // Anhang I, Teilslice I-a ergänzt die drei vermessenen Wasserfahrzeuge I.3.5 bis I.3.7.
+      'composition-recipe': 140,
       // 254 Piktogramme plus acht Organisationen (seit LFH-424 mit hilfsorganisation), vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
@@ -105,10 +106,46 @@ describe('Coverage-Manifest', () => {
       // Strichhülle vermessen ist.
       element: 273,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(424);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(427);
     expect(elementRows).toHaveLength(273);
     expect(pictogramRows).toHaveLength(254);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
+  });
+
+  it('führt ausschließlich I.3.5 bis I.3.7 mit belegter Quelle und vollständigem Technikreview', () => {
+    const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
+      entry.sourceId.startsWith('bbk-babz-2025:I.'),
+    );
+    expect(
+      rows.map((entry) => ({
+        section: entry.sourceId.slice('bbk-babz-2025:'.length),
+        referenceAsset: entry.referenceAsset,
+      })),
+    ).toEqual([
+      { section: 'I.3.5', referenceAsset: 'I.3.5_Mehrzweckboot.svg' },
+      { section: 'I.3.6', referenceAsset: 'I.3.6_Mehrzweckarbeitsboot.svg' },
+      { section: 'I.3.7', referenceAsset: 'I.3.7_Mehrzweckponton.svg' },
+    ]);
+
+    const expectedReview = {
+      status: 'approved',
+      reviewer: 'rv',
+      date: '2026-08-26',
+      note:
+        'I.3.5-I.3.7 passed measured inset-hull, 7.99 mm center-profile, literal recipe, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
+    };
+    expect(rows).toHaveLength(3);
+    for (const row of rows) {
+      expect(row.coverage).toBe('composition-recipe');
+      expect(row.review.technical).toEqual(expectedReview);
+      expect(row.review.domain.status).toBe('pending');
+    }
+
+    expect(COVERAGE_MANIFEST.scope).toContain('I.3.5');
+    expect(COVERAGE_MANIFEST.scope).toContain('I.3.6');
+    expect(COVERAGE_MANIFEST.scope).toContain('I.3.7');
+    expect(COVERAGE_MANIFEST.scope).not.toContain('I');
+    expect(COVERAGE_MANIFEST.scope).not.toContain('I.3');
   });
 
   it('bewahrt das technische F-e-Review für F.3.1 bis F.3.11', () => {
@@ -390,6 +427,9 @@ describe('Coverage-Manifest', () => {
       // Manifesteinträgen ableitet. Bis E.2.6 fehlte, ließ sich dieser Test nicht schreiben.
       'E',
       'F',
+      'I.3.5',
+      'I.3.6',
+      'I.3.7',
       'J.1',
       'J.2',
       'J.3',

@@ -78,6 +78,20 @@ describe('Fachreview-Ledger', () => {
     expect(new Set(reviews).size).toBe(reviews.length);
   });
 
+  it('führt für I-a genau drei weiterhin offene Fachreviews', () => {
+    const keys = Object.keys(MANIFEST_DOMAIN_REVIEWS).filter((key) =>
+      key.startsWith('bbk-babz-2025:I.'),
+    );
+    expect(keys).toEqual([
+      'bbk-babz-2025:I.3.5#primary',
+      'bbk-babz-2025:I.3.6#primary',
+      'bbk-babz-2025:I.3.7#primary',
+    ]);
+    for (const key of keys) {
+      expect(manifestDomainReviewFor(key)).toEqual({ status: 'pending' });
+    }
+  });
+
   it('erfindet keine Fachfreigabe', () => {
     const manifestReviews = Object.values(MANIFEST_DOMAIN_REVIEWS);
     const sourceReviews = Object.values(SOURCE_DOMAIN_REVIEWS);
@@ -97,10 +111,11 @@ describe('Fachreview-Ledger', () => {
     // bis F.1.22 und die beiden Alternativdarstellungen; damit sind es hier 383.
     // F-d ergänzt acht einzelne, weiterhin offene Reviewplätze für F.2.10 bis F.2.17. F-e
     // ergänzt elf für F.3.1 bis F.3.11 und F-f die acht verbleibenden für F.3.12 bis F.3.19.
-    expect(manifestReviews).toHaveLength(424);
+    // I-a ergänzt drei technisch belegte, fachlich weiterhin offene Wasserfahrzeuge.
+    expect(manifestReviews).toHaveLength(427);
     expect(sourceReviews).toHaveLength(13);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(438);
+    expect(reviews).toHaveLength(441);
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
   });
 
