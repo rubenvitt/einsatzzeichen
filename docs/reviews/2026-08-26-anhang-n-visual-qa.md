@@ -63,3 +63,49 @@ Eine fachkundige Person muss weiterhin Organisation, Trägerzuordnung und Einsat
 neutral benannten Marken bestätigen. Die technische Einzelprüfung ist keine professionelle oder
 fachliche Freigabe. Der deterministische LFH-422-Kontaktbogen, sein Hash und die abschließende
 Originalauflösungsprüfung gehören zu Task 3 und sind hier ausdrücklich noch nicht behauptet.
+
+## Finaler Task-3-Kontaktbogen
+
+Der abschließende technische Kontaktbogen wurde aus den neun live in `RECIPES` registrierten
+N-Schlüsseln erzeugt; Schlüssel, Titel und exakte Referenzdateinamen stammen nicht aus einer
+zweiten, manuell gepflegten Matrix. Seine Katalogbasis ist
+`bd3aad8df6b43f0976c94854a4ff3b4b28cb4341`. Generator und Ergebnis bleiben wie vorgesehen
+ignoriert:
+
+- Generator: `out/tools/generate-lfh-422-contact-sheet.ts`;
+- PNG: `out/lfh-422/contact-sheets/LFH-422-anhang-n.png`;
+- Manifest: `out/lfh-422/contact-sheets/manifest.json`.
+
+Das PNG ist `2048 × 3208` px groß und hat den vollständigen SHA-256
+`544ce198ec76c84eeeacc2f8522d24e945d8d4ee4b44bd315a65db61192875d7`. Das Raster besteht aus
+fünf Zeilen und zwei Karten je Zeile: Die ersten neun Karten enthalten N.1.1 bis N.2.3 in
+numerischer Reihenfolge, die zehnte Karte ist sichtbar und absichtlich leer. Jede befüllte Karte
+enthält Abschnitt, kanonischen Titel, exakten Referenzdateinamen, die Bezeichnungen `Referenz`
+und `Katalog` sowie kurze SVG- und PNG-SHA-256-Präfixe. Referenz und Katalog wurden vor der
+Montage jeweils separat auf `420 × 420` px gerastert. Auch der Kataloglauf und die
+Kontaktbogenbeschriftung binden die eingecheckte Arimo-Datei; `loadSystemFonts` ist `false`.
+
+Der Generator beginnt jeden Lauf mit dem Entfernen genau der beiden bekannten Ausgabedateien und
+führt anschließend zwei vollständige Erzeugungspässe aus. Beim finalen Lauf waren PNG und
+Manifest zwischen Pass 1 und Pass 2 byteidentisch. Der Manifest-SHA-256 lautet
+`7a411bcfb12ff30394329c8236ac49f7866aa8e0945e0691af9b8d6b5e38c673`; das Manifest enthält den
+Ticketwert, die Katalogbasis, die Generatorversion, Layout und Schriftbindung sowie für alle neun
+Paare Rezept-, Quellen-SVG-, Quellen-PNG-, Katalog-SVG- und Katalog-PNG-Hashes und den
+vollständigen Ausgabehash.
+
+Das finale PNG wurde mit `view_image` im Modus `original` geprüft. Ergebnis:
+
+- 9/9 Referenz-Katalog-Paare sind vorhanden, richtig geordnet und sichtbar voneinander getrennt;
+- Abschnitt, Titel, Dateiname, Seitenbezeichnungen und Hashpräfixe sind lesbar;
+- weder Zeichen noch externe Beschriftungszonen sind abgeschnitten; zusätzlich weist der
+  Generator jeden der 18 Einzelraster zurück, sobald sichtbare Tinte dessen Außenrand berührt;
+- der leere zehnte Slot ist eindeutig als absichtlich leer gekennzeichnet;
+- die im Einzelprotokoll beschriebenen Körper, Fahrwerke, Marken, Füllungen, Textanker und
+  Textfarben sind auch im gemeinsamen Kontaktbogen erkennbar;
+- sichtbar verbleiben ausschließlich die bereits dokumentierten geringfügigen
+  Arimo-gegen-Quellpfad-Glyphenunterschiede und die scharfen Quellen- gegenüber den leicht
+  gerundeten Katalogecken der N.1.4-Box.
+
+Damit ist die technische Screenshot-Evidenz vollständig. Die neun fachlichen Domain-Reviews
+bleiben unverändert `pending`; der Kontaktbogen ist keine professionelle oder fachliche
+Freigabe.
