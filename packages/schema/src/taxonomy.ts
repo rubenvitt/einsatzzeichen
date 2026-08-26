@@ -526,7 +526,7 @@ export interface BodyLabels {
    */
   readonly topLeftLines?: readonly [string, string];
   /**
-   * Rechtsbündiger Lauf unterhalb des Körpers; Lage und Tinte bestimmen das Körperprofil. Die
+   * Rechtsbündiger Lauf unterhalb des Körpers; Lage und Tinte sind körperprofilabhängig. Die
    * angehobenen Wasserfahrzeuge E.2.27 bis E.2.31 belegen die Tintenlage
    * 22,5379/24,0806/31,5778/26,9998 mm, die Füllung #003296 und die Versalhöhe 2,9192 mm
    * (selbst vermessen, in allen fünf Dateien gleich bis auf 0,0003 mm an der T-Glyphe von
