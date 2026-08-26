@@ -33,6 +33,7 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:1.14#primary': { status: 'pending' },
   'bbk-babz-2025:C.1.1#primary': { status: 'pending' },
   'bbk-babz-2025:C.1.2#primary': { status: 'pending' },
+  'bbk-babz-2025:C.1.3#primary': { status: 'pending' },
   'bbk-babz-2025:D.3.7#primary': { status: 'pending' },
   // Anhang E, Teilslice E-a: die 16 Bergungs- und Fachgruppen des THW. Ihre Bedeutung liegt
   // vollständig in einem Buchstabenkürzel, das am Referenzbild abgelesen wurde — die fachliche
@@ -300,6 +301,14 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:G.6#primary': { status: 'pending' },
   'bbk-babz-2025:G.7#primary': { status: 'pending' },
   'bbk-babz-2025:G.8#primary': { status: 'pending' },
+  'bbk-babz-2025:H.1#primary': { status: 'pending' },
+  'bbk-babz-2025:H.2#primary': { status: 'pending' },
+  'bbk-babz-2025:H.3#primary': { status: 'pending' },
+  // Das Erscheinungsbild ist technisch durch die Mess-, Rezept- und Snapshot-Gates belegt; die
+  // organisatorische und fachliche Bedeutung des weißen Körpers bleibt dennoch ungeklärt.
+  'bbk-babz-2025:I.3.5#primary': { status: 'pending' },
+  'bbk-babz-2025:I.3.6#primary': { status: 'pending' },
+  'bbk-babz-2025:I.3.7#primary': { status: 'pending' },
   'bbk-babz-2025:2.1#primary': { status: 'pending' },
   // 2.2 seit LFH-424. Fachlich besonders zu prüfen: die Zuordnung „HiOrg = Hilfsorganisation" ist
   // aus dem gerasterten Bild abgelesen, nicht aus dem Dateinamen — der ist generisch

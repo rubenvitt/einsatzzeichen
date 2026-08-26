@@ -650,10 +650,11 @@ bleiben datengetrieben. Weiße Zeichen werden einschließlich DLRG als
 Feuerwehr, Polizei, Führung/Leitung und Bundeswehr. Diese fachlichen Zuordnungen sind nicht
 freigegeben: alle 21 neuen Domain-Reviews stehen `pending`.
 
-Der mengenexakte Vollständigkeitstest trägt `G` erst jetzt im Manifest-Scope. Der Katalog
-umfasst 158 Rezepte, 426 Renderfälle und 445 Manifestzeilen. Dazu gehören 172 direkte
-SVG-Snapshots und 427 Mehrgrößen-Snapshots. Alle 445 Manifest-Domainreviews sowie die 13
-Quellen- und das eine Profilreview bleiben offen, insgesamt 459 fachliche Reviewobjekte.
+Der mengenexakte Vollständigkeitstest trägt `G` erst jetzt im Manifest-Scope. Zusammen mit den
+inzwischen auf `main` hinzugekommenen Anhängen C, H und I umfasst der Katalog 165 Rezepte,
+433 Renderfälle und 452 Manifestzeilen. Dazu gehören 179 direkte SVG-Snapshots und 434
+Mehrgrößen-Snapshots. Alle 452 Manifest-Domainreviews sowie die 13 Quellen- und das eine
+Profilreview bleiben offen, insgesamt 466 fachliche Reviewobjekte.
 
 Zwanzig G-Rezepte besitzen den Körper-Fingerprint- plus Snapshot-Nachweis. `G.1.5` ist der
 ehrliche Sonderfall: seine Referenz führt keine vergleichbare Füllfläche, deshalb trägt die
@@ -677,6 +678,38 @@ Logistikformationen G.1 bis G.8 sind in den Quellen oben offen. Das generische P
 Kontur deshalb nur ohne Kopf und ohne Labels. G.1.1 bis G.1.5 sowie F.1.3/F.1.17 und die übrigen
 Körpervarianten behalten durch diese Oberkantenkorrektur ihre geschlossene Kontur und ihre
 bestehenden Snapshotbytes.
+
+## Anhang H: veterinärmedizinische Formationen
+
+H.1 bis H.3 ergänzen drei orangefarbene Formationsrezepte für Veterinärzug,
+Tier-Dekontaminationsgruppe sowie Schlacht- und Untersuchungsgruppe. H.2 hat bewusst eine eigene,
+kompakte technische Tierdekontaminationsmarke links unten: Sie ist weder die rote C.1.10-Fassung
+noch eine Wiederverwendung von `capability.decontamination`. Die drei Original-/Katalogpaare
+wurden als beschrifteter `420 × 420 px`-Paarvergleich gerastert und in Originalauflösung
+gesichtet; die lokalen, ignorierten PR-Evidenzdaten stehen in der QA-Notiz. Die technischen
+Reviews sind freigegeben, während die drei Domain-Reviews ausdrücklich `pending` bleiben.
+
+Messentscheidung und Provenienzgrenze: [`docs/decisions/2026-08-26-anhang-h.md`](docs/decisions/2026-08-26-anhang-h.md).
+Visual QA und Artefakthash: [`docs/reviews/2026-08-26-h-visual-qa.md`](docs/reviews/2026-08-26-h-visual-qa.md).
+
+## LFH-418: C.1.3 als erster Anhang-C-Slice
+
+Anhang C umfasst 59 Referenzdarstellungen; C.1.1 und C.1.2 waren bereits im Katalog.
+Der erste ausführbare Restslice ergänzt ausschließlich C.1.3 „Löschzug einer Feuerwehr“ als
+Komposition aus Formation, Feuerwehrfarbe, Stärke `zug` und der für C.1 vermessenen
+randbündigen `fire-fighting`-Körpermarke. Der Scope bleibt abschnittsgenau bei `C.1.3`; weder
+`C.1` noch `C` wird vor vollständiger, getesteter Abdeckung beansprucht. Das fachliche Review
+bleibt `pending`.
+
+Der damalige, nach dem finalen Rebase des C.1.3-Branches auf `origin/main` wiederholte Lauf
+belegte 60 Testdateien mit 4.126 grünen Tests, einen fehlerfreien Typecheck und das Coverage-Gate
+mit 431 Manifestzeilen und 445 offenen Fachreviews. Diese historischen Slice-Belege sind keine
+aktuelle Gesamtbranch-Aussage und keine fachliche Freigabe.
+
+Die visuelle QA steht in
+[`docs/reviews/2026-08-26-c-1-3-visual-qa.md`](docs/reviews/2026-08-26-c-1-3-visual-qa.md).
+Der dort verlinkte Screenshot zeigt ausschließlich generierte Katalogausgabe; die lokale
+BABZ-Referenz wird wegen ungeklärter Nutzungsgrundlage weder committed noch veröffentlicht.
 
 ## Der lokale Referenzbestand
 

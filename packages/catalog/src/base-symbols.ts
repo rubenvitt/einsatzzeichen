@@ -665,6 +665,12 @@ const VARIANT_BODIES: Partial<Record<SymbolKind, Partial<Record<BodyVariantId, P
       d: halfCircleBelowChord(15.9997, 7.9999, 14.9897),
       style: OUTLINE,
     },
+    'inset-hull': {
+      type: 'path',
+      role: 'body',
+      d: halfCircleBelowChord(15.9997, 9.0001, 14.9897),
+      style: OUTLINE,
+    },
   },
   'vehicle-air': {
     'raised-hull': {

@@ -31,6 +31,8 @@ import {
   ANHANG_F_F_RECIPES,
 } from './recipes-anhang-f.js';
 import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
+import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
+import { ANHANG_I_A_RECIPES } from './recipes-anhang-i.js';
 
 const PORTS: CatalogPorts = {
   baseDrawing,
@@ -84,12 +86,14 @@ export const RECIPES = {
   ...ANHANG_F_D_RECIPES,
   ...ANHANG_F_E_RECIPES,
   ...ANHANG_F_F_RECIPES,
+  ...ANHANG_I_A_RECIPES,
   ...ANHANG_E_A_RECIPES,
   ...ANHANG_E_B_RECIPES,
   ...ANHANG_E_C_RECIPES,
   ...ANHANG_E_D_RECIPES,
   ...ANHANG_E_E_RECIPES,
   ...ANHANG_E_F_RECIPES,
+  ...ANHANG_H_RECIPES,
   'C.1.1': {
     title: 'Löschstaffel',
     referenceAsset: 'C.1.1_Löschstaffel.svg',
@@ -97,7 +101,7 @@ export const RECIPES = {
       kind: 'formation',
       organization: 'feuerwehr',
       strength: 'staffel',
-      capabilities: ['fire-fighting'],
+      bodyMarks: ['fire-fighting'],
     },
   },
   'C.1.2': {
@@ -107,7 +111,17 @@ export const RECIPES = {
       kind: 'formation',
       organization: 'feuerwehr',
       strength: 'gruppe',
-      capabilities: ['fire-fighting'],
+      bodyMarks: ['fire-fighting'],
+    },
+  },
+  'C.1.3': {
+    title: 'Löschzug einer Feuerwehr',
+    referenceAsset: 'C.1.3_Löschzug einer Feuerwehr.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'feuerwehr',
+      strength: 'zug',
+      bodyMarks: ['fire-fighting'],
     },
   },
   'D.3.7': {

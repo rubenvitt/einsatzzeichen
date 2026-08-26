@@ -322,6 +322,124 @@ describe('bodyMark() — gebänderte Logistikkörper', () => {
   });
 });
 
+describe('bodyMark() — Brandbekämpfung für C.1', () => {
+  it('zeichnet Brandbekämpfung für C.1 randbündig ohne rechten Horizontalast', () => {
+    expect(bodyMark('fire-fighting', formationBodyMm)).toEqual([
+      line(1, 16, 21, 16),
+      line(21, 16, 31, 6),
+      line(21, 16, 31, 26),
+    ]);
+  });
+});
+
+describe('bodyMark() — H.1 Veterinärzug', () => {
+  it('rekonstruiert das vollständige Veterinär-V aus den gepaarten Konturkanten', () => {
+    // Die obere und untere Konturkante der Quelle liegen auf y = 8,75 bzw. 9,25 mm: ihre
+    // Mittellinie ist y = 9 mm. An den schrägen Konturpaaren liegen die Knicke bei x = 10/22 mm;
+    // x = 11/21 mm wären bereits Punkte auf den Schenkeln und keine Mittellinienknicke.
+    expect(bodyMark('veterinary', formationBodyMm)).toEqual([{
+      type: 'polyline',
+      role: 'pictogram',
+      points: [[7, 9], [10, 9], [16, 23.6], [22, 9], [25, 9]],
+      style: {
+        fill: 'none',
+        stroke: 'schwarz',
+        strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+      },
+    }]);
+  });
+});
+
+describe('bodyMark() — H.2 Tierdekontamination', () => {
+  it('setzt das Veterinär-V auf die aus beiden Konturkanten gewonnenen Mittellinien', () => {
+    const [veterinaryV] = bodyMark('h-veterinary-decontamination', formationBodyMm);
+    expect(veterinaryV).toEqual({
+      type: 'polyline',
+      role: 'pictogram',
+      points: [[9, 9], [12, 9], [18, 23.6], [24, 9], [27, 9]],
+      style: {
+        fill: 'none',
+        stroke: 'schwarz',
+        strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+      },
+    });
+  });
+
+  it('hält die zwei kurzen kreuzenden Pfeildiagonalen kompakt links unten und vom Veterinär-V getrennt', () => {
+    // Sichtbare H.2-Quelle: die zwei Punkte um (4,583|18) und (10,417|18) tragen nur zwei
+    // kurze kreuzende Pfeildiagonalen in x = 3,75…11,25 und y = 16,75…23,25 mm. Sie reichen
+    // nicht bis zum Veterinär-V, dessen linker Schenkel in dieser unteren Zone erst deutlich
+    // rechts davon liegt. Die frühere globale compactX-Verschiebung erzeugte dagegen Diagonalen
+    // bis x = 19,75 und ließ sie das V kreuzen.
+    const marks = bodyMark('h-veterinary-decontamination', formationBodyMm);
+    expect(marks.slice(1)).toEqual([
+      {
+        type: 'circle', role: 'pictogram', cx: 4.583, cy: 18, r: 1.25,
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+      {
+        type: 'circle', role: 'pictogram', cx: 10.417, cy: 18, r: 1.25,
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+      {
+        type: 'polyline', role: 'pictogram',
+        points: [[5.818, 18.167], [10.75, 22.4]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      {
+        type: 'polyline', role: 'pictogram',
+        points: [[3.75, 20.75], [3.75, 23.25], [6, 23.25]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      {
+        type: 'polyline', role: 'pictogram',
+        points: [[9.182, 18.167], [4.25, 22.4]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      {
+        type: 'polyline', role: 'pictogram',
+        points: [[9, 23.25], [11.25, 23.25], [11.25, 20.75]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+    ]);
+  });
+});
+
+describe('bodyMark() — H.3 Schlacht- und Untersuchungsgruppe', () => {
+  it('setzt das Veterinär-V auf dieselben vermessenen Mittellinien wie H.2', () => {
+    const [veterinaryV] = bodyMark('h-veterinary-slaughter', formationBodyMm);
+    expect(veterinaryV).toEqual({
+      type: 'polyline',
+      role: 'pictogram',
+      points: [[9, 9], [12, 9], [18, 23.6], [24, 9], [27, 9]],
+      style: {
+        fill: 'none',
+        stroke: 'schwarz',
+        strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+      },
+    });
+  });
+
+  it('zeichnet Balken und hohles Hängedreieck als eine verbundene schwarze Kontur', () => {
+    // Der Quellenumriss hat einen 0,5-mm-Balken x = 3…15 auf y = 20,75…21,25 mm. Seine
+    // Unterkante geht an x ≈ 5,475/6,525 unmittelbar in die Außenschultern des Dreiecks über;
+    // nur das innere Dreieck (6|21,4)–(7,5|23,25)–(4,5|23,25) bleibt als Negativraum frei.
+    // Zwei getrennte Strichprimitive erzeugen dagegen eine Lücke und verkleinern die Kontur auf
+    // genau diesen inneren Negativraum.
+    const marks = bodyMark('h-veterinary-slaughter', formationBodyMm);
+    expect(marks.slice(1)).toEqual([{
+      type: 'path',
+      role: 'pictogram',
+      d: 'M 3 20.75 H 15 V 21.25 H 6.525 L 8.25 23.36 V 23.75 H 3.75 V 23.36 L 5.475 21.25 H 3 Z M 6 21.4 L 7.5 23.25 H 4.5 Z',
+      style: {
+        fill: 'schwarz',
+        fillRule: 'evenodd',
+        stroke: 'none',
+      },
+    }]);
+  });
+});
+
 describe('bodyMark() — die Zusätze je Fachdienst', () => {
   it('setzt die Arztleiste 8 mm breit auf 4 mm über der Körperunterkante', () => {
     // Gemessen an `F.1.7_Sanitätsgruppe_arztbesetzt.svg` (und gleichlautend an `F.1.1`): Leiste
@@ -1070,17 +1188,17 @@ describe('bodyMark() — was nicht fortgeschrieben wird', () => {
       bodyMarkWithContext('medical-service', { kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm),
     ).toThrow(/nicht vermessen/);
     expect(() =>
-      bodyMarkWithContext('fire-fighting', { kind: 'formation' }, formationBodyMm),
-    ).toThrow(/keine randbündige Fassung vermessen/);
+      bodyMarkWithContext('fire-fighting', { kind: 'vehicle-land' }, landBodyMm),
+    ).toThrow(/nicht vermessen/);
   });
 
   it('wirft für eine Fähigkeit ohne vermessene randbündige Fassung', () => {
-    // `fire-fighting` steht in `CAPABILITY_IDS` und hat ein Boxpiktogramm, aber keine an einer
+    // `service-water` steht in `CAPABILITY_IDS` und hat ein Boxpiktogramm, aber keine an einer
     // F-Datei vermessene randbündige Fassung. Ein stiller Rückfall auf die Boxfassung wäre der
     // eigentliche Fehler: die beiden Zeichnungen unterscheiden sich in ihren **Maßen** (Kreuz
     // 2…30 gegen 1…31, Leiste 10 gegen 8 mm) und nicht nur in ihrer Größe — das Ergebnis sähe
     // plausibel aus und wäre an keiner Referenzdatei belegt.
-    expect(() => bodyMark('fire-fighting', formationBodyMm)).toThrow(
+    expect(() => bodyMark('service-water', formationBodyMm)).toThrow(
       /keine randbündige Fassung vermessen/,
     );
   });

@@ -67,8 +67,15 @@ export type SymbolKind =
  * mit Mittelpunkt (16|18) und seinem separat vermessenen Giebel. Seine Quellgeometrie ist mit
  * J.3.2 identisch; die Kennung behauptet aber keine Standortsemantik und verwendet nicht dessen
  * abweichend approximierte bestehende Katalogfassung `stationBody(17, 11.5)`.
+ * `inset-hull` ist ein vermessener, eingesenkter unterer Halbkreis für Wasserfahrzeuge aus
+ * Anhang I.
  */
-export type BodyVariantId = 'raised-hull' | 'foot-band' | 'plain-wheel-pair' | 'raised-gable';
+export type BodyVariantId =
+  | 'raised-hull'
+  | 'inset-hull'
+  | 'foot-band'
+  | 'plain-wheel-pair'
+  | 'raised-gable';
 
 /** Organisationen nach Kapitel 2. Bestimmen die Körperfarbe. */
 export type OrganizationId =
@@ -245,6 +252,8 @@ export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
   'circle-information-stem',
   'circle-transport-diamond-arrows',
   'circle-transport-diamond-wheels-arrows',
+  'h-veterinary-decontamination',
+  'h-veterinary-slaughter',
 ] as const);
 
 export type TechnicalBodyMarkId = (typeof TECHNICAL_BODY_MARK_IDS)[number];

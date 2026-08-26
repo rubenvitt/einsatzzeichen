@@ -48,6 +48,8 @@ import {
   ANHANG_F_F_DEVIATIONS,
 } from './recipes-anhang-f.js';
 import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
+import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
+import { ANHANG_I_A_RECIPES } from './recipes-anhang-i.js';
 
 /**
  * Migration nach Slice 2: `technical` ist für alle elf Einträge `approved`, weil das Kriterium
@@ -59,6 +61,23 @@ const TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
   date: '2026-08-05',
+};
+
+const ANHANG_C_A_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'Die verpflichtende Sicht-QA hat die zuvor für C.1 verwendete Kapitel-4-Boxfassung mit ' +
+    'zusätzlichem rechten Horizontalast widerlegt; die eigenständige capability.fire-fighting ' +
+    'bleibt für Kapitel 4 unverändert. C.1.3 verwendet Formation, Feuerwehrfarbe, Stärke zug ' +
+    'und die formationsgebundene bodyMarks-Fassung fire-fighting: (1|16) nach (21|16), von dort ' +
+    'nach (31|6) und (31|26), ohne rechten Horizontalast. Der Körper besteht ' +
+    'matchFingerprint ohne Befund; recipes.test.ts hält Rezept, drei Kopfprimitive bei ' +
+    'cx 11/16/21 und cy 3,5 mm, Körperhülle 1/6 bis 31/26 mm sowie die Innengeometrie fest. ' +
+    'strengths.test.ts trägt die unabhängig vermessenen Zugmarken. Direkter und Mehrgrößen-' +
+    'Snapshot sowie die globalen viewBox-, Metadaten- und Kontrast-Gates prüfen die ' +
+    'renderbare Ausgabe. Das Domain-Review bleibt pending.',
 };
 
 /**
@@ -247,8 +266,7 @@ const ANHANG_F_F_TECHNICAL_REVIEW: Review = {
 
 /**
  * Technisches Review der 21 Anhang-G-Rezepte. Es bezieht sich auf die vermessenen lokalen
- * Geometrie-, Kompositions- und Katalogverträge; der 21-Karten-Vergleich und seine visuelle
- * Akzeptanz gehören ausdrücklich erst zu Task 3.
+ * Geometrie-, Kompositions- und Katalogverträge sowie den abgeschlossenen 21-Karten-Vergleich.
  */
 const ANHANG_G_TECHNICAL_REVIEW: Review = {
   status: 'approved',
@@ -261,8 +279,30 @@ const ANHANG_G_TECHNICAL_REVIEW: Review = {
     'fest; Snapshot-, Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates prüfen den ' +
     'renderbaren Bestand. G.1.5 besitzt in der Quelle keine vergleichbare Füllfläche und ' +
     'trägt deshalb eine ehrliche Körper-Geometrieregression statt eines Fingerprint-Claims. ' +
-    'Der 21-Karten-Referenzvergleich und die visuelle Akzeptanz sind in Task 2 noch nicht erfolgt ' +
-    'und bleiben Task 3 vorbehalten. Sämtliche fachlichen Zuordnungen bleiben pending.',
+    'Der deterministische 21-Karten-Referenzvergleich wurde in Originalauflösung gesichtet; ' +
+    'DLRG, Diesel und Bw sind sichtbar, und die acht kopflosen Formationen bewahren ihre offene ' +
+    'Oberkante. Die abweichende bestehende Polizei-Grünpalette von G.3.2 ist dokumentiert. ' +
+    'Sämtliche fachlichen Zuordnungen bleiben pending.',
+};
+
+const ANHANG_H_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'Die drei H-Originale wurden einzeln vermessen und aus Linien, Polylinien und Kreisen ' +
+    'unabhängig rekonstruiert. H.2 verwendet eine eigene veterinärmedizinische kompakte ' +
+    'Dekontaminationsmarke statt der Human-Dekontamination aus Kapitel 4. Snapshot-, ' +
+    'Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates prüfen den renderbaren Bestand; die ' +
+    'fachliche Zuordnung bleibt im Domain-Review pending.',
+};
+
+const ANHANG_I_A_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'I.3.5-I.3.7 passed measured inset-hull, 7.99 mm center-profile, literal recipe, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
 };
 
 /** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
@@ -634,6 +674,7 @@ function withFindingAndDeviation(
  * `approved` von `rv`, an dem kein Test etwas auffällig fände.
  */
 function technicalReviewFor(section: string): Review {
+  if (section === 'C.1.3') return ANHANG_C_A_TECHNICAL_REVIEW;
   if (Object.hasOwn(ANHANG_E_A_RECIPES, section)) {
     const defect = ANHANG_E_A_FILL_DEFECTS[section];
     if (defect === undefined) return ANHANG_E_A_TECHNICAL_REVIEW;
@@ -721,6 +762,10 @@ function technicalReviewFor(section: string): Review {
   }
   if (Object.hasOwn(ANHANG_G_RECIPES, section)) {
     return ANHANG_G_TECHNICAL_REVIEW;
+  }
+  if (Object.hasOwn(ANHANG_H_RECIPES, section)) return ANHANG_H_TECHNICAL_REVIEW;
+  if (Object.hasOwn(ANHANG_I_A_RECIPES, section)) {
+    return ANHANG_I_A_TECHNICAL_REVIEW;
   }
   return TECHNICAL_REVIEW;
 }
@@ -910,10 +955,15 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     '5.8',
     'C.1.1',
     'C.1.2',
+    'C.1.3',
     'D.3.7',
     'E',
     'F',
     'G',
+    'H',
+    'I.3.5',
+    'I.3.6',
+    'I.3.7',
     'J.1',
     'J.2',
     'J.3',

@@ -422,6 +422,49 @@ describe('Körperformen des Anhangs E.2', () => {
     expect(mmToUnits(chapterOne.maxY - raised.maxY)).toBeGreaterThan(TOLERANCE_UNITS);
   });
 
+  it('trifft die drei LFH-479-Referenzen mit dem vermessenen inset-hull', () => {
+    const insetHull = 'inset-hull' as BodyVariantId;
+    const assets = [
+      'I.3.5_Mehrzweckboot.svg',
+      'I.3.6_Mehrzweckarbeitsboot.svg',
+      'I.3.7_Mehrzweckponton.svg',
+    ] as const;
+
+    for (const asset of assets) {
+      expect(matchFingerprint(baseDrawing('vehicle-water', insetHull), fingerprintFor(asset))).toEqual({
+        ok: true,
+        problems: [],
+      });
+    }
+  });
+
+  it('hält normal, raised-hull und inset-hull geometrisch getrennt', () => {
+    const insetHull = 'inset-hull' as BodyVariantId;
+    const normal = boundsOfMm(drawnBody('vehicle-water'));
+    const raised = boundsOfMm(drawnBody('vehicle-water', 'raised-hull'));
+    const insetBody = drawnBody('vehicle-water', insetHull);
+    if (insetBody.type !== 'path') throw new Error('unreachable');
+    const inset = boundsOfMm(insetBody);
+
+    expect(inset.minY).toBe(9.0001);
+    expect(inset.maxY).toBe(23.9898);
+    expect(insetBody.d).toBe(
+      'M 1.01 9.0001 L 30.9894 9.0001 C 30.9894 17.2787, 24.2783 23.9898, 15.9997 23.9898 C 7.7211 23.9898, 1.01 17.2787, 1.01 9.0001 Z',
+    );
+    for (const other of [normal, raised]) {
+      expect(mmToUnits(Math.max(
+        Math.abs(inset.minY - other.minY),
+        Math.abs(inset.maxY - other.maxY),
+      ))).toBeGreaterThan(TOLERANCE_UNITS);
+    }
+  });
+
+  it('lässt inset-hull bei Land und Luft nicht als Fallback zu', () => {
+    const insetHull = 'inset-hull' as BodyVariantId;
+    expect(() => baseDrawing('vehicle-land', insetHull)).toThrow(/Körpervariante/);
+    expect(() => baseDrawing('vehicle-air', insetHull)).toThrow(/Körpervariante/);
+  });
+
   it('führt am angehobenen F.2-Luftkörper den Rotor als Grundzeichenextra und nicht als Chassis', () => {
     const air = baseDrawing('vehicle-air', 'raised-hull');
     expect(air.children.filter((child) => child.role === 'body')).toHaveLength(1);

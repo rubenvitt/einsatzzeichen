@@ -204,6 +204,9 @@ const raisedVehicleWaterProfile: LayoutProfile = {
   },
 };
 
+/** I.3.5 bis I.3.7: 7,9900 mm über der separat gemessenen Rumpfunterkante. */
+const insetVehicleWaterProfile: LayoutProfile = rectBody(7.99);
+
 /**
  * Verkleinert das gedrehte Quadrat von oben und hält die Unterkante.
  * Belegt an D.3.7: halbe Diagonale 15 → 13 mm, Mittelpunkt 16 → 18 mm, Unterkante bleibt 31 mm.
@@ -356,6 +359,7 @@ export function profileFor(kind: SymbolKind, variant?: BodyVariantId): LayoutPro
   if (kind === 'vehicle-land' && variant === 'plain-wheel-pair') {
     return plainWheelVehicleLandProfile;
   }
+  if (kind === 'vehicle-water' && variant === 'inset-hull') return insetVehicleWaterProfile;
   if (kind === 'circle-12' && variant === 'raised-gable') return raisedGableCircle12Profile;
   if (kind === 'circle-12' && variant === 'foot-band') return footBandCircle12Profile;
   return PROFILES[kind];
