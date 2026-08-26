@@ -1,3 +1,4 @@
+import { readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { renderSvg } from '@einsatzzeichen/core';
 import { type Drawing } from '@einsatzzeichen/schema';
@@ -12,6 +13,13 @@ import { describePictogram } from '../labels.js';
  * (Slice-3-Spec, Abschnitt 7).
  */
 describe('Piktogramm-Snapshots', () => {
+  it('schreibt exakt 255 eigenständige Piktogramm-Snapshots', () => {
+    const snapshots = readdirSync(new URL('./__snapshots__/', import.meta.url), {
+      withFileTypes: true,
+    }).filter((entry) => entry.isFile() && entry.name.endsWith('.svg'));
+    expect(snapshots).toHaveLength(255);
+  });
+
   it.each(ALL_PICTOGRAMS.map((definition) => [pictogramRenderId(definition), definition] as const))(
     'rendert %s unverändert',
     async (id, definition) => {

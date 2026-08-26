@@ -25,6 +25,8 @@ const ACCESSIBLE_LIGHT_PALETTE: ColorPalette = deepFreeze({
 
 const PRINT_MONOCHROME_PALETTE: ColorPalette = deepFreeze({
   schwarz: '#000000',
+  // D.1.8 bleibt in Farbe schwarz auf Rot; nur auf dem Druckgrau braucht sein Rollenlauf Weiss.
+  'funktionslauf-kontrast': '#ffffff',
   weiss: '#ffffff',
   rot: '#666666',
   /**

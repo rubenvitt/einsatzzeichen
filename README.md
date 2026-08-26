@@ -641,6 +641,34 @@ genau acht direkte und acht Mehrgrößen-Snapshots hinzu (151 beziehungsweise 40
 alle 541 zuvor vorhandenen Snapshotdateien blieben bytegleich. Die Einzelsichtung ist nicht der
 finale Task-6-Kontaktbogen, und sämtliche F-f-Domainreviews bleiben `pending`.
 
+## LFH-420 Task 3: Anhang D.1 Führungsstellen im Einsatz
+
+Anhang D.1 ergänzt exakt zehn Darstellungen: D.1.1 ist die erste direkte `leadership`-Definition,
+D.1.2 bis D.1.8 sind sieben Kompositionen aus den vermessenen Funktionsträgerrollen, und D.1.9
+liegt als Primary plus Alternative vor. Damit umfasst der Zwischenstand 146 Rezepte, 255
+Piktogramme, 415 Renderfälle, 434 Manifestzeilen und 448 Reviewobjekte; 274 Manifestzeilen
+repräsentieren auflösbare Elemente. Der beanspruchte D-Scope bleibt trotzdem bei `D.3.7` und
+wird erst nach vollständiger Umsetzung des Anhangs D erweitert.
+
+D.1.1 bewahrt die nichtquadratische 32×46-mm-Quelle einschließlich Bezeichnungslauf,
+Rahmenanschluss, vierzehn gestrichelten Teilstücken und Außenkreuz. Eine angeforderte
+Rasterbreite bleibt eine Breite: 16/24/32/64/128/256 px ergeben deshalb
+23/35/46/92/184/368 px Höhe. Die übrigen neun Darstellungen bleiben 32×32 mm.
+
+Der Rollenlauf `Ber` aus D.1.8 verwendet den semantischen Token `funktionslauf-kontrast`:
+Referenz und Accessible bleiben quellentreu schwarz auf Rot, nur das monochrome Drucktheme
+invertiert diesen einen Lauf zu Weiß auf Grau. Die Textschwelle bleibt in allen drei Themes bei
+4,5:1; es kommt keine Kontrastausnahme hinzu.
+
+D.1.9 besitzt bewusst keine `functionRole`. Beide Varianten tragen exakt einen äußeren
+`trupp`-Stärkepunkt und die Sanätsmarke; die Alternative modelliert ihre drei weißen Kreise als
+negative Innenlöcher der schwarzen 4-mm-Kappe, nicht als zweiten Stärkegrad. Die aus der weißen
+Quellfläche abgeleitete Zuordnung `hilfsorganisation` bleibt im Reviewtext ausdrücklich offen.
+Alle zehn D.1-Domainreviews stehen weiterhin auf `pending`; die technische Rollen- und
+Geometrieentscheidung ist in
+[`docs/decisions/2026-08-26-anhang-d-function-roles.md`](docs/decisions/2026-08-26-anhang-d-function-roles.md)
+dokumentiert.
+
 ## Der lokale Referenzbestand
 
 `taktische-zeichen/` ist ein **lokaler Ordner mit 661 damals von der BABZ bereitgestellten

@@ -61,6 +61,12 @@ Die Quell-Tinthüllen der großen Formationstexte lagen beispielsweise für `Kat
 `x=4,501075…28,165320`, `y=12,697836…20,126955`. Die finalen Boxen sind nicht enger als diese
 Pfade, sondern decken zusätzlich die deterministische Arimo-Rastertinte ab.
 
+Dasselbe gilt für den direkten Bezeichnungslauf von D.1.1: Seine Quellplatzierung bleibt bei
+`x=2,673`, Grundlinie `13` und Schriftgrad `4,243` mm. Die gebundene Arimo-Rasterung belegt bei
+512 px jedoch `x=3…26,9375` und `y=9,9375…13,875` mm. Deshalb sichert die deklarierte Box
+`B[2.673,9.971,24.3,3.927]` die reale Tinte ab; die engere Quellpfadbreite `21,344` mm wäre für
+den im Renderer verwendeten Font falsch.
+
 ## Personen: endgültige Rollenmetriken
 
 | Abschnitt / Rolle | Familie / Kopf | Rollenlauf | Trägerlauf | erlaubte Marken |
@@ -85,9 +91,19 @@ Pfade, sondern decken zusätzlich die deterministische Arimo-Rastertinte ab.
 | D.4.5 `international-relief-operation-director`† | C / EU | — | — | — |
 
 Schwarzer Rollenlauf auf der Körperfarbe ist der Standard. `TZ` ist die beobachtete weiße
-Ausnahme. Trägerläufe stehen schwarz auf der Ausgabeoberfläche. Ihre Hintergründe sind deshalb
-expliziter Vertragsbestandteil und werden für Zeichnung und Kontrastgate aus derselben Definition
-gelesen.
+Ausnahme. D.1.8 verwendet für `Ber` den semantischen Token `funktionslauf-kontrast`: Im
+Referenz- und im barrierearmen Farbtheme löst er wie die Quelle zu Schwarz auf Rot auf
+(5,218:1), ausschließlich im monochromen Drucktheme zu Weiß auf `#666666` (5,742:1). Damit
+bleiben alle drei Theme-Paare über der unveränderten Textschwelle von 4,5:1. Alle anderen
+Rollenläufe behalten ihr bisheriges Ink. Trägerläufe stehen schwarz auf der Ausgabeoberfläche.
+Ihre Hintergründe sind deshalb expliziter Vertragsbestandteil und werden für Zeichnung und
+Kontrastgate aus derselben Definition gelesen.
+
+Diese eng begrenzte Theme-Auflösung ist bewusst keine Kontrastausnahme. Verworfen wurden eine
+neue `ContrastException` und eine Absenkung auf 3:1, weil `Ber` lesbarer Text bleibt; als
+Glyphenpfade wäre der Lauf nicht mehr der vermessene Textvertrag; ein global dunkleres `rot`
+würde sämtliche bestehenden roten Zeichen verändern. Der eigene Token hält dagegen die
+quellentreue Farbausgabe stabil und verändert nur den einen problematischen Lauf im Drucktheme.
 
 ## Verwaltungsstufen
 

@@ -8,6 +8,7 @@ import { STATE_PICTOGRAMS } from './states/index.js';
 import { COMMS_PICTOGRAMS } from './comms/index.js';
 import { DAMAGE_PICTOGRAMS } from './damage/index.js';
 import { WILDFIRE_PICTOGRAMS } from './wildfire/index.js';
+import { LEADERSHIP_PICTOGRAMS } from './leadership/index.js';
 import type { CatalogPictogramDefinition } from './catalog-definition.js';
 import { deepFreeze } from '../readonly-data.js';
 
@@ -23,19 +24,21 @@ export function pictogramRenderId(
   return value.variant === 'primary' ? value.id : `${value.id}.${value.variant}`;
 }
 
-/** Alle Piktogramme des Katalogs, ein Modul je Bereich — seit D.4 alle fünf Arten. */
+/** Alle Piktogramme des Katalogs, ein Modul je Bereich — Anhang D ergänzt Leadership als sechste Art. */
 export const ALL_PICTOGRAMS: readonly CatalogPictogramDefinition[] = deepFreeze([
   ...CAPABILITY_PICTOGRAMS,
   ...STATE_PICTOGRAMS,
   ...COMMS_PICTOGRAMS,
   ...DAMAGE_PICTOGRAMS,
   ...WILDFIRE_PICTOGRAMS,
+  ...LEADERSHIP_PICTOGRAMS,
 ]);
 
 export { STATE_PICTOGRAMS } from './states/index.js';
 export { COMMS_PICTOGRAMS } from './comms/index.js';
 export { DAMAGE_PICTOGRAMS } from './damage/index.js';
 export { WILDFIRE_PICTOGRAMS } from './wildfire/index.js';
+export { LEADERSHIP_PICTOGRAMS } from './leadership/index.js';
 
 export function buildPictogramRegistry(
   definitions: readonly CatalogPictogramDefinition[],

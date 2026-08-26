@@ -21,9 +21,25 @@ describe('Render-Theme-Register', () => {
   it('enthält in jedem totalen Theme ausschließlich sechsstellige RGB-Hexwerte', () => {
     for (const theme of Object.values(RENDER_THEMES)) {
       expect(theme.surface).toMatch(/^#[0-9a-f]{6}$/);
-      expect(Object.keys(theme.palette)).toHaveLength(12);
+      expect(Object.keys(theme.palette)).toHaveLength(13);
       for (const color of Object.values(theme.palette)) expect(color).toMatch(/^#[0-9a-f]{6}$/);
     }
+  });
+
+  it('löst den semantischen Funktionslauf in jedem Theme total und nur im Drucktheme invertiert auf', () => {
+    const resolved = Object.fromEntries(
+      Object.entries(RENDER_THEMES).map(([id, theme]) => [
+        id,
+        (theme.palette as unknown as Readonly<Record<string, string>>)[
+          'funktionslauf-kontrast'
+        ],
+      ]),
+    );
+    expect(resolved).toEqual({
+      reference: '#000000',
+      'accessible-light': '#000000',
+      'print-monochrome': '#ffffff',
+    });
   });
 
   it('friert Register, Themes, Paletten und Kontursignaturen tief ein', () => {

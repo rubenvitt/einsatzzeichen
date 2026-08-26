@@ -69,7 +69,16 @@ describe('Kompositionsrezepte', () => {
 
   it.each(fingerprintCases)('reproduziert die Referenz %s', (_section, recipe) => {
     const drawing = composeFromCatalog(recipe.spec);
-    const result = matchFingerprint(drawing, fingerprintFor(recipe.referenceAsset));
+    const fingerprint = fingerprintFor(recipe.referenceAsset);
+    // D.1.2–D.1.8 verdecken die obere Rahmenlinie mit ihrer 3-mm-Kappe. Der Extraktor führt
+    // deshalb neben der exakten 1/6–31/26-mm-Füllhülle einen nur noch ab y=7,375 sichtbaren
+    // `ring`. Der semantische `body` bleibt die vollständige Füllhülle; die Kappe ist eine
+    // getrennte Dekoration. Für genau diese sieben Quellen vergleichen wir daher die ebenfalls
+    // extrahierte `rect`-Hülle und nicht die durch Übermalung verkürzte sichtbare Kontur.
+    const comparableFingerprint = /^D\.1\.[2-8][._]/.test(recipe.referenceAsset)
+      ? { ...fingerprint, shapes: fingerprint.shapes.filter((shape) => shape.kind !== 'ring') }
+      : fingerprint;
+    const result = matchFingerprint(drawing, comparableFingerprint);
     expect(result.problems).toEqual([]);
     expect(result.ok).toBe(true);
   });
@@ -206,6 +215,81 @@ describe('Kompositionsrezepte', () => {
   });
 });
 
+describe('Anhang D.1, Führungsstellen im Einsatz', () => {
+  const expectedKeys = [
+    'D.1.2',
+    'D.1.3',
+    'D.1.4',
+    'D.1.5',
+    'D.1.6',
+    'D.1.7',
+    'D.1.8',
+    'D.1.9',
+    'D.1.9#alternative',
+  ] as const;
+
+  it('führt exakt die neun komponierten D.1-Darstellungen', () => {
+    expect(Object.keys(RECIPES).filter((key) => key.startsWith('D.1.'))).toEqual(expectedKeys);
+    expect(Object.keys(RECIPES)).toHaveLength(146);
+  });
+
+  it('bindet D.1.2 bis D.1.8 an die sieben gemessenen Formationsrollen', () => {
+    expect(expectedKeys.slice(0, 7).map((key) => RECIPES[key]?.spec)).toEqual([
+      {
+        kind: 'formation', organization: 'fuehrung-leitung',
+        functionRole: 'disaster-control-command',
+      },
+      {
+        kind: 'formation', organization: 'fuehrung-leitung',
+        functionRole: 'technical-incident-command-evacuation',
+      },
+      {
+        kind: 'formation', organization: 'fuehrung-leitung',
+        functionRole: 'incident-command',
+      },
+      {
+        kind: 'formation', organization: 'fuehrung-leitung',
+        functionRole: 'incident-section-command-north',
+      },
+      {
+        kind: 'formation', organization: 'fuehrung-leitung',
+        functionRole: 'incident-subsection-command',
+      },
+      {
+        kind: 'formation', organization: 'fuehrung-leitung', strength: 'gruppe',
+        functionRole: 'technical-incident-command-group',
+      },
+      {
+        kind: 'formation', organization: 'feuerwehr', strength: 'gruppe',
+        functionRole: 'fire-service-readiness-command-group',
+      },
+    ]);
+  });
+
+  it('hält beide D.1.9-Darstellungen rollenlos und die alternative Dreierreihe als Innenmarke', () => {
+    const cases = [
+      ['D.1.9', 'formation-solid-cap-3mm'],
+      ['D.1.9#alternative', 'formation-solid-cap-4mm-three-hole-row'],
+    ] as const;
+
+    for (const [key, cap] of cases) {
+      const recipe = RECIPES[key];
+      expect(recipe, `${key} fehlt`).toBeDefined();
+      if (recipe === undefined) continue;
+      expect(recipe.spec).toEqual({
+        kind: 'formation',
+        organization: 'hilfsorganisation',
+        strength: 'trupp',
+        bodyMarks: ['medical-service', cap],
+      });
+      expect(recipe.spec).not.toHaveProperty('functionRole');
+
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      expect(drawing.children.filter((child) => child.role === 'head')).toHaveLength(1);
+    }
+  });
+});
+
 describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
   const cases = Object.entries<Recipe>(ANHANG_E_A_RECIPES);
 
@@ -333,8 +417,9 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
 
   it('verlangt für die Beschriftung auf der Körperfarbe die Textschwelle, nicht die Nichttextschwelle', () => {
     const requirements = labelContrastRequirements();
-    // **Sechs seit dem Teilslice F-e**, und nur eine davon besteht nicht. Drei Nachbarschaften
-    // und drei Organisationen kommen hier zusammen: die Beschriftung im Körper, die
+    // **Fünfzehn seit Anhang D.1**, und nur eine davon besteht nicht. Neun Anforderungen
+    // stammen aus den einzeln vermessenen Rollenläufen, sechs aus den bisherigen Labelzonen.
+    // Drei Nachbarschaften und drei Organisationen kommen bei den Labelzonen zusammen: die Beschriftung im Körper, die
     // Organisationsfarbe auf der Ausgabeoberfläche sowie die schwarzen Kreislabels, die
     // teilweise außerhalb der weißen Körperfläche auf `surface` stehen.
     //
@@ -352,6 +437,60 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
     // `CONTRAST_EXCEPTIONS` als entschiedene Ausnahme gezählt. Diese Zeile ist die Stelle, an der
     // ein zweites solches Rezept mechanisch sichtbar würde.
     expect(requirements).toEqual([
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf disaster-control-command: KatSL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf technical-incident-command-evacuation: TEL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf technical-incident-command-evacuation: Evakuierung',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf incident-command: EL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf incident-section-command-north: EAL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf incident-section-command-north: Nord',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf incident-subsection-command: UEAL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf technical-incident-command-group: TEL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'funktionslauf-kontrast',
+        background: 'rot',
+        context: 'Funktionslauf fire-service-readiness-command-group: Ber',
+        minimum: 4.5,
+      },
       {
         foreground: 'schwarz',
         background: 'weiss',
@@ -1192,12 +1331,12 @@ describe('Anhang F, Teilslice F-f', () => {
     },
   } as const;
 
-  it('deckt F.3.12 bis F.3.19 lückenlos ohne Alternative ab und erreicht 137 Rezepte', () => {
+  it('deckt F.3.12 bis F.3.19 lückenlos ohne Alternative ab und erreicht mit D.1 146 Rezepte', () => {
     const entries = Object.entries<Recipe>(RECIPES)
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(137);
+    expect(Object.keys(RECIPES)).toHaveLength(146);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {

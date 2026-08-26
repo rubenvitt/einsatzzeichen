@@ -33,6 +33,28 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:1.14#primary': { status: 'pending' },
   'bbk-babz-2025:C.1.1#primary': { status: 'pending' },
   'bbk-babz-2025:C.1.2#primary': { status: 'pending' },
+  // Anhang D.1: alle zehn Darstellungen bleiben fachlich offen. Insbesondere behauptet die
+  // technische ID von D.1.1 keine freigegebene Übersetzung des Führungsbegriffs; D.1.3 und
+  // D.1.8 tragen die im Design markierten englischen Arbeitsnamen weiter.
+  'bbk-babz-2025:D.1.1#primary': { status: 'pending' },
+  'bbk-babz-2025:D.1.2#primary': { status: 'pending' },
+  'bbk-babz-2025:D.1.3#primary': { status: 'pending' },
+  'bbk-babz-2025:D.1.4#primary': { status: 'pending' },
+  'bbk-babz-2025:D.1.5#primary': { status: 'pending' },
+  'bbk-babz-2025:D.1.6#primary': { status: 'pending' },
+  'bbk-babz-2025:D.1.7#primary': { status: 'pending' },
+  'bbk-babz-2025:D.1.8#primary': { status: 'pending' },
+  // Die Quelle belegt an D.1.9 zunächst nur einen weißen Körper. Ob daraus die Organisation
+  // hilfsorganisation folgt, ist für beide Darstellungen eine offene Fachfrage, keine durch die
+  // sichtbare Farbe erledigte Freigabe.
+  'bbk-babz-2025:D.1.9#primary': {
+    status: 'pending',
+    note: 'Organisationszuordnung hilfsorganisation ist aus der weißen Fläche abgeleitet.',
+  },
+  'bbk-babz-2025:D.1.9#alternative': {
+    status: 'pending',
+    note: 'Organisationszuordnung hilfsorganisation ist aus der weißen Fläche abgeleitet.',
+  },
   // D.3.7 ist technisch auf die gemessene Funktionsfassung migriert. Ob die Rolle
   // „Zugführer der Feuerwehr" und die innere Brandbekämpfungsmarke fachlich genau diese
   // Semantik tragen, bleibt ausdrücklich der Fachprüfung vorbehalten.

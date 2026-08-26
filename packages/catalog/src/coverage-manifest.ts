@@ -13,7 +13,10 @@ import { referenceLacksComparableShape } from './fingerprint-index.js';
 import { ALL_PICTOGRAMS } from './pictograms/index.js';
 import { deepFreeze, type DeepReadonly } from './readonly-data.js';
 import { RECIPES } from './recipes.js';
-import { ANHANG_D_TASK_2_RECIPES } from './recipes-anhang-d.js';
+import {
+  ANHANG_D_TASK_2_RECIPES,
+  ANHANG_D_TASK_3_RECIPES,
+} from './recipes-anhang-d.js';
 import {
   ANHANG_E_A_FILL_DEFECTS,
   ANHANG_E_A_RECIPES,
@@ -74,6 +77,32 @@ const ANHANG_D_TASK_2_TECHNICAL_REVIEW: Review = {
     'Body-Mark- und Kompositionsreihenfolge sind lokal gegatet; Fingerprint-, Snapshot-, ' +
     'Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates prüfen den renderbaren Eintrag. ' +
     'Die fachliche Rollenbezeichnung bleibt im Domain-Review pending.',
+};
+
+const ANHANG_D_TASK_3_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'D.1.2 bis D.1.8 konsumieren die sieben einzeln vermessenen Formationsrollen mit ihren ' +
+    'festen Textmetriken und schwarzen 3-mm-Kappen. D.1.9 bleibt rollenlos: beide Fassungen ' +
+    'tragen genau einen äußeren Trupppunkt, die Alternative führt ihre drei weißen Löcher als ' +
+    'negative Innenmarken der 4-mm-Kappe. Die Zuordnung der weißen D.1.9-Körper zu ' +
+    'hilfsorganisation ist eine technische Entscheidung und bleibt im Domain-Review ' +
+    'ausdrücklich pending. Fingerprint-, Snapshot-, Mehrgrößen-, viewBox-, Metadaten- und ' +
+    'Kontrast-Gates prüfen alle neun renderbaren Rezepte.',
+};
+
+const LEADERSHIP_PICTOGRAM_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'D.1.1 ist direkt aus gemessenen Rechteck-, Linien- und Kreuzprimitiven aufgebaut. Die ' +
+    'eigene 32×46-mm-ViewBox erhält Körper, vierzehnteilige Verbindung und Außenkreuz ' +
+    'vollständig; der 32×32-Negativfall meldet outside-viewbox. Snapshot, Kommando, Box, ' +
+    'Standalone-Clipping, Mehrgrößen-, Metadaten- und explizite Kontrast-Gates prüfen den ' +
+    'renderbaren Eintrag. Benennung und fachliche Bedeutung bleiben pending.',
 };
 
 /**
@@ -629,6 +658,9 @@ function withFindingAndDeviation(
  * `approved` von `rv`, an dem kein Test etwas auffällig fände.
  */
 function technicalReviewFor(section: string): Review {
+  if (Object.hasOwn(ANHANG_D_TASK_3_RECIPES, section)) {
+    return ANHANG_D_TASK_3_TECHNICAL_REVIEW;
+  }
   if (Object.hasOwn(ANHANG_D_TASK_2_RECIPES, section)) {
     return ANHANG_D_TASK_2_TECHNICAL_REVIEW;
   }
@@ -830,6 +862,8 @@ const pictogramEntries: CoverageEntry[] = ALL_PICTOGRAMS.map((definition) => {
   const sourceId = `bbk-babz-2025:${definition.section}`;
   const technicalReview = definition.id.startsWith('state.')
     ? STATE_PICTOGRAM_TECHNICAL_REVIEW
+    : definition.id.startsWith('leadership.')
+      ? LEADERSHIP_PICTOGRAM_TECHNICAL_REVIEW
     : definition.id.startsWith('damage.') || definition.id.startsWith('wildfire.')
       ? DAMAGE_PICTOGRAM_TECHNICAL_REVIEW
       : PICTOGRAM_TECHNICAL_REVIEW;

@@ -11,6 +11,7 @@ describe('geometry', () => {
   it('enthält alle in der Referenz vorkommenden Farben', () => {
     expect(PALETTE).toEqual({
       schwarz: '#000000',
+      'funktionslauf-kontrast': '#000000',
       weiss: '#ffffff',
       rot: '#fa1919',
       blau: '#003296',

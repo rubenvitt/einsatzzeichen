@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { checkBox, checkClipping, checkCommands, checkTextLegibility } from '@einsatzzeichen/core';
+import {
+  checkBox,
+  checkClipping,
+  checkCommands,
+  checkTextLegibility,
+  checkViewBox,
+  rasterDimensionsForWidth,
+} from '@einsatzzeichen/core';
 import {
   DEFAULT_VIEWBOX_MM,
   entryKey,
@@ -11,6 +18,7 @@ import { BASE_SYMBOLS, baseDrawing } from '../base-symbols.js';
 import { COVERAGE_MANIFEST } from '../coverage-manifest.js';
 import { deepFreeze } from '../readonly-data.js';
 import type { CatalogPictogramDefinition } from './catalog-definition.js';
+import * as catalogDefinitionExports from './catalog-definition.js';
 import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
 import { ALL_PICTOGRAMS, pictogramVariantKey } from './index.js';
 import { STATE_PICTOGRAMS } from './states/index.js';
@@ -70,6 +78,32 @@ const CENTERED_TEST_PICTOGRAM: PictogramDefinition = {
  */
 const RENDER_SIZES_PX = [16, 24, 32, 64, 128, 256] as const;
 
+const LEADERSHIP_INPUT_FIXTURE = {
+  section: 'D.1.1',
+  id: 'command-post-in-operation',
+  title: 'Befehlsstelle im Einsatz',
+  referenceAsset: 'D.1.1_Befehlsstelle im Einsatz.svg',
+  viewBox: { width: 32, height: 46 },
+  box: { xMm: 1, yMm: 1, widthMm: 30, heightMm: 44 },
+  primitives: [
+    {
+      type: 'rect', role: 'pictogram', x: 1, y: 1, width: 30, height: 44,
+      style: { fill: 'gelb' },
+    },
+  ],
+  contrastPairs: [
+    { foreground: 'gelb', background: 'surface', context: 'Testfläche' },
+  ],
+};
+
+function defineLeadershipAtRuntime(input: unknown): unknown {
+  const candidate = Reflect.get(catalogDefinitionExports, 'defineLeadership');
+  if (typeof candidate !== 'function') {
+    throw new Error('defineLeadership fehlt im Katalogvertrag.');
+  }
+  return Reflect.apply(candidate, undefined, [input]);
+}
+
 function clippingBodyFor(definition: CatalogPictogramDefinition): Primitive {
   return definition.placement.mode === 'in-body'
     ? bodyOf(definition.placement.bodyKind)
@@ -104,6 +138,44 @@ function standaloneFixture(
 }
 
 describe('Piktogramm-Gates über den Katalogbestand', () => {
+  it.each([
+    ['fehlend', undefined],
+    ['nicht endlich', { width: Number.NaN, height: 46 }],
+    ['Breite null', { width: 0, height: 46 }],
+    ['negative Höhe', { width: 32, height: -46 }],
+  ])('lehnt eine %s Leadership-ViewBox mit stabilem Befund ab', (_label, viewBox) => {
+    const input = { ...LEADERSHIP_INPUT_FIXTURE, viewBox };
+    expect(() => defineLeadershipAtRuntime(input)).toThrow(/leadership-viewbox-required/);
+  });
+
+  it('lehnt sichtbare Leadership-Geometrie außerhalb der deklarierten ViewBox stabil ab', () => {
+    const input = {
+      ...LEADERSHIP_INPUT_FIXTURE,
+      primitives: [{
+        type: 'line', role: 'pictogram', x1: 1, y1: 1, x2: 31, y2: 46,
+        style: { stroke: 'schwarz', strokeWidth: 0.5 },
+      }],
+    };
+    expect(() => defineLeadershipAtRuntime(input)).toThrow(/leadership-outside-viewbox/);
+  });
+
+  it('bewahrt die vollständige D.1.1-Verbindung in 32×46 mm und würde sie in 32×32 abschneiden', () => {
+    const definition = ALL_PICTOGRAMS.find(
+      (candidate) => candidate.id === 'leadership.command-post-in-operation',
+    );
+    expect(definition).toBeDefined();
+    if (definition === undefined) return;
+
+    const drawing = { viewBox: definition.viewBox, children: definition.primitives };
+    expect(checkViewBox(drawing)).toEqual([]);
+    expect(checkViewBox({ ...drawing, viewBox: DEFAULT_VIEWBOX_MM })).toContainEqual(
+      expect.objectContaining({ rule: 'outside-viewbox' }),
+    );
+    expect(RENDER_SIZES_PX.map((size) =>
+      rasterDimensionsForWidth(definition.viewBox, size).heightPx,
+    )).toEqual([23, 35, 46, 92, 184, 368]);
+  });
+
   it('bindet den Vertragsclaim exakt an die ausgeführten Piktogrammfälle', () => {
     const tested = ALL_PICTOGRAMS.map(pictogramVariantKey).sort();
     const claimed = COVERAGE_MANIFEST.entries
@@ -156,10 +228,9 @@ describe('Piktogramm-Gates über den Katalogbestand', () => {
   // Ohne diese Verdrahtung liefe checkTextLegibility außerhalb seines eigenen Unittests nie —
   // checkPictogram fasst nur Kommando-, Box- und Clipping-Gate zusammen (siehe dessen Kommentar
   // in pictogram-gate.ts), das Lesbarkeits-Gate ist bewusst kein vierter Baustein davon, weil es
-  // die Rendergrößenreihe braucht, die core absichtlich nicht kennt. Heute trägt kein
-  // ALL_PICTOGRAMS-Eintrag Text, der Test ist also grün, weil er nichts zu melden hat — nicht,
-  // weil er nichts prüft. Sobald ein künftiges Textpiktogramm dazukommt, prüft genau dieser Lauf
-  // es gegen alle sechs Snapshotgrößen.
+  // die Rendergrößenreihe braucht, die core absichtlich nicht kennt. D.1.1 ist der erste reale
+  // ALL_PICTOGRAMS-Eintrag mit Text; genau dieser Lauf prüft seinen Bezeichnungslauf gegen alle
+  // sechs Snapshotgrößen.
   it.each(ALL_PICTOGRAMS.map((definition) => [pictogramVariantKey(definition), definition] as const))(
     'besteht für %s das Text-Legibility-Gate über alle sechs Rendergrößen',
     (_id, definition) => {

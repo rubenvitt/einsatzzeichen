@@ -69,7 +69,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 424 Zeilen mit 273 Elementdarstellungen', () => {
+  it('enthält exakt 434 Zeilen mit 274 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -77,7 +77,8 @@ describe('Coverage-Manifest', () => {
         entry.implementation.startsWith('state.') ||
         entry.implementation.startsWith('comms.') ||
         entry.implementation.startsWith('damage.') ||
-        entry.implementation.startsWith('wildfire.'),
+        entry.implementation.startsWith('wildfire.') ||
+        entry.implementation.startsWith('leadership.'),
     );
     const counts = COVERAGE_MANIFEST.entries.reduce<Record<string, number>>((acc, e) => {
       acc[e.coverage] = (acc[e.coverage] ?? 0) + 1;
@@ -97,17 +98,17 @@ describe('Coverage-Manifest', () => {
       // `alternative` — die Zeile zählt einzeln, weil das Manifest Darstellungen zählt und nicht
       // Abschnitte, weil F.1.3 dort noch bewusst offen blieb; F-b baut es mit `foot-band`.
       // F-d ergänzt F.2.10 bis F.2.17 als acht reine Anwendungen des Fahrzeugvertrags.
-      'composition-recipe': 137,
-      // 254 Piktogramme plus acht Organisationen (seit LFH-424 mit hilfsorganisation), vier
+      'composition-recipe': 146,
+      // 255 Piktogramme plus acht Organisationen (seit LFH-424 mit hilfsorganisation), vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
       // `amphibienfahrzeug` hat weiterhin keinen Eintrag, weil seine Wellenlinie nur als
       // Strichhülle vermessen ist.
-      element: 273,
+      element: 274,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(424);
-    expect(elementRows).toHaveLength(273);
-    expect(pictogramRows).toHaveLength(254);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(434);
+    expect(elementRows).toHaveLength(274);
+    expect(pictogramRows).toHaveLength(255);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
   });
 
@@ -126,6 +127,26 @@ describe('Coverage-Manifest', () => {
     ) === true)).toBe(true);
     expect(entries.every((entry) => entry.review.domain.status === 'pending')).toBe(true);
     expect(COVERAGE_MANIFEST.scope).toContain('F');
+  });
+
+  it('führt exakt zehn D.1-Darstellungen und lässt den Scope bis D.4 bei D.3.7', () => {
+    const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
+      entry.sourceId.startsWith('bbk-babz-2025:D.1.'),
+    );
+    expect(rows.map((entry) => entryKey(entry.sourceId, entry.variant))).toEqual([
+      'bbk-babz-2025:D.1.2#primary',
+      'bbk-babz-2025:D.1.3#primary',
+      'bbk-babz-2025:D.1.4#primary',
+      'bbk-babz-2025:D.1.5#primary',
+      'bbk-babz-2025:D.1.6#primary',
+      'bbk-babz-2025:D.1.7#primary',
+      'bbk-babz-2025:D.1.8#primary',
+      'bbk-babz-2025:D.1.9#primary',
+      'bbk-babz-2025:D.1.9#alternative',
+      'bbk-babz-2025:D.1.1#primary',
+    ]);
+    expect(COVERAGE_MANIFEST.scope).toContain('D.3.7');
+    expect(COVERAGE_MANIFEST.scope).not.toContain('D');
   });
 
   it('führt Anhang E lückenlos und trägt damit das `E` im beanspruchten Umfang', () => {
@@ -435,7 +456,7 @@ describe('Manifest-Einträge für Piktogramme', () => {
       .filter((entry) => definitionKeys.has(entryKey(entry.implementation, entry.variant)))
       .map((entry) => entryKey(entry.implementation, entry.variant))
       .sort();
-    expect(rows).toHaveLength(254);
+    expect(rows).toHaveLength(255);
     expect(rows).toEqual([...definitionKeys].sort());
   });
 

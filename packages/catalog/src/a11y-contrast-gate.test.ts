@@ -48,7 +48,7 @@ function requirements(): ContrastRequirement[] {
 
 describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
   it('hat echte Piktogramm-Nachbarschaften zu prüfen', () => {
-    expect(ALL_PICTOGRAMS.length).toBeGreaterThan(0);
+    expect(ALL_PICTOGRAMS).toHaveLength(255);
     expect(requirements().length).toBeGreaterThan(1);
   });
 
@@ -178,6 +178,32 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
         minimum: MINIMUM_TEXT_CONTRAST,
       },
     ]);
+  });
+
+  it('hält D.1.8 quellentreu schwarz und invertiert nur den Funktionslauf im Drucktheme', () => {
+    const derived = labelContrastRequirements([RECIPES['D.1.8']]);
+    expect(derived).toEqual([{
+      foreground: 'funktionslauf-kontrast',
+      background: 'rot',
+      context: 'Funktionslauf fire-service-readiness-command-group: Ber',
+      minimum: MINIMUM_TEXT_CONTRAST,
+    }]);
+
+    const cases = [
+      [RENDER_THEMES.reference, '#000000', 5.218],
+      [ACCESSIBLE_LIGHT_THEME, '#000000', 5.218],
+      [PRINT_MONOCHROME_THEME, '#ffffff', 5.742],
+    ] as const;
+    for (const [theme, expectedInk, expectedRatio] of cases) {
+      const ink = (theme.palette as unknown as Readonly<
+        Record<string, `#${string}` | undefined>
+      >)['funktionslauf-kontrast'];
+      expect(ink, theme.id).toBe(expectedInk);
+      if (ink === undefined) continue;
+      const ratio = contrastRatio(ink, theme.palette.rot);
+      expect(ratio, theme.id).toBeCloseTo(expectedRatio, 3);
+      expect(ratio, theme.id).toBeGreaterThanOrEqual(MINIMUM_TEXT_CONTRAST);
+    }
   });
 
   it('hält weiss auf orange als entschiedene Ausnahme fest, die kein Theme löst', () => {

@@ -289,6 +289,7 @@ export function requiredTestEvidence(entry: CoverageEntry): readonly TestEvidenc
     case 'comms':
     case 'damage':
     case 'wildfire':
+    case 'leadership':
       return PICTOGRAM_EVIDENCE;
     default: {
       const exhaustive: never = descriptor.kind;

@@ -184,7 +184,14 @@ const DEFINITIONS: Record<FunctionRoleId, FunctionRoleDefinition> = {
   'fire-service-readiness-command-group': formationRole(
     'fire-service-readiness-command-group',
     'Führungsgruppe einer Feuerwehrbereitschaft',
-    [roleRun('Ber', 20, FORMATION_LARGE, { xMm: 8.4, yMm: 12.4, widthMm: 16, heightMm: 7.9 }, 25)],
+    [roleRun(
+      'Ber',
+      20,
+      FORMATION_LARGE,
+      { xMm: 8.4, yMm: 12.4, widthMm: 16, heightMm: 7.9 },
+      25,
+      'funktionslauf-kontrast',
+    )],
     'strength',
   ),
   'technical-incident-commander': personRole({

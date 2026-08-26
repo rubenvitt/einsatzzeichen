@@ -18,12 +18,12 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 405 seit F-f: 308 nach LFH-424, plus die 31 Zeichen aus E.2 und alle 66 F-Rezepte.
-    expect(ids).toHaveLength(405);
+    // 415 nach D.1: 405 seit F-f, plus neun Rezepte und D.1.1 als direkte Definition.
+    expect(ids).toHaveLength(415);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
     // dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66 weitere.
-    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(137);
+    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(146);
     expect(ids.filter((id) => id.startsWith('recipe.E.1.'))).toHaveLength(37);
     // Anhang F, Teilslice F-a: zehn Abschnitte in elf Renderfällen. Der elfte ist
     // `recipe.F.1.11#alternative` — der **erste Renderfall des Katalogs, dessen Darstellung im
@@ -48,6 +48,9 @@ describe('vollständige Renderfallmenge', () => {
     expect(ids.filter((id) => id.startsWith('comms.'))).toHaveLength(53);
     expect(ids.filter((id) => id.startsWith('damage.'))).toHaveLength(28);
     expect(ids.filter((id) => id.startsWith('wildfire.'))).toHaveLength(14);
+    expect(ids.filter((id) => id.startsWith('leadership.'))).toEqual([
+      'leadership.command-post-in-operation',
+    ]);
     // Was übrig bleibt, sind die vierzehn Grundzeichen aus Kapitel 1 — die einzigen
     // Renderfälle ohne Artpräfix. Seit LFH-424 ist das Kapitel vollständig.
     expect(
@@ -58,7 +61,8 @@ describe('vollständige Renderfallmenge', () => {
           !id.startsWith('state.') &&
           !id.startsWith('comms.') &&
           !id.startsWith('damage.') &&
-          !id.startsWith('wildfire.'),
+          !id.startsWith('wildfire.') &&
+          !id.startsWith('leadership.'),
       ),
     ).toHaveLength(14);
     expect(new Set(ids).size).toBe(ids.length);
@@ -93,9 +97,16 @@ describe('vollständige Renderfallmenge', () => {
     expect(checkViewBox(drawing)).toEqual([]);
   });
 
-  it('hält alle bestehenden Piktogrammdefinitionen bei der kanonischen 32×32-mm-ViewBox', () => {
-    expect(ALL_PICTOGRAMS.map((definition) => definition.viewBox)).toEqual(
-      Array.from({ length: ALL_PICTOGRAMS.length }, () => DEFAULT_VIEWBOX_MM),
+  it('hält nur D.1.1 rechteckig und alle übrigen Definitionen bei 32×32 mm', () => {
+    const rectangular = ALL_PICTOGRAMS.filter(
+      (definition) => definition.viewBox.width !== definition.viewBox.height,
     );
+    expect(rectangular.map((definition) => [definition.id, definition.viewBox])).toEqual([
+      ['leadership.command-post-in-operation', { width: 32, height: 46 }],
+    ]);
+    expect(
+      ALL_PICTOGRAMS.filter((definition) => !rectangular.includes(definition))
+        .every((definition) => definition.viewBox === DEFAULT_VIEWBOX_MM),
+    ).toBe(true);
   });
 });

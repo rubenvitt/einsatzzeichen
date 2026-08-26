@@ -2,6 +2,13 @@ import type { Drawing, Length, Primitive } from './geometry.js';
 import type { DepictionVariant } from './provenance.js';
 import type { CapabilityId, CommsId, DamageId, StateId, WildfireId } from './taxonomy.js';
 
+/** Direkte Führungszeichen aus Anhang D, inkrementell je belegtem Teilslice. */
+export const LEADERSHIP_IDS = [
+  'command-post-in-operation',
+] as const;
+
+export type LeadershipId = (typeof LEADERSHIP_IDS)[number];
+
 /**
  * Zugesicherte Hülle eines Piktogramms: linke obere Ecke und Maße in Millimetern.
  *
@@ -17,7 +24,7 @@ export interface PictogramBox {
 }
 
 /**
- * Die fünf Piktogrammarten der Baseline haben je einen eigenen ID-Raum. Ein Wetterzeichen oder
+ * Die sechs Piktogrammarten der Baseline haben je einen eigenen ID-Raum. Ein Wetterzeichen oder
  * ein Trümmerkegel ist keine Fähigkeit einer Einheit — sie unter `capability.` zu führen wäre
  * eine Falschaussage in der ID.
  *
@@ -33,7 +40,8 @@ export type PictogramId =
   | `state.${StateId}`
   | `comms.${CommsId}`
   | `damage.${DamageId}`
-  | `wildfire.${WildfireId}`;
+  | `wildfire.${WildfireId}`
+  | `leadership.${LeadershipId}`;
 
 /**
  * Ein Piktogramm ist Code: eine Folge von Primitiven in Millimetern mit deklarierter Hüllbox.

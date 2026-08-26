@@ -47,4 +47,31 @@ describe('functionRole()', () => {
     expect(functionRole('incident-section-command-north').layout.roleRuns)
       .toMatchObject([{ content: 'EAL' }, { content: 'Nord' }]);
   });
+
+  it('bindet D.1.2 bis D.1.8 an die gemessenen Rollenläufe und ausschließlich die Gruppenköpfe', () => {
+    const cases = [
+      ['disaster-control-command', ['KatSL'], 'none'],
+      ['technical-incident-command-evacuation', ['TEL', 'Evakuierung'], 'none'],
+      ['incident-command', ['EL'], 'none'],
+      ['incident-section-command-north', ['EAL', 'Nord'], 'none'],
+      ['incident-subsection-command', ['UEAL'], 'none'],
+      ['technical-incident-command-group', ['TEL'], 'strength'],
+      ['fire-service-readiness-command-group', ['Ber'], 'strength'],
+    ] as const;
+    for (const [id, runs, expectedHead] of cases) {
+      const definition = functionRole(id);
+      expect(definition.kind).toBe('formation');
+      expect(definition.expectedHead).toBe(expectedHead);
+      expect(definition.layout.roleRuns.map((run) => run.content)).toEqual(runs);
+      expect(definition.layout.decorations).toContainEqual(expect.objectContaining({
+        type: 'rect', x: 1, y: 6, width: 30, height: 3,
+      }));
+    }
+    expect(functionRole('fire-service-readiness-command-group').layout.roleRuns[0]?.ink)
+      .toBe('funktionslauf-kontrast');
+    expect(cases.slice(0, -1).flatMap(([id]) =>
+      functionRole(id).layout.roleRuns.map((run) => run.ink))).toEqual([
+      'schwarz', 'schwarz', 'schwarz', 'schwarz', 'schwarz', 'schwarz', 'schwarz', 'schwarz',
+    ]);
+  });
 });

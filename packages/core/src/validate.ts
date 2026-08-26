@@ -94,7 +94,8 @@ function validRoleRun(run: unknown): run is FunctionRoleTextRun {
     box.yMm + box.heightMm <= DEFAULT_VIEWBOX_MM.height &&
     typeof run.minRenderPx === 'number' && Number.isInteger(run.minRenderPx) &&
     run.minRenderPx > 0 &&
-    (run.ink === 'body-contrast' || run.ink === 'schwarz' || run.ink === 'weiss' ||
+    (run.ink === 'body-contrast' || run.ink === 'schwarz' ||
+      run.ink === 'funktionslauf-kontrast' || run.ink === 'weiss' ||
       run.ink === 'rot' || run.ink === 'blau' || run.ink === 'gelb' ||
       run.ink === 'gruen' || run.ink === 'hellgruen' || run.ink === 'orange' ||
       run.ink === 'braun' || run.ink === 'grau' || run.ink === 'hellgrau' ||

@@ -480,6 +480,30 @@ describe('validateSpec', () => {
     }
   });
 
+  it('akzeptiert den semantischen Kontrastlauf und bleibt für unbekanntes Ink fail-closed', () => {
+    const spec = {
+      kind: 'person',
+      functionRole: 'fire-service-platoon-commander',
+      strength: 'zug',
+    };
+    const definitionWithInk = (ink: string) => runtimeRoleDefinition({
+      layout: {
+        headTopMm: 1,
+        body: { type: 'rect', role: 'body', x: 3, y: 5, width: 26, height: 26 },
+        bodyAdditions: [],
+        decorations: [],
+        roleRuns: [runtimeRoleRun({ ink })],
+      },
+    });
+
+    expect(validateRuntime(spec, {
+      functionRole: definitionWithInk('funktionslauf-kontrast'),
+    })).toEqual([]);
+    expect(validateRuntime(spec, {
+      functionRole: definitionWithInk('unbekanntes-ink'),
+    }).map((issue) => issue.rule)).toContain('function-role-label-metrics-required');
+  });
+
   it('lehnt unvollständige Layouts, falsche Kopfanker und versteckten Dekorationstext ab', () => {
     const spec = {
       kind: 'person',
