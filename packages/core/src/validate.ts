@@ -60,6 +60,7 @@ const BODY_VARIANT_KINDS: Readonly<Record<BodyVariantId, ReadonlySet<SymbolKind>
 
 export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
+  const labels = spec.labels;
 
   if (
     spec.bodyVariant !== undefined &&
@@ -71,6 +72,35 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
         `Die Körpervariante "${spec.bodyVariant}" ist für "${spec.kind}" nicht vermessen. ` +
         'Varianten fallen weder auf eine andere Körperart noch auf deren Normalfassung zurück.',
     });
+  }
+
+  const isInsetWatercraft =
+    spec.kind === 'vehicle-water' && spec.bodyVariant === 'inset-hull';
+
+  if (isInsetWatercraft && spec.organization !== 'hilfsorganisation') {
+    issues.push({
+      rule: 'inset-hull-requires-hilfsorganisation',
+      message: 'inset-hull requires the measured white Hilfsorganisation body.',
+    });
+  }
+
+  if (isInsetWatercraft) {
+    const hasUnmeasuredLabelZone =
+      labels?.bottomLeft !== undefined ||
+      labels?.bottomCenter !== undefined ||
+      labels?.bottomRight !== undefined ||
+      labels?.topLeft !== undefined ||
+      labels?.topLeftMetrics !== undefined ||
+      labels?.aboveLeft !== undefined ||
+      labels?.topLeftLines !== undefined ||
+      labels?.belowRight !== undefined;
+
+    if (hasUnmeasuredLabelZone || spec.designation !== undefined) {
+      issues.push({
+        rule: 'inset-hull-requires-center-label-only',
+        message: 'inset-hull supports only the measured center label zone.',
+      });
+    }
   }
 
   if (spec.strength !== undefined && !UNIT_KINDS.has(spec.kind)) {
