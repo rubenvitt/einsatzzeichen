@@ -544,7 +544,7 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
 
   it('verlangt für die Beschriftung auf der Körperfarbe die Textschwelle, nicht die Nichttextschwelle', () => {
     const requirements = labelContrastRequirements();
-    // **Acht seit Anhang G**, und nur eine davon besteht nicht. Vier Nachbarschaften
+    // **Acht seit Anhang G**, und nur zwei davon bestehen nicht. Vier Nachbarschaften
     // und vier Organisationen kommen hier zusammen: die Beschriftung im Körper, die
     // Organisationsfarbe auf der Ausgabeoberfläche sowie die schwarzen Kreislabels, die
     // teilweise außerhalb der weißen Körperfläche auf `surface` stehen.

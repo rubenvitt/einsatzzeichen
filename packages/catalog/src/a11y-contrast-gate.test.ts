@@ -68,7 +68,7 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
   });
 
   it.each([ACCESSIBLE_LIGHT_THEME, PRINT_MONOCHROME_THEME])(
-    '$id besteht alle expliziten Anforderungen bis auf die eine entschiedene Ausnahme',
+    '$id besteht alle expliziten Anforderungen bis auf die zwei entschiedenen Ausnahmen',
     (theme) => {
       const issues = checkContrast(theme, requirements());
       // Die Ausnahme wirkt paarweise und themeweise (`contrastExceptionFor`), nicht als

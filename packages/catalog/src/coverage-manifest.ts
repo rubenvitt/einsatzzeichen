@@ -502,7 +502,7 @@ const ANHANG_E_C_DEVIATIONS: Readonly<Record<string, string>> = Object.freeze({
  * Mal ein Gate greift, das es in E.1 nicht gab.
  *
  * **Am 18. August 2026 um E.2.6 erweitert.** Es teilt dieses Review mit den 20 anderen — sein
- * Nachweis ist derselbe —, bringt aber als einziges Zeichen des Katalogs ein Kontrastpaar mit,
+ * Nachweis ist derselbe —, bringt aber als einziges Zeichen des Anhangs E ein Kontrastpaar mit,
  * das die eigene Schwelle nicht erreicht. Das steht unten in der Note und nicht als
  * `deviation`: die Umsetzung folgt der Quelle punktgenau.
  */
