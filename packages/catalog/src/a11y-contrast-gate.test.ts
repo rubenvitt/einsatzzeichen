@@ -4,6 +4,7 @@ import {
   contrastRatio,
   relativeLuminance,
   type ContrastRequirement,
+  type RenderTheme,
 } from '@einsatzzeichen/core';
 import {
   CONTRAST_EXCEPTIONS,
@@ -37,6 +38,9 @@ const BASE_CONTRAST_REQUIREMENT: ContrastRequirement = {
   context: 'schwarze Kontur und Kopfmarke auf der Ausgabeoberfläche',
   minimum: MINIMUM_NON_TEXT_CONTRAST,
 };
+
+const D3_14_CAP_CONTRAST_CONTEXT =
+  'schwarze offene Kappenschulter auf der blauen Funktionsflaeche';
 
 function requirements(): ContrastRequirement[] {
   return [
@@ -82,8 +86,42 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     const blue = issues.filter(
       (issue) => issue.foreground === 'schwarz' && issue.background === 'blau',
     );
-    expect(blue).toHaveLength(PRIMARY_PICTOGRAMS.length);
+    expect(blue).toHaveLength(PRIMARY_PICTOGRAMS.length + 1);
+    expect(blue.filter((issue) => issue.context === D3_14_CAP_CONTRAST_CONTEXT)).toEqual([
+      expect.objectContaining({ minimum: MINIMUM_TEXT_CONTRAST }),
+    ]);
     expect(blue.every((issue) => issue.ratio < MINIMUM_NON_TEXT_CONTRAST)).toBe(true);
+  });
+
+  it('deklariert und prüft die schwarze D.3.14-Kappenschulter gegen ihre blaue Fläche', () => {
+    const definition = ALL_PICTOGRAMS.find(
+      (candidate) => candidate.id === 'leadership.technical-advisor-thw',
+    );
+    expect(definition).toBeDefined();
+    if (definition === undefined || definition.placement.mode !== 'standalone') return;
+
+    expect(definition.contrastPairs).toContainEqual({
+      foreground: 'schwarz',
+      background: 'blau',
+      context: D3_14_CAP_CONTRAST_CONTEXT,
+    });
+
+    const collidingTheme: RenderTheme = {
+      ...RENDER_THEMES.reference,
+      id: 'synthetic-d3.14-cap-collision',
+      palette: {
+        ...RENDER_THEMES.reference.palette,
+        blau: RENDER_THEMES.reference.palette.schwarz,
+      },
+    };
+    expect(checkContrast(collidingTheme, contrastRequirementsFor(definition))).toContainEqual({
+      foreground: 'schwarz',
+      background: 'blau',
+      context: D3_14_CAP_CONTRAST_CONTEXT,
+      minimum: MINIMUM_TEXT_CONTRAST,
+      themeId: 'synthetic-d3.14-cap-collision',
+      ratio: 1,
+    });
   });
 
   it('leitet für ein Trägerkürzel unterhalb des Körpers die Organisationsfarbe auf der Oberfläche ab', () => {

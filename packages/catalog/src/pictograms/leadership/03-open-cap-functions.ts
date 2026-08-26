@@ -83,6 +83,11 @@ const THW_CONTRAST = [
   },
   {
     foreground: 'schwarz',
+    background: 'blau',
+    context: 'schwarze offene Kappenschulter auf der blauen Funktionsflaeche',
+  },
+  {
+    foreground: 'schwarz',
     background: 'surface',
     context: 'schwarze offene Kappe, Kontur und Traegerlauf auf der Ausgabeoberflaeche',
   },

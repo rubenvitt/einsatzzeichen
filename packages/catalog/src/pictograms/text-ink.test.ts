@@ -15,7 +15,7 @@ import { ALL_PICTOGRAMS, pictogramVariantKey } from './index.js';
  * als offen.
  *
  * Dieser Test schließt sie für den Katalogbestand: er rastert jeden Textlauf einzeln und zählt
- * die dunklen Pixel außerhalb seiner deklarierten Box. Er ersetzt kein allgemeines
+ * sichtbare Alpha-/Tintpixel außerhalb seiner deklarierten Box. Er ersetzt kein allgemeines
  * Textmetrik-Gate in `core` — er prüft die Zeichen, die es gibt, nicht die Form an sich.
  *
  * Warum nicht in `core`: die Rasterung braucht eine Schriftbindung, und die liegt in `catalog`
