@@ -42,13 +42,13 @@ wurden die Rezepte und Snapshots korrigiert und alle neun Paare neu erzeugt und 
 - Die vier schwarzen Körperläufe aus N.1.2 bis N.1.5 bestehen den Textkontrast in Referenz-,
   accessible-light- und Drucktheme. Es kam keine neue Kontrastausnahme hinzu; die bestehende
   weiss/orange-Ausnahme bleibt auf E.2.6 begrenzt.
-- Es liegen 167 direkte und 422 Mehrgrößen-Snapshotdateien vor. Der Branch-Diff gegen die
-  integrierte `origin/main`-Basis enthält neun neue direkte N-Snapshots sowie neun neue
+- Es liegen 188 direkte und 443 Mehrgrößen-Snapshotdateien vor. Der Branch-Diff gegen die
+  Current-main-Integrationsbasis enthält neun neue direkte N-Snapshots sowie neun neue
   N-Rezeptsnapshots im Mehrgrößenbaum. Dort ist zusätzlich der bestehende Sammelbeleg
   `organization-profiles.svg` für das neue öffentliche Profil `bundespolizei` aktualisiert; andere
   bestehende Snapshots wurden nicht geändert und keine Snapshotdatei wurde gelöscht.
-- Der Katalog umfasst 153 Rezepte, 421 Renderfälle, 440 Manifestzeilen und 113 beschriftete
-  Rezepte. Die Coverageausgabe führt 454 offene Reviews: 440 Manifest-, 13 Quellen- und ein
+- Der Katalog umfasst 174 Rezepte, 442 Renderfälle, 461 Manifestzeilen und 115 beschriftete
+  Rezepte. Die Coverageausgabe führt 475 offene Reviews: 461 Manifest-, 13 Quellen- und ein
   Profilreview. Alle neun technischen N-Manifestreviews sind vom 26. August 2026; alle neun
   N-Domain-Reviews bleiben `pending`.
 
@@ -73,11 +73,12 @@ Originalauflösungsprüfung sind im folgenden Abschnitt getrennt belegt.
 
 Der abschließende technische Kontaktbogen wurde aus den neun live in `RECIPES` registrierten
 N-Schlüsseln erzeugt; Schlüssel, Titel und exakte Referenzdateinamen stammen nicht aus einer
-zweiten, manuell gepflegten Matrix. Die `origin/main`-Integrationsbasis des Branches ist der
-additive Merge-HEAD `d96c4bb319f69ae0887524c7f170fdafc668b649`. Der final gerasterte
-technische Geometriestand und die `gitSha` des Manifests sind nach dem reviewten
-One-Boundary-`inset-hull`-Fix `4d33e928543bea2ec000228e1aa6778c92f59c19`. Generator und
-Ergebnis bleiben wie vorgesehen ignoriert:
+zweiten, manuell gepflegten Matrix. Die Current-main-Integrationsbasis des Branches ist
+`f4944cedc0c4b2b33376eed0ec90b01a86903be8`. Der final gerasterte technische Geometriestand und
+die `gitSha` des Manifests sind nach dem Code-Merge
+`1b3c4211fb5b9660c7fd3295f7b0880e96e03c0b`; der reviewte
+One-Boundary-`inset-hull`-Fix bleibt darin enthalten. Generator und Ergebnis bleiben wie
+vorgesehen ignoriert:
 
 - Generator: `out/tools/generate-lfh-422-contact-sheet.ts`;
 - PNG: `out/lfh-422/contact-sheets/LFH-422-anhang-n.png`;
@@ -96,13 +97,13 @@ Der Generator beginnt jeden Lauf mit dem Entfernen genau der beiden bekannten Au
 führt anschließend zwei vollständige Erzeugungspässe aus. Zwei abschließende externe
 Generatoraufrufe waren jeweils intern und untereinander byteidentisch; damit stimmen PNG und
 Manifest über vier saubere Pässe überein. Der Manifest-SHA-256 lautet
-`2027b6bcd5ac4c4a20a2b2746153fd6c0e6c93a2daa3a1283b403005e29241c8`; das Manifest enthält den
+`c76c61548fe8af92b03242848004334924a524920a64db225a48ffb0b1d36284`; das Manifest enthält den
 Ticketwert, die Katalogbasis, die Generatorversion, Layout und Schriftbindung sowie für alle neun
 Paare Rezept-, Quellen-SVG-, Quellen-PNG-, Katalog-SVG- und Katalog-PNG-Hashes und den
 vollständigen Ausgabehash. Das PNG blieb gegenüber dem Vor-Merge-Beleg byteidentisch; der
 Manifesthash änderte sich erwartungsgemäß mit der auf den finalen technischen Geometriestand
-aktualisierten `gitSha`. Der vollständige frische Testlauf dieses Stands umfasst 61 bestandene
-Testdateien mit 4.267 bestandenen Tests.
+aktualisierten `gitSha`. Der vollständige frische Testlauf dieses Stands umfasst 62 bestandene
+Testdateien mit 4.417 bestandenen Tests.
 
 Das finale PNG wurde mit `view_image` im Modus `original` geprüft. Ergebnis:
 
