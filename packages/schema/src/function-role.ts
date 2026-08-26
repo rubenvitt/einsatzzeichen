@@ -1,5 +1,12 @@
 import type { ColorToken, Length, Primitive } from './geometry.js';
-import type { BodyMarkId, FunctionRoleId, SymbolKind } from './taxonomy.js';
+import type {
+  AdminLevelId,
+  BodyMarkId,
+  FunctionRoleId,
+  OrganizationId,
+  StrengthId,
+  SymbolKind,
+} from './taxonomy.js';
 
 export type FunctionRoleKind = Extract<SymbolKind, 'formation' | 'person'>;
 export type FunctionRoleHeadKind = 'none' | 'strength' | 'administrative';
@@ -38,6 +45,9 @@ export interface FunctionRoleDefinition {
   readonly title: string;
   readonly kind: FunctionRoleKind;
   readonly expectedHead: FunctionRoleHeadKind;
+  readonly expectedOrganization: OrganizationId;
+  readonly expectedStrength?: StrengthId;
+  readonly expectedAdministrativeLevel?: AdminLevelId;
   readonly allowedBodyMarks: readonly BodyMarkId[];
   readonly layout: FunctionRoleLayout;
 }

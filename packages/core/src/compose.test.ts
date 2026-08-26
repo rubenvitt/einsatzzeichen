@@ -1621,6 +1621,7 @@ describe('compose() — gemessene Funktionsträger', () => {
       title: 'Einsatzleitung',
       kind: 'formation',
       expectedHead: 'none',
+      expectedOrganization: 'fuehrung-leitung',
       allowedBodyMarks: ['care'],
       layout: {
         body: {
@@ -1646,6 +1647,7 @@ describe('compose() — gemessene Funktionsträger', () => {
       },
     };
     const roleCatalog = Object.assign({}, catalog, {
+      organizationColor: () => 'weiss' as const,
       functionRole: () => roleDefinition,
       administrativeHead: () => undefined,
       bodyMark: () => [
@@ -1654,6 +1656,7 @@ describe('compose() — gemessene Funktionsträger', () => {
     });
     const spec = {
       kind: 'formation',
+      organization: 'fuehrung-leitung',
       functionRole: 'incident-command',
       bodyMarks: ['care'],
     } as unknown as SymbolSpec;
@@ -1688,11 +1691,14 @@ describe('compose() — gemessene Funktionsträger', () => {
   it('zeichnet einen aufgelösten Verwaltungskopf vor dem gemessenen Rollenkörper', () => {
     const administrativeRoleCatalog: CatalogPorts = {
       ...catalog,
+      organizationColor: () => 'weiss',
       functionRole: () => ({
         id: 'technical-incident-commander',
         title: 'Technischer Einsatzleiter',
         kind: 'person',
         expectedHead: 'administrative',
+        expectedOrganization: 'fuehrung-leitung',
+        expectedAdministrativeLevel: 'kreis',
         allowedBodyMarks: [],
         layout: {
           headTopMm: 0,
@@ -1713,6 +1719,7 @@ describe('compose() — gemessene Funktionsträger', () => {
     };
     const drawing = compose({
       kind: 'person',
+      organization: 'fuehrung-leitung',
       functionRole: 'technical-incident-commander',
       administrativeLevel: 'kreis',
     }, administrativeRoleCatalog);

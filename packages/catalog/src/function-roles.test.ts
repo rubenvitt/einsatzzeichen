@@ -1,7 +1,85 @@
 import { describe, expect, it } from 'vitest';
-import { FUNCTION_ROLE_IDS, type FunctionRoleId } from '@einsatzzeichen/schema';
+import {
+  FUNCTION_ROLE_IDS,
+  type AdminLevelId,
+  type FunctionRoleHeadKind,
+  type FunctionRoleId,
+  type OrganizationId,
+  type StrengthId,
+} from '@einsatzzeichen/schema';
 import { boundsOfMm } from '@einsatzzeichen/core';
 import { FUNCTION_ROLE_DEFINITIONS, functionRole } from './function-roles.js';
+
+interface ExpectedRoleBinding {
+  readonly organization: OrganizationId;
+  readonly head: FunctionRoleHeadKind;
+  readonly strength?: StrengthId;
+  readonly administrativeLevel?: AdminLevelId;
+}
+
+const EXPECTED_ROLE_BINDINGS = {
+  'disaster-control-command': { organization: 'fuehrung-leitung', head: 'none' },
+  'technical-incident-command-evacuation': {
+    organization: 'fuehrung-leitung', head: 'none',
+  },
+  'incident-command': { organization: 'fuehrung-leitung', head: 'none' },
+  'incident-section-command-north': { organization: 'fuehrung-leitung', head: 'none' },
+  'incident-subsection-command': { organization: 'fuehrung-leitung', head: 'none' },
+  'technical-incident-command-group': {
+    organization: 'fuehrung-leitung', head: 'strength', strength: 'gruppe',
+  },
+  'fire-service-readiness-command-group': {
+    organization: 'feuerwehr', head: 'strength', strength: 'gruppe',
+  },
+  'technical-incident-commander': {
+    organization: 'fuehrung-leitung', head: 'administrative', administrativeLevel: 'kreis',
+  },
+  'incident-commander': { organization: 'fuehrung-leitung', head: 'none' },
+  'lead-emergency-physician': {
+    organization: 'fuehrung-leitung', head: 'administrative', administrativeLevel: 'kreis',
+  },
+  'organizational-incident-commander': {
+    organization: 'fuehrung-leitung', head: 'administrative', administrativeLevel: 'kreis',
+  },
+  'incident-section-commander': { organization: 'fuehrung-leitung', head: 'none' },
+  'incident-subsection-commander': { organization: 'fuehrung-leitung', head: 'none' },
+  'fire-service-platoon-commander': {
+    organization: 'feuerwehr', head: 'strength', strength: 'zug',
+  },
+  'technical-platoon-commander': { organization: 'thw', head: 'strength', strength: 'zug' },
+  'medical-platoon-commander': {
+    organization: 'hilfsorganisation', head: 'strength', strength: 'zug',
+  },
+  'operational-unit-platoon-commander': {
+    organization: 'hilfsorganisation', head: 'strength', strength: 'zug',
+  },
+  'care-platoon-commander': {
+    organization: 'hilfsorganisation', head: 'strength', strength: 'zug',
+  },
+  'care-group-commander': {
+    organization: 'hilfsorganisation', head: 'strength', strength: 'gruppe',
+  },
+  'rapid-response-group-commander': {
+    organization: 'hilfsorganisation', head: 'strength', strength: 'gruppe',
+  },
+  'district-control-center-director': {
+    organization: 'fuehrung-leitung', head: 'administrative', administrativeLevel: 'kreis',
+  },
+  'district-fire-chief': {
+    organization: 'feuerwehr', head: 'administrative', administrativeLevel: 'kreis',
+  },
+  'hazard-response-director': {
+    organization: 'fuehrung-leitung', head: 'administrative', administrativeLevel: 'kreis',
+  },
+  'hazard-response-forces-director': {
+    organization: 'polizei', head: 'administrative', administrativeLevel: 'nationalstaat',
+  },
+  'international-relief-operation-director': {
+    organization: 'fuehrung-leitung',
+    head: 'administrative',
+    administrativeLevel: 'europaeische-union',
+  },
+} as const satisfies Record<FunctionRoleId, ExpectedRoleBinding>;
 
 describe('functionRole()', () => {
   it('ist ein totaler, unveraenderlicher Resolver fuer exakt alle 25 IDs', () => {
@@ -14,6 +92,17 @@ describe('functionRole()', () => {
     expect(() => functionRole('unknown-function-role' as FunctionRoleId)).toThrowError(
       'Unbekannte Funktionsrollen-ID "unknown-function-role".',
     );
+  });
+
+  it('bindet alle 25 Rollen an exakt eine Quellorganisation und einen konkreten Kopfwert', () => {
+    for (const id of FUNCTION_ROLE_IDS) {
+      const definition = functionRole(id);
+      const expected: ExpectedRoleBinding = EXPECTED_ROLE_BINDINGS[id];
+      expect(definition.expectedOrganization, id).toBe(expected.organization);
+      expect(definition.expectedHead, id).toBe(expected.head);
+      expect(definition.expectedStrength, id).toBe(expected.strength);
+      expect(definition.expectedAdministrativeLevel, id).toBe(expected.administrativeLevel);
+    }
   });
 
   it('haelt die drei nicht ableitbaren Personenkoerper getrennt', () => {

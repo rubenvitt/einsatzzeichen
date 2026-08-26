@@ -15,21 +15,29 @@ const runtimeRoleRun = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-const runtimeRoleDefinition = (overrides: Record<string, unknown> = {}) => ({
-  id: 'fire-service-platoon-commander',
-  title: 'Zugführer der Feuerwehr',
-  kind: 'person',
-  expectedHead: 'strength',
-  allowedBodyMarks: ['fire-fighting'],
-  layout: {
-    headTopMm: 1,
-    body: { type: 'rect', role: 'body', x: 3, y: 5, width: 26, height: 26 },
-    bodyAdditions: [],
-    decorations: [],
-    roleRuns: [],
-  },
-  ...overrides,
-});
+const runtimeRoleDefinition = (overrides: Record<string, unknown> = {}) => {
+  const expectedHead = overrides.expectedHead ?? 'strength';
+  return {
+    id: 'fire-service-platoon-commander',
+    title: 'Zugführer der Feuerwehr',
+    kind: 'person',
+    expectedHead,
+    expectedOrganization: 'feuerwehr',
+    ...(expectedHead === 'strength' ? { expectedStrength: 'zug' } : {}),
+    ...(expectedHead === 'administrative'
+      ? { expectedAdministrativeLevel: 'kreis' }
+      : {}),
+    allowedBodyMarks: ['fire-fighting'],
+    layout: {
+      headTopMm: 1,
+      body: { type: 'rect', role: 'body', x: 3, y: 5, width: 26, height: 26 },
+      bodyAdditions: [],
+      decorations: [],
+      roleRuns: [],
+    },
+    ...overrides,
+  };
+};
 
 function validateRuntime(
   spec: Record<string, unknown>,
@@ -737,6 +745,7 @@ describe('validateSpec', () => {
   it('akzeptiert ausschließlich eine aufgelöste, vermessene Verwaltungsstufe', () => {
     const supportedSpec = {
       kind: 'person',
+      organization: 'fuehrung-leitung',
       administrativeLevel: 'kreis',
       functionRole: 'technical-incident-commander',
     };
@@ -744,6 +753,7 @@ describe('validateSpec', () => {
       id: 'technical-incident-commander',
       title: 'Technischer Einsatzleiter',
       expectedHead: 'administrative',
+      expectedOrganization: 'fuehrung-leitung',
       allowedBodyMarks: [],
     });
     const administrativeHead = {
@@ -780,6 +790,155 @@ describe('validateSpec', () => {
     },
   );
 
+  it('bindet eine Verwaltungsrolle an die konkret vermessene Stufe', () => {
+    const functionRole = runtimeRoleDefinition({
+      id: 'technical-incident-commander',
+      title: 'Technischer Einsatzleiter',
+      expectedHead: 'administrative',
+      expectedOrganization: 'fuehrung-leitung',
+      expectedAdministrativeLevel: 'kreis',
+      allowedBodyMarks: [],
+      layout: {
+        headTopMm: 0,
+        body: { type: 'rect', role: 'body', x: 3, y: 3, width: 26, height: 26 },
+        bodyAdditions: [], decorations: [], roleRuns: [],
+      },
+    });
+    const administrativeHead = {
+      box: { xMm: 4.143, yMm: 0, widthMm: 23.714, heightMm: 4 },
+      heightMm: 4,
+      primitives: [],
+    };
+
+    const issues = validateRuntime(
+      {
+        kind: 'person',
+        organization: 'fuehrung-leitung',
+        administrativeLevel: 'nationalstaat',
+        functionRole: 'technical-incident-commander',
+      },
+      { functionRole, administrativeHead },
+    );
+
+    expect(issues.map((issue) => issue.rule)).toContain('function-role-head-mismatch');
+  });
+
+  it('bindet eine Stärkerolle an den konkret vermessenen Stärkegrad', () => {
+    const functionRole = runtimeRoleDefinition({ expectedStrength: 'zug' });
+
+    const issues = validateRuntime(
+      {
+        kind: 'person',
+        organization: 'feuerwehr',
+        strength: 'gruppe',
+        functionRole: 'fire-service-platoon-commander',
+      },
+      { functionRole },
+    );
+
+    expect(issues.map((issue) => issue.rule)).toContain('function-role-head-mismatch');
+  });
+
+  it.each([
+    ['Stärkerolle ohne Stärkegrad',
+      {
+        kind: 'person', organization: 'feuerwehr', strength: 'zug',
+        functionRole: 'fire-service-platoon-commander',
+      },
+      runtimeRoleDefinition({ expectedStrength: undefined }),
+      {}],
+    ['kopflose Rolle mit zusätzlichem Stärkegrad',
+      {
+        kind: 'person', organization: 'feuerwehr',
+        functionRole: 'fire-service-platoon-commander',
+      },
+      runtimeRoleDefinition({
+        expectedHead: 'none',
+        expectedStrength: 'zug',
+        layout: {
+          body: { type: 'rect', role: 'body', x: 3, y: 3, width: 26, height: 26 },
+          bodyAdditions: [], decorations: [], roleRuns: [],
+        },
+      }),
+      {}],
+    ['Verwaltungsrolle ohne konkrete Stufe',
+      {
+        kind: 'person',
+        organization: 'fuehrung-leitung',
+        administrativeLevel: 'kreis',
+        functionRole: 'technical-incident-commander',
+      },
+      runtimeRoleDefinition({
+        id: 'technical-incident-commander',
+        expectedHead: 'administrative',
+        expectedOrganization: 'fuehrung-leitung',
+        expectedAdministrativeLevel: undefined,
+        layout: {
+          headTopMm: 0,
+          body: { type: 'rect', role: 'body', x: 3, y: 3, width: 26, height: 26 },
+          bodyAdditions: [], decorations: [], roleRuns: [],
+        },
+      }),
+      {
+        administrativeHead: {
+          box: { xMm: 9.143, yMm: 0, widthMm: 13.714, heightMm: 4 },
+          heightMm: 4,
+          primitives: [],
+        },
+      }],
+  ])('lehnt die runtime-malformed Kopfbindung %s fail-closed ab', (
+    _case,
+    spec,
+    functionRole,
+    context,
+  ) => {
+    const issues = validateRuntime(spec, { ...context, functionRole });
+
+    expect(issues.map((issue) => issue.rule)).toContain('function-role-head-mismatch');
+  });
+
+  it.each([
+    ['fehlende Organisation', undefined],
+    ['falsche Organisation', 'hilfsorganisation'],
+  ] as const)('bindet eine Rolle an ihre gemessene Organisation: %s', (_case, organization) => {
+    const functionRole = runtimeRoleDefinition({
+      id: 'technical-platoon-commander',
+      expectedOrganization: 'thw',
+    });
+    const issues = validateRuntime(
+      {
+        kind: 'person',
+        organization,
+        strength: 'zug',
+        functionRole: 'technical-platoon-commander',
+      },
+      { functionRole },
+    );
+
+    expect(issues.map((issue) => issue.rule)).toContain('function-role-organization-mismatch');
+  });
+
+  it.each([
+    ['fehlender Organisationsbindung', undefined],
+    ['unbekannter Organisationsbindung', 'unbekannte-organisation'],
+  ])('lehnt eine runtime-malformed Rolle mit %s fail-closed ab', (_case, expectedOrganization) => {
+    const functionRole = runtimeRoleDefinition({
+      id: 'technical-platoon-commander',
+      expectedOrganization,
+    });
+    const issues = validateRuntime(
+      {
+        kind: 'person',
+        organization: 'thw',
+        strength: 'zug',
+        functionRole: 'technical-platoon-commander',
+      },
+      { functionRole },
+    );
+
+    expect(issues.map((issue) => issue.rule)).toContain('function-role-organization-mismatch');
+  });
+
   it('lehnt eine Rolle ab, wenn Art, Definition oder Kopf nicht zur Messung passen', () => {
     expect(validateRuntime(
       { kind: 'building', functionRole: 'fire-service-platoon-commander' },
@@ -802,6 +961,7 @@ describe('validateSpec', () => {
     const context = { functionRole: runtimeRoleDefinition() };
     const base = {
       kind: 'person',
+      organization: 'feuerwehr',
       functionRole: 'fire-service-platoon-commander',
       strength: 'zug',
     };
@@ -816,6 +976,7 @@ describe('validateSpec', () => {
   it('verlangt vollständige sichtbare Rollenmetriken und getrennte Textboxen', () => {
     const spec = {
       kind: 'person',
+      organization: 'feuerwehr',
       functionRole: 'fire-service-platoon-commander',
       strength: 'zug',
     };
@@ -853,6 +1014,7 @@ describe('validateSpec', () => {
   it('akzeptiert den semantischen Kontrastlauf und bleibt für unbekanntes Ink fail-closed', () => {
     const spec = {
       kind: 'person',
+      organization: 'feuerwehr',
       functionRole: 'fire-service-platoon-commander',
       strength: 'zug',
     };
@@ -877,6 +1039,7 @@ describe('validateSpec', () => {
   it('lehnt unvollständige Layouts, falsche Kopfanker und versteckten Dekorationstext ab', () => {
     const spec = {
       kind: 'person',
+      organization: 'feuerwehr',
       functionRole: 'fire-service-platoon-commander',
       strength: 'zug',
     };
@@ -925,7 +1088,8 @@ describe('validateSpec', () => {
   ])('meldet für %s stabil ein unvollständiges Rollenlayout', (_name, functionRole) => {
     const issues = validateRuntime(
       {
-        kind: 'person', functionRole: 'fire-service-platoon-commander', strength: 'zug',
+        kind: 'person', organization: 'feuerwehr',
+        functionRole: 'fire-service-platoon-commander', strength: 'zug',
       },
       { functionRole },
     );
@@ -944,7 +1108,8 @@ describe('validateSpec', () => {
 
     const issues = validateRuntime(
       {
-        kind: 'person', functionRole: 'fire-service-platoon-commander', strength: 'zug',
+        kind: 'person', organization: 'feuerwehr',
+        functionRole: 'fire-service-platoon-commander', strength: 'zug',
       },
       { functionRole },
     );

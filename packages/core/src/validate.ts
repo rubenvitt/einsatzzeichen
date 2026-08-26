@@ -1,9 +1,12 @@
 import {
   DEFAULT_VIEWBOX_MM,
   type BodyVariantId,
+  type AdminLevelId,
   type FunctionRoleDefinition,
   type FunctionRoleTextRun,
   type AdministrativeHeadShape,
+  type OrganizationId,
+  type StrengthId,
   type SymbolKind,
   type SymbolSpec,
 } from '@einsatzzeichen/schema';
@@ -88,6 +91,23 @@ function finite(value: unknown): value is number {
 
 function record(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
+}
+
+function strengthId(value: unknown): value is StrengthId {
+  return value === 'trupp' || value === 'staffel' || value === 'gruppe' || value === 'zug';
+}
+
+function administrativeLevelId(value: unknown): value is AdminLevelId {
+  return value === 'gemeinde' || value === 'kreis' || value === 'bezirk' ||
+    value === 'bundesland' || value === 'nationalstaat' ||
+    value === 'europaeische-union';
+}
+
+function organizationId(value: unknown): value is OrganizationId {
+  return value === 'feuerwehr' || value === 'thw' || value === 'fuehrung-leitung' ||
+    value === 'polizei' || value === 'bundespolizei' || value === 'bundeswehr' ||
+    value === 'sonstige-gefahrenabwehr' || value === 'zivile-einheiten' ||
+    value === 'hilfsorganisation';
 }
 
 function containsText(primitive: unknown): boolean {
@@ -262,14 +282,27 @@ function validatePreparedSpec(
       const layout = record(definitionValue.layout) ? definitionValue.layout : undefined;
       const headTopMm = layout?.headTopMm;
       const expectedHead = definitionValue.expectedHead;
+      const expectedOrganization = definitionValue.expectedOrganization;
+      const expectedStrength = definitionValue.expectedStrength;
+      const expectedAdministrativeLevel = definitionValue.expectedAdministrativeLevel;
+      if (!organizationId(expectedOrganization) || spec.organization !== expectedOrganization) {
+        issues.push({
+          rule: 'function-role-organization-mismatch',
+          message: 'Die Organisation entspricht nicht der exakt vermessenen Funktionsfassung.',
+        });
+      }
       const headMatches = expectedHead === 'none'
         ? spec.strength === undefined && spec.administrativeLevel === undefined &&
+          expectedStrength === undefined && expectedAdministrativeLevel === undefined &&
           headTopMm === undefined
         : expectedHead === 'strength'
-          ? spec.strength !== undefined && spec.administrativeLevel === undefined &&
+          ? strengthId(expectedStrength) && expectedAdministrativeLevel === undefined &&
+            spec.strength === expectedStrength && spec.administrativeLevel === undefined &&
             finite(headTopMm)
-          : expectedHead === 'administrative' && spec.strength === undefined &&
-            spec.administrativeLevel !== undefined && finite(headTopMm) &&
+          : expectedHead === 'administrative' && expectedStrength === undefined &&
+            administrativeLevelId(expectedAdministrativeLevel) &&
+            spec.strength === undefined &&
+            spec.administrativeLevel === expectedAdministrativeLevel && finite(headTopMm) &&
             context.administrativeHead !== undefined;
       if (!headMatches) {
         issues.push({

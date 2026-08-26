@@ -7,12 +7,19 @@ Status: technische Entscheidung; Fachreview weiterhin offen
 
 Die 25 wiederkehrenden Funktionsträger aus D.1.2–D.1.8, D.3.1–D.3.13 und D.4.1–D.4.5
 werden als totale, unveränderliche Rollenregistry modelliert. Eine Rolle liefert den bereits
-endgültig platzierten Körper, Dekoration, eigene Textmetriken, die erwartete Kopfart und die
-zulässigen randbündigen Körpermarken. `core` kennt nur den Port und keine Katalogdaten.
+endgültig platzierten Körper, Dekoration, eigene Textmetriken, die erwartete Organisation, die
+erwartete Kopfart samt konkretem Stärke- oder Verwaltungswert und die zulässigen randbündigen
+Körpermarken. `core` kennt nur den Port und keine Katalogdaten.
 
 Ein Spec ohne `functionRole` behält den bisherigen Kompositionspfad byteidentisch. Ein Spec mit
 Rolle fällt weder auf das normale Körperprofil noch auf Standardpiktogramme oder Körpervarianten
 zurück. Nicht vermessene Kombinationen werden vor dem Zeichnen abgelehnt.
+
+`functionRole`, `organization`, `strength` und `administrativeLevel` bleiben dabei semantisch
+getrennte `SymbolSpec`-Achsen. Die Rollen-Definition bindet zur Laufzeit trotzdem exakt die eine
+in ihrem genehmigten Quellrezept belegte Organisation und den konkreten Kopfwert. Fehlende oder
+abweichende Organisationen sowie andere Stärke- oder Verwaltungswerte sind ungemessene
+Kreuzprodukte und werden fail-closed abgelehnt.
 
 ## Messmethode und Bezugsrahmen
 
@@ -91,8 +98,9 @@ den im Renderer verwendeten Font falsch.
 | D.4.5 `international-relief-operation-director`† | C / EU | — | — | — |
 
 Schwarzer Rollenlauf auf der Körperfarbe ist der Standard. `TZ` ist die beobachtete weiße
-Ausnahme. D.1.8 verwendet für `Ber` den semantischen Token `funktionslauf-kontrast`: Im
-Referenz- und im barrierearmen Farbtheme löst er wie die Quelle zu Schwarz auf Rot auf
+Ausnahme. D.1.8 `Ber` und D.4.2 `KBM` verwenden den semantischen Token
+`funktionslauf-kontrast`: Im Referenz- und im barrierearmen Farbtheme lösen beide Rollenläufe wie
+die Quellen zu Schwarz auf Rot auf
 (5,218:1), ausschließlich im monochromen Drucktheme zu Weiß auf `#666666` (5,742:1). Damit
 bleiben alle drei Theme-Paare über der unveränderten Textschwelle von 4,5:1. Alle anderen
 Rollenläufe behalten ihr bisheriges Ink. Trägerläufe stehen schwarz auf der Ausgabeoberfläche.
@@ -100,10 +108,11 @@ Ihre Hintergründe sind deshalb expliziter Vertragsbestandteil und werden für Z
 Kontrastgate aus derselben Definition gelesen.
 
 Diese eng begrenzte Theme-Auflösung ist bewusst keine Kontrastausnahme. Verworfen wurden eine
-neue `ContrastException` und eine Absenkung auf 3:1, weil `Ber` lesbarer Text bleibt; als
-Glyphenpfade wäre der Lauf nicht mehr der vermessene Textvertrag; ein global dunkleres `rot`
-würde sämtliche bestehenden roten Zeichen verändern. Der eigene Token hält dagegen die
-quellentreue Farbausgabe stabil und verändert nur den einen problematischen Lauf im Drucktheme.
+neue `ContrastException` und eine Absenkung auf 3:1, weil `Ber` und `KBM` lesbarer Text bleiben;
+als Glyphenpfade wären die Läufe nicht mehr die vermessenen Textverträge; ein global dunkleres
+`rot` würde sämtliche bestehenden roten Zeichen verändern. Der eigene Token hält dagegen die
+quellentreue Farbausgabe stabil und verändert nur die beiden problematischen Rollenläufe im
+Drucktheme.
 
 ## Verwaltungsstufen
 

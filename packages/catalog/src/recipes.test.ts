@@ -646,6 +646,15 @@ describe('Anhang D.3, Funktionen', () => {
     expect(Object.keys(actual).filter((key) => key === 'D.3.7')).toHaveLength(1);
   });
 
+  it('lehnt eine Rollenorganisation vor dem Rendern über composeFromCatalog ab', () => {
+    expect(() => composeFromCatalog({
+      kind: 'person',
+      organization: 'hilfsorganisation',
+      strength: 'zug',
+      functionRole: 'technical-platoon-commander',
+    })).toThrowError(/function-role-organization-mismatch/);
+  });
+
   it('bewahrt no-head, Zwei-Stern, abgesenkte Dreipunkt- und Standard-Zweipunktgeometrie', () => {
     const cases = [
       ['D.3.2', [3, 3, 29, 29], 0],

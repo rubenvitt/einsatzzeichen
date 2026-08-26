@@ -138,6 +138,11 @@ Die Rolle bleibt von folgenden vorhandenen Achsen getrennt:
 Diese Trennung verhindert insbesondere, dass `DRK`, `ASB`, `MHD`, `JUH`, `BuPol` oder regionale
 Kürzel zu neuen `OrganizationId`-Werten erklärt werden.
 
+Die Achsen bleiben semantisch getrennt; die Rollen-Definition bindet zur Validierung jedoch die
+eine source-backed gemessene `expectedOrganization` und, abhängig von `expectedHead`, den exakten
+`expectedStrength`- oder `expectedAdministrativeLevel`-Wert des genehmigten Rezepts. Fehlende
+Werte und andere Kreuzprodukte dieser Achsen sind nicht vermessen und bleiben fail-closed.
+
 ### 5.2 Funktionsträger-Definition und Katalogport
 
 Der Katalog führt je `FunctionRoleId` eine unveränderliche Definition mit:
@@ -146,7 +151,9 @@ Der Katalog führt je `FunctionRoleId` eine unveränderliche Definition mit:
 - gemessener Layoutfamilie;
 - ein- oder zweizeiligem Rollenlauf und vollständigen Textmetriken;
 - optionalem Trägerlauf mit eigener gemessener Zone;
-- erwarteter Kopfart (`none`, `strength` oder `administrative`);
+- erwarteter Organisation;
+- erwarteter Kopfart (`none`, `strength` oder `administrative`) samt exaktem Stärke- oder
+  Verwaltungswert, falls die Kopfart einen verlangt;
 - den für diese Rolle zulässigen zusätzlichen Innenmarken.
 
 `CatalogPorts` erhält einen `functionRole`-Port. Der Port liefert keine fertige Gesamtzeichnung,
@@ -154,9 +161,10 @@ sondern die gemessene Funktionsträger-Dekoration und Layoutangaben. `compose()`
 der Reihenfolge: Kopf, gefüllter Körper, Körperzusätze, Innenmarken, Funktionsdekoration,
 Beschriftung und Fußzone.
 
-Unbekannte Rollen, falsche Körperarten, unzulässige Kopfarten und nicht vermessene
-Rolle-/Körper-Kombinationen werfen beziehungsweise liefern einen Validierungsbefund. Es gibt
-keinen Rückfall auf das normale `formation`- oder `person`-Profil.
+Unbekannte Rollen, falsche Körperarten, fehlende oder falsche Organisationen, unzulässige
+Kopfarten oder konkrete Kopfwerte und nicht vermessene Rolle-/Körper-Kombinationen werfen
+beziehungsweise liefern einen Validierungsbefund. Es gibt keinen Rückfall auf das normale
+`formation`- oder `person`-Profil.
 
 ### 5.3 Gemessene Layoutfamilien
 
@@ -379,7 +387,8 @@ belegt. Der Slice führt keinen `functionRole` für eine ungeklärte Bedeutung e
 ### 8.1 Rezepte
 
 1. Ein Rezept enthält `SymbolSpec` mit `functionRole` und den belegten vorhandenen Achsen.
-2. `validateSpec()` prüft Körperart, Kopfart, Rollenlayout, Beschriftungsmetriken und Konflikte.
+2. `validateSpec()` prüft Körperart, die exakt gebundene Organisation und den konkreten Kopfwert,
+   Rollenlayout, Beschriftungsmetriken und Konflikte.
 3. `composeFromCatalog()` löst Grundkörper, Organisation, Stärke/Verwaltungsstufe,
    Funktionsdefinition und Innenmarken über Ports auf.
 4. `compose()` platziert und zeichnet die Primitive in deterministischer Reihenfolge.
@@ -400,7 +409,10 @@ Der Slice führt mindestens folgende Schutzregeln ein:
 
 - `function-role-requires-measured-kind` — Rolle und Körperart sind nicht belegt;
 - `function-role-requires-measured-layout` — Rolle hat keine vollständige Layoutdefinition;
-- `function-role-head-mismatch` — Rolle verlangt eine andere Kopfart;
+- `function-role-organization-mismatch` — Rolle und konkrete Organisation sind nicht gemeinsam
+  belegt;
+- `function-role-head-mismatch` — Rolle verlangt eine andere Kopfart oder einen anderen konkreten
+  Stärke-/Verwaltungswert;
 - `administrative-level-not-measured` — die Verwaltungsstufe besitzt keine Kopfquelle;
 - `head-zone-conflict` — Stärke und Verwaltungsstufe sind zugleich gesetzt;
 - `function-role-label-metrics-required` — ein Rollen-/Trägerlauf besitzt keine vollständigen
