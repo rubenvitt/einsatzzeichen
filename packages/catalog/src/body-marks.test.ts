@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { boundsOfMm, type BoundsMm } from '@einsatzzeichen/core';
-import { DEFAULT_STROKE_WIDTH_MM, type Primitive } from '@einsatzzeichen/schema';
+import {
+  DEFAULT_STROKE_WIDTH_MM,
+  type BodyMarkId,
+  type BodyVariantId,
+  type Primitive,
+  type SymbolKind,
+} from '@einsatzzeichen/schema';
 import { BODY_MARK_IDS, bodyMark as bodyMarkWithContext } from './body-marks.js';
 
 /**
@@ -13,6 +19,8 @@ const landBodyMm: BoundsMm = { minX: 1, minY: 5.75, maxX: 31, maxY: 26 };
 const airBodyMm: BoundsMm = { minX: 1, minY: 8, maxX: 31, maxY: 23 };
 const raisedAirBodyMm: BoundsMm = { minX: 1.01, minY: 6, maxX: 30.99, maxY: 20.99 };
 const trailerBodyMm: BoundsMm = { minX: 4, minY: 5.75, maxX: 31, maxY: 26 };
+const circleBodyMm: BoundsMm = { minX: 4, minY: 4, maxX: 28, maxY: 28 };
+const raisedCircleBodyMm: BoundsMm = { minX: 4, minY: 6, maxX: 28, maxY: 30 };
 const bodyMark = (id: Parameters<typeof bodyMarkWithContext>[0], bounds: BoundsMm) =>
   bodyMarkWithContext(id, { kind: 'formation' }, bounds);
 
@@ -787,6 +795,142 @@ describe('bodyMark() — was nicht fortgeschrieben wird', () => {
   });
 });
 
+describe('bodyMark() — F.3.1 bis F.3.11 auf dem 12-mm-Kreis', () => {
+  const circleKind = 'circle-12' as SymbolKind;
+  const raisedGable = 'raised-gable' as BodyVariantId;
+  const technical = (id: string) => id as BodyMarkId;
+  const circleMark = (
+    id: BodyMarkId,
+    variant: BodyVariantId | undefined = undefined,
+    bounds: BoundsMm = variant === raisedGable ? raisedCircleBodyMm : circleBodyMm,
+  ) => bodyMarkWithContext(
+    id,
+    { kind: circleKind, ...(variant === undefined ? {} : { bodyVariant: variant }) },
+    bounds,
+  );
+  const outline = (points: readonly (readonly [number, number])[], closed = false): Primitive => ({
+    type: 'polyline', role: 'pictogram', points, closed,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  });
+  const ring = (cx: number, cy: number, r: number): Primitive => ({
+    type: 'circle', role: 'pictogram', cx, cy, r,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  });
+  const path = (d: string): Primitive => ({
+    type: 'path', role: 'pictogram', d,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  });
+
+  const normalQuartering = [line(16, 4, 16, 28), line(4, 16, 28, 16)];
+  const raisedQuartering = [line(16, 6, 16, 30), line(4, 18, 28, 18)];
+
+  it('vermisst Sanitätskreuz und Arztleiste getrennt für normal und raised-gable', () => {
+    expect(circleMark('medical-service')).toEqual(normalQuartering);
+    expect(circleMark('physician')).toEqual([
+      ...normalQuartering, line(12, 22, 20, 22),
+    ]);
+    expect(circleMark('medical-service', raisedGable)).toEqual(raisedQuartering);
+    expect(circleMark('physician', raisedGable)).toEqual([
+      ...raisedQuartering, line(12, 24, 20, 24),
+    ]);
+  });
+
+  it('zeichnet F.3.1/F.3.2 als geteilten Kreis mit dem oberen Doppelpfeil', () => {
+    expect(circleMark(technical('circle-patient-staging-arrows'))).toEqual([
+      ...normalQuartering,
+      line(10, 10, 22, 10),
+      outline([[13, 7], [10, 10], [13, 13]]),
+      outline([[19, 7], [22, 10], [19, 13]]),
+    ]);
+  });
+
+  it('zeichnet F.3.6 als Sammelpfeil mit eigenem Ring', () => {
+    expect(circleMark(technical('circle-collection-arrow'))).toEqual([
+      line(6, 16, 21, 16),
+      outline([[18, 13], [21, 16], [18, 19]]),
+      ring(23, 16, 2),
+    ]);
+  });
+
+  it('zeichnet F.3.7 und F.3.8 mit ihren getrennt vermessenen Rahmen', () => {
+    const upperFrame = path(
+      'M 8 9.5 C 10 10.25, 13 11, 16 11 C 19 11, 22 10.25, 24 9.5 L 24 19 L 8 19 Z',
+    );
+    expect(circleMark(technical('circle-staging-frame-arrow'))).toEqual([
+      upperFrame,
+      line(8, 22, 20, 22),
+      outline([[18, 20], [20, 22], [18, 24]]),
+      ring(21.5, 22, 1.5),
+    ]);
+    expect(circleMark(technical('circle-staging-frame'))).toEqual([
+      path('M 8 11 C 10 11.75, 13 12.5, 16 12.5 C 19 12.5, 22 11.75, 24 11 L 24 21 L 8 21 Z'),
+    ]);
+  });
+
+  it('zeichnet F.3.9 als viergeteilten Rahmen mit unterem Doppelpfeil', () => {
+    expect(circleMark(technical('circle-staging-frame-quadrants-arrows'))).toEqual([
+      path('M 8 9.5 C 10 10.25, 13 11, 16 11 C 19 11, 22 10.25, 24 9.5 L 24 19 L 8 19 Z'),
+      line(16, 11, 16, 19),
+      line(8, 14.5, 24, 14.5),
+      line(8, 22, 24, 22),
+      outline([[10, 20], [8, 22], [10, 24]]),
+      outline([[22, 20], [24, 22], [22, 24]]),
+    ]);
+  });
+
+  it('zeichnet F.3.10 als Raute, Anschlag und Rechtspfeil statt Patiententransport', () => {
+    expect(circleMark(technical('circle-diamond-arrow'))).toEqual([
+      outline([[16, 6], [22.5, 12.5], [16, 19], [9.5, 12.5]], true),
+      line(16, 6, 16, 19),
+      line(9, 20, 9, 24),
+      line(9, 22, 24, 22),
+      outline([[22, 20], [24, 22], [22, 24]]),
+    ]);
+  });
+
+  it('zeichnet F.3.11 als geteilten Kreis mit eigenem Kreuzring', () => {
+    const diagonal = 5.5 / Math.SQRT2;
+    expect(circleMark(technical('circle-cross-ring'))).toEqual([
+      ...normalQuartering,
+      ring(16, 16, 5.5),
+      line(16 - diagonal, 16 - diagonal, 16 + diagonal, 16 + diagonal),
+      line(16 + diagonal, 16 - diagonal, 16 - diagonal, 16 + diagonal),
+    ]);
+  });
+
+  it('rechnet jede Kreismarke gegen die übergebene Hülle statt gegen absolute F.3-Koordinaten', () => {
+    const shifted = { minX: 5, minY: 5, maxX: 29, maxY: 29 };
+    expect(circleMark(technical('circle-collection-arrow'), undefined, shifted)).toEqual([
+      line(7, 17, 22, 17),
+      outline([[19, 14], [22, 17], [19, 20]]),
+      ring(24, 17, 2),
+    ]);
+  });
+
+  it('lehnt jede ungemessene Art-/Varianten-/Markenkombination ab', () => {
+    for (const id of [
+      'circle-patient-staging-arrows',
+      'circle-collection-arrow',
+      'circle-staging-frame-arrow',
+      'circle-staging-frame',
+      'circle-staging-frame-quadrants-arrows',
+      'circle-diamond-arrow',
+      'circle-cross-ring',
+    ]) {
+      expect(() => bodyMarkWithContext(
+        technical(id), { kind: 'formation' }, formationBodyMm,
+      ), id).toThrow(/nicht vermessen/);
+      expect(() => bodyMarkWithContext(
+        technical(id), { kind: 'post' }, circleBodyMm,
+      ), id).toThrow(/nicht vermessen/);
+    }
+    expect(() => circleMark('medical-service', 'foot-band')).toThrow(/nicht vermessen/);
+    expect(() => circleMark(technical('circle-collection-arrow'), raisedGable)).toThrow(
+      /nicht vermessen/,
+    );
+  });
+});
+
 describe('BODY_MARK_IDS', () => {
   it('führt jede an Anhang F.1 vermessene Fähigkeit, und jede davon zeichnet auch', () => {
     // Enthaltensein und nicht Gleichheit — und der Zuwachs hat die Bauart schon bestätigt: mit
@@ -812,8 +956,10 @@ describe('BODY_MARK_IDS', () => {
           ? [{ kind: 'vehicle-land', bodyVariant: 'foot-band' } as const, landBodyMm] as const
         : id === 'air-winch-chevron-diamond'
           ? [{ kind: 'vehicle-air', bodyVariant: 'raised-hull' } as const, raisedAirBodyMm] as const
-          : id === 'top-center-rect-0-5x0-6mm'
+        : id === 'top-center-rect-0-5x0-6mm'
             ? [{ kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' } as const, landBodyMm] as const
+            : id.startsWith('circle-')
+              ? [{ kind: 'circle-12' } as const, circleBodyMm] as const
             : id === 'ring-6mm-offset-down-3mm-four-way-stem' ||
                 id === 'ring-5mm-offset-down-3mm-eight-spokes'
               ? [{ kind: 'vehicle-land' } as const, landBodyMm] as const

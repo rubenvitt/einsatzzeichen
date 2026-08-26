@@ -148,6 +148,100 @@ describe('validateSpec', () => {
     },
   );
 
+  const circleTopLeftMetrics = {
+    capHeightMm: 2.919225,
+    baselineFromBodyTopMm: 1.000254,
+    anchorFromBodyLeftMm: -2.984684,
+  };
+  const raisedCircleTopLeftMetrics = {
+    capHeightMm: 2.749893,
+    baselineFromBodyTopMm: -0.999746,
+    anchorFromBodyLeftMm: -2.974002,
+  };
+
+  function circleSpec(
+    bodyVariant: 'raised-gable' | undefined,
+    topLeft: string,
+    metrics: unknown,
+    organization: SymbolSpec['organization'] = 'hilfsorganisation',
+  ): SymbolSpec {
+    return {
+      kind: 'circle-12',
+      ...(bodyVariant === undefined ? {} : { bodyVariant }),
+      organization,
+      labels: { topLeft, topLeftMetrics: metrics },
+    } as unknown as SymbolSpec;
+  }
+
+  it('akzeptiert die vollständigen UHS- und 50-Metriken nur an ihrer Kreisfassung', () => {
+    expect(validateSpec(circleSpec(undefined, 'UHS', circleTopLeftMetrics))).toEqual([]);
+    expect(validateSpec(circleSpec(
+      'raised-gable', '50', raisedCircleTopLeftMetrics,
+    ))).toEqual([]);
+  });
+
+  it('verlangt an beiden Kreisfassungen immer einen vollständigen topLeft-Metriksatz', () => {
+    const withoutMetrics = {
+      kind: 'circle-12', organization: 'hilfsorganisation', labels: { topLeft: 'UHS' },
+    } as unknown as SymbolSpec;
+    expect(validateSpec(withoutMetrics).map((issue) => issue.rule)).toContain(
+      'circle-top-left-requires-metrics',
+    );
+    expect(validateSpec(circleSpec(
+      'raised-gable', '50', { capHeightMm: 2.749893 },
+    )).map((issue) => issue.rule)).toContain('top-left-metrics-complete');
+  });
+
+  it('lehnt unbelegte Kreisvarianten ab', () => {
+    const wrongVariant = {
+      kind: 'circle-12', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+    } as unknown as SymbolSpec;
+    const gableOnPost = {
+      kind: 'post', bodyVariant: 'raised-gable',
+    } as unknown as SymbolSpec;
+    expect(validateSpec(wrongVariant).map((issue) => issue.rule)).toContain(
+      'body-variant-requires-measured-kind',
+    );
+    expect(validateSpec(gableOnPost).map((issue) => issue.rule)).toContain(
+      'body-variant-requires-measured-kind',
+    );
+  });
+
+  it('bindet jeden gemessenen 12-mm-Kreis auch ohne Label an die weiße HiOrg-Fläche', () => {
+    const wrongOrganization = {
+      kind: 'circle-12', organization: 'feuerwehr',
+    } as unknown as SymbolSpec;
+    const missingOrganization = {
+      kind: 'circle-12',
+    } as unknown as SymbolSpec;
+    expect(validateSpec(wrongOrganization).map((issue) => issue.rule)).toContain(
+      'circle-12-requires-hilfsorganisation',
+    );
+    expect(validateSpec(missingOrganization).map((issue) => issue.rule)).toContain(
+      'circle-12-requires-hilfsorganisation',
+    );
+    expect(validateSpec({
+      kind: 'circle-12', bodyVariant: 'raised-gable', organization: 'feuerwehr',
+    } as unknown as SymbolSpec).map((issue) => issue.rule)).toContain(
+      'circle-12-requires-hilfsorganisation',
+    );
+  });
+
+  it('begrenzt negative Kreis-Metriken gegen die ViewBox statt gegen die Kreisfläche', () => {
+    expect(validateSpec(circleSpec(undefined, 'UHS', {
+      ...circleTopLeftMetrics, anchorFromBodyLeftMm: -4.01,
+    })).map((issue) => issue.rule)).toContain('circle-top-left-anchor-within-viewbox');
+    expect(validateSpec(circleSpec('raised-gable', '50', {
+      ...raisedCircleTopLeftMetrics, baselineFromBodyTopMm: -6.01,
+    })).map((issue) => issue.rule)).toContain('circle-top-left-baseline-within-viewbox');
+    expect(validateSpec(circleSpec(undefined, 'UHS', {
+      ...circleTopLeftMetrics, anchorFromBodyLeftMm: Number.NaN,
+    })).map((issue) => issue.rule)).toContain('circle-top-left-anchor-within-viewbox');
+    expect(validateSpec(circleSpec(undefined, 'UHS', {
+      ...circleTopLeftMetrics, anchorFromBodyLeftMm: 22.01,
+    })).map((issue) => issue.rule)).toContain('circle-top-left-anchor-within-viewbox');
+  });
+
   it('bindet beide F.2-Sonderzonen an das exakte Art-/Variantenpaar', () => {
     expect(validateSpec({
       kind: 'vehicle-land', bodyVariant: 'raised-hull',

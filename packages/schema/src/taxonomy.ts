@@ -2,11 +2,10 @@
  * Körperform eines Zeichens. Die ersten vierzehn Werte sind die Grundzeichen aus Kapitel 1 der
  * BBK/BABZ-Empfehlung und stehen als `CatalogEntry` in `BASE_SYMBOLS`.
  *
- * **Die letzten drei sind Körperformen ohne Kapitel-1-Abschnitt.** Der Anhang E.2 trägt sie, und
- * die Zuschnittsnotiz vom 11. August 2026 hat sie vorhergesagt („für die letzten drei nennt der
- * Zuschnitt kein Grundzeichen aus Kapitel 1"). Sie stehen bewusst **nicht** in `BASE_SYMBOLS`:
- * dessen Register ist das Kapitel 1, und ein Eintrag dort verlangte einen Abschnitt, den zwei von
- * ihnen nicht haben (ihre einzige Belegdatei ist das E.2-Zeichen selbst, je 1 von 661).
+ * **Die letzten vier sind Körperformen ohne Kapitel-1-Abschnitt.** Die Zuschnittsnotiz zu
+ * Anhang E.2 vom 11. August 2026 hat die ersten drei vorhergesagt; Anhang F.3 belegt den
+ * eigenständigen 12-mm-Kreis. Sie stehen bewusst **nicht** in `BASE_SYMBOLS`: dessen Register ist
+ * das Kapitel 1, und ein Eintrag dort verlangte einen Abschnitt, den diese Quellen nicht liefern.
  *
  * - `trailer` — Anhängerrumpf. Belegt an `5.1.2.1_Anhänger_allgemein.svg`; sein Füllpfad kommt in
  *   17 der 661 Referenzdateien byteidentisch vor (selbst gezählt).
@@ -14,6 +13,8 @@
  * - `upright-rectangle` — hochkantes Rechteck 26 × 28 mm von `E.2.26`. Genau 1 von 661. Nach der
  *   Zeichnung benannt und nicht nach der Trinkwasseraufbereitungsanlage: was die Form fachlich
  *   bezeichnet, sagt die Datei nicht.
+ * - `circle-12` — Kreis mit Radius 12 mm aus den elf F.3-Zeichen; bei `raised-gable` ist sein
+ *   Mittelpunkt separat abgesenkt vermessen.
  */
 export type SymbolKind =
   | 'formation'
@@ -32,7 +33,8 @@ export type SymbolKind =
   | 'spontaneous-helper'
   | 'trailer'
   | 'swap-loader-vehicle'
-  | 'upright-rectangle';
+  | 'upright-rectangle'
+  | 'circle-12';
 
 /**
  * Eine **zweite, in der Quelle belegte Zeichnung desselben Grundzeichens** — keine zweite
@@ -57,9 +59,11 @@ export type SymbolKind =
  * Landfahrzeug führen dafür getrennt vermessene Körperfassungen; die gemeinsame Kennung erlaubt
  * keine Übertragung ihrer übrigen Maße. `plain-wheel-pair` hält die zwei schlichten Radringe der
  * elf F.2-Landdarstellungen getrennt von `vehicleCategory`: das Bild gleicht Kategorie 1, die
- * Quelle belegt hier aber keine Kategorie-Semantik.
+ * Quelle belegt hier aber keine Kategorie-Semantik. `raised-gable` bezeichnet den F.3-Kreis
+ * mit Mittelpunkt (16|18) und seinem separat vermessenen Giebel; die Kennung behauptet weder
+ * Standortsemantik noch Gleichheit mit der abweichenden Katalogfassung von J.3.2.
  */
-export type BodyVariantId = 'raised-hull' | 'foot-band' | 'plain-wheel-pair';
+export type BodyVariantId = 'raised-hull' | 'foot-band' | 'plain-wheel-pair' | 'raised-gable';
 
 /** Organisationen nach Kapitel 2. Bestimmen die Körperfarbe. */
 export type OrganizationId =
@@ -225,6 +229,13 @@ export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
   'air-winch-chevron-diamond',
   'ring-6mm-offset-down-3mm-four-way-stem',
   'ring-5mm-offset-down-3mm-eight-spokes',
+  'circle-patient-staging-arrows',
+  'circle-collection-arrow',
+  'circle-staging-frame-arrow',
+  'circle-staging-frame',
+  'circle-staging-frame-quadrants-arrows',
+  'circle-diamond-arrow',
+  'circle-cross-ring',
 ] as const);
 
 export type TechnicalBodyMarkId = (typeof TECHNICAL_BODY_MARK_IDS)[number];
@@ -466,8 +477,11 @@ export interface BodyLabels {
    * Drei **gemeinsam erforderliche Quellenmaße** für einen einzelnen `topLeft`-Lauf. Fehlt das
    * Objekt, gelten unverändert Schriftgrad, Grundlinie und Anker des Körperprofils. Es ist kein
    * Auto-Fit und keine Stilkennung: jede Zahl stammt aus dem jeweiligen, in Pfade umgewandelten
-   * Quellenlauf. `compose()` akzeptiert den Override fail-closed nur am normalen und gebänderten
-   * F.2-Landfahrzeug; `plain-wheel-pair`, Formation und andere Körperarten behalten ihre eigenen
+   * Quellenlauf. `compose()` akzeptiert den Override fail-closed am normalen und gebänderten
+   * F.2-Landfahrzeug sowie zwingend an den beiden F.3-Kreisprofilen. Die Kreiswerte dürfen
+   * negativ relativ zur Körperhülle sein, weil `UHS` und `50` sichtbar auf der weissen
+   * Ausgabeoberfläche beginnen; sie werden stattdessen gegen die 32-mm-ViewBox geprüft.
+   * `plain-wheel-pair`, Formation und alle anderen Körperarten behalten ihre eigenen
    * vermessenen Defaults.
    *
    * Ablesung in 90,709 / 32 SVG-Einheiten pro Millimeter; Grundlinie aus flachfüßigen Glyphen,

@@ -7,6 +7,7 @@ import {
 } from '@einsatzzeichen/schema';
 import type { BoundsMm } from './bounds.js';
 import { compose, type CatalogPorts } from './compose.js';
+import { ARIMO_CAP_HEIGHT_FRACTION } from './render/text-policy.js';
 import { checkViewBox } from './viewbox-gate.js';
 
 /** Der Körper der Taktischen Formation, wie `base-symbols.ts` ihn führt. */
@@ -798,6 +799,62 @@ describe('compose() — die beiden expliziten F.2-Sonderzonen', () => {
       },
       f2Catalog,
     )).toThrow(/exakt zwei/);
+  });
+});
+
+describe('compose() — die profilgebundenen F.3-Kreislabels', () => {
+  const circleCatalog: CatalogPorts = {
+    ...catalog,
+    baseDrawing: (_kind, variant) => ({
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [{
+        type: 'circle', role: 'body', cx: 16, cy: variant === 'raised-gable' ? 18 : 16, r: 12,
+        style: { fill: 'weiss', stroke: 'schwarz', strokeWidth: 0.5 },
+      }],
+    }),
+    organizationColor: () => 'weiss',
+  };
+
+  it('setzt UHS mit den quellengenauen Normal-Kreis-Metriken schwarz', () => {
+    const spec = {
+      kind: 'circle-12', organization: 'hilfsorganisation',
+      labels: {
+        topLeft: 'UHS',
+        topLeftMetrics: {
+          capHeightMm: 2.919225,
+          baselineFromBodyTopMm: 1.000254,
+          anchorFromBodyLeftMm: -2.984684,
+        },
+      },
+    } as unknown as SymbolSpec;
+    const label = compose(spec, circleCatalog).children.find((child) => child.role === 'label');
+    expect(label).toMatchObject({
+      type: 'text', content: 'UHS', x: 1.015316, y: 5.000254,
+      sizeMm: 2.919225 / ARIMO_CAP_HEIGHT_FRACTION,
+      style: { fill: 'schwarz' },
+    });
+  });
+
+  it('setzt 50 oberhalb der raised-gable-Kreisfläche und innerhalb der ViewBox', () => {
+    const spec = {
+      kind: 'circle-12', bodyVariant: 'raised-gable', organization: 'hilfsorganisation',
+      labels: {
+        topLeft: '50',
+        topLeftMetrics: {
+          capHeightMm: 2.749893,
+          baselineFromBodyTopMm: -0.999746,
+          anchorFromBodyLeftMm: -2.974002,
+        },
+      },
+    } as unknown as SymbolSpec;
+    const drawing = compose(spec, circleCatalog);
+    const label = drawing.children.find((child) => child.role === 'label');
+    expect(label).toMatchObject({
+      type: 'text', content: '50', x: 1.025998, y: 5.000254,
+      sizeMm: 2.749893 / ARIMO_CAP_HEIGHT_FRACTION,
+      style: { fill: 'schwarz' },
+    });
+    expect(checkViewBox(drawing)).toEqual([]);
   });
 });
 

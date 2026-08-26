@@ -440,6 +440,184 @@ function outline(points: readonly (readonly [number, number])[]): Primitive {
   };
 }
 
+function circleOutline(
+  points: readonly (readonly [number, number])[],
+  closed = false,
+): Primitive {
+  return {
+    type: 'polyline',
+    role: 'pictogram',
+    points,
+    closed,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  };
+}
+
+function circleRing(cx: number, cy: number, r: number): Primitive {
+  return {
+    type: 'circle',
+    role: 'pictogram',
+    cx,
+    cy,
+    r,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  };
+}
+
+function circlePath(d: string): Primitive {
+  return {
+    type: 'path',
+    role: 'pictogram',
+    d,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  };
+}
+
+// `compose()` dedupliziert nur identische Primitive-Referenzen zwischen Markengruppen. Die
+// Teilung ist an F.3.2/F.3.4/F.3.5 eine gemeinsame Schicht mehrerer Marken; dieser Cache hält
+// genau diese beiden Linien für dieselbe vermessene Körperhülle referenzidentisch.
+const CIRCLE_QUARTERING_BY_BOUNDS = new WeakMap<BoundsMm, Primitive[]>();
+
+function circleQuartering(bounds: BoundsMm): Primitive[] {
+  const cached = CIRCLE_QUARTERING_BY_BOUNDS.get(bounds);
+  if (cached !== undefined) return cached;
+  const cx = (bounds.minX + bounds.maxX) / 2;
+  const cy = (bounds.minY + bounds.maxY) / 2;
+  const primitives = [
+    stroke(cx, bounds.minY, cx, bounds.maxY),
+    stroke(bounds.minX, cy, bounds.maxX, cy),
+  ];
+  CIRCLE_QUARTERING_BY_BOUNDS.set(bounds, primitives);
+  return primitives;
+}
+
+/**
+ * F.3.1 bis F.3.11, am 26. August 2026 je Quelle separat vermessen. Die Koordinaten werden
+ * gegen die 24 × 24-mm-Hülle gerechnet; sie sind weder aus der Formation noch aus einem
+ * Fahrzeug skaliert. Die technischen IDs benennen nur das sichtbare Motiv und behaupten keine
+ * zusätzliche Fachsemantik.
+ */
+const CIRCLE_NORMAL_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
+  'medical-service': circleQuartering,
+  physician: (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    return [
+      ...circleQuartering(bounds),
+      stroke(cx - 4, bounds.maxY - 6, cx + 4, bounds.maxY - 6),
+    ];
+  },
+  'circle-patient-staging-arrows': (bounds) => {
+    const dx = bounds.minX - 4;
+    const dy = bounds.minY - 4;
+    return [
+      ...circleQuartering(bounds),
+      stroke(10 + dx, 10 + dy, 22 + dx, 10 + dy),
+      circleOutline([[13 + dx, 7 + dy], [10 + dx, 10 + dy], [13 + dx, 13 + dy]]),
+      circleOutline([[19 + dx, 7 + dy], [22 + dx, 10 + dy], [19 + dx, 13 + dy]]),
+    ];
+  },
+  'circle-collection-arrow': (bounds) => {
+    const dx = bounds.minX - 4;
+    const dy = bounds.minY - 4;
+    return [
+      stroke(6 + dx, 16 + dy, 21 + dx, 16 + dy),
+      circleOutline([[18 + dx, 13 + dy], [21 + dx, 16 + dy], [18 + dx, 19 + dy]]),
+      circleRing(23 + dx, 16 + dy, 2),
+    ];
+  },
+  'circle-staging-frame-arrow': (bounds) => {
+    const dx = bounds.minX - 4;
+    const dy = bounds.minY - 4;
+    return [
+      circlePath(
+        `M ${8 + dx} ${9.5 + dy} C ${10 + dx} ${10.25 + dy}, ` +
+        `${13 + dx} ${11 + dy}, ${16 + dx} ${11 + dy} C ${19 + dx} ${11 + dy}, ` +
+        `${22 + dx} ${10.25 + dy}, ${24 + dx} ${9.5 + dy} L ${24 + dx} ${19 + dy} ` +
+        `L ${8 + dx} ${19 + dy} Z`,
+      ),
+      stroke(8 + dx, 22 + dy, 20 + dx, 22 + dy),
+      circleOutline([[18 + dx, 20 + dy], [20 + dx, 22 + dy], [18 + dx, 24 + dy]]),
+      circleRing(21.5 + dx, 22 + dy, 1.5),
+    ];
+  },
+  'circle-staging-frame': (bounds) => {
+    const dx = bounds.minX - 4;
+    const dy = bounds.minY - 4;
+    return [circlePath(
+      `M ${8 + dx} ${11 + dy} C ${10 + dx} ${11.75 + dy}, ` +
+      `${13 + dx} ${12.5 + dy}, ${16 + dx} ${12.5 + dy} C ${19 + dx} ${12.5 + dy}, ` +
+      `${22 + dx} ${11.75 + dy}, ${24 + dx} ${11 + dy} L ${24 + dx} ${21 + dy} ` +
+      `L ${8 + dx} ${21 + dy} Z`,
+    )];
+  },
+  'circle-staging-frame-quadrants-arrows': (bounds) => {
+    const dx = bounds.minX - 4;
+    const dy = bounds.minY - 4;
+    return [
+      circlePath(
+        `M ${8 + dx} ${9.5 + dy} C ${10 + dx} ${10.25 + dy}, ` +
+        `${13 + dx} ${11 + dy}, ${16 + dx} ${11 + dy} C ${19 + dx} ${11 + dy}, ` +
+        `${22 + dx} ${10.25 + dy}, ${24 + dx} ${9.5 + dy} L ${24 + dx} ${19 + dy} ` +
+        `L ${8 + dx} ${19 + dy} Z`,
+      ),
+      stroke(16 + dx, 11 + dy, 16 + dx, 19 + dy),
+      stroke(8 + dx, 14.5 + dy, 24 + dx, 14.5 + dy),
+      stroke(8 + dx, 22 + dy, 24 + dx, 22 + dy),
+      circleOutline([[10 + dx, 20 + dy], [8 + dx, 22 + dy], [10 + dx, 24 + dy]]),
+      circleOutline([[22 + dx, 20 + dy], [24 + dx, 22 + dy], [22 + dx, 24 + dy]]),
+    ];
+  },
+  'circle-diamond-arrow': (bounds) => {
+    const dx = bounds.minX - 4;
+    const dy = bounds.minY - 4;
+    return [
+      // F.3.10: Aus den jeweils gegenüberliegenden Konturseiten des 0,5-mm-Umrisses gemittelt
+      // folgen die vier Mittellinienpunkte (16|6), (22,5|12,5), (16|19), (9,5|12,5). Die
+      // bequemeren Ganzzahlen 23/13/20/9 lägen auf wechselnden Außenkanten und vergrößerten die
+      // Raute um bis zu 1 mm; Anschlag und Pfeil darunter sind davon getrennt vermessen.
+      circleOutline(
+        [
+          [16 + dx, 6 + dy],
+          [22.5 + dx, 12.5 + dy],
+          [16 + dx, 19 + dy],
+          [9.5 + dx, 12.5 + dy],
+        ],
+        true,
+      ),
+      stroke(16 + dx, 6 + dy, 16 + dx, 19 + dy),
+      stroke(9 + dx, 20 + dy, 9 + dx, 24 + dy),
+      stroke(9 + dx, 22 + dy, 24 + dx, 22 + dy),
+      circleOutline([[22 + dx, 20 + dy], [24 + dx, 22 + dy], [22 + dx, 24 + dy]]),
+    ];
+  },
+  'circle-cross-ring': (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    const cy = (bounds.minY + bounds.maxY) / 2;
+    const radiusMm = 5.5;
+    const diagonalMm = radiusMm / Math.SQRT2;
+    return [
+      ...circleQuartering(bounds),
+      circleRing(cx, cy, radiusMm),
+      stroke(cx - diagonalMm, cy - diagonalMm, cx + diagonalMm, cy + diagonalMm),
+      stroke(cx + diagonalMm, cy - diagonalMm, cx - diagonalMm, cy + diagonalMm),
+    ];
+  },
+};
+
+/** F.3.5: dieselben semantischen Marken, aber separat gegen den abgesenkten Kreis vermessen. */
+const CIRCLE_RAISED_GABLE_MARKS: Partial<
+  Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
+> = {
+  'medical-service': circleQuartering,
+  physician: (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    return [
+      ...circleQuartering(bounds),
+      stroke(cx - 4, bounds.maxY - 6, cx + 4, bounds.maxY - 6),
+    ];
+  },
+};
+
 // `compose()` behandelt dieselbe Primitive-Referenz in mehreren Markengruppen als bewusst
 // gemeinsam genutzte Schicht. Der Cache macht genau die zwei Linien der Landteilung für dieselbe
 // platzierte Körperhülle zu solchen Referenzen; separat erzeugte, nur geometrisch gleiche Linien
@@ -724,6 +902,10 @@ export function bodyMark(
         ? VEHICLE_AIR_MARKS[id]
         : context.kind === 'trailer' && context.bodyVariant === undefined
           ? TRAILER_MARKS[id]
+          : context.kind === 'circle-12' && context.bodyVariant === undefined
+            ? CIRCLE_NORMAL_MARKS[id]
+            : context.kind === 'circle-12' && context.bodyVariant === 'raised-gable'
+              ? CIRCLE_RAISED_GABLE_MARKS[id]
           : undefined;
   const hasAnyBuild = [
     MARKS,
@@ -732,6 +914,8 @@ export function bodyMark(
     VEHICLE_LAND_PLAIN_WHEEL_PAIR_MARKS,
     VEHICLE_AIR_MARKS,
     TRAILER_MARKS,
+    CIRCLE_NORMAL_MARKS,
+    CIRCLE_RAISED_GABLE_MARKS,
   ]
     .some((candidate) => Object.hasOwn(candidate, id));
   if (!hasAnyBuild) {
@@ -758,7 +942,9 @@ export function bodyMark(
       ? { width: 30, height: 20.25, label: '30 × 20,25 mm' }
     : context.kind === 'vehicle-air'
         ? { width: 29.98, height: 14.99, label: '29,98 × 14,99 mm' }
-        : { width: 27, height: 20.25, label: '27 × 20,25 mm' };
+        : context.kind === 'circle-12'
+          ? { width: 24, height: 24, label: '24 × 24 mm' }
+          : { width: 27, height: 20.25, label: '27 × 20,25 mm' };
   if (
     Math.abs(widthMm - expected.width) > BODY_TOLERANCE_MM ||
     Math.abs(heightMm - expected.height) > BODY_TOLERANCE_MM
@@ -811,6 +997,8 @@ export const BODY_MARK_IDS: readonly BodyMarkId[] = Object.freeze(
       VEHICLE_LAND_PLAIN_WHEEL_PAIR_MARKS,
       VEHICLE_AIR_MARKS,
       TRAILER_MARKS,
+      CIRCLE_NORMAL_MARKS,
+      CIRCLE_RAISED_GABLE_MARKS,
     ]
       .some((registry) => Object.hasOwn(registry, id))),
 );

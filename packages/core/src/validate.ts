@@ -1,5 +1,11 @@
-import type { SymbolKind, SymbolSpec } from '@einsatzzeichen/schema';
+import {
+  DEFAULT_VIEWBOX_MM,
+  type BodyVariantId,
+  type SymbolKind,
+  type SymbolSpec,
+} from '@einsatzzeichen/schema';
 import { profileFor } from './layout/profiles.js';
+import { ARIMO_CAP_HEIGHT_FRACTION, verticalTextBoxMm } from './render/text-policy.js';
 
 export interface ValidationIssue {
   /** Stabile Regel-ID. Wird später in der Dokumentation verlinkt. */
@@ -40,9 +46,31 @@ const CHASSIS_KINDS = new Set<SymbolKind>([
 const F2_VEHICLE_LAND_BODY_HEIGHT_MM = 20.25;
 /** Rechte Innenmarge der bestehenden `topLeft`-Box: absolut x 29, relativ zur linken Hülle 28. */
 const F2_TOP_LEFT_BOX_RIGHT_FROM_BODY_LEFT_MM = 28;
+/** Rechte Kante der F.3-`topLeft`-Box: Kreis maxX 28 minus 2-mm-Innenmarge. */
+const F3_CIRCLE_TOP_LEFT_BOX_RIGHT_MM = 26;
+
+/** Exakte, aus den Quellen vermessene Art-/Variantenpaare; alle anderen bleiben fail-closed. */
+const BODY_VARIANT_KINDS: Readonly<Record<BodyVariantId, ReadonlySet<SymbolKind>>> = {
+  'raised-hull': new Set<SymbolKind>(['vehicle-air', 'vehicle-water']),
+  'foot-band': new Set<SymbolKind>(['formation', 'vehicle-land']),
+  'plain-wheel-pair': new Set<SymbolKind>(['vehicle-land']),
+  'raised-gable': new Set<SymbolKind>(['circle-12']),
+};
 
 export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
+
+  if (
+    spec.bodyVariant !== undefined &&
+    !BODY_VARIANT_KINDS[spec.bodyVariant].has(spec.kind)
+  ) {
+    issues.push({
+      rule: 'body-variant-requires-measured-kind',
+      message:
+        `Die Körpervariante "${spec.bodyVariant}" ist für "${spec.kind}" nicht vermessen. ` +
+        'Varianten fallen weder auf eine andere Körperart noch auf deren Normalfassung zurück.',
+    });
+  }
 
   if (spec.strength !== undefined && !UNIT_KINDS.has(spec.kind)) {
     issues.push({
@@ -201,6 +229,34 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
     });
   }
 
+  const isCircle12 = spec.kind === 'circle-12';
+  const isMeasuredCircleVariant = isCircle12 &&
+    (spec.bodyVariant === undefined || spec.bodyVariant === 'raised-gable');
+  if (
+    isMeasuredCircleVariant &&
+    spec.labels?.topLeft !== undefined &&
+    spec.labels.topLeftMetrics === undefined
+  ) {
+    issues.push({
+      rule: 'circle-top-left-requires-metrics',
+      message:
+        'Ein topLeft-Lauf am 12-mm-Kreis verlangt immer den vollständigen vermessenen ' +
+        'Metriksatz; die beiden Kreisfassungen haben keinen allgemeinen Profildefault.',
+    });
+  }
+  if (
+    isMeasuredCircleVariant &&
+    spec.organization !== 'hilfsorganisation'
+  ) {
+    issues.push({
+      rule: 'circle-12-requires-hilfsorganisation',
+      message:
+        'Der 12-mm-Kreis ist in allen elf F.3-Belegen ausschließlich als weiße ' +
+        'HiOrg-Körperfläche vermessen. Andere oder fehlende Organisationszuordnungen sind ' +
+        'auch ohne Beschriftung nicht belegt.',
+    });
+  }
+
   const topLeftMetrics = spec.labels?.topLeftMetrics as unknown;
   if (topLeftMetrics !== undefined) {
     const metricsRecord = typeof topLeftMetrics === 'object' && topLeftMetrics !== null &&
@@ -219,15 +275,15 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
           'ohne ihn würden alle drei Maße still verschluckt.',
       });
     }
-    if (
-      spec.kind !== 'vehicle-land' ||
-      !(spec.bodyVariant === undefined || spec.bodyVariant === 'foot-band')
-    ) {
+    const isMeasuredVehicleLand = spec.kind === 'vehicle-land' &&
+      (spec.bodyVariant === undefined || spec.bodyVariant === 'foot-band');
+    if (!isMeasuredVehicleLand && !isMeasuredCircleVariant) {
       issues.push({
         rule: 'top-left-metrics-require-measured-vehicle-land',
         message:
           'Individuelle topLeft-Metriken sind nur am normalen und gebänderten F.2-Landfahrzeug ' +
-          'vermessen. Andere Arten und Varianten behalten ihre eigenen Profilwerte.',
+          'sowie den beiden F.3-Kreisfassungen vermessen. Andere Arten und Varianten behalten ' +
+          'ihre eigenen Profilwerte.',
       });
     }
     if (
@@ -249,33 +305,80 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
         message: 'Die Versalhöhe des topLeft-Laufs muss endlich und größer als null sein.',
       });
     }
-    if (
-      !(typeof baselineFromBodyTopMm === 'number' &&
+    if (isMeasuredVehicleLand) {
+      if (
+        !(typeof baselineFromBodyTopMm === 'number' &&
+          Number.isFinite(baselineFromBodyTopMm) &&
+          typeof capHeightMm === 'number' &&
+          Number.isFinite(capHeightMm) &&
+          baselineFromBodyTopMm >= capHeightMm &&
+          baselineFromBodyTopMm <= F2_VEHICLE_LAND_BODY_HEIGHT_MM)
+      ) {
+        issues.push({
+          rule: 'top-left-baseline-within-body',
+          message:
+            'Die topLeft-Grundlinie muss mindestens eine Versalhöhe unter der Körperoberkante ' +
+            `und höchstens ${F2_VEHICLE_LAND_BODY_HEIGHT_MM} mm darunter liegen.`,
+        });
+      }
+      if (
+        !(typeof anchorFromBodyLeftMm === 'number' &&
+          Number.isFinite(anchorFromBodyLeftMm) &&
+          anchorFromBodyLeftMm >= 0 &&
+          anchorFromBodyLeftMm <= F2_TOP_LEFT_BOX_RIGHT_FROM_BODY_LEFT_MM)
+      ) {
+        issues.push({
+          rule: 'top-left-anchor-within-body',
+          message:
+            'Der topLeft-Anker muss endlich sein und innerhalb der vermessenen Landfahrzeugbox ' +
+            `zwischen 0 und ${F2_TOP_LEFT_BOX_RIGHT_FROM_BODY_LEFT_MM} mm liegen.`,
+        });
+      }
+    }
+
+    if (isMeasuredCircleVariant) {
+      const circleMinXMm = 4;
+      const circleMinYMm = spec.bodyVariant === 'raised-gable' ? 6 : 4;
+      const anchorXMm = typeof anchorFromBodyLeftMm === 'number'
+        ? circleMinXMm + anchorFromBodyLeftMm
+        : Number.NaN;
+      if (
+        !(Number.isFinite(anchorXMm) &&
+          anchorXMm >= 0 &&
+          anchorXMm <= F3_CIRCLE_TOP_LEFT_BOX_RIGHT_MM)
+      ) {
+        issues.push({
+          rule: 'circle-top-left-anchor-within-viewbox',
+          message:
+            'Der relative Kreislabel-Anker darf außerhalb der Kreisfläche beginnen, seine ' +
+            'absolute Lage muss aber innerhalb der 32-mm-ViewBox liegen und darf die rechte ' +
+            `Kante der deklarierten Textbox bei ${F3_CIRCLE_TOP_LEFT_BOX_RIGHT_MM} mm nicht ` +
+            'überschreiten.',
+        });
+      }
+
+      let verticalBoxWithinViewBox = false;
+      if (
+        typeof baselineFromBodyTopMm === 'number' &&
         Number.isFinite(baselineFromBodyTopMm) &&
         typeof capHeightMm === 'number' &&
         Number.isFinite(capHeightMm) &&
-        baselineFromBodyTopMm >= capHeightMm &&
-        baselineFromBodyTopMm <= F2_VEHICLE_LAND_BODY_HEIGHT_MM)
-    ) {
-      issues.push({
-        rule: 'top-left-baseline-within-body',
-        message:
-          'Die topLeft-Grundlinie muss mindestens eine Versalhöhe unter der Körperoberkante und ' +
-          `höchstens ${F2_VEHICLE_LAND_BODY_HEIGHT_MM} mm darunter liegen.`,
-      });
-    }
-    if (
-      !(typeof anchorFromBodyLeftMm === 'number' &&
-        Number.isFinite(anchorFromBodyLeftMm) &&
-        anchorFromBodyLeftMm >= 0 &&
-        anchorFromBodyLeftMm <= F2_TOP_LEFT_BOX_RIGHT_FROM_BODY_LEFT_MM)
-    ) {
-      issues.push({
-        rule: 'top-left-anchor-within-body',
-        message:
-          'Der topLeft-Anker muss endlich sein und innerhalb der vermessenen Landfahrzeugbox ' +
-          `zwischen 0 und ${F2_TOP_LEFT_BOX_RIGHT_FROM_BODY_LEFT_MM} mm liegen.`,
-      });
+        capHeightMm > 0
+      ) {
+        const baselineYMm = circleMinYMm + baselineFromBodyTopMm;
+        const sizeMm = capHeightMm / ARIMO_CAP_HEIGHT_FRACTION;
+        const box = verticalTextBoxMm(baselineYMm, sizeMm, 'alphabetic');
+        verticalBoxWithinViewBox = box.topMm >= 0 &&
+          box.topMm + box.heightMm <= DEFAULT_VIEWBOX_MM.height;
+      }
+      if (!verticalBoxWithinViewBox) {
+        issues.push({
+          rule: 'circle-top-left-baseline-within-viewbox',
+          message:
+            'Die relative Kreislabel-Grundlinie darf außerhalb der Kreisfläche liegen, die ' +
+            'daraus berechnete Textbox muss aber vollständig innerhalb der 32-mm-ViewBox bleiben.',
+        });
+      }
     }
   }
 

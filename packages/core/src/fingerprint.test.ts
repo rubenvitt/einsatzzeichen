@@ -176,6 +176,62 @@ describe('matchFingerprint', () => {
     expect(result.ok).toBe(true);
   });
 
+  it('vergleicht einen Kreiskörper mit der vorhandenen Kreisform statt mit fremden bounds', () => {
+    const circleBody: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [{ type: 'circle', role: 'body', cx: 16, cy: 18, r: 12 }],
+    };
+    const result = matchFingerprint(circleBody, {
+      asset: 'F.3.5.svg',
+      shapes: [
+        {
+          kind: 'circle',
+          boundsMm: { minXMm: 4, minYMm: 6, maxXMm: 28, maxYMm: 30 },
+        },
+        {
+          kind: 'bounds',
+          boundsMm: { minXMm: 2.847, minYMm: 0.685, maxXMm: 29.152, maxYMm: 11.198 },
+        },
+      ],
+    });
+    expect(result).toEqual({ ok: true, problems: [] });
+  });
+
+  it('behält am Kreiskörper eine vorhandene Ring-Mittellinie vor einer Kreis-Hülle', () => {
+    const circleBody: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [{ type: 'circle', role: 'body', cx: 16, cy: 16, r: 12 }],
+    };
+    const result = matchFingerprint(circleBody, {
+      asset: 'circle-with-ring.svg',
+      shapes: [
+        ring(4, 4, 28, 28),
+        {
+          kind: 'circle',
+          boundsMm: { minXMm: 5, minYMm: 5, maxXMm: 27, maxYMm: 27 },
+        },
+      ],
+    });
+    expect(result).toEqual({ ok: true, problems: [] });
+  });
+
+  it('lässt an Nicht-Kreisen die bisherige bounds-Präzedenz vor einer Kreis-Hülle unverändert', () => {
+    const result = matchFingerprint(formation, {
+      asset: 'rect-with-circle.svg',
+      shapes: [
+        {
+          kind: 'bounds',
+          boundsMm: { minXMm: 1, minYMm: 6, maxXMm: 31, maxYMm: 26 },
+        },
+        {
+          kind: 'circle',
+          boundsMm: { minXMm: 5, minYMm: 5, maxXMm: 27, maxYMm: 27 },
+        },
+      ],
+    });
+    expect(result).toEqual({ ok: true, problems: [] });
+  });
+
   it('meldet, wenn kein Primitiv mit der Rolle body vorhanden ist', () => {
     const result = matchFingerprint(
       { viewBox: DEFAULT_VIEWBOX_MM, children: [] },

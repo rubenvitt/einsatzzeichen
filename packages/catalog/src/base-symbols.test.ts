@@ -545,3 +545,46 @@ describe('Körperformen des Anhangs E.2', () => {
     expect(Object.keys(BASE_SYMBOLS)).not.toContain('upright-rectangle');
   });
 });
+
+describe('Körperformen des Anhangs F.3', () => {
+  const circleKind = 'circle-12' as SymbolKind;
+  const raisedGable = 'raised-gable' as BodyVariantId;
+
+  it('zeichnet den eigenständigen 12-mm-Kreis zwei Millimeter kleiner als post', () => {
+    const drawing = baseDrawing(circleKind);
+    const body = drawing.children.find((primitive) => primitive.role === 'body');
+    expect(body).toEqual({
+      type: 'circle', role: 'body', cx: 16, cy: 16, r: 12,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    });
+    const post = baseDrawing('post').children.find((primitive) => primitive.role === 'body');
+    if (body?.type !== 'circle' || post?.type !== 'circle') throw new Error('Kreiskörper fehlt.');
+    expect(post.r - body.r).toBe(2);
+  });
+
+  it('senkt nur raised-gable auf (16|18) und trägt den separat vermessenen Giebel', () => {
+    const drawing = baseDrawing(circleKind, raisedGable);
+    expect(drawing.children).toEqual([
+      {
+        type: 'circle', role: 'body', cx: 16, cy: 18, r: 12,
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      {
+        type: 'polyline', role: 'bodyExtra', closed: false,
+        points: [[3, 11], [16, 1], [29, 11]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+    ]);
+    expect(baseDrawing(circleKind).children).toHaveLength(1);
+  });
+
+  it('fällt mit raised-gable weder auf post noch auf eine andere Körperart zurück', () => {
+    expect(() => baseDrawing('post', raisedGable)).toThrow(/Körpervariante/);
+    expect(() => baseDrawing('formation', raisedGable)).toThrow(/Körpervariante/);
+    expect(() => baseDrawing(circleKind, 'foot-band')).toThrow(/Körpervariante/);
+  });
+
+  it('trägt circle-12 nicht in das Kapitel-1-Register ein', () => {
+    expect(Object.keys(BASE_SYMBOLS)).not.toContain('circle-12');
+  });
+});

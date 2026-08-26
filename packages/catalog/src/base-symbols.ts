@@ -515,6 +515,19 @@ const BODIES: Partial<Record<SymbolKind, Primitive>> = {
     height: 28,
     style: OUTLINE,
   },
+  /**
+   * Eigenständiger Kreiskörper der elf Zeichen F.3.1 bis F.3.11. Das Ringpaar der Quellstriche
+   * misst außen r = 12,25 mm und innen r = 11,75 mm um (16|16), also die Mittellinie r = 12 mm.
+   * `post` scheidet mit r = 14 mm aus und bleibt deshalb eine eigene Körperart.
+   */
+  'circle-12': {
+    type: 'circle',
+    role: 'body',
+    cx: 16,
+    cy: 16,
+    r: 12,
+    style: OUTLINE,
+  },
 };
 
 const VARIANT_EXTRA_PRIMITIVES: Partial<
@@ -570,6 +583,17 @@ const VARIANT_EXTRA_PRIMITIVES: Partial<
       },
     ],
   },
+  'circle-12': {
+    'raised-gable': [
+      {
+        type: 'polyline',
+        role: 'bodyExtra',
+        closed: false,
+        points: [[3, 11], [16, 1], [29, 11]],
+        style: OUTLINE,
+      },
+    ],
+  },
 };
 
 /**
@@ -619,6 +643,20 @@ const VARIANT_BODIES: Partial<Record<SymbolKind, Partial<Record<BodyVariantId, P
   'vehicle-land': {
     'foot-band': BODIES['vehicle-land']!,
     'plain-wheel-pair': BODIES['vehicle-land']!,
+  },
+  'circle-12': {
+    /**
+     * F.3.5: derselbe 12-mm-Kreis, zwei Millimeter abgesenkt. Der separat vermessene Giebel
+     * steht in `VARIANT_EXTRA_PRIMITIVES`; die Katalogfassung J.3.2 ist keine Vorlage dafür.
+     */
+    'raised-gable': {
+      type: 'circle',
+      role: 'body',
+      cx: 16,
+      cy: 18,
+      r: 12,
+      style: OUTLINE,
+    },
   },
 };
 
@@ -686,6 +724,7 @@ const TITLES: Partial<Record<SymbolKind, string>> = {
   trailer: 'Anhänger',
   'swap-loader-vehicle': 'Wechselladerfahrzeug',
   'upright-rectangle': 'Hochkantrechteck',
+  'circle-12': '12-mm-Kreis',
   formation: 'Taktische Formation',
   person: 'Person',
   'vehicle-land': 'Landfahrzeug',
@@ -809,7 +848,7 @@ function entry(kind: SymbolKind): CatalogEntry {
  *
  * **Diese Sammlung ist das Register des Kapitels 1 und keine Liste aller Körperformen.** Die
  * Körperformen, die kein Kapitel-1-Grundzeichen sind — Anhängerrumpf, Wechselladerrumpf,
- * Hochkantrechteck —, stehen in `BODIES` und tragen eigene Manifestzeilen; sie hier zu führen
+ * Hochkantrechteck und 12-mm-Kreis —, stehen in `BODIES` und tragen eigene Manifestzeilen; sie hier zu führen
  * verlangte einen Abschnitt aus Kapitel 1, den sie nicht haben.
  */
 export const BASE_SYMBOLS = {

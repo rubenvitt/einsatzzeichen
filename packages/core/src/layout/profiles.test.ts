@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Primitive } from '@einsatzzeichen/schema';
+import type { BodyVariantId, Primitive, SymbolKind } from '@einsatzzeichen/schema';
 import { boundsOfMm } from '../bounds.js';
 import { HEAD_GAP_MM, HEAD_TOP_MARGIN_MM, placeHead, profileFor } from './profiles.js';
 
@@ -97,5 +97,22 @@ describe('Layoutprofile', () => {
     expect(profileFor('formation').topLeftLines).toBeUndefined();
     expect(profileFor('formation').aboveLeftBaselineFromBodyTopMm).toBeUndefined();
     expect(profileFor('trailer').topLeftBaselineFromBodyTopMm).toBeUndefined();
+  });
+
+  it('führt getrennte, schwarz gesetzte topLeft-Profile für beide F.3-Kreisfassungen', () => {
+    const circleKind = 'circle-12' as SymbolKind;
+    const raisedGable = 'raised-gable' as BodyVariantId;
+    const normal = profileFor(circleKind);
+    const raised = profileFor(circleKind, raisedGable);
+
+    expect(normal).not.toBe(raised);
+    expect(normal.id).toBe('circle-body');
+    expect(raised.id).toBe('circle-body');
+    expect(normal.topLeftBaselineFromBodyTopMm).toBeCloseTo(1.000254, 6);
+    expect(raised.topLeftBaselineFromBodyTopMm).toBeCloseTo(-0.999746, 6);
+    expect(normal.topLeftInk).toBe('schwarz');
+    expect(raised.topLeftInk).toBe('schwarz');
+    expect(profileFor('post').topLeftBaselineFromBodyTopMm).toBeUndefined();
+    expect(profileFor('post').topLeftInk).toBeUndefined();
   });
 });

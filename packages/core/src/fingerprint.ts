@@ -27,9 +27,13 @@ export interface FingerprintResult {
  * wenn nichts Besseres da ist.
  */
 const PRECEDENCE = ['ring', 'bounds', 'rect', 'circle', 'outline'];
+const CIRCLE_BODY_PRECEDENCE = ['ring', 'circle', 'bounds', 'rect', 'outline'];
 
-function pickShape(shapes: readonly FingerprintShapeLike[]): FingerprintShapeLike | null {
-  for (const kind of PRECEDENCE) {
+function pickShape(
+  shapes: readonly FingerprintShapeLike[],
+  precedence: readonly string[] = PRECEDENCE,
+): FingerprintShapeLike | null {
+  for (const kind of precedence) {
     const found = shapes.find((shape) => shape.kind === kind);
     if (found) return found;
   }
@@ -97,7 +101,14 @@ export function matchFingerprint(
     };
   }
 
-  const picked = pickShape(fingerprint.shapes);
+  // Eine Referenz kann neben dem eigentlichen Kreiskörper eine zweite, unspezifisch als
+  // `bounds` extrahierte Zusatzkontur führen (F.3.5: der Giebel). Für einen expliziten
+  // Kreis-Body rückt deshalb `circle` vor diese unspezifische Hülle, eine vorhandene
+  // `ring`-Mittellinie bleibt aber aussagekräftiger. Alle Nicht-Kreis-Körper behalten die
+  // bisherige Präzedenz unverändert.
+  const picked = body.type === 'circle'
+    ? pickShape(fingerprint.shapes, CIRCLE_BODY_PRECEDENCE)
+    : pickShape(fingerprint.shapes);
   if (!picked) {
     return {
       ok: false,

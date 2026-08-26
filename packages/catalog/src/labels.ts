@@ -32,6 +32,7 @@ const KIND_LABELS: Record<SymbolKind, string> = {
   // Nach der Zeichnung benannt und nicht nach der Trinkwasseraufbereitungsanlage, für die
   // `E.2.26` sie verwendet: was diese Form fachlich bezeichnet, sagt die Datei nicht.
   'upright-rectangle': 'Hochkantrechteck',
+  'circle-12': '12-mm-Kreis',
 };
 
 const ORGANIZATION_LABELS: Record<OrganizationId, string> = {
@@ -87,6 +88,14 @@ export const TECHNICAL_BODY_MARK_LABELS = Object.freeze({
     'Ring 6 mm mit Vierwegeform und unterem Gabelsteg',
   'ring-5mm-offset-down-3mm-eight-spokes':
     'Ring 5 mm mit acht Speichen, 3 mm nach unten versetzt',
+  'circle-patient-staging-arrows': 'Geteilter Kreis mit Doppelpfeil im oberen Feld',
+  'circle-collection-arrow': 'Waagerechter Pfeil mit kleinem Ring',
+  'circle-staging-frame-arrow': 'Oben gewölbter Rahmen mit Pfeil und kleinem Ring',
+  'circle-staging-frame': 'Oben gewölbter geschlossener Rahmen',
+  'circle-staging-frame-quadrants-arrows':
+    'Viergeteilter gewölbter Rahmen mit unterem Doppelpfeil',
+  'circle-diamond-arrow': 'Geteilte Raute mit Anschlag und Rechtspfeil',
+  'circle-cross-ring': 'Geteilter Kreis mit Ring und Diagonalkreuz',
 } satisfies Record<TechnicalBodyMarkId, string>);
 
 const TECHNICAL_BODY_MARK_ID_SET = new Set<string>(TECHNICAL_BODY_MARK_IDS);
