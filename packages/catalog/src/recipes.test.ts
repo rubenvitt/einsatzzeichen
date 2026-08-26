@@ -58,6 +58,65 @@ function horizontalPictogramLineYMm(drawing: Drawing): number | undefined {
   return line.y1 + (group.transform?.translate?.dyMm ?? 0);
 }
 
+describe('composeFromCatalog() — vorbereitete inset-hull-Spec', () => {
+  function labelContents(drawing: Drawing): string[] {
+    return drawing.children
+      .filter(
+        (child): child is Primitive & { type: 'text' } =>
+          child.type === 'text' && child.role === 'label',
+      )
+      .map((label) => label.content);
+  }
+
+  it('ignoriert einen non-enumerable center-Getter auf Object.prototype in Bild und Beschreibung', () => {
+    const previousCenter = Object.getOwnPropertyDescriptor(Object.prototype, 'center');
+
+    try {
+      Object.defineProperty(Object.prototype, 'center', {
+        configurable: true,
+        enumerable: false,
+        get: () => 'GEERBT',
+      });
+
+      const drawing = composeFromCatalog({
+        kind: 'vehicle-water',
+        bodyVariant: 'inset-hull',
+        organization: 'hilfsorganisation',
+        labels: {},
+      });
+      expect(labelContents(drawing)).not.toContain('GEERBT');
+      expect(drawing.description).not.toContain('GEERBT');
+    } finally {
+      if (previousCenter === undefined) {
+        Reflect.deleteProperty(Object.prototype, 'center');
+      } else {
+        Object.defineProperty(Object.prototype, 'center', previousCenter);
+      }
+    }
+  });
+
+  it('verwendet bei Proxy-Labels für Bild und Beschreibung denselben center-Data-Deskriptor', () => {
+    const labels = new Proxy({ center: 'MzB' }, {
+      get: (target, key, receiver) => key === 'center'
+        ? 'PROXY'
+        : Reflect.get(target, key, receiver),
+      getOwnPropertyDescriptor: (target, key) => Reflect.getOwnPropertyDescriptor(target, key),
+      getPrototypeOf: () => Object.prototype,
+      ownKeys: (target) => Reflect.ownKeys(target),
+    });
+
+    const drawing = composeFromCatalog({
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+      labels,
+    });
+    expect(labelContents(drawing)).toEqual(['MzB']);
+    expect(drawing.description).toContain('Kürzel: MzB');
+    expect(drawing.description).not.toContain('PROXY');
+  });
+});
+
 describe('Kompositionsrezepte', () => {
   const geometryRegressionCases = Object.entries(RECIPES).filter(([, recipe]) =>
     referenceLacksComparableShape(recipe.referenceAsset),
@@ -490,7 +549,7 @@ describe('Anhang G — vollständiges Logistikinventar', () => {
     expect(actual).toEqual(expected);
     expect(Object.keys(actual)).toEqual(Object.keys(expected));
     expect(Object.keys(actual).every((key) => !key.includes('#'))).toBe(true);
-    expect(Object.keys(RECIPES)).toHaveLength(165);
+    expect(Object.keys(RECIPES)).toHaveLength(174);
   });
 
   it('bindet die 21 primary- und Referenz-IDs exakt und ohne Alternative', () => {
@@ -725,8 +784,8 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
 
   it('verlangt für die Beschriftung auf der Körperfarbe die Textschwelle, nicht die Nichttextschwelle', () => {
     const requirements = labelContrastRequirements();
-    // **Acht seit Anhang G**, und nur eine davon besteht nicht. Vier Nachbarschaften
-    // und vier Organisationen kommen hier zusammen: die Beschriftung im Körper, die
+    // **Zwölf mit Anhang G und LFH-422**, und nur eine davon besteht nicht. Sechs
+    // Körper-Farb/Tinten-Paare und sechs Oberflächen-Nachbarschaften kommen hier zusammen.
     // Organisationsfarbe auf der Ausgabeoberfläche sowie die schwarzen Kreislabels, die
     // teilweise außerhalb der weißen Körperfläche auf `surface` stehen.
     //
@@ -738,12 +797,12 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
     // 21:1 in allen drei Themes. Sie steht **vor** den THW-Zeilen, weil `RECIPES` Anhang F vor
     // Anhang E einreiht.
     //
-    // Die dritte Zeile ist E.2.6: das einzige Rezept mit `sonstige-gefahrenabwehr` und
-    // Beschriftung. Die Ableitung meldet „weiss auf orange" unverändert — 2,382:1 bzw. 2,323:1
-    // gegen die Textschwelle 4,5:1 —, und sie wird nicht hier unterdrückt, sondern in
-    // `CONTRAST_EXCEPTIONS` als entschiedene Ausnahme gezählt. Diese Zeile ist die Stelle, an der
-    // ein zweites solches Rezept mechanisch sichtbar würde. Die vierte Zeile ist G.3.5:
-    // `circle-12/foot-band` setzt `bottomCenter` wie die visuell geprüfte Quelle schwarz.
+    // Die dritte Zeile ist E.2.6 mit dem unveränderten Default „weiss auf orange" — 2,382:1
+    // bzw. 2,323:1 und deshalb die einzige entschiedene Ausnahme. Anhang N setzt auf derselben
+    // orangefarbenen Fläche sowie auf hellgruen und braun die jeweils an der Quelle vermessene
+    // schwarze Tinte. Diese drei Paare stehen separat, obwohl eines denselben Organisationskontext
+    // wie E.2.6 trägt; sonst würde der Resolveroverride im Kontrastvertrag unsichtbar. G.3.5
+    // ergänzt denselben schwarz/braun-Farbwert als separat benannten bottomCenter-Vertrag.
     expect(requirements).toEqual([
       {
         foreground: 'schwarz',
@@ -761,6 +820,24 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
         foreground: 'weiss',
         background: 'orange',
         context: 'Beschriftung im Körper auf Organisation sonstige-gefahrenabwehr',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'orange',
+        context: 'Beschriftung im Körper auf Organisation sonstige-gefahrenabwehr',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'hellgruen',
+        context: 'Beschriftung im Körper auf Organisation bundespolizei',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'braun',
+        context: 'Beschriftung im Körper auf Organisation bundeswehr',
         minimum: 4.5,
       },
       {
@@ -790,10 +867,43 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
       {
         foreground: 'schwarz',
         background: 'surface',
+        context: 'Beschriftung unterhalb des Körpers auf der Ausgabeoberfläche',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
         context: 'Kreislabel teilweise außerhalb der Körperfläche',
         minimum: 4.5,
       },
     ]);
+  });
+
+  it('leitet die Tinte eines überstehenden Kreislabels über denselben Body-Resolver ab', () => {
+    const requirements = labelContrastRequirements([{
+      title: 'synthetischer Resolververtrag',
+      referenceAsset: 'synthetic.svg',
+      spec: {
+        kind: 'circle-12',
+        organization: 'hilfsorganisation',
+        labels: {
+          topLeft: 'UHS',
+          topLeftMetrics: {
+            capHeightMm: 2.919225,
+            baselineFromBodyTopMm: 1.000254,
+            anchorFromBodyLeftMm: -2.984684,
+          },
+          inBodyInk: 'weiss',
+        },
+      },
+    }]);
+
+    expect(requirements).toContainEqual({
+      foreground: 'weiss',
+      background: 'surface',
+      context: 'Kreislabel teilweise außerhalb der Körperfläche',
+      minimum: 4.5,
+    });
   });
 });
 
@@ -1597,12 +1707,12 @@ describe('Anhang F, Teilslice F-f', () => {
     },
   } as const;
 
-  it('deckt F.3.12 bis F.3.19 lückenlos ohne Alternative ab und erreicht mit G, H, I-a und C.1.3 165 Rezepte', () => {
+  it('deckt F.3.12 bis F.3.19 lückenlos ab und erreicht mit G, H, I-a, C.1.3 und N 174 Rezepte', () => {
     const entries = Object.entries<Recipe>(RECIPES)
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(165);
+    expect(Object.keys(RECIPES)).toHaveLength(174);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {

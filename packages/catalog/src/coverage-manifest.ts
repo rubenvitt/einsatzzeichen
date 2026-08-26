@@ -47,6 +47,7 @@ import {
   ANHANG_F_F_FINDINGS,
   ANHANG_F_F_DEVIATIONS,
 } from './recipes-anhang-f.js';
+import { ANHANG_N_RECIPES } from './recipes-anhang-n.js';
 import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
 import { ANHANG_I_A_RECIPES } from './recipes-anhang-i.js';
@@ -265,6 +266,30 @@ const ANHANG_F_F_TECHNICAL_REVIEW: Review = {
 };
 
 /**
+ * Technisches Review der neun Anhang-N-Zeichen. Die Trägerbezeichnungen im Dateinamen bleiben
+ * erhalten, ohne daraus neue Organisationssemantik abzuleiten; genau deshalb nennt die Note den
+ * kommunalen Bauhof und den Beauftragten Dritten ausdrücklich. Der spätere Kontaktbogen gehört
+ * zu Task 3 und wird hier nicht vorweggenommen.
+ */
+const ANHANG_N_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'Alle neun Originalreferenzen N.1.1 bis N.1.6 und N.2.1 bis N.2.3 wurden einzeln gegen ' +
+    'die literal gebundene Rezeptmatrix geprüft. Körper-Fingerprint, gemessene Fahrwerke, ' +
+    'technische BodyMarks, Textläufe, direkte Snapshots und Mehrgrößen-Snapshots sind gegatet. ' +
+    'Die benannten Träger kommunaler Bauhof (N.1.2) und Beauftragter Dritter (N.1.5) bleiben ' +
+    'Träger in Titel und Quellenreview erhalten; daraus entsteht weder eine neue Organisation ' +
+    'noch eine geländegängig-Semantik. Die schwarzen Quellenläufe von N.1.2 bis N.1.5 werden ' +
+    'über den gemessenen inBodyInk-Vertrag gerendert und bestehen den Kontrastvertrag ohne neue ' +
+    'Ausnahme; die bestehende E.2.6-Ausnahme bleibt allein. Der finale LFH-422-Kontaktbogen ' +
+    'war zu diesem ' +
+    'Zeitpunkt noch nicht erzeugt oder gesichtet; sämtliche Fachzuordnungen bleiben im ' +
+    'Domain-Review pending.',
+};
+
+/**
  * Technisches Review der 21 Anhang-G-Rezepte. Es bezieht sich auf die vermessenen lokalen
  * Geometrie-, Kompositions- und Katalogverträge sowie den abgeschlossenen 21-Karten-Vergleich.
  */
@@ -284,7 +309,6 @@ const ANHANG_G_TECHNICAL_REVIEW: Review = {
     'Oberkante. Die abweichende bestehende Polizei-Grünpalette von G.3.2 ist dokumentiert. ' +
     'Sämtliche fachlichen Zuordnungen bleiben pending.',
 };
-
 const ANHANG_H_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
@@ -760,6 +784,9 @@ function technicalReviewFor(section: string): Review {
       ANHANG_F_F_DEVIATIONS[section],
     );
   }
+  if (Object.hasOwn(ANHANG_N_RECIPES, section)) {
+    return ANHANG_N_TECHNICAL_REVIEW;
+  }
   if (Object.hasOwn(ANHANG_G_RECIPES, section)) {
     return ANHANG_G_TECHNICAL_REVIEW;
   }
@@ -971,6 +998,7 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'K',
     'L',
     'M',
+    'N',
   ],
   entries: [...catalogEntries, ...recipeEntries, ...elementEntries, ...pictogramEntries],
 };

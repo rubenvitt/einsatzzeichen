@@ -75,7 +75,10 @@ export type BodyVariantId =
   | 'inset-hull'
   | 'foot-band'
   | 'plain-wheel-pair'
-  | 'raised-gable';
+  | 'raised-gable'
+  | 'inverted-hull-track'
+  | 'fixed-wing-hull'
+  | 'raised-circle-1mm';
 
 /** Organisationen nach Kapitel 2. Bestimmen die Körperfarbe. */
 export type OrganizationId =
@@ -83,6 +86,7 @@ export type OrganizationId =
   | 'thw'
   | 'fuehrung-leitung'
   | 'polizei'
+  | 'bundespolizei'
   | 'bundeswehr'
   | 'sonstige-gefahrenabwehr'
   | 'zivile-einheiten'
@@ -254,6 +258,13 @@ export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
   'circle-transport-diamond-wheels-arrows',
   'h-veterinary-decontamination',
   'h-veterinary-slaughter',
+  'land-horizontal-blade-bent-upright',
+  'ring-5mm-offset-down-3-5mm-eight-spokes',
+  'air-quartering-up-arrow-box',
+  'air-horizontal-left-chevron',
+  'air-rising-diagonal',
+  'spontaneous-helper-collection-arrow',
+  'spontaneous-helper-contact-double-arrow',
 ] as const);
 
 export type TechnicalBodyMarkId = (typeof TECHNICAL_BODY_MARK_IDS)[number];
@@ -444,6 +455,9 @@ export const WILDFIRE_IDS = Object.freeze([
 
 export type WildfireId = (typeof WILDFIRE_IDS)[number];
 
+/** Quellenvermessene Tinte eines Textlaufs innerhalb der Körperfläche. */
+export type BodyLabelInk = 'schwarz' | 'weiss';
+
 /**
  * Beschriftungen **im** Körper, in den drei Zonen, die Anhang E belegt. Die Zonen sind nach
  * ihrer Lage benannt und nicht nach einer Bedeutung: vermessen ist die Position, nicht die
@@ -458,7 +472,24 @@ export type WildfireId = (typeof WILDFIRE_IDS)[number];
  * nebeneinander, statt dass eine die andere umdeutet.
  */
 export interface BodyLabels {
+  /**
+   * Opt-in für quellenoffene Läufe, deren fachliche Rolle nicht belegt ist. Der neutrale Modus
+   * beschreibt ausschließlich ihre geometrische Zone; fehlt er, bleiben alle historisch
+   * eingeführten Kürzel-/Trägerbezeichnungen byteidentisch.
+   */
+  readonly accessibilityMode?: 'neutral-zones';
+  /**
+   * Explizite, an der Quelle vermessene Tinte aller gesetzten Läufe **im** Körper. Fehlt sie,
+   * leitet `bodyLabelInk()` die Tinte unverändert aus der Körperfüllung ab. Läufe oberhalb oder
+   * auf der Ausgabeoberfläche gehören nicht zu diesem Override.
+   */
+  readonly inBodyInk?: BodyLabelInk;
   readonly center?: string;
+  /**
+   * Individuell vermessener Abstand der mittigen Grundlinie von der Körperunterkante. Der
+   * vollständige abgeleitete Textlauf muss innerhalb der dafür vermessenen Körperhülle bleiben.
+   */
+  readonly centerBaselineFromBodyBottomMm?: number;
   readonly bottomLeft?: string;
   /**
    * Unten mittig im Körper, mit profilabhängiger Grundlinie. Die Formation einschließlich
@@ -470,6 +501,18 @@ export interface BodyLabels {
    */
   readonly bottomCenter?: string;
   readonly bottomRight?: string;
+  /**
+   * Vollständiger, körperrelativer Metriksatz für einen einzeln vermessenen `bottomRight`-Lauf.
+   * Der waagerechte Anker liegt in diesem Vertrag mittig in der angegebenen Box; ohne das Objekt
+   * bleiben Endanker, Grundlinie, Schriftgrad und Halbzonenbox unverändert.
+   */
+  readonly bottomRightMetrics?: {
+    readonly capHeightMm: number;
+    readonly baselineFromBodyTopMm: number;
+    readonly anchorFromBodyLeftMm: number;
+    readonly boxLeftFromBodyLeftMm: number;
+    readonly boxWidthMm: number;
+  };
   /**
    * Die **fünfte** Zone: linksbündig im oberen Bereich des Körpers. Anhang F setzt
    * dort sein Kürzel — „MTF", „SEG", „RettD", „10" —, weil die Fachdienstteilung
@@ -502,8 +545,9 @@ export interface BodyLabels {
    * F.2-Landfahrzeug sowie zwingend an den beiden F.3-Kreisprofilen. Die Kreiswerte dürfen
    * negativ relativ zur Körperhülle sein, weil `UHS` und `50` sichtbar auf der weissen
    * Ausgabeoberfläche beginnen; sie werden stattdessen gegen die 32-mm-ViewBox geprüft.
-   * `plain-wheel-pair`, Formation und alle anderen Körperarten behalten ihre eigenen
-   * vermessenen Defaults.
+   * Am Festflügel-Luftfahrzeug ist der vollständige Satz zwingend; dort ist kein unabhängiger
+   * Default für den Lauf belegt. `plain-wheel-pair`, Formation und alle anderen Körperarten
+   * behalten ihre eigenen vermessenen Defaults.
    *
    * Ablesung in 90,709 / 32 SVG-Einheiten pro Millimeter; Grundlinie aus flachfüßigen Glyphen,
    * Versalhöhe ohne runden Overshoot. Weil die Quelle nur Pfade speichert, ist der Anker aus der
@@ -529,6 +573,15 @@ export interface BodyLabels {
    * Grundlinie y = 6 mm, zwei Millimeter oberhalb des Luftfahrzeugrumpfs aus Kapitel 1.
    */
   readonly aboveLeft?: string;
+  /**
+   * Vollständiger Metriksatz eines oberhalb links liegenden Laufs. Endlicher Anker und die aus
+   * Versalhöhe/Grundlinie abgeleitete Textbox müssen in Profilbox und 32-mm-ViewBox bleiben.
+   */
+  readonly aboveLeftMetrics?: {
+    readonly capHeightMm: number;
+    readonly baselineFromBodyTopMm: number;
+    readonly anchorFromBodyLeftMm: number;
+  };
   /**
    * Zwei linksbündige Läufe im oberen linken Körperfeld. Belegt nur an F.2.8 (`GW-San` / `50`)
    * mit getrennten Grundlinien und kleinerem, gemeinsam vermessenem Schriftgrad.
@@ -557,6 +610,9 @@ export interface BodyLabels {
    * oder Schwarz und im Schriftgrad der unteren Zonen.
    */
   readonly belowRight?: string;
+  /** Schwarze Läufe auf der Ausgabeoberfläche unterhalb der Körperhülle. */
+  readonly surfaceBelowLeft?: string;
+  readonly surfaceBelowRight?: string;
   /**
    * **Gemessene Versalhöhe** des mittigen Laufs in Millimetern. Fehlt sie, gilt der Normwert aus
    * `compose.ts` (4,87 mm, an den 16 Dateien E.1.1 bis E.1.16 vermessen).

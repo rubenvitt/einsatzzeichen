@@ -51,10 +51,11 @@ export interface ElementDescriptor {
 
 /**
  * Die statisch belegten Organisations- und Stärkeelemente. Seit LFH-424 führt Kapitel 2 hier alle
- * **acht** Organisationen: `2.2_Organisationen.svg` trägt entgegen seinem generischen Namen den
+ * **acht** dortigen Organisationen: `2.2_Organisationen.svg` trägt entgegen seinem generischen Namen den
  * Fleck der Hilfsorganisationen (vollflächig `#ffffff` wie 2.1 und 2.3 bis 2.8, Typo-Ebene liest
  * gerastert „HiOrg"). Die frühere Annahme, aus dem Namen folge keine Zuordnung, ist damit
  * widerlegt — nachgezählt: genau acht Dateien des Kapitels tragen Fleck **und** Typo-Ebene.
+ * Anhang N.1.3 ergänzt als neunte Organisation die Bundespolizei mit hellgrünem Fleck.
  *
  * Bei den Stärkegraden enthält `referenceAssets` mehr als die namensgebende Datei: die
  * `5.4.x`-Dateien sind eigenständige Anzeigedarstellungen mit r = 4 und selbst keine Kopfzonen;
@@ -86,6 +87,12 @@ const STATIC_ELEMENTS = {
     kind: 'organization',
     title: 'Polizei',
     referenceAssets: ['2.5_Polizei.svg'],
+  },
+  'organization.bundespolizei': {
+    id: 'organization.bundespolizei',
+    kind: 'organization',
+    title: 'Bundespolizei',
+    referenceAssets: ['N.1.3_Einsatzfahrzeug_Bundespolizei.svg'],
   },
   'organization.bundeswehr': {
     id: 'organization.bundeswehr',

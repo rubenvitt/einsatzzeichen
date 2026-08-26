@@ -47,6 +47,52 @@ describe('validateSpec', () => {
     expect(rules).toContain('circle-12-requires-organization');
   });
 
+  it('trennt den offenen G-Kreisvertrag von den exakten farbigen N-Kreisverträgen', () => {
+    for (const organization of ['feuerwehr', 'bundeswehr'] as const) {
+      expect(validateSpec({
+        kind: 'circle-12', bodyVariant: 'foot-band', organization,
+      }), organization).toEqual([]);
+    }
+
+    const measuredNContracts: readonly SymbolSpec[] = [
+      {
+        kind: 'circle-12', organization: 'zivile-einheiten',
+        bodyMarks: ['spontaneous-helper-collection-arrow'],
+      },
+      {
+        kind: 'circle-12', organization: 'feuerwehr',
+        bodyMarks: ['spontaneous-helper-contact-double-arrow'],
+      },
+      {
+        kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+        organization: 'zivile-einheiten', bodyMarks: ['circle-information-stem'],
+      },
+    ];
+    for (const spec of measuredNContracts) {
+      expect(validateSpec(spec), JSON.stringify(spec)).toEqual([]);
+    }
+
+    const crossedNContracts: readonly SymbolSpec[] = [
+      {
+        kind: 'circle-12', organization: 'feuerwehr',
+        bodyMarks: ['spontaneous-helper-collection-arrow'],
+      },
+      {
+        kind: 'circle-12', organization: 'zivile-einheiten',
+        bodyMarks: ['spontaneous-helper-contact-double-arrow'],
+      },
+      {
+        kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+        organization: 'feuerwehr', bodyMarks: ['circle-information-stem'],
+      },
+    ];
+    for (const spec of crossedNContracts) {
+      expect(validateSpec(spec).map((issue) => issue.rule), JSON.stringify(spec)).toContain(
+        'circle-12-requires-hilfsorganisation',
+      );
+    }
+  });
+
   it('lässt am gebänderten Formationskörper nur die drei vermessenen Kopfzonen zu', () => {
     for (const strength of ['trupp', 'gruppe', 'zug'] as const) {
       expect(validateSpec({ kind: 'formation', bodyVariant: 'foot-band', strength })).toEqual([]);
@@ -86,6 +132,107 @@ describe('validateSpec', () => {
     expect(validateSpec({ kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-1' })).toEqual([]);
   });
 
+  it('lässt die drei Anhang-N-Körpervarianten nur an ihren vermessenen Arten zu', () => {
+    expect(validateSpec({
+      kind: 'vehicle-land', bodyVariant: 'inverted-hull-track', vehicleCategory: 'kettenfahrzeug',
+    } as SymbolSpec)).toEqual([]);
+    expect(validateSpec({ kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull' } as SymbolSpec))
+      .toEqual([]);
+    expect(validateSpec({
+      kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+      organization: 'zivile-einheiten', bodyMarks: ['circle-information-stem'],
+    } as SymbolSpec)).toEqual([]);
+    expect(validateSpec({
+      kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+    } as SymbolSpec).map((issue) => issue.rule)).toContain(
+      'circle-12-requires-hilfsorganisation',
+    );
+
+    for (const spec of [
+      { kind: 'vehicle-air', bodyVariant: 'inverted-hull-track' },
+      { kind: 'vehicle-land', bodyVariant: 'fixed-wing-hull' },
+      { kind: 'formation', bodyVariant: 'raised-circle-1mm' },
+    ] as unknown as SymbolSpec[]) {
+      expect(validateSpec(spec).map((issue) => issue.rule)).toContain(
+        'body-variant-requires-measured-kind',
+      );
+    }
+  });
+
+  it('validiert die generischen gemessenen Anhang-N-Labelmetriken fail-closed', () => {
+    expect(validateSpec({
+      kind: 'vehicle-land', labels: {
+        center: 'BuPol', centerBaselineFromBodyBottomMm: 6.5,
+        topLeftLines: ['Kipper,', '26 t'],
+      },
+    } as SymbolSpec)).toEqual([]);
+    expect(validateSpec({
+      kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull', labels: {
+        aboveLeft: 'Cessna 172',
+        aboveLeftMetrics: {
+          capHeightMm: 2.919225,
+          baselineFromBodyTopMm: -1,
+          anchorFromBodyLeftMm: -0.01,
+        },
+      },
+    } as SymbolSpec)).toEqual([]);
+    expect(validateSpec({
+      kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+      organization: 'zivile-einheiten', bodyMarks: ['circle-information-stem'],
+      labels: { surfaceBelowLeft: '291300', surfaceBelowRight: 'ZIV' },
+    } as SymbolSpec)).toEqual([]);
+
+    expect(validateSpec({
+      kind: 'formation', labels: { surfaceBelowLeft: 'X' },
+    } as SymbolSpec).map((issue) => issue.rule)).toContain(
+      'surface-label-requires-measured-body',
+    );
+    expect(validateSpec({
+      kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull', labels: {
+        aboveLeft: 'X', aboveLeftMetrics: { capHeightMm: Number.NaN },
+      },
+    } as unknown as SymbolSpec).map((issue) => issue.rule)).toContain(
+      'above-left-metrics-complete',
+    );
+    expect(validateSpec({
+      kind: 'vehicle-land', labels: { centerBaselineFromBodyBottomMm: 6.5 },
+    } as SymbolSpec).map((issue) => issue.rule)).toContain(
+      'center-baseline-requires-center-label',
+    );
+
+    for (const spec of [
+      { kind: 'formation', labels: { center: 'X', centerBaselineFromBodyBottomMm: 6.5 } },
+      { kind: 'vehicle-air', labels: { center: 'X', centerBaselineFromBodyBottomMm: 6.5 } },
+      {
+        kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+        labels: { center: 'X', centerBaselineFromBodyBottomMm: 6.5 },
+      },
+      {
+        kind: 'vehicle-land', bodyVariant: 'foot-band',
+        labels: { center: 'X', centerBaselineFromBodyBottomMm: 6.5 },
+      },
+      {
+        kind: 'vehicle-land', bodyVariant: 'inverted-hull-track',
+        labels: { center: 'X', centerBaselineFromBodyBottomMm: 6.5 },
+      },
+    ] as SymbolSpec[]) {
+      expect(validateSpec(spec).map((issue) => issue.rule), spec.kind).toContain(
+        'center-baseline-override-requires-measured-body',
+      );
+    }
+
+    expect(validateSpec({
+      kind: 'vehicle-air', bodyVariant: 'raised-hull',
+      labels: { surfaceBelowLeft: 'X' },
+    } as SymbolSpec).map((issue) => issue.rule)).toContain(
+      'surface-left-label-requires-measured-anchor',
+    );
+    expect(validateSpec({
+      kind: 'vehicle-air', bodyVariant: 'raised-hull',
+      labels: { surfaceBelowRight: 'BW' },
+    } as SymbolSpec)).toEqual([]);
+  });
+
   it('lässt die oberhalb liegende F.2.7-Zone nur am Luftfahrzeug zu', () => {
     expect(validateSpec({
       kind: 'vehicle-air', bodyVariant: 'raised-hull', labels: { aboveLeft: 'ITH' },
@@ -96,13 +243,13 @@ describe('validateSpec', () => {
       .toContain('above-left-label-requires-measured-body');
   });
 
-  it('lässt die zweizeilige F.2.8-Zone nur am Landfahrzeug zu', () => {
+  it('lässt zweizeilige Läufe an den beiden separat vermessenen Landfahrzeugprofilen zu', () => {
     expect(validateSpec({
       kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', labels: { topLeftLines: ['GW-San', '50'] },
     }))
       .toEqual([]);
-    expect(validateSpec({ kind: 'vehicle-land', labels: { topLeftLines: ['GW-San', '50'] } })
-      .map((issue) => issue.rule)).toContain('top-left-lines-require-measured-body');
+    expect(validateSpec({ kind: 'vehicle-land', labels: { topLeftLines: ['Kipper,', '26 t'] } }))
+      .toEqual([]);
     expect(validateSpec({ kind: 'trailer', labels: { topLeftLines: ['GW-San', '50'] } })
       .map((issue) => issue.rule)).toContain('top-left-lines-require-measured-body');
   });
@@ -277,6 +424,72 @@ describe('validateSpec', () => {
 
   it('akzeptiert den vermessenen eingesenkten Wasserrumpf mit mittigem Lauf', () => {
     expect(validateSpec(validInsetWatercraft)).toEqual([]);
+    expect(validateSpec({
+      ...validInsetWatercraft,
+      labels: { accessibilityMode: 'neutral-zones', center: 'MzB' },
+    })).toEqual([]);
+  });
+
+  it('lehnt geerbte inset-hull-Renderingfelder trotz eigenem center ab', () => {
+    class InheritedRenderingLabels implements NonNullable<SymbolSpec['labels']> {
+      readonly center = 'MzB';
+
+      get inBodyInk(): 'schwarz' {
+        return 'schwarz';
+      }
+
+      get centerCapHeightMm(): number {
+        return 3.4099;
+      }
+    }
+
+    expect(validateSpec({
+      ...validInsetWatercraft,
+      labels: new InheritedRenderingLabels(),
+    }).map((issue) => issue.rule)).toContain('inset-hull-requires-center-label-only');
+  });
+
+  it('akzeptiert inset-hull-Labels als null-prototype-Datenobjekt', () => {
+    const labels: NonNullable<SymbolSpec['labels']> = Object.assign(Object.create(null), {
+      accessibilityMode: 'neutral-zones' as const,
+      center: 'MzB',
+    });
+
+    expect(validateSpec({ ...validInsetWatercraft, labels })).toEqual([]);
+  });
+
+  const accessorLabels: NonNullable<SymbolSpec['labels']> = Object.create(null);
+  Object.defineProperty(accessorLabels, 'center', {
+    configurable: true,
+    enumerable: true,
+    get: () => 'MzB',
+  });
+  const nonEnumerableLabels: NonNullable<SymbolSpec['labels']> = Object.create(null);
+  Object.defineProperty(nonEnumerableLabels, 'center', {
+    configurable: true,
+    enumerable: false,
+    value: 'MzB',
+  });
+  const symbolLabels: NonNullable<SymbolSpec['labels']> = {
+    center: 'MzB',
+    [Symbol('rendering-override')]: 'schwarz',
+  };
+  const foreignLabels = { center: 'MzB', futureRenderingOverride: 'schwarz' };
+  const inheritedForeignLabels: NonNullable<SymbolSpec['labels']> = Object.assign(
+    Object.create({ harmlessMetadata: true }),
+    { center: 'MzB' },
+  );
+
+  it.each([
+    ['Accessor-Feld', accessorLabels],
+    ['nicht-enumerable-Feld', nonEnumerableLabels],
+    ['Symbol-Feld', symbolLabels],
+    ['fremdem Feld', foreignLabels],
+    ['nichttrivialem Prototyp', inheritedForeignLabels],
+  ] as const)('lehnt inset-hull-Labels mit %s ab', (_case, labels) => {
+    expect(validateSpec({ ...validInsetWatercraft, labels }).map((issue) => issue.rule)).toContain(
+      'inset-hull-requires-center-label-only',
+    );
   });
 
   it.each([
@@ -305,10 +518,45 @@ describe('validateSpec', () => {
       },
     }],
     ['aboveLeft', { ...validInsetWatercraft, labels: { aboveLeft: 'AL' } }],
+    ['aboveLeftMetrics', {
+      ...validInsetWatercraft,
+      labels: {
+        aboveLeftMetrics: {
+          capHeightMm: 2.919225, baselineFromBodyTopMm: -1, anchorFromBodyLeftMm: -0.01,
+        },
+      },
+    }],
     ['topLeftLines', {
       ...validInsetWatercraft, labels: { topLeftLines: ['one', 'two'] },
     }],
     ['belowRight', { ...validInsetWatercraft, labels: { belowRight: 'BR' } }],
+    ['inBodyInk', { ...validInsetWatercraft, labels: { inBodyInk: 'schwarz' } }],
+    ['centerBaselineFromBodyBottomMm', {
+      ...validInsetWatercraft,
+      labels: { center: 'MzB', centerBaselineFromBodyBottomMm: 7.99 },
+    }],
+    ['centerCapHeightMm', {
+      ...validInsetWatercraft, labels: { center: 'MzB', centerCapHeightMm: 3.4099 },
+    }],
+    ['bottomRightMetrics', {
+      ...validInsetWatercraft,
+      labels: {
+        bottomRight: 'HiOrg',
+        bottomRightMetrics: {
+          capHeightMm: 2.919225,
+          baselineFromBodyTopMm: 12,
+          anchorFromBodyLeftMm: 24,
+          boxLeftFromBodyLeftMm: 15,
+          boxWidthMm: 15,
+        },
+      },
+    }],
+    ['surfaceBelowLeft', {
+      ...validInsetWatercraft, labels: { surfaceBelowLeft: '291300' },
+    }],
+    ['surfaceBelowRight', {
+      ...validInsetWatercraft, labels: { surfaceBelowRight: 'ZIV' },
+    }],
   ] as const)('lehnt die ungemessene inset-hull-Labelzone %s ab', (_zone, spec) => {
     expect(validateSpec(spec).map((issue) => issue.rule)).toContain(
       'inset-hull-requires-center-label-only',
@@ -469,6 +717,79 @@ describe('validateSpec', () => {
   it('lehnt eine leere Bezeichnung ab', () => {
     const issues = validateSpec({ kind: 'formation', designation: '   ' });
     expect(issues.map((i) => i.rule)).toContain('designation-not-blank');
+  });
+
+  it('bindet den Körperlabel-Tintenoverride an tatsächlich gesetzten Text im Körper', () => {
+    expect(validateSpec({
+      kind: 'formation', labels: { center: 'BuPol', inBodyInk: 'schwarz' },
+    } as unknown as SymbolSpec)).toEqual([]);
+    expect(validateSpec({
+      kind: 'vehicle-air', bodyVariant: 'raised-hull',
+      labels: { aboveLeft: 'CH-53', surfaceBelowRight: 'BW', inBodyInk: 'schwarz' },
+    } as unknown as SymbolSpec).map((issue) => issue.rule)).toContain(
+      'in-body-ink-requires-in-body-label',
+    );
+  });
+
+  const bottomRightMetrics = {
+    capHeightMm: 2.750245,
+    baselineFromBodyTopMm: 13.000087,
+    anchorFromBodyLeftMm: 21.99,
+    boxLeftFromBodyLeftMm: 19.24,
+    boxWidthMm: 5.5,
+  };
+
+  function withBottomRightMetrics(
+    metrics: unknown,
+    bottomRight: string | null = '7',
+    kind: SymbolSpec['kind'] = 'vehicle-air',
+    bodyVariant: SymbolSpec['bodyVariant'] = 'raised-hull',
+  ): SymbolSpec {
+    return {
+      kind, bodyVariant,
+      labels: {
+        ...(bottomRight === null ? {} : { bottomRight }),
+        bottomRightMetrics: metrics,
+      },
+    } as unknown as SymbolSpec;
+  }
+
+  it('bindet vollständige bottomRight-Metriken an das gemessene Körperprofil und den Lauf', () => {
+    expect(validateSpec(withBottomRightMetrics(bottomRightMetrics))).toEqual([]);
+    expect(validateSpec(withBottomRightMetrics(bottomRightMetrics, null)).map(
+      (issue) => issue.rule,
+    )).toContain('bottom-right-metrics-require-bottom-right-label');
+    expect(validateSpec(withBottomRightMetrics(
+      bottomRightMetrics, '7', 'formation', undefined,
+    )).map((issue) => issue.rule)).toContain('bottom-right-metrics-require-measured-body');
+    expect(validateSpec(withBottomRightMetrics(
+      bottomRightMetrics, '7', 'vehicle-air', 'fixed-wing-hull',
+    )).map((issue) => issue.rule)).toContain('bottom-right-metrics-require-measured-body');
+  });
+
+  it('lehnt unvollständige und außerhalb der Körperhülle liegende bottomRight-Metriken ab', () => {
+    expect(validateSpec(withBottomRightMetrics({ capHeightMm: 2.750245 })).map(
+      (issue) => issue.rule,
+    )).toContain('bottom-right-metrics-complete');
+
+    for (const metrics of [
+      { ...bottomRightMetrics, capHeightMm: 0 },
+      { ...bottomRightMetrics, baselineFromBodyTopMm: 3 },
+      { ...bottomRightMetrics, anchorFromBodyLeftMm: 24.75 },
+      { ...bottomRightMetrics, boxLeftFromBodyLeftMm: -0.01 },
+      { ...bottomRightMetrics, boxWidthMm: 0 },
+      { ...bottomRightMetrics, boxLeftFromBodyLeftMm: 25, boxWidthMm: 5.5 },
+      {
+        ...bottomRightMetrics,
+        anchorFromBodyLeftMm: 27.2295,
+        boxLeftFromBodyLeftMm: 24.4795,
+        boxWidthMm: 5.5,
+      },
+      { ...bottomRightMetrics, anchorFromBodyLeftMm: Number.NaN },
+    ]) {
+      expect(validateSpec(withBottomRightMetrics(metrics)).map((issue) => issue.rule))
+        .toContain('bottom-right-metrics-within-body');
+    }
   });
 
   it('nennt in jeder Meldung Regel und Begründung', () => {

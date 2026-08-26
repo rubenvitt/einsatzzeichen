@@ -611,6 +611,21 @@ function circleQuartering(bounds: BoundsMm): Primitive[] {
   return primitives;
 }
 
+function circleInformationStem(bounds: BoundsMm): Primitive[] {
+  const dx = bounds.minX - 4;
+  const dy = bounds.minY - 4;
+  return [
+    {
+      type: 'circle', role: 'pictogram', cx: 16 + dx, cy: 10.5 + dy, r: 1.5,
+      style: { fill: 'schwarz', stroke: 'none' },
+    },
+    {
+      type: 'rect', role: 'pictogram', x: 15 + dx, y: 14 + dy, width: 2, height: 8,
+      style: { fill: 'schwarz', stroke: 'none' },
+    },
+  ];
+}
+
 /**
  * F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen. Die
  * Koordinaten werden
@@ -726,20 +741,7 @@ const CIRCLE_NORMAL_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Prim
       circleOutline([[9 + dx, 25.75 + dy], [16 + dx, 22 + dy], [23 + dx, 25.75 + dy]]),
     ];
   },
-  'circle-information-stem': (bounds) => {
-    const dx = bounds.minX - 4;
-    const dy = bounds.minY - 4;
-    return [
-      {
-        type: 'circle', role: 'pictogram', cx: 16 + dx, cy: 10.5 + dy, r: 1.5,
-        style: { fill: 'schwarz', stroke: 'none' },
-      },
-      {
-        type: 'rect', role: 'pictogram', x: 15 + dx, y: 14 + dy, width: 2, height: 8,
-        style: { fill: 'schwarz', stroke: 'none' },
-      },
-    ];
-  },
+  'circle-information-stem': circleInformationStem,
   'circle-transport-diamond-arrows': (bounds) => {
     const dx = bounds.minX - 4;
     const dy = bounds.minY - 4;
@@ -758,6 +760,13 @@ const CIRCLE_NORMAL_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Prim
       circleRing(21.5 + dx, 17.5 + dy, 1.5),
     ];
   },
+};
+
+/** N.2.3: am um 1 mm angehobenen Kreis ist ausschließlich diese eine Marke vermessen. */
+const CIRCLE_RAISED_ONE_MM_MARKS: Partial<
+  Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
+> = {
+  'circle-information-stem': circleInformationStem,
 };
 
 /** F.3.5/F.3.14: semantische Marken, separat gegen den abgesenkten Kreis vermessen. */
@@ -1002,6 +1011,36 @@ const VEHICLE_LAND_NORMAL_MARKS: Partial<
   care: (bounds) => landCare(bounds, bounds.maxY),
   'ring-6mm-offset-down-3mm-four-way-stem': landFourWayStem,
   'ring-5mm-offset-down-3mm-eight-spokes': landShiftedEightSpokes,
+  'ring-5mm-offset-down-3-5mm-eight-spokes': (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    const cy = bounds.maxY - 6.5;
+    const rMm = 5;
+    const diagonalMm = rMm / Math.SQRT2;
+    return [
+      circleRing(cx, cy, rMm),
+      stroke(cx - rMm, cy, cx + rMm, cy),
+      stroke(cx, cy - rMm, cx, cy + rMm),
+      stroke(cx - diagonalMm, cy - diagonalMm, cx + diagonalMm, cy + diagonalMm),
+      stroke(cx + diagonalMm, cy - diagonalMm, cx - diagonalMm, cy + diagonalMm),
+    ];
+  },
+};
+
+const VEHICLE_LAND_INVERTED_HULL_MARKS: Partial<
+  Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
+> = {
+  'land-horizontal-blade-bent-upright': (bounds) => {
+    const dxMm = bounds.minX - 1;
+    const dyMm = bounds.minY - 6;
+    return [
+      stroke(6 + dxMm, 14.75 + dyMm, 20.75 + dxMm, 14.75 + dyMm),
+      outline([
+        [20.75 + dxMm, 9.5 + dyMm],
+        [20.75 + dxMm, 18.5 + dyMm],
+        [26 + dxMm, 19.5 + dyMm],
+      ]),
+    ];
+  },
 };
 
 const VEHICLE_LAND_FOOT_BAND_MARKS: Partial<
@@ -1211,6 +1250,72 @@ const VEHICLE_AIR_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primit
       outline(shifted([[24, 15.9], [26.35, 18], [24, 19.65], [21.65, 18], [24, 15.9]])),
     ];
   },
+  'air-quartering-up-arrow-box': (bounds) => {
+    const dxMm = bounds.minX - 1.01;
+    const dyMm = bounds.minY - 6;
+    return [
+      ...airQuartering(bounds),
+      stroke(23 + dxMm, 14 + dyMm, 23 + dxMm, 9.5 + dyMm),
+      outline([[21.5 + dxMm, 11 + dyMm], [23 + dxMm, 9.5 + dyMm], [24.5 + dxMm, 11 + dyMm]]),
+      {
+        type: 'rect', role: 'pictogram', x: 20.25 + dxMm, y: 15 + dyMm,
+        width: 5.5, height: 5.5,
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+    ];
+  },
+};
+
+const VEHICLE_AIR_FIXED_WING_MARKS: Partial<
+  Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
+> = {
+  'air-horizontal-left-chevron': (bounds) => {
+    const dxMm = bounds.minX - 1.01;
+    const dyMm = bounds.minY - 6;
+    return [
+      stroke(7 + dxMm, 15 + dyMm, 25 + dxMm, 15 + dyMm),
+      outline([[24 + dxMm, 11 + dyMm], [20 + dxMm, 15 + dyMm], [24 + dxMm, 19 + dyMm]]),
+    ];
+  },
+  'air-rising-diagonal': (bounds) => {
+    const dxMm = bounds.minX - 1.01;
+    const dyMm = bounds.minY - 6;
+    return [stroke(2.07 + dxMm, 20.74 + dyMm, 24.96 + dxMm, 9.3 + dyMm)];
+  },
+};
+
+function spontaneousHelperClover(dxMm = 0, dyMm = 0): Primitive {
+  return {
+    type: 'path', role: 'pictogram',
+    d: `M ${13 + dxMm} ${10 + dyMm} C ${13 + dxMm} ${8.3431 + dyMm}, ${14.3431 + dxMm} ${7 + dyMm}, ${16 + dxMm} ${7 + dyMm} C ${17.6569 + dxMm} ${7 + dyMm}, ${19 + dxMm} ${8.3431 + dyMm}, ${19 + dxMm} ${10 + dyMm} C ${20.6569 + dxMm} ${10 + dyMm}, ${22 + dxMm} ${11.3431 + dyMm}, ${22 + dxMm} ${13 + dyMm} C ${22 + dxMm} ${14.6569 + dyMm}, ${20.6569 + dxMm} ${16 + dyMm}, ${19 + dxMm} ${16 + dyMm} C ${19 + dxMm} ${17.6569 + dyMm}, ${17.6569 + dxMm} ${19 + dyMm}, ${16 + dxMm} ${19 + dyMm} C ${14.3431 + dxMm} ${19 + dyMm}, ${13 + dxMm} ${17.6569 + dyMm}, ${13 + dxMm} ${16 + dyMm} C ${11.3431 + dxMm} ${16 + dyMm}, ${10 + dxMm} ${14.6569 + dyMm}, ${10 + dxMm} ${13 + dyMm} C ${10 + dxMm} ${11.3431 + dyMm}, ${11.3431 + dxMm} ${10 + dyMm}, ${13 + dxMm} ${10 + dyMm} Z`,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  };
+}
+
+/** N.2.1/N.2.2: Innenmarken ausschließlich auf dem normalen 12-mm-Kreis (Hülle 4…28). */
+const CIRCLE_NORMAL_ANHANG_N_MARKS: Partial<
+  Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
+> = {
+  'spontaneous-helper-collection-arrow': (bounds) => {
+    const dxMm = bounds.minX - 4;
+    const dyMm = bounds.minY - 4;
+    return [
+      spontaneousHelperClover(dxMm, dyMm),
+      circleRing(10.5 + dxMm, 22 + dyMm, 1.5),
+      stroke(12 + dxMm, 22 + dyMm, 23 + dxMm, 22 + dyMm),
+      outline([[21 + dxMm, 20 + dyMm], [23 + dxMm, 22 + dyMm], [21 + dxMm, 24 + dyMm]]),
+    ];
+  },
+  'spontaneous-helper-contact-double-arrow': (bounds) => {
+    const dxMm = bounds.minX - 4;
+    const dyMm = bounds.minY - 4;
+    return [
+      spontaneousHelperClover(dxMm, dyMm),
+      stroke(9 + dxMm, 22 + dyMm, 23 + dxMm, 22 + dyMm),
+      outline([[11 + dxMm, 20 + dyMm], [9 + dxMm, 22 + dyMm], [11 + dxMm, 24 + dyMm]]),
+      outline([[21 + dxMm, 20 + dyMm], [23 + dxMm, 22 + dyMm], [21 + dxMm, 24 + dyMm]]),
+    ];
+  },
 };
 
 const TRAILER_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
@@ -1270,21 +1375,27 @@ export function bodyMark(
         ? VEHICLE_LAND_FOOT_BAND_MARKS[id] ?? (id === 'maintenance' ? logisticsMaintenance : undefined)
         : context.kind === 'vehicle-land' && context.bodyVariant === 'plain-wheel-pair'
           ? VEHICLE_LAND_PLAIN_WHEEL_PAIR_MARKS[id]
+        : context.kind === 'vehicle-land' && context.bodyVariant === 'inverted-hull-track'
+          ? VEHICLE_LAND_INVERTED_HULL_MARKS[id]
       : context.kind === 'vehicle-air' && context.bodyVariant === 'raised-hull'
         ? VEHICLE_AIR_MARKS[id]
+      : context.kind === 'vehicle-air' && context.bodyVariant === 'fixed-wing-hull'
+        ? VEHICLE_AIR_FIXED_WING_MARKS[id]
         : context.kind === 'trailer' && context.bodyVariant === undefined
           ? TRAILER_MARKS[id]
           : context.kind === 'trailer' && context.bodyVariant === 'foot-band'
             ? TRAILER_FOOT_BAND_LOGISTICS_MARKS[id]
           : context.kind === 'circle-12' && context.bodyVariant === undefined
-            ? CIRCLE_NORMAL_MARKS[id]
+            ? CIRCLE_NORMAL_MARKS[id] ?? CIRCLE_NORMAL_ANHANG_N_MARKS[id]
+            : context.kind === 'circle-12' && context.bodyVariant === 'raised-circle-1mm'
+              ? CIRCLE_RAISED_ONE_MM_MARKS[id]
             : context.kind === 'circle-12' && context.bodyVariant === 'raised-gable'
               ? CIRCLE_RAISED_GABLE_MARKS[id]
               : context.kind === 'circle-12' && context.bodyVariant === 'foot-band'
                 ? CIRCLE_FOOT_BAND_LOGISTICS_MARKS[id]
               : context.kind === 'reduced-house' && context.bodyVariant === undefined
                 ? REDUCED_HOUSE_MARKS[id]
-          : undefined;
+                : undefined;
   const hasAnyBuild = [
     MARKS,
     VEHICLE_LAND_NORMAL_MARKS,
@@ -1293,9 +1404,13 @@ export function bodyMark(
     TRAILER_FOOT_BAND_LOGISTICS_MARKS,
     CIRCLE_FOOT_BAND_LOGISTICS_MARKS,
     VEHICLE_LAND_PLAIN_WHEEL_PAIR_MARKS,
+    VEHICLE_LAND_INVERTED_HULL_MARKS,
     VEHICLE_AIR_MARKS,
+    VEHICLE_AIR_FIXED_WING_MARKS,
     TRAILER_MARKS,
     CIRCLE_NORMAL_MARKS,
+    CIRCLE_NORMAL_ANHANG_N_MARKS,
+    CIRCLE_RAISED_ONE_MM_MARKS,
     CIRCLE_RAISED_GABLE_MARKS,
     REDUCED_HOUSE_MARKS,
   ]
@@ -1321,14 +1436,18 @@ export function bodyMark(
   const expected = context.kind === 'formation'
     ? { width: 30, height: 20, label: '30 × 20 mm' }
     : context.kind === 'vehicle-land'
-      ? { width: 30, height: 20.25, label: '30 × 20,25 mm' }
+      ? context.bodyVariant === 'inverted-hull-track'
+        ? { width: 30, height: 19.75, label: '30 × 19,75 mm' }
+        : { width: 30, height: 20.25, label: '30 × 20,25 mm' }
     : context.kind === 'vehicle-air'
         ? { width: 29.98, height: 14.99, label: '29,98 × 14,99 mm' }
         : context.kind === 'circle-12'
           ? { width: 24, height: 24, label: '24 × 24 mm' }
           : context.kind === 'reduced-house'
             ? { width: 28, height: 22, label: '28 × 22 mm' }
-          : { width: 27, height: 20.25, label: '27 × 20,25 mm' };
+          : context.kind === 'spontaneous-helper'
+            ? { width: 28, height: 28, label: '28 × 28 mm' }
+            : { width: 27, height: 20.25, label: '27 × 20,25 mm' };
   if (
     Math.abs(widthMm - expected.width) > BODY_TOLERANCE_MM ||
     Math.abs(heightMm - expected.height) > BODY_TOLERANCE_MM
@@ -1382,9 +1501,13 @@ export const BODY_MARK_IDS: readonly BodyMarkId[] = Object.freeze(
       TRAILER_FOOT_BAND_LOGISTICS_MARKS,
       CIRCLE_FOOT_BAND_LOGISTICS_MARKS,
       VEHICLE_LAND_PLAIN_WHEEL_PAIR_MARKS,
+      VEHICLE_LAND_INVERTED_HULL_MARKS,
       VEHICLE_AIR_MARKS,
+      VEHICLE_AIR_FIXED_WING_MARKS,
       TRAILER_MARKS,
       CIRCLE_NORMAL_MARKS,
+      CIRCLE_NORMAL_ANHANG_N_MARKS,
+      CIRCLE_RAISED_ONE_MM_MARKS,
       CIRCLE_RAISED_GABLE_MARKS,
       REDUCED_HOUSE_MARKS,
     ]

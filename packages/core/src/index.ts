@@ -4,7 +4,11 @@ export * from './render/theme.js';
 export * from './bounds.js';
 export * from './fingerprint.js';
 export * from './layout/profiles.js';
-export * from './validate.js';
+export {
+  CompositionError,
+  validateSpec,
+  type ValidationIssue,
+} from './validate.js';
 export * from './compose.js';
 export * from './path-commands.js';
 export * from './pictogram-gate.js';

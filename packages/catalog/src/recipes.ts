@@ -5,7 +5,7 @@ import {
   type CatalogPorts,
   type ContrastRequirement,
 } from '@einsatzzeichen/core';
-import type { Drawing, OrganizationId, SymbolSpec } from '@einsatzzeichen/schema';
+import type { BodyLabelInk, Drawing, OrganizationId, SymbolSpec } from '@einsatzzeichen/schema';
 import { baseDrawing } from './base-symbols.js';
 import { bodyMark } from './body-marks.js';
 import { organizationColor } from './organizations.js';
@@ -30,6 +30,7 @@ import {
   ANHANG_F_E_RECIPES,
   ANHANG_F_F_RECIPES,
 } from './recipes-anhang-f.js';
+import { ANHANG_N_RECIPES } from './recipes-anhang-n.js';
 import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
 import { ANHANG_I_A_RECIPES } from './recipes-anhang-i.js';
@@ -46,7 +47,7 @@ const PORTS: CatalogPorts = {
 export function composeFromCatalog(spec: SymbolSpec, title?: string): Drawing {
   return compose(spec, PORTS, {
     ...(title !== undefined ? { title } : {}),
-    description: describeSymbolSpec(spec),
+    descriptionFromSpec: describeSymbolSpec,
   });
 }
 
@@ -77,6 +78,10 @@ export interface Recipe {
  * 2026 nachgezogenen E.2.6 sind damit **alle 68** Abschnitte des Anhangs E gebaut. E.2.6 ist
  * zugleich das einzige Zeichen des Anhangs E, dessen Kontrastpaar eine erklärte Ausnahme trägt
  * (`CONTRAST_EXCEPTIONS`).
+ *
+ * Anhang N ergänzt neun primary-Darstellungen weiterer Träger. Ihre Körper-, Fahrwerks-,
+ * Marken- und Textgeometrien verwenden ausschließlich die davor separat vermessenen Verträge;
+ * insbesondere entsteht aus „geländegängig“ keine neue fachliche oder technische ID.
  */
 export const RECIPES = {
   ...ANHANG_G_RECIPES,
@@ -93,6 +98,7 @@ export const RECIPES = {
   ...ANHANG_E_D_RECIPES,
   ...ANHANG_E_E_RECIPES,
   ...ANHANG_E_F_RECIPES,
+  ...ANHANG_N_RECIPES,
   ...ANHANG_H_RECIPES,
   'C.1.1': {
     title: 'Löschstaffel',
@@ -158,6 +164,13 @@ export const RECIPES = {
  * auf weiss und damit 21:1 in allen drei Themes — die Anforderung entfällt nicht, sie ist
  * erfüllt.
  *
+ * **Seit LFH-422 kann die Quelle diese Ableitung je Rezept überschreiben.** N.1.2 bis N.1.5
+ * führen schwarze Körperläufe auf orange, hellgruen und braun. `bodyLabelInk()` nimmt denselben
+ * optionalen `inBodyInk`-Wert entgegen wie die Zeichnung; der Kontrastvertrag pflegt keine
+ * zweite Farblogik. Da E.2.6 auf derselben orangefarbenen Organisation weiterhin den weissen
+ * Default trägt, wird die Körperanforderung nach Organisation **und** Vordergrund dedupliziert.
+ * So bleiben weiss/orange und schwarz/orange zugleich sichtbar.
+ *
  * **Seit dem Teilslice E.2 gibt es eine zweite Richtung.** Die vierte Beschriftungszone steht
  * unter dem Körper auf der Ausgabeoberfläche. Ihre Tinte kommt wie beim Zeichnen aus dem
  * Körperprofil: E verwendet Organisationsfarbe, das G-Kreisband Schwarz. Selbst gerechnet,
@@ -179,12 +192,16 @@ export const RECIPES = {
 export function labelContrastRequirements(
   recipes: Iterable<Recipe> = Object.values<Recipe>(RECIPES),
 ): readonly ContrastRequirement[] {
-  const inBody = new Set<OrganizationId>();
+  const inBody = new Map<string, {
+    organization: OrganizationId;
+    foreground: BodyLabelInk;
+  }>();
   const blackBottomCenter = new Set<OrganizationId>();
   const belowBody = new Set<OrganizationId>();
   let blackBelowBody = false;
   let aboveBody = false;
-  let circleTopLeftOnSurface = false;
+  let surfaceBelowBody = false;
+  const circleTopLeftOnSurface = new Set<BodyLabelInk>();
   for (const recipe of recipes) {
     const { labels, organization } = recipe.spec;
     if (labels === undefined) continue;
@@ -201,15 +218,31 @@ export function labelContrastRequirements(
         labels.bottomRight !== undefined ||
         labels.topLeftLines !== undefined
       ) {
-        inBody.add(organization);
+        const foreground = bodyLabelInk(
+          organizationColor(organization),
+          labels.inBodyInk,
+        );
+        // Ein Organisationsprofil kann mehrere quellenvermessene Tinten führen: E.2.6 setzt auf
+        // orange den bisherigen weissen Default, N.1.2/N.1.5 dagegen schwarz. Der Schlüssel muss
+        // deshalb Farbe und Organisation tragen; ein Set nur aus Organisationen verschluckte eines
+        // der beiden real gezeichneten Kontrastpaare.
+        inBody.set(`${organization}:${foreground}`, { organization, foreground });
       }
       if (labels.bottomCenter !== undefined && profile.bottomCenterInk === 'black') {
         blackBottomCenter.add(organization);
       }
-      if (labels.aboveLeft !== undefined) aboveBody = true;
       if (recipe.spec.kind === 'circle-12' && labels.topLeft !== undefined) {
-        circleTopLeftOnSurface = true;
+        circleTopLeftOnSurface.add(bodyLabelInk(
+          organizationColor(organization),
+          labels.inBodyInk,
+        ));
       }
+    }
+    if (labels.aboveLeft !== undefined) aboveBody = true;
+    if (labels.surfaceBelowLeft !== undefined || labels.surfaceBelowRight !== undefined) {
+      // Beide Felder teilen Tinte und Untergrund. Ein boolescher Vertrag hält zwei sichtbare
+      // Läufe wie bei N.2.3 dedupliziert, ohne sie mit `aboveLeft` oder Kreis-Clipping zu vermengen.
+      surfaceBelowBody = true;
     }
     if (labels.belowRight !== undefined) {
       const ink = profile.belowRight?.ink;
@@ -218,11 +251,11 @@ export function labelContrastRequirements(
     }
   }
   return [
-    ...[...inBody].map<ContrastRequirement>((organization) => ({
-      // Dieselbe Ableitung, die `compose.ts` beim Zeichnen anwendet: schwarz auf weissem Körper,
-      // sonst weiss. Aufgerufen und nicht nachgebaut, damit Vertrag und Zeichnung nicht
-      // auseinanderlaufen können.
-      foreground: bodyLabelInk(organizationColor(organization)),
+    ...[...inBody.values()].map<ContrastRequirement>(({ organization, foreground }) => ({
+      // Derselbe Resolver, den `compose.ts` beim Zeichnen anwendet: quellenvermessener Override,
+      // sonst schwarz auf weissem Körper und weiss auf jeder anderen Füllung. Aufgerufen und
+      // nicht nachgebaut, damit Vertrag und Zeichnung nicht auseinanderlaufen können.
+      foreground,
       background: organizationColor(organization),
       context: `Beschriftung im Körper auf Organisation ${organization}`,
       minimum: MINIMUM_TEXT_CONTRAST,
@@ -251,11 +284,17 @@ export function labelContrastRequirements(
       context: 'Beschriftung oberhalb des Körpers auf der Ausgabeoberfläche',
       minimum: MINIMUM_TEXT_CONTRAST,
     }] : []),
-    ...(circleTopLeftOnSurface ? [{
+    ...(surfaceBelowBody ? [{
       foreground: 'schwarz' as const,
+      background: 'surface' as const,
+      context: 'Beschriftung unterhalb des Körpers auf der Ausgabeoberfläche',
+      minimum: MINIMUM_TEXT_CONTRAST,
+    }] : []),
+    ...[...circleTopLeftOnSurface].map<ContrastRequirement>((foreground) => ({
+      foreground,
       background: 'surface' as const,
       context: 'Kreislabel teilweise außerhalb der Körperfläche',
       minimum: MINIMUM_TEXT_CONTRAST,
-    }] : []),
+    })),
   ];
 }

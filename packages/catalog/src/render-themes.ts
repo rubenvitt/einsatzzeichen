@@ -61,6 +61,8 @@ export const ORGANIZATION_BODY_DASHES = deepFreeze({
   blau: [2, 1.5],
   gelb: [4, 2],
   gruen: [6, 2],
+  // Bundespolizei aus N.1.3: eigenständig zu Polizei (`gruen`) und allen acht Altprofilen.
+  hellgruen: [3, 1],
   orange: [6, 2, 1, 2],
   braun: [2, 2, 2, 4],
   hellgrau: [8, 2],

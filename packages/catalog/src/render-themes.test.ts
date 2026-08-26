@@ -73,4 +73,9 @@ describe('Render-Theme-Register', () => {
     expect(ORGANIZATION_BODY_DASHES.blau).toHaveLength(originalLength);
     expect(renderTheme('print-monochrome')).toBe(PRINT_MONOCHROME_THEME);
   });
+
+  it('gibt hellgruen eine von gruen getrennte Kontursignatur', () => {
+    expect(ORGANIZATION_BODY_DASHES.hellgruen).toEqual([3, 1]);
+    expect(ORGANIZATION_BODY_DASHES.hellgruen).not.toEqual(ORGANIZATION_BODY_DASHES.gruen);
+  });
 });

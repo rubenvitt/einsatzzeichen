@@ -572,6 +572,20 @@ const VARIANT_EXTRA_PRIMITIVES: Partial<
         style: { fill: 'schwarz', stroke: 'none' },
       },
     ],
+    'fixed-wing-hull': [
+      {
+        type: 'path',
+        role: 'bodyExtra',
+        d: 'M 24.2114 23.2109 C 23.4801 22.4796, 22.377 22.2669, 21.4259 22.6743 L 16 24.9995 L 21.4261 27.3251 C 22.3768 27.7326, 23.48 27.5202, 24.2116 26.7885 C 25.1997 25.8007, 25.1997 24.1988, 24.2116 23.211 Z',
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+      {
+        type: 'path',
+        role: 'bodyExtra',
+        d: 'M 7.7882 23.2109 C 6.8001 24.199, 6.8001 25.8006, 7.7882 26.7884 C 8.5195 27.5201, 9.6226 27.7324, 10.5737 27.325 L 16 24.9995 L 10.5739 22.6743 C 9.6232 22.2668, 8.52 22.4792, 7.7884 23.2109 Z',
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+    ],
   },
   'vehicle-land': {
     'foot-band': [
@@ -679,10 +693,22 @@ const VARIANT_BODIES: Partial<Record<SymbolKind, Partial<Record<BodyVariantId, P
       d: halfCircleAboveChord(15.9997, 20.9898, 14.9897),
       style: OUTLINE,
     },
+    'fixed-wing-hull': {
+      type: 'path',
+      role: 'body',
+      d: halfCircleAboveChord(15.9997, 20.9898, 14.9897),
+      style: OUTLINE,
+    },
   },
   'vehicle-land': {
     'foot-band': BODIES['vehicle-land']!,
     'plain-wheel-pair': BODIES['vehicle-land']!,
+    'inverted-hull-track': {
+      type: 'path',
+      role: 'body',
+      d: 'M 16 23.555 C 10 23.555, 5 24.443, 1 25.75 L 1 6 L 31 6 L 31 25.75 C 27 24.445, 22 23.556, 16 23.556 Z',
+      style: OUTLINE,
+    },
   },
   'circle-12': {
     'foot-band': BODIES['circle-12']!,
@@ -697,6 +723,14 @@ const VARIANT_BODIES: Partial<Record<SymbolKind, Partial<Record<BodyVariantId, P
       role: 'body',
       cx: 16,
       cy: 18,
+      r: 12,
+      style: OUTLINE,
+    },
+    'raised-circle-1mm': {
+      type: 'circle',
+      role: 'body',
+      cx: 16,
+      cy: 15,
       r: 12,
       style: OUTLINE,
     },

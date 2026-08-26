@@ -2,6 +2,7 @@ import {
   DEFAULT_STROKE_WIDTH_MM,
   DEFAULT_VIEWBOX_MM,
   type BodyVariantId,
+  type BodyLabelInk,
   type BodyMarkId,
   type CapabilityId,
   type ChassisMark,
@@ -25,7 +26,7 @@ import {
   MINIMUM_TEXT_RENDER_PX,
   verticalTextBoxMm,
 } from './render/text-policy.js';
-import { validateSpec } from './validate.js';
+import { analyzeSymbolSpec, CompositionError } from './validate.js';
 
 /**
  * Ob ein Körper ein Polyzug ist, den die Zeichnung **nicht** schließt. `closed` ist optional; die
@@ -332,18 +333,21 @@ function labelPrimitive(
  * bildet diese Regel ab — eine Ableitung nach Kontrast hätte eine getroffene Entscheidung still
  * überschrieben.
  *
- * **Eine Ableitung und kein neues Feld am `SymbolSpec`.** Die Farbe ist an beiden Anhängen keine
- * Wahl der Zeichnung, sondern eine Folge der Körperfarbe; ein Feld hätte sie zu einer Angabe
- * gemacht, die 58 F-Rezepte mitschleppen müssten.
+ * **Die Ableitung bleibt der Default.** Ein optionaler `BodyLabels.inBodyInk`-Wert überschreibt
+ * sie nur dort, wo eine konkrete Quelle eine andere schwarze oder weisse Tinte vermisst. Specs
+ * ohne diese Messung behalten denselben Rückgabewert und dieselben gerenderten Bytes.
  *
- * **Exportiert, weil der Kontrastvertrag dieselbe Regel braucht.** Der Katalog leitet in
+ * **Exportiert, weil der Kontrastvertrag denselben Resolver braucht.** Der Katalog leitet in
  * `labelContrastRequirements()` ab, welches Paar aus einer Beschriftung im Körper überhaupt
  * entsteht; träfe er die Farbwahl dort ein zweites Mal, könnten Zeichnung und Vertrag
  * auseinanderlaufen — genau der Fehler, den dieser Teilslice behoben hat (der Vertrag behauptete
  * `weiss`, während der Lauf schwarz gezeichnet wurde). Eine Funktion, zwei Aufrufer.
  */
-export function bodyLabelInk(bodyFill: ColorToken): ColorToken {
-  return bodyFill === 'weiss' ? 'schwarz' : 'weiss';
+export function bodyLabelInk(
+  bodyFill: ColorToken,
+  measuredOverride?: BodyLabelInk,
+): BodyLabelInk {
+  return measuredOverride ?? (bodyFill === 'weiss' ? 'schwarz' : 'weiss');
 }
 
 /**
@@ -381,6 +385,11 @@ function labelPrimitives(
   normalizeTopLeftCoordinatePrecision: boolean,
   aboveLeftBaselineFromBodyTopMm: number | undefined,
   aboveLeftAnchorFromBodyLeftMm: number | undefined,
+  surfaceLabels: {
+    readonly baselineFromBodyBottomMm: number;
+    readonly leftAnchorFromBodyLeftMm?: number;
+    readonly rightAnchorFromBodyRightMm?: number;
+  } | undefined,
   topLeftLines: {
     readonly baselinesFromBodyTopMm: readonly [number, number];
     readonly capHeightMm: number;
@@ -423,12 +432,17 @@ function labelPrimitives(
     ) {
       throw new Error('Die Zone "aboveLeft" ist an dieser Körperform nicht vermessen.');
     }
-    const anchorXMm = bodyBoundsMm.minX + aboveLeftAnchorFromBodyLeftMm;
+    const metrics = labels.aboveLeftMetrics;
+    const anchorXMm = bodyBoundsMm.minX +
+      (metrics?.anchorFromBodyLeftMm ?? aboveLeftAnchorFromBodyLeftMm);
     primitives.push(
       labelPrimitive(
         labels.aboveLeft,
-        BOTTOM_LABEL_SIZE_MM,
-        bodyBoundsMm.minY + aboveLeftBaselineFromBodyTopMm,
+        metrics === undefined
+          ? BOTTOM_LABEL_SIZE_MM
+          : metrics.capHeightMm / ARIMO_CAP_HEIGHT_FRACTION,
+        bodyBoundsMm.minY +
+          (metrics?.baselineFromBodyTopMm ?? aboveLeftBaselineFromBodyTopMm),
         'start',
         anchorXMm,
         anchorXMm,
@@ -553,15 +567,28 @@ function labelPrimitives(
     );
   }
   if (labels.bottomRight !== undefined) {
+    const metrics = labels.bottomRightMetrics;
+    const sizeMm = metrics === undefined
+      ? BOTTOM_LABEL_SIZE_MM
+      : metrics.capHeightMm / ARIMO_CAP_HEIGHT_FRACTION;
+    const baselineYMm = metrics === undefined
+      ? bottomBaselineMm
+      : bodyBoundsMm.minY + metrics.baselineFromBodyTopMm;
+    const anchorXMm = metrics === undefined
+      ? rightMm
+      : bodyBoundsMm.minX + metrics.anchorFromBodyLeftMm;
+    const boxXMm = metrics === undefined
+      ? centerXMm
+      : bodyBoundsMm.minX + metrics.boxLeftFromBodyLeftMm;
     primitives.push(
       labelPrimitive(
         labels.bottomRight,
-        BOTTOM_LABEL_SIZE_MM,
-        bottomBaselineMm,
-        'end',
-        rightMm,
-        centerXMm,
-        rightMm - centerXMm,
+        sizeMm,
+        baselineYMm,
+        metrics === undefined ? 'end' : 'middle',
+        anchorXMm,
+        boxXMm,
+        metrics?.boxWidthMm ?? (rightMm - centerXMm),
         viewBoxWidthMm,
         ink,
       ),
@@ -595,6 +622,46 @@ function labelPrimitives(
         belowRight.ink === 'black' ? 'schwarz' : belowRightFill!,
       ),
     );
+  }
+  if (labels.surfaceBelowLeft !== undefined || labels.surfaceBelowRight !== undefined) {
+    if (surfaceLabels === undefined) {
+      throw new Error('Die schwarzen Oberflächenläufe sind an dieser Körperform nicht vermessen.');
+    }
+    const baselineMm = bodyBoundsMm.maxY + surfaceLabels.baselineFromBodyBottomMm;
+    if (labels.surfaceBelowLeft !== undefined) {
+      if (surfaceLabels.leftAnchorFromBodyLeftMm === undefined) {
+        throw new Error('Der linke schwarze Oberflächenlauf hat keinen vermessenen Anker.');
+      }
+      const anchorXMm = bodyBoundsMm.minX + surfaceLabels.leftAnchorFromBodyLeftMm;
+      primitives.push(labelPrimitive(
+        labels.surfaceBelowLeft,
+        BOTTOM_LABEL_SIZE_MM,
+        baselineMm,
+        'start',
+        anchorXMm,
+        anchorXMm,
+        centerXMm - anchorXMm,
+        viewBoxWidthMm,
+        'schwarz',
+      ));
+    }
+    if (labels.surfaceBelowRight !== undefined) {
+      if (surfaceLabels.rightAnchorFromBodyRightMm === undefined) {
+        throw new Error('Der rechte schwarze Oberflächenlauf hat keinen vermessenen Anker.');
+      }
+      const anchorXMm = bodyBoundsMm.maxX + surfaceLabels.rightAnchorFromBodyRightMm;
+      primitives.push(labelPrimitive(
+        labels.surfaceBelowRight,
+        BOTTOM_LABEL_SIZE_MM,
+        baselineMm,
+        'end',
+        anchorXMm,
+        centerXMm,
+        anchorXMm - centerXMm,
+        viewBoxWidthMm,
+        'schwarz',
+      ));
+    }
   }
   return primitives;
 }
@@ -651,15 +718,6 @@ export interface CatalogPorts {
   ): readonly Primitive[];
 }
 
-export class CompositionError extends Error {
-  constructor(readonly issues: ReturnType<typeof validateSpec>) {
-    super(
-      `Unzulässige Kombination:\n${issues.map((i) => `  [${i.rule}] ${i.message}`).join('\n')}`,
-    );
-    this.name = 'CompositionError';
-  }
-}
-
 export interface ComposeOptions {
   /**
    * Titel des zusammengesetzten Zeichens. Überschreibt den Titel des Grundzeichens
@@ -671,6 +729,12 @@ export interface ComposeOptions {
   title?: string;
   /** Semantische Beschreibung; wird wie der Titel vom Katalog geliefert, nie aus Geometrie geraten. */
   description?: string;
+  /**
+   * Leitet die Beschreibung erst nach erfolgreicher Validierung aus exakt derselben vorbereiteten
+   * Spec ab, die anschließend die Geometrie erzeugt. Bei `inset-hull` sind Spec und Labelsnapshot
+   * vor dem Aufruf eingefroren; der Callback kann die geprüfte Sicht nicht mehr verändern.
+   */
+  descriptionFromSpec?: (preparedSpec: SymbolSpec) => string;
 }
 
 /**
@@ -757,9 +821,17 @@ function composeBodyMarkPrimitives(groups: readonly (readonly Primitive[])[]): P
   return result;
 }
 
-export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: ComposeOptions = {}): Drawing {
-  const issues = validateSpec(spec);
-  if (issues.length > 0) throw new CompositionError(issues);
+export function compose(
+  sourceSpec: SymbolSpec,
+  catalog: CatalogPorts,
+  options: ComposeOptions = {},
+): Drawing {
+  const analysis = analyzeSymbolSpec(sourceSpec);
+  if (analysis.issues.length > 0) throw new CompositionError(analysis.issues);
+
+  const spec = analysis.spec;
+  const effectiveLabels = spec.labels;
+  const description = options.descriptionFromSpec?.(spec) ?? options.description;
 
   const base = catalog.baseDrawing(spec.kind, spec.bodyVariant);
   const body = base.children.find((child) => child.role === 'body');
@@ -994,23 +1066,26 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
       }, bodyBoundsMm)),
   );
 
-  const labels = spec.labels !== undefined
+  const labelChildren = effectiveLabels !== undefined
     ? labelPrimitives(
-        spec.labels,
+        effectiveLabels,
         bodyBoundsMm,
         DEFAULT_VIEWBOX_MM.width,
         spec.organization !== undefined ? catalog.organizationColor(spec.organization) : null,
         profile.bottomLabelBaselineFromBodyBottomMm,
         profile.belowRight,
-        profile.centerBaselineFromBodyBottomMm,
+        profile.allowsCenterBaselineOverride === true
+          ? effectiveLabels.centerBaselineFromBodyBottomMm ?? profile.centerBaselineFromBodyBottomMm
+          : profile.centerBaselineFromBodyBottomMm,
         profile.topLeftBaselineFromBodyTopMm,
         normalizesMeasuredCircleTopLeftCoordinates(spec.kind, spec.bodyVariant),
         profile.aboveLeftBaselineFromBodyTopMm,
         profile.aboveLeftAnchorFromBodyLeftMm,
+        profile.surfaceLabels,
         profile.topLeftLines,
         profile.bottomCenterBaselineFromBodyBottomMm,
         profile.bottomCenterInk,
-        bodyLabelInk(bodyFill),
+        bodyLabelInk(bodyFill, effectiveLabels.inBodyInk),
       )
     : [];
 
@@ -1035,10 +1110,10 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
       // Beschriftungen: sie liegen auf der Körperfläche wie diese, und die Kürzel liegen auf
       // ihnen (Anhang F setzt „MTF" über das obere linke Viertel der Teilung).
       ...bodyMarkPrimitives,
-      ...labels,
+      ...labelChildren,
       ...footPrimitives,
     ],
     ...(options.title !== undefined ? { title: options.title } : {}),
-    ...(options.description !== undefined ? { description: options.description } : {}),
+    ...(description !== undefined ? { description } : {}),
   };
 }
