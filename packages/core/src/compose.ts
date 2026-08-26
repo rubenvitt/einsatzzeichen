@@ -361,8 +361,9 @@ function normalizesMeasuredCircleTopLeftCoordinates(
 /**
  * Die Beschriftungszonen gegen die Hülle des platzierten Körpers gerechnet. Läufe **im** Körper
  * tragen die aus der Körperfüllung abgeleitete Tinte (`bodyLabelInk`). `aboveLeft` steht dagegen
- * schwarz auf der Ausgabeoberfläche, `belowRight` trägt dort die Organisationsfarbe. Alle drei
- * Nachbarschaften stehen im Kontrastvertrag des Katalogs.
+ * schwarz auf der Ausgabeoberfläche. `belowRight` steht ebenfalls auf der Ausgabeoberfläche;
+ * seine Tinte bestimmt das Profil als Organisationsfarbe oder Schwarz. Alle drei Nachbarschaften
+ * stehen im Kontrastvertrag des Katalogs.
  */
 function labelPrimitives(
   labels: NonNullable<SymbolSpec['labels']>,
@@ -532,8 +533,8 @@ function labelPrimitives(
     if (bottomCenterBaselineFromBodyBottomMm === undefined) {
       throw new Error(
         'Die Zone "bottomCenter" ist an dieser Körperform nicht vermessen: ihre Grundlinie ' +
-          'steht nur für die taktische Formation fest (2,0 mm über der Körperunterkante, ' +
-          'gemessen an F.1.18 und F.1.20).',
+          'steht für die taktische Formation (2,0 mm über der Körperunterkante, F.1.18/F.1.20) ' +
+          'und den gebänderten 12-mm-Kreis (6,0 mm über der Körperunterkante, G.3.5) fest.',
       );
     }
     primitives.push(

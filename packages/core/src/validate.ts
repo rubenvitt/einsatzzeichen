@@ -455,9 +455,10 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
     issues.push({
       rule: 'bottom-center-label-requires-measured-body',
       message:
-        'Die Beschriftungszone unten mittig ist allein an der taktischen Formation vermessen ' +
-        '(Grundlinie 2,0 mm über der Körperunterkante, an F.1.18 und F.1.20). Für ' +
-        `"${spec.kind}" gibt es keine Messung, aus der ihre Lage folgte.`,
+        'Die Beschriftungszone unten mittig ist an der taktischen Formation (2,0 mm über der ' +
+        'Körperunterkante, F.1.18/F.1.20) und am gebänderten 12-mm-Kreis (6,0 mm über der ' +
+        `Körperunterkante, G.3.5) vermessen. Für "${spec.kind}" mit Variante ` +
+        `"${spec.bodyVariant ?? 'normal'}" gibt es keine Messung, aus der ihre Lage folgte.`,
     });
   }
 

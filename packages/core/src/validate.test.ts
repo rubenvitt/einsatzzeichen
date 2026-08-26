@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { SymbolSpec } from '@einsatzzeichen/schema';
+import type { SymbolKind, SymbolSpec } from '@einsatzzeichen/schema';
 import { validateSpec } from './validate.js';
 
 describe('validateSpec', () => {
@@ -14,8 +14,27 @@ describe('validateSpec', () => {
       kind: 'circle-12', bodyVariant: 'foot-band', organization: 'bundeswehr',
     })).toEqual([]);
 
-    expect(validateSpec({ kind: 'post', bodyVariant: 'foot-band' })
-      .map((issue) => issue.rule)).toContain('body-variant-requires-measured-kind');
+    const forbiddenKinds: readonly SymbolKind[] = [
+      'person',
+      'vehicle-air',
+      'vehicle-water',
+      'post',
+      'building',
+      'container',
+      'area',
+      'measure',
+      'hazard',
+      'point',
+      'event',
+      'spontaneous-helper',
+      'swap-loader-vehicle',
+      'upright-rectangle',
+      'reduced-house',
+    ];
+    for (const kind of forbiddenKinds) {
+      expect(validateSpec({ kind, bodyVariant: 'foot-band' }).map((issue) => issue.rule), kind)
+        .toContain('body-variant-requires-measured-kind');
+    }
     expect(validateSpec({ kind: 'circle-12', bodyVariant: 'foot-band' })
       .map((issue) => issue.rule)).toContain('circle-12-requires-organization');
   });

@@ -86,10 +86,10 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     expect(blue.every((issue) => issue.ratio < MINIMUM_NON_TEXT_CONTRAST)).toBe(true);
   });
 
-  it('leitet für ein Trägerkürzel unterhalb des Körpers die Organisationsfarbe auf der Oberfläche ab', () => {
-    // Die vierte Beschriftungszone ist der **einzige** farbige Text des Katalogs, und ihr
-    // Untergrund ist die Ausgabeoberfläche statt der Körperfläche. Die Ableitung „weiss auf
-    // Körperfarbe" erzeugt dieses Paar nicht — ohne die zweite Richtung stünde es ohne Vertrag da.
+  it('leitet belowRight profilabhängig auf der Oberfläche ab und dedupliziert schwarze Tinte', () => {
+    // Die vierte Beschriftungszone liegt auf der Ausgabeoberfläche statt auf der Körperfläche.
+    // E führt sie in Organisationsfarbe, das G-Kreisband dagegen schwarz. Zwei schwarze Rezepte
+    // — darunter eines ohne Organisation — müssen genau eine schwarze Anforderung erzeugen.
     //
     // Geprüft an einem eigens gebauten Rezept und nicht am Bestand: `labelContrastRequirements`
     // liest die Rezepte, und die 31 Zeichen aus E.2 trägt erst die zweite Bauphase ein. Der
@@ -106,12 +106,37 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
           labels: { belowRight: 'THW' },
         },
       },
+      {
+        title: 'Prüffall schwarzes Kreisband mit Organisation',
+        referenceAsset: 'G.3.5_Versorgungsstelle Betriebsstoffe.svg',
+        spec: {
+          kind: 'circle-12',
+          bodyVariant: 'foot-band',
+          organization: 'bundeswehr',
+          labels: { belowRight: 'Bw' },
+        },
+      },
+      {
+        title: 'Prüffall schwarzes Kreisband ohne Organisation',
+        referenceAsset: 'G.3.5_Versorgungsstelle Betriebsstoffe.svg',
+        spec: {
+          kind: 'circle-12',
+          bodyVariant: 'foot-band',
+          labels: { belowRight: 'Bw' },
+        },
+      },
     ]);
     expect(derived).toEqual([
       {
         foreground: 'blau',
         background: 'surface',
         context: 'Trägerkürzel unterhalb des Körpers, Organisation thw',
+        minimum: MINIMUM_TEXT_CONTRAST,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Schwarze Beschriftung unterhalb des Körpers',
         minimum: MINIMUM_TEXT_CONTRAST,
       },
     ]);

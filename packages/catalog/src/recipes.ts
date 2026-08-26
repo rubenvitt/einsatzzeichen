@@ -1,6 +1,7 @@
 import {
   bodyLabelInk,
   compose,
+  profileFor,
   type CatalogPorts,
   type ContrastRequirement,
 } from '@einsatzzeichen/core';
@@ -141,11 +142,12 @@ export const RECIPES = {
  * auf weiss und damit 21:1 in allen drei Themes — die Anforderung entfällt nicht, sie ist
  * erfüllt.
  *
- * **Seit dem Teilslice E.2 gibt es eine zweite Richtung.** Die vierte Beschriftungszone setzt das
- * Trägerkürzel in der **Organisationsfarbe** unter den Körper, also auf die Ausgabeoberfläche.
- * Selbst gerechnet, damit es nicht übernommen ist: `blau` gegen `surface` erreicht 11,072:1 im
- * Referenztheme, 4,634:1 in `accessible-light` und 4,542:1 im Drucktheme — alle drei über der
- * Textschwelle 4,5:1, keine Palettenänderung nötig.
+ * **Seit dem Teilslice E.2 gibt es eine zweite Richtung.** Die vierte Beschriftungszone steht
+ * unter dem Körper auf der Ausgabeoberfläche. Ihre Tinte kommt wie beim Zeichnen aus dem
+ * Körperprofil: E verwendet Organisationsfarbe, das G-Kreisband Schwarz. Selbst gerechnet,
+ * damit es nicht übernommen ist: `blau` gegen `surface` erreicht 11,072:1 im Referenztheme,
+ * 4,634:1 in `accessible-light` und 4,542:1 im Drucktheme — alle drei über der Textschwelle
+ * 4,5:1, keine Palettenänderung nötig.
  *
  * **Seit dem 18. August 2026 leitet sie eine dritte Anforderung ab, die nicht besteht.** E.2.6
  * trägt als einziges Rezept `sonstige-gefahrenabwehr` mit Beschriftung; daraus entsteht „weiss
@@ -163,35 +165,35 @@ export function labelContrastRequirements(
 ): readonly ContrastRequirement[] {
   const inBody = new Set<OrganizationId>();
   const belowBody = new Set<OrganizationId>();
+  let blackBelowBody = false;
   let aboveBody = false;
   let circleTopLeftOnSurface = false;
   for (const recipe of recipes) {
     const { labels, organization } = recipe.spec;
-    // Ein Rezept ohne Organisation bleibt hier aussen vor, obwohl `compose.ts` auch ihm eine
-    // Körperfüllung gibt (die Grundfüllung des Grundzeichens, ersatzweise `weiss`). Der Bestand
-    // kennt heute kein solches Rezept — alle 80 führen eine Organisation —, und ein Paar aus
-    // einer Farbe zu bilden, die kein Zeichen trägt, hiesse eine Anforderung zu erfinden. Kommt
-    // das erste organisationslose Rezept mit Beschriftung, fällt es hier still durch; deshalb
-    // steht es hier als benannte Kante und nicht als Auslassung.
-    if (labels === undefined || organization === undefined) continue;
-    if (
-      labels.center !== undefined ||
-      labels.topLeft !== undefined ||
-      labels.bottomLeft !== undefined ||
-      labels.bottomCenter !== undefined ||
-      labels.bottomRight !== undefined ||
-      labels.topLeftLines !== undefined
-    ) {
-      inBody.add(organization);
+    if (labels === undefined) continue;
+    // Körperbeschriftungen ohne Organisation bleiben außen vor: ohne Organisationsfarbe ist
+    // kein belastbares Körperfarbenpaar ableitbar. Schwarzes `belowRight` ist davon unabhängig,
+    // weil sein Profil Vorder- und Hintergrundtoken vollständig festlegt.
+    if (organization !== undefined) {
+      if (
+        labels.center !== undefined ||
+        labels.topLeft !== undefined ||
+        labels.bottomLeft !== undefined ||
+        labels.bottomCenter !== undefined ||
+        labels.bottomRight !== undefined ||
+        labels.topLeftLines !== undefined
+      ) {
+        inBody.add(organization);
+      }
+      if (labels.aboveLeft !== undefined) aboveBody = true;
+      if (recipe.spec.kind === 'circle-12' && labels.topLeft !== undefined) {
+        circleTopLeftOnSurface = true;
+      }
     }
-    // Die vierte Zone steht **unter** dem Körper und trägt die Organisationsfarbe selbst. Ihr
-    // Untergrund ist deshalb die Ausgabeoberfläche und nicht die Körperfläche — ein Paar, das die
-    // Ableitung oben nie erzeugt, weil sie ausschließlich „weiss auf Körperfarbe" kennt. Ohne
-    // diese zweite Schleife wäre der einzige farbige Text des Katalogs ohne Kontrastvertrag.
-    if (labels.belowRight !== undefined) belowBody.add(organization);
-    if (labels.aboveLeft !== undefined) aboveBody = true;
-    if (recipe.spec.kind === 'circle-12' && labels.topLeft !== undefined) {
-      circleTopLeftOnSurface = true;
+    if (labels.belowRight !== undefined) {
+      const ink = profileFor(recipe.spec.kind, recipe.spec.bodyVariant).belowRight?.ink;
+      if (ink === 'organization' && organization !== undefined) belowBody.add(organization);
+      if (ink === 'black') blackBelowBody = true;
     }
   }
   return [
@@ -210,6 +212,12 @@ export function labelContrastRequirements(
       context: `Trägerkürzel unterhalb des Körpers, Organisation ${organization}`,
       minimum: MINIMUM_TEXT_CONTRAST,
     })),
+    ...(blackBelowBody ? [{
+      foreground: 'schwarz' as const,
+      background: 'surface' as const,
+      context: 'Schwarze Beschriftung unterhalb des Körpers',
+      minimum: MINIMUM_TEXT_CONTRAST,
+    }] : []),
     ...(aboveBody ? [{
       foreground: 'schwarz' as const,
       background: 'surface' as const,
