@@ -41,6 +41,8 @@ describe('functionRole()', () => {
 
   it('bewahrt explizite Tinten und getrennte Rollen-/Traegerlaeufe', () => {
     expect(functionRole('technical-platoon-commander').layout.roleRuns[0]?.ink).toBe('weiss');
+    expect(functionRole('district-fire-chief').layout.roleRuns[0]?.ink)
+      .toBe('funktionslauf-kontrast');
     expect(functionRole('technical-incident-commander').layout).toMatchObject({
       roleRuns: [{ content: 'TEL' }], carrierRun: { content: 'AW' },
     });
@@ -78,6 +80,29 @@ describe('functionRole()', () => {
       expect(definition.layout.roleRuns.map((run) => run.content), id).toEqual(roleRuns);
       expect(definition.layout.carrierRun?.content, id).toBe(carrierRun);
       expect(definition.allowedBodyMarks, id).toEqual(allowedBodyMarks);
+    }
+  });
+
+  it('bindet D.4.1 bis D.4.5 an ihre getrennt gemessenen Rollen-, Traeger- und Koerpervertraege', () => {
+    const cases = [
+      ['district-control-center-director', ['LtS'], 'ST', [3, 3, 29, 29]],
+      ['district-fire-chief', ['KBM'], 'ME', [3, 3, 29, 29]],
+      ['hazard-response-director', ['LtrGA'], 'MG', [3, 3, 29, 29]],
+      ['hazard-response-forces-director', [], 'BuPol', [3, 5, 29, 31]],
+      ['international-relief-operation-director', [], undefined, [5.5, 10, 26.5, 31]],
+    ] as const;
+
+    for (const [id, roleRuns, carrierRun, expectedBounds] of cases) {
+      const definition = functionRole(id);
+      expect(definition).toMatchObject({
+        kind: 'person', expectedHead: 'administrative', allowedBodyMarks: [],
+      });
+      expect(definition.layout.roleRuns.map((run) => run.content), id).toEqual(roleRuns);
+      expect(definition.layout.carrierRun?.content, id).toBe(carrierRun);
+      const bounds = boundsOfMm(definition.layout.body);
+      expect([bounds.minX, bounds.minY, bounds.maxX, bounds.maxY], id).toEqual(
+        expectedBounds.map((value) => expect.closeTo(value, 9)),
+      );
     }
   });
 

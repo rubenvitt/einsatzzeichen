@@ -325,8 +325,11 @@ Zwei Nebenbefunde gehören dazu. Eine Fahrzeugkategorie war seither nur am **Lan
 seit E.2 kommen der Anhänger- und der Wechselladerrumpf dazu, `CHASSIS_KINDS` führt drei Arten
 statt einer. Und sie schließt eine Fußzone aus, weil beide denselben Streifen unterhalb des Körpers
 belegen.
-Verwaltungsstufen (Kapitel 5.7) und das Kreiskörperprofil bleiben begründet offen; beide Urteile
-stehen mit ihren Messwerten in
+Die eigenständigen Verwaltungsstufen-Zeichen aus Kapitel 5.7 und das Kreiskörperprofil bleiben
+begründet offen. Davon getrennt verwendet Anhang D inzwischen ausschließlich die drei in seinen
+Funktionszeichen direkt belegten Sternköpfe `kreis`, `nationalstaat` und
+`europaeische-union`; die drei unbelegten Stufen bleiben fail-closed. Beide Zuschnitte stehen mit
+ihren Messwerten in
 [`2026-08-18-grundlagen-restpunkte.md`](./docs/decisions/2026-08-18-grundlagen-restpunkte.md).
 
 ## E-d, E-e und E-f: Anhang E.2, damit alle 68 Zeichen des Anhangs E
@@ -702,6 +705,25 @@ Der Zwischenstand umfasst 158 Rezepte, 172 Rezept-/Basis-Snapshots, 264 Piktogra
 Renderfälle, 455 Manifestzeilen, 437 Mehrgrößen-Sheets und 469 Reviewobjekte; 283 Manifestzeilen
 repräsentieren auflösbare Elemente. Alle fünfzehn D.3-Domainreviews bleiben `pending`, und der
 beanspruchte D-Scope bleibt bis zur vollständigen Umsetzung von D.4 bei `D.3.7`.
+
+## LFH-420 Task 6: Anhang D.4 und vollständiger Anhang D
+
+D.4 ergänzt fünf übergeordnete Funktionsrezepte. D.4.1 bis D.4.3 verwenden jeweils den
+Standard-Personenkörper mit dem belegten Zwei-Stern-Kreiskopf und bewahren `LtS`/`ST`, `KBM`/`ME`
+und `LtrGA`/`MG` als sichtbare Literale. D.4.4 behält seinen separat gemessenen abgesenkten Körper,
+den Fünf-Stern-Nationalstaat-Kopf und `BuPol`; D.4.5 den kompakten Körper und den sechsblättrigen
+EU-Kopf ohne erfundenen Text. Organisationen bestimmen ausschließlich die Körperfarbe.
+
+Damit ist Anhang D technisch mit exakt 37 Darstellungen vollständig: zehn aus D.1, sieben aus
+D.2, fünfzehn aus D.3 und fünf aus D.4. Der Katalog umfasst 163 Rezepte, 264 Piktogramme, 441
+Renderfälle, 460 Manifestzeilen, 177 Rezept-/Basis-Snapshots, 264 Piktogramm-Snapshots, 442
+Mehrgrößen-Sheets und 474 Reviewobjekte. Das Manifest führt weiterhin 283 Elementzeilen; das
+Elementregister enthält 268 eindeutige Beschreibungen bei 264 Definitionen und 249 eindeutigen
+Piktogramm-IDs. Erst der separate exakte 37/37-Mengentest trägt die Scope-Promotion von `D.3.7`
+auf genau `D`.
+
+Alle 37 Anhang-D-Domainreviews bleiben `pending`. Die technische Vollständigkeit, die gemessenen
+Körper und die grünen Rendergates sind keine fachliche, normative oder einsatztaktische Freigabe.
 
 ## Der lokale Referenzbestand
 

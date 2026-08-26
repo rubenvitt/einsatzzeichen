@@ -231,3 +231,58 @@ export const ANHANG_D_TASK_5_RECIPES = {
     },
   },
 } as const satisfies Record<string, Recipe>;
+
+/** Anhang D vollständig: fünf übergeordnete Funktionsträger aus den gemessenen D.4-Rollen. */
+export const ANHANG_D_TASK_6_RECIPES = {
+  ...ANHANG_D_TASK_5_RECIPES,
+  'D.4.1': {
+    title: 'Leiter Kreisleitstelle Steinfurt',
+    referenceAsset: 'D.4.1_Leiter Kreisleitstelle Steinfurt.svg',
+    spec: {
+      kind: 'person',
+      organization: 'fuehrung-leitung',
+      administrativeLevel: 'kreis',
+      functionRole: 'district-control-center-director',
+    },
+  },
+  'D.4.2': {
+    title: 'Kreisbrandmeister Mettmann',
+    referenceAsset: 'D.4.2_Kreisbrandmeister Mettmann.svg',
+    spec: {
+      kind: 'person',
+      organization: 'feuerwehr',
+      administrativeLevel: 'kreis',
+      functionRole: 'district-fire-chief',
+    },
+  },
+  'D.4.3': {
+    title: 'Leiter Gefahrenabwehr Mönchengladbach',
+    referenceAsset: 'D.4.3_Leiter Gefahrenabwehr Mönchengladbach.svg',
+    spec: {
+      kind: 'person',
+      organization: 'fuehrung-leitung',
+      administrativeLevel: 'kreis',
+      functionRole: 'hazard-response-director',
+    },
+  },
+  'D.4.4': {
+    title: 'Leiter Gefahrenabwehrkräfte Bundespolizei',
+    referenceAsset: 'D.4.4_Leiter Gefahrenabwehrkräfte Bundespolizei.svg',
+    spec: {
+      kind: 'person',
+      organization: 'polizei',
+      administrativeLevel: 'nationalstaat',
+      functionRole: 'hazard-response-forces-director',
+    },
+  },
+  'D.4.5': {
+    title: 'Leiter internationalen Hilfsaktion',
+    referenceAsset: 'D.4.5_Leiter internationalen Hilfsaktion.svg',
+    spec: {
+      kind: 'person',
+      organization: 'fuehrung-leitung',
+      administrativeLevel: 'europaeische-union',
+      functionRole: 'international-relief-operation-director',
+    },
+  },
+} as const satisfies Record<string, Recipe>;

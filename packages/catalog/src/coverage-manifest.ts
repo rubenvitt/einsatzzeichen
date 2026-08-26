@@ -16,6 +16,7 @@ import { RECIPES } from './recipes.js';
 import {
   ANHANG_D_TASK_3_RECIPES,
   ANHANG_D_TASK_5_RECIPES,
+  ANHANG_D_TASK_6_RECIPES,
 } from './recipes-anhang-d.js';
 import {
   ANHANG_E_A_FILL_DEFECTS,
@@ -79,6 +80,21 @@ const ANHANG_D_TASK_5_TECHNICAL_REVIEW: Review = {
     'waagerechte Teilung und rechte geschlossene Raute. Fingerprint-, Snapshot-, ' +
     'Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates prüfen alle dreizehn renderbaren ' +
     'Rezepte; Rollenbenennungen und Organisationszuordnungen bleiben im Domain-Review pending.',
+};
+
+/** D.4 schließt Anhang D mit den fünf separat vermessenen Verwaltungsrollen. */
+const ANHANG_D_TASK_6_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'D.4.1 bis D.4.5 konsumieren fünf einzeln vermessene Funktionsrollen. D.4.1 bis D.4.3 ' +
+    'verwenden den Standard-Personenkörper und den belegten Zwei-Stern-Kreis-Kopf; D.4.4 ' +
+    'behält seinen separat gemessenen abgesenkten Körper und den Fünf-Stern-Nationalstaat-Kopf, ' +
+    'D.4.5 seinen kompakten Körper und den sechsblättrigen EU-Kopf. LtS/ST, KBM/ME, LtrGA/MG ' +
+    'und BuPol bleiben sichtbare Rollen- beziehungsweise Trägertexte. Fingerprint-, Snapshot-, ' +
+    'Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates prüfen alle fünf Rezepte; ' +
+    'Rollenbenennungen und Organisationszuordnungen bleiben im Domain-Review pending.',
 };
 
 const ANHANG_D_TASK_3_TECHNICAL_REVIEW: Review = {
@@ -693,6 +709,9 @@ function technicalReviewFor(section: string): Review {
   if (Object.hasOwn(ANHANG_D_TASK_5_RECIPES, section)) {
     return ANHANG_D_TASK_5_TECHNICAL_REVIEW;
   }
+  if (Object.hasOwn(ANHANG_D_TASK_6_RECIPES, section)) {
+    return ANHANG_D_TASK_6_TECHNICAL_REVIEW;
+  }
   if (Object.hasOwn(ANHANG_E_A_RECIPES, section)) {
     const defect = ANHANG_E_A_FILL_DEFECTS[section];
     if (defect === undefined) return ANHANG_E_A_TECHNICAL_REVIEW;
@@ -969,7 +988,7 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     '5.8',
     'C.1.1',
     'C.1.2',
-    'D.3.7',
+    'D',
     'E',
     'F',
     'J.1',

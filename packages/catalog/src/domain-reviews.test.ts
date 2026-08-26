@@ -97,10 +97,10 @@ describe('Fachreview-Ledger', () => {
     // bis F.1.22 und die beiden Alternativdarstellungen; damit sind es hier 383.
     // F-d ergänzt acht einzelne, weiterhin offene Reviewplätze für F.2.10 bis F.2.17. F-e
     // ergänzt elf für F.3.1 bis F.3.11 und F-f die acht verbleibenden für F.3.12 bis F.3.19.
-    expect(manifestReviews).toHaveLength(455);
+    expect(manifestReviews).toHaveLength(460);
     expect(sourceReviews).toHaveLength(13);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(469);
+    expect(reviews).toHaveLength(474);
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
   });
 
@@ -111,6 +111,13 @@ describe('Fachreview-Ledger', () => {
 
   it('hält alle fünfzehn D.3-Darstellungen einzeln fachlich offen', () => {
     const references = Array.from({ length: 15 }, (_, index) => `D.3.${index + 1}`);
+    expect(references.map((reference) =>
+      MANIFEST_DOMAIN_REVIEWS[`bbk-babz-2025:${reference}#primary` as keyof typeof MANIFEST_DOMAIN_REVIEWS],
+    )).toEqual(references.map(() => ({ status: 'pending' })));
+  });
+
+  it('hält alle fünf D.4-Funktionsträger einzeln fachlich offen', () => {
+    const references = Array.from({ length: 5 }, (_, index) => `D.4.${index + 1}`);
     expect(references.map((reference) =>
       MANIFEST_DOMAIN_REVIEWS[`bbk-babz-2025:${reference}#primary` as keyof typeof MANIFEST_DOMAIN_REVIEWS],
     )).toEqual(references.map(() => ({ status: 'pending' })));

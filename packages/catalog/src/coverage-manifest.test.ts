@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_VIEWBOX_MM, entryKey, type CatalogEntry } from '@einsatzzeichen/schema';
+import {
+  DEFAULT_VIEWBOX_MM,
+  entryKey,
+  LEADERSHIP_IDS,
+  type CatalogEntry,
+} from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { checkCoverage, findPrimaryViolations, releaseBlockers } from './coverage-gate.js';
 import { ALL_PICTOGRAMS, pictogramVariantKey } from './pictograms/index.js';
@@ -69,7 +74,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 455 Zeilen mit 283 Elementdarstellungen', () => {
+  it('enthält exakt 460 Zeilen mit 283 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -98,7 +103,7 @@ describe('Coverage-Manifest', () => {
       // `alternative` — die Zeile zählt einzeln, weil das Manifest Darstellungen zählt und nicht
       // Abschnitte, weil F.1.3 dort noch bewusst offen blieb; F-b baut es mit `foot-band`.
       // F-d ergänzt F.2.10 bis F.2.17 als acht reine Anwendungen des Fahrzeugvertrags.
-      'composition-recipe': 158,
+      'composition-recipe': 163,
       // 264 Piktogramme plus acht Organisationen (seit LFH-424 mit hilfsorganisation), vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
@@ -106,7 +111,7 @@ describe('Coverage-Manifest', () => {
       // Strichhülle vermessen ist.
       element: 283,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(455);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(460);
     expect(elementRows).toHaveLength(283);
     expect(pictogramRows).toHaveLength(264);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
@@ -129,7 +134,7 @@ describe('Coverage-Manifest', () => {
     expect(COVERAGE_MANIFEST.scope).toContain('F');
   });
 
-  it('führt exakt zehn D.1-Darstellungen und lässt den Scope bis D.4 bei D.3.7', () => {
+  it('führt exakt zehn D.1-Darstellungen', () => {
     const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
       entry.sourceId.startsWith('bbk-babz-2025:D.1.'),
     );
@@ -145,8 +150,6 @@ describe('Coverage-Manifest', () => {
       'bbk-babz-2025:D.1.9#alternative',
       'bbk-babz-2025:D.1.1#primary',
     ]);
-    expect(COVERAGE_MANIFEST.scope).toContain('D.3.7');
-    expect(COVERAGE_MANIFEST.scope).not.toContain('D');
   });
 
   it('führt D.2.1 bis D.2.7 direkt mit technischem Nachweis und offenem Fachreview', () => {
@@ -168,8 +171,6 @@ describe('Coverage-Manifest', () => {
       'normalisierten Kreis-, Dach-, Text- und Innengeometrien',
     ) === true)).toBe(true);
     expect(rows.every((entry) => entry.review.domain.status === 'pending')).toBe(true);
-    expect(COVERAGE_MANIFEST.scope).toContain('D.3.7');
-    expect(COVERAGE_MANIFEST.scope).not.toContain('D');
   });
 
   it('führt Anhang E lückenlos und trägt damit das `E` im beanspruchten Umfang', () => {
@@ -422,7 +423,7 @@ describe('Coverage-Manifest', () => {
     expect(entry?.review.technical.note).toContain('rechte geschlossene Raute');
   });
 
-  it('führt D.3.1 bis D.3.15 vollständig bei unverändertem D.3.7-Scope', () => {
+  it('führt D.3.1 bis D.3.15 vollständig', () => {
     const entries = COVERAGE_MANIFEST.entries.filter((entry) =>
       /^bbk-babz-2025:D\.3\.(?:[1-9]|1[0-5])$/.test(entry.sourceId),
     );
@@ -431,8 +432,56 @@ describe('Coverage-Manifest', () => {
     );
     expect(entries.every((entry) => entry.review.technical.status === 'approved')).toBe(true);
     expect(entries.every((entry) => entry.review.domain.status === 'pending')).toBe(true);
-    expect(COVERAGE_MANIFEST.scope).toContain('D.3.7');
-    expect(COVERAGE_MANIFEST.scope).not.toContain('D');
+  });
+
+  it('beweist exakt 37 Anhang-D-Darstellungen, 36 neue Keys und den vollständigen D-Scope', () => {
+    const expectedKeys = [
+      'D.1.1#primary',
+      'D.1.2#primary',
+      'D.1.3#primary',
+      'D.1.4#primary',
+      'D.1.5#primary',
+      'D.1.6#primary',
+      'D.1.7#primary',
+      'D.1.8#primary',
+      'D.1.9#primary',
+      'D.1.9#alternative',
+      ...Array.from({ length: 7 }, (_, index) => `D.2.${index + 1}#primary`),
+      ...Array.from({ length: 15 }, (_, index) => `D.3.${index + 1}#primary`),
+      ...Array.from({ length: 5 }, (_, index) => `D.4.${index + 1}#primary`),
+    ];
+    const actualKeys = COVERAGE_MANIFEST.entries
+      .filter((entry) => entry.sourceId.startsWith('bbk-babz-2025:D.'))
+      .map((entry) => `${entry.sourceId.slice('bbk-babz-2025:'.length)}#${entry.variant}`);
+
+    expect(actualKeys).toHaveLength(37);
+    expect(new Set(actualKeys).size).toBe(37);
+    expect(new Set(actualKeys)).toEqual(new Set(expectedKeys));
+    expect(actualKeys.filter((key) => key === 'D.3.7#primary')).toHaveLength(1);
+    expect(actualKeys.filter((key) => key !== 'D.3.7#primary')).toHaveLength(36);
+
+    const leadershipDefinitions = ALL_PICTOGRAMS
+      .filter((definition) => definition.id.startsWith('leadership.'))
+      .map((definition) => [definition.section, definition.id]);
+    expect(leadershipDefinitions).toEqual([
+      ['D.1.1', 'leadership.command-post-in-operation'],
+      ['D.2.1', 'leadership.staging-area'],
+      ['D.2.2', 'leadership.staging-area-with-reporting-head'],
+      ['D.2.3', 'leadership.reporting-head'],
+      ['D.2.4', 'leadership.guide-post'],
+      ['D.2.5', 'leadership.control-center'],
+      ['D.2.6', 'leadership.helicopter-landing-zone'],
+      ['D.2.7', 'leadership.helicopter-landing-site'],
+      ['D.3.14', 'leadership.technical-advisor-thw'],
+      ['D.3.15', 'leadership.red-cross-commissioner'],
+    ]);
+    expect(leadershipDefinitions.map(([, id]) => id.slice('leadership.'.length)))
+      .toEqual([...LEADERSHIP_IDS]);
+
+    expect(COVERAGE_MANIFEST.scope.filter((chapter) => chapter === 'D')).toHaveLength(1);
+    expect(COVERAGE_MANIFEST.scope).not.toContain('D.3.7');
+    expect(COVERAGE_MANIFEST.scope.filter((chapter) => chapter.startsWith('D'))).toEqual(['D']);
+    expect(releaseBlockers().uncoveredScope).toEqual([]);
   });
 
   it('beansprucht nur den Umfang dieses Slice', () => {
@@ -449,7 +498,7 @@ describe('Coverage-Manifest', () => {
       '5.8',
       'C.1.1',
       'C.1.2',
-      'D.3.7',
+      'D',
       // Anhang E seit dem 18. August 2026 als **ein** `E` statt `E.1` plus 30 E.2-Einzelzeilen.
       // Die Zusammenziehung hängt nicht daran, dass sie kürzer ist, sondern daran, dass sie
       // widerlegbar wurde: `uncoveredScope` prüft an einem Präfix nur, ob **eine** Zeile mit ihm

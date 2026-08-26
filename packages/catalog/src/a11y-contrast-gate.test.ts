@@ -218,14 +218,28 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     ]);
   });
 
-  it('hält D.1.8 quellentreu schwarz und invertiert nur den Funktionslauf im Drucktheme', () => {
-    const derived = labelContrastRequirements([RECIPES['D.1.8']]);
-    expect(derived).toEqual([{
-      foreground: 'funktionslauf-kontrast',
-      background: 'rot',
-      context: 'Funktionslauf fire-service-readiness-command-group: Ber',
-      minimum: MINIMUM_TEXT_CONTRAST,
-    }]);
+  it('hält D.1.8 und D.4.2 quellentreu schwarz und invertiert nur ihre Funktionsläufe im Drucktheme', () => {
+    const derived = labelContrastRequirements([RECIPES['D.1.8'], RECIPES['D.4.2']]);
+    expect(derived).toEqual([
+      {
+        foreground: 'funktionslauf-kontrast',
+        background: 'rot',
+        context: 'Funktionslauf fire-service-readiness-command-group: Ber',
+        minimum: MINIMUM_TEXT_CONTRAST,
+      },
+      {
+        foreground: 'funktionslauf-kontrast',
+        background: 'rot',
+        context: 'Funktionslauf district-fire-chief: KBM',
+        minimum: MINIMUM_TEXT_CONTRAST,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf district-fire-chief: ME',
+        minimum: MINIMUM_TEXT_CONTRAST,
+      },
+    ]);
 
     const cases = [
       [RENDER_THEMES.reference, '#000000', 5.218],

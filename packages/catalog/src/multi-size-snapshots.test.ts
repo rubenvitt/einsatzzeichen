@@ -23,6 +23,11 @@ const MEASURED_TOP_EDGE_HEADS = new Set([
   'recipe.D.3.1',
   'recipe.D.3.3',
   'recipe.D.3.4',
+  'recipe.D.4.1',
+  'recipe.D.4.2',
+  'recipe.D.4.3',
+  'recipe.D.4.4',
+  'recipe.D.4.5',
 ]);
 
 const RECTANGULAR_FIXTURE: Drawing = {
@@ -96,8 +101,8 @@ function touchesOuterBorder(image: RenderedImage, allowTopBorder = false): boole
   const pixels = image.pixels;
   const alphaAt = (x: number, y: number): number => pixels[(y * image.width + x) * 4 + 3] ?? 0;
   for (let x = 0; x < image.width; x += 1) {
-    // Die zwei vermessenen Kreis-Sterne reichen bei D.3.1/.3/.4 absichtlich bis y=0. Nur
-    // dieser obere Rand ist zulässig; Seiten und Unterkante bleiben unverändert fail-closed.
+    // Die vermessenen Verwaltungssterne reichen bei D.3.1/.3/.4 und D.4.1–D.4.5 absichtlich bis
+    // y=0. Nur dieser obere Rand ist zulässig; Seiten und Unterkante bleiben fail-closed.
     if ((!allowTopBorder && alphaAt(x, 0) > 0) || alphaAt(x, image.height - 1) > 0) return true;
   }
   for (let y = 0; y < image.height; y += 1) {
@@ -254,11 +259,11 @@ describe('echte Mehrgrößen- und Profilregression', () => {
     expect(image.height).toBe(92);
   });
 
-  it('schreibt exakt 437 Mehrgrößen-Snapshots', () => {
+  it('schreibt exakt 442 Mehrgrößen-Snapshots', () => {
     const snapshots = readdirSync(new URL('./__snapshots__/multi-size/', import.meta.url), {
       withFileTypes: true,
     }).filter((entry) => entry.isFile() && entry.name.endsWith('.svg'));
-    expect(snapshots).toHaveLength(437);
+    expect(snapshots).toHaveLength(442);
   });
 
   it.each(RENDER_CASES)(

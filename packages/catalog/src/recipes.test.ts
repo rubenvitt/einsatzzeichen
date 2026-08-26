@@ -77,7 +77,12 @@ describe('Kompositionsrezepte', () => {
     // extrahierte `rect`-Hülle und nicht die durch Übermalung verkürzte sichtbare Kontur.
     const comparableFingerprint = /^D\.1\.[2-8][._]/.test(recipe.referenceAsset)
       ? { ...fingerprint, shapes: fingerprint.shapes.filter((shape) => shape.kind !== 'ring') }
-      : fingerprint;
+      // D.4.3s beide Sternpfade sind im Kennwertartefakt als unspezifische `bounds` vor dem
+      // eigentlichen, korrekt erkannten `rect`-Körper einsortiert. Wie bei den verdeckten
+      // D.1-Rahmen oben wird nur für diese belegte Quelle die Nichtkörperklasse entfernt.
+      : recipe.referenceAsset === 'D.4.3_Leiter Gefahrenabwehr Mönchengladbach.svg'
+        ? { ...fingerprint, shapes: fingerprint.shapes.filter((shape) => shape.kind !== 'bounds') }
+        : fingerprint;
     const result = matchFingerprint(drawing, comparableFingerprint);
     expect(result.problems).toEqual([]);
     expect(result.ok).toBe(true);
@@ -230,7 +235,7 @@ describe('Anhang D.1, Führungsstellen im Einsatz', () => {
 
   it('führt exakt die neun komponierten D.1-Darstellungen', () => {
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('D.1.'))).toEqual(expectedKeys);
-    expect(Object.keys(RECIPES)).toHaveLength(158);
+    expect(Object.keys(RECIPES)).toHaveLength(163);
   });
 
   it('bindet D.1.2 bis D.1.8 an die sieben gemessenen Formationsrollen', () => {
@@ -459,6 +464,133 @@ describe('Anhang D.3, Funktionen', () => {
   });
 });
 
+describe('Anhang D.4, übergeordnete Funktionen', () => {
+  const cases = [
+    [
+      'D.4.1',
+      {
+        title: 'Leiter Kreisleitstelle Steinfurt',
+        referenceAsset: 'D.4.1_Leiter Kreisleitstelle Steinfurt.svg',
+        spec: {
+          kind: 'person', organization: 'fuehrung-leitung', administrativeLevel: 'kreis',
+          functionRole: 'district-control-center-director',
+        },
+      },
+      ['LtS', 'ST'],
+      6,
+      [3, 3, 29, 29],
+      'gelb',
+    ],
+    [
+      'D.4.2',
+      {
+        title: 'Kreisbrandmeister Mettmann',
+        referenceAsset: 'D.4.2_Kreisbrandmeister Mettmann.svg',
+        spec: {
+          kind: 'person', organization: 'feuerwehr', administrativeLevel: 'kreis',
+          functionRole: 'district-fire-chief',
+        },
+      },
+      ['KBM', 'ME'],
+      6,
+      [3, 3, 29, 29],
+      'rot',
+    ],
+    [
+      'D.4.3',
+      {
+        title: 'Leiter Gefahrenabwehr Mönchengladbach',
+        referenceAsset: 'D.4.3_Leiter Gefahrenabwehr Mönchengladbach.svg',
+        spec: {
+          kind: 'person', organization: 'fuehrung-leitung', administrativeLevel: 'kreis',
+          functionRole: 'hazard-response-director',
+        },
+      },
+      ['LtrGA', 'MG'],
+      6,
+      [3, 3, 29, 29],
+      'gelb',
+    ],
+    [
+      'D.4.4',
+      {
+        title: 'Leiter Gefahrenabwehrkräfte Bundespolizei',
+        referenceAsset: 'D.4.4_Leiter Gefahrenabwehrkräfte Bundespolizei.svg',
+        spec: {
+          kind: 'person', organization: 'polizei', administrativeLevel: 'nationalstaat',
+          functionRole: 'hazard-response-forces-director',
+        },
+      },
+      ['BuPol'],
+      15,
+      [3, 5, 29, 31],
+      'gruen',
+    ],
+    [
+      'D.4.5',
+      {
+        title: 'Leiter internationalen Hilfsaktion',
+        referenceAsset: 'D.4.5_Leiter internationalen Hilfsaktion.svg',
+        spec: {
+          kind: 'person', organization: 'fuehrung-leitung',
+          administrativeLevel: 'europaeische-union',
+          functionRole: 'international-relief-operation-director',
+        },
+      },
+      [],
+      18,
+      [5.5, 10, 26.5, 31],
+      'gelb',
+    ],
+  ] as const satisfies readonly (readonly [
+    string,
+    Recipe,
+    readonly string[],
+    number,
+    readonly number[],
+    string,
+  ])[];
+
+  it.each(cases)(
+    '%s bewahrt Rezept, sichtbare Literale, Kopf und separat gemessenen Körper',
+    (section, expected, texts, headLeafCount, expectedBounds, bodyFill) => {
+      const recipe = RECIPES[section];
+      expect(recipe, `${section} fehlt`).toEqual(expected);
+      if (recipe === undefined) return;
+
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      const visibleTexts = drawing.children
+        .filter((child): child is Primitive & { type: 'text' } => child.type === 'text')
+        .map((text) => text.content);
+      expect(visibleTexts, section).toEqual(texts);
+
+      const headLeaves = drawing.children
+        .filter((child) => child.role === 'head')
+        .flatMap((child) => child.type === 'group' ? child.children : [child]);
+      expect(headLeaves, section).toHaveLength(headLeafCount);
+
+      const body = drawing.children.find((child) => child.role === 'body');
+      expect(body, section).toBeDefined();
+      if (body === undefined) return;
+      const bounds = boundsOfMm(body);
+      expect([bounds.minX, bounds.minY, bounds.maxX, bounds.maxY], section).toEqual(
+        expectedBounds.map((value) => expect.closeTo(value, 9)),
+      );
+      expect(body.style?.fill, section).toBe(bodyFill);
+    },
+  );
+
+  it('führt exakt die 27 freigegebenen Anhang-D-Rezeptschlüssel', () => {
+    expect(Object.keys(RECIPES).filter((key) => /^D\.[134]\./.test(key))).toEqual([
+      'D.1.2', 'D.1.3', 'D.1.4', 'D.1.5', 'D.1.6', 'D.1.7', 'D.1.8',
+      'D.1.9', 'D.1.9#alternative',
+      'D.3.1', 'D.3.2', 'D.3.3', 'D.3.4', 'D.3.5', 'D.3.6', 'D.3.7',
+      'D.3.8', 'D.3.9', 'D.3.10', 'D.3.11', 'D.3.12', 'D.3.13',
+      'D.4.1', 'D.4.2', 'D.4.3', 'D.4.4', 'D.4.5',
+    ]);
+  });
+});
+
 describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
   const cases = Object.entries<Recipe>(ANHANG_E_A_RECIPES);
 
@@ -586,9 +718,10 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
 
   it('verlangt für die Beschriftung auf der Körperfarbe die Textschwelle, nicht die Nichttextschwelle', () => {
     const requirements = labelContrastRequirements();
-    // **Neunundzwanzig seit Anhang D.3**, und nur eine davon besteht nicht. Dreiundzwanzig
+    // **Sechsunddreißig seit Anhang D.4**, und nur eine davon besteht nicht. Dreißig
     // Anforderungen stammen aus den einzeln vermessenen Rollenläufen, sechs aus den bisherigen
-    // Labelzonen.
+    // Labelzonen. Der D.4.2-Lauf verwendet denselben eng begrenzten Theme-Token wie D.1.8:
+    // quellentreu schwarz auf Rot in Referenz/Accessible und weiß nur im Drucktheme.
     // Drei Nachbarschaften und drei Organisationen kommen bei den Labelzonen zusammen: die Beschriftung im Körper, die
     // Organisationsfarbe auf der Ausgabeoberfläche sowie die schwarzen Kreislabels, die
     // teilweise außerhalb der weißen Körperfläche auf `surface` stehen.
@@ -743,6 +876,48 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
         foreground: 'schwarz',
         background: 'surface',
         context: 'Funktionslauf rapid-response-group-commander: JUH',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf district-control-center-director: LtS',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf district-control-center-director: ST',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'funktionslauf-kontrast',
+        background: 'rot',
+        context: 'Funktionslauf district-fire-chief: KBM',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf district-fire-chief: ME',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf hazard-response-director: LtrGA',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf hazard-response-director: MG',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf hazard-response-forces-director: BuPol',
         minimum: 4.5,
       },
       {
@@ -1585,12 +1760,12 @@ describe('Anhang F, Teilslice F-f', () => {
     },
   } as const;
 
-  it('deckt F.3.12 bis F.3.19 lückenlos ohne Alternative ab und erreicht mit D.3 158 Rezepte', () => {
+  it('deckt F.3.12 bis F.3.19 lückenlos ohne Alternative ab und bleibt bei final 163 Rezepten', () => {
     const entries = Object.entries<Recipe>(RECIPES)
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(158);
+    expect(Object.keys(RECIPES)).toHaveLength(163);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {

@@ -271,7 +271,14 @@ const DEFINITIONS: Record<FunctionRoleId, FunctionRoleDefinition> = {
   'district-fire-chief': personRole({
     id: 'district-fire-chief', title: 'Kreisbrandmeister',
     organizationHead: 'administrative',
-    roleRuns: [roleRun('KBM', 18.5, PERSON_LARGE, { xMm: 8.625, yMm: 13.4, widthMm: 14.75, heightMm: 5.3 }, 37)],
+    roleRuns: [roleRun(
+      'KBM',
+      18.5,
+      PERSON_LARGE,
+      { xMm: 8.625, yMm: 13.4, widthMm: 14.75, heightMm: 5.3 },
+      37,
+      'funktionslauf-kontrast',
+    )],
     carrierRun: carrierRun('ME', 30, 29, { xMm: 23.7, yMm: 25.8, widthMm: 6.5, heightMm: 3.4 }),
   }),
   'hazard-response-director': personRole({
