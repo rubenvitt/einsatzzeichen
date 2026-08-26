@@ -1,8 +1,106 @@
 import { describe, expect, it } from 'vitest';
-import type { SymbolSpec } from '@einsatzzeichen/schema';
+import type { SymbolKind, SymbolSpec } from '@einsatzzeichen/schema';
 import { validateSpec } from './validate.js';
 
 describe('validateSpec', () => {
+  it('lässt foot-band ausschließlich an den vier vermessenen Logistikkörpern zu', () => {
+    expect(validateSpec({ kind: 'formation', bodyVariant: 'foot-band' })).toEqual([]);
+    expect(validateSpec({ kind: 'vehicle-land', bodyVariant: 'foot-band' })).toEqual([]);
+    expect(validateSpec({ kind: 'trailer', bodyVariant: 'foot-band' })).toEqual([]);
+    expect(validateSpec({
+      kind: 'circle-12', bodyVariant: 'foot-band', organization: 'feuerwehr',
+    })).toEqual([]);
+    expect(validateSpec({
+      kind: 'circle-12', bodyVariant: 'foot-band', organization: 'bundeswehr',
+    })).toEqual([]);
+
+    const forbiddenKinds: readonly SymbolKind[] = [
+      'person',
+      'vehicle-air',
+      'vehicle-water',
+      'post',
+      'building',
+      'container',
+      'area',
+      'measure',
+      'hazard',
+      'point',
+      'event',
+      'spontaneous-helper',
+      'swap-loader-vehicle',
+      'upright-rectangle',
+      'reduced-house',
+    ];
+    for (const kind of forbiddenKinds) {
+      expect(validateSpec({ kind, bodyVariant: 'foot-band' }).map((issue) => issue.rule), kind)
+        .toContain('body-variant-requires-measured-kind');
+    }
+    expect(validateSpec({ kind: 'circle-12', bodyVariant: 'foot-band' })
+      .map((issue) => issue.rule)).toContain('circle-12-requires-organization');
+  });
+
+  it('verlangt für ein schwarzes belowRight-Profil keine Organisationsfarbe', () => {
+    const rules = validateSpec({
+      kind: 'circle-12', bodyVariant: 'foot-band', labels: { belowRight: 'Bw' },
+    }).map((issue) => issue.rule);
+    expect(rules).not.toContain('below-right-label-requires-organization');
+    expect(rules).toContain('circle-12-requires-organization');
+  });
+
+  it('trennt den offenen G-Kreisvertrag von den exakten farbigen N-Kreisverträgen', () => {
+    for (const organization of ['feuerwehr', 'bundeswehr'] as const) {
+      expect(validateSpec({
+        kind: 'circle-12', bodyVariant: 'foot-band', organization,
+      }), organization).toEqual([]);
+    }
+
+    const measuredNContracts: readonly SymbolSpec[] = [
+      {
+        kind: 'circle-12', organization: 'zivile-einheiten',
+        bodyMarks: ['spontaneous-helper-collection-arrow'],
+      },
+      {
+        kind: 'circle-12', organization: 'feuerwehr',
+        bodyMarks: ['spontaneous-helper-contact-double-arrow'],
+      },
+      {
+        kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+        organization: 'zivile-einheiten', bodyMarks: ['circle-information-stem'],
+      },
+    ];
+    for (const spec of measuredNContracts) {
+      expect(validateSpec(spec), JSON.stringify(spec)).toEqual([]);
+    }
+
+    const crossedNContracts: readonly SymbolSpec[] = [
+      {
+        kind: 'circle-12', organization: 'feuerwehr',
+        bodyMarks: ['spontaneous-helper-collection-arrow'],
+      },
+      {
+        kind: 'circle-12', organization: 'zivile-einheiten',
+        bodyMarks: ['spontaneous-helper-contact-double-arrow'],
+      },
+      {
+        kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+        organization: 'feuerwehr', bodyMarks: ['circle-information-stem'],
+      },
+    ];
+    for (const spec of crossedNContracts) {
+      expect(validateSpec(spec).map((issue) => issue.rule), JSON.stringify(spec)).toContain(
+        'circle-12-requires-hilfsorganisation',
+      );
+    }
+  });
+
+  it('lässt am gebänderten Formationskörper nur die drei vermessenen Kopfzonen zu', () => {
+    for (const strength of ['trupp', 'gruppe', 'zug'] as const) {
+      expect(validateSpec({ kind: 'formation', bodyVariant: 'foot-band', strength })).toEqual([]);
+    }
+    expect(validateSpec({ kind: 'formation', bodyVariant: 'foot-band', strength: 'staffel' })
+      .map((issue) => issue.rule)).toContain('foot-band-head-requires-measured-strength');
+  });
+
   it('akzeptiert eine Löschstaffel', () => {
     const spec: SymbolSpec = {
       kind: 'formation',
@@ -296,16 +394,14 @@ describe('validateSpec', () => {
     )).map((issue) => issue.rule)).toContain('top-left-metrics-complete');
   });
 
-  it('lehnt unbelegte Kreisvarianten ab', () => {
-    const wrongVariant = {
+  it('erlaubt das vermessene Kreisband, lehnt Varianten an unbelegten Arten aber ab', () => {
+    const measuredVariant = {
       kind: 'circle-12', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
     } as unknown as SymbolSpec;
     const gableOnPost = {
       kind: 'post', bodyVariant: 'raised-gable',
     } as unknown as SymbolSpec;
-    expect(validateSpec(wrongVariant).map((issue) => issue.rule)).toContain(
-      'body-variant-requires-measured-kind',
-    );
+    expect(validateSpec(measuredVariant)).toEqual([]);
     expect(validateSpec(gableOnPost).map((issue) => issue.rule)).toContain(
       'body-variant-requires-measured-kind',
     );

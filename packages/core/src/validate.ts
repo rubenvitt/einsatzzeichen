@@ -66,7 +66,7 @@ const DEFAULT_CENTER_LABEL_CAP_HEIGHT_MM = 4.87;
 const BODY_VARIANT_KINDS: Readonly<Record<BodyVariantId, ReadonlySet<SymbolKind>>> = {
   'raised-hull': new Set<SymbolKind>(['vehicle-air', 'vehicle-water']),
   'inset-hull': new Set<SymbolKind>(['vehicle-water']),
-  'foot-band': new Set<SymbolKind>(['formation', 'vehicle-land']),
+  'foot-band': new Set<SymbolKind>(['formation', 'vehicle-land', 'trailer', 'circle-12']),
   'plain-wheel-pair': new Set<SymbolKind>(['vehicle-land']),
   'raised-gable': new Set<SymbolKind>(['circle-12']),
   'inverted-hull-track': new Set<SymbolKind>(['vehicle-land']),
@@ -226,6 +226,19 @@ function validatePreparedSpec(
     });
   }
 
+  if (
+    spec.kind === 'formation' &&
+    spec.bodyVariant === 'foot-band' &&
+    spec.strength === 'staffel'
+  ) {
+    issues.push({
+      rule: 'foot-band-head-requires-measured-strength',
+      message:
+        'Am gebänderten Formationskörper sind nur Trupp, Gruppe und Zug vermessen. Die Staffel ' +
+        'würde den Körper verschieben; wie das Fußband mitwandert, ist nicht belegt.',
+    });
+  }
+
   if (spec.vehicleCategory !== undefined && !CHASSIS_KINDS.has(spec.kind)) {
     issues.push({
       rule: 'vehicle-category-requires-vehicle',
@@ -345,26 +358,27 @@ function validatePreparedSpec(
     });
   }
 
-  // Die vierte Beschriftungszone steht **unterhalb** des Körpers, in der Organisationsfarbe.
-  // Vermessen ist sie an genau einer Körperform: dem angehobenen Wasserrumpf der fünf Zeichen
-  // E.2.27 bis E.2.31 (Tinte 22,5379/24,0806/31,5778/26,9998 mm, Füllung #003296, in allen fünf
-  // Dateien gleich bis auf 0,0003 mm).
+  // Die Beschriftungszone steht **unterhalb** des Körpers; Lage und Tinte sind profilabhängig.
+  // E.2.27 bis E.2.31 belegen die tatsächliche Tintenlage und Organisationsfarbe am angehobenen
+  // Wasserrumpf (Tinte 22,5379/24,0806/31,5778/26,9998 mm, Füllung #003296, in allen fünf
+  // Dateien gleich bis auf 0,0003 mm). Das Profil modelliert diese Lage körperrelativ mit
+  // 4,01 mm vertikal und 0,5618 mm horizontal; wie `compose.ts` dokumentiert, ist diese Zerlegung
+  // eine Modellierungsentscheidung und keine direkte Messung der beiden Abstände. G.3.5 führt
+  // am gebänderten 12-mm-Kreis eigene schwarze Profilwerte von 1,0 mm und 3,0 mm.
   //
-  // Deshalb eine Ablehnung und keine Übertragung auf jede Körperform: die beiden Abstände, aus
-  // denen der Katalog den Lauf setzt (4,01 mm unter der Körperunterkante, 0,5615 mm rechts der
-  // Körperkante), sind an **dieser** Hülle gemessen. Auf einer `formation` erzeugten sie einen
-  // blauen Lauf, den keine Referenzdatei zeigt — und kein Gate meldete ihn: der Fingerprint sieht
-  // nur `role: 'body'`, die Rasterprüfung nur die selbst deklarierte Box.
+  // Beide Wertesätze bleiben auf ihr jeweiliges Profil und dessen Hülle begrenzt; daraus folgt
+  // keine Übertragung auf weitere Körperformen. Auf einer `formation` erzeugten sie einen Lauf,
+  // den keine Referenzdatei zeigt — und kein Gate meldete ihn: der Fingerprint sieht nur
+  // `role: 'body'`, die Rasterprüfung nur die selbst deklarierte Box.
   if (
     spec.labels?.belowRight !== undefined &&
-    !(spec.kind === 'vehicle-water' && spec.bodyVariant === 'raised-hull')
+    profileFor(spec.kind, spec.bodyVariant).belowRight === undefined
   ) {
     issues.push({
       rule: 'below-right-label-requires-measured-body',
       message:
-        'Die Beschriftungszone unterhalb des Körpers ist allein am angehobenen Wasserrumpf ' +
-        '(kind "vehicle-water", bodyVariant "raised-hull") vermessen — an den fünf Zeichen ' +
-        `E.2.27 bis E.2.31. Für "${spec.kind}" gibt es keine Messung, aus der ihre Lage folgte.`,
+        'Die Beschriftungszone unterhalb des Körpers verlangt ein vermessenes Körperprofil. ' +
+        `Für "${spec.kind}" mit Variante "${spec.bodyVariant ?? 'normal'}" fehlt es.`,
     });
   }
 
@@ -414,7 +428,21 @@ function validatePreparedSpec(
         'quellenspezifischen Metriksatz; ein Profildefault wäre nur eine Teilmessung.',
     });
   }
-  if (isCircle12 && !hasMeasuredCircleOrganizationContract(spec)) {
+  if (
+    isCircle12 &&
+    spec.bodyVariant === 'foot-band' &&
+    spec.organization === undefined
+  ) {
+    issues.push({
+      rule: 'circle-12-requires-organization',
+      message: 'Der gebänderte 12-mm-Kreis verlangt die Organisationsfarbe seiner Körperfläche.',
+    });
+  }
+  if (
+    isCircle12 &&
+    spec.bodyVariant !== 'foot-band' &&
+    !hasMeasuredCircleOrganizationContract(spec)
+  ) {
     issues.push({
       rule: 'circle-12-requires-hilfsorganisation',
       message:
@@ -788,21 +816,27 @@ function validatePreparedSpec(
     issues.push({
       rule: 'bottom-center-label-requires-measured-body',
       message:
-        'Die Beschriftungszone unten mittig ist allein an der taktischen Formation vermessen ' +
-        '(Grundlinie 2,0 mm über der Körperunterkante, an F.1.18 und F.1.20). Für ' +
-        `"${spec.kind}" gibt es keine Messung, aus der ihre Lage folgte.`,
+        'Die Beschriftungszone unten mittig ist an der taktischen Formation (2,0 mm über der ' +
+        'Körperunterkante, F.1.18/F.1.20) und am gebänderten 12-mm-Kreis (6,0 mm über der ' +
+        `Körperunterkante, G.3.5) vermessen. Für "${spec.kind}" mit Variante ` +
+        `"${spec.bodyVariant ?? 'normal'}" gibt es keine Messung, aus der ihre Lage folgte.`,
     });
   }
 
-  // Ohne Organisation gibt es keine Farbe, die diese Zone tragen dürfte: gemessen ist sie in
-  // #003296, und das ist `organizationColor('thw')`. Ein schwarzer oder weißer Lauf an derselben
-  // Stelle wäre eine andere Zeichnung.
-  if (spec.labels?.belowRight !== undefined && spec.organization === undefined) {
+  // Nur Profile mit Organisations-Tinte brauchen eine Organisation, die diese Farbe liefert.
+  // Das G.3.5-Kreisband trägt `belowRight` dagegen ausdrücklich schwarz; seine unabhängige
+  // Organisationspflicht für die Körperfläche wird weiter oben separat geprüft.
+  if (
+    spec.labels?.belowRight !== undefined &&
+    profileFor(spec.kind, spec.bodyVariant).belowRight?.ink === 'organization' &&
+    spec.organization === undefined
+  ) {
     issues.push({
       rule: 'below-right-label-requires-organization',
       message:
-        'Die Beschriftungszone unterhalb des Körpers ist nur in der Organisationsfarbe belegt ' +
-        '(#003296 an E.2.27 bis E.2.31). Ohne Organisation hat sie keine gemessene Farbe.',
+        'Dieses Körperprofil führt die Beschriftungszone unterhalb des Körpers in der ' +
+        'Organisationsfarbe (#003296 an E.2.27 bis E.2.31). Ohne Organisation hat sie keine ' +
+        'gemessene Farbe.',
     });
   }
 

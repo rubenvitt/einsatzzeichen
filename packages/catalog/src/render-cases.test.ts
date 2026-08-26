@@ -17,13 +17,14 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 421 seit LFH-422: 412 nach C.1.3, H und I-a plus die neun primary-Rezepte aus Anhang N.
-    expect(ids).toHaveLength(421);
+    // 442 mit 21 G- und neun N-Rezepten zusätzlich zum vorherigen Bestand.
+    expect(ids).toHaveLength(442);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
-    // dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66 weitere, H und I-a
+    // dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66, G 21, H und I-a
     // jeweils drei, C.1.3 einen und Anhang N neun weitere Rezeptfälle.
-    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(153);
+    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(174);
+    expect(ids.filter((id) => id.startsWith('recipe.G.'))).toHaveLength(21);
     expect(ids.filter((id) => id.startsWith('recipe.N.'))).toEqual([
       'recipe.N.1.1', 'recipe.N.1.2', 'recipe.N.1.3', 'recipe.N.1.4', 'recipe.N.1.5',
       'recipe.N.1.6', 'recipe.N.2.1', 'recipe.N.2.2', 'recipe.N.2.3',

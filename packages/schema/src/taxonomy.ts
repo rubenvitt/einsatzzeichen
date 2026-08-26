@@ -492,9 +492,12 @@ export interface BodyLabels {
   readonly centerBaselineFromBodyBottomMm?: number;
   readonly bottomLeft?: string;
   /**
-   * Unten mittig im Formationskörper. Gemessen an F.1.18 und F.1.20: Grundlinie 24,0 mm,
-   * Mittelpunkt x = 16,0 mm und derselbe Schriftgrad wie `bottomLeft`/`bottomRight`.
-   * An anderen Körperformen fehlt die Messung; `compose()` lehnt dort fail-closed ab.
+   * Unten mittig im Körper, mit profilabhängiger Grundlinie. Die Formation einschließlich
+   * `formation/foot-band` verwendet den an F.1.18 und F.1.20 gemessenen Abstand von 2,0 mm über
+   * der Körperunterkante (absolut y = 24,0 mm). G.3.5 belegt für `circle-12/foot-band` einen
+   * eigenen Abstand von 6,0 mm (absolut y = 22,0 mm). Beide Läufe sind um x = 16,0 mm zentriert
+   * und verwenden den Schriftgrad der unteren Zonen. Profile ohne eingetragene `bottomCenter`-
+   * Zone lehnt `compose()` fail-closed ab.
    */
   readonly bottomCenter?: string;
   readonly bottomRight?: string;
@@ -585,11 +588,16 @@ export interface BodyLabels {
    */
   readonly topLeftLines?: readonly [string, string];
   /**
-   * Die **vierte** Zone, und die einzige **außerhalb** des Körpers: rechtsbündig unterhalb seiner
-   * Unterkante, in der Organisationsfarbe statt in Weiß. Belegt an den fünf Wasserfahrzeugen
-   * `E.2.27` bis `E.2.31`, deren Typo-Ebene diesen Lauf byteidentisch führt (Tinte
-   * 22,5379/24,0806/31,5778/26,9998 mm, Füllung #003296, Versalhöhe 2,9192 — selbst vermessen,
-   * in allen fünf Dateien gleich bis auf 0,0003 mm an der T-Glyphe von E.2.28).
+   * Rechtsbündiger Lauf unterhalb des Körpers; Lage und Tinte sind körperprofilabhängig. Die
+   * angehobenen Wasserfahrzeuge E.2.27 bis E.2.31 belegen die Tintenlage
+   * 22,5379/24,0806/31,5778/26,9998 mm, die Füllung #003296 und die Versalhöhe 2,9192 mm
+   * (selbst vermessen, in allen fünf Dateien gleich bis auf 0,0003 mm an der T-Glyphe von
+   * E.2.28). Aus der rechten Tintenkante und dem vermessenen Seitenlager desselben `THW`-Laufs
+   * ist der Anker x = 31,5512 mm zurückgerechnet. Das Profil zerlegt dieses Bild in 4,01 mm
+   * vertikalen und 0,5618 mm horizontalen Abstand relativ zur Hülle; diese körperrelative Lesart
+   * ist eine Modellierungsentscheidung und keine Quellenmessung der beiden Abstände. G.3.5
+   * belegt davon unabhängig am `circle-12/foot-band` einen schwarzen Lauf 1,0 mm unter und
+   * 3,0 mm rechts der Körperkante, also mit Anker und Grundlinie auf x = 31,0 / y = 29,0 mm.
    *
    * **Nicht dasselbe wie `bottomRight` mit anderer Farbe.** Der Lauf liegt vollständig unter dem
    * Rumpf: seine Oberkante 24,0806 mm steht 1,0908 mm unter der Rumpfunterkante 22,9898 mm. Ein
@@ -598,8 +606,8 @@ export interface BodyLabels {
    * deklarierte Box).
    *
    * **Auch nicht dasselbe wie `SymbolSpec.designation`.** Die Fußzone steht mittig, schwarz und
-   * mit festem Schriftgrad 4 mm; dieser Lauf steht rechtsbündig, farbig und im Schriftgrad der
-   * unteren Zonen.
+   * mit festem Schriftgrad 4 mm; dieser Lauf steht rechtsbündig, je Profil in Organisationsfarbe
+   * oder Schwarz und im Schriftgrad der unteren Zonen.
    */
   readonly belowRight?: string;
   /** Schwarze Läufe auf der Ausgabeoberfläche unterhalb der Körperhülle. */

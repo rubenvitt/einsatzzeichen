@@ -4,7 +4,7 @@ import { deepFreeze, type DeepReadonly } from './readonly-data.js';
 
 /**
  * Ein Kontrastpaar, das der Katalog **wissentlich** unterhalb seiner eigenen Schwelle führt, weil
- * die Referenz es so zeichnet und keine Palettenänderung es auflöst.
+ * die Referenz es so zeichnet und keine zulässige Palettenänderung es in allen Themes auflöst.
  *
  * Warum das als Datum im Paket steht und nicht als Zeile in einem Test: eine Ausnahme, die nur im
  * Test steht, ist im Betrieb unsichtbar. Wer den Katalog einsetzt, sieht dann ein Zeichen, dessen

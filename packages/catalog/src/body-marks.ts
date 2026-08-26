@@ -6,6 +6,7 @@ import {
   type BodyMarkId,
   type BodyVariantId,
   type Primitive,
+  type StrengthId,
   type SymbolKind,
 } from '@einsatzzeichen/schema';
 
@@ -1050,6 +1051,171 @@ const VEHICLE_LAND_FOOT_BAND_MARKS: Partial<
   'drinking-water': landDrinkingWater,
 };
 
+function logisticsFuels(bounds: BoundsMm, topYMm = 9, bottomYMm = 21): Primitive[] {
+  const cx = (bounds.minX + bounds.maxX) / 2;
+  return [{
+    type: 'path', role: 'pictogram',
+    d:
+      `M ${cx - 5} ${topYMm} H ${cx + 5} L ${cx + 1.5} ${topYMm + 5} ` +
+      `V ${bottomYMm} M ${cx - 1.5} ${bottomYMm} V ${topYMm + 5} ` +
+      `L ${cx - 5} ${topYMm}`,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  }];
+}
+
+/** G.2: eigener Logistik-Wasserhahn; die kleinere F.2.15-Fahrzeugfassung bleibt separat. */
+function logisticsDrinkingWater(): Primitive[] {
+  return [
+    stroke(20, 11, 20, 16),
+    stroke(18, 11, 22, 11),
+    {
+      type: 'path',
+      role: 'pictogram',
+      d: 'M 7 14 H 23 C 24.657 14 26 15.343 26 17 V 18',
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+  ];
+}
+
+function logisticsCatering(bounds: BoundsMm, shiftYMm = 0, shiftXMm = 0): Primitive[] {
+  const cx = (bounds.minX + bounds.maxX) / 2 + shiftXMm;
+  const cy = 15 + shiftYMm;
+  return [{
+    type: 'path', role: 'pictogram',
+    d:
+      `M ${cx} ${cy - 5} C ${cx - 2.75} ${cy - 5} ${cx - 5} ${cy - 2.75} ` +
+      `${cx - 5} ${cy} C ${cx - 5} ${cy + 2.75} ${cx - 2.75} ${cy + 5} ${cx} ${cy + 5} ` +
+      `C ${cx + 2} ${cy + 5} ${cx + 3.5} ${cy + 4} ${cx + 4.5} ${cy + 2.25} ` +
+      `L ${cx} ${cy} L ${cx + 4.5} ${cy - 2.25} C ${cx + 3.5} ${cy - 4} ` +
+      `${cx + 2} ${cy - 5} ${cx} ${cy - 5} Z`,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  }];
+}
+
+/**
+ * G.7/G.2.1/G.2.2/G.3.4: durchgehende Mittellinie zwischen zwei offenen 3-mm-Endbögen. Der
+ * Kreis-Kontext liegt 0,5 mm tiefer; die übrigen Profile teilen y=15.
+ */
+function logisticsMaintenance(bounds: BoundsMm, centerYMm = 15): Primitive[] {
+  const cx = (bounds.minX + bounds.maxX) / 2;
+  return [{
+    type: 'path', role: 'pictogram',
+    d:
+      `M ${cx - 9} ${centerYMm - 3} ` +
+      `C ${cx - 7.343} ${centerYMm - 3} ${cx - 6} ${centerYMm - 1.657} ${cx - 6} ${centerYMm} ` +
+      `H ${cx + 6} ` +
+      `C ${cx + 6} ${centerYMm - 1.657} ${cx + 7.343} ${centerYMm - 3} ${cx + 9} ${centerYMm - 3} ` +
+      `M ${cx - 9} ${centerYMm + 3} ` +
+      `C ${cx - 7.343} ${centerYMm + 3} ${cx - 6} ${centerYMm + 1.657} ${cx - 6} ${centerYMm} ` +
+      `M ${cx + 6} ${centerYMm} ` +
+      `C ${cx + 6} ${centerYMm + 1.657} ${cx + 7.343} ${centerYMm + 3} ${cx + 9} ${centerYMm + 3}`,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  }];
+}
+
+/**
+ * G.8: Mülltonne aus sechs getrennten Mittellinien-Primitiven. Griff y=7 und Deckel y=8 stehen
+ * oberhalb des Behälters; die frühere Trapezabkürzung ab y=11 ließ beide sichtbaren Teile aus.
+ */
+function logisticsWasteDisposal(): Primitive[] {
+  return [
+    stroke(14, 7, 18, 7),
+    stroke(10, 8, 22, 8),
+    {
+      type: 'path',
+      role: 'pictogram',
+      d: 'M 11.5 8 V 19 C 11.5 19.552 11.948 20 12.5 20 H 19.5 ' +
+        'C 20.052 20 20.5 19.552 20.5 19 V 8',
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+    stroke(13.5, 10, 13.5, 18),
+    stroke(16, 10, 16, 18),
+    stroke(18.5, 10, 18.5, 18),
+  ];
+}
+
+/**
+ * Die große G-Löffelsilhouette, rekonstruiert aus G.6/G.3.2/G.2.3. Sie ist nicht die kleinere
+ * F.2.13-Silhouette: Kopfbreite 3 mm statt 1,772 mm, Unterkante y=20 statt y=21,60015.
+ */
+function logisticsSpoon(cx: number): Primitive {
+  return {
+    type: 'path',
+    role: 'pictogram',
+    d:
+      `M ${cx - 0.7} 12.86 C ${cx - 0.573} 12.953 ${cx - 0.5} 13.103 ${cx - 0.5} 13.26 ` +
+      `V 19.5 C ${cx - 0.5} 19.776 ${cx - 0.276} 20 ${cx} 20 ` +
+      `C ${cx + 0.276} 20 ${cx + 0.5} 19.776 ${cx + 0.5} 19.5 V 13.26 ` +
+      `C ${cx + 0.5} 13.103 ${cx + 0.573} 12.953 ${cx + 0.7} 12.86 ` +
+      `C ${cx + 1.164} 12.521 ${cx + 1.5} 12.139 ${cx + 1.5} 11.5 ` +
+      `C ${cx + 1.5} 10.262 ${cx + 0.846} 9.5 ${cx} 9.5 ` +
+      `C ${cx - 0.846} 9.5 ${cx - 1.5} 10.262 ${cx - 1.5} 11.5 ` +
+      `C ${cx - 1.5} 12.139 ${cx - 1.164} 12.521 ${cx - 0.7} 12.86 Z`,
+    style: { fill: 'schwarz', stroke: 'none' },
+  };
+}
+
+/**
+ * Löffel und Schüssel behalten ihre je Körperprofil vermessenen horizontalen Abstände zur
+ * Körpermitte. Formation und Kreis teilen -5/+3 mm; der Anhänger führt -5,5/+2,5 mm.
+ */
+function logisticsMealPreparation(
+  bounds: BoundsMm,
+  spoonCenterFromBodyCenterMm: number,
+  bowlCenterFromBodyCenterMm: number,
+): Primitive[] {
+  const bodyCenterXMm = (bounds.minX + bounds.maxX) / 2;
+  return [
+    logisticsSpoon(bodyCenterXMm + spoonCenterFromBodyCenterMm),
+    ...logisticsCatering(bounds, 0, bowlCenterFromBodyCenterMm),
+  ];
+}
+
+const FORMATION_FOOT_BAND_LOGISTICS_MARKS: Partial<
+  Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
+> = {
+  'fuels-consumables': logisticsFuels,
+  'drinking-water': logisticsDrinkingWater,
+  'water-conveyance': () => [{
+      type: 'path', role: 'pictogram',
+      d:
+        'M 5 16 C 7.125 16 8.375 12 10.5 12 C 12.625 12 13.875 16 16 16 ' +
+        'C 18.125 16 19.375 12 21.5 12 C 23.625 12 24.875 16 27 16',
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    }],
+  'power-supply': () => [{
+    type: 'polyline',
+    role: 'pictogram',
+    points: [
+      [17.083, 13.387], [14.027, 19.394], [13.232, 17.406], [12.768, 17.592],
+      [13.861, 20.324], [16.593, 19.231], [16.407, 18.767], [14.524, 19.52],
+      [17.762, 13.152], [17.49, 12.794], [13.417, 13.612], [16.222, 8.113],
+      [15.777, 7.886], [12.737, 13.846], [13.009, 14.205], [17.083, 13.387],
+    ],
+    style: { fill: 'schwarz', stroke: 'none' },
+  }],
+  catering: (bounds) => logisticsCatering(bounds),
+  'meal-preparation': (bounds) => logisticsMealPreparation(bounds, -5, 3),
+  maintenance: logisticsMaintenance,
+  'waste-disposal': logisticsWasteDisposal,
+};
+
+const TRAILER_FOOT_BAND_LOGISTICS_MARKS: Partial<
+  Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
+> = {
+  maintenance: logisticsMaintenance,
+  'meal-preparation': (bounds) => logisticsMealPreparation(bounds, -5.5, 2.5),
+};
+
+const CIRCLE_FOOT_BAND_LOGISTICS_MARKS: Partial<
+  Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
+> = {
+  catering: (bounds) => logisticsCatering(bounds),
+  'meal-preparation': (bounds) => logisticsMealPreparation(bounds, -5, 3),
+  'fuels-consumables': logisticsFuels,
+  maintenance: (bounds) => logisticsMaintenance(bounds, 15.5),
+};
+
 function airQuartering(bounds: BoundsMm): Primitive[] {
   const cx = (bounds.minX + bounds.maxX) / 2;
   const cy = bounds.maxY;
@@ -1174,20 +1340,39 @@ const TRAILER_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[
 
 export function bodyMark(
   id: BodyMarkId,
-  context: { kind: SymbolKind; bodyVariant?: BodyVariantId },
+  context: {
+    kind: SymbolKind;
+    bodyVariant?: BodyVariantId;
+    strength?: StrengthId;
+    occupiedLabelZones?: readonly ('bottomCenter' | 'bottomRight' | 'belowRight')[];
+  },
   bodyBoundsMm: BoundsMm,
 ): readonly Primitive[] {
-  const build = context.kind === 'formation'
+  const build = context.kind === 'formation' && context.bodyVariant === 'foot-band' &&
+      id === 'catering' && context.strength === 'trupp' &&
+      context.occupiedLabelZones?.includes('bottomRight')
+    ? (bounds: BoundsMm) => logisticsCatering(bounds, -2)
+    : context.kind === 'circle-12' && context.bodyVariant === 'foot-band' &&
+        id === 'fuels-consumables' && context.occupiedLabelZones?.includes('bottomCenter')
+      ? (bounds: BoundsMm) => logisticsFuels(bounds, 7, 18)
+    : context.kind === 'formation'
     ? context.bodyVariant === undefined && id !== 'catering'
       ? MARKS[id]
-      : context.bodyVariant === 'foot-band' &&
-          (id === 'care' || id === 'temporary-accommodation-resting' || id === 'catering')
-        ? MARKS[id]
+      : context.bodyVariant === 'foot-band'
+        ? id === 'catering'
+          ? context.strength === 'gruppe'
+            ? MARKS[id]
+            : context.strength === undefined || context.strength === 'zug'
+              ? FORMATION_FOOT_BAND_LOGISTICS_MARKS[id]
+              : undefined
+          : FORMATION_FOOT_BAND_LOGISTICS_MARKS[id] ?? (
+              id === 'care' || id === 'temporary-accommodation-resting' ? MARKS[id] : undefined
+            )
         : undefined
     : context.kind === 'vehicle-land' && context.bodyVariant === undefined
       ? VEHICLE_LAND_NORMAL_MARKS[id]
       : context.kind === 'vehicle-land' && context.bodyVariant === 'foot-band'
-        ? VEHICLE_LAND_FOOT_BAND_MARKS[id]
+        ? VEHICLE_LAND_FOOT_BAND_MARKS[id] ?? (id === 'maintenance' ? logisticsMaintenance : undefined)
         : context.kind === 'vehicle-land' && context.bodyVariant === 'plain-wheel-pair'
           ? VEHICLE_LAND_PLAIN_WHEEL_PAIR_MARKS[id]
         : context.kind === 'vehicle-land' && context.bodyVariant === 'inverted-hull-track'
@@ -1198,12 +1383,16 @@ export function bodyMark(
         ? VEHICLE_AIR_FIXED_WING_MARKS[id]
         : context.kind === 'trailer' && context.bodyVariant === undefined
           ? TRAILER_MARKS[id]
+          : context.kind === 'trailer' && context.bodyVariant === 'foot-band'
+            ? TRAILER_FOOT_BAND_LOGISTICS_MARKS[id]
           : context.kind === 'circle-12' && context.bodyVariant === undefined
             ? CIRCLE_NORMAL_MARKS[id] ?? CIRCLE_NORMAL_ANHANG_N_MARKS[id]
             : context.kind === 'circle-12' && context.bodyVariant === 'raised-circle-1mm'
               ? CIRCLE_RAISED_ONE_MM_MARKS[id]
             : context.kind === 'circle-12' && context.bodyVariant === 'raised-gable'
               ? CIRCLE_RAISED_GABLE_MARKS[id]
+              : context.kind === 'circle-12' && context.bodyVariant === 'foot-band'
+                ? CIRCLE_FOOT_BAND_LOGISTICS_MARKS[id]
               : context.kind === 'reduced-house' && context.bodyVariant === undefined
                 ? REDUCED_HOUSE_MARKS[id]
                 : undefined;
@@ -1211,6 +1400,9 @@ export function bodyMark(
     MARKS,
     VEHICLE_LAND_NORMAL_MARKS,
     VEHICLE_LAND_FOOT_BAND_MARKS,
+    FORMATION_FOOT_BAND_LOGISTICS_MARKS,
+    TRAILER_FOOT_BAND_LOGISTICS_MARKS,
+    CIRCLE_FOOT_BAND_LOGISTICS_MARKS,
     VEHICLE_LAND_PLAIN_WHEEL_PAIR_MARKS,
     VEHICLE_LAND_INVERTED_HULL_MARKS,
     VEHICLE_AIR_MARKS,
@@ -1305,6 +1497,9 @@ export const BODY_MARK_IDS: readonly BodyMarkId[] = Object.freeze(
       MARKS,
       VEHICLE_LAND_NORMAL_MARKS,
       VEHICLE_LAND_FOOT_BAND_MARKS,
+      FORMATION_FOOT_BAND_LOGISTICS_MARKS,
+      TRAILER_FOOT_BAND_LOGISTICS_MARKS,
+      CIRCLE_FOOT_BAND_LOGISTICS_MARKS,
       VEHICLE_LAND_PLAIN_WHEEL_PAIR_MARKS,
       VEHICLE_LAND_INVERTED_HULL_MARKS,
       VEHICLE_AIR_MARKS,
