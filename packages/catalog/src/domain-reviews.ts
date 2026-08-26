@@ -33,6 +33,7 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:1.14#primary': { status: 'pending' },
   'bbk-babz-2025:C.1.1#primary': { status: 'pending' },
   'bbk-babz-2025:C.1.2#primary': { status: 'pending' },
+  'bbk-babz-2025:C.1.3#primary': { status: 'pending' },
   // Anhang D.1: alle zehn Darstellungen bleiben fachlich offen. Insbesondere behauptet die
   // technische ID von D.1.1 keine freigegebene Übersetzung des Führungsbegriffs; D.1.3 und
   // D.1.8 tragen die im Design markierten englischen Arbeitsnamen weiter.
@@ -333,6 +334,55 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:F.3.17#primary': { status: 'pending' },
   'bbk-babz-2025:F.3.18#primary': { status: 'pending' },
   'bbk-babz-2025:F.3.19#primary': { status: 'pending' },
+  // Anhang N: neun Fahrzeuge und Anlaufstellen weiterer Träger. Technisch gemessen sind Form,
+  // Füllung, Fahrwerk, Marken und Text. Fachlich offen bleiben die Zuordnung von kommunalem
+  // Bauhof und Beauftragtem Dritten zur sonstigen Gefahrenabwehr, die getrennte Bundespolizei-
+  // Organisation, die Bundeswehr-/Feuerwehr-/ZIV-Zuordnungen sowie die Einsatzbedeutung der drei
+  // N.2-Marken. „Geländegängig“ aus dem Dateinamen von N.1.2 ist ausdrücklich keine neue
+  // Katalogsemantik. Die schwarzen Körperläufe bestehen den technischen Kontrastvertrag und
+  // ersetzen keine fachliche Freigabe.
+  'bbk-babz-2025:N.1.1#primary': { status: 'pending' },
+  'bbk-babz-2025:N.1.2#primary': { status: 'pending' },
+  'bbk-babz-2025:N.1.3#primary': { status: 'pending' },
+  'bbk-babz-2025:N.1.4#primary': { status: 'pending' },
+  'bbk-babz-2025:N.1.5#primary': { status: 'pending' },
+  'bbk-babz-2025:N.1.6#primary': { status: 'pending' },
+  'bbk-babz-2025:N.2.1#primary': { status: 'pending' },
+  'bbk-babz-2025:N.2.2#primary': { status: 'pending' },
+  'bbk-babz-2025:N.2.3#primary': { status: 'pending' },
+  // Anhang G: alle 21 Logistikdarstellungen bleiben fachlich offen. Die weißen Zeichen,
+  // einschließlich DLRG, sind technisch als `hilfsorganisation` zugeordnet; ebenso stehen die
+  // Bedeutungen der Marken und die Betreiberzuordnung der farbigen Kreiszeichen noch zur
+  // Bestätigung durch eine fachkundige Person aus.
+  'bbk-babz-2025:G.1#primary': { status: 'pending' },
+  'bbk-babz-2025:G.1.1#primary': { status: 'pending' },
+  'bbk-babz-2025:G.1.2#primary': { status: 'pending' },
+  'bbk-babz-2025:G.1.3#primary': { status: 'pending' },
+  'bbk-babz-2025:G.1.4#primary': { status: 'pending' },
+  'bbk-babz-2025:G.1.5#primary': { status: 'pending' },
+  'bbk-babz-2025:G.2#primary': { status: 'pending' },
+  'bbk-babz-2025:G.2.1#primary': { status: 'pending' },
+  'bbk-babz-2025:G.2.2#primary': { status: 'pending' },
+  'bbk-babz-2025:G.2.3#primary': { status: 'pending' },
+  'bbk-babz-2025:G.3#primary': { status: 'pending' },
+  'bbk-babz-2025:G.3.1#primary': { status: 'pending' },
+  'bbk-babz-2025:G.3.2#primary': { status: 'pending' },
+  'bbk-babz-2025:G.3.3#primary': { status: 'pending' },
+  'bbk-babz-2025:G.3.4#primary': { status: 'pending' },
+  'bbk-babz-2025:G.3.5#primary': { status: 'pending' },
+  'bbk-babz-2025:G.4#primary': { status: 'pending' },
+  'bbk-babz-2025:G.5#primary': { status: 'pending' },
+  'bbk-babz-2025:G.6#primary': { status: 'pending' },
+  'bbk-babz-2025:G.7#primary': { status: 'pending' },
+  'bbk-babz-2025:G.8#primary': { status: 'pending' },
+  'bbk-babz-2025:H.1#primary': { status: 'pending' },
+  'bbk-babz-2025:H.2#primary': { status: 'pending' },
+  'bbk-babz-2025:H.3#primary': { status: 'pending' },
+  // Das Erscheinungsbild ist technisch durch die Mess-, Rezept- und Snapshot-Gates belegt; die
+  // organisatorische und fachliche Bedeutung des weißen Körpers bleibt dennoch ungeklärt.
+  'bbk-babz-2025:I.3.5#primary': { status: 'pending' },
+  'bbk-babz-2025:I.3.6#primary': { status: 'pending' },
+  'bbk-babz-2025:I.3.7#primary': { status: 'pending' },
   'bbk-babz-2025:2.1#primary': { status: 'pending' },
   // 2.2 seit LFH-424. Fachlich besonders zu prüfen: die Zuordnung „HiOrg = Hilfsorganisation" ist
   // aus dem gerasterten Bild abgelesen, nicht aus dem Dateinamen — der ist generisch

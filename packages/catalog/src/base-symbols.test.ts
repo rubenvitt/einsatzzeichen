@@ -16,6 +16,7 @@ import { BASE_SYMBOLS, baseDrawing } from './base-symbols.js';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { fingerprintFor } from './fingerprint-index.js';
 import { DEVICE_COMMS } from './pictograms/comms/03-devices.js';
+import { composeFromCatalog } from './recipes.js';
 
 /**
  * Die dreizehn Grundzeichen, deren Körper **am Kennwertartefakt** gegatet ist. Die dritte Spalte
@@ -181,7 +182,11 @@ describe('Grundzeichen Kapitel 1', () => {
   it('bindet den Geometrie-Regressionsclaim exakt an die ungegateten Grundzeichenfälle', () => {
     const tested = UNGATED.map(([kind]) => BASE_SYMBOLS[kind].id).sort();
     const claimed = COVERAGE_MANIFEST.entries
-      .filter((entry) => entry.testEvidence.includes('body-geometry-regression'))
+      .filter(
+        (entry) =>
+          entry.coverage === 'catalog-entry' &&
+          entry.testEvidence.includes('body-geometry-regression'),
+      )
       .map((entry) => entry.implementation)
       .sort();
     expect(tested).toEqual(claimed);
@@ -418,6 +423,49 @@ describe('Körperformen des Anhangs E.2', () => {
     expect(mmToUnits(chapterOne.maxY - raised.maxY)).toBeGreaterThan(TOLERANCE_UNITS);
   });
 
+  it('trifft die drei LFH-479-Referenzen mit dem vermessenen inset-hull', () => {
+    const insetHull = 'inset-hull' as BodyVariantId;
+    const assets = [
+      'I.3.5_Mehrzweckboot.svg',
+      'I.3.6_Mehrzweckarbeitsboot.svg',
+      'I.3.7_Mehrzweckponton.svg',
+    ] as const;
+
+    for (const asset of assets) {
+      expect(matchFingerprint(baseDrawing('vehicle-water', insetHull), fingerprintFor(asset))).toEqual({
+        ok: true,
+        problems: [],
+      });
+    }
+  });
+
+  it('hält normal, raised-hull und inset-hull geometrisch getrennt', () => {
+    const insetHull = 'inset-hull' as BodyVariantId;
+    const normal = boundsOfMm(drawnBody('vehicle-water'));
+    const raised = boundsOfMm(drawnBody('vehicle-water', 'raised-hull'));
+    const insetBody = drawnBody('vehicle-water', insetHull);
+    if (insetBody.type !== 'path') throw new Error('unreachable');
+    const inset = boundsOfMm(insetBody);
+
+    expect(inset.minY).toBe(9.0001);
+    expect(inset.maxY).toBe(23.9898);
+    expect(insetBody.d).toBe(
+      'M 1.01 9.0001 L 30.9894 9.0001 C 30.9894 17.2787, 24.2783 23.9898, 15.9997 23.9898 C 7.7211 23.9898, 1.01 17.2787, 1.01 9.0001 Z',
+    );
+    for (const other of [normal, raised]) {
+      expect(mmToUnits(Math.max(
+        Math.abs(inset.minY - other.minY),
+        Math.abs(inset.maxY - other.maxY),
+      ))).toBeGreaterThan(TOLERANCE_UNITS);
+    }
+  });
+
+  it('lässt inset-hull bei Land und Luft nicht als Fallback zu', () => {
+    const insetHull = 'inset-hull' as BodyVariantId;
+    expect(() => baseDrawing('vehicle-land', insetHull)).toThrow(/Körpervariante/);
+    expect(() => baseDrawing('vehicle-air', insetHull)).toThrow(/Körpervariante/);
+  });
+
   it('führt am angehobenen F.2-Luftkörper den Rotor als Grundzeichenextra und nicht als Chassis', () => {
     const air = baseDrawing('vehicle-air', 'raised-hull');
     expect(air.children.filter((child) => child.role === 'body')).toHaveLength(1);
@@ -452,7 +500,75 @@ describe('Körperformen des Anhangs E.2', () => {
     ]);
   });
 
-  it('vermisst foot-band getrennt an Formation und Landfahrzeug und lässt beide Normalkörper unverändert', () => {
+  it('führt den N.1.1-Panzerrumpf als umgekehrte Deckkurve mit eigener Unterkante', () => {
+    const drawing = baseDrawing('vehicle-land', 'inverted-hull-track' as BodyVariantId);
+    expect(drawing.children).toEqual([
+      {
+        type: 'path',
+        role: 'body',
+        d: 'M 16 23.555 C 10 23.555, 5 24.443, 1 25.75 L 1 6 L 31 6 L 31 25.75 C 27 24.445, 22 23.556, 16 23.556 Z',
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+    ]);
+    expect(boundsOfMm(drawing.children[0]!)).toEqual({ minX: 1, minY: 6, maxX: 31, maxY: 25.75 });
+  });
+
+  it('führt den N.1.5/N.1.6-Festflügler mit separat vermessenen Tragflächen', () => {
+    const drawing = baseDrawing('vehicle-air', 'fixed-wing-hull' as BodyVariantId);
+    expect(drawing.children[0]).toEqual(baseDrawing('vehicle-air', 'raised-hull').children[0]);
+    expect(drawing.children.slice(1)).toEqual([
+      {
+        type: 'path',
+        role: 'bodyExtra',
+        d: 'M 24.2114 23.2109 C 23.4801 22.4796, 22.377 22.2669, 21.4259 22.6743 L 16 24.9995 L 21.4261 27.3251 C 22.3768 27.7326, 23.48 27.5202, 24.2116 26.7885 C 25.1997 25.8007, 25.1997 24.1988, 24.2116 23.211 Z',
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+      {
+        type: 'path',
+        role: 'bodyExtra',
+        d: 'M 7.7882 23.2109 C 6.8001 24.199, 6.8001 25.8006, 7.7882 26.7884 C 8.5195 27.5201, 9.6226 27.7324, 10.5737 27.325 L 16 24.9995 L 10.5739 22.6743 C 9.6232 22.2668, 8.52 22.4792, 7.7884 23.2109 Z',
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+    ]);
+  });
+
+  it('verarbeitet beide Festflügler-Verträge durch reale Komposition und Hüllenberechnung', () => {
+    for (const bodyMark of [
+      'air-horizontal-left-chevron',
+      'air-rising-diagonal',
+    ] as const) {
+      const drawing = composeFromCatalog({
+        kind: 'vehicle-air',
+        bodyVariant: 'fixed-wing-hull',
+        bodyMarks: [bodyMark],
+      });
+      const extras = drawing.children.filter((child) => child.role === 'bodyExtra');
+      expect(extras).toHaveLength(2);
+      const [right, left] = extras.map((extra) => boundsOfMm(extra));
+      expect(right).toEqual({
+        minX: 16,
+        minY: expect.closeTo(22.46980509717646, 10),
+        maxX: expect.closeTo(24.952675, 10),
+        maxY: expect.closeTo(27.52973005360795, 10),
+      });
+      expect(left).toEqual({
+        minX: expect.closeTo(7.047125, 10),
+        minY: expect.closeTo(22.46966994639205, 10),
+        maxX: 16,
+        maxY: expect.closeTo(27.52958561552712, 10),
+      });
+    }
+  });
+
+  it('führt den N.2.3-Kreis einen Millimeter oberhalb der normalen Kreisfassung', () => {
+    const normal = boundsOfMm(drawnBody('circle-12'));
+    const raised = boundsOfMm(drawnBody('circle-12', 'raised-circle-1mm' as BodyVariantId));
+    expect(raised).toEqual({ minX: 4, minY: 3, maxX: 28, maxY: 27 });
+    expect(normal.minY - raised.minY).toBe(1);
+    expect(normal.maxY - raised.maxY).toBe(1);
+  });
+
+  it('vermisst foot-band getrennt an Formation, Landfahrzeug, Anhänger und 12-mm-Kreis', () => {
     const normal = baseDrawing('formation');
     const footBand = baseDrawing('formation', 'foot-band');
     const normalVehicle = baseDrawing('vehicle-land');
@@ -490,6 +606,23 @@ describe('Körperformen des Anhangs E.2', () => {
       maxX: 31,
       maxY: 26,
     });
+
+    const trailerNormal = baseDrawing('trailer');
+    const trailerFootBand = baseDrawing('trailer', 'foot-band');
+    expect(trailerFootBand.children[0]).toEqual(trailerNormal.children[0]);
+    expect(trailerFootBand.children).toContainEqual({
+      type: 'rect', role: 'pictogram', x: 4, y: 23, width: 27, height: 3,
+      style: { fill: 'schwarz', stroke: 'none' },
+    });
+
+    const circleNormal = baseDrawing('circle-12');
+    const circleFootBand = baseDrawing('circle-12', 'foot-band');
+    expect(circleFootBand.children[0]).toEqual(circleNormal.children[0]);
+    expect(circleFootBand.children[1]).toEqual({
+      type: 'path', role: 'pictogram',
+      d: 'M 7.4048 24.0005 H 24.5954 C 22.479 26.5508 19.0883 27.7505 16 27.7505 C 12.9117 27.7505 9.5204 26.5508 7.4048 24.0005 Z',
+      style: { fill: 'schwarz', stroke: 'none' },
+    });
   });
 
   it('wirft für eine Körpervariante, die die Art nicht führt', () => {
@@ -498,6 +631,9 @@ describe('Körperformen des Anhangs E.2', () => {
     expect(() => baseDrawing('vehicle-land', 'raised-hull')).toThrow(/Körpervariante/);
     expect(() => baseDrawing('formation', 'raised-hull')).toThrow(/Körpervariante/);
     expect(() => baseDrawing('vehicle-air', 'plain-wheel-pair')).toThrow(/Körpervariante/);
+    expect(() => baseDrawing('vehicle-air', 'inverted-hull-track' as BodyVariantId)).toThrow(/Körpervariante/);
+    expect(() => baseDrawing('vehicle-land', 'fixed-wing-hull' as BodyVariantId)).toThrow(/Körpervariante/);
+    expect(() => baseDrawing('circle-12', 'fixed-wing-hull' as BodyVariantId)).toThrow(/Körpervariante/);
   });
 
   it('trägt die Zusatzprimitive der Grundzeichen mit', () => {
@@ -611,7 +747,7 @@ describe('Körperformen des Anhangs F.3', () => {
   it('fällt mit raised-gable weder auf post noch auf eine andere Körperart zurück', () => {
     expect(() => baseDrawing('post', raisedGable)).toThrow(/Körpervariante/);
     expect(() => baseDrawing('formation', raisedGable)).toThrow(/Körpervariante/);
-    expect(() => baseDrawing(circleKind, 'foot-band')).toThrow(/Körpervariante/);
+    expect(baseDrawing(circleKind, 'foot-band').children).toHaveLength(2);
   });
 
   it('trägt circle-12 nicht in das Kapitel-1-Register ein', () => {

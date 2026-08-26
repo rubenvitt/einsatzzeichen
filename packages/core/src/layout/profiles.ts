@@ -1,5 +1,5 @@
 import type { BodyVariantId, Primitive, SymbolKind } from '@einsatzzeichen/schema';
-import { boundsOfMm, shiftY } from '../bounds.js';
+import { boundsOfMm, shiftY, type BoundsMm } from '../bounds.js';
 
 /**
  * Abstand zwischen der Unterkante der Kopfzone und dem Körperanker.
@@ -57,6 +57,15 @@ export interface LayoutProfile {
    * folgt der Mehrheit — dieselbe Einordnung wie bei E.1.18/E.1.20/E.1.21.
    */
   centerBaselineFromBodyBottomMm: number;
+  /** Erlaubt einen je Zeichen vermessenen Abstand anstelle des Profilwerts. */
+  allowsCenterBaselineOverride?: true;
+  /**
+   * Absolute vermessene Körperhülle für vollständige je-Spec-Textmetriken. Fehlt sie, darf
+   * die Validierung keine relativen Metriken gegen eine angenommene Hülle freigeben.
+   */
+  measuredBodyBoundsMm?: Readonly<BoundsMm>;
+  /** Grundlinie der unteren linken/rechten Läufe, gerechnet von der Körperunterkante nach oben. */
+  bottomLabelBaselineFromBodyBottomMm: number;
   /**
    * Grundlinie des Laufs oben links, gerechnet **von der Körperoberkante nach unten**. Fehlt sie,
    * ist die Zone an dieser Körperform nicht vermessen und `compose()` wirft, statt eine Lage zu
@@ -70,6 +79,8 @@ export interface LayoutProfile {
    * Teilslice F-c sie einträgt, und nicht als stille Miterbschaft dieser.
    */
   topLeftBaselineFromBodyTopMm?: number;
+  /** Dieses Profil belegt `topLeft` ausschließlich mit einem vollständigen je-Spec-Metriksatz. */
+  requiresTopLeftMetrics?: true;
   /** Grundlinie eines linksbündigen Laufs oberhalb des Körpers, gegen dessen Oberkante. */
   aboveLeftBaselineFromBodyTopMm?: number;
   /** Waagerechter Anker des oberhalb liegenden Laufs relativ zur linken Körperhüllenkante. */
@@ -79,11 +90,40 @@ export interface LayoutProfile {
     readonly baselinesFromBodyTopMm: readonly [number, number];
     readonly capHeightMm: number;
   };
+  /** Schwarze Oberflächenläufe unterhalb des Körpers, relativ zu dessen Hülle vermessen. */
+  surfaceLabels?: {
+    readonly baselineFromBodyBottomMm: number;
+    readonly leftAnchorFromBodyLeftMm?: number;
+    readonly rightAnchorFromBodyRightMm?: number;
+  };
   /**
-   * Grundlinie des unten mittigen Laufs, gerechnet von der Körperunterkante nach oben. Bisher
-   * allein an F.1.18 und F.1.20 auf der taktischen Formation gemessen.
+   * Körperhülle, innerhalb der ein vollständiger je-Spec-Metriksatz für `bottomRight` belegt ist.
+   * Fehlt der Wert, lehnt `validateSpec()` den Metriksatz statt einer Profilübertragung ab.
+   */
+  bottomRightMetricsBounds?: {
+    readonly widthMm: number;
+    readonly heightMm: number;
+  };
+  /**
+   * Grundlinie des unten mittigen Laufs, gerechnet von der Körperunterkante nach oben. Gemessen
+   * sind 2,0 mm an F.1.18/F.1.20 für die Formation und davon unabhängig 6,0 mm an G.3.5 für
+   * `circle-12/foot-band`; andere Körperprofile führen keinen Wert.
    */
   bottomCenterBaselineFromBodyBottomMm?: number;
+  /** Tinte des unten mittigen Laufs; ohne Angabe gilt weiter die Körperfarben-Ableitung. */
+  bottomCenterInk?: 'body' | 'black';
+  /**
+   * Öffnet die obere Körperkontur, wenn weder Kopfzone noch Beschriftung belegt sind. Das Profil
+   * beschreibt damit die acht unbeschrifteten Logistikformationen, ohne Kapitel-IDs zu kennen;
+   * beschriftete oder kopftragende Nutzer desselben Körpers behalten die geschlossene Kontur.
+   */
+  openTopWhenHeadlessAndUnlabelled?: boolean;
+  /** Vermessene Zone rechts unterhalb des Körpers. Fehlt sie, ist die Zone nicht zulässig. */
+  belowRight?: {
+    readonly baselineFromBodyBottomMm: number;
+    readonly anchorFromBodyRightMm: number;
+    readonly ink: 'organization' | 'black';
+  };
   /**
    * Setzt den Körper relativ zur Kopfzone. `headBottomMm === null` bedeutet: keine Kopfzone,
    * der Körper behält seine Standardgeometrie.
@@ -119,6 +159,7 @@ function rectBody(centerBaselineFromBodyBottomMm: number): LayoutProfile {
     id: 'rect-body',
     defaultAnchorMm: 6,
     centerBaselineFromBodyBottomMm,
+    bottomLabelBaselineFromBodyBottomMm: 2,
     place(body, headBottomMm) {
       if (headBottomMm === null) return body;
       const target = Math.max(this.defaultAnchorMm, headBottomMm + HEAD_GAP_MM);
@@ -141,6 +182,13 @@ const formationProfile: LayoutProfile = {
   bottomCenterBaselineFromBodyBottomMm: 2,
 };
 
+const formationFootBandProfile: LayoutProfile = {
+  ...formationProfile,
+  // G.1.2: DLRG-Grundlinie 21 mm bei Körperunterkante 26 mm.
+  bottomLabelBaselineFromBodyBottomMm: 5,
+  openTopWhenHeadlessAndUnlabelled: true,
+};
+
 /**
  * F.2-Landfahrzeuge mit normaler oder gebänderter Hülle: obere Grundlinie 6,75 mm unter der
  * Körperoberkante. Das Kapitel-1-Grundzeichen selbst trägt keinen Lauf; der Wert wird nur
@@ -148,14 +196,30 @@ const formationProfile: LayoutProfile = {
  */
 const vehicleLandProfile: LayoutProfile = {
   ...rectBody(8),
+  allowsCenterBaselineOverride: true,
+  measuredBodyBoundsMm: { minX: 1, minY: 5.75, maxX: 31, maxY: 26 },
   topLeftBaselineFromBodyTopMm: 6.75,
+  topLeftLines: { baselinesFromBodyTopMm: [6.75, 10.75], capHeightMm: 2.919225 },
+};
+
+const footBandVehicleLandProfile: LayoutProfile = {
+  ...vehicleLandProfile,
+  allowsCenterBaselineOverride: undefined,
+  topLeftLines: undefined,
 };
 
 /** F.2-Landfahrzeuge: Grundlinie 12,5 mm und die zweizeilige F.2.8-Zone. */
 const plainWheelVehicleLandProfile: LayoutProfile = {
   ...vehicleLandProfile,
+  allowsCenterBaselineOverride: undefined,
   // F.2.8: Grundlinien 11,54/15,07 mm; gemeinsame Versalhöhe 2,43 mm.
   topLeftLines: { baselinesFromBodyTopMm: [5.79, 9.32], capHeightMm: 2.43 },
+};
+
+const invertedHullVehicleLandProfile: LayoutProfile = {
+  ...vehicleLandProfile,
+  allowsCenterBaselineOverride: undefined,
+  measuredBodyBoundsMm: undefined,
 };
 
 /** Das Kapitel-1-Luftfahrzeug belegt keine Beschriftungszone. */
@@ -166,9 +230,37 @@ const vehicleAirProfile: LayoutProfile = {
 /** F.2.6/F.2.7: dieselbe absolute ITH-Grundlinie y=6 am auf y=6 angehobenen Rumpf. */
 const raisedVehicleAirProfile: LayoutProfile = {
   ...rectBody(8),
+  measuredBodyBoundsMm: { minX: 1.01, minY: 6.0001, maxX: 30.9894, maxY: 20.9898 },
   aboveLeftBaselineFromBodyTopMm: 0,
   aboveLeftAnchorFromBodyLeftMm: -0.01,
+  surfaceLabels: {
+    baselineFromBodyBottomMm: 8.01,
+    rightAnchorFromBodyRightMm: 0.01,
+  },
+  // Der reale Katalogpfad spannt 1,0100…30,9894 × 6,0001…20,9898 mm auf.
+  bottomRightMetricsBounds: { widthMm: 29.9794, heightMm: 14.9897 },
 };
+
+const fixedWingVehicleAirProfile: LayoutProfile = {
+  ...rectBody(8),
+  measuredBodyBoundsMm: { minX: 1.01, minY: 6.0001, maxX: 30.9894, maxY: 20.9898 },
+  topLeftBaselineFromBodyTopMm: 7,
+  requiresTopLeftMetrics: true,
+  aboveLeftBaselineFromBodyTopMm: -1,
+  aboveLeftAnchorFromBodyLeftMm: -0.01,
+};
+
+const raisedVehicleWaterProfile: LayoutProfile = {
+  ...rectBody(6.9896),
+  belowRight: {
+    baselineFromBodyBottomMm: 4.01,
+    anchorFromBodyRightMm: 0.5618,
+    ink: 'organization',
+  },
+};
+
+/** I.3.5 bis I.3.7: 7,9900 mm über der separat gemessenen Rumpfunterkante. */
+const insetVehicleWaterProfile: LayoutProfile = rectBody(7.99);
 
 /**
  * Verkleinert das gedrehte Quadrat von oben und hält die Unterkante.
@@ -180,6 +272,7 @@ const rotatedSquareProfile: LayoutProfile = {
   // Unvermessen: kein Zeichen des Bestands beschriftet ein gedrehtes Quadrat mittig. Der Normwert
   // steht hier, damit die Zahl nicht fehlt — er ist keine Messung an dieser Körperform.
   centerBaselineFromBodyBottomMm: 8,
+  bottomLabelBaselineFromBodyBottomMm: 2,
   place(body, headBottomMm) {
     if (headBottomMm === null) return body;
     if (body.type !== 'rect' || body.transform?.rotate === undefined) {
@@ -236,6 +329,7 @@ const circleBodyProfile: LayoutProfile = {
   defaultAnchorMm: 2,
   // Unvermessen, wie bei `rotated-square-body`.
   centerBaselineFromBodyBottomMm: 8,
+  bottomLabelBaselineFromBodyBottomMm: 2,
   place(body, headBottomMm) {
     if (headBottomMm === null) return body;
     throw new Error(
@@ -263,6 +357,27 @@ const raisedGableCircle12Profile: LayoutProfile = {
   topLeftBaselineFromBodyTopMm: -0.999746,
 };
 
+const raisedCircleOneMmProfile: LayoutProfile = {
+  ...circleBodyProfile,
+  surfaceLabels: {
+    baselineFromBodyBottomMm: 4,
+    leftAnchorFromBodyLeftMm: -3,
+    rightAnchorFromBodyRightMm: 3,
+  },
+};
+
+const footBandCircle12Profile: LayoutProfile = {
+  ...circleBodyProfile,
+  // G.3.5: Diesel auf y=22, Bw rechts außen auf (31|29), Körperhülle 4…28 mm.
+  bottomCenterBaselineFromBodyBottomMm: 6,
+  // G.3.5: Der in Pfade umgewandelte Diesel-Lauf ist in der Referenz schwarz, nicht weiss.
+  bottomCenterInk: 'black',
+  belowRight: {
+    baselineFromBodyBottomMm: 1,
+    anchorFromBodyRightMm: 3,
+    ink: 'black',
+  },
+};
 const PROFILES: Record<SymbolKind, LayoutProfile> = {
   formation: formationProfile,
   // Die drei Körperformen ohne Kapitel-1-Abschnitt. `rectBodyProfile` und kein eigenes Profil:
@@ -301,10 +416,20 @@ const PROFILES: Record<SymbolKind, LayoutProfile> = {
 };
 
 export function profileFor(kind: SymbolKind, variant?: BodyVariantId): LayoutProfile {
+  if (kind === 'formation' && variant === 'foot-band') return formationFootBandProfile;
   if (kind === 'vehicle-air' && variant === 'raised-hull') return raisedVehicleAirProfile;
+  if (kind === 'vehicle-air' && variant === 'fixed-wing-hull') return fixedWingVehicleAirProfile;
+  if (kind === 'vehicle-water' && variant === 'raised-hull') return raisedVehicleWaterProfile;
   if (kind === 'vehicle-land' && variant === 'plain-wheel-pair') {
     return plainWheelVehicleLandProfile;
   }
+  if (kind === 'vehicle-land' && variant === 'foot-band') return footBandVehicleLandProfile;
+  if (kind === 'vehicle-land' && variant === 'inverted-hull-track') {
+    return invertedHullVehicleLandProfile;
+  }
+  if (kind === 'vehicle-water' && variant === 'inset-hull') return insetVehicleWaterProfile;
   if (kind === 'circle-12' && variant === 'raised-gable') return raisedGableCircle12Profile;
+  if (kind === 'circle-12' && variant === 'raised-circle-1mm') return raisedCircleOneMmProfile;
+  if (kind === 'circle-12' && variant === 'foot-band') return footBandCircle12Profile;
   return PROFILES[kind];
 }

@@ -32,22 +32,22 @@ describe('coverage CLI', () => {
     // 14 Darstellungen aus F.2.1 bis F.2.9 einschließlich fünf Alternativen: insgesamt 397. F-d
     // ergänzt F.2.10 bis F.2.17 lückenlos mit acht weiteren Fahrzeugen: insgesamt 405. F-e
     // ergänzt elf Platzzeichen aus F.3.1 bis F.3.11: insgesamt 416. F-f schließt F.3 mit den
-    // acht Zeichen F.3.12 bis F.3.19 ab: insgesamt 424. D.1 ergänzt zehn Darstellungen aus
-    // D.1.1 bis D.1.9 einschließlich der Alternative von D.1.9: insgesamt 434. D.2 ergänzt die
-    // sieben Ortsdefinitionen D.2.1 bis D.2.7: insgesamt 441. D.3 ergänzt zwölf neue Rezepte
-    // und zwei direkte offene Kappen; D.3.7 behält seinen vorhandenen Schlüssel: insgesamt 455.
-    // D.4 ergänzt fünf übergeordnete Funktionsrezepte und schließt Anhang D bei 460 Zeilen.
-    expect(manifestReviews).toBe(460);
+    // Acht Zeichen F.3.12 bis F.3.19 ergeben 424. G ergänzt 21, H und I-a je drei,
+    // C.1.3 eine und N neun weitere Darstellungen auf insgesamt 461. D.1 ergänzt zehn aus
+    // D.1.1 bis D.1.9 einschließlich der Alternative von D.1.9: 471. D.2 ergänzt die sieben
+    // Ortsdefinitionen: 478. D.3 ergänzt zwölf neue Rezepte und zwei direkte offene
+    // Kappen; D.3.7 behält seinen vorhandenen Schlüssel: 492. D.4 schließt bei 497 Zeilen.
+    expect(manifestReviews).toBe(497);
     expect(sourceReviews).toBe(13);
     expect(profileReviews).toBe(1);
-    expect(openReviews).toBe(474);
+    expect(openReviews).toBe(511);
     // **Die Umfangszeile ist wieder kurz.** Der Teilslice E.2 hatte sie auf 47 Einträge gedehnt,
     // weil E.2 mit einem fehlenden Abschnitt nur abschnittsweise behauptbar war. Seit E.2.6
     // gebaut ist, tragen zwei Tests die Lückenlosigkeit — an den Rezepten (`recipes.test.ts`)
     // und an den Manifesteinträgen (`coverage-manifest.test.ts`) —, und erst damit ist das eine
     // `E` eine widerlegbare Aussage statt einer kürzeren.
     expect(lines).toContain(
-      'Umfang:      1, 2, 4, 5.1.1, 5.4, 5.8, C.1.1, C.1.2, D, E, F, J.1, J.2, J.3, J.4, K, L, M',
+      'Umfang:      1, 2, 4, 5.1.1, 5.4, 5.8, C.1.1, C.1.2, C.1.3, D, E, F, G, H, I.3.5, I.3.6, I.3.7, J.1, J.2, J.3, J.4, K, L, M, N',
     );
     // Die Ausnahme ist im Betrieb sichtbar und nicht nur im Gate. Sie steht bewusst **nicht** in
     // der Blockerzeile darunter: ein Blocker ist ein offener Punkt, diese Ausnahme ist ein

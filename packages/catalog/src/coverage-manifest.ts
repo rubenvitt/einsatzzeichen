@@ -52,6 +52,10 @@ import {
   ANHANG_F_F_FINDINGS,
   ANHANG_F_F_DEVIATIONS,
 } from './recipes-anhang-f.js';
+import { ANHANG_N_RECIPES } from './recipes-anhang-n.js';
+import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
+import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
+import { ANHANG_I_A_RECIPES } from './recipes-anhang-i.js';
 
 /**
  * Migration nach Slice 2: `technical` ist für alle elf Einträge `approved`, weil das Kriterium
@@ -148,6 +152,23 @@ const LEADERSHIP_OPEN_CAP_TECHNICAL_REVIEW: Review = {
     'Kontrasthintergründe sind je Definition explizit. Snapshot, Kommando, Box, ' +
     'Standalone-Clipping, Textlesbarkeit, Mehrgrößen-, Metadaten- und Kontrast-Gates prüfen ' +
     'beide renderbaren Einträge; Benennung und Bedeutung der offenen Kappe bleiben pending.',
+};
+
+const ANHANG_C_A_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'Die verpflichtende Sicht-QA hat die zuvor für C.1 verwendete Kapitel-4-Boxfassung mit ' +
+    'zusätzlichem rechten Horizontalast widerlegt; die eigenständige capability.fire-fighting ' +
+    'bleibt für Kapitel 4 unverändert. C.1.3 verwendet Formation, Feuerwehrfarbe, Stärke zug ' +
+    'und die formationsgebundene bodyMarks-Fassung fire-fighting: (1|16) nach (21|16), von dort ' +
+    'nach (31|6) und (31|26), ohne rechten Horizontalast. Der Körper besteht ' +
+    'matchFingerprint ohne Befund; recipes.test.ts hält Rezept, drei Kopfprimitive bei ' +
+    'cx 11/16/21 und cy 3,5 mm, Körperhülle 1/6 bis 31/26 mm sowie die Innengeometrie fest. ' +
+    'strengths.test.ts trägt die unabhängig vermessenen Zugmarken. Direkter und Mehrgrößen-' +
+    'Snapshot sowie die globalen viewBox-, Metadaten- und Kontrast-Gates prüfen die ' +
+    'renderbare Ausgabe. Das Domain-Review bleibt pending.',
 };
 
 /**
@@ -332,6 +353,70 @@ const ANHANG_F_F_TECHNICAL_REVIEW: Review = {
     'vorbestehenden Snapshots bleiben hashgleich. Der finale Task-6-Kontaktbogen war zu diesem ' +
     'Zeitpunkt noch nicht erzeugt oder gesichtet. Die Organisation hilfsorganisation und ' +
     'sämtliche Fachzuordnungen bleiben im Domain-Review pending.',
+};
+
+/**
+ * Technisches Review der neun Anhang-N-Zeichen. Die Trägerbezeichnungen im Dateinamen bleiben
+ * erhalten, ohne daraus neue Organisationssemantik abzuleiten; genau deshalb nennt die Note den
+ * kommunalen Bauhof und den Beauftragten Dritten ausdrücklich. Der spätere Kontaktbogen gehört
+ * zu Task 3 und wird hier nicht vorweggenommen.
+ */
+const ANHANG_N_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'Alle neun Originalreferenzen N.1.1 bis N.1.6 und N.2.1 bis N.2.3 wurden einzeln gegen ' +
+    'die literal gebundene Rezeptmatrix geprüft. Körper-Fingerprint, gemessene Fahrwerke, ' +
+    'technische BodyMarks, Textläufe, direkte Snapshots und Mehrgrößen-Snapshots sind gegatet. ' +
+    'Die benannten Träger kommunaler Bauhof (N.1.2) und Beauftragter Dritter (N.1.5) bleiben ' +
+    'Träger in Titel und Quellenreview erhalten; daraus entsteht weder eine neue Organisation ' +
+    'noch eine geländegängig-Semantik. Die schwarzen Quellenläufe von N.1.2 bis N.1.5 werden ' +
+    'über den gemessenen inBodyInk-Vertrag gerendert und bestehen den Kontrastvertrag ohne neue ' +
+    'Ausnahme; die bestehende E.2.6-Ausnahme bleibt allein. Der finale LFH-422-Kontaktbogen ' +
+    'war zu diesem ' +
+    'Zeitpunkt noch nicht erzeugt oder gesichtet; sämtliche Fachzuordnungen bleiben im ' +
+    'Domain-Review pending.',
+};
+
+/**
+ * Technisches Review der 21 Anhang-G-Rezepte. Es bezieht sich auf die vermessenen lokalen
+ * Geometrie-, Kompositions- und Katalogverträge sowie den abgeschlossenen 21-Karten-Vergleich.
+ */
+const ANHANG_G_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'Alle 21 Anhang-G-Referenzen sind literal an eigene primary-Rezepte gebunden. Die ' +
+    'generischen Tests halten foot-band an Formation, Landfahrzeug, Anhänger und 12-mm-Kreis, ' +
+    'die Kopf- und Fahrwerkszonen, Logistikmarken sowie DLRG-, Diesel- und Bw-Labelpositionen ' +
+    'fest; Snapshot-, Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates prüfen den ' +
+    'renderbaren Bestand. G.1.5 besitzt in der Quelle keine vergleichbare Füllfläche und ' +
+    'trägt deshalb eine ehrliche Körper-Geometrieregression statt eines Fingerprint-Claims. ' +
+    'Der deterministische 21-Karten-Referenzvergleich wurde in Originalauflösung gesichtet; ' +
+    'DLRG, Diesel und Bw sind sichtbar, und die acht kopflosen Formationen bewahren ihre offene ' +
+    'Oberkante. Die abweichende bestehende Polizei-Grünpalette von G.3.2 ist dokumentiert. ' +
+    'Sämtliche fachlichen Zuordnungen bleiben pending.',
+};
+const ANHANG_H_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'Die drei H-Originale wurden einzeln vermessen und aus Linien, Polylinien und Kreisen ' +
+    'unabhängig rekonstruiert. H.2 verwendet eine eigene veterinärmedizinische kompakte ' +
+    'Dekontaminationsmarke statt der Human-Dekontamination aus Kapitel 4. Snapshot-, ' +
+    'Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates prüfen den renderbaren Bestand; die ' +
+    'fachliche Zuordnung bleibt im Domain-Review pending.',
+};
+
+const ANHANG_I_A_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'I.3.5-I.3.7 passed measured inset-hull, 7.99 mm center-profile, literal recipe, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
 };
 
 /** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
@@ -571,7 +656,7 @@ const ANHANG_E_C_DEVIATIONS: Readonly<Record<string, string>> = Object.freeze({
  * Mal ein Gate greift, das es in E.1 nicht gab.
  *
  * **Am 18. August 2026 um E.2.6 erweitert.** Es teilt dieses Review mit den 20 anderen — sein
- * Nachweis ist derselbe —, bringt aber als einziges Zeichen des Katalogs ein Kontrastpaar mit,
+ * Nachweis ist derselbe —, bringt aber als einziges Zeichen des Anhangs E ein Kontrastpaar mit,
  * das die eigene Schwelle nicht erreicht. Das steht unten in der Note und nicht als
  * `deviation`: die Umsetzung folgt der Quelle punktgenau.
  */
@@ -712,6 +797,7 @@ function technicalReviewFor(section: string): Review {
   if (Object.hasOwn(ANHANG_D_TASK_6_RECIPES, section)) {
     return ANHANG_D_TASK_6_TECHNICAL_REVIEW;
   }
+  if (section === 'C.1.3') return ANHANG_C_A_TECHNICAL_REVIEW;
   if (Object.hasOwn(ANHANG_E_A_RECIPES, section)) {
     const defect = ANHANG_E_A_FILL_DEFECTS[section];
     if (defect === undefined) return ANHANG_E_A_TECHNICAL_REVIEW;
@@ -797,6 +883,16 @@ function technicalReviewFor(section: string): Review {
       ANHANG_F_F_DEVIATIONS[section],
     );
   }
+  if (Object.hasOwn(ANHANG_N_RECIPES, section)) {
+    return ANHANG_N_TECHNICAL_REVIEW;
+  }
+  if (Object.hasOwn(ANHANG_G_RECIPES, section)) {
+    return ANHANG_G_TECHNICAL_REVIEW;
+  }
+  if (Object.hasOwn(ANHANG_H_RECIPES, section)) return ANHANG_H_TECHNICAL_REVIEW;
+  if (Object.hasOwn(ANHANG_I_A_RECIPES, section)) {
+    return ANHANG_I_A_TECHNICAL_REVIEW;
+  }
   return TECHNICAL_REVIEW;
 }
 
@@ -834,10 +930,13 @@ const recipeEntries: CoverageEntry[] = Object.entries(RECIPES).map(([key, recipe
     referenceAsset: recipe.referenceAsset,
     coverage: 'composition-recipe',
     profile: 'bund',
-    // Task 13 hat alle drei Rezepte per matchFingerprint gegen die Referenz gegated,
-    // mit Differenz 0 an allen Kanten — das Manifest bildet das ab, statt es zu untertreiben.
-    // Für die 16 Zeichen aus E-a gilt dasselbe, geprüft in recipes.test.ts.
-    testEvidence: DRAWING_EVIDENCE,
+    // Wie bei den Grundzeichen entscheidet das Kennwertartefakt statt einer Rezept-ID: führt die
+    // Referenz `shapes: []`, ist der Fingerprint-Vergleich strukturell nicht ausführbar und eine
+    // explizite Geometrieregression tritt an seine Stelle. Unbekannte Assets liefern im Helper
+    // bewusst `false` und fallen danach im Fingerprinttest fail-closed auf.
+    testEvidence: referenceLacksComparableShape(recipe.referenceAsset)
+      ? UNGATED_DRAWING_EVIDENCE
+      : DRAWING_EVIDENCE,
     review: reviewFor(sourceId, variant, technicalReviewFor(key)),
   };
 });
@@ -988,9 +1087,15 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     '5.8',
     'C.1.1',
     'C.1.2',
+    'C.1.3',
     'D',
     'E',
     'F',
+    'G',
+    'H',
+    'I.3.5',
+    'I.3.6',
+    'I.3.7',
     'J.1',
     'J.2',
     'J.3',
@@ -998,6 +1103,7 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'K',
     'L',
     'M',
+    'N',
   ],
   entries: [...catalogEntries, ...recipeEntries, ...elementEntries, ...pictogramEntries],
 };

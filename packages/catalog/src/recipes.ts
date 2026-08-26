@@ -2,10 +2,11 @@ import {
   bodyLabelInk,
   compose,
   functionRoleTextInk,
+  profileFor,
   type CatalogPorts,
   type ContrastRequirement,
 } from '@einsatzzeichen/core';
-import type { Drawing, OrganizationId, SymbolSpec } from '@einsatzzeichen/schema';
+import type { BodyLabelInk, Drawing, OrganizationId, SymbolSpec } from '@einsatzzeichen/schema';
 import { baseDrawing } from './base-symbols.js';
 import { bodyMark } from './body-marks.js';
 import { administrativeHead } from './administrative-heads.js';
@@ -33,6 +34,10 @@ import {
   ANHANG_F_F_RECIPES,
 } from './recipes-anhang-f.js';
 import { ANHANG_D_TASK_6_RECIPES } from './recipes-anhang-d.js';
+import { ANHANG_N_RECIPES } from './recipes-anhang-n.js';
+import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
+import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
+import { ANHANG_I_A_RECIPES } from './recipes-anhang-i.js';
 
 const PORTS: CatalogPorts = {
   baseDrawing,
@@ -48,7 +53,7 @@ const PORTS: CatalogPorts = {
 export function composeFromCatalog(spec: SymbolSpec, title?: string): Drawing {
   return compose(spec, PORTS, {
     ...(title !== undefined ? { title } : {}),
-    description: describeSymbolSpec(spec),
+    descriptionFromSpec: describeSymbolSpec,
   });
 }
 
@@ -76,24 +81,32 @@ export interface Recipe {
  * zweier, drei davon ohne Kapitel-1-Abschnitt, dazu die Fahrwerkszone unterhalb des Körpers, eine
  * Zusatzgeometrie am Grundzeichen (Deichsel, L-Rahmen), die vierte Beschriftungszone außerhalb des
  * Körpers und einen je Zeichen gemessenen Schriftgrad des mittigen Laufs. Mit dem am 18. August
- * 2026 nachgezogenen E.2.6 sind damit **alle 68** Abschnitte des Anhangs E gebaut. Es ist zugleich
- * das einzige Zeichen des Katalogs, dessen Kontrastpaar eine erklärte Ausnahme trägt
+ * 2026 nachgezogenen E.2.6 sind damit **alle 68** Abschnitte des Anhangs E gebaut. E.2.6 ist
+ * zugleich das einzige Zeichen des Anhangs E, dessen Kontrastpaar eine erklärte Ausnahme trägt
  * (`CONTRAST_EXCEPTIONS`).
+ *
+ * Anhang N ergänzt neun primary-Darstellungen weiterer Träger. Ihre Körper-, Fahrwerks-,
+ * Marken- und Textgeometrien verwenden ausschließlich die davor separat vermessenen Verträge;
+ * insbesondere entsteht aus „geländegängig“ keine neue fachliche oder technische ID.
  */
 export const RECIPES = {
   ...ANHANG_D_TASK_6_RECIPES,
+  ...ANHANG_G_RECIPES,
   ...ANHANG_F_A_RECIPES,
   ...ANHANG_F_B_RECIPES,
   ...ANHANG_F_C_RECIPES,
   ...ANHANG_F_D_RECIPES,
   ...ANHANG_F_E_RECIPES,
   ...ANHANG_F_F_RECIPES,
+  ...ANHANG_I_A_RECIPES,
   ...ANHANG_E_A_RECIPES,
   ...ANHANG_E_B_RECIPES,
   ...ANHANG_E_C_RECIPES,
   ...ANHANG_E_D_RECIPES,
   ...ANHANG_E_E_RECIPES,
   ...ANHANG_E_F_RECIPES,
+  ...ANHANG_N_RECIPES,
+  ...ANHANG_H_RECIPES,
   'C.1.1': {
     title: 'Löschstaffel',
     referenceAsset: 'C.1.1_Löschstaffel.svg',
@@ -101,7 +114,7 @@ export const RECIPES = {
       kind: 'formation',
       organization: 'feuerwehr',
       strength: 'staffel',
-      capabilities: ['fire-fighting'],
+      bodyMarks: ['fire-fighting'],
     },
   },
   'C.1.2': {
@@ -111,7 +124,17 @@ export const RECIPES = {
       kind: 'formation',
       organization: 'feuerwehr',
       strength: 'gruppe',
-      capabilities: ['fire-fighting'],
+      bodyMarks: ['fire-fighting'],
+    },
+  },
+  'C.1.3': {
+    title: 'Löschzug einer Feuerwehr',
+    referenceAsset: 'C.1.3_Löschzug einer Feuerwehr.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'feuerwehr',
+      strength: 'zug',
+      bodyMarks: ['fire-fighting'],
     },
   },
 } as const satisfies Record<string, Recipe>;
@@ -139,11 +162,19 @@ export const RECIPES = {
  * auf weiss und damit 21:1 in allen drei Themes — die Anforderung entfällt nicht, sie ist
  * erfüllt.
  *
- * **Seit dem Teilslice E.2 gibt es eine zweite Richtung.** Die vierte Beschriftungszone setzt das
- * Trägerkürzel in der **Organisationsfarbe** unter den Körper, also auf die Ausgabeoberfläche.
- * Selbst gerechnet, damit es nicht übernommen ist: `blau` gegen `surface` erreicht 11,072:1 im
- * Referenztheme, 4,634:1 in `accessible-light` und 4,542:1 im Drucktheme — alle drei über der
- * Textschwelle 4,5:1, keine Palettenänderung nötig.
+ * **Seit LFH-422 kann die Quelle diese Ableitung je Rezept überschreiben.** N.1.2 bis N.1.5
+ * führen schwarze Körperläufe auf orange, hellgruen und braun. `bodyLabelInk()` nimmt denselben
+ * optionalen `inBodyInk`-Wert entgegen wie die Zeichnung; der Kontrastvertrag pflegt keine
+ * zweite Farblogik. Da E.2.6 auf derselben orangefarbenen Organisation weiterhin den weissen
+ * Default trägt, wird die Körperanforderung nach Organisation **und** Vordergrund dedupliziert.
+ * So bleiben weiss/orange und schwarz/orange zugleich sichtbar.
+ *
+ * **Seit dem Teilslice E.2 gibt es eine zweite Richtung.** Die vierte Beschriftungszone steht
+ * unter dem Körper auf der Ausgabeoberfläche. Ihre Tinte kommt wie beim Zeichnen aus dem
+ * Körperprofil: E verwendet Organisationsfarbe, das G-Kreisband Schwarz. Selbst gerechnet,
+ * damit es nicht übernommen ist: `blau` gegen `surface` erreicht 11,072:1 im Referenztheme,
+ * 4,634:1 in `accessible-light` und 4,542:1 im Drucktheme — alle drei über der Textschwelle
+ * 4,5:1, keine Palettenänderung nötig.
  *
  * **Seit dem 18. August 2026 leitet sie eine dritte Anforderung ab, die nicht besteht.** E.2.6
  * trägt als einziges Rezept `sonstige-gefahrenabwehr` mit Beschriftung; daraus entsteht „weiss
@@ -159,11 +190,17 @@ export const RECIPES = {
 export function labelContrastRequirements(
   recipes: Iterable<Recipe> = Object.values<Recipe>(RECIPES),
 ): readonly ContrastRequirement[] {
-  const inBody = new Set<OrganizationId>();
+  const inBody = new Map<string, {
+    organization: OrganizationId;
+    foreground: BodyLabelInk;
+  }>();
+  const blackBottomCenter = new Set<OrganizationId>();
   const belowBody = new Set<OrganizationId>();
   const roleText = new Map<string, ContrastRequirement>();
+  let blackBelowBody = false;
   let aboveBody = false;
-  let circleTopLeftOnSurface = false;
+  let surfaceBelowBody = false;
+  const circleTopLeftOnSurface = new Set<BodyLabelInk>();
   for (const recipe of recipes) {
     const { labels, organization } = recipe.spec;
     if (recipe.spec.functionRole !== undefined) {
@@ -186,42 +223,67 @@ export function labelContrastRequirements(
         });
       }
     }
-    // Ein Rezept ohne Organisation bleibt hier aussen vor, obwohl `compose.ts` auch ihm eine
-    // Körperfüllung gibt (die Grundfüllung des Grundzeichens, ersatzweise `weiss`). Der Bestand
-    // kennt heute kein solches Rezept — alle 80 führen eine Organisation —, und ein Paar aus
-    // einer Farbe zu bilden, die kein Zeichen trägt, hiesse eine Anforderung zu erfinden. Kommt
-    // das erste organisationslose Rezept mit Beschriftung, fällt es hier still durch; deshalb
-    // steht es hier als benannte Kante und nicht als Auslassung.
-    if (labels === undefined || organization === undefined) continue;
-    if (
-      labels.center !== undefined ||
-      labels.topLeft !== undefined ||
-      labels.bottomLeft !== undefined ||
-      labels.bottomCenter !== undefined ||
-      labels.bottomRight !== undefined ||
-      labels.topLeftLines !== undefined
-    ) {
-      inBody.add(organization);
+    if (labels === undefined) continue;
+    const profile = profileFor(recipe.spec.kind, recipe.spec.bodyVariant);
+    // Körperbeschriftungen ohne Organisation bleiben außen vor: ohne Organisationsfarbe ist
+    // kein belastbares Körperfarbenpaar ableitbar. Schwarzes `belowRight` ist davon unabhängig,
+    // weil sein Profil Vorder- und Hintergrundtoken vollständig festlegt.
+    if (organization !== undefined) {
+      if (
+        labels.center !== undefined ||
+        labels.topLeft !== undefined ||
+        labels.bottomLeft !== undefined ||
+        (labels.bottomCenter !== undefined && profile.bottomCenterInk !== 'black') ||
+        labels.bottomRight !== undefined ||
+        labels.topLeftLines !== undefined
+      ) {
+        const foreground = bodyLabelInk(
+          organizationColor(organization),
+          labels.inBodyInk,
+        );
+        // Ein Organisationsprofil kann mehrere quellenvermessene Tinten führen: E.2.6 setzt auf
+        // orange den bisherigen weissen Default, N.1.2/N.1.5 dagegen schwarz. Der Schlüssel muss
+        // deshalb Farbe und Organisation tragen; ein Set nur aus Organisationen verschluckte eines
+        // der beiden real gezeichneten Kontrastpaare.
+        inBody.set(`${organization}:${foreground}`, { organization, foreground });
+      }
+      if (labels.bottomCenter !== undefined && profile.bottomCenterInk === 'black') {
+        blackBottomCenter.add(organization);
+      }
+      if (recipe.spec.kind === 'circle-12' && labels.topLeft !== undefined) {
+        circleTopLeftOnSurface.add(bodyLabelInk(
+          organizationColor(organization),
+          labels.inBodyInk,
+        ));
+      }
     }
-    // Die vierte Zone steht **unter** dem Körper und trägt die Organisationsfarbe selbst. Ihr
-    // Untergrund ist deshalb die Ausgabeoberfläche und nicht die Körperfläche — ein Paar, das die
-    // Ableitung oben nie erzeugt, weil sie ausschließlich „weiss auf Körperfarbe" kennt. Ohne
-    // diese zweite Schleife wäre der einzige farbige Text des Katalogs ohne Kontrastvertrag.
-    if (labels.belowRight !== undefined) belowBody.add(organization);
     if (labels.aboveLeft !== undefined) aboveBody = true;
-    if (recipe.spec.kind === 'circle-12' && labels.topLeft !== undefined) {
-      circleTopLeftOnSurface = true;
+    if (labels.surfaceBelowLeft !== undefined || labels.surfaceBelowRight !== undefined) {
+      // Beide Felder teilen Tinte und Untergrund. Ein boolescher Vertrag hält zwei sichtbare
+      // Läufe wie bei N.2.3 dedupliziert, ohne sie mit `aboveLeft` oder Kreis-Clipping zu vermengen.
+      surfaceBelowBody = true;
+    }
+    if (labels.belowRight !== undefined) {
+      const ink = profile.belowRight?.ink;
+      if (ink === 'organization' && organization !== undefined) belowBody.add(organization);
+      if (ink === 'black') blackBelowBody = true;
     }
   }
   return [
     ...roleText.values(),
-    ...[...inBody].map<ContrastRequirement>((organization) => ({
-      // Dieselbe Ableitung, die `compose.ts` beim Zeichnen anwendet: schwarz auf weissem Körper,
-      // sonst weiss. Aufgerufen und nicht nachgebaut, damit Vertrag und Zeichnung nicht
-      // auseinanderlaufen können.
-      foreground: bodyLabelInk(organizationColor(organization)),
+    ...[...inBody.values()].map<ContrastRequirement>(({ organization, foreground }) => ({
+      // Derselbe Resolver, den `compose.ts` beim Zeichnen anwendet: quellenvermessener Override,
+      // sonst schwarz auf weissem Körper und weiss auf jeder anderen Füllung. Aufgerufen und
+      // nicht nachgebaut, damit Vertrag und Zeichnung nicht auseinanderlaufen können.
+      foreground,
       background: organizationColor(organization),
       context: `Beschriftung im Körper auf Organisation ${organization}`,
+      minimum: MINIMUM_TEXT_CONTRAST,
+    })),
+    ...[...blackBottomCenter].map<ContrastRequirement>((organization) => ({
+      foreground: 'schwarz',
+      background: organizationColor(organization),
+      context: `Schwarze Beschriftung im Körper auf Organisation ${organization}`,
       minimum: MINIMUM_TEXT_CONTRAST,
     })),
     ...[...belowBody].map<ContrastRequirement>((organization) => ({
@@ -230,17 +292,29 @@ export function labelContrastRequirements(
       context: `Trägerkürzel unterhalb des Körpers, Organisation ${organization}`,
       minimum: MINIMUM_TEXT_CONTRAST,
     })),
+    ...(blackBelowBody ? [{
+      foreground: 'schwarz' as const,
+      background: 'surface' as const,
+      context: 'Schwarze Beschriftung unterhalb des Körpers',
+      minimum: MINIMUM_TEXT_CONTRAST,
+    }] : []),
     ...(aboveBody ? [{
       foreground: 'schwarz' as const,
       background: 'surface' as const,
       context: 'Beschriftung oberhalb des Körpers auf der Ausgabeoberfläche',
       minimum: MINIMUM_TEXT_CONTRAST,
     }] : []),
-    ...(circleTopLeftOnSurface ? [{
+    ...(surfaceBelowBody ? [{
       foreground: 'schwarz' as const,
+      background: 'surface' as const,
+      context: 'Beschriftung unterhalb des Körpers auf der Ausgabeoberfläche',
+      minimum: MINIMUM_TEXT_CONTRAST,
+    }] : []),
+    ...[...circleTopLeftOnSurface].map<ContrastRequirement>((foreground) => ({
+      foreground,
       background: 'surface' as const,
       context: 'Kreislabel teilweise außerhalb der Körperfläche',
       minimum: MINIMUM_TEXT_CONTRAST,
-    }] : []),
+    })),
   ];
 }

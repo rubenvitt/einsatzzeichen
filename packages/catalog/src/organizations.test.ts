@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { PALETTE, type OrganizationId } from '@einsatzzeichen/schema';
+import { PALETTE, type OrganizationId, type SymbolSpec } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { ORGANIZATION_COLORS, organizationColor } from './organizations.js';
 import { fingerprintFor } from './fingerprint-index.js';
+import { composeFromCatalog } from './recipes.js';
 
 /** Organisationen aus Kapitel 2, deren Referenzdatei eine Füllfarbe trägt — per audit:reference belegt. */
 const COLORED = [
@@ -18,6 +19,11 @@ const COLORED = [
   ['hilfsorganisation', '2.2_Organisationen.svg'],
 ] as const satisfies ReadonlyArray<[keyof typeof ORGANIZATION_COLORS, string]>;
 
+/** Zusätzlicher Farbbeleg außerhalb Kapitel 2; gehört deshalb nicht in dessen Coverage-Claim. */
+const ANHANG_N_COLORED = [
+  ['bundespolizei', 'N.1.3_Einsatzfahrzeug_Bundespolizei.svg'],
+] as const satisfies ReadonlyArray<[keyof typeof ORGANIZATION_COLORS, string]>;
+
 /**
  * Erzwingt zur Kompilierzeit, dass jede in `ORGANIZATION_COLORS` belegte Organisation auch in
  * `COLORED` einen Farbnachweis-Fall hat. `ReadonlyArray<[keyof typeof ORGANIZATION_COLORS, string]>`
@@ -27,7 +33,9 @@ const COLORED = [
  * `keyof typeof ORGANIZATION_COLORS`, und die Zuweisung unten wird zum Typfehler
  * ("Type 'false' does not satisfy the constraint 'true'").
  */
-type ReferencedOrganization = (typeof COLORED)[number][0];
+type ReferencedOrganization =
+  | (typeof COLORED)[number][0]
+  | (typeof ANHANG_N_COLORED)[number][0];
 type Extends<Type, Constraint> = Type extends Constraint ? true : false;
 type AssertTrue<Check extends true> = Check;
 const referenceCoversAllOrganizationColors: AssertTrue<
@@ -36,6 +44,73 @@ const referenceCoversAllOrganizationColors: AssertTrue<
 void referenceCoversAllOrganizationColors;
 
 describe('Organisationsfarben Kapitel 2', () => {
+  const measuredN2CircleSpecs = [
+    {
+      kind: 'circle-12',
+      organization: 'zivile-einheiten',
+      bodyMarks: ['spontaneous-helper-collection-arrow'],
+    },
+    {
+      kind: 'circle-12',
+      organization: 'feuerwehr',
+      bodyMarks: ['spontaneous-helper-contact-double-arrow'],
+    },
+    {
+      kind: 'circle-12',
+      bodyVariant: 'raised-circle-1mm',
+      organization: 'zivile-einheiten',
+      bodyMarks: ['circle-information-stem'],
+      labels: { surfaceBelowLeft: '291300', surfaceBelowRight: 'ZIV' },
+    },
+  ] as const satisfies readonly SymbolSpec[];
+
+  it('komponiert ausschließlich die drei gemessenen N.2-Kreis-/Organisationsverträge', () => {
+    for (const spec of measuredN2CircleSpecs) {
+      expect(() => composeFromCatalog(spec), JSON.stringify(spec)).not.toThrow();
+    }
+
+    const invalid: readonly SymbolSpec[] = [
+      ...measuredN2CircleSpecs.map(({ organization: _organization, ...spec }) => spec),
+      {
+        kind: 'circle-12', organization: 'feuerwehr',
+        bodyMarks: ['spontaneous-helper-collection-arrow'],
+      },
+      {
+        kind: 'circle-12', organization: 'zivile-einheiten',
+        bodyMarks: ['spontaneous-helper-contact-double-arrow'],
+      },
+      {
+        kind: 'circle-12', organization: 'zivile-einheiten',
+        bodyMarks: ['circle-information-stem'],
+      },
+      {
+        kind: 'circle-12', organization: 'hilfsorganisation',
+        bodyMarks: ['spontaneous-helper-collection-arrow'],
+      },
+      {
+        kind: 'circle-12', organization: 'hilfsorganisation',
+        bodyMarks: ['spontaneous-helper-contact-double-arrow'],
+      },
+      {
+        kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+        organization: 'feuerwehr', bodyMarks: ['circle-information-stem'],
+      },
+      {
+        kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+        organization: 'zivile-einheiten', bodyMarks: ['spontaneous-helper-collection-arrow'],
+      },
+      {
+        kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+        organization: 'zivile-einheiten',
+      },
+    ];
+    for (const spec of invalid) {
+      expect(() => composeFromCatalog(spec), JSON.stringify(spec)).toThrow(
+        /circle-12-requires-hilfsorganisation/,
+      );
+    }
+  });
+
   it('bindet den Referenzfüllungs-Claim exakt an die ausgeführten Organisationsfälle', () => {
     const tested = COLORED.map(([id]) => `organization.${id}`).sort();
     const claimed = COVERAGE_MANIFEST.entries
@@ -51,7 +126,7 @@ describe('Organisationsfarben Kapitel 2', () => {
       .toContain(PALETTE[organizationColor(id)]);
   });
 
-  it('belegt jede der acht Organisationen der Taxonomie', () => {
+  it('belegt jede der neun Organisationen der Taxonomie', () => {
     // Bis LFH-424 sicherte diese Stelle das Gegenteil zu: `organizationColor('hilfsorganisation')`
     // warf, weil Kapitel 2 angeblich keine Referenzdatei dafür führte. 2.2_Organisationen.svg ist
     // die Datei — vollflächiger Fleck #ffffff, Typo-Ebene liest „HiOrg".
@@ -60,6 +135,7 @@ describe('Organisationsfarben Kapitel 2', () => {
       'thw',
       'fuehrung-leitung',
       'polizei',
+      'bundespolizei',
       'bundeswehr',
       'sonstige-gefahrenabwehr',
       'zivile-einheiten',
@@ -74,6 +150,14 @@ describe('Organisationsfarben Kapitel 2', () => {
     // `hilfsorganisation` ist von einem organisationslosen farblich nicht unterscheidbar. Genau
     // deshalb trägt die Kontursignatur hier mehr als bei den übrigen sieben.
     expect(PALETTE[organizationColor('hilfsorganisation')]).toBe('#ffffff');
+  });
+
+  it('trennt die hellgrüne Bundespolizei von der grünen Polizei', () => {
+    const [[, asset]] = ANHANG_N_COLORED;
+    expect(fingerprintFor(asset).fills).toContain('#64dc32');
+    expect(PALETTE[organizationColor('bundespolizei')]).toBe('#64dc32');
+    expect(organizationColor('bundespolizei')).toBe('hellgruen');
+    expect(organizationColor('polizei')).toBe('gruen');
   });
 
   it('definiert für jede belegte Organisation genau ein gültiges Palettentoken', () => {

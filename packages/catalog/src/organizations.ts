@@ -2,8 +2,9 @@ import type { ColorToken, OrganizationId } from '@einsatzzeichen/schema';
 
 /**
  * Aus Kapitel 2 der BBK/BABZ-Empfehlung abgeleitet, Werte per `pnpm cli audit:reference`
- * gegen `fingerprints.json` belegt. **Seit LFH-424 vollständig: acht Organisationsflecken für acht
- * `OrganizationId`-Werte.**
+ * gegen `fingerprints.json` belegt. **Seit LFH-424 vollständig: acht Organisationsflecken für die
+ * acht Organisationen aus Kapitel 2.** Anhang N.1.3 belegt zusätzlich die Bundespolizei als
+ * eigenständige hellgrüne Organisation; sie darf nicht mit der grünen Polizei kollabieren.
  *
  * `hilfsorganisation` fehlte bis dahin mit der Begründung, Kapitel 2 enthalte dafür keine
  * Referenzdatei. Das ist widerlegt: `2.2_Organisationen.svg` trägt einen vollflächigen Fleck
@@ -26,6 +27,7 @@ export const ORGANIZATION_COLORS = {
   thw: 'blau',
   'fuehrung-leitung': 'gelb',
   polizei: 'gruen',
+  bundespolizei: 'hellgruen',
   bundeswehr: 'braun',
   'sonstige-gefahrenabwehr': 'orange',
   'zivile-einheiten': 'hellgrau',
@@ -34,13 +36,13 @@ export const ORGANIZATION_COLORS = {
 
 /**
  * Weit getypter Blick auf `ORGANIZATION_COLORS` für die Suche über alle `OrganizationId`-Werte.
- * `ORGANIZATION_COLORS` selbst bleibt eng getypt (nur die sieben belegten Schlüssel), damit die
+ * `ORGANIZATION_COLORS` selbst bleibt eng getypt (nur die belegten Schlüssel), damit die
  * Vollständigkeitsprüfung in organizations.test.ts an `keyof typeof ORGANIZATION_COLORS` greift.
  */
 const colorsByOrganization: Partial<Record<OrganizationId, ColorToken>> = ORGANIZATION_COLORS;
 
 /**
- * Wirft, wenn die Organisation im Referenzumfang dieses Slice nicht belegt ist. Seit alle acht
+ * Wirft, wenn die Organisation im Referenzumfang dieses Slice nicht belegt ist. Seit alle neun
  * `OrganizationId`-Werte belegt sind, ist der Wurf unerreichbar — er bleibt trotzdem stehen: der
  * Typ ist weiterhin `Partial<Record<…>>`, und eine künftige Erweiterung von `OrganizationId` soll
  * hier auffallen statt `undefined` weiterzureichen.

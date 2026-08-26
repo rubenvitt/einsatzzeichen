@@ -411,13 +411,12 @@ nicht eng, sondern leer.
 die Referenz es zeigt, und führt „weiß auf orange" als bekannten, begründeten Negativbefund. E.2.6
 trägt deshalb **keine** `deviation` — abweichend ist nicht die Umsetzung von der Quelle, sondern
 die eigene Kontrastschwelle des Katalogs vom Bild. Die Ausnahme steht als Datum im Paket
-(`CONTRAST_EXCEPTIONS` mit Paar, Themes, Abschnitten, Entscheidungsdatum, Begründung und den drei
-geprüften und verworfenen Wegen) und ist im Betrieb sichtbar: `pnpm cli coverage` gibt
-`Kontrastausnahmen: weiss auf orange (E.2.6, entschieden am 2026-08-18 durch Projektinhaber)` aus.
-Sie ist ausdrücklich **kein** Freigabeblocker — ein Blocker ist ein offener Punkt, diese Ausnahme
-ist ein entschiedener. Das a11y-Gate bleibt scharf: die Ausnahme wirkt paarweise und themeweise,
-die Zahl der gedeckten Befunde ist auf **genau einen je Theme** gepinnt, und ein zweites oranges
-Rezept fällt an einer eigenen Zusage auf.
+(`CONTRAST_EXCEPTIONS` mit Paar, Themes, Abschnitten, Entscheidungsdatum, Begründung und den
+geprüften und verworfenen Wegen) und ist im Betrieb sichtbar. Die Ausnahme ist ausdrücklich
+**kein** Freigabeblocker — ein Blocker ist ein offener Punkt, dieses Paar ist entschieden. Das
+a11y-Gate bleibt scharf: die Ausnahme wirkt paarweise und themeweise, die Zahl der gedeckten
+Befunde ist auf **genau einen je Theme** gepinnt, und ein
+weiteres oranges Rezept fällt weiterhin an einer eigenen Zusage auf.
 
 **Die Umfangszeile ist damit zusammengezogen: aus `E.1` plus 30 E.2-Einzelzeilen wird `E`**, 47
 Einträge werden 17. Das ging vorher nicht: die Umfangsprüfung sieht Vollständigkeit nicht, sie
@@ -648,8 +647,8 @@ finale Task-6-Kontaktbogen, und sämtliche F-f-Domainreviews bleiben `pending`.
 
 Anhang D.1 ergänzt exakt zehn Darstellungen: D.1.1 ist die erste direkte `leadership`-Definition,
 D.1.2 bis D.1.8 sind sieben Kompositionen aus den vermessenen Funktionsträgerrollen, und D.1.9
-liegt als Primary plus Alternative vor. Damit umfasst der Zwischenstand 146 Rezepte, 255
-Piktogramme, 415 Renderfälle, 434 Manifestzeilen und 448 Reviewobjekte; 274 Manifestzeilen
+liegt als Primary plus Alternative vor. Auf dem integrierten Hauptbestand umfasst dieser Stand
+183 Rezepte, 255 Piktogramme, 452 Renderfälle, 471 Manifestzeilen und 485 Reviewobjekte; 274 Manifestzeilen
 repräsentieren auflösbare Elemente. Der beanspruchte D-Scope bleibt trotzdem bei `D.3.7` und
 wird erst nach vollständiger Umsetzung des Anhangs D erweitert.
 
@@ -681,8 +680,8 @@ weder eine öffentliche Kreis-/Ortsachse noch ein Rezept; insbesondere wird der 
 HiOrg-Zeichen gebundene `circle-12`-Körper nicht wiederverwendet und aus der gelben Fläche keine
 Organisation abgeleitet.
 
-Der Zwischenstand umfasst unverändert 146 Rezepte und 160 Rezept-/Basis-Snapshots sowie nun 262
-Piktogramme, 422 Renderfälle, 441 Manifestzeilen, 423 Mehrgrößen-Sheets und 455 Reviewobjekte;
+Der integrierte Zwischenstand umfasst unverändert 183 Rezepte und 197 Rezept-/Basis-Snapshots
+sowie nun 262 Piktogramme, 459 Renderfälle, 478 Manifestzeilen, 460 Mehrgrößen-Sheets und 492 Reviewobjekte;
 281 Manifestzeilen repräsentieren auflösbare Elemente. Alle sieben D.2-Domainreviews bleiben
 `pending`, und der beanspruchte D-Scope bleibt bis zum vollständigen Anhang bei `D.3.7`.
 
@@ -701,8 +700,8 @@ von D.3.12/D.3.13 mit Zweipunktkopf. Brandbekämpfung, Sanität und Betreuung we
 jeweilige endgültige Körperhülle gerechnet. `AW`, `ASB`, `DRK`, `MHD` und `JUH` bleiben
 sichtbarer Text und werden nicht zu Organisationen umgedeutet.
 
-Der Zwischenstand umfasst 158 Rezepte, 172 Rezept-/Basis-Snapshots, 264 Piktogramme, 436
-Renderfälle, 455 Manifestzeilen, 437 Mehrgrößen-Sheets und 469 Reviewobjekte; 283 Manifestzeilen
+Der integrierte Zwischenstand umfasst 195 Rezepte, 209 Rezept-/Basis-Snapshots, 264 Piktogramme,
+473 Renderfälle, 492 Manifestzeilen, 474 Mehrgrößen-Sheets und 506 Reviewobjekte; 283 Manifestzeilen
 repräsentieren auflösbare Elemente. Alle fünfzehn D.3-Domainreviews bleiben `pending`, und der
 beanspruchte D-Scope bleibt bis zur vollständigen Umsetzung von D.4 bei `D.3.7`.
 
@@ -715,15 +714,86 @@ den Fünf-Stern-Nationalstaat-Kopf und `BuPol`; D.4.5 den kompakten Körper und 
 EU-Kopf ohne erfundenen Text. Organisationen bestimmen ausschließlich die Körperfarbe.
 
 Damit ist Anhang D technisch mit exakt 37 Darstellungen vollständig: zehn aus D.1, sieben aus
-D.2, fünfzehn aus D.3 und fünf aus D.4. Der Katalog umfasst 163 Rezepte, 264 Piktogramme, 441
-Renderfälle, 460 Manifestzeilen, 177 Rezept-/Basis-Snapshots, 264 Piktogramm-Snapshots, 442
-Mehrgrößen-Sheets und 474 Reviewobjekte. Das Manifest führt weiterhin 283 Elementzeilen; das
-Elementregister enthält 268 eindeutige Beschreibungen bei 264 Definitionen und 249 eindeutigen
+D.2, fünfzehn aus D.3 und fünf aus D.4. Der integrierte Katalog umfasst 200 Rezepte, 264
+Piktogramme, 478 Renderfälle, 497 Manifestzeilen, 214 Rezept-/Basis-Snapshots, 264
+Piktogramm-Snapshots, 479 Mehrgrößen-Sheets und 511 Reviewobjekte. Das Manifest führt weiterhin
+283 Elementzeilen; das Elementregister enthält 269 eindeutige Beschreibungen bei 264 Definitionen und 249 eindeutigen
 Piktogramm-IDs. Erst der separate exakte 37/37-Mengentest trägt die Scope-Promotion von `D.3.7`
 auf genau `D`.
 
 Alle 37 Anhang-D-Domainreviews bleiben `pending`. Die technische Vollständigkeit, die gemessenen
 Körper und die grünen Rendergates sind keine fachliche, normative oder einsatztaktische Freigabe.
+
+## Anhang G: 21 Logistikzeichen vollständig im Katalog
+
+Anhang G ist mit allen 21 benannten Referenzen als eigenständige `primary`-Rezepte vertreten.
+Formation, Landfahrzeug, Anhänger und 12-mm-Kreis verwenden die vermessene Variante
+`foot-band`; Kopf- und Fahrwerkszonen, Logistikmarken sowie die Läufe `DLRG`, `Diesel` und `Bw`
+bleiben datengetrieben. Weiße Zeichen werden einschließlich DLRG als
+`hilfsorganisation` geführt, die farbigen Zeichen mit den bestehenden Organisationen
+Feuerwehr, Polizei, Führung/Leitung und Bundeswehr. Diese fachlichen Zuordnungen sind nicht
+freigegeben: alle 21 neuen Domain-Reviews stehen `pending`.
+
+Der mengenexakte Vollständigkeitstest trägt `G` erst jetzt im Manifest-Scope. Zusammen mit den
+inzwischen auf `main` hinzugekommenen Anhängen C, H und I umfasst der Katalog 165 Rezepte,
+433 Renderfälle und 452 Manifestzeilen. Dazu gehören 179 direkte SVG-Snapshots und 434
+Mehrgrößen-Snapshots. Alle 452 Manifest-Domainreviews sowie die 13 Quellen- und das eine
+Profilreview bleiben offen, insgesamt 466 fachliche Reviewobjekte.
+
+Zwanzig G-Rezepte besitzen den Körper-Fingerprint- plus Snapshot-Nachweis. `G.1.5` ist der
+ehrliche Sonderfall: seine Referenz führt keine vergleichbare Füllfläche, deshalb trägt die
+Manifestzeile `body-geometry-regression` plus `svg-snapshot` und keinen erfundenen
+Fingerprint-Claim. Die Entscheidung und die abgeschlossene technische Sichtprüfung stehen
+in [`docs/decisions/2026-08-26-anhang-g.md`](docs/decisions/2026-08-26-anhang-g.md) und
+[`docs/reviews/2026-08-26-anhang-g-visual-qa.md`](docs/reviews/2026-08-26-anhang-g-visual-qa.md).
+Der Task-3-Kontaktbogen stellt alle 21 Paare in Rezeptreihenfolge gegenüber. Die technische
+Sichtprüfung ist abgeschlossen; die 21 fachlichen Domain-Reviews bleiben davon unberührt.
+
+Der Task-3-Paarvergleich hat die Task-2-Annahme zum `Diesel`-Lauf widerlegt: die lokale Referenz
+zeichnet ihn schwarz, nicht weiss. Das Profil `circle-12/foot-band` führt deshalb für seine
+vermessene `bottomCenter`-Zone schwarze Tinte; die Formation behält die körperfarbenabhängige
+Regel. `labelContrastRequirements()` liest dieselbe Profilangabe. Schwarz auf Bundeswehr-Braun
+besteht die Textschwelle in allen Themes, daher gibt es für G.3.5 keine Kontrastausnahme mehr;
+das außenliegende `Bw` bleibt wie vermessen schwarz.
+
+Dieselbe Paarprüfung hat das vorläufige Task-1-Modell einer stets geschlossenen
+`formation/foot-band`-Oberkante präzisiert: die acht kopflosen und unbeschrifteten
+Logistikformationen G.1 bis G.8 sind in den Quellen oben offen. Das generische Profil öffnet die
+Kontur deshalb nur ohne Kopf und ohne Labels. G.1.1 bis G.1.5 sowie F.1.3/F.1.17 und die übrigen
+Körpervarianten behalten durch diese Oberkantenkorrektur ihre geschlossene Kontur und ihre
+bestehenden Snapshotbytes.
+
+## Anhang H: veterinärmedizinische Formationen
+
+H.1 bis H.3 ergänzen drei orangefarbene Formationsrezepte für Veterinärzug,
+Tier-Dekontaminationsgruppe sowie Schlacht- und Untersuchungsgruppe. H.2 hat bewusst eine eigene,
+kompakte technische Tierdekontaminationsmarke links unten: Sie ist weder die rote C.1.10-Fassung
+noch eine Wiederverwendung von `capability.decontamination`. Die drei Original-/Katalogpaare
+wurden als beschrifteter `420 × 420 px`-Paarvergleich gerastert und in Originalauflösung
+gesichtet; die lokalen, ignorierten PR-Evidenzdaten stehen in der QA-Notiz. Die technischen
+Reviews sind freigegeben, während die drei Domain-Reviews ausdrücklich `pending` bleiben.
+
+Messentscheidung und Provenienzgrenze: [`docs/decisions/2026-08-26-anhang-h.md`](docs/decisions/2026-08-26-anhang-h.md).
+Visual QA und Artefakthash: [`docs/reviews/2026-08-26-h-visual-qa.md`](docs/reviews/2026-08-26-h-visual-qa.md).
+
+## LFH-418: C.1.3 als erster Anhang-C-Slice
+
+Anhang C umfasst 59 Referenzdarstellungen; C.1.1 und C.1.2 waren bereits im Katalog.
+Der erste ausführbare Restslice ergänzt ausschließlich C.1.3 „Löschzug einer Feuerwehr“ als
+Komposition aus Formation, Feuerwehrfarbe, Stärke `zug` und der für C.1 vermessenen
+randbündigen `fire-fighting`-Körpermarke. Der Scope bleibt abschnittsgenau bei `C.1.3`; weder
+`C.1` noch `C` wird vor vollständiger, getesteter Abdeckung beansprucht. Das fachliche Review
+bleibt `pending`.
+
+Der damalige, nach dem finalen Rebase des C.1.3-Branches auf `origin/main` wiederholte Lauf
+belegte 60 Testdateien mit 4.126 grünen Tests, einen fehlerfreien Typecheck und das Coverage-Gate
+mit 431 Manifestzeilen und 445 offenen Fachreviews. Diese historischen Slice-Belege sind keine
+aktuelle Gesamtbranch-Aussage und keine fachliche Freigabe.
+
+Die visuelle QA steht in
+[`docs/reviews/2026-08-26-c-1-3-visual-qa.md`](docs/reviews/2026-08-26-c-1-3-visual-qa.md).
+Der dort verlinkte Screenshot zeigt ausschließlich generierte Katalogausgabe; die lokale
+BABZ-Referenz wird wegen ungeklärter Nutzungsgrundlage weder committed noch veröffentlicht.
 
 ## Der lokale Referenzbestand
 
@@ -751,6 +821,10 @@ pnpm cli audit:reference [--filter <präfix>] [--print]
 pnpm cli coverage
 pnpm cli export --out <pfad> --size <px> \
   --theme <reference|accessible-light|print-monochrome>
+
+REFERENCE_ROOT=/path/to/local/reference-root
+rtk pnpm cli visual-proof --reference-root "$REFERENCE_ROOT" \
+  --out out/lfh-421/anhang-g-reference-vs-catalog.png
 ```
 
 - `audit:reference` — Referenzbestand einlesen, Kennzahlen ableiten. `--filter <präfix>` schränkt
@@ -769,6 +843,12 @@ pnpm cli export --out <pfad> --size <px> \
   `print-monochrome` erzeugt eine achromatische Ausgabe mit getrennten Organisationsgrauwerten.
   Beide Alternativthemes ergänzen pro Organisation eine eindeutige Kontursignatur als
   nicht-farblichen visuellen Kanal.
+- `visual-proof --reference-root <pfad> --out out/lfh-421/<datei>.png` — erzeugt den
+  deterministischen Anhang-G-Kontaktbogen aus einem expliziten lokalen Referenzbestand. Die
+  Ausgabe bleibt im ignorierten Verzeichnis `out/lfh-421/`; vorbestehende Symlinks und Hardlinks
+  an den geprüften Ausgabepfaden werden abgewiesen. Der lokale Einzelprozess erwartet exklusiven
+  Zugriff auf diesen Ausgabebaum. Reproduktionsdaten, Sicherheitsgrenze und Einzelprüfung stehen
+  in der [Anhang-G-Visual-QA](./docs/reviews/2026-08-26-anhang-g-visual-qa.md).
 
 ## Globale Qualitätsgates vor D.1
 

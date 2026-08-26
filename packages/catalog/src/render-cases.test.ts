@@ -18,12 +18,23 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 441 nach D.4: 436 seit D.3 plus fünf übergeordnete Funktionsrezepte.
-    expect(ids).toHaveLength(441);
+    // 478: der integrierte Hauptbestand plus 36 neue Anhang-D-Renderfälle.
+    expect(ids).toHaveLength(478);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
-    // dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66 weitere.
-    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(163);
+    // dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66, G 21, H und I-a
+    // jeweils drei, C.1.3 einen, Anhang N neun und Anhang D 26 neue Rezeptfälle.
+    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(200);
+    expect(ids.filter((id) => id.startsWith('recipe.G.'))).toHaveLength(21);
+    expect(ids.filter((id) => id.startsWith('recipe.N.'))).toEqual([
+      'recipe.N.1.1', 'recipe.N.1.2', 'recipe.N.1.3', 'recipe.N.1.4', 'recipe.N.1.5',
+      'recipe.N.1.6', 'recipe.N.2.1', 'recipe.N.2.2', 'recipe.N.2.3',
+    ]);
+    expect(ids.filter((id) => id.startsWith('recipe.H.'))).toEqual([
+      'recipe.H.1',
+      'recipe.H.2',
+      'recipe.H.3',
+    ]);
     expect(ids.filter((id) => id.startsWith('recipe.E.1.'))).toHaveLength(37);
     // Anhang F, Teilslice F-a: zehn Abschnitte in elf Renderfällen. Der elfte ist
     // `recipe.F.1.11#alternative` — der **erste Renderfall des Katalogs, dessen Darstellung im

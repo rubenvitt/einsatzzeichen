@@ -1,6 +1,6 @@
 # LFH-420 — Anhang D: Führung und Funktionen
 
-> Design-Spec · 26. August 2026  
+> Design-Spec · 26. August 2026
 > Status: schriftlich freigegeben am 26. August 2026
 
 ## 1. Ziel und Erfolgsbild
@@ -447,13 +447,13 @@ Migration.
 
 | Zählpunkt | Basis | Nach LFH-420 |
 |---|---:|---:|
-| Rezepte | 137 | **163** |
-| Renderfälle | 405 | **441** |
-| Manifestzeilen | 424 | **460** |
-| Rezept-/Basissymbol-SVG-Snapshots | 151 | **177** |
+| Rezepte | 174 | **200** |
+| Renderfälle | 442 | **478** |
+| Manifestzeilen | 461 | **497** |
+| Rezept-/Basissymbol-SVG-Snapshots | 188 | **214** |
 | eigenständige Piktogramm-SVG-Snapshots | 254 | **264** |
-| Mehrgrößen-Sheets einschließlich Organisationsprofil | 406 | **442** |
-| offene Reviewobjekte einschließlich 13 Quellen- und 1 Profilreview | 438 | **474** |
+| Mehrgrößen-Sheets einschließlich Organisationsprofil | 443 | **479** |
+| offene Reviewobjekte einschließlich 13 Quellen- und 1 Profilreview | 475 | **511** |
 
 Die Zahlen werden aus Registern abgeleitet und durch Tests belegt. D.3.7 ändert zwei vorhandene
 Snapshotdateien, erhöht aber keinen Zählpunkt.

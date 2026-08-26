@@ -12,7 +12,7 @@ import {
   knownContrastIssues,
   unexpectedContrastIssues,
 } from './contrast-exceptions.js';
-import { organizationColor, ORGANIZATION_COLORS } from './organizations.js';
+import { ORGANIZATION_COLORS } from './organizations.js';
 import { ALL_PICTOGRAMS } from './pictograms/index.js';
 import { RECIPES, labelContrastRequirements, type Recipe } from './recipes.js';
 import {
@@ -50,6 +50,21 @@ function requirements(): ContrastRequirement[] {
   ];
 }
 
+function exceptionSectionsFromRecipes(
+  exception: (typeof CONTRAST_EXCEPTIONS)[number],
+  recipes: Readonly<Record<string, Recipe>> = RECIPES,
+): string[] {
+  return Object.entries<Recipe>(recipes)
+    .filter(([, recipe]) =>
+      labelContrastRequirements([recipe]).some(
+        (requirement) =>
+          requirement.foreground === exception.foreground &&
+          requirement.background === exception.background,
+      ),
+    )
+    .map(([section]) => section);
+}
+
 describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
   it('hat echte Piktogramm-Nachbarschaften zu prüfen', () => {
     expect(ALL_PICTOGRAMS).toHaveLength(264);
@@ -57,15 +72,14 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
   });
 
   it.each([ACCESSIBLE_LIGHT_THEME, PRINT_MONOCHROME_THEME])(
-    '$id besteht alle expliziten Anforderungen bis auf die eine entschiedene Ausnahme',
+    '$id besteht alle expliziten Anforderungen bis auf die entschiedene Ausnahme',
     (theme) => {
       const issues = checkContrast(theme, requirements());
       // Die Ausnahme wirkt paarweise und themeweise (`contrastExceptionFor`), nicht als
       // gelockerte Schwelle: jedes andere Paar und jedes andere Theme fällt weiter auf.
       expect(unexpectedContrastIssues(issues)).toEqual([]);
-      // Und die Zahl der gedeckten Befunde ist **gepinnt**, nicht toleriert — dasselbe Muster
-      // wie beim blauen Negativbefund weiter unten. Genau einer je Theme: weiss auf orange aus
-      // der Beschriftung von E.2.6.
+      // Und die Zahl der gedeckten Befunde ist **gepinnt**, nicht toleriert — genau einer je
+      // Theme: weiss auf orange aus E.2.6. Die schwarzen N-Läufe und Diesel bestehen regulär.
       expect(knownContrastIssues(issues)).toHaveLength(1);
       expect(knownContrastIssues(issues).map((issue) => issue.context)).toEqual([
         'Beschriftung im Körper auf Organisation sonstige-gefahrenabwehr',
@@ -124,10 +138,10 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     });
   });
 
-  it('leitet für ein Trägerkürzel unterhalb des Körpers die Organisationsfarbe auf der Oberfläche ab', () => {
-    // Die vierte Beschriftungszone ist der **einzige** farbige Text des Katalogs, und ihr
-    // Untergrund ist die Ausgabeoberfläche statt der Körperfläche. Die Ableitung „weiss auf
-    // Körperfarbe" erzeugt dieses Paar nicht — ohne die zweite Richtung stünde es ohne Vertrag da.
+  it('leitet belowRight profilabhängig auf der Oberfläche ab und dedupliziert schwarze Tinte', () => {
+    // Die vierte Beschriftungszone liegt auf der Ausgabeoberfläche statt auf der Körperfläche.
+    // E führt sie in Organisationsfarbe, das G-Kreisband dagegen schwarz. Zwei schwarze Rezepte
+    // — darunter eines ohne Organisation — müssen genau eine schwarze Anforderung erzeugen.
     //
     // Geprüft an einem eigens gebauten Rezept und nicht am Bestand: `labelContrastRequirements`
     // liest die Rezepte, und die 31 Zeichen aus E.2 trägt erst die zweite Bauphase ein. Der
@@ -144,12 +158,37 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
           labels: { belowRight: 'THW' },
         },
       },
+      {
+        title: 'Prüffall schwarzes Kreisband mit Organisation',
+        referenceAsset: 'G.3.5_Versorgungsstelle Betriebsstoffe.svg',
+        spec: {
+          kind: 'circle-12',
+          bodyVariant: 'foot-band',
+          organization: 'bundeswehr',
+          labels: { belowRight: 'Bw' },
+        },
+      },
+      {
+        title: 'Prüffall schwarzes Kreisband ohne Organisation',
+        referenceAsset: 'G.3.5_Versorgungsstelle Betriebsstoffe.svg',
+        spec: {
+          kind: 'circle-12',
+          bodyVariant: 'foot-band',
+          labels: { belowRight: 'Bw' },
+        },
+      },
     ]);
     expect(derived).toEqual([
       {
         foreground: 'blau',
         background: 'surface',
         context: 'Trägerkürzel unterhalb des Körpers, Organisation thw',
+        minimum: MINIMUM_TEXT_CONTRAST,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Schwarze Beschriftung unterhalb des Körpers',
         minimum: MINIMUM_TEXT_CONTRAST,
       },
     ]);
@@ -258,6 +297,22 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     }
   });
 
+  it('leitet N.2.3s schwarze Oberflächenläufe eigenständig und dedupliziert ab', () => {
+    const derived = labelContrastRequirements([RECIPES['N.2.3']]);
+    expect(derived).toEqual([
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Beschriftung unterhalb des Körpers auf der Ausgabeoberfläche',
+        minimum: MINIMUM_TEXT_CONTRAST,
+      },
+    ]);
+    for (const theme of [RENDER_THEMES.reference, ACCESSIBLE_LIGHT_THEME, PRINT_MONOCHROME_THEME]) {
+      expect(checkContrast(theme, derived), theme.id).toEqual([]);
+    }
+    expect(CONTRAST_EXCEPTIONS).toHaveLength(1);
+  });
+
   it('hält weiss auf orange als entschiedene Ausnahme fest, die kein Theme löst', () => {
     // **Diese Zeile hat ihre Rolle gewechselt, nicht ihre Zahlen.** Bis zum 18. August 2026 hielt
     // sie einen offenen Punkt fest und E.2.6 blieb ungebaut. Seither ist entschieden (Nutzer,
@@ -285,7 +340,7 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     }
 
     const exception = CONTRAST_EXCEPTIONS[0];
-    expect(CONTRAST_EXCEPTIONS).toHaveLength(1);
+    expect(exception?.sections).toEqual(['E.2.6']);
     expect(exception?.decidedOn).toBe('2026-08-18');
     expect(exception?.decidedBy).toBe('Projektinhaber');
     // Drei geprüfte und verworfene Wege, nicht einer: ohne sie wäre die Entscheidung eine
@@ -308,6 +363,54 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     }
   });
 
+  it('leitet die quellenvermessene schwarze Tinte der N-Körperläufe ohne Ausnahme ab', () => {
+    const nRecipes = Object.entries<Recipe>(RECIPES)
+      .filter(([section]) => section.startsWith('N.'))
+      .map(([, recipe]) => recipe);
+    const inBody = labelContrastRequirements(nRecipes).filter(
+      (requirement) => requirement.context.startsWith('Beschriftung im Körper'),
+    );
+    expect(inBody).toEqual([
+      {
+        foreground: 'schwarz',
+        background: 'orange',
+        context: 'Beschriftung im Körper auf Organisation sonstige-gefahrenabwehr',
+        minimum: MINIMUM_TEXT_CONTRAST,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'hellgruen',
+        context: 'Beschriftung im Körper auf Organisation bundespolizei',
+        minimum: MINIMUM_TEXT_CONTRAST,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'braun',
+        context: 'Beschriftung im Körper auf Organisation bundeswehr',
+        minimum: MINIMUM_TEXT_CONTRAST,
+      },
+    ]);
+    for (const theme of [RENDER_THEMES.reference, ACCESSIBLE_LIGHT_THEME, PRINT_MONOCHROME_THEME]) {
+      expect(checkContrast(theme, inBody), theme.id).toEqual([]);
+    }
+    expect(CONTRAST_EXCEPTIONS).toHaveLength(1);
+  });
+
+  it('leitet den schwarzen Diesel-Lauf profilabhängig als reguläre Kontrastanforderung ab', () => {
+    const dieselRequirements = labelContrastRequirements([RECIPES['G.3.5']]);
+    expect(dieselRequirements).toContainEqual({
+      foreground: 'schwarz',
+      background: 'braun',
+      context: 'Schwarze Beschriftung im Körper auf Organisation bundeswehr',
+      minimum: MINIMUM_TEXT_CONTRAST,
+    });
+    for (const theme of [RENDER_THEMES.reference, ACCESSIBLE_LIGHT_THEME, PRINT_MONOCHROME_THEME]) {
+      expect(checkContrast(theme, dieselRequirements), theme.id).toEqual([]);
+    }
+    expect(
+      contrastExceptionFor({ foreground: 'weiss', background: 'braun', themeId: 'reference' }),
+    ).toBeUndefined();
+  });
   it('belegt, dass das Fenster im Drucktheme leer ist, statt es zu behaupten', () => {
     // Die tragende Hälfte der Begründung. Für `accessible-light` wäre der Befund lösbar — ein
     // dunkleres Orange im Farbton von #fa8c00 erfüllt beide Richtungen (nachgerechnet: #b06300
@@ -341,26 +444,22 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     expect(moeglich).toEqual([]);
   });
 
-  it('nennt in der Ausnahme genau die Abschnitte, aus denen das Paar entsteht', () => {
-    // Der Pin, der ein **zweites** oranges Zeichen auffallen lässt. Über die Befundzahl geht das
-    // nicht: `labelContrastRequirements` sammelt je Organisation in ein `Set`, ein zweites
-    // oranges Rezept erzeugte also keine zweite Anforderung und keinen zweiten Befund. Diese
-    // Zeile zählt deshalb die Rezepte und nicht die Befunde.
-    const orangeMitBeschriftung = Object.entries<Recipe>(RECIPES)
-      .filter(([, recipe]) => {
-        const { organization, labels } = recipe.spec;
-        if (organization === undefined || labels === undefined) return false;
-        if (organizationColor(organization) !== 'orange') return false;
-        return (
-          labels.center !== undefined ||
-          labels.bottomLeft !== undefined ||
-          labels.bottomCenter !== undefined ||
-          labels.bottomRight !== undefined
-        );
-      })
-      .map(([section]) => section);
-    expect(orangeMitBeschriftung).toEqual(['E.2.6']);
-    expect(CONTRAST_EXCEPTIONS[0]?.sections).toEqual(orangeMitBeschriftung);
+  it('bindet jede Ausnahme exakt an alle aktuell erzeugenden Rezeptabschnitte', () => {
+    // Die Befundzahl kann diese Vollständigkeit nicht halten: `labelContrastRequirements`
+    // dedupliziert je Organisation in einem `Set`, und `contrastExceptionFor` matcht danach nur
+    // noch Paar plus Theme. Ein zweites Rezept mit demselben Paar erzeugte deshalb weder eine
+    // zweite Anforderung noch einen zweiten bekannten Befund. Diese Zeile zählt die Rezepte.
+    const expectedByPair = {
+      'weiss:orange': ['E.2.6'],
+    } as const;
+    expect(CONTRAST_EXCEPTIONS).toHaveLength(Object.keys(expectedByPair).length);
+    for (const exception of CONTRAST_EXCEPTIONS) {
+      const pair =
+        `${exception.foreground}:${exception.background}` as keyof typeof expectedByPair;
+      const sections = exceptionSectionsFromRecipes(exception);
+      expect(sections, pair).toEqual(expectedByPair[pair]);
+      expect(exception.sections, pair).toEqual(sections);
+    }
   });
 
   it('behält die feste Körper- und Kopf-Anforderung genau einmal', () => {

@@ -8,6 +8,11 @@ import {
 import { pictogram } from './pictograms/index.js';
 
 describe('semantische Zeichenbeschreibungen', () => {
+  it('benennt die Bundespolizei als eigene Organisation', () => {
+    expect(describeSymbolSpec({ kind: 'vehicle-land', organization: 'bundespolizei' }))
+      .toContain('Organisation: Bundespolizei');
+  });
+
   it('beschreibt alle gesetzten Bestandteile einer Komposition', () => {
     expect(
       describeSymbolSpec({
@@ -37,6 +42,81 @@ describe('semantische Zeichenbeschreibungen', () => {
     ).toBe(
       'Grundzeichen: Wasserfahrzeug. Organisation: Technisches Hilfswerk. Trägerkürzel: THW.',
     );
+  });
+
+  it('liest einen einzelnen schwarzen Oberflächenlauf als ortsneutrale Zusatzangabe vor', () => {
+    expect(describeSymbolSpec({
+      kind: 'vehicle-air',
+      labels: { surfaceBelowLeft: 'BW' },
+    })).toBe('Grundzeichen: Luftfahrzeug. Zusatzangabe: BW.');
+  });
+
+  it('liest zwei schwarze Oberflächenläufe von links nach rechts vor', () => {
+    expect(describeSymbolSpec({
+      kind: 'circle-12',
+      labels: { surfaceBelowLeft: '291300', surfaceBelowRight: 'ZIV' },
+    })).toBe(
+      'Grundzeichen: 12-mm-Kreis. Zusatzangabe: 291300. Zusatzangabe: ZIV.',
+    );
+  });
+
+  it('lässt die bestehende Beschreibung ohne Oberflächenlauf byteidentisch', () => {
+    expect(describeSymbolSpec({
+      kind: 'vehicle-air',
+      labels: { aboveLeft: 'ITH' },
+    })).toBe('Grundzeichen: Luftfahrzeug. Kürzel oberhalb: ITH.');
+  });
+
+  it('bewahrt ohne Opt-in die Legacy-Bezeichnungen aller sichtbaren Zonen byteidentisch', () => {
+    expect(describeSymbolSpec({
+      kind: 'vehicle-land',
+      labels: {
+        topLeft: 'TL',
+        center: 'C',
+        bottomLeft: 'BL',
+        bottomCenter: 'BC',
+        bottomRight: 'BR',
+        belowRight: 'BELOW',
+        aboveLeft: 'ABOVE',
+        topLeftLines: ['L1', 'L2'],
+        surfaceBelowLeft: 'SL',
+        surfaceBelowRight: 'SR',
+      },
+    })).toBe(
+      'Grundzeichen: Landfahrzeug. Kürzel: TL. Kürzel: C. Zusatzkennzeichnung: BL. ' +
+      'Zusatzkennzeichnung: BC. Trägerkürzel: BR. Trägerkürzel: BELOW. ' +
+      'Kürzel oberhalb: ABOVE. Kürzel zweizeilig: L1 / L2. Zusatzangabe: SL. ' +
+      'Zusatzangabe: SR.',
+    );
+  });
+
+  it('beschreibt im neutralen Modus jede sichtbare Zone geometrisch statt als Kürzel', () => {
+    const description = describeSymbolSpec({
+      kind: 'vehicle-land',
+      labels: {
+        accessibilityMode: 'neutral-zones',
+        inBodyInk: 'schwarz',
+        topLeft: 'TL',
+        center: 'C',
+        centerCapHeightMm: 3.4,
+        bottomLeft: 'BL',
+        bottomCenter: 'BC',
+        bottomRight: 'BR',
+        belowRight: 'BELOW',
+        aboveLeft: 'ABOVE',
+        topLeftLines: ['L1', 'L2'],
+        surfaceBelowLeft: 'SL',
+        surfaceBelowRight: 'SR',
+      },
+    });
+    expect(description).toBe(
+      'Grundzeichen: Landfahrzeug. Beschriftung im Körper: TL. Beschriftung im Körper: C. ' +
+      'Beschriftung im Körper: BL. Beschriftung im Körper: BC. Beschriftung im Körper: BR. ' +
+      'Beschriftung unterhalb des Körpers: BELOW. Beschriftung oberhalb des Körpers: ABOVE. ' +
+      'Beschriftung im Körper: L1 / L2. Beschriftung auf der Ausgabeoberfläche: SL. ' +
+      'Beschriftung auf der Ausgabeoberfläche: SR.',
+    );
+    expect(description).not.toMatch(/Kürzel|Trägerkürzel|neutral-zones|accessibilityMode|3\.4/);
   });
 
   it('nimmt gemessene Labelmetriken nicht in die Vorlesebeschreibung auf', () => {
@@ -101,6 +181,10 @@ describe('semantische Zeichenbeschreibungen', () => {
         'Raute mit zwei inneren Diagonalen, Anschlag und Rechtspfeil',
       'circle-transport-diamond-wheels-arrows':
         'Raute mit zwei Ringen, Anschlag und Rechtspfeil',
+      'h-veterinary-decontamination':
+        'Veterinär-V mit kompakter Tierdekontaminationsmarke unten links',
+      'h-veterinary-slaughter':
+        'Veterinär-V mit Schlacht- und Untersuchungsmarke unten links',
     });
     const task4TechnicalIds = [
       'ring-7mm-offset-down-1mm',
@@ -124,6 +208,19 @@ describe('semantische Zeichenbeschreibungen', () => {
       'circle-transport-diamond-arrows',
       'circle-transport-diamond-wheels-arrows',
     ] as const;
+    const task1AnhangHTechnicalIds = [
+      'h-veterinary-decontamination',
+      'h-veterinary-slaughter',
+    ] as const;
+    const task1AnhangNTechnicalIds = [
+      'land-horizontal-blade-bent-upright',
+      'ring-5mm-offset-down-3-5mm-eight-spokes',
+      'air-quartering-up-arrow-box',
+      'air-horizontal-left-chevron',
+      'air-rising-diagonal',
+      'spontaneous-helper-collection-arrow',
+      'spontaneous-helper-contact-double-arrow',
+    ] as const;
     const task2RoleTechnicalIds = [
       'formation-solid-cap-3mm',
       'formation-solid-cap-4mm-three-hole-row',
@@ -132,6 +229,8 @@ describe('semantische Zeichenbeschreibungen', () => {
       ...task4TechnicalIds,
       ...task5TechnicalIds,
       ...task2RoleTechnicalIds,
+      ...task1AnhangHTechnicalIds,
+      ...task1AnhangNTechnicalIds,
     ]);
     expect(TECHNICAL_BODY_MARK_LABELS as Record<string, string>).toMatchObject({
       'formation-solid-cap-3mm': 'Schwarze Formationskappe, 3 mm hoch',

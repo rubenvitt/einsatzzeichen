@@ -1,6 +1,6 @@
 # Anhang D: gemessene Funktionsträger
 
-Datum: 26. August 2026  
+Datum: 26. August 2026
 Status: technische Entscheidung; Fachreview weiterhin offen
 
 ## Entscheidung

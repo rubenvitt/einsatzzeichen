@@ -6,7 +6,8 @@ import {
   type SymbolSpec,
 } from '@einsatzzeichen/schema';
 import type { BoundsMm } from './bounds.js';
-import { compose, CompositionError, type CatalogPorts } from './compose.js';
+import { bodyLabelInk, compose, type CatalogPorts, type ComposeOptions } from './compose.js';
+import { CompositionError } from './validate.js';
 import { ARIMO_CAP_HEIGHT_FRACTION } from './render/text-policy.js';
 import { checkViewBox } from './viewbox-gate.js';
 
@@ -26,6 +27,12 @@ const vehicleLandBody: Primitive = {
 };
 const vehicleAirBody: Primitive = {
   type: 'rect', role: 'body', x: 1.01, y: 6, width: 29.98, height: 14.99,
+};
+/** Exakter `raised-hull`-Körperpfad aus `base-symbols.ts` für die quellennahe Komposition. */
+const measuredRaisedVehicleAirBody: Primitive = {
+  type: 'path',
+  role: 'body',
+  d: 'M 30.9894 20.9898 L 1.01 20.9898 C 1.01 12.7112, 7.7211 6.0001, 15.9997 6.0001 C 24.2783 6.0001, 30.9894 12.7112, 30.9894 20.9898 Z',
 };
 
 /**
@@ -74,6 +81,185 @@ const catalog: CatalogPorts = {
     throw new Error('Für diesen Test nicht aufgerufen.');
   },
 };
+
+describe('compose() — inset-hull-Labelvertrag', () => {
+  const insetHullCatalog: CatalogPorts = {
+    ...catalog,
+    organizationColor: () => 'weiss',
+  };
+
+  function insetHullDrawing(
+    labels: NonNullable<SymbolSpec['labels']>,
+    options: ComposeOptions = {},
+  ) {
+    return compose({
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+      labels,
+    }, insetHullCatalog, options);
+  }
+
+  function restoreObjectPrototypeProperty(
+    key: PropertyKey,
+    descriptor: PropertyDescriptor | undefined,
+  ): void {
+    if (descriptor === undefined) {
+      Reflect.deleteProperty(Object.prototype, key);
+    } else {
+      Object.defineProperty(Object.prototype, key, descriptor);
+    }
+  }
+
+  it('lehnt geerbte Renderingfelder durch validateSpec vor der Komposition ab', () => {
+    class InheritedRenderingLabels implements NonNullable<SymbolSpec['labels']> {
+      readonly center = 'MzB';
+
+      get inBodyInk(): 'schwarz' {
+        return 'schwarz';
+      }
+
+      get centerCapHeightMm(): number {
+        return 3.4099;
+      }
+    }
+
+    expect(() => insetHullDrawing(new InheritedRenderingLabels()))
+      .toThrow(/inset-hull-requires-center-label-only/);
+  });
+
+  it('ignoriert non-enumerable Renderingfelder auf Object.prototype', () => {
+    const previousInk = Object.getOwnPropertyDescriptor(Object.prototype, 'inBodyInk');
+    const previousCapHeight = Object.getOwnPropertyDescriptor(
+      Object.prototype,
+      'centerCapHeightMm',
+    );
+
+    try {
+      Object.defineProperties(Object.prototype, {
+        inBodyInk: {
+          configurable: true,
+          enumerable: false,
+          value: 'weiss',
+          writable: true,
+        },
+        centerCapHeightMm: {
+          configurable: true,
+          enumerable: false,
+          value: 1,
+          writable: true,
+        },
+      });
+
+      const label = insetHullDrawing({ center: 'MzB' }).children.find(
+        (child): child is Extract<Primitive, { type: 'text' }> =>
+          child.type === 'text' && child.role === 'label',
+      );
+      expect(label?.style?.fill).toBe('schwarz');
+      expect(label?.sizeMm).toBeCloseTo(4.87 / ARIMO_CAP_HEIGHT_FRACTION, 6);
+    } finally {
+      restoreObjectPrototypeProperty('inBodyInk', previousInk);
+      restoreObjectPrototypeProperty('centerCapHeightMm', previousCapHeight);
+    }
+  });
+
+  it('ignoriert einen geerbten center-Getter auf Object.prototype', () => {
+    const previousCenter = Object.getOwnPropertyDescriptor(Object.prototype, 'center');
+
+    try {
+      Object.defineProperty(Object.prototype, 'center', {
+        configurable: true,
+        enumerable: false,
+        get: () => 'GEERBT',
+      });
+
+      expect(insetHullDrawing({}).children.filter((child) => child.role === 'label')).toEqual([]);
+    } finally {
+      restoreObjectPrototypeProperty('center', previousCenter);
+    }
+  });
+
+  it('komponiert Proxy-Labels ausschließlich aus validierten Data-Deskriptoren', () => {
+    const labels = new Proxy({ center: 'MzB' } as NonNullable<SymbolSpec['labels']>, {
+      get: (target, key, receiver) => {
+        if (key === 'inBodyInk') return 'weiss';
+        if (key === 'centerCapHeightMm') return 1;
+        return Reflect.get(target, key, receiver);
+      },
+      getOwnPropertyDescriptor: (target, key) => Reflect.getOwnPropertyDescriptor(target, key),
+      getPrototypeOf: () => Object.prototype,
+      ownKeys: (target) => Reflect.ownKeys(target),
+    });
+
+    const label = insetHullDrawing(labels).children.find(
+      (child): child is Extract<Primitive, { type: 'text' }> =>
+        child.type === 'text' && child.role === 'label',
+    );
+    expect(label?.style?.fill).toBe('schwarz');
+    expect(label?.sizeMm).toBeCloseTo(4.87 / ARIMO_CAP_HEIGHT_FRACTION, 6);
+  });
+
+  it('leitet die Beschreibung aus derselben vorbereiteten Spec wie die Geometrie ab', () => {
+    const labels = new Proxy({ center: 'MzB' } as NonNullable<SymbolSpec['labels']>, {
+      get: (target, key, receiver) => key === 'center'
+        ? 'PROXY'
+        : Reflect.get(target, key, receiver),
+      getOwnPropertyDescriptor: (target, key) => Reflect.getOwnPropertyDescriptor(target, key),
+      getPrototypeOf: () => Object.prototype,
+      ownKeys: (target) => Reflect.ownKeys(target),
+    });
+    let describedCenter: string | undefined;
+    const options: ComposeOptions = {
+      descriptionFromSpec: (preparedSpec: SymbolSpec) => {
+        describedCenter = preparedSpec.labels?.center;
+        return `Kürzel: ${preparedSpec.labels?.center}`;
+      },
+    };
+
+    const drawing = compose({
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+      labels,
+    }, insetHullCatalog, options);
+    const renderedLabels = drawing.children
+      .filter(
+        (child): child is Extract<Primitive, { type: 'text' }> =>
+          child.type === 'text' && child.role === 'label',
+      )
+      .map((label) => label.content);
+    expect(describedCenter).toBe('MzB');
+    expect(drawing.description).toBe('Kürzel: MzB');
+    expect(renderedLabels).toEqual(['MzB']);
+  });
+
+  it('friert inset-hull-Spec und Labelsnapshot vor dem Beschreibungs-Callback ein', () => {
+    let callbackCalled = false;
+    const options: ComposeOptions = {
+      descriptionFromSpec: (preparedSpec: SymbolSpec) => {
+        callbackCalled = true;
+        expect(Object.isFrozen(preparedSpec)).toBe(true);
+        expect(Object.isExtensible(preparedSpec)).toBe(false);
+        expect(Object.isFrozen(preparedSpec.labels)).toBe(true);
+        expect(Object.isExtensible(preparedSpec.labels)).toBe(false);
+        expect(() => Object.defineProperty(preparedSpec, 'labels', {
+          value: { center: 'MUTIERT' },
+        })).toThrow(TypeError);
+        expect(() => Object.defineProperty(preparedSpec.labels!, 'center', {
+          value: 'MUTIERT',
+        })).toThrow(TypeError);
+        return `Kürzel: ${preparedSpec.labels?.center}`;
+      },
+    };
+
+    const drawing = insetHullDrawing({ center: 'MzB' }, options);
+    expect(callbackCalled).toBe(true);
+    expect(drawing.description).toBe('Kürzel: MzB');
+    expect(drawing.children.some(
+      (child) => child.type === 'text' && child.role === 'label' && child.content === 'MzB',
+    )).toBe(true);
+  });
+});
 
 describe('compose() — Fußzone', () => {
   it('gibt die Bezeichnung als Fußzone aus', () => {
@@ -270,6 +456,38 @@ describe('compose() — Fahrwerkszone', () => {
     expect(checkViewBox(drawing)).toEqual([]);
   });
 
+  it('kombiniert das vermessene Fußband an Landfahrzeug und Anhänger mit ihrer Radzone', () => {
+    const footBandCatalog: CatalogPorts = {
+      ...vehicleCatalog,
+      baseDrawing: (kind) => ({
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [
+          vehicleBody,
+          {
+            type: 'rect', role: 'pictogram',
+            x: kind === 'trailer' ? 4 : 1,
+            y: 23,
+            width: kind === 'trailer' ? 27 : 30,
+            height: 3,
+          },
+        ],
+      }),
+    };
+
+    for (const kind of ['vehicle-land', 'trailer'] as const) {
+      const drawing = compose({
+        kind, bodyVariant: 'foot-band', vehicleCategory: 'kfz-kategorie-3',
+      }, footBandCatalog);
+      const roles = drawing.children.map((child) => child.role);
+      expect(drawing.children).toContainEqual(
+        expect.objectContaining({ type: 'rect', role: 'pictogram', y: 23, height: 3 }),
+      );
+      expect(drawing.children.filter((child) => child.role === 'chassis')).toHaveLength(3);
+      expect(roles.indexOf('pictogram')).toBeLessThan(roles.indexOf('chassis'));
+      expect(checkViewBox(drawing)).toEqual([]);
+    }
+  });
+
   it('erzeugt ohne Fahrzeugkategorie kein Fahrwerk und ruft den Port nicht', () => {
     // `catalog.vehicleChassis` wirft im Doppel — der Test belegt damit zugleich, dass der Port
     // nur bei gesetzter Kategorie überhaupt gefragt wird.
@@ -362,6 +580,98 @@ describe('compose() — Beschriftungszonen', () => {
     // deshalb, dass die auf 2…30 mm geweitete Box zulässig bleibt.
     const drawing = compose(labelSpec, catalog);
     expect(checkViewBox(drawing)).toEqual([]);
+  });
+
+  it('setzt gemessene relative Metriken für Mitte, obere Läufe und Oberfläche', () => {
+    const metricCatalog: CatalogPorts = {
+      ...catalog,
+      baseDrawing: (kind) => ({
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [kind === 'circle-12'
+          ? { type: 'circle', role: 'body', cx: 16, cy: 15, r: 12 }
+          : kind === 'vehicle-air'
+            ? vehicleAirBody
+            : vehicleLandBody],
+      }),
+      organizationColor: (organization) => {
+        if (organization !== 'zivile-einheiten') throw new Error('Für diesen Test nicht aufgerufen.');
+        return 'hellgrau';
+      },
+      bodyMark: (id) => {
+        if (id !== 'circle-information-stem') throw new Error('Für diesen Test nicht aufgerufen.');
+        return [];
+      },
+    };
+
+    const land = compose({
+      kind: 'vehicle-land',
+      labels: {
+        center: 'BuPol',
+        centerBaselineFromBodyBottomMm: 6.5,
+        topLeftLines: ['Kipper,', '26 t'],
+      },
+    } as SymbolSpec, metricCatalog);
+    const [center, first, second] = land.children.filter((child) => child.role === 'label');
+    expect(center).toMatchObject({ type: 'text', content: 'BuPol', y: 19.5 });
+    expect(first).toMatchObject({ type: 'text', content: 'Kipper,', x: 2.5, y: 12.5 });
+    expect(second).toMatchObject({ type: 'text', content: '26 t', x: 2.5, y: 16.5 });
+
+    const fixedWing = compose({
+      kind: 'vehicle-air',
+      bodyVariant: 'fixed-wing-hull',
+      labels: {
+        topLeft: '5.000',
+        topLeftMetrics: {
+          capHeightMm: 2.919225,
+          baselineFromBodyTopMm: 7,
+          anchorFromBodyLeftMm: 5.99,
+        },
+        aboveLeft: 'Cessna 172',
+        aboveLeftMetrics: {
+          capHeightMm: 2.919225,
+          baselineFromBodyTopMm: -1,
+          anchorFromBodyLeftMm: -0.01,
+        },
+      },
+    } as SymbolSpec, metricCatalog);
+    const fixedLabels = fixedWing.children.filter((child) => child.role === 'label');
+    expect(fixedLabels).toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: 'text', content: '5.000', x: 7, y: 13 }),
+      expect.objectContaining({ type: 'text', content: 'Cessna 172', x: 1, y: 5 }),
+    ]));
+
+    const rotor = compose({
+      kind: 'vehicle-air', bodyVariant: 'raised-hull',
+      labels: {
+        aboveLeft: 'CH-53',
+        aboveLeftMetrics: {
+          capHeightMm: 2.919225,
+          baselineFromBodyTopMm: -1,
+          anchorFromBodyLeftMm: -0.01,
+        },
+        surfaceBelowRight: 'BW',
+      },
+    } as SymbolSpec, metricCatalog);
+    const [ch53, bw] = rotor.children.filter((child) => child.role === 'label');
+    expect(ch53).toMatchObject({ type: 'text', content: 'CH-53', x: 1, y: 5 });
+    expect(bw).toMatchObject({ type: 'text', content: 'BW', y: 29, style: { fill: 'schwarz' } });
+    if (bw?.type !== 'text') throw new Error('BW-Oberflächenlauf fehlt.');
+    expect(bw.x).toBeCloseTo(31, 10);
+
+    expect(() => compose({
+      kind: 'vehicle-air', bodyVariant: 'raised-hull',
+      labels: { surfaceBelowLeft: 'X' },
+    } as SymbolSpec, metricCatalog)).toThrow(/surface-left-label-requires-measured-anchor/);
+
+    const circle = compose({
+      kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+      organization: 'zivile-einheiten', bodyMarks: ['circle-information-stem'],
+      labels: { surfaceBelowLeft: '291300', surfaceBelowRight: 'ZIV' },
+    } as SymbolSpec, metricCatalog);
+    expect(circle.children.filter((child) => child.role === 'label')).toEqual([
+      expect.objectContaining({ type: 'text', content: '291300', x: 1, y: 31, anchor: 'start' }),
+      expect.objectContaining({ type: 'text', content: 'ZIV', x: 31, y: 31, anchor: 'end' }),
+    ]);
   });
 });
 
@@ -545,6 +855,112 @@ describe('compose() — vierte Beschriftungszone', () => {
     expect(() => compose({ kind: 'formation', bodyVariant: 'raised-hull' }, e2Catalog)).toThrow(
       /Körpervariante/,
     );
+  });
+});
+
+describe('compose() — gebänderte Logistikprofile', () => {
+  const logisticsCatalog: CatalogPorts = {
+    ...catalog,
+    baseDrawing: (kind, variant) => {
+      if (kind === 'circle-12') {
+        return {
+          viewBox: DEFAULT_VIEWBOX_MM,
+          children: [
+            { type: 'circle', role: 'body', cx: 16, cy: 16, r: 12 },
+            ...(variant === 'foot-band'
+              ? [{
+                  type: 'path' as const, role: 'pictogram' as const,
+                  d: 'M 7.4048 24.0005 H 24.5954 C 22.479 26.5508 19.0883 27.7505 16 27.7505 C 12.9117 27.7505 9.5204 26.5508 7.4048 24.0005 Z',
+                }]
+              : []),
+          ],
+        };
+      }
+      return {
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [
+          formationBody,
+          ...(variant === 'foot-band'
+            ? [{ type: 'rect' as const, role: 'pictogram' as const, x: 1, y: 23, width: 30, height: 3 }]
+            : []),
+        ],
+      };
+    },
+    organizationColor: (id) => id === 'bundeswehr' ? 'braun' : 'weiss',
+    strengthHead: () => ({
+      heightMm: 3,
+      marks: [{ cxMm: 16, cyFromTopMm: 1.5, rMm: 1.5 }],
+    }),
+    bodyMark: () => [],
+  };
+
+  it('komponiert die drei vermessenen Formationsköpfe ohne das Fußband zu verschieben', () => {
+    for (const strength of ['trupp', 'gruppe', 'zug'] as const) {
+      const drawing = compose(
+        { kind: 'formation', bodyVariant: 'foot-band', strength }, logisticsCatalog,
+      );
+      expect(drawing.children).toContainEqual(
+        expect.objectContaining({ type: 'rect', role: 'pictogram', y: 23, height: 3 }),
+      );
+      expect(drawing.children).toContainEqual(
+        expect.objectContaining({ type: 'circle', role: 'head', cy: 3.5 }),
+      );
+    }
+  });
+
+  it('setzt DLRG am gebänderten Formationskörper auf die vermessene Grundlinie y=21', () => {
+    const label = compose({
+      kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+      labels: { bottomRight: 'DLRG' },
+    }, logisticsCatalog).children.find((child) => child.role === 'label');
+    expect(label).toMatchObject({
+      type: 'text', content: 'DLRG', anchor: 'end', x: 29, y: 21,
+      style: { fill: 'schwarz' },
+    });
+  });
+
+  it('setzt Diesel im Kreis und Bw außerhalb auf die beiden vermessenen Grundlinien', () => {
+    const drawing = compose({
+      kind: 'circle-12', bodyVariant: 'foot-band', organization: 'bundeswehr',
+      labels: { bottomCenter: 'Diesel', belowRight: 'Bw' },
+    }, logisticsCatalog);
+    const labels = drawing.children.filter((child) => child.role === 'label');
+    expect(labels).toMatchObject([
+      {
+        type: 'text', content: 'Diesel', anchor: 'middle', x: 16, y: 22,
+        style: { fill: 'schwarz' },
+      },
+      { type: 'text', content: 'Bw', anchor: 'end', x: 31, y: 29, style: { fill: 'schwarz' } },
+    ]);
+    expect(checkViewBox(drawing)).toEqual([]);
+  });
+
+  it('lässt den generischen inBodyInk-Override nicht in die schwarze G-bottomCenter-Zone lecken', () => {
+    const drawing = compose({
+      kind: 'circle-12', bodyVariant: 'foot-band', organization: 'bundeswehr',
+      labels: { bottomCenter: 'Diesel', inBodyInk: 'weiss' },
+    }, logisticsCatalog);
+    expect(drawing.children.find(
+      (child) => child.type === 'text' && child.content === 'Diesel',
+    )).toMatchObject({ style: { fill: 'schwarz' } });
+  });
+
+  it('meldet belegte Labelzonen als neutralen Layoutkontext an den Körpermarken-Port', () => {
+    const contexts: Parameters<NonNullable<CatalogPorts['bodyMark']>>[1][] = [];
+    compose({
+      kind: 'circle-12', bodyVariant: 'foot-band', organization: 'bundeswehr',
+      bodyMarks: ['fuels-consumables'], labels: { bottomCenter: 'Diesel', belowRight: 'Bw' },
+    }, {
+      ...logisticsCatalog,
+      bodyMark: (_id, context) => {
+        contexts.push(context);
+        return [];
+      },
+    });
+    expect(contexts).toEqual([{
+      kind: 'circle-12', bodyVariant: 'foot-band',
+      occupiedLabelZones: ['bottomCenter', 'belowRight'],
+    }]);
   });
 });
 
@@ -931,6 +1347,110 @@ describe('compose() — Schriftfarbe der Läufe im Körper', () => {
         'orange',
       ),
     ).toBe('weiss');
+  });
+
+  it('behält ohne Override die bestehende Ableitung am exportierten Resolver bei', () => {
+    expect(bodyLabelInk('weiss')).toBe('schwarz');
+    expect(bodyLabelInk('braun')).toBe('weiss');
+    expect(bodyLabelInk('braun', 'schwarz')).toBe('schwarz');
+  });
+
+  it('setzt den gemessenen schwarzen Override in Mitte und oberen Körperzonen', () => {
+    const specs = [
+      {
+        kind: 'formation', organization: 'bundeswehr',
+        labels: { center: 'BuPol', inBodyInk: 'schwarz' },
+      },
+      {
+        kind: 'formation', organization: 'bundeswehr',
+        labels: { topLeft: '5.000', inBodyInk: 'schwarz' },
+      },
+      {
+        kind: 'vehicle-land', organization: 'bundeswehr',
+        labels: { topLeftLines: ['Kipper,', '26 t'], inBodyInk: 'schwarz' },
+      },
+    ] as unknown as SymbolSpec[];
+
+    for (const spec of specs) {
+      const labels = compose(spec, {
+        ...catalog,
+        organizationColor: () => 'braun',
+      }).children.filter((child) => child.role === 'label');
+      expect(labels.length).toBeGreaterThan(0);
+      expect(labels.every((label) => label.style?.fill === 'schwarz')).toBe(true);
+    }
+  });
+
+  it('lässt oberhalb und auf der Oberfläche liegende Tinten vom Override unberührt', () => {
+    const drawing = compose({
+      kind: 'vehicle-air', bodyVariant: 'raised-hull', organization: 'hilfsorganisation',
+      labels: {
+        center: 'Innen', aboveLeft: 'Oben', surfaceBelowRight: 'Außen', inBodyInk: 'weiss',
+      },
+    } as unknown as SymbolSpec, {
+      ...catalog,
+      baseDrawing: () => ({
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [measuredRaisedVehicleAirBody],
+      }),
+      organizationColor: () => 'weiss',
+    });
+    const fills = Object.fromEntries(drawing.children
+      .filter((child): child is Extract<Primitive, { type: 'text' }> => child.type === 'text')
+      .map((label) => [label.content, label.style?.fill]));
+    expect(fills).toEqual({ Innen: 'weiss', Oben: 'schwarz', Außen: 'schwarz' });
+  });
+});
+
+describe('compose() — vollständig vermessener Lauf unten rechts', () => {
+  const bottomRightMetrics = {
+    capHeightMm: 2.750245,
+    baselineFromBodyTopMm: 13.000087,
+    anchorFromBodyLeftMm: 21.99,
+    boxLeftFromBodyLeftMm: 19.24,
+    boxWidthMm: 5.5,
+  };
+
+  it('setzt die schwarze 7 quellengenau und mittig in das 5,5-mm-Feld', () => {
+    const measuredBox: Primitive = {
+      type: 'rect', role: 'pictogram', x: 20.25, y: 15, width: 5.5, height: 5.5,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+    };
+    const drawing = compose({
+      kind: 'vehicle-air', bodyVariant: 'raised-hull', organization: 'bundeswehr',
+      bodyMarks: ['air-quartering-up-arrow-box'],
+      labels: {
+        bottomRight: '7', bottomRightMetrics, inBodyInk: 'schwarz',
+      },
+    } as unknown as SymbolSpec, {
+      ...catalog,
+      baseDrawing: () => ({
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [measuredRaisedVehicleAirBody],
+      }),
+      organizationColor: () => 'braun',
+      bodyMark: (id) => {
+        if (id !== 'air-quartering-up-arrow-box') {
+          throw new Error(`Unerwartete Körpermarke: ${id}`);
+        }
+        return [measuredBox];
+      },
+    });
+
+    const label = drawing.children.find(
+      (child): child is Extract<Primitive, { type: 'text' }> =>
+        child.type === 'text' && child.content === '7',
+    );
+    if (label === undefined) throw new Error('compose() hat den gemessenen Lauf nicht erzeugt.');
+    expect(label).toMatchObject({
+      anchor: 'middle', x: 23, y: 19.000187,
+      boxMm: { xMm: 20.25, widthMm: 5.5 },
+      style: { fill: 'schwarz' },
+    });
+    expect(label.sizeMm * ARIMO_CAP_HEIGHT_FRACTION).toBeCloseTo(2.750245, 9);
+    expect(label.boxMm.yMm).toBeGreaterThanOrEqual(measuredBox.y);
+    expect(label.boxMm.yMm + label.boxMm.heightMm)
+      .toBeLessThanOrEqual(measuredBox.y + measuredBox.height);
   });
 });
 

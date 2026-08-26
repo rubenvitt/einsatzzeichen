@@ -24,6 +24,8 @@ const trailerBodyMm: BoundsMm = { minX: 4, minY: 5.75, maxX: 31, maxY: 26 };
 const circleBodyMm: BoundsMm = { minX: 4, minY: 4, maxX: 28, maxY: 28 };
 const raisedCircleBodyMm: BoundsMm = { minX: 4, minY: 6, maxX: 28, maxY: 30 };
 const reducedHouseBodyMm: BoundsMm = { minX: 2, minY: 4, maxX: 30, maxY: 26 };
+const invertedLandBodyMm: BoundsMm = { minX: 1, minY: 6, maxX: 31, maxY: 25.75 };
+const raisedCircleOneMmBodyMm: BoundsMm = { minX: 4, minY: 3, maxX: 28, maxY: 27 };
 const bodyMark = (id: Parameters<typeof bodyMarkWithContext>[0], bounds: BoundsMm) =>
   bodyMarkWithContext(id, { kind: 'formation' }, bounds);
 
@@ -32,6 +34,242 @@ const strokeStyle = { stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM } 
 
 function line(x1: number, y1: number, x2: number, y2: number): Primitive {
   return { type: 'line', role: 'pictogram', x1, y1, x2, y2, style: strokeStyle };
+}
+
+const outlineStyle = {
+  fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+} as const;
+
+describe('bodyMark() — die technischen Innenzeichnungen des Anhangs N', () => {
+  it('zeichnet die beiden getrennt vermessenen Landfahrzeugmarken', () => {
+    expect(bodyMarkWithContext(
+      'land-horizontal-blade-bent-upright' as BodyMarkId,
+      { kind: 'vehicle-land', bodyVariant: 'inverted-hull-track' as BodyVariantId },
+      invertedLandBodyMm,
+    )).toEqual([
+      line(6, 14.75, 20.75, 14.75),
+      {
+        type: 'polyline', role: 'pictogram',
+        points: [[20.75, 9.5], [20.75, 18.5], [26, 19.5]],
+        style: outlineStyle,
+      },
+    ]);
+
+    const diagonal = 5 / Math.SQRT2;
+    expect(bodyMarkWithContext(
+      'ring-5mm-offset-down-3-5mm-eight-spokes' as BodyMarkId,
+      { kind: 'vehicle-land' }, landBodyMm,
+    )).toEqual([
+      { type: 'circle', role: 'pictogram', cx: 16, cy: 19.5, r: 5, style: outlineStyle },
+      line(11, 19.5, 21, 19.5),
+      line(16, 14.5, 16, 24.5),
+      line(16 - diagonal, 19.5 - diagonal, 16 + diagonal, 19.5 + diagonal),
+      line(16 + diagonal, 19.5 - diagonal, 16 - diagonal, 19.5 + diagonal),
+    ]);
+  });
+
+  it('zeichnet die drei getrennt vermessenen Luftfahrzeugmarken', () => {
+    expect(bodyMarkWithContext(
+      'air-quartering-up-arrow-box' as BodyMarkId,
+      { kind: 'vehicle-air', bodyVariant: 'raised-hull' }, raisedAirBodyMm,
+    )).toEqual([
+      line(16, 6, 16, 20.99),
+      line(2.74, 14, 29.26, 14),
+      line(23, 14, 23, 9.5),
+      { type: 'polyline', role: 'pictogram', points: [[21.5, 11], [23, 9.5], [24.5, 11]], style: outlineStyle },
+      { type: 'rect', role: 'pictogram', x: 20.25, y: 15, width: 5.5, height: 5.5, style: outlineStyle },
+    ]);
+    expect(bodyMarkWithContext(
+      'air-horizontal-left-chevron' as BodyMarkId,
+      { kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull' as BodyVariantId }, raisedAirBodyMm,
+    )).toEqual([
+      line(7, 15, 25, 15),
+      { type: 'polyline', role: 'pictogram', points: [[24, 11], [20, 15], [24, 19]], style: outlineStyle },
+    ]);
+    expect(bodyMarkWithContext(
+      'air-rising-diagonal' as BodyMarkId,
+      { kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull' as BodyVariantId }, raisedAirBodyMm,
+    )).toEqual([line(2.07, 20.74, 24.96, 9.3)]);
+  });
+
+  it('zeichnet Sammelraum und Kontaktstelle ausschließlich auf dem normalen 12-mm-Kreis', () => {
+    const clover = {
+      type: 'path', role: 'pictogram',
+      d: 'M 13 10 C 13 8.3431, 14.3431 7, 16 7 C 17.6569 7, 19 8.3431, 19 10 C 20.6569 10, 22 11.3431, 22 13 C 22 14.6569, 20.6569 16, 19 16 C 19 17.6569, 17.6569 19, 16 19 C 14.3431 19, 13 17.6569, 13 16 C 11.3431 16, 10 14.6569, 10 13 C 10 11.3431, 11.3431 10, 13 10 Z',
+      style: outlineStyle,
+    } as const;
+    expect(bodyMarkWithContext(
+      'spontaneous-helper-collection-arrow' as BodyMarkId,
+      { kind: 'circle-12' }, circleBodyMm,
+    )).toEqual([
+      clover,
+      { type: 'circle', role: 'pictogram', cx: 10.5, cy: 22, r: 1.5, style: outlineStyle },
+      line(12, 22, 23, 22),
+      { type: 'polyline', role: 'pictogram', points: [[21, 20], [23, 22], [21, 24]], style: outlineStyle },
+    ]);
+    expect(bodyMarkWithContext(
+      'spontaneous-helper-contact-double-arrow' as BodyMarkId,
+      { kind: 'circle-12' }, circleBodyMm,
+    )).toEqual([
+      clover,
+      line(9, 22, 23, 22),
+      { type: 'polyline', role: 'pictogram', points: [[11, 20], [9, 22], [11, 24]], style: outlineStyle },
+      { type: 'polyline', role: 'pictogram', points: [[21, 20], [23, 22], [21, 24]], style: outlineStyle },
+    ]);
+
+    for (const id of [
+      'spontaneous-helper-collection-arrow',
+      'spontaneous-helper-contact-double-arrow',
+    ] as BodyMarkId[]) {
+      expect(() => bodyMarkWithContext(
+        id,
+        { kind: 'spontaneous-helper' },
+        { minX: 2, minY: 2, maxX: 30, maxY: 30 },
+      ), id).toThrow(/nicht vermessen/);
+    }
+  });
+
+  it('verschiebt die bestehende Informationsmarke mit dem um 1 mm angehobenen Kreis', () => {
+    expect(bodyMarkWithContext(
+      'circle-information-stem',
+      { kind: 'circle-12', bodyVariant: 'raised-circle-1mm' as BodyVariantId },
+      raisedCircleOneMmBodyMm,
+    )).toEqual([
+      { type: 'circle', role: 'pictogram', cx: 16, cy: 9.5, r: 1.5, style: { fill: 'schwarz', stroke: 'none' } },
+      { type: 'rect', role: 'pictogram', x: 15, y: 13, width: 2, height: 8, style: { fill: 'schwarz', stroke: 'none' } },
+    ]);
+  });
+
+  it('bindet den angehobenen Kreis ausschließlich an die dort vermessene Informationsmarke', () => {
+    for (const id of ['medical-service', 'care', 'circle-collection-arrow'] as BodyMarkId[]) {
+      expect(() => bodyMarkWithContext(
+        id,
+        { kind: 'circle-12', bodyVariant: 'raised-circle-1mm' as BodyVariantId },
+        raisedCircleOneMmBodyMm,
+      ), id).toThrow(/nicht vermessen/);
+    }
+  });
+
+  it('lehnt jede technische N-Marke außerhalb ihres vermessenen Kontexts ab', () => {
+    expect(() => bodyMarkWithContext(
+      'air-rising-diagonal' as BodyMarkId,
+      { kind: 'vehicle-air', bodyVariant: 'raised-hull' }, raisedAirBodyMm,
+    )).toThrow(/nicht vermessen/);
+    expect(() => bodyMarkWithContext(
+      'spontaneous-helper-contact-double-arrow' as BodyMarkId,
+      { kind: 'formation' }, formationBodyMm,
+    )).toThrow(/nicht vermessen/);
+  });
+});
+
+function cateringPath(cx: number, cy: number): Primitive {
+  return {
+    type: 'path',
+    role: 'pictogram',
+    d:
+      `M ${cx} ${cy - 5} C ${cx - 2.75} ${cy - 5} ${cx - 5} ${cy - 2.75} ` +
+      `${cx - 5} ${cy} C ${cx - 5} ${cy + 2.75} ${cx - 2.75} ${cy + 5} ${cx} ${cy + 5} ` +
+      `C ${cx + 2} ${cy + 5} ${cx + 3.5} ${cy + 4} ${cx + 4.5} ${cy + 2.25} ` +
+      `L ${cx} ${cy} L ${cx + 4.5} ${cy - 2.25} C ${cx + 3.5} ${cy - 4} ` +
+      `${cx + 2} ${cy - 5} ${cx} ${cy - 5} Z`,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  };
+}
+
+function logisticsSpoonPath(cx: number): Primitive {
+  return {
+    type: 'path',
+    role: 'pictogram',
+    d:
+      `M ${cx - 0.7} 12.86 C ${cx - 0.573} 12.953 ${cx - 0.5} 13.103 ${cx - 0.5} 13.26 ` +
+      `V 19.5 C ${cx - 0.5} 19.776 ${cx - 0.276} 20 ${cx} 20 ` +
+      `C ${cx + 0.276} 20 ${cx + 0.5} 19.776 ${cx + 0.5} 19.5 V 13.26 ` +
+      `C ${cx + 0.5} 13.103 ${cx + 0.573} 12.953 ${cx + 0.7} 12.86 ` +
+      `C ${cx + 1.164} 12.521 ${cx + 1.5} 12.139 ${cx + 1.5} 11.5 ` +
+      `C ${cx + 1.5} 10.262 ${cx + 0.846} 9.5 ${cx} 9.5 ` +
+      `C ${cx - 0.846} 9.5 ${cx - 1.5} 10.262 ${cx - 1.5} 11.5 ` +
+      `C ${cx - 1.5} 12.139 ${cx - 1.164} 12.521 ${cx - 0.7} 12.86 Z`,
+    style: { fill: 'schwarz', stroke: 'none' },
+  };
+}
+
+function maintenancePath(cx: number, cy: number): Primitive {
+  return {
+    type: 'path',
+    role: 'pictogram',
+    d:
+      `M ${cx - 9} ${cy - 3} C ${cx - 7.343} ${cy - 3} ${cx - 6} ${cy - 1.657} ${cx - 6} ${cy} ` +
+      `H ${cx + 6} C ${cx + 6} ${cy - 1.657} ${cx + 7.343} ${cy - 3} ${cx + 9} ${cy - 3} ` +
+      `M ${cx - 9} ${cy + 3} C ${cx - 7.343} ${cy + 3} ${cx - 6} ${cy + 1.657} ${cx - 6} ${cy} ` +
+      `M ${cx + 6} ${cy} C ${cx + 6} ${cy + 1.657} ${cx + 7.343} ${cy + 3} ${cx + 9} ${cy + 3}`,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  };
+}
+
+function wasteDisposalMarks(): readonly Primitive[] {
+  return [
+    line(14, 7, 18, 7),
+    line(10, 8, 22, 8),
+    {
+      type: 'path',
+      role: 'pictogram',
+      d: 'M 11.5 8 V 19 C 11.5 19.552 11.948 20 12.5 20 H 19.5 ' +
+        'C 20.052 20 20.5 19.552 20.5 19 V 8',
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+    line(13.5, 10, 13.5, 18),
+    line(16, 10, 16, 18),
+    line(18.5, 10, 18.5, 18),
+  ];
+}
+
+function fuelsPath(cx: number, topYMm: number, bottomYMm: number): Primitive {
+  return {
+    type: 'path',
+    role: 'pictogram',
+    d:
+      `M ${cx - 5} ${topYMm} H ${cx + 5} L ${cx + 1.5} ${topYMm + 5} ` +
+      `V ${bottomYMm} M ${cx - 1.5} ${bottomYMm} V ${topYMm + 5} L ${cx - 5} ${topYMm}`,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  };
+}
+
+function drinkingWaterMarks(): readonly Primitive[] {
+  return [
+    line(20, 11, 20, 16),
+    line(18, 11, 22, 11),
+    {
+      type: 'path',
+      role: 'pictogram',
+      d: 'M 7 14 H 23 C 24.657 14 26 15.343 26 17 V 18',
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+  ];
+}
+
+function waterConveyancePath(): Primitive {
+  return {
+    type: 'path',
+    role: 'pictogram',
+    d:
+      'M 5 16 C 7.125 16 8.375 12 10.5 12 C 12.625 12 13.875 16 16 16 ' +
+      'C 18.125 16 19.375 12 21.5 12 C 23.625 12 24.875 16 27 16',
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  };
+}
+
+function powerSupplyMark(): Primitive {
+  return {
+    type: 'polyline',
+    role: 'pictogram',
+    points: [
+      [17.083, 13.387], [14.027, 19.394], [13.232, 17.406], [12.768, 17.592],
+      [13.861, 20.324], [16.593, 19.231], [16.407, 18.767], [14.524, 19.52],
+      [17.762, 13.152], [17.49, 12.794], [13.417, 13.612], [16.222, 8.113],
+      [15.777, 7.886], [12.737, 13.846], [13.009, 14.205], [17.083, 13.387],
+    ],
+    style: { fill: 'schwarz', stroke: 'none' },
+  };
 }
 
 /** Die Fachdienstteilung, die jede der vier Fassungen als erste beiden Primitive trägt. */
@@ -95,6 +333,289 @@ describe('bodyMark() — die Fachdienstteilung', () => {
     // die volle Körperbreite 1…31. Das ist der Unterschied zur Boxfassung aus Kapitel 4, deren
     // beide Arme auf 2…30 mm enden — die randbündige Fassung stößt an die Hülle.
     expect(bodyMark('medical-service', formationBodyMm)).toEqual(quartering);
+  });
+});
+
+describe('bodyMark() — gebänderte Logistikkörper', () => {
+  it('routet G.5 ohne Stärke und den Verpflegungszug auf dieselbe Logistikgeometrie', () => {
+    for (const strength of [undefined, 'zug'] as const) {
+      const context = {
+        kind: 'formation' as const,
+        bodyVariant: 'foot-band' as const,
+        ...(strength === undefined ? {} : { strength }),
+      };
+      const [mark] = bodyMarkWithContext('catering', context, formationBodyMm);
+      expect(mark).toEqual(cateringPath(16, 15));
+      expect(boundsOfMm(mark!)).toEqual({ minX: 11, minY: 10, maxX: 20.5, maxY: 20 });
+    }
+  });
+
+  it('bewahrt die bestehende F.1.17-Fassung ausschließlich für die Gruppe bytegleich', () => {
+    const [mark] = bodyMarkWithContext(
+      'catering',
+      { kind: 'formation', bodyVariant: 'foot-band', strength: 'gruppe' },
+      formationBodyMm,
+    );
+    expect(mark).toEqual(cateringPath(16, 16.5));
+    expect(boundsOfMm(mark!)).toEqual({ minX: 11, minY: 11.5, maxX: 20.5, maxY: 21.5 });
+  });
+
+  it('verschiebt die Truppfassung nur mit belegter unterer rechter Labelzone', () => {
+    const [mark] = bodyMarkWithContext(
+      'catering', {
+        kind: 'formation', bodyVariant: 'foot-band', strength: 'trupp',
+        occupiedLabelZones: ['bottomRight'],
+      }, formationBodyMm,
+    );
+    expect(mark).toEqual(cateringPath(16, 13));
+    expect(boundsOfMm(mark!)).toEqual({ minX: 11, minY: 8, maxX: 20.5, maxY: 18 });
+
+    for (const strength of ['trupp', 'staffel'] as const) {
+      expect(() => bodyMarkWithContext(
+        'catering', { kind: 'formation', bodyVariant: 'foot-band', strength }, formationBodyMm,
+      )).toThrow(/nicht vermessen/);
+    }
+  });
+
+  it('setzt Löffel und Schüssel an Formation und Kreis auf dieselben absoluten Messpositionen', () => {
+    for (const [kind, bounds] of [
+      ['formation', formationBodyMm],
+      ['circle-12', circleBodyMm],
+    ] as const) {
+      const marks = bodyMarkWithContext(
+        'meal-preparation', { kind, bodyVariant: 'foot-band' }, bounds,
+      );
+      expect(marks).toEqual([logisticsSpoonPath(11), cateringPath(19, 15)]);
+      expect(boundsOfMm(marks[0]!)).toEqual({ minX: 9.5, minY: 9.5, maxX: 12.5, maxY: 20 });
+      expect(boundsOfMm(marks[1]!)).toEqual({ minX: 14, minY: 10, maxX: 23.5, maxY: 20 });
+    }
+  });
+
+  it('setzt Löffel und Schüssel am Anhänger auf dessen eigene nach rechts versetzte Messposition', () => {
+    const marks = bodyMarkWithContext(
+      'meal-preparation', { kind: 'trailer', bodyVariant: 'foot-band' }, trailerBodyMm,
+    );
+    expect(marks).toEqual([logisticsSpoonPath(12), cateringPath(20, 15)]);
+    expect(boundsOfMm(marks[0]!)).toEqual({ minX: 10.5, minY: 9.5, maxX: 13.5, maxY: 20 });
+    expect(boundsOfMm(marks[1]!)).toEqual({ minX: 15, minY: 10, maxX: 24.5, maxY: 20 });
+    expect(() => bodyMarkWithContext('meal-preparation', { kind: 'trailer' }, trailerBodyMm))
+      .toThrow(/nicht vermessen/);
+  });
+
+  it('zeichnet Instandhaltung als Mittellinie mit offenen Endbögen je Körperprofil', () => {
+    for (const [context, bounds, expected] of [
+      [{ kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm, maintenancePath(16, 15)],
+      [{ kind: 'vehicle-land', bodyVariant: 'foot-band' }, landBodyMm, maintenancePath(16, 15)],
+      [{ kind: 'trailer', bodyVariant: 'foot-band' }, trailerBodyMm, maintenancePath(17.5, 15)],
+      [{ kind: 'circle-12', bodyVariant: 'foot-band' }, circleBodyMm, maintenancePath(16, 15.5)],
+    ] as const) {
+      const marks = bodyMarkWithContext('maintenance', context, bounds);
+      expect(marks).toEqual([expected]);
+      expect(boundsOfMm(marks[0]!)).toEqual({
+        minX: (bounds.minX + bounds.maxX) / 2 - 9,
+        minY: context.kind === 'circle-12' ? 12.5 : 12,
+        maxX: (bounds.minX + bounds.maxX) / 2 + 9,
+        maxY: context.kind === 'circle-12' ? 18.5 : 18,
+      });
+    }
+    for (const [kind, bounds] of [
+      ['vehicle-land', landBodyMm],
+      ['trailer', trailerBodyMm],
+    ] as const) {
+      expect(() => bodyMarkWithContext('maintenance', { kind }, bounds)).toThrow(/nicht vermessen/);
+    }
+  });
+
+  it('zeichnet Entsorgung vollständig mit Griff, Deckel, Behälter und drei Innenlinien', () => {
+    const marks = bodyMarkWithContext(
+      'waste-disposal', { kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm,
+    );
+    expect(marks).toEqual(wasteDisposalMarks());
+    expect(boundsOfMm(marks[0]!)).toEqual({ minX: 14, minY: 7, maxX: 18, maxY: 7 });
+    expect(boundsOfMm(marks[1]!)).toEqual({ minX: 10, minY: 8, maxX: 22, maxY: 8 });
+    expect(boundsOfMm(marks[2]!)).toEqual({ minX: 11.5, minY: 8, maxX: 20.5, maxY: 20 });
+    for (const context of [
+      { kind: 'vehicle-land', bodyVariant: 'foot-band' },
+      { kind: 'trailer', bodyVariant: 'foot-band' },
+      { kind: 'circle-12', bodyVariant: 'foot-band' },
+    ] as const) {
+      expect(() => bodyMarkWithContext('waste-disposal', context, formationBodyMm))
+        .toThrow(/nicht vermessen/);
+    }
+  });
+
+  it('vermisst die vier übrigen Formationsmarken und hält Normalformationen fail-closed', () => {
+    const cases = [
+      ['fuels-consumables', [fuelsPath(16, 9, 21)], { minX: 11, minY: 9, maxX: 21, maxY: 21 }],
+      ['drinking-water', drinkingWaterMarks(), { minX: 7, minY: 11, maxX: 26, maxY: 18 }],
+      ['water-conveyance', [waterConveyancePath()], { minX: 5, minY: 12, maxX: 27, maxY: 16 }],
+      ['power-supply', [powerSupplyMark()], { minX: 12.737, minY: 7.886, maxX: 17.762, maxY: 20.324 }],
+    ] as const;
+    for (const [id, expected, expectedBounds] of cases) {
+      const marks = bodyMarkWithContext(
+        id, { kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm,
+      );
+      expect(marks).toEqual(expected);
+      const combinedBounds = marks.map(boundsOfMm).reduce((left, right) => ({
+        minX: Math.min(left.minX, right.minX),
+        minY: Math.min(left.minY, right.minY),
+        maxX: Math.max(left.maxX, right.maxX),
+        maxY: Math.max(left.maxY, right.maxY),
+      }));
+      expect(combinedBounds).toEqual(expectedBounds);
+      expect(() => bodyMarkWithContext(id, { kind: 'formation' }, formationBodyMm))
+        .toThrow(/nicht vermessen/);
+    }
+  });
+
+  it('zeichnet Catering und beide Kraftstofflagen am gebänderten Kreis exakt', () => {
+    const catering = bodyMarkWithContext(
+      'catering', { kind: 'circle-12', bodyVariant: 'foot-band' }, circleBodyMm,
+    );
+    expect(catering).toEqual([cateringPath(16, 15)]);
+    expect(boundsOfMm(catering[0]!)).toEqual({ minX: 11, minY: 10, maxX: 20.5, maxY: 20 });
+
+    const normal = bodyMarkWithContext(
+      'fuels-consumables', { kind: 'circle-12', bodyVariant: 'foot-band' }, circleBodyMm,
+    );
+    expect(normal).toEqual([fuelsPath(16, 9, 21)]);
+    expect(boundsOfMm(normal[0]!)).toEqual({ minX: 11, minY: 9, maxX: 21, maxY: 21 });
+
+    const labeled = bodyMarkWithContext(
+      'fuels-consumables', {
+        kind: 'circle-12', bodyVariant: 'foot-band', occupiedLabelZones: ['bottomCenter'],
+      }, circleBodyMm,
+    );
+    expect(labeled).toEqual([fuelsPath(16, 7, 18)]);
+    expect(boundsOfMm(labeled[0]!)).toEqual({ minX: 11, minY: 7, maxX: 21, maxY: 18 });
+
+    for (const id of ['catering', 'meal-preparation', 'fuels-consumables', 'maintenance'] as const) {
+      for (const bodyVariant of [undefined, 'raised-gable'] as const) {
+        expect(() => bodyMarkWithContext(
+          id,
+          { kind: 'circle-12', ...(bodyVariant === undefined ? {} : { bodyVariant }) },
+          bodyVariant === 'raised-gable' ? raisedCircleBodyMm : circleBodyMm,
+        )).toThrow(/nicht vermessen/);
+      }
+    }
+  });
+});
+
+describe('bodyMark() — Brandbekämpfung für C.1', () => {
+  it('zeichnet Brandbekämpfung für C.1 randbündig ohne rechten Horizontalast', () => {
+    expect(bodyMark('fire-fighting', formationBodyMm)).toEqual([
+      line(1, 16, 21, 16),
+      line(21, 16, 31, 6),
+      line(21, 16, 31, 26),
+    ]);
+  });
+});
+
+describe('bodyMark() — H.1 Veterinärzug', () => {
+  it('rekonstruiert das vollständige Veterinär-V aus den gepaarten Konturkanten', () => {
+    // Die obere und untere Konturkante der Quelle liegen auf y = 8,75 bzw. 9,25 mm: ihre
+    // Mittellinie ist y = 9 mm. An den schrägen Konturpaaren liegen die Knicke bei x = 10/22 mm;
+    // x = 11/21 mm wären bereits Punkte auf den Schenkeln und keine Mittellinienknicke.
+    expect(bodyMark('veterinary', formationBodyMm)).toEqual([{
+      type: 'polyline',
+      role: 'pictogram',
+      points: [[7, 9], [10, 9], [16, 23.6], [22, 9], [25, 9]],
+      style: {
+        fill: 'none',
+        stroke: 'schwarz',
+        strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+      },
+    }]);
+  });
+});
+
+describe('bodyMark() — H.2 Tierdekontamination', () => {
+  it('setzt das Veterinär-V auf die aus beiden Konturkanten gewonnenen Mittellinien', () => {
+    const [veterinaryV] = bodyMark('h-veterinary-decontamination', formationBodyMm);
+    expect(veterinaryV).toEqual({
+      type: 'polyline',
+      role: 'pictogram',
+      points: [[9, 9], [12, 9], [18, 23.6], [24, 9], [27, 9]],
+      style: {
+        fill: 'none',
+        stroke: 'schwarz',
+        strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+      },
+    });
+  });
+
+  it('hält die zwei kurzen kreuzenden Pfeildiagonalen kompakt links unten und vom Veterinär-V getrennt', () => {
+    // Sichtbare H.2-Quelle: die zwei Punkte um (4,583|18) und (10,417|18) tragen nur zwei
+    // kurze kreuzende Pfeildiagonalen in x = 3,75…11,25 und y = 16,75…23,25 mm. Sie reichen
+    // nicht bis zum Veterinär-V, dessen linker Schenkel in dieser unteren Zone erst deutlich
+    // rechts davon liegt. Die frühere globale compactX-Verschiebung erzeugte dagegen Diagonalen
+    // bis x = 19,75 und ließ sie das V kreuzen.
+    const marks = bodyMark('h-veterinary-decontamination', formationBodyMm);
+    expect(marks.slice(1)).toEqual([
+      {
+        type: 'circle', role: 'pictogram', cx: 4.583, cy: 18, r: 1.25,
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+      {
+        type: 'circle', role: 'pictogram', cx: 10.417, cy: 18, r: 1.25,
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+      {
+        type: 'polyline', role: 'pictogram',
+        points: [[5.818, 18.167], [10.75, 22.4]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      {
+        type: 'polyline', role: 'pictogram',
+        points: [[3.75, 20.75], [3.75, 23.25], [6, 23.25]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      {
+        type: 'polyline', role: 'pictogram',
+        points: [[9.182, 18.167], [4.25, 22.4]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      {
+        type: 'polyline', role: 'pictogram',
+        points: [[9, 23.25], [11.25, 23.25], [11.25, 20.75]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+    ]);
+  });
+});
+
+describe('bodyMark() — H.3 Schlacht- und Untersuchungsgruppe', () => {
+  it('setzt das Veterinär-V auf dieselben vermessenen Mittellinien wie H.2', () => {
+    const [veterinaryV] = bodyMark('h-veterinary-slaughter', formationBodyMm);
+    expect(veterinaryV).toEqual({
+      type: 'polyline',
+      role: 'pictogram',
+      points: [[9, 9], [12, 9], [18, 23.6], [24, 9], [27, 9]],
+      style: {
+        fill: 'none',
+        stroke: 'schwarz',
+        strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+      },
+    });
+  });
+
+  it('zeichnet Balken und hohles Hängedreieck als eine verbundene schwarze Kontur', () => {
+    // Der Quellenumriss hat einen 0,5-mm-Balken x = 3…15 auf y = 20,75…21,25 mm. Seine
+    // Unterkante geht an x ≈ 5,475/6,525 unmittelbar in die Außenschultern des Dreiecks über;
+    // nur das innere Dreieck (6|21,4)–(7,5|23,25)–(4,5|23,25) bleibt als Negativraum frei.
+    // Zwei getrennte Strichprimitive erzeugen dagegen eine Lücke und verkleinern die Kontur auf
+    // genau diesen inneren Negativraum.
+    const marks = bodyMark('h-veterinary-slaughter', formationBodyMm);
+    expect(marks.slice(1)).toEqual([{
+      type: 'path',
+      role: 'pictogram',
+      d: 'M 3 20.75 H 15 V 21.25 H 6.525 L 8.25 23.36 V 23.75 H 3.75 V 23.36 L 5.475 21.25 H 3 Z M 6 21.4 L 7.5 23.25 H 4.5 Z',
+      style: {
+        fill: 'schwarz',
+        fillRule: 'evenodd',
+        stroke: 'none',
+      },
+    }]);
   });
 });
 
@@ -254,7 +775,7 @@ describe('bodyMark() — reduzierte Verpflegungsmarke aus F.1.17', () => {
   const sourceContractMark = (): Primitive => {
     const marks = bodyMarkWithContext(
       'catering',
-      { kind: 'formation', bodyVariant: 'foot-band' },
+      { kind: 'formation', bodyVariant: 'foot-band', strength: 'gruppe' },
       formationBodyMm,
     );
     expect(marks).toHaveLength(1);
@@ -562,7 +1083,7 @@ describe('bodyMark() — F.2.10 bis F.2.17 auf normalen, gebänderten und Anhän
       },
       {
         type: 'polyline', role: 'pictogram', points: [[14, 24], [16, 23], [18, 24]],
-        style: outlineStyle,
+      style: outlineStyle,
       },
     ]);
     expect(() => bodyMarkWithContext(
@@ -579,7 +1100,7 @@ describe('bodyMark() — F.2.10 bis F.2.17 auf normalen, gebänderten und Anhän
     )).toEqual([
       {
         type: 'circle', role: 'pictogram', cx: 16, cy: 19, r: 5,
-        style: outlineStyle,
+      style: outlineStyle,
       },
       line(11, 19, 21, 19),
       line(16, 14, 16, 24),
@@ -846,17 +1367,17 @@ describe('bodyMark() — was nicht fortgeschrieben wird', () => {
       bodyMarkWithContext('medical-service', { kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm),
     ).toThrow(/nicht vermessen/);
     expect(() =>
-      bodyMarkWithContext('fire-fighting', { kind: 'formation' }, formationBodyMm),
-    ).toThrow(/keine randbündige Fassung vermessen/);
+      bodyMarkWithContext('fire-fighting', { kind: 'vehicle-land' }, landBodyMm),
+    ).toThrow(/nicht vermessen/);
   });
 
   it('wirft für eine Fähigkeit ohne vermessene randbündige Fassung', () => {
-    // `fire-fighting` steht in `CAPABILITY_IDS` und hat ein Boxpiktogramm, aber keine an einer
+    // `service-water` steht in `CAPABILITY_IDS` und hat ein Boxpiktogramm, aber keine an einer
     // F-Datei vermessene randbündige Fassung. Ein stiller Rückfall auf die Boxfassung wäre der
     // eigentliche Fehler: die beiden Zeichnungen unterscheiden sich in ihren **Maßen** (Kreuz
     // 2…30 gegen 1…31, Leiste 10 gegen 8 mm) und nicht nur in ihrer Größe — das Ergebnis sähe
     // plausibel aus und wäre an keiner Referenzdatei belegt.
-    expect(() => bodyMark('fire-fighting', formationBodyMm)).toThrow(
+    expect(() => bodyMark('service-water', formationBodyMm)).toThrow(
       /keine randbündige Fassung vermessen/,
     );
   });
@@ -1228,7 +1749,7 @@ describe('BODY_MARK_IDS', () => {
     })));
   });
 
-  it('führt jede an Anhang F.1 vermessene Fähigkeit, und jede davon zeichnet auch', () => {
+  it('führt jede vermessene Fähigkeit und zeichnet alle nicht separat exakt geprüften IDs', () => {
     // Enthaltensein und nicht Gleichheit — und der Zuwachs hat die Bauart schon bestätigt: mit
     // `care` (F.1.4) kam ein fünfter vermessener Fachdienst dazu, ohne dass dieser Test dafür
     // rot werden musste. Was er festhält, ist die Zusicherung, dass jede aufgeführte Kennung
@@ -1243,23 +1764,43 @@ describe('BODY_MARK_IDS', () => {
     ]) {
       expect(BODY_MARK_IDS).toContain(id);
     }
+    const task1LogisticsIds = new Set<BodyMarkId>([
+      'fuels-consumables',
+      'drinking-water',
+      'water-conveyance',
+      'power-supply',
+      'catering',
+      'meal-preparation',
+      'maintenance',
+      'waste-disposal',
+    ]);
+    for (const id of task1LogisticsIds) expect(BODY_MARK_IDS).toContain(id);
     for (const id of BODY_MARK_IDS) {
+      // Sämtliche Task-1-Logistikrouten sind oben je Körperprofil mit exakten Primitiven,
+      // Pfaden, Stilen, Bounds und negativen Nachbarkontexten abgesichert. Ein zusätzlicher
+      // Existenzcheck würde diese stärkeren Verträge wieder zu `length > 0` verwässern.
+      if (task1LogisticsIds.has(id)) continue;
       // Kein Mindestmaß von zwei Primitiven: `care` steht mit **einem** Polyzug ohne Teilung da,
       // und genau das ist an F.1.3 belegt (siehe den Block zur Zeltmarke oben).
-      const invocation = id === 'catering'
-        ? [{ kind: 'formation', bodyVariant: 'foot-band' } as const, formationBodyMm] as const
-        : id === 'meal-preparation' || id === 'drinking-water'
-          ? [{ kind: 'vehicle-land', bodyVariant: 'foot-band' } as const, landBodyMm] as const
-        : id === 'air-winch-chevron-diamond'
+      const invocation = id === 'air-winch-chevron-diamond'
           ? [{ kind: 'vehicle-air', bodyVariant: 'raised-hull' } as const, raisedAirBodyMm] as const
+        : id === 'air-quartering-up-arrow-box'
+          ? [{ kind: 'vehicle-air', bodyVariant: 'raised-hull' } as const, raisedAirBodyMm] as const
+        : id === 'air-horizontal-left-chevron' || id === 'air-rising-diagonal'
+          ? [{ kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull' } as const, raisedAirBodyMm] as const
         : id === 'top-center-rect-0-5x0-6mm'
             ? [{ kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' } as const, landBodyMm] as const
           : id === 'hospital'
             ? [{ kind: 'reduced-house' } as const, reducedHouseBodyMm] as const
             : id.startsWith('circle-')
               ? [{ kind: 'circle-12' } as const, circleBodyMm] as const
+            : id.startsWith('spontaneous-helper-')
+              ? [{ kind: 'circle-12' } as const, circleBodyMm] as const
+            : id === 'land-horizontal-blade-bent-upright'
+              ? [{ kind: 'vehicle-land', bodyVariant: 'inverted-hull-track' } as const, invertedLandBodyMm] as const
             : id === 'ring-6mm-offset-down-3mm-four-way-stem' ||
-                id === 'ring-5mm-offset-down-3mm-eight-spokes'
+                id === 'ring-5mm-offset-down-3mm-eight-spokes' ||
+                id === 'ring-5mm-offset-down-3-5mm-eight-spokes'
               ? [{ kind: 'vehicle-land' } as const, landBodyMm] as const
           : [{ kind: 'formation' } as const, formationBodyMm] as const;
       expect(bodyMarkWithContext(id, invocation[0], invocation[1]).length).toBeGreaterThanOrEqual(1);

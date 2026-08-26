@@ -6,10 +6,11 @@ import {
   formatUnits,
   matchFingerprint,
   renderSvg,
+  validateSpec,
 } from '@einsatzzeichen/core';
 import { mmToUnits, type Drawing, type Primitive } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
-import { fingerprintFor } from './fingerprint-index.js';
+import { fingerprintFor, referenceLacksComparableShape } from './fingerprint-index.js';
 import { pictogram } from './pictograms/index.js';
 import {
   RECIPES,
@@ -40,6 +41,12 @@ import { ANHANG_F_B_RECIPES } from './recipes-anhang-f.js';
  * die fachliche Aussage ist unverändert, sie wird eine Ebene tiefer gelesen.
  */
 function horizontalPictogramLineYMm(drawing: Drawing): number | undefined {
+  const directLine = drawing.children.find(
+    (c): c is Primitive & { type: 'line' } =>
+      c.type === 'line' && c.role === 'pictogram' && c.y1 === c.y2,
+  );
+  if (directLine !== undefined) return directLine.y1;
+
   const group = drawing.children.find(
     (c): c is Primitive & { type: 'group' } => c.type === 'group' && c.role === 'pictogram',
   );
@@ -78,8 +85,122 @@ function comparableBodyFingerprint(
   };
 }
 
+describe('composeFromCatalog() — vorbereitete inset-hull-Spec', () => {
+  function labelContents(drawing: Drawing): string[] {
+    return drawing.children
+      .filter(
+        (child): child is Primitive & { type: 'text' } =>
+          child.type === 'text' && child.role === 'label',
+      )
+      .map((label) => label.content);
+  }
+
+  it('ignoriert einen non-enumerable center-Getter auf Object.prototype in Bild und Beschreibung', () => {
+    const previousCenter = Object.getOwnPropertyDescriptor(Object.prototype, 'center');
+
+    try {
+      Object.defineProperty(Object.prototype, 'center', {
+        configurable: true,
+        enumerable: false,
+        get: () => 'GEERBT',
+      });
+
+      const drawing = composeFromCatalog({
+        kind: 'vehicle-water',
+        bodyVariant: 'inset-hull',
+        organization: 'hilfsorganisation',
+        labels: {},
+      });
+      expect(labelContents(drawing)).not.toContain('GEERBT');
+      expect(drawing.description).not.toContain('GEERBT');
+    } finally {
+      if (previousCenter === undefined) {
+        Reflect.deleteProperty(Object.prototype, 'center');
+      } else {
+        Object.defineProperty(Object.prototype, 'center', previousCenter);
+      }
+    }
+  });
+
+  it('verwendet bei Proxy-Labels für Bild und Beschreibung denselben center-Data-Deskriptor', () => {
+    const labels = new Proxy({ center: 'MzB' }, {
+      get: (target, key, receiver) => key === 'center'
+        ? 'PROXY'
+        : Reflect.get(target, key, receiver),
+      getOwnPropertyDescriptor: (target, key) => Reflect.getOwnPropertyDescriptor(target, key),
+      getPrototypeOf: () => Object.prototype,
+      ownKeys: (target) => Reflect.ownKeys(target),
+    });
+
+    const drawing = composeFromCatalog({
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+      labels,
+    });
+    expect(labelContents(drawing)).toEqual(['MzB']);
+    expect(drawing.description).toContain('Kürzel: MzB');
+    expect(drawing.description).not.toContain('PROXY');
+  });
+});
+
 describe('Kompositionsrezepte', () => {
-  const fingerprintCases = Object.entries(RECIPES);
+  const geometryRegressionCases = Object.entries(RECIPES).filter(([, recipe]) =>
+    referenceLacksComparableShape(recipe.referenceAsset),
+  );
+  const fingerprintCases = Object.entries(RECIPES).filter(([, recipe]) =>
+    !referenceLacksComparableShape(recipe.referenceAsset),
+  );
+
+  it('bindet Anhang H mit drei orangefarbenen Formationen an die Originaldateien', () => {
+    expect(RECIPES['H.1']).toEqual({
+      title: 'Veterinärzug',
+      referenceAsset: 'H.1_Veterinärzug.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'sonstige-gefahrenabwehr',
+        strength: 'zug',
+        bodyMarks: ['veterinary'],
+      },
+    });
+    expect(RECIPES['H.2']).toEqual({
+      title: 'Tier-Dekontaminationsgruppe',
+      referenceAsset: 'H.2_Tier-Dekontaminationsgruppe.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'sonstige-gefahrenabwehr',
+        strength: 'gruppe',
+        bodyMarks: ['h-veterinary-decontamination'],
+      },
+    });
+    expect(RECIPES['H.3']).toEqual({
+      title: 'Schlacht- und Untersuchungsgruppe',
+      referenceAsset: 'H.3_Schlacht- und Untersuchungsgruppe.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'sonstige-gefahrenabwehr',
+        strength: 'gruppe',
+        bodyMarks: ['h-veterinary-slaughter'],
+      },
+    });
+  });
+
+  it('zeichnet die H-spezifische kompakte Tierdekontaminationsmarke', () => {
+    const h2 = composeFromCatalog(RECIPES['H.2']!.spec).children.filter(
+      (child) => child.role === 'pictogram',
+    );
+
+    expect(h2).toHaveLength(7);
+    expect(h2.map((child) => child.type)).toEqual([
+      'polyline',
+      'circle',
+      'circle',
+      'polyline',
+      'polyline',
+      'polyline',
+      'polyline',
+    ]);
+  });
 
   it('bindet den Körper-Fingerprint-Claim exakt an die ausgeführten Rezeptfälle', () => {
     const tested = fingerprintCases.map(([section]) => `recipe.${section}`).sort();
@@ -130,6 +251,24 @@ describe('Kompositionsrezepte', () => {
     expect(() => comparableBodyFingerprint(withUnexpectedBounds)).toThrow();
   });
 
+  it('bindet den Geometrie-Regressionsclaim exakt an Rezeptartefakte mit shapes: []', () => {
+    expect(geometryRegressionCases.map(([section]) => section)).toEqual(['G.1.5']);
+    for (const [section, recipe] of geometryRegressionCases) {
+      expect(fingerprintFor(recipe.referenceAsset).shapes, section).toEqual([]);
+    }
+    const claimed = COVERAGE_MANIFEST.entries
+      .filter(
+        (entry) =>
+          entry.coverage === 'composition-recipe' &&
+          entry.testEvidence.includes('body-geometry-regression'),
+      )
+      .map((entry) => entry.implementation)
+      .sort();
+    expect(claimed).toEqual(
+      geometryRegressionCases.map(([section]) => `recipe.${section}`).sort(),
+    );
+  });
+
   it('erzeugt die Löschstaffel mit Körper bei 9 mm', () => {
     const drawing = composeFromCatalog(RECIPES['C.1.1'].spec);
     const body = drawing.children.find((c) => c.role === 'body');
@@ -147,10 +286,66 @@ describe('Kompositionsrezepte', () => {
     expect(boundsOfMm(body).minY).toBeCloseTo(6, 6);
   });
 
-  it('unterscheidet Löschstaffel und Löschgruppe nur in der Stärke', () => {
+  it('erzeugt C.1.3 als Löschzug auf dem unveränderten Formationskörper', () => {
+    const recipe = RECIPES['C.1.3'];
+    expect(recipe).toEqual({
+      title: 'Löschzug einer Feuerwehr',
+      referenceAsset: 'C.1.3_Löschzug einer Feuerwehr.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'feuerwehr',
+        strength: 'zug',
+        bodyMarks: ['fire-fighting'],
+      },
+    });
+
+    const drawing = composeFromCatalog(recipe.spec);
+    const heads = drawing.children.filter(
+      (child): child is Primitive & { type: 'circle' } =>
+        child.type === 'circle' && child.role === 'head',
+    );
+    expect(heads.map(({ cx, cy, r }) => ({ cx, cy, r }))).toEqual([
+      { cx: 11, cy: 3.5, r: 1.5 },
+      { cx: 16, cy: 3.5, r: 1.5 },
+      { cx: 21, cy: 3.5, r: 1.5 },
+    ]);
+
+    const pictogramLines = drawing.children.filter(
+      (child): child is Primitive & { type: 'line' } =>
+        child.type === 'line' && child.role === 'pictogram',
+    );
+    expect(pictogramLines.map(({ x1, y1, x2, y2 }) => ({ x1, y1, x2, y2 }))).toEqual([
+      { x1: 1, y1: 16, x2: 21, y2: 16 },
+      { x1: 21, y1: 16, x2: 31, y2: 6 },
+      { x1: 21, y1: 16, x2: 31, y2: 26 },
+    ]);
+    expect(pictogramLines).not.toContainEqual(
+      expect.objectContaining({ x1: 21, y1: 16, x2: 31, y2: 16 }),
+    );
+
+    const body = drawing.children.find((child) => child.role === 'body');
+    expect(body).toBeDefined();
+    if (body === undefined) return;
+    const bounds = boundsOfMm(body);
+    expect(bounds.minX).toBeCloseTo(1, 6);
+    expect(bounds.minY).toBeCloseTo(6, 6);
+    expect(bounds.maxX).toBeCloseTo(31, 6);
+    expect(bounds.maxY).toBeCloseTo(26, 6);
+    expect(body.style?.fill).toBe('rot');
+    expect(horizontalPictogramLineYMm(drawing)).toBeCloseTo(16, 6);
+  });
+
+  it('unterscheidet Löschstaffel, Löschgruppe und Löschzug nur in der Stärke', () => {
     const { strength: _a, ...staffel } = RECIPES['C.1.1'].spec;
     const { strength: _b, ...gruppe } = RECIPES['C.1.2'].spec;
+    const { strength: _c, ...zug } = RECIPES['C.1.3'].spec;
+    expect(staffel).toEqual({
+      kind: 'formation',
+      organization: 'feuerwehr',
+      bodyMarks: ['fire-fighting'],
+    });
     expect(staffel).toEqual(gruppe);
+    expect(gruppe).toEqual(zug);
   });
 
   it('erzeugt den Zugführer mit Spitze bei 5 mm und Unterkante bei 31 mm', () => {
@@ -208,6 +403,7 @@ describe('Kompositionsrezepte', () => {
     const cases = [
       ['C.1.1', 19] as const,
       ['C.1.2', 16] as const,
+      ['C.1.3', 16] as const,
     ];
     for (const [section, expectedCenterYMm] of cases) {
       const drawing = composeFromCatalog(RECIPES[section].spec);
@@ -277,7 +473,7 @@ describe('Anhang D.1, Führungsstellen im Einsatz', () => {
 
   it('führt exakt die neun komponierten D.1-Darstellungen', () => {
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('D.1.'))).toEqual(expectedKeys);
-    expect(Object.keys(RECIPES)).toHaveLength(163);
+    expect(Object.keys(RECIPES)).toHaveLength(200);
   });
 
   it('bindet D.1.2 bis D.1.8 an die sieben gemessenen Formationsrollen', () => {
@@ -633,6 +829,293 @@ describe('Anhang D.4, übergeordnete Funktionen', () => {
   });
 });
 
+describe('Anhang G — vollständiges Logistikinventar', () => {
+  const expected = {
+    'G.1': {
+      title: 'Versorgung mit Verbrauchsgütern',
+      referenceAsset: 'G.1_Versorgung mit Verbrauchsgütern.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        bodyMarks: ['fuels-consumables'],
+      },
+    },
+    'G.1.1': {
+      title: 'Versorgungstrupp Feuerwehr Materialerhaltung',
+      referenceAsset: 'G.1.1_Versorgungstrupp Feuerwehr_Materialerhaltung.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'feuerwehr',
+        strength: 'trupp', bodyMarks: ['maintenance'],
+      },
+    },
+    'G.1.2': {
+      title: 'Versorgungstrupp DLRG',
+      referenceAsset: 'G.1.2_Versorgungstrupp DLRG.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        strength: 'trupp', bodyMarks: ['catering'], labels: { bottomRight: 'DLRG' },
+      },
+    },
+    'G.1.3': {
+      title: 'Versorgungstrupp Feuerwehr Verbrauchsgüter',
+      referenceAsset: 'G.1.3_Versorgungstrupp Feuerwehr_Verbrauchsgüter.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'feuerwehr',
+        strength: 'trupp', bodyMarks: ['fuels-consumables'],
+      },
+    },
+    'G.1.4': {
+      title: 'Verpflegungszug',
+      referenceAsset: 'G.1.4_Verpflegungszug.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        strength: 'zug', bodyMarks: ['catering'],
+      },
+    },
+    'G.1.5': {
+      title: 'Instandhaltungsgruppe',
+      referenceAsset: 'G.1.5_Instandhaltungsgruppe.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        strength: 'gruppe', bodyMarks: ['maintenance'],
+      },
+    },
+    'G.2': {
+      title: 'Versorgung mit Trinkwasser',
+      referenceAsset: 'G.2_Versorgung mit Trinkwasser.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        bodyMarks: ['drinking-water'],
+      },
+    },
+    'G.2.1': {
+      title: 'Fahrzeug Instandhaltung',
+      referenceAsset: 'G.2.1_Fahrzeug Instandhaltung.svg',
+      spec: {
+        kind: 'vehicle-land', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        vehicleCategory: 'kfz-kategorie-1', bodyMarks: ['maintenance'],
+      },
+    },
+    'G.2.2': {
+      title: 'Anhänger Technik Sicherheit',
+      referenceAsset: 'G.2.2_Anhänger Technik Sicherheit.svg',
+      spec: {
+        kind: 'trailer', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        vehicleCategory: 'anhaenger-ein-rad', bodyMarks: ['maintenance'],
+      },
+    },
+    'G.2.3': {
+      title: 'Geräteanhänger Feldkochherd',
+      referenceAsset: 'G.2.3_Geräteanhänger Feldkochherd.svg',
+      spec: {
+        kind: 'trailer', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        vehicleCategory: 'anhaenger-zwei-raeder', bodyMarks: ['meal-preparation'],
+      },
+    },
+    'G.3': {
+      title: 'Versorgung mit Brauchwasser',
+      referenceAsset: 'G.3_Versorgung mit Brauchwasser.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        bodyMarks: ['water-conveyance'],
+      },
+    },
+    'G.3.1': {
+      title: 'Verpflegungsstelle betrieben durch Feuerwehr',
+      referenceAsset: 'G.3.1_Verpflegungsstelle_betrieben durch Feuerwehr.svg',
+      spec: {
+        kind: 'circle-12', bodyVariant: 'foot-band', organization: 'feuerwehr',
+        bodyMarks: ['catering'],
+      },
+    },
+    'G.3.2': {
+      title: 'Verpflegungszubereitungsstelle Polizei',
+      referenceAsset: 'G.3.2_Verpflegungszubereitungsstelle_betrieben durch Polizei.svg',
+      spec: {
+        kind: 'circle-12', bodyVariant: 'foot-band', organization: 'polizei',
+        bodyMarks: ['meal-preparation'],
+      },
+    },
+    'G.3.3': {
+      title: 'Versorgungsstelle Hilfsorganisation',
+      referenceAsset: 'G.3.3_Versorgungsstelle Hilfsorganisation.svg',
+      spec: {
+        kind: 'circle-12', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        bodyMarks: ['fuels-consumables'],
+      },
+    },
+    'G.3.4': {
+      title: 'Zentrale Stelle Notversorgung',
+      referenceAsset: 'G.3.4_Zentrale Stelle Notversorgung.svg',
+      spec: {
+        kind: 'circle-12', bodyVariant: 'foot-band', organization: 'fuehrung-leitung',
+        bodyMarks: ['maintenance'],
+      },
+    },
+    'G.3.5': {
+      title: 'Mobiler Tankpunkt Diesel Bundeswehr',
+      referenceAsset: 'G.3.5_Mobiler Tankpunkt Diesel_betrieben durch Bundeswehr.svg',
+      spec: {
+        kind: 'circle-12', bodyVariant: 'foot-band', organization: 'bundeswehr',
+        bodyMarks: ['fuels-consumables'], labels: { bottomCenter: 'Diesel', belowRight: 'Bw' },
+      },
+    },
+    'G.4': {
+      title: 'Versorgung mit Elektrizität',
+      referenceAsset: 'G.4_Versorgung mit Elektrizität.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        bodyMarks: ['power-supply'],
+      },
+    },
+    'G.5': {
+      title: 'Versorgung mit Verpflegung',
+      referenceAsset: 'G.5_Versorgung mit Verpflegung.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        bodyMarks: ['catering'],
+      },
+    },
+    'G.6': {
+      title: 'Zubereiten von Verpflegung',
+      referenceAsset: 'G.6_Zubereiten von Verpflegung.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        bodyMarks: ['meal-preparation'],
+      },
+    },
+    'G.7': {
+      title: 'Instandhaltung',
+      referenceAsset: 'G.7_Instandhaltung.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        bodyMarks: ['maintenance'],
+      },
+    },
+    'G.8': {
+      title: 'Entsorgung',
+      referenceAsset: 'G.8_Entsorgung.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        bodyMarks: ['waste-disposal'],
+      },
+    },
+  } as const satisfies Record<string, Recipe>;
+
+  it('bindet alle 21 primary-Rezepte literal an Namen, Körper, Organisation, Kopf, Fahrwerk, Marken und Labels', () => {
+    const actual = Object.fromEntries(
+      Object.entries<Recipe>(RECIPES).filter(([key]) => key === 'G.1' || /^G\.[1-3]\.[1-5]$/.test(key) || /^G\.[2-8]$/.test(key)),
+    );
+    expect(actual).toEqual(expected);
+    expect(Object.keys(actual)).toEqual(Object.keys(expected));
+    expect(Object.keys(actual).every((key) => !key.includes('#'))).toBe(true);
+    expect(Object.keys(RECIPES)).toHaveLength(200);
+  });
+
+  it('bindet die 21 primary- und Referenz-IDs exakt und ohne Alternative', () => {
+    const rows = COVERAGE_MANIFEST.entries.filter(
+      (entry) => entry.coverage === 'composition-recipe' && entry.sourceId.startsWith('bbk-babz-2025:G.'),
+    );
+    expect(rows.map((entry) => ({
+      sourceId: entry.sourceId,
+      variant: entry.variant,
+      implementation: entry.implementation,
+      referenceAsset: entry.referenceAsset,
+    }))).toEqual(Object.entries(expected).map(([id, recipe]) => ({
+      sourceId: `bbk-babz-2025:${id}`,
+      variant: 'primary',
+      implementation: `recipe.${id}`,
+      referenceAsset: recipe.referenceAsset,
+    })));
+  });
+
+  it('gated G.1.5 über die vollständige Geometrie statt über einen falschen Fingerprint', () => {
+    const recipe = RECIPES['G.1.5'];
+    const drawing = composeFromCatalog(recipe.spec, recipe.title);
+    expect(drawing.children.find((primitive) => primitive.role === 'body')).toMatchObject({
+      type: 'rect', x: 1, y: 6, width: 30, height: 20,
+    });
+    expect(drawing.children.find(
+      (primitive) => primitive.type === 'rect' && primitive.role === 'pictogram' && primitive.y === 23,
+    )).toMatchObject({ type: 'rect', x: 1, y: 23, width: 30, height: 3 });
+    expect(drawing.children.filter((primitive) => primitive.role === 'head')).toEqual([
+      expect.objectContaining({ type: 'circle', cx: 11, cy: 3.5, r: 1.5 }),
+      expect.objectContaining({ type: 'circle', cx: 21, cy: 3.5, r: 1.5 }),
+    ]);
+    const entry = COVERAGE_MANIFEST.entries.find(
+      (candidate) => candidate.sourceId === 'bbk-babz-2025:G.1.5',
+    );
+    expect(entry?.testEvidence).toEqual(['body-geometry-regression', 'svg-snapshot']);
+    expect(entry?.testEvidence).not.toContain('body-fingerprint');
+  });
+});
+
+describe('Anhang I, Teilslice I-a (I.3.5 bis I.3.7)', () => {
+  const expected = {
+    'I.3.5': ['Mehrzweckboot', 'I.3.5_Mehrzweckboot.svg', 'MzB'],
+    'I.3.6': ['Mehrzweckarbeitsboot', 'I.3.6_Mehrzweckarbeitsboot.svg', 'MzAB'],
+    'I.3.7': ['Mehrzweckponton', 'I.3.7_Mehrzweckponton.svg', 'MzPt'],
+  } as const;
+  const recipes: Record<string, Recipe> = RECIPES;
+
+  it('bindet ausschließlich die drei vermessenen Wasserfahrzeuge an ihre Referenzmatrix', () => {
+    // Diese Literale schützen die Zuordnung von Abschnitt, Name, Quelldatei und Kürzel: etwa
+    // ein vertauschtes MzAB/MzPt ergäbe weiter eine valide Komposition, aber ein falsches Bild.
+    const actual = Object.fromEntries(
+      Object.entries(recipes)
+        .filter(([section]) => section.startsWith('I.'))
+        .map(([section, recipe]) => {
+        return [
+          section,
+          [recipe.title, recipe.referenceAsset, recipe.spec.labels?.center],
+        ];
+      }),
+    );
+    expect(actual).toEqual(expected);
+  });
+
+  it.each(Object.entries(expected))(
+    '%s kompositioniert den gemessenen inset-hull mit ausschließlich schwarzem Mittellabel',
+    (section, [_title, referenceAsset, center]) => {
+      const recipe = recipes[section];
+      expect(recipe).toBeDefined();
+      if (recipe === undefined) return;
+
+      expect(recipe.spec.kind).toBe('vehicle-water');
+      expect(recipe.spec.bodyVariant).toBe('inset-hull');
+      expect(recipe.spec.organization).toBe('hilfsorganisation');
+      expect(recipe.spec.labels).toEqual({ center });
+      expect(recipe.spec.designation).toBeUndefined();
+      expect(validateSpec(recipe.spec)).toEqual([]);
+
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      const body = drawing.children.find((child) => child.role === 'body');
+      expect(body).toBeDefined();
+      expect(body?.type).toBe('path');
+      if (body?.type === 'path') {
+        expect(body.d).toBe(
+          'M 1.01 9.0001 L 30.9894 9.0001 C 30.9894 17.2787, 24.2783 23.9898, 15.9997 23.9898 C 7.7211 23.9898, 1.01 17.2787, 1.01 9.0001 Z',
+        );
+      }
+
+      // Der Rezeptweg muss die benannte lokale Quelldatei treffen; der Grundzeichen-Test allein
+      // deckt weder Registrierung noch Komposition ab.
+      expect(matchFingerprint(drawing, fingerprintFor(referenceAsset))).toEqual({
+        ok: true,
+        problems: [],
+      });
+
+      const labels = drawing.children.filter(
+        (child): child is Primitive & { type: 'text' } =>
+          child.type === 'text' && child.role === 'label',
+      );
+      expect(labels).toHaveLength(1);
+      expect(labels[0]?.content).toBe(center);
+      expect(labels[0]?.style?.fill).toBe('schwarz');
+      expect(labels[0]?.y).toBeCloseTo(15.9999, 3);
+    },
+  );
+});
+
 describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
   const cases = Object.entries<Recipe>(ANHANG_E_A_RECIPES);
 
@@ -760,11 +1243,10 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
 
   it('verlangt für die Beschriftung auf der Körperfarbe die Textschwelle, nicht die Nichttextschwelle', () => {
     const requirements = labelContrastRequirements();
-    // **Sechsunddreißig seit Anhang D.4**, und nur eine davon besteht nicht. Dreißig
-    // Anforderungen stammen aus den einzeln vermessenen Rollenläufen, sechs aus den bisherigen
-    // Labelzonen. Der D.4.2-Lauf verwendet denselben eng begrenzten Theme-Token wie D.1.8:
-    // quellentreu schwarz auf Rot in Referenz/Accessible und weiß nur im Drucktheme.
-    // Drei Nachbarschaften und drei Organisationen kommen bei den Labelzonen zusammen: die Beschriftung im Körper, die
+    // **42 im integrierten Stand**, und nur eine davon besteht nicht: dreißig Anforderungen
+    // stammen aus den einzeln vermessenen Rollenläufen, zwölf aus Körper-/Oberflächenlabels.
+    // D.4.2 verwendet denselben eng begrenzten Theme-Token wie D.1.8: quellentreu schwarz auf
+    // Rot in Referenz/Accessible und weiß nur im Drucktheme.
     // Organisationsfarbe auf der Ausgabeoberfläche sowie die schwarzen Kreislabels, die
     // teilweise außerhalb der weißen Körperfläche auf `surface` stehen.
     //
@@ -776,11 +1258,12 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
     // 21:1 in allen drei Themes. Sie steht **vor** den THW-Zeilen, weil `RECIPES` Anhang F vor
     // Anhang E einreiht.
     //
-    // Die dritte Zeile ist E.2.6: das einzige Rezept mit `sonstige-gefahrenabwehr` und
-    // Beschriftung. Die Ableitung meldet „weiss auf orange" unverändert — 2,382:1 bzw. 2,323:1
-    // gegen die Textschwelle 4,5:1 —, und sie wird nicht hier unterdrückt, sondern in
-    // `CONTRAST_EXCEPTIONS` als entschiedene Ausnahme gezählt. Diese Zeile ist die Stelle, an der
-    // ein zweites solches Rezept mechanisch sichtbar würde.
+    // Die dritte Zeile ist E.2.6 mit dem unveränderten Default „weiss auf orange" — 2,382:1
+    // bzw. 2,323:1 und deshalb die einzige entschiedene Ausnahme. Anhang N setzt auf derselben
+    // orangefarbenen Fläche sowie auf hellgruen und braun die jeweils an der Quelle vermessene
+    // schwarze Tinte. Diese drei Paare stehen separat, obwohl eines denselben Organisationskontext
+    // wie E.2.6 trägt; sonst würde der Resolveroverride im Kontrastvertrag unsichtbar. G.3.5
+    // ergänzt denselben schwarz/braun-Farbwert als separat benannten bottomCenter-Vertrag.
     expect(requirements).toEqual([
       {
         foreground: 'schwarz',
@@ -981,9 +1464,39 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
         minimum: 4.5,
       },
       {
+        foreground: 'schwarz',
+        background: 'orange',
+        context: 'Beschriftung im Körper auf Organisation sonstige-gefahrenabwehr',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'hellgruen',
+        context: 'Beschriftung im Körper auf Organisation bundespolizei',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'braun',
+        context: 'Beschriftung im Körper auf Organisation bundeswehr',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'braun',
+        context: 'Schwarze Beschriftung im Körper auf Organisation bundeswehr',
+        minimum: 4.5,
+      },
+      {
         foreground: 'blau',
         background: 'surface',
         context: 'Trägerkürzel unterhalb des Körpers, Organisation thw',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Schwarze Beschriftung unterhalb des Körpers',
         minimum: 4.5,
       },
       {
@@ -995,10 +1508,43 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
       {
         foreground: 'schwarz',
         background: 'surface',
+        context: 'Beschriftung unterhalb des Körpers auf der Ausgabeoberfläche',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
         context: 'Kreislabel teilweise außerhalb der Körperfläche',
         minimum: 4.5,
       },
     ]);
+  });
+
+  it('leitet die Tinte eines überstehenden Kreislabels über denselben Body-Resolver ab', () => {
+    const requirements = labelContrastRequirements([{
+      title: 'synthetischer Resolververtrag',
+      referenceAsset: 'synthetic.svg',
+      spec: {
+        kind: 'circle-12',
+        organization: 'hilfsorganisation',
+        labels: {
+          topLeft: 'UHS',
+          topLeftMetrics: {
+            capHeightMm: 2.919225,
+            baselineFromBodyTopMm: 1.000254,
+            anchorFromBodyLeftMm: -2.984684,
+          },
+          inBodyInk: 'weiss',
+        },
+      },
+    }]);
+
+    expect(requirements).toContainEqual({
+      foreground: 'weiss',
+      background: 'surface',
+      context: 'Kreislabel teilweise außerhalb der Körperfläche',
+      minimum: 4.5,
+    });
   });
 });
 
@@ -1802,12 +2348,12 @@ describe('Anhang F, Teilslice F-f', () => {
     },
   } as const;
 
-  it('deckt F.3.12 bis F.3.19 lückenlos ohne Alternative ab und bleibt bei final 163 Rezepten', () => {
+  it('deckt F.3.12 bis F.3.19 lückenlos ab und erreicht integriert 200 Rezepte', () => {
     const entries = Object.entries<Recipe>(RECIPES)
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(163);
+    expect(Object.keys(RECIPES)).toHaveLength(200);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {
@@ -2373,13 +2919,18 @@ describe('Anhang E, Teilslice E-f (E.2.27 bis E.2.31)', () => {
 
 describe('Piktogramm-Platzierung als Gruppe', () => {
   it('erzeugt genau eine Piktogramm-Gruppe mit der Verschiebung als Transformation', () => {
-    const drawing = composeFromCatalog(RECIPES['C.1.1'].spec);
+    const drawing = composeFromCatalog({
+      kind: 'formation',
+      organization: 'feuerwehr',
+      strength: 'staffel',
+      capabilities: ['fire-fighting'],
+    });
     const pictograms = drawing.children.filter((c) => c.role === 'pictogram');
     expect(pictograms).toHaveLength(1);
     const group = pictograms[0];
     expect(group?.type).toBe('group');
     if (group?.type !== 'group') return;
-    // C.1.1 verschiebt den Körper um 3 mm (Anker 6 → 9); das Piktogramm folgt der Körpermitte.
+    // Der Stapel verschiebt den Körper um 3 mm (Anker 6 → 9); das Boxpiktogramm folgt ihm.
     expect(group.transform?.translate?.dxMm).toBe(0);
     expect(group.transform?.translate?.dyMm).toBeCloseTo(3, 6);
     // Die Kinder tragen ihre Autorenkoordinaten unverändert — die Verschiebung sitzt außen.
@@ -2390,9 +2941,14 @@ describe('Piktogramm-Platzierung als Gruppe', () => {
   });
 
   it('verschiebt die Gruppe bei unverändertem Körper um null, statt sie weglassen', () => {
-    // C.1.2 (Reihe) lässt den Körper bei Anker 6. Die Gruppe entsteht trotzdem: eine
+    // Die Reihe lässt den Körper bei Anker 6. Die Gruppe entsteht trotzdem: eine
     // Sonderbehandlung für Delta 0 wäre ein zweiter Codepfad ohne fachlichen Anlass.
-    const drawing = composeFromCatalog(RECIPES['C.1.2'].spec);
+    const drawing = composeFromCatalog({
+      kind: 'formation',
+      organization: 'feuerwehr',
+      strength: 'gruppe',
+      capabilities: ['fire-fighting'],
+    });
     const group = drawing.children.find((c) => c.role === 'pictogram');
     expect(group?.type).toBe('group');
     expect(group?.transform?.translate?.dyMm).toBeCloseTo(0, 6);
