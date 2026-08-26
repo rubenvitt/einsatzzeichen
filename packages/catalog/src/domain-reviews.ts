@@ -246,6 +246,22 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:F.2.15#primary': { status: 'pending' },
   'bbk-babz-2025:F.2.16#primary': { status: 'pending' },
   'bbk-babz-2025:F.2.17#primary': { status: 'pending' },
+  // Anhang F, Teilslice F-e: elf Platzzeichen auf dem 12-mm-Kreis. Fachlich offen bleiben die
+  // organisationssemantische Zuordnung der ausschließlich weißen Körper, die Begriffe hinter
+  // den neutral benannten Pfeil-/Rahmen-/Rautenformen sowie insbesondere die Frage, ob F.3.10
+  // und F.3.11 tatsächlich von Patiententransport- oder Spezialrettungszeichen abzugrenzen sind.
+  // Die technische Umsetzung behauptet diese Semantik ausdrücklich nicht.
+  'bbk-babz-2025:F.3.1#primary': { status: 'pending' },
+  'bbk-babz-2025:F.3.2#primary': { status: 'pending' },
+  'bbk-babz-2025:F.3.3#primary': { status: 'pending' },
+  'bbk-babz-2025:F.3.4#primary': { status: 'pending' },
+  'bbk-babz-2025:F.3.5#primary': { status: 'pending' },
+  'bbk-babz-2025:F.3.6#primary': { status: 'pending' },
+  'bbk-babz-2025:F.3.7#primary': { status: 'pending' },
+  'bbk-babz-2025:F.3.8#primary': { status: 'pending' },
+  'bbk-babz-2025:F.3.9#primary': { status: 'pending' },
+  'bbk-babz-2025:F.3.10#primary': { status: 'pending' },
+  'bbk-babz-2025:F.3.11#primary': { status: 'pending' },
   'bbk-babz-2025:2.1#primary': { status: 'pending' },
   // 2.2 seit LFH-424. Fachlich besonders zu prüfen: die Zuordnung „HiOrg = Hilfsorganisation" ist
   // aus dem gerasterten Bild abgelesen, nicht aus dem Dateinamen — der ist generisch

@@ -280,7 +280,8 @@ describe('Rasterevidenz für Text (resvgFontOptions())', () => {
     // **93 seit F-c:** acht der 14 Fahrzeugdarstellungen tragen mindestens einen Lauf; F.2.7
     // belegt die oberhalb liegende Zone und F.2.8 zwei getrennt gerasterte Textprimitive.
     // F-d ergänzt sieben beschriftete Fahrzeuge; allein F.2.15 trägt keinen Lauf.
-    expect(labelRecipes).toHaveLength(100);
+    // F-e ergänzt die drei vollständig vermessenen Kreisläufe UHS/UHS/50.
+    expect(labelRecipes).toHaveLength(103);
   });
 
   /**

@@ -604,6 +604,177 @@ export const ANHANG_F_D_DEVIATIONS: Readonly<Record<string, string>> = Object.fr
     'quellenspezifischen Innenkonturwert keine eigene Rumpfvariante ein.',
 });
 
+/**
+ * F.3.1 bis F.3.11: elf Platzzeichen auf dem separat vermessenen 12-mm-Kreis. F.3.5 ist die
+ * einzige Giebelvariante dieses Teilslice. Die Zuordnung `hilfsorganisation` bleibt wie in F-a
+ * eine technische Entscheidung für die ausschließlich weiße Quelle; keine Darstellung trägt
+ * einen Stärkegrad.
+ */
+export const ANHANG_F_E_RECIPES = {
+  'F.3.1': {
+    title: 'Patientenablage',
+    referenceAsset: 'F.3.1_Patientenablage.svg',
+    spec: {
+      kind: 'circle-12',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['circle-patient-staging-arrows'],
+    },
+  },
+  'F.3.2': {
+    title: 'Patientenablage, arztbesetzt',
+    referenceAsset: 'F.3.2_Patientenablage_arztbesetzt.svg',
+    spec: {
+      kind: 'circle-12',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['circle-patient-staging-arrows', 'physician'],
+    },
+  },
+  'F.3.3': {
+    title: 'Unfallhilfsstelle / Sanitätsstation',
+    referenceAsset: 'F.3.3_Unfallhilfsstelle_Sanitätsstation.svg',
+    spec: {
+      kind: 'circle-12',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['medical-service'],
+      labels: {
+        topLeft: 'UHS',
+        topLeftMetrics: {
+          capHeightMm: 2.919225,
+          baselineFromBodyTopMm: 1.000254,
+          anchorFromBodyLeftMm: -2.984684,
+        },
+      },
+    },
+  },
+  'F.3.4': {
+    title: 'Unfallhilfsstelle / Sanitätsstation, arztbesetzt',
+    referenceAsset: 'F.3.4_Unfallhilfsstelle_Sanitätsstation_arztbesetzt.svg',
+    spec: {
+      kind: 'circle-12',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['medical-service', 'physician'],
+      labels: {
+        topLeft: 'UHS',
+        topLeftMetrics: {
+          capHeightMm: 2.919225,
+          baselineFromBodyTopMm: 1.000254,
+          anchorFromBodyLeftMm: -2.984684,
+        },
+      },
+    },
+  },
+  'F.3.5': {
+    title: 'Behandlungsplatz 50, ortsgebunden',
+    referenceAsset: 'F.3.5_Behandlungsplatz 50_ortsgebunden.svg',
+    spec: {
+      kind: 'circle-12',
+      bodyVariant: 'raised-gable',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['medical-service', 'physician'],
+      labels: {
+        topLeft: '50',
+        topLeftMetrics: {
+          capHeightMm: 2.749893,
+          baselineFromBodyTopMm: -0.999746,
+          anchorFromBodyLeftMm: -2.974002,
+        },
+      },
+    },
+  },
+  'F.3.6': {
+    title: 'Sammelstelle allgemein',
+    referenceAsset: 'F.3.6_Sammelstelle allgemein.svg',
+    spec: {
+      kind: 'circle-12',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['circle-collection-arrow'],
+    },
+  },
+  'F.3.7': {
+    title: 'Sammelraum Einsatzfahrzeuge',
+    referenceAsset: 'F.3.7_Sammelraum Einsatzfahrzeuge.svg',
+    spec: {
+      kind: 'circle-12',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['circle-staging-frame-arrow'],
+    },
+  },
+  'F.3.8': {
+    title: 'Bereitstellungsraum',
+    referenceAsset: 'F.3.8_Bereitstellungsraum.svg',
+    spec: {
+      kind: 'circle-12',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['circle-staging-frame'],
+    },
+  },
+  'F.3.9': {
+    title: 'Pufferzone / Verfügungsraum Rettungsdienst',
+    referenceAsset: 'F.3.9_Pufferzone_Verfügungsraum Rettungsdienst.svg',
+    spec: {
+      kind: 'circle-12',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['circle-staging-frame-quadrants-arrows'],
+    },
+  },
+  'F.3.10': {
+    title: 'Ladezone',
+    referenceAsset: 'F.3.10_Ladezone.svg',
+    spec: {
+      kind: 'circle-12',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['circle-diamond-arrow'],
+    },
+  },
+  'F.3.11': {
+    title: 'Rettungsmittelhalteplatz',
+    referenceAsset: 'F.3.11_Rettungsmittelhalteplatz.svg',
+    spec: {
+      kind: 'circle-12',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['circle-cross-ring'],
+    },
+  },
+} as const satisfies Record<string, Recipe>;
+
+/** Quellenbefunde des am 26. August 2026 einzeln vermessenen F.3.1–F.3.11-Blocks. */
+export const ANHANG_F_E_FINDINGS: Readonly<Record<string, string>> = Object.freeze({
+  'F.3.1':
+    'Die obere Doppelpfeilform steht auf der Kreis-Fachdienstteilung und erhält eine neutrale ' +
+    'technische ID; die Quelle benennt für das Innenmotiv keine eigenständige Capability.',
+  'F.3.2':
+    'Die Arztleiste ergänzt dieselbe geteilte Doppelpfeilform wie F.3.1. Gemeinsame ' +
+    'Teilungslinien werden als eine Schicht gezeichnet.',
+  'F.3.3':
+    'Der Lauf „UHS“ beginnt 2,984684 mm links der Kreis-Hüllenkante und ist deshalb nur mit ' +
+    'seinem vollständigen, gegen die ViewBox geprüften Metriksatz belegt.',
+  'F.3.4':
+    'Die Arztleiste ergänzt Sanitätsteilung und denselben außerhalb beginnenden UHS-Lauf wie ' +
+    'F.3.3; gemeinsame Teilungslinien werden nicht überzeichnet.',
+  'F.3.5':
+    'Der Kreis ist um 2 mm auf Mittelpunkt (16|18) abgesenkt. Der Giebel (3|11)–(16|1)–(29|11) ' +
+    'und der teilweise oberhalb liegende Lauf „50“ sind separat vermessen.',
+  'F.3.6':
+    'Sammelpfeil und kleiner Ring sind als zusammengehörige, rein technische Kreisform ' +
+    'vermessen; die Quelle ordnet ihnen keine CapabilityId zu.',
+  'F.3.7':
+    'Gewölbter Rahmen, Rechtspfeil und kleiner Ring bilden eine eigene technische Kreisform.',
+  'F.3.8':
+    'Der geschlossene gewölbte Rahmen unterscheidet sich sichtbar von der Pfeilfassung F.3.7 ' +
+    'und bleibt deshalb eine eigene technische ID.',
+  'F.3.9':
+    'Der viergeteilte gewölbte Rahmen trägt einen unteren Doppelpfeil und ist separat von den ' +
+    'Rahmenfassungen F.3.7/F.3.8 vermessen.',
+  'F.3.10':
+    'Raute, Mittelsteg, Anschlag und Rechtspfeil sind eine neutrale technische Form; die ' +
+    'Zeichnung belegt weder Patiententransport noch Spezialrettung.',
+  'F.3.11':
+    'Der Kreuzring steht auf der Kreis-Fachdienstteilung. Die Darstellung wird nicht als ' +
+    'Patiententransport fortgeschrieben, weil die Quelle diese Semantik hier nicht belegt.',
+});
+
+export const ANHANG_F_E_DEVIATIONS: Readonly<Record<string, string>> = Object.freeze({});
+
 export const ANHANG_F_B_FINDINGS: Readonly<Record<string, string>> = Object.freeze({
   'F.1.3':
     'Die Bettzeichnung ist bildgleich mit F.1.19; allein F.1.3 führt zusätzlich das schwarze ' +

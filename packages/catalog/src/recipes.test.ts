@@ -301,10 +301,10 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
 
   it('verlangt für die Beschriftung auf der Körperfarbe die Textschwelle, nicht die Nichttextschwelle', () => {
     const requirements = labelContrastRequirements();
-    // **Vier seit dem Teilslice F-a**, und nur eine davon besteht nicht. Zwei Richtungen und drei
-    // Organisationen kommen hier zusammen: die Beschriftung im Körper (der gesamte Bestand außer
-    // den fünf Wasserfahrzeugen) und die Organisationsfarbe auf der Ausgabeoberfläche (die vierte
-    // Beschriftungszone, seit E-f).
+    // **Sechs seit dem Teilslice F-e**, und nur eine davon besteht nicht. Drei Nachbarschaften
+    // und drei Organisationen kommen hier zusammen: die Beschriftung im Körper, die
+    // Organisationsfarbe auf der Ausgabeoberfläche sowie die schwarzen Kreislabels, die
+    // teilweise außerhalb der weißen Körperfläche auf `surface` stehen.
     //
     // **Die erste Zeile ist neu und war vorher falsch.** Bis F-a behauptete die Ableitung fest
     // `foreground: 'weiss'`; für `hilfsorganisation` (= `weiss`) hätte das „weiss auf weiss"
@@ -348,6 +348,12 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
         foreground: 'schwarz',
         background: 'surface',
         context: 'Beschriftung oberhalb des Körpers auf der Ausgabeoberfläche',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Kreislabel teilweise außerhalb der Körperfläche',
         minimum: 4.5,
       },
     ]);
@@ -913,10 +919,9 @@ describe('Anhang F, Teilslice F-d', () => {
     },
   } as const;
 
-  it('deckt F.2.10 bis F.2.17 lückenlos ab und erreicht den Zählpunkt 118', () => {
+  it('deckt F.2.10 bis F.2.17 lückenlos ab', () => {
     const keys = Object.keys(RECIPES).filter((key) => /^F\.2\.(1[0-7])$/.test(key));
     expect(keys).toEqual(Object.keys(expected));
-    expect(Object.keys(RECIPES)).toHaveLength(118);
   });
 
   it('bindet alle acht Darstellungen literal an Referenz, Kategorie, Marken und Label', () => {
@@ -967,6 +972,127 @@ describe('Anhang F, Teilslice F-d', () => {
       ), key).toHaveLength(1);
     }
   });
+});
+
+describe('Anhang F, Teilslice F-e', () => {
+  const uhsMetrics = {
+    capHeightMm: 2.919225,
+    baselineFromBodyTopMm: 1.000254,
+    anchorFromBodyLeftMm: -2.984684,
+  };
+  const fiftyMetrics = {
+    capHeightMm: 2.749893,
+    baselineFromBodyTopMm: -0.999746,
+    anchorFromBodyLeftMm: -2.974002,
+  };
+  const expected = {
+    'F.3.1': {
+      title: 'Patientenablage', referenceAsset: 'F.3.1_Patientenablage.svg',
+      spec: { kind: 'circle-12', organization: 'hilfsorganisation', bodyMarks: ['circle-patient-staging-arrows'] },
+    },
+    'F.3.2': {
+      title: 'Patientenablage, arztbesetzt',
+      referenceAsset: 'F.3.2_Patientenablage_arztbesetzt.svg',
+      spec: { kind: 'circle-12', organization: 'hilfsorganisation', bodyMarks: ['circle-patient-staging-arrows', 'physician'] },
+    },
+    'F.3.3': {
+      title: 'Unfallhilfsstelle / Sanitätsstation',
+      referenceAsset: 'F.3.3_Unfallhilfsstelle_Sanitätsstation.svg',
+      spec: { kind: 'circle-12', organization: 'hilfsorganisation', bodyMarks: ['medical-service'], labels: { topLeft: 'UHS', topLeftMetrics: uhsMetrics } },
+    },
+    'F.3.4': {
+      title: 'Unfallhilfsstelle / Sanitätsstation, arztbesetzt',
+      referenceAsset: 'F.3.4_Unfallhilfsstelle_Sanitätsstation_arztbesetzt.svg',
+      spec: { kind: 'circle-12', organization: 'hilfsorganisation', bodyMarks: ['medical-service', 'physician'], labels: { topLeft: 'UHS', topLeftMetrics: uhsMetrics } },
+    },
+    'F.3.5': {
+      title: 'Behandlungsplatz 50, ortsgebunden',
+      referenceAsset: 'F.3.5_Behandlungsplatz 50_ortsgebunden.svg',
+      spec: { kind: 'circle-12', bodyVariant: 'raised-gable', organization: 'hilfsorganisation', bodyMarks: ['medical-service', 'physician'], labels: { topLeft: '50', topLeftMetrics: fiftyMetrics } },
+    },
+    'F.3.6': {
+      title: 'Sammelstelle allgemein', referenceAsset: 'F.3.6_Sammelstelle allgemein.svg',
+      spec: { kind: 'circle-12', organization: 'hilfsorganisation', bodyMarks: ['circle-collection-arrow'] },
+    },
+    'F.3.7': {
+      title: 'Sammelraum Einsatzfahrzeuge',
+      referenceAsset: 'F.3.7_Sammelraum Einsatzfahrzeuge.svg',
+      spec: { kind: 'circle-12', organization: 'hilfsorganisation', bodyMarks: ['circle-staging-frame-arrow'] },
+    },
+    'F.3.8': {
+      title: 'Bereitstellungsraum', referenceAsset: 'F.3.8_Bereitstellungsraum.svg',
+      spec: { kind: 'circle-12', organization: 'hilfsorganisation', bodyMarks: ['circle-staging-frame'] },
+    },
+    'F.3.9': {
+      title: 'Pufferzone / Verfügungsraum Rettungsdienst',
+      referenceAsset: 'F.3.9_Pufferzone_Verfügungsraum Rettungsdienst.svg',
+      spec: { kind: 'circle-12', organization: 'hilfsorganisation', bodyMarks: ['circle-staging-frame-quadrants-arrows'] },
+    },
+    'F.3.10': {
+      title: 'Ladezone', referenceAsset: 'F.3.10_Ladezone.svg',
+      spec: { kind: 'circle-12', organization: 'hilfsorganisation', bodyMarks: ['circle-diamond-arrow'] },
+    },
+    'F.3.11': {
+      title: 'Rettungsmittelhalteplatz',
+      referenceAsset: 'F.3.11_Rettungsmittelhalteplatz.svg',
+      spec: { kind: 'circle-12', organization: 'hilfsorganisation', bodyMarks: ['circle-cross-ring'] },
+    },
+  } as const;
+
+  it('deckt F.3.1 bis F.3.11 lückenlos ab und erreicht 129 Rezepte', () => {
+    const keys = Object.keys(RECIPES).filter((key) => /^F\.3\.(?:[1-9]|10|11)$/.test(key));
+    expect(keys).toEqual(Object.keys(expected));
+    expect(Object.keys(RECIPES)).toHaveLength(129);
+  });
+
+  it('bindet alle elf Darstellungen literal an Quelle, Körper, Marken und Label', () => {
+    expect(Object.fromEntries(
+      Object.entries<Recipe>(RECIPES).filter(([key]) => /^F\.3\.(?:[1-9]|10|11)$/.test(key)),
+    )).toEqual(expected);
+    for (const key of Object.keys(expected) as Array<keyof typeof expected>) {
+      const recipe = RECIPES[key];
+      expect('strength' in recipe.spec, key).toBe(false);
+      expect(recipe.spec.organization, key).toBe('hilfsorganisation');
+    }
+  });
+
+  it('meldet für die teilweise außerhalb liegenden Kreislabels Körper- und Surface-Kontrast an', () => {
+    const circleRequirements = labelContrastRequirements(
+      Object.values(expected) as unknown as Iterable<Recipe>,
+    );
+    expect(circleRequirements).toEqual(expect.arrayContaining([
+      {
+        foreground: 'schwarz', background: 'weiss',
+        context: 'Beschriftung im Körper auf Organisation hilfsorganisation', minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz', background: 'surface',
+        context: 'Kreislabel teilweise außerhalb der Körperfläche', minimum: 4.5,
+      },
+    ]));
+  });
+
+  it.each(['F.3.2', 'F.3.4', 'F.3.5'] as const)(
+    '%s zeichnet gemeinsam genutzte Kreislinien trotz kombinierter Marken genau einmal',
+    (key) => {
+      const recipe = RECIPES[key];
+      expect(recipe).toBeDefined();
+      if (recipe === undefined) return;
+      const lines = composeFromCatalog(recipe.spec, recipe.title).children.filter(
+        (primitive) => primitive.type === 'line' && primitive.role === 'pictogram',
+      );
+      const body = composeFromCatalog(recipe.spec, recipe.title).children.find(
+        (primitive) => primitive.role === 'body',
+      );
+      if (body?.type !== 'circle') throw new Error(`${key}: Kreiskörper fehlt.`);
+      expect(lines.filter((line) => line.type === 'line' &&
+        line.x1 === body.cx && line.x2 === body.cx &&
+        line.y1 === body.cy - body.r && line.y2 === body.cy + body.r)).toHaveLength(1);
+      expect(lines.filter((line) => line.type === 'line' &&
+        line.y1 === body.cy && line.y2 === body.cy &&
+        line.x1 === body.cx - body.r && line.x2 === body.cx + body.r)).toHaveLength(1);
+    },
+  );
 });
 
 describe('Anhang E, Teilslice E-c (E.1.29 bis E.1.37)', () => {

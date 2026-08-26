@@ -69,7 +69,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 405 Zeilen mit 273 Elementdarstellungen', () => {
+  it('enthält exakt 416 Zeilen mit 273 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -97,7 +97,7 @@ describe('Coverage-Manifest', () => {
       // `alternative` — die Zeile zählt einzeln, weil das Manifest Darstellungen zählt und nicht
       // Abschnitte, weil F.1.3 dort noch bewusst offen blieb; F-b baut es mit `foot-band`.
       // F-d ergänzt F.2.10 bis F.2.17 als acht reine Anwendungen des Fahrzeugvertrags.
-      'composition-recipe': 118,
+      'composition-recipe': 129,
       // 254 Piktogramme plus acht Organisationen (seit LFH-424 mit hilfsorganisation), vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
@@ -105,10 +105,22 @@ describe('Coverage-Manifest', () => {
       // Strichhülle vermessen ist.
       element: 273,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(405);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(416);
     expect(elementRows).toHaveLength(273);
     expect(pictogramRows).toHaveLength(254);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
+  });
+
+  it('führt F.3.1 bis F.3.11 technisch geprüft, ohne Anhang F vorzeitig zu beanspruchen', () => {
+    const entries = COVERAGE_MANIFEST.entries.filter((entry) =>
+      /^bbk-babz-2025:F\.3\.(?:[1-9]|10|11)$/.test(entry.sourceId),
+    );
+    expect(entries.map((entry) => entry.sourceId)).toEqual(
+      Array.from({ length: 11 }, (_, index) => `bbk-babz-2025:F.3.${index + 1}`),
+    );
+    expect(entries.every((entry) => entry.review.technical.status === 'approved')).toBe(true);
+    expect(entries.every((entry) => entry.review.domain.status === 'pending')).toBe(true);
+    expect(COVERAGE_MANIFEST.scope).not.toContain('F');
   });
 
   it('führt Anhang E lückenlos und trägt damit das `E` im beanspruchten Umfang', () => {

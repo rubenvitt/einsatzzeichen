@@ -40,6 +40,9 @@ import {
   ANHANG_F_D_RECIPES,
   ANHANG_F_D_FINDINGS,
   ANHANG_F_D_DEVIATIONS,
+  ANHANG_F_E_RECIPES,
+  ANHANG_F_E_FINDINGS,
+  ANHANG_F_E_DEVIATIONS,
 } from './recipes-anhang-f.js';
 
 /**
@@ -184,6 +187,28 @@ const ANHANG_F_D_TECHNICAL_REVIEW: Review = {
     'Task-6-Kontaktbogen war zu diesem Zeitpunkt noch nicht erzeugt oder gesichtet. Die ' +
     'Organisation hilfsorganisation bleibt eine technische Entscheidung, das Domain-Review ' +
     'pending.',
+};
+
+/**
+ * Eigenes technisches Review für F-e: Der 12-mm-Kreis ist weder die 14-mm-Funktionsstelle noch
+ * die Gebäudefassung J.3.2. Die Note trennt die elf einzeln geprüften Raster ausdrücklich vom
+ * späteren Task-6-Kontaktbogen.
+ */
+const ANHANG_F_E_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'Alle elf Originalreferenzen F.3.1 bis F.3.11 wurden einzeln bei 900 px gerastert, ' +
+    'vermessen und gegen die literal gebundene Rezeptmatrix geprüft. Lokale Geometrietests ' +
+    'halten den Kreis r 12 mm, die abgesenkte raised-gable-Fassung, den separat vermessenen ' +
+    'Giebel und alle semantischen wie technischen Kreis-BodyMarks fail-closed fest. Die ' +
+    'vollständigen UHS-/50-Metriken werden gegen die ViewBox geprüft und profilgebunden schwarz ' +
+    'gezeichnet; der Kontrastvertrag deckt sowohl die weiße HiOrg-Körperfläche als auch surface. ' +
+    'Snapshot-, Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates prüfen den renderbaren ' +
+    'Bestand. Der finale Task-6-Kontaktbogen war zu diesem Zeitpunkt noch nicht erzeugt oder ' +
+    'gesichtet. Die Organisation hilfsorganisation und sämtliche Fachzuordnungen bleiben im ' +
+    'Domain-Review pending.',
 };
 
 /** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
@@ -624,6 +649,13 @@ function technicalReviewFor(section: string): Review {
       ANHANG_F_D_TECHNICAL_REVIEW,
       ANHANG_F_D_FINDINGS[section],
       ANHANG_F_D_DEVIATIONS[section],
+    );
+  }
+  if (Object.hasOwn(ANHANG_F_E_RECIPES, section)) {
+    return withFindingAndDeviation(
+      ANHANG_F_E_TECHNICAL_REVIEW,
+      ANHANG_F_E_FINDINGS[section],
+      ANHANG_F_E_DEVIATIONS[section],
     );
   }
   return TECHNICAL_REVIEW;

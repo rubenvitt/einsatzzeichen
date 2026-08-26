@@ -26,6 +26,7 @@ import {
   ANHANG_F_B_RECIPES,
   ANHANG_F_C_RECIPES,
   ANHANG_F_D_RECIPES,
+  ANHANG_F_E_RECIPES,
 } from './recipes-anhang-f.js';
 
 const PORTS: CatalogPorts = {
@@ -77,6 +78,7 @@ export const RECIPES = {
   ...ANHANG_F_B_RECIPES,
   ...ANHANG_F_C_RECIPES,
   ...ANHANG_F_D_RECIPES,
+  ...ANHANG_F_E_RECIPES,
   ...ANHANG_E_A_RECIPES,
   ...ANHANG_E_B_RECIPES,
   ...ANHANG_E_C_RECIPES,
@@ -160,6 +162,7 @@ export function labelContrastRequirements(
   const inBody = new Set<OrganizationId>();
   const belowBody = new Set<OrganizationId>();
   let aboveBody = false;
+  let circleTopLeftOnSurface = false;
   for (const recipe of recipes) {
     const { labels, organization } = recipe.spec;
     // Ein Rezept ohne Organisation bleibt hier aussen vor, obwohl `compose.ts` auch ihm eine
@@ -185,6 +188,9 @@ export function labelContrastRequirements(
     // diese zweite Schleife wäre der einzige farbige Text des Katalogs ohne Kontrastvertrag.
     if (labels.belowRight !== undefined) belowBody.add(organization);
     if (labels.aboveLeft !== undefined) aboveBody = true;
+    if (recipe.spec.kind === 'circle-12' && labels.topLeft !== undefined) {
+      circleTopLeftOnSurface = true;
+    }
   }
   return [
     ...[...inBody].map<ContrastRequirement>((organization) => ({
@@ -206,6 +212,12 @@ export function labelContrastRequirements(
       foreground: 'schwarz' as const,
       background: 'surface' as const,
       context: 'Beschriftung oberhalb des Körpers auf der Ausgabeoberfläche',
+      minimum: MINIMUM_TEXT_CONTRAST,
+    }] : []),
+    ...(circleTopLeftOnSurface ? [{
+      foreground: 'schwarz' as const,
+      background: 'surface' as const,
+      context: 'Kreislabel teilweise außerhalb der Körperfläche',
       minimum: MINIMUM_TEXT_CONTRAST,
     }] : []),
   ];
