@@ -13,6 +13,15 @@ export interface ValidationIssue {
   message: string;
 }
 
+export class CompositionError extends Error {
+  constructor(readonly issues: ValidationIssue[]) {
+    super(
+      `Unzulässige Kombination:\n${issues.map((i) => `  [${i.rule}] ${i.message}`).join('\n')}`,
+    );
+    this.name = 'CompositionError';
+  }
+}
+
 /** Grundzeichenarten, die eine taktische Einheit darstellen und eine Stärke tragen dürfen. */
 const UNIT_KINDS = new Set<SymbolKind>(['formation', 'person']);
 
@@ -118,10 +127,56 @@ function hasMeasuredCircleOrganizationContract(spec: SymbolSpec): boolean {
     !(spec.bodyMarks ?? []).some((mark) => COLORED_NORMAL_CIRCLE_ONLY_MARKS.has(mark));
 }
 
-export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
+const INSET_HULL_LABEL_FIELDS = new Set<PropertyKey>(['accessibilityMode', 'center']);
+
+type InsetHullLabelPreparation =
+  | { readonly valid: false }
+  | {
+      readonly valid: true;
+      readonly labels: NonNullable<SymbolSpec['labels']>;
+    };
+
+/**
+ * Der eingesenkten Wasserfahrzeughülle sind nur zwei einfache Datenfelder belegt. `Object.keys`
+ * genügt dafür nicht: geerbte Werte liest `compose()` über die Prototypkette, Accessors können
+ * beim Lesen Code ausführen, und nicht-enumerable bzw. Symbolfelder blieben unsichtbar. Akzeptiert
+ * werden deshalb ausschließlich eigene, aufzählbare Datenfelder eines normalen oder
+ * null-prototype-Objekts; jede andere Objektform bleibt fail-closed.
+ */
+function prepareInsetHullLabelData(value: unknown): InsetHullLabelPreparation {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return { valid: false };
+  }
+
+  const prototype = Object.getPrototypeOf(value);
+  if (prototype !== Object.prototype && prototype !== null) return { valid: false };
+
+  const snapshot = Object.create(null) as NonNullable<SymbolSpec['labels']>;
+  for (const key of Reflect.ownKeys(value)) {
+    if (typeof key !== 'string' || !INSET_HULL_LABEL_FIELDS.has(key)) {
+      return { valid: false };
+    }
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (descriptor?.enumerable !== true || !Object.hasOwn(descriptor, 'value')) {
+      return { valid: false };
+    }
+    Object.defineProperty(snapshot, key, {
+      configurable: false,
+      enumerable: true,
+      value: descriptor.value,
+      writable: false,
+    });
+  }
+
+  return { valid: true, labels: Object.freeze(snapshot) };
+}
+
+function validatePreparedSpec(
+  spec: SymbolSpec,
+  hasInvalidInsetHullLabelData: boolean,
+): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const profile = profileFor(spec.kind, spec.bodyVariant);
-  const labels = spec.labels;
 
   if (
     spec.bodyVariant !== undefined &&
@@ -150,9 +205,7 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
     // inzwischen breiter als dieser Vertrag (unter anderem durch die vermessenen N-Metriken).
     // Deshalb erlauben wir die zwei bekannten nicht bzw. genau so gerenderten Felder explizit,
     // statt eine Liste verbotener Zonen zu pflegen, die beim nächsten Feld still veraltet.
-    const hasUnmeasuredLabelZone = labels !== undefined && Object.keys(labels).some(
-      (key) => key !== 'accessibilityMode' && key !== 'center',
-    );
+    const hasUnmeasuredLabelZone = hasInvalidInsetHullLabelData;
 
     if (hasUnmeasuredLabelZone || spec.designation !== undefined) {
       issues.push({
@@ -907,4 +960,41 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
   }
 
   return issues;
+}
+
+export interface SymbolSpecAnalysis {
+  readonly spec: SymbolSpec;
+  readonly issues: ValidationIssue[];
+}
+
+/**
+ * Prüft die Original-Spec und erzeugt für den einzigen prototypkritischen Vertrag genau einen
+ * descriptor-basierten Labelsnapshot. Die weitere Validierung liest bei `inset-hull` bereits
+ * diesen Snapshot: Proxy-`get`-Traps und geerbte Werte können dadurch weder die Validierung noch
+ * einen späteren Konsumenten von der geprüften Datenansicht abkoppeln. Andere Profile behalten
+ * dieselbe Spec- und Labelreferenz.
+ */
+export function analyzeSymbolSpec(spec: SymbolSpec): SymbolSpecAnalysis {
+  const isInsetWatercraft =
+    spec.kind === 'vehicle-water' && spec.bodyVariant === 'inset-hull';
+  const insetHullLabels = isInsetWatercraft && spec.labels !== undefined
+    ? prepareInsetHullLabelData(spec.labels)
+    : undefined;
+  const preparedSpec = isInsetWatercraft
+    ? Object.freeze({
+        ...spec,
+        ...(insetHullLabels === undefined
+          ? {}
+          : { labels: insetHullLabels.valid ? insetHullLabels.labels : undefined }),
+      })
+    : spec;
+
+  return {
+    spec: preparedSpec,
+    issues: validatePreparedSpec(preparedSpec, insetHullLabels?.valid === false),
+  };
+}
+
+export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
+  return analyzeSymbolSpec(spec).issues;
 }

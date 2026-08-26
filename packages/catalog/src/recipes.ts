@@ -45,7 +45,7 @@ const PORTS: CatalogPorts = {
 export function composeFromCatalog(spec: SymbolSpec, title?: string): Drawing {
   return compose(spec, PORTS, {
     ...(title !== undefined ? { title } : {}),
-    description: describeSymbolSpec(spec),
+    descriptionFromSpec: describeSymbolSpec,
   });
 }
 

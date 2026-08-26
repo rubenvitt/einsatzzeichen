@@ -334,6 +334,68 @@ describe('validateSpec', () => {
     })).toEqual([]);
   });
 
+  it('lehnt geerbte inset-hull-Renderingfelder trotz eigenem center ab', () => {
+    class InheritedRenderingLabels implements NonNullable<SymbolSpec['labels']> {
+      readonly center = 'MzB';
+
+      get inBodyInk(): 'schwarz' {
+        return 'schwarz';
+      }
+
+      get centerCapHeightMm(): number {
+        return 3.4099;
+      }
+    }
+
+    expect(validateSpec({
+      ...validInsetWatercraft,
+      labels: new InheritedRenderingLabels(),
+    }).map((issue) => issue.rule)).toContain('inset-hull-requires-center-label-only');
+  });
+
+  it('akzeptiert inset-hull-Labels als null-prototype-Datenobjekt', () => {
+    const labels: NonNullable<SymbolSpec['labels']> = Object.assign(Object.create(null), {
+      accessibilityMode: 'neutral-zones' as const,
+      center: 'MzB',
+    });
+
+    expect(validateSpec({ ...validInsetWatercraft, labels })).toEqual([]);
+  });
+
+  const accessorLabels: NonNullable<SymbolSpec['labels']> = Object.create(null);
+  Object.defineProperty(accessorLabels, 'center', {
+    configurable: true,
+    enumerable: true,
+    get: () => 'MzB',
+  });
+  const nonEnumerableLabels: NonNullable<SymbolSpec['labels']> = Object.create(null);
+  Object.defineProperty(nonEnumerableLabels, 'center', {
+    configurable: true,
+    enumerable: false,
+    value: 'MzB',
+  });
+  const symbolLabels: NonNullable<SymbolSpec['labels']> = {
+    center: 'MzB',
+    [Symbol('rendering-override')]: 'schwarz',
+  };
+  const foreignLabels = { center: 'MzB', futureRenderingOverride: 'schwarz' };
+  const inheritedForeignLabels: NonNullable<SymbolSpec['labels']> = Object.assign(
+    Object.create({ harmlessMetadata: true }),
+    { center: 'MzB' },
+  );
+
+  it.each([
+    ['Accessor-Feld', accessorLabels],
+    ['nicht-enumerable-Feld', nonEnumerableLabels],
+    ['Symbol-Feld', symbolLabels],
+    ['fremdem Feld', foreignLabels],
+    ['nichttrivialem Prototyp', inheritedForeignLabels],
+  ] as const)('lehnt inset-hull-Labels mit %s ab', (_case, labels) => {
+    expect(validateSpec({ ...validInsetWatercraft, labels }).map((issue) => issue.rule)).toContain(
+      'inset-hull-requires-center-label-only',
+    );
+  });
+
   it.each([
     ['fehlender Organisation', {
       kind: 'vehicle-water', bodyVariant: 'inset-hull', labels: { center: 'MzB' },

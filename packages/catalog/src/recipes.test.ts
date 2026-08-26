@@ -58,6 +58,65 @@ function horizontalPictogramLineYMm(drawing: Drawing): number | undefined {
   return line.y1 + (group.transform?.translate?.dyMm ?? 0);
 }
 
+describe('composeFromCatalog() — vorbereitete inset-hull-Spec', () => {
+  function labelContents(drawing: Drawing): string[] {
+    return drawing.children
+      .filter(
+        (child): child is Primitive & { type: 'text' } =>
+          child.type === 'text' && child.role === 'label',
+      )
+      .map((label) => label.content);
+  }
+
+  it('ignoriert einen non-enumerable center-Getter auf Object.prototype in Bild und Beschreibung', () => {
+    const previousCenter = Object.getOwnPropertyDescriptor(Object.prototype, 'center');
+
+    try {
+      Object.defineProperty(Object.prototype, 'center', {
+        configurable: true,
+        enumerable: false,
+        get: () => 'GEERBT',
+      });
+
+      const drawing = composeFromCatalog({
+        kind: 'vehicle-water',
+        bodyVariant: 'inset-hull',
+        organization: 'hilfsorganisation',
+        labels: {},
+      });
+      expect(labelContents(drawing)).not.toContain('GEERBT');
+      expect(drawing.description).not.toContain('GEERBT');
+    } finally {
+      if (previousCenter === undefined) {
+        Reflect.deleteProperty(Object.prototype, 'center');
+      } else {
+        Object.defineProperty(Object.prototype, 'center', previousCenter);
+      }
+    }
+  });
+
+  it('verwendet bei Proxy-Labels für Bild und Beschreibung denselben center-Data-Deskriptor', () => {
+    const labels = new Proxy({ center: 'MzB' }, {
+      get: (target, key, receiver) => key === 'center'
+        ? 'PROXY'
+        : Reflect.get(target, key, receiver),
+      getOwnPropertyDescriptor: (target, key) => Reflect.getOwnPropertyDescriptor(target, key),
+      getPrototypeOf: () => Object.prototype,
+      ownKeys: (target) => Reflect.ownKeys(target),
+    });
+
+    const drawing = composeFromCatalog({
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+      labels,
+    });
+    expect(labelContents(drawing)).toEqual(['MzB']);
+    expect(drawing.description).toContain('Kürzel: MzB');
+    expect(drawing.description).not.toContain('PROXY');
+  });
+});
+
 describe('Kompositionsrezepte', () => {
   const fingerprintCases = Object.entries(RECIPES);
 

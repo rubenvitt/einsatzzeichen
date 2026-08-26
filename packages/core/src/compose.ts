@@ -26,7 +26,7 @@ import {
   MINIMUM_TEXT_RENDER_PX,
   verticalTextBoxMm,
 } from './render/text-policy.js';
-import { validateSpec } from './validate.js';
+import { analyzeSymbolSpec, CompositionError } from './validate.js';
 
 /**
  * Ob ein Körper ein Polyzug ist, den die Zeichnung **nicht** schließt. `closed` ist optional; die
@@ -709,15 +709,6 @@ export interface CatalogPorts {
   ): readonly Primitive[];
 }
 
-export class CompositionError extends Error {
-  constructor(readonly issues: ReturnType<typeof validateSpec>) {
-    super(
-      `Unzulässige Kombination:\n${issues.map((i) => `  [${i.rule}] ${i.message}`).join('\n')}`,
-    );
-    this.name = 'CompositionError';
-  }
-}
-
 export interface ComposeOptions {
   /**
    * Titel des zusammengesetzten Zeichens. Überschreibt den Titel des Grundzeichens
@@ -729,6 +720,12 @@ export interface ComposeOptions {
   title?: string;
   /** Semantische Beschreibung; wird wie der Titel vom Katalog geliefert, nie aus Geometrie geraten. */
   description?: string;
+  /**
+   * Leitet die Beschreibung erst nach erfolgreicher Validierung aus exakt derselben vorbereiteten
+   * Spec ab, die anschließend die Geometrie erzeugt. Bei `inset-hull` sind Spec und Labelsnapshot
+   * vor dem Aufruf eingefroren; der Callback kann die geprüfte Sicht nicht mehr verändern.
+   */
+  descriptionFromSpec?: (preparedSpec: SymbolSpec) => string;
 }
 
 /**
@@ -815,9 +812,17 @@ function composeBodyMarkPrimitives(groups: readonly (readonly Primitive[])[]): P
   return result;
 }
 
-export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: ComposeOptions = {}): Drawing {
-  const issues = validateSpec(spec);
-  if (issues.length > 0) throw new CompositionError(issues);
+export function compose(
+  sourceSpec: SymbolSpec,
+  catalog: CatalogPorts,
+  options: ComposeOptions = {},
+): Drawing {
+  const analysis = analyzeSymbolSpec(sourceSpec);
+  if (analysis.issues.length > 0) throw new CompositionError(analysis.issues);
+
+  const spec = analysis.spec;
+  const effectiveLabels = spec.labels;
+  const description = options.descriptionFromSpec?.(spec) ?? options.description;
 
   const base = catalog.baseDrawing(spec.kind, spec.bodyVariant);
   const body = base.children.find((child) => child.role === 'body');
@@ -1013,14 +1018,14 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
       catalog.bodyMark(id, { kind: spec.kind, bodyVariant: spec.bodyVariant }, bodyBoundsMm)),
   );
 
-  const labels = spec.labels !== undefined
+  const labelChildren = effectiveLabels !== undefined
     ? labelPrimitives(
-        spec.labels,
+        effectiveLabels,
         bodyBoundsMm,
         DEFAULT_VIEWBOX_MM.width,
         spec.organization !== undefined ? catalog.organizationColor(spec.organization) : null,
         profile.allowsCenterBaselineOverride === true
-          ? spec.labels.centerBaselineFromBodyBottomMm ?? profile.centerBaselineFromBodyBottomMm
+          ? effectiveLabels.centerBaselineFromBodyBottomMm ?? profile.centerBaselineFromBodyBottomMm
           : profile.centerBaselineFromBodyBottomMm,
         profile.topLeftBaselineFromBodyTopMm,
         normalizesMeasuredCircleTopLeftCoordinates(spec.kind, spec.bodyVariant),
@@ -1029,7 +1034,7 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
         profile.surfaceLabels,
         profile.topLeftLines,
         profile.bottomCenterBaselineFromBodyBottomMm,
-        bodyLabelInk(bodyFill, spec.labels.inBodyInk),
+        bodyLabelInk(bodyFill, effectiveLabels.inBodyInk),
       )
     : [];
 
@@ -1054,10 +1059,10 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
       // Beschriftungen: sie liegen auf der Körperfläche wie diese, und die Kürzel liegen auf
       // ihnen (Anhang F setzt „MTF" über das obere linke Viertel der Teilung).
       ...bodyMarkPrimitives,
-      ...labels,
+      ...labelChildren,
       ...footPrimitives,
     ],
     ...(options.title !== undefined ? { title: options.title } : {}),
-    ...(options.description !== undefined ? { description: options.description } : {}),
+    ...(description !== undefined ? { description } : {}),
   };
 }
