@@ -1,6 +1,6 @@
 # LFH-418 — C.1.3 Löschzug: Design-Spec
 
-> Design-Spec · 26. August 2026 · Status: zur Sichtfreigabe
+> Design-Spec · 26. August 2026 · Status: freigegeben
 
 ## 1. Ziel und belegter Ausgangspunkt
 
