@@ -9,7 +9,7 @@ import {
 } from '@einsatzzeichen/core';
 import { mmToUnits, type Drawing, type Primitive } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
-import { fingerprintFor } from './fingerprint-index.js';
+import { fingerprintFor, referenceLacksComparableShape } from './fingerprint-index.js';
 import { pictogram } from './pictograms/index.js';
 import {
   RECIPES,
@@ -52,9 +52,12 @@ function horizontalPictogramLineYMm(drawing: Drawing): number | undefined {
 }
 
 describe('Kompositionsrezepte', () => {
-  // G.1.5 führt in den Kennzahlen keine vergleichbare Füllfläche (`shapes: []`) und wird
-  // deshalb weiter unten ehrlich über seine vollständige Körpergeometrie gegatet.
-  const fingerprintCases = Object.entries(RECIPES).filter(([section]) => section !== 'G.1.5');
+  const geometryRegressionCases = Object.entries(RECIPES).filter(([, recipe]) =>
+    referenceLacksComparableShape(recipe.referenceAsset),
+  );
+  const fingerprintCases = Object.entries(RECIPES).filter(([, recipe]) =>
+    !referenceLacksComparableShape(recipe.referenceAsset),
+  );
 
   it('bindet den Körper-Fingerprint-Claim exakt an die ausgeführten Rezeptfälle', () => {
     const tested = fingerprintCases.map(([section]) => `recipe.${section}`).sort();
@@ -74,6 +77,24 @@ describe('Kompositionsrezepte', () => {
     const result = matchFingerprint(drawing, fingerprintFor(recipe.referenceAsset));
     expect(result.problems).toEqual([]);
     expect(result.ok).toBe(true);
+  });
+
+  it('bindet den Geometrie-Regressionsclaim exakt an Rezeptartefakte mit shapes: []', () => {
+    expect(geometryRegressionCases.map(([section]) => section)).toEqual(['G.1.5']);
+    for (const [section, recipe] of geometryRegressionCases) {
+      expect(fingerprintFor(recipe.referenceAsset).shapes, section).toEqual([]);
+    }
+    const claimed = COVERAGE_MANIFEST.entries
+      .filter(
+        (entry) =>
+          entry.coverage === 'composition-recipe' &&
+          entry.testEvidence.includes('body-geometry-regression'),
+      )
+      .map((entry) => entry.implementation)
+      .sort();
+    expect(claimed).toEqual(
+      geometryRegressionCases.map(([section]) => `recipe.${section}`).sort(),
+    );
   });
 
   it('erzeugt die Löschstaffel mit Körper bei 9 mm', () => {

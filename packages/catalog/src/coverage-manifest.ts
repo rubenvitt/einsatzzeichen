@@ -759,10 +759,13 @@ const recipeEntries: CoverageEntry[] = Object.entries(RECIPES).map(([key, recipe
     referenceAsset: recipe.referenceAsset,
     coverage: 'composition-recipe',
     profile: 'bund',
-    // Task 13 hat alle drei Rezepte per matchFingerprint gegen die Referenz gegated,
-    // mit Differenz 0 an allen Kanten — das Manifest bildet das ab, statt es zu untertreiben.
-    // Für die 16 Zeichen aus E-a gilt dasselbe, geprüft in recipes.test.ts.
-    testEvidence: key === 'G.1.5' ? UNGATED_DRAWING_EVIDENCE : DRAWING_EVIDENCE,
+    // Wie bei den Grundzeichen entscheidet das Kennwertartefakt statt einer Rezept-ID: führt die
+    // Referenz `shapes: []`, ist der Fingerprint-Vergleich strukturell nicht ausführbar und eine
+    // explizite Geometrieregression tritt an seine Stelle. Unbekannte Assets liefern im Helper
+    // bewusst `false` und fallen danach im Fingerprinttest fail-closed auf.
+    testEvidence: referenceLacksComparableShape(recipe.referenceAsset)
+      ? UNGATED_DRAWING_EVIDENCE
+      : DRAWING_EVIDENCE,
     review: reviewFor(sourceId, variant, technicalReviewFor(key)),
   };
 });

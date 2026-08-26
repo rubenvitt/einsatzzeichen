@@ -1,7 +1,7 @@
 # Visual QA: Anhang G
 
-Datum: 26. August 2026  
-Scope: alle 21 primary-Darstellungen G.1 bis G.8  
+Datum: 26. August 2026
+Scope: alle 21 primary-Darstellungen G.1 bis G.8
 Status: Entwurf nach Katalogintegration; visueller Referenzvergleich in Task 3 ausstehend
 
 ## In Task 2 beobachtet

@@ -11,7 +11,7 @@ import {
   knownContrastIssues,
   unexpectedContrastIssues,
 } from './contrast-exceptions.js';
-import { organizationColor, ORGANIZATION_COLORS } from './organizations.js';
+import { ORGANIZATION_COLORS } from './organizations.js';
 import { ALL_PICTOGRAMS } from './pictograms/index.js';
 import { RECIPES, labelContrastRequirements, type Recipe } from './recipes.js';
 import {
@@ -44,6 +44,21 @@ function requirements(): ContrastRequirement[] {
     ...ALL_PICTOGRAMS.flatMap(contrastRequirementsFor),
     ...labelContrastRequirements(),
   ];
+}
+
+function exceptionSectionsFromRecipes(
+  exception: (typeof CONTRAST_EXCEPTIONS)[number],
+  recipes: Readonly<Record<string, Recipe>> = RECIPES,
+): string[] {
+  return Object.entries<Recipe>(recipes)
+    .filter(([, recipe]) =>
+      labelContrastRequirements([recipe]).some(
+        (requirement) =>
+          requirement.foreground === exception.foreground &&
+          requirement.background === exception.background,
+      ),
+    )
+    .map(([section]) => section);
 }
 
 describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
@@ -296,26 +311,47 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     expect(moeglich).toEqual([]);
   });
 
-  it('nennt in der Ausnahme genau die Abschnitte, aus denen das Paar entsteht', () => {
-    // Der Pin, der ein **zweites** oranges Zeichen auffallen lässt. Über die Befundzahl geht das
-    // nicht: `labelContrastRequirements` sammelt je Organisation in ein `Set`, ein zweites
-    // oranges Rezept erzeugte also keine zweite Anforderung und keinen zweiten Befund. Diese
-    // Zeile zählt deshalb die Rezepte und nicht die Befunde.
-    const orangeMitBeschriftung = Object.entries<Recipe>(RECIPES)
-      .filter(([, recipe]) => {
-        const { organization, labels } = recipe.spec;
-        if (organization === undefined || labels === undefined) return false;
-        if (organizationColor(organization) !== 'orange') return false;
-        return (
-          labels.center !== undefined ||
-          labels.bottomLeft !== undefined ||
-          labels.bottomCenter !== undefined ||
-          labels.bottomRight !== undefined
-        );
-      })
-      .map(([section]) => section);
-    expect(orangeMitBeschriftung).toEqual(['E.2.6']);
-    expect(CONTRAST_EXCEPTIONS[0]?.sections).toEqual(orangeMitBeschriftung);
+  it('bindet jede Ausnahme exakt an alle aktuell erzeugenden Rezeptabschnitte', () => {
+    // Die Befundzahl kann diese Vollständigkeit nicht halten: `labelContrastRequirements`
+    // dedupliziert je Organisation in einem `Set`, und `contrastExceptionFor` matcht danach nur
+    // noch Paar plus Theme. Ein zweites Rezept mit demselben Paar erzeugte deshalb weder eine
+    // zweite Anforderung noch einen zweiten bekannten Befund. Diese Zeile zählt die Rezepte.
+    const expectedByPair = {
+      'weiss:orange': ['E.2.6'],
+      'weiss:braun': ['G.3.5'],
+    } as const;
+    expect(CONTRAST_EXCEPTIONS).toHaveLength(Object.keys(expectedByPair).length);
+    for (const exception of CONTRAST_EXCEPTIONS) {
+      const pair =
+        `${exception.foreground}:${exception.background}` as keyof typeof expectedByPair;
+      const sections = exceptionSectionsFromRecipes(exception);
+      expect(sections, pair).toEqual(expectedByPair[pair]);
+      expect(exception.sections, pair).toEqual(sections);
+    }
+  });
+
+  it('erkennt in einer Fixture ein weiteres Weiss-auf-Braun-Innenlabel trotz Paardeduplizierung', () => {
+    const brown = CONTRAST_EXCEPTIONS.find(
+      (exception) => exception.foreground === 'weiss' && exception.background === 'braun',
+    );
+    expect(brown).toBeDefined();
+    if (brown === undefined) return;
+
+    const fixture = {
+      'G.3.5': RECIPES['G.3.5'],
+      'fixture.weiss-auf-braun': {
+        title: 'Zusätzlicher brauner Innenlauf',
+        referenceAsset: 'G.3.5_Mobiler Tankpunkt Diesel_betrieben durch Bundeswehr.svg',
+        spec: {
+          kind: 'formation', organization: 'bundeswehr', labels: { center: 'X' },
+        },
+      },
+    } satisfies Record<string, Recipe>;
+    expect(exceptionSectionsFromRecipes(brown, fixture)).toEqual([
+      'G.3.5',
+      'fixture.weiss-auf-braun',
+    ]);
+    expect(exceptionSectionsFromRecipes(brown, fixture)).not.toEqual(brown.sections);
   });
 
   it('behält die feste Körper- und Kopf-Anforderung genau einmal', () => {
