@@ -468,6 +468,12 @@ export type BodyLabelInk = 'schwarz' | 'weiss';
  */
 export interface BodyLabels {
   /**
+   * Opt-in für quellenoffene Läufe, deren fachliche Rolle nicht belegt ist. Der neutrale Modus
+   * beschreibt ausschließlich ihre geometrische Zone; fehlt er, bleiben alle historisch
+   * eingeführten Kürzel-/Trägerbezeichnungen byteidentisch.
+   */
+  readonly accessibilityMode?: 'neutral-zones';
+  /**
    * Explizite, an der Quelle vermessene Tinte aller gesetzten Läufe **im** Körper. Fehlt sie,
    * leitet `bodyLabelInk()` die Tinte unverändert aus der Körperfüllung ab. Läufe oberhalb oder
    * auf der Ausgabeoberfläche gehören nicht zu diesem Override.

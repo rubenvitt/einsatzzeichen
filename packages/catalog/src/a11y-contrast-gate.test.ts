@@ -156,6 +156,22 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     });
   });
 
+  it('leitet N.2.3s schwarze Oberflächenläufe eigenständig und dedupliziert ab', () => {
+    const derived = labelContrastRequirements([RECIPES['N.2.3']]);
+    expect(derived).toEqual([
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Beschriftung unterhalb des Körpers auf der Ausgabeoberfläche',
+        minimum: MINIMUM_TEXT_CONTRAST,
+      },
+    ]);
+    for (const theme of [RENDER_THEMES.reference, ACCESSIBLE_LIGHT_THEME, PRINT_MONOCHROME_THEME]) {
+      expect(checkContrast(theme, derived), theme.id).toEqual([]);
+    }
+    expect(CONTRAST_EXCEPTIONS).toHaveLength(1);
+  });
+
   it('hält weiss auf orange als entschiedene Ausnahme fest, die kein Theme löst', () => {
     // **Diese Zeile hat ihre Rolle gewechselt, nicht ihre Zahlen.** Bis zum 18. August 2026 hielt
     // sie einen offenen Punkt fest und E.2.6 blieb ungebaut. Seither ist entschieden (Nutzer,

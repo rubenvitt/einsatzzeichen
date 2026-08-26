@@ -26,7 +26,11 @@ export const ANHANG_N_RECIPES = {
       organization: 'sonstige-gefahrenabwehr',
       vehicleCategory: 'kfz-kategorie-2',
       bodyMarks: ['ring-5mm-offset-down-3-5mm-eight-spokes'],
-      labels: { inBodyInk: 'schwarz', topLeftLines: ['Kipper,', '26 t'] },
+      labels: {
+        accessibilityMode: 'neutral-zones',
+        inBodyInk: 'schwarz',
+        topLeftLines: ['Kipper,', '26 t'],
+      },
     },
   },
   'N.1.3': {
@@ -36,7 +40,12 @@ export const ANHANG_N_RECIPES = {
       kind: 'vehicle-land',
       organization: 'bundespolizei',
       vehicleCategory: 'kfz-kategorie-1',
-      labels: { inBodyInk: 'schwarz', center: 'BuPol', centerBaselineFromBodyBottomMm: 6.5 },
+      labels: {
+        accessibilityMode: 'neutral-zones',
+        inBodyInk: 'schwarz',
+        center: 'BuPol',
+        centerBaselineFromBodyBottomMm: 6.5,
+      },
     },
   },
   'N.1.4': {
@@ -48,6 +57,7 @@ export const ANHANG_N_RECIPES = {
       organization: 'bundeswehr',
       bodyMarks: ['air-quartering-up-arrow-box'],
       labels: {
+        accessibilityMode: 'neutral-zones',
         inBodyInk: 'schwarz',
         aboveLeft: 'CH-53',
         aboveLeftMetrics: {
@@ -76,6 +86,7 @@ export const ANHANG_N_RECIPES = {
       organization: 'sonstige-gefahrenabwehr',
       bodyMarks: ['air-horizontal-left-chevron'],
       labels: {
+        accessibilityMode: 'neutral-zones',
         inBodyInk: 'schwarz',
         topLeft: '5.000',
         topLeftMetrics: {
@@ -95,6 +106,7 @@ export const ANHANG_N_RECIPES = {
       organization: 'feuerwehr',
       bodyMarks: ['air-rising-diagonal'],
       labels: {
+        accessibilityMode: 'neutral-zones',
         aboveLeft: 'Cessna 172',
         aboveLeftMetrics: {
           capHeightMm: 2.919225,
@@ -130,7 +142,11 @@ export const ANHANG_N_RECIPES = {
       bodyVariant: 'raised-circle-1mm',
       organization: 'zivile-einheiten',
       bodyMarks: ['circle-information-stem'],
-      labels: { surfaceBelowLeft: '291300', surfaceBelowRight: 'ZIV' },
+      labels: {
+        accessibilityMode: 'neutral-zones',
+        surfaceBelowLeft: '291300',
+        surfaceBelowRight: 'ZIV',
+      },
     },
   },
 } as const satisfies Record<string, Recipe>;

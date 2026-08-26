@@ -301,7 +301,7 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
 
   it('verlangt für die Beschriftung auf der Körperfarbe die Textschwelle, nicht die Nichttextschwelle', () => {
     const requirements = labelContrastRequirements();
-    // **Neun seit LFH-422**, und nur eine davon besteht nicht. Drei Nachbarschaften und sechs
+    // **Zehn seit dem LFH-422-Review**, und nur eine davon besteht nicht. Vier Nachbarschaften und sechs
     // Körper-Farb/Tinten-Paare kommen hier zusammen: die Beschriftung im Körper, die
     // Organisationsfarbe auf der Ausgabeoberfläche sowie die schwarzen Kreislabels, die
     // teilweise außerhalb der weißen Körperfläche auf `surface` stehen.
@@ -366,6 +366,12 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
         foreground: 'schwarz',
         background: 'surface',
         context: 'Beschriftung oberhalb des Körpers auf der Ausgabeoberfläche',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Beschriftung unterhalb des Körpers auf der Ausgabeoberfläche',
         minimum: 4.5,
       },
       {

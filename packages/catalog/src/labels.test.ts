@@ -67,6 +67,58 @@ describe('semantische Zeichenbeschreibungen', () => {
     })).toBe('Grundzeichen: Luftfahrzeug. Kürzel oberhalb: ITH.');
   });
 
+  it('bewahrt ohne Opt-in die Legacy-Bezeichnungen aller sichtbaren Zonen byteidentisch', () => {
+    expect(describeSymbolSpec({
+      kind: 'vehicle-land',
+      labels: {
+        topLeft: 'TL',
+        center: 'C',
+        bottomLeft: 'BL',
+        bottomCenter: 'BC',
+        bottomRight: 'BR',
+        belowRight: 'BELOW',
+        aboveLeft: 'ABOVE',
+        topLeftLines: ['L1', 'L2'],
+        surfaceBelowLeft: 'SL',
+        surfaceBelowRight: 'SR',
+      },
+    })).toBe(
+      'Grundzeichen: Landfahrzeug. Kürzel: TL. Kürzel: C. Zusatzkennzeichnung: BL. ' +
+      'Zusatzkennzeichnung: BC. Trägerkürzel: BR. Trägerkürzel: BELOW. ' +
+      'Kürzel oberhalb: ABOVE. Kürzel zweizeilig: L1 / L2. Zusatzangabe: SL. ' +
+      'Zusatzangabe: SR.',
+    );
+  });
+
+  it('beschreibt im neutralen Modus jede sichtbare Zone geometrisch statt als Kürzel', () => {
+    const description = describeSymbolSpec({
+      kind: 'vehicle-land',
+      labels: {
+        accessibilityMode: 'neutral-zones',
+        inBodyInk: 'schwarz',
+        topLeft: 'TL',
+        center: 'C',
+        centerCapHeightMm: 3.4,
+        bottomLeft: 'BL',
+        bottomCenter: 'BC',
+        bottomRight: 'BR',
+        belowRight: 'BELOW',
+        aboveLeft: 'ABOVE',
+        topLeftLines: ['L1', 'L2'],
+        surfaceBelowLeft: 'SL',
+        surfaceBelowRight: 'SR',
+      },
+    });
+    expect(description).toBe(
+      'Grundzeichen: Landfahrzeug. Beschriftung im Körper: TL. Beschriftung im Körper: C. ' +
+      'Beschriftung im Körper: BL. Beschriftung im Körper: BC. Beschriftung im Körper: BR. ' +
+      'Beschriftung unterhalb des Körpers: BELOW. Beschriftung oberhalb des Körpers: ABOVE. ' +
+      'Beschriftung im Körper: L1 / L2. Beschriftung auf der Ausgabeoberfläche: SL. ' +
+      'Beschriftung auf der Ausgabeoberfläche: SR.',
+    );
+    expect(description).not.toMatch(/Kürzel|Trägerkürzel|neutral-zones|accessibilityMode|3\.4/);
+  });
+
   it('nimmt gemessene Labelmetriken nicht in die Vorlesebeschreibung auf', () => {
     // Metriken sind Maßangaben und kein Text. Stünden sie in der Beschreibung, läse eine
     // Vorlesestimme Dezimalzahlen mitten im Kürzel vor.

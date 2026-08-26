@@ -24,7 +24,11 @@ const expected = {
       organization: 'sonstige-gefahrenabwehr',
       vehicleCategory: 'kfz-kategorie-2',
       bodyMarks: ['ring-5mm-offset-down-3-5mm-eight-spokes'],
-      labels: { inBodyInk: 'schwarz', topLeftLines: ['Kipper,', '26 t'] },
+      labels: {
+        accessibilityMode: 'neutral-zones',
+        inBodyInk: 'schwarz',
+        topLeftLines: ['Kipper,', '26 t'],
+      },
     },
   },
   'N.1.3': {
@@ -34,7 +38,12 @@ const expected = {
       kind: 'vehicle-land',
       organization: 'bundespolizei',
       vehicleCategory: 'kfz-kategorie-1',
-      labels: { inBodyInk: 'schwarz', center: 'BuPol', centerBaselineFromBodyBottomMm: 6.5 },
+      labels: {
+        accessibilityMode: 'neutral-zones',
+        inBodyInk: 'schwarz',
+        center: 'BuPol',
+        centerBaselineFromBodyBottomMm: 6.5,
+      },
     },
   },
   'N.1.4': {
@@ -46,6 +55,7 @@ const expected = {
       organization: 'bundeswehr',
       bodyMarks: ['air-quartering-up-arrow-box'],
       labels: {
+        accessibilityMode: 'neutral-zones',
         inBodyInk: 'schwarz',
         aboveLeft: 'CH-53',
         aboveLeftMetrics: {
@@ -74,6 +84,7 @@ const expected = {
       organization: 'sonstige-gefahrenabwehr',
       bodyMarks: ['air-horizontal-left-chevron'],
       labels: {
+        accessibilityMode: 'neutral-zones',
         inBodyInk: 'schwarz',
         topLeft: '5.000',
         topLeftMetrics: {
@@ -93,6 +104,7 @@ const expected = {
       organization: 'feuerwehr',
       bodyMarks: ['air-rising-diagonal'],
       labels: {
+        accessibilityMode: 'neutral-zones',
         aboveLeft: 'Cessna 172',
         aboveLeftMetrics: {
           capHeightMm: 2.919225,
@@ -128,7 +140,11 @@ const expected = {
       bodyVariant: 'raised-circle-1mm',
       organization: 'zivile-einheiten',
       bodyMarks: ['circle-information-stem'],
-      labels: { surfaceBelowLeft: '291300', surfaceBelowRight: 'ZIV' },
+      labels: {
+        accessibilityMode: 'neutral-zones',
+        surfaceBelowLeft: '291300',
+        surfaceBelowRight: 'ZIV',
+      },
     },
   },
 } as const satisfies Record<string, Recipe>;
@@ -152,10 +168,12 @@ function bodyBounds(section: keyof typeof expected): BoundsMm {
 describe('Anhang N — Fahrzeuge weiterer Träger', () => {
   it('registriert genau N.1.1 bis N.1.6 und N.2.1 bis N.2.3 als primary-Rezepte', () => {
     expect(nRecipes()).toEqual(expected);
-    expect(Object.keys(nRecipes())).toEqual([
+    const expectedKeys = [
       'N.1.1', 'N.1.2', 'N.1.3', 'N.1.4', 'N.1.5', 'N.1.6',
       'N.2.1', 'N.2.2', 'N.2.3',
-    ]);
+    ];
+    expect(Object.keys(nRecipes())).toEqual(expectedKeys);
+    expect(Object.keys(RECIPES).filter((key) => key.startsWith('N.'))).toEqual(expectedKeys);
     expect(Object.keys(RECIPES)).toHaveLength(146);
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('N.') && key.includes('#'))).toEqual([]);
   });
@@ -285,21 +303,38 @@ describe('Anhang N — Fahrzeuge weiterer Träger', () => {
   it('erhält Trägertext in Titeln und vollständige zugängliche Beschreibungen', () => {
     expect(expected['N.1.2'].title).toContain('kommunaler Bauhof');
     expect(expected['N.1.5'].title).toContain('Beauftragter Dritter');
-    const labelText = {
-      'N.1.2': ['Kipper,', '26 t'],
-      'N.1.3': ['BuPol'],
-      'N.1.4': ['CH-53', '7', 'BW'],
-      'N.1.5': ['5.000'],
-      'N.1.6': ['Cessna 172'],
-      'N.2.3': ['291300', 'ZIV'],
+    const descriptions = {
+      'N.1.2':
+        'Grundzeichen: Landfahrzeug. Organisation: Sonstige Gefahrenabwehr. ' +
+        'Fahrzeugkategorie: Kraftfahrzeugkategorie 2. Technische Körpermarke: Ring 5 mm mit ' +
+        'acht Speichen, 3,5 mm nach unten versetzt. Beschriftung im Körper: Kipper, / 26 t.',
+      'N.1.3':
+        'Grundzeichen: Landfahrzeug. Organisation: Bundespolizei. Fahrzeugkategorie: ' +
+        'Kraftfahrzeugkategorie 1. Beschriftung im Körper: BuPol.',
+      'N.1.4':
+        'Grundzeichen: Luftfahrzeug. Organisation: Bundeswehr. Technische Körpermarke: ' +
+        'Luftfahrzeugteilung mit Aufwärtspfeil und Rechteck. Beschriftung im Körper: 7. ' +
+        'Beschriftung oberhalb des Körpers: CH-53. Beschriftung auf der Ausgabeoberfläche: BW.',
+      'N.1.5':
+        'Grundzeichen: Luftfahrzeug. Organisation: Sonstige Gefahrenabwehr. Technische ' +
+        'Körpermarke: Waagerechte Linie mit linksweisendem Winkel. Beschriftung im Körper: 5.000.',
+      'N.1.6':
+        'Grundzeichen: Luftfahrzeug. Organisation: Feuerwehr. Technische Körpermarke: ' +
+        'Ansteigende Diagonale im Luftfahrzeugrumpf. Beschriftung oberhalb des Körpers: Cessna 172.',
+      'N.2.3':
+        'Grundzeichen: 12-mm-Kreis. Organisation: Zivile Einheiten. Technische Körpermarke: ' +
+        'Gefüllter Punkt über gefülltem senkrechtem Stamm. Beschriftung auf der ' +
+        'Ausgabeoberfläche: 291300. Beschriftung auf der Ausgabeoberfläche: ZIV.',
     } as const;
     for (const [section, recipe] of Object.entries(nRecipes())) {
       const drawing = composeFromCatalog(recipe.spec, recipe.title);
       expect(drawing.title, section).toBe(recipe.title);
       expect(drawing.description, section).toContain('Grundzeichen:');
       expect(drawing.description, section).toContain('Organisation:');
-      for (const value of labelText[section as keyof typeof labelText] ?? []) {
-        expect(drawing.description, `${section}: ${value}`).toContain(value);
+      const expectedDescription = descriptions[section as keyof typeof descriptions];
+      if (expectedDescription !== undefined) {
+        expect(drawing.description, section).toBe(expectedDescription);
+        expect(drawing.description, section).not.toMatch(/Kürzel|Trägerkürzel/);
       }
     }
   });

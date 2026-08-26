@@ -180,6 +180,7 @@ export function labelContrastRequirements(
   }>();
   const belowBody = new Set<OrganizationId>();
   let aboveBody = false;
+  let surfaceBelowBody = false;
   let circleTopLeftOnSurface = false;
   for (const recipe of recipes) {
     const { labels, organization } = recipe.spec;
@@ -214,6 +215,11 @@ export function labelContrastRequirements(
     // diese zweite Schleife wäre der einzige farbige Text des Katalogs ohne Kontrastvertrag.
     if (labels.belowRight !== undefined) belowBody.add(organization);
     if (labels.aboveLeft !== undefined) aboveBody = true;
+    if (labels.surfaceBelowLeft !== undefined || labels.surfaceBelowRight !== undefined) {
+      // Beide Felder teilen Tinte und Untergrund. Ein boolescher Vertrag hält zwei sichtbare
+      // Läufe wie bei N.2.3 dedupliziert, ohne sie mit `aboveLeft` oder Kreis-Clipping zu vermengen.
+      surfaceBelowBody = true;
+    }
     if (recipe.spec.kind === 'circle-12' && labels.topLeft !== undefined) {
       circleTopLeftOnSurface = true;
     }
@@ -238,6 +244,12 @@ export function labelContrastRequirements(
       foreground: 'schwarz' as const,
       background: 'surface' as const,
       context: 'Beschriftung oberhalb des Körpers auf der Ausgabeoberfläche',
+      minimum: MINIMUM_TEXT_CONTRAST,
+    }] : []),
+    ...(surfaceBelowBody ? [{
+      foreground: 'schwarz' as const,
+      background: 'surface' as const,
+      context: 'Beschriftung unterhalb des Körpers auf der Ausgabeoberfläche',
       minimum: MINIMUM_TEXT_CONTRAST,
     }] : []),
     ...(circleTopLeftOnSurface ? [{

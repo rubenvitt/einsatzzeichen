@@ -26,7 +26,7 @@ wurden die Rezepte und Snapshots korrigiert und alle neun Paare neu erzeugt und 
 | `N.1.1_Bergeräumpanzer_Bundeswehr.svg` | `N.1.1` | Braune umgekehrte Rumpfhülle, Kettenstadion und der waagerechte/abgeknickte technische Linienzug stimmen in Lage und Topologie; nichts clippt. |
 | `N.1.2_Transportfahrzeug_kommunaler Bauhof_geländegängig.svg` | `N.1.2` | Orange Rumpfhülle, drei Kategorie-2-Ringe, Acht-Speichen-Ring und die beiden schwarzen Läufe `Kipper,`/`26 t` stimmen in Ankern und Grundlinien. Die Arimo-Glyphenkontur ist sichtbar etwas schmaler als die in Pfade umgewandelte Quellschrift; Versalhöhe und Lage bleiben gegatet. |
 | `N.1.3_Einsatzfahrzeug_Bundespolizei.svg` | `N.1.3` | Hellgrüne Rumpfhülle, beide Kategorie-1-Ringe und der schwarze, mittige `BuPol`-Lauf stimmen nach der Korrektur. Der verbleibende Unterschied ist ausschließlich die Arimo- gegenüber der konturierten Quellglyphensilhouette. |
-| `N.1.4_Drehflügler_Bundeswehr_CH-53_Außentraglast 7t.svg` | `N.1.4` | Brauner angehobener Luftrumpf, Rotordoppeldreieck, Teilung, Aufwärtspfeil und 5,5-mm-Rechteck stimmen. Die schwarze `7` steht nach der Korrektur mittig in dieser Box auf der gemessenen Grundlinie; `CH-53` und `BW` sitzen an den gemessenen Oberflächenankern. Nur die gebundene Arimo-Silhouette unterscheidet sich geringfügig von den Quellpfaden. |
+| `N.1.4_Drehflügler_Bundeswehr_CH-53_Außentraglast 7t.svg` | `N.1.4` | Brauner angehobener Luftrumpf, Rotordoppeldreieck, Teilung, Aufwärtspfeil und 5,5-mm-Rechteck stimmen. Die schwarze `7` steht nach der Korrektur mittig in dieser Box auf der gemessenen Grundlinie; `CH-53` und `BW` sitzen an den gemessenen Oberflächenankern. Die Quelle zeichnet die Boxecken scharf, während die globale Katalog-Linienverbindung sie leicht rundet; diese kleine Restabweichung bleibt bewusst bestehen. Zusätzlich unterscheidet sich die gebundene Arimo-Silhouette geringfügig von den Quellpfaden. |
 | `N.1.5_Löschflugzeug_Beauftragter Dritter_5.000l.svg` | `N.1.5` | Orange Festflügelhülle, beide Flügelflächen, waagerechter Zug mit Linkswinkel und schwarzer `5.000`-Lauf stimmen sichtbar. Die Schriftkontur bleibt der erwartete Arimo-vs.-Quellpfad-Unterschied. |
 | `N.1.6_Erkundungsflugzeug_Feuerwehr_Cessna 172.svg` | `N.1.6` | Rote Festflügelhülle, Flügelflächen und steigende Diagonale stimmen; `Cessna 172` steht ungeclippt am gemessenen Oberflächenanker. Nur die Schriftkontur unterscheidet sich geringfügig. |
 | `N.2.1_Sammelraum_Spontanhelfer.svg` | `N.2.1` | Hellgrauer 12-mm-Kreis, Vierblattkontur, kleiner Ring und Rechtspfeil stimmen in Form, Lage und offenen Linienenden. |
@@ -54,6 +54,10 @@ Arimo-Datei. Deshalb sind an den beschrifteten Paaren geringfügige Glyphensilho
 Laufbreitenunterschiede sichtbar, obwohl Kappenhöhe, Grundlinie, Anker und die vollständige
 N.1.4-Textbox vermessen und gegatet sind. Diese technische Restgrenze wird weder durch Auto-Fit
 noch durch rezeptabhängige Schriftpfade kaschiert.
+
+Eine zweite kleine Restgrenze betrifft ausschließlich die Ecken der N.1.4-Textbox: Die Quelle
+zeichnet sie scharf, die projektweit einheitliche Linienverbindung des Katalogs leicht gerundet.
+Task 2 verändert dafür weder den globalen Renderer noch dessen Join-Policy.
 
 Eine fachkundige Person muss weiterhin Organisation, Trägerzuordnung und Einsatzbedeutung der
 neutral benannten Marken bestätigen. Die technische Einzelprüfung ist keine professionelle oder

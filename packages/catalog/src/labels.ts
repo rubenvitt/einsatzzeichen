@@ -165,34 +165,46 @@ export function describeSymbolSpec(spec: SymbolSpec): string {
   // Ausdrücklich **nicht** in der Liste: `centerCapHeightMm` und `topLeftMetrics`. Beides sind
   // Maßangaben und kein Text; Versalhöhe, Grundlinie oder Anker in der Vorlesebeschreibung wären
   // Rauschen. Die Liste ist deshalb explizit aufgezählt und nicht aus `Object.entries` erzeugt.
-  const zones: Array<[keyof NonNullable<SymbolSpec['labels']>, string]> = [
+  const neutralZones = spec.labels?.accessibilityMode === 'neutral-zones';
+  const zones: Array<[
+    keyof NonNullable<SymbolSpec['labels']>,
+    string,
+    string,
+  ]> = [
     // Oben links steht in Anhang F dasselbe, was Anhang E mittig setzt: das Kürzel der Einheit.
     // Deshalb dasselbe Wort — und deshalb zuerst, weil eine Vorlesestimme das Bild von oben nach
     // unten liest. Ohne diese Zeile fiele bei F-Rezepten der einzige Text aus der
     // Beschreibung, den das Bild zeigt: `F.1.9` und `F.1.11` wären dort nicht mehr zu
     // unterscheiden, obwohl sie „SEG" gegen „RettD" tragen.
-    ['topLeft', 'Kürzel'],
-    ['center', 'Kürzel'],
-    ['bottomLeft', 'Zusatzkennzeichnung'],
-    ['bottomCenter', 'Zusatzkennzeichnung'],
-    ['bottomRight', 'Trägerkürzel'],
-    ['belowRight', 'Trägerkürzel'],
+    ['topLeft', 'Kürzel', 'Beschriftung im Körper'],
+    ['center', 'Kürzel', 'Beschriftung im Körper'],
+    ['bottomLeft', 'Zusatzkennzeichnung', 'Beschriftung im Körper'],
+    ['bottomCenter', 'Zusatzkennzeichnung', 'Beschriftung im Körper'],
+    ['bottomRight', 'Trägerkürzel', 'Beschriftung im Körper'],
+    ['belowRight', 'Trägerkürzel', 'Beschriftung unterhalb des Körpers'],
   ];
-  for (const [zone, label] of zones) {
+  for (const [zone, legacyLabel, neutralLabel] of zones) {
     const value = spec.labels?.[zone];
-    if (typeof value === 'string') parts.push(`${label}: ${value}`);
+    if (typeof value === 'string') {
+      parts.push(`${neutralZones ? neutralLabel : legacyLabel}: ${value}`);
+    }
   }
   if (spec.labels?.aboveLeft !== undefined) {
-    parts.push(`Kürzel oberhalb: ${spec.labels.aboveLeft}`);
+    const label = neutralZones ? 'Beschriftung oberhalb des Körpers' : 'Kürzel oberhalb';
+    parts.push(`${label}: ${spec.labels.aboveLeft}`);
   }
   if (spec.labels?.topLeftLines !== undefined) {
-    parts.push(`Kürzel zweizeilig: ${spec.labels.topLeftLines.join(' / ')}`);
+    const label = neutralZones ? 'Beschriftung im Körper' : 'Kürzel zweizeilig';
+    parts.push(`${label}: ${spec.labels.topLeftLines.join(' / ')}`);
   }
   // Diese unterste sichtbare Zone folgt allen bisherigen Läufen. Beide Seiten heißen bewusst
   // gleich: die Vorlesebeschreibung trägt den Inhalt, nicht seine geometrische Links-/Rechtslage.
   for (const zone of ['surfaceBelowLeft', 'surfaceBelowRight'] as const) {
     const value = spec.labels?.[zone];
-    if (value !== undefined) parts.push(`Zusatzangabe: ${value}`);
+    if (value !== undefined) {
+      const label = neutralZones ? 'Beschriftung auf der Ausgabeoberfläche' : 'Zusatzangabe';
+      parts.push(`${label}: ${value}`);
+    }
   }
   return `${parts.join('. ')}.`;
 }
