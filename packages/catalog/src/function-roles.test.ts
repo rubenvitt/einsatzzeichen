@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FUNCTION_ROLE_IDS } from '@einsatzzeichen/schema';
+import { FUNCTION_ROLE_IDS, type FunctionRoleId } from '@einsatzzeichen/schema';
 import { boundsOfMm } from '@einsatzzeichen/core';
 import { FUNCTION_ROLE_DEFINITIONS, functionRole } from './function-roles.js';
 
@@ -11,6 +11,9 @@ describe('functionRole()', () => {
       expect(Object.isFrozen(functionRole(id))).toBe(true);
       expect(Object.isFrozen(functionRole(id).layout)).toBe(true);
     }
+    expect(() => functionRole('unknown-function-role' as FunctionRoleId)).toThrowError(
+      'Unbekannte Funktionsrollen-ID "unknown-function-role".',
+    );
   });
 
   it('haelt die drei nicht ableitbaren Personenkoerper getrennt', () => {

@@ -1051,8 +1051,9 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
   // dass `uncoveredScope` das nicht meldet, ist der Grund, warum die Zuordnung in
   // `vehicle-categories.test.ts` zusätzlich an den Zahlen festgenagelt ist.
   //
-  // 5.7 (Verwaltungsstufen) bleibt außerhalb: drei der sechs Stufen haben in Kopfform überhaupt
-  // keine Referenz, und keines der 320 Zeichen im Umfang braucht sie
+  // 5.7 (Verwaltungsstufen) bleibt außerhalb: Drei der sechs Stufen haben in Kopfform überhaupt
+  // keine Referenz. Die drei in D.3/D.4 vermessenen Köpfe liefern deshalb keinen
+  // Vollständigkeitsnachweis für den Satz aus allen sechs Stufen
   // (`docs/decisions/2026-08-18-grundlagen-restpunkte.md`).
   // K, L und M stehen einbuchstabig im Umfang, weil ihre Nummerierung flach ist: `K` deckt
   // K.1 bis K.18 ab, wo `J` vier Unterkapitel gebraucht hätte.

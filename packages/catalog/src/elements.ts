@@ -2,9 +2,10 @@ import { ALL_PICTOGRAMS, pictogramVariantKey } from './pictograms/index.js';
 import { deepFreeze, type DeepReadonly } from './readonly-data.js';
 
 /**
- * Die Arten von Einzelelementen. Die vier Piktogrammarten neben `capability` haben in D.0 noch
- * keine Einträge und kommen mit D.2 bis D.4 dazu — sie stehen hier, weil
- * `PICTOGRAM_ELEMENT_KINDS` sie für renderbare Elementarten ausweist.
+ * Die Arten von Einzelelementen. Die fünf direkten Piktogrammarten neben `capability` sind
+ * `state`, `comms`, `damage`, `wildfire` und `leadership`; die zehn `leadership`-Definitionen
+ * belegen D.1.1, D.2.1–D.2.7 sowie D.3.14 und D.3.15 direkt. `PICTOGRAM_ELEMENT_KINDS` weist sie
+ * als renderbare Elementarten aus.
  */
 export type ElementKind =
   | 'organization'

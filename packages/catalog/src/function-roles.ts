@@ -311,6 +311,13 @@ export const FUNCTION_ROLE_DEFINITIONS: DeepReadonly<
   Record<FunctionRoleId, FunctionRoleDefinition>
 > = deepFreeze(DEFINITIONS);
 
+const functionRolesById: Readonly<Partial<Record<FunctionRoleId, FunctionRoleDefinition>>> =
+  FUNCTION_ROLE_DEFINITIONS;
+
 export function functionRole(id: FunctionRoleId): FunctionRoleDefinition {
-  return FUNCTION_ROLE_DEFINITIONS[id];
+  const definition = functionRolesById[id];
+  if (definition === undefined) {
+    throw new Error(`Unbekannte Funktionsrollen-ID "${id}".`);
+  }
+  return definition;
 }

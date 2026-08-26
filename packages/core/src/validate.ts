@@ -462,8 +462,9 @@ function validatePreparedSpec(
     });
   }
 
-  // Nur die drei in D.3/D.4 vermessenen Verwaltungskoepfe werden zusammen mit ihrer exakt
-  // aufgeloesten Funktionsrolle akzeptiert. Gemeinde, Bezirk und Bundesland bleiben fail-closed.
+  // Die Verwaltungsstufenabdeckung ist bewusst partiell: Nur die drei in D.3/D.4 vermessenen
+  // Koepfe werden zusammen mit ihrer exakt aufgeloesten Funktionsrolle akzeptiert. Gemeinde,
+  // Bezirk und Bundesland bleiben fail-closed.
   if (
     spec.administrativeLevel !== undefined &&
     (context.administrativeHead === undefined || !resolvedFunctionRole)
@@ -481,11 +482,11 @@ function validatePreparedSpec(
   // ist falsch, `spec.vehicleCategory` kommt hier nicht vor, und die Begründung „belegen beide die
   // Kopfzone" trüge für sie geometrisch auch nicht: die Stärke sitzt oben, das Fahrwerk unten.
   //
-  // Solange die Regel darüber jede Verwaltungsstufe ablehnt, ist dieser Fall zusätzlich
-  // abgedeckt und die Regel meldet nie allein. Sie bleibt trotzdem stehen und wird nicht durch
-  // einen Typ ersetzt, der die Kollision unmöglich macht: eine unterscheidende Vereinigung über
-  // `SymbolSpec` (etwa `head: {strength} | {administrativeLevel}`) zöge alle 40 Rezepte und ihre
-  // Tests nach und kaufte nichts, solange der zweite Zweig ohnehin abgelehnt wird. Die
+  // Diese Kollision ist von der partiellen Abdeckungsprüfung darüber unabhängig: Auch eine mit
+  // Verwaltungskopf und Funktionsrolle vollständig aufgeloeste Stufe bleibt zusammen mit einer
+  // Stärkeangabe geometrisch unzulässig. Die Regel wird nicht durch einen Typ ersetzt, der die
+  // Kollision unmöglich macht: eine unterscheidende Vereinigung über `SymbolSpec` (etwa
+  // `head: {strength} | {administrativeLevel}`) zöge alle Rezepte und ihre Tests nach. Die
   // Entscheidung steht in der Notiz vom 18. August 2026, damit sie nicht als Versäumnis gelesen
   // wird.
   if (spec.strength !== undefined && spec.administrativeLevel !== undefined) {
