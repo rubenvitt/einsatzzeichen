@@ -60,6 +60,55 @@ const BODY_VARIANT_KINDS: Readonly<Record<BodyVariantId, ReadonlySet<SymbolKind>
   'raised-circle-1mm': new Set<SymbolKind>(['circle-12']),
 };
 
+/**
+ * Farbige 12-mm-Kreisverträge außerhalb der weißen F.3-Fassung. Die technischen Marken sind
+ * sichtbare Geometrie-IDs; die Tabelle behauptet keine Abschnitts- oder Rezeptsemantik.
+ */
+const MEASURED_COLORED_CIRCLE_CONTRACTS = [
+  {
+    bodyVariant: undefined,
+    organization: 'zivile-einheiten',
+    bodyMark: 'spontaneous-helper-collection-arrow',
+  },
+  {
+    bodyVariant: undefined,
+    organization: 'feuerwehr',
+    bodyMark: 'spontaneous-helper-contact-double-arrow',
+  },
+  {
+    bodyVariant: 'raised-circle-1mm',
+    organization: 'zivile-einheiten',
+    bodyMark: 'circle-information-stem',
+  },
+] as const satisfies ReadonlyArray<{
+  readonly bodyVariant: SymbolSpec['bodyVariant'];
+  readonly organization: SymbolSpec['organization'];
+  readonly bodyMark: NonNullable<SymbolSpec['bodyMarks']>[number];
+}>;
+
+const COLORED_NORMAL_CIRCLE_ONLY_MARKS = new Set<
+  NonNullable<SymbolSpec['bodyMarks']>[number]
+>([
+  'spontaneous-helper-collection-arrow',
+  'spontaneous-helper-contact-double-arrow',
+]);
+
+function hasMeasuredCircleOrganizationContract(spec: SymbolSpec): boolean {
+  if (spec.kind !== 'circle-12') return false;
+  const [bodyMark, ...additionalBodyMarks] = spec.bodyMarks ?? [];
+  const matchesColoredContract = additionalBodyMarks.length === 0 && bodyMark !== undefined &&
+    MEASURED_COLORED_CIRCLE_CONTRACTS.some((contract) =>
+      contract.bodyVariant === spec.bodyVariant &&
+      contract.organization === spec.organization &&
+      contract.bodyMark === bodyMark);
+  if (matchesColoredContract) return true;
+
+  const isWhiteF3Contract = spec.organization === 'hilfsorganisation' &&
+    (spec.bodyVariant === undefined || spec.bodyVariant === 'raised-gable');
+  return isWhiteF3Contract &&
+    !(spec.bodyMarks ?? []).some((mark) => COLORED_NORMAL_CIRCLE_ONLY_MARKS.has(mark));
+}
+
 export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
 
@@ -247,17 +296,13 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
         'Metriksatz; die beiden Kreisfassungen haben keinen allgemeinen Profildefault.',
     });
   }
-  if (
-    isMeasuredCircleVariant &&
-    spec.organization !== 'hilfsorganisation'
-  ) {
+  if (isCircle12 && !hasMeasuredCircleOrganizationContract(spec)) {
     issues.push({
       rule: 'circle-12-requires-hilfsorganisation',
       message:
-        'Der 12-mm-Kreis ist in allen 17 F.3-Belegen (F.3.1–F.3.14 und F.3.17–F.3.19) ' +
-        'ausschließlich als weiße ' +
-        'HiOrg-Körperfläche vermessen. Andere oder fehlende Organisationszuordnungen sind ' +
-        'auch ohne Beschriftung nicht belegt.',
+        'Der 12-mm-Kreis verlangt einen vollständig vermessenen Organisationsvertrag: die ' +
+        'weiße HiOrg-Fassung aus F.3 oder genau eine der farbigen technischen ' +
+        'Art-/Varianten-/Markenfassungen. Fehlende oder vertauschte Werte sind nicht belegt.',
     });
   }
   if (

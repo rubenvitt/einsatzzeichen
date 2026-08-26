@@ -40,8 +40,15 @@ describe('validateSpec', () => {
     } as SymbolSpec)).toEqual([]);
     expect(validateSpec({ kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull' } as SymbolSpec))
       .toEqual([]);
-    expect(validateSpec({ kind: 'circle-12', bodyVariant: 'raised-circle-1mm' } as SymbolSpec))
-      .toEqual([]);
+    expect(validateSpec({
+      kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+      organization: 'zivile-einheiten', bodyMarks: ['circle-information-stem'],
+    } as SymbolSpec)).toEqual([]);
+    expect(validateSpec({
+      kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+    } as SymbolSpec).map((issue) => issue.rule)).toContain(
+      'circle-12-requires-hilfsorganisation',
+    );
 
     for (const spec of [
       { kind: 'vehicle-air', bodyVariant: 'inverted-hull-track' },
@@ -73,6 +80,7 @@ describe('validateSpec', () => {
     } as SymbolSpec)).toEqual([]);
     expect(validateSpec({
       kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+      organization: 'zivile-einheiten', bodyMarks: ['circle-information-stem'],
       labels: { surfaceBelowLeft: '291300', surfaceBelowRight: 'ZIV' },
     } as SymbolSpec)).toEqual([]);
 

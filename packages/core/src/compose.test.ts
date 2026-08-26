@@ -371,6 +371,14 @@ describe('compose() — Beschriftungszonen', () => {
             ? vehicleAirBody
             : vehicleLandBody],
       }),
+      organizationColor: (organization) => {
+        if (organization !== 'zivile-einheiten') throw new Error('Für diesen Test nicht aufgerufen.');
+        return 'hellgrau';
+      },
+      bodyMark: (id) => {
+        if (id !== 'circle-information-stem') throw new Error('Für diesen Test nicht aufgerufen.');
+        return [];
+      },
     };
 
     const land = compose({
@@ -435,6 +443,7 @@ describe('compose() — Beschriftungszonen', () => {
 
     const circle = compose({
       kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+      organization: 'zivile-einheiten', bodyMarks: ['circle-information-stem'],
       labels: { surfaceBelowLeft: '291300', surfaceBelowRight: 'ZIV' },
     } as SymbolSpec, metricCatalog);
     expect(circle.children.filter((child) => child.role === 'label')).toEqual([

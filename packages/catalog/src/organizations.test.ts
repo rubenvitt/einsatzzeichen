@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { PALETTE, type OrganizationId } from '@einsatzzeichen/schema';
+import { PALETTE, type OrganizationId, type SymbolSpec } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { ORGANIZATION_COLORS, organizationColor } from './organizations.js';
 import { fingerprintFor } from './fingerprint-index.js';
+import { composeFromCatalog } from './recipes.js';
 
 /** Organisationen aus Kapitel 2, deren Referenzdatei eine Füllfarbe trägt — per audit:reference belegt. */
 const COLORED = [
@@ -43,6 +44,73 @@ const referenceCoversAllOrganizationColors: AssertTrue<
 void referenceCoversAllOrganizationColors;
 
 describe('Organisationsfarben Kapitel 2', () => {
+  const measuredN2CircleSpecs = [
+    {
+      kind: 'circle-12',
+      organization: 'zivile-einheiten',
+      bodyMarks: ['spontaneous-helper-collection-arrow'],
+    },
+    {
+      kind: 'circle-12',
+      organization: 'feuerwehr',
+      bodyMarks: ['spontaneous-helper-contact-double-arrow'],
+    },
+    {
+      kind: 'circle-12',
+      bodyVariant: 'raised-circle-1mm',
+      organization: 'zivile-einheiten',
+      bodyMarks: ['circle-information-stem'],
+      labels: { surfaceBelowLeft: '291300', surfaceBelowRight: 'ZIV' },
+    },
+  ] as const satisfies readonly SymbolSpec[];
+
+  it('komponiert ausschließlich die drei gemessenen N.2-Kreis-/Organisationsverträge', () => {
+    for (const spec of measuredN2CircleSpecs) {
+      expect(() => composeFromCatalog(spec), JSON.stringify(spec)).not.toThrow();
+    }
+
+    const invalid: readonly SymbolSpec[] = [
+      ...measuredN2CircleSpecs.map(({ organization: _organization, ...spec }) => spec),
+      {
+        kind: 'circle-12', organization: 'feuerwehr',
+        bodyMarks: ['spontaneous-helper-collection-arrow'],
+      },
+      {
+        kind: 'circle-12', organization: 'zivile-einheiten',
+        bodyMarks: ['spontaneous-helper-contact-double-arrow'],
+      },
+      {
+        kind: 'circle-12', organization: 'zivile-einheiten',
+        bodyMarks: ['circle-information-stem'],
+      },
+      {
+        kind: 'circle-12', organization: 'hilfsorganisation',
+        bodyMarks: ['spontaneous-helper-collection-arrow'],
+      },
+      {
+        kind: 'circle-12', organization: 'hilfsorganisation',
+        bodyMarks: ['spontaneous-helper-contact-double-arrow'],
+      },
+      {
+        kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+        organization: 'feuerwehr', bodyMarks: ['circle-information-stem'],
+      },
+      {
+        kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+        organization: 'zivile-einheiten', bodyMarks: ['spontaneous-helper-collection-arrow'],
+      },
+      {
+        kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+        organization: 'zivile-einheiten',
+      },
+    ];
+    for (const spec of invalid) {
+      expect(() => composeFromCatalog(spec), JSON.stringify(spec)).toThrow(
+        /circle-12-requires-hilfsorganisation/,
+      );
+    }
+  });
+
   it('bindet den Referenzfüllungs-Claim exakt an die ausgeführten Organisationsfälle', () => {
     const tested = COLORED.map(([id]) => `organization.${id}`).sort();
     const claimed = COVERAGE_MANIFEST.entries
