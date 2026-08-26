@@ -159,7 +159,7 @@ export function describeSymbolSpec(spec: SymbolSpec): string {
   const zones: Array<[keyof NonNullable<SymbolSpec['labels']>, string]> = [
     // Oben links steht in Anhang F dasselbe, was Anhang E mittig setzt: das Kürzel der Einheit.
     // Deshalb dasselbe Wort — und deshalb zuerst, weil eine Vorlesestimme das Bild von oben nach
-    // unten liest. Ohne diese Zeile fiele bei elf F-Rezepten der einzige Text aus der
+    // unten liest. Ohne diese Zeile fiele bei F-Rezepten der einzige Text aus der
     // Beschreibung, den das Bild zeigt: `F.1.9` und `F.1.11` wären dort nicht mehr zu
     // unterscheiden, obwohl sie „SEG" gegen „RettD" tragen.
     ['topLeft', 'Kürzel'],

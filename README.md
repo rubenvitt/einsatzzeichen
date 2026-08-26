@@ -604,6 +604,43 @@ Einzelsichtung aller elf 900-px-Paare in
 [`docs/reviews/2026-08-25-f-e-visual-qa.md`](docs/reviews/2026-08-25-f-e-visual-qa.md). Diese
 Sichtung ist nicht der finale Task-6-Kontaktbogen; alle elf Domain-Reviews bleiben `pending`.
 
+## F-f: F.3.12 bis F.3.19 und vollständiger Anhang F
+
+F-f ergänzt die acht verbleibenden Platzzeichen und schließt Anhang F mit exakt 58 eindeutigen
+Source-IDs, acht bekannten Alternativschlüsseln und 66 Rezeptschlüsseln ab. Erst dieses
+mengenexakte Gate trägt das einzelne `F` im Manifest-Scope. Der Gesamtbestand umfasst nun 137
+Rezepte, 405 Renderfälle und 424 Manifestzeilen; 424 offene Manifest-Domainreviews, 13 offene
+Quellenreviews und ein offenes Profilreview ergeben 438 fachlich weiterhin `pending` stehende
+Reviewobjekte. Technische Reviews der acht neuen Zeilen sind nach den lokalen Gates `approved`.
+
+F.3.12, F.3.13 und F.3.17 bis F.3.19 verwenden den bestehenden `circle-12`; F.3.14 belegt den
+zweiten Einsatz der vorhandenen `raised-gable`-Fassung. Die Capability `care` erhält dafür eigene,
+bounds-relative Kreis-Builder. Das Label `500` verwendet den privaten `bodyLabelInk()`-Pfad und
+den vollständig vermessenen Metriksatz (Kappenhöhe 2,749893 mm, Grundlinie relativ -0,999746 mm,
+Anker relativ -2,974002 mm), ohne Profilfeld, Rezeptsonderfall oder Auto-Fit.
+
+F.3.15 und F.3.16 stehen auf `reduced-house`: der geschlossenen Kontur
+(16|4)–(2|10)–(2|26)–(30|26)–(30|10) plus genau einer Trauflinie (2|10)–(30|10). Die Form ist
+weder das breitere/höhere `building` noch ein Kapitel-1-Grundzeichen. Unterkunft und Krankenhaus
+verwenden die vorhandenen semantischen IDs `temporary-accommodation-resting` und `hospital`, aber
+eigene, nur für diese 28 × 22-mm-Hülle vermessene Builder. F.3.16s zusätzlicher
+Outline-Fingerprint bleibt die Strichhülle desselben Körpers und ändert die globale
+Fingerprint-Präzedenz nicht.
+
+Nur die vier bildlich belegten Kreisformen aus F.3.12 und F.3.17 bis F.3.19 erweitern die
+`TechnicalBodyMarkId`s; ihre vollständigen A11y-Texte bleiben geometrisch. F.3.18 trägt zwei
+innere Diagonalen, F.3.19 stattdessen zwei Ringe. Beide teilen mit F.3.10 ausschließlich den
+quellenexakten Raute-/Unterpfeil-Teilhelper; die direkte und die Mehrgrößen-Ausgabe von F.3.10
+bleiben bytegleich.
+
+Die exakte Rezept- und Geometriematrix steht in
+[`docs/decisions/2026-08-25-anhang-f-f.md`](docs/decisions/2026-08-25-anhang-f-f.md), die
+Einzelsichtung aller acht Original-/Katalogpaare bei 64 und 900 px in
+[`docs/reviews/2026-08-25-f-f-visual-qa.md`](docs/reviews/2026-08-25-f-f-visual-qa.md). Es kamen
+genau acht direkte und acht Mehrgrößen-Snapshots hinzu (151 beziehungsweise 406 insgesamt);
+alle 541 zuvor vorhandenen Snapshotdateien blieben bytegleich. Die Einzelsichtung ist nicht der
+finale Task-6-Kontaktbogen, und sämtliche F-f-Domainreviews bleiben `pending`.
+
 ## Der lokale Referenzbestand
 
 `taktische-zeichen/` ist ein **lokaler Ordner mit 661 damals von der BABZ bereitgestellten
@@ -658,7 +695,7 @@ semantischer Titel und Beschreibung verlangt und die sichtbare Geometrie gegen d
 `packages/catalog/src/__snapshots__/multi-size/`; ein eigener Profilbogen zeigt sieben der acht
 Organisationen in beiden Alternativthemes bei 64 px. Die achte, `hilfsorganisation` aus LFH-424,
 fehlt **auf dem Profilbogen** weiterhin — Katalogeinträge, die sie setzen, gibt es seit dem
-Teilslice F-a allerdings: die elf F-Rezepte tragen sie, und mit ihnen steht ihre Punktsignatur in
+Teilslice F-a allerdings: alle 66 F-Rezepte tragen sie, und mit ihnen steht ihre Punktsignatur in
 den Mehrgrößenbögen dieser Zeichen.
 
 Die unveränderte Referenzpalette wird nicht pauschal als barrierefrei bezeichnet: Schwarz auf dem
