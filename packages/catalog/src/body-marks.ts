@@ -180,7 +180,7 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
   'h-veterinary-decontamination': (bounds) => {
     const { minX, minY, maxX, maxY } = bounds;
     const cx = (minX + maxX) / 2;
-    const compactX = minX + 7.5;
+    const compactX = minX + 10.75;
     const compactY = maxY - 8;
     const ink = { fill: 'schwarz', stroke: 'none' } as const;
     return [

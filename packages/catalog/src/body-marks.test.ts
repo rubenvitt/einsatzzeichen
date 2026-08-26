@@ -47,6 +47,26 @@ describe('bodyMark() — die Fachdienstteilung', () => {
   });
 });
 
+describe('bodyMark() — H.2 Tierdekontamination', () => {
+  it('hält die linke kompakte Pfeilspitze innerhalb der Formationskörpergrenze', () => {
+    // In H.2 beginnt die linke kompakte Pfeilspitze bei 10,630 SVG-Einheiten. Bei 2,834656
+    // Einheiten/mm sind das 3,75 mm — sie liegt damit deutlich innerhalb der Füllfläche
+    // 1…31 × 6…26 mm. Ein Ansatz bei 0,5 mm wäre keine gemessene Überragung, sondern eine
+    // Rekonstruktionsverschiebung.
+    const marks = bodyMark('h-veterinary-decontamination', formationBodyMm);
+    expect(marks[5]).toEqual({
+      type: 'polyline',
+      role: 'pictogram',
+      points: [[3.75, 20.75], [5.75, 23.25], [3.75, 25.75]],
+      style: {
+        fill: 'none',
+        stroke: 'schwarz',
+        strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+      },
+    });
+  });
+});
+
 describe('bodyMark() — die Zusätze je Fachdienst', () => {
   it('setzt die Arztleiste 8 mm breit auf 4 mm über der Körperunterkante', () => {
     // Gemessen an `F.1.7_Sanitätsgruppe_arztbesetzt.svg` (und gleichlautend an `F.1.1`): Leiste
