@@ -92,7 +92,7 @@ describe('bodyMark() — die technischen Innenzeichnungen des Anhangs N', () => 
     )).toEqual([line(2.07, 20.74, 24.96, 9.3)]);
   });
 
-  it('zeichnet Sammelraum und Kontaktstelle auf der Spontanhelfenden-Hülle', () => {
+  it('zeichnet Sammelraum und Kontaktstelle ausschließlich auf dem normalen 12-mm-Kreis', () => {
     const clover = {
       type: 'path', role: 'pictogram',
       d: 'M 13 10 C 13 8.3431, 14.3431 7, 16 7 C 17.6569 7, 19 8.3431, 19 10 C 20.6569 10, 22 11.3431, 22 13 C 22 14.6569, 20.6569 16, 19 16 C 19 17.6569, 17.6569 19, 16 19 C 14.3431 19, 13 17.6569, 13 16 C 11.3431 16, 10 14.6569, 10 13 C 10 11.3431, 11.3431 10, 13 10 Z',
@@ -100,7 +100,7 @@ describe('bodyMark() — die technischen Innenzeichnungen des Anhangs N', () => 
     } as const;
     expect(bodyMarkWithContext(
       'spontaneous-helper-collection-arrow' as BodyMarkId,
-      { kind: 'spontaneous-helper' }, { minX: 2, minY: 2, maxX: 30, maxY: 30 },
+      { kind: 'circle-12' }, circleBodyMm,
     )).toEqual([
       clover,
       { type: 'circle', role: 'pictogram', cx: 10.5, cy: 22, r: 1.5, style: outlineStyle },
@@ -109,13 +109,24 @@ describe('bodyMark() — die technischen Innenzeichnungen des Anhangs N', () => 
     ]);
     expect(bodyMarkWithContext(
       'spontaneous-helper-contact-double-arrow' as BodyMarkId,
-      { kind: 'spontaneous-helper' }, { minX: 2, minY: 2, maxX: 30, maxY: 30 },
+      { kind: 'circle-12' }, circleBodyMm,
     )).toEqual([
       clover,
       line(9, 22, 23, 22),
       { type: 'polyline', role: 'pictogram', points: [[11, 20], [9, 22], [11, 24]], style: outlineStyle },
       { type: 'polyline', role: 'pictogram', points: [[21, 20], [23, 22], [21, 24]], style: outlineStyle },
     ]);
+
+    for (const id of [
+      'spontaneous-helper-collection-arrow',
+      'spontaneous-helper-contact-double-arrow',
+    ] as BodyMarkId[]) {
+      expect(() => bodyMarkWithContext(
+        id,
+        { kind: 'spontaneous-helper' },
+        { minX: 2, minY: 2, maxX: 30, maxY: 30 },
+      ), id).toThrow(/nicht vermessen/);
+    }
   });
 
   it('verschiebt die bestehende Informationsmarke mit dem um 1 mm angehobenen Kreis', () => {
@@ -1305,7 +1316,7 @@ describe('BODY_MARK_IDS', () => {
             : id.startsWith('circle-')
               ? [{ kind: 'circle-12' } as const, circleBodyMm] as const
             : id.startsWith('spontaneous-helper-')
-              ? [{ kind: 'spontaneous-helper' } as const, { minX: 2, minY: 2, maxX: 30, maxY: 30 }] as const
+              ? [{ kind: 'circle-12' } as const, circleBodyMm] as const
             : id === 'land-horizontal-blade-bent-upright'
               ? [{ kind: 'vehicle-land', bodyVariant: 'inverted-hull-track' } as const, invertedLandBodyMm] as const
             : id === 'ring-6mm-offset-down-3mm-four-way-stem' ||

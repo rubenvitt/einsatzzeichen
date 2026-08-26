@@ -1050,12 +1050,13 @@ function spontaneousHelperClover(dxMm = 0, dyMm = 0): Primitive {
   };
 }
 
-const SPONTANEOUS_HELPER_MARKS: Partial<
+/** N.2.1/N.2.2: Innenmarken ausschließlich auf dem normalen 12-mm-Kreis (Hülle 4…28). */
+const CIRCLE_NORMAL_ANHANG_N_MARKS: Partial<
   Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
 > = {
   'spontaneous-helper-collection-arrow': (bounds) => {
-    const dxMm = bounds.minX - 2;
-    const dyMm = bounds.minY - 2;
+    const dxMm = bounds.minX - 4;
+    const dyMm = bounds.minY - 4;
     return [
       spontaneousHelperClover(dxMm, dyMm),
       circleRing(10.5 + dxMm, 22 + dyMm, 1.5),
@@ -1064,8 +1065,8 @@ const SPONTANEOUS_HELPER_MARKS: Partial<
     ];
   },
   'spontaneous-helper-contact-double-arrow': (bounds) => {
-    const dxMm = bounds.minX - 2;
-    const dyMm = bounds.minY - 2;
+    const dxMm = bounds.minX - 4;
+    const dyMm = bounds.minY - 4;
     return [
       spontaneousHelperClover(dxMm, dyMm),
       stroke(9 + dxMm, 22 + dyMm, 23 + dxMm, 22 + dyMm),
@@ -1122,16 +1123,14 @@ export function bodyMark(
         : context.kind === 'trailer' && context.bodyVariant === undefined
           ? TRAILER_MARKS[id]
           : context.kind === 'circle-12' && context.bodyVariant === undefined
-            ? CIRCLE_NORMAL_MARKS[id]
+            ? CIRCLE_NORMAL_MARKS[id] ?? CIRCLE_NORMAL_ANHANG_N_MARKS[id]
             : context.kind === 'circle-12' && context.bodyVariant === 'raised-circle-1mm'
               ? CIRCLE_RAISED_ONE_MM_MARKS[id]
             : context.kind === 'circle-12' && context.bodyVariant === 'raised-gable'
               ? CIRCLE_RAISED_GABLE_MARKS[id]
               : context.kind === 'reduced-house' && context.bodyVariant === undefined
                 ? REDUCED_HOUSE_MARKS[id]
-                : context.kind === 'spontaneous-helper' && context.bodyVariant === undefined
-                  ? SPONTANEOUS_HELPER_MARKS[id]
-          : undefined;
+                : undefined;
   const hasAnyBuild = [
     MARKS,
     VEHICLE_LAND_NORMAL_MARKS,
@@ -1142,10 +1141,10 @@ export function bodyMark(
     VEHICLE_AIR_FIXED_WING_MARKS,
     TRAILER_MARKS,
     CIRCLE_NORMAL_MARKS,
+    CIRCLE_NORMAL_ANHANG_N_MARKS,
     CIRCLE_RAISED_ONE_MM_MARKS,
     CIRCLE_RAISED_GABLE_MARKS,
     REDUCED_HOUSE_MARKS,
-    SPONTANEOUS_HELPER_MARKS,
   ]
     .some((candidate) => Object.hasOwn(candidate, id));
   if (!hasAnyBuild) {
@@ -1236,10 +1235,10 @@ export const BODY_MARK_IDS: readonly BodyMarkId[] = Object.freeze(
       VEHICLE_AIR_FIXED_WING_MARKS,
       TRAILER_MARKS,
       CIRCLE_NORMAL_MARKS,
+      CIRCLE_NORMAL_ANHANG_N_MARKS,
       CIRCLE_RAISED_ONE_MM_MARKS,
       CIRCLE_RAISED_GABLE_MARKS,
       REDUCED_HOUSE_MARKS,
-      SPONTANEOUS_HELPER_MARKS,
     ]
       .some((registry) => Object.hasOwn(registry, id))),
 );
