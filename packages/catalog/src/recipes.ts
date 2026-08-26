@@ -98,7 +98,7 @@ export const RECIPES = {
       kind: 'formation',
       organization: 'feuerwehr',
       strength: 'staffel',
-      capabilities: ['fire-fighting'],
+      bodyMarks: ['fire-fighting'],
     },
   },
   'C.1.2': {
@@ -108,7 +108,7 @@ export const RECIPES = {
       kind: 'formation',
       organization: 'feuerwehr',
       strength: 'gruppe',
-      capabilities: ['fire-fighting'],
+      bodyMarks: ['fire-fighting'],
     },
   },
   'C.1.3': {
@@ -118,7 +118,7 @@ export const RECIPES = {
       kind: 'formation',
       organization: 'feuerwehr',
       strength: 'zug',
-      capabilities: ['fire-fighting'],
+      bodyMarks: ['fire-fighting'],
     },
   },
   'D.3.7': {

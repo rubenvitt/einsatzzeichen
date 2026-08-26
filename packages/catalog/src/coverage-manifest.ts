@@ -67,13 +67,16 @@ const ANHANG_C_A_TECHNICAL_REVIEW: Review = {
   reviewer: 'rv',
   date: '2026-08-26',
   note:
-    'C.1.3 verwendet ausschließlich die vorhandene Formation, Feuerwehrfarbe, Stärke zug ' +
-    'und capability.fire-fighting. Der Körper besteht matchFingerprint ohne Befund; ' +
-    'recipes.test.ts hält Rezept, drei Kopfprimitive, Körperhülle 1/6 bis 31/26 mm und die ' +
-    'Piktogramm-Mittellinie bei y 16 mm fest. strengths.test.ts trägt die unabhängig ' +
-    'vermessenen Zugmarken bei cx 11/16/21 mm. Direkter und Mehrgrößen-Snapshot sowie die ' +
-    'globalen viewBox-, Metadaten- und Kontrast-Gates prüfen die renderbare Ausgabe. Das ' +
-    'Domain-Review bleibt pending.',
+    'Die verpflichtende Sicht-QA hat die zuvor für C.1 verwendete Kapitel-4-Boxfassung mit ' +
+    'zusätzlichem rechten Horizontalast widerlegt; die eigenständige capability.fire-fighting ' +
+    'bleibt für Kapitel 4 unverändert. C.1.3 verwendet Formation, Feuerwehrfarbe, Stärke zug ' +
+    'und die formationsgebundene bodyMarks-Fassung fire-fighting: (1|16) nach (21|16), von dort ' +
+    'nach (31|6) und (31|26), ohne rechten Horizontalast. Der Körper besteht ' +
+    'matchFingerprint ohne Befund; recipes.test.ts hält Rezept, drei Kopfprimitive bei ' +
+    'cx 11/16/21 und cy 3,5 mm, Körperhülle 1/6 bis 31/26 mm sowie die Innengeometrie fest. ' +
+    'strengths.test.ts trägt die unabhängig vermessenen Zugmarken. Direkter und Mehrgrößen-' +
+    'Snapshot sowie die globalen viewBox-, Metadaten- und Kontrast-Gates prüfen die ' +
+    'renderbare Ausgabe. Das Domain-Review bleibt pending.',
 };
 
 /**

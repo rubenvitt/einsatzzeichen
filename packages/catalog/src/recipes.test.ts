@@ -41,6 +41,12 @@ import { ANHANG_F_B_RECIPES } from './recipes-anhang-f.js';
  * die fachliche Aussage ist unverändert, sie wird eine Ebene tiefer gelesen.
  */
 function horizontalPictogramLineYMm(drawing: Drawing): number | undefined {
+  const directLine = drawing.children.find(
+    (c): c is Primitive & { type: 'line' } =>
+      c.type === 'line' && c.role === 'pictogram' && c.y1 === c.y2,
+  );
+  if (directLine !== undefined) return directLine.y1;
+
   const group = drawing.children.find(
     (c): c is Primitive & { type: 'group' } => c.type === 'group' && c.role === 'pictogram',
   );
@@ -151,12 +157,33 @@ describe('Kompositionsrezepte', () => {
         kind: 'formation',
         organization: 'feuerwehr',
         strength: 'zug',
-        capabilities: ['fire-fighting'],
+        bodyMarks: ['fire-fighting'],
       },
     });
 
     const drawing = composeFromCatalog(recipe.spec);
-    expect(drawing.children.filter((child) => child.role === 'head')).toHaveLength(3);
+    const heads = drawing.children.filter(
+      (child): child is Primitive & { type: 'circle' } =>
+        child.type === 'circle' && child.role === 'head',
+    );
+    expect(heads.map(({ cx, cy, r }) => ({ cx, cy, r }))).toEqual([
+      { cx: 11, cy: 3.5, r: 1.5 },
+      { cx: 16, cy: 3.5, r: 1.5 },
+      { cx: 21, cy: 3.5, r: 1.5 },
+    ]);
+
+    const pictogramLines = drawing.children.filter(
+      (child): child is Primitive & { type: 'line' } =>
+        child.type === 'line' && child.role === 'pictogram',
+    );
+    expect(pictogramLines.map(({ x1, y1, x2, y2 }) => ({ x1, y1, x2, y2 }))).toEqual([
+      { x1: 1, y1: 16, x2: 21, y2: 16 },
+      { x1: 21, y1: 16, x2: 31, y2: 6 },
+      { x1: 21, y1: 16, x2: 31, y2: 26 },
+    ]);
+    expect(pictogramLines).not.toContainEqual(
+      expect.objectContaining({ x1: 21, y1: 16, x2: 31, y2: 16 }),
+    );
 
     const body = drawing.children.find((child) => child.role === 'body');
     expect(body).toBeDefined();
@@ -174,6 +201,11 @@ describe('Kompositionsrezepte', () => {
     const { strength: _a, ...staffel } = RECIPES['C.1.1'].spec;
     const { strength: _b, ...gruppe } = RECIPES['C.1.2'].spec;
     const { strength: _c, ...zug } = RECIPES['C.1.3'].spec;
+    expect(staffel).toEqual({
+      kind: 'formation',
+      organization: 'feuerwehr',
+      bodyMarks: ['fire-fighting'],
+    });
     expect(staffel).toEqual(gruppe);
     expect(gruppe).toEqual(zug);
   });
@@ -1880,13 +1912,18 @@ describe('Anhang E, Teilslice E-f (E.2.27 bis E.2.31)', () => {
 
 describe('Piktogramm-Platzierung als Gruppe', () => {
   it('erzeugt genau eine Piktogramm-Gruppe mit der Verschiebung als Transformation', () => {
-    const drawing = composeFromCatalog(RECIPES['C.1.1'].spec);
+    const drawing = composeFromCatalog({
+      kind: 'formation',
+      organization: 'feuerwehr',
+      strength: 'staffel',
+      capabilities: ['fire-fighting'],
+    });
     const pictograms = drawing.children.filter((c) => c.role === 'pictogram');
     expect(pictograms).toHaveLength(1);
     const group = pictograms[0];
     expect(group?.type).toBe('group');
     if (group?.type !== 'group') return;
-    // C.1.1 verschiebt den Körper um 3 mm (Anker 6 → 9); das Piktogramm folgt der Körpermitte.
+    // Der Stapel verschiebt den Körper um 3 mm (Anker 6 → 9); das Boxpiktogramm folgt ihm.
     expect(group.transform?.translate?.dxMm).toBe(0);
     expect(group.transform?.translate?.dyMm).toBeCloseTo(3, 6);
     // Die Kinder tragen ihre Autorenkoordinaten unverändert — die Verschiebung sitzt außen.
@@ -1897,9 +1934,14 @@ describe('Piktogramm-Platzierung als Gruppe', () => {
   });
 
   it('verschiebt die Gruppe bei unverändertem Körper um null, statt sie weglassen', () => {
-    // C.1.2 (Reihe) lässt den Körper bei Anker 6. Die Gruppe entsteht trotzdem: eine
+    // Die Reihe lässt den Körper bei Anker 6. Die Gruppe entsteht trotzdem: eine
     // Sonderbehandlung für Delta 0 wäre ein zweiter Codepfad ohne fachlichen Anlass.
-    const drawing = composeFromCatalog(RECIPES['C.1.2'].spec);
+    const drawing = composeFromCatalog({
+      kind: 'formation',
+      organization: 'feuerwehr',
+      strength: 'gruppe',
+      capabilities: ['fire-fighting'],
+    });
     const group = drawing.children.find((c) => c.role === 'pictogram');
     expect(group?.type).toBe('group');
     expect(group?.transform?.translate?.dyMm).toBeCloseTo(0, 6);

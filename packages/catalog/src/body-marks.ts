@@ -160,6 +160,17 @@ function crossedSwabs(cx: number, cy: number): Primitive[] {
  * gegen die Hülle formuliert; die Herleitungen stehen an der jeweiligen Zeile.
  */
 const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
+  /** C.1.1 bis C.1.3: die an der Formation vermessene Löschmarke mit zwei rechten Diagonalen. */
+  'fire-fighting': (bounds) => {
+    const cy = (bounds.minY + bounds.maxY) / 2;
+    const branchX = bounds.maxX - 10;
+    return [
+      stroke(bounds.minX, cy, branchX, cy),
+      stroke(branchX, cy, bounds.maxX, bounds.minY),
+      stroke(branchX, cy, bounds.maxX, bounds.maxY),
+    ];
+  },
+
   /** H.1: die separat vermessene, randbündige Veterinärmarke. */
   veterinary: (bounds) => {
     const { minX, minY, maxX, maxY } = bounds;

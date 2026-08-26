@@ -1,6 +1,6 @@
 # LFH-418 — C.1.3 Löschzug: Design-Spec
 
-> Design-Spec · 26. August 2026 · Status: freigegeben
+> Design-Spec · 26. August 2026 · Status: freigegeben, nach visueller QA korrigiert
 
 ## 1. Ziel und belegter Ausgangspunkt
 
@@ -26,8 +26,11 @@ Screenshot der generierten Katalogausgabe.
 
 ### Im Scope
 
-- Rezept `recipe.C.1.3` mit `formation`, `feuerwehr`, Stärke `zug` und Fähigkeit
-  `fire-fighting`.
+- Rezept `recipe.C.1.3` mit `formation`, `feuerwehr`, Stärke `zug` und der
+  randbündigen, für C.1 vermessenen Brandbekämpfungsmarke `fire-fighting`.
+- Notwendige Bestandskorrektur: C.1.1 und C.1.2 verwenden dieselbe vermessene
+  Körpermarke statt der eigenständigen Kapitel-4-Boxfassung; ihr beanspruchter
+  Manifest-Scope ändert sich dadurch nicht.
 - Manifestzeile `bbk-babz-2025:C.1.3#primary`.
 - Exakter beanspruchter Scope `C.1.3`.
 - Aktuelles technisches Review für diesen Slice.
@@ -40,8 +43,9 @@ Screenshot der generierten Katalogausgabe.
 
 - Kein gemeinsamer Scope `C.1` oder `C`: Beide würden Vollständigkeit vortäuschen.
 - Keine Umsetzung von `C.1.4` bis `C.1.15` oder von C.2.
-- Kein neuer Schema-, Kompositions-, Renderer-, Piktogramm- oder
-  Fahrzeugmechanismus.
+- Kein neuer Schema-, Core-, Renderer- oder Fahrzeugmechanismus und keine Änderung
+  der eigenständigen Kapitel-4-Piktogrammfassung. Die vorhandene `bodyMarks`-Schnittstelle
+  erhält ausschließlich die an C.1.1 bis C.1.3 vermessene formationsgebundene Fassung.
 - Keine fachliche Freigabe des Zeichens; das Domainreview bleibt bewusst offen.
 - Kein Upload, Commit oder sonstige Veröffentlichung der lokalen
   BABZ-Referenzdatei oder eines Referenz-vs.-Katalog-Bildes.
@@ -49,25 +53,31 @@ Screenshot der generierten Katalogausgabe.
 
 ## 3. Kompositionsentscheidung
 
-`C.1.3` verwendet ausschließlich bestehende, bereits vermessene Bausteine:
+`C.1.3` verwendet bestehende Bausteine und die vorhandene Schnittstelle für
+randbündige, eigenständig vermessene Körpermarken:
 
 ```ts
 {
   kind: 'formation',
   organization: 'feuerwehr',
   strength: 'zug',
-  capabilities: ['fire-fighting'],
+  bodyMarks: ['fire-fighting'],
 }
 ```
 
 Die Stärke `zug` ist im Katalog mit drei Kreismarken bei `cx = 11 / 16 / 21 mm`,
-`cy = 1,5 mm` und `r = 1,5 mm` hinterlegt. Der Formationskörper liegt bei
-`x = 1…31 mm` und `y = 6…26 mm`; das Brandbekämpfungszeichen sitzt im Körper.
+`cy = 3,5 mm` und `r = 1,5 mm` hinterlegt. Der Formationskörper liegt bei
+`x = 1…31 mm` und `y = 6…26 mm`. Die C.1-Fassung der Brandbekämpfungsmarke
+besteht aus der waagerechten Linie `(1|16) → (21|16)` und den beiden Diagonalen
+`(21|16) → (31|6)` sowie `(21|16) → (31|26)`. Es gibt keinen waagerechten Ast
+vom Verzweigungspunkt nach rechts.
 
-Eine read-only Probe dieser Komposition bestand vor der Implementierung
-Fingerprint-, A11y- und ViewBox-Prüfung ohne Befund. Im 64-px-Raster lag ihre
-Abweichung in derselben Größenordnung wie beim bereits akzeptierten `C.1.2`.
-Damit ist ein neues Geometrie- oder Layoutprimitiv nicht begründet.
+Eine read-only Probe der zuerst angenommenen Box-Komposition bestand vor der
+Implementierung Fingerprint-, A11y- und ViewBox-Prüfung ohne Befund. Diese Gates
+prüfen jedoch nicht die Innengeometrie gegen die Referenz. Der verpflichtende
+Sichtvergleich nach Task 1 zeigte den zusätzlichen rechten Horizontalast und
+widerlegte damit die Annahme. Die Kapitel-4-Boxfassung selbst bleibt korrekt;
+C.1 benötigt die bereits architektonisch vorgesehene randbündige Darstellungsform.
 
 ## 4. Manifest-, Review- und Scope-Vertrag
 
@@ -89,19 +99,23 @@ ist keine fachliche Bestätigung der Benennung oder Bedeutung.
 Der Slice ist technisch akzeptiert, wenn alle folgenden Aussagen durch Tests oder
 Artefakte belegt sind:
 
-1. `recipe.C.1.3` enthält exakt die oben beschriebene Komposition.
-2. Die drei Kopfmarken liegen bei `cx = 11 / 16 / 21 mm`, `cy = 1,5 mm`,
+1. `recipe.C.1.3` enthält exakt die oben beschriebene Komposition mit
+   `bodyMarks: ['fire-fighting']`.
+2. Die drei Kopfmarken liegen bei `cx = 11 / 16 / 21 mm`, `cy = 3,5 mm`,
    `r = 1,5 mm`.
-3. Körper und Brandbekämpfungszeichen entsprechen dem bestehenden
-   C.1-Kompositionsvertrag.
-4. Fingerprint-, A11y- und ViewBox-Gates melden keinen Befund.
-5. Direkter Snapshot sowie alle Mehrgrößen-/Theme-Darstellungen sind stabil und
+3. Körper und Brandbekämpfungszeichen entsprechen dem vermessenen C.1-Vertrag:
+   linker Stamm bis `(21|16)`, genau zwei rechte Diagonalen und kein rechter
+   Horizontalast.
+4. C.1.1, C.1.2 und C.1.3 verwenden dieselbe Körpermarke und unterscheiden sich
+   weiterhin nur in ihrer Stärke.
+5. Fingerprint-, A11y- und ViewBox-Gates melden keinen Befund.
+6. Direkter Snapshot sowie alle Mehrgrößen-/Theme-Darstellungen sind stabil und
    frei von Clipping.
-6. Das Manifest führt genau eine neue Zeile; der Scope wächst nur um `C.1.3`.
-7. Das technische Review ist aktuell und das Domainreview bleibt `pending`.
-8. Die vollständige Suite, Typecheck, `pnpm cli coverage` und
+7. Das Manifest führt genau eine neue Zeile; der Scope wächst nur um `C.1.3`.
+8. Das technische Review ist aktuell und das Domainreview bleibt `pending`.
+9. Die vollständige Suite, Typecheck, `pnpm cli coverage` und
    `git diff --check` sind grün.
-9. Ein unabhängiger Code- und Spec-Review findet keinen offenen Pflichtbefund.
+10. Ein unabhängiger Code- und Spec-Review findet keinen offenen Pflichtbefund.
 
 Die nach dem Rebase auf den aktuellen `origin/main` erneut geprüfte Baseline lautet:
 60 Testdateien, 4.074 Tests, Typecheck ohne Fehler, 427 Manifesteinträge und bestandenes
@@ -149,6 +163,8 @@ Geändert oder neu angelegt werden ausschließlich:
 
 - `packages/catalog/src/recipes.ts`
 - `packages/catalog/src/recipes.test.ts`
+- `packages/catalog/src/body-marks.ts`
+- `packages/catalog/src/body-marks.test.ts`
 - `packages/catalog/src/coverage-manifest.ts`
 - `packages/catalog/src/coverage-manifest.test.ts`
 - `packages/catalog/src/domain-reviews.ts`
@@ -157,6 +173,10 @@ Geändert oder neu angelegt werden ausschließlich:
 - `packages/catalog/src/snapshots.test.ts`
 - `packages/catalog/src/multi-size-snapshots.test.ts`
 - `packages/catalog/src/__snapshots__/C.1.3.svg`
+- `packages/catalog/src/__snapshots__/C.1.1.svg`
+- `packages/catalog/src/__snapshots__/C.1.2.svg`
+- `packages/catalog/src/__snapshots__/multi-size/recipe.C.1.1.svg`
+- `packages/catalog/src/__snapshots__/multi-size/recipe.C.1.2.svg`
 - `packages/catalog/src/__snapshots__/multi-size/recipe.C.1.3.svg`
 - `packages/cli/src/commands/coverage.test.ts`
 - `README.md`
