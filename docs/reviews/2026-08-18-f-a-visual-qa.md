@@ -59,3 +59,15 @@ der Grund für den Schnitt und alle Maße stehen in der Entscheidungsnotiz, Absc
   waagerechten Armstücke bis an den Ring und nicht durch ihn — links als eigenes Rechteck
   (1,0…10,5 mm), rechts als Zwischenraum zweier Felder (21,7375…30,75). Der Katalog zieht den Arm
   durch; im Bild ist es derselbe Strich, weil die Speichen im Ring auf denselben Linien liegen.
+
+## Finaler Task-6-Kontaktbogen
+
+Am 26. August 2026 wurde
+`out/lfh-417/contact-sheets/LFH-447-f-a.png` einzeln in Originalauflösung
+2048 × 4136 px geprüft; der vollständige SHA-256 steht im deterministischen
+`out/lfh-417/contact-sheets/manifest.json`. Alle zwölf Karten sowie die vollständigen
+Referenznamen, Panelbezeichnungen und Hashpräfixe sind lesbar; keine Zeile oder
+Marke ist abgeschnitten. F.1.3 erscheint absichtlich als deutlich schraffierter historischer
+Platzhalter und wird auf diesem Bogen nicht als Katalogrender behauptet. Die oben dokumentierten
+F-a-Abweichungen bleiben sichtbar beziehungsweise akzeptiert; der Kontaktbogen erzeugte keinen
+neuen technischen Blocker. Domain-Reviews bleiben davon unberührt.

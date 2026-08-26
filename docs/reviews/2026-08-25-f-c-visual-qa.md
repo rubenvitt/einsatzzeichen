@@ -53,4 +53,16 @@ wurden keine Referenz-Pfaddaten übernommen. Diese Prüfung ist nicht der finale
 Eine fachkundige Person muss weiterhin entscheiden, welche Bedeutung die kleine obere Marke von
 F.2.2 und die Winschform von F.2.6 tragen und ob die weißen F-Körper fachlich tatsächlich
 `hilfsorganisation` ausdrücken. Bis dahin bleiben alle 14 Domain-Reviews `pending`; der Scope `F`
-wird nicht als vollständig beansprucht.
+wurde in diesem F-c-Teilslice noch nicht als vollständig beansprucht; die abschließende Aktivierung
+ist im F-f-Slice dokumentiert.
+
+## Finaler Task-6-Kontaktbogen
+
+Am 26. August 2026 wurde
+`out/lfh-417/contact-sheets/LFH-449-f-c.png` einzeln in Originalauflösung
+2048 × 4800 px geprüft; der vollständige SHA-256 steht im deterministischen
+`out/lfh-417/contact-sheets/manifest.json`. Alle 14 Karten,
+einschließlich der fünf eigenständigen Alternativen, stehen in numerischer Reihenfolge und sind
+vollständig lesbar. Räder, Rotor, außerhalb liegendes `ITH`, zweizeiliges `GW-San`/`50` und alle
+Markenkombinationen bleiben ungeclippt. Referenz und Katalog werden je Karte eindeutig getrennt;
+es entstand kein neuer technischer Blocker. Die offenen fachlichen Bewertungen bleiben bestehen.

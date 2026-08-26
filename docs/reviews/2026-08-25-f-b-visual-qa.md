@@ -48,3 +48,15 @@ Eine fachkundige Person muss weiterhin entscheiden, ob die technischen Innenform
 F.1.16 und F.1.21 etablierte fachliche Begriffe tragen und ob die weißen F-Körper tatsächlich
 `hilfsorganisation` ausdrücken. Bis dahin bleibt das Domain-Review jeder neuen Manifestzeile
 `pending`.
+
+## Finaler Task-6-Kontaktbogen
+
+Am 26. August 2026 wurde
+`out/lfh-417/contact-sheets/LFH-448-f-b.png` einzeln in Originalauflösung
+2048 × 4800 px geprüft; der vollständige SHA-256 steht im deterministischen
+`out/lfh-417/contact-sheets/manifest.json`. Alle 14 Karten und beide
+Alternativen sind getrennt, vollständig beschriftet und ungeclippt. F.1.3 zeigt hier ausdrücklich
+den echten gebauten Katalogstand mit Badge `DEFERRED CARRY-IN AUS F-a`; er ist damit nicht mit dem
+historischen LFH-447-Platzhalter zu verwechseln. Kopf-, Fuß- und Innenmarken sowie die langen
+Beschriftungen bleiben vollständig sichtbar. Kein neuer technischer Blocker; Domain-Reviews
+bleiben `pending`.

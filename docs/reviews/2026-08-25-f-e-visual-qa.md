@@ -55,3 +55,15 @@ die Organisationszuordnung der weißen F.3-Körper bestätigen. Die sichtbaren B
 zwischen Arimo und den konturierten Quellglyphen von `UHS`/`50` werden nicht durch Auto-Fit oder
 rezeptabhängige Schriftprofile kaschiert; belegt sind Kappe, Grundlinie und Anker. Bis zur
 Fachentscheidung stehen alle elf Domain-Reviews auf `pending`.
+
+## Finaler Task-6-Kontaktbogen
+
+Am 26. August 2026 wurde
+`out/lfh-417/contact-sheets/LFH-451-f-e.png` einzeln in Originalauflösung
+2048 × 4136 px geprüft; der vollständige SHA-256 steht im deterministischen
+`out/lfh-417/contact-sheets/manifest.json`. Alle elf Karten sind in
+Reihenfolge vollständig sichtbar; Kreis-, Giebel-, Label- und Innenmarkengeometrien clippen nicht.
+Die bereits dokumentierten Arimo-Silhouettenunterschiede bei `UHS`/`50` bleiben erkennbar, ohne
+Kappen-, Grundlinien- oder Ankerabweichung. F.3.10 zeigt die korrigierte Raute, F.3.11 keine
+unbelegte Patiententransport-Semantik. Kein neuer technischer Blocker; Domain-Reviews bleiben
+`pending`.

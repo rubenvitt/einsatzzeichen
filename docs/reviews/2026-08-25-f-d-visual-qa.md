@@ -78,3 +78,14 @@ versetzten Rings aus F.2.16 und die Organisationszuordnung der weißen F-Körper
 y=6,096-mm-Beginn der inneren Kontur von F.2.17 bleibt ein Quellen-Finding; die gemeinsame
 Fahrzeughülle bleibt die getrennt dokumentierte Katalogabweichung. Bis zur Fachentscheidung stehen
 alle acht Domain-Reviews auf `pending`.
+
+## Finaler Task-6-Kontaktbogen
+
+Am 26. August 2026 wurde
+`out/lfh-417/contact-sheets/LFH-450-f-d.png` einzeln in Originalauflösung
+2048 × 2808 px geprüft; der vollständige SHA-256 steht im deterministischen
+`out/lfh-417/contact-sheets/manifest.json`. Alle acht Karten,
+Referenznamen, Labels und Hashpräfixe sind vollständig lesbar. Fahrzeug- und Anhängerhüllen,
+Fußbänder, Chassis, die F.2.11-/F.2.16-Technikformen, Küchenmotiv und Armatur sind ungeclippt und
+jeweils der richtigen Referenz zugeordnet. Kein neuer technischer Blocker; die dokumentierten
+Quellen-/Domain-Findings bleiben unverändert.

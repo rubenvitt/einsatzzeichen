@@ -51,5 +51,17 @@ Freigabe des finalen Task-6-Kontaktbogens.
 Eine fachkundige Person muss die HiOrg-Zuordnung der ausschließlich weißen Quellen und die
 fachliche Benennung beziehungsweise Abgrenzung der vier neutralen technischen Kreisformen
 bestätigen. Die technischen Reviews der acht Zeilen sind mit Datum 2026-08-26 freigegeben, alle
-Domain-Reviews bleiben `pending`. Der spätere Task 6 muss seinen eigenen finalen Kontaktbogen
-erzeugen und prüfen.
+Domain-Reviews bleiben `pending`. Der finale Task-6-Kontaktbogen ist im folgenden Abschnitt
+belegt.
+
+## Finaler Task-6-Kontaktbogen
+
+Am 26. August 2026 wurde
+`out/lfh-417/contact-sheets/LFH-452-f-f.png` einzeln in Originalauflösung
+2048 × 2808 px geprüft; der vollständige SHA-256 steht im deterministischen
+`out/lfh-417/contact-sheets/manifest.json`. Alle acht Karten sowie die vollständigen
+Referenznamen und Hashpräfixe sind lesbar; keine Haus-, Kreis-, Label- oder
+Innenmarkengeometrie ist abgeschnitten. F.3.14 zeigt die erwartete Arimo-vs.-Quellkontur bei
+korrekter Lage, F.3.15 die geprüfte Kurve und einzelne Trauflinie, F.3.16 keinen zweiten Körper,
+F.3.19 ausdrücklich keine F.3.18-Diagonalen. Kein neuer technischer Blocker; die fachlichen
+Domain-Reviews bleiben `pending`.
