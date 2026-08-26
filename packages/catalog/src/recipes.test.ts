@@ -142,10 +142,40 @@ describe('Kompositionsrezepte', () => {
     expect(boundsOfMm(body).minY).toBeCloseTo(6, 6);
   });
 
-  it('unterscheidet Löschstaffel und Löschgruppe nur in der Stärke', () => {
+  it('erzeugt C.1.3 als Löschzug auf dem unveränderten Formationskörper', () => {
+    const recipe = RECIPES['C.1.3'];
+    expect(recipe).toEqual({
+      title: 'Löschzug einer Feuerwehr',
+      referenceAsset: 'C.1.3_Löschzug einer Feuerwehr.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'feuerwehr',
+        strength: 'zug',
+        capabilities: ['fire-fighting'],
+      },
+    });
+
+    const drawing = composeFromCatalog(recipe.spec);
+    expect(drawing.children.filter((child) => child.role === 'head')).toHaveLength(3);
+
+    const body = drawing.children.find((child) => child.role === 'body');
+    expect(body).toBeDefined();
+    if (body === undefined) return;
+    const bounds = boundsOfMm(body);
+    expect(bounds.minX).toBeCloseTo(1, 6);
+    expect(bounds.minY).toBeCloseTo(6, 6);
+    expect(bounds.maxX).toBeCloseTo(31, 6);
+    expect(bounds.maxY).toBeCloseTo(26, 6);
+    expect(body.style?.fill).toBe('rot');
+    expect(horizontalPictogramLineYMm(drawing)).toBeCloseTo(16, 6);
+  });
+
+  it('unterscheidet Löschstaffel, Löschgruppe und Löschzug nur in der Stärke', () => {
     const { strength: _a, ...staffel } = RECIPES['C.1.1'].spec;
     const { strength: _b, ...gruppe } = RECIPES['C.1.2'].spec;
+    const { strength: _c, ...zug } = RECIPES['C.1.3'].spec;
     expect(staffel).toEqual(gruppe);
+    expect(gruppe).toEqual(zug);
   });
 
   it('erzeugt den Zugführer mit Spitze bei 5 mm und Unterkante bei 31 mm', () => {
@@ -171,6 +201,7 @@ describe('Kompositionsrezepte', () => {
     const cases = [
       ['C.1.1', 19] as const,
       ['C.1.2', 16] as const,
+      ['C.1.3', 16] as const,
     ];
     for (const [section, expectedCenterYMm] of cases) {
       const drawing = composeFromCatalog(RECIPES[section].spec);
@@ -1278,12 +1309,12 @@ describe('Anhang F, Teilslice F-f', () => {
     },
   } as const;
 
-  it('deckt F.3.12 bis F.3.19 lückenlos ohne Alternative ab und erreicht mit H und I-a 143 Rezepte', () => {
+  it('deckt F.3.12 bis F.3.19 lückenlos ohne Alternative ab und erreicht mit H, I-a und C.1.3 144 Rezepte', () => {
     const entries = Object.entries<Recipe>(RECIPES)
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(143);
+    expect(Object.keys(RECIPES)).toHaveLength(144);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {

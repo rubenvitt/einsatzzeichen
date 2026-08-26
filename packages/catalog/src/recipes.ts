@@ -111,6 +111,16 @@ export const RECIPES = {
       capabilities: ['fire-fighting'],
     },
   },
+  'C.1.3': {
+    title: 'Löschzug einer Feuerwehr',
+    referenceAsset: 'C.1.3_Löschzug einer Feuerwehr.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'feuerwehr',
+      strength: 'zug',
+      capabilities: ['fire-fighting'],
+    },
+  },
   'D.3.7': {
     title: 'Zugführer der Feuerwehr',
     referenceAsset: 'D.3.7_Zugführer der Feuerwehr.svg',
