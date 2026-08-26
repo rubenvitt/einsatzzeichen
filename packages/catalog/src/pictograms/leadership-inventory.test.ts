@@ -147,6 +147,31 @@ describe('Leadership-Inventar nach D.2', () => {
     }
   });
 
+  it('bewahrt die gemessene schwarze Kreiskappe nur an der Leitstelle D.2.5', () => {
+    const controlCenter = LEADERSHIP_PICTOGRAMS.find(
+      (definition) => definition.id === 'leadership.control-center',
+    );
+    const landingSite = LEADERSHIP_PICTOGRAMS.find(
+      (definition) => definition.id === 'leadership.helicopter-landing-site',
+    );
+    const blackFillPaths = (definition: typeof controlCenter) =>
+      definition?.primitives.filter(
+        (primitive) => primitive.type === 'path' && primitive.style?.fill === 'schwarz',
+      );
+
+    expect(blackFillPaths(controlCenter)).toEqual([
+      {
+        type: 'path',
+        role: 'pictogram',
+        d:
+          'M 6.724 10 H 25.277 C 22.95 7.302 19.564 5.75 16 5.75 ' +
+          'C 12.436 5.75 9.05 7.302 6.724 10 Z',
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+    ]);
+    expect(blackFillPaths(landingSite)).toEqual([]);
+  });
+
   it('hält D.2 direkt und erfindet weder Recipe, State, circle-12 noch Organisation', () => {
     const definitions = LEADERSHIP_PICTOGRAMS.slice(1);
     const referenceAssets = new Set(definitions.map((definition) => definition.referenceAsset));

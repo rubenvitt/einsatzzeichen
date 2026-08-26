@@ -59,6 +59,18 @@ function locationRoof(): Primitive {
   };
 }
 
+/** Schwarze Kreiskappe der Leitstelle D.2.5 zwischen Außenkante y=5,75 und Sehne y=10. */
+function controlCenterCap(): Primitive {
+  return {
+    type: 'path',
+    role: 'pictogram',
+    d:
+      'M 6.724 10 H 25.277 C 22.95 7.302 19.564 5.75 16 5.75 ' +
+      'C 12.436 5.75 9.05 7.302 6.724 10 Z',
+    style: { ...BLACK_FILL },
+  };
+}
+
 /**
  * Der Bereitstellungsrahmen besitzt in D.2.1 und D.2.2 dieselbe gewölbte Oberkante. Die zweite
  * Fassung liegt unter dem Meldekopf um 1,5 mm tiefer; ihre Bodenlinie ist um 1 mm abgesenkt.
@@ -191,6 +203,7 @@ export const LOCATION_PICTOGRAMS = [
     box: { xMm: 3, yMm: 1, widthMm: 26, heightMm: 29 },
     primitives: [
       loweredLocationCircle(),
+      controlCenterCap(),
       locationRoof(),
       locationText('LtS', {
         x: 16.238,
