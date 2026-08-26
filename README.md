@@ -643,86 +643,21 @@ genau acht direkte und acht Mehrgrößen-Snapshots hinzu (151 beziehungsweise 40
 alle 541 zuvor vorhandenen Snapshotdateien blieben bytegleich. Die Einzelsichtung ist nicht der
 finale Task-6-Kontaktbogen, und sämtliche F-f-Domainreviews bleiben `pending`.
 
-## LFH-420 Task 3: Anhang D.1 Führungsstellen im Einsatz
+## Anhang D: Führung und Funktionen
 
-Anhang D.1 ergänzt exakt zehn Darstellungen: D.1.1 ist die erste direkte `leadership`-Definition,
-D.1.2 bis D.1.8 sind sieben Kompositionen aus den vermessenen Funktionsträgerrollen, und D.1.9
-liegt als Primary plus Alternative vor. Auf dem integrierten Hauptbestand umfasst dieser Stand
-183 Rezepte, 255 Piktogramme, 452 Renderfälle, 471 Manifestzeilen und 485 Reviewobjekte; 274 Manifestzeilen
-repräsentieren auflösbare Elemente. Der beanspruchte D-Scope bleibt trotzdem bei `D.3.7` und
-wird erst nach vollständiger Umsetzung des Anhangs D erweitert.
+Anhang D ist technisch mit exakt 37 Darstellungen vollständig: zehn aus D.1, sieben aus D.2,
+fünfzehn aus D.3 und fünf aus D.4. Die Modellierung kombiniert quellenvermessene
+Funktionsträgerrollen mit direkten `leadership`-Definitionen. D.1.1 bewahrt als einzige
+nichtquadratische Darstellung ihre 32×46-mm-Fläche; die Funktionszeichen verwenden ausschließlich
+die drei belegten Kopfprofile `kreis`, `nationalstaat` und `europaeische-union`.
 
-D.1.1 bewahrt die nichtquadratische 32×46-mm-Quelle einschließlich Bezeichnungslauf,
-Rahmenanschluss, vierzehn gestrichelten Teilstücken und Außenkreuz. Eine angeforderte
-Rasterbreite bleibt eine Breite: 16/24/32/64/128/256 px ergeben deshalb
-23/35/46/92/184/368 px Höhe. Die übrigen neun Darstellungen bleiben 32×32 mm.
-
-Der Rollenlauf `Ber` aus D.1.8 verwendet den semantischen Token `funktionslauf-kontrast`:
-Referenz und Accessible bleiben quellentreu schwarz auf Rot, nur das monochrome Drucktheme
-invertiert diesen einen Lauf zu Weiß auf Grau. Die Textschwelle bleibt in allen drei Themes bei
-4,5:1; es kommt keine Kontrastausnahme hinzu.
-
-D.1.9 besitzt bewusst keine `functionRole`. Beide Varianten tragen exakt einen äußeren
-`trupp`-Stärkepunkt und die Sanätsmarke; die Alternative modelliert ihre drei weißen Kreise als
-negative Innenlöcher der schwarzen 4-mm-Kappe, nicht als zweiten Stärkegrad. Die aus der weißen
-Quellfläche abgeleitete Zuordnung `hilfsorganisation` bleibt im Reviewtext ausdrücklich offen.
-Alle zehn D.1-Domainreviews stehen weiterhin auf `pending`; die technische Rollen- und
-Geometrieentscheidung ist in
-[`docs/decisions/2026-08-26-anhang-d-function-roles.md`](docs/decisions/2026-08-26-anhang-d-function-roles.md)
-dokumentiert.
-
-## LFH-420 Task 4: Anhang D.2 Ortszeichen
-
-D.2.1 bis D.2.7 ergänzen sieben direkte `leadership`-Definitionen auf jeweils 32×32 mm. Sie
-teilen ausschließlich private, aus den Quellen normalisierte Geometrie für den Kreis mit Radius
-12 mm, seine um 2 mm abgesenkte Fassung, den Giebel und wiederkehrende Innenzeichen. Es entsteht
-weder eine öffentliche Kreis-/Ortsachse noch ein Rezept; insbesondere wird der an weiße F.3-
-HiOrg-Zeichen gebundene `circle-12`-Körper nicht wiederverwendet und aus der gelben Fläche keine
-Organisation abgeleitet.
-
-Der integrierte Zwischenstand umfasst unverändert 183 Rezepte und 197 Rezept-/Basis-Snapshots
-sowie nun 262 Piktogramme, 459 Renderfälle, 478 Manifestzeilen, 460 Mehrgrößen-Sheets und 492 Reviewobjekte;
-281 Manifestzeilen repräsentieren auflösbare Elemente. Alle sieben D.2-Domainreviews bleiben
-`pending`, und der beanspruchte D-Scope bleibt bis zum vollständigen Anhang bei `D.3.7`.
-
-## LFH-420 Task 5: Anhang D.3 Funktionen
-
-D.3 ist mit fünfzehn Darstellungen vollständig: D.3.1 bis D.3.13 sind Kompositionen aus den
-bereits einzeln vermessenen Funktionsträgerrollen; D.3.14 und D.3.15 bleiben direkte
-`leadership`-Definitionen mit einer ausschließlich privat geteilten offenen Kappengeometrie.
-Die beiden Directs erhalten keine erfundene `functionRole` oder Organisation. D.3.7 bleibt
-dasselbe Rezept und behält Manifestkey, Domainstatus sowie direkte und Mehrgrößen-Snapshotbytes;
-nur sein technischer Nachweis beschreibt nun die vollständige D.3-Prüfmatrix.
-
-Die Matrix unterscheidet drei kopflose Standardkörper, drei Standardkörper mit Zwei-Stern-Kopf,
-vier neue abgesenkte Zugkörper mit Dreipunktkopf sowie die separat vermessenen Standardkörper
-von D.3.12/D.3.13 mit Zweipunktkopf. Brandbekämpfung, Sanität und Betreuung werden gegen die
-jeweilige endgültige Körperhülle gerechnet. `AW`, `ASB`, `DRK`, `MHD` und `JUH` bleiben
-sichtbarer Text und werden nicht zu Organisationen umgedeutet.
-
-Der integrierte Zwischenstand umfasst 195 Rezepte, 209 Rezept-/Basis-Snapshots, 264 Piktogramme,
-473 Renderfälle, 492 Manifestzeilen, 474 Mehrgrößen-Sheets und 506 Reviewobjekte; 283 Manifestzeilen
-repräsentieren auflösbare Elemente. Alle fünfzehn D.3-Domainreviews bleiben `pending`, und der
-beanspruchte D-Scope bleibt bis zur vollständigen Umsetzung von D.4 bei `D.3.7`.
-
-## LFH-420 Task 6: Anhang D.4 und vollständiger Anhang D
-
-D.4 ergänzt fünf übergeordnete Funktionsrezepte. D.4.1 bis D.4.3 verwenden jeweils den
-Standard-Personenkörper mit dem belegten Zwei-Stern-Kreiskopf und bewahren `LtS`/`ST`, `KBM`/`ME`
-und `LtrGA`/`MG` als sichtbare Literale. D.4.4 behält seinen separat gemessenen abgesenkten Körper,
-den Fünf-Stern-Nationalstaat-Kopf und `BuPol`; D.4.5 den kompakten Körper und den sechsblättrigen
-EU-Kopf ohne erfundenen Text. Organisationen bestimmen ausschließlich die Körperfarbe.
-
-Damit ist Anhang D technisch mit exakt 37 Darstellungen vollständig: zehn aus D.1, sieben aus
-D.2, fünfzehn aus D.3 und fünf aus D.4. Der integrierte Katalog umfasst 200 Rezepte, 264
-Piktogramme, 478 Renderfälle, 497 Manifestzeilen, 214 Rezept-/Basis-Snapshots, 264
-Piktogramm-Snapshots, 479 Mehrgrößen-Sheets und 511 Reviewobjekte. Das Manifest führt weiterhin
-283 Elementzeilen; das Elementregister enthält 269 eindeutige Beschreibungen bei 264 Definitionen und 249 eindeutigen
-Piktogramm-IDs. Erst der separate exakte 37/37-Mengentest trägt die Scope-Promotion von `D.3.7`
-auf genau `D`.
-
-Alle 37 Anhang-D-Domainreviews bleiben `pending`. Die technische Vollständigkeit, die gemessenen
-Körper und die grünen Rendergates sind keine fachliche, normative oder einsatztaktische Freigabe.
+Das Manifest beansprucht den Scope `D` erst durch das exakte 37/37-Vollständigkeitsgate. Die
+Modellierungs- und Geometrieentscheidungen stehen in
+[`docs/decisions/2026-08-26-anhang-d-function-roles.md`](docs/decisions/2026-08-26-anhang-d-function-roles.md),
+die technische Sichtprüfung aller 37 Darstellungen in
+[`docs/reviews/2026-08-26-lfh-420-visual-qa.md`](docs/reviews/2026-08-26-lfh-420-visual-qa.md).
+Alle 37 Domainreviews bleiben `pending`; technische Vollständigkeit ist keine fachliche,
+normative oder einsatztaktische Freigabe.
 
 ## Anhang G: 21 Logistikzeichen vollständig im Katalog
 
