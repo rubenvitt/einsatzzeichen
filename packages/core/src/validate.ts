@@ -52,7 +52,7 @@ const F3_CIRCLE_TOP_LEFT_BOX_RIGHT_MM = 26;
 /** Exakte, aus den Quellen vermessene Art-/Variantenpaare; alle anderen bleiben fail-closed. */
 const BODY_VARIANT_KINDS: Readonly<Record<BodyVariantId, ReadonlySet<SymbolKind>>> = {
   'raised-hull': new Set<SymbolKind>(['vehicle-air', 'vehicle-water']),
-  'foot-band': new Set<SymbolKind>(['formation', 'vehicle-land']),
+  'foot-band': new Set<SymbolKind>(['formation', 'vehicle-land', 'trailer', 'circle-12']),
   'plain-wheel-pair': new Set<SymbolKind>(['vehicle-land']),
   'raised-gable': new Set<SymbolKind>(['circle-12']),
 };
@@ -78,6 +78,19 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
       message:
         `Eine Stärkeangabe ist nur an taktischen Einheiten zulässig. ` +
         `"${spec.kind}" ist keine Einheit.`,
+    });
+  }
+
+  if (
+    spec.kind === 'formation' &&
+    spec.bodyVariant === 'foot-band' &&
+    spec.strength === 'staffel'
+  ) {
+    issues.push({
+      rule: 'foot-band-head-requires-measured-strength',
+      message:
+        'Am gebänderten Formationskörper sind nur Trupp, Gruppe und Zug vermessen. Die Staffel ' +
+        'würde den Körper verschieben; wie das Fußband mitwandert, ist nicht belegt.',
     });
   }
 
@@ -199,14 +212,13 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
   // nur `role: 'body'`, die Rasterprüfung nur die selbst deklarierte Box.
   if (
     spec.labels?.belowRight !== undefined &&
-    !(spec.kind === 'vehicle-water' && spec.bodyVariant === 'raised-hull')
+    profileFor(spec.kind, spec.bodyVariant).belowRight === undefined
   ) {
     issues.push({
       rule: 'below-right-label-requires-measured-body',
       message:
-        'Die Beschriftungszone unterhalb des Körpers ist allein am angehobenen Wasserrumpf ' +
-        '(kind "vehicle-water", bodyVariant "raised-hull") vermessen — an den fünf Zeichen ' +
-        `E.2.27 bis E.2.31. Für "${spec.kind}" gibt es keine Messung, aus der ihre Lage folgte.`,
+        'Die Beschriftungszone unterhalb des Körpers verlangt ein vermessenes Körperprofil. ' +
+        `Für "${spec.kind}" mit Variante "${spec.bodyVariant ?? 'normal'}" fehlt es.`,
     });
   }
 
@@ -242,6 +254,16 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
       message:
         'Ein topLeft-Lauf am 12-mm-Kreis verlangt immer den vollständigen vermessenen ' +
         'Metriksatz; die beiden Kreisfassungen haben keinen allgemeinen Profildefault.',
+    });
+  }
+  if (
+    isCircle12 &&
+    spec.bodyVariant === 'foot-band' &&
+    spec.organization === undefined
+  ) {
+    issues.push({
+      rule: 'circle-12-requires-organization',
+      message: 'Der gebänderte 12-mm-Kreis verlangt die Organisationsfarbe seiner Körperfläche.',
     });
   }
   if (

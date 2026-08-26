@@ -107,7 +107,6 @@ const FOOT_TEXT_SIZE_MM = 4;
  * Referenz. Für die **Box** des mittigen Laufs gilt diese Übertragung seit E-b nicht mehr, siehe
  * `CENTER_LABEL_BOX_MARGIN_MM`.
  */
-const BOTTOM_LABEL_BASELINE_FROM_BODY_BOTTOM_MM = 2;
 const LABEL_SIDE_MARGIN_MM = 2;
 
 /**
@@ -232,9 +231,6 @@ const CENTER_LABEL_BOX_MARGIN_MM = 1;
  * auf 0,047 mm. Gegenprobe an der bestehenden Zone: derselbe Lauf rendert dort 19,438…28,977 bei
  * einer Referenz von 19,987…29,027 — dieselbe Differenz an derselben Stelle.
  */
-const BELOW_BODY_LABEL_BASELINE_FROM_BODY_BOTTOM_MM = 4.01;
-const BELOW_BODY_LABEL_RIGHT_OVERHANG_MM = 0.5618;
-
 /** Versalhöhen der beiden Schriftgrade, gemessen an den 16 Dateien E.1.1 bis E.1.16 (Tabelle oben). */
 const CENTER_LABEL_CAP_HEIGHT_MM = 4.87;
 const BOTTOM_LABEL_CAP_HEIGHT_MM = 2.92;
@@ -373,6 +369,12 @@ function labelPrimitives(
   bodyBoundsMm: BoundsMm,
   viewBoxWidthMm: number,
   belowRightFill: ColorToken | null,
+  bottomLabelBaselineFromBodyBottomMm: number,
+  belowRight: {
+    readonly baselineFromBodyBottomMm: number;
+    readonly anchorFromBodyRightMm: number;
+    readonly ink: 'organization' | 'black';
+  } | undefined,
   centerBaselineFromBodyBottomMm: number,
   topLeftBaselineFromBodyTopMm: number | undefined,
   normalizeTopLeftCoordinatePrecision: boolean,
@@ -394,7 +396,7 @@ function labelPrimitives(
   const centerBoxLeftMm = bodyBoundsMm.minX + CENTER_LABEL_BOX_MARGIN_MM;
   const centerBoxRightMm = bodyBoundsMm.maxX - CENTER_LABEL_BOX_MARGIN_MM;
   const centerBaselineMm = bodyBoundsMm.maxY - centerBaselineFromBodyBottomMm;
-  const bottomBaselineMm = bodyBoundsMm.maxY - BOTTOM_LABEL_BASELINE_FROM_BODY_BOTTOM_MM;
+  const bottomBaselineMm = bodyBoundsMm.maxY - bottomLabelBaselineFromBodyBottomMm;
 
   const primitives: Primitive[] = [];
   if (labels.center !== undefined) {
@@ -564,7 +566,10 @@ function labelPrimitives(
     );
   }
   if (labels.belowRight !== undefined) {
-    if (belowRightFill === null) {
+    if (belowRight === undefined) {
+      throw new Error('Die Zone "belowRight" ist an dieser Körperform nicht vermessen.');
+    }
+    if (belowRight.ink === 'organization' && belowRightFill === null) {
       // Unerreichbar über `compose()` — `validateSpec` lehnt die Zone ohne Organisation ab. Die
       // Zeile hält die Bedingung trotzdem am Ort ihrer Wirkung fest: die Zone ist in der
       // Organisationsfarbe gemessen, eine schwarze oder weiße Fassung von ihr ist es nicht.
@@ -573,8 +578,8 @@ function labelPrimitives(
           'E.2.31); ohne Organisation gibt es keine Farbe, die sie tragen dürfte.',
       );
     }
-    const anchorXMm = bodyBoundsMm.maxX + BELOW_BODY_LABEL_RIGHT_OVERHANG_MM;
-    const baselineMm = bodyBoundsMm.maxY + BELOW_BODY_LABEL_BASELINE_FROM_BODY_BOTTOM_MM;
+    const anchorXMm = bodyBoundsMm.maxX + belowRight.anchorFromBodyRightMm;
+    const baselineMm = bodyBoundsMm.maxY + belowRight.baselineFromBodyBottomMm;
     primitives.push(
       labelPrimitive(
         labels.belowRight,
@@ -585,7 +590,7 @@ function labelPrimitives(
         centerXMm,
         anchorXMm - centerXMm,
         viewBoxWidthMm,
-        belowRightFill,
+        belowRight.ink === 'black' ? 'schwarz' : belowRightFill!,
       ),
     );
   }
@@ -596,6 +601,8 @@ function labelPrimitives(
 export interface BodyMarkContext {
   readonly kind: SymbolKind;
   readonly bodyVariant?: BodyVariantId;
+  readonly strength?: StrengthId;
+  readonly occupiedLabelZones?: readonly ('bottomCenter' | 'bottomRight' | 'belowRight')[];
 }
 
 export interface CatalogPorts {
@@ -784,11 +791,11 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
   // Einzige belegte Ausnahme: F.1.17 führt `foot-band` zusammen mit der Kopfzone `gruppe`.
   // Diese Kopfzone verschiebt den Formationskörper nicht; Band und Hülle bleiben auf y 23…26.
   // Weder andere Stärken noch andere Zusatzgeometrien werden daraus fortgeschrieben.
-  const isMeasuredFootBandWithGroup =
+  const isMeasuredFootBandWithHead =
     spec.kind === 'formation' &&
     spec.bodyVariant === 'foot-band' &&
-    spec.strength === 'gruppe';
-  if (extras.length > 0 && headBox !== null && !isMeasuredFootBandWithGroup) {
+    spec.strength !== undefined;
+  if (extras.length > 0 && headBox !== null && !isMeasuredFootBandWithHead) {
     // Wie Zusatzgeometrie einer Kopfzone ausweicht, ist **nicht** belegt: kein Zeichen des
     // Referenzbestands trägt beides. Der Anhang E.2 führt überhaupt keine Kopfzone (an allen 31
     // Dateien nachgesehen), und `validateSpec` lehnt eine Stärkeangabe an diesen Körperformen
@@ -943,7 +950,20 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
   // sie sind bereits an der richtigen Stelle gerechnet.
   const bodyMarkPrimitives = composeBodyMarkPrimitives(
     (spec.bodyMarks ?? []).map((id) =>
-      catalog.bodyMark(id, { kind: spec.kind, bodyVariant: spec.bodyVariant }, bodyBoundsMm)),
+      catalog.bodyMark(id, {
+        kind: spec.kind,
+        bodyVariant: spec.bodyVariant,
+        ...(spec.strength === undefined ? {} : { strength: spec.strength }),
+        ...(
+          spec.labels === undefined
+            ? {}
+            : (() => {
+                const occupiedLabelZones = (['bottomCenter', 'bottomRight', 'belowRight'] as const)
+                  .filter((zone) => spec.labels?.[zone] !== undefined);
+                return occupiedLabelZones.length === 0 ? {} : { occupiedLabelZones };
+              })()
+        ),
+      }, bodyBoundsMm)),
   );
 
   const labels = spec.labels !== undefined
@@ -952,6 +972,8 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
         bodyBoundsMm,
         DEFAULT_VIEWBOX_MM.width,
         spec.organization !== undefined ? catalog.organizationColor(spec.organization) : null,
+        profile.bottomLabelBaselineFromBodyBottomMm,
+        profile.belowRight,
         profile.centerBaselineFromBodyBottomMm,
         profile.topLeftBaselineFromBodyTopMm,
         normalizesMeasuredCircleTopLeftCoordinates(spec.kind, spec.bodyVariant),

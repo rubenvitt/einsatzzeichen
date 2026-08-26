@@ -47,6 +47,65 @@ describe('bodyMark() — die Fachdienstteilung', () => {
   });
 });
 
+describe('bodyMark() — gebänderte Logistikkörper', () => {
+  it('führt die acht semantisch bekannten Logistikmarken am Formationsband fail-closed', () => {
+    const ids = [
+      'fuels-consumables', 'drinking-water', 'water-conveyance', 'power-supply',
+      'catering', 'meal-preparation', 'maintenance', 'waste-disposal',
+    ] as const;
+    for (const id of ids) {
+      expect(bodyMarkWithContext(
+        id, { kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm,
+      ).length, id).toBeGreaterThan(0);
+    }
+    expect(() => bodyMarkWithContext(
+      'power-supply', { kind: 'formation' }, formationBodyMm,
+    )).toThrow(/nicht vermessen/);
+  });
+
+  it('verschiebt Verpflegung bei belegter unterer rechter Labelzone nach oben', () => {
+    const normal = bodyMarkWithContext(
+      'catering', { kind: 'formation', bodyVariant: 'foot-band', strength: 'zug' }, formationBodyMm,
+    );
+    const withLabel = bodyMarkWithContext(
+      'catering', {
+        kind: 'formation', bodyVariant: 'foot-band', strength: 'trupp',
+        occupiedLabelZones: ['bottomRight'],
+      }, formationBodyMm,
+    );
+    expect(boundsOfMm(normal[0]!)).toMatchObject({ minY: 10, maxY: 20 });
+    expect(boundsOfMm(withLabel[0]!)).toMatchObject({ minY: 8, maxY: 18 });
+  });
+
+  it('führt Instandhaltung am Fahrzeug und Anhänger sowie Feldkochherd am Anhänger', () => {
+    expect(bodyMarkWithContext(
+      'maintenance', { kind: 'vehicle-land', bodyVariant: 'foot-band' }, landBodyMm,
+    )).toHaveLength(1);
+    expect(bodyMarkWithContext(
+      'maintenance', { kind: 'trailer', bodyVariant: 'foot-band' }, trailerBodyMm,
+    )).toHaveLength(1);
+    expect(bodyMarkWithContext(
+      'meal-preparation', { kind: 'trailer', bodyVariant: 'foot-band' }, trailerBodyMm,
+    )).toHaveLength(2);
+  });
+
+  it('führt die vier belegten Logistikmarken am gebänderten 12-mm-Kreis', () => {
+    for (const id of [
+      'catering', 'meal-preparation', 'fuels-consumables', 'maintenance',
+    ] as const) {
+      expect(bodyMarkWithContext(
+        id, { kind: 'circle-12', bodyVariant: 'foot-band' }, circleBodyMm,
+      ).length, id).toBeGreaterThan(0);
+    }
+    const shifted = bodyMarkWithContext(
+      'fuels-consumables', {
+        kind: 'circle-12', bodyVariant: 'foot-band', occupiedLabelZones: ['bottomCenter'],
+      }, circleBodyMm,
+    );
+    expect(boundsOfMm(shifted[0]!)).toMatchObject({ minY: 7, maxY: 17.75 });
+  });
+});
+
 describe('bodyMark() — die Zusätze je Fachdienst', () => {
   it('setzt die Arztleiste 8 mm breit auf 4 mm über der Körperunterkante', () => {
     // Gemessen an `F.1.7_Sanitätsgruppe_arztbesetzt.svg` (und gleichlautend an `F.1.1`): Leiste
@@ -1173,6 +1232,10 @@ describe('BODY_MARK_IDS', () => {
       // und genau das ist an F.1.3 belegt (siehe den Block zur Zeltmarke oben).
       const invocation = id === 'catering'
         ? [{ kind: 'formation', bodyVariant: 'foot-band' } as const, formationBodyMm] as const
+        : [
+            'fuels-consumables', 'water-conveyance', 'power-supply', 'maintenance', 'waste-disposal',
+          ].includes(id)
+          ? [{ kind: 'formation', bodyVariant: 'foot-band' } as const, formationBodyMm] as const
         : id === 'meal-preparation' || id === 'drinking-water'
           ? [{ kind: 'vehicle-land', bodyVariant: 'foot-band' } as const, landBodyMm] as const
         : id === 'air-winch-chevron-diamond'

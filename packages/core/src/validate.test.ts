@@ -3,6 +3,31 @@ import type { SymbolSpec } from '@einsatzzeichen/schema';
 import { validateSpec } from './validate.js';
 
 describe('validateSpec', () => {
+  it('lässt foot-band ausschließlich an den vier vermessenen Logistikkörpern zu', () => {
+    expect(validateSpec({ kind: 'formation', bodyVariant: 'foot-band' })).toEqual([]);
+    expect(validateSpec({ kind: 'vehicle-land', bodyVariant: 'foot-band' })).toEqual([]);
+    expect(validateSpec({ kind: 'trailer', bodyVariant: 'foot-band' })).toEqual([]);
+    expect(validateSpec({
+      kind: 'circle-12', bodyVariant: 'foot-band', organization: 'feuerwehr',
+    })).toEqual([]);
+    expect(validateSpec({
+      kind: 'circle-12', bodyVariant: 'foot-band', organization: 'bundeswehr',
+    })).toEqual([]);
+
+    expect(validateSpec({ kind: 'post', bodyVariant: 'foot-band' })
+      .map((issue) => issue.rule)).toContain('body-variant-requires-measured-kind');
+    expect(validateSpec({ kind: 'circle-12', bodyVariant: 'foot-band' })
+      .map((issue) => issue.rule)).toContain('circle-12-requires-organization');
+  });
+
+  it('lässt am gebänderten Formationskörper nur die drei vermessenen Kopfzonen zu', () => {
+    for (const strength of ['trupp', 'gruppe', 'zug'] as const) {
+      expect(validateSpec({ kind: 'formation', bodyVariant: 'foot-band', strength })).toEqual([]);
+    }
+    expect(validateSpec({ kind: 'formation', bodyVariant: 'foot-band', strength: 'staffel' })
+      .map((issue) => issue.rule)).toContain('foot-band-head-requires-measured-strength');
+  });
+
   it('akzeptiert eine Löschstaffel', () => {
     const spec: SymbolSpec = {
       kind: 'formation',
@@ -195,16 +220,14 @@ describe('validateSpec', () => {
     )).map((issue) => issue.rule)).toContain('top-left-metrics-complete');
   });
 
-  it('lehnt unbelegte Kreisvarianten ab', () => {
-    const wrongVariant = {
+  it('erlaubt das vermessene Kreisband, lehnt Varianten an unbelegten Arten aber ab', () => {
+    const measuredVariant = {
       kind: 'circle-12', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
     } as unknown as SymbolSpec;
     const gableOnPost = {
       kind: 'post', bodyVariant: 'raised-gable',
     } as unknown as SymbolSpec;
-    expect(validateSpec(wrongVariant).map((issue) => issue.rule)).toContain(
-      'body-variant-requires-measured-kind',
-    );
+    expect(validateSpec(measuredVariant)).toEqual([]);
     expect(validateSpec(gableOnPost).map((issue) => issue.rule)).toContain(
       'body-variant-requires-measured-kind',
     );
