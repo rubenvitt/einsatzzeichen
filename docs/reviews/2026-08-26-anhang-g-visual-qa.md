@@ -11,8 +11,11 @@ Der Generator liest ausschließlich die 21 in den Rezepten benannten lokalen Ref
 rastert Referenz und Katalog mit derselben eingebetteten Arimo-Konfiguration und schreibt nur in
 den ignorierten Ausgabeordner. `REFERENCE_ROOT` bezeichnet den lokalen, read-only gehaltenen
 Referenzbestand; sein tatsächlicher Speicherort gehört nicht in Git. Reale Root- und
-Unterverzeichnisgrenzen sowie ein `O_NOFOLLOW`-Deskriptor verhindern, dass Symlinks die Ausgabe
-aus diesem Baum umleiten.
+Unterverzeichnisgrenzen weisen vorbestehende Symlinks zurück. Ein vorhandenes Ziel wird ohne
+`O_TRUNC` und mit `O_NOFOLLOW` geöffnet und nur als reguläre Datei mit genau einem Hardlink
+akzeptiert. Der Generator schreibt das PNG zunächst in eine eindeutige Datei im verifizierten
+Elternverzeichnis (`O_CREAT | O_EXCL | O_NOFOLLOW`) und ersetzt das akzeptierte oder fehlende
+Ziel anschließend atomar.
 
 ```sh
 REFERENCE_ROOT=/path/to/local/reference-root
@@ -95,10 +98,14 @@ Kopf/Stärke, F.1.3/F.1.17 und Fahrzeug-, Anhänger- sowie Kreisvarianten behalt
 Kontur und ihre bisherigen Snapshotbytes. Aktualisiert wurden ausschließlich die acht direkt und
 acht mehrfach skaliert betroffenen Snapshots.
 
-Zwei adversariale Child-CLI-Tests legen entweder `out/lfh-421` selbst oder ein darunterliegendes
-Verzeichnis als Symlink auf ein externes Sentinel-Ziel an. Beide Läufe werden abgewiesen, ohne
-das Sentinel zu verändern. Der lexikalische Präfixvergleich allein ist damit nicht mehr Teil des
-Sicherheitsvertrags.
+Vier adversariale Child-CLI-Tests legen entweder `out/lfh-421`, ein darunterliegendes Verzeichnis
+oder den finalen Zielnamen als Symlink auf ein externes Sentinel-Ziel an beziehungsweise setzen
+den Zielnamen als Hardlink auf ein externes Sentinel. Alle Läufe werden abgewiesen, ohne das
+Sentinel zu verändern. Der lexikalische Präfixvergleich allein ist damit nicht mehr Teil des
+Sicherheitsvertrags. Der Hardlink-Test war gegen den früheren Direkt-Writer echt rot: der Prozess
+endete erfolgreich und überschrieb das Sentinel. Eine kontrollierte Mutation ohne `O_NOFOLLOW`
+machte entsprechend den Target-Symlink-Test rot (Status 0, Sentinel verändert). Nach Rücknahme
+der Mutation und Einführung des atomaren Writers sind beide Verträge grün.
 
 ## Restunsicherheiten
 
@@ -111,3 +118,9 @@ Sicherheitsvertrags.
   farbigen Kreiszeichen sind weiterhin fachlich ungeprüft.
 - Alle 21 G-Domain-Reviews stehen `pending`. Der Kontaktbogen belegt technische Sichtprüfung,
   nicht fachliche Abnahme oder eine Lizenz zur Weitergabe der lokalen Quellen.
+- Die Pfadprüfung schützt gegen vorbestehende Root-, Unterverzeichnis- und Ziel-Symlinks sowie
+  gegen mehrfach verlinkte Zieldateien. Node bietet hier kein portables `openat`/`beneath`, das
+  einen gleichzeitig umbenannten oder ausgetauschten Elternpfad an einen geöffneten
+  Verzeichnisdeskriptor bindet. Gegen einen parallel schreibenden Angreifer wird deshalb kein
+  Sicherheitsversprechen abgegeben; das lokale CLI setzt exklusiven Zugriff auf seinen
+  Outputbaum voraus.

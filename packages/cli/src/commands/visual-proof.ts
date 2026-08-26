@@ -1,12 +1,16 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import {
   closeSync,
   constants,
+  fstatSync,
+  fsyncSync,
   lstatSync,
   mkdirSync,
   openSync,
   readFileSync,
   realpathSync,
+  renameSync,
+  unlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
@@ -190,15 +194,56 @@ function safeOutputPath(outputFile: string): string {
 
 function writeProofPng(outputFile: string, png: Buffer): void {
   const destination = safeOutputPath(outputFile);
-  const descriptor = openSync(
-    destination,
-    constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | constants.O_NOFOLLOW,
-    0o644,
-  );
+  let existingDescriptor: number | undefined;
   try {
-    writeFileSync(descriptor, png);
+    existingDescriptor = openSync(
+      destination,
+      constants.O_RDONLY | constants.O_NONBLOCK | constants.O_NOFOLLOW,
+    );
+    const existing = fstatSync(existingDescriptor);
+    if (!existing.isFile() || existing.nlink !== 1) {
+      throw new Error(
+        'Visual-Proof-Ziel muss eine reguläre Datei mit genau einem Hardlink sein.',
+      );
+    }
+  } catch (error) {
+    if (!isErrorWithCode(error, 'ENOENT')) throw error;
   } finally {
-    closeSync(descriptor);
+    if (existingDescriptor !== undefined) closeSync(existingDescriptor);
+  }
+
+  // Die temporäre Datei entsteht im bereits verifizierten realen Parent. Der atomische Rename
+  // ersetzt anschließend nur den Zielnamen; er dereferenziert weder einen später eingeschobenen
+  // Symlink noch verändert er den Inode eines später eingeschobenen Hardlinks. Node stellt aber
+  // kein portables openat/beneath bereit: ein gleichzeitig umbenannter/ersetzter Parent bleibt
+  // außerhalb dieses lokalen CLI-Vertrags und verlangt exklusiven Zugriff auf den Outputbaum.
+  const temporary = join(
+    dirname(destination),
+    `.${basename(destination)}.${process.pid}.${randomBytes(8).toString('hex')}.tmp`,
+  );
+  let temporaryDescriptor: number | undefined;
+  let renamed = false;
+  try {
+    temporaryDescriptor = openSync(
+      temporary,
+      constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW,
+      0o644,
+    );
+    writeFileSync(temporaryDescriptor, png);
+    fsyncSync(temporaryDescriptor);
+    closeSync(temporaryDescriptor);
+    temporaryDescriptor = undefined;
+    renameSync(temporary, destination);
+    renamed = true;
+  } finally {
+    if (temporaryDescriptor !== undefined) closeSync(temporaryDescriptor);
+    if (!renamed) {
+      try {
+        unlinkSync(temporary);
+      } catch (error) {
+        if (!isErrorWithCode(error, 'ENOENT')) throw error;
+      }
+    }
   }
 }
 

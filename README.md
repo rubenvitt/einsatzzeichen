@@ -704,6 +704,10 @@ pnpm cli audit:reference [--filter <präfix>] [--print]
 pnpm cli coverage
 pnpm cli export --out <pfad> --size <px> \
   --theme <reference|accessible-light|print-monochrome>
+
+REFERENCE_ROOT=/path/to/local/reference-root
+rtk pnpm cli visual-proof --reference-root "$REFERENCE_ROOT" \
+  --out out/lfh-421/anhang-g-reference-vs-catalog.png
 ```
 
 - `audit:reference` — Referenzbestand einlesen, Kennzahlen ableiten. `--filter <präfix>` schränkt
@@ -722,6 +726,12 @@ pnpm cli export --out <pfad> --size <px> \
   `print-monochrome` erzeugt eine achromatische Ausgabe mit getrennten Organisationsgrauwerten.
   Beide Alternativthemes ergänzen pro Organisation eine eindeutige Kontursignatur als
   nicht-farblichen visuellen Kanal.
+- `visual-proof --reference-root <pfad> --out out/lfh-421/<datei>.png` — erzeugt den
+  deterministischen Anhang-G-Kontaktbogen aus einem expliziten lokalen Referenzbestand. Die
+  Ausgabe bleibt im ignorierten Verzeichnis `out/lfh-421/`; vorbestehende Symlinks und Hardlinks
+  an den geprüften Ausgabepfaden werden abgewiesen. Der lokale Einzelprozess erwartet exklusiven
+  Zugriff auf diesen Ausgabebaum. Reproduktionsdaten, Sicherheitsgrenze und Einzelprüfung stehen
+  in der [Anhang-G-Visual-QA](./docs/reviews/2026-08-26-anhang-g-visual-qa.md).
 
 ## Globale Qualitätsgates vor D.1
 

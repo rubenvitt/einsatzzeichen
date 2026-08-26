@@ -1,5 +1,6 @@
 import {
   mkdirSync,
+  linkSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -463,6 +464,46 @@ describe('Anhang-G-Visual-Proof', () => {
       expect(readFileSync(externalTarget, 'utf8')).toBe('unverändert');
     },
   );
+
+  it('folgt keinem finalen Target-Symlink auf ein externes Sentinel', () => {
+    const referenceRoot = fixtureDirectory();
+    const workingDirectory = temporaryDirectory('anhang-g-proof-target-symlink-');
+    const externalDirectory = temporaryDirectory('anhang-g-proof-target-external-');
+    const proofDirectory = join(workingDirectory, 'out', 'lfh-421');
+    mkdirSync(proofDirectory, { recursive: true });
+    const externalTarget = join(externalDirectory, 'sentinel.png');
+    writeFileSync(externalTarget, 'unverändert', 'utf8');
+    symlinkSync(externalTarget, join(proofDirectory, 'proof.png'), 'file');
+
+    const result = runVisualProofCli(
+      workingDirectory,
+      referenceRoot,
+      'out/lfh-421/proof.png',
+    );
+
+    expect(result.status, result.stderr).not.toBe(0);
+    expect(readFileSync(externalTarget, 'utf8')).toBe('unverändert');
+  });
+
+  it('überschreibt keinen extern mehrfach verlinkten Ziel-Inode', () => {
+    const referenceRoot = fixtureDirectory();
+    const workingDirectory = temporaryDirectory('anhang-g-proof-target-hardlink-');
+    const externalDirectory = temporaryDirectory('anhang-g-proof-hardlink-external-');
+    const proofDirectory = join(workingDirectory, 'out', 'lfh-421');
+    mkdirSync(proofDirectory, { recursive: true });
+    const externalTarget = join(externalDirectory, 'sentinel.png');
+    writeFileSync(externalTarget, 'unverändert', 'utf8');
+    linkSync(externalTarget, join(proofDirectory, 'proof.png'));
+
+    const result = runVisualProofCli(
+      workingDirectory,
+      referenceRoot,
+      'out/lfh-421/proof.png',
+    );
+
+    expect(result.status, result.stderr).not.toBe(0);
+    expect(readFileSync(externalTarget, 'utf8')).toBe('unverändert');
+  });
 
   it('verweigert Ausgaben außerhalb des ignorierten Proofverzeichnisses', () => {
     const referenceRoot = fixtureDirectory();
