@@ -11,6 +11,7 @@ import type {
   VehicleCategoryId,
 } from '@einsatzzeichen/schema';
 import { pictogram } from './pictograms/index.js';
+import { functionRole } from './function-roles.js';
 
 const KIND_LABELS: Record<SymbolKind, string> = {
   formation: 'Taktische Formation',
@@ -81,6 +82,9 @@ const VEHICLE_CATEGORY_LABELS: Record<VehicleCategoryId, string> = {
  * zum Typfehler, bis ihre nicht-semantische Beschreibung ausdrücklich ergänzt ist.
  */
 export const TECHNICAL_BODY_MARK_LABELS = Object.freeze({
+  'formation-solid-cap-3mm': 'Schwarze Formationskappe, 3 mm hoch',
+  'formation-solid-cap-4mm-three-hole-row':
+    'Schwarze Formationskappe, 4 mm hoch, mit drei Löchern in einer Reihe',
   'ring-7mm-offset-down-1mm': 'Ring 7 mm, Mittelpunkt 1 mm unter Körpermitte',
   'chevron-over-opposed-triangles': 'Winkel über gegenüberliegenden Dreiecken',
   'ring-6-5mm-offset-down-2mm-with-roof': 'Ring 6,5 mm mit Dach und eingeschriebenem Dreieck',
@@ -138,6 +142,23 @@ export function describeSymbolSpec(spec: SymbolSpec): string {
   if (spec.strength !== undefined) parts.push(`Stärke: ${STRENGTH_LABELS[spec.strength]}`);
   if (spec.administrativeLevel !== undefined) {
     parts.push(`Verwaltungsstufe: ${ADMIN_LEVEL_LABELS[spec.administrativeLevel]}`);
+  }
+  if (spec.functionRole !== undefined) {
+    const definition = functionRole(spec.functionRole);
+    parts.push(`Funktion: ${definition.title}`);
+    parts.push(
+      `Funktionskopf: ${definition.expectedHead === 'none'
+        ? 'ohne'
+        : definition.expectedHead === 'strength'
+          ? 'Stärke'
+          : 'Verwaltungsstufe'}`,
+    );
+    for (const run of definition.layout.roleRuns) {
+      parts.push(`Funktionskürzel: ${run.content}`);
+    }
+    if (definition.layout.carrierRun !== undefined) {
+      parts.push(`Trägerkürzel: ${definition.layout.carrierRun.content}`);
+    }
   }
   if (spec.vehicleCategory !== undefined) {
     parts.push(`Fahrzeugkategorie: ${VEHICLE_CATEGORY_LABELS[spec.vehicleCategory]}`);

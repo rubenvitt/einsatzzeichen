@@ -207,6 +207,8 @@ describe('semantische Zeichenbeschreibungen', () => {
       'circle-information-stem',
       'circle-transport-diamond-arrows',
       'circle-transport-diamond-wheels-arrows',
+    ] as const;
+    const task1AnhangHTechnicalIds = [
       'h-veterinary-decontamination',
       'h-veterinary-slaughter',
     ] as const;
@@ -219,11 +221,36 @@ describe('semantische Zeichenbeschreibungen', () => {
       'spontaneous-helper-collection-arrow',
       'spontaneous-helper-contact-double-arrow',
     ] as const;
+    const task2RoleTechnicalIds = [
+      'formation-solid-cap-3mm',
+      'formation-solid-cap-4mm-three-hole-row',
+    ] as const;
     expect(TECHNICAL_BODY_MARK_IDS).toEqual([
       ...task4TechnicalIds,
       ...task5TechnicalIds,
+      ...task2RoleTechnicalIds,
+      ...task1AnhangHTechnicalIds,
       ...task1AnhangNTechnicalIds,
     ]);
+    expect(TECHNICAL_BODY_MARK_LABELS as Record<string, string>).toMatchObject({
+      'formation-solid-cap-3mm': 'Schwarze Formationskappe, 3 mm hoch',
+      'formation-solid-cap-4mm-three-hole-row':
+        'Schwarze Formationskappe, 4 mm hoch, mit drei Löchern in einer Reihe',
+    });
+  });
+
+  it('beschreibt Funktion, Kopfart und alle sichtbaren Funktionsläufe', () => {
+    const spec = {
+      kind: 'person',
+      organization: 'fuehrung-leitung',
+      administrativeLevel: 'kreis',
+      functionRole: 'technical-incident-commander',
+    } as unknown as Parameters<typeof describeSymbolSpec>[0];
+    const description = describeSymbolSpec(spec);
+    expect(description).toContain('Funktion: Technischer Einsatzleiter');
+    expect(description).toContain('Funktionskopf: Verwaltungsstufe');
+    expect(description).toContain('Funktionskürzel: TEL');
+    expect(description).toContain('Trägerkürzel: AW');
   });
 
   it('beschreibt ein eigenständiges Piktogramm aus seiner Definition', () => {

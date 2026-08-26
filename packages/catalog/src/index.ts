@@ -6,6 +6,8 @@ export * from './base-symbols.js';
 export * from './body-marks.js';
 export * from './organizations.js';
 export * from './strengths.js';
+export * from './administrative-heads.js';
+export * from './function-roles.js';
 export * from './pictograms/index.js';
 export * from './recipes.js';
 export * from './coverage-manifest.js';

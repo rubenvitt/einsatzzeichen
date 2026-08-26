@@ -162,6 +162,31 @@ function crossedSwabs(cx: number, cy: number): Primitive[] {
  * an den F-Dateien, `fire-fighting` an C.1.1 bis C.1.3.
  */
 const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
+  'formation-solid-cap-3mm': (bounds) => [{
+    type: 'rect',
+    role: 'pictogram',
+    x: bounds.minX,
+    y: bounds.minY,
+    width: bounds.maxX - bounds.minX,
+    height: 3,
+    style: { fill: 'schwarz', stroke: 'none' },
+  }],
+  'formation-solid-cap-4mm-three-hole-row': (bounds) => [{
+    type: 'rect',
+    role: 'pictogram',
+    x: bounds.minX,
+    y: bounds.minY,
+    width: bounds.maxX - bounds.minX,
+    height: 4,
+    style: { fill: 'schwarz', stroke: 'none' },
+  }, ...[11, 16, 21].map((cx) => ({
+    type: 'circle' as const,
+    role: 'pictogram' as const,
+    cx,
+    cy: bounds.minY + 1.75,
+    r: 1.5,
+    style: { fill: 'weiss' as const, stroke: 'none' as const },
+  }))],
   /** C.1.1 bis C.1.3: die an der Formation vermessene Löschmarke mit zwei rechten Diagonalen. */
   'fire-fighting': (bounds) => {
     const cy = (bounds.minY + bounds.maxY) / 2;
@@ -510,6 +535,39 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
       },
       outline([[cx - 4.5, cy + 6.5], [cx, cy - 4.5], [cx + 4.5, cy + 6.5]]),
     ];
+  },
+};
+
+/**
+ * Eigenstaendige randbuendige Fassungen am 26 x 26-mm-Personenkoerper aus D.3.
+ * Die uebergebene Huelle behaelt die getrennt vermessene Lage: D.3.9 bis D.3.11 liegen auf
+ * y=5…31, D.3.12 auf y=3…29. Gleiche Breite und Hoehe sind kein Grund, den Mittelpunkt zu
+ * vereinheitlichen.
+ */
+const PERSON_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
+  'fire-fighting': (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    const cy = (bounds.minY + bounds.maxY) / 2;
+    return [
+      stroke(bounds.minX, cy, bounds.maxX, cy),
+      {
+        ...outline([[cx + 9, cy - 4], [cx + 13, cy], [cx + 9, cy + 4], [cx + 5, cy]]),
+        closed: true,
+      },
+    ];
+  },
+  'medical-service': (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    const cy = (bounds.minY + bounds.maxY) / 2;
+    return [
+      stroke(cx, bounds.minY + 5, cx, bounds.maxY),
+      stroke(bounds.minX, cy, bounds.maxX, cy),
+    ];
+  },
+  care: (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    const cy = (bounds.minY + bounds.maxY) / 2;
+    return [outline([[cx - 6.5, cy + 6.5], [cx, cy], [cx + 6.5, cy + 6.5]])];
   },
 };
 
@@ -1369,6 +1427,8 @@ export function bodyMark(
               id === 'care' || id === 'temporary-accommodation-resting' ? MARKS[id] : undefined
             )
         : undefined
+    : context.kind === 'person' && context.bodyVariant === undefined
+      ? PERSON_MARKS[id]
     : context.kind === 'vehicle-land' && context.bodyVariant === undefined
       ? VEHICLE_LAND_NORMAL_MARKS[id]
       : context.kind === 'vehicle-land' && context.bodyVariant === 'foot-band'
@@ -1395,8 +1455,8 @@ export function bodyMark(
                 ? CIRCLE_FOOT_BAND_LOGISTICS_MARKS[id]
               : context.kind === 'reduced-house' && context.bodyVariant === undefined
                 ? REDUCED_HOUSE_MARKS[id]
-                : undefined;
-  const hasAnyBuild = [
+          : undefined;
+  const hasAnyBuild = (context.kind === 'person' ? [PERSON_MARKS] : [
     MARKS,
     VEHICLE_LAND_NORMAL_MARKS,
     VEHICLE_LAND_FOOT_BAND_MARKS,
@@ -1413,7 +1473,7 @@ export function bodyMark(
     CIRCLE_RAISED_ONE_MM_MARKS,
     CIRCLE_RAISED_GABLE_MARKS,
     REDUCED_HOUSE_MARKS,
-  ]
+  ])
     .some((candidate) => Object.hasOwn(candidate, id));
   if (!hasAnyBuild) {
     throw new Error(
@@ -1435,6 +1495,8 @@ export function bodyMark(
   const heightMm = bodyBoundsMm.maxY - bodyBoundsMm.minY;
   const expected = context.kind === 'formation'
     ? { width: 30, height: 20, label: '30 × 20 mm' }
+    : context.kind === 'person'
+      ? { width: 26, height: 26, label: '26 × 26 mm' }
     : context.kind === 'vehicle-land'
       ? context.bodyVariant === 'inverted-hull-track'
         ? { width: 30, height: 19.75, label: '30 × 19,75 mm' }

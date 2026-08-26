@@ -104,6 +104,37 @@ export type AdminLevelId =
   | 'nationalstaat'
   | 'europaeische-union';
 
+/** Gemessene Funktionstraeger aus Anhang D.1, D.3 und D.4. */
+export const FUNCTION_ROLE_IDS = Object.freeze([
+  'disaster-control-command',
+  'technical-incident-command-evacuation',
+  'incident-command',
+  'incident-section-command-north',
+  'incident-subsection-command',
+  'technical-incident-command-group',
+  'fire-service-readiness-command-group',
+  'technical-incident-commander',
+  'incident-commander',
+  'lead-emergency-physician',
+  'organizational-incident-commander',
+  'incident-section-commander',
+  'incident-subsection-commander',
+  'fire-service-platoon-commander',
+  'technical-platoon-commander',
+  'medical-platoon-commander',
+  'operational-unit-platoon-commander',
+  'care-platoon-commander',
+  'care-group-commander',
+  'rapid-response-group-commander',
+  'district-control-center-director',
+  'district-fire-chief',
+  'hazard-response-director',
+  'hazard-response-forces-director',
+  'international-relief-operation-director',
+] as const);
+
+export type FunctionRoleId = (typeof FUNCTION_ROLE_IDS)[number];
+
 /**
  * Fahrzeugkategorien nach Kapitel 5.1 — die Fahrwerkszone, die ein Zeichen unterhalb seines
  * Körpers trägt.
@@ -256,6 +287,8 @@ export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
   'circle-information-stem',
   'circle-transport-diamond-arrows',
   'circle-transport-diamond-wheels-arrows',
+  'formation-solid-cap-3mm',
+  'formation-solid-cap-4mm-three-hole-row',
   'h-veterinary-decontamination',
   'h-veterinary-slaughter',
   'land-horizontal-blade-bent-upright',
@@ -640,6 +673,8 @@ export interface BodyLabels {
 /** Semantische Beschreibung eines Zeichens. Eingabe des Kompositionsmotors. */
 export interface SymbolSpec {
   kind: SymbolKind;
+  /** Gemessene Funktionsfassung aus Anhang D; ohne Definition gibt es keinen Rueckfall. */
+  functionRole?: FunctionRoleId;
   /**
    * Zweite belegte Zeichnung derselben Grundzeichenart. Fehlt sie, gilt die Zeichnung aus
    * Kapitel 1. Ein Wert, den die Art nicht führt, ist kein stiller Rückfall: `baseDrawing` wirft.

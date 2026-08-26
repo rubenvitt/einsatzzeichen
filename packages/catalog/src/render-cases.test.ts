@@ -3,6 +3,7 @@ import { checkA11yMetadata, checkViewBox } from '@einsatzzeichen/core';
 import { DEFAULT_VIEWBOX_MM } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { pictogramRenderId } from './pictograms/index.js';
+import { ALL_PICTOGRAMS } from './pictograms/index.js';
 import { RENDER_CASES } from './test-support/render-cases.js';
 
 describe('vollständige Renderfallmenge', () => {
@@ -17,13 +18,13 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 442 mit 21 G- und neun N-Rezepten zusätzlich zum vorherigen Bestand.
-    expect(ids).toHaveLength(442);
+    // 478: der integrierte Hauptbestand plus 36 neue Anhang-D-Renderfälle.
+    expect(ids).toHaveLength(478);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
     // dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66, G 21, H und I-a
-    // jeweils drei, C.1.3 einen und Anhang N neun weitere Rezeptfälle.
-    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(174);
+    // jeweils drei, C.1.3 einen, Anhang N neun und Anhang D 26 neue Rezeptfälle.
+    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(200);
     expect(ids.filter((id) => id.startsWith('recipe.G.'))).toHaveLength(21);
     expect(ids.filter((id) => id.startsWith('recipe.N.'))).toEqual([
       'recipe.N.1.1', 'recipe.N.1.2', 'recipe.N.1.3', 'recipe.N.1.4', 'recipe.N.1.5',
@@ -58,6 +59,18 @@ describe('vollständige Renderfallmenge', () => {
     expect(ids.filter((id) => id.startsWith('comms.'))).toHaveLength(53);
     expect(ids.filter((id) => id.startsWith('damage.'))).toHaveLength(28);
     expect(ids.filter((id) => id.startsWith('wildfire.'))).toHaveLength(14);
+    expect(ids.filter((id) => id.startsWith('leadership.'))).toEqual([
+      'leadership.command-post-in-operation',
+      'leadership.control-center',
+      'leadership.guide-post',
+      'leadership.helicopter-landing-site',
+      'leadership.helicopter-landing-zone',
+      'leadership.red-cross-commissioner',
+      'leadership.reporting-head',
+      'leadership.staging-area',
+      'leadership.staging-area-with-reporting-head',
+      'leadership.technical-advisor-thw',
+    ]);
     // Was übrig bleibt, sind die vierzehn Grundzeichen aus Kapitel 1 — die einzigen
     // Renderfälle ohne Artpräfix. Seit LFH-424 ist das Kapitel vollständig.
     expect(
@@ -68,7 +81,8 @@ describe('vollständige Renderfallmenge', () => {
           !id.startsWith('state.') &&
           !id.startsWith('comms.') &&
           !id.startsWith('damage.') &&
-          !id.startsWith('wildfire.'),
+          !id.startsWith('wildfire.') &&
+          !id.startsWith('leadership.'),
       ),
     ).toHaveLength(14);
     expect(new Set(ids).size).toBe(ids.length);
@@ -99,8 +113,21 @@ describe('vollständige Renderfallmenge', () => {
     expect(checkA11yMetadata(drawing)).toEqual([]);
   });
 
-  it.each(RENDER_CASES)('$id verwendet die kanonische viewBox und clippt keine Geometrie', ({ drawing }) => {
-    expect(drawing.viewBox).toEqual(DEFAULT_VIEWBOX_MM);
+  it.each(RENDER_CASES)('$id verwendet seine deklarierte ViewBox und clippt keine Geometrie', ({ drawing }) => {
     expect(checkViewBox(drawing)).toEqual([]);
+  });
+
+  it('hält nur D.1.1 rechteckig und alle übrigen Definitionen bei 32×32 mm', () => {
+    const rectangular = ALL_PICTOGRAMS.filter(
+      (definition) => definition.viewBox.width !== definition.viewBox.height,
+    );
+    expect(rectangular.map((definition) => [definition.id, definition.viewBox])).toEqual([
+      ['leadership.command-post-in-operation', { width: 32, height: 46 }],
+    ]);
+    for (const definition of ALL_PICTOGRAMS.filter(
+      (candidate) => !rectangular.includes(candidate),
+    )) {
+      expect(definition.viewBox).toEqual(DEFAULT_VIEWBOX_MM);
+    }
   });
 });

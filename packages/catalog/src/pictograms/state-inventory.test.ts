@@ -104,7 +104,7 @@ function inventoryTuple(definition: CatalogPictogramDefinition) {
 
 function monochromeSvg(definition: CatalogPictogramDefinition): string {
   const drawing: Drawing = {
-    viewBox: DEFAULT_VIEWBOX_MM,
+    viewBox: definition.viewBox,
     children: definition.primitives,
   };
   return renderSvg(drawing, { size: 64, theme: PRINT_MONOCHROME_THEME });
@@ -117,6 +117,10 @@ function expectDeepFrozen(value: unknown): void {
 }
 
 describe('State-Piktogramminventur', () => {
+  it('führt jede Bestandsdefinition mit der kanonischen 32×32-mm-ViewBox', () => {
+    expect(STATE_PICTOGRAMS.every((definition) => definition.viewBox === DEFAULT_VIEWBOX_MM)).toBe(true);
+  });
+
   it('hält exakt 61 eindeutige State-IDs in Kapitelreihenfolge fest', () => {
     expect(STATE_IDS).toEqual(EXPECTED_STATE_IDS);
     expect(STATE_IDS).toHaveLength(61);

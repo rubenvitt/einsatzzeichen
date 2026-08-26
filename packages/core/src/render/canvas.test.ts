@@ -39,9 +39,18 @@ function looksLikeCanvasRenderingContext2D(value: object): value is CanvasRender
 /** Minimaler Aufzeichner. Wir prüfen die Aufrufreihenfolge, nicht gerasterte Pixel. */
 function recordingContext(): { ctx: CanvasRenderingContext2D; calls: Call[] } {
   const calls: Call[] = [];
+  const canvas = new Proxy(
+    { width: 0, height: 0 },
+    {
+      set(target, prop: string | symbol, value: unknown) {
+        calls.push([`set:canvas.${String(prop)}`, value]);
+        return Reflect.set(target, prop, value);
+      },
+    },
+  );
   const handler: ProxyHandler<Record<string, unknown>> = {
     get(_target, prop: string | symbol) {
-      if (prop === 'canvas') return { width: 0, height: 0 };
+      if (prop === 'canvas') return canvas;
       return (...args: unknown[]) => {
         calls.push([String(prop), ...args]);
       };
@@ -131,6 +140,41 @@ describe('renderCanvas', () => {
     renderCanvas(formation, ctx, { size: 64 });
     const scale = calls.find(([name]) => name === 'scale');
     expect(scale?.[1]).toBeCloseTo(64 / 90.70866141732283, 9);
+  });
+
+  it('setzt eine persistente rechteckige Zeichenfläche und skaliert beide Achsen einheitlich', () => {
+    const rectangular: Drawing = { viewBox: { width: 32, height: 46 }, children: [] };
+    const { ctx, calls } = recordingContext();
+
+    renderCanvas(rectangular, ctx, { size: 64 });
+
+    expect(calls).toContainEqual(['set:canvas.width', 64]);
+    expect(calls).toContainEqual(['set:canvas.height', 92]);
+    expect(calls.find(([name]) => name === 'scale')?.slice(1)).toEqual([
+      64 / mmToUnits(32),
+      64 / mmToUnits(32),
+    ]);
+  });
+
+  it.each([Number.NaN, Number.POSITIVE_INFINITY, 0, -1, 1.5])(
+    'lehnt die ungültige Pixelbreite %p vor jeder Canvas-Mutation ab',
+    (size) => {
+      const { ctx, calls } = recordingContext();
+      expect(() => renderCanvas(formation, ctx, { size })).toThrow();
+      expect(calls).toEqual([]);
+    },
+  );
+
+  it.each([
+    { width: 0, height: 46 },
+    { width: 32, height: 0 },
+    { width: Number.NaN, height: 46 },
+    { width: 32, height: Number.POSITIVE_INFINITY },
+  ])('lehnt eine ungültige ViewBox %o vor jeder Canvas-Mutation ab', (viewBox) => {
+    const { ctx, calls } = recordingContext();
+    const drawing: Drawing = { viewBox, children: [] };
+    expect(() => renderCanvas(drawing, ctx, { size: 64 })).toThrow();
+    expect(calls).toEqual([]);
   });
 
   it('füllt und umrandet ein Rechteck mit den aufgelösten Farben', () => {

@@ -7,6 +7,7 @@ import {
 } from '@einsatzzeichen/schema';
 import type { BoundsMm } from './bounds.js';
 import { bodyLabelInk, compose, type CatalogPorts, type ComposeOptions } from './compose.js';
+import { CompositionError } from './validate.js';
 import { ARIMO_CAP_HEIGHT_FRACTION } from './render/text-policy.js';
 import { checkViewBox } from './viewbox-gate.js';
 
@@ -66,6 +67,10 @@ const catalog: CatalogPorts = {
   strengthHead: () => {
     throw new Error('Für diesen Test nicht aufgerufen.');
   },
+  functionRole: () => {
+    throw new Error('Für diesen Test nicht aufgerufen.');
+  },
+  administrativeHead: () => undefined,
   vehicleChassis: () => {
     throw new Error('Für diesen Test nicht aufgerufen.');
   },
@@ -1529,6 +1534,7 @@ describe('compose() — randbündige Fachdienstzeichen', () => {
         id,
         variant: 'primary',
         title: 'Doppel',
+        viewBox: DEFAULT_VIEWBOX_MM,
         box: { xMm: 4, yMm: 8, widthMm: 24, heightMm: 16 },
         primitives: [{ type: 'circle', role: 'pictogram', cx: 16, cy: 16, r: 3 }],
       }),
@@ -1605,5 +1611,151 @@ describe('compose() — randbündige Fachdienstzeichen', () => {
     // Kinderliste bewiese sie nicht: ein Doppel, das statt zu werfen `[]` lieferte, ergäbe
     // dieselbe leere Liste.
     expect(() => compose({ kind: 'formation', labels: { topLeft: 'MTF' } }, catalog)).not.toThrow();
+  });
+});
+
+describe('compose() — gemessene Funktionsträger', () => {
+  it('konsumiert die aufgelöste Rolle und hält die gemessene Kindreihenfolge', () => {
+    const roleDefinition = {
+      id: 'incident-command',
+      title: 'Einsatzleitung',
+      kind: 'formation',
+      expectedHead: 'none',
+      expectedOrganization: 'fuehrung-leitung',
+      allowedBodyMarks: ['care'],
+      layout: {
+        body: {
+          type: 'rect', role: 'body', x: 2, y: 8, width: 28, height: 16,
+          style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+        },
+        bodyAdditions: [
+          { type: 'line', role: 'bodyExtra', x1: 2, y1: 24, x2: 30, y2: 24 },
+        ],
+        decorations: [
+          { type: 'rect', role: 'pictogram', x: 2, y: 8, width: 28, height: 3 },
+        ],
+        roleRuns: [{
+          content: 'EL', anchorXMm: 16, baselineYMm: 19, sizeMm: 7,
+          anchor: 'middle', boxMm: { xMm: 10, yMm: 13, widthMm: 12, heightMm: 6 },
+          minRenderPx: 37, ink: 'schwarz', contrastBackground: 'body',
+        }],
+        carrierRun: {
+          content: 'AW', anchorXMm: 29, baselineYMm: 23, sizeMm: 4,
+          anchor: 'end', boxMm: { xMm: 22, yMm: 19.5, widthMm: 8, heightMm: 4 },
+          minRenderPx: 64, ink: 'schwarz', contrastBackground: 'surface',
+        },
+      },
+    };
+    const roleCatalog = Object.assign({}, catalog, {
+      organizationColor: () => 'weiss' as const,
+      functionRole: () => roleDefinition,
+      administrativeHead: () => undefined,
+      bodyMark: () => [
+        { type: 'line' as const, role: 'pictogram' as const, x1: 2, y1: 16, x2: 30, y2: 16 },
+      ],
+    });
+    const spec = {
+      kind: 'formation',
+      organization: 'fuehrung-leitung',
+      functionRole: 'incident-command',
+      bodyMarks: ['care'],
+    } as unknown as SymbolSpec;
+
+    const drawing = Reflect.apply(compose, undefined, [spec, roleCatalog]);
+    const body = drawing.children.find((child) => child.role === 'body');
+    expect(body).toMatchObject({ type: 'rect', x: 2, y: 8, width: 28, height: 16 });
+
+    const bodyIndex = drawing.children.findIndex((child) => child.role === 'body');
+    const additionIndex = drawing.children.findIndex((child) => child.role === 'bodyExtra');
+    const markIndex = drawing.children.findIndex(
+      (child) => child.type === 'line' && child.role === 'pictogram' && child.y1 === 16,
+    );
+    const decorationIndex = drawing.children.findIndex(
+      (child) => child.type === 'rect' && child.role === 'pictogram',
+    );
+    const roleIndex = drawing.children.findIndex(
+      (child) => child.type === 'text' && child.content === 'EL',
+    );
+    const carrierIndex = drawing.children.findIndex(
+      (child) => child.type === 'text' && child.content === 'AW',
+    );
+    expect([bodyIndex, additionIndex, markIndex, decorationIndex, roleIndex, carrierIndex])
+      .not.toContain(-1);
+    expect(bodyIndex).toBeLessThan(additionIndex);
+    expect(additionIndex).toBeLessThan(markIndex);
+    expect(markIndex).toBeLessThan(decorationIndex);
+    expect(decorationIndex).toBeLessThan(roleIndex);
+    expect(roleIndex).toBeLessThan(carrierIndex);
+  });
+
+  it('zeichnet einen aufgelösten Verwaltungskopf vor dem gemessenen Rollenkörper', () => {
+    const administrativeRoleCatalog: CatalogPorts = {
+      ...catalog,
+      organizationColor: () => 'weiss',
+      functionRole: () => ({
+        id: 'technical-incident-commander',
+        title: 'Technischer Einsatzleiter',
+        kind: 'person',
+        expectedHead: 'administrative',
+        expectedOrganization: 'fuehrung-leitung',
+        expectedAdministrativeLevel: 'kreis',
+        allowedBodyMarks: [],
+        layout: {
+          headTopMm: 0,
+          body: { type: 'rect', role: 'body', x: 3, y: 3, width: 26, height: 26 },
+          bodyAdditions: [],
+          decorations: [],
+          roleRuns: [],
+        },
+      }),
+      administrativeHead: () => ({
+        box: { xMm: 9, yMm: 0, widthMm: 14, heightMm: 4 },
+        heightMm: 4,
+        primitives: [{
+          type: 'rect', role: 'head', x: 10.75, y: 0, width: 0.5, height: 4,
+          style: { fill: 'schwarz' },
+        }],
+      }),
+    };
+    const drawing = compose({
+      kind: 'person',
+      organization: 'fuehrung-leitung',
+      functionRole: 'technical-incident-commander',
+      administrativeLevel: 'kreis',
+    }, administrativeRoleCatalog);
+
+    expect(drawing.children[0]).toMatchObject({
+      type: 'group',
+      role: 'head',
+      transform: { translate: { dxMm: 0, dyMm: 0 } },
+      children: [{ type: 'rect', role: 'head' }],
+    });
+    expect(drawing.children[1]).toMatchObject({ type: 'rect', role: 'body' });
+  });
+
+  it('wandelt eine runtime-malformed Rollenfassung in einen CompositionError um', () => {
+    const malformedCatalog = {
+      ...catalog,
+      functionRole: () => ({
+        id: 'incident-commander',
+        title: 'Einsatzleiter',
+        kind: 'person',
+        expectedHead: 'none',
+        allowedBodyMarks: [],
+      }),
+    };
+    let thrown: unknown;
+
+    try {
+      Reflect.apply(compose, undefined, [{
+        kind: 'person', functionRole: 'incident-commander',
+      }, malformedCatalog]);
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(CompositionError);
+    expect((thrown as CompositionError).issues.map((issue) => issue.rule))
+      .toContain('function-role-requires-measured-layout');
   });
 });

@@ -4,12 +4,16 @@ import type {
   CommsId,
   DamageId,
   DepictionVariant,
+  Drawing,
+  LeadershipId,
   PictogramBox,
   PictogramDefinition,
   Primitive,
   StateId,
   WildfireId,
 } from '@einsatzzeichen/schema';
+import { DEFAULT_VIEWBOX_MM } from '@einsatzzeichen/schema';
+import { checkViewBox } from '@einsatzzeichen/core';
 import { deepFreeze, type DeepReadonly } from '../readonly-data.js';
 
 /**
@@ -22,7 +26,8 @@ export type PictogramSection =
   | `J.${string}`
   | `K.${string}`
   | `L.${string}`
-  | `M.${string}`;
+  | `M.${string}`
+  | `D.${string}`;
 
 export interface PictogramContrastPair {
   readonly foreground: ColorToken;
@@ -79,6 +84,7 @@ export function defineCapability(input: CapabilityDefinitionInput): CatalogPicto
     title: input.title,
     referenceAsset: input.referenceAsset,
     placement: { mode: 'in-body', bodyKind: 'formation' } as const,
+    viewBox: DEFAULT_VIEWBOX_MM,
     // Definitionen übernehmen keine veränderlichen Eingabereferenzen. Der anschließende Freeze
     // hat dadurch keinen überraschenden Seiteneffekt auf Objekte im Besitz des Aufrufers.
     box: structuredClone(input.box),
@@ -95,6 +101,7 @@ export function defineState(input: StateDefinitionInput): CatalogPictogramDefini
     referenceAsset: input.referenceAsset,
     placement: { mode: 'standalone' } as const,
     contrastPairs: structuredClone(input.contrastPairs),
+    viewBox: DEFAULT_VIEWBOX_MM,
     box: structuredClone(input.box),
     primitives: structuredClone(input.primitives),
   });
@@ -120,6 +127,7 @@ export function defineComms(input: CommsDefinitionInput): CatalogPictogramDefini
     referenceAsset: input.referenceAsset,
     placement: { mode: 'standalone' } as const,
     contrastPairs: structuredClone(input.contrastPairs),
+    viewBox: DEFAULT_VIEWBOX_MM,
     box: structuredClone(input.box),
     primitives: structuredClone(input.primitives),
   });
@@ -150,6 +158,7 @@ export function defineDamage(input: DamageDefinitionInput): CatalogPictogramDefi
     referenceAsset: input.referenceAsset,
     placement: { mode: 'standalone' } as const,
     contrastPairs: structuredClone(input.contrastPairs),
+    viewBox: DEFAULT_VIEWBOX_MM,
     box: structuredClone(input.box),
     primitives: structuredClone(input.primitives),
   });
@@ -175,6 +184,66 @@ export function defineWildfire(input: WildfireDefinitionInput): CatalogPictogram
     referenceAsset: input.referenceAsset,
     placement: { mode: 'standalone' } as const,
     contrastPairs: structuredClone(input.contrastPairs),
+    viewBox: DEFAULT_VIEWBOX_MM,
+    box: structuredClone(input.box),
+    primitives: structuredClone(input.primitives),
+  });
+}
+
+export interface LeadershipDefinitionInput {
+  readonly section: `D.${string}`;
+  readonly id: LeadershipId;
+  readonly variant?: DepictionVariant;
+  readonly title: string;
+  readonly referenceAsset: `${string}.svg`;
+  /** Kein Default: D.1.1 belegt als erstes direktes Zeichen eine 32×46-mm-Ansicht. */
+  readonly viewBox: Drawing['viewBox'];
+  readonly box: PictogramBox;
+  readonly primitives: readonly Primitive[];
+  readonly contrastPairs: readonly [PictogramContrastPair, ...PictogramContrastPair[]];
+}
+
+function validatedLeadershipViewBox(input: LeadershipDefinitionInput): Drawing['viewBox'] {
+  const candidate = input.viewBox as unknown;
+  if (
+    typeof candidate !== 'object' ||
+    candidate === null ||
+    !('width' in candidate) ||
+    !('height' in candidate) ||
+    typeof candidate.width !== 'number' ||
+    typeof candidate.height !== 'number' ||
+    !Number.isFinite(candidate.width) ||
+    !Number.isFinite(candidate.height) ||
+    candidate.width <= 0 ||
+    candidate.height <= 0
+  ) {
+    throw new Error(
+      'leadership-viewbox-required: Leadership benötigt eine positive, endliche ViewBox.',
+    );
+  }
+
+  const viewBox = { width: candidate.width, height: candidate.height };
+  const outside = checkViewBox({ viewBox, children: input.primitives })
+    .filter((issue) => issue.rule === 'outside-viewbox');
+  if (outside.length > 0) {
+    throw new Error(
+      `leadership-outside-viewbox: ${outside.map((issue) => issue.detail).join(' ')}`,
+    );
+  }
+  return viewBox;
+}
+
+export function defineLeadership(input: LeadershipDefinitionInput): CatalogPictogramDefinition {
+  const viewBox = validatedLeadershipViewBox(input);
+  return deepFreeze({
+    section: input.section,
+    id: `leadership.${input.id}`,
+    variant: input.variant ?? 'primary',
+    title: input.title,
+    referenceAsset: input.referenceAsset,
+    placement: { mode: 'standalone' } as const,
+    contrastPairs: structuredClone(input.contrastPairs),
+    viewBox: structuredClone(viewBox),
     box: structuredClone(input.box),
     primitives: structuredClone(input.primitives),
   });

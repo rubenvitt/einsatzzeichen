@@ -1,19 +1,21 @@
 import { checkBox, checkClipping, checkCommands } from '@einsatzzeichen/core';
-import { DEFAULT_VIEWBOX_MM, type Primitive } from '@einsatzzeichen/schema';
+import { type Primitive } from '@einsatzzeichen/schema';
 import { describe, expect, it } from 'vitest';
 import type { CatalogPictogramDefinition } from '../catalog-definition.js';
 import { ACCESS_STATES } from './09-access.js';
 
 type Line = Extract<Primitive, { type: 'line' }>;
 
-const VIEWBOX_BODY: Primitive = {
-  type: 'rect',
-  role: 'body',
-  x: 0,
-  y: 0,
-  width: DEFAULT_VIEWBOX_MM.width,
-  height: DEFAULT_VIEWBOX_MM.height,
-};
+function viewBoxBody(item: CatalogPictogramDefinition): Primitive {
+  return {
+    type: 'rect',
+    role: 'body',
+    x: 0,
+    y: 0,
+    width: item.viewBox.width,
+    height: item.viewBox.height,
+  };
+}
 
 function definition(id: string): CatalogPictogramDefinition {
   const found = ACCESS_STATES.find((item) => item.id === id);
@@ -56,7 +58,7 @@ describe('ACCESS_STATES', () => {
       }]);
       expect(checkCommands(item)).toEqual([]);
       expect(checkBox(item)).toEqual([]);
-      expect(checkClipping(item, VIEWBOX_BODY)).toEqual([]);
+      expect(checkClipping(item, viewBoxBody(item))).toEqual([]);
       expect(item.primitives.every((primitive) =>
         primitive.type === 'line' &&
         primitive.role === 'pictogram' &&

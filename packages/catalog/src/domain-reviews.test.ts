@@ -111,12 +111,57 @@ describe('Fachreview-Ledger', () => {
     // bis F.1.22 und die beiden Alternativdarstellungen; damit sind es hier 383.
     // F-d ergänzt acht einzelne, weiterhin offene Reviewplätze für F.2.10 bis F.2.17. F-e
     // ergänzt elf für F.3.1 bis F.3.11 und F-f die acht verbleibenden für F.3.12 bis F.3.19.
-    // Anhang G ergänzt 21, H und I-a je drei, C.1.3 einen und Anhang N neun offene Plätze.
-    expect(manifestReviews).toHaveLength(461);
+    // Anhang G ergänzt 21, H und I-a je drei, C.1.3 einen und Anhang N neun offene Plätze;
+    // Anhang D ergänzt auf dem integrierten Stand weitere 36 Darstellungen.
+    expect(manifestReviews).toHaveLength(497);
     expect(sourceReviews).toHaveLength(13);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(475);
+    expect(reviews).toHaveLength(511);
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
+  });
+
+  it('laesst den stabilen D.3.7-Schluessel trotz technischer Migration fachlich offen', () => {
+    expect(MANIFEST_DOMAIN_REVIEWS['bbk-babz-2025:D.3.7#primary'])
+      .toEqual({ status: 'pending' });
+  });
+
+  it('hält alle fünfzehn D.3-Darstellungen einzeln fachlich offen', () => {
+    const references = Array.from({ length: 15 }, (_, index) => `D.3.${index + 1}`);
+    expect(references.map((reference) =>
+      MANIFEST_DOMAIN_REVIEWS[`bbk-babz-2025:${reference}#primary` as keyof typeof MANIFEST_DOMAIN_REVIEWS],
+    )).toEqual(references.map(() => ({ status: 'pending' })));
+  });
+
+  it('hält alle fünf D.4-Funktionsträger einzeln fachlich offen', () => {
+    const references = Array.from({ length: 5 }, (_, index) => `D.4.${index + 1}`);
+    expect(references.map((reference) =>
+      MANIFEST_DOMAIN_REVIEWS[`bbk-babz-2025:${reference}#primary` as keyof typeof MANIFEST_DOMAIN_REVIEWS],
+    )).toEqual(references.map(() => ({ status: 'pending' })));
+  });
+
+  it('hält alle sieben D.2-Ortsdefinitionen einzeln fachlich offen', () => {
+    const references = [
+      'D.2.1',
+      'D.2.2',
+      'D.2.3',
+      'D.2.4',
+      'D.2.5',
+      'D.2.6',
+      'D.2.7',
+    ] as const;
+
+    expect(references.map((reference) =>
+      MANIFEST_DOMAIN_REVIEWS[`bbk-babz-2025:${reference}#primary`],
+    )).toEqual(references.map(() => ({ status: 'pending' })));
+  });
+
+  it('hält die unsichere HiOrg-Zuordnung beider D.1.9-Darstellungen ausdrücklich offen', () => {
+    for (const variant of ['primary', 'alternative'] as const) {
+      const review = MANIFEST_DOMAIN_REVIEWS[`bbk-babz-2025:D.1.9#${variant}`];
+      expect(review.status).toBe('pending');
+      expect(review.note).toContain('hilfsorganisation');
+      expect(review.note).toContain('weißen Fläche');
+    }
   });
 
   it('wirft für einen nicht inventarisierten Manifestschlüssel', () => {

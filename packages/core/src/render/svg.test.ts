@@ -156,6 +156,32 @@ describe('renderSvg', () => {
     expect(renderSvg(formation, { size: 64 })).toContain('width="64" height="64"');
   });
 
+  it('interpretiert size als Pixelbreite und leitet die Höhe aus einer rechteckigen ViewBox ab', () => {
+    const rectangular: Drawing = {
+      viewBox: { width: 32, height: 46 },
+      children: [],
+    };
+
+    expect(renderSvg(rectangular, { size: 64 })).toContain('width="64" height="92"');
+  });
+
+  it.each([Number.NaN, Number.POSITIVE_INFINITY, 0, -1, 1.5])(
+    'lehnt eine ungültige Pixelbreite %p ab',
+    (size) => {
+      expect(() => renderSvg(formation, { size })).toThrow();
+    },
+  );
+
+  it.each([
+    { width: 0, height: 46 },
+    { width: 32, height: 0 },
+    { width: Number.NaN, height: 46 },
+    { width: 32, height: Number.POSITIVE_INFINITY },
+  ])('lehnt eine ungültige ViewBox %o bei fester Pixelbreite ab', (viewBox) => {
+    const drawing: Drawing = { viewBox, children: [] };
+    expect(() => renderSvg(drawing, { size: 64 })).toThrow();
+  });
+
   it('skaliert Pfad-Koordinaten über das transform-Attribut und lässt d unverändert', () => {
     const svg = renderSvg({
       viewBox: DEFAULT_VIEWBOX_MM,

@@ -1,7 +1,12 @@
 import { readdirSync } from 'node:fs';
 import { Resvg, type RenderedImage } from '@resvg/resvg-js';
 import { describe, expect, it } from 'vitest';
-import { renderSvg, type RenderTheme } from '@einsatzzeichen/core';
+import {
+  rasterDimensionsForWidth,
+  renderSvg,
+  type RenderTheme,
+} from '@einsatzzeichen/core';
+import type { Drawing } from '@einsatzzeichen/schema';
 import {
   ACCESSIBLE_LIGHT_THEME,
   PRINT_MONOCHROME_THEME,
@@ -14,9 +19,34 @@ import { resvgFontOptions } from './fonts.js';
 const SIZES = [16, 24, 32, 64, 128, 256] as const;
 const GAP = 12;
 const LARGE = 256;
+const MEASURED_TOP_EDGE_HEADS = new Set([
+  'recipe.D.3.1',
+  'recipe.D.3.3',
+  'recipe.D.3.4',
+  'recipe.D.4.1',
+  'recipe.D.4.2',
+  'recipe.D.4.3',
+  'recipe.D.4.4',
+  'recipe.D.4.5',
+]);
+
+const RECTANGULAR_FIXTURE: Drawing = {
+  viewBox: { width: 32, height: 46 },
+  children: [
+    {
+      type: 'rect',
+      x: 1,
+      y: 1,
+      width: 30,
+      height: 44,
+      style: { fill: 'schwarz' },
+    },
+  ],
+};
 
 interface Raster {
-  size: number;
+  width: number;
+  height: number;
   pngBase64: string;
 }
 
@@ -36,16 +66,21 @@ function rasterize(renderCase: RenderCase, size: number, theme: RenderTheme): Ra
     // ändert die bestehenden Snapshots deshalb nicht.
     font: resvgFontOptions(),
   }).render();
-  expect(image.width, `${renderCase.id}/${theme.id}/${size}: Breite`).toBe(size);
-  expect(image.height, `${renderCase.id}/${theme.id}/${size}: Höhe`).toBe(size);
+  const expected = rasterDimensionsForWidth(renderCase.drawing.viewBox, size);
+  expect(image.width, `${renderCase.id}/${theme.id}/${size}: Breite`).toBe(expected.widthPx);
+  expect(image.height, `${renderCase.id}/${theme.id}/${size}: Höhe`).toBe(expected.heightPx);
   expect(hasVisiblePixel(image), `${renderCase.id}/${theme.id}/${size}: leere Rasterung`).toBe(true);
   if (size === LARGE) {
     expect(
-      touchesOuterBorder(image),
+      touchesOuterBorder(image, MEASURED_TOP_EDGE_HEADS.has(renderCase.id)),
       `${renderCase.id}/${theme.id}/${size}: sichtbare Tinte berührt den Außenrand`,
     ).toBe(false);
   }
-  return { size, pngBase64: image.asPng().toString('base64') };
+  return {
+    width: image.width,
+    height: image.height,
+    pngBase64: image.asPng().toString('base64'),
+  };
 }
 
 // `image.pixels` einmal abgreifen — derselbe teure Getter wie in `fonts.test.ts`
@@ -62,11 +97,13 @@ function hasVisiblePixel(image: RenderedImage): boolean {
   return false;
 }
 
-function touchesOuterBorder(image: RenderedImage): boolean {
+function touchesOuterBorder(image: RenderedImage, allowTopBorder = false): boolean {
   const pixels = image.pixels;
   const alphaAt = (x: number, y: number): number => pixels[(y * image.width + x) * 4 + 3] ?? 0;
   for (let x = 0; x < image.width; x += 1) {
-    if (alphaAt(x, 0) > 0 || alphaAt(x, image.height - 1) > 0) return true;
+    // Die vermessenen Verwaltungssterne reichen bei D.3.1/.3/.4 und D.4.1–D.4.5 absichtlich bis
+    // y=0. Nur dieser obere Rand ist zulässig; Seiten und Unterkante bleiben fail-closed.
+    if ((!allowTopBorder && alphaAt(x, 0) > 0) || alphaAt(x, image.height - 1) > 0) return true;
   }
   for (let y = 0; y < image.height; y += 1) {
     if (alphaAt(0, y) > 0 || alphaAt(image.width - 1, y) > 0) return true;
@@ -89,12 +126,12 @@ function imageTag(
   y: number,
   label: string,
 ): string {
-  const imageX = cellX + (cellWidth - raster.size) / 2;
+  const imageX = cellX + (cellWidth - raster.width) / 2;
   const labelX = cellX + cellWidth / 2;
   return (
-    `<image x="${imageX}" y="${y}" width="${raster.size}" height="${raster.size}" ` +
+    `<image x="${imageX}" y="${y}" width="${raster.width}" height="${raster.height}" ` +
     `href="data:image/png;base64,${raster.pngBase64}"/>` +
-    `<text x="${labelX}" y="${y + raster.size + 16}" text-anchor="middle" ` +
+    `<text x="${labelX}" y="${y + raster.height + 16}" text-anchor="middle" ` +
     `font-family="sans-serif" font-size="11" fill="#000000">${escapeXml(label)}</text>`
   );
 }
@@ -108,28 +145,30 @@ function contactSheet(renderCase: RenderCase): string {
     rasterize(renderCase, LARGE, PRINT_MONOCHROME_THEME),
   ];
 
-  const operationalCellWidths = operational.map((raster) => Math.max(raster.size, 64));
+  const operationalCellWidths = operational.map((raster) => Math.max(raster.width, 64));
+  const operationalMaxHeight = Math.max(...operational.map((raster) => raster.height));
+  const profileMaxHeight = Math.max(...profiles.map((raster) => raster.height));
   const operationalWidth = operationalCellWidths.reduce((sum, cellWidth) => sum + cellWidth, 0);
   const contentWidth = Math.max(
     operationalWidth + GAP * (operational.length - 1),
-    profiles.reduce((sum, raster) => sum + raster.size, 0) + GAP,
+    profiles.reduce((sum, raster) => sum + raster.width, 0) + GAP,
   );
   const width = contentWidth + 24;
   const firstTop = 40;
-  const firstBottom = firstTop + LARGE;
+  const firstBottom = firstTop + operationalMaxHeight;
   const secondTop = firstBottom + 48;
-  const height = secondTop + LARGE + 34;
+  const height = secondTop + profileMaxHeight + 34;
 
   let operationalX = 12;
   const operationalImages = operational
     .map((raster, index) => {
-      const cellWidth = operationalCellWidths[index] ?? raster.size;
+      const cellWidth = operationalCellWidths[index] ?? raster.width;
       const tag = imageTag(
         raster,
         operationalX,
         cellWidth,
-        firstTop + LARGE - raster.size,
-        `${raster.size} px`,
+        firstTop + operationalMaxHeight - raster.height,
+        `${raster.width} px`,
       );
       operationalX += cellWidth + GAP;
       return tag;
@@ -140,8 +179,8 @@ function contactSheet(renderCase: RenderCase): string {
   const profileImages = profiles
     .map((raster, index) => {
       const label = index === 0 ? ACCESSIBLE_LIGHT_THEME.id : PRINT_MONOCHROME_THEME.id;
-      const tag = imageTag(raster, profileX, raster.size, secondTop, label);
-      profileX += raster.size + GAP;
+      const tag = imageTag(raster, profileX, raster.width, secondTop, label);
+      profileX += raster.width + GAP;
       return tag;
     })
     .join('');
@@ -217,12 +256,20 @@ function organizationProfileSheet(): string {
 }
 
 describe('echte Mehrgrößen- und Profilregression', () => {
-  it('schreibt exakt 443 Mehrgrößen-Snapshots', () => {
+  it('rastert eine rechteckige Testzeichnung proportional zur Pixelbreite', () => {
+    const svg = renderSvg(RECTANGULAR_FIXTURE, { size: 64 });
+    const image = new Resvg(svg).render();
+
+    expect(image.width).toBe(64);
+    expect(image.height).toBe(92);
+  });
+
+  it('schreibt exakt 479 Mehrgrößen-Snapshots', () => {
     const snapshots = readdirSync(new URL('./__snapshots__/multi-size/', import.meta.url), {
       withFileTypes: true,
     }).filter((entry) => entry.isFile() && entry.name.endsWith('.svg'));
     const names = snapshots.map((entry) => entry.name);
-    expect(snapshots).toHaveLength(443);
+    expect(snapshots).toHaveLength(479);
     expect(names).toContain('recipe.C.1.3.svg');
     expect(names).toContain('recipe.G.1.svg');
     expect(names).toContain('recipe.G.8.svg');

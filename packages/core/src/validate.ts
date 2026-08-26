@@ -1,6 +1,12 @@
 import {
   DEFAULT_VIEWBOX_MM,
   type BodyVariantId,
+  type AdminLevelId,
+  type FunctionRoleDefinition,
+  type FunctionRoleTextRun,
+  type AdministrativeHeadShape,
+  type OrganizationId,
+  type StrengthId,
   type SymbolKind,
   type SymbolSpec,
 } from '@einsatzzeichen/schema';
@@ -73,6 +79,79 @@ const BODY_VARIANT_KINDS: Readonly<Record<BodyVariantId, ReadonlySet<SymbolKind>
   'fixed-wing-hull': new Set<SymbolKind>(['vehicle-air']),
   'raised-circle-1mm': new Set<SymbolKind>(['circle-12']),
 };
+
+export interface ValidationContext {
+  functionRole?: FunctionRoleDefinition;
+  administrativeHead?: AdministrativeHeadShape;
+}
+
+function finite(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function record(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function strengthId(value: unknown): value is StrengthId {
+  return value === 'trupp' || value === 'staffel' || value === 'gruppe' || value === 'zug';
+}
+
+function administrativeLevelId(value: unknown): value is AdminLevelId {
+  return value === 'gemeinde' || value === 'kreis' || value === 'bezirk' ||
+    value === 'bundesland' || value === 'nationalstaat' ||
+    value === 'europaeische-union';
+}
+
+function organizationId(value: unknown): value is OrganizationId {
+  return value === 'feuerwehr' || value === 'thw' || value === 'fuehrung-leitung' ||
+    value === 'polizei' || value === 'bundespolizei' || value === 'bundeswehr' ||
+    value === 'sonstige-gefahrenabwehr' || value === 'zivile-einheiten' ||
+    value === 'hilfsorganisation';
+}
+
+function containsText(primitive: unknown): boolean {
+  if (!record(primitive)) return false;
+  return primitive.type === 'text' ||
+    (primitive.type === 'group' && Array.isArray(primitive.children) &&
+      primitive.children.some(containsText));
+}
+
+function validRoleRun(run: unknown): run is FunctionRoleTextRun {
+  if (!record(run)) return false;
+  const box = run.boxMm;
+  if (!record(box)) return false;
+  return typeof run.content === 'string' && run.content.trim() !== '' &&
+    finite(run.anchorXMm) && finite(run.baselineYMm) && finite(run.sizeMm) && run.sizeMm > 0 &&
+    (run.anchor === 'start' || run.anchor === 'middle' || run.anchor === 'end') &&
+    box !== undefined && finite(box.xMm) && finite(box.yMm) && finite(box.widthMm) &&
+    finite(box.heightMm) && box.widthMm > 0 && box.heightMm > 0 &&
+    box.xMm >= 0 && box.yMm >= 0 &&
+    box.xMm + box.widthMm <= DEFAULT_VIEWBOX_MM.width &&
+    box.yMm + box.heightMm <= DEFAULT_VIEWBOX_MM.height &&
+    typeof run.minRenderPx === 'number' && Number.isInteger(run.minRenderPx) &&
+    run.minRenderPx > 0 &&
+    (run.ink === 'body-contrast' || run.ink === 'schwarz' ||
+      run.ink === 'funktionslauf-kontrast' || run.ink === 'weiss' ||
+      run.ink === 'rot' || run.ink === 'blau' || run.ink === 'gelb' ||
+      run.ink === 'gruen' || run.ink === 'hellgruen' || run.ink === 'orange' ||
+      run.ink === 'braun' || run.ink === 'grau' || run.ink === 'hellgrau' ||
+      run.ink === 'hellblau') &&
+    (run.contrastBackground === 'body' || run.contrastBackground === 'surface' ||
+      run.contrastBackground === 'schwarz' || run.contrastBackground === 'weiss' ||
+      run.contrastBackground === 'rot' || run.contrastBackground === 'blau' ||
+      run.contrastBackground === 'gelb' || run.contrastBackground === 'gruen' ||
+      run.contrastBackground === 'hellgruen' || run.contrastBackground === 'orange' ||
+      run.contrastBackground === 'braun' || run.contrastBackground === 'grau' ||
+      run.contrastBackground === 'hellgrau' || run.contrastBackground === 'hellblau');
+}
+
+function roleRunsOverlap(left: FunctionRoleTextRun, right: FunctionRoleTextRun): boolean {
+  const a = left.boxMm;
+  const b = right.boxMm;
+  return a.xMm < b.xMm + b.widthMm && a.xMm + a.widthMm > b.xMm &&
+    a.yMm < b.yMm + b.heightMm && a.yMm + a.heightMm > b.yMm;
+}
 
 /**
  * Farbige 12-mm-Kreisverträge außerhalb der weißen F.3-Fassung. Die technischen Marken sind
@@ -174,8 +253,118 @@ function prepareInsetHullLabelData(value: unknown): InsetHullLabelPreparation {
 function validatePreparedSpec(
   spec: SymbolSpec,
   hasInvalidInsetHullLabelData: boolean,
+  context: ValidationContext = {},
 ): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
+  const definitionValue: unknown = context.functionRole;
+  const resolvedFunctionRole = spec.functionRole !== undefined &&
+    record(definitionValue) && definitionValue.id === spec.functionRole;
+
+  if (spec.functionRole !== undefined) {
+    if (spec.kind !== 'formation' && spec.kind !== 'person') {
+      issues.push({
+        rule: 'function-role-requires-measured-kind',
+        message: 'Eine gemessene Funktion ist nur an Formation oder Person belegt.',
+      });
+    }
+    if (!resolvedFunctionRole) {
+      issues.push({
+        rule: 'function-role-requires-measured-layout',
+        message: 'Die Funktion verlangt ihre exakt aufgeloeste gemessene Layoutdefinition.',
+      });
+    } else {
+      if (definitionValue.kind !== spec.kind) {
+        issues.push({
+          rule: 'function-role-requires-measured-kind',
+          message: `Die Funktion "${spec.functionRole}" ist nicht fuer "${spec.kind}" vermessen.`,
+        });
+      }
+      const layout = record(definitionValue.layout) ? definitionValue.layout : undefined;
+      const headTopMm = layout?.headTopMm;
+      const expectedHead = definitionValue.expectedHead;
+      const expectedOrganization = definitionValue.expectedOrganization;
+      const expectedStrength = definitionValue.expectedStrength;
+      const expectedAdministrativeLevel = definitionValue.expectedAdministrativeLevel;
+      if (!organizationId(expectedOrganization) || spec.organization !== expectedOrganization) {
+        issues.push({
+          rule: 'function-role-organization-mismatch',
+          message: 'Die Organisation entspricht nicht der exakt vermessenen Funktionsfassung.',
+        });
+      }
+      const headMatches = expectedHead === 'none'
+        ? spec.strength === undefined && spec.administrativeLevel === undefined &&
+          expectedStrength === undefined && expectedAdministrativeLevel === undefined &&
+          headTopMm === undefined
+        : expectedHead === 'strength'
+          ? strengthId(expectedStrength) && expectedAdministrativeLevel === undefined &&
+            spec.strength === expectedStrength && spec.administrativeLevel === undefined &&
+            finite(headTopMm)
+          : expectedHead === 'administrative' && expectedStrength === undefined &&
+            administrativeLevelId(expectedAdministrativeLevel) &&
+            spec.strength === undefined &&
+            spec.administrativeLevel === expectedAdministrativeLevel && finite(headTopMm) &&
+            context.administrativeHead !== undefined;
+      if (!headMatches) {
+        issues.push({
+          rule: 'function-role-head-mismatch',
+          message: `Die Kopfzone entspricht nicht der vermessenen Fassung "${String(expectedHead)}".`,
+        });
+      }
+      const body = record(layout?.body) ? layout.body : undefined;
+      const bodyAdditions = layout?.bodyAdditions;
+      const decorations = layout?.decorations;
+      const roleRuns = layout?.roleRuns;
+      const layoutValid = body?.type === 'rect' && body.role === 'body' &&
+        finite(body.x) && finite(body.y) && finite(body.width) && finite(body.height) &&
+        body.width > 0 && body.height > 0 && Array.isArray(bodyAdditions) &&
+        Array.isArray(decorations) && Array.isArray(roleRuns) &&
+        roleRuns.length <= 2 && !decorations.some(containsText);
+      if (!layoutValid) {
+        issues.push({
+          rule: 'function-role-requires-measured-layout',
+          message: 'Die Funktionsfassung muss einen vollstaendigen, textfreien Geometrieplan liefern.',
+        });
+      }
+      if (Array.isArray(roleRuns)) {
+        const runs: unknown[] = [
+          ...roleRuns,
+          ...(layout?.carrierRun === undefined ? [] : [layout.carrierRun]),
+        ];
+        const validRuns = runs.filter(validRoleRun);
+        if (
+          validRuns.length !== runs.length ||
+          validRuns.some((run, index) =>
+            validRuns.slice(index + 1).some((other) => roleRunsOverlap(run, other)))
+        ) {
+          issues.push({
+            rule: 'function-role-label-metrics-required',
+            message: 'Jeder Funktionslauf braucht vollstaendige sichtbare Metriken ohne Boxueberlagerung.',
+          });
+        }
+      }
+      const allowedBodyMarks = definitionValue.allowedBodyMarks;
+      if (spec.bodyMarks?.some(
+        (id) => !Array.isArray(allowedBodyMarks) || !allowedBodyMarks.includes(id),
+      )) {
+        issues.push({
+          rule: 'function-role-body-mark-mismatch',
+          message: 'Mindestens eine Koerpermarke ist fuer diese Funktionsfassung nicht vermessen.',
+        });
+      }
+    }
+    if (spec.bodyVariant !== undefined) {
+      issues.push({
+        rule: 'function-role-body-variant-not-measured',
+        message: 'Koerpervarianten sind mit gemessenen Funktionsfassungen nicht kombiniert belegt.',
+      });
+    }
+    if (spec.capabilities !== undefined) {
+      issues.push({
+        rule: 'function-role-capabilities-not-measured',
+        message: 'Standard-Piktogramme sind mit gemessenen Funktionsfassungen nicht kombiniert belegt.',
+      });
+    }
+  }
   const profile = profileFor(spec.kind, spec.bodyVariant);
 
   if (
@@ -306,28 +495,18 @@ function validatePreparedSpec(
     });
   }
 
-  // Verwaltungsstufen sind vermessen, aber nicht gebaut: `compose()` liest für die Kopfzone
-  // ausschließlich `spec.strength`, und `CatalogPorts` kennt keine Marken für Verwaltungsstufen.
-  // Ohne diese Regel liefert `validateSpec` für `{kind:'formation', administrativeLevel:'kreis'}`
-  // eine leere Befundliste und `compose()` byteidentisches SVG mit und ohne das Feld — die Angabe
-  // wird still verschluckt. Der Ausfall ist **vorbestehend** und nicht von LFH-424 erzeugt,
-  // anders als der Fahrzeugkategoriefall, den erst `vehicle-land` in `BASE_SYMBOLS` erreichbar
-  // gemacht hat.
-  //
-  // Warum nicht gebaut: drei der sechs Stufen haben in Kopfform überhaupt keine Referenz.
-  // Vermessen sind nur n = 2 (D.3.1, D.3.3, D.3.4, D.4.1, D.4.2, D.4.3), n = 5 (D.4.4) und n = 6
-  // (D.4.5); `gemeinde` (n = 1), `bezirk` (n = 3) und `bundesland` (n = 4) tragen im gesamten
-  // Bestand keine Kopfmarke. Für n = 4 trägt auch keine Ableitung: der einzige Kopfzonenfall mit
-  // gerader Markenzahl jenseits von zwei ist n = 6, und dort liegen die äußeren Marken auf 16 ± 7,0
-  // statt der aus der 5-mm-Teilung erwarteten 16 ± 7,5. Siehe
-  // `docs/decisions/2026-08-18-grundlagen-restpunkte.md`.
-  if (spec.administrativeLevel !== undefined) {
+  // Die Verwaltungsstufenabdeckung ist bewusst partiell: Nur die drei in D.3/D.4 vermessenen
+  // Koepfe werden zusammen mit ihrer exakt aufgeloesten Funktionsrolle akzeptiert. Gemeinde,
+  // Bezirk und Bundesland bleiben fail-closed.
+  if (
+    spec.administrativeLevel !== undefined &&
+    (context.administrativeHead === undefined || !resolvedFunctionRole)
+  ) {
     issues.push({
-      rule: 'administrative-level-not-implemented',
+      rule: 'administrative-level-not-measured',
       message:
-        'Eine Verwaltungsstufe wird noch nicht gezeichnet: die Kopfmarken aus D.3/D.4 sind für ' +
-        'drei der sechs Stufen an der Referenz gar nicht belegt. Die Angabe würde still ' +
-        'verschluckt.',
+        `Die Verwaltungsstufe "${spec.administrativeLevel}" besitzt keinen aufgeloesten ` +
+        'gemessenen Kopf aus D.3/D.4.',
     });
   }
 
@@ -336,11 +515,11 @@ function validatePreparedSpec(
   // ist falsch, `spec.vehicleCategory` kommt hier nicht vor, und die Begründung „belegen beide die
   // Kopfzone" trüge für sie geometrisch auch nicht: die Stärke sitzt oben, das Fahrwerk unten.
   //
-  // Solange die Regel darüber jede Verwaltungsstufe ablehnt, ist dieser Fall zusätzlich
-  // abgedeckt und die Regel meldet nie allein. Sie bleibt trotzdem stehen und wird nicht durch
-  // einen Typ ersetzt, der die Kollision unmöglich macht: eine unterscheidende Vereinigung über
-  // `SymbolSpec` (etwa `head: {strength} | {administrativeLevel}`) zöge alle 40 Rezepte und ihre
-  // Tests nach und kaufte nichts, solange der zweite Zweig ohnehin abgelehnt wird. Die
+  // Diese Kollision ist von der partiellen Abdeckungsprüfung darüber unabhängig: Auch eine mit
+  // Verwaltungskopf und Funktionsrolle vollständig aufgeloeste Stufe bleibt zusammen mit einer
+  // Stärkeangabe geometrisch unzulässig. Die Regel wird nicht durch einen Typ ersetzt, der die
+  // Kollision unmöglich macht: eine unterscheidende Vereinigung über `SymbolSpec` (etwa
+  // `head: {strength} | {administrativeLevel}`) zöge alle Rezepte und ihre Tests nach. Die
   // Entscheidung steht in der Notiz vom 18. August 2026, damit sie nicht als Versäumnis gelesen
   // wird.
   if (spec.strength !== undefined && spec.administrativeLevel !== undefined) {
@@ -1008,7 +1187,10 @@ export interface SymbolSpecAnalysis {
  * einen späteren Konsumenten von der geprüften Datenansicht abkoppeln. Andere Profile behalten
  * dieselbe Spec- und Labelreferenz.
  */
-export function analyzeSymbolSpec(spec: SymbolSpec): SymbolSpecAnalysis {
+export function analyzeSymbolSpec(
+  spec: SymbolSpec,
+  context: ValidationContext = {},
+): SymbolSpecAnalysis {
   const isInsetWatercraft =
     spec.kind === 'vehicle-water' && spec.bodyVariant === 'inset-hull';
   const insetHullLabels = isInsetWatercraft && spec.labels !== undefined
@@ -1025,10 +1207,13 @@ export function analyzeSymbolSpec(spec: SymbolSpec): SymbolSpecAnalysis {
 
   return {
     spec: preparedSpec,
-    issues: validatePreparedSpec(preparedSpec, insetHullLabels?.valid === false),
+    issues: validatePreparedSpec(preparedSpec, insetHullLabels?.valid === false, context),
   };
 }
 
-export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
-  return analyzeSymbolSpec(spec).issues;
+export function validateSpec(
+  spec: SymbolSpec,
+  context: ValidationContext = {},
+): ValidationIssue[] {
+  return analyzeSymbolSpec(spec, context).issues;
 }

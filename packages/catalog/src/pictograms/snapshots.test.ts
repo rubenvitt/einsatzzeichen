@@ -1,6 +1,7 @@
+import { readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { renderSvg } from '@einsatzzeichen/core';
-import { DEFAULT_VIEWBOX_MM, type Drawing } from '@einsatzzeichen/schema';
+import { type Drawing } from '@einsatzzeichen/schema';
 import { ALL_PICTOGRAMS, pictogramRenderId } from './index.js';
 import { describePictogram } from '../labels.js';
 
@@ -12,11 +13,18 @@ import { describePictogram } from '../labels.js';
  * (Slice-3-Spec, Abschnitt 7).
  */
 describe('Piktogramm-Snapshots', () => {
+  it('schreibt exakt 264 eigenständige Piktogramm-Snapshots', () => {
+    const snapshots = readdirSync(new URL('./__snapshots__/', import.meta.url), {
+      withFileTypes: true,
+    }).filter((entry) => entry.isFile() && entry.name.endsWith('.svg'));
+    expect(snapshots).toHaveLength(264);
+  });
+
   it.each(ALL_PICTOGRAMS.map((definition) => [pictogramRenderId(definition), definition] as const))(
     'rendert %s unverändert',
     async (id, definition) => {
       const drawing: Drawing = {
-        viewBox: DEFAULT_VIEWBOX_MM,
+        viewBox: definition.viewBox,
         children: definition.primitives,
         title: definition.title,
         description: describePictogram(definition),

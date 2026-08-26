@@ -58,6 +58,33 @@ function horizontalPictogramLineYMm(drawing: Drawing): number | undefined {
   return line.y1 + (group.transform?.translate?.dyMm ?? 0);
 }
 
+const D_4_3_REFERENCE_ASSET = 'D.4.3_Leiter Gefahrenabwehr Mönchengladbach.svg';
+const D_4_3_STAR_BOUNDS = [
+  {
+    kind: 'bounds',
+    boundsMm: { minXMm: 9.143, minYMm: 0, maxXMm: 12.857, maxYMm: 4 },
+  },
+  {
+    kind: 'bounds',
+    boundsMm: { minXMm: 19.143, minYMm: 0, maxXMm: 22.857, maxYMm: 4 },
+  },
+] as const;
+
+function comparableBodyFingerprint(
+  fingerprint: ReturnType<typeof fingerprintFor>,
+): ReturnType<typeof fingerprintFor> {
+  if (fingerprint.asset !== D_4_3_REFERENCE_ASSET) return fingerprint;
+  const starBounds = fingerprint.shapes.filter((shape) => shape.kind === 'bounds');
+  expect(starBounds).toEqual(D_4_3_STAR_BOUNDS);
+  const [leftStarBounds, rightStarBounds] = starBounds;
+  return {
+    ...fingerprint,
+    shapes: fingerprint.shapes.filter(
+      (shape) => shape !== leftStarBounds && shape !== rightStarBounds,
+    ),
+  };
+}
+
 describe('composeFromCatalog() — vorbereitete inset-hull-Spec', () => {
   function labelContents(drawing: Drawing): string[] {
     return drawing.children
@@ -190,9 +217,38 @@ describe('Kompositionsrezepte', () => {
 
   it.each(fingerprintCases)('reproduziert die Referenz %s', (_section, recipe) => {
     const drawing = composeFromCatalog(recipe.spec);
-    const result = matchFingerprint(drawing, fingerprintFor(recipe.referenceAsset));
+    const fingerprint = fingerprintFor(recipe.referenceAsset);
+    // D.1.2–D.1.8 verdecken die obere Rahmenlinie mit ihrer 3-mm-Kappe. Der Extraktor führt
+    // deshalb neben der exakten 1/6–31/26-mm-Füllhülle einen nur noch ab y=7,375 sichtbaren
+    // `ring`. Der semantische `body` bleibt die vollständige Füllhülle; die Kappe ist eine
+    // getrennte Dekoration. Für genau diese sieben Quellen vergleichen wir daher die ebenfalls
+    // extrahierte `rect`-Hülle und nicht die durch Übermalung verkürzte sichtbare Kontur.
+    const comparableFingerprint = /^D\.1\.[2-8][._]/.test(recipe.referenceAsset)
+      ? { ...fingerprint, shapes: fingerprint.shapes.filter((shape) => shape.kind !== 'ring') }
+      // D.4.3s `rect`-Körper steht im JSON zuerst; `matchFingerprint` bevorzugt durch seine
+      // Kind-Präzedenz trotzdem die beiden als `bounds` extrahierten Sternpfade. Nur wenn ihre
+      // vollständige Teilmenge exakt den zwei vermessenen Hüllen entspricht, werden genau diese
+      // beiden Objekte aus dem Körpervergleich entfernt.
+      : comparableBodyFingerprint(fingerprint);
+    const result = matchFingerprint(drawing, comparableFingerprint);
     expect(result.problems).toEqual([]);
     expect(result.ok).toBe(true);
+  });
+
+  it('lehnt zusätzliche D.4.3-bounds ab, statt sie still aus dem Körpervergleich zu entfernen', () => {
+    const fingerprint = fingerprintFor(D_4_3_REFERENCE_ASSET);
+    const withUnexpectedBounds = {
+      ...fingerprint,
+      shapes: [
+        ...fingerprint.shapes,
+        {
+          kind: 'bounds',
+          boundsMm: { minXMm: 14, minYMm: 0, maxXMm: 18, maxYMm: 4 },
+        },
+      ],
+    };
+
+    expect(() => comparableBodyFingerprint(withUnexpectedBounds)).toThrow();
   });
 
   it('bindet den Geometrie-Regressionsclaim exakt an Rezeptartefakte mit shapes: []', () => {
@@ -302,6 +358,38 @@ describe('Kompositionsrezepte', () => {
     expect(bounds.maxY).toBeCloseTo(31, 3);
   });
 
+  it('migriert D.3.7 auf Funktionsträgerkappe, Stärke und innere Brandbekämpfungsmarke', () => {
+    const recipe = RECIPES['D.3.7'];
+    expect(recipe.spec).toMatchObject({
+      kind: 'person',
+      organization: 'feuerwehr',
+      strength: 'zug',
+      functionRole: 'fire-service-platoon-commander',
+      bodyMarks: ['fire-fighting'],
+    });
+
+    const drawing = composeFromCatalog(recipe.spec, recipe.title);
+    expect(drawing.viewBox).toEqual({ width: 32, height: 32 });
+    expect(drawing.children.filter((child) => child.role === 'head')).toHaveLength(3);
+    expect(drawing.children.some(
+      (child) => child.role === 'pictogram' && child.style?.fill === 'schwarz',
+    )).toBe(true);
+    expect(drawing.children).toContainEqual(expect.objectContaining({
+      type: 'line', role: 'pictogram', y1: 18, y2: 18,
+    }));
+    expect(drawing.children).toContainEqual(expect.objectContaining({
+      type: 'polyline', role: 'pictogram', closed: true,
+      points: [[25, 14], [29, 18], [25, 22], [21, 18]],
+    }));
+    const body = drawing.children.find((child) => child.role === 'body');
+    expect(body?.style?.fill).toBe('rot');
+
+    const formerSimplified = composeFromCatalog({
+      kind: 'person', organization: 'feuerwehr', strength: 'zug',
+    }, recipe.title);
+    expect(renderSvg(drawing)).not.toBe(renderSvg(formerSimplified));
+  });
+
   it('setzt die Stärkepunkte als eigene Primitive mit der Rolle head', () => {
     const drawing = composeFromCatalog(RECIPES['C.1.1'].spec);
     expect(drawing.children.filter((c) => c.role === 'head')).toHaveLength(2);
@@ -367,6 +455,386 @@ describe('Kompositionsrezepte', () => {
   it('erzeugt keinen Titel, wenn composeFromCatalog ohne Titel aufgerufen wird', () => {
     const drawing = composeFromCatalog(RECIPES['C.1.1'].spec);
     expect(drawing.title).toBeUndefined();
+  });
+});
+
+describe('Anhang D.1, Führungsstellen im Einsatz', () => {
+  const expectedKeys = [
+    'D.1.2',
+    'D.1.3',
+    'D.1.4',
+    'D.1.5',
+    'D.1.6',
+    'D.1.7',
+    'D.1.8',
+    'D.1.9',
+    'D.1.9#alternative',
+  ] as const;
+
+  it('führt exakt die neun komponierten D.1-Darstellungen', () => {
+    expect(Object.keys(RECIPES).filter((key) => key.startsWith('D.1.'))).toEqual(expectedKeys);
+    expect(Object.keys(RECIPES)).toHaveLength(200);
+  });
+
+  it('bindet D.1.2 bis D.1.8 an die sieben gemessenen Formationsrollen', () => {
+    expect(expectedKeys.slice(0, 7).map((key) => RECIPES[key]?.spec)).toEqual([
+      {
+        kind: 'formation', organization: 'fuehrung-leitung',
+        functionRole: 'disaster-control-command',
+      },
+      {
+        kind: 'formation', organization: 'fuehrung-leitung',
+        functionRole: 'technical-incident-command-evacuation',
+      },
+      {
+        kind: 'formation', organization: 'fuehrung-leitung',
+        functionRole: 'incident-command',
+      },
+      {
+        kind: 'formation', organization: 'fuehrung-leitung',
+        functionRole: 'incident-section-command-north',
+      },
+      {
+        kind: 'formation', organization: 'fuehrung-leitung',
+        functionRole: 'incident-subsection-command',
+      },
+      {
+        kind: 'formation', organization: 'fuehrung-leitung', strength: 'gruppe',
+        functionRole: 'technical-incident-command-group',
+      },
+      {
+        kind: 'formation', organization: 'feuerwehr', strength: 'gruppe',
+        functionRole: 'fire-service-readiness-command-group',
+      },
+    ]);
+  });
+
+  it('hält beide D.1.9-Darstellungen rollenlos und die alternative Dreierreihe als Innenmarke', () => {
+    const cases = [
+      ['D.1.9', 'formation-solid-cap-3mm'],
+      ['D.1.9#alternative', 'formation-solid-cap-4mm-three-hole-row'],
+    ] as const;
+
+    for (const [key, cap] of cases) {
+      const recipe = RECIPES[key];
+      expect(recipe, `${key} fehlt`).toBeDefined();
+      if (recipe === undefined) continue;
+      expect(recipe.spec).toEqual({
+        kind: 'formation',
+        organization: 'hilfsorganisation',
+        strength: 'trupp',
+        bodyMarks: ['medical-service', cap],
+      });
+      expect(recipe.spec).not.toHaveProperty('functionRole');
+
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      expect(drawing.children.filter((child) => child.role === 'head')).toHaveLength(1);
+    }
+  });
+});
+
+describe('Anhang D.3, Funktionen', () => {
+  const expected = {
+    'D.3.1': {
+      title: 'Technischer Einsatzleiter',
+      referenceAsset: 'D.3.1_Technischer Einsatzleiter LK Ahrweiler.svg',
+      spec: {
+        kind: 'person', organization: 'fuehrung-leitung', administrativeLevel: 'kreis',
+        functionRole: 'technical-incident-commander',
+      },
+    },
+    'D.3.2': {
+      title: 'Einsatzleiter', referenceAsset: 'D.3.2_Einsatzleiter.svg',
+      spec: {
+        kind: 'person', organization: 'fuehrung-leitung',
+        functionRole: 'incident-commander',
+      },
+    },
+    'D.3.3': {
+      title: 'Leitender Notarzt', referenceAsset: 'D.3.3_Leitender Notarzt.svg',
+      spec: {
+        kind: 'person', organization: 'fuehrung-leitung', administrativeLevel: 'kreis',
+        functionRole: 'lead-emergency-physician',
+      },
+    },
+    'D.3.4': {
+      title: 'Organisatorischer Leiter', referenceAsset: 'D.3.4_Organisatorischer Leiter.svg',
+      spec: {
+        kind: 'person', organization: 'fuehrung-leitung', administrativeLevel: 'kreis',
+        functionRole: 'organizational-incident-commander',
+      },
+    },
+    'D.3.5': {
+      title: 'Einsatzabschnittsleiter', referenceAsset: 'D.3.5_Einsatzabschnittsleiter.svg',
+      spec: {
+        kind: 'person', organization: 'fuehrung-leitung',
+        functionRole: 'incident-section-commander',
+      },
+    },
+    'D.3.6': {
+      title: 'Untereinsatzabschnittsleiter',
+      referenceAsset: 'D.3.6_Untereinsatzabschnittsleiter.svg',
+      spec: {
+        kind: 'person', organization: 'fuehrung-leitung',
+        functionRole: 'incident-subsection-commander',
+      },
+    },
+    'D.3.7': {
+      title: 'Zugführer der Feuerwehr',
+      referenceAsset: 'D.3.7_Zugführer der Feuerwehr.svg',
+      spec: {
+        kind: 'person', organization: 'feuerwehr', strength: 'zug',
+        functionRole: 'fire-service-platoon-commander', bodyMarks: ['fire-fighting'],
+      },
+    },
+    'D.3.8': {
+      title: 'Zugführer Technischer Zug',
+      referenceAsset: 'D.3.8_Zugführer Technischer Zug THW.svg',
+      spec: {
+        kind: 'person', organization: 'thw', strength: 'zug',
+        functionRole: 'technical-platoon-commander',
+      },
+    },
+    'D.3.9': {
+      title: 'Zugführer Sanitätszug',
+      referenceAsset: 'D.3.9_Zugführer Sanitätszug ASB.svg',
+      spec: {
+        kind: 'person', organization: 'hilfsorganisation', strength: 'zug',
+        functionRole: 'medical-platoon-commander', bodyMarks: ['medical-service'],
+      },
+    },
+    'D.3.10': {
+      title: 'Zugführer Einsatzeinheit',
+      referenceAsset: 'D.3.10_Zugführer Einsatzeinheit DRK.svg',
+      spec: {
+        kind: 'person', organization: 'hilfsorganisation', strength: 'zug',
+        functionRole: 'operational-unit-platoon-commander',
+        bodyMarks: ['medical-service', 'care'],
+      },
+    },
+    'D.3.11': {
+      title: 'Zugführer Betreuungszug',
+      referenceAsset: 'D.3.11_Zugführer Betreuungszug ASB.svg',
+      spec: {
+        kind: 'person', organization: 'hilfsorganisation', strength: 'zug',
+        functionRole: 'care-platoon-commander', bodyMarks: ['care'],
+      },
+    },
+    'D.3.12': {
+      title: 'Gruppenführer Betreuungsgruppe',
+      referenceAsset: 'D.3.12_Gruppenführer Betreuungsgruppe Malteser.svg',
+      spec: {
+        kind: 'person', organization: 'hilfsorganisation', strength: 'gruppe',
+        functionRole: 'care-group-commander', bodyMarks: ['care'],
+      },
+    },
+    'D.3.13': {
+      title: 'Gruppenführer Schnell-Einsatzgruppe',
+      referenceAsset: 'D.3.13_Gruppenführer Schnell-Einsatzgruppe Johanniter.svg',
+      spec: {
+        kind: 'person', organization: 'hilfsorganisation', strength: 'gruppe',
+        functionRole: 'rapid-response-group-commander',
+      },
+    },
+  } as const satisfies Record<string, Recipe>;
+
+  it('führt D.3.1 bis D.3.13 vollständig und D.3.7 genau einmal', () => {
+    const actual = Object.fromEntries(
+      Object.entries<Recipe>(RECIPES).filter(([key]) => key.startsWith('D.3.')),
+    );
+    expect(actual).toEqual(expected);
+    expect(Object.keys(actual).filter((key) => key === 'D.3.7')).toHaveLength(1);
+  });
+
+  it('lehnt eine Rollenorganisation vor dem Rendern über composeFromCatalog ab', () => {
+    expect(() => composeFromCatalog({
+      kind: 'person',
+      organization: 'hilfsorganisation',
+      strength: 'zug',
+      functionRole: 'technical-platoon-commander',
+    })).toThrowError(/function-role-organization-mismatch/);
+  });
+
+  it('bewahrt no-head, Zwei-Stern, abgesenkte Dreipunkt- und Standard-Zweipunktgeometrie', () => {
+    const cases = [
+      ['D.3.2', [3, 3, 29, 29], 0],
+      ['D.3.5', [3, 3, 29, 29], 0],
+      ['D.3.6', [3, 3, 29, 29], 0],
+      ['D.3.1', [3, 3, 29, 29], 6],
+      ['D.3.3', [3, 3, 29, 29], 6],
+      ['D.3.4', [3, 3, 29, 29], 6],
+      ['D.3.8', [3, 5, 29, 31], 3],
+      ['D.3.9', [3, 5, 29, 31], 3],
+      ['D.3.10', [3, 5, 29, 31], 3],
+      ['D.3.11', [3, 5, 29, 31], 3],
+      ['D.3.12', [3, 3, 29, 29], 2],
+      ['D.3.13', [3, 3, 29, 29], 2],
+    ] as const;
+
+    for (const [section, expectedBounds, expectedHeadLeaves] of cases) {
+      const recipe = RECIPES[section];
+      expect(recipe, `${section} fehlt`).toBeDefined();
+      if (recipe === undefined) continue;
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      const body = drawing.children.find((child) => child.role === 'body');
+      expect(body, section).toBeDefined();
+      if (body === undefined) continue;
+      const bounds = boundsOfMm(body);
+      expect([bounds.minX, bounds.minY, bounds.maxX, bounds.maxY], section).toEqual(
+        expectedBounds.map((value) => expect.closeTo(value, 9)),
+      );
+      const headLeaves = drawing.children
+        .filter((child) => child.role === 'head')
+        .flatMap((child) => child.type === 'group' ? child.children : [child]);
+      expect(headLeaves, section).toHaveLength(expectedHeadLeaves);
+    }
+  });
+
+  it('zeichnet D.3.13s SEG- und JUH-Laeufe an den gemessenen Positionen', () => {
+    const recipe = RECIPES['D.3.13'];
+    expect(recipe).toBeDefined();
+    if (recipe === undefined) return;
+    const drawing = composeFromCatalog(recipe.spec, recipe.title);
+    const labels = drawing.children.filter(
+      (child): child is Primitive & { type: 'text' } => child.type === 'text',
+    );
+    expect(labels).toMatchObject([
+      {
+        content: 'SEG', x: 16, y: 18.5, sizeMm: 7.08, anchor: 'middle',
+        boxMm: { xMm: 8.5, yMm: 13.3, widthMm: 14.75, heightMm: 5.5 }, minRenderPx: 37,
+      },
+      {
+        content: 'JUH', x: 30.5, y: 29, sizeMm: 4.243, anchor: 'end',
+        boxMm: { xMm: 22.1, yMm: 25.8, widthMm: 8.3, heightMm: 3.5 }, minRenderPx: 61,
+      },
+    ]);
+  });
+});
+
+describe('Anhang D.4, übergeordnete Funktionen', () => {
+  const cases = [
+    [
+      'D.4.1',
+      {
+        title: 'Leiter Kreisleitstelle Steinfurt',
+        referenceAsset: 'D.4.1_Leiter Kreisleitstelle Steinfurt.svg',
+        spec: {
+          kind: 'person', organization: 'fuehrung-leitung', administrativeLevel: 'kreis',
+          functionRole: 'district-control-center-director',
+        },
+      },
+      ['LtS', 'ST'],
+      6,
+      [3, 3, 29, 29],
+      'gelb',
+    ],
+    [
+      'D.4.2',
+      {
+        title: 'Kreisbrandmeister Mettmann',
+        referenceAsset: 'D.4.2_Kreisbrandmeister Mettmann.svg',
+        spec: {
+          kind: 'person', organization: 'feuerwehr', administrativeLevel: 'kreis',
+          functionRole: 'district-fire-chief',
+        },
+      },
+      ['KBM', 'ME'],
+      6,
+      [3, 3, 29, 29],
+      'rot',
+    ],
+    [
+      'D.4.3',
+      {
+        title: 'Leiter Gefahrenabwehr Mönchengladbach',
+        referenceAsset: 'D.4.3_Leiter Gefahrenabwehr Mönchengladbach.svg',
+        spec: {
+          kind: 'person', organization: 'fuehrung-leitung', administrativeLevel: 'kreis',
+          functionRole: 'hazard-response-director',
+        },
+      },
+      ['LtrGA', 'MG'],
+      6,
+      [3, 3, 29, 29],
+      'gelb',
+    ],
+    [
+      'D.4.4',
+      {
+        title: 'Leiter Gefahrenabwehrkräfte Bundespolizei',
+        referenceAsset: 'D.4.4_Leiter Gefahrenabwehrkräfte Bundespolizei.svg',
+        spec: {
+          kind: 'person', organization: 'polizei', administrativeLevel: 'nationalstaat',
+          functionRole: 'hazard-response-forces-director',
+        },
+      },
+      ['BuPol'],
+      15,
+      [3, 5, 29, 31],
+      'gruen',
+    ],
+    [
+      'D.4.5',
+      {
+        title: 'Leiter internationalen Hilfsaktion',
+        referenceAsset: 'D.4.5_Leiter internationalen Hilfsaktion.svg',
+        spec: {
+          kind: 'person', organization: 'fuehrung-leitung',
+          administrativeLevel: 'europaeische-union',
+          functionRole: 'international-relief-operation-director',
+        },
+      },
+      [],
+      18,
+      [5.5, 10, 26.5, 31],
+      'gelb',
+    ],
+  ] as const satisfies readonly (readonly [
+    string,
+    Recipe,
+    readonly string[],
+    number,
+    readonly number[],
+    string,
+  ])[];
+
+  it.each(cases)(
+    '%s bewahrt Rezept, sichtbare Literale, Kopf und separat gemessenen Körper',
+    (section, expected, texts, headLeafCount, expectedBounds, bodyFill) => {
+      const recipe = RECIPES[section];
+      expect(recipe, `${section} fehlt`).toEqual(expected);
+      if (recipe === undefined) return;
+
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      const visibleTexts = drawing.children
+        .filter((child): child is Primitive & { type: 'text' } => child.type === 'text')
+        .map((text) => text.content);
+      expect(visibleTexts, section).toEqual(texts);
+
+      const headLeaves = drawing.children
+        .filter((child) => child.role === 'head')
+        .flatMap((child) => child.type === 'group' ? child.children : [child]);
+      expect(headLeaves, section).toHaveLength(headLeafCount);
+
+      const body = drawing.children.find((child) => child.role === 'body');
+      expect(body, section).toBeDefined();
+      if (body === undefined) return;
+      const bounds = boundsOfMm(body);
+      expect([bounds.minX, bounds.minY, bounds.maxX, bounds.maxY], section).toEqual(
+        expectedBounds.map((value) => expect.closeTo(value, 9)),
+      );
+      expect(body.style?.fill, section).toBe(bodyFill);
+    },
+  );
+
+  it('führt exakt die 27 freigegebenen Anhang-D-Rezeptschlüssel', () => {
+    expect(Object.keys(RECIPES).filter((key) => /^D\.[134]\./.test(key))).toEqual([
+      'D.1.2', 'D.1.3', 'D.1.4', 'D.1.5', 'D.1.6', 'D.1.7', 'D.1.8',
+      'D.1.9', 'D.1.9#alternative',
+      'D.3.1', 'D.3.2', 'D.3.3', 'D.3.4', 'D.3.5', 'D.3.6', 'D.3.7',
+      'D.3.8', 'D.3.9', 'D.3.10', 'D.3.11', 'D.3.12', 'D.3.13',
+      'D.4.1', 'D.4.2', 'D.4.3', 'D.4.4', 'D.4.5',
+    ]);
   });
 });
 
@@ -549,7 +1017,7 @@ describe('Anhang G — vollständiges Logistikinventar', () => {
     expect(actual).toEqual(expected);
     expect(Object.keys(actual)).toEqual(Object.keys(expected));
     expect(Object.keys(actual).every((key) => !key.includes('#'))).toBe(true);
-    expect(Object.keys(RECIPES)).toHaveLength(174);
+    expect(Object.keys(RECIPES)).toHaveLength(200);
   });
 
   it('bindet die 21 primary- und Referenz-IDs exakt und ohne Alternative', () => {
@@ -784,8 +1252,10 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
 
   it('verlangt für die Beschriftung auf der Körperfarbe die Textschwelle, nicht die Nichttextschwelle', () => {
     const requirements = labelContrastRequirements();
-    // **Zwölf mit Anhang G und LFH-422**, und nur eine davon besteht nicht. Sechs
-    // Körper-Farb/Tinten-Paare und sechs Oberflächen-Nachbarschaften kommen hier zusammen.
+    // **42 im integrierten Stand**, und nur eine davon besteht nicht: dreißig Anforderungen
+    // stammen aus den einzeln vermessenen Rollenläufen, zwölf aus Körper-/Oberflächenlabels.
+    // D.4.2 verwendet denselben eng begrenzten Theme-Token wie D.1.8: quellentreu schwarz auf
+    // Rot in Referenz/Accessible und weiß nur im Drucktheme.
     // Organisationsfarbe auf der Ausgabeoberfläche sowie die schwarzen Kreislabels, die
     // teilweise außerhalb der weißen Körperfläche auf `surface` stehen.
     //
@@ -804,6 +1274,186 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
     // wie E.2.6 trägt; sonst würde der Resolveroverride im Kontrastvertrag unsichtbar. G.3.5
     // ergänzt denselben schwarz/braun-Farbwert als separat benannten bottomCenter-Vertrag.
     expect(requirements).toEqual([
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf disaster-control-command: KatSL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf technical-incident-command-evacuation: TEL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf technical-incident-command-evacuation: Evakuierung',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf incident-command: EL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf incident-section-command-north: EAL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf incident-section-command-north: Nord',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf incident-subsection-command: UEAL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf technical-incident-command-group: TEL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'funktionslauf-kontrast',
+        background: 'rot',
+        context: 'Funktionslauf fire-service-readiness-command-group: Ber',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf technical-incident-commander: TEL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf technical-incident-commander: AW',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf incident-commander: EL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf lead-emergency-physician: LNA',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf organizational-incident-commander: OrgL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf incident-section-commander: EAL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf incident-subsection-commander: UEAL',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'weiss',
+        background: 'blau',
+        context: 'Funktionslauf technical-platoon-commander: TZ',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf medical-platoon-commander: ASB',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf operational-unit-platoon-commander: DRK',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf care-platoon-commander: ASB',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf care-group-commander: MHD',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'weiss',
+        context: 'Funktionslauf rapid-response-group-commander: SEG',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf rapid-response-group-commander: JUH',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf district-control-center-director: LtS',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf district-control-center-director: ST',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'funktionslauf-kontrast',
+        background: 'rot',
+        context: 'Funktionslauf district-fire-chief: KBM',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf district-fire-chief: ME',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'gelb',
+        context: 'Funktionslauf hazard-response-director: LtrGA',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf hazard-response-director: MG',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf hazard-response-forces-director: BuPol',
+        minimum: 4.5,
+      },
       {
         foreground: 'schwarz',
         background: 'weiss',
@@ -1707,12 +2357,12 @@ describe('Anhang F, Teilslice F-f', () => {
     },
   } as const;
 
-  it('deckt F.3.12 bis F.3.19 lückenlos ab und erreicht mit G, H, I-a, C.1.3 und N 174 Rezepte', () => {
+  it('deckt F.3.12 bis F.3.19 lückenlos ab und erreicht integriert 200 Rezepte', () => {
     const entries = Object.entries<Recipe>(RECIPES)
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(174);
+    expect(Object.keys(RECIPES)).toHaveLength(200);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {
@@ -2315,7 +2965,9 @@ describe('Piktogramm-Platzierung als Gruppe', () => {
 
   it('erzeugt keine Gruppe, wenn die Spec keine Fähigkeit nennt', () => {
     const drawing = composeFromCatalog(RECIPES['D.3.7'].spec);
-    expect(drawing.children.filter((c) => c.role === 'pictogram')).toHaveLength(0);
+    expect(drawing.children.filter(
+      (child) => child.role === 'pictogram' && child.type === 'group',
+    )).toHaveLength(0);
   });
 });
 

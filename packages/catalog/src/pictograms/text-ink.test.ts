@@ -15,7 +15,7 @@ import { ALL_PICTOGRAMS, pictogramVariantKey } from './index.js';
  * als offen.
  *
  * Dieser Test schließt sie für den Katalogbestand: er rastert jeden Textlauf einzeln und zählt
- * die dunklen Pixel außerhalb seiner deklarierten Box. Er ersetzt kein allgemeines
+ * sichtbare Alpha-/Tintpixel außerhalb seiner deklarierten Box. Er ersetzt kein allgemeines
  * Textmetrik-Gate in `core` — er prüft die Zeichen, die es gibt, nicht die Form an sich.
  *
  * Warum nicht in `core`: die Rasterung braucht eine Schriftbindung, und die liegt in `catalog`
@@ -25,11 +25,11 @@ const RASTER_PX = 512;
 const PX_PER_MM = RASTER_PX / DEFAULT_VIEWBOX_MM.width;
 
 /**
- * Ein Pixel Toleranz an jeder Kante. Die Rasterung setzt Kantenglättung ein: das äußerste
- * Pixel einer Glyphe ist ein Mischwert und kann bei exakt bündiger Box eine Zeile weiter
- * erscheinen, ohne dass die Box zu klein wäre.
+ * Zwei Pixel Toleranz an jeder Kante. Die Rasterung setzt Kantenglättung ein: mit der
+ * farbunabhängigen Alpha-Prüfung wird auch das äußerste, fast transparente Mischpixel erfasst.
+ * Es kann bei exakt bündiger Box zwei Zeilen weiter erscheinen, ohne dass die Box zu klein wäre.
  */
-const EDGE_TOLERANCE_PX = 1;
+const EDGE_TOLERANCE_PX = 2;
 
 type TextPrimitive = Extract<Primitive, { type: 'text' }>;
 
@@ -43,12 +43,12 @@ function textsOf(primitives: readonly Primitive[]): readonly TextPrimitive[] {
   );
 }
 
-function inkOutsideBox(text: TextPrimitive): { outside: number; dark: number } {
+function inkOutsideBox(text: TextPrimitive): { outside: number; ink: number } {
   const svg = renderSvg(
     { viewBox: DEFAULT_VIEWBOX_MM, children: [text] },
     { size: RASTER_PX, idPrefix: 'text-ink' },
   );
-  const { pixels } = new Resvg(svg, { font: resvgFontOptions(), background: 'white' }).render();
+  const { pixels } = new Resvg(svg, { font: resvgFontOptions() }).render();
 
   const left = text.boxMm.xMm * PX_PER_MM - EDGE_TOLERANCE_PX;
   const right = (text.boxMm.xMm + text.boxMm.widthMm) * PX_PER_MM + EDGE_TOLERANCE_PX;
@@ -56,16 +56,18 @@ function inkOutsideBox(text: TextPrimitive): { outside: number; dark: number } {
   const bottom = (text.boxMm.yMm + text.boxMm.heightMm) * PX_PER_MM + EDGE_TOLERANCE_PX;
 
   let outside = 0;
-  let dark = 0;
+  let ink = 0;
   for (let i = 0; i < pixels.length; i += 4) {
-    if (pixels[i]! >= 128) continue;
-    dark++;
+    // Transparentes Canvas + Alpha prueft sichtbare Tinte unabhaengig von ihrer Farbe. Ein
+    // weisser Rollenlauf wie D.3.14 THW bliebe auf deckendem Weiss sonst faelschlich leer.
+    if (pixels[i + 3]! === 0) continue;
+    ink++;
     const pixel = i / 4;
     const x = pixel % RASTER_PX;
     const y = Math.floor(pixel / RASTER_PX);
     if (x < left || x > right || y < top || y > bottom) outside++;
   }
-  return { outside, dark };
+  return { outside, ink };
 }
 
 const WITH_TEXT = ALL_PICTOGRAMS.flatMap((definition) =>
@@ -76,11 +78,11 @@ const WITH_TEXT = ALL_PICTOGRAMS.flatMap((definition) =>
 
 describe('Texttinte gegen die deklarierte Box', () => {
   it.runIf(WITH_TEXT.length > 0).each(WITH_TEXT)('hält %s in seiner boxMm', (_label, text) => {
-    const { outside, dark } = inkOutsideBox(text);
-    // Der Dunkelpixel-Zähler unterscheidet „passt hinein" von „rastert gar nicht": ohne
+    const { outside, ink } = inkOutsideBox(text);
+    // Der Alpha-Tintenzähler unterscheidet „passt hinein" von „rastert gar nicht": ohne
     // Schriftbindung liefert resvg ein leeres Bild, und ein leeres Bild hätte trivial null
-    // Pixel außerhalb der Box.
-    expect(dark).toBeGreaterThan(100);
+    // Pixel außerhalb der Box. Anders als ein Dunkelpixeltest sieht er auch weisse Texttinte.
+    expect(ink).toBeGreaterThan(100);
     expect(outside).toBe(0);
   });
 

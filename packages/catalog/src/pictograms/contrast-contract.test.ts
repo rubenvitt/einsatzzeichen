@@ -12,6 +12,7 @@ import {
   MINIMUM_TEXT_CONTRAST,
 } from './contrast-contract.js';
 import { ALL_PICTOGRAMS } from './index.js';
+import { LEADERSHIP_PICTOGRAMS } from './leadership/index.js';
 import { STATE_PICTOGRAMS } from './states/index.js';
 
 function declaredPaintTokensOf(
@@ -55,8 +56,8 @@ describe('Kontrastvertrag für Katalogpiktogramme', () => {
     }
   });
 
-  it('deklariert für jedes Standalone-State alle tatsächlich verwendeten Farbtoken', () => {
-    for (const definition of STATE_PICTOGRAMS) {
+  it('deklariert für State und Leadership alle tatsächlich verwendeten Farbtoken', () => {
+    for (const definition of [...STATE_PICTOGRAMS, ...LEADERSHIP_PICTOGRAMS]) {
       const declared = declaredPaintTokensOf(definition);
       expect(
         [...paintTokensOf(definition.primitives)].filter((token) => !declared.has(token)),

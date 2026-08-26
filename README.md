@@ -325,8 +325,11 @@ Zwei Nebenbefunde gehören dazu. Eine Fahrzeugkategorie war seither nur am **Lan
 seit E.2 kommen der Anhänger- und der Wechselladerrumpf dazu, `CHASSIS_KINDS` führt drei Arten
 statt einer. Und sie schließt eine Fußzone aus, weil beide denselben Streifen unterhalb des Körpers
 belegen.
-Verwaltungsstufen (Kapitel 5.7) und das Kreiskörperprofil bleiben begründet offen; beide Urteile
-stehen mit ihren Messwerten in
+Die eigenständigen Verwaltungsstufen-Zeichen aus Kapitel 5.7 und das Kreiskörperprofil bleiben
+begründet offen. Davon getrennt verwendet Anhang D inzwischen ausschließlich die drei in seinen
+Funktionszeichen direkt belegten Sternköpfe `kreis`, `nationalstaat` und
+`europaeische-union`; die drei unbelegten Stufen bleiben fail-closed. Beide Zuschnitte stehen mit
+ihren Messwerten in
 [`2026-08-18-grundlagen-restpunkte.md`](./docs/decisions/2026-08-18-grundlagen-restpunkte.md).
 
 ## E-d, E-e und E-f: Anhang E.2, damit alle 68 Zeichen des Anhangs E
@@ -639,6 +642,22 @@ Einzelsichtung aller acht Original-/Katalogpaare bei 64 und 900 px in
 genau acht direkte und acht Mehrgrößen-Snapshots hinzu (151 beziehungsweise 406 insgesamt);
 alle 541 zuvor vorhandenen Snapshotdateien blieben bytegleich. Die Einzelsichtung ist nicht der
 finale Task-6-Kontaktbogen, und sämtliche F-f-Domainreviews bleiben `pending`.
+
+## Anhang D: Führung und Funktionen
+
+Anhang D ist technisch mit exakt 37 Darstellungen vollständig: zehn aus D.1, sieben aus D.2,
+fünfzehn aus D.3 und fünf aus D.4. Die Modellierung kombiniert quellenvermessene
+Funktionsträgerrollen mit direkten `leadership`-Definitionen. D.1.1 bewahrt als einzige
+nichtquadratische Darstellung ihre 32×46-mm-Fläche; die Funktionszeichen verwenden ausschließlich
+die drei belegten Kopfprofile `kreis`, `nationalstaat` und `europaeische-union`.
+
+Das Manifest beansprucht den Scope `D` erst durch das exakte 37/37-Vollständigkeitsgate. Die
+Modellierungs- und Geometrieentscheidungen stehen in
+[`docs/decisions/2026-08-26-anhang-d-function-roles.md`](docs/decisions/2026-08-26-anhang-d-function-roles.md),
+die technische Sichtprüfung aller 37 Darstellungen in
+[`docs/reviews/2026-08-26-lfh-420-visual-qa.md`](docs/reviews/2026-08-26-lfh-420-visual-qa.md).
+Alle 37 Domainreviews bleiben `pending`; technische Vollständigkeit ist keine fachliche,
+normative oder einsatztaktische Freigabe.
 
 ## Anhang G: 21 Logistikzeichen vollständig im Katalog
 

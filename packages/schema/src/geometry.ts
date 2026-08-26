@@ -5,6 +5,7 @@ export type Point = readonly [Length, Length];
 
 export type ColorToken =
   | 'schwarz'
+  | 'funktionslauf-kontrast'
   | 'weiss'
   | 'rot'
   | 'blau'
@@ -26,6 +27,8 @@ export type ColorPalette = Readonly<Record<ColorToken, RgbHex>>;
 /** Aus dem BABZ-Referenzbestand abgeleitete Organisations- und Signalfarben. */
 export const PALETTE: ColorPalette = Object.freeze({
   schwarz: '#000000',
+  /** Quellengetreuer Rollenlauf; nur das Drucktheme darf ihn zur Kontrasterhaltung invertieren. */
+  'funktionslauf-kontrast': '#000000',
   weiss: '#ffffff',
   rot: '#fa1919',
   blau: '#003296',

@@ -4,6 +4,7 @@ import {
   contrastRatio,
   relativeLuminance,
   type ContrastRequirement,
+  type RenderTheme,
 } from '@einsatzzeichen/core';
 import {
   CONTRAST_EXCEPTIONS,
@@ -38,6 +39,9 @@ const BASE_CONTRAST_REQUIREMENT: ContrastRequirement = {
   minimum: MINIMUM_NON_TEXT_CONTRAST,
 };
 
+const D3_14_CAP_CONTRAST_CONTEXT =
+  'schwarze offene Kappenschulter auf der blauen Funktionsflaeche';
+
 function requirements(): ContrastRequirement[] {
   return [
     BASE_CONTRAST_REQUIREMENT,
@@ -63,7 +67,7 @@ function exceptionSectionsFromRecipes(
 
 describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
   it('hat echte Piktogramm-Nachbarschaften zu prüfen', () => {
-    expect(ALL_PICTOGRAMS.length).toBeGreaterThan(0);
+    expect(ALL_PICTOGRAMS).toHaveLength(264);
     expect(requirements().length).toBeGreaterThan(1);
   });
 
@@ -96,8 +100,42 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     const blue = issues.filter(
       (issue) => issue.foreground === 'schwarz' && issue.background === 'blau',
     );
-    expect(blue).toHaveLength(PRIMARY_PICTOGRAMS.length);
+    expect(blue).toHaveLength(PRIMARY_PICTOGRAMS.length + 1);
+    expect(blue.filter((issue) => issue.context === D3_14_CAP_CONTRAST_CONTEXT)).toEqual([
+      expect.objectContaining({ minimum: MINIMUM_TEXT_CONTRAST }),
+    ]);
     expect(blue.every((issue) => issue.ratio < MINIMUM_NON_TEXT_CONTRAST)).toBe(true);
+  });
+
+  it('deklariert und prüft die schwarze D.3.14-Kappenschulter gegen ihre blaue Fläche', () => {
+    const definition = ALL_PICTOGRAMS.find(
+      (candidate) => candidate.id === 'leadership.technical-advisor-thw',
+    );
+    expect(definition).toBeDefined();
+    if (definition === undefined || definition.placement.mode !== 'standalone') return;
+
+    expect(definition.contrastPairs).toContainEqual({
+      foreground: 'schwarz',
+      background: 'blau',
+      context: D3_14_CAP_CONTRAST_CONTEXT,
+    });
+
+    const collidingTheme: RenderTheme = {
+      ...RENDER_THEMES.reference,
+      id: 'synthetic-d3.14-cap-collision',
+      palette: {
+        ...RENDER_THEMES.reference.palette,
+        blau: RENDER_THEMES.reference.palette.schwarz,
+      },
+    };
+    expect(checkContrast(collidingTheme, contrastRequirementsFor(definition))).toContainEqual({
+      foreground: 'schwarz',
+      background: 'blau',
+      context: D3_14_CAP_CONTRAST_CONTEXT,
+      minimum: MINIMUM_TEXT_CONTRAST,
+      themeId: 'synthetic-d3.14-cap-collision',
+      ratio: 1,
+    });
   });
 
   it('leitet belowRight profilabhängig auf der Oberfläche ab und dedupliziert schwarze Tinte', () => {
@@ -194,6 +232,69 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
       context: 'Beschriftung oberhalb des Körpers auf der Ausgabeoberfläche',
       minimum: MINIMUM_TEXT_CONTRAST,
     });
+  });
+
+  it('leitet Rollen- und Trägertext aus derselben Rollenfassung und Hintergrundangabe ab', () => {
+    const derived = labelContrastRequirements([{
+      title: 'Technischer Einsatzleiter',
+      referenceAsset: 'D.3.1_Technischer Einsatzleiter LK Ahrweiler.svg',
+      spec: {
+        kind: 'person', organization: 'fuehrung-leitung', administrativeLevel: 'kreis',
+        functionRole: 'technical-incident-commander',
+      },
+    }]);
+    expect(derived).toEqual([
+      {
+        foreground: 'schwarz', background: 'gelb',
+        context: 'Funktionslauf technical-incident-commander: TEL',
+        minimum: MINIMUM_TEXT_CONTRAST,
+      },
+      {
+        foreground: 'schwarz', background: 'surface',
+        context: 'Funktionslauf technical-incident-commander: AW',
+        minimum: MINIMUM_TEXT_CONTRAST,
+      },
+    ]);
+  });
+
+  it('hält D.1.8 und D.4.2 quellentreu schwarz und invertiert nur ihre Funktionsläufe im Drucktheme', () => {
+    const derived = labelContrastRequirements([RECIPES['D.1.8'], RECIPES['D.4.2']]);
+    expect(derived).toEqual([
+      {
+        foreground: 'funktionslauf-kontrast',
+        background: 'rot',
+        context: 'Funktionslauf fire-service-readiness-command-group: Ber',
+        minimum: MINIMUM_TEXT_CONTRAST,
+      },
+      {
+        foreground: 'funktionslauf-kontrast',
+        background: 'rot',
+        context: 'Funktionslauf district-fire-chief: KBM',
+        minimum: MINIMUM_TEXT_CONTRAST,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Funktionslauf district-fire-chief: ME',
+        minimum: MINIMUM_TEXT_CONTRAST,
+      },
+    ]);
+
+    const cases = [
+      [RENDER_THEMES.reference, '#000000', 5.218],
+      [ACCESSIBLE_LIGHT_THEME, '#000000', 5.218],
+      [PRINT_MONOCHROME_THEME, '#ffffff', 5.742],
+    ] as const;
+    for (const [theme, expectedInk, expectedRatio] of cases) {
+      const ink = (theme.palette as unknown as Readonly<
+        Record<string, `#${string}` | undefined>
+      >)['funktionslauf-kontrast'];
+      expect(ink, theme.id).toBe(expectedInk);
+      if (ink === undefined) continue;
+      const ratio = contrastRatio(ink, theme.palette.rot);
+      expect(ratio, theme.id).toBeCloseTo(expectedRatio, 3);
+      expect(ratio, theme.id).toBeGreaterThanOrEqual(MINIMUM_TEXT_CONTRAST);
+    }
   });
 
   it('leitet N.2.3s schwarze Oberflächenläufe eigenständig und dedupliziert ab', () => {

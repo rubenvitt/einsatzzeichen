@@ -10,13 +10,14 @@ import {
 import { escapeXml, formatUnits } from './format.js';
 import { assertValidActiveStrokeWidths, mergeStyle } from './style.js';
 import { baselineAttr, TEXT_FONT_FAMILY_ATTR } from './text-policy.js';
+import { rasterDimensionsForWidth } from './raster-dimensions.js';
 import { REFERENCE_THEME, type RenderTheme } from './theme.js';
 import { assertValidRenderTheme } from './theme-validation.js';
 
 export { formatUnits };
 
 export interface SvgOptions {
-  /** Kantenlänge in Pixeln. Ohne Angabe skaliert das SVG frei. */
+  /** Pixelbreite. Ohne Angabe skaliert das SVG frei. */
   size?: number;
   /** Präfix für erzeugte Element-IDs. Erforderlich, wenn mehrere SVGs im selben DOM liegen. */
   idPrefix?: string;
@@ -248,12 +249,13 @@ export function renderSvg(drawing: Drawing, options: SvgOptions = {}): string {
   const theme = options.theme === undefined ? REFERENCE_THEME : options.theme;
   assertValidRenderTheme(theme);
   assertValidActiveStrokeWidths(drawing);
+  const raster = rasterDimensionsForWidth(drawing.viewBox, options.size ?? 1);
   const width = u(drawing.viewBox.width);
   const height = u(drawing.viewBox.height);
 
   const attrs = ['xmlns="http://www.w3.org/2000/svg"', `viewBox="0 0 ${width} ${height}"`];
   if (options.size !== undefined) {
-    attrs.push(`width="${options.size}"`, `height="${options.size}"`);
+    attrs.push(`width="${raster.widthPx}"`, `height="${raster.heightPx}"`);
   }
 
   const labelled: string[] = [];

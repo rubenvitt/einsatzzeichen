@@ -5,11 +5,7 @@ import {
   checkCommands,
   renderSvg,
 } from '@einsatzzeichen/core';
-import {
-  DEFAULT_VIEWBOX_MM,
-  type Drawing,
-  type Primitive,
-} from '@einsatzzeichen/schema';
+import { type Drawing, type Primitive } from '@einsatzzeichen/schema';
 import { PRINT_MONOCHROME_THEME } from '../../render-themes.js';
 import type { CatalogPictogramDefinition } from '../catalog-definition.js';
 import { TACTICS_HAZARDS_STATES } from './01-tactics-hazards.js';
@@ -18,14 +14,16 @@ import { TENDENCY_STATES } from './03-tendencies.js';
 
 type PathPrimitive = Extract<Primitive, { type: 'path' }>;
 
-const VIEWBOX_BODY: Primitive = {
-  type: 'rect',
-  role: 'body',
-  x: 0,
-  y: 0,
-  width: DEFAULT_VIEWBOX_MM.width,
-  height: DEFAULT_VIEWBOX_MM.height,
-};
+function viewBoxBody(item: CatalogPictogramDefinition): Primitive {
+  return {
+    type: 'rect',
+    role: 'body',
+    x: 0,
+    y: 0,
+    width: item.viewBox.width,
+    height: item.viewBox.height,
+  };
+}
 
 const FIRST_THREE_FAMILIES = [
   ...TACTICS_HAZARDS_STATES,
@@ -73,7 +71,7 @@ function colorBlindGeometrySignature(definition: CatalogPictogramDefinition): st
 
 function monochromeSvg(definition: CatalogPictogramDefinition): string {
   const drawing: Drawing = {
-    viewBox: DEFAULT_VIEWBOX_MM,
+    viewBox: definition.viewBox,
     children: definition.primitives,
   };
   return renderSvg(drawing, {
@@ -117,7 +115,7 @@ describe('5.8.1 bis 5.8.3: gemeinsamer Autorenvertrag', () => {
       expect(leavesOf(item.primitives).every((leaf) => leaf.role === 'pictogram')).toBe(true);
       expect(checkCommands(item), `${item.id}#${item.variant}: commands`).toEqual([]);
       expect(checkBox(item), `${item.id}#${item.variant}: box`).toEqual([]);
-      expect(checkClipping(item, VIEWBOX_BODY), `${item.id}#${item.variant}: clipping`).toEqual([]);
+      expect(checkClipping(item, viewBoxBody(item)), `${item.id}#${item.variant}: clipping`).toEqual([]);
     }
   });
 });

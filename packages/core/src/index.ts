@@ -1,5 +1,6 @@
 export * from './render/svg.js';
 export * from './render/canvas.js';
+export * from './render/raster-dimensions.js';
 export * from './render/theme.js';
 export * from './bounds.js';
 export * from './fingerprint.js';

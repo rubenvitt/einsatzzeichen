@@ -14,6 +14,11 @@ import { ALL_PICTOGRAMS } from './pictograms/index.js';
 import { deepFreeze, type DeepReadonly } from './readonly-data.js';
 import { RECIPES } from './recipes.js';
 import {
+  ANHANG_D_TASK_3_RECIPES,
+  ANHANG_D_TASK_5_RECIPES,
+  ANHANG_D_TASK_6_RECIPES,
+} from './recipes-anhang-d.js';
+import {
   ANHANG_E_A_FILL_DEFECTS,
   ANHANG_E_A_RECIPES,
   ANHANG_E_B_FILL_FINDINGS,
@@ -62,6 +67,91 @@ const TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
   date: '2026-08-05',
+};
+
+/** D.3 prueft den vollständigen gemessenen Funktionsvertrag statt generischer Personenfassungen. */
+const ANHANG_D_TASK_5_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'D.3.1 bis D.3.13 konsumieren die dreizehn einzeln vermessenen Funktionsrollen: drei ' +
+    'rollenlose Kopfzonen, drei Zwei-Stern-Köpfe, fünf abgesenkte Zugkörper und zwei getrennt ' +
+    'vermessene Gruppenkörper. AW, ASB, DRK, MHD und JUH bleiben sichtbare Trägertexte; ' +
+    'Brandbekämpfung, Sanität und Betreuung verwenden ihre körperlageabhängigen Innenmarken. ' +
+    'D.3.7 behält Schlüssel und Domainstatus, konsumiert aber weiterhin den gemessenen ' +
+    'Funktionsvertrag: abgesenkter 26-mm-Rautenkörper mit drei Stärkepunkten, schwarzer Kappe, ' +
+    'waagerechte Teilung und rechte geschlossene Raute. Fingerprint-, Snapshot-, ' +
+    'Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates prüfen alle dreizehn renderbaren ' +
+    'Rezepte; Rollenbenennungen und Organisationszuordnungen bleiben im Domain-Review pending.',
+};
+
+/** D.4 schließt Anhang D mit den fünf separat vermessenen Verwaltungsrollen. */
+const ANHANG_D_TASK_6_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'D.4.1 bis D.4.5 konsumieren fünf einzeln vermessene Funktionsrollen. D.4.1 bis D.4.3 ' +
+    'verwenden den Standard-Personenkörper und den belegten Zwei-Stern-Kreis-Kopf; D.4.4 ' +
+    'behält seinen separat gemessenen abgesenkten Körper und den Fünf-Stern-Nationalstaat-Kopf, ' +
+    'D.4.5 seinen kompakten Körper und den sechsblättrigen EU-Kopf. LtS/ST, KBM/ME, LtrGA/MG ' +
+    'und BuPol bleiben sichtbare Rollen- beziehungsweise Trägertexte. Fingerprint-, Snapshot-, ' +
+    'Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates prüfen alle fünf Rezepte; ' +
+    'Rollenbenennungen und Organisationszuordnungen bleiben im Domain-Review pending.',
+};
+
+const ANHANG_D_TASK_3_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'D.1.2 bis D.1.8 konsumieren die sieben einzeln vermessenen Formationsrollen mit ihren ' +
+    'festen Textmetriken und schwarzen 3-mm-Kappen. D.1.9 bleibt rollenlos: beide Fassungen ' +
+    'tragen genau einen äußeren Trupppunkt, die Alternative führt ihre drei weißen Löcher als ' +
+    'negative Innenmarken der 4-mm-Kappe. Die Zuordnung der weißen D.1.9-Körper zu ' +
+    'hilfsorganisation ist eine technische Entscheidung und bleibt im Domain-Review ' +
+    'ausdrücklich pending. Fingerprint-, Snapshot-, Mehrgrößen-, viewBox-, Metadaten- und ' +
+    'Kontrast-Gates prüfen alle neun renderbaren Rezepte.',
+};
+
+const LEADERSHIP_PICTOGRAM_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'D.1.1 ist direkt aus gemessenen Rechteck-, Linien- und Kreuzprimitiven aufgebaut. Die ' +
+    'eigene 32×46-mm-ViewBox erhält Körper, vierzehnteilige Verbindung und Außenkreuz ' +
+    'vollständig; der 32×32-Negativfall meldet outside-viewbox. Snapshot, Kommando, Box, ' +
+    'Standalone-Clipping, Mehrgrößen-, Metadaten- und explizite Kontrast-Gates prüfen den ' +
+    'renderbaren Eintrag. Benennung und fachliche Bedeutung bleiben pending.',
+};
+
+const LEADERSHIP_LOCATION_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'D.2.1 bis D.2.7 sind direkte 32×32-mm-Definitionen aus normalisierten Kreis-, Dach-, ' +
+    'Text- und Innengeometrien. Private Helfer teilen ausschließlich gemessene Geometrie; es ' +
+    'entsteht weder eine öffentliche Ortsachse noch eine Wiederverwendung des F.3-Körpers ' +
+    'circle-12 oder eine Organisationszuordnung aus der gelben Fläche. Snapshot, Kommando, ' +
+    'Box, Standalone-Clipping, Textlesbarkeit, Mehrgrößen-, Metadaten- und explizite ' +
+    'Kontrast-Gates prüfen alle sieben renderbaren Einträge. Benennung und fachliche Bedeutung ' +
+    'bleiben pending.',
+};
+
+const LEADERSHIP_OPEN_CAP_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'D.3.14 und D.3.15 bleiben zwei direkte 32×32-mm-Leadership-Definitionen. Sie teilen nur ' +
+    'den privat vermessenen offenen Kappenrahmen; daraus entsteht weder eine functionRole noch ' +
+    'eine Organisationszuordnung. Rollen- und Trägertext, Körperfarbe, Texttinte und ihre ' +
+    'Kontrasthintergründe sind je Definition explizit. Snapshot, Kommando, Box, ' +
+    'Standalone-Clipping, Textlesbarkeit, Mehrgrößen-, Metadaten- und Kontrast-Gates prüfen ' +
+    'beide renderbaren Einträge; Benennung und Bedeutung der offenen Kappe bleiben pending.',
 };
 
 const ANHANG_C_A_TECHNICAL_REVIEW: Review = {
@@ -698,6 +788,15 @@ function withFindingAndDeviation(
  * `approved` von `rv`, an dem kein Test etwas auffällig fände.
  */
 function technicalReviewFor(section: string): Review {
+  if (Object.hasOwn(ANHANG_D_TASK_3_RECIPES, section)) {
+    return ANHANG_D_TASK_3_TECHNICAL_REVIEW;
+  }
+  if (Object.hasOwn(ANHANG_D_TASK_5_RECIPES, section)) {
+    return ANHANG_D_TASK_5_TECHNICAL_REVIEW;
+  }
+  if (Object.hasOwn(ANHANG_D_TASK_6_RECIPES, section)) {
+    return ANHANG_D_TASK_6_TECHNICAL_REVIEW;
+  }
   if (section === 'C.1.3') return ANHANG_C_A_TECHNICAL_REVIEW;
   if (Object.hasOwn(ANHANG_E_A_RECIPES, section)) {
     const defect = ANHANG_E_A_FILL_DEFECTS[section];
@@ -910,6 +1009,12 @@ const pictogramEntries: CoverageEntry[] = ALL_PICTOGRAMS.map((definition) => {
   const sourceId = `bbk-babz-2025:${definition.section}`;
   const technicalReview = definition.id.startsWith('state.')
     ? STATE_PICTOGRAM_TECHNICAL_REVIEW
+    : definition.id.startsWith('leadership.')
+      ? definition.section.startsWith('D.3.')
+        ? LEADERSHIP_OPEN_CAP_TECHNICAL_REVIEW
+        : definition.section.startsWith('D.2.')
+          ? LEADERSHIP_LOCATION_TECHNICAL_REVIEW
+          : LEADERSHIP_PICTOGRAM_TECHNICAL_REVIEW
     : definition.id.startsWith('damage.') || definition.id.startsWith('wildfire.')
       ? DAMAGE_PICTOGRAM_TECHNICAL_REVIEW
       : PICTOGRAM_TECHNICAL_REVIEW;
@@ -946,8 +1051,9 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
   // dass `uncoveredScope` das nicht meldet, ist der Grund, warum die Zuordnung in
   // `vehicle-categories.test.ts` zusätzlich an den Zahlen festgenagelt ist.
   //
-  // 5.7 (Verwaltungsstufen) bleibt außerhalb: drei der sechs Stufen haben in Kopfform überhaupt
-  // keine Referenz, und keines der 320 Zeichen im Umfang braucht sie
+  // 5.7 (Verwaltungsstufen) bleibt außerhalb: Drei der sechs Stufen haben in Kopfform überhaupt
+  // keine Referenz. Die drei in D.3/D.4 vermessenen Köpfe liefern deshalb keinen
+  // Vollständigkeitsnachweis für den Satz aus allen sechs Stufen
   // (`docs/decisions/2026-08-18-grundlagen-restpunkte.md`).
   // K, L und M stehen einbuchstabig im Umfang, weil ihre Nummerierung flach ist: `K` deckt
   // K.1 bis K.18 ab, wo `J` vier Unterkapitel gebraucht hätte.
@@ -983,7 +1089,7 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'C.1.1',
     'C.1.2',
     'C.1.3',
-    'D.3.7',
+    'D',
     'E',
     'F',
     'G',

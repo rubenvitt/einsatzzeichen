@@ -8,11 +8,12 @@ import {
 } from '@einsatzzeichen/schema';
 import { assertValidActiveStrokeWidths, mergeStyle } from './style.js';
 import { canvasBaseline, canvasTextAlign, TEXT_FONT_FAMILY_ATTR } from './text-policy.js';
+import { rasterDimensionsForWidth } from './raster-dimensions.js';
 import { REFERENCE_THEME, type RenderTheme } from './theme.js';
 import { assertValidRenderTheme } from './theme-validation.js';
 
 export interface CanvasOptions {
-  /** Kantenlänge in Pixeln. Ohne Angabe wird in SVG-Einheiten gezeichnet. */
+  /** Pixelbreite. Ohne Angabe wird in SVG-Einheiten gezeichnet. */
   size?: number;
   /** Farbprofil der Ausgabe. Ohne Angabe wird die unveränderte Referenzpalette verwendet. */
   theme?: RenderTheme;
@@ -192,9 +193,15 @@ export function renderCanvas(
   const theme = options.theme === undefined ? REFERENCE_THEME : options.theme;
   assertValidRenderTheme(theme);
   assertValidActiveStrokeWidths(drawing);
+  const raster = rasterDimensionsForWidth(drawing.viewBox, options.size ?? 1);
+  if (options.size !== undefined) {
+    ctx.canvas.width = raster.widthPx;
+    ctx.canvas.height = raster.heightPx;
+  }
   ctx.save();
   if (options.size !== undefined) {
-    ctx.scale(options.size / mmToUnits(drawing.viewBox.width), options.size / mmToUnits(drawing.viewBox.height));
+    const scale = raster.widthPx / mmToUnits(drawing.viewBox.width);
+    ctx.scale(scale, scale);
   }
   for (const child of drawing.children) drawPrimitive(child, ctx, theme);
   ctx.restore();

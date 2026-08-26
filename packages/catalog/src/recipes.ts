@@ -1,6 +1,7 @@
 import {
   bodyLabelInk,
   compose,
+  functionRoleTextInk,
   profileFor,
   type CatalogPorts,
   type ContrastRequirement,
@@ -8,6 +9,8 @@ import {
 import type { BodyLabelInk, Drawing, OrganizationId, SymbolSpec } from '@einsatzzeichen/schema';
 import { baseDrawing } from './base-symbols.js';
 import { bodyMark } from './body-marks.js';
+import { administrativeHead } from './administrative-heads.js';
+import { functionRole } from './function-roles.js';
 import { organizationColor } from './organizations.js';
 import { MINIMUM_TEXT_CONTRAST } from './pictograms/contrast-contract.js';
 import { pictogram } from './pictograms/index.js';
@@ -30,6 +33,7 @@ import {
   ANHANG_F_E_RECIPES,
   ANHANG_F_F_RECIPES,
 } from './recipes-anhang-f.js';
+import { ANHANG_D_TASK_6_RECIPES } from './recipes-anhang-d.js';
 import { ANHANG_N_RECIPES } from './recipes-anhang-n.js';
 import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
@@ -40,6 +44,8 @@ const PORTS: CatalogPorts = {
   bodyMark,
   organizationColor,
   strengthHead,
+  functionRole,
+  administrativeHead,
   vehicleChassis,
   pictogram,
 };
@@ -84,6 +90,7 @@ export interface Recipe {
  * insbesondere entsteht aus „geländegängig“ keine neue fachliche oder technische ID.
  */
 export const RECIPES = {
+  ...ANHANG_D_TASK_6_RECIPES,
   ...ANHANG_G_RECIPES,
   ...ANHANG_F_A_RECIPES,
   ...ANHANG_F_B_RECIPES,
@@ -128,15 +135,6 @@ export const RECIPES = {
       organization: 'feuerwehr',
       strength: 'zug',
       bodyMarks: ['fire-fighting'],
-    },
-  },
-  'D.3.7': {
-    title: 'Zugführer der Feuerwehr',
-    referenceAsset: 'D.3.7_Zugführer der Feuerwehr.svg',
-    spec: {
-      kind: 'person',
-      organization: 'feuerwehr',
-      strength: 'zug',
     },
   },
 } as const satisfies Record<string, Recipe>;
@@ -198,12 +196,33 @@ export function labelContrastRequirements(
   }>();
   const blackBottomCenter = new Set<OrganizationId>();
   const belowBody = new Set<OrganizationId>();
+  const roleText = new Map<string, ContrastRequirement>();
   let blackBelowBody = false;
   let aboveBody = false;
   let surfaceBelowBody = false;
   const circleTopLeftOnSurface = new Set<BodyLabelInk>();
   for (const recipe of recipes) {
     const { labels, organization } = recipe.spec;
+    if (recipe.spec.functionRole !== undefined) {
+      const definition = functionRole(recipe.spec.functionRole);
+      const bodyFill = organization === undefined ? 'weiss' : organizationColor(organization);
+      for (const run of [
+        ...definition.layout.roleRuns,
+        ...(definition.layout.carrierRun === undefined ? [] : [definition.layout.carrierRun]),
+      ]) {
+        const foreground = functionRoleTextInk(run, bodyFill);
+        const background = run.contrastBackground === 'body'
+          ? bodyFill
+          : run.contrastBackground;
+        const context = `Funktionslauf ${definition.id}: ${run.content}`;
+        roleText.set(`${foreground}/${background}/${context}`, {
+          foreground,
+          background,
+          context,
+          minimum: MINIMUM_TEXT_CONTRAST,
+        });
+      }
+    }
     if (labels === undefined) continue;
     const profile = profileFor(recipe.spec.kind, recipe.spec.bodyVariant);
     // Körperbeschriftungen ohne Organisation bleiben außen vor: ohne Organisationsfarbe ist
@@ -251,6 +270,7 @@ export function labelContrastRequirements(
     }
   }
   return [
+    ...roleText.values(),
     ...[...inBody.values()].map<ContrastRequirement>(({ organization, foreground }) => ({
       // Derselbe Resolver, den `compose.ts` beim Zeichnen anwendet: quellenvermessener Override,
       // sonst schwarz auf weissem Körper und weiss auf jeder anderen Füllung. Aufgerufen und

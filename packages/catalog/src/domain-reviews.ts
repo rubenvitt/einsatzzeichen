@@ -34,7 +34,65 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:C.1.1#primary': { status: 'pending' },
   'bbk-babz-2025:C.1.2#primary': { status: 'pending' },
   'bbk-babz-2025:C.1.3#primary': { status: 'pending' },
+  // Anhang D.1: alle zehn Darstellungen bleiben fachlich offen. Insbesondere behauptet die
+  // technische ID von D.1.1 keine freigegebene Übersetzung des Führungsbegriffs; D.1.3 und
+  // D.1.8 tragen die im Design markierten englischen Arbeitsnamen weiter.
+  'bbk-babz-2025:D.1.1#primary': { status: 'pending' },
+  'bbk-babz-2025:D.1.2#primary': { status: 'pending' },
+  'bbk-babz-2025:D.1.3#primary': { status: 'pending' },
+  'bbk-babz-2025:D.1.4#primary': { status: 'pending' },
+  'bbk-babz-2025:D.1.5#primary': { status: 'pending' },
+  'bbk-babz-2025:D.1.6#primary': { status: 'pending' },
+  'bbk-babz-2025:D.1.7#primary': { status: 'pending' },
+  'bbk-babz-2025:D.1.8#primary': { status: 'pending' },
+  // Die Quelle belegt an D.1.9 zunächst nur einen weißen Körper. Ob daraus die Organisation
+  // hilfsorganisation folgt, ist für beide Darstellungen eine offene Fachfrage, keine durch die
+  // sichtbare Farbe erledigte Freigabe.
+  'bbk-babz-2025:D.1.9#primary': {
+    status: 'pending',
+    note: 'Organisationszuordnung hilfsorganisation ist aus der weißen Fläche abgeleitet.',
+  },
+  'bbk-babz-2025:D.1.9#alternative': {
+    status: 'pending',
+    note: 'Organisationszuordnung hilfsorganisation ist aus der weißen Fläche abgeleitet.',
+  },
+  // Anhang D.2: sieben vollständige Ortszeichen. Die gelbe Kreisfläche belegt keine
+  // Organisation, und die technischen englischen IDs behaupten keine fachlich freigegebene
+  // Übersetzung der Ortsbegriffe. Alle sieben Darstellungen bleiben deshalb einzeln offen.
+  'bbk-babz-2025:D.2.1#primary': { status: 'pending' },
+  'bbk-babz-2025:D.2.2#primary': { status: 'pending' },
+  'bbk-babz-2025:D.2.3#primary': { status: 'pending' },
+  'bbk-babz-2025:D.2.4#primary': { status: 'pending' },
+  'bbk-babz-2025:D.2.5#primary': { status: 'pending' },
+  'bbk-babz-2025:D.2.6#primary': { status: 'pending' },
+  'bbk-babz-2025:D.2.7#primary': { status: 'pending' },
+  // Anhang D.3: dreizehn komponierte Funktionsträger und zwei direkte offene Kappen. Die
+  // englischen Rollen-IDs sind technische Schlüssel; AW/ASB/DRK/MHD/JUH bleiben sichtbarer
+  // Text. Insbesondere D.3.14/D.3.15 erhalten keine erfundene functionRole. D.3.7 behält sein
+  // vorhandenes Reviewobjekt und bleibt trotz der erweiterten technischen Evidenz fachlich offen.
+  'bbk-babz-2025:D.3.1#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.2#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.3#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.4#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.5#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.6#primary': { status: 'pending' },
   'bbk-babz-2025:D.3.7#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.8#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.9#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.10#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.11#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.12#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.13#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.14#primary': { status: 'pending' },
+  'bbk-babz-2025:D.3.15#primary': { status: 'pending' },
+  // Anhang D.4: die fünf englischen Rollen-IDs bleiben technische Schlüssel. ST, ME, MG und
+  // BuPol sind sichtbarer Trägertext; die Organisationsfarbe wird nicht als fachliche Freigabe
+  // der Rollenbezeichnung oder Verwaltungszuordnung ausgegeben.
+  'bbk-babz-2025:D.4.1#primary': { status: 'pending' },
+  'bbk-babz-2025:D.4.2#primary': { status: 'pending' },
+  'bbk-babz-2025:D.4.3#primary': { status: 'pending' },
+  'bbk-babz-2025:D.4.4#primary': { status: 'pending' },
+  'bbk-babz-2025:D.4.5#primary': { status: 'pending' },
   // Anhang E, Teilslice E-a: die 16 Bergungs- und Fachgruppen des THW. Ihre Bedeutung liegt
   // vollständig in einem Buchstabenkürzel, das am Referenzbild abgelesen wurde — die fachliche
   // Prüfung, ob „B" tatsächlich die Bergungsgruppe und nicht etwa den Bergungstrupp bezeichnet,
