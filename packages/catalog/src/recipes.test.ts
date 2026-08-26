@@ -51,6 +51,33 @@ function horizontalPictogramLineYMm(drawing: Drawing): number | undefined {
   return line.y1 + (group.transform?.translate?.dyMm ?? 0);
 }
 
+const D_4_3_REFERENCE_ASSET = 'D.4.3_Leiter Gefahrenabwehr Mönchengladbach.svg';
+const D_4_3_STAR_BOUNDS = [
+  {
+    kind: 'bounds',
+    boundsMm: { minXMm: 9.143, minYMm: 0, maxXMm: 12.857, maxYMm: 4 },
+  },
+  {
+    kind: 'bounds',
+    boundsMm: { minXMm: 19.143, minYMm: 0, maxXMm: 22.857, maxYMm: 4 },
+  },
+] as const;
+
+function comparableBodyFingerprint(
+  fingerprint: ReturnType<typeof fingerprintFor>,
+): ReturnType<typeof fingerprintFor> {
+  if (fingerprint.asset !== D_4_3_REFERENCE_ASSET) return fingerprint;
+  const starBounds = fingerprint.shapes.filter((shape) => shape.kind === 'bounds');
+  expect(starBounds).toEqual(D_4_3_STAR_BOUNDS);
+  const [leftStarBounds, rightStarBounds] = starBounds;
+  return {
+    ...fingerprint,
+    shapes: fingerprint.shapes.filter(
+      (shape) => shape !== leftStarBounds && shape !== rightStarBounds,
+    ),
+  };
+}
+
 describe('Kompositionsrezepte', () => {
   const fingerprintCases = Object.entries(RECIPES);
 
@@ -77,15 +104,30 @@ describe('Kompositionsrezepte', () => {
     // extrahierte `rect`-Hülle und nicht die durch Übermalung verkürzte sichtbare Kontur.
     const comparableFingerprint = /^D\.1\.[2-8][._]/.test(recipe.referenceAsset)
       ? { ...fingerprint, shapes: fingerprint.shapes.filter((shape) => shape.kind !== 'ring') }
-      // D.4.3s beide Sternpfade sind im Kennwertartefakt als unspezifische `bounds` vor dem
-      // eigentlichen, korrekt erkannten `rect`-Körper einsortiert. Wie bei den verdeckten
-      // D.1-Rahmen oben wird nur für diese belegte Quelle die Nichtkörperklasse entfernt.
-      : recipe.referenceAsset === 'D.4.3_Leiter Gefahrenabwehr Mönchengladbach.svg'
-        ? { ...fingerprint, shapes: fingerprint.shapes.filter((shape) => shape.kind !== 'bounds') }
-        : fingerprint;
+      // D.4.3s `rect`-Körper steht im JSON zuerst; `matchFingerprint` bevorzugt durch seine
+      // Kind-Präzedenz trotzdem die beiden als `bounds` extrahierten Sternpfade. Nur wenn ihre
+      // vollständige Teilmenge exakt den zwei vermessenen Hüllen entspricht, werden genau diese
+      // beiden Objekte aus dem Körpervergleich entfernt.
+      : comparableBodyFingerprint(fingerprint);
     const result = matchFingerprint(drawing, comparableFingerprint);
     expect(result.problems).toEqual([]);
     expect(result.ok).toBe(true);
+  });
+
+  it('lehnt zusätzliche D.4.3-bounds ab, statt sie still aus dem Körpervergleich zu entfernen', () => {
+    const fingerprint = fingerprintFor(D_4_3_REFERENCE_ASSET);
+    const withUnexpectedBounds = {
+      ...fingerprint,
+      shapes: [
+        ...fingerprint.shapes,
+        {
+          kind: 'bounds',
+          boundsMm: { minXMm: 14, minYMm: 0, maxXMm: 18, maxYMm: 4 },
+        },
+      ],
+    };
+
+    expect(() => comparableBodyFingerprint(withUnexpectedBounds)).toThrow();
   });
 
   it('erzeugt die Löschstaffel mit Körper bei 9 mm', () => {
