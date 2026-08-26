@@ -47,6 +47,16 @@ describe('bodyMark() — die Fachdienstteilung', () => {
   });
 });
 
+describe('bodyMark() — Brandbekämpfung für C.1', () => {
+  it('zeichnet Brandbekämpfung für C.1 randbündig ohne rechten Horizontalast', () => {
+    expect(bodyMark('fire-fighting', formationBodyMm)).toEqual([
+      line(1, 16, 21, 16),
+      line(21, 16, 31, 6),
+      line(21, 16, 31, 26),
+    ]);
+  });
+});
+
 describe('bodyMark() — H.1 Veterinärzug', () => {
   it('rekonstruiert das vollständige Veterinär-V aus den gepaarten Konturkanten', () => {
     // Die obere und untere Konturkante der Quelle liegen auf y = 8,75 bzw. 9,25 mm: ihre
@@ -903,17 +913,17 @@ describe('bodyMark() — was nicht fortgeschrieben wird', () => {
       bodyMarkWithContext('medical-service', { kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm),
     ).toThrow(/nicht vermessen/);
     expect(() =>
-      bodyMarkWithContext('fire-fighting', { kind: 'formation' }, formationBodyMm),
-    ).toThrow(/keine randbündige Fassung vermessen/);
+      bodyMarkWithContext('fire-fighting', { kind: 'vehicle-land' }, landBodyMm),
+    ).toThrow(/nicht vermessen/);
   });
 
   it('wirft für eine Fähigkeit ohne vermessene randbündige Fassung', () => {
-    // `fire-fighting` steht in `CAPABILITY_IDS` und hat ein Boxpiktogramm, aber keine an einer
+    // `service-water` steht in `CAPABILITY_IDS` und hat ein Boxpiktogramm, aber keine an einer
     // F-Datei vermessene randbündige Fassung. Ein stiller Rückfall auf die Boxfassung wäre der
     // eigentliche Fehler: die beiden Zeichnungen unterscheiden sich in ihren **Maßen** (Kreuz
     // 2…30 gegen 1…31, Leiste 10 gegen 8 mm) und nicht nur in ihrer Größe — das Ergebnis sähe
     // plausibel aus und wäre an keiner Referenzdatei belegt.
-    expect(() => bodyMark('fire-fighting', formationBodyMm)).toThrow(
+    expect(() => bodyMark('service-water', formationBodyMm)).toThrow(
       /keine randbündige Fassung vermessen/,
     );
   });

@@ -62,6 +62,23 @@ const TECHNICAL_REVIEW: Review = {
   date: '2026-08-05',
 };
 
+const ANHANG_C_A_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'Die verpflichtende Sicht-QA hat die zuvor für C.1 verwendete Kapitel-4-Boxfassung mit ' +
+    'zusätzlichem rechten Horizontalast widerlegt; die eigenständige capability.fire-fighting ' +
+    'bleibt für Kapitel 4 unverändert. C.1.3 verwendet Formation, Feuerwehrfarbe, Stärke zug ' +
+    'und die formationsgebundene bodyMarks-Fassung fire-fighting: (1|16) nach (21|16), von dort ' +
+    'nach (31|6) und (31|26), ohne rechten Horizontalast. Der Körper besteht ' +
+    'matchFingerprint ohne Befund; recipes.test.ts hält Rezept, drei Kopfprimitive bei ' +
+    'cx 11/16/21 und cy 3,5 mm, Körperhülle 1/6 bis 31/26 mm sowie die Innengeometrie fest. ' +
+    'strengths.test.ts trägt die unabhängig vermessenen Zugmarken. Direkter und Mehrgrößen-' +
+    'Snapshot sowie die globalen viewBox-, Metadaten- und Kontrast-Gates prüfen die ' +
+    'renderbare Ausgabe. Das Domain-Review bleibt pending.',
+};
+
 /**
  * Für Piktogramme ist der erste Teil des Slice-2-Kriteriums für `technical: approved`
  * — Fingerprint- und Snapshot-Gate grün — strukturell unerreichbar: `matchFingerprint` vergleicht
@@ -635,6 +652,7 @@ function withFindingAndDeviation(
  * `approved` von `rv`, an dem kein Test etwas auffällig fände.
  */
 function technicalReviewFor(section: string): Review {
+  if (section === 'C.1.3') return ANHANG_C_A_TECHNICAL_REVIEW;
   if (Object.hasOwn(ANHANG_E_A_RECIPES, section)) {
     const defect = ANHANG_E_A_FILL_DEFECTS[section];
     if (defect === undefined) return ANHANG_E_A_TECHNICAL_REVIEW;
@@ -909,6 +927,7 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     '5.8',
     'C.1.1',
     'C.1.2',
+    'C.1.3',
     'D.3.7',
     'E',
     'F',

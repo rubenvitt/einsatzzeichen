@@ -98,7 +98,7 @@ export const RECIPES = {
       kind: 'formation',
       organization: 'feuerwehr',
       strength: 'staffel',
-      capabilities: ['fire-fighting'],
+      bodyMarks: ['fire-fighting'],
     },
   },
   'C.1.2': {
@@ -108,7 +108,17 @@ export const RECIPES = {
       kind: 'formation',
       organization: 'feuerwehr',
       strength: 'gruppe',
-      capabilities: ['fire-fighting'],
+      bodyMarks: ['fire-fighting'],
+    },
+  },
+  'C.1.3': {
+    title: 'Löschzug einer Feuerwehr',
+    referenceAsset: 'C.1.3_Löschzug einer Feuerwehr.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'feuerwehr',
+      strength: 'zug',
+      bodyMarks: ['fire-fighting'],
     },
   },
   'D.3.7': {
