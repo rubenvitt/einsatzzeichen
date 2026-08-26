@@ -165,11 +165,11 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
     const { minX, minY, maxX, maxY } = bounds;
     const cx = (minX + maxX) / 2;
     return [outline([
-      [minX + 6, minY + 2.75],
-      [minX + 10, minY + 2.75],
+      [minX + 6, minY + 3],
+      [minX + 9, minY + 3],
       [cx, maxY - 2.4],
-      [maxX - 10, minY + 2.75],
-      [maxX - 6, minY + 2.75],
+      [maxX - 9, minY + 3],
+      [maxX - 6, minY + 3],
     ])];
   },
 
@@ -183,11 +183,11 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
     const ink = { fill: 'schwarz', stroke: 'none' } as const;
     return [
       outline([
-        [minX + 8, minY + 2.75],
-        [minX + 11.25, minY + 2.75],
+        [minX + 8, minY + 3],
+        [minX + 11, minY + 3],
         [cx + 2, maxY - 2.4],
-        [maxX - 7.75, minY + 2.75],
-        [maxX - 4, minY + 2.75],
+        [maxX - 7, minY + 3],
+        [maxX - 4, minY + 3],
       ]),
       { type: 'circle', role: 'pictogram', cx: minX + 3.583, cy: maxY - 8, r: 1.25, style: ink },
       { type: 'circle', role: 'pictogram', cx: minX + 9.417, cy: maxY - 8, r: 1.25, style: ink },
@@ -204,22 +204,22 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
     const cx = (minX + maxX) / 2;
     return [
       outline([
-        [minX + 8, minY + 2.75],
-        [minX + 11.25, minY + 2.75],
+        [minX + 8, minY + 3],
+        [minX + 11, minY + 3],
         [cx + 2, maxY - 2.4],
-        [maxX - 7.75, minY + 2.75],
-        [maxX - 4, minY + 2.75],
-      ]),
-      outline([
-        [minX + 2, maxY - 5.25],
-        [minX + 14, maxY - 5.25],
+        [maxX - 7, minY + 3],
+        [maxX - 4, minY + 3],
       ]),
       {
-        type: 'polyline',
+        type: 'path',
         role: 'pictogram',
-        points: [[minX + 3.5, maxY - 2.75], [minX + 5, maxY - 4.6], [minX + 6.5, maxY - 2.75]],
-        closed: true,
-        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+        d:
+          `M ${minX + 2} ${maxY - 5.25} H ${minX + 14} V ${maxY - 4.75} ` +
+          `H ${minX + 5.525} L ${minX + 7.25} ${maxY - 2.64} V ${maxY - 2.25} ` +
+          `H ${minX + 2.75} V ${maxY - 2.64} L ${minX + 4.475} ${maxY - 4.75} ` +
+          `H ${minX + 2} Z M ${minX + 5} ${maxY - 4.6} ` +
+          `L ${minX + 6.5} ${maxY - 2.75} H ${minX + 3.5} Z`,
+        style: { fill: 'schwarz', fillRule: 'evenodd', stroke: 'none' },
       },
     ];
   },
