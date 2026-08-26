@@ -10,6 +10,7 @@ import type {
   StateId,
   WildfireId,
 } from '@einsatzzeichen/schema';
+import { DEFAULT_VIEWBOX_MM } from '@einsatzzeichen/schema';
 import { deepFreeze, type DeepReadonly } from '../readonly-data.js';
 
 /**
@@ -79,6 +80,7 @@ export function defineCapability(input: CapabilityDefinitionInput): CatalogPicto
     title: input.title,
     referenceAsset: input.referenceAsset,
     placement: { mode: 'in-body', bodyKind: 'formation' } as const,
+    viewBox: DEFAULT_VIEWBOX_MM,
     // Definitionen übernehmen keine veränderlichen Eingabereferenzen. Der anschließende Freeze
     // hat dadurch keinen überraschenden Seiteneffekt auf Objekte im Besitz des Aufrufers.
     box: structuredClone(input.box),
@@ -95,6 +97,7 @@ export function defineState(input: StateDefinitionInput): CatalogPictogramDefini
     referenceAsset: input.referenceAsset,
     placement: { mode: 'standalone' } as const,
     contrastPairs: structuredClone(input.contrastPairs),
+    viewBox: DEFAULT_VIEWBOX_MM,
     box: structuredClone(input.box),
     primitives: structuredClone(input.primitives),
   });
@@ -120,6 +123,7 @@ export function defineComms(input: CommsDefinitionInput): CatalogPictogramDefini
     referenceAsset: input.referenceAsset,
     placement: { mode: 'standalone' } as const,
     contrastPairs: structuredClone(input.contrastPairs),
+    viewBox: DEFAULT_VIEWBOX_MM,
     box: structuredClone(input.box),
     primitives: structuredClone(input.primitives),
   });
@@ -150,6 +154,7 @@ export function defineDamage(input: DamageDefinitionInput): CatalogPictogramDefi
     referenceAsset: input.referenceAsset,
     placement: { mode: 'standalone' } as const,
     contrastPairs: structuredClone(input.contrastPairs),
+    viewBox: DEFAULT_VIEWBOX_MM,
     box: structuredClone(input.box),
     primitives: structuredClone(input.primitives),
   });
@@ -175,6 +180,7 @@ export function defineWildfire(input: WildfireDefinitionInput): CatalogPictogram
     referenceAsset: input.referenceAsset,
     placement: { mode: 'standalone' } as const,
     contrastPairs: structuredClone(input.contrastPairs),
+    viewBox: DEFAULT_VIEWBOX_MM,
     box: structuredClone(input.box),
     primitives: structuredClone(input.primitives),
   });

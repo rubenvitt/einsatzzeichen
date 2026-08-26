@@ -1,6 +1,5 @@
 import {
   DEFAULT_STROKE_WIDTH_MM,
-  DEFAULT_VIEWBOX_MM,
   mmToUnits,
   unitsEqual,
   type DepictionVariant,
@@ -13,6 +12,7 @@ import {
   type Style,
   type Transform,
 } from '@einsatzzeichen/schema';
+import { rasterDimensionsForWidth } from './render/raster-dimensions.js';
 import { boundsOfMm, type BoundsMm } from './bounds.js';
 import { tokenizePath, type PathCommand } from './path-commands.js';
 import { effectiveTextPx, MINIMUM_TEXT_RENDER_PX } from './render/text-policy.js';
@@ -406,9 +406,8 @@ export function checkBox(definition: PictogramDefinition): PictogramIssue[] {
  * `core` kennt die sechs Snapshotgrößen der Mehrgrößenregression nicht — die liegt in `catalog`
  * (Task 9) — und soll sie auch nicht kennen, um die Paketrichtung `catalog → core` nicht umzukehren.
  *
- * `viewBoxMm` ist nicht Teil von `PictogramDefinition` (siehe dort) und deshalb nicht Parameter
- * dieser Funktion: die Standard-viewBox ist im gesamten Referenzbestand `DEFAULT_VIEWBOX_MM`, und
- * `compose()` setzt sie fest.
+ * Die jeweilige Definitions-ViewBox ist Teil des Vertrags. Der gemeinsame Rastervertrag validiert
+ * sie hier vor der Textberechnung und hält deren Pixelbreite an der Renderer-Schnittstelle fest.
  */
 export function checkTextLegibility(
   definition: PictogramDefinition,
@@ -417,11 +416,12 @@ export function checkTextLegibility(
   const issues: PictogramIssue[] = [];
   for (const text of textsOf(definition.primitives)) {
     for (const renderPx of renderSizesPx) {
+      const { widthPx } = rasterDimensionsForWidth(definition.viewBox, renderPx);
       // Unterhalb seiner deklarierten Einsatzgrenze beansprucht der Lauf keine Lesbarkeit; dort
       // gibt es nichts zu melden. Ohne diesen Zweig wäre kein Kürzel aus Anhang J je befundfrei:
       // die 16-px-Snapshotgröße verlangt 16 mm Schriftgrad, das breiteste Kürzel misst 10,3 mm.
       if (text.minRenderPx !== undefined && renderPx < text.minRenderPx) continue;
-      const effectivePx = effectiveTextPx(text.sizeMm, renderPx, DEFAULT_VIEWBOX_MM.width);
+      const effectivePx = effectiveTextPx(text.sizeMm, widthPx, definition.viewBox.width);
       if (effectivePx >= MINIMUM_TEXT_RENDER_PX) continue;
       issues.push({
         gate: 'text-legibility',

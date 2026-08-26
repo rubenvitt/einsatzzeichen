@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderSvg } from '@einsatzzeichen/core';
-import { DEFAULT_VIEWBOX_MM, type Drawing } from '@einsatzzeichen/schema';
+import { type Drawing } from '@einsatzzeichen/schema';
 import { ALL_PICTOGRAMS, pictogramRenderId } from './index.js';
 import { describePictogram } from '../labels.js';
 
@@ -16,7 +16,7 @@ describe('Piktogramm-Snapshots', () => {
     'rendert %s unverändert',
     async (id, definition) => {
       const drawing: Drawing = {
-        viewBox: DEFAULT_VIEWBOX_MM,
+        viewBox: definition.viewBox,
         children: definition.primitives,
         title: definition.title,
         description: describePictogram(definition),

@@ -1,4 +1,4 @@
-import type { Length, Primitive } from './geometry.js';
+import type { Drawing, Length, Primitive } from './geometry.js';
 import type { DepictionVariant } from './provenance.js';
 import type { CapabilityId, CommsId, DamageId, StateId, WildfireId } from './taxonomy.js';
 
@@ -44,6 +44,8 @@ export interface PictogramDefinition {
   variant: DepictionVariant;
   /** Deutsche Bezeichnung der Referenz. Die ID bleibt englisch (wie `SymbolKind`, `PrimitiveRole`). */
   title: string;
+  /** Reale Zeichenfläche dieser direkten Piktogrammdefinition in Millimetern. */
+  viewBox: Drawing['viewBox'];
   box: PictogramBox;
   primitives: readonly Primitive[];
 }

@@ -21,6 +21,7 @@ import { ARIMO_CAP_HEIGHT_FRACTION, MINIMUM_TEXT_RENDER_PX } from './render/text
 function withPath(d: string): PictogramDefinition {
   return {
     id: 'capability.fire-fighting',
+    viewBox: DEFAULT_VIEWBOX_MM,
     variant: 'primary',
     title: 'Testpiktogramm',
     box: { xMm: 4, yMm: 12, widthMm: 24, heightMm: 8 },
@@ -32,6 +33,7 @@ function withPath(d: string): PictogramDefinition {
 function withBox(box: PictogramDefinition['box']): PictogramDefinition {
   return {
     id: 'capability.fire-fighting',
+    viewBox: DEFAULT_VIEWBOX_MM,
     variant: 'primary',
     title: 'Testbox',
     box,
@@ -98,6 +100,7 @@ describe('Kommando-Gate', () => {
     // Fehlgründen belegt der Test, dass Befunde aus **beiden** Pfaden stammen, nicht nur einem.
     const definition: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Zwei Pfade',
       box: { xMm: 4, yMm: 12, widthMm: 24, heightMm: 8 },
@@ -124,6 +127,7 @@ describe('Kommando-Gate', () => {
     };
     const definition: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Pfad in Gruppe',
       box: { xMm: 4, yMm: 12, widthMm: 24, heightMm: 8 },
@@ -135,6 +139,7 @@ describe('Kommando-Gate', () => {
   it('meldet nichts für ein Piktogramm ohne Pfade', () => {
     const definition: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Nur Linien',
       box: { xMm: 3, yMm: 9, widthMm: 23, heightMm: 14 },
@@ -172,6 +177,7 @@ describe('Box-Gate', () => {
     // würde diesen validen Pfad ablehnen.
     const narrow: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Schmal und hoch',
       box: { xMm: 2, yMm: 2, widthMm: 8, heightMm: 26 },
@@ -183,6 +189,7 @@ describe('Box-Gate', () => {
   it('lehnt V ab, wenn der Wert die Höhe übersteigt', () => {
     const narrow: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Schmal und hoch',
       box: { xMm: 2, yMm: 2, widthMm: 8, heightMm: 26 },
@@ -196,6 +203,7 @@ describe('Box-Gate', () => {
   it('fordert bei einer Definition ohne Pfade Gleichheit von Hülle und Box', () => {
     const tooLarge: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Nur Linien, Box zu groß',
       box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
@@ -209,6 +217,7 @@ describe('Box-Gate', () => {
   it('nimmt eine Definition ohne Pfade an, deren Box genau der Hülle entspricht', () => {
     const exact: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Nur Linien, Box exakt',
       box: { xMm: 3, yMm: 9, widthMm: 23, heightMm: 14 },
@@ -226,6 +235,7 @@ describe('Box-Gate', () => {
     // muss. Gleichheit zu fordern wäre hier unerfüllbar.
     const mixed: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Linie und Pfad',
       box: { xMm: 3, yMm: 9, widthMm: 23, heightMm: 14 },
@@ -240,6 +250,7 @@ describe('Box-Gate', () => {
   it('lehnt ein Nicht-Pfad-Primitiv ab, das aus der Box ragt', () => {
     const outside: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Linie ragt heraus',
       box: { xMm: 4, yMm: 12, widthMm: 24, heightMm: 8 },
@@ -256,6 +267,7 @@ describe('Box-Gate', () => {
   it('hält Nicht-Pfad-Geometrie im Box-Vertrag von sichtbaren Strichen getrennt', () => {
     const onLeftBodyEdge: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Strich auf der linken Körperkante',
       box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
@@ -281,6 +293,7 @@ describe('Box-Gate', () => {
   it('lehnt eine Transformation direkt am Pfad ab, statt Rohkoordinaten freizugeben', () => {
     const transformed: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Transformierter Pfad',
       box: { xMm: 1, yMm: 6, widthMm: 10, heightMm: 10 },
@@ -332,6 +345,7 @@ describe('Box-Gate', () => {
     // verlangen (siehe measurableOf-Kommentar zur Zirkularitätsgefahr).
     const definition: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Text kleiner als die Piktogramm-Box',
       box: { xMm: 4, yMm: 10, widthMm: 24, heightMm: 14 },
@@ -358,6 +372,7 @@ describe('Box-Gate', () => {
     // gegen die deklarierte Box prüft und nicht bloß immer grün bleibt.
     const definition: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Text außerhalb der Piktogramm-Box',
       box: { xMm: 10, yMm: 10, widthMm: 8, heightMm: 8 },
@@ -391,6 +406,7 @@ describe('Box-Gate', () => {
     // (`widthMm < 0`) eine `invalid-geometry`-Meldung im viewBox-Gate; Text bislang keine.
     const definition: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Textbox mit negativer Breite',
       box: { xMm: 0, yMm: 0, widthMm: 32, heightMm: 32 },
@@ -424,6 +440,7 @@ describe('Box-Gate', () => {
     // Datei entgegen. Analog zum transformierten Pfad oben (`checkBox` meldet, statt zu werfen).
     const definition: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Gedrehter Text',
       box: { xMm: 4, yMm: 12, widthMm: 24, heightMm: 8 },
@@ -515,6 +532,7 @@ describe('Clipping-Gate', () => {
   it('lehnt eine Box ab, die über den Körper hinausragt', () => {
     const tall: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Box ragt oben heraus',
       box: { xMm: 4, yMm: 3, widthMm: 24, heightMm: 8 },
@@ -529,6 +547,7 @@ describe('Clipping-Gate', () => {
   it('nimmt eine Box an, deren Kante genau auf der Körperkante liegt', () => {
     const flush: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Box auf der Körperkante',
       box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
@@ -540,6 +559,7 @@ describe('Clipping-Gate', () => {
   it('meldet einen gestrichenen Pfad, dessen Box bündig an der Körperkante liegt', () => {
     const edgeStroke: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Strich auf linker Körperkante',
       box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
@@ -562,6 +582,7 @@ describe('Clipping-Gate', () => {
   it('meldet eine aktive Piktogramm-Linie an der Körperkante, ohne den Box-Vertrag zu ändern', () => {
     const edgeLine: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Linie auf linker Körperkante',
       box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
@@ -586,6 +607,7 @@ describe('Clipping-Gate', () => {
   it('erbt für ein rollenloses Definitionsblatt die Piktogrammrolle der Kompositionswurzel', () => {
     const rolelessEdgeStroke: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Rollenloser Strich auf linker Körperkante',
       box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
@@ -640,6 +662,7 @@ describe('Clipping-Gate', () => {
   it('vererbt die implizite Piktogrammrolle durch rollenlose Gruppen bis zum Blatt', () => {
     const nestedRolelessEdgeStroke: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Verschachtelter rollenloser Strich auf linker Körperkante',
       box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
@@ -662,6 +685,7 @@ describe('Clipping-Gate', () => {
     (role) => {
       const conflictingRole: PictogramDefinition = {
         id: 'capability.fire-fighting',
+        viewBox: DEFAULT_VIEWBOX_MM,
         variant: 'primary',
         title: `Piktogramm mit Fremdrolle ${role}`,
         box: { xMm: 4, yMm: 8, widthMm: 24, heightMm: 16 },
@@ -686,6 +710,7 @@ describe('Clipping-Gate', () => {
   it('akzeptiert eine explizite Piktogrammrolle weiterhin', () => {
     const explicitPictogramRole: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Explizite Piktogrammrolle',
       box: { xMm: 4, yMm: 8, widthMm: 24, heightMm: 16 },
@@ -705,6 +730,7 @@ describe('Clipping-Gate', () => {
   it('berücksichtigt geerbte Rolle und Stil für Polylinien, aber nicht none oder reine Füllung', () => {
     const inheritedPolyline: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Geerbte Piktogramm-Polylinie',
       box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
@@ -769,6 +795,7 @@ describe('Clipping-Gate', () => {
   it('bewahrt den geplanten strokeCapability-Vertrag für eine zentrale Pfadbox', () => {
     const planned: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Geplanter Standardfall',
       box: { xMm: 4, yMm: 8, widthMm: 24, heightMm: 16 },
@@ -789,6 +816,7 @@ describe('Clipping-Gate', () => {
   it('löst den Pfadstrichstil vor dem Clipping wie die Renderer feldweise auf', () => {
     const ownStrokeWins: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Eigener Strich überschreibt Gruppe',
       box: { xMm: 1.75, yMm: 6.25, widthMm: 29, heightMm: 19.5 },
@@ -1008,6 +1036,7 @@ describe('Clipping-Gate', () => {
   it('nimmt eine Textbox an, die vollständig im Körper liegt', () => {
     const definition: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Text im Körper',
       box: { xMm: 4, yMm: 12, widthMm: 24, heightMm: 8 },
@@ -1034,6 +1063,7 @@ describe('Clipping-Gate', () => {
     // Textbox stammt und nicht von der bereits an anderer Stelle geprüften Gesamt-Box.
     const definition: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Text ragt oben aus dem Körper',
       box: { xMm: 4, yMm: 12, widthMm: 24, heightMm: 8 },
@@ -1065,6 +1095,7 @@ describe('Clipping-Gate', () => {
     // halfStroke 0 und die Prüfung bleibt grün; ohne den Fix würde sie über den Körper hinausragen.
     const definition: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Text mit Strichstil, Box bündig am Körper',
       box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
@@ -1095,6 +1126,7 @@ describe('Clipping-Gate', () => {
     // checkPictogram/checkBox, um den unabhängigen Aufrufpfad tatsächlich zu treffen.
     const groupedText: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Text in transformierter Gruppe',
       box: { xMm: 4, yMm: 12, widthMm: 24, heightMm: 8 },
@@ -1159,6 +1191,7 @@ describe('checkPictogram', () => {
   it('führt die drei Gates zusammen und meldet Befunde aller drei', () => {
     const broken: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Dreifach kaputt',
       // Box ragt über den Körper (y ab 3), und die Linie liegt außerhalb der Box.
@@ -1183,6 +1216,7 @@ describe('checkPictogram', () => {
     // auf einmal zu melden.
     const broken: PictogramDefinition = {
       id: 'capability.fire-fighting',
+      viewBox: DEFAULT_VIEWBOX_MM,
       variant: 'primary',
       title: 'Kommando- und Box-Verstoß, Körper nicht vermessen',
       box: { xMm: 4, yMm: 12, widthMm: 24, heightMm: 8 },
@@ -1228,6 +1262,7 @@ function withText(content: string): PictogramDefinition {
 function withTextSize(content: string, sizeMm: number): PictogramDefinition {
   return {
     id: 'capability.fire-fighting',
+    viewBox: DEFAULT_VIEWBOX_MM,
     variant: 'primary',
     title: content,
     box: { xMm: 2, yMm: 12, widthMm: 28, heightMm: 10 },
@@ -1268,6 +1303,25 @@ describe('Text-Legibility-Gate', () => {
   // meldet das Gate nichts.
   it('meldet nichts oberhalb der Schwelle', () => {
     expect(checkTextLegibility(withText('HRT'), [32])).toEqual([]);
+  });
+
+  it('berechnet die Textlesbarkeit mit der Breite der Definitions-ViewBox', () => {
+    const narrow = {
+      ...withTextSize('HRT', 4),
+      viewBox: { width: 16, height: 46 },
+    } as PictogramDefinition;
+
+    expect(checkTextLegibility(narrow, [32])).toEqual([]);
+  });
+
+  it.each([
+    { width: 0, height: 46 },
+    { width: 32, height: 0 },
+    { width: Number.NaN, height: 46 },
+    { width: 32, height: Number.POSITIVE_INFINITY },
+  ])('lehnt eine ungültige Definitions-ViewBox %o ab', (viewBox) => {
+    const invalid = { ...withText('HRT'), viewBox } as PictogramDefinition;
+    expect(() => checkTextLegibility(invalid, [32])).toThrow();
   });
 
   it('prüft jede Rendergröße einzeln, statt nur die kleinste oder größte zu bewerten', () => {

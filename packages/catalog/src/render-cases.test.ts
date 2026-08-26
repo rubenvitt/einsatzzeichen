@@ -3,6 +3,7 @@ import { checkA11yMetadata, checkViewBox } from '@einsatzzeichen/core';
 import { DEFAULT_VIEWBOX_MM } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { pictogramRenderId } from './pictograms/index.js';
+import { ALL_PICTOGRAMS } from './pictograms/index.js';
 import { RENDER_CASES } from './test-support/render-cases.js';
 
 describe('vollständige Renderfallmenge', () => {
@@ -88,8 +89,13 @@ describe('vollständige Renderfallmenge', () => {
     expect(checkA11yMetadata(drawing)).toEqual([]);
   });
 
-  it.each(RENDER_CASES)('$id verwendet die kanonische viewBox und clippt keine Geometrie', ({ drawing }) => {
-    expect(drawing.viewBox).toEqual(DEFAULT_VIEWBOX_MM);
+  it.each(RENDER_CASES)('$id verwendet seine deklarierte ViewBox und clippt keine Geometrie', ({ drawing }) => {
     expect(checkViewBox(drawing)).toEqual([]);
+  });
+
+  it('hält alle bestehenden Piktogrammdefinitionen bei der kanonischen 32×32-mm-ViewBox', () => {
+    expect(ALL_PICTOGRAMS.map((definition) => definition.viewBox)).toEqual(
+      Array.from({ length: ALL_PICTOGRAMS.length }, () => DEFAULT_VIEWBOX_MM),
+    );
   });
 });

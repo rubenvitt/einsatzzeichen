@@ -1010,6 +1010,7 @@ describe('compose() — randbündige Fachdienstzeichen', () => {
         id,
         variant: 'primary',
         title: 'Doppel',
+        viewBox: DEFAULT_VIEWBOX_MM,
         box: { xMm: 4, yMm: 8, widthMm: 24, heightMm: 16 },
         primitives: [{ type: 'circle', role: 'pictogram', cx: 16, cy: 16, r: 3 }],
       }),

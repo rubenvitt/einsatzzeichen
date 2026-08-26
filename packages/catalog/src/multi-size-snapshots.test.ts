@@ -2,6 +2,7 @@ import { readdirSync } from 'node:fs';
 import { Resvg, type RenderedImage } from '@resvg/resvg-js';
 import { describe, expect, it } from 'vitest';
 import { renderSvg, type RenderTheme } from '@einsatzzeichen/core';
+import type { Drawing } from '@einsatzzeichen/schema';
 import {
   ACCESSIBLE_LIGHT_THEME,
   PRINT_MONOCHROME_THEME,
@@ -14,6 +15,20 @@ import { resvgFontOptions } from './fonts.js';
 const SIZES = [16, 24, 32, 64, 128, 256] as const;
 const GAP = 12;
 const LARGE = 256;
+
+const RECTANGULAR_FIXTURE: Drawing = {
+  viewBox: { width: 32, height: 46 },
+  children: [
+    {
+      type: 'rect',
+      x: 1,
+      y: 1,
+      width: 30,
+      height: 44,
+      style: { fill: 'schwarz' },
+    },
+  ],
+};
 
 interface Raster {
   size: number;
@@ -212,6 +227,14 @@ function organizationProfileSheet(): string {
 }
 
 describe('echte Mehrgrößen- und Profilregression', () => {
+  it('rastert eine rechteckige Testzeichnung proportional zur Pixelbreite', () => {
+    const svg = renderSvg(RECTANGULAR_FIXTURE, { size: 64 });
+    const image = new Resvg(svg).render();
+
+    expect(image.width).toBe(64);
+    expect(image.height).toBe(92);
+  });
+
   it('schreibt exakt 406 Mehrgrößen-Snapshots', () => {
     const snapshots = readdirSync(new URL('./__snapshots__/multi-size/', import.meta.url), {
       withFileTypes: true,

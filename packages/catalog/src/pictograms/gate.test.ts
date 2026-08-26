@@ -58,6 +58,7 @@ const CENTERED_TEST_PICTOGRAM: PictogramDefinition = {
   id: 'capability.fire-fighting',
   variant: 'primary',
   title: 'Zentrale Testbox',
+  viewBox: DEFAULT_VIEWBOX_MM,
   box: { xMm: 14, yMm: 14, widthMm: 4, heightMm: 4 },
   primitives: [],
 };
@@ -69,22 +70,23 @@ const CENTERED_TEST_PICTOGRAM: PictogramDefinition = {
  */
 const RENDER_SIZES_PX = [16, 24, 32, 64, 128, 256] as const;
 
-const VIEWBOX_BODY: Primitive = {
-  type: 'rect',
-  role: 'body',
-  x: 0,
-  y: 0,
-  width: DEFAULT_VIEWBOX_MM.width,
-  height: DEFAULT_VIEWBOX_MM.height,
-};
-
 function clippingBodyFor(definition: CatalogPictogramDefinition): Primitive {
   return definition.placement.mode === 'in-body'
     ? bodyOf(definition.placement.bodyKind)
-    : VIEWBOX_BODY;
+    : {
+        type: 'rect',
+        role: 'body',
+        x: 0,
+        y: 0,
+        width: definition.viewBox.width,
+        height: definition.viewBox.height,
+      };
 }
 
-function standaloneFixture(box: PictogramBox): CatalogPictogramDefinition {
+function standaloneFixture(
+  box: PictogramBox,
+  viewBox: PictogramDefinition['viewBox'] = DEFAULT_VIEWBOX_MM,
+): CatalogPictogramDefinition {
   return deepFreeze({
     section: '4.fixture',
     id: 'capability.fire-fighting',
@@ -92,6 +94,7 @@ function standaloneFixture(box: PictogramBox): CatalogPictogramDefinition {
     title: 'Standalone-Testfixture',
     referenceAsset: 'fixture.svg',
     placement: { mode: 'standalone' } as const,
+    viewBox,
     contrastPairs: [
       { foreground: 'schwarz', background: 'surface', context: 'Testfixture' },
     ],
@@ -173,6 +176,14 @@ describe('Piktogramm-Gates über den Katalogbestand', () => {
   it('lehnt standalone-Tinte außerhalb der 32×32-mm-ViewBox ab', () => {
     const definition = standaloneFixture({ xMm: 31, yMm: 31, widthMm: 2, heightMm: 2 });
     expect(checkClipping(definition, clippingBodyFor(definition))).not.toEqual([]);
+  });
+
+  it('leitet den standalone-Clippingkörper aus der rechteckigen Definitions-ViewBox ab', () => {
+    const definition = standaloneFixture(
+      { xMm: 1, yMm: 42, widthMm: 3, heightMm: 3 },
+      { width: 32, height: 46 },
+    );
+    expect(checkClipping(definition, clippingBodyFor(definition))).toEqual([]);
   });
 
   it.each(BODY_CASES)('kann die reale Körperfläche von %s prüfen', (_kind, body) => {

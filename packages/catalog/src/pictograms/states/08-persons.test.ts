@@ -1,5 +1,5 @@
 import { checkBox, checkClipping, checkCommands } from '@einsatzzeichen/core';
-import { DEFAULT_VIEWBOX_MM, type Primitive } from '@einsatzzeichen/schema';
+import { type Primitive } from '@einsatzzeichen/schema';
 import { describe, expect, it } from 'vitest';
 import type { CatalogPictogramDefinition } from '../catalog-definition.js';
 import { PERSON_STATES } from './08-persons.js';
@@ -9,14 +9,16 @@ type Circle = Extract<Primitive, { type: 'circle' }>;
 type Path = Extract<Primitive, { type: 'path' }>;
 type Polyline = Extract<Primitive, { type: 'polyline' }>;
 
-const VIEWBOX_BODY: Primitive = {
-  type: 'rect',
-  role: 'body',
-  x: 0,
-  y: 0,
-  width: DEFAULT_VIEWBOX_MM.width,
-  height: DEFAULT_VIEWBOX_MM.height,
-};
+function viewBoxBody(item: CatalogPictogramDefinition): Primitive {
+  return {
+    type: 'rect',
+    role: 'body',
+    x: 0,
+    y: 0,
+    width: item.viewBox.width,
+    height: item.viewBox.height,
+  };
+}
 
 function definition(id: string, variant = 'primary'): CatalogPictogramDefinition {
   const found = PERSON_STATES.find((item) => item.id === id && item.variant === variant);
@@ -102,7 +104,7 @@ describe('PERSON_STATES', () => {
       }]);
       expect(checkCommands(item)).toEqual([]);
       expect(checkBox(item)).toEqual([]);
-      expect(checkClipping(item, VIEWBOX_BODY)).toEqual([]);
+      expect(checkClipping(item, viewBoxBody(item))).toEqual([]);
       for (const leaf of leavesOf(item.primitives)) {
         expect(leaf.role).toBe('pictogram');
         expect(leaf.role).not.toBe('foot');
