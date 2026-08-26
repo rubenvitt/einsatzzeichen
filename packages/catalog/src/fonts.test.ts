@@ -282,8 +282,9 @@ describe('Rasterevidenz für Text (resvgFontOptions())', () => {
     // F-d ergänzt sieben beschriftete Fahrzeuge; allein F.2.15 trägt keinen Lauf.
     // F-e ergänzt die drei vollständig vermessenen Kreisläufe UHS/UHS/50. F-f ergänzt mit
     // F.3.14 genau einen weiteren vermessenen Lauf: `500` im ortsgebundenen Betreuungsplatz.
-    // Anhang N ergänzt sechs beschriftete Rezepte: N.1.2 bis N.1.6 sowie N.2.3.
-    expect(labelRecipes).toHaveLength(110);
+    // I-a ergänzt die drei Wasserfahrzeugkürzel MzB, MzAB und MzPt; Anhang N ergänzt sechs
+    // beschriftete Rezepte: N.1.2 bis N.1.6 sowie N.2.3.
+    expect(labelRecipes).toHaveLength(113);
   });
 
   /**

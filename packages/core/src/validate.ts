@@ -56,6 +56,7 @@ const DEFAULT_CENTER_LABEL_CAP_HEIGHT_MM = 4.87;
 /** Exakte, aus den Quellen vermessene Art-/Variantenpaare; alle anderen bleiben fail-closed. */
 const BODY_VARIANT_KINDS: Readonly<Record<BodyVariantId, ReadonlySet<SymbolKind>>> = {
   'raised-hull': new Set<SymbolKind>(['vehicle-air', 'vehicle-water']),
+  'inset-hull': new Set<SymbolKind>(['vehicle-water']),
   'foot-band': new Set<SymbolKind>(['formation', 'vehicle-land']),
   'plain-wheel-pair': new Set<SymbolKind>(['vehicle-land']),
   'raised-gable': new Set<SymbolKind>(['circle-12']),
@@ -120,6 +121,7 @@ function hasMeasuredCircleOrganizationContract(spec: SymbolSpec): boolean {
 export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const profile = profileFor(spec.kind, spec.bodyVariant);
+  const labels = spec.labels;
 
   if (
     spec.bodyVariant !== undefined &&
@@ -131,6 +133,35 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
         `Die Körpervariante "${spec.bodyVariant}" ist für "${spec.kind}" nicht vermessen. ` +
         'Varianten fallen weder auf eine andere Körperart noch auf deren Normalfassung zurück.',
     });
+  }
+
+  const isInsetWatercraft =
+    spec.kind === 'vehicle-water' && spec.bodyVariant === 'inset-hull';
+
+  if (isInsetWatercraft && spec.organization !== 'hilfsorganisation') {
+    issues.push({
+      rule: 'inset-hull-requires-hilfsorganisation',
+      message: 'inset-hull requires the measured white Hilfsorganisation body.',
+    });
+  }
+
+  if (isInsetWatercraft) {
+    // I.3.5 bis I.3.7 belegen ausschließlich den mittigen Lauf. Das generische Labelmodell ist
+    // inzwischen breiter als dieser Vertrag (unter anderem durch die vermessenen N-Metriken).
+    // Deshalb erlauben wir die zwei bekannten nicht bzw. genau so gerenderten Felder explizit,
+    // statt eine Liste verbotener Zonen zu pflegen, die beim nächsten Feld still veraltet.
+    const hasUnmeasuredLabelZone = labels !== undefined && Object.keys(labels).some(
+      (key) => key !== 'accessibilityMode' && key !== 'center',
+    );
+
+    if (hasUnmeasuredLabelZone || spec.designation !== undefined) {
+      issues.push({
+        rule: 'inset-hull-requires-center-label-only',
+        message:
+          'inset-hull supports only the measured center label zone and non-rendering ' +
+          'accessibility metadata.',
+      });
+    }
   }
 
   if (spec.strength !== undefined && !UNIT_KINDS.has(spec.kind)) {

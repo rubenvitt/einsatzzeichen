@@ -128,6 +128,18 @@ describe('Layoutprofile', () => {
     });
   });
 
+  it('hält die separat gemessene Mitte des eingesenkten Wasserrumpfs bei y=15,9999', () => {
+    // I.3.5 bis I.3.7: Körperunterkante 23,9899 mm, mittige Grundlinie 15,9999 mm.
+    const insetHullBottomMm = 23.9899;
+    const insetProfile = profileFor('vehicle-water', 'inset-hull');
+
+    expect(insetProfile.centerBaselineFromBodyBottomMm).toBeCloseTo(7.99, 6);
+    expect(insetHullBottomMm - insetProfile.centerBaselineFromBodyBottomMm).toBeCloseTo(15.9999, 4);
+    expect(profileFor('vehicle-water').centerBaselineFromBodyBottomMm).toBeCloseTo(6.9896, 6);
+    expect(profileFor('vehicle-water', 'raised-hull').centerBaselineFromBodyBottomMm)
+      .toBeCloseTo(6.9896, 6);
+  });
+
   it('führt getrennte topLeft-Profile ohne öffentliche Stilsteuerung für beide F.3-Kreisfassungen', () => {
     const circleKind = 'circle-12' as SymbolKind;
     const raisedGable = 'raised-gable' as BodyVariantId;

@@ -166,6 +166,7 @@ const ORGANIZATION_IDS = [
   'thw',
   'fuehrung-leitung',
   'polizei',
+  'bundespolizei',
   'bundeswehr',
   'sonstige-gefahrenabwehr',
   'zivile-einheiten',
@@ -185,9 +186,11 @@ function organizationProfileSheet(): string {
   const left = 12;
   const rowGap = 42;
   const firstTop = 42;
-  const secondTop = firstTop + size + rowGap + 28;
+  const rowStride = size + rowGap + 28;
+  const themes = Object.values(RENDER_THEMES);
+  const rowTops = themes.map((_theme, index) => firstTop + index * rowStride);
   const width = left * 2 + cellWidth * ORGANIZATION_CASES.length;
-  const height = secondTop + size + 30;
+  const height = (rowTops.at(-1) ?? firstTop) + size + 30;
 
   function row(theme: RenderTheme, top: number): string {
     return ORGANIZATION_CASES.map((renderCase, index) => {
@@ -201,22 +204,31 @@ function organizationProfileSheet(): string {
     `viewBox="0 0 ${width} ${height}">` +
     `<rect width="${width}" height="${height}" fill="#ffffff"/>` +
     `<title>Organisationsprofile ohne alleinige Farbhue-Abhängigkeit</title>` +
-    `<text x="12" y="20" font-family="sans-serif" font-size="14" ` +
-    `font-weight="bold">accessible-light · 64px</text>` +
-    row(ACCESSIBLE_LIGHT_THEME, firstTop) +
-    `<text x="12" y="${secondTop - 14}" font-family="sans-serif" font-size="14" ` +
-    `font-weight="bold">print-monochrome · 64px</text>` +
-    row(PRINT_MONOCHROME_THEME, secondTop) +
+    themes.map((theme, index) => {
+      const top = rowTops[index] ?? firstTop;
+      return (
+        `<text x="12" y="${top - 14}" font-family="sans-serif" font-size="14" ` +
+        `font-weight="bold">${escapeXml(theme.id)} · 64px</text>` +
+        row(theme, top)
+      );
+    }).join('') +
     `</svg>`
   );
 }
 
 describe('echte Mehrgrößen- und Profilregression', () => {
-  it('schreibt exakt 415 Mehrgrößen-Snapshots', () => {
+  it('schreibt exakt 422 Mehrgrößen-Snapshots', () => {
     const snapshots = readdirSync(new URL('./__snapshots__/multi-size/', import.meta.url), {
       withFileTypes: true,
     }).filter((entry) => entry.isFile() && entry.name.endsWith('.svg'));
-    expect(snapshots).toHaveLength(415);
+    const names = snapshots.map((entry) => entry.name);
+    expect(snapshots).toHaveLength(422);
+    expect(names).toContain('recipe.C.1.3.svg');
+    expect(names).toContain('recipe.I.3.5.svg');
+    expect(names).toContain('recipe.I.3.6.svg');
+    expect(names).toContain('recipe.I.3.7.svg');
+    expect(names).toContain('recipe.N.1.1.svg');
+    expect(names).toContain('recipe.N.2.3.svg');
   });
 
   it.each(RENDER_CASES)(

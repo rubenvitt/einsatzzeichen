@@ -1,7 +1,7 @@
 # Visual QA: Anhang N
 
-Datum: 26. August 2026  
-Scope: N.1.1 bis N.1.6 und N.2.1 bis N.2.3  
+Datum: 26. August 2026
+Scope: N.1.1 bis N.1.6 und N.2.1 bis N.2.3
 Status: technische Einzelprüfung abgeschlossen; Domain-Review pending
 
 ## Prüfaufbau

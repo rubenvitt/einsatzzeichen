@@ -641,6 +641,37 @@ genau acht direkte und acht Mehrgrößen-Snapshots hinzu (151 beziehungsweise 40
 alle 541 zuvor vorhandenen Snapshotdateien blieben bytegleich. Die Einzelsichtung ist nicht der
 finale Task-6-Kontaktbogen, und sämtliche F-f-Domainreviews bleiben `pending`.
 
+## Anhang H: veterinärmedizinische Formationen
+
+H.1 bis H.3 ergänzen drei orangefarbene Formationsrezepte für Veterinärzug,
+Tier-Dekontaminationsgruppe sowie Schlacht- und Untersuchungsgruppe. H.2 hat bewusst eine eigene,
+kompakte technische Tierdekontaminationsmarke links unten: Sie ist weder die rote C.1.10-Fassung
+noch eine Wiederverwendung von `capability.decontamination`. Die drei Original-/Katalogpaare
+wurden als beschrifteter `420 × 420 px`-Paarvergleich gerastert und in Originalauflösung
+gesichtet; die lokalen, ignorierten PR-Evidenzdaten stehen in der QA-Notiz. Die technischen
+Reviews sind freigegeben, während die drei Domain-Reviews ausdrücklich `pending` bleiben.
+
+Messentscheidung und Provenienzgrenze: [`docs/decisions/2026-08-26-anhang-h.md`](docs/decisions/2026-08-26-anhang-h.md).
+Visual QA und Artefakthash: [`docs/reviews/2026-08-26-h-visual-qa.md`](docs/reviews/2026-08-26-h-visual-qa.md).
+
+## LFH-418: C.1.3 als erster Anhang-C-Slice
+
+Anhang C umfasst 59 Referenzdarstellungen; C.1.1 und C.1.2 waren bereits im Katalog.
+Der erste ausführbare Restslice ergänzt ausschließlich C.1.3 „Löschzug einer Feuerwehr“ als
+Komposition aus Formation, Feuerwehrfarbe, Stärke `zug` und der für C.1 vermessenen
+randbündigen `fire-fighting`-Körpermarke. Der Scope bleibt abschnittsgenau bei `C.1.3`; weder
+`C.1` noch `C` wird vor vollständiger, getesteter Abdeckung beansprucht. Das fachliche Review
+bleibt `pending`.
+
+Der nach dem finalen Rebase auf `origin/main` wiederholte Branchlauf belegte 60 Testdateien mit
+4.126 grünen Tests, einen fehlerfreien Typecheck und das Coverage-Gate mit 431 Manifestzeilen und
+445 offenen Fachreviews. Diese technischen Belege sind keine fachliche Freigabe.
+
+Die visuelle QA steht in
+[`docs/reviews/2026-08-26-c-1-3-visual-qa.md`](docs/reviews/2026-08-26-c-1-3-visual-qa.md).
+Der dort verlinkte Screenshot zeigt ausschließlich generierte Katalogausgabe; die lokale
+BABZ-Referenz wird wegen ungeklärter Nutzungsgrundlage weder committed noch veröffentlicht.
+
 ## Der lokale Referenzbestand
 
 `taktische-zeichen/` ist ein **lokaler Ordner mit 661 damals von der BABZ bereitgestellten

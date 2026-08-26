@@ -6,6 +6,7 @@ import {
   formatUnits,
   matchFingerprint,
   renderSvg,
+  validateSpec,
 } from '@einsatzzeichen/core';
 import { mmToUnits, type Drawing, type Primitive } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
@@ -40,6 +41,12 @@ import { ANHANG_F_B_RECIPES } from './recipes-anhang-f.js';
  * die fachliche Aussage ist unverändert, sie wird eine Ebene tiefer gelesen.
  */
 function horizontalPictogramLineYMm(drawing: Drawing): number | undefined {
+  const directLine = drawing.children.find(
+    (c): c is Primitive & { type: 'line' } =>
+      c.type === 'line' && c.role === 'pictogram' && c.y1 === c.y2,
+  );
+  if (directLine !== undefined) return directLine.y1;
+
   const group = drawing.children.find(
     (c): c is Primitive & { type: 'group' } => c.type === 'group' && c.role === 'pictogram',
   );
@@ -53,6 +60,56 @@ function horizontalPictogramLineYMm(drawing: Drawing): number | undefined {
 
 describe('Kompositionsrezepte', () => {
   const fingerprintCases = Object.entries(RECIPES);
+
+  it('bindet Anhang H mit drei orangefarbenen Formationen an die Originaldateien', () => {
+    expect(RECIPES['H.1']).toEqual({
+      title: 'Veterinärzug',
+      referenceAsset: 'H.1_Veterinärzug.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'sonstige-gefahrenabwehr',
+        strength: 'zug',
+        bodyMarks: ['veterinary'],
+      },
+    });
+    expect(RECIPES['H.2']).toEqual({
+      title: 'Tier-Dekontaminationsgruppe',
+      referenceAsset: 'H.2_Tier-Dekontaminationsgruppe.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'sonstige-gefahrenabwehr',
+        strength: 'gruppe',
+        bodyMarks: ['h-veterinary-decontamination'],
+      },
+    });
+    expect(RECIPES['H.3']).toEqual({
+      title: 'Schlacht- und Untersuchungsgruppe',
+      referenceAsset: 'H.3_Schlacht- und Untersuchungsgruppe.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'sonstige-gefahrenabwehr',
+        strength: 'gruppe',
+        bodyMarks: ['h-veterinary-slaughter'],
+      },
+    });
+  });
+
+  it('zeichnet die H-spezifische kompakte Tierdekontaminationsmarke', () => {
+    const h2 = composeFromCatalog(RECIPES['H.2']!.spec).children.filter(
+      (child) => child.role === 'pictogram',
+    );
+
+    expect(h2).toHaveLength(7);
+    expect(h2.map((child) => child.type)).toEqual([
+      'polyline',
+      'circle',
+      'circle',
+      'polyline',
+      'polyline',
+      'polyline',
+      'polyline',
+    ]);
+  });
 
   it('bindet den Körper-Fingerprint-Claim exakt an die ausgeführten Rezeptfälle', () => {
     const tested = fingerprintCases.map(([section]) => `recipe.${section}`).sort();
@@ -91,10 +148,66 @@ describe('Kompositionsrezepte', () => {
     expect(boundsOfMm(body).minY).toBeCloseTo(6, 6);
   });
 
-  it('unterscheidet Löschstaffel und Löschgruppe nur in der Stärke', () => {
+  it('erzeugt C.1.3 als Löschzug auf dem unveränderten Formationskörper', () => {
+    const recipe = RECIPES['C.1.3'];
+    expect(recipe).toEqual({
+      title: 'Löschzug einer Feuerwehr',
+      referenceAsset: 'C.1.3_Löschzug einer Feuerwehr.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'feuerwehr',
+        strength: 'zug',
+        bodyMarks: ['fire-fighting'],
+      },
+    });
+
+    const drawing = composeFromCatalog(recipe.spec);
+    const heads = drawing.children.filter(
+      (child): child is Primitive & { type: 'circle' } =>
+        child.type === 'circle' && child.role === 'head',
+    );
+    expect(heads.map(({ cx, cy, r }) => ({ cx, cy, r }))).toEqual([
+      { cx: 11, cy: 3.5, r: 1.5 },
+      { cx: 16, cy: 3.5, r: 1.5 },
+      { cx: 21, cy: 3.5, r: 1.5 },
+    ]);
+
+    const pictogramLines = drawing.children.filter(
+      (child): child is Primitive & { type: 'line' } =>
+        child.type === 'line' && child.role === 'pictogram',
+    );
+    expect(pictogramLines.map(({ x1, y1, x2, y2 }) => ({ x1, y1, x2, y2 }))).toEqual([
+      { x1: 1, y1: 16, x2: 21, y2: 16 },
+      { x1: 21, y1: 16, x2: 31, y2: 6 },
+      { x1: 21, y1: 16, x2: 31, y2: 26 },
+    ]);
+    expect(pictogramLines).not.toContainEqual(
+      expect.objectContaining({ x1: 21, y1: 16, x2: 31, y2: 16 }),
+    );
+
+    const body = drawing.children.find((child) => child.role === 'body');
+    expect(body).toBeDefined();
+    if (body === undefined) return;
+    const bounds = boundsOfMm(body);
+    expect(bounds.minX).toBeCloseTo(1, 6);
+    expect(bounds.minY).toBeCloseTo(6, 6);
+    expect(bounds.maxX).toBeCloseTo(31, 6);
+    expect(bounds.maxY).toBeCloseTo(26, 6);
+    expect(body.style?.fill).toBe('rot');
+    expect(horizontalPictogramLineYMm(drawing)).toBeCloseTo(16, 6);
+  });
+
+  it('unterscheidet Löschstaffel, Löschgruppe und Löschzug nur in der Stärke', () => {
     const { strength: _a, ...staffel } = RECIPES['C.1.1'].spec;
     const { strength: _b, ...gruppe } = RECIPES['C.1.2'].spec;
+    const { strength: _c, ...zug } = RECIPES['C.1.3'].spec;
+    expect(staffel).toEqual({
+      kind: 'formation',
+      organization: 'feuerwehr',
+      bodyMarks: ['fire-fighting'],
+    });
     expect(staffel).toEqual(gruppe);
+    expect(gruppe).toEqual(zug);
   });
 
   it('erzeugt den Zugführer mit Spitze bei 5 mm und Unterkante bei 31 mm', () => {
@@ -120,6 +233,7 @@ describe('Kompositionsrezepte', () => {
     const cases = [
       ['C.1.1', 19] as const,
       ['C.1.2', 16] as const,
+      ['C.1.3', 16] as const,
     ];
     for (const [section, expectedCenterYMm] of cases) {
       const drawing = composeFromCatalog(RECIPES[section].spec);
@@ -172,6 +286,73 @@ describe('Kompositionsrezepte', () => {
     const drawing = composeFromCatalog(RECIPES['C.1.1'].spec);
     expect(drawing.title).toBeUndefined();
   });
+});
+
+describe('Anhang I, Teilslice I-a (I.3.5 bis I.3.7)', () => {
+  const expected = {
+    'I.3.5': ['Mehrzweckboot', 'I.3.5_Mehrzweckboot.svg', 'MzB'],
+    'I.3.6': ['Mehrzweckarbeitsboot', 'I.3.6_Mehrzweckarbeitsboot.svg', 'MzAB'],
+    'I.3.7': ['Mehrzweckponton', 'I.3.7_Mehrzweckponton.svg', 'MzPt'],
+  } as const;
+  const recipes: Record<string, Recipe> = RECIPES;
+
+  it('bindet ausschließlich die drei vermessenen Wasserfahrzeuge an ihre Referenzmatrix', () => {
+    // Diese Literale schützen die Zuordnung von Abschnitt, Name, Quelldatei und Kürzel: etwa
+    // ein vertauschtes MzAB/MzPt ergäbe weiter eine valide Komposition, aber ein falsches Bild.
+    const actual = Object.fromEntries(
+      Object.entries(recipes)
+        .filter(([section]) => section.startsWith('I.'))
+        .map(([section, recipe]) => {
+        return [
+          section,
+          [recipe.title, recipe.referenceAsset, recipe.spec.labels?.center],
+        ];
+      }),
+    );
+    expect(actual).toEqual(expected);
+  });
+
+  it.each(Object.entries(expected))(
+    '%s kompositioniert den gemessenen inset-hull mit ausschließlich schwarzem Mittellabel',
+    (section, [_title, referenceAsset, center]) => {
+      const recipe = recipes[section];
+      expect(recipe).toBeDefined();
+      if (recipe === undefined) return;
+
+      expect(recipe.spec.kind).toBe('vehicle-water');
+      expect(recipe.spec.bodyVariant).toBe('inset-hull');
+      expect(recipe.spec.organization).toBe('hilfsorganisation');
+      expect(recipe.spec.labels).toEqual({ center });
+      expect(recipe.spec.designation).toBeUndefined();
+      expect(validateSpec(recipe.spec)).toEqual([]);
+
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      const body = drawing.children.find((child) => child.role === 'body');
+      expect(body).toBeDefined();
+      expect(body?.type).toBe('path');
+      if (body?.type === 'path') {
+        expect(body.d).toBe(
+          'M 1.01 9.0001 L 30.9894 9.0001 C 30.9894 17.2787, 24.2783 23.9898, 15.9997 23.9898 C 7.7211 23.9898, 1.01 17.2787, 1.01 9.0001 Z',
+        );
+      }
+
+      // Der Rezeptweg muss die benannte lokale Quelldatei treffen; der Grundzeichen-Test allein
+      // deckt weder Registrierung noch Komposition ab.
+      expect(matchFingerprint(drawing, fingerprintFor(referenceAsset))).toEqual({
+        ok: true,
+        problems: [],
+      });
+
+      const labels = drawing.children.filter(
+        (child): child is Primitive & { type: 'text' } =>
+          child.type === 'text' && child.role === 'label',
+      );
+      expect(labels).toHaveLength(1);
+      expect(labels[0]?.content).toBe(center);
+      expect(labels[0]?.style?.fill).toBe('schwarz');
+      expect(labels[0]?.y).toBeCloseTo(15.9999, 3);
+    },
+  );
 });
 
 describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
@@ -1211,11 +1392,12 @@ describe('Anhang F, Teilslice F-f', () => {
     },
   } as const;
 
-  it('deckt F.3.12 bis F.3.19 lückenlos ohne Alternative ab', () => {
+  it('deckt F.3.12 bis F.3.19 lückenlos ohne Alternative ab und erreicht mit H, I-a, C.1.3 und N 153 Rezepte', () => {
     const entries = Object.entries<Recipe>(RECIPES)
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
+    expect(Object.keys(RECIPES)).toHaveLength(153);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {
@@ -1781,13 +1963,18 @@ describe('Anhang E, Teilslice E-f (E.2.27 bis E.2.31)', () => {
 
 describe('Piktogramm-Platzierung als Gruppe', () => {
   it('erzeugt genau eine Piktogramm-Gruppe mit der Verschiebung als Transformation', () => {
-    const drawing = composeFromCatalog(RECIPES['C.1.1'].spec);
+    const drawing = composeFromCatalog({
+      kind: 'formation',
+      organization: 'feuerwehr',
+      strength: 'staffel',
+      capabilities: ['fire-fighting'],
+    });
     const pictograms = drawing.children.filter((c) => c.role === 'pictogram');
     expect(pictograms).toHaveLength(1);
     const group = pictograms[0];
     expect(group?.type).toBe('group');
     if (group?.type !== 'group') return;
-    // C.1.1 verschiebt den Körper um 3 mm (Anker 6 → 9); das Piktogramm folgt der Körpermitte.
+    // Der Stapel verschiebt den Körper um 3 mm (Anker 6 → 9); das Boxpiktogramm folgt ihm.
     expect(group.transform?.translate?.dxMm).toBe(0);
     expect(group.transform?.translate?.dyMm).toBeCloseTo(3, 6);
     // Die Kinder tragen ihre Autorenkoordinaten unverändert — die Verschiebung sitzt außen.
@@ -1798,9 +1985,14 @@ describe('Piktogramm-Platzierung als Gruppe', () => {
   });
 
   it('verschiebt die Gruppe bei unverändertem Körper um null, statt sie weglassen', () => {
-    // C.1.2 (Reihe) lässt den Körper bei Anker 6. Die Gruppe entsteht trotzdem: eine
+    // Die Reihe lässt den Körper bei Anker 6. Die Gruppe entsteht trotzdem: eine
     // Sonderbehandlung für Delta 0 wäre ein zweiter Codepfad ohne fachlichen Anlass.
-    const drawing = composeFromCatalog(RECIPES['C.1.2'].spec);
+    const drawing = composeFromCatalog({
+      kind: 'formation',
+      organization: 'feuerwehr',
+      strength: 'gruppe',
+      capabilities: ['fire-fighting'],
+    });
     const group = drawing.children.find((c) => c.role === 'pictogram');
     expect(group?.type).toBe('group');
     expect(group?.transform?.translate?.dyMm).toBeCloseTo(0, 6);

@@ -156,10 +156,86 @@ function crossedSwabs(cx: number, cy: number): Primitive[] {
 }
 
 /**
- * Die Zusatzstriche zur Teilung, je Fähigkeit. Alle Zahlen sind an den F-Dateien gemessen und
- * gegen die Hülle formuliert; die Herleitungen stehen an der jeweiligen Zeile.
+ * Die Zusatzstriche zur Teilung, je Fähigkeit. Jede Marke ist an den jeweils an ihrer Zeile
+ * genannten Anhangsreferenzen gemessen und gegen die Hülle formuliert: die bestehenden F-Marken
+ * an den F-Dateien, `fire-fighting` an C.1.1 bis C.1.3.
  */
 const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
+  /** C.1.1 bis C.1.3: die an der Formation vermessene Löschmarke mit zwei rechten Diagonalen. */
+  'fire-fighting': (bounds) => {
+    const cy = (bounds.minY + bounds.maxY) / 2;
+    const branchX = bounds.maxX - 10;
+    return [
+      stroke(bounds.minX, cy, branchX, cy),
+      stroke(branchX, cy, bounds.maxX, bounds.minY),
+      stroke(branchX, cy, bounds.maxX, bounds.maxY),
+    ];
+  },
+
+  /** H.1: die separat vermessene, randbündige Veterinärmarke. */
+  veterinary: (bounds) => {
+    const { minX, minY, maxX, maxY } = bounds;
+    const cx = (minX + maxX) / 2;
+    return [outline([
+      [minX + 6, minY + 3],
+      [minX + 9, minY + 3],
+      [cx, maxY - 2.4],
+      [maxX - 9, minY + 3],
+      [maxX - 6, minY + 3],
+    ])];
+  },
+
+  /**
+   * H.2: Veterinär- und Tierdekontaminationsmarke. Die kompakte linke Anordnung wurde für
+   * Anhang H neu konstruiert; sie ist keine Übernahme der Human-Dekontaminationsmarke.
+   */
+  'h-veterinary-decontamination': (bounds) => {
+    const { minX, minY, maxX, maxY } = bounds;
+    const cx = (minX + maxX) / 2;
+    const ink = { fill: 'schwarz', stroke: 'none' } as const;
+    return [
+      outline([
+        [minX + 8, minY + 3],
+        [minX + 11, minY + 3],
+        [cx + 2, maxY - 2.4],
+        [maxX - 7, minY + 3],
+        [maxX - 4, minY + 3],
+      ]),
+      { type: 'circle', role: 'pictogram', cx: minX + 3.583, cy: maxY - 8, r: 1.25, style: ink },
+      { type: 'circle', role: 'pictogram', cx: minX + 9.417, cy: maxY - 8, r: 1.25, style: ink },
+      outline([[minX + 4.818, maxY - 7.833], [minX + 9.75, maxY - 3.6]]),
+      outline([[minX + 2.75, maxY - 5.25], [minX + 2.75, maxY - 2.75], [minX + 5, maxY - 2.75]]),
+      outline([[minX + 8.182, maxY - 7.833], [minX + 3.25, maxY - 3.6]]),
+      outline([[minX + 8, maxY - 2.75], [minX + 10.25, maxY - 2.75], [minX + 10.25, maxY - 5.25]]),
+    ];
+  },
+
+  /** H.3: Veterinär-V mit der eigenständig vermessenen Schlacht-/Untersuchungsmarke links. */
+  'h-veterinary-slaughter': (bounds) => {
+    const { minX, minY, maxX, maxY } = bounds;
+    const cx = (minX + maxX) / 2;
+    return [
+      outline([
+        [minX + 8, minY + 3],
+        [minX + 11, minY + 3],
+        [cx + 2, maxY - 2.4],
+        [maxX - 7, minY + 3],
+        [maxX - 4, minY + 3],
+      ]),
+      {
+        type: 'path',
+        role: 'pictogram',
+        d:
+          `M ${minX + 2} ${maxY - 5.25} H ${minX + 14} V ${maxY - 4.75} ` +
+          `H ${minX + 5.525} L ${minX + 7.25} ${maxY - 2.64} V ${maxY - 2.25} ` +
+          `H ${minX + 2.75} V ${maxY - 2.64} L ${minX + 4.475} ${maxY - 4.75} ` +
+          `H ${minX + 2} Z M ${minX + 5} ${maxY - 4.6} ` +
+          `L ${minX + 6.5} ${maxY - 2.75} H ${minX + 3.5} Z`,
+        style: { fill: 'schwarz', fillRule: 'evenodd', stroke: 'none' },
+      },
+    ];
+  },
+
   /** 4.6.1 Sanität, Grundzeichen — die Teilung allein. F.1.5, F.1.6, F.1.9, F.1.11. */
   'medical-service': (bounds) => quartering(bounds),
 
