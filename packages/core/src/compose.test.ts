@@ -266,6 +266,38 @@ describe('compose() — Fahrwerkszone', () => {
     expect(checkViewBox(drawing)).toEqual([]);
   });
 
+  it('kombiniert das vermessene Fußband an Landfahrzeug und Anhänger mit ihrer Radzone', () => {
+    const footBandCatalog: CatalogPorts = {
+      ...vehicleCatalog,
+      baseDrawing: (kind) => ({
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [
+          vehicleBody,
+          {
+            type: 'rect', role: 'pictogram',
+            x: kind === 'trailer' ? 4 : 1,
+            y: 23,
+            width: kind === 'trailer' ? 27 : 30,
+            height: 3,
+          },
+        ],
+      }),
+    };
+
+    for (const kind of ['vehicle-land', 'trailer'] as const) {
+      const drawing = compose({
+        kind, bodyVariant: 'foot-band', vehicleCategory: 'kfz-kategorie-3',
+      }, footBandCatalog);
+      const roles = drawing.children.map((child) => child.role);
+      expect(drawing.children).toContainEqual(
+        expect.objectContaining({ type: 'rect', role: 'pictogram', y: 23, height: 3 }),
+      );
+      expect(drawing.children.filter((child) => child.role === 'chassis')).toHaveLength(3);
+      expect(roles.indexOf('pictogram')).toBeLessThan(roles.indexOf('chassis'));
+      expect(checkViewBox(drawing)).toEqual([]);
+    }
+  });
+
   it('erzeugt ohne Fahrzeugkategorie kein Fahrwerk und ruft den Port nicht', () => {
     // `catalog.vehicleChassis` wirft im Doppel — der Test belegt damit zugleich, dass der Port
     // nur bei gesetzter Kategorie überhaupt gefragt wird.
@@ -541,6 +573,102 @@ describe('compose() — vierte Beschriftungszone', () => {
     expect(() => compose({ kind: 'formation', bodyVariant: 'raised-hull' }, e2Catalog)).toThrow(
       /Körpervariante/,
     );
+  });
+});
+
+describe('compose() — gebänderte Logistikprofile', () => {
+  const logisticsCatalog: CatalogPorts = {
+    ...catalog,
+    baseDrawing: (kind, variant) => {
+      if (kind === 'circle-12') {
+        return {
+          viewBox: DEFAULT_VIEWBOX_MM,
+          children: [
+            { type: 'circle', role: 'body', cx: 16, cy: 16, r: 12 },
+            ...(variant === 'foot-band'
+              ? [{
+                  type: 'path' as const, role: 'pictogram' as const,
+                  d: 'M 7.4048 24.0005 H 24.5954 C 22.479 26.5508 19.0883 27.7505 16 27.7505 C 12.9117 27.7505 9.5204 26.5508 7.4048 24.0005 Z',
+                }]
+              : []),
+          ],
+        };
+      }
+      return {
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [
+          formationBody,
+          ...(variant === 'foot-band'
+            ? [{ type: 'rect' as const, role: 'pictogram' as const, x: 1, y: 23, width: 30, height: 3 }]
+            : []),
+        ],
+      };
+    },
+    organizationColor: (id) => id === 'bundeswehr' ? 'braun' : 'weiss',
+    strengthHead: () => ({
+      heightMm: 3,
+      marks: [{ cxMm: 16, cyFromTopMm: 1.5, rMm: 1.5 }],
+    }),
+    bodyMark: () => [],
+  };
+
+  it('komponiert die drei vermessenen Formationsköpfe ohne das Fußband zu verschieben', () => {
+    for (const strength of ['trupp', 'gruppe', 'zug'] as const) {
+      const drawing = compose(
+        { kind: 'formation', bodyVariant: 'foot-band', strength }, logisticsCatalog,
+      );
+      expect(drawing.children).toContainEqual(
+        expect.objectContaining({ type: 'rect', role: 'pictogram', y: 23, height: 3 }),
+      );
+      expect(drawing.children).toContainEqual(
+        expect.objectContaining({ type: 'circle', role: 'head', cy: 3.5 }),
+      );
+    }
+  });
+
+  it('setzt DLRG am gebänderten Formationskörper auf die vermessene Grundlinie y=21', () => {
+    const label = compose({
+      kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+      labels: { bottomRight: 'DLRG' },
+    }, logisticsCatalog).children.find((child) => child.role === 'label');
+    expect(label).toMatchObject({
+      type: 'text', content: 'DLRG', anchor: 'end', x: 29, y: 21,
+      style: { fill: 'schwarz' },
+    });
+  });
+
+  it('setzt Diesel im Kreis und Bw außerhalb auf die beiden vermessenen Grundlinien', () => {
+    const drawing = compose({
+      kind: 'circle-12', bodyVariant: 'foot-band', organization: 'bundeswehr',
+      labels: { bottomCenter: 'Diesel', belowRight: 'Bw' },
+    }, logisticsCatalog);
+    const labels = drawing.children.filter((child) => child.role === 'label');
+    expect(labels).toMatchObject([
+      {
+        type: 'text', content: 'Diesel', anchor: 'middle', x: 16, y: 22,
+        style: { fill: 'schwarz' },
+      },
+      { type: 'text', content: 'Bw', anchor: 'end', x: 31, y: 29, style: { fill: 'schwarz' } },
+    ]);
+    expect(checkViewBox(drawing)).toEqual([]);
+  });
+
+  it('meldet belegte Labelzonen als neutralen Layoutkontext an den Körpermarken-Port', () => {
+    const contexts: Parameters<NonNullable<CatalogPorts['bodyMark']>>[1][] = [];
+    compose({
+      kind: 'circle-12', bodyVariant: 'foot-band', organization: 'bundeswehr',
+      bodyMarks: ['fuels-consumables'], labels: { bottomCenter: 'Diesel', belowRight: 'Bw' },
+    }, {
+      ...logisticsCatalog,
+      bodyMark: (_id, context) => {
+        contexts.push(context);
+        return [];
+      },
+    });
+    expect(contexts).toEqual([{
+      kind: 'circle-12', bodyVariant: 'foot-band',
+      occupiedLabelZones: ['bottomCenter', 'belowRight'],
+    }]);
   });
 });
 

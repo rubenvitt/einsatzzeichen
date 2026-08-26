@@ -107,7 +107,6 @@ const FOOT_TEXT_SIZE_MM = 4;
  * Referenz. Für die **Box** des mittigen Laufs gilt diese Übertragung seit E-b nicht mehr, siehe
  * `CENTER_LABEL_BOX_MARGIN_MM`.
  */
-const BOTTOM_LABEL_BASELINE_FROM_BODY_BOTTOM_MM = 2;
 const LABEL_SIDE_MARGIN_MM = 2;
 
 /**
@@ -232,9 +231,6 @@ const CENTER_LABEL_BOX_MARGIN_MM = 1;
  * auf 0,047 mm. Gegenprobe an der bestehenden Zone: derselbe Lauf rendert dort 19,438…28,977 bei
  * einer Referenz von 19,987…29,027 — dieselbe Differenz an derselben Stelle.
  */
-const BELOW_BODY_LABEL_BASELINE_FROM_BODY_BOTTOM_MM = 4.01;
-const BELOW_BODY_LABEL_RIGHT_OVERHANG_MM = 0.5618;
-
 /** Versalhöhen der beiden Schriftgrade, gemessen an den 16 Dateien E.1.1 bis E.1.16 (Tabelle oben). */
 const CENTER_LABEL_CAP_HEIGHT_MM = 4.87;
 const BOTTOM_LABEL_CAP_HEIGHT_MM = 2.92;
@@ -365,14 +361,21 @@ function normalizesMeasuredCircleTopLeftCoordinates(
 /**
  * Die Beschriftungszonen gegen die Hülle des platzierten Körpers gerechnet. Läufe **im** Körper
  * tragen die aus der Körperfüllung abgeleitete Tinte (`bodyLabelInk`). `aboveLeft` steht dagegen
- * schwarz auf der Ausgabeoberfläche, `belowRight` trägt dort die Organisationsfarbe. Alle drei
- * Nachbarschaften stehen im Kontrastvertrag des Katalogs.
+ * schwarz auf der Ausgabeoberfläche. `belowRight` steht ebenfalls auf der Ausgabeoberfläche;
+ * seine Tinte bestimmt das Profil als Organisationsfarbe oder Schwarz. Alle drei Nachbarschaften
+ * stehen im Kontrastvertrag des Katalogs.
  */
 function labelPrimitives(
   labels: NonNullable<SymbolSpec['labels']>,
   bodyBoundsMm: BoundsMm,
   viewBoxWidthMm: number,
   belowRightFill: ColorToken | null,
+  bottomLabelBaselineFromBodyBottomMm: number,
+  belowRight: {
+    readonly baselineFromBodyBottomMm: number;
+    readonly anchorFromBodyRightMm: number;
+    readonly ink: 'organization' | 'black';
+  } | undefined,
   centerBaselineFromBodyBottomMm: number,
   topLeftBaselineFromBodyTopMm: number | undefined,
   normalizeTopLeftCoordinatePrecision: boolean,
@@ -383,6 +386,7 @@ function labelPrimitives(
     readonly capHeightMm: number;
   } | undefined,
   bottomCenterBaselineFromBodyBottomMm: number | undefined,
+  bottomCenterInk: 'body' | 'black' | undefined,
   ink: ColorToken,
 ): Primitive[] {
   const centerXMm = (bodyBoundsMm.minX + bodyBoundsMm.maxX) / 2;
@@ -394,7 +398,7 @@ function labelPrimitives(
   const centerBoxLeftMm = bodyBoundsMm.minX + CENTER_LABEL_BOX_MARGIN_MM;
   const centerBoxRightMm = bodyBoundsMm.maxX - CENTER_LABEL_BOX_MARGIN_MM;
   const centerBaselineMm = bodyBoundsMm.maxY - centerBaselineFromBodyBottomMm;
-  const bottomBaselineMm = bodyBoundsMm.maxY - BOTTOM_LABEL_BASELINE_FROM_BODY_BOTTOM_MM;
+  const bottomBaselineMm = bodyBoundsMm.maxY - bottomLabelBaselineFromBodyBottomMm;
 
   const primitives: Primitive[] = [];
   if (labels.center !== undefined) {
@@ -530,8 +534,8 @@ function labelPrimitives(
     if (bottomCenterBaselineFromBodyBottomMm === undefined) {
       throw new Error(
         'Die Zone "bottomCenter" ist an dieser Körperform nicht vermessen: ihre Grundlinie ' +
-          'steht nur für die taktische Formation fest (2,0 mm über der Körperunterkante, ' +
-          'gemessen an F.1.18 und F.1.20).',
+          'steht für die taktische Formation (2,0 mm über der Körperunterkante, F.1.18/F.1.20) ' +
+          'und den gebänderten 12-mm-Kreis (6,0 mm über der Körperunterkante, G.3.5) fest.',
       );
     }
     primitives.push(
@@ -544,7 +548,7 @@ function labelPrimitives(
         centerBoxLeftMm,
         centerBoxRightMm - centerBoxLeftMm,
         viewBoxWidthMm,
-        ink,
+        bottomCenterInk === 'black' ? 'schwarz' : ink,
       ),
     );
   }
@@ -564,7 +568,10 @@ function labelPrimitives(
     );
   }
   if (labels.belowRight !== undefined) {
-    if (belowRightFill === null) {
+    if (belowRight === undefined) {
+      throw new Error('Die Zone "belowRight" ist an dieser Körperform nicht vermessen.');
+    }
+    if (belowRight.ink === 'organization' && belowRightFill === null) {
       // Unerreichbar über `compose()` — `validateSpec` lehnt die Zone ohne Organisation ab. Die
       // Zeile hält die Bedingung trotzdem am Ort ihrer Wirkung fest: die Zone ist in der
       // Organisationsfarbe gemessen, eine schwarze oder weiße Fassung von ihr ist es nicht.
@@ -573,8 +580,8 @@ function labelPrimitives(
           'E.2.31); ohne Organisation gibt es keine Farbe, die sie tragen dürfte.',
       );
     }
-    const anchorXMm = bodyBoundsMm.maxX + BELOW_BODY_LABEL_RIGHT_OVERHANG_MM;
-    const baselineMm = bodyBoundsMm.maxY + BELOW_BODY_LABEL_BASELINE_FROM_BODY_BOTTOM_MM;
+    const anchorXMm = bodyBoundsMm.maxX + belowRight.anchorFromBodyRightMm;
+    const baselineMm = bodyBoundsMm.maxY + belowRight.baselineFromBodyBottomMm;
     primitives.push(
       labelPrimitive(
         labels.belowRight,
@@ -585,7 +592,7 @@ function labelPrimitives(
         centerXMm,
         anchorXMm - centerXMm,
         viewBoxWidthMm,
-        belowRightFill,
+        belowRight.ink === 'black' ? 'schwarz' : belowRightFill!,
       ),
     );
   }
@@ -596,6 +603,8 @@ function labelPrimitives(
 export interface BodyMarkContext {
   readonly kind: SymbolKind;
   readonly bodyVariant?: BodyVariantId;
+  readonly strength?: StrengthId;
+  readonly occupiedLabelZones?: readonly ('bottomCenter' | 'bottomRight' | 'belowRight')[];
 }
 
 export interface CatalogPorts {
@@ -780,15 +789,41 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
       : [];
 
   const placedBody = profile.place(body, headBox?.bottomMm ?? null);
+  // Acht Anhang-G-Quellen belegen dieselbe generische Form: ein unbeschrifteter, kopfloser
+  // `formation/foot-band`-Körper hat keine Oberlinie. Das Profil entscheidet diesen Kontext;
+  // Kapitel- oder Rezept-IDs bleiben aus dem Kompositionsmotor heraus.
+  const occupiedLabelZones = spec.labels === undefined
+    ? []
+    : (['center', 'bottomLeft', 'bottomCenter', 'bottomRight', 'topLeft', 'aboveLeft', 'topLeftLines', 'belowRight'] as const)
+        .filter((zone) => spec.labels?.[zone] !== undefined);
+  const usesOpenTopOutline =
+    profile.openTopWhenHeadlessAndUnlabelled === true &&
+    headBox === null &&
+    occupiedLabelZones.length === 0;
+  if (usesOpenTopOutline && placedBody.type !== 'rect') {
+    throw new Error('Das kopflose offene Oberkantenprofil erwartet einen Rechteckkörper.');
+  }
+  const bodyForFill: Primitive = usesOpenTopOutline && placedBody.type === 'rect'
+    ? {
+        type: 'path',
+        role: 'body',
+        d: `M ${placedBody.x} ${placedBody.y} ` +
+          `L ${placedBody.x} ${placedBody.y + placedBody.height} ` +
+          `L ${placedBody.x + placedBody.width} ${placedBody.y + placedBody.height} ` +
+          `L ${placedBody.x + placedBody.width} ${placedBody.y}`,
+        style: placedBody.style,
+        ...(placedBody.transform === undefined ? {} : { transform: placedBody.transform }),
+      }
+    : placedBody;
 
-  // Einzige belegte Ausnahme: F.1.17 führt `foot-band` zusammen mit der Kopfzone `gruppe`.
-  // Diese Kopfzone verschiebt den Formationskörper nicht; Band und Hülle bleiben auf y 23…26.
-  // Weder andere Stärken noch andere Zusatzgeometrien werden daraus fortgeschrieben.
-  const isMeasuredFootBandWithGroup =
+  // Belegte Ausnahmen: F.1.17 sowie die drei vermessenen G-Köpfe `trupp`, `gruppe` und `zug`
+  // führen `foot-band` zusammen mit einer Kopfzone. Die Kopfzone verschiebt den Formationskörper
+  // nicht; Band und Hülle bleiben auf y 23…26. Andere Stärken werden daraus nicht fortgeschrieben.
+  const isMeasuredFootBandWithHead =
     spec.kind === 'formation' &&
     spec.bodyVariant === 'foot-band' &&
-    spec.strength === 'gruppe';
-  if (extras.length > 0 && headBox !== null && !isMeasuredFootBandWithGroup) {
+    spec.strength !== undefined;
+  if (extras.length > 0 && headBox !== null && !isMeasuredFootBandWithHead) {
     // Wie Zusatzgeometrie einer Kopfzone ausweicht, ist **nicht** belegt: kein Zeichen des
     // Referenzbestands trägt beides. Der Anhang E.2 führt überhaupt keine Kopfzone (an allen 31
     // Dateien nachgesehen), und `validateSpec` lehnt eine Stärkeangabe an diesen Körperformen
@@ -821,10 +856,10 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
   const filled: Primitive =
     spec.organization !== undefined
       ? {
-          ...placedBody,
-          style: { ...placedBody.style, fill: catalog.organizationColor(spec.organization) },
+          ...bodyForFill,
+          style: { ...bodyForFill.style, fill: catalog.organizationColor(spec.organization) },
         }
-      : placedBody;
+      : bodyForFill;
 
   // Piktogramme sind auf den unverschobenen Körper hin entworfen (Mitte bei 16 mm). Der
   // Kompositionsmotor kann den Körper senkrecht verschieben oder verkleinern, um Platz für die
@@ -943,7 +978,20 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
   // sie sind bereits an der richtigen Stelle gerechnet.
   const bodyMarkPrimitives = composeBodyMarkPrimitives(
     (spec.bodyMarks ?? []).map((id) =>
-      catalog.bodyMark(id, { kind: spec.kind, bodyVariant: spec.bodyVariant }, bodyBoundsMm)),
+      catalog.bodyMark(id, {
+        kind: spec.kind,
+        bodyVariant: spec.bodyVariant,
+        ...(spec.strength === undefined ? {} : { strength: spec.strength }),
+        ...(
+          spec.labels === undefined
+            ? {}
+            : (() => {
+                const occupiedLabelZones = (['bottomCenter', 'bottomRight', 'belowRight'] as const)
+                  .filter((zone) => spec.labels?.[zone] !== undefined);
+                return occupiedLabelZones.length === 0 ? {} : { occupiedLabelZones };
+              })()
+        ),
+      }, bodyBoundsMm)),
   );
 
   const labels = spec.labels !== undefined
@@ -952,6 +1000,8 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
         bodyBoundsMm,
         DEFAULT_VIEWBOX_MM.width,
         spec.organization !== undefined ? catalog.organizationColor(spec.organization) : null,
+        profile.bottomLabelBaselineFromBodyBottomMm,
+        profile.belowRight,
         profile.centerBaselineFromBodyBottomMm,
         profile.topLeftBaselineFromBodyTopMm,
         normalizesMeasuredCircleTopLeftCoordinates(spec.kind, spec.bodyVariant),
@@ -959,6 +1009,7 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
         profile.aboveLeftAnchorFromBodyLeftMm,
         profile.topLeftLines,
         profile.bottomCenterBaselineFromBodyBottomMm,
+        profile.bottomCenterInk,
         bodyLabelInk(bodyFill),
       )
     : [];

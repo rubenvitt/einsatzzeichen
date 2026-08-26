@@ -181,7 +181,11 @@ describe('Grundzeichen Kapitel 1', () => {
   it('bindet den Geometrie-Regressionsclaim exakt an die ungegateten Grundzeichenfälle', () => {
     const tested = UNGATED.map(([kind]) => BASE_SYMBOLS[kind].id).sort();
     const claimed = COVERAGE_MANIFEST.entries
-      .filter((entry) => entry.testEvidence.includes('body-geometry-regression'))
+      .filter(
+        (entry) =>
+          entry.coverage === 'catalog-entry' &&
+          entry.testEvidence.includes('body-geometry-regression'),
+      )
       .map((entry) => entry.implementation)
       .sort();
     expect(tested).toEqual(claimed);
@@ -495,7 +499,7 @@ describe('Körperformen des Anhangs E.2', () => {
     ]);
   });
 
-  it('vermisst foot-band getrennt an Formation und Landfahrzeug und lässt beide Normalkörper unverändert', () => {
+  it('vermisst foot-band getrennt an Formation, Landfahrzeug, Anhänger und 12-mm-Kreis', () => {
     const normal = baseDrawing('formation');
     const footBand = baseDrawing('formation', 'foot-band');
     const normalVehicle = baseDrawing('vehicle-land');
@@ -532,6 +536,23 @@ describe('Körperformen des Anhangs E.2', () => {
       minY: 5.75,
       maxX: 31,
       maxY: 26,
+    });
+
+    const trailerNormal = baseDrawing('trailer');
+    const trailerFootBand = baseDrawing('trailer', 'foot-band');
+    expect(trailerFootBand.children[0]).toEqual(trailerNormal.children[0]);
+    expect(trailerFootBand.children).toContainEqual({
+      type: 'rect', role: 'pictogram', x: 4, y: 23, width: 27, height: 3,
+      style: { fill: 'schwarz', stroke: 'none' },
+    });
+
+    const circleNormal = baseDrawing('circle-12');
+    const circleFootBand = baseDrawing('circle-12', 'foot-band');
+    expect(circleFootBand.children[0]).toEqual(circleNormal.children[0]);
+    expect(circleFootBand.children[1]).toEqual({
+      type: 'path', role: 'pictogram',
+      d: 'M 7.4048 24.0005 H 24.5954 C 22.479 26.5508 19.0883 27.7505 16 27.7505 C 12.9117 27.7505 9.5204 26.5508 7.4048 24.0005 Z',
+      style: { fill: 'schwarz', stroke: 'none' },
     });
   });
 
@@ -654,7 +675,7 @@ describe('Körperformen des Anhangs F.3', () => {
   it('fällt mit raised-gable weder auf post noch auf eine andere Körperart zurück', () => {
     expect(() => baseDrawing('post', raisedGable)).toThrow(/Körpervariante/);
     expect(() => baseDrawing('formation', raisedGable)).toThrow(/Körpervariante/);
-    expect(() => baseDrawing(circleKind, 'foot-band')).toThrow(/Körpervariante/);
+    expect(baseDrawing(circleKind, 'foot-band').children).toHaveLength(2);
   });
 
   it('trägt circle-12 nicht in das Kapitel-1-Register ein', () => {

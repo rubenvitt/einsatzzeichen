@@ -47,6 +47,7 @@ import {
   ANHANG_F_F_FINDINGS,
   ANHANG_F_F_DEVIATIONS,
 } from './recipes-anhang-f.js';
+import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
 import { ANHANG_I_A_RECIPES } from './recipes-anhang-i.js';
 
@@ -261,6 +262,27 @@ const ANHANG_F_F_TECHNICAL_REVIEW: Review = {
     'vorbestehenden Snapshots bleiben hashgleich. Der finale Task-6-Kontaktbogen war zu diesem ' +
     'Zeitpunkt noch nicht erzeugt oder gesichtet. Die Organisation hilfsorganisation und ' +
     'sämtliche Fachzuordnungen bleiben im Domain-Review pending.',
+};
+
+/**
+ * Technisches Review der 21 Anhang-G-Rezepte. Es bezieht sich auf die vermessenen lokalen
+ * Geometrie-, Kompositions- und Katalogverträge sowie den abgeschlossenen 21-Karten-Vergleich.
+ */
+const ANHANG_G_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'Alle 21 Anhang-G-Referenzen sind literal an eigene primary-Rezepte gebunden. Die ' +
+    'generischen Tests halten foot-band an Formation, Landfahrzeug, Anhänger und 12-mm-Kreis, ' +
+    'die Kopf- und Fahrwerkszonen, Logistikmarken sowie DLRG-, Diesel- und Bw-Labelpositionen ' +
+    'fest; Snapshot-, Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates prüfen den ' +
+    'renderbaren Bestand. G.1.5 besitzt in der Quelle keine vergleichbare Füllfläche und ' +
+    'trägt deshalb eine ehrliche Körper-Geometrieregression statt eines Fingerprint-Claims. ' +
+    'Der deterministische 21-Karten-Referenzvergleich wurde in Originalauflösung gesichtet; ' +
+    'DLRG, Diesel und Bw sind sichtbar, und die acht kopflosen Formationen bewahren ihre offene ' +
+    'Oberkante. Die abweichende bestehende Polizei-Grünpalette von G.3.2 ist dokumentiert. ' +
+    'Sämtliche fachlichen Zuordnungen bleiben pending.',
 };
 
 const ANHANG_H_TECHNICAL_REVIEW: Review = {
@@ -520,7 +542,7 @@ const ANHANG_E_C_DEVIATIONS: Readonly<Record<string, string>> = Object.freeze({
  * Mal ein Gate greift, das es in E.1 nicht gab.
  *
  * **Am 18. August 2026 um E.2.6 erweitert.** Es teilt dieses Review mit den 20 anderen — sein
- * Nachweis ist derselbe —, bringt aber als einziges Zeichen des Katalogs ein Kontrastpaar mit,
+ * Nachweis ist derselbe —, bringt aber als einziges Zeichen des Anhangs E ein Kontrastpaar mit,
  * das die eigene Schwelle nicht erreicht. Das steht unten in der Note und nicht als
  * `deviation`: die Umsetzung folgt der Quelle punktgenau.
  */
@@ -738,6 +760,9 @@ function technicalReviewFor(section: string): Review {
       ANHANG_F_F_DEVIATIONS[section],
     );
   }
+  if (Object.hasOwn(ANHANG_G_RECIPES, section)) {
+    return ANHANG_G_TECHNICAL_REVIEW;
+  }
   if (Object.hasOwn(ANHANG_H_RECIPES, section)) return ANHANG_H_TECHNICAL_REVIEW;
   if (Object.hasOwn(ANHANG_I_A_RECIPES, section)) {
     return ANHANG_I_A_TECHNICAL_REVIEW;
@@ -779,10 +804,13 @@ const recipeEntries: CoverageEntry[] = Object.entries(RECIPES).map(([key, recipe
     referenceAsset: recipe.referenceAsset,
     coverage: 'composition-recipe',
     profile: 'bund',
-    // Task 13 hat alle drei Rezepte per matchFingerprint gegen die Referenz gegated,
-    // mit Differenz 0 an allen Kanten — das Manifest bildet das ab, statt es zu untertreiben.
-    // Für die 16 Zeichen aus E-a gilt dasselbe, geprüft in recipes.test.ts.
-    testEvidence: DRAWING_EVIDENCE,
+    // Wie bei den Grundzeichen entscheidet das Kennwertartefakt statt einer Rezept-ID: führt die
+    // Referenz `shapes: []`, ist der Fingerprint-Vergleich strukturell nicht ausführbar und eine
+    // explizite Geometrieregression tritt an seine Stelle. Unbekannte Assets liefern im Helper
+    // bewusst `false` und fallen danach im Fingerprinttest fail-closed auf.
+    testEvidence: referenceLacksComparableShape(recipe.referenceAsset)
+      ? UNGATED_DRAWING_EVIDENCE
+      : DRAWING_EVIDENCE,
     review: reviewFor(sourceId, variant, technicalReviewFor(key)),
   };
 });
@@ -931,6 +959,7 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'D.3.7',
     'E',
     'F',
+    'G',
     'H',
     'I.3.5',
     'I.3.6',

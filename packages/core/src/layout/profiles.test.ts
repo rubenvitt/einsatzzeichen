@@ -127,6 +127,29 @@ describe('Layoutprofile', () => {
     expect(profileFor('post').topLeftBaselineFromBodyTopMm).toBeUndefined();
   });
 
+  it('führt die Logistik-Labelzonen ausschließlich an ihren gebänderten Profilen', () => {
+    expect(profileFor('formation').bottomLabelBaselineFromBodyBottomMm).toBe(2);
+    expect(profileFor('formation', 'foot-band').bottomLabelBaselineFromBodyBottomMm).toBe(5);
+
+    const circleFootBand = profileFor('circle-12', 'foot-band');
+    expect(circleFootBand.bottomCenterBaselineFromBodyBottomMm).toBe(6);
+    expect(circleFootBand.bottomCenterInk).toBe('black');
+    expect(profileFor('formation').bottomCenterInk).toBeUndefined();
+    expect(circleFootBand.openTopWhenHeadlessAndUnlabelled).toBeUndefined();
+    expect(profileFor('formation', 'foot-band').openTopWhenHeadlessAndUnlabelled).toBe(true);
+    expect(circleFootBand.belowRight).toEqual({
+      baselineFromBodyBottomMm: 1,
+      anchorFromBodyRightMm: 3,
+      ink: 'black',
+    });
+    expect(profileFor('circle-12').belowRight).toBeUndefined();
+    expect(profileFor('vehicle-water', 'raised-hull').belowRight).toEqual({
+      baselineFromBodyBottomMm: 4.01,
+      anchorFromBodyRightMm: 0.5618,
+      ink: 'organization',
+    });
+  });
+
   it('nutzt reduced-house unverändert mit dem vorhandenen Rechteckprofil ohne neue Labelzone', () => {
     const reducedHouse = 'reduced-house' as SymbolKind;
     const profile = profileFor(reducedHouse);

@@ -69,7 +69,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 431 Zeilen mit 273 Elementdarstellungen', () => {
+  it('enthält exakt 452 Zeilen mit 273 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -97,9 +97,8 @@ describe('Coverage-Manifest', () => {
       // `alternative` — die Zeile zählt einzeln, weil das Manifest Darstellungen zählt und nicht
       // Abschnitte, weil F.1.3 dort noch bewusst offen blieb; F-b baut es mit `foot-band`.
       // F-d ergänzt F.2.10 bis F.2.17 als acht reine Anwendungen des Fahrzeugvertrags.
-      // Anhang H ergänzt drei veterinärmedizinische Formationen; Anhang I, Teilslice I-a ergänzt
-      // die drei vermessenen Wasserfahrzeuge I.3.5 bis I.3.7; C.1.3 ergänzt ein Rezept.
-      'composition-recipe': 144,
+      // G ergänzt 21 Rezepte; H und I-a je drei, C.1.3 ein weiteres.
+      'composition-recipe': 165,
       // 254 Piktogramme plus acht Organisationen (seit LFH-424 mit hilfsorganisation), vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
@@ -107,7 +106,7 @@ describe('Coverage-Manifest', () => {
       // Strichhülle vermessen ist.
       element: 273,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(431);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(452);
     expect(elementRows).toHaveLength(273);
     expect(pictogramRows).toHaveLength(254);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
@@ -387,6 +386,34 @@ describe('Coverage-Manifest', () => {
     expect(releaseBlockers().uncoveredScope).toEqual([]);
   });
 
+  it('beansprucht G erst mit exakt allen 21 primary-Referenzen und pending Fachreviews', () => {
+    const rows = COVERAGE_MANIFEST.entries.filter(
+      (entry) => entry.coverage === 'composition-recipe' && entry.sourceId.startsWith('bbk-babz-2025:G.'),
+    );
+    const expectedIds = [
+      'G.1',
+      ...Array.from({ length: 5 }, (_, index) => `G.1.${index + 1}`),
+      'G.2',
+      ...Array.from({ length: 3 }, (_, index) => `G.2.${index + 1}`),
+      'G.3',
+      ...Array.from({ length: 5 }, (_, index) => `G.3.${index + 1}`),
+      ...Array.from({ length: 5 }, (_, index) => `G.${index + 4}`),
+    ];
+    expect(rows.map((entry) => entry.sourceId.slice('bbk-babz-2025:'.length))).toEqual(expectedIds);
+    expect(rows).toHaveLength(21);
+    expect(rows.every((entry) => entry.variant === 'primary')).toBe(true);
+    expect(rows.every((entry) => entry.review.domain.status === 'pending')).toBe(true);
+    expect(rows.every((entry) => entry.review.technical.status === 'approved')).toBe(true);
+    expect(rows.every((entry) => entry.review.technical.note?.includes(
+      '21-Karten-Referenzvergleich wurde in Originalauflösung gesichtet',
+    ) === true)).toBe(true);
+    expect(rows.every((entry) => entry.review.technical.note?.includes(
+      'G.3.2 ist dokumentiert',
+    ) === true)).toBe(true);
+    expect(COVERAGE_MANIFEST.scope.filter((chapter) => chapter === 'G')).toEqual(['G']);
+    expect(releaseBlockers().uncoveredScope).toEqual([]);
+  });
+
   it('trennt F.2.17s Quellenbefund y 6,096 von der bewussten gemeinsamen Fahrzeughülle', () => {
     const row = COVERAGE_MANIFEST.entries.find(
       (entry) => entry.sourceId === 'bbk-babz-2025:F.2.17',
@@ -450,6 +477,7 @@ describe('Coverage-Manifest', () => {
       // Manifesteinträgen ableitet. Bis E.2.6 fehlte, ließ sich dieser Test nicht schreiben.
       'E',
       'F',
+      'G',
       'H',
       'I.3.5',
       'I.3.6',

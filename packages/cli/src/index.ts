@@ -2,6 +2,10 @@ import { isRenderThemeId, renderTheme } from '@einsatzzeichen/catalog';
 import { auditReference } from './commands/audit-reference.js';
 import { coverage } from './commands/coverage.js';
 import { InvalidExportSizeError, exportSvg, parseExportSize } from './commands/export.js';
+import {
+  DEFAULT_ANHANG_G_PROOF_OUTPUT,
+  generateAnhangGVisualProof,
+} from './commands/visual-proof.js';
 
 class CliUsageError extends Error {}
 
@@ -59,12 +63,37 @@ switch (command) {
     }
     break;
   }
+  case 'visual-proof': {
+    try {
+      const referenceRoot = flag('reference-root');
+      if (referenceRoot === undefined) {
+        throw new CliUsageError('visual-proof benötigt --reference-root <pfad>.');
+      }
+      const result = generateAnhangGVisualProof({
+        referenceRoot,
+        outputFile: flag('out') ?? DEFAULT_ANHANG_G_PROOF_OUTPUT,
+      });
+      console.log(
+        `${result.sections.length} Karten nach ${result.outputFile} geschrieben ` +
+          `(${result.width}x${result.height} px, ${result.byteLength} Bytes, ` +
+          `SHA-256 ${result.sha256}, Quellen-Set SHA-256 ${result.sourceSetDigest}).`,
+      );
+    } catch (error) {
+      if (error instanceof CliUsageError) {
+        console.error(error.message);
+        process.exit(1);
+      }
+      throw error;
+    }
+    break;
+  }
   default:
     console.error(`Unbekanntes Kommando: ${command ?? '(keines)'}`);
     console.error(
       'Verfügbar: audit:reference [--filter <präfix>] [--print] | coverage | ' +
         'export [--out <pfad>] [--size <px>] ' +
-        '[--theme <reference|accessible-light|print-monochrome>]',
+        '[--theme <reference|accessible-light|print-monochrome>] | ' +
+        'visual-proof --reference-root <pfad> [--out <png-pfad>]',
     );
     process.exit(1);
 }

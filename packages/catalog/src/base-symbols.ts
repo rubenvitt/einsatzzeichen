@@ -596,7 +596,25 @@ const VARIANT_EXTRA_PRIMITIVES: Partial<
       },
     ],
   },
+  trailer: {
+    'foot-band': [
+      {
+        type: 'rect', role: 'pictogram', x: 4, y: 23, width: 27, height: 3,
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+    ],
+  },
   'circle-12': {
+    'foot-band': [
+      {
+        type: 'path',
+        role: 'pictogram',
+        d:
+          'M 7.4048 24.0005 H 24.5954 C 22.479 26.5508 19.0883 27.7505 16 27.7505 ' +
+          'C 12.9117 27.7505 9.5204 26.5508 7.4048 24.0005 Z',
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+    ],
     'raised-gable': [
       {
         type: 'polyline',
@@ -637,6 +655,9 @@ const VARIANT_BODIES: Partial<Record<SymbolKind, Partial<Record<BodyVariantId, P
   formation: {
     'foot-band': { type: 'rect', role: 'body', x: 1, y: 6, width: 30, height: 20, style: OUTLINE },
   },
+  trailer: {
+    'foot-band': BODIES.trailer!,
+  },
   'vehicle-water': {
     'raised-hull': {
       type: 'path',
@@ -664,6 +685,7 @@ const VARIANT_BODIES: Partial<Record<SymbolKind, Partial<Record<BodyVariantId, P
     'plain-wheel-pair': BODIES['vehicle-land']!,
   },
   'circle-12': {
+    'foot-band': BODIES['circle-12']!,
     /**
      * F.3.5/F.3.14: derselbe 12-mm-Kreis, zwei Millimeter abgesenkt. Der separat vermessene Giebel
      * steht in `VARIANT_EXTRA_PRIMITIVES`. Die Quellgeometrie ist mit J.3.2 identisch; dessen

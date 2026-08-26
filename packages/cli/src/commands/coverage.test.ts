@@ -32,19 +32,19 @@ describe('coverage CLI', () => {
     // 14 Darstellungen aus F.2.1 bis F.2.9 einschließlich fünf Alternativen: insgesamt 397. F-d
     // ergänzt F.2.10 bis F.2.17 lückenlos mit acht weiteren Fahrzeugen: insgesamt 405. F-e
     // ergänzt elf Platzzeichen aus F.3.1 bis F.3.11: insgesamt 416. F-f schließt F.3 mit den
-    // acht Zeichen F.3.12 bis F.3.19 ab: insgesamt 424. Anhang H und I-a ergänzen jeweils drei
-    // Darstellungen; C.1.3 ergänzt eine weitere auf insgesamt 431.
-    expect(manifestReviews).toBe(431);
+    // Acht Zeichen F.3.12 bis F.3.19 ergeben 424. Anhang G ergänzt 21, H und I-a jeweils drei;
+    // C.1.3 ergänzt eine weitere Darstellung auf insgesamt 452.
+    expect(manifestReviews).toBe(452);
     expect(sourceReviews).toBe(13);
     expect(profileReviews).toBe(1);
-    expect(openReviews).toBe(445);
+    expect(openReviews).toBe(466);
     // **Die Umfangszeile ist wieder kurz.** Der Teilslice E.2 hatte sie auf 47 Einträge gedehnt,
     // weil E.2 mit einem fehlenden Abschnitt nur abschnittsweise behauptbar war. Seit E.2.6
     // gebaut ist, tragen zwei Tests die Lückenlosigkeit — an den Rezepten (`recipes.test.ts`)
     // und an den Manifesteinträgen (`coverage-manifest.test.ts`) —, und erst damit ist das eine
     // `E` eine widerlegbare Aussage statt einer kürzeren.
     expect(lines).toContain(
-      'Umfang:      1, 2, 4, 5.1.1, 5.4, 5.8, C.1.1, C.1.2, C.1.3, D.3.7, E, F, H, I.3.5, I.3.6, I.3.7, J.1, J.2, J.3, J.4, K, L, M',
+      'Umfang:      1, 2, 4, 5.1.1, 5.4, 5.8, C.1.1, C.1.2, C.1.3, D.3.7, E, F, G, H, I.3.5, I.3.6, I.3.7, J.1, J.2, J.3, J.4, K, L, M',
     );
     // Die Ausnahme ist im Betrieb sichtbar und nicht nur im Gate. Sie steht bewusst **nicht** in
     // der Blockerzeile darunter: ein Blocker ist ein offener Punkt, diese Ausnahme ist ein
