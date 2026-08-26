@@ -2,7 +2,14 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { RECIPES, composeFromCatalog } from '@einsatzzeichen/catalog';
+import {
+  ACCESSIBLE_LIGHT_THEME,
+  PRINT_MONOCHROME_THEME,
+  RECIPES,
+  composeFromCatalog,
+} from '@einsatzzeichen/catalog';
+import { mmToUnits } from '@einsatzzeichen/schema';
+import { renderCanvas, renderSvg } from '@einsatzzeichen/core';
 import {
   ANHANG_G_PROOF_HEIGHT,
   ANHANG_G_PROOF_WIDTH,
@@ -39,6 +46,39 @@ const HEADLESS_FORMATION_FOOT_BAND = ['G.1', 'G.2', 'G.3', 'G.4', 'G.5', 'G.6', 
 const HEADED_FORMATION_FOOT_BAND = ['G.1.1', 'G.1.2', 'G.1.3', 'G.1.4', 'G.1.5'] as const;
 
 const temporaryDirectories: string[] = [];
+
+if (typeof globalThis.Path2D === 'undefined') {
+  class Path2DStub {
+    constructor(_d?: string) {}
+  }
+  // @ts-expect-error: Der Test braucht nur den Konstruktor, weil der Recorder nie rastert.
+  globalThis.Path2D = Path2DStub;
+}
+
+function recordingCanvas(): { ctx: CanvasRenderingContext2D; calls: [string, ...unknown[]][] } {
+  const calls: [string, ...unknown[]][] = [];
+  const target = new Proxy<Record<string, unknown>>({}, {
+    get(_object, property: string | symbol) {
+      if (property === 'canvas') return { width: 0, height: 0 };
+      return (...args: unknown[]) => calls.push([String(property), ...args]);
+    },
+    set(_object, property: string | symbol, value: unknown) {
+      calls.push([`set:${String(property)}`, value]);
+      return true;
+    },
+    has() {
+      return true;
+    },
+  });
+  if (!looksLikeCanvasRenderingContext2D(target)) {
+    throw new Error('Canvas-Recorder stellt die benötigte Oberfläche nicht bereit.');
+  }
+  return { ctx: target, calls };
+}
+
+function looksLikeCanvasRenderingContext2D(value: object): value is CanvasRenderingContext2D {
+  return 'save' in value && 'restore' in value && 'fill' in value && 'stroke' in value;
+}
 
 afterEach(() => {
   for (const directory of temporaryDirectories.splice(0)) {
@@ -114,15 +154,78 @@ describe('Anhang-G-Visual-Proof', () => {
       const recipe = RECIPES[section];
       const drawing = composeFromCatalog(recipe.spec, recipe.title);
       const body = drawing.children.find((primitive) => primitive.role === 'body');
-      const openOutline = drawing.children.find(
-        (primitive) => primitive.type === 'polyline' && primitive.role === 'bodyExtra',
-      );
-      expect(body?.style?.stroke, section).toBe('none');
-      expect(openOutline, section).toMatchObject({
-        type: 'polyline', closed: false, points: [[1, 6], [1, 26], [31, 26], [31, 6]],
+      expect(body, section).toMatchObject({
+        type: 'path',
+        role: 'body',
+        d: 'M 1 6 L 1 26 L 31 26 L 31 6',
+        style: { fill: 'weiss', stroke: 'schwarz' },
       });
+      expect(drawing.children.some((primitive) => primitive.role === 'bodyExtra'), section)
+        .toBe(false);
     }
   });
+
+  it('behandelt leere Labelzonen wie fehlende und echte Labels weiter als belegt', () => {
+    const recipe = RECIPES['G.1'];
+    const omitted = composeFromCatalog(recipe.spec, recipe.title);
+    const empty = composeFromCatalog({ ...recipe.spec, labels: {} }, recipe.title);
+    const labelled = composeFromCatalog({ ...recipe.spec, labels: { center: 'X' } }, recipe.title);
+
+    expect(empty).toEqual(omitted);
+    expect(labelled.children.find((primitive) => primitive.role === 'body')).toMatchObject({
+      type: 'rect', style: { stroke: 'schwarz' },
+    });
+  });
+
+  it.each([ACCESSIBLE_LIGHT_THEME, PRINT_MONOCHROME_THEME])(
+    '$id signiert alle acht offenen G-Körper in SVG und Canvas als Organisationskörper',
+    (theme) => {
+      for (const section of HEADLESS_FORMATION_FOOT_BAND) {
+        const recipe = RECIPES[section];
+        const drawing = composeFromCatalog(recipe.spec, recipe.title);
+        const svg = renderSvg(drawing, { theme });
+        const bodyTag = svg.match(/<path d="M 1 6 L 1 26 L 31 26 L 31 6"[^>]*\/>/)?.[0];
+        expect(bodyTag, section).toContain('fill="#ffffff"');
+        // Pfadkoordinaten, Strichbreite und Dashwerte bleiben im SVG-Rohmaß Millimeter; die
+        // Pfadtransformation skaliert sie gemeinsam. Canvas folgt demselben Vertrag.
+        expect(bodyTag, section).toContain('stroke-dasharray="1 2"');
+
+        const { ctx, calls } = recordingCanvas();
+        renderCanvas(drawing, ctx, { theme });
+        expect(calls, section).toContainEqual([
+          'setLineDash', [1, 2],
+        ]);
+      }
+    },
+  );
+
+  it.each([ACCESSIBLE_LIGHT_THEME, PRINT_MONOCHROME_THEME])(
+    '$id behält die Organisationssignatur an den fünf geschlossenen G-Kontrollen',
+    (theme) => {
+      const expectedDashes = [
+        ['G.1.1', []],
+        ['G.1.2', [1, 2]],
+        ['G.1.3', []],
+        ['G.1.4', [1, 2]],
+        ['G.1.5', [1, 2]],
+      ] as const;
+      for (const [section, dashMm] of expectedDashes) {
+        const recipe = RECIPES[section];
+        const drawing = composeFromCatalog(recipe.spec, recipe.title);
+        const body = drawing.children.find((primitive) => primitive.role === 'body');
+        expect(body, section).toMatchObject({ type: 'rect', style: { stroke: 'schwarz' } });
+
+        const svg = renderSvg(drawing, { theme });
+        const bodyTag = svg.match(/<rect[^>]*\/>/)?.[0];
+        if (dashMm.length === 0) expect(bodyTag, section).not.toContain('stroke-dasharray');
+        else expect(bodyTag, section).toContain('stroke-dasharray="2.835 5.669"');
+
+        const { ctx, calls } = recordingCanvas();
+        renderCanvas(drawing, ctx, { theme });
+        expect(calls, section).toContainEqual(['setLineDash', dashMm.map(mmToUnits)]);
+      }
+    },
+  );
 
   it('behält die geschlossene Oberkante mit Kopf und an anderen Körpervarianten', () => {
     for (const section of HEADED_FORMATION_FOOT_BAND) {

@@ -792,37 +792,29 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
   // Acht Anhang-G-Quellen belegen dieselbe generische Form: ein unbeschrifteter, kopfloser
   // `formation/foot-band`-Körper hat keine Oberlinie. Das Profil entscheidet diesen Kontext;
   // Kapitel- oder Rezept-IDs bleiben aus dem Kompositionsmotor heraus.
+  const occupiedLabelZones = spec.labels === undefined
+    ? []
+    : (['center', 'bottomLeft', 'bottomCenter', 'bottomRight', 'topLeft', 'aboveLeft', 'topLeftLines', 'belowRight'] as const)
+        .filter((zone) => spec.labels?.[zone] !== undefined);
   const usesOpenTopOutline =
     profile.openTopWhenHeadlessAndUnlabelled === true &&
     headBox === null &&
-    spec.labels === undefined;
+    occupiedLabelZones.length === 0;
   if (usesOpenTopOutline && placedBody.type !== 'rect') {
     throw new Error('Das kopflose offene Oberkantenprofil erwartet einen Rechteckkörper.');
   }
-  const bodyForFill: Primitive = usesOpenTopOutline
-    ? { ...placedBody, style: { ...placedBody.style, stroke: 'none' } }
+  const bodyForFill: Primitive = usesOpenTopOutline && placedBody.type === 'rect'
+    ? {
+        type: 'path',
+        role: 'body',
+        d: `M ${placedBody.x} ${placedBody.y} ` +
+          `L ${placedBody.x} ${placedBody.y + placedBody.height} ` +
+          `L ${placedBody.x + placedBody.width} ${placedBody.y + placedBody.height} ` +
+          `L ${placedBody.x + placedBody.width} ${placedBody.y}`,
+        style: placedBody.style,
+        ...(placedBody.transform === undefined ? {} : { transform: placedBody.transform }),
+      }
     : placedBody;
-  const openTopOutline: Primitive[] =
-    usesOpenTopOutline && placedBody.type === 'rect'
-      ? [
-          {
-            type: 'polyline',
-            role: 'bodyExtra',
-            closed: false,
-            points: [
-              [placedBody.x, placedBody.y],
-              [placedBody.x, placedBody.y + placedBody.height],
-              [placedBody.x + placedBody.width, placedBody.y + placedBody.height],
-              [placedBody.x + placedBody.width, placedBody.y],
-            ],
-            style: {
-              fill: 'none',
-              stroke: placedBody.style?.stroke ?? 'schwarz',
-              strokeWidth: placedBody.style?.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM,
-            },
-          },
-        ]
-      : [];
 
   // Belegte Ausnahmen: F.1.17 sowie die drei vermessenen G-Köpfe `trupp`, `gruppe` und `zug`
   // führen `foot-band` zusammen mit einer Kopfzone. Die Kopfzone verschiebt den Formationskörper
@@ -1032,7 +1024,6 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
     children: [
       ...headPrimitives,
       filled,
-      ...openTopOutline,
       // Zusatzgeometrie **nach** dem gefüllten Körper, aus demselben Grund wie das Fahrwerk: die
       // Deichsel endet innerhalb des Körperstrichs (rechtes Ende auf der Körpermittellinie 4,0),
       // und eine Organisationsfüllung zeichnete darüber. Sie nimmt die Farbe selbst nicht an —
