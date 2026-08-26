@@ -1,7 +1,7 @@
 # LFH-420 — Anhang D: Führung und Funktionen
 
 > Design-Spec · 26. August 2026  
-> Status: im Chat freigegeben; schriftliche Spec-Prüfung ausstehend
+> Status: schriftlich freigegeben am 26. August 2026
 
 ## 1. Ziel und Erfolgsbild
 
