@@ -114,4 +114,14 @@ describe('Layoutprofile', () => {
     expect(raised).not.toHaveProperty('topLeftInk');
     expect(profileFor('post').topLeftBaselineFromBodyTopMm).toBeUndefined();
   });
+
+  it('nutzt reduced-house unverändert mit dem vorhandenen Rechteckprofil ohne neue Labelzone', () => {
+    const reducedHouse = 'reduced-house' as SymbolKind;
+    const profile = profileFor(reducedHouse);
+    expect(profile.id).toBe('rect-body');
+    expect(profile.topLeftBaselineFromBodyTopMm).toBeUndefined();
+    expect(profile.topLeftLines).toBeUndefined();
+    expect(profile.aboveLeftBaselineFromBodyTopMm).toBeUndefined();
+    expect(profile).toBe(profileFor('building'));
+  });
 });

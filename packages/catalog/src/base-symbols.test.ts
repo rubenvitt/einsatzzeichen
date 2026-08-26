@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { boundsOfMm, matchFingerprint, type BodyGeometryMode } from '@einsatzzeichen/core';
+import {
+  boundsOfMm,
+  matchFingerprint,
+  strokeBoundsOfMm,
+  type BodyGeometryMode,
+} from '@einsatzzeichen/core';
 import {
   DEFAULT_STROKE_WIDTH_MM,
   TOLERANCE_UNITS,
@@ -549,6 +554,7 @@ describe('Körperformen des Anhangs E.2', () => {
 
 describe('Körperformen des Anhangs F.3', () => {
   const circleKind = 'circle-12' as SymbolKind;
+  const reducedHouseKind = 'reduced-house' as SymbolKind;
   const raisedGable = 'raised-gable' as BodyVariantId;
 
   it('zeichnet den eigenständigen 12-mm-Kreis zwei Millimeter kleiner als post', () => {
@@ -610,5 +616,59 @@ describe('Körperformen des Anhangs F.3', () => {
 
   it('trägt circle-12 nicht in das Kapitel-1-Register ein', () => {
     expect(Object.keys(BASE_SYMBOLS)).not.toContain('circle-12');
+  });
+
+  it('zeichnet reduced-house als eigene geschlossene Kontur mit genau einer Trauflinie', () => {
+    const drawing = baseDrawing(reducedHouseKind);
+    expect(drawing.children).toEqual([
+      {
+        type: 'polyline', role: 'body', closed: true,
+        points: [[16, 4], [2, 10], [2, 26], [30, 26], [30, 10]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      {
+        type: 'line', role: 'bodyExtra', x1: 2, y1: 10, x2: 30, y2: 10,
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+    ]);
+    expect(drawing.children.filter((primitive) =>
+      primitive.type === 'line' && primitive.role === 'bodyExtra' &&
+      primitive.x1 === 2 && primitive.y1 === 10 && primitive.x2 === 30 && primitive.y2 === 10,
+    )).toHaveLength(1);
+  });
+
+  it('grenzt reduced-house geometrisch von building ab und hält es aus BASE_SYMBOLS heraus', () => {
+    const reduced = baseDrawing(reducedHouseKind).children.find((primitive) => primitive.role === 'body');
+    const building = baseDrawing('building').children.find((primitive) => primitive.role === 'body');
+    expect(reduced).toBeDefined();
+    expect(building).toBeDefined();
+    if (reduced === undefined || building === undefined) return;
+    expect(boundsOfMm(reduced)).toEqual({ minX: 2, minY: 4, maxX: 30, maxY: 26 });
+    expect(boundsOfMm(building)).toEqual({ minX: 1, minY: 3, maxX: 31, maxY: 26 });
+    expect(reduced).not.toEqual(building);
+    expect(Object.keys(BASE_SYMBOLS)).not.toContain('reduced-house');
+  });
+
+  it('trifft für beide Hausreferenzen standardmäßig den bounds-Fingerprint', () => {
+    for (const asset of ['F.3.15_Unterkunft.svg', 'F.3.16_Krankenhaus.svg']) {
+      const result = matchFingerprint(baseDrawing(reducedHouseKind), fingerprintFor(asset));
+      expect(result.problems, asset).toEqual([]);
+      expect(result.ok, asset).toBe(true);
+    }
+  });
+
+  it('prüft F.3.16s outline gesondert als Strichhülle derselben Kontur', () => {
+    const body = baseDrawing(reducedHouseKind).children.find((primitive) => primitive.role === 'body');
+    if (body === undefined) throw new Error('reduced-house: kein body-Primitiv.');
+    const outline = strokeBoundsOfMm(body);
+    expectWithinTolerance(outline.minX, 1.75, 'F.3.16 outline minX');
+    expectWithinTolerance(outline.minY, 3.7290520585, 'F.3.16 outline minY');
+    expectWithinTolerance(outline.maxX, 30.25, 'F.3.16 outline maxX');
+    expectWithinTolerance(outline.maxY, 26.25, 'F.3.16 outline maxY');
+  });
+
+  it('lehnt raised-gable und jede andere Variante am reduced-house ab', () => {
+    expect(() => baseDrawing(reducedHouseKind, raisedGable)).toThrow(/Körpervariante/);
+    expect(() => baseDrawing(reducedHouseKind, 'foot-band')).toThrow(/Körpervariante/);
   });
 });

@@ -295,6 +295,9 @@ const PROFILES: Record<SymbolKind, LayoutProfile> = {
   person: rotatedSquareProfile,
   post: circleBodyProfile,
   'circle-12': circle12Profile,
+  // F.3.15/F.3.16 tragen weder Kopf- noch Labelzone. Wie bei den übrigen eigenständigen
+  // Rechteckkörpern bleibt `place()` ohne Kopfzone identisch; ein neues Profil wäre unbelegt.
+  'reduced-house': rectBodyProfile,
 };
 
 export function profileFor(kind: SymbolKind, variant?: BodyVariantId): LayoutProfile {

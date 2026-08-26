@@ -207,6 +207,20 @@ describe('validateSpec', () => {
     );
   });
 
+  it('bindet reduced-house auch ohne Label an HiOrg und lehnt jede Variante ab', () => {
+    const reducedHouse = 'reduced-house' as SymbolSpec['kind'];
+    expect(validateSpec({ kind: reducedHouse, organization: 'hilfsorganisation' })).toEqual([]);
+    for (const organization of [undefined, 'thw'] as const) {
+      expect(validateSpec({
+        kind: reducedHouse,
+        ...(organization === undefined ? {} : { organization }),
+      }).map((issue) => issue.rule)).toContain('reduced-house-requires-hilfsorganisation');
+    }
+    expect(validateSpec({
+      kind: reducedHouse, bodyVariant: 'raised-gable', organization: 'hilfsorganisation',
+    }).map((issue) => issue.rule)).toContain('body-variant-requires-measured-kind');
+  });
+
   it('bindet jeden gemessenen 12-mm-Kreis auch ohne Label an die weiße HiOrg-Fläche', () => {
     const wrongOrganization = {
       kind: 'circle-12', organization: 'feuerwehr',

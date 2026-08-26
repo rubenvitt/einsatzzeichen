@@ -256,6 +256,18 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
         'auch ohne Beschriftung nicht belegt.',
     });
   }
+  if (
+    spec.kind === 'reduced-house' &&
+    spec.organization !== 'hilfsorganisation'
+  ) {
+    issues.push({
+      rule: 'reduced-house-requires-hilfsorganisation',
+      message:
+        'Die reduzierte Hauskontur ist in beiden F.3-Belegen ausschließlich als weiße ' +
+        'HiOrg-Körperfläche vermessen. Andere oder fehlende Organisationszuordnungen sind ' +
+        'auch ohne Beschriftung nicht belegt.',
+    });
+  }
 
   const topLeftMetrics = spec.labels?.topLeftMetrics as unknown;
   if (topLeftMetrics !== undefined) {

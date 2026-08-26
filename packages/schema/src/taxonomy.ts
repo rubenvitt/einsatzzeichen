@@ -2,7 +2,7 @@
  * Körperform eines Zeichens. Die ersten vierzehn Werte sind die Grundzeichen aus Kapitel 1 der
  * BBK/BABZ-Empfehlung und stehen als `CatalogEntry` in `BASE_SYMBOLS`.
  *
- * **Die letzten vier sind Körperformen ohne Kapitel-1-Abschnitt.** Die Zuschnittsnotiz zu
+ * **Die letzten fünf sind Körperformen ohne Kapitel-1-Abschnitt.** Die Zuschnittsnotiz zu
  * Anhang E.2 vom 11. August 2026 hat die ersten drei vorhergesagt; Anhang F.3 belegt den
  * eigenständigen 12-mm-Kreis. Sie stehen bewusst **nicht** in `BASE_SYMBOLS`: dessen Register ist
  * das Kapitel 1, und ein Eintrag dort verlangte einen Abschnitt, den diese Quellen nicht liefern.
@@ -15,6 +15,8 @@
  *   bezeichnet, sagt die Datei nicht.
  * - `circle-12` — Kreis mit Radius 12 mm aus den elf F.3-Zeichen; bei `raised-gable` ist sein
  *   Mittelpunkt separat abgesenkt vermessen.
+ * - `reduced-house` — reduzierte Hauskontur der beiden F.3-Zeichen Unterkunft und Krankenhaus.
+ *   Die sichtbare Traufe ist ein separates Körperprimitiv, kein zweiter Körper.
  */
 export type SymbolKind =
   | 'formation'
@@ -34,7 +36,8 @@ export type SymbolKind =
   | 'trailer'
   | 'swap-loader-vehicle'
   | 'upright-rectangle'
-  | 'circle-12';
+  | 'circle-12'
+  | 'reduced-house';
 
 /**
  * Eine **zweite, in der Quelle belegte Zeichnung desselben Grundzeichens** — keine zweite

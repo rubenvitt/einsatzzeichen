@@ -528,6 +528,18 @@ const BODIES: Partial<Record<SymbolKind, Primitive>> = {
     r: 12,
     style: OUTLINE,
   },
+  /**
+   * Reduzierte Hauskontur aus F.3.15/F.3.16. Die fünf Eckpunkte sind die Mittellinie der
+   * gemeinsamen Kontur. F.3.16s zusätzlich vermessene Outline ist nur deren Strichhülle und
+   * deshalb ausdrücklich kein zweiter Körper und kein abweichender Fingerprint-Präzedenzfall.
+   */
+  'reduced-house': {
+    type: 'polyline',
+    role: 'body',
+    closed: true,
+    points: [[16, 4], [2, 10], [2, 26], [30, 26], [30, 10]],
+    style: OUTLINE,
+  },
 };
 
 const VARIANT_EXTRA_PRIMITIVES: Partial<
@@ -720,6 +732,17 @@ const EXTRA_PRIMITIVES: Partial<Record<SymbolKind, readonly Primitive[]>> = {
       style: OUTLINE,
     },
   ],
+  'reduced-house': [
+    {
+      type: 'line',
+      role: 'bodyExtra',
+      x1: 2,
+      y1: 10,
+      x2: 30,
+      y2: 10,
+      style: OUTLINE,
+    },
+  ],
 };
 
 const TITLES: Partial<Record<SymbolKind, string>> = {
@@ -727,6 +750,7 @@ const TITLES: Partial<Record<SymbolKind, string>> = {
   'swap-loader-vehicle': 'Wechselladerfahrzeug',
   'upright-rectangle': 'Hochkantrechteck',
   'circle-12': '12-mm-Kreis',
+  'reduced-house': 'Reduzierte Hauskontur',
   formation: 'Taktische Formation',
   person: 'Person',
   'vehicle-land': 'Landfahrzeug',

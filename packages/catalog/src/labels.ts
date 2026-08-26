@@ -33,6 +33,7 @@ const KIND_LABELS: Record<SymbolKind, string> = {
   // `E.2.26` sie verwendet: was diese Form fachlich bezeichnet, sagt die Datei nicht.
   'upright-rectangle': 'Hochkantrechteck',
   'circle-12': '12-mm-Kreis',
+  'reduced-house': 'Reduzierte Hauskontur',
 };
 
 const ORGANIZATION_LABELS: Record<OrganizationId, string> = {
