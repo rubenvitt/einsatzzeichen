@@ -641,6 +641,19 @@ genau acht direkte und acht Mehrgrößen-Snapshots hinzu (151 beziehungsweise 40
 alle 541 zuvor vorhandenen Snapshotdateien blieben bytegleich. Die Einzelsichtung ist nicht der
 finale Task-6-Kontaktbogen, und sämtliche F-f-Domainreviews bleiben `pending`.
 
+## Anhang H: veterinärmedizinische Formationen
+
+H.1 bis H.3 ergänzen drei orangefarbene Formationsrezepte für Veterinärzug,
+Tier-Dekontaminationsgruppe sowie Schlacht- und Untersuchungsgruppe. H.2 hat bewusst eine eigene,
+kompakte technische Tierdekontaminationsmarke links unten: Sie ist weder die rote C.1.10-Fassung
+noch eine Wiederverwendung von `capability.decontamination`. Die drei Original-/Katalogpaare
+wurden als beschrifteter `420 × 420 px`-Paarvergleich gerastert und in Originalauflösung
+gesichtet; die lokalen, ignorierten PR-Evidenzdaten stehen in der QA-Notiz. Die technischen
+Reviews sind freigegeben, während die drei Domain-Reviews ausdrücklich `pending` bleiben.
+
+Messentscheidung und Provenienzgrenze: [`docs/decisions/2026-08-26-anhang-h.md`](docs/decisions/2026-08-26-anhang-h.md).
+Visual QA und Artefakthash: [`docs/reviews/2026-08-26-h-visual-qa.md`](docs/reviews/2026-08-26-h-visual-qa.md).
+
 ## Der lokale Referenzbestand
 
 `taktische-zeichen/` ist ein **lokaler Ordner mit 661 damals von der BABZ bereitgestellten
