@@ -104,6 +104,10 @@ export const TECHNICAL_BODY_MARK_LABELS = Object.freeze({
     'Raute mit zwei inneren Diagonalen, Anschlag und Rechtspfeil',
   'circle-transport-diamond-wheels-arrows':
     'Raute mit zwei Ringen, Anschlag und Rechtspfeil',
+  'h-veterinary-decontamination':
+    'Veterinär-V mit kompakter Tierdekontaminationsmarke unten links',
+  'h-veterinary-slaughter':
+    'Veterinär-V mit Schlacht- und Untersuchungsmarke unten links',
 } satisfies Record<TechnicalBodyMarkId, string>);
 
 const TECHNICAL_BODY_MARK_ID_SET = new Set<string>(TECHNICAL_BODY_MARK_IDS);

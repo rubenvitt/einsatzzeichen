@@ -69,7 +69,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 424 Zeilen mit 273 Elementdarstellungen', () => {
+  it('enthält exakt 427 Zeilen mit 273 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -97,7 +97,7 @@ describe('Coverage-Manifest', () => {
       // `alternative` — die Zeile zählt einzeln, weil das Manifest Darstellungen zählt und nicht
       // Abschnitte, weil F.1.3 dort noch bewusst offen blieb; F-b baut es mit `foot-band`.
       // F-d ergänzt F.2.10 bis F.2.17 als acht reine Anwendungen des Fahrzeugvertrags.
-      'composition-recipe': 137,
+      'composition-recipe': 140,
       // 254 Piktogramme plus acht Organisationen (seit LFH-424 mit hilfsorganisation), vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
@@ -105,7 +105,7 @@ describe('Coverage-Manifest', () => {
       // Strichhülle vermessen ist.
       element: 273,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(424);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(427);
     expect(elementRows).toHaveLength(273);
     expect(pictogramRows).toHaveLength(254);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
@@ -390,6 +390,7 @@ describe('Coverage-Manifest', () => {
       // Manifesteinträgen ableitet. Bis E.2.6 fehlte, ließ sich dieser Test nicht schreiben.
       'E',
       'F',
+      'H',
       'J.1',
       'J.2',
       'J.3',
