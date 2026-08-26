@@ -461,15 +461,20 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
     });
   }
 
-  // Ohne Organisation gibt es keine Farbe, die diese Zone tragen dürfte: gemessen ist sie in
-  // #003296, und das ist `organizationColor('thw')`. Ein schwarzer oder weißer Lauf an derselben
-  // Stelle wäre eine andere Zeichnung.
-  if (spec.labels?.belowRight !== undefined && spec.organization === undefined) {
+  // Nur Profile mit Organisations-Tinte brauchen eine Organisation, die diese Farbe liefert.
+  // Das G.3.5-Kreisband trägt `belowRight` dagegen ausdrücklich schwarz; seine unabhängige
+  // Organisationspflicht für die Körperfläche wird weiter oben separat geprüft.
+  if (
+    spec.labels?.belowRight !== undefined &&
+    profileFor(spec.kind, spec.bodyVariant).belowRight?.ink === 'organization' &&
+    spec.organization === undefined
+  ) {
     issues.push({
       rule: 'below-right-label-requires-organization',
       message:
-        'Die Beschriftungszone unterhalb des Körpers ist nur in der Organisationsfarbe belegt ' +
-        '(#003296 an E.2.27 bis E.2.31). Ohne Organisation hat sie keine gemessene Farbe.',
+        'Dieses Körperprofil führt die Beschriftungszone unterhalb des Körpers in der ' +
+        'Organisationsfarbe (#003296 an E.2.27 bis E.2.31). Ohne Organisation hat sie keine ' +
+        'gemessene Farbe.',
     });
   }
 

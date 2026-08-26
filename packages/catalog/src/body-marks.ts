@@ -936,16 +936,30 @@ const VEHICLE_LAND_FOOT_BAND_MARKS: Partial<
   'drinking-water': landDrinkingWater,
 };
 
-function logisticsFuels(bounds: BoundsMm, shiftYMm = 0): Primitive[] {
+function logisticsFuels(bounds: BoundsMm, topYMm = 9, bottomYMm = 21): Primitive[] {
   const cx = (bounds.minX + bounds.maxX) / 2;
   return [{
     type: 'path', role: 'pictogram',
     d:
-      `M ${cx - 5} ${9 + shiftYMm} H ${cx + 5} L ${cx + 1.5} ${14 + shiftYMm} ` +
-      `V ${19.75 + shiftYMm} M ${cx - 1.5} ${19.75 + shiftYMm} V ${14 + shiftYMm} ` +
-      `L ${cx - 5} ${9 + shiftYMm}`,
+      `M ${cx - 5} ${topYMm} H ${cx + 5} L ${cx + 1.5} ${topYMm + 5} ` +
+      `V ${bottomYMm} M ${cx - 1.5} ${bottomYMm} V ${topYMm + 5} ` +
+      `L ${cx - 5} ${topYMm}`,
     style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
   }];
+}
+
+/** G.2: eigener Logistik-Wasserhahn; die kleinere F.2.15-Fahrzeugfassung bleibt separat. */
+function logisticsDrinkingWater(): Primitive[] {
+  return [
+    stroke(20, 11, 20, 16),
+    stroke(18, 11, 22, 11),
+    {
+      type: 'path',
+      role: 'pictogram',
+      d: 'M 7 14 H 23 C 24.657 14 26 15.343 26 17 V 18',
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+  ];
 }
 
 function logisticsCatering(bounds: BoundsMm, shiftYMm = 0, shiftXMm = 0): Primitive[] {
@@ -1046,20 +1060,25 @@ const FORMATION_FOOT_BAND_LOGISTICS_MARKS: Partial<
   Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
 > = {
   'fuels-consumables': logisticsFuels,
-  'drinking-water': landDrinkingWater,
-  'water-conveyance': (bounds) => {
-    const cx = (bounds.minX + bounds.maxX) / 2;
-    return [{
+  'drinking-water': logisticsDrinkingWater,
+  'water-conveyance': () => [{
       type: 'path', role: 'pictogram',
-      d: `M ${cx - 10} 16 C ${cx - 8} 12 ${cx - 5} 12 ${cx - 3} 16 ` +
-        `S ${cx + 2} 20 ${cx + 4} 16 S ${cx + 9} 12 ${cx + 11} 16`,
+      d:
+        'M 5 16 C 7.125 16 8.375 12 10.5 12 C 12.625 12 13.875 16 16 16 ' +
+        'C 18.125 16 19.375 12 21.5 12 C 23.625 12 24.875 16 27 16',
       style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
-    }];
-  },
-  'power-supply': (bounds) => {
-    const cx = (bounds.minX + bounds.maxX) / 2;
-    return [outline([[cx, 10], [cx - 3, 16], [cx + 1, 15], [cx - 2, 21], [cx + 4, 14], [cx, 15]])];
-  },
+    }],
+  'power-supply': () => [{
+    type: 'polyline',
+    role: 'pictogram',
+    points: [
+      [17.083, 13.387], [14.027, 19.394], [13.232, 17.406], [12.768, 17.592],
+      [13.861, 20.324], [16.593, 19.231], [16.407, 18.767], [14.524, 19.52],
+      [17.762, 13.152], [17.49, 12.794], [13.417, 13.612], [16.222, 8.113],
+      [15.777, 7.886], [12.737, 13.846], [13.009, 14.205], [17.083, 13.387],
+    ],
+    style: { fill: 'schwarz', stroke: 'none' },
+  }],
   catering: (bounds) => logisticsCatering(bounds),
   'meal-preparation': (bounds) => logisticsMealPreparation(bounds, -5, 3),
   maintenance: logisticsMaintenance,
@@ -1078,7 +1097,7 @@ const CIRCLE_FOOT_BAND_LOGISTICS_MARKS: Partial<
 > = {
   catering: (bounds) => logisticsCatering(bounds),
   'meal-preparation': (bounds) => logisticsMealPreparation(bounds, -5, 3),
-  'fuels-consumables': (bounds) => logisticsFuels(bounds, 0),
+  'fuels-consumables': logisticsFuels,
   maintenance: (bounds) => logisticsMaintenance(bounds, 15.5),
 };
 
@@ -1154,7 +1173,7 @@ export function bodyMark(
     ? (bounds: BoundsMm) => logisticsCatering(bounds, -2)
     : context.kind === 'circle-12' && context.bodyVariant === 'foot-band' &&
         id === 'fuels-consumables' && context.occupiedLabelZones?.includes('bottomCenter')
-      ? (bounds: BoundsMm) => logisticsFuels(bounds, -2)
+      ? (bounds: BoundsMm) => logisticsFuels(bounds, 7, 18)
     : context.kind === 'formation'
     ? context.bodyVariant === undefined && id !== 'catering'
       ? MARKS[id]

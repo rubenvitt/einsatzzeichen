@@ -95,6 +95,55 @@ function wasteDisposalMarks(): readonly Primitive[] {
   ];
 }
 
+function fuelsPath(cx: number, topYMm: number, bottomYMm: number): Primitive {
+  return {
+    type: 'path',
+    role: 'pictogram',
+    d:
+      `M ${cx - 5} ${topYMm} H ${cx + 5} L ${cx + 1.5} ${topYMm + 5} ` +
+      `V ${bottomYMm} M ${cx - 1.5} ${bottomYMm} V ${topYMm + 5} L ${cx - 5} ${topYMm}`,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  };
+}
+
+function drinkingWaterMarks(): readonly Primitive[] {
+  return [
+    line(20, 11, 20, 16),
+    line(18, 11, 22, 11),
+    {
+      type: 'path',
+      role: 'pictogram',
+      d: 'M 7 14 H 23 C 24.657 14 26 15.343 26 17 V 18',
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+  ];
+}
+
+function waterConveyancePath(): Primitive {
+  return {
+    type: 'path',
+    role: 'pictogram',
+    d:
+      'M 5 16 C 7.125 16 8.375 12 10.5 12 C 12.625 12 13.875 16 16 16 ' +
+      'C 18.125 16 19.375 12 21.5 12 C 23.625 12 24.875 16 27 16',
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  };
+}
+
+function powerSupplyMark(): Primitive {
+  return {
+    type: 'polyline',
+    role: 'pictogram',
+    points: [
+      [17.083, 13.387], [14.027, 19.394], [13.232, 17.406], [12.768, 17.592],
+      [13.861, 20.324], [16.593, 19.231], [16.407, 18.767], [14.524, 19.52],
+      [17.762, 13.152], [17.49, 12.794], [13.417, 13.612], [16.222, 8.113],
+      [15.777, 7.886], [12.737, 13.846], [13.009, 14.205], [17.083, 13.387],
+    ],
+    style: { fill: 'schwarz', stroke: 'none' },
+  };
+}
+
 /** Die Fachdienstteilung, die jede der vier Fassungen als erste beiden Primitive trägt. */
 const quartering: readonly Primitive[] = [line(16, 6, 16, 26), line(1, 16, 31, 16)];
 
@@ -170,6 +219,8 @@ describe('bodyMark() — gebänderte Logistikkörper', () => {
     expect(marks).toEqual([logisticsSpoonPath(12), cateringPath(20, 15)]);
     expect(boundsOfMm(marks[0]!)).toEqual({ minX: 10.5, minY: 9.5, maxX: 13.5, maxY: 20 });
     expect(boundsOfMm(marks[1]!)).toEqual({ minX: 15, minY: 10, maxX: 24.5, maxY: 20 });
+    expect(() => bodyMarkWithContext('meal-preparation', { kind: 'trailer' }, trailerBodyMm))
+      .toThrow(/nicht vermessen/);
   });
 
   it('zeichnet Instandhaltung als Mittellinie mit offenen Endbögen je Körperprofil', () => {
@@ -187,6 +238,12 @@ describe('bodyMark() — gebänderte Logistikkörper', () => {
         maxX: (bounds.minX + bounds.maxX) / 2 + 9,
         maxY: context.kind === 'circle-12' ? 18.5 : 18,
       });
+    }
+    for (const [kind, bounds] of [
+      ['vehicle-land', landBodyMm],
+      ['trailer', trailerBodyMm],
+    ] as const) {
+      expect(() => bodyMarkWithContext('maintenance', { kind }, bounds)).toThrow(/nicht vermessen/);
     }
   });
 
@@ -208,29 +265,60 @@ describe('bodyMark() — gebänderte Logistikkörper', () => {
     }
   });
 
-  it('hält nicht profilierte Logistikmarken außerhalb des Formationsbands fail-closed', () => {
-    for (const id of [
-      'fuels-consumables', 'drinking-water', 'water-conveyance', 'power-supply',
-    ] as const) {
+  it('vermisst die vier übrigen Formationsmarken und hält Normalformationen fail-closed', () => {
+    const cases = [
+      ['fuels-consumables', [fuelsPath(16, 9, 21)], { minX: 11, minY: 9, maxX: 21, maxY: 21 }],
+      ['drinking-water', drinkingWaterMarks(), { minX: 7, minY: 11, maxX: 26, maxY: 18 }],
+      ['water-conveyance', [waterConveyancePath()], { minX: 5, minY: 12, maxX: 27, maxY: 16 }],
+      ['power-supply', [powerSupplyMark()], { minX: 12.737, minY: 7.886, maxX: 17.762, maxY: 20.324 }],
+    ] as const;
+    for (const [id, expected, expectedBounds] of cases) {
+      const marks = bodyMarkWithContext(
+        id, { kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm,
+      );
+      expect(marks).toEqual(expected);
+      const combinedBounds = marks.map(boundsOfMm).reduce((left, right) => ({
+        minX: Math.min(left.minX, right.minX),
+        minY: Math.min(left.minY, right.minY),
+        maxX: Math.max(left.maxX, right.maxX),
+        maxY: Math.max(left.maxY, right.maxY),
+      }));
+      expect(combinedBounds).toEqual(expectedBounds);
       expect(() => bodyMarkWithContext(id, { kind: 'formation' }, formationBodyMm))
         .toThrow(/nicht vermessen/);
     }
   });
 
-  it('führt die vier belegten Logistikmarken am gebänderten 12-mm-Kreis', () => {
-    for (const id of [
-      'catering', 'meal-preparation', 'fuels-consumables', 'maintenance',
-    ] as const) {
-      expect(bodyMarkWithContext(
-        id, { kind: 'circle-12', bodyVariant: 'foot-band' }, circleBodyMm,
-      ).length, id).toBeGreaterThan(0);
-    }
-    const shifted = bodyMarkWithContext(
+  it('zeichnet Catering und beide Kraftstofflagen am gebänderten Kreis exakt', () => {
+    const catering = bodyMarkWithContext(
+      'catering', { kind: 'circle-12', bodyVariant: 'foot-band' }, circleBodyMm,
+    );
+    expect(catering).toEqual([cateringPath(16, 15)]);
+    expect(boundsOfMm(catering[0]!)).toEqual({ minX: 11, minY: 10, maxX: 20.5, maxY: 20 });
+
+    const normal = bodyMarkWithContext(
+      'fuels-consumables', { kind: 'circle-12', bodyVariant: 'foot-band' }, circleBodyMm,
+    );
+    expect(normal).toEqual([fuelsPath(16, 9, 21)]);
+    expect(boundsOfMm(normal[0]!)).toEqual({ minX: 11, minY: 9, maxX: 21, maxY: 21 });
+
+    const labeled = bodyMarkWithContext(
       'fuels-consumables', {
         kind: 'circle-12', bodyVariant: 'foot-band', occupiedLabelZones: ['bottomCenter'],
       }, circleBodyMm,
     );
-    expect(boundsOfMm(shifted[0]!)).toMatchObject({ minY: 7, maxY: 17.75 });
+    expect(labeled).toEqual([fuelsPath(16, 7, 18)]);
+    expect(boundsOfMm(labeled[0]!)).toEqual({ minX: 11, minY: 7, maxX: 21, maxY: 18 });
+
+    for (const id of ['catering', 'meal-preparation', 'fuels-consumables', 'maintenance'] as const) {
+      for (const bodyVariant of [undefined, 'raised-gable'] as const) {
+        expect(() => bodyMarkWithContext(
+          id,
+          { kind: 'circle-12', ...(bodyVariant === undefined ? {} : { bodyVariant }) },
+          bodyVariant === 'raised-gable' ? raisedCircleBodyMm : circleBodyMm,
+        )).toThrow(/nicht vermessen/);
+      }
+    }
   });
 });
 
@@ -1340,7 +1428,7 @@ describe('bodyMark() — F.3.1 bis F.3.19 auf Kreis und reduziertem Haus', () =>
 });
 
 describe('BODY_MARK_IDS', () => {
-  it('führt jede an Anhang F.1 vermessene Fähigkeit, und jede davon zeichnet auch', () => {
+  it('führt jede vermessene Fähigkeit und zeichnet alle nicht separat exakt geprüften IDs', () => {
     // Enthaltensein und nicht Gleichheit — und der Zuwachs hat die Bauart schon bestätigt: mit
     // `care` (F.1.4) kam ein fünfter vermessener Fachdienst dazu, ohne dass dieser Test dafür
     // rot werden musste. Was er festhält, ist die Zusicherung, dass jede aufgeführte Kennung
@@ -1355,18 +1443,25 @@ describe('BODY_MARK_IDS', () => {
     ]) {
       expect(BODY_MARK_IDS).toContain(id);
     }
+    const task1LogisticsIds = new Set<BodyMarkId>([
+      'fuels-consumables',
+      'drinking-water',
+      'water-conveyance',
+      'power-supply',
+      'catering',
+      'meal-preparation',
+      'maintenance',
+      'waste-disposal',
+    ]);
+    for (const id of task1LogisticsIds) expect(BODY_MARK_IDS).toContain(id);
     for (const id of BODY_MARK_IDS) {
+      // Sämtliche Task-1-Logistikrouten sind oben je Körperprofil mit exakten Primitiven,
+      // Pfaden, Stilen, Bounds und negativen Nachbarkontexten abgesichert. Ein zusätzlicher
+      // Existenzcheck würde diese stärkeren Verträge wieder zu `length > 0` verwässern.
+      if (task1LogisticsIds.has(id)) continue;
       // Kein Mindestmaß von zwei Primitiven: `care` steht mit **einem** Polyzug ohne Teilung da,
       // und genau das ist an F.1.3 belegt (siehe den Block zur Zeltmarke oben).
-      const invocation = id === 'catering'
-        ? [{ kind: 'formation', bodyVariant: 'foot-band' } as const, formationBodyMm] as const
-        : [
-            'fuels-consumables', 'water-conveyance', 'power-supply', 'maintenance', 'waste-disposal',
-          ].includes(id)
-          ? [{ kind: 'formation', bodyVariant: 'foot-band' } as const, formationBodyMm] as const
-        : id === 'meal-preparation' || id === 'drinking-water'
-          ? [{ kind: 'vehicle-land', bodyVariant: 'foot-band' } as const, landBodyMm] as const
-        : id === 'air-winch-chevron-diamond'
+      const invocation = id === 'air-winch-chevron-diamond'
           ? [{ kind: 'vehicle-air', bodyVariant: 'raised-hull' } as const, raisedAirBodyMm] as const
         : id === 'top-center-rect-0-5x0-6mm'
             ? [{ kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' } as const, landBodyMm] as const

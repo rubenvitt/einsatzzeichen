@@ -788,9 +788,9 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
 
   const placedBody = profile.place(body, headBox?.bottomMm ?? null);
 
-  // Einzige belegte Ausnahme: F.1.17 führt `foot-band` zusammen mit der Kopfzone `gruppe`.
-  // Diese Kopfzone verschiebt den Formationskörper nicht; Band und Hülle bleiben auf y 23…26.
-  // Weder andere Stärken noch andere Zusatzgeometrien werden daraus fortgeschrieben.
+  // Belegte Ausnahmen: F.1.17 sowie die drei vermessenen G-Köpfe `trupp`, `gruppe` und `zug`
+  // führen `foot-band` zusammen mit einer Kopfzone. Die Kopfzone verschiebt den Formationskörper
+  // nicht; Band und Hülle bleiben auf y 23…26. Andere Stärken werden daraus nicht fortgeschrieben.
   const isMeasuredFootBandWithHead =
     spec.kind === 'formation' &&
     spec.bodyVariant === 'foot-band' &&

@@ -20,6 +20,14 @@ describe('validateSpec', () => {
       .map((issue) => issue.rule)).toContain('circle-12-requires-organization');
   });
 
+  it('verlangt für ein schwarzes belowRight-Profil keine Organisationsfarbe', () => {
+    const rules = validateSpec({
+      kind: 'circle-12', bodyVariant: 'foot-band', labels: { belowRight: 'Bw' },
+    }).map((issue) => issue.rule);
+    expect(rules).not.toContain('below-right-label-requires-organization');
+    expect(rules).toContain('circle-12-requires-organization');
+  });
+
   it('lässt am gebänderten Formationskörper nur die drei vermessenen Kopfzonen zu', () => {
     for (const strength of ['trupp', 'gruppe', 'zug'] as const) {
       expect(validateSpec({ kind: 'formation', bodyVariant: 'foot-band', strength })).toEqual([]);
