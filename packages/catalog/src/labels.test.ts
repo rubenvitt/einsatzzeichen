@@ -44,6 +44,29 @@ describe('semantische Zeichenbeschreibungen', () => {
     );
   });
 
+  it('liest einen einzelnen schwarzen Oberflächenlauf als ortsneutrale Zusatzangabe vor', () => {
+    expect(describeSymbolSpec({
+      kind: 'vehicle-air',
+      labels: { surfaceBelowLeft: 'BW' },
+    })).toBe('Grundzeichen: Luftfahrzeug. Zusatzangabe: BW.');
+  });
+
+  it('liest zwei schwarze Oberflächenläufe von links nach rechts vor', () => {
+    expect(describeSymbolSpec({
+      kind: 'circle-12',
+      labels: { surfaceBelowLeft: '291300', surfaceBelowRight: 'ZIV' },
+    })).toBe(
+      'Grundzeichen: 12-mm-Kreis. Zusatzangabe: 291300. Zusatzangabe: ZIV.',
+    );
+  });
+
+  it('lässt die bestehende Beschreibung ohne Oberflächenlauf byteidentisch', () => {
+    expect(describeSymbolSpec({
+      kind: 'vehicle-air',
+      labels: { aboveLeft: 'ITH' },
+    })).toBe('Grundzeichen: Luftfahrzeug. Kürzel oberhalb: ITH.');
+  });
+
   it('nimmt gemessene Labelmetriken nicht in die Vorlesebeschreibung auf', () => {
     // Metriken sind Maßangaben und kein Text. Stünden sie in der Beschreibung, läse eine
     // Vorlesestimme Dezimalzahlen mitten im Kürzel vor.

@@ -188,6 +188,12 @@ export function describeSymbolSpec(spec: SymbolSpec): string {
   if (spec.labels?.topLeftLines !== undefined) {
     parts.push(`Kürzel zweizeilig: ${spec.labels.topLeftLines.join(' / ')}`);
   }
+  // Diese unterste sichtbare Zone folgt allen bisherigen Läufen. Beide Seiten heißen bewusst
+  // gleich: die Vorlesebeschreibung trägt den Inhalt, nicht seine geometrische Links-/Rechtslage.
+  for (const zone of ['surfaceBelowLeft', 'surfaceBelowRight'] as const) {
+    const value = spec.labels?.[zone];
+    if (value !== undefined) parts.push(`Zusatzangabe: ${value}`);
+  }
   return `${parts.join('. ')}.`;
 }
 
