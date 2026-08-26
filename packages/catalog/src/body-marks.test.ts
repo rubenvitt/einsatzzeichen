@@ -24,6 +24,8 @@ const trailerBodyMm: BoundsMm = { minX: 4, minY: 5.75, maxX: 31, maxY: 26 };
 const circleBodyMm: BoundsMm = { minX: 4, minY: 4, maxX: 28, maxY: 28 };
 const raisedCircleBodyMm: BoundsMm = { minX: 4, minY: 6, maxX: 28, maxY: 30 };
 const reducedHouseBodyMm: BoundsMm = { minX: 2, minY: 4, maxX: 30, maxY: 26 };
+const invertedLandBodyMm: BoundsMm = { minX: 1, minY: 6, maxX: 31, maxY: 25.75 };
+const raisedCircleOneMmBodyMm: BoundsMm = { minX: 4, minY: 3, maxX: 28, maxY: 27 };
 const bodyMark = (id: Parameters<typeof bodyMarkWithContext>[0], bounds: BoundsMm) =>
   bodyMarkWithContext(id, { kind: 'formation' }, bounds);
 
@@ -33,6 +35,111 @@ const strokeStyle = { stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM } 
 function line(x1: number, y1: number, x2: number, y2: number): Primitive {
   return { type: 'line', role: 'pictogram', x1, y1, x2, y2, style: strokeStyle };
 }
+
+const outlineStyle = {
+  fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+} as const;
+
+describe('bodyMark() — die technischen Innenzeichnungen des Anhangs N', () => {
+  it('zeichnet die beiden getrennt vermessenen Landfahrzeugmarken', () => {
+    expect(bodyMarkWithContext(
+      'land-horizontal-blade-bent-upright' as BodyMarkId,
+      { kind: 'vehicle-land', bodyVariant: 'inverted-hull-track' as BodyVariantId },
+      invertedLandBodyMm,
+    )).toEqual([
+      line(6, 14.75, 20.75, 14.75),
+      {
+        type: 'polyline', role: 'pictogram',
+        points: [[20.75, 9.5], [20.75, 18.5], [26, 19.5]],
+        style: outlineStyle,
+      },
+    ]);
+
+    const diagonal = 5 / Math.SQRT2;
+    expect(bodyMarkWithContext(
+      'ring-5mm-offset-down-3-5mm-eight-spokes' as BodyMarkId,
+      { kind: 'vehicle-land' }, landBodyMm,
+    )).toEqual([
+      { type: 'circle', role: 'pictogram', cx: 16, cy: 19.5, r: 5, style: outlineStyle },
+      line(11, 19.5, 21, 19.5),
+      line(16, 14.5, 16, 24.5),
+      line(16 - diagonal, 19.5 - diagonal, 16 + diagonal, 19.5 + diagonal),
+      line(16 + diagonal, 19.5 - diagonal, 16 - diagonal, 19.5 + diagonal),
+    ]);
+  });
+
+  it('zeichnet die drei getrennt vermessenen Luftfahrzeugmarken', () => {
+    expect(bodyMarkWithContext(
+      'air-quartering-up-arrow-box' as BodyMarkId,
+      { kind: 'vehicle-air', bodyVariant: 'raised-hull' }, raisedAirBodyMm,
+    )).toEqual([
+      line(16, 6, 16, 20.99),
+      line(2.74, 14, 29.26, 14),
+      line(23, 14, 23, 9.5),
+      { type: 'polyline', role: 'pictogram', points: [[21.5, 11], [23, 9.5], [24.5, 11]], style: outlineStyle },
+      { type: 'rect', role: 'pictogram', x: 20.25, y: 15, width: 5.5, height: 5.5, style: outlineStyle },
+    ]);
+    expect(bodyMarkWithContext(
+      'air-horizontal-left-chevron' as BodyMarkId,
+      { kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull' as BodyVariantId }, raisedAirBodyMm,
+    )).toEqual([
+      line(7, 15, 25, 15),
+      { type: 'polyline', role: 'pictogram', points: [[24, 11], [20, 15], [24, 19]], style: outlineStyle },
+    ]);
+    expect(bodyMarkWithContext(
+      'air-rising-diagonal' as BodyMarkId,
+      { kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull' as BodyVariantId }, raisedAirBodyMm,
+    )).toEqual([line(2.07, 20.74, 24.96, 9.3)]);
+  });
+
+  it('zeichnet Sammelraum und Kontaktstelle auf der Spontanhelfenden-Hülle', () => {
+    const clover = {
+      type: 'path', role: 'pictogram',
+      d: 'M 13 10 C 13 8.3431, 14.3431 7, 16 7 C 17.6569 7, 19 8.3431, 19 10 C 20.6569 10, 22 11.3431, 22 13 C 22 14.6569, 20.6569 16, 19 16 C 19 17.6569, 17.6569 19, 16 19 C 14.3431 19, 13 17.6569, 13 16 C 11.3431 16, 10 14.6569, 10 13 C 10 11.3431, 11.3431 10, 13 10 Z',
+      style: outlineStyle,
+    } as const;
+    expect(bodyMarkWithContext(
+      'spontaneous-helper-collection-arrow' as BodyMarkId,
+      { kind: 'spontaneous-helper' }, { minX: 2, minY: 2, maxX: 30, maxY: 30 },
+    )).toEqual([
+      clover,
+      { type: 'circle', role: 'pictogram', cx: 10.5, cy: 22, r: 1.5, style: outlineStyle },
+      line(12, 22, 23, 22),
+      { type: 'polyline', role: 'pictogram', points: [[21, 20], [23, 22], [21, 24]], style: outlineStyle },
+    ]);
+    expect(bodyMarkWithContext(
+      'spontaneous-helper-contact-double-arrow' as BodyMarkId,
+      { kind: 'spontaneous-helper' }, { minX: 2, minY: 2, maxX: 30, maxY: 30 },
+    )).toEqual([
+      clover,
+      line(9, 22, 23, 22),
+      { type: 'polyline', role: 'pictogram', points: [[11, 20], [9, 22], [11, 24]], style: outlineStyle },
+      { type: 'polyline', role: 'pictogram', points: [[21, 20], [23, 22], [21, 24]], style: outlineStyle },
+    ]);
+  });
+
+  it('verschiebt die bestehende Informationsmarke mit dem um 1 mm angehobenen Kreis', () => {
+    expect(bodyMarkWithContext(
+      'circle-information-stem',
+      { kind: 'circle-12', bodyVariant: 'raised-circle-1mm' as BodyVariantId },
+      raisedCircleOneMmBodyMm,
+    )).toEqual([
+      { type: 'circle', role: 'pictogram', cx: 16, cy: 9.5, r: 1.5, style: { fill: 'schwarz', stroke: 'none' } },
+      { type: 'rect', role: 'pictogram', x: 15, y: 13, width: 2, height: 8, style: { fill: 'schwarz', stroke: 'none' } },
+    ]);
+  });
+
+  it('lehnt jede technische N-Marke außerhalb ihres vermessenen Kontexts ab', () => {
+    expect(() => bodyMarkWithContext(
+      'air-rising-diagonal' as BodyMarkId,
+      { kind: 'vehicle-air', bodyVariant: 'raised-hull' }, raisedAirBodyMm,
+    )).toThrow(/nicht vermessen/);
+    expect(() => bodyMarkWithContext(
+      'spontaneous-helper-contact-double-arrow' as BodyMarkId,
+      { kind: 'formation' }, formationBodyMm,
+    )).toThrow(/nicht vermessen/);
+  });
+});
 
 /** Die Fachdienstteilung, die jede der vier Fassungen als erste beiden Primitive trägt. */
 const quartering: readonly Primitive[] = [line(16, 6, 16, 26), line(1, 16, 31, 16)];
@@ -511,7 +618,7 @@ describe('bodyMark() — F.2.10 bis F.2.17 auf normalen, gebänderten und Anhän
       },
       {
         type: 'polyline', role: 'pictogram', points: [[14, 24], [16, 23], [18, 24]],
-        style: outlineStyle,
+      style: outlineStyle,
       },
     ]);
     expect(() => bodyMarkWithContext(
@@ -528,7 +635,7 @@ describe('bodyMark() — F.2.10 bis F.2.17 auf normalen, gebänderten und Anhän
     )).toEqual([
       {
         type: 'circle', role: 'pictogram', cx: 16, cy: 19, r: 5,
-        style: outlineStyle,
+      style: outlineStyle,
       },
       line(11, 19, 21, 19),
       line(16, 14, 16, 24),
@@ -1177,14 +1284,23 @@ describe('BODY_MARK_IDS', () => {
           ? [{ kind: 'vehicle-land', bodyVariant: 'foot-band' } as const, landBodyMm] as const
         : id === 'air-winch-chevron-diamond'
           ? [{ kind: 'vehicle-air', bodyVariant: 'raised-hull' } as const, raisedAirBodyMm] as const
+        : id === 'air-quartering-up-arrow-box'
+          ? [{ kind: 'vehicle-air', bodyVariant: 'raised-hull' } as const, raisedAirBodyMm] as const
+        : id === 'air-horizontal-left-chevron' || id === 'air-rising-diagonal'
+          ? [{ kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull' } as const, raisedAirBodyMm] as const
         : id === 'top-center-rect-0-5x0-6mm'
             ? [{ kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' } as const, landBodyMm] as const
           : id === 'hospital'
             ? [{ kind: 'reduced-house' } as const, reducedHouseBodyMm] as const
             : id.startsWith('circle-')
               ? [{ kind: 'circle-12' } as const, circleBodyMm] as const
+            : id.startsWith('spontaneous-helper-')
+              ? [{ kind: 'spontaneous-helper' } as const, { minX: 2, minY: 2, maxX: 30, maxY: 30 }] as const
+            : id === 'land-horizontal-blade-bent-upright'
+              ? [{ kind: 'vehicle-land', bodyVariant: 'inverted-hull-track' } as const, invertedLandBodyMm] as const
             : id === 'ring-6mm-offset-down-3mm-four-way-stem' ||
-                id === 'ring-5mm-offset-down-3mm-eight-spokes'
+                id === 'ring-5mm-offset-down-3mm-eight-spokes' ||
+                id === 'ring-5mm-offset-down-3-5mm-eight-spokes'
               ? [{ kind: 'vehicle-land' } as const, landBodyMm] as const
           : [{ kind: 'formation' } as const, formationBodyMm] as const;
       expect(bodyMarkWithContext(id, invocation[0], invocation[1]).length).toBeGreaterThanOrEqual(1);

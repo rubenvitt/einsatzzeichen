@@ -55,6 +55,9 @@ const BODY_VARIANT_KINDS: Readonly<Record<BodyVariantId, ReadonlySet<SymbolKind>
   'foot-band': new Set<SymbolKind>(['formation', 'vehicle-land']),
   'plain-wheel-pair': new Set<SymbolKind>(['vehicle-land']),
   'raised-gable': new Set<SymbolKind>(['circle-12']),
+  'inverted-hull-track': new Set<SymbolKind>(['vehicle-land']),
+  'fixed-wing-hull': new Set<SymbolKind>(['vehicle-air']),
+  'raised-circle-1mm': new Set<SymbolKind>(['circle-12']),
 };
 
 export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
@@ -290,7 +293,9 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
     }
     const isMeasuredVehicleLand = spec.kind === 'vehicle-land' &&
       (spec.bodyVariant === undefined || spec.bodyVariant === 'foot-band');
-    if (!isMeasuredVehicleLand && !isMeasuredCircleVariant) {
+    const isMeasuredFixedWing = spec.kind === 'vehicle-air' &&
+      spec.bodyVariant === 'fixed-wing-hull';
+    if (!isMeasuredVehicleLand && !isMeasuredCircleVariant && !isMeasuredFixedWing) {
       issues.push({
         rule: 'top-left-metrics-require-measured-vehicle-land',
         message:
@@ -407,9 +412,38 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
     });
   }
 
+  const aboveLeftMetrics = spec.labels?.aboveLeftMetrics as unknown;
+  if (aboveLeftMetrics !== undefined) {
+    const record = typeof aboveLeftMetrics === 'object' && aboveLeftMetrics !== null &&
+      !Array.isArray(aboveLeftMetrics)
+      ? aboveLeftMetrics as Record<string, unknown>
+      : undefined;
+    if (
+      spec.labels?.aboveLeft === undefined ||
+      record === undefined ||
+      !Object.hasOwn(record, 'capHeightMm') ||
+      !Object.hasOwn(record, 'baselineFromBodyTopMm') ||
+      !Object.hasOwn(record, 'anchorFromBodyLeftMm') ||
+      !(typeof record.capHeightMm === 'number' && Number.isFinite(record.capHeightMm) &&
+        record.capHeightMm > 0) ||
+      !(typeof record.baselineFromBodyTopMm === 'number' &&
+        Number.isFinite(record.baselineFromBodyTopMm)) ||
+      !(typeof record.anchorFromBodyLeftMm === 'number' &&
+        Number.isFinite(record.anchorFromBodyLeftMm))
+    ) {
+      issues.push({
+        rule: 'above-left-metrics-complete',
+        message: 'Gemessene aboveLeft-Metriken verlangen Lauf, Versalhöhe, Grundlinie und Anker.',
+      });
+    }
+  }
+
   if (
     spec.labels?.topLeftLines !== undefined &&
-    profileFor(spec.kind, spec.bodyVariant).topLeftLines === undefined
+    (
+      profileFor(spec.kind, spec.bodyVariant).topLeftLines === undefined ||
+      (spec.bodyVariant !== undefined && !BODY_VARIANT_KINDS[spec.bodyVariant].has(spec.kind))
+    )
   ) {
     issues.push({
       rule: 'top-left-lines-require-measured-body',
@@ -423,6 +457,36 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
     issues.push({
       rule: 'top-left-lines-exactly-two',
       message: 'Die zweizeilige obere Beschriftungszone muss exakt zwei Zeilen enthalten.',
+    });
+  }
+
+  if (
+    (spec.labels?.surfaceBelowLeft !== undefined || spec.labels?.surfaceBelowRight !== undefined) &&
+    profileFor(spec.kind, spec.bodyVariant).surfaceLabels === undefined
+  ) {
+    issues.push({
+      rule: 'surface-label-requires-measured-body',
+      message: 'Schwarze Oberflächenläufe sind nur an den dafür vermessenen Körperprofilen zulässig.',
+    });
+  }
+
+  if (
+    spec.labels?.centerBaselineFromBodyBottomMm !== undefined &&
+    spec.labels.center === undefined
+  ) {
+    issues.push({
+      rule: 'center-baseline-requires-center-label',
+      message: 'Eine gemessene mittige Grundlinie verlangt einen mittigen Lauf.',
+    });
+  }
+  if (
+    spec.labels?.centerBaselineFromBodyBottomMm !== undefined &&
+    !(Number.isFinite(spec.labels.centerBaselineFromBodyBottomMm) &&
+      spec.labels.centerBaselineFromBodyBottomMm > 0)
+  ) {
+    issues.push({
+      rule: 'center-baseline-positive',
+      message: 'Der Abstand der mittigen Grundlinie muss endlich und größer als null sein.',
     });
   }
 

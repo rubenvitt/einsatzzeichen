@@ -378,6 +378,11 @@ function labelPrimitives(
   normalizeTopLeftCoordinatePrecision: boolean,
   aboveLeftBaselineFromBodyTopMm: number | undefined,
   aboveLeftAnchorFromBodyLeftMm: number | undefined,
+  surfaceLabels: {
+    readonly baselineFromBodyBottomMm: number;
+    readonly leftAnchorFromBodyLeftMm?: number;
+    readonly rightAnchorFromBodyRightMm?: number;
+  } | undefined,
   topLeftLines: {
     readonly baselinesFromBodyTopMm: readonly [number, number];
     readonly capHeightMm: number;
@@ -393,7 +398,8 @@ function labelPrimitives(
   const rightMm = bodyBoundsMm.maxX - LABEL_SIDE_MARGIN_MM;
   const centerBoxLeftMm = bodyBoundsMm.minX + CENTER_LABEL_BOX_MARGIN_MM;
   const centerBoxRightMm = bodyBoundsMm.maxX - CENTER_LABEL_BOX_MARGIN_MM;
-  const centerBaselineMm = bodyBoundsMm.maxY - centerBaselineFromBodyBottomMm;
+  const centerBaselineMm = bodyBoundsMm.maxY -
+    (labels.centerBaselineFromBodyBottomMm ?? centerBaselineFromBodyBottomMm);
   const bottomBaselineMm = bodyBoundsMm.maxY - BOTTOM_LABEL_BASELINE_FROM_BODY_BOTTOM_MM;
 
   const primitives: Primitive[] = [];
@@ -419,12 +425,17 @@ function labelPrimitives(
     ) {
       throw new Error('Die Zone "aboveLeft" ist an dieser Körperform nicht vermessen.');
     }
-    const anchorXMm = bodyBoundsMm.minX + aboveLeftAnchorFromBodyLeftMm;
+    const metrics = labels.aboveLeftMetrics;
+    const anchorXMm = bodyBoundsMm.minX +
+      (metrics?.anchorFromBodyLeftMm ?? aboveLeftAnchorFromBodyLeftMm);
     primitives.push(
       labelPrimitive(
         labels.aboveLeft,
-        BOTTOM_LABEL_SIZE_MM,
-        bodyBoundsMm.minY + aboveLeftBaselineFromBodyTopMm,
+        metrics === undefined
+          ? BOTTOM_LABEL_SIZE_MM
+          : metrics.capHeightMm / ARIMO_CAP_HEIGHT_FRACTION,
+        bodyBoundsMm.minY +
+          (metrics?.baselineFromBodyTopMm ?? aboveLeftBaselineFromBodyTopMm),
         'start',
         anchorXMm,
         anchorXMm,
@@ -588,6 +599,40 @@ function labelPrimitives(
         belowRightFill,
       ),
     );
+  }
+  if (labels.surfaceBelowLeft !== undefined || labels.surfaceBelowRight !== undefined) {
+    if (surfaceLabels === undefined) {
+      throw new Error('Die schwarzen Oberflächenläufe sind an dieser Körperform nicht vermessen.');
+    }
+    const baselineMm = bodyBoundsMm.maxY + surfaceLabels.baselineFromBodyBottomMm;
+    if (labels.surfaceBelowLeft !== undefined) {
+      const anchorXMm = bodyBoundsMm.minX + (surfaceLabels.leftAnchorFromBodyLeftMm ?? 0);
+      primitives.push(labelPrimitive(
+        labels.surfaceBelowLeft,
+        BOTTOM_LABEL_SIZE_MM,
+        baselineMm,
+        'start',
+        anchorXMm,
+        anchorXMm,
+        centerXMm - anchorXMm,
+        viewBoxWidthMm,
+        'schwarz',
+      ));
+    }
+    if (labels.surfaceBelowRight !== undefined) {
+      const anchorXMm = bodyBoundsMm.maxX + (surfaceLabels.rightAnchorFromBodyRightMm ?? 0);
+      primitives.push(labelPrimitive(
+        labels.surfaceBelowRight,
+        BOTTOM_LABEL_SIZE_MM,
+        baselineMm,
+        'end',
+        anchorXMm,
+        centerXMm,
+        anchorXMm - centerXMm,
+        viewBoxWidthMm,
+        'schwarz',
+      ));
+    }
   }
   return primitives;
 }
@@ -957,6 +1002,7 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
         normalizesMeasuredCircleTopLeftCoordinates(spec.kind, spec.bodyVariant),
         profile.aboveLeftBaselineFromBodyTopMm,
         profile.aboveLeftAnchorFromBodyLeftMm,
+        profile.surfaceLabels,
         profile.topLeftLines,
         profile.bottomCenterBaselineFromBodyBottomMm,
         bodyLabelInk(bodyFill),

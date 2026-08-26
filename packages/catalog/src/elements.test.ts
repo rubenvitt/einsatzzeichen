@@ -35,14 +35,14 @@ describe('Element-Register', () => {
     expect(observedTitle).toBe(originalTitle);
   });
 
-  it('enthält exakt 258 Deskriptoren mit den festen Artenzahlen', () => {
+  it('enthält exakt 259 Deskriptoren mit den festen Artenzahlen', () => {
     const byKind = Object.values(ELEMENTS).reduce<Record<string, number>>((acc, el) => {
       acc[el.kind] = (acc[el.kind] ?? 0) + 1;
       return acc;
     }, {});
     expect(byKind).toEqual({
       // Acht seit LFH-424: 2.2_Organisationen.svg ist der Fleck der Hilfsorganisationen.
-      organization: 8,
+      organization: 9,
       strength: 4,
       // Fünf der sechs Fahrzeugkategorien aus Kapitel 5.1.1 plus die beiden Anhängerfahrwerke
       // aus 5.1.2.4 und 5.1.2.5, die der Teilslice E.2 vermessen hat. `amphibienfahrzeug` fehlt
@@ -54,7 +54,7 @@ describe('Element-Register', () => {
       damage: 28,
       wildfire: 14,
     });
-    expect(Object.keys(ELEMENTS)).toHaveLength(258);
+    expect(Object.keys(ELEMENTS)).toHaveLength(259);
   });
 
   it('kollabiert 67 State-Darstellungen auf exakt 61 semantische Deskriptoren', () => {
@@ -123,6 +123,16 @@ describe('Element-Register', () => {
     const descriptor = resolveElement('organization.hilfsorganisation');
     expect(descriptor.kind).toBe('organization');
     expect(descriptor.referenceAssets).toEqual(['2.2_Organisationen.svg']);
+  });
+
+  it('belegt die Bundespolizei an ihrer hellgrünen Anhang-N-Quelle', () => {
+    const descriptor = resolveElement('organization.bundespolizei');
+    expect(descriptor.kind).toBe('organization');
+    expect(descriptor.title).toBe('Bundespolizei');
+    expect(descriptor.referenceAssets).toEqual([
+      'N.1.3_Einsatzfahrzeug_Bundespolizei.svg',
+    ]);
+    expect(fingerprintFor(descriptor.referenceAssets[0]!).fills).toContain('#64dc32');
   });
 
   it('wirft bei einer unbekannten Element-ID', () => {

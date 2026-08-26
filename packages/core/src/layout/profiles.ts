@@ -79,6 +79,12 @@ export interface LayoutProfile {
     readonly baselinesFromBodyTopMm: readonly [number, number];
     readonly capHeightMm: number;
   };
+  /** Schwarze Oberflächenläufe unterhalb des Körpers, relativ zu dessen Hülle vermessen. */
+  surfaceLabels?: {
+    readonly baselineFromBodyBottomMm: number;
+    readonly leftAnchorFromBodyLeftMm?: number;
+    readonly rightAnchorFromBodyRightMm?: number;
+  };
   /**
    * Grundlinie des unten mittigen Laufs, gerechnet von der Körperunterkante nach oben. Bisher
    * allein an F.1.18 und F.1.20 auf der taktischen Formation gemessen.
@@ -149,6 +155,12 @@ const formationProfile: LayoutProfile = {
 const vehicleLandProfile: LayoutProfile = {
   ...rectBody(8),
   topLeftBaselineFromBodyTopMm: 6.75,
+  topLeftLines: { baselinesFromBodyTopMm: [6.75, 10.75], capHeightMm: 2.919225 },
+};
+
+const footBandVehicleLandProfile: LayoutProfile = {
+  ...vehicleLandProfile,
+  topLeftLines: undefined,
 };
 
 /** F.2-Landfahrzeuge: Grundlinie 12,5 mm und die zweizeilige F.2.8-Zone. */
@@ -167,6 +179,17 @@ const vehicleAirProfile: LayoutProfile = {
 const raisedVehicleAirProfile: LayoutProfile = {
   ...rectBody(8),
   aboveLeftBaselineFromBodyTopMm: 0,
+  aboveLeftAnchorFromBodyLeftMm: -0.01,
+  surfaceLabels: {
+    baselineFromBodyBottomMm: 8.01,
+    rightAnchorFromBodyRightMm: 0.01,
+  },
+};
+
+const fixedWingVehicleAirProfile: LayoutProfile = {
+  ...rectBody(8),
+  topLeftBaselineFromBodyTopMm: 7,
+  aboveLeftBaselineFromBodyTopMm: -1,
   aboveLeftAnchorFromBodyLeftMm: -0.01,
 };
 
@@ -263,6 +286,15 @@ const raisedGableCircle12Profile: LayoutProfile = {
   topLeftBaselineFromBodyTopMm: -0.999746,
 };
 
+const raisedCircleOneMmProfile: LayoutProfile = {
+  ...circleBodyProfile,
+  surfaceLabels: {
+    baselineFromBodyBottomMm: 4,
+    leftAnchorFromBodyLeftMm: -3,
+    rightAnchorFromBodyRightMm: 3,
+  },
+};
+
 const PROFILES: Record<SymbolKind, LayoutProfile> = {
   formation: formationProfile,
   // Die drei Körperformen ohne Kapitel-1-Abschnitt. `rectBodyProfile` und kein eigenes Profil:
@@ -302,9 +334,12 @@ const PROFILES: Record<SymbolKind, LayoutProfile> = {
 
 export function profileFor(kind: SymbolKind, variant?: BodyVariantId): LayoutProfile {
   if (kind === 'vehicle-air' && variant === 'raised-hull') return raisedVehicleAirProfile;
+  if (kind === 'vehicle-air' && variant === 'fixed-wing-hull') return fixedWingVehicleAirProfile;
   if (kind === 'vehicle-land' && variant === 'plain-wheel-pair') {
     return plainWheelVehicleLandProfile;
   }
+  if (kind === 'vehicle-land' && variant === 'foot-band') return footBandVehicleLandProfile;
   if (kind === 'circle-12' && variant === 'raised-gable') return raisedGableCircle12Profile;
+  if (kind === 'circle-12' && variant === 'raised-circle-1mm') return raisedCircleOneMmProfile;
   return PROFILES[kind];
 }

@@ -18,6 +18,11 @@ const COLORED = [
   ['hilfsorganisation', '2.2_Organisationen.svg'],
 ] as const satisfies ReadonlyArray<[keyof typeof ORGANIZATION_COLORS, string]>;
 
+/** Zusätzlicher Farbbeleg außerhalb Kapitel 2; gehört deshalb nicht in dessen Coverage-Claim. */
+const ANHANG_N_COLORED = [
+  ['bundespolizei', 'N.1.3_Einsatzfahrzeug_Bundespolizei.svg'],
+] as const satisfies ReadonlyArray<[keyof typeof ORGANIZATION_COLORS, string]>;
+
 /**
  * Erzwingt zur Kompilierzeit, dass jede in `ORGANIZATION_COLORS` belegte Organisation auch in
  * `COLORED` einen Farbnachweis-Fall hat. `ReadonlyArray<[keyof typeof ORGANIZATION_COLORS, string]>`
@@ -27,7 +32,9 @@ const COLORED = [
  * `keyof typeof ORGANIZATION_COLORS`, und die Zuweisung unten wird zum Typfehler
  * ("Type 'false' does not satisfy the constraint 'true'").
  */
-type ReferencedOrganization = (typeof COLORED)[number][0];
+type ReferencedOrganization =
+  | (typeof COLORED)[number][0]
+  | (typeof ANHANG_N_COLORED)[number][0];
 type Extends<Type, Constraint> = Type extends Constraint ? true : false;
 type AssertTrue<Check extends true> = Check;
 const referenceCoversAllOrganizationColors: AssertTrue<
@@ -51,7 +58,7 @@ describe('Organisationsfarben Kapitel 2', () => {
       .toContain(PALETTE[organizationColor(id)]);
   });
 
-  it('belegt jede der acht Organisationen der Taxonomie', () => {
+  it('belegt jede der neun Organisationen der Taxonomie', () => {
     // Bis LFH-424 sicherte diese Stelle das Gegenteil zu: `organizationColor('hilfsorganisation')`
     // warf, weil Kapitel 2 angeblich keine Referenzdatei dafür führte. 2.2_Organisationen.svg ist
     // die Datei — vollflächiger Fleck #ffffff, Typo-Ebene liest „HiOrg".
@@ -60,6 +67,7 @@ describe('Organisationsfarben Kapitel 2', () => {
       'thw',
       'fuehrung-leitung',
       'polizei',
+      'bundespolizei',
       'bundeswehr',
       'sonstige-gefahrenabwehr',
       'zivile-einheiten',
@@ -74,6 +82,14 @@ describe('Organisationsfarben Kapitel 2', () => {
     // `hilfsorganisation` ist von einem organisationslosen farblich nicht unterscheidbar. Genau
     // deshalb trägt die Kontursignatur hier mehr als bei den übrigen sieben.
     expect(PALETTE[organizationColor('hilfsorganisation')]).toBe('#ffffff');
+  });
+
+  it('trennt die hellgrüne Bundespolizei von der grünen Polizei', () => {
+    const [[, asset]] = ANHANG_N_COLORED;
+    expect(fingerprintFor(asset).fills).toContain('#64dc32');
+    expect(PALETTE[organizationColor('bundespolizei')]).toBe('#64dc32');
+    expect(organizationColor('bundespolizei')).toBe('hellgruen');
+    expect(organizationColor('polizei')).toBe('gruen');
   });
 
   it('definiert für jede belegte Organisation genau ein gültiges Palettentoken', () => {

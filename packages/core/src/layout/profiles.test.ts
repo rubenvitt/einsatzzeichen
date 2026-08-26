@@ -85,7 +85,10 @@ describe('Layoutprofile', () => {
     expect(profileFor('vehicle-land').topLeftBaselineFromBodyTopMm).toBe(6.75);
     expect(profileFor('vehicle-land', 'foot-band').topLeftBaselineFromBodyTopMm).toBe(6.75);
     expect(profileFor('vehicle-land', 'plain-wheel-pair').topLeftBaselineFromBodyTopMm).toBe(6.75);
-    expect(profileFor('vehicle-land').topLeftLines).toBeUndefined();
+    expect(profileFor('vehicle-land').topLeftLines).toEqual({
+      baselinesFromBodyTopMm: [6.75, 10.75],
+      capHeightMm: 2.919225,
+    });
     expect(profileFor('vehicle-land', 'foot-band').topLeftLines).toBeUndefined();
     expect(profileFor('vehicle-land', 'plain-wheel-pair').topLeftLines).toEqual({
       baselinesFromBodyTopMm: [5.79, 9.32],
@@ -97,6 +100,23 @@ describe('Layoutprofile', () => {
     expect(profileFor('formation').topLeftLines).toBeUndefined();
     expect(profileFor('formation').aboveLeftBaselineFromBodyTopMm).toBeUndefined();
     expect(profileFor('trailer').topLeftBaselineFromBodyTopMm).toBeUndefined();
+  });
+
+  it('führt die vermessenen Anhang-N-Flächenprofile ohne rezeptabhängige Verzweigung', () => {
+    const fixedWing = profileFor('vehicle-air', 'fixed-wing-hull' as BodyVariantId);
+    expect(fixedWing.topLeftBaselineFromBodyTopMm).toBe(7);
+    expect(fixedWing.aboveLeftBaselineFromBodyTopMm).toBe(-1);
+    expect(fixedWing.aboveLeftAnchorFromBodyLeftMm).toBe(-0.01);
+
+    expect(profileFor('vehicle-air', 'raised-hull').surfaceLabels).toEqual({
+      baselineFromBodyBottomMm: 8.01,
+      rightAnchorFromBodyRightMm: 0.01,
+    });
+    expect(profileFor('circle-12', 'raised-circle-1mm' as BodyVariantId).surfaceLabels).toEqual({
+      baselineFromBodyBottomMm: 4,
+      leftAnchorFromBodyLeftMm: -3,
+      rightAnchorFromBodyRightMm: 3,
+    });
   });
 
   it('führt getrennte topLeft-Profile ohne öffentliche Stilsteuerung für beide F.3-Kreisfassungen', () => {

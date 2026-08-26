@@ -359,6 +359,84 @@ describe('compose() — Beschriftungszonen', () => {
     const drawing = compose(labelSpec, catalog);
     expect(checkViewBox(drawing)).toEqual([]);
   });
+
+  it('setzt gemessene relative Metriken für Mitte, obere Läufe und Oberfläche', () => {
+    const metricCatalog: CatalogPorts = {
+      ...catalog,
+      baseDrawing: (kind) => ({
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [kind === 'circle-12'
+          ? { type: 'circle', role: 'body', cx: 16, cy: 15, r: 12 }
+          : kind === 'vehicle-air'
+            ? vehicleAirBody
+            : vehicleLandBody],
+      }),
+    };
+
+    const land = compose({
+      kind: 'vehicle-land',
+      labels: {
+        center: 'BuPol',
+        centerBaselineFromBodyBottomMm: 6.5,
+        topLeftLines: ['Kipper,', '26 t'],
+      },
+    } as SymbolSpec, metricCatalog);
+    const [center, first, second] = land.children.filter((child) => child.role === 'label');
+    expect(center).toMatchObject({ type: 'text', content: 'BuPol', y: 19.5 });
+    expect(first).toMatchObject({ type: 'text', content: 'Kipper,', x: 2.5, y: 12.5 });
+    expect(second).toMatchObject({ type: 'text', content: '26 t', x: 2.5, y: 16.5 });
+
+    const fixedWing = compose({
+      kind: 'vehicle-air',
+      bodyVariant: 'fixed-wing-hull',
+      labels: {
+        topLeft: '5.000',
+        topLeftMetrics: {
+          capHeightMm: 2.919225,
+          baselineFromBodyTopMm: 7,
+          anchorFromBodyLeftMm: 5.99,
+        },
+        aboveLeft: 'Cessna 172',
+        aboveLeftMetrics: {
+          capHeightMm: 2.919225,
+          baselineFromBodyTopMm: -1,
+          anchorFromBodyLeftMm: -0.01,
+        },
+      },
+    } as SymbolSpec, metricCatalog);
+    const fixedLabels = fixedWing.children.filter((child) => child.role === 'label');
+    expect(fixedLabels).toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: 'text', content: '5.000', x: 7, y: 13 }),
+      expect.objectContaining({ type: 'text', content: 'Cessna 172', x: 1, y: 5 }),
+    ]));
+
+    const rotor = compose({
+      kind: 'vehicle-air', bodyVariant: 'raised-hull',
+      labels: {
+        aboveLeft: 'CH-53',
+        aboveLeftMetrics: {
+          capHeightMm: 2.919225,
+          baselineFromBodyTopMm: -1,
+          anchorFromBodyLeftMm: -0.01,
+        },
+        surfaceBelowRight: 'BW',
+      },
+    } as SymbolSpec, metricCatalog);
+    const [ch53, bw] = rotor.children.filter((child) => child.role === 'label');
+    expect(ch53).toMatchObject({ type: 'text', content: 'CH-53', x: 1, y: 5 });
+    expect(bw).toMatchObject({ type: 'text', content: 'BW', y: 29, style: { fill: 'schwarz' } });
+    if (bw?.type !== 'text') throw new Error('BW-Oberflächenlauf fehlt.');
+    expect(bw.x).toBeCloseTo(31, 10);
+
+    const circle = compose({
+      kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+      labels: { surfaceBelowLeft: '291300', surfaceBelowRight: 'ZIV' },
+    } as SymbolSpec, metricCatalog);
+    expect(circle.children.filter((child) => child.role === 'label')).toEqual([
+      expect.objectContaining({ type: 'text', content: '291300', x: 1, y: 31, anchor: 'start' }),
+      expect.objectContaining({ type: 'text', content: 'ZIV', x: 31, y: 31, anchor: 'end' }),
+    ]);
+  });
 });
 
 /**

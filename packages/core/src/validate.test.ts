@@ -34,6 +34,67 @@ describe('validateSpec', () => {
     expect(validateSpec({ kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-1' })).toEqual([]);
   });
 
+  it('lässt die drei Anhang-N-Körpervarianten nur an ihren vermessenen Arten zu', () => {
+    expect(validateSpec({
+      kind: 'vehicle-land', bodyVariant: 'inverted-hull-track', vehicleCategory: 'kettenfahrzeug',
+    } as SymbolSpec)).toEqual([]);
+    expect(validateSpec({ kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull' } as SymbolSpec))
+      .toEqual([]);
+    expect(validateSpec({ kind: 'circle-12', bodyVariant: 'raised-circle-1mm' } as SymbolSpec))
+      .toEqual([]);
+
+    for (const spec of [
+      { kind: 'vehicle-air', bodyVariant: 'inverted-hull-track' },
+      { kind: 'vehicle-land', bodyVariant: 'fixed-wing-hull' },
+      { kind: 'formation', bodyVariant: 'raised-circle-1mm' },
+    ] as unknown as SymbolSpec[]) {
+      expect(validateSpec(spec).map((issue) => issue.rule)).toContain(
+        'body-variant-requires-measured-kind',
+      );
+    }
+  });
+
+  it('validiert die generischen gemessenen Anhang-N-Labelmetriken fail-closed', () => {
+    expect(validateSpec({
+      kind: 'vehicle-land', labels: {
+        center: 'BuPol', centerBaselineFromBodyBottomMm: 6.5,
+        topLeftLines: ['Kipper,', '26 t'],
+      },
+    } as SymbolSpec)).toEqual([]);
+    expect(validateSpec({
+      kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull', labels: {
+        aboveLeft: 'Cessna 172',
+        aboveLeftMetrics: {
+          capHeightMm: 2.919225,
+          baselineFromBodyTopMm: -1,
+          anchorFromBodyLeftMm: -0.01,
+        },
+      },
+    } as SymbolSpec)).toEqual([]);
+    expect(validateSpec({
+      kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+      labels: { surfaceBelowLeft: '291300', surfaceBelowRight: 'ZIV' },
+    } as SymbolSpec)).toEqual([]);
+
+    expect(validateSpec({
+      kind: 'formation', labels: { surfaceBelowLeft: 'X' },
+    } as SymbolSpec).map((issue) => issue.rule)).toContain(
+      'surface-label-requires-measured-body',
+    );
+    expect(validateSpec({
+      kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull', labels: {
+        aboveLeft: 'X', aboveLeftMetrics: { capHeightMm: Number.NaN },
+      },
+    } as unknown as SymbolSpec).map((issue) => issue.rule)).toContain(
+      'above-left-metrics-complete',
+    );
+    expect(validateSpec({
+      kind: 'vehicle-land', labels: { centerBaselineFromBodyBottomMm: 6.5 },
+    } as SymbolSpec).map((issue) => issue.rule)).toContain(
+      'center-baseline-requires-center-label',
+    );
+  });
+
   it('lässt die oberhalb liegende F.2.7-Zone nur am Luftfahrzeug zu', () => {
     expect(validateSpec({
       kind: 'vehicle-air', bodyVariant: 'raised-hull', labels: { aboveLeft: 'ITH' },
@@ -44,13 +105,13 @@ describe('validateSpec', () => {
       .toContain('above-left-label-requires-measured-body');
   });
 
-  it('lässt die zweizeilige F.2.8-Zone nur am Landfahrzeug zu', () => {
+  it('lässt zweizeilige Läufe an den beiden separat vermessenen Landfahrzeugprofilen zu', () => {
     expect(validateSpec({
       kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', labels: { topLeftLines: ['GW-San', '50'] },
     }))
       .toEqual([]);
-    expect(validateSpec({ kind: 'vehicle-land', labels: { topLeftLines: ['GW-San', '50'] } })
-      .map((issue) => issue.rule)).toContain('top-left-lines-require-measured-body');
+    expect(validateSpec({ kind: 'vehicle-land', labels: { topLeftLines: ['Kipper,', '26 t'] } }))
+      .toEqual([]);
     expect(validateSpec({ kind: 'trailer', labels: { topLeftLines: ['GW-San', '50'] } })
       .map((issue) => issue.rule)).toContain('top-left-lines-require-measured-body');
   });

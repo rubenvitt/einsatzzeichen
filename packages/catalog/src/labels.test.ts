@@ -8,6 +8,11 @@ import {
 import { pictogram } from './pictograms/index.js';
 
 describe('semantische Zeichenbeschreibungen', () => {
+  it('benennt die Bundespolizei als eigene Organisation', () => {
+    expect(describeSymbolSpec({ kind: 'vehicle-land', organization: 'bundespolizei' }))
+      .toContain('Organisation: Bundespolizei');
+  });
+
   it('beschreibt alle gesetzten Bestandteile einer Komposition', () => {
     expect(
       describeSymbolSpec({
@@ -124,7 +129,20 @@ describe('semantische Zeichenbeschreibungen', () => {
       'circle-transport-diamond-arrows',
       'circle-transport-diamond-wheels-arrows',
     ] as const;
-    expect(TECHNICAL_BODY_MARK_IDS).toEqual([...task4TechnicalIds, ...task5TechnicalIds]);
+    const task1AnhangNTechnicalIds = [
+      'land-horizontal-blade-bent-upright',
+      'ring-5mm-offset-down-3-5mm-eight-spokes',
+      'air-quartering-up-arrow-box',
+      'air-horizontal-left-chevron',
+      'air-rising-diagonal',
+      'spontaneous-helper-collection-arrow',
+      'spontaneous-helper-contact-double-arrow',
+    ] as const;
+    expect(TECHNICAL_BODY_MARK_IDS).toEqual([
+      ...task4TechnicalIds,
+      ...task5TechnicalIds,
+      ...task1AnhangNTechnicalIds,
+    ]);
   });
 
   it('beschreibt ein eigenständiges Piktogramm aus seiner Definition', () => {

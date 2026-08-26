@@ -68,7 +68,14 @@ export type SymbolKind =
  * J.3.2 identisch; die Kennung behauptet aber keine Standortsemantik und verwendet nicht dessen
  * abweichend approximierte bestehende Katalogfassung `stationBody(17, 11.5)`.
  */
-export type BodyVariantId = 'raised-hull' | 'foot-band' | 'plain-wheel-pair' | 'raised-gable';
+export type BodyVariantId =
+  | 'raised-hull'
+  | 'foot-band'
+  | 'plain-wheel-pair'
+  | 'raised-gable'
+  | 'inverted-hull-track'
+  | 'fixed-wing-hull'
+  | 'raised-circle-1mm';
 
 /** Organisationen nach Kapitel 2. Bestimmen die Körperfarbe. */
 export type OrganizationId =
@@ -76,6 +83,7 @@ export type OrganizationId =
   | 'thw'
   | 'fuehrung-leitung'
   | 'polizei'
+  | 'bundespolizei'
   | 'bundeswehr'
   | 'sonstige-gefahrenabwehr'
   | 'zivile-einheiten'
@@ -245,6 +253,13 @@ export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
   'circle-information-stem',
   'circle-transport-diamond-arrows',
   'circle-transport-diamond-wheels-arrows',
+  'land-horizontal-blade-bent-upright',
+  'ring-5mm-offset-down-3-5mm-eight-spokes',
+  'air-quartering-up-arrow-box',
+  'air-horizontal-left-chevron',
+  'air-rising-diagonal',
+  'spontaneous-helper-collection-arrow',
+  'spontaneous-helper-contact-double-arrow',
 ] as const);
 
 export type TechnicalBodyMarkId = (typeof TECHNICAL_BODY_MARK_IDS)[number];
@@ -450,6 +465,8 @@ export type WildfireId = (typeof WILDFIRE_IDS)[number];
  */
 export interface BodyLabels {
   readonly center?: string;
+  /** Individuell vermessener Abstand der mittigen Grundlinie von der Körperunterkante. */
+  readonly centerBaselineFromBodyBottomMm?: number;
   readonly bottomLeft?: string;
   /**
    * Unten mittig im Formationskörper. Gemessen an F.1.18 und F.1.20: Grundlinie 24,0 mm,
@@ -517,6 +534,12 @@ export interface BodyLabels {
    * Grundlinie y = 6 mm, zwei Millimeter oberhalb des Luftfahrzeugrumpfs aus Kapitel 1.
    */
   readonly aboveLeft?: string;
+  /** Vollständiger Metriksatz eines oberhalb links liegenden Laufs. */
+  readonly aboveLeftMetrics?: {
+    readonly capHeightMm: number;
+    readonly baselineFromBodyTopMm: number;
+    readonly anchorFromBodyLeftMm: number;
+  };
   /**
    * Zwei linksbündige Läufe im oberen linken Körperfeld. Belegt nur an F.2.8 (`GW-San` / `50`)
    * mit getrennten Grundlinien und kleinerem, gemeinsam vermessenem Schriftgrad.
@@ -540,6 +563,9 @@ export interface BodyLabels {
    * unteren Zonen.
    */
   readonly belowRight?: string;
+  /** Schwarze Läufe auf der Ausgabeoberfläche unterhalb der Körperhülle. */
+  readonly surfaceBelowLeft?: string;
+  readonly surfaceBelowRight?: string;
   /**
    * **Gemessene Versalhöhe** des mittigen Laufs in Millimetern. Fehlt sie, gilt der Normwert aus
    * `compose.ts` (4,87 mm, an den 16 Dateien E.1.1 bis E.1.16 vermessen).
