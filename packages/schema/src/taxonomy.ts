@@ -527,12 +527,15 @@ export interface BodyLabels {
   readonly topLeftLines?: readonly [string, string];
   /**
    * Rechtsbündiger Lauf unterhalb des Körpers; Lage und Tinte bestimmen das Körperprofil. Die
-   * angehobenen Wasserfahrzeuge E.2.27 bis E.2.31 führen ihn 4,01 mm unter der Körperunterkante
-   * und 0,5618 mm rechts der Körperkante in der Organisationsfarbe (Tinte
-   * 22,5379/24,0806/31,5778/26,9998 mm, Füllung #003296, Versalhöhe 2,9192 — selbst vermessen,
-   * in allen fünf Dateien gleich bis auf 0,0003 mm an der T-Glyphe von E.2.28). G.3.5 belegt
-   * davon unabhängig am `circle-12/foot-band` einen schwarzen Lauf 1,0 mm unter und 3,0 mm
-   * rechts der Körperkante, also mit Anker und Grundlinie auf x = 31,0 / y = 29,0 mm.
+   * angehobenen Wasserfahrzeuge E.2.27 bis E.2.31 belegen die Tintenlage
+   * 22,5379/24,0806/31,5778/26,9998 mm, die Füllung #003296 und die Versalhöhe 2,9192 mm
+   * (selbst vermessen, in allen fünf Dateien gleich bis auf 0,0003 mm an der T-Glyphe von
+   * E.2.28). Aus der rechten Tintenkante und dem vermessenen Seitenlager desselben `THW`-Laufs
+   * ist der Anker x = 31,5512 mm zurückgerechnet. Das Profil zerlegt dieses Bild in 4,01 mm
+   * vertikalen und 0,5618 mm horizontalen Abstand relativ zur Hülle; diese körperrelative Lesart
+   * ist eine Modellierungsentscheidung und keine Quellenmessung der beiden Abstände. G.3.5
+   * belegt davon unabhängig am `circle-12/foot-band` einen schwarzen Lauf 1,0 mm unter und
+   * 3,0 mm rechts der Körperkante, also mit Anker und Grundlinie auf x = 31,0 / y = 29,0 mm.
    *
    * **Nicht dasselbe wie `bottomRight` mit anderer Farbe.** Der Lauf liegt vollständig unter dem
    * Rumpf: seine Oberkante 24,0806 mm steht 1,0908 mm unter der Rumpfunterkante 22,9898 mm. Ein
