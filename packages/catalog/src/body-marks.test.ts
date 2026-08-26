@@ -129,6 +129,16 @@ describe('bodyMark() — die technischen Innenzeichnungen des Anhangs N', () => 
     ]);
   });
 
+  it('bindet den angehobenen Kreis ausschließlich an die dort vermessene Informationsmarke', () => {
+    for (const id of ['medical-service', 'care', 'circle-collection-arrow'] as BodyMarkId[]) {
+      expect(() => bodyMarkWithContext(
+        id,
+        { kind: 'circle-12', bodyVariant: 'raised-circle-1mm' as BodyVariantId },
+        raisedCircleOneMmBodyMm,
+      ), id).toThrow(/nicht vermessen/);
+    }
+  });
+
   it('lehnt jede technische N-Marke außerhalb ihres vermessenen Kontexts ab', () => {
     expect(() => bodyMarkWithContext(
       'air-rising-diagonal' as BodyMarkId,

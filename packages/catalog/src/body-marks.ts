@@ -534,6 +534,21 @@ function circleQuartering(bounds: BoundsMm): Primitive[] {
   return primitives;
 }
 
+function circleInformationStem(bounds: BoundsMm): Primitive[] {
+  const dx = bounds.minX - 4;
+  const dy = bounds.minY - 4;
+  return [
+    {
+      type: 'circle', role: 'pictogram', cx: 16 + dx, cy: 10.5 + dy, r: 1.5,
+      style: { fill: 'schwarz', stroke: 'none' },
+    },
+    {
+      type: 'rect', role: 'pictogram', x: 15 + dx, y: 14 + dy, width: 2, height: 8,
+      style: { fill: 'schwarz', stroke: 'none' },
+    },
+  ];
+}
+
 /**
  * F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen. Die
  * Koordinaten werden
@@ -649,20 +664,7 @@ const CIRCLE_NORMAL_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Prim
       circleOutline([[9 + dx, 25.75 + dy], [16 + dx, 22 + dy], [23 + dx, 25.75 + dy]]),
     ];
   },
-  'circle-information-stem': (bounds) => {
-    const dx = bounds.minX - 4;
-    const dy = bounds.minY - 4;
-    return [
-      {
-        type: 'circle', role: 'pictogram', cx: 16 + dx, cy: 10.5 + dy, r: 1.5,
-        style: { fill: 'schwarz', stroke: 'none' },
-      },
-      {
-        type: 'rect', role: 'pictogram', x: 15 + dx, y: 14 + dy, width: 2, height: 8,
-        style: { fill: 'schwarz', stroke: 'none' },
-      },
-    ];
-  },
+  'circle-information-stem': circleInformationStem,
   'circle-transport-diamond-arrows': (bounds) => {
     const dx = bounds.minX - 4;
     const dy = bounds.minY - 4;
@@ -681,6 +683,13 @@ const CIRCLE_NORMAL_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Prim
       circleRing(21.5 + dx, 17.5 + dy, 1.5),
     ];
   },
+};
+
+/** N.2.3: am um 1 mm angehobenen Kreis ist ausschließlich diese eine Marke vermessen. */
+const CIRCLE_RAISED_ONE_MM_MARKS: Partial<
+  Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
+> = {
+  'circle-information-stem': circleInformationStem,
 };
 
 /** F.3.5/F.3.14: semantische Marken, separat gegen den abgesenkten Kreis vermessen. */
@@ -1115,7 +1124,7 @@ export function bodyMark(
           : context.kind === 'circle-12' && context.bodyVariant === undefined
             ? CIRCLE_NORMAL_MARKS[id]
             : context.kind === 'circle-12' && context.bodyVariant === 'raised-circle-1mm'
-              ? CIRCLE_NORMAL_MARKS[id]
+              ? CIRCLE_RAISED_ONE_MM_MARKS[id]
             : context.kind === 'circle-12' && context.bodyVariant === 'raised-gable'
               ? CIRCLE_RAISED_GABLE_MARKS[id]
               : context.kind === 'reduced-house' && context.bodyVariant === undefined
@@ -1133,6 +1142,7 @@ export function bodyMark(
     VEHICLE_AIR_FIXED_WING_MARKS,
     TRAILER_MARKS,
     CIRCLE_NORMAL_MARKS,
+    CIRCLE_RAISED_ONE_MM_MARKS,
     CIRCLE_RAISED_GABLE_MARKS,
     REDUCED_HOUSE_MARKS,
     SPONTANEOUS_HELPER_MARKS,
@@ -1226,6 +1236,7 @@ export const BODY_MARK_IDS: readonly BodyMarkId[] = Object.freeze(
       VEHICLE_AIR_FIXED_WING_MARKS,
       TRAILER_MARKS,
       CIRCLE_NORMAL_MARKS,
+      CIRCLE_RAISED_ONE_MM_MARKS,
       CIRCLE_RAISED_GABLE_MARKS,
       REDUCED_HOUSE_MARKS,
       SPONTANEOUS_HELPER_MARKS,

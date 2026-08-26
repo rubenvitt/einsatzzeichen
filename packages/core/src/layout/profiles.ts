@@ -57,6 +57,8 @@ export interface LayoutProfile {
    * folgt der Mehrheit — dieselbe Einordnung wie bei E.1.18/E.1.20/E.1.21.
    */
   centerBaselineFromBodyBottomMm: number;
+  /** Erlaubt einen je Zeichen vermessenen Abstand anstelle des Profilwerts. */
+  allowsCenterBaselineOverride?: true;
   /**
    * Grundlinie des Laufs oben links, gerechnet **von der Körperoberkante nach unten**. Fehlt sie,
    * ist die Zone an dieser Körperform nicht vermessen und `compose()` wirft, statt eine Lage zu
@@ -154,20 +156,28 @@ const formationProfile: LayoutProfile = {
  */
 const vehicleLandProfile: LayoutProfile = {
   ...rectBody(8),
+  allowsCenterBaselineOverride: true,
   topLeftBaselineFromBodyTopMm: 6.75,
   topLeftLines: { baselinesFromBodyTopMm: [6.75, 10.75], capHeightMm: 2.919225 },
 };
 
 const footBandVehicleLandProfile: LayoutProfile = {
   ...vehicleLandProfile,
+  allowsCenterBaselineOverride: undefined,
   topLeftLines: undefined,
 };
 
 /** F.2-Landfahrzeuge: Grundlinie 12,5 mm und die zweizeilige F.2.8-Zone. */
 const plainWheelVehicleLandProfile: LayoutProfile = {
   ...vehicleLandProfile,
+  allowsCenterBaselineOverride: undefined,
   // F.2.8: Grundlinien 11,54/15,07 mm; gemeinsame Versalhöhe 2,43 mm.
   topLeftLines: { baselinesFromBodyTopMm: [5.79, 9.32], capHeightMm: 2.43 },
+};
+
+const invertedHullVehicleLandProfile: LayoutProfile = {
+  ...vehicleLandProfile,
+  allowsCenterBaselineOverride: undefined,
 };
 
 /** Das Kapitel-1-Luftfahrzeug belegt keine Beschriftungszone. */
@@ -339,6 +349,9 @@ export function profileFor(kind: SymbolKind, variant?: BodyVariantId): LayoutPro
     return plainWheelVehicleLandProfile;
   }
   if (kind === 'vehicle-land' && variant === 'foot-band') return footBandVehicleLandProfile;
+  if (kind === 'vehicle-land' && variant === 'inverted-hull-track') {
+    return invertedHullVehicleLandProfile;
+  }
   if (kind === 'circle-12' && variant === 'raised-gable') return raisedGableCircle12Profile;
   if (kind === 'circle-12' && variant === 'raised-circle-1mm') return raisedCircleOneMmProfile;
   return PROFILES[kind];

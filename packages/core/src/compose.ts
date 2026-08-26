@@ -398,8 +398,7 @@ function labelPrimitives(
   const rightMm = bodyBoundsMm.maxX - LABEL_SIDE_MARGIN_MM;
   const centerBoxLeftMm = bodyBoundsMm.minX + CENTER_LABEL_BOX_MARGIN_MM;
   const centerBoxRightMm = bodyBoundsMm.maxX - CENTER_LABEL_BOX_MARGIN_MM;
-  const centerBaselineMm = bodyBoundsMm.maxY -
-    (labels.centerBaselineFromBodyBottomMm ?? centerBaselineFromBodyBottomMm);
+  const centerBaselineMm = bodyBoundsMm.maxY - centerBaselineFromBodyBottomMm;
   const bottomBaselineMm = bodyBoundsMm.maxY - BOTTOM_LABEL_BASELINE_FROM_BODY_BOTTOM_MM;
 
   const primitives: Primitive[] = [];
@@ -606,7 +605,10 @@ function labelPrimitives(
     }
     const baselineMm = bodyBoundsMm.maxY + surfaceLabels.baselineFromBodyBottomMm;
     if (labels.surfaceBelowLeft !== undefined) {
-      const anchorXMm = bodyBoundsMm.minX + (surfaceLabels.leftAnchorFromBodyLeftMm ?? 0);
+      if (surfaceLabels.leftAnchorFromBodyLeftMm === undefined) {
+        throw new Error('Der linke schwarze Oberflächenlauf hat keinen vermessenen Anker.');
+      }
+      const anchorXMm = bodyBoundsMm.minX + surfaceLabels.leftAnchorFromBodyLeftMm;
       primitives.push(labelPrimitive(
         labels.surfaceBelowLeft,
         BOTTOM_LABEL_SIZE_MM,
@@ -620,7 +622,10 @@ function labelPrimitives(
       ));
     }
     if (labels.surfaceBelowRight !== undefined) {
-      const anchorXMm = bodyBoundsMm.maxX + (surfaceLabels.rightAnchorFromBodyRightMm ?? 0);
+      if (surfaceLabels.rightAnchorFromBodyRightMm === undefined) {
+        throw new Error('Der rechte schwarze Oberflächenlauf hat keinen vermessenen Anker.');
+      }
+      const anchorXMm = bodyBoundsMm.maxX + surfaceLabels.rightAnchorFromBodyRightMm;
       primitives.push(labelPrimitive(
         labels.surfaceBelowRight,
         BOTTOM_LABEL_SIZE_MM,
@@ -997,7 +1002,9 @@ export function compose(spec: SymbolSpec, catalog: CatalogPorts, options: Compos
         bodyBoundsMm,
         DEFAULT_VIEWBOX_MM.width,
         spec.organization !== undefined ? catalog.organizationColor(spec.organization) : null,
-        profile.centerBaselineFromBodyBottomMm,
+        profile.allowsCenterBaselineOverride === true
+          ? spec.labels.centerBaselineFromBodyBottomMm ?? profile.centerBaselineFromBodyBottomMm
+          : profile.centerBaselineFromBodyBottomMm,
         profile.topLeftBaselineFromBodyTopMm,
         normalizesMeasuredCircleTopLeftCoordinates(spec.kind, spec.bodyVariant),
         profile.aboveLeftBaselineFromBodyTopMm,

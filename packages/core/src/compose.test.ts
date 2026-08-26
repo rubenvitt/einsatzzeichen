@@ -428,6 +428,11 @@ describe('compose() — Beschriftungszonen', () => {
     if (bw?.type !== 'text') throw new Error('BW-Oberflächenlauf fehlt.');
     expect(bw.x).toBeCloseTo(31, 10);
 
+    expect(() => compose({
+      kind: 'vehicle-air', bodyVariant: 'raised-hull',
+      labels: { surfaceBelowLeft: 'X' },
+    } as SymbolSpec, metricCatalog)).toThrow(/surface-left-label-requires-measured-anchor/);
+
     const circle = compose({
       kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
       labels: { surfaceBelowLeft: '291300', surfaceBelowRight: 'ZIV' },

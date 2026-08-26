@@ -88,6 +88,42 @@ const CHASSIS_CASES = Object.entries(EXPECTED_CHASSIS) as Array<
 >;
 
 describe('Fahrzeugkategorien', () => {
+  it('komponiert die beiden Anhang-N-Fahrwerke aus den realen Grundzeichen und Katalogformen', () => {
+    const n11 = composeFromCatalog({
+      kind: 'vehicle-land',
+      bodyVariant: 'inverted-hull-track',
+      vehicleCategory: 'kettenfahrzeug',
+    } as Recipe['spec']);
+    expect(n11.children.filter((child) => child.role === 'chassis')).toEqual([{
+      type: 'rect',
+      role: 'chassis',
+      x: 2,
+      y: 25.75,
+      width: 28,
+      height: 4.5,
+      rx: 2.25,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+    }]);
+
+    const n12 = composeFromCatalog({
+      kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-2',
+    });
+    expect(n12.children.filter((child) => child.role === 'chassis')).toEqual([
+      {
+        type: 'circle', role: 'chassis', cx: 3.75, cy: 28.25, r: 2.25,
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+      },
+      {
+        type: 'circle', role: 'chassis', cx: 16, cy: 28.25, r: 2.25,
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+      },
+      {
+        type: 'circle', role: 'chassis', cx: 28.25, cy: 28.25, r: 2.25,
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+      },
+    ]);
+  });
+
   it('bindet den Fahrwerksgeometrie-Claim exakt an die ausgeführten Kategoriefälle', () => {
     const tested = CHASSIS_CASES.map(([id]) => `vehicle-category.${id}`).sort();
     const claimed = COVERAGE_MANIFEST.entries

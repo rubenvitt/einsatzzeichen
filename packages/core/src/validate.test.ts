@@ -93,6 +93,38 @@ describe('validateSpec', () => {
     } as SymbolSpec).map((issue) => issue.rule)).toContain(
       'center-baseline-requires-center-label',
     );
+
+    for (const spec of [
+      { kind: 'formation', labels: { center: 'X', centerBaselineFromBodyBottomMm: 6.5 } },
+      { kind: 'vehicle-air', labels: { center: 'X', centerBaselineFromBodyBottomMm: 6.5 } },
+      {
+        kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
+        labels: { center: 'X', centerBaselineFromBodyBottomMm: 6.5 },
+      },
+      {
+        kind: 'vehicle-land', bodyVariant: 'foot-band',
+        labels: { center: 'X', centerBaselineFromBodyBottomMm: 6.5 },
+      },
+      {
+        kind: 'vehicle-land', bodyVariant: 'inverted-hull-track',
+        labels: { center: 'X', centerBaselineFromBodyBottomMm: 6.5 },
+      },
+    ] as SymbolSpec[]) {
+      expect(validateSpec(spec).map((issue) => issue.rule), spec.kind).toContain(
+        'center-baseline-override-requires-measured-body',
+      );
+    }
+
+    expect(validateSpec({
+      kind: 'vehicle-air', bodyVariant: 'raised-hull',
+      labels: { surfaceBelowLeft: 'X' },
+    } as SymbolSpec).map((issue) => issue.rule)).toContain(
+      'surface-left-label-requires-measured-anchor',
+    );
+    expect(validateSpec({
+      kind: 'vehicle-air', bodyVariant: 'raised-hull',
+      labels: { surfaceBelowRight: 'BW' },
+    } as SymbolSpec)).toEqual([]);
   });
 
   it('lässt die oberhalb liegende F.2.7-Zone nur am Luftfahrzeug zu', () => {

@@ -469,6 +469,26 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
       message: 'Schwarze Oberflächenläufe sind nur an den dafür vermessenen Körperprofilen zulässig.',
     });
   }
+  if (
+    spec.labels?.surfaceBelowLeft !== undefined &&
+    profileFor(spec.kind, spec.bodyVariant).surfaceLabels !== undefined &&
+    profileFor(spec.kind, spec.bodyVariant).surfaceLabels?.leftAnchorFromBodyLeftMm === undefined
+  ) {
+    issues.push({
+      rule: 'surface-left-label-requires-measured-anchor',
+      message: 'Der linke schwarze Oberflächenlauf verlangt einen links vermessenen Anker.',
+    });
+  }
+  if (
+    spec.labels?.surfaceBelowRight !== undefined &&
+    profileFor(spec.kind, spec.bodyVariant).surfaceLabels !== undefined &&
+    profileFor(spec.kind, spec.bodyVariant).surfaceLabels?.rightAnchorFromBodyRightMm === undefined
+  ) {
+    issues.push({
+      rule: 'surface-right-label-requires-measured-anchor',
+      message: 'Der rechte schwarze Oberflächenlauf verlangt einen rechts vermessenen Anker.',
+    });
+  }
 
   if (
     spec.labels?.centerBaselineFromBodyBottomMm !== undefined &&
@@ -487,6 +507,15 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
     issues.push({
       rule: 'center-baseline-positive',
       message: 'Der Abstand der mittigen Grundlinie muss endlich und größer als null sein.',
+    });
+  }
+  if (
+    spec.labels?.centerBaselineFromBodyBottomMm !== undefined &&
+    profileFor(spec.kind, spec.bodyVariant).allowsCenterBaselineOverride !== true
+  ) {
+    issues.push({
+      rule: 'center-baseline-override-requires-measured-body',
+      message: 'Eine abweichende mittige Grundlinie ist nur an einem dafür vermessenen Körperprofil zulässig.',
     });
   }
 

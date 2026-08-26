@@ -103,6 +103,15 @@ describe('Layoutprofile', () => {
   });
 
   it('führt die vermessenen Anhang-N-Flächenprofile ohne rezeptabhängige Verzweigung', () => {
+    expect(profileFor('vehicle-land').allowsCenterBaselineOverride).toBe(true);
+    expect(profileFor('formation').allowsCenterBaselineOverride).toBeUndefined();
+    expect(profileFor('vehicle-air').allowsCenterBaselineOverride).toBeUndefined();
+    expect(profileFor('vehicle-land', 'foot-band').allowsCenterBaselineOverride).toBeUndefined();
+    expect(profileFor('vehicle-land', 'inverted-hull-track' as BodyVariantId)
+      .allowsCenterBaselineOverride).toBeUndefined();
+    expect(profileFor('circle-12', 'raised-circle-1mm' as BodyVariantId)
+      .allowsCenterBaselineOverride).toBeUndefined();
+
     const fixedWing = profileFor('vehicle-air', 'fixed-wing-hull' as BodyVariantId);
     expect(fixedWing.topLeftBaselineFromBodyTopMm).toBe(7);
     expect(fixedWing.aboveLeftBaselineFromBodyTopMm).toBe(-1);
