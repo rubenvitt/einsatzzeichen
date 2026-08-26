@@ -17,7 +17,8 @@ Der Slice liefert:
 - einen gemessenen, wiederverwendbaren Kompositionsvertrag für Funktionsträger;
 - einen fail-closed Verwaltungsstufen-Kopfvertrag für genau die drei belegten Stufen;
 - zehn direkte `leadership.*`-Definitionen für Zeichen ohne belegbare Kompositionsachse;
-- vier reproduzierbare Referenz-gegen-Katalog-Kontaktbögen als PR-Beleg;
+- vier reproduzierbare Referenz-gegen-Katalog-Kontaktbögen als lokale Belege für den finalen
+  Handoff an den Nutzer;
 - getrennte technische und fachliche Reviewobjekte.
 
 Der Slice erteilt keine fachliche, normative oder lizenzrechtliche Freigabe. Jede neue
@@ -525,7 +526,7 @@ Unter dem ignorierten Pfad `out/lfh-420/contact-sheets/` entstehen:
   Referenz, Katalogausgabe und jeden Kontaktbogen.
 
 Referenz und Katalog werden getrennt mit `@resvg/resvg-js` gerastert und erst danach montiert.
-So gehen weder eingebettete Schrift noch Geometrie durch verschachtelte SVG-Images verloren.
+So gehen weder Schrift noch Geometrie durch verschachtelte SVG-Images verloren.
 
 Der ebenfalls ignorierte Generator liegt während der Ausführung unter
 `out/tools/generate-lfh420-contact-sheets.ts` und wird reproduzierbar so aufgerufen:
@@ -567,12 +568,13 @@ Das lokale Abschlussgate enthält vor den Paketgates einen erfolgreichen `--veri
 PNGs werden anschließend jeweils in Originalauflösung geöffnet; 37/37 Sichtungen werden im
 Reviewprotokoll abgehakt.
 
-### 12.3 PR-Beleg
+### 12.3 Finaler Handoff
 
-Die vier finalen PNGs werden als GitHub-User-Attachments direkt in den PR-Text hochgeladen und
-dort unter „Visueller Beleg — 37/37“ eingebettet. PNGs und Generator bleiben untracked; im
-Repository stehen reproduzierbare SVG-Snapshots, Manifest-/Testverträge und das textuelle
-Reviewprotokoll.
+Nach der späteren ausdrücklichen Nutzerentscheidung vom 26. August 2026 werden die vier finalen
+PNGs ausschließlich in der finalen Nachricht als lokale, klickbare Bilddateien übergeben. Sie
+werden weder in den GitHub-PR hochgeladen noch dort eingebettet oder verlinkt. PNGs und Generator
+bleiben untracked; im Repository stehen reproduzierbare SVG-Snapshots, Manifest-/Testverträge
+und das textuelle Reviewprotokoll.
 
 ## 13. Branch, Commits, PR und ClickUp
 
@@ -586,19 +588,20 @@ Der PR enthält:
 - Link auf LFH-420;
 - 26/10-Aufteilung und D.3.7-Migration;
 - Zählpunkte und genaue Gate-Ausgaben;
-- vier Screenshot-Belege;
+- Link auf das eingecheckte textuelle QA-Protokoll;
 - technische Grenzen und offene Domainreviews.
 
 Vor Übergabe gelten zusätzlich diese externen Gates:
 
 1. Der PR-Head entspricht der Git-SHA im Screenshot-Manifest.
 2. GitHub Actions `CI / test` ist für genau diesen Head-SHA erfolgreich.
-3. Alle vier eingebetteten Attachments werden aus der tatsächlichen PR-Seite geöffnet und sind
-   sichtbar; Linktext oder lokale Dateien allein gelten nicht als Beleg.
+3. Alle vier lokalen PNGs werden in Originalauflösung geöffnet und über das Manifest dem
+   PR-Head zugeordnet; 37/37 Sichtungen sind im QA-Protokoll dokumentiert.
 4. Ein unabhängiger Abschlussreview prüft Diff, lokale Gateausgaben, Manifest und alle vier
    Originalbilder; offene technische Findings werden behoben und erneut gegatet.
-5. PR-Checks, Attachmentanzahl und Head-/Manifest-SHA werden unmittelbar vor der ClickUp-
-   Aktualisierung erneut abgeglichen.
+5. PR-Checks und Head-/Manifest-SHA werden unmittelbar vor der ClickUp-Aktualisierung erneut
+   abgeglichen. Im anschließenden finalen Handoff werden genau die vier manifestgebundenen
+   lokalen PNGs als klickbare Bilddateien ausgegeben.
 
 Der PR bleibt ohne ausdrückliche Anweisung im Draft-Zustand; dieser Slice autorisiert weder
 `ready for review` noch Merge.
