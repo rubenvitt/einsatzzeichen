@@ -1,8 +1,8 @@
 # Entscheidung: Anhang C beginnt mit C.1.3
 
-Datum: 26. August 2026  
-Status: C.1.3 technisch umgesetzt und visuell geprüft; Domainreview weiterhin `pending`  
-Scope: ausschließlich `C.1.3` — Löschzug einer Feuerwehr
+- Datum: 26. August 2026
+- Status: C.1.3 technisch umgesetzt und visuell geprüft; Domainreview weiterhin `pending`
+- Scope: ausschließlich `C.1.3` — Löschzug einer Feuerwehr
 
 ## Inventar und Entscheidung
 
