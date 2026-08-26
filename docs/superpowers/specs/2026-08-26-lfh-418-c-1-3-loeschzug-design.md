@@ -117,9 +117,12 @@ Artefakte belegt sind:
    `git diff --check` sind grün.
 10. Ein unabhängiger Code- und Spec-Review findet keinen offenen Pflichtbefund.
 
-Die nach dem Rebase auf den aktuellen `origin/main` erneut geprüfte Baseline lautet:
-60 Testdateien, 4.074 Tests, Typecheck ohne Fehler, 427 Manifesteinträge und bestandenes
-Coverage-Gate.
+Die bei der Umsetzung zunächst geprüfte Baseline auf `d7661bf` lautete 60 Testdateien,
+4.074 Tests, 427 Manifesteinträge und 441 offene Reviews. Vor dem Gesamt-Review wurde der
+unveröffentlichte Branch erneut auf `origin/main` (`41bd895`) rebased und mit dessen
+I-a-Wasserfahrzeug-Slice additiv zusammengeführt. Der danach frisch geprüfte Branchstand lautet:
+60 Testdateien, 4.126 Tests, Typecheck ohne Fehler, 431 Manifesteinträge, 445 offene Reviews und
+bestandenes Coverage-Gate.
 
 ## 6. Visueller Nachweis und Lizenzgrenze
 

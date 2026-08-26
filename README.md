@@ -663,9 +663,9 @@ randbündigen `fire-fighting`-Körpermarke. Der Scope bleibt abschnittsgenau bei
 `C.1` noch `C` wird vor vollständiger, getesteter Abdeckung beansprucht. Das fachliche Review
 bleibt `pending`.
 
-Der Task-1A-Abschlusslauf belegte 60 Testdateien mit 4.082 grünen Tests, einen fehlerfreien
-Typecheck und das Coverage-Gate mit 428 Manifestzeilen und 442 offenen Fachreviews. Diese
-technischen Belege sind keine fachliche Freigabe.
+Der nach dem finalen Rebase auf `origin/main` wiederholte Branchlauf belegte 60 Testdateien mit
+4.126 grünen Tests, einen fehlerfreien Typecheck und das Coverage-Gate mit 431 Manifestzeilen und
+445 offenen Fachreviews. Diese technischen Belege sind keine fachliche Freigabe.
 
 Die visuelle QA steht in
 [`docs/reviews/2026-08-26-c-1-3-visual-qa.md`](docs/reviews/2026-08-26-c-1-3-visual-qa.md).
