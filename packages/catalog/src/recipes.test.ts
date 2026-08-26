@@ -52,7 +52,9 @@ function horizontalPictogramLineYMm(drawing: Drawing): number | undefined {
 }
 
 describe('Kompositionsrezepte', () => {
-  const fingerprintCases = Object.entries(RECIPES);
+  // G.1.5 führt in den Kennzahlen keine vergleichbare Füllfläche (`shapes: []`) und wird
+  // deshalb weiter unten ehrlich über seine vollständige Körpergeometrie gegatet.
+  const fingerprintCases = Object.entries(RECIPES).filter(([section]) => section !== 'G.1.5');
 
   it('bindet den Körper-Fingerprint-Claim exakt an die ausgeführten Rezeptfälle', () => {
     const tested = fingerprintCases.map(([section]) => `recipe.${section}`).sort();
@@ -171,6 +173,226 @@ describe('Kompositionsrezepte', () => {
   it('erzeugt keinen Titel, wenn composeFromCatalog ohne Titel aufgerufen wird', () => {
     const drawing = composeFromCatalog(RECIPES['C.1.1'].spec);
     expect(drawing.title).toBeUndefined();
+  });
+});
+
+describe('Anhang G — vollständiges Logistikinventar', () => {
+  const expected = {
+    'G.1': {
+      title: 'Versorgung mit Verbrauchsgütern',
+      referenceAsset: 'G.1_Versorgung mit Verbrauchsgütern.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        bodyMarks: ['fuels-consumables'],
+      },
+    },
+    'G.1.1': {
+      title: 'Versorgungstrupp Feuerwehr Materialerhaltung',
+      referenceAsset: 'G.1.1_Versorgungstrupp Feuerwehr_Materialerhaltung.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'feuerwehr',
+        strength: 'trupp', bodyMarks: ['maintenance'],
+      },
+    },
+    'G.1.2': {
+      title: 'Versorgungstrupp DLRG',
+      referenceAsset: 'G.1.2_Versorgungstrupp DLRG.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        strength: 'trupp', bodyMarks: ['catering'], labels: { bottomRight: 'DLRG' },
+      },
+    },
+    'G.1.3': {
+      title: 'Versorgungstrupp Feuerwehr Verbrauchsgüter',
+      referenceAsset: 'G.1.3_Versorgungstrupp Feuerwehr_Verbrauchsgüter.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'feuerwehr',
+        strength: 'trupp', bodyMarks: ['fuels-consumables'],
+      },
+    },
+    'G.1.4': {
+      title: 'Verpflegungszug',
+      referenceAsset: 'G.1.4_Verpflegungszug.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        strength: 'zug', bodyMarks: ['catering'],
+      },
+    },
+    'G.1.5': {
+      title: 'Instandhaltungsgruppe',
+      referenceAsset: 'G.1.5_Instandhaltungsgruppe.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        strength: 'gruppe', bodyMarks: ['maintenance'],
+      },
+    },
+    'G.2': {
+      title: 'Versorgung mit Trinkwasser',
+      referenceAsset: 'G.2_Versorgung mit Trinkwasser.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        bodyMarks: ['drinking-water'],
+      },
+    },
+    'G.2.1': {
+      title: 'Fahrzeug Instandhaltung',
+      referenceAsset: 'G.2.1_Fahrzeug Instandhaltung.svg',
+      spec: {
+        kind: 'vehicle-land', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        vehicleCategory: 'kfz-kategorie-1', bodyMarks: ['maintenance'],
+      },
+    },
+    'G.2.2': {
+      title: 'Anhänger Technik Sicherheit',
+      referenceAsset: 'G.2.2_Anhänger Technik Sicherheit.svg',
+      spec: {
+        kind: 'trailer', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        vehicleCategory: 'anhaenger-ein-rad', bodyMarks: ['maintenance'],
+      },
+    },
+    'G.2.3': {
+      title: 'Geräteanhänger Feldkochherd',
+      referenceAsset: 'G.2.3_Geräteanhänger Feldkochherd.svg',
+      spec: {
+        kind: 'trailer', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        vehicleCategory: 'anhaenger-zwei-raeder', bodyMarks: ['meal-preparation'],
+      },
+    },
+    'G.3': {
+      title: 'Versorgung mit Brauchwasser',
+      referenceAsset: 'G.3_Versorgung mit Brauchwasser.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        bodyMarks: ['water-conveyance'],
+      },
+    },
+    'G.3.1': {
+      title: 'Verpflegungsstelle betrieben durch Feuerwehr',
+      referenceAsset: 'G.3.1_Verpflegungsstelle_betrieben durch Feuerwehr.svg',
+      spec: {
+        kind: 'circle-12', bodyVariant: 'foot-band', organization: 'feuerwehr',
+        bodyMarks: ['catering'],
+      },
+    },
+    'G.3.2': {
+      title: 'Verpflegungszubereitungsstelle Polizei',
+      referenceAsset: 'G.3.2_Verpflegungszubereitungsstelle_betrieben durch Polizei.svg',
+      spec: {
+        kind: 'circle-12', bodyVariant: 'foot-band', organization: 'polizei',
+        bodyMarks: ['meal-preparation'],
+      },
+    },
+    'G.3.3': {
+      title: 'Versorgungsstelle Hilfsorganisation',
+      referenceAsset: 'G.3.3_Versorgungsstelle Hilfsorganisation.svg',
+      spec: {
+        kind: 'circle-12', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        bodyMarks: ['fuels-consumables'],
+      },
+    },
+    'G.3.4': {
+      title: 'Zentrale Stelle Notversorgung',
+      referenceAsset: 'G.3.4_Zentrale Stelle Notversorgung.svg',
+      spec: {
+        kind: 'circle-12', bodyVariant: 'foot-band', organization: 'fuehrung-leitung',
+        bodyMarks: ['maintenance'],
+      },
+    },
+    'G.3.5': {
+      title: 'Mobiler Tankpunkt Diesel Bundeswehr',
+      referenceAsset: 'G.3.5_Mobiler Tankpunkt Diesel_betrieben durch Bundeswehr.svg',
+      spec: {
+        kind: 'circle-12', bodyVariant: 'foot-band', organization: 'bundeswehr',
+        bodyMarks: ['fuels-consumables'], labels: { bottomCenter: 'Diesel', belowRight: 'Bw' },
+      },
+    },
+    'G.4': {
+      title: 'Versorgung mit Elektrizität',
+      referenceAsset: 'G.4_Versorgung mit Elektrizität.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        bodyMarks: ['power-supply'],
+      },
+    },
+    'G.5': {
+      title: 'Versorgung mit Verpflegung',
+      referenceAsset: 'G.5_Versorgung mit Verpflegung.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        bodyMarks: ['catering'],
+      },
+    },
+    'G.6': {
+      title: 'Zubereiten von Verpflegung',
+      referenceAsset: 'G.6_Zubereiten von Verpflegung.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        bodyMarks: ['meal-preparation'],
+      },
+    },
+    'G.7': {
+      title: 'Instandhaltung',
+      referenceAsset: 'G.7_Instandhaltung.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        bodyMarks: ['maintenance'],
+      },
+    },
+    'G.8': {
+      title: 'Entsorgung',
+      referenceAsset: 'G.8_Entsorgung.svg',
+      spec: {
+        kind: 'formation', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+        bodyMarks: ['waste-disposal'],
+      },
+    },
+  } as const satisfies Record<string, Recipe>;
+
+  it('bindet alle 21 primary-Rezepte literal an Namen, Körper, Organisation, Kopf, Fahrwerk, Marken und Labels', () => {
+    const actual = Object.fromEntries(
+      Object.entries<Recipe>(RECIPES).filter(([key]) => key === 'G.1' || /^G\.[1-3]\.[1-5]$/.test(key) || /^G\.[2-8]$/.test(key)),
+    );
+    expect(actual).toEqual(expected);
+    expect(Object.keys(actual)).toEqual(Object.keys(expected));
+    expect(Object.keys(actual).every((key) => !key.includes('#'))).toBe(true);
+    expect(Object.keys(RECIPES)).toHaveLength(158);
+  });
+
+  it('bindet die 21 primary- und Referenz-IDs exakt und ohne Alternative', () => {
+    const rows = COVERAGE_MANIFEST.entries.filter(
+      (entry) => entry.coverage === 'composition-recipe' && entry.sourceId.startsWith('bbk-babz-2025:G.'),
+    );
+    expect(rows.map((entry) => ({
+      sourceId: entry.sourceId,
+      variant: entry.variant,
+      implementation: entry.implementation,
+      referenceAsset: entry.referenceAsset,
+    }))).toEqual(Object.entries(expected).map(([id, recipe]) => ({
+      sourceId: `bbk-babz-2025:${id}`,
+      variant: 'primary',
+      implementation: `recipe.${id}`,
+      referenceAsset: recipe.referenceAsset,
+    })));
+  });
+
+  it('gated G.1.5 über die vollständige Geometrie statt über einen falschen Fingerprint', () => {
+    const recipe = RECIPES['G.1.5'];
+    const drawing = composeFromCatalog(recipe.spec, recipe.title);
+    expect(drawing.children.find((primitive) => primitive.role === 'body')).toMatchObject({
+      type: 'rect', x: 1, y: 6, width: 30, height: 20,
+    });
+    expect(drawing.children.find(
+      (primitive) => primitive.type === 'rect' && primitive.role === 'pictogram' && primitive.y === 23,
+    )).toMatchObject({ type: 'rect', x: 1, y: 23, width: 30, height: 3 });
+    expect(drawing.children.filter((primitive) => primitive.role === 'head')).toEqual([
+      expect.objectContaining({ type: 'circle', cx: 11, cy: 3.5, r: 1.5 }),
+      expect.objectContaining({ type: 'circle', cx: 21, cy: 3.5, r: 1.5 }),
+    ]);
+    const entry = COVERAGE_MANIFEST.entries.find(
+      (candidate) => candidate.sourceId === 'bbk-babz-2025:G.1.5',
+    );
+    expect(entry?.testEvidence).toEqual(['body-geometry-regression', 'svg-snapshot']);
+    expect(entry?.testEvidence).not.toContain('body-fingerprint');
   });
 });
 
@@ -301,8 +523,8 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
 
   it('verlangt für die Beschriftung auf der Körperfarbe die Textschwelle, nicht die Nichttextschwelle', () => {
     const requirements = labelContrastRequirements();
-    // **Sechs seit dem Teilslice F-e**, und nur eine davon besteht nicht. Drei Nachbarschaften
-    // und drei Organisationen kommen hier zusammen: die Beschriftung im Körper, die
+    // **Acht seit Anhang G**, und nur eine davon besteht nicht. Vier Nachbarschaften
+    // und vier Organisationen kommen hier zusammen: die Beschriftung im Körper, die
     // Organisationsfarbe auf der Ausgabeoberfläche sowie die schwarzen Kreislabels, die
     // teilweise außerhalb der weißen Körperfläche auf `surface` stehen.
     //
@@ -328,6 +550,12 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
       },
       {
         foreground: 'weiss',
+        background: 'braun',
+        context: 'Beschriftung im Körper auf Organisation bundeswehr',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'weiss',
         background: 'blau',
         context: 'Beschriftung im Körper auf Organisation thw',
         minimum: 4.5,
@@ -342,6 +570,12 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
         foreground: 'blau',
         background: 'surface',
         context: 'Trägerkürzel unterhalb des Körpers, Organisation thw',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz',
+        background: 'surface',
+        context: 'Schwarze Beschriftung unterhalb des Körpers',
         minimum: 4.5,
       },
       {
@@ -1165,7 +1399,7 @@ describe('Anhang F, Teilslice F-f', () => {
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(137);
+    expect(Object.keys(RECIPES)).toHaveLength(158);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {

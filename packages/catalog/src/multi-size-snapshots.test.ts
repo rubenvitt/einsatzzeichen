@@ -212,11 +212,11 @@ function organizationProfileSheet(): string {
 }
 
 describe('echte Mehrgrößen- und Profilregression', () => {
-  it('schreibt exakt 406 Mehrgrößen-Snapshots', () => {
+  it('schreibt exakt 427 Mehrgrößen-Snapshots', () => {
     const snapshots = readdirSync(new URL('./__snapshots__/multi-size/', import.meta.url), {
       withFileTypes: true,
     }).filter((entry) => entry.isFile() && entry.name.endsWith('.svg'));
-    expect(snapshots).toHaveLength(406);
+    expect(snapshots).toHaveLength(427);
   });
 
   it.each(RENDER_CASES)(

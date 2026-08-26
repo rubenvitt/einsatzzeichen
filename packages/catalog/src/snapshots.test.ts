@@ -5,11 +5,11 @@ import { BASE_SYMBOLS, baseDrawing } from './base-symbols.js';
 import { RECIPES, composeFromCatalog } from './recipes.js';
 
 describe('SVG-Snapshots', () => {
-  it('schreibt exakt 151 direkte SVG-Snapshots', () => {
+  it('schreibt exakt 172 direkte SVG-Snapshots', () => {
     const snapshots = readdirSync(new URL('./__snapshots__/', import.meta.url), {
       withFileTypes: true,
     }).filter((entry) => entry.isFile() && entry.name.endsWith('.svg'));
-    expect(snapshots).toHaveLength(151);
+    expect(snapshots).toHaveLength(172);
   });
 
   it.each(Object.values(BASE_SYMBOLS).map((entry) => entry.kind))(

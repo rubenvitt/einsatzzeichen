@@ -47,6 +47,7 @@ import {
   ANHANG_F_F_FINDINGS,
   ANHANG_F_F_DEVIATIONS,
 } from './recipes-anhang-f.js';
+import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 
 /**
  * Migration nach Slice 2: `technical` ist für alle elf Einträge `approved`, weil das Kriterium
@@ -242,6 +243,26 @@ const ANHANG_F_F_TECHNICAL_REVIEW: Review = {
     'vorbestehenden Snapshots bleiben hashgleich. Der finale Task-6-Kontaktbogen war zu diesem ' +
     'Zeitpunkt noch nicht erzeugt oder gesichtet. Die Organisation hilfsorganisation und ' +
     'sämtliche Fachzuordnungen bleiben im Domain-Review pending.',
+};
+
+/**
+ * Technisches Review der 21 Anhang-G-Rezepte. Es bezieht sich auf die vermessenen lokalen
+ * Geometrie-, Kompositions- und Katalogverträge; der 21-Karten-Vergleich und seine visuelle
+ * Akzeptanz gehören ausdrücklich erst zu Task 3.
+ */
+const ANHANG_G_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'Alle 21 Anhang-G-Referenzen sind literal an eigene primary-Rezepte gebunden. Die ' +
+    'generischen Tests halten foot-band an Formation, Landfahrzeug, Anhänger und 12-mm-Kreis, ' +
+    'die Kopf- und Fahrwerkszonen, Logistikmarken sowie DLRG-, Diesel- und Bw-Labelpositionen ' +
+    'fest; Snapshot-, Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates prüfen den ' +
+    'renderbaren Bestand. G.1.5 besitzt in der Quelle keine vergleichbare Füllfläche und ' +
+    'trägt deshalb eine ehrliche Körper-Geometrieregression statt eines Fingerprint-Claims. ' +
+    'Der 21-Karten-Referenzvergleich und die visuelle Akzeptanz sind in Task 2 noch nicht erfolgt ' +
+    'und bleiben Task 3 vorbehalten. Sämtliche fachlichen Zuordnungen bleiben pending.',
 };
 
 /** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
@@ -698,6 +719,9 @@ function technicalReviewFor(section: string): Review {
       ANHANG_F_F_DEVIATIONS[section],
     );
   }
+  if (Object.hasOwn(ANHANG_G_RECIPES, section)) {
+    return ANHANG_G_TECHNICAL_REVIEW;
+  }
   return TECHNICAL_REVIEW;
 }
 
@@ -738,7 +762,7 @@ const recipeEntries: CoverageEntry[] = Object.entries(RECIPES).map(([key, recipe
     // Task 13 hat alle drei Rezepte per matchFingerprint gegen die Referenz gegated,
     // mit Differenz 0 an allen Kanten — das Manifest bildet das ab, statt es zu untertreiben.
     // Für die 16 Zeichen aus E-a gilt dasselbe, geprüft in recipes.test.ts.
-    testEvidence: DRAWING_EVIDENCE,
+    testEvidence: key === 'G.1.5' ? UNGATED_DRAWING_EVIDENCE : DRAWING_EVIDENCE,
     review: reviewFor(sourceId, variant, technicalReviewFor(key)),
   };
 });
@@ -886,6 +910,7 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'D.3.7',
     'E',
     'F',
+    'G',
     'J.1',
     'J.2',
     'J.3',

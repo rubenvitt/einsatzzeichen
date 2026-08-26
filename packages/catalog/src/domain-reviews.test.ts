@@ -97,10 +97,11 @@ describe('Fachreview-Ledger', () => {
     // bis F.1.22 und die beiden Alternativdarstellungen; damit sind es hier 383.
     // F-d ergänzt acht einzelne, weiterhin offene Reviewplätze für F.2.10 bis F.2.17. F-e
     // ergänzt elf für F.3.1 bis F.3.11 und F-f die acht verbleibenden für F.3.12 bis F.3.19.
-    expect(manifestReviews).toHaveLength(424);
+    // Anhang G ergänzt 21 eigenständige, weiterhin offene primary-Reviews.
+    expect(manifestReviews).toHaveLength(445);
     expect(sourceReviews).toHaveLength(13);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(438);
+    expect(reviews).toHaveLength(459);
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
   });
 

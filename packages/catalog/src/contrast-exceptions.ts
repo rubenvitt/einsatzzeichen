@@ -4,7 +4,7 @@ import { deepFreeze, type DeepReadonly } from './readonly-data.js';
 
 /**
  * Ein Kontrastpaar, das der Katalog **wissentlich** unterhalb seiner eigenen Schwelle führt, weil
- * die Referenz es so zeichnet und keine Palettenänderung es auflöst.
+ * die Referenz es so zeichnet und keine zulässige Palettenänderung es in allen Themes auflöst.
  *
  * Warum das als Datum im Paket steht und nicht als Zeile in einem Test: eine Ausnahme, die nur im
  * Test steht, ist im Betrieb unsichtbar. Wer den Katalog einsetzt, sieht dann ein Zeichen, dessen
@@ -83,6 +83,34 @@ export const CONTRAST_EXCEPTIONS: DeepReadonly<ContrastException[]> = deepFreeze
       'E.2.6 ungebaut lassen: hält Anhang E dauerhaft bei 67 von 68 Abschnitten und begründet ' +
         'eine Lücke im Bestand mit einer Eigenschaft der Palette. Verworfen, weil die Lücke ' +
         'teurer ist als der dokumentierte Befund.',
+    ],
+  },
+  {
+    foreground: 'weiss',
+    background: 'braun',
+    themeIds: ['reference', 'accessible-light', 'print-monochrome'],
+    sections: ['G.3.5'],
+    decidedOn: '2026-08-26',
+    decidedBy: 'Projektvorgabe LFH-421',
+    rationale:
+      'Die weisse Beschriftung Diesel auf der bestehenden Organisationsfarbe braun erreicht ' +
+      '3,689:1 im Referenz- und accessible-light-Theme sowie 2,849:1 im Drucktheme gegen die ' +
+      'Textschwelle 4,5:1. LFH-421 verlangt die gemessenen Labels und die bestehenden ' +
+      'Organisationsfarben; der Katalog bildet G.3.5 deshalb ohne visuell unbelegte Abweichung ' +
+      'ab. Im Drucktheme ist das zulässige Fenster wie bei weiss auf orange leer: weisser Text ' +
+      'ab 4,5:1 und schwarzer Piktogramm-Ink ab 3:1 begrenzen die Relativluminanz auf ' +
+      '0,1000 bis 0,1833; der geforderte Abstand von mehr als 0,045 zu den belegten Grauwerten ' +
+      'rot (0,1329) und blau (0,1812) lässt darin keinen der 256 Grauwerte zu.',
+    rejected: [
+      'Schwarzes statt weisses Diesel-Label: widerspricht der bestehenden generischen ' +
+        'Quellenregel für Innenlabels auf Organisationsfarben und wäre eine nicht durch ' +
+        'LFH-421 belegte visuelle Abweichung.',
+      'Dunkleres Braun nur in accessible-light: kann dort beide Kontrastrichtungen erfüllen, ' +
+        'lässt aber den unverändert unlösbaren Befund im achromatischen Drucktheme stehen ' +
+        'und beseitigt die katalogweite Ausnahme daher nicht.',
+      'G.3.5 ungebaut lassen: verletzt das ausdrückliche Vollständigkeitsziel von 21 ' +
+        'eigenständigen primary-Rezepten und verdeckt die Kontrastlage, statt sie im Katalog ' +
+        'und in der Coverage-Ausgabe sichtbar zu machen.',
     ],
   },
 ]);

@@ -60,10 +60,11 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
       // gelockerte Schwelle: jedes andere Paar und jedes andere Theme fällt weiter auf.
       expect(unexpectedContrastIssues(issues)).toEqual([]);
       // Und die Zahl der gedeckten Befunde ist **gepinnt**, nicht toleriert — dasselbe Muster
-      // wie beim blauen Negativbefund weiter unten. Genau einer je Theme: weiss auf orange aus
-      // der Beschriftung von E.2.6.
-      expect(knownContrastIssues(issues)).toHaveLength(1);
+      // wie beim blauen Negativbefund weiter unten. Genau zwei je Theme: weiss auf orange aus
+      // E.2.6 und weiss auf braun aus dem Diesel-Lauf von G.3.5.
+      expect(knownContrastIssues(issues)).toHaveLength(2);
       expect(knownContrastIssues(issues).map((issue) => issue.context)).toEqual([
+        'Beschriftung im Körper auf Organisation bundeswehr',
         'Beschriftung im Körper auf Organisation sonstige-gefahrenabwehr',
       ]);
     },
@@ -209,7 +210,7 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     }
 
     const exception = CONTRAST_EXCEPTIONS[0];
-    expect(CONTRAST_EXCEPTIONS).toHaveLength(1);
+    expect(CONTRAST_EXCEPTIONS).toHaveLength(2);
     expect(exception?.decidedOn).toBe('2026-08-18');
     expect(exception?.decidedBy).toBe('Projektinhaber');
     // Drei geprüfte und verworfene Wege, nicht einer: ohne sie wäre die Entscheidung eine
@@ -229,6 +230,36 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     // einer Liste von Stichworten zu verkommen.
     for (const rejected of exception?.rejected ?? []) {
       expect(rejected.length, rejected).toBeGreaterThan(80);
+    }
+  });
+
+  it('hält den quellengebundenen Diesel-Lauf als zweite sichtbare Kontrastausnahme fest', () => {
+    for (const [theme, expected] of [
+      [RENDER_THEMES.reference, 3.689],
+      [ACCESSIBLE_LIGHT_THEME, 3.689],
+      [PRINT_MONOCHROME_THEME, 2.849],
+    ] as const) {
+      expect(contrastRatio(theme.palette.weiss, theme.palette.braun), theme.id).toBeCloseTo(
+        expected,
+        3,
+      );
+      expect(expected).toBeLessThan(MINIMUM_TEXT_CONTRAST);
+      expect(
+        contrastExceptionFor({ foreground: 'weiss', background: 'braun', themeId: theme.id }),
+        theme.id,
+      ).toBeDefined();
+    }
+
+    const exception = CONTRAST_EXCEPTIONS[1];
+    expect(exception?.sections).toEqual(['G.3.5']);
+    expect(exception?.decidedOn).toBe('2026-08-26');
+    expect(exception?.decidedBy).toBe('Projektvorgabe LFH-421');
+    for (const fragment of ['3,689:1', '2,849:1', '4,5:1', 'Drucktheme', '0,1833', '0,1000']) {
+      expect(exception?.rationale, fragment).toContain(fragment);
+    }
+    expect(exception?.rejected).toHaveLength(3);
+    for (const rejected of exception?.rejected ?? []) {
+      expect(rejected.length, rejected).toBeGreaterThan(100);
     }
   });
 

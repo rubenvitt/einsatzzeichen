@@ -30,6 +30,7 @@ import {
   ANHANG_F_E_RECIPES,
   ANHANG_F_F_RECIPES,
 } from './recipes-anhang-f.js';
+import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 
 const PORTS: CatalogPorts = {
   baseDrawing,
@@ -76,6 +77,7 @@ export interface Recipe {
  * (`CONTRAST_EXCEPTIONS`).
  */
 export const RECIPES = {
+  ...ANHANG_G_RECIPES,
   ...ANHANG_F_A_RECIPES,
   ...ANHANG_F_B_RECIPES,
   ...ANHANG_F_C_RECIPES,

@@ -181,7 +181,11 @@ describe('Grundzeichen Kapitel 1', () => {
   it('bindet den Geometrie-Regressionsclaim exakt an die ungegateten Grundzeichenfälle', () => {
     const tested = UNGATED.map(([kind]) => BASE_SYMBOLS[kind].id).sort();
     const claimed = COVERAGE_MANIFEST.entries
-      .filter((entry) => entry.testEvidence.includes('body-geometry-regression'))
+      .filter(
+        (entry) =>
+          entry.coverage === 'catalog-entry' &&
+          entry.testEvidence.includes('body-geometry-regression'),
+      )
       .map((entry) => entry.implementation)
       .sort();
     expect(tested).toEqual(claimed);
