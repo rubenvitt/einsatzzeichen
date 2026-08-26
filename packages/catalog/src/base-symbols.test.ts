@@ -16,6 +16,7 @@ import { BASE_SYMBOLS, baseDrawing } from './base-symbols.js';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { fingerprintFor } from './fingerprint-index.js';
 import { DEVICE_COMMS } from './pictograms/comms/03-devices.js';
+import { composeFromCatalog } from './recipes.js';
 
 /**
  * Die dreizehn Grundzeichen, deren Körper **am Kennwertartefakt** gegatet ist. Die dritte Spalte
@@ -472,16 +473,44 @@ describe('Körperformen des Anhangs E.2', () => {
       {
         type: 'path',
         role: 'bodyExtra',
-        d: 'M 24.2114 23.2109 c -0.7313 -0.7313, -1.8344 -0.944, -2.7855 -0.5366 L 16 24.9995 l 5.4261 2.3256 c 0.9507 0.4075, 2.0539 0.1951, 2.7855 -0.5366 c 0.9881 -0.9878, 0.9881 -2.5897, 0 -3.5775 Z',
+        d: 'M 24.2114 23.2109 C 23.4801 22.4796, 22.377 22.2669, 21.4259 22.6743 L 16 24.9995 L 21.4261 27.3251 C 22.3768 27.7326, 23.48 27.5202, 24.2116 26.7885 C 25.1997 25.8007, 25.1997 24.1988, 24.2116 23.211 Z',
         style: { fill: 'schwarz', stroke: 'none' },
       },
       {
         type: 'path',
         role: 'bodyExtra',
-        d: 'M 7.7882 23.2109 c -0.9881 0.9881, -0.9881 2.5897, 0 3.5775 c 0.7313 0.7317, 1.8344 0.944, 2.7855 0.5366 L 16 24.9995 l -5.4261 -2.3252 c -0.9507 -0.4075, -2.0539 -0.1951, -2.7855 0.5366 Z',
+        d: 'M 7.7882 23.2109 C 6.8001 24.199, 6.8001 25.8006, 7.7882 26.7884 C 8.5195 27.5201, 9.6226 27.7324, 10.5737 27.325 L 16 24.9995 L 10.5739 22.6743 C 9.6232 22.2668, 8.52 22.4792, 7.7884 23.2109 Z',
         style: { fill: 'schwarz', stroke: 'none' },
       },
     ]);
+  });
+
+  it('verarbeitet beide Festflügler-Verträge durch reale Komposition und Hüllenberechnung', () => {
+    for (const bodyMark of [
+      'air-horizontal-left-chevron',
+      'air-rising-diagonal',
+    ] as const) {
+      const drawing = composeFromCatalog({
+        kind: 'vehicle-air',
+        bodyVariant: 'fixed-wing-hull',
+        bodyMarks: [bodyMark],
+      });
+      const extras = drawing.children.filter((child) => child.role === 'bodyExtra');
+      expect(extras).toHaveLength(2);
+      const [right, left] = extras.map((extra) => boundsOfMm(extra));
+      expect(right).toEqual({
+        minX: 16,
+        minY: expect.closeTo(22.46980509717646, 10),
+        maxX: expect.closeTo(24.952675, 10),
+        maxY: expect.closeTo(27.52973005360795, 10),
+      });
+      expect(left).toEqual({
+        minX: expect.closeTo(7.047125, 10),
+        minY: expect.closeTo(22.46966994639205, 10),
+        maxX: 16,
+        maxY: expect.closeTo(27.52958561552712, 10),
+      });
+    }
   });
 
   it('führt den N.2.3-Kreis einen Millimeter oberhalb der normalen Kreisfassung', () => {
