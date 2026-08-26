@@ -1,6 +1,15 @@
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve, sep } from 'node:path';
+import {
+  closeSync,
+  constants,
+  lstatSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  realpathSync,
+  writeFileSync,
+} from 'node:fs';
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { Resvg, type RenderedImage } from '@resvg/resvg-js';
 import { RECIPES, composeFromCatalog, resvgFontOptions } from '@einsatzzeichen/catalog';
 import { REFERENCE_THEME, renderSvg } from '@einsatzzeichen/core';
@@ -27,6 +36,7 @@ export interface AnhangGProofResult {
   height: number;
   byteLength: number;
   sha256: string;
+  sourceSetDigest: string;
   sections: readonly string[];
 }
 
@@ -65,18 +75,26 @@ export function rasterizeVisualProofSvg(svg: string): RenderedImage {
   }).render();
 }
 
-function proofSvg(referenceRoot: string): { svg: string; sections: readonly string[] } {
+function proofSvg(referenceRoot: string): {
+  svg: string;
+  sections: readonly string[];
+  sourceSetDigest: string;
+} {
   const recipes = anhangGRecipes();
   if (recipes.length !== 21) {
     throw new Error(`Anhang-G-Proof benötigt exakt 21 Rezepte, fand ${recipes.length}.`);
   }
 
+  const sourceSetRows: string[] = [];
   const cards = recipes.map(([section, recipe], index) => {
     const column = index % COLUMNS;
     const row = Math.floor(index / COLUMNS);
     const x = column * CARD_WIDTH;
     const y = row * CARD_HEIGHT;
-    const referenceSvg = readFileSync(join(referenceRoot, recipe.referenceAsset), 'utf8');
+    const referenceBytes = readFileSync(join(referenceRoot, recipe.referenceAsset));
+    const referenceSvg = referenceBytes.toString('utf8');
+    const contentDigest = createHash('sha256').update(referenceBytes).digest('hex');
+    sourceSetRows.push(`${section}\t${recipe.referenceAsset}\t${contentDigest}\n`);
     const catalogSvg = renderSvg(composeFromCatalog(recipe.spec, recipe.title), {
       size: IMAGE_WIDTH,
       theme: REFERENCE_THEME,
@@ -117,18 +135,78 @@ function proofSvg(referenceRoot: string): { svg: string; sections: readonly stri
       cards.join('') +
       `</svg>`,
     sections: recipes.map(([section]) => section),
+    sourceSetDigest: createHash('sha256').update(sourceSetRows.join('')).digest('hex'),
   };
+}
+
+function isErrorWithCode(error: unknown, code: string): boolean {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === code;
+}
+
+function ensureRealDirectory(directory: string): void {
+  try {
+    mkdirSync(directory);
+  } catch (error) {
+    if (!isErrorWithCode(error, 'EEXIST')) throw error;
+  }
+  const stat = lstatSync(directory);
+  if (stat.isSymbolicLink() || !stat.isDirectory()) {
+    throw new Error(`Visual-Proof-Ausgabepfad enthält kein echtes Verzeichnis: ${directory}.`);
+  }
+}
+
+function safeOutputPath(outputFile: string): string {
+  const outputRoot = resolve('out/lfh-421');
+  const resolvedOutput = resolve(outputFile);
+  const fromRoot = relative(outputRoot, resolvedOutput);
+  if (
+    fromRoot === '' ||
+    fromRoot === '..' ||
+    fromRoot.startsWith(`..${sep}`) ||
+    isAbsolute(fromRoot)
+  ) {
+    throw new Error('Visual-Proof-Ausgaben sind ausschließlich unter out/lfh-421 zulässig.');
+  }
+
+  const outDirectory = dirname(outputRoot);
+  ensureRealDirectory(outDirectory);
+  ensureRealDirectory(outputRoot);
+  let parent = outputRoot;
+  const nestedParent = dirname(fromRoot);
+  if (nestedParent !== '.') {
+    for (const part of nestedParent.split(sep)) {
+      parent = join(parent, part);
+      ensureRealDirectory(parent);
+    }
+  }
+
+  const realRoot = realpathSync(outputRoot);
+  const realParent = realpathSync(parent);
+  if (realParent !== realRoot && !realParent.startsWith(`${realRoot}${sep}`)) {
+    throw new Error('Visual-Proof-Ausgabepfad verlässt die reale out/lfh-421-Grenze.');
+  }
+  return join(realParent, basename(resolvedOutput));
+}
+
+function writeProofPng(outputFile: string, png: Buffer): void {
+  const destination = safeOutputPath(outputFile);
+  const descriptor = openSync(
+    destination,
+    constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | constants.O_NOFOLLOW,
+    0o644,
+  );
+  try {
+    writeFileSync(descriptor, png);
+  } finally {
+    closeSync(descriptor);
+  }
 }
 
 export function generateAnhangGVisualProof(
   options: AnhangGProofOptions,
 ): AnhangGProofResult {
   const outputFile = options.outputFile ?? DEFAULT_ANHANG_G_PROOF_OUTPUT;
-  const allowedOutputRoot = `${resolve('out/lfh-421')}${sep}`;
-  if (!resolve(outputFile).startsWith(allowedOutputRoot)) {
-    throw new Error('Visual-Proof-Ausgaben sind ausschließlich unter out/lfh-421 zulässig.');
-  }
-  const { svg, sections } = proofSvg(options.referenceRoot);
+  const { svg, sections, sourceSetDigest } = proofSvg(options.referenceRoot);
   const image = new Resvg(svg, {
     background: '#f0f2f5',
     font: resvgFontOptions(),
@@ -141,8 +219,7 @@ export function generateAnhangGVisualProof(
   }
 
   const png = image.asPng();
-  mkdirSync(dirname(outputFile), { recursive: true });
-  writeFileSync(outputFile, png);
+  writeProofPng(outputFile, png);
 
   return {
     outputFile,
@@ -150,6 +227,7 @@ export function generateAnhangGVisualProof(
     height: image.height,
     byteLength: png.byteLength,
     sha256: createHash('sha256').update(png).digest('hex'),
+    sourceSetDigest,
     sections,
   };
 }

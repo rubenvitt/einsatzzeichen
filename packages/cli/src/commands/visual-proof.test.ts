@@ -1,6 +1,16 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { inflateSync } from 'node:zlib';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   ACCESSIBLE_LIGHT_THEME,
@@ -44,6 +54,11 @@ const EXPECTED_INVENTORY = [
 
 const HEADLESS_FORMATION_FOOT_BAND = ['G.1', 'G.2', 'G.3', 'G.4', 'G.5', 'G.6', 'G.7', 'G.8'] as const;
 const HEADED_FORMATION_FOOT_BAND = ['G.1.1', 'G.1.2', 'G.1.3', 'G.1.4', 'G.1.5'] as const;
+const FIXTURE_SOURCE_SET_DIGEST = 'c8fafd6ed92e9981413d10e84c1584c85ecf035a09cf82dde4bf11e7d3a2cb45';
+const CLI_ENTRY = fileURLToPath(new URL('../index.ts', import.meta.url));
+const TSX_ENTRY = fileURLToPath(
+  new URL('../../../../node_modules/tsx/dist/cli.mjs', import.meta.url),
+);
 
 const temporaryDirectories: string[] = [];
 
@@ -100,6 +115,112 @@ function fixtureDirectory(): string {
     );
   }
   return directory;
+}
+
+function temporaryDirectory(prefix: string): string {
+  const directory = mkdtempSync(join(tmpdir(), prefix));
+  temporaryDirectories.push(directory);
+  return directory;
+}
+
+interface DecodedPng {
+  width: number;
+  height: number;
+  pixels: Uint8Array;
+}
+
+function paethPredictor(left: number, above: number, upperLeft: number): number {
+  const prediction = left + above - upperLeft;
+  const leftDistance = Math.abs(prediction - left);
+  const aboveDistance = Math.abs(prediction - above);
+  const upperLeftDistance = Math.abs(prediction - upperLeft);
+  if (leftDistance <= aboveDistance && leftDistance <= upperLeftDistance) return left;
+  return aboveDistance <= upperLeftDistance ? above : upperLeft;
+}
+
+/** Dekodiert genau den nicht-interlaced RGBA/8-Vertrag, den Resvg für den Proof schreibt. */
+function decodeProofPng(png: Buffer): DecodedPng {
+  expect(png.subarray(0, 8)).toEqual(
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+  );
+  let offset = 8;
+  let width = 0;
+  let height = 0;
+  const compressed: Buffer[] = [];
+  while (offset < png.length) {
+    const length = png.readUInt32BE(offset);
+    const type = png.toString('ascii', offset + 4, offset + 8);
+    const data = png.subarray(offset + 8, offset + 8 + length);
+    if (type === 'IHDR') {
+      width = data.readUInt32BE(0);
+      height = data.readUInt32BE(4);
+      expect([...data.subarray(8, 13)]).toEqual([8, 6, 0, 0, 0]);
+    }
+    if (type === 'IDAT') compressed.push(data);
+    offset += length + 12;
+  }
+
+  const scanlines = inflateSync(Buffer.concat(compressed));
+  const stride = width * 4;
+  const pixels = new Uint8Array(stride * height);
+  let sourceOffset = 0;
+  for (let y = 0; y < height; y += 1) {
+    const filter = scanlines[sourceOffset] ?? -1;
+    sourceOffset += 1;
+    for (let x = 0; x < stride; x += 1) {
+      const raw = scanlines[sourceOffset + x] ?? 0;
+      const target = y * stride + x;
+      const left = x >= 4 ? (pixels[target - 4] ?? 0) : 0;
+      const above = y > 0 ? (pixels[target - stride] ?? 0) : 0;
+      const upperLeft = y > 0 && x >= 4 ? (pixels[target - stride - 4] ?? 0) : 0;
+      const predictor = filter === 0
+        ? 0
+        : filter === 1
+          ? left
+          : filter === 2
+            ? above
+            : filter === 3
+              ? Math.floor((left + above) / 2)
+              : filter === 4
+                ? paethPredictor(left, above, upperLeft)
+                : Number.NaN;
+      if (!Number.isFinite(predictor)) throw new Error(`Unbekannter PNG-Filter ${filter}.`);
+      pixels[target] = (raw + predictor) & 0xff;
+    }
+    sourceOffset += stride;
+  }
+  return { width, height, pixels };
+}
+
+function darkPixelsIn(
+  image: DecodedPng,
+  crop: { x: number; y: number; width: number; height: number },
+): number {
+  let count = 0;
+  for (let y = crop.y; y < crop.y + crop.height; y += 1) {
+    for (let x = crop.x; x < crop.x + crop.width; x += 1) {
+      const index = (y * image.width + x) * 4;
+      if (
+        (image.pixels[index] ?? 255) < 80 &&
+        (image.pixels[index + 1] ?? 255) < 80 &&
+        (image.pixels[index + 2] ?? 255) < 80 &&
+        (image.pixels[index + 3] ?? 0) > 128
+      ) count += 1;
+    }
+  }
+  return count;
+}
+
+function runVisualProofCli(
+  workingDirectory: string,
+  referenceRoot: string,
+  outputFile: string,
+) {
+  return spawnSync(
+    process.execPath,
+    [TSX_ENTRY, CLI_ENTRY, 'visual-proof', '--reference-root', referenceRoot, '--out', outputFile],
+    { cwd: workingDirectory, encoding: 'utf8' },
+  );
 }
 
 describe('Anhang-G-Visual-Proof', () => {
@@ -272,12 +393,76 @@ describe('Anhang-G-Visual-Proof', () => {
     expect(first.height).toBe(ANHANG_G_PROOF_HEIGHT);
     expect(first.byteLength).toBe(firstPng.byteLength);
     expect(first.sha256).toMatch(/^[0-9a-f]{64}$/);
+    expect(first.sourceSetDigest).toBe(FIXTURE_SOURCE_SET_DIGEST);
     expect(firstPng.subarray(0, 8)).toEqual(
       Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
     );
     expect(second).toEqual({ ...first, outputFile: secondOutput });
     expect(secondPng).toEqual(firstPng);
   });
+
+  it('enthält DLRG, Diesel und Bw als dunkle Textpixel im finalen PNG', () => {
+    const referenceRoot = fixtureDirectory();
+    const proofRoot = resolve('out/lfh-421');
+    mkdirSync(proofRoot, { recursive: true });
+    const outputDirectory = mkdtempSync(join(proofRoot, 'visual-proof-pixels-'));
+    temporaryDirectories.push(outputDirectory);
+    const outputFile = join(outputDirectory, 'proof.png');
+
+    generateAnhangGVisualProof({ referenceRoot, outputFile });
+    const image = decodeProofPng(readFileSync(outputFile));
+    expect(image.width).toBe(ANHANG_G_PROOF_WIDTH);
+    expect(image.height).toBe(ANHANG_G_PROOF_HEIGHT);
+    const crops = [
+      ['DLRG', { x: 2032, y: 211, width: 68, height: 48 }, 80],
+      ['Diesel', { x: 492, y: 2011, width: 120, height: 50 }, 80],
+      ['Bw', { x: 652, y: 2076, width: 34, height: 55 }, 20],
+    ] as const;
+    for (const [label, crop, minimum] of crops) {
+      expect(darkPixelsIn(image, crop), label).toBeGreaterThan(minimum);
+    }
+  });
+
+  it('gibt den deterministischen Quellen-Set-Digest im echten CLI-Lauf aus', () => {
+    const referenceRoot = fixtureDirectory();
+    const workingDirectory = temporaryDirectory('anhang-g-proof-cli-');
+    const result = runVisualProofCli(
+      workingDirectory,
+      referenceRoot,
+      'out/lfh-421/proof.png',
+    );
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout).toContain(`Quellen-Set SHA-256 ${FIXTURE_SOURCE_SET_DIGEST}`);
+  });
+
+  it.each(['root', 'nested'] as const)(
+    'folgt keinem %s-Symlink aus dem erlaubten Outputbaum',
+    (position) => {
+      const referenceRoot = fixtureDirectory();
+      const workingDirectory = temporaryDirectory(`anhang-g-proof-${position}-`);
+      const externalDirectory = temporaryDirectory(`anhang-g-proof-external-${position}-`);
+      const outDirectory = join(workingDirectory, 'out');
+      mkdirSync(outDirectory);
+      const outputFile = position === 'root'
+        ? 'out/lfh-421/proof.png'
+        : 'out/lfh-421/nested/proof.png';
+      if (position === 'root') {
+        symlinkSync(externalDirectory, join(outDirectory, 'lfh-421'), 'dir');
+      } else {
+        const proofDirectory = join(outDirectory, 'lfh-421');
+        mkdirSync(proofDirectory);
+        symlinkSync(externalDirectory, join(proofDirectory, 'nested'), 'dir');
+      }
+      const externalTarget = join(externalDirectory, 'proof.png');
+      writeFileSync(externalTarget, 'unverändert', 'utf8');
+
+      const result = runVisualProofCli(workingDirectory, referenceRoot, outputFile);
+
+      expect(result.status, result.stderr).not.toBe(0);
+      expect(readFileSync(externalTarget, 'utf8')).toBe('unverändert');
+    },
+  );
 
   it('verweigert Ausgaben außerhalb des ignorierten Proofverzeichnisses', () => {
     const referenceRoot = fixtureDirectory();

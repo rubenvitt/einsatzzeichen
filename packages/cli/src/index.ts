@@ -76,7 +76,7 @@ switch (command) {
       console.log(
         `${result.sections.length} Karten nach ${result.outputFile} geschrieben ` +
           `(${result.width}x${result.height} px, ${result.byteLength} Bytes, ` +
-          `SHA-256 ${result.sha256}).`,
+          `SHA-256 ${result.sha256}, Quellen-Set SHA-256 ${result.sourceSetDigest}).`,
       );
     } catch (error) {
       if (error instanceof CliUsageError) {

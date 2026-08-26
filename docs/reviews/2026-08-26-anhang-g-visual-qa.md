@@ -10,19 +10,27 @@ fachliche Domain-Reviews offen
 Der Generator liest ausschließlich die 21 in den Rezepten benannten lokalen Referenz-SVGs,
 rastert Referenz und Katalog mit derselben eingebetteten Arimo-Konfiguration und schreibt nur in
 den ignorierten Ausgabeordner. `REFERENCE_ROOT` bezeichnet den lokalen, read-only gehaltenen
-Referenzbestand; sein tatsächlicher Speicherort gehört nicht in Git.
+Referenzbestand; sein tatsächlicher Speicherort gehört nicht in Git. Reale Root- und
+Unterverzeichnisgrenzen sowie ein `O_NOFOLLOW`-Deskriptor verhindern, dass Symlinks die Ausgabe
+aus diesem Baum umleiten.
 
 ```sh
 REFERENCE_ROOT=/path/to/local/reference-root
-pnpm cli visual-proof --reference-root "$REFERENCE_ROOT" --out out/lfh-421/anhang-g-reference-vs-catalog.png
+rtk pnpm cli visual-proof --reference-root "$REFERENCE_ROOT" --out out/lfh-421/anhang-g-reference-vs-catalog.png
 ```
 
 - PNG: `out/lfh-421/anhang-g-reference-vs-catalog.png`
 - Raster: 2160 × 2520 px
 - Dateigröße: 346461 Bytes
 - SHA-256: `f5f299c0ba630615d0a4b1077acef97c14b41c5eade3f67f0f093e20ce09e22b`
+- Quellen-Set-SHA-256: `ebecdd9c62b16484b326a51d638525ba50733b7dc03fc8c9ee62cf066449f19d`
 - Aufbau: 3 Spalten × 7 Zeilen, exakt in G-Rezeptreihenfolge
 - Ablage: durch `.gitignore` gedeckt; weder PNG noch Referenz-SVGs werden committet
+
+Der Quellen-Set-Digest hasht in dieser Reihenfolge je Karte G-ID, Referenzdateiname und den
+SHA-256 des Dateiinhalts. Lokale Pfade und Quelldaten gehen nicht in die Ausgabe ein. Derselbe
+`rtk pnpm`-Befehl gibt PNG- und Quellen-Set-Digest gemeinsam aus; die oben dokumentierten Werte
+sind der erfolgreiche Wiederholungslauf.
 
 Der PNG wurde nach dem letzten Render in Originalauflösung geöffnet und vollständig von links
 nach rechts, oben nach unten geprüft. Jede Karte zeigt lesbare G-ID und Titel sowie die lokale
@@ -62,7 +70,10 @@ Organisation oder Bedeutung.
 Der erste Kontaktbogen ließ `DLRG` in G.1.2 sowie `Diesel` und `Bw` in G.3.5 auf der
 Katalogseite unsichtbar. Ein fokussierter RED belegte, dass eingebetteter SVG-Text im
 Proof-Rasterpfad fehlte. Der Generator rastert seither beide SVG-Seiten vor der Einbettung mit
-den bestehenden `resvgFontOptions()`; alle drei Läufe sind im finalen PNG sichtbar.
+den bestehenden `resvgFontOptions()`; alle drei Läufe sind im finalen PNG sichtbar. Ein
+End-to-End-Test dekodiert das tatsächlich geschriebene PNG und prüft isolierte Katalog-Crops auf
+dunkle Textpixel. Bei kontrollierter Umgehung der Vorrasterung wurde dieser Test mit null
+DLRG-Pixeln RED; nach Rücknahme der Mutation ist er wieder grün.
 
 Die Referenz von G.3.5 widerlegte anschließend die vorläufige Task-2-Annahme von weissem
 `Diesel`: die Tinte ist schwarz. Ein discrepancy-spezifischer RED erwartete schwarze Tinte und
@@ -76,10 +87,18 @@ Acht Quellen — G.1, G.2, G.3 und G.4 bis G.8 — zeigen ihren kopflosen und un
 Formationskörper konsistent ohne Oberlinie. Das korrigiert das vorläufige Task-1-Modell eines
 stets geschlossenen `formation/foot-band`-Rechtecks. Der echte RED erwartete an exakt diesen
 acht Rezepten eine offene U-Kontur und erhielt zunächst den geschlossenen schwarzen Rahmen. Das
-generische Profilmerkmal `openTopWhenHeadlessAndUnlabelled` öffnet jetzt nur in diesem belegten
-Kontext. G.1.1 bis G.1.5 mit Kopf/Stärke, F.1.3/F.1.17 und Fahrzeug-, Anhänger- sowie
-Kreisvarianten behalten die geschlossene Kontur und ihre bisherigen Snapshotbytes. Aktualisiert
-wurden ausschließlich die acht direkt und acht mehrfach skaliert betroffenen Snapshots.
+generische Profilmerkmal `openTopWhenHeadlessAndUnlabelled` erzeugt jetzt nur in diesem belegten
+Kontext einen offenen, gefüllten `body`-Pfad. Dadurch bleibt die Kontur offen, während SVG und
+Canvas in den beiden Alternativthemes weiterhin die Organisationssignatur anwenden. Leere
+Labelobjekte verhalten sich wie fehlende; echte Labelzonen schließen. G.1.1 bis G.1.5 mit
+Kopf/Stärke, F.1.3/F.1.17 und Fahrzeug-, Anhänger- sowie Kreisvarianten behalten die geschlossene
+Kontur und ihre bisherigen Snapshotbytes. Aktualisiert wurden ausschließlich die acht direkt und
+acht mehrfach skaliert betroffenen Snapshots.
+
+Zwei adversariale Child-CLI-Tests legen entweder `out/lfh-421` selbst oder ein darunterliegendes
+Verzeichnis als Symlink auf ein externes Sentinel-Ziel an. Beide Läufe werden abgewiesen, ohne
+das Sentinel zu verändern. Der lexikalische Präfixvergleich allein ist damit nicht mehr Teil des
+Sicherheitsvertrags.
 
 ## Restunsicherheiten
 
