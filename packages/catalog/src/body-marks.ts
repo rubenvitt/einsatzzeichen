@@ -156,8 +156,9 @@ function crossedSwabs(cx: number, cy: number): Primitive[] {
 }
 
 /**
- * Die Zusatzstriche zur Teilung, je Fähigkeit. Alle Zahlen sind an den F-Dateien gemessen und
- * gegen die Hülle formuliert; die Herleitungen stehen an der jeweiligen Zeile.
+ * Die Zusatzstriche zur Teilung, je Fähigkeit. Jede Marke ist an den jeweils an ihrer Zeile
+ * genannten Anhangsreferenzen gemessen und gegen die Hülle formuliert: die bestehenden F-Marken
+ * an den F-Dateien, `fire-fighting` an C.1.1 bis C.1.3.
  */
 const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
   /** C.1.1 bis C.1.3: die an der Formation vermessene Löschmarke mit zwei rechten Diagonalen. */
