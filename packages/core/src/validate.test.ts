@@ -210,6 +210,78 @@ describe('validateSpec', () => {
     );
   });
 
+  it('lässt inset-hull ausschließlich am Wasserfahrzeug zu', () => {
+    const insetHull = 'inset-hull' as SymbolSpec['bodyVariant'];
+    expect(validateSpec({ kind: 'vehicle-water', bodyVariant: insetHull })
+      .map((issue) => issue.rule)).not.toContain('body-variant-requires-measured-kind');
+    expect(validateSpec({ kind: 'vehicle-land', bodyVariant: insetHull })
+      .map((issue) => issue.rule)).toContain('body-variant-requires-measured-kind');
+  });
+
+  const validInsetWatercraft = {
+    kind: 'vehicle-water',
+    bodyVariant: 'inset-hull',
+    organization: 'hilfsorganisation',
+    labels: { center: 'MzB' },
+  } as const satisfies SymbolSpec;
+
+  it('akzeptiert den vermessenen eingesenkten Wasserrumpf mit mittigem Lauf', () => {
+    expect(validateSpec(validInsetWatercraft)).toEqual([]);
+  });
+
+  it.each([
+    ['fehlender Organisation', {
+      kind: 'vehicle-water', bodyVariant: 'inset-hull', labels: { center: 'MzB' },
+    }],
+    ['THW-Organisation', { ...validInsetWatercraft, organization: 'thw' }],
+    ['Feuerwehr-Organisation', { ...validInsetWatercraft, organization: 'feuerwehr' }],
+  ] as const)('lehnt inset-hull mit %s ab', (_case, spec) => {
+    expect(validateSpec(spec).map((issue) => issue.rule)).toContain(
+      'inset-hull-requires-hilfsorganisation',
+    );
+  });
+
+  it.each([
+    ['bottomLeft', { ...validInsetWatercraft, labels: { bottomLeft: 'BL' } }],
+    ['bottomCenter', { ...validInsetWatercraft, labels: { bottomCenter: 'BC' } }],
+    ['bottomRight', { ...validInsetWatercraft, labels: { bottomRight: 'BR' } }],
+    ['topLeft', { ...validInsetWatercraft, labels: { topLeft: 'TL' } }],
+    ['topLeftMetrics', {
+      ...validInsetWatercraft,
+      labels: {
+        topLeftMetrics: {
+          capHeightMm: 2.191447, baselineFromBodyTopMm: 5.249923, anchorFromBodyLeftMm: 0.51423,
+        },
+      },
+    }],
+    ['aboveLeft', { ...validInsetWatercraft, labels: { aboveLeft: 'AL' } }],
+    ['topLeftLines', {
+      ...validInsetWatercraft, labels: { topLeftLines: ['one', 'two'] },
+    }],
+    ['belowRight', { ...validInsetWatercraft, labels: { belowRight: 'BR' } }],
+  ] as const)('lehnt die ungemessene inset-hull-Labelzone %s ab', (_zone, spec) => {
+    expect(validateSpec(spec).map((issue) => issue.rule)).toContain(
+      'inset-hull-requires-center-label-only',
+    );
+  });
+
+  it('lehnt die inset-hull-Fußbezeichnung als ungemessene Zone ab', () => {
+    expect(validateSpec({ ...validInsetWatercraft, designation: 'MzB' }).map((issue) => issue.rule))
+      .toContain('inset-hull-requires-center-label-only');
+  });
+
+  it('lässt inset-hull für spätere unbeschriftete Boote ohne Labels zu', () => {
+    expect(validateSpec({
+      kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'hilfsorganisation',
+    })).toEqual([]);
+  });
+
+  it('lässt raised-hull-Wasserfahrzeuge unverändert', () => {
+    expect(validateSpec({
+      kind: 'vehicle-water', bodyVariant: 'raised-hull', organization: 'thw', labels: { center: 'MzB' },
+    })).toEqual([]);
+  });
+
   it('bindet reduced-house auch ohne Label an HiOrg und lehnt jede Variante ab', () => {
     const reducedHouse = 'reduced-house' as SymbolSpec['kind'];
     expect(validateSpec({ kind: reducedHouse, organization: 'hilfsorganisation' })).toEqual([]);

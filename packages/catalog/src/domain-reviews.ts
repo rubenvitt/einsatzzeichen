@@ -278,6 +278,11 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:H.1#primary': { status: 'pending' },
   'bbk-babz-2025:H.2#primary': { status: 'pending' },
   'bbk-babz-2025:H.3#primary': { status: 'pending' },
+  // Das Erscheinungsbild ist technisch durch die Mess-, Rezept- und Snapshot-Gates belegt; die
+  // organisatorische und fachliche Bedeutung des weißen Körpers bleibt dennoch ungeklärt.
+  'bbk-babz-2025:I.3.5#primary': { status: 'pending' },
+  'bbk-babz-2025:I.3.6#primary': { status: 'pending' },
+  'bbk-babz-2025:I.3.7#primary': { status: 'pending' },
   'bbk-babz-2025:2.1#primary': { status: 'pending' },
   // 2.2 seit LFH-424. Fachlich besonders zu prüfen: die Zuordnung „HiOrg = Hilfsorganisation" ist
   // aus dem gerasterten Bild abgelesen, nicht aus dem Dateinamen — der ist generisch
