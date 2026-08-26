@@ -3,14 +3,89 @@ import { entryKey, LEADERSHIP_IDS } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from '../coverage-manifest.js';
 import { MANIFEST_DOMAIN_REVIEWS } from '../domain-reviews.js';
 import { resolveElement } from '../elements.js';
+import { RECIPES } from '../recipes.js';
 import { RENDER_CASES } from '../test-support/render-cases.js';
 import { ALL_PICTOGRAMS, pictogram, pictogramVariantKey } from './index.js';
 import { LEADERSHIP_PICTOGRAMS } from './leadership/index.js';
 
-describe('Leadership-Inventar nach D.1', () => {
-  it('führt exakt die erste inkrementelle Leadership-ID', () => {
-    expect(LEADERSHIP_IDS).toEqual(['command-post-in-operation']);
-    expect(LEADERSHIP_PICTOGRAMS).toHaveLength(1);
+const D2_CONTRAST_PAIRS = [
+  {
+    foreground: 'schwarz',
+    background: 'gelb',
+    context: 'schwarze Kontur und Innenmarke auf gelber Ortsfläche',
+  },
+  {
+    foreground: 'schwarz',
+    background: 'surface',
+    context: 'schwarze Außenkontur auf der Ausgabeoberfläche',
+  },
+] as const;
+
+const D2_EXPECTED = [
+  {
+    id: 'leadership.staging-area',
+    section: 'D.2.1',
+    title: 'Bereitstellungsraum',
+    referenceAsset: 'D.2.1_Bereitstellungsraum.svg',
+    box: { xMm: 4, yMm: 4, widthMm: 24, heightMm: 24 },
+  },
+  {
+    id: 'leadership.staging-area-with-reporting-head',
+    section: 'D.2.2',
+    title: 'Bereitstellungsraum mit Meldekopf',
+    referenceAsset: 'D.2.2_Bereitstellungsraum mit Meldekopf.svg',
+    box: { xMm: 4, yMm: 4, widthMm: 24, heightMm: 24 },
+  },
+  {
+    id: 'leadership.reporting-head',
+    section: 'D.2.3',
+    title: 'Meldekopf',
+    referenceAsset: 'D.2.3_Meldekopf.svg',
+    box: { xMm: 4, yMm: 4, widthMm: 24, heightMm: 24 },
+  },
+  {
+    id: 'leadership.guide-post',
+    section: 'D.2.4',
+    title: 'Lotsenstelle',
+    referenceAsset: 'D.2.4_Lotsenstelle.svg',
+    box: { xMm: 4, yMm: 4, widthMm: 24, heightMm: 24 },
+  },
+  {
+    id: 'leadership.control-center',
+    section: 'D.2.5',
+    title: 'Leitstelle',
+    referenceAsset: 'D.2.5_Leitstelle.svg',
+    box: { xMm: 3, yMm: 1, widthMm: 26, heightMm: 29 },
+  },
+  {
+    id: 'leadership.helicopter-landing-zone',
+    section: 'D.2.6',
+    title: 'Hubschrauberlandezone',
+    referenceAsset: 'D.2.6_Hubschrauberlandezone.svg',
+    box: { xMm: 4, yMm: 4, widthMm: 24, heightMm: 24 },
+  },
+  {
+    id: 'leadership.helicopter-landing-site',
+    section: 'D.2.7',
+    title: 'Hubschrauberlandeplatz',
+    referenceAsset: 'D.2.7_Hubschrauberlandeplatz.svg',
+    box: { xMm: 3, yMm: 1, widthMm: 26, heightMm: 29 },
+  },
+] as const;
+
+describe('Leadership-Inventar nach D.2', () => {
+  it('führt D.1.1 und exakt die sieben inkrementellen D.2-IDs', () => {
+    expect(LEADERSHIP_IDS).toEqual([
+      'command-post-in-operation',
+      'staging-area',
+      'staging-area-with-reporting-head',
+      'reporting-head',
+      'guide-post',
+      'control-center',
+      'helicopter-landing-zone',
+      'helicopter-landing-site',
+    ]);
+    expect(LEADERSHIP_PICTOGRAMS).toHaveLength(8);
     expect(Object.isFrozen(LEADERSHIP_PICTOGRAMS)).toBe(true);
   });
 
@@ -59,36 +134,66 @@ describe('Leadership-Inventar nach D.1', () => {
     ]);
   });
 
+  it('bindet D.2.1 bis D.2.7 exakt als primäre 32×32-mm-Ortsdefinitionen', () => {
+    expect(LEADERSHIP_PICTOGRAMS.slice(1)).toHaveLength(7);
+    for (const [index, expected] of D2_EXPECTED.entries()) {
+      expect(LEADERSHIP_PICTOGRAMS[index + 1]).toMatchObject({
+        ...expected,
+        variant: 'primary',
+        viewBox: { width: 32, height: 32 },
+        placement: { mode: 'standalone' },
+        contrastPairs: D2_CONTRAST_PAIRS,
+      });
+    }
+  });
+
+  it('hält D.2 direkt und erfindet weder Recipe, State, circle-12 noch Organisation', () => {
+    const definitions = LEADERSHIP_PICTOGRAMS.slice(1);
+    const referenceAssets = new Set(definitions.map((definition) => definition.referenceAsset));
+    expect(Object.keys(RECIPES).filter((section) => section.startsWith('D.2.'))).toEqual([]);
+    expect(ALL_PICTOGRAMS.filter((definition) =>
+      definition.id.startsWith('state.') && referenceAssets.has(definition.referenceAsset),
+    )).toEqual([]);
+    for (const definition of definitions) {
+      expect(JSON.stringify(definition)).not.toContain('circle-12');
+      expect('organization' in definition).toBe(false);
+    }
+  });
+
   it('hält Familie, Registry, Renderfall, Element, Manifest und Review bijektiv', () => {
-    const definition = LEADERSHIP_PICTOGRAMS[0];
     const familyKeys = LEADERSHIP_PICTOGRAMS.map(pictogramVariantKey);
     const allKeys = ALL_PICTOGRAMS
       .filter((candidate) => candidate.id.startsWith('leadership.'))
       .map(pictogramVariantKey);
     expect(allKeys).toEqual(familyKeys);
-    expect(pictogram('leadership.command-post-in-operation')).toBe(definition);
 
     expect(RENDER_CASES.filter((renderCase) => renderCase.id.startsWith('leadership.'))
-      .map((renderCase) => renderCase.id)).toEqual(['leadership.command-post-in-operation']);
-    expect(resolveElement(definition.id)).toMatchObject({
-      kind: 'leadership',
-      title: definition.title,
-      referenceAssets: [definition.referenceAsset],
-    });
+      .map((renderCase) => renderCase.id)).toEqual(
+        LEADERSHIP_IDS.map((id) => `leadership.${id}`).sort(),
+      );
 
-    const manifestKey = entryKey('bbk-babz-2025:D.1.1', 'primary');
-    const rows = COVERAGE_MANIFEST.entries.filter(
-      (entry) => entryKey(entry.sourceId, entry.variant) === manifestKey,
-    );
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({
-      implementation: definition.id,
-      referenceAsset: definition.referenceAsset,
-      testEvidence: ['svg-snapshot', 'pictogram-contract'],
-      review: { domain: { status: 'pending' } },
-    });
-    expect(rows[0]?.review.domain).toBe(
-      MANIFEST_DOMAIN_REVIEWS[manifestKey as keyof typeof MANIFEST_DOMAIN_REVIEWS],
-    );
+    for (const definition of LEADERSHIP_PICTOGRAMS) {
+      expect(pictogram(definition.id)).toBe(definition);
+      expect(resolveElement(definition.id)).toMatchObject({
+        kind: 'leadership',
+        title: definition.title,
+        referenceAssets: [definition.referenceAsset],
+      });
+
+      const manifestKey = entryKey(`bbk-babz-2025:${definition.section}`, 'primary');
+      const rows = COVERAGE_MANIFEST.entries.filter(
+        (entry) => entryKey(entry.sourceId, entry.variant) === manifestKey,
+      );
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({
+        implementation: definition.id,
+        referenceAsset: definition.referenceAsset,
+        testEvidence: ['svg-snapshot', 'pictogram-contract'],
+        review: { domain: { status: 'pending' } },
+      });
+      expect(rows[0]?.review.domain).toBe(
+        MANIFEST_DOMAIN_REVIEWS[manifestKey as keyof typeof MANIFEST_DOMAIN_REVIEWS],
+      );
+    }
   });
 });

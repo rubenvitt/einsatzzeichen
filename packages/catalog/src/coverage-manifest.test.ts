@@ -69,7 +69,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 434 Zeilen mit 274 Elementdarstellungen', () => {
+  it('enthält exakt 441 Zeilen mit 281 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -99,16 +99,16 @@ describe('Coverage-Manifest', () => {
       // Abschnitte, weil F.1.3 dort noch bewusst offen blieb; F-b baut es mit `foot-band`.
       // F-d ergänzt F.2.10 bis F.2.17 als acht reine Anwendungen des Fahrzeugvertrags.
       'composition-recipe': 146,
-      // 255 Piktogramme plus acht Organisationen (seit LFH-424 mit hilfsorganisation), vier
+      // 262 Piktogramme plus acht Organisationen (seit LFH-424 mit hilfsorganisation), vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
       // `amphibienfahrzeug` hat weiterhin keinen Eintrag, weil seine Wellenlinie nur als
       // Strichhülle vermessen ist.
-      element: 274,
+      element: 281,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(434);
-    expect(elementRows).toHaveLength(274);
-    expect(pictogramRows).toHaveLength(255);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(441);
+    expect(elementRows).toHaveLength(281);
+    expect(pictogramRows).toHaveLength(262);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
   });
 
@@ -145,6 +145,29 @@ describe('Coverage-Manifest', () => {
       'bbk-babz-2025:D.1.9#alternative',
       'bbk-babz-2025:D.1.1#primary',
     ]);
+    expect(COVERAGE_MANIFEST.scope).toContain('D.3.7');
+    expect(COVERAGE_MANIFEST.scope).not.toContain('D');
+  });
+
+  it('führt D.2.1 bis D.2.7 direkt mit technischem Nachweis und offenem Fachreview', () => {
+    const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
+      entry.sourceId.startsWith('bbk-babz-2025:D.2.'),
+    );
+    expect(rows.map((entry) => [entry.sourceId, entry.implementation])).toEqual([
+      ['bbk-babz-2025:D.2.1', 'leadership.staging-area'],
+      ['bbk-babz-2025:D.2.2', 'leadership.staging-area-with-reporting-head'],
+      ['bbk-babz-2025:D.2.3', 'leadership.reporting-head'],
+      ['bbk-babz-2025:D.2.4', 'leadership.guide-post'],
+      ['bbk-babz-2025:D.2.5', 'leadership.control-center'],
+      ['bbk-babz-2025:D.2.6', 'leadership.helicopter-landing-zone'],
+      ['bbk-babz-2025:D.2.7', 'leadership.helicopter-landing-site'],
+    ]);
+    expect(rows.every((entry) => entry.testEvidence.join(',') ===
+      'svg-snapshot,pictogram-contract')).toBe(true);
+    expect(rows.every((entry) => entry.review.technical.note?.includes(
+      'normalisierten Kreis-, Dach-, Text- und Innengeometrien',
+    ) === true)).toBe(true);
+    expect(rows.every((entry) => entry.review.domain.status === 'pending')).toBe(true);
     expect(COVERAGE_MANIFEST.scope).toContain('D.3.7');
     expect(COVERAGE_MANIFEST.scope).not.toContain('D');
   });
@@ -456,7 +479,7 @@ describe('Manifest-Einträge für Piktogramme', () => {
       .filter((entry) => definitionKeys.has(entryKey(entry.implementation, entry.variant)))
       .map((entry) => entryKey(entry.implementation, entry.variant))
       .sort();
-    expect(rows).toHaveLength(255);
+    expect(rows).toHaveLength(262);
     expect(rows).toEqual([...definitionKeys].sort());
   });
 

@@ -18,8 +18,8 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 415 nach D.1: 405 seit F-f, plus neun Rezepte und D.1.1 als direkte Definition.
-    expect(ids).toHaveLength(415);
+    // 422 nach D.2: 415 seit D.1 plus sieben direkte Ortsdefinitionen.
+    expect(ids).toHaveLength(422);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
     // dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66 weitere.
@@ -50,6 +50,13 @@ describe('vollständige Renderfallmenge', () => {
     expect(ids.filter((id) => id.startsWith('wildfire.'))).toHaveLength(14);
     expect(ids.filter((id) => id.startsWith('leadership.'))).toEqual([
       'leadership.command-post-in-operation',
+      'leadership.control-center',
+      'leadership.guide-post',
+      'leadership.helicopter-landing-site',
+      'leadership.helicopter-landing-zone',
+      'leadership.reporting-head',
+      'leadership.staging-area',
+      'leadership.staging-area-with-reporting-head',
     ]);
     // Was übrig bleibt, sind die vierzehn Grundzeichen aus Kapitel 1 — die einzigen
     // Renderfälle ohne Artpräfix. Seit LFH-424 ist das Kapitel vollständig.
@@ -104,9 +111,10 @@ describe('vollständige Renderfallmenge', () => {
     expect(rectangular.map((definition) => [definition.id, definition.viewBox])).toEqual([
       ['leadership.command-post-in-operation', { width: 32, height: 46 }],
     ]);
-    expect(
-      ALL_PICTOGRAMS.filter((definition) => !rectangular.includes(definition))
-        .every((definition) => definition.viewBox === DEFAULT_VIEWBOX_MM),
-    ).toBe(true);
+    for (const definition of ALL_PICTOGRAMS.filter(
+      (candidate) => !rectangular.includes(candidate),
+    )) {
+      expect(definition.viewBox).toEqual(DEFAULT_VIEWBOX_MM);
+    }
   });
 });

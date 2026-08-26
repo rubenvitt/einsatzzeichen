@@ -669,6 +669,20 @@ Geometrieentscheidung ist in
 [`docs/decisions/2026-08-26-anhang-d-function-roles.md`](docs/decisions/2026-08-26-anhang-d-function-roles.md)
 dokumentiert.
 
+## LFH-420 Task 4: Anhang D.2 Ortszeichen
+
+D.2.1 bis D.2.7 ergänzen sieben direkte `leadership`-Definitionen auf jeweils 32×32 mm. Sie
+teilen ausschließlich private, aus den Quellen normalisierte Geometrie für den Kreis mit Radius
+12 mm, seine um 2 mm abgesenkte Fassung, den Giebel und wiederkehrende Innenzeichen. Es entsteht
+weder eine öffentliche Kreis-/Ortsachse noch ein Rezept; insbesondere wird der an weiße F.3-
+HiOrg-Zeichen gebundene `circle-12`-Körper nicht wiederverwendet und aus der gelben Fläche keine
+Organisation abgeleitet.
+
+Der Zwischenstand umfasst unverändert 146 Rezepte und 160 Rezept-/Basis-Snapshots sowie nun 262
+Piktogramme, 422 Renderfälle, 441 Manifestzeilen, 423 Mehrgrößen-Sheets und 455 Reviewobjekte;
+281 Manifestzeilen repräsentieren auflösbare Elemente. Alle sieben D.2-Domainreviews bleiben
+`pending`, und der beanspruchte D-Scope bleibt bis zum vollständigen Anhang bei `D.3.7`.
+
 ## Der lokale Referenzbestand
 
 `taktische-zeichen/` ist ein **lokaler Ordner mit 661 damals von der BABZ bereitgestellten

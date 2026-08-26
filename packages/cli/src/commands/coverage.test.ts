@@ -33,11 +33,12 @@ describe('coverage CLI', () => {
     // ergänzt F.2.10 bis F.2.17 lückenlos mit acht weiteren Fahrzeugen: insgesamt 405. F-e
     // ergänzt elf Platzzeichen aus F.3.1 bis F.3.11: insgesamt 416. F-f schließt F.3 mit den
     // acht Zeichen F.3.12 bis F.3.19 ab: insgesamt 424. D.1 ergänzt zehn Darstellungen aus
-    // D.1.1 bis D.1.9 einschließlich der Alternative von D.1.9: insgesamt 434.
-    expect(manifestReviews).toBe(434);
+    // D.1.1 bis D.1.9 einschließlich der Alternative von D.1.9: insgesamt 434. D.2 ergänzt die
+    // sieben Ortsdefinitionen D.2.1 bis D.2.7: insgesamt 441.
+    expect(manifestReviews).toBe(441);
     expect(sourceReviews).toBe(13);
     expect(profileReviews).toBe(1);
-    expect(openReviews).toBe(448);
+    expect(openReviews).toBe(455);
     // **Die Umfangszeile ist wieder kurz.** Der Teilslice E.2 hatte sie auf 47 Einträge gedehnt,
     // weil E.2 mit einem fehlenden Abschnitt nur abschnittsweise behauptbar war. Seit E.2.6
     // gebaut ist, tragen zwei Tests die Lückenlosigkeit — an den Rezepten (`recipes.test.ts`)

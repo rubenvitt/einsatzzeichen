@@ -5,6 +5,13 @@ import type { CapabilityId, CommsId, DamageId, StateId, WildfireId } from './tax
 /** Direkte Führungszeichen aus Anhang D, inkrementell je belegtem Teilslice. */
 export const LEADERSHIP_IDS = [
   'command-post-in-operation',
+  'staging-area',
+  'staging-area-with-reporting-head',
+  'reporting-head',
+  'guide-post',
+  'control-center',
+  'helicopter-landing-zone',
+  'helicopter-landing-site',
 ] as const;
 
 export type LeadershipId = (typeof LEADERSHIP_IDS)[number];

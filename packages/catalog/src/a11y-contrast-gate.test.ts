@@ -48,7 +48,7 @@ function requirements(): ContrastRequirement[] {
 
 describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
   it('hat echte Piktogramm-Nachbarschaften zu prüfen', () => {
-    expect(ALL_PICTOGRAMS).toHaveLength(255);
+    expect(ALL_PICTOGRAMS).toHaveLength(262);
     expect(requirements().length).toBeGreaterThan(1);
   });
 

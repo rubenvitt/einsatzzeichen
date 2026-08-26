@@ -55,6 +55,16 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
     status: 'pending',
     note: 'Organisationszuordnung hilfsorganisation ist aus der weißen Fläche abgeleitet.',
   },
+  // Anhang D.2: sieben vollständige Ortszeichen. Die gelbe Kreisfläche belegt keine
+  // Organisation, und die technischen englischen IDs behaupten keine fachlich freigegebene
+  // Übersetzung der Ortsbegriffe. Alle sieben Darstellungen bleiben deshalb einzeln offen.
+  'bbk-babz-2025:D.2.1#primary': { status: 'pending' },
+  'bbk-babz-2025:D.2.2#primary': { status: 'pending' },
+  'bbk-babz-2025:D.2.3#primary': { status: 'pending' },
+  'bbk-babz-2025:D.2.4#primary': { status: 'pending' },
+  'bbk-babz-2025:D.2.5#primary': { status: 'pending' },
+  'bbk-babz-2025:D.2.6#primary': { status: 'pending' },
+  'bbk-babz-2025:D.2.7#primary': { status: 'pending' },
   // D.3.7 ist technisch auf die gemessene Funktionsfassung migriert. Ob die Rolle
   // „Zugführer der Feuerwehr" und die innere Brandbekämpfungsmarke fachlich genau diese
   // Semantik tragen, bleibt ausdrücklich der Fachprüfung vorbehalten.

@@ -247,11 +247,11 @@ describe('echte Mehrgrößen- und Profilregression', () => {
     expect(image.height).toBe(92);
   });
 
-  it('schreibt exakt 416 Mehrgrößen-Snapshots', () => {
+  it('schreibt exakt 423 Mehrgrößen-Snapshots', () => {
     const snapshots = readdirSync(new URL('./__snapshots__/multi-size/', import.meta.url), {
       withFileTypes: true,
     }).filter((entry) => entry.isFile() && entry.name.endsWith('.svg'));
-    expect(snapshots).toHaveLength(416);
+    expect(snapshots).toHaveLength(423);
   });
 
   it.each(RENDER_CASES)(

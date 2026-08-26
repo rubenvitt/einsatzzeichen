@@ -97,16 +97,32 @@ describe('Fachreview-Ledger', () => {
     // bis F.1.22 und die beiden Alternativdarstellungen; damit sind es hier 383.
     // F-d ergänzt acht einzelne, weiterhin offene Reviewplätze für F.2.10 bis F.2.17. F-e
     // ergänzt elf für F.3.1 bis F.3.11 und F-f die acht verbleibenden für F.3.12 bis F.3.19.
-    expect(manifestReviews).toHaveLength(434);
+    expect(manifestReviews).toHaveLength(441);
     expect(sourceReviews).toHaveLength(13);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(448);
+    expect(reviews).toHaveLength(455);
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
   });
 
   it('laesst den stabilen D.3.7-Schluessel trotz technischer Migration fachlich offen', () => {
     expect(MANIFEST_DOMAIN_REVIEWS['bbk-babz-2025:D.3.7#primary'])
       .toEqual({ status: 'pending' });
+  });
+
+  it('hält alle sieben D.2-Ortsdefinitionen einzeln fachlich offen', () => {
+    const references = [
+      'D.2.1',
+      'D.2.2',
+      'D.2.3',
+      'D.2.4',
+      'D.2.5',
+      'D.2.6',
+      'D.2.7',
+    ] as const;
+
+    expect(references.map((reference) =>
+      MANIFEST_DOMAIN_REVIEWS[`bbk-babz-2025:${reference}#primary`],
+    )).toEqual(references.map(() => ({ status: 'pending' })));
   });
 
   it('hält die unsichere HiOrg-Zuordnung beider D.1.9-Darstellungen ausdrücklich offen', () => {

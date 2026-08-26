@@ -105,6 +105,20 @@ const LEADERSHIP_PICTOGRAM_TECHNICAL_REVIEW: Review = {
     'renderbaren Eintrag. Benennung und fachliche Bedeutung bleiben pending.',
 };
 
+const LEADERSHIP_LOCATION_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'D.2.1 bis D.2.7 sind direkte 32×32-mm-Definitionen aus normalisierten Kreis-, Dach-, ' +
+    'Text- und Innengeometrien. Private Helfer teilen ausschließlich gemessene Geometrie; es ' +
+    'entsteht weder eine öffentliche Ortsachse noch eine Wiederverwendung des F.3-Körpers ' +
+    'circle-12 oder eine Organisationszuordnung aus der gelben Fläche. Snapshot, Kommando, ' +
+    'Box, Standalone-Clipping, Textlesbarkeit, Mehrgrößen-, Metadaten- und explizite ' +
+    'Kontrast-Gates prüfen alle sieben renderbaren Einträge. Benennung und fachliche Bedeutung ' +
+    'bleiben pending.',
+};
+
 /**
  * Für Piktogramme ist der erste Teil des Slice-2-Kriteriums für `technical: approved`
  * — Fingerprint- und Snapshot-Gate grün — strukturell unerreichbar: `matchFingerprint` vergleicht
@@ -863,7 +877,9 @@ const pictogramEntries: CoverageEntry[] = ALL_PICTOGRAMS.map((definition) => {
   const technicalReview = definition.id.startsWith('state.')
     ? STATE_PICTOGRAM_TECHNICAL_REVIEW
     : definition.id.startsWith('leadership.')
-      ? LEADERSHIP_PICTOGRAM_TECHNICAL_REVIEW
+      ? definition.section.startsWith('D.2.')
+        ? LEADERSHIP_LOCATION_TECHNICAL_REVIEW
+        : LEADERSHIP_PICTOGRAM_TECHNICAL_REVIEW
     : definition.id.startsWith('damage.') || definition.id.startsWith('wildfire.')
       ? DAMAGE_PICTOGRAM_TECHNICAL_REVIEW
       : PICTOGRAM_TECHNICAL_REVIEW;
