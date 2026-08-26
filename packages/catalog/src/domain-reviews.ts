@@ -262,6 +262,18 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:F.3.9#primary': { status: 'pending' },
   'bbk-babz-2025:F.3.10#primary': { status: 'pending' },
   'bbk-babz-2025:F.3.11#primary': { status: 'pending' },
+  // Anhang F, Teilslice F-f: die acht verbleibenden Platzzeichen. Fachlich offen bleiben die
+  // HiOrg-Zuordnung der weißen Quellen und die Benennung der vier rein technischen Kreisformen;
+  // die geometrischen Gates entscheiden weder deren Einsatzbedeutung noch die Abgrenzung von
+  // Ladezone, Personentransport und besonderen Bedarfen.
+  'bbk-babz-2025:F.3.12#primary': { status: 'pending' },
+  'bbk-babz-2025:F.3.13#primary': { status: 'pending' },
+  'bbk-babz-2025:F.3.14#primary': { status: 'pending' },
+  'bbk-babz-2025:F.3.15#primary': { status: 'pending' },
+  'bbk-babz-2025:F.3.16#primary': { status: 'pending' },
+  'bbk-babz-2025:F.3.17#primary': { status: 'pending' },
+  'bbk-babz-2025:F.3.18#primary': { status: 'pending' },
+  'bbk-babz-2025:F.3.19#primary': { status: 'pending' },
   'bbk-babz-2025:2.1#primary': { status: 'pending' },
   // 2.2 seit LFH-424. Fachlich besonders zu prüfen: die Zuordnung „HiOrg = Hilfsorganisation" ist
   // aus dem gerasterten Bild abgelesen, nicht aus dem Dateinamen — der ist generisch

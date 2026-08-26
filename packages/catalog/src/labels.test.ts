@@ -92,6 +92,39 @@ describe('semantische Zeichenbeschreibungen', () => {
       kind: 'vehicle-land',
       bodyMarks: ['ring-5mm-offset-down-3mm-eight-spokes'],
     })).toContain('Technische Körpermarke: Ring 5 mm mit acht Speichen, 3 mm nach unten versetzt');
+    expect(TECHNICAL_BODY_MARK_LABELS).toMatchObject({
+      'circle-double-arrow-lower-v':
+        'Senkrechter Stamm mit oberem Doppelpfeil und unterem V',
+      'circle-information-stem':
+        'Gefüllter Punkt über gefülltem senkrechtem Stamm',
+      'circle-transport-diamond-arrows':
+        'Raute mit zwei inneren Diagonalen, Anschlag und Rechtspfeil',
+      'circle-transport-diamond-wheels-arrows':
+        'Raute mit zwei Ringen, Anschlag und Rechtspfeil',
+    });
+    const task4TechnicalIds = [
+      'ring-7mm-offset-down-1mm',
+      'chevron-over-opposed-triangles',
+      'ring-6-5mm-offset-down-2mm-with-roof',
+      'top-center-rect-0-5x0-6mm',
+      'air-winch-chevron-diamond',
+      'ring-6mm-offset-down-3mm-four-way-stem',
+      'ring-5mm-offset-down-3mm-eight-spokes',
+      'circle-patient-staging-arrows',
+      'circle-collection-arrow',
+      'circle-staging-frame-arrow',
+      'circle-staging-frame',
+      'circle-staging-frame-quadrants-arrows',
+      'circle-diamond-arrow',
+      'circle-cross-ring',
+    ] as const;
+    const task5TechnicalIds = [
+      'circle-double-arrow-lower-v',
+      'circle-information-stem',
+      'circle-transport-diamond-arrows',
+      'circle-transport-diamond-wheels-arrows',
+    ] as const;
+    expect(TECHNICAL_BODY_MARK_IDS).toEqual([...task4TechnicalIds, ...task5TechnicalIds]);
   });
 
   it('beschreibt ein eigenständiges Piktogramm aus seiner Definition', () => {

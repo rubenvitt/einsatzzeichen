@@ -97,6 +97,13 @@ export const TECHNICAL_BODY_MARK_LABELS = Object.freeze({
     'Viergeteilter gewölbter Rahmen mit unterem Doppelpfeil',
   'circle-diamond-arrow': 'Geteilte Raute mit Anschlag und Rechtspfeil',
   'circle-cross-ring': 'Geteilter Kreis mit Ring und Diagonalkreuz',
+  'circle-double-arrow-lower-v':
+    'Senkrechter Stamm mit oberem Doppelpfeil und unterem V',
+  'circle-information-stem': 'Gefüllter Punkt über gefülltem senkrechtem Stamm',
+  'circle-transport-diamond-arrows':
+    'Raute mit zwei inneren Diagonalen, Anschlag und Rechtspfeil',
+  'circle-transport-diamond-wheels-arrows':
+    'Raute mit zwei Ringen, Anschlag und Rechtspfeil',
 } satisfies Record<TechnicalBodyMarkId, string>);
 
 const TECHNICAL_BODY_MARK_ID_SET = new Set<string>(TECHNICAL_BODY_MARK_IDS);

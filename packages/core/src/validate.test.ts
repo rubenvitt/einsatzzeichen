@@ -173,10 +173,13 @@ describe('validateSpec', () => {
     } as unknown as SymbolSpec;
   }
 
-  it('akzeptiert die vollständigen UHS- und 50-Metriken nur an ihrer Kreisfassung', () => {
+  it('akzeptiert die vollständigen UHS-, 50- und 500-Metriken nur an ihrer Kreisfassung', () => {
     expect(validateSpec(circleSpec(undefined, 'UHS', circleTopLeftMetrics))).toEqual([]);
     expect(validateSpec(circleSpec(
       'raised-gable', '50', raisedCircleTopLeftMetrics,
+    ))).toEqual([]);
+    expect(validateSpec(circleSpec(
+      'raised-gable', '500', raisedCircleTopLeftMetrics,
     ))).toEqual([]);
   });
 

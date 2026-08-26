@@ -280,8 +280,9 @@ describe('Rasterevidenz für Text (resvgFontOptions())', () => {
     // **93 seit F-c:** acht der 14 Fahrzeugdarstellungen tragen mindestens einen Lauf; F.2.7
     // belegt die oberhalb liegende Zone und F.2.8 zwei getrennt gerasterte Textprimitive.
     // F-d ergänzt sieben beschriftete Fahrzeuge; allein F.2.15 trägt keinen Lauf.
-    // F-e ergänzt die drei vollständig vermessenen Kreisläufe UHS/UHS/50.
-    expect(labelRecipes).toHaveLength(103);
+    // F-e ergänzt die drei vollständig vermessenen Kreisläufe UHS/UHS/50. F-f ergänzt mit
+    // F.3.14 genau einen weiteren vermessenen Lauf: `500` im ortsgebundenen Betreuungsplatz.
+    expect(labelRecipes).toHaveLength(104);
   });
 
   /**

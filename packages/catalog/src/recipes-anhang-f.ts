@@ -775,6 +775,126 @@ export const ANHANG_F_E_FINDINGS: Readonly<Record<string, string>> = Object.free
 
 export const ANHANG_F_E_DEVIATIONS: Readonly<Record<string, string>> = Object.freeze({});
 
+/**
+ * F.3.12 bis F.3.19: die acht verbleibenden Platzzeichen. Sechs stehen auf dem bereits
+ * vermessenen 12-mm-Kreis, F.3.14 in dessen abgesenkter Giebelfassung; Unterkunft und
+ * Krankenhaus teilen die reduzierte Hauskontur. Alle Quellen führen ausschließlich die weiße
+ * HiOrg-Fläche und keinen Stärkegrad.
+ */
+export const ANHANG_F_F_RECIPES = {
+  'F.3.12': {
+    title: 'Anlaufstelle für Betroffene',
+    referenceAsset: 'F.3.12_Anlaufstelle für Betroffene.svg',
+    spec: {
+      kind: 'circle-12',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['circle-double-arrow-lower-v'],
+    },
+  },
+  'F.3.13': {
+    title: 'Betreuungsstelle',
+    referenceAsset: 'F.3.13_Betreuungsstelle.svg',
+    spec: {
+      kind: 'circle-12',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['care'],
+    },
+  },
+  'F.3.14': {
+    title: 'Betreuungsplatz, ortsgebunden',
+    referenceAsset: 'F.3.14_Betreuungsplatz_ortsgebunden.svg',
+    spec: {
+      kind: 'circle-12',
+      bodyVariant: 'raised-gable',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['care'],
+      labels: {
+        topLeft: '500',
+        topLeftMetrics: {
+          capHeightMm: 2.749893,
+          baselineFromBodyTopMm: -0.999746,
+          anchorFromBodyLeftMm: -2.974002,
+        },
+      },
+    },
+  },
+  'F.3.15': {
+    title: 'Unterkunft',
+    referenceAsset: 'F.3.15_Unterkunft.svg',
+    spec: {
+      kind: 'reduced-house',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['temporary-accommodation-resting'],
+    },
+  },
+  'F.3.16': {
+    title: 'Krankenhaus',
+    referenceAsset: 'F.3.16_Krankenhaus.svg',
+    spec: {
+      kind: 'reduced-house',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['hospital'],
+    },
+  },
+  'F.3.17': {
+    title: 'Notfallinformationspunkt / KatS-Leuchtturm',
+    referenceAsset: 'F.3.17_Notfallinformationspunkt_KatS-Leuchtturm.svg',
+    spec: {
+      kind: 'circle-12',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['circle-information-stem'],
+    },
+  },
+  'F.3.18': {
+    title: 'Ladezone Personentransport',
+    referenceAsset: 'F.3.18_Ladezone Personentransport.svg',
+    spec: {
+      kind: 'circle-12',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['circle-transport-diamond-arrows'],
+    },
+  },
+  'F.3.19': {
+    title: 'Ladezone Personentransport, besondere Bedarfe',
+    referenceAsset: 'F.3.19_Ladezone Personentransport_besondere Bedarfe.svg',
+    spec: {
+      kind: 'circle-12',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['circle-transport-diamond-wheels-arrows'],
+    },
+  },
+} as const satisfies Record<string, Recipe>;
+
+/** Quellenbefunde des am 26. August 2026 einzeln vermessenen F.3.12–F.3.19-Blocks. */
+export const ANHANG_F_F_FINDINGS: Readonly<Record<string, string>> = Object.freeze({
+  'F.3.12':
+    'Doppelpfeil, Stamm und untere Gabel bilden eine rein technische Kreisform; die Quelle ' +
+    'belegt dafür keine eigenständige Capability.',
+  'F.3.13':
+    'Der offene Zweischenkelzug ist die quellengetreue Kreisfassung der semantischen ' +
+    'Capability Betreuung und keine skalierte Formation- oder Fahrzeugmarke.',
+  'F.3.14':
+    'Kreis, Giebel und Lauf „500“ verwenden dieselbe abgesenkte Fassung und denselben ' +
+    'vollständigen Metriksatz wie der vermessene F.3.5-Beleg; die Betreuungsmarke liegt 2 mm tiefer.',
+  'F.3.15':
+    'Unterkunft belegt die semantische Marke temporary-accommodation-resting in einer eigenen ' +
+    'quellengetreuen Hausfassung; die Liegekurve wurde zusätzlich gegen das Originalraster geprüft.',
+  'F.3.16':
+    'Die zusätzliche Outline-Angabe der Quelle ist die Strichhülle derselben reduzierten ' +
+    'Hauskontur, kein zweiter Körper und keine abweichende Körpervariante.',
+  'F.3.17':
+    'Punkt und gefüllter Stamm sind eine rein technische Informationsform und werden nicht in ' +
+    'die anders gezeichnete Capability information-communications umgedeutet.',
+  'F.3.18':
+    'Raute, unterer Stop/Pfeil und innere Diagonalen bilden eine technische Form; Titel und ' +
+    'Geometrie belegen nicht das vorhandene patient-transport-Motiv.',
+  'F.3.19':
+    'Die beiden offenen Ringe ergänzen Raute und unteren Stop/Pfeil ohne die Diagonalen aus ' +
+    'F.3.18; diese Topologie erhält deshalb eine eigene technische ID.',
+});
+
+export const ANHANG_F_F_DEVIATIONS: Readonly<Record<string, string>> = Object.freeze({});
+
 export const ANHANG_F_B_FINDINGS: Readonly<Record<string, string>> = Object.freeze({
   'F.1.3':
     'Die Bettzeichnung ist bildgleich mit F.1.19; allein F.1.3 führt zusätzlich das schwarze ' +

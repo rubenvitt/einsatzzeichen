@@ -1,6 +1,8 @@
+import { Resvg } from '@resvg/resvg-js';
 import { describe, expect, it } from 'vitest';
-import { boundsOfMm, type BoundsMm } from '@einsatzzeichen/core';
+import { boundsOfMm, renderSvg, type BoundsMm } from '@einsatzzeichen/core';
 import {
+  DEFAULT_VIEWBOX_MM,
   DEFAULT_STROKE_WIDTH_MM,
   type BodyMarkId,
   type BodyVariantId,
@@ -21,6 +23,7 @@ const raisedAirBodyMm: BoundsMm = { minX: 1.01, minY: 6, maxX: 30.99, maxY: 20.9
 const trailerBodyMm: BoundsMm = { minX: 4, minY: 5.75, maxX: 31, maxY: 26 };
 const circleBodyMm: BoundsMm = { minX: 4, minY: 4, maxX: 28, maxY: 28 };
 const raisedCircleBodyMm: BoundsMm = { minX: 4, minY: 6, maxX: 28, maxY: 30 };
+const reducedHouseBodyMm: BoundsMm = { minX: 2, minY: 4, maxX: 30, maxY: 26 };
 const bodyMark = (id: Parameters<typeof bodyMarkWithContext>[0], bounds: BoundsMm) =>
   bodyMarkWithContext(id, { kind: 'formation' }, bounds);
 
@@ -795,8 +798,9 @@ describe('bodyMark() — was nicht fortgeschrieben wird', () => {
   });
 });
 
-describe('bodyMark() — F.3.1 bis F.3.11 auf dem 12-mm-Kreis', () => {
+describe('bodyMark() — F.3.1 bis F.3.19 auf Kreis und reduziertem Haus', () => {
   const circleKind = 'circle-12' as SymbolKind;
+  const reducedHouseKind = 'reduced-house' as SymbolKind;
   const raisedGable = 'raised-gable' as BodyVariantId;
   const technical = (id: string) => id as BodyMarkId;
   const circleMark = (
@@ -820,6 +824,27 @@ describe('bodyMark() — F.3.1 bis F.3.11 auf dem 12-mm-Kreis', () => {
     type: 'path', role: 'pictogram', d,
     style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
   });
+  const filledCircle = (cx: number, cy: number, r: number): Primitive => ({
+    type: 'circle', role: 'pictogram', cx, cy, r,
+    style: { fill: 'schwarz', stroke: 'none' },
+  });
+  const filledRect = (x: number, y: number, width: number, height: number): Primitive => ({
+    type: 'rect', role: 'pictogram', x, y, width, height,
+    style: { fill: 'schwarz', stroke: 'none' },
+  });
+  const alphaRmse = (leftSvg: string, rightSvg: string): number => {
+    const left = new Resvg(leftSvg).render();
+    const right = new Resvg(rightSvg).render();
+    expect([left.width, left.height]).toEqual([right.width, right.height]);
+    const leftPixels = left.pixels;
+    const rightPixels = right.pixels;
+    let squaredDifference = 0;
+    for (let index = 3; index < leftPixels.length; index += 4) {
+      const difference = ((leftPixels[index] ?? 0) - (rightPixels[index] ?? 0)) / 255;
+      squaredDifference += difference * difference;
+    }
+    return Math.sqrt(squaredDifference / (left.width * left.height));
+  };
 
   const normalQuartering = [line(16, 4, 16, 28), line(4, 16, 28, 16)];
   const raisedQuartering = [line(16, 6, 16, 30), line(4, 18, 28, 18)];
@@ -898,6 +923,152 @@ describe('bodyMark() — F.3.1 bis F.3.11 auf dem 12-mm-Kreis', () => {
     ]);
   });
 
+  it('zeichnet F.3.12 als Stamm, oberen Doppelpfeil und unteres offenes V', () => {
+    expect(circleMark(technical('circle-double-arrow-lower-v'))).toEqual([
+      line(16, 4, 16, 22),
+      line(9, 11, 23, 11),
+      outline([[11.5, 8.5], [9, 11], [11.5, 13.5]]),
+      outline([[20.5, 8.5], [23, 11], [20.5, 13.5]]),
+      outline([[9, 25.75], [16, 22], [23, 25.75]]),
+    ]);
+  });
+
+  it('zeichnet care bounds-relativ, aber nur in den beiden vermessenen Kreisfassungen', () => {
+    expect(circleMark('care')).toEqual([outline([[8, 25], [16, 4], [24, 25]])]);
+    expect(circleMark('care', raisedGable)).toEqual([outline([[8, 27], [16, 6], [24, 27]])]);
+    const shifted = { minX: 5, minY: 5, maxX: 29, maxY: 29 };
+    expect(circleMark('care', undefined, shifted)).toEqual([
+      outline([[9, 26], [17, 5], [25, 26]]),
+    ]);
+  });
+
+  it('zeichnet F.3.17 als gefüllten Informationspunkt und gefüllten Stamm', () => {
+    expect(circleMark(technical('circle-information-stem'))).toEqual([
+      filledCircle(16, 10.5, 1.5),
+      filledRect(15, 14, 2, 8),
+    ]);
+  });
+
+  it('verschiebt jede neue technische Kreisgeometrie vollständig mit ihrer 24-mm-Hülle', () => {
+    const shifted = { minX: 5, minY: 5, maxX: 29, maxY: 29 };
+    expect(circleMark(technical('circle-double-arrow-lower-v'), undefined, shifted)).toEqual([
+      line(17, 5, 17, 23),
+      line(10, 12, 24, 12),
+      outline([[12.5, 9.5], [10, 12], [12.5, 14.5]]),
+      outline([[21.5, 9.5], [24, 12], [21.5, 14.5]]),
+      outline([[10, 26.75], [17, 23], [24, 26.75]]),
+    ]);
+    expect(circleMark(technical('circle-information-stem'), undefined, shifted)).toEqual([
+      filledCircle(17, 11.5, 1.5),
+      filledRect(16, 15, 2, 8),
+    ]);
+    expect(circleMark(technical('circle-transport-diamond-arrows'), undefined, shifted)).toEqual([
+      outline([[17, 7], [23.5, 13.5], [17, 20], [10.5, 13.5]], true),
+      line(10, 21, 10, 25),
+      line(10, 23, 25, 23),
+      outline([[23, 21], [25, 23], [23, 25]]),
+      line(17, 7, 13, 20),
+      line(17, 7, 21, 20),
+    ]);
+    expect(
+      circleMark(technical('circle-transport-diamond-wheels-arrows'), undefined, shifted),
+    ).toEqual([
+      outline([[17, 7], [23.5, 13.5], [17, 20], [10.5, 13.5]], true),
+      line(10, 21, 10, 25),
+      line(10, 23, 25, 23),
+      outline([[23, 21], [25, 23], [23, 25]]),
+      ring(11.5, 18.5, 1.5),
+      ring(22.5, 18.5, 1.5),
+    ]);
+  });
+
+  it('teilt Raute und Unterpfeil mit F.3.10, ohne dessen Ausgabe zu verändern', () => {
+    const shared = [
+      outline([[16, 6], [22.5, 12.5], [16, 19], [9.5, 12.5]], true),
+      line(9, 20, 9, 24),
+      line(9, 22, 24, 22),
+      outline([[22, 20], [24, 22], [22, 24]]),
+    ];
+    expect(circleMark(technical('circle-diamond-arrow'))).toEqual([
+      shared[0], line(16, 6, 16, 19), ...shared.slice(1),
+    ]);
+    expect(circleMark(technical('circle-transport-diamond-arrows'))).toEqual([
+      ...shared,
+      line(16, 6, 12, 19),
+      line(16, 6, 20, 19),
+    ]);
+  });
+
+  it('zeichnet F.3.19 mit zwei Ringen und ausdrücklich ohne F.3.18-Diagonalen', () => {
+    const marks = circleMark(technical('circle-transport-diamond-wheels-arrows'));
+    expect(marks).toEqual([
+      outline([[16, 6], [22.5, 12.5], [16, 19], [9.5, 12.5]], true),
+      line(9, 20, 9, 24),
+      line(9, 22, 24, 22),
+      outline([[22, 20], [24, 22], [22, 24]]),
+      ring(10.5, 17.5, 1.5),
+      ring(21.5, 17.5, 1.5),
+    ]);
+    expect(marks).not.toContainEqual(line(16, 6, 12, 19));
+    expect(marks).not.toContainEqual(line(16, 6, 20, 19));
+  });
+
+  it('baut Unterkunft und Krankenhaus ausschließlich gegen die reduced-house-Hülle', () => {
+    expect(bodyMarkWithContext(
+      'temporary-accommodation-resting', { kind: reducedHouseKind }, reducedHouseBodyMm,
+    )).toEqual([
+      line(6, 12, 6, 24),
+      line(26, 12, 26, 24),
+      path('M 6 19 C 6 15.708, 9.7 14, 16 14 C 22.3 14, 26 15.708, 26 19'),
+      line(6, 20, 26, 20),
+    ]);
+    expect(bodyMarkWithContext(
+      'hospital', { kind: reducedHouseKind }, reducedHouseBodyMm,
+    )).toEqual([
+      line(16, 10, 16, 26),
+      line(9, 14, 9, 22),
+      line(23, 14, 23, 22),
+      line(2, 18, 30, 18),
+    ]);
+  });
+
+  it('verschiebt beide Hausmarken vollständig mit ihrer 28 × 22-mm-Hülle', () => {
+    const shiftedHouse = { minX: 3, minY: 5, maxX: 31, maxY: 27 };
+    expect(bodyMarkWithContext(
+      'temporary-accommodation-resting', { kind: reducedHouseKind }, shiftedHouse,
+    )).toEqual([
+      line(7, 13, 7, 25),
+      line(27, 13, 27, 25),
+      path('M 7 20 C 7 16.708, 10.7 15, 17 15 C 23.3 15, 27 16.708, 27 20'),
+      line(7, 21, 27, 21),
+    ]);
+    expect(bodyMarkWithContext('hospital', { kind: reducedHouseKind }, shiftedHouse)).toEqual([
+      line(17, 11, 17, 27),
+      line(10, 15, 10, 23),
+      line(24, 15, 24, 23),
+      line(3, 19, 31, 19),
+    ]);
+  });
+
+  it('trifft F.3.15s expandierte Originalkontur im unabhängigen Quellenraster', () => {
+    const generated = renderSvg({
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: bodyMarkWithContext(
+        'temporary-accommodation-resting', { kind: reducedHouseKind }, reducedHouseBodyMm,
+      ),
+    }, { size: 2048 });
+    // Verbatim die beiden Marken-Subpfade aus `F.3.15_Unterkunft.svg`; die Hauskontur beginnt
+    // erst beim folgenden `M4.96,27.45` und ist bewusst nicht Teil dieses Vergleichs.
+    const source =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90.709 90.709" ' +
+      'width="2048" height="2048"><path fill="#000000" d="' +
+      'M72.992,48.345c-2.635-4.699-9.749-9.368-27.638-9.368s-25.003,4.668-' +
+      '27.638,9.368v-14.329h-1.417v34.016h1.417v-10.63h55.275v10.63h1.417v-34.016h-' +
+      '1.417v14.329ZM72.992,55.985H17.717v-2.126c0-8.683,9.815-13.464,27.638-' +
+      '13.464s27.638,4.782,27.638,13.464v2.126Z"/></svg>';
+    expect(alphaRmse(generated, source)).toBeLessThan(0.006);
+  });
+
   it('rechnet jede Kreismarke gegen die übergebene Hülle statt gegen absolute F.3-Koordinaten', () => {
     const shifted = { minX: 5, minY: 5, maxX: 29, maxY: 29 };
     expect(circleMark(technical('circle-collection-arrow'), undefined, shifted)).toEqual([
@@ -916,6 +1087,10 @@ describe('bodyMark() — F.3.1 bis F.3.11 auf dem 12-mm-Kreis', () => {
       'circle-staging-frame-quadrants-arrows',
       'circle-diamond-arrow',
       'circle-cross-ring',
+      'circle-double-arrow-lower-v',
+      'circle-information-stem',
+      'circle-transport-diamond-arrows',
+      'circle-transport-diamond-wheels-arrows',
     ]) {
       expect(() => bodyMarkWithContext(
         technical(id), { kind: 'formation' }, formationBodyMm,
@@ -928,6 +1103,17 @@ describe('bodyMark() — F.3.1 bis F.3.11 auf dem 12-mm-Kreis', () => {
     expect(() => circleMark(technical('circle-collection-arrow'), raisedGable)).toThrow(
       /nicht vermessen/,
     );
+    expect(() => circleMark(technical('circle-double-arrow-lower-v'), raisedGable)).toThrow(
+      /nicht vermessen/,
+    );
+    expect(() => bodyMarkWithContext('care', { kind: reducedHouseKind }, reducedHouseBodyMm))
+      .toThrow(/nicht vermessen/);
+    expect(() => bodyMarkWithContext(
+      'hospital', { kind: reducedHouseKind, bodyVariant: raisedGable }, reducedHouseBodyMm,
+    )).toThrow(/nicht vermessen/);
+    expect(() => bodyMarkWithContext(
+      'hospital', { kind: 'building' }, reducedHouseBodyMm,
+    )).toThrow(/nicht vermessen/);
   });
 });
 
@@ -958,6 +1144,8 @@ describe('BODY_MARK_IDS', () => {
           ? [{ kind: 'vehicle-air', bodyVariant: 'raised-hull' } as const, raisedAirBodyMm] as const
         : id === 'top-center-rect-0-5x0-6mm'
             ? [{ kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' } as const, landBodyMm] as const
+          : id === 'hospital'
+            ? [{ kind: 'reduced-house' } as const, reducedHouseBodyMm] as const
             : id.startsWith('circle-')
               ? [{ kind: 'circle-12' } as const, circleBodyMm] as const
             : id === 'ring-6mm-offset-down-3mm-four-way-stem' ||

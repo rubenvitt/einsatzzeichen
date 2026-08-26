@@ -473,6 +473,44 @@ function circlePath(d: string): Primitive {
   };
 }
 
+/**
+ * Das Betreuungsmotiv der beiden Kreisfassungen, ausschließlich gegen ihre jeweilige Hülle.
+ * Die gleichnamigen Formation-/Fahrzeugfassungen haben andere Maße und rufen diesen Helper nie
+ * auf; die Registrygrenze darunter hält diese semantische ID kontextspezifisch fail-closed.
+ */
+function circleCare(bounds: BoundsMm): Primitive[] {
+  const cx = (bounds.minX + bounds.maxX) / 2;
+  return [circleOutline([
+    [bounds.minX + 4, bounds.minY + 21],
+    [cx, bounds.minY],
+    [bounds.maxX - 4, bounds.minY + 21],
+  ])];
+}
+
+/**
+ * Die quellenidentische Teilgeometrie aus F.3.10/F.3.18/F.3.19: Raute, unterer Anschlag,
+ * Schaft und offene Rechtspfeilspitze. F.3.10 setzt seinen eigenen senkrechten Stamm zwischen
+ * Raute und Anschlag ein; dadurch bleiben seine Reihenfolge und sein SVG bytegleich.
+ */
+function circleDiamondAndLowerArrow(bounds: BoundsMm): Primitive[] {
+  const dx = bounds.minX - 4;
+  const dy = bounds.minY - 4;
+  return [
+    circleOutline(
+      [
+        [16 + dx, 6 + dy],
+        [22.5 + dx, 12.5 + dy],
+        [16 + dx, 19 + dy],
+        [9.5 + dx, 12.5 + dy],
+      ],
+      true,
+    ),
+    stroke(9 + dx, 20 + dy, 9 + dx, 24 + dy),
+    stroke(9 + dx, 22 + dy, 24 + dx, 22 + dy),
+    circleOutline([[22 + dx, 20 + dy], [24 + dx, 22 + dy], [22 + dx, 24 + dy]]),
+  ];
+}
+
 // `compose()` dedupliziert nur identische Primitive-Referenzen zwischen Markengruppen. Die
 // Teilung ist an F.3.2/F.3.4/F.3.5 eine gemeinsame Schicht mehrerer Marken; dieser Cache hält
 // genau diese beiden Linien für dieselbe vermessene Körperhülle referenzidentisch.
@@ -492,13 +530,15 @@ function circleQuartering(bounds: BoundsMm): Primitive[] {
 }
 
 /**
- * F.3.1 bis F.3.11, am 26. August 2026 je Quelle separat vermessen. Die Koordinaten werden
+ * F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen. Die
+ * Koordinaten werden
  * gegen die 24 × 24-mm-Hülle gerechnet; sie sind weder aus der Formation noch aus einem
  * Fahrzeug skaliert. Die technischen IDs benennen nur das sichtbare Motiv und behaupten keine
  * zusätzliche Fachsemantik.
  */
 const CIRCLE_NORMAL_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
   'medical-service': circleQuartering,
+  care: circleCare,
   physician: (bounds) => {
     const cx = (bounds.minX + bounds.maxX) / 2;
     return [
@@ -570,24 +610,15 @@ const CIRCLE_NORMAL_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Prim
   'circle-diamond-arrow': (bounds) => {
     const dx = bounds.minX - 4;
     const dy = bounds.minY - 4;
+    const shared = circleDiamondAndLowerArrow(bounds);
     return [
       // F.3.10: Aus den jeweils gegenüberliegenden Konturseiten des 0,5-mm-Umrisses gemittelt
       // folgen die vier Mittellinienpunkte (16|6), (22,5|12,5), (16|19), (9,5|12,5). Die
       // bequemeren Ganzzahlen 23/13/20/9 lägen auf wechselnden Außenkanten und vergrößerten die
       // Raute um bis zu 1 mm; Anschlag und Pfeil darunter sind davon getrennt vermessen.
-      circleOutline(
-        [
-          [16 + dx, 6 + dy],
-          [22.5 + dx, 12.5 + dy],
-          [16 + dx, 19 + dy],
-          [9.5 + dx, 12.5 + dy],
-        ],
-        true,
-      ),
+      shared[0]!,
       stroke(16 + dx, 6 + dy, 16 + dx, 19 + dy),
-      stroke(9 + dx, 20 + dy, 9 + dx, 24 + dy),
-      stroke(9 + dx, 22 + dy, 24 + dx, 22 + dy),
-      circleOutline([[22 + dx, 20 + dy], [24 + dx, 22 + dy], [22 + dx, 24 + dy]]),
+      ...shared.slice(1),
     ];
   },
   'circle-cross-ring': (bounds) => {
@@ -602,18 +633,93 @@ const CIRCLE_NORMAL_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Prim
       stroke(cx + diagonalMm, cy - diagonalMm, cx - diagonalMm, cy + diagonalMm),
     ];
   },
+  'circle-double-arrow-lower-v': (bounds) => {
+    const dx = bounds.minX - 4;
+    const dy = bounds.minY - 4;
+    return [
+      stroke(16 + dx, 4 + dy, 16 + dx, 22 + dy),
+      stroke(9 + dx, 11 + dy, 23 + dx, 11 + dy),
+      circleOutline([[11.5 + dx, 8.5 + dy], [9 + dx, 11 + dy], [11.5 + dx, 13.5 + dy]]),
+      circleOutline([[20.5 + dx, 8.5 + dy], [23 + dx, 11 + dy], [20.5 + dx, 13.5 + dy]]),
+      circleOutline([[9 + dx, 25.75 + dy], [16 + dx, 22 + dy], [23 + dx, 25.75 + dy]]),
+    ];
+  },
+  'circle-information-stem': (bounds) => {
+    const dx = bounds.minX - 4;
+    const dy = bounds.minY - 4;
+    return [
+      {
+        type: 'circle', role: 'pictogram', cx: 16 + dx, cy: 10.5 + dy, r: 1.5,
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+      {
+        type: 'rect', role: 'pictogram', x: 15 + dx, y: 14 + dy, width: 2, height: 8,
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+    ];
+  },
+  'circle-transport-diamond-arrows': (bounds) => {
+    const dx = bounds.minX - 4;
+    const dy = bounds.minY - 4;
+    return [
+      ...circleDiamondAndLowerArrow(bounds),
+      stroke(16 + dx, 6 + dy, 12 + dx, 19 + dy),
+      stroke(16 + dx, 6 + dy, 20 + dx, 19 + dy),
+    ];
+  },
+  'circle-transport-diamond-wheels-arrows': (bounds) => {
+    const dx = bounds.minX - 4;
+    const dy = bounds.minY - 4;
+    return [
+      ...circleDiamondAndLowerArrow(bounds),
+      circleRing(10.5 + dx, 17.5 + dy, 1.5),
+      circleRing(21.5 + dx, 17.5 + dy, 1.5),
+    ];
+  },
 };
 
-/** F.3.5: dieselben semantischen Marken, aber separat gegen den abgesenkten Kreis vermessen. */
+/** F.3.5/F.3.14: semantische Marken, separat gegen den abgesenkten Kreis vermessen. */
 const CIRCLE_RAISED_GABLE_MARKS: Partial<
   Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
 > = {
   'medical-service': circleQuartering,
+  care: circleCare,
   physician: (bounds) => {
     const cx = (bounds.minX + bounds.maxX) / 2;
     return [
       ...circleQuartering(bounds),
       stroke(cx - 4, bounds.maxY - 6, cx + 4, bounds.maxY - 6),
+    ];
+  },
+};
+
+/** F.3.15/F.3.16: ausschließlich an der 28 × 22-mm-Hülle des reduzierten Hauses. */
+const REDUCED_HOUSE_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
+  'temporary-accommodation-resting': (bounds) => {
+    const dx = bounds.minX - 2;
+    const dy = bounds.minY - 4;
+    return [
+      stroke(6 + dx, 12 + dy, 6 + dx, 24 + dy),
+      stroke(26 + dx, 12 + dy, 26 + dx, 24 + dy),
+      // Die Anker 6/19, 16/14 und 26/19 sind die Mittellinie. Die beiden äußeren Kontrollen
+      // treffen die expandierte Originalkontur bei 2048 px mit Alpha-RMSE 0,004656; 15,67 aus
+      // dem ersten Anker-Entwurf verfehlte denselben unabhängigen Vergleich mit 0,012109.
+      circlePath(
+        `M ${6 + dx} ${19 + dy} C ${6 + dx} ${15.708 + dy}, ` +
+        `${9.7 + dx} ${14 + dy}, ${16 + dx} ${14 + dy} ` +
+        `C ${22.3 + dx} ${14 + dy}, ${26 + dx} ${15.708 + dy}, ${26 + dx} ${19 + dy}`,
+      ),
+      stroke(6 + dx, 20 + dy, 26 + dx, 20 + dy),
+    ];
+  },
+  hospital: (bounds) => {
+    const dx = bounds.minX - 2;
+    const dy = bounds.minY - 4;
+    return [
+      stroke(16 + dx, 10 + dy, 16 + dx, 26 + dy),
+      stroke(9 + dx, 14 + dy, 9 + dx, 22 + dy),
+      stroke(23 + dx, 14 + dy, 23 + dx, 22 + dy),
+      stroke(2 + dx, 18 + dy, 30 + dx, 18 + dy),
     ];
   },
 };
@@ -906,6 +1012,8 @@ export function bodyMark(
             ? CIRCLE_NORMAL_MARKS[id]
             : context.kind === 'circle-12' && context.bodyVariant === 'raised-gable'
               ? CIRCLE_RAISED_GABLE_MARKS[id]
+              : context.kind === 'reduced-house' && context.bodyVariant === undefined
+                ? REDUCED_HOUSE_MARKS[id]
           : undefined;
   const hasAnyBuild = [
     MARKS,
@@ -916,6 +1024,7 @@ export function bodyMark(
     TRAILER_MARKS,
     CIRCLE_NORMAL_MARKS,
     CIRCLE_RAISED_GABLE_MARKS,
+    REDUCED_HOUSE_MARKS,
   ]
     .some((candidate) => Object.hasOwn(candidate, id));
   if (!hasAnyBuild) {
@@ -944,6 +1053,8 @@ export function bodyMark(
         ? { width: 29.98, height: 14.99, label: '29,98 × 14,99 mm' }
         : context.kind === 'circle-12'
           ? { width: 24, height: 24, label: '24 × 24 mm' }
+          : context.kind === 'reduced-house'
+            ? { width: 28, height: 22, label: '28 × 22 mm' }
           : { width: 27, height: 20.25, label: '27 × 20,25 mm' };
   if (
     Math.abs(widthMm - expected.width) > BODY_TOLERANCE_MM ||
@@ -999,6 +1110,7 @@ export const BODY_MARK_IDS: readonly BodyMarkId[] = Object.freeze(
       TRAILER_MARKS,
       CIRCLE_NORMAL_MARKS,
       CIRCLE_RAISED_GABLE_MARKS,
+      REDUCED_HOUSE_MARKS,
     ]
       .some((registry) => Object.hasOwn(registry, id))),
 );

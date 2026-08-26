@@ -69,7 +69,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 416 Zeilen mit 273 Elementdarstellungen', () => {
+  it('enthält exakt 424 Zeilen mit 273 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -97,7 +97,7 @@ describe('Coverage-Manifest', () => {
       // `alternative` — die Zeile zählt einzeln, weil das Manifest Darstellungen zählt und nicht
       // Abschnitte, weil F.1.3 dort noch bewusst offen blieb; F-b baut es mit `foot-band`.
       // F-d ergänzt F.2.10 bis F.2.17 als acht reine Anwendungen des Fahrzeugvertrags.
-      'composition-recipe': 129,
+      'composition-recipe': 137,
       // 254 Piktogramme plus acht Organisationen (seit LFH-424 mit hilfsorganisation), vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
@@ -105,13 +105,13 @@ describe('Coverage-Manifest', () => {
       // Strichhülle vermessen ist.
       element: 273,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(416);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(424);
     expect(elementRows).toHaveLength(273);
     expect(pictogramRows).toHaveLength(254);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
   });
 
-  it('führt F.3.1 bis F.3.11 technisch geprüft, ohne Anhang F vorzeitig zu beanspruchen', () => {
+  it('bewahrt das technische F-e-Review für F.3.1 bis F.3.11', () => {
     const entries = COVERAGE_MANIFEST.entries.filter((entry) =>
       /^bbk-babz-2025:F\.3\.(?:[1-9]|10|11)$/.test(entry.sourceId),
     );
@@ -125,7 +125,7 @@ describe('Coverage-Manifest', () => {
         'liegt außerhalb dieses Teilslices.',
     ) === true)).toBe(true);
     expect(entries.every((entry) => entry.review.domain.status === 'pending')).toBe(true);
-    expect(COVERAGE_MANIFEST.scope).not.toContain('F');
+    expect(COVERAGE_MANIFEST.scope).toContain('F');
   });
 
   it('führt Anhang E lückenlos und trägt damit das `E` im beanspruchten Umfang', () => {
@@ -287,6 +287,47 @@ describe('Coverage-Manifest', () => {
     }
   });
 
+  it('trägt für alle acht F-f-Darstellungen ein technisches Review vom 26. August', () => {
+    const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
+      /^bbk-babz-2025:F\.3\.(1[2-9])$/.test(entry.sourceId),
+    );
+    expect(rows).toHaveLength(8);
+    for (const row of rows) {
+      expect(row.review.technical.status).toBe('approved');
+      expect(row.review.technical.date).toBe('2026-08-26');
+      expect(row.review.technical.note).toContain('finale Task-6-Kontaktbogen');
+      expect(row.review.domain.status).toBe('pending');
+    }
+  });
+
+  it('beansprucht F erst mit exakt 58 Source-IDs, acht Altkeys und 66 Recipekeys', () => {
+    const rows = COVERAGE_MANIFEST.entries.filter(
+      (entry) => entry.coverage === 'composition-recipe' && entry.sourceId.startsWith('bbk-babz-2025:F.'),
+    );
+    const sourceIds = rows.map((entry) => entry.sourceId.slice('bbk-babz-2025:'.length));
+    const recipeKeys = rows.map((entry) => entry.implementation.slice('recipe.'.length));
+    const expectedSourceIds = [
+      ...Array.from({ length: 22 }, (_, index) => `F.1.${index + 1}`),
+      ...Array.from({ length: 17 }, (_, index) => `F.2.${index + 1}`),
+      ...Array.from({ length: 19 }, (_, index) => `F.3.${index + 1}`),
+    ];
+    const expectedAlternativeKeys = [
+      'F.1.11#alternative', 'F.1.12#alternative', 'F.1.15#alternative',
+      'F.2.1#alternative', 'F.2.2#alternative', 'F.2.3#alternative',
+      'F.2.4#alternative', 'F.2.5#alternative',
+    ];
+    expect([...new Set(sourceIds)].sort()).toEqual([...expectedSourceIds].sort());
+    expect(new Set(sourceIds).size).toBe(58);
+    expect(recipeKeys.filter((key) => key.includes('#')).sort()).toEqual(
+      [...expectedAlternativeKeys].sort(),
+    );
+    expect(new Set(recipeKeys).size).toBe(66);
+    expect(recipeKeys).toHaveLength(66);
+    expect(sourceIds.some((section) => /^F\.3\.(?:2[0-9]|[3-9][0-9])$/.test(section))).toBe(false);
+    expect(COVERAGE_MANIFEST.scope.filter((chapter) => chapter === 'F')).toEqual(['F']);
+    expect(releaseBlockers().uncoveredScope).toEqual([]);
+  });
+
   it('trennt F.2.17s Quellenbefund y 6,096 von der bewussten gemeinsamen Fahrzeughülle', () => {
     const row = COVERAGE_MANIFEST.entries.find(
       (entry) => entry.sourceId === 'bbk-babz-2025:F.2.17',
@@ -348,6 +389,7 @@ describe('Coverage-Manifest', () => {
       // Aussage vom Test „führt Anhang E lückenlos" weiter oben, der die 68 Abschnitte aus den
       // Manifesteinträgen ableitet. Bis E.2.6 fehlte, ließ sich dieser Test nicht schreiben.
       'E',
+      'F',
       'J.1',
       'J.2',
       'J.3',
@@ -358,12 +400,12 @@ describe('Coverage-Manifest', () => {
     ]);
   });
 
-  it('führt F.1 vollständig, ohne Anhang F vorzeitig zu beanspruchen', () => {
+  it('führt F.1 vollständig innerhalb des nun mengenexakt belegten F-Scope', () => {
     const sections = COVERAGE_MANIFEST.entries
       .filter((entry) => entry.sourceId.startsWith('bbk-babz-2025:F.1.'))
       .map((entry) => entry.sourceId.slice('bbk-babz-2025:'.length).replace(/#.*$/, ''));
     expect(new Set(sections)).toEqual(new Set(Array.from({ length: 22 }, (_, index) => `F.1.${index + 1}`)));
-    expect(COVERAGE_MANIFEST.scope).not.toContain('F');
+    expect(COVERAGE_MANIFEST.scope).toContain('F');
   });
 
   it('meldet Katalogeinträge ohne genau eine primary-Darstellung', () => {

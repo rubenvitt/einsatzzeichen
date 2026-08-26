@@ -516,7 +516,8 @@ const BODIES: Partial<Record<SymbolKind, Primitive>> = {
     style: OUTLINE,
   },
   /**
-   * Eigenständiger Kreiskörper der elf Zeichen F.3.1 bis F.3.11. Das Ringpaar der Quellstriche
+   * Eigenständiger Kreiskörper der 17 Zeichen F.3.1 bis F.3.14 und F.3.17 bis F.3.19. Das Ringpaar
+   * der Quellstriche
    * misst außen r = 12,25 mm und innen r = 11,75 mm um (16|16), also die Mittellinie r = 12 mm.
    * `post` scheidet mit r = 14 mm aus und bleibt deshalb eine eigene Körperart.
    */
@@ -658,7 +659,7 @@ const VARIANT_BODIES: Partial<Record<SymbolKind, Partial<Record<BodyVariantId, P
   },
   'circle-12': {
     /**
-     * F.3.5: derselbe 12-mm-Kreis, zwei Millimeter abgesenkt. Der separat vermessene Giebel
+     * F.3.5/F.3.14: derselbe 12-mm-Kreis, zwei Millimeter abgesenkt. Der separat vermessene Giebel
      * steht in `VARIANT_EXTRA_PRIMITIVES`. Die Quellgeometrie ist mit J.3.2 identisch; dessen
      * bestehende Katalogfassung `stationBody(17, 11.5)` ist jedoch eine abweichende Approximation
      * und wird hier nicht als Vorlage wiederverwendet.

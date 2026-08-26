@@ -1,3 +1,4 @@
+import { readdirSync } from 'node:fs';
 import { Resvg, type RenderedImage } from '@resvg/resvg-js';
 import { describe, expect, it } from 'vitest';
 import { renderSvg, type RenderTheme } from '@einsatzzeichen/core';
@@ -211,6 +212,13 @@ function organizationProfileSheet(): string {
 }
 
 describe('echte Mehrgrößen- und Profilregression', () => {
+  it('schreibt exakt 406 Mehrgrößen-Snapshots', () => {
+    const snapshots = readdirSync(new URL('./__snapshots__/multi-size/', import.meta.url), {
+      withFileTypes: true,
+    }).filter((entry) => entry.isFile() && entry.name.endsWith('.svg'));
+    expect(snapshots).toHaveLength(406);
+  });
+
   it.each(RENDER_CASES)(
     '$id',
     async (renderCase) => {

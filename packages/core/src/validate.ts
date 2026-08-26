@@ -251,7 +251,8 @@ export function validateSpec(spec: SymbolSpec): ValidationIssue[] {
     issues.push({
       rule: 'circle-12-requires-hilfsorganisation',
       message:
-        'Der 12-mm-Kreis ist in allen elf F.3-Belegen ausschließlich als weiße ' +
+        'Der 12-mm-Kreis ist in allen 17 F.3-Belegen (F.3.1–F.3.14 und F.3.17–F.3.19) ' +
+        'ausschließlich als weiße ' +
         'HiOrg-Körperfläche vermessen. Andere oder fehlende Organisationszuordnungen sind ' +
         'auch ohne Beschriftung nicht belegt.',
     });

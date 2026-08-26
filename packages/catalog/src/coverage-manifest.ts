@@ -43,6 +43,9 @@ import {
   ANHANG_F_E_RECIPES,
   ANHANG_F_E_FINDINGS,
   ANHANG_F_E_DEVIATIONS,
+  ANHANG_F_F_RECIPES,
+  ANHANG_F_F_FINDINGS,
+  ANHANG_F_F_DEVIATIONS,
 } from './recipes-anhang-f.js';
 
 /**
@@ -215,6 +218,30 @@ const ANHANG_F_E_TECHNICAL_REVIEW: Review = {
     'Bestand. Der finale Task-6-Kontaktbogen war zu diesem Zeitpunkt noch nicht erzeugt oder ' +
     'gesichtet. Die Organisation hilfsorganisation und sämtliche Fachzuordnungen bleiben im ' +
     'Domain-Review pending.',
+};
+
+/**
+ * Eigenes technisches Review für F-f. Die sechs Kreiszeichen benutzen die in F-e eingeführte
+ * Körperhülle, aber ausschließlich bounds-relative, separat an den F-f-Quellen vermessene
+ * Marken. Die beiden Hauszeichen teilen nur Körper und Traufe; ihre semantischen Marken besitzen
+ * eigene reduced-house-Builder. Das Review hält die Einzelprüfung vom späteren Kontaktbogen
+ * getrennt.
+ */
+const ANHANG_F_F_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-26',
+  note:
+    'Alle acht Originalreferenzen F.3.12 bis F.3.19 wurden einzeln in kleiner und großer ' +
+    'Darstellung gerastert, vermessen und gegen die literal gebundene Rezeptmatrix geprüft. ' +
+    'Lokale Geometrietests halten die bounds-relativen Kreisformen, die reduzierte Hauskontur ' +
+    'mit genau einer Trauflinie, die separate Strichhülle von F.3.16 sowie alle semantischen ' +
+    'und technischen BodyMarks fail-closed fest. Der F.3.15-Kurvenzug besteht außerdem den ' +
+    'unabhängigen 2048-px-Vergleich gegen den Original-Subpfad. Snapshot-, Mehrgrößen-, ' +
+    'viewBox-, Metadaten- und Kontrast-Gates prüfen den renderbaren Bestand; die 541 ' +
+    'vorbestehenden Snapshots bleiben hashgleich. Der finale Task-6-Kontaktbogen war zu diesem ' +
+    'Zeitpunkt noch nicht erzeugt oder gesichtet. Die Organisation hilfsorganisation und ' +
+    'sämtliche Fachzuordnungen bleiben im Domain-Review pending.',
 };
 
 /** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
@@ -664,6 +691,13 @@ function technicalReviewFor(section: string): Review {
       ANHANG_F_E_DEVIATIONS[section],
     );
   }
+  if (Object.hasOwn(ANHANG_F_F_RECIPES, section)) {
+    return withFindingAndDeviation(
+      ANHANG_F_F_TECHNICAL_REVIEW,
+      ANHANG_F_F_FINDINGS[section],
+      ANHANG_F_F_DEVIATIONS[section],
+    );
+  }
   return TECHNICAL_REVIEW;
 }
 
@@ -851,6 +885,7 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'C.1.2',
     'D.3.7',
     'E',
+    'F',
     'J.1',
     'J.2',
     'J.3',

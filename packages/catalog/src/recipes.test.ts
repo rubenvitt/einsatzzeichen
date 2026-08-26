@@ -1039,10 +1039,9 @@ describe('Anhang F, Teilslice F-e', () => {
     },
   } as const;
 
-  it('deckt F.3.1 bis F.3.11 lückenlos ab und erreicht 129 Rezepte', () => {
+  it('deckt den historischen F-e-Block F.3.1 bis F.3.11 lückenlos ab', () => {
     const keys = Object.keys(RECIPES).filter((key) => /^F\.3\.(?:[1-9]|10|11)$/.test(key));
     expect(keys).toEqual(Object.keys(expected));
-    expect(Object.keys(RECIPES)).toHaveLength(129);
   });
 
   it('bindet alle elf Darstellungen literal an Quelle, Körper, Marken und Label', () => {
@@ -1093,6 +1092,136 @@ describe('Anhang F, Teilslice F-e', () => {
         line.x1 === body.cx - body.r && line.x2 === body.cx + body.r)).toHaveLength(1);
     },
   );
+});
+
+describe('Anhang F, Teilslice F-f', () => {
+  const fiveHundredMetrics = {
+    capHeightMm: 2.749893,
+    baselineFromBodyTopMm: -0.999746,
+    anchorFromBodyLeftMm: -2.974002,
+  };
+  const expected = {
+    'F.3.12': {
+      title: 'Anlaufstelle für Betroffene',
+      referenceAsset: 'F.3.12_Anlaufstelle für Betroffene.svg',
+      spec: {
+        kind: 'circle-12', organization: 'hilfsorganisation',
+        bodyMarks: ['circle-double-arrow-lower-v'],
+      },
+    },
+    'F.3.13': {
+      title: 'Betreuungsstelle', referenceAsset: 'F.3.13_Betreuungsstelle.svg',
+      spec: { kind: 'circle-12', organization: 'hilfsorganisation', bodyMarks: ['care'] },
+    },
+    'F.3.14': {
+      title: 'Betreuungsplatz, ortsgebunden',
+      referenceAsset: 'F.3.14_Betreuungsplatz_ortsgebunden.svg',
+      spec: {
+        kind: 'circle-12', bodyVariant: 'raised-gable', organization: 'hilfsorganisation',
+        bodyMarks: ['care'], labels: { topLeft: '500', topLeftMetrics: fiveHundredMetrics },
+      },
+    },
+    'F.3.15': {
+      title: 'Unterkunft', referenceAsset: 'F.3.15_Unterkunft.svg',
+      spec: {
+        kind: 'reduced-house', organization: 'hilfsorganisation',
+        bodyMarks: ['temporary-accommodation-resting'],
+      },
+    },
+    'F.3.16': {
+      title: 'Krankenhaus', referenceAsset: 'F.3.16_Krankenhaus.svg',
+      spec: {
+        kind: 'reduced-house', organization: 'hilfsorganisation', bodyMarks: ['hospital'],
+      },
+    },
+    'F.3.17': {
+      title: 'Notfallinformationspunkt / KatS-Leuchtturm',
+      referenceAsset: 'F.3.17_Notfallinformationspunkt_KatS-Leuchtturm.svg',
+      spec: {
+        kind: 'circle-12', organization: 'hilfsorganisation',
+        bodyMarks: ['circle-information-stem'],
+      },
+    },
+    'F.3.18': {
+      title: 'Ladezone Personentransport',
+      referenceAsset: 'F.3.18_Ladezone Personentransport.svg',
+      spec: {
+        kind: 'circle-12', organization: 'hilfsorganisation',
+        bodyMarks: ['circle-transport-diamond-arrows'],
+      },
+    },
+    'F.3.19': {
+      title: 'Ladezone Personentransport, besondere Bedarfe',
+      referenceAsset: 'F.3.19_Ladezone Personentransport_besondere Bedarfe.svg',
+      spec: {
+        kind: 'circle-12', organization: 'hilfsorganisation',
+        bodyMarks: ['circle-transport-diamond-wheels-arrows'],
+      },
+    },
+  } as const;
+
+  it('deckt F.3.12 bis F.3.19 lückenlos ohne Alternative ab und erreicht 137 Rezepte', () => {
+    const entries = Object.entries<Recipe>(RECIPES)
+      .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
+    expect(Object.fromEntries(entries)).toEqual(expected);
+    expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
+    expect(Object.keys(RECIPES)).toHaveLength(137);
+  });
+
+  it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {
+    for (const [key, recipe] of Object.entries(expected)) {
+      expect(recipe.spec.organization, key).toBe('hilfsorganisation');
+      expect('strength' in recipe.spec, key).toBe(false);
+      expect(key.includes('#'), key).toBe(false);
+    }
+  });
+
+  it('belegt das vollständige F-Inventar als exakt 58 IDs, acht Altkeys und 66 Recipekeys', () => {
+    const keys = Object.keys(RECIPES).filter((key) => key.startsWith('F.'));
+    const ids = keys.map((key) => key.split('#')[0]!);
+    const expectedIds = [
+      ...Array.from({ length: 22 }, (_, index) => `F.1.${index + 1}`),
+      ...Array.from({ length: 17 }, (_, index) => `F.2.${index + 1}`),
+      ...Array.from({ length: 19 }, (_, index) => `F.3.${index + 1}`),
+    ];
+    const expectedAlternatives = [
+      'F.1.11#alternative', 'F.1.12#alternative', 'F.1.15#alternative',
+      'F.2.1#alternative', 'F.2.2#alternative', 'F.2.3#alternative',
+      'F.2.4#alternative', 'F.2.5#alternative',
+    ];
+    expect([...new Set(ids)].sort()).toEqual([...expectedIds].sort());
+    expect(new Set(ids).size).toBe(58);
+    expect(keys.filter((key) => key.includes('#')).sort()).toEqual(expectedAlternatives.sort());
+    expect(new Set(keys).size).toBe(66);
+    expect(keys).toHaveLength(66);
+    expect(keys.some((key) => /^F\.3\.(?:2[0-9]|[3-9][0-9])/.test(key))).toBe(false);
+  });
+
+  it('zeichnet die gemeinsame Haus-Traufe je Rezept exakt einmal', () => {
+    for (const key of ['F.3.15', 'F.3.16'] as const) {
+      const recipe = expected[key];
+      const drawing = composeFromCatalog(recipe.spec as Recipe['spec'], recipe.title);
+      expect(drawing.children.filter((primitive) =>
+        primitive.type === 'line' && primitive.x1 === 2 && primitive.y1 === 10 &&
+        primitive.x2 === 30 && primitive.y2 === 10,
+      ), key).toHaveLength(1);
+    }
+  });
+
+  it('meldet für das teilweise außerhalb liegende 500-Label Körper- und Surface-Kontrast an', () => {
+    expect(labelContrastRequirements([
+      expected['F.3.14'] as unknown as Recipe,
+    ])).toEqual(expect.arrayContaining([
+      {
+        foreground: 'schwarz', background: 'weiss',
+        context: 'Beschriftung im Körper auf Organisation hilfsorganisation', minimum: 4.5,
+      },
+      {
+        foreground: 'schwarz', background: 'surface',
+        context: 'Kreislabel teilweise außerhalb der Körperfläche', minimum: 4.5,
+      },
+    ]));
+  });
 });
 
 describe('Anhang E, Teilslice E-c (E.1.29 bis E.1.37)', () => {
