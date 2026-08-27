@@ -219,7 +219,11 @@ function hasMeasuredCircleOrganizationContract(spec: SymbolSpec): boolean {
     !(spec.bodyMarks ?? []).some((mark) => COLORED_NORMAL_CIRCLE_ONLY_MARKS.has(mark));
 }
 
-const INSET_HULL_LABEL_FIELDS = new Set<PropertyKey>(['accessibilityMode', 'center']);
+const INSET_HULL_LABEL_FIELDS = new Set<PropertyKey>([
+  'accessibilityMode',
+  'center',
+  'centerCapHeightMm',
+]);
 
 type InsetHullLabelPreparation =
   | { readonly valid: false }
@@ -229,7 +233,7 @@ type InsetHullLabelPreparation =
     };
 
 /**
- * Der eingesenkten Wasserfahrzeughülle sind nur zwei einfache Datenfelder belegt. `Object.keys`
+ * Der eingesenkten Wasserfahrzeughülle sind nur drei einfache Datenfelder belegt. `Object.keys`
  * genügt dafür nicht: geerbte Werte liest `compose()` über die Prototypkette, Accessors können
  * beim Lesen Code ausführen, und nicht-enumerable bzw. Symbolfelder blieben unsichtbar. Akzeptiert
  * werden deshalb ausschließlich eigene, aufzählbare Datenfelder eines normalen oder
@@ -410,18 +414,37 @@ function validatePreparedSpec(
   const isInsetWatercraft =
     spec.kind === 'vehicle-water' && spec.bodyVariant === 'inset-hull';
 
-  if (isInsetWatercraft && spec.organization !== 'hilfsorganisation') {
-    issues.push({
-      rule: 'inset-hull-requires-hilfsorganisation',
-      message: 'inset-hull requires the measured white Hilfsorganisation body.',
-    });
+  if (isInsetWatercraft) {
+    const bodyMarks = spec.bodyMarks ?? [];
+    const isHilfsorganisation = spec.organization === 'hilfsorganisation';
+    const isFeuerwehr = spec.organization === 'feuerwehr';
+    const hasMeasuredBodyMark =
+      (isHilfsorganisation &&
+        (bodyMarks.length === 0 ||
+          (bodyMarks.length === 1 && bodyMarks[0] === 'inset-hull-wheel-pair'))) ||
+      (isFeuerwehr && bodyMarks.length === 1 && bodyMarks[0] === 'fire-fighting');
+
+    if (!isHilfsorganisation && !isFeuerwehr) {
+      issues.push({
+        rule: 'inset-hull-requires-measured-organization',
+        message:
+          'inset-hull is measured only for Hilfsorganisation or Feuerwehr body contracts.',
+      });
+    } else if (!hasMeasuredBodyMark) {
+      issues.push({
+        rule: 'inset-hull-requires-measured-body-mark',
+        message:
+          'inset-hull body marks are measured only as none or inset-hull-wheel-pair for ' +
+          'Hilfsorganisation, and fire-fighting for Feuerwehr.',
+      });
+    }
   }
 
   if (isInsetWatercraft) {
-    // I.3.5 bis I.3.7 belegen ausschließlich den mittigen Lauf. Das generische Labelmodell ist
-    // inzwischen breiter als dieser Vertrag (unter anderem durch die vermessenen N-Metriken).
-    // Deshalb erlauben wir die zwei bekannten nicht bzw. genau so gerenderten Felder explizit,
-    // statt eine Liste verbotener Zonen zu pflegen, die beim nächsten Feld still veraltet.
+    // Der vollständige I.3-Vertrag belegt drei sichere Felder: `accessibilityMode`, `center` und
+    // `centerCapHeightMm`. Das generische Labelmodell ist inzwischen breiter als dieser Vertrag
+    // (unter anderem durch die vermessenen N-Metriken). Deshalb erlauben wir diese drei Felder
+    // explizit, statt eine Liste verbotener Zonen zu pflegen, die beim nächsten Feld still veraltet.
     const hasUnmeasuredLabelZone = hasInvalidInsetHullLabelData;
 
     if (hasUnmeasuredLabelZone || spec.designation !== undefined) {
@@ -430,6 +453,13 @@ function validatePreparedSpec(
         message:
           'inset-hull supports only the measured center label zone and non-rendering ' +
           'accessibility metadata.',
+      });
+    }
+
+    if (spec.organization === 'feuerwehr' && spec.labels !== undefined) {
+      issues.push({
+        rule: 'inset-hull-fire-fighting-requires-no-labels',
+        message: 'The measured Feuerwehr inset-hull fire-fighting contract carries no labels.',
       });
     }
   }

@@ -155,6 +155,18 @@ describe('Fachreview-Ledger', () => {
     }
   });
 
+  it('führt für I.3 genau elf weiterhin offene Fachreviews', () => {
+    const keys = Object.keys(MANIFEST_DOMAIN_REVIEWS).filter((key) =>
+      /^bbk-babz-2025:I\.3\.(?:[1-9]|1[01])#primary$/.test(key),
+    );
+    expect(keys).toEqual(
+      Array.from({ length: 11 }, (_, index) => `bbk-babz-2025:I.3.${index + 1}#primary`),
+    );
+    for (const key of keys) {
+      expect(manifestDomainReviewFor(key)).toEqual({ status: 'pending' });
+    }
+  });
+
   it('führt für LFH-485 genau vier weiterhin offene I-g-Fachreviews', () => {
     const keys = Object.keys(MANIFEST_DOMAIN_REVIEWS).filter((key) =>
       /^bbk-babz-2025:I\.1\.(?:1[7-9]|20)#primary$/.test(key),
@@ -219,13 +231,13 @@ describe('Fachreview-Ledger', () => {
     // bis F.1.22 und die beiden Alternativdarstellungen; damit sind es hier 383.
     // F-d ergänzt acht einzelne, weiterhin offene Reviewplätze für F.2.10 bis F.2.17. F-e
     // ergänzt elf für F.3.1 bis F.3.11 und F-f die acht verbleibenden für F.3.12 bis F.3.19.
-    // Anhang D schließt den damaligen Stand bei 497. I-a, I-b, I-j und I-k ergänzen je drei;
-    // I-c, I-d und I-g je vier, I-e sowie I.5.4 bis I.5.8 je fünf. Der integrierte Stand
-    // schließt bei 528.
-    expect(manifestReviews).toHaveLength(528);
+    // Anhang D schließt den damaligen Stand bei 497. I-c, I-d und I-g ergänzen je vier,
+    // I-e und I.5.4 bis I.5.8 je fünf, I.2 drei, I.3 elf, I-j drei und I-k drei. Der
+    // integrierte Stand schließt bei 536.
+    expect(manifestReviews).toHaveLength(536);
     expect(sourceReviews).toHaveLength(13);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(542);
+    expect(reviews).toHaveLength(550);
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
   });
 

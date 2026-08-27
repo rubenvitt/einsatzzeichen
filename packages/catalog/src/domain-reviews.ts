@@ -406,12 +406,24 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:I.1.18#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.19#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.20#primary': { status: 'pending' },
+  // I.2 bleibt trotz freigegebener kategorieabhängiger Landfahrzeuggeometrie fachlich offen.
   'bbk-babz-2025:I.2.1#primary': { status: 'pending' },
   'bbk-babz-2025:I.2.2#primary': { status: 'pending' },
   'bbk-babz-2025:I.2.3#primary': { status: 'pending' },
+  // I.3 ist vollständig technisch umgesetzt; die elf source IDs werden im Manifesttest lückenlos
+  // aus dem Ledger abgeleitet. Das Erscheinungsbild ist durch Rezept-, Fingerprint- und Snapshot-
+  // Gates belegt, die organisatorische und fachliche Bedeutung bleibt dennoch ungeklärt.
+  'bbk-babz-2025:I.3.1#primary': { status: 'pending' },
+  'bbk-babz-2025:I.3.2#primary': { status: 'pending' },
+  'bbk-babz-2025:I.3.3#primary': { status: 'pending' },
+  'bbk-babz-2025:I.3.4#primary': { status: 'pending' },
   'bbk-babz-2025:I.3.5#primary': { status: 'pending' },
   'bbk-babz-2025:I.3.6#primary': { status: 'pending' },
   'bbk-babz-2025:I.3.7#primary': { status: 'pending' },
+  'bbk-babz-2025:I.3.8#primary': { status: 'pending' },
+  'bbk-babz-2025:I.3.9#primary': { status: 'pending' },
+  'bbk-babz-2025:I.3.10#primary': { status: 'pending' },
+  'bbk-babz-2025:I.3.11#primary': { status: 'pending' },
   // I.4.1 bis I.4.3 sind technisch als weiße HiOrg-Kreiszeichen rekonstruiert. Ob die sichtbaren
   // Marken fachlich richtig benannt und gegeneinander verwechslungsfrei sind, bleibt je
   // Darstellung offen; insbesondere leitet der Katalog aus I.4.1s Giebel keine neue Semantik ab.

@@ -195,6 +195,7 @@ describe('semantische Zeichenbeschreibungen', () => {
         'Veterinär-V mit kompakter Tierdekontaminationsmarke unten links',
       'h-veterinary-slaughter':
         'Veterinär-V mit Schlacht- und Untersuchungsmarke unten links',
+      'inset-hull-wheel-pair': 'Radpaar in der eingesenkten Wasserfahrzeughülle',
     });
     const task4TechnicalIds = [
       'ring-7mm-offset-down-1mm',
@@ -235,6 +236,7 @@ describe('semantische Zeichenbeschreibungen', () => {
       'air-rising-diagonal',
       'spontaneous-helper-collection-arrow',
       'spontaneous-helper-contact-double-arrow',
+      'inset-hull-wheel-pair',
     ] as const;
     const task1AnhangITechnicalIds = ['double-wave-inner-diamond-8mm'] as const;
     const task2RoleTechnicalIds = [

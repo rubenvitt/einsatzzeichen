@@ -28,6 +28,9 @@ const invertedLandBodyMm: BoundsMm = { minX: 1, minY: 6, maxX: 31, maxY: 25.75 }
 const raisedCircleOneMmBodyMm: BoundsMm = { minX: 4, minY: 3, maxX: 28, maxY: 27 };
 const compactPersonDiamondBodyMm: BoundsMm = { minX: 3, minY: 3, maxX: 29, maxY: 29 };
 const loweredCompactPersonDiamondBodyMm: BoundsMm = { minX: 3, minY: 5, maxX: 29, maxY: 31 };
+const insetWaterBodyMm: BoundsMm = {
+  minX: 1.0100, minY: 9.0001, maxX: 30.9894, maxY: 23.9898,
+};
 const bodyMark = (id: Parameters<typeof bodyMarkWithContext>[0], bounds: BoundsMm) =>
   bodyMarkWithContext(id, { kind: 'formation' }, bounds);
 
@@ -156,6 +159,77 @@ describe('bodyMark() — LFH-488 Anhang I.4 Wasserrettungsorte', () => {
       )).toThrow(/exakten Hülle/);
     },
   );
+});
+
+describe('bodyMark() — die technischen Innenzeichnungen der Körpermarken', () => {
+  it('zeichnet die separat vermessenen I.3.4- und I.3.11-Marken nur im eingesenkten Wasserrumpf', () => {
+    expect(bodyMarkWithContext(
+      'inset-hull-wheel-pair' as BodyMarkId,
+      { kind: 'vehicle-water', bodyVariant: 'inset-hull' },
+      insetWaterBodyMm,
+    )).toEqual([
+      { type: 'circle', role: 'pictogram', cx: 6.75, cy: 23.75, r: 2.25, style: outlineStyle },
+      { type: 'circle', role: 'pictogram', cx: 25.25, cy: 23.75, r: 2.25, style: outlineStyle },
+    ]);
+    expect(bodyMarkWithContext(
+      'fire-fighting',
+      { kind: 'vehicle-water', bodyVariant: 'inset-hull' },
+      insetWaterBodyMm,
+    )).toEqual([
+      line(2.263209, 15.000055, 21.249843, 15.000055),
+      line(21.249843, 15.000055, 29.736438, 15.000055),
+      line(21.249843, 15.000055, 26.749628, 9.250152),
+      line(21.249843, 15.000055, 25.901906, 19.901884),
+    ]);
+  });
+
+  it('lehnt die I.3.4- und I.3.11-Marken außerhalb ihres gemessenen Wasserrumpfs ab', () => {
+    for (const id of ['inset-hull-wheel-pair', 'fire-fighting'] as BodyMarkId[]) {
+      expect(() => bodyMarkWithContext(
+        id,
+        { kind: 'vehicle-water' },
+        insetWaterBodyMm,
+      ), `${id}/normal`).toThrow(/nicht vermessen/);
+      expect(() => bodyMarkWithContext(
+        id,
+        { kind: 'vehicle-land', bodyVariant: 'inset-hull' },
+        insetWaterBodyMm,
+      ), `${id}/vehicle-land`).toThrow(/nicht vermessen/);
+    }
+  });
+
+  it('bindet die I.3.4- und I.3.11-Marken an die exakt gemessene Rumpfhülle', () => {
+    for (const id of ['inset-hull-wheel-pair', 'fire-fighting'] as BodyMarkId[]) {
+      expect(() => bodyMarkWithContext(
+        id,
+        { kind: 'vehicle-water', bodyVariant: 'inset-hull' },
+        { ...insetWaterBodyMm, maxX: 31 },
+      ), id).toThrow(/29,9794 × 14,9897 mm/);
+    }
+  });
+
+  it.each([
+    ['waagerecht', 1, 0],
+    ['senkrecht', 0, 1],
+  ] as const)('lehnt die gleich große, aber %s verschobene I.3-Wasserrumpfhülle ab', (
+    _direction,
+    deltaX,
+    deltaY,
+  ) => {
+    const shiftedInsetWaterBodyMm: BoundsMm = {
+      minX: insetWaterBodyMm.minX + deltaX,
+      minY: insetWaterBodyMm.minY + deltaY,
+      maxX: insetWaterBodyMm.maxX + deltaX,
+      maxY: insetWaterBodyMm.maxY + deltaY,
+    };
+    for (const id of ['inset-hull-wheel-pair', 'fire-fighting'] as BodyMarkId[]) {
+      expect(() => bodyMarkWithContext(
+        id,
+        { kind: 'vehicle-water', bodyVariant: 'inset-hull' },
+        shiftedInsetWaterBodyMm,
+      ), id).toThrow(/exakten Hülle/);
+    }
+  });
 });
 
 describe('bodyMark() — Wasserrettungsfassung der Anhang-I-Landfahrzeuge', () => {
@@ -2359,6 +2433,8 @@ describe('BODY_MARK_IDS', () => {
       'patient-transport',
       'care',
       'water-rescue',
+      'double-wave-inner-diamond-8mm',
+      'inset-hull-wheel-pair',
     ]) {
       expect(BODY_MARK_IDS).toContain(id);
     }
@@ -2389,8 +2465,10 @@ describe('BODY_MARK_IDS', () => {
           ? [{ kind: 'vehicle-air', bodyVariant: 'raised-hull' } as const, raisedAirBodyMm] as const
         : id === 'air-horizontal-left-chevron' || id === 'air-rising-diagonal'
           ? [{ kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull' } as const, raisedAirBodyMm] as const
-        : id === 'top-center-rect-0-5x0-6mm'
+          : id === 'top-center-rect-0-5x0-6mm'
             ? [{ kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' } as const, landBodyMm] as const
+          : id === 'inset-hull-wheel-pair'
+            ? [{ kind: 'vehicle-water', bodyVariant: 'inset-hull' } as const, insetWaterBodyMm] as const
           : id === 'double-wave-inner-diamond-8mm'
             ? [{ kind: 'person', bodyVariant: 'compact-person-diamond-26mm' } as const,
               compactPersonDiamondBodyMm] as const
