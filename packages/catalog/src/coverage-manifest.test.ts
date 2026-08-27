@@ -74,7 +74,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 511 Zeilen mit 283 Elementdarstellungen', () => {
+  it('enthält exakt 516 Zeilen mit 288 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -83,7 +83,8 @@ describe('Coverage-Manifest', () => {
         entry.implementation.startsWith('comms.') ||
         entry.implementation.startsWith('damage.') ||
         entry.implementation.startsWith('wildfire.') ||
-        entry.implementation.startsWith('leadership.'),
+        entry.implementation.startsWith('leadership.') ||
+        entry.implementation.startsWith('water-rescue-personnel.'),
     );
     const counts = COVERAGE_MANIFEST.entries.reduce<Record<string, number>>((acc, e) => {
       acc[e.coverage] = (acc[e.coverage] ?? 0) + 1;
@@ -106,16 +107,16 @@ describe('Coverage-Manifest', () => {
       // G ergänzt 21 Rezepte, H, I-a, I-b und I-j je drei, I-d und I-g je vier, C.1.3 eins und N neun.
       // Anhang D ergänzt 26 neue Rezepte; D.3.7 bleibt eine Migration desselben Schlüssels.
       'composition-recipe': 214,
-      // 264 Piktogramme plus acht Manifest-Organisationen, vier
+      // 269 Piktogramme plus acht Manifest-Organisationen, vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
       // `amphibienfahrzeug` hat weiterhin keinen Eintrag, weil seine Wellenlinie nur als
       // Strichhülle vermessen ist.
-      element: 283,
+      element: 288,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(511);
-    expect(elementRows).toHaveLength(283);
-    expect(pictogramRows).toHaveLength(264);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(516);
+    expect(elementRows).toHaveLength(288);
+    expect(pictogramRows).toHaveLength(269);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
   });
 
@@ -736,6 +737,11 @@ describe('Coverage-Manifest', () => {
       'I.4.1',
       'I.4.2',
       'I.4.3',
+      'I.5.4',
+      'I.5.5',
+      'I.5.6',
+      'I.5.7',
+      'I.5.8',
       'J.1',
       'J.2',
       'J.3',
@@ -789,7 +795,7 @@ describe('Manifest-Einträge für Piktogramme', () => {
       .filter((entry) => definitionKeys.has(entryKey(entry.implementation, entry.variant)))
       .map((entry) => entryKey(entry.implementation, entry.variant))
       .sort();
-    expect(rows).toHaveLength(264);
+    expect(rows).toHaveLength(269);
     expect(rows).toEqual([...definitionKeys].sort());
   });
 

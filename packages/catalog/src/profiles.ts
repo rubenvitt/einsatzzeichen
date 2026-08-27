@@ -15,15 +15,18 @@ export const PROFILES: Record<ProfileId, ProfileRecord> = {
   bund: {
     id: 'bund',
     title: 'Bundesweiter Kern',
-    version: '0.1.0',
+    version: '0.2.0',
     sources: ['bbk-babz-2025', 'babz-svg-2025'],
-    verifiedAgainstCore: '0.1.0',
+    verifiedAgainstCore: '0.2.0',
     review: {
       technical: {
         status: 'approved',
         reviewer: 'rv',
-        date: '2026-08-05',
-        note: 'Versionsfelder und Quellenbezüge sind vom Coverage-Gate geprüft.',
+        date: '2026-08-27',
+        note:
+          'Kernversion 0.2.0, Profilversion und verifiedAgainstCore sind nach den neuen ' +
+          'öffentlichen LFH-490-Piktogramm-IDs synchron; Versionsfelder und Quellenbezüge ' +
+          'prüft das Coverage-Gate.',
       },
       domain: profileDomainReviewFor('bund'),
     },
