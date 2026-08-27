@@ -131,14 +131,14 @@ erst nach grünen Gates freigegeben; die korrespondierenden Domain-Reviews bleib
 
 ## 5. Erwartete mechanische Deltas
 
-| Größe | Basis | LFH-481 |
+| Größe | integrierte `origin/main`-Basis | LFH-481 |
 |---|---:|---:|
-| Rezepte | 200 | 204 |
-| Renderfälle | 478 | 482 |
-| direkte SVG-Snapshots | 214 | 218 |
-| Mehrgrößen-Snapshots | 479 | 483 |
-| Manifestzeilen | 497 | 501 |
-| offene Reviews gesamt | 511 | 515 |
+| Rezepte | 207 | 211 |
+| Renderfälle | 485 | 489 |
+| direkte SVG-Snapshots | 221 | 225 |
+| Mehrgrößen-Snapshots | 486 | 490 |
+| Manifestzeilen | 504 | 508 |
+| offene Reviews gesamt | 518 | 522 |
 | Elementzeilen | 283 | 283 |
 
 ## 6. Test- und Visualstrategie

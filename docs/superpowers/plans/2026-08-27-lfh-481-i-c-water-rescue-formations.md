@@ -196,8 +196,8 @@ geometry and recipe identity. The compact I-g `water-rescue` formation mark rema
 **Interfaces:**
 
 - Consumes: four live recipes from Task 2.
-- Produces: 501 manifest rows, 515 review rows, 482 render cases, 218 direct snapshots and 483
-  multi-size snapshots.
+- Produces: 508 manifest rows, 522 review rows, 489 render cases, 225 direct snapshots and 490
+  multi-size snapshots on the integrated `origin/main` basis.
 
 - [ ] **Step 1: Write RED count, scope and review assertions**
 

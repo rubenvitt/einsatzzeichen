@@ -1,7 +1,9 @@
 # Visual QA: Anhang I-c
 
-Datum: 27. August 2026  
-Scope: I.1.1 bis I.1.4  
+Datum: 27. August 2026
+
+Scope: I.1.1 bis I.1.4
+
 Status: technische Semantik, output-only Sichtprüfung und lokaler Originalvergleich abgeschlossen;
 alle Domain-Reviews `pending`
 
