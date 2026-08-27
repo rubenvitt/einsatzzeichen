@@ -21,6 +21,7 @@ const landBodyMm: BoundsMm = { minX: 1, minY: 5.75, maxX: 31, maxY: 26 };
 const airBodyMm: BoundsMm = { minX: 1, minY: 8, maxX: 31, maxY: 23 };
 const raisedAirBodyMm: BoundsMm = { minX: 1.01, minY: 6, maxX: 30.99, maxY: 20.99 };
 const trailerBodyMm: BoundsMm = { minX: 4, minY: 5.75, maxX: 31, maxY: 26 };
+const translatedTrailerBodyMm: BoundsMm = { minX: 5, minY: 6.75, maxX: 32, maxY: 27 };
 const circleBodyMm: BoundsMm = { minX: 4, minY: 4, maxX: 28, maxY: 28 };
 const raisedCircleBodyMm: BoundsMm = { minX: 4, minY: 6, maxX: 28, maxY: 30 };
 const reducedHouseBodyMm: BoundsMm = { minX: 2, minY: 4, maxX: 30, maxY: 26 };
@@ -194,6 +195,14 @@ describe('bodyMark() — die vermessenen Wasserrettungs-Anhänger', () => {
       { kind: 'vehicle-water' },
       airBodyMm,
     )).toThrow(/nicht vermessen/);
+  });
+
+  it('lehnt gleich große, aber gegenüber der vermessenen Anhängerhülle verschobene Marken ab', () => {
+    expect(() => bodyMarkWithContext(
+      'trailer-water-rescue' as BodyMarkId,
+      { kind: 'trailer' },
+      translatedTrailerBodyMm,
+    )).toThrow(/4.*5,75.*31.*26/);
   });
 });
 

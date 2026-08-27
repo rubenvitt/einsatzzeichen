@@ -1558,6 +1558,22 @@ export function bodyMark(
 
   const widthMm = bodyBoundsMm.maxX - bodyBoundsMm.minX;
   const heightMm = bodyBoundsMm.maxY - bodyBoundsMm.minY;
+  const isMeasuredTrailerTechnicalMark =
+    context.kind === 'trailer' && context.bodyVariant === undefined &&
+    Object.hasOwn(TRAILER_MARKS, id);
+  if (
+    isMeasuredTrailerTechnicalMark && (
+      Math.abs(bodyBoundsMm.minX - 4) > BODY_TOLERANCE_MM ||
+      Math.abs(bodyBoundsMm.minY - 5.75) > BODY_TOLERANCE_MM ||
+      Math.abs(bodyBoundsMm.maxX - 31) > BODY_TOLERANCE_MM ||
+      Math.abs(bodyBoundsMm.maxY - 26) > BODY_TOLERANCE_MM
+    )
+  ) {
+    throw new Error(
+      `Die technische Anhängermarke "${id}" ist ausschließlich an der absolut vermessenen ` +
+        'Hülle 4 / 5,75 / 31 / 26 mm belegt; gleich große verschobene Anhängerhüllen sind nicht vermessen.',
+    );
+  }
   const expected = context.kind === 'formation'
     ? { width: 30, height: 20, label: '30 × 20 mm' }
     : context.kind === 'person'

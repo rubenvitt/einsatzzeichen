@@ -122,7 +122,7 @@ export const TECHNICAL_BODY_MARK_LABELS = Object.freeze({
   'h-veterinary-slaughter':
     'Veterinär-V mit Schlacht- und Untersuchungsmarke unten links',
   'trailer-water-rescue': 'Doppelwelle mit Raute für Wasserrettung',
-  'trailer-diving': 'Doppelwelle mit kleiner Raute für Tauchen',
+  'trailer-diving': 'Doppelwelle mit kleiner Raute',
   'trailer-boat-hull': 'Schwarzer Bootsrumpf mit weißem Innenraum',
 } satisfies Record<TechnicalBodyMarkId, string>);
 

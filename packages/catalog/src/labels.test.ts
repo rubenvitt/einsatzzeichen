@@ -243,9 +243,20 @@ describe('semantische Zeichenbeschreibungen', () => {
       'formation-solid-cap-4mm-three-hole-row':
         'Schwarze Formationskappe, 4 mm hoch, mit drei Löchern in einer Reihe',
       'trailer-water-rescue': 'Doppelwelle mit Raute für Wasserrettung',
-      'trailer-diving': 'Doppelwelle mit kleiner Raute für Tauchen',
+      'trailer-diving': 'Doppelwelle mit kleiner Raute',
       'trailer-boat-hull': 'Schwarzer Bootsrumpf mit weißem Innenraum',
     });
+  });
+
+  it('beschreibt die gemeinsame Anhängerwelle von I.2.6 ohne eine falsche Tauchen-Semantik', () => {
+    const description = describeSymbolSpec({
+      kind: 'trailer',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['trailer-diving'],
+      labels: { center: 'Strömungsrettung' },
+    });
+    expect(description).toContain('Technische Körpermarke: Doppelwelle mit kleiner Raute');
+    expect(description).not.toContain('Tauchen');
   });
 
   it('beschreibt Funktion, Kopfart und alle sichtbaren Funktionsläufe', () => {
