@@ -38,11 +38,12 @@ describe('coverage CLI', () => {
     // Ortsdefinitionen: 478. D.3 ergänzt zwölf neue Rezepte und zwei direkte offene
     // Kappen; D.3.7 behält seinen vorhandenen Schlüssel: 492. D.4 schließt bei 497 Zeilen;
     // I-d und I-g ergänzen je vier, I-b und I-j je drei sowie I.5 fünf Wasserrettungszeilen:
-    // insgesamt 516. LFH-480 ergänzt danach genau acht zuvor fehlende I.3-Zeilen: 524.
-    expect(manifestReviews).toBe(524);
+    // insgesamt 516. LFH-480 ergänzt danach genau acht zuvor fehlende I.3-Zeilen auf 524;
+    // LFH-483 ergänzt abschließend die fünf I-e-Darstellungen auf 529.
+    expect(manifestReviews).toBe(529);
     expect(sourceReviews).toBe(13);
     expect(profileReviews).toBe(1);
-    expect(openReviews).toBe(538);
+    expect(openReviews).toBe(543);
     expect(lines).toContain('Kernversion: 0.2.0 (Profil "bund": 0.2.0)');
     // **Die Umfangszeile ist wieder kurz.** Der Teilslice E.2 hatte sie auf 47 Einträge gedehnt,
     // weil E.2 mit einem fehlenden Abschnitt nur abschnittsweise behauptbar war. Seit E.2.6
@@ -52,7 +53,7 @@ describe('coverage CLI', () => {
     // ihren vier, I-b und I-j jeweils auf ihren drei sowie I.5 auf seinen fünf gebauten
     // Einzelabschnitten statt pauschal auf `I.1`, `I.2`, `I.4`, `I.5` oder `I` begrenzt.
     expect(lines).toContain(
-      'Umfang:      1, 2, 4, 5.1.1, 5.4, 5.8, C.1.1, C.1.2, C.1.3, D, E, F, G, H, I.1.5, I.1.6, I.1.7, I.1.8, I.1.17, I.1.18, I.1.19, I.1.20, I.2.1, I.2.2, I.2.3, I.3, I.4.1, I.4.2, I.4.3, I.5.4, I.5.5, I.5.6, I.5.7, I.5.8, J.1, J.2, J.3, J.4, K, L, M, N',
+      'Umfang:      1, 2, 4, 5.1.1, 5.4, 5.8, C.1.1, C.1.2, C.1.3, D, E, F, G, H, I.1.5, I.1.6, I.1.7, I.1.8, I.1.9, I.1.10, I.1.11, I.1.12, I.1.17, I.1.18, I.1.19, I.1.20, I.2.1, I.2.2, I.2.3, I.3, I.4.1, I.4.2, I.4.3, I.5.4, I.5.5, I.5.6, I.5.7, I.5.8, J.1, J.2, J.3, J.4, K, L, M, N',
     );
     // Die Ausnahme ist im Betrieb sichtbar und nicht nur im Gate. Sie steht bewusst **nicht** in
     // der Blockerzeile darunter: ein Blocker ist ein offener Punkt, diese Ausnahme ist ein

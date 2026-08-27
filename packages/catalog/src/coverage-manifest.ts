@@ -425,6 +425,17 @@ const ANHANG_H_TECHNICAL_REVIEW: Review = {
     'fachliche Zuordnung bleibt im Domain-Review pending.',
 };
 
+const ANHANG_I_E_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-27',
+  note:
+    'I.1.9-I.1.12 passed measured formation-specific water-rescue and ' +
+    'watercraft-operations body-mark, literal recipe, primary-alternative, direct-snapshot ' +
+    'and multi-size gates. The white Hilfsorganisation body is a technical rendering ' +
+    'decision; domain classification remains pending.',
+};
+
 const ANHANG_I_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
@@ -446,7 +457,9 @@ const ANHANG_I_G_TECHNICAL_REVIEW: Review = {
   reviewer: 'rv',
   date: '2026-08-27',
   note:
-    'I.1.17-I.1.20 passed measured formation body marks, 16 mm center-baseline, 2.5 mm ' +
+    'I.1.17-I.1.20 passed the separately registered formation-water-rescue-lower-zone body ' +
+    'mark, distinct from the I-e water-rescue and I-d compact geometries, plus 16 mm ' +
+    'center-baseline, 2.5 mm ' +
     'cap-height and 29 mm output-box contracts, literal recipe, direct-snapshot, multi-size, ' +
     'coverage and ' +
     'output-only visual QA gates. Opposed triangles and chevron remain separate geometric ' +
@@ -475,6 +488,11 @@ const ANHANG_I_TECHNICAL_REVIEW_BY_SECTION = {
   'I.1.6': ANHANG_I_D_TECHNICAL_REVIEW,
   'I.1.7': ANHANG_I_D_TECHNICAL_REVIEW,
   'I.1.8': ANHANG_I_D_TECHNICAL_REVIEW,
+  'I.1.9': ANHANG_I_E_TECHNICAL_REVIEW,
+  'I.1.9#alternative': ANHANG_I_E_TECHNICAL_REVIEW,
+  'I.1.10': ANHANG_I_E_TECHNICAL_REVIEW,
+  'I.1.11': ANHANG_I_E_TECHNICAL_REVIEW,
+  'I.1.12': ANHANG_I_E_TECHNICAL_REVIEW,
   'I.1.17': ANHANG_I_G_TECHNICAL_REVIEW,
   'I.1.18': ANHANG_I_G_TECHNICAL_REVIEW,
   'I.1.19': ANHANG_I_G_TECHNICAL_REVIEW,
@@ -501,7 +519,7 @@ const ANHANG_I_TECHNICAL_REVIEW_BY_SECTION = {
 /**
  * Ordnet nur einen tatsächlich integrierten Anhang-I-Schlüssel seinem separat belegten
  * technischen Review zu. Neue Schlüssel brauchen zuerst einen expliziten Eintrag; insbesondere
- * erbt ein neuer I.1-Abschnitt weder das I-d- noch das I-g-Review über einen Präfixschluss.
+ * erbt ein neuer I.1-Abschnitt weder das I-d-, I-e- noch das I-g-Review über einen Präfixschluss.
  */
 export function technicalReviewForAnhangI(section: string): Review {
   if (!Object.hasOwn(ANHANG_I_TECHNICAL_REVIEW_BY_SECTION, section)) {
@@ -1194,6 +1212,10 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'I.1.6',
     'I.1.7',
     'I.1.8',
+    'I.1.9',
+    'I.1.10',
+    'I.1.11',
+    'I.1.12',
     'I.1.17',
     'I.1.18',
     'I.1.19',

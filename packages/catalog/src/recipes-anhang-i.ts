@@ -5,7 +5,6 @@ const I_2_TOP_LEFT_METRICS = {
   baselineFromBodyTopMm: 6.55959,
   anchorFromBodyLeftMm: 1.56869,
 } as const;
-
 /**
  * Gemeinsame Anhang-I-Aggregation. Die einzelnen LFH-Slices bleiben über ihre exakten Schlüssel
  * und die korrespondierenden technischen Reviews getrennt, werden aber nur einmal in `RECIPES`
@@ -53,6 +52,62 @@ export const ANHANG_I_RECIPES = {
       bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3mm'],
     },
   },
+  // LFH-483 / Anhang I-e: vier Abschnitte mit fünf vermessenen Darstellungen.
+  'I.1.9': {
+    title: 'Bootstrupp Wasserrettungszug',
+    referenceAsset: 'I.1.9_Bootstrupp Wasserrettungszug.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'trupp',
+      bodyMarks: ['water-rescue'],
+      labels: { topLeft: 'Boot' },
+    },
+  },
+  'I.1.9#alternative': {
+    title: 'Bootstrupp Wasserrettungszug',
+    referenceAsset: 'I.1.9_Bootstrupp Wasserrettungszug_Alternative.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'trupp',
+      bodyMarks: ['watercraft-operations'],
+      labels: { topLeft: 'WRZ' },
+    },
+  },
+  'I.1.10': {
+    title: 'Bootsgruppe Wasserrettung',
+    referenceAsset: 'I.1.10_Bootsgruppe Wasserrettung.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'gruppe',
+      bodyMarks: ['water-rescue'],
+      labels: { topLeft: 'Boot' },
+    },
+  },
+  'I.1.11': {
+    title: 'Tauchtrupp',
+    referenceAsset: 'I.1.11_Tauchtrupp.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'trupp',
+      bodyMarks: ['water-rescue'],
+      labels: { topLeft: 'Tauchen' },
+    },
+  },
+  'I.1.12': {
+    title: 'Tauchgruppe',
+    referenceAsset: 'I.1.12_Tauchgruppe.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'gruppe',
+      bodyMarks: ['water-rescue'],
+      labels: { topLeft: 'Tauchen' },
+    },
+  },
   // LFH-485 / Anhang I-g: Die Wasserrettungsmarke ist die separat vermessene kompakte
   // Formationsfassung. Dreieckspaar und Winkel bleiben geometrisch getrennt. Der Textlauf der
   // ersten beiden Rezepte steht auf y=10,0 mm; die idealisierte Versalhöhe beträgt 2,5 mm.
@@ -63,7 +118,7 @@ export const ANHANG_I_RECIPES = {
       kind: 'formation',
       organization: 'hilfsorganisation',
       strength: 'trupp',
-      bodyMarks: ['water-rescue'],
+      bodyMarks: ['formation-water-rescue-lower-zone'],
       labels: {
         center: 'Strömungsrettung',
         centerBaselineFromBodyBottomMm: 16,
@@ -79,7 +134,7 @@ export const ANHANG_I_RECIPES = {
       kind: 'formation',
       organization: 'hilfsorganisation',
       strength: 'gruppe',
-      bodyMarks: ['water-rescue'],
+      bodyMarks: ['formation-water-rescue-lower-zone'],
       labels: {
         center: 'Strömungsrettung',
         centerBaselineFromBodyBottomMm: 16,
@@ -95,7 +150,7 @@ export const ANHANG_I_RECIPES = {
       kind: 'formation',
       organization: 'hilfsorganisation',
       strength: 'trupp',
-      bodyMarks: ['water-rescue', 'formation-opposed-triangles-top'],
+      bodyMarks: ['formation-water-rescue-lower-zone', 'formation-opposed-triangles-top'],
     },
   },
   'I.1.20': {
@@ -105,7 +160,7 @@ export const ANHANG_I_RECIPES = {
       kind: 'formation',
       organization: 'hilfsorganisation',
       strength: 'trupp',
-      bodyMarks: ['water-rescue', 'formation-chevron-top'],
+      bodyMarks: ['formation-water-rescue-lower-zone', 'formation-chevron-top'],
     },
   },
   // LFH-486 / Anhang I-b: drei separat vermessene Wasserrettungs-Landfahrzeuge.

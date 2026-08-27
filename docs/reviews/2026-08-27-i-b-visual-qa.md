@@ -16,9 +16,9 @@ des Kontaktbogens. Die drei generierten Direkt- und Mehrgrößenpaare bleiben ei
 Katalogprüfung; sie behaupten weder Pixelidentität mit einem Original noch eine fachliche oder
 lizenzrechtliche Freigabe.
 
-Vor der Sichtprüfung liefen die vollständigen direkten und Mehrgrößen-Snapshotdateien auf dem
-integrierten Branch-Stand mit `745/745` Tests grün. Dieser Stand enthält exakt `236` direkte und
-`506` Mehrgrößen-Snapshots.
+Für den nun integrierten Branch-Stand liefen die vollständigen direkten und
+Mehrgrößen-Snapshotdateien nach dem additiven LFH-483-Merge mit `755/755` Tests grün. Dieser
+Stand enthält exakt `241` direkte und `511` Mehrgrößen-Snapshots.
 
 ## Einzelprotokoll
 
