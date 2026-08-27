@@ -39,10 +39,14 @@ import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
 import { ANHANG_I_A_RECIPES } from './recipes-anhang-i.js';
 
+/** I.5 hält `white` als technische Körperfüllung außerhalb der Kapitel-2-Organisationen fest. */
+const catalogOrganizationColor: CatalogPorts['organizationColor'] = (organization) =>
+  organization === ('white' as never) ? 'weiss' : organizationColor(organization);
+
 const PORTS: CatalogPorts = {
   baseDrawing,
   bodyMark,
-  organizationColor,
+  organizationColor: catalogOrganizationColor,
   strengthHead,
   functionRole,
   administrativeHead,

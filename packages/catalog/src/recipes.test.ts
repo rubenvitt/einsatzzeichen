@@ -59,6 +59,7 @@ function horizontalPictogramLineYMm(drawing: Drawing): number | undefined {
 }
 
 const D_4_3_REFERENCE_ASSET = 'D.4.3_Leiter Gefahrenabwehr Mönchengladbach.svg';
+const I_5_3_REFERENCE_ASSET = 'I.5.3_Taucher.svg';
 const D_4_3_STAR_BOUNDS = [
   {
     kind: 'bounds',
@@ -73,6 +74,18 @@ const D_4_3_STAR_BOUNDS = [
 function comparableBodyFingerprint(
   fingerprint: ReturnType<typeof fingerprintFor>,
 ): ReturnType<typeof fingerprintFor> {
+  if (fingerprint.asset === I_5_3_REFERENCE_ASSET) {
+    const labelTOutline = fingerprint.shapes.filter((shape) => shape.kind === 'outline');
+    expect(labelTOutline).toEqual([{
+      kind: 'outline',
+      boundsMm: { minXMm: 1.089, minYMm: 1.081, maxXMm: 3.339, maxYMm: 4 },
+    }]);
+    return {
+      ...fingerprint,
+      // Der zusätzliche Pfad ist das T des literalen Labels „Taucher", nicht Teil der Raute.
+      shapes: fingerprint.shapes.filter((shape) => shape.kind !== 'outline'),
+    };
+  }
   if (fingerprint.asset !== D_4_3_REFERENCE_ASSET) return fingerprint;
   const starBounds = fingerprint.shapes.filter((shape) => shape.kind === 'bounds');
   expect(starBounds).toEqual(D_4_3_STAR_BOUNDS);
@@ -473,7 +486,7 @@ describe('Anhang D.1, Führungsstellen im Einsatz', () => {
 
   it('führt exakt die neun komponierten D.1-Darstellungen', () => {
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('D.1.'))).toEqual(expectedKeys);
-    expect(Object.keys(RECIPES)).toHaveLength(200);
+    expect(Object.keys(RECIPES)).toHaveLength(203);
   });
 
   it('bindet D.1.2 bis D.1.8 an die sieben gemessenen Formationsrollen', () => {
@@ -1017,7 +1030,7 @@ describe('Anhang G — vollständiges Logistikinventar', () => {
     expect(actual).toEqual(expected);
     expect(Object.keys(actual)).toEqual(Object.keys(expected));
     expect(Object.keys(actual).every((key) => !key.includes('#'))).toBe(true);
-    expect(Object.keys(RECIPES)).toHaveLength(200);
+    expect(Object.keys(RECIPES)).toHaveLength(203);
   });
 
   it('bindet die 21 primary- und Referenz-IDs exakt und ohne Alternative', () => {
@@ -1071,7 +1084,7 @@ describe('Anhang I, Teilslice I-a (I.3.5 bis I.3.7)', () => {
     // ein vertauschtes MzAB/MzPt ergäbe weiter eine valide Komposition, aber ein falsches Bild.
     const actual = Object.fromEntries(
       Object.entries(recipes)
-        .filter(([section]) => section.startsWith('I.'))
+        .filter(([section]) => /^I\.3\./.test(section))
         .map(([section, recipe]) => {
         return [
           section,
@@ -1123,6 +1136,107 @@ describe('Anhang I, Teilslice I-a (I.3.5 bis I.3.7)', () => {
       expect(labels[0]?.y).toBeCloseTo(15.9999, 3);
     },
   );
+});
+
+describe('Anhang I, Teilslice I.5 (I.5.1 bis I.5.3)', () => {
+  const expected = {
+    'I.5.1': {
+      title: 'Einsatzkraft Wasserrettung',
+      referenceAsset: 'I.5.1_Einsatzkraft Wasserrettung.svg',
+      spec: {
+        kind: 'person',
+        bodyVariant: 'compact-person-diamond-26mm',
+        organization: 'white' as never,
+        bodyMarks: ['double-wave-inner-diamond-8mm'],
+      },
+    },
+    'I.5.2': {
+      title: 'Strömungsretter',
+      referenceAsset: 'I.5.2_Strömungsretter.svg',
+      spec: {
+        kind: 'person',
+        bodyVariant: 'compact-person-diamond-26mm-lowered-2mm',
+        organization: 'white' as never,
+        bodyMarks: ['double-wave-inner-diamond-8mm'],
+        labels: {
+          aboveLeft: 'Strömungsretter',
+          aboveLeftMetrics: {
+            capHeightMm: 2,
+            anchorFromBodyLeftMm: -2,
+            baselineFromBodyTopMm: -1.5,
+          },
+        },
+      },
+    },
+    'I.5.3': {
+      title: 'Taucher',
+      referenceAsset: 'I.5.3_Taucher.svg',
+      spec: {
+        kind: 'person',
+        bodyVariant: 'compact-person-diamond-26mm-lowered-2mm',
+        organization: 'white' as never,
+        bodyMarks: ['double-wave-inner-diamond-8mm'],
+        labels: {
+          aboveLeft: 'Taucher',
+          aboveLeftMetrics: {
+            capHeightMm: 2,
+            anchorFromBodyLeftMm: -2,
+            baselineFromBodyTopMm: -1,
+          },
+        },
+      },
+    },
+  } as const satisfies Record<string, Recipe>;
+
+  it('bindet ausschließlich die drei vermessenen Wasserrettungsrezepte literal an Quelle und Geometrie', () => {
+    const actual = Object.fromEntries(
+      Object.entries(RECIPES).filter(([section]) => section.startsWith('I.5.')),
+    );
+    expect(actual).toEqual(expected);
+  });
+
+  it.each(Object.entries(expected))(
+    '%s verwendet ausschließlich die technische Doppelwelle mit Innenraute ohne Fachsemantik',
+    (section, recipe) => {
+      const actual = (RECIPES as Record<string, Recipe>)[section];
+      expect(actual).toBeDefined();
+      if (actual === undefined) return;
+
+      expect(actual.spec.organization).toBe('white');
+      expect(actual.spec.bodyMarks).toEqual(['double-wave-inner-diamond-8mm']);
+      const spec = actual.spec as unknown as Record<string, unknown>;
+      expect(spec.capability).toBeUndefined();
+      expect(spec.functionRole).toBeUndefined();
+      expect(spec.qualification).toBeUndefined();
+      expect(validateSpec(actual.spec)).toEqual([]);
+
+      const drawing = composeFromCatalog(actual.spec, actual.title);
+      expect(matchFingerprint(drawing, comparableBodyFingerprint(fingerprintFor(recipe.referenceAsset)))).toMatchObject({
+        ok: true,
+        problems: [],
+      });
+    },
+  );
+
+  it.each([
+    ['I.5.1', undefined, undefined, undefined],
+    ['I.5.2', 'Strömungsretter', 1, 3.5],
+    ['I.5.3', 'Taucher', 1, 4],
+  ] as const)('%s hält die gemessene Above-left-Textlage fest', (section, content, x, y) => {
+    const recipe = RECIPES[section]!;
+    const labels = composeFromCatalog(recipe.spec, recipe.title).children.filter(
+      (child): child is Primitive & { type: 'text' } => child.type === 'text' && child.role === 'label',
+    );
+    if (content === undefined) {
+      expect(labels).toEqual([]);
+      return;
+    }
+
+    expect(labels).toHaveLength(1);
+    expect(labels[0]?.content).toBe(content);
+    expect(labels[0]?.x).toBeCloseTo(x, 12);
+    expect(labels[0]?.y).toBeCloseTo(y, 12);
+  });
 });
 
 describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
@@ -2362,7 +2476,7 @@ describe('Anhang F, Teilslice F-f', () => {
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(200);
+    expect(Object.keys(RECIPES)).toHaveLength(203);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {

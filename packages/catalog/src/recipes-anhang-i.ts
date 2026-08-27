@@ -1,6 +1,52 @@
 import type { Recipe } from './recipes.js';
 
 export const ANHANG_I_A_RECIPES = {
+  'I.5.1': {
+    title: 'Einsatzkraft Wasserrettung',
+    referenceAsset: 'I.5.1_Einsatzkraft Wasserrettung.svg',
+    spec: {
+      kind: 'person',
+      bodyVariant: 'compact-person-diamond-26mm',
+      organization: 'white' as never,
+      bodyMarks: ['double-wave-inner-diamond-8mm'],
+    },
+  },
+  'I.5.2': {
+    title: 'Strömungsretter',
+    referenceAsset: 'I.5.2_Strömungsretter.svg',
+    spec: {
+      kind: 'person',
+      bodyVariant: 'compact-person-diamond-26mm-lowered-2mm',
+      organization: 'white' as never,
+      bodyMarks: ['double-wave-inner-diamond-8mm'],
+      labels: {
+        aboveLeft: 'Strömungsretter',
+        aboveLeftMetrics: {
+          capHeightMm: 2,
+          anchorFromBodyLeftMm: -2,
+          baselineFromBodyTopMm: -1.5,
+        },
+      },
+    },
+  },
+  'I.5.3': {
+    title: 'Taucher',
+    referenceAsset: 'I.5.3_Taucher.svg',
+    spec: {
+      kind: 'person',
+      bodyVariant: 'compact-person-diamond-26mm-lowered-2mm',
+      organization: 'white' as never,
+      bodyMarks: ['double-wave-inner-diamond-8mm'],
+      labels: {
+        aboveLeft: 'Taucher',
+        aboveLeftMetrics: {
+          capHeightMm: 2,
+          anchorFromBodyLeftMm: -2,
+          baselineFromBodyTopMm: -1,
+        },
+      },
+    },
+  },
   'I.3.5': {
     title: 'Mehrzweckboot',
     referenceAsset: 'I.3.5_Mehrzweckboot.svg',

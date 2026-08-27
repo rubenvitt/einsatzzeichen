@@ -383,6 +383,12 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:I.3.5#primary': { status: 'pending' },
   'bbk-babz-2025:I.3.6#primary': { status: 'pending' },
   'bbk-babz-2025:I.3.7#primary': { status: 'pending' },
+  // Die drei I.5-Rezepte bilden ausschließlich die vermessene Geometrie, Doppelwelle und den
+  // sichtbaren Text ab. Ob der weiße Körper fachlich Wasserrettungspersonal bezeichnet, bleibt
+  // unabhängig von der technischen Bildtreue offen.
+  'bbk-babz-2025:I.5.1#primary': { status: 'pending' },
+  'bbk-babz-2025:I.5.2#primary': { status: 'pending' },
+  'bbk-babz-2025:I.5.3#primary': { status: 'pending' },
   'bbk-babz-2025:2.1#primary': { status: 'pending' },
   // 2.2 seit LFH-424. Fachlich besonders zu prüfen: die Zuordnung „HiOrg = Hilfsorganisation" ist
   // aus dem gerasterten Bild abgelesen, nicht aus dem Dateinamen — der ist generisch
