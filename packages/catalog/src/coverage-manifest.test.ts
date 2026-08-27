@@ -74,7 +74,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 508 Zeilen mit 283 Elementdarstellungen', () => {
+  it('enthält exakt 517 Zeilen mit 288 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -83,7 +83,8 @@ describe('Coverage-Manifest', () => {
         entry.implementation.startsWith('comms.') ||
         entry.implementation.startsWith('damage.') ||
         entry.implementation.startsWith('wildfire.') ||
-        entry.implementation.startsWith('leadership.'),
+        entry.implementation.startsWith('leadership.') ||
+        entry.implementation.startsWith('water-rescue-personnel.'),
     );
     const counts = COVERAGE_MANIFEST.entries.reduce<Record<string, number>>((acc, e) => {
       acc[e.coverage] = (acc[e.coverage] ?? 0) + 1;
@@ -103,35 +104,37 @@ describe('Coverage-Manifest', () => {
       // `alternative` — die Zeile zählt einzeln, weil das Manifest Darstellungen zählt und nicht
       // Abschnitte, weil F.1.3 dort noch bewusst offen blieb; F-b baut es mit `foot-band`.
       // F-d ergänzt F.2.10 bis F.2.17 als acht reine Anwendungen des Fahrzeugvertrags.
-      // G ergänzt 21 Rezepte, H, I-a und I-j je drei, I-g und I-b je vier, C.1.3 ein weiteres
-      // und N neun weitere.
+      // G ergänzt 21 Rezepte, H, I-a und I-j je drei, I-d, I-g und I-b je vier, C.1.3 eins und
+      // N neun.
       // Anhang D ergänzt 26 neue Rezepte; D.3.7 bleibt eine Migration desselben Schlüssels.
-      'composition-recipe': 211,
-      // 264 Piktogramme plus acht Manifest-Organisationen, vier
+      'composition-recipe': 215,
+      // 269 Piktogramme plus acht Manifest-Organisationen, vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
       // `amphibienfahrzeug` hat weiterhin keinen Eintrag, weil seine Wellenlinie nur als
       // Strichhülle vermessen ist.
-      element: 283,
+      element: 288,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(508);
-    expect(elementRows).toHaveLength(283);
-    expect(pictogramRows).toHaveLength(264);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(517);
+    expect(elementRows).toHaveLength(288);
+    expect(pictogramRows).toHaveLength(269);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
   });
 
-  it('führt I-g, I-b und I-a mit belegter Quelle und getrennten vollständigen Technikreviews', () => {
+  it('führt I-d, I-g, I-b und I-a mit belegter Quelle und getrennten Technikreviews', () => {
     const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
-      entry.sourceId.startsWith('bbk-babz-2025:I.1.') ||
-      entry.sourceId.startsWith('bbk-babz-2025:I.2.') ||
-      entry.sourceId.startsWith('bbk-babz-2025:I.3.'),
+      /^bbk-babz-2025:I\.(?:1\.(?:[5-8]|1[7-9]|20)|2\.[4-7]|3\.[5-7])$/.test(entry.sourceId),
     );
     expect(
       rows.map((entry) => ({
         section: entry.sourceId.slice('bbk-babz-2025:'.length),
         referenceAsset: entry.referenceAsset,
-      })),
+      })).sort((left, right) => left.section.localeCompare(right.section, 'de', { numeric: true })),
     ).toEqual([
+      { section: 'I.1.5', referenceAsset: 'I.1.5_Zugtrupp Wasserrettungszug.svg' },
+      { section: 'I.1.6', referenceAsset: 'I.1.6_Führungstrupp Wasserrettung.svg' },
+      { section: 'I.1.7', referenceAsset: 'I.1.7_Führungsgruppe Wasserrettung.svg' },
+      { section: 'I.1.8', referenceAsset: 'I.1.8_Führungsstaffel Wasserrettung.svg' },
       { section: 'I.1.17', referenceAsset: 'I.1.17_Strömungsrettungstrupp.svg' },
       { section: 'I.1.18', referenceAsset: 'I.1.18_Strömungsrettungsgruppe.svg' },
       {
@@ -162,6 +165,13 @@ describe('Coverage-Manifest', () => {
       note:
         'I.2.4-I.2.7 passed the measured trailer shell and drawbar, explicitly absent chassis, trailer-only technical body marks, literal recipes, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
     };
+    const expectedIdReview = {
+      status: 'approved',
+      reviewer: 'rv',
+      date: '2026-08-27',
+      note:
+        'I.1.5-I.1.8 passed literal recipe, measured compact water-rescue body-mark, independently gated cap/head/body vertical placement, direct-snapshot and multi-size gates. I.1.5 uses its measured 3.7 mm three-hole cap; I.1.6-I.1.8 reuse the 3 mm cap and I.1.8 moves body geometry by 3 mm with staffel. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending.',
+    };
     const expectedIGReview = {
       status: 'approved',
       reviewer: 'rv',
@@ -173,27 +183,50 @@ describe('Coverage-Manifest', () => {
         'output-only visual QA gates. Opposed triangles and chevron remain separate geometric ' +
         'marks; domain classification remains pending.',
     };
-    expect(rows).toHaveLength(11);
+    const idSourceIds = new Set([
+      'bbk-babz-2025:I.1.5',
+      'bbk-babz-2025:I.1.6',
+      'bbk-babz-2025:I.1.7',
+      'bbk-babz-2025:I.1.8',
+    ]);
+    const igSourceIds = new Set([
+      'bbk-babz-2025:I.1.17',
+      'bbk-babz-2025:I.1.18',
+      'bbk-babz-2025:I.1.19',
+      'bbk-babz-2025:I.1.20',
+    ]);
+    const ibSourceIds = new Set([
+      'bbk-babz-2025:I.2.4',
+      'bbk-babz-2025:I.2.5',
+      'bbk-babz-2025:I.2.6',
+      'bbk-babz-2025:I.2.7',
+    ]);
+    expect(rows).toHaveLength(15);
     for (const row of rows) {
       expect(row.coverage).toBe('composition-recipe');
       expect(row.review.technical).toEqual(
-        row.sourceId.startsWith('bbk-babz-2025:I.1.')
-          ? expectedIGReview
-          : row.sourceId.startsWith('bbk-babz-2025:I.2.')
-            ? expectedIBReview
-            : expectedIAReview,
+        idSourceIds.has(row.sourceId)
+          ? expectedIdReview
+          : igSourceIds.has(row.sourceId)
+            ? expectedIGReview
+            : ibSourceIds.has(row.sourceId)
+              ? expectedIBReview
+              : expectedIAReview,
       );
       expect(row.review.domain.status).toBe('pending');
     }
 
     expect(COVERAGE_MANIFEST.scope.filter((section) =>
-      section.startsWith('I.1.') || section.startsWith('I.2.') || section.startsWith('I.3.'),
+      /^I\.(?:1\.(?:[5-8]|1[7-9]|20)|2\.[4-7]|3\.[5-7])$/.test(section),
     )).toEqual([
+      'I.1.5', 'I.1.6', 'I.1.7', 'I.1.8',
       'I.1.17', 'I.1.18', 'I.1.19', 'I.1.20',
       'I.2.4', 'I.2.5', 'I.2.6', 'I.2.7',
       'I.3.5', 'I.3.6', 'I.3.7',
     ]);
     expect(COVERAGE_MANIFEST.scope).not.toContain('I');
+    expect(COVERAGE_MANIFEST.scope).not.toContain('I.1');
+    expect(COVERAGE_MANIFEST.scope).not.toContain('I.2');
     expect(COVERAGE_MANIFEST.scope).not.toContain('I.3');
   });
 
@@ -240,6 +273,28 @@ describe('Coverage-Manifest', () => {
     expect(COVERAGE_MANIFEST.scope).toContain('I.4.2');
     expect(COVERAGE_MANIFEST.scope).toContain('I.4.3');
     expect(COVERAGE_MANIFEST.scope).not.toContain('I.4');
+  });
+
+  it('führt I.5.4 bis I.5.8 als fünf direkte Wasserrettungs-Piktogramme', () => {
+    const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
+      entry.implementation.startsWith('water-rescue-personnel.'),
+    );
+    expect(rows.map((entry) => [entry.sourceId, entry.implementation])).toEqual([
+      ['bbk-babz-2025:I.5.4', 'water-rescue-personnel.team-leader'],
+      ['bbk-babz-2025:I.5.5', 'water-rescue-personnel.group-leader'],
+      ['bbk-babz-2025:I.5.6', 'water-rescue-personnel.platoon-leader'],
+      ['bbk-babz-2025:I.5.7', 'water-rescue-personnel.formation-leader'],
+      ['bbk-babz-2025:I.5.8', 'water-rescue-personnel.technical-advisor'],
+    ]);
+    for (const row of rows) {
+      expect(row.coverage).toBe('element');
+      expect(row.testEvidence).toEqual(['svg-snapshot', 'pictogram-contract']);
+      expect(row.review.technical).toMatchObject({
+        status: 'approved', reviewer: 'rv', date: '2026-08-27',
+      });
+      expect(row.review.technical.note).toContain('I.5.4 bis I.5.8');
+      expect(row.review.domain).toEqual({ status: 'pending' });
+    }
   });
 
   it('bindet C.1.3 an das aktuelle technische Review und nur an seinen eigenen Scope', () => {
@@ -684,6 +739,10 @@ describe('Coverage-Manifest', () => {
       'F',
       'G',
       'H',
+      'I.1.5',
+      'I.1.6',
+      'I.1.7',
+      'I.1.8',
       'I.1.17',
       'I.1.18',
       'I.1.19',
@@ -698,6 +757,11 @@ describe('Coverage-Manifest', () => {
       'I.4.1',
       'I.4.2',
       'I.4.3',
+      'I.5.4',
+      'I.5.5',
+      'I.5.6',
+      'I.5.7',
+      'I.5.8',
       'J.1',
       'J.2',
       'J.3',
@@ -751,7 +815,7 @@ describe('Manifest-Einträge für Piktogramme', () => {
       .filter((entry) => definitionKeys.has(entryKey(entry.implementation, entry.variant)))
       .map((entry) => entryKey(entry.implementation, entry.variant))
       .sort();
-    expect(rows).toHaveLength(264);
+    expect(rows).toHaveLength(269);
     expect(rows).toEqual([...definitionKeys].sort());
   });
 

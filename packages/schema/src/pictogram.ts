@@ -18,6 +18,17 @@ export const LEADERSHIP_IDS = [
 
 export type LeadershipId = (typeof LEADERSHIP_IDS)[number];
 
+/** Direkte Wasserrettungs-Personenpiktogramme aus I.5.4 bis I.5.8. */
+export const WATER_RESCUE_PERSONNEL_IDS = [
+  'team-leader',
+  'group-leader',
+  'platoon-leader',
+  'formation-leader',
+  'technical-advisor',
+] as const;
+
+export type WaterRescuePersonnelId = (typeof WATER_RESCUE_PERSONNEL_IDS)[number];
+
 /**
  * Zugesicherte Hülle eines Piktogramms: linke obere Ecke und Maße in Millimetern.
  *
@@ -33,11 +44,11 @@ export interface PictogramBox {
 }
 
 /**
- * Die sechs Piktogrammarten der Baseline haben je einen eigenen ID-Raum. Ein Wetterzeichen oder
+ * Die Piktogrammarten der Baseline haben je einen eigenen ID-Raum. Ein Wetterzeichen oder
  * ein Trümmerkegel ist keine Fähigkeit einer Einheit — sie unter `capability.` zu führen wäre
  * eine Falschaussage in der ID.
  *
- * Seit D.4 tragen alle fünf Räume Literale. `DamageId` und `WildfireId` standen bis dahin als
+ * Seit D.4 tragen auch `DamageId` und `WildfireId` Literale. Beide standen bis dahin als
  * `never` hier — als Vertrag, an dem D.4 anknüpfen konnte, ohne die Aufteilung neu zu
  * entscheiden. Genau so ist es gekommen: Das Auffüllen war reines Hinzufügen, die Aufteilung
  * blieb unberührt. Beide Aliasse leben jetzt in `taxonomy.ts` neben `CapabilityId`, `StateId`
@@ -50,7 +61,8 @@ export type PictogramId =
   | `comms.${CommsId}`
   | `damage.${DamageId}`
   | `wildfire.${WildfireId}`
-  | `leadership.${LeadershipId}`;
+  | `leadership.${LeadershipId}`
+  | `water-rescue-personnel.${WaterRescuePersonnelId}`;
 
 /**
  * Ein Piktogramm ist Code: eine Folge von Primitiven in Millimetern mit deklarierter Hüllbox.

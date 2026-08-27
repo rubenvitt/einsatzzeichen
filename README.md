@@ -711,6 +711,22 @@ Reviews sind freigegeben, während die drei Domain-Reviews ausdrücklich `pendin
 Messentscheidung und Provenienzgrenze: [`docs/decisions/2026-08-26-anhang-h.md`](docs/decisions/2026-08-26-anhang-h.md).
 Visual QA und Artefakthash: [`docs/reviews/2026-08-26-h-visual-qa.md`](docs/reviews/2026-08-26-h-visual-qa.md).
 
+## Anhang I-d: Wasserrettungs-Führungsformationen I.1.5 bis I.1.8
+
+LFH-482 ergänzt genau vier weiße Formationsrezepte: Zugtrupp Wasserrettungszug,
+Führungstrupp Wasserrettung, Führungsgruppe Wasserrettung und Führungsstaffel Wasserrettung.
+Sie verwenden die separat vermessene technische Marke `formation-water-rescue-compact`; I.1.5 kombiniert sie mit der
+eigenen 3,7-mm-Kappe und drei negativen Kreisen, I.1.6 bis I.1.8 mit der geschlossenen 3-mm-Kappe. Bei der
+Staffel verschieben sich Körper, Kappe und Innenmarke gemeinsam um 3 mm.
+
+Der Manifest-Scope bleibt abschnittsgenau bei `I.1.5`, `I.1.6`, `I.1.7` und `I.1.8`; weder
+`I` noch `I.1` wird vorzeitig beansprucht. Mess- und Modellierungsentscheidung:
+[`docs/decisions/2026-08-27-anhang-i-d.md`](docs/decisions/2026-08-27-anhang-i-d.md).
+Output-only Sichtprüfung und lokaler Originalvergleich:
+[`docs/reviews/2026-08-27-i-d-visual-qa.md`](docs/reviews/2026-08-27-i-d-visual-qa.md).
+Die vier technischen Reviews sind freigegeben, alle vier fachlichen Domain-Reviews bleiben
+`pending`.
+
 ## LFH-418: C.1.3 als erster Anhang-C-Slice
 
 Anhang C umfasst 59 Referenzdarstellungen; C.1.1 und C.1.2 waren bereits im Katalog.

@@ -28,6 +28,7 @@ const MEASURED_TOP_EDGE_HEADS = new Set([
   'recipe.D.4.3',
   'recipe.D.4.4',
   'recipe.D.4.5',
+  'water-rescue-personnel.formation-leader',
 ]);
 
 const RECTANGULAR_FIXTURE: Drawing = {
@@ -264,15 +265,19 @@ describe('echte Mehrgrößen- und Profilregression', () => {
     expect(image.height).toBe(92);
   });
 
-  it('schreibt exakt 490 Mehrgrößen-Snapshots', () => {
+  it('schreibt exakt 499 Mehrgrößen-Snapshots', () => {
     const snapshots = readdirSync(new URL('./__snapshots__/multi-size/', import.meta.url), {
       withFileTypes: true,
     }).filter((entry) => entry.isFile() && entry.name.endsWith('.svg'));
     const names = snapshots.map((entry) => entry.name);
-    expect(snapshots).toHaveLength(490);
+    expect(snapshots).toHaveLength(499);
     expect(names).toContain('recipe.C.1.3.svg');
     expect(names).toContain('recipe.G.1.svg');
     expect(names).toContain('recipe.G.8.svg');
+    expect(names).toContain('recipe.I.1.5.svg');
+    expect(names).toContain('recipe.I.1.6.svg');
+    expect(names).toContain('recipe.I.1.7.svg');
+    expect(names).toContain('recipe.I.1.8.svg');
     expect(names).toContain('recipe.I.3.5.svg');
     expect(names).toContain('recipe.I.3.6.svg');
     expect(names).toContain('recipe.I.3.7.svg');
@@ -289,6 +294,15 @@ describe('echte Mehrgrößen- und Profilregression', () => {
     expect(names).toContain('recipe.I.4.3.svg');
     expect(names).toContain('recipe.N.1.1.svg');
     expect(names).toContain('recipe.N.2.3.svg');
+    for (const id of [
+      'team-leader',
+      'group-leader',
+      'platoon-leader',
+      'formation-leader',
+      'technical-advisor',
+    ]) {
+      expect(names).toContain(`water-rescue-personnel.${id}.svg`);
+    }
   });
 
   it.each(RENDER_CASES)(

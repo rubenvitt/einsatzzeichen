@@ -380,6 +380,10 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:H.3#primary': { status: 'pending' },
   // Das Erscheinungsbild ist technisch durch die Mess-, Rezept- und Snapshot-Gates belegt; die
   // organisatorische und fachliche Bedeutung des weißen Körpers bleibt dennoch ungeklärt.
+  'bbk-babz-2025:I.1.5#primary': { status: 'pending' },
+  'bbk-babz-2025:I.1.6#primary': { status: 'pending' },
+  'bbk-babz-2025:I.1.7#primary': { status: 'pending' },
+  'bbk-babz-2025:I.1.8#primary': { status: 'pending' },
   // I-g bleibt zusätzlich bei der Bedeutungszuordnung von Wasserrettung, Luftunterstützung und
   // Drohne offen; die rein geometrischen Marken nehmen dieses Fachreview nicht vorweg.
   'bbk-babz-2025:I.1.17#primary': { status: 'pending' },
@@ -399,6 +403,11 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:I.4.1#primary': { status: 'pending' },
   'bbk-babz-2025:I.4.2#primary': { status: 'pending' },
   'bbk-babz-2025:I.4.3#primary': { status: 'pending' },
+  'bbk-babz-2025:I.5.4#primary': { status: 'pending' },
+  'bbk-babz-2025:I.5.5#primary': { status: 'pending' },
+  'bbk-babz-2025:I.5.6#primary': { status: 'pending' },
+  'bbk-babz-2025:I.5.7#primary': { status: 'pending' },
+  'bbk-babz-2025:I.5.8#primary': { status: 'pending' },
   'bbk-babz-2025:2.1#primary': { status: 'pending' },
   // 2.2 seit LFH-424. Fachlich besonders zu prüfen: die Zuordnung „HiOrg = Hilfsorganisation" ist
   // aus dem gerasterten Bild abgelesen, nicht aus dem Dateinamen — der ist generisch

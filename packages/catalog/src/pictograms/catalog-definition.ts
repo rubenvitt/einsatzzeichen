@@ -10,6 +10,7 @@ import type {
   PictogramDefinition,
   Primitive,
   StateId,
+  WaterRescuePersonnelId,
   WildfireId,
 } from '@einsatzzeichen/schema';
 import { DEFAULT_VIEWBOX_MM } from '@einsatzzeichen/schema';
@@ -27,7 +28,8 @@ export type PictogramSection =
   | `K.${string}`
   | `L.${string}`
   | `M.${string}`
-  | `D.${string}`;
+  | `D.${string}`
+  | `I.5.${string}`;
 
 export interface PictogramContrastPair {
   readonly foreground: ColorToken;
@@ -244,6 +246,34 @@ export function defineLeadership(input: LeadershipDefinitionInput): CatalogPicto
     placement: { mode: 'standalone' } as const,
     contrastPairs: structuredClone(input.contrastPairs),
     viewBox: structuredClone(viewBox),
+    box: structuredClone(input.box),
+    primitives: structuredClone(input.primitives),
+  });
+}
+
+export interface WaterRescuePersonnelDefinitionInput {
+  readonly section: `I.5.${string}`;
+  readonly id: WaterRescuePersonnelId;
+  readonly variant?: DepictionVariant;
+  readonly title: string;
+  readonly referenceAsset: `${string}.svg`;
+  readonly box: PictogramBox;
+  readonly primitives: readonly Primitive[];
+  readonly contrastPairs: readonly [PictogramContrastPair, ...PictogramContrastPair[]];
+}
+
+export function defineWaterRescuePersonnel(
+  input: WaterRescuePersonnelDefinitionInput,
+): CatalogPictogramDefinition {
+  return deepFreeze({
+    section: input.section,
+    id: `water-rescue-personnel.${input.id}`,
+    variant: input.variant ?? 'primary',
+    title: input.title,
+    referenceAsset: input.referenceAsset,
+    placement: { mode: 'standalone' } as const,
+    contrastPairs: structuredClone(input.contrastPairs),
+    viewBox: DEFAULT_VIEWBOX_MM,
     box: structuredClone(input.box),
     primitives: structuredClone(input.primitives),
   });

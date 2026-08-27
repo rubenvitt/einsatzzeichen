@@ -56,9 +56,10 @@ import { ANHANG_N_RECIPES } from './recipes-anhang-n.js';
 import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
 import {
-  ANHANG_I_A_RECIPES,
-  ANHANG_I_B_RECIPES,
+  ANHANG_I_D_RECIPES,
   ANHANG_I_G_RECIPES,
+  ANHANG_I_B_RECIPES,
+  ANHANG_I_A_RECIPES,
   ANHANG_I_J_RECIPES,
 } from './recipes-anhang-i.js';
 
@@ -157,6 +158,20 @@ const LEADERSHIP_OPEN_CAP_TECHNICAL_REVIEW: Review = {
     'Kontrasthintergründe sind je Definition explizit. Snapshot, Kommando, Box, ' +
     'Standalone-Clipping, Textlesbarkeit, Mehrgrößen-, Metadaten- und Kontrast-Gates prüfen ' +
     'beide renderbaren Einträge; Benennung und Bedeutung der offenen Kappe bleiben pending.',
+};
+
+const WATER_RESCUE_PERSONNEL_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-27',
+  note:
+    'I.5.4 bis I.5.8 sind fünf direkte 32×32-mm-Piktogramme im eigenen ID-Raum. Zwei ' +
+    'literal vermessene Körperlagen erhalten geschlossene beziehungsweise offene Kappe, zwei ' +
+    'gefüllte Kubik-Wasserlinien und die Innenraute; die Kopfgeometrie bleibt je Quelle ' +
+    '1/2/3 Kreis, Verbandsbalken oder leer. Eine private Hilfe teilt nur Geometrie und erzeugt ' +
+    'keine FunctionRole-, Strength- oder Organisationssemantik. Snapshot, Kommando, Box, ' +
+    'Standalone-Clipping, Mehrgrößen-, Metadaten- und explizite Kontrast-Gates prüfen alle ' +
+    'fünf renderbaren Einträge; Rang- und Rollenbenennungen bleiben im Domain-Review pending.',
 };
 
 const ANHANG_C_A_TECHNICAL_REVIEW: Review = {
@@ -432,6 +447,13 @@ const ANHANG_I_B_TECHNICAL_REVIEW: Review = {
     'I.2.4-I.2.7 passed the measured trailer shell and drawbar, explicitly absent chassis, trailer-only technical body marks, literal recipes, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
 };
 
+const ANHANG_I_D_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-27',
+  note:
+    'I.1.5-I.1.8 passed literal recipe, measured compact water-rescue body-mark, independently gated cap/head/body vertical placement, direct-snapshot and multi-size gates. I.1.5 uses its measured 3.7 mm three-hole cap; I.1.6-I.1.8 reuse the 3 mm cap and I.1.8 moves body geometry by 3 mm with staffel. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending.',
+};
 const ANHANG_I_G_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
@@ -443,7 +465,6 @@ const ANHANG_I_G_TECHNICAL_REVIEW: Review = {
     'output-only visual QA gates. Opposed triangles and chevron remain separate geometric ' +
     'marks; domain classification remains pending.',
 };
-
 const ANHANG_I_J_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
@@ -454,7 +475,6 @@ const ANHANG_I_J_TECHNICAL_REVIEW: Review = {
     'circle-12/raised-gable as geometry only; white Hilfsorganisation bodies and all domain ' +
     'classifications remain pending.',
 };
-
 /** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
 function reviewFor(
   sourceId: string,
@@ -926,11 +946,14 @@ function technicalReviewFor(section: string): Review {
     return ANHANG_G_TECHNICAL_REVIEW;
   }
   if (Object.hasOwn(ANHANG_H_RECIPES, section)) return ANHANG_H_TECHNICAL_REVIEW;
+  if (Object.hasOwn(ANHANG_I_D_RECIPES, section)) {
+    return ANHANG_I_D_TECHNICAL_REVIEW;
+  }
   if (Object.hasOwn(ANHANG_I_G_RECIPES, section)) {
     return ANHANG_I_G_TECHNICAL_REVIEW;
   }
-  if (Object.hasOwn(ANHANG_I_A_RECIPES, section)) return ANHANG_I_A_TECHNICAL_REVIEW;
   if (Object.hasOwn(ANHANG_I_B_RECIPES, section)) return ANHANG_I_B_TECHNICAL_REVIEW;
+  if (Object.hasOwn(ANHANG_I_A_RECIPES, section)) return ANHANG_I_A_TECHNICAL_REVIEW;
   if (Object.hasOwn(ANHANG_I_J_RECIPES, section)) {
     return ANHANG_I_J_TECHNICAL_REVIEW;
   }
@@ -1048,7 +1071,9 @@ const elementEntries: CoverageEntry[] = Object.entries(ELEMENT_SECTIONS).map(([i
 
 const pictogramEntries: CoverageEntry[] = ALL_PICTOGRAMS.map((definition) => {
   const sourceId = `bbk-babz-2025:${definition.section}`;
-  const technicalReview = definition.id.startsWith('state.')
+  const technicalReview = definition.id.startsWith('water-rescue-personnel.')
+    ? WATER_RESCUE_PERSONNEL_TECHNICAL_REVIEW
+    : definition.id.startsWith('state.')
     ? STATE_PICTOGRAM_TECHNICAL_REVIEW
     : definition.id.startsWith('leadership.')
       ? definition.section.startsWith('D.3.')
@@ -1079,7 +1104,7 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
    * ohne den Kern zu berühren, und umgekehrt — über Paketversionen wäre das nur darstellbar,
    * wenn jedes Profil ein eigenes npm-Paket wäre.
    */
-  coreVersion: '0.1.0',
+  coreVersion: '0.2.0',
   // Kapitel 3 (sieben Referenzdateien) setzt dieser Slice nicht um.
   //
   // **`5.1.1` und ausdrücklich nicht `5.1`.** Fünf der sechs Fahrzeugkategorien aus 5.1.1 sind
@@ -1135,6 +1160,10 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'F',
     'G',
     'H',
+    'I.1.5',
+    'I.1.6',
+    'I.1.7',
+    'I.1.8',
     'I.1.17',
     'I.1.18',
     'I.1.19',
@@ -1149,6 +1178,11 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'I.4.1',
     'I.4.2',
     'I.4.3',
+    'I.5.4',
+    'I.5.5',
+    'I.5.6',
+    'I.5.7',
+    'I.5.8',
     'J.1',
     'J.2',
     'J.3',

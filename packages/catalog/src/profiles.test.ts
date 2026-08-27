@@ -25,6 +25,14 @@ describe('Profilregister', () => {
     expect(bund.version).toBe(COVERAGE_MANIFEST.coreVersion);
   });
 
+  it('versioniert den um öffentliche LFH-490-Piktogramm-IDs erweiterten Kern synchron als 0.2.0', () => {
+    expect(COVERAGE_MANIFEST.coreVersion).toBe('0.2.0');
+    expect(profileFor('bund')).toMatchObject({
+      version: '0.2.0',
+      verifiedAgainstCore: '0.2.0',
+    });
+  });
+
   it('stützt den Kern auf die Baseline und die Referenzdateien', () => {
     expect(profileFor('bund').sources).toEqual(['bbk-babz-2025', 'babz-svg-2025']);
   });
