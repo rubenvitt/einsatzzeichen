@@ -1025,6 +1025,85 @@ describe('bodyMark() — rein geometrische technische Marken aus F.1', () => {
   });
 });
 
+describe('bodyMark() — LFH-485 Strömungsrettung und getrennte Luftmarken', () => {
+  const waterWave = (baselineYMm: number): Primitive => ({
+    type: 'path',
+    role: 'pictogram',
+    d:
+      `M 20 ${baselineYMm} C 19.604 ${baselineYMm} 19.416 ${baselineYMm - 0.188} ` +
+      `19.178 ${baselineYMm - 0.427} C 18.923 ${baselineYMm - 0.682} ` +
+      `18.605 ${baselineYMm - 1} 18.002 ${baselineYMm - 1} ` +
+      `C 17.399 ${baselineYMm - 1} 17.081 ${baselineYMm - 0.682} ` +
+      `16.826 ${baselineYMm - 0.427} C 16.587 ${baselineYMm - 0.188} ` +
+      `16.399 ${baselineYMm} 16.003 ${baselineYMm} ` +
+      `C 15.606 ${baselineYMm} 15.417 ${baselineYMm - 0.188} ` +
+      `15.179 ${baselineYMm - 0.427} C 14.924 ${baselineYMm - 0.682} ` +
+      `14.605 ${baselineYMm - 1} 14.002 ${baselineYMm - 1} ` +
+      `C 13.398 ${baselineYMm - 1} 13.08 ${baselineYMm - 0.682} ` +
+      `12.824 ${baselineYMm - 0.427} C 12.586 ${baselineYMm - 0.188} ` +
+      `12.398 ${baselineYMm} 12.001 ${baselineYMm}`,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  });
+
+  it('hält die kompakte Wasserrettungsmarke unter der oberen Inhaltszone', () => {
+    expect(bodyMark('water-rescue', formationBodyMm)).toEqual([
+      waterWave(13.25),
+      waterWave(15.25),
+      outline([[16, 16.646], [19.854, 20.5], [16, 24.354], [12.146, 20.5]], true),
+    ]);
+  });
+
+  it('führt I.1.19-Dreiecke und I.1.20-Winkel als getrennte Geometrien', () => {
+    const filled = (points: readonly (readonly [number, number])[]): Primitive => ({
+      type: 'polyline',
+      role: 'pictogram',
+      points,
+      closed: true,
+      style: { fill: 'schwarz', stroke: 'none' },
+    });
+
+    expect(bodyMark(
+      'formation-opposed-triangles-top' as BodyMarkId,
+      formationBodyMm,
+    )).toEqual([
+      filled([[16, 9.5], [9.5, 11.5], [9.5, 7.5]]),
+      filled([[22.5, 11.5], [16, 9.5], [22.5, 7.5]]),
+    ]);
+    expect(bodyMark(
+      'formation-chevron-top' as BodyMarkId,
+      formationBodyMm,
+    )).toEqual([
+      filled([
+        [16, 9.5],
+        [10.667, 7.25],
+        [10.667, 8.25],
+        [16, 11.5],
+        [21.333, 8.25],
+        [21.333, 7.25],
+      ]),
+    ]);
+  });
+
+  it('lehnt alle drei LFH-485-Fassungen außerhalb der normalen Formation ab', () => {
+    for (const id of [
+      'water-rescue',
+      'formation-opposed-triangles-top',
+      'formation-chevron-top',
+    ] as BodyMarkId[]) {
+      expect(() => bodyMarkWithContext(
+        id,
+        { kind: 'formation', bodyVariant: 'foot-band' },
+        formationBodyMm,
+      ), id).toThrow(/nicht vermessen/);
+      expect(() => bodyMarkWithContext(
+        id,
+        { kind: 'vehicle-land' },
+        landBodyMm,
+      ), id).toThrow(/nicht vermessen/);
+    }
+  });
+});
+
 describe('bodyMark() — die drei getrennt vermessenen Fahrzeugkörper aus F.2', () => {
   it('setzt die Landfahrzeugteilung auf Dachscheitel, Körpermittellinie und Seitenkanten', () => {
     expect(bodyMarkWithContext(

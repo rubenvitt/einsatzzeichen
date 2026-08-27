@@ -473,7 +473,7 @@ describe('Anhang D.1, Führungsstellen im Einsatz', () => {
 
   it('führt exakt die neun komponierten D.1-Darstellungen', () => {
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('D.1.'))).toEqual(expectedKeys);
-    expect(Object.keys(RECIPES)).toHaveLength(203);
+    expect(Object.keys(RECIPES)).toHaveLength(207);
   });
 
   it('bindet D.1.2 bis D.1.8 an die sieben gemessenen Formationsrollen', () => {
@@ -1017,7 +1017,7 @@ describe('Anhang G — vollständiges Logistikinventar', () => {
     expect(actual).toEqual(expected);
     expect(Object.keys(actual)).toEqual(Object.keys(expected));
     expect(Object.keys(actual).every((key) => !key.includes('#'))).toBe(true);
-    expect(Object.keys(RECIPES)).toHaveLength(203);
+    expect(Object.keys(RECIPES)).toHaveLength(207);
   });
 
   it('bindet die 21 primary- und Referenz-IDs exakt und ohne Alternative', () => {
@@ -1121,6 +1121,99 @@ describe('Anhang I, Teilslice I-a (I.3.5 bis I.3.7)', () => {
       expect(labels[0]?.content).toBe(center);
       expect(labels[0]?.style?.fill).toBe('schwarz');
       expect(labels[0]?.y).toBeCloseTo(15.9999, 3);
+    },
+  );
+});
+
+describe('Anhang I, Teilslice I-g (I.1.17 bis I.1.20)', () => {
+  const expected = {
+    'I.1.17': {
+      title: 'Strömungsrettungstrupp',
+      referenceAsset: 'I.1.17_Strömungsrettungstrupp.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'hilfsorganisation',
+        strength: 'trupp',
+        bodyMarks: ['water-rescue'],
+        labels: {
+          center: 'Strömungsrettung',
+          centerBaselineFromBodyBottomMm: 16,
+          centerCapHeightMm: 2.5,
+          centerBoxMarginMm: 0.5,
+        },
+      },
+    },
+    'I.1.18': {
+      title: 'Strömungsrettungsgruppe',
+      referenceAsset: 'I.1.18_Strömungsrettungsgruppe.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'hilfsorganisation',
+        strength: 'gruppe',
+        bodyMarks: ['water-rescue'],
+        labels: {
+          center: 'Strömungsrettung',
+          centerBaselineFromBodyBottomMm: 16,
+          centerCapHeightMm: 2.5,
+          centerBoxMarginMm: 0.5,
+        },
+      },
+    },
+    'I.1.19': {
+      title: 'Trupp Luftunterstützte Wasserrettung',
+      referenceAsset: 'I.1.19_Trupp Luftunterstützte Wasserrettung.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'hilfsorganisation',
+        strength: 'trupp',
+        bodyMarks: ['water-rescue', 'formation-opposed-triangles-top'],
+      },
+    },
+    'I.1.20': {
+      title: 'Trupp Drohne',
+      referenceAsset: 'I.1.20_Trupp Drohne.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'hilfsorganisation',
+        strength: 'trupp',
+        bodyMarks: ['water-rescue', 'formation-chevron-top'],
+      },
+    },
+  } as const;
+  const recipes: Record<string, Recipe> = RECIPES;
+
+  it('bindet exakt die vier freigegebenen I-g-Referenzen an ihre gemessenen Specs', () => {
+    expect(Object.fromEntries(
+      Object.entries(recipes).filter(([section]) => section.startsWith('I.1.')),
+    )).toEqual(expected);
+  });
+
+  it.each(Object.entries(expected))(
+    '%s bleibt eine weiße Formation mit belegter Stärke und gültigem Vertrag',
+    (section, recipe) => {
+      expect(validateSpec(recipe.spec)).toEqual([]);
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      expect(drawing.children.find((child) => child.role === 'body')?.style?.fill).toBe('weiss');
+      expect(drawing.children.filter((child) => child.role === 'head').length).toBeGreaterThan(0);
+
+      const labels = drawing.children.filter(
+        (child): child is Primitive & { type: 'text' } =>
+          child.type === 'text' && child.role === 'label',
+      );
+      if (section === 'I.1.17' || section === 'I.1.18') {
+        expect(labels).toEqual([
+          expect.objectContaining({
+            content: 'Strömungsrettung',
+            x: 16,
+            y: 10,
+            sizeMm: 2.5 / ARIMO_CAP_HEIGHT_FRACTION,
+            anchor: 'middle',
+            boxMm: expect.objectContaining({ xMm: 1.5, widthMm: 29 }),
+          }),
+        ]);
+      } else {
+        expect(labels).toHaveLength(0);
+      }
     },
   );
 });
@@ -2435,12 +2528,12 @@ describe('Anhang F, Teilslice F-f', () => {
     },
   } as const;
 
-  it('deckt F.3.12 bis F.3.19 lückenlos ab', () => {
+  it('deckt F.3.12 bis F.3.19 lückenlos ab und bleibt im integrierten Bestand erhalten', () => {
     const entries = Object.entries<Recipe>(RECIPES)
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(203);
+    expect(Object.keys(RECIPES)).toHaveLength(207);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {

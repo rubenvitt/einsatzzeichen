@@ -128,6 +128,7 @@ describe('semantische Zeichenbeschreibungen', () => {
       labels: {
         center: 'MzGW Lbw',
         centerCapHeightMm: 3.4099,
+        centerBoxMarginMm: 0.5,
         topLeft: 'BTKombi',
         topLeftMetrics: {
           capHeightMm: 2.191447,
@@ -139,6 +140,7 @@ describe('semantische Zeichenbeschreibungen', () => {
     expect(description).toContain('Kürzel: MzGW Lbw');
     expect(description).toContain('Kürzel: BTKombi');
     expect(description).not.toContain('3.4099');
+    expect(description).not.toContain('0.5');
     expect(description).not.toContain('2.191447');
     expect(description).not.toContain('5.249923');
     expect(description).not.toContain('0.51423');
@@ -230,6 +232,10 @@ describe('semantische Zeichenbeschreibungen', () => {
       'formation-solid-cap-3mm',
       'formation-solid-cap-4mm-three-hole-row',
     ] as const;
+    const lfh485TechnicalIds = [
+      'formation-opposed-triangles-top',
+      'formation-chevron-top',
+    ] as const;
     expect(TECHNICAL_BODY_MARK_IDS).toEqual([
       ...task4TechnicalIds,
       ...task5TechnicalIds,
@@ -237,11 +243,15 @@ describe('semantische Zeichenbeschreibungen', () => {
       ...task2RoleTechnicalIds,
       ...task1AnhangHTechnicalIds,
       ...task1AnhangNTechnicalIds,
+      ...lfh485TechnicalIds,
     ]);
     expect(TECHNICAL_BODY_MARK_LABELS as Record<string, string>).toMatchObject({
       'formation-solid-cap-3mm': 'Schwarze Formationskappe, 3 mm hoch',
       'formation-solid-cap-4mm-three-hole-row':
         'Schwarze Formationskappe, 4 mm hoch, mit drei Löchern in einer Reihe',
+      'formation-opposed-triangles-top':
+        'Zwei gegenüberliegende Dreiecke in der oberen Formationszone',
+      'formation-chevron-top': 'Gefüllter Winkel in der oberen Formationszone',
     });
   });
 

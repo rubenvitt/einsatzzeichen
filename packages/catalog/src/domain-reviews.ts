@@ -380,6 +380,12 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:H.3#primary': { status: 'pending' },
   // Das Erscheinungsbild ist technisch durch die Mess-, Rezept- und Snapshot-Gates belegt; die
   // organisatorische und fachliche Bedeutung des weißen Körpers bleibt dennoch ungeklärt.
+  // I-g bleibt zusätzlich bei der Bedeutungszuordnung von Wasserrettung, Luftunterstützung und
+  // Drohne offen; die rein geometrischen Marken nehmen dieses Fachreview nicht vorweg.
+  'bbk-babz-2025:I.1.17#primary': { status: 'pending' },
+  'bbk-babz-2025:I.1.18#primary': { status: 'pending' },
+  'bbk-babz-2025:I.1.19#primary': { status: 'pending' },
+  'bbk-babz-2025:I.1.20#primary': { status: 'pending' },
   'bbk-babz-2025:I.3.5#primary': { status: 'pending' },
   'bbk-babz-2025:I.3.6#primary': { status: 'pending' },
   'bbk-babz-2025:I.3.7#primary': { status: 'pending' },
