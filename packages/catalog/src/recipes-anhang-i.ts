@@ -149,6 +149,9 @@ export const ANHANG_I_E_RECIPES = {
  * einzigen versalen S idealisierte Versalhöhe beträgt 2,5 mm.
  */
 export const ANHANG_I_G_RECIPES = {
+  // LFH-485 / Anhang I-g: Die Wasserrettungsmarke ist die separat vermessene kompakte
+  // Formationsfassung. Dreieckspaar und Winkel bleiben geometrisch getrennt. Der Textlauf der
+  // ersten beiden Rezepte steht auf y=10,0 mm; die idealisierte Versalhöhe beträgt 2,5 mm.
   'I.1.17': {
     title: 'Strömungsrettungstrupp',
     referenceAsset: 'I.1.17_Strömungsrettungstrupp.svg',
@@ -211,6 +214,7 @@ const I_2_TOP_LEFT_METRICS = {
 
 /** I.2.1 bis I.2.3: die drei literalen Wasserrettungs-Landfahrzeuge aus LFH-486. */
 export const ANHANG_I_B_RECIPES = {
+  // LFH-486 / Anhang I-b: drei separat vermessene Wasserrettungs-Landfahrzeuge.
   'I.2.1': {
     title: 'Gerätewagen Wasserrettung, geländegängig',
     referenceAsset: 'I.2.1_Gerätewagen Wasserrettung_geländegängig.svg',
@@ -295,6 +299,47 @@ export const ANHANG_I_B_RECIPES = {
 } as const satisfies Record<string, Recipe>;
 
 export const ANHANG_I_A_RECIPES = {
+  // LFH-479/LFH-480 / Anhang I-a und I-b: die vollständige I.3-Reihe.
+  'I.3.1': {
+    title: 'Boot allgemein',
+    referenceAsset: 'I.3.1_Boot allgemein.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+    },
+  },
+  'I.3.2': {
+    title: 'Schlauchboot',
+    referenceAsset: 'I.3.2_Schlauchboot.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+      labels: { center: 'Schlauch', centerCapHeightMm: 4.1395 },
+    },
+  },
+  'I.3.3': {
+    title: 'Festrumpfschlauchboot',
+    referenceAsset: 'I.3.3_Festrumpfschlauchboot.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+      labels: { center: 'RIB' },
+    },
+  },
+  'I.3.4': {
+    title: 'Hochwasserboot',
+    referenceAsset: 'I.3.4_Hochwasserboot.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+      labels: { center: 'HW' },
+      bodyMarks: ['inset-hull-wheel-pair'],
+    },
+  },
   'I.3.5': {
     title: 'Mehrzweckboot',
     referenceAsset: 'I.3.5_Mehrzweckboot.svg',
@@ -325,7 +370,48 @@ export const ANHANG_I_A_RECIPES = {
       labels: { center: 'MzPt' },
     },
   },
+  'I.3.8': {
+    title: 'Rettungsboot Typ 1',
+    referenceAsset: 'I.3.8_Rettungsboot_Typ 1.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+      labels: { center: 'RTB 1' },
+    },
+  },
+  'I.3.9': {
+    title: 'Rettungsboot Typ 2',
+    referenceAsset: 'I.3.9_Rettungsboot_Typ 2.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+      labels: { center: 'RTB 2' },
+    },
+  },
+  'I.3.10': {
+    title: 'Raft',
+    referenceAsset: 'I.3.10_Raft.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+      labels: { center: 'Raft' },
+    },
+  },
+  'I.3.11': {
+    title: 'Feuerlöschboot',
+    referenceAsset: 'I.3.11_Feuerlöschboot.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'feuerwehr',
+      bodyMarks: ['fire-fighting'],
+    },
+  },
 } as const satisfies Record<string, Recipe>;
+
 export const ANHANG_I_J_RECIPES = {
   'I.4.1': {
     title: 'Wasserrettungsstation, ortsgebunden',
@@ -355,4 +441,19 @@ export const ANHANG_I_J_RECIPES = {
       bodyMarks: ['circle-wide-bowl'],
     },
   },
+} as const satisfies Record<string, Recipe>;
+
+/**
+ * Gemeinsame Anhang-I-Aggregation. Die einzelnen LFH-Slices bleiben über ihre exakten Schlüssel
+ * und die korrespondierenden technischen Reviews getrennt, werden aber nur einmal in `RECIPES`
+ * eingebunden.
+ */
+export const ANHANG_I_RECIPES = {
+  ...ANHANG_I_C_RECIPES,
+  ...ANHANG_I_D_RECIPES,
+  ...ANHANG_I_E_RECIPES,
+  ...ANHANG_I_G_RECIPES,
+  ...ANHANG_I_B_RECIPES,
+  ...ANHANG_I_A_RECIPES,
+  ...ANHANG_I_J_RECIPES,
 } as const satisfies Record<string, Recipe>;

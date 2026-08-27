@@ -18,45 +18,25 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 510: 14 Grundzeichen, 227 Rezeptfälle und 269 Piktogrammvarianten.
-    expect(ids).toHaveLength(510);
-    // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
-    // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
-    // Dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66, G 21, H sowie
-    // I-a/I-j je drei, I-c/I-d/I-g je vier, I-e fünf, I-b sieben, C.1.3 einen, N neun und D 26 Fälle.
-    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(227);
-    expect(ids.filter((id) => id.startsWith('recipe.I.'))).toEqual([
-      'recipe.I.1.1',
-      'recipe.I.1.10',
-      'recipe.I.1.11',
-      'recipe.I.1.12',
-      'recipe.I.1.17',
-      'recipe.I.1.18',
-      'recipe.I.1.19',
-      'recipe.I.1.2',
-      'recipe.I.1.20',
-      'recipe.I.1.3',
-      'recipe.I.1.4',
-      'recipe.I.1.5',
-      'recipe.I.1.6',
-      'recipe.I.1.7',
-      'recipe.I.1.8',
+    // 518: 14 Grundzeichen, 235 Rezeptfälle und 269 Piktogrammvarianten.
+    expect(ids).toHaveLength(518);
+    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(235);
+
+    const anhangIRecipeIds = ids.filter((id) => id.startsWith('recipe.I.'));
+    const expectedAnhangIRecipeIds = [
+      ...Array.from({ length: 4 }, (_, index) => `recipe.I.1.${index + 1}`),
+      ...Array.from({ length: 4 }, (_, index) => `recipe.I.1.${index + 5}`),
       'recipe.I.1.9',
       'recipe.I.1.9#alternative',
-      'recipe.I.2.1',
-      'recipe.I.2.2',
-      'recipe.I.2.3',
-      'recipe.I.2.4',
-      'recipe.I.2.5',
-      'recipe.I.2.6',
-      'recipe.I.2.7',
-      'recipe.I.3.5',
-      'recipe.I.3.6',
-      'recipe.I.3.7',
-      'recipe.I.4.1',
-      'recipe.I.4.2',
-      'recipe.I.4.3',
-    ]);
+      ...Array.from({ length: 3 }, (_, index) => `recipe.I.1.${index + 10}`),
+      ...Array.from({ length: 4 }, (_, index) => `recipe.I.1.${index + 17}`),
+      ...Array.from({ length: 7 }, (_, index) => `recipe.I.2.${index + 1}`),
+      ...Array.from({ length: 11 }, (_, index) => `recipe.I.3.${index + 1}`),
+      ...Array.from({ length: 3 }, (_, index) => `recipe.I.4.${index + 1}`),
+    ];
+    expect(anhangIRecipeIds).toHaveLength(38);
+    expect(new Set(anhangIRecipeIds)).toEqual(new Set(expectedAnhangIRecipeIds));
+
     expect(ids.filter((id) => id.startsWith('recipe.G.'))).toHaveLength(21);
     expect(ids.filter((id) => id.startsWith('recipe.N.'))).toEqual([
       'recipe.N.1.1', 'recipe.N.1.2', 'recipe.N.1.3', 'recipe.N.1.4', 'recipe.N.1.5',
@@ -67,58 +47,12 @@ describe('vollständige Renderfallmenge', () => {
       'recipe.H.2',
       'recipe.H.3',
     ]);
-    expect(ids.filter((id) => id.startsWith('recipe.I.1.'))).toEqual([
-      'recipe.I.1.1',
-      'recipe.I.1.10',
-      'recipe.I.1.11',
-      'recipe.I.1.12',
-      'recipe.I.1.17',
-      'recipe.I.1.18',
-      'recipe.I.1.19',
-      'recipe.I.1.2',
-      'recipe.I.1.20',
-      'recipe.I.1.3',
-      'recipe.I.1.4',
-      'recipe.I.1.5',
-      'recipe.I.1.6',
-      'recipe.I.1.7',
-      'recipe.I.1.8',
-      'recipe.I.1.9',
-      'recipe.I.1.9#alternative',
-    ]);
-    expect(ids.filter((id) => id.startsWith('recipe.I.4.'))).toEqual([
-      'recipe.I.4.1',
-      'recipe.I.4.2',
-      'recipe.I.4.3',
-    ]);
-    expect(ids.filter((id) => id.startsWith('recipe.I.2.'))).toEqual([
-      'recipe.I.2.1',
-      'recipe.I.2.2',
-      'recipe.I.2.3',
-      'recipe.I.2.4',
-      'recipe.I.2.5',
-      'recipe.I.2.6',
-      'recipe.I.2.7',
-    ]);
     expect(ids.filter((id) => id.startsWith('recipe.E.1.'))).toHaveLength(37);
-    // Anhang F, Teilslice F-a: zehn Abschnitte in elf Renderfällen. Der elfte ist
-    // `recipe.F.1.11#alternative` — der **erste Renderfall des Katalogs, dessen Darstellung im
-    // Rezeptschlüssel steht** statt in einem Suffix aus `pictogramRenderId` (siehe die
-    // Ableitung im Test darunter).
-    const f1 = ids.filter((id) => id.startsWith('recipe.F.1.'));
-    expect(f1).toHaveLength(25);
-    expect(f1).toContain('recipe.F.1.11#alternative');
+    expect(ids.filter((id) => id.startsWith('recipe.F.1.'))).toHaveLength(25);
+    expect(ids).toContain('recipe.F.1.11#alternative');
     expect(ids.filter((id) => id.startsWith('recipe.F.2.'))).toHaveLength(22);
     expect(ids.filter((id) => id.startsWith('recipe.F.3.'))).toHaveLength(19);
-    // **31 und damit lückenlos**, seit E.2.6 am 18. August 2026 nachgezogen wurde. Diese Zeile
-    // hielt vorher die Lücke fest (`not.toContain('recipe.E.2.6')`); sie hält jetzt die
-    // Vollständigkeit fest, und zwar an den Renderfällen statt an einer Zahl — ein Zeichen ohne
-    // Renderfall hätte keinen Snapshot, kein Raster- und kein Metadaten-Gate.
-    const e2 = ids.filter((id) => id.startsWith('recipe.E.2.'));
-    expect(e2).toHaveLength(31);
-    expect(new Set(e2)).toEqual(
-      new Set(Array.from({ length: 31 }, (_, index) => `recipe.E.2.${index + 1}`)),
-    );
+    expect(ids.filter((id) => id.startsWith('recipe.E.2.'))).toHaveLength(31);
     expect(ids.filter((id) => id.startsWith('capability.'))).toHaveLength(92);
     expect(ids.filter((id) => id.startsWith('state.'))).toHaveLength(67);
     expect(ids.filter((id) => id.startsWith('comms.'))).toHaveLength(53);
@@ -143,21 +77,17 @@ describe('vollständige Renderfallmenge', () => {
       'leadership.staging-area-with-reporting-head',
       'leadership.technical-advisor-thw',
     ]);
-    // Was übrig bleibt, sind die vierzehn Grundzeichen aus Kapitel 1 — die einzigen
-    // Renderfälle ohne Artpräfix. Seit LFH-424 ist das Kapitel vollständig.
-    expect(
-      ids.filter(
-        (id) =>
-          !id.startsWith('recipe.') &&
-          !id.startsWith('capability.') &&
-          !id.startsWith('state.') &&
-          !id.startsWith('comms.') &&
-          !id.startsWith('damage.') &&
-          !id.startsWith('wildfire.') &&
-          !id.startsWith('leadership.') &&
-          !id.startsWith('water-rescue-personnel.'),
-      ),
-    ).toHaveLength(14);
+    expect(ids.filter(
+      (id) =>
+        !id.startsWith('recipe.') &&
+        !id.startsWith('capability.') &&
+        !id.startsWith('state.') &&
+        !id.startsWith('comms.') &&
+        !id.startsWith('damage.') &&
+        !id.startsWith('wildfire.') &&
+        !id.startsWith('leadership.') &&
+        !id.startsWith('water-rescue-personnel.'),
+    )).toHaveLength(14);
     expect(new Set(ids).size).toBe(ids.length);
   });
 

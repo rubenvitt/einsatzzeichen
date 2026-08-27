@@ -66,6 +66,21 @@ function exceptionSectionsFromRecipes(
 }
 
 describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
+  it('leitet für den vollständigen I.3-Wasserfahrzeugsatz exakt Schwarz auf Weiß ab', () => {
+    const i3Recipes = [
+      RECIPES['I.3.1']!, RECIPES['I.3.2']!, RECIPES['I.3.3']!, RECIPES['I.3.4']!,
+      RECIPES['I.3.5']!, RECIPES['I.3.6']!, RECIPES['I.3.7']!, RECIPES['I.3.8']!,
+      RECIPES['I.3.9']!, RECIPES['I.3.10']!, RECIPES['I.3.11']!,
+    ];
+
+    expect(labelContrastRequirements(i3Recipes)).toEqual([{
+      foreground: 'schwarz',
+      background: 'weiss',
+      context: 'Beschriftung im Körper auf Organisation hilfsorganisation',
+      minimum: MINIMUM_TEXT_CONTRAST,
+    }]);
+  });
+
   it('hat echte Piktogramm-Nachbarschaften zu prüfen', () => {
     expect(ALL_PICTOGRAMS).toHaveLength(269);
     expect(requirements().length).toBeGreaterThan(1);

@@ -5,12 +5,12 @@ import { BASE_SYMBOLS, baseDrawing } from './base-symbols.js';
 import { RECIPES, composeFromCatalog } from './recipes.js';
 
 describe('SVG-Snapshots', () => {
-  it('schreibt exakt 241 direkte SVG-Snapshots', () => {
+  it('schreibt exakt 249 direkte SVG-Snapshots', () => {
     const snapshots = readdirSync(new URL('./__snapshots__/', import.meta.url), {
       withFileTypes: true,
     }).filter((entry) => entry.isFile() && entry.name.endsWith('.svg'));
     const names = snapshots.map((entry) => entry.name);
-    expect(snapshots).toHaveLength(241);
+    expect(snapshots).toHaveLength(249);
     expect(names).toContain('C.1.3.svg');
     expect(names).toContain('G.1.svg');
     expect(names).toContain('G.8.svg');
@@ -38,12 +38,12 @@ describe('SVG-Snapshots', () => {
     expect(names).toContain('I.2.5.svg');
     expect(names).toContain('I.2.6.svg');
     expect(names).toContain('I.2.7.svg');
-    expect(names).toContain('I.3.5.svg');
-    expect(names).toContain('I.3.6.svg');
-    expect(names).toContain('I.3.7.svg');
-    expect(names).toContain('I.4.1.svg');
-    expect(names).toContain('I.4.2.svg');
-    expect(names).toContain('I.4.3.svg');
+    for (const section of Array.from({ length: 11 }, (_, index) => `I.3.${index + 1}`)) {
+      expect(names).toContain(`${section}.svg`);
+    }
+    for (const section of Array.from({ length: 3 }, (_, index) => `I.4.${index + 1}`)) {
+      expect(names).toContain(`${section}.svg`);
+    }
     expect(names).toContain('N.1.1.svg');
     expect(names).toContain('N.2.3.svg');
   });

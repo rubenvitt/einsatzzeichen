@@ -8,8 +8,9 @@ Domain-Review pending
 ## Prüfaufbau
 
 Der ignorierte Generator `out/tools/generate-lfh482-contact-sheets.ts` akzeptiert ausschließlich
-die vier Schlüssel der `ANHANG_I_D_RECIPES`-Matrix. Titel, Stärke und Body-Marks stammen direkt
-aus `RECIPES`. Jedes Rezept wird validiert, im Referenztheme bei 900 × 900 px gerendert und
+die vier explizit abgegrenzten I-d-Schlüssel der `ANHANG_I_RECIPES`-Matrix. Titel, Stärke und
+Body-Marks stammen direkt aus `RECIPES`. Jedes Rezept wird validiert, im Referenztheme bei
+900 × 900 px gerendert und
 zusätzlich über seinen eingecheckten Mehrgrößen-Snapshot rasterisiert. Der Kontaktbogen enthält
 nur diese generierten Katalograster; Originalreferenzen, Bilddaten und lokale Quellpfade sind
 keine Eingaben des output-only Bogens.

@@ -18,7 +18,8 @@ lizenzrechtliche Freigabe.
 
 Vor der Sichtprüfung liefen die vollständigen direkten und Mehrgrößen-Snapshotdateien mit
 `702/702` Tests grün. Der damalige, vor LFH-487 integrierte Anhang-I-Stand enthielt exakt `224`
-direkte und `489` Mehrgrößen-Snapshots.
+direkte und `489` Mehrgrößen-Snapshots. Diese historische LFH-486-Task-Evidenz ist keine
+Behauptung über den aktuellen global integrierten Snapshotbestand.
 
 ## Einzelprotokoll
 
