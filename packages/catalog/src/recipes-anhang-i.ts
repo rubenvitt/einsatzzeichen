@@ -11,6 +11,43 @@ const I_2_TOP_LEFT_METRICS = {
  * eingebunden.
  */
 export const ANHANG_I_RECIPES = {
+  // LFH-481 / Anhang I-c: vier Wasserrettungsformationen ohne Organisationsableitung.
+  'I.1.1': {
+    title: 'Wasserrettungstrupp',
+    referenceAsset: 'I.1.1_Wasserrettungstrupp.svg',
+    spec: {
+      kind: 'formation',
+      strength: 'trupp',
+      bodyMarks: ['formation-two-waves-diamond'],
+    },
+  },
+  'I.1.2': {
+    title: 'Wasserrettungsgruppe',
+    referenceAsset: 'I.1.2_Wasserrettungsgruppe.svg',
+    spec: {
+      kind: 'formation',
+      strength: 'gruppe',
+      bodyMarks: ['formation-two-waves-diamond'],
+    },
+  },
+  'I.1.3': {
+    title: 'Wasserrettungszug',
+    referenceAsset: 'I.1.3_Wasserrettungszug.svg',
+    spec: {
+      kind: 'formation',
+      strength: 'zug',
+      bodyMarks: ['formation-two-waves-diamond'],
+    },
+  },
+  'I.1.4': {
+    title: 'Wasserrettungsverband',
+    referenceAsset: 'I.1.4_Wasserrettungsverband.svg',
+    spec: {
+      kind: 'formation',
+      technicalHeadMark: 'single-vertical-bar',
+      bodyMarks: ['formation-two-waves-diamond'],
+    },
+  },
   // LFH-482 / Anhang I-d: vier separat vermessene Wasserrettungs-Führungsformationen.
   'I.1.5': {
     title: 'Zugtrupp Wasserrettungszug',

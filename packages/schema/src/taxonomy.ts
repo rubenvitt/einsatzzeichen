@@ -95,6 +95,14 @@ export type OrganizationId =
 /** Taktische Stärke nach Kapitel 5.4. Bestimmt die Kopfzone. */
 export type StrengthId = 'trupp' | 'staffel' | 'gruppe' | 'zug';
 
+/**
+ * Rein geometrisch benannte Kopfmarken, deren fachliche Deutung nicht als globaler Stärkegrad
+ * belegt ist. Die geschlossene Menge verhindert, dass ähnlich aussehende Balken stillschweigend
+ * zwischen Anhängen wiederverwendet werden.
+ */
+export const TECHNICAL_HEAD_MARK_IDS = Object.freeze(['single-vertical-bar'] as const);
+export type TechnicalHeadMarkId = (typeof TECHNICAL_HEAD_MARK_IDS)[number];
+
 /** Verwaltungsstufen nach Kapitel 5.7. */
 export type AdminLevelId =
   | 'gemeinde'
@@ -304,6 +312,7 @@ export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
   'spontaneous-helper-collection-arrow',
   'spontaneous-helper-contact-double-arrow',
   'inset-hull-wheel-pair',
+  'formation-two-waves-diamond',
   'formation-water-rescue-lower-zone',
   'formation-opposed-triangles-top',
   'formation-chevron-top',
@@ -698,6 +707,8 @@ export interface SymbolSpec {
   bodyVariant?: BodyVariantId;
   organization?: OrganizationId;
   strength?: StrengthId;
+  /** Vermessene technische Kopfmarke ohne erfundene Stärke- oder Organisationssemantik. */
+  technicalHeadMark?: TechnicalHeadMarkId;
   administrativeLevel?: AdminLevelId;
   vehicleCategory?: VehicleCategoryId;
   capabilities?: readonly CapabilityId[];

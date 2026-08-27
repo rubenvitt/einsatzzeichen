@@ -9,6 +9,7 @@ import {
   type StrengthId,
   type SymbolKind,
   type SymbolSpec,
+  type TechnicalHeadMarkId,
 } from '@einsatzzeichen/schema';
 import { profileFor } from './layout/profiles.js';
 import { ARIMO_CAP_HEIGHT_FRACTION, verticalTextBoxMm } from './render/text-policy.js';
@@ -95,6 +96,10 @@ function record(value: unknown): value is Record<string, unknown> {
 
 function strengthId(value: unknown): value is StrengthId {
   return value === 'trupp' || value === 'staffel' || value === 'gruppe' || value === 'zug';
+}
+
+function technicalHeadMarkId(value: unknown): value is TechnicalHeadMarkId {
+  return value === 'single-vertical-bar';
 }
 
 function administrativeLevelId(value: unknown): value is AdminLevelId {
@@ -540,7 +545,33 @@ function validatePreparedSpec(
     });
   }
 
-  // Deckt ausdrücklich **nur** Stärke gegen Verwaltungsstufe. Die Entscheidungsnotiz vom
+  if (
+    spec.technicalHeadMark !== undefined &&
+    !technicalHeadMarkId(spec.technicalHeadMark)
+  ) {
+    issues.push({
+      rule: 'technical-head-mark-not-measured',
+      message:
+        `Die technische Kopfmarke "${String(spec.technicalHeadMark)}" ist nicht vermessen.`,
+    });
+  }
+
+  if (
+    spec.technicalHeadMark !== undefined &&
+    (spec.kind !== 'formation' || spec.bodyVariant !== undefined)
+  ) {
+    issues.push({
+      rule: 'technical-head-mark-requires-normal-formation',
+      message:
+        'Die technische Kopfmarke ist ausschließlich an der normalen Formation vermessen.',
+    });
+  }
+
+  // Deckt Stärke, Verwaltungsstufe und technische Kopfmarke gegeneinander sowie die technische
+  // Kopfmarke gegen eine vollständig vermessene Funktionsfassung ab. Eine Funktionsfassung ist
+  // nicht pauschal eine weitere Kopfquelle: bestehende Rollen binden selbst genau eine Stärke,
+  // Verwaltungsstufe oder kopflose Fassung und müssen unverändert gültig bleiben.
+  // Die Entscheidungsnotiz vom
   // 4. August 2026, Abschnitt 2, schreibt dieser Regel zusätzlich die Fahrzeugkategorie zu — das
   // ist falsch, `spec.vehicleCategory` kommt hier nicht vor, und die Begründung „belegen beide die
   // Kopfzone" trüge für sie geometrisch auch nicht: die Stärke sitzt oben, das Fahrwerk unten.
@@ -552,11 +583,19 @@ function validatePreparedSpec(
   // `head: {strength} | {administrativeLevel}`) zöge alle Rezepte und ihre Tests nach. Die
   // Entscheidung steht in der Notiz vom 18. August 2026, damit sie nicht als Versäumnis gelesen
   // wird.
-  if (spec.strength !== undefined && spec.administrativeLevel !== undefined) {
+  const explicitHeadOccupants = [
+    spec.strength,
+    spec.administrativeLevel,
+    spec.technicalHeadMark,
+  ].filter((value) => value !== undefined).length;
+  if (
+    explicitHeadOccupants > 1 ||
+    (spec.technicalHeadMark !== undefined && spec.functionRole !== undefined)
+  ) {
     issues.push({
       rule: 'head-zone-conflict',
       message:
-        'Stärkeangabe und Verwaltungsstufe belegen beide die Kopfzone und schließen sich aus.',
+        'Mehrere Angaben belegen dieselbe Kopfzone und schließen sich aus.',
     });
   }
 

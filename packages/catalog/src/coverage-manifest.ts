@@ -475,6 +475,15 @@ const ANHANG_I_J_TECHNICAL_REVIEW: Review = {
     'circle-12/raised-gable as geometry only; white Hilfsorganisation bodies and all domain ' +
     'classifications remain pending.',
 };
+const ANHANG_I_C_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-27',
+  note:
+    'I.1.1-I.1.4 passed literal strength and technical-head geometry, the independently ' +
+    'measured water-rescue formation mark, recipe, direct-snapshot and multi-size gates. ' +
+    'No organization or global Verband strength is inferred; domain classification remains pending.',
+};
 const ANHANG_I_B_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
@@ -482,8 +491,11 @@ const ANHANG_I_B_TECHNICAL_REVIEW: Review = {
   note:
     'I.2.1-I.2.3 passed measured vehicle-land, category-specific water-rescue, literal recipe, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; labels, organization and domain classification remain pending.',
 };
-
 const ANHANG_I_TECHNICAL_REVIEW_BY_SECTION = {
+  'I.1.1': ANHANG_I_C_TECHNICAL_REVIEW,
+  'I.1.2': ANHANG_I_C_TECHNICAL_REVIEW,
+  'I.1.3': ANHANG_I_C_TECHNICAL_REVIEW,
+  'I.1.4': ANHANG_I_C_TECHNICAL_REVIEW,
   'I.1.5': ANHANG_I_D_TECHNICAL_REVIEW,
   'I.1.6': ANHANG_I_D_TECHNICAL_REVIEW,
   'I.1.7': ANHANG_I_D_TECHNICAL_REVIEW,
@@ -519,7 +531,8 @@ const ANHANG_I_TECHNICAL_REVIEW_BY_SECTION = {
 /**
  * Ordnet nur einen tatsächlich integrierten Anhang-I-Schlüssel seinem separat belegten
  * technischen Review zu. Neue Schlüssel brauchen zuerst einen expliziten Eintrag; insbesondere
- * erbt ein neuer I.1-Abschnitt weder das I-d-, I-e- noch das I-g-Review über einen Präfixschluss.
+ * erbt ein neuer I.1-Abschnitt weder das I-c-, I-d-, I-e- noch das I-g-Review über einen
+ * Präfixschluss.
  */
 export function technicalReviewForAnhangI(section: string): Review {
   if (!Object.hasOwn(ANHANG_I_TECHNICAL_REVIEW_BY_SECTION, section)) {
@@ -1208,6 +1221,10 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'F',
     'G',
     'H',
+    'I.1.1',
+    'I.1.2',
+    'I.1.3',
+    'I.1.4',
     'I.1.5',
     'I.1.6',
     'I.1.7',

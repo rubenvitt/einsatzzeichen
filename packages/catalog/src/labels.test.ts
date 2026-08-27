@@ -28,6 +28,14 @@ describe('semantische Zeichenbeschreibungen', () => {
     );
   });
 
+  it('benennt den technischen Einzelbalken geometrisch und ohne Stärkegrad', () => {
+    expect(describeSymbolSpec({
+      kind: 'formation', technicalHeadMark: 'single-vertical-bar',
+    })).toBe(
+      'Grundzeichen: Taktische Formation. Technische Kopfmarke: Einzelner Vertikalbalken.',
+    );
+  });
+
   it('beschreibt das Trägerkürzel unterhalb des Körpers wie das im Körper', () => {
     // Die vierte Zone unterscheidet sich in Lage und Farbe, nicht in der Bedeutung. Für eine
     // Vorlesestimme ist das derselbe Sachverhalt — sonst verlöre E.2.27 seine einzige
@@ -241,6 +249,7 @@ describe('semantische Zeichenbeschreibungen', () => {
       'formation-opposed-triangles-top',
       'formation-chevron-top',
     ] as const;
+    const lfh481TechnicalIds = ['formation-two-waves-diamond'] as const;
     expect(TECHNICAL_BODY_MARK_IDS).toEqual([
       ...task4TechnicalIds,
       ...task5TechnicalIds,
@@ -248,6 +257,7 @@ describe('semantische Zeichenbeschreibungen', () => {
       ...task2RoleTechnicalIds,
       ...task1AnhangHTechnicalIds,
       ...task1AnhangNTechnicalIds,
+      ...lfh481TechnicalIds,
       ...lfh485TechnicalIds,
     ]);
     expect(TECHNICAL_BODY_MARK_LABELS as Record<string, string>).toMatchObject({
@@ -256,6 +266,8 @@ describe('semantische Zeichenbeschreibungen', () => {
         'Schwarze Formationskappe, 3,7 mm hoch, mit drei Löchern in einer Reihe',
       'formation-solid-cap-4mm-three-hole-row':
         'Schwarze Formationskappe, 4 mm hoch, mit drei Löchern in einer Reihe',
+      'formation-two-waves-diamond':
+        'Zwei Wellenlinien über einer Raute in der Formationshülle',
       'formation-water-rescue-compact':
         'Kompakte Wasserrettungsmarke mit Doppelwelle und scharfkantigem Rautenring',
       'formation-water-rescue-lower-zone':

@@ -15,6 +15,7 @@ import { organizationColor } from './organizations.js';
 import { MINIMUM_TEXT_CONTRAST } from './pictograms/contrast-contract.js';
 import { pictogram } from './pictograms/index.js';
 import { strengthHead } from './strengths.js';
+import { technicalHeadMark } from './technical-head-marks.js';
 import { vehicleChassis } from './vehicle-categories.js';
 import { describeSymbolSpec } from './labels.js';
 import {
@@ -44,6 +45,7 @@ const PORTS: CatalogPorts = {
   bodyMark,
   organizationColor,
   strengthHead,
+  technicalHeadMark,
   functionRole,
   administrativeHead,
   vehicleChassis,
@@ -88,6 +90,9 @@ export interface Recipe {
  * Anhang N ergänzt neun primary-Darstellungen weiterer Träger. Ihre Körper-, Fahrwerks-,
  * Marken- und Textgeometrien verwenden ausschließlich die davor separat vermessenen Verträge;
  * insbesondere entsteht aus „geländegängig“ keine neue fachliche oder technische ID.
+ * Anhang I-c ergänzt vier Wasserrettungsformationen ohne Organisationsableitung. I.1.4 verwendet
+ * die separat validierte technische Kopfmarke `single-vertical-bar`, nicht einen neuen globalen
+ * Stärkegrad.
  * Anhang I-e ergänzt vier Abschnitte mit fünf Wasserrettungsformationen. Die alternative
  * Darstellung von I.1.9 bleibt über ihren Varianten-Key eigenständig adressierbar; beide
  * Fachdienstbilder verwenden die vorhandenen CapabilityIds in einer für Formationen vermessenen
