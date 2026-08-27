@@ -67,6 +67,39 @@ function stroke(x1: number, y1: number, x2: number, y2: number): Primitive {
   };
 }
 
+function filledPolygon(points: readonly (readonly [number, number])[]): Primitive {
+  return {
+    type: 'polyline',
+    role: 'pictogram',
+    points,
+    closed: true,
+    style: { fill: 'schwarz', stroke: 'none' },
+  };
+}
+
+function waterWave(centerXMm: number, baselineYMm: number): Primitive {
+  const x = (offsetMm: number) => Number((centerXMm + offsetMm).toFixed(3));
+  const y = (offsetMm: number) => Number((baselineYMm + offsetMm).toFixed(3));
+  return {
+    type: 'path',
+    role: 'pictogram',
+    d:
+      `M ${x(4)} ${y(0)} C ${x(3.604)} ${y(0)} ${x(3.416)} ${y(-0.188)} ` +
+      `${x(3.178)} ${y(-0.427)} C ${x(2.923)} ${y(-0.682)} ` +
+      `${x(2.605)} ${y(-1)} ${x(2.002)} ${y(-1)} ` +
+      `C ${x(1.399)} ${y(-1)} ${x(1.081)} ${y(-0.682)} ` +
+      `${x(0.826)} ${y(-0.427)} C ${x(0.587)} ${y(-0.188)} ` +
+      `${x(0.399)} ${y(0)} ${x(0.003)} ${y(0)} ` +
+      `C ${x(-0.394)} ${y(0)} ${x(-0.583)} ${y(-0.188)} ` +
+      `${x(-0.821)} ${y(-0.427)} C ${x(-1.076)} ${y(-0.682)} ` +
+      `${x(-1.395)} ${y(-1)} ${x(-1.998)} ${y(-1)} ` +
+      `C ${x(-2.602)} ${y(-1)} ${x(-2.92)} ${y(-0.682)} ` +
+      `${x(-3.176)} ${y(-0.427)} C ${x(-3.414)} ${y(-0.188)} ` +
+      `${x(-3.602)} ${y(0)} ${x(-3.999)} ${y(0)}`,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  };
+}
+
 /**
  * Die Fachdienstteilung: die beiden Mittellinien der Körperhülle, von Kante zu Kante. Gemessen an
  * `F.1.11_Rettungsdienst allgemein.svg` (senkrechter Arm 15,75…16,25 mm um die Mittellinie 16,0
@@ -177,6 +210,25 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
     height: 3,
     style: { fill: 'schwarz', stroke: 'none' },
   }],
+  'formation-solid-cap-3.7mm-three-hole-row': (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    return [{
+      type: 'rect',
+      role: 'pictogram',
+      x: bounds.minX,
+      y: bounds.minY,
+      width: bounds.maxX - bounds.minX,
+      height: 3.7,
+      style: { fill: 'schwarz', stroke: 'none' },
+    }, ...[cx - 5, cx, cx + 5].map((holeCx) => ({
+      type: 'circle' as const,
+      role: 'pictogram' as const,
+      cx: holeCx,
+      cy: bounds.minY + 1.75,
+      r: 1.5,
+      style: { fill: 'weiss' as const, stroke: 'none' as const },
+    }))];
+  },
   'formation-solid-cap-4mm-three-hole-row': (bounds) => [{
     type: 'rect',
     role: 'pictogram',
@@ -193,6 +245,51 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
     r: 1.5,
     style: { fill: 'weiss' as const, stroke: 'none' as const },
   }))],
+
+  /**
+   * I.1.5 bis I.1.8: die kompakte, körperbezogene Wasserrettungsfassung — ausdrücklich nicht
+   * die 23 mm breite Boxfassung aus 4.5.8. Aus den expandierten 0,5-mm-Konturen ergeben sich
+   * zwei 8 mm breite Kubikwellen und die Raute auf den Ankern ±4 mm um die Körpermitte.
+   *
+   * Die Quellenkoordinaten sind auf drei SVG-Dezimalstellen exportiert. Nach Umrechnung auf
+   * 32 mm liegen die zurückgerechneten Mittellinien höchstens 0,002 mm von den hier verwendeten
+   * ganzen bzw. halben Millimetern entfernt; diese Exportabweichung wird nicht fortgeschrieben.
+   */
+  'formation-water-rescue-compact': (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    const cy = (bounds.minY + bounds.maxY) / 2;
+    const miterOffsetMm = 0.353553;
+    const wave = (baselineY: number, crestY: number): Primitive => ({
+      type: 'path',
+      role: 'pictogram',
+      d:
+        `M ${cx - 4} ${baselineY} ` +
+        `C ${cx - 3} ${baselineY} ${cx - 3} ${crestY} ${cx - 2} ${crestY} ` +
+        `C ${cx - 1} ${crestY} ${cx - 1} ${baselineY} ${cx} ${baselineY} ` +
+        `C ${cx + 1} ${baselineY} ${cx + 1} ${crestY} ${cx + 2} ${crestY} ` +
+        `C ${cx + 3} ${crestY} ${cx + 3} ${baselineY} ${cx + 4} ${baselineY}`,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    });
+    return [
+      wave(cy - 3.5, cy - 4.5),
+      wave(cy - 1.5, cy - 2.5),
+      {
+        type: 'path',
+        role: 'pictogram',
+        d:
+          `M ${cx - 4 - miterOffsetMm} ${cy + 4} ` +
+          `L ${cx} ${cy + 8 + miterOffsetMm} ` +
+          `L ${cx + 4 + miterOffsetMm} ${cy + 4} ` +
+          `L ${cx} ${cy - miterOffsetMm} Z ` +
+          `M ${cx} ${cy + 8 - miterOffsetMm} ` +
+          `L ${cx - 4 + miterOffsetMm} ${cy + 4} ` +
+          `L ${cx} ${cy + miterOffsetMm} ` +
+          `L ${cx + 4 - miterOffsetMm} ${cy + 4} Z`,
+        style: { fill: 'schwarz', fillRule: 'evenodd', stroke: 'none' },
+      },
+    ];
+  },
+
   /** C.1.1 bis C.1.3: die an der Formation vermessene Löschmarke mit zwei rechten Diagonalen. */
   'fire-fighting': (bounds) => {
     const cy = (bounds.minY + bounds.maxY) / 2;
@@ -201,6 +298,28 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
       stroke(bounds.minX, cy, branchX, cy),
       stroke(branchX, cy, bounds.maxX, bounds.minY),
       stroke(branchX, cy, bounds.maxX, bounds.maxY),
+    ];
+  },
+
+  /**
+   * I.1.17 bis I.1.20: die kompakte Wasserrettungsmarke der Formation. Gegenüber der
+   * eigenständigen Kapitel-4-Fassung bleiben Wellen und Raute bewusst in der unteren
+   * Inhaltszone; die Maße sind an den vier I-g-Dateien separat vermessen.
+   */
+  'water-rescue': (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    return [
+      waterWave(cx, bounds.minY + 7.25),
+      waterWave(cx, bounds.minY + 9.25),
+      {
+        ...outline([
+          [cx, bounds.minY + 10.646],
+          [cx + 3.854, bounds.minY + 14.5],
+          [cx, bounds.minY + 18.354],
+          [cx - 3.854, bounds.minY + 14.5],
+        ]),
+        closed: true,
+      },
     ];
   },
 
@@ -517,6 +636,43 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
       filled([[cx, cy + 4], [cx - 8, cy + 6.667], [cx - 8, cy + 1.333]]),
       filled([[cx, cy + 4], [cx + 8, cy + 1.333], [cx + 8, cy + 6.667]]),
     ];
+  },
+
+  /**
+   * I.1.19: zwei gefüllte, zur Mitte gerichtete Dreiecke in der oberen Inhaltszone. Diese
+   * geometrische ID übernimmt ausdrücklich weder die zusätzliche Winkelmarke noch eine
+   * fachliche Drohnenbedeutung aus F.1.16.
+   */
+  'formation-opposed-triangles-top': (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    return [
+      filledPolygon([
+        [cx, bounds.minY + 3.5],
+        [cx - 6.5, bounds.minY + 5.5],
+        [cx - 6.5, bounds.minY + 1.5],
+      ]),
+      filledPolygon([
+        [cx + 6.5, bounds.minY + 5.5],
+        [cx, bounds.minY + 3.5],
+        [cx + 6.5, bounds.minY + 1.5],
+      ]),
+    ];
+  },
+
+  /**
+   * I.1.20: ein einzelner gefüllter Winkel in der oberen Inhaltszone. Die getrennte ID hält
+   * ihn von der kombinierten F.1.16-Geometrie und deren ungeklärter Fachsemantik fern.
+   */
+  'formation-chevron-top': (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    return [filledPolygon([
+      [cx, bounds.minY + 3.5],
+      [cx - 5.333, bounds.minY + 1.25],
+      [cx - 5.333, bounds.minY + 2.25],
+      [cx, bounds.minY + 5.5],
+      [cx + 5.333, bounds.minY + 2.25],
+      [cx + 5.333, bounds.minY + 1.25],
+    ])];
   },
 
   /** F.1.21: eigener Ring r 6,5 mm, Dach und eingeschriebenes Dreieck. */

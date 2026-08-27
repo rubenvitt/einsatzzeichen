@@ -83,8 +83,12 @@ const VEHICLE_CATEGORY_LABELS: Record<VehicleCategoryId, string> = {
  */
 export const TECHNICAL_BODY_MARK_LABELS = Object.freeze({
   'formation-solid-cap-3mm': 'Schwarze Formationskappe, 3 mm hoch',
+  'formation-solid-cap-3.7mm-three-hole-row':
+    'Schwarze Formationskappe, 3,7 mm hoch, mit drei Löchern in einer Reihe',
   'formation-solid-cap-4mm-three-hole-row':
     'Schwarze Formationskappe, 4 mm hoch, mit drei Löchern in einer Reihe',
+  'formation-water-rescue-compact':
+    'Kompakte Wasserrettungsmarke mit Doppelwelle und scharfkantigem Rautenring',
   'ring-7mm-offset-down-1mm': 'Ring 7 mm, Mittelpunkt 1 mm unter Körpermitte',
   'chevron-over-opposed-triangles': 'Winkel über gegenüberliegenden Dreiecken',
   'ring-6-5mm-offset-down-2mm-with-roof': 'Ring 6,5 mm mit Dach und eingeschriebenem Dreieck',
@@ -121,6 +125,9 @@ export const TECHNICAL_BODY_MARK_LABELS = Object.freeze({
   'air-rising-diagonal': 'Ansteigende Diagonale im Luftfahrzeugrumpf',
   'spontaneous-helper-collection-arrow': 'Vierblattmarke mit Ring und Rechtspfeil',
   'spontaneous-helper-contact-double-arrow': 'Vierblattmarke mit Doppelpfeil',
+  'formation-opposed-triangles-top':
+    'Zwei gegenüberliegende Dreiecke in der oberen Formationszone',
+  'formation-chevron-top': 'Gefüllter Winkel in der oberen Formationszone',
   'h-veterinary-decontamination':
     'Veterinär-V mit kompakter Tierdekontaminationsmarke unten links',
   'h-veterinary-slaughter':
