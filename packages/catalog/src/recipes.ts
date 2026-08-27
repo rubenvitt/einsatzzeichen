@@ -15,6 +15,7 @@ import { organizationColor } from './organizations.js';
 import { MINIMUM_TEXT_CONTRAST } from './pictograms/contrast-contract.js';
 import { pictogram } from './pictograms/index.js';
 import { strengthHead } from './strengths.js';
+import { technicalHeadMark } from './technical-head-marks.js';
 import { vehicleChassis } from './vehicle-categories.js';
 import { describeSymbolSpec } from './labels.js';
 import {
@@ -38,6 +39,7 @@ import { ANHANG_N_RECIPES } from './recipes-anhang-n.js';
 import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
 import {
+  ANHANG_I_C_RECIPES,
   ANHANG_I_D_RECIPES,
   ANHANG_I_E_RECIPES,
   ANHANG_I_G_RECIPES,
@@ -51,6 +53,7 @@ const PORTS: CatalogPorts = {
   bodyMark,
   organizationColor,
   strengthHead,
+  technicalHeadMark,
   functionRole,
   administrativeHead,
   vehicleChassis,
@@ -113,6 +116,7 @@ export const RECIPES = {
   ...ANHANG_F_D_RECIPES,
   ...ANHANG_F_E_RECIPES,
   ...ANHANG_F_F_RECIPES,
+  ...ANHANG_I_C_RECIPES,
   ...ANHANG_I_D_RECIPES,
   ...ANHANG_I_E_RECIPES,
   ...ANHANG_I_G_RECIPES,

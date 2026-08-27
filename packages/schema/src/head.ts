@@ -26,6 +26,16 @@ export interface HeadShape {
   heightMm: number;
 }
 
+/**
+ * Kopfzone aus beliebigen, relativ zu ihrer Oberkante vermessenen Primitiven. Anders als
+ * `HeadShape` legt sie keine Kreissemantik nahe; die absolute Platzierung bleibt Aufgabe des
+ * Kompositionsmotors.
+ */
+export interface PrimitiveHeadShape {
+  readonly heightMm: Length;
+  readonly primitives: readonly Primitive[];
+}
+
 /** Separat vermessene Verwaltungsmarken, relativ zu ihrer Kopfzonen-Oberkante. */
 export interface AdministrativeHeadShape {
   readonly box: {

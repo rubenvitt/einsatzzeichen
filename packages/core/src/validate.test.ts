@@ -1203,6 +1203,48 @@ describe('validateSpec', () => {
     expect(issues.map((i) => i.rule)).toContain('head-zone-conflict');
   });
 
+  it('bindet die technische Einzelbalken-Kopfmarke fail-closed an die normale Formation', () => {
+    expect(validateSpec({
+      kind: 'formation', technicalHeadMark: 'single-vertical-bar',
+    })).toEqual([]);
+
+    expect(validateRuntime({
+      kind: 'formation', technicalHeadMark: 'double-vertical-bar',
+    }).map((issue) => issue.rule)).toContain('technical-head-mark-not-measured');
+
+    for (const spec of [
+      { kind: 'person', technicalHeadMark: 'single-vertical-bar' },
+      {
+        kind: 'formation', bodyVariant: 'foot-band',
+        technicalHeadMark: 'single-vertical-bar',
+      },
+    ] satisfies SymbolSpec[]) {
+      expect(validateSpec(spec).map((issue) => issue.rule))
+        .toContain('technical-head-mark-requires-normal-formation');
+    }
+  });
+
+  it('behandelt jede Doppelbelegung der technischen Kopfzone als Konflikt', () => {
+    const conflictingSpecs = [
+      {
+        kind: 'formation', strength: 'gruppe',
+        technicalHeadMark: 'single-vertical-bar',
+      },
+      {
+        kind: 'formation', administrativeLevel: 'kreis',
+        technicalHeadMark: 'single-vertical-bar',
+      },
+      {
+        kind: 'formation', functionRole: 'fire-service-platoon-commander',
+        technicalHeadMark: 'single-vertical-bar',
+      },
+    ] satisfies SymbolSpec[];
+
+    for (const spec of conflictingSpecs) {
+      expect(validateSpec(spec).map((issue) => issue.rule)).toContain('head-zone-conflict');
+    }
+  });
+
   it('lehnt eine leere Bezeichnung ab', () => {
     const issues = validateSpec({ kind: 'formation', designation: '   ' });
     expect(issues.map((i) => i.rule)).toContain('designation-not-blank');

@@ -19,9 +19,11 @@ import {
   type PictogramDefinition,
   type PictogramId,
   type Primitive,
+  type PrimitiveHeadShape,
   type StrengthId,
   type SymbolKind,
   type SymbolSpec,
+  type TechnicalHeadMarkId,
   type VehicleCategoryId,
 } from '@einsatzzeichen/schema';
 import { boundsOfMm, type BoundsMm } from './bounds.js';
@@ -714,6 +716,8 @@ export interface CatalogPorts {
   baseDrawing(kind: SymbolKind, variant?: BodyVariantId): Drawing;
   organizationColor(id: OrganizationId): ColorToken;
   strengthHead(id: StrengthId): HeadShape;
+  /** Totaler Resolver fuer relativ vermessene, semantikfreie Kopfprimitive. */
+  technicalHeadMark(id: TechnicalHeadMarkId): PrimitiveHeadShape;
   /** Totaler Resolver fuer alle 25 vollstaendig vermessenen Funktionsfassungen. */
   functionRole(id: FunctionRoleId): FunctionRoleDefinition;
   /** Partieller Resolver: nur Kreis, Nationalstaat und EU sind als Kopf vermessen. */
@@ -888,15 +892,19 @@ export function compose(
 
   const profile = profileFor(spec.kind, spec.bodyVariant);
   const headShape = spec.strength !== undefined ? catalog.strengthHead(spec.strength) : null;
+  const primitiveHeadShape = spec.technicalHeadMark !== undefined
+    ? catalog.technicalHeadMark(spec.technicalHeadMark)
+    : null;
+  const headHeightMm = headShape?.heightMm ?? primitiveHeadShape?.heightMm;
 
   // Dieselbe Kopfzone sitzt je nach Körperform unterschiedlich hoch — deshalb
   // rechnet erst placeHead die relativen Marken in absolute Koordinaten um.
-  const headBox = headShape
+  const headBox = headHeightMm !== undefined
     ? roleDefinition === undefined
-      ? placeHead(profile, headShape.heightMm)
+      ? placeHead(profile, headHeightMm)
       : {
           topMm: roleDefinition.layout.headTopMm!,
-          bottomMm: roleDefinition.layout.headTopMm! + headShape.heightMm,
+          bottomMm: roleDefinition.layout.headTopMm! + headHeightMm,
         }
     : null;
   const headPrimitives: Primitive[] =
@@ -910,6 +918,15 @@ export function compose(
           style: { fill: 'schwarz' },
         }))
       : [];
+
+  if (primitiveHeadShape !== null && headBox !== null) {
+    headPrimitives.push({
+      type: 'group',
+      role: 'head',
+      transform: { translate: { dxMm: 0, dyMm: headBox.topMm } },
+      children: primitiveHeadShape.primitives,
+    });
+  }
 
   if (administrativeHead !== undefined && roleDefinition !== undefined) {
     headPrimitives.push({
