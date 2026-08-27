@@ -18,6 +18,7 @@ import {
   labelContrastRequirements,
   type Recipe,
 } from './recipes.js';
+import { ANHANG_I_A_RECIPES, ANHANG_I_D_RECIPES } from './recipes-anhang-i.js';
 import {
   ANHANG_E_A_FILL_DEFECTS,
   ANHANG_E_A_RECIPES,
@@ -473,7 +474,7 @@ describe('Anhang D.1, Führungsstellen im Einsatz', () => {
 
   it('führt exakt die neun komponierten D.1-Darstellungen', () => {
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('D.1.'))).toEqual(expectedKeys);
-    expect(Object.keys(RECIPES)).toHaveLength(210);
+    expect(Object.keys(RECIPES)).toHaveLength(214);
   });
 
   it('bindet D.1.2 bis D.1.8 an die sieben gemessenen Formationsrollen', () => {
@@ -1017,7 +1018,7 @@ describe('Anhang G — vollständiges Logistikinventar', () => {
     expect(actual).toEqual(expected);
     expect(Object.keys(actual)).toEqual(Object.keys(expected));
     expect(Object.keys(actual).every((key) => !key.includes('#'))).toBe(true);
-    expect(Object.keys(RECIPES)).toHaveLength(210);
+    expect(Object.keys(RECIPES)).toHaveLength(214);
   });
 
   it('bindet die 21 primary- und Referenz-IDs exakt und ohne Alternative', () => {
@@ -1064,14 +1065,13 @@ describe('Anhang I, Teilslice I-a (I.3.5 bis I.3.7)', () => {
     'I.3.6': ['Mehrzweckarbeitsboot', 'I.3.6_Mehrzweckarbeitsboot.svg', 'MzAB'],
     'I.3.7': ['Mehrzweckponton', 'I.3.7_Mehrzweckponton.svg', 'MzPt'],
   } as const;
-  const recipes: Record<string, Recipe> = RECIPES;
+  const recipes: Record<string, Recipe> = ANHANG_I_A_RECIPES;
 
   it('bindet ausschließlich die drei vermessenen Wasserfahrzeuge an ihre Referenzmatrix', () => {
     // Diese Literale schützen die Zuordnung von Abschnitt, Name, Quelldatei und Kürzel: etwa
     // ein vertauschtes MzAB/MzPt ergäbe weiter eine valide Komposition, aber ein falsches Bild.
     const actual = Object.fromEntries(
       Object.entries(recipes)
-        .filter(([section]) => section.startsWith('I.3.'))
         .map(([section, recipe]) => {
         return [
           section,
@@ -1080,6 +1080,7 @@ describe('Anhang I, Teilslice I-a (I.3.5 bis I.3.7)', () => {
       }),
     );
     expect(actual).toEqual(expected);
+    expect(Object.keys(recipes)).toEqual(Object.keys(expected));
   });
 
   it.each(Object.entries(expected))(
@@ -1184,7 +1185,7 @@ describe('Anhang I, Teilslice I-g (I.1.17 bis I.1.20)', () => {
 
   it('bindet exakt die vier freigegebenen I-g-Referenzen an ihre gemessenen Specs', () => {
     expect(Object.fromEntries(
-      Object.entries(recipes).filter(([section]) => section.startsWith('I.1.')),
+      Object.entries(recipes).filter(([section]) => /^I\.1\.(?:1[7-9]|20)$/.test(section)),
     )).toEqual(expected);
   });
 
@@ -1368,6 +1369,141 @@ describe('Anhang I, LFH-486 (I.2.1 bis I.2.3)', () => {
       expect(key).toMatch(/^I\.2\.[1-3]$/);
     },
   );
+});
+
+describe('Anhang I, Teilslice I-d (I.1.5 bis I.1.8)', () => {
+  const expected = {
+    'I.1.5': {
+      title: 'Zugtrupp Wasserrettungszug',
+      referenceAsset: 'I.1.5_Zugtrupp Wasserrettungszug.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'hilfsorganisation',
+        strength: 'trupp',
+        bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3.7mm-three-hole-row'],
+      },
+    },
+    'I.1.6': {
+      title: 'Führungstrupp Wasserrettung',
+      referenceAsset: 'I.1.6_Führungstrupp Wasserrettung.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'hilfsorganisation',
+        strength: 'trupp',
+        bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3mm'],
+      },
+    },
+    'I.1.7': {
+      title: 'Führungsgruppe Wasserrettung',
+      referenceAsset: 'I.1.7_Führungsgruppe Wasserrettung.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'hilfsorganisation',
+        strength: 'gruppe',
+        bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3mm'],
+      },
+    },
+    'I.1.8': {
+      title: 'Führungsstaffel Wasserrettung',
+      referenceAsset: 'I.1.8_Führungsstaffel Wasserrettung.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'hilfsorganisation',
+        strength: 'staffel',
+        bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3mm'],
+      },
+    },
+  } as const satisfies Record<string, Recipe>;
+  const recipes: Readonly<Record<string, Recipe>> = ANHANG_I_D_RECIPES;
+
+  it('exportiert ausschließlich die vier freigegebenen Rezepte mit ihrer literalen Matrix', () => {
+    expect(recipes).toEqual(expected);
+  });
+
+  it('integriert I.1.5 bis I.1.8 exakt neben den übrigen I.1-Slices', () => {
+    expect(Object.keys(RECIPES).filter((section) => /^I\.1\.[5-8]$/.test(section))).toEqual([
+      'I.1.5',
+      'I.1.6',
+      'I.1.7',
+      'I.1.8',
+    ]);
+  });
+
+  it.each(Object.keys(expected) as (keyof typeof expected)[])(
+    '%s ist als exakt diese Formation valide',
+    (section) => {
+      const recipe = recipes[section];
+      expect(recipe).toBeDefined();
+      if (recipe === undefined) return;
+      expect(recipe.spec).toEqual(expected[section].spec);
+      expect(validateSpec(recipe.spec)).toEqual([]);
+    },
+  );
+
+  it('hält Kopf, Körper und Kappe in der belegten vertikalen Lage', () => {
+    const placements = {
+      'I.1.5': {
+        body: { minX: 1, minY: 6, maxX: 31, maxY: 26 },
+        heads: [{ cx: 16, cy: 3.5, r: 1.5 }],
+        capHeight: 3.7,
+      },
+      'I.1.6': {
+        body: { minX: 1, minY: 6, maxX: 31, maxY: 26 },
+        heads: [{ cx: 16, cy: 3.5, r: 1.5 }],
+        capHeight: 3,
+      },
+      'I.1.7': {
+        body: { minX: 1, minY: 6, maxX: 31, maxY: 26 },
+        heads: [
+          { cx: 11, cy: 3.5, r: 1.5 },
+          { cx: 21, cy: 3.5, r: 1.5 },
+        ],
+        capHeight: 3,
+      },
+      'I.1.8': {
+        body: { minX: 1, minY: 9, maxX: 31, maxY: 29 },
+        heads: [
+          { cx: 16, cy: 2.5, r: 1.5 },
+          { cx: 16, cy: 6.5, r: 1.5 },
+        ],
+        capHeight: 3,
+      },
+    } as const;
+
+    for (const [section, placement] of Object.entries(placements)) {
+      const recipe = recipes[section];
+      expect(recipe, `${section} fehlt`).toBeDefined();
+      if (recipe === undefined) continue;
+
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      const body = drawing.children.find((child) => child.role === 'body');
+      expect(body, `${section}: Körper`).toBeDefined();
+      if (body === undefined) continue;
+      const bodyBounds = boundsOfMm(body);
+      expect(bodyBounds, `${section}: Körperhülle`).toEqual(placement.body);
+      expect(body.style?.fill, `${section}: Körperfarbe`).toBe('weiss');
+
+      const heads = drawing.children
+        .filter((child): child is Primitive & { type: 'circle' } =>
+          child.type === 'circle' && child.role === 'head')
+        .map(({ cx, cy, r }) => ({ cx, cy, r }));
+      expect(heads, `${section}: Kopfzone`).toEqual(placement.heads);
+      expect(
+        bodyBounds.minY - Math.max(...heads.map((head) => head.cy + head.r)),
+        `${section}: Abstand zwischen Kopf und Körper`,
+      ).toBe(1);
+
+      const cap = drawing.children.find((child): child is Primitive & { type: 'rect' } =>
+        child.type === 'rect' &&
+        child.role === 'pictogram' &&
+        child.x === bodyBounds.minX &&
+        child.y === bodyBounds.minY &&
+        child.width === bodyBounds.maxX - bodyBounds.minX &&
+        child.height === placement.capHeight &&
+        child.style?.fill === 'schwarz');
+      expect(cap, `${section}: Kappe`).toBeDefined();
+    }
+  });
 });
 
 describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
@@ -2602,12 +2738,12 @@ describe('Anhang F, Teilslice F-f', () => {
     },
   } as const;
 
-  it('deckt F.3.12 bis F.3.19 lückenlos ab und bleibt im integrierten Bestand erhalten', () => {
+  it('deckt F.3.12 bis F.3.19 lückenlos ab und erreicht integriert 214 Rezepte', () => {
     const entries = Object.entries<Recipe>(RECIPES)
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(210);
+    expect(Object.keys(RECIPES)).toHaveLength(214);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {

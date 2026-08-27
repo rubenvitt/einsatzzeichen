@@ -37,20 +37,20 @@ describe('coverage CLI', () => {
     // D.1.1 bis D.1.9 einschließlich der Alternative von D.1.9: 471. D.2 ergänzt die sieben
     // Ortsdefinitionen: 478. D.3 ergänzt zwölf neue Rezepte und zwei direkte offene
     // Kappen; D.3.7 behält seinen vorhandenen Schlüssel: 492. D.4 schließt bei 497 Zeilen;
-    // LFH-485, LFH-486 und LFH-488 ergänzen zusammen zehn I-Zeilen: insgesamt 507.
-    expect(manifestReviews).toBe(507);
+    // I-d und I-g ergänzen je vier, I-b und I-j je drei literale Zeilen: insgesamt 511.
+    expect(manifestReviews).toBe(511);
     expect(sourceReviews).toBe(13);
     expect(profileReviews).toBe(1);
-    expect(openReviews).toBe(521);
+    expect(openReviews).toBe(525);
     // **Die Umfangszeile ist wieder kurz.** Der Teilslice E.2 hatte sie auf 47 Einträge gedehnt,
     // weil E.2 mit einem fehlenden Abschnitt nur abschnittsweise behauptbar war. Seit E.2.6
     // gebaut ist, tragen zwei Tests die Lückenlosigkeit — an den Rezepten (`recipes.test.ts`)
     // und an den Manifesteinträgen (`coverage-manifest.test.ts`) —, und erst damit ist das eine
-    // `E` eine widerlegbare Aussage statt einer kürzeren. I-g und I-b bleiben dagegen
-    // absichtlich auf ihren gebauten Einzelabschnitten statt pauschal auf `I.1`, `I.2` oder `I`
-    // begrenzt.
+    // `E` eine widerlegbare Aussage statt einer kürzeren. I-d und I-g bleiben dagegen jeweils auf
+    // ihren vier, I-b und I-j jeweils auf ihren drei gebauten Einzelabschnitten statt pauschal auf
+    // `I.1`, `I.2`, `I.4` oder `I` begrenzt.
     expect(lines).toContain(
-      'Umfang:      1, 2, 4, 5.1.1, 5.4, 5.8, C.1.1, C.1.2, C.1.3, D, E, F, G, H, I.1.17, I.1.18, I.1.19, I.1.20, I.2.1, I.2.2, I.2.3, I.3.5, I.3.6, I.3.7, I.4.1, I.4.2, I.4.3, J.1, J.2, J.3, J.4, K, L, M, N',
+      'Umfang:      1, 2, 4, 5.1.1, 5.4, 5.8, C.1.1, C.1.2, C.1.3, D, E, F, G, H, I.1.5, I.1.6, I.1.7, I.1.8, I.1.17, I.1.18, I.1.19, I.1.20, I.2.1, I.2.2, I.2.3, I.3.5, I.3.6, I.3.7, I.4.1, I.4.2, I.4.3, J.1, J.2, J.3, J.4, K, L, M, N',
     );
     // Die Ausnahme ist im Betrieb sichtbar und nicht nur im Gate. Sie steht bewusst **nicht** in
     // der Blockerzeile darunter: ein Blocker ist ein offener Punkt, diese Ausnahme ist ein
