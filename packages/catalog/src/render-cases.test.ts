@@ -18,14 +18,17 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 497: integrierter Bestand einschließlich I-d/I-g/I-b/I-j und fünf direkte I.5-Piktogramme.
-    expect(ids).toHaveLength(497);
+    // 502: integrierter Bestand einschließlich I-d/e/g/b/a/j und fünf direkte I.5-Piktogramme.
+    expect(ids).toHaveLength(502);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
     // dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66, G 21, H sowie
-    // I-a/I-b/I-j jeweils drei, I-d/I-g je vier, C.1.3 einen, N neun und Anhang D 26 Fälle.
-    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(214);
+    // I-a/I-b/I-j jeweils drei, I-d/I-g je vier, I-e fünf, C.1.3 einen, N neun und Anhang D 26 Fälle.
+    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(219);
     expect(ids.filter((id) => id.startsWith('recipe.I.'))).toEqual([
+      'recipe.I.1.10',
+      'recipe.I.1.11',
+      'recipe.I.1.12',
       'recipe.I.1.17',
       'recipe.I.1.18',
       'recipe.I.1.19',
@@ -34,6 +37,8 @@ describe('vollständige Renderfallmenge', () => {
       'recipe.I.1.6',
       'recipe.I.1.7',
       'recipe.I.1.8',
+      'recipe.I.1.9',
+      'recipe.I.1.9#alternative',
       'recipe.I.2.1',
       'recipe.I.2.2',
       'recipe.I.2.3',
@@ -53,6 +58,21 @@ describe('vollständige Renderfallmenge', () => {
       'recipe.H.1',
       'recipe.H.2',
       'recipe.H.3',
+    ]);
+    expect(ids.filter((id) => id.startsWith('recipe.I.1.'))).toEqual([
+      'recipe.I.1.10',
+      'recipe.I.1.11',
+      'recipe.I.1.12',
+      'recipe.I.1.17',
+      'recipe.I.1.18',
+      'recipe.I.1.19',
+      'recipe.I.1.20',
+      'recipe.I.1.5',
+      'recipe.I.1.6',
+      'recipe.I.1.7',
+      'recipe.I.1.8',
+      'recipe.I.1.9',
+      'recipe.I.1.9#alternative',
     ]);
     expect(ids.filter((id) => id.startsWith('recipe.I.4.'))).toEqual([
       'recipe.I.4.1',

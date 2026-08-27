@@ -34,6 +34,7 @@ import {
   ANHANG_E_F_RECIPES,
 } from './recipes-anhang-e.js';
 import { ANHANG_F_B_RECIPES } from './recipes-anhang-f.js';
+import * as anhangI from './recipes-anhang-i.js';
 
 /**
  * Effektive y-Lage der waagerechten Brandbekämpfungs-Linie: ihre Autorenkoordinate plus die
@@ -142,6 +143,94 @@ describe('composeFromCatalog() — vorbereitete inset-hull-Spec', () => {
     expect(labelContents(drawing)).toEqual(['MzB']);
     expect(drawing.description).toContain('Kürzel: MzB');
     expect(drawing.description).not.toContain('PROXY');
+  });
+});
+
+describe('Anhang I, Teilslice I-e — Wasserrettungsformationen', () => {
+  it('bindet genau die fünf vermessenen Wasserrettungsdarstellungen an ihre Quellen und Specs', () => {
+    // Nicht aus `RECIPES` hergeleitet: Die Matrix bleibt ein unabhängiger, literaler Vertrag und
+    // erkennt dadurch vertauschte Stärke, Labels oder die zwei CapabilityIds sofort.
+    expect(anhangI.ANHANG_I_E_RECIPES).toEqual({
+      'I.1.9': {
+        title: 'Bootstrupp Wasserrettungszug',
+        referenceAsset: 'I.1.9_Bootstrupp Wasserrettungszug.svg',
+        spec: {
+          kind: 'formation',
+          organization: 'hilfsorganisation',
+          strength: 'trupp',
+          bodyMarks: ['water-rescue'],
+          labels: { topLeft: 'Boot' },
+        },
+      },
+      'I.1.9#alternative': {
+        title: 'Bootstrupp Wasserrettungszug',
+        referenceAsset: 'I.1.9_Bootstrupp Wasserrettungszug_Alternative.svg',
+        spec: {
+          kind: 'formation',
+          organization: 'hilfsorganisation',
+          strength: 'trupp',
+          bodyMarks: ['watercraft-operations'],
+          labels: { topLeft: 'WRZ' },
+        },
+      },
+      'I.1.10': {
+        title: 'Bootsgruppe Wasserrettung',
+        referenceAsset: 'I.1.10_Bootsgruppe Wasserrettung.svg',
+        spec: {
+          kind: 'formation',
+          organization: 'hilfsorganisation',
+          strength: 'gruppe',
+          bodyMarks: ['water-rescue'],
+          labels: { topLeft: 'Boot' },
+        },
+      },
+      'I.1.11': {
+        title: 'Tauchtrupp',
+        referenceAsset: 'I.1.11_Tauchtrupp.svg',
+        spec: {
+          kind: 'formation',
+          organization: 'hilfsorganisation',
+          strength: 'trupp',
+          bodyMarks: ['water-rescue'],
+          labels: { topLeft: 'Tauchen' },
+        },
+      },
+      'I.1.12': {
+        title: 'Tauchgruppe',
+        referenceAsset: 'I.1.12_Tauchgruppe.svg',
+        spec: {
+          kind: 'formation',
+          organization: 'hilfsorganisation',
+          strength: 'gruppe',
+          bodyMarks: ['water-rescue'],
+          labels: { topLeft: 'Tauchen' },
+        },
+      },
+    });
+  });
+
+  it('macht alle fünf Darstellungen über den öffentlichen Rezeptkatalog adressierbar', () => {
+    expect(Object.fromEntries(
+      Object.entries(RECIPES).filter(([section]) =>
+        ['I.1.9', 'I.1.9#alternative', 'I.1.10', 'I.1.11', 'I.1.12'].includes(section),
+      ),
+    )).toEqual(anhangI.ANHANG_I_E_RECIPES);
+  });
+
+  it('komponiert alle fünf Specs ohne die zu große Standard-Capability-Box', () => {
+    const recipes = anhangI.ANHANG_I_E_RECIPES;
+    expect(recipes).toBeDefined();
+    if (recipes === undefined) return;
+    for (const [section, recipe] of Object.entries(recipes)) {
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      const labels = drawing.children.filter(
+        (child): child is Primitive & { type: 'text' } => child.type === 'text' && child.role === 'label',
+      );
+      expect(labels.map((label) => label.content), section).toEqual([recipe.spec.labels.topLeft]);
+      const pictograms = drawing.children.filter((child) => child.role === 'pictogram');
+      expect(pictograms, section).not.toHaveLength(1);
+      expect(pictograms.some((child) => child.type === 'group'), section).toBe(false);
+    }
   });
 });
 
@@ -474,7 +563,7 @@ describe('Anhang D.1, Führungsstellen im Einsatz', () => {
 
   it('führt exakt die neun komponierten D.1-Darstellungen', () => {
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('D.1.'))).toEqual(expectedKeys);
-    expect(Object.keys(RECIPES)).toHaveLength(214);
+    expect(Object.keys(RECIPES)).toHaveLength(219);
   });
 
   it('bindet D.1.2 bis D.1.8 an die sieben gemessenen Formationsrollen', () => {
@@ -1018,7 +1107,7 @@ describe('Anhang G — vollständiges Logistikinventar', () => {
     expect(actual).toEqual(expected);
     expect(Object.keys(actual)).toEqual(Object.keys(expected));
     expect(Object.keys(actual).every((key) => !key.includes('#'))).toBe(true);
-    expect(Object.keys(RECIPES)).toHaveLength(214);
+    expect(Object.keys(RECIPES)).toHaveLength(219);
   });
 
   it('bindet die 21 primary- und Referenz-IDs exakt und ohne Alternative', () => {
@@ -1135,7 +1224,7 @@ describe('Anhang I, Teilslice I-g (I.1.17 bis I.1.20)', () => {
         kind: 'formation',
         organization: 'hilfsorganisation',
         strength: 'trupp',
-        bodyMarks: ['water-rescue'],
+        bodyMarks: ['formation-water-rescue-lower-zone'],
         labels: {
           center: 'Strömungsrettung',
           centerBaselineFromBodyBottomMm: 16,
@@ -1151,7 +1240,7 @@ describe('Anhang I, Teilslice I-g (I.1.17 bis I.1.20)', () => {
         kind: 'formation',
         organization: 'hilfsorganisation',
         strength: 'gruppe',
-        bodyMarks: ['water-rescue'],
+        bodyMarks: ['formation-water-rescue-lower-zone'],
         labels: {
           center: 'Strömungsrettung',
           centerBaselineFromBodyBottomMm: 16,
@@ -1167,7 +1256,7 @@ describe('Anhang I, Teilslice I-g (I.1.17 bis I.1.20)', () => {
         kind: 'formation',
         organization: 'hilfsorganisation',
         strength: 'trupp',
-        bodyMarks: ['water-rescue', 'formation-opposed-triangles-top'],
+        bodyMarks: ['formation-water-rescue-lower-zone', 'formation-opposed-triangles-top'],
       },
     },
     'I.1.20': {
@@ -1177,7 +1266,7 @@ describe('Anhang I, Teilslice I-g (I.1.17 bis I.1.20)', () => {
         kind: 'formation',
         organization: 'hilfsorganisation',
         strength: 'trupp',
-        bodyMarks: ['water-rescue', 'formation-chevron-top'],
+        bodyMarks: ['formation-water-rescue-lower-zone', 'formation-chevron-top'],
       },
     },
   } as const;
@@ -2738,12 +2827,12 @@ describe('Anhang F, Teilslice F-f', () => {
     },
   } as const;
 
-  it('deckt F.3.12 bis F.3.19 lückenlos ab und erreicht integriert 214 Rezepte', () => {
+  it('deckt F.3.12 bis F.3.19 lückenlos ab und bewahrt den integrierten Rezeptbestand', () => {
     const entries = Object.entries<Recipe>(RECIPES)
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(214);
+    expect(Object.keys(RECIPES)).toHaveLength(219);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {
