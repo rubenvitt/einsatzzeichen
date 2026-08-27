@@ -78,11 +78,15 @@ describe('Fachreview-Ledger', () => {
     expect(new Set(reviews).size).toBe(reviews.length);
   });
 
-  it('führt für I-a genau drei weiterhin offene Fachreviews', () => {
+  it('führt für I-d und I-a genau sieben weiterhin offene Fachreviews', () => {
     const keys = Object.keys(MANIFEST_DOMAIN_REVIEWS).filter((key) =>
-      key.startsWith('bbk-babz-2025:I.3.'),
+      /^bbk-babz-2025:I\.(?:1\.[5-8]|3\.[5-7])#primary$/.test(key),
     );
     expect(keys).toEqual([
+      'bbk-babz-2025:I.1.5#primary',
+      'bbk-babz-2025:I.1.6#primary',
+      'bbk-babz-2025:I.1.7#primary',
+      'bbk-babz-2025:I.1.8#primary',
       'bbk-babz-2025:I.3.5#primary',
       'bbk-babz-2025:I.3.6#primary',
       'bbk-babz-2025:I.3.7#primary',
@@ -94,7 +98,7 @@ describe('Fachreview-Ledger', () => {
 
   it('führt für LFH-485 genau vier weiterhin offene I-g-Fachreviews', () => {
     const keys = Object.keys(MANIFEST_DOMAIN_REVIEWS).filter((key) =>
-      key.startsWith('bbk-babz-2025:I.1.'),
+      /^bbk-babz-2025:I\.1\.(?:1[7-9]|20)#primary$/.test(key),
     );
     expect(keys).toEqual([
       'bbk-babz-2025:I.1.17#primary',
@@ -140,12 +144,12 @@ describe('Fachreview-Ledger', () => {
     // bis F.1.22 und die beiden Alternativdarstellungen; damit sind es hier 383.
     // F-d ergänzt acht einzelne, weiterhin offene Reviewplätze für F.2.10 bis F.2.17. F-e
     // ergänzt elf für F.3.1 bis F.3.11 und F-f die acht verbleibenden für F.3.12 bis F.3.19.
-    // Anhang G ergänzt 21, H, I-a und I-j je drei, I-g vier, C.1.3 einen und Anhang N neun.
+    // Anhang G ergänzt 21, H, I-a und I-j je drei, I-d und I-g je vier, C.1.3 eins und N neun.
     // Anhang D ergänzt auf dem integrierten Stand weitere 36 Darstellungen.
-    expect(manifestReviews).toHaveLength(504);
+    expect(manifestReviews).toHaveLength(508);
     expect(sourceReviews).toHaveLength(13);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(518);
+    expect(reviews).toHaveLength(522);
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
   });
 

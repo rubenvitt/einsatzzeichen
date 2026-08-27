@@ -57,6 +57,7 @@ import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
 import {
   ANHANG_I_A_RECIPES,
+  ANHANG_I_D_RECIPES,
   ANHANG_I_G_RECIPES,
   ANHANG_I_J_RECIPES,
 } from './recipes-anhang-i.js';
@@ -423,6 +424,14 @@ const ANHANG_I_A_TECHNICAL_REVIEW: Review = {
     'I.3.5-I.3.7 passed measured inset-hull, 7.99 mm center-profile, literal recipe, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
 };
 
+const ANHANG_I_D_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-27',
+  note:
+    'I.1.5-I.1.8 passed literal recipe, measured compact water-rescue body-mark, independently gated cap/head/body vertical placement, direct-snapshot and multi-size gates. I.1.5 uses its measured 3.7 mm three-hole cap; I.1.6-I.1.8 reuse the 3 mm cap and I.1.8 moves body geometry by 3 mm with staffel. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending.',
+};
+
 const ANHANG_I_G_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
@@ -434,7 +443,6 @@ const ANHANG_I_G_TECHNICAL_REVIEW: Review = {
     'output-only visual QA gates. Opposed triangles and chevron remain separate geometric ' +
     'marks; domain classification remains pending.',
 };
-
 const ANHANG_I_J_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
@@ -445,7 +453,6 @@ const ANHANG_I_J_TECHNICAL_REVIEW: Review = {
     'circle-12/raised-gable as geometry only; white Hilfsorganisation bodies and all domain ' +
     'classifications remain pending.',
 };
-
 /** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
 function reviewFor(
   sourceId: string,
@@ -917,6 +924,9 @@ function technicalReviewFor(section: string): Review {
     return ANHANG_G_TECHNICAL_REVIEW;
   }
   if (Object.hasOwn(ANHANG_H_RECIPES, section)) return ANHANG_H_TECHNICAL_REVIEW;
+  if (Object.hasOwn(ANHANG_I_D_RECIPES, section)) {
+    return ANHANG_I_D_TECHNICAL_REVIEW;
+  }
   if (Object.hasOwn(ANHANG_I_G_RECIPES, section)) {
     return ANHANG_I_G_TECHNICAL_REVIEW;
   }
@@ -1127,6 +1137,10 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'F',
     'G',
     'H',
+    'I.1.5',
+    'I.1.6',
+    'I.1.7',
+    'I.1.8',
     'I.1.17',
     'I.1.18',
     'I.1.19',

@@ -94,6 +94,48 @@ export const ANHANG_I_A_RECIPES = {
     },
   },
 } as const satisfies Record<string, Recipe>;
+export const ANHANG_I_D_RECIPES = {
+  'I.1.5': {
+    title: 'Zugtrupp Wasserrettungszug',
+    referenceAsset: 'I.1.5_Zugtrupp Wasserrettungszug.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'trupp',
+      bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3.7mm-three-hole-row'],
+    },
+  },
+  'I.1.6': {
+    title: 'Führungstrupp Wasserrettung',
+    referenceAsset: 'I.1.6_Führungstrupp Wasserrettung.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'trupp',
+      bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3mm'],
+    },
+  },
+  'I.1.7': {
+    title: 'Führungsgruppe Wasserrettung',
+    referenceAsset: 'I.1.7_Führungsgruppe Wasserrettung.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'gruppe',
+      bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3mm'],
+    },
+  },
+  'I.1.8': {
+    title: 'Führungsstaffel Wasserrettung',
+    referenceAsset: 'I.1.8_Führungsstaffel Wasserrettung.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'staffel',
+      bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3mm'],
+    },
+  },
+} as const satisfies Record<string, Recipe>;
 
 export const ANHANG_I_J_RECIPES = {
   'I.4.1': {

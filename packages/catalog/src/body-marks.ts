@@ -210,6 +210,25 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
     height: 3,
     style: { fill: 'schwarz', stroke: 'none' },
   }],
+  'formation-solid-cap-3.7mm-three-hole-row': (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    return [{
+      type: 'rect',
+      role: 'pictogram',
+      x: bounds.minX,
+      y: bounds.minY,
+      width: bounds.maxX - bounds.minX,
+      height: 3.7,
+      style: { fill: 'schwarz', stroke: 'none' },
+    }, ...[cx - 5, cx, cx + 5].map((holeCx) => ({
+      type: 'circle' as const,
+      role: 'pictogram' as const,
+      cx: holeCx,
+      cy: bounds.minY + 1.75,
+      r: 1.5,
+      style: { fill: 'weiss' as const, stroke: 'none' as const },
+    }))];
+  },
   'formation-solid-cap-4mm-three-hole-row': (bounds) => [{
     type: 'rect',
     role: 'pictogram',
@@ -226,6 +245,51 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
     r: 1.5,
     style: { fill: 'weiss' as const, stroke: 'none' as const },
   }))],
+
+  /**
+   * I.1.5 bis I.1.8: die kompakte, körperbezogene Wasserrettungsfassung — ausdrücklich nicht
+   * die 23 mm breite Boxfassung aus 4.5.8. Aus den expandierten 0,5-mm-Konturen ergeben sich
+   * zwei 8 mm breite Kubikwellen und die Raute auf den Ankern ±4 mm um die Körpermitte.
+   *
+   * Die Quellenkoordinaten sind auf drei SVG-Dezimalstellen exportiert. Nach Umrechnung auf
+   * 32 mm liegen die zurückgerechneten Mittellinien höchstens 0,002 mm von den hier verwendeten
+   * ganzen bzw. halben Millimetern entfernt; diese Exportabweichung wird nicht fortgeschrieben.
+   */
+  'formation-water-rescue-compact': (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    const cy = (bounds.minY + bounds.maxY) / 2;
+    const miterOffsetMm = 0.353553;
+    const wave = (baselineY: number, crestY: number): Primitive => ({
+      type: 'path',
+      role: 'pictogram',
+      d:
+        `M ${cx - 4} ${baselineY} ` +
+        `C ${cx - 3} ${baselineY} ${cx - 3} ${crestY} ${cx - 2} ${crestY} ` +
+        `C ${cx - 1} ${crestY} ${cx - 1} ${baselineY} ${cx} ${baselineY} ` +
+        `C ${cx + 1} ${baselineY} ${cx + 1} ${crestY} ${cx + 2} ${crestY} ` +
+        `C ${cx + 3} ${crestY} ${cx + 3} ${baselineY} ${cx + 4} ${baselineY}`,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    });
+    return [
+      wave(cy - 3.5, cy - 4.5),
+      wave(cy - 1.5, cy - 2.5),
+      {
+        type: 'path',
+        role: 'pictogram',
+        d:
+          `M ${cx - 4 - miterOffsetMm} ${cy + 4} ` +
+          `L ${cx} ${cy + 8 + miterOffsetMm} ` +
+          `L ${cx + 4 + miterOffsetMm} ${cy + 4} ` +
+          `L ${cx} ${cy - miterOffsetMm} Z ` +
+          `M ${cx} ${cy + 8 - miterOffsetMm} ` +
+          `L ${cx - 4 + miterOffsetMm} ${cy + 4} ` +
+          `L ${cx} ${cy + miterOffsetMm} ` +
+          `L ${cx + 4 - miterOffsetMm} ${cy + 4} Z`,
+        style: { fill: 'schwarz', fillRule: 'evenodd', stroke: 'none' },
+      },
+    ];
+  },
+
   /** C.1.1 bis C.1.3: die an der Formation vermessene Löschmarke mit zwei rechten Diagonalen. */
   'fire-fighting': (bounds) => {
     const cy = (bounds.minY + bounds.maxY) / 2;
