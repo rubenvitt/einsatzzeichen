@@ -143,6 +143,14 @@ function rasterPixelOutsideBox(
     y > boxMaxYPx + RASTER_BOUNDARY_EPSILON_PX;
 }
 
+it('akzeptiert nur den ULP-Randrest, nicht aber einen ganzen Rasterpixelüberstand', () => {
+  // 8 < 8.000000000000007 ist derselbe mathematische Rand nach der Koordinatenumrechnung.
+  expect(rasterPixelOutsideBox(8, 8, 8.000000000000007, 16, 0, 16)).toBe(false);
+  // Ein vollständiger Pixel links bzw. rechts der Box bleibt außerhalb.
+  expect(rasterPixelOutsideBox(7, 8, 8, 16, 0, 16)).toBe(true);
+  expect(rasterPixelOutsideBox(9, 8, 0, 8, 0, 16)).toBe(true);
+});
+
 /**
  * Rastert die Fußzone einer `compose()`-Zeichnung isoliert (ohne Körper/Kopf/Piktogramm — die
  * würden bei der Innerhalb-Prüfung nur stören) und vergleicht die tatsächliche Tinte gegen die
