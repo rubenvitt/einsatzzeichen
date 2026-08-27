@@ -22,7 +22,7 @@ export const ANHANG_I_A_RECIPES = {
       labels: {
         aboveLeft: 'Strömungsretter',
         aboveLeftMetrics: {
-          capHeightMm: 2,
+          capHeightMm: 2.432746,
           anchorFromBodyLeftMm: -2,
           baselineFromBodyTopMm: -1.5,
         },
@@ -40,7 +40,7 @@ export const ANHANG_I_A_RECIPES = {
       labels: {
         aboveLeft: 'Taucher',
         aboveLeftMetrics: {
-          capHeightMm: 2,
+          capHeightMm: 2.919225,
           anchorFromBodyLeftMm: -2,
           baselineFromBodyTopMm: -1,
         },

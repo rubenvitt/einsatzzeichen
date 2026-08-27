@@ -1161,7 +1161,7 @@ describe('Anhang I, Teilslice I.5 (I.5.1 bis I.5.3)', () => {
         labels: {
           aboveLeft: 'Strömungsretter',
           aboveLeftMetrics: {
-            capHeightMm: 2,
+            capHeightMm: 2.432746,
             anchorFromBodyLeftMm: -2,
             baselineFromBodyTopMm: -1.5,
           },
@@ -1179,7 +1179,7 @@ describe('Anhang I, Teilslice I.5 (I.5.1 bis I.5.3)', () => {
         labels: {
           aboveLeft: 'Taucher',
           aboveLeftMetrics: {
-            capHeightMm: 2,
+            capHeightMm: 2.919225,
             anchorFromBodyLeftMm: -2,
             baselineFromBodyTopMm: -1,
           },
@@ -1236,6 +1236,18 @@ describe('Anhang I, Teilslice I.5 (I.5.1 bis I.5.3)', () => {
     expect(labels[0]?.content).toBe(content);
     expect(labels[0]?.x).toBeCloseTo(x, 12);
     expect(labels[0]?.y).toBeCloseTo(y, 12);
+  });
+
+  it.each([
+    ['I.5.2', 2.432746],
+    ['I.5.3', 2.919225],
+  ] as const)('%s leitet den Schriftgrad aus der gemessenen Versalhöhe ab', (section, capHeightMm) => {
+    const recipe = RECIPES[section]!;
+    const label = composeFromCatalog(recipe.spec, recipe.title).children.find(
+      (child): child is Primitive & { type: 'text' } => child.type === 'text' && child.role === 'label',
+    );
+    expect(label).toBeDefined();
+    expect((label?.sizeMm ?? Number.NaN) * ARIMO_CAP_HEIGHT_FRACTION).toBeCloseTo(capHeightMm, 6);
   });
 
   it.each([

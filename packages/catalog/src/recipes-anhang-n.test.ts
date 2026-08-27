@@ -174,7 +174,8 @@ describe('Anhang N — Fahrzeuge weiterer Träger', () => {
     ];
     expect(Object.keys(nRecipes())).toEqual(expectedKeys);
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('N.'))).toEqual(expectedKeys);
-    expect(Object.keys(RECIPES)).toHaveLength(200);
+    // Der bis Anhang N gezählte Bestand (200) erhält ausschließlich die drei primären I.5-Rezepte.
+    expect(Object.keys(RECIPES)).toHaveLength(203);
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('N.') && key.includes('#'))).toEqual([]);
   });
 
