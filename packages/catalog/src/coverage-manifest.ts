@@ -55,7 +55,7 @@ import {
 import { ANHANG_N_RECIPES } from './recipes-anhang-n.js';
 import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
-import { ANHANG_I_A_RECIPES } from './recipes-anhang-i.js';
+import { ANHANG_I_A_RECIPES, ANHANG_I_G_RECIPES } from './recipes-anhang-i.js';
 
 /**
  * Migration nach Slice 2: `technical` ist für alle elf Einträge `approved`, weil das Kriterium
@@ -417,6 +417,18 @@ const ANHANG_I_A_TECHNICAL_REVIEW: Review = {
   date: '2026-08-26',
   note:
     'I.3.5-I.3.7 passed measured inset-hull, 7.99 mm center-profile, literal recipe, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
+};
+
+const ANHANG_I_G_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-27',
+  note:
+    'I.1.17-I.1.20 passed measured formation body marks, 16 mm center-baseline, 2.5 mm ' +
+    'cap-height and 29 mm output-box contracts, literal recipe, direct-snapshot, multi-size, ' +
+    'coverage and ' +
+    'output-only visual QA gates. Opposed triangles and chevron remain separate geometric ' +
+    'marks; domain classification remains pending.',
 };
 
 /** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
@@ -890,6 +902,9 @@ function technicalReviewFor(section: string): Review {
     return ANHANG_G_TECHNICAL_REVIEW;
   }
   if (Object.hasOwn(ANHANG_H_RECIPES, section)) return ANHANG_H_TECHNICAL_REVIEW;
+  if (Object.hasOwn(ANHANG_I_G_RECIPES, section)) {
+    return ANHANG_I_G_TECHNICAL_REVIEW;
+  }
   if (Object.hasOwn(ANHANG_I_A_RECIPES, section)) {
     return ANHANG_I_A_TECHNICAL_REVIEW;
   }
@@ -1094,6 +1109,10 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'F',
     'G',
     'H',
+    'I.1.17',
+    'I.1.18',
+    'I.1.19',
+    'I.1.20',
     'I.3.5',
     'I.3.6',
     'I.3.7',

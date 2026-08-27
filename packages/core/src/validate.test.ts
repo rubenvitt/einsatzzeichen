@@ -203,7 +203,7 @@ describe('validateSpec', () => {
     }
   });
 
-  it('validiert die generischen gemessenen Anhang-N-Labelmetriken fail-closed', () => {
+  it('validiert die gemessenen Anhang-N- und I-g-Labelmetriken fail-closed', () => {
     expect(validateSpec({
       kind: 'vehicle-land', labels: {
         center: 'BuPol', centerBaselineFromBodyBottomMm: 6.5,
@@ -244,8 +244,44 @@ describe('validateSpec', () => {
       'center-baseline-requires-center-label',
     );
 
+    expect(validateSpec({
+      kind: 'formation',
+      labels: {
+        center: 'Strömungsrettung',
+        centerBaselineFromBodyBottomMm: 16,
+        centerCapHeightMm: 2.5,
+        centerBoxMarginMm: 0.5,
+      },
+    })).toEqual([]);
+
+    expect(validateSpec({
+      kind: 'formation', labels: { centerBoxMarginMm: 0.5 },
+    } as SymbolSpec).map((issue) => issue.rule)).toContain(
+      'center-box-margin-requires-center-label',
+    );
+    expect(validateSpec({
+      kind: 'formation', labels: { center: 'X', centerBoxMarginMm: -0.1 },
+    } as SymbolSpec).map((issue) => issue.rule)).toContain(
+      'center-box-margin-non-negative',
+    );
+    expect(validateSpec({
+      kind: 'formation', labels: { center: 'X', centerBoxMarginMm: 15 },
+    } as SymbolSpec).map((issue) => issue.rule)).toContain(
+      'center-box-margin-within-body',
+    );
+    expect(validateSpec({
+      kind: 'formation', bodyVariant: 'foot-band',
+      labels: { center: 'X', centerBoxMarginMm: 0.5 },
+    } as SymbolSpec).map((issue) => issue.rule)).toContain(
+      'center-box-margin-override-requires-measured-body',
+    );
+    expect(validateSpec({
+      kind: 'vehicle-land', labels: { center: 'X', centerBoxMarginMm: 0.5 },
+    } as SymbolSpec).map((issue) => issue.rule)).toContain(
+      'center-box-margin-override-requires-measured-body',
+    );
+
     for (const spec of [
-      { kind: 'formation', labels: { center: 'X', centerBaselineFromBodyBottomMm: 6.5 } },
       { kind: 'vehicle-air', labels: { center: 'X', centerBaselineFromBodyBottomMm: 6.5 } },
       {
         kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
@@ -253,6 +289,10 @@ describe('validateSpec', () => {
       },
       {
         kind: 'vehicle-land', bodyVariant: 'foot-band',
+        labels: { center: 'X', centerBaselineFromBodyBottomMm: 6.5 },
+      },
+      {
+        kind: 'formation', bodyVariant: 'foot-band',
         labels: { center: 'X', centerBaselineFromBodyBottomMm: 6.5 },
       },
       {
