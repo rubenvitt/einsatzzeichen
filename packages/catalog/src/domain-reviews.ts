@@ -378,6 +378,13 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:H.1#primary': { status: 'pending' },
   'bbk-babz-2025:H.2#primary': { status: 'pending' },
   'bbk-babz-2025:H.3#primary': { status: 'pending' },
+  // I.1.1 bis I.1.4 sind technisch vermessen, erhalten aber weder aus dem weißen Körper noch aus
+  // dem Einzelbalken eine erfundene Organisations- oder Stärkezuordnung. Jede fachliche
+  // Einordnung bleibt deshalb eine eigene offene Entscheidung.
+  'bbk-babz-2025:I.1.1#primary': { status: 'pending' },
+  'bbk-babz-2025:I.1.2#primary': { status: 'pending' },
+  'bbk-babz-2025:I.1.3#primary': { status: 'pending' },
+  'bbk-babz-2025:I.1.4#primary': { status: 'pending' },
   // Das Erscheinungsbild ist technisch durch die Mess-, Rezept- und Snapshot-Gates belegt; die
   // organisatorische und fachliche Bedeutung des weißen Körpers bleibt dennoch ungeklärt.
   // I-g bleibt zusätzlich bei der Bedeutungszuordnung von Wasserrettung, Luftunterstützung und

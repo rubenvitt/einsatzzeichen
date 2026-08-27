@@ -8,6 +8,7 @@ import type {
   SymbolKind,
   SymbolSpec,
   TechnicalBodyMarkId,
+  TechnicalHeadMarkId,
   VehicleCategoryId,
 } from '@einsatzzeichen/schema';
 import { pictogram } from './pictograms/index.js';
@@ -55,6 +56,10 @@ const STRENGTH_LABELS: Record<StrengthId, string> = {
   gruppe: 'Gruppe',
   zug: 'Zug',
 };
+
+export const TECHNICAL_HEAD_MARK_LABELS = Object.freeze({
+  'single-vertical-bar': 'Einzelner Vertikalbalken',
+} satisfies Record<TechnicalHeadMarkId, string>);
 
 const ADMIN_LEVEL_LABELS: Record<AdminLevelId, string> = {
   gemeinde: 'Gemeinde',
@@ -147,6 +152,9 @@ export function describeSymbolSpec(spec: SymbolSpec): string {
     parts.push(`Organisation: ${ORGANIZATION_LABELS[spec.organization]}`);
   }
   if (spec.strength !== undefined) parts.push(`Stärke: ${STRENGTH_LABELS[spec.strength]}`);
+  if (spec.technicalHeadMark !== undefined) {
+    parts.push(`Technische Kopfmarke: ${TECHNICAL_HEAD_MARK_LABELS[spec.technicalHeadMark]}`);
+  }
   if (spec.administrativeLevel !== undefined) {
     parts.push(`Verwaltungsstufe: ${ADMIN_LEVEL_LABELS[spec.administrativeLevel]}`);
   }

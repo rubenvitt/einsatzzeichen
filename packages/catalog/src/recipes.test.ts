@@ -33,6 +33,7 @@ import {
   ANHANG_E_F_RECIPES,
 } from './recipes-anhang-e.js';
 import { ANHANG_F_B_RECIPES } from './recipes-anhang-f.js';
+import { ANHANG_I_C_RECIPES } from './recipes-anhang-i.js';
 
 /**
  * Effektive y-Lage der waagerechten Brandbekämpfungs-Linie: ihre Autorenkoordinate plus die
@@ -1294,6 +1295,106 @@ describe('Anhang I, Teilslice I-j (I.4.1 bis I.4.3)', () => {
       );
     },
   );
+});
+
+describe('Anhang I, Teilslice I-c (I.1.1 bis I.1.4)', () => {
+  const recipes: Record<string, Recipe> = RECIPES;
+  const expected = {
+    'I.1.1': {
+      title: 'Wasserrettungstrupp',
+      referenceAsset: 'I.1.1_Wasserrettungstrupp.svg',
+      spec: { kind: 'formation', strength: 'trupp', bodyMarks: ['water-rescue'] },
+    },
+    'I.1.2': {
+      title: 'Wasserrettungsgruppe',
+      referenceAsset: 'I.1.2_Wasserrettungsgruppe.svg',
+      spec: { kind: 'formation', strength: 'gruppe', bodyMarks: ['water-rescue'] },
+    },
+    'I.1.3': {
+      title: 'Wasserrettungszug',
+      referenceAsset: 'I.1.3_Wasserrettungszug.svg',
+      spec: { kind: 'formation', strength: 'zug', bodyMarks: ['water-rescue'] },
+    },
+    'I.1.4': {
+      title: 'Wasserrettungsverband',
+      referenceAsset: 'I.1.4_Wasserrettungsverband.svg',
+      spec: {
+        kind: 'formation',
+        technicalHeadMark: 'single-vertical-bar',
+        bodyMarks: ['water-rescue'],
+      },
+    },
+  } as const;
+
+  it('bindet exakt vier Wasserrettungsformationen an die Literalrezepte', () => {
+    expect(ANHANG_I_C_RECIPES).toEqual(expected);
+    expect(Object.fromEntries(
+      Object.entries(RECIPES).filter(([section]) => section.startsWith('I.1.')),
+    )).toEqual(expected);
+  });
+
+  it.each(Object.entries(expected))(
+    '%s verwendet ausschließlich die vermessene Formationsfassung der Wasserrettung',
+    (section, expectedRecipe) => {
+      const recipe = recipes[section];
+      expect(recipe).toEqual(expectedRecipe);
+      if (recipe === undefined) return;
+
+      expect(recipe.spec.organization).toBeUndefined();
+      expect(recipe.spec.bodyVariant).toBeUndefined();
+      expect(recipe.spec.capabilities).toBeUndefined();
+      expect(recipe.spec.labels).toBeUndefined();
+      expect(recipe.spec.designation).toBeUndefined();
+      expect(validateSpec(recipe.spec)).toEqual([]);
+
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      expect(drawing.children.find((child) => child.role === 'body')).toMatchObject({
+        type: 'rect', x: 1, y: 6, width: 30, height: 20,
+      });
+      expect(drawing.children.filter((child) => child.role === 'pictogram')).toHaveLength(3);
+    },
+  );
+
+  it('setzt Trupp, Gruppe und Zug auf die bestehenden Kreisplätze', () => {
+    const positions = {
+      'I.1.1': [16],
+      'I.1.2': [11, 21],
+      'I.1.3': [11, 16, 21],
+    } as const;
+
+    for (const [section, xs] of Object.entries(positions)) {
+      const recipe = recipes[section];
+      expect(recipe).toBeDefined();
+      if (recipe === undefined) continue;
+      const drawing = composeFromCatalog(recipe.spec);
+      expect(drawing.children
+        .filter((child): child is Extract<Primitive, { type: 'circle' }> =>
+          child.type === 'circle' && child.role === 'head')
+        .map(({ cx, cy, r }) => ({ cx, cy, r })))
+        .toEqual(xs.map((cx) => ({ cx, cy: 3.5, r: 1.5 })));
+    }
+  });
+
+  it('setzt I.1.4s technische Einzelmarke effektiv auf 15,25/1/1,5/4', () => {
+    const recipe = recipes['I.1.4'];
+    expect(recipe).toBeDefined();
+    if (recipe === undefined) return;
+
+    const drawing = composeFromCatalog(recipe.spec);
+    const head = drawing.children.find(
+      (child) => child.type === 'group' && child.role === 'head',
+    );
+    expect(head).toMatchObject({
+      type: 'group',
+      transform: { translate: { dxMm: 0, dyMm: 1 } },
+      children: [{
+        type: 'rect', role: 'head', x: 15.25, y: 0, width: 1.5, height: 4,
+        style: { fill: 'schwarz', stroke: 'none' },
+      }],
+    });
+    expect(head === undefined ? undefined : boundsOfMm(head))
+      .toEqual({ minX: 15.25, minY: 1, maxX: 16.75, maxY: 5 });
+  });
 });
 
 describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {

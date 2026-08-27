@@ -101,6 +101,49 @@ function waterWave(centerXMm: number, baselineYMm: number): Primitive {
 }
 
 /**
+ * Die Wasserrettungsmarke aus I.1.1 bis I.1.4, als Mittellinienrekonstruktion der beiden
+ * 0,5-mm-Wellenbänder und der Rautenkontur. Die Zahlen sind gegen die platzierte Hülle
+ * formuliert; sie stammen nicht aus einer Skalierung der Kapitel-4-Standardbox.
+ */
+function waterRescue(bounds: BoundsMm): Primitive[] {
+  const left = bounds.minX + 11;
+  const centerX = (bounds.minX + bounds.maxX) / 2;
+  const style = {
+    fill: 'none',
+    stroke: 'schwarz',
+    strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+  } as const;
+
+  const wave = (startY: number, crestY: number): Primitive => ({
+    type: 'path',
+    role: 'pictogram',
+    d:
+      `M ${left} ${startY} C ${left + 1} ${startY} ${left + 1} ${crestY} ${left + 2} ${crestY} ` +
+      `C ${left + 3} ${crestY} ${left + 3} ${startY} ${left + 4} ${startY} ` +
+      `C ${left + 5} ${startY} ${left + 5} ${crestY} ${left + 6} ${crestY} ` +
+      `C ${left + 7} ${crestY} ${left + 7} ${startY} ${left + 8} ${startY}`,
+    style,
+  });
+
+  return [
+    wave(bounds.minY + 5.5, bounds.minY + 4.5),
+    wave(bounds.minY + 7.5, bounds.minY + 6.5),
+    {
+      type: 'polyline',
+      role: 'pictogram',
+      points: [
+        [centerX, bounds.minY + 9],
+        [centerX + 4, bounds.minY + 13],
+        [centerX, bounds.minY + 17],
+        [centerX - 4, bounds.minY + 13],
+        [centerX, bounds.minY + 9],
+      ],
+      style,
+    },
+  ];
+}
+
+/**
  * Die Fachdienstteilung: die beiden Mittellinien der Körperhülle, von Kante zu Kante. Gemessen an
  * `F.1.11_Rettungsdienst allgemein.svg` (senkrechter Arm 15,75…16,25 mm um die Mittellinie 16,0
  * über die volle Körperhöhe, waagerechter Arm 15,75…16,25 um 16,0 über die volle Körperbreite)
@@ -236,6 +279,8 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
       stroke(branchX, cy, bounds.maxX, bounds.maxY),
     ];
   },
+  /** I.1.1 bis I.1.4: zwei Wellen über einer Raute auf der normalen Formationshülle. */
+  'water-rescue': waterRescue,
 
   /**
    * I.1.17 bis I.1.20: die kompakte Wasserrettungsmarke der Formation. Gegenüber der

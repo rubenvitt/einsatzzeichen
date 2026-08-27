@@ -627,6 +627,75 @@ describe('bodyMark() — Brandbekämpfung für C.1', () => {
   });
 });
 
+describe('bodyMark() — Wasserrettung für I.1', () => {
+  it('rekonstruiert zwei Wellen und die geschlossene Raute aus den vermessenen Mittellinien', () => {
+    const marks = bodyMark('water-rescue', formationBodyMm);
+
+    expect(marks).toEqual([
+      {
+        type: 'path',
+        role: 'pictogram',
+        d:
+          'M 12 11.5 C 13 11.5 13 10.5 14 10.5 ' +
+          'C 15 10.5 15 11.5 16 11.5 ' +
+          'C 17 11.5 17 10.5 18 10.5 ' +
+          'C 19 10.5 19 11.5 20 11.5',
+        style: outlineStyle,
+      },
+      {
+        type: 'path',
+        role: 'pictogram',
+        d:
+          'M 12 13.5 C 13 13.5 13 12.5 14 12.5 ' +
+          'C 15 12.5 15 13.5 16 13.5 ' +
+          'C 17 13.5 17 12.5 18 12.5 ' +
+          'C 19 12.5 19 13.5 20 13.5',
+        style: outlineStyle,
+      },
+      {
+        type: 'polyline',
+        role: 'pictogram',
+        points: [[16, 15], [20, 19], [16, 23], [12, 19], [16, 15]],
+        style: outlineStyle,
+      },
+    ]);
+
+    expect(boundsOfMm(marks[0]!)).toEqual({ minX: 12, minY: 10.5, maxX: 20, maxY: 11.5 });
+    expect(boundsOfMm(marks[1]!)).toEqual({ minX: 12, minY: 12.5, maxX: 20, maxY: 13.5 });
+    expect(boundsOfMm(marks[2]!)).toEqual({ minX: 12, minY: 15, maxX: 20, maxY: 23 });
+  });
+
+  it('verschiebt die vollständige Marke mit der platzierten Formationshülle', () => {
+    const shifted = bodyMarkWithContext(
+      'water-rescue',
+      { kind: 'formation' },
+      { minX: 2, minY: 7, maxX: 32, maxY: 27 },
+    );
+
+    expect(boundsOfMm(shifted[0]!)).toEqual({ minX: 13, minY: 11.5, maxX: 21, maxY: 12.5 });
+    expect(boundsOfMm(shifted[1]!)).toEqual({ minX: 13, minY: 13.5, maxX: 21, maxY: 14.5 });
+    expect(boundsOfMm(shifted[2]!)).toEqual({ minX: 13, minY: 16, maxX: 21, maxY: 24 });
+  });
+
+  it('lehnt ungemessene Körper, Varianten und Hüllen fail-closed ab', () => {
+    expect(() => bodyMarkWithContext(
+      'water-rescue',
+      { kind: 'formation', bodyVariant: 'foot-band' },
+      formationBodyMm,
+    )).toThrow(/nicht vermessen/);
+    expect(() => bodyMarkWithContext(
+      'water-rescue',
+      { kind: 'vehicle-land' },
+      landBodyMm,
+    )).toThrow(/nicht vermessen/);
+    expect(() => bodyMarkWithContext(
+      'water-rescue',
+      { kind: 'formation' },
+      { minX: 1, minY: 6, maxX: 30.5, maxY: 26 },
+    )).toThrow(/30 × 20 mm/);
+  });
+});
+
 describe('bodyMark() — H.1 Veterinärzug', () => {
   it('rekonstruiert das vollständige Veterinär-V aus den gepaarten Konturkanten', () => {
     // Die obere und untere Konturkante der Quelle liegen auf y = 8,75 bzw. 9,25 mm: ihre
@@ -1956,6 +2025,7 @@ describe('BODY_MARK_IDS', () => {
       'intensive-care',
       'patient-transport',
       'care',
+      'water-rescue',
     ]) {
       expect(BODY_MARK_IDS).toContain(id);
     }

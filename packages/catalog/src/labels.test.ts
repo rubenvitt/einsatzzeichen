@@ -28,6 +28,14 @@ describe('semantische Zeichenbeschreibungen', () => {
     );
   });
 
+  it('benennt den technischen Einzelbalken geometrisch und ohne Stärkegrad', () => {
+    expect(describeSymbolSpec({
+      kind: 'formation', technicalHeadMark: 'single-vertical-bar',
+    })).toBe(
+      'Grundzeichen: Taktische Formation. Technische Kopfmarke: Einzelner Vertikalbalken.',
+    );
+  });
+
   it('beschreibt das Trägerkürzel unterhalb des Körpers wie das im Körper', () => {
     // Die vierte Zone unterscheidet sich in Lage und Farbe, nicht in der Bedeutung. Für eine
     // Vorlesestimme ist das derselbe Sachverhalt — sonst verlöre E.2.27 seine einzige

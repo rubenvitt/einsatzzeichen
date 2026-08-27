@@ -94,7 +94,6 @@ export const ANHANG_I_A_RECIPES = {
     },
   },
 } as const satisfies Record<string, Recipe>;
-
 export const ANHANG_I_J_RECIPES = {
   'I.4.1': {
     title: 'Wasserrettungsstation, ortsgebunden',
@@ -122,6 +121,45 @@ export const ANHANG_I_J_RECIPES = {
       kind: 'circle-12',
       organization: 'hilfsorganisation',
       bodyMarks: ['circle-wide-bowl'],
+    },
+  },
+} as const satisfies Record<string, Recipe>;
+
+export const ANHANG_I_C_RECIPES = {
+  'I.1.1': {
+    title: 'Wasserrettungstrupp',
+    referenceAsset: 'I.1.1_Wasserrettungstrupp.svg',
+    spec: {
+      kind: 'formation',
+      strength: 'trupp',
+      bodyMarks: ['water-rescue'],
+    },
+  },
+  'I.1.2': {
+    title: 'Wasserrettungsgruppe',
+    referenceAsset: 'I.1.2_Wasserrettungsgruppe.svg',
+    spec: {
+      kind: 'formation',
+      strength: 'gruppe',
+      bodyMarks: ['water-rescue'],
+    },
+  },
+  'I.1.3': {
+    title: 'Wasserrettungszug',
+    referenceAsset: 'I.1.3_Wasserrettungszug.svg',
+    spec: {
+      kind: 'formation',
+      strength: 'zug',
+      bodyMarks: ['water-rescue'],
+    },
+  },
+  'I.1.4': {
+    title: 'Wasserrettungsverband',
+    referenceAsset: 'I.1.4_Wasserrettungsverband.svg',
+    spec: {
+      kind: 'formation',
+      technicalHeadMark: 'single-vertical-bar',
+      bodyMarks: ['water-rescue'],
     },
   },
 } as const satisfies Record<string, Recipe>;
