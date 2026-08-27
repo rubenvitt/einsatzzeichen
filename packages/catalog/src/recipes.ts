@@ -40,6 +40,7 @@ import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
 import {
   ANHANG_I_A_RECIPES,
   ANHANG_I_B_RECIPES,
+  ANHANG_I_G_RECIPES,
   ANHANG_I_J_RECIPES,
 } from './recipes-anhang-i.js';
 
@@ -102,6 +103,7 @@ export const RECIPES = {
   ...ANHANG_F_D_RECIPES,
   ...ANHANG_F_E_RECIPES,
   ...ANHANG_F_F_RECIPES,
+  ...ANHANG_I_G_RECIPES,
   ...ANHANG_I_B_RECIPES,
   ...ANHANG_I_A_RECIPES,
   ...ANHANG_I_J_RECIPES,

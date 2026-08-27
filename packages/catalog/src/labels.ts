@@ -121,6 +121,9 @@ export const TECHNICAL_BODY_MARK_LABELS = Object.freeze({
   'air-rising-diagonal': 'Ansteigende Diagonale im Luftfahrzeugrumpf',
   'spontaneous-helper-collection-arrow': 'Vierblattmarke mit Ring und Rechtspfeil',
   'spontaneous-helper-contact-double-arrow': 'Vierblattmarke mit Doppelpfeil',
+  'formation-opposed-triangles-top':
+    'Zwei gegenüberliegende Dreiecke in der oberen Formationszone',
+  'formation-chevron-top': 'Gefüllter Winkel in der oberen Formationszone',
   'h-veterinary-decontamination':
     'Veterinär-V mit kompakter Tierdekontaminationsmarke unten links',
   'h-veterinary-slaughter':

@@ -730,6 +730,22 @@ Die visuelle QA steht in
 Der dort verlinkte Screenshot zeigt ausschließlich generierte Katalogausgabe; die lokale
 BABZ-Referenz wird wegen ungeklärter Nutzungsgrundlage weder committed noch veröffentlicht.
 
+## LFH-485: Strömungsrettung und getrennte Luftmarken aus Anhang I-g
+
+LFH-485 ergänzt genau `I.1.17` bis `I.1.20` als vier weiße Formationsrezepte. Die kompakte
+Wasserrettungsmarke ist an diesen Dateien separat vermessen. Das Dreieckspaar der
+luftunterstützten Wasserrettung und der einzelne Winkel des Drohnentrupps besitzen getrennte,
+rein geometrische technische IDs; die kombinierte Darstellung aus F.1.16 wird nicht übernommen.
+
+`Strömungsrettung` steht bei I.1.17 und I.1.18 auf der gemessenen Grundlinie `y = 10` mm mit
+idealisierten `2,5` mm Versalhöhe. Direkte und Mehrgrößen-Snapshots, Manifestzeilen und ein
+output-only Kontaktbogen belegen jede Darstellung einzeln. Die technische Entscheidung steht in
+[`docs/decisions/2026-08-27-anhang-i-g.md`](docs/decisions/2026-08-27-anhang-i-g.md), das
+Sichtprotokoll in
+[`docs/reviews/2026-08-27-i-g-visual-qa.md`](docs/reviews/2026-08-27-i-g-visual-qa.md).
+Alle vier Domain-Reviews bleiben `pending`; der Katalog beansprucht weder eine allgemeine
+Drohnentaxonomie noch eine pauschale Abdeckung von `I.1` oder `I`.
+
 ## Der lokale Referenzbestand
 
 `taktische-zeichen/` ist ein **lokaler Ordner mit 661 damals von der BABZ bereitgestellten

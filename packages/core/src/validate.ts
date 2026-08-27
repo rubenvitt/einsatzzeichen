@@ -1000,7 +1000,55 @@ function validatePreparedSpec(
         rule: 'center-label-within-body',
         message:
           'Die aus Grundlinie und Versalhöhe abgeleitete mittige Textbox muss vollständig ' +
-          'innerhalb der vermessenen Landfahrzeughülle liegen.',
+          'innerhalb der vermessenen Körperhülle liegen.',
+      });
+    }
+  }
+
+  const centerBoxMarginMm = spec.labels?.centerBoxMarginMm;
+  if (centerBoxMarginMm !== undefined && spec.labels?.center === undefined) {
+    issues.push({
+      rule: 'center-box-margin-requires-center-label',
+      message: 'Ein individueller Rand der mittigen Textbox verlangt einen mittigen Lauf.',
+    });
+  }
+  if (
+    centerBoxMarginMm !== undefined &&
+    !(Number.isFinite(centerBoxMarginMm) && centerBoxMarginMm >= 0)
+  ) {
+    issues.push({
+      rule: 'center-box-margin-non-negative',
+      message: 'Der Rand der mittigen Textbox muss endlich und mindestens null sein.',
+    });
+  }
+  if (
+    centerBoxMarginMm !== undefined &&
+    (
+      profile.allowsCenterBoxMarginOverride !== true ||
+      profile.measuredBodyBoundsMm === undefined
+    )
+  ) {
+    issues.push({
+      rule: 'center-box-margin-override-requires-measured-body',
+      message:
+        'Ein individueller Rand der mittigen Textbox ist nur an einer vermessenen ' +
+        'Körperhülle zulässig.',
+    });
+  }
+  if (
+    centerBoxMarginMm !== undefined &&
+    Number.isFinite(centerBoxMarginMm) &&
+    centerBoxMarginMm >= 0 &&
+    profile.allowsCenterBoxMarginOverride === true &&
+    profile.measuredBodyBoundsMm !== undefined
+  ) {
+    const bodyWidthMm = profile.measuredBodyBoundsMm.maxX - profile.measuredBodyBoundsMm.minX;
+    if (centerBoxMarginMm * 2 >= bodyWidthMm) {
+      issues.push({
+        rule: 'center-box-margin-within-body',
+        message:
+          'Der beidseitige Rand der mittigen Textbox muss eine positive Boxbreite innerhalb ' +
+          'der vermessenen Körperhülle übrig lassen.',
       });
     }
   }

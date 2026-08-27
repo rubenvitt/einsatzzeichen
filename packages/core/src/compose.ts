@@ -284,8 +284,10 @@ function minRenderPxFor(sizeMm: number, viewBoxWidthMm: number): number {
 /**
  * Ein Beschriftungslauf im Körper. `boxMm` ist wie bei jedem Textprimitiv eine Zusicherung des
  * Autors, keine Messung — die waagerechte Ausdehnung ist deshalb bewusst eng gefasst: der
- * mittige Lauf bekommt die Körperbreite abzüglich zweimal `CENTER_LABEL_BOX_MARGIN_MM` (also das
- * vermessene Innenfeld, 28 mm), die beiden unteren je ihre Hälfte von ihrem Anker
+ * mittige Lauf bekommt normalerweise die Körperbreite abzüglich zweimal
+ * `CENTER_LABEL_BOX_MARGIN_MM` (also das vermessene Innenfeld, 28 mm); ein einzelner
+ * quellenvermessener Lauf darf diese reine Ausgabebox mit `BodyLabels.centerBoxMarginMm`
+ * enger an die Körperkante führen. Die beiden unteren bekommen je ihre Hälfte von ihrem Anker
  * (`LABEL_SIDE_MARGIN_MM`) bis zur Körpermitte. Damit ist „passt in seine Zone" eine prüfbare
  * Aussage — für den mittigen Lauf gegen das Innenfeld, für die unteren gegen ihre Ränder — und die
  * beiden unteren Läufe können sich nicht überlappen, ohne dass ein Gate es meldet
@@ -420,14 +422,18 @@ function labelPrimitives(
   // nicht ein umgerechnetes: sonst wanderten die vermessenen unteren Anker 3,03/29,03 mit.
   const leftMm = bodyBoundsMm.minX + LABEL_SIDE_MARGIN_MM;
   const rightMm = bodyBoundsMm.maxX - LABEL_SIDE_MARGIN_MM;
-  // Der einzige vermessene linke Mittellauf (I.2.5) beginnt bei x = 5,088 mm. Seine
-  // Rasterkante kann die generische 1-mm-Innenmarge unterschreiten; die Box beginnt deshalb an
-  // der vermessenen Körperkante und hält diesen ausdrücklich freigegebenen Anker inklusive
-  // Antialiasing innerhalb der Zusicherung.
-  const centerBoxLeftMm = bodyBoundsMm.minX + (
-    centerAnchorFromBodyLeftMm === undefined ? CENTER_LABEL_BOX_MARGIN_MM : 0
-  );
-  const centerBoxRightMm = bodyBoundsMm.maxX - CENTER_LABEL_BOX_MARGIN_MM;
+  // `bottomCenter` behält immer seine generische 1-mm-Box. Der quellenvermessen deklarierte
+  // Rand gilt ausschließlich für den eigentlichen mittigen Lauf.
+  const defaultCenterBoxLeftMm = bodyBoundsMm.minX + CENTER_LABEL_BOX_MARGIN_MM;
+  const defaultCenterBoxRightMm = bodyBoundsMm.maxX - CENTER_LABEL_BOX_MARGIN_MM;
+  const centerBoxMarginMm = labels.centerBoxMarginMm ?? CENTER_LABEL_BOX_MARGIN_MM;
+  // I.2.5s vermessener linker Anker beginnt bei x = 5,088 mm. Nur dieser verifizierte
+  // Anker darf deshalb links bis an die Körperkante reichen; alle anderen mittigen Läufe
+  // verwenden den individuellen oder globalen symmetrischen Rand.
+  const centerLabelBoxLeftMm = centerAnchorFromBodyLeftMm === undefined
+    ? bodyBoundsMm.minX + centerBoxMarginMm
+    : bodyBoundsMm.minX;
+  const centerLabelBoxRightMm = bodyBoundsMm.maxX - centerBoxMarginMm;
   const centerBaselineMm = bodyBoundsMm.maxY - centerBaselineFromBodyBottomMm;
   const bottomBaselineMm = bodyBoundsMm.maxY - bottomLabelBaselineFromBodyBottomMm;
 
@@ -440,8 +446,8 @@ function labelPrimitives(
         centerBaselineMm,
         'middle',
         centerXMm,
-        centerBoxLeftMm,
-        centerBoxRightMm - centerBoxLeftMm,
+        centerLabelBoxLeftMm,
+        centerLabelBoxRightMm - centerLabelBoxLeftMm,
         viewBoxWidthMm,
         ink,
       ),
@@ -581,8 +587,8 @@ function labelPrimitives(
         bodyBoundsMm.maxY - bottomCenterBaselineFromBodyBottomMm,
         'middle',
         centerXMm,
-        centerBoxLeftMm,
-        centerBoxRightMm - centerBoxLeftMm,
+        defaultCenterBoxLeftMm,
+        defaultCenterBoxRightMm - defaultCenterBoxLeftMm,
         viewBoxWidthMm,
         bottomCenterInk === 'black' ? 'schwarz' : ink,
       ),

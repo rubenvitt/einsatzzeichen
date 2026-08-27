@@ -58,6 +58,7 @@ import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
 import {
   ANHANG_I_A_RECIPES,
   ANHANG_I_B_RECIPES,
+  ANHANG_I_G_RECIPES,
   ANHANG_I_J_RECIPES,
 } from './recipes-anhang-i.js';
 
@@ -421,6 +422,18 @@ const ANHANG_I_TECHNICAL_REVIEW: Review = {
   date: '2026-08-26',
   note:
     'I.2.4-I.2.7 passed the measured trailer shell and drawbar, explicitly absent chassis, trailer-only technical body marks, literal recipes, direct-snapshot and multi-size gates. I.3.5-I.3.7 retain their measured inset-hull and 7.99 mm center-profile. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
+};
+
+const ANHANG_I_G_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-27',
+  note:
+    'I.1.17-I.1.20 passed measured formation body marks, 16 mm center-baseline, 2.5 mm ' +
+    'cap-height and 29 mm output-box contracts, literal recipe, direct-snapshot, multi-size, ' +
+    'coverage and ' +
+    'output-only visual QA gates. Opposed triangles and chevron remain separate geometric ' +
+    'marks; domain classification remains pending.',
 };
 
 const ANHANG_I_J_TECHNICAL_REVIEW: Review = {
@@ -905,6 +918,9 @@ function technicalReviewFor(section: string): Review {
     return ANHANG_G_TECHNICAL_REVIEW;
   }
   if (Object.hasOwn(ANHANG_H_RECIPES, section)) return ANHANG_H_TECHNICAL_REVIEW;
+  if (Object.hasOwn(ANHANG_I_G_RECIPES, section)) {
+    return ANHANG_I_G_TECHNICAL_REVIEW;
+  }
   if (Object.hasOwn(ANHANG_I_A_RECIPES, section) || Object.hasOwn(ANHANG_I_B_RECIPES, section)) {
     return ANHANG_I_TECHNICAL_REVIEW;
   }
@@ -1112,6 +1128,10 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'F',
     'G',
     'H',
+    'I.1.17',
+    'I.1.18',
+    'I.1.19',
+    'I.1.20',
     'I.2.4',
     'I.2.5',
     'I.2.6',
