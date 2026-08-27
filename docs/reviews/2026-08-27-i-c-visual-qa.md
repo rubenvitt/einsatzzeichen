@@ -28,13 +28,13 @@ fokussierte Provenienz-/Snapshot-Lauf war zuvor mit 1.760/1.760 Tests grün.
 
 ## Output-only Artefakte
 
-Erzeuger-Commit: `6cd60807abbd262405981dd1d67cdc21abfe2c83`
+Erzeuger-Commit: `92b04ec63a46d13db1e48d0d4168f4650d6badea`
 
 | Artefakt | Abmessungen | SHA-256 |
 |---|---:|---|
-| `out/lfh-481/contact-sheet/LFH-481-i-c-direct.png` | 1500 × 1540 px | `91f26d6744d645f4bda755ec910470221508ad3af6e33068d387489d44e2d565` |
-| `out/lfh-481/contact-sheet/LFH-481-i-c-generated.png` | 1600 × 3000 px | `4c6475f37b2edfbc4f28a79736d685346ac2a05d539177712e7648b76c792059` |
-| `out/lfh-481/contact-sheet/manifest.json` | vier Rezeptzeilen und zwei Outputbindungen | `f3dfa356f71e78643d31d9ae2fca998557f46d9bf91666ef17e83abe96b5b9fa` |
+| `out/lfh-481/contact-sheet/LFH-481-i-c-direct.png` | 1500 × 1540 px | `47b702e8bc36432c332fde9e7341bdd49523235396fcef5d1016478a3d64c1e3` |
+| `out/lfh-481/contact-sheet/LFH-481-i-c-generated.png` | 1600 × 3000 px | `795615b9c04383ba915acae090644b99b31ada5ba9d7abacbd38f007727a3d32` |
+| `out/lfh-481/contact-sheet/manifest.json` | vier Rezeptzeilen und zwei Outputbindungen | `82272fd758b91e3847d9da499a9879e78b2116e67db2714e8e121d83ab3b109e` |
 
 Beide PNGs wurden in Originalauflösung vollständig gesichtet. Titel, Abschnitt und Spalten sind
 lesbar. Kein Kopf, Rahmen oder Innenzeichen wird abgeschnitten. Der große Kontaktbogen zeigt alle
@@ -54,10 +54,13 @@ eingecheckt noch im PR-Bild enthalten.
 | I.1.3 | `d0b9f7bfa913b0b2b73a038b84189ed9d38789630d47659486e45d8bec716528` | drei Kreise bei `x = 11/16/21`; Abstände und Innenmarke stimmen |
 | I.1.4 | `35e6b2fdafa2220074b770defb9457f278dc8b56ece737307331012bed12c73a` | einzelner Balken `15,25…16,75/1…5`; keine Kreis-, Verwaltungs- oder globale Verbandsstärke |
 
-Im unabhängigen Rastervergleich waren die Körperrahmen pixelgleich. Über die vier Bilder wichen
-`0,0619–0,0683 %` der Pixel ab; die RGBA-RMSE lag ungefähr bei `2,10/255`, die
-Dark-Pixel-IoU der Innenmarke bei `99,33–99,37 %`. Die Restdifferenzen liegen an geglätteten
-Innenkanten und wenigen pfadkonvertierten Kopfkreispixeln, nicht an Rahmen oder Platzierung.
+Im nach der Polygonkorrektur wiederholten Rastervergleich waren die Körperrahmen pixelgleich.
+Über die vier Bilder wichen `0,0572–0,0636 %` der Pixel ab; die RGBA-RMSE lag bei
+`1,49–1,51/255`, die Dark-Pixel-IoU der Innenmarke bei `99,53–99,58 %`. Die
+Restdifferenzen liegen an geglätteten Innenkanten und wenigen pfadkonvertierten
+Kopfkreispixeln, nicht an Rahmen oder Platzierung. Die Raute wird jetzt aus vier kanonischen
+Eckpunkten mit `closed: true` als echte geschlossene Kontur gerendert; private Paarbilder wurden
+für diese Messung nicht geschrieben.
 
 Die Originale besitzen eine explizit weiße Füllung, während die organisationslosen
 Katalogkörper transparent sind. Der Vergleich belegt deshalb die visuelle Übereinstimmung auf
@@ -68,7 +71,7 @@ Organisationszuordnung.
 
 | Rezept | direkter Snapshot | Mehrgrößen-Snapshot | Semantik- und Sichtprüfung |
 |---|---|---|---|
-| `I.1.1` | `packages/catalog/src/__snapshots__/I.1.1.svg` | `packages/catalog/src/__snapshots__/multi-size/recipe.I.1.1.svg` | bestanden: Truppkreis, normale Hülle und Wasserrettungsmarke vollständig |
+| `I.1.1` | `packages/catalog/src/__snapshots__/I.1.1.svg` | `packages/catalog/src/__snapshots__/multi-size/recipe.I.1.1.svg` | bestanden: Truppkreis, normale Hülle und echt geschlossene Wasserrettungsraute vollständig |
 | `I.1.2` | `packages/catalog/src/__snapshots__/I.1.2.svg` | `packages/catalog/src/__snapshots__/multi-size/recipe.I.1.2.svg` | bestanden: zwei Gruppenkreise, gleiche Körper- und Innengeometrie |
 | `I.1.3` | `packages/catalog/src/__snapshots__/I.1.3.svg` | `packages/catalog/src/__snapshots__/multi-size/recipe.I.1.3.svg` | bestanden: drei Zugkreise, gleichmäßige Abstände, keine Zusatzsemantik |
 | `I.1.4` | `packages/catalog/src/__snapshots__/I.1.4.svg` | `packages/catalog/src/__snapshots__/multi-size/recipe.I.1.4.svg` | bestanden: technische Einzelmarke und barrierefreie Beschreibung ohne behauptete Verbandsstärke |
