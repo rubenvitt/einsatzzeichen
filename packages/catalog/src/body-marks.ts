@@ -576,32 +576,75 @@ const PERSON_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]
  * Die absoluten Exportwerte sind gegen den Mittelpunkt der übergebenen 26-mm-Raute zerlegt;
  * dadurch verschiebt I.5.2/I.5.3 die vollständige Markierung ausschließlich mit ihrer Hülle.
  */
-const I5_WAVE_COMMANDS =
-  'c -0.395815189 0 -0.583845043 -0.188029854 -0.821969154 -0.426506741 ' +
-  '-0.255057381 -0.255762934 -0.572908973 -0.573614526 -1.175803944 -0.573614526 ' +
-  's -0.921452116 0.317851591 -1.176509497 0.573261749 ' +
-  'c -0.238476888 0.238829664 -0.426506741 0.426859518 -0.823027483 0.426859518 ' +
-  's -0.585256149 -0.188029854 -0.823733036 -0.426859518 ' +
-  'c -0.255410158 -0.255410158 -0.573614526 -0.573261749 -1.177215050 -0.573261749 ' +
-  's -0.921804893 0.317851591 -1.177215050 0.573261749 ' +
-  'c -0.238476888 0.238829664 -0.426859518 0.426859518 -0.823733036 0.426859518 ' +
-  'v 0.500237022 c 0.603600525 0 0.921804893 -0.317851591 1.177215050 -0.573261749 ' +
-  '0.238476888 -0.238829664 0.426859518 -0.426859518 0.823733036 -0.426859518 ' +
-  's 0.585256149 0.188029854 0.823733036 0.426859518 ' +
-  'c 0.255410158 0.255410158 0.573614526 0.573261749 1.177215050 0.573261749 ' +
-  's 0.921452116 -0.317851591 1.176862274 -0.573261749 ' +
-  'c 0.238476888 -0.238829664 0.426506741 -0.426859518 0.823027483 -0.426859518 ' +
-  's 0.583845043 0.188029854 0.821969154 0.426506741 ' +
-  'c 0.255057381 0.255762934 0.572908973 0.573614526 1.175803944 0.573614526 ' +
-  'v -0.500237022 Z';
-
 function i5Wave(cxMm: number, cyMm: number, startYFromCenterMm: number): Primitive {
   const coordinate = (value: number): number => Number(value.toFixed(9));
+  let xMm = coordinate(cxMm + 3.999955903);
+  let yMm = coordinate(cyMm + startYFromCenterMm);
+  let previousControlXMm = xMm;
+  let previousControlYMm = yMm;
+  const commands = [`M ${xMm} ${yMm}`];
+  const cubic = (
+    control1DxMm: number,
+    control1DyMm: number,
+    control2DxMm: number,
+    control2DyMm: number,
+    endDxMm: number,
+    endDyMm: number,
+  ): void => {
+    const control1XMm = coordinate(xMm + control1DxMm);
+    const control1YMm = coordinate(yMm + control1DyMm);
+    const control2XMm = coordinate(xMm + control2DxMm);
+    const control2YMm = coordinate(yMm + control2DyMm);
+    xMm = coordinate(xMm + endDxMm);
+    yMm = coordinate(yMm + endDyMm);
+    previousControlXMm = control2XMm;
+    previousControlYMm = control2YMm;
+    commands.push(`C ${control1XMm} ${control1YMm} ${control2XMm} ${control2YMm} ${xMm} ${yMm}`);
+  };
+  const smoothCubic = (
+    control2DxMm: number,
+    control2DyMm: number,
+    endDxMm: number,
+    endDyMm: number,
+  ): void => {
+    const control1XMm = coordinate(2 * xMm - previousControlXMm);
+    const control1YMm = coordinate(2 * yMm - previousControlYMm);
+    const control2XMm = coordinate(xMm + control2DxMm);
+    const control2YMm = coordinate(yMm + control2DyMm);
+    xMm = coordinate(xMm + endDxMm);
+    yMm = coordinate(yMm + endDyMm);
+    previousControlXMm = control2XMm;
+    previousControlYMm = control2YMm;
+    commands.push(`C ${control1XMm} ${control1YMm} ${control2XMm} ${control2YMm} ${xMm} ${yMm}`);
+  };
+  const vertical = (dyMm: number): void => {
+    yMm = coordinate(yMm + dyMm);
+    commands.push(`L ${xMm} ${yMm}`);
+  };
+
+  cubic(-0.395815189, 0, -0.583845043, -0.188029854, -0.821969154, -0.426506741);
+  cubic(-0.255057381, -0.255762934, -0.572908973, -0.573614526, -1.175803944, -0.573614526);
+  smoothCubic(-0.921452116, 0.317851591, -1.176509497, 0.573261749);
+  cubic(-0.238476888, 0.238829664, -0.426506741, 0.426859518, -0.823027483, 0.426859518);
+  smoothCubic(-0.585256149, -0.188029854, -0.823733036, -0.426859518);
+  cubic(-0.255410158, -0.255410158, -0.573614526, -0.573261749, -1.17721505, -0.573261749);
+  smoothCubic(-0.921804893, 0.317851591, -1.17721505, 0.573261749);
+  cubic(-0.238476888, 0.238829664, -0.426859518, 0.426859518, -0.823733036, 0.426859518);
+  vertical(0.500237022);
+  cubic(0.603600525, 0, 0.921804893, -0.317851591, 1.17721505, -0.573261749);
+  cubic(0.238476888, -0.238829664, 0.426859518, -0.426859518, 0.823733036, -0.426859518);
+  smoothCubic(0.585256149, 0.188029854, 0.823733036, 0.426859518);
+  cubic(0.255410158, 0.255410158, 0.573614526, 0.573261749, 1.17721505, 0.573261749);
+  smoothCubic(0.921452116, -0.317851591, 1.176862274, -0.573261749);
+  cubic(0.238476888, -0.238829664, 0.426506741, -0.426859518, 0.823027483, -0.426859518);
+  smoothCubic(0.583845043, 0.188029854, 0.821969154, 0.426506741);
+  cubic(0.255057381, 0.255762934, 0.572908973, 0.573614526, 1.175803944, 0.573614526);
+  vertical(-0.500237022);
+
   return {
     type: 'path',
     role: 'pictogram',
-    d: `M ${coordinate(cxMm + 3.999955903)} ${coordinate(cyMm + startYFromCenterMm)} ` +
-      I5_WAVE_COMMANDS,
+    d: `${commands.join(' ')} Z`,
     style: { fill: 'schwarz', stroke: 'none' },
   };
 }

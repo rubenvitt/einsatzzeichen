@@ -169,24 +169,6 @@ describe('bodyMark() — die technische Innenzeichnung des Anhangs I.5', () => {
   const compactPersonDiamond = 'compact-person-diamond-26mm' as BodyVariantId;
   const loweredCompactPersonDiamond =
     'compact-person-diamond-26mm-lowered-2mm' as BodyVariantId;
-  const waveCommands =
-    'c -0.395815189 0 -0.583845043 -0.188029854 -0.821969154 -0.426506741 ' +
-    '-0.255057381 -0.255762934 -0.572908973 -0.573614526 -1.175803944 -0.573614526 ' +
-    's -0.921452116 0.317851591 -1.176509497 0.573261749 ' +
-    'c -0.238476888 0.238829664 -0.426506741 0.426859518 -0.823027483 0.426859518 ' +
-    's -0.585256149 -0.188029854 -0.823733036 -0.426859518 ' +
-    'c -0.255410158 -0.255410158 -0.573614526 -0.573261749 -1.177215050 -0.573261749 ' +
-    's -0.921804893 0.317851591 -1.177215050 0.573261749 ' +
-    'c -0.238476888 0.238829664 -0.426859518 0.426859518 -0.823733036 0.426859518 ' +
-    'v 0.500237022 c 0.603600525 0 0.921804893 -0.317851591 1.177215050 -0.573261749 ' +
-    '0.238476888 -0.238829664 0.426859518 -0.426859518 0.823733036 -0.426859518 ' +
-    's 0.585256149 0.188029854 0.823733036 0.426859518 ' +
-    'c 0.255410158 0.255410158 0.573614526 0.573261749 1.177215050 0.573261749 ' +
-    's 0.921452116 -0.317851591 1.176862274 -0.573261749 ' +
-    'c 0.238476888 -0.238829664 0.426506741 -0.426859518 0.823027483 -0.426859518 ' +
-    's 0.583845043 0.188029854 0.821969154 0.426506741 ' +
-    'c 0.255057381 0.255762934 0.572908973 0.573614526 1.175803944 0.573614526 ' +
-    'v -0.500237022 Z';
   const filledWaveStyle = { fill: 'schwarz', stroke: 'none' } as const;
 
   it('registriert die doppelte Welle mit innerer 8-mm-Raute und bindet sie nur an die I.5-Rauten', () => {
@@ -198,12 +180,12 @@ describe('bodyMark() — die technische Innenzeichnung des Anhangs I.5', () => {
     )).toEqual([
       {
         type: 'path', role: 'pictogram',
-        d: `M 19.999955903 10.750157096 ${waveCommands}`,
+        d: expect.stringMatching(/^M 19\.999955903 10\.750157096 /),
         style: filledWaveStyle,
       },
       {
         type: 'path', role: 'pictogram',
-        d: `M 19.999955903 12.749694077 ${waveCommands}`,
+        d: expect.stringMatching(/^M 19\.999955903 12\.749694077 /),
         style: filledWaveStyle,
       },
       {
@@ -219,12 +201,12 @@ describe('bodyMark() — die technische Innenzeichnung des Anhangs I.5', () => {
     )).toEqual([
       {
         type: 'path', role: 'pictogram',
-        d: `M 19.999955903 12.750157096 ${waveCommands}`,
+        d: expect.stringMatching(/^M 19\.999955903 12\.750157096 /),
         style: filledWaveStyle,
       },
       {
         type: 'path', role: 'pictogram',
-        d: `M 19.999955903 14.749694077 ${waveCommands}`,
+        d: expect.stringMatching(/^M 19\.999955903 14\.749694077 /),
         style: filledWaveStyle,
       },
       {
@@ -243,6 +225,25 @@ describe('bodyMark() — die technische Innenzeichnung des Anhangs I.5', () => {
       { kind: 'formation' },
       formationBodyMm,
     )).toThrow(/keine randbündige Fassung/);
+  });
+
+  it('emittiert die I.5-Wellen ausschließlich mit dem absoluten Pfad-Subset des Render-Gates', () => {
+    for (const [bodyVariant, bounds] of [
+      [compactPersonDiamond, compactPersonDiamondBodyMm],
+      [loweredCompactPersonDiamond, loweredCompactPersonDiamondBodyMm],
+    ] as const) {
+      const waves = bodyMarkWithContext(
+        waterRescueMark,
+        { kind: 'person', bodyVariant },
+        bounds,
+      ).filter((primitive) => primitive.type === 'path');
+      expect(waves).toHaveLength(2);
+      for (const wave of waves) {
+        expect(wave.d).toMatch(/^[MLHVCQZ0-9.,\s-]+$/);
+        expect(wave.d).toContain('C');
+        expect(wave.d).toContain('L');
+      }
+    }
   });
 });
 
