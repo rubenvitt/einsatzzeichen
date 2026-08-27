@@ -387,6 +387,12 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:I.3.5#primary': { status: 'pending' },
   'bbk-babz-2025:I.3.6#primary': { status: 'pending' },
   'bbk-babz-2025:I.3.7#primary': { status: 'pending' },
+  // I.4.1 bis I.4.3 sind technisch als weiße HiOrg-Kreiszeichen rekonstruiert. Ob die sichtbaren
+  // Marken fachlich richtig benannt und gegeneinander verwechslungsfrei sind, bleibt je
+  // Darstellung offen; insbesondere leitet der Katalog aus I.4.1s Giebel keine neue Semantik ab.
+  'bbk-babz-2025:I.4.1#primary': { status: 'pending' },
+  'bbk-babz-2025:I.4.2#primary': { status: 'pending' },
+  'bbk-babz-2025:I.4.3#primary': { status: 'pending' },
   'bbk-babz-2025:2.1#primary': { status: 'pending' },
   // 2.2 seit LFH-424. Fachlich besonders zu prüfen: die Zuordnung „HiOrg = Hilfsorganisation" ist
   // aus dem gerasterten Bild abgelesen, nicht aus dem Dateinamen — der ist generisch

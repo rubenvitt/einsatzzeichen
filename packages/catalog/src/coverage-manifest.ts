@@ -55,7 +55,11 @@ import {
 import { ANHANG_N_RECIPES } from './recipes-anhang-n.js';
 import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
-import { ANHANG_I_A_RECIPES, ANHANG_I_B_RECIPES } from './recipes-anhang-i.js';
+import {
+  ANHANG_I_A_RECIPES,
+  ANHANG_I_B_RECIPES,
+  ANHANG_I_J_RECIPES,
+} from './recipes-anhang-i.js';
 
 /**
  * Migration nach Slice 2: `technical` ist für alle elf Einträge `approved`, weil das Kriterium
@@ -417,6 +421,17 @@ const ANHANG_I_TECHNICAL_REVIEW: Review = {
   date: '2026-08-26',
   note:
     'I.2.4-I.2.7 passed the measured trailer shell and drawbar, explicitly absent chassis, trailer-only technical body marks, literal recipes, direct-snapshot and multi-size gates. I.3.5-I.3.7 retain their measured inset-hull and 7.99 mm center-profile. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
+};
+
+const ANHANG_I_J_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-27',
+  note:
+    'I.4.1-I.4.3 passed independently measured circle and body-mark geometry, fail-closed ' +
+    'kind/variant/bounds, literal recipe, direct-snapshot and multi-size gates. I.4.1 reuses ' +
+    'circle-12/raised-gable as geometry only; white Hilfsorganisation bodies and all domain ' +
+    'classifications remain pending.',
 };
 
 /** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
@@ -893,6 +908,9 @@ function technicalReviewFor(section: string): Review {
   if (Object.hasOwn(ANHANG_I_A_RECIPES, section) || Object.hasOwn(ANHANG_I_B_RECIPES, section)) {
     return ANHANG_I_TECHNICAL_REVIEW;
   }
+  if (Object.hasOwn(ANHANG_I_J_RECIPES, section)) {
+    return ANHANG_I_J_TECHNICAL_REVIEW;
+  }
   return TECHNICAL_REVIEW;
 }
 
@@ -1101,6 +1119,9 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'I.3.5',
     'I.3.6',
     'I.3.7',
+    'I.4.1',
+    'I.4.2',
+    'I.4.3',
     'J.1',
     'J.2',
     'J.3',
