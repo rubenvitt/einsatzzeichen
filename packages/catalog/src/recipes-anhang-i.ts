@@ -1,7 +1,95 @@
 import type { Recipe } from './recipes.js';
 
-/** I.1.9 bis I.1.12: die fünf vermessenen Wasserrettungsformationen. */
-export const ANHANG_I_E_RECIPES = {
+const I_2_TOP_LEFT_METRICS = {
+  capHeightMm: 3.18236,
+  baselineFromBodyTopMm: 6.55959,
+  anchorFromBodyLeftMm: 1.56869,
+} as const;
+/**
+ * Gemeinsame Anhang-I-Aggregation. Die einzelnen LFH-Slices bleiben über ihre exakten Schlüssel
+ * und die korrespondierenden technischen Reviews getrennt, werden aber nur einmal in `RECIPES`
+ * eingebunden.
+ */
+export const ANHANG_I_RECIPES = {
+  // LFH-481 / Anhang I-c: vier Wasserrettungsformationen ohne Organisationsableitung.
+  'I.1.1': {
+    title: 'Wasserrettungstrupp',
+    referenceAsset: 'I.1.1_Wasserrettungstrupp.svg',
+    spec: {
+      kind: 'formation',
+      strength: 'trupp',
+      bodyMarks: ['formation-two-waves-diamond'],
+    },
+  },
+  'I.1.2': {
+    title: 'Wasserrettungsgruppe',
+    referenceAsset: 'I.1.2_Wasserrettungsgruppe.svg',
+    spec: {
+      kind: 'formation',
+      strength: 'gruppe',
+      bodyMarks: ['formation-two-waves-diamond'],
+    },
+  },
+  'I.1.3': {
+    title: 'Wasserrettungszug',
+    referenceAsset: 'I.1.3_Wasserrettungszug.svg',
+    spec: {
+      kind: 'formation',
+      strength: 'zug',
+      bodyMarks: ['formation-two-waves-diamond'],
+    },
+  },
+  'I.1.4': {
+    title: 'Wasserrettungsverband',
+    referenceAsset: 'I.1.4_Wasserrettungsverband.svg',
+    spec: {
+      kind: 'formation',
+      technicalHeadMark: 'single-vertical-bar',
+      bodyMarks: ['formation-two-waves-diamond'],
+    },
+  },
+  // LFH-482 / Anhang I-d: vier separat vermessene Wasserrettungs-Führungsformationen.
+  'I.1.5': {
+    title: 'Zugtrupp Wasserrettungszug',
+    referenceAsset: 'I.1.5_Zugtrupp Wasserrettungszug.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'trupp',
+      bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3.7mm-three-hole-row'],
+    },
+  },
+  'I.1.6': {
+    title: 'Führungstrupp Wasserrettung',
+    referenceAsset: 'I.1.6_Führungstrupp Wasserrettung.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'trupp',
+      bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3mm'],
+    },
+  },
+  'I.1.7': {
+    title: 'Führungsgruppe Wasserrettung',
+    referenceAsset: 'I.1.7_Führungsgruppe Wasserrettung.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'gruppe',
+      bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3mm'],
+    },
+  },
+  'I.1.8': {
+    title: 'Führungsstaffel Wasserrettung',
+    referenceAsset: 'I.1.8_Führungsstaffel Wasserrettung.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'staffel',
+      bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3mm'],
+    },
+  },
+  // LFH-483 / Anhang I-e: vier Abschnitte mit fünf vermessenen Darstellungen.
   'I.1.9': {
     title: 'Bootstrupp Wasserrettungszug',
     referenceAsset: 'I.1.9_Bootstrupp Wasserrettungszug.svg',
@@ -57,16 +145,9 @@ export const ANHANG_I_E_RECIPES = {
       labels: { topLeft: 'Tauchen' },
     },
   },
-} as const satisfies Record<string, Recipe>;
-
-/**
- * LFH-485 / Anhang I-g: vier weiße Wasserrettungsformationen. Die Wasserrettungsmarke ist die
- * separat vermessene kompakte Formationsfassung. Dreieckspaar und Winkel bleiben geometrisch
- * getrennt, damit weder die kombinierte F.1.16-Zeichnung noch eine ungeklärte Drohnensemantik
- * übernommen wird. Der Textlauf der ersten beiden Rezepte steht auf y=10,0 mm; seine aus dem
- * einzigen versalen S idealisierte Versalhöhe beträgt 2,5 mm.
- */
-export const ANHANG_I_G_RECIPES = {
+  // LFH-485 / Anhang I-g: Die Wasserrettungsmarke ist die separat vermessene kompakte
+  // Formationsfassung. Dreieckspaar und Winkel bleiben geometrisch getrennt. Der Textlauf der
+  // ersten beiden Rezepte steht auf y=10,0 mm; die idealisierte Versalhöhe beträgt 2,5 mm.
   'I.1.17': {
     title: 'Strömungsrettungstrupp',
     referenceAsset: 'I.1.17_Strömungsrettungstrupp.svg',
@@ -119,16 +200,7 @@ export const ANHANG_I_G_RECIPES = {
       bodyMarks: ['formation-water-rescue-lower-zone', 'formation-chevron-top'],
     },
   },
-} as const satisfies Record<string, Recipe>;
-
-const I_2_TOP_LEFT_METRICS = {
-  capHeightMm: 3.18236,
-  baselineFromBodyTopMm: 6.55959,
-  anchorFromBodyLeftMm: 1.56869,
-} as const;
-
-/** I.2.1 bis I.2.3: die drei literalen Wasserrettungs-Landfahrzeuge aus LFH-486. */
-export const ANHANG_I_B_RECIPES = {
+  // LFH-486 / Anhang I-b: drei separat vermessene Wasserrettungs-Landfahrzeuge.
   'I.2.1': {
     title: 'Gerätewagen Wasserrettung, geländegängig',
     referenceAsset: 'I.2.1_Gerätewagen Wasserrettung_geländegängig.svg',
@@ -162,9 +234,47 @@ export const ANHANG_I_B_RECIPES = {
       labels: { topLeft: 'GW SR', topLeftMetrics: I_2_TOP_LEFT_METRICS },
     },
   },
-} as const satisfies Record<string, Recipe>;
-
-export const ANHANG_I_A_RECIPES = {
+  // LFH-479/LFH-480 / Anhang I-a und I-b: die vollständige I.3-Reihe.
+  'I.3.1': {
+    title: 'Boot allgemein',
+    referenceAsset: 'I.3.1_Boot allgemein.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+    },
+  },
+  'I.3.2': {
+    title: 'Schlauchboot',
+    referenceAsset: 'I.3.2_Schlauchboot.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+      labels: { center: 'Schlauch', centerCapHeightMm: 4.1395 },
+    },
+  },
+  'I.3.3': {
+    title: 'Festrumpfschlauchboot',
+    referenceAsset: 'I.3.3_Festrumpfschlauchboot.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+      labels: { center: 'RIB' },
+    },
+  },
+  'I.3.4': {
+    title: 'Hochwasserboot',
+    referenceAsset: 'I.3.4_Hochwasserboot.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+      labels: { center: 'HW' },
+      bodyMarks: ['inset-hull-wheel-pair'],
+    },
+  },
   'I.3.5': {
     title: 'Mehrzweckboot',
     referenceAsset: 'I.3.5_Mehrzweckboot.svg',
@@ -195,50 +305,46 @@ export const ANHANG_I_A_RECIPES = {
       labels: { center: 'MzPt' },
     },
   },
-} as const satisfies Record<string, Recipe>;
-export const ANHANG_I_D_RECIPES = {
-  'I.1.5': {
-    title: 'Zugtrupp Wasserrettungszug',
-    referenceAsset: 'I.1.5_Zugtrupp Wasserrettungszug.svg',
+  'I.3.8': {
+    title: 'Rettungsboot Typ 1',
+    referenceAsset: 'I.3.8_Rettungsboot_Typ 1.svg',
     spec: {
-      kind: 'formation',
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
       organization: 'hilfsorganisation',
-      strength: 'trupp',
-      bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3.7mm-three-hole-row'],
+      labels: { center: 'RTB 1' },
     },
   },
-  'I.1.6': {
-    title: 'Führungstrupp Wasserrettung',
-    referenceAsset: 'I.1.6_Führungstrupp Wasserrettung.svg',
+  'I.3.9': {
+    title: 'Rettungsboot Typ 2',
+    referenceAsset: 'I.3.9_Rettungsboot_Typ 2.svg',
     spec: {
-      kind: 'formation',
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
       organization: 'hilfsorganisation',
-      strength: 'trupp',
-      bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3mm'],
+      labels: { center: 'RTB 2' },
     },
   },
-  'I.1.7': {
-    title: 'Führungsgruppe Wasserrettung',
-    referenceAsset: 'I.1.7_Führungsgruppe Wasserrettung.svg',
+  'I.3.10': {
+    title: 'Raft',
+    referenceAsset: 'I.3.10_Raft.svg',
     spec: {
-      kind: 'formation',
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
       organization: 'hilfsorganisation',
-      strength: 'gruppe',
-      bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3mm'],
+      labels: { center: 'Raft' },
     },
   },
-  'I.1.8': {
-    title: 'Führungsstaffel Wasserrettung',
-    referenceAsset: 'I.1.8_Führungsstaffel Wasserrettung.svg',
+  'I.3.11': {
+    title: 'Feuerlöschboot',
+    referenceAsset: 'I.3.11_Feuerlöschboot.svg',
     spec: {
-      kind: 'formation',
-      organization: 'hilfsorganisation',
-      strength: 'staffel',
-      bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3mm'],
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'feuerwehr',
+      bodyMarks: ['fire-fighting'],
     },
   },
-} as const satisfies Record<string, Recipe>;
-export const ANHANG_I_J_RECIPES = {
   'I.4.1': {
     title: 'Wasserrettungsstation, ortsgebunden',
     referenceAsset: 'I.4.1_Wasserrettungsstation_ortsgebunden.svg',
@@ -265,45 +371,6 @@ export const ANHANG_I_J_RECIPES = {
       kind: 'circle-12',
       organization: 'hilfsorganisation',
       bodyMarks: ['circle-wide-bowl'],
-    },
-  },
-} as const satisfies Record<string, Recipe>;
-
-export const ANHANG_I_C_RECIPES = {
-  'I.1.1': {
-    title: 'Wasserrettungstrupp',
-    referenceAsset: 'I.1.1_Wasserrettungstrupp.svg',
-    spec: {
-      kind: 'formation',
-      strength: 'trupp',
-      bodyMarks: ['formation-two-waves-diamond'],
-    },
-  },
-  'I.1.2': {
-    title: 'Wasserrettungsgruppe',
-    referenceAsset: 'I.1.2_Wasserrettungsgruppe.svg',
-    spec: {
-      kind: 'formation',
-      strength: 'gruppe',
-      bodyMarks: ['formation-two-waves-diamond'],
-    },
-  },
-  'I.1.3': {
-    title: 'Wasserrettungszug',
-    referenceAsset: 'I.1.3_Wasserrettungszug.svg',
-    spec: {
-      kind: 'formation',
-      strength: 'zug',
-      bodyMarks: ['formation-two-waves-diamond'],
-    },
-  },
-  'I.1.4': {
-    title: 'Wasserrettungsverband',
-    referenceAsset: 'I.1.4_Wasserrettungsverband.svg',
-    spec: {
-      kind: 'formation',
-      technicalHeadMark: 'single-vertical-bar',
-      bodyMarks: ['formation-two-waves-diamond'],
     },
   },
 } as const satisfies Record<string, Recipe>;

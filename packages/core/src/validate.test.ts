@@ -512,6 +512,24 @@ describe('validateSpec', () => {
       ...validInsetWatercraft,
       labels: { accessibilityMode: 'neutral-zones', center: 'MzB' },
     })).toEqual([]);
+    expect(validateSpec({
+      ...validInsetWatercraft,
+      labels: { center: 'MzB', centerCapHeightMm: 3.4099 },
+    })).toEqual([]);
+  });
+
+  it('akzeptiert genau die gemessenen I.3.4- und I.3.11-Organisations- und Markenverträge', () => {
+    expect(validateSpec({
+      kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'hilfsorganisation',
+    })).toEqual([]);
+    expect(validateSpec({
+      kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'hilfsorganisation',
+      bodyMarks: ['inset-hull-wheel-pair'],
+    })).toEqual([]);
+    expect(validateSpec({
+      kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'feuerwehr',
+      bodyMarks: ['fire-fighting'],
+    })).toEqual([]);
   });
 
   it('lehnt geerbte inset-hull-Renderingfelder trotz eigenem center ab', () => {
@@ -581,11 +599,49 @@ describe('validateSpec', () => {
       kind: 'vehicle-water', bodyVariant: 'inset-hull', labels: { center: 'MzB' },
     }],
     ['THW-Organisation', { ...validInsetWatercraft, organization: 'thw' }],
-    ['Feuerwehr-Organisation', { ...validInsetWatercraft, organization: 'feuerwehr' }],
   ] as const)('lehnt inset-hull mit %s ab', (_case, spec) => {
     expect(validateSpec(spec).map((issue) => issue.rule)).toContain(
-      'inset-hull-requires-hilfsorganisation',
+      'inset-hull-requires-measured-organization',
     );
+  });
+
+  it.each([
+    ['Hilfsorganisation mit Feuerlöschmarke', {
+      ...validInsetWatercraft, bodyMarks: ['fire-fighting'],
+    }],
+    ['Hilfsorganisation mit zwei Marken', {
+      ...validInsetWatercraft, bodyMarks: ['inset-hull-wheel-pair', 'fire-fighting'],
+    }],
+    ['Feuerwehr ohne Marke', {
+      kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'feuerwehr',
+    }],
+    ['Feuerwehr mit Radpaar', {
+      kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'feuerwehr',
+      bodyMarks: ['inset-hull-wheel-pair'],
+    }],
+  ] as const)('lehnt inset-hull mit %s ab', (_case, spec) => {
+    expect(validateSpec(spec).map((issue) => issue.rule)).toContain(
+      'inset-hull-requires-measured-body-mark',
+    );
+  });
+
+  it('fordert die unbeschriftete Feuerwehrfassung und behält die generischen Mittellaufregeln', () => {
+    expect(validateSpec({
+      kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'feuerwehr',
+      bodyMarks: ['fire-fighting'], labels: { center: 'LF' },
+    }).map((issue) => issue.rule)).toContain('inset-hull-fire-fighting-requires-no-labels');
+    expect(validateSpec({
+      ...validInsetWatercraft,
+      labels: { centerCapHeightMm: 3.4099 },
+    }).map((issue) => issue.rule)).toContain('center-cap-height-requires-center-label');
+    expect(validateSpec({
+      ...validInsetWatercraft,
+      labels: { center: 'MzB', centerCapHeightMm: 0 },
+    }).map((issue) => issue.rule)).toContain('center-cap-height-positive');
+    expect(validateSpec({
+      ...validInsetWatercraft,
+      vehicleCategory: 'kfz-kategorie-1',
+    }).map((issue) => issue.rule)).toContain('vehicle-category-requires-vehicle');
   });
 
   it.each([
@@ -618,9 +674,6 @@ describe('validateSpec', () => {
     ['centerBaselineFromBodyBottomMm', {
       ...validInsetWatercraft,
       labels: { center: 'MzB', centerBaselineFromBodyBottomMm: 7.99 },
-    }],
-    ['centerCapHeightMm', {
-      ...validInsetWatercraft, labels: { center: 'MzB', centerCapHeightMm: 3.4099 },
     }],
     ['bottomRightMetrics', {
       ...validInsetWatercraft,

@@ -136,6 +136,7 @@ export const TECHNICAL_BODY_MARK_LABELS = Object.freeze({
   'formation-opposed-triangles-top':
     'Zwei gegenüberliegende Dreiecke in der oberen Formationszone',
   'formation-chevron-top': 'Gefüllter Winkel in der oberen Formationszone',
+  'inset-hull-wheel-pair': 'Radpaar in der eingesenkten Wasserfahrzeughülle',
   'h-veterinary-decontamination':
     'Veterinär-V mit kompakter Tierdekontaminationsmarke unten links',
   'h-veterinary-slaughter':
