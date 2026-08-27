@@ -1237,6 +1237,25 @@ describe('Anhang I, Teilslice I.5 (I.5.1 bis I.5.3)', () => {
     expect(labels[0]?.x).toBeCloseTo(x, 12);
     expect(labels[0]?.y).toBeCloseTo(y, 12);
   });
+
+  it.each([
+    ['I.5.1', undefined],
+    ['I.5.2', 'Strömungsretter'],
+    ['I.5.3', 'Taucher'],
+  ] as const)('%s beschreibt Basis, technische Marke und sichtbares Label ohne Organisationssemantik', (section, label) => {
+    const recipe = RECIPES[section]!;
+    const description = composeFromCatalog(recipe.spec, recipe.title).description;
+
+    expect(description).toContain('Grundzeichen: Person');
+    expect(description).toContain('Technische Körpermarke: Doppelwelle mit Innenraute (8 mm)');
+    expect(description).not.toContain('undefined');
+    expect(description).not.toContain('Organisation:');
+    if (label === undefined) {
+      expect(description).not.toContain('Kürzel oberhalb:');
+    } else {
+      expect(description).toContain(`Kürzel oberhalb: ${label}`);
+    }
+  });
 });
 
 describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {

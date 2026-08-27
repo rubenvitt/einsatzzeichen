@@ -43,6 +43,13 @@ import { ANHANG_I_A_RECIPES } from './recipes-anhang-i.js';
 const catalogOrganizationColor: CatalogPorts['organizationColor'] = (organization) =>
   organization === ('white' as never) ? 'weiss' : organizationColor(organization);
 
+/** Omits the technical I.5 fill value from accessible organization semantics. */
+function describeCatalogSymbolSpec(spec: SymbolSpec): string {
+  if (spec.organization !== ('white' as never)) return describeSymbolSpec(spec);
+  const { organization: _technicalFill, ...semanticSpec } = spec;
+  return describeSymbolSpec(semanticSpec);
+}
+
 const PORTS: CatalogPorts = {
   baseDrawing,
   bodyMark,
@@ -57,7 +64,7 @@ const PORTS: CatalogPorts = {
 export function composeFromCatalog(spec: SymbolSpec, title?: string): Drawing {
   return compose(spec, PORTS, {
     ...(title !== undefined ? { title } : {}),
-    descriptionFromSpec: describeSymbolSpec,
+    descriptionFromSpec: describeCatalogSymbolSpec,
   });
 }
 
