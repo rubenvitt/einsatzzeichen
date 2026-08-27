@@ -126,28 +126,29 @@ describe('Coverage-Manifest', () => {
     );
     expect(
       rows.map((entry) => ({
-        section: entry.sourceId.slice('bbk-babz-2025:'.length),
+        sourceId: entry.sourceId,
+        variant: entry.variant,
+        implementation: entry.implementation,
         referenceAsset: entry.referenceAsset,
+        coverage: entry.coverage,
+        testEvidence: entry.testEvidence,
       })),
     ).toEqual([
-      { section: 'I.1.17', referenceAsset: 'I.1.17_Strömungsrettungstrupp.svg' },
-      { section: 'I.1.18', referenceAsset: 'I.1.18_Strömungsrettungsgruppe.svg' },
-      {
-        section: 'I.1.19',
-        referenceAsset: 'I.1.19_Trupp Luftunterstützte Wasserrettung.svg',
-      },
-      { section: 'I.1.20', referenceAsset: 'I.1.20_Trupp Drohne.svg' },
-      { section: 'I.3.1', referenceAsset: 'I.3.1_Boot allgemein.svg' },
-      { section: 'I.3.2', referenceAsset: 'I.3.2_Schlauchboot.svg' },
-      { section: 'I.3.3', referenceAsset: 'I.3.3_Festrumpfschlauchboot.svg' },
-      { section: 'I.3.4', referenceAsset: 'I.3.4_Hochwasserboot.svg' },
-      { section: 'I.3.5', referenceAsset: 'I.3.5_Mehrzweckboot.svg' },
-      { section: 'I.3.6', referenceAsset: 'I.3.6_Mehrzweckarbeitsboot.svg' },
-      { section: 'I.3.7', referenceAsset: 'I.3.7_Mehrzweckponton.svg' },
-      { section: 'I.3.8', referenceAsset: 'I.3.8_Rettungsboot_Typ 1.svg' },
-      { section: 'I.3.9', referenceAsset: 'I.3.9_Rettungsboot_Typ 2.svg' },
-      { section: 'I.3.10', referenceAsset: 'I.3.10_Raft.svg' },
-      { section: 'I.3.11', referenceAsset: 'I.3.11_Feuerlöschboot.svg' },
+      { sourceId: 'bbk-babz-2025:I.1.17', variant: 'primary', implementation: 'recipe.I.1.17', referenceAsset: 'I.1.17_Strömungsrettungstrupp.svg', coverage: 'composition-recipe', testEvidence: ['body-fingerprint', 'svg-snapshot'] },
+      { sourceId: 'bbk-babz-2025:I.1.18', variant: 'primary', implementation: 'recipe.I.1.18', referenceAsset: 'I.1.18_Strömungsrettungsgruppe.svg', coverage: 'composition-recipe', testEvidence: ['body-fingerprint', 'svg-snapshot'] },
+      { sourceId: 'bbk-babz-2025:I.1.19', variant: 'primary', implementation: 'recipe.I.1.19', referenceAsset: 'I.1.19_Trupp Luftunterstützte Wasserrettung.svg', coverage: 'composition-recipe', testEvidence: ['body-fingerprint', 'svg-snapshot'] },
+      { sourceId: 'bbk-babz-2025:I.1.20', variant: 'primary', implementation: 'recipe.I.1.20', referenceAsset: 'I.1.20_Trupp Drohne.svg', coverage: 'composition-recipe', testEvidence: ['body-fingerprint', 'svg-snapshot'] },
+      { sourceId: 'bbk-babz-2025:I.3.1', variant: 'primary', implementation: 'recipe.I.3.1', referenceAsset: 'I.3.1_Boot allgemein.svg', coverage: 'composition-recipe', testEvidence: ['body-fingerprint', 'svg-snapshot'] },
+      { sourceId: 'bbk-babz-2025:I.3.2', variant: 'primary', implementation: 'recipe.I.3.2', referenceAsset: 'I.3.2_Schlauchboot.svg', coverage: 'composition-recipe', testEvidence: ['body-fingerprint', 'svg-snapshot'] },
+      { sourceId: 'bbk-babz-2025:I.3.3', variant: 'primary', implementation: 'recipe.I.3.3', referenceAsset: 'I.3.3_Festrumpfschlauchboot.svg', coverage: 'composition-recipe', testEvidence: ['body-fingerprint', 'svg-snapshot'] },
+      { sourceId: 'bbk-babz-2025:I.3.4', variant: 'primary', implementation: 'recipe.I.3.4', referenceAsset: 'I.3.4_Hochwasserboot.svg', coverage: 'composition-recipe', testEvidence: ['body-fingerprint', 'svg-snapshot'] },
+      { sourceId: 'bbk-babz-2025:I.3.5', variant: 'primary', implementation: 'recipe.I.3.5', referenceAsset: 'I.3.5_Mehrzweckboot.svg', coverage: 'composition-recipe', testEvidence: ['body-fingerprint', 'svg-snapshot'] },
+      { sourceId: 'bbk-babz-2025:I.3.6', variant: 'primary', implementation: 'recipe.I.3.6', referenceAsset: 'I.3.6_Mehrzweckarbeitsboot.svg', coverage: 'composition-recipe', testEvidence: ['body-fingerprint', 'svg-snapshot'] },
+      { sourceId: 'bbk-babz-2025:I.3.7', variant: 'primary', implementation: 'recipe.I.3.7', referenceAsset: 'I.3.7_Mehrzweckponton.svg', coverage: 'composition-recipe', testEvidence: ['body-fingerprint', 'svg-snapshot'] },
+      { sourceId: 'bbk-babz-2025:I.3.8', variant: 'primary', implementation: 'recipe.I.3.8', referenceAsset: 'I.3.8_Rettungsboot_Typ 1.svg', coverage: 'composition-recipe', testEvidence: ['body-fingerprint', 'svg-snapshot'] },
+      { sourceId: 'bbk-babz-2025:I.3.9', variant: 'primary', implementation: 'recipe.I.3.9', referenceAsset: 'I.3.9_Rettungsboot_Typ 2.svg', coverage: 'composition-recipe', testEvidence: ['body-fingerprint', 'svg-snapshot'] },
+      { sourceId: 'bbk-babz-2025:I.3.10', variant: 'primary', implementation: 'recipe.I.3.10', referenceAsset: 'I.3.10_Raft.svg', coverage: 'composition-recipe', testEvidence: ['body-fingerprint', 'svg-snapshot'] },
+      { sourceId: 'bbk-babz-2025:I.3.11', variant: 'primary', implementation: 'recipe.I.3.11', referenceAsset: 'I.3.11_Feuerlöschboot.svg', coverage: 'composition-recipe', testEvidence: ['body-fingerprint', 'svg-snapshot'] },
     ]);
 
     const expectedIAReview = {
