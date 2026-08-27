@@ -297,6 +297,24 @@ const rotatedSquareProfile: LayoutProfile = {
   },
 };
 
+/** I.5.1: die kompakte, zentrierte 26-mm-Personraute (Hülle 3…29 mm). */
+const compactPersonDiamondProfile: LayoutProfile = {
+  ...rotatedSquareProfile,
+  measuredBodyBoundsMm: { minX: 3, minY: 3, maxX: 29, maxY: 29 },
+};
+
+/**
+ * I.5.2/I.5.3: dieselbe Raute, nur 2 mm abgesenkt (Hülle 3/5 bis 29/31 mm).
+ * Die oberhalb liegende Beschriftungszone bleibt als bestehender Metrikvertrag je Rezept
+ * überschreibbar; ihre Defaultwerte ergeben Anker (1|3,5) mm.
+ */
+const loweredCompactPersonDiamondProfile: LayoutProfile = {
+  ...rotatedSquareProfile,
+  measuredBodyBoundsMm: { minX: 3, minY: 5, maxX: 29, maxY: 31 },
+  aboveLeftAnchorFromBodyLeftMm: -2,
+  aboveLeftBaselineFromBodyTopMm: -1.5,
+};
+
 /**
  * Kreiskörper mit Kopfzone ist in der Referenz nicht belegt — und das ist seit dem 18. August 2026
  * ein **gemessenes Negativ** und kein offener Platzhalter. Über alle 661 Referenzdateien gezählt,
@@ -416,6 +434,12 @@ const PROFILES: Record<SymbolKind, LayoutProfile> = {
 };
 
 export function profileFor(kind: SymbolKind, variant?: BodyVariantId): LayoutProfile {
+  if (kind === 'person' && variant === 'compact-person-diamond-26mm') {
+    return compactPersonDiamondProfile;
+  }
+  if (kind === 'person' && variant === 'compact-person-diamond-26mm-lowered-2mm') {
+    return loweredCompactPersonDiamondProfile;
+  }
   if (kind === 'formation' && variant === 'foot-band') return formationFootBandProfile;
   if (kind === 'vehicle-air' && variant === 'raised-hull') return raisedVehicleAirProfile;
   if (kind === 'vehicle-air' && variant === 'fixed-wing-hull') return fixedWingVehicleAirProfile;

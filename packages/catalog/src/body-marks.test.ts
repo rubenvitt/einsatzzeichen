@@ -26,6 +26,8 @@ const raisedCircleBodyMm: BoundsMm = { minX: 4, minY: 6, maxX: 28, maxY: 30 };
 const reducedHouseBodyMm: BoundsMm = { minX: 2, minY: 4, maxX: 30, maxY: 26 };
 const invertedLandBodyMm: BoundsMm = { minX: 1, minY: 6, maxX: 31, maxY: 25.75 };
 const raisedCircleOneMmBodyMm: BoundsMm = { minX: 4, minY: 3, maxX: 28, maxY: 27 };
+const compactPersonDiamondBodyMm: BoundsMm = { minX: 3, minY: 3, maxX: 29, maxY: 29 };
+const loweredCompactPersonDiamondBodyMm: BoundsMm = { minX: 3, minY: 5, maxX: 29, maxY: 31 };
 const bodyMark = (id: Parameters<typeof bodyMarkWithContext>[0], bounds: BoundsMm) =>
   bodyMarkWithContext(id, { kind: 'formation' }, bounds);
 
@@ -159,6 +161,88 @@ describe('bodyMark() — die technischen Innenzeichnungen des Anhangs N', () => 
       'spontaneous-helper-contact-double-arrow' as BodyMarkId,
       { kind: 'formation' }, formationBodyMm,
     )).toThrow(/nicht vermessen/);
+  });
+});
+
+describe('bodyMark() — die technische Innenzeichnung des Anhangs I.5', () => {
+  const waterRescueMark = 'double-wave-inner-diamond-8mm' as BodyMarkId;
+  const compactPersonDiamond = 'compact-person-diamond-26mm' as BodyVariantId;
+  const loweredCompactPersonDiamond =
+    'compact-person-diamond-26mm-lowered-2mm' as BodyVariantId;
+  const waveCommands =
+    'c -0.395815189 0 -0.583845043 -0.188029854 -0.821969154 -0.426506741 ' +
+    '-0.255057381 -0.255762934 -0.572908973 -0.573614526 -1.175803944 -0.573614526 ' +
+    's -0.921452116 0.317851591 -1.176509497 0.573261749 ' +
+    'c -0.238476888 0.238829664 -0.426506741 0.426859518 -0.823027483 0.426859518 ' +
+    's -0.585256149 -0.188029854 -0.823733036 -0.426859518 ' +
+    'c -0.255410158 -0.255410158 -0.573614526 -0.573261749 -1.177215050 -0.573261749 ' +
+    's -0.921804893 0.317851591 -1.177215050 0.573261749 ' +
+    'c -0.238476888 0.238829664 -0.426859518 0.426859518 -0.823733036 0.426859518 ' +
+    'v 0.500237022 c 0.603600525 0 0.921804893 -0.317851591 1.177215050 -0.573261749 ' +
+    '0.238476888 -0.238829664 0.426859518 -0.426859518 0.823733036 -0.426859518 ' +
+    's 0.585256149 0.188029854 0.823733036 0.426859518 ' +
+    'c 0.255410158 0.255410158 0.573614526 0.573261749 1.177215050 0.573261749 ' +
+    's 0.921452116 -0.317851591 1.176862274 -0.573261749 ' +
+    'c 0.238476888 -0.238829664 0.426506741 -0.426859518 0.823027483 -0.426859518 ' +
+    's 0.583845043 0.188029854 0.821969154 0.426506741 ' +
+    'c 0.255057381 0.255762934 0.572908973 0.573614526 1.175803944 0.573614526 ' +
+    'v -0.500237022 Z';
+  const filledWaveStyle = { fill: 'schwarz', stroke: 'none' } as const;
+
+  it('registriert die doppelte Welle mit innerer 8-mm-Raute und bindet sie nur an die I.5-Rauten', () => {
+    expect(BODY_MARK_IDS).toContain(waterRescueMark);
+    expect(bodyMarkWithContext(
+      waterRescueMark,
+      { kind: 'person', bodyVariant: compactPersonDiamond },
+      compactPersonDiamondBodyMm,
+    )).toEqual([
+      {
+        type: 'path', role: 'pictogram',
+        d: `M 19.999955903 10.750157096 ${waveCommands}`,
+        style: filledWaveStyle,
+      },
+      {
+        type: 'path', role: 'pictogram',
+        d: `M 19.999955903 12.749694077 ${waveCommands}`,
+        style: filledWaveStyle,
+      },
+      {
+        type: 'polyline', role: 'pictogram', closed: true,
+        points: [[16, 14.5], [20, 18.5], [16, 22.5], [12, 18.5]],
+        style: outlineStyle,
+      },
+    ]);
+    expect(bodyMarkWithContext(
+      waterRescueMark,
+      { kind: 'person', bodyVariant: loweredCompactPersonDiamond },
+      loweredCompactPersonDiamondBodyMm,
+    )).toEqual([
+      {
+        type: 'path', role: 'pictogram',
+        d: `M 19.999955903 12.750157096 ${waveCommands}`,
+        style: filledWaveStyle,
+      },
+      {
+        type: 'path', role: 'pictogram',
+        d: `M 19.999955903 14.749694077 ${waveCommands}`,
+        style: filledWaveStyle,
+      },
+      {
+        type: 'polyline', role: 'pictogram', closed: true,
+        points: [[16, 16.5], [20, 20.5], [16, 24.5], [12, 20.5]],
+        style: outlineStyle,
+      },
+    ]);
+    expect(() => bodyMarkWithContext(
+      waterRescueMark,
+      { kind: 'person' },
+      compactPersonDiamondBodyMm,
+    )).toThrow(/nicht vermessen/);
+    expect(() => bodyMarkWithContext(
+      waterRescueMark,
+      { kind: 'formation' },
+      formationBodyMm,
+    )).toThrow(/keine randbündige Fassung/);
   });
 });
 
@@ -1790,6 +1874,9 @@ describe('BODY_MARK_IDS', () => {
           ? [{ kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull' } as const, raisedAirBodyMm] as const
         : id === 'top-center-rect-0-5x0-6mm'
             ? [{ kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' } as const, landBodyMm] as const
+          : id === 'double-wave-inner-diamond-8mm'
+            ? [{ kind: 'person', bodyVariant: 'compact-person-diamond-26mm' } as const,
+              compactPersonDiamondBodyMm] as const
           : id === 'hospital'
             ? [{ kind: 'reduced-house' } as const, reducedHouseBodyMm] as const
             : id.startsWith('circle-')

@@ -69,6 +69,8 @@ export type SymbolKind =
  * abweichend approximierte bestehende Katalogfassung `stationBody(17, 11.5)`.
  * `inset-hull` ist ein vermessener, eingesenkter unterer Halbkreis für Wasserfahrzeuge aus
  * Anhang I.
+ * `compact-person-diamond-26mm` und `compact-person-diamond-26mm-lowered-2mm` sind die zwei
+ * getrennt vermessenen 26-mm-Personrauten aus I.5. Die zweite liegt ausschließlich 2 mm tiefer.
  */
 export type BodyVariantId =
   | 'raised-hull'
@@ -78,7 +80,9 @@ export type BodyVariantId =
   | 'raised-gable'
   | 'inverted-hull-track'
   | 'fixed-wing-hull'
-  | 'raised-circle-1mm';
+  | 'raised-circle-1mm'
+  | 'compact-person-diamond-26mm'
+  | 'compact-person-diamond-26mm-lowered-2mm';
 
 /** Organisationen nach Kapitel 2. Bestimmen die Körperfarbe. */
 export type OrganizationId =
@@ -298,6 +302,7 @@ export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
   'air-rising-diagonal',
   'spontaneous-helper-collection-arrow',
   'spontaneous-helper-contact-double-arrow',
+  'double-wave-inner-diamond-8mm',
 ] as const);
 
 export type TechnicalBodyMarkId = (typeof TECHNICAL_BODY_MARK_IDS)[number];

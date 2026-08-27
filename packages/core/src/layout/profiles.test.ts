@@ -194,4 +194,16 @@ describe('Layoutprofile', () => {
     expect(profile.aboveLeftBaselineFromBodyTopMm).toBeUndefined();
     expect(profile).toBe(profileFor('building'));
   });
+
+  it('führt die zwei I.5-Personrauten mit ihren Nominalhüllen und der oberen Labelzone', () => {
+    const compact = profileFor('person', 'compact-person-diamond-26mm' as BodyVariantId);
+    const lowered = profileFor(
+      'person', 'compact-person-diamond-26mm-lowered-2mm' as BodyVariantId,
+    );
+
+    expect(compact.measuredBodyBoundsMm).toEqual({ minX: 3, minY: 3, maxX: 29, maxY: 29 });
+    expect(lowered.measuredBodyBoundsMm).toEqual({ minX: 3, minY: 5, maxX: 29, maxY: 31 });
+    expect(lowered.aboveLeftAnchorFromBodyLeftMm).toBe(-2);
+    expect(lowered.aboveLeftBaselineFromBodyTopMm).toBe(-1.5);
+  });
 });

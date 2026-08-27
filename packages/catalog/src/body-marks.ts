@@ -571,6 +571,64 @@ const PERSON_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]
   },
 };
 
+/**
+ * I.5.1 bis I.5.3: zwei gefüllte, 0,500237-mm hohe Bézier-Wellenbänder und die innere Raute.
+ * Die absoluten Exportwerte sind gegen den Mittelpunkt der übergebenen 26-mm-Raute zerlegt;
+ * dadurch verschiebt I.5.2/I.5.3 die vollständige Markierung ausschließlich mit ihrer Hülle.
+ */
+const I5_WAVE_COMMANDS =
+  'c -0.395815189 0 -0.583845043 -0.188029854 -0.821969154 -0.426506741 ' +
+  '-0.255057381 -0.255762934 -0.572908973 -0.573614526 -1.175803944 -0.573614526 ' +
+  's -0.921452116 0.317851591 -1.176509497 0.573261749 ' +
+  'c -0.238476888 0.238829664 -0.426506741 0.426859518 -0.823027483 0.426859518 ' +
+  's -0.585256149 -0.188029854 -0.823733036 -0.426859518 ' +
+  'c -0.255410158 -0.255410158 -0.573614526 -0.573261749 -1.177215050 -0.573261749 ' +
+  's -0.921804893 0.317851591 -1.177215050 0.573261749 ' +
+  'c -0.238476888 0.238829664 -0.426859518 0.426859518 -0.823733036 0.426859518 ' +
+  'v 0.500237022 c 0.603600525 0 0.921804893 -0.317851591 1.177215050 -0.573261749 ' +
+  '0.238476888 -0.238829664 0.426859518 -0.426859518 0.823733036 -0.426859518 ' +
+  's 0.585256149 0.188029854 0.823733036 0.426859518 ' +
+  'c 0.255410158 0.255410158 0.573614526 0.573261749 1.177215050 0.573261749 ' +
+  's 0.921452116 -0.317851591 1.176862274 -0.573261749 ' +
+  'c 0.238476888 -0.238829664 0.426506741 -0.426859518 0.823027483 -0.426859518 ' +
+  's 0.583845043 0.188029854 0.821969154 0.426506741 ' +
+  'c 0.255057381 0.255762934 0.572908973 0.573614526 1.175803944 0.573614526 ' +
+  'v -0.500237022 Z';
+
+function i5Wave(cxMm: number, cyMm: number, startYFromCenterMm: number): Primitive {
+  const coordinate = (value: number): number => Number(value.toFixed(9));
+  return {
+    type: 'path',
+    role: 'pictogram',
+    d: `M ${coordinate(cxMm + 3.999955903)} ${coordinate(cyMm + startYFromCenterMm)} ` +
+      I5_WAVE_COMMANDS,
+    style: { fill: 'schwarz', stroke: 'none' },
+  };
+}
+
+const PERSON_I5_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
+  'double-wave-inner-diamond-8mm': (bounds) => {
+    const cxMm = (bounds.minX + bounds.maxX) / 2;
+    const cyMm = (bounds.minY + bounds.maxY) / 2;
+    return [
+      i5Wave(cxMm, cyMm, -5.249842904),
+      i5Wave(cxMm, cyMm, -3.250305923),
+      {
+        type: 'polyline',
+        role: 'pictogram',
+        closed: true,
+        points: [
+          [cxMm, cyMm - 1.5],
+          [cxMm + 4, cyMm + 2.5],
+          [cxMm, cyMm + 6.5],
+          [cxMm - 4, cyMm + 2.5],
+        ],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+    ];
+  },
+};
+
 function outline(points: readonly (readonly [number, number])[]): Primitive {
   return {
     type: 'polyline',
@@ -1427,8 +1485,13 @@ export function bodyMark(
               id === 'care' || id === 'temporary-accommodation-resting' ? MARKS[id] : undefined
             )
         : undefined
-    : context.kind === 'person' && context.bodyVariant === undefined
-      ? PERSON_MARKS[id]
+    : context.kind === 'person'
+      ? context.bodyVariant === undefined
+        ? PERSON_MARKS[id]
+        : context.bodyVariant === 'compact-person-diamond-26mm' ||
+            context.bodyVariant === 'compact-person-diamond-26mm-lowered-2mm'
+          ? PERSON_I5_MARKS[id]
+          : undefined
     : context.kind === 'vehicle-land' && context.bodyVariant === undefined
       ? VEHICLE_LAND_NORMAL_MARKS[id]
       : context.kind === 'vehicle-land' && context.bodyVariant === 'foot-band'
@@ -1456,7 +1519,7 @@ export function bodyMark(
               : context.kind === 'reduced-house' && context.bodyVariant === undefined
                 ? REDUCED_HOUSE_MARKS[id]
           : undefined;
-  const hasAnyBuild = (context.kind === 'person' ? [PERSON_MARKS] : [
+  const hasAnyBuild = (context.kind === 'person' ? [PERSON_MARKS, PERSON_I5_MARKS] : [
     MARKS,
     VEHICLE_LAND_NORMAL_MARKS,
     VEHICLE_LAND_FOOT_BAND_MARKS,
@@ -1572,6 +1635,7 @@ export const BODY_MARK_IDS: readonly BodyMarkId[] = Object.freeze(
       CIRCLE_RAISED_ONE_MM_MARKS,
       CIRCLE_RAISED_GABLE_MARKS,
       REDUCED_HOUSE_MARKS,
+      PERSON_I5_MARKS,
     ]
       .some((registry) => Object.hasOwn(registry, id))),
 );

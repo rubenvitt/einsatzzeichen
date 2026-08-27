@@ -78,6 +78,8 @@ const BODY_VARIANT_KINDS: Readonly<Record<BodyVariantId, ReadonlySet<SymbolKind>
   'inverted-hull-track': new Set<SymbolKind>(['vehicle-land']),
   'fixed-wing-hull': new Set<SymbolKind>(['vehicle-air']),
   'raised-circle-1mm': new Set<SymbolKind>(['circle-12']),
+  'compact-person-diamond-26mm': new Set<SymbolKind>(['person']),
+  'compact-person-diamond-26mm-lowered-2mm': new Set<SymbolKind>(['person']),
 };
 
 export interface ValidationContext {

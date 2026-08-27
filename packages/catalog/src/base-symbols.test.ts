@@ -688,6 +688,42 @@ describe('Körperformen des Anhangs E.2', () => {
   });
 });
 
+describe('Körpervarianten des Anhangs I.5', () => {
+  const compactPersonDiamond = 'compact-person-diamond-26mm' as BodyVariantId;
+  const loweredCompactPersonDiamond =
+    'compact-person-diamond-26mm-lowered-2mm' as BodyVariantId;
+
+  it('zeichnet die zwei vermessenen 26-mm-Personrauten mit ihren getrennten Nominalhüllen', () => {
+    const compact = baseDrawing('person', compactPersonDiamond).children[0];
+    const lowered = baseDrawing('person', loweredCompactPersonDiamond).children[0];
+
+    for (const [body, expected] of [
+      [compact, { minX: 3, minY: 3, maxX: 29, maxY: 29 }],
+      [lowered, { minX: 3, minY: 5, maxX: 29, maxY: 31 }],
+    ] as const) {
+      const bounds = boundsOfMm(body!);
+      expect(bounds.minX).toBeCloseTo(expected.minX, 12);
+      expect(bounds.minY).toBeCloseTo(expected.minY, 12);
+      expect(bounds.maxX).toBeCloseTo(expected.maxX, 12);
+      expect(bounds.maxY).toBeCloseTo(expected.maxY, 12);
+    }
+  });
+
+  it('lässt die zwei I.5-Rauten außerhalb von person nicht auf andere Grundzeichen zurückfallen', () => {
+    const nonPersonKinds: readonly SymbolKind[] = [
+      'formation', 'vehicle-land', 'vehicle-air', 'vehicle-water', 'post', 'building',
+      'container', 'area', 'measure', 'hazard', 'point', 'event', 'spontaneous-helper',
+      'trailer', 'swap-loader-vehicle', 'upright-rectangle', 'circle-12', 'reduced-house',
+    ];
+
+    for (const variant of [compactPersonDiamond, loweredCompactPersonDiamond]) {
+      for (const kind of nonPersonKinds) {
+        expect(() => baseDrawing(kind, variant), `${kind}/${variant}`).toThrow(/Körpervariante/);
+      }
+    }
+  });
+});
+
 describe('Körperformen des Anhangs F.3', () => {
   const circleKind = 'circle-12' as SymbolKind;
   const reducedHouseKind = 'reduced-house' as SymbolKind;
