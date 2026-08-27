@@ -1025,6 +1025,85 @@ describe('bodyMark() — rein geometrische technische Marken aus F.1', () => {
   });
 });
 
+describe('bodyMark() — LFH-485 Strömungsrettung und getrennte Luftmarken', () => {
+  const waterWave = (baselineYMm: number): Primitive => ({
+    type: 'path',
+    role: 'pictogram',
+    d:
+      `M 20 ${baselineYMm} C 19.604 ${baselineYMm} 19.416 ${baselineYMm - 0.188} ` +
+      `19.178 ${baselineYMm - 0.427} C 18.923 ${baselineYMm - 0.682} ` +
+      `18.605 ${baselineYMm - 1} 18.002 ${baselineYMm - 1} ` +
+      `C 17.399 ${baselineYMm - 1} 17.081 ${baselineYMm - 0.682} ` +
+      `16.826 ${baselineYMm - 0.427} C 16.587 ${baselineYMm - 0.188} ` +
+      `16.399 ${baselineYMm} 16.003 ${baselineYMm} ` +
+      `C 15.606 ${baselineYMm} 15.417 ${baselineYMm - 0.188} ` +
+      `15.179 ${baselineYMm - 0.427} C 14.924 ${baselineYMm - 0.682} ` +
+      `14.605 ${baselineYMm - 1} 14.002 ${baselineYMm - 1} ` +
+      `C 13.398 ${baselineYMm - 1} 13.08 ${baselineYMm - 0.682} ` +
+      `12.824 ${baselineYMm - 0.427} C 12.586 ${baselineYMm - 0.188} ` +
+      `12.398 ${baselineYMm} 12.001 ${baselineYMm}`,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  });
+
+  it('hält die kompakte Wasserrettungsmarke unter der oberen Inhaltszone', () => {
+    expect(bodyMark('formation-water-rescue-lower-zone' as BodyMarkId, formationBodyMm)).toEqual([
+      waterWave(13.25),
+      waterWave(15.25),
+      outline([[16, 16.646], [19.854, 20.5], [16, 24.354], [12.146, 20.5]], true),
+    ]);
+  });
+
+  it('führt I.1.19-Dreiecke und I.1.20-Winkel als getrennte Geometrien', () => {
+    const filled = (points: readonly (readonly [number, number])[]): Primitive => ({
+      type: 'polyline',
+      role: 'pictogram',
+      points,
+      closed: true,
+      style: { fill: 'schwarz', stroke: 'none' },
+    });
+
+    expect(bodyMark(
+      'formation-opposed-triangles-top' as BodyMarkId,
+      formationBodyMm,
+    )).toEqual([
+      filled([[16, 9.5], [9.5, 11.5], [9.5, 7.5]]),
+      filled([[22.5, 11.5], [16, 9.5], [22.5, 7.5]]),
+    ]);
+    expect(bodyMark(
+      'formation-chevron-top' as BodyMarkId,
+      formationBodyMm,
+    )).toEqual([
+      filled([
+        [16, 9.5],
+        [10.667, 7.25],
+        [10.667, 8.25],
+        [16, 11.5],
+        [21.333, 8.25],
+        [21.333, 7.25],
+      ]),
+    ]);
+  });
+
+  it('lehnt alle drei LFH-485-Fassungen außerhalb der normalen Formation ab', () => {
+    for (const id of [
+      'formation-water-rescue-lower-zone',
+      'formation-opposed-triangles-top',
+      'formation-chevron-top',
+    ] as BodyMarkId[]) {
+      expect(() => bodyMarkWithContext(
+        id,
+        { kind: 'formation', bodyVariant: 'foot-band' },
+        formationBodyMm,
+      ), id).toThrow(/nicht vermessen/);
+      expect(() => bodyMarkWithContext(
+        id,
+        { kind: 'vehicle-land' },
+        landBodyMm,
+      ), id).toThrow(/nicht vermessen/);
+    }
+  });
+});
+
 describe('bodyMark() — die drei getrennt vermessenen Fahrzeugkörper aus F.2', () => {
   it('setzt die Landfahrzeugteilung auf Dachscheitel, Körpermittellinie und Seitenkanten', () => {
     expect(bodyMarkWithContext(
@@ -1924,8 +2003,73 @@ describe('bodyMark() — F.3.1 bis F.3.19 auf Kreis und reduziertem Haus', () =>
   });
 });
 
+describe('bodyMark() — kompakte Wasserrettungsmarke aus I.1.5 bis I.1.8', () => {
+  const staffelBodyMm: BoundsMm = { minX: 1, minY: 9, maxX: 31, maxY: 29 };
+
+  it('rekonstruiert Doppelwelle und Raute aus den expandierten I.1-Konturen', () => {
+    // Die beiden Wellen sind aus den 0,5-mm-Konturkanten zurückgerechnet: ihre Mittellinien
+    // laufen von x=12 bis x=20 mm, mit den Scheiteln bei x=14/18 und y=11,5 bzw. 13,5 mm.
+    // Die Rautenaußenkante liegt 0,3536 mm außerhalb der Anker 12/16/20/24; das ist exakt der
+    // 0,25-mm-Halbstrich am 45°-Miter. Ihre Mittellinie liegt daher auf diesen runden Ankern.
+    const marks = bodyMarkWithContext(
+      'formation-water-rescue-compact' as BodyMarkId,
+      { kind: 'formation' },
+      formationBodyMm,
+    );
+    expect(marks).toEqual([
+      {
+        type: 'path', role: 'pictogram',
+        d: 'M 12 12.5 C 13 12.5 13 11.5 14 11.5 C 15 11.5 15 12.5 16 12.5 C 17 12.5 17 11.5 18 11.5 C 19 11.5 19 12.5 20 12.5',
+        style: outlineStyle,
+      },
+      {
+        type: 'path', role: 'pictogram',
+        d: 'M 12 14.5 C 13 14.5 13 13.5 14 13.5 C 15 13.5 15 14.5 16 14.5 C 17 14.5 17 13.5 18 13.5 C 19 13.5 19 14.5 20 14.5',
+        style: outlineStyle,
+      },
+      {
+        type: 'path', role: 'pictogram',
+        d: 'M 11.646447 20 L 16 24.353553 L 20.353553 20 L 16 15.646447 Z M 16 23.646447 L 12.353553 20 L 16 16.353553 L 19.646447 20 Z',
+        style: { fill: 'schwarz', fillRule: 'evenodd', stroke: 'none' },
+      },
+    ]);
+    expect(marks.map((mark) => boundsOfMm(mark))).toEqual([
+      { minX: 12, minY: 11.5, maxX: 20, maxY: 12.5 },
+      { minX: 12, minY: 13.5, maxX: 20, maxY: 14.5 },
+      { minX: 11.646447, minY: 15.646447, maxX: 20.353553, maxY: 24.353553 },
+    ]);
+  });
+
+  it('verschiebt die vollständige Marke mit dem um exakt 3 mm platzierten Staffelkörper', () => {
+    const marks = bodyMarkWithContext(
+      'formation-water-rescue-compact' as BodyMarkId,
+      { kind: 'formation', strength: 'staffel' },
+      staffelBodyMm,
+    );
+    expect(marks.map((mark) => boundsOfMm(mark))).toEqual([
+      { minX: 12, minY: 14.5, maxX: 20, maxY: 15.5 },
+      { minX: 12, minY: 16.5, maxX: 20, maxY: 17.5 },
+      { minX: 11.646447, minY: 18.646447, maxX: 20.353553, maxY: 27.353553 },
+    ]);
+    expect(marks[2]).toEqual({
+      type: 'path',
+      role: 'pictogram',
+      d: 'M 11.646447 23 L 16 27.353553 L 20.353553 23 L 16 18.646447 Z M 16 26.646447 L 12.353553 23 L 16 19.353553 L 19.646447 23 Z',
+      style: { fill: 'schwarz', fillRule: 'evenodd', stroke: 'none' },
+    });
+  });
+
+  it('lehnt dieselbe technische ID auf einer anderen Körperart weiterhin ab', () => {
+    expect(() => bodyMarkWithContext(
+      'formation-water-rescue-compact' as BodyMarkId,
+      { kind: 'vehicle-land' },
+      landBodyMm,
+    )).toThrow(/nicht vermessen/);
+  });
+});
+
 describe('BODY_MARK_IDS', () => {
-  it('zeichnet die beiden D.1.9-Kappen als getrennt vermessene technische Marken', () => {
+  it('zeichnet die beiden D.1.9-Kappen und die eigene 3,7-mm-I.1.5-Kappe getrennt', () => {
     const primary = Reflect.apply(bodyMarkWithContext, undefined, [
       'formation-solid-cap-3mm', { kind: 'formation' }, formationBodyMm,
     ]);
@@ -1936,6 +2080,18 @@ describe('BODY_MARK_IDS', () => {
       },
     ]);
 
+    const compactWaterRescue = Reflect.apply(bodyMarkWithContext, undefined, [
+      'formation-solid-cap-3.7mm-three-hole-row', { kind: 'formation' }, formationBodyMm,
+    ]);
+    expect(compactWaterRescue).toHaveLength(4);
+    expect(compactWaterRescue[0]).toMatchObject({
+      type: 'rect', role: 'pictogram', x: 1, y: 6, width: 30, height: 3.7,
+    });
+    expect(compactWaterRescue.slice(1)).toEqual([11, 16, 21].map((cx) => ({
+      type: 'circle', role: 'pictogram', cx, cy: 7.75, r: 1.5,
+      style: { fill: 'weiss', stroke: 'none' },
+    })));
+
     const alternative = Reflect.apply(bodyMarkWithContext, undefined, [
       'formation-solid-cap-4mm-three-hole-row', { kind: 'formation' }, formationBodyMm,
     ]);
@@ -1944,6 +2100,21 @@ describe('BODY_MARK_IDS', () => {
       type: 'rect', role: 'pictogram', x: 1, y: 6, width: 30, height: 4,
     });
     expect(alternative.slice(1)).toEqual([11, 16, 21].map((cx) => ({
+      type: 'circle', role: 'pictogram', cx, cy: 7.75, r: 1.5,
+      style: { fill: 'weiss', stroke: 'none' },
+    })));
+  });
+
+  it('bindet die drei Löcher der 3,7-mm-Kappe an horizontal verschobene Körpergrenzen', () => {
+    const shiftedBodyMm: BoundsMm = { minX: 5, minY: 6, maxX: 35, maxY: 26 };
+    const marks = bodyMarkWithContext(
+      'formation-solid-cap-3.7mm-three-hole-row',
+      { kind: 'formation' },
+      shiftedBodyMm,
+    );
+
+    expect(marks[0]).toMatchObject({ x: 5, y: 6, width: 30, height: 3.7 });
+    expect(marks.slice(1)).toEqual([15, 20, 25].map((cx) => ({
       type: 'circle', role: 'pictogram', cx, cy: 7.75, r: 1.5,
       style: { fill: 'weiss', stroke: 'none' },
     })));
@@ -1964,6 +2135,7 @@ describe('BODY_MARK_IDS', () => {
     ]) {
       expect(BODY_MARK_IDS).toContain(id);
     }
+    expect(BODY_MARK_IDS).toContain('formation-water-rescue-compact');
     const task1LogisticsIds = new Set<BodyMarkId>([
       'fuels-consumables',
       'drinking-water',

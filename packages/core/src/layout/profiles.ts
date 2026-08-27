@@ -59,6 +59,8 @@ export interface LayoutProfile {
   centerBaselineFromBodyBottomMm: number;
   /** Erlaubt einen je Zeichen vermessenen Abstand anstelle des Profilwerts. */
   allowsCenterBaselineOverride?: true;
+  /** Erlaubt eine je Lauf deklarierte horizontale Center-Ausgabebox. */
+  allowsCenterBoxMarginOverride?: true;
   /**
    * Absolute vermessene Körperhülle für vollständige je-Spec-Textmetriken. Fehlt sie, darf
    * die Validierung keine relativen Metriken gegen eine angenommene Hülle freigeben.
@@ -178,12 +180,21 @@ const rectBodyProfile: LayoutProfile = rectBody(8);
  */
 const formationProfile: LayoutProfile = {
   ...rectBody(8),
+  // I.1.17/I.1.18: der mittige Lauf steht auf y=10,0 mm bei der 1…31 × 6…26-mm-Hülle.
+  // Damit ist die Grundlinie als körperrelativer Abstand vermessen; die konkrete Zahl bleibt
+  // wie bei den Landfahrzeugen im Rezept und wird nicht zum neuen Profilstandard.
+  allowsCenterBaselineOverride: true,
+  allowsCenterBoxMarginOverride: true,
+  measuredBodyBoundsMm: { minX: 1, minY: 6, maxX: 31, maxY: 26 },
   topLeftBaselineFromBodyTopMm: 5,
   bottomCenterBaselineFromBodyBottomMm: 2,
 };
 
 const formationFootBandProfile: LayoutProfile = {
   ...formationProfile,
+  allowsCenterBaselineOverride: undefined,
+  allowsCenterBoxMarginOverride: undefined,
+  measuredBodyBoundsMm: undefined,
   // G.1.2: DLRG-Grundlinie 21 mm bei Körperunterkante 26 mm.
   bottomLabelBaselineFromBodyBottomMm: 5,
   openTopWhenHeadlessAndUnlabelled: true,

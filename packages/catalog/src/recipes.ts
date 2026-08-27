@@ -39,7 +39,9 @@ import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
 import {
   ANHANG_I_A_RECIPES,
+  ANHANG_I_D_RECIPES,
   ANHANG_I_E_RECIPES,
+  ANHANG_I_G_RECIPES,
   ANHANG_I_J_RECIPES,
 } from './recipes-anhang-i.js';
 
@@ -98,6 +100,8 @@ export interface Recipe {
  * kompakten Geometrie statt der größeren Standard-Capability-Box.
  * Anhang I-j ergänzt drei einzeln vermessene Wasserrettungsorte mit eng gebundenen Kreisfassungen
  * und technischen Innenmarken; die fachliche Einordnung bleibt auch dort offen.
+ * Anhang I-d und I-g ergänzen die Führungs- sowie Spezialformationen mit ihren jeweils eng
+ * vermessenen Körpermarken; auch dort bleiben die Domain-Reviews separat offen.
  */
 export const RECIPES = {
   ...ANHANG_D_TASK_6_RECIPES,
@@ -108,7 +112,9 @@ export const RECIPES = {
   ...ANHANG_F_D_RECIPES,
   ...ANHANG_F_E_RECIPES,
   ...ANHANG_F_F_RECIPES,
+  ...ANHANG_I_D_RECIPES,
   ...ANHANG_I_E_RECIPES,
+  ...ANHANG_I_G_RECIPES,
   ...ANHANG_I_A_RECIPES,
   ...ANHANG_I_J_RECIPES,
   ...ANHANG_E_A_RECIPES,

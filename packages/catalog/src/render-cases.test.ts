@@ -18,13 +18,36 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 486: der integrierte Hauptbestand plus fünf I-e- und drei I-j-Renderfälle.
-    expect(ids).toHaveLength(486);
+    // 494: der integrierte Hauptbestand plus vier I-d-, fünf I-e-, vier I-g-, drei I-a- und
+    // drei I-j-Renderfälle.
+    expect(ids).toHaveLength(494);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
     // dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66, G 21, H, I-a und I-j
-    // jeweils drei, I-e fünf, C.1.3 einen, Anhang N neun und Anhang D 26 neue Rezeptfälle.
-    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(208);
+    // jeweils drei, I-d und I-g je vier, I-e fünf, C.1.3 einen, N neun und Anhang D 26
+    // Rezeptfälle.
+    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(216);
+    expect(ids.filter((id) => id.startsWith('recipe.I.'))).toEqual([
+      'recipe.I.1.10',
+      'recipe.I.1.11',
+      'recipe.I.1.12',
+      'recipe.I.1.17',
+      'recipe.I.1.18',
+      'recipe.I.1.19',
+      'recipe.I.1.20',
+      'recipe.I.1.5',
+      'recipe.I.1.6',
+      'recipe.I.1.7',
+      'recipe.I.1.8',
+      'recipe.I.1.9',
+      'recipe.I.1.9#alternative',
+      'recipe.I.3.5',
+      'recipe.I.3.6',
+      'recipe.I.3.7',
+      'recipe.I.4.1',
+      'recipe.I.4.2',
+      'recipe.I.4.3',
+    ]);
     expect(ids.filter((id) => id.startsWith('recipe.G.'))).toHaveLength(21);
     expect(ids.filter((id) => id.startsWith('recipe.N.'))).toEqual([
       'recipe.N.1.1', 'recipe.N.1.2', 'recipe.N.1.3', 'recipe.N.1.4', 'recipe.N.1.5',
@@ -39,6 +62,14 @@ describe('vollständige Renderfallmenge', () => {
       'recipe.I.1.10',
       'recipe.I.1.11',
       'recipe.I.1.12',
+      'recipe.I.1.17',
+      'recipe.I.1.18',
+      'recipe.I.1.19',
+      'recipe.I.1.20',
+      'recipe.I.1.5',
+      'recipe.I.1.6',
+      'recipe.I.1.7',
+      'recipe.I.1.8',
       'recipe.I.1.9',
       'recipe.I.1.9#alternative',
     ]);

@@ -5,23 +5,31 @@ import { BASE_SYMBOLS, baseDrawing } from './base-symbols.js';
 import { RECIPES, composeFromCatalog } from './recipes.js';
 
 describe('SVG-Snapshots', () => {
-  it('schreibt exakt 222 direkte SVG-Snapshots', () => {
+  it('schreibt exakt 230 direkte SVG-Snapshots', () => {
     const snapshots = readdirSync(new URL('./__snapshots__/', import.meta.url), {
       withFileTypes: true,
     }).filter((entry) => entry.isFile() && entry.name.endsWith('.svg'));
     const names = snapshots.map((entry) => entry.name);
-    expect(snapshots).toHaveLength(222);
+    expect(snapshots).toHaveLength(230);
     expect(names).toContain('C.1.3.svg');
     expect(names).toContain('G.1.svg');
     expect(names).toContain('G.8.svg');
-    expect(names).toContain('I.3.5.svg');
-    expect(names).toContain('I.3.6.svg');
-    expect(names).toContain('I.3.7.svg');
+    expect(names).toContain('I.1.5.svg');
+    expect(names).toContain('I.1.6.svg');
+    expect(names).toContain('I.1.7.svg');
+    expect(names).toContain('I.1.8.svg');
     expect(names).toContain('I.1.9.svg');
     expect(names).toContain('I.1.9#alternative.svg');
     expect(names).toContain('I.1.10.svg');
     expect(names).toContain('I.1.11.svg');
     expect(names).toContain('I.1.12.svg');
+    expect(names).toContain('I.1.17.svg');
+    expect(names).toContain('I.1.18.svg');
+    expect(names).toContain('I.1.19.svg');
+    expect(names).toContain('I.1.20.svg');
+    expect(names).toContain('I.3.5.svg');
+    expect(names).toContain('I.3.6.svg');
+    expect(names).toContain('I.3.7.svg');
     expect(names).toContain('I.4.1.svg');
     expect(names).toContain('I.4.2.svg');
     expect(names).toContain('I.4.3.svg');
