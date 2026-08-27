@@ -15,6 +15,7 @@ import { organizationColor } from './organizations.js';
 import { MINIMUM_TEXT_CONTRAST } from './pictograms/contrast-contract.js';
 import { pictogram } from './pictograms/index.js';
 import { strengthHead } from './strengths.js';
+import { technicalHeadMark } from './technical-head-marks.js';
 import { vehicleChassis } from './vehicle-categories.js';
 import { describeSymbolSpec } from './labels.js';
 import {
@@ -48,6 +49,7 @@ const PORTS: CatalogPorts = {
   bodyMark,
   organizationColor,
   strengthHead,
+  technicalHeadMark,
   functionRole,
   administrativeHead,
   vehicleChassis,

@@ -67,6 +67,9 @@ const catalog: CatalogPorts = {
   strengthHead: () => {
     throw new Error('Für diesen Test nicht aufgerufen.');
   },
+  technicalHeadMark: () => {
+    throw new Error('Für diesen Test nicht aufgerufen.');
+  },
   functionRole: () => {
     throw new Error('Für diesen Test nicht aufgerufen.');
   },
@@ -258,6 +261,49 @@ describe('compose() — inset-hull-Labelvertrag', () => {
     expect(drawing.children.some(
       (child) => child.type === 'text' && child.role === 'label' && child.content === 'MzB',
     )).toBe(true);
+  });
+});
+
+describe('compose() — technische Kopfmarke', () => {
+  it('setzt den relativen Einzelbalken über placeHead absolut auf y = 1…5 mm', () => {
+    const technicalCatalog: CatalogPorts = {
+      ...catalog,
+      technicalHeadMark: () => ({
+        heightMm: 4,
+        primitives: [{
+          type: 'rect',
+          role: 'head',
+          x: 15.25,
+          y: 0,
+          width: 1.5,
+          height: 4,
+          style: { fill: 'schwarz', stroke: 'none' },
+        }],
+      }),
+    };
+
+    const drawing = compose({
+      kind: 'formation',
+      technicalHeadMark: 'single-vertical-bar',
+    }, technicalCatalog);
+
+    expect(drawing.children[0]).toEqual({
+      type: 'group',
+      role: 'head',
+      transform: { translate: { dxMm: 0, dyMm: 1 } },
+      children: [{
+        type: 'rect',
+        role: 'head',
+        x: 15.25,
+        y: 0,
+        width: 1.5,
+        height: 4,
+        style: { fill: 'schwarz', stroke: 'none' },
+      }],
+    });
+    expect(drawing.children[1]).toMatchObject({
+      type: 'rect', role: 'body', x: 1, y: 6, width: 30, height: 20,
+    });
   });
 });
 

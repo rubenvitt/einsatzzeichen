@@ -97,6 +97,9 @@ const formationCatalog: CatalogPorts = {
   strengthHead: () => {
     throw new Error('Für diese Prüfung nicht aufgerufen.');
   },
+  technicalHeadMark: () => {
+    throw new Error('Für diese Prüfung nicht aufgerufen.');
+  },
   functionRole: () => {
     throw new Error('Für diese Prüfung nicht aufgerufen.');
   },
