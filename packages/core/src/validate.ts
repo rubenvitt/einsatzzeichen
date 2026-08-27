@@ -1,6 +1,8 @@
 import {
   DEFAULT_VIEWBOX_MM,
+  PALETTE,
   type BodyVariantId,
+  type ColorToken,
   type AdminLevelId,
   type FunctionRoleDefinition,
   type FunctionRoleTextRun,
@@ -79,6 +81,8 @@ const BODY_VARIANT_KINDS: Readonly<Record<BodyVariantId, ReadonlySet<SymbolKind>
   'inverted-hull-track': new Set<SymbolKind>(['vehicle-land']),
   'fixed-wing-hull': new Set<SymbolKind>(['vehicle-air']),
   'raised-circle-1mm': new Set<SymbolKind>(['circle-12']),
+  'compact-person-diamond-26mm': new Set<SymbolKind>(['person']),
+  'compact-person-diamond-26mm-lowered-2mm': new Set<SymbolKind>(['person']),
 };
 
 export interface ValidationContext {
@@ -113,6 +117,10 @@ function organizationId(value: unknown): value is OrganizationId {
     value === 'polizei' || value === 'bundespolizei' || value === 'bundeswehr' ||
     value === 'sonstige-gefahrenabwehr' || value === 'zivile-einheiten' ||
     value === 'hilfsorganisation';
+}
+
+function colorToken(value: unknown): value is ColorToken {
+  return typeof value === 'string' && Object.hasOwn(PALETTE, value);
 }
 
 function containsText(primitive: unknown): boolean {
@@ -268,6 +276,21 @@ function validatePreparedSpec(
   const definitionValue: unknown = context.functionRole;
   const resolvedFunctionRole = spec.functionRole !== undefined &&
     record(definitionValue) && definitionValue.id === spec.functionRole;
+
+  if (spec.technicalFill !== undefined && !colorToken(spec.technicalFill)) {
+    issues.push({
+      rule: 'technical-fill-token-invalid',
+      message: 'Eine technische Körperfüllung muss einen bekannten Farbtoken verwenden.',
+    });
+  }
+  if (spec.technicalFill !== undefined && spec.organization !== undefined) {
+    issues.push({
+      rule: 'technical-fill-organization-conflict',
+      message:
+        'Technische Körperfüllung und Organisation schließen sich aus: nur die Organisation ' +
+        'trägt eine nicht-farbliche Kontursignatur.',
+    });
+  }
 
   if (spec.functionRole !== undefined) {
     if (spec.kind !== 'formation' && spec.kind !== 'person') {

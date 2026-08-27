@@ -988,7 +988,12 @@ export function compose(
     );
   }
 
-  if (spec.organization !== undefined && isOpenPolyline(placedBody)) {
+  const organizationFill = spec.organization === undefined
+    ? undefined
+    : catalog.organizationColor(spec.organization);
+  const bodyFillOverride = organizationFill ?? spec.technicalFill;
+
+  if (bodyFillOverride !== undefined && isOpenPolyline(placedBody)) {
     // SVG (und `canvas.ts` genauso) schließt einen gefüllten Polyzug implizit: aus dem Haken von
     // `1.13 Ereignis` würde ein volles Dreieck. Selbst gerastert (18. August 2026): derselbe
     // Polyzug mit `fill: 'rot'` deckt 936 Pixel bei 64 px Kantenlänge statt der 142 des reinen
@@ -1001,17 +1006,23 @@ export function compose(
     // keinen Beleg für ein organisationsgefärbtes Ereignis. Werfen statt raten, dasselbe Muster
     // wie `organizationColor` und `circleBodyProfile.place`.
     throw new Error(
-      `Eine Organisationsfarbe an "${spec.kind}" ist nicht belegt: der Körper ist ein offener ` +
+      `Eine Körperfüllung an "${spec.kind}" ist nicht belegt: der Körper ist ein offener ` +
         'Polyzug, und eine Füllung schlösse ihn implizit zu einer Fläche, die die Referenz nicht ' +
         'zeichnet.',
     );
   }
 
   const filled: Primitive =
-    spec.organization !== undefined
+    bodyFillOverride !== undefined
       ? {
           ...bodyForFill,
-          style: { ...bodyForFill.style, fill: catalog.organizationColor(spec.organization) },
+          style: {
+            ...bodyForFill.style,
+            fill: bodyFillOverride,
+            ...(organizationFill === undefined
+              ? {}
+              : { bodyStrokeDashToken: organizationFill }),
+          },
         }
       : bodyForFill;
 
@@ -1121,11 +1132,7 @@ export function compose(
   // und die ist in allen drei Themes weiss.
   const declaredFill = filled.style?.fill;
   const bodyFill: ColorToken =
-    spec.organization !== undefined
-      ? catalog.organizationColor(spec.organization)
-      : declaredFill === undefined || declaredFill === 'none'
-        ? 'weiss'
-        : declaredFill;
+    declaredFill === undefined || declaredFill === 'none' ? 'weiss' : declaredFill;
 
   // Randbündige Fachdienstzeichen: gegen die Hülle des **platzierten** Körpers gerechnet, nicht
   // gegen die Standardgeometrie. Deshalb ohne die Verschiebung, die die Boxpiktogramme brauchen —
@@ -1154,7 +1161,7 @@ export function compose(
         effectiveLabels,
         bodyBoundsMm,
         DEFAULT_VIEWBOX_MM.width,
-        spec.organization !== undefined ? catalog.organizationColor(spec.organization) : null,
+        organizationFill ?? null,
         profile.bottomLabelBaselineFromBodyBottomMm,
         profile.belowRight,
         profile.allowsCenterBaselineOverride === true

@@ -47,6 +47,49 @@ function validateRuntime(
 }
 
 describe('validateSpec', () => {
+  it('lehnt technische Körperfüllung zusammen mit Organisationssemantik ab', () => {
+    expect(validateRuntime({
+      kind: 'person',
+      organization: 'hilfsorganisation',
+      technicalFill: 'weiss',
+    }).map((issue) => issue.rule)).toContain('technical-fill-organization-conflict');
+  });
+
+  it('akzeptiert nur einen bekannten Farbtoken als technische Körperfüllung', () => {
+    expect(validateRuntime({ kind: 'person', technicalFill: 'weiss' })).toEqual([]);
+    expect(validateRuntime({ kind: 'person', technicalFill: 'white' })
+      .map((issue) => issue.rule)).toContain('technical-fill-token-invalid');
+  });
+
+  it('lässt die zwei I.5-Personrauten nur an person zu', () => {
+    const variants = [
+      'compact-person-diamond-26mm',
+      'compact-person-diamond-26mm-lowered-2mm',
+    ] as const;
+
+    for (const bodyVariant of variants) {
+      const personSpec = { kind: 'person', bodyVariant } as SymbolSpec;
+      expect(() => validateSpec(personSpec), bodyVariant).not.toThrow();
+      expect(validateSpec(personSpec)).toEqual([]);
+      for (const kind of ['formation', 'vehicle-air', 'circle-12'] as const) {
+        expect(validateSpec({ kind, bodyVariant } as SymbolSpec).map((issue) => issue.rule),
+          `${kind}/${bodyVariant}`).toContain('body-variant-requires-measured-kind');
+      }
+    }
+
+    expect(validateSpec({
+      kind: 'person', bodyVariant: 'compact-person-diamond-26mm-lowered-2mm',
+      labels: {
+        aboveLeft: 'Taucher',
+        aboveLeftMetrics: {
+          capHeightMm: 2,
+          baselineFromBodyTopMm: -1,
+          anchorFromBodyLeftMm: -2,
+        },
+      },
+    } as SymbolSpec)).toEqual([]);
+  });
+
   it('lässt foot-band ausschließlich an den vier vermessenen Logistikkörpern zu', () => {
     expect(validateSpec({ kind: 'formation', bodyVariant: 'foot-band' })).toEqual([]);
     expect(validateSpec({ kind: 'vehicle-land', bodyVariant: 'foot-band' })).toEqual([]);

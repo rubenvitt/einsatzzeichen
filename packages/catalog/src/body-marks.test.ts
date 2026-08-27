@@ -27,6 +27,8 @@ const raisedCircleBodyMm: BoundsMm = { minX: 4, minY: 6, maxX: 28, maxY: 30 };
 const reducedHouseBodyMm: BoundsMm = { minX: 2, minY: 4, maxX: 30, maxY: 26 };
 const invertedLandBodyMm: BoundsMm = { minX: 1, minY: 6, maxX: 31, maxY: 25.75 };
 const raisedCircleOneMmBodyMm: BoundsMm = { minX: 4, minY: 3, maxX: 28, maxY: 27 };
+const compactPersonDiamondBodyMm: BoundsMm = { minX: 3, minY: 3, maxX: 29, maxY: 29 };
+const loweredCompactPersonDiamondBodyMm: BoundsMm = { minX: 3, minY: 5, maxX: 29, maxY: 31 };
 const insetWaterBodyMm: BoundsMm = {
   minX: 1.0100, minY: 9.0001, maxX: 30.9894, maxY: 23.9898,
 };
@@ -421,6 +423,89 @@ describe('bodyMark() — die technischen Innenzeichnungen des Anhangs N', () => 
       'spontaneous-helper-contact-double-arrow' as BodyMarkId,
       { kind: 'formation' }, formationBodyMm,
     )).toThrow(/nicht vermessen/);
+  });
+});
+
+describe('bodyMark() — die technische Innenzeichnung des Anhangs I.5', () => {
+  const waterRescueMark = 'double-wave-inner-diamond-8mm' as BodyMarkId;
+  const compactPersonDiamond = 'compact-person-diamond-26mm' as BodyVariantId;
+  const loweredCompactPersonDiamond =
+    'compact-person-diamond-26mm-lowered-2mm' as BodyVariantId;
+  const filledWaveStyle = { fill: 'schwarz', stroke: 'none' } as const;
+
+  it('registriert die doppelte Welle mit innerer 8-mm-Raute und bindet sie nur an die I.5-Rauten', () => {
+    expect(BODY_MARK_IDS).toContain(waterRescueMark);
+    expect(bodyMarkWithContext(
+      waterRescueMark,
+      { kind: 'person', bodyVariant: compactPersonDiamond },
+      compactPersonDiamondBodyMm,
+    )).toEqual([
+      {
+        type: 'path', role: 'pictogram',
+        d: expect.stringMatching(/^M 19\.999955903 10\.750157096 /),
+        style: filledWaveStyle,
+      },
+      {
+        type: 'path', role: 'pictogram',
+        d: expect.stringMatching(/^M 19\.999955903 12\.749694077 /),
+        style: filledWaveStyle,
+      },
+      {
+        type: 'polyline', role: 'pictogram', closed: true,
+        points: [[16, 14.5], [20, 18.5], [16, 22.5], [12, 18.5]],
+        style: outlineStyle,
+      },
+    ]);
+    expect(bodyMarkWithContext(
+      waterRescueMark,
+      { kind: 'person', bodyVariant: loweredCompactPersonDiamond },
+      loweredCompactPersonDiamondBodyMm,
+    )).toEqual([
+      {
+        type: 'path', role: 'pictogram',
+        d: expect.stringMatching(/^M 19\.999955903 12\.750157096 /),
+        style: filledWaveStyle,
+      },
+      {
+        type: 'path', role: 'pictogram',
+        d: expect.stringMatching(/^M 19\.999955903 14\.749694077 /),
+        style: filledWaveStyle,
+      },
+      {
+        type: 'polyline', role: 'pictogram', closed: true,
+        points: [[16, 16.5], [20, 20.5], [16, 24.5], [12, 20.5]],
+        style: outlineStyle,
+      },
+    ]);
+    expect(() => bodyMarkWithContext(
+      waterRescueMark,
+      { kind: 'person' },
+      compactPersonDiamondBodyMm,
+    )).toThrow(/nicht vermessen/);
+    expect(() => bodyMarkWithContext(
+      waterRescueMark,
+      { kind: 'formation' },
+      formationBodyMm,
+    )).toThrow(/keine randbündige Fassung/);
+  });
+
+  it('emittiert die I.5-Wellen ausschließlich mit dem absoluten Pfad-Subset des Render-Gates', () => {
+    for (const [bodyVariant, bounds] of [
+      [compactPersonDiamond, compactPersonDiamondBodyMm],
+      [loweredCompactPersonDiamond, loweredCompactPersonDiamondBodyMm],
+    ] as const) {
+      const waves = bodyMarkWithContext(
+        waterRescueMark,
+        { kind: 'person', bodyVariant },
+        bounds,
+      ).filter((primitive) => primitive.type === 'path');
+      expect(waves).toHaveLength(2);
+      for (const wave of waves) {
+        expect(wave.d).toMatch(/^[MLHVCQZ0-9.,\s-]+$/);
+        expect(wave.d).toContain('C');
+        expect(wave.d).toContain('L');
+      }
+    }
   });
 });
 
@@ -2464,6 +2549,8 @@ describe('BODY_MARK_IDS', () => {
       'patient-transport',
       'care',
       'water-rescue',
+      'double-wave-inner-diamond-8mm',
+      'inset-hull-wheel-pair',
     ]) {
       expect(BODY_MARK_IDS).toContain(id);
     }
@@ -2498,6 +2585,9 @@ describe('BODY_MARK_IDS', () => {
           ? [{ kind: 'vehicle-water', bodyVariant: 'inset-hull' } as const, insetWaterBodyMm] as const
         : id === 'top-center-rect-0-5x0-6mm'
             ? [{ kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' } as const, landBodyMm] as const
+          : id === 'double-wave-inner-diamond-8mm'
+            ? [{ kind: 'person', bodyVariant: 'compact-person-diamond-26mm' } as const,
+              compactPersonDiamondBodyMm] as const
           : id === 'trailer-water-rescue' || id === 'trailer-diving' || id === 'trailer-boat-hull'
             ? [{ kind: 'trailer' } as const, trailerBodyMm] as const
           : id === 'hospital'

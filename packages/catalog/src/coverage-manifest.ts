@@ -444,6 +444,31 @@ const ANHANG_I_TECHNICAL_REVIEW: Review = {
     'I.3.1-I.3.11 passed literal recipe, measured inset-hull, wheel/fire primitive, body-fingerprint, direct-snapshot and multi-size gates. The white Hilfsorganisation body and the red Feuerlöschboot body are technical rendering decisions; domain classification remains pending and no identity with E.2 is claimed.',
 };
 
+const ANHANG_I_K_TECHNICAL_REVIEWS: Readonly<Record<string, Review>> = {
+  'I.5.1': {
+    status: 'approved', reviewer: 'rv', date: '2026-08-27',
+    note:
+      'I.5.1 passes the measured centered 26-mm person diamond and the shared double-wave ' +
+      'with 8-mm inner-diamond technical mark. It intentionally has no label; fingerprint, ' +
+      'direct-snapshot and multi-size gates cover the rendered output.',
+  },
+  'I.5.2': {
+    status: 'approved', reviewer: 'rv', date: '2026-08-27',
+    note:
+      'I.5.2 passes the measured 2-mm-lowered 26-mm person diamond, shared double-wave with ' +
+      '8-mm inner-diamond technical mark, and literal Strömungsretter text at x=1 mm/y=3.5 mm. ' +
+      'Fingerprint, direct-snapshot and multi-size gates cover the rendered output.',
+  },
+  'I.5.3': {
+    status: 'approved', reviewer: 'rv', date: '2026-08-27',
+    note:
+      'I.5.3 passes the measured 2-mm-lowered 26-mm person diamond, shared double-wave with ' +
+      '8-mm inner-diamond technical mark, and literal Taucher text at x=1 mm/y=4.0 mm. ' +
+      'The apparent source outline is its T glyph, not another mark; fingerprint, direct-snapshot ' +
+      'and multi-size gates cover the rendered output.',
+  },
+};
+
 const ANHANG_I_B_TRAILER_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
@@ -537,6 +562,9 @@ const ANHANG_I_TECHNICAL_REVIEW_BY_SECTION = {
   'I.4.1': ANHANG_I_J_TECHNICAL_REVIEW,
   'I.4.2': ANHANG_I_J_TECHNICAL_REVIEW,
   'I.4.3': ANHANG_I_J_TECHNICAL_REVIEW,
+  'I.5.1': ANHANG_I_K_TECHNICAL_REVIEWS['I.5.1'],
+  'I.5.2': ANHANG_I_K_TECHNICAL_REVIEWS['I.5.2'],
+  'I.5.3': ANHANG_I_K_TECHNICAL_REVIEWS['I.5.3'],
 } as const satisfies Readonly<Record<keyof typeof ANHANG_I_RECIPES, Review>>;
 
 /**
@@ -1259,6 +1287,9 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'I.4.1',
     'I.4.2',
     'I.4.3',
+    'I.5.1',
+    'I.5.2',
+    'I.5.3',
     'I.5.4',
     'I.5.5',
     'I.5.6',

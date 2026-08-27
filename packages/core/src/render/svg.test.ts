@@ -77,7 +77,7 @@ describe('renderSvg', () => {
     },
   );
 
-  it('gibt im alternativen Theme eine nicht-farbliche Körperkontur in Millimetern aus', () => {
+  it('leitet keine Organisationskontur allein aus einer weißen Füllung ab', () => {
     const theme: RenderTheme = {
       id: 'test',
       palette: PALETTE,
@@ -85,6 +85,24 @@ describe('renderSvg', () => {
       bodyStrokeDashes: { weiss: [2, 1] },
     };
     const svg = renderSvg(formation, { theme });
+    expect(svg).not.toContain('stroke-dasharray=');
+  });
+
+  it('gibt eine explizite nicht-farbliche Körperkontur in Millimetern aus', () => {
+    const theme: RenderTheme = {
+      id: 'test',
+      palette: PALETTE,
+      surface: '#ffffff',
+      bodyStrokeDashes: { weiss: [2, 1] },
+    };
+    const signedFormation = {
+      ...formation,
+      children: formation.children.map((child) => ({
+        ...child,
+        style: { ...child.style, bodyStrokeDashToken: 'weiss' },
+      })),
+    } as Drawing;
+    const svg = renderSvg(signedFormation, { theme });
     expect(svg).toContain(
       `stroke-dasharray="${formatUnits(mmToUnits(2))} ${formatUnits(mmToUnits(1))}"`,
     );

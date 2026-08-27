@@ -441,6 +441,53 @@ export const ANHANG_I_J_RECIPES = {
       bodyMarks: ['circle-wide-bowl'],
     },
   },
+  // LFH-489 / Anhang I.5: drei Personenzeichen mit eigener 26-mm-Rautenfassung.
+  'I.5.1': {
+    title: 'Einsatzkraft Wasserrettung',
+    referenceAsset: 'I.5.1_Einsatzkraft Wasserrettung.svg',
+    spec: {
+      kind: 'person',
+      bodyVariant: 'compact-person-diamond-26mm',
+      technicalFill: 'weiss',
+      bodyMarks: ['double-wave-inner-diamond-8mm'],
+    },
+  },
+  'I.5.2': {
+    title: 'Strömungsretter',
+    referenceAsset: 'I.5.2_Strömungsretter.svg',
+    spec: {
+      kind: 'person',
+      bodyVariant: 'compact-person-diamond-26mm-lowered-2mm',
+      technicalFill: 'weiss',
+      bodyMarks: ['double-wave-inner-diamond-8mm'],
+      labels: {
+        aboveLeft: 'Strömungsretter',
+        aboveLeftMetrics: {
+          capHeightMm: 2.432746,
+          anchorFromBodyLeftMm: -2,
+          baselineFromBodyTopMm: -1.5,
+        },
+      },
+    },
+  },
+  'I.5.3': {
+    title: 'Taucher',
+    referenceAsset: 'I.5.3_Taucher.svg',
+    spec: {
+      kind: 'person',
+      bodyVariant: 'compact-person-diamond-26mm-lowered-2mm',
+      technicalFill: 'weiss',
+      bodyMarks: ['double-wave-inner-diamond-8mm'],
+      labels: {
+        aboveLeft: 'Taucher',
+        aboveLeftMetrics: {
+          capHeightMm: 2.919225,
+          anchorFromBodyLeftMm: -2,
+          baselineFromBodyTopMm: -1,
+        },
+      },
+    },
+  },
 } as const satisfies Record<string, Recipe>;
 
 /**

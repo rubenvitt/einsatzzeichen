@@ -1,3 +1,5 @@
+import type { ColorToken } from './geometry.js';
+
 /**
  * Körperform eines Zeichens. Die ersten vierzehn Werte sind die Grundzeichen aus Kapitel 1 der
  * BBK/BABZ-Empfehlung und stehen als `CatalogEntry` in `BASE_SYMBOLS`.
@@ -69,6 +71,8 @@ export type SymbolKind =
  * abweichend approximierte bestehende Katalogfassung `stationBody(17, 11.5)`.
  * `inset-hull` ist ein vermessener, eingesenkter unterer Halbkreis für Wasserfahrzeuge aus
  * Anhang I.
+ * `compact-person-diamond-26mm` und `compact-person-diamond-26mm-lowered-2mm` sind die zwei
+ * getrennt vermessenen 26-mm-Personrauten aus I.5. Die zweite liegt ausschließlich 2 mm tiefer.
  */
 export type BodyVariantId =
   | 'raised-hull'
@@ -78,7 +82,9 @@ export type BodyVariantId =
   | 'raised-gable'
   | 'inverted-hull-track'
   | 'fixed-wing-hull'
-  | 'raised-circle-1mm';
+  | 'raised-circle-1mm'
+  | 'compact-person-diamond-26mm'
+  | 'compact-person-diamond-26mm-lowered-2mm';
 
 /** Organisationen nach Kapitel 2. Bestimmen die Körperfarbe. */
 export type OrganizationId =
@@ -316,6 +322,7 @@ export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
   'formation-water-rescue-lower-zone',
   'formation-opposed-triangles-top',
   'formation-chevron-top',
+  'double-wave-inner-diamond-8mm',
   'trailer-water-rescue',
   'trailer-diving',
   'trailer-boat-hull',
@@ -715,6 +722,12 @@ export interface SymbolSpec {
    */
   bodyVariant?: BodyVariantId;
   organization?: OrganizationId;
+  /**
+   * Quellenbelegte Körperfüllung ohne Organisationssemantik. Der Farbtoken steuert ausschließlich
+   * die technische Fläche; nicht-farbliche Organisationssignaturen werden daraus nicht abgeleitet.
+   * `validateSpec()` lehnt die gleichzeitige Angabe von `organization` fail-closed ab.
+   */
+  technicalFill?: ColorToken;
   strength?: StrengthId;
   /** Vermessene technische Kopfmarke ohne erfundene Stärke- oder Organisationssemantik. */
   technicalHeadMark?: TechnicalHeadMarkId;

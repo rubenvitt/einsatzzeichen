@@ -870,6 +870,107 @@ const PERSON_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]
   },
 };
 
+/**
+ * I.5.1 bis I.5.3: zwei gefüllte, 0,500237-mm hohe Bézier-Wellenbänder und die innere Raute.
+ * Die absoluten Exportwerte sind gegen den Mittelpunkt der übergebenen 26-mm-Raute zerlegt;
+ * dadurch verschiebt I.5.2/I.5.3 die vollständige Markierung ausschließlich mit ihrer Hülle.
+ */
+function i5Wave(cxMm: number, cyMm: number, startYFromCenterMm: number): Primitive {
+  const coordinate = (value: number): number => Number(value.toFixed(9));
+  let xMm = coordinate(cxMm + 3.999955903);
+  let yMm = coordinate(cyMm + startYFromCenterMm);
+  let previousControlXMm = xMm;
+  let previousControlYMm = yMm;
+  const commands = [`M ${xMm} ${yMm}`];
+  const cubic = (
+    control1DxMm: number,
+    control1DyMm: number,
+    control2DxMm: number,
+    control2DyMm: number,
+    endDxMm: number,
+    endDyMm: number,
+  ): void => {
+    const control1XMm = coordinate(xMm + control1DxMm);
+    const control1YMm = coordinate(yMm + control1DyMm);
+    const control2XMm = coordinate(xMm + control2DxMm);
+    const control2YMm = coordinate(yMm + control2DyMm);
+    xMm = coordinate(xMm + endDxMm);
+    yMm = coordinate(yMm + endDyMm);
+    previousControlXMm = control2XMm;
+    previousControlYMm = control2YMm;
+    commands.push(`C ${control1XMm} ${control1YMm} ${control2XMm} ${control2YMm} ${xMm} ${yMm}`);
+  };
+  const smoothCubic = (
+    control2DxMm: number,
+    control2DyMm: number,
+    endDxMm: number,
+    endDyMm: number,
+  ): void => {
+    const control1XMm = coordinate(2 * xMm - previousControlXMm);
+    const control1YMm = coordinate(2 * yMm - previousControlYMm);
+    const control2XMm = coordinate(xMm + control2DxMm);
+    const control2YMm = coordinate(yMm + control2DyMm);
+    xMm = coordinate(xMm + endDxMm);
+    yMm = coordinate(yMm + endDyMm);
+    previousControlXMm = control2XMm;
+    previousControlYMm = control2YMm;
+    commands.push(`C ${control1XMm} ${control1YMm} ${control2XMm} ${control2YMm} ${xMm} ${yMm}`);
+  };
+  const vertical = (dyMm: number): void => {
+    yMm = coordinate(yMm + dyMm);
+    commands.push(`L ${xMm} ${yMm}`);
+  };
+
+  cubic(-0.395815189, 0, -0.583845043, -0.188029854, -0.821969154, -0.426506741);
+  cubic(-0.255057381, -0.255762934, -0.572908973, -0.573614526, -1.175803944, -0.573614526);
+  smoothCubic(-0.921452116, 0.317851591, -1.176509497, 0.573261749);
+  cubic(-0.238476888, 0.238829664, -0.426506741, 0.426859518, -0.823027483, 0.426859518);
+  smoothCubic(-0.585256149, -0.188029854, -0.823733036, -0.426859518);
+  cubic(-0.255410158, -0.255410158, -0.573614526, -0.573261749, -1.17721505, -0.573261749);
+  smoothCubic(-0.921804893, 0.317851591, -1.17721505, 0.573261749);
+  cubic(-0.238476888, 0.238829664, -0.426859518, 0.426859518, -0.823733036, 0.426859518);
+  vertical(0.500237022);
+  cubic(0.603600525, 0, 0.921804893, -0.317851591, 1.17721505, -0.573261749);
+  cubic(0.238476888, -0.238829664, 0.426859518, -0.426859518, 0.823733036, -0.426859518);
+  smoothCubic(0.585256149, 0.188029854, 0.823733036, 0.426859518);
+  cubic(0.255410158, 0.255410158, 0.573614526, 0.573261749, 1.17721505, 0.573261749);
+  smoothCubic(0.921452116, -0.317851591, 1.176862274, -0.573261749);
+  cubic(0.238476888, -0.238829664, 0.426506741, -0.426859518, 0.823027483, -0.426859518);
+  smoothCubic(0.583845043, 0.188029854, 0.821969154, 0.426506741);
+  cubic(0.255057381, 0.255762934, 0.572908973, 0.573614526, 1.175803944, 0.573614526);
+  vertical(-0.500237022);
+
+  return {
+    type: 'path',
+    role: 'pictogram',
+    d: `${commands.join(' ')} Z`,
+    style: { fill: 'schwarz', stroke: 'none' },
+  };
+}
+
+const PERSON_I5_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
+  'double-wave-inner-diamond-8mm': (bounds) => {
+    const cxMm = (bounds.minX + bounds.maxX) / 2;
+    const cyMm = (bounds.minY + bounds.maxY) / 2;
+    return [
+      i5Wave(cxMm, cyMm, -5.249842904),
+      i5Wave(cxMm, cyMm, -3.250305923),
+      {
+        type: 'polyline',
+        role: 'pictogram',
+        closed: true,
+        points: [
+          [cxMm, cyMm - 1.5],
+          [cxMm + 4, cyMm + 2.5],
+          [cxMm, cyMm + 6.5],
+          [cxMm - 4, cyMm + 2.5],
+        ],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+    ];
+  },
+};
+
 function outline(points: readonly (readonly [number, number])[]): Primitive {
   return {
     type: 'polyline',
@@ -1944,8 +2045,13 @@ export function bodyMark(
               id === 'care' || id === 'temporary-accommodation-resting' ? MARKS[id] : undefined
             )
         : undefined
-    : context.kind === 'person' && context.bodyVariant === undefined
-      ? PERSON_MARKS[id]
+    : context.kind === 'person'
+      ? context.bodyVariant === undefined
+        ? PERSON_MARKS[id]
+        : context.bodyVariant === 'compact-person-diamond-26mm' ||
+            context.bodyVariant === 'compact-person-diamond-26mm-lowered-2mm'
+          ? PERSON_I5_MARKS[id]
+          : undefined
     : context.kind === 'vehicle-land' && context.bodyVariant === undefined
       ? id === 'water-rescue' && context.vehicleCategory !== undefined
         ? VEHICLE_LAND_WATER_RESCUE_MARKS[context.vehicleCategory]
@@ -1977,25 +2083,29 @@ export function bodyMark(
               : context.kind === 'reduced-house' && context.bodyVariant === undefined
                 ? REDUCED_HOUSE_MARKS[id]
           : undefined;
-  const hasAnyBuild = id === 'water-rescue' || (context.kind === 'person' ? [PERSON_MARKS] : [
-    MARKS,
-    VEHICLE_LAND_NORMAL_MARKS,
-    VEHICLE_LAND_FOOT_BAND_MARKS,
-    FORMATION_FOOT_BAND_LOGISTICS_MARKS,
-    TRAILER_FOOT_BAND_LOGISTICS_MARKS,
-    CIRCLE_FOOT_BAND_LOGISTICS_MARKS,
-    VEHICLE_LAND_PLAIN_WHEEL_PAIR_MARKS,
-    VEHICLE_LAND_INVERTED_HULL_MARKS,
-    VEHICLE_AIR_MARKS,
-    VEHICLE_AIR_FIXED_WING_MARKS,
-    VEHICLE_WATER_INSET_HULL_MARKS,
-    TRAILER_MARKS,
-    CIRCLE_NORMAL_MARKS,
-    CIRCLE_NORMAL_ANHANG_N_MARKS,
-    CIRCLE_RAISED_ONE_MM_MARKS,
-    CIRCLE_RAISED_GABLE_MARKS,
-    REDUCED_HOUSE_MARKS,
-  ])
+  const hasAnyBuild = id === 'water-rescue' || (
+    context.kind === 'person'
+      ? [PERSON_MARKS, PERSON_I5_MARKS]
+      : [
+          MARKS,
+          VEHICLE_LAND_NORMAL_MARKS,
+          VEHICLE_LAND_FOOT_BAND_MARKS,
+          FORMATION_FOOT_BAND_LOGISTICS_MARKS,
+          TRAILER_FOOT_BAND_LOGISTICS_MARKS,
+          CIRCLE_FOOT_BAND_LOGISTICS_MARKS,
+          VEHICLE_LAND_PLAIN_WHEEL_PAIR_MARKS,
+          VEHICLE_LAND_INVERTED_HULL_MARKS,
+          VEHICLE_AIR_MARKS,
+          VEHICLE_AIR_FIXED_WING_MARKS,
+          VEHICLE_WATER_INSET_HULL_MARKS,
+          TRAILER_MARKS,
+          CIRCLE_NORMAL_MARKS,
+          CIRCLE_NORMAL_ANHANG_N_MARKS,
+          CIRCLE_RAISED_ONE_MM_MARKS,
+          CIRCLE_RAISED_GABLE_MARKS,
+          REDUCED_HOUSE_MARKS,
+        ]
+  )
     .some((candidate) => Object.hasOwn(candidate, id));
   if (!hasAnyBuild) {
     throw new Error(
@@ -2141,6 +2251,7 @@ export const BODY_MARK_IDS: readonly BodyMarkId[] = Object.freeze(
       CIRCLE_RAISED_ONE_MM_MARKS,
       CIRCLE_RAISED_GABLE_MARKS,
       REDUCED_HOUSE_MARKS,
+      PERSON_I5_MARKS,
     ]
       .some((registry) => Object.hasOwn(registry, id))),
 );

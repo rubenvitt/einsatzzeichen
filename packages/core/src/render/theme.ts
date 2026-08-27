@@ -16,7 +16,8 @@ export interface RenderTheme {
   readonly surface: RgbHex;
   /**
    * Optionale, nicht-farbliche Organisationsmarke: Strich-/Lückenlängen in Millimetern für die
-   * Körperkontur, adressiert über den semantischen Fülltoken des Körpers.
+   * Körperkontur, adressiert über den expliziten `Style.bodyStrokeDashToken`. Die Körperfüllung
+   * allein aktiviert keine Signatur, weil derselbe Farbtoken auch technisch verwendet werden kann.
    */
   readonly bodyStrokeDashes?: Readonly<Partial<Record<ColorToken, readonly number[]>>>;
 }

@@ -434,6 +434,12 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:I.4.1#primary': { status: 'pending' },
   'bbk-babz-2025:I.4.2#primary': { status: 'pending' },
   'bbk-babz-2025:I.4.3#primary': { status: 'pending' },
+  // Die drei I-k-Rezepte bilden ausschließlich die vermessene Geometrie, Doppelwelle und den
+  // sichtbaren Text ab. Ob der weiße Körper fachlich Wasserrettungspersonal bezeichnet, bleibt
+  // unabhängig von der technischen Bildtreue offen.
+  'bbk-babz-2025:I.5.1#primary': { status: 'pending' },
+  'bbk-babz-2025:I.5.2#primary': { status: 'pending' },
+  'bbk-babz-2025:I.5.3#primary': { status: 'pending' },
   'bbk-babz-2025:I.5.4#primary': { status: 'pending' },
   'bbk-babz-2025:I.5.5#primary': { status: 'pending' },
   'bbk-babz-2025:I.5.6#primary': { status: 'pending' },

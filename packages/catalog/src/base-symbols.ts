@@ -18,6 +18,8 @@ const OUTLINE: Style = {
 
 /** Halbe Seitenlänge des gedrehten Quadrats bei 15 mm halber Diagonale. */
 const PERSON_HALF_SIDE = (15 * Math.SQRT2) / 2;
+/** Halbe Seitenlänge der I.5-Raute bei 13 mm halber Diagonale. */
+const COMPACT_PERSON_HALF_SIDE = 13 / Math.SQRT2;
 
 /**
  * Nachkommastellen der erzeugten Pfadkoordinaten (siehe `roundedPolygonPath`). Vier Stellen
@@ -666,6 +668,28 @@ const VARIANT_EXTRA_PRIMITIVES: Partial<
  * `I.3.5_Mehrzweckboot.svg`, dessen Rumpf 1,0100/9,0001/30,9894/23,9899 misst.
  */
 const VARIANT_BODIES: Partial<Record<SymbolKind, Partial<Record<BodyVariantId, Primitive>>>> = {
+  person: {
+    'compact-person-diamond-26mm': {
+      type: 'rect',
+      role: 'body',
+      x: 16 - COMPACT_PERSON_HALF_SIDE,
+      y: 16 - COMPACT_PERSON_HALF_SIDE,
+      width: COMPACT_PERSON_HALF_SIDE * 2,
+      height: COMPACT_PERSON_HALF_SIDE * 2,
+      transform: { rotate: { angle: 45, cx: 16, cy: 16 } },
+      style: OUTLINE,
+    },
+    'compact-person-diamond-26mm-lowered-2mm': {
+      type: 'rect',
+      role: 'body',
+      x: 16 - COMPACT_PERSON_HALF_SIDE,
+      y: 18 - COMPACT_PERSON_HALF_SIDE,
+      width: COMPACT_PERSON_HALF_SIDE * 2,
+      height: COMPACT_PERSON_HALF_SIDE * 2,
+      transform: { rotate: { angle: 45, cx: 16, cy: 18 } },
+      style: OUTLINE,
+    },
+  },
   formation: {
     'foot-band': { type: 'rect', role: 'body', x: 1, y: 6, width: 30, height: 20, style: OUTLINE },
   },

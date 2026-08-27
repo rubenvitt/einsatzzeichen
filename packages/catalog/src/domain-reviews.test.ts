@@ -130,6 +130,20 @@ describe('Fachreview-Ledger', () => {
     }
   });
 
+  it('führt für I-k exakt drei weiterhin offene Fachreviews', () => {
+    const keys = Object.keys(MANIFEST_DOMAIN_REVIEWS).filter((key) =>
+      /^bbk-babz-2025:I\.5\.[1-3]#primary$/.test(key),
+    );
+    expect(keys).toEqual([
+      'bbk-babz-2025:I.5.1#primary',
+      'bbk-babz-2025:I.5.2#primary',
+      'bbk-babz-2025:I.5.3#primary',
+    ]);
+    for (const key of keys) {
+      expect(manifestDomainReviewFor(key)).toEqual({ status: 'pending' });
+    }
+  });
+
   it('führt für I.3 genau elf weiterhin offene Fachreviews', () => {
     const keys = Object.keys(MANIFEST_DOMAIN_REVIEWS).filter((key) =>
       /^bbk-babz-2025:I\.3\.(?:[1-9]|1[01])#primary$/.test(key),
@@ -207,11 +221,12 @@ describe('Fachreview-Ledger', () => {
     // F-d ergänzt acht einzelne, weiterhin offene Reviewplätze für F.2.10 bis F.2.17. F-e
     // ergänzt elf für F.3.1 bis F.3.11 und F-f die acht verbleibenden für F.3.12 bis F.3.19.
     // Anhang D schließt den damaligen Stand bei 497. I-c, I-d und I-g ergänzen je vier, I-e
-    // fünf, I-b sieben, I.3 elf, I-j drei und I.5 fünf; damit umfasst der integrierte Stand 537.
-    expect(manifestReviews).toHaveLength(537);
+    // und I.5.4 bis I.5.8 je fünf, I-b sieben, I.3 elf, I-j drei und I-k drei. Der integrierte
+    // Stand schließt bei 540.
+    expect(manifestReviews).toHaveLength(540);
     expect(sourceReviews).toHaveLength(13);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(551);
+    expect(reviews).toHaveLength(554);
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
   });
 

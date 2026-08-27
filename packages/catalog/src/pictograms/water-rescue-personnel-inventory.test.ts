@@ -142,8 +142,11 @@ describe('Wasserrettungsführung I.5.4 bis I.5.8', () => {
   });
 
   it('reserviert fünf getrennte und weiterhin offene Fachreviews', () => {
+    const lfh490ReviewKeys: ReadonlySet<string> = new Set(
+      EXPECTED.map(({ section }) => `bbk-babz-2025:${section}#primary`),
+    );
     const keys = Object.keys(MANIFEST_DOMAIN_REVIEWS).filter((key) =>
-      key.startsWith('bbk-babz-2025:I.5.'),
+      lfh490ReviewKeys.has(key),
     );
     expect(keys).toEqual([
       'bbk-babz-2025:I.5.4#primary',
@@ -158,8 +161,15 @@ describe('Wasserrettungsführung I.5.4 bis I.5.8', () => {
   });
 
   it('führt nur I.5.4 bis I.5.8 mit technischem Direktnachweis im Manifest', () => {
-    const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
-      entry.sourceId.startsWith('bbk-babz-2025:I.5.'),
+    const lfh490SourceIds: ReadonlySet<string> = new Set(
+      EXPECTED.map(({ section }) => `bbk-babz-2025:${section}`),
+    );
+    const directImplementations: ReadonlySet<string> = new Set(
+      WATER_RESCUE_PERSONNEL_IDS.map((id) => `water-rescue-personnel.${id}`),
+    );
+    const rows = COVERAGE_MANIFEST.entries.filter(
+      (entry) =>
+        lfh490SourceIds.has(entry.sourceId) || directImplementations.has(entry.implementation),
     );
     expect(rows.map((entry) => [entry.sourceId, entry.implementation])).toEqual([
       ['bbk-babz-2025:I.5.4', 'water-rescue-personnel.team-leader'],
@@ -181,7 +191,10 @@ describe('Wasserrettungsführung I.5.4 bis I.5.8', () => {
       expect(row.review.technical.note).toContain('I.5.4 bis I.5.8');
       expect(row.review.technical.note).toContain('keine FunctionRole-, Strength- oder Organisationssemantik');
     }
-    expect(COVERAGE_MANIFEST.scope.filter((section) => section.startsWith('I.5'))).toEqual([
+    const lfh490Sections: ReadonlySet<string> = new Set(
+      EXPECTED.map(({ section }) => section),
+    );
+    expect(COVERAGE_MANIFEST.scope.filter((section) => lfh490Sections.has(section))).toEqual([
       'I.5.4', 'I.5.5', 'I.5.6', 'I.5.7', 'I.5.8',
     ]);
     expect(COVERAGE_MANIFEST.scope).not.toContain('I');

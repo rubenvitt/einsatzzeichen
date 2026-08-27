@@ -107,6 +107,12 @@ export interface Style {
   stroke?: ColorToken | 'none';
   strokeWidth?: Length;
   fillRule?: 'nonzero' | 'evenodd';
+  /**
+   * Expliziter Schlüssel für die nicht-farbliche Organisationssignatur einer Körperkontur.
+   * Getrennt von `fill`: dieselbe Farbe kann eine Organisation oder eine rein technische
+   * Füllung darstellen. Nur eine tatsächlich gesetzte Organisationssemantik trägt diesen Wert.
+   */
+  bodyStrokeDashToken?: ColorToken;
 }
 
 interface PrimitiveBase {

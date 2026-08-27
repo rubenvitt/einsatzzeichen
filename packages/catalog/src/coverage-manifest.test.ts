@@ -77,7 +77,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 537 Zeilen mit 288 Elementdarstellungen', () => {
+  it('enthält exakt 540 Zeilen mit 288 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -108,9 +108,9 @@ describe('Coverage-Manifest', () => {
       // Abschnitte, weil F.1.3 dort noch bewusst offen blieb; F-b baut es mit `foot-band`.
       // F-d ergänzt F.2.10 bis F.2.17 als acht reine Anwendungen des Fahrzeugvertrags.
       // G ergänzt 21 Rezepte, H drei, I-c, I-d und I-g je vier, I-e fünf, I-b sieben,
-      // I.3 elf, I-j drei, C.1.3 eins und N neun.
+      // I.3 elf, I-j drei, I-k drei, C.1.3 eins und N neun.
       // Anhang D ergänzt 26 neue Rezepte; D.3.7 bleibt eine Migration desselben Schlüssels.
-      'composition-recipe': 235,
+      'composition-recipe': 238,
       // 269 Piktogramme plus acht Manifest-Organisationen, vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
@@ -118,7 +118,7 @@ describe('Coverage-Manifest', () => {
       // Strichhülle vermessen ist.
       element: 288,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(537);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(540);
     expect(elementRows).toHaveLength(288);
     expect(pictogramRows).toHaveLength(269);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
@@ -238,6 +238,46 @@ describe('Coverage-Manifest', () => {
     expect(COVERAGE_MANIFEST.scope).not.toContain('I.4');
   });
 
+  it('führt I-k exakt als I.5.1 bis I.5.3 und bewahrt den vollständigen I.5-Scope', () => {
+    const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
+      /^bbk-babz-2025:I\.5\.[1-3]$/.test(entry.sourceId),
+    );
+    expect(rows.map((row) => ({
+      section: row.sourceId.slice('bbk-babz-2025:'.length),
+      implementation: row.implementation,
+      coverage: row.coverage,
+      testEvidence: row.testEvidence,
+      domain: row.review.domain,
+    }))).toEqual([
+      {
+        section: 'I.5.1', implementation: 'recipe.I.5.1', coverage: 'composition-recipe',
+        testEvidence: ['body-fingerprint', 'svg-snapshot'], domain: { status: 'pending' },
+      },
+      {
+        section: 'I.5.2', implementation: 'recipe.I.5.2', coverage: 'composition-recipe',
+        testEvidence: ['body-fingerprint', 'svg-snapshot'], domain: { status: 'pending' },
+      },
+      {
+        section: 'I.5.3', implementation: 'recipe.I.5.3', coverage: 'composition-recipe',
+        testEvidence: ['body-fingerprint', 'svg-snapshot'], domain: { status: 'pending' },
+      },
+    ]);
+    expect(rows).toHaveLength(3);
+    for (const row of rows) {
+      expect(row.review.technical).toMatchObject({
+        status: 'approved', reviewer: 'rv', date: '2026-08-27',
+      });
+      expect(row.review.technical.note).toMatch(/measured|gemessen/i);
+      expect(row.review.technical.note).toMatch(/diamond|Raute/i);
+      expect(row.review.technical.note).toMatch(/wave|Welle/i);
+      expect(row.review.technical.note).toMatch(/label|Text/i);
+    }
+    expect(COVERAGE_MANIFEST.scope).toEqual(expect.arrayContaining(
+      Array.from({ length: 8 }, (_, index) => `I.5.${index + 1}`),
+    ));
+    expect(COVERAGE_MANIFEST.scope).not.toContain('I.5');
+  });
+
   it('führt I.5.4 bis I.5.8 als fünf direkte Wasserrettungs-Piktogramme', () => {
     const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
       entry.implementation.startsWith('water-rescue-personnel.'),
@@ -279,6 +319,7 @@ describe('Coverage-Manifest', () => {
     expect(technicalReviewForAnhangI('I.2.4')).toBe(technicalReviewAt('I.2.4'));
     expect(technicalReviewForAnhangI('I.3.1')).toBe(technicalReviewAt('I.3.1'));
     expect(technicalReviewForAnhangI('I.4.1')).toBe(technicalReviewAt('I.4.1'));
+    expect(technicalReviewForAnhangI('I.5.1')).toBe(technicalReviewAt('I.5.1'));
     expect(technicalReviewForAnhangI('I.1.1')).not.toBe(technicalReviewForAnhangI('I.1.5'));
     expect(technicalReviewForAnhangI('I.1.5')).not.toBe(technicalReviewForAnhangI('I.1.9'));
     expect(technicalReviewForAnhangI('I.1.9')).not.toBe(technicalReviewForAnhangI('I.1.17'));
@@ -813,6 +854,9 @@ describe('Coverage-Manifest', () => {
       'I.4.1',
       'I.4.2',
       'I.4.3',
+      'I.5.1',
+      'I.5.2',
+      'I.5.3',
       'I.5.4',
       'I.5.5',
       'I.5.6',

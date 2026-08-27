@@ -123,6 +123,38 @@ interface InkAgainstBox {
 }
 
 /**
+ * Die Boxgrenzen sind kontinuierliche Millimeterwerte, die Rasterkoordinaten ganzzahlig. Die
+ * Umrechnung kann bei mathematisch gleicher Geometrie einen ULP-Rest erzeugen: etwa
+ * `1.0000000000000009 mm * 8 px/mm = 8.000000000000007 px`. Dann darf der Pixel an x=8 nicht
+ * allein wegen dieses Restes außerhalb zählen. Die Schranke von 1e-9 px löst ausschließlich
+ * diesen Subpixel-Rundungsrest auf; sie ändert weder `boxMm`, Alpha-Schwelle noch einen echten
+ * Rasterüberstand (der mindestens einen ganzen Pixel Abstand hat).
+ */
+const RASTER_BOUNDARY_EPSILON_PX = 1e-9;
+
+function rasterPixelOutsideBox(
+  x: number,
+  y: number,
+  boxMinXPx: number,
+  boxMaxXPx: number,
+  boxMinYPx: number,
+  boxMaxYPx: number,
+): boolean {
+  return x < boxMinXPx - RASTER_BOUNDARY_EPSILON_PX ||
+    x > boxMaxXPx + RASTER_BOUNDARY_EPSILON_PX ||
+    y < boxMinYPx - RASTER_BOUNDARY_EPSILON_PX ||
+    y > boxMaxYPx + RASTER_BOUNDARY_EPSILON_PX;
+}
+
+it('akzeptiert nur den ULP-Randrest, nicht aber einen ganzen Rasterpixelüberstand', () => {
+  // 8 < 8.000000000000007 ist derselbe mathematische Rand nach der Koordinatenumrechnung.
+  expect(rasterPixelOutsideBox(8, 8, 8.000000000000007, 16, 0, 16)).toBe(false);
+  // Ein vollständiger Pixel links bzw. rechts der Box bleibt außerhalb.
+  expect(rasterPixelOutsideBox(7, 8, 8, 16, 0, 16)).toBe(true);
+  expect(rasterPixelOutsideBox(9, 8, 0, 8, 0, 16)).toBe(true);
+});
+
+/**
  * Rastert die Fußzone einer `compose()`-Zeichnung isoliert (ohne Körper/Kopf/Piktogramm — die
  * würden bei der Innerhalb-Prüfung nur stören) und vergleicht die tatsächliche Tinte gegen die
  * vom Primitiv deklarierte `boxMm`. Das ist der Ersatz für die verlorene geometrische Messung
@@ -152,7 +184,9 @@ function footInkAgainstBox(designation: string): InkAgainstBox {
       const alpha = pixels[(y * image.width + x) * 4 + 3] ?? 0;
       if (alpha === 0) continue;
       inkPixelCount++;
-      if (x < boxMinXPx || x > boxMaxXPx || y < boxMinYPx || y > boxMaxYPx) outsideBoxCount++;
+      if (rasterPixelOutsideBox(x, y, boxMinXPx, boxMaxXPx, boxMinYPx, boxMaxYPx)) {
+        outsideBoxCount++;
+      }
     }
   }
   return { inkPixelCount, outsideBoxCount };
@@ -192,7 +226,9 @@ function labelInkAgainstBox(drawing: Drawing): InkAgainstBox[] {
         const alpha = pixels[(y * image.width + x) * 4 + 3] ?? 0;
         if (alpha === 0) continue;
         inkPixelCount++;
-        if (x < boxMinXPx || x > boxMaxXPx || y < boxMinYPx || y > boxMaxYPx) outsideBoxCount++;
+        if (rasterPixelOutsideBox(x, y, boxMinXPx, boxMaxXPx, boxMinYPx, boxMaxYPx)) {
+          outsideBoxCount++;
+        }
       }
     }
     return { inkPixelCount, outsideBoxCount };
@@ -290,9 +326,24 @@ describe('Rasterevidenz für Text (resvgFontOptions())', () => {
     // F-d ergänzt sieben beschriftete Fahrzeuge; allein F.2.15 trägt keinen Lauf.
     // F-e ergänzt die drei vollständig vermessenen Kreisläufe UHS/UHS/50. F-f ergänzt mit
     // F.3.14 genau einen weiteren vermessenen Lauf: `500` im ortsgebundenen Betreuungsplatz.
-    // G ergänzt zwei, I-d vier, I-e fünf, I-g zwei, I-b fünf, I.3 neun und Anhang N sechs
-    // beschriftete Rezepte. I-b zählt drei Landfahrzeug- und zwei Anhängerbeschriftungen.
-    expect(labelRecipes).toHaveLength(133);
+    // G ergänzt zwei, I-d vier, I-e fünf, I-g zwei, I-b fünf, I.3 neun, I.5 genau zwei
+    // (I.5.2/I.5.3) und Anhang N sechs beschriftete Rezepte. I.5.1 trägt bewusst keinen Lauf.
+    expect(labelRecipes).toHaveLength(135);
+  });
+
+  it('behandelt die ULP-äquivalente linke I.5.3-Boxkante als innerhalb', () => {
+    const recipe = RECIPES['I.5.3'];
+    const drawing = composeFromCatalog(recipe.spec, recipe.title);
+    const label = drawing.children.find(
+      (primitive): primitive is Primitive & { type: 'text' } =>
+        primitive.type === 'text' && primitive.role === 'label',
+    );
+    expect(label?.x).toBeCloseTo(1, 12);
+    expect(label?.boxMm.xMm).toBeCloseTo(1, 12);
+
+    const [ink] = labelInkAgainstBox(drawing);
+    expect(ink?.inkPixelCount).toBeGreaterThan(0);
+    expect(ink?.outsideBoxCount).toBe(0);
   });
 
   /**

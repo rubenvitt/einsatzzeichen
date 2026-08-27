@@ -123,11 +123,10 @@ function drawPrimitive(
           ctx.lineCap = 'butt';
           ctx.lineJoin = 'round';
         }
-        const fillToken = style.fill;
-        const dash =
-          role === 'body' && fillToken !== undefined && fillToken !== 'none'
-            ? theme.bodyStrokeDashes?.[fillToken]
-            : undefined;
+        const dashToken = style.bodyStrokeDashToken;
+        const dash = role === 'body' && dashToken !== undefined
+          ? theme.bodyStrokeDashes?.[dashToken]
+          : undefined;
         ctx.setLineDash(dash === undefined ? [] : [...dash]);
         ctx.lineDashOffset = 0;
         ctx.stroke(path);
@@ -171,11 +170,10 @@ function drawPrimitive(
         ctx.lineCap = 'butt';
         ctx.lineJoin = 'round';
       }
-      const fillToken = style.fill;
-      const dash =
-        role === 'body' && fillToken !== undefined && fillToken !== 'none'
-          ? theme.bodyStrokeDashes?.[fillToken]
-          : undefined;
+      const dashToken = style.bodyStrokeDashToken;
+      const dash = role === 'body' && dashToken !== undefined
+        ? theme.bodyStrokeDashes?.[dashToken]
+        : undefined;
       ctx.setLineDash(dash === undefined ? [] : dash.map(mmToUnits));
       ctx.lineDashOffset = 0;
       ctx.stroke();

@@ -239,6 +239,7 @@ describe('semantische Zeichenbeschreibungen', () => {
       'inset-hull-wheel-pair',
     ] as const;
     const task1AnhangITechnicalIds = [
+      'double-wave-inner-diamond-8mm',
       'trailer-water-rescue',
       'trailer-diving',
       'trailer-boat-hull',
@@ -272,6 +273,7 @@ describe('semantische Zeichenbeschreibungen', () => {
         'Schwarze Formationskappe, 3,7 mm hoch, mit drei Löchern in einer Reihe',
       'formation-solid-cap-4mm-three-hole-row':
         'Schwarze Formationskappe, 4 mm hoch, mit drei Löchern in einer Reihe',
+      'double-wave-inner-diamond-8mm': 'Doppelwelle mit Innenraute (8 mm)',
       'formation-two-waves-diamond':
         'Zwei Wellenlinien über einer Raute in der Formationshülle',
       'formation-water-rescue-compact':
