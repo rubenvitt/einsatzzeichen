@@ -473,7 +473,7 @@ describe('Anhang D.1, Führungsstellen im Einsatz', () => {
 
   it('führt exakt die neun komponierten D.1-Darstellungen', () => {
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('D.1.'))).toEqual(expectedKeys);
-    expect(Object.keys(RECIPES)).toHaveLength(204);
+    expect(Object.keys(RECIPES)).toHaveLength(207);
   });
 
   it('bindet D.1.2 bis D.1.8 an die sieben gemessenen Formationsrollen', () => {
@@ -1017,7 +1017,7 @@ describe('Anhang G — vollständiges Logistikinventar', () => {
     expect(actual).toEqual(expected);
     expect(Object.keys(actual)).toEqual(Object.keys(expected));
     expect(Object.keys(actual).every((key) => !key.includes('#'))).toBe(true);
-    expect(Object.keys(RECIPES)).toHaveLength(204);
+    expect(Object.keys(RECIPES)).toHaveLength(207);
   });
 
   it('bindet die 21 primary- und Referenz-IDs exakt und ohne Alternative', () => {
@@ -1214,6 +1214,84 @@ describe('Anhang I, Teilslice I-g (I.1.17 bis I.1.20)', () => {
       } else {
         expect(labels).toHaveLength(0);
       }
+    },
+  );
+});
+
+describe('Anhang I, Teilslice I-j (I.4.1 bis I.4.3)', () => {
+  const expected = {
+    'I.4.1': [
+      'Wasserrettungsstation, ortsgebunden',
+      'I.4.1_Wasserrettungsstation_ortsgebunden.svg',
+      'circle-two-waves-diamond',
+      'raised-gable',
+    ],
+    'I.4.2': [
+      'Slip-Stelle',
+      'I.4.2_Slip-Stelle.svg',
+      'circle-diagonal-double-arrow-offset-bowl',
+      undefined,
+    ],
+    'I.4.3': [
+      'Anlegestelle für Boote',
+      'I.4.3_Anlegestelle für Boote.svg',
+      'circle-wide-bowl',
+      undefined,
+    ],
+  } as const;
+  const recipes: Record<string, Recipe> = RECIPES;
+
+  it('bindet genau drei literale Wasserrettungsorte an Referenz, Kreisfassung und Innenmarke', () => {
+    const actual = Object.fromEntries(
+      Object.entries(recipes)
+        .filter(([section]) => section.startsWith('I.4.'))
+        .map(([section, recipe]) => [
+          section,
+          [
+            recipe.title,
+            recipe.referenceAsset,
+            recipe.spec.bodyMarks?.[0],
+            recipe.spec.bodyVariant,
+          ],
+        ]),
+    );
+    expect(actual).toEqual(expected);
+  });
+
+  it.each(Object.entries(expected))(
+    '%s bleibt eine geometrische Kreisvariation ohne erfundene Ortsgebunden-Semantik',
+    (section, [_title, referenceAsset, bodyMark, bodyVariant]) => {
+      const recipe = recipes[section];
+      expect(recipe).toBeDefined();
+      if (recipe === undefined) return;
+
+      expect(recipe.spec).toEqual({
+        kind: 'circle-12',
+        ...(bodyVariant === undefined ? {} : { bodyVariant }),
+        organization: 'hilfsorganisation',
+        bodyMarks: [bodyMark],
+      });
+      expect(validateSpec(recipe.spec)).toEqual([]);
+
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      expect(matchFingerprint(drawing, fingerprintFor(referenceAsset))).toEqual({
+        ok: true,
+        problems: [],
+      });
+      expect(drawing.children.find((child) => child.role === 'body')).toEqual({
+        type: 'circle', role: 'body', cx: 16, cy: bodyVariant === 'raised-gable' ? 18 : 16,
+        r: 12,
+        style: { fill: 'weiss', stroke: 'schwarz', strokeWidth: 0.5 },
+      });
+      expect(drawing.children.filter((child) => child.role === 'bodyExtra')).toEqual(
+        bodyVariant === 'raised-gable'
+          ? [{
+              type: 'polyline', role: 'bodyExtra', closed: false,
+              points: [[3, 11], [16, 1], [29, 11]],
+              style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+            }]
+          : [],
+      );
     },
   );
 });
@@ -2455,7 +2533,7 @@ describe('Anhang F, Teilslice F-f', () => {
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(204);
+    expect(Object.keys(RECIPES)).toHaveLength(207);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {

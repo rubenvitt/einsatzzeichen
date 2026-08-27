@@ -210,6 +210,11 @@ describe('semantische Zeichenbeschreibungen', () => {
       'circle-transport-diamond-arrows',
       'circle-transport-diamond-wheels-arrows',
     ] as const;
+    const lfh488TechnicalIds = [
+      'circle-two-waves-diamond',
+      'circle-diagonal-double-arrow-offset-bowl',
+      'circle-wide-bowl',
+    ] as const;
     const task1AnhangHTechnicalIds = [
       'h-veterinary-decontamination',
       'h-veterinary-slaughter',
@@ -234,6 +239,7 @@ describe('semantische Zeichenbeschreibungen', () => {
     expect(TECHNICAL_BODY_MARK_IDS).toEqual([
       ...task4TechnicalIds,
       ...task5TechnicalIds,
+      ...lfh488TechnicalIds,
       ...task2RoleTechnicalIds,
       ...task1AnhangHTechnicalIds,
       ...task1AnhangNTechnicalIds,
@@ -246,6 +252,15 @@ describe('semantische Zeichenbeschreibungen', () => {
       'formation-opposed-triangles-top':
         'Zwei gegenüberliegende Dreiecke in der oberen Formationszone',
       'formation-chevron-top': 'Gefüllter Winkel in der oberen Formationszone',
+    });
+  });
+
+  it('beschreibt die drei technischen Körpermarken von LFH-488 ohne Fachsemantik', () => {
+    expect(TECHNICAL_BODY_MARK_LABELS).toMatchObject({
+      'circle-two-waves-diamond': 'Zwei Wellenlinien über einer Raute',
+      'circle-diagonal-double-arrow-offset-bowl':
+        'Diagonaler Doppelpfeil neben einer nach rechts versetzten Schale',
+      'circle-wide-bowl': 'Breite Schale',
     });
   });
 
