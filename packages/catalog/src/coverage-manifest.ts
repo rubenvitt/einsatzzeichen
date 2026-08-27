@@ -56,8 +56,9 @@ import { ANHANG_N_RECIPES } from './recipes-anhang-n.js';
 import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
 import {
-  ANHANG_I_A_RECIPES,
+  ANHANG_I_C_RECIPES,
   ANHANG_I_G_RECIPES,
+  ANHANG_I_A_RECIPES,
   ANHANG_I_J_RECIPES,
 } from './recipes-anhang-i.js';
 
@@ -444,6 +445,16 @@ const ANHANG_I_J_TECHNICAL_REVIEW: Review = {
     'kind/variant/bounds, literal recipe, direct-snapshot and multi-size gates. I.4.1 reuses ' +
     'circle-12/raised-gable as geometry only; white Hilfsorganisation bodies and all domain ' +
     'classifications remain pending.',
+};
+
+const ANHANG_I_C_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-27',
+  note:
+    'I.1.1-I.1.4 passed literal strength and technical-head geometry, the independently ' +
+    'measured water-rescue formation mark, recipe, direct-snapshot and multi-size gates. ' +
+    'No organization or global Verband strength is inferred; domain classification remains pending.',
 };
 
 /** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
@@ -917,6 +928,9 @@ function technicalReviewFor(section: string): Review {
     return ANHANG_G_TECHNICAL_REVIEW;
   }
   if (Object.hasOwn(ANHANG_H_RECIPES, section)) return ANHANG_H_TECHNICAL_REVIEW;
+  if (Object.hasOwn(ANHANG_I_C_RECIPES, section)) {
+    return ANHANG_I_C_TECHNICAL_REVIEW;
+  }
   if (Object.hasOwn(ANHANG_I_G_RECIPES, section)) {
     return ANHANG_I_G_TECHNICAL_REVIEW;
   }
@@ -1127,6 +1141,10 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'F',
     'G',
     'H',
+    'I.1.1',
+    'I.1.2',
+    'I.1.3',
+    'I.1.4',
     'I.1.17',
     'I.1.18',
     'I.1.19',
