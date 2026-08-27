@@ -8,6 +8,7 @@ import {
   type Primitive,
   type StrengthId,
   type SymbolKind,
+  type VehicleCategoryId,
 } from '@einsatzzeichen/schema';
 
 /**
@@ -1345,6 +1346,79 @@ const VEHICLE_LAND_NORMAL_MARKS: Partial<
   },
 };
 
+function waterRescueWave(d: string): Primitive {
+  return {
+    type: 'path', role: 'pictogram', d,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  };
+}
+
+function waterRescueDiamond(
+  points: readonly (readonly [number, number])[],
+): Primitive {
+  return {
+    type: 'polyline', role: 'pictogram', points, closed: true,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  };
+}
+
+/**
+ * I.2.1 bis I.2.3: zwei getrennt vermessene Wasserrettungsfassungen auf derselben normalen
+ * Landfahrzeughülle. Die drei sichtbaren Räder von I.2.1 wählen Kategorie 2; die beiden äußeren
+ * Räder von I.2.2/I.2.3 Kategorie 1. Die Kategorie ist hier kein Größenfaktor: sie ist der
+ * vorhandene semantische Kontext, der die beiden konkret belegten Zeichnungen fail-closed trennt.
+ */
+const VEHICLE_LAND_WATER_RESCUE_MARKS: Partial<
+  Record<VehicleCategoryId, (bounds: BoundsMm) => Primitive[]>
+> = {
+  'kfz-kategorie-2': (bounds) => {
+    const dx = bounds.minX - 1;
+    const dy = bounds.minY - 5.75;
+    return [
+      waterRescueWave(
+        `M ${12 + dx} ${12 + dy} C ${13 + dx} ${11 + dy}, ${14 + dx} ${13 + dy}, ` +
+        `${15 + dx} ${12 + dy} C ${16 + dx} ${11 + dy}, ${17 + dx} ${13 + dy}, ` +
+        `${18 + dx} ${12 + dy} C ${18.667 + dx} ${11.333 + dy}, ` +
+        `${19.333 + dx} ${11.333 + dy}, ${20 + dx} ${12 + dy}`,
+      ),
+      waterRescueWave(
+        `M ${12 + dx} ${14 + dy} C ${13 + dx} ${13 + dy}, ${14 + dx} ${15 + dy}, ` +
+        `${15 + dx} ${14 + dy} C ${16 + dx} ${13 + dy}, ${17 + dx} ${15 + dy}, ` +
+        `${18 + dx} ${14 + dy} C ${18.667 + dx} ${13.333 + dy}, ` +
+        `${19.333 + dx} ${13.333 + dy}, ${20 + dx} ${14 + dy}`,
+      ),
+      waterRescueDiamond([
+        [16 + dx, 16 + dy], [20 + dx, 20 + dy],
+        [16 + dx, 24 + dy], [12 + dx, 20 + dy],
+      ]),
+    ];
+  },
+  'kfz-kategorie-1': (bounds) => {
+    const dx = bounds.minX - 1;
+    const dy = bounds.minY - 5.75;
+    return [
+      waterRescueWave(
+        `M ${12.818 + dx} ${14.5 + dy} C ${13.614 + dx} ${13.704 + dy}, ` +
+        `${14.409 + dx} ${15.296 + dy}, ${15.205 + dx} ${14.5 + dy} ` +
+        `C ${16 + dx} ${13.704 + dy}, ${16.796 + dx} ${15.296 + dy}, ` +
+        `${17.591 + dx} ${14.5 + dy} C ${18.121 + dx} ${13.97 + dy}, ` +
+        `${18.652 + dx} ${13.97 + dy}, ${19.182 + dx} ${14.5 + dy}`,
+      ),
+      waterRescueWave(
+        `M ${12.818 + dx} ${16.25 + dy} C ${13.614 + dx} ${15.454 + dy}, ` +
+        `${14.409 + dx} ${17.046 + dy}, ${15.205 + dx} ${16.25 + dy} ` +
+        `C ${16 + dx} ${15.454 + dy}, ${16.796 + dx} ${17.046 + dy}, ` +
+        `${17.591 + dx} ${16.25 + dy} C ${18.121 + dx} ${15.72 + dy}, ` +
+        `${18.652 + dx} ${15.72 + dy}, ${19.182 + dx} ${16.25 + dy}`,
+      ),
+      waterRescueDiamond([
+        [16 + dx, 17.636 + dy], [19.182 + dx, 20.818 + dy],
+        [16 + dx, 24 + dy], [12.818 + dx, 20.818 + dy],
+      ]),
+    ];
+  },
+};
+
 const VEHICLE_LAND_INVERTED_HULL_MARKS: Partial<
   Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
 > = {
@@ -1662,6 +1736,7 @@ export function bodyMark(
   context: {
     kind: SymbolKind;
     bodyVariant?: BodyVariantId;
+    vehicleCategory?: VehicleCategoryId;
     strength?: StrengthId;
     occupiedLabelZones?: readonly ('bottomCenter' | 'bottomRight' | 'belowRight')[];
   },
@@ -1691,7 +1766,9 @@ export function bodyMark(
     : context.kind === 'person' && context.bodyVariant === undefined
       ? PERSON_MARKS[id]
     : context.kind === 'vehicle-land' && context.bodyVariant === undefined
-      ? VEHICLE_LAND_NORMAL_MARKS[id]
+      ? id === 'water-rescue' && context.vehicleCategory !== undefined
+        ? VEHICLE_LAND_WATER_RESCUE_MARKS[context.vehicleCategory]
+        : VEHICLE_LAND_NORMAL_MARKS[id]
       : context.kind === 'vehicle-land' && context.bodyVariant === 'foot-band'
         ? VEHICLE_LAND_FOOT_BAND_MARKS[id] ?? (id === 'maintenance' ? logisticsMaintenance : undefined)
         : context.kind === 'vehicle-land' && context.bodyVariant === 'plain-wheel-pair'
@@ -1717,7 +1794,7 @@ export function bodyMark(
               : context.kind === 'reduced-house' && context.bodyVariant === undefined
                 ? REDUCED_HOUSE_MARKS[id]
           : undefined;
-  const hasAnyBuild = (context.kind === 'person' ? [PERSON_MARKS] : [
+  const hasAnyBuild = id === 'water-rescue' || (context.kind === 'person' ? [PERSON_MARKS] : [
     MARKS,
     VEHICLE_LAND_NORMAL_MARKS,
     VEHICLE_LAND_FOOT_BAND_MARKS,
@@ -1832,7 +1909,7 @@ export function bodyMark(
  */
 export const BODY_MARK_IDS: readonly BodyMarkId[] = Object.freeze(
   [...CAPABILITY_IDS, ...TECHNICAL_BODY_MARK_IDS].filter((id) =>
-    [
+    id === 'water-rescue' || [
       MARKS,
       VEHICLE_LAND_NORMAL_MARKS,
       VEHICLE_LAND_FOOT_BAND_MARKS,

@@ -26,8 +26,9 @@ rtk mise exec -- pnpm exec tsx out/tools/generate-lfh481-output-only.ts --verify
 ```
 
 Der unmittelbar folgende Verify-Lauf rekonstruierte Screenshot und Manifest bytegleich. Der
-fokussierte, additiv mit I.1.5 bis I.1.8, I.1.17 bis I.1.20 und I.4.1 bis I.4.3 integrierte Lauf
-war mit 2.338/2.338 Tests grün; die Vollsuite bestand mit 67/67 Dateien und 4.902/4.902 Tests.
+fokussierte, additiv mit I.1.5 bis I.1.8, I.1.17 bis I.1.20, I.2.1 bis I.2.3, I.4.1 bis I.4.3
+und I.5.4 bis I.5.8 integrierte Lauf war mit 2.497/2.497 Tests grün; die Vollsuite bestand mit
+68/68 Dateien und 4.982/4.982 Tests.
 
 ## Output-only Artefakte
 

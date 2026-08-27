@@ -478,7 +478,7 @@ describe('Anhang D.1, Führungsstellen im Einsatz', () => {
 
   it('führt exakt die neun komponierten D.1-Darstellungen', () => {
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('D.1.'))).toEqual(expectedKeys);
-    expect(Object.keys(RECIPES)).toHaveLength(215);
+    expect(Object.keys(RECIPES)).toHaveLength(218);
   });
 
   it('bindet D.1.2 bis D.1.8 an die sieben gemessenen Formationsrollen', () => {
@@ -1022,7 +1022,7 @@ describe('Anhang G — vollständiges Logistikinventar', () => {
     expect(actual).toEqual(expected);
     expect(Object.keys(actual)).toEqual(Object.keys(expected));
     expect(Object.keys(actual).every((key) => !key.includes('#'))).toBe(true);
-    expect(Object.keys(RECIPES)).toHaveLength(215);
+    expect(Object.keys(RECIPES)).toHaveLength(218);
   });
 
   it('bindet die 21 primary- und Referenz-IDs exakt und ohne Alternative', () => {
@@ -1399,6 +1399,79 @@ describe('Anhang I, Teilslice I-c (I.1.1 bis I.1.4)', () => {
     expect(head === undefined ? undefined : boundsOfMm(head))
       .toEqual({ minX: 15.25, minY: 1, maxX: 16.75, maxY: 5 });
   });
+});
+describe('Anhang I, LFH-486 (I.2.1 bis I.2.3)', () => {
+  const topLeftMetrics = {
+    capHeightMm: 3.18236,
+    baselineFromBodyTopMm: 6.55959,
+    anchorFromBodyLeftMm: 1.56869,
+  } as const;
+  const expected = {
+    'I.2.1': {
+      title: 'Gerätewagen Wasserrettung, geländegängig',
+      referenceAsset: 'I.2.1_Gerätewagen Wasserrettung_geländegängig.svg',
+      spec: {
+        kind: 'vehicle-land', organization: 'hilfsorganisation',
+        vehicleCategory: 'kfz-kategorie-2', bodyMarks: ['water-rescue'],
+        labels: { topLeft: 'GW', topLeftMetrics },
+      },
+    },
+    'I.2.2': {
+      title: 'Gerätewagen Tauchen',
+      referenceAsset: 'I.2.2_Gerätewagen Tauchen.svg',
+      spec: {
+        kind: 'vehicle-land', organization: 'hilfsorganisation',
+        vehicleCategory: 'kfz-kategorie-1', bodyMarks: ['water-rescue'],
+        labels: { topLeft: 'GW Tauchen', topLeftMetrics },
+      },
+    },
+    'I.2.3': {
+      title: 'Gerätewagen Strömungsrettung',
+      referenceAsset: 'I.2.3_Gerätewagen Strömungsrettung.svg',
+      spec: {
+        kind: 'vehicle-land', organization: 'hilfsorganisation',
+        vehicleCategory: 'kfz-kategorie-1', bodyMarks: ['water-rescue'],
+        labels: { topLeft: 'GW SR', topLeftMetrics },
+      },
+    },
+  } as const;
+
+  it('bindet genau die drei literalen Landfahrzeugrezepte an Quelle, Kategorie, Marke und Label', () => {
+    expect(Object.fromEntries(
+      Object.entries<Recipe>(RECIPES).filter(([key]) => /^I\.2\.[1-3]$/.test(key)),
+    )).toEqual(expected);
+  });
+
+  it.each(Object.entries(expected))(
+    '%s komponiert Normalhülle, gemessenes Fahrwerk, schwarze obere Beschriftung und Wasserrettung',
+    (key, expectedRecipe) => {
+      const recipe = (RECIPES as Record<string, Recipe>)[key];
+      expect(recipe).toEqual(expectedRecipe);
+      if (recipe === undefined) return;
+      expect(validateSpec(recipe.spec)).toEqual([]);
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      expect(drawing.children.filter((child) => child.role === 'chassis'))
+        .toHaveLength(recipe.spec.vehicleCategory === 'kfz-kategorie-2' ? 3 : 2);
+      expect(drawing.children.filter((child) => child.role === 'pictogram'))
+        .toEqual(expect.arrayContaining([
+          expect.objectContaining({ type: 'path' }),
+          expect.objectContaining({ type: 'polyline', closed: true }),
+        ]));
+      const label = drawing.children.find(
+        (child): child is Extract<Primitive, { type: 'text' }> =>
+          child.type === 'text' && child.role === 'label',
+      );
+      expect(label).toMatchObject({
+        content: expectedRecipe.spec.labels.topLeft,
+        anchor: 'start',
+        style: { fill: 'schwarz' },
+      });
+      expect((label?.sizeMm ?? 0) * ARIMO_CAP_HEIGHT_FRACTION)
+        .toBeCloseTo(topLeftMetrics.capHeightMm, 6);
+      expect(label?.y).toBeCloseTo(5.75 + topLeftMetrics.baselineFromBodyTopMm, 6);
+      expect(key).toMatch(/^I\.2\.[1-3]$/);
+    },
+  );
 });
 describe('Anhang I, Teilslice I-d (I.1.5 bis I.1.8)', () => {
   const expected = {
@@ -2766,12 +2839,12 @@ describe('Anhang F, Teilslice F-f', () => {
     },
   } as const;
 
-  it('deckt F.3.12 bis F.3.19 lückenlos ab und erreicht integriert 215 Rezepte', () => {
+  it('deckt F.3.12 bis F.3.19 lückenlos ab und erreicht integriert 218 Rezepte', () => {
     const entries = Object.entries<Recipe>(RECIPES)
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(215);
+    expect(Object.keys(RECIPES)).toHaveLength(218);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {
