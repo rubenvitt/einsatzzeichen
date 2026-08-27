@@ -31,7 +31,7 @@ Im Scope sind ausschließlich:
 - I.1.1 bis I.1.4 als `primary`-Rezepte;
 - die vorhandenen Stärkegrade `trupp`, `gruppe` und `zug` unverändert;
 - eine geometrisch benannte technische Kopfmarke `single-vertical-bar` für I.1.4;
-- eine separat vermessene Formationsfassung der vorhandenen Capability-ID `water-rescue`;
+- eine separat vermessene technische Körpermarke `formation-two-waves-diamond`;
 - vier Manifest- und vier Domain-Review-Zeilen;
 - direkte und Mehrgrößen-Snapshots, Entscheidungsnotiz und Visual-QA-Protokoll;
 - ein output-only Kontaktbogen aus den vier generierten Zeichen.
@@ -43,7 +43,8 @@ Nicht im Scope sind:
 - eine neue Organisation oder eine Zuordnung zu `hilfsorganisation`;
 - ein fünfter `StrengthId` namens `verband`;
 - ein Backfill ähnlicher Einzel- oder Doppelbalken aus C, E oder F;
-- Änderungen an der Standardbox von `capability.water-rescue`;
+- Änderungen an der Standardbox oder der kompakten I-g-Formationsfassung von
+  `capability.water-rescue`;
 - eine Zusammenziehung des Manifestumfangs auf `I` oder `I.1`;
 - Original-SVGs, Originalpfade oder Referenz/Katalog-Paarbilder im Repository oder PR.
 
@@ -95,9 +96,10 @@ Körpervarianten und Doppelbelegung werden fail-closed abgelehnt.
 
 ### 4.2 Wasserrettungs-Körpermarke
 
-`packages/catalog/src/body-marks.ts` registriert `water-rescue` in der normalen
-Formationsfassung. Die Capability-ID bleibt dieselbe, aber die Geometrie wird nicht aus der
-24 × 16-mm-Standardbox skaliert: beide Fassungen sind unabhängig vermessen.
+`packages/catalog/src/body-marks.ts` registriert `formation-two-waves-diamond` als neutrale
+technische Marke in der normalen Formationsfassung. Sie wird nicht aus der 24 × 16-mm-Standardbox
+skaliert. Die auf `main` bereits vorhandene kompakte I-g-Formationsfassung von `water-rescue`
+bleibt eine getrennte, unabhängig vermessene Geometrie.
 
 Jede andere Art oder Körpervariante bleibt unzulässig. Der bestehende Fehlervertrag für nicht
 vermessene Body-Mark-Kombinationen bleibt erhalten.
@@ -108,14 +110,14 @@ vermessene Body-Mark-Kombinationen bleibt erhalten.
 
 ```ts
 {
-  'I.1.1': { spec: { kind: 'formation', strength: 'trupp', bodyMarks: ['water-rescue'] } },
-  'I.1.2': { spec: { kind: 'formation', strength: 'gruppe', bodyMarks: ['water-rescue'] } },
-  'I.1.3': { spec: { kind: 'formation', strength: 'zug', bodyMarks: ['water-rescue'] } },
+  'I.1.1': { spec: { kind: 'formation', strength: 'trupp', bodyMarks: ['formation-two-waves-diamond'] } },
+  'I.1.2': { spec: { kind: 'formation', strength: 'gruppe', bodyMarks: ['formation-two-waves-diamond'] } },
+  'I.1.3': { spec: { kind: 'formation', strength: 'zug', bodyMarks: ['formation-two-waves-diamond'] } },
   'I.1.4': {
     spec: {
       kind: 'formation',
       technicalHeadMark: 'single-vertical-bar',
-      bodyMarks: ['water-rescue'],
+      bodyMarks: ['formation-two-waves-diamond'],
     },
   },
 }

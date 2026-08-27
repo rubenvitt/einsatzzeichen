@@ -11,10 +11,10 @@ neutral organization semantics, technical gate evidence, an output-only contact 
 draft pull request.
 
 **Architecture:** Preserve the four existing chapter-5.4 strength IDs and introduce one
-geometry-only technical head mark for I.1.4. Register the existing `water-rescue` capability ID
-as an independently measured normal-formation body mark, then add four literal recipes and narrow
-manifest/review rows. Core owns placement and fail-closed validation; catalog owns measured
-geometry and recipe identity.
+geometry-only technical head mark for I.1.4. Register `formation-two-waves-diamond` as an
+independently measured technical normal-formation body mark, then add four literal recipes and
+narrow manifest/review rows. Core owns placement and fail-closed validation; catalog owns measured
+geometry and recipe identity. The compact I-g `water-rescue` formation mark remains separate.
 
 **Tech Stack:** TypeScript 5.9, Vitest 3.2, Resvg 2.6, pnpm 11.20.0, Node.js 22,
 `@einsatzzeichen/schema`, `@einsatzzeichen/core`, `@einsatzzeichen/catalog`
@@ -25,10 +25,11 @@ geometry and recipe identity.
 
 - Run every shell command with `rtk`.
 - Work only on `codex/lfh-481-wasserrettungsformationen` in the current isolated worktree.
-- Baseline is `origin/main` at `c3b00d023ba98db68843d0512101bc3c752270ea`.
+- Initial baseline was `c3b00d023ba98db68843d0512101bc3c752270ea`; delivery is rebased onto
+  `origin/main` at `5cec36ccc4450a729830704caf1156a401bd6153`.
 - Follow strict RED-GREEN-REFACTOR; a RED must be an assertion failure for missing behavior.
 - Never add `verband` to `StrengthId` and never assign an organization to the four recipes.
-- Do not change `capability.water-rescue`; add only its separately measured formation body mark.
+- Do not change `capability.water-rescue`; add a separately measured neutral technical body mark.
 - Do not update snapshots before semantic head/body/recipe assertions are green.
 - Do not broaden coverage to `I` or `I.1`; add exactly four individual sections.
 - Keep all four domain reviews `pending`; technical approval follows only after green gates.
@@ -127,13 +128,13 @@ geometry and recipe identity.
   these specs:
 
   ```ts
-  { kind: 'formation', strength: 'trupp', bodyMarks: ['water-rescue'] }
-  { kind: 'formation', strength: 'gruppe', bodyMarks: ['water-rescue'] }
-  { kind: 'formation', strength: 'zug', bodyMarks: ['water-rescue'] }
+  { kind: 'formation', strength: 'trupp', bodyMarks: ['formation-two-waves-diamond'] }
+  { kind: 'formation', strength: 'gruppe', bodyMarks: ['formation-two-waves-diamond'] }
+  { kind: 'formation', strength: 'zug', bodyMarks: ['formation-two-waves-diamond'] }
   {
     kind: 'formation',
     technicalHeadMark: 'single-vertical-bar',
-    bodyMarks: ['water-rescue'],
+    bodyMarks: ['formation-two-waves-diamond'],
   }
   ```
 
@@ -147,12 +148,13 @@ geometry and recipe identity.
     --maxWorkers=1 --minWorkers=1
   ```
 
-  Expected: `water-rescue` lacks a measured formation builder and I.1.1–I.1.4 are missing.
+  Expected: `formation-two-waves-diamond` and I.1.1–I.1.4 are missing.
 
 - [ ] **Step 3: Implement the minimal catalog data**
 
-  Add the reconstructed 0.5-mm wave/diamond primitives to `MARKS.water-rescue`. Add the literal
-  recipe matrix and merge it with the existing I.3.5–I.3.7 matrix without changing those entries.
+  Add the reconstructed 0.5-mm wave/diamond primitives to
+  `MARKS['formation-two-waves-diamond']`. Add the literal recipe matrix and merge it with the
+  existing I.3.5–I.3.7 matrix without changing those entries.
 
 - [ ] **Step 4: Run GREEN and typecheck**
 
