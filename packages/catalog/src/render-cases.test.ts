@@ -18,8 +18,8 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 481: der integrierte Hauptbestand plus die drei Wasserrettungsorte aus I.4.
-    expect(ids).toHaveLength(481);
+    // 486: der integrierte Hauptbestand plus I.4s drei Orte und fünf direkte I.5-Piktogramme.
+    expect(ids).toHaveLength(486);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
     // dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66, G 21, H, I-a und I-j
@@ -87,7 +87,8 @@ describe('vollständige Renderfallmenge', () => {
           !id.startsWith('comms.') &&
           !id.startsWith('damage.') &&
           !id.startsWith('wildfire.') &&
-          !id.startsWith('leadership.'),
+          !id.startsWith('leadership.') &&
+          !id.startsWith('water-rescue-personnel.'),
       ),
     ).toHaveLength(14);
     expect(new Set(ids).size).toBe(ids.length);
