@@ -1,3 +1,5 @@
+import type { ColorToken } from './geometry.js';
+
 /**
  * Körperform eines Zeichens. Die ersten vierzehn Werte sind die Grundzeichen aus Kapitel 1 der
  * BBK/BABZ-Empfehlung und stehen als `CatalogEntry` in `BASE_SYMBOLS`.
@@ -686,6 +688,12 @@ export interface SymbolSpec {
    */
   bodyVariant?: BodyVariantId;
   organization?: OrganizationId;
+  /**
+   * Quellenbelegte Körperfüllung ohne Organisationssemantik. Der Farbtoken steuert ausschließlich
+   * die technische Fläche; nicht-farbliche Organisationssignaturen werden daraus nicht abgeleitet.
+   * `validateSpec()` lehnt die gleichzeitige Angabe von `organization` fail-closed ab.
+   */
+  technicalFill?: ColorToken;
   strength?: StrengthId;
   administrativeLevel?: AdminLevelId;
   vehicleCategory?: VehicleCategoryId;

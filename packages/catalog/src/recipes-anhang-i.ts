@@ -7,7 +7,7 @@ export const ANHANG_I_A_RECIPES = {
     spec: {
       kind: 'person',
       bodyVariant: 'compact-person-diamond-26mm',
-      organization: 'white' as never,
+      technicalFill: 'weiss',
       bodyMarks: ['double-wave-inner-diamond-8mm'],
     },
   },
@@ -17,7 +17,7 @@ export const ANHANG_I_A_RECIPES = {
     spec: {
       kind: 'person',
       bodyVariant: 'compact-person-diamond-26mm-lowered-2mm',
-      organization: 'white' as never,
+      technicalFill: 'weiss',
       bodyMarks: ['double-wave-inner-diamond-8mm'],
       labels: {
         aboveLeft: 'Strömungsretter',
@@ -35,7 +35,7 @@ export const ANHANG_I_A_RECIPES = {
     spec: {
       kind: 'person',
       bodyVariant: 'compact-person-diamond-26mm-lowered-2mm',
-      organization: 'white' as never,
+      technicalFill: 'weiss',
       bodyMarks: ['double-wave-inner-diamond-8mm'],
       labels: {
         aboveLeft: 'Taucher',

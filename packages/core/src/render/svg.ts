@@ -84,11 +84,10 @@ function styleAttrs(
         // beim Miter-Join nicht ausreichend. Canvas setzt denselben Vertrag in drawPrimitive().
         parts.push('stroke-linecap="butt"', 'stroke-linejoin="round"');
       }
-      const fillToken = style.fill;
-      const dash =
-        options.role === 'body' && fillToken !== undefined && fillToken !== 'none'
-          ? theme.bodyStrokeDashes?.[fillToken]
-          : undefined;
+      const dashToken = style.bodyStrokeDashToken;
+      const dash = options.role === 'body' && dashToken !== undefined
+        ? theme.bodyStrokeDashes?.[dashToken]
+        : undefined;
       if (dash !== undefined && dash.length > 0) {
         const values = dash.map((length) =>
           options.rawStrokeWidth ? formatUnits(length) : u(length),

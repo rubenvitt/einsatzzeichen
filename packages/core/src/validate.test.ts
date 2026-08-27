@@ -47,6 +47,20 @@ function validateRuntime(
 }
 
 describe('validateSpec', () => {
+  it('lehnt technische Körperfüllung zusammen mit Organisationssemantik ab', () => {
+    expect(validateRuntime({
+      kind: 'person',
+      organization: 'hilfsorganisation',
+      technicalFill: 'weiss',
+    }).map((issue) => issue.rule)).toContain('technical-fill-organization-conflict');
+  });
+
+  it('akzeptiert nur einen bekannten Farbtoken als technische Körperfüllung', () => {
+    expect(validateRuntime({ kind: 'person', technicalFill: 'weiss' })).toEqual([]);
+    expect(validateRuntime({ kind: 'person', technicalFill: 'white' })
+      .map((issue) => issue.rule)).toContain('technical-fill-token-invalid');
+  });
+
   it('lässt die zwei I.5-Personrauten nur an person zu', () => {
     const variants = [
       'compact-person-diamond-26mm',

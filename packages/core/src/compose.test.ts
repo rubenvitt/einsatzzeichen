@@ -261,6 +261,37 @@ describe('compose() — inset-hull-Labelvertrag', () => {
   });
 });
 
+describe('compose() — technische Körperfüllung', () => {
+  const whiteCatalog: CatalogPorts = {
+    ...catalog,
+    organizationColor: () => 'weiss',
+  };
+
+  it('füllt technisch weiß ohne Organisations-Kontursignatur', () => {
+    const drawing = compose({
+      kind: 'person',
+      technicalFill: 'weiss',
+    }, whiteCatalog);
+    const body = drawing.children.find((child) => child.role === 'body');
+
+    expect(body?.style).toMatchObject({ fill: 'weiss' });
+    expect(body?.style?.bodyStrokeDashToken).toBeUndefined();
+  });
+
+  it('markiert eine echte weiße Organisation weiterhin für ihre Kontursignatur', () => {
+    const drawing = compose({
+      kind: 'person',
+      organization: 'hilfsorganisation',
+    }, whiteCatalog);
+    const body = drawing.children.find((child) => child.role === 'body');
+
+    expect(body?.style).toMatchObject({
+      fill: 'weiss',
+      bodyStrokeDashToken: 'weiss',
+    });
+  });
+});
+
 describe('compose() — Fußzone', () => {
   it('gibt die Bezeichnung als Fußzone aus', () => {
     const drawing = compose({ kind: 'formation', designation: '2. Zug' }, catalog);

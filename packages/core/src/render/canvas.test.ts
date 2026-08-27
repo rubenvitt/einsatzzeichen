@@ -258,7 +258,7 @@ describe('renderCanvas', () => {
     expect(calls).toEqual([]);
   });
 
-  it('setzt dieselbe nicht-farbliche Körperkontur wie der SVG-Renderer', () => {
+  it('setzt ohne explizite Organisationssignatur in Canvas und SVG eine solide weiße Kontur', () => {
     const theme: RenderTheme = {
       id: 'test',
       palette: PALETTE,
@@ -267,8 +267,28 @@ describe('renderCanvas', () => {
     };
     const { ctx, calls } = recordingContext();
     renderCanvas(formation, ctx, { theme });
+    expect(calls).toContainEqual(['setLineDash', []]);
+    expect(renderSvg(formation, { theme })).not.toContain('stroke-dasharray=');
+  });
+
+  it('setzt dieselbe explizite nicht-farbliche Körperkontur wie der SVG-Renderer', () => {
+    const theme: RenderTheme = {
+      id: 'test',
+      palette: PALETTE,
+      surface: '#ffffff',
+      bodyStrokeDashes: { weiss: [2, 1] },
+    };
+    const signedFormation = {
+      ...formation,
+      children: formation.children.map((child) => ({
+        ...child,
+        style: { ...child.style, bodyStrokeDashToken: 'weiss' },
+      })),
+    } as Drawing;
+    const { ctx, calls } = recordingContext();
+    renderCanvas(signedFormation, ctx, { theme });
     expect(calls).toContainEqual(['setLineDash', [mmToUnits(2), mmToUnits(1)]]);
-    expect(renderSvg(formation, { theme })).toContain('stroke-dasharray=');
+    expect(renderSvg(signedFormation, { theme })).toContain('stroke-dasharray=');
   });
 
   it.each([
@@ -400,7 +420,12 @@ describe('renderCanvas', () => {
         {
           type: 'group',
           role: 'body',
-          style: { fill: 'blau', stroke: 'schwarz', strokeWidth: 0.5 },
+          style: {
+            fill: 'blau',
+            stroke: 'schwarz',
+            strokeWidth: 0.5,
+            bodyStrokeDashToken: 'blau',
+          },
           children: [{ type: 'rect', x: 1, y: 6, width: 30, height: 20 }],
         },
       ],

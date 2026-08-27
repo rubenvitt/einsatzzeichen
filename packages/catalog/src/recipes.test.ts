@@ -33,6 +33,7 @@ import {
   ANHANG_E_F_RECIPES,
 } from './recipes-anhang-e.js';
 import { ANHANG_F_B_RECIPES } from './recipes-anhang-f.js';
+import { ACCESSIBLE_LIGHT_THEME, PRINT_MONOCHROME_THEME } from './render-themes.js';
 
 /**
  * Effektive y-Lage der waagerechten Brandbekämpfungs-Linie: ihre Autorenkoordinate plus die
@@ -1146,7 +1147,7 @@ describe('Anhang I, Teilslice I.5 (I.5.1 bis I.5.3)', () => {
       spec: {
         kind: 'person',
         bodyVariant: 'compact-person-diamond-26mm',
-        organization: 'white' as never,
+        technicalFill: 'weiss',
         bodyMarks: ['double-wave-inner-diamond-8mm'],
       },
     },
@@ -1156,7 +1157,7 @@ describe('Anhang I, Teilslice I.5 (I.5.1 bis I.5.3)', () => {
       spec: {
         kind: 'person',
         bodyVariant: 'compact-person-diamond-26mm-lowered-2mm',
-        organization: 'white' as never,
+        technicalFill: 'weiss',
         bodyMarks: ['double-wave-inner-diamond-8mm'],
         labels: {
           aboveLeft: 'Strömungsretter',
@@ -1174,7 +1175,7 @@ describe('Anhang I, Teilslice I.5 (I.5.1 bis I.5.3)', () => {
       spec: {
         kind: 'person',
         bodyVariant: 'compact-person-diamond-26mm-lowered-2mm',
-        organization: 'white' as never,
+        technicalFill: 'weiss',
         bodyMarks: ['double-wave-inner-diamond-8mm'],
         labels: {
           aboveLeft: 'Taucher',
@@ -1202,7 +1203,8 @@ describe('Anhang I, Teilslice I.5 (I.5.1 bis I.5.3)', () => {
       expect(actual).toBeDefined();
       if (actual === undefined) return;
 
-      expect(actual.spec.organization).toBe('white');
+      expect(actual.spec.organization).toBeUndefined();
+      expect(actual.spec.technicalFill).toBe('weiss');
       expect(actual.spec.bodyMarks).toEqual(['double-wave-inner-diamond-8mm']);
       const spec = actual.spec as unknown as Record<string, unknown>;
       expect(spec.capability).toBeUndefined();
@@ -1217,6 +1219,26 @@ describe('Anhang I, Teilslice I.5 (I.5.1 bis I.5.3)', () => {
       });
     },
   );
+
+  it.each([
+    ['accessible-light', ACCESSIBLE_LIGHT_THEME],
+    ['print-monochrome', PRINT_MONOCHROME_THEME],
+  ] as const)('rendert I.5 im Theme %s ohne erfundene Organisationskontur', (_id, theme) => {
+    for (const section of ['I.5.1', 'I.5.2', 'I.5.3'] as const) {
+      const recipe = RECIPES[section]!;
+      expect(renderSvg(composeFromCatalog(recipe.spec, recipe.title), { theme }), section)
+        .not.toContain('stroke-dasharray=');
+    }
+  });
+
+  it.each([
+    ['accessible-light', ACCESSIBLE_LIGHT_THEME],
+    ['print-monochrome', PRINT_MONOCHROME_THEME],
+  ] as const)('bewahrt die gepunktete Hilfsorganisationskontur im Theme %s', (_id, theme) => {
+    const recipe = RECIPES['I.3.5']!;
+    expect(renderSvg(composeFromCatalog(recipe.spec, recipe.title), { theme }))
+      .toContain('stroke-dasharray="1 2"');
+  });
 
   it.each([
     ['I.5.1', undefined, undefined, undefined],
