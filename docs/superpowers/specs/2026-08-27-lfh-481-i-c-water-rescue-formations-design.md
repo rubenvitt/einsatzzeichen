@@ -133,12 +133,12 @@ erst nach grünen Gates freigegeben; die korrespondierenden Domain-Reviews bleib
 
 | Größe | integrierte `origin/main`-Basis | LFH-481 |
 |---|---:|---:|
-| Rezepte | 207 | 211 |
-| Renderfälle | 485 | 489 |
-| direkte SVG-Snapshots | 221 | 225 |
-| Mehrgrößen-Snapshots | 486 | 490 |
-| Manifestzeilen | 504 | 508 |
-| offene Reviews gesamt | 518 | 522 |
+| Rezepte | 211 | 215 |
+| Renderfälle | 489 | 493 |
+| direkte SVG-Snapshots | 225 | 229 |
+| Mehrgrößen-Snapshots | 490 | 494 |
+| Manifestzeilen | 508 | 512 |
+| offene Reviews gesamt | 522 | 526 |
 | Elementzeilen | 283 | 283 |
 
 ## 6. Test- und Visualstrategie

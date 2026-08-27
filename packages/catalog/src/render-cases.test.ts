@@ -18,16 +18,32 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 489: der integrierte Hauptbestand plus die vier Wasserrettungsformationen aus I-c.
-    expect(ids).toHaveLength(489);
+    // 493: der integrierte Hauptbestand plus je vier Rezeptfälle aus I-c und I-d.
+    expect(ids).toHaveLength(493);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
-    // Dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66, G 21, H, I-a und I-j
-    // je drei, I-c und I-g je vier, C.1.3 einen, Anhang N neun und Anhang D 26 neue Rezeptfälle.
-    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(211);
-    expect(ids.filter((id) => id.startsWith('recipe.I.1.'))).toEqual([
-      'recipe.I.1.1', 'recipe.I.1.17', 'recipe.I.1.18', 'recipe.I.1.19',
-      'recipe.I.1.2', 'recipe.I.1.20', 'recipe.I.1.3', 'recipe.I.1.4',
+    // Dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66, G 21, H, I-a und
+    // I-j je drei, I-c, I-d und I-g je vier, C.1.3 einen, N neun und Anhang D 26 Rezeptfälle.
+    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(215);
+    expect(ids.filter((id) => id.startsWith('recipe.I.'))).toEqual([
+      'recipe.I.1.1',
+      'recipe.I.1.17',
+      'recipe.I.1.18',
+      'recipe.I.1.19',
+      'recipe.I.1.2',
+      'recipe.I.1.20',
+      'recipe.I.1.3',
+      'recipe.I.1.4',
+      'recipe.I.1.5',
+      'recipe.I.1.6',
+      'recipe.I.1.7',
+      'recipe.I.1.8',
+      'recipe.I.3.5',
+      'recipe.I.3.6',
+      'recipe.I.3.7',
+      'recipe.I.4.1',
+      'recipe.I.4.2',
+      'recipe.I.4.3',
     ]);
     expect(ids.filter((id) => id.startsWith('recipe.G.'))).toHaveLength(21);
     expect(ids.filter((id) => id.startsWith('recipe.N.'))).toEqual([

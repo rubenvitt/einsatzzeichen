@@ -238,7 +238,9 @@ describe('semantische Zeichenbeschreibungen', () => {
     ] as const;
     const task2RoleTechnicalIds = [
       'formation-solid-cap-3mm',
+      'formation-solid-cap-3.7mm-three-hole-row',
       'formation-solid-cap-4mm-three-hole-row',
+      'formation-water-rescue-compact',
     ] as const;
     const lfh485TechnicalIds = [
       'formation-opposed-triangles-top',
@@ -257,10 +259,14 @@ describe('semantische Zeichenbeschreibungen', () => {
     ]);
     expect(TECHNICAL_BODY_MARK_LABELS as Record<string, string>).toMatchObject({
       'formation-solid-cap-3mm': 'Schwarze Formationskappe, 3 mm hoch',
+      'formation-solid-cap-3.7mm-three-hole-row':
+        'Schwarze Formationskappe, 3,7 mm hoch, mit drei Löchern in einer Reihe',
       'formation-solid-cap-4mm-three-hole-row':
         'Schwarze Formationskappe, 4 mm hoch, mit drei Löchern in einer Reihe',
       'formation-two-waves-diamond':
         'Zwei Wellenlinien über einer Raute in der Formationshülle',
+      'formation-water-rescue-compact':
+        'Kompakte Wasserrettungsmarke mit Doppelwelle und scharfkantigem Rautenring',
       'formation-opposed-triangles-top':
         'Zwei gegenüberliegende Dreiecke in der oberen Formationszone',
       'formation-chevron-top': 'Gefüllter Winkel in der oberen Formationszone',
