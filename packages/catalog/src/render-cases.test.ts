@@ -26,8 +26,8 @@ describe('vollständige Renderfallmenge', () => {
     // je drei, I-c und I-g je vier, C.1.3 einen, Anhang N neun und Anhang D 26 neue Rezeptfälle.
     expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(211);
     expect(ids.filter((id) => id.startsWith('recipe.I.1.'))).toEqual([
-      'recipe.I.1.1', 'recipe.I.1.2', 'recipe.I.1.3', 'recipe.I.1.4',
-      'recipe.I.1.17', 'recipe.I.1.18', 'recipe.I.1.19', 'recipe.I.1.20',
+      'recipe.I.1.1', 'recipe.I.1.17', 'recipe.I.1.18', 'recipe.I.1.19',
+      'recipe.I.1.2', 'recipe.I.1.20', 'recipe.I.1.3', 'recipe.I.1.4',
     ]);
     expect(ids.filter((id) => id.startsWith('recipe.G.'))).toHaveLength(21);
     expect(ids.filter((id) => id.startsWith('recipe.N.'))).toEqual([

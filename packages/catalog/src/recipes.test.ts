@@ -474,7 +474,7 @@ describe('Anhang D.1, Führungsstellen im Einsatz', () => {
 
   it('führt exakt die neun komponierten D.1-Darstellungen', () => {
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('D.1.'))).toEqual(expectedKeys);
-    expect(Object.keys(RECIPES)).toHaveLength(207);
+    expect(Object.keys(RECIPES)).toHaveLength(211);
   });
 
   it('bindet D.1.2 bis D.1.8 an die sieben gemessenen Formationsrollen', () => {
@@ -1018,7 +1018,7 @@ describe('Anhang G — vollständiges Logistikinventar', () => {
     expect(actual).toEqual(expected);
     expect(Object.keys(actual)).toEqual(Object.keys(expected));
     expect(Object.keys(actual).every((key) => !key.includes('#'))).toBe(true);
-    expect(Object.keys(RECIPES)).toHaveLength(207);
+    expect(Object.keys(RECIPES)).toHaveLength(211);
   });
 
   it('bindet die 21 primary- und Referenz-IDs exakt und ohne Alternative', () => {
@@ -1185,7 +1185,7 @@ describe('Anhang I, Teilslice I-g (I.1.17 bis I.1.20)', () => {
 
   it('bindet exakt die vier freigegebenen I-g-Referenzen an ihre gemessenen Specs', () => {
     expect(Object.fromEntries(
-      Object.entries(recipes).filter(([section]) => section.startsWith('I.1.')),
+      Object.entries(recipes).filter(([section]) => Object.hasOwn(expected, section)),
     )).toEqual(expected);
   });
 
@@ -1303,17 +1303,17 @@ describe('Anhang I, Teilslice I-c (I.1.1 bis I.1.4)', () => {
     'I.1.1': {
       title: 'Wasserrettungstrupp',
       referenceAsset: 'I.1.1_Wasserrettungstrupp.svg',
-      spec: { kind: 'formation', strength: 'trupp', bodyMarks: ['water-rescue'] },
+      spec: { kind: 'formation', strength: 'trupp', bodyMarks: ['formation-two-waves-diamond'] },
     },
     'I.1.2': {
       title: 'Wasserrettungsgruppe',
       referenceAsset: 'I.1.2_Wasserrettungsgruppe.svg',
-      spec: { kind: 'formation', strength: 'gruppe', bodyMarks: ['water-rescue'] },
+      spec: { kind: 'formation', strength: 'gruppe', bodyMarks: ['formation-two-waves-diamond'] },
     },
     'I.1.3': {
       title: 'Wasserrettungszug',
       referenceAsset: 'I.1.3_Wasserrettungszug.svg',
-      spec: { kind: 'formation', strength: 'zug', bodyMarks: ['water-rescue'] },
+      spec: { kind: 'formation', strength: 'zug', bodyMarks: ['formation-two-waves-diamond'] },
     },
     'I.1.4': {
       title: 'Wasserrettungsverband',
@@ -1321,7 +1321,7 @@ describe('Anhang I, Teilslice I-c (I.1.1 bis I.1.4)', () => {
       spec: {
         kind: 'formation',
         technicalHeadMark: 'single-vertical-bar',
-        bodyMarks: ['water-rescue'],
+        bodyMarks: ['formation-two-waves-diamond'],
       },
     },
   } as const;
@@ -1329,7 +1329,7 @@ describe('Anhang I, Teilslice I-c (I.1.1 bis I.1.4)', () => {
   it('bindet exakt vier Wasserrettungsformationen an die Literalrezepte', () => {
     expect(ANHANG_I_C_RECIPES).toEqual(expected);
     expect(Object.fromEntries(
-      Object.entries(RECIPES).filter(([section]) => section.startsWith('I.1.')),
+      Object.entries(RECIPES).filter(([section]) => Object.hasOwn(expected, section)),
     )).toEqual(expected);
   });
 
@@ -2634,7 +2634,7 @@ describe('Anhang F, Teilslice F-f', () => {
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(207);
+    expect(Object.keys(RECIPES)).toHaveLength(211);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {

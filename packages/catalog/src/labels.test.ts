@@ -244,6 +244,7 @@ describe('semantische Zeichenbeschreibungen', () => {
       'formation-opposed-triangles-top',
       'formation-chevron-top',
     ] as const;
+    const lfh481TechnicalIds = ['formation-two-waves-diamond'] as const;
     expect(TECHNICAL_BODY_MARK_IDS).toEqual([
       ...task4TechnicalIds,
       ...task5TechnicalIds,
@@ -251,12 +252,15 @@ describe('semantische Zeichenbeschreibungen', () => {
       ...task2RoleTechnicalIds,
       ...task1AnhangHTechnicalIds,
       ...task1AnhangNTechnicalIds,
+      ...lfh481TechnicalIds,
       ...lfh485TechnicalIds,
     ]);
     expect(TECHNICAL_BODY_MARK_LABELS as Record<string, string>).toMatchObject({
       'formation-solid-cap-3mm': 'Schwarze Formationskappe, 3 mm hoch',
       'formation-solid-cap-4mm-three-hole-row':
         'Schwarze Formationskappe, 4 mm hoch, mit drei Löchern in einer Reihe',
+      'formation-two-waves-diamond':
+        'Zwei Wellenlinien über einer Raute in der Formationshülle',
       'formation-opposed-triangles-top':
         'Zwei gegenüberliegende Dreiecke in der oberen Formationszone',
       'formation-chevron-top': 'Gefüllter Winkel in der oberen Formationszone',

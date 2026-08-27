@@ -132,7 +132,7 @@ export const ANHANG_I_C_RECIPES = {
     spec: {
       kind: 'formation',
       strength: 'trupp',
-      bodyMarks: ['water-rescue'],
+      bodyMarks: ['formation-two-waves-diamond'],
     },
   },
   'I.1.2': {
@@ -141,7 +141,7 @@ export const ANHANG_I_C_RECIPES = {
     spec: {
       kind: 'formation',
       strength: 'gruppe',
-      bodyMarks: ['water-rescue'],
+      bodyMarks: ['formation-two-waves-diamond'],
     },
   },
   'I.1.3': {
@@ -150,7 +150,7 @@ export const ANHANG_I_C_RECIPES = {
     spec: {
       kind: 'formation',
       strength: 'zug',
-      bodyMarks: ['water-rescue'],
+      bodyMarks: ['formation-two-waves-diamond'],
     },
   },
   'I.1.4': {
@@ -159,7 +159,7 @@ export const ANHANG_I_C_RECIPES = {
     spec: {
       kind: 'formation',
       technicalHeadMark: 'single-vertical-bar',
-      bodyMarks: ['water-rescue'],
+      bodyMarks: ['formation-two-waves-diamond'],
     },
   },
 } as const satisfies Record<string, Recipe>;

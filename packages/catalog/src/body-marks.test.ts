@@ -627,9 +627,9 @@ describe('bodyMark() — Brandbekämpfung für C.1', () => {
   });
 });
 
-describe('bodyMark() — Wasserrettung für I.1', () => {
+describe('bodyMark() — technische Wasserrettungsgeometrie für I-c', () => {
   it('rekonstruiert zwei Wellen und die geschlossene Raute aus den vermessenen Mittellinien', () => {
-    const marks = bodyMark('water-rescue', formationBodyMm);
+    const marks = bodyMark('formation-two-waves-diamond', formationBodyMm);
 
     expect(marks).toEqual([
       {
@@ -668,7 +668,7 @@ describe('bodyMark() — Wasserrettung für I.1', () => {
 
   it('verschiebt die vollständige Marke mit der platzierten Formationshülle', () => {
     const shifted = bodyMarkWithContext(
-      'water-rescue',
+      'formation-two-waves-diamond',
       { kind: 'formation' },
       { minX: 2, minY: 7, maxX: 32, maxY: 27 },
     );
@@ -680,17 +680,17 @@ describe('bodyMark() — Wasserrettung für I.1', () => {
 
   it('lehnt ungemessene Körper, Varianten und Hüllen fail-closed ab', () => {
     expect(() => bodyMarkWithContext(
-      'water-rescue',
+      'formation-two-waves-diamond',
       { kind: 'formation', bodyVariant: 'foot-band' },
       formationBodyMm,
     )).toThrow(/nicht vermessen/);
     expect(() => bodyMarkWithContext(
-      'water-rescue',
+      'formation-two-waves-diamond',
       { kind: 'vehicle-land' },
       landBodyMm,
     )).toThrow(/nicht vermessen/);
     expect(() => bodyMarkWithContext(
-      'water-rescue',
+      'formation-two-waves-diamond',
       { kind: 'formation' },
       { minX: 1, minY: 6, maxX: 30.5, maxY: 26 },
     )).toThrow(/30 × 20 mm/);

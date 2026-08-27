@@ -126,6 +126,7 @@ export const TECHNICAL_BODY_MARK_LABELS = Object.freeze({
   'air-rising-diagonal': 'Ansteigende Diagonale im Luftfahrzeugrumpf',
   'spontaneous-helper-collection-arrow': 'Vierblattmarke mit Ring und Rechtspfeil',
   'spontaneous-helper-contact-double-arrow': 'Vierblattmarke mit Doppelpfeil',
+  'formation-two-waves-diamond': 'Zwei Wellenlinien über einer Raute in der Formationshülle',
   'formation-opposed-triangles-top':
     'Zwei gegenüberliegende Dreiecke in der oberen Formationszone',
   'formation-chevron-top': 'Gefüllter Winkel in der oberen Formationszone',

@@ -93,15 +93,16 @@ describe('Fachreview-Ledger', () => {
   });
 
   it('führt für LFH-485 genau vier weiterhin offene I-g-Fachreviews', () => {
-    const keys = Object.keys(MANIFEST_DOMAIN_REVIEWS).filter((key) =>
-      key.startsWith('bbk-babz-2025:I.1.'),
-    );
-    expect(keys).toEqual([
+    const expectedKeys = new Set([
       'bbk-babz-2025:I.1.17#primary',
       'bbk-babz-2025:I.1.18#primary',
       'bbk-babz-2025:I.1.19#primary',
       'bbk-babz-2025:I.1.20#primary',
     ]);
+    const keys = Object.keys(MANIFEST_DOMAIN_REVIEWS).filter((key) =>
+      expectedKeys.has(key),
+    );
+    expect(keys).toEqual([...expectedKeys]);
     for (const key of keys) {
       expect(manifestDomainReviewFor(key)).toEqual({ status: 'pending' });
     }
@@ -122,15 +123,16 @@ describe('Fachreview-Ledger', () => {
   });
 
   it('führt für I-c genau vier eigene weiterhin offene Fachreviews', () => {
-    const keys = Object.keys(MANIFEST_DOMAIN_REVIEWS).filter((key) =>
-      key.startsWith('bbk-babz-2025:I.1.'),
-    );
-    expect(keys).toEqual([
+    const expectedKeys = new Set([
       'bbk-babz-2025:I.1.1#primary',
       'bbk-babz-2025:I.1.2#primary',
       'bbk-babz-2025:I.1.3#primary',
       'bbk-babz-2025:I.1.4#primary',
     ]);
+    const keys = Object.keys(MANIFEST_DOMAIN_REVIEWS).filter((key) =>
+      expectedKeys.has(key),
+    );
+    expect(keys).toEqual([...expectedKeys]);
     for (const key of keys) {
       expect(manifestDomainReviewFor(key)).toEqual({ status: 'pending' });
     }

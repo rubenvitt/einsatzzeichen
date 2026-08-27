@@ -309,6 +309,7 @@ export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
   'air-rising-diagonal',
   'spontaneous-helper-collection-arrow',
   'spontaneous-helper-contact-double-arrow',
+  'formation-two-waves-diamond',
   'formation-opposed-triangles-top',
   'formation-chevron-top',
 ] as const);

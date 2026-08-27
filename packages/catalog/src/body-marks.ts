@@ -105,7 +105,7 @@ function waterWave(centerXMm: number, baselineYMm: number): Primitive {
  * 0,5-mm-Wellenbänder und der Rautenkontur. Die Zahlen sind gegen die platzierte Hülle
  * formuliert; sie stammen nicht aus einer Skalierung der Kapitel-4-Standardbox.
  */
-function waterRescue(bounds: BoundsMm): Primitive[] {
+function formationTwoWavesDiamond(bounds: BoundsMm): Primitive[] {
   const left = bounds.minX + 11;
   const centerX = (bounds.minX + bounds.maxX) / 2;
   const style = {
@@ -280,7 +280,7 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
     ];
   },
   /** I.1.1 bis I.1.4: zwei Wellen über einer Raute auf der normalen Formationshülle. */
-  'water-rescue': waterRescue,
+  'formation-two-waves-diamond': formationTwoWavesDiamond,
 
   /**
    * I.1.17 bis I.1.20: die kompakte Wasserrettungsmarke der Formation. Gegenüber der
