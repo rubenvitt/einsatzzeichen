@@ -77,6 +77,90 @@ function quartering(bounds: BoundsMm): Primitive[] {
 }
 
 /**
+ * I.1.9, I.1.10, I.1.11 und I.1.12: Wasserrettung auf der normalen 30 × 20-mm-Formation.
+ *
+ * Die beiden Wellen wechseln auf den durch die Konturkanten zurückgerechneten Mittellinien
+ * zwischen y=12…13 und y=14…15. Das acht Millimeter hohe Rautensignal ist mittig bei (16|20).
+ * Die Quelle speichert seine 0,5-mm-Kontur bereits expandiert mit Miter-Spitzen. Der Renderer
+ * zeichnet dagegen projektweit Round-Joins; deshalb werden die vier Mittellinienspitzen um
+ * 0,1036 mm nach außen kompensiert. So bleiben die sichtbaren Ink-Bounds 11,646…20,354 bzw.
+ * 15,646…24,354 mm erhalten. Das unterscheidet sich grundlegend von 4.5.8: dessen 24 × 16-mm-
+ * Box führt die Wellen über fast die gesamte Breite und setzt die Raute tiefer.
+ */
+function formationWaterRescue(bounds: BoundsMm): Primitive[] {
+  const dx = bounds.minX - 1;
+  const dy = bounds.minY - 6;
+  const point = (x: number, y: number) => `${x + dx} ${y + dy}`;
+  const outlineStyle = {
+    fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+  } as const;
+  const wave = (middleY: number): Primitive => ({
+    type: 'path', role: 'pictogram',
+    d: `M ${point(12, middleY + 0.5)} ` +
+      `C ${point(13, middleY + 0.5)} ${point(13, middleY - 0.5)} ${point(14, middleY - 0.5)} ` +
+      `C ${point(15, middleY - 0.5)} ${point(15, middleY + 0.5)} ${point(16, middleY + 0.5)} ` +
+      `C ${point(17, middleY + 0.5)} ${point(17, middleY - 0.5)} ${point(18, middleY - 0.5)} ` +
+      `C ${point(19, middleY - 0.5)} ${point(19, middleY + 0.5)} ${point(20, middleY + 0.5)}`,
+    style: outlineStyle,
+  });
+  const roundJoinTipCompensationMm = DEFAULT_STROKE_WIDTH_MM * (Math.SQRT2 - 1) / 2;
+  return [
+    wave(12.5),
+    wave(14.5),
+    {
+      type: 'polyline', role: 'pictogram',
+      points: [
+        [12 - roundJoinTipCompensationMm, 20],
+        [16, 16 - roundJoinTipCompensationMm],
+        [20 + roundJoinTipCompensationMm, 20],
+        [16, 24 + roundJoinTipCompensationMm],
+        [12 - roundJoinTipCompensationMm, 20],
+      ].map(
+        ([x, y]) => [x + dx, y + dy] as const,
+      ),
+      style: outlineStyle,
+    },
+  ];
+}
+
+/**
+ * I.1.9 Alternative: Einsatz von Wasserfahrzeugen auf derselben Formation.
+ *
+ * Der Bootsrumpf misst auf seiner zurückgerechneten Mittellinie 11…21 mm × 15…20 mm; seine
+ * expandierten Quell-Ink-Bounds liegen bei 10,75…21,25 mm × 14,75…20,25 mm. Je zwei Wellen
+ * stehen links (2…10 mm) und rechts (22…30 mm), zentriert bei y=16 und y=18. Zwischen den
+ * fertigen 0,5-mm-Konturen bleiben dadurch je 0,75 mm sichtbar frei; die 4.5.5-Box würde
+ * stattdessen Boot und Wellen in eine 24 × 16-mm-Fassung zusammendrängen.
+ */
+function formationWatercraftOperations(bounds: BoundsMm): Primitive[] {
+  const dx = bounds.minX - 1;
+  const dy = bounds.minY - 6;
+  const point = (x: number, y: number) => `${x + dx} ${y + dy}`;
+  const outlineStyle = {
+    fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+  } as const;
+  const wave = (x: number, middleY: number): Primitive => ({
+    type: 'path', role: 'pictogram',
+    d: `M ${point(x, middleY + 0.5)} ` +
+      `C ${point(x + 1, middleY + 0.5)} ${point(x + 1, middleY - 0.5)} ${point(x + 2, middleY - 0.5)} ` +
+      `C ${point(x + 3, middleY - 0.5)} ${point(x + 3, middleY + 0.5)} ${point(x + 4, middleY + 0.5)} ` +
+      `C ${point(x + 5, middleY + 0.5)} ${point(x + 5, middleY - 0.5)} ${point(x + 6, middleY - 0.5)} ` +
+      `C ${point(x + 7, middleY - 0.5)} ${point(x + 7, middleY + 0.5)} ${point(x + 8, middleY + 0.5)}`,
+    style: outlineStyle,
+  });
+  return [
+    {
+      type: 'path', role: 'pictogram',
+      d: `M ${point(11, 15)} C ${point(11, 18)} ${point(13, 20)} ` +
+        `${point(16, 20)} C ${point(19, 20)} ${point(21, 18)} ` +
+        `${point(21, 15)} Z`,
+      style: outlineStyle,
+    },
+    wave(2, 16), wave(22, 16), wave(2, 18), wave(22, 18),
+  ];
+}
+
+/**
  * Das Innenzeichen von `cbrn-protection`: zwei gekreuzte „Wattestäbchen" — je ein gerader Schaft
  * mit einem ausgefüllten Kopf am oberen Ende, wobei der Kopf **seitlich** am Schaft hängt und
  * nicht auf dessen Ende sitzt.
@@ -162,6 +246,8 @@ function crossedSwabs(cx: number, cy: number): Primitive[] {
  * an den F-Dateien, `fire-fighting` an C.1.1 bis C.1.3.
  */
 const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
+  'water-rescue': formationWaterRescue,
+  'watercraft-operations': formationWatercraftOperations,
   'formation-solid-cap-3mm': (bounds) => [{
     type: 'rect',
     role: 'pictogram',

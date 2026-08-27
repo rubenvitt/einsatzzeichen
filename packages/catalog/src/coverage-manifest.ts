@@ -55,7 +55,7 @@ import {
 import { ANHANG_N_RECIPES } from './recipes-anhang-n.js';
 import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
-import { ANHANG_I_A_RECIPES } from './recipes-anhang-i.js';
+import { ANHANG_I_A_RECIPES, ANHANG_I_E_RECIPES } from './recipes-anhang-i.js';
 
 /**
  * Migration nach Slice 2: `technical` ist für alle elf Einträge `approved`, weil das Kriterium
@@ -409,6 +409,17 @@ const ANHANG_H_TECHNICAL_REVIEW: Review = {
     'Dekontaminationsmarke statt der Human-Dekontamination aus Kapitel 4. Snapshot-, ' +
     'Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates prüfen den renderbaren Bestand; die ' +
     'fachliche Zuordnung bleibt im Domain-Review pending.',
+};
+
+const ANHANG_I_E_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-27',
+  note:
+    'I.1.9-I.1.12 passed measured formation-specific water-rescue and ' +
+    'watercraft-operations body-mark, literal recipe, primary-alternative, direct-snapshot ' +
+    'and multi-size gates. The white Hilfsorganisation body is a technical rendering ' +
+    'decision; domain classification remains pending.',
 };
 
 const ANHANG_I_A_TECHNICAL_REVIEW: Review = {
@@ -890,6 +901,9 @@ function technicalReviewFor(section: string): Review {
     return ANHANG_G_TECHNICAL_REVIEW;
   }
   if (Object.hasOwn(ANHANG_H_RECIPES, section)) return ANHANG_H_TECHNICAL_REVIEW;
+  if (Object.hasOwn(ANHANG_I_E_RECIPES, section)) {
+    return ANHANG_I_E_TECHNICAL_REVIEW;
+  }
   if (Object.hasOwn(ANHANG_I_A_RECIPES, section)) {
     return ANHANG_I_A_TECHNICAL_REVIEW;
   }
@@ -1094,6 +1108,10 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'F',
     'G',
     'H',
+    'I.1.9',
+    'I.1.10',
+    'I.1.11',
+    'I.1.12',
     'I.3.5',
     'I.3.6',
     'I.3.7',

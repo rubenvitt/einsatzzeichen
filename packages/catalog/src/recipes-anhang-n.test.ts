@@ -174,7 +174,7 @@ describe('Anhang N — Fahrzeuge weiterer Träger', () => {
     ];
     expect(Object.keys(nRecipes())).toEqual(expectedKeys);
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('N.'))).toEqual(expectedKeys);
-    expect(Object.keys(RECIPES)).toHaveLength(200);
+    expect(Object.keys(RECIPES)).toHaveLength(205);
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('N.') && key.includes('#'))).toEqual([]);
   });
 
