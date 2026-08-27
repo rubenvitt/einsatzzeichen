@@ -1,7 +1,9 @@
 # Visual QA: Anhang I.5 — Wasserrettungspersonal
 
-Datum: 27. August 2026  
-Scope: `I.5.1` bis `I.5.3`  
+Datum: 27. August 2026
+
+Scope: `I.5.1` bis `I.5.3`
+
 Status: technische Sichtprüfung in Originalauflösung bestanden; Domain-Review bleibt `pending`
 
 ## Output-only Prüfaufbau
