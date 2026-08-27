@@ -18,23 +18,26 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 505: integrierter Bestand einschließlich I-d/e/g/b/a/j/k und fünf direkte
+    // 509: integrierter Bestand einschließlich I-c/d/e/g/b/a/j/k und fünf direkte
     // I.5-Piktogramme.
-    expect(ids).toHaveLength(505);
+    expect(ids).toHaveLength(509);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
-    // dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66, G 21, H sowie
-    // I-a/I-b/I-j/I-k jeweils drei, I-d/I-g je vier, I-e fünf, C.1.3 einen, N neun und
-    // Anhang D 26 Fälle.
-    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(222);
+    // Dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66, G 21, H sowie
+    // I-a/I-b/I-j/I-k je drei, I-c/I-d/I-g je vier, I-e fünf, C.1.3 einen, N neun und D 26 Fälle.
+    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(226);
     expect(ids.filter((id) => id.startsWith('recipe.I.'))).toEqual([
+      'recipe.I.1.1',
       'recipe.I.1.10',
       'recipe.I.1.11',
       'recipe.I.1.12',
       'recipe.I.1.17',
       'recipe.I.1.18',
       'recipe.I.1.19',
+      'recipe.I.1.2',
       'recipe.I.1.20',
+      'recipe.I.1.3',
+      'recipe.I.1.4',
       'recipe.I.1.5',
       'recipe.I.1.6',
       'recipe.I.1.7',
@@ -65,13 +68,17 @@ describe('vollständige Renderfallmenge', () => {
       'recipe.H.3',
     ]);
     expect(ids.filter((id) => id.startsWith('recipe.I.1.'))).toEqual([
+      'recipe.I.1.1',
       'recipe.I.1.10',
       'recipe.I.1.11',
       'recipe.I.1.12',
       'recipe.I.1.17',
       'recipe.I.1.18',
       'recipe.I.1.19',
+      'recipe.I.1.2',
       'recipe.I.1.20',
+      'recipe.I.1.3',
+      'recipe.I.1.4',
       'recipe.I.1.5',
       'recipe.I.1.6',
       'recipe.I.1.7',

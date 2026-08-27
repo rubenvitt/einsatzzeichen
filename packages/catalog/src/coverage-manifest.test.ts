@@ -74,7 +74,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 524 Zeilen mit 288 Elementdarstellungen', () => {
+  it('enthält exakt 528 Zeilen mit 288 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -104,10 +104,10 @@ describe('Coverage-Manifest', () => {
       // `alternative` — die Zeile zählt einzeln, weil das Manifest Darstellungen zählt und nicht
       // Abschnitte, weil F.1.3 dort noch bewusst offen blieb; F-b baut es mit `foot-band`.
       // F-d ergänzt F.2.10 bis F.2.17 als acht reine Anwendungen des Fahrzeugvertrags.
-      // G ergänzt 21 Rezepte, H, I-a, I-b, I-j und I-k je drei, I-d und I-g je vier, I-e fünf,
-      // C.1.3 ein weiteres und N neun.
+      // G ergänzt 21 Rezepte, H, I-a, I-b, I-j und I-k je drei, I-c, I-d und I-g je vier,
+      // I-e fünf, C.1.3 eines und N neun.
       // Anhang D ergänzt 26 neue Rezepte; D.3.7 bleibt eine Migration desselben Schlüssels.
-      'composition-recipe': 222,
+      'composition-recipe': 226,
       // 269 Piktogramme plus acht Manifest-Organisationen, vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
@@ -115,7 +115,7 @@ describe('Coverage-Manifest', () => {
       // Strichhülle vermessen ist.
       element: 288,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(524);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(528);
     expect(elementRows).toHaveLength(288);
     expect(pictogramRows).toHaveLength(269);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
@@ -434,6 +434,58 @@ describe('Coverage-Manifest', () => {
       Array.from({ length: 8 }, (_, index) => `I.5.${index + 1}`),
     ));
     expect(COVERAGE_MANIFEST.scope).not.toContain('I.5');
+  });
+
+  it('führt I.1.1 bis I.1.4 einzeln und ohne erfundene Fachfreigabe', () => {
+    const expectedSections = new Set(['I.1.1', 'I.1.2', 'I.1.3', 'I.1.4']);
+    const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
+      expectedSections.has(entry.sourceId.slice('bbk-babz-2025:'.length)),
+    );
+    expect(rows.map((entry) => ({
+      section: entry.sourceId.slice('bbk-babz-2025:'.length),
+      implementation: entry.implementation,
+      referenceAsset: entry.referenceAsset,
+    }))).toEqual([
+      {
+        section: 'I.1.1', implementation: 'recipe.I.1.1',
+        referenceAsset: 'I.1.1_Wasserrettungstrupp.svg',
+      },
+      {
+        section: 'I.1.2', implementation: 'recipe.I.1.2',
+        referenceAsset: 'I.1.2_Wasserrettungsgruppe.svg',
+      },
+      {
+        section: 'I.1.3', implementation: 'recipe.I.1.3',
+        referenceAsset: 'I.1.3_Wasserrettungszug.svg',
+      },
+      {
+        section: 'I.1.4', implementation: 'recipe.I.1.4',
+        referenceAsset: 'I.1.4_Wasserrettungsverband.svg',
+      },
+    ]);
+
+    const expectedReview = {
+      status: 'approved',
+      reviewer: 'rv',
+      date: '2026-08-27',
+      note:
+        'I.1.1-I.1.4 passed literal strength and technical-head geometry, the independently ' +
+        'measured water-rescue formation mark, recipe, direct-snapshot and multi-size gates. ' +
+        'No organization or global Verband strength is inferred; domain classification remains pending.',
+    };
+    for (const row of rows) {
+      expect(row.coverage).toBe('composition-recipe');
+      expect(row.testEvidence).toEqual(['body-fingerprint', 'svg-snapshot']);
+      expect(row.review.technical).toEqual(expectedReview);
+      expect(row.review.domain).toEqual({ status: 'pending' });
+    }
+
+    expect(rows).toHaveLength(4);
+    for (const section of ['I.1.1', 'I.1.2', 'I.1.3', 'I.1.4']) {
+      expect(COVERAGE_MANIFEST.scope).toContain(section);
+    }
+    expect(COVERAGE_MANIFEST.scope).not.toContain('I');
+    expect(COVERAGE_MANIFEST.scope).not.toContain('I.1');
   });
 
   it('bindet C.1.3 an das aktuelle technische Review und nur an seinen eigenen Scope', () => {
@@ -878,6 +930,10 @@ describe('Coverage-Manifest', () => {
       'F',
       'G',
       'H',
+      'I.1.1',
+      'I.1.2',
+      'I.1.3',
+      'I.1.4',
       'I.1.5',
       'I.1.6',
       'I.1.7',

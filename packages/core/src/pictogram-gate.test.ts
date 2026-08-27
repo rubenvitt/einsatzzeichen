@@ -627,6 +627,9 @@ describe('Clipping-Gate', () => {
       strengthHead: () => {
         throw new Error('Für diesen Test nicht aufgerufen.');
       },
+      technicalHeadMark: () => {
+        throw new Error('Für diesen Test nicht aufgerufen.');
+      },
       functionRole: () => {
         throw new Error('Für diesen Test nicht aufgerufen.');
       },

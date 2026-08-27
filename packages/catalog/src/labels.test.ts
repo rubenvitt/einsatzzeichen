@@ -28,6 +28,14 @@ describe('semantische Zeichenbeschreibungen', () => {
     );
   });
 
+  it('benennt den technischen Einzelbalken geometrisch und ohne Stärkegrad', () => {
+    expect(describeSymbolSpec({
+      kind: 'formation', technicalHeadMark: 'single-vertical-bar',
+    })).toBe(
+      'Grundzeichen: Taktische Formation. Technische Kopfmarke: Einzelner Vertikalbalken.',
+    );
+  });
+
   it('beschreibt das Trägerkürzel unterhalb des Körpers wie das im Körper', () => {
     // Die vierte Zone unterscheidet sich in Lage und Farbe, nicht in der Bedeutung. Für eine
     // Vorlesestimme ist das derselbe Sachverhalt — sonst verlöre E.2.27 seine einzige
@@ -240,6 +248,7 @@ describe('semantische Zeichenbeschreibungen', () => {
       'formation-opposed-triangles-top',
       'formation-chevron-top',
     ] as const;
+    const lfh481TechnicalIds = ['formation-two-waves-diamond'] as const;
     expect(TECHNICAL_BODY_MARK_IDS).toEqual([
       ...task4TechnicalIds,
       ...task5TechnicalIds,
@@ -247,6 +256,7 @@ describe('semantische Zeichenbeschreibungen', () => {
       ...task2RoleTechnicalIds,
       ...task1AnhangHTechnicalIds,
       ...task1AnhangNTechnicalIds,
+      ...lfh481TechnicalIds,
       ...lfh485TechnicalIds,
       ...task1AnhangITechnicalIds,
     ]);
@@ -257,6 +267,8 @@ describe('semantische Zeichenbeschreibungen', () => {
       'formation-solid-cap-4mm-three-hole-row':
         'Schwarze Formationskappe, 4 mm hoch, mit drei Löchern in einer Reihe',
       'double-wave-inner-diamond-8mm': 'Doppelwelle mit Innenraute (8 mm)',
+      'formation-two-waves-diamond':
+        'Zwei Wellenlinien über einer Raute in der Formationshülle',
       'formation-water-rescue-compact':
         'Kompakte Wasserrettungsmarke mit Doppelwelle und scharfkantigem Rautenring',
       'formation-water-rescue-lower-zone':
