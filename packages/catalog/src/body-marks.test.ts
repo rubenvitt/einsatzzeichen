@@ -374,6 +374,24 @@ describe('bodyMark() — die vermessenen Wasserrettungs-Anhänger', () => {
         .toThrow(/4.*5,75.*31.*26/);
     }
   });
+
+  it('lehnt nicht-endliche Anhängerhüllen vor den Toleranzvergleichen fail-closed ab', () => {
+    const ids = [
+      'trailer-water-rescue', 'trailer-diving', 'trailer-boat-hull',
+    ] as BodyMarkId[];
+    for (const coordinate of ['minX', 'minY', 'maxX', 'maxY'] as const) {
+      const nonFiniteBounds = { ...trailerBodyMm, [coordinate]: Number.NaN } as BoundsMm;
+      for (const id of ids) {
+        expect(() => bodyMarkWithContext(id, { kind: 'trailer' }, nonFiniteBounds), id)
+          .toThrow(/vier endliche absolute Hüllengrenzen/);
+      }
+    }
+    expect(() => bodyMarkWithContext(
+      'trailer-diving',
+      { kind: 'trailer' },
+      { ...trailerBodyMm, maxY: Number.POSITIVE_INFINITY },
+    )).toThrow(/vier endliche absolute Hüllengrenzen/);
+  });
 });
 
 function cateringPath(cx: number, cy: number): Primitive {

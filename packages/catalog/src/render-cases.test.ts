@@ -18,7 +18,7 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 478: der integrierte Hauptbestand plus vier I.1-, vier I.2- und drei I.4-Rezeptfälle.
+    // 489: 478 Bestandfälle plus vier I.1-, vier I.2- und drei I.4-Rezeptfälle.
     expect(ids).toHaveLength(489);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,

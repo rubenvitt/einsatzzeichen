@@ -120,7 +120,7 @@ describe('Coverage-Manifest', () => {
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
   });
 
-  it('führt I-g sowie I-b/I-a mit belegter Quelle und getrennten vollständigen Technikreviews', () => {
+  it('führt I-g, I-b und I-a mit belegter Quelle und getrennten vollständigen Technikreviews', () => {
     const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
       entry.sourceId.startsWith('bbk-babz-2025:I.1.') ||
       entry.sourceId.startsWith('bbk-babz-2025:I.2.') ||
@@ -153,7 +153,14 @@ describe('Coverage-Manifest', () => {
       reviewer: 'rv',
       date: '2026-08-26',
       note:
-        'I.2.4-I.2.7 passed the measured trailer shell and drawbar, explicitly absent chassis, trailer-only technical body marks, literal recipes, direct-snapshot and multi-size gates. I.3.5-I.3.7 retain their measured inset-hull and 7.99 mm center-profile. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
+        'I.3.5-I.3.7 passed measured inset-hull, 7.99 mm center-profile, literal recipe, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
+    };
+    const expectedIBReview = {
+      status: 'approved',
+      reviewer: 'rv',
+      date: '2026-08-27',
+      note:
+        'I.2.4-I.2.7 passed the measured trailer shell and drawbar, explicitly absent chassis, trailer-only technical body marks, literal recipes, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
     };
     const expectedIGReview = {
       status: 'approved',
@@ -170,7 +177,11 @@ describe('Coverage-Manifest', () => {
     for (const row of rows) {
       expect(row.coverage).toBe('composition-recipe');
       expect(row.review.technical).toEqual(
-        row.sourceId.startsWith('bbk-babz-2025:I.1.') ? expectedIGReview : expectedIAReview,
+        row.sourceId.startsWith('bbk-babz-2025:I.1.')
+          ? expectedIGReview
+          : row.sourceId.startsWith('bbk-babz-2025:I.2.')
+            ? expectedIBReview
+            : expectedIAReview,
       );
       expect(row.review.domain.status).toBe('pending');
     }

@@ -1714,11 +1714,19 @@ export function bodyMark(
     );
   }
 
-  const widthMm = bodyBoundsMm.maxX - bodyBoundsMm.minX;
-  const heightMm = bodyBoundsMm.maxY - bodyBoundsMm.minY;
   const isMeasuredTrailerTechnicalMark =
     context.kind === 'trailer' && context.bodyVariant === undefined &&
     LFH_487_TRAILER_MARK_IDS.has(id);
+  if (
+    isMeasuredTrailerTechnicalMark &&
+    ![bodyBoundsMm.minX, bodyBoundsMm.minY, bodyBoundsMm.maxX, bodyBoundsMm.maxY]
+      .every(Number.isFinite)
+  ) {
+    throw new Error(
+      `Die technische Anhängermarke "${id}" verlangt vier endliche absolute Hüllengrenzen ` +
+        '(minX, minY, maxX, maxY).',
+    );
+  }
   if (
     isMeasuredTrailerTechnicalMark && (
       Math.abs(bodyBoundsMm.minX - 4) > BODY_TOLERANCE_MM ||
@@ -1732,6 +1740,8 @@ export function bodyMark(
         'Hülle 4 / 5,75 / 31 / 26 mm belegt; gleich große verschobene Anhängerhüllen sind nicht vermessen.',
     );
   }
+  const widthMm = bodyBoundsMm.maxX - bodyBoundsMm.minX;
+  const heightMm = bodyBoundsMm.maxY - bodyBoundsMm.minY;
   const expected = context.kind === 'formation'
     ? { width: 30, height: 20, label: '30 × 20 mm' }
     : context.kind === 'person'
