@@ -749,7 +749,9 @@ BABZ-Referenz wird wegen ungeklärter Nutzungsgrundlage weder committed noch ver
 ## LFH-485: Strömungsrettung und getrennte Luftmarken aus Anhang I-g
 
 LFH-485 ergänzt genau `I.1.17` bis `I.1.20` als vier weiße Formationsrezepte. Die kompakte
-Wasserrettungsmarke ist an diesen Dateien separat vermessen. Das Dreieckspaar der
+Wasserrettungsmarke ist an diesen Dateien separat vermessen und als
+`formation-water-rescue-lower-zone` klar von `water-rescue` (I-e) sowie
+`formation-water-rescue-compact` (I-d) getrennt. Das Dreieckspaar der
 luftunterstützten Wasserrettung und der einzelne Winkel des Drohnentrupps besitzen getrennte,
 rein geometrische technische IDs; die kombinierte Darstellung aus F.1.16 wird nicht übernommen.
 

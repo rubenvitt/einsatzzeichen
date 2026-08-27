@@ -174,8 +174,9 @@ describe('Anhang N — Fahrzeuge weiterer Träger', () => {
     ];
     expect(Object.keys(nRecipes())).toEqual(expectedKeys);
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('N.'))).toEqual(expectedKeys);
-    // LFH-482, LFH-485, LFH-487 und LFH-488 ergänzen den globalen Bestand; N bleibt bei neun.
-    expect(Object.keys(RECIPES)).toHaveLength(215);
+    // LFH-482, LFH-483, LFH-485, LFH-486, LFH-487 und LFH-488 ergänzen den globalen Bestand;
+    // N bleibt bei neun.
+    expect(Object.keys(RECIPES)).toHaveLength(223);
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('N.') && key.includes('#'))).toEqual([]);
   });
 

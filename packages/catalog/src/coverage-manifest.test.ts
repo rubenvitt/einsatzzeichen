@@ -74,7 +74,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 517 Zeilen mit 288 Elementdarstellungen', () => {
+  it('enthält exakt 525 Zeilen mit 288 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -104,10 +104,10 @@ describe('Coverage-Manifest', () => {
       // `alternative` — die Zeile zählt einzeln, weil das Manifest Darstellungen zählt und nicht
       // Abschnitte, weil F.1.3 dort noch bewusst offen blieb; F-b baut es mit `foot-band`.
       // F-d ergänzt F.2.10 bis F.2.17 als acht reine Anwendungen des Fahrzeugvertrags.
-      // G ergänzt 21 Rezepte, H, I-a und I-j je drei, I-d, I-g und I-b je vier, C.1.3 eins und
-      // N neun.
+      // G ergänzt 21 Rezepte, H, I-a und I-j je drei, I-d und I-g je vier, I-e fünf, I-b sieben,
+      // C.1.3 ein weiteres und N neun.
       // Anhang D ergänzt 26 neue Rezepte; D.3.7 bleibt eine Migration desselben Schlüssels.
-      'composition-recipe': 215,
+      'composition-recipe': 223,
       // 269 Piktogramme plus acht Manifest-Organisationen, vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
@@ -115,55 +115,214 @@ describe('Coverage-Manifest', () => {
       // Strichhülle vermessen ist.
       element: 288,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(517);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(525);
     expect(elementRows).toHaveLength(288);
     expect(pictogramRows).toHaveLength(269);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
   });
 
-  it('führt I-d, I-g, I-b und I-a mit belegter Quelle und getrennten Technikreviews', () => {
-    const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
-      /^bbk-babz-2025:I\.(?:1\.(?:[5-8]|1[7-9]|20)|2\.[4-7]|3\.[5-7])$/.test(entry.sourceId),
-    );
+  it('führt I-d, I-e, I-g, I-b, I-a und I-j mit getrennten Technikreviews', () => {
+    const sliceSourceIds = new Set([
+      'bbk-babz-2025:I.1.5',
+      'bbk-babz-2025:I.1.6',
+      'bbk-babz-2025:I.1.7',
+      'bbk-babz-2025:I.1.8',
+      'bbk-babz-2025:I.1.9',
+      'bbk-babz-2025:I.1.10',
+      'bbk-babz-2025:I.1.11',
+      'bbk-babz-2025:I.1.12',
+      'bbk-babz-2025:I.1.17',
+      'bbk-babz-2025:I.1.18',
+      'bbk-babz-2025:I.1.19',
+      'bbk-babz-2025:I.1.20',
+      'bbk-babz-2025:I.2.1',
+      'bbk-babz-2025:I.2.2',
+      'bbk-babz-2025:I.2.3',
+      'bbk-babz-2025:I.2.4',
+      'bbk-babz-2025:I.2.5',
+      'bbk-babz-2025:I.2.6',
+      'bbk-babz-2025:I.2.7',
+      'bbk-babz-2025:I.3.5',
+      'bbk-babz-2025:I.3.6',
+      'bbk-babz-2025:I.3.7',
+      'bbk-babz-2025:I.4.1',
+      'bbk-babz-2025:I.4.2',
+      'bbk-babz-2025:I.4.3',
+    ]);
+    const rows = COVERAGE_MANIFEST.entries.filter((entry) => sliceSourceIds.has(entry.sourceId));
     expect(
       rows.map((entry) => ({
         section: entry.sourceId.slice('bbk-babz-2025:'.length),
+        variant: entry.variant,
         referenceAsset: entry.referenceAsset,
       })).sort((left, right) => left.section.localeCompare(right.section, 'de', { numeric: true })),
     ).toEqual([
-      { section: 'I.1.5', referenceAsset: 'I.1.5_Zugtrupp Wasserrettungszug.svg' },
-      { section: 'I.1.6', referenceAsset: 'I.1.6_Führungstrupp Wasserrettung.svg' },
-      { section: 'I.1.7', referenceAsset: 'I.1.7_Führungsgruppe Wasserrettung.svg' },
-      { section: 'I.1.8', referenceAsset: 'I.1.8_Führungsstaffel Wasserrettung.svg' },
-      { section: 'I.1.17', referenceAsset: 'I.1.17_Strömungsrettungstrupp.svg' },
-      { section: 'I.1.18', referenceAsset: 'I.1.18_Strömungsrettungsgruppe.svg' },
+      {
+        section: 'I.1.5',
+        variant: 'primary',
+        referenceAsset: 'I.1.5_Zugtrupp Wasserrettungszug.svg',
+      },
+      {
+        section: 'I.1.6',
+        variant: 'primary',
+        referenceAsset: 'I.1.6_Führungstrupp Wasserrettung.svg',
+      },
+      {
+        section: 'I.1.7',
+        variant: 'primary',
+        referenceAsset: 'I.1.7_Führungsgruppe Wasserrettung.svg',
+      },
+      {
+        section: 'I.1.8',
+        variant: 'primary',
+        referenceAsset: 'I.1.8_Führungsstaffel Wasserrettung.svg',
+      },
+      {
+        section: 'I.1.9',
+        variant: 'primary',
+        referenceAsset: 'I.1.9_Bootstrupp Wasserrettungszug.svg',
+      },
+      {
+        section: 'I.1.9',
+        variant: 'alternative',
+        referenceAsset: 'I.1.9_Bootstrupp Wasserrettungszug_Alternative.svg',
+      },
+      {
+        section: 'I.1.10',
+        variant: 'primary',
+        referenceAsset: 'I.1.10_Bootsgruppe Wasserrettung.svg',
+      },
+      {
+        section: 'I.1.11',
+        variant: 'primary',
+        referenceAsset: 'I.1.11_Tauchtrupp.svg',
+      },
+      {
+        section: 'I.1.12',
+        variant: 'primary',
+        referenceAsset: 'I.1.12_Tauchgruppe.svg',
+      },
+      {
+        section: 'I.1.17',
+        variant: 'primary',
+        referenceAsset: 'I.1.17_Strömungsrettungstrupp.svg',
+      },
+      {
+        section: 'I.1.18',
+        variant: 'primary',
+        referenceAsset: 'I.1.18_Strömungsrettungsgruppe.svg',
+      },
       {
         section: 'I.1.19',
+        variant: 'primary',
         referenceAsset: 'I.1.19_Trupp Luftunterstützte Wasserrettung.svg',
       },
-      { section: 'I.1.20', referenceAsset: 'I.1.20_Trupp Drohne.svg' },
-      { section: 'I.2.4', referenceAsset: 'I.2.4_Anhänger Wasserrettung.svg' },
-      { section: 'I.2.5', referenceAsset: 'I.2.5_Anhänger Tauchen.svg' },
-      { section: 'I.2.6', referenceAsset: 'I.2.6_Anhänger Strömungsrettung.svg' },
-      { section: 'I.2.7', referenceAsset: 'I.2.7_Bootsanhänger.svg' },
-      { section: 'I.3.5', referenceAsset: 'I.3.5_Mehrzweckboot.svg' },
-      { section: 'I.3.6', referenceAsset: 'I.3.6_Mehrzweckarbeitsboot.svg' },
-      { section: 'I.3.7', referenceAsset: 'I.3.7_Mehrzweckponton.svg' },
+      {
+        section: 'I.1.20',
+        variant: 'primary',
+        referenceAsset: 'I.1.20_Trupp Drohne.svg',
+      },
+      {
+        section: 'I.2.1',
+        variant: 'primary',
+        referenceAsset: 'I.2.1_Gerätewagen Wasserrettung_geländegängig.svg',
+      },
+      {
+        section: 'I.2.2',
+        variant: 'primary',
+        referenceAsset: 'I.2.2_Gerätewagen Tauchen.svg',
+      },
+      {
+        section: 'I.2.3',
+        variant: 'primary',
+        referenceAsset: 'I.2.3_Gerätewagen Strömungsrettung.svg',
+      },
+      {
+        section: 'I.2.4',
+        variant: 'primary',
+        referenceAsset: 'I.2.4_Anhänger Wasserrettung.svg',
+      },
+      {
+        section: 'I.2.5',
+        variant: 'primary',
+        referenceAsset: 'I.2.5_Anhänger Tauchen.svg',
+      },
+      {
+        section: 'I.2.6',
+        variant: 'primary',
+        referenceAsset: 'I.2.6_Anhänger Strömungsrettung.svg',
+      },
+      {
+        section: 'I.2.7',
+        variant: 'primary',
+        referenceAsset: 'I.2.7_Bootsanhänger.svg',
+      },
+      {
+        section: 'I.3.5',
+        variant: 'primary',
+        referenceAsset: 'I.3.5_Mehrzweckboot.svg',
+      },
+      {
+        section: 'I.3.6',
+        variant: 'primary',
+        referenceAsset: 'I.3.6_Mehrzweckarbeitsboot.svg',
+      },
+      {
+        section: 'I.3.7',
+        variant: 'primary',
+        referenceAsset: 'I.3.7_Mehrzweckponton.svg',
+      },
+      {
+        section: 'I.4.1',
+        variant: 'primary',
+        referenceAsset: 'I.4.1_Wasserrettungsstation_ortsgebunden.svg',
+      },
+      {
+        section: 'I.4.2',
+        variant: 'primary',
+        referenceAsset: 'I.4.2_Slip-Stelle.svg',
+      },
+      {
+        section: 'I.4.3',
+        variant: 'primary',
+        referenceAsset: 'I.4.3_Anlegestelle für Boote.svg',
+      },
     ]);
 
-    const expectedIAReview = {
+    const expectedLandReview = {
+      status: 'approved',
+      reviewer: 'rv',
+      date: '2026-08-27',
+      note:
+        'I.2.1-I.2.3 passed measured vehicle-land, category-specific water-rescue, literal recipe, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; labels, organization and domain classification remain pending.',
+    };
+    const expectedWaterReview = {
       status: 'approved',
       reviewer: 'rv',
       date: '2026-08-26',
       note:
         'I.3.5-I.3.7 passed measured inset-hull, 7.99 mm center-profile, literal recipe, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
     };
-    const expectedIBReview = {
+    const expectedTrailerReview = {
       status: 'approved',
       reviewer: 'rv',
       date: '2026-08-27',
       note:
         'I.2.4-I.2.7 passed the measured trailer shell and drawbar, explicitly absent chassis, trailer-only technical body marks, literal recipes, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
+    };
+    const expectedIEReview = {
+      status: 'approved',
+      reviewer: 'rv',
+      date: '2026-08-27',
+      note:
+        'I.1.9-I.1.12 passed measured formation-specific water-rescue and watercraft-operations body-mark, literal recipe, primary-alternative, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending.',
+    };
+    const expectedIJReview = {
+      status: 'approved',
+      reviewer: 'rv',
+      date: '2026-08-27',
+      note:
+        'I.4.1-I.4.3 passed independently measured circle and body-mark geometry, fail-closed kind/variant/bounds, literal recipe, direct-snapshot and multi-size gates. I.4.1 reuses circle-12/raised-gable as geometry only; white Hilfsorganisation bodies and all domain classifications remain pending.',
     };
     const expectedIdReview = {
       status: 'approved',
@@ -177,7 +336,9 @@ describe('Coverage-Manifest', () => {
       reviewer: 'rv',
       date: '2026-08-27',
       note:
-        'I.1.17-I.1.20 passed measured formation body marks, 16 mm center-baseline, 2.5 mm ' +
+        'I.1.17-I.1.20 passed the separately registered formation-water-rescue-lower-zone body ' +
+        'mark, distinct from the I-e water-rescue and I-d compact geometries, plus 16 mm ' +
+        'center-baseline, 2.5 mm ' +
         'cap-height and 29 mm output-box contracts, literal recipe, direct-snapshot, multi-size, ' +
         'coverage and ' +
         'output-only visual QA gates. Opposed triangles and chevron remain separate geometric ' +
@@ -195,34 +356,66 @@ describe('Coverage-Manifest', () => {
       'bbk-babz-2025:I.1.19',
       'bbk-babz-2025:I.1.20',
     ]);
-    const ibSourceIds = new Set([
+    const ieSourceIds = new Set([
+      'bbk-babz-2025:I.1.9',
+      'bbk-babz-2025:I.1.10',
+      'bbk-babz-2025:I.1.11',
+      'bbk-babz-2025:I.1.12',
+    ]);
+    const ibLandSourceIds = new Set([
+      'bbk-babz-2025:I.2.1',
+      'bbk-babz-2025:I.2.2',
+      'bbk-babz-2025:I.2.3',
+    ]);
+    const ibTrailerSourceIds = new Set([
       'bbk-babz-2025:I.2.4',
       'bbk-babz-2025:I.2.5',
       'bbk-babz-2025:I.2.6',
       'bbk-babz-2025:I.2.7',
     ]);
-    expect(rows).toHaveLength(15);
+    const iaSourceIds = new Set([
+      'bbk-babz-2025:I.3.5',
+      'bbk-babz-2025:I.3.6',
+      'bbk-babz-2025:I.3.7',
+    ]);
+    const ijSourceIds = new Set([
+      'bbk-babz-2025:I.4.1',
+      'bbk-babz-2025:I.4.2',
+      'bbk-babz-2025:I.4.3',
+    ]);
+    expect(rows).toHaveLength(26);
     for (const row of rows) {
       expect(row.coverage).toBe('composition-recipe');
+      expect(row.testEvidence).toEqual(['body-fingerprint', 'svg-snapshot']);
       expect(row.review.technical).toEqual(
         idSourceIds.has(row.sourceId)
           ? expectedIdReview
-          : igSourceIds.has(row.sourceId)
-            ? expectedIGReview
-            : ibSourceIds.has(row.sourceId)
-              ? expectedIBReview
-              : expectedIAReview,
+          : ieSourceIds.has(row.sourceId)
+            ? expectedIEReview
+            : igSourceIds.has(row.sourceId)
+              ? expectedIGReview
+              : ibLandSourceIds.has(row.sourceId)
+                ? expectedLandReview
+                : ibTrailerSourceIds.has(row.sourceId)
+                  ? expectedTrailerReview
+                  : iaSourceIds.has(row.sourceId)
+                    ? expectedWaterReview
+                    : ijSourceIds.has(row.sourceId)
+                      ? expectedIJReview
+                      : undefined,
       );
       expect(row.review.domain.status).toBe('pending');
     }
 
     expect(COVERAGE_MANIFEST.scope.filter((section) =>
-      /^I\.(?:1\.(?:[5-8]|1[7-9]|20)|2\.[4-7]|3\.[5-7])$/.test(section),
+      /^I\.(?:1\.(?:[5-9]|1[0-2]|1[7-9]|20)|2\.[1-7]|3\.[5-7]|4\.[1-3])$/.test(section),
     )).toEqual([
       'I.1.5', 'I.1.6', 'I.1.7', 'I.1.8',
+      'I.1.9', 'I.1.10', 'I.1.11', 'I.1.12',
       'I.1.17', 'I.1.18', 'I.1.19', 'I.1.20',
-      'I.2.4', 'I.2.5', 'I.2.6', 'I.2.7',
+      'I.2.1', 'I.2.2', 'I.2.3', 'I.2.4', 'I.2.5', 'I.2.6', 'I.2.7',
       'I.3.5', 'I.3.6', 'I.3.7',
+      'I.4.1', 'I.4.2', 'I.4.3',
     ]);
     expect(COVERAGE_MANIFEST.scope).not.toContain('I');
     expect(COVERAGE_MANIFEST.scope).not.toContain('I.1');
@@ -743,10 +936,17 @@ describe('Coverage-Manifest', () => {
       'I.1.6',
       'I.1.7',
       'I.1.8',
+      'I.1.9',
+      'I.1.10',
+      'I.1.11',
+      'I.1.12',
       'I.1.17',
       'I.1.18',
       'I.1.19',
       'I.1.20',
+      'I.2.1',
+      'I.2.2',
+      'I.2.3',
       'I.2.4',
       'I.2.5',
       'I.2.6',

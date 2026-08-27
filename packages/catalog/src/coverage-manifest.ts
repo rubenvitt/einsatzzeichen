@@ -57,6 +57,7 @@ import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
 import {
   ANHANG_I_D_RECIPES,
+  ANHANG_I_E_RECIPES,
   ANHANG_I_G_RECIPES,
   ANHANG_I_B_RECIPES,
   ANHANG_I_A_RECIPES,
@@ -431,6 +432,17 @@ const ANHANG_H_TECHNICAL_REVIEW: Review = {
     'fachliche Zuordnung bleibt im Domain-Review pending.',
 };
 
+const ANHANG_I_E_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-27',
+  note:
+    'I.1.9-I.1.12 passed measured formation-specific water-rescue and ' +
+    'watercraft-operations body-mark, literal recipe, primary-alternative, direct-snapshot ' +
+    'and multi-size gates. The white Hilfsorganisation body is a technical rendering ' +
+    'decision; domain classification remains pending.',
+};
+
 const ANHANG_I_A_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
@@ -439,7 +451,7 @@ const ANHANG_I_A_TECHNICAL_REVIEW: Review = {
     'I.3.5-I.3.7 passed measured inset-hull, 7.99 mm center-profile, literal recipe, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
 };
 
-const ANHANG_I_B_TECHNICAL_REVIEW: Review = {
+const ANHANG_I_B_TRAILER_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
   date: '2026-08-27',
@@ -459,7 +471,9 @@ const ANHANG_I_G_TECHNICAL_REVIEW: Review = {
   reviewer: 'rv',
   date: '2026-08-27',
   note:
-    'I.1.17-I.1.20 passed measured formation body marks, 16 mm center-baseline, 2.5 mm ' +
+    'I.1.17-I.1.20 passed the separately registered formation-water-rescue-lower-zone body ' +
+    'mark, distinct from the I-e water-rescue and I-d compact geometries, plus 16 mm ' +
+    'center-baseline, 2.5 mm ' +
     'cap-height and 29 mm output-box contracts, literal recipe, direct-snapshot, multi-size, ' +
     'coverage and ' +
     'output-only visual QA gates. Opposed triangles and chevron remain separate geometric ' +
@@ -475,6 +489,14 @@ const ANHANG_I_J_TECHNICAL_REVIEW: Review = {
     'circle-12/raised-gable as geometry only; white Hilfsorganisation bodies and all domain ' +
     'classifications remain pending.',
 };
+const ANHANG_I_B_LAND_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-27',
+  note:
+    'I.2.1-I.2.3 passed measured vehicle-land, category-specific water-rescue, literal recipe, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; labels, organization and domain classification remain pending.',
+};
+
 /** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
 function reviewFor(
   sourceId: string,
@@ -949,11 +971,20 @@ function technicalReviewFor(section: string): Review {
   if (Object.hasOwn(ANHANG_I_D_RECIPES, section)) {
     return ANHANG_I_D_TECHNICAL_REVIEW;
   }
+  if (Object.hasOwn(ANHANG_I_E_RECIPES, section)) {
+    return ANHANG_I_E_TECHNICAL_REVIEW;
+  }
   if (Object.hasOwn(ANHANG_I_G_RECIPES, section)) {
     return ANHANG_I_G_TECHNICAL_REVIEW;
   }
-  if (Object.hasOwn(ANHANG_I_B_RECIPES, section)) return ANHANG_I_B_TECHNICAL_REVIEW;
-  if (Object.hasOwn(ANHANG_I_A_RECIPES, section)) return ANHANG_I_A_TECHNICAL_REVIEW;
+  if (Object.hasOwn(ANHANG_I_B_RECIPES, section)) {
+    return section === 'I.2.1' || section === 'I.2.2' || section === 'I.2.3'
+      ? ANHANG_I_B_LAND_TECHNICAL_REVIEW
+      : ANHANG_I_B_TRAILER_TECHNICAL_REVIEW;
+  }
+  if (Object.hasOwn(ANHANG_I_A_RECIPES, section)) {
+    return ANHANG_I_A_TECHNICAL_REVIEW;
+  }
   if (Object.hasOwn(ANHANG_I_J_RECIPES, section)) {
     return ANHANG_I_J_TECHNICAL_REVIEW;
   }
@@ -1164,10 +1195,17 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'I.1.6',
     'I.1.7',
     'I.1.8',
+    'I.1.9',
+    'I.1.10',
+    'I.1.11',
+    'I.1.12',
     'I.1.17',
     'I.1.18',
     'I.1.19',
     'I.1.20',
+    'I.2.1',
+    'I.2.2',
+    'I.2.3',
     'I.2.4',
     'I.2.5',
     'I.2.6',

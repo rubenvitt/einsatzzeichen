@@ -157,6 +157,77 @@ describe('bodyMark() — LFH-488 Anhang I.4 Wasserrettungsorte', () => {
   );
 });
 
+describe('bodyMark() — Wasserrettungsfassung der Anhang-I-Landfahrzeuge', () => {
+  const wave = (d: string): Primitive => ({
+    type: 'path', role: 'pictogram', d, style: outlineStyle,
+  });
+  const diamond = (points: readonly (readonly [number, number])[]): Primitive => ({
+    type: 'polyline', role: 'pictogram', points, closed: true, style: outlineStyle,
+  });
+
+  it('zeichnet die groessere Fassung nur fuer das dreiraedrige Kategorie-2-Fahrzeug', () => {
+    expect(bodyMarkWithContext(
+      'water-rescue',
+      { kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-2' },
+      landBodyMm,
+    )).toEqual([
+      wave(
+        'M 12 12 C 13 11, 14 13, 15 12 C 16 11, 17 13, 18 12 ' +
+        'C 18.667 11.333, 19.333 11.333, 20 12',
+      ),
+      wave(
+        'M 12 14 C 13 13, 14 15, 15 14 C 16 13, 17 15, 18 14 ' +
+        'C 18.667 13.333, 19.333 13.333, 20 14',
+      ),
+      diamond([[16, 16], [20, 20], [16, 24], [12, 20]]),
+    ]);
+  });
+
+  it('zeichnet die kleinere tiefere Fassung nur fuer Kategorie 1', () => {
+    expect(bodyMarkWithContext(
+      'water-rescue',
+      { kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-1' },
+      landBodyMm,
+    )).toEqual([
+      wave(
+        'M 12.818 14.5 C 13.614 13.704, 14.409 15.296, 15.205 14.5 ' +
+        'C 16 13.704, 16.796 15.296, 17.591 14.5 ' +
+        'C 18.121 13.97, 18.652 13.97, 19.182 14.5',
+      ),
+      wave(
+        'M 12.818 16.25 C 13.614 15.454, 14.409 17.046, 15.205 16.25 ' +
+        'C 16 15.454, 16.796 17.046, 17.591 16.25 ' +
+        'C 18.121 15.72, 18.652 15.72, 19.182 16.25',
+      ),
+      diamond([[16, 17.636], [19.182, 20.818], [16, 24], [12.818, 20.818]]),
+    ]);
+  });
+
+  it.each([
+    ['fehlende Kategorie', { kind: 'vehicle-land' }, /nicht vermessen/],
+    [
+      'andere Fahrzeugkategorie',
+      { kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-3' },
+      /nicht vermessen/,
+    ],
+    ['andere Fahrzeugvariante', {
+      kind: 'vehicle-land', bodyVariant: 'foot-band', vehicleCategory: 'kfz-kategorie-1',
+    }, /nicht vermessen/],
+    [
+      'Formationsart mit der I.2-Landfahrzeughülle',
+      { kind: 'formation', vehicleCategory: 'kfz-kategorie-1' },
+      /nur an der Hülle 30 × 20 mm vermessen/,
+    ],
+    ['Anhängerart', { kind: 'trailer', vehicleCategory: 'kfz-kategorie-1' }, /nicht vermessen/],
+    ['Wasserfahrzeugart', {
+      kind: 'vehicle-water', bodyVariant: 'inset-hull', vehicleCategory: 'kfz-kategorie-1',
+    }, /nicht vermessen/],
+  ] as const)('lehnt %s fail-closed ab', (_case, context, expectedError) => {
+    expect(() => bodyMarkWithContext('water-rescue', context, landBodyMm))
+      .toThrow(expectedError);
+  });
+});
+
 describe('bodyMark() — die technischen Innenzeichnungen des Anhangs N', () => {
   it('zeichnet die beiden getrennt vermessenen Landfahrzeugmarken', () => {
     expect(bodyMarkWithContext(
@@ -1162,7 +1233,7 @@ describe('bodyMark() — LFH-485 Strömungsrettung und getrennte Luftmarken', ()
   });
 
   it('hält die kompakte Wasserrettungsmarke unter der oberen Inhaltszone', () => {
-    expect(bodyMark('water-rescue', formationBodyMm)).toEqual([
+    expect(bodyMark('formation-water-rescue-lower-zone' as BodyMarkId, formationBodyMm)).toEqual([
       waterWave(13.25),
       waterWave(15.25),
       outline([[16, 16.646], [19.854, 20.5], [16, 24.354], [12.146, 20.5]], true),
@@ -1202,7 +1273,7 @@ describe('bodyMark() — LFH-485 Strömungsrettung und getrennte Luftmarken', ()
 
   it('lehnt alle drei LFH-485-Fassungen außerhalb der normalen Formation ab', () => {
     for (const id of [
-      'water-rescue',
+      'formation-water-rescue-lower-zone',
       'formation-opposed-triangles-top',
       'formation-chevron-top',
     ] as BodyMarkId[]) {
@@ -1656,6 +1727,90 @@ describe('bodyMark() — der zusammengefasste Eintrag von F.1.2', () => {
  * neue Bauart mit n = 1. Wer die Meldungen umformuliert, passt hier die Muster mit an.
  */
 describe('bodyMark() — was nicht fortgeschrieben wird', () => {
+  it('zeichnet die eigens vermessenen Wasserrettungs- und Wasserfahrzeugfassungen nur auf der normalen Formation', () => {
+    // I.1.9–I.1.12: Die Quellen führen nicht die Kapitel-4-Box (4.5.5: 24 × 16 mm,
+    // 4.5.8: 24 × 16 mm), sondern zwei eigenständige, mittige Zeichen in der 30 × 20-mm-
+    // Körperhülle. Wasserrettung hat zwei Wellenläufe zwischen y=12…13 und y=14…15. Die
+    // miter-expandierte Quellraute braucht wegen des projektweiten Round-Joins an jeder Spitze
+    // 0,1036 mm Kompensation. Wasserfahrzeuge ergänzen das flache Boot auf der Mittellinie
+    // 11…21 × 15…20 und je zwei Wellen links 2…10 und rechts 22…30. So bleiben die in der
+    // Quelle sichtbaren 0,75 mm zwischen den fertigen 0,5-mm-Konturen frei.
+    const outline = { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM } as const;
+    const roundJoinTipCompensationMm = DEFAULT_STROKE_WIDTH_MM * (Math.SQRT2 - 1) / 2;
+    const waterRescue: Primitive[] = [
+      {
+        type: 'path', role: 'pictogram',
+        d: 'M 12 13 C 13 13 13 12 14 12 C 15 12 15 13 16 13 C 17 13 17 12 18 12 C 19 12 19 13 20 13',
+        style: outline,
+      },
+      {
+        type: 'path', role: 'pictogram',
+        d: 'M 12 15 C 13 15 13 14 14 14 C 15 14 15 15 16 15 C 17 15 17 14 18 14 C 19 14 19 15 20 15',
+        style: outline,
+      },
+      {
+        type: 'polyline', role: 'pictogram',
+        points: [
+          [12 - roundJoinTipCompensationMm, 20],
+          [16, 16 - roundJoinTipCompensationMm],
+          [20 + roundJoinTipCompensationMm, 20],
+          [16, 24 + roundJoinTipCompensationMm],
+          [12 - roundJoinTipCompensationMm, 20],
+        ],
+        style: outline,
+      },
+    ];
+    const watercraftOperations: Primitive[] = [
+      {
+        type: 'path', role: 'pictogram',
+        d: 'M 11 15 C 11 18 13 20 16 20 C 19 20 21 18 21 15 Z',
+        style: outline,
+      },
+      ...[16, 18].flatMap((yMm) => [
+        {
+          type: 'path' as const, role: 'pictogram' as const,
+          d: `M 2 ${yMm + 0.5} C 3 ${yMm + 0.5} 3 ${yMm - 0.5} 4 ${yMm - 0.5} ` +
+            `C 5 ${yMm - 0.5} 5 ${yMm + 0.5} 6 ${yMm + 0.5} ` +
+            `C 7 ${yMm + 0.5} 7 ${yMm - 0.5} 8 ${yMm - 0.5} ` +
+            `C 9 ${yMm - 0.5} 9 ${yMm + 0.5} 10 ${yMm + 0.5}`,
+          style: outline,
+        },
+        {
+          type: 'path' as const, role: 'pictogram' as const,
+          d: `M 22 ${yMm + 0.5} C 23 ${yMm + 0.5} 23 ${yMm - 0.5} 24 ${yMm - 0.5} ` +
+            `C 25 ${yMm - 0.5} 25 ${yMm + 0.5} 26 ${yMm + 0.5} ` +
+            `C 27 ${yMm + 0.5} 27 ${yMm - 0.5} 28 ${yMm - 0.5} ` +
+            `C 29 ${yMm - 0.5} 29 ${yMm + 0.5} 30 ${yMm + 0.5}`,
+          style: outline,
+        },
+      ]),
+    ];
+
+    expect(bodyMark('water-rescue', formationBodyMm)).toEqual(waterRescue);
+    expect(bodyMark('watercraft-operations', formationBodyMm)).toEqual(watercraftOperations);
+    expect(boundsOfMm(waterRescue[2]!)).toEqual({
+      minX: 12 - roundJoinTipCompensationMm,
+      minY: 16 - roundJoinTipCompensationMm,
+      maxX: 20 + roundJoinTipCompensationMm,
+      maxY: 24 + roundJoinTipCompensationMm,
+    });
+    expect(boundsOfMm(watercraftOperations[0]!)).toEqual({
+      minX: 11, minY: 15, maxX: 21, maxY: 20,
+    });
+    expect(boundsOfMm(watercraftOperations[1]!).maxX).toBe(10);
+    expect(boundsOfMm(watercraftOperations[2]!).minX).toBe(22);
+
+    // Diese beiden Fassungen sind ausschließlich an der normalen Formation belegt. Ein
+    // Rückfall auf dieselbe oder die Kapitel-4-Box in anderen Art-/Varianten-Kontexten wäre
+    // fachlich ungemessen und deshalb verboten.
+    for (const id of ['water-rescue', 'watercraft-operations'] as const) {
+      expect(() => bodyMarkWithContext(id, { kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm))
+        .toThrow(/nicht vermessen/);
+      expect(() => bodyMarkWithContext(id, { kind: 'vehicle-land' }, landBodyMm))
+        .toThrow(/nicht vermessen/);
+    }
+  });
+
   it('wirft für jedes nicht vermessene Art-/Varianten-/Fähigkeitspaar', () => {
     expect(() => bodyMarkWithContext('medical-service', { kind: 'vehicle-land' }, landBodyMm))
       .toThrow(/nicht vermessen/);
@@ -2186,7 +2341,9 @@ describe('BODY_MARK_IDS', () => {
       if (task1LogisticsIds.has(id)) continue;
       // Kein Mindestmaß von zwei Primitiven: `care` steht mit **einem** Polyzug ohne Teilung da,
       // und genau das ist an F.1.3 belegt (siehe den Block zur Zeltmarke oben).
-      const invocation = id === 'air-winch-chevron-diamond'
+      const invocation = id === 'water-rescue'
+        ? [{ kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-2' } as const, landBodyMm] as const
+        : id === 'air-winch-chevron-diamond'
           ? [{ kind: 'vehicle-air', bodyVariant: 'raised-hull' } as const, raisedAirBodyMm] as const
         : id === 'air-quartering-up-arrow-box'
           ? [{ kind: 'vehicle-air', bodyVariant: 'raised-hull' } as const, raisedAirBodyMm] as const
