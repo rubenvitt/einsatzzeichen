@@ -277,6 +277,20 @@ describe('validateSpec', () => {
     } as SymbolSpec)).toEqual([]);
   });
 
+  it('lässt einen expliziten mittigen Linksanker ausschließlich am vermessenen Anhängerprofil zu', () => {
+    const trailerAnchor = (kind: SymbolKind, anchor = 8.24) => ({
+      kind,
+      labels: { center: 'Tauchen', centerAnchorFromBodyLeftMm: anchor },
+    }) as unknown as SymbolSpec;
+
+    expect(validateSpec(trailerAnchor('trailer'))).toEqual([]);
+    for (const spec of [trailerAnchor('formation'), trailerAnchor('trailer', 8.23)]) {
+      expect(validateSpec(spec).map((issue) => issue.rule)).toContain(
+        'center-anchor-override-requires-measured-trailer',
+      );
+    }
+  });
+
   it('lässt die oberhalb liegende F.2.7-Zone nur am Luftfahrzeug zu', () => {
     expect(validateSpec({
       kind: 'vehicle-air', bodyVariant: 'raised-hull', labels: { aboveLeft: 'ITH' },

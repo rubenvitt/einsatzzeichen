@@ -959,6 +959,23 @@ function validatePreparedSpec(
     });
   }
   if (
+    spec.labels?.centerAnchorFromBodyLeftMm !== undefined &&
+    (
+      spec.labels.center === undefined ||
+      !Number.isFinite(spec.labels.centerAnchorFromBodyLeftMm) ||
+      profile.allowsCenterAnchorOverride !== true ||
+      profile.measuredCenterAnchorFromBodyLeftMm === undefined ||
+      spec.labels.centerAnchorFromBodyLeftMm !== profile.measuredCenterAnchorFromBodyLeftMm
+    )
+  ) {
+    issues.push({
+      rule: 'center-anchor-override-requires-measured-trailer',
+      message:
+        'Ein abweichender mittiger x-Anker ist nur am vermessenen Anhängerprofil und nur mit ' +
+        'dessen vollständigem gemessenen Anker zulässig.',
+    });
+  }
+  if (
     spec.labels?.centerBaselineFromBodyBottomMm !== undefined &&
     profile.allowsCenterBaselineOverride === true
   ) {

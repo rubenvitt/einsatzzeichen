@@ -51,7 +51,10 @@ export const ANHANG_I_B_RECIPES = {
       kind: 'trailer',
       organization: 'hilfsorganisation',
       bodyMarks: ['trailer-diving'],
-      labels: { center: 'Tauchen', centerBaselineFromBodyBottomMm: 14.5, centerCapHeightMm: 2.919 },
+      labels: {
+        center: 'Tauchen', centerAnchorFromBodyLeftMm: 8.24,
+        centerBaselineFromBodyBottomMm: 14.5, centerCapHeightMm: 2.919,
+      },
     },
   },
   'I.2.6': {

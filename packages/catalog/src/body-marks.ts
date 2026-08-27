@@ -1461,6 +1461,12 @@ const TRAILER_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[
   care: (bounds) => landCare(bounds, bounds.maxY),
 };
 
+const LFH_487_TRAILER_MARK_IDS = new Set<BodyMarkId>([
+  'trailer-water-rescue',
+  'trailer-diving',
+  'trailer-boat-hull',
+]);
+
 export function bodyMark(
   id: BodyMarkId,
   context: {
@@ -1560,7 +1566,7 @@ export function bodyMark(
   const heightMm = bodyBoundsMm.maxY - bodyBoundsMm.minY;
   const isMeasuredTrailerTechnicalMark =
     context.kind === 'trailer' && context.bodyVariant === undefined &&
-    Object.hasOwn(TRAILER_MARKS, id);
+    LFH_487_TRAILER_MARK_IDS.has(id);
   if (
     isMeasuredTrailerTechnicalMark && (
       Math.abs(bodyBoundsMm.minX - 4) > BODY_TOLERANCE_MM ||

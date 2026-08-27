@@ -394,6 +394,7 @@ function labelPrimitives(
     readonly ink: 'organization' | 'black';
   } | undefined,
   centerBaselineFromBodyBottomMm: number,
+  centerAnchorFromBodyLeftMm: number | undefined,
   topLeftBaselineFromBodyTopMm: number | undefined,
   normalizeTopLeftCoordinatePrecision: boolean,
   aboveLeftBaselineFromBodyTopMm: number | undefined,
@@ -411,13 +412,21 @@ function labelPrimitives(
   bottomCenterInk: 'body' | 'black' | undefined,
   ink: ColorToken,
 ): Primitive[] {
-  const centerXMm = (bodyBoundsMm.minX + bodyBoundsMm.maxX) / 2;
+  const centerXMm = centerAnchorFromBodyLeftMm === undefined
+    ? (bodyBoundsMm.minX + bodyBoundsMm.maxX) / 2
+    : bodyBoundsMm.minX + centerAnchorFromBodyLeftMm;
   // `leftMm`/`rightMm` sind die **Anker** der unteren Läufe und zugleich die Kanten ihrer Boxen.
   // Die Box des mittigen Laufs rechnet seit E-b mit der eigenen Marge — deshalb zwei Paare und
   // nicht ein umgerechnetes: sonst wanderten die vermessenen unteren Anker 3,03/29,03 mit.
   const leftMm = bodyBoundsMm.minX + LABEL_SIDE_MARGIN_MM;
   const rightMm = bodyBoundsMm.maxX - LABEL_SIDE_MARGIN_MM;
-  const centerBoxLeftMm = bodyBoundsMm.minX + CENTER_LABEL_BOX_MARGIN_MM;
+  // Der einzige vermessene linke Mittellauf (I.2.5) beginnt bei x = 5,088 mm. Seine
+  // Rasterkante kann die generische 1-mm-Innenmarge unterschreiten; die Box beginnt deshalb an
+  // der vermessenen Körperkante und hält diesen ausdrücklich freigegebenen Anker inklusive
+  // Antialiasing innerhalb der Zusicherung.
+  const centerBoxLeftMm = bodyBoundsMm.minX + (
+    centerAnchorFromBodyLeftMm === undefined ? CENTER_LABEL_BOX_MARGIN_MM : 0
+  );
   const centerBoxRightMm = bodyBoundsMm.maxX - CENTER_LABEL_BOX_MARGIN_MM;
   const centerBaselineMm = bodyBoundsMm.maxY - centerBaselineFromBodyBottomMm;
   const bottomBaselineMm = bodyBoundsMm.maxY - bottomLabelBaselineFromBodyBottomMm;
@@ -1126,6 +1135,9 @@ export function compose(
         profile.allowsCenterBaselineOverride === true
           ? effectiveLabels.centerBaselineFromBodyBottomMm ?? profile.centerBaselineFromBodyBottomMm
           : profile.centerBaselineFromBodyBottomMm,
+        profile.allowsCenterAnchorOverride === true
+          ? effectiveLabels.centerAnchorFromBodyLeftMm
+          : undefined,
         profile.topLeftBaselineFromBodyTopMm,
         normalizesMeasuredCircleTopLeftCoordinates(spec.kind, spec.bodyVariant),
         profile.aboveLeftBaselineFromBodyTopMm,

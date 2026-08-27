@@ -1141,6 +1141,7 @@ describe('Anhang I, Teilslice I-b (I.2.4 bis I.2.7)', () => {
         center: 'Tauchen',
         centerBaselineFromBodyBottomMm: 14.5,
         centerCapHeightMm: 2.919,
+        centerAnchorFromBodyLeftMm: 8.24,
       },
     },
     'I.2.6': {
@@ -1200,6 +1201,17 @@ describe('Anhang I, Teilslice I-b (I.2.4 bis I.2.7)', () => {
       expect(drawing.children.filter((child) => child.role === 'pictogram')).not.toHaveLength(0);
     },
   );
+
+  it('setzt I.2.5s Tauchen-Lauf auf den aus der Quelle gemessenen Anker x = 12,24 mm', () => {
+    const recipe: Recipe = RECIPES['I.2.5'];
+    const labels = composeFromCatalog(recipe.spec, recipe.title).children.filter(
+      (child): child is Primitive & { type: 'text' } => child.type === 'text' && child.role === 'label',
+    );
+    expect(labels).toEqual([expect.objectContaining({
+      content: 'Tauchen', anchor: 'middle', x: 12.24, y: 11.5,
+      sizeMm: 2.919 / ARIMO_CAP_HEIGHT_FRACTION,
+    })]);
+  });
 });
 
 describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {

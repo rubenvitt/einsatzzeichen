@@ -169,17 +169,60 @@ describe('bodyMark() — die vermessenen Wasserrettungs-Anhänger', () => {
       'trailer-water-rescue' as BodyMarkId,
       { kind: 'trailer' },
       trailerBodyMm,
-    )).toHaveLength(3);
+    )).toEqual([
+      {
+        type: 'path', role: 'pictogram',
+        d: 'M 13.5 12.427 C 14.5 12.427 14.5 11.427 15.5 11.427 C 16.5 11.427 16.5 12.427 17.5 12.427 C 18.5 12.427 18.5 11.427 19.5 11.427 C 20.5 11.427 20.5 12.427 21.5 12.427',
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      {
+        type: 'path', role: 'pictogram',
+        d: 'M 13.5 14.427 C 14.5 14.427 14.5 13.427 15.5 13.427 C 16.5 13.427 16.5 14.427 17.5 14.427 C 18.5 14.427 18.5 13.427 19.5 13.427 C 20.5 13.427 20.5 14.427 21.5 14.427',
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      {
+        type: 'polyline', role: 'pictogram', closed: true,
+        points: [[17.5, 15.146], [21.604, 19.25], [17.5, 23.354], [13.396, 19.25]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+    ]);
     expect(bodyMarkWithContext(
       'trailer-diving' as BodyMarkId,
       { kind: 'trailer' },
       trailerBodyMm,
-    )).toHaveLength(3);
+    )).toEqual([
+      {
+        type: 'path', role: 'pictogram',
+        d: 'M 13.5 15.247 C 14.5 15.247 14.5 14.247 15.5 14.247 C 16.5 14.247 16.5 15.247 17.5 15.247 C 18.5 15.247 18.5 14.247 19.5 14.247 C 20.5 14.247 20.5 15.247 21.5 15.247',
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      {
+        type: 'path', role: 'pictogram',
+        d: 'M 13.5 16.847 C 14.5 16.847 14.5 15.847 15.5 15.847 C 16.5 15.847 16.5 16.847 17.5 16.847 C 18.5 16.847 18.5 15.847 19.5 15.847 C 20.5 15.847 20.5 16.847 21.5 16.847',
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+      {
+        type: 'polyline', role: 'pictogram', closed: true,
+        points: [[17.5, 17.533], [20.785, 20.818], [17.5, 24.103], [14.215, 20.818]],
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+    ]);
     expect(bodyMarkWithContext(
       'trailer-boat-hull' as BodyMarkId,
       { kind: 'trailer' },
       trailerBodyMm,
-    )).toHaveLength(2);
+    )).toEqual([
+      {
+        type: 'path', role: 'pictogram',
+        d: 'M 11.25 13.765 H 23.75 V 14.015 C 23.75 17.86 21.355 20.25 17.5 20.25 C 13.645 20.25 11.25 17.86 11.25 14.015 Z',
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+      {
+        type: 'path', role: 'pictogram',
+        d: 'M 11.753 14.265 H 23.247 C 23.149 17.706 20.991 19.75 17.5 19.75 C 14.009 19.75 11.851 17.706 11.753 14.265 Z',
+        style: { fill: 'weiss', stroke: 'none' },
+      },
+    ]);
     expect(() => bodyMarkWithContext(
       'trailer-water-rescue' as BodyMarkId,
       { kind: 'vehicle-land' },
@@ -197,12 +240,23 @@ describe('bodyMark() — die vermessenen Wasserrettungs-Anhänger', () => {
     )).toThrow(/nicht vermessen/);
   });
 
-  it('lehnt gleich große, aber gegenüber der vermessenen Anhängerhülle verschobene Marken ab', () => {
-    expect(() => bodyMarkWithContext(
-      'trailer-water-rescue' as BodyMarkId,
-      { kind: 'trailer' },
-      translatedTrailerBodyMm,
-    )).toThrow(/4.*5,75.*31.*26/);
+  it('übersetzt bestehende bounds-relative Anhängermarken, lehnt aber alle drei LFH-487-Marken ab', () => {
+    expect(bodyMarkWithContext(
+      'medical-service', { kind: 'trailer' }, translatedTrailerBodyMm,
+    )).toEqual([
+      line(18.5, 9, 18.5, 27),
+      line(5, 18, 32, 18),
+      {
+        type: 'circle', role: 'pictogram', cx: 18.5, cy: 18, r: 5.5,
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+      },
+    ]);
+    for (const id of [
+      'trailer-water-rescue', 'trailer-diving', 'trailer-boat-hull',
+    ] as BodyMarkId[]) {
+      expect(() => bodyMarkWithContext(id, { kind: 'trailer' }, translatedTrailerBodyMm), id)
+        .toThrow(/4.*5,75.*31.*26/);
+    }
   });
 });
 
@@ -1818,17 +1872,12 @@ describe('BODY_MARK_IDS', () => {
       'maintenance',
     'waste-disposal',
   ]);
-  const trailerWaterRescueIds = new Set<BodyMarkId>([
-    'trailer-water-rescue',
-    'trailer-diving',
-    'trailer-boat-hull',
-  ]);
     for (const id of task1LogisticsIds) expect(BODY_MARK_IDS).toContain(id);
     for (const id of BODY_MARK_IDS) {
       // Sämtliche Task-1-Logistikrouten sind oben je Körperprofil mit exakten Primitiven,
       // Pfaden, Stilen, Bounds und negativen Nachbarkontexten abgesichert. Ein zusätzlicher
       // Existenzcheck würde diese stärkeren Verträge wieder zu `length > 0` verwässern.
-      if (task1LogisticsIds.has(id) || trailerWaterRescueIds.has(id)) continue;
+      if (task1LogisticsIds.has(id)) continue;
       // Kein Mindestmaß von zwei Primitiven: `care` steht mit **einem** Polyzug ohne Teilung da,
       // und genau das ist an F.1.3 belegt (siehe den Block zur Zeltmarke oben).
       const invocation = id === 'air-winch-chevron-diamond'
@@ -1839,6 +1888,8 @@ describe('BODY_MARK_IDS', () => {
           ? [{ kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull' } as const, raisedAirBodyMm] as const
         : id === 'top-center-rect-0-5x0-6mm'
             ? [{ kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' } as const, landBodyMm] as const
+          : id === 'trailer-water-rescue' || id === 'trailer-diving' || id === 'trailer-boat-hull'
+            ? [{ kind: 'trailer' } as const, trailerBodyMm] as const
           : id === 'hospital'
             ? [{ kind: 'reduced-house' } as const, reducedHouseBodyMm] as const
             : id.startsWith('circle-')
