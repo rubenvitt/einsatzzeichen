@@ -18,15 +18,13 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 494: der integrierte Hauptbestand plus vier I-d-, fünf I-e-, vier I-g-, drei I-a- und
-    // drei I-j-Renderfälle.
-    expect(ids).toHaveLength(494);
+    // 502: integrierter Bestand einschließlich I-d/e/g/b/a/j und fünf direkte I.5-Piktogramme.
+    expect(ids).toHaveLength(502);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
-    // dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66, G 21, H, I-a und I-j
-    // jeweils drei, I-d und I-g je vier, I-e fünf, C.1.3 einen, N neun und Anhang D 26
-    // Rezeptfälle.
-    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(216);
+    // dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66, G 21, H sowie
+    // I-a/I-b/I-j jeweils drei, I-d/I-g je vier, I-e fünf, C.1.3 einen, N neun und Anhang D 26 Fälle.
+    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(219);
     expect(ids.filter((id) => id.startsWith('recipe.I.'))).toEqual([
       'recipe.I.1.10',
       'recipe.I.1.11',
@@ -41,6 +39,9 @@ describe('vollständige Renderfallmenge', () => {
       'recipe.I.1.8',
       'recipe.I.1.9',
       'recipe.I.1.9#alternative',
+      'recipe.I.2.1',
+      'recipe.I.2.2',
+      'recipe.I.2.3',
       'recipe.I.3.5',
       'recipe.I.3.6',
       'recipe.I.3.7',
@@ -78,6 +79,11 @@ describe('vollständige Renderfallmenge', () => {
       'recipe.I.4.2',
       'recipe.I.4.3',
     ]);
+    expect(ids.filter((id) => id.startsWith('recipe.I.2.'))).toEqual([
+      'recipe.I.2.1',
+      'recipe.I.2.2',
+      'recipe.I.2.3',
+    ]);
     expect(ids.filter((id) => id.startsWith('recipe.E.1.'))).toHaveLength(37);
     // Anhang F, Teilslice F-a: zehn Abschnitte in elf Renderfällen. Der elfte ist
     // `recipe.F.1.11#alternative` — der **erste Renderfall des Katalogs, dessen Darstellung im
@@ -102,6 +108,13 @@ describe('vollständige Renderfallmenge', () => {
     expect(ids.filter((id) => id.startsWith('comms.'))).toHaveLength(53);
     expect(ids.filter((id) => id.startsWith('damage.'))).toHaveLength(28);
     expect(ids.filter((id) => id.startsWith('wildfire.'))).toHaveLength(14);
+    expect(ids.filter((id) => id.startsWith('water-rescue-personnel.'))).toEqual([
+      'water-rescue-personnel.formation-leader',
+      'water-rescue-personnel.group-leader',
+      'water-rescue-personnel.platoon-leader',
+      'water-rescue-personnel.team-leader',
+      'water-rescue-personnel.technical-advisor',
+    ]);
     expect(ids.filter((id) => id.startsWith('leadership.'))).toEqual([
       'leadership.command-post-in-operation',
       'leadership.control-center',
@@ -125,7 +138,8 @@ describe('vollständige Renderfallmenge', () => {
           !id.startsWith('comms.') &&
           !id.startsWith('damage.') &&
           !id.startsWith('wildfire.') &&
-          !id.startsWith('leadership.'),
+          !id.startsWith('leadership.') &&
+          !id.startsWith('water-rescue-personnel.'),
       ),
     ).toHaveLength(14);
     expect(new Set(ids).size).toBe(ids.length);

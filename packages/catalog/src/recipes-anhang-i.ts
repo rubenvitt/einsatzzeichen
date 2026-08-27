@@ -121,6 +121,49 @@ export const ANHANG_I_G_RECIPES = {
   },
 } as const satisfies Record<string, Recipe>;
 
+const I_2_TOP_LEFT_METRICS = {
+  capHeightMm: 3.18236,
+  baselineFromBodyTopMm: 6.55959,
+  anchorFromBodyLeftMm: 1.56869,
+} as const;
+
+/** I.2.1 bis I.2.3: die drei literalen Wasserrettungs-Landfahrzeuge aus LFH-486. */
+export const ANHANG_I_B_RECIPES = {
+  'I.2.1': {
+    title: 'Gerätewagen Wasserrettung, geländegängig',
+    referenceAsset: 'I.2.1_Gerätewagen Wasserrettung_geländegängig.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'hilfsorganisation',
+      vehicleCategory: 'kfz-kategorie-2',
+      bodyMarks: ['water-rescue'],
+      labels: { topLeft: 'GW', topLeftMetrics: I_2_TOP_LEFT_METRICS },
+    },
+  },
+  'I.2.2': {
+    title: 'Gerätewagen Tauchen',
+    referenceAsset: 'I.2.2_Gerätewagen Tauchen.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'hilfsorganisation',
+      vehicleCategory: 'kfz-kategorie-1',
+      bodyMarks: ['water-rescue'],
+      labels: { topLeft: 'GW Tauchen', topLeftMetrics: I_2_TOP_LEFT_METRICS },
+    },
+  },
+  'I.2.3': {
+    title: 'Gerätewagen Strömungsrettung',
+    referenceAsset: 'I.2.3_Gerätewagen Strömungsrettung.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'hilfsorganisation',
+      vehicleCategory: 'kfz-kategorie-1',
+      bodyMarks: ['water-rescue'],
+      labels: { topLeft: 'GW SR', topLeftMetrics: I_2_TOP_LEFT_METRICS },
+    },
+  },
+} as const satisfies Record<string, Recipe>;
+
 export const ANHANG_I_A_RECIPES = {
   'I.3.5': {
     title: 'Mehrzweckboot',

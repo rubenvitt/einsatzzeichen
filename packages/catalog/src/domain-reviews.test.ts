@@ -111,6 +111,21 @@ describe('Fachreview-Ledger', () => {
     }
   });
 
+  it('führt für I-b genau drei weiterhin offene Fachreviews', () => {
+    const expectedKeys = [
+      'bbk-babz-2025:I.2.1#primary',
+      'bbk-babz-2025:I.2.2#primary',
+      'bbk-babz-2025:I.2.3#primary',
+    ];
+    const keys = Object.keys(MANIFEST_DOMAIN_REVIEWS).filter((key) =>
+      /^bbk-babz-2025:I\.2\.[1-3]#primary$/.test(key),
+    );
+    expect(keys).toEqual(expectedKeys);
+    for (const key of keys) {
+      expect(manifestDomainReviewFor(key)).toEqual({ status: 'pending' });
+    }
+  });
+
   it('führt für I-a genau drei weiterhin offene Fachreviews', () => {
     const expectedKeys = [
       'bbk-babz-2025:I.3.5#primary',
@@ -174,13 +189,12 @@ describe('Fachreview-Ledger', () => {
     // bis F.1.22 und die beiden Alternativdarstellungen; damit sind es hier 383.
     // F-d ergänzt acht einzelne, weiterhin offene Reviewplätze für F.2.10 bis F.2.17. F-e
     // ergänzt elf für F.3.1 bis F.3.11 und F-f die acht verbleibenden für F.3.12 bis F.3.19.
-    // Anhang G ergänzt 21, H, I-a und I-j je drei, I-d und I-g je vier, I-e fünf, C.1.3
-    // einen und Anhang N neun offene Plätze.
-    // Anhang D ergänzt auf dem integrierten Stand weitere 36 Darstellungen.
-    expect(manifestReviews).toHaveLength(513);
+    // Anhang G ergänzt 21, H, I-a, I-b und I-j je drei, I-d und I-g je vier, I-e und I.5 je
+    // fünf, C.1.3 eins und N neun. Anhang D ergänzt weitere 36 Darstellungen.
+    expect(manifestReviews).toHaveLength(521);
     expect(sourceReviews).toHaveLength(13);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(527);
+    expect(reviews).toHaveLength(535);
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
   });
 
