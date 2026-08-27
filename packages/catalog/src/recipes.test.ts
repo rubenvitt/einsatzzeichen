@@ -575,7 +575,7 @@ describe('Anhang D.1, Führungsstellen im Einsatz', () => {
 
   it('führt exakt die neun komponierten D.1-Darstellungen', () => {
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('D.1.'))).toEqual(expectedKeys);
-    expect(Object.keys(RECIPES)).toHaveLength(231);
+    expect(Object.keys(RECIPES)).toHaveLength(235);
   });
 
   it('bindet D.1.2 bis D.1.8 an die sieben gemessenen Formationsrollen', () => {
@@ -1119,7 +1119,7 @@ describe('Anhang G — vollständiges Logistikinventar', () => {
     expect(actual).toEqual(expected);
     expect(Object.keys(actual)).toEqual(Object.keys(expected));
     expect(Object.keys(actual).every((key) => !key.includes('#'))).toBe(true);
-    expect(Object.keys(RECIPES)).toHaveLength(231);
+    expect(Object.keys(RECIPES)).toHaveLength(235);
   });
 
   it('bindet die 21 primary- und Referenz-IDs exakt und ohne Alternative', () => {
@@ -1237,6 +1237,95 @@ describe('Anhang I, Teilslice I-b (I.3.1 bis I.3.11)', () => {
       { type: 'line', role: 'pictogram', x1: 21.249843, y1: 15.000055, x2: 26.749628, y2: 9.250152, style: { stroke: 'schwarz', strokeWidth: 0.5 } },
       { type: 'line', role: 'pictogram', x1: 21.249843, y1: 15.000055, x2: 25.901906, y2: 19.901884, style: { stroke: 'schwarz', strokeWidth: 0.5 } },
     ]);
+  });
+});
+
+describe('Anhang I, Teilslice I-b (I.2.4 bis I.2.7)', () => {
+  const expected = {
+    'I.2.4': {
+      title: 'Anhänger Wasserrettung',
+      referenceAsset: 'I.2.4_Anhänger Wasserrettung.svg',
+      bodyMarks: ['trailer-water-rescue'] as const,
+      labels: undefined,
+    },
+    'I.2.5': {
+      title: 'Anhänger Tauchen',
+      referenceAsset: 'I.2.5_Anhänger Tauchen.svg',
+      bodyMarks: ['trailer-diving'] as const,
+      labels: {
+        center: 'Tauchen',
+        centerBaselineFromBodyBottomMm: 14.5,
+        centerCapHeightMm: 2.919,
+        centerAnchorFromBodyLeftMm: 8.24,
+      },
+    },
+    'I.2.6': {
+      title: 'Anhänger Strömungsrettung',
+      referenceAsset: 'I.2.6_Anhänger Strömungsrettung.svg',
+      bodyMarks: ['trailer-diving'] as const,
+      labels: {
+        center: 'Strömungsrettung',
+        centerBaselineFromBodyBottomMm: 14.327,
+        centerCapHeightMm: 2.191447,
+      },
+    },
+    'I.2.7': {
+      title: 'Bootsanhänger',
+      referenceAsset: 'I.2.7_Bootsanhänger.svg',
+      bodyMarks: ['trailer-boat-hull'] as const,
+      labels: undefined,
+    },
+  } as const;
+
+  it('bindet genau die vier literalen Wasserrettungs-Anhänger ohne Ersatzquelle oder Duplikat', () => {
+    const cases = Object.fromEntries(
+      (Object.keys(expected) as Array<keyof typeof expected>)
+        .map((section) => {
+          const recipe: Recipe = RECIPES[section];
+          return [section, {
+          title: recipe.title,
+          referenceAsset: recipe.referenceAsset,
+          bodyMarks: recipe.spec.bodyMarks,
+          labels: recipe.spec.labels,
+          }];
+        }),
+    );
+    expect(cases).toEqual(expected);
+  });
+
+  it.each(Object.entries(expected))(
+    '%s bleibt ein radloser Anhänger mit ausschließlich der vermessenen technischen Innenmarke',
+    (section, expectedCase) => {
+      const recipe: Recipe | undefined = RECIPES[section as keyof typeof RECIPES];
+      expect(recipe).toBeDefined();
+      if (recipe === undefined) return;
+
+      expect(recipe.spec).toMatchObject({
+        kind: 'trailer',
+        organization: 'hilfsorganisation',
+        bodyMarks: expectedCase.bodyMarks,
+      });
+      expect(recipe.spec.bodyVariant).toBeUndefined();
+      expect(recipe.spec.vehicleCategory).toBeUndefined();
+      expect(recipe.spec.labels).toEqual(expectedCase.labels);
+      expect(validateSpec(recipe.spec)).toEqual([]);
+
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      expect(drawing.children.filter((child) => child.role === 'bodyExtra')).toHaveLength(1);
+      expect(drawing.children.filter((child) => child.role === 'chassis')).toHaveLength(0);
+      expect(drawing.children.filter((child) => child.role === 'pictogram')).not.toHaveLength(0);
+    },
+  );
+
+  it('setzt I.2.5s Tauchen-Lauf auf den aus der Quelle gemessenen Anker x = 12,24 mm', () => {
+    const recipe: Recipe = RECIPES['I.2.5'];
+    const labels = composeFromCatalog(recipe.spec, recipe.title).children.filter(
+      (child): child is Primitive & { type: 'text' } => child.type === 'text' && child.role === 'label',
+    );
+    expect(labels).toEqual([expect.objectContaining({
+      content: 'Tauchen', anchor: 'middle', x: 12.24, y: 11.5,
+      sizeMm: 2.919 / ARIMO_CAP_HEIGHT_FRACTION,
+    })]);
   });
 });
 
@@ -2954,12 +3043,12 @@ describe('Anhang F, Teilslice F-f', () => {
     },
   } as const;
 
-  it('deckt F.3.12 bis F.3.19 lückenlos ab und erreicht integriert 231 Rezepte', () => {
+  it('deckt F.3.12 bis F.3.19 lückenlos ab und erreicht integriert 235 Rezepte', () => {
     const entries = Object.entries<Recipe>(RECIPES)
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(231);
+    expect(Object.keys(RECIPES)).toHaveLength(235);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {

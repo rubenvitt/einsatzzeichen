@@ -398,6 +398,7 @@ function labelPrimitives(
     readonly ink: 'organization' | 'black';
   } | undefined,
   centerBaselineFromBodyBottomMm: number,
+  centerAnchorFromBodyLeftMm: number | undefined,
   topLeftBaselineFromBodyTopMm: number | undefined,
   normalizeTopLeftCoordinatePrecision: boolean,
   aboveLeftBaselineFromBodyTopMm: number | undefined,
@@ -415,16 +416,25 @@ function labelPrimitives(
   bottomCenterInk: 'body' | 'black' | undefined,
   ink: ColorToken,
 ): Primitive[] {
-  const centerXMm = (bodyBoundsMm.minX + bodyBoundsMm.maxX) / 2;
+  const centerXMm = centerAnchorFromBodyLeftMm === undefined
+    ? (bodyBoundsMm.minX + bodyBoundsMm.maxX) / 2
+    : bodyBoundsMm.minX + centerAnchorFromBodyLeftMm;
   // `leftMm`/`rightMm` sind die **Anker** der unteren Läufe und zugleich die Kanten ihrer Boxen.
   // Die Box des mittigen Laufs rechnet seit E-b mit der eigenen Marge — deshalb zwei Paare und
   // nicht ein umgerechnetes: sonst wanderten die vermessenen unteren Anker 3,03/29,03 mit.
   const leftMm = bodyBoundsMm.minX + LABEL_SIDE_MARGIN_MM;
   const rightMm = bodyBoundsMm.maxX - LABEL_SIDE_MARGIN_MM;
+  // `bottomCenter` behält immer seine generische 1-mm-Box. Der quellenvermessen deklarierte
+  // Rand gilt ausschließlich für den eigentlichen mittigen Lauf.
   const defaultCenterBoxLeftMm = bodyBoundsMm.minX + CENTER_LABEL_BOX_MARGIN_MM;
   const defaultCenterBoxRightMm = bodyBoundsMm.maxX - CENTER_LABEL_BOX_MARGIN_MM;
   const centerBoxMarginMm = labels.centerBoxMarginMm ?? CENTER_LABEL_BOX_MARGIN_MM;
-  const centerLabelBoxLeftMm = bodyBoundsMm.minX + centerBoxMarginMm;
+  // I.2.5s vermessener linker Anker beginnt bei x = 5,088 mm. Nur dieser verifizierte
+  // Anker darf deshalb links bis an die Körperkante reichen; alle anderen mittigen Läufe
+  // verwenden den individuellen oder globalen symmetrischen Rand.
+  const centerLabelBoxLeftMm = centerAnchorFromBodyLeftMm === undefined
+    ? bodyBoundsMm.minX + centerBoxMarginMm
+    : bodyBoundsMm.minX;
   const centerLabelBoxRightMm = bodyBoundsMm.maxX - centerBoxMarginMm;
   const centerBaselineMm = bodyBoundsMm.maxY - centerBaselineFromBodyBottomMm;
   const bottomBaselineMm = bodyBoundsMm.maxY - bottomLabelBaselineFromBodyBottomMm;
@@ -1150,6 +1160,9 @@ export function compose(
         profile.allowsCenterBaselineOverride === true
           ? effectiveLabels.centerBaselineFromBodyBottomMm ?? profile.centerBaselineFromBodyBottomMm
           : profile.centerBaselineFromBodyBottomMm,
+        profile.allowsCenterAnchorOverride === true
+          ? effectiveLabels.centerAnchorFromBodyLeftMm
+          : undefined,
         profile.topLeftBaselineFromBodyTopMm,
         normalizesMeasuredCircleTopLeftCoordinates(spec.kind, spec.bodyVariant),
         profile.aboveLeftBaselineFromBodyTopMm,

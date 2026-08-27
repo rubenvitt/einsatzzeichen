@@ -1803,6 +1803,71 @@ const CIRCLE_NORMAL_ANHANG_N_MARKS: Partial<
 };
 
 const TRAILER_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
+  /** I.2.4: zwei 0,5-mm-Wellen über der 8,207-mm-Raute, nur am normalen Anhängerrumpf. */
+  'trailer-water-rescue': () => [
+    {
+      type: 'path', role: 'pictogram',
+      d:
+        'M 13.5 12.427 C 14.5 12.427 14.5 11.427 15.5 11.427 ' +
+        'C 16.5 11.427 16.5 12.427 17.5 12.427 C 18.5 12.427 18.5 11.427 19.5 11.427 ' +
+        'C 20.5 11.427 20.5 12.427 21.5 12.427',
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+    {
+      type: 'path', role: 'pictogram',
+      d:
+        'M 13.5 14.427 C 14.5 14.427 14.5 13.427 15.5 13.427 ' +
+        'C 16.5 13.427 16.5 14.427 17.5 14.427 C 18.5 14.427 18.5 13.427 19.5 13.427 ' +
+        'C 20.5 13.427 20.5 14.427 21.5 14.427',
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+    {
+      type: 'polyline', role: 'pictogram', closed: true,
+      points: [[17.5, 15.146], [21.604, 19.25], [17.5, 23.354], [13.396, 19.25]],
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+  ],
+  /** I.2.5/I.2.6: kompaktere Wellen-Rauten-Fassung, getrennt von I.2.4 vermessen. */
+  'trailer-diving': () => [
+    {
+      type: 'path', role: 'pictogram',
+      d:
+        'M 13.5 15.247 C 14.5 15.247 14.5 14.247 15.5 14.247 ' +
+        'C 16.5 14.247 16.5 15.247 17.5 15.247 C 18.5 15.247 18.5 14.247 19.5 14.247 ' +
+        'C 20.5 14.247 20.5 15.247 21.5 15.247',
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+    {
+      type: 'path', role: 'pictogram',
+      d:
+        'M 13.5 16.847 C 14.5 16.847 14.5 15.847 15.5 15.847 ' +
+        'C 16.5 15.847 16.5 16.847 17.5 16.847 C 18.5 16.847 18.5 15.847 19.5 15.847 ' +
+        'C 20.5 15.847 20.5 16.847 21.5 16.847',
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+    {
+      type: 'polyline', role: 'pictogram', closed: true,
+      points: [[17.5, 17.533], [20.785, 20.818], [17.5, 24.103], [14.215, 20.818]],
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+  ],
+  /** I.2.7: der 12,5-mm-Bootsrumpf mit 0,5-mm-Innenkontur. */
+  'trailer-boat-hull': () => [
+    {
+      type: 'path', role: 'pictogram',
+      d:
+        'M 11.25 13.765 H 23.75 V 14.015 C 23.75 17.86 21.355 20.25 17.5 20.25 ' +
+        'C 13.645 20.25 11.25 17.86 11.25 14.015 Z',
+      style: { fill: 'schwarz', stroke: 'none' },
+    },
+    {
+      type: 'path', role: 'pictogram',
+      d:
+        'M 11.753 14.265 H 23.247 C 23.149 17.706 20.991 19.75 17.5 19.75 ' +
+        'C 14.009 19.75 11.851 17.706 11.753 14.265 Z',
+      style: { fill: 'weiss', stroke: 'none' },
+    },
+  ],
   'medical-service': (bounds) => {
     const cx = (bounds.minX + bounds.maxX) / 2;
     const cy = bounds.maxY - 9;
@@ -1821,6 +1886,12 @@ const TRAILER_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[
   },
   care: (bounds) => landCare(bounds, bounds.maxY),
 };
+
+const LFH_487_TRAILER_MARK_IDS = new Set<BodyMarkId>([
+  'trailer-water-rescue',
+  'trailer-diving',
+  'trailer-boat-hull',
+]);
 
 /** I.3.4 und I.3.11: eigenständig vermessene Marken des eingesenkten Wasserrumpfs. */
 const VEHICLE_WATER_INSET_HULL_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
@@ -1841,7 +1912,6 @@ const VEHICLE_WATER_INSET_HULL_MARKS: Partial<Record<BodyMarkId, (bounds: Bounds
     stroke(21.249843, 15.000055, 25.901906, 19.901884),
   ],
 };
-
 export function bodyMark(
   id: BodyMarkId,
   context: {
@@ -1943,6 +2013,32 @@ export function bodyMark(
     );
   }
 
+  const isMeasuredTrailerTechnicalMark =
+    context.kind === 'trailer' && context.bodyVariant === undefined &&
+    LFH_487_TRAILER_MARK_IDS.has(id);
+  if (
+    isMeasuredTrailerTechnicalMark &&
+    ![bodyBoundsMm.minX, bodyBoundsMm.minY, bodyBoundsMm.maxX, bodyBoundsMm.maxY]
+      .every(Number.isFinite)
+  ) {
+    throw new Error(
+      `Die technische Anhängermarke "${id}" verlangt vier endliche absolute Hüllengrenzen ` +
+        '(minX, minY, maxX, maxY).',
+    );
+  }
+  if (
+    isMeasuredTrailerTechnicalMark && (
+      Math.abs(bodyBoundsMm.minX - 4) > BODY_TOLERANCE_MM ||
+      Math.abs(bodyBoundsMm.minY - 5.75) > BODY_TOLERANCE_MM ||
+      Math.abs(bodyBoundsMm.maxX - 31) > BODY_TOLERANCE_MM ||
+      Math.abs(bodyBoundsMm.maxY - 26) > BODY_TOLERANCE_MM
+    )
+  ) {
+    throw new Error(
+      `Die technische Anhängermarke "${id}" ist ausschließlich an der absolut vermessenen ` +
+        'Hülle 4 / 5,75 / 31 / 26 mm belegt; gleich große verschobene Anhängerhüllen sind nicht vermessen.',
+    );
+  }
   const widthMm = bodyBoundsMm.maxX - bodyBoundsMm.minX;
   const heightMm = bodyBoundsMm.maxY - bodyBoundsMm.minY;
   const expected = context.kind === 'formation'
@@ -2038,6 +2134,7 @@ export const BODY_MARK_IDS: readonly BodyMarkId[] = Object.freeze(
       VEHICLE_LAND_INVERTED_HULL_MARKS,
       VEHICLE_AIR_MARKS,
       VEHICLE_AIR_FIXED_WING_MARKS,
+      VEHICLE_WATER_INSET_HULL_MARKS,
       TRAILER_MARKS,
       CIRCLE_NORMAL_MARKS,
       CIRCLE_NORMAL_ANHANG_N_MARKS,

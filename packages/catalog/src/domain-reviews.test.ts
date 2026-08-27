@@ -111,29 +111,18 @@ describe('Fachreview-Ledger', () => {
     }
   });
 
-  it('führt für I-b genau drei weiterhin offene Fachreviews', () => {
+  it('führt für I-b genau sieben weiterhin offene Fachreviews', () => {
     const expectedKeys = [
       'bbk-babz-2025:I.2.1#primary',
       'bbk-babz-2025:I.2.2#primary',
       'bbk-babz-2025:I.2.3#primary',
+      'bbk-babz-2025:I.2.4#primary',
+      'bbk-babz-2025:I.2.5#primary',
+      'bbk-babz-2025:I.2.6#primary',
+      'bbk-babz-2025:I.2.7#primary',
     ];
     const keys = Object.keys(MANIFEST_DOMAIN_REVIEWS).filter((key) =>
-      /^bbk-babz-2025:I\.2\.[1-3]#primary$/.test(key),
-    );
-    expect(keys).toEqual(expectedKeys);
-    for (const key of keys) {
-      expect(manifestDomainReviewFor(key)).toEqual({ status: 'pending' });
-    }
-  });
-
-  it('führt für I-a genau drei weiterhin offene Fachreviews', () => {
-    const expectedKeys = [
-      'bbk-babz-2025:I.3.5#primary',
-      'bbk-babz-2025:I.3.6#primary',
-      'bbk-babz-2025:I.3.7#primary',
-    ];
-    const keys = Object.keys(MANIFEST_DOMAIN_REVIEWS).filter((key) =>
-      /^bbk-babz-2025:I\.3\.[5-7]#primary$/.test(key),
+      /^bbk-babz-2025:I\.2\.[1-7]#primary$/.test(key),
     );
     expect(keys).toEqual(expectedKeys);
     for (const key of keys) {
@@ -217,13 +206,12 @@ describe('Fachreview-Ledger', () => {
     // bis F.1.22 und die beiden Alternativdarstellungen; damit sind es hier 383.
     // F-d ergänzt acht einzelne, weiterhin offene Reviewplätze für F.2.10 bis F.2.17. F-e
     // ergänzt elf für F.3.1 bis F.3.11 und F-f die acht verbleibenden für F.3.12 bis F.3.19.
-    // Anhang D schließt den damaligen Stand bei 497. I-a, I-b und I-j ergänzen je drei;
-    // I-c, I-d und I-g je vier, I-e und I.5 je fünf, I.2 drei und I.3 elf. Der integrierte
-    // Stand schließt bei 533.
-    expect(manifestReviews).toHaveLength(533);
+    // Anhang D schließt den damaligen Stand bei 497. I-c, I-d und I-g ergänzen je vier, I-e
+    // fünf, I-b sieben, I.3 elf, I-j drei und I.5 fünf; damit umfasst der integrierte Stand 537.
+    expect(manifestReviews).toHaveLength(537);
     expect(sourceReviews).toHaveLength(13);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(547);
+    expect(reviews).toHaveLength(551);
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
   });
 

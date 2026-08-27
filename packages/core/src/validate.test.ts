@@ -317,6 +317,43 @@ describe('validateSpec', () => {
     } as SymbolSpec)).toEqual([]);
   });
 
+  it('lässt einen expliziten mittigen Linksanker ausschließlich am vermessenen Anhängerprofil zu', () => {
+    const trailerAnchor = (kind: SymbolKind, anchor = 8.24) => ({
+      kind,
+      labels: { center: 'Tauchen', centerAnchorFromBodyLeftMm: anchor },
+    }) as unknown as SymbolSpec;
+
+    expect(validateSpec(trailerAnchor('trailer'))).toEqual([]);
+    for (const spec of [trailerAnchor('formation'), trailerAnchor('trailer', 8.23)]) {
+      expect(validateSpec(spec).map((issue) => issue.rule)).toContain(
+        'center-anchor-override-requires-measured-trailer',
+      );
+    }
+  });
+
+  it('beschränkt Anhänger-Mittenbaselines auf die zwei vermessenen Werte', () => {
+    for (const labels of [
+      { center: 'Tauchen', centerBaselineFromBodyBottomMm: 14.5, centerCapHeightMm: 2.919 },
+      {
+        center: 'Strömungsrettung', centerBaselineFromBodyBottomMm: 14.327,
+        centerCapHeightMm: 2.191447,
+      },
+    ]) {
+      expect(validateSpec({ kind: 'trailer', labels } as SymbolSpec)).toEqual([]);
+    }
+
+    expect(validateSpec({
+      kind: 'trailer',
+      labels: { center: 'X', centerBaselineFromBodyBottomMm: 10, centerCapHeightMm: 2.191447 },
+    } as SymbolSpec).map((issue) => issue.rule)).toContain(
+      'center-baseline-not-measured',
+    );
+    expect(validateSpec({
+      kind: 'vehicle-land',
+      labels: { center: 'BuPol', centerBaselineFromBodyBottomMm: 6.5 },
+    } as SymbolSpec)).toEqual([]);
+  });
+
   it('lässt die oberhalb liegende F.2.7-Zone nur am Luftfahrzeug zu', () => {
     expect(validateSpec({
       kind: 'vehicle-air', bodyVariant: 'raised-hull', labels: { aboveLeft: 'ITH' },
