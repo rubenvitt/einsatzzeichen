@@ -413,10 +413,10 @@ function validatePreparedSpec(
   }
 
   if (isInsetWatercraft) {
-    // I.3.5 bis I.3.7 belegen ausschließlich den mittigen Lauf. Das generische Labelmodell ist
-    // inzwischen breiter als dieser Vertrag (unter anderem durch die vermessenen N-Metriken).
-    // Deshalb erlauben wir die zwei bekannten nicht bzw. genau so gerenderten Felder explizit,
-    // statt eine Liste verbotener Zonen zu pflegen, die beim nächsten Feld still veraltet.
+    // Der vollständige I.3-Vertrag belegt drei sichere Felder: `accessibilityMode`, `center` und
+    // `centerCapHeightMm`. Das generische Labelmodell ist inzwischen breiter als dieser Vertrag
+    // (unter anderem durch die vermessenen N-Metriken). Deshalb erlauben wir diese drei Felder
+    // explizit, statt eine Liste verbotener Zonen zu pflegen, die beim nächsten Feld still veraltet.
     const hasUnmeasuredLabelZone = hasInvalidInsetHullLabelData;
 
     if (hasUnmeasuredLabelZone || spec.designation !== undefined) {

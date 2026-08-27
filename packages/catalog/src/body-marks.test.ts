@@ -159,7 +159,7 @@ describe('bodyMark() — LFH-488 Anhang I.4 Wasserrettungsorte', () => {
   );
 });
 
-describe('bodyMark() — die technischen Innenzeichnungen des Anhangs N', () => {
+describe('bodyMark() — die technischen Innenzeichnungen der Körpermarken', () => {
   it('zeichnet die separat vermessenen I.3.4- und I.3.11-Marken nur im eingesenkten Wasserrumpf', () => {
     expect(bodyMarkWithContext(
       'inset-hull-wheel-pair' as BodyMarkId,
