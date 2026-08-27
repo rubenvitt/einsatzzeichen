@@ -74,7 +74,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 497 Zeilen mit 283 Elementdarstellungen', () => {
+  it('enthält exakt 516 Zeilen mit 288 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -83,60 +83,95 @@ describe('Coverage-Manifest', () => {
         entry.implementation.startsWith('comms.') ||
         entry.implementation.startsWith('damage.') ||
         entry.implementation.startsWith('wildfire.') ||
-        entry.implementation.startsWith('leadership.'),
+        entry.implementation.startsWith('leadership.') ||
+        entry.implementation.startsWith('water-rescue-personnel.'),
     );
     const counts = COVERAGE_MANIFEST.entries.reduce<Record<string, number>>((acc, e) => {
       acc[e.coverage] = (acc[e.coverage] ?? 0) + 1;
       return acc;
     }, {});
     expect(counts).toEqual({
-      // Seit LFH-424 alle vierzehn Grundzeichen aus Kapitel 1 statt acht.
       'catalog-entry': 14,
-      // 3 Belegfälle des Kompositionsmotors plus die 68 Zeichen aus Anhang E — 16 aus
-      // Teilslice E-a, zwölf aus E-b und neun aus E-c (damit ist E.1 vollständig), 21 aus E-d,
-      // fünf aus E-e und fünf aus E-f. **68 und damit vollständig** seit E.2.6 am 18. August 2026
-      // nachgezogen wurde; die Lückenlosigkeit hält der Test „führt Anhang E lückenlos" unten
-      // fest, und erst er trägt das `E` im `scope`. Dazu elf Zeilen aus F-a und 14 aus F-b:
-      // F.1.3 sowie F.1.12 bis F.1.22 einschließlich der Alternativen von F.1.12 und F.1.15.
-      // F-a umfasst zehn
-      // Abschnitte, denn `F.1.11` führt als erster Abschnitt des Katalogs neben `primary` eine
-      // `alternative` — die Zeile zählt einzeln, weil das Manifest Darstellungen zählt und nicht
-      // Abschnitte, weil F.1.3 dort noch bewusst offen blieb; F-b baut es mit `foot-band`.
-      // F-d ergänzt F.2.10 bis F.2.17 als acht reine Anwendungen des Fahrzeugvertrags.
-      // G ergänzt 21 Rezepte, H und I-a je drei, I.5 drei weitere, C.1.3 ein weiteres und N neun weitere.
-      // Anhang D ergänzt 26 neue Rezepte; D.3.7 bleibt eine Migration desselben Schlüssels.
-      'composition-recipe': 203,
-      // 264 Piktogramme plus acht Manifest-Organisationen, vier
-      // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
-      // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
-      // `amphibienfahrzeug` hat weiterhin keinen Eintrag, weil seine Wellenlinie nur als
-      // Strichhülle vermessen ist.
-      element: 283,
+      // Der integrierte I-Bestand enthält I-d/I-g, I-a/I-j und die drei I-k-Rezepte.
+      'composition-recipe': 214,
+      // 269 Piktogramme plus acht Manifest-Organisationen, vier Stärkegrade und sieben
+      // Fahrwerkszonen.
+      element: 288,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(500);
-    expect(elementRows).toHaveLength(283);
-    expect(pictogramRows).toHaveLength(264);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(516);
+    expect(elementRows).toHaveLength(288);
+    expect(pictogramRows).toHaveLength(269);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
   });
 
-  it('führt I.3.5 bis I.3.7 und genau I.5.1 bis I.5.3 mit belegter Quelle und vollständigem Technikreview', () => {
+  it('führt I-d und I-g exakt mit belegter Quelle und getrennten Technikreviews', () => {
     const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
-      entry.sourceId.startsWith('bbk-babz-2025:I.'),
+      /^bbk-babz-2025:I\.1\.(?:[5-8]|1[7-9]|20)$/.test(entry.sourceId),
     );
-    expect(
-      rows.map((entry) => ({
-        section: entry.sourceId.slice('bbk-babz-2025:'.length),
-        referenceAsset: entry.referenceAsset,
-      })),
-    ).toEqual([
-      { section: 'I.5.1', referenceAsset: 'I.5.1_Einsatzkraft Wasserrettung.svg' },
-      { section: 'I.5.2', referenceAsset: 'I.5.2_Strömungsretter.svg' },
-      { section: 'I.5.3', referenceAsset: 'I.5.3_Taucher.svg' },
+    expect(rows.map((entry) => ({
+      section: entry.sourceId.slice('bbk-babz-2025:'.length),
+      referenceAsset: entry.referenceAsset,
+    })).sort((left, right) => left.section.localeCompare(right.section, 'de', { numeric: true })))
+      .toEqual([
+        { section: 'I.1.5', referenceAsset: 'I.1.5_Zugtrupp Wasserrettungszug.svg' },
+        { section: 'I.1.6', referenceAsset: 'I.1.6_Führungstrupp Wasserrettung.svg' },
+        { section: 'I.1.7', referenceAsset: 'I.1.7_Führungsgruppe Wasserrettung.svg' },
+        { section: 'I.1.8', referenceAsset: 'I.1.8_Führungsstaffel Wasserrettung.svg' },
+        { section: 'I.1.17', referenceAsset: 'I.1.17_Strömungsrettungstrupp.svg' },
+        { section: 'I.1.18', referenceAsset: 'I.1.18_Strömungsrettungsgruppe.svg' },
+        {
+          section: 'I.1.19',
+          referenceAsset: 'I.1.19_Trupp Luftunterstützte Wasserrettung.svg',
+        },
+        { section: 'I.1.20', referenceAsset: 'I.1.20_Trupp Drohne.svg' },
+      ]);
+
+    const expectedIdReview = {
+      status: 'approved',
+      reviewer: 'rv',
+      date: '2026-08-27',
+      note:
+        'I.1.5-I.1.8 passed literal recipe, measured compact water-rescue body-mark, independently gated cap/head/body vertical placement, direct-snapshot and multi-size gates. I.1.5 uses its measured 3.7 mm three-hole cap; I.1.6-I.1.8 reuse the 3 mm cap and I.1.8 moves body geometry by 3 mm with staffel. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending.',
+    };
+    const expectedIGReview = {
+      status: 'approved',
+      reviewer: 'rv',
+      date: '2026-08-27',
+      note:
+        'I.1.17-I.1.20 passed measured formation body marks, 16 mm center-baseline, 2.5 mm ' +
+        'cap-height and 29 mm output-box contracts, literal recipe, direct-snapshot, multi-size, ' +
+        'coverage and ' +
+        'output-only visual QA gates. Opposed triangles and chevron remain separate geometric ' +
+        'marks; domain classification remains pending.',
+    };
+    const idSourceIds = new Set([
+      'bbk-babz-2025:I.1.5',
+      'bbk-babz-2025:I.1.6',
+      'bbk-babz-2025:I.1.7',
+      'bbk-babz-2025:I.1.8',
+    ]);
+    expect(rows).toHaveLength(8);
+    for (const row of rows) {
+      expect(row.coverage).toBe('composition-recipe');
+      expect(row.review.technical).toEqual(
+        idSourceIds.has(row.sourceId) ? expectedIdReview : expectedIGReview,
+      );
+      expect(row.review.domain.status).toBe('pending');
+    }
+  });
+
+  it('führt I-a exakt als I.3.5 bis I.3.7', () => {
+    const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
+      /^bbk-babz-2025:I\.3\.[5-7]$/.test(entry.sourceId),
+    );
+    expect(rows.map((entry) => ({
+      section: entry.sourceId.slice('bbk-babz-2025:'.length),
+      referenceAsset: entry.referenceAsset,
+    }))).toEqual([
       { section: 'I.3.5', referenceAsset: 'I.3.5_Mehrzweckboot.svg' },
       { section: 'I.3.6', referenceAsset: 'I.3.6_Mehrzweckarbeitsboot.svg' },
       { section: 'I.3.7', referenceAsset: 'I.3.7_Mehrzweckponton.svg' },
     ]);
-
     const expectedReview = {
       status: 'approved',
       reviewer: 'rv',
@@ -144,15 +179,63 @@ describe('Coverage-Manifest', () => {
       note:
         'I.3.5-I.3.7 passed measured inset-hull, 7.99 mm center-profile, literal recipe, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
     };
-    expect(rows).toHaveLength(6);
-    for (const row of rows.filter((row) => !row.sourceId.startsWith('bbk-babz-2025:I.5.'))) {
+    expect(rows).toHaveLength(3);
+    for (const row of rows) {
       expect(row.coverage).toBe('composition-recipe');
       expect(row.review.technical).toEqual(expectedReview);
       expect(row.review.domain.status).toBe('pending');
     }
+    expect(COVERAGE_MANIFEST.scope).toEqual(expect.arrayContaining(['I.3.5', 'I.3.6', 'I.3.7']));
+    expect(COVERAGE_MANIFEST.scope).not.toContain('I.3');
+  });
 
-    const i5Rows = rows.filter((row) => row.sourceId.startsWith('bbk-babz-2025:I.5.'));
-    expect(i5Rows.map((row) => ({
+  it('führt I-j exakt als I.4.1 bis I.4.3', () => {
+    const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
+      /^bbk-babz-2025:I\.4\.[1-3]$/.test(entry.sourceId),
+    );
+    expect(rows.map((entry) => ({
+      section: entry.sourceId.slice('bbk-babz-2025:'.length),
+      referenceAsset: entry.referenceAsset,
+      evidence: entry.testEvidence,
+    }))).toEqual([
+      {
+        section: 'I.4.1',
+        referenceAsset: 'I.4.1_Wasserrettungsstation_ortsgebunden.svg',
+        evidence: ['body-fingerprint', 'svg-snapshot'],
+      },
+      {
+        section: 'I.4.2',
+        referenceAsset: 'I.4.2_Slip-Stelle.svg',
+        evidence: ['body-fingerprint', 'svg-snapshot'],
+      },
+      {
+        section: 'I.4.3',
+        referenceAsset: 'I.4.3_Anlegestelle für Boote.svg',
+        evidence: ['body-fingerprint', 'svg-snapshot'],
+      },
+    ]);
+    const expectedReview = {
+      status: 'approved',
+      reviewer: 'rv',
+      date: '2026-08-27',
+      note:
+        'I.4.1-I.4.3 passed independently measured circle and body-mark geometry, fail-closed kind/variant/bounds, literal recipe, direct-snapshot and multi-size gates. I.4.1 reuses circle-12/raised-gable as geometry only; white Hilfsorganisation bodies and all domain classifications remain pending.',
+    };
+    expect(rows).toHaveLength(3);
+    for (const row of rows) {
+      expect(row.coverage).toBe('composition-recipe');
+      expect(row.review.technical).toEqual(expectedReview);
+      expect(row.review.domain.status).toBe('pending');
+    }
+    expect(COVERAGE_MANIFEST.scope).toEqual(expect.arrayContaining(['I.4.1', 'I.4.2', 'I.4.3']));
+    expect(COVERAGE_MANIFEST.scope).not.toContain('I.4');
+  });
+
+  it('führt I-k exakt als I.5.1 bis I.5.3 und bewahrt den vollständigen I.5-Scope', () => {
+    const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
+      /^bbk-babz-2025:I\.5\.[1-3]$/.test(entry.sourceId),
+    );
+    expect(rows.map((row) => ({
       section: row.sourceId.slice('bbk-babz-2025:'.length),
       implementation: row.implementation,
       coverage: row.coverage,
@@ -172,7 +255,8 @@ describe('Coverage-Manifest', () => {
         testEvidence: ['body-fingerprint', 'svg-snapshot'], domain: { status: 'pending' },
       },
     ]);
-    for (const row of i5Rows) {
+    expect(rows).toHaveLength(3);
+    for (const row of rows) {
       expect(row.review.technical).toMatchObject({
         status: 'approved', reviewer: 'rv', date: '2026-08-27',
       });
@@ -181,15 +265,9 @@ describe('Coverage-Manifest', () => {
       expect(row.review.technical.note).toMatch(/wave|Welle/i);
       expect(row.review.technical.note).toMatch(/label|Text/i);
     }
-
-    expect(COVERAGE_MANIFEST.scope).toContain('I.3.5');
-    expect(COVERAGE_MANIFEST.scope).toContain('I.3.6');
-    expect(COVERAGE_MANIFEST.scope).toContain('I.3.7');
-    expect(COVERAGE_MANIFEST.scope).toContain('I.5.1');
-    expect(COVERAGE_MANIFEST.scope).toContain('I.5.2');
-    expect(COVERAGE_MANIFEST.scope).toContain('I.5.3');
-    expect(COVERAGE_MANIFEST.scope).not.toContain('I');
-    expect(COVERAGE_MANIFEST.scope).not.toContain('I.3');
+    expect(COVERAGE_MANIFEST.scope).toEqual(expect.arrayContaining(
+      Array.from({ length: 8 }, (_, index) => `I.5.${index + 1}`),
+    ));
     expect(COVERAGE_MANIFEST.scope).not.toContain('I.5');
   });
 
@@ -635,12 +713,28 @@ describe('Coverage-Manifest', () => {
       'F',
       'G',
       'H',
+      'I.1.5',
+      'I.1.6',
+      'I.1.7',
+      'I.1.8',
+      'I.1.17',
+      'I.1.18',
+      'I.1.19',
+      'I.1.20',
       'I.3.5',
       'I.3.6',
       'I.3.7',
+      'I.4.1',
+      'I.4.2',
+      'I.4.3',
       'I.5.1',
       'I.5.2',
       'I.5.3',
+      'I.5.4',
+      'I.5.5',
+      'I.5.6',
+      'I.5.7',
+      'I.5.8',
       'J.1',
       'J.2',
       'J.3',
@@ -694,7 +788,7 @@ describe('Manifest-Einträge für Piktogramme', () => {
       .filter((entry) => definitionKeys.has(entryKey(entry.implementation, entry.variant)))
       .map((entry) => entryKey(entry.implementation, entry.variant))
       .sort();
-    expect(rows).toHaveLength(264);
+    expect(rows).toHaveLength(269);
     expect(rows).toEqual([...definitionKeys].sort());
   });
 

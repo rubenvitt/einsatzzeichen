@@ -49,6 +49,12 @@ import {
  */
 const BODY_TOLERANCE_MM = 0.01;
 
+const LFH488_EXACT_BODY_BOUNDS: Partial<Record<BodyMarkId, BoundsMm>> = {
+  'circle-two-waves-diamond': { minX: 4, minY: 6, maxX: 28, maxY: 30 },
+  'circle-diagonal-double-arrow-offset-bowl': { minX: 4, minY: 4, maxX: 28, maxY: 28 },
+  'circle-wide-bowl': { minX: 4, minY: 4, maxX: 28, maxY: 28 },
+};
+
 function stroke(x1: number, y1: number, x2: number, y2: number): Primitive {
   return {
     type: 'line',
@@ -58,6 +64,39 @@ function stroke(x1: number, y1: number, x2: number, y2: number): Primitive {
     x2,
     y2,
     style: { stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  };
+}
+
+function filledPolygon(points: readonly (readonly [number, number])[]): Primitive {
+  return {
+    type: 'polyline',
+    role: 'pictogram',
+    points,
+    closed: true,
+    style: { fill: 'schwarz', stroke: 'none' },
+  };
+}
+
+function waterWave(centerXMm: number, baselineYMm: number): Primitive {
+  const x = (offsetMm: number) => Number((centerXMm + offsetMm).toFixed(3));
+  const y = (offsetMm: number) => Number((baselineYMm + offsetMm).toFixed(3));
+  return {
+    type: 'path',
+    role: 'pictogram',
+    d:
+      `M ${x(4)} ${y(0)} C ${x(3.604)} ${y(0)} ${x(3.416)} ${y(-0.188)} ` +
+      `${x(3.178)} ${y(-0.427)} C ${x(2.923)} ${y(-0.682)} ` +
+      `${x(2.605)} ${y(-1)} ${x(2.002)} ${y(-1)} ` +
+      `C ${x(1.399)} ${y(-1)} ${x(1.081)} ${y(-0.682)} ` +
+      `${x(0.826)} ${y(-0.427)} C ${x(0.587)} ${y(-0.188)} ` +
+      `${x(0.399)} ${y(0)} ${x(0.003)} ${y(0)} ` +
+      `C ${x(-0.394)} ${y(0)} ${x(-0.583)} ${y(-0.188)} ` +
+      `${x(-0.821)} ${y(-0.427)} C ${x(-1.076)} ${y(-0.682)} ` +
+      `${x(-1.395)} ${y(-1)} ${x(-1.998)} ${y(-1)} ` +
+      `C ${x(-2.602)} ${y(-1)} ${x(-2.92)} ${y(-0.682)} ` +
+      `${x(-3.176)} ${y(-0.427)} C ${x(-3.414)} ${y(-0.188)} ` +
+      `${x(-3.602)} ${y(0)} ${x(-3.999)} ${y(0)}`,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
   };
 }
 
@@ -171,6 +210,25 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
     height: 3,
     style: { fill: 'schwarz', stroke: 'none' },
   }],
+  'formation-solid-cap-3.7mm-three-hole-row': (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    return [{
+      type: 'rect',
+      role: 'pictogram',
+      x: bounds.minX,
+      y: bounds.minY,
+      width: bounds.maxX - bounds.minX,
+      height: 3.7,
+      style: { fill: 'schwarz', stroke: 'none' },
+    }, ...[cx - 5, cx, cx + 5].map((holeCx) => ({
+      type: 'circle' as const,
+      role: 'pictogram' as const,
+      cx: holeCx,
+      cy: bounds.minY + 1.75,
+      r: 1.5,
+      style: { fill: 'weiss' as const, stroke: 'none' as const },
+    }))];
+  },
   'formation-solid-cap-4mm-three-hole-row': (bounds) => [{
     type: 'rect',
     role: 'pictogram',
@@ -187,6 +245,51 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
     r: 1.5,
     style: { fill: 'weiss' as const, stroke: 'none' as const },
   }))],
+
+  /**
+   * I.1.5 bis I.1.8: die kompakte, körperbezogene Wasserrettungsfassung — ausdrücklich nicht
+   * die 23 mm breite Boxfassung aus 4.5.8. Aus den expandierten 0,5-mm-Konturen ergeben sich
+   * zwei 8 mm breite Kubikwellen und die Raute auf den Ankern ±4 mm um die Körpermitte.
+   *
+   * Die Quellenkoordinaten sind auf drei SVG-Dezimalstellen exportiert. Nach Umrechnung auf
+   * 32 mm liegen die zurückgerechneten Mittellinien höchstens 0,002 mm von den hier verwendeten
+   * ganzen bzw. halben Millimetern entfernt; diese Exportabweichung wird nicht fortgeschrieben.
+   */
+  'formation-water-rescue-compact': (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    const cy = (bounds.minY + bounds.maxY) / 2;
+    const miterOffsetMm = 0.353553;
+    const wave = (baselineY: number, crestY: number): Primitive => ({
+      type: 'path',
+      role: 'pictogram',
+      d:
+        `M ${cx - 4} ${baselineY} ` +
+        `C ${cx - 3} ${baselineY} ${cx - 3} ${crestY} ${cx - 2} ${crestY} ` +
+        `C ${cx - 1} ${crestY} ${cx - 1} ${baselineY} ${cx} ${baselineY} ` +
+        `C ${cx + 1} ${baselineY} ${cx + 1} ${crestY} ${cx + 2} ${crestY} ` +
+        `C ${cx + 3} ${crestY} ${cx + 3} ${baselineY} ${cx + 4} ${baselineY}`,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    });
+    return [
+      wave(cy - 3.5, cy - 4.5),
+      wave(cy - 1.5, cy - 2.5),
+      {
+        type: 'path',
+        role: 'pictogram',
+        d:
+          `M ${cx - 4 - miterOffsetMm} ${cy + 4} ` +
+          `L ${cx} ${cy + 8 + miterOffsetMm} ` +
+          `L ${cx + 4 + miterOffsetMm} ${cy + 4} ` +
+          `L ${cx} ${cy - miterOffsetMm} Z ` +
+          `M ${cx} ${cy + 8 - miterOffsetMm} ` +
+          `L ${cx - 4 + miterOffsetMm} ${cy + 4} ` +
+          `L ${cx} ${cy + miterOffsetMm} ` +
+          `L ${cx + 4 - miterOffsetMm} ${cy + 4} Z`,
+        style: { fill: 'schwarz', fillRule: 'evenodd', stroke: 'none' },
+      },
+    ];
+  },
+
   /** C.1.1 bis C.1.3: die an der Formation vermessene Löschmarke mit zwei rechten Diagonalen. */
   'fire-fighting': (bounds) => {
     const cy = (bounds.minY + bounds.maxY) / 2;
@@ -195,6 +298,28 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
       stroke(bounds.minX, cy, branchX, cy),
       stroke(branchX, cy, bounds.maxX, bounds.minY),
       stroke(branchX, cy, bounds.maxX, bounds.maxY),
+    ];
+  },
+
+  /**
+   * I.1.17 bis I.1.20: die kompakte Wasserrettungsmarke der Formation. Gegenüber der
+   * eigenständigen Kapitel-4-Fassung bleiben Wellen und Raute bewusst in der unteren
+   * Inhaltszone; die Maße sind an den vier I-g-Dateien separat vermessen.
+   */
+  'water-rescue': (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    return [
+      waterWave(cx, bounds.minY + 7.25),
+      waterWave(cx, bounds.minY + 9.25),
+      {
+        ...outline([
+          [cx, bounds.minY + 10.646],
+          [cx + 3.854, bounds.minY + 14.5],
+          [cx, bounds.minY + 18.354],
+          [cx - 3.854, bounds.minY + 14.5],
+        ]),
+        closed: true,
+      },
     ];
   },
 
@@ -513,6 +638,43 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
     ];
   },
 
+  /**
+   * I.1.19: zwei gefüllte, zur Mitte gerichtete Dreiecke in der oberen Inhaltszone. Diese
+   * geometrische ID übernimmt ausdrücklich weder die zusätzliche Winkelmarke noch eine
+   * fachliche Drohnenbedeutung aus F.1.16.
+   */
+  'formation-opposed-triangles-top': (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    return [
+      filledPolygon([
+        [cx, bounds.minY + 3.5],
+        [cx - 6.5, bounds.minY + 5.5],
+        [cx - 6.5, bounds.minY + 1.5],
+      ]),
+      filledPolygon([
+        [cx + 6.5, bounds.minY + 5.5],
+        [cx, bounds.minY + 3.5],
+        [cx + 6.5, bounds.minY + 1.5],
+      ]),
+    ];
+  },
+
+  /**
+   * I.1.20: ein einzelner gefüllter Winkel in der oberen Inhaltszone. Die getrennte ID hält
+   * ihn von der kombinierten F.1.16-Geometrie und deren ungeklärter Fachsemantik fern.
+   */
+  'formation-chevron-top': (bounds) => {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    return [filledPolygon([
+      [cx, bounds.minY + 3.5],
+      [cx - 5.333, bounds.minY + 1.25],
+      [cx - 5.333, bounds.minY + 2.25],
+      [cx, bounds.minY + 5.5],
+      [cx + 5.333, bounds.minY + 2.25],
+      [cx + 5.333, bounds.minY + 1.25],
+    ])];
+  },
+
   /** F.1.21: eigener Ring r 6,5 mm, Dach und eingeschriebenes Dreieck. */
   'ring-6-5mm-offset-down-2mm-with-roof': (bounds) => {
     const cx = (bounds.minX + bounds.maxX) / 2;
@@ -786,11 +948,12 @@ function circleInformationStem(bounds: BoundsMm): Primitive[] {
 }
 
 /**
- * F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen. Die
- * Koordinaten werden
- * gegen die 24 × 24-mm-Hülle gerechnet; sie sind weder aus der Formation noch aus einem
- * Fahrzeug skaliert. Die technischen IDs benennen nur das sichtbare Motiv und behaupten keine
- * zusätzliche Fachsemantik.
+ * F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen;
+ * I.4.2 und I.4.3 wurden am 27. August 2026 unabhängig ergänzt. Die F.3-Koordinaten werden gegen
+ * die 24 × 24-mm-Hülle gerechnet. Die beiden I.4-Marken sind zusätzlich auf die exakte Lage
+ * `(4|4)–(28|28)` begrenzt. Keine dieser Geometrien ist aus Formation oder Fahrzeug skaliert;
+ * die technischen IDs benennen nur das sichtbare Motiv und behaupten keine zusätzliche
+ * Fachsemantik.
  */
 const CIRCLE_NORMAL_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
   'medical-service': circleQuartering,
@@ -919,6 +1082,30 @@ const CIRCLE_NORMAL_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Prim
       circleRing(21.5 + dx, 17.5 + dy, 1.5),
     ];
   },
+  'circle-diagonal-double-arrow-offset-bowl': (bounds) => {
+    const dx = bounds.minX - 4;
+    const dy = bounds.minY - 4;
+    return [
+      stroke(7 + dx, 14 + dy, 18 + dx, 25 + dy),
+      circleOutline([[7 + dx, 17 + dy], [7 + dx, 14 + dy], [10 + dx, 14 + dy]]),
+      circleOutline([[15 + dx, 25 + dy], [18 + dx, 25 + dy], [18 + dx, 22 + dy]]),
+      circlePath(
+        `M ${12 + dx} ${13.5 + dy} H ${24 + dx} ` +
+        `C ${24 + dx} ${17.5 + dy}, ${22 + dx} ${19.5 + dy}, ${18 + dx} ${19.5 + dy} ` +
+        `C ${14 + dx} ${19.5 + dy}, ${12 + dx} ${17.5 + dy}, ` +
+        `${12 + dx} ${13.5 + dy} Z`,
+      ),
+    ];
+  },
+  'circle-wide-bowl': (bounds) => {
+    const dx = bounds.minX - 4;
+    const dy = bounds.minY - 4;
+    return [circlePath(
+      `M ${8 + dx} ${13.5 + dy} H ${24 + dx} ` +
+      `C ${24 + dx} ${18.5 + dy}, ${21 + dx} ${21.5 + dy}, ${16 + dx} ${21.5 + dy} ` +
+      `C ${11 + dx} ${21.5 + dy}, ${8 + dx} ${18.5 + dy}, ${8 + dx} ${13.5 + dy} Z`,
+    )];
+  },
 };
 
 /** N.2.3: am um 1 mm angehobenen Kreis ist ausschließlich diese eine Marke vermessen. */
@@ -928,7 +1115,11 @@ const CIRCLE_RAISED_ONE_MM_MARKS: Partial<
   'circle-information-stem': circleInformationStem,
 };
 
-/** F.3.5/F.3.14: semantische Marken, separat gegen den abgesenkten Kreis vermessen. */
+/**
+ * F.3.5/F.3.14: semantische Marken, separat gegen den abgesenkten Kreis vermessen. I.4.1 ergänzt
+ * seit der unabhängigen Messung vom 27. August 2026 eine technische Marke ausschließlich an der
+ * exakten raised-gable-Hülle `(4|6)–(28|30)`.
+ */
 const CIRCLE_RAISED_GABLE_MARKS: Partial<
   Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
 > = {
@@ -939,6 +1130,31 @@ const CIRCLE_RAISED_GABLE_MARKS: Partial<
     return [
       ...circleQuartering(bounds),
       stroke(cx - 4, bounds.maxY - 6, cx + 4, bounds.maxY - 6),
+    ];
+  },
+  'circle-two-waves-diamond': (bounds) => {
+    const dx = bounds.minX - 4;
+    const dy = bounds.minY - 6;
+    const wave = (baselineY: number) => circlePath(
+      `M ${12 + dx} ${baselineY + dy} ` +
+      `C ${13.25 + dx} ${baselineY + dy}, ${13.25 + dx} ${baselineY - 1 + dy}, ` +
+      `${14 + dx} ${baselineY - 1 + dy} ` +
+      `C ${14.75 + dx} ${baselineY - 1 + dy}, ${14.75 + dx} ${baselineY + dy}, ` +
+      `${16 + dx} ${baselineY + dy} ` +
+      `C ${17.25 + dx} ${baselineY + dy}, ${17.25 + dx} ${baselineY - 1 + dy}, ` +
+      `${18 + dx} ${baselineY - 1 + dy} ` +
+      `C ${18.75 + dx} ${baselineY - 1 + dy}, ${18.75 + dx} ${baselineY + dy}, ` +
+      `${20 + dx} ${baselineY + dy}`,
+    );
+    return [
+      wave(12.5),
+      wave(14.5),
+      circleOutline([
+        [16 + dx, 16 + dy],
+        [20 + dx, 20 + dy],
+        [16 + dx, 24 + dy],
+        [12 + dx, 20 + dy],
+      ], true),
     ];
   },
 };
@@ -1625,6 +1841,22 @@ export function bodyMark(
         `${expected.label} vermessen. Diese Hülle misst ${widthMm.toFixed(3)} × ` +
         `${heightMm.toFixed(3)} mm; ihre Leisten- und Ringmaße sind eigene Messungen und werden ` +
         'nicht aus einer anderen Körperart fortgeschrieben.',
+    );
+  }
+
+  const exactBounds = LFH488_EXACT_BODY_BOUNDS[id];
+  if (
+    exactBounds !== undefined && (
+      Math.abs(bodyBoundsMm.minX - exactBounds.minX) > BODY_TOLERANCE_MM ||
+      Math.abs(bodyBoundsMm.minY - exactBounds.minY) > BODY_TOLERANCE_MM ||
+      Math.abs(bodyBoundsMm.maxX - exactBounds.maxX) > BODY_TOLERANCE_MM ||
+      Math.abs(bodyBoundsMm.maxY - exactBounds.maxY) > BODY_TOLERANCE_MM
+    )
+  ) {
+    throw new Error(
+      `Die technische Körpermarke "${id}" ist nur an der exakten Hülle ` +
+        `${exactBounds.minX}/${exactBounds.minY}/${exactBounds.maxX}/${exactBounds.maxY} mm ` +
+        'vermessen; gleich große verschobene Hüllen werden nicht fortgeschrieben.',
     );
   }
 

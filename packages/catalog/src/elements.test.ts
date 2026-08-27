@@ -35,7 +35,7 @@ describe('Element-Register', () => {
     expect(observedTitle).toBe(originalTitle);
   });
 
-  it('enthält exakt 269 Deskriptoren mit den festen Artenzahlen', () => {
+  it('enthält exakt 274 Deskriptoren mit den festen Artenzahlen', () => {
     const byKind = Object.values(ELEMENTS).reduce<Record<string, number>>((acc, el) => {
       acc[el.kind] = (acc[el.kind] ?? 0) + 1;
       return acc;
@@ -54,8 +54,9 @@ describe('Element-Register', () => {
       damage: 28,
       wildfire: 14,
       leadership: 10,
+      'water-rescue-personnel': 5,
     });
-    expect(Object.keys(ELEMENTS)).toHaveLength(269);
+    expect(Object.keys(ELEMENTS)).toHaveLength(274);
   });
 
   it('kollabiert 67 State-Darstellungen auf exakt 61 semantische Deskriptoren', () => {
@@ -67,8 +68,8 @@ describe('Element-Register', () => {
       definition.id.startsWith('state.'),
     );
 
-    expect(ALL_PICTOGRAMS).toHaveLength(264);
-    expect(new Set(ALL_PICTOGRAMS.map((definition) => definition.id)).size).toBe(249);
+    expect(ALL_PICTOGRAMS).toHaveLength(269);
+    expect(new Set(ALL_PICTOGRAMS.map((definition) => definition.id)).size).toBe(254);
     expect(capabilityDefinitions).toHaveLength(92);
     expect(new Set(capabilityDefinitions.map((definition) => definition.id)).size).toBe(88);
     expect(stateDefinitions).toHaveLength(67);
@@ -186,6 +187,7 @@ describe('Piktogramm-Elemente', () => {
   it('zählt genau die geometrietragenden Elementarten als Piktogramme', () => {
     expect(PICTOGRAM_ELEMENT_KINDS.has('capability')).toBe(true);
     expect(PICTOGRAM_ELEMENT_KINDS.has('leadership')).toBe(true);
+    expect(PICTOGRAM_ELEMENT_KINDS.has('water-rescue-personnel')).toBe(true);
     expect(PICTOGRAM_ELEMENT_KINDS.has('organization')).toBe(false);
     expect(PICTOGRAM_ELEMENT_KINDS.has('strength')).toBe(false);
   });

@@ -293,8 +293,13 @@ export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
   'circle-information-stem',
   'circle-transport-diamond-arrows',
   'circle-transport-diamond-wheels-arrows',
+  'circle-two-waves-diamond',
+  'circle-diagonal-double-arrow-offset-bowl',
+  'circle-wide-bowl',
   'formation-solid-cap-3mm',
+  'formation-solid-cap-3.7mm-three-hole-row',
   'formation-solid-cap-4mm-three-hole-row',
+  'formation-water-rescue-compact',
   'h-veterinary-decontamination',
   'h-veterinary-slaughter',
   'land-horizontal-blade-bent-upright',
@@ -304,6 +309,8 @@ export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
   'air-rising-diagonal',
   'spontaneous-helper-collection-arrow',
   'spontaneous-helper-contact-double-arrow',
+  'formation-opposed-triangles-top',
+  'formation-chevron-top',
   'double-wave-inner-diamond-8mm',
 ] as const);
 
@@ -530,6 +537,13 @@ export interface BodyLabels {
    * vollständige abgeleitete Textlauf muss innerhalb der dafür vermessenen Körperhülle bleiben.
    */
   readonly centerBaselineFromBodyBottomMm?: number;
+  /**
+   * Individueller symmetrischer Rand der zugesicherten mittigen `boxMm` gegen die Körperhülle.
+   * Das ist keine Quellmessung und kein Auto-Fit: der Wert beschreibt die für den konkreten,
+   * bereits vermessenen Lauf erforderliche Ausgabebox. Ohne Angabe bleibt der globale
+   * 1-mm-Rand unverändert.
+   */
+  readonly centerBoxMarginMm?: number;
   readonly bottomLeft?: string;
   /**
    * Unten mittig im Körper, mit profilabhängiger Grundlinie. Die Formation einschließlich

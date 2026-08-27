@@ -19,6 +19,11 @@ import {
   type Recipe,
 } from './recipes.js';
 import {
+  ANHANG_I_A_RECIPES,
+  ANHANG_I_D_RECIPES,
+  ANHANG_I_K_RECIPES,
+} from './recipes-anhang-i.js';
+import {
   ANHANG_E_A_FILL_DEFECTS,
   ANHANG_E_A_RECIPES,
   ANHANG_E_B_FILL_FINDINGS,
@@ -487,7 +492,7 @@ describe('Anhang D.1, Führungsstellen im Einsatz', () => {
 
   it('führt exakt die neun komponierten D.1-Darstellungen', () => {
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('D.1.'))).toEqual(expectedKeys);
-    expect(Object.keys(RECIPES)).toHaveLength(203);
+    expect(Object.keys(RECIPES)).toHaveLength(214);
   });
 
   it('bindet D.1.2 bis D.1.8 an die sieben gemessenen Formationsrollen', () => {
@@ -1031,7 +1036,7 @@ describe('Anhang G — vollständiges Logistikinventar', () => {
     expect(actual).toEqual(expected);
     expect(Object.keys(actual)).toEqual(Object.keys(expected));
     expect(Object.keys(actual).every((key) => !key.includes('#'))).toBe(true);
-    expect(Object.keys(RECIPES)).toHaveLength(203);
+    expect(Object.keys(RECIPES)).toHaveLength(214);
   });
 
   it('bindet die 21 primary- und Referenz-IDs exakt und ohne Alternative', () => {
@@ -1078,15 +1083,13 @@ describe('Anhang I, Teilslice I-a (I.3.5 bis I.3.7)', () => {
     'I.3.6': ['Mehrzweckarbeitsboot', 'I.3.6_Mehrzweckarbeitsboot.svg', 'MzAB'],
     'I.3.7': ['Mehrzweckponton', 'I.3.7_Mehrzweckponton.svg', 'MzPt'],
   } as const;
-  const recipes: Record<string, Recipe> = RECIPES;
+  const recipes: Record<string, Recipe> = ANHANG_I_A_RECIPES;
 
   it('bindet ausschließlich die drei vermessenen Wasserfahrzeuge an ihre Referenzmatrix', () => {
     // Diese Literale schützen die Zuordnung von Abschnitt, Name, Quelldatei und Kürzel: etwa
     // ein vertauschtes MzAB/MzPt ergäbe weiter eine valide Komposition, aber ein falsches Bild.
     const actual = Object.fromEntries(
-      Object.entries(recipes)
-        .filter(([section]) => /^I\.3\./.test(section))
-        .map(([section, recipe]) => {
+      Object.entries(recipes).map(([section, recipe]) => {
         return [
           section,
           [recipe.title, recipe.referenceAsset, recipe.spec.labels?.center],
@@ -1094,6 +1097,7 @@ describe('Anhang I, Teilslice I-a (I.3.5 bis I.3.7)', () => {
       }),
     );
     expect(actual).toEqual(expected);
+    expect(Object.keys(recipes)).toEqual(Object.keys(expected));
   });
 
   it.each(Object.entries(expected))(
@@ -1188,18 +1192,20 @@ describe('Anhang I, Teilslice I.5 (I.5.1 bis I.5.3)', () => {
       },
     },
   } as const satisfies Record<string, Recipe>;
+  const recipes: Readonly<Record<string, Recipe>> = ANHANG_I_K_RECIPES;
 
   it('bindet ausschließlich die drei vermessenen Wasserrettungsrezepte literal an Quelle und Geometrie', () => {
-    const actual = Object.fromEntries(
-      Object.entries(RECIPES).filter(([section]) => section.startsWith('I.5.')),
-    );
-    expect(actual).toEqual(expected);
+    expect(recipes).toEqual(expected);
+    expect(Object.keys(recipes)).toEqual(['I.5.1', 'I.5.2', 'I.5.3']);
+    expect(Object.fromEntries(
+      Object.entries(RECIPES).filter(([section]) => /^I\.5\.[1-3]$/.test(section)),
+    )).toEqual(expected);
   });
 
   it.each(Object.entries(expected))(
     '%s verwendet ausschließlich die technische Doppelwelle mit Innenraute ohne Fachsemantik',
     (section, recipe) => {
-      const actual = (RECIPES as Record<string, Recipe>)[section];
+      const actual = recipes[section];
       expect(actual).toBeDefined();
       if (actual === undefined) return;
 
@@ -1225,7 +1231,7 @@ describe('Anhang I, Teilslice I.5 (I.5.1 bis I.5.3)', () => {
     ['print-monochrome', PRINT_MONOCHROME_THEME],
   ] as const)('rendert I.5 im Theme %s ohne erfundene Organisationskontur', (_id, theme) => {
     for (const section of ['I.5.1', 'I.5.2', 'I.5.3'] as const) {
-      const recipe = RECIPES[section]!;
+      const recipe = recipes[section]!;
       expect(renderSvg(composeFromCatalog(recipe.spec, recipe.title), { theme }), section)
         .not.toContain('stroke-dasharray=');
     }
@@ -1245,7 +1251,7 @@ describe('Anhang I, Teilslice I.5 (I.5.1 bis I.5.3)', () => {
     ['I.5.2', 'Strömungsretter', 1, 3.5],
     ['I.5.3', 'Taucher', 1, 4],
   ] as const)('%s hält die gemessene Above-left-Textlage fest', (section, content, x, y) => {
-    const recipe = RECIPES[section]!;
+    const recipe = recipes[section]!;
     const labels = composeFromCatalog(recipe.spec, recipe.title).children.filter(
       (child): child is Primitive & { type: 'text' } => child.type === 'text' && child.role === 'label',
     );
@@ -1264,7 +1270,7 @@ describe('Anhang I, Teilslice I.5 (I.5.1 bis I.5.3)', () => {
     ['I.5.2', 2.432746],
     ['I.5.3', 2.919225],
   ] as const)('%s leitet den Schriftgrad aus der gemessenen Versalhöhe ab', (section, capHeightMm) => {
-    const recipe = RECIPES[section]!;
+    const recipe = recipes[section]!;
     const label = composeFromCatalog(recipe.spec, recipe.title).children.find(
       (child): child is Primitive & { type: 'text' } => child.type === 'text' && child.role === 'label',
     );
@@ -1277,7 +1283,7 @@ describe('Anhang I, Teilslice I.5 (I.5.1 bis I.5.3)', () => {
     ['I.5.2', 'Strömungsretter'],
     ['I.5.3', 'Taucher'],
   ] as const)('%s beschreibt Basis, technische Marke und sichtbares Label ohne Organisationssemantik', (section, label) => {
-    const recipe = RECIPES[section]!;
+    const recipe = recipes[section]!;
     const description = composeFromCatalog(recipe.spec, recipe.title).description;
 
     expect(description).toContain('Grundzeichen: Person');
@@ -1291,7 +1297,316 @@ describe('Anhang I, Teilslice I.5 (I.5.1 bis I.5.3)', () => {
     }
   });
 });
+describe('Anhang I, Teilslice I-g (I.1.17 bis I.1.20)', () => {
+  const expected = {
+    'I.1.17': {
+      title: 'Strömungsrettungstrupp',
+      referenceAsset: 'I.1.17_Strömungsrettungstrupp.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'hilfsorganisation',
+        strength: 'trupp',
+        bodyMarks: ['water-rescue'],
+        labels: {
+          center: 'Strömungsrettung',
+          centerBaselineFromBodyBottomMm: 16,
+          centerCapHeightMm: 2.5,
+          centerBoxMarginMm: 0.5,
+        },
+      },
+    },
+    'I.1.18': {
+      title: 'Strömungsrettungsgruppe',
+      referenceAsset: 'I.1.18_Strömungsrettungsgruppe.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'hilfsorganisation',
+        strength: 'gruppe',
+        bodyMarks: ['water-rescue'],
+        labels: {
+          center: 'Strömungsrettung',
+          centerBaselineFromBodyBottomMm: 16,
+          centerCapHeightMm: 2.5,
+          centerBoxMarginMm: 0.5,
+        },
+      },
+    },
+    'I.1.19': {
+      title: 'Trupp Luftunterstützte Wasserrettung',
+      referenceAsset: 'I.1.19_Trupp Luftunterstützte Wasserrettung.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'hilfsorganisation',
+        strength: 'trupp',
+        bodyMarks: ['water-rescue', 'formation-opposed-triangles-top'],
+      },
+    },
+    'I.1.20': {
+      title: 'Trupp Drohne',
+      referenceAsset: 'I.1.20_Trupp Drohne.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'hilfsorganisation',
+        strength: 'trupp',
+        bodyMarks: ['water-rescue', 'formation-chevron-top'],
+      },
+    },
+  } as const;
+  const recipes: Record<string, Recipe> = RECIPES;
 
+  it('bindet exakt die vier freigegebenen I-g-Referenzen an ihre gemessenen Specs', () => {
+    expect(Object.fromEntries(
+      Object.entries(recipes).filter(([section]) => /^I\.1\.(?:1[7-9]|20)$/.test(section)),
+    )).toEqual(expected);
+  });
+
+  it.each(Object.entries(expected))(
+    '%s bleibt eine weiße Formation mit belegter Stärke und gültigem Vertrag',
+    (section, recipe) => {
+      expect(validateSpec(recipe.spec)).toEqual([]);
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      expect(drawing.children.find((child) => child.role === 'body')?.style?.fill).toBe('weiss');
+      expect(drawing.children.filter((child) => child.role === 'head').length).toBeGreaterThan(0);
+
+      const labels = drawing.children.filter(
+        (child): child is Primitive & { type: 'text' } =>
+          child.type === 'text' && child.role === 'label',
+      );
+      if (section === 'I.1.17' || section === 'I.1.18') {
+        expect(labels).toEqual([
+          expect.objectContaining({
+            content: 'Strömungsrettung',
+            x: 16,
+            y: 10,
+            sizeMm: 2.5 / ARIMO_CAP_HEIGHT_FRACTION,
+            anchor: 'middle',
+            boxMm: expect.objectContaining({ xMm: 1.5, widthMm: 29 }),
+          }),
+        ]);
+      } else {
+        expect(labels).toHaveLength(0);
+      }
+    },
+  );
+});
+
+describe('Anhang I, Teilslice I-j (I.4.1 bis I.4.3)', () => {
+  const expected = {
+    'I.4.1': [
+      'Wasserrettungsstation, ortsgebunden',
+      'I.4.1_Wasserrettungsstation_ortsgebunden.svg',
+      'circle-two-waves-diamond',
+      'raised-gable',
+    ],
+    'I.4.2': [
+      'Slip-Stelle',
+      'I.4.2_Slip-Stelle.svg',
+      'circle-diagonal-double-arrow-offset-bowl',
+      undefined,
+    ],
+    'I.4.3': [
+      'Anlegestelle für Boote',
+      'I.4.3_Anlegestelle für Boote.svg',
+      'circle-wide-bowl',
+      undefined,
+    ],
+  } as const;
+  const recipes: Record<string, Recipe> = RECIPES;
+
+  it('bindet genau drei literale Wasserrettungsorte an Referenz, Kreisfassung und Innenmarke', () => {
+    const actual = Object.fromEntries(
+      Object.entries(recipes)
+        .filter(([section]) => section.startsWith('I.4.'))
+        .map(([section, recipe]) => [
+          section,
+          [
+            recipe.title,
+            recipe.referenceAsset,
+            recipe.spec.bodyMarks?.[0],
+            recipe.spec.bodyVariant,
+          ],
+        ]),
+    );
+    expect(actual).toEqual(expected);
+  });
+
+  it.each(Object.entries(expected))(
+    '%s bleibt eine geometrische Kreisvariation ohne erfundene Ortsgebunden-Semantik',
+    (section, [_title, referenceAsset, bodyMark, bodyVariant]) => {
+      const recipe = recipes[section];
+      expect(recipe).toBeDefined();
+      if (recipe === undefined) return;
+
+      expect(recipe.spec).toEqual({
+        kind: 'circle-12',
+        ...(bodyVariant === undefined ? {} : { bodyVariant }),
+        organization: 'hilfsorganisation',
+        bodyMarks: [bodyMark],
+      });
+      expect(validateSpec(recipe.spec)).toEqual([]);
+
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      expect(matchFingerprint(drawing, fingerprintFor(referenceAsset))).toEqual({
+        ok: true,
+        problems: [],
+      });
+      expect(drawing.children.find((child) => child.role === 'body')).toEqual({
+        type: 'circle', role: 'body', cx: 16, cy: bodyVariant === 'raised-gable' ? 18 : 16,
+        r: 12,
+        style: {
+          fill: 'weiss',
+          stroke: 'schwarz',
+          strokeWidth: 0.5,
+          bodyStrokeDashToken: 'weiss',
+        },
+      });
+      expect(drawing.children.filter((child) => child.role === 'bodyExtra')).toEqual(
+        bodyVariant === 'raised-gable'
+          ? [{
+              type: 'polyline', role: 'bodyExtra', closed: false,
+              points: [[3, 11], [16, 1], [29, 11]],
+              style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+            }]
+          : [],
+      );
+    },
+  );
+});
+
+describe('Anhang I, Teilslice I-d (I.1.5 bis I.1.8)', () => {
+  const expected = {
+    'I.1.5': {
+      title: 'Zugtrupp Wasserrettungszug',
+      referenceAsset: 'I.1.5_Zugtrupp Wasserrettungszug.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'hilfsorganisation',
+        strength: 'trupp',
+        bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3.7mm-three-hole-row'],
+      },
+    },
+    'I.1.6': {
+      title: 'Führungstrupp Wasserrettung',
+      referenceAsset: 'I.1.6_Führungstrupp Wasserrettung.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'hilfsorganisation',
+        strength: 'trupp',
+        bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3mm'],
+      },
+    },
+    'I.1.7': {
+      title: 'Führungsgruppe Wasserrettung',
+      referenceAsset: 'I.1.7_Führungsgruppe Wasserrettung.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'hilfsorganisation',
+        strength: 'gruppe',
+        bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3mm'],
+      },
+    },
+    'I.1.8': {
+      title: 'Führungsstaffel Wasserrettung',
+      referenceAsset: 'I.1.8_Führungsstaffel Wasserrettung.svg',
+      spec: {
+        kind: 'formation',
+        organization: 'hilfsorganisation',
+        strength: 'staffel',
+        bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3mm'],
+      },
+    },
+  } as const satisfies Record<string, Recipe>;
+  const recipes: Readonly<Record<string, Recipe>> = ANHANG_I_D_RECIPES;
+
+  it('exportiert ausschließlich die vier freigegebenen Rezepte mit ihrer literalen Matrix', () => {
+    expect(recipes).toEqual(expected);
+  });
+
+  it('integriert I.1.5 bis I.1.8 exakt neben den übrigen I.1-Slices', () => {
+    expect(Object.keys(RECIPES).filter((section) => /^I\.1\.[5-8]$/.test(section))).toEqual([
+      'I.1.5',
+      'I.1.6',
+      'I.1.7',
+      'I.1.8',
+    ]);
+  });
+
+  it.each(Object.keys(expected) as (keyof typeof expected)[])(
+    '%s ist als exakt diese Formation valide',
+    (section) => {
+      const recipe = recipes[section];
+      expect(recipe).toBeDefined();
+      if (recipe === undefined) return;
+      expect(recipe.spec).toEqual(expected[section].spec);
+      expect(validateSpec(recipe.spec)).toEqual([]);
+    },
+  );
+
+  it('hält Kopf, Körper und Kappe in der belegten vertikalen Lage', () => {
+    const placements = {
+      'I.1.5': {
+        body: { minX: 1, minY: 6, maxX: 31, maxY: 26 },
+        heads: [{ cx: 16, cy: 3.5, r: 1.5 }],
+        capHeight: 3.7,
+      },
+      'I.1.6': {
+        body: { minX: 1, minY: 6, maxX: 31, maxY: 26 },
+        heads: [{ cx: 16, cy: 3.5, r: 1.5 }],
+        capHeight: 3,
+      },
+      'I.1.7': {
+        body: { minX: 1, minY: 6, maxX: 31, maxY: 26 },
+        heads: [
+          { cx: 11, cy: 3.5, r: 1.5 },
+          { cx: 21, cy: 3.5, r: 1.5 },
+        ],
+        capHeight: 3,
+      },
+      'I.1.8': {
+        body: { minX: 1, minY: 9, maxX: 31, maxY: 29 },
+        heads: [
+          { cx: 16, cy: 2.5, r: 1.5 },
+          { cx: 16, cy: 6.5, r: 1.5 },
+        ],
+        capHeight: 3,
+      },
+    } as const;
+
+    for (const [section, placement] of Object.entries(placements)) {
+      const recipe = recipes[section];
+      expect(recipe, `${section} fehlt`).toBeDefined();
+      if (recipe === undefined) continue;
+
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      const body = drawing.children.find((child) => child.role === 'body');
+      expect(body, `${section}: Körper`).toBeDefined();
+      if (body === undefined) continue;
+      const bodyBounds = boundsOfMm(body);
+      expect(bodyBounds, `${section}: Körperhülle`).toEqual(placement.body);
+      expect(body.style?.fill, `${section}: Körperfarbe`).toBe('weiss');
+
+      const heads = drawing.children
+        .filter((child): child is Primitive & { type: 'circle' } =>
+          child.type === 'circle' && child.role === 'head')
+        .map(({ cx, cy, r }) => ({ cx, cy, r }));
+      expect(heads, `${section}: Kopfzone`).toEqual(placement.heads);
+      expect(
+        bodyBounds.minY - Math.max(...heads.map((head) => head.cy + head.r)),
+        `${section}: Abstand zwischen Kopf und Körper`,
+      ).toBe(1);
+
+      const cap = drawing.children.find((child): child is Primitive & { type: 'rect' } =>
+        child.type === 'rect' &&
+        child.role === 'pictogram' &&
+        child.x === bodyBounds.minX &&
+        child.y === bodyBounds.minY &&
+        child.width === bodyBounds.maxX - bodyBounds.minX &&
+        child.height === placement.capHeight &&
+        child.style?.fill === 'schwarz');
+      expect(cap, `${section}: Kappe`).toBeDefined();
+    }
+  });
+});
 describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
   const cases = Object.entries<Recipe>(ANHANG_E_A_RECIPES);
 
@@ -2524,12 +2839,12 @@ describe('Anhang F, Teilslice F-f', () => {
     },
   } as const;
 
-  it('deckt F.3.12 bis F.3.19 lückenlos ab und erreicht integriert 200 Rezepte', () => {
+  it('deckt F.3.12 bis F.3.19 lückenlos ab und erreicht integriert 214 Rezepte', () => {
     const entries = Object.entries<Recipe>(RECIPES)
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(203);
+    expect(Object.keys(RECIPES)).toHaveLength(214);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {

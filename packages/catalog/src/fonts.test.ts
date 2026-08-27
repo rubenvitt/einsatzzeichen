@@ -323,9 +323,9 @@ describe('Rasterevidenz für Text (resvgFontOptions())', () => {
     // F-d ergänzt sieben beschriftete Fahrzeuge; allein F.2.15 trägt keinen Lauf.
     // F-e ergänzt die drei vollständig vermessenen Kreisläufe UHS/UHS/50. F-f ergänzt mit
     // F.3.14 genau einen weiteren vermessenen Lauf: `500` im ortsgebundenen Betreuungsplatz.
-    // G ergänzt zwei, I-a drei, I.5 genau zwei (I.5.2/I.5.3) und Anhang N sechs beschriftete
-    // Rezepte. I.5.1 trägt bewusst keinen Lauf.
-    expect(labelRecipes).toHaveLength(117);
+    // G ergänzt zwei, I-a drei, I-g zwei, I.5 genau zwei (I.5.2/I.5.3) und Anhang N sechs
+    // beschriftete Rezepte. I.5.1 trägt bewusst keinen Lauf.
+    expect(labelRecipes).toHaveLength(119);
   });
 
   it('behandelt die ULP-äquivalente linke I.5.3-Boxkante als innerhalb', () => {

@@ -570,6 +570,33 @@ describe('compose() — Beschriftungszonen', () => {
     expect(bottomRight.boxMm).toMatchObject({ xMm: 16, widthMm: 13 });
   });
 
+  it('begrenzt einen je Rezept deklarierten Center-Boxrand auf genau diesen Lauf', () => {
+    const drawing = compose({
+      kind: 'formation',
+      labels: {
+        center: 'Strömungsrettung',
+        centerBoxMarginMm: 0.5,
+        bottomCenter: 'BC',
+      },
+    }, catalog);
+    const labels = drawing.children.filter(
+      (child): child is Extract<Primitive, { type: 'text' }> =>
+        child.type === 'text' && child.role === 'label',
+    );
+    const center = labels.find((label) => label.content === 'Strömungsrettung');
+    const bottomCenter = labels.find((label) => label.content === 'BC');
+    if (center === undefined || bottomCenter === undefined) {
+      throw new Error('compose() hat nicht beide mittigen Textläufe erzeugt.');
+    }
+
+    // Körper x=1…31 mm: der individuelle Rand erweitert ausschließlich die zugesicherte Box
+    // auf x=1,5…30,5 mm. Anker und Standardposition bleiben unverändert.
+    expect(center.boxMm).toMatchObject({ xMm: 1.5, widthMm: 29 });
+    expect(center.x).toBe(16);
+    expect(center.anchor).toBe('middle');
+    expect(bottomCenter.boxMm).toMatchObject({ xMm: 2, widthMm: 28 });
+  });
+
   it('rechnet die mittige Grundlinie gegen die Körperunterkante, nicht gegen die Oberkante', () => {
     // Die eigentliche Zusicherung steht in der **zweiten** Hälfte. An `formation` (Hülle
     // 6…26 mm) liefern „12 mm unter der Oberkante" und „8 mm über der Unterkante" beide 18 mm —

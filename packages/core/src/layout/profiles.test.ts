@@ -102,10 +102,17 @@ describe('Layoutprofile', () => {
     expect(profileFor('trailer').topLeftBaselineFromBodyTopMm).toBeUndefined();
   });
 
-  it('führt die vermessenen Anhang-N-Flächenprofile ohne rezeptabhängige Verzweigung', () => {
+  it('führt vermessene Baseline-Overrides nur an den belegten Flächenprofilen', () => {
     expect(profileFor('vehicle-land').allowsCenterBaselineOverride).toBe(true);
-    expect(profileFor('formation').allowsCenterBaselineOverride).toBeUndefined();
+    expect(profileFor('formation').allowsCenterBaselineOverride).toBe(true);
+    expect(profileFor('formation').allowsCenterBoxMarginOverride).toBe(true);
+    expect(profileFor('formation').measuredBodyBoundsMm).toEqual({
+      minX: 1, minY: 6, maxX: 31, maxY: 26,
+    });
     expect(profileFor('vehicle-air').allowsCenterBaselineOverride).toBeUndefined();
+    expect(profileFor('vehicle-land').allowsCenterBoxMarginOverride).toBeUndefined();
+    expect(profileFor('formation', 'foot-band').allowsCenterBaselineOverride).toBeUndefined();
+    expect(profileFor('formation', 'foot-band').allowsCenterBoxMarginOverride).toBeUndefined();
     expect(profileFor('vehicle-land', 'foot-band').allowsCenterBaselineOverride).toBeUndefined();
     expect(profileFor('vehicle-land', 'inverted-hull-track' as BodyVariantId)
       .allowsCenterBaselineOverride).toBeUndefined();

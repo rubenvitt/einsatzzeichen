@@ -83,8 +83,12 @@ const VEHICLE_CATEGORY_LABELS: Record<VehicleCategoryId, string> = {
  */
 export const TECHNICAL_BODY_MARK_LABELS = Object.freeze({
   'formation-solid-cap-3mm': 'Schwarze Formationskappe, 3 mm hoch',
+  'formation-solid-cap-3.7mm-three-hole-row':
+    'Schwarze Formationskappe, 3,7 mm hoch, mit drei Löchern in einer Reihe',
   'formation-solid-cap-4mm-three-hole-row':
     'Schwarze Formationskappe, 4 mm hoch, mit drei Löchern in einer Reihe',
+  'formation-water-rescue-compact':
+    'Kompakte Wasserrettungsmarke mit Doppelwelle und scharfkantigem Rautenring',
   'ring-7mm-offset-down-1mm': 'Ring 7 mm, Mittelpunkt 1 mm unter Körpermitte',
   'chevron-over-opposed-triangles': 'Winkel über gegenüberliegenden Dreiecken',
   'ring-6-5mm-offset-down-2mm-with-roof': 'Ring 6,5 mm mit Dach und eingeschriebenem Dreieck',
@@ -109,6 +113,10 @@ export const TECHNICAL_BODY_MARK_LABELS = Object.freeze({
     'Raute mit zwei inneren Diagonalen, Anschlag und Rechtspfeil',
   'circle-transport-diamond-wheels-arrows':
     'Raute mit zwei Ringen, Anschlag und Rechtspfeil',
+  'circle-two-waves-diamond': 'Zwei Wellenlinien über einer Raute',
+  'circle-diagonal-double-arrow-offset-bowl':
+    'Diagonaler Doppelpfeil neben einer nach rechts versetzten Schale',
+  'circle-wide-bowl': 'Breite Schale',
   'land-horizontal-blade-bent-upright': 'Waagerechte Leiste mit geknickter senkrechter Stütze',
   'ring-5mm-offset-down-3-5mm-eight-spokes':
     'Ring 5 mm mit acht Speichen, 3,5 mm nach unten versetzt',
@@ -117,6 +125,9 @@ export const TECHNICAL_BODY_MARK_LABELS = Object.freeze({
   'air-rising-diagonal': 'Ansteigende Diagonale im Luftfahrzeugrumpf',
   'spontaneous-helper-collection-arrow': 'Vierblattmarke mit Ring und Rechtspfeil',
   'spontaneous-helper-contact-double-arrow': 'Vierblattmarke mit Doppelpfeil',
+  'formation-opposed-triangles-top':
+    'Zwei gegenüberliegende Dreiecke in der oberen Formationszone',
+  'formation-chevron-top': 'Gefüllter Winkel in der oberen Formationszone',
   'double-wave-inner-diamond-8mm': 'Doppelwelle mit Innenraute (8 mm)',
   'h-veterinary-decontamination':
     'Veterinär-V mit kompakter Tierdekontaminationsmarke unten links',

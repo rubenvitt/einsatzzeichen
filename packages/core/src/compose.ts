@@ -284,8 +284,10 @@ function minRenderPxFor(sizeMm: number, viewBoxWidthMm: number): number {
 /**
  * Ein Beschriftungslauf im Körper. `boxMm` ist wie bei jedem Textprimitiv eine Zusicherung des
  * Autors, keine Messung — die waagerechte Ausdehnung ist deshalb bewusst eng gefasst: der
- * mittige Lauf bekommt die Körperbreite abzüglich zweimal `CENTER_LABEL_BOX_MARGIN_MM` (also das
- * vermessene Innenfeld, 28 mm), die beiden unteren je ihre Hälfte von ihrem Anker
+ * mittige Lauf bekommt normalerweise die Körperbreite abzüglich zweimal
+ * `CENTER_LABEL_BOX_MARGIN_MM` (also das vermessene Innenfeld, 28 mm); ein einzelner
+ * quellenvermessener Lauf darf diese reine Ausgabebox mit `BodyLabels.centerBoxMarginMm`
+ * enger an die Körperkante führen. Die beiden unteren bekommen je ihre Hälfte von ihrem Anker
  * (`LABEL_SIDE_MARGIN_MM`) bis zur Körpermitte. Damit ist „passt in seine Zone" eine prüfbare
  * Aussage — für den mittigen Lauf gegen das Innenfeld, für die unteren gegen ihre Ränder — und die
  * beiden unteren Läufe können sich nicht überlappen, ohne dass ein Gate es meldet
@@ -417,8 +419,11 @@ function labelPrimitives(
   // nicht ein umgerechnetes: sonst wanderten die vermessenen unteren Anker 3,03/29,03 mit.
   const leftMm = bodyBoundsMm.minX + LABEL_SIDE_MARGIN_MM;
   const rightMm = bodyBoundsMm.maxX - LABEL_SIDE_MARGIN_MM;
-  const centerBoxLeftMm = bodyBoundsMm.minX + CENTER_LABEL_BOX_MARGIN_MM;
-  const centerBoxRightMm = bodyBoundsMm.maxX - CENTER_LABEL_BOX_MARGIN_MM;
+  const defaultCenterBoxLeftMm = bodyBoundsMm.minX + CENTER_LABEL_BOX_MARGIN_MM;
+  const defaultCenterBoxRightMm = bodyBoundsMm.maxX - CENTER_LABEL_BOX_MARGIN_MM;
+  const centerBoxMarginMm = labels.centerBoxMarginMm ?? CENTER_LABEL_BOX_MARGIN_MM;
+  const centerLabelBoxLeftMm = bodyBoundsMm.minX + centerBoxMarginMm;
+  const centerLabelBoxRightMm = bodyBoundsMm.maxX - centerBoxMarginMm;
   const centerBaselineMm = bodyBoundsMm.maxY - centerBaselineFromBodyBottomMm;
   const bottomBaselineMm = bodyBoundsMm.maxY - bottomLabelBaselineFromBodyBottomMm;
 
@@ -431,8 +436,8 @@ function labelPrimitives(
         centerBaselineMm,
         'middle',
         centerXMm,
-        centerBoxLeftMm,
-        centerBoxRightMm - centerBoxLeftMm,
+        centerLabelBoxLeftMm,
+        centerLabelBoxRightMm - centerLabelBoxLeftMm,
         viewBoxWidthMm,
         ink,
       ),
@@ -572,8 +577,8 @@ function labelPrimitives(
         bodyBoundsMm.maxY - bottomCenterBaselineFromBodyBottomMm,
         'middle',
         centerXMm,
-        centerBoxLeftMm,
-        centerBoxRightMm - centerBoxLeftMm,
+        defaultCenterBoxLeftMm,
+        defaultCenterBoxRightMm - defaultCenterBoxLeftMm,
         viewBoxWidthMm,
         bottomCenterInk === 'black' ? 'schwarz' : ink,
       ),
