@@ -323,6 +323,9 @@ export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
   'formation-opposed-triangles-top',
   'formation-chevron-top',
   'double-wave-inner-diamond-8mm',
+  'trailer-water-rescue',
+  'trailer-diving',
+  'trailer-boat-hull',
 ] as const);
 
 export type TechnicalBodyMarkId = (typeof TECHNICAL_BODY_MARK_IDS)[number];
@@ -543,6 +546,12 @@ export interface BodyLabels {
    */
   readonly inBodyInk?: BodyLabelInk;
   readonly center?: string;
+  /**
+   * Quellenspezifischer x-Anker eines mittigen Laufs, von der linken Körperkante gerechnet.
+   * Die Angabe ist kein automatisches Ausrichten: `validateSpec()` akzeptiert sie ausschließlich
+   * an dem Profil, das genau diesen Anker vermessen hat.
+   */
+  readonly centerAnchorFromBodyLeftMm?: number;
   /**
    * Individuell vermessener Abstand der mittigen Grundlinie von der Körperunterkante. Der
    * vollständige abgeleitete Textlauf muss innerhalb der dafür vermessenen Körperhülle bleiben.

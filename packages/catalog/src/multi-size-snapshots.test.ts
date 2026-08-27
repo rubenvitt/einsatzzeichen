@@ -265,12 +265,12 @@ describe('echte Mehrgrößen- und Profilregression', () => {
     expect(image.height).toBe(92);
   });
 
-  it('schreibt exakt 518 Mehrgrößen-Snapshots', () => {
+  it('schreibt exakt 522 Mehrgrößen-Snapshots', () => {
     const snapshots = readdirSync(new URL('./__snapshots__/multi-size/', import.meta.url), {
       withFileTypes: true,
     }).filter((entry) => entry.isFile() && entry.name.endsWith('.svg'));
     const names = snapshots.map((entry) => entry.name);
-    expect(snapshots).toHaveLength(518);
+    expect(snapshots).toHaveLength(522);
     expect(names).toContain('recipe.C.1.3.svg');
     expect(names).toContain('recipe.G.1.svg');
     expect(names).toContain('recipe.G.8.svg');
@@ -297,6 +297,10 @@ describe('echte Mehrgrößen- und Profilregression', () => {
     expect(names).toContain('recipe.I.1.18.svg');
     expect(names).toContain('recipe.I.1.19.svg');
     expect(names).toContain('recipe.I.1.20.svg');
+    expect(names).toContain('recipe.I.2.4.svg');
+    expect(names).toContain('recipe.I.2.5.svg');
+    expect(names).toContain('recipe.I.2.6.svg');
+    expect(names).toContain('recipe.I.2.7.svg');
     for (const section of Array.from({ length: 11 }, (_, index) => `I.3.${index + 1}`)) {
       expect(names).toContain(`recipe.${section}.svg`);
     }

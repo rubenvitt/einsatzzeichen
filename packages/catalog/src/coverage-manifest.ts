@@ -469,6 +469,14 @@ const ANHANG_I_K_TECHNICAL_REVIEWS: Readonly<Record<string, Review>> = {
   },
 };
 
+const ANHANG_I_B_TRAILER_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-27',
+  note:
+    'I.2.4-I.2.7 passed the measured trailer shell and drawbar, explicitly absent chassis, trailer-only technical body marks, literal recipes, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
+};
+
 const ANHANG_I_D_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
@@ -476,7 +484,6 @@ const ANHANG_I_D_TECHNICAL_REVIEW: Review = {
   note:
     'I.1.5-I.1.8 passed literal recipe, measured compact water-rescue body-mark, independently gated cap/head/body vertical placement, direct-snapshot and multi-size gates. I.1.5 uses its measured 3.7 mm three-hole cap; I.1.6-I.1.8 reuse the 3 mm cap and I.1.8 moves body geometry by 3 mm with staffel. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending.',
 };
-
 const ANHANG_I_G_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
@@ -509,7 +516,7 @@ const ANHANG_I_C_TECHNICAL_REVIEW: Review = {
     'measured water-rescue formation mark, recipe, direct-snapshot and multi-size gates. ' +
     'No organization or global Verband strength is inferred; domain classification remains pending.',
 };
-const ANHANG_I_B_TECHNICAL_REVIEW: Review = {
+const ANHANG_I_B_LAND_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
   date: '2026-08-27',
@@ -534,9 +541,13 @@ const ANHANG_I_TECHNICAL_REVIEW_BY_SECTION = {
   'I.1.18': ANHANG_I_G_TECHNICAL_REVIEW,
   'I.1.19': ANHANG_I_G_TECHNICAL_REVIEW,
   'I.1.20': ANHANG_I_G_TECHNICAL_REVIEW,
-  'I.2.1': ANHANG_I_B_TECHNICAL_REVIEW,
-  'I.2.2': ANHANG_I_B_TECHNICAL_REVIEW,
-  'I.2.3': ANHANG_I_B_TECHNICAL_REVIEW,
+  'I.2.1': ANHANG_I_B_LAND_TECHNICAL_REVIEW,
+  'I.2.2': ANHANG_I_B_LAND_TECHNICAL_REVIEW,
+  'I.2.3': ANHANG_I_B_LAND_TECHNICAL_REVIEW,
+  'I.2.4': ANHANG_I_B_TRAILER_TECHNICAL_REVIEW,
+  'I.2.5': ANHANG_I_B_TRAILER_TECHNICAL_REVIEW,
+  'I.2.6': ANHANG_I_B_TRAILER_TECHNICAL_REVIEW,
+  'I.2.7': ANHANG_I_B_TRAILER_TECHNICAL_REVIEW,
   'I.3.1': ANHANG_I_TECHNICAL_REVIEW,
   'I.3.2': ANHANG_I_TECHNICAL_REVIEW,
   'I.3.3': ANHANG_I_TECHNICAL_REVIEW,
@@ -1268,6 +1279,10 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'I.2.1',
     'I.2.2',
     'I.2.3',
+    'I.2.4',
+    'I.2.5',
+    'I.2.6',
+    'I.2.7',
     'I.3',
     'I.4.1',
     'I.4.2',

@@ -59,6 +59,12 @@ export interface LayoutProfile {
   centerBaselineFromBodyBottomMm: number;
   /** Erlaubt einen je Zeichen vermessenen Abstand anstelle des Profilwerts. */
   allowsCenterBaselineOverride?: true;
+  /** Geschlossene Liste der an diesem Profil einzeln vermessenen abweichenden Grundlinien. */
+  measuredCenterBaselineOverridesMm?: readonly number[];
+  /** Erlaubt einen ausdrücklich vermessenen, von der linken Körperkante gerechneten Mittelpunkt. */
+  allowsCenterAnchorOverride?: true;
+  /** Der einzige an diesem Profil vermessene relative x-Anker des mittigen Laufs. */
+  measuredCenterAnchorFromBodyLeftMm?: number;
   /** Erlaubt eine je Lauf deklarierte horizontale Center-Ausgabebox. */
   allowsCenterBoxMarginOverride?: true;
   /**
@@ -172,6 +178,19 @@ function rectBody(centerBaselineFromBodyBottomMm: number): LayoutProfile {
 
 /** Der Normfall: mittige Grundlinie 8 mm über der Körperunterkante. */
 const rectBodyProfile: LayoutProfile = rectBody(8);
+
+/**
+ * Der Anhänger ist 27 × 20,25 mm groß und führt in I.2.5/I.2.6 zwei einzeln vermessene
+ * Mittellabel-Grundlinien. Die übrigen Anhänger behalten ohne Override den Normwert 8 mm.
+ */
+const trailerProfile: LayoutProfile = {
+  ...rectBody(8),
+  allowsCenterBaselineOverride: true,
+  measuredCenterBaselineOverridesMm: [14.5, 14.327] as const,
+  allowsCenterAnchorOverride: true,
+  measuredCenterAnchorFromBodyLeftMm: 8.24,
+  measuredBodyBoundsMm: { minX: 4, minY: 5.75, maxX: 31, maxY: 26 },
+};
 
 /**
  * Die taktische Formation trägt zusätzlich die vermessene Zone oben links (Anhang F). Ein eigenes
@@ -415,7 +434,7 @@ const PROFILES: Record<SymbolKind, LayoutProfile> = {
   // Kein Zeichen des Anhangs E.2 trägt überhaupt eine Kopfzone (selbst nachgesehen an allen 31).
   // Ohne Kopfzone gibt `place` den Körper unverändert zurück; `defaultAnchorMm` bleibt damit
   // unerreichbar und ist für diese drei keine Behauptung.
-  trailer: rectBodyProfile,
+  trailer: trailerProfile,
   // 7,5004 gemessen an E.2.15 (Grundlinie 17,0000 bei Körperunterkante 24,5004) — n = 1. Das ist
   // ein **Wert** in einem stehenden Mechanismus und kein eigener Mechanismus; die Fallzahlregel
   // des Projekts trifft ihn nicht.

@@ -6,9 +6,11 @@ Status: technische Ausgabeprüfung abgeschlossen; Domain-Review pending
 
 ## Ausgabeprüfung
 
-Die direkte SVG-Snapshotmenge enthält 245 Ausgaben, die Mehrgrößenmenge 515 Ausgaben. Die acht
-neuen I.3-Ausgaben sind jeweils in beiden Mengen vorhanden; die bestehenden Ausgaben wurden
-nicht verändert. Alle elf I.3-Darstellungen stehen in der numerischen Rezeptreihenfolge.
+Im damaligen LFH-480-Prüfstand enthielt die direkte SVG-Snapshotmenge 245 Ausgaben, die
+Mehrgrößenmenge 515 Ausgaben. Die acht neuen I.3-Ausgaben waren jeweils in beiden Mengen
+vorhanden; die bestehenden Ausgaben wurden nicht verändert. Alle elf I.3-Darstellungen standen
+in der numerischen Rezeptreihenfolge. Diese historischen Zähler behaupten nicht den späteren
+integrierten Gesamtbestand.
 
 Die technische Prüfung bestätigt den gemeinsamen eingesenkten Rumpf, schwarze Mittellabels bei
 den beschrifteten Darstellungen und die label-losen Ausnahmen I.3.1 sowie I.3.11. I.3.2 führt

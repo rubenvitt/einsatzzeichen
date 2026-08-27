@@ -238,7 +238,12 @@ describe('semantische Zeichenbeschreibungen', () => {
       'spontaneous-helper-contact-double-arrow',
       'inset-hull-wheel-pair',
     ] as const;
-    const task1AnhangITechnicalIds = ['double-wave-inner-diamond-8mm'] as const;
+    const task1AnhangITechnicalIds = [
+      'double-wave-inner-diamond-8mm',
+      'trailer-water-rescue',
+      'trailer-diving',
+      'trailer-boat-hull',
+    ] as const;
     const task2RoleTechnicalIds = [
       'formation-solid-cap-3mm',
       'formation-solid-cap-3.7mm-three-hole-row',
@@ -278,7 +283,31 @@ describe('semantische Zeichenbeschreibungen', () => {
       'formation-opposed-triangles-top':
         'Zwei gegenüberliegende Dreiecke in der oberen Formationszone',
       'formation-chevron-top': 'Gefüllter Winkel in der oberen Formationszone',
+      'trailer-water-rescue': 'Zwei Wellenlinien über einer Raute',
+      'trailer-diving': 'Doppelwelle mit kleiner Raute',
+      'trailer-boat-hull': 'Schwarzer Bootsrumpf mit weißem Innenraum',
     });
+  });
+
+  it('beschreibt die Anhänger-Wasserrettungsmarke geometrisch ohne Fachdienstsemantik', () => {
+    const description = describeSymbolSpec({
+      kind: 'trailer',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['trailer-water-rescue'],
+    });
+    expect(description).toContain('Technische Körpermarke: Zwei Wellenlinien über einer Raute');
+    expect(description).not.toContain('Wasserrettung');
+  });
+
+  it('beschreibt die gemeinsame Anhängerwelle von I.2.6 ohne eine falsche Tauchen-Semantik', () => {
+    const description = describeSymbolSpec({
+      kind: 'trailer',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['trailer-diving'],
+      labels: { center: 'Strömungsrettung' },
+    });
+    expect(description).toContain('Technische Körpermarke: Doppelwelle mit kleiner Raute');
+    expect(description).not.toContain('Tauchen');
   });
 
   it('beschreibt die drei technischen Körpermarken von LFH-488 ohne Fachsemantik', () => {

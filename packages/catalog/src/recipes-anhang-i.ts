@@ -1,17 +1,6 @@
 import type { Recipe } from './recipes.js';
 
-const I_2_TOP_LEFT_METRICS = {
-  capHeightMm: 3.18236,
-  baselineFromBodyTopMm: 6.55959,
-  anchorFromBodyLeftMm: 1.56869,
-} as const;
-/**
- * Gemeinsame Anhang-I-Aggregation. Die einzelnen LFH-Slices bleiben über ihre exakten Schlüssel
- * und die korrespondierenden technischen Reviews getrennt, werden aber nur einmal in `RECIPES`
- * eingebunden.
- */
-export const ANHANG_I_RECIPES = {
-  // LFH-481 / Anhang I-c: vier Wasserrettungsformationen ohne Organisationsableitung.
+export const ANHANG_I_C_RECIPES = {
   'I.1.1': {
     title: 'Wasserrettungstrupp',
     referenceAsset: 'I.1.1_Wasserrettungstrupp.svg',
@@ -48,7 +37,9 @@ export const ANHANG_I_RECIPES = {
       bodyMarks: ['formation-two-waves-diamond'],
     },
   },
-  // LFH-482 / Anhang I-d: vier separat vermessene Wasserrettungs-Führungsformationen.
+} as const satisfies Record<string, Recipe>;
+
+export const ANHANG_I_D_RECIPES = {
   'I.1.5': {
     title: 'Zugtrupp Wasserrettungszug',
     referenceAsset: 'I.1.5_Zugtrupp Wasserrettungszug.svg',
@@ -89,7 +80,10 @@ export const ANHANG_I_RECIPES = {
       bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3mm'],
     },
   },
-  // LFH-483 / Anhang I-e: vier Abschnitte mit fünf vermessenen Darstellungen.
+} as const satisfies Record<string, Recipe>;
+
+/** I.1.9 bis I.1.12: die fünf vermessenen Wasserrettungsformationen. */
+export const ANHANG_I_E_RECIPES = {
   'I.1.9': {
     title: 'Bootstrupp Wasserrettungszug',
     referenceAsset: 'I.1.9_Bootstrupp Wasserrettungszug.svg',
@@ -145,6 +139,16 @@ export const ANHANG_I_RECIPES = {
       labels: { topLeft: 'Tauchen' },
     },
   },
+} as const satisfies Record<string, Recipe>;
+
+/**
+ * LFH-485 / Anhang I-g: vier weiße Wasserrettungsformationen. Die Wasserrettungsmarke ist die
+ * separat vermessene kompakte Formationsfassung. Dreieckspaar und Winkel bleiben geometrisch
+ * getrennt, damit weder die kombinierte F.1.16-Zeichnung noch eine ungeklärte Drohnensemantik
+ * übernommen wird. Der Textlauf der ersten beiden Rezepte steht auf y=10,0 mm; seine aus dem
+ * einzigen versalen S idealisierte Versalhöhe beträgt 2,5 mm.
+ */
+export const ANHANG_I_G_RECIPES = {
   // LFH-485 / Anhang I-g: Die Wasserrettungsmarke ist die separat vermessene kompakte
   // Formationsfassung. Dreieckspaar und Winkel bleiben geometrisch getrennt. Der Textlauf der
   // ersten beiden Rezepte steht auf y=10,0 mm; die idealisierte Versalhöhe beträgt 2,5 mm.
@@ -200,6 +204,16 @@ export const ANHANG_I_RECIPES = {
       bodyMarks: ['formation-water-rescue-lower-zone', 'formation-chevron-top'],
     },
   },
+} as const satisfies Record<string, Recipe>;
+
+const I_2_TOP_LEFT_METRICS = {
+  capHeightMm: 3.18236,
+  baselineFromBodyTopMm: 6.55959,
+  anchorFromBodyLeftMm: 1.56869,
+} as const;
+
+/** I.2.1 bis I.2.3: die drei literalen Wasserrettungs-Landfahrzeuge aus LFH-486. */
+export const ANHANG_I_B_RECIPES = {
   // LFH-486 / Anhang I-b: drei separat vermessene Wasserrettungs-Landfahrzeuge.
   'I.2.1': {
     title: 'Gerätewagen Wasserrettung, geländegängig',
@@ -234,6 +248,57 @@ export const ANHANG_I_RECIPES = {
       labels: { topLeft: 'GW SR', topLeftMetrics: I_2_TOP_LEFT_METRICS },
     },
   },
+  /** I.2.4 bis I.2.7: vier radlose Anhänger mit ausschließlich quellenbelegten Innenmarken. */
+  'I.2.4': {
+    title: 'Anhänger Wasserrettung',
+    referenceAsset: 'I.2.4_Anhänger Wasserrettung.svg',
+    spec: {
+      kind: 'trailer',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['trailer-water-rescue'],
+    },
+  },
+  'I.2.5': {
+    title: 'Anhänger Tauchen',
+    referenceAsset: 'I.2.5_Anhänger Tauchen.svg',
+    spec: {
+      kind: 'trailer',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['trailer-diving'],
+      labels: {
+        center: 'Tauchen',
+        centerAnchorFromBodyLeftMm: 8.24,
+        centerBaselineFromBodyBottomMm: 14.5,
+        centerCapHeightMm: 2.919,
+      },
+    },
+  },
+  'I.2.6': {
+    title: 'Anhänger Strömungsrettung',
+    referenceAsset: 'I.2.6_Anhänger Strömungsrettung.svg',
+    spec: {
+      kind: 'trailer',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['trailer-diving'],
+      labels: {
+        center: 'Strömungsrettung',
+        centerBaselineFromBodyBottomMm: 14.327,
+        centerCapHeightMm: 2.191447,
+      },
+    },
+  },
+  'I.2.7': {
+    title: 'Bootsanhänger',
+    referenceAsset: 'I.2.7_Bootsanhänger.svg',
+    spec: {
+      kind: 'trailer',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['trailer-boat-hull'],
+    },
+  },
+} as const satisfies Record<string, Recipe>;
+
+export const ANHANG_I_A_RECIPES = {
   // LFH-479/LFH-480 / Anhang I-a und I-b: die vollständige I.3-Reihe.
   'I.3.1': {
     title: 'Boot allgemein',
@@ -345,6 +410,9 @@ export const ANHANG_I_RECIPES = {
       bodyMarks: ['fire-fighting'],
     },
   },
+} as const satisfies Record<string, Recipe>;
+
+export const ANHANG_I_J_RECIPES = {
   'I.4.1': {
     title: 'Wasserrettungsstation, ortsgebunden',
     referenceAsset: 'I.4.1_Wasserrettungsstation_ortsgebunden.svg',
@@ -420,4 +488,19 @@ export const ANHANG_I_RECIPES = {
       },
     },
   },
+} as const satisfies Record<string, Recipe>;
+
+/**
+ * Gemeinsame Anhang-I-Aggregation. Die einzelnen LFH-Slices bleiben über ihre exakten Schlüssel
+ * und die korrespondierenden technischen Reviews getrennt, werden aber nur einmal in `RECIPES`
+ * eingebunden.
+ */
+export const ANHANG_I_RECIPES = {
+  ...ANHANG_I_C_RECIPES,
+  ...ANHANG_I_D_RECIPES,
+  ...ANHANG_I_E_RECIPES,
+  ...ANHANG_I_G_RECIPES,
+  ...ANHANG_I_B_RECIPES,
+  ...ANHANG_I_A_RECIPES,
+  ...ANHANG_I_J_RECIPES,
 } as const satisfies Record<string, Recipe>;
