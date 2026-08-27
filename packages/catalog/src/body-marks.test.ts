@@ -156,6 +156,77 @@ describe('bodyMark() — LFH-488 Anhang I.4 Wasserrettungsorte', () => {
   );
 });
 
+describe('bodyMark() — Wasserrettungsfassung der Anhang-I-Landfahrzeuge', () => {
+  const wave = (d: string): Primitive => ({
+    type: 'path', role: 'pictogram', d, style: outlineStyle,
+  });
+  const diamond = (points: readonly (readonly [number, number])[]): Primitive => ({
+    type: 'polyline', role: 'pictogram', points, closed: true, style: outlineStyle,
+  });
+
+  it('zeichnet die groessere Fassung nur fuer das dreiraedrige Kategorie-2-Fahrzeug', () => {
+    expect(bodyMarkWithContext(
+      'water-rescue',
+      { kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-2' },
+      landBodyMm,
+    )).toEqual([
+      wave(
+        'M 12 12 C 13 11, 14 13, 15 12 C 16 11, 17 13, 18 12 ' +
+        'C 18.667 11.333, 19.333 11.333, 20 12',
+      ),
+      wave(
+        'M 12 14 C 13 13, 14 15, 15 14 C 16 13, 17 15, 18 14 ' +
+        'C 18.667 13.333, 19.333 13.333, 20 14',
+      ),
+      diamond([[16, 16], [20, 20], [16, 24], [12, 20]]),
+    ]);
+  });
+
+  it('zeichnet die kleinere tiefere Fassung nur fuer Kategorie 1', () => {
+    expect(bodyMarkWithContext(
+      'water-rescue',
+      { kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-1' },
+      landBodyMm,
+    )).toEqual([
+      wave(
+        'M 12.818 14.5 C 13.614 13.704, 14.409 15.296, 15.205 14.5 ' +
+        'C 16 13.704, 16.796 15.296, 17.591 14.5 ' +
+        'C 18.121 13.97, 18.652 13.97, 19.182 14.5',
+      ),
+      wave(
+        'M 12.818 16.25 C 13.614 15.454, 14.409 17.046, 15.205 16.25 ' +
+        'C 16 15.454, 16.796 17.046, 17.591 16.25 ' +
+        'C 18.121 15.72, 18.652 15.72, 19.182 16.25',
+      ),
+      diamond([[16, 17.636], [19.182, 20.818], [16, 24], [12.818, 20.818]]),
+    ]);
+  });
+
+  it.each([
+    ['fehlende Kategorie', { kind: 'vehicle-land' }, /nicht vermessen/],
+    [
+      'andere Fahrzeugkategorie',
+      { kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-3' },
+      /nicht vermessen/,
+    ],
+    ['andere Fahrzeugvariante', {
+      kind: 'vehicle-land', bodyVariant: 'foot-band', vehicleCategory: 'kfz-kategorie-1',
+    }, /nicht vermessen/],
+    [
+      'Formationsart mit der I.2-Landfahrzeughülle',
+      { kind: 'formation', vehicleCategory: 'kfz-kategorie-1' },
+      /nur an der Hülle 30 × 20 mm vermessen/,
+    ],
+    ['Anhängerart', { kind: 'trailer', vehicleCategory: 'kfz-kategorie-1' }, /nicht vermessen/],
+    ['Wasserfahrzeugart', {
+      kind: 'vehicle-water', bodyVariant: 'inset-hull', vehicleCategory: 'kfz-kategorie-1',
+    }, /nicht vermessen/],
+  ] as const)('lehnt %s fail-closed ab', (_case, context, expectedError) => {
+    expect(() => bodyMarkWithContext('water-rescue', context, landBodyMm))
+      .toThrow(expectedError);
+  });
+});
+
 describe('bodyMark() — die technischen Innenzeichnungen des Anhangs N', () => {
   it('zeichnet die beiden getrennt vermessenen Landfahrzeugmarken', () => {
     expect(bodyMarkWithContext(
@@ -2070,7 +2141,9 @@ describe('BODY_MARK_IDS', () => {
       if (task1LogisticsIds.has(id)) continue;
       // Kein Mindestmaß von zwei Primitiven: `care` steht mit **einem** Polyzug ohne Teilung da,
       // und genau das ist an F.1.3 belegt (siehe den Block zur Zeltmarke oben).
-      const invocation = id === 'air-winch-chevron-diamond'
+      const invocation = id === 'water-rescue'
+        ? [{ kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-2' } as const, landBodyMm] as const
+        : id === 'air-winch-chevron-diamond'
           ? [{ kind: 'vehicle-air', bodyVariant: 'raised-hull' } as const, raisedAirBodyMm] as const
         : id === 'air-quartering-up-arrow-box'
           ? [{ kind: 'vehicle-air', bodyVariant: 'raised-hull' } as const, raisedAirBodyMm] as const
