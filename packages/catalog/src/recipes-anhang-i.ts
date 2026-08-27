@@ -7,7 +7,7 @@ import type { Recipe } from './recipes.js';
  * übernommen wird. Der Textlauf der ersten beiden Rezepte steht auf y=10,0 mm; seine aus dem
  * einzigen versalen S idealisierte Versalhöhe beträgt 2,5 mm.
  */
-export const ANHANG_I_G_RECIPES = {
+export const ANHANG_I_RECIPES = {
   'I.1.17': {
     title: 'Strömungsrettungstrupp',
     referenceAsset: 'I.1.17_Strömungsrettungstrupp.svg',
@@ -60,9 +60,46 @@ export const ANHANG_I_G_RECIPES = {
       bodyMarks: ['water-rescue', 'formation-chevron-top'],
     },
   },
-} as const satisfies Record<string, Recipe>;
-
-export const ANHANG_I_A_RECIPES = {
+  'I.3.1': {
+    title: 'Boot allgemein',
+    referenceAsset: 'I.3.1_Boot allgemein.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+    },
+  },
+  'I.3.2': {
+    title: 'Schlauchboot',
+    referenceAsset: 'I.3.2_Schlauchboot.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+      labels: { center: 'Schlauch', centerCapHeightMm: 4.1395 },
+    },
+  },
+  'I.3.3': {
+    title: 'Festrumpfschlauchboot',
+    referenceAsset: 'I.3.3_Festrumpfschlauchboot.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+      labels: { center: 'RIB' },
+    },
+  },
+  'I.3.4': {
+    title: 'Hochwasserboot',
+    referenceAsset: 'I.3.4_Hochwasserboot.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+      labels: { center: 'HW' },
+      bodyMarks: ['inset-hull-wheel-pair'],
+    },
+  },
   'I.3.5': {
     title: 'Mehrzweckboot',
     referenceAsset: 'I.3.5_Mehrzweckboot.svg',
@@ -93,9 +130,46 @@ export const ANHANG_I_A_RECIPES = {
       labels: { center: 'MzPt' },
     },
   },
-} as const satisfies Record<string, Recipe>;
-
-export const ANHANG_I_J_RECIPES = {
+  'I.3.8': {
+    title: 'Rettungsboot Typ 1',
+    referenceAsset: 'I.3.8_Rettungsboot_Typ 1.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+      labels: { center: 'RTB 1' },
+    },
+  },
+  'I.3.9': {
+    title: 'Rettungsboot Typ 2',
+    referenceAsset: 'I.3.9_Rettungsboot_Typ 2.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+      labels: { center: 'RTB 2' },
+    },
+  },
+  'I.3.10': {
+    title: 'Raft',
+    referenceAsset: 'I.3.10_Raft.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'hilfsorganisation',
+      labels: { center: 'Raft' },
+    },
+  },
+  'I.3.11': {
+    title: 'Feuerlöschboot',
+    referenceAsset: 'I.3.11_Feuerlöschboot.svg',
+    spec: {
+      kind: 'vehicle-water',
+      bodyVariant: 'inset-hull',
+      organization: 'feuerwehr',
+      bodyMarks: ['fire-fighting'],
+    },
+  },
   'I.4.1': {
     title: 'Wasserrettungsstation, ortsgebunden',
     referenceAsset: 'I.4.1_Wasserrettungsstation_ortsgebunden.svg',

@@ -55,11 +55,7 @@ import {
 import { ANHANG_N_RECIPES } from './recipes-anhang-n.js';
 import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
-import {
-  ANHANG_I_A_RECIPES,
-  ANHANG_I_G_RECIPES,
-  ANHANG_I_J_RECIPES,
-} from './recipes-anhang-i.js';
+import { ANHANG_I_RECIPES } from './recipes-anhang-i.js';
 
 /**
  * Migration nach Slice 2: `technical` ist für alle elf Einträge `approved`, weil das Kriterium
@@ -415,12 +411,12 @@ const ANHANG_H_TECHNICAL_REVIEW: Review = {
     'fachliche Zuordnung bleibt im Domain-Review pending.',
 };
 
-const ANHANG_I_A_TECHNICAL_REVIEW: Review = {
+const ANHANG_I_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
-  date: '2026-08-26',
+  date: '2026-08-27',
   note:
-    'I.3.5-I.3.7 passed measured inset-hull, 7.99 mm center-profile, literal recipe, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
+    'I.3.1-I.3.11 passed literal recipe, measured inset-hull, wheel/fire primitive, body-fingerprint, direct-snapshot and multi-size gates. The white Hilfsorganisation body and the red Feuerlöschboot body are technical rendering decisions; domain classification remains pending and no identity with E.2 is claimed.',
 };
 
 const ANHANG_I_G_TECHNICAL_REVIEW: Review = {
@@ -917,14 +913,10 @@ function technicalReviewFor(section: string): Review {
     return ANHANG_G_TECHNICAL_REVIEW;
   }
   if (Object.hasOwn(ANHANG_H_RECIPES, section)) return ANHANG_H_TECHNICAL_REVIEW;
-  if (Object.hasOwn(ANHANG_I_G_RECIPES, section)) {
-    return ANHANG_I_G_TECHNICAL_REVIEW;
-  }
-  if (Object.hasOwn(ANHANG_I_A_RECIPES, section)) {
-    return ANHANG_I_A_TECHNICAL_REVIEW;
-  }
-  if (Object.hasOwn(ANHANG_I_J_RECIPES, section)) {
-    return ANHANG_I_J_TECHNICAL_REVIEW;
+  if (Object.hasOwn(ANHANG_I_RECIPES, section)) {
+    if (section.startsWith('I.1.')) return ANHANG_I_G_TECHNICAL_REVIEW;
+    if (section.startsWith('I.4.')) return ANHANG_I_J_TECHNICAL_REVIEW;
+    return ANHANG_I_TECHNICAL_REVIEW;
   }
   return TECHNICAL_REVIEW;
 }
@@ -1131,9 +1123,7 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'I.1.18',
     'I.1.19',
     'I.1.20',
-    'I.3.5',
-    'I.3.6',
-    'I.3.7',
+    'I.3',
     'I.4.1',
     'I.4.2',
     'I.4.3',

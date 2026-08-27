@@ -24,24 +24,12 @@ describe('coverage CLI', () => {
 
     coverage();
 
-    // 358 mit E.2.6: 325 nach LFH-424, plus die beiden Anhängerfahrwerke aus 5.1.2.4 und
-    // 5.1.2.5, plus die 31 Zeichen aus E.2. Mit dem am 18. August 2026 nachgezogenen E.2.6 hat
-    // jeder Abschnitt des Anhangs E eine Manifestzeile und einen Ledgerplatz. Seit dem Teilslice
-    // F-a **369**: elf Zeilen für zehn Abschnitte. F-b ergänzt 14 Darstellungen — F.1.3,
-    // F.1.12 bis F.1.22 und die Alternativen von F.1.12/F.1.15 — auf insgesamt 383. F-c ergänzt
-    // 14 Darstellungen aus F.2.1 bis F.2.9 einschließlich fünf Alternativen: insgesamt 397. F-d
-    // ergänzt F.2.10 bis F.2.17 lückenlos mit acht weiteren Fahrzeugen: insgesamt 405. F-e
-    // ergänzt elf Platzzeichen aus F.3.1 bis F.3.11: insgesamt 416. F-f schließt F.3 mit den
-    // Acht Zeichen F.3.12 bis F.3.19 ergeben 424. G ergänzt 21, H und I-a je drei,
-    // C.1.3 eine und N neun weitere Darstellungen auf insgesamt 461. D.1 ergänzt zehn aus
-    // D.1.1 bis D.1.9 einschließlich der Alternative von D.1.9: 471. D.2 ergänzt die sieben
-    // Ortsdefinitionen: 478. D.3 ergänzt zwölf neue Rezepte und zwei direkte offene
-    // Kappen; D.3.7 behält seinen vorhandenen Schlüssel: 492. D.4 schließt bei 497 Zeilen.
-    // I-g und I-j ergänzen zusammen sieben literale Zeilen: insgesamt 504.
-    expect(manifestReviews).toBe(504);
+    // Fresh main enthält 504 Zeilen einschließlich vier I.1- und drei I.4-Zeilen. LFH-480
+    // ergänzt ausschließlich die acht zuvor fehlenden I.3-Zeilen: insgesamt 512.
+    expect(manifestReviews).toBe(512);
     expect(sourceReviews).toBe(13);
     expect(profileReviews).toBe(1);
-    expect(openReviews).toBe(518);
+    expect(openReviews).toBe(526);
     // **Die Umfangszeile ist wieder kurz.** Der Teilslice E.2 hatte sie auf 47 Einträge gedehnt,
     // weil E.2 mit einem fehlenden Abschnitt nur abschnittsweise behauptbar war. Seit E.2.6
     // gebaut ist, tragen zwei Tests die Lückenlosigkeit — an den Rezepten (`recipes.test.ts`)
@@ -49,7 +37,7 @@ describe('coverage CLI', () => {
     // `E` eine widerlegbare Aussage statt einer kürzeren. I-g bleibt dagegen absichtlich auf
     // seinen vier gebauten Einzelabschnitten statt pauschal auf `I.1` oder `I` begrenzt.
     expect(lines).toContain(
-      'Umfang:      1, 2, 4, 5.1.1, 5.4, 5.8, C.1.1, C.1.2, C.1.3, D, E, F, G, H, I.1.17, I.1.18, I.1.19, I.1.20, I.3.5, I.3.6, I.3.7, I.4.1, I.4.2, I.4.3, J.1, J.2, J.3, J.4, K, L, M, N',
+      'Umfang:      1, 2, 4, 5.1.1, 5.4, 5.8, C.1.1, C.1.2, C.1.3, D, E, F, G, H, I.1.17, I.1.18, I.1.19, I.1.20, I.3, I.4.1, I.4.2, I.4.3, J.1, J.2, J.3, J.4, K, L, M, N',
     );
     // Die Ausnahme ist im Betrieb sichtbar und nicht nur im Gate. Sie steht bewusst **nicht** in
     // der Blockerzeile darunter: ein Blocker ist ein offener Punkt, diese Ausnahme ist ein

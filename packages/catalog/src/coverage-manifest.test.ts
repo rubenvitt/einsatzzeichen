@@ -74,7 +74,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 504 Zeilen mit 283 Elementdarstellungen', () => {
+  it('enthält exakt 512 Zeilen mit 283 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -103,9 +103,9 @@ describe('Coverage-Manifest', () => {
       // `alternative` — die Zeile zählt einzeln, weil das Manifest Darstellungen zählt und nicht
       // Abschnitte, weil F.1.3 dort noch bewusst offen blieb; F-b baut es mit `foot-band`.
       // F-d ergänzt F.2.10 bis F.2.17 als acht reine Anwendungen des Fahrzeugvertrags.
-      // G ergänzt 21 Rezepte, H, I-a und I-j je drei, I-g vier, C.1.3 ein weiteres und N neun.
+      // G ergänzt 21 Rezepte, H drei, I.1 vier, I.3 elf, I.4 drei, C.1.3 eines und N neun.
       // Anhang D ergänzt 26 neue Rezepte; D.3.7 bleibt eine Migration desselben Schlüssels.
-      'composition-recipe': 207,
+      'composition-recipe': 215,
       // 264 Piktogramme plus acht Manifest-Organisationen, vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
@@ -113,13 +113,13 @@ describe('Coverage-Manifest', () => {
       // Strichhülle vermessen ist.
       element: 283,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(504);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(512);
     expect(elementRows).toHaveLength(283);
     expect(pictogramRows).toHaveLength(264);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
   });
 
-  it('führt I-g und I-a mit belegter Quelle und getrennten vollständigen Technikreviews', () => {
+  it('führt I.1.17 bis I.1.20 und I.3.1 bis I.3.11 mit getrennten Technikreviews', () => {
     const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
       entry.sourceId.startsWith('bbk-babz-2025:I.1.') ||
       entry.sourceId.startsWith('bbk-babz-2025:I.3.'),
@@ -137,17 +137,25 @@ describe('Coverage-Manifest', () => {
         referenceAsset: 'I.1.19_Trupp Luftunterstützte Wasserrettung.svg',
       },
       { section: 'I.1.20', referenceAsset: 'I.1.20_Trupp Drohne.svg' },
+      { section: 'I.3.1', referenceAsset: 'I.3.1_Boot allgemein.svg' },
+      { section: 'I.3.2', referenceAsset: 'I.3.2_Schlauchboot.svg' },
+      { section: 'I.3.3', referenceAsset: 'I.3.3_Festrumpfschlauchboot.svg' },
+      { section: 'I.3.4', referenceAsset: 'I.3.4_Hochwasserboot.svg' },
       { section: 'I.3.5', referenceAsset: 'I.3.5_Mehrzweckboot.svg' },
       { section: 'I.3.6', referenceAsset: 'I.3.6_Mehrzweckarbeitsboot.svg' },
       { section: 'I.3.7', referenceAsset: 'I.3.7_Mehrzweckponton.svg' },
+      { section: 'I.3.8', referenceAsset: 'I.3.8_Rettungsboot_Typ 1.svg' },
+      { section: 'I.3.9', referenceAsset: 'I.3.9_Rettungsboot_Typ 2.svg' },
+      { section: 'I.3.10', referenceAsset: 'I.3.10_Raft.svg' },
+      { section: 'I.3.11', referenceAsset: 'I.3.11_Feuerlöschboot.svg' },
     ]);
 
     const expectedIAReview = {
       status: 'approved',
       reviewer: 'rv',
-      date: '2026-08-26',
+      date: '2026-08-27',
       note:
-        'I.3.5-I.3.7 passed measured inset-hull, 7.99 mm center-profile, literal recipe, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
+        'I.3.1-I.3.11 passed literal recipe, measured inset-hull, wheel/fire primitive, body-fingerprint, direct-snapshot and multi-size gates. The white Hilfsorganisation body and the red Feuerlöschboot body are technical rendering decisions; domain classification remains pending and no identity with E.2 is claimed.',
     };
     const expectedIGReview = {
       status: 'approved',
@@ -160,7 +168,7 @@ describe('Coverage-Manifest', () => {
         'output-only visual QA gates. Opposed triangles and chevron remain separate geometric ' +
         'marks; domain classification remains pending.',
     };
-    expect(rows).toHaveLength(7);
+    expect(rows).toHaveLength(15);
     for (const row of rows) {
       expect(row.coverage).toBe('composition-recipe');
       expect(row.review.technical).toEqual(
@@ -173,11 +181,8 @@ describe('Coverage-Manifest', () => {
     expect(COVERAGE_MANIFEST.scope).toContain('I.1.18');
     expect(COVERAGE_MANIFEST.scope).toContain('I.1.19');
     expect(COVERAGE_MANIFEST.scope).toContain('I.1.20');
-    expect(COVERAGE_MANIFEST.scope).toContain('I.3.5');
-    expect(COVERAGE_MANIFEST.scope).toContain('I.3.6');
-    expect(COVERAGE_MANIFEST.scope).toContain('I.3.7');
+    expect(COVERAGE_MANIFEST.scope).toContain('I.3');
     expect(COVERAGE_MANIFEST.scope).not.toContain('I');
-    expect(COVERAGE_MANIFEST.scope).not.toContain('I.3');
   });
 
   it('führt I.4.1 bis I.4.3 literal mit eigenem technischem Review und engem Scope', () => {
@@ -671,9 +676,7 @@ describe('Coverage-Manifest', () => {
       'I.1.18',
       'I.1.19',
       'I.1.20',
-      'I.3.5',
-      'I.3.6',
-      'I.3.7',
+      'I.3',
       'I.4.1',
       'I.4.2',
       'I.4.3',

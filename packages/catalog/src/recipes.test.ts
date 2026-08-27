@@ -473,7 +473,7 @@ describe('Anhang D.1, Führungsstellen im Einsatz', () => {
 
   it('führt exakt die neun komponierten D.1-Darstellungen', () => {
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('D.1.'))).toEqual(expectedKeys);
-    expect(Object.keys(RECIPES)).toHaveLength(207);
+    expect(Object.keys(RECIPES)).toHaveLength(215);
   });
 
   it('bindet D.1.2 bis D.1.8 an die sieben gemessenen Formationsrollen', () => {
@@ -1017,7 +1017,7 @@ describe('Anhang G — vollständiges Logistikinventar', () => {
     expect(actual).toEqual(expected);
     expect(Object.keys(actual)).toEqual(Object.keys(expected));
     expect(Object.keys(actual).every((key) => !key.includes('#'))).toBe(true);
-    expect(Object.keys(RECIPES)).toHaveLength(207);
+    expect(Object.keys(RECIPES)).toHaveLength(215);
   });
 
   it('bindet die 21 primary- und Referenz-IDs exakt und ohne Alternative', () => {
@@ -1058,71 +1058,84 @@ describe('Anhang G — vollständiges Logistikinventar', () => {
   });
 });
 
-describe('Anhang I, Teilslice I-a (I.3.5 bis I.3.7)', () => {
+describe('Anhang I, Teilslice I-b (I.3.1 bis I.3.11)', () => {
   const expected = {
-    'I.3.5': ['Mehrzweckboot', 'I.3.5_Mehrzweckboot.svg', 'MzB'],
-    'I.3.6': ['Mehrzweckarbeitsboot', 'I.3.6_Mehrzweckarbeitsboot.svg', 'MzAB'],
-    'I.3.7': ['Mehrzweckponton', 'I.3.7_Mehrzweckponton.svg', 'MzPt'],
-  } as const;
+    'I.3.1': { title: 'Boot allgemein', referenceAsset: 'I.3.1_Boot allgemein.svg', spec: { kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'hilfsorganisation' } },
+    'I.3.2': { title: 'Schlauchboot', referenceAsset: 'I.3.2_Schlauchboot.svg', spec: { kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'hilfsorganisation', labels: { center: 'Schlauch', centerCapHeightMm: 4.1395 } } },
+    'I.3.3': { title: 'Festrumpfschlauchboot', referenceAsset: 'I.3.3_Festrumpfschlauchboot.svg', spec: { kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'hilfsorganisation', labels: { center: 'RIB' } } },
+    'I.3.4': { title: 'Hochwasserboot', referenceAsset: 'I.3.4_Hochwasserboot.svg', spec: { kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'hilfsorganisation', labels: { center: 'HW' }, bodyMarks: ['inset-hull-wheel-pair'] } },
+    'I.3.5': { title: 'Mehrzweckboot', referenceAsset: 'I.3.5_Mehrzweckboot.svg', spec: { kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'hilfsorganisation', labels: { center: 'MzB' } } },
+    'I.3.6': { title: 'Mehrzweckarbeitsboot', referenceAsset: 'I.3.6_Mehrzweckarbeitsboot.svg', spec: { kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'hilfsorganisation', labels: { center: 'MzAB' } } },
+    'I.3.7': { title: 'Mehrzweckponton', referenceAsset: 'I.3.7_Mehrzweckponton.svg', spec: { kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'hilfsorganisation', labels: { center: 'MzPt' } } },
+    'I.3.8': { title: 'Rettungsboot Typ 1', referenceAsset: 'I.3.8_Rettungsboot_Typ 1.svg', spec: { kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'hilfsorganisation', labels: { center: 'RTB 1' } } },
+    'I.3.9': { title: 'Rettungsboot Typ 2', referenceAsset: 'I.3.9_Rettungsboot_Typ 2.svg', spec: { kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'hilfsorganisation', labels: { center: 'RTB 2' } } },
+    'I.3.10': { title: 'Raft', referenceAsset: 'I.3.10_Raft.svg', spec: { kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'hilfsorganisation', labels: { center: 'Raft' } } },
+    'I.3.11': { title: 'Feuerlöschboot', referenceAsset: 'I.3.11_Feuerlöschboot.svg', spec: { kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'feuerwehr', bodyMarks: ['fire-fighting'] } },
+  } as const satisfies Record<string, Recipe>;
   const recipes: Record<string, Recipe> = RECIPES;
 
-  it('bindet ausschließlich die drei vermessenen Wasserfahrzeuge an ihre Referenzmatrix', () => {
-    // Diese Literale schützen die Zuordnung von Abschnitt, Name, Quelldatei und Kürzel: etwa
-    // ein vertauschtes MzAB/MzPt ergäbe weiter eine valide Komposition, aber ein falsches Bild.
+  it('bindet exakt I.3.1 bis I.3.11 und keine weitere I-Sektion an die Literalreferenzmatrix', () => {
     const actual = Object.fromEntries(
-      Object.entries(recipes)
-        .filter(([section]) => section.startsWith('I.3.'))
-        .map(([section, recipe]) => {
-        return [
-          section,
-          [recipe.title, recipe.referenceAsset, recipe.spec.labels?.center],
-        ];
-      }),
+      Object.entries(recipes).filter(([section]) => section.startsWith('I.3.')),
     );
     expect(actual).toEqual(expected);
+    expect(Object.keys(actual)).toEqual(Array.from({ length: 11 }, (_, index) => `I.3.${index + 1}`));
   });
 
   it.each(Object.entries(expected))(
-    '%s kompositioniert den gemessenen inset-hull mit ausschließlich schwarzem Mittellabel',
-    (section, [_title, referenceAsset, center]) => {
-      const recipe = recipes[section];
-      expect(recipe).toBeDefined();
-      if (recipe === undefined) return;
+    '%s kompositioniert den gemessenen inset-hull mit der quellengetreuen Beschriftung',
+    (section, recipe) => {
+      const actualRecipe = recipes[section];
+      expect(actualRecipe).toBeDefined();
+      if (actualRecipe === undefined) return;
+      expect(actualRecipe.spec.kind).toBe('vehicle-water');
+      expect(actualRecipe.spec.bodyVariant).toBe('inset-hull');
+      expect(actualRecipe.spec.designation).toBeUndefined();
+      expect(validateSpec(actualRecipe.spec)).toEqual([]);
 
-      expect(recipe.spec.kind).toBe('vehicle-water');
-      expect(recipe.spec.bodyVariant).toBe('inset-hull');
-      expect(recipe.spec.organization).toBe('hilfsorganisation');
-      expect(recipe.spec.labels).toEqual({ center });
-      expect(recipe.spec.designation).toBeUndefined();
-      expect(validateSpec(recipe.spec)).toEqual([]);
-
-      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      const drawing = composeFromCatalog(actualRecipe.spec, actualRecipe.title);
       const body = drawing.children.find((child) => child.role === 'body');
       expect(body).toBeDefined();
       expect(body?.type).toBe('path');
       if (body?.type === 'path') {
-        expect(body.d).toBe(
-          'M 1.01 9.0001 L 30.9894 9.0001 C 30.9894 17.2787, 24.2783 23.9898, 15.9997 23.9898 C 7.7211 23.9898, 1.01 17.2787, 1.01 9.0001 Z',
-        );
+        expect(body.d).toBe('M 1.01 9.0001 L 30.9894 9.0001 C 30.9894 17.2787, 24.2783 23.9898, 15.9997 23.9898 C 7.7211 23.9898, 1.01 17.2787, 1.01 9.0001 Z');
       }
-
-      // Der Rezeptweg muss die benannte lokale Quelldatei treffen; der Grundzeichen-Test allein
-      // deckt weder Registrierung noch Komposition ab.
-      expect(matchFingerprint(drawing, fingerprintFor(referenceAsset))).toEqual({
-        ok: true,
-        problems: [],
-      });
+      expect(matchFingerprint(drawing, fingerprintFor(recipe.referenceAsset))).toEqual({ ok: true, problems: [] });
 
       const labels = drawing.children.filter(
-        (child): child is Primitive & { type: 'text' } =>
-          child.type === 'text' && child.role === 'label',
+        (child): child is Primitive & { type: 'text' } => child.type === 'text' && child.role === 'label',
       );
-      expect(labels).toHaveLength(1);
-      expect(labels[0]?.content).toBe(center);
-      expect(labels[0]?.style?.fill).toBe('schwarz');
-      expect(labels[0]?.y).toBeCloseTo(15.9999, 3);
+      const center = 'labels' in recipe.spec ? recipe.spec.labels?.center : undefined;
+      expect(labels).toHaveLength(center === undefined ? 0 : 1);
+      if (center !== undefined) {
+        expect(labels[0]?.content).toBe(center);
+        expect(labels[0]?.style?.fill).toBe('schwarz');
+        expect(labels[0]?.y).toBeCloseTo(15.9999, 3);
+      }
     },
   );
+
+  it('hält die einzigartige Schlauchboot-Kappenhöhe und die sonst fehlenden Kappenüberschreibungen fest', () => {
+    expect(recipes['I.3.2']?.spec.labels).toEqual({ center: 'Schlauch', centerCapHeightMm: 4.1395 });
+    for (const section of Object.keys(expected).filter((section) => section !== 'I.3.2')) {
+      expect(recipes[section]?.spec.labels?.centerCapHeightMm, section).toBeUndefined();
+    }
+  });
+
+  it('zeichnet die I.3.4-Radmarke und die I.3.11-Löschmarke mit den Task-1-Primitiven', () => {
+    const wheelPrimitives = composeFromCatalog(recipes['I.3.4']!.spec, recipes['I.3.4']!.title).children.filter((child) => child.role === 'pictogram');
+    expect(wheelPrimitives).toEqual([
+      { type: 'circle', role: 'pictogram', cx: 6.75, cy: 23.75, r: 2.25, style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 } },
+      { type: 'circle', role: 'pictogram', cx: 25.25, cy: 23.75, r: 2.25, style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 } },
+    ]);
+    const firePrimitives = composeFromCatalog(recipes['I.3.11']!.spec, recipes['I.3.11']!.title).children.filter((child) => child.role === 'pictogram');
+    expect(firePrimitives).toEqual([
+      { type: 'line', role: 'pictogram', x1: 2.263209, y1: 15.000055, x2: 21.249843, y2: 15.000055, style: { stroke: 'schwarz', strokeWidth: 0.5 } },
+      { type: 'line', role: 'pictogram', x1: 21.249843, y1: 15.000055, x2: 29.736438, y2: 15.000055, style: { stroke: 'schwarz', strokeWidth: 0.5 } },
+      { type: 'line', role: 'pictogram', x1: 21.249843, y1: 15.000055, x2: 26.749628, y2: 9.250152, style: { stroke: 'schwarz', strokeWidth: 0.5 } },
+      { type: 'line', role: 'pictogram', x1: 21.249843, y1: 15.000055, x2: 25.901906, y2: 19.901884, style: { stroke: 'schwarz', strokeWidth: 0.5 } },
+    ]);
+  });
 });
 
 describe('Anhang I, Teilslice I-g (I.1.17 bis I.1.20)', () => {
@@ -2528,12 +2541,12 @@ describe('Anhang F, Teilslice F-f', () => {
     },
   } as const;
 
-  it('deckt F.3.12 bis F.3.19 lückenlos ab und bleibt im integrierten Bestand erhalten', () => {
+  it('deckt F.3.12 bis F.3.19 lückenlos ab und erreicht integriert 215 Rezepte', () => {
     const entries = Object.entries<Recipe>(RECIPES)
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(207);
+    expect(Object.keys(RECIPES)).toHaveLength(215);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {
