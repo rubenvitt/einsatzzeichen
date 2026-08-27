@@ -688,6 +688,7 @@ function labelPrimitives(
 export interface BodyMarkContext {
   readonly kind: SymbolKind;
   readonly bodyVariant?: BodyVariantId;
+  readonly vehicleCategory?: VehicleCategoryId;
   readonly strength?: StrengthId;
   readonly occupiedLabelZones?: readonly ('bottomCenter' | 'bottomRight' | 'belowRight')[];
 }
@@ -1114,6 +1115,7 @@ export function compose(
       catalog.bodyMark(id, {
         kind: spec.kind,
         bodyVariant: spec.bodyVariant,
+        ...(spec.vehicleCategory === undefined ? {} : { vehicleCategory: spec.vehicleCategory }),
         ...(spec.strength === undefined ? {} : { strength: spec.strength }),
         ...(
           spec.labels === undefined

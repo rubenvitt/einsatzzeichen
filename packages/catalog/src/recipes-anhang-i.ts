@@ -1,5 +1,64 @@
 import type { Recipe } from './recipes.js';
 
+/** I.1.9 bis I.1.12: die fünf vermessenen Wasserrettungsformationen. */
+export const ANHANG_I_E_RECIPES = {
+  'I.1.9': {
+    title: 'Bootstrupp Wasserrettungszug',
+    referenceAsset: 'I.1.9_Bootstrupp Wasserrettungszug.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'trupp',
+      bodyMarks: ['water-rescue'],
+      labels: { topLeft: 'Boot' },
+    },
+  },
+  'I.1.9#alternative': {
+    title: 'Bootstrupp Wasserrettungszug',
+    referenceAsset: 'I.1.9_Bootstrupp Wasserrettungszug_Alternative.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'trupp',
+      bodyMarks: ['watercraft-operations'],
+      labels: { topLeft: 'WRZ' },
+    },
+  },
+  'I.1.10': {
+    title: 'Bootsgruppe Wasserrettung',
+    referenceAsset: 'I.1.10_Bootsgruppe Wasserrettung.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'gruppe',
+      bodyMarks: ['water-rescue'],
+      labels: { topLeft: 'Boot' },
+    },
+  },
+  'I.1.11': {
+    title: 'Tauchtrupp',
+    referenceAsset: 'I.1.11_Tauchtrupp.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'trupp',
+      bodyMarks: ['water-rescue'],
+      labels: { topLeft: 'Tauchen' },
+    },
+  },
+  'I.1.12': {
+    title: 'Tauchgruppe',
+    referenceAsset: 'I.1.12_Tauchgruppe.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'gruppe',
+      bodyMarks: ['water-rescue'],
+      labels: { topLeft: 'Tauchen' },
+    },
+  },
+} as const satisfies Record<string, Recipe>;
+
 /**
  * LFH-485 / Anhang I-g: vier weiße Wasserrettungsformationen. Die Wasserrettungsmarke ist die
  * separat vermessene kompakte Formationsfassung. Dreieckspaar und Winkel bleiben geometrisch
@@ -15,7 +74,7 @@ export const ANHANG_I_G_RECIPES = {
       kind: 'formation',
       organization: 'hilfsorganisation',
       strength: 'trupp',
-      bodyMarks: ['water-rescue'],
+      bodyMarks: ['formation-water-rescue-lower-zone'],
       labels: {
         center: 'Strömungsrettung',
         centerBaselineFromBodyBottomMm: 16,
@@ -31,7 +90,7 @@ export const ANHANG_I_G_RECIPES = {
       kind: 'formation',
       organization: 'hilfsorganisation',
       strength: 'gruppe',
-      bodyMarks: ['water-rescue'],
+      bodyMarks: ['formation-water-rescue-lower-zone'],
       labels: {
         center: 'Strömungsrettung',
         centerBaselineFromBodyBottomMm: 16,
@@ -47,7 +106,7 @@ export const ANHANG_I_G_RECIPES = {
       kind: 'formation',
       organization: 'hilfsorganisation',
       strength: 'trupp',
-      bodyMarks: ['water-rescue', 'formation-opposed-triangles-top'],
+      bodyMarks: ['formation-water-rescue-lower-zone', 'formation-opposed-triangles-top'],
     },
   },
   'I.1.20': {
@@ -57,7 +116,50 @@ export const ANHANG_I_G_RECIPES = {
       kind: 'formation',
       organization: 'hilfsorganisation',
       strength: 'trupp',
-      bodyMarks: ['water-rescue', 'formation-chevron-top'],
+      bodyMarks: ['formation-water-rescue-lower-zone', 'formation-chevron-top'],
+    },
+  },
+} as const satisfies Record<string, Recipe>;
+
+const I_2_TOP_LEFT_METRICS = {
+  capHeightMm: 3.18236,
+  baselineFromBodyTopMm: 6.55959,
+  anchorFromBodyLeftMm: 1.56869,
+} as const;
+
+/** I.2.1 bis I.2.3: die drei literalen Wasserrettungs-Landfahrzeuge aus LFH-486. */
+export const ANHANG_I_B_RECIPES = {
+  'I.2.1': {
+    title: 'Gerätewagen Wasserrettung, geländegängig',
+    referenceAsset: 'I.2.1_Gerätewagen Wasserrettung_geländegängig.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'hilfsorganisation',
+      vehicleCategory: 'kfz-kategorie-2',
+      bodyMarks: ['water-rescue'],
+      labels: { topLeft: 'GW', topLeftMetrics: I_2_TOP_LEFT_METRICS },
+    },
+  },
+  'I.2.2': {
+    title: 'Gerätewagen Tauchen',
+    referenceAsset: 'I.2.2_Gerätewagen Tauchen.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'hilfsorganisation',
+      vehicleCategory: 'kfz-kategorie-1',
+      bodyMarks: ['water-rescue'],
+      labels: { topLeft: 'GW Tauchen', topLeftMetrics: I_2_TOP_LEFT_METRICS },
+    },
+  },
+  'I.2.3': {
+    title: 'Gerätewagen Strömungsrettung',
+    referenceAsset: 'I.2.3_Gerätewagen Strömungsrettung.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'hilfsorganisation',
+      vehicleCategory: 'kfz-kategorie-1',
+      bodyMarks: ['water-rescue'],
+      labels: { topLeft: 'GW SR', topLeftMetrics: I_2_TOP_LEFT_METRICS },
     },
   },
 } as const satisfies Record<string, Recipe>;

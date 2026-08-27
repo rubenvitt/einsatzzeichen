@@ -8,6 +8,7 @@ import {
   type Primitive,
   type StrengthId,
   type SymbolKind,
+  type VehicleCategoryId,
 } from '@einsatzzeichen/schema';
 
 /**
@@ -116,6 +117,90 @@ function quartering(bounds: BoundsMm): Primitive[] {
 }
 
 /**
+ * I.1.9, I.1.10, I.1.11 und I.1.12: Wasserrettung auf der normalen 30 × 20-mm-Formation.
+ *
+ * Die beiden Wellen wechseln auf den durch die Konturkanten zurückgerechneten Mittellinien
+ * zwischen y=12…13 und y=14…15. Das acht Millimeter hohe Rautensignal ist mittig bei (16|20).
+ * Die Quelle speichert seine 0,5-mm-Kontur bereits expandiert mit Miter-Spitzen. Der Renderer
+ * zeichnet dagegen projektweit Round-Joins; deshalb werden die vier Mittellinienspitzen um
+ * 0,1036 mm nach außen kompensiert. So bleiben die sichtbaren Ink-Bounds 11,646…20,354 bzw.
+ * 15,646…24,354 mm erhalten. Das unterscheidet sich grundlegend von 4.5.8: dessen 24 × 16-mm-
+ * Box führt die Wellen über fast die gesamte Breite und setzt die Raute tiefer.
+ */
+function formationWaterRescue(bounds: BoundsMm): Primitive[] {
+  const dx = bounds.minX - 1;
+  const dy = bounds.minY - 6;
+  const point = (x: number, y: number) => `${x + dx} ${y + dy}`;
+  const outlineStyle = {
+    fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+  } as const;
+  const wave = (middleY: number): Primitive => ({
+    type: 'path', role: 'pictogram',
+    d: `M ${point(12, middleY + 0.5)} ` +
+      `C ${point(13, middleY + 0.5)} ${point(13, middleY - 0.5)} ${point(14, middleY - 0.5)} ` +
+      `C ${point(15, middleY - 0.5)} ${point(15, middleY + 0.5)} ${point(16, middleY + 0.5)} ` +
+      `C ${point(17, middleY + 0.5)} ${point(17, middleY - 0.5)} ${point(18, middleY - 0.5)} ` +
+      `C ${point(19, middleY - 0.5)} ${point(19, middleY + 0.5)} ${point(20, middleY + 0.5)}`,
+    style: outlineStyle,
+  });
+  const roundJoinTipCompensationMm = DEFAULT_STROKE_WIDTH_MM * (Math.SQRT2 - 1) / 2;
+  return [
+    wave(12.5),
+    wave(14.5),
+    {
+      type: 'polyline', role: 'pictogram',
+      points: [
+        [12 - roundJoinTipCompensationMm, 20],
+        [16, 16 - roundJoinTipCompensationMm],
+        [20 + roundJoinTipCompensationMm, 20],
+        [16, 24 + roundJoinTipCompensationMm],
+        [12 - roundJoinTipCompensationMm, 20],
+      ].map(
+        ([x, y]) => [x + dx, y + dy] as const,
+      ),
+      style: outlineStyle,
+    },
+  ];
+}
+
+/**
+ * I.1.9 Alternative: Einsatz von Wasserfahrzeugen auf derselben Formation.
+ *
+ * Der Bootsrumpf misst auf seiner zurückgerechneten Mittellinie 11…21 mm × 15…20 mm; seine
+ * expandierten Quell-Ink-Bounds liegen bei 10,75…21,25 mm × 14,75…20,25 mm. Je zwei Wellen
+ * stehen links (2…10 mm) und rechts (22…30 mm), zentriert bei y=16 und y=18. Zwischen den
+ * fertigen 0,5-mm-Konturen bleiben dadurch je 0,75 mm sichtbar frei; die 4.5.5-Box würde
+ * stattdessen Boot und Wellen in eine 24 × 16-mm-Fassung zusammendrängen.
+ */
+function formationWatercraftOperations(bounds: BoundsMm): Primitive[] {
+  const dx = bounds.minX - 1;
+  const dy = bounds.minY - 6;
+  const point = (x: number, y: number) => `${x + dx} ${y + dy}`;
+  const outlineStyle = {
+    fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+  } as const;
+  const wave = (x: number, middleY: number): Primitive => ({
+    type: 'path', role: 'pictogram',
+    d: `M ${point(x, middleY + 0.5)} ` +
+      `C ${point(x + 1, middleY + 0.5)} ${point(x + 1, middleY - 0.5)} ${point(x + 2, middleY - 0.5)} ` +
+      `C ${point(x + 3, middleY - 0.5)} ${point(x + 3, middleY + 0.5)} ${point(x + 4, middleY + 0.5)} ` +
+      `C ${point(x + 5, middleY + 0.5)} ${point(x + 5, middleY - 0.5)} ${point(x + 6, middleY - 0.5)} ` +
+      `C ${point(x + 7, middleY - 0.5)} ${point(x + 7, middleY + 0.5)} ${point(x + 8, middleY + 0.5)}`,
+    style: outlineStyle,
+  });
+  return [
+    {
+      type: 'path', role: 'pictogram',
+      d: `M ${point(11, 15)} C ${point(11, 18)} ${point(13, 20)} ` +
+        `${point(16, 20)} C ${point(19, 20)} ${point(21, 18)} ` +
+        `${point(21, 15)} Z`,
+      style: outlineStyle,
+    },
+    wave(2, 16), wave(22, 16), wave(2, 18), wave(22, 18),
+  ];
+}
+
+/**
  * Das Innenzeichen von `cbrn-protection`: zwei gekreuzte „Wattestäbchen" — je ein gerader Schaft
  * mit einem ausgefüllten Kopf am oberen Ende, wobei der Kopf **seitlich** am Schaft hängt und
  * nicht auf dessen Ende sitzt.
@@ -201,6 +286,8 @@ function crossedSwabs(cx: number, cy: number): Primitive[] {
  * an den F-Dateien, `fire-fighting` an C.1.1 bis C.1.3.
  */
 const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
+  'water-rescue': formationWaterRescue,
+  'watercraft-operations': formationWatercraftOperations,
   'formation-solid-cap-3mm': (bounds) => [{
     type: 'rect',
     role: 'pictogram',
@@ -306,7 +393,7 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
    * eigenständigen Kapitel-4-Fassung bleiben Wellen und Raute bewusst in der unteren
    * Inhaltszone; die Maße sind an den vier I-g-Dateien separat vermessen.
    */
-  'water-rescue': (bounds) => {
+  'formation-water-rescue-lower-zone': (bounds) => {
     const cx = (bounds.minX + bounds.maxX) / 2;
     return [
       waterWave(cx, bounds.minY + 7.25),
@@ -1401,6 +1488,79 @@ const VEHICLE_LAND_NORMAL_MARKS: Partial<
   },
 };
 
+function waterRescueWave(d: string): Primitive {
+  return {
+    type: 'path', role: 'pictogram', d,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  };
+}
+
+function waterRescueDiamond(
+  points: readonly (readonly [number, number])[],
+): Primitive {
+  return {
+    type: 'polyline', role: 'pictogram', points, closed: true,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  };
+}
+
+/**
+ * I.2.1 bis I.2.3: zwei getrennt vermessene Wasserrettungsfassungen auf derselben normalen
+ * Landfahrzeughülle. Die drei sichtbaren Räder von I.2.1 wählen Kategorie 2; die beiden äußeren
+ * Räder von I.2.2/I.2.3 Kategorie 1. Die Kategorie ist hier kein Größenfaktor: sie ist der
+ * vorhandene semantische Kontext, der die beiden konkret belegten Zeichnungen fail-closed trennt.
+ */
+const VEHICLE_LAND_WATER_RESCUE_MARKS: Partial<
+  Record<VehicleCategoryId, (bounds: BoundsMm) => Primitive[]>
+> = {
+  'kfz-kategorie-2': (bounds) => {
+    const dx = bounds.minX - 1;
+    const dy = bounds.minY - 5.75;
+    return [
+      waterRescueWave(
+        `M ${12 + dx} ${12 + dy} C ${13 + dx} ${11 + dy}, ${14 + dx} ${13 + dy}, ` +
+        `${15 + dx} ${12 + dy} C ${16 + dx} ${11 + dy}, ${17 + dx} ${13 + dy}, ` +
+        `${18 + dx} ${12 + dy} C ${18.667 + dx} ${11.333 + dy}, ` +
+        `${19.333 + dx} ${11.333 + dy}, ${20 + dx} ${12 + dy}`,
+      ),
+      waterRescueWave(
+        `M ${12 + dx} ${14 + dy} C ${13 + dx} ${13 + dy}, ${14 + dx} ${15 + dy}, ` +
+        `${15 + dx} ${14 + dy} C ${16 + dx} ${13 + dy}, ${17 + dx} ${15 + dy}, ` +
+        `${18 + dx} ${14 + dy} C ${18.667 + dx} ${13.333 + dy}, ` +
+        `${19.333 + dx} ${13.333 + dy}, ${20 + dx} ${14 + dy}`,
+      ),
+      waterRescueDiamond([
+        [16 + dx, 16 + dy], [20 + dx, 20 + dy],
+        [16 + dx, 24 + dy], [12 + dx, 20 + dy],
+      ]),
+    ];
+  },
+  'kfz-kategorie-1': (bounds) => {
+    const dx = bounds.minX - 1;
+    const dy = bounds.minY - 5.75;
+    return [
+      waterRescueWave(
+        `M ${12.818 + dx} ${14.5 + dy} C ${13.614 + dx} ${13.704 + dy}, ` +
+        `${14.409 + dx} ${15.296 + dy}, ${15.205 + dx} ${14.5 + dy} ` +
+        `C ${16 + dx} ${13.704 + dy}, ${16.796 + dx} ${15.296 + dy}, ` +
+        `${17.591 + dx} ${14.5 + dy} C ${18.121 + dx} ${13.97 + dy}, ` +
+        `${18.652 + dx} ${13.97 + dy}, ${19.182 + dx} ${14.5 + dy}`,
+      ),
+      waterRescueWave(
+        `M ${12.818 + dx} ${16.25 + dy} C ${13.614 + dx} ${15.454 + dy}, ` +
+        `${14.409 + dx} ${17.046 + dy}, ${15.205 + dx} ${16.25 + dy} ` +
+        `C ${16 + dx} ${15.454 + dy}, ${16.796 + dx} ${17.046 + dy}, ` +
+        `${17.591 + dx} ${16.25 + dy} C ${18.121 + dx} ${15.72 + dy}, ` +
+        `${18.652 + dx} ${15.72 + dy}, ${19.182 + dx} ${16.25 + dy}`,
+      ),
+      waterRescueDiamond([
+        [16 + dx, 17.636 + dy], [19.182 + dx, 20.818 + dy],
+        [16 + dx, 24 + dy], [12.818 + dx, 20.818 + dy],
+      ]),
+    ];
+  },
+};
+
 const VEHICLE_LAND_INVERTED_HULL_MARKS: Partial<
   Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
 > = {
@@ -1718,6 +1878,7 @@ export function bodyMark(
   context: {
     kind: SymbolKind;
     bodyVariant?: BodyVariantId;
+    vehicleCategory?: VehicleCategoryId;
     strength?: StrengthId;
     occupiedLabelZones?: readonly ('bottomCenter' | 'bottomRight' | 'belowRight')[];
   },
@@ -1752,7 +1913,9 @@ export function bodyMark(
           ? PERSON_I5_MARKS[id]
           : undefined
     : context.kind === 'vehicle-land' && context.bodyVariant === undefined
-      ? VEHICLE_LAND_NORMAL_MARKS[id]
+      ? id === 'water-rescue' && context.vehicleCategory !== undefined
+        ? VEHICLE_LAND_WATER_RESCUE_MARKS[context.vehicleCategory]
+        : VEHICLE_LAND_NORMAL_MARKS[id]
       : context.kind === 'vehicle-land' && context.bodyVariant === 'foot-band'
         ? VEHICLE_LAND_FOOT_BAND_MARKS[id] ?? (id === 'maintenance' ? logisticsMaintenance : undefined)
         : context.kind === 'vehicle-land' && context.bodyVariant === 'plain-wheel-pair'
@@ -1778,24 +1941,28 @@ export function bodyMark(
               : context.kind === 'reduced-house' && context.bodyVariant === undefined
                 ? REDUCED_HOUSE_MARKS[id]
           : undefined;
-  const hasAnyBuild = (context.kind === 'person' ? [PERSON_MARKS, PERSON_I5_MARKS] : [
-    MARKS,
-    VEHICLE_LAND_NORMAL_MARKS,
-    VEHICLE_LAND_FOOT_BAND_MARKS,
-    FORMATION_FOOT_BAND_LOGISTICS_MARKS,
-    TRAILER_FOOT_BAND_LOGISTICS_MARKS,
-    CIRCLE_FOOT_BAND_LOGISTICS_MARKS,
-    VEHICLE_LAND_PLAIN_WHEEL_PAIR_MARKS,
-    VEHICLE_LAND_INVERTED_HULL_MARKS,
-    VEHICLE_AIR_MARKS,
-    VEHICLE_AIR_FIXED_WING_MARKS,
-    TRAILER_MARKS,
-    CIRCLE_NORMAL_MARKS,
-    CIRCLE_NORMAL_ANHANG_N_MARKS,
-    CIRCLE_RAISED_ONE_MM_MARKS,
-    CIRCLE_RAISED_GABLE_MARKS,
-    REDUCED_HOUSE_MARKS,
-  ])
+  const hasAnyBuild = id === 'water-rescue' || (
+    context.kind === 'person'
+      ? [PERSON_MARKS, PERSON_I5_MARKS]
+      : [
+          MARKS,
+          VEHICLE_LAND_NORMAL_MARKS,
+          VEHICLE_LAND_FOOT_BAND_MARKS,
+          FORMATION_FOOT_BAND_LOGISTICS_MARKS,
+          TRAILER_FOOT_BAND_LOGISTICS_MARKS,
+          CIRCLE_FOOT_BAND_LOGISTICS_MARKS,
+          VEHICLE_LAND_PLAIN_WHEEL_PAIR_MARKS,
+          VEHICLE_LAND_INVERTED_HULL_MARKS,
+          VEHICLE_AIR_MARKS,
+          VEHICLE_AIR_FIXED_WING_MARKS,
+          TRAILER_MARKS,
+          CIRCLE_NORMAL_MARKS,
+          CIRCLE_NORMAL_ANHANG_N_MARKS,
+          CIRCLE_RAISED_ONE_MM_MARKS,
+          CIRCLE_RAISED_GABLE_MARKS,
+          REDUCED_HOUSE_MARKS,
+        ]
+  )
     .some((candidate) => Object.hasOwn(candidate, id));
   if (!hasAnyBuild) {
     throw new Error(
@@ -1893,7 +2060,7 @@ export function bodyMark(
  */
 export const BODY_MARK_IDS: readonly BodyMarkId[] = Object.freeze(
   [...CAPABILITY_IDS, ...TECHNICAL_BODY_MARK_IDS].filter((id) =>
-    [
+    id === 'water-rescue' || [
       MARKS,
       VEHICLE_LAND_NORMAL_MARKS,
       VEHICLE_LAND_FOOT_BAND_MARKS,

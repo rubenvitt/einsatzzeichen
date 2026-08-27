@@ -236,6 +236,7 @@ describe('semantische Zeichenbeschreibungen', () => {
       'formation-water-rescue-compact',
     ] as const;
     const lfh485TechnicalIds = [
+      'formation-water-rescue-lower-zone',
       'formation-opposed-triangles-top',
       'formation-chevron-top',
     ] as const;
@@ -258,6 +259,8 @@ describe('semantische Zeichenbeschreibungen', () => {
       'double-wave-inner-diamond-8mm': 'Doppelwelle mit Innenraute (8 mm)',
       'formation-water-rescue-compact':
         'Kompakte Wasserrettungsmarke mit Doppelwelle und scharfkantigem Rautenring',
+      'formation-water-rescue-lower-zone':
+        'Kompakte Wasserrettungsmarke in der unteren Formationszone',
       'formation-opposed-triangles-top':
         'Zwei gegenüberliegende Dreiecke in der oberen Formationszone',
       'formation-chevron-top': 'Gefüllter Winkel in der oberen Formationszone',
