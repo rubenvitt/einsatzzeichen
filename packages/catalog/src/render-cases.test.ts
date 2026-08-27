@@ -18,13 +18,21 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // LFH-480 ergänzt acht I.3-Renderfälle zum integrierten Hauptbestand.
-    expect(ids).toHaveLength(493);
+    // LFH-482 und LFH-480 ergänzen zusammen zwölf Fälle zum zuvor integrierten I-g-/I-j-Bestand.
+    expect(ids).toHaveLength(497);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
-    // dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66, G 21, H drei und
-    // I.1 vier, I.3 elf sowie I.4 drei, C.1.3 einen, N neun und D 26 neue Rezeptfälle.
-    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(215);
+    // dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66, G 21, H drei,
+    // I-d und I-g je vier, I.3 elf sowie I-j drei, C.1.3 einen, N neun und D 26 Rezeptfälle.
+    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(219);
+    const anhangIRecipeIds = ids.filter((id) => id.startsWith('recipe.I.'));
+    expect(anhangIRecipeIds).toHaveLength(22);
+    expect(new Set(anhangIRecipeIds)).toEqual(new Set([
+      ...Array.from({ length: 4 }, (_, index) => `recipe.I.1.${index + 5}`),
+      ...Array.from({ length: 4 }, (_, index) => `recipe.I.1.${index + 17}`),
+      ...Array.from({ length: 11 }, (_, index) => `recipe.I.3.${index + 1}`),
+      ...Array.from({ length: 3 }, (_, index) => `recipe.I.4.${index + 1}`),
+    ]));
     expect(ids.filter((id) => id.startsWith('recipe.G.'))).toHaveLength(21);
     expect(ids.filter((id) => id.startsWith('recipe.N.'))).toEqual([
       'recipe.N.1.1', 'recipe.N.1.2', 'recipe.N.1.3', 'recipe.N.1.4', 'recipe.N.1.5',

@@ -419,6 +419,14 @@ const ANHANG_I_TECHNICAL_REVIEW: Review = {
     'I.3.1-I.3.11 passed literal recipe, measured inset-hull, wheel/fire primitive, body-fingerprint, direct-snapshot and multi-size gates. The white Hilfsorganisation body and the red Feuerlöschboot body are technical rendering decisions; domain classification remains pending and no identity with E.2 is claimed.',
 };
 
+const ANHANG_I_D_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-27',
+  note:
+    'I.1.5-I.1.8 passed literal recipe, measured compact water-rescue body-mark, independently gated cap/head/body vertical placement, direct-snapshot and multi-size gates. I.1.5 uses its measured 3.7 mm three-hole cap; I.1.6-I.1.8 reuse the 3 mm cap and I.1.8 moves body geometry by 3 mm with staffel. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending.',
+};
+
 const ANHANG_I_G_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
@@ -430,7 +438,6 @@ const ANHANG_I_G_TECHNICAL_REVIEW: Review = {
     'output-only visual QA gates. Opposed triangles and chevron remain separate geometric ' +
     'marks; domain classification remains pending.',
 };
-
 const ANHANG_I_J_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
@@ -441,30 +448,46 @@ const ANHANG_I_J_TECHNICAL_REVIEW: Review = {
     'circle-12/raised-gable as geometry only; white Hilfsorganisation bodies and all domain ' +
     'classifications remain pending.',
 };
-
-const ANHANG_I_TECHNICAL_REVIEW_BY_SUBSECTION = {
-  'I.1': ANHANG_I_G_TECHNICAL_REVIEW,
-  'I.3': ANHANG_I_TECHNICAL_REVIEW,
-  'I.4': ANHANG_I_J_TECHNICAL_REVIEW,
-} as const satisfies Readonly<Record<string, Review>>;
+const ANHANG_I_TECHNICAL_REVIEW_BY_SECTION = {
+  'I.1.5': ANHANG_I_D_TECHNICAL_REVIEW,
+  'I.1.6': ANHANG_I_D_TECHNICAL_REVIEW,
+  'I.1.7': ANHANG_I_D_TECHNICAL_REVIEW,
+  'I.1.8': ANHANG_I_D_TECHNICAL_REVIEW,
+  'I.1.17': ANHANG_I_G_TECHNICAL_REVIEW,
+  'I.1.18': ANHANG_I_G_TECHNICAL_REVIEW,
+  'I.1.19': ANHANG_I_G_TECHNICAL_REVIEW,
+  'I.1.20': ANHANG_I_G_TECHNICAL_REVIEW,
+  'I.3.1': ANHANG_I_TECHNICAL_REVIEW,
+  'I.3.2': ANHANG_I_TECHNICAL_REVIEW,
+  'I.3.3': ANHANG_I_TECHNICAL_REVIEW,
+  'I.3.4': ANHANG_I_TECHNICAL_REVIEW,
+  'I.3.5': ANHANG_I_TECHNICAL_REVIEW,
+  'I.3.6': ANHANG_I_TECHNICAL_REVIEW,
+  'I.3.7': ANHANG_I_TECHNICAL_REVIEW,
+  'I.3.8': ANHANG_I_TECHNICAL_REVIEW,
+  'I.3.9': ANHANG_I_TECHNICAL_REVIEW,
+  'I.3.10': ANHANG_I_TECHNICAL_REVIEW,
+  'I.3.11': ANHANG_I_TECHNICAL_REVIEW,
+  'I.4.1': ANHANG_I_J_TECHNICAL_REVIEW,
+  'I.4.2': ANHANG_I_J_TECHNICAL_REVIEW,
+  'I.4.3': ANHANG_I_J_TECHNICAL_REVIEW,
+} as const satisfies Readonly<Record<keyof typeof ANHANG_I_RECIPES, Review>>;
 
 /**
- * Ordnet einen Anhang-I-Abschnitt seinem separat belegten technischen Review zu. Neue
- * Unterabschnitte brauchen zuerst einen eigenen Eintrag; sie erben weder stillschweigend das
- * I.3-Review noch irgendein anderes Review.
+ * Ordnet nur einen tatsächlich integrierten Anhang-I-Schlüssel seinem separat belegten
+ * technischen Review zu. Neue Schlüssel brauchen zuerst einen expliziten Eintrag; insbesondere
+ * erbt ein neuer I.1-Abschnitt weder das I-d- noch das I-g-Review über einen Präfixschluss.
  */
 export function technicalReviewForAnhangI(section: string): Review {
-  const subsection = section.split('.', 2).join('.');
-  if (!Object.hasOwn(ANHANG_I_TECHNICAL_REVIEW_BY_SUBSECTION, subsection)) {
+  if (!Object.hasOwn(ANHANG_I_TECHNICAL_REVIEW_BY_SECTION, section)) {
     throw new Error(
-      `Der Anhang-I-Abschnitt "${section}" ist keinem technischen Unterabschnittsreview zugeordnet.`,
+      `Der Anhang-I-Abschnitt "${section}" ist keinem technischen Abschnittsreview zugeordnet.`,
     );
   }
-  return ANHANG_I_TECHNICAL_REVIEW_BY_SUBSECTION[
-    subsection as keyof typeof ANHANG_I_TECHNICAL_REVIEW_BY_SUBSECTION
+  return ANHANG_I_TECHNICAL_REVIEW_BY_SECTION[
+    section as keyof typeof ANHANG_I_TECHNICAL_REVIEW_BY_SECTION
   ];
 }
-
 /** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
 function reviewFor(
   sourceId: string,
@@ -1140,6 +1163,10 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'F',
     'G',
     'H',
+    'I.1.5',
+    'I.1.6',
+    'I.1.7',
+    'I.1.8',
     'I.1.17',
     'I.1.18',
     'I.1.19',

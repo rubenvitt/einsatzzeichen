@@ -1,13 +1,55 @@
 import type { Recipe } from './recipes.js';
 
 /**
- * LFH-485 / Anhang I-g: vier weiße Wasserrettungsformationen. Die Wasserrettungsmarke ist die
- * separat vermessene kompakte Formationsfassung. Dreieckspaar und Winkel bleiben geometrisch
- * getrennt, damit weder die kombinierte F.1.16-Zeichnung noch eine ungeklärte Drohnensemantik
- * übernommen wird. Der Textlauf der ersten beiden Rezepte steht auf y=10,0 mm; seine aus dem
- * einzigen versalen S idealisierte Versalhöhe beträgt 2,5 mm.
+ * Gemeinsame Anhang-I-Aggregation. Die einzelnen LFH-Slices bleiben über ihre exakten Schlüssel
+ * und die korrespondierenden technischen Reviews getrennt, werden aber nur einmal in `RECIPES`
+ * eingebunden.
  */
 export const ANHANG_I_RECIPES = {
+  // LFH-482 / Anhang I-d: vier separat vermessene Wasserrettungs-Führungsformationen.
+  'I.1.5': {
+    title: 'Zugtrupp Wasserrettungszug',
+    referenceAsset: 'I.1.5_Zugtrupp Wasserrettungszug.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'trupp',
+      bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3.7mm-three-hole-row'],
+    },
+  },
+  'I.1.6': {
+    title: 'Führungstrupp Wasserrettung',
+    referenceAsset: 'I.1.6_Führungstrupp Wasserrettung.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'trupp',
+      bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3mm'],
+    },
+  },
+  'I.1.7': {
+    title: 'Führungsgruppe Wasserrettung',
+    referenceAsset: 'I.1.7_Führungsgruppe Wasserrettung.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'gruppe',
+      bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3mm'],
+    },
+  },
+  'I.1.8': {
+    title: 'Führungsstaffel Wasserrettung',
+    referenceAsset: 'I.1.8_Führungsstaffel Wasserrettung.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'hilfsorganisation',
+      strength: 'staffel',
+      bodyMarks: ['formation-water-rescue-compact', 'formation-solid-cap-3mm'],
+    },
+  },
+  // LFH-485 / Anhang I-g: Die Wasserrettungsmarke ist die separat vermessene kompakte
+  // Formationsfassung. Dreieckspaar und Winkel bleiben geometrisch getrennt. Der Textlauf der
+  // ersten beiden Rezepte steht auf y=10,0 mm; die idealisierte Versalhöhe beträgt 2,5 mm.
   'I.1.17': {
     title: 'Strömungsrettungstrupp',
     referenceAsset: 'I.1.17_Strömungsrettungstrupp.svg',
