@@ -24,17 +24,17 @@ rtk mise exec -- pnpm exec tsx out/tools/generate-lfh481-output-only.ts --verify
 ```
 
 Der unmittelbar folgende Verify-Lauf rekonstruierte Screenshot und Manifest bytegleich. Der
-fokussierte Provenienz-/Snapshot-Lauf war zuvor mit 1.760/1.760 Tests grün.
+fokussierte, additiv mit I.4.1 bis I.4.3 integrierte Lauf war mit 2.266/2.266 Tests grün.
 
 ## Output-only Artefakte
 
-Erzeuger-Commit: `92b04ec63a46d13db1e48d0d4168f4650d6badea`
+Erzeuger-Commit: `4b94469cb168ba0d1882c2ea331fd488762c4d6e`
 
 | Artefakt | Abmessungen | SHA-256 |
 |---|---:|---|
 | `out/lfh-481/contact-sheet/LFH-481-i-c-direct.png` | 1500 × 1540 px | `47b702e8bc36432c332fde9e7341bdd49523235396fcef5d1016478a3d64c1e3` |
 | `out/lfh-481/contact-sheet/LFH-481-i-c-generated.png` | 1600 × 3000 px | `795615b9c04383ba915acae090644b99b31ada5ba9d7abacbd38f007727a3d32` |
-| `out/lfh-481/contact-sheet/manifest.json` | vier Rezeptzeilen und zwei Outputbindungen | `82272fd758b91e3847d9da499a9879e78b2116e67db2714e8e121d83ab3b109e` |
+| `out/lfh-481/contact-sheet/manifest.json` | vier Rezeptzeilen und zwei Outputbindungen | `1fb9e9a3c22e9f0ffdbf53afff5de2d79eaf050af246fb33288597ba17f02e4a` |
 
 Beide PNGs wurden in Originalauflösung vollständig gesichtet. Titel, Abschnitt und Spalten sind
 lesbar. Kein Kopf, Rahmen oder Innenzeichen wird abgeschnitten. Der große Kontaktbogen zeigt alle
