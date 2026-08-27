@@ -2,8 +2,9 @@ import type {
   PrimitiveHeadShape,
   TechnicalHeadMarkId,
 } from '@einsatzzeichen/schema';
+import { deepFreeze, type DeepReadonly } from './readonly-data.js';
 
-const SINGLE_VERTICAL_BAR: PrimitiveHeadShape = {
+const SINGLE_VERTICAL_BAR: DeepReadonly<PrimitiveHeadShape> = deepFreeze({
   heightMm: 4,
   primitives: [{
     type: 'rect',
@@ -14,7 +15,7 @@ const SINGLE_VERTICAL_BAR: PrimitiveHeadShape = {
     height: 4,
     style: { fill: 'schwarz', stroke: 'none' },
   }],
-};
+});
 
 /** Totaler Resolver der separat vermessenen technischen Kopfmarken. */
 export function technicalHeadMark(id: TechnicalHeadMarkId): PrimitiveHeadShape {

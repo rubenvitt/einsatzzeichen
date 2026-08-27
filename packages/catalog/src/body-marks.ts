@@ -136,8 +136,8 @@ function waterRescue(bounds: BoundsMm): Primitive[] {
         [centerX + 4, bounds.minY + 13],
         [centerX, bounds.minY + 17],
         [centerX - 4, bounds.minY + 13],
-        [centerX, bounds.minY + 9],
       ],
+      closed: true,
       style,
     },
   ];

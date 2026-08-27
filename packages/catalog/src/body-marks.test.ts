@@ -655,7 +655,8 @@ describe('bodyMark() — Wasserrettung für I.1', () => {
       {
         type: 'polyline',
         role: 'pictogram',
-        points: [[16, 15], [20, 19], [16, 23], [12, 19], [16, 15]],
+        points: [[16, 15], [20, 19], [16, 23], [12, 19]],
+        closed: true,
         style: outlineStyle,
       },
     ]);
