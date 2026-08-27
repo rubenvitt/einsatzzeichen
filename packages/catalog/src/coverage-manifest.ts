@@ -160,6 +160,20 @@ const LEADERSHIP_OPEN_CAP_TECHNICAL_REVIEW: Review = {
     'beide renderbaren Einträge; Benennung und Bedeutung der offenen Kappe bleiben pending.',
 };
 
+const WATER_RESCUE_PERSONNEL_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-27',
+  note:
+    'I.5.4 bis I.5.8 sind fünf direkte 32×32-mm-Piktogramme im eigenen ID-Raum. Zwei ' +
+    'literal vermessene Körperlagen erhalten geschlossene beziehungsweise offene Kappe, zwei ' +
+    'gefüllte Kubik-Wasserlinien und die Innenraute; die Kopfgeometrie bleibt je Quelle ' +
+    '1/2/3 Kreis, Verbandsbalken oder leer. Eine private Hilfe teilt nur Geometrie und erzeugt ' +
+    'keine FunctionRole-, Strength- oder Organisationssemantik. Snapshot, Kommando, Box, ' +
+    'Standalone-Clipping, Mehrgrößen-, Metadaten- und explizite Kontrast-Gates prüfen alle ' +
+    'fünf renderbaren Einträge; Rang- und Rollenbenennungen bleiben im Domain-Review pending.',
+};
+
 const ANHANG_C_A_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
@@ -1063,7 +1077,9 @@ const elementEntries: CoverageEntry[] = Object.entries(ELEMENT_SECTIONS).map(([i
 
 const pictogramEntries: CoverageEntry[] = ALL_PICTOGRAMS.map((definition) => {
   const sourceId = `bbk-babz-2025:${definition.section}`;
-  const technicalReview = definition.id.startsWith('state.')
+  const technicalReview = definition.id.startsWith('water-rescue-personnel.')
+    ? WATER_RESCUE_PERSONNEL_TECHNICAL_REVIEW
+    : definition.id.startsWith('state.')
     ? STATE_PICTOGRAM_TECHNICAL_REVIEW
     : definition.id.startsWith('leadership.')
       ? definition.section.startsWith('D.3.')
@@ -1094,7 +1110,7 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
    * ohne den Kern zu berühren, und umgekehrt — über Paketversionen wäre das nur darstellbar,
    * wenn jedes Profil ein eigenes npm-Paket wäre.
    */
-  coreVersion: '0.1.0',
+  coreVersion: '0.2.0',
   // Kapitel 3 (sieben Referenzdateien) setzt dieser Slice nicht um.
   //
   // **`5.1.1` und ausdrücklich nicht `5.1`.** Fünf der sechs Fahrzeugkategorien aus 5.1.1 sind
@@ -1168,6 +1184,11 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'I.4.1',
     'I.4.2',
     'I.4.3',
+    'I.5.4',
+    'I.5.5',
+    'I.5.6',
+    'I.5.7',
+    'I.5.8',
     'J.1',
     'J.2',
     'J.3',

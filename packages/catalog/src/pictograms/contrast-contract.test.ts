@@ -14,6 +14,7 @@ import {
 import { ALL_PICTOGRAMS } from './index.js';
 import { LEADERSHIP_PICTOGRAMS } from './leadership/index.js';
 import { STATE_PICTOGRAMS } from './states/index.js';
+import { WATER_RESCUE_PERSONNEL_PICTOGRAMS } from './water-rescue-personnel/index.js';
 
 function declaredPaintTokensOf(
   definition: CatalogPictogramDefinition,
@@ -31,6 +32,13 @@ function declaredPaintTokensOf(
       ...(pair.background === 'surface' ? [] : [pair.background]),
     ]),
   );
+}
+
+function undeclaredPaintTokensOf(
+  definition: CatalogPictogramDefinition,
+): readonly ColorToken[] {
+  const declared = declaredPaintTokensOf(definition);
+  return [...paintTokensOf(definition.primitives)].filter((token) => !declared.has(token));
 }
 
 describe('Kontrastvertrag für Katalogpiktogramme', () => {
@@ -56,14 +64,33 @@ describe('Kontrastvertrag für Katalogpiktogramme', () => {
     }
   });
 
-  it('deklariert für State und Leadership alle tatsächlich verwendeten Farbtoken', () => {
-    for (const definition of [...STATE_PICTOGRAMS, ...LEADERSHIP_PICTOGRAMS]) {
-      const declared = declaredPaintTokensOf(definition);
+  it('deklariert für State, Leadership und Wasserrettungspersonal alle tatsächlich verwendeten Farbtoken', () => {
+    for (const definition of [
+      ...STATE_PICTOGRAMS,
+      ...LEADERSHIP_PICTOGRAMS,
+      ...WATER_RESCUE_PERSONNEL_PICTOGRAMS,
+    ]) {
       expect(
-        [...paintTokensOf(definition.primitives)].filter((token) => !declared.has(token)),
+        undeclaredPaintTokensOf(definition),
         `${definition.id}#${definition.variant}`,
       ).toEqual([]);
     }
+  });
+
+  it('meldet bei einer mutierten Wasserrettungsdefinition ein verwendetes, aber nicht deklariertes Farbtoken', () => {
+    const original = WATER_RESCUE_PERSONNEL_PICTOGRAMS[0];
+    const mutated = {
+      ...original,
+      primitives: [
+        ...original.primitives,
+        {
+          type: 'circle', role: 'pictogram', cx: 16, cy: 16, r: 1,
+          style: { fill: 'rot', stroke: 'none' },
+        },
+      ],
+    } as CatalogPictogramDefinition;
+
+    expect(undeclaredPaintTokensOf(mutated)).toEqual(['rot']);
   });
 
   it('lehnt ein unsicher erzeugtes Standalone-Piktogramm ohne Kontrastpaare fail-closed ab', () => {

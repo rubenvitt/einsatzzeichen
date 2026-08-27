@@ -161,11 +161,12 @@ describe('Fachreview-Ledger', () => {
     // F-d ergänzt acht einzelne, weiterhin offene Reviewplätze für F.2.10 bis F.2.17. F-e
     // ergänzt elf für F.3.1 bis F.3.11 und F-f die acht verbleibenden für F.3.12 bis F.3.19.
     // Anhang D schließt den damaligen Stand bei 497. I-j ergänzt drei Wasserrettungsorte;
-    // I-c, I-d und I-g ergänzen je vier Formationen. Der integrierte Stand schließt bei 512.
-    expect(manifestReviews).toHaveLength(512);
+    // I-c, I-d und I-g ergänzen je vier Formationen, I.5 fünf Führungspiktogramme.
+    // Der integrierte Stand schließt bei 517.
+    expect(manifestReviews).toHaveLength(517);
     expect(sourceReviews).toHaveLength(13);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(526);
+    expect(reviews).toHaveLength(531);
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
   });
 
