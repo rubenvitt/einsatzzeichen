@@ -331,6 +331,29 @@ describe('validateSpec', () => {
     }
   });
 
+  it('beschränkt Anhänger-Mittenbaselines auf die zwei vermessenen Werte', () => {
+    for (const labels of [
+      { center: 'Tauchen', centerBaselineFromBodyBottomMm: 14.5, centerCapHeightMm: 2.919 },
+      {
+        center: 'Strömungsrettung', centerBaselineFromBodyBottomMm: 14.327,
+        centerCapHeightMm: 2.191447,
+      },
+    ]) {
+      expect(validateSpec({ kind: 'trailer', labels } as SymbolSpec)).toEqual([]);
+    }
+
+    expect(validateSpec({
+      kind: 'trailer',
+      labels: { center: 'X', centerBaselineFromBodyBottomMm: 10, centerCapHeightMm: 2.191447 },
+    } as SymbolSpec).map((issue) => issue.rule)).toContain(
+      'center-baseline-not-measured',
+    );
+    expect(validateSpec({
+      kind: 'vehicle-land',
+      labels: { center: 'BuPol', centerBaselineFromBodyBottomMm: 6.5 },
+    } as SymbolSpec)).toEqual([]);
+  });
+
   it('lässt die oberhalb liegende F.2.7-Zone nur am Luftfahrzeug zu', () => {
     expect(validateSpec({
       kind: 'vehicle-air', bodyVariant: 'raised-hull', labels: { aboveLeft: 'ITH' },

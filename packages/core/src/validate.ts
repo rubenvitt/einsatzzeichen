@@ -959,6 +959,17 @@ function validatePreparedSpec(
     });
   }
   if (
+    spec.labels?.centerBaselineFromBodyBottomMm !== undefined &&
+    profile.measuredCenterBaselineOverridesMm !== undefined &&
+    !profile.measuredCenterBaselineOverridesMm.includes(spec.labels.centerBaselineFromBodyBottomMm)
+  ) {
+    issues.push({
+      rule: 'center-baseline-not-measured',
+      message:
+        'Die abweichende mittige Grundlinie muss einem an diesem Körperprofil vermessenen Wert entsprechen.',
+    });
+  }
+  if (
     spec.labels?.centerAnchorFromBodyLeftMm !== undefined &&
     (
       spec.labels.center === undefined ||

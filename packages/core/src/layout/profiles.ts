@@ -59,6 +59,8 @@ export interface LayoutProfile {
   centerBaselineFromBodyBottomMm: number;
   /** Erlaubt einen je Zeichen vermessenen Abstand anstelle des Profilwerts. */
   allowsCenterBaselineOverride?: true;
+  /** Geschlossene Liste der an diesem Profil einzeln vermessenen abweichenden Grundlinien. */
+  measuredCenterBaselineOverridesMm?: readonly number[];
   /** Erlaubt einen ausdrücklich vermessenen, von der linken Körperkante gerechneten Mittelpunkt. */
   allowsCenterAnchorOverride?: true;
   /** Der einzige an diesem Profil vermessene relative x-Anker des mittigen Laufs. */
@@ -184,6 +186,7 @@ const rectBodyProfile: LayoutProfile = rectBody(8);
 const trailerProfile: LayoutProfile = {
   ...rectBody(8),
   allowsCenterBaselineOverride: true,
+  measuredCenterBaselineOverridesMm: [14.5, 14.327] as const,
   allowsCenterAnchorOverride: true,
   measuredCenterAnchorFromBodyLeftMm: 8.24,
   measuredBodyBoundsMm: { minX: 4, minY: 5.75, maxX: 31, maxY: 26 },
