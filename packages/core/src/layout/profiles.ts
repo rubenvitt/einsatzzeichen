@@ -172,6 +172,16 @@ function rectBody(centerBaselineFromBodyBottomMm: number): LayoutProfile {
 const rectBodyProfile: LayoutProfile = rectBody(8);
 
 /**
+ * Der Anhänger ist 27 × 20,25 mm groß und führt in I.2.5/I.2.6 zwei einzeln vermessene
+ * Mittellabel-Grundlinien. Die übrigen Anhänger behalten ohne Override den Normwert 8 mm.
+ */
+const trailerProfile: LayoutProfile = {
+  ...rectBody(8),
+  allowsCenterBaselineOverride: true,
+  measuredBodyBoundsMm: { minX: 4, minY: 5.75, maxX: 31, maxY: 26 },
+};
+
+/**
  * Die taktische Formation trägt zusätzlich die vermessene Zone oben links (Anhang F). Ein eigenes
  * Profilobjekt und keine Ergänzung an `rectBodyProfile`: das teilen sich zehn Körperformen, und
  * für neun davon ist diese Grundlinie unvermessen.
@@ -386,7 +396,7 @@ const PROFILES: Record<SymbolKind, LayoutProfile> = {
   // Kein Zeichen des Anhangs E.2 trägt überhaupt eine Kopfzone (selbst nachgesehen an allen 31).
   // Ohne Kopfzone gibt `place` den Körper unverändert zurück; `defaultAnchorMm` bleibt damit
   // unerreichbar und ist für diese drei keine Behauptung.
-  trailer: rectBodyProfile,
+  trailer: trailerProfile,
   // 7,5004 gemessen an E.2.15 (Grundlinie 17,0000 bei Körperunterkante 24,5004) — n = 1. Das ist
   // ein **Wert** in einem stehenden Mechanismus und kein eigener Mechanismus; die Fallzahlregel
   // des Projekts trifft ihn nicht.

@@ -32,3 +32,47 @@ export const ANHANG_I_A_RECIPES = {
     },
   },
 } as const satisfies Record<string, Recipe>;
+
+/** I.2.4 bis I.2.7: vier radlose Anhänger mit ausschließlich quellenbelegten Innenmarken. */
+export const ANHANG_I_B_RECIPES = {
+  'I.2.4': {
+    title: 'Anhänger Wasserrettung',
+    referenceAsset: 'I.2.4_Anhänger Wasserrettung.svg',
+    spec: {
+      kind: 'trailer',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['trailer-water-rescue'],
+    },
+  },
+  'I.2.5': {
+    title: 'Anhänger Tauchen',
+    referenceAsset: 'I.2.5_Anhänger Tauchen.svg',
+    spec: {
+      kind: 'trailer',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['trailer-diving'],
+      labels: { center: 'Tauchen', centerBaselineFromBodyBottomMm: 14.5, centerCapHeightMm: 2.919 },
+    },
+  },
+  'I.2.6': {
+    title: 'Anhänger Strömungsrettung',
+    referenceAsset: 'I.2.6_Anhänger Strömungsrettung.svg',
+    spec: {
+      kind: 'trailer',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['trailer-diving'],
+      labels: {
+        center: 'Strömungsrettung', centerBaselineFromBodyBottomMm: 14.327, centerCapHeightMm: 2.191447,
+      },
+    },
+  },
+  'I.2.7': {
+    title: 'Bootsanhänger',
+    referenceAsset: 'I.2.7_Bootsanhänger.svg',
+    spec: {
+      kind: 'trailer',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['trailer-boat-hull'],
+    },
+  },
+} as const satisfies Record<string, Recipe>;

@@ -380,6 +380,10 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:H.3#primary': { status: 'pending' },
   // Das Erscheinungsbild ist technisch durch die Mess-, Rezept- und Snapshot-Gates belegt; die
   // organisatorische und fachliche Bedeutung des weißen Körpers bleibt dennoch ungeklärt.
+  'bbk-babz-2025:I.2.4#primary': { status: 'pending' },
+  'bbk-babz-2025:I.2.5#primary': { status: 'pending' },
+  'bbk-babz-2025:I.2.6#primary': { status: 'pending' },
+  'bbk-babz-2025:I.2.7#primary': { status: 'pending' },
   'bbk-babz-2025:I.3.5#primary': { status: 'pending' },
   'bbk-babz-2025:I.3.6#primary': { status: 'pending' },
   'bbk-babz-2025:I.3.7#primary': { status: 'pending' },

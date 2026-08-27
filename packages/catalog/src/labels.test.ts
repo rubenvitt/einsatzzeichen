@@ -221,6 +221,11 @@ describe('semantische Zeichenbeschreibungen', () => {
       'spontaneous-helper-collection-arrow',
       'spontaneous-helper-contact-double-arrow',
     ] as const;
+    const task1AnhangITechnicalIds = [
+      'trailer-water-rescue',
+      'trailer-diving',
+      'trailer-boat-hull',
+    ] as const;
     const task2RoleTechnicalIds = [
       'formation-solid-cap-3mm',
       'formation-solid-cap-4mm-three-hole-row',
@@ -231,11 +236,15 @@ describe('semantische Zeichenbeschreibungen', () => {
       ...task2RoleTechnicalIds,
       ...task1AnhangHTechnicalIds,
       ...task1AnhangNTechnicalIds,
+      ...task1AnhangITechnicalIds,
     ]);
     expect(TECHNICAL_BODY_MARK_LABELS as Record<string, string>).toMatchObject({
       'formation-solid-cap-3mm': 'Schwarze Formationskappe, 3 mm hoch',
       'formation-solid-cap-4mm-three-hole-row':
         'Schwarze Formationskappe, 4 mm hoch, mit drei Löchern in einer Reihe',
+      'trailer-water-rescue': 'Doppelwelle mit Raute für Wasserrettung',
+      'trailer-diving': 'Doppelwelle mit kleiner Raute für Tauchen',
+      'trailer-boat-hull': 'Schwarzer Bootsrumpf mit weißem Innenraum',
     });
   });
 

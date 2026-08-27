@@ -55,7 +55,7 @@ import {
 import { ANHANG_N_RECIPES } from './recipes-anhang-n.js';
 import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
-import { ANHANG_I_A_RECIPES } from './recipes-anhang-i.js';
+import { ANHANG_I_A_RECIPES, ANHANG_I_B_RECIPES } from './recipes-anhang-i.js';
 
 /**
  * Migration nach Slice 2: `technical` ist für alle elf Einträge `approved`, weil das Kriterium
@@ -411,12 +411,12 @@ const ANHANG_H_TECHNICAL_REVIEW: Review = {
     'fachliche Zuordnung bleibt im Domain-Review pending.',
 };
 
-const ANHANG_I_A_TECHNICAL_REVIEW: Review = {
+const ANHANG_I_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
   date: '2026-08-26',
   note:
-    'I.3.5-I.3.7 passed measured inset-hull, 7.99 mm center-profile, literal recipe, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
+    'I.2.4-I.2.7 passed the measured trailer shell and drawbar, explicitly absent chassis, trailer-only technical body marks, literal recipes, direct-snapshot and multi-size gates. I.3.5-I.3.7 retain their measured inset-hull and 7.99 mm center-profile. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
 };
 
 /** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
@@ -890,8 +890,8 @@ function technicalReviewFor(section: string): Review {
     return ANHANG_G_TECHNICAL_REVIEW;
   }
   if (Object.hasOwn(ANHANG_H_RECIPES, section)) return ANHANG_H_TECHNICAL_REVIEW;
-  if (Object.hasOwn(ANHANG_I_A_RECIPES, section)) {
-    return ANHANG_I_A_TECHNICAL_REVIEW;
+  if (Object.hasOwn(ANHANG_I_A_RECIPES, section) || Object.hasOwn(ANHANG_I_B_RECIPES, section)) {
+    return ANHANG_I_TECHNICAL_REVIEW;
   }
   return TECHNICAL_REVIEW;
 }
@@ -1094,6 +1094,10 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'F',
     'G',
     'H',
+    'I.2.4',
+    'I.2.5',
+    'I.2.6',
+    'I.2.7',
     'I.3.5',
     'I.3.6',
     'I.3.7',

@@ -162,6 +162,41 @@ describe('bodyMark() — die technischen Innenzeichnungen des Anhangs N', () => 
   });
 });
 
+describe('bodyMark() — die vermessenen Wasserrettungs-Anhänger', () => {
+  it('zeichnet Wasserrettung und Tauchen ausschließlich auf dem normalen Anhängerrumpf', () => {
+    expect(bodyMarkWithContext(
+      'trailer-water-rescue' as BodyMarkId,
+      { kind: 'trailer' },
+      trailerBodyMm,
+    )).toHaveLength(3);
+    expect(bodyMarkWithContext(
+      'trailer-diving' as BodyMarkId,
+      { kind: 'trailer' },
+      trailerBodyMm,
+    )).toHaveLength(3);
+    expect(bodyMarkWithContext(
+      'trailer-boat-hull' as BodyMarkId,
+      { kind: 'trailer' },
+      trailerBodyMm,
+    )).toHaveLength(2);
+    expect(() => bodyMarkWithContext(
+      'trailer-water-rescue' as BodyMarkId,
+      { kind: 'vehicle-land' },
+      landBodyMm,
+    )).toThrow(/nicht vermessen/);
+    expect(() => bodyMarkWithContext(
+      'trailer-diving' as BodyMarkId,
+      { kind: 'trailer', bodyVariant: 'foot-band' },
+      trailerBodyMm,
+    )).toThrow(/nicht vermessen/);
+    expect(() => bodyMarkWithContext(
+      'trailer-boat-hull' as BodyMarkId,
+      { kind: 'vehicle-water' },
+      airBodyMm,
+    )).toThrow(/nicht vermessen/);
+  });
+});
+
 function cateringPath(cx: number, cy: number): Primitive {
   return {
     type: 'path',
@@ -1764,7 +1799,7 @@ describe('BODY_MARK_IDS', () => {
     ]) {
       expect(BODY_MARK_IDS).toContain(id);
     }
-    const task1LogisticsIds = new Set<BodyMarkId>([
+  const task1LogisticsIds = new Set<BodyMarkId>([
       'fuels-consumables',
       'drinking-water',
       'water-conveyance',
@@ -1772,14 +1807,19 @@ describe('BODY_MARK_IDS', () => {
       'catering',
       'meal-preparation',
       'maintenance',
-      'waste-disposal',
-    ]);
+    'waste-disposal',
+  ]);
+  const trailerWaterRescueIds = new Set<BodyMarkId>([
+    'trailer-water-rescue',
+    'trailer-diving',
+    'trailer-boat-hull',
+  ]);
     for (const id of task1LogisticsIds) expect(BODY_MARK_IDS).toContain(id);
     for (const id of BODY_MARK_IDS) {
       // Sämtliche Task-1-Logistikrouten sind oben je Körperprofil mit exakten Primitiven,
       // Pfaden, Stilen, Bounds und negativen Nachbarkontexten abgesichert. Ein zusätzlicher
       // Existenzcheck würde diese stärkeren Verträge wieder zu `length > 0` verwässern.
-      if (task1LogisticsIds.has(id)) continue;
+      if (task1LogisticsIds.has(id) || trailerWaterRescueIds.has(id)) continue;
       // Kein Mindestmaß von zwei Primitiven: `care` steht mit **einem** Polyzug ohne Teilung da,
       // und genau das ist an F.1.3 belegt (siehe den Block zur Zeltmarke oben).
       const invocation = id === 'air-winch-chevron-diamond'

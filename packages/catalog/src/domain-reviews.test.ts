@@ -78,11 +78,15 @@ describe('Fachreview-Ledger', () => {
     expect(new Set(reviews).size).toBe(reviews.length);
   });
 
-  it('führt für I-a genau drei weiterhin offene Fachreviews', () => {
+  it('führt für I-a und I-b genau sieben weiterhin offene Fachreviews', () => {
     const keys = Object.keys(MANIFEST_DOMAIN_REVIEWS).filter((key) =>
       key.startsWith('bbk-babz-2025:I.'),
     );
     expect(keys).toEqual([
+      'bbk-babz-2025:I.2.4#primary',
+      'bbk-babz-2025:I.2.5#primary',
+      'bbk-babz-2025:I.2.6#primary',
+      'bbk-babz-2025:I.2.7#primary',
       'bbk-babz-2025:I.3.5#primary',
       'bbk-babz-2025:I.3.6#primary',
       'bbk-babz-2025:I.3.7#primary',
@@ -113,10 +117,10 @@ describe('Fachreview-Ledger', () => {
     // ergänzt elf für F.3.1 bis F.3.11 und F-f die acht verbleibenden für F.3.12 bis F.3.19.
     // Anhang G ergänzt 21, H und I-a je drei, C.1.3 einen und Anhang N neun offene Plätze;
     // Anhang D ergänzt auf dem integrierten Stand weitere 36 Darstellungen.
-    expect(manifestReviews).toHaveLength(497);
+    expect(manifestReviews).toHaveLength(501);
     expect(sourceReviews).toHaveLength(13);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(511);
+    expect(reviews).toHaveLength(515);
     expect(reviews.every((review) => review.status === 'pending')).toBe(true);
   });
 

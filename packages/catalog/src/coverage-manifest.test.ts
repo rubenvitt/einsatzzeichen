@@ -74,7 +74,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 497 Zeilen mit 283 Elementdarstellungen', () => {
+  it('enthält exakt 501 Zeilen mit 283 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -105,7 +105,7 @@ describe('Coverage-Manifest', () => {
       // F-d ergänzt F.2.10 bis F.2.17 als acht reine Anwendungen des Fahrzeugvertrags.
       // G ergänzt 21 Rezepte, H und I-a je drei, C.1.3 ein weiteres und N neun weitere.
       // Anhang D ergänzt 26 neue Rezepte; D.3.7 bleibt eine Migration desselben Schlüssels.
-      'composition-recipe': 200,
+      'composition-recipe': 204,
       // 264 Piktogramme plus acht Manifest-Organisationen, vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
@@ -113,13 +113,13 @@ describe('Coverage-Manifest', () => {
       // Strichhülle vermessen ist.
       element: 283,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(497);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(501);
     expect(elementRows).toHaveLength(283);
     expect(pictogramRows).toHaveLength(264);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
   });
 
-  it('führt ausschließlich I.3.5 bis I.3.7 mit belegter Quelle und vollständigem Technikreview', () => {
+  it('führt I.2.4 bis I.2.7 und I.3.5 bis I.3.7 mit belegter Quelle und vollständigem Technikreview', () => {
     const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
       entry.sourceId.startsWith('bbk-babz-2025:I.'),
     );
@@ -129,6 +129,10 @@ describe('Coverage-Manifest', () => {
         referenceAsset: entry.referenceAsset,
       })),
     ).toEqual([
+      { section: 'I.2.4', referenceAsset: 'I.2.4_Anhänger Wasserrettung.svg' },
+      { section: 'I.2.5', referenceAsset: 'I.2.5_Anhänger Tauchen.svg' },
+      { section: 'I.2.6', referenceAsset: 'I.2.6_Anhänger Strömungsrettung.svg' },
+      { section: 'I.2.7', referenceAsset: 'I.2.7_Bootsanhänger.svg' },
       { section: 'I.3.5', referenceAsset: 'I.3.5_Mehrzweckboot.svg' },
       { section: 'I.3.6', referenceAsset: 'I.3.6_Mehrzweckarbeitsboot.svg' },
       { section: 'I.3.7', referenceAsset: 'I.3.7_Mehrzweckponton.svg' },
@@ -139,18 +143,18 @@ describe('Coverage-Manifest', () => {
       reviewer: 'rv',
       date: '2026-08-26',
       note:
-        'I.3.5-I.3.7 passed measured inset-hull, 7.99 mm center-profile, literal recipe, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
+        'I.2.4-I.2.7 passed the measured trailer shell and drawbar, explicitly absent chassis, trailer-only technical body marks, literal recipes, direct-snapshot and multi-size gates. I.3.5-I.3.7 retain their measured inset-hull and 7.99 mm center-profile. The white Hilfsorganisation body is a technical rendering decision; domain classification remains pending and no identity with E.2 is claimed.',
     };
-    expect(rows).toHaveLength(3);
+    expect(rows).toHaveLength(7);
     for (const row of rows) {
       expect(row.coverage).toBe('composition-recipe');
       expect(row.review.technical).toEqual(expectedReview);
       expect(row.review.domain.status).toBe('pending');
     }
 
-    expect(COVERAGE_MANIFEST.scope).toContain('I.3.5');
-    expect(COVERAGE_MANIFEST.scope).toContain('I.3.6');
-    expect(COVERAGE_MANIFEST.scope).toContain('I.3.7');
+    expect(COVERAGE_MANIFEST.scope.filter((section) => section.startsWith('I.'))).toEqual([
+      'I.2.4', 'I.2.5', 'I.2.6', 'I.2.7', 'I.3.5', 'I.3.6', 'I.3.7',
+    ]);
     expect(COVERAGE_MANIFEST.scope).not.toContain('I');
     expect(COVERAGE_MANIFEST.scope).not.toContain('I.3');
   });
@@ -597,6 +601,10 @@ describe('Coverage-Manifest', () => {
       'F',
       'G',
       'H',
+      'I.2.4',
+      'I.2.5',
+      'I.2.6',
+      'I.2.7',
       'I.3.5',
       'I.3.6',
       'I.3.7',

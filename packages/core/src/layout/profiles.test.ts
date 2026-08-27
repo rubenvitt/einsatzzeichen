@@ -104,6 +104,10 @@ describe('Layoutprofile', () => {
 
   it('führt die vermessenen Anhang-N-Flächenprofile ohne rezeptabhängige Verzweigung', () => {
     expect(profileFor('vehicle-land').allowsCenterBaselineOverride).toBe(true);
+    expect(profileFor('trailer').allowsCenterBaselineOverride).toBe(true);
+    expect(profileFor('trailer').measuredBodyBoundsMm).toEqual({
+      minX: 4, minY: 5.75, maxX: 31, maxY: 26,
+    });
     expect(profileFor('formation').allowsCenterBaselineOverride).toBeUndefined();
     expect(profileFor('vehicle-air').allowsCenterBaselineOverride).toBeUndefined();
     expect(profileFor('vehicle-land', 'foot-band').allowsCenterBaselineOverride).toBeUndefined();
