@@ -94,6 +94,8 @@ export const TECHNICAL_BODY_MARK_LABELS = Object.freeze({
     'Schwarze Formationskappe, 4 mm hoch, mit drei Löchern in einer Reihe',
   'formation-water-rescue-compact':
     'Kompakte Wasserrettungsmarke mit Doppelwelle und scharfkantigem Rautenring',
+  'formation-water-rescue-lower-zone':
+    'Kompakte Wasserrettungsmarke in der unteren Formationszone',
   'ring-7mm-offset-down-1mm': 'Ring 7 mm, Mittelpunkt 1 mm unter Körpermitte',
   'chevron-over-opposed-triangles': 'Winkel über gegenüberliegenden Dreiecken',
   'ring-6-5mm-offset-down-2mm-with-roof': 'Ring 6,5 mm mit Dach und eingeschriebenem Dreieck',

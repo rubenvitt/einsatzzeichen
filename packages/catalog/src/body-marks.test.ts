@@ -1187,7 +1187,7 @@ describe('bodyMark() — LFH-485 Strömungsrettung und getrennte Luftmarken', ()
   });
 
   it('hält die kompakte Wasserrettungsmarke unter der oberen Inhaltszone', () => {
-    expect(bodyMark('water-rescue', formationBodyMm)).toEqual([
+    expect(bodyMark('formation-water-rescue-lower-zone' as BodyMarkId, formationBodyMm)).toEqual([
       waterWave(13.25),
       waterWave(15.25),
       outline([[16, 16.646], [19.854, 20.5], [16, 24.354], [12.146, 20.5]], true),
@@ -1227,7 +1227,7 @@ describe('bodyMark() — LFH-485 Strömungsrettung und getrennte Luftmarken', ()
 
   it('lehnt alle drei LFH-485-Fassungen außerhalb der normalen Formation ab', () => {
     for (const id of [
-      'water-rescue',
+      'formation-water-rescue-lower-zone',
       'formation-opposed-triangles-top',
       'formation-chevron-top',
     ] as BodyMarkId[]) {
@@ -1681,6 +1681,90 @@ describe('bodyMark() — der zusammengefasste Eintrag von F.1.2', () => {
  * neue Bauart mit n = 1. Wer die Meldungen umformuliert, passt hier die Muster mit an.
  */
 describe('bodyMark() — was nicht fortgeschrieben wird', () => {
+  it('zeichnet die eigens vermessenen Wasserrettungs- und Wasserfahrzeugfassungen nur auf der normalen Formation', () => {
+    // I.1.9–I.1.12: Die Quellen führen nicht die Kapitel-4-Box (4.5.5: 24 × 16 mm,
+    // 4.5.8: 24 × 16 mm), sondern zwei eigenständige, mittige Zeichen in der 30 × 20-mm-
+    // Körperhülle. Wasserrettung hat zwei Wellenläufe zwischen y=12…13 und y=14…15. Die
+    // miter-expandierte Quellraute braucht wegen des projektweiten Round-Joins an jeder Spitze
+    // 0,1036 mm Kompensation. Wasserfahrzeuge ergänzen das flache Boot auf der Mittellinie
+    // 11…21 × 15…20 und je zwei Wellen links 2…10 und rechts 22…30. So bleiben die in der
+    // Quelle sichtbaren 0,75 mm zwischen den fertigen 0,5-mm-Konturen frei.
+    const outline = { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM } as const;
+    const roundJoinTipCompensationMm = DEFAULT_STROKE_WIDTH_MM * (Math.SQRT2 - 1) / 2;
+    const waterRescue: Primitive[] = [
+      {
+        type: 'path', role: 'pictogram',
+        d: 'M 12 13 C 13 13 13 12 14 12 C 15 12 15 13 16 13 C 17 13 17 12 18 12 C 19 12 19 13 20 13',
+        style: outline,
+      },
+      {
+        type: 'path', role: 'pictogram',
+        d: 'M 12 15 C 13 15 13 14 14 14 C 15 14 15 15 16 15 C 17 15 17 14 18 14 C 19 14 19 15 20 15',
+        style: outline,
+      },
+      {
+        type: 'polyline', role: 'pictogram',
+        points: [
+          [12 - roundJoinTipCompensationMm, 20],
+          [16, 16 - roundJoinTipCompensationMm],
+          [20 + roundJoinTipCompensationMm, 20],
+          [16, 24 + roundJoinTipCompensationMm],
+          [12 - roundJoinTipCompensationMm, 20],
+        ],
+        style: outline,
+      },
+    ];
+    const watercraftOperations: Primitive[] = [
+      {
+        type: 'path', role: 'pictogram',
+        d: 'M 11 15 C 11 18 13 20 16 20 C 19 20 21 18 21 15 Z',
+        style: outline,
+      },
+      ...[16, 18].flatMap((yMm) => [
+        {
+          type: 'path' as const, role: 'pictogram' as const,
+          d: `M 2 ${yMm + 0.5} C 3 ${yMm + 0.5} 3 ${yMm - 0.5} 4 ${yMm - 0.5} ` +
+            `C 5 ${yMm - 0.5} 5 ${yMm + 0.5} 6 ${yMm + 0.5} ` +
+            `C 7 ${yMm + 0.5} 7 ${yMm - 0.5} 8 ${yMm - 0.5} ` +
+            `C 9 ${yMm - 0.5} 9 ${yMm + 0.5} 10 ${yMm + 0.5}`,
+          style: outline,
+        },
+        {
+          type: 'path' as const, role: 'pictogram' as const,
+          d: `M 22 ${yMm + 0.5} C 23 ${yMm + 0.5} 23 ${yMm - 0.5} 24 ${yMm - 0.5} ` +
+            `C 25 ${yMm - 0.5} 25 ${yMm + 0.5} 26 ${yMm + 0.5} ` +
+            `C 27 ${yMm + 0.5} 27 ${yMm - 0.5} 28 ${yMm - 0.5} ` +
+            `C 29 ${yMm - 0.5} 29 ${yMm + 0.5} 30 ${yMm + 0.5}`,
+          style: outline,
+        },
+      ]),
+    ];
+
+    expect(bodyMark('water-rescue', formationBodyMm)).toEqual(waterRescue);
+    expect(bodyMark('watercraft-operations', formationBodyMm)).toEqual(watercraftOperations);
+    expect(boundsOfMm(waterRescue[2]!)).toEqual({
+      minX: 12 - roundJoinTipCompensationMm,
+      minY: 16 - roundJoinTipCompensationMm,
+      maxX: 20 + roundJoinTipCompensationMm,
+      maxY: 24 + roundJoinTipCompensationMm,
+    });
+    expect(boundsOfMm(watercraftOperations[0]!)).toEqual({
+      minX: 11, minY: 15, maxX: 21, maxY: 20,
+    });
+    expect(boundsOfMm(watercraftOperations[1]!).maxX).toBe(10);
+    expect(boundsOfMm(watercraftOperations[2]!).minX).toBe(22);
+
+    // Diese beiden Fassungen sind ausschließlich an der normalen Formation belegt. Ein
+    // Rückfall auf dieselbe oder die Kapitel-4-Box in anderen Art-/Varianten-Kontexten wäre
+    // fachlich ungemessen und deshalb verboten.
+    for (const id of ['water-rescue', 'watercraft-operations'] as const) {
+      expect(() => bodyMarkWithContext(id, { kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm))
+        .toThrow(/nicht vermessen/);
+      expect(() => bodyMarkWithContext(id, { kind: 'vehicle-land' }, landBodyMm))
+        .toThrow(/nicht vermessen/);
+    }
+  });
+
   it('wirft für jedes nicht vermessene Art-/Varianten-/Fähigkeitspaar', () => {
     expect(() => bodyMarkWithContext('medical-service', { kind: 'vehicle-land' }, landBodyMm))
       .toThrow(/nicht vermessen/);

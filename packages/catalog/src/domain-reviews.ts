@@ -385,6 +385,15 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:I.1.2#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.3#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.4#primary': { status: 'pending' },
+  // Anhang I-e: Die gemessenen weißen Formationen und ihre kompakten Wasserrettungsmarken sind
+  // technisch belegt. Offen bleiben die fachliche Zuordnung zur Hilfsorganisation sowie die
+  // Bedeutung der zwei Darstellungen von I.1.9; die Alternative ist deshalb ein eigener
+  // Reviewträger und keine stillschweigend gleichgesetzte Grafik.
+  'bbk-babz-2025:I.1.9#primary': { status: 'pending' },
+  'bbk-babz-2025:I.1.9#alternative': { status: 'pending' },
+  'bbk-babz-2025:I.1.10#primary': { status: 'pending' },
+  'bbk-babz-2025:I.1.11#primary': { status: 'pending' },
+  'bbk-babz-2025:I.1.12#primary': { status: 'pending' },
   // Das Erscheinungsbild ist technisch durch die Mess-, Rezept- und Snapshot-Gates belegt; die
   // organisatorische und fachliche Bedeutung des weißen Körpers bleibt dennoch ungeklärt.
   'bbk-babz-2025:I.1.5#primary': { status: 'pending' },

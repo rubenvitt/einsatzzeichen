@@ -26,8 +26,8 @@ geometry and recipe identity. The compact I-g `water-rescue` formation mark rema
 - Run every shell command with `rtk`.
 - Work only on `codex/lfh-481-wasserrettungsformationen` in the current isolated worktree.
 - Initial baseline was `c3b00d023ba98db68843d0512101bc3c752270ea`; final delivery integrates
-  `origin/main` at `dcea2c79fd33d6134e4fae9456d26c4a372872dd`, including the independent
-  LFH-482, LFH-486 and LFH-490 slices without attributing them to LFH-481.
+  `origin/main` at `4e051c52fda2cf749150ddb197e5da428a4bc335`, including the independent
+  LFH-482, LFH-483, LFH-486 and LFH-490 slices without attributing them to LFH-481.
 - Follow strict RED-GREEN-REFACTOR; a RED must be an assertion failure for missing behavior.
 - Never add `verband` to `StrengthId` and never assign an organization to the four recipes.
 - Do not change `capability.water-rescue`; add a separately measured neutral technical body mark.
@@ -197,7 +197,7 @@ geometry and recipe identity. The compact I-g `water-rescue` formation mark rema
 **Interfaces:**
 
 - Consumes: four live recipes from Task 2.
-- Produces: 520 manifest rows, 534 review rows, 501 render cases, 232 direct snapshots and 502
+- Produces: 525 manifest rows, 539 review rows, 506 render cases, 237 direct snapshots and 507
   multi-size snapshots on the integrated `origin/main` basis.
 
 - [ ] **Step 1: Write RED count, scope and review assertions**

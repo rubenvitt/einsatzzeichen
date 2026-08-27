@@ -38,6 +38,10 @@ Insbesondere werden weder die deutlich größere Kapitel-4-Wasserrettungsfassung
 kombinierte Winkel-/Dreiecksmarke aus F.1.16 übernommen. Das ist ein technischer Abgleich, keine
 fachliche Freigabe und keine Behauptung von Pixelidentität der Typografie.
 
+Die separat vermessene I-g-Geometrie ist unter der technischen ID
+`formation-water-rescue-lower-zone` registriert. Dadurch kann sie weder die I-e-ID
+`water-rescue` noch die I-d-ID `formation-water-rescue-compact` still überschreiben.
+
 ## Output-only Artefakte
 
 | Artefakt | Pixelmaß | SHA-256 |
