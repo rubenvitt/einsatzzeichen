@@ -442,6 +442,29 @@ const ANHANG_I_J_TECHNICAL_REVIEW: Review = {
     'classifications remain pending.',
 };
 
+const ANHANG_I_TECHNICAL_REVIEW_BY_SUBSECTION = {
+  'I.1': ANHANG_I_G_TECHNICAL_REVIEW,
+  'I.3': ANHANG_I_TECHNICAL_REVIEW,
+  'I.4': ANHANG_I_J_TECHNICAL_REVIEW,
+} as const satisfies Readonly<Record<string, Review>>;
+
+/**
+ * Ordnet einen Anhang-I-Abschnitt seinem separat belegten technischen Review zu. Neue
+ * Unterabschnitte brauchen zuerst einen eigenen Eintrag; sie erben weder stillschweigend das
+ * I.3-Review noch irgendein anderes Review.
+ */
+export function technicalReviewForAnhangI(section: string): Review {
+  const subsection = section.split('.', 2).join('.');
+  if (!Object.hasOwn(ANHANG_I_TECHNICAL_REVIEW_BY_SUBSECTION, subsection)) {
+    throw new Error(
+      `Der Anhang-I-Abschnitt "${section}" ist keinem technischen Unterabschnittsreview zugeordnet.`,
+    );
+  }
+  return ANHANG_I_TECHNICAL_REVIEW_BY_SUBSECTION[
+    subsection as keyof typeof ANHANG_I_TECHNICAL_REVIEW_BY_SUBSECTION
+  ];
+}
+
 /** Technische und fachliche Rolle bleiben getrennt; das Fachreview ist je Manifestzeile einzeln. */
 function reviewFor(
   sourceId: string,
@@ -914,9 +937,7 @@ function technicalReviewFor(section: string): Review {
   }
   if (Object.hasOwn(ANHANG_H_RECIPES, section)) return ANHANG_H_TECHNICAL_REVIEW;
   if (Object.hasOwn(ANHANG_I_RECIPES, section)) {
-    if (section.startsWith('I.1.')) return ANHANG_I_G_TECHNICAL_REVIEW;
-    if (section.startsWith('I.4.')) return ANHANG_I_J_TECHNICAL_REVIEW;
-    return ANHANG_I_TECHNICAL_REVIEW;
+    return technicalReviewForAnhangI(section);
   }
   return TECHNICAL_REVIEW;
 }

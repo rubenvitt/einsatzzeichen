@@ -49,6 +49,11 @@ import {
  */
 const BODY_TOLERANCE_MM = 0.01;
 
+const VEHICLE_WATER_INSET_HULL_EXACT_BODY_BOUNDS: Partial<Record<BodyMarkId, BoundsMm>> = {
+  'inset-hull-wheel-pair': { minX: 1.01, minY: 9.0001, maxX: 30.9894, maxY: 23.9898 },
+  'fire-fighting': { minX: 1.01, minY: 9.0001, maxX: 30.9894, maxY: 23.9898 },
+};
+
 const LFH488_EXACT_BODY_BOUNDS: Partial<Record<BodyMarkId, BoundsMm>> = {
   'circle-two-waves-diamond': { minX: 4, minY: 6, maxX: 28, maxY: 30 },
   'circle-diagonal-double-arrow-offset-bowl': { minX: 4, minY: 4, maxX: 28, maxY: 28 },
@@ -1699,7 +1704,9 @@ export function bodyMark(
     );
   }
 
-  const exactBounds = LFH488_EXACT_BODY_BOUNDS[id];
+  const exactBounds = context.kind === 'vehicle-water' && context.bodyVariant === 'inset-hull'
+    ? VEHICLE_WATER_INSET_HULL_EXACT_BODY_BOUNDS[id]
+    : LFH488_EXACT_BODY_BOUNDS[id];
   if (
     exactBounds !== undefined && (
       Math.abs(bodyBoundsMm.minX - exactBounds.minX) > BODY_TOLERANCE_MM ||

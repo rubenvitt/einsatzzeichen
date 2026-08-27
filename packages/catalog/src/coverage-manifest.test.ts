@@ -5,7 +5,10 @@ import {
   LEADERSHIP_IDS,
   type CatalogEntry,
 } from '@einsatzzeichen/schema';
-import { COVERAGE_MANIFEST } from './coverage-manifest.js';
+import {
+  COVERAGE_MANIFEST,
+  technicalReviewForAnhangI,
+} from './coverage-manifest.js';
 import { checkCoverage, findPrimaryViolations, releaseBlockers } from './coverage-gate.js';
 import { ALL_PICTOGRAMS, pictogramVariantKey } from './pictograms/index.js';
 
@@ -229,6 +232,17 @@ describe('Coverage-Manifest', () => {
     expect(COVERAGE_MANIFEST.scope).toContain('I.4.2');
     expect(COVERAGE_MANIFEST.scope).toContain('I.4.3');
     expect(COVERAGE_MANIFEST.scope).not.toContain('I.4');
+  });
+
+  it('routet technische Anhang-I-Reviews explizit und lehnt unbekannte Unterabschnitte ab', () => {
+    const technicalReviewAt = (section: string) => COVERAGE_MANIFEST.entries.find(
+      (entry) => entry.sourceId === `bbk-babz-2025:${section}`,
+    )?.review.technical;
+
+    expect(technicalReviewForAnhangI('I.1.17')).toBe(technicalReviewAt('I.1.17'));
+    expect(technicalReviewForAnhangI('I.3.1')).toBe(technicalReviewAt('I.3.1'));
+    expect(technicalReviewForAnhangI('I.4.1')).toBe(technicalReviewAt('I.4.1'));
+    expect(() => technicalReviewForAnhangI('I.2.1')).toThrow(/I\.2\.1.*zugeordnet/);
   });
 
   it('bindet C.1.3 an das aktuelle technische Review und nur an seinen eigenen Scope', () => {

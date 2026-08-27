@@ -206,6 +206,29 @@ describe('bodyMark() — die technischen Innenzeichnungen der Körpermarken', ()
     }
   });
 
+  it.each([
+    ['waagerecht', 1, 0],
+    ['senkrecht', 0, 1],
+  ] as const)('lehnt die gleich große, aber %s verschobene I.3-Wasserrumpfhülle ab', (
+    _direction,
+    deltaX,
+    deltaY,
+  ) => {
+    const shiftedInsetWaterBodyMm: BoundsMm = {
+      minX: insetWaterBodyMm.minX + deltaX,
+      minY: insetWaterBodyMm.minY + deltaY,
+      maxX: insetWaterBodyMm.maxX + deltaX,
+      maxY: insetWaterBodyMm.maxY + deltaY,
+    };
+    for (const id of ['inset-hull-wheel-pair', 'fire-fighting'] as BodyMarkId[]) {
+      expect(() => bodyMarkWithContext(
+        id,
+        { kind: 'vehicle-water', bodyVariant: 'inset-hull' },
+        shiftedInsetWaterBodyMm,
+      ), id).toThrow(/exakten Hülle/);
+    }
+  });
+
   it('zeichnet die beiden getrennt vermessenen Landfahrzeugmarken', () => {
     expect(bodyMarkWithContext(
       'land-horizontal-blade-bent-upright' as BodyMarkId,
