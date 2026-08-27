@@ -26,6 +26,9 @@ const raisedCircleBodyMm: BoundsMm = { minX: 4, minY: 6, maxX: 28, maxY: 30 };
 const reducedHouseBodyMm: BoundsMm = { minX: 2, minY: 4, maxX: 30, maxY: 26 };
 const invertedLandBodyMm: BoundsMm = { minX: 1, minY: 6, maxX: 31, maxY: 25.75 };
 const raisedCircleOneMmBodyMm: BoundsMm = { minX: 4, minY: 3, maxX: 28, maxY: 27 };
+const insetWaterBodyMm: BoundsMm = {
+  minX: 1.0100, minY: 9.0001, maxX: 30.9894, maxY: 23.9898,
+};
 const bodyMark = (id: Parameters<typeof bodyMarkWithContext>[0], bounds: BoundsMm) =>
   bodyMarkWithContext(id, { kind: 'formation' }, bounds);
 
@@ -157,6 +160,52 @@ describe('bodyMark() — LFH-488 Anhang I.4 Wasserrettungsorte', () => {
 });
 
 describe('bodyMark() — die technischen Innenzeichnungen des Anhangs N', () => {
+  it('zeichnet die separat vermessenen I.3.4- und I.3.11-Marken nur im eingesenkten Wasserrumpf', () => {
+    expect(bodyMarkWithContext(
+      'inset-hull-wheel-pair' as BodyMarkId,
+      { kind: 'vehicle-water', bodyVariant: 'inset-hull' },
+      insetWaterBodyMm,
+    )).toEqual([
+      { type: 'circle', role: 'pictogram', cx: 6.75, cy: 23.75, r: 2.25, style: outlineStyle },
+      { type: 'circle', role: 'pictogram', cx: 25.25, cy: 23.75, r: 2.25, style: outlineStyle },
+    ]);
+    expect(bodyMarkWithContext(
+      'fire-fighting',
+      { kind: 'vehicle-water', bodyVariant: 'inset-hull' },
+      insetWaterBodyMm,
+    )).toEqual([
+      line(2.263209, 15.000055, 21.249843, 15.000055),
+      line(21.249843, 15.000055, 29.736438, 15.000055),
+      line(21.249843, 15.000055, 26.749628, 9.250152),
+      line(21.249843, 15.000055, 25.901906, 19.901884),
+    ]);
+  });
+
+  it('lehnt die I.3.4- und I.3.11-Marken außerhalb ihres gemessenen Wasserrumpfs ab', () => {
+    for (const id of ['inset-hull-wheel-pair', 'fire-fighting'] as BodyMarkId[]) {
+      expect(() => bodyMarkWithContext(
+        id,
+        { kind: 'vehicle-water' },
+        insetWaterBodyMm,
+      ), `${id}/normal`).toThrow(/nicht vermessen/);
+      expect(() => bodyMarkWithContext(
+        id,
+        { kind: 'vehicle-land', bodyVariant: 'inset-hull' },
+        insetWaterBodyMm,
+      ), `${id}/vehicle-land`).toThrow(/nicht vermessen/);
+    }
+  });
+
+  it('bindet die I.3.4- und I.3.11-Marken an die exakt gemessene Rumpfhülle', () => {
+    for (const id of ['inset-hull-wheel-pair', 'fire-fighting'] as BodyMarkId[]) {
+      expect(() => bodyMarkWithContext(
+        id,
+        { kind: 'vehicle-water', bodyVariant: 'inset-hull' },
+        { ...insetWaterBodyMm, maxX: 31 },
+      ), id).toThrow(/29,9794 × 14,9897 mm/);
+    }
+  });
+
   it('zeichnet die beiden getrennt vermessenen Landfahrzeugmarken', () => {
     expect(bodyMarkWithContext(
       'land-horizontal-blade-bent-upright' as BodyMarkId,

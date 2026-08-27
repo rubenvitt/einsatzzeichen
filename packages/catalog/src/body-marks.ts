@@ -1548,6 +1548,26 @@ const TRAILER_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[
   care: (bounds) => landCare(bounds, bounds.maxY),
 };
 
+/** I.3.4 und I.3.11: eigenständig vermessene Marken des eingesenkten Wasserrumpfs. */
+const VEHICLE_WATER_INSET_HULL_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
+  'inset-hull-wheel-pair': () => [
+    {
+      type: 'circle', role: 'pictogram', cx: 6.75, cy: 23.75, r: 2.25,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+    {
+      type: 'circle', role: 'pictogram', cx: 25.25, cy: 23.75, r: 2.25,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+  ],
+  'fire-fighting': () => [
+    stroke(2.263209, 15.000055, 21.249843, 15.000055),
+    stroke(21.249843, 15.000055, 29.736438, 15.000055),
+    stroke(21.249843, 15.000055, 26.749628, 9.250152),
+    stroke(21.249843, 15.000055, 25.901906, 19.901884),
+  ],
+};
+
 export function bodyMark(
   id: BodyMarkId,
   context: {
@@ -1593,6 +1613,8 @@ export function bodyMark(
         ? VEHICLE_AIR_MARKS[id]
       : context.kind === 'vehicle-air' && context.bodyVariant === 'fixed-wing-hull'
         ? VEHICLE_AIR_FIXED_WING_MARKS[id]
+      : context.kind === 'vehicle-water' && context.bodyVariant === 'inset-hull'
+        ? VEHICLE_WATER_INSET_HULL_MARKS[id]
         : context.kind === 'trailer' && context.bodyVariant === undefined
           ? TRAILER_MARKS[id]
           : context.kind === 'trailer' && context.bodyVariant === 'foot-band'
@@ -1619,6 +1641,7 @@ export function bodyMark(
     VEHICLE_LAND_INVERTED_HULL_MARKS,
     VEHICLE_AIR_MARKS,
     VEHICLE_AIR_FIXED_WING_MARKS,
+    VEHICLE_WATER_INSET_HULL_MARKS,
     TRAILER_MARKS,
     CIRCLE_NORMAL_MARKS,
     CIRCLE_NORMAL_ANHANG_N_MARKS,
@@ -1655,6 +1678,8 @@ export function bodyMark(
         : { width: 30, height: 20.25, label: '30 × 20,25 mm' }
     : context.kind === 'vehicle-air'
         ? { width: 29.98, height: 14.99, label: '29,98 × 14,99 mm' }
+        : context.kind === 'vehicle-water' && context.bodyVariant === 'inset-hull'
+          ? { width: 29.9794, height: 14.9897, label: '29,9794 × 14,9897 mm' }
         : context.kind === 'circle-12'
           ? { width: 24, height: 24, label: '24 × 24 mm' }
           : context.kind === 'reduced-house'

@@ -303,6 +303,7 @@ export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
   'spontaneous-helper-contact-double-arrow',
   'formation-opposed-triangles-top',
   'formation-chevron-top',
+  'inset-hull-wheel-pair',
 ] as const);
 
 export type TechnicalBodyMarkId = (typeof TECHNICAL_BODY_MARK_IDS)[number];
