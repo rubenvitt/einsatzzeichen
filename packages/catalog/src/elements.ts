@@ -2,10 +2,8 @@ import { ALL_PICTOGRAMS, pictogramVariantKey } from './pictograms/index.js';
 import { deepFreeze, type DeepReadonly } from './readonly-data.js';
 
 /**
- * Die Arten von Einzelelementen. Die fünf direkten Piktogrammarten neben `capability` sind
- * `state`, `comms`, `damage`, `wildfire` und `leadership`; die zehn `leadership`-Definitionen
- * belegen D.1.1, D.2.1–D.2.7 sowie D.3.14 und D.3.15 direkt. `PICTOGRAM_ELEMENT_KINDS` weist sie
- * als renderbare Elementarten aus.
+ * Die Arten von Einzelelementen. Wasserrettungs-Personen stehen in einem eigenen direkten
+ * Piktogrammraum; sie sind weder Leadership noch FunctionRole oder Strength.
  */
 export type ElementKind =
   | 'organization'
@@ -16,7 +14,8 @@ export type ElementKind =
   | 'comms'
   | 'damage'
   | 'wildfire'
-  | 'leadership';
+  | 'leadership'
+  | 'water-rescue-personnel';
 
 /**
  * Die Elementarten, die eine eigene Geometrie tragen und deshalb einen Dateisnapshot haben können.
@@ -31,6 +30,7 @@ export const PICTOGRAM_ELEMENT_KINDS: ReadonlySet<ElementKind> = new Set<Element
   'damage',
   'wildfire',
   'leadership',
+  'water-rescue-personnel',
 ]);
 
 /**

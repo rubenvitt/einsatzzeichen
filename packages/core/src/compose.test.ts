@@ -989,6 +989,24 @@ describe('compose() — gebänderte Logistikprofile', () => {
       occupiedLabelZones: ['bottomCenter', 'belowRight'],
     }]);
   });
+
+  it('reicht die Fahrzeugkategorie als Geometriekontext an den Körpermarken-Port', () => {
+    const contexts: Parameters<NonNullable<CatalogPorts['bodyMark']>>[1][] = [];
+    compose({
+      kind: 'vehicle-land', organization: 'hilfsorganisation',
+      vehicleCategory: 'kfz-kategorie-2', bodyMarks: ['water-rescue'],
+    }, {
+      ...f2Catalog,
+      organizationColor: () => 'weiss',
+      bodyMark: (_id, context) => {
+        contexts.push(context);
+        return [];
+      },
+    });
+    expect(contexts).toEqual([{
+      kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-2',
+    }]);
+  });
 });
 
 describe('compose() — Schriftgrad des mittigen Laufs', () => {

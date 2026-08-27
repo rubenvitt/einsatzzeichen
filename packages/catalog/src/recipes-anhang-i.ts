@@ -1,5 +1,11 @@
 import type { Recipe } from './recipes.js';
 
+const I_2_TOP_LEFT_METRICS = {
+  capHeightMm: 3.18236,
+  baselineFromBodyTopMm: 6.55959,
+  anchorFromBodyLeftMm: 1.56869,
+} as const;
+
 /**
  * Gemeinsame Anhang-I-Aggregation. Die einzelnen LFH-Slices bleiben über ihre exakten Schlüssel
  * und die korrespondierenden technischen Reviews getrennt, werden aber nur einmal in `RECIPES`
@@ -102,6 +108,41 @@ export const ANHANG_I_RECIPES = {
       bodyMarks: ['water-rescue', 'formation-chevron-top'],
     },
   },
+  // LFH-486 / Anhang I-b: drei separat vermessene Wasserrettungs-Landfahrzeuge.
+  'I.2.1': {
+    title: 'Gerätewagen Wasserrettung, geländegängig',
+    referenceAsset: 'I.2.1_Gerätewagen Wasserrettung_geländegängig.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'hilfsorganisation',
+      vehicleCategory: 'kfz-kategorie-2',
+      bodyMarks: ['water-rescue'],
+      labels: { topLeft: 'GW', topLeftMetrics: I_2_TOP_LEFT_METRICS },
+    },
+  },
+  'I.2.2': {
+    title: 'Gerätewagen Tauchen',
+    referenceAsset: 'I.2.2_Gerätewagen Tauchen.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'hilfsorganisation',
+      vehicleCategory: 'kfz-kategorie-1',
+      bodyMarks: ['water-rescue'],
+      labels: { topLeft: 'GW Tauchen', topLeftMetrics: I_2_TOP_LEFT_METRICS },
+    },
+  },
+  'I.2.3': {
+    title: 'Gerätewagen Strömungsrettung',
+    referenceAsset: 'I.2.3_Gerätewagen Strömungsrettung.svg',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'hilfsorganisation',
+      vehicleCategory: 'kfz-kategorie-1',
+      bodyMarks: ['water-rescue'],
+      labels: { topLeft: 'GW SR', topLeftMetrics: I_2_TOP_LEFT_METRICS },
+    },
+  },
+  // LFH-479/LFH-480 / Anhang I-a und I-b: die vollständige I.3-Reihe.
   'I.3.1': {
     title: 'Boot allgemein',
     referenceAsset: 'I.3.1_Boot allgemein.svg',

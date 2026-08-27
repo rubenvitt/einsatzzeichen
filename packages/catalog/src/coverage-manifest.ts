@@ -154,6 +154,20 @@ const LEADERSHIP_OPEN_CAP_TECHNICAL_REVIEW: Review = {
     'beide renderbaren Einträge; Benennung und Bedeutung der offenen Kappe bleiben pending.',
 };
 
+const WATER_RESCUE_PERSONNEL_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-27',
+  note:
+    'I.5.4 bis I.5.8 sind fünf direkte 32×32-mm-Piktogramme im eigenen ID-Raum. Zwei ' +
+    'literal vermessene Körperlagen erhalten geschlossene beziehungsweise offene Kappe, zwei ' +
+    'gefüllte Kubik-Wasserlinien und die Innenraute; die Kopfgeometrie bleibt je Quelle ' +
+    '1/2/3 Kreis, Verbandsbalken oder leer. Eine private Hilfe teilt nur Geometrie und erzeugt ' +
+    'keine FunctionRole-, Strength- oder Organisationssemantik. Snapshot, Kommando, Box, ' +
+    'Standalone-Clipping, Mehrgrößen-, Metadaten- und explizite Kontrast-Gates prüfen alle ' +
+    'fünf renderbaren Einträge; Rang- und Rollenbenennungen bleiben im Domain-Review pending.',
+};
+
 const ANHANG_C_A_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
@@ -448,6 +462,14 @@ const ANHANG_I_J_TECHNICAL_REVIEW: Review = {
     'circle-12/raised-gable as geometry only; white Hilfsorganisation bodies and all domain ' +
     'classifications remain pending.',
 };
+const ANHANG_I_B_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-27',
+  note:
+    'I.2.1-I.2.3 passed measured vehicle-land, category-specific water-rescue, literal recipe, direct-snapshot and multi-size gates. The white Hilfsorganisation body is a technical rendering decision; labels, organization and domain classification remain pending.',
+};
+
 const ANHANG_I_TECHNICAL_REVIEW_BY_SECTION = {
   'I.1.5': ANHANG_I_D_TECHNICAL_REVIEW,
   'I.1.6': ANHANG_I_D_TECHNICAL_REVIEW,
@@ -457,6 +479,9 @@ const ANHANG_I_TECHNICAL_REVIEW_BY_SECTION = {
   'I.1.18': ANHANG_I_G_TECHNICAL_REVIEW,
   'I.1.19': ANHANG_I_G_TECHNICAL_REVIEW,
   'I.1.20': ANHANG_I_G_TECHNICAL_REVIEW,
+  'I.2.1': ANHANG_I_B_TECHNICAL_REVIEW,
+  'I.2.2': ANHANG_I_B_TECHNICAL_REVIEW,
+  'I.2.3': ANHANG_I_B_TECHNICAL_REVIEW,
   'I.3.1': ANHANG_I_TECHNICAL_REVIEW,
   'I.3.2': ANHANG_I_TECHNICAL_REVIEW,
   'I.3.3': ANHANG_I_TECHNICAL_REVIEW,
@@ -1076,7 +1101,9 @@ const elementEntries: CoverageEntry[] = Object.entries(ELEMENT_SECTIONS).map(([i
 
 const pictogramEntries: CoverageEntry[] = ALL_PICTOGRAMS.map((definition) => {
   const sourceId = `bbk-babz-2025:${definition.section}`;
-  const technicalReview = definition.id.startsWith('state.')
+  const technicalReview = definition.id.startsWith('water-rescue-personnel.')
+    ? WATER_RESCUE_PERSONNEL_TECHNICAL_REVIEW
+    : definition.id.startsWith('state.')
     ? STATE_PICTOGRAM_TECHNICAL_REVIEW
     : definition.id.startsWith('leadership.')
       ? definition.section.startsWith('D.3.')
@@ -1107,7 +1134,7 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
    * ohne den Kern zu berühren, und umgekehrt — über Paketversionen wäre das nur darstellbar,
    * wenn jedes Profil ein eigenes npm-Paket wäre.
    */
-  coreVersion: '0.1.0',
+  coreVersion: '0.2.0',
   // Kapitel 3 (sieben Referenzdateien) setzt dieser Slice nicht um.
   //
   // **`5.1.1` und ausdrücklich nicht `5.1`.** Fünf der sechs Fahrzeugkategorien aus 5.1.1 sind
@@ -1171,10 +1198,18 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'I.1.18',
     'I.1.19',
     'I.1.20',
+    'I.2.1',
+    'I.2.2',
+    'I.2.3',
     'I.3',
     'I.4.1',
     'I.4.2',
     'I.4.3',
+    'I.5.4',
+    'I.5.5',
+    'I.5.6',
+    'I.5.7',
+    'I.5.8',
     'J.1',
     'J.2',
     'J.3',

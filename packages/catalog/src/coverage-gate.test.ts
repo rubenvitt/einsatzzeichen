@@ -424,7 +424,7 @@ describe('Gate-Prüfungen zu Elementen und Versionen', () => {
   });
 
   it('nimmt Versionen an, die der Form major.minor.patch folgen und den Kern nennen', () => {
-    expect(checkVersions('0.1.0', Object.values(PROFILES))).toEqual([]);
+    expect(checkVersions(COVERAGE_MANIFEST.coreVersion, Object.values(PROFILES))).toEqual([]);
   });
 
   it('meldet eine Kernversion mit falscher Form', () => {
@@ -435,14 +435,14 @@ describe('Gate-Prüfungen zu Elementen und Versionen', () => {
 
   it('meldet ein Profil, dessen verifiedAgainstCore keine bekannte Kernversion nennt', () => {
     const stale = [{ ...PROFILES.bund, verifiedAgainstCore: '0.0.9' }];
-    const [violation] = checkVersions('0.1.0', stale);
+    const [violation] = checkVersions(COVERAGE_MANIFEST.coreVersion, stale);
     expect(violation?.check).toBe('unknown-core-version');
     expect(violation?.detail).toContain('0.0.9');
   });
 
   it('meldet ein Profil mit unzulässiger Datenversion', () => {
     const broken = [{ ...PROFILES.bund, version: 'v1' }];
-    const checks = checkVersions('0.1.0', broken).map((v) => v.check);
+    const checks = checkVersions(COVERAGE_MANIFEST.coreVersion, broken).map((v) => v.check);
     expect(checks).toEqual(['version-format']);
   });
 
@@ -450,7 +450,10 @@ describe('Gate-Prüfungen zu Elementen und Versionen', () => {
     // Nicht dieselbe Prüfung wie eine unbekannte Kernversion: eine unzulässige Form erreicht den
     // Abgleich gegen die bekannten Kernversionen nie.
     expect(
-      checkVersions('0.1.0', [{ ...PROFILES.bund, verifiedAgainstCore: 'v1' }]).map((v) => v.check),
+      checkVersions(
+        COVERAGE_MANIFEST.coreVersion,
+        [{ ...PROFILES.bund, verifiedAgainstCore: 'v1' }],
+      ).map((v) => v.check),
     ).toEqual(['version-format']);
   });
 });

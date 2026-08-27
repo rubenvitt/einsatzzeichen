@@ -390,6 +390,10 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:I.1.18#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.19#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.20#primary': { status: 'pending' },
+  // I.2 bleibt trotz freigegebener kategorieabhängiger Landfahrzeuggeometrie fachlich offen.
+  'bbk-babz-2025:I.2.1#primary': { status: 'pending' },
+  'bbk-babz-2025:I.2.2#primary': { status: 'pending' },
+  'bbk-babz-2025:I.2.3#primary': { status: 'pending' },
   // I.3 ist vollständig technisch umgesetzt; die elf source IDs werden im Manifesttest lückenlos
   // aus dem Ledger abgeleitet. Das Erscheinungsbild ist durch Rezept-, Fingerprint- und Snapshot-
   // Gates belegt, die organisatorische und fachliche Bedeutung bleibt dennoch ungeklärt.
@@ -410,6 +414,11 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:I.4.1#primary': { status: 'pending' },
   'bbk-babz-2025:I.4.2#primary': { status: 'pending' },
   'bbk-babz-2025:I.4.3#primary': { status: 'pending' },
+  'bbk-babz-2025:I.5.4#primary': { status: 'pending' },
+  'bbk-babz-2025:I.5.5#primary': { status: 'pending' },
+  'bbk-babz-2025:I.5.6#primary': { status: 'pending' },
+  'bbk-babz-2025:I.5.7#primary': { status: 'pending' },
+  'bbk-babz-2025:I.5.8#primary': { status: 'pending' },
   'bbk-babz-2025:2.1#primary': { status: 'pending' },
   // 2.2 seit LFH-424. Fachlich besonders zu prüfen: die Zuordnung „HiOrg = Hilfsorganisation" ist
   // aus dem gerasterten Bild abgelesen, nicht aus dem Dateinamen — der ist generisch
