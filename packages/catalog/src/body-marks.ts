@@ -49,6 +49,12 @@ import {
  */
 const BODY_TOLERANCE_MM = 0.01;
 
+const LFH488_EXACT_BODY_BOUNDS: Partial<Record<BodyMarkId, BoundsMm>> = {
+  'circle-two-waves-diamond': { minX: 4, minY: 6, maxX: 28, maxY: 30 },
+  'circle-diagonal-double-arrow-offset-bowl': { minX: 4, minY: 4, maxX: 28, maxY: 28 },
+  'circle-wide-bowl': { minX: 4, minY: 4, maxX: 28, maxY: 28 },
+};
+
 function stroke(x1: number, y1: number, x2: number, y2: number): Primitive {
   return {
     type: 'line',
@@ -771,11 +777,12 @@ function circleInformationStem(bounds: BoundsMm): Primitive[] {
 }
 
 /**
- * F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen. Die
- * Koordinaten werden
- * gegen die 24 × 24-mm-Hülle gerechnet; sie sind weder aus der Formation noch aus einem
- * Fahrzeug skaliert. Die technischen IDs benennen nur das sichtbare Motiv und behaupten keine
- * zusätzliche Fachsemantik.
+ * F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen;
+ * I.4.2 und I.4.3 wurden am 27. August 2026 unabhängig ergänzt. Die F.3-Koordinaten werden gegen
+ * die 24 × 24-mm-Hülle gerechnet. Die beiden I.4-Marken sind zusätzlich auf die exakte Lage
+ * `(4|4)–(28|28)` begrenzt. Keine dieser Geometrien ist aus Formation oder Fahrzeug skaliert;
+ * die technischen IDs benennen nur das sichtbare Motiv und behaupten keine zusätzliche
+ * Fachsemantik.
  */
 const CIRCLE_NORMAL_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
   'medical-service': circleQuartering,
@@ -904,6 +911,30 @@ const CIRCLE_NORMAL_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Prim
       circleRing(21.5 + dx, 17.5 + dy, 1.5),
     ];
   },
+  'circle-diagonal-double-arrow-offset-bowl': (bounds) => {
+    const dx = bounds.minX - 4;
+    const dy = bounds.minY - 4;
+    return [
+      stroke(7 + dx, 14 + dy, 18 + dx, 25 + dy),
+      circleOutline([[7 + dx, 17 + dy], [7 + dx, 14 + dy], [10 + dx, 14 + dy]]),
+      circleOutline([[15 + dx, 25 + dy], [18 + dx, 25 + dy], [18 + dx, 22 + dy]]),
+      circlePath(
+        `M ${12 + dx} ${13.5 + dy} H ${24 + dx} ` +
+        `C ${24 + dx} ${17.5 + dy}, ${22 + dx} ${19.5 + dy}, ${18 + dx} ${19.5 + dy} ` +
+        `C ${14 + dx} ${19.5 + dy}, ${12 + dx} ${17.5 + dy}, ` +
+        `${12 + dx} ${13.5 + dy} Z`,
+      ),
+    ];
+  },
+  'circle-wide-bowl': (bounds) => {
+    const dx = bounds.minX - 4;
+    const dy = bounds.minY - 4;
+    return [circlePath(
+      `M ${8 + dx} ${13.5 + dy} H ${24 + dx} ` +
+      `C ${24 + dx} ${18.5 + dy}, ${21 + dx} ${21.5 + dy}, ${16 + dx} ${21.5 + dy} ` +
+      `C ${11 + dx} ${21.5 + dy}, ${8 + dx} ${18.5 + dy}, ${8 + dx} ${13.5 + dy} Z`,
+    )];
+  },
 };
 
 /** N.2.3: am um 1 mm angehobenen Kreis ist ausschließlich diese eine Marke vermessen. */
@@ -913,7 +944,11 @@ const CIRCLE_RAISED_ONE_MM_MARKS: Partial<
   'circle-information-stem': circleInformationStem,
 };
 
-/** F.3.5/F.3.14: semantische Marken, separat gegen den abgesenkten Kreis vermessen. */
+/**
+ * F.3.5/F.3.14: semantische Marken, separat gegen den abgesenkten Kreis vermessen. I.4.1 ergänzt
+ * seit der unabhängigen Messung vom 27. August 2026 eine technische Marke ausschließlich an der
+ * exakten raised-gable-Hülle `(4|6)–(28|30)`.
+ */
 const CIRCLE_RAISED_GABLE_MARKS: Partial<
   Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
 > = {
@@ -924,6 +959,31 @@ const CIRCLE_RAISED_GABLE_MARKS: Partial<
     return [
       ...circleQuartering(bounds),
       stroke(cx - 4, bounds.maxY - 6, cx + 4, bounds.maxY - 6),
+    ];
+  },
+  'circle-two-waves-diamond': (bounds) => {
+    const dx = bounds.minX - 4;
+    const dy = bounds.minY - 6;
+    const wave = (baselineY: number) => circlePath(
+      `M ${12 + dx} ${baselineY + dy} ` +
+      `C ${13.25 + dx} ${baselineY + dy}, ${13.25 + dx} ${baselineY - 1 + dy}, ` +
+      `${14 + dx} ${baselineY - 1 + dy} ` +
+      `C ${14.75 + dx} ${baselineY - 1 + dy}, ${14.75 + dx} ${baselineY + dy}, ` +
+      `${16 + dx} ${baselineY + dy} ` +
+      `C ${17.25 + dx} ${baselineY + dy}, ${17.25 + dx} ${baselineY - 1 + dy}, ` +
+      `${18 + dx} ${baselineY - 1 + dy} ` +
+      `C ${18.75 + dx} ${baselineY - 1 + dy}, ${18.75 + dx} ${baselineY + dy}, ` +
+      `${20 + dx} ${baselineY + dy}`,
+    );
+    return [
+      wave(12.5),
+      wave(14.5),
+      circleOutline([
+        [16 + dx, 16 + dy],
+        [20 + dx, 20 + dy],
+        [16 + dx, 24 + dy],
+        [12 + dx, 20 + dy],
+      ], true),
     ];
   },
 };
@@ -1605,6 +1665,22 @@ export function bodyMark(
         `${expected.label} vermessen. Diese Hülle misst ${widthMm.toFixed(3)} × ` +
         `${heightMm.toFixed(3)} mm; ihre Leisten- und Ringmaße sind eigene Messungen und werden ` +
         'nicht aus einer anderen Körperart fortgeschrieben.',
+    );
+  }
+
+  const exactBounds = LFH488_EXACT_BODY_BOUNDS[id];
+  if (
+    exactBounds !== undefined && (
+      Math.abs(bodyBoundsMm.minX - exactBounds.minX) > BODY_TOLERANCE_MM ||
+      Math.abs(bodyBoundsMm.minY - exactBounds.minY) > BODY_TOLERANCE_MM ||
+      Math.abs(bodyBoundsMm.maxX - exactBounds.maxX) > BODY_TOLERANCE_MM ||
+      Math.abs(bodyBoundsMm.maxY - exactBounds.maxY) > BODY_TOLERANCE_MM
+    )
+  ) {
+    throw new Error(
+      `Die technische Körpermarke "${id}" ist nur an der exakten Hülle ` +
+        `${exactBounds.minX}/${exactBounds.minY}/${exactBounds.maxX}/${exactBounds.maxY} mm ` +
+        'vermessen; gleich große verschobene Hüllen werden nicht fortgeschrieben.',
     );
   }
 

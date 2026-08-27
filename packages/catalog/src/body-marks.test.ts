@@ -40,6 +40,122 @@ const outlineStyle = {
   fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM,
 } as const;
 
+describe('bodyMark() — LFH-488 Anhang I.4 Wasserrettungsorte', () => {
+  it('zeichnet I.4.1 als zwei Wellen und Raute nur im abgesenkten Kreis', () => {
+    expect(bodyMarkWithContext(
+      'circle-two-waves-diamond' as BodyMarkId,
+      { kind: 'circle-12', bodyVariant: 'raised-gable' },
+      raisedCircleBodyMm,
+    )).toEqual([
+      {
+        type: 'path', role: 'pictogram',
+        d: 'M 12 12.5 C 13.25 12.5, 13.25 11.5, 14 11.5 C 14.75 11.5, 14.75 12.5, 16 12.5 C 17.25 12.5, 17.25 11.5, 18 11.5 C 18.75 11.5, 18.75 12.5, 20 12.5',
+        style: outlineStyle,
+      },
+      {
+        type: 'path', role: 'pictogram',
+        d: 'M 12 14.5 C 13.25 14.5, 13.25 13.5, 14 13.5 C 14.75 13.5, 14.75 14.5, 16 14.5 C 17.25 14.5, 17.25 13.5, 18 13.5 C 18.75 13.5, 18.75 14.5, 20 14.5',
+        style: outlineStyle,
+      },
+      {
+        type: 'polyline', role: 'pictogram',
+        points: [[16, 16], [20, 20], [16, 24], [12, 20]],
+        closed: true,
+        style: outlineStyle,
+      },
+    ]);
+  });
+
+  it('zeichnet I.4.2 als diagonalen Doppelpfeil über einer schmalen Wannenform', () => {
+    expect(bodyMarkWithContext(
+      'circle-diagonal-double-arrow-offset-bowl' as BodyMarkId,
+      { kind: 'circle-12' },
+      circleBodyMm,
+    )).toEqual([
+      line(7, 14, 18, 25),
+      {
+        type: 'polyline', role: 'pictogram',
+        points: [[7, 17], [7, 14], [10, 14]],
+        closed: false,
+        style: outlineStyle,
+      },
+      {
+        type: 'polyline', role: 'pictogram',
+        points: [[15, 25], [18, 25], [18, 22]],
+        closed: false,
+        style: outlineStyle,
+      },
+      {
+        type: 'path', role: 'pictogram',
+        d: 'M 12 13.5 H 24 C 24 17.5, 22 19.5, 18 19.5 C 14 19.5, 12 17.5, 12 13.5 Z',
+        style: outlineStyle,
+      },
+    ]);
+  });
+
+  it('zeichnet I.4.3 als breite, symmetrische Wannenform', () => {
+    expect(bodyMarkWithContext(
+      'circle-wide-bowl' as BodyMarkId,
+      { kind: 'circle-12' },
+      circleBodyMm,
+    )).toEqual([{
+      type: 'path', role: 'pictogram',
+      d: 'M 8 13.5 H 24 C 24 18.5, 21 21.5, 16 21.5 C 11 21.5, 8 18.5, 8 13.5 Z',
+      style: outlineStyle,
+    }]);
+  });
+
+  it('lehnt jede I.4-Marke außerhalb ihrer vermessenen Kreisfassung und Hüllengröße ab', () => {
+    expect(() => bodyMarkWithContext(
+      'circle-two-waves-diamond' as BodyMarkId,
+      { kind: 'circle-12' },
+      circleBodyMm,
+    )).toThrow(/nicht vermessen/);
+    for (const id of [
+      'circle-diagonal-double-arrow-offset-bowl',
+      'circle-wide-bowl',
+    ] as BodyMarkId[]) {
+      expect(() => bodyMarkWithContext(
+        id,
+        { kind: 'circle-12', bodyVariant: 'raised-gable' },
+        raisedCircleBodyMm,
+      ), id).toThrow(/nicht vermessen/);
+    }
+    expect(() => bodyMarkWithContext(
+      'circle-wide-bowl' as BodyMarkId,
+      { kind: 'circle-12' },
+      { minX: 4, minY: 4, maxX: 29, maxY: 28 },
+    )).toThrow(/24 × 24 mm/);
+  });
+
+  it.each([
+    [
+      'circle-two-waves-diamond',
+      { kind: 'circle-12', bodyVariant: 'raised-gable' },
+      { minX: 5, minY: 6, maxX: 29, maxY: 30 },
+    ],
+    [
+      'circle-diagonal-double-arrow-offset-bowl',
+      { kind: 'circle-12' },
+      { minX: 4, minY: 5, maxX: 28, maxY: 29 },
+    ],
+    [
+      'circle-wide-bowl',
+      { kind: 'circle-12' },
+      { minX: 3, minY: 4, maxX: 27, maxY: 28 },
+    ],
+  ] as const)(
+    'lehnt die gleich große, aber verschobene I.4-Hülle für %s ab',
+    (id, context, shiftedBounds) => {
+      expect(() => bodyMarkWithContext(
+        id as BodyMarkId,
+        context,
+        shiftedBounds,
+      )).toThrow(/exakten Hülle/);
+    },
+  );
+});
+
 describe('bodyMark() — die technischen Innenzeichnungen des Anhangs N', () => {
   it('zeichnet die beiden getrennt vermessenen Landfahrzeugmarken', () => {
     expect(bodyMarkWithContext(
@@ -1876,6 +1992,8 @@ describe('BODY_MARK_IDS', () => {
             ? [{ kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' } as const, landBodyMm] as const
           : id === 'hospital'
             ? [{ kind: 'reduced-house' } as const, reducedHouseBodyMm] as const
+            : id === 'circle-two-waves-diamond'
+              ? [{ kind: 'circle-12', bodyVariant: 'raised-gable' } as const, raisedCircleBodyMm] as const
             : id.startsWith('circle-')
               ? [{ kind: 'circle-12' } as const, circleBodyMm] as const
             : id.startsWith('spontaneous-helper-')

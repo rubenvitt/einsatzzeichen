@@ -109,6 +109,10 @@ export const TECHNICAL_BODY_MARK_LABELS = Object.freeze({
     'Raute mit zwei inneren Diagonalen, Anschlag und Rechtspfeil',
   'circle-transport-diamond-wheels-arrows':
     'Raute mit zwei Ringen, Anschlag und Rechtspfeil',
+  'circle-two-waves-diamond': 'Zwei Wellenlinien über einer Raute',
+  'circle-diagonal-double-arrow-offset-bowl':
+    'Diagonaler Doppelpfeil neben einer nach rechts versetzten Schale',
+  'circle-wide-bowl': 'Breite Schale',
   'land-horizontal-blade-bent-upright': 'Waagerechte Leiste mit geknickter senkrechter Stütze',
   'ring-5mm-offset-down-3-5mm-eight-spokes':
     'Ring 5 mm mit acht Speichen, 3,5 mm nach unten versetzt',

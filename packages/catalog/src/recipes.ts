@@ -37,7 +37,11 @@ import { ANHANG_D_TASK_6_RECIPES } from './recipes-anhang-d.js';
 import { ANHANG_N_RECIPES } from './recipes-anhang-n.js';
 import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
-import { ANHANG_I_A_RECIPES, ANHANG_I_E_RECIPES } from './recipes-anhang-i.js';
+import {
+  ANHANG_I_A_RECIPES,
+  ANHANG_I_E_RECIPES,
+  ANHANG_I_J_RECIPES,
+} from './recipes-anhang-i.js';
 
 const PORTS: CatalogPorts = {
   baseDrawing,
@@ -92,6 +96,8 @@ export interface Recipe {
  * Darstellung von I.1.9 bleibt über ihren Varianten-Key eigenständig adressierbar; beide
  * Fachdienstbilder verwenden die vorhandenen CapabilityIds in einer für Formationen vermessenen
  * kompakten Geometrie statt der größeren Standard-Capability-Box.
+ * Anhang I-j ergänzt drei einzeln vermessene Wasserrettungsorte mit eng gebundenen Kreisfassungen
+ * und technischen Innenmarken; die fachliche Einordnung bleibt auch dort offen.
  */
 export const RECIPES = {
   ...ANHANG_D_TASK_6_RECIPES,
@@ -104,6 +110,7 @@ export const RECIPES = {
   ...ANHANG_F_F_RECIPES,
   ...ANHANG_I_E_RECIPES,
   ...ANHANG_I_A_RECIPES,
+  ...ANHANG_I_J_RECIPES,
   ...ANHANG_E_A_RECIPES,
   ...ANHANG_E_B_RECIPES,
   ...ANHANG_E_C_RECIPES,

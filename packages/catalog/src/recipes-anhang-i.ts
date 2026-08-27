@@ -91,3 +91,34 @@ export const ANHANG_I_A_RECIPES = {
     },
   },
 } as const satisfies Record<string, Recipe>;
+
+export const ANHANG_I_J_RECIPES = {
+  'I.4.1': {
+    title: 'Wasserrettungsstation, ortsgebunden',
+    referenceAsset: 'I.4.1_Wasserrettungsstation_ortsgebunden.svg',
+    spec: {
+      kind: 'circle-12',
+      bodyVariant: 'raised-gable',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['circle-two-waves-diamond'],
+    },
+  },
+  'I.4.2': {
+    title: 'Slip-Stelle',
+    referenceAsset: 'I.4.2_Slip-Stelle.svg',
+    spec: {
+      kind: 'circle-12',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['circle-diagonal-double-arrow-offset-bowl'],
+    },
+  },
+  'I.4.3': {
+    title: 'Anlegestelle für Boote',
+    referenceAsset: 'I.4.3_Anlegestelle für Boote.svg',
+    spec: {
+      kind: 'circle-12',
+      organization: 'hilfsorganisation',
+      bodyMarks: ['circle-wide-bowl'],
+    },
+  },
+} as const satisfies Record<string, Recipe>;
