@@ -3,7 +3,6 @@ title: MapLibre Lab
 description: Katalogzeichen auf einer echten MapLibre-Karte — als Marker im DOM und als gerastertes Bild im Kartenstil, mit Größe, Pixel Ratio und Farbprofil zum Ausprobieren.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
 import { RENDER_THEMES } from '@einsatzzeichen/catalog';
 import MapLibreLab from '../../components/islands/MapLibreLab.tsx';
 import { labSymbols } from '../../lib/maplibre-lab.js';
@@ -62,7 +61,9 @@ MapLibre rechnet über `pixelRatio` auf die CSS-Größe zurück; deshalb erschei
 Pixel Ratio 1, 2 und 3 gleich groß, nur schärfer. Wenn die Größe zwischen Marker und Symbolebene
 auseinanderläuft, ist die Rechnung falsch, nicht die Karte.
 
-<Aside type="note" title="Kartengrundlage">
+<div class="ez-note">
+<span class="ez-note__title">Kartengrundlage</span>
+
 Die Kacheln kommen von OpenFreeMap (Stil `positron`). OpenFreeMap nennt als Bedingung: „There are
 no limits on the number of map views or requests. There's no registration, no user database, no
 API keys, and no cookies“ — kommerzielle Nutzung ausdrücklich erlaubt, verpflichtend ist allein
@@ -70,9 +71,12 @@ die Namensnennung „OpenFreeMap © OpenMapTiles Data from OpenStreetMap“, die
 in der Karte führt. Im Repository steht kein Schlüssel, weil keiner gebraucht wird. Wer ohne
 fremden Dienst arbeiten will, setzt `basemap="none"`: dann zeigt die Karte nur eine
 Hintergrundfläche und lädt nichts nach.
-</Aside>
 
-<Aside type="caution" title="Noch nicht gebaut">
+</div>
+
+<div class="ez-note">
+<span class="ez-note__title">Noch nicht gebaut</span>
+
 **Clustering.** MapLibre kann Punkte zu Gruppen zusammenfassen (`cluster: true` an der
 GeoJSON-Quelle); das Lab tut es nicht, weil ein Cluster ein eigenes Zeichen bräuchte — welches
 Zeichen für zehn verschiedene Einheiten steht, ist eine fachliche Frage und keine, die sich in
@@ -82,11 +86,15 @@ der Website beantworten lässt.
 erzeugen ist Arbeit im Paket `@einsatzzeichen/maplibre` (Rasterung, Atlas, `sprite.json`), nicht
 Arbeit der Website. Diese Seite baut deshalb einzelne Bilder zur Laufzeit statt ein Sprite
 vorzutäuschen.
-</Aside>
 
-<Aside type="danger" title="Technisch grün ist nicht fachlich freigegeben">
+</div>
+
+<div class="ez-note">
+<span class="ez-note__title">Technisch grün ist nicht fachlich freigegeben</span>
+
 Dass ein Zeichen hier sauber auf der Karte steht, sagt nur, dass die Darstellung technisch
 funktioniert. Der fachliche Reviewstatus jedes Zeichens steht auf seiner Symbolseite; die
 Grundlage der Zeichen (AFKzV, 57. Sitzung, 13./14.03.2025: vorläufige Anwendung aufgehoben,
 Verbreitung ausgesetzt) steht auf der Seite zur Grundlage.
-</Aside>
+
+</div>

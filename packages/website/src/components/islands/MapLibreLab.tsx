@@ -277,11 +277,9 @@ export default function MapLibreLab({
 
   return (
     <section className="ez-lab" aria-label="MapLibre Lab">
-      <style>{LAB_CSS}</style>
-
       <div className="ez-lab__controls">
-        <div className="ez-lab__field ez-lab__field--wide">
-          <label htmlFor="ez-lab-query">Zeichen suchen</label>
+        <label className="ez-lab__field ez-lab__field--wide" htmlFor="ez-lab-query">
+          <span className="ez-lab__field-label">Zeichen suchen</span>
           <input
             id="ez-lab-query"
             type="search"
@@ -289,10 +287,12 @@ export default function MapLibreLab({
             placeholder="Titel, ID oder Kapitel"
             onChange={(event) => setQuery(event.target.value)}
           />
-        </div>
+        </label>
 
-        <div className="ez-lab__field ez-lab__field--wide">
-          <label htmlFor="ez-lab-symbol">Zeichen ({matches.length} von {symbols.length})</label>
+        <label className="ez-lab__field ez-lab__field--wide" htmlFor="ez-lab-symbol">
+          <span className="ez-lab__field-label">
+            Zeichen · {matches.length} von {symbols.length}
+          </span>
           <select
             id="ez-lab-symbol"
             value={symbol?.id ?? ''}
@@ -304,10 +304,10 @@ export default function MapLibreLab({
               </option>
             ))}
           </select>
-        </div>
+        </label>
 
-        <div className="ez-lab__field">
-          <label htmlFor="ez-lab-size">Größe: {size} px</label>
+        <label className="ez-lab__field" htmlFor="ez-lab-size">
+          <span className="ez-lab__field-label">Größe · {size} px</span>
           <input
             id="ez-lab-size"
             type="range"
@@ -317,10 +317,10 @@ export default function MapLibreLab({
             value={size}
             onChange={(event) => setSize(clampSize(Number(event.target.value)))}
           />
-        </div>
+        </label>
 
-        <div className="ez-lab__field">
-          <label htmlFor="ez-lab-ratio">Pixel Ratio</label>
+        <label className="ez-lab__field" htmlFor="ez-lab-ratio">
+          <span className="ez-lab__field-label">Pixel Ratio</span>
           <select
             id="ez-lab-ratio"
             value={pixelRatio}
@@ -332,10 +332,10 @@ export default function MapLibreLab({
               </option>
             ))}
           </select>
-        </div>
+        </label>
 
-        <div className="ez-lab__field">
-          <label htmlFor="ez-lab-theme">Farbprofil</label>
+        <label className="ez-lab__field" htmlFor="ez-lab-theme">
+          <span className="ez-lab__field-label">Farbprofil</span>
           <select
             id="ez-lab-theme"
             value={themeOption?.id ?? ''}
@@ -347,10 +347,10 @@ export default function MapLibreLab({
               </option>
             ))}
           </select>
-        </div>
+        </label>
 
         <fieldset className="ez-lab__field ez-lab__modes">
-          <legend>Darstellung</legend>
+          <legend className="ez-lab__field-label">Darstellung</legend>
           <label>
             <input
               type="radio"
@@ -359,7 +359,7 @@ export default function MapLibreLab({
               checked={mode === 'marker'}
               onChange={() => setMode('marker')}
             />
-            Marker (SVG im DOM)
+            Marker · SVG im DOM
           </label>
           <label>
             <input
@@ -369,17 +369,20 @@ export default function MapLibreLab({
               checked={mode === 'symbol-layer'}
               onChange={() => setMode('symbol-layer')}
             />
-            Symbol Layer (Bild im Stil)
+            Symbol Layer · Bild im Stil
           </label>
         </fieldset>
 
-        <div className="ez-lab__field ez-lab__zooms">
-          <span id="ez-lab-zoom-label">Zoom</span>
-          <div role="group" aria-labelledby="ez-lab-zoom-label">
+        <div className="ez-lab__field">
+          <span className="ez-lab__field-label" id="ez-lab-zoom-label">
+            Zoom
+          </span>
+          <div className="ez-lab__zooms" role="group" aria-labelledby="ez-lab-zoom-label">
             {ZOOM_LEVELS.map((zoom) => (
               <button
                 key={zoom}
                 type="button"
+                className="ez-action"
                 onClick={() => zoomTo(zoom)}
                 disabled={!styleReady}
               >
@@ -400,32 +403,46 @@ export default function MapLibreLab({
             className={mapUnavailable ? 'ez-lab__map ez-lab__map--hidden' : 'ez-lab__map'}
           />
           {mapUnavailable ? (
-            <div className="ez-lab__map-error" role="alert">
-              <strong>Die Karte wird nicht angezeigt.</strong>
+            <div className="ez-lab__overlay ez-note" role="alert">
+              <span className="ez-note__title">Karte nicht verfügbar</span>
               <p>{mapError}</p>
               <p>
-                Die Vorschau rechts zeichnet dasselbe Zeichen ohne Karte — sie hängt weder an
+                Die Vorschau daneben zeichnet dasselbe Zeichen ohne Karte — sie hängt weder an
                 MapLibre noch an einer Kachelquelle.
               </p>
             </div>
           ) : null}
           {!mapUnavailable && !styleReady ? (
-            <p className="ez-lab__map-hint" role="status">
+            <p className="ez-lab__overlay ez-lab__hint" role="status">
               Karte wird geladen …
             </p>
           ) : null}
         </div>
 
         <aside className="ez-lab__side">
-          <h3>Vorschau ohne Karte</h3>
-          <div className="ez-lab__preview" style={{ background: theme?.surface ?? '#ffffff' }}>
+          <span className="ez-lab__field-label">Vorschau ohne Karte</span>
+          {/* Beide Kartenhintergründe, unabhängig vom Seitenthema (Spec §5.6): die
+              Referenzpalette ist auf Weiß gerechnet, gelesen wird die Seite oft dunkel. */}
+          <div className="ez-canvas-pair">
             {symbol !== undefined && theme !== undefined ? (
-              <Einsatzzeichen
-                drawing={symbol.drawing}
-                size={Math.min(size, 128)}
-                theme={theme}
-                idPrefix="ez-lab-preview"
-              />
+              <>
+                <span className="ez-canvas ez-canvas--light">
+                  <Einsatzzeichen
+                    drawing={symbol.drawing}
+                    size={size}
+                    theme={theme}
+                    idPrefix="ez-lab-preview-hell"
+                  />
+                </span>
+                <span className="ez-canvas ez-canvas--dark">
+                  <Einsatzzeichen
+                    drawing={symbol.drawing}
+                    size={size}
+                    theme={theme}
+                    idPrefix="ez-lab-preview-dunkel"
+                  />
+                </span>
+              </>
             ) : null}
           </div>
           {symbol !== undefined ? (
@@ -434,105 +451,200 @@ export default function MapLibreLab({
               <dd>{symbol.title}</dd>
               <dt>ID</dt>
               <dd>
-                <code>{symbol.id}</code>
+                <span className="ez-id">{symbol.id}</span>
               </dd>
               <dt>Fundstelle</dt>
               <dd>{symbol.chapter}</dd>
               <dt>Bild-ID im Stil</dt>
               <dd>
-                <code>
+                <span className="ez-mono">
                   {symbolImageId({ symbolId: symbol.id, size, pixelRatio, themeId })}
-                </code>
+                </span>
               </dd>
             </dl>
           ) : null}
-          <p className="ez-lab__note">
-            Marker und Symbolebene sollen gleich groß erscheinen: das Raster wird mit{' '}
-            <code>size × pixelRatio</code> gezeichnet, und MapLibre rechnet über{' '}
-            <code>pixelRatio</code> auf dieselbe CSS-Größe zurück. Weicht die Größe zwischen den
-            Modi ab, stimmt die Rechnung nicht.
-          </p>
         </aside>
       </div>
 
       {drawError !== null ? (
-        <p className="ez-lab__error" role="alert">
-          Das Zeichen ließ sich nicht auf die Karte bringen. Grund: {drawError}
-        </p>
+        <div className="ez-note" role="alert">
+          <span className="ez-note__title">Zeichen nicht auf der Karte</span>
+          <p>Das Zeichen ließ sich nicht auf die Karte bringen. Grund: {drawError}</p>
+        </div>
       ) : null}
 
       {tileNote !== null && !mapUnavailable ? (
-        <p className="ez-lab__warn" role="status">
-          {tileNote.text}
-        </p>
+        <div className="ez-note" role="status">
+          <span className="ez-note__title">Untergrund lückenhaft</span>
+          <p>{tileNote.text}</p>
+        </div>
       ) : null}
 
       <p className="ez-lab__source">
         {basemap === 'openfreemap' ? (
           <>
-            Untergrund: <code>{OPENFREEMAP_STYLE_URL}</code> — {OPENFREEMAP_ATTRIBUTION}.
+            Untergrund <span className="ez-mono">{OPENFREEMAP_STYLE_URL}</span> —{' '}
+            {OPENFREEMAP_ATTRIBUTION}. Marker und Symbolebene erscheinen bei Pixel Ratio 1, 2 und 3
+            gleich groß: das Raster wird mit <span className="ez-mono">size × pixelRatio</span>
+            {' '}gezeichnet, MapLibre rechnet über <span className="ez-mono">pixelRatio</span> auf
+            dieselbe CSS-Größe zurück.
           </>
         ) : (
           <>Ohne Untergrund: die Karte zeigt nur eine Hintergrundfläche, es wird nichts geladen.</>
         )}
       </p>
+
+      <style>{`
+        .ez-lab {
+          display: grid;
+          gap: var(--ez-space-4);
+          margin-block: var(--ez-space-6);
+        }
+        .ez-lab__controls {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: end;
+          gap: var(--ez-space-3) var(--ez-space-4);
+        }
+        .ez-lab__field {
+          display: flex;
+          flex-direction: column;
+          gap: var(--ez-space-1);
+          margin: 0;
+          padding: 0;
+          border: 0;
+        }
+        .ez-lab__field--wide {
+          flex: 1 1 15rem;
+        }
+        .ez-lab__field-label {
+          font-family: var(--ez-font-mono);
+          font-size: var(--sl-text-2xs);
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--sl-color-gray-3);
+        }
+        .ez-lab__field input[type='search'],
+        .ez-lab__field select {
+          font: inherit;
+          font-size: var(--sl-text-sm);
+          padding: var(--ez-space-2) var(--ez-space-3);
+          border: 1px solid var(--sl-color-hairline);
+          border-radius: var(--ez-radius);
+          background: transparent;
+          color: var(--sl-color-white);
+        }
+        .ez-lab__field input:focus-visible,
+        .ez-lab__field select:focus-visible,
+        .ez-lab button.ez-action:focus-visible {
+          outline: 2px solid var(--sl-color-accent);
+          outline-offset: 2px;
+        }
+        .ez-lab__field input[type='range'] {
+          accent-color: var(--sl-color-accent);
+          min-width: 10rem;
+        }
+        .ez-lab__modes label {
+          display: flex;
+          align-items: center;
+          gap: var(--ez-space-2);
+          font-size: var(--sl-text-sm);
+        }
+        .ez-lab__zooms {
+          display: flex;
+          gap: var(--ez-space-2);
+        }
+        .ez-lab button.ez-action {
+          padding: var(--ez-space-2) var(--ez-space-3);
+          font: inherit;
+          font-family: var(--ez-font-mono);
+          font-variant-numeric: tabular-nums;
+          background: transparent;
+          cursor: pointer;
+        }
+        .ez-lab button.ez-action[disabled] {
+          cursor: not-allowed;
+          color: var(--sl-color-gray-3);
+          border-color: var(--sl-color-hairline);
+        }
+        .ez-lab__stage {
+          display: grid;
+          gap: var(--ez-space-4);
+          grid-template-columns: minmax(0, 2fr) minmax(13rem, 1fr);
+        }
+        @media (max-width: 50rem) {
+          .ez-lab__stage {
+            grid-template-columns: minmax(0, 1fr);
+          }
+        }
+        .ez-lab__map-slot {
+          position: relative;
+          min-height: 26rem;
+        }
+        .ez-lab__map {
+          position: absolute;
+          inset: 0;
+          border: 1px solid var(--sl-color-hairline);
+          border-radius: var(--ez-radius);
+          overflow: hidden;
+        }
+        .ez-lab__map--hidden {
+          visibility: hidden;
+        }
+        .ez-lab__overlay {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: var(--ez-space-2);
+          margin: 0;
+        }
+        .ez-lab__hint {
+          padding: var(--ez-space-4);
+          border: 1px dashed var(--sl-color-gray-4);
+          border-radius: var(--ez-radius);
+          font-family: var(--ez-font-mono);
+          font-size: var(--sl-text-2xs);
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--sl-color-gray-3);
+          text-align: center;
+        }
+        .ez-lab__side {
+          display: flex;
+          flex-direction: column;
+          gap: var(--ez-space-3);
+        }
+        .ez-lab__marker {
+          line-height: 0;
+          cursor: default;
+        }
+        .ez-lab__meta {
+          display: grid;
+          grid-template-columns: auto minmax(0, 1fr);
+          gap: var(--ez-space-1) var(--ez-space-3);
+          margin: 0;
+          font-size: var(--sl-text-xs);
+        }
+        .ez-lab__meta dt {
+          font-family: var(--ez-font-mono);
+          font-size: var(--sl-text-2xs);
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--sl-color-gray-3);
+        }
+        .ez-lab__meta dd {
+          margin: 0;
+          overflow-wrap: anywhere;
+        }
+        .ez-lab__source {
+          margin: 0;
+          font-size: var(--sl-text-xs);
+          line-height: 1.6;
+          color: var(--sl-color-gray-3);
+        }
+      `}</style>
     </section>
   );
 }
-
-/**
- * Die Insel bringt ihre Gestaltung selbst mit, damit sie in einer Seite ohne eigenes Stylesheet
- * vollständig ist. Farben kommen aus Starlights Variablen; die Zeichen behalten ihre eigenen.
- */
-const LAB_CSS = `
-.ez-lab { display: grid; gap: 1rem; margin-block: 1.5rem; }
-.ez-lab__controls {
-  display: grid; gap: 0.75rem 1rem; align-items: end;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-  padding: 0.9rem; border: 1px solid var(--sl-color-gray-5); border-radius: 0.5rem;
-  background: var(--sl-color-gray-7, transparent);
-}
-.ez-lab__field { display: grid; gap: 0.3rem; font-size: 0.875rem; }
-.ez-lab__field--wide { grid-column: span 2; }
-.ez-lab__field label, .ez-lab__field legend, .ez-lab__zooms span { font-weight: 600; }
-.ez-lab__field input[type='search'], .ez-lab__field select {
-  width: 100%; padding: 0.35rem 0.45rem; font: inherit; font-size: 0.875rem;
-  border: 1px solid var(--sl-color-gray-5); border-radius: 0.25rem;
-  background: var(--sl-color-black); color: var(--sl-color-white);
-}
-.ez-lab__modes { border: 0; padding: 0; margin: 0; }
-.ez-lab__modes label { display: flex; gap: 0.4rem; align-items: center; font-weight: 400; }
-.ez-lab__zooms div { display: flex; gap: 0.35rem; }
-.ez-lab__zooms button {
-  padding: 0.3rem 0.7rem; font: inherit; cursor: pointer;
-  border: 1px solid var(--sl-color-gray-5); border-radius: 0.25rem;
-  background: var(--sl-color-gray-6, transparent); color: inherit;
-}
-.ez-lab__zooms button[disabled] { opacity: 0.5; cursor: not-allowed; }
-.ez-lab__stage { display: grid; gap: 1rem; grid-template-columns: minmax(0, 2fr) minmax(14rem, 1fr); }
-@media (max-width: 50rem) { .ez-lab__stage { grid-template-columns: minmax(0, 1fr); } }
-.ez-lab__map-slot { position: relative; min-height: 26rem; }
-.ez-lab__map { position: absolute; inset: 0; border-radius: 0.5rem; overflow: hidden; }
-.ez-lab__map--hidden { visibility: hidden; }
-.ez-lab__map-error, .ez-lab__map-hint {
-  position: absolute; inset: 0; display: grid; align-content: center; gap: 0.5rem;
-  padding: 1.5rem; border: 1px dashed var(--sl-color-gray-4); border-radius: 0.5rem;
-  background: var(--sl-color-gray-6, #eef); text-align: left;
-}
-.ez-lab__map-error p, .ez-lab__map-hint { margin: 0; font-size: 0.9rem; }
-.ez-lab__marker { line-height: 0; cursor: default; }
-.ez-lab__side { display: grid; gap: 0.75rem; align-content: start; }
-.ez-lab__side h3 { margin: 0; font-size: 1rem; }
-.ez-lab__preview {
-  display: grid; place-items: center; min-height: 9rem; padding: 1rem;
-  border: 1px solid var(--sl-color-gray-5); border-radius: 0.5rem;
-}
-.ez-lab__meta { display: grid; grid-template-columns: auto 1fr; gap: 0.15rem 0.6rem; margin: 0; font-size: 0.8125rem; }
-.ez-lab__meta dt { font-weight: 600; }
-.ez-lab__meta dd { margin: 0; overflow-wrap: anywhere; }
-.ez-lab__note, .ez-lab__source { margin: 0; font-size: 0.8125rem; color: var(--sl-color-gray-3); }
-.ez-lab__error, .ez-lab__warn {
-  margin: 0; padding: 0.6rem 0.8rem; font-size: 0.875rem; border-radius: 0.35rem;
-  border: 1px solid var(--sl-color-gray-5);
-}
-`;
