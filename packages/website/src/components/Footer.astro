@@ -1,0 +1,39 @@
+---
+/**
+ * Override von Starlights `Footer` (Spec §3, dritte Präzisierung vom 28.08.2026).
+ *
+ * Die Vorgabe ist ein *subtiler* Hinweis, dass die Inhalte mit KI entstanden sind: ein Satz im
+ * Seitenfuß, klein, kein Banner, kein Badge im Kopf, kein Popup. Deshalb wird Starlights eigener
+ * Fuß (Bearbeitungslink, Datum, Vor/Zurück) unverändert gerendert und der Satz als Geschwister
+ * *dahinter* gehängt — nicht in den `<slot />` des Vorgabebauteils: dort landen die Kinder, die
+ * die Seite selbst mitgibt, und ein fremder Absatz darin würde die Reihenfolge des Fußes
+ * verschieben.
+ *
+ * Der Satz steht auf jeder Seite, weil die Aussage für jede Seite gilt. Er nennt zugleich den
+ * Ort, an dem die Frage konkret beantwortet wird — den fachlichen Reviewstatus am Zeichen —,
+ * damit er nicht als allgemeiner Haftungssatz gelesen wird.
+ *
+ * Farbe und Größe kommen aus vorhandenen Starlight-Tokens (`--sl-color-gray-3`,
+ * `--sl-text-2xs`); es entsteht keine neue Farbe und kein neuer Rahmen.
+ */
+import Default from '@astrojs/starlight/components/Footer.astro';
+---
+
+<Default>
+  <slot />
+</Default>
+
+<p class="ez-ai-note">
+  Texte und Code dieser Website sind mit KI-Unterstützung entstanden und werden von Menschen
+  geprüft; der fachliche Reviewstatus steht an jedem Zeichen.
+</p>
+
+<style>
+  .ez-ai-note {
+    margin-block-start: var(--ez-space-6, 1.5rem);
+    font-size: var(--sl-text-2xs);
+    line-height: 1.5;
+    color: var(--sl-color-gray-3);
+    text-wrap: pretty;
+  }
+</style>
