@@ -1,0 +1,37 @@
+---
+title: Belege
+description: Die Kontaktbögen des Katalogs — jede Zeichnung in sechs Größen und drei Themes, als Rasterbeleg gegen unbemerkte Änderungen.
+---
+
+import ContactSheet from '../../components/ContactSheet.astro';
+import { loadSnapshot } from '../../lib/snapshot';
+
+export const snapshot = loadSnapshot();
+
+Ein Kontaktbogen ist ein Rasterbeleg für genau eine Zeichnung. Er zeigt sie sechsmal im
+Referenztheme — 16, 24, 32, 64, 128 und 256 px — und darunter dieselbe Zeichnung bei 256 px in den
+beiden anderen Themes: `accessible-light` für erhöhten Kontrast und `print-monochrome` für den
+Schwarzweißdruck.
+
+Die Bögen liegen im Repository, weil sie dort etwas leisten, was ein Bild in einer Dokumentation
+nicht leistet: `multi-size-snapshots.test.ts` rastert jede Zeichnung neu und vergleicht sie
+byteweise mit dem eingecheckten Bogen. Ändert jemand eine Geometrie, eine Farbe oder die Schrift,
+schlägt der Test fehl und der Unterschied ist sichtbar. Deshalb rastern die Bögen auch nicht mit
+einer Systemschrift, sondern mit dem Arimo-Subset aus `packages/catalog/assets` — eine
+Systemschrift würde ein maschinenabhängiges Ergebnis liefern und den Beleg entwerten.
+
+Zu jedem der {snapshot.symbols.length} Zeichen des Katalogs gehört genau ein Bogen. Die übrigen
+zeigen die Elemente, aus denen Zeichen zusammengesetzt werden: Fähigkeiten, Zustände,
+Kommunikationsmittel, Schadens- und Führungsmarken. Sie haben keine eigene Zeichenseite, weil ein
+Element allein noch kein Zeichen ist — geprüft wird es trotzdem.
+
+Was ein Bogen **nicht** ist: eine fachliche Freigabe. Er belegt, dass die Ausgabe stabil und
+reproduzierbar ist, nicht dass das Zeichen die richtige Bedeutung trägt. Der Prüfstand jedes
+Zeichens steht auf seiner [Zeichenseite](/zeichen/).
+
+## Alle Bögen
+
+Die Gruppen sind zugeklappt, damit die Seite ohne 15 MB Bilddaten aufgeht; der Browser lädt die
+Bögen einer Gruppe erst beim Aufklappen.
+
+<ContactSheet />

@@ -1,0 +1,59 @@
+---
+title: schema
+description: Typen der internen Repräsentation, Einheiten und Farbpalette — das Vokabular, auf das sich alle anderen Pakete beziehen.
+---
+
+`@einsatzzeichen/schema` ist das Vokabular des Projekts: die Typen der internen Repräsentation
+(IR), die Einheitenrechnung und die Farbpalette. Es rendert nichts, kennt keinen Katalog und hat
+**null Fremdabhängigkeiten** — reines TypeScript.
+
+Zwei Dinge werden hier festgelegt, die überall sonst gelten. Erstens die Millimeter-Regel: alle
+Längen in der IR und im Katalog sind Millimeter, umgerechnet wird erst an der Rendergrenze.
+Zweitens die Farbpalette: `PALETTE` bildet die dreizehn Farbtoken auf ihre Hexwerte ab. Ein
+Zeichen benennt Farbe über den Token, nie über den Hexwert — deshalb kann ein Render-Theme sie
+austauschen, ohne dass die Zeichnung sich ändert.
+
+## Installation
+
+<div class="ez-note">
+<span class="ez-note__title">Nicht veröffentlicht</span>
+
+Kein Paket dieses Projekts liegt auf npm; alle sind `private: true` und zeigen mit `main` auf
+`./src/index.ts`. Es gibt keinen Build-Schritt. Benutzt wird das Paket im Workspace:
+
+```json
+{ "dependencies": { "@einsatzzeichen/schema": "workspace:*" } }
+```
+
+Wer außerhalb des Workspace baut, löst `@einsatzzeichen/*` per Alias auf die Quelldateien auf —
+so macht es auch diese Website (`vite.resolve.alias` in `astro.config.mjs`).
+
+</div>
+
+## Hauptexporte
+
+| Export | Was es ist |
+|---|---|
+| `SymbolSpec` | die semantische Beschreibung eines Zeichens — `kind`, `organization`, `strength`, `capabilities`, … |
+| `Drawing`, `Primitive`, `Style`, `Transform` | die IR: was gezeichnet wird, in Millimetern |
+| `PALETTE`, `ColorToken`, `RgbHex`, `ColorPalette` | die dreizehn Farbtoken und ihre Werte |
+| `UNITS_PER_MM`, `mmToUnits`, `unitsToMm`, `unitsEqual`, `TOLERANCE_UNITS` | Einheitenrechnung und Vergleichstoleranz |
+| `SYMBOL_KINDS`, `ORGANIZATION_IDS`, `STRENGTH_IDS`, `CAPABILITY_IDS`, `STATE_IDS`, `COMMS_IDS`, `DAMAGE_IDS`, `WILDFIRE_IDS`, … | die erlaubten Werte je Feld der `SymbolSpec` |
+| `CatalogEntry`, `CoverageEntry`, `CoverageManifest` | Katalogeintrag und Manifestzeile |
+| `Review`, `ReviewSet`, `ReviewStatus`, `reviewIssues` | die Reviewform: technisch und fachlich, beide Pflicht |
+| `SourceRecord`, `Licence`, `LicenceStatus`, `ProfileRecord` | Quellen- und Profilregister |
+
+## Beispiel
+
+```ts
+import { PALETTE, mmToUnits, type SymbolSpec } from '@einsatzzeichen/schema';
+
+const spec: SymbolSpec = {
+  kind: 'formation',
+  organization: 'thw',
+  strength: 'gruppe',
+};
+
+PALETTE.blau; // '#003296'
+mmToUnits(32); // Millimeter in SVG-Einheiten, an der Rendergrenze
+```

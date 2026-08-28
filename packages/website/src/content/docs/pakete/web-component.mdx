@@ -1,0 +1,56 @@
+---
+title: web-component
+description: Custom Element einsatzzeichen-symbol mit offenem Shadow DOM — dasselbe SVG, ohne Framework.
+---
+
+`@einsatzzeichen/web-component` stellt `<einsatzzeichen-symbol>` bereit: ein Custom Element mit
+offenem Shadow DOM, das dieselbe Zeichnung über `renderSvg` ausgibt wie jeder andere Kanal. Kein
+Framework, keine Build-Voraussetzung im Zielprojekt.
+
+Die Aufteilung folgt der Natur der Werte: `drawing` und `theme` sind **Properties**, weil Objekte
+sich nicht sinnvoll als Attribut tragen lassen; `size` und `id-prefix` sind **Attribute**, weil sie
+Strings sind und aus dem Markup kommen sollen. Die Registrierung ist idempotent und ohne
+`customElements` folgenlos — der Import scheitert also auch in Node nicht.
+
+## Installation
+
+<div class="ez-note">
+<span class="ez-note__title">Nicht veröffentlicht</span>
+
+`private: true`, `main` zeigt auf `./src/index.ts`. Im Workspace:
+
+```json
+{ "dependencies": { "@einsatzzeichen/web-component": "workspace:*" } }
+```
+
+</div>
+
+## Hauptexporte
+
+| Export | Was es ist |
+|---|---|
+| `defineEinsatzzeichenElement(tagName?)` | registriert das Element; Vorgabe `einsatzzeichen-symbol` |
+| `EinsatzzeichenElement` | die Klasse selbst |
+| `DEFAULT_TAG_NAME`, `OBSERVED_ATTRIBUTES` | `'einsatzzeichen-symbol'` und `['size', 'id-prefix']` |
+| `renderElementMarkup(drawing, options)` | das Markup ohne DOM — für Serverausgabe und Tests |
+| `parseSizeAttribute(value)` | wirft bei einem ungültigen `size`, statt still zu raten |
+
+## Beispiel
+
+```ts
+import { defineEinsatzzeichenElement } from '@einsatzzeichen/web-component';
+import { RECIPES, composeFromCatalog } from '@einsatzzeichen/catalog';
+
+defineEinsatzzeichenElement();
+
+const recipe = RECIPES['E.1.1'];
+const element = document.createElement('einsatzzeichen-symbol');
+element.drawing = composeFromCatalog(recipe.spec, recipe.title);
+element.setAttribute('size', '64');
+element.setAttribute('id-prefix', 'ez-e-1-1');
+document.body.append(element);
+```
+
+```html
+<einsatzzeichen-symbol size="64" id-prefix="ez-e-1-1"></einsatzzeichen-symbol>
+```

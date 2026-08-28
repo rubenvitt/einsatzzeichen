@@ -48,6 +48,23 @@
  * Regel hier ist deshalb an eine `.ez-`-Klasse gebunden, außer den Tokenblöcken.
  */
 
+/*
+ * Arimo, selbst ausgeliefert — die einzige mitgelieferte Schrift, und sie gehört nicht dem
+ * Fließtext, sondern den Zeichen: `renderSvg()` schreibt `font-family="Arimo"` in jedes Zeichen
+ * mit Kürzel oder Trägerkürzel (`TEXT_FONT_FAMILY_ATTR` in core). Ohne die Datei setzt der Browser
+ * eine Ersatzschrift mit anderen Vorschubbreiten, und das Kürzel steht nicht mehr da, wo die
+ * Geometrie es vorsieht — die Vorschau zeigte dann etwas anderes als der Katalog rastert.
+ * Die Datei liegt bereits im Repository (`packages/catalog/assets`, Subset, SIL OFL 1.1, im
+ * Quellenregister als `arimo-ofl` geführt); Vite kopiert sie in die Ausgabe. Kein externer Request.
+ */
+@font-face {
+  font-family: 'Arimo';
+  src: url('../../../catalog/assets/Arimo[wght].ttf') format('truetype-variations');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: block;
+}
+
 /* --- Token: Dunkelmodus (Starlights Voreinstellung steht auf `:root`) -------------------- */
 
 :root {
@@ -67,6 +84,7 @@
   --sl-color-hairline-light: var(--sl-color-gray-5);
   --sl-color-hairline: var(--sl-color-gray-6);
 
+  --ez-surface: hsl(220, 11%, 13%);
   --ez-canvas-light: #ffffff;
   --ez-canvas-light-ink: hsl(220, 12%, 12%);
   --ez-canvas-dark: hsl(220, 14%, 8%);
@@ -95,6 +113,9 @@
   --sl-color-hairline-light: var(--sl-color-gray-5);
   --sl-color-hairline: var(--sl-color-gray-5);
   --sl-color-hairline-shade: var(--sl-color-gray-6);
+
+  /* Weiße Karten auf warmem Papiergrund — der Unterschied trägt die Gliederung, kein Schatten. */
+  --ez-surface: #ffffff;
 }
 
 /* --- Token: Satz und Raster -------------------------------------------------------------- */
@@ -275,7 +296,7 @@
   padding: var(--ez-space-4);
   border: 1px solid var(--sl-color-hairline);
   border-radius: var(--ez-radius);
-  background: var(--sl-color-black);
+  background: var(--ez-surface);
 }
 
 a.ez-card {
@@ -319,6 +340,7 @@ a.ez-card:hover .ez-card__title {
   padding: var(--ez-space-4);
   border: 1px solid var(--sl-color-hairline);
   border-radius: var(--ez-radius);
+  background: var(--ez-surface);
 }
 
 .ez-figure__value {
@@ -491,6 +513,7 @@ a.ez-card:hover .ez-card__title {
 
 /* Das einzige Bild der Startseite: ein echtes Zeichen aus dem Katalog, groß. */
 .ez-hero__plate {
+  margin: 0;
   display: flex;
   flex-direction: column;
   gap: var(--ez-space-3);
@@ -520,13 +543,10 @@ a.ez-card:hover .ez-card__title {
 /* --- Belege: Kontaktbögen ------------------------------------------------------------------ */
 
 .ez-sheets {
-  margin-block: var(--ez-space-6);
+  margin-block: var(--ez-space-3);
   border: 1px solid var(--sl-color-hairline);
   border-radius: var(--ez-radius);
-}
-
-.ez-sheets + .ez-sheets {
-  margin-block-start: calc(-1 * var(--ez-space-6) + var(--ez-space-2));
+  background: var(--ez-surface);
 }
 
 .ez-sheets > summary {

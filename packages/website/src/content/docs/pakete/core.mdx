@@ -1,0 +1,68 @@
+---
+title: core
+description: Renderer für SVG und Canvas, Kompositionsmotor, Regelvalidierung und die Gates für Kontrast, viewBox und Textmetrik.
+---
+
+`@einsatzzeichen/core` ist der einzige Renderer des Projekts. Jeder Ausgabekanal — React, Web
+Component, MapLibre, QGIS — geht durch `renderSvg` oder `renderCanvas`, damit aus derselben
+Zeichnung überall dasselbe Bild entsteht. Wer selbst rastert, weicht ab; das ist der Grund für die
+Regel.
+
+Daneben sitzt hier der Kompositionsmotor: `compose()` setzt aus einer `SymbolSpec` und den Ports
+des Katalogs eine `Drawing` zusammen, `validateSpec()` prüft die Spec gegen die
+Validierungsregeln, bevor gezeichnet wird. Und die Gates: Kontrast, viewBox, A11y-Metadaten,
+Textmetrik, Fingerprint-Vergleich gegen die Referenz.
+
+`core` hat **null Fremdabhängigkeiten** und hängt **nie** von `catalog` ab — die Richtung geht
+immer `catalog → core → schema`.
+
+## Installation
+
+<div class="ez-note">
+<span class="ez-note__title">Nicht veröffentlicht</span>
+
+`private: true`, `main` zeigt auf `./src/index.ts`, kein Build-Schritt. Im Workspace:
+
+```json
+{ "dependencies": { "@einsatzzeichen/core": "workspace:*" } }
+```
+
+`core` und `schema` importieren kein `node:*` und laufen deshalb auch im Browser.
+
+</div>
+
+## Hauptexporte
+
+| Export | Was es tut |
+|---|---|
+| `renderSvg(drawing, options)` | SVG als String; `options`: `size`, `idPrefix`, `theme` |
+| `renderCanvas(drawing, ctx, options)` | dieselbe Zeichnung auf einen 2D-Kontext |
+| `rasterDimensionsForWidth(viewBox, width)` | Rastermaße zu einer Zielbreite |
+| `REFERENCE_THEME`, `colorFor`, `RenderTheme` | der Farbvertrag am Rendererrand |
+| `compose(spec, ports, options)`, `CompositionError` | Komposition aus der `SymbolSpec` |
+| `validateSpec(spec)`, `ValidationIssue`, `VALIDATION_RULE_IDS` | Regelprüfung mit Regel-ID je Befund |
+| `analyzeSymbolSpec(spec)` | die aufgelöste Sicht auf eine Spec |
+| `matchFingerprint(...)` | Hüllenvergleich gegen die Referenz, Toleranz 0,01 SVG-Einheiten |
+| `boundsOfMm`, `strokeBoundsOfMm` | Hüllenberechnung in Millimetern |
+| `checkContrast`, `contrastRatio`, `relativeLuminance` | Kontrastgate |
+| `checkViewBox`, `checkA11yMetadata`, `checkTextMetrics`, `checkClipping`, `checkPictogram` | die übrigen Gates |
+| `profileFor(id)`, `placeHead(...)` | Layoutprofile und Kopfzonensetzung |
+
+## Beispiel
+
+```ts
+import { REFERENCE_THEME, renderSvg, validateSpec } from '@einsatzzeichen/core';
+import { composeFromCatalog } from '@einsatzzeichen/catalog';
+import type { SymbolSpec } from '@einsatzzeichen/schema';
+
+const spec: SymbolSpec = { kind: 'formation', organization: 'thw', strength: 'gruppe' };
+
+const issues = validateSpec(spec);
+if (issues.length > 0) throw new Error(issues.map((issue) => issue.rule).join(', '));
+
+const svg = renderSvg(composeFromCatalog(spec), {
+  size: 64,
+  idPrefix: 'ez-bergungsgruppe',
+  theme: REFERENCE_THEME,
+});
+```

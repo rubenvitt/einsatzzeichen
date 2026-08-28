@@ -33,6 +33,8 @@ export default defineConfig({
       defaultLocale: 'root',
       locales: { root: { label: 'Deutsch', lang: 'de' } },
       customCss: ['./src/styles/theme.css'],
+      // Eigener Hero: das Bild der Startseite ist ein echtes Zeichen aus dem Snapshot, kein Asset.
+      components: { Hero: './src/components/Hero.astro' },
       sidebar: [], // Task 11 füllt
     }),
     react(),
