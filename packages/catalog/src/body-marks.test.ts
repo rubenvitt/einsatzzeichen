@@ -1520,6 +1520,88 @@ describe('bodyMark() — LFH-485 Strömungsrettung und getrennte Luftmarken', ()
   });
 });
 
+describe('bodyMark() — LFH-484 Umweltgefahren als eigene technische Composite-Marke', () => {
+  const waterWave = (baselineYMm: number): Primitive => ({
+    type: 'path',
+    role: 'pictogram',
+    d: (() => {
+      const y = (offsetMm: number) => Number((baselineYMm + offsetMm).toFixed(3));
+      return `M 20 ${y(0)} C 19.604 ${y(0)} 19.416 ${y(-0.188)} ` +
+        `19.178 ${y(-0.427)} C 18.923 ${y(-0.682)} 18.605 ${y(-1)} 18.002 ${y(-1)} ` +
+        `C 17.399 ${y(-1)} 17.081 ${y(-0.682)} 16.826 ${y(-0.427)} ` +
+        `C 16.587 ${y(-0.188)} 16.399 ${y(0)} 16.003 ${y(0)} ` +
+        `C 15.606 ${y(0)} 15.417 ${y(-0.188)} 15.179 ${y(-0.427)} ` +
+        `C 14.924 ${y(-0.682)} 14.605 ${y(-1)} 14.002 ${y(-1)} ` +
+        `C 13.398 ${y(-1)} 13.08 ${y(-0.682)} 12.824 ${y(-0.427)} ` +
+        `C 12.586 ${y(-0.188)} 12.398 ${y(0)} 12.001 ${y(0)}`;
+    })(),
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  });
+
+  it('hält die verschmolzene Scheiben-/Schaft-/Klammerkontur und den Wasserteil literal fest', () => {
+    const marks = bodyMark(
+      'formation-hooked-crossed-disks-over-lowered-wave-diamond' as BodyMarkId,
+      formationBodyMm,
+    );
+    expect(marks).toEqual([
+      {
+        type: 'path',
+        role: 'pictogram',
+        d:
+          'M 11.83565 8.150195 C 11.83565 7.460869 12.396212 6.899955 13.085537 6.899955 ' +
+          'C 13.4302 6.899955 13.74276 7.040007 13.96889 7.26649 ' +
+          'L 15.999471 9.296365 L 18.030052 7.26649 ' +
+          'C 18.256535 7.040007 18.568742 6.899955 18.913404 6.899955 ' +
+          'C 19.60273 6.899955 20.163291 7.460869 20.163291 8.150195 ' +
+          'C 20.163291 8.83952 19.60273 9.400434 18.913404 9.400434 ' +
+          'C 18.282993 9.400434 17.76547 8.929478 17.680803 8.321644 ' +
+          'L 16.3526 9.649847 L 19.249248 12.546495 L 19.249248 11.150206 ' +
+          'L 19.749132 11.150206 L 19.749132 13.400214 L 17.499124 13.400214 ' +
+          'L 17.499124 12.899977 L 18.895413 12.899977 L 15.999118 10.003329 ' +
+          'L 13.102823 12.899977 L 14.499113 12.899977 L 14.499113 13.400214 ' +
+          'L 12.249104 13.400214 L 12.249104 11.150206 L 12.748989 11.150206 ' +
+          'L 12.748989 12.546495 L 15.645636 9.649847 L 14.317785 8.321997 ' +
+          'C 14.233119 8.929478 13.715596 9.400434 13.085184 9.400434 ' +
+          'C 12.395859 9.400434 11.835297 8.83952 11.835297 8.150195 Z',
+        style: { fill: 'schwarz', stroke: 'none' },
+      },
+      waterWave(16),
+      waterWave(17.6),
+      {
+        type: 'path',
+        role: 'pictogram',
+        d:
+          'M 16 18.283 L 19.535 21.818 L 16 25.354 L 12.464 21.818 Z ' +
+          'M 16 18.99 L 13.171 21.818 L 16 24.647 L 18.828 21.818 Z',
+        style: { fill: 'schwarz', fillRule: 'evenodd', stroke: 'none' },
+      },
+    ]);
+    expect(boundsOfMm(marks[0]!)).toEqual({
+      minX: 11.835297,
+      minY: 6.899955,
+      maxX: 20.163291,
+      maxY: 13.400214,
+    });
+  });
+
+  it('lehnt die Composite-Marke außerhalb der normalen 30 × 20-mm-Formation ab', () => {
+    const id = 'formation-hooked-crossed-disks-over-lowered-wave-diamond' as BodyMarkId;
+    expect(() => bodyMarkWithContext(
+      id,
+      { kind: 'formation', bodyVariant: 'foot-band' },
+      formationBodyMm,
+    )).toThrow(/nicht vermessen/);
+    expect(() => bodyMarkWithContext(id, { kind: 'vehicle-land' }, landBodyMm)).toThrow(
+      /nicht vermessen/,
+    );
+    expect(() => bodyMarkWithContext(
+      id,
+      { kind: 'formation' },
+      { ...formationBodyMm, maxY: 25.5 },
+    )).toThrow(/30 × 20 mm/);
+  });
+});
+
 describe('bodyMark() — die drei getrennt vermessenen Fahrzeugkörper aus F.2', () => {
   it('setzt die Landfahrzeugteilung auf Dachscheitel, Körpermittellinie und Seitenkanten', () => {
     expect(bodyMarkWithContext(

@@ -141,6 +141,60 @@ export const ANHANG_I_E_RECIPES = {
   },
 } as const satisfies Record<string, Recipe>;
 
+/** I.1.13 bis I.1.16: vier literale Formationen ohne abgeleitete Organisationssemantik. */
+export const ANHANG_I_F_RECIPES = {
+  'I.1.13': {
+    title: 'Trupp Umweltgefahren',
+    referenceAsset: 'I.1.13_Trupp Umweltgefahren.svg',
+    spec: {
+      kind: 'formation',
+      technicalFill: 'weiss',
+      strength: 'trupp',
+      bodyMarks: ['formation-hooked-crossed-disks-over-lowered-wave-diamond'],
+    },
+  },
+  'I.1.14': {
+    title: 'Gruppe Umweltgefahren',
+    referenceAsset: 'I.1.14_Gruppe Umweltgefahren.svg',
+    spec: {
+      kind: 'formation',
+      technicalFill: 'weiss',
+      strength: 'gruppe',
+      bodyMarks: ['formation-hooked-crossed-disks-over-lowered-wave-diamond'],
+    },
+  },
+  'I.1.15': {
+    title: 'Trupp Ölabwehr',
+    referenceAsset: 'I.1.15_Trupp Ölabwehr.svg',
+    spec: {
+      kind: 'formation',
+      technicalFill: 'weiss',
+      strength: 'trupp',
+      bodyMarks: ['formation-water-rescue-lower-zone'],
+      labels: {
+        center: 'Öl',
+        centerBaselineFromBodyBottomMm: 15.45,
+        centerCapHeightMm: 3,
+      },
+    },
+  },
+  'I.1.16': {
+    title: 'Gruppe Ölabwehr',
+    referenceAsset: 'I.1.16_Gruppe Ölabwehr.svg',
+    spec: {
+      kind: 'formation',
+      technicalFill: 'weiss',
+      strength: 'gruppe',
+      bodyMarks: ['formation-water-rescue-lower-zone'],
+      labels: {
+        center: 'Öl',
+        centerBaselineFromBodyBottomMm: 15.45,
+        centerCapHeightMm: 3,
+      },
+    },
+  },
+} as const satisfies Record<string, Recipe>;
+
 /**
  * LFH-485 / Anhang I-g: vier weiße Wasserrettungsformationen. Die Wasserrettungsmarke ist die
  * separat vermessene kompakte Formationsfassung. Dreieckspaar und Winkel bleiben geometrisch
@@ -499,6 +553,7 @@ export const ANHANG_I_RECIPES = {
   ...ANHANG_I_C_RECIPES,
   ...ANHANG_I_D_RECIPES,
   ...ANHANG_I_E_RECIPES,
+  ...ANHANG_I_F_RECIPES,
   ...ANHANG_I_G_RECIPES,
   ...ANHANG_I_B_RECIPES,
   ...ANHANG_I_A_RECIPES,

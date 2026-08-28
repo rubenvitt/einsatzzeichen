@@ -727,6 +727,22 @@ Output-only Sichtprüfung und lokaler Originalvergleich:
 Die vier technischen Reviews sind freigegeben, alle vier fachlichen Domain-Reviews bleiben
 `pending`.
 
+## LFH-484: Umweltgefahren und Ölabwehr aus Anhang I-f
+
+LFH-484 ergänzt genau `I.1.13` bis `I.1.16` als vier weiße Formationsrezepte, ohne aus der
+sichtbaren Fläche eine Organisation abzuleiten. I.1.13/I.1.14 verwenden eine eigene technische
+Composite-Marke aus zwei Scheiben, gekreuzten Schäften mit unteren Klammern, tiefer gesetzten
+Wellen und einer Raute. I.1.15/I.1.16 verwenden die quellenbytegleiche bestehende untere
+Wasserrettungsfassung und setzen den literal vermessenen Text `Öl` auf `y = 10,55 mm`.
+
+Direkte und Mehrgrößen-Snapshots, Manifestzeilen sowie ein korrigierter und deterministisch
+pixelverifizierter output-only Kontaktbogen belegen alle vier Darstellungen. Entscheidung und
+Messgrenze stehen in
+[`docs/decisions/2026-08-28-anhang-i-f.md`](docs/decisions/2026-08-28-anhang-i-f.md), das
+Sichtprotokoll in
+[`docs/reviews/2026-08-28-i-f-visual-qa.md`](docs/reviews/2026-08-28-i-f-visual-qa.md).
+Alle vier Domain-Reviews bleiben `pending`; der Scope wächst nur um diese vier Abschnitte.
+
 ## LFH-418: C.1.3 als erster Anhang-C-Slice
 
 Anhang C umfasst 59 Referenzdarstellungen; C.1.1 und C.1.2 waren bereits im Katalog.

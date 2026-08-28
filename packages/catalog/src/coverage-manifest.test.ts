@@ -77,7 +77,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 540 Zeilen mit 288 Elementdarstellungen', () => {
+  it('enthält exakt 544 Zeilen mit 288 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -107,10 +107,10 @@ describe('Coverage-Manifest', () => {
       // `alternative` — die Zeile zählt einzeln, weil das Manifest Darstellungen zählt und nicht
       // Abschnitte, weil F.1.3 dort noch bewusst offen blieb; F-b baut es mit `foot-band`.
       // F-d ergänzt F.2.10 bis F.2.17 als acht reine Anwendungen des Fahrzeugvertrags.
-      // G ergänzt 21 Rezepte, H drei, I-c, I-d und I-g je vier, I-e fünf, I-b sieben,
+      // G ergänzt 21 Rezepte, H drei, I-c, I-d, I-f und I-g je vier, I-e fünf, I-b sieben,
       // I.3 elf, I-j drei, I-k drei, C.1.3 eins und N neun.
       // Anhang D ergänzt 26 neue Rezepte; D.3.7 bleibt eine Migration desselben Schlüssels.
-      'composition-recipe': 238,
+      'composition-recipe': 242,
       // 269 Piktogramme plus acht Manifest-Organisationen, vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
@@ -118,18 +118,19 @@ describe('Coverage-Manifest', () => {
       // Strichhülle vermessen ist.
       element: 288,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(540);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(544);
     expect(elementRows).toHaveLength(288);
     expect(pictogramRows).toHaveLength(269);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
   });
 
-  it('führt I-d, I-e, I-g, I-b und I.3.1 bis I.3.11 literal mit getrennten Technikreviews', () => {
+  it('führt I-d, I-e, I-f, I-g, I-b und I.3.1 bis I.3.11 literal mit getrennten Technikreviews', () => {
     const reviewGroupByKey = new Map<string, string>([
       ...['I.1.5', 'I.1.6', 'I.1.7', 'I.1.8'].map((key) => [key, 'I-d'] as const),
       ...['I.1.9', 'I.1.9#alternative', 'I.1.10', 'I.1.11', 'I.1.12'].map(
         (key) => [key, 'I-e'] as const,
       ),
+      ...['I.1.13', 'I.1.14', 'I.1.15', 'I.1.16'].map((key) => [key, 'I-f'] as const),
       ...['I.1.17', 'I.1.18', 'I.1.19', 'I.1.20'].map((key) => [key, 'I-g'] as const),
       ...['I.2.1', 'I.2.2', 'I.2.3'].map((key) => [key, 'I-b-land'] as const),
       ...['I.2.4', 'I.2.5', 'I.2.6', 'I.2.7'].map((key) => [key, 'I-b-trailer'] as const),
@@ -142,7 +143,7 @@ describe('Coverage-Manifest', () => {
       return reviewGroupByKey.has(key);
     });
 
-    expect(rows).toHaveLength(31);
+    expect(rows).toHaveLength(35);
     expect(rows.map((entry) => `${entry.sourceId.slice('bbk-babz-2025:'.length)}${entry.variant === 'alternative' ? '#alternative' : ''}`).sort(
       (left, right) => left.localeCompare(right, 'de', { numeric: true }),
     )).toEqual([...reviewGroupByKey.keys()].sort(
@@ -152,6 +153,7 @@ describe('Coverage-Manifest', () => {
     const expectedReviewPhrase = {
       'I-d': 'I.1.5-I.1.8 passed',
       'I-e': 'I.1.9-I.1.12 passed',
+      'I-f': 'I.1.13-I.1.16 passed',
       'I-g': 'I.1.17-I.1.20 passed',
       'I-b-land': 'I.2.1-I.2.3 passed',
       'I-b-trailer': 'I.2.4-I.2.7 passed',
@@ -168,7 +170,7 @@ describe('Coverage-Manifest', () => {
       expect(row.review.technical).toMatchObject({
         status: 'approved',
         reviewer: 'rv',
-        date: '2026-08-27',
+        date: group === 'I-f' ? '2026-08-28' : '2026-08-27',
       });
       expect(row.review.technical.note).toContain(expectedReviewPhrase[group as keyof typeof expectedReviewPhrase]);
       expect(row.review.domain.status).toBe('pending');
@@ -182,6 +184,7 @@ describe('Coverage-Manifest', () => {
     for (const section of [
       'I.1.5', 'I.1.6', 'I.1.7', 'I.1.8',
       'I.1.9', 'I.1.10', 'I.1.11', 'I.1.12',
+      'I.1.13', 'I.1.14', 'I.1.15', 'I.1.16',
       'I.1.17', 'I.1.18', 'I.1.19', 'I.1.20',
       'I.2.1', 'I.2.2', 'I.2.3', 'I.2.4', 'I.2.5', 'I.2.6', 'I.2.7',
     ]) {
@@ -314,6 +317,7 @@ describe('Coverage-Manifest', () => {
     expect(technicalReviewForAnhangI('I.1.9#alternative')).toBe(
       technicalReviewAt('I.1.9', 'alternative'),
     );
+    expect(technicalReviewForAnhangI('I.1.13')).toBe(technicalReviewAt('I.1.13'));
     expect(technicalReviewForAnhangI('I.1.17')).toBe(technicalReviewAt('I.1.17'));
     expect(technicalReviewForAnhangI('I.2.1')).toBe(technicalReviewAt('I.2.1'));
     expect(technicalReviewForAnhangI('I.2.4')).toBe(technicalReviewAt('I.2.4'));
@@ -322,11 +326,12 @@ describe('Coverage-Manifest', () => {
     expect(technicalReviewForAnhangI('I.5.1')).toBe(technicalReviewAt('I.5.1'));
     expect(technicalReviewForAnhangI('I.1.1')).not.toBe(technicalReviewForAnhangI('I.1.5'));
     expect(technicalReviewForAnhangI('I.1.5')).not.toBe(technicalReviewForAnhangI('I.1.9'));
-    expect(technicalReviewForAnhangI('I.1.9')).not.toBe(technicalReviewForAnhangI('I.1.17'));
+    expect(technicalReviewForAnhangI('I.1.9')).not.toBe(technicalReviewForAnhangI('I.1.13'));
+    expect(technicalReviewForAnhangI('I.1.13')).not.toBe(technicalReviewForAnhangI('I.1.17'));
     expect(technicalReviewForAnhangI('I.1.17')).not.toBe(technicalReviewForAnhangI('I.2.1'));
     expect(technicalReviewForAnhangI('I.2.1')).not.toBe(technicalReviewForAnhangI('I.2.4'));
     expect(technicalReviewForAnhangI('I.2.1')).not.toBe(technicalReviewForAnhangI('I.3.1'));
-    for (const section of ['I.1.13', 'I.2.8', 'I.3.12', 'I.4.4']) {
+    for (const section of ['I.1.21', 'I.2.8', 'I.3.12', 'I.4.4']) {
       expect(() => technicalReviewForAnhangI(section), section).toThrow(
         new RegExp(`${section.replaceAll('.', '\\.')}.*zugeordnet`),
       );
@@ -839,6 +844,10 @@ describe('Coverage-Manifest', () => {
       'I.1.10',
       'I.1.11',
       'I.1.12',
+      'I.1.13',
+      'I.1.14',
+      'I.1.15',
+      'I.1.16',
       'I.1.17',
       'I.1.18',
       'I.1.19',
