@@ -9,14 +9,118 @@ import {
   type Primitive,
   type SymbolSpec,
 } from '@einsatzzeichen/schema';
-import { TEXT_FONT_FAMILY, TEXT_FONT_PATH, TEXT_FONT_SHA256, resvgFontOptions } from './fonts.js';
+import {
+  TEXT_FONT_FAMILY,
+  TEXT_FONT_METRICS_PATH,
+  TEXT_FONT_PATH,
+  TEXT_FONT_SHA256,
+  TEXT_FONT_SOURCE_SHA256,
+  resvgFontOptions,
+} from './fonts.js';
+import { readFontHeadMetrics } from './test-support/ttf-tables.js';
 import { RECIPES, composeFromCatalog, type Recipe } from './recipes.js';
 import { FUNCTION_ROLE_DEFINITIONS } from './function-roles.js';
+import { ARIMO_TEXT_METRICS } from './text-metrics.js';
 
 describe('Textschrift', () => {
   it('liegt im Repository und hat die erwartete Prüfsumme', () => {
     const bytes = readFileSync(TEXT_FONT_PATH);
     expect(createHash('sha256').update(bytes).digest('hex')).toBe(TEXT_FONT_SHA256);
+  });
+
+  it('ist ein Subset, kein Austausch: das Original ist eine andere Datei', () => {
+    expect(TEXT_FONT_SHA256).not.toBe(TEXT_FONT_SOURCE_SHA256);
+    expect(TEXT_FONT_SOURCE_SHA256).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('behält die Kopfwerte, aus denen core seine Konstanten ableitet', () => {
+    // core (compose.ts, text-policy.ts) rechnet mit 1409/2048 (Versalhöhe) und 1854/−434
+    // (Ascender/Descender). Ein Subset mit neu berechneten Grenzen (ohne --no-recalc-bounds)
+    // oder eine instanziierte Schrift (ohne wght-Achse) würde hier auffallen, bevor es die
+    // Kontaktbögen tut.
+    const metrics = readFontHeadMetrics(TEXT_FONT_PATH);
+    expect(metrics.unitsPerEm).toBe(2048);
+    expect(metrics.ascender).toBe(1854);
+    expect(metrics.descender).toBe(-434);
+    expect(metrics.capHeight).toBe(1409);
+    // visual-proof.ts setzt font-weight 700 — die Achse muss den Wert erreichen.
+    expect(metrics.axes).toEqual([{ tag: 'wght', min: 400, default: 400, max: 700 }]);
+  });
+
+  it(
+    'deckt den deutschen Prüfvorrat ohne Tofu ab',
+    () => {
+      // `designation` ist ein freier String: Umlaute, ß, typografische Anführungszeichen und
+      // Gedankenstrich sind sicher, Latin-Extended (Ł ć š ž) und € sind die Decke. Jedes Zeichen
+      // wird einzeln gerastert und seine Ink-Signatur mit der des Ersatzzeichens U+FFFD (liegt
+      // im Subset) und der von .notdef (ein Codepoint außerhalb der Range) verglichen — beide
+      // stehen für „fehlt", nicht für ein leeres Glyph.
+      const replacement = glyphInkSignature('\uFFFD');
+      const notdef = glyphInkSignature('\u4E00'); // CJK, bewusst nicht im Subset
+      expect(replacement.count).toBeGreaterThan(0);
+      expect(notdef.count).toBeGreaterThan(0);
+      for (const char of 'ÄÖÜäöüß–„“/0123456789Łćšž€') {
+        const signature = glyphInkSignature(char);
+        expect(signature.count, `U+${char.codePointAt(0)?.toString(16)}`).toBeGreaterThan(0);
+        expect(signature.hash, char).not.toBe(replacement.hash);
+        expect(signature.hash, char).not.toBe(notdef.hash);
+      }
+    },
+    60_000,
+  );
+
+  it('exportiert Metriken, die zur eingecheckten Datei passen', () => {
+    const metrics = JSON.parse(readFileSync(TEXT_FONT_METRICS_PATH, 'utf8')) as {
+      family: string;
+      sourceSha256: string;
+      subsetSha256: string;
+      unitsPerEm: number;
+      ascender: number;
+      descender: number;
+      capHeight: number;
+      defaultWeight: number;
+      advances: Record<string, number>;
+      inkExtents: Record<string, [number, number, number, number]>;
+      kerning: Record<string, Record<string, number>>;
+      maxAdvance: number;
+      notdefAdvance: number;
+    };
+    const head = readFontHeadMetrics(TEXT_FONT_PATH);
+    expect(metrics.family).toBe(TEXT_FONT_FAMILY);
+    expect(metrics.sourceSha256).toBe(TEXT_FONT_SOURCE_SHA256);
+    expect(metrics.subsetSha256).toBe(TEXT_FONT_SHA256);
+    expect(metrics.unitsPerEm).toBe(head.unitsPerEm);
+    expect(metrics.ascender).toBe(head.ascender);
+    expect(metrics.descender).toBe(head.descender);
+    expect(metrics.capHeight).toBe(head.capHeight);
+    expect(metrics.defaultWeight).toBe(400);
+    for (const char of 'ÄÖÜäöüß–„“/0123456789Łćšž€') {
+      expect(metrics.advances, char).toHaveProperty(String(char.codePointAt(0)));
+    }
+    const advances = Object.values(metrics.advances);
+    expect(advances.every((advance) => Number.isInteger(advance) && advance >= 0)).toBe(true);
+    expect(metrics.maxAdvance).toBe(Math.max(...advances));
+    expect(metrics.notdefAdvance).toBeGreaterThan(0);
+    // inkExtents (glyf-Box der Default-Instanz) beschreibt genau dieselben Codepoints wie
+    // advances — ein Anbieter, der Laufweite kennt, aber keine Tintenbox, wäre nur halb nutzbar.
+    expect(Object.keys(metrics.inkExtents).sort()).toEqual(Object.keys(metrics.advances).sort());
+    for (const char of 'ÄÖÜäöüß–„“/0123456789Łćšž€') {
+      const box = metrics.inkExtents[String(char.codePointAt(0))];
+      expect(box, char).toBeDefined();
+      const [xMin, yMin, xMax, yMax] = box as [number, number, number, number];
+      expect(xMin, char).toBeLessThanOrEqual(xMax);
+      expect(yMin, char).toBeLessThanOrEqual(yMax);
+    }
+    // kerning (GPOS `kern`, Default-Instanz) darf nur Codepoints nennen, die das Subset auch
+    // vorschiebt; T→a ist das klassische Paar und in Arimo mit −227 Einheiten unterschnitten.
+    for (const [left, rights] of Object.entries(metrics.kerning)) {
+      expect(metrics.advances, left).toHaveProperty(left);
+      for (const [right, value] of Object.entries(rights)) {
+        expect(metrics.advances, `${left}/${right}`).toHaveProperty(right);
+        expect(Number.isInteger(value) && value !== 0, `${left}/${right}`).toBe(true);
+      }
+    }
+    expect(metrics.kerning[String('T'.codePointAt(0))]?.[String('a'.codePointAt(0))]).toBe(-227);
   });
 
   it('schließt Systemschriften aus', () => {
@@ -81,6 +185,40 @@ function countDarkInkPixels(image: RenderedImage): number {
 }
 
 /**
+ * Rastert ein einzelnes Zeichen bei 256 px mit der Projektschrift und liefert Pixelzahl plus
+ * SHA-256 der Pixel — die „Ink-Signatur". Zwei Zeichen mit gleicher Signatur sind für resvg
+ * dasselbe Glyph; so lässt sich Tofu (Ersatzzeichen oder .notdef) von echter Abdeckung trennen,
+ * ohne die cmap zu parsen.
+ */
+function glyphInkSignature(char: string): { count: number; hash: string } {
+  const svg = renderSvg(
+    {
+      viewBox: { width: 32, height: 32 },
+      children: [
+        {
+          type: 'text',
+          role: 'pictogram',
+          content: char,
+          x: 16,
+          y: 22,
+          sizeMm: 16,
+          anchor: 'middle',
+          baseline: 'alphabetic',
+          boxMm: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 28 },
+          style: { fill: 'schwarz' },
+        },
+      ],
+    },
+    { size: 256 },
+  );
+  const image = new Resvg(svg, { font: resvgFontOptions() }).render();
+  return {
+    count: countDarkInkPixels(image),
+    hash: createHash('sha256').update(image.pixels).digest('hex'),
+  };
+}
+
+/**
  * Katalog-Doppel für die Fußzonen-Ratserprüfungen unten: liefert ausschließlich den Körper der
  * Taktischen Formation aus `base-symbols.ts` (`x:1, y:6, width:30, height:20`), alles andere ist
  * für diese Prüfungen unerheblich und lehnt einen Aufruf explizit ab, statt still einen falschen
@@ -113,6 +251,9 @@ const formationCatalog: CatalogPorts = {
   bodyMark: () => {
     throw new Error('Für diese Prüfung nicht aufgerufen.');
   },
+  // Die echte Laufweitentabelle: die Fußzonenfälle unten sollen genau das Gate passieren,
+  // das `compose()` auch im Katalog anwendet — ein Doppel würde hier die Messung entwerten.
+  textMetrics: ARIMO_TEXT_METRICS,
 };
 
 interface InkAgainstBox {

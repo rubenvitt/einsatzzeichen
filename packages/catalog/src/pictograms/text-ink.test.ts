@@ -15,11 +15,18 @@ import { ALL_PICTOGRAMS, pictogramVariantKey } from './index.js';
  * als offen.
  *
  * Dieser Test schließt sie für den Katalogbestand: er rastert jeden Textlauf einzeln und zählt
- * sichtbare Alpha-/Tintpixel außerhalb seiner deklarierten Box. Er ersetzt kein allgemeines
- * Textmetrik-Gate in `core` — er prüft die Zeichen, die es gibt, nicht die Form an sich.
+ * sichtbare Alpha-/Tintpixel außerhalb seiner deklarierten Box.
  *
- * Warum nicht in `core`: die Rasterung braucht eine Schriftbindung, und die liegt in `catalog`
- * (`fonts.ts`). Die Paketrichtung `catalog → core` bliebe sonst nicht erhalten.
+ * Seit dem 28. August 2026 (LFH-410) steht daneben das allgemeine Textmetrik-Gate in `core`
+ * (`checkTextMetrics`, gespeist aus `ARIMO_TEXT_METRICS`; Katalogbestand in
+ * `../text-metrics.test.ts`): es rechnet die Tinte aus Vorschüben, Kerning und
+ * Glyphen-Bounding-Boxen, ohne zu rastern. Dieser Rastertest bleibt als **unabhängige Evidenz**
+ * bestehen — die Rechnung ist gegen ihn kalibriert (Toleranz ein Rasterpixel bei 8 px/mm), und
+ * ein Schriftwechsel, der die Metrikdatei und die Rasterung auseinanderlaufen ließe, fiele hier
+ * auf, nicht im Gate.
+ *
+ * Warum die Rasterung nicht in `core` liegt: sie braucht eine Schriftbindung, und die liegt in
+ * `catalog` (`fonts.ts`). Die Paketrichtung `catalog → core` bliebe sonst nicht erhalten.
  */
 const RASTER_PX = 512;
 const PX_PER_MM = RASTER_PX / DEFAULT_VIEWBOX_MM.width;

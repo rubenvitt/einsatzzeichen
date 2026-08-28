@@ -8,8 +8,10 @@ import {
 import type { BoundsMm } from './bounds.js';
 import { bodyLabelInk, compose, type CatalogPorts, type ComposeOptions } from './compose.js';
 import { CompositionError } from './validate.js';
-import { ARIMO_CAP_HEIGHT_FRACTION } from './render/text-policy.js';
+import { ARIMO_CAP_HEIGHT_FRACTION, DIACRITIC_HEADROOM_FRACTION } from './render/text-policy.js';
 import { checkViewBox } from './viewbox-gate.js';
+import { uniformTextMetrics } from './test-support/text-metrics-double.js';
+import { checkTextMetrics } from './text-metrics.js';
 
 /** Der Körper der Taktischen Formation, wie `base-symbols.ts` ihn führt. */
 const formationBody: Primitive = {
@@ -57,6 +59,7 @@ const buildingBody: Primitive = {
 /** Katalog-Doppel: liefert ausschließlich das Grundzeichen, alles andere ist für diese Tests
  * unerheblich und lehnt einen Aufruf explizit ab, statt still einen falschen Wert zu liefern. */
 const catalog: CatalogPorts = {
+  textMetrics: uniformTextMetrics(),
   baseDrawing: (kind) => ({
     viewBox: DEFAULT_VIEWBOX_MM,
     children: [kind === 'building' ? buildingBody : formationBody],
@@ -1879,5 +1882,60 @@ describe('compose() — gemessene Funktionsträger', () => {
     expect(thrown).toBeInstanceOf(CompositionError);
     expect((thrown as CompositionError).issues.map((issue) => issue.rule))
       .toContain('function-role-requires-measured-layout');
+  });
+});
+
+describe('compose() — seitliche Box-Grenze der Textläufe (LFH-411)', () => {
+  // Doppel mit 0,5 em je Glyphe: Fußzone 4 mm × 0,5 em = 2 mm je Zeichen in einer 30-mm-Box
+  // (Körper 1…31) — 15 Zeichen passen bündig, 16 nicht. Rechenbar, nicht Arimo.
+  const wideCatalog: CatalogPorts = { ...catalog, textMetrics: uniformTextMetrics(0.5) };
+
+  it('wirft designation-too-wide, wenn die Fußzone breiter als der Körper ist', () => {
+    let thrown: unknown;
+    try {
+      compose({ kind: 'formation', designation: 'Wasserrettungszug' }, wideCatalog);
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(CompositionError);
+    const issues = (thrown as CompositionError).issues;
+    expect(issues.map((issue) => issue.rule)).toEqual(['designation-too-wide']);
+    expect(issues[0]?.message).toContain('34 mm');
+    expect(issues[0]?.message).toContain('30 mm');
+    expect(issues[0]?.message).toContain('"Wasserrettungszug"');
+  });
+
+  it('lässt eine Fußzone durch, die die Körperbreite bündig ausfüllt', () => {
+    const drawing = compose({ kind: 'formation', designation: 'Wasserrettungsz' }, wideCatalog);
+    const foot = drawing.children.find((child) => child.role === 'foot');
+    expect(foot?.type).toBe('text');
+    // Die Fußzone bleibt vertikal, wie sie war: Oberkante um den Diakritika-Zuschlag angehoben.
+    if (foot?.type !== 'text') throw new Error('keine Fußzone');
+    expect(foot.boxMm.yMm).toBeCloseTo(foot.y - foot.sizeMm * DIACRITIC_HEADROOM_FRACTION, 9);
+    expect(checkTextMetrics(drawing, wideCatalog.textMetrics)).toEqual([]);
+  });
+
+  it('wirft label-too-wide für einen zu breiten Beschriftungslauf', () => {
+    let thrown: unknown;
+    try {
+      compose({ kind: 'formation', labels: { center: 'Strömungsrettung' } }, wideCatalog);
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(CompositionError);
+    expect((thrown as CompositionError).issues.map((issue) => issue.rule)).toEqual(['label-too-wide']);
+  });
+
+  it('wirft designation-unknown-glyph für ein Zeichen ohne Vorschub (fail-closed)', () => {
+    const tofuCatalog: CatalogPorts = { ...catalog, textMetrics: uniformTextMetrics(0.25, {}, ['€']) };
+    let thrown: unknown;
+    try {
+      compose({ kind: 'formation', designation: '5 €' }, tofuCatalog);
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(CompositionError);
+    expect((thrown as CompositionError).issues.map((issue) => issue.rule))
+      .toEqual(['designation-unknown-glyph']);
   });
 });

@@ -33,7 +33,8 @@ import {
   MINIMUM_TEXT_RENDER_PX,
   verticalTextBoxMm,
 } from './render/text-policy.js';
-import { analyzeSymbolSpec, CompositionError } from './validate.js';
+import { textRunIssues, type TextMetrics } from './text-metrics.js';
+import { analyzeSymbolSpec, CompositionError, type ValidationIssue } from './validate.js';
 
 /**
  * Ob ein Körper ein Polyzug ist, den die Zeichnung **nicht** schließt. `closed` ist optional; die
@@ -753,6 +754,14 @@ export interface CatalogPorts {
     context: BodyMarkContext,
     bodyBoundsMm: BoundsMm,
   ): readonly Primitive[];
+  /**
+   * Laufweiten der eingebundenen Schrift (LFH-411). `compose()` erzeugt drei Arten von Textläufen
+   * — Fußzone, Beschriftungen, Funktionsrollenläufe — und deklariert für jede eine `boxMm`, die
+   * bis zu diesem Port eine ungeprüfte Zusicherung war. Mit der Metrik prüft `compose()` die
+   * seitliche Grenze schon zur Kompositionszeit (siehe `assertTextRunsFit`), statt sie erst dem
+   * Renderer oder einer Rasterprüfung im Katalog zu überlassen.
+   */
+  textMetrics: TextMetrics;
 }
 
 export interface ComposeOptions {
@@ -856,6 +865,41 @@ function composeBodyMarkPrimitives(groups: readonly (readonly Primitive[])[]): P
   }
 
   return result;
+}
+
+/**
+ * Seitliche Box-Grenze der Textläufe zur Kompositionszeit (LFH-411).
+ *
+ * **Fehler, kein Umbruch, keine Verkleinerung.** Ein zu langer Lauf könnte umbrochen oder im
+ * Schriftgrad gesenkt werden — beides änderte die Geometrie (`y`, `sizeMm`, ggf. mehrere
+ * Primitive) und damit jeden SVG-Snapshot, der den Lauf trägt, und beides träfe eine
+ * gestalterische Entscheidung, die die Vorschrift nicht trifft (Anhang E setzt Kürzel, keine
+ * Fließtexte). Ein Fehler ist die einzige Variante, die den Renderer und die Snapshots unberührt
+ * lässt und den Autor zwingt, das Zeichen zu entscheiden: kürzeres Kürzel, anderes Grundzeichen
+ * oder eine im Katalog belegte Ausnahme.
+ *
+ * Dieselbe Rechnung wie das allgemeine Gate (`textRunIssues`), damit ein Zeichen, das hier
+ * durchkommt, auch `checkTextMetrics` besteht. Die vertikale Box wird hier **nicht** ein zweites
+ * Mal geprüft: `compose()` leitet sie selbst aus `verticalTextBoxMm` ab (Fußzone,
+ * `labelPrimitive`), und die Funktionsrollen-Boxen stehen im Katalog unter dem allgemeinen Gate.
+ */
+function assertTextRunsFit(
+  runs: readonly Primitive[],
+  rulePrefix: 'designation' | 'label' | 'function-role-run',
+  metrics: TextMetrics,
+): void {
+  const issues: ValidationIssue[] = [];
+  for (const run of runs) {
+    if (run.type !== 'text') continue;
+    for (const issue of textRunIssues(run, metrics)) {
+      if (issue.rule === 'text-too-wide' || issue.rule === 'text-outside-box') {
+        issues.push({ rule: `${rulePrefix}-too-wide`, message: issue.detail });
+      } else if (issue.rule === 'unknown-glyph') {
+        issues.push({ rule: `${rulePrefix}-unknown-glyph`, message: issue.detail });
+      }
+    }
+  }
+  if (issues.length > 0) throw new CompositionError(issues);
 }
 
 export function compose(
@@ -1202,6 +1246,12 @@ export function compose(
         minRenderPx: run.minRenderPx,
         style: { fill: functionRoleTextInk(run, bodyFill) },
       }));
+
+  // Seitliche Box-Grenze aller drei Textläufe — nach ihrer Konstruktion, vor der Ausgabe. Die
+  // Reihenfolge nennt zuerst den Lauf, den der Autor am ehesten selbst gesetzt hat.
+  assertTextRunsFit(footPrimitives, 'designation', catalog.textMetrics);
+  assertTextRunsFit(labelChildren, 'label', catalog.textMetrics);
+  assertTextRunsFit(roleTextPrimitives, 'function-role-run', catalog.textMetrics);
 
   if (roleDefinition !== undefined) {
     return {

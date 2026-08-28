@@ -57,3 +57,13 @@ export function fingerprintFor(asset: string): FingerprintLike {
   }
   return found;
 }
+
+/**
+ * Alle Dateinamen des Kennwertartefakts in Artefaktreihenfolge. Das ist das **Referenzinventar**:
+ * `pnpm cli audit:reference` legt je Datei des Referenzbestands genau einen Eintrag ab, und es
+ * gibt keine zweite Liste der 661 Dateien im Repository. `reference-inventory.ts` rechnet
+ * dagegen auf, ob jede Datei beansprucht oder begründet ausgeschlossen ist.
+ */
+export function referenceInventoryAssets(): string[] {
+  return [...index.keys()];
+}

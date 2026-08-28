@@ -3,9 +3,13 @@ import {
   COVERAGE_MANIFEST,
   SOURCE_REGISTRY,
   checkCoverage,
+  generativeReach,
   profileFor,
+  referenceInventory,
   releaseBlockers,
+  ruleCoverage,
   sortedDomainReviewOpenByArea,
+  validationRuleCoverage,
 } from '@einsatzzeichen/catalog';
 
 function counted(count: number, singular: string, plural: string): string {
@@ -106,6 +110,53 @@ export function coverage(): void {
   for (const chapter of blockers.uncoveredScope) {
     console.log(`  Kapitel im beanspruchten Umfang ohne Eintrag: ${chapter}`);
   }
+
+  // Die drei Achsen aus §7 der Slice-1-Spezifikation, im Betrieb sichtbar und nicht nur im
+  // Test. Nur die Referenzabdeckung ist ein Gate — ihre Verstöße laufen oben über `violations`
+  // und führen zu Exit 1; die beiden anderen sind Metriken über den Ausbaustand.
+  const inventory = referenceInventory();
+  const excluded = inventory.excludedByDisposition;
+  console.log(
+    `Referenzabdeckung:   ${inventory.claimed}/${inventory.total} Dateien beansprucht; ` +
+      `${inventory.total - inventory.claimed} nicht — ${inventory.outOfScope} außerhalb des Umfangs, ` +
+      `${excluded.example} Beispielanwendungen, ${excluded['overview-sheet']} Übersichtsblatt, ` +
+      `${excluded.deferred} zurückgestellt, ${inventory.unaccounted.length} nicht zugeordnet`,
+  );
+  if (inventory.unaccounted.length > 0) {
+    console.log(`  Nicht zugeordnet:  ${inventory.unaccounted.join(', ')}`);
+  }
+
+  const axes = ruleCoverage();
+  const complete = axes.filter((axis) => axis.missing.length === 0);
+  const rules = validationRuleCoverage();
+  console.log(
+    `Regelabdeckung:      ${complete.length}/${axes.length} Achsen vollständig belegt; ` +
+      `${rules.total} Validierungsregeln (Testfall je Regel durch core-Test erzwungen)`,
+  );
+  const gaps = axes.filter((axis) => axis.missing.length > 0);
+  if (gaps.length > 0) {
+    console.log(
+      `  Achsen mit Lücke:  ${gaps
+        .map((axis) => `${axis.id} ${axis.exercised.length}/${axis.values.length} (${axis.missing.join(', ')})`)
+        .join('; ')}`,
+    );
+  }
+
+  const reach = generativeReach();
+  console.log(
+    `Generative Reichweite (Stufe 1): ${reach.valid} gültige Kompositionen aus kind × ` +
+      'Körpervariante × Organisation × Kopfzone × Fahrwerk, davon ' +
+      `${reach.referenced} in der Referenz belegt — ${reach.reachOnly} erzeugbar ohne ` +
+      'Referenzbeleg (dokumentiert, kein Gate); nicht enumeriert: ' +
+      reach.notEnumerated
+        .map((axis) =>
+          axis.id === 'capabilities' ? `${axis.size} Fähigkeiten`
+            : axis.id === 'bodyMarks' ? `${axis.size} Körpermarken`
+              : axis.id === 'functionRole' ? `${axis.size} Funktionsrollen`
+                : 'freie Bezeichnung',
+        )
+        .join(', '),
+  );
 
   if (
     duplicates.length > 0 ||
