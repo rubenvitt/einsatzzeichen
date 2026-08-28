@@ -10,6 +10,10 @@ import { loadSnapshot } from '../../lib/snapshot';
 export const snapshot = loadSnapshot();
 export const coverage = snapshot.coverage;
 export const referenceAxis = coverage.axes.find((axis) => axis.label === 'Referenzabdeckung');
+// `of` ist bei der Achse „Regelabdeckung" bereits `ruleCoverage().length` (snapshot-build.ts,
+// `coverageAxes()`) — dieselbe Zahl, die ein eigenes `ruleAxisCount`-Feld liefern würde, nur ohne
+// ein zweites Feld, das mit der ersten Zahl auseinanderlaufen könnte.
+export const ruleAxis = coverage.axes.find((axis) => axis.label === 'Regelabdeckung');
 
 Der Katalog misst seinen Ausbaustand auf drei unabhängigen Achsen. Nur eine davon ist ein Gate;
 die anderen beiden sind Kennzahlen über den Stand, kein Fehlerabbruch. Alle drei Zahlen unten
@@ -23,9 +27,9 @@ Gründe zutrifft, als nicht zugeordnet gemeldet. Das ist die einzige der drei Ac
 Gate läuft: eine nicht zugeordnete Datei lässt `pnpm cli coverage` mit Exit 1 scheitern.
 
 **Regelabdeckung** stellt den Werteraum aus dem Schema gegen das, was der Katalog tatsächlich
-belegt — über 16 Achsen von `SymbolSpec` (Organisation, Stärke, Fahrwerk, Körpermarken und
-weitere) und die Piktogrammräume, die nicht Teil von `SymbolSpec` sind. Belegt heißt: ein
-Rezept, ein Katalogeintrag oder ein Element trägt den Wert. Dazu die Zahl der
+belegt — insgesamt {ruleAxis?.of} Achsen: `SymbolSpec`-Felder wie Organisation, Stärke, Fahrwerk
+und Körpermarken, dazu die Piktogrammräume, die nicht Teil von `SymbolSpec` sind. Belegt heißt:
+ein Rezept, ein Katalogeintrag oder ein Element trägt den Wert. Dazu die Zahl der
 Validierungsregeln in `core` — für jede erzwingt ein core-Test einen eigenen Testfall. Auch
 diese Achse ist reine Kennzahl, kein Gate.
 
@@ -45,10 +49,11 @@ technischen und einem eigenen fachlichen Reviewstatus (`domain-reviews.ts`). Ein
 Referenzabdeckung, Regelabdeckung oder generative Reichweite sagt, dass der Katalog technisch
 das tut, was er behauptet. Sie sagt nichts darüber, ob ein Fachmensch aus Feuerwehr, THW oder
 Rettungsdienst das Zeichen für richtig hält. Der Status der fachlichen Grundlage selbst ist
-offen: Der AFKzV hob in seiner 57. Sitzung am 13./14.03.2025 die vorläufige Anwendung der
-Empfehlungen auf, Veröffentlichung und Verbreitung sind bis zum Abschluss der Beratungen
-ausgesetzt. Unten stehen die {coverage.blockers.length} offenen Punkte für Release 1.0 und die
-offenen fachlichen Reviews je Bereich, mit Schlüssel — nicht nur als Zahl.
+offen — der vollständige Wortlaut steht auf [Grundlage](/grundlage). Kurz und in eigenen
+Worten: die vorläufige Anwendung der Empfehlungen ist aufgehoben, Veröffentlichung und
+Verbreitung sind bis zum Abschluss der Beratungen ausgesetzt. Unten stehen die
+{coverage.blockers.length} offenen Punkte für Release 1.0 und die offenen fachlichen Reviews je
+Bereich, mit Schlüssel — nicht nur als Zahl.
 
 ## Manifestmatrix
 
