@@ -1,0 +1,81 @@
+---
+title: Zeichen in eigene Software einbauen
+description: Für Entwicklerinnen und Entwickler — die acht Pakete, die vier Ausgabewege und der kürzeste Weg zum ersten Zeichen auf dem Bildschirm.
+---
+
+import { loadSnapshot } from '../../../lib/snapshot';
+
+export const snapshot = loadSnapshot();
+
+Diese Seite richtet sich an Menschen, die Software bauen. Wer selbst nicht programmiert, aber ein
+Zeichen in eine Anwendung bekommen möchte, kann sie einer entwickelnden Person weiterreichen — sie
+findet hier alles, was sie braucht, und die [übrigen Anleitungen](/anleitungen/) beschreiben die
+Wege ohne Programmierung.
+
+## Der Kern in einem Satz
+
+Aus einer semantischen Beschreibung eines Zeichens (`SymbolSpec`) wird über einen
+Kompositionsmotor eine Zeichnung (`Drawing`), und aus der Zeichnung ein SVG. Alle Längen sind
+Millimeter; umgerechnet wird erst am Renderer.
+
+```ts
+import { composeFromCatalog, RECIPES } from '@einsatzzeichen/catalog';
+import { renderSvg } from '@einsatzzeichen/core';
+
+const recipe = RECIPES['E.1.1'];
+const svg = renderSvg(composeFromCatalog(recipe.spec, recipe.title), { size: 64 });
+```
+
+Vollständige, lauffähige Beispiele in allen vier Kanälen stehen im
+[Quickstart](/quickstart/); sie werden aus derselben Vorlage erzeugt wie die Beispiele auf jeder
+Zeichenseite und können daher nicht veralten.
+
+## Die vier Ausgabewege
+
+| Weg | Paket | Kernaufruf |
+|---|---|---|
+| TypeScript, ohne Rahmenwerk | `@einsatzzeichen/core` | `renderSvg(drawing, { size, theme, idPrefix })` |
+| React | `@einsatzzeichen/react` | `<Einsatzzeichen drawing={drawing} size={64} />` |
+| Web Component | `@einsatzzeichen/web-component` | `defineEinsatzzeichenElement()`, dann `<einsatzzeichen-symbol>` |
+| Karte | `@einsatzzeichen/maplibre` | `addSymbolImage(map, id, drawing, { size, pixelRatio })` |
+
+`@einsatzzeichen/react` bringt zusätzlich `useEinsatzzeichenSvg(drawing, options)`, wenn du das
+Markup selbst platzieren willst. Das Web-Component-Element beobachtet `size` und `id-prefix`;
+`defineEinsatzzeichenElement()` ist idempotent und lässt sich gefahrlos mehrfach aufrufen.
+
+## Die acht Pakete
+
+| Paket | Wofür |
+|---|---|
+| [`schema`](/pakete/schema/) | Typen, Palette, Millimeter-Helfer (`mmToUnits`, `unitsToMm`) |
+| [`core`](/pakete/core/) | Renderer, Kompositionsmotor, Regelvalidierung, Kontrast- und viewBox-Gates |
+| [`catalog`](/pakete/catalog/) | die Zeichen selbst: Grundzeichen, Rezepte, Themes, Quellenregister |
+| [`react`](/pakete/react/) | React-Komponente und Hook |
+| [`web-component`](/pakete/web-component/) | Custom Element ohne Rahmenwerk |
+| [`maplibre`](/pakete/maplibre/) | Zeichen als Bild im Kartenstil |
+| [`qgis`](/pakete/qgis/) | Stilbibliothek und SVG-Verzeichnis für QGIS |
+| [`cli`](/pakete/cli/) | `coverage`, `export`, `audit:reference`, `verify:repository`, `review-dossier`, `visual-proof` |
+
+Alle Pakete sind `private: true` und zeigen mit `main` auf `./src/index.ts`; es gibt keinen
+Build-Schritt und keine Veröffentlichung auf einer Registry. Im Workspace läuft die Einbindung
+über `workspace:*`.
+
+## Zwei Fallstricke
+
+**`@einsatzzeichen/catalog` ist nicht browsertauglich, wenn er über den Index geladen wird.**
+`fonts.ts` importiert `node:url`, und der Index re-exportiert es. Im Browser läuft deshalb
+entweder ein Subpfad-Import oder — wie auf dieser Website — eine zur Bauzeit erzeugte Datendatei.
+`core`, `schema`, `react`, `web-component` und `maplibre` sind frei von `node:*`.
+
+**Die Schrift gehört zum Zeichen.** `renderSvg()` schreibt `font-family="Arimo"` in jedes Zeichen
+mit Kürzel. Ohne ausgelieferte Schriftdatei setzt der Browser eine Ersatzschrift mit anderen
+Vorschubbreiten, und das Kürzel steht nicht mehr dort, wo die Geometrie es vorsieht. Das Subset
+liegt in `packages/catalog/assets` (SIL OFL 1.1).
+
+## Was du in deiner Oberfläche mitführen solltest
+
+Zu jedem der {snapshot.symbols.length} Zeichen gehören zwei Prüfstände. Der technische ist
+durchgehend belegt, der fachliche steht bei keinem einzigen Zeichen auf „geprüft“. Wer die Zeichen
+in einer Anwendung anzeigt, sollte diesen Stand mit anzeigen und nicht wegoptimieren — er ist die
+zentrale Aussage des Projekts, nicht eine Fußnote. Die Daten dafür stehen je Zeichen im
+Katalog; den Gesamtstand zeigt der [Stand der Prüfung](/coverage/).

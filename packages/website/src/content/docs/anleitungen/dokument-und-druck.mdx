@@ -1,0 +1,105 @@
+---
+title: Ein Zeichen in ein Dokument setzen oder drucken
+description: SVG in Word, PowerPoint oder LibreOffice einfügen, die richtige Größe wählen — und was heute für den Schwarz-Weiß-Druck möglich ist.
+---
+
+import { loadSnapshot } from '../../../lib/snapshot';
+
+export const snapshot = loadSnapshot();
+
+Für eine Unterlage, eine Präsentation, ein Merkblatt oder eine Legende brauchst du nur eine Datei
+und drei Klicks. Wichtig ist vor allem, die richtige Datei zu nehmen — sonst wird das Zeichen im
+Druck unscharf.
+
+## Schritt für Schritt
+
+1. Hol dir das Zeichen als **SVG**. Wie das geht, steht unter
+   [Ein Zeichen herunterladen](/anleitungen/herunterladen/). Nimm SVG und nicht PNG: SVG bleibt in
+   jeder Größe scharf, auch im Druck.
+
+2. Füge die Datei ein:
+
+   - **Word und PowerPoint:** *Einfügen → Bilder → Dieses Gerät*, dann die `.svg`-Datei wählen.
+     Aktuelle Fassungen von Microsoft 365 und Office nehmen SVG direkt an. Meldet dein Word, es
+     kenne das Format nicht, ist es zu alt — dann nimm das PNG.
+   - **LibreOffice Writer und Impress:** *Einfügen → Bild*, dann die `.svg`-Datei wählen.
+   - **Google Docs und Slides** nehmen kein SVG an; dort brauchst du das PNG.
+
+3. Zieh das Zeichen auf die gewünschte Größe — aber **immer an einer Ecke**, nie an einer Kante.
+   An der Kante gezogen wird das Zeichen verzerrt, und ein verzerrtes taktisches Zeichen ist ein
+   falsches Zeichen.
+
+4. Gib die Größe lieber als Zahl ein als mit der Maus. In Word und LibreOffice findest du sie
+   unter den Bildeigenschaften; Breite und Höhe müssen gleich bleiben.
+
+## Welche Größe?
+
+Alle Zeichen dieses Katalogs sind quadratisch und in **32 × 32 Millimetern** vermessen — das ist
+ihre natürliche Größe, gut 3 Zentimeter Kantenlänge. In dieser Größe eingefügt stimmen
+Strichstärken und Schriftgrößen genau so, wie sie gemessen wurden.
+
+Kleiner geht, aber nicht beliebig: unter etwa 15 Millimetern werden Kürzel in der Fußzone auf
+Papier schwer lesbar. Größer geht ohne Grenze — das SVG wird nicht unscharf.
+
+Ein praktischer Anhalt:
+
+- **Legende oder Fließtext:** 8 bis 12 Millimeter, ohne Kürzel.
+- **Tabelle, Merkblatt, Handout:** 15 bis 25 Millimeter.
+- **Präsentationsfolie, Wandkarte:** 32 Millimeter und mehr.
+
+## Schwarz-Weiß-Druck
+
+Es gibt eine eigene Farbfassung für den Schwarz-Weiß-Druck. Sie ersetzt die Organisationsfarben
+durch abgestufte Grauwerte, die sich auch dann noch unterscheiden lassen, wenn keine Farbe mehr da
+ist — anders als ein einfach entfärbtes Farbbild, bei dem Rot und Grün zum selben Grau werden.
+
+**Heute lässt sich diese Fassung nicht direkt von der Zeichenseite herunterladen.** Zwei Wege gibt
+es trotzdem:
+
+- Auf der Seite [Belege](/belege/) liegt zu jeder Zeichnung ein Bogen, der sie unten auch in der
+  Schwarz-Weiß-Fassung zeigt. Rechtsklick, „Bild speichern unter …“ — dann hast du den ganzen
+  Bogen als Datei und kannst den unteren Teil ausschneiden.
+- Oder du bittest jemanden, der das Projekt bauen kann, um einen Export in dieser Fassung. Das ist
+  ein einziges Kommando; es steht im nächsten Abschnitt.
+
+<div class="ez-note">
+<span class="ez-note__title">Was in der Unterlage danebenstehen sollte</span>
+
+Keines der {snapshot.symbols.length} Zeichen ist fachlich freigegeben. Wenn die Unterlage in
+Ausbildung oder Einsatzvorbereitung geht, gehört ein Satz dazu, woher die Zeichen stammen und dass
+ihre fachliche Prüfung aussteht. Der Wortlaut zur Grundlage steht auf der
+Seite [Grundlage](/grundlage/).
+
+</div>
+
+## Für Entwicklerinnen und Entwickler
+
+Ein vollständiger Export in der Druckfassung, eine SVG-Datei je Zeichen:
+
+```bash
+pnpm cli export --out out/druck --size 128 --theme print-monochrome
+```
+
+`--theme` nimmt `reference`, `accessible-light` und `print-monochrome`
+(`packages/cli/src/index.ts`). Einzeln:
+
+```ts
+import { PRINT_MONOCHROME_THEME } from '@einsatzzeichen/catalog';
+import { renderSvg } from '@einsatzzeichen/core';
+
+const svg = renderSvg(drawing, { theme: PRINT_MONOCHROME_THEME });
+```
+
+Ohne `size` trägt das SVG keine Pixelmaße, sondern nur seine `viewBox` in Millimetern — richtig
+für alles, was selbst skaliert (Satzprogramm, QGIS, CSS). Mit `size` bekommt es eine feste
+Pixelbreite.
+
+Die Millimeterregel gilt im ganzen Projekt: alle Längen in der Zwischendarstellung und im Katalog
+sind Millimeter, umgerechnet wird erst an der Renderergrenze mit `1 mm = 72 / 25.4` SVG-Einheiten
+über `mmToUnits`/`unitsToMm` aus `@einsatzzeichen/schema`. Die `viewBox` jedes Zeichens ist
+32 × 32 mm.
+
+Die Grauwerte der Druckfassung sind nicht frei gewählt, sondern auf Kontrast gerechnet: jeder
+Organisationswert hält einen Mindestabstand zu den übrigen und erreicht gegen weiße wie schwarze
+Schrift mindestens 4,5:1 (`packages/catalog/src/render-themes.ts`). Ein selbst entsättigtes
+Farb-SVG erreicht das nicht.

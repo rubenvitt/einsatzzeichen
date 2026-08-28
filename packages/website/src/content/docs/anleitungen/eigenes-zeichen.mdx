@@ -1,0 +1,101 @@
+---
+title: Ein Zeichen selbst zusammensetzen
+description: Im Baukasten aus Grundzeichen, Organisation, Stärke und Fähigkeiten ein Zeichen bauen, lesen warum eine Kombination abgelehnt wird, und das Ergebnis mitnehmen.
+---
+
+import { loadSnapshot } from '../../../lib/snapshot';
+
+export const snapshot = loadSnapshot();
+
+Nicht jedes Zeichen, das ihr braucht, steht im Katalog. Im [Baukasten](/builder/) setzt du eines
+aus seinen Bestandteilen zusammen — Grundzeichen, Organisation, Stärke, Fähigkeiten — und siehst
+sofort, wie es aussieht.
+
+Der Baukasten prüft dabei mit: {snapshot.ruleIds.length} Regeln beschreiben, welche Bestandteile
+zusammenpassen. Verstößt deine Zusammenstellung gegen eine davon, steht in Klartext daneben,
+welche Regel das ist und warum es sie gibt. Du musst die Regeln also nicht kennen — du lernst sie
+beim Bauen.
+
+## Schritt für Schritt
+
+1. Öffne den [Baukasten](/builder/).
+
+2. Fang nicht bei null an. Ganz oben steht **Aus dem Katalog laden**: wähle dort ein Zeichen, das
+   deinem Ziel nahekommt. Alle Felder springen auf dessen Werte, und du änderst nur, was anders
+   sein soll. Von der Seite eines Zeichens führt dich die Schaltfläche **Im Baukasten öffnen**
+   direkt mit diesem Zeichen hierher.
+
+3. Stelle die Felder ein, die dein Zeichen beschreiben:
+
+   - **Grundzeichenart** — die Grundform, auf der alles aufsetzt.
+   - **Körpervariante** — die Ausprägung dieser Grundform.
+   - **Organisation** — Feuerwehr, THW und die übrigen; sie bestimmt die Farbe.
+   - **Technische Füllung** — eine Füllung ohne Organisationsbezug, wenn keine Organisation gemeint
+     ist.
+   - **Stärke** — die Größe der Einheit.
+   - **Funktionsfassung** und **Verwaltungsstufe** — Führungsfunktion und Ebene.
+   - **Technische Kopfmarke** und **Fahrzeugkategorie** — Marken in der Kopfzone.
+
+4. Trag unter **Beschriftung (Fußzone)** ein Kürzel ein, wenn das Zeichen eines tragen soll. Es
+   erscheint unter dem Zeichen.
+
+5. Wähle unter **Fähigkeiten** und **Körpermarken** aus, was zusätzlich hinein soll. Fähigkeiten
+   erscheinen als Piktogramme in der Standardbox, Körpermarken randbündig über der Körperfläche.
+   Beides sind Mehrfachauswahlen: klicke eine gewählte Marke an, um sie wieder zu entfernen.
+
+6. Sieh dir das Ergebnis an. Der Baukasten zeigt es in drei Größen — 32, 64 und 128 Bildpunkte —
+   und auf hellem wie dunklem Untergrund, damit du beurteilen kannst, ob es klein noch lesbar ist.
+
+7. Ist etwas nicht erlaubt, verschwindet die Vorschau nicht wortlos. Stattdessen steht dort, gegen
+   welche Regel die Zusammenstellung verstößt, was diese Regel bedeutet und welche Kennung sie
+   trägt. Ändere ein Feld, und die Prüfung läuft sofort neu.
+
+8. Nimm das Ergebnis mit: die Adresse in der Adresszeile des Browsers trägt deine Zusammenstellung
+   in sich. Kopiere sie, und wer den Link öffnet, sieht genau dein Zeichen — nichts wird auf einem
+   Server gespeichert.
+
+Ganz unten unter den Feldern steht ein Knopf, der alles auf den Anfangszustand zurücksetzt, falls
+du dich verrannt hast.
+
+## Warum eine Kombination abgelehnt wird
+
+Die Regeln sind keine Willkür des Programms. Sie halten fest, was in der Vorlage zusammenpasst —
+etwa dass eine bestimmte Marke nur in einer bestimmten Zone stehen darf, oder dass zwei Angaben
+sich gegenseitig ausschließen. Ein Zeichen, das gegen eine solche Regel verstößt, wäre kein
+schwieriges Zeichen, sondern ein falsches.
+
+Zu jeder Regel steht eine Erklärung bereit; keine bleibt eine bloße Kennung. Findest du eine
+Meldung ohne Erklärung, ist das eine Lücke im Projekt und kein Fehler von dir — die Seite sagt das
+dann auch ausdrücklich.
+
+<div class="ez-note">
+<span class="ez-note__title">Grün heißt hier nur: keine Regel verletzt</span>
+
+Wenn der Baukasten dein Zeichen zeichnet, heißt das, dass die Zusammenstellung keiner der
+{snapshot.ruleIds.length} Regeln widerspricht. Es heißt **nicht**, dass die Bedeutungskombination
+fachlich belegt oder in der Praxis üblich ist. Ein fachliches Review gibt es nur für die Zeichen
+im Katalog — und auch dort steht es aus.
+
+Ein selbst gebautes Zeichen ist ein Entwurf. Für eine verbindliche Verwendung gehört es einer
+fachkundigen Person vorgelegt.
+
+</div>
+
+## Für Entwicklerinnen und Entwickler
+
+Der Baukasten ist ein Formular über die Felder der `SymbolSpec`. Bei jeder Änderung läuft
+`validateSpec()`; die gefundenen Verstöße tragen eine Regel-ID, die über
+`src/lib/rule-explanations.ts` auf einen Satz in Klarsprache abgebildet wird. Ein Test verlangt,
+dass jede ID aus `VALIDATION_RULE_IDS` dort einen Eintrag hat — deshalb bleibt keine Meldung
+unerklärt.
+
+Ist die Spec gültig, komponiert `compose()` die Zeichnung, und die Seite zeigt daneben die Spec
+als JSON zum Kopieren sowie vier Codebeispiele (TypeScript, React, Web Component, MapLibre) aus
+derselben Vorlage, aus der auch der Quickstart und die Zeichenseiten sie erzeugen
+(`src/lib/code-samples.ts`).
+
+Der Zustand steht als `?spec=` in der Adresse: base64url-kodiertes JSON ohne Füllzeichen.
+Geschrieben wird entprellt über `history.replaceState`, weil Safari bei zu häufigem Schreiben
+wirft; ein Link mit unlesbarem Wert setzt den Baukasten auf die Startspec zurück und sagt, was er
+nicht lesen konnte. `CompositionError` erscheint als Regelliste, jede andere Ausnahme als
+sichtbarer Fehlerblock — nichts wird verschluckt.
