@@ -8,7 +8,7 @@ Validator identity: the system `skill-creator` `quick_validate.py`.
 
 ```sh
 # CLICKUP_DEV_VALIDATOR is set by the invoking environment to that system validator.
-mise exec -- python "$CLICKUP_DEV_VALIDATOR" .agents/skills/clickup-dev
+rtk mise exec -- python "$CLICKUP_DEV_VALIDATOR" .agents/skills/clickup-dev
 ```
 
 Result: `Skill is valid!`.
