@@ -16,7 +16,8 @@ Ausgeschlossen: Änderungen außerhalb des vereinbarten Lieferumfangs.
 
 ## Abhängigkeiten
 
-Zugeordneter Parent-Task sowie live verifizierter Ziel-Branch und Lieferumfang.
+Zugeordneter Parent-Task sowie Ziel-Branch und Lieferumfang. Diese Werte vor der ersten
+einschlägigen Mutation live verifizieren und hier mit dem tatsächlichen Nachweis ergänzen.
 
 ## Verifikation
 

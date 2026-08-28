@@ -294,7 +294,12 @@ veröffentlichbaren Workflow-/Eval-Screenshot.
   rtk bash -c 'clickup_dev_abs_path="/""Users/"
   clickup_dev_private_project="taktische""-zeichen"
   rtk rg -n "TODO|TBD|FIXME|PLACEHOLDER|${clickup_dev_abs_path}|${clickup_dev_private_project}" \
-    .agents/skills/clickup-dev'
+    .agents/skills/clickup-dev
+  clickup_dev_rg_status=$?
+  case "$clickup_dev_rg_status" in
+    1) exit 0 ;;
+    *) exit 1 ;;
+  esac'
   rtk wc -w .agents/skills/clickup-dev/SKILL.md
   ```
 
@@ -381,9 +386,14 @@ Bild-Agent darf nur Renderer und Bildartefakt besitzen.
   rtk bash -c 'clickup_dev_abs_path="/""Users/"
   clickup_dev_private_project="taktische""-zeichen"
   clickup_dev_private_svg="BA""BZ.*\\.svg"
-  if rtk rg -n "${clickup_dev_abs_path}|${clickup_dev_private_project}|${clickup_dev_private_svg}" \
+  rtk rg -n "${clickup_dev_abs_path}|${clickup_dev_private_project}|${clickup_dev_private_svg}" \
     docs/reviews/2026-08-28-clickup-dev-evals.md \
-    .agents/skills/clickup-dev; then exit 1; else exit 0; fi'
+    .agents/skills/clickup-dev
+  clickup_dev_rg_status=$?
+  case "$clickup_dev_rg_status" in
+    1) exit 0 ;;
+    *) exit 1 ;;
+  esac'
   ```
 
   Expected: PNG 1600×1200; Hash vorhanden; Privacy-Scan ohne Treffer. Öffne das PNG mit dem
@@ -435,9 +445,14 @@ Bild-Agent darf nur Renderer und Bildartefakt besitzen.
   rtk bash -c 'clickup_dev_abs_path="/""Users/"
   clickup_dev_private_project="taktische""-zeichen"
   clickup_dev_private_marker="BE""GIN .*PRIVATE"
-  if rtk rg -n "${clickup_dev_abs_path}|${clickup_dev_private_project}|${clickup_dev_private_marker}" \
+  rtk rg -n "${clickup_dev_abs_path}|${clickup_dev_private_project}|${clickup_dev_private_marker}" \
     .agents/skills/clickup-dev \
-    docs/reviews/2026-08-28-clickup-dev-evals.md; then exit 1; else exit 0; fi'
+    docs/reviews/2026-08-28-clickup-dev-evals.md
+  clickup_dev_rg_status=$?
+  case "$clickup_dev_rg_status" in
+    1) exit 0 ;;
+    *) exit 1 ;;
+  esac'
   ```
 
   Expected: nur Spec, Pläne, fünf Skilldateien, Evalnotiz und Workflow-PNG; kein Privacy-Treffer.
