@@ -52,6 +52,10 @@ Rasterer in `core`:
   `function-role-run-too-wide`. **Fehler, kein Umbruch, keine Verkleinerung:** Umbruch und
   Verkleinerung änderten Geometrie und damit 256 SVG-Snapshots und 526 Kontaktbögen; ein Fehler
   lässt Renderer und Snapshots unberührt und zwingt den Autor, das Zeichen zu entscheiden.
+  Zur Kompositionszeit wird nur die Breite erzwungen (`text-too-wide`, `text-outside-box`,
+  `unknown-glyph`); die vertikale Box leitet `compose()` selbst aus `verticalTextBoxMm` ab, und
+  die vertikale Prüfung der Funktionsrollen-Boxen trägt das allgemeine Gate über alle
+  Renderfälle.
 - Der Katalog liefert `ARIMO_TEXT_METRICS` aus `packages/catalog/assets/arimo-metrics.json`
   (Laufzeitvalidierung wie bei `fingerprints.json`). Die Datei ist ein Generat aus der Schriftdatei
   (siehe Subsetting) — Advances, Glyphboxen und GPOS-`kern`-Paare der Default-Instanz.

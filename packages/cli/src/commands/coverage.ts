@@ -145,9 +145,10 @@ export function coverage(): void {
   const reach = generativeReach();
   console.log(
     `Generative Reichweite (Stufe 1): ${reach.valid} gültige Kompositionen aus kind × ` +
-      'Körpervariante × Organisation × Kopfzone × Fahrwerk, davon ' +
+      `Körpervariante × Organisation × Kopfzone × Fahrwerk (${reach.enumerated} enumeriert), davon ` +
       `${reach.referenced} in der Referenz belegt — ${reach.reachOnly} erzeugbar ohne ` +
-      'Referenzbeleg (dokumentiert, kein Gate); nicht enumeriert: ' +
+      `Referenzbeleg, ${reach.referencedOutsideReach.length} Rezeptsignaturen außerhalb der Stufe ` +
+      '(dokumentiert, kein Gate); nicht enumeriert: ' +
       reach.notEnumerated
         .map((axis) =>
           axis.id === 'capabilities' ? `${axis.size} Fähigkeiten`

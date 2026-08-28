@@ -98,8 +98,9 @@ describe('coverage CLI', () => {
     );
     expect(lines).toContain(
       'Generative Reichweite (Stufe 1): 894 gültige Kompositionen aus kind × Körpervariante × ' +
-        'Organisation × Kopfzone × Fahrwerk, davon 67 in der Referenz belegt — 827 erzeugbar ohne ' +
-        'Referenzbeleg (dokumentiert, kein Gate); nicht enumeriert: 88 Fähigkeiten, ' +
+        'Organisation × Kopfzone × Fahrwerk (225720 enumeriert), davon 67 in der Referenz belegt — ' +
+        '827 erzeugbar ohne Referenzbeleg, 8 Rezeptsignaturen außerhalb der Stufe ' +
+        '(dokumentiert, kein Gate); nicht enumeriert: 88 Fähigkeiten, ' +
         '132 Körpermarken, 25 Funktionsrollen, freie Bezeichnung',
     );
     expect(lines.at(-1)).toBe('Coverage-Gate bestanden.');
