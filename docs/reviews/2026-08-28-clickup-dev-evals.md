@@ -40,7 +40,7 @@ The final blind parent scenario passed with C: it made no state change, retained
 The auditable self-scan includes this note and returns zero only when there are no matches:
 
 ```sh
-rtk bash -c 'if rtk rg -n "T\x4fDO|T\x42D|F\x49XME|PLACEH\x4fLDER|/\x55sers/|taktische\x2dzeichen|B\x41BZ.*\.(s\x76g|png)|private.*reference.*\.(s\x76g|png)" .agents/skills/clickup-dev docs/reviews/2026-08-28-clickup-dev-evals.md; then exit 1; else test "$?" -eq 1; fi'
+rtk bash -c 'rtk rg -n "T\x4fDO|T\x42D|F\x49XME|PLACEH\x4fLDER|/\x55sers/|taktische\x2dzeichen|B\x41BZ.*\.(s\x76g|png)|private.*reference.*\.(s\x76g|png)" .agents/skills/clickup-dev docs/reviews/2026-08-28-clickup-dev-evals.md; clickup_dev_scan_status=$?; case "$clickup_dev_scan_status" in 1) exit 0 ;; *) exit 1 ;; esac'
 ```
 
 Result: no matches; exit 0. `SKILL.md` is 392 words. The system validator returned `Skill is valid!` and the committed diff check completed without output.
