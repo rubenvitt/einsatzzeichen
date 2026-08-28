@@ -34,7 +34,11 @@ export default defineConfig({
       locales: { root: { label: 'Deutsch', lang: 'de' } },
       customCss: ['./src/styles/theme.css'],
       // Eigener Hero: das Bild der Startseite ist ein echtes Zeichen aus dem Snapshot, kein Asset.
-      components: { Hero: './src/components/Hero.astro' },
+      // Eigener Seitenfuß: Starlights Vorgabefuß plus der KI-Hinweis aus Spec §3.
+      components: {
+        Hero: './src/components/Hero.astro',
+        Footer: './src/components/Footer.astro',
+      },
       sidebar: [], // Task 11 füllt
     }),
     react(),
