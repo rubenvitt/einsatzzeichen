@@ -1,5 +1,10 @@
 # Fachreview-Übergabe für den aktuellen Katalogstand
 
+> **Abgelöst durch** [`2026-08-28-domain-review-handoff.md`](2026-08-28-domain-review-handoff.md)
+> (Deckblatt) und das Generat [`2026-08-28-domain-review-dossier.md`](2026-08-28-domain-review-dossier.md)
+> aus `pnpm cli review-dossier`. Die Handtabelle in Abschnitt 4 nennt 181 Einträge; der Ledger
+> führt am 28. August 2026 544. Dieses Dokument bleibt als Stand vom 7. August 2026 erhalten.
+
 > Stand: 7. August 2026
 > Reviewpaket vorbereitet, keine fachliche Freigabe erteilt.
 > Offen: 181 Manifestreviews, 12 Quellenreviews, 1 Profilreview = 194 Reviewträger.

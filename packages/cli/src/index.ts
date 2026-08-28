@@ -1,6 +1,7 @@
 import { isRenderThemeId, renderTheme } from '@einsatzzeichen/catalog';
 import { auditReference } from './commands/audit-reference.js';
 import { coverage } from './commands/coverage.js';
+import { ReviewDossierError, reviewDossier } from './commands/review-dossier.js';
 import { InvalidExportSizeError, exportSvg, parseExportSize } from './commands/export.js';
 import {
   RepositoryPolicyError,
@@ -49,6 +50,19 @@ switch (command) {
   case 'coverage':
     coverage();
     break;
+  case 'review-dossier': {
+    try {
+      const out = flag('out');
+      reviewDossier(out !== undefined ? { out } : {});
+    } catch (error) {
+      if (error instanceof CliUsageError || error instanceof ReviewDossierError) {
+        console.error(error.message);
+        process.exit(1);
+      }
+      throw error;
+    }
+    break;
+  }
   case 'verify:repository': {
     try {
       verifyRepository();
@@ -107,6 +121,7 @@ switch (command) {
     console.error(`Unbekanntes Kommando: ${command ?? '(keines)'}`);
     console.error(
       'Verfügbar: audit:reference [--filter <präfix>] [--print] | coverage | ' +
+        'review-dossier [--out <md-pfad>] | ' +
         'verify:repository | ' +
         'export [--out <pfad>] [--size <px>] ' +
         '[--theme <reference|accessible-light|print-monochrome>] | ' +
