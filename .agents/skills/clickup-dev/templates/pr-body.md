@@ -1,35 +1,41 @@
 # Ergebnis
 
-Abgegrenztes Katalogartefakt geliefert.
+Abgegrenzte technische Voraussetzung oder fachlicher Produktslice im vereinbarten Umfang.
 
 ## Scope
 
-Betroffene Zeichen- und Katalogdateien des vereinbarten Subtasks.
+Betroffene technische oder fachliche Artefakte des vereinbarten Subtasks.
 
 ## Nicht im Scope
 
-Nicht betroffene Zeichenfamilien und private Referenzmaterialien.
+Nicht vereinbarte Artefakte sowie private Referenzmaterialien.
 
 ## Tests
 
-`pnpm test`, `pnpm typecheck`, `pnpm cli coverage`, `git diff --check`, sauberer Status.
+Aktuelle Ergebnisse der erforderlichen Vollgates und des sauberen Status werden nach deren
+Ausführung ergänzt.
 
 ## Reviews
 
-Vertragsreview und unabhängiger Qualitätsreview dokumentiert.
+Vertragsreview und unabhängiger Qualitätsreview werden mit ihren tatsächlichen Ergebnissen
+dokumentiert.
 
 ## Screenshot
 
-Katalog-/Workflow-Screenshot des gelieferten Eintrags.
+Zulässiger Screenshot der technischen oder fachlichen Workflow-Ausgabe; keine privaten
+Referenzmaterialien.
 
 ## ClickUp
 
-Zugeordneter Subtask; Status `testing`.
+Für einen Draft-PR den zugeordneten Subtask nur bei erfüllten Vorbedingungen in `testing` führen;
+aktuellen Live-Status und Nachweis hier eintragen.
 
 ## Approval-HEAD
 
-Approval für PR #123, `codex/example-delivery`, HEAD `0123abcd`.
+`ausstehend`: Explizites Repository-Owner-Approval für den exakten aktuellen Tuple
+`(PR, Branch, HEAD)` abwarten und erst dann mit den tatsächlichen Werten dokumentieren.
 
 ## Post-Merge-Nachweis
 
-Fresh-Gates auf effektivem Remote `main` grün; Subtask `shipped`.
+`ausstehend` bis Merge und frischen Vollgates auf effektivem Remote-`main`. Erst nach diesem
+Nachweis genau den zugeordneten Subtask auf `shipped` setzen.

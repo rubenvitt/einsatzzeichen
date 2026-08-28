@@ -2,7 +2,8 @@
 
 ## Ergebnis
 
-Lieferbares Ergebnis: abgegrenztes Katalogartefakt.
+Lieferbares Ergebnis: eine klar abgegrenzte technische Voraussetzung oder ein Produktslice im
+vereinbarten Umfang.
 
 ## Nicht-Ziele
 
@@ -10,21 +11,25 @@ Ausgeschlossen: Änderungen außerhalb des vereinbarten Lieferumfangs.
 
 ## Akzeptanzkriterien
 
-- Katalogartefakt ist im vorgesehenen Workflow sichtbar.
-- Vollgates und Reviews sind nachweisbar.
+- Vereinbarter technischer oder fachlicher Lieferumfang ist nachweisbar erbracht.
+- Reviews und erforderliche Vollgates werden mit aktuellen Ergebnissen dokumentiert.
 
 ## Abhängigkeiten
 
-Zugeordneter Parent-Task; genehmigter Ziel-Branch.
+Zugeordneter Parent-Task sowie live verifizierter Ziel-Branch und Lieferumfang.
 
 ## Verifikation
 
-`pnpm test`, `pnpm typecheck`, `pnpm cli coverage`, `git diff --check`, sauberer Status.
+Ausstehend bis zur Ausführung: erforderliche Vollgates, Reviews und sauberer Status werden hier
+mit ihren tatsächlichen Ergebnissen festgehalten.
 
 ## PR/HEAD
 
-PR: #123; Branch: `codex/example-delivery`; HEAD: `0123abcd`.
+`ausstehend`: Noch kein PR/HEAD angelegt. Erst nach Erstellung den exakten Tuple
+`(PR, Branch, HEAD)` eintragen, zum Beispiel `(PR #42, codex/example-delivery, 0123abcd)`.
 
 ## Post-Merge-Nachweis
 
-Remote `main` erfolgreich verifiziert; Subtask `shipped`.
+`ausstehend` bis Merge und frischer Verifikation des effektiven Remote-`main` mit allen
+erforderlichen Gates. Erst danach genau diesen Subtask auf `shipped` setzen; der Parent bleibt
+von diesem Nachweis unberührt.

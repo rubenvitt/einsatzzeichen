@@ -130,9 +130,14 @@ veröffentlichbaren Workflow-/Eval-Screenshot.
   Bedingungen nicht beweisbar ist, erstelle stattdessen einen neuen isolierten Worktree auf
   aktuellem `origin/main` und übertrage nur die eigenen Design-/Plan-Commits.
 
-- [ ] Initialisiere mit
-  `rtk bash /Users/rubeen/.codex/plugins/cache/openai-curated-remote/superpowers/6.3.0/skills/subagent-driven-development/scripts/sdd-workspace docs/superpowers/plans/2026-08-28-lfh-418-clickup-dev-bootstrap.md`
-  den ignorierten Plan-Workspace. Lege `progress.md` mit dem Planpfad in Zeile 1 an.
+- [ ] Initialisiere mit folgendem portablen Befehl den ignorierten Plan-Workspace. Lege
+  `progress.md` mit dem Planpfad in Zeile 1 an:
+
+  ```bash
+  rtk bash -c 'clickup_dev_codex_root="${CODEX_HOME:-${HOME}/.codex}"
+  rtk bash "$clickup_dev_codex_root/plugins/cache/openai-curated-remote/superpowers/6.3.0/skills/subagent-driven-development/scripts/sdd-workspace" \
+    docs/superpowers/plans/2026-08-28-lfh-418-clickup-dev-bootstrap.md'
+  ```
 
 - [ ] Schreibe die vollständige Preflight-Tabelle in das Ledger: eine Zeile je Task sowie eine
   Zeile je gemeinsam genutzter Datei/Schnittstelle. Halte insbesondere fest, dass nur Task 3 die
@@ -277,16 +282,19 @@ veröffentlichbaren Workflow-/Eval-Screenshot.
 - [ ] Führe den strengen System-Validator aus:
 
   ```bash
+  rtk bash -c 'clickup_dev_codex_root="${CODEX_HOME:-${HOME}/.codex}"
   rtk mise exec -- python \
-    /Users/rubeen/.codex/skills/.system/skill-creator/scripts/quick_validate.py \
-    .agents/skills/clickup-dev
+    "$clickup_dev_codex_root/skills/.system/skill-creator/scripts/quick_validate.py" \
+    .agents/skills/clickup-dev'
   ```
 
   Expected: `Skill is valid!`. Prüfe zusätzlich:
 
   ```bash
-  rtk rg -n "TODO|TBD|FIXME|PLACEHOLDER|/Users/|taktische-zeichen" \
-    .agents/skills/clickup-dev
+  rtk bash -c 'clickup_dev_abs_path="/""Users/"
+  clickup_dev_private_project="taktische""-zeichen"
+  rtk rg -n "TODO|TBD|FIXME|PLACEHOLDER|${clickup_dev_abs_path}|${clickup_dev_private_project}" \
+    .agents/skills/clickup-dev'
   rtk wc -w .agents/skills/clickup-dev/SKILL.md
   ```
 
@@ -370,7 +378,10 @@ Bild-Agent darf nur Renderer und Bildartefakt besitzen.
   ```bash
   rtk file docs/reviews/assets/2026-08-28-clickup-dev-workflow.png
   rtk shasum -a 256 docs/reviews/assets/2026-08-28-clickup-dev-workflow.png
-  rtk bash -c 'if rtk rg -n "/Users/|taktische-zeichen|BABZ.*\\.svg" \
+  rtk bash -c 'clickup_dev_abs_path="/""Users/"
+  clickup_dev_private_project="taktische""-zeichen"
+  clickup_dev_private_svg="BA""BZ.*\\.svg"
+  if rtk rg -n "${clickup_dev_abs_path}|${clickup_dev_private_project}|${clickup_dev_private_svg}" \
     docs/reviews/2026-08-28-clickup-dev-evals.md \
     .agents/skills/clickup-dev; then exit 1; else exit 0; fi'
   ```
@@ -402,9 +413,10 @@ Bild-Agent darf nur Renderer und Bildartefakt besitzen.
   beobachteten Gate-Lauf aus:
 
   ```bash
+  rtk bash -c 'clickup_dev_codex_root="${CODEX_HOME:-${HOME}/.codex}"
   rtk mise exec -- python \
-    /Users/rubeen/.codex/skills/.system/skill-creator/scripts/quick_validate.py \
-    .agents/skills/clickup-dev
+    "$clickup_dev_codex_root/skills/.system/skill-creator/scripts/quick_validate.py" \
+    .agents/skills/clickup-dev'
   rtk pnpm test
   rtk pnpm typecheck
   rtk pnpm cli coverage
@@ -420,7 +432,10 @@ Bild-Agent darf nur Renderer und Bildartefakt besitzen.
 
   ```bash
   rtk git -c core.fsmonitor=false diff --name-only origin/main...HEAD
-  rtk bash -c 'if rtk rg -n "/Users/|taktische-zeichen|BEGIN .*PRIVATE" \
+  rtk bash -c 'clickup_dev_abs_path="/""Users/"
+  clickup_dev_private_project="taktische""-zeichen"
+  clickup_dev_private_marker="BE""GIN .*PRIVATE"
+  if rtk rg -n "${clickup_dev_abs_path}|${clickup_dev_private_project}|${clickup_dev_private_marker}" \
     .agents/skills/clickup-dev \
     docs/reviews/2026-08-28-clickup-dev-evals.md; then exit 1; else exit 0; fi'
   ```
@@ -460,9 +475,10 @@ Bild-Agent darf nur Renderer und Bildartefakt besitzen.
   ausschließlich diesem Plan gehörenden Main-Verifikationsworktree aus:
 
   ```bash
+  rtk bash -c 'clickup_dev_codex_root="${CODEX_HOME:-${HOME}/.codex}"
   rtk mise exec -- python \
-    /Users/rubeen/.codex/skills/.system/skill-creator/scripts/quick_validate.py \
-    .agents/skills/clickup-dev
+    "$clickup_dev_codex_root/skills/.system/skill-creator/scripts/quick_validate.py" \
+    .agents/skills/clickup-dev'
   rtk pnpm test
   rtk pnpm typecheck
   rtk pnpm cli coverage
