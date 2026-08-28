@@ -52,17 +52,20 @@ angegeben" nicht mit „gehört zum Kern" verwechselbar ist.
 
 ## Die Millimeter-Regel
 
-**Alle Längen in der IR und im Katalog sind Millimeter.** Die Umrechnung in SVG-Einheiten
-geschieht ausschließlich im Renderer (`packages/core/src/render/`):
+**Alle Längen in der IR und im Katalog sind Millimeter.** Die Umrechnung geschriebener Geometrie
+für die erzeugte SVG- und Canvas-Ausgabe geschieht an der Renderergrenze
+(`packages/core/src/render/`):
 
 ```
 1 mm = 72 / 25.4 SVG-Einheiten
 ```
 
-Diese Konstante wird nie gerundet hart eingetragen, sondern immer als Ausdruck berechnet
-(`mmToUnits` in `packages/schema`). Die einzige Ausnahme: `SubpathBounds` und `Ring` im
-`cli`-Paket (`packages/cli/src/scan/path-geometry.ts`) tragen SVG-Einheiten, weil sie direkt aus
-den SVG-Koordinaten der Referenzdateien extrahiert werden, bevor eine Umrechnung stattfindet.
+Diese Konstante wird nie gerundet hart eingetragen, sondern immer über die zentralen Helfer
+`mmToUnits` und `unitsToMm` aus `packages/schema` verwendet. Mess- und Vergleichscode im CLI und
+in den Core-Gates darf damit Werte aus rohen SVG-Koordinaten normalisieren oder gegen die
+Toleranz in SVG-Einheiten vergleichen; das ist keine zweite Ausgabeumrechnung. `SubpathBounds`
+und `Ring` im CLI (`packages/cli/src/scan/path-geometry.ts`) tragen weiterhin SVG-Einheiten, weil
+sie direkt aus den SVG-Koordinaten der Referenzdateien extrahiert werden.
 
 Fingerprint- und koordinatenbasierte Geometriegates verwenden eine Toleranz von
 **0,01 SVG-Einheiten**. Datei- und Rastersnapshots werden dagegen exakt verglichen.
@@ -804,6 +807,7 @@ pnpm test
 
 pnpm cli audit:reference [--filter <präfix>] [--print]
 pnpm cli coverage
+pnpm cli verify:repository
 pnpm cli export --out <pfad> --size <px> \
   --theme <reference|accessible-light|print-monochrome>
 
@@ -822,6 +826,15 @@ rtk pnpm cli visual-proof --reference-root "$REFERENCE_ROOT" \
   18. August 2026 auch die Zeile `Kontrastausnahmen:` — entschiedene Kontrastpaare unterhalb der
   eigenen Schwelle, mit Abschnitt, Datum und Entscheider. Sie steht bewusst nicht bei den
   Blockern: ein Blocker ist ein offener Punkt, eine Ausnahme ein entschiedener.
+- `verify:repository` — prüft Paketabhängigkeiten sowie statische Imports, Re-Exports,
+  Inline-Importtypen, `import = require(...)`, dynamische Imports und direkte `require(...)`
+  gegen `cli → catalog → core → schema`. Syntaxfehler, nicht statisch auflösbare Modulziele,
+  relative Paketgrenzen-Umgehungen und Quell-Symlinks werden zurückgewiesen. Externe
+  Produktionsimporte bleiben in `core` und `schema` verboten und müssen in `cli` und `catalog`
+  im Paketmanifest deklariert sein. Per NUL-getrenntem Git-Index kontrolliert das Gate außerdem,
+  dass weder `taktische-zeichen/` noch `taktische-zeichen.zip` eingecheckt sind, und lässt Git
+  die Schutzwirkung der Rootregeln einschließlich späterer Negationen auswerten. Wirksam
+  ignorierte lokale Originale bleiben ausdrücklich erlaubt.
 - `export --out <pfad> --size <px> [--theme …]` — rendert alle Grundzeichen und
   Kompositionsrezepte als SVG nach `<pfad>`, mit `<px>` Kantenlänge. Ohne Theme gilt die
   unveränderte Referenzpalette. `accessible-light` hellt das kontrastkritische Blau auf;
