@@ -1,0 +1,160 @@
+---
+/**
+ * Die vier Codebeispiele eines Zeichens als Reiter (Spec §5.5 Abschnitt 4).
+ *
+ * Die Snippets kommen aus `codeSamplesFor()` — derselben Vorlage wie im Quickstart und im Builder,
+ * damit kein Beispiel auf der Website eine API nachbildet, die es so nicht gibt.
+ *
+ * Umschaltung wie bei `SymbolPreview`: Radiobuttons als Geschwister vor den Tafeln, Auswahl per
+ * `:checked ~` über Attributselektoren, kein JavaScript. Die Reiterbeschriftungen entsprechen denen
+ * der Builder-Insel (`CODE_TABS` in `islands/Builder.tsx`).
+ *
+ * Für die Auszeichnung nimmt die Seite Starlights `<Code>` (Expressive Code): dieselbe Darstellung
+ * wie in den Markdown-Seiten, inklusive Kopierschaltfläche — die kommt aus Starlight und ist kein
+ * eigenes Skript.
+ */
+import { Code } from '@astrojs/starlight/components';
+import type { CodeSamples } from '../lib/code-samples';
+
+interface Props {
+  samples: CodeSamples;
+  /** Eindeutiges Präfix für IDs und Radiogruppe; eine Seite kann mehrere Reiterleisten tragen. */
+  idPrefix: string;
+}
+
+const { samples, idPrefix } = Astro.props;
+
+const TABS = [
+  { id: 'typescript', label: 'TypeScript', lang: 'ts' },
+  { id: 'react', label: 'React', lang: 'tsx' },
+  { id: 'web-component', label: 'Web Component', lang: 'ts' },
+  { id: 'maplibre', label: 'MapLibre', lang: 'ts' },
+] as const;
+
+const panels = [
+  { ...TABS[0], code: samples.typescript },
+  { ...TABS[1], code: samples.react },
+  { ...TABS[2], code: samples.webComponent },
+  { ...TABS[3], code: samples.maplibre },
+];
+---
+
+<div class="ez-codetabs">
+  {
+    panels.map((panel, index) => (
+      <input
+        class="ez-codetabs__radio"
+        type="radio"
+        name={`${idPrefix}-kanal`}
+        id={`${idPrefix}-${panel.id}`}
+        data-ez-tab={panel.id}
+        checked={index === 0}
+      />
+    ))
+  }
+
+  <div class="ez-codetabs__tabs">
+    {
+      panels.map((panel) => (
+        <label class="ez-codetabs__tab" data-ez-tab={panel.id} for={`${idPrefix}-${panel.id}`}>
+          {panel.label}
+        </label>
+      ))
+    }
+  </div>
+
+  {
+    panels.map((panel) => (
+      <div class="ez-codetabs__panel" data-ez-tab={panel.id}>
+        <Code code={panel.code} lang={panel.lang} />
+      </div>
+    ))
+  }
+</div>
+
+<style>
+  .ez-codetabs {
+    margin-block: var(--ez-space-6);
+  }
+
+  /* Sichtbar für die Tastatur, unsichtbar im Bild — Begründung wie in `SymbolPreview.astro`. */
+  .ez-codetabs__radio {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .ez-codetabs__tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ez-space-2);
+    margin-block-end: var(--ez-space-3);
+  }
+
+  .ez-codetabs__tab {
+    padding: 0.3em 0.7em;
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: var(--ez-radius);
+    font-family: var(--ez-font-mono);
+    font-size: var(--sl-text-xs);
+    letter-spacing: 0.04em;
+    color: var(--sl-color-gray-2);
+    cursor: pointer;
+  }
+
+  .ez-codetabs__tab:hover {
+    border-color: var(--sl-color-accent);
+  }
+
+  .ez-codetabs__panel {
+    display: none;
+  }
+
+  .ez-codetabs__radio[data-ez-tab='typescript']:checked
+    ~ .ez-codetabs__panel[data-ez-tab='typescript'],
+  .ez-codetabs__radio[data-ez-tab='react']:checked ~ .ez-codetabs__panel[data-ez-tab='react'],
+  .ez-codetabs__radio[data-ez-tab='web-component']:checked
+    ~ .ez-codetabs__panel[data-ez-tab='web-component'],
+  .ez-codetabs__radio[data-ez-tab='maplibre']:checked
+    ~ .ez-codetabs__panel[data-ez-tab='maplibre'] {
+    display: block;
+  }
+
+  .ez-codetabs__radio[data-ez-tab='typescript']:checked
+    ~ .ez-codetabs__tabs
+    .ez-codetabs__tab[data-ez-tab='typescript'],
+  .ez-codetabs__radio[data-ez-tab='react']:checked
+    ~ .ez-codetabs__tabs
+    .ez-codetabs__tab[data-ez-tab='react'],
+  .ez-codetabs__radio[data-ez-tab='web-component']:checked
+    ~ .ez-codetabs__tabs
+    .ez-codetabs__tab[data-ez-tab='web-component'],
+  .ez-codetabs__radio[data-ez-tab='maplibre']:checked
+    ~ .ez-codetabs__tabs
+    .ez-codetabs__tab[data-ez-tab='maplibre'] {
+    border-color: var(--sl-color-accent);
+    color: var(--sl-color-white);
+  }
+
+  .ez-codetabs__radio[data-ez-tab='typescript']:focus-visible
+    ~ .ez-codetabs__tabs
+    .ez-codetabs__tab[data-ez-tab='typescript'],
+  .ez-codetabs__radio[data-ez-tab='react']:focus-visible
+    ~ .ez-codetabs__tabs
+    .ez-codetabs__tab[data-ez-tab='react'],
+  .ez-codetabs__radio[data-ez-tab='web-component']:focus-visible
+    ~ .ez-codetabs__tabs
+    .ez-codetabs__tab[data-ez-tab='web-component'],
+  .ez-codetabs__radio[data-ez-tab='maplibre']:focus-visible
+    ~ .ez-codetabs__tabs
+    .ez-codetabs__tab[data-ez-tab='maplibre'] {
+    outline: 2px solid var(--sl-color-accent);
+    outline-offset: 2px;
+  }
+</style>

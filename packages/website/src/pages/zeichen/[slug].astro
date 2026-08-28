@@ -1,0 +1,481 @@
+---
+/**
+ * Eine Seite je Zeichen (Spec §5.5), zur Buildzeit aus dem Katalog-Snapshot erzeugt.
+ *
+ * Die Abschnittsreihenfolge steht in der Spec und ist verbindlich: Kopf, Vorschau, Spec, Code,
+ * Synonyme, zulässige Kombinationen, Nachweise. Jeder Abschnitt erscheint nur, wenn Daten da sind —
+ * eine leere Rubrik behauptet, es gäbe dort nichts zu wissen, statt zu sagen, dass die Daten fehlen.
+ * „Änderungshistorie" fehlt deshalb ganz: dafür gibt es keine Datenquelle, und ein leerer Abschnitt
+ * wäre eine Behauptung.
+ *
+ * **Was aus welchem Feld kommt.** `drawing` ist die gezeigte Zeichnung; bei einem Katalogeintrag
+ * (`kind: 'catalog-entry'`) ist sie die vermessene Darstellung und die `spec` dazu eine
+ * Rekonstruktion. JSON, Builder-Link und Codebeispiele gehen alle von dieser Spec aus, also steht
+ * bei Katalogeinträgen genau ein Hinweis darüber, der für alle drei gilt.
+ *
+ * **Reviewnotizen.** Kurz gefasst: was eine Abweichung begründet, steht oben; was eine Freigabe
+ * begründet, steht bei den Nachweisen. 241 der 256 Zeichen tragen eine technische Notiz mit im
+ * Mittel 895 Zeichen — alle davon in den Kopf zu setzen, schöbe die Vorschau unter eine
+ * Textwand. Abweichungen (12 technische) und fachliche Notizen bleiben oben, weil sie die
+ * Vertrauensfrage betreffen.
+ */
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import CodeTabs from '../../components/CodeTabs.astro';
+import StatusPair from '../../components/StatusPair.astro';
+import SymbolPreview from '../../components/SymbolPreview.astro';
+import { codeSamplesFor } from '../../lib/code-samples';
+import { RULE_EXPLANATIONS } from '../../lib/rule-explanations';
+import { loadSnapshot, type SymbolSummary } from '../../lib/snapshot';
+
+interface Props {
+  symbol: SymbolSummary;
+}
+
+export function getStaticPaths(): { params: { slug: string }; props: Props }[] {
+  return loadSnapshot().symbols.map((symbol) => ({
+    params: { slug: symbol.slug },
+    props: { symbol },
+  }));
+}
+
+const { symbol } = Astro.props;
+const snapshot = loadSnapshot();
+
+/* --- Beschriftungen ----------------------------------------------------------------------- */
+
+const KIND_LABELS: Record<SymbolSummary['kind'], string> = {
+  'catalog-entry': 'Katalogeintrag',
+  'composition-recipe': 'Kompositionsrezept',
+};
+
+const VARIANT_LABELS: Record<SymbolSummary['variant'], string> = {
+  primary: 'Hauptfassung',
+  alternative: 'Alternative Fassung',
+};
+
+/**
+ * Deutsche Bezeichnung der `SymbolSpec`-Achsen. Wortgleich mit den Formularfeldern der
+ * Builder-Insel (`SELECT_FIELDS`/`LIST_FIELDS` in `islands/Builder.tsx`), damit dasselbe Feld auf
+ * beiden Seiten denselben Namen trägt. `labels` hat dort kein Formularfeld und deshalb hier eine
+ * eigene Bezeichnung.
+ */
+const FIELD_LABELS: Record<string, string> = {
+  kind: 'Grundzeichenart',
+  bodyVariant: 'Körpervariante',
+  organization: 'Organisation',
+  technicalFill: 'Technische Füllung',
+  strength: 'Stärke',
+  functionRole: 'Funktionsfassung',
+  administrativeLevel: 'Verwaltungsstufe',
+  technicalHeadMark: 'Technische Kopfmarke',
+  vehicleCategory: 'Fahrzeugkategorie',
+  capabilities: 'Fähigkeiten',
+  bodyMarks: 'Körpermarken',
+  labels: 'Beschriftungen',
+  designation: 'Kennung',
+};
+
+/** Nachweisarten aus `CoverageEntry.testEvidence`, ausgeschrieben. */
+const EVIDENCE_LABELS: Record<string, string> = {
+  'body-fingerprint': 'Körper-Fingerprint gegen die Referenzdatei (matchFingerprint)',
+  'svg-snapshot': 'SVG-Snapshot: die Ausgabe von renderSvg bleibt bytegleich',
+  'body-geometry-regression': 'Regressionstest der Körpergeometrie',
+};
+
+/* --- Kopfdaten ---------------------------------------------------------------------------- */
+
+const sourceLabel =
+  symbol.source.page === undefined ? symbol.chapter : `${symbol.chapter}, S. ${symbol.source.page}`;
+
+/**
+ * Sichtbare Notizen im Kopf: jede Abweichung und jede fachliche Notiz. Eine Abweichung ohne ihren
+ * Grund wäre eine Marke ohne Aussage, und die fachliche Notiz ist die Antwort auf die Frage, wegen
+ * der jemand diese Seite aufruft.
+ */
+const headNotes = [
+  symbol.review.technical.status === 'deviation' && symbol.review.technical.note !== undefined
+    ? { title: 'Bekannte Abweichung — technischer Review', note: symbol.review.technical.note }
+    : undefined,
+  symbol.review.domain.status === 'deviation' && symbol.review.domain.note !== undefined
+    ? { title: 'Bekannte Abweichung — fachlicher Review', note: symbol.review.domain.note }
+    : undefined,
+  symbol.review.domain.status !== 'deviation' && symbol.review.domain.note !== undefined
+    ? { title: 'Anmerkung aus dem fachlichen Review', note: symbol.review.domain.note }
+    : undefined,
+].filter((entry) => entry !== undefined);
+
+/** Die lange Begründung einer erteilten technischen Freigabe — bei den Nachweisen, aufklappbar. */
+const technicalNote =
+  symbol.review.technical.status === 'deviation' ? undefined : symbol.review.technical.note;
+
+/* --- Spec, Builder, Code ------------------------------------------------------------------ */
+
+const isReconstruction = symbol.kind === 'catalog-entry';
+const specJson = JSON.stringify(symbol.spec, null, 2);
+
+/**
+ * `?spec=` ist der Vertrag der Builder-Insel: base64url-kodiertes JSON ohne Füllzeichen
+ * (`encodeSpec`/`decodeSpec` in `src/lib/builder-state.ts`). Hier steht die Node-Fassung derselben
+ * Kodierung, damit diese Seite nicht den Browserpfad des Builders in den Build zieht; ein Vergleich
+ * über alle 256 Specs — Umlaute eingeschlossen — hat beide Wege als bytegleich belegt.
+ */
+const builderHref = `/builder/?spec=${Buffer.from(JSON.stringify(symbol.spec), 'utf8').toString('base64url')}`;
+
+const samples = codeSamplesFor(symbol.spec, symbol.id);
+
+/* --- Abschnitt 6: gesetzte Felder und ihre Regeln ------------------------------------------ */
+
+/** `functionRole` → `function-role`; die Regelkennungen führen dieselben Wörter in Bindestrichform. */
+function kebab(field: string): string {
+  return field.replaceAll(/(?<lower>[a-z])(?<upper>[A-Z])/g, '$<lower>-$<upper>').toLowerCase();
+}
+
+function valueLabels(field: string, value: unknown): { text: string; id?: string }[] {
+  const vocabulary = snapshot.builder[field] ?? [];
+  const label = (id: string): string => vocabulary.find((entry) => entry.id === id)?.label ?? id;
+  if (Array.isArray(value)) return value.map((item) => ({ id: String(item), text: label(String(item)) }));
+  if (typeof value === 'object' && value !== null) {
+    return Object.entries(value).map(([key, entry]) => ({ id: key, text: String(entry) }));
+  }
+  const id = String(value);
+  return [{ id, text: label(id) }];
+}
+
+/**
+ * Regeln je Feld nur dort, wo die Zuordnung nachweisbar ist: eine Regelkennung gehört zu einem Feld,
+ * wenn sie mit dessen Namen in Bindestrichform beginnt (`functionRole` → `function-role-…`). Alles
+ * andere wäre geraten — `validateSpec()` führt keine Feldzuordnung, und eine Regel nach Stichworten
+ * in ihrem Text zuzuordnen, brächte falsche Treffer. Felder ohne eigene Regelfamilie stehen deshalb
+ * ohne Regeln da, und der Text darunter sagt, dass die Liste nicht die vollständige Prüfung ist.
+ */
+const setFields = (Object.entries(symbol.spec) as [string, unknown][])
+  .filter(([, value]) => value !== undefined)
+  .map(([field, value]) => {
+    const prefix = `${kebab(field)}-`;
+    const rules = snapshot.ruleIds
+      .filter((rule) => rule.startsWith(prefix))
+      .map((rule) => ({ id: rule, explanation: RULE_EXPLANATIONS[rule] }))
+      .filter((entry) => entry.explanation !== undefined);
+    return {
+      field,
+      label: FIELD_LABELS[field] ?? field,
+      values: valueLabels(field, value),
+      rules,
+    };
+  });
+
+const ruleCount = setFields.reduce((total, entry) => total + entry.rules.length, 0);
+
+/* --- Abschnitte und Inhaltsverzeichnis ---------------------------------------------------- */
+
+const hasNames = symbol.synonyms.length > 0 || symbol.legacyIds.length > 0;
+
+/**
+ * Starlight baut das Inhaltsverzeichnis aus `headings`; in einer `.astro`-Seite sammelt das niemand
+ * automatisch ein. Die Liste steht deshalb hier und trägt genau die `id`s der Überschriften unten.
+ */
+const headings = [
+  { depth: 2, slug: 'vorschau', text: 'Vorschau' },
+  { depth: 2, slug: 'spec', text: 'Spec' },
+  { depth: 2, slug: 'codebeispiele', text: 'Codebeispiele' },
+  ...(hasNames ? [{ depth: 2, slug: 'benennungen', text: 'Weitere Benennungen' }] : []),
+  { depth: 2, slug: 'kombinationen', text: 'Zulässige Kombinationen' },
+  { depth: 2, slug: 'nachweise', text: 'Nachweise' },
+];
+
+const description =
+  `${symbol.title} — ${KIND_LABELS[symbol.kind]} aus ${symbol.chapter}: Vorschau in sechs Größen ` +
+  'und drei Farbprofilen, SymbolSpec, Codebeispiele, Reviewstand und Nachweise.';
+---
+
+<StarlightPage frontmatter={{ title: symbol.title, description }} headings={headings}>
+  <p class="ez-eyebrow">
+    {symbol.chapter} · {KIND_LABELS[symbol.kind]} · {VARIANT_LABELS[symbol.variant]}
+  </p>
+
+  <dl class="ez-head">
+    <dt>Semantische ID</dt>
+    <dd><code class="ez-id ez-head__copy">{symbol.id}</code></dd>
+
+    <dt>Quelle</dt>
+    <dd>
+      {sourceLabel} · {symbol.source.citation} ·{' '}
+      <a href="/grundlage/#quellenregister">Quellenregister</a>
+    </dd>
+
+    <dt>Manifestschlüssel</dt>
+    <dd><code class="ez-id">{symbol.sourceId}</code></dd>
+
+    <dt>Profil</dt>
+    <dd><a href="/grundlage/#profile"><code class="ez-mono">{symbol.profile}</code></a></dd>
+  </dl>
+
+  <p class="ez-head__status">
+    <StatusPair technical={symbol.review.technical} domain={symbol.review.domain} />
+  </p>
+
+  {
+    headNotes.map((entry) => (
+      <div class="ez-note">
+        <span class="ez-note__title">{entry.title}</span>
+        <p>{entry.note}</p>
+      </div>
+    ))
+  }
+
+  <h2 id="vorschau">Vorschau</h2>
+  <p>
+    Dieselbe Zeichnung in {[16, 24, 32, 64, 128, 256].join(', ')} px, je einmal auf weißem und auf
+    dunklem Untergrund. Die drei Schaltflächen wechseln das Farbprofil aus <code class="ez-mono"
+      >RENDER_THEMES</code
+    >: Referenz (die Palette der Vorlage), kontraststark hell und Druck monochrom. Alle Zeichnungen
+    stehen als Inline-SVG im HTML, erzeugt mit <code class="ez-mono">renderSvg()</code> zur Buildzeit.
+  </p>
+
+  <SymbolPreview drawing={symbol.drawing} idPrefix={`ez-${symbol.slug}`} />
+
+  <h2 id="spec">Spec</h2>
+
+  {
+    isReconstruction && (
+      <div class="ez-note">
+        <span class="ez-note__title">Rekonstruktion, keine Messung</span>
+        <p>
+          Dieses Zeichen ist ein Katalogeintrag: gezeigt wird die vermessene Darstellung aus der
+          Quelle. Die Spec darunter ist die Rekonstruktion dazu — sie beschreibt, mit welchen Achsen
+          sich dasselbe Zeichen zusammensetzen ließe. Was <code class="ez-mono">compose()</code>{' '}
+          daraus baut, kann von der Darstellung oben abweichen. Das gilt für das JSON, für den
+          Builder-Link und für die vier Codebeispiele gleichermaßen.
+        </p>
+      </div>
+    )
+  }
+
+  <pre class="ez-spec"><code>{specJson}</code></pre>
+
+  <p>
+    <a class="ez-action" href={builderHref}>
+      <strong>Im Builder öffnen</strong>
+      <span>Diese Spec im Formular, mit Live-Vorschau und Regelprüfung</span>
+    </a>
+  </p>
+
+  <h2 id="codebeispiele">Codebeispiele</h2>
+  <p>
+    Vier Kanäle, ein Zeichen. Die Beispiele entstehen aus derselben Vorlage wie im Quickstart und im
+    Builder (<code class="ez-mono">src/lib/code-samples.ts</code>), damit sie nicht hinter den
+    Paket-APIs zurückbleiben.
+  </p>
+
+  <CodeTabs samples={samples} idPrefix={`ez-${symbol.slug}`} />
+
+  {
+    hasNames && (
+      <>
+        <h2 id="benennungen">Weitere Benennungen</h2>
+        {symbol.synonyms.length > 0 && (
+          <p>
+            <strong>Synonyme:</strong> {symbol.synonyms.join(', ')}
+          </p>
+        )}
+        {symbol.legacyIds.length > 0 && (
+          <p>
+            <strong>Legacy-Bezeichnungen:</strong>{' '}
+            <span class="ez-mono">{symbol.legacyIds.join(', ')}</span>
+          </p>
+        )}
+      </>
+    )
+  }
+
+  <h2 id="kombinationen">Zulässige Kombinationen</h2>
+  <p>
+    Diese Spec setzt {setFields.length}{' '}
+    {setFields.length === 1 ? 'Feld' : 'Felder'}. Darunter steht, welche Werte gesetzt sind und
+    welche Regeln aus <code class="ez-mono">validateSpec()</code> denselben Feldnamen tragen —{' '}
+    {ruleCount === 0 ? 'für diese Felder keine' : `${ruleCount} an der Zahl`}.
+  </p>
+
+  <div class="ez-table-scroll">
+    <table class="ez-table">
+      <thead>
+        <tr>
+          <th>Feld</th>
+          <th>Wert</th>
+          <th>Regeln mit diesem Feldnamen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          setFields.map((entry) => (
+            <tr>
+              <td>
+                {entry.label}
+                <br />
+                <code class="ez-mono">{entry.field}</code>
+              </td>
+              <td>
+                {entry.values.map((value) => (
+                  <div>
+                    {value.text}
+                    {value.id !== undefined && value.id !== value.text && (
+                      <>
+                        {' '}
+                        <code class="ez-mono">{value.id}</code>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </td>
+              <td>
+                {entry.rules.length === 0 ? (
+                  <span class="ez-muted">keine Regelfamilie unter diesem Namen</span>
+                ) : (
+                  entry.rules.map((rule) => (
+                    <details class="ez-rule">
+                      <summary>
+                        <code class="ez-mono">{rule.id}</code>
+                      </summary>
+                      <p>
+                        <strong>{rule.explanation.title}.</strong> {rule.explanation.explanation}
+                      </p>
+                    </details>
+                  ))
+                )}
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    Die Zuordnung geht allein über den Namen: eine Regel gehört zu einem Feld, wenn ihre Kennung mit
+    dem Feldnamen in Bindestrichform beginnt. <code class="ez-mono">validateSpec()</code> führt keine
+    Feldzuordnung, deshalb ist diese Liste nicht die vollständige Prüfung — Regeln über mehrere
+    Achsen hinweg stehen nirgends in dieser Tabelle. Wer wissen will, ob eine geänderte Kombination
+    trägt, ändert sie im <a href="/builder/">Builder</a>: dort läuft dieselbe Komposition wie im
+    Katalog, und jede abgelehnte Kombination kommt mit ihrer Regel und deren Erklärung zurück.
+  </p>
+
+  <h2 id="nachweise">Nachweise</h2>
+
+  {
+    symbol.evidence.length > 0 && (
+      <>
+        <p>Diese Testarten decken die Zeile im Coverage-Manifest ab:</p>
+        <ul>
+          {symbol.evidence.map((kind) => (
+            <li>
+              {EVIDENCE_LABELS[kind] ?? kind} <code class="ez-mono">{kind}</code>
+            </li>
+          ))}
+        </ul>
+      </>
+    )
+  }
+
+  <p>
+    Gemessen und gerendert wird im Profil <code class="ez-mono">{symbol.profile}</code>; die Profile
+    und ihre Prüfstände stehen auf der <a href="/grundlage/#profile">Grundlage-Seite</a>.
+  </p>
+
+  {
+    symbol.contrastException !== undefined && (
+      <div class="ez-note">
+        <span class="ez-note__title">Kontrastausnahme</span>
+        <p>
+          {symbol.contrastException} — die Ausnahme ist entschieden und dokumentiert, kein offener
+          Blocker. Sie steht auch in der Übersicht auf der <a href="/coverage/">Coverage-Seite</a>.
+        </p>
+      </div>
+    )
+  }
+
+  {
+    technicalNote !== undefined && (
+      <details class="ez-longnote">
+        <summary>Begründung des technischen Reviews</summary>
+        <p>{technicalNote}</p>
+      </details>
+    )
+  }
+</StarlightPage>
+
+<style>
+  .ez-head {
+    display: grid;
+    grid-template-columns: minmax(8rem, max-content) 1fr;
+    gap: var(--ez-space-2) var(--ez-space-4);
+    margin-block: var(--ez-space-6);
+    font-size: var(--sl-text-sm);
+  }
+
+  .ez-head dt {
+    font-family: var(--ez-font-mono);
+    font-size: var(--sl-text-2xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sl-color-gray-3);
+    padding-block-start: 0.15em;
+  }
+
+  .ez-head dd {
+    margin: 0;
+  }
+
+  .ez-head__status {
+    margin-block: var(--ez-space-4) var(--ez-space-6);
+  }
+
+  /* Kopierbar ohne Skript: ein Klick wählt die ganze Kennung, nicht das Wort unter dem Zeiger. */
+  .ez-head__copy {
+    user-select: all;
+  }
+
+  .ez-spec {
+    max-height: 22rem;
+    overflow: auto;
+    padding: var(--ez-space-4);
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: var(--ez-radius);
+    background: var(--ez-surface);
+    font-family: var(--ez-font-mono);
+    font-size: var(--sl-text-xs);
+    line-height: 1.6;
+  }
+
+  .ez-muted {
+    color: var(--sl-color-gray-3);
+    font-size: var(--sl-text-xs);
+  }
+
+  .ez-rule summary,
+  .ez-longnote summary {
+    cursor: pointer;
+  }
+
+  .ez-rule p {
+    margin-block: var(--ez-space-2);
+    font-size: var(--sl-text-xs);
+    line-height: 1.6;
+  }
+
+  .ez-longnote {
+    margin-block: var(--ez-space-6);
+    padding: var(--ez-space-4);
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: var(--ez-radius);
+    font-size: var(--sl-text-sm);
+    line-height: 1.65;
+  }
+
+  .ez-longnote summary {
+    font-family: var(--ez-font-mono);
+    font-size: var(--sl-text-2xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sl-color-gray-3);
+  }
+</style>

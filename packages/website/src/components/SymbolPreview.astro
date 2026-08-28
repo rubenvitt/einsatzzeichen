@@ -1,0 +1,245 @@
+---
+/**
+ * Die Vorschau einer Zeichnung in sechs Größen, drei Farbprofilen und auf beiden Kartenuntergründen
+ * (Spec §5.5 Abschnitt 2, §5.6).
+ *
+ * **Zur Buildzeit gerendert.** `renderSvg()` läuft in Node, das Ergebnis steht inline im HTML. Kein
+ * Skript, keine Rasterung im Browser — die Seite zeigt genau das Markup, das die Bibliothek ausgibt.
+ *
+ * **Umschaltung ohne JavaScript.** Drei Radiobuttons stehen als Geschwister vor den drei Tafeln;
+ * `input[data-ez-profile='x']:checked ~ .ez-preview__panel[data-ez-profile='x']` blendet die
+ * gewählte ein. Attributselektoren statt `:nth-of-type`, damit die Regel nicht an der Reihenfolge
+ * der Elemente hängt. Das Attribut heißt `data-ez-profile` und nicht `data-theme`, weil Starlight
+ * `data-theme` am `<html>` für das Seitenthema führt — zwei Bedeutungen unter einem Namen wären
+ * beim Lesen eine Falle.
+ *
+ * **Beide Untergründe gleichzeitig, nicht umschaltbar.** Die Referenzpalette ist auf weißes Papier
+ * gerechnet; wer die Seite dunkel liest, muss trotzdem sehen, was auf Papier herauskommt. Deshalb
+ * steht jede Größenreihe zweimal untereinander (Spec §5.6).
+ *
+ * **Barrierefreiheit.** Dieselbe Zeichnung erscheint hier 36-mal. Jede Wiederholung mit ihrem
+ * Titel vorzulesen wäre Lärm, deshalb tragen die Tafeln `aria-hidden` und der Abschnitt stattdessen
+ * einen Satz Fließtext. Die Umschaltung selbst bleibt bedienbar: die Radiobuttons liegen außerhalb
+ * der verborgenen Tafeln, sind fokussierbar und tragen sichtbare Beschriftungen.
+ *
+ * Jede Instanz bekommt ein eigenes `idPrefix` — `renderSvg()` vergibt `id="<prefix>-title"` und
+ * `id="<prefix>-desc"`, und die müssen im Dokument eindeutig bleiben.
+ */
+import { RENDER_THEMES } from '@einsatzzeichen/catalog';
+import { renderSvg } from '@einsatzzeichen/core';
+import type { Drawing } from '@einsatzzeichen/schema';
+
+interface Props {
+  drawing: Drawing;
+  /** Eindeutiges Präfix für die erzeugten SVG-IDs und den Namen der Radiogruppe. */
+  idPrefix: string;
+  /** Pixelbreiten der Reihe. Voreinstellung sind die sechs Größen aus Spec §5.5. */
+  sizes?: number[];
+}
+
+const DEFAULT_SIZES = [16, 24, 32, 64, 128, 256];
+
+/** Die drei Profile aus `RENDER_THEMES`, in derselben Reihenfolge und Benennung wie im Lab. */
+const PROFILES = [
+  { id: 'reference', label: 'Referenz', theme: RENDER_THEMES.reference },
+  {
+    id: 'accessible-light',
+    label: 'Kontraststark hell',
+    theme: RENDER_THEMES['accessible-light'],
+  },
+  {
+    id: 'print-monochrome',
+    label: 'Druck monochrom',
+    theme: RENDER_THEMES['print-monochrome'],
+  },
+] as const;
+
+const BACKGROUNDS = [
+  { id: 'light', label: 'Weißer Untergrund', className: 'ez-canvas--light' },
+  { id: 'dark', label: 'Dunkler Untergrund', className: 'ez-canvas--dark' },
+] as const;
+
+const { drawing, idPrefix, sizes = DEFAULT_SIZES } = Astro.props;
+
+const panels = PROFILES.map((profile) => ({
+  ...profile,
+  rows: BACKGROUNDS.map((background) => ({
+    ...background,
+    cells: sizes.map((size) => ({
+      size,
+      svg: renderSvg(drawing, {
+        size,
+        theme: profile.theme,
+        idPrefix: `${idPrefix}-${profile.id}-${background.id}-${size}`,
+      }),
+    })),
+  })),
+}));
+---
+
+<div class="ez-preview">
+  {
+    panels.map((panel, index) => (
+      <input
+        class="ez-preview__radio"
+        type="radio"
+        name={`${idPrefix}-profil`}
+        id={`${idPrefix}-${panel.id}`}
+        data-ez-profile={panel.id}
+        checked={index === 0}
+      />
+    ))
+  }
+
+  <div class="ez-preview__tabs">
+    {
+      panels.map((panel) => (
+        <label class="ez-preview__tab" data-ez-profile={panel.id} for={`${idPrefix}-${panel.id}`}>
+          {panel.label}
+        </label>
+      ))
+    }
+  </div>
+
+  {
+    panels.map((panel) => (
+      <div class="ez-preview__panel" data-ez-profile={panel.id} aria-hidden="true">
+        {panel.rows.map((row) => (
+          <figure class="ez-preview__figure">
+            <div class:list={['ez-canvas', 'ez-preview__row', row.className]}>
+              {row.cells.map((cell) => (
+                <span class="ez-preview__cell">
+                  <Fragment set:html={cell.svg} />
+                  <span class="ez-preview__size">{cell.size} px</span>
+                </span>
+              ))}
+            </div>
+            <figcaption class="ez-preview__caption">{row.label}</figcaption>
+          </figure>
+        ))}
+      </div>
+    ))
+  }
+</div>
+
+<style>
+  .ez-preview {
+    margin-block: var(--ez-space-6);
+  }
+
+  /*
+   * Nicht `display: none`: ein verborgener Radiobutton verschwindet aus der Tabulatorreihenfolge,
+   * und dann ließe sich das Profil nur noch mit der Maus wechseln. Er bleibt bedienbar und wird
+   * nur aus dem Bild genommen; der Fokus zeigt sich an der zugehörigen Beschriftung.
+   */
+  .ez-preview__radio {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .ez-preview__tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ez-space-2);
+    margin-block-end: var(--ez-space-4);
+  }
+
+  .ez-preview__tab {
+    padding: 0.3em 0.7em;
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: var(--ez-radius);
+    font-family: var(--ez-font-mono);
+    font-size: var(--sl-text-xs);
+    letter-spacing: 0.04em;
+    color: var(--sl-color-gray-2);
+    cursor: pointer;
+  }
+
+  .ez-preview__tab:hover {
+    border-color: var(--sl-color-accent);
+  }
+
+  .ez-preview__panel {
+    display: none;
+  }
+
+  .ez-preview__radio[data-ez-profile='reference']:checked
+    ~ .ez-preview__panel[data-ez-profile='reference'],
+  .ez-preview__radio[data-ez-profile='accessible-light']:checked
+    ~ .ez-preview__panel[data-ez-profile='accessible-light'],
+  .ez-preview__radio[data-ez-profile='print-monochrome']:checked
+    ~ .ez-preview__panel[data-ez-profile='print-monochrome'] {
+    display: block;
+  }
+
+  .ez-preview__radio[data-ez-profile='reference']:checked
+    ~ .ez-preview__tabs
+    .ez-preview__tab[data-ez-profile='reference'],
+  .ez-preview__radio[data-ez-profile='accessible-light']:checked
+    ~ .ez-preview__tabs
+    .ez-preview__tab[data-ez-profile='accessible-light'],
+  .ez-preview__radio[data-ez-profile='print-monochrome']:checked
+    ~ .ez-preview__tabs
+    .ez-preview__tab[data-ez-profile='print-monochrome'] {
+    border-color: var(--sl-color-accent);
+    color: var(--sl-color-white);
+  }
+
+  /* Der Fokus liegt am unsichtbaren Radiobutton; sichtbar wird er an dessen Beschriftung. */
+  .ez-preview__radio[data-ez-profile='reference']:focus-visible
+    ~ .ez-preview__tabs
+    .ez-preview__tab[data-ez-profile='reference'],
+  .ez-preview__radio[data-ez-profile='accessible-light']:focus-visible
+    ~ .ez-preview__tabs
+    .ez-preview__tab[data-ez-profile='accessible-light'],
+  .ez-preview__radio[data-ez-profile='print-monochrome']:focus-visible
+    ~ .ez-preview__tabs
+    .ez-preview__tab[data-ez-profile='print-monochrome'] {
+    outline: 2px solid var(--sl-color-accent);
+    outline-offset: 2px;
+  }
+
+  .ez-preview__figure {
+    margin: 0 0 var(--ez-space-3);
+  }
+
+  /* Die sechs Größen stehen auf einer Grundlinie nebeneinander, wie auf einem Kontaktbogen. */
+  .ez-preview__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: var(--ez-space-4);
+    overflow-x: auto;
+  }
+
+  .ez-preview__cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--ez-space-2);
+  }
+
+  .ez-preview__size {
+    font-family: var(--ez-font-mono);
+    font-size: var(--sl-text-2xs);
+    letter-spacing: 0.08em;
+    opacity: 0.7;
+  }
+
+  .ez-preview__caption {
+    margin-block-start: var(--ez-space-2);
+    font-family: var(--ez-font-mono);
+    font-size: var(--sl-text-2xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--sl-color-gray-3);
+  }
+</style>

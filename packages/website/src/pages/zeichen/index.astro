@@ -1,0 +1,145 @@
+---
+/**
+ * Übersicht aller Symbolseiten, gruppiert nach Kapitel und Anhang (Spec §4, §5.5).
+ *
+ * Jede Kachel trägt dieselben drei Angaben wie die Kopfzeile der Einzelseite: das Zeichen, seinen
+ * Titel und die zwei Statusmarken in kompakter Form. Die Marken stehen hier bewusst mit auf der
+ * Kachel und nicht erst auf der Detailseite — wer eine Liste überfliegt, soll nicht erst klicken
+ * müssen, um zu sehen, dass kein einziges Zeichen fachlich freigegeben ist.
+ *
+ * Die Miniaturen entstehen zur Buildzeit mit `renderSvg()` im Referenzprofil und stehen inline im
+ * HTML; jedes bekommt ein eigenes `idPrefix`, weil `renderSvg()` `id="<prefix>-title"` vergibt und
+ * hier 256 Zeichnungen in einem Dokument liegen.
+ */
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { renderSvg } from '@einsatzzeichen/core';
+import StatusPair from '../../components/StatusPair.astro';
+import { formatReviewDate } from '../../components/StatusPair.tsx';
+import { loadSnapshot, type SymbolSummary } from '../../lib/snapshot';
+
+const THUMBNAIL_SIZE = 64;
+
+const snapshot = loadSnapshot();
+
+interface ChapterGroup {
+  chapter: string;
+  slug: string;
+  symbols: SymbolSummary[];
+}
+
+/** `Anhang E.1` → `anhang-e-1`; Sprungziel für das Inhaltsverzeichnis und für Verweise von außen. */
+function anchor(chapter: string): string {
+  return chapter
+    .toLowerCase()
+    .replaceAll('ä', 'ae')
+    .replaceAll('ö', 'oe')
+    .replaceAll('ü', 'ue')
+    .replaceAll('ß', 'ss')
+    .replaceAll(/[^a-z0-9]+/g, '-')
+    .replaceAll(/^-|-$/g, '');
+}
+
+/** Kapitel vor Anhang — das ist die Reihenfolge des Aufbaus: erst die Grundzeichen, dann die Anhänge. */
+function rank(chapter: string): number {
+  return chapter.startsWith('Kapitel') ? 0 : 1;
+}
+
+const collator = new Intl.Collator('de', { numeric: true });
+const buckets = new Map<string, SymbolSummary[]>();
+for (const symbol of snapshot.symbols) {
+  const bucket = buckets.get(symbol.chapter);
+  if (bucket === undefined) buckets.set(symbol.chapter, [symbol]);
+  else bucket.push(symbol);
+}
+
+const groups: ChapterGroup[] = [...buckets.entries()]
+  .map(([chapter, symbols]) => ({
+    chapter,
+    slug: anchor(chapter),
+    symbols: [...symbols].sort((left, right) => collator.compare(left.id, right.id)),
+  }))
+  .sort(
+    (left, right) =>
+      rank(left.chapter) - rank(right.chapter) || collator.compare(left.chapter, right.chapter),
+  );
+
+const thumbnails = new Map(
+  snapshot.symbols.map((symbol) => [
+    symbol.slug,
+    renderSvg(symbol.drawing, { size: THUMBNAIL_SIZE, idPrefix: `ez-thumb-${symbol.slug}` }),
+  ]),
+);
+
+const headings = groups.map((group) => ({ depth: 2, slug: group.slug, text: group.chapter }));
+
+const approved = snapshot.symbols.filter(
+  (symbol) => symbol.review.domain.status === 'approved',
+).length;
+
+const frontmatter = {
+  title: 'Zeichen',
+  description:
+    `Alle ${snapshot.symbols.length} Zeichen aus dem Katalog-Snapshot, nach Kapitel und Anhang ` +
+    'gruppiert: Zeichnung, Titel und die zwei Reviewmarken je Eintrag.',
+};
+---
+
+<StarlightPage frontmatter={frontmatter} headings={headings}>
+  <p>
+    Der Katalog-Snapshot vom {formatReviewDate(snapshot.generatedAt.slice(0, 10))} führt{' '}
+    <strong>{snapshot.symbols.length} Zeichen</strong> in {groups.length} Kapiteln und Anhängen,
+    Baseline <code class="ez-mono">{snapshot.baseline}</code>. Fachlich freigegeben ist davon{' '}
+    {approved === 0 ? 'keines' : `${approved}`} — die rechte Marke an jeder Kachel sagt es für jedes
+    Zeichen einzeln. Jede Kachel führt auf eine Seite mit der Vorschau in sechs Größen, der{' '}
+    <code class="ez-mono">SymbolSpec</code>, den vier Codebeispielen und den Nachweisen.
+  </p>
+
+  {
+    groups.map((group) => (
+      <>
+        <h2 id={group.slug}>
+          {group.chapter}
+          <span class="ez-chapter__count">{group.symbols.length}</span>
+        </h2>
+        <ul class="ez-grid ez-grid--4">
+          {group.symbols.map((symbol) => (
+            <li>
+              <a class="ez-card ez-symbolcard" href={`/zeichen/${symbol.slug}/`}>
+                <span class="ez-canvas ez-canvas--light ez-symbolcard__canvas" aria-hidden="true">
+                  <Fragment set:html={thumbnails.get(symbol.slug)} />
+                </span>
+                <span class="ez-card__title">{symbol.title}</span>
+                <code class="ez-id">{symbol.id}</code>
+                <StatusPair
+                  technical={symbol.review.technical}
+                  domain={symbol.review.domain}
+                  compact
+                />
+              </a>
+            </li>
+          ))}
+        </ul>
+      </>
+    ))
+  }
+</StarlightPage>
+
+<style>
+  .ez-chapter__count {
+    margin-inline-start: var(--ez-space-3);
+    font-family: var(--ez-font-mono);
+    font-size: var(--sl-text-xs);
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    color: var(--sl-color-gray-3);
+  }
+
+  /* Die Miniatur sitzt auf weißem Untergrund, weil die Referenzpalette darauf gerechnet ist. */
+  .ez-symbolcard__canvas {
+    min-height: 5.5rem;
+  }
+
+  .ez-symbolcard .ez-card__title {
+    font-size: var(--sl-text-base);
+  }
+</style>
