@@ -2,22 +2,29 @@
 /**
  * Eine Seite je Zeichen (Spec §5.5), zur Buildzeit aus dem Katalog-Snapshot erzeugt.
  *
- * Die Abschnittsreihenfolge steht in der Spec und ist verbindlich: Kopf, Vorschau, Spec, Code,
- * Synonyme, zulässige Kombinationen, Nachweise. Jeder Abschnitt erscheint nur, wenn Daten da sind —
- * eine leere Rubrik behauptet, es gäbe dort nichts zu wissen, statt zu sagen, dass die Daten fehlen.
- * „Änderungshistorie" fehlt deshalb ganz: dafür gibt es keine Datenquelle, und ein leerer Abschnitt
- * wäre eine Behauptung.
+ * **Aufbau.** Die Reihenfolge folgt der Präzisierung vom 28.08.2026 (Spec §3): erst was man mit
+ * dem Zeichen tun kann, dann wie es aussieht, dann was es bedeutet und woher es kommt — und ganz
+ * zuletzt, klar abgesetzt, der Teil für Entwicklerinnen und Entwickler. Die sieben Bestandteile
+ * aus §5.5 sind alle da, nur anders sortiert: Kopf mit den zwei Statusmarken, Vorschau,
+ * Bauanleitung als JSON mit „Im Baukasten öffnen“, Codebeispiele, weitere Benennungen, zulässige
+ * Kombinationen, Nachweise. Jeder Abschnitt erscheint nur, wenn Daten da sind — eine leere Rubrik
+ * behauptet, es gäbe dort nichts zu wissen, statt zu sagen, dass die Daten fehlen.
+ * „Änderungshistorie“ fehlt deshalb ganz: dafür gibt es keine Datenquelle.
  *
- * **Was aus welchem Feld kommt.** `drawing` ist die gezeigte Zeichnung; bei einem Katalogeintrag
- * (`kind: 'catalog-entry'`) ist sie die vermessene Darstellung und die `spec` dazu eine
- * Rekonstruktion. JSON, Builder-Link und Codebeispiele gehen alle von dieser Spec aus, also steht
- * bei Katalogeinträgen genau ein Hinweis darüber, der für alle drei gilt.
+ * **Sprache.** Oberhalb des Entwicklerabschnitts stehen keine Software-Begriffe: kein Rezept, kein
+ * Manifest, kein Snapshot, keine Spec. Das Zeichen heißt Zeichen, die Datei heißt Datei, und die
+ * Statusmarken bekommen einen Satz, der sagt, was sie für die Leserin bedeuten (Spec §3).
  *
- * **Reviewnotizen.** Kurz gefasst: was eine Abweichung begründet, steht oben; was eine Freigabe
- * begründet, steht bei den Nachweisen. 241 der 256 Zeichen tragen eine technische Notiz mit im
- * Mittel 895 Zeichen — alle davon in den Kopf zu setzen, schöbe die Vorschau unter eine
- * Textwand. Abweichungen (12 technische) und fachliche Notizen bleiben oben, weil sie die
- * Vertrauensfrage betreffen.
+ * **Was aus welchem Feld kommt.** `drawing` ist die gezeigte und die heruntergeladene Zeichnung;
+ * bei einem Katalogeintrag (`kind: 'catalog-entry'`) ist sie die vermessene Darstellung und die
+ * `spec` dazu eine Rekonstruktion. JSON, Baukasten-Link und Codebeispiele gehen von dieser Spec
+ * aus — also steht bei Katalogeinträgen ein Hinweis an der Aktionsleiste und einer über dem JSON.
+ * Die Downloads sind davon nicht betroffen, sie liefern `drawing`.
+ *
+ * **Reviewnotizen.** 241 der 256 Zeichen tragen eine technische Notiz mit im Mittel 895 Zeichen.
+ * Abweichungen und fachliche Notizen stehen offen im Kopf, weil sie die Vertrauensfrage betreffen;
+ * die Begründung einer erteilten Freigabe steht ebenfalls im Kopf, aber zugeklappt — sonst schöbe
+ * eine Textwand die Vorschau unter den Falz.
  */
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import CodeTabs from '../../components/CodeTabs.astro';
@@ -43,9 +50,10 @@ const snapshot = loadSnapshot();
 
 /* --- Beschriftungen ----------------------------------------------------------------------- */
 
+/** Alltagssprache für den Kopf; die Fachwörter dazu stehen im Entwicklerabschnitt. */
 const KIND_LABELS: Record<SymbolSummary['kind'], string> = {
-  'catalog-entry': 'Katalogeintrag',
-  'composition-recipe': 'Kompositionsrezept',
+  'catalog-entry': 'aus der Vorlage vermessen',
+  'composition-recipe': 'aus Grundzeichen zusammengesetzt',
 };
 
 const VARIANT_LABELS: Record<SymbolSummary['variant'], string> = {
@@ -54,10 +62,10 @@ const VARIANT_LABELS: Record<SymbolSummary['variant'], string> = {
 };
 
 /**
- * Deutsche Bezeichnung der `SymbolSpec`-Achsen. Wortgleich mit den Formularfeldern der
- * Builder-Insel (`SELECT_FIELDS`/`LIST_FIELDS` in `islands/Builder.tsx`), damit dasselbe Feld auf
- * beiden Seiten denselben Namen trägt. `labels` hat dort kein Formularfeld und deshalb hier eine
- * eigene Bezeichnung.
+ * Deutsche Bezeichnung der `SymbolSpec`-Achsen. Wortgleich mit den Formularfeldern des Baukastens
+ * (`SELECT_FIELDS`/`LIST_FIELDS` in `islands/Builder.tsx`), damit dasselbe Feld auf beiden Seiten
+ * denselben Namen trägt. `labels` hat dort kein Formularfeld und deshalb hier eine eigene
+ * Bezeichnung.
  */
 const FIELD_LABELS: Record<string, string> = {
   kind: 'Grundzeichenart',
@@ -94,36 +102,50 @@ const sourceLabel =
  */
 const headNotes = [
   symbol.review.technical.status === 'deviation' && symbol.review.technical.note !== undefined
-    ? { title: 'Bekannte Abweichung — technischer Review', note: symbol.review.technical.note }
+    ? { title: 'Bekannte Abweichung beim technischen Prüfen', note: symbol.review.technical.note }
     : undefined,
   symbol.review.domain.status === 'deviation' && symbol.review.domain.note !== undefined
-    ? { title: 'Bekannte Abweichung — fachlicher Review', note: symbol.review.domain.note }
+    ? { title: 'Bekannte Abweichung beim fachlichen Prüfen', note: symbol.review.domain.note }
     : undefined,
   symbol.review.domain.status !== 'deviation' && symbol.review.domain.note !== undefined
-    ? { title: 'Anmerkung aus dem fachlichen Review', note: symbol.review.domain.note }
+    ? { title: 'Anmerkung aus dem fachlichen Prüfen', note: symbol.review.domain.note }
     : undefined,
 ].filter((entry) => entry !== undefined);
 
-/** Die lange Begründung einer erteilten technischen Freigabe — bei den Nachweisen, aufklappbar. */
+/**
+ * Die lange Begründung einer erteilten technischen Freigabe — im Kopf, aber zugeklappt und als
+ * Zitat gekennzeichnet. Sie ist in der Fachsprache der Prüfung geschrieben (Fingerprint, Gate,
+ * Rezept); umschreiben würde den Beleg verfälschen, weglassen ihn verstecken. Also wörtlich, mit
+ * einer Aufschrift, die sagt, was da kommt (wie der README-Wortlaut auf der Grundlage-Seite).
+ */
 const technicalNote =
   symbol.review.technical.status === 'deviation' ? undefined : symbol.review.technical.note;
 
-/* --- Spec, Builder, Code ------------------------------------------------------------------ */
-
-const isReconstruction = symbol.kind === 'catalog-entry';
-const specJson = JSON.stringify(symbol.spec, null, 2);
+/* --- Aktionen ----------------------------------------------------------------------------- */
 
 /**
- * `?spec=` ist der Vertrag der Builder-Insel: base64url-kodiertes JSON ohne Füllzeichen
+ * `?spec=` ist der Vertrag des Baukastens: base64url-kodiertes JSON ohne Füllzeichen
  * (`encodeSpec`/`decodeSpec` in `src/lib/builder-state.ts`). Hier steht die Node-Fassung derselben
- * Kodierung, damit diese Seite nicht den Browserpfad des Builders in den Build zieht; ein Vergleich
- * über alle 256 Specs — Umlaute eingeschlossen — hat beide Wege als bytegleich belegt.
+ * Kodierung, damit diese Seite nicht den Browserpfad des Baukastens in den Build zieht; ein
+ * Vergleich über alle 256 Specs — Umlaute eingeschlossen — hat beide Wege als bytegleich belegt.
  */
 const builderHref = `/builder/?spec=${Buffer.from(JSON.stringify(symbol.spec), 'utf8').toString('base64url')}`;
 
-const samples = codeSamplesFor(symbol.spec, symbol.id);
+/**
+ * Die Karte kennt den Parameter `symbol` noch nicht; sie bekommt ihn in einem eigenen Task. Der
+ * Link steht trotzdem schon in dieser Form, damit die Adresse sich später nicht ändert — ein
+ * unbekannter Parameter öffnet die Karte einfach mit ihrer Voreinstellung.
+ */
+const mapHref = `/maplibre-lab/?symbol=${symbol.slug}`;
 
-/* --- Abschnitt 6: gesetzte Felder und ihre Regeln ------------------------------------------ */
+const svgHref = `/zeichen/${symbol.slug}.svg`;
+const pngHref = `/zeichen/${symbol.slug}.png`;
+
+/* --- Entwicklerabschnitt ------------------------------------------------------------------ */
+
+const isReconstruction = symbol.kind === 'catalog-entry';
+const specJson = JSON.stringify(symbol.spec, null, 2);
+const samples = codeSamplesFor(symbol.spec, symbol.id);
 
 /** `functionRole` → `function-role`; die Regelkennungen führen dieselben Wörter in Bindestrichform. */
 function kebab(field: string): string {
@@ -133,7 +155,8 @@ function kebab(field: string): string {
 function valueLabels(field: string, value: unknown): { text: string; id?: string }[] {
   const vocabulary = snapshot.builder[field] ?? [];
   const label = (id: string): string => vocabulary.find((entry) => entry.id === id)?.label ?? id;
-  if (Array.isArray(value)) return value.map((item) => ({ id: String(item), text: label(String(item)) }));
+  if (Array.isArray(value))
+    return value.map((item) => ({ id: String(item), text: label(String(item)) }));
   if (typeof value === 'object' && value !== null) {
     return Object.entries(value).map(([key, entry]) => ({ id: key, text: String(entry) }));
   }
@@ -175,17 +198,19 @@ const hasNames = symbol.synonyms.length > 0 || symbol.legacyIds.length > 0;
  * automatisch ein. Die Liste steht deshalb hier und trägt genau die `id`s der Überschriften unten.
  */
 const headings = [
-  { depth: 2, slug: 'vorschau', text: 'Vorschau' },
-  { depth: 2, slug: 'spec', text: 'Spec' },
-  { depth: 2, slug: 'codebeispiele', text: 'Codebeispiele' },
-  ...(hasNames ? [{ depth: 2, slug: 'benennungen', text: 'Weitere Benennungen' }] : []),
-  { depth: 2, slug: 'kombinationen', text: 'Zulässige Kombinationen' },
-  { depth: 2, slug: 'nachweise', text: 'Nachweise' },
+  { depth: 2, slug: 'verwenden', text: 'Zeichen verwenden' },
+  { depth: 2, slug: 'ansehen', text: 'So sieht es aus' },
+  { depth: 2, slug: 'herkunft', text: 'Bedeutung und Herkunft' },
+  { depth: 2, slug: 'entwicklung', text: 'Für Entwicklerinnen und Entwickler' },
+  { depth: 3, slug: 'bauanleitung', text: 'Bauanleitung als JSON' },
+  { depth: 3, slug: 'codebeispiele', text: 'Codebeispiele' },
+  { depth: 3, slug: 'kombinationen', text: 'Zulässige Kombinationen' },
+  { depth: 3, slug: 'nachweise', text: 'Nachweise' },
 ];
 
 const description =
-  `${symbol.title} — ${KIND_LABELS[symbol.kind]} aus ${symbol.chapter}: Vorschau in sechs Größen ` +
-  'und drei Farbprofilen, SymbolSpec, Codebeispiele, Reviewstand und Nachweise.';
+  `${symbol.title} aus ${symbol.chapter}: Zeichen ansehen, als SVG oder PNG herunterladen, auf ` +
+  'der Karte zeigen, im Baukasten abwandeln — mit Prüfstand, Herkunft und Codebeispielen.';
 ---
 
 <StarlightPage frontmatter={{ title: symbol.title, description }} headings={headings}>
@@ -193,25 +218,15 @@ const description =
     {symbol.chapter} · {KIND_LABELS[symbol.kind]} · {VARIANT_LABELS[symbol.variant]}
   </p>
 
-  <dl class="ez-head">
-    <dt>Semantische ID</dt>
-    <dd><code class="ez-id ez-head__copy">{symbol.id}</code></dd>
-
-    <dt>Quelle</dt>
-    <dd>
-      {sourceLabel} · {symbol.source.citation} ·{' '}
-      <a href="/grundlage/#quellenregister">Quellenregister</a>
-    </dd>
-
-    <dt>Manifestschlüssel</dt>
-    <dd><code class="ez-id">{symbol.sourceId}</code></dd>
-
-    <dt>Profil</dt>
-    <dd><a href="/grundlage/#profile"><code class="ez-mono">{symbol.profile}</code></a></dd>
-  </dl>
-
   <p class="ez-head__status">
     <StatusPair technical={symbol.review.technical} domain={symbol.review.domain} />
+  </p>
+
+  <p class="ez-head__explain">
+    „Technisch geprüft“ heißt: das Bild stimmt mit der Vorlage überein, nachgemessen und mit Tests
+    abgesichert. „Fachlich noch nicht geprüft“ heißt: niemand aus der Fachwelt hat bestätigt, dass
+    dies das richtige Zeichen für diese Bedeutung ist. Beide Angaben stehen an jedem Zeichen dieser
+    Website; die rechte ist die, die man leicht übersieht.
   </p>
 
   {
@@ -223,29 +238,134 @@ const description =
     ))
   }
 
-  <h2 id="vorschau">Vorschau</h2>
+  {
+    technicalNote !== undefined && (
+      <details class="ez-longnote">
+        <summary>Wortlaut aus dem technischen Review (Fachsprache)</summary>
+        <p>{technicalNote}</p>
+      </details>
+    )
+  }
+
+  <h2 id="verwenden">Zeichen verwenden</h2>
+
+  <div class="ez-actions">
+    <a class="ez-action" href={svgHref} download={`${symbol.slug}.svg`}>
+      <strong>Als SVG herunterladen</strong>
+      <span>Bleibt in jeder Größe scharf — für Karten, Dokumente und Druck</span>
+    </a>
+    <a class="ez-action" href={pngHref} download={`${symbol.slug}.png`}>
+      <strong>Als PNG herunterladen</strong>
+      <span>Bilddatei, 256 Pixel breit, weißer Hintergrund — für Folien und ältere Programme</span>
+    </a>
+    <a class="ez-action" href={mapHref}>
+      <strong>Auf der Karte ansehen</strong>
+      <span>Das Zeichen auf einer echten Karte, in verschiedenen Größen</span>
+    </a>
+    <a class="ez-action" href={builderHref}>
+      <strong>Im Baukasten öffnen</strong>
+      <span>Dieses Zeichen abwandeln und sehen, welche Kombinationen erlaubt sind</span>
+    </a>
+  </div>
+
+  {
+    isReconstruction && (
+      <p class="ez-hint">
+        Dieses Zeichen ist an der Vorlage vermessen. Die beiden Dateien geben genau das wieder, was
+        oben zu sehen ist; im Baukasten kann das Ergebnis dagegen leicht anders aussehen, weil er es
+        aus Grundzeichen neu zusammensetzt.
+      </p>
+    )
+  }
+
+  <h2 id="ansehen">So sieht es aus</h2>
   <p>
-    Dieselbe Zeichnung in {[16, 24, 32, 64, 128, 256].join(', ')} px, je einmal auf weißem und auf
-    dunklem Untergrund. Die drei Schaltflächen wechseln das Farbprofil aus <code class="ez-mono"
-      >RENDER_THEMES</code
-    >: Referenz (die Palette der Vorlage), kontraststark hell und Druck monochrom. Alle Zeichnungen
-    stehen als Inline-SVG im HTML, erzeugt mit <code class="ez-mono">renderSvg()</code> zur Buildzeit.
+    Dasselbe Zeichen in sechs Größen — von 16 bis 256 Pixel breit —, jeweils auf hellem und auf
+    dunklem Untergrund. Die drei Schaltflächen wechseln die Farbfassung: „Referenz“ ist die Palette
+    der Vorlage, „Kontraststark hell“ hebt die Farben für schwierige Bildschirme an, „Druck
+    monochrom“ ist die Fassung für Schwarz-Weiß-Druck und Kopien.
   </p>
 
   <SymbolPreview drawing={symbol.drawing} idPrefix={`ez-${symbol.slug}`} />
 
-  <h2 id="spec">Spec</h2>
+  <h2 id="herkunft">Bedeutung und Herkunft</h2>
+
+  <dl class="ez-head">
+    <dt>Kennung</dt>
+    <dd><code class="ez-id ez-head__copy">{symbol.id}</code></dd>
+
+    <dt>Quelle</dt>
+    <dd>
+      {sourceLabel} · {symbol.source.citation} ·{' '}
+      <a href="/grundlage/#quellenregister">alle Quellen mit Prüfstand</a>
+    </dd>
+
+    <dt>Zeichenprofil</dt>
+    <dd>
+      <a href="/grundlage/#profile"><code class="ez-mono">{symbol.profile}</code></a> — die
+      Maßregeln, nach denen dieses Zeichen gezeichnet ist
+    </dd>
+
+    {
+      symbol.synonyms.length > 0 && (
+        <>
+          <dt>Andere Bezeichnungen</dt>
+          <dd>{symbol.synonyms.join(', ')}</dd>
+        </>
+      )
+    }
+
+    {
+      symbol.legacyIds.length > 0 && (
+        <>
+          <dt>Frühere Kennungen</dt>
+          <dd class="ez-mono">{symbol.legacyIds.join(', ')}</dd>
+        </>
+      )
+    }
+  </dl>
+
+  {
+    !hasNames && (
+      <p class="ez-hint">
+        Andere Bezeichnungen und frühere Kennungen führt der Katalog für dieses Zeichen noch nicht.
+      </p>
+    )
+  }
+
+  {
+    symbol.contrastException !== undefined && (
+      <div class="ez-note">
+        <span class="ez-note__title">Ausnahme beim Farbkontrast</span>
+        <p>
+          Für dieses Zeichen ist eine Ausnahme vom Kontrastmaß eingetragen:{' '}
+          {symbol.contrastException}. Sie ist entschieden und dokumentiert, also kein offener Punkt;
+          nachlesen lässt sie sich unter <a href="/coverage/">Stand der Prüfung</a>.
+        </p>
+      </div>
+    )
+  }
+
+  <h2 id="entwicklung">Für Entwicklerinnen und Entwickler</h2>
+  <p>
+    Ab hier stehen die Begriffe der Bibliothek: <code class="ez-mono">SymbolSpec</code>,{' '}
+    <code class="ez-mono">compose()</code>, <code class="ez-mono">renderSvg()</code>. Wer das
+    Zeichen nur benutzen will, ist mit den Dateien oben fertig.
+  </p>
+
+  <h3 id="bauanleitung">Bauanleitung als JSON</h3>
 
   {
     isReconstruction && (
       <div class="ez-note">
         <span class="ez-note__title">Rekonstruktion, keine Messung</span>
         <p>
-          Dieses Zeichen ist ein Katalogeintrag: gezeigt wird die vermessene Darstellung aus der
-          Quelle. Die Spec darunter ist die Rekonstruktion dazu — sie beschreibt, mit welchen Achsen
-          sich dasselbe Zeichen zusammensetzen ließe. Was <code class="ez-mono">compose()</code>{' '}
-          daraus baut, kann von der Darstellung oben abweichen. Das gilt für das JSON, für den
-          Builder-Link und für die vier Codebeispiele gleichermaßen.
+          Dieses Zeichen ist ein Katalogeintrag: gezeigt und ausgeliefert wird die vermessene
+          Darstellung aus der Quelle. Die <code class="ez-mono">SymbolSpec</code> darunter ist die
+          Rekonstruktion dazu — sie beschreibt, mit welchen Achsen sich dasselbe Zeichen
+          zusammensetzen ließe. Was <code class="ez-mono">compose()</code> daraus baut, kann von der
+          Darstellung oben abweichen. Das gilt für das JSON, für den Baukasten-Link und für die vier
+          Codebeispiele gleichermaßen.
         </p>
       </div>
     )
@@ -254,45 +374,24 @@ const description =
   <pre class="ez-spec"><code>{specJson}</code></pre>
 
   <p>
-    <a class="ez-action" href={builderHref}>
-      <strong>Im Builder öffnen</strong>
-      <span>Diese Spec im Formular, mit Live-Vorschau und Regelprüfung</span>
-    </a>
+    Manifestschlüssel dieser Zeile: <code class="ez-id">{symbol.sourceId}</code> ·{' '}
+    <a href={builderHref}>dieselbe Spec im Baukasten öffnen</a>
   </p>
 
-  <h2 id="codebeispiele">Codebeispiele</h2>
+  <h3 id="codebeispiele">Codebeispiele</h3>
   <p>
     Vier Kanäle, ein Zeichen. Die Beispiele entstehen aus derselben Vorlage wie im Quickstart und im
-    Builder (<code class="ez-mono">src/lib/code-samples.ts</code>), damit sie nicht hinter den
+    Baukasten (<code class="ez-mono">src/lib/code-samples.ts</code>), damit sie nicht hinter den
     Paket-APIs zurückbleiben.
   </p>
 
   <CodeTabs samples={samples} idPrefix={`ez-${symbol.slug}`} />
 
-  {
-    hasNames && (
-      <>
-        <h2 id="benennungen">Weitere Benennungen</h2>
-        {symbol.synonyms.length > 0 && (
-          <p>
-            <strong>Synonyme:</strong> {symbol.synonyms.join(', ')}
-          </p>
-        )}
-        {symbol.legacyIds.length > 0 && (
-          <p>
-            <strong>Legacy-Bezeichnungen:</strong>{' '}
-            <span class="ez-mono">{symbol.legacyIds.join(', ')}</span>
-          </p>
-        )}
-      </>
-    )
-  }
-
-  <h2 id="kombinationen">Zulässige Kombinationen</h2>
+  <h3 id="kombinationen">Zulässige Kombinationen</h3>
   <p>
-    Diese Spec setzt {setFields.length}{' '}
-    {setFields.length === 1 ? 'Feld' : 'Felder'}. Darunter steht, welche Werte gesetzt sind und
-    welche Regeln aus <code class="ez-mono">validateSpec()</code> denselben Feldnamen tragen —{' '}
+    Diese Spec setzt {setFields.length} {setFields.length === 1 ? 'Feld' : 'Felder'}. Darunter steht,
+    welche Werte gesetzt sind und welche Regeln aus <code class="ez-mono">validateSpec()</code>{' '}
+    denselben Feldnamen tragen —{' '}
     {ruleCount === 0 ? 'für diese Felder keine' : `${ruleCount} an der Zahl`}.
   </p>
 
@@ -355,11 +454,11 @@ const description =
     dem Feldnamen in Bindestrichform beginnt. <code class="ez-mono">validateSpec()</code> führt keine
     Feldzuordnung, deshalb ist diese Liste nicht die vollständige Prüfung — Regeln über mehrere
     Achsen hinweg stehen nirgends in dieser Tabelle. Wer wissen will, ob eine geänderte Kombination
-    trägt, ändert sie im <a href="/builder/">Builder</a>: dort läuft dieselbe Komposition wie im
+    trägt, ändert sie im <a href="/builder/">Baukasten</a>: dort läuft dieselbe Komposition wie im
     Katalog, und jede abgelehnte Kombination kommt mit ihrer Regel und deren Erklärung zurück.
   </p>
 
-  <h2 id="nachweise">Nachweise</h2>
+  <h3 id="nachweise">Nachweise</h3>
 
   {
     symbol.evidence.length > 0 && (
@@ -378,29 +477,9 @@ const description =
 
   <p>
     Gemessen und gerendert wird im Profil <code class="ez-mono">{symbol.profile}</code>; die Profile
-    und ihre Prüfstände stehen auf der <a href="/grundlage/#profile">Grundlage-Seite</a>.
+    und ihre Prüfstände stehen auf der <a href="/grundlage/#profile">Grundlage-Seite</a>, der
+    gesamte Prüfstand unter <a href="/coverage/">Stand der Prüfung</a>.
   </p>
-
-  {
-    symbol.contrastException !== undefined && (
-      <div class="ez-note">
-        <span class="ez-note__title">Kontrastausnahme</span>
-        <p>
-          {symbol.contrastException} — die Ausnahme ist entschieden und dokumentiert, kein offener
-          Blocker. Sie steht auch in der Übersicht auf der <a href="/coverage/">Coverage-Seite</a>.
-        </p>
-      </div>
-    )
-  }
-
-  {
-    technicalNote !== undefined && (
-      <details class="ez-longnote">
-        <summary>Begründung des technischen Reviews</summary>
-        <p>{technicalNote}</p>
-      </details>
-    )
-  }
 </StarlightPage>
 
 <style>
@@ -425,13 +504,32 @@ const description =
     margin: 0;
   }
 
-  .ez-head__status {
-    margin-block: var(--ez-space-4) var(--ez-space-6);
-  }
-
   /* Kopierbar ohne Skript: ein Klick wählt die ganze Kennung, nicht das Wort unter dem Zeiger. */
   .ez-head__copy {
     user-select: all;
+  }
+
+  .ez-head__status {
+    margin-block: var(--ez-space-4) var(--ez-space-3);
+  }
+
+  .ez-head__explain {
+    font-size: var(--sl-text-sm);
+    line-height: 1.65;
+    color: var(--sl-color-gray-2);
+  }
+
+  /* Die vier Aktionen: mehrspaltig, sobald Platz ist; die zweite Zeile trägt die Erklärung. */
+  .ez-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: var(--ez-space-3);
+    margin-block: var(--ez-space-4);
+  }
+
+  .ez-hint {
+    font-size: var(--sl-text-sm);
+    color: var(--sl-color-gray-3);
   }
 
   .ez-spec {
@@ -463,7 +561,7 @@ const description =
   }
 
   .ez-longnote {
-    margin-block: var(--ez-space-6);
+    margin-block: var(--ez-space-4);
     padding: var(--ez-space-4);
     border: 1px solid var(--sl-color-hairline);
     border-radius: var(--ez-radius);

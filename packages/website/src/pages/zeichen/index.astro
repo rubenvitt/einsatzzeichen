@@ -79,19 +79,19 @@ const approved = snapshot.symbols.filter(
 const frontmatter = {
   title: 'Zeichen',
   description:
-    `Alle ${snapshot.symbols.length} Zeichen aus dem Katalog-Snapshot, nach Kapitel und Anhang ` +
-    'gruppiert: Zeichnung, Titel und die zwei Reviewmarken je Eintrag.',
+    `Alle ${snapshot.symbols.length} Zeichen des Katalogs, nach Kapitel und Anhang geordnet: ` +
+    'Zeichnung, Titel und der Prüfstand technisch/fachlich je Zeichen.',
 };
 ---
 
 <StarlightPage frontmatter={frontmatter} headings={headings}>
   <p>
-    Der Katalog-Snapshot vom {formatReviewDate(snapshot.generatedAt.slice(0, 10))} führt{' '}
-    <strong>{snapshot.symbols.length} Zeichen</strong> in {groups.length} Kapiteln und Anhängen,
-    Baseline <code class="ez-mono">{snapshot.baseline}</code>. Fachlich freigegeben ist davon{' '}
-    {approved === 0 ? 'keines' : `${approved}`} — die rechte Marke an jeder Kachel sagt es für jedes
-    Zeichen einzeln. Jede Kachel führt auf eine Seite mit der Vorschau in sechs Größen, der{' '}
-    <code class="ez-mono">SymbolSpec</code>, den vier Codebeispielen und den Nachweisen.
+    Alle <strong>{snapshot.symbols.length} Zeichen</strong> des Katalogs, geordnet nach Kapitel und
+    Anhang der Vorlage — Stand {formatReviewDate(snapshot.generatedAt.slice(0, 10))}, Vorlagenstand{' '}
+    <code class="ez-mono">{snapshot.baseline}</code>. Fachlich freigegeben ist davon{' '}
+    {approved === 0 ? 'keines' : `${approved}`}: die rechte Marke an jeder Kachel sagt es für jedes
+    Zeichen einzeln. Ein Klick führt zum Zeichen — ansehen, als SVG oder PNG herunterladen, auf der
+    Karte zeigen oder im Baukasten abwandeln.
   </p>
 
   {
