@@ -40,6 +40,12 @@ const DEFAULT_SPEC: SymbolSpec = { kind: 'formation' };
 
 const SPEC_PARAM = 'spec';
 
+/** Entprellung des URL-Schreibens in Millisekunden — siehe `useEffect` unten. */
+const URL_WRITE_DELAY_MS = 250;
+
+/** Die Seite ohne `?spec=`, für den Ausweg aus dem Fehlerblock. */
+const CLEAN_PATH = '/builder/';
+
 interface FieldDefinition {
   field: keyof SymbolSpec;
   label: string;
@@ -328,9 +334,15 @@ class ErrorBoundary extends Component<{ children: ReactNode }, BoundaryState> {
       <div className="ez-note" role="alert">
         <p className="ez-note__title">Der Builder ist beim Zeichnen abgebrochen</p>
         <p>
-          Das ist ein Fehler im Builder, keine abgelehnte Kombination. Lade die Seite neu; wenn er
-          wiederkommt, gehört die Meldung unten in eine Fehlermeldung zum Projekt.
+          Das ist ein Fehler im Builder, keine abgelehnte Kombination. Trug die URL einen
+          `spec`-Parameter, löst ein Neuladen ihn nicht — er brächte dieselbe Spec zurück.
         </p>
+        <p>
+          <a className="ez-action" href={CLEAN_PATH}>
+            <strong>Builder ohne URL-Spec öffnen</strong>
+          </a>
+        </p>
+        <p>Kommt der Fehler wieder, gehört die Meldung unten in eine Fehlermeldung zum Projekt.</p>
         <pre className="ez-builder__pre">
           <code>
             {error.name}: {error.message}
@@ -365,15 +377,29 @@ function BuilderForm() {
     }
   }, []);
 
+  // Entprellt, weil jeder Tastenanschlag im Beschriftungsfeld die Spec ändert: Safari wirft
+  // einen `SecurityError`, wenn `replaceState` öfter als rund hundertmal in dreißig Sekunden
+  // läuft. Der Timer wird bei jeder Änderung und beim Abbau gelöscht, damit kein Schreibvorgang
+  // nach dem Ende der Insel landet.
   useEffect(() => {
-    if (!hydrated) return;
-    const params = new URLSearchParams(window.location.search);
-    params.set(SPEC_PARAM, encodeSpec(spec));
-    window.history.replaceState(
-      null,
-      '',
-      `${window.location.pathname}?${params.toString()}${window.location.hash}`,
-    );
+    if (!hydrated) return undefined;
+    const timer = window.setTimeout(() => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        params.set(SPEC_PARAM, encodeSpec(spec));
+        window.history.replaceState(
+          null,
+          '',
+          `${window.location.pathname}?${params.toString()}${window.location.hash}`,
+        );
+      } catch {
+        // Hier wird bewusst geschluckt, und nur hier: eine URL, die nicht mitgeschrieben wurde,
+        // ist kein Fehler des Builders — das Formular, die Vorschau und die Codebeispiele
+        // stimmen weiter. Wer das später in einen Fehlerblock verwandelt, meldet dem Leser ein
+        // Problem, das er weder verursacht hat noch lösen kann.
+      }
+    }, URL_WRITE_DELAY_MS);
+    return () => window.clearTimeout(timer);
   }, [spec, hydrated]);
 
   const outcome = useMemo(() => outcomeOf(spec), [spec]);
@@ -540,10 +566,10 @@ function BuilderForm() {
           </ul>
           {outcome.unexplained.length === 0 ? null : (
             <div className="ez-note" role="alert">
-              <p className="ez-note__title">Zu diesen Regeln fehlt die Erklärung</p>
+              <p className="ez-note__title">Für diese Regel gibt es noch keine Erklärung</p>
               <p>
-                Der Kern meldet eine Regel, die `src/lib/rule-explanations.ts` nicht führt. Statt
-                eine Erklärung zu erfinden, steht hier die Meldung im Original:
+                Die Regel hat die Kombination abgelehnt, ihr Klartext fehlt aber noch. Statt einen
+                zu erfinden, steht hier die Meldung so, wie sie entstanden ist:
               </p>
               <ul>
                 {outcome.unexplained.map((issue, index) => (

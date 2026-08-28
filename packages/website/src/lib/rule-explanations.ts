@@ -598,17 +598,102 @@ export type RuleId = keyof typeof EXPLANATIONS;
 export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> =
   Object.freeze(EXPLANATIONS);
 
+/* --- Zweite Tabelle: Regeln, die erst beim Komponieren entstehen ------------------------- */
+
+/**
+ * Regeln aus `assertTextRunsFit()` (`packages/core/src/compose.ts`), die **nicht** in
+ * `VALIDATION_RULE_IDS` stehen.
+ *
+ * Warum eine zweite Tabelle statt eines Eintrags oben: `validateSpec()` prüft die Spec, bevor
+ * irgendetwas gezeichnet ist, und `VALIDATION_RULE_IDS` ist die Liste genau dieser Regeln. Die
+ * sechs hier entstehen erst, wenn die Komposition den Textlauf gesetzt und gegen seine Box
+ * gemessen hat — sie brauchen Geometrie, die es zur Prüfzeit noch nicht gibt. Beide Listen in
+ * einen Topf zu werfen, hieße den Mengengleichheits-Test oben aufzugeben, der belegt, dass keine
+ * Prüfregel ohne Erklärung dasteht.
+ *
+ * Die sechs Kennungen bildet `assertTextRunsFit` aus drei Präfixen (`designation` für die
+ * Fußzone, `label` für die Beschriftungszonen, `function-role-run` für die Läufe der
+ * Funktionsfassung) und zwei Endungen (`-too-wide` aus `text-too-wide` **und**
+ * `text-outside-box`, `-unknown-glyph` aus `unknown-glyph`). `rule-explanations.test.ts` löst
+ * vier davon über den echten Kompositionsweg aus und prüft, dass die geworfene Kennung hier
+ * einen Eintrag hat.
+ */
+const COMPOSITION_EXPLANATIONS = {
+  'designation-too-wide': {
+    title: 'Beschriftung passt nicht in die Fußzone',
+    explanation:
+      'Der Lauf aus `designation` steht mittig unter dem Körper, in 4 mm Schriftgrad ' +
+      '(`FOOT_TEXT_SIZE_MM` in `compose.ts`), und seine Box ist so breit wie der Körper. Die ' +
+      'Komposition bricht ab, statt umzubrechen oder den Schriftgrad zu senken: beides änderte ' +
+      'die Geometrie und träfe eine gestalterische Entscheidung, die die Vorschrift nicht trifft ' +
+      '— Anhang E setzt Kürzel, keine Fließtexte. Die Meldung nennt die gemessene Tinte und die ' +
+      'Breite der Box; kürze die Beschriftung oder wähle eine breitere Grundzeichenart.',
+  },
+  'designation-unknown-glyph': {
+    title: 'Beschriftung enthält ein Zeichen ohne Vorschub',
+    explanation:
+      'Die Breite eines Laufs wird aus den Vorschubwerten von Arimo gerechnet ' +
+      '(`assets/arimo-metrics.json`, erzeugt aus der Schriftdatei im Katalog). Für ein Zeichen, ' +
+      'das die Schrift nicht führt, gibt es keinen Vorschub — die Prüfung müsste raten, und ein ' +
+      'geratener Wert wäre zu klein. Die Meldung nennt jeden fehlenden Codepoint; ersetze ihn ' +
+      'durch ein Zeichen, das die Schrift führt.',
+  },
+  'label-too-wide': {
+    title: 'Beschriftungslauf passt nicht in seine Zone',
+    explanation:
+      'Jede Zone in `labels` hat eine Box aus dem Körperprofil: Lage, Grundlinie und Breite sind ' +
+      'je Grundzeichenart vermessen, nicht frei. Ein Lauf, dessen Tinte breiter ist als seine ' +
+      'Box, stünde über der Kante. Die Meldung nennt Lauf, gemessene Tinte, Schriftgrad und ' +
+      'Boxbreite; kürze den Lauf oder setze ihn in eine Zone, deren Box ihn trägt.',
+  },
+  'label-unknown-glyph': {
+    title: 'Beschriftungslauf enthält ein Zeichen ohne Vorschub',
+    explanation:
+      'Wie bei der Fußzone: die Laufweite kommt aus den Vorschubwerten von Arimo, und ein ' +
+      'Zeichen ohne Eintrag hat keinen. Die Prüfung meldet es, statt mit einem Ersatzwert ' +
+      'weiterzurechnen. Die Meldung nennt jeden fehlenden Codepoint; ersetze ihn durch ein ' +
+      'Zeichen, das die Schrift führt.',
+  },
+  'function-role-run-too-wide': {
+    title: 'Lauf der Funktionsfassung passt nicht in seine Box',
+    explanation:
+      'Diese Läufe stammen aus der vermessenen Funktionsfassung im Katalog ' +
+      '(`layout.roleRuns` und `layout.carrierRun`), nicht aus einer Eingabe im Builder. Kürzen ' +
+      'lässt sich hier deshalb nichts; die einzige Änderung an der Spec ist eine andere ' +
+      '`functionRole`. Tritt die Meldung auf, ist das ein Befund über die Fassung im Katalog und ' +
+      'gehört dorthin gemeldet, nicht in die Spec.',
+  },
+  'function-role-run-unknown-glyph': {
+    title: 'Lauf der Funktionsfassung enthält ein Zeichen ohne Vorschub',
+    explanation:
+      'Auch dieser Lauf kommt aus der Funktionsfassung im Katalog, nicht aus einer Eingabe. Ein ' +
+      'Zeichen ohne Vorschub in Arimo macht seine Breite unprüfbar. An der Spec lässt sich nur ' +
+      'die `functionRole` wechseln; die Ursache liegt in der Fassung im Katalog und gehört ' +
+      'dorthin gemeldet.',
+  },
+} as const satisfies Readonly<Record<string, RuleExplanation>>;
+
+/**
+ * Erklärung je Kompositionsregel. Getrennt von `RULE_EXPLANATIONS`, weil beide Tabellen gegen
+ * verschiedene Quellen gattern: die eine gegen `VALIDATION_RULE_IDS`, diese gegen `compose.ts`.
+ */
+export const COMPOSITION_RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> =
+  Object.freeze(COMPOSITION_EXPLANATIONS);
+
 export interface ExplainedIssue extends ValidationIssue, RuleExplanation {}
 
 /**
- * Ergänzt eine Meldung aus `validateSpec()` um Titel und Erklärung ihrer Regel.
+ * Ergänzt eine Meldung aus `validateSpec()` oder aus der Komposition um Titel und Erklärung ihrer
+ * Regel. Gefragt wird erst die Prüftabelle, dann die Kompositionstabelle; der Test hält beide
+ * überschneidungsfrei, damit diese Reihenfolge nie eine Entscheidung trifft.
  *
  * Kein stiller Rückfall (Spec §7): eine unbekannte Kennung wirft, statt eine Erklärung zu
  * erfinden. Der Fall bedeutet, dass `core` eine Regel bekommen hat, die hier fehlt — und genau
  * das fängt `rule-explanations.test.ts` vor jedem Build ab.
  */
 export function explainIssue(issue: ValidationIssue): ExplainedIssue {
-  const entry: RuleExplanation | undefined = RULE_EXPLANATIONS[issue.rule];
+  const entry: RuleExplanation | undefined =
+    RULE_EXPLANATIONS[issue.rule] ?? COMPOSITION_RULE_EXPLANATIONS[issue.rule];
   if (entry === undefined) {
     throw new Error(
       `Für die Regel "${issue.rule}" gibt es keine Erklärung in rule-explanations.ts.`,
