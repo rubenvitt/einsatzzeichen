@@ -3,6 +3,10 @@ import { auditReference } from './commands/audit-reference.js';
 import { coverage } from './commands/coverage.js';
 import { InvalidExportSizeError, exportSvg, parseExportSize } from './commands/export.js';
 import {
+  RepositoryPolicyError,
+  verifyRepository,
+} from './commands/verify-repository.js';
+import {
   DEFAULT_ANHANG_G_PROOF_OUTPUT,
   generateAnhangGVisualProof,
 } from './commands/visual-proof.js';
@@ -45,6 +49,18 @@ switch (command) {
   case 'coverage':
     coverage();
     break;
+  case 'verify:repository': {
+    try {
+      verifyRepository();
+    } catch (error) {
+      if (error instanceof RepositoryPolicyError) {
+        console.error(error.message);
+        process.exit(1);
+      }
+      throw error;
+    }
+    break;
+  }
   case 'export': {
     try {
       const themeId = flag('theme') ?? 'reference';
@@ -91,6 +107,7 @@ switch (command) {
     console.error(`Unbekanntes Kommando: ${command ?? '(keines)'}`);
     console.error(
       'Verfügbar: audit:reference [--filter <präfix>] [--print] | coverage | ' +
+        'verify:repository | ' +
         'export [--out <pfad>] [--size <px>] ' +
         '[--theme <reference|accessible-light|print-monochrome>] | ' +
         'visual-proof --reference-root <pfad> [--out <png-pfad>]',

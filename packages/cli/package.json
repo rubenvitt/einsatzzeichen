@@ -7,6 +7,8 @@
   "dependencies": {
     "@einsatzzeichen/catalog": "workspace:*",
     "@einsatzzeichen/core": "workspace:*",
-    "@einsatzzeichen/schema": "workspace:*"
+    "@einsatzzeichen/schema": "workspace:*",
+    "@resvg/resvg-js": "2.6.2",
+    "typescript": "^5.9.3"
   }
 }

@@ -22,14 +22,10 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Der BABZ-Referenzbestand liegt in CI nicht vor. Die Fingerprint-Kennzahlen
-      # sind eingecheckt; ein Referenzvergleich läuft ausschließlich lokal.
-      - name: Referenzbestand darf nicht im Repository liegen
-        run: |
-          if [ -d taktische-zeichen ]; then
-            echo "taktische-zeichen/ ist eingecheckt — das darf nicht passieren." >&2
-            exit 1
-          fi
+      # Prüft den Git-Index statt des Arbeitsbaums: lokale ignorierte Originale sind erlaubt,
+      # eingecheckte Referenzassets sowie verletzte Paketgrenzen nicht.
+      - name: Repository-Policy
+        run: pnpm cli verify:repository
 
       - run: pnpm typecheck
       - run: pnpm test
