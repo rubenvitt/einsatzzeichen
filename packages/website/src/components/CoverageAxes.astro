@@ -17,6 +17,12 @@ const { coverage } = snapshot;
 // Je Blocker-Art eine Gruppe: `blockerRows()` (snapshot-build.ts) vergibt allen Zeilen einer Art
 // denselben `detail`-Text — der wird hier unverändert als Gruppenüberschrift übernommen, nicht
 // neu formuliert.
+//
+// Die aufgeklappten Schlüssellisten unten (Blocker- und Bereichsgruppen) tragen
+// `data-pagefind-ignore`: bei 544 Manifestzeilen sind das über tausend `<code>`-Elemente, und
+// ohne das Attribut würde Pagefind jeden einzelnen Schlüssel indexieren — eine Suche nach
+// „E.1.1" fände dann diese Seite vor der eigentlichen Symbolseite. Zahlen und
+// Gruppenüberschriften bleiben durchsuchbar, nur die Schlüssellisten nicht.
 interface BlockerGroup {
   kind: string;
   detail: string;
@@ -26,9 +32,15 @@ interface BlockerGroup {
 const blockerGroups: BlockerGroup[] = (() => {
   const byKind = new Map<string, BlockerGroup>();
   for (const blocker of coverage.blockers) {
+    // `blockerRows()` setzt `detail` für jede Zeile — ein fehlender Text wäre ein Bruch dieser
+    // Zusage und soll den Build stoppen, nicht still den technischen kind-Slug in die deutsche
+    // Prosa durchreichen.
+    if (blocker.detail === undefined) {
+      throw new Error(`Blocker "${blocker.key}" (${blocker.kind}) trägt kein detail.`);
+    }
     const group = byKind.get(blocker.kind);
     if (group === undefined) {
-      byKind.set(blocker.kind, { kind: blocker.kind, detail: blocker.detail ?? blocker.kind, keys: [blocker.key] });
+      byKind.set(blocker.kind, { kind: blocker.kind, detail: blocker.detail, keys: [blocker.key] });
     } else {
       group.keys.push(blocker.key);
     }
@@ -68,7 +80,7 @@ const totalBlockers = coverage.blockers.length;
               <summary>
                 {group.keys.length} × {group.detail}
               </summary>
-              <ul class="ez-blocker-groups__keys">
+              <ul class="ez-blocker-groups__keys" data-pagefind-ignore>
                 {group.keys.map((key) => (
                   <li>
                     <code>{key}</code>
@@ -90,7 +102,7 @@ const totalBlockers = coverage.blockers.length;
               <summary>
                 Bereich {entry.area}: {entry.count}
               </summary>
-              <ul class="ez-open-by-area__keys">
+              <ul class="ez-open-by-area__keys" data-pagefind-ignore>
                 {entry.keys.map((key) => (
                   <li>
                     <code>{key}</code>
