@@ -1,0 +1,202 @@
+---
+/**
+ * Drei Achsen, Blocker, offene Fachreviews je Bereich, Kontrastausnahmen — der obere Teil der
+ * Coverage-Seite (Spec §5.4). Ruft `loadSnapshot()` selbst auf (Buildzeit, Node): diese
+ * Komponente läuft nie im Browser, `coverage.mdx` bindet sie ohne `client:*` ein.
+ *
+ * Alle Zahlen kommen unverändert aus `snapshot.coverage` — derselbe `releaseBlockers()`/
+ * `ruleCoverage()`/`generativeReach()`/`referenceInventory()`-Lauf, den `pnpm cli coverage`
+ * beim Generieren des Snapshots ausführt (Spec §5.3, §5.4: „dieselben Zahlen — kein zweiter
+ * Rechenweg"). Diese Komponente rechnet nichts nach, sie gruppiert nur zur Anzeige.
+ */
+import { loadSnapshot } from '../lib/snapshot';
+
+const snapshot = loadSnapshot();
+const { coverage } = snapshot;
+
+// Je Blocker-Art eine Gruppe: `blockerRows()` (snapshot-build.ts) vergibt allen Zeilen einer Art
+// denselben `detail`-Text — der wird hier unverändert als Gruppenüberschrift übernommen, nicht
+// neu formuliert.
+interface BlockerGroup {
+  kind: string;
+  detail: string;
+  keys: string[];
+}
+
+const blockerGroups: BlockerGroup[] = (() => {
+  const byKind = new Map<string, BlockerGroup>();
+  for (const blocker of coverage.blockers) {
+    const group = byKind.get(blocker.kind);
+    if (group === undefined) {
+      byKind.set(blocker.kind, { kind: blocker.kind, detail: blocker.detail ?? blocker.kind, keys: [blocker.key] });
+    } else {
+      group.keys.push(blocker.key);
+    }
+  }
+  return [...byKind.values()].sort((a, b) => b.keys.length - a.keys.length);
+})();
+
+const totalBlockers = coverage.blockers.length;
+---
+
+<section class="ez-coverage-axes">
+  <div class="ez-coverage-axes__tiles">
+    {
+      coverage.axes.map((axis) => (
+        <article class="ez-axis-tile">
+          <p class="ez-axis-tile__label">{axis.label}</p>
+          <p class="ez-axis-tile__value">
+            {axis.value}
+            {axis.of !== undefined && <span class="ez-axis-tile__of"> / {axis.of}</span>}
+          </p>
+          {axis.detail !== undefined && <p class="ez-axis-tile__detail">{axis.detail}</p>}
+        </article>
+      ))
+    }
+  </div>
+
+  <section class="ez-coverage-open" aria-labelledby="was-offen-ist">
+    <h2 id="was-offen-ist">Was offen ist</h2>
+
+    <h3>Blocker für Release 1.0</h3>
+    <p>{totalBlockers} offene Punkte, gruppiert nach Art:</p>
+    <ul class="ez-blocker-groups">
+      {
+        blockerGroups.map((group) => (
+          <li>
+            <details>
+              <summary>
+                {group.keys.length} × {group.detail}
+              </summary>
+              <ul class="ez-blocker-groups__keys">
+                {group.keys.map((key) => (
+                  <li>
+                    <code>{key}</code>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          </li>
+        ))
+      }
+    </ul>
+
+    <h3>Offene fachliche Reviews je Bereich</h3>
+    <ul class="ez-open-by-area">
+      {
+        coverage.openDomainReviewsByArea.map((entry) => (
+          <li>
+            <details>
+              <summary>
+                Bereich {entry.area}: {entry.count}
+              </summary>
+              <ul class="ez-open-by-area__keys">
+                {entry.keys.map((key) => (
+                  <li>
+                    <code>{key}</code>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <aside class="ez-contrast-exceptions" aria-label="Kontrastausnahmen">
+    <h3>Kontrastausnahmen</h3>
+    <p>
+      Eine Kontrastausnahme ist kein Blocker: ein Blocker ist ein offener Punkt, eine Ausnahme
+      ist ein entschiedener.
+    </p>
+    {
+      coverage.contrastExceptions.length === 0 ? (
+        <p>Keine.</p>
+      ) : (
+        <ul>
+          {coverage.contrastExceptions.map((exception) => (
+            <li>{exception}</li>
+          ))}
+        </ul>
+      )
+    }
+  </aside>
+</section>
+
+<style>
+  .ez-coverage-axes__tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1rem;
+    margin-block: 1rem 1.5rem;
+  }
+
+  .ez-axis-tile {
+    border: 1px solid var(--sl-color-hairline, #444);
+    border-radius: 0.5rem;
+    padding: 0.9rem 1.1rem;
+  }
+
+  .ez-axis-tile__label {
+    margin: 0;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    opacity: 0.75;
+  }
+
+  .ez-axis-tile__value {
+    margin: 0.15rem 0 0.35rem;
+    font-size: 1.6rem;
+    font-weight: 600;
+  }
+
+  .ez-axis-tile__of {
+    font-size: 1.1rem;
+    font-weight: 400;
+    opacity: 0.7;
+  }
+
+  .ez-axis-tile__detail {
+    margin: 0;
+    font-size: 0.85rem;
+    opacity: 0.85;
+  }
+
+  .ez-coverage-open h3 {
+    margin-top: 1.25rem;
+  }
+
+  .ez-blocker-groups,
+  .ez-open-by-area {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .ez-blocker-groups__keys,
+  .ez-open-by-area__keys {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.6rem;
+    list-style: none;
+    padding: 0.5rem 0 0.25rem;
+    margin: 0;
+  }
+
+  .ez-contrast-exceptions {
+    margin-top: 1.5rem;
+    padding: 0.9rem 1.1rem;
+    border: 1px solid var(--sl-color-hairline, #444);
+    border-radius: 0.5rem;
+    max-width: 60rem;
+  }
+
+  .ez-contrast-exceptions h3 {
+    margin-top: 0;
+  }
+</style>

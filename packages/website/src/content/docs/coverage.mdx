@@ -1,0 +1,61 @@
+---
+title: Coverage
+description: Drei Achsen, eine Manifestmatrix und was fachlich noch offen ist — der Ausbaustand des Katalogs ohne Rundungen.
+---
+
+import CoverageAxes from '../../components/CoverageAxes.astro';
+import CoverageMatrix from '../../components/islands/CoverageMatrix.tsx';
+import { loadSnapshot } from '../../lib/snapshot';
+
+export const snapshot = loadSnapshot();
+export const coverage = snapshot.coverage;
+export const referenceAxis = coverage.axes.find((axis) => axis.label === 'Referenzabdeckung');
+
+Der Katalog misst seinen Ausbaustand auf drei unabhängigen Achsen. Nur eine davon ist ein Gate;
+die anderen beiden sind Kennzahlen über den Stand, kein Fehlerabbruch. Alle drei Zahlen unten
+kommen aus demselben Lauf wie `pnpm cli coverage` — die Website rechnet nicht nach.
+
+**Referenzabdeckung** zählt, wie viele der {referenceAxis?.of} Dateien des lokalen
+Referenzbestands eine Manifestzeile, ein Rezept oder ein Element beansprucht. Der Rest ist nicht
+verschwunden, sondern erklärt: außerhalb des beanspruchten Umfangs, als Beispielanwendung oder
+Übersichtsblatt begründet ausgeschlossen, fachlich zurückgestellt — oder, wenn keiner dieser
+Gründe zutrifft, als nicht zugeordnet gemeldet. Das ist die einzige der drei Achsen, die als
+Gate läuft: eine nicht zugeordnete Datei lässt `pnpm cli coverage` mit Exit 1 scheitern.
+
+**Regelabdeckung** stellt den Werteraum aus dem Schema gegen das, was der Katalog tatsächlich
+belegt — über 16 Achsen von `SymbolSpec` (Organisation, Stärke, Fahrwerk, Körpermarken und
+weitere) und die Piktogrammräume, die nicht Teil von `SymbolSpec` sind. Belegt heißt: ein
+Rezept, ein Katalogeintrag oder ein Element trägt den Wert. Dazu die Zahl der
+Validierungsregeln in `core` — für jede erzwingt ein core-Test einen eigenen Testfall. Auch
+diese Achse ist reine Kennzahl, kein Gate.
+
+**Generative Reichweite** misst, was der Kompositionsmotor aus den fünf Kernachsen von
+`SymbolSpec` (`kind`, Körpervariante, Organisation, Kopfzone, Fahrwerk) tatsächlich erzeugen
+kann — geprüft mit dem echten `validateSpec()` und `composeFromCatalog()`, nicht mit einer
+Nachbildung der Regeln. Bewusst ohne Prozentwert: Fähigkeiten, Körpermarken, Funktionsrollen und
+freie Bezeichnung machen den vollen Raum unbeschränkt, und ein Anteil an einem unendlichen Raum
+wäre eine Zahl ohne Aussage. Diese Achse ist dokumentiert, kein Gate.
+
+<CoverageAxes />
+
+## Technisch grün heißt nicht fachlich freigegeben
+
+{coverage.entries} Manifestzeilen aus {coverage.sources} Quellen — jede mit einem eigenen
+technischen und einem eigenen fachlichen Reviewstatus (`domain-reviews.ts`). Eine grüne
+Referenzabdeckung, Regelabdeckung oder generative Reichweite sagt, dass der Katalog technisch
+das tut, was er behauptet. Sie sagt nichts darüber, ob ein Fachmensch aus Feuerwehr, THW oder
+Rettungsdienst das Zeichen für richtig hält. Der Status der fachlichen Grundlage selbst ist
+offen: Der AFKzV hob in seiner 57. Sitzung am 13./14.03.2025 die vorläufige Anwendung der
+Empfehlungen auf, Veröffentlichung und Verbreitung sind bis zum Abschluss der Beratungen
+ausgesetzt. Unten stehen die {coverage.blockers.length} offenen Punkte für Release 1.0 und die
+offenen fachlichen Reviews je Bereich, mit Schlüssel — nicht nur als Zahl.
+
+## Manifestmatrix
+
+Eine Zeile je Manifesteintrag: Quelle und Abschnitt, Titel, Implementierung, Art, Profil,
+technischer und fachlicher Reviewstatus, Testnachweis. Filterbar nach Bereich und Status,
+sortierbar per Klick auf die Spaltenüberschrift. Zeilen mit Symbolseite verlinken auf
+`/zeichen/<slug>` — Elemente und Piktogramme haben keine eigene Seite und stehen ohne Link in
+der Tabelle.
+
+<CoverageMatrix client:visible rows={coverage.matrix} />
