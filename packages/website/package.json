@@ -4,9 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "pnpm generate",
     "dev": "astro dev",
+    "prebuild": "pnpm generate",
     "build": "astro build",
     "preview": "astro preview",
+    "precheck": "pnpm generate",
     "check": "astro check",
     "generate": "tsx scripts/generate-snapshot.ts"
   },
