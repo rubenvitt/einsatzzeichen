@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Einsatzzeichen } from '@einsatzzeichen/react';
-import { searchSymbols, type SymbolFacets } from '../../lib/explorer-search.js';
+import {
+  facetOptions,
+  reviewStatusOptions,
+  sanitizeFacets,
+  searchSymbols,
+  type ExplorerFacetField,
+  type ExplorerFilters,
+  type FacetGroup,
+  type SymbolFacets,
+} from '../../lib/explorer-search.js';
 import { loadSnapshot, type ReviewSummary, type SymbolSummary } from '../../lib/snapshot.js';
 import StatusPair, { statusMark } from '../StatusPair.js';
 
@@ -11,24 +20,16 @@ import StatusPair, { statusMark } from '../StatusPair.js';
  *
  * Facetten-Werte kommen aus dem Snapshot selbst (nicht aus `builder.vocabulary`, das die
  * *erlaubten* Werte für den Builder führt): der Explorer soll nur zeigen, was tatsächlich
- * vorkommt, mit der echten Anzahl daneben.
+ * vorkommt, mit der echten Anzahl daneben. Zähl- und Validierungslogik (`facetOptions`,
+ * `reviewStatusOptions`, `sanitizeFacets`) liegt bewusst in `lib/explorer-search.ts`: dort ist
+ * sie ohne DOM/React testbar (Review 1: „Alle"-Zähler; Review 2: URL-Facetten validieren).
  */
 
 const snapshot = loadSnapshot();
 const ALL_SYMBOLS: SymbolSummary[] = snapshot.symbols;
 const ORGANIZATION_LABELS = new Map(snapshot.builder.organization.map((entry) => [entry.id, entry.label]));
 
-interface FilterState {
-  q: string;
-  org: string;
-  kapitel: string;
-  quelle: string;
-  profil: string;
-  technisch: string;
-  fachlich: string;
-}
-
-const EMPTY_FILTERS: FilterState = {
+const EMPTY_FILTERS: ExplorerFilters = {
   q: '',
   org: '',
   kapitel: '',
@@ -38,7 +39,7 @@ const EMPTY_FILTERS: FilterState = {
   fachlich: '',
 };
 
-const PARAM_KEYS: Record<keyof FilterState, string> = {
+const PARAM_KEYS: Record<keyof ExplorerFilters, string> = {
   q: 'q',
   org: 'org',
   kapitel: 'kapitel',
@@ -48,26 +49,26 @@ const PARAM_KEYS: Record<keyof FilterState, string> = {
   fachlich: 'fachlich',
 };
 
-function filtersFromLocation(): FilterState {
+function filtersFromLocation(): ExplorerFilters {
   if (typeof window === 'undefined') return EMPTY_FILTERS;
   const params = new URLSearchParams(window.location.search);
   const next = { ...EMPTY_FILTERS };
-  for (const key of Object.keys(PARAM_KEYS) as (keyof FilterState)[]) {
+  for (const key of Object.keys(PARAM_KEYS) as (keyof ExplorerFilters)[]) {
     next[key] = params.get(PARAM_KEYS[key]) ?? '';
   }
   return next;
 }
 
-function locationSearchFromFilters(filters: FilterState): string {
+function locationSearchFromFilters(filters: ExplorerFilters): string {
   const params = new URLSearchParams();
-  for (const key of Object.keys(PARAM_KEYS) as (keyof FilterState)[]) {
+  for (const key of Object.keys(PARAM_KEYS) as (keyof ExplorerFilters)[]) {
     if (filters[key] !== '') params.set(PARAM_KEYS[key], filters[key]);
   }
   const query = params.toString();
   return query === '' ? '' : `?${query}`;
 }
 
-function toFacets(filters: FilterState): SymbolFacets {
+function toFacets(filters: ExplorerFilters): SymbolFacets {
   const facets: SymbolFacets = {};
   if (filters.org !== '') facets.organization = filters.org;
   if (filters.kapitel !== '') facets.chapter = filters.kapitel;
@@ -78,62 +79,22 @@ function toFacets(filters: FilterState): SymbolFacets {
   return facets;
 }
 
-interface FacetOption {
-  value: string;
-  label: string;
-  count: number;
-}
-
-/** Facettenwerte mit Zähler, aus dem Snapshot abgeleitet und alphabetisch sortiert. */
-function facetOptions(
-  symbols: SymbolSummary[],
-  selector: (symbol: SymbolSummary) => string | undefined,
-  labelFor: (value: string) => string,
-): FacetOption[] {
-  const counts = new Map<string, number>();
-  for (const symbol of symbols) {
-    const value = selector(symbol);
-    if (value === undefined || value === '') continue;
-    counts.set(value, (counts.get(value) ?? 0) + 1);
-  }
-  return [...counts.entries()]
-    .map(([value, count]) => ({ value, label: labelFor(value), count }))
-    .sort((a, b) => a.label.localeCompare(b.label, 'de'));
-}
-
-const REVIEW_STATUS_ORDER: ReviewSummary['status'][] = ['approved', 'deviation', 'pending'];
-
-function reviewStatusOptions(
-  symbols: SymbolSummary[],
-  axis: 'technical' | 'domain',
-): FacetOption[] {
-  const counts = new Map<ReviewSummary['status'], number>();
-  for (const symbol of symbols) {
-    const status = symbol.review[axis].status;
-    counts.set(status, (counts.get(status) ?? 0) + 1);
-  }
-  return REVIEW_STATUS_ORDER.filter((status) => (counts.get(status) ?? 0) > 0).map((status) => ({
-    value: status,
-    label: statusMark(axis, { status }).shortLabel,
-    count: counts.get(status) ?? 0,
-  }));
-}
-
 interface FacetFieldProps {
   id: string;
   label: string;
   value: string;
-  options: FacetOption[];
+  group: FacetGroup;
   onChange: (value: string) => void;
 }
 
-function FacetField({ id, label, value, options, onChange }: FacetFieldProps) {
+/** „Alle" zeigt `group.total` — die Gesamtzahl der Symbole, nicht die Summe der Options-Zähler (Review 1). */
+function FacetField({ id, label, value, group, onChange }: FacetFieldProps) {
   return (
     <label className="ez-explorer__field" htmlFor={id}>
       <span className="ez-explorer__field-label">{label}</span>
       <select id={id} value={value} onChange={(event) => onChange(event.target.value)}>
-        <option value="">Alle ({options.reduce((sum, option) => sum + option.count, 0)})</option>
-        {options.map((option) => (
+        <option value="">Alle ({group.total})</option>
+        {group.options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label} ({option.count})
           </option>
@@ -144,13 +105,47 @@ function FacetField({ id, label, value, options, onChange }: FacetFieldProps) {
 }
 
 export default function Explorer() {
-  const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
+  const [filters, setFilters] = useState<ExplorerFilters>(EMPTY_FILTERS);
+
+  const organizationGroup = useMemo(
+    () => facetOptions(ALL_SYMBOLS, (s) => s.spec.organization, (id) => ORGANIZATION_LABELS.get(id) ?? id),
+    [],
+  );
+  const chapterGroup = useMemo(() => facetOptions(ALL_SYMBOLS, (s) => s.chapter, (id) => id), []);
+  const sourceGroup = useMemo(() => {
+    const citations = new Map(ALL_SYMBOLS.map((s) => [s.source.id, s.source.citation]));
+    return facetOptions(ALL_SYMBOLS, (s) => s.source.id, (id) => citations.get(id) ?? id);
+  }, []);
+  const profileGroup = useMemo(() => facetOptions(ALL_SYMBOLS, (s) => s.profile, (id) => id), []);
+  const technicalGroup = useMemo(
+    () => reviewStatusOptions(ALL_SYMBOLS, 'technical', (status) => statusMark('technical', { status }).shortLabel),
+    [],
+  );
+  const domainGroup = useMemo(
+    () => reviewStatusOptions(ALL_SYMBOLS, 'domain', (status) => statusMark('domain', { status }).shortLabel),
+    [],
+  );
+
+  const validValues: Record<ExplorerFacetField, readonly string[]> = useMemo(
+    () => ({
+      org: organizationGroup.options.map((o) => o.value),
+      kapitel: chapterGroup.options.map((o) => o.value),
+      quelle: sourceGroup.options.map((o) => o.value),
+      profil: profileGroup.options.map((o) => o.value),
+      technisch: technicalGroup.options.map((o) => o.value),
+      fachlich: domainGroup.options.map((o) => o.value),
+    }),
+    [organizationGroup, chapterGroup, sourceGroup, profileGroup, technicalGroup, domainGroup],
+  );
 
   // Erst nach der Hydration die URL lesen: SSR und der erste Client-Render zeigen dieselbe,
   // ungefilterte Liste — sonst weicht das serverseitig gerenderte Markup vom ersten
-  // Client-Render ab, sobald die URL Parameter trägt.
+  // Client-Render ab, sobald die URL Parameter trägt. Werte, die keine Auswahlbox anbietet
+  // (veralteter oder von Hand geänderter Link, Review 2), werden dabei verworfen statt einen
+  // unsichtbaren Filter zu setzen.
   useEffect(() => {
-    setFilters(filtersFromLocation());
+    setFilters(sanitizeFacets(filtersFromLocation(), validValues));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -160,29 +155,7 @@ export default function Explorer() {
     window.history.replaceState(null, '', url);
   }, [filters]);
 
-  const organizationOptions = useMemo(
-    () => facetOptions(ALL_SYMBOLS, (s) => s.spec.organization, (id) => ORGANIZATION_LABELS.get(id) ?? id),
-    [],
-  );
-  const chapterOptions = useMemo(
-    () => facetOptions(ALL_SYMBOLS, (s) => s.chapter, (id) => id),
-    [],
-  );
-  const sourceOptions = useMemo(() => {
-    const citations = new Map(ALL_SYMBOLS.map((s) => [s.source.id, s.source.citation]));
-    return facetOptions(ALL_SYMBOLS, (s) => s.source.id, (id) => citations.get(id) ?? id);
-  }, []);
-  const profileOptions = useMemo(
-    () => facetOptions(ALL_SYMBOLS, (s) => s.profile, (id) => id),
-    [],
-  );
-  const technicalOptions = useMemo(() => reviewStatusOptions(ALL_SYMBOLS, 'technical'), []);
-  const domainOptions = useMemo(() => reviewStatusOptions(ALL_SYMBOLS, 'domain'), []);
-
-  const results = useMemo(
-    () => searchSymbols(ALL_SYMBOLS, filters.q, toFacets(filters)),
-    [filters],
-  );
+  const results = useMemo(() => searchSymbols(ALL_SYMBOLS, filters.q, toFacets(filters)), [filters]);
 
   const hasActiveFilter =
     filters.q !== '' ||
@@ -193,7 +166,7 @@ export default function Explorer() {
     filters.technisch !== '' ||
     filters.fachlich !== '';
 
-  function setField(key: keyof FilterState) {
+  function setField(key: keyof ExplorerFilters) {
     return (value: string) => setFilters((current) => ({ ...current, [key]: value }));
   }
 
@@ -214,42 +187,42 @@ export default function Explorer() {
           id="ez-explorer-org"
           label="Organisation"
           value={filters.org}
-          options={organizationOptions}
+          group={organizationGroup}
           onChange={setField('org')}
         />
         <FacetField
           id="ez-explorer-kapitel"
           label="Kapitel/Anhang"
           value={filters.kapitel}
-          options={chapterOptions}
+          group={chapterGroup}
           onChange={setField('kapitel')}
         />
         <FacetField
           id="ez-explorer-quelle"
           label="Quelle"
           value={filters.quelle}
-          options={sourceOptions}
+          group={sourceGroup}
           onChange={setField('quelle')}
         />
         <FacetField
           id="ez-explorer-profil"
           label="Profil"
           value={filters.profil}
-          options={profileOptions}
+          group={profileGroup}
           onChange={setField('profil')}
         />
         <FacetField
           id="ez-explorer-technisch"
           label="Technisch"
           value={filters.technisch}
-          options={technicalOptions}
+          group={technicalGroup}
           onChange={setField('technisch')}
         />
         <FacetField
           id="ez-explorer-fachlich"
           label="Fachlich"
           value={filters.fachlich}
-          options={domainOptions}
+          group={domainGroup}
           onChange={setField('fachlich')}
         />
       </div>
