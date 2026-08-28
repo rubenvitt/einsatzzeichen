@@ -1,6 +1,6 @@
 # Ergebnis
 
-Katalogeintrag für Wasserrettungsführung geliefert.
+Abgegrenztes Katalogartefakt geliefert.
 
 ## Scope
 
@@ -24,7 +24,7 @@ Katalog-/Workflow-Screenshot des gelieferten Eintrags.
 
 ## ClickUp
 
-Subtask LFH-492; Status `testing`.
+Zugeordneter Subtask; Status `testing`.
 
 ## Approval-HEAD
 

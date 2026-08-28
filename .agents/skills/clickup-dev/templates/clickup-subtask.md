@@ -2,20 +2,20 @@
 
 ## Ergebnis
 
-Lieferbares Ergebnis: Katalogeintrag für Wasserrettungsführung.
+Lieferbares Ergebnis: abgegrenztes Katalogartefakt.
 
 ## Nicht-Ziele
 
-Ausgeschlossen: Änderungen an nicht betroffenen Zeichenfamilien.
+Ausgeschlossen: Änderungen außerhalb des vereinbarten Lieferumfangs.
 
 ## Akzeptanzkriterien
 
-- Katalogeintrag ist im vorgesehenen Workflow sichtbar.
+- Katalogartefakt ist im vorgesehenen Workflow sichtbar.
 - Vollgates und Reviews sind nachweisbar.
 
 ## Abhängigkeiten
 
-ClickUp-Parent LFH-418; genehmigter Ziel-Branch.
+Zugeordneter Parent-Task; genehmigter Ziel-Branch.
 
 ## Verifikation
 
