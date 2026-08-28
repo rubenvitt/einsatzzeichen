@@ -123,7 +123,7 @@ Drei Klassen nach Vision:
 | 9 Sonstige | 2 | 2 | 0 | 0 |
 | **Summe** | **142** | **105 (74 %)** | **23 (16 %)** | **14 (10 %)** |
 
-Von den 105 eindeutigen Zielen liegen **10 außerhalb des heute beanspruchten Umfangs** (Kapitel 3:
+Von den 105 eindeutigen Zielen liegen **12 außerhalb des heute beanspruchten Umfangs** (Kapitel 3:
 6.1.9 Kraftrad → 3.8, 6.1.10 Fahrrad → 3.7, 5.2.1 Sonderfunktion → 3.2; Kapitel 5.2: 7.1–7.6 →
 5.2.1–5.2.6; Kapitel 5.5: 4.2.1–4.2.3 → 5.5.1–5.5.3). Der Vollständigkeitstest (Abschnitt 4.3)
 muss diese Fälle als „Ziel registriert, Eintrag fehlt" tragen können, sonst blockiert die
@@ -213,7 +213,7 @@ Zuordnung braucht im Slice den Blick auf beide Bilder (Arbeitspaket 2).
 
 `CatalogEntry.legacyIds?: readonly string[]` ist die falsche Form. Sie kann nur 1:1 und n:1
 ausdrücken, nicht 1:n, nicht „ohne Nachfolger", nicht die Begründung — und sie hängt am
-Katalogeintrag, während zehn eindeutige Ziele heute keinen Eintrag haben. Vorschlag: **ein
+Katalogeintrag, während zwölf eindeutige Ziele heute keinen Eintrag haben. Vorschlag: **ein
 eigenständiges Migrationsregister** im Katalog, geschlüsselt nach Legacy-Bezeichner, nach dem
 Muster des Quellenregisters (`SOURCE_REGISTRY`, `satisfies Record<…>`) und des Review-Ledgers
 (`MANIFEST_DOMAIN_REVIEWS`, ein Objekt je Schlüssel, Vollständigkeit in beide Richtungen getestet).
@@ -315,7 +315,7 @@ derselben Auflösung, aber ein eigener Slice.
 
 ```
 Legacy-Migration:    142/142 Bezeichner entschieden — 105 eindeutig, 23 mehrdeutig, 14 ohne Nachfolger;
-                     10 Ziele noch ohne Katalogeintrag; 142 fachlich offen
+                     12 Ziele noch ohne Katalogeintrag; 142 fachlich offen
 ```
 
 Die Zahl „entschieden" ist ein Gate (Test 1), der Rest ist Bericht. „Ziele noch ohne
@@ -392,7 +392,7 @@ Entscheidungsnotiz („hängt an nichts").
 - Niemand nutzt die Auflösung heute; kein Ausgabekanal, kein Importer, keine Docs-Seite fragt
   danach. Ein Register ohne Konsumenten ist genau der Zustand, den die Entscheidungsnotiz als
   „Typ existiert, kein Konsument" kritisiert — nur eine Ebene höher.
-- Zehn eindeutige Ziele und alle Rezeptbeispiele aus Kapitel 10 zeigen auf Katalogteile, die es
+- Zwölf eindeutige Ziele und alle Rezeptbeispiele aus Kapitel 10 zeigen auf Katalogteile, die es
   noch nicht gibt. Ein vor dem Katalogausbau gebautes Register trägt vorübergehend
   `section-only`-Zeilen, die später umgeschrieben werden müssen.
 - Das fachliche Review von 142 Zeilen konkurriert um denselben Reviewer wie die Manifestzeilen,

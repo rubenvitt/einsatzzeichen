@@ -22,7 +22,7 @@ import { entryKey } from '@einsatzzeichen/schema';
  * Fahrwerksmarken an der Körperunterkante verankern und vom Kopfgate nie erfasst werden. Beide
  * unter ein vorhandenes Kürzel zu schieben, hieße dem Reviewer eine Herkunft vorzutäuschen.
  */
-const EVIDENCE_CODES: Record<TestEvidenceKind, string> = {
+export const EVIDENCE_CODES: Record<TestEvidenceKind, string> = {
   'body-fingerprint': 'FP',
   'body-geometry-regression': 'GEO',
   'svg-snapshot': 'RS',
@@ -32,7 +32,7 @@ const EVIDENCE_CODES: Record<TestEvidenceKind, string> = {
   'pictogram-contract': 'PG',
 };
 
-const EVIDENCE_LEGEND: ReadonlyArray<readonly [code: string, meaning: string]> = [
+export const EVIDENCE_LEGEND: ReadonlyArray<readonly [code: string, meaning: string]> = [
   ['FP', 'Körperhülle gegen die Kennzahlen des lokalen Referenz-SVGs (`matchFingerprint`); nicht das vollständige Bild.'],
   ['GEO', 'Körpergeometrie gegen in der Testdatei festgenagelte Messwerte — dort, wo das Kennwertartefakt keine vergleichbare Form führt. Kein FP: andere Provenienz des Erwartungswerts.'],
   ['RS', 'Datei- und Mehrgrößen-Rastersnapshot der eigenen Ausgabe; Regressionsschutz, kein Referenzvergleich.'],
@@ -98,6 +98,26 @@ function evidenceCell(entry: CoverageEntry): string {
   return codes.length === 0 ? '—' : codes.join(', ');
 }
 
+/**
+ * Reihenfolge der Bereiche im Dossier: zuerst wie die Coverage-Zeile „Offene fachliche Reviews
+ * nach Bereich" (absteigend nach offenen Zeilen, bei Gleichstand alphabetisch), dahinter
+ * alphabetisch die Bereiche, die in `openByArea` nicht vorkommen — also vollständig
+ * abgeschlossen sind. Eigene Funktion mit Parametern statt Modul-Singletons, damit der Fall
+ * „ein Bereich ist komplett approved" testbar ist, ohne das eingefrorene Manifest anzufassen.
+ */
+export function dossierAreaOrder(
+  openByArea: Record<string, number>,
+  areas: Iterable<string>,
+): string[] {
+  const order = sortedDomainReviewOpenByArea(openByArea).map(([area]) => area);
+  const rest = [...new Set(areas)]
+    .filter((area) => !order.includes(area))
+    .sort((a, b) => a.localeCompare(b));
+  return [...order, ...rest];
+}
+
+export class ReviewDossierError extends Error {}
+
 /** Das Dossier als Markdown. Deterministisch — keine Zeitstempel, keine lokalen Pfade. */
 export function renderReviewDossier(): string {
   const entries = COVERAGE_MANIFEST.entries as readonly CoverageEntry[];
@@ -105,7 +125,6 @@ export function renderReviewDossier(): string {
   const profiles = Object.values(PROFILES);
   const blockers = releaseBlockers();
   const known = new Set(referenceInventoryAssets());
-  const registerIssues = domainReviewQuestionIssues();
 
   const manifestCount = countStatuses(entries.map((entry) => entry.review.domain));
   const sourceCount = countStatuses(sources.map((source) => source.review.domain));
@@ -147,22 +166,13 @@ export function renderReviewDossier(): string {
   out('Die Spalte „Fachreview" zeigt `status[, reviewer, date]` des Domain-Reviews; „note" dessen Notiz.');
   out('Die Spalte „Fragen" nennt die IDs der offenen Fachfragen aus dem Register; ihr Wortlaut steht');
   out('am Ende jedes Bereichs.');
-  if (registerIssues.length > 0) {
-    out();
-    out('**Registerfehler** (das Fragenregister ist nicht konsistent zum Ledger):');
-    out();
-    for (const issue of registerIssues) out(`- ${issue}`);
-  }
 
-  // Bereiche in derselben Reihenfolge wie die Coverage-Zeile „Offene fachliche Reviews nach
-  // Bereich"; Bereiche ohne offene Zeile hängen alphabetisch an.
-  const areaOrder = sortedDomainReviewOpenByArea(blockers.domainReviewOpenByArea).map(([area]) => area);
   const byArea = new Map<string, CoverageEntry[]>();
   for (const entry of entries) {
     const area = areaOf(entry.sourceId);
     byArea.set(area, [...(byArea.get(area) ?? []), entry]);
   }
-  for (const area of [...byArea.keys()].sort()) if (!areaOrder.includes(area)) areaOrder.push(area);
+  const areaOrder = dossierAreaOrder(blockers.domainReviewOpenByArea, byArea.keys());
 
   out();
   out('## Manifestreviews nach Bereich');
@@ -229,9 +239,26 @@ export function renderReviewDossier(): string {
 export interface ReviewDossierOptions {
   /** Zielpfad; ohne Angabe geht das Markdown auf stdout. */
   out?: string;
+  /**
+   * Quelle der Registerprüfung; Standard ist das echte Register. Als Parameter, damit der
+   * Fehlpfad testbar ist, ohne das eingefrorene Register zu verbiegen.
+   */
+  registerIssues?: () => string[];
 }
 
+/**
+ * Wirft `ReviewDossierError`, wenn das Fragenregister nicht zum Ledger passt — ein Dossier mit
+ * toten Fragen wäre für den Reviewer schlimmer als keines. Die CLI meldet das auf stderr mit
+ * Exit 1 (Muster der übrigen Kommandos).
+ */
 export function reviewDossier(options: ReviewDossierOptions = {}): void {
+  const issues = (options.registerIssues ?? domainReviewQuestionIssues)();
+  if (issues.length > 0) {
+    throw new ReviewDossierError(
+      'Fachfragenregister inkonsistent zum Ledger, kein Dossier erzeugt:\n' +
+        issues.map((issue) => `  - ${issue}`).join('\n'),
+    );
+  }
   const markdown = renderReviewDossier();
   if (options.out === undefined) {
     process.stdout.write(markdown);

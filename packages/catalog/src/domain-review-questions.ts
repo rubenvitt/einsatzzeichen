@@ -1,5 +1,6 @@
+import type { DepictionVariant } from '@einsatzzeichen/schema';
 import { type ManifestDomainReviewKey, MANIFEST_DOMAIN_REVIEWS } from './domain-reviews.js';
-import { deepFreeze } from './readonly-data.js';
+import { deepFreeze, type DeepReadonly } from './readonly-data.js';
 
 /**
  * Eine offene **Fachfrage** an das Domain-Review, die keine Messung und kein technisches Gate
@@ -16,7 +17,12 @@ import { deepFreeze } from './readonly-data.js';
 export interface DomainReviewQuestion {
   /** Stabiler Bezeichner, z. B. `Q-1-ereignis-ohne-organisation`. */
   id: string;
-  /** Manifestschlüssel, an denen die Frage im Dossier erscheint. Typgeprüft gegen das Ledger. */
+  /**
+   * Manifestschlüssel, an denen die Frage im Dossier erscheint. Der Typ ist die Schlüsselunion
+   * des Ledgers; `keysOf` erzeugt sie aus Abschnittsliteralen, sodass ein Abschnitt ohne
+   * Ledgerplatz schon beim Kompilieren abgewiesen wird. `domainReviewQuestionIssues()` prüft
+   * dieselbe Invariante zusätzlich zur Laufzeit — für Aufrufer, die das Register als Daten lesen.
+   */
   keys: readonly ManifestDomainReviewKey[];
   /** Die Frage selbst, als Frage formuliert. */
   question: string;
@@ -24,12 +30,32 @@ export interface DomainReviewQuestion {
   context?: string;
 }
 
-function keysOf(sections: readonly string[], variant: 'primary' | 'alternative' = 'primary') {
-  return sections.map((section) => `bbk-babz-2025:${section}#${variant}` as ManifestDomainReviewKey);
-}
+/**
+ * Abschnittsnummern, für die das Ledger eine Zeile der jeweiligen Variante führt — je Variante
+ * **einmal** verteilt über die Schlüsselunion berechnet. Eine generische Fassung je `keysOf`-Aufruf
+ * (Extract über 544 Schlüssel × Aufrufliteral) trieb `tsc` über Minuten; deshalb zwei feste
+ * Aliase und ein schlichter Rückgabetyp.
+ */
+type SectionOf<Key, V extends DepictionVariant> = Key extends `bbk-babz-2025:${infer S}#${V}`
+  ? S
+  : never;
+type PrimarySection = SectionOf<ManifestDomainReviewKey, 'primary'>;
+type AlternativeSection = SectionOf<ManifestDomainReviewKey, 'alternative'>;
 
-function range(prefix: string, from: number, to: number): string[] {
-  return Array.from({ length: to - from + 1 }, (_, index) => `${prefix}.${from + index}`);
+/**
+ * Baut Ledgerschlüssel aus Abschnittsliteralen. Die **Eingabe** ist auf Abschnitte begrenzt, die
+ * das Ledger in der Variante tatsächlich führt: `keysOf(['9.9'])` oder
+ * `keysOf(['1.1'], 'alternative')` kompilieren nicht. Die Assertion im Rückgabewert ist damit
+ * durch die Eingabeprüfung gedeckt; `domainReviewQuestionIssues()` prüft dieselbe Invariante
+ * zusätzlich zur Laufzeit.
+ */
+function keysOf(sections: readonly PrimarySection[]): ManifestDomainReviewKey[];
+function keysOf(
+  sections: readonly AlternativeSection[],
+  variant: 'alternative',
+): ManifestDomainReviewKey[];
+function keysOf(sections: readonly string[], variant: DepictionVariant = 'primary') {
+  return sections.map((section) => `bbk-babz-2025:${section}#${variant}` as ManifestDomainReviewKey);
 }
 
 /**
@@ -37,7 +63,7 @@ function range(prefix: string, from: number, to: number): string[] {
  * Ein Eintrag je Frage, nicht je Block — eine Frage, die mehrere Schlüssel betrifft, nennt sie
  * alle, damit das Dossier sie an jedem betroffenen Schlüssel ausweisen kann.
  */
-export const DOMAIN_REVIEW_QUESTIONS: readonly DomainReviewQuestion[] = deepFreeze([
+export const DOMAIN_REVIEW_QUESTIONS: DeepReadonly<readonly DomainReviewQuestion[]> = deepFreeze([
   // ── Kapitel 1 ────────────────────────────────────────────────────────────────────────────────
   {
     id: 'Q-1-ereignis-ohne-organisation',
@@ -125,19 +151,19 @@ export const DOMAIN_REVIEW_QUESTIONS: readonly DomainReviewQuestion[] = deepFree
   },
   {
     id: 'Q-D.2-gelbe-kreisflaeche',
-    keys: keysOf(range('D.2', 1, 7)),
+    keys: keysOf(['D.2.1', 'D.2.2', 'D.2.3', 'D.2.4', 'D.2.5', 'D.2.6', 'D.2.7']),
     question: 'Belegt die gelbe Kreisfläche der Ortszeichen eine Organisation — oder keine?',
   },
   {
     id: 'Q-D.2-ortsbegriffe-uebersetzung',
-    keys: keysOf(range('D.2', 1, 7)),
+    keys: keysOf(['D.2.1', 'D.2.2', 'D.2.3', 'D.2.4', 'D.2.5', 'D.2.6', 'D.2.7']),
     question:
       'Sind die technischen englischen IDs der sieben Ortszeichen fachlich vertretbare ' +
       'Übersetzungen der Ortsbegriffe?',
   },
   {
     id: 'Q-D.3-rollenbezeichnungen',
-    keys: keysOf(range('D.3', 1, 13)),
+    keys: keysOf(['D.3.1', 'D.3.2', 'D.3.3', 'D.3.4', 'D.3.5', 'D.3.6', 'D.3.7', 'D.3.8', 'D.3.9', 'D.3.10', 'D.3.11', 'D.3.12', 'D.3.13']),
     question:
       'Sind die Rollenbezeichnungen hinter den englischen Rollen-IDs fachlich richtig, und ' +
       'tragen AW/ASB/DRK/MHD/JUH als sichtbarer Text die richtige Organisation?',
@@ -158,7 +184,7 @@ export const DOMAIN_REVIEW_QUESTIONS: readonly DomainReviewQuestion[] = deepFree
   },
   {
     id: 'Q-D.4-verwaltungsrollen',
-    keys: keysOf(range('D.4', 1, 5)),
+    keys: keysOf(['D.4.1', 'D.4.2', 'D.4.3', 'D.4.4', 'D.4.5']),
     question:
       'Sind die fünf Verwaltungsrollen hinter den englischen Rollen-IDs fachlich richtig benannt, ' +
       'und ist die Verwaltungszuordnung hinter ST, ME, MG und BuPol korrekt?',
@@ -169,7 +195,7 @@ export const DOMAIN_REVIEW_QUESTIONS: readonly DomainReviewQuestion[] = deepFree
   // ── Anhang E.1 ───────────────────────────────────────────────────────────────────────────────
   {
     id: 'Q-E.1-a-buchstabenkuerzel',
-    keys: keysOf(range('E.1', 1, 16)),
+    keys: keysOf(['E.1.1', 'E.1.2', 'E.1.3', 'E.1.4', 'E.1.5', 'E.1.6', 'E.1.7', 'E.1.8', 'E.1.9', 'E.1.10', 'E.1.11', 'E.1.12', 'E.1.13', 'E.1.14', 'E.1.15', 'E.1.16']),
     question:
       'Bezeichnen die am Referenzbild abgelesenen Buchstabenkürzel die richtigen Einheiten — ' +
       'etwa „B" die Bergungsgruppe und nicht den Bergungstrupp?',
@@ -177,7 +203,7 @@ export const DOMAIN_REVIEW_QUESTIONS: readonly DomainReviewQuestion[] = deepFree
   },
   {
     id: 'Q-E.1-b-fuehrungsverhaeltnisse',
-    keys: keysOf(range('E.1', 17, 28)),
+    keys: keysOf(['E.1.17', 'E.1.18', 'E.1.19', 'E.1.20', 'E.1.21', 'E.1.22', 'E.1.23', 'E.1.24', 'E.1.25', 'E.1.26', 'E.1.27', 'E.1.28']),
     question:
       'Sind die Führungs- und Unterstellungsverhältnisse der Fachzüge, Zugtrupps, des Stabs und ' +
       'der Logistikeinheiten richtig wiedergegeben?',
@@ -220,7 +246,7 @@ export const DOMAIN_REVIEW_QUESTIONS: readonly DomainReviewQuestion[] = deepFree
   },
   {
     id: 'Q-E.1-c-o-oder-null',
-    keys: keysOf(range('E.1', 29, 37)),
+    keys: keysOf(['E.1.29', 'E.1.30', 'E.1.31', 'E.1.32', 'E.1.33', 'E.1.34', 'E.1.35', 'E.1.36', 'E.1.37']),
     question: 'Ist die runde Versalie in „VOST" und „OV" ein O und keine Null?',
     context:
       'Im gesamten E.1-Bestand kommt keine Ziffer vor; es gibt keine Negativkontrolle gegen die Null.',
@@ -298,7 +324,7 @@ export const DOMAIN_REVIEW_QUESTIONS: readonly DomainReviewQuestion[] = deepFree
   {
     id: 'Q-F-weiss-als-hilfsorganisation',
     keys: [
-      ...keysOf([...range('F.1', 1, 22), ...range('F.2', 1, 17), ...range('F.3', 1, 19)]),
+      ...keysOf(['F.1.1', 'F.1.2', 'F.1.3', 'F.1.4', 'F.1.5', 'F.1.6', 'F.1.7', 'F.1.8', 'F.1.9', 'F.1.10', 'F.1.11', 'F.1.12', 'F.1.13', 'F.1.14', 'F.1.15', 'F.1.16', 'F.1.17', 'F.1.18', 'F.1.19', 'F.1.20', 'F.1.21', 'F.1.22', 'F.2.1', 'F.2.2', 'F.2.3', 'F.2.4', 'F.2.5', 'F.2.6', 'F.2.7', 'F.2.8', 'F.2.9', 'F.2.10', 'F.2.11', 'F.2.12', 'F.2.13', 'F.2.14', 'F.2.15', 'F.2.16', 'F.2.17', 'F.3.1', 'F.3.2', 'F.3.3', 'F.3.4', 'F.3.5', 'F.3.6', 'F.3.7', 'F.3.8', 'F.3.9', 'F.3.10', 'F.3.11', 'F.3.12', 'F.3.13', 'F.3.14', 'F.3.15', 'F.3.16', 'F.3.17', 'F.3.18', 'F.3.19']),
       ...keysOf(['F.1.11', 'F.1.12', 'F.1.15', 'F.2.1', 'F.2.2', 'F.2.3', 'F.2.4', 'F.2.5'], 'alternative'),
     ],
     question:
@@ -311,7 +337,7 @@ export const DOMAIN_REVIEW_QUESTIONS: readonly DomainReviewQuestion[] = deepFree
   },
   {
     id: 'Q-F.1-a-kuerzel',
-    keys: keysOf(range('F.1', 1, 11)),
+    keys: keysOf(['F.1.1', 'F.1.2', 'F.1.3', 'F.1.4', 'F.1.5', 'F.1.6', 'F.1.7', 'F.1.8', 'F.1.9', 'F.1.10', 'F.1.11']),
     question: 'Tragen die am Bild abgelesenen Kürzel „MTF", „SEG" und „RettD" fachlich?',
   },
   {
@@ -371,13 +397,13 @@ export const DOMAIN_REVIEW_QUESTIONS: readonly DomainReviewQuestion[] = deepFree
   },
   {
     id: 'Q-F.2-d-formen',
-    keys: keysOf(range('F.2', 10, 17)),
+    keys: keysOf(['F.2.10', 'F.2.11', 'F.2.12', 'F.2.13', 'F.2.14', 'F.2.15', 'F.2.16', 'F.2.17']),
     question:
       'Was bedeuten die Vierwegeform aus F.2.11 und der verschobene Ring aus F.2.16 fachlich?',
   },
   {
     id: 'Q-F.3-e-formbegriffe',
-    keys: keysOf(range('F.3', 1, 11)),
+    keys: keysOf(['F.3.1', 'F.3.2', 'F.3.3', 'F.3.4', 'F.3.5', 'F.3.6', 'F.3.7', 'F.3.8', 'F.3.9', 'F.3.10', 'F.3.11']),
     question:
       'Welche Begriffe stehen hinter den neutral benannten Pfeil-, Rahmen- und Rautenformen der ' +
       'Platzzeichen?',
@@ -392,7 +418,7 @@ export const DOMAIN_REVIEW_QUESTIONS: readonly DomainReviewQuestion[] = deepFree
   },
   {
     id: 'Q-F.3-f-kreisformen',
-    keys: keysOf(range('F.3', 12, 19)),
+    keys: keysOf(['F.3.12', 'F.3.13', 'F.3.14', 'F.3.15', 'F.3.16', 'F.3.17', 'F.3.18', 'F.3.19']),
     question:
       'Wie heißen die vier rein technisch benannten Kreisformen fachlich, und wie grenzen sich ' +
       'Ladezone, Personentransport und besondere Bedarfe ab?',
@@ -411,7 +437,7 @@ export const DOMAIN_REVIEW_QUESTIONS: readonly DomainReviewQuestion[] = deepFree
   // ── Anhang I ─────────────────────────────────────────────────────────────────────────────────
   {
     id: 'Q-I.1-c-weiss-und-einzelbalken',
-    keys: keysOf(range('I.1', 1, 4)),
+    keys: keysOf(['I.1.1', 'I.1.2', 'I.1.3', 'I.1.4']),
     question:
       'Welche Organisation und welche Stärke bezeichnen der weiße Körper und der Einzelbalken ' +
       'von I.1.1 bis I.1.4?',
@@ -419,12 +445,12 @@ export const DOMAIN_REVIEW_QUESTIONS: readonly DomainReviewQuestion[] = deepFree
   },
   {
     id: 'Q-I.1-d-weisser-koerper',
-    keys: keysOf(range('I.1', 5, 8)),
+    keys: keysOf(['I.1.5', 'I.1.6', 'I.1.7', 'I.1.8']),
     question: 'Welche organisatorische und fachliche Bedeutung hat der weiße Körper von I.1.5 bis I.1.8?',
   },
   {
     id: 'Q-I.1-e-hilfsorganisation',
-    keys: [...keysOf(range('I.1', 9, 12)), ...keysOf(['I.1.9'], 'alternative')],
+    keys: [...keysOf(['I.1.9', 'I.1.10', 'I.1.11', 'I.1.12']), ...keysOf(['I.1.9'], 'alternative')],
     question:
       'Gehören die weißen Wasserrettungsformationen zur Hilfsorganisation, und was unterscheidet ' +
       'die zwei Darstellungen von I.1.9?',
@@ -432,41 +458,41 @@ export const DOMAIN_REVIEW_QUESTIONS: readonly DomainReviewQuestion[] = deepFree
   },
   {
     id: 'Q-I.1-f-formen',
-    keys: keysOf(range('I.1', 13, 16)),
+    keys: keysOf(['I.1.13', 'I.1.14', 'I.1.15', 'I.1.16']),
     question:
       'Welche Organisation und einsatztaktische Klassifikation stehen hinter den weißen Körpern ' +
       'und den Scheiben-, Schaft-, Klammer- beziehungsweise Ölformen von I.1.13 bis I.1.16?',
   },
   {
     id: 'Q-I.1-g-bedeutung',
-    keys: keysOf(range('I.1', 17, 20)),
+    keys: keysOf(['I.1.17', 'I.1.18', 'I.1.19', 'I.1.20']),
     question:
       'Ist die Bedeutungszuordnung von Wasserrettung, Luftunterstützung und Drohne bei I.1.17 bis ' +
       'I.1.20 fachlich richtig?',
   },
   {
     id: 'Q-I.2-landfahrzeuge',
-    keys: keysOf(range('I.2', 1, 7)),
+    keys: keysOf(['I.2.1', 'I.2.2', 'I.2.3', 'I.2.4', 'I.2.5', 'I.2.6', 'I.2.7']),
     question:
       'Sind die I.2-Landfahrzeuge über die freigegebene kategorieabhängige Geometrie hinaus ' +
       'fachlich richtig benannt und zugeordnet?',
   },
   {
     id: 'Q-I.3-bedeutung',
-    keys: keysOf(range('I.3', 1, 11)),
+    keys: keysOf(['I.3.1', 'I.3.2', 'I.3.3', 'I.3.4', 'I.3.5', 'I.3.6', 'I.3.7', 'I.3.8', 'I.3.9', 'I.3.10', 'I.3.11']),
     question: 'Welche organisatorische und fachliche Bedeutung haben die elf I.3-Zeichen?',
     context: 'Das Erscheinungsbild ist durch Rezept-, Fingerprint- und Snapshot-Gates belegt.',
   },
   {
     id: 'Q-I.4-marken',
-    keys: keysOf(range('I.4', 1, 3)),
+    keys: keysOf(['I.4.1', 'I.4.2', 'I.4.3']),
     question:
       'Sind die Marken der weißen HiOrg-Kreiszeichen I.4.1 bis I.4.3 richtig benannt und ' +
       'gegeneinander verwechslungsfrei — insbesondere ohne neue Semantik aus dem Giebel von I.4.1?',
   },
   {
     id: 'Q-I.5-wasserrettungspersonal',
-    keys: keysOf(range('I.5', 1, 8)),
+    keys: keysOf(['I.5.1', 'I.5.2', 'I.5.3', 'I.5.4', 'I.5.5', 'I.5.6', 'I.5.7', 'I.5.8']),
     question: 'Bezeichnet der weiße Körper von I.5.1 bis I.5.8 fachlich Wasserrettungspersonal?',
   },
   // ── Anhang N ─────────────────────────────────────────────────────────────────────────────────
@@ -487,7 +513,7 @@ export const DOMAIN_REVIEW_QUESTIONS: readonly DomainReviewQuestion[] = deepFree
 ] satisfies readonly DomainReviewQuestion[]);
 
 /** Alle Fragen zu einem Manifestschlüssel, in Registerreihenfolge. */
-export function domainReviewQuestionsFor(key: string): DomainReviewQuestion[] {
+export function domainReviewQuestionsFor(key: string): DeepReadonly<DomainReviewQuestion>[] {
   return DOMAIN_REVIEW_QUESTIONS.filter((question) =>
     (question.keys as readonly string[]).includes(key),
   );

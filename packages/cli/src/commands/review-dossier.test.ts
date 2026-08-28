@@ -8,7 +8,14 @@ import {
   sortedDomainReviewOpenByArea,
 } from '@einsatzzeichen/catalog';
 import { entryKey } from '@einsatzzeichen/schema';
-import { renderReviewDossier, reviewDossier } from './review-dossier.js';
+import {
+  EVIDENCE_CODES,
+  EVIDENCE_LEGEND,
+  ReviewDossierError,
+  dossierAreaOrder,
+  renderReviewDossier,
+  reviewDossier,
+} from './review-dossier.js';
 
 // Nur die Dateisystemgrenze ist gefaked (Muster: `audit-reference.test.ts`); das Dossier selbst
 // liest kein Dateisystem, `fingerprints.json` kommt per JSON-Import.
@@ -59,6 +66,26 @@ describe('review-dossier CLI', () => {
       .filter((match): match is RegExpExecArray => match !== null)
       .map((match) => [match[1], Number(match[2])] as const);
     expect(headings.slice(0, byArea.length)).toEqual(byArea);
+    // Heute ist kein Bereich vollständig abgeschlossen: jeder distinkte Bereich des Manifests hat
+    // genau eine Überschrift, und es hängt nichts an.
+    const distinctAreas = new Set(
+      COVERAGE_MANIFEST.entries.map((entry) => {
+        const section = entry.sourceId.slice(entry.sourceId.indexOf(':') + 1);
+        return section.includes('.') ? section.slice(0, section.indexOf('.')) : section;
+      }),
+    );
+    expect(headings).toHaveLength(distinctAreas.size);
+    expect(headings.length).toBe(byArea.length);
+  });
+
+  it('hängt vollständig abgeschlossene Bereiche alphabetisch (localeCompare) hinter die offenen', () => {
+    // Fixture: „4" und „E" offen, „C", „1" und „a" ohne offene Zeile. Der Primärpfad sortiert
+    // absteigend nach Anzahl, der Rest per localeCompare — nicht per Codepunkt, sonst stünde
+    // „a" hinter „C".
+    expect(dossierAreaOrder({ E: 5, 4: 5 }, ['1', 'C', 'E', 'a', '4', 'E'])).toEqual([
+      '4', 'E', '1', 'a', 'C',
+    ]);
+    expect(dossierAreaOrder({}, ['b', 'A'])).toEqual(['A', 'b']);
   });
 
   it('enthält jeden Manifestschlüssel genau einmal', () => {
@@ -95,7 +122,6 @@ describe('review-dossier CLI', () => {
     for (const question of DOMAIN_REVIEW_QUESTIONS) {
       expect(markdown).toContain(`- **${question.id}**`);
     }
-    expect(markdown).not.toContain('**Registerfehler**');
   });
 
   it('erklärt jedes verwendete Evidenzkürzel in der Legende', () => {
@@ -108,6 +134,26 @@ describe('review-dossier CLI', () => {
     for (const abbreviation of used) {
       expect(markdown, abbreviation).toContain(`- **${abbreviation}:**`);
     }
+  });
+
+  it('vergibt je Nachweisart ein eigenes Kürzel und erklärt jedes in der Legende', () => {
+    const codes = Object.values(EVIDENCE_CODES);
+    expect(new Set(codes).size).toBe(Object.keys(EVIDENCE_CODES).length);
+    const legend = new Set(EVIDENCE_LEGEND.map(([abbreviation]) => abbreviation));
+    for (const abbreviation of codes) expect(legend.has(abbreviation), abbreviation).toBe(true);
+    expect(legend.size).toBe(codes.length);
+  });
+
+  it('bricht bei Registerfehlern mit ReviewDossierError ab statt still ein Dossier zu schreiben', () => {
+    const stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    expect(() =>
+      reviewDossier({ out: 'docs/reviews/dossier.md', registerIssues: () => ['Frage X nennt 9.9'] }),
+    ).toThrow(ReviewDossierError);
+    expect(() => reviewDossier({ registerIssues: () => ['Frage X nennt 9.9'] })).toThrow(
+      /Frage X nennt 9\.9/,
+    );
+    expect(stdout).not.toHaveBeenCalled();
+    expect(mocks.writeFileSync).not.toHaveBeenCalled();
   });
 
   it('ist deterministisch und ändert keinen Reviewstatus', () => {

@@ -1,7 +1,7 @@
 import { isRenderThemeId, renderTheme } from '@einsatzzeichen/catalog';
 import { auditReference } from './commands/audit-reference.js';
 import { coverage } from './commands/coverage.js';
-import { reviewDossier } from './commands/review-dossier.js';
+import { ReviewDossierError, reviewDossier } from './commands/review-dossier.js';
 import { InvalidExportSizeError, exportSvg, parseExportSize } from './commands/export.js';
 import {
   RepositoryPolicyError,
@@ -55,7 +55,7 @@ switch (command) {
       const out = flag('out');
       reviewDossier(out !== undefined ? { out } : {});
     } catch (error) {
-      if (error instanceof CliUsageError) {
+      if (error instanceof CliUsageError || error instanceof ReviewDossierError) {
         console.error(error.message);
         process.exit(1);
       }
