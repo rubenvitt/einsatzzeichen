@@ -100,6 +100,7 @@ export default function MapLibreLab({
   const [mode, setMode] = useState<LabMode>('marker');
 
   const [styleReady, setStyleReady] = useState(false);
+  const [fontsReady, setFontsReady] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
   const [tileNote, setTileNote] = useState<TileNote | null>(null);
   const [drawError, setDrawError] = useState<string | null>(null);
@@ -124,6 +125,42 @@ export default function MapLibreLab({
     [themes, themeId],
   );
   const theme = themeOption?.theme;
+
+  /*
+   * Auf die Schrift warten, bevor gerastert wird. `addSymbolImage` zeichnet über `renderCanvas`
+   * mit `ctx.fillText`; die Leinwand kennt kein `font-display` und nimmt, was in diesem Moment
+   * aufgelöst ist. Wäre Arimo noch nicht da, stünde das Kürzel in einer Ersatzschrift mit anderen
+   * Vorschubbreiten im Bild — und weil die Bild-ID nur Zeichen, Größe, Pixelverhältnis und
+   * Farbprofil trägt, bliebe genau dieses falsche Bild im Stil liegen. Die Marker sind davon
+   * nicht betroffen: ein SVG im DOM setzt sich neu, sobald die Schrift eintrifft.
+   */
+  useEffect(() => {
+    let cancelled = false;
+    if (typeof document === 'undefined' || !('fonts' in document)) {
+      setFontsReady(true);
+      return;
+    }
+    const fonts = document.fonts;
+    void (async () => {
+      // `fonts.ready` allein genügt nicht: es meldet nur, dass gerade nichts mehr lädt — auch
+      // dann, wenn Arimo noch gar nicht angefordert wurde. `load()` fordert die Schrift an.
+      try {
+        await fonts.load('16px Arimo');
+      } catch {
+        // Eine nicht ladbare Schrift ist kein Grund, das Lab zu blockieren; dann rastert es mit
+        // der Ersatzschrift, und das ist sichtbar, statt verborgen.
+      }
+      try {
+        await fonts.ready;
+      } catch {
+        // dito
+      }
+      if (!cancelled) setFontsReady(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Karte anlegen. Läuft einmal je Grundlage; alles Weitere passiert über Effekt zwei.
   useEffect(() => {
@@ -163,7 +200,12 @@ export default function MapLibreLab({
       mapRef.current = map;
 
       map.on('load', () => {
-        if (!cancelled) setStyleReady(true);
+        if (cancelled) return;
+        // Ein Fehler ohne URL vor dem Laden gilt als tödlich (`classifyMapError`) — er kann aber
+        // vorübergehend sein. Feuert `load`, steht die Karte, und die Meldung von vorhin ist
+        // widerlegt: sie verschwindet, statt die brauchbare Karte weiter zu verdecken.
+        setMapError(null);
+        setStyleReady(true);
       });
 
       // `error` feuert auch für eine einzelne fehlende Kachel, ein fehlendes Sprite oder einen
@@ -212,6 +254,10 @@ export default function MapLibreLab({
 
     for (const marker of markersRef.current) marker.remove();
     markersRef.current = [];
+
+    // Rastern erst, wenn Arimo steht (siehe Effekt „auf die Schrift warten"). Der Effekt läuft
+    // erneut, sobald `fontsReady` umspringt.
+    if (mode === 'symbol-layer' && !fontsReady) return;
 
     try {
       if (mode === 'marker') {
@@ -267,7 +313,7 @@ export default function MapLibreLab({
     } catch (error) {
       setDrawError(errorDetail(error));
     }
-  }, [styleReady, mode, symbol, theme, themeId, size, pixelRatio, points]);
+  }, [styleReady, fontsReady, mode, symbol, theme, themeId, size, pixelRatio, points]);
 
   function zoomTo(zoom: number): void {
     mapRef.current?.easeTo({ zoom, center: [LAB_CENTER[0], LAB_CENTER[1]] });
@@ -470,6 +516,16 @@ export default function MapLibreLab({
         <div className="ez-note" role="alert">
           <span className="ez-note__title">Zeichen nicht auf der Karte</span>
           <p>Das Zeichen ließ sich nicht auf die Karte bringen. Grund: {drawError}</p>
+        </div>
+      ) : null}
+
+      {mode === 'symbol-layer' && !fontsReady ? (
+        <div className="ez-note" role="status">
+          <span className="ez-note__title">Warten auf die Schrift</span>
+          <p>
+            Die Symbolebene rastert erst, wenn Arimo geladen ist — sonst stünde das Kürzel im Bild
+            in einer Ersatzschrift, und dieses Bild bliebe im Kartenstil liegen.
+          </p>
         </div>
       ) : null}
 
