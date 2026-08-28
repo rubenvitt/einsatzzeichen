@@ -44,9 +44,30 @@ Entscheidung zu LFH-432 (Lizenz- und Quellengrundlage) sinnvoll ist.
 
 ## 3. Nutzer und Ton
 
-Zwei Leserinnen und Leser: die Entwicklerin, die in fünf Minuten ein Zeichen auf ihrer Karte
-sehen will, und der Fachmensch aus Feuerwehr, THW oder Rettungsdienst, der wissen will, ob er
-diesem Zeichen trauen darf. Beide bekommen ihre Antwort auf der Startseite, ohne zu scrollen.
+Zwei Zielgruppen, vom Projektinhaber am 28.08.2026 präzisiert: **Entwicklerinnen und
+Entwickler**, die die Zeichen in ihre Software einbauen wollen, und **Anwenderinnen und
+Anwender ohne technisches Verständnis** — Menschen aus Feuerwehr, THW, Rettungsdienst,
+Verwaltung oder Ausbildung, die ein Zeichen finden, verstehen, herunterladen oder auf einer
+Karte sehen wollen. Die zweite Gruppe ist die größere; sie darf auf keiner Seite das Gefühl
+haben, auf einer Entwicklerseite gelandet zu sein.
+
+Folgen für die Texte:
+
+- Jede Seite beginnt mit dem, was man hier **tun** kann, in Alltagssprache — nicht mit
+  Architektur, Paketen oder Buildwegen. Technik kommt danach, klar abgesetzt („Für
+  Entwicklerinnen und Entwickler“).
+- Fachbegriffe der Gefahrenabwehr (Grundzeichen, Kopfzone, Stärke, Fähigkeit) sind erlaubt,
+  weil das Publikum sie kennt; Software-Begriffe (Snapshot, Island, Hydration, Manifest,
+  Slug, Chunk, Gate, Rezept, Spec, Fingerprint) sind es **nicht** — sie werden entweder
+  übersetzt („Bauanleitung eines Zeichens“) oder nur im Entwicklerabschnitt benutzt.
+- Zahlen und Status bleiben ehrlich (siehe unten), aber mit einer Erklärung, was sie für die
+  Leserin bedeuten: „technisch geprüft“ heißt „das Bild stimmt mit der Vorlage überein“,
+  „fachlich noch nicht geprüft“ heißt „niemand aus der Fachwelt hat bestätigt, dass es das
+  richtige Zeichen für diese Bedeutung ist“.
+- Handlungsaufforderungen statt Beschreibungen: „Zeichen suchen“, „Als SVG herunterladen“,
+  „Auf der Karte ausprobieren“.
+- Fehlermeldungen und Hinweise in den interaktiven Teilen (Builder, Explorer, Karte) sprechen
+  die Anwenderin an, nie den Entwickler — kein Dateipfad, kein Stacktrace im Normaltext.
 
 Sprachregeln für alle Texte (verbindlich für jeden Subagenten, der Prosa schreibt):
 
