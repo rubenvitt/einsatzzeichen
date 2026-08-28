@@ -1,0 +1,51 @@
+---
+/**
+ * Die zwei Statusmarken für statische Seiten (Spec §5.5, §5.6).
+ *
+ * Gleiche Props, gleiche Klassen und dieselben Beschriftungen wie die React-Fassung — beide holen
+ * Wortlaut und Zeichen aus `StatusPair.tsx`, damit Seite und Insel nicht auseinanderlaufen. Diese
+ * Fassung rendert ohne React und ohne Hydration; sie ist die Voreinstellung auf Buildzeit-Seiten.
+ */
+import type { ReviewSummary } from '../lib/snapshot';
+import { STATUS_GLYPHS, statusMark } from './StatusPair.tsx';
+
+interface Props {
+  technical: ReviewSummary;
+  domain: ReviewSummary;
+  /** Kompakt: nur das kurze Label, Datum und Prüfer stehen im Tooltip. Für Kacheln und Tabellen. */
+  compact?: boolean;
+}
+
+const { technical, domain, compact = false } = Astro.props;
+const marks = [statusMark('technical', technical), statusMark('domain', domain)];
+---
+
+<span class:list={['ez-status-pair', { 'ez-status-pair--compact': compact }]}>
+  {
+    marks.map((mark) => {
+      const glyph = STATUS_GLYPHS[mark.status];
+      return (
+        <span class={mark.className} title={mark.title}>
+          <svg
+            class="ez-status__glyph"
+            viewBox="0 0 16 16"
+            width="16"
+            height="16"
+            aria-hidden="true"
+          >
+            <path
+              d={glyph.d}
+              fill={glyph.filled ? 'currentColor' : 'none'}
+              fill-rule={glyph.filled ? 'evenodd' : undefined}
+              stroke={glyph.filled ? 'none' : 'currentColor'}
+              stroke-width={glyph.filled ? undefined : 1.6}
+              stroke-linecap={glyph.filled ? undefined : 'round'}
+              stroke-linejoin={glyph.filled ? undefined : 'round'}
+            />
+          </svg>
+          <span class="ez-status__label">{compact ? mark.shortLabel : mark.label}</span>
+        </span>
+      );
+    })
+  }
+</span>
