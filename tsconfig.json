@@ -15,7 +15,11 @@
     "paths": {
       "@einsatzzeichen/schema": ["./packages/schema/src/index.ts"],
       "@einsatzzeichen/core": ["./packages/core/src/index.ts"],
-      "@einsatzzeichen/catalog": ["./packages/catalog/src/index.ts"]
+      "@einsatzzeichen/catalog": ["./packages/catalog/src/index.ts"],
+      "@einsatzzeichen/react": ["./packages/react/src/index.ts"],
+      "@einsatzzeichen/web-component": ["./packages/web-component/src/index.ts"],
+      "@einsatzzeichen/maplibre": ["./packages/maplibre/src/index.ts"],
+      "@einsatzzeichen/qgis": ["./packages/qgis/src/index.ts"]
     }
   },
   "include": ["packages/*/src/**/*.ts", "vitest.config.ts"]

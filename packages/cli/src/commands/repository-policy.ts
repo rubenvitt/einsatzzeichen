@@ -1,7 +1,24 @@
 import { posix } from 'node:path';
 import * as ts from 'typescript';
 
-export type WorkspacePackageId = 'cli' | 'catalog' | 'core' | 'schema';
+export type WorkspacePackageId =
+  | 'cli'
+  | 'catalog'
+  | 'core'
+  | 'schema'
+  | 'react'
+  | 'web-component'
+  | 'maplibre'
+  | 'qgis';
+
+/**
+ * Die vier Ausgabekanäle (LFH-405) stehen auf demselben Rang wie `catalog`: sie dürfen `core` und
+ * `schema` importieren, aber weder `catalog` noch einander — und `catalog` darf keinen Kanal
+ * importieren. Katalogdaten kommen über die Anwendung in den Kanal, nicht über eine Paketkante.
+ * Ein gleicher Rang genügt dafür, weil nur eine echt kleinere Rangzahl als Abhängigkeit zulässig
+ * ist; die Kette `cli → catalog → core → schema` bleibt damit zyklenfrei.
+ */
+export const OUTPUT_CHANNEL_PACKAGE_IDS = ['react', 'web-component', 'maplibre', 'qgis'] as const;
 
 export interface RepositoryManifest {
   id: WorkspacePackageId;
@@ -44,6 +61,10 @@ const PACKAGE_RANK: Readonly<Record<WorkspacePackageId, number>> = {
   schema: 0,
   core: 1,
   catalog: 2,
+  react: 2,
+  'web-component': 2,
+  maplibre: 2,
+  qgis: 2,
   cli: 3,
 };
 

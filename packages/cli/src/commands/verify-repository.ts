@@ -2,6 +2,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import {
+  OUTPUT_CHANNEL_PACKAGE_IDS,
   REFERENCE_IGNORE_TARGETS,
   findRepositoryPolicyViolations,
   type RepositoryManifest,
@@ -21,7 +22,13 @@ export type {
   WorkspacePackageId,
 } from './repository-policy.js';
 
-const PACKAGE_IDS = ['cli', 'catalog', 'core', 'schema'] as const;
+const PACKAGE_IDS = [
+  'cli',
+  'catalog',
+  'core',
+  'schema',
+  ...OUTPUT_CHANNEL_PACKAGE_IDS,
+] as const;
 const DEPENDENCY_SECTIONS = [
   'dependencies',
   'devDependencies',

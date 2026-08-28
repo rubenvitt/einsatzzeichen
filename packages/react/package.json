@@ -1,0 +1,14 @@
+{
+  "name": "@einsatzzeichen/react",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@einsatzzeichen/core": "workspace:*",
+    "@einsatzzeichen/schema": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  }
+}
