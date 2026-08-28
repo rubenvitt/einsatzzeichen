@@ -38,7 +38,9 @@ const KIND_LABELS: Record<SymbolKind, string> = {
   'reduced-house': 'Reduzierte Hauskontur',
 };
 
-const ORGANIZATION_LABELS: Record<OrganizationId, string> = {
+/** Öffentlich, weil die Dokumentationswebsite dasselbe Vokabular anzeigt wie die
+ * Vorlesebeschreibung — eine zweite Liste dort liefe auseinander. */
+export const ORGANIZATION_LABELS: Record<OrganizationId, string> = {
   feuerwehr: 'Feuerwehr',
   thw: 'Technisches Hilfswerk',
   'fuehrung-leitung': 'Führung und Leitung',
@@ -50,7 +52,8 @@ const ORGANIZATION_LABELS: Record<OrganizationId, string> = {
   hilfsorganisation: 'Hilfsorganisation',
 };
 
-const STRENGTH_LABELS: Record<StrengthId, string> = {
+/** Öffentlich aus demselben Grund wie `ORGANIZATION_LABELS`. */
+export const STRENGTH_LABELS: Record<StrengthId, string> = {
   trupp: 'Trupp',
   staffel: 'Staffel',
   gruppe: 'Gruppe',
@@ -61,7 +64,8 @@ export const TECHNICAL_HEAD_MARK_LABELS = Object.freeze({
   'single-vertical-bar': 'Einzelner Vertikalbalken',
 } satisfies Record<TechnicalHeadMarkId, string>);
 
-const ADMIN_LEVEL_LABELS: Record<AdminLevelId, string> = {
+/** Öffentlich aus demselben Grund wie `ORGANIZATION_LABELS`. */
+export const ADMIN_LEVEL_LABELS: Record<AdminLevelId, string> = {
   gemeinde: 'Gemeinde',
   kreis: 'Kreis',
   bezirk: 'Bezirk',
@@ -70,7 +74,8 @@ const ADMIN_LEVEL_LABELS: Record<AdminLevelId, string> = {
   'europaeische-union': 'Europäische Union',
 };
 
-const VEHICLE_CATEGORY_LABELS: Record<VehicleCategoryId, string> = {
+/** Öffentlich aus demselben Grund wie `ORGANIZATION_LABELS`. */
+export const VEHICLE_CATEGORY_LABELS: Record<VehicleCategoryId, string> = {
   'kfz-kategorie-1': 'Kraftfahrzeugkategorie 1',
   'kfz-kategorie-2': 'Kraftfahrzeugkategorie 2',
   'kfz-kategorie-3': 'Kraftfahrzeugkategorie 3',

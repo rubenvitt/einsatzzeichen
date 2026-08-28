@@ -1,0 +1,168 @@
+---
+/**
+ * Drei Achsen, Blocker, offene Fachreviews je Bereich, Kontrastausnahmen — der obere Teil der
+ * Coverage-Seite (Spec §5.4). Ruft `loadSnapshot()` selbst auf (Buildzeit, Node): diese
+ * Komponente läuft nie im Browser, `coverage.mdx` bindet sie ohne `client:*` ein.
+ *
+ * Alle Zahlen kommen unverändert aus `snapshot.coverage` — derselbe `releaseBlockers()`/
+ * `ruleCoverage()`/`generativeReach()`/`referenceInventory()`-Lauf, den `pnpm cli coverage`
+ * beim Generieren des Snapshots ausführt (Spec §5.3, §5.4: „dieselben Zahlen — kein zweiter
+ * Rechenweg"). Diese Komponente rechnet nichts nach, sie gruppiert nur zur Anzeige.
+ *
+ * Gestaltung: der gemeinsame `.ez-*`-Vorrat aus `theme.css` (`.ez-grid`/`.ez-figure` für die
+ * Achsen, `.ez-note` für „Was offen ist" und die Kontrastausnahmen) — keine eigenen Farben,
+ * eigene Regeln unten nur an neue `.ez-`-Klassen für das, was der Vorrat nicht abdeckt
+ * (Schlüssellisten, `<details>`-Rücksetzung).
+ */
+import { loadSnapshot } from '../lib/snapshot';
+
+const snapshot = loadSnapshot();
+const { coverage } = snapshot;
+
+// Je Blocker-Art eine Gruppe: `blockerRows()` (snapshot-build.ts) vergibt allen Zeilen einer Art
+// denselben `detail`-Text — der wird hier unverändert als Gruppenüberschrift übernommen, nicht
+// neu formuliert.
+//
+// Die aufgeklappten Schlüssellisten unten (Blocker- und Bereichsgruppen) tragen
+// `data-pagefind-ignore`: bei 544 Manifestzeilen sind das über tausend `<code>`-Elemente, und
+// ohne das Attribut würde Pagefind jeden einzelnen Schlüssel indexieren — eine Suche nach
+// „E.1.1" fände dann diese Seite vor der eigentlichen Symbolseite. Zahlen und
+// Gruppenüberschriften bleiben durchsuchbar, nur die Schlüssellisten nicht.
+interface BlockerGroup {
+  kind: string;
+  detail: string;
+  keys: string[];
+}
+
+const blockerGroups: BlockerGroup[] = (() => {
+  const byKind = new Map<string, BlockerGroup>();
+  for (const blocker of coverage.blockers) {
+    // `blockerRows()` setzt `detail` für jede Zeile — ein fehlender Text wäre ein Bruch dieser
+    // Zusage und soll den Build stoppen, nicht still den technischen kind-Slug in die deutsche
+    // Prosa durchreichen.
+    if (blocker.detail === undefined) {
+      throw new Error(`Blocker "${blocker.key}" (${blocker.kind}) trägt kein detail.`);
+    }
+    const group = byKind.get(blocker.kind);
+    if (group === undefined) {
+      byKind.set(blocker.kind, { kind: blocker.kind, detail: blocker.detail, keys: [blocker.key] });
+    } else {
+      group.keys.push(blocker.key);
+    }
+  }
+  return [...byKind.values()].sort((a, b) => b.keys.length - a.keys.length);
+})();
+
+const totalBlockers = coverage.blockers.length;
+---
+
+<section class="ez-coverage-axes">
+  <ul class="ez-grid ez-grid--4">
+    {
+      coverage.axes.map((axis) => (
+        <li class="ez-figure">
+          <p class="ez-figure__value">
+            {axis.value}
+            {axis.of !== undefined && <small> / {axis.of}</small>}
+          </p>
+          <p class="ez-figure__label">{axis.label}</p>
+          {axis.detail !== undefined && <p class="ez-figure__source">{axis.detail}</p>}
+        </li>
+      ))
+    }
+  </ul>
+
+  <section aria-labelledby="was-offen-ist">
+    <h2 id="was-offen-ist">Was offen ist</h2>
+
+    <div class="ez-note">
+      <p class="ez-note__title">Blocker für Release 1.0</p>
+      <p>{totalBlockers} offene Punkte, gruppiert nach Art:</p>
+      <ul class="ez-coverage-keygroups">
+        {
+          blockerGroups.map((group) => (
+            <li>
+              <details>
+                <summary>
+                  {group.keys.length} × {group.detail}
+                </summary>
+                <ul class="ez-coverage-keygroups__keys" data-pagefind-ignore>
+                  {group.keys.map((key) => (
+                    <li class="ez-id">{key}</li>
+                  ))}
+                </ul>
+              </details>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <div class="ez-note">
+      <p class="ez-note__title">Offene fachliche Reviews je Bereich</p>
+      <ul class="ez-coverage-keygroups">
+        {
+          coverage.openDomainReviewsByArea.map((entry) => (
+            <li>
+              <details>
+                <summary>
+                  Bereich {entry.area}: {entry.count}
+                </summary>
+                <ul class="ez-coverage-keygroups__keys" data-pagefind-ignore>
+                  {entry.keys.map((key) => (
+                    <li class="ez-id">{key}</li>
+                  ))}
+                </ul>
+              </details>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <aside class="ez-note" aria-label="Kontrastausnahmen">
+    <p class="ez-note__title">Kontrastausnahmen</p>
+    <p>
+      Eine Kontrastausnahme ist kein Blocker: ein Blocker ist ein offener Punkt, eine Ausnahme
+      ist ein entschiedener.
+    </p>
+    {
+      coverage.contrastExceptions.length === 0 ? (
+        <p>Keine.</p>
+      ) : (
+        <ul>
+          {coverage.contrastExceptions.map((exception) => (
+            <li>{exception}</li>
+          ))}
+        </ul>
+      )
+    }
+  </aside>
+</section>
+
+<style>
+  /* Ergänzt den gemeinsamen Vorrat nur dort, wo er nichts für die Sache hat: Schlüssellisten
+     unter einem `.ez-note__title` und die native `<details>`-Rücksetzung. Keine eigene Farbe. */
+  .ez-coverage-keygroups {
+    list-style: none;
+    padding: 0;
+    margin: var(--ez-space-2) 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--ez-space-1);
+  }
+
+  .ez-coverage-keygroups summary {
+    cursor: pointer;
+  }
+
+  .ez-coverage-keygroups__keys {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ez-space-1) var(--ez-space-3);
+    list-style: none;
+    padding: var(--ez-space-2) 0 var(--ez-space-1);
+    margin: 0;
+  }
+</style>

@@ -1,0 +1,100 @@
+---
+title: MapLibre Lab
+description: Katalogzeichen auf einer echten MapLibre-Karte — als Marker im DOM und als gerastertes Bild im Kartenstil, mit Größe, Pixel Ratio und Farbprofil zum Ausprobieren.
+---
+
+import { RENDER_THEMES } from '@einsatzzeichen/catalog';
+import MapLibreLab from '../../components/islands/MapLibreLab.tsx';
+import { labSymbols } from '../../lib/maplibre-lab.js';
+import { loadSnapshot } from '../../lib/snapshot.js';
+
+export const snapshot = loadSnapshot();
+export const symbols = labSymbols(snapshot.symbols);
+export const themes = [
+  { id: 'reference', label: 'Referenz', theme: RENDER_THEMES.reference },
+  { id: 'accessible-light', label: 'Kontraststark hell', theme: RENDER_THEMES['accessible-light'] },
+  { id: 'print-monochrome', label: 'Druck monochrom', theme: RENDER_THEMES['print-monochrome'] },
+];
+
+Ein taktisches Zeichen auf einer Karte ist zweierlei: ein SVG im DOM, das man anklicken und mit
+CSS anfassen kann, oder ein Bild im Kartenstil, das MapLibre selbst zeichnet und beim Zoomen und
+Drehen mitführt. Diese Seite zeigt beides mit demselben Zeichen auf derselben Karte, damit der
+Unterschied sichtbar wird und nicht behauptet werden muss.
+
+Zur Auswahl stehen alle {symbols.length} Zeichen aus dem Katalog-Snapshot (Bezugsbestand
+`{snapshot.baseline}`, gezeichnet von `@einsatzzeichen/core` {snapshot.coreVersion}). Die fünf
+Punkte auf der Karte liegen um Bonn und bedeuten nichts — sie sind Platzhalter, keine Lage.
+
+<MapLibreLab client:visible symbols={symbols} themes={themes} basemap="openfreemap" />
+
+## Die zwei Wege
+
+**Marker.** `renderSvg()` erzeugt das Markup, das Markup wird zum Inhalt eines `<div>`, und
+`new maplibregl.Marker({ element })` hängt dieses `<div>` an eine Koordinate. Das Zeichen bleibt
+ein DOM-Element: Vektorschärfe in jeder Zoomstufe, Ereignisse und Tooltips ohne Umweg. Dafür
+kostet jeder Marker ein DOM-Element — bei ein paar hundert Zeichen wird das Scrollen zäh.
+
+**Symbol Layer.** `addSymbolImage(map, id, drawing, { size, pixelRatio, theme })` aus
+`@einsatzzeichen/maplibre` rastert die Zeichnung und meldet sie über `map.addImage()` im
+Kartenstil an; eine `symbol`-Ebene zeigt sie über `icon-image` an jedem Punkt einer Quelle. Das
+Zeichnen übernimmt dann MapLibre, auch bei vielen tausend Punkten. Dafür ist das Bild ein Raster:
+Größe, Pixel Ratio und Farbprofil stehen beim Anlegen fest, und eine andere Einstellung ist ein
+anderes Bild unter einer anderen ID.
+
+```ts
+import { addSymbolImage } from '@einsatzzeichen/maplibre';
+
+addSymbolImage(map, 'ez:base.formation:64:2:reference', drawing, {
+  size: 64,
+  pixelRatio: 2,
+});
+map.addLayer({
+  id: 'einsatzzeichen',
+  type: 'symbol',
+  source: 'lage',
+  layout: { 'icon-image': 'ez:base.formation:64:2:reference', 'icon-overlap': 'always' },
+});
+```
+
+`size × pixelRatio` muss eine ganze Zahl ergeben — der Bildpuffer kennt keine halben Pixel.
+MapLibre rechnet über `pixelRatio` auf die CSS-Größe zurück; deshalb erscheint ein Zeichen bei
+Pixel Ratio 1, 2 und 3 gleich groß, nur schärfer. Wenn die Größe zwischen Marker und Symbolebene
+auseinanderläuft, ist die Rechnung falsch, nicht die Karte.
+
+<div class="ez-note">
+<span class="ez-note__title">Kartengrundlage</span>
+
+Die Kacheln kommen von OpenFreeMap (Stil `positron`). OpenFreeMap nennt als Bedingung: „There are
+no limits on the number of map views or requests. There's no registration, no user database, no
+API keys, and no cookies“ — kommerzielle Nutzung ausdrücklich erlaubt, verpflichtend ist allein
+die Namensnennung „OpenFreeMap © OpenMapTiles Data from OpenStreetMap“, die MapLibre unten rechts
+in der Karte führt. Im Repository steht kein Schlüssel, weil keiner gebraucht wird. Wer ohne
+fremden Dienst arbeiten will, setzt `basemap="none"`: dann zeigt die Karte nur eine
+Hintergrundfläche und lädt nichts nach.
+
+</div>
+
+<div class="ez-note">
+<span class="ez-note__title">Noch nicht gebaut</span>
+
+**Clustering.** MapLibre kann Punkte zu Gruppen zusammenfassen (`cluster: true` an der
+GeoJSON-Quelle); das Lab tut es nicht, weil ein Cluster ein eigenes Zeichen bräuchte — welches
+Zeichen für zehn verschiedene Einheiten steht, ist eine fachliche Frage und keine, die sich in
+der Website beantworten lässt.
+
+**Offline-Sprites.** Ein Sprite-Blatt mit allen Zeichen wäre der Weg für Karten ohne Netz; es zu
+erzeugen ist Arbeit im Paket `@einsatzzeichen/maplibre` (Rasterung, Atlas, `sprite.json`), nicht
+Arbeit der Website. Diese Seite baut deshalb einzelne Bilder zur Laufzeit statt ein Sprite
+vorzutäuschen.
+
+</div>
+
+<div class="ez-note">
+<span class="ez-note__title">Technisch grün ist nicht fachlich freigegeben</span>
+
+Dass ein Zeichen hier sauber auf der Karte steht, sagt nur, dass die Darstellung technisch
+funktioniert. Der fachliche Reviewstatus jedes Zeichens steht auf seiner Symbolseite; die
+Grundlage der Zeichen (AFKzV, 57. Sitzung, 13./14.03.2025: vorläufige Anwendung aufgehoben,
+Verbreitung ausgesetzt) steht auf der Seite zur Grundlage.
+
+</div>

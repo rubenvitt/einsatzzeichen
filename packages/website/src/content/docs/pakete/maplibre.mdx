@@ -1,0 +1,64 @@
+---
+title: maplibre
+description: Zeichen als Symbol Layer auf einer MapLibre-Karte — rastert über den Canvas-Renderer von core, ohne Abhängigkeit zu maplibre-gl.
+---
+
+`@einsatzzeichen/maplibre` bringt ein Zeichen in den Stil einer MapLibre-Karte: es rastert die
+Zeichnung über den Canvas-Renderer von `core` zu `{ width, height, data }` und registriert das
+Ergebnis mit `map.addImage`.
+
+Das Paket hängt **nicht** von `maplibre-gl` ab. Karte und Leinwand sind strukturell typisiert
+(`MapLike`, `CanvasLike`) — es passt damit auf jede Karte mit `hasImage`/`addImage` und lässt sich
+in Node gegen eine Attrappe testen.
+
+Eine bereits belegte Bild-ID ist ein Fehler und keine Warnung: MapLibre selbst würde `addImage`
+still übergehen, und der Aufrufer sähe unter dem neuen Namen das alte Bild.
+
+## Installation
+
+<div class="ez-note">
+<span class="ez-note__title">Nicht veröffentlicht</span>
+
+`private: true`, `main` zeigt auf `./src/index.ts`. Im Workspace:
+
+```json
+{ "dependencies": { "@einsatzzeichen/maplibre": "workspace:*" } }
+```
+
+`maplibre-gl` gehört in die Anwendung, nicht in dieses Paket.
+
+</div>
+
+## Hauptexporte
+
+| Export | Was es tut |
+|---|---|
+| `addSymbolImage(map, id, drawing, options)` | rastert und registriert das Bild; wirft, wenn `id` belegt ist |
+| `createStyleImage(drawing, options)` | nur rastern: `{ width, height, data }` |
+| `SymbolImageOptions` | `size` (CSS-Pixel), `pixelRatio`, `theme`, `createCanvas` |
+| `MapLike`, `CanvasLike`, `StyleImageData` | die strukturellen Typen |
+
+`size × pixelRatio` muss ganzzahlig sein — ein Bildpuffer kennt keine Bruchteile von Pixeln, und
+stilles Runden würde die CSS-Größe verfälschen.
+
+## Beispiel
+
+```ts
+import { addSymbolImage } from '@einsatzzeichen/maplibre';
+import { RECIPES, composeFromCatalog } from '@einsatzzeichen/catalog';
+
+const recipe = RECIPES['E.1.1'];
+const drawing = composeFromCatalog(recipe.spec, recipe.title);
+
+addSymbolImage(map, 'ez-e-1-1', drawing, { size: 32, pixelRatio: 2 });
+
+map.addLayer({
+  id: 'einheiten',
+  type: 'symbol',
+  source: 'einheiten',
+  layout: { 'icon-image': 'ez-e-1-1', 'icon-allow-overlap': true },
+});
+```
+
+Wie sich das anfühlt, steht im [MapLibre Lab](/maplibre-lab/) — mit echter Karte, Größe,
+Pixel Ratio und Theme zum Durchprobieren.

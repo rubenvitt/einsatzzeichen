@@ -1,0 +1,61 @@
+---
+title: catalog
+description: Grundzeichen, Organisationsfarben, Rezepte, Quellen- und Profilregister, Coverage-Manifest und die konkreten Render-Themes.
+---
+
+`@einsatzzeichen/catalog` ist das Wissen: welche Grundzeichen es gibt, welche Farbe eine
+Organisation hat, wie ein Zeichen aus Elementen zusammengesetzt wird, aus welcher Quelle es stammt
+und was daran geprüft ist. `core` weiß davon nichts — es rendert nur, was der Katalog ihm gibt.
+
+Hier liegt auch das Coverage-Manifest: eine Zeile je Abschnitt der Baseline, mit Titel,
+Implementierung, Art, Profil, Testnachweis und beiden Reviews. Die Zahlen dieser Website kommen
+aus denselben Funktionen, die `pnpm cli coverage` aufruft — es gibt keinen zweiten Rechenweg.
+
+Eine Einschränkung für den Browser: `fonts.ts` importiert `node:url`, und der Index re-exportiert
+es. Ein Katalog-Import über den Index scheitert deshalb in einem Browser-Bundle. Diese Website
+umgeht das mit einem Snapshot, der zur Buildzeit in Node entsteht.
+
+## Installation
+
+<div class="ez-note">
+<span class="ez-note__title">Nicht veröffentlicht</span>
+
+`private: true`, `main` zeigt auf `./src/index.ts`, kein Build-Schritt. Im Workspace:
+
+```json
+{ "dependencies": { "@einsatzzeichen/catalog": "workspace:*" } }
+```
+
+Im Browser nur über einen Subpfad-Import oder über vorher erzeugte Daten — nicht über den Index.
+
+</div>
+
+## Hauptexporte
+
+| Export | Was es ist |
+|---|---|
+| `BASE_SYMBOLS`, `baseDrawing(kind)` | die Grundzeichen und ihre Zeichnung |
+| `RECIPES`, `composeFromCatalog(spec, title?)` | die Rezepte je Abschnitt und der Weg von der Spec zur `Drawing` |
+| `ELEMENTS`, `resolveElement(...)`, `PICTOGRAM_ELEMENT_KINDS` | das Elementregister |
+| `ORGANIZATION_COLORS`, `organizationColor(id)` | Organisationsfarben |
+| `strengthHead`, `technicalHeadMark`, `administrativeHead`, `functionRole` | die Kopfzonen |
+| `ALL_PICTOGRAMS`, `pictogram(...)`, `buildPictogramRegistry()` | die Piktogramme |
+| `SOURCE_REGISTRY`, `isRegisteredSource(id)` | das Quellenregister |
+| `PROFILES`, `profileFor(id)` | das Profilregister |
+| `COVERAGE_MANIFEST`, `checkCoverage()`, `releaseBlockers()`, `sortedDomainReviewOpenByArea()` | Manifest und Coverage-Gate |
+| `MANIFEST_DOMAIN_REVIEWS`, `SOURCE_DOMAIN_REVIEWS`, `PROFILE_DOMAIN_REVIEWS` | die fachlichen Reviews |
+| `RENDER_THEMES`, `renderTheme(id)`, `isRenderThemeId(value)`, `ACCESSIBLE_LIGHT_THEME`, `PRINT_MONOCHROME_THEME` | die drei konkreten Themes |
+| `CONTRAST_EXCEPTIONS`, `contrastExceptionFor(...)` | dokumentierte Kontrastausnahmen |
+| `describeSymbolSpec(spec)`, `ORGANIZATION_LABELS`, `STRENGTH_LABELS`, … | deutsche Bezeichnungen |
+
+## Beispiel
+
+```ts
+import { RECIPES, composeFromCatalog, renderTheme } from '@einsatzzeichen/catalog';
+import { renderSvg } from '@einsatzzeichen/core';
+
+const recipe = RECIPES['E.1.1'];
+const drawing = composeFromCatalog(recipe.spec, recipe.title);
+
+const svg = renderSvg(drawing, { size: 128, theme: renderTheme('print-monochrome') });
+```

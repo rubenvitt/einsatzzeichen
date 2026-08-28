@@ -1,0 +1,19 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "include": [".astro/types.d.ts", "**/*"],
+  "exclude": ["dist"],
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "baseUrl": ".",
+    "paths": {
+      "@einsatzzeichen/schema": ["../schema/src/index.ts"],
+      "@einsatzzeichen/core": ["../core/src/index.ts"],
+      "@einsatzzeichen/catalog": ["../catalog/src/index.ts"],
+      "@einsatzzeichen/react": ["../react/src/index.ts"],
+      "@einsatzzeichen/web-component": ["../web-component/src/index.ts"],
+      "@einsatzzeichen/maplibre": ["../maplibre/src/index.ts"],
+      "@einsatzzeichen/qgis": ["../qgis/src/index.ts"]
+    }
+  }
+}

@@ -1,0 +1,148 @@
+---
+title: Grundlage
+description: Status der fachlichen Grundlage (AFKzV), Quellenregister mit Prüfständen und Profilregister — die Antwort auf die Frage, ob man einem Zeichen trauen darf.
+---
+
+import StatusPair from '../../components/StatusPair.astro';
+import { loadSnapshot } from '../../lib/snapshot';
+
+export const snapshot = loadSnapshot();
+export const profiles = [...new Set(snapshot.symbols.map((symbol) => symbol.profile))].sort();
+export const openProfileReviews = snapshot.coverage.blockers.filter(
+  (blocker) => blocker.kind === 'profil-review-offen',
+);
+export const openSourceReviews = snapshot.coverage.blockers.filter(
+  (blocker) => blocker.kind === 'quellen-review-offen',
+);
+export const clarifiedSources = snapshot.sources.filter((source) => source.status === 'clarified');
+export const example = snapshot.symbols.find((symbol) => symbol.id === 'recipe.E.1.1') ?? snapshot.symbols[0];
+
+Wer ein Zeichen aus diesem Projekt in eine Lage einträgt, sollte drei Dinge wissen: woher es
+stammt, was daran geprüft wurde und was nicht. Diese Seite beantwortet alle drei — mit den Zahlen
+aus dem Katalog, nicht mit einer Zusammenfassung davon.
+
+## Status der fachlichen Grundlage
+
+<div class="ez-note">
+<span class="ez-note__title">Wortlaut aus der README des Projekts</span>
+
+`bbk-babz-2025` ist die **projektinterne Coverage-Baseline**. Der Name bezeichnet den
+versionierten Referenzstand des Projekts, keine geltende eigenständige Dienstvorschrift. Der AFKzV
+hob in seiner 57. Sitzung am 13./14.03.2025 die vorläufige Anwendung der Empfehlungen auf. Die
+BABZ führt das Ergebnis der Überarbeitungsgruppe bis zu einer künftigen FwDV 102/DV 102 als
+Diskussionsgrundlage; weitere Veröffentlichung und Verbreitung sind bis zum Abschluss der
+Beratungen ausgesetzt. Maßgeblich für diesen am 06.08.2026 geprüften Status ist die
+[offizielle BABZ-Seite](https://lernplattform-babz-bund.de/goto.php?target=cat_109540).
+
+TAKTIK verwendet den bereits lokal vorhandenen Arbeitsstand weiterhin reproduzierbar für Coverage
+und Vergleiche, behauptet damit aber weder normative Geltung noch fachliche Freigabe.
+
+</div>
+
+Daraus folgt für jedes Zeichen auf dieser Website dasselbe: die Geometrie ist gegen den lokalen
+Referenzstand gemessen und mit Tests belegt, die fachliche Aussage des Zeichens ist es nicht.
+Deshalb stehen an jedem Zeichen zwei Marken und nicht eine.
+
+So sieht das an <code class="ez-mono">{example.id}</code>, {example.title}, aus:
+
+<p>
+  <StatusPair technical={example.review.technical} domain={example.review.domain} />
+</p>
+
+Die linke Marke sagt: die Zeichnung entspricht der Referenz, gemessen und gegatet. Die rechte sagt:
+ob dieses Zeichen fachlich das Richtige bedeutet, hat noch niemand aus Feuerwehr, THW oder
+Rettungsdienst bestätigt. Beide Marken sind gleich wichtig; die rechte ist die, die man leicht
+übersieht.
+
+## Offene fachliche Reviews
+
+Die offenen fachlichen Reviews sind im Repository dokumentiert, nach Bereichen sortiert und mit
+den Fragen versehen, die dabei zu beantworten sind:
+[`docs/reviews/2026-08-06-domain-review-handoff.md`](https://github.com/rubenvitt/einsatzzeichen/blob/main/docs/reviews/2026-08-06-domain-review-handoff.md).
+
+Der aktuelle Stand aus dem Katalog: {snapshot.coverage.openDomainReviewsByArea.reduce((sum, area) => sum + area.count, 0)} von
+{snapshot.coverage.matrix.length} Manifestzeilen warten auf ein fachliches Review, verteilt auf
+{snapshot.coverage.openDomainReviewsByArea.length} Bereiche. Welche Zeile in welchem Bereich, steht
+auf der [Coverage-Seite](/coverage/).
+
+<div class="ez-table-scroll">
+  <table class="ez-table">
+    <thead>
+      <tr>
+        <th>Bereich</th>
+        <th>offene Reviews</th>
+      </tr>
+    </thead>
+    <tbody>
+      {snapshot.coverage.openDomainReviewsByArea.map((area) => (
+        <tr>
+          <td class="ez-table__id">{area.area}</td>
+          <td class="ez-table__id">{area.count}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+## Quellenregister
+
+{snapshot.sources.length} Quellen, jede mit Nutzungsgrundlage und eigenem Prüfstand. Der Lizenzstand
+steht als Feld im Register und nicht nur in Prosa: {clarifiedSources.length} Quellen sind geklärt,
+die übrigen {snapshot.sources.length - clarifiedSources.length} nicht — für die BABZ-Bestände ist
+die Lage `unclear`, und die Konsequenz daraus ist, dass dieses Projekt abgeleitete Kennzahlen
+zeigt und keine Referenzdateien.
+
+Auch die Quellen selbst tragen zwei Reviews. {openSourceReviews.length} von
+{snapshot.sources.length} Quellenreviews sind fachlich offen.
+
+<div class="ez-table-scroll">
+  <table class="ez-table">
+    <thead>
+      <tr>
+        <th>Kennung</th>
+        <th>Quelle</th>
+        <th>Lizenzstand</th>
+        <th>Prüfstand</th>
+      </tr>
+    </thead>
+    <tbody>
+      {snapshot.sources.map((source) => (
+        <tr>
+          <td class="ez-table__id">{source.id}</td>
+          <td>
+            {source.url === undefined ? (
+              source.title
+            ) : (
+              <a href={source.url} rel="noreferrer">{source.title}</a>
+            )}
+          </td>
+          <td class="ez-table__id">{source.status === 'clarified' ? 'geklärt' : 'ungeklärt'}</td>
+          <td>
+            <StatusPair
+              technical={source.review.technical}
+              domain={source.review.domain}
+              compact
+            />
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+## Profile
+
+Ein Profil ist ein benannter Satz Layoutregeln. Der bundesweite Kern ist selbst das erste
+registrierte Profil, damit „kein Profil angegeben“ nicht mit „gehört zum Kern“ verwechselbar ist —
+`CatalogEntry.profile` ist deshalb Pflichtfeld.
+
+Im Katalog steht derzeit {profiles.length === 1 ? 'genau ein Profil' : `${profiles.length} Profile`}:
+{profiles.map((profile) => <code class="ez-mono">{profile}</code>)}. Alle
+{snapshot.symbols.length} Zeichen dieser Website gehören dazu.
+{openProfileReviews.length > 0 && (
+  <> Das fachliche Review des Profils ist offen — es steht als Blocker im Coverage-Gate.</>
+)}
+
+Kern und Profile tragen eigene Datenversionen, unabhängig von den Paketversionen. Der Kern steht
+gerade auf <code class="ez-mono">{snapshot.coreVersion}</code>, die Baseline auf
+<code class="ez-mono">{snapshot.baseline}</code>.

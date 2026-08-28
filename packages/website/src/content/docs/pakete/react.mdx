@@ -1,0 +1,54 @@
+---
+title: react
+description: Hook und Komponente, die das SVG aus core bytegleich in den React-Baum tragen.
+---
+
+`@einsatzzeichen/react` trägt das SVG aus `core` in den React-Baum — und zwar bytegleich. Die
+Komponente rendert nicht selbst: sie ruft `renderSvg`, zerlegt das Ergebnis in Wurzelattribute und
+Inhalt und setzt beides ein. Damit ist ausgeschlossen, dass React ein anderes Bild erzeugt als der
+Kanal daneben.
+
+Kein JSX-Build im Paket, `react` ist Peer-Abhängigkeit (`>=18`). Das Paket importiert `core` und
+`schema`, aber **nicht** `catalog` — Katalogdaten kommen über die Anwendung herein.
+
+## Installation
+
+<div class="ez-note">
+<span class="ez-note__title">Nicht veröffentlicht</span>
+
+`private: true`, `main` zeigt auf `./src/index.ts`. Im Workspace:
+
+```json
+{
+  "dependencies": { "@einsatzzeichen/react": "workspace:*" },
+  "peerDependencies": { "react": ">=18" }
+}
+```
+
+</div>
+
+## Hauptexporte
+
+| Export | Was es tut |
+|---|---|
+| `Einsatzzeichen({ drawing, size, theme, idPrefix, className, style })` | die Komponente; gibt ein `<svg>`-Element zurück |
+| `useEinsatzzeichenSvg(drawing, options)` | der Hook: liefert das SVG von `core` als String |
+| `splitSvgMarkup(svg)` | zerlegt Markup in Wurzelattribute und Inhalt |
+| `svgAttributeToReactProp(name)` | Attributnamen zu React-Props (`stroke-width` → `strokeWidth`) |
+
+`idPrefix` ist nicht optional gedacht, wenn mehrere Zeichen im selben Dokument stehen: die
+erzeugten Element-IDs müssen eindeutig bleiben.
+
+## Beispiel
+
+```tsx
+import { Einsatzzeichen } from '@einsatzzeichen/react';
+import { RECIPES, composeFromCatalog } from '@einsatzzeichen/catalog';
+
+const recipe = RECIPES['E.1.1'];
+const drawing = composeFromCatalog(recipe.spec, recipe.title);
+
+export function Bergungsgruppe() {
+  return <Einsatzzeichen drawing={drawing} size={64} idPrefix="ez-e-1-1" />;
+}
+```

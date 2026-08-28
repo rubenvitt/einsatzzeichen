@@ -1,0 +1,83 @@
+---
+title: qgis
+description: QGIS-Stilbibliothek und SVG-Verzeichnis aus dem Katalog — ohne Dateisystemzugriff, ohne param()-Umfärbung.
+---
+
+`@einsatzzeichen/qgis` erzeugt zwei Dinge für QGIS: eine **Stilbibliothek** als XML
+(`<!DOCTYPE qgis_style>`, Version 2) mit einem `SvgMarker` je Zeichen, dessen SVG als
+`base64:`-Inline-Daten in der Datei steht, und wahlweise ein **SVG-Verzeichnis** als Dateiliste.
+
+Beide Funktionen sind rein: sie geben Zeichenketten zurück und fassen das Dateisystem nicht an.
+Wohin geschrieben wird, entscheidet die Anwendung.
+
+Bewusst **keine** `param()`-Umfärbung. QGIS könnte SVG-Marker über Parameter einfärben — für
+taktische Zeichen wäre das falsch: die Farben sind semantisch festgelegt, Blau bedeutet THW und
+nicht „eine Farbe, die zur Karte passt“.
+
+## Installation
+
+<div class="ez-note">
+<span class="ez-note__title">Nicht veröffentlicht</span>
+
+`private: true`, `main` zeigt auf `./src/index.ts`. Im Workspace:
+
+```json
+{ "dependencies": { "@einsatzzeichen/qgis": "workspace:*" } }
+```
+
+</div>
+
+## Hauptexporte
+
+| Export | Was es tut |
+|---|---|
+| `qgisSymbolLibrary(entries, options)` | die Stilbibliothek als XML-String |
+| `qgisSvgFiles(entries, options)` | `{ path, content }` je Zeichen für ein SVG-Verzeichnis |
+| `QgisSymbolEntry` | `{ name, drawing }`; `name` muss in der Bibliothek eindeutig sein |
+| `QgisLibraryOptions` | `theme`, `sizeMm` (Vorgabe 10), `idPrefix` |
+| `encodeBase64Utf8(text)` | die Base64-Kodierung, die die Bibliothek benutzt |
+
+Doppelte Namen und eine `sizeMm` unterhalb der Schreibgenauigkeit werfen — beides würde in QGIS
+sonst still ein falsches oder unsichtbares Symbol ergeben.
+
+## Zeichen nach QGIS bringen
+
+1. Bibliothek erzeugen und schreiben:
+
+   ```ts
+   import { writeFileSync } from 'node:fs';
+   import { RECIPES, composeFromCatalog } from '@einsatzzeichen/catalog';
+   import { qgisSymbolLibrary } from '@einsatzzeichen/qgis';
+
+   const entries = Object.entries(RECIPES).map(([section, recipe]) => ({
+     name: `${section} · ${recipe.title}`,
+     drawing: composeFromCatalog(recipe.spec, recipe.title),
+   }));
+
+   writeFileSync('einsatzzeichen.xml', qgisSymbolLibrary(entries, { sizeMm: 10 }), 'utf8');
+   ```
+
+2. In QGIS: **Einstellungen → Stilverwaltung → Importieren/Exportieren → Objekte importieren**,
+   die Datei wählen, Symbole übernehmen.
+
+3. Die Symbole stehen danach als Marker-Symbole zur Verfügung und lassen sich einer Punktebene
+   zuweisen. Die Markergröße kommt aus `sizeMm` und ist in Millimetern definiert — auf der Karte
+   wie im Druck.
+
+Alternativ als SVG-Verzeichnis, wenn QGIS die Dateien selbst finden soll:
+
+```ts
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { qgisSvgFiles } from '@einsatzzeichen/qgis';
+
+mkdirSync('qgis-svg', { recursive: true });
+for (const file of qgisSvgFiles(entries)) {
+  writeFileSync(join('qgis-svg', file.path), file.content, 'utf8');
+}
+```
+
+Das Verzeichnis wird in QGIS unter **Einstellungen → Optionen → System → SVG-Pfade** eingetragen.
+
+Eine Live-Vorführung gibt es nicht: QGIS ist eine Desktop-Anwendung, und ein nachgebautes
+Kartenfenster im Browser wäre eine Behauptung statt eines Belegs.

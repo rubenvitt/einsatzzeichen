@@ -1,0 +1,103 @@
+---
+/**
+ * Galerie der Kontaktbögen aus `packages/catalog/src/__snapshots__/multi-size` (Spec §4, Belege).
+ *
+ * Das Verzeichnis und die Auslieferung stehen in `src/lib/contact-sheets.ts` und der Route
+ * `src/pages/kontaktbogen/[datei].svg.ts` — dort steht auch, warum es kein `import.meta.glob` ist.
+ * Diese Datei gruppiert und zeigt nur.
+ *
+ * Jede Gruppe steckt in einem zugeklappten `<details>`. Bilder in einem eingeklappten `<details>`
+ * werden vom Browser nicht geladen; die Seite kostet damit beim Aufruf nichts und lädt erst, was
+ * jemand wirklich aufklappt.
+ */
+import { listContactSheets, type ContactSheet } from '../lib/contact-sheets';
+
+interface SheetGroup {
+  key: string;
+  label: string;
+  sheets: ContactSheet[];
+}
+
+/** Deutsche Bezeichnung der Elementgruppen; Rezeptgruppen bekommen ihre Anhangsbezeichnung. */
+const GROUP_LABELS: Record<string, string> = {
+  base: 'Grundzeichen',
+  capability: 'Fähigkeiten',
+  comms: 'Kommunikationsmittel',
+  damage: 'Schadensmarken',
+  leadership: 'Führungsmarken',
+  'organization-profiles': 'Organisationsprofile',
+  state: 'Zustände',
+  'water-rescue-personnel': 'Wasserrettungspersonal',
+  wildfire: 'Vegetationsbrand',
+};
+
+/** Erstes Namenssegment; Rezepte zusätzlich nach Anhang, sonst stünden 242 Bögen in einer Gruppe. */
+function groupKey(name: string): string {
+  const segments = name.split('.');
+  return segments[0] === 'recipe' && segments.length > 1
+    ? `recipe.${segments[1]}`
+    : (segments[0] ?? name);
+}
+
+function groupLabel(key: string): string {
+  if (key.startsWith('recipe.')) return `Anhang ${key.slice('recipe.'.length)}`;
+  return GROUP_LABELS[key] ?? key;
+}
+
+/** Grundzeichen zuerst, dann die Anhänge, dann die Elemente — die Reihenfolge des Aufbaus. */
+function groupRank(key: string): number {
+  if (key === 'base') return 0;
+  if (key.startsWith('recipe.')) return 1;
+  return 2;
+}
+
+const sheets = listContactSheets();
+const buckets = new Map<string, ContactSheet[]>();
+for (const sheet of sheets) {
+  const key = groupKey(sheet.name);
+  const bucket = buckets.get(key);
+  if (bucket === undefined) buckets.set(key, [sheet]);
+  else bucket.push(sheet);
+}
+
+const collator = new Intl.Collator('de', { numeric: true });
+const groups: SheetGroup[] = [...buckets.entries()]
+  .map(([key, grouped]) => ({ key, label: groupLabel(key), sheets: grouped }))
+  .sort(
+    (left, right) =>
+      groupRank(left.key) - groupRank(right.key) || collator.compare(left.key, right.key),
+  );
+---
+
+<p class="ez-eyebrow">
+  {sheets.length} Kontaktbögen in {groups.length} Gruppen · packages/catalog/src/__snapshots__/multi-size
+</p>
+
+{
+  groups.map((group) => (
+    <details class="ez-sheets">
+      <summary>
+        {group.label}
+        <span class="ez-sheets__count">
+          {' · '}
+          {group.key} · {group.sheets.length} Bögen
+        </span>
+      </summary>
+      <div class="ez-sheets__body">
+        {group.sheets.map((sheet) => (
+          <figure class="ez-sheet">
+            <img
+              src={sheet.url}
+              width={sheet.width}
+              height={sheet.height}
+              loading="lazy"
+              decoding="async"
+              alt={`Kontaktbogen ${sheet.name}: dieselbe Zeichnung in 16, 24, 32, 64, 128 und 256 px im Referenztheme, darunter in accessible-light und print-monochrome.`}
+            />
+            <figcaption>{sheet.name}</figcaption>
+          </figure>
+        ))}
+      </div>
+    </details>
+  ))
+}

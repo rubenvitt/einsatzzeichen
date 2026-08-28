@@ -30,3 +30,11 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm cli coverage
+
+      - run: pnpm --filter @einsatzzeichen/website check
+      - run: pnpm --filter @einsatzzeichen/website build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: website
+          path: packages/website/dist
+          retention-days: 14
