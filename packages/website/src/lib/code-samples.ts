@@ -45,7 +45,11 @@ export function Symbol() {
 }
 `;
 
-  const webComponent = `import { DEFAULT_TAG_NAME, defineEinsatzzeichenElement } from '@einsatzzeichen/web-component';
+  const webComponent = `import {
+  DEFAULT_TAG_NAME,
+  defineEinsatzzeichenElement,
+  type EinsatzzeichenElement,
+} from '@einsatzzeichen/web-component';
 import { composeFromCatalog } from '@einsatzzeichen/catalog';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 
@@ -55,17 +59,20 @@ const spec: SymbolSpec = ${specLiteral};
 // Registriert <einsatzzeichen-symbol> einmalig (ruft customElements.define auf).
 defineEinsatzzeichenElement();
 
-const element = document.createElement(DEFAULT_TAG_NAME) as HTMLElement & { drawing: unknown };
+const element = document.createElement(DEFAULT_TAG_NAME) as EinsatzzeichenElement;
 element.drawing = composeFromCatalog(spec);
 document.body.append(element);
 `;
 
-  const maplibre = `import { addSymbolImage } from '@einsatzzeichen/maplibre';
+  const maplibre = `import maplibregl from 'maplibre-gl';
+import { addSymbolImage } from '@einsatzzeichen/maplibre';
 import { composeFromCatalog } from '@einsatzzeichen/catalog';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 
 // Spezifikation für ${idLiteral}
 const spec: SymbolSpec = ${specLiteral};
+
+const map = new maplibregl.Map({ container: 'map', style: 'https://example.org/style.json' });
 
 map.on('load', () => {
   // addSymbolImage rastert die Zeichnung und ruft intern map.addImage(...) auf.
