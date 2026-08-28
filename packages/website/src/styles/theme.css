@@ -35,10 +35,13 @@
  * KARTENHINTERGRÜNDE FÜR VORSCHAUEN. Ein Zeichen wird auf beiden Untergründen gezeigt, unabhängig
  * vom Seitenthema: `.ez-canvas--light` (Weiß) und `.ez-canvas--dark` (Graphit). Grund: die
  * Referenzpalette ist auf weißen Untergrund gerechnet, und wer die Seite dunkel liest, muss
- * trotzdem sehen, was auf Papier herauskommt. Beide Karten tragen ein feines 4-mm-Raster — die
- * Millimeter-Regel des Projekts als sichtbares Element statt als Fußnote.
+ * trotzdem sehen, was auf Papier herauskommt. Beide Karten tragen ein feines Raster wie
+ * Millimeterpapier — die Millimeter-Regel des Projekts als sichtbares Element statt als Fußnote.
+ * Bewusst ohne Millimeterangabe: der Rasterschritt ist ein Bildschirmmaß (`--ez-grid-step`), das
+ * Zeichen darüber trägt seine eigene Millimeterskala aus der viewBox. Beide gleichzusetzen wäre
+ * eine Zahl, die nicht stimmt.
  *
- * SIGNATURELEMENT. Die Statusmarke als Prüfstempel plus das Millimeterraster hinter jedem Zeichen.
+ * SIGNATURELEMENT. Die Statusmarke als Prüfstempel plus das Raster hinter jedem Zeichen.
  * Sonst bleibt die Seite still: keine Verläufe, keine Illustrationen, keine Bewegung außer einem
  * Farbwechsel an Rahmen beim Überfahren.
  *
@@ -59,7 +62,16 @@
  */
 @font-face {
   font-family: 'Arimo';
-  src: url('../../../catalog/assets/Arimo[wght].ttf') format('truetype-variations');
+  /*
+   * Zwei Einträge, nicht einer: `truetype-variations` ist die alte Schreibweise aus CSS Fonts 3.
+   * Eine Engine, die ein Formatkürzel nicht kennt, verwirft den Eintrag stillschweigend — und
+   * genau dann stünde das Kürzel wieder in einer Ersatzschrift, also im Fehlerfall, den dieses
+   * `@font-face` verhindern soll. `truetype` als zweiter Eintrag lädt dieselbe Datei; die
+   * wght-Achse bleibt über `font-weight: 400 700` erreichbar.
+   */
+  src:
+    url('../../../catalog/assets/Arimo[wght].ttf') format('truetype-variations'),
+    url('../../../catalog/assets/Arimo[wght].ttf') format('truetype');
   font-weight: 400 700;
   font-style: normal;
   font-display: block;
@@ -232,7 +244,7 @@
   font-size: 0.6875rem;
 }
 
-/* --- Zeichenfläche: beide Untergründe, immer, mit Millimeterraster ------------------------ */
+/* --- Zeichenfläche: beide Untergründe, immer, mit Rasterhintergrund ----------------------- */
 
 .ez-canvas {
   display: flex;
