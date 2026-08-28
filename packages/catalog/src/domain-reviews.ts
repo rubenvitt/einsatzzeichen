@@ -9,16 +9,16 @@ import { deepFreeze, type DeepReadonly } from './readonly-data.js';
  * Die Vollständigkeit und die identische Verdrahtung zum Manifest werden in
  * `domain-reviews.test.ts` in beide Richtungen geprüft. Ein neuer Manifest-Eintrag muss deshalb
  * hier bewusst als `pending` aufgenommen werden, bevor das Gate wieder grün wird.
+ *
+ * Die **offenen Fachfragen** je Block stehen seit LFH-430 nicht mehr nur als Kommentar hier,
+ * sondern als Daten in `domain-review-questions.ts` (`Q-…`-IDs); `pnpm cli review-dossier`
+ * gibt sie je Manifestschlüssel aus. Die Kommentare nennen nur noch die Fragen-IDs.
  */
 export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:1.1#primary': { status: 'pending' },
   'bbk-babz-2025:1.2#primary': { status: 'pending' },
-  // Die sechs Grundzeichen aus LFH-424. Bei ihnen steht über die übliche fachliche Prüfung hinaus
-  // je eine eigene Frage aus: ob `1.13 Ereignis` fachlich zu Recht als einziges Grundzeichen keine
-  // Organisation annehmen darf (der Katalog wirft dafür, belegt allein daraus, dass die Referenz
-  // den Haken in keinem zusammengesetzten Zeichen führt), und ob `1.3` bis `1.5` ohne die
-  // Fahrwerksmarken aus Kapitel 5.1 als vollständige Zeichen gelten — sie sind vermessen, aber
-  // nicht umgesetzt, und `validateSpec` lehnt eine Fahrzeugkategorie deshalb ab.
+  // Die sechs Grundzeichen aus LFH-424. Fachfragen: Q-1-ereignis-ohne-organisation,
+  // Q-1-fahrzeuge-ohne-fahrwerk (`domain-review-questions.ts`).
   'bbk-babz-2025:1.3#primary': { status: 'pending' },
   'bbk-babz-2025:1.4#primary': { status: 'pending' },
   'bbk-babz-2025:1.5#primary': { status: 'pending' },
@@ -34,9 +34,7 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:C.1.1#primary': { status: 'pending' },
   'bbk-babz-2025:C.1.2#primary': { status: 'pending' },
   'bbk-babz-2025:C.1.3#primary': { status: 'pending' },
-  // Anhang D.1: alle zehn Darstellungen bleiben fachlich offen. Insbesondere behauptet die
-  // technische ID von D.1.1 keine freigegebene Übersetzung des Führungsbegriffs; D.1.3 und
-  // D.1.8 tragen die im Design markierten englischen Arbeitsnamen weiter.
+  // Anhang D.1: alle zehn Darstellungen bleiben fachlich offen. Fachfragen: Q-D.1-*.
   'bbk-babz-2025:D.1.1#primary': { status: 'pending' },
   'bbk-babz-2025:D.1.2#primary': { status: 'pending' },
   'bbk-babz-2025:D.1.3#primary': { status: 'pending' },
@@ -45,9 +43,7 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:D.1.6#primary': { status: 'pending' },
   'bbk-babz-2025:D.1.7#primary': { status: 'pending' },
   'bbk-babz-2025:D.1.8#primary': { status: 'pending' },
-  // Die Quelle belegt an D.1.9 zunächst nur einen weißen Körper. Ob daraus die Organisation
-  // hilfsorganisation folgt, ist für beide Darstellungen eine offene Fachfrage, keine durch die
-  // sichtbare Farbe erledigte Freigabe.
+  // D.1.9: die `note` ist Befundlage, keine Freigabe. Fachfrage: Q-D.1.9-hilfsorganisation-aus-weiss.
   'bbk-babz-2025:D.1.9#primary': {
     status: 'pending',
     note: 'Organisationszuordnung hilfsorganisation ist aus der weißen Fläche abgeleitet.',
@@ -56,9 +52,7 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
     status: 'pending',
     note: 'Organisationszuordnung hilfsorganisation ist aus der weißen Fläche abgeleitet.',
   },
-  // Anhang D.2: sieben vollständige Ortszeichen. Die gelbe Kreisfläche belegt keine
-  // Organisation, und die technischen englischen IDs behaupten keine fachlich freigegebene
-  // Übersetzung der Ortsbegriffe. Alle sieben Darstellungen bleiben deshalb einzeln offen.
+  // Anhang D.2: sieben vollständige Ortszeichen, einzeln offen. Fachfragen: Q-D.2-*.
   'bbk-babz-2025:D.2.1#primary': { status: 'pending' },
   'bbk-babz-2025:D.2.2#primary': { status: 'pending' },
   'bbk-babz-2025:D.2.3#primary': { status: 'pending' },
@@ -66,10 +60,8 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:D.2.5#primary': { status: 'pending' },
   'bbk-babz-2025:D.2.6#primary': { status: 'pending' },
   'bbk-babz-2025:D.2.7#primary': { status: 'pending' },
-  // Anhang D.3: dreizehn komponierte Funktionsträger und zwei direkte offene Kappen. Die
-  // englischen Rollen-IDs sind technische Schlüssel; AW/ASB/DRK/MHD/JUH bleiben sichtbarer
-  // Text. Insbesondere D.3.14/D.3.15 erhalten keine erfundene functionRole. D.3.7 behält sein
-  // vorhandenes Reviewobjekt und bleibt trotz der erweiterten technischen Evidenz fachlich offen.
+  // Anhang D.3: dreizehn komponierte Funktionsträger und zwei direkte offene Kappen; D.3.7 behält
+  // sein vorhandenes Reviewobjekt. Fachfragen: Q-D.3-*, Q-D.3.7-zugfuehrer.
   'bbk-babz-2025:D.3.1#primary': { status: 'pending' },
   'bbk-babz-2025:D.3.2#primary': { status: 'pending' },
   'bbk-babz-2025:D.3.3#primary': { status: 'pending' },
@@ -85,18 +77,13 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:D.3.13#primary': { status: 'pending' },
   'bbk-babz-2025:D.3.14#primary': { status: 'pending' },
   'bbk-babz-2025:D.3.15#primary': { status: 'pending' },
-  // Anhang D.4: die fünf englischen Rollen-IDs bleiben technische Schlüssel. ST, ME, MG und
-  // BuPol sind sichtbarer Trägertext; die Organisationsfarbe wird nicht als fachliche Freigabe
-  // der Rollenbezeichnung oder Verwaltungszuordnung ausgegeben.
+  // Anhang D.4: fünf Verwaltungsrollen. Fachfrage: Q-D.4-verwaltungsrollen.
   'bbk-babz-2025:D.4.1#primary': { status: 'pending' },
   'bbk-babz-2025:D.4.2#primary': { status: 'pending' },
   'bbk-babz-2025:D.4.3#primary': { status: 'pending' },
   'bbk-babz-2025:D.4.4#primary': { status: 'pending' },
   'bbk-babz-2025:D.4.5#primary': { status: 'pending' },
-  // Anhang E, Teilslice E-a: die 16 Bergungs- und Fachgruppen des THW. Ihre Bedeutung liegt
-  // vollständig in einem Buchstabenkürzel, das am Referenzbild abgelesen wurde — die fachliche
-  // Prüfung, ob „B" tatsächlich die Bergungsgruppe und nicht etwa den Bergungstrupp bezeichnet,
-  // steht damit besonders aus.
+  // Anhang E, Teilslice E-a: die 16 Bergungs- und Fachgruppen des THW. Fachfrage: Q-E.1-a-buchstabenkuerzel.
   'bbk-babz-2025:E.1.1#primary': { status: 'pending' },
   'bbk-babz-2025:E.1.2#primary': { status: 'pending' },
   'bbk-babz-2025:E.1.3#primary': { status: 'pending' },
@@ -113,14 +100,10 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:E.1.14#primary': { status: 'pending' },
   'bbk-babz-2025:E.1.15#primary': { status: 'pending' },
   'bbk-babz-2025:E.1.16#primary': { status: 'pending' },
-  // Anhang E, Teilslice E-b: Fachzüge, Zugtrupps, Stab und die Logistikeinheiten des THW. Ein
-  // eigener Block und keine erweiterte Zahl oben, weil der E-a-Satz „Bergungs- und Fachgruppen"
-  // diese Einheiten fachlich nicht deckt: hier stehen Führungs- und Unterstellungsverhältnisse
-  // zur Prüfung, nicht nur die Zuordnung eines Kürzels zu einer Gruppe. Drei Fragen sind
-  // ausdrücklich offen und in keinem technischen Gate beantwortbar — ob „FZ-" als Kürzel eines
-  // Musterblatts überhaupt eine Einheit bezeichnet (E.1.17), ob ein Zugtrupp ohne die
-  // Unterstellungsmarke seiner Referenz noch dieselbe Einheit bezeichnet (E.1.19, E.1.24), und
-  // ob „Stab" ohne Stärkeangabe von einem Fachzug unterscheidbar bleibt (E.1.21).
+  // Anhang E, Teilslice E-b: Fachzüge, Zugtrupps, Stab und Logistikeinheiten. Eigener Block, weil
+  // hier Führungs- und Unterstellungsverhältnisse zur Prüfung stehen, nicht nur Kürzel. Fachfragen:
+  // Q-E.1-b-fuehrungsverhaeltnisse, Q-E.1.17-musterblatt, Q-E.1-zugtrupp-ohne-unterstellung,
+  // Q-E.1.21-stab-ohne-staerke.
   'bbk-babz-2025:E.1.17#primary': { status: 'pending' },
   'bbk-babz-2025:E.1.18#primary': { status: 'pending' },
   'bbk-babz-2025:E.1.19#primary': { status: 'pending' },
@@ -133,14 +116,8 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:E.1.26#primary': { status: 'pending' },
   'bbk-babz-2025:E.1.27#primary': { status: 'pending' },
   'bbk-babz-2025:E.1.28#primary': { status: 'pending' },
-  // Anhang E, Teilslice E-c: Trupps, Teams und der Ortsverband. Wieder ein eigener Block, weil
-  // die offenen Fragen andere sind als in E-a und E-b: bei E.1.30 und E.1.36 trägt der Dateiname
-  // kein Stärkewort und die Einordnung als Gruppe bzw. Zug ruht allein auf der Kopfgeometrie; bei
-  // E.1.31 baut der Katalog die Balkenkopfzone der Referenz nicht, und ob „SysBR" ohne die Zahl
-  // 500 des Dateinamens dieselbe Einheit bezeichnet, entscheidet keine Messung; bei E.1.37 steht
-  // mit dem Ortsverband erstmals eine Einrichtung statt einer Einheit im Anhang. Dazu bei allen
-  // neun die Frage, ob die runde Versalie in „VOST" und „OV" ein O ist — im gesamten E.1-Bestand
-  // kommt keine Ziffer vor, es gibt also keine Negativkontrolle gegen die Null.
+  // Anhang E, Teilslice E-c: Trupps, Teams und der Ortsverband. Fachfragen:
+  // Q-E.1-c-staerke-aus-kopfgeometrie, Q-E.1.31-sysbr, Q-E.1.37-einrichtung, Q-E.1-c-o-oder-null.
   'bbk-babz-2025:E.1.29#primary': { status: 'pending' },
   'bbk-babz-2025:E.1.30#primary': { status: 'pending' },
   'bbk-babz-2025:E.1.31#primary': { status: 'pending' },
@@ -150,24 +127,10 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:E.1.35#primary': { status: 'pending' },
   'bbk-babz-2025:E.1.36#primary': { status: 'pending' },
   'bbk-babz-2025:E.1.37#primary': { status: 'pending' },
-  // Anhang E, Teilslice E-d: die 21 Landfahrzeuge E.2.1 bis E.2.21, davon 20 des THW. Ein
-  // eigener Block, weil die offenen Fragen hier zum ersten Mal nicht die Einheit betreffen,
-  // sondern das **Gerät** und seine Benennung. Fünf stehen ausdrücklich aus und sind in keinem
-  // technischen Gate beantwortbar: ob „Telelader" (Bild) oder „Teleskopstapler" (Dateiname) das fachlich
-  // tragende Kürzel für E.2.7 ist; ob „Bagger" ohne die Kurzform „BRmG" die
-  // Bergungsräumgeräte E.2.9 und E.2.10 hinreichend bezeichnet (im Bild kommt „BRmG" in keinem
-  // der drei vor); ob die Zuordnung „Kategorie 1/2/3 = straßenfähig/geländefähig/geländegängig"
-  // trägt, die aus der Mehrheit der Dateinamen abgeleitet ist und der E.2.12, E.2.13 und E.2.18
-  // widersprechen; und ob E.2.9 und E.2.10, die dasselbe Kürzel und verschiedene Fahrwerke
-  // führen, im Einsatz verwechslungsfrei bleiben; und — die fünfte, seit E.2.6 am 18. August 2026
-  // nachgezogen wurde — ob der orange Körper der `sonstige-gefahrenabwehr` bei zugleich
-  // gezeichnetem Trägerkürzel `THW` die Zuordnung oder den Betreiber bezeichnet. Der Dateiname
-  // („öffentliche Gefahrenabwehr, THW betrieben") legt das Zweite nahe, entschieden ist es von
-  // keiner Messung.
-  //
-  // Die **Kontrastlage** von E.2.6 gehört ausdrücklich nicht hierher: weiss auf orange verfehlt
-  // die Textschwelle in jedem Theme, das ist gemessen und als Ausnahme in `CONTRAST_EXCEPTIONS`
-  // entschieden — keine fachliche Frage an ein Review.
+  // Anhang E, Teilslice E-d: die 21 Landfahrzeuge E.2.1 bis E.2.21. Eigener Block, weil die Fragen
+  // hier das **Gerät** und seine Benennung betreffen. Fachfragen: Q-E.2.7-telelader, Q-E.2-bagger-brmg,
+  // Q-E.2-kategorie-widerspruch, Q-E.2-bagger-verwechslung, Q-E.2.6-orange-und-thw. Die Kontrastlage
+  // von E.2.6 ist gemessen und in `CONTRAST_EXCEPTIONS` entschieden — keine Fachfrage.
   'bbk-babz-2025:E.2.1#primary': { status: 'pending' },
   'bbk-babz-2025:E.2.2#primary': { status: 'pending' },
   'bbk-babz-2025:E.2.3#primary': { status: 'pending' },
@@ -189,67 +152,30 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:E.2.19#primary': { status: 'pending' },
   'bbk-babz-2025:E.2.20#primary': { status: 'pending' },
   'bbk-babz-2025:E.2.21#primary': { status: 'pending' },
-  // Anhang E, Teilslice E-e: Anhänger und Sonderkörper. Wieder ein eigener Block, weil hier zwei
-  // Fragen zusammenkommen, die es in E.1 nicht gab. Erstens: **bezeichnet ein Anhänger mit einem
-  // Rad etwas anderes als einer mit zweien?** Die Zeichnung unterscheidet sie, die Quelle
-  // benennt sie widersprüchlich (E.2.22 „Grundzeichen" und E.2.23 „von LKW gezogen" tragen beide
-  // ein Rad, E.2.24 mit demselben Namenszusatz zwei), und der Katalog benennt deshalb die Räder
-  // statt des Zugfahrzeugs — dieselbe Frage steht an 5.1.2.4 und 5.1.2.5. Zweitens: ob die
-  // Trinkwasseraufbereitungsanlage (E.2.26) mit ihrem hochkanten Rechteck ein eigenes
-  // Grundzeichen verdient; ihre Körperform kommt in genau einer der 661 Referenzdateien vor, und
-  // was sie fachlich bezeichnet, sagt die Datei nicht. Dazu bei E.2.22 die Frage, ob ein Zeichen
-  // ohne mittiges Kürzel — das einzige des Anhangs — überhaupt eine Einheit bezeichnet oder wie
-  // E.1.17 ein Musterblatt ist.
+  // Anhang E, Teilslice E-e: Anhänger und Sonderkörper. Fachfragen:
+  // Q-5.1-anhaenger-ein-oder-zwei-raeder, Q-E.2.26-eigenes-grundzeichen, Q-E.2.22-ohne-kuerzel.
   'bbk-babz-2025:E.2.22#primary': { status: 'pending' },
   'bbk-babz-2025:E.2.23#primary': { status: 'pending' },
   'bbk-babz-2025:E.2.24#primary': { status: 'pending' },
   'bbk-babz-2025:E.2.25#primary': { status: 'pending' },
   'bbk-babz-2025:E.2.26#primary': { status: 'pending' },
-  // Anhang E, Teilslice E-f: die Wasserfahrzeuge. Eigener Block wegen einer Frage, die keine der
-  // 66 übrigen E-Zeilen stellt: **sind E.2.29 bis E.2.31 dieselben Einheiten wie I.3.5 bis
-  // I.3.7?** Ihre mittigen Läufe sind bis auf 0,00035 mm deckungsgleich, sie tragen dieselben
-  // Namen, und sie unterscheiden sich allein in der Farbe. Heute kollidiert nichts, weil Anhang
-  // I nicht im beanspruchten Umfang steht — die Antwort entscheidet aber, ob dort
-  // Alternativdarstellungen entstehen oder eigene IDs. Dazu bei E.2.27 die Frage, ob ein
-  // Wasserfahrzeug ohne jedes Kürzel im Körper mehr bezeichnet als das Grundzeichen 1.5 selbst.
+  // Anhang E, Teilslice E-f: die Wasserfahrzeuge. Fachfragen: Q-E.2-wasserfahrzeuge-gleich-i.3,
+  // Q-E.2.27-ohne-kuerzel.
   'bbk-babz-2025:E.2.27#primary': { status: 'pending' },
   'bbk-babz-2025:E.2.28#primary': { status: 'pending' },
   'bbk-babz-2025:E.2.29#primary': { status: 'pending' },
   'bbk-babz-2025:E.2.30#primary': { status: 'pending' },
   'bbk-babz-2025:E.2.31#primary': { status: 'pending' },
-  // Anhang F, Teilslice F-a: die sanitätsdienstlichen Einheiten F.1.1 bis F.1.11 — elf Zeilen
-  // für zehn Abschnitte, weil F.1.11 als erster Abschnitt des Katalogs eine Alternativdarstellung
-  // führt. Der Zuschnitt (`docs/decisions/2026-08-18-anhang-f-zuschnitt.md`) rechnet F-a elf
-  // Abschnitte zu; im damaligen F-a-Stand hatte F.1.3 noch kein Rezept und deshalb in diesem
-  // Block keinen Platz. F-b hat es später als aufgeschobenen Carry-in ergänzt. Der Ledger ist
-  // mit dem **Manifest** deckungsgleich und nicht mit dem historischen Zuschnitt, und diese
-  // Deckungsgleichheit prüft `domain-reviews.test.ts` in beide Richtungen. Eigener Block, weil hier zum ersten Mal
-  // die **Organisation selbst** zur Frage steht: alle 66 F-Dateien führen ausschliesslich `#fff`,
-  // und ob das `hilfsorganisation` bedeutet oder gar keine Organisation, sagt die Quelle nicht —
-  // der Katalog hat sich für `hilfsorganisation` entschieden (Begründung in
-  // `recipes-anhang-f.ts`), und diese Entscheidung ist genau das, was ein Fachreview bestätigen
-  // oder umstossen muss. Sie wiegt schwerer als bei E, weil sie in den beiden Alternativthemes
-  // sichtbar wird: `weiss` trägt dort die Punktsignatur aus `ORGANIZATION_BODY_DASHES`.
-  //
-  // Vier weitere Fragen, die keine Messung beantwortet: ob die am Bild abgelesenen Kürzel „MTF",
-  // „SEG" und „RettD" fachlich tragen; ob die beiden Kopfbalken von F.1.1 einen fünften
-  // Stärkegrad bezeichnen, den Kapitel 5.4 nicht führt (der Katalog zeichnet sie nicht, siehe
-  // `ANHANG_F_A_DEVIATIONS`); ob F.1.9 und F.1.10 — beide „SEG", verschieden allein in der
-  // Fachdienstteilung — im Einsatz verwechslungsfrei bleiben; und ob `F.1.11#alternative`
-  // wirklich dasselbe bezeichnet wie `F.1.11` und deshalb zu Recht dessen Abschnitt teilt statt
-  // einen eigenen zu bekommen.
+  // Anhang F, Teilslice F-a: F.1.1 bis F.1.11 — elf Zeilen für zehn Abschnitte, weil F.1.11 als
+  // erster Abschnitt eine Alternativdarstellung führt. F.1.3 hatte im F-a-Stand kein Rezept und kam
+  // mit F-b als Carry-in; der Ledger ist mit dem **Manifest** deckungsgleich, nicht mit dem
+  // historischen Zuschnitt (`docs/decisions/2026-08-18-anhang-f-zuschnitt.md`). Fachfragen:
+  // Q-F-weiss-als-hilfsorganisation, Q-F.1-a-kuerzel, Q-F.1.1-fuenfter-staerkegrad,
+  // Q-F.1-seg-verwechslung, Q-F.1.11-alternative.
   'bbk-babz-2025:F.1.1#primary': { status: 'pending' },
-  // F.1.2 zeichnet als einziges Zeichen des Teilslices ein Fähigkeitszeichen aus Kapitel 4.1 im
-  // Körper — und die Datei zeigt dabei 4.1.1 (ABC-/CBRN-Schutz), obwohl sie
-  // „Dekontaminationseinheit" heißt; 4.1.3 (Dekontaminieren) trüge zusätzlich das Häkchenpaar an
-  // den Schaftenden. Fachlich zu prüfen ist, welche der beiden Lesarten gilt: eine Einheit, die
-  // ABC-Schutz leistet, oder eine, die dekontaminiert. Dazu die Frage, ob „MTF" hier richtig
-  // steht — der Lauf ist zeichengleich mit dem von F.1.1, die Einheit trägt also das Kürzel
-  // ihrer Task Force und kein eigenes.
+  // F.1.2: Fachfrage Q-F.1.2-abc-oder-dekon.
   'bbk-babz-2025:F.1.2#primary': { status: 'pending' },
-  // F.1.4 führt zwei randbündige Fachdienstzeichen zugleich — Teilung und Zelt, Sanitätsdienst
-  // und Betreuung. Fachlich zu prüfen ist, ob die Nebeneinanderstellung dasselbe aussagt wie der
-  // eine Umriss, den die Referenz zeichnet.
+  // F.1.4: Fachfrage Q-F.1.4-zwei-fachdienstzeichen.
   'bbk-babz-2025:F.1.4#primary': { status: 'pending' },
   'bbk-babz-2025:F.1.5#primary': { status: 'pending' },
   'bbk-babz-2025:F.1.6#primary': { status: 'pending' },
@@ -274,12 +200,8 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:F.1.20#primary': { status: 'pending' },
   'bbk-babz-2025:F.1.21#primary': { status: 'pending' },
   'bbk-babz-2025:F.1.22#primary': { status: 'pending' },
-  // Anhang F, Teilslice F-c: Fahrzeuge und Anhänger des Sanitätsdienstes. Fachlich offen ist,
-  // ob die rein aus der Grafik abgelesenen Fähigkeitskombinationen der fünf direkten
-  // Alternativdarstellungen tatsächlich dieselben Fahrzeuge bezeichnen; insbesondere darf aus
-  // dem Ring der Referenz nicht pauschal Intensivtransport abgeleitet werden. Ebenfalls zu
-  // bestätigen sind die kleine obere Marke von F.2.2, die Hebe-/Winschform von F.2.6 und die
-  // Bedeutung der oberhalb gesetzten Abkürzung ITH. Alle 14 bleiben deshalb einzeln pending.
+  // Anhang F, Teilslice F-c: Fahrzeuge und Anhänger des Sanitätsdienstes. Fachfragen:
+  // Q-F.2-c-alternativen-faehigkeiten, Q-F.2-c-einzelmarken.
   'bbk-babz-2025:F.2.1#primary': { status: 'pending' },
   'bbk-babz-2025:F.2.1#alternative': { status: 'pending' },
   'bbk-babz-2025:F.2.2#primary': { status: 'pending' },
@@ -294,10 +216,7 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:F.2.7#primary': { status: 'pending' },
   'bbk-babz-2025:F.2.8#primary': { status: 'pending' },
   'bbk-babz-2025:F.2.9#primary': { status: 'pending' },
-  // Anhang F, Teilslice F-d: Die acht Betreuungsfahrzeuge verwenden die technisch vermessenen
-  // Fassungen aus F.2.10 bis F.2.17. Offen bleiben insbesondere die fachliche Bedeutung der
-  // Vierwegeform aus F.2.11, die Einordnung des verschobenen Rings aus F.2.16 und weiterhin die
-  // organisationssemantische Aussage der ausschließlich weißen Quelle.
+  // Anhang F, Teilslice F-d: die acht Betreuungsfahrzeuge. Fachfrage: Q-F.2-d-formen.
   'bbk-babz-2025:F.2.10#primary': { status: 'pending' },
   'bbk-babz-2025:F.2.11#primary': { status: 'pending' },
   'bbk-babz-2025:F.2.12#primary': { status: 'pending' },
@@ -306,11 +225,8 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:F.2.15#primary': { status: 'pending' },
   'bbk-babz-2025:F.2.16#primary': { status: 'pending' },
   'bbk-babz-2025:F.2.17#primary': { status: 'pending' },
-  // Anhang F, Teilslice F-e: elf Platzzeichen auf dem 12-mm-Kreis. Fachlich offen bleiben die
-  // organisationssemantische Zuordnung der ausschließlich weißen Körper, die Begriffe hinter
-  // den neutral benannten Pfeil-/Rahmen-/Rautenformen sowie insbesondere die Frage, ob F.3.10
-  // und F.3.11 tatsächlich von Patiententransport- oder Spezialrettungszeichen abzugrenzen sind.
-  // Die technische Umsetzung behauptet diese Semantik ausdrücklich nicht.
+  // Anhang F, Teilslice F-e: elf Platzzeichen auf dem 12-mm-Kreis. Fachfragen: Q-F.3-e-formbegriffe,
+  // Q-F.3-abgrenzung-transport.
   'bbk-babz-2025:F.3.1#primary': { status: 'pending' },
   'bbk-babz-2025:F.3.2#primary': { status: 'pending' },
   'bbk-babz-2025:F.3.3#primary': { status: 'pending' },
@@ -322,10 +238,7 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:F.3.9#primary': { status: 'pending' },
   'bbk-babz-2025:F.3.10#primary': { status: 'pending' },
   'bbk-babz-2025:F.3.11#primary': { status: 'pending' },
-  // Anhang F, Teilslice F-f: die acht verbleibenden Platzzeichen. Fachlich offen bleiben die
-  // HiOrg-Zuordnung der weißen Quellen und die Benennung der vier rein technischen Kreisformen;
-  // die geometrischen Gates entscheiden weder deren Einsatzbedeutung noch die Abgrenzung von
-  // Ladezone, Personentransport und besonderen Bedarfen.
+  // Anhang F, Teilslice F-f: die acht verbleibenden Platzzeichen. Fachfrage: Q-F.3-f-kreisformen.
   'bbk-babz-2025:F.3.12#primary': { status: 'pending' },
   'bbk-babz-2025:F.3.13#primary': { status: 'pending' },
   'bbk-babz-2025:F.3.14#primary': { status: 'pending' },
@@ -334,13 +247,8 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:F.3.17#primary': { status: 'pending' },
   'bbk-babz-2025:F.3.18#primary': { status: 'pending' },
   'bbk-babz-2025:F.3.19#primary': { status: 'pending' },
-  // Anhang N: neun Fahrzeuge und Anlaufstellen weiterer Träger. Technisch gemessen sind Form,
-  // Füllung, Fahrwerk, Marken und Text. Fachlich offen bleiben die Zuordnung von kommunalem
-  // Bauhof und Beauftragtem Dritten zur sonstigen Gefahrenabwehr, die getrennte Bundespolizei-
-  // Organisation, die Bundeswehr-/Feuerwehr-/ZIV-Zuordnungen sowie die Einsatzbedeutung der drei
-  // N.2-Marken. „Geländegängig“ aus dem Dateinamen von N.1.2 ist ausdrücklich keine neue
-  // Katalogsemantik. Die schwarzen Körperläufe bestehen den technischen Kontrastvertrag und
-  // ersetzen keine fachliche Freigabe.
+  // Anhang N: neun Fahrzeuge und Anlaufstellen weiterer Träger. Fachfragen: Q-N-traegerzuordnung,
+  // Q-N.2-marken.
   'bbk-babz-2025:N.1.1#primary': { status: 'pending' },
   'bbk-babz-2025:N.1.2#primary': { status: 'pending' },
   'bbk-babz-2025:N.1.3#primary': { status: 'pending' },
@@ -350,10 +258,7 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:N.2.1#primary': { status: 'pending' },
   'bbk-babz-2025:N.2.2#primary': { status: 'pending' },
   'bbk-babz-2025:N.2.3#primary': { status: 'pending' },
-  // Anhang G: alle 21 Logistikdarstellungen bleiben fachlich offen. Die weißen Zeichen,
-  // einschließlich DLRG, sind technisch als `hilfsorganisation` zugeordnet; ebenso stehen die
-  // Bedeutungen der Marken und die Betreiberzuordnung der farbigen Kreiszeichen noch zur
-  // Bestätigung durch eine fachkundige Person aus.
+  // Anhang G: alle 21 Logistikdarstellungen bleiben offen. Fachfrage: Q-G-weiss-und-marken.
   'bbk-babz-2025:G.1#primary': { status: 'pending' },
   'bbk-babz-2025:G.1.1#primary': { status: 'pending' },
   'bbk-babz-2025:G.1.2#primary': { status: 'pending' },
@@ -378,42 +283,33 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:H.1#primary': { status: 'pending' },
   'bbk-babz-2025:H.2#primary': { status: 'pending' },
   'bbk-babz-2025:H.3#primary': { status: 'pending' },
-  // I.1.1 bis I.1.4 sind technisch vermessen, erhalten aber weder aus dem weißen Körper noch aus
-  // dem Einzelbalken eine erfundene Organisations- oder Stärkezuordnung. Jede fachliche
-  // Einordnung bleibt deshalb eine eigene offene Entscheidung.
+  // I-c: Fachfrage Q-I.1-c-weiss-und-einzelbalken.
   'bbk-babz-2025:I.1.1#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.2#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.3#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.4#primary': { status: 'pending' },
-  // Anhang I-e: Die gemessenen weißen Formationen und ihre kompakten Wasserrettungsmarken sind
-  // technisch belegt. Offen bleiben die fachliche Zuordnung zur Hilfsorganisation sowie die
-  // Bedeutung der zwei Darstellungen von I.1.9; die Alternative ist deshalb ein eigener
-  // Reviewträger und keine stillschweigend gleichgesetzte Grafik.
+  // I-e: die Alternative von I.1.9 ist ein eigener Reviewträger. Fachfrage: Q-I.1-e-hilfsorganisation.
   'bbk-babz-2025:I.1.9#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.9#alternative': { status: 'pending' },
   'bbk-babz-2025:I.1.10#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.11#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.12#primary': { status: 'pending' },
-  // I-f bildet weiße Formationen technisch literal ab. Weder die Füllfarbe noch die sichtbaren
-  // Scheiben-/Schaft-/Klammer- beziehungsweise Ölformen leiten eine Organisation oder
-  // einsatztaktische Klassifikation ab.
+  // I-f: Fachfrage Q-I.1-f-formen.
   'bbk-babz-2025:I.1.13#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.14#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.15#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.16#primary': { status: 'pending' },
-  // Das Erscheinungsbild ist technisch durch die Mess-, Rezept- und Snapshot-Gates belegt; die
-  // organisatorische und fachliche Bedeutung des weißen Körpers bleibt dennoch ungeklärt.
+  // I-d: Fachfrage Q-I.1-d-weisser-koerper.
   'bbk-babz-2025:I.1.5#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.6#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.7#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.8#primary': { status: 'pending' },
-  // I-g bleibt zusätzlich bei der Bedeutungszuordnung von Wasserrettung, Luftunterstützung und
-  // Drohne offen; die rein geometrischen Marken nehmen dieses Fachreview nicht vorweg.
+  // I-g: Fachfrage Q-I.1-g-bedeutung.
   'bbk-babz-2025:I.1.17#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.18#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.19#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.20#primary': { status: 'pending' },
-  // I.2 bleibt trotz freigegebener kategorieabhängiger Landfahrzeuggeometrie fachlich offen.
+  // I-b: Fachfrage Q-I.2-landfahrzeuge.
   'bbk-babz-2025:I.2.1#primary': { status: 'pending' },
   'bbk-babz-2025:I.2.2#primary': { status: 'pending' },
   'bbk-babz-2025:I.2.3#primary': { status: 'pending' },
@@ -421,9 +317,8 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:I.2.5#primary': { status: 'pending' },
   'bbk-babz-2025:I.2.6#primary': { status: 'pending' },
   'bbk-babz-2025:I.2.7#primary': { status: 'pending' },
-  // I.3 ist vollständig technisch umgesetzt; die elf source IDs werden im Manifesttest lückenlos
-  // aus dem Ledger abgeleitet. Das Erscheinungsbild ist durch Rezept-, Fingerprint- und Snapshot-
-  // Gates belegt, die organisatorische und fachliche Bedeutung bleibt dennoch ungeklärt.
+  // I.3: die elf source IDs werden im Manifesttest lückenlos aus dem Ledger abgeleitet.
+  // Fachfrage: Q-I.3-bedeutung.
   'bbk-babz-2025:I.3.1#primary': { status: 'pending' },
   'bbk-babz-2025:I.3.2#primary': { status: 'pending' },
   'bbk-babz-2025:I.3.3#primary': { status: 'pending' },
@@ -435,15 +330,11 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:I.3.9#primary': { status: 'pending' },
   'bbk-babz-2025:I.3.10#primary': { status: 'pending' },
   'bbk-babz-2025:I.3.11#primary': { status: 'pending' },
-  // I.4.1 bis I.4.3 sind technisch als weiße HiOrg-Kreiszeichen rekonstruiert. Ob die sichtbaren
-  // Marken fachlich richtig benannt und gegeneinander verwechslungsfrei sind, bleibt je
-  // Darstellung offen; insbesondere leitet der Katalog aus I.4.1s Giebel keine neue Semantik ab.
+  // I-j: Fachfrage Q-I.4-marken.
   'bbk-babz-2025:I.4.1#primary': { status: 'pending' },
   'bbk-babz-2025:I.4.2#primary': { status: 'pending' },
   'bbk-babz-2025:I.4.3#primary': { status: 'pending' },
-  // Die drei I-k-Rezepte bilden ausschließlich die vermessene Geometrie, Doppelwelle und den
-  // sichtbaren Text ab. Ob der weiße Körper fachlich Wasserrettungspersonal bezeichnet, bleibt
-  // unabhängig von der technischen Bildtreue offen.
+  // I-k und I.5.4 bis I.5.8: Fachfrage Q-I.5-wasserrettungspersonal.
   'bbk-babz-2025:I.5.1#primary': { status: 'pending' },
   'bbk-babz-2025:I.5.2#primary': { status: 'pending' },
   'bbk-babz-2025:I.5.3#primary': { status: 'pending' },
@@ -453,11 +344,7 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:I.5.7#primary': { status: 'pending' },
   'bbk-babz-2025:I.5.8#primary': { status: 'pending' },
   'bbk-babz-2025:2.1#primary': { status: 'pending' },
-  // 2.2 seit LFH-424. Fachlich besonders zu prüfen: die Zuordnung „HiOrg = Hilfsorganisation" ist
-  // aus dem gerasterten Bild abgelesen, nicht aus dem Dateinamen — der ist generisch
-  // („Organisationen") und hatte die Zuordnung bisher verdeckt. Dazu die Frage, ob eine
-  // Organisation, deren Farbe mit der neutralen Grundfüllung zusammenfällt, im Einsatz
-  // verwechslungsfrei bleibt.
+  // 2.2 seit LFH-424. Fachfragen: Q-2-hiorg-aus-raster, Q-2-hiorg-farbe-neutral.
   'bbk-babz-2025:2.2#primary': { status: 'pending' },
   'bbk-babz-2025:2.3#primary': { status: 'pending' },
   'bbk-babz-2025:2.4#primary': { status: 'pending' },
@@ -469,23 +356,14 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:5.4.2#primary': { status: 'pending' },
   'bbk-babz-2025:5.4.3#primary': { status: 'pending' },
   'bbk-babz-2025:5.4.4#primary': { status: 'pending' },
-  // Die fünf Fahrzeugkategorien aus LFH-424. Über die übliche fachliche Prüfung hinaus stehen bei
-  // ihnen zwei Fragen aus, die keine Messung beantwortet: ob die Zuordnung „Kategorie 1/2/3 =
-  // straßenfähig/geländefähig/geländegängig" stimmt (sie ist aus der Mehrheit der E.2-Dateinamen
-  // abgeleitet, und vier der 31 E.2-Dateien widersprechen ihrem eigenen Namen), und ob die
-  // Endpunkte des Verbindungsstrichs der Kategorie 3 fachlich auf der Ringmittellinie liegen
-  // sollen — vermessen ist nur das Band, in dem sie liegen müssen (siehe `vehicle-categories.ts`).
+  // Die fünf Fahrzeugkategorien aus LFH-424. Fachfragen: Q-5.1-kategoriezuordnung,
+  // Q-5.1-verbindungsstrich-endpunkte.
   'bbk-babz-2025:5.1.1.1#primary': { status: 'pending' },
   'bbk-babz-2025:5.1.1.2#primary': { status: 'pending' },
   'bbk-babz-2025:5.1.1.3#primary': { status: 'pending' },
   'bbk-babz-2025:5.1.1.5#primary': { status: 'pending' },
   'bbk-babz-2025:5.1.1.6#primary': { status: 'pending' },
-  // Die beiden Anhängerfahrwerke aus Kapitel 5.1.2. Fachlich offen ist hier zusätzlich, **ob ein
-  // Anhänger mit einem Rad etwas anderes bezeichnet als einer mit zweien** — die Zeichnung
-  // unterscheidet sie, die Quelle benennt sie widersprüchlich: `5.1.2.4` heißt „von PKW gezogen"
-  // und `5.1.2.5` „von LKW gezogen", aber `E.2.23` („von LKW gezogen") trägt ein Rad und
-  // `5.1.2.1` („allgemein") gar keines. Der Katalog benennt deshalb die Räder und nicht das
-  // Zugfahrzeug; welche der beiden Lesarten fachlich trägt, entscheidet dieses Review.
+  // Die beiden Anhängerfahrwerke aus Kapitel 5.1.2. Fachfrage: Q-5.1-anhaenger-ein-oder-zwei-raeder.
   'bbk-babz-2025:5.1.2.4#primary': { status: 'pending' },
   'bbk-babz-2025:5.1.2.5#primary': { status: 'pending' },
   'bbk-babz-2025:4.3.1#primary': { status: 'pending' },
