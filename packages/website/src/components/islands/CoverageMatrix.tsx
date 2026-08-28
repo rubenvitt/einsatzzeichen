@@ -150,13 +150,13 @@ export default function CoverageMatrix({ rows }: CoverageMatrixProps) {
         {visibleRows.length} von {rows.length} Manifestzeilen
       </p>
 
-      <div className="ez-coverage-matrix__scroll">
-        <table>
+      <div className="ez-table-scroll">
+        <table className="ez-table">
           <thead>
             <tr>
               {COLUMNS.map((column) => (
                 <th key={column.key} scope="col">
-                  <button type="button" onClick={() => toggleSort(column.key)}>
+                  <button type="button" className="ez-coverage-matrix__sort" onClick={() => toggleSort(column.key)}>
                     {column.label}
                     {sort.key === column.key ? (sort.direction === 'asc' ? ' ▲' : ' ▼') : ''}
                   </button>
@@ -167,15 +167,15 @@ export default function CoverageMatrix({ rows }: CoverageMatrixProps) {
           <tbody>
             {visibleRows.map((row) => (
               <tr key={row.key}>
-                <td>{row.sourceId}</td>
+                <td className="ez-table__id">{row.sourceId}</td>
                 <td>{row.slug !== undefined ? <a href={`/zeichen/${row.slug}`}>{row.title}</a> : row.title}</td>
-                <td>{row.implementation}</td>
+                <td className="ez-table__id">{row.implementation}</td>
                 <td>{ART_LABELS[row.coverage] ?? row.coverage}</td>
                 <td>{row.profile}</td>
                 <td>
                   <StatusPair technical={row.technical} domain={row.domain} compact />
                 </td>
-                <td>{row.evidence.length > 0 ? row.evidence.join(', ') : '—'}</td>
+                <td className="ez-table__id">{row.evidence.length > 0 ? row.evidence.join(', ') : '—'}</td>
               </tr>
             ))}
           </tbody>
@@ -186,42 +186,30 @@ export default function CoverageMatrix({ rows }: CoverageMatrixProps) {
         .ez-coverage-matrix__filters {
           display: flex;
           flex-wrap: wrap;
-          gap: 1rem;
-          margin-bottom: 0.75rem;
+          gap: var(--ez-space-4);
+          margin-block-end: var(--ez-space-3);
         }
         .ez-coverage-matrix__filters label {
           display: flex;
           flex-direction: column;
-          gap: 0.25rem;
-          font-size: 0.85rem;
+          gap: var(--ez-space-1);
+          font-size: var(--sl-text-sm);
         }
         .ez-coverage-matrix__count {
-          font-size: 0.85rem;
-          opacity: 0.8;
+          font-size: var(--sl-text-sm);
+          color: var(--sl-color-gray-3);
         }
-        .ez-coverage-matrix__scroll {
-          overflow-x: auto;
-        }
-        .ez-coverage-matrix table {
-          border-collapse: collapse;
-          width: 100%;
-          font-size: 0.85rem;
-        }
-        .ez-coverage-matrix th,
-        .ez-coverage-matrix td {
-          border-bottom: 1px solid var(--sl-color-hairline, #444);
-          padding: 0.35rem 0.6rem;
-          text-align: left;
-          white-space: nowrap;
-        }
-        .ez-coverage-matrix th button {
+        .ez-coverage-matrix__sort {
           background: none;
           border: none;
           font: inherit;
-          font-weight: 600;
+          font-weight: inherit;
+          letter-spacing: inherit;
+          text-transform: inherit;
           cursor: pointer;
           padding: 0;
           color: inherit;
+          white-space: nowrap;
         }
       `}</style>
     </div>

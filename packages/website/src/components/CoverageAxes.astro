@@ -8,6 +8,11 @@
  * `ruleCoverage()`/`generativeReach()`/`referenceInventory()`-Lauf, den `pnpm cli coverage`
  * beim Generieren des Snapshots ausführt (Spec §5.3, §5.4: „dieselben Zahlen — kein zweiter
  * Rechenweg"). Diese Komponente rechnet nichts nach, sie gruppiert nur zur Anzeige.
+ *
+ * Gestaltung: der gemeinsame `.ez-*`-Vorrat aus `theme.css` (`.ez-grid`/`.ez-figure` für die
+ * Achsen, `.ez-note` für „Was offen ist" und die Kontrastausnahmen) — keine eigenen Farben,
+ * eigene Regeln unten nur an neue `.ez-`-Klassen für das, was der Vorrat nicht abdeckt
+ * (Schlüssellisten, `<details>`-Rücksetzung).
  */
 import { loadSnapshot } from '../lib/snapshot';
 
@@ -52,72 +57,72 @@ const totalBlockers = coverage.blockers.length;
 ---
 
 <section class="ez-coverage-axes">
-  <div class="ez-coverage-axes__tiles">
+  <ul class="ez-grid ez-grid--4">
     {
       coverage.axes.map((axis) => (
-        <article class="ez-axis-tile">
-          <p class="ez-axis-tile__label">{axis.label}</p>
-          <p class="ez-axis-tile__value">
+        <li class="ez-figure">
+          <p class="ez-figure__value">
             {axis.value}
-            {axis.of !== undefined && <span class="ez-axis-tile__of"> / {axis.of}</span>}
+            {axis.of !== undefined && <small> / {axis.of}</small>}
           </p>
-          {axis.detail !== undefined && <p class="ez-axis-tile__detail">{axis.detail}</p>}
-        </article>
+          <p class="ez-figure__label">{axis.label}</p>
+          {axis.detail !== undefined && <p class="ez-figure__source">{axis.detail}</p>}
+        </li>
       ))
     }
-  </div>
+  </ul>
 
-  <section class="ez-coverage-open" aria-labelledby="was-offen-ist">
+  <section aria-labelledby="was-offen-ist">
     <h2 id="was-offen-ist">Was offen ist</h2>
 
-    <h3>Blocker für Release 1.0</h3>
-    <p>{totalBlockers} offene Punkte, gruppiert nach Art:</p>
-    <ul class="ez-blocker-groups">
-      {
-        blockerGroups.map((group) => (
-          <li>
-            <details>
-              <summary>
-                {group.keys.length} × {group.detail}
-              </summary>
-              <ul class="ez-blocker-groups__keys" data-pagefind-ignore>
-                {group.keys.map((key) => (
-                  <li>
-                    <code>{key}</code>
-                  </li>
-                ))}
-              </ul>
-            </details>
-          </li>
-        ))
-      }
-    </ul>
+    <div class="ez-note">
+      <p class="ez-note__title">Blocker für Release 1.0</p>
+      <p>{totalBlockers} offene Punkte, gruppiert nach Art:</p>
+      <ul class="ez-coverage-keygroups">
+        {
+          blockerGroups.map((group) => (
+            <li>
+              <details>
+                <summary>
+                  {group.keys.length} × {group.detail}
+                </summary>
+                <ul class="ez-coverage-keygroups__keys" data-pagefind-ignore>
+                  {group.keys.map((key) => (
+                    <li class="ez-id">{key}</li>
+                  ))}
+                </ul>
+              </details>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
 
-    <h3>Offene fachliche Reviews je Bereich</h3>
-    <ul class="ez-open-by-area">
-      {
-        coverage.openDomainReviewsByArea.map((entry) => (
-          <li>
-            <details>
-              <summary>
-                Bereich {entry.area}: {entry.count}
-              </summary>
-              <ul class="ez-open-by-area__keys" data-pagefind-ignore>
-                {entry.keys.map((key) => (
-                  <li>
-                    <code>{key}</code>
-                  </li>
-                ))}
-              </ul>
-            </details>
-          </li>
-        ))
-      }
-    </ul>
+    <div class="ez-note">
+      <p class="ez-note__title">Offene fachliche Reviews je Bereich</p>
+      <ul class="ez-coverage-keygroups">
+        {
+          coverage.openDomainReviewsByArea.map((entry) => (
+            <li>
+              <details>
+                <summary>
+                  Bereich {entry.area}: {entry.count}
+                </summary>
+                <ul class="ez-coverage-keygroups__keys" data-pagefind-ignore>
+                  {entry.keys.map((key) => (
+                    <li class="ez-id">{key}</li>
+                  ))}
+                </ul>
+              </details>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
   </section>
 
-  <aside class="ez-contrast-exceptions" aria-label="Kontrastausnahmen">
-    <h3>Kontrastausnahmen</h3>
+  <aside class="ez-note" aria-label="Kontrastausnahmen">
+    <p class="ez-note__title">Kontrastausnahmen</p>
     <p>
       Eine Kontrastausnahme ist kein Blocker: ein Blocker ist ein offener Punkt, eine Ausnahme
       ist ein entschiedener.
@@ -137,78 +142,27 @@ const totalBlockers = coverage.blockers.length;
 </section>
 
 <style>
-  .ez-coverage-axes__tiles {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-    gap: 1rem;
-    margin-block: 1rem 1.5rem;
-  }
-
-  .ez-axis-tile {
-    border: 1px solid var(--sl-color-hairline, #444);
-    border-radius: 0.5rem;
-    padding: 0.9rem 1.1rem;
-  }
-
-  .ez-axis-tile__label {
-    margin: 0;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-    opacity: 0.75;
-  }
-
-  .ez-axis-tile__value {
-    margin: 0.15rem 0 0.35rem;
-    font-size: 1.6rem;
-    font-weight: 600;
-  }
-
-  .ez-axis-tile__of {
-    font-size: 1.1rem;
-    font-weight: 400;
-    opacity: 0.7;
-  }
-
-  .ez-axis-tile__detail {
-    margin: 0;
-    font-size: 0.85rem;
-    opacity: 0.85;
-  }
-
-  .ez-coverage-open h3 {
-    margin-top: 1.25rem;
-  }
-
-  .ez-blocker-groups,
-  .ez-open-by-area {
+  /* Ergänzt den gemeinsamen Vorrat nur dort, wo er nichts für die Sache hat: Schlüssellisten
+     unter einem `.ez-note__title` und die native `<details>`-Rücksetzung. Keine eigene Farbe. */
+  .ez-coverage-keygroups {
     list-style: none;
     padding: 0;
-    margin: 0.5rem 0;
+    margin: var(--ez-space-2) 0 0;
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: var(--ez-space-1);
   }
 
-  .ez-blocker-groups__keys,
-  .ez-open-by-area__keys {
+  .ez-coverage-keygroups summary {
+    cursor: pointer;
+  }
+
+  .ez-coverage-keygroups__keys {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.35rem 0.6rem;
+    gap: var(--ez-space-1) var(--ez-space-3);
     list-style: none;
-    padding: 0.5rem 0 0.25rem;
+    padding: var(--ez-space-2) 0 var(--ez-space-1);
     margin: 0;
-  }
-
-  .ez-contrast-exceptions {
-    margin-top: 1.5rem;
-    padding: 0.9rem 1.1rem;
-    border: 1px solid var(--sl-color-hairline, #444);
-    border-radius: 0.5rem;
-    max-width: 60rem;
-  }
-
-  .ez-contrast-exceptions h3 {
-    margin-top: 0;
   }
 </style>
