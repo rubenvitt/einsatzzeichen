@@ -103,5 +103,8 @@ describe('coverage CLI', () => {
         '132 Körpermarken, 25 Funktionsrollen, freie Bezeichnung',
     );
     expect(lines.at(-1)).toBe('Coverage-Gate bestanden.');
-  });
+    // Expliziter Timeout: `coverage()` rechnet seit LFH-413 `generativeReach()` mit
+    // (963 validateSpec-gültige, 894 komponierte Kombinationen) — allein ~140 ms, unter
+    // Vitest-Parallellast bis ~4 s gemessen; das 5-s-Standardlimit wäre ein Lastflake.
+  }, 30_000);
 });

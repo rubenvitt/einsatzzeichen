@@ -18,13 +18,17 @@ import type { TextMetrics } from '../text-metrics.js';
  * `unknown` nennt Codepoints, die das Doppel **nicht** kennt (Tofu-Fall); alles andere gilt als
  * bekannt. Die Tinte füllt den Vorschub vollständig (`[0, advance]`, keine Seitenbreiten) — außer
  * beim Leerzeichen, das wie in jeder Schrift keine Kontur hat; `bearings` setzt für einzelne
- * Zeichen ein Paar aus linker und rechter Seitenbreite in em.
+ * Zeichen ein Paar aus linker und rechter Seitenbreite in em. Vertikal reicht jede Glyphe von
+ * `vertical[0]` (unter der Grundlinie, negativ) bis `vertical[1]` (darüber) — die Vorgabe liegt
+ * innerhalb der gemessenen Arimo-Anteile (`ALPHABETIC_ASCENT_FRACTION` 0,86 /
+ * `ALPHABETIC_DESCENT_FRACTION` 0,212), damit `labelPrimitive`-Boxen im Bestand passen.
  */
 export function uniformTextMetrics(
   em = 0.25,
   overrides: Readonly<Record<string, number>> = {},
   unknown: readonly string[] = [],
   bearings: Readonly<Record<string, readonly [number, number]>> = {},
+  vertical: readonly [number, number] = [-0.2, 0.75],
 ): TextMetrics {
   const overrideByCodepoint = new Map<number, number>();
   for (const [character, width] of Object.entries(overrides)) {
@@ -46,9 +50,9 @@ export function uniformTextMetrics(
     inkExtentEm: (codepoint) => {
       const advance = advanceEm(codepoint);
       if (advance === undefined) return undefined;
-      if (codepoint === 0x20) return [0, 0];
+      if (codepoint === 0x20) return [0, 0, 0, 0];
       const [left, right] = bearingByCodepoint.get(codepoint) ?? [0, 0];
-      return [left, advance - right];
+      return [left, vertical[0], advance - right, vertical[1]];
     },
   };
 }

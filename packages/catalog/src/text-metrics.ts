@@ -8,9 +8,8 @@ import arimoMetrics from '../assets/arimo-metrics.json' with { type: 'json' };
  * Die Quelle ist `assets/arimo-metrics.json`, ein **Generat** aus `Arimo[wght].ttf`
  * (`scripts/font/*`): je cmap-Eintrag der hmtx-Vorschub (`advances`) und die horizontale
  * Bounding-Box der Kontur (`inkExtents`) und die Kerningpaare (`kerning`) der Default-Instanz
- * (Gewicht 400), in Font-Einheiten bei `unitsPerEm` 2048. `inkExtents` führt die volle Box `[xMin, yMin, xMax, yMax]`;
- * das Gate nutzt davon nur die Horizontale (siehe `text-metrics.ts` in core, warum die Vertikale
- * nicht inhaltsunabhängig prüfbar ist). Der JSON-Import ist wie bei
+ * (Gewicht 400), in Font-Einheiten bei `unitsPerEm` 2048. `inkExtents` führt die volle Box `[xMin, yMin, xMax, yMax]`,
+ * y nach oben positiv. Der JSON-Import ist wie bei
  * `fingerprint-index.ts` eine Vertrauensgrenze zu einem Generat, nicht zu TypeScript — der
  * `with { type: 'json' }`-Typ behauptet die Form, prüft sie aber nicht; deshalb Laufzeitvalidierung.
  *
@@ -75,10 +74,10 @@ const ADVANCE_EM = new Map<number, number>(
   Object.entries(file.advances).map(([codepoint, advance]) => [Number(codepoint), advance / file.unitsPerEm]),
 );
 
-const INK_EXTENT_EM = new Map<number, readonly [number, number]>(
-  Object.entries(file.inkExtents).map(([codepoint, [xMin, , xMax]]) => [
+const INK_EXTENT_EM = new Map<number, readonly [number, number, number, number]>(
+  Object.entries(file.inkExtents).map(([codepoint, box]) => [
     Number(codepoint),
-    [xMin / file.unitsPerEm, xMax / file.unitsPerEm],
+    [box[0] / file.unitsPerEm, box[1] / file.unitsPerEm, box[2] / file.unitsPerEm, box[3] / file.unitsPerEm],
   ]),
 );
 

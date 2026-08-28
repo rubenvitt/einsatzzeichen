@@ -136,6 +136,24 @@ describe('checkTextMetrics()', () => {
     expect(issues[0]?.detail).toContain('U+20AC');
   });
 
+  it('prüft bei baseline "alphabetic" die Tinte des Inhalts gegen die Box', () => {
+    // Doppel: Tinte von −0,2 em bis 0,75 em um die Grundlinie, bei 4 mm und y = 10 also 7…10,8.
+    expect(checkTextMetrics(drawing(text({ boxMm: { xMm: 10, yMm: 7, widthMm: 10, heightMm: 3.8 } })), metrics)).toEqual([]);
+    // Dieselbe Rasterpixel-Toleranz wie horizontal: 0,125 mm gehen durch, 0,13 mm nicht.
+    const withinTolerance = checkTextMetrics(drawing(text({ boxMm: { xMm: 10, yMm: 7.125, widthMm: 10, heightMm: 3.55 } })), metrics);
+    expect(withinTolerance).toEqual([]);
+    const tooLow = checkTextMetrics(drawing(text({ boxMm: { xMm: 10, yMm: 7.13, widthMm: 10, heightMm: 3.67 } })), metrics);
+    expect(tooLow.map((issue) => issue.rule)).toEqual(['text-too-tall']);
+    const tooShort = checkTextMetrics(drawing(text({ boxMm: { xMm: 10, yMm: 7, widthMm: 10, heightMm: 3.67 } })), metrics);
+    expect(tooShort.map((issue) => issue.rule)).toEqual(['text-too-tall']);
+    expect(tooShort[0]?.detail).toContain('7 mm bis 10.8 mm');
+  });
+
+  it('lässt bei baseline "hanging" die Vertikale bewusst ungeprüft', () => {
+    const hanging = text({ baseline: 'hanging', boxMm: { xMm: 10, yMm: 10, widthMm: 10, heightMm: 0.1 } });
+    expect(checkTextMetrics(drawing(hanging), metrics)).toEqual([]);
+  });
+
   it('meldet baseline "middle" als ungemessen statt zu werfen', () => {
     const issues = checkTextMetrics(drawing(text({ baseline: 'middle' })), metrics);
     expect(issues.map((issue) => issue.rule)).toEqual(['unmeasured-baseline']);

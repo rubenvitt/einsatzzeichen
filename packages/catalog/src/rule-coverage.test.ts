@@ -99,8 +99,14 @@ describe('reachSignature', () => {
   });
 });
 
+// Expliziter Timeout für jeden Test, der `generativeReach()` ausführt: die Enumeration prüft
+// 225 720 Kombinationen mit `validateSpec` (963 bestehen) und komponiert 894 davon. Allein
+// ~140 ms, unter Vitest-Parallellast bis ~4 s gemessen — das Vitest-Standardlimit von 5 s ist
+// dann ein Lastflake, kein Befund.
+const REACH_TIMEOUT_MS = 30_000;
+
 describe('generativeReach (echter Bestand)', () => {
-  it('enumeriert Stufe 1 mit echtem validateSpec und compose und bleibt unter einer Sekunde', () => {
+  it('enumeriert Stufe 1 mit echtem validateSpec und compose', () => {
     // 19 Arten × (∅+10) Varianten × (∅+9) Organisationen × (∅+4+1+6) Kopfzonen × (∅+8) Fahrwerke.
     // Die Reichweitenzahlen wachsen mit den vermessenen Verträgen (ein neues Fahrwerk, eine neue
     // Körpervariante); `referenced` wächst mit den Rezepten. Der Unterschied validBySpec − valid
@@ -125,7 +131,7 @@ describe('generativeReach (echter Bestand)', () => {
     // Keine Laufzeit-Assertion: allein gemessen ~140 ms, unter Vitest-Parallellast bis 4 s —
     // eine Schwelle wäre ein Lastflake. `durationMs` bleibt in der Ausgabe sichtbar.
     expect(reach.durationMs).toBeGreaterThan(0);
-  });
+  }, REACH_TIMEOUT_MS);
 
   it('zählt mit einer Fixture-Rezeptmenge nur die Signaturen innerhalb der Reichweite', () => {
     const reach = generativeReach([
@@ -137,5 +143,5 @@ describe('generativeReach (echter Bestand)', () => {
     expect(reach.referenced).toBe(1);
     expect(reach.referencedOutsideReach).toEqual(['formation||feuerwehr||kfz-kategorie-1']);
     expect(reach.reachOnly).toBe(reach.valid - 1);
-  });
+  }, REACH_TIMEOUT_MS);
 });

@@ -43,13 +43,24 @@ import type { Drawing, Primitive } from '@einsatzzeichen/schema';
  * Schwelle meldete Boxen, die jede Rasterprüfung belegt, eine größere wäre nicht mehr aus der
  * Evidenz hergeleitet.
  *
- * **Vertikal prüft dieses Gate nur, ob die Baseline vermessen ist.** Eine inhaltsunabhängige
+ * **Vertikal inhaltsabhängig, und nur bei `baseline: 'alphabetic'`.** Eine inhaltsunabhängige
  * Soll-Box aus `verticalTextBoxMm` (Oberlänge + Unterlänge + Diakritika-Zuschlag) wäre für die
- * handvermessenen Katalogboxen falsch: „TEL" reserviert zu Recht keine Unterlänge, und rund 60
+ * handvermessenen Katalogboxen falsch: „TEL" reserviert zu Recht keine Unterlänge, und 62
  * Läufe des Bestands (D.1–D.4, comms, leadership) fielen durch, obwohl ihre Rasterprüfung
- * (`text-ink.test.ts`, 512 px) sie belegt. Inhaltsabhängig ginge es nur mit vertikaler
- * Glyphenmetrik, die hier nicht vorliegt. Die Läufe, die `compose()` selbst erzeugt, leiten ihre
- * vertikale Box ohnehin aus `verticalTextBoxMm` ab.
+ * (`text-ink.test.ts`, 512 px) sie belegt. Stattdessen gilt die Tinte des tatsächlichen
+ * Inhalts: größtes yMax und kleinstes yMin seiner Glyphen um die Grundlinie, die bei
+ * `alphabetic` exakt auf `y` liegt. Bei `hanging` liegt die Grundlinie um die Hanging-Metrik der
+ * Schrift unter `y`, und die steht nicht in der Tabelle (BASE-Tabelle fehlt Arimo; resvg leitet
+ * den Wert intern ab) — dort wird bewusst nicht geprüft, die Fußzone deckt der Rasterbeleg in
+ * fonts.test.ts. `middle` bleibt `unmeasured-baseline`.
+ *
+ * Auch vertikal gilt `BOX_TOLERANCE_MM`, nicht 1e-9: die handvermessenen Boxen enden an der
+ * Grundlinie, runde Glyphen (O, C, x) überschießen sie aber um −20/2048 em — bei 7 mm 0,068 mm
+ * („DMO"), bei 9 mm 0,088 mm („Fax"), bei 14 mm 0,137 mm („C", comms.telephone-exchange).
+ * Exakt geprüft fielen sieben Läufe des Bestands, alle um diesen Überschuss oder um
+ * Handvermessungsreste ≤ 0,05 mm („Bezeichnung" 0,046 mm, „L" 0,005 mm); mit der
+ * Rasterpixel-Toleranz bleibt allein „C" bei 14 mm, um 0,012 mm darüber — ein echter, wenn auch
+ * unsichtbarer Befund, den das Gate meldet, statt die Schwelle danach zu biegen.
  */
 
 /**
@@ -64,11 +75,11 @@ export interface TextMetrics {
    */
   advanceEm(codepoint: number): number | undefined;
   /**
-   * Horizontale Tintenausdehnung der Glyphe relativ zu ihrem Ursprung, in em: `[xMin, xMax]`
-   * ihrer Bounding-Box. Glyphen ohne Kontur (Leerzeichen) liefern `[0, 0]`; unbekannte Codepoints
-   * wie bei `advanceEm` `undefined`.
+   * Tintenausdehnung der Glyphe relativ zu ihrem Ursprung, in em: `[xMin, yMin, xMax, yMax]`
+   * ihrer Bounding-Box, y nach **oben** positiv (Font-Konvention, nicht SVG). Glyphen ohne Kontur
+   * (Leerzeichen) liefern `[0, 0, 0, 0]`; unbekannte Codepoints wie bei `advanceEm` `undefined`.
    */
-  inkExtentEm(codepoint: number): readonly [number, number] | undefined;
+  inkExtentEm(codepoint: number): readonly [number, number, number, number] | undefined;
   /**
    * Kerning des Paars (links, rechts) in em — die Korrektur des Vorschubs der linken Glyphe,
    * meist negativ. Optional: ein Doppel ohne Paare lässt es weg, und die Rechnung bleibt dann
@@ -139,6 +150,10 @@ export interface TextRunMeasure extends TextWidth {
   inkMinXMm: number;
   /** Rechte Tintenkante entsprechend. */
   inkMaxXMm: number;
+  /** Tinte oberhalb der Grundlinie (größtes yMax), in mm — 0 ohne Tinte. */
+  inkAscentMm: number;
+  /** Tinte unterhalb der Grundlinie (−kleinstes yMin), in mm — 0 ohne Tinte. */
+  inkDescentMm: number;
 }
 
 /**
@@ -159,13 +174,17 @@ export function measureTextRun(primitive: TextPrimitive, metrics: TextMetrics): 
   let penEm = 0;
   let inkMinEm = Number.POSITIVE_INFINITY;
   let inkMaxEm = Number.NEGATIVE_INFINITY;
+  let ascentEm = 0;
+  let descentEm = 0;
   for (const { advanceEm, codepoint } of glyphRun(primitive.content, metrics)) {
     const extent = metrics.inkExtentEm(codepoint);
     if (advanceEm === undefined || extent === undefined) continue;
-    const [xMinEm, xMaxEm] = extent;
+    const [xMinEm, yMinEm, xMaxEm, yMaxEm] = extent;
     if (xMaxEm > xMinEm) {
       inkMinEm = Math.min(inkMinEm, penEm + xMinEm);
       inkMaxEm = Math.max(inkMaxEm, penEm + xMaxEm);
+      ascentEm = Math.max(ascentEm, yMaxEm);
+      descentEm = Math.max(descentEm, -yMinEm);
     }
     penEm += advanceEm;
   }
@@ -178,6 +197,8 @@ export function measureTextRun(primitive: TextPrimitive, metrics: TextMetrics): 
     inkWidthMm: (inkMaxEm - inkMinEm) * primitive.sizeMm,
     inkMinXMm: startXMm + inkMinEm * primitive.sizeMm,
     inkMaxXMm: startXMm + inkMaxEm * primitive.sizeMm,
+    inkAscentMm: ascentEm * primitive.sizeMm,
+    inkDescentMm: descentEm * primitive.sizeMm,
   };
 }
 
@@ -185,6 +206,7 @@ export type TextMetricsRule =
   | 'unknown-glyph'
   | 'text-too-wide'
   | 'text-outside-box'
+  | 'text-too-tall'
   | 'unmeasured-baseline';
 
 /** Befundformat wie `ViewBoxIssue`: Regel, Primitivpfad, Klartext mit Zahlen. */
@@ -201,6 +223,7 @@ export interface TextMetricsIssue {
  * außerhalb.
  */
 export const BOX_TOLERANCE_MM = 0.125;
+
 
 function formatMm(value: number): string {
   return `${Number(value.toFixed(3))} mm`;
@@ -222,10 +245,9 @@ export function textRunIssues(
   metrics: TextMetrics,
 ): Omit<TextMetricsIssue, 'primitive'>[] {
   const issues: Omit<TextMetricsIssue, 'primitive'>[] = [];
-  const { xMm, widthMm } = primitive.boxMm;
+  const { xMm, yMm, widthMm, heightMm } = primitive.boxMm;
   const content = `"${primitive.content}"`;
 
-  // Vertikal: nur die Vermessbarkeit der Baseline (siehe Modulkommentar, warum keine Soll-Box).
   // `verticalTextBoxMm` wirft für `middle`; hier wird daraus ein Befund, kein Abbruch, damit ein
   // Gate über 525 Fälle nicht am ersten hängen bleibt.
   if (primitive.baseline === 'middle') {
@@ -237,8 +259,8 @@ export function textRunIssues(
     });
   }
 
-  // Horizontal: nur mit Metrik. Unbekannte Glyphen machen die Breite unverlässlich — Befund
-  // statt Ersatzwert, und die Breitenprüfung entfällt für diesen Lauf (sie wäre zu klein).
+  // Unbekannte Glyphen machen Breite und Höhe unverlässlich — Befund statt Ersatzwert, und die
+  // Maßprüfungen entfallen für diesen Lauf (sie wären zu klein).
   const measure = measureTextRun(primitive, metrics);
   if (measure.unknownCodepoints.length > 0) {
     issues.push({
@@ -248,6 +270,21 @@ export function textRunIssues(
         `${measure.unknownCodepoints.map(codepointLabel).join(', ')}.`,
     });
     return issues;
+  }
+  // Vertikal: Tinte des Inhalts um die Grundlinie, mit derselben Rasterpixel-Toleranz wie
+  // horizontal — siehe Modulkommentar, warum nur `alphabetic` und warum nicht exakt.
+  if (primitive.baseline === 'alphabetic') {
+    const inkTopMm = primitive.y - measure.inkAscentMm;
+    const inkBottomMm = primitive.y + measure.inkDescentMm;
+    if (inkTopMm < yMm - BOX_TOLERANCE_MM || inkBottomMm > yMm + heightMm + BOX_TOLERANCE_MM) {
+      issues.push({
+        rule: 'text-too-tall',
+        detail:
+          `Lauf ${content} trägt Tinte von ${formatMm(inkTopMm)} bis ${formatMm(inkBottomMm)} ` +
+          `(Grundlinie ${formatMm(primitive.y)}, ${formatMm(primitive.sizeMm)} Schriftgrad), ` +
+          `die Box deckt ${formatMm(yMm)}…${formatMm(yMm + heightMm)}.`,
+      });
+    }
   }
   if (measure.inkWidthMm > widthMm + BOX_TOLERANCE_MM) {
     issues.push({
