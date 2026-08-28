@@ -394,6 +394,13 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:I.1.10#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.11#primary': { status: 'pending' },
   'bbk-babz-2025:I.1.12#primary': { status: 'pending' },
+  // I-f bildet weiße Formationen technisch literal ab. Weder die Füllfarbe noch die sichtbaren
+  // Scheiben-/Schaft-/Klammer- beziehungsweise Ölformen leiten eine Organisation oder
+  // einsatztaktische Klassifikation ab.
+  'bbk-babz-2025:I.1.13#primary': { status: 'pending' },
+  'bbk-babz-2025:I.1.14#primary': { status: 'pending' },
+  'bbk-babz-2025:I.1.15#primary': { status: 'pending' },
+  'bbk-babz-2025:I.1.16#primary': { status: 'pending' },
   // Das Erscheinungsbild ist technisch durch die Mess-, Rezept- und Snapshot-Gates belegt; die
   // organisatorische und fachliche Bedeutung des weißen Körpers bleibt dennoch ungeklärt.
   'bbk-babz-2025:I.1.5#primary': { status: 'pending' },

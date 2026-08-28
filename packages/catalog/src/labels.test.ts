@@ -250,8 +250,11 @@ describe('semantische Zeichenbeschreibungen', () => {
       'formation-solid-cap-4mm-three-hole-row',
       'formation-water-rescue-compact',
     ] as const;
-    const lfh485TechnicalIds = [
-      'formation-water-rescue-lower-zone',
+    const lfh485LowerTechnicalIds = ['formation-water-rescue-lower-zone'] as const;
+    const lfh484TechnicalIds = [
+      'formation-hooked-crossed-disks-over-lowered-wave-diamond',
+    ] as const;
+    const lfh485UpperTechnicalIds = [
       'formation-opposed-triangles-top',
       'formation-chevron-top',
     ] as const;
@@ -264,7 +267,9 @@ describe('semantische Zeichenbeschreibungen', () => {
       ...task1AnhangHTechnicalIds,
       ...task1AnhangNTechnicalIds,
       ...lfh481TechnicalIds,
-      ...lfh485TechnicalIds,
+      ...lfh485LowerTechnicalIds,
+      ...lfh484TechnicalIds,
+      ...lfh485UpperTechnicalIds,
       ...task1AnhangITechnicalIds,
     ]);
     expect(TECHNICAL_BODY_MARK_LABELS as Record<string, string>).toMatchObject({
@@ -273,6 +278,8 @@ describe('semantische Zeichenbeschreibungen', () => {
         'Schwarze Formationskappe, 3,7 mm hoch, mit drei Löchern in einer Reihe',
       'formation-solid-cap-4mm-three-hole-row':
         'Schwarze Formationskappe, 4 mm hoch, mit drei Löchern in einer Reihe',
+      'formation-hooked-crossed-disks-over-lowered-wave-diamond':
+        'Gekreuzte Scheibenstäbe mit unteren Klammern über zwei Wellen und einer Raute',
       'double-wave-inner-diamond-8mm': 'Doppelwelle mit Innenraute (8 mm)',
       'formation-two-waves-diamond':
         'Zwei Wellenlinien über einer Raute in der Formationshülle',

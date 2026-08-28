@@ -320,6 +320,7 @@ export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
   'inset-hull-wheel-pair',
   'formation-two-waves-diamond',
   'formation-water-rescue-lower-zone',
+  'formation-hooked-crossed-disks-over-lowered-wave-diamond',
   'formation-opposed-triangles-top',
   'formation-chevron-top',
   'double-wave-inner-diamond-8mm',

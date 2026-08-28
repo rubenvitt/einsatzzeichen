@@ -18,15 +18,15 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 521: 14 Grundzeichen, 238 Rezeptfälle und 269 Piktogrammvarianten. Die Anhang-I-Slices
+    // 525: 14 Grundzeichen, 242 Rezeptfälle und 269 Piktogrammvarianten. Die Anhang-I-Slices
     // I.2.4 bis I.2.7 ergänzen den bereits vollständigen I.3-Bestand und I.5.1 bis I.5.3.
-    expect(ids).toHaveLength(521);
+    expect(ids).toHaveLength(525);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
     // Dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66, G 21, H drei,
-    // I-c, I-d und I-g je vier, I-e fünf, I.2 sieben, I.3 elf, I-j drei und I.5 drei,
+    // I-c, I-d, I-f und I-g je vier, I-e fünf, I.2 sieben, I.3 elf, I-j drei und I.5 drei,
     // C.1.3 einen, N neun und D 26 Rezeptfälle.
-    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(238);
+    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(242);
     const anhangIRecipeIds = ids.filter((id) => id.startsWith('recipe.I.'));
     const expectedAnhangIRecipeIds = [
       ...Array.from({ length: 4 }, (_, index) => `recipe.I.1.${index + 1}`),
@@ -34,13 +34,14 @@ describe('vollständige Renderfallmenge', () => {
       'recipe.I.1.9',
       'recipe.I.1.9#alternative',
       ...Array.from({ length: 3 }, (_, index) => `recipe.I.1.${index + 10}`),
+      ...Array.from({ length: 4 }, (_, index) => `recipe.I.1.${index + 13}`),
       ...Array.from({ length: 4 }, (_, index) => `recipe.I.1.${index + 17}`),
       ...Array.from({ length: 7 }, (_, index) => `recipe.I.2.${index + 1}`),
       ...Array.from({ length: 11 }, (_, index) => `recipe.I.3.${index + 1}`),
       ...Array.from({ length: 3 }, (_, index) => `recipe.I.4.${index + 1}`),
       ...Array.from({ length: 3 }, (_, index) => `recipe.I.5.${index + 1}`),
     ];
-    expect(anhangIRecipeIds).toHaveLength(41);
+    expect(anhangIRecipeIds).toHaveLength(45);
     expect(new Set(anhangIRecipeIds)).toEqual(new Set(expectedAnhangIRecipeIds));
     expect(ids.filter((id) => id.startsWith('recipe.G.'))).toHaveLength(21);
     expect(ids.filter((id) => id.startsWith('recipe.N.'))).toEqual([

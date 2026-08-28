@@ -497,6 +497,18 @@ const ANHANG_I_G_TECHNICAL_REVIEW: Review = {
     'output-only visual QA gates. Opposed triangles and chevron remain separate geometric ' +
     'marks; domain classification remains pending.',
 };
+const ANHANG_I_F_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-08-28',
+  note:
+    'I.1.13-I.1.16 passed four literal recipes, direct-snapshot, multi-size, coverage and ' +
+    'visual-QA gates. I.1.13-I.1.14 use their separately measured technical composite mark ' +
+    'with hooked crossed disks and the lower wave-diamond geometry; I.1.15-I.1.16 reuse the ' +
+    'source-byte-identical formation-water-rescue-lower-zone mark and keep the literal Öl ' +
+    'text at its measured baseline and cap height. White is a technical fill, not an inferred ' +
+    'organization; domain classification remains pending.',
+};
 const ANHANG_I_J_TECHNICAL_REVIEW: Review = {
   status: 'approved',
   reviewer: 'rv',
@@ -537,6 +549,10 @@ const ANHANG_I_TECHNICAL_REVIEW_BY_SECTION = {
   'I.1.10': ANHANG_I_E_TECHNICAL_REVIEW,
   'I.1.11': ANHANG_I_E_TECHNICAL_REVIEW,
   'I.1.12': ANHANG_I_E_TECHNICAL_REVIEW,
+  'I.1.13': ANHANG_I_F_TECHNICAL_REVIEW,
+  'I.1.14': ANHANG_I_F_TECHNICAL_REVIEW,
+  'I.1.15': ANHANG_I_F_TECHNICAL_REVIEW,
+  'I.1.16': ANHANG_I_F_TECHNICAL_REVIEW,
   'I.1.17': ANHANG_I_G_TECHNICAL_REVIEW,
   'I.1.18': ANHANG_I_G_TECHNICAL_REVIEW,
   'I.1.19': ANHANG_I_G_TECHNICAL_REVIEW,
@@ -1272,6 +1288,10 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'I.1.10',
     'I.1.11',
     'I.1.12',
+    'I.1.13',
+    'I.1.14',
+    'I.1.15',
+    'I.1.16',
     'I.1.17',
     'I.1.18',
     'I.1.19',

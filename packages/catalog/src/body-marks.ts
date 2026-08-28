@@ -460,6 +460,52 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
     ];
   },
 
+  /**
+   * I.1.13 und I.1.14: eine eigene technische Composite-Marke. Die obere verschmolzene
+   * Scheiben-/Schaft-/Klammerkontur und der tiefer gesetzte Wasser-/Rautenteil sind gemeinsam
+   * an genau diesen beiden normalen Formationskörpern vermessen. Weder die Kapitel-4-Box noch
+   * die höher stehenden Wasserrettungsfassungen aus I-c, I-e oder I-g werden fortgeschrieben.
+   */
+  'formation-hooked-crossed-disks-over-lowered-wave-diamond': (bounds) => {
+    const dx = bounds.minX - 1;
+    const dy = bounds.minY - 6;
+    const point = (x: number, y: number): string => `${x + dx} ${y + dy}`;
+    const ink = { fill: 'schwarz', stroke: 'none' } as const;
+    const upperContour = [
+      `M ${point(11.83565, 8.150195)}`,
+      `C ${point(11.83565, 7.460869)} ${point(12.396212, 6.899955)} ${point(13.085537, 6.899955)}`,
+      `C ${point(13.4302, 6.899955)} ${point(13.74276, 7.040007)} ${point(13.96889, 7.26649)}`,
+      `L ${point(15.999471, 9.296365)} L ${point(18.030052, 7.26649)}`,
+      `C ${point(18.256535, 7.040007)} ${point(18.568742, 6.899955)} ${point(18.913404, 6.899955)}`,
+      `C ${point(19.60273, 6.899955)} ${point(20.163291, 7.460869)} ${point(20.163291, 8.150195)}`,
+      `C ${point(20.163291, 8.83952)} ${point(19.60273, 9.400434)} ${point(18.913404, 9.400434)}`,
+      `C ${point(18.282993, 9.400434)} ${point(17.76547, 8.929478)} ${point(17.680803, 8.321644)}`,
+      `L ${point(16.3526, 9.649847)} L ${point(19.249248, 12.546495)} L ${point(19.249248, 11.150206)}`,
+      `L ${point(19.749132, 11.150206)} L ${point(19.749132, 13.400214)} L ${point(17.499124, 13.400214)}`,
+      `L ${point(17.499124, 12.899977)} L ${point(18.895413, 12.899977)} L ${point(15.999118, 10.003329)}`,
+      `L ${point(13.102823, 12.899977)} L ${point(14.499113, 12.899977)} L ${point(14.499113, 13.400214)}`,
+      `L ${point(12.249104, 13.400214)} L ${point(12.249104, 11.150206)} L ${point(12.748989, 11.150206)}`,
+      `L ${point(12.748989, 12.546495)} L ${point(15.645636, 9.649847)} L ${point(14.317785, 8.321997)}`,
+      `C ${point(14.233119, 8.929478)} ${point(13.715596, 9.400434)} ${point(13.085184, 9.400434)}`,
+      `C ${point(12.395859, 9.400434)} ${point(11.835297, 8.83952)} ${point(11.835297, 8.150195)} Z`,
+    ].join(' ');
+    return [
+      { type: 'path', role: 'pictogram', d: upperContour, style: ink },
+      waterWave(16 + dx, 16 + dy),
+      waterWave(16 + dx, 17.6 + dy),
+      {
+        type: 'path',
+        role: 'pictogram',
+        d:
+          `M ${16 + dx} ${18.283 + dy} L ${19.535 + dx} ${21.818 + dy} ` +
+          `L ${16 + dx} ${25.354 + dy} L ${12.464 + dx} ${21.818 + dy} Z ` +
+          `M ${16 + dx} ${18.99 + dy} L ${13.171 + dx} ${21.818 + dy} ` +
+          `L ${16 + dx} ${24.647 + dy} L ${18.828 + dx} ${21.818 + dy} Z`,
+        style: { fill: 'schwarz', fillRule: 'evenodd', stroke: 'none' },
+      },
+    ];
+  },
+
   /** H.1: die separat vermessene, randbündige Veterinärmarke. */
   veterinary: (bounds) => {
     const { minX, minY, maxX, maxY } = bounds;

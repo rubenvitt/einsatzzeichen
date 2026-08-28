@@ -589,7 +589,7 @@ describe('Anhang D.1, Führungsstellen im Einsatz', () => {
 
   it('führt exakt die neun komponierten D.1-Darstellungen', () => {
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('D.1.'))).toEqual(expectedKeys);
-    expect(Object.keys(RECIPES)).toHaveLength(238);
+    expect(Object.keys(RECIPES)).toHaveLength(242);
   });
 
   it('bindet D.1.2 bis D.1.8 an die sieben gemessenen Formationsrollen', () => {
@@ -1133,7 +1133,7 @@ describe('Anhang G — vollständiges Logistikinventar', () => {
     expect(actual).toEqual(expected);
     expect(Object.keys(actual)).toEqual(Object.keys(expected));
     expect(Object.keys(actual).every((key) => !key.includes('#'))).toBe(true);
-    expect(Object.keys(RECIPES)).toHaveLength(238);
+    expect(Object.keys(RECIPES)).toHaveLength(242);
   });
 
   it('bindet die 21 primary- und Referenz-IDs exakt und ohne Alternative', () => {
@@ -1583,6 +1583,97 @@ describe('Anhang I, Teilslice I-g (I.1.17 bis I.1.20)', () => {
             sizeMm: 2.5 / ARIMO_CAP_HEIGHT_FRACTION,
             anchor: 'middle',
             boxMm: expect.objectContaining({ xMm: 1.5, widthMm: 29 }),
+          }),
+        ]);
+      } else {
+        expect(labels).toHaveLength(0);
+      }
+    },
+  );
+});
+
+describe('Anhang I, Teilslice I-f (I.1.13 bis I.1.16)', () => {
+  const expected = {
+    'I.1.13': {
+      title: 'Trupp Umweltgefahren',
+      referenceAsset: 'I.1.13_Trupp Umweltgefahren.svg',
+      spec: {
+        kind: 'formation',
+        technicalFill: 'weiss',
+        strength: 'trupp',
+        bodyMarks: ['formation-hooked-crossed-disks-over-lowered-wave-diamond'],
+      },
+    },
+    'I.1.14': {
+      title: 'Gruppe Umweltgefahren',
+      referenceAsset: 'I.1.14_Gruppe Umweltgefahren.svg',
+      spec: {
+        kind: 'formation',
+        technicalFill: 'weiss',
+        strength: 'gruppe',
+        bodyMarks: ['formation-hooked-crossed-disks-over-lowered-wave-diamond'],
+      },
+    },
+    'I.1.15': {
+      title: 'Trupp Ölabwehr',
+      referenceAsset: 'I.1.15_Trupp Ölabwehr.svg',
+      spec: {
+        kind: 'formation',
+        technicalFill: 'weiss',
+        strength: 'trupp',
+        bodyMarks: ['formation-water-rescue-lower-zone'],
+        labels: {
+          center: 'Öl',
+          centerBaselineFromBodyBottomMm: 15.45,
+          centerCapHeightMm: 3,
+        },
+      },
+    },
+    'I.1.16': {
+      title: 'Gruppe Ölabwehr',
+      referenceAsset: 'I.1.16_Gruppe Ölabwehr.svg',
+      spec: {
+        kind: 'formation',
+        technicalFill: 'weiss',
+        strength: 'gruppe',
+        bodyMarks: ['formation-water-rescue-lower-zone'],
+        labels: {
+          center: 'Öl',
+          centerBaselineFromBodyBottomMm: 15.45,
+          centerCapHeightMm: 3,
+        },
+      },
+    },
+  } as const;
+  const recipes: Record<string, Recipe> = RECIPES;
+
+  it('bindet exakt vier primary-Referenzen an ihre literalen Specs', () => {
+    expect(Object.fromEntries(
+      Object.entries(recipes).filter(([section]) => Object.hasOwn(expected, section)),
+    )).toEqual(expected);
+  });
+
+  it.each(Object.entries(expected))(
+    '%s bleibt eine Formation ohne abgeleitete Organisationssemantik',
+    (section, recipe) => {
+      expect(validateSpec(recipe.spec)).toEqual([]);
+      expect(recipe.spec).not.toHaveProperty('organization');
+      const drawing = composeFromCatalog(recipe.spec, recipe.title);
+      expect(drawing.children.find((child) => child.role === 'body')?.style?.fill).toBe('weiss');
+
+      const labels = drawing.children.filter(
+        (child): child is Primitive & { type: 'text' } =>
+          child.type === 'text' && child.role === 'label',
+      );
+      if (section === 'I.1.15' || section === 'I.1.16') {
+        expect(labels).toEqual([
+          expect.objectContaining({
+            content: 'Öl',
+            anchor: 'middle',
+            x: 16,
+            y: 10.55,
+            sizeMm: 3 / ARIMO_CAP_HEIGHT_FRACTION,
+            boxMm: expect.objectContaining({ xMm: 2, widthMm: 28 }),
           }),
         ]);
       } else {
@@ -3218,12 +3309,12 @@ describe('Anhang F, Teilslice F-f', () => {
     },
   } as const;
 
-  it('deckt F.3.12 bis F.3.19 lückenlos ab und erreicht integriert 238 Rezepte', () => {
+  it('deckt F.3.12 bis F.3.19 lückenlos ab und erreicht integriert 242 Rezepte', () => {
     const entries = Object.entries<Recipe>(RECIPES)
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(238);
+    expect(Object.keys(RECIPES)).toHaveLength(242);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {
