@@ -1,0 +1,29 @@
+---
+title: Builder
+description: Eine SymbolSpec zusammensetzen, das Ergebnis sehen und jede abgelehnte Kombination erklärt bekommen.
+---
+
+import Builder from '../../components/islands/Builder.tsx';
+
+Der Builder setzt eine `SymbolSpec` aus den Achsen zusammen, die das Schema führt, und komponiert
+sie im Browser mit demselben `compose()`, das auch der Katalog benutzt. Passt die Kombination
+nicht, steht hier nicht nur die Regelkennung, sondern was die Regel verlangt, worauf sie sich
+stützt und was sich an der Spec ändern lässt.
+
+Die Auswahlwerte kommen aus dem Katalog-Snapshot, nicht aus einer zweiten Liste in der Website:
+`kind`, `bodyVariant`, `organization`, `technicalFill`, `strength`, `functionRole`,
+`administrativeLevel`, `technicalHeadMark`, `vehicleCategory`, `capabilities` und `bodyMarks`.
+Der Snapshot bringt darüber hinaus die Piktogrammregister `states`, `comms`, `damage` und
+`wildfire` mit. Für die gibt es kein Formularfeld, weil `SymbolSpec` in
+`packages/schema/src/taxonomy.ts` keine solche Achse führt — ein Feld dafür behauptete eine
+Eingabe, die die Komposition nicht annimmt.
+
+„Aus dem Katalog laden" öffnet jede Spec aus dem Snapshot. Bei einem Katalogeintrag steht ein
+Hinweis dabei: dessen Zeichnung im Katalog stammt aus der vermessenen Darstellung, die Spec ist
+dazu die Rekonstruktion, und die Vorschau hier zeigt, was die Komposition daraus macht. Bei einem
+Kompositionsrezept gibt es diesen Unterschied nicht — dort ist die Spec die Quelle des Bildes.
+
+Die aktuelle Spec steht base64-kodiert im Parameter `spec` der URL. Ein Link teilt damit genau
+diesen Stand.
+
+<Builder client:load />
