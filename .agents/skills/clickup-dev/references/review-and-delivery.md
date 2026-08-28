@@ -22,7 +22,7 @@ Use [the PR body template](../templates/pr-body.md) for reviewable PR evidence.
 | Generic or prose status was substituted for the list status. | Read and use an exact live status from the project path. |
 | A generic in-progress label was inferred during RED work. | Use `in development` at the documented transition. |
 | A made-up verification status was used after merge. | Verify remote `main`, then use `shipped` for the PR subtask. |
-| Remaining representations were called remaining slices. | Preserve the live distinction unless scope evidence defines a slice. |
+| Remaining representations were called remaining slices. | Keep a technical prerequisite/bootstrap subtask, a product slice, and a represented depiction/count distinct; do not convert one type into another without live scope evidence. |
 | A screenshot concern produced an invented parent status. | Keep the parent at its live status and publish only eligible catalog/workflow evidence. |
 | HEAD drift produced invented blocked and action statuses. | Keep live statuses; stop and request approval for the new tuple. |
 
