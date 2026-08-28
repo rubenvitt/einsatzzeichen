@@ -147,7 +147,8 @@ const EXPLANATIONS = {
     title: 'Abweichende mittige Grundlinie nur an vermessenem Profil',
     explanation:
       'Eine eigene Grundlinie für den mittigen Lauf akzeptieren nur Profile, die das ' +
-      'ausdrücklich erlauben — taktische Formation, Landfahrzeug in Normalfassung und Anhänger. ' +
+      'ausdrücklich erlauben — taktische Formation in Normalfassung, Landfahrzeug in ' +
+      'Normalfassung und Anhänger. ' +
       'Andere Körperprofile behalten ihren Wert, damit keine ungemessene Lage entsteht. ' +
       'Entferne `labels.centerBaselineFromBodyBottomMm` oder wechsle das Profil.',
   },
@@ -231,9 +232,11 @@ const EXPLANATIONS = {
     explanation:
       'Der 12-mm-Kreis außerhalb der gebänderten Fassung verlangt einen vollständig vermessenen ' +
       'Organisationsvertrag: die weiße HiOrg-Fassung aus F.3 oder genau eine der drei farbigen ' +
-      'Art-, Varianten- und Markenfassungen. Fehlende oder vertauschte Werte sind an keiner ' +
-      'Datei belegt. Setze `organization` auf `hilfsorganisation` oder bilde eine der gemessenen ' +
-      'farbigen Kombinationen genau nach.',
+      'Art-, Varianten- und Markenfassungen. Die weiße F.3-Fassung gilt nur für `bodyVariant` ' +
+      '`undefined` oder `raised-gable`, nicht für `raised-circle-1mm`; fehlende oder ' +
+      'vertauschte Werte sind an keiner Datei belegt. Setze `organization` auf ' +
+      '`hilfsorganisation` mit einem dieser beiden `bodyVariant`-Werte oder bilde eine der ' +
+      'gemessenen farbigen Kombinationen genau nach.',
   },
   'circle-12-requires-organization': {
     title: 'Gebänderter Kreis braucht eine Organisation',
@@ -578,9 +581,9 @@ const EXPLANATIONS = {
     explanation:
       'Eine Fahrzeugkategorie ist nur am Landfahrzeug, am Anhängerrumpf und am ' +
       'Wechselladerrumpf belegt; nur diese drei Körperformen tragen in der Referenz eine ' +
-      'Fahrwerkszone. Von den 31 Zeichen des Anhangs E.2 tragen 25 ein Fahrwerk, die fünf ' +
-      'Wasserfahrzeuge und die Luftfahrzeugdateien keines. Entferne `vehicleCategory` oder ' +
-      'wechsle auf eine der drei Arten.',
+      'Fahrwerkszone. Von den 31 Zeichen des Anhangs E.2 tragen 25 ein Fahrwerk; die fünf ' +
+      'Wasserfahrzeuge E.2.27 bis E.2.31 und das Hochkantrechteck E.2.26 tragen keines. ' +
+      'Entferne `vehicleCategory` oder wechsle auf eine der drei Arten.',
   },
 } as const satisfies Readonly<Record<string, RuleExplanation>>;
 

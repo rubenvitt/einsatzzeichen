@@ -46,4 +46,10 @@ describe('explainIssue', () => {
     expect(() => explainIssue({ rule: 'gibt-es-nicht', message: 'z' }))
       .toThrow(/gibt-es-nicht/);
   });
+
+  it('reicht konkrete Werte in der Meldung unverändert durch', () => {
+    const id = VALIDATION_RULE_IDS[0];
+    const message = 'Breite 14.5 mm überschreitet 14.327 mm';
+    expect(explainIssue({ rule: id, message })).toMatchObject({ rule: id, message });
+  });
 });
