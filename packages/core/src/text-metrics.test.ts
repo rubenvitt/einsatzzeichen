@@ -33,7 +33,7 @@ function drawing(...children: Primitive[]): Drawing {
 }
 
 describe('textWidthMm()', () => {
-  it('summiert ungekernte Laufweiten mal Schriftgrad', () => {
+  it('summiert Laufweiten mal Schriftgrad (ohne Kerningpaare ungekernt)', () => {
     expect(textWidthMm('abW', 4, metrics)).toEqual({ widthMm: 8, unknownCodepoints: [] });
   });
 

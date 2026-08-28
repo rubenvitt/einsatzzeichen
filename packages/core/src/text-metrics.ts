@@ -16,7 +16,8 @@ import type { Drawing, Primitive } from '@einsatzzeichen/schema';
  * keine Injektion — dafür stehen die gemessenen Arimo-Anteile in `text-policy.ts`
  * (`verticalTextBoxMm`).
  *
- * **Ungekernte Vorschubsumme, an den Enden auf die Tinte gekürzt.** Die Rechnung setzt die
+ * **Vorschubsumme (mit Kerning, sofern der Anbieter es liefert), an den Enden auf die Tinte
+ * gekürzt.** Die Rechnung setzt die
  * Glyphen mit ihren Vorschüben (Advances) hintereinander und nimmt als Tinte je Glyphe ihre
  * horizontale Bounding-Box (`inkExtentEm`) — die linke Seitenbreite der ersten und die rechte der
  * letzten Glyphe zählen damit nicht als Tinte. Das ist keine Feinheit: die handvermessenen Boxen
@@ -96,7 +97,8 @@ export interface TextWidth {
 }
 
 /**
- * Ungekernte Breite eines Laufs: Summe der Vorschübe × Schriftgrad. Iteriert nach Codepoints
+ * Breite eines Laufs: Summe der Vorschübe × Schriftgrad, einschließlich Kerning, sofern
+ * `metrics.kerningEm` definiert ist (ein Doppel ohne Paare rechnet ungekernt). Iteriert nach Codepoints
  * (`for…of`), nicht nach UTF-16-Einheiten — ein Zeichen außerhalb der BMP ist **eine** Glyphe.
  */
 export function textWidthMm(content: string, sizeMm: number, metrics: TextMetrics): TextWidth {
@@ -290,7 +292,7 @@ export function textRunIssues(
     issues.push({
       rule: 'text-too-wide',
       detail:
-        `Lauf ${content} misst ${formatMm(measure.inkWidthMm)} Tinte (ungekernt, Vorschubsumme ` +
+        `Lauf ${content} misst ${formatMm(measure.inkWidthMm)} Tinte (Vorschubsumme ` +
         `${formatMm(measure.widthMm)}, bei ${formatMm(primitive.sizeMm)} Schriftgrad), ` +
         `die Box ist ${formatMm(widthMm)} breit.`,
     });
