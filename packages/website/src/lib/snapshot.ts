@@ -98,29 +98,56 @@ export interface CatalogSnapshot {
   ruleIds: string[];
 }
 
-// Statischer Import: `loadSnapshot()` ist synchron, ein dynamischer Import ginge nicht. Fehlt die
-// Datei, scheitert bereits die Auflösung — `predev`/`prebuild` erzeugen sie deshalb vor jedem
-// Lauf. Der Hinweis unten fängt den zweiten Fall ab: Datei da, aber leer oder aus einem
-// abgebrochenen Lauf.
-import snapshot from '../generated/catalog-snapshot.json';
+const HINT =
+  'Der Katalog-Snapshot fehlt oder ist unvollständig. Erzeugen mit: ' +
+  'pnpm --filter @einsatzzeichen/website generate';
 
 /**
- * Der erzeugte Snapshot. Wirft mit dem Hinweis aus Spec §7, wenn die Datei keinen brauchbaren
- * Snapshot trägt — kein stiller Rückfall auf einen leeren Katalog.
+ * `import.meta.glob` statt eines statischen Imports — und das ist der ganze Punkt: ein
+ * `import … from '../generated/catalog-snapshot.json'` scheitert bei fehlender Datei schon in der
+ * Modulauflösung, mit einer Meldung über einen unauflösbaren Pfad. Genau der Fall, den Spec §7
+ * beschreibt („jemand startet `astro dev` ohne `generate`"), bekäme dann nicht den Hinweis,
+ * sondern eine Bundlermeldung. Ein Glob liefert bei fehlender Datei ein leeres Register, und der
+ * Hinweis unten kommt zum Zug.
+ *
+ * `eager: true` hält `loadSnapshot()` synchron; ein dynamischer Import ginge bei dieser Signatur
+ * nicht. Die statische Typisierung der Konsumenten hängt am Rückgabetyp `CatalogSnapshot`, nicht
+ * am Import.
+ */
+const GENERATED = import.meta.glob('../generated/catalog-snapshot.json', {
+  eager: true,
+  import: 'default',
+}) as Record<string, unknown>;
+
+function generatedSnapshot(): unknown {
+  const found = Object.values(GENERATED);
+  return found.length === 1 ? found[0] : undefined;
+}
+
+/**
+ * Die Prüfung getrennt vom Laden, damit sie prüfbar ist: der fehlende Fall ist beim Glob ein
+ * `undefined`, und den kann ein Test herstellen, ohne die erzeugte Datei zu löschen. Ein Test,
+ * der sie löschte, würde jeden parallelen Lauf im selben Arbeitsverzeichnis stören.
+ */
+export function assertSnapshot(candidate: unknown): CatalogSnapshot {
+  const value = candidate as Partial<CatalogSnapshot> | null | undefined;
+  if (
+    value === null ||
+    value === undefined ||
+    typeof value !== 'object' ||
+    !Array.isArray(value.symbols) ||
+    value.symbols.length === 0 ||
+    typeof value.generatedAt !== 'string'
+  ) {
+    throw new Error(HINT);
+  }
+  return value as CatalogSnapshot;
+}
+
+/**
+ * Der erzeugte Snapshot. Wirft mit dem Hinweis aus Spec §7, wenn die Datei fehlt oder keinen
+ * brauchbaren Snapshot trägt — kein stiller Rückfall auf einen leeren Katalog.
  */
 export function loadSnapshot(): CatalogSnapshot {
-  const candidate = snapshot as Partial<CatalogSnapshot> | null;
-  if (
-    candidate === null ||
-    typeof candidate !== 'object' ||
-    !Array.isArray(candidate.symbols) ||
-    candidate.symbols.length === 0 ||
-    typeof candidate.generatedAt !== 'string'
-  ) {
-    throw new Error(
-      'Der Katalog-Snapshot fehlt oder ist unvollständig. Erzeugen mit: ' +
-        'pnpm --filter @einsatzzeichen/website generate',
-    );
-  }
-  return candidate as CatalogSnapshot;
+  return assertSnapshot(generatedSnapshot());
 }
