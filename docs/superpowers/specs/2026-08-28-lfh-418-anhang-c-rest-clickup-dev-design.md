@@ -43,10 +43,10 @@ Der Produktbestand lautet:
 C.2 enthält 31 Primärdarstellungen und 13 Alternativen. Alternativen bestehen für C.2.14 bis
 C.2.17 sowie C.2.20 bis C.2.28.
 
-Der private BABZ-Referenzbestand liegt lokal im Hauptcheckout unter dem ignorierten Ordner
-`taktische-zeichen`. Er wird weder kopiert noch committed. Die Implementierungsworktrees erhalten
-nur einen lokalen, ignorierten Zugriff auf diesen Bestand, damit Messung und visuelle Prüfung
-gegen die Originale möglich bleiben.
+Der private BABZ-Referenzbestand liegt lokal in einem ignorierten Ordner des Hauptcheckouts. Er
+wird weder kopiert noch committed. Die Implementierungsworktrees erhalten nur einen lokalen,
+ignorierten Zugriff auf diesen Bestand, damit Messung und visuelle Prüfung gegen die Originale
+möglich bleiben.
 
 ## 3. Abgrenzung
 
