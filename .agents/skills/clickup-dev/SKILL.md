@@ -43,4 +43,4 @@ First read [the project contract](references/project-contract.md) and verify its
 
 ## Common mistakes
 
-Do not replace a ClickUp status with a prose explanation, make an implicit approval out of surrounding context, reuse a stale approval after HEAD drift, or publish reference artwork outside the catalog/workflow boundary. Cleanup is limited to the worktree you own after delivery evidence is complete.
+Do not replace a ClickUp status with a prose explanation, make an implicit approval out of surrounding context, or reuse a stale approval after HEAD drift. Publish only eligible catalog/workflow output; never publish or commit private reference files, reference-derived rasters, reference-vs-catalog comparison/pair images, or local absolute reference paths/metadata. Cleanup is limited to the worktree you own after delivery evidence is complete.

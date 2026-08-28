@@ -7,7 +7,7 @@ Use this reference for review, PR, merge, screenshot, and completion work.
 - Get two independent reviews for each slice: one checks contract and acceptance criteria, the other checks implementation quality and delivery evidence.
 - Run every full gate from the project contract. Treat CI as a separate, exact-HEAD result; a flaky-test claim or local result does not substitute for it.
 - Do not merge if any required local gate or exact-HEAD CI is RED, failed, missing, or stale. Repository-owner approval never overrides this stop condition.
-- Capture a screenshot from the catalog or workflow that belongs to the slice. Do not publish private reference artwork or unrelated local material.
+- Capture a screenshot from the catalog or workflow that belongs to the slice. Publish only eligible catalog/workflow output; never publish or commit private reference files, reference-derived rasters, reference-vs-catalog comparison/pair images, or local absolute reference paths/metadata.
 - Record approval as the exact tuple `(PR, branch, HEAD)`. If HEAD changes, approval and CI evidence for the old commit do not carry forward.
 - After merge, verify effective remote `main` afresh with the full gates before `shipped`.
 - Finish the parent only when its live acceptance criteria and all represented delivery scope are complete. A progress count is not proof that remaining representations are delivery slices.
