@@ -41,7 +41,6 @@ immer `catalog → core → schema`.
 | `REFERENCE_THEME`, `colorFor`, `RenderTheme` | der Farbvertrag am Rendererrand |
 | `compose(spec, ports, options)`, `CompositionError` | Komposition aus der `SymbolSpec` |
 | `validateSpec(spec)`, `ValidationIssue`, `VALIDATION_RULE_IDS` | Regelprüfung mit Regel-ID je Befund |
-| `analyzeSymbolSpec(spec)` | die aufgelöste Sicht auf eine Spec |
 | `matchFingerprint(...)` | Hüllenvergleich gegen die Referenz, Toleranz 0,01 SVG-Einheiten |
 | `boundsOfMm`, `strokeBoundsOfMm` | Hüllenberechnung in Millimetern |
 | `checkContrast`, `contrastRatio`, `relativeLuminance` | Kontrastgate |
@@ -55,6 +54,8 @@ import { REFERENCE_THEME, renderSvg, validateSpec } from '@einsatzzeichen/core';
 import { composeFromCatalog } from '@einsatzzeichen/catalog';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 
+// Ohne `labels` ist das die THW-Gruppe als Grundform, nicht E.1.1 „Bergungsgruppe" — das Kürzel
+// im Körper gehört zum Rezept. Der Katalogweg dorthin steht auf der Seite zu `catalog`.
 const spec: SymbolSpec = { kind: 'formation', organization: 'thw', strength: 'gruppe' };
 
 const issues = validateSpec(spec);
@@ -62,7 +63,7 @@ if (issues.length > 0) throw new Error(issues.map((issue) => issue.rule).join(',
 
 const svg = renderSvg(composeFromCatalog(spec), {
   size: 64,
-  idPrefix: 'ez-bergungsgruppe',
+  idPrefix: 'ez-thw-gruppe',
   theme: REFERENCE_THEME,
 });
 ```

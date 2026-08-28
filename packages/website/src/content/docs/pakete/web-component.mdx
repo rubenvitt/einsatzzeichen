@@ -38,13 +38,19 @@ Strings sind und aus dem Markup kommen sollen. Die Registrierung ist idempotent 
 ## Beispiel
 
 ```ts
-import { defineEinsatzzeichenElement } from '@einsatzzeichen/web-component';
+import {
+  DEFAULT_TAG_NAME,
+  defineEinsatzzeichenElement,
+  type EinsatzzeichenElement,
+} from '@einsatzzeichen/web-component';
 import { RECIPES, composeFromCatalog } from '@einsatzzeichen/catalog';
 
 defineEinsatzzeichenElement();
 
 const recipe = RECIPES['E.1.1'];
-const element = document.createElement('einsatzzeichen-symbol');
+// `createElement` kennt das eigene Element nicht; die Zusicherung macht `drawing` als Property
+// verfügbar, ohne `HTMLElementTagNameMap` global zu erweitern.
+const element = document.createElement(DEFAULT_TAG_NAME) as EinsatzzeichenElement;
 element.drawing = composeFromCatalog(recipe.spec, recipe.title);
 element.setAttribute('size', '64');
 element.setAttribute('id-prefix', 'ez-e-1-1');

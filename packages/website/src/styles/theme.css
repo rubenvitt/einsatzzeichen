@@ -21,12 +21,14 @@
  * durchgezogen heißt geprüft, gestrichelt heißt offen, eine Akzentkante heißt Abweichung. Das ist
  * zugleich die barrierefreie Fassung: die Marke bleibt unterscheidbar, wenn Farbe wegfällt.
  *
- * SCHRIFT. Kein externer Request und keine mitgelieferte Schriftdatei: Arimo liegt im Katalog und
- * gehört den Zeichen, nicht dem Fließtext. Der Fließtext bleibt deshalb auf dem System-Stack.
- * Die Persönlichkeit kommt statt aus einer Schriftlizenz aus dem Satz: Überschriften eng
- * (`letter-spacing: -0.02em`), Kennungen, Kennzahlen, Rubriken und Statusmarken durchgehend in
- * der Monospace mit weiter Laufweite — die Anschriftenschrift technischer Zeichnungen. Alle Zahlen
- * laufen tabellarisch (`tabular-nums`), damit Spalten untereinander stehen.
+ * SCHRIFT. Kein externer Request. Der Fließtext bekommt keine eigene Schriftdatei und bleibt auf
+ * dem System-Stack. Ausgeliefert wird genau eine Datei, und sie gehört nicht dem Fließtext,
+ * sondern den Zeichen: Arimo, weil `renderSvg()` sie in jedes Zeichen mit Kürzel schreibt (siehe
+ * das `@font-face` unten). Die Persönlichkeit der Seite kommt deshalb nicht aus einer Schriftwahl,
+ * sondern aus dem Satz: Überschriften eng (`letter-spacing: -0.018em`), Kennungen, Kennzahlen,
+ * Rubriken und Statusmarken durchgehend in der Monospace mit weiter Laufweite — die
+ * Anschriftenschrift technischer Zeichnungen. Alle Zahlen laufen tabellarisch (`tabular-nums`),
+ * damit Spalten untereinander stehen.
  *
  * ABSTÄNDE. Ein 4er-Raster (`--ez-space-*`, 0,25 rem Schritt) für alles. Karten haben 1 px
  * Haarlinie und 3 px Radius — nahezu rechtwinklig, wie ein Planfeld; kein Schatten außer dem, den
@@ -97,6 +99,14 @@
   --sl-color-hairline: var(--sl-color-gray-6);
 
   --ez-surface: hsl(220, 11%, 13%);
+  /*
+   * Rahmen und Statuslinien. Starlights `--sl-color-hairline` (gray-6) erreicht auf `--ez-surface`
+   * nur 1,06:1 und ist damit praktisch unsichtbar — für einen Rahmen, der eine Fläche begrenzt,
+   * zu wenig, und für die gestrichelte Kante von `.ez-status--pending` unzulässig: dort trägt die
+   * Rahmenart die Aussage, sie muss also wahrnehmbar sein. Dieser Wert erreicht 3,31:1 gegen die
+   * Kartenfläche und 3,67:1 gegen den Seitengrund (WCAG 1.4.11).
+   */
+  --ez-line: hsl(220, 6%, 45%);
   --ez-canvas-light: #ffffff;
   --ez-canvas-light-ink: hsl(220, 12%, 12%);
   --ez-canvas-dark: hsl(220, 14%, 8%);
@@ -128,6 +138,8 @@
 
   /* Weiße Karten auf warmem Papiergrund — der Unterschied trägt die Gliederung, kein Schatten. */
   --ez-surface: #ffffff;
+  /* 3,49:1 gegen die weiße Karte, 3,29:1 gegen den Papiergrund. */
+  --ez-line: hsl(220, 7%, 55%);
 }
 
 /* --- Token: Satz und Raster -------------------------------------------------------------- */
@@ -197,7 +209,7 @@
   align-items: center;
   gap: 0.45em;
   padding: 0.2em 0.55em;
-  border: 1px solid var(--sl-color-gray-4);
+  border: 1px solid var(--ez-line);
   border-radius: var(--ez-radius);
   font-family: var(--ez-font-mono);
   font-size: var(--sl-text-2xs);
@@ -221,19 +233,19 @@
 /* Rahmenart trägt die Aussage — die Farbe bleibt den Zeichen vorbehalten. */
 .ez-status--approved {
   border-style: solid;
-  border-color: var(--sl-color-gray-3);
+  border-color: var(--ez-line);
   color: var(--sl-color-white);
 }
 
 .ez-status--pending {
   border-style: dashed;
-  border-color: var(--sl-color-gray-4);
+  border-color: var(--ez-line);
   color: var(--sl-color-gray-3);
 }
 
 .ez-status--deviation {
   border-style: solid;
-  border-color: var(--sl-color-gray-3);
+  border-color: var(--ez-line);
   border-inline-start: 3px solid var(--sl-color-accent);
   color: var(--sl-color-white);
 }
@@ -251,12 +263,19 @@
   align-items: center;
   justify-content: center;
   padding: var(--ez-space-4);
-  border: 1px solid var(--sl-color-hairline);
+  border: 1px solid var(--ez-line);
   border-radius: var(--ez-radius);
+  /*
+   * Grund und Rasterfarbe stehen auch ohne Modifier: `--ez-grid-line` wird erst von
+   * `--light`/`--dark` gesetzt, und ohne Fallback erbte ein blankes `.ez-canvas` eine ungültige
+   * Farbe — der Verlauf fiele aus, der Hintergrund bliebe durchsichtig. Ohne Modifier heißt hier
+   * ausdrücklich: Kartenfläche, kein Raster.
+   */
+  background-color: var(--ez-surface);
   background-size: var(--ez-grid-step) var(--ez-grid-step);
   background-image:
-    linear-gradient(to right, var(--ez-grid-line) 0 1px, transparent 1px),
-    linear-gradient(to bottom, var(--ez-grid-line) 0 1px, transparent 1px);
+    linear-gradient(to right, var(--ez-grid-line, transparent) 0 1px, transparent 1px),
+    linear-gradient(to bottom, var(--ez-grid-line, transparent) 0 1px, transparent 1px);
 }
 
 .ez-canvas--light {
@@ -306,7 +325,7 @@
   flex-direction: column;
   gap: var(--ez-space-2);
   padding: var(--ez-space-4);
-  border: 1px solid var(--sl-color-hairline);
+  border: 1px solid var(--ez-line);
   border-radius: var(--ez-radius);
   background: var(--ez-surface);
 }
@@ -350,7 +369,7 @@ a.ez-card:hover .ez-card__title {
   flex-direction: column;
   gap: var(--ez-space-1);
   padding: var(--ez-space-4);
-  border: 1px solid var(--sl-color-hairline);
+  border: 1px solid var(--ez-line);
   border-radius: var(--ez-radius);
   background: var(--ez-surface);
 }
@@ -388,7 +407,7 @@ a.ez-card:hover .ez-card__title {
 .ez-note {
   margin-block: var(--ez-space-6);
   padding: var(--ez-space-4);
-  border: 1px dashed var(--sl-color-gray-4);
+  border: 1px dashed var(--ez-line);
   border-inline-start: 3px solid var(--sl-color-accent);
   border-radius: var(--ez-radius);
   font-size: var(--sl-text-sm);
@@ -427,7 +446,7 @@ a.ez-card:hover .ez-card__title {
 .ez-table th,
 .ez-table td {
   padding: var(--ez-space-2) var(--ez-space-3);
-  border-block-end: 1px solid var(--sl-color-hairline);
+  border-block-end: 1px solid var(--ez-line);
   text-align: start;
   vertical-align: top;
 }
@@ -499,7 +518,7 @@ a.ez-card:hover .ez-card__title {
   flex-direction: column;
   gap: 0.15rem;
   padding: var(--ez-space-3) var(--ez-space-4);
-  border: 1px solid var(--sl-color-gray-4);
+  border: 1px solid var(--ez-line);
   border-radius: var(--ez-radius);
   text-decoration: none;
   color: var(--sl-color-white);
@@ -556,7 +575,7 @@ a.ez-card:hover .ez-card__title {
 
 .ez-sheets {
   margin-block: var(--ez-space-3);
-  border: 1px solid var(--sl-color-hairline);
+  border: 1px solid var(--ez-line);
   border-radius: var(--ez-radius);
   background: var(--ez-surface);
 }
@@ -584,7 +603,7 @@ a.ez-card:hover .ez-card__title {
   grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
   gap: var(--ez-space-4);
   padding: var(--ez-space-4);
-  border-block-start: 1px solid var(--sl-color-hairline);
+  border-block-start: 1px solid var(--ez-line);
 }
 
 .ez-sheet {
@@ -597,7 +616,7 @@ a.ez-card:hover .ez-card__title {
 .ez-sheet img {
   width: 100%;
   height: auto;
-  border: 1px solid var(--sl-color-hairline);
+  border: 1px solid var(--ez-line);
   border-radius: var(--ez-radius);
   background: var(--ez-canvas-light);
 }

@@ -4,7 +4,7 @@ import { listContactSheets, readContactSheet } from '../../lib/contact-sheets';
 /**
  * Liefert die Kontaktbögen des Katalogs als eigene Dateien aus (Spec §4, Seite „Belege").
  *
- * Sie werden nicht über `import.meta.glob` eingebunden, weil 22 Dateinamen ein `#` tragen und
+ * Sie werden nicht über `import.meta.glob` eingebunden, weil zehn Dateinamen ein `#` tragen und
  * damit für Vite nicht auflösbar sind — die Begründung steht in `src/lib/contact-sheets.ts`.
  */
 export const getStaticPaths: GetStaticPaths = () =>

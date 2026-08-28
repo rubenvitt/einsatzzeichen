@@ -92,7 +92,7 @@ const groups: SheetGroup[] = [...buckets.entries()]
               height={sheet.height}
               loading="lazy"
               decoding="async"
-              alt={`Kontaktbogen ${sheet.name}: dieselbe Zeichnung in 16, 24, 32, 64, 128 und 256 px im Referenztheme, darunter in accessible-light und print-monochrome.`}
+              alt={sheet.alt}
             />
             <figcaption>{sheet.name}</figcaption>
           </figure>
