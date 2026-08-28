@@ -5,21 +5,23 @@ description: Drei Achsen, eine Manifestmatrix und was fachlich noch offen ist �
 
 import CoverageAxes from '../../components/CoverageAxes.astro';
 import CoverageMatrix from '../../components/islands/CoverageMatrix.tsx';
+import { axisByLabel } from '../../lib/coverage-axes';
 import { loadSnapshot } from '../../lib/snapshot';
 
 export const snapshot = loadSnapshot();
 export const coverage = snapshot.coverage;
-export const referenceAxis = coverage.axes.find((axis) => axis.label === 'Referenzabdeckung');
+export const referenceAxis = axisByLabel(coverage.axes, 'Referenzabdeckung');
 // `of` ist bei der Achse „Regelabdeckung" bereits `ruleCoverage().length` (snapshot-build.ts,
 // `coverageAxes()`) — dieselbe Zahl, die ein eigenes `ruleAxisCount`-Feld liefern würde, nur ohne
-// ein zweites Feld, das mit der ersten Zahl auseinanderlaufen könnte.
-export const ruleAxis = coverage.axes.find((axis) => axis.label === 'Regelabdeckung');
+// ein zweites Feld, das mit der ersten Zahl auseinanderlaufen könnte. `axisByLabel` wirft mit
+// Klartext, statt bei einem Tippfehler im Label still `undefined` zu rendern.
+export const ruleAxis = axisByLabel(coverage.axes, 'Regelabdeckung');
 
 Der Katalog misst seinen Ausbaustand auf drei unabhängigen Achsen. Nur eine davon ist ein Gate;
 die anderen beiden sind Kennzahlen über den Stand, kein Fehlerabbruch. Alle drei Zahlen unten
 kommen aus demselben Lauf wie `pnpm cli coverage` — die Website rechnet nicht nach.
 
-**Referenzabdeckung** zählt, wie viele der {referenceAxis?.of} Dateien des lokalen
+**Referenzabdeckung** zählt, wie viele der {referenceAxis.of} Dateien des lokalen
 Referenzbestands eine Manifestzeile, ein Rezept oder ein Element beansprucht. Der Rest ist nicht
 verschwunden, sondern erklärt: außerhalb des beanspruchten Umfangs, als Beispielanwendung oder
 Übersichtsblatt begründet ausgeschlossen, fachlich zurückgestellt — oder, wenn keiner dieser
@@ -27,7 +29,7 @@ Gründe zutrifft, als nicht zugeordnet gemeldet. Das ist die einzige der drei Ac
 Gate läuft: eine nicht zugeordnete Datei lässt `pnpm cli coverage` mit Exit 1 scheitern.
 
 **Regelabdeckung** stellt den Werteraum aus dem Schema gegen das, was der Katalog tatsächlich
-belegt — insgesamt {ruleAxis?.of} Achsen: `SymbolSpec`-Felder wie Organisation, Stärke, Fahrwerk
+belegt — insgesamt {ruleAxis.of} Achsen: `SymbolSpec`-Felder wie Organisation, Stärke, Fahrwerk
 und Körpermarken, dazu die Piktogrammräume, die nicht Teil von `SymbolSpec` sind. Belegt heißt:
 ein Rezept, ein Katalogeintrag oder ein Element trägt den Wert. Dazu die Zahl der
 Validierungsregeln in `core` — für jede erzwingt ein core-Test einen eigenen Testfall. Auch
