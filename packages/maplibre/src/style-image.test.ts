@@ -207,7 +207,7 @@ describe('createStyleImage', () => {
 
 describe('addSymbolImage', () => {
   interface RecordingMap extends MapLike {
-    added: Array<[string, StyleImageData, { pixelRatio?: number; sdf?: boolean } | undefined]>;
+    added: Array<[string, StyleImageData, { pixelRatio?: number } | undefined]>;
   }
 
   function recordingMap(existing: readonly string[] = []): RecordingMap {

@@ -1,16 +1,6 @@
 import { posix } from 'node:path';
 import * as ts from 'typescript';
 
-export type WorkspacePackageId =
-  | 'cli'
-  | 'catalog'
-  | 'core'
-  | 'schema'
-  | 'react'
-  | 'web-component'
-  | 'maplibre'
-  | 'qgis';
-
 /**
  * Die vier Ausgabekanäle (LFH-405) stehen auf demselben Rang wie `catalog`: sie dürfen `core` und
  * `schema` importieren, aber weder `catalog` noch einander — und `catalog` darf keinen Kanal
@@ -19,6 +9,13 @@ export type WorkspacePackageId =
  * ist; die Kette `cli → catalog → core → schema` bleibt damit zyklenfrei.
  */
 export const OUTPUT_CHANNEL_PACKAGE_IDS = ['react', 'web-component', 'maplibre', 'qgis'] as const;
+
+export type WorkspacePackageId =
+  | 'cli'
+  | 'catalog'
+  | 'core'
+  | 'schema'
+  | (typeof OUTPUT_CHANNEL_PACKAGE_IDS)[number];
 
 export interface RepositoryManifest {
   id: WorkspacePackageId;

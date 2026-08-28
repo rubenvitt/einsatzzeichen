@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { decodeBase64Utf8, encodeBase64Utf8 } from './base64.js';
+import { encodeBase64Utf8 } from './base64.js';
+import { decodeBase64Utf8 } from './base64.test-helper.js';
 
-describe('encodeBase64Utf8 / decodeBase64Utf8', () => {
+describe('encodeBase64Utf8', () => {
   it('kodiert ASCII wie die Standard-Base64-Tabelle', () => {
     expect(encodeBase64Utf8('')).toBe('');
     expect(encodeBase64Utf8('f')).toBe('Zg==');
@@ -23,8 +24,8 @@ describe('encodeBase64Utf8 / decodeBase64Utf8', () => {
     },
   );
 
-  it('lehnt ungültige Base64-Eingaben ab', () => {
-    expect(() => decodeBase64Utf8('Zm9v!')).toThrow();
-    expect(() => decodeBase64Utf8('Zm9')).toThrow();
+  it('verarbeitet Eingaben oberhalb der Blockgrenze byteweise korrekt', () => {
+    const text = 'ä€x'.repeat(50_000);
+    expect(decodeBase64Utf8(encodeBase64Utf8(text))).toBe(text);
   });
 });

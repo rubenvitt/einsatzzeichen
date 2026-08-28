@@ -8,7 +8,7 @@ export const DEFAULT_TAG_NAME = 'einsatzzeichen-symbol';
 export const OBSERVED_ATTRIBUTES = ['size', 'id-prefix'] as const;
 
 export interface ElementMarkupOptions {
-  /** Rohwert des `size`-Attributs; `null`/`undefined` heißt „nicht gesetzt" (frei skalierend). */
+  /** Rohwert des `size`-Attributs; `null`/`undefined` heißt „nicht gesetzt“ (frei skalierend). */
   size?: string | null;
   /** Rohwert des `id-prefix`-Attributs; `null`/`undefined` überlässt core die Vorgabe. */
   idPrefix?: string | null;
@@ -18,10 +18,15 @@ export interface ElementMarkupOptions {
 /**
  * Wandelt den Attributstring in eine Pixelbreite um. Attribute sind immer Strings; ein stiller
  * Rückfall auf eine Standardgröße würde Tippfehler im Markup verstecken, deshalb wird jeder
- * Wert, der keine positive ganze Zahl ist, mit `RangeError` abgewiesen.
+ * Wert, der nicht aus Dezimalziffern besteht oder null ist, mit `RangeError` abgewiesen. Bewusst
+ * strenger als `Number(...)`, das auch `"0x40"`, `"1e2"` oder `" 64 "` durchließe — im Markup
+ * soll nur die Schreibweise stehen, die man auch liest.
+ *
+ * Im Browser propagiert ein Fehler aus `attributeChangedCallback` nicht an `setAttribute`,
+ * sondern wird als uncaught error gemeldet — sichtbar, nicht verschluckt.
  */
 export function parseSizeAttribute(value: string): number {
-  const size = value.trim() === '' ? Number.NaN : Number(value);
+  const size = /^\d+$/u.test(value) ? Number(value) : Number.NaN;
   if (!Number.isInteger(size) || size <= 0) {
     throw new RangeError(
       `Attribut "size" muss eine positive ganze Pixelzahl sein, erhalten: ${JSON.stringify(value)}`,
@@ -44,11 +49,7 @@ export function renderElementMarkup(
   }
   const size = options.size == null ? undefined : parseSizeAttribute(options.size);
   const idPrefix = options.idPrefix == null ? undefined : options.idPrefix;
-  return renderSvg(drawing, {
-    ...(size !== undefined ? { size } : {}),
-    ...(idPrefix !== undefined ? { idPrefix } : {}),
-    ...(options.theme !== undefined ? { theme: options.theme } : {}),
-  });
+  return renderSvg(drawing, { size, idPrefix, theme: options.theme });
 }
 
 /**
@@ -64,7 +65,9 @@ const Base: typeof HTMLElement =
  * `<einsatzzeichen-symbol>`: rendert eine `Drawing`-IR über `renderSvg` in einen offenen
  * Shadow DOM. Zeichnung und Theme sind Properties (Objekte lassen sich nicht sinnvoll als
  * Attribut tragen), `size` und `id-prefix` sind Attribute, weil sie Strings sind und aus dem
- * Markup gesetzt werden sollen.
+ * Markup gesetzt werden sollen. Gerendert wird nur im verbundenen Zustand (siehe `#render`);
+ * Fehler aus dem Rendern (etwa eine ungültige `size`) werden nicht abgefangen — der Browser
+ * meldet sie aus `attributeChangedCallback` als uncaught error.
  */
 export class EinsatzzeichenElement extends Base {
   static get observedAttributes(): readonly string[] {
@@ -102,21 +105,24 @@ export class EinsatzzeichenElement extends Base {
     this.#render();
   }
 
-  /**
-   * Vor dem Verbinden nicht rendern: `connectedCallback` rendert ohnehin, und beim Parsen
-   * eines Dokuments kommen Attribute einzeln an — jedes würde sonst ein eigenes Rendern kosten.
-   */
   attributeChangedCallback(): void {
-    if (this.isConnected) {
-      this.#render();
-    }
+    this.#render();
   }
 
+  /**
+   * Vor dem Verbinden nicht rendern: `connectedCallback` rendert ohnehin, und beim Parsen eines
+   * Dokuments kommen Attribute und Properties einzeln an — jedes würde sonst ein eigenes Rendern
+   * kosten. Der Guard sitzt hier und nicht in den einzelnen Callbacks/Settern, damit alle
+   * Auslöser dieselbe Regel haben.
+   */
   #render(): void {
+    if (!this.isConnected) {
+      return;
+    }
     this.#root.innerHTML = renderElementMarkup(this.#drawing, {
       size: this.getAttribute('size'),
       idPrefix: this.getAttribute('id-prefix'),
-      ...(this.#theme !== undefined ? { theme: this.#theme } : {}),
+      theme: this.#theme,
     });
   }
 }

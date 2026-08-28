@@ -33,7 +33,7 @@ export interface MapLike {
   addImage(
     id: string,
     image: StyleImageData,
-    options?: { pixelRatio?: number; sdf?: boolean },
+    options?: { pixelRatio?: number },
   ): void;
 }
 
@@ -55,16 +55,12 @@ export interface SymbolImageOptions {
   readonly createCanvas?: (width: number, height: number) => CanvasLike;
 }
 
-function assertPositiveInteger(value: number, name: string): void {
-  if (!Number.isFinite(value) || value <= 0 || !Number.isInteger(value)) {
-    throw new RangeError(`${name} muss eine positive ganze Zahl sein (ist ${String(value)}).`);
-  }
-}
-
 /**
  * Löst die Rasterbreite in Gerätepixeln auf. `size × pixelRatio` muss ganzzahlig sein, weil ein
  * Bildpuffer keine Bruchteile von Pixeln kennt; stilles Runden würde die CSS-Größe verfälschen,
- * die MapLibre aus `width / pixelRatio` zurückrechnet.
+ * die MapLibre aus `width / pixelRatio` zurückrechnet. Die Ganzzahlprüfung des Produkts übernimmt
+ * `rasterDimensionsForWidth` (core); hier werden nur die Faktoren vorab geprüft, damit die
+ * Meldung den eigentlichen Verursacher benennt und keine Leinwand angelegt wird.
  */
 function devicePixelWidth(size: number, pixelRatio: number): number {
   if (!Number.isFinite(size) || size <= 0) {
@@ -79,17 +75,17 @@ function devicePixelWidth(size: number, pixelRatio: number): number {
         'size × pixelRatio muss eine ganze Zahl ergeben.',
     );
   }
-  const widthPx = size * pixelRatio;
-  assertPositiveInteger(widthPx, `size × pixelRatio (${String(size)} × ${String(pixelRatio)})`);
-  return widthPx;
+  return size * pixelRatio;
 }
 
 /**
  * `OffscreenCanvas.getContext('2d')` liefert einen `OffscreenCanvasRenderingContext2D`, den
  * TypeScript nicht als `CanvasRenderingContext2D` durchlässt — obwohl `renderCanvas` nur die
  * gemeinsame Zeichenoberfläche (Transformationen, Pfade, Füllen/Streichen, `canvas.width/height`)
- * verwendet. Statt eines Casts prüfen wir genau diese Oberfläche zur Laufzeit; derselbe Grenzfall
- * wie `looksLikeCanvasRenderingContext2D` in den Core-Tests.
+ * verwendet. Das Type-Predicate ersetzt einen Cast durch eine Laufzeitprüfung dieser Oberfläche;
+ * ehrlicherweise ist der Fehlerzweig praktisch unerreichbar, weil jede Browserimplementierung
+ * diese Methoden trägt — es ist ein Feigenblatt gegenüber `as`, kein echter Schutz. Derselbe
+ * Grenzfall wie `looksLikeCanvasRenderingContext2D` in den Core-Tests.
  */
 function isDrawableContext2D(value: object): value is CanvasRenderingContext2D {
   return (
@@ -149,10 +145,13 @@ function defaultCreateCanvas(width: number, height: number): CanvasLike {
 }
 
 /**
- * Rastert eine Zeichnung als RGBA-Bild für `map.addImage`. Das Raster wird in Gerätepixeln
- * (`size × pixelRatio`) gezeichnet; die Höhe leitet `rasterDimensionsForWidth` proportional aus der
- * ViewBox ab — dieselbe Regel wie bei allen anderen Rasterausgaben, damit ein Symbol auf der Karte
- * exakt die Proportionen des Katalogs behält.
+ * Rastert eine Zeichnung als RGBA-Bild für `map.addImage`. Die Maße entstehen als
+ * `rasterDimensionsForWidth(viewBox, size × pixelRatio)` — also erst multiplizieren, dann die Höhe
+ * proportional aufrunden. Das ist pixelgenauer als `rasterDimensionsForWidth(viewBox, size) ×
+ * pixelRatio`: bei nichtquadratischer ViewBox kann die Höhe der naiven Rechnung um 1 px abweichen,
+ * weil dort bereits die CSS-Höhe aufgerundet und der Rundungsfehler mitskaliert würde. Dieselbe
+ * Regel wie bei allen anderen Rasterausgaben, damit ein Symbol auf der Karte die Proportionen des
+ * Katalogs behält.
  */
 export function createStyleImage(drawing: Drawing, options: SymbolImageOptions): StyleImageData {
   const pixelRatio = options.pixelRatio ?? 1;

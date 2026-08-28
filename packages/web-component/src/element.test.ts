@@ -29,7 +29,7 @@ describe('renderElementMarkup (ohne DOM)', () => {
     );
   });
 
-  it.each(['0', '-8', '12.5', 'abc', '', 'Infinity'])('wirft bei ungültiger Größe %j', (size) => {
+  it.each(['0', '-8', '12.5', 'abc', '', 'Infinity', '0x40', '1e2', ' 64 ', '+64'])('wirft bei ungültiger Größe %j', (size) => {
     expect(() => renderElementMarkup(formation, { size })).toThrow(RangeError);
   });
 

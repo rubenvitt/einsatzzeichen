@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderSvg, type RenderTheme } from '@einsatzzeichen/core';
 import { DEFAULT_VIEWBOX_MM, PALETTE, type Drawing } from '@einsatzzeichen/schema';
-import { decodeBase64Utf8 } from './base64.js';
+import { decodeBase64Utf8 } from './base64.test-helper.js';
 import { qgisSvgFiles, qgisSymbolLibrary, type QgisSymbolEntry } from './library.js';
 
 const formation: Drawing = {
@@ -69,6 +69,19 @@ describe('qgisSymbolLibrary', () => {
     );
   });
 
+  it('schreibt die Größe in fester Dezimalschreibweise', () => {
+    expect(() => qgisSymbolLibrary(entries, { sizeMm: 1e-7 })).toThrow(
+      'sizeMm muss eine endliche Zahl von mindestens 0.000001 sein (ist 1e-7).',
+    );
+    expect(qgisSymbolLibrary(entries, { sizeMm: 0.000001 })).toContain(
+      '<Option type="QString" name="size" value="0.000001"/>',
+    );
+    expect(qgisSymbolLibrary(entries, { sizeMm: 1e21 })).toContain(
+      '<Option type="QString" name="size" value="1000000000000000000000"/>',
+    );
+    expect(qgisSymbolLibrary(entries, { sizeMm: 10 })).toContain('name="size" value="10"/>');
+  });
+
   it('bettet exakt das Ergebnis von renderSvg als Base64 ein (inklusive Umlauten)', () => {
     const xml = qgisSymbolLibrary(entries, { idPrefix: 'lz' });
     const svg = decodeBase64Utf8(base64Payload(xml, 'Löschzug'));
@@ -121,7 +134,7 @@ describe('qgisSymbolLibrary', () => {
 
   it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])('lehnt sizeMm=%s ab', (sizeMm) => {
     expect(() => qgisSymbolLibrary(entries, { sizeMm })).toThrow(
-      `sizeMm muss eine endliche Zahl größer 0 sein (ist ${String(sizeMm)}).`,
+      `sizeMm muss eine endliche Zahl von mindestens 0.000001 sein (ist ${String(sizeMm)}).`,
     );
   });
 

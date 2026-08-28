@@ -3,7 +3,12 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_VIEWBOX_MM, PALETTE, type Drawing } from '@einsatzzeichen/schema';
 import { REFERENCE_THEME, renderSvg, type RenderTheme } from '@einsatzzeichen/core';
-import { Einsatzzeichen, splitSvgMarkup, svgAttributeToReactProp } from './index.js';
+import {
+  Einsatzzeichen,
+  splitSvgMarkup,
+  svgAttributeToReactProp,
+  useEinsatzzeichenSvg,
+} from './index.js';
 
 const formation: Drawing = {
   viewBox: DEFAULT_VIEWBOX_MM,
@@ -79,6 +84,26 @@ describe('svgAttributeToReactProp', () => {
     expect(svgAttributeToReactProp('xlink:href')).toBe('xlinkHref');
     expect(svgAttributeToReactProp('stroke-width')).toBe('strokeWidth');
     expect(svgAttributeToReactProp('viewBox')).toBe('viewBox');
+  });
+});
+
+describe('useEinsatzzeichenSvg', () => {
+  it('liefert das renderSvg-Markup bytegleich', () => {
+    const options = { size: 48, idPrefix: 'hook' };
+    // Kleinste Komponente, die den Hook regulär im Render aufruft; der String landet als Text in
+    // <pre> und wird per Entity-Decodierung zurückgewonnen, damit der Byte-Vergleich möglich ist.
+    function Probe(): ReturnType<typeof createElement> {
+      return createElement('pre', null, useEinsatzzeichenSvg(formation, options));
+    }
+    const html = renderToStaticMarkup(createElement(Probe));
+    const text = html
+      .replace(/^<pre>/u, '')
+      .replace(/<\/pre>$/u, '')
+      .replaceAll('&quot;', '"')
+      .replaceAll('&lt;', '<')
+      .replaceAll('&gt;', '>')
+      .replaceAll('&amp;', '&');
+    expect(text).toBe(renderSvg(formation, options));
   });
 });
 

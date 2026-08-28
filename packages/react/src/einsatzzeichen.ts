@@ -46,13 +46,19 @@ export function Einsatzzeichen({
   style,
 }: EinsatzzeichenProps): ReactElement {
   const svg = useEinsatzzeichenSvg(drawing, { size, idPrefix, theme });
-  const { attributes, innerHtml } = splitSvgMarkup(svg);
-  const props: Record<string, unknown> = {};
-  for (const [name, value] of Object.entries(attributes)) {
-    props[svgAttributeToReactProp(name)] = value;
-  }
+  // Zerlegung und Prop-Abbildung hängen nur vom Markup ab und werden deshalb mit ihm
+  // memoisiert — sonst liefe der Split bei jedem Render erneut, auch ohne neues SVG.
+  const svgProps = useMemo(() => {
+    const { attributes, innerHtml } = splitSvgMarkup(svg);
+    const props: Record<string, unknown> = {};
+    for (const [name, value] of Object.entries(attributes)) {
+      props[svgAttributeToReactProp(name)] = value;
+    }
+    props.dangerouslySetInnerHTML = { __html: innerHtml };
+    return props;
+  }, [svg]);
+  const props: Record<string, unknown> = { ...svgProps };
   if (className !== undefined) props.className = className;
   if (style !== undefined) props.style = style;
-  props.dangerouslySetInnerHTML = { __html: innerHtml };
   return createElement('svg', props);
 }

@@ -16,10 +16,10 @@ Acht Pakete, mit einer festen, zyklenfreien Abhängigkeitsrichtung:
 
 ```
 cli → catalog → core → schema
-      react ─┐
-      web-component ─┤→ core → schema
-      maplibre ─┤
-      qgis ─┘
+      react ────────┐
+      web-component ┼→ core → schema
+      maplibre ─────┤
+      qgis ─────────┘
 ```
 
 Die vier **Ausgabekanäle** `react`, `web-component`, `maplibre` und `qgis` (LFH-405) stehen auf
@@ -35,7 +35,7 @@ in sein Zielformat. Kein Kanal rendert selbst aus der IR; alle vier verwenden `r
 | `core` | Renderer (SVG, Canvas), Render-Theme-Vertrag, A11y-/Kontrast- und viewBox-Gates, Hüllenberechnung, Fingerprint-Vergleich, Layoutprofile, Kompositionsmotor, Regelvalidierung. Hängt **nie** von `catalog` ab. |
 | `catalog` | Grundzeichen, Organisationsfarben, Stärkeangaben, Fähigkeiten, Kompositionsrezepte, konkrete Render-Themes, Quellenregister, Profilregister, Elementregister, Coverage-Manifest. |
 | `cli` | Kennzahlenableitung aus der lokalen Referenz, Coverage-Gate, SVG-Export. |
-| `react` | Komponente `<Einsatzzeichen drawing size theme idPrefix />` und Hook `useEinsatzzeichenSvg`; trägt das `core`-SVG bytegleich in den React-Baum (kein JSX-Build, `react` als Peer-Abhängigkeit). |
+| `react` | Hook `useEinsatzzeichenSvg` (liefert das `core`-SVG bytegleich als String) und Komponente `<Einsatzzeichen drawing size theme idPrefix />`, die Wurzelattribute und Inhalt dieses SVGs unverändert in den React-Baum trägt — React ordnet nur die Attribute selbst (kein JSX-Build, `react` als Peer-Abhängigkeit). |
 | `web-component` | Custom Element `<einsatzzeichen-symbol>` mit offenem Shadow DOM; Properties `drawing`/`theme`, Attribute `size`/`id-prefix`. Registrierung idempotent und ohne `customElements` folgenlos. |
 | `maplibre` | `createStyleImage` rastert über den `core`-Canvas-Renderer zu `{ width, height, data }` für `map.addImage`; `addSymbolImage` registriert es mit `pixelRatio`. Map und Canvas sind strukturell typisiert, keine `maplibre-gl`-Abhängigkeit. |
 | `qgis` | `qgisSymbolLibrary` erzeugt eine QGIS-Stilbibliothek (XML, `SvgMarker` mit `base64:`-Inline-SVG aus `renderSvg`), `qgisSvgFiles` die Dateiliste für ein SVG-Verzeichnis — ohne Dateisystemzugriff und ohne `param()`-Umfärbung, weil die Farben taktischer Zeichen semantisch festgelegt sind. |

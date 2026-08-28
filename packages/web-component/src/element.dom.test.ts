@@ -86,7 +86,10 @@ describe('EinsatzzeichenElement (happy-dom)', () => {
     expect(el.shadowRoot?.innerHTML).toContain('fill="#eeeeee"');
   });
 
-  it('wirft bei ungültiger Größe statt still zu rendern', () => {
+  // happy-dom propagiert Ausnahmen aus `attributeChangedCallback` an `setAttribute`; im Browser
+  // wird derselbe Fehler als uncaught error gemeldet, nicht verschluckt. Belegt wird hier, dass
+  // das Element ungültige Größen nicht still übergeht.
+  it('lässt den Fehler bei ungültiger Größe aus attributeChangedCallback entweichen', () => {
     const el = mount();
     el.drawing = formation;
     expect(() => el.setAttribute('size', '0')).toThrow(RangeError);
@@ -95,6 +98,7 @@ describe('EinsatzzeichenElement (happy-dom)', () => {
   it('rendert erst beim Verbinden, wenn die Zeichnung vorher gesetzt wurde', () => {
     const el = document.createElement(DEFAULT_TAG_NAME) as EinsatzzeichenElement;
     el.drawing = formation;
+    expect(el.shadowRoot!.innerHTML).toBe('');
     document.body.appendChild(el);
     expect(el.shadowRoot?.innerHTML).toBe(serialized(renderSvg(formation)));
   });

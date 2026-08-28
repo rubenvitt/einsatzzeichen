@@ -54,16 +54,26 @@ function assertUniqueNames(entries: readonly QgisSymbolEntry[]): void {
  * `size`/`size_unit` der Symbolebene; feste Breiten im SVG würden diese Angabe nur verzerren.
  */
 function renderEntry(entry: QgisSymbolEntry, options: QgisLibraryOptions): string {
-  const svgOptions: { theme?: RenderTheme; idPrefix?: string } = {};
-  if (options.theme !== undefined) svgOptions.theme = options.theme;
-  if (options.idPrefix !== undefined) svgOptions.idPrefix = options.idPrefix;
-  return renderSvg(entry.drawing, svgOptions);
+  return renderSvg(entry.drawing, { theme: options.theme, idPrefix: options.idPrefix });
+}
+
+/**
+ * `String(1e-7)` liefert Exponentialschreibweise, die QGIS als Größe nicht zuverlässig liest.
+ * Feste Dezimaldarstellung mit bis zu sechs Nachkommastellen ohne nachlaufende Nullen.
+ */
+const MIN_SIZE_MM = 0.000001;
+
+function formatSizeMm(sizeMm: number): string {
+  return sizeMm.toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 6 });
 }
 
 /**
  * Erzeugt eine QGIS-Stilbibliothek (`<!DOCTYPE qgis_style>`, Version 2) mit einem SVG-Marker je
  * Eintrag. Die SVG-Quelle liegt inline als `base64:` im `name`-Option des Layers, sodass die
- * Datei ohne Begleitdateien in QGIS ≥ 3 importierbar bleibt.
+ * Datei ohne Begleitdateien importierbar bleibt. Das `<Option type="Map">`-Format lesen erst
+ * QGIS ≥ 3.16; ältere 3.x-Versionen erwarten `<prop k="…" v="…"/>`. Die Struktur ist aus der
+ * QGIS-Dokumentation und -Quelle abgeleitet; ein Fixture-Vergleich gegen eine echte
+ * QGIS-Exportdatei liegt nicht vor.
  *
  * Die SVGs sind bewusst fest eingefärbt und nicht über `param(fill)`/`param(outline)`
  * parametrisiert: Die Farben taktischer Zeichen sind semantisch festgelegt (Organisation,
@@ -75,8 +85,12 @@ export function qgisSymbolLibrary(
   options: QgisLibraryOptions = {},
 ): string {
   const sizeMm = options.sizeMm ?? DEFAULT_SIZE_MM;
-  if (!Number.isFinite(sizeMm) || sizeMm <= 0) {
-    throw new Error(`sizeMm muss eine endliche Zahl größer 0 sein (ist ${String(sizeMm)}).`);
+  // Untergrenze = Auflösung von `formatSizeMm`: alles darunter würde still als `0` geschrieben
+  // und in QGIS ein unsichtbares Symbol ergeben — genau der stille Rückfall, den wir vermeiden.
+  if (!Number.isFinite(sizeMm) || sizeMm < MIN_SIZE_MM) {
+    throw new Error(
+      `sizeMm muss eine endliche Zahl von mindestens ${formatSizeMm(MIN_SIZE_MM)} sein (ist ${String(sizeMm)}).`,
+    );
   }
   assertUniqueNames(entries);
 
@@ -87,7 +101,7 @@ export function qgisSymbolLibrary(
       '      <layer class="SvgMarker" enabled="1" locked="0" pass="0">',
       '        <Option type="Map">',
       `          <Option type="QString" name="name" value="base64:${svg}"/>`,
-      `          <Option type="QString" name="size" value="${String(sizeMm)}"/>`,
+      `          <Option type="QString" name="size" value="${formatSizeMm(sizeMm)}"/>`,
       '          <Option type="QString" name="size_unit" value="MM"/>',
       '          <Option type="QString" name="angle" value="0"/>',
       '          <Option type="QString" name="offset" value="0,0"/>',
