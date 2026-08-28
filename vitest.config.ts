@@ -10,6 +10,10 @@ export default defineConfig({
       '@einsatzzeichen/schema': pkg('schema'),
       '@einsatzzeichen/core': pkg('core'),
       '@einsatzzeichen/catalog': pkg('catalog'),
+      '@einsatzzeichen/react': pkg('react'),
+      '@einsatzzeichen/web-component': pkg('web-component'),
+      '@einsatzzeichen/maplibre': pkg('maplibre'),
+      '@einsatzzeichen/qgis': pkg('qgis'),
     },
   },
   test: {

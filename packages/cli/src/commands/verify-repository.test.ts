@@ -56,6 +56,16 @@ function validPolicyInput(): RepositoryPolicyInput {
         dependencies: {},
         malformedDependencySections: [],
       },
+      ...(['react', 'web-component', 'maplibre', 'qgis'] as const).map((id) => ({
+        id,
+        name: `@einsatzzeichen/${id}`,
+        path: `packages/${id}/package.json`,
+        dependencies: {
+          '@einsatzzeichen/core': 'workspace:*',
+          '@einsatzzeichen/schema': 'workspace:*',
+        },
+        malformedDependencySections: [],
+      })),
     ],
     sourceFiles: [],
     sourceSymlinks: [],
@@ -87,6 +97,75 @@ function writeValidRepositoryFixture(root: string): void {
 }
 
 describe('Repository-Policy — Paketgrenzen', () => {
+  it('akzeptiert die vier Ausgabekanäle mit Abhängigkeit auf core und schema', () => {
+    expect(findRepositoryPolicyViolations(validPolicyInput())).toEqual([]);
+  });
+
+  it.each(['react', 'web-component', 'maplibre', 'qgis'] as const)(
+    'weist eine Abhängigkeit und einen Import des Ausgabekanals %s auf catalog zurück',
+    (packageId) => {
+      const input = validPolicyInput();
+      const manifest = input.manifests.find((candidate) => candidate.id === packageId);
+      if (manifest === undefined) throw new Error(`Testfixture ohne ${packageId}-Manifest`);
+      manifest.dependencies['@einsatzzeichen/catalog'] = 'workspace:*';
+      input.sourceFiles.push({
+        packageId,
+        path: `packages/${packageId}/src/pull.ts`,
+        source: "export { RECIPES } from '@einsatzzeichen/catalog';\n",
+      });
+
+      const violations = findRepositoryPolicyViolations(input);
+      expect(violations).toContainEqual(
+        expect.objectContaining({
+          code: 'forbidden-internal-dependency',
+          importer: packageId,
+          target: 'catalog',
+        }),
+      );
+      expect(violations).toContainEqual(
+        expect.objectContaining({
+          code: 'forbidden-internal-import',
+          importer: packageId,
+          target: 'catalog',
+        }),
+      );
+    },
+  );
+
+  it('weist einen Import von catalog auf einen Ausgabekanal zurück', () => {
+    const input = validPolicyInput();
+    input.sourceFiles.push({
+      packageId: 'catalog',
+      path: 'packages/catalog/src/channel.ts',
+      source: "export { qgisSymbolLibrary } from '@einsatzzeichen/qgis';\n",
+    });
+
+    expect(findRepositoryPolicyViolations(input)).toContainEqual(
+      expect.objectContaining({
+        code: 'forbidden-internal-import',
+        importer: 'catalog',
+        target: 'qgis',
+      }),
+    );
+  });
+
+  it('weist einen Import zwischen zwei Ausgabekanälen zurück', () => {
+    const input = validPolicyInput();
+    input.sourceFiles.push({
+      packageId: 'react',
+      path: 'packages/react/src/sibling.ts',
+      source: "export { createStyleImage } from '@einsatzzeichen/maplibre';\n",
+    });
+
+    expect(findRepositoryPolicyViolations(input)).toContainEqual(
+      expect.objectContaining({
+        code: 'forbidden-internal-import',
+        importer: 'react',
+        target: 'maplibre',
+      }),
+    );
+  });
+
   it('weist eine rückwärts gerichtete Workspace-Abhängigkeit von core auf catalog zurück', () => {
     const input = validPolicyInput();
     const core = input.manifests.find((manifest) => manifest.id === 'core');
@@ -690,24 +769,30 @@ describe('Repository-Policy — Repository-Adapter', () => {
     expect(result.stdout).toContain('Repository-Gate bestanden.');
   });
 
-  it('bricht mit allen Repository-Befunden ab, statt trotz Verletzung Erfolg auszugeben', () => {
-    let thrown: unknown;
-    try {
-      verifyRepository({
-        root: REPOSITORY_ROOT,
-        trackedFiles: ['taktische-zeichen.zip', 'taktische-zeichen/local.svg'],
-      });
-    } catch (error) {
-      thrown = error;
-    }
+  // Dieser Fall liest das echte Repository, das seit LFH-405 acht statt vier Pakete umfasst;
+  // unter Last lief er in die Vitest-Vorgabe von 5 s. Der Timeout steht bewusst hier, nicht global.
+  it(
+    'bricht mit allen Repository-Befunden ab, statt trotz Verletzung Erfolg auszugeben',
+    { timeout: 30_000 },
+    () => {
+      let thrown: unknown;
+      try {
+        verifyRepository({
+          root: REPOSITORY_ROOT,
+          trackedFiles: ['taktische-zeichen.zip', 'taktische-zeichen/local.svg'],
+        });
+      } catch (error) {
+        thrown = error;
+      }
 
-    expect(thrown).toBeInstanceOf(Error);
-    if (!(thrown instanceof Error)) throw new Error('Repository-Gate warf keinen Error');
-    expect(thrown.message).toContain('[tracked-reference-asset] taktische-zeichen.zip');
-    expect(thrown.message).toContain(
-      '[tracked-reference-asset] taktische-zeichen/local.svg',
-    );
-  });
+      expect(thrown).toBeInstanceOf(Error);
+      if (!(thrown instanceof Error)) throw new Error('Repository-Gate warf keinen Error');
+      expect(thrown.message).toContain('[tracked-reference-asset] taktische-zeichen.zip');
+      expect(thrown.message).toContain(
+        '[tracked-reference-asset] taktische-zeichen/local.svg',
+      );
+    },
+  );
 
   it('liefert bei einem echten CLI-Verstoß Status 1 und eine Befundliste ohne Stacktrace', () => {
     const root = mkdtempSync(join(tmpdir(), 'einsatzzeichen-cli-policy-'));

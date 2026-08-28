@@ -12,11 +12,22 @@ und welche begründet offen bleiben, der Coverage-Manifest-Scope):
 
 ## Pakete
 
-Vier Pakete, mit einer festen, zyklenfreien Abhängigkeitsrichtung:
+Acht Pakete, mit einer festen, zyklenfreien Abhängigkeitsrichtung:
 
 ```
 cli → catalog → core → schema
+      react ────────┐
+      web-component ┼→ core → schema
+      maplibre ─────┤
+      qgis ─────────┘
 ```
+
+Die vier **Ausgabekanäle** `react`, `web-component`, `maplibre` und `qgis` (LFH-405) stehen auf
+demselben Rang wie `catalog`: Sie dürfen `core` und `schema` importieren, aber weder `catalog`
+noch einander, und `catalog` darf keinen Kanal importieren. Katalogdaten kommen über die
+Anwendung in den Kanal — `composeFromCatalog(...)` liefert die `Drawing`, der Kanal trägt sie nur
+in sein Zielformat. Kein Kanal rendert selbst aus der IR; alle vier verwenden `renderSvg` bzw.
+`renderCanvas` aus `core`, damit aus derselben Zeichnung in jedem Kanal dasselbe Bild entsteht.
 
 | Paket | Inhalt |
 |---|---|
@@ -24,6 +35,10 @@ cli → catalog → core → schema
 | `core` | Renderer (SVG, Canvas), Render-Theme-Vertrag, A11y-/Kontrast- und viewBox-Gates, Hüllenberechnung, Fingerprint-Vergleich, Layoutprofile, Kompositionsmotor, Regelvalidierung. Hängt **nie** von `catalog` ab. |
 | `catalog` | Grundzeichen, Organisationsfarben, Stärkeangaben, Fähigkeiten, Kompositionsrezepte, konkrete Render-Themes, Quellenregister, Profilregister, Elementregister, Coverage-Manifest. |
 | `cli` | Kennzahlenableitung aus der lokalen Referenz, Coverage-Gate, SVG-Export. |
+| `react` | Hook `useEinsatzzeichenSvg` (liefert das `core`-SVG bytegleich als String) und Komponente `<Einsatzzeichen drawing size theme idPrefix />`, die Wurzelattribute und Inhalt dieses SVGs unverändert in den React-Baum trägt — React ordnet nur die Attribute selbst (kein JSX-Build, `react` als Peer-Abhängigkeit). |
+| `web-component` | Custom Element `<einsatzzeichen-symbol>` mit offenem Shadow DOM; Properties `drawing`/`theme`, Attribute `size`/`id-prefix`. Registrierung idempotent und ohne `customElements` folgenlos. |
+| `maplibre` | `createStyleImage` rastert über den `core`-Canvas-Renderer zu `{ width, height, data }` für `map.addImage`; `addSymbolImage` registriert es mit `pixelRatio`. Map und Canvas sind strukturell typisiert, keine `maplibre-gl`-Abhängigkeit. |
+| `qgis` | `qgisSymbolLibrary` erzeugt eine QGIS-Stilbibliothek (XML, `SvgMarker` mit `base64:`-Inline-SVG aus `renderSvg`), `qgisSvgFiles` die Dateiliste für ein SVG-Verzeichnis — ohne Dateisystemzugriff und ohne `param()`-Umfärbung, weil die Farben taktischer Zeichen semantisch festgelegt sind. |
 
 `schema` und `core` haben **null Fremdabhängigkeiten** — beide sind reines TypeScript ohne
 externe Pakete.
@@ -828,7 +843,8 @@ rtk pnpm cli visual-proof --reference-root "$REFERENCE_ROOT" \
   Blockern: ein Blocker ist ein offener Punkt, eine Ausnahme ein entschiedener.
 - `verify:repository` — prüft Paketabhängigkeiten sowie statische Imports, Re-Exports,
   Inline-Importtypen, `import = require(...)`, dynamische Imports und direkte `require(...)`
-  gegen `cli → catalog → core → schema`. Syntaxfehler, nicht statisch auflösbare Modulziele,
+  gegen `cli → catalog → core → schema` sowie die vier Ausgabekanäle auf dem Rang von `catalog`
+  (kein Kanal importiert `catalog` oder einen anderen Kanal, `catalog` keinen Kanal). Syntaxfehler, nicht statisch auflösbare Modulziele,
   relative Paketgrenzen-Umgehungen und Quell-Symlinks werden zurückgewiesen. Externe
   Produktionsimporte bleiben in `core` und `schema` verboten und müssen in `cli` und `catalog`
   im Paketmanifest deklariert sein. Per NUL-getrenntem Git-Index kontrolliert das Gate außerdem,
