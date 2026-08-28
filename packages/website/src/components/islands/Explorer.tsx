@@ -259,23 +259,26 @@ export default function Explorer() {
       </p>
 
       {results.length === 0 ? (
-        <p className="ez-explorer__empty">
-          Kein Treffer mit dieser Kombination aus Suche und Filtern.{' '}
+        <div className="ez-note">
+          <p className="ez-note__title">Kein Treffer</p>
+          <p>Kein Treffer mit dieser Kombination aus Suche und Filtern.</p>
           {hasActiveFilter ? (
-            <button type="button" onClick={() => setFilters(EMPTY_FILTERS)}>
-              Alle Filter lösen
+            <button type="button" className="ez-action" onClick={() => setFilters(EMPTY_FILTERS)}>
+              <strong>Alle Filter lösen</strong>
             </button>
           ) : null}
-        </p>
+        </div>
       ) : (
-        <ul className="ez-explorer__grid">
+        <ul className="ez-grid ez-grid--4">
           {results.map((symbol) => (
-            <li key={symbol.id} className="ez-explorer__tile">
-              <a href={`/zeichen/${symbol.slug}`}>
-                <Einsatzzeichen drawing={symbol.drawing} size={64} />
-                <span className="ez-explorer__tile-title">{symbol.title}</span>
+            <li key={symbol.id}>
+              <a className="ez-card" href={`/zeichen/${symbol.slug}`}>
+                <span className="ez-canvas ez-canvas--light">
+                  <Einsatzzeichen drawing={symbol.drawing} size={64} />
+                </span>
+                <span className="ez-card__title">{symbol.title}</span>
+                <StatusPair technical={symbol.review.technical} domain={symbol.review.domain} compact />
               </a>
-              <StatusPair technical={symbol.review.technical} domain={symbol.review.domain} compact />
             </li>
           ))}
         </ul>
@@ -285,14 +288,20 @@ export default function Explorer() {
         .ez-explorer__controls {
           display: flex;
           flex-wrap: wrap;
-          gap: 0.75rem 1rem;
-          margin-bottom: 1rem;
+          gap: var(--ez-space-3) var(--ez-space-4);
+          margin-block-end: var(--ez-space-6);
         }
         .ez-explorer__field {
           display: flex;
           flex-direction: column;
-          gap: 0.25rem;
-          font-size: 0.85rem;
+          gap: var(--ez-space-1);
+        }
+        .ez-explorer__field-label {
+          font-family: var(--ez-font-mono);
+          font-size: var(--sl-text-2xs);
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--sl-color-gray-3);
         }
         .ez-explorer__field--search {
           flex: 1 1 16rem;
@@ -300,41 +309,31 @@ export default function Explorer() {
         .ez-explorer__field input,
         .ez-explorer__field select {
           font: inherit;
-          padding: 0.4rem 0.5rem;
+          font-size: var(--sl-text-sm);
+          padding: var(--ez-space-2) var(--ez-space-3);
+          border: 1px solid var(--sl-color-hairline);
+          border-radius: var(--ez-radius);
+          background: transparent;
+          color: var(--sl-color-white);
+        }
+        .ez-explorer__field input:focus-visible,
+        .ez-explorer__field select:focus-visible {
+          outline: 2px solid var(--sl-color-accent);
+          outline-offset: 2px;
         }
         .ez-explorer__count {
-          margin: 0 0 1rem;
-          font-size: 0.9rem;
+          margin: 0 0 var(--ez-space-4);
+          font-family: var(--ez-font-mono);
+          font-variant-numeric: tabular-nums;
+          font-size: var(--sl-text-sm);
+          color: var(--sl-color-gray-2);
         }
-        .ez-explorer__grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
-          gap: 1rem;
-          list-style: none;
-          margin: 0;
-          padding: 0;
+        .ez-explorer .ez-card__title {
+          font-size: var(--sl-text-sm);
         }
-        .ez-explorer__tile {
-          display: flex;
-          flex-direction: column;
+        .ez-explorer .ez-card {
           align-items: center;
-          gap: 0.35rem;
           text-align: center;
-        }
-        .ez-explorer__tile a {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0.35rem;
-          text-decoration: none;
-          color: inherit;
-        }
-        .ez-explorer__tile svg {
-          width: 64px;
-          height: 64px;
-        }
-        .ez-explorer__tile-title {
-          font-size: 0.8rem;
         }
       `}</style>
     </div>
