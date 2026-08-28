@@ -15,6 +15,7 @@ import {
   checkTextLegibility,
 } from './pictogram-gate.js';
 import { renderSvg } from './render/svg.js';
+import { uniformTextMetrics } from './test-support/text-metrics-double.js';
 import { ARIMO_CAP_HEIGHT_FRACTION, MINIMUM_TEXT_RENDER_PX } from './render/text-policy.js';
 
 /** Ein Piktogramm mit genau einem Pfad, Box und Titel unverändert — nur der `d`-String variiert. */
@@ -620,6 +621,7 @@ describe('Clipping-Gate', () => {
       ],
     };
     const catalog: CatalogPorts = {
+      textMetrics: uniformTextMetrics(),
       baseDrawing: () => ({ viewBox: DEFAULT_VIEWBOX_MM, children: [formationBody] }),
       organizationColor: () => {
         throw new Error('Für diesen Test nicht aufgerufen.');

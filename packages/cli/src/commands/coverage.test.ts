@@ -80,6 +80,32 @@ describe('coverage CLI', () => {
         '0 Manifestabweichungen, 0 Quellenabweichungen und 0 Profilabweichungen mit ' +
         'domain: deviation; 0 ohne Testnachweis, 0 Kapitel im beanspruchten Umfang ohne Eintrag',
     );
+    // Die drei Achsen aus §7 der Slice-1-Spezifikation (LFH-413/LFH-414). Die Zahlen sind an
+    // `reference-inventory.test.ts` und `rule-coverage.test.ts` festgenagelt; hier zählt, dass
+    // sie im Betrieb sichtbar sind und **vor** der Gate-Zeile stehen.
+    expect(lines).toContain(
+      'Referenzabdeckung:   550/661 Dateien beansprucht; 111 nicht — 83 außerhalb des Umfangs, ' +
+        '9 Beispielanwendungen, 1 Übersichtsblatt, 18 zurückgestellt, 0 nicht zugeordnet',
+    );
+    expect(lines.some((line) => line.startsWith('  Nicht zugeordnet:'))).toBe(false);
+    expect(lines).toContain(
+      'Regelabdeckung:      14/16 Achsen vollständig belegt; 72 Validierungsregeln ' +
+        '(Testfall je Regel durch core-Test erzwungen)',
+    );
+    expect(lines).toContain(
+      '  Achsen mit Lücke:  administrativeLevel 3/6 (gemeinde, bezirk, bundesland); ' +
+        'vehicleCategory 7/8 (amphibienfahrzeug)',
+    );
+    expect(lines).toContain(
+      'Generative Reichweite (Stufe 1): 894 gültige Kompositionen aus kind × Körpervariante × ' +
+        'Organisation × Kopfzone × Fahrwerk (225720 enumeriert), davon 67 in der Referenz belegt — ' +
+        '827 erzeugbar ohne Referenzbeleg, 8 Rezeptsignaturen außerhalb der Stufe ' +
+        '(dokumentiert, kein Gate); nicht enumeriert: 88 Fähigkeiten, ' +
+        '132 Körpermarken, 25 Funktionsrollen, freie Bezeichnung',
+    );
     expect(lines.at(-1)).toBe('Coverage-Gate bestanden.');
-  });
+    // Expliziter Timeout: `coverage()` rechnet seit LFH-413 `generativeReach()` mit
+    // (963 validateSpec-gültige, 894 komponierte Kombinationen) — allein ~140 ms, unter
+    // Vitest-Parallellast bis ~4 s gemessen; das 5-s-Standardlimit wäre ein Lastflake.
+  }, 30_000);
 });

@@ -11,6 +11,7 @@ export {
   type ValidationIssue,
 } from './validate.js';
 export * from './compose.js';
+export { VALIDATION_RULE_IDS } from './validation-rules.js';
 export * from './path-commands.js';
 export * from './pictogram-gate.js';
 // Drei Teile der Textpolitik führen nach außen: effectiveTextPx/MINIMUM_TEXT_RENDER_PX, die
@@ -30,3 +31,4 @@ export {
 export * from './a11y/contrast.js';
 export * from './a11y/metadata.js';
 export * from './viewbox-gate.js';
+export * from './text-metrics.js';

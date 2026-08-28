@@ -17,6 +17,7 @@ import { pictogram } from './pictograms/index.js';
 import { strengthHead } from './strengths.js';
 import { technicalHeadMark } from './technical-head-marks.js';
 import { vehicleChassis } from './vehicle-categories.js';
+import { ARIMO_TEXT_METRICS } from './text-metrics.js';
 import { describeSymbolSpec } from './labels.js';
 import {
   ANHANG_E_A_RECIPES,
@@ -50,6 +51,7 @@ const PORTS: CatalogPorts = {
   administrativeHead,
   vehicleChassis,
   pictogram,
+  textMetrics: ARIMO_TEXT_METRICS,
 };
 
 export function composeFromCatalog(spec: SymbolSpec, title?: string): Drawing {

@@ -312,7 +312,8 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
     url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/arimo/Arimo%5Bwght%5D.ttf',
     scope:
       'Einzige Textschrift des Projekts für das Textprimitiv aus Anhang J. Metrisch ' +
-      'Arial-kompatibel, siehe packages/catalog/assets/README.md.',
+      'Arial-kompatibel; im Repository als OFL-Modified-Version gesubsettet (Unicode-Decke für ' +
+      'freie Bezeichnungen, wght-Achse erhalten), siehe packages/catalog/assets/README.md.',
     acquisition: 'local',
     geometryUse: ['none'],
     licence: {

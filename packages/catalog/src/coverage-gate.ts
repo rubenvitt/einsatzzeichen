@@ -14,8 +14,14 @@ import {
 import { BASE_SYMBOLS } from './base-symbols.js';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { resolveElement, type ElementDescriptor } from './elements.js';
-import { referenceLacksComparableShape } from './fingerprint-index.js';
+import { referenceInventoryAssets, referenceLacksComparableShape } from './fingerprint-index.js';
 import { PROFILES } from './profiles.js';
+import {
+  INVENTORY_EXCLUSIONS,
+  claimedReferenceAssets,
+  inventoryOf,
+  type InventoryExclusion,
+} from './reference-inventory.js';
 import { SOURCE_REGISTRY, isRegisteredSource } from './sources.js';
 
 /**
@@ -418,6 +424,102 @@ export function checkVersions(
 }
 
 /**
+ * Vollständigkeit gegen das Referenzinventar. Bis LFH-414 maß kein Gate, ob jede der 661 Dateien
+ * des Referenzbestands irgendwo beansprucht ist: `uncoveredScope` prüft je Kapitelpräfix nur, ob
+ * **eine** Zeile damit beginnt, und ein Abschnitt mit null Zeilen (J.2.3) war strukturell
+ * unsichtbar. Die deklarierte Liste, die dafür fehlte, gibt es faktisch — das Kennwertartefakt
+ * `fingerprints.json` führt jede Datei genau einmal.
+ *
+ * Fünf Befunde, jeder in beide Richtungen fail-closed:
+ * - `unaccounted-reference`: Datei im Umfang, weder beansprucht noch ausgeschlossen — der
+ *   „fünfte Posten", den D.2 und D.3 an diese Aufgabe verwiesen hatten und der ohne Gate wieder
+ *   entstünde.
+ * - `stale-exclusion`: Ausschluss für eine Datei, die es nicht gibt oder die inzwischen
+ *   beansprucht ist — damit ein Ausschluss nicht länger lebt als sein Grund.
+ * - `ambiguous-disposition`, `exclusion-without-reason`, `exclusion-without-decision`: Form der
+ *   Ausschlussliste. Ein Ausschluss ohne Notiz wäre ein stilles Vergessen mit anderem Namen.
+ * - `claimed-asset-not-in-inventory`: Beanspruchung einer Datei, die das Artefakt nicht kennt —
+ *   entweder ein Tippfehler oder ein nicht nachgezogenes `pnpm cli audit:reference`.
+ * - `section-without-entry`: Abschnitt im Umfang mit nicht ausgeschlossenen Dateien, aber ohne
+ *   Manifestzeile — genau die Lücke, die `uncoveredScope` nicht sieht.
+ */
+export function checkReferenceInventory(
+  inventory: readonly string[],
+  claimedAssets: readonly string[] | ReadonlySet<string>,
+  exclusions: readonly InventoryExclusion[],
+  scope: readonly string[],
+  manifestSections: readonly string[],
+): CoverageViolation[] {
+  const violations: CoverageViolation[] = [];
+  const inventorySet = new Set(inventory);
+  const claimedList = claimedAssets instanceof Set ? [...claimedAssets] : [...claimedAssets];
+
+  const seen = new Set<string>();
+  for (const exclusion of exclusions) {
+    if (seen.has(exclusion.asset)) {
+      violations.push({
+        check: 'ambiguous-disposition',
+        key: exclusion.asset,
+        detail: 'Die Datei steht mehrfach in INVENTORY_EXCLUSIONS; ihre Disposition ist mehrdeutig.',
+      });
+    }
+    seen.add(exclusion.asset);
+    if (exclusion.reason.trim() === '') {
+      violations.push({
+        check: 'exclusion-without-reason',
+        key: exclusion.asset,
+        detail: 'Der Ausschluss trägt keine fachliche Begründung.',
+      });
+    }
+    if (!/^docs\/decisions\/[0-9a-z-]+\.md$/.test(exclusion.decidedIn)) {
+      violations.push({
+        check: 'exclusion-without-decision',
+        key: exclusion.asset,
+        detail: `"${exclusion.decidedIn}" ist kein Pfad einer Entscheidungsnotiz unter docs/decisions/.`,
+      });
+    }
+  }
+
+  for (const asset of claimedList) {
+    if (!inventorySet.has(asset)) {
+      violations.push({
+        check: 'claimed-asset-not-in-inventory',
+        key: asset,
+        detail: 'Die beanspruchte Datei fehlt im Kennwertartefakt (fingerprints.json).',
+      });
+    }
+  }
+
+  const result = inventoryOf(inventory, claimedList, exclusions, scope, manifestSections);
+  for (const asset of result.staleExclusions) {
+    violations.push({
+      check: 'stale-exclusion',
+      key: asset,
+      detail: inventorySet.has(asset)
+        ? 'Die Datei ist inzwischen beansprucht; der Ausschluss ist hinfällig.'
+        : 'Die Datei existiert nicht im Referenzinventar.',
+    });
+  }
+  for (const asset of result.unaccounted) {
+    violations.push({
+      check: 'unaccounted-reference',
+      key: asset,
+      detail:
+        'Die Datei liegt im beanspruchten Umfang, ist aber weder beansprucht noch in ' +
+        'INVENTORY_EXCLUSIONS begründet ausgeschlossen.',
+    });
+  }
+  for (const section of result.sectionsWithoutEntry) {
+    violations.push({
+      check: 'section-without-entry',
+      key: section,
+      detail: 'Der Abschnitt hat nicht ausgeschlossene Referenzdateien, aber keine Manifestzeile.',
+    });
+  }
+  return violations;
+}
+
+/**
  * Das CI-Gate. Die vier Prüfungen aus Slice 1 (Referenzdatei vorhanden, eindeutige Schlüssel,
  * genau eine `primary`-Darstellung) bleiben in ihren eigenen Feldern; die in Slice 2
  * hinzugekommenen Prüfungen sammeln sich in `violations`.
@@ -454,6 +556,13 @@ export function checkCoverage(): {
     ...checkTestEvidence(COVERAGE_MANIFEST.entries),
     ...checkProfileRegistry(COVERAGE_MANIFEST.entries, Object.values(PROFILES)),
     ...checkVersions(COVERAGE_MANIFEST.coreVersion, Object.values(PROFILES)),
+    ...checkReferenceInventory(
+      referenceInventoryAssets(),
+      claimedReferenceAssets(),
+      INVENTORY_EXCLUSIONS,
+      COVERAGE_MANIFEST.scope,
+      COVERAGE_MANIFEST.entries.map((entry) => sectionOf(entry.sourceId)),
+    ),
   ];
 
   return {
@@ -597,10 +706,12 @@ export function blockersOf(
  * `babz-svg-2025` ein dauerhafter Blocker — und die Architektur beantwortet die unklare Lage
  * bereits: abgeleitete Kennzahlen statt Dateien, eigenständige Geometrie statt übernommener Pfade.
  *
- * Die Vollständigkeit gegenüber der Baseline wird hier bewusst **nicht** gemessen:
+ * Die Vollständigkeit gegenüber der Baseline wird hier bewusst **nicht** als Blocker geführt:
  * `uncoveredScope` meldet Lücken innerhalb des beanspruchten Umfangs (`COVERAGE_MANIFEST.scope`),
- * nicht Lücken des Umfangs gegenüber dem Gesamtdokument. Diese zweite Messung bräuchte eine
- * deklarierte Kapitelliste der Baseline, die es noch nicht gibt.
+ * nicht Lücken des Umfangs gegenüber dem Gesamtdokument. Diese zweite Messung sitzt seit LFH-414
+ * in `checkReferenceInventory` und `referenceInventory()` — gegen das Kennwertartefakt als
+ * Inventar, nicht gegen eine Kapitelliste: jede Datei ist beansprucht, begründet ausgeschlossen
+ * oder außerhalb des Umfangs, und die Zahl „außerhalb" ist der gemessene Rest zur Baseline.
  */
 export function releaseBlockers(): ReleaseBlockers {
   return blockersOf(

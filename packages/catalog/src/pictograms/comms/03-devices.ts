@@ -57,13 +57,19 @@ function deviceLabel(content: string) {
 /**
  * Das große „C" der beiden Fernsprechvermittlungen. Ein einzelner Großbuchstabe verträgt mehr
  * Schriftgrad als ein Kürzel — 14 mm füllen die Fläche unter dem Überstrich, wie in der Referenz.
+ *
+ * `heightMm` 11,15 statt 11 (28. August 2026, LFH-410): das Textmetrik-Gate (`checkTextMetrics`)
+ * fand eine echte Abweichung zwischen der Autorenzusicherung und der Glyphtinte — das runde „C"
+ * überschießt die Grundlinie um −20/2048 em, bei 14 mm Schriftgrad 0,137 mm, die Box endete
+ * exakt auf der Grundlinie (22 mm). Nur die Zusicherung wächst um 0,15 mm nach unten; `x`, `y`,
+ * `sizeMm` und damit das Bild bleiben unverändert (`boxMm` steht in keinem Snapshot).
  */
 function exchangeLabel() {
   return commsText('C', {
     x: 16,
     y: 22,
     sizeMm: 14,
-    boxMm: { xMm: 9, yMm: 11, widthMm: 14, heightMm: 11 },
+    boxMm: { xMm: 9, yMm: 11, widthMm: 14, heightMm: 11.15 },
     minRenderPx: 32,
   });
 }

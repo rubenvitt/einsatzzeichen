@@ -22,11 +22,13 @@ import {
   checkElementEntries,
   checkProfileRegistry,
   checkVersions,
+  checkReferenceInventory,
   releaseBlockers,
   blockersOf,
   sortedDomainReviewOpenByArea,
 } from './coverage-gate.js';
 import { PROFILES } from './profiles.js';
+import type { InventoryExclusion } from './reference-inventory.js';
 
 // Dieselbe Vorlage wie in `coverage-manifest.test.ts`: beide Dateien brauchen einen
 // Katalogeintrag mit einstellbarer Zahl von `primary`-Darstellungen, und ein gemeinsames
@@ -656,5 +658,109 @@ describe('blockersOf — Zählung nach Bereich', () => {
     const blockers = releaseBlockers();
     const sum = Object.values(blockers.domainReviewOpenByArea).reduce((a, b) => a + b, 0);
     expect(sum).toBe(blockers.domainReviewOpen.length);
+  });
+});
+
+describe('Gate-Prüfung zum Referenzinventar', () => {
+  const scope = ['1', '5.8'];
+  const manifestSections = ['1.1'];
+  function fixtureExclusion(overrides: Partial<InventoryExclusion> = {}): InventoryExclusion {
+    return {
+      asset: '5.8.1_Beispiel 1.svg',
+      disposition: 'example',
+      reason: 'Beispielanwendung.',
+      decidedIn: 'docs/decisions/2026-08-07-kapitel-5-8-zustaende-d2.md',
+      ...overrides,
+    };
+  }
+
+  it('nimmt ein restlos aufgerechnetes Inventar an', () => {
+    expect(
+      checkReferenceInventory(
+        ['1.1_Formation.svg', '5.8.1_Beispiel 1.svg', '3.1_Fremd.svg'],
+        ['1.1_Formation.svg'],
+        [fixtureExclusion()],
+        scope,
+        manifestSections,
+      ),
+    ).toEqual([]);
+  });
+
+  it('meldet eine Datei im Umfang ohne Beanspruchung und ohne Ausschluss als unaccounted-reference', () => {
+    const violations = checkReferenceInventory(
+      ['1.1_Formation.svg', '1.2_Person.svg'],
+      ['1.1_Formation.svg'],
+      [],
+      scope,
+      manifestSections,
+    );
+    expect(violations.map((v) => [v.check, v.key])).toEqual([
+      ['unaccounted-reference', '1.2_Person.svg'],
+      ['section-without-entry', '1.2'],
+    ]);
+  });
+
+  it('meldet einen Ausschluss ohne Datei und einen für eine beanspruchte Datei als stale-exclusion', () => {
+    const violations = checkReferenceInventory(
+      ['1.1_Formation.svg'],
+      ['1.1_Formation.svg'],
+      [fixtureExclusion({ asset: 'weg.svg' }), fixtureExclusion({ asset: '1.1_Formation.svg' })],
+      scope,
+      manifestSections,
+    );
+    expect(violations.map((v) => [v.check, v.key])).toEqual([
+      ['stale-exclusion', 'weg.svg'],
+      ['stale-exclusion', '1.1_Formation.svg'],
+    ]);
+  });
+
+  it('meldet einen Ausschluss ohne Begründung oder ohne Entscheidungsnotiz', () => {
+    const violations = checkReferenceInventory(
+      ['5.8.1_Beispiel 1.svg', '5.8.1_Beispiel 2.svg'],
+      [],
+      [
+        fixtureExclusion({ reason: '  ' }),
+        fixtureExclusion({ asset: '5.8.1_Beispiel 2.svg', decidedIn: 'notizen.txt' }),
+      ],
+      scope,
+      manifestSections,
+    );
+    expect(violations.map((v) => [v.check, v.key])).toEqual([
+      ['exclusion-without-reason', '5.8.1_Beispiel 1.svg'],
+      ['exclusion-without-decision', '5.8.1_Beispiel 2.svg'],
+    ]);
+  });
+
+  it('meldet eine beanspruchte Datei, die im Inventar fehlt', () => {
+    const violations = checkReferenceInventory(
+      ['1.1_Formation.svg'],
+      ['1.1_Formation.svg', '1.9_Fehlt.svg'],
+      [],
+      scope,
+      manifestSections,
+    );
+    expect(violations.map((v) => [v.check, v.key])).toEqual([
+      ['claimed-asset-not-in-inventory', '1.9_Fehlt.svg'],
+    ]);
+  });
+
+  it('meldet eine mehrdeutige Disposition (Datei mehrfach ausgeschlossen)', () => {
+    const violations = checkReferenceInventory(
+      ['5.8.1_Beispiel 1.svg'],
+      [],
+      [fixtureExclusion(), fixtureExclusion()],
+      scope,
+      manifestSections,
+    );
+    expect(violations.map((v) => [v.check, v.key])).toEqual([
+      ['ambiguous-disposition', '5.8.1_Beispiel 1.svg'],
+    ]);
+  });
+
+  it('rechnet den echten Bestand restlos auf: 661 = 550 + 83 + 28', () => {
+    // Die Zahlen sind hart, siehe `reference-inventory.test.ts`: das Inventar ist ein Generat,
+    // die Beanspruchung wächst mit jedem Slice. Dieser Test hält fest, dass das Gate am echten
+    // Bestand nichts meldet — das ist die Aussage „kein fünfter Posten".
+    expect(checkCoverage().violations.filter((v) => v.check.includes('exclusion') || v.check.includes('reference') || v.check === 'section-without-entry')).toEqual([]);
   });
 });
