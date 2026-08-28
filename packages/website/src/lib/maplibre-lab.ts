@@ -185,6 +185,38 @@ const MAP_ERROR_TEXTS: Record<MapErrorKind, string> = {
   style: `Der Kartenstil von OpenFreeMap (${OPENFREEMAP_STYLE_URL}) ist nicht erreichbar.`,
 };
 
+export interface MapErrorContext {
+  /** URL der fehlgeschlagenen Anfrage, falls der Fehler eine trägt (`AJAXError.url`). */
+  url?: string;
+  /** Ob der Stil bereits geparst ist (`map.isStyleLoaded()`). */
+  styleLoaded: boolean;
+  basemap: BasemapId;
+}
+
+/**
+ * Trennt den tödlichen Kartenfehler von der Randnotiz. Entscheidend ist die fehlgeschlagene
+ * Ressource, nicht der Zeitpunkt: MapLibre holt Kacheln, Sprite und Glyphen, bevor `load` feuert,
+ * und eine einzelne fehlende Kachel würde bei reiner Zeitbetrachtung als „Stil nicht erreichbar"
+ * durchgehen und die brauchbare Karte verstecken. Fehlt jede URL, entscheidet als Rückfall, ob
+ * der Stil schon steht.
+ */
+export function classifyMapError(context: MapErrorContext): 'fatal' | 'note' {
+  const url = context.url ?? '';
+  if (url !== '') {
+    return context.basemap === 'openfreemap' && url.startsWith(OPENFREEMAP_STYLE_URL)
+      ? 'fatal'
+      : 'note';
+  }
+  return context.styleLoaded ? 'note' : 'fatal';
+}
+
+/** URL einer fehlgeschlagenen Anfrage, falls der Fehlerwert eine trägt (`AJAXError`). */
+export function errorUrl(error: unknown): string | undefined {
+  if (typeof error !== 'object' || error === null) return undefined;
+  const url = (error as { url?: unknown }).url;
+  return typeof url === 'string' && url !== '' ? url : undefined;
+}
+
 /** Kurze Beschreibung eines unbekannten Fehlerwerts, ohne Stack. */
 export function errorDetail(error: unknown): string {
   if (error instanceof Error) return error.message;

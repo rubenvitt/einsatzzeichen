@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_VIEWBOX_MM, type Drawing } from '@einsatzzeichen/schema';
 import {
   basemapStyle,
+  classifyMapError,
   clampSize,
+  errorUrl,
   filterSymbols,
   labFeatureCollection,
   labPoints,
@@ -128,6 +130,45 @@ describe('filterSymbols', () => {
     expect(filterSymbols(symbols, 'BASE.')).toHaveLength(1);
     expect(filterSymbols(symbols, 'Anhang E')).toHaveLength(1);
     expect(filterSymbols(symbols, 'gibt es nicht')).toHaveLength(0);
+  });
+});
+
+describe('classifyMapError', () => {
+  it('hält die Karte nur für unbrauchbar, wenn das Stildokument selbst fehlt', () => {
+    expect(
+      classifyMapError({ url: OPENFREEMAP_STYLE_URL, styleLoaded: false, basemap: 'openfreemap' }),
+    ).toBe('fatal');
+  });
+
+  it('behandelt Kacheln, Sprite und Glyphen als Notiz — auch vor dem Laden des Stils', () => {
+    for (const url of [
+      'https://tiles.openfreemap.org/planet/20250101/14/8/5.pbf',
+      `${OPENFREEMAP_STYLE_URL}/sprite.png`.replace('/styles/positron', '/sprites/ofm'),
+      'https://tiles.openfreemap.org/fonts/noto_sans_regular/0-255.pbf',
+    ]) {
+      expect(classifyMapError({ url, styleLoaded: false, basemap: 'openfreemap' })).toBe('note');
+    }
+  });
+
+  it('entscheidet ohne URL danach, ob der Stil schon steht', () => {
+    expect(classifyMapError({ styleLoaded: false, basemap: 'openfreemap' })).toBe('fatal');
+    expect(classifyMapError({ styleLoaded: true, basemap: 'openfreemap' })).toBe('note');
+  });
+
+  it('kennt ohne Grundlage kein Stildokument, das fehlen könnte', () => {
+    expect(
+      classifyMapError({ url: OPENFREEMAP_STYLE_URL, styleLoaded: true, basemap: 'none' }),
+    ).toBe('note');
+  });
+});
+
+describe('errorUrl', () => {
+  it('liest die URL aus einem AJAXError-artigen Wert und sonst nichts', () => {
+    const ajaxLike = Object.assign(new Error('HTTP 404'), { url: 'https://example.invalid/a.pbf' });
+    expect(errorUrl(ajaxLike)).toBe('https://example.invalid/a.pbf');
+    expect(errorUrl(new Error('ohne URL'))).toBeUndefined();
+    expect(errorUrl('Zeichenkette')).toBeUndefined();
+    expect(errorUrl(null)).toBeUndefined();
   });
 });
 

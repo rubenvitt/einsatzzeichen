@@ -6,8 +6,10 @@ import { addSymbolImage } from '@einsatzzeichen/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import {
   basemapStyle,
+  classifyMapError,
   clampSize,
   errorDetail,
+  errorUrl,
   filterSymbols,
   labFeatureCollection,
   labPoints,
@@ -60,6 +62,24 @@ interface TileNote {
   text: string;
 }
 
+/**
+ * Gibt das zuletzt verwendete Symbolbild frei und merkt sich das neue. Aufzurufen **nach** dem
+ * Umhängen der Ebene, damit `icon-image` nie auf ein entferntes Bild zeigt. Ohne diese Freigabe
+ * bliebe je Reglerschritt ein Raster im Stil liegen — bei 128 px und Pixel Ratio 3 sind das rund
+ * 590 KB pro Bild.
+ */
+function releaseImage(
+  map: MapLibreMap,
+  applied: { current: string | null },
+  next: string | null,
+): void {
+  const previous = applied.current;
+  if (previous !== null && previous !== next && map.hasImage(previous)) {
+    map.removeImage(previous);
+  }
+  applied.current = next;
+}
+
 export default function MapLibreLab({
   symbols,
   themes,
@@ -69,7 +89,8 @@ export default function MapLibreLab({
   const mapRef = useRef<MapLibreMap | null>(null);
   const glRef = useRef<typeof import('maplibre-gl') | null>(null);
   const markersRef = useRef<MapLibreMarker[]>([]);
-  const styleLoadedRef = useRef(false);
+  /** Bild-ID, die die Symbolebene gerade zeigt — für die Freigabe des vorherigen Rasters. */
+  const appliedImageRef = useRef<string | null>(null);
 
   const [query, setQuery] = useState('');
   const [symbolId, setSymbolId] = useState(symbols[0]?.id ?? '');
@@ -142,19 +163,24 @@ export default function MapLibreLab({
       mapRef.current = map;
 
       map.on('load', () => {
-        styleLoadedRef.current = true;
         if (!cancelled) setStyleReady(true);
       });
 
-      // `error` feuert auch für eine einzelne fehlende Kachel. Nur was vor dem Laden des Stils
-      // schiefgeht, macht die Karte unbrauchbar; alles danach ist eine Notiz, kein Abbruch
-      // (Spec §7 verlangt einen Grund, nicht ein Banner über allem).
+      // `error` feuert auch für eine einzelne fehlende Kachel, ein fehlendes Sprite oder einen
+      // Glyphenbereich — und zwar bevor `load` feuert. Deshalb entscheidet die fehlgeschlagene
+      // Ressource, nicht der Zeitpunkt (`classifyMapError`): unerreichbar ist die Karte nur, wenn
+      // das Stildokument selbst fehlt (Spec §7 verlangt einen Grund, nicht ein Banner über allem).
       map.on('error', (event: { error?: unknown }) => {
         if (cancelled) return;
-        if (styleLoadedRef.current) {
+        const kind = classifyMapError({
+          url: errorUrl(event.error),
+          styleLoaded: map.isStyleLoaded() === true,
+          basemap,
+        });
+        if (kind === 'note') {
           setTileNote({
             text:
-              'Einzelne Kacheln wurden nicht geladen — die Karte bleibt bedienbar, ' +
+              'Ein Teil des Untergrunds wurde nicht geladen — die Karte bleibt bedienbar, ' +
               `der Untergrund kann lückenhaft sein. Grund: ${errorDetail(event.error)}`,
           });
           return;
@@ -167,7 +193,7 @@ export default function MapLibreLab({
       cancelled = true;
       for (const marker of markersRef.current) marker.remove();
       markersRef.current = [];
-      styleLoadedRef.current = false;
+      appliedImageRef.current = null;
       setStyleReady(false);
       mapRef.current?.remove();
       mapRef.current = null;
@@ -190,6 +216,7 @@ export default function MapLibreLab({
     try {
       if (mode === 'marker') {
         if (map.getLayer(LAYER_ID) !== undefined) map.removeLayer(LAYER_ID);
+        releaseImage(map, appliedImageRef, null);
         for (const point of points) {
           const element = document.createElement('div');
           element.className = 'ez-lab__marker';
@@ -231,6 +258,10 @@ export default function MapLibreLab({
         } else {
           map.setLayoutProperty(LAYER_ID, 'icon-image', imageId);
         }
+        // Erst umhängen, dann das alte Bild freigeben: ein Raster von 128 px bei Pixel Ratio 3
+        // belegt gut ein halbes Megabyte, und am Größenregler entstünde sonst je Schritt eines,
+        // das bis zum Seitenwechsel im Stil liegen bliebe.
+        releaseImage(map, appliedImageRef, imageId);
       }
       setDrawError(null);
     } catch (error) {
