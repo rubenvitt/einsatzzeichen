@@ -22,5 +22,8 @@
       "@einsatzzeichen/qgis": ["./packages/qgis/src/index.ts"]
     }
   },
-  "include": ["packages/*/src/**/*.ts", "vitest.config.ts"]
+  "include": ["packages/*/src/**/*.ts", "vitest.config.ts"],
+  // Die Website bringt eigene Typprüfung mit (`astro check`): `astro:content` und die
+  // Starlight-Quellen sind unter `moduleResolution: NodeNext` nicht auflösbar.
+  "exclude": ["packages/website"]
 }
