@@ -39,7 +39,44 @@ export default defineConfig({
         Hero: './src/components/Hero.astro',
         Footer: './src/components/Footer.astro',
       },
-      sidebar: [], // Task 11 füllt
+      sidebar: [
+        {
+          label: 'Anleitungen',
+          items: [
+            { label: 'Anleitungen', link: '/anleitungen/' },
+            { label: 'Ein Zeichen finden', link: '/anleitungen/zeichen-finden/' },
+            { label: 'Ein Zeichen herunterladen', link: '/anleitungen/herunterladen/' },
+            { label: 'Ein Zeichen auf eine Karte legen', link: '/anleitungen/karte/' },
+            { label: 'Zeichen in QGIS verwenden', link: '/anleitungen/qgis/' },
+            { label: 'Ein Zeichen in ein Dokument setzen oder drucken', link: '/anleitungen/dokument-und-druck/' },
+            { label: 'Ein Zeichen selbst zusammensetzen', link: '/anleitungen/eigenes-zeichen/' },
+            { label: 'Zeichen in eigene Software einbauen', link: '/anleitungen/software/' },
+          ],
+        },
+        {
+          label: 'Einstiege',
+          items: [
+            { label: 'Zeichen suchen', link: '/explorer/' },
+            { label: 'Baukasten', link: '/builder/' },
+            { label: 'Karte', link: '/maplibre-lab/' },
+            { label: 'Quickstart', link: '/quickstart/' },
+          ],
+        },
+        { label: 'Zeichen', link: '/zeichen/' },
+        {
+          label: 'Hintergrund',
+          items: [
+            { label: 'Grundlage', link: '/grundlage/' },
+            { label: 'Stand der Prüfung', link: '/coverage/' },
+            { label: 'Belege', link: '/belege/' },
+            { label: 'Sources & Diffs', link: '/sources-und-diffs/' },
+          ],
+        },
+        {
+          label: 'Pakete',
+          items: [{ autogenerate: { directory: 'pakete' } }],
+        },
+      ],
     }),
     react(),
   ],

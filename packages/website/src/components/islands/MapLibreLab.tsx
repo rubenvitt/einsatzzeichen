@@ -352,7 +352,7 @@ export default function MapLibreLab({
   const mapUnavailable = mapError !== null;
 
   return (
-    <section className="ez-lab" aria-label="MapLibre Lab">
+    <section className="ez-lab" aria-label="Karte">
       {unknownSymbolParam === null ? null : (
         <div className="ez-note" role="status">
           <span className="ez-note__title">Dieses Zeichen gibt es hier nicht</span>

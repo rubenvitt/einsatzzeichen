@@ -168,7 +168,7 @@ export default function CoverageMatrix({ rows }: CoverageMatrixProps) {
             {visibleRows.map((row) => (
               <tr key={row.key}>
                 <td className="ez-table__id">{row.sourceId}</td>
-                <td>{row.slug !== undefined ? <a href={`/zeichen/${row.slug}`}>{row.title}</a> : row.title}</td>
+                <td>{row.slug !== undefined ? <a href={`/zeichen/${row.slug}/`}>{row.title}</a> : row.title}</td>
                 <td className="ez-table__id">{row.implementation}</td>
                 <td>{ART_LABELS[row.coverage] ?? row.coverage}</td>
                 <td>{row.profile}</td>

@@ -245,7 +245,7 @@ export default function Explorer() {
         <ul className="ez-grid ez-grid--4">
           {results.map((symbol) => (
             <li key={symbol.id}>
-              <a className="ez-card" href={`/zeichen/${symbol.slug}`}>
+              <a className="ez-card" href={`/zeichen/${symbol.slug}/`}>
                 <span className="ez-canvas ez-canvas--light">
                   <Einsatzzeichen drawing={symbol.drawing} size={64} />
                 </span>
