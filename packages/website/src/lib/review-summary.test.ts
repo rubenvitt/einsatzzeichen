@@ -130,10 +130,13 @@ describe('bulkDomainApproval', () => {
     expect(bulkDomainApproval([entry('approved', 'approved'), entry('approved', 'approved')])).toBeUndefined();
   });
 
-  it('findet die Sammelfreigabe in den echten Daten — Zeichen wie Prüfliste', () => {
+  it('nennt für die echten Daten keine — Zeichen wie Prüfliste', () => {
+    // Der Ledger führt heute 558 offene Fachreviews und keine einzige Freigabe. Beide Wege
+    // müssen darüber dasselbe sagen: die Startseite zählt die Prüfliste, die Anleitungen zählen
+    // die Zeichen, und ein Halbsatz, den nur eine der beiden Seiten zeigt, wäre der Fehler.
     const fromSymbols = bulkDomainApproval(snapshot.symbols);
     const fromRows = bulkDomainApprovalOfRows(snapshot.coverage.matrix);
-    expect(fromSymbols).toBeDefined();
+    expect(fromSymbols).toBeUndefined();
     expect(fromRows).toEqual(fromSymbols);
   });
 });

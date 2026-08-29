@@ -17,6 +17,40 @@ function counted(count: number, singular: string, plural: string): string {
   return `${count} ${count === 1 ? singular : plural}`;
 }
 
+/** Die Reviewträger, gegen die eine Null gemessen ist — Manifestzeilen, Quellen, Profile. */
+export interface ReviewCarriers {
+  manifestEntries: number;
+  sources: number;
+  profiles: number;
+}
+
+/**
+ * Die Zeile über die offenen Fachreviews — im Nullfall mit eigenen Worten.
+ *
+ * **Der Nullfall bekommt eigene Worte.** „Offene fachliche Reviews: 0 (0 Manifestreviews, …)"
+ * wäre richtig und trotzdem irreführend: dieselbe Zeile stünde da, wenn es überhaupt keine
+ * Reviewträger gäbe. Deshalb nennt sie bei null offenen Punkten den geprüften Bestand, gegen
+ * den die Null gemessen ist.
+ *
+ * Als eigene, reine Funktion und nicht als Zweig mitten in `coverage()`: der Ledger führt
+ * heute 558 offene Reviews, der Nullfall ist also gegen die echten Daten nicht auslösbar. Nur
+ * so lässt er sich gegen erfundene Zahlen prüfen, statt ungeprüft dazustehen, bis er eines
+ * Tages zum ersten Mal ausgegeben wird.
+ */
+export function openDomainReviewsLine(
+  openDomainReviews: number,
+  carriers: ReviewCarriers,
+  open: { manifest: string; sources: string; profiles: string },
+): string {
+  const total = carriers.manifestEntries + carriers.sources + carriers.profiles;
+  return openDomainReviews === 0
+    ? `Offene fachliche Reviews: keine — alle ${total} Reviewträger sind fachlich ` +
+        `freigegeben (${carriers.manifestEntries} Manifestzeilen, ${carriers.sources} Quellen, ` +
+        `${carriers.profiles} Profil)`
+    : `Offene fachliche Reviews: ${openDomainReviews} ` +
+        `(${open.manifest}, ${open.sources}, ${open.profiles})`;
+}
+
 export function coverage(): void {
   const { missing, duplicates, invalidPrimary, violations, openDomainReviews } = checkCoverage();
   const core = profileFor('bund');
@@ -87,21 +121,16 @@ export function coverage(): void {
     'Profilabweichung',
     'Profilabweichungen',
   );
-  // **Der Nullfall bekommt eigene Worte.** „Offene fachliche Reviews: 0 (0 Manifestreviews, …)"
-  // wäre richtig und trotzdem irreführend: dieselbe Zeile stünde da, wenn es überhaupt keine
-  // Reviewträger gäbe. Deshalb nennt sie bei null offenen Punkten den geprüften Bestand, gegen
-  // den die Null gemessen ist.
-  const reviewCarriers =
-    COVERAGE_MANIFEST.entries.length +
-    Object.keys(SOURCE_REGISTRY).length +
-    Object.keys(PROFILES).length;
   console.log(
-    openDomainReviews === 0
-      ? `Offene fachliche Reviews: keine — alle ${reviewCarriers} Reviewträger sind fachlich ` +
-        `freigegeben (${COVERAGE_MANIFEST.entries.length} Manifestzeilen, ` +
-        `${Object.keys(SOURCE_REGISTRY).length} Quellen, ${Object.keys(PROFILES).length} Profil)`
-      : `Offene fachliche Reviews: ${openDomainReviews} ` +
-        `(${manifestReviews}, ${sourceReviews}, ${profileReviews})`,
+    openDomainReviewsLine(
+      openDomainReviews,
+      {
+        manifestEntries: COVERAGE_MANIFEST.entries.length,
+        sources: Object.keys(SOURCE_REGISTRY).length,
+        profiles: Object.keys(PROFILES).length,
+      },
+      { manifest: manifestReviews, sources: sourceReviews, profiles: profileReviews },
+    ),
   );
   console.log(
     `1.0-Blocker: ${manifestReviews}, ${sourceReviews} und ${profileReviews} ` +

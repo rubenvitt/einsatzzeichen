@@ -13,6 +13,7 @@ import {
   EVIDENCE_LEGEND,
   ReviewDossierError,
   dossierAreaOrder,
+  openDomainReviewsBullet,
   renderReviewDossier,
   reviewDossier,
 } from './review-dossier.js';
@@ -34,33 +35,27 @@ const manifestRows = tableRows.filter((line) => /^\| `[^`]+#(?:primary|alternati
 describe('review-dossier CLI', () => {
   it('nennt dieselben Zählungen wie das Coverage-Manifest und die Release-Blocker', () => {
     const blockers = releaseBlockers();
-    const countBy = (statuses: readonly string[], status: string) =>
-      statuses.filter((value) => value === status).length;
-    const manifestStatuses = COVERAGE_MANIFEST.entries.map((entry) => entry.review.domain.status);
-    const sourceStatuses = Object.values(SOURCE_REGISTRY).map((s) => s.review.domain.status);
-    const profileStatuses = Object.values(PROFILES).map((p) => p.review.domain.status);
+    const manifestPending = COVERAGE_MANIFEST.entries.filter(
+      (entry) => entry.review.domain.status === 'pending',
+    ).length;
+    const sourcePending = Object.values(SOURCE_REGISTRY).filter(
+      (source) => source.review.domain.status === 'pending',
+    ).length;
+    const profilePending = Object.values(PROFILES).filter(
+      (profile) => profile.review.domain.status === 'pending',
+    ).length;
 
-    expect(countBy(manifestStatuses, 'pending')).toBe(blockers.domainReviewOpen.length);
-    expect(blockers.domainReviewOpen).toEqual([]);
-    // Der Nullfall steht ausgeschrieben da, nicht als „0, 0, 0".
+    expect(manifestPending).toBe(blockers.domainReviewOpen.length);
     expect(lines).toContain(
-      '- Offene fachliche Reviews: keine — alle Manifestzeilen, Quellen und Profile sind ' +
-        'fachlich freigegeben',
-    );
-    // Die Zählzeilen bleiben und verschieben ihre Masse von „offen" nach „approved": erst damit
-    // ist die Null oben eine Aussage über einen vorhandenen Bestand.
-    expect(lines).toContain(
-      `| Manifestzeilen | 0 | ${countBy(manifestStatuses, 'approved')} | 0 | ` +
-        `${COVERAGE_MANIFEST.entries.length} |`,
+      `- Offene fachliche Reviews: ${blockers.domainReviewOpen.length} Manifest, ` +
+        `${blockers.sourceDomainReviewOpen.length} Quellen, ` +
+        `${blockers.profileDomainReviewOpen.length} Profil`,
     );
     expect(lines).toContain(
-      `| Quellen | 0 | ${countBy(sourceStatuses, 'approved')} | 0 | ` +
-        `${Object.keys(SOURCE_REGISTRY).length} |`,
+      `| Manifestzeilen | ${manifestPending} | 0 | 0 | ${COVERAGE_MANIFEST.entries.length} |`,
     );
-    expect(lines).toContain(
-      `| Profile | 0 | ${countBy(profileStatuses, 'approved')} | 0 | ` +
-        `${Object.keys(PROFILES).length} |`,
-    );
+    expect(lines).toContain(`| Quellen | ${sourcePending} | 0 | 0 | ${Object.keys(SOURCE_REGISTRY).length} |`);
+    expect(lines).toContain(`| Profile | ${profilePending} | 0 | 0 | ${Object.keys(PROFILES).length} |`);
     expect(lines).toContain(`- Kernversion: ${COVERAGE_MANIFEST.coreVersion} (Profil \`bund\`: ${PROFILES.bund.version})`);
   });
 
@@ -72,23 +67,16 @@ describe('review-dossier CLI', () => {
       .filter((match): match is RegExpExecArray => match !== null)
       .map((match) => [match[1], Number(match[2])] as const);
     expect(headings.slice(0, byArea.length)).toEqual(byArea);
-    // **Seit der Sammelfreigabe ist jeder Bereich abgeschlossen.** `byArea` ist damit leer, und
-    // der Vergleich oben wäre für sich allein wertlos — er verglichte zwei leere Listen. Die
-    // beiden Zusicherungen darunter sind deshalb die eigentliche Prüfung: jeder distinkte Bereich
-    // des Manifests bekommt weiterhin genau eine Überschrift, sie stehen alphabetisch
-    // (`dossierAreaOrder` fällt für einen leeren Primärpfad auf `localeCompare` zurück), und
-    // jede nennt null offene Zeilen.
-    const distinctAreas = [
-      ...new Set(
-        COVERAGE_MANIFEST.entries.map((entry) => {
-          const section = entry.sourceId.slice(entry.sourceId.indexOf(':') + 1);
-          return section.includes('.') ? section.slice(0, section.indexOf('.')) : section;
-        }),
-      ),
-    ].sort((a, b) => a.localeCompare(b));
-    expect(byArea).toEqual([]);
-    expect(headings.map(([area]) => area)).toEqual(distinctAreas);
-    expect(headings.every(([, open]) => open === 0)).toBe(true);
+    // Heute ist kein Bereich vollständig abgeschlossen: jeder distinkte Bereich des Manifests hat
+    // genau eine Überschrift, und es hängt nichts an.
+    const distinctAreas = new Set(
+      COVERAGE_MANIFEST.entries.map((entry) => {
+        const section = entry.sourceId.slice(entry.sourceId.indexOf(':') + 1);
+        return section.includes('.') ? section.slice(0, section.indexOf('.')) : section;
+      }),
+    );
+    expect(headings).toHaveLength(distinctAreas.size);
+    expect(headings.length).toBe(byArea.length);
   });
 
   it('hängt vollständig abgeschlossene Bereiche alphabetisch (localeCompare) hinter die offenen', () => {
@@ -172,9 +160,7 @@ describe('review-dossier CLI', () => {
   it('ist deterministisch und ändert keinen Reviewstatus', () => {
     expect(renderReviewDossier()).toBe(markdown);
     expect(markdown).not.toMatch(/\d{4}-\d{2}-\d{2}T/);
-    // Das Dossier bereitet vor und entscheidet nicht: es hat den Status, den es vorfindet, auch
-    // nach dem Rendern nicht angefasst.
-    expect(COVERAGE_MANIFEST.entries.every((entry) => entry.review.domain.status === 'approved')).toBe(true);
+    expect(COVERAGE_MANIFEST.entries.every((entry) => entry.review.domain.status === 'pending')).toBe(true);
   });
 
   it('schreibt mit --out in eine Datei, sonst auf stdout', () => {
@@ -189,5 +175,22 @@ describe('review-dossier CLI', () => {
     expect(mocks.mkdirSync).toHaveBeenCalledWith('docs/reviews', { recursive: true });
     expect(mocks.writeFileSync).toHaveBeenCalledWith('docs/reviews/dossier.md', markdown, 'utf8');
     expect(log).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('openDomainReviewsBullet', () => {
+  // Wie in `coverage.test.ts`: der Nullfall ist gegen den echten Ledger nicht auslösbar und
+  // wird deshalb gegen erfundene Zahlen geprüft.
+  it('sagt den Nullfall aus, statt „0 Manifest, 0 Quellen, 0 Profil" zu zählen', () => {
+    expect(openDomainReviewsBullet(0, 0, 0)).toBe(
+      '- Offene fachliche Reviews: keine — alle Manifestzeilen, Quellen und Profile sind ' +
+        'fachlich freigegeben',
+    );
+  });
+
+  it('zählt sonst je Trägerart', () => {
+    expect(openDomainReviewsBullet(544, 13, 1)).toBe(
+      '- Offene fachliche Reviews: 544 Manifest, 13 Quellen, 1 Profil',
+    );
   });
 });
