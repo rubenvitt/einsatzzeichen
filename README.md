@@ -378,7 +378,7 @@ E.2 ist die zweite Hälfte von Anhang E und der erste Rezeptblock, der Fahrzeuge
 Landfahrzeuge (E-d), fünf Anhänger und Sonderkörper (E-e), fünf Wasserfahrzeuge (E-f).
 **Alle 31 sind gebaut** — den 68 Referenzdateien des Anhangs stehen damit 68 Rezepte gegenüber,
 lückenlos von E.1.1 bis E.1.37 und von E.2.1 bis E.2.31. Der Katalog führt seither 71 Rezepte und
-339 Renderfälle, 358 Manifestzeilen und 372 offene fachliche Reviews, davon 68 im Bereich E (eigener
+339 Renderfälle, 358 Manifestzeilen und damals 372 offene fachliche Reviews, davon 68 im Bereich E (eigener
 Lauf `pnpm cli coverage`). `E.2.6` ist am 18. August 2026 nachgezogen worden und war bis dahin der
 einzige offene Abschnitt; der Grund und seine Auflösung stehen weiter unten.
 
@@ -654,8 +654,8 @@ F-f ergänzt die acht verbleibenden Platzzeichen und schließt Anhang F mit exak
 Source-IDs, acht bekannten Alternativschlüsseln und 66 Rezeptschlüsseln ab. Erst dieses
 mengenexakte Gate trägt das einzelne `F` im Manifest-Scope. Der Gesamtbestand umfasst nun 137
 Rezepte, 405 Renderfälle und 424 Manifestzeilen; 424 offene Manifest-Domainreviews, 13 offene
-Quellenreviews und ein offenes Profilreview ergeben 438 fachlich weiterhin `pending` stehende
-Reviewobjekte. Technische Reviews der acht neuen Zeilen sind nach den lokalen Gates `approved`.
+Quellenreviews und ein offenes Profilreview ergaben zum Slice-Abschluss 438 fachlich `pending`
+stehende Reviewobjekte. Technische Reviews der acht neuen Zeilen sind nach den lokalen Gates `approved`.
 
 F.3.12, F.3.13 und F.3.17 bis F.3.19 verwenden den bestehenden `circle-12`; F.3.14 belegt den
 zweiten Einsatz der vorhandenen `raised-gable`-Fassung. Die Capability `care` erhält dafür eigene,
