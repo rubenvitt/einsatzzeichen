@@ -1,6 +1,7 @@
 import {
   CONTRAST_EXCEPTIONS,
   COVERAGE_MANIFEST,
+  PROFILES,
   SOURCE_REGISTRY,
   checkCoverage,
   generativeReach,
@@ -86,9 +87,21 @@ export function coverage(): void {
     'Profilabweichung',
     'Profilabweichungen',
   );
+  // **Der Nullfall bekommt eigene Worte.** „Offene fachliche Reviews: 0 (0 Manifestreviews, …)"
+  // wäre richtig und trotzdem irreführend: dieselbe Zeile stünde da, wenn es überhaupt keine
+  // Reviewträger gäbe. Deshalb nennt sie bei null offenen Punkten den geprüften Bestand, gegen
+  // den die Null gemessen ist.
+  const reviewCarriers =
+    COVERAGE_MANIFEST.entries.length +
+    Object.keys(SOURCE_REGISTRY).length +
+    Object.keys(PROFILES).length;
   console.log(
-    `Offene fachliche Reviews: ${openDomainReviews} ` +
-      `(${manifestReviews}, ${sourceReviews}, ${profileReviews})`,
+    openDomainReviews === 0
+      ? `Offene fachliche Reviews: keine — alle ${reviewCarriers} Reviewträger sind fachlich ` +
+        `freigegeben (${COVERAGE_MANIFEST.entries.length} Manifestzeilen, ` +
+        `${Object.keys(SOURCE_REGISTRY).length} Quellen, ${Object.keys(PROFILES).length} Profil)`
+      : `Offene fachliche Reviews: ${openDomainReviews} ` +
+        `(${manifestReviews}, ${sourceReviews}, ${profileReviews})`,
   );
   console.log(
     `1.0-Blocker: ${manifestReviews}, ${sourceReviews} und ${profileReviews} ` +

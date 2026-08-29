@@ -15,7 +15,11 @@ describe('coverage CLI', () => {
     const manifestReviews = Object.keys(MANIFEST_DOMAIN_REVIEWS).length;
     const sourceReviews = Object.keys(SOURCE_DOMAIN_REVIEWS).length;
     const profileReviews = Object.keys(PROFILE_DOMAIN_REVIEWS).length;
-    const openReviews = manifestReviews + sourceReviews + profileReviews;
+    // **Der Bestand, nicht die offenen Punkte.** Bis zur Sammelfreigabe vom 28.08.2026 waren
+    // beide Zahlen dieselbe; seither ist die Zahl der Reviewträger 558 und die der offenen
+    // Reviews 0. Die Ledgergrößen bleiben hier stehen, weil die Ausgabezeile sie im Nullfall
+    // nennt — die Null ist nur dann eine Aussage, wenn danebensteht, wogegen gemessen wurde.
+    const reviewCarriers = manifestReviews + sourceReviews + profileReviews;
     const lines: string[] = [];
     vi.spyOn(console, 'log').mockImplementation((message?: unknown) => {
       lines.push(String(message));
@@ -45,7 +49,7 @@ describe('coverage CLI', () => {
     expect(manifestReviews).toBe(544);
     expect(sourceReviews).toBe(13);
     expect(profileReviews).toBe(1);
-    expect(openReviews).toBe(558);
+    expect(reviewCarriers).toBe(558);
     expect(lines).toContain('Kernversion: 0.2.0 (Profil "bund": 0.2.0)');
     // **Die Umfangszeile ist wieder kurz.** Der Teilslice E.2 hatte sie auf 47 Einträge gedehnt,
     // weil E.2 mit einem fehlenden Abschnitt nur abschnittsweise behauptbar war. Seit E.2.6
@@ -65,9 +69,9 @@ describe('coverage CLI', () => {
       'Kontrastausnahmen: weiss auf orange (E.2.6, entschieden am 2026-08-18 durch Projektinhaber)',
     );
     expect(lines).toContain(
-      `Offene fachliche Reviews: ${openReviews} ` +
-        `(${manifestReviews} Manifestreviews, ${sourceReviews} Quellenreviews, ` +
-        `${profileReviews} Profilreview)`,
+      `Offene fachliche Reviews: keine — alle ${reviewCarriers} Reviewträger sind fachlich ` +
+        `freigegeben (${manifestReviews} Manifestzeilen, ${sourceReviews} Quellen, ` +
+        `${profileReviews} Profil)`,
     );
     // Die Zeile bleibt auch nach E.2 wortgleich, obwohl das Manifest inzwischen fünf
     // technische Abweichungen führt (E.1.17, E.1.19, E.1.24, E.1.31, E.2.26): `ReleaseBlockers` liest
@@ -75,10 +79,15 @@ describe('coverage CLI', () => {
     // Sie ist damit korrekt und zugleich die Stelle, an der technische Abweichungen im Betrieb
     // unsichtbar bleiben — auffindbar sind sie nur in der Note ihrer Manifestzeile.
     expect(lines).toContain(
-      `1.0-Blocker: ${manifestReviews} Manifestreviews, ${sourceReviews} Quellenreviews und ` +
-        `${profileReviews} Profilreview noch ohne abgeschlossenes fachliches Review; ` +
+      '1.0-Blocker: 0 Manifestreviews, 0 Quellenreviews und ' +
+        '0 Profilreviews noch ohne abgeschlossenes fachliches Review; ' +
         '0 Manifestabweichungen, 0 Quellenabweichungen und 0 Profilabweichungen mit ' +
         'domain: deviation; 0 ohne Testnachweis, 0 Kapitel im beanspruchten Umfang ohne Eintrag',
+    );
+    // Die Bereichszeile entfällt, wenn kein Bereich mehr eine offene Zeile hat — sie darf nicht
+    // als leere Aufzählung stehen bleiben.
+    expect(lines.some((line) => line.startsWith('  Offene fachliche Reviews nach Bereich:'))).toBe(
+      false,
     );
     // Die drei Achsen aus §7 der Slice-1-Spezifikation (LFH-413/LFH-414). Die Zahlen sind an
     // `reference-inventory.test.ts` und `rule-coverage.test.ts` festgenagelt; hier zählt, dass

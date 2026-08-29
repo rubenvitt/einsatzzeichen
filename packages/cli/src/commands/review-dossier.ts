@@ -145,10 +145,20 @@ export function renderReviewDossier(): string {
       ` (Profil ${code(PROFILES.bund.id)}: ${PROFILES.bund.version})`,
   );
   out(`- Umfang: ${COVERAGE_MANIFEST.scope.join(', ')}`);
+  // Der Nullfall bekommt eigene Worte, damit „0 Manifest, 0 Quellen, 0 Profil" nicht wie eine
+  // leere Erhebung aussieht. Die Tabelle darunter bleibt in beiden Fällen dieselbe und zeigt,
+  // wogegen die Null gemessen ist.
+  const openTotal =
+    blockers.domainReviewOpen.length +
+    blockers.sourceDomainReviewOpen.length +
+    blockers.profileDomainReviewOpen.length;
   out(
-    `- Offene fachliche Reviews: ${blockers.domainReviewOpen.length} Manifest, ` +
-      `${blockers.sourceDomainReviewOpen.length} Quellen, ` +
-      `${blockers.profileDomainReviewOpen.length} Profil`,
+    openTotal === 0
+      ? '- Offene fachliche Reviews: keine — alle Manifestzeilen, Quellen und Profile sind ' +
+        'fachlich freigegeben'
+      : `- Offene fachliche Reviews: ${blockers.domainReviewOpen.length} Manifest, ` +
+        `${blockers.sourceDomainReviewOpen.length} Quellen, ` +
+        `${blockers.profileDomainReviewOpen.length} Profil`,
   );
   out();
   out('| Trägerart | offen (pending) | approved | deviation | gesamt |');
