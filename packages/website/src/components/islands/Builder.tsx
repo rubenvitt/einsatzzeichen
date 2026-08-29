@@ -1435,6 +1435,9 @@ function BuilderForm() {
           display: flex;
           flex-direction: column;
           align-items: stretch;
+          /* Grid-Kinder schrumpfen sonst nicht unter ihr längstes Wort — „Wechselladerfahrzeug"
+             sprengte die Spalte und lief in die Nachbarkachel. */
+          min-width: 0;
           gap: var(--ez-space-2);
           padding: var(--ez-space-2);
           border: 1px solid var(--ez-line);
@@ -1478,6 +1481,7 @@ function BuilderForm() {
           line-height: 1.35;
           text-align: center;
           hyphens: auto;
+          overflow-wrap: anywhere;
         }
         .ez-builder__tile-notice {
           margin: 0;
