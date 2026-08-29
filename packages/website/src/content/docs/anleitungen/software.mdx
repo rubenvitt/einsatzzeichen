@@ -4,10 +4,11 @@ description: Für Entwicklerinnen und Entwickler — die acht Pakete, die vier A
 ---
 
 import { loadSnapshot } from '../../../lib/snapshot';
-import { reviewSummary } from '../../../lib/review-summary';
+import { bulkApprovalClause, bulkDomainApproval, reviewSummary } from '../../../lib/review-summary';
 
 export const snapshot = loadSnapshot();
 export const review = reviewSummary(snapshot.symbols);
+export const bulkApproval = bulkApprovalClause(bulkDomainApproval(snapshot.symbols));
 
 Diese Seite richtet sich an Menschen, die Software bauen. Wer selbst nicht programmiert, aber ein
 Zeichen in eine Anwendung bekommen möchte, kann sie einer entwickelnden Person weiterreichen — sie
@@ -89,9 +90,16 @@ export const technicalSentence = [
 export const domainSentence =
   review.domain.approved === 0
     ? `Fachlich steht keines der ${review.domain.total} Zeichen auf „geprüft“.`
-    : review.domain.pending === 0
-      ? `Fachlich stehen inzwischen alle ${review.domain.total} Zeichen auf „geprüft“.`
-      : `Fachlich stehen ${review.domain.approved} der ${review.domain.total} Zeichen auf „geprüft“; bei ${review.domain.pending} steht die Prüfung aus.`;
+    : review.domain.approved === review.domain.total
+      ? `Fachlich stehen inzwischen alle ${review.domain.total} Zeichen auf „geprüft“${bulkApproval}.`
+      : [
+          `Fachlich stehen ${review.domain.approved} der ${review.domain.total} Zeichen auf „geprüft“`,
+          review.domain.pending > 0 ? `, bei ${review.domain.pending} steht die Prüfung aus` : '',
+          review.domain.deviation > 0
+            ? `, ${review.domain.deviation} tragen eine dokumentierte Abweichung`
+            : '',
+          '.',
+        ].join('');
 
 <p>{`${technicalSentence} ${domainSentence}`}</p>
 

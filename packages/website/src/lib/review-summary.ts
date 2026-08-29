@@ -1,3 +1,4 @@
+import { formatReviewDate } from './review-date.js';
 import type { ReviewSummary } from './snapshot.js';
 
 /**
@@ -80,4 +81,65 @@ export interface ReviewedRow {
  */
 export function reviewSummaryOfRows(rows: readonly ReviewedRow[]): ReviewTotals {
   return reviewSummary(rows.map((row) => ({ review: { technical: row.technical, domain: row.domain } })));
+}
+
+/** Prüfer und Tag einer Sammelfreigabe, so wie die Daten sie ausweisen. */
+export interface BulkApproval {
+  reviewer: string;
+  /** ISO-Datum, unverändert aus dem Katalog. */
+  date: string;
+}
+
+/** Woran eine Sammelfreigabe in der Notiz zu erkennen ist — `domain-reviews.ts` schreibt es hin. */
+const BULK_NOTE_MARKER = 'Sammelfreigabe';
+
+/**
+ * Die Sammelfreigabe hinter den fachlichen „geprüft"-Marken — oder `undefined`, wenn die Daten
+ * keine ausweisen.
+ *
+ * Warum das geprüft und nicht angenommen wird: die Seiten sagen „als Sammelfreigabe des
+ * Projektinhabers, <Name>, <Datum>". Das ist eine Herkunftsbehauptung, und sie stimmt nur, solange
+ * alle Freigaben denselben Prüfer, dasselbe Datum und eine Notiz tragen, die sie als Sammelfreigabe
+ * ausweist. Trägt eine Freigabe später einen anderen Prüfer, ein anderes Datum oder eine Notiz ohne
+ * dieses Wort, verschwindet der Halbsatz von allen Seiten — statt eine Herkunft zu behaupten, die
+ * es nicht mehr gibt.
+ *
+ * Eine einzelne Freigabe ist keine Sammelfreigabe; darunter liegt die Schwelle bei zwei.
+ */
+export function bulkDomainApproval(entries: readonly Reviewed[]): BulkApproval | undefined {
+  const approved = entries
+    .map((entry) => entry.review.domain)
+    .filter((review) => review.status === 'approved');
+  if (approved.length < 2) return undefined;
+
+  const reviewers = new Set(approved.map((review) => review.reviewer));
+  const dates = new Set(approved.map((review) => review.date));
+  if (reviewers.size !== 1 || dates.size !== 1) return undefined;
+
+  const [reviewer] = reviewers;
+  const [date] = dates;
+  if (reviewer === undefined || reviewer === '') return undefined;
+  if (date === undefined || date === '') return undefined;
+  if (!approved.every((review) => review.note?.includes(BULK_NOTE_MARKER) === true)) {
+    return undefined;
+  }
+  return { reviewer, date };
+}
+
+/** Dasselbe für die Prüfliste, deren Marken direkt am Objekt hängen. */
+export function bulkDomainApprovalOfRows(rows: readonly ReviewedRow[]): BulkApproval | undefined {
+  return bulkDomainApproval(rows.map((row) => ({ review: { technical: row.technical, domain: row.domain } })));
+}
+
+/**
+ * Der Halbsatz, mit dem eine Sammelfreigabe genannt wird — leer, wenn es keine zu nennen gibt.
+ *
+ * Als Funktion und nicht als fünfmal getippter Satz: die Startseite, die Prüfseite und drei
+ * Anleitungen sagen dasselbe, und fünf Fassungen desselben Satzes laufen auseinander, sobald eine
+ * davon geändert wird. Der führende Gedankenstrich gehört dazu — die Aufrufer hängen den Halbsatz
+ * unmittelbar an ihre eigene Aussage an.
+ */
+export function bulkApprovalClause(approval: BulkApproval | undefined): string {
+  if (approval === undefined) return '';
+  return ` — als Sammelfreigabe des Projektinhabers, ${approval.reviewer}, ${formatReviewDate(approval.date)}`;
 }

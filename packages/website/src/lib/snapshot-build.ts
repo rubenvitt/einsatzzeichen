@@ -44,6 +44,7 @@ import {
   type Review,
   type ReviewSet,
 } from '@einsatzzeichen/schema';
+import { formatReviewDate } from './review-date.js';
 import { slugForSymbolId } from './slug.js';
 import type {
   BuilderVocabulary,
@@ -177,17 +178,6 @@ const COLOR_WORDS: Record<ColorToken | 'surface', string> = {
   surface: 'der Ausgabefläche',
 };
 
-/**
- * ISO-Datum als deutsches Datum. Bewusst eine eigene Zeile statt eines Imports aus
- * `components/StatusPair.tsx`: jene Datei ist eine React-Komponente und wird auch im Browser
- * gebündelt, dieser Baustein läuft nur in Node beim Erzeugen der Daten. Ein Datum, das nicht
- * ISO-förmig ist, bleibt unverändert stehen, statt zu `NaN.NaN.NaN` zu werden.
- */
-function germanDate(iso: string): string {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  return match === null ? iso : `${match[3]}.${match[2]}.${match[1]}`;
-}
-
 /** „E.2.6" → „Abschnitt E.2.6"; mehrere → „Abschnitte E.2.6 und E.2.7". */
 function sectionPhrase(sections: readonly string[]): string {
   if (sections.length === 0) return 'ohne Abschnittsangabe';
@@ -211,7 +201,7 @@ function contrastExceptionText(exception: (typeof CONTRAST_EXCEPTIONS)[number]):
   const background = COLOR_WORDS[exception.background];
   return (
     `${foreground} auf ${background}, ${sectionPhrase(exception.sections)} ` +
-    `(entschieden am ${germanDate(exception.decidedOn)}, ${exception.decidedBy})`
+    `(entschieden am ${formatReviewDate(exception.decidedOn)}, ${exception.decidedBy})`
   );
 }
 

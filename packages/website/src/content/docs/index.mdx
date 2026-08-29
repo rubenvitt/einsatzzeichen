@@ -18,8 +18,7 @@ hero:
 ---
 
 import { loadSnapshot } from '../../lib/snapshot';
-import { reviewSummaryOfRows } from '../../lib/review-summary';
-import { formatReviewDate } from '../../components/StatusPair.tsx';
+import { bulkApprovalClause, bulkDomainApprovalOfRows, reviewSummaryOfRows } from '../../lib/review-summary';
 
 export const snapshot = loadSnapshot();
 export const matrix = snapshot.coverage.matrix;
@@ -28,10 +27,10 @@ export const matrix = snapshot.coverage.matrix;
 // eigener Seite. Wer beides vermischt, nennt eine Zahl, die es nicht gibt.
 export const listed = reviewSummaryOfRows(matrix);
 export const clarifiedSources = snapshot.sources.filter((source) => source.status === 'clarified').length;
-// Das Datum der fachlichen Prüfung, sofern sie an allen Einträgen dasselbe trägt. Kein fester
-// Text: steht später an einem Eintrag ein anderes Datum, fällt die Angabe weg statt falsch zu sein.
-export const domainDates = [...new Set(matrix.map((row) => row.domain.date).filter((date) => date !== undefined))];
-export const domainReviewers = [...new Set(matrix.map((row) => row.domain.reviewer).filter((name) => name !== undefined))];
+// Die Herkunft der fachlichen Freigabe, aus den Daten belegt (`bulkDomainApproval`): ein Prüfer,
+// ein Datum, eine Notiz, die sie als Sammelfreigabe ausweist. Trifft das später nicht mehr zu,
+// fällt der Halbsatz weg, statt eine Herkunft zu behaupten, die es nicht gibt.
+export const bulkApproval = bulkApprovalClause(bulkDomainApprovalOfRows(matrix));
 
 ## Was hier steht
 
@@ -64,8 +63,13 @@ Bedeutung ist.
       {listed.domain.approved === 0
         ? 'fachlich geprüft: kein einziger. Technisch geprüft ist nicht fachlich geprüft.'
         : listed.domain.approved === matrix.length
-          ? `fachlich geprüft: bestätigt, dass es das richtige Zeichen für diese Bedeutung ist${domainReviewers.length === 1 && domainDates.length === 1 ? ` — ${domainReviewers[0]}, ${formatReviewDate(domainDates[0])}` : ''}. Wer wann geprüft hat, steht an jedem Zeichen einzeln.`
-          : `fachlich geprüft. Bei den übrigen ${matrix.length - listed.domain.approved} steht die Prüfung aus; welcher Stand für ein bestimmtes Zeichen gilt, steht auf seiner Seite.`}
+          ? `fachlich geprüft: bestätigt, dass es das richtige Zeichen für diese Bedeutung ist${bulkApproval}. Wer wann geprüft hat, steht an jedem Zeichen einzeln.`
+          : [
+              'fachlich geprüft',
+              listed.domain.pending > 0 ? `. Bei ${listed.domain.pending} steht die Prüfung aus` : '',
+              listed.domain.deviation > 0 ? `, ${listed.domain.deviation} tragen eine dokumentierte Abweichung` : '',
+              '. Welcher Stand für ein bestimmtes Zeichen gilt, steht auf seiner Seite.',
+            ].join('')}
     </span>
     <span class="ez-figure__source">fachliche Prüfungen im Katalog</span>
   </div>

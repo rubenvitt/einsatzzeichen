@@ -1,3 +1,4 @@
+import { formatReviewDate } from '../lib/review-date.js';
 import type { ReviewSummary } from '../lib/snapshot';
 
 /**
@@ -9,6 +10,9 @@ import type { ReviewSummary } from '../lib/snapshot';
  * Diese Datei ist die einzige Quelle der Beschriftung. `StatusPair.astro` rendert dieselben Labels
  * für die statischen Seiten, damit Insel und Seite nicht auseinanderlaufen.
  */
+
+/** Re-Export: die Marke und die Seiten sollen dasselbe Datumsformat zeigen. */
+export { formatReviewDate };
 
 export type StatusAxis = 'technical' | 'domain';
 
@@ -29,11 +33,6 @@ const AXIS_WORD: Record<StatusAxis, string> = {
   domain: 'fachlich',
 };
 
-/** ISO-Datum als deutsches Datum. Was nicht ISO ist, bleibt unverändert stehen. */
-export function formatReviewDate(date: string): string {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
-  return match === null ? date : `${match[3]}.${match[2]}.${match[1]}`;
-}
 
 /** Beschriftung, Zeichen und Klasse einer Marke — ohne React, damit `.astro` sie mitbenutzt. */
 export function statusMark(axis: StatusAxis, review: ReviewSummary): StatusMark {

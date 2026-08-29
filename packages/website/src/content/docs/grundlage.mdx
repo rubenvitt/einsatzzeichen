@@ -5,7 +5,7 @@ description: Worauf sich die Zeichen stützen, welche Quellen dahinterstehen und
 
 import StatusPair from '../../components/StatusPair.astro';
 import { loadSnapshot } from '../../lib/snapshot';
-import { reviewSummary } from '../../lib/review-summary';
+import { bulkDomainApprovalOfRows, reviewSummary } from '../../lib/review-summary';
 import { formatReviewDate } from '../../components/StatusPair.tsx';
 
 export const snapshot = loadSnapshot();
@@ -21,6 +21,14 @@ export const openDomainTotal = snapshot.coverage.openDomainReviewsByArea.reduce(
 );
 export const example = snapshot.symbols.find((symbol) => symbol.id === 'recipe.E.1.1') ?? snapshot.symbols[0];
 export const exampleDomain = example.review.domain;
+// Herkunft der fachlichen Freigabe aus den Daten — kein Datum von Hand im Satz. Diese Seite baut
+// ihren eigenen Satz statt den Halbsatz aus `bulkApprovalClause`, weil sie die Sammelfreigabe zum
+// Hauptsatz macht und nicht anhängt.
+export const bulkApproval = bulkDomainApprovalOfRows(snapshot.coverage.matrix);
+export const bulkApprovalSentence =
+  bulkApproval === undefined
+    ? ''
+    : ` Es stammt aus einer Sammelfreigabe des Projektinhabers, ${bulkApproval.reviewer}, vom ${formatReviewDate(bulkApproval.date)} — ein Prüfer, ein Datum.`;
 
 Wer ein Zeichen aus diesem Projekt in eine Lage, eine Unterlage oder eine Ausbildung einträgt,
 sollte drei Dinge wissen: woher es stammt, was daran geprüft wurde und was das über seine
@@ -78,7 +86,7 @@ So sieht das an {example.title} aus, {example.chapter} der Vorlage:
 
 <p>
   {openDomainTotal === 0
-    ? `Für jeden der ${snapshot.coverage.matrix.length} geprüften Abschnitte steht ein fachliches Urteil im Katalog, mit Name, Datum und Notiz. Es stammt aus einer Sammelfreigabe des Projektinhabers vom 28.08.2026 — ein Prüfer, ein Datum. Welches Urteil für ein bestimmtes Zeichen gilt, steht auf seiner Seite und in der Prüfliste unter „Stand der Prüfung".`
+    ? `Für jeden der ${snapshot.coverage.matrix.length} geprüften Abschnitte steht ein fachliches Urteil im Katalog, mit Name, Datum und Notiz.${bulkApprovalSentence} Welches Urteil für ein bestimmtes Zeichen gilt, steht auf seiner Seite und in der Prüfliste unter „Stand der Prüfung".`
     : `${openDomainTotal} von ${snapshot.coverage.matrix.length} geprüften Abschnitten warten noch auf ein fachliches Urteil, verteilt auf ${snapshot.coverage.openDomainReviewsByArea.length} Bereiche. Welcher Abschnitt in welchem Bereich, steht unter „Stand der Prüfung".`}
 </p>
 

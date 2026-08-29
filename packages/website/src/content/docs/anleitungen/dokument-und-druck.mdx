@@ -4,10 +4,11 @@ description: SVG in Word, PowerPoint oder LibreOffice einfügen, die richtige Gr
 ---
 
 import { loadSnapshot } from '../../../lib/snapshot';
-import { reviewSummary } from '../../../lib/review-summary';
+import { bulkApprovalClause, bulkDomainApproval, reviewSummary } from '../../../lib/review-summary';
 
 export const snapshot = loadSnapshot();
 export const domain = reviewSummary(snapshot.symbols).domain;
+export const bulkApproval = bulkApprovalClause(bulkDomainApproval(snapshot.symbols));
 export const contrastExceptions = snapshot.coverage.contrastExceptions;
 
 Für eine Unterlage, eine Präsentation, ein Merkblatt oder eine Legende brauchst du nur eine Datei
@@ -81,19 +82,23 @@ es trotzdem:
       oder Einsatzvorbereitung geht, gehört ein Satz dazu, woher die Zeichen stammen und dass ihre
       fachliche Prüfung aussteht.
     </p>
-  ) : domain.pending === 0 ? (
+  ) : domain.approved === domain.total ? (
     <p>
-      Alle {domain.total} Zeichen sind inzwischen fachlich geprüft. Woher die Zeichen stammen,
-      gehört trotzdem in die Unterlage — ein fachliches Urteil ersetzt die Quellenangabe nicht, und
-      die Vorlage selbst ist weiterhin keine geltende Vorschrift.
+      Alle {domain.total} Zeichen sind inzwischen fachlich geprüft{bulkApproval}. Woher die Zeichen
+      stammen, gehört trotzdem in die Unterlage — ein fachliches Urteil ersetzt die Quellenangabe
+      nicht, und die Vorlage selbst ist weiterhin keine geltende Vorschrift.
     </p>
   ) : (
     <p>
-      Fachlich geprüft sind {domain.approved} der {domain.total} Zeichen; bei den übrigen{' '}
-      {domain.total - domain.approved} steht die Prüfung aus. Wenn die Unterlage in Ausbildung oder
-      Einsatzvorbereitung geht, gehört ein Satz dazu, woher die Zeichen stammen — und bei jedem
-      Zeichen, dessen Prüfung noch aussteht, dass sie aussteht. Der Stand steht auf der Seite des
-      Zeichens.
+      {[
+        `Fachlich geprüft sind ${domain.approved} der ${domain.total} Zeichen`,
+        domain.pending > 0 ? `; bei ${domain.pending} steht die Prüfung aus` : '',
+        domain.deviation > 0 ? `, und ${domain.deviation} tragen eine dokumentierte Abweichung` : '',
+        '.',
+      ].join('')}{' '}
+      Wenn die Unterlage in Ausbildung oder Einsatzvorbereitung geht, gehört ein Satz dazu, woher
+      die Zeichen stammen — und bei jedem Zeichen, dessen Prüfung noch aussteht, dass sie aussteht.
+      Der Stand steht auf der Seite des Zeichens.
     </p>
   )}
 

@@ -7,8 +7,7 @@ import CoverageAxes from '../../components/CoverageAxes.astro';
 import CoverageMatrix from '../../components/islands/CoverageMatrix.tsx';
 import { axisByLabel } from '../../lib/coverage-axes';
 import { loadSnapshot } from '../../lib/snapshot';
-import { reviewSummaryOfRows } from '../../lib/review-summary';
-import { formatReviewDate } from '../../components/StatusPair.tsx';
+import { bulkApprovalClause, bulkDomainApprovalOfRows, reviewSummaryOfRows } from '../../lib/review-summary';
 
 export const snapshot = loadSnapshot();
 export const coverage = snapshot.coverage;
@@ -19,8 +18,7 @@ export const referenceAxis = axisByLabel(coverage.axes, 'Referenzabdeckung');
 // Klartext, statt bei einem Tippfehler im Label still `undefined` zu rendern.
 export const ruleAxis = axisByLabel(coverage.axes, 'Regelabdeckung');
 export const listed = reviewSummaryOfRows(coverage.matrix);
-export const domainDates = [...new Set(coverage.matrix.map((row) => row.domain.date).filter((date) => date !== undefined))];
-export const domainReviewers = [...new Set(coverage.matrix.map((row) => row.domain.reviewer).filter((name) => name !== undefined))];
+export const bulkApproval = bulkApprovalClause(bulkDomainApprovalOfRows(coverage.matrix));
 
 Hier siehst du nach, wie belastbar ein Zeichen ist, bevor du dich darauf verlässt: wie viel der
 Vorlage überhaupt umgesetzt ist, was an jedem einzelnen Abschnitt geprüft wurde und wer wann
@@ -43,10 +41,15 @@ steht auf der Seite jedes Zeichens, und was die Marken bedeuten, erklärt
 
 <p>
   {listed.domain.approved === coverage.matrix.length
-    ? `Fachlich geprüft sind ebenfalls alle ${coverage.matrix.length}: jemand hat bestätigt, dass es jeweils das richtige Zeichen für diese Bedeutung ist${domainReviewers.length === 1 && domainDates.length === 1 ? ` — ${domainReviewers[0]}, ${formatReviewDate(domainDates[0])}` : ''}. Das Urteil steht mit Name, Datum und Notiz an jedem Abschnitt und stammt aus einer Sammelfreigabe des Projektinhabers — ein Prüfer, ein Datum; die Prüfliste unten zeigt es Zeile für Zeile.`
+    ? `Fachlich geprüft sind alle ${coverage.matrix.length}: jemand hat bestätigt, dass es jeweils das richtige Zeichen für diese Bedeutung ist${bulkApproval}. Ein Prüfer, ein Datum; das Urteil steht mit Name, Datum und Notiz an jedem Abschnitt, und die Prüfliste unten zeigt es Zeile für Zeile.`
     : listed.domain.approved === 0
       ? `Fachlich geprüft ist bisher keiner der ${coverage.matrix.length} Abschnitte. Technisch geprüft ist nicht fachlich geprüft: dass ein Bild stimmt, sagt nichts darüber, ob es das richtige Zeichen für seine Bedeutung ist.`
-      : `Fachlich geprüft sind ${listed.domain.approved} der ${coverage.matrix.length} Abschnitte; bei den übrigen ${coverage.matrix.length - listed.domain.approved} steht das Urteil aus. Welcher Stand für ein bestimmtes Zeichen gilt, steht auf seiner Seite.`}
+      : [
+          `Fachlich geprüft sind ${listed.domain.approved} der ${coverage.matrix.length} Abschnitte`,
+          listed.domain.pending > 0 ? `, bei ${listed.domain.pending} steht das Urteil aus` : '',
+          listed.domain.deviation > 0 ? `, und ${listed.domain.deviation} tragen eine dokumentierte Abweichung` : '',
+          '. Welcher Stand für ein bestimmtes Zeichen gilt, steht auf seiner Seite.',
+        ].join('')}
 </p>
 
 Was ein fachliches Urteil nicht leistet, steht auf der Seite [Grundlage](/grundlage/): die Vorlage

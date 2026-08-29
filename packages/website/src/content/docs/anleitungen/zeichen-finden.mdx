@@ -4,10 +4,11 @@ description: Nach Bedeutung, Abkürzung, Organisation oder Kapitel suchen — un
 ---
 
 import { loadSnapshot } from '../../../lib/snapshot';
-import { reviewSummary } from '../../../lib/review-summary';
+import { bulkApprovalClause, bulkDomainApproval, reviewSummary } from '../../../lib/review-summary';
 
 export const snapshot = loadSnapshot();
 export const domain = reviewSummary(snapshot.symbols).domain;
+export const bulkApproval = bulkApprovalClause(bulkDomainApproval(snapshot.symbols));
 
 Hier findest du heraus, ob es für eine Bedeutung ein Zeichen gibt, wie es aussieht und wie
 verlässlich es ist. Dafür gibt es zwei Wege: die Suche über der Seite, die alle Texte dieser
@@ -79,7 +80,7 @@ die Marke, dann erscheint die Angabe auch dort, wo sie aus Platzgründen fehlt.
     <p>
       {[
         domain.approved === domain.total
-          ? `Der fachliche Prüfstand steht bei allen ${domain.total} Zeichen auf „geprüft“`
+          ? `Der fachliche Prüfstand steht bei allen ${domain.total} Zeichen auf „geprüft“${bulkApproval}`
           : `Der fachliche Prüfstand steht bei ${domain.approved} der ${domain.total} Zeichen auf „geprüft“`,
         domain.pending > 0 ? `, bei ${domain.pending} steht er noch aus` : '',
         domain.deviation > 0

@@ -133,8 +133,12 @@ const sourceLabel =
   symbol.source.page === undefined ? symbol.chapter : `${symbol.chapter}, S. ${symbol.source.page}`;
 
 /**
- * Sichtbare Notizen im Kopf: die **fachlichen**. Sie sind kurz (zwei Zeichen tragen eine, höchstens
- * 78 Zeichen lang) und in Alltagssprache geschrieben, also stehen sie offen.
+ * Sichtbare Notizen im Kopf: die **fachlichen**. Sie sind kurz und in Alltagssprache geschrieben,
+ * also stehen sie offen statt zugeklappt — anders als der technische Wortlaut darunter.
+ *
+ * Seit der Sammelfreigabe vom 28.08.2026 trägt jedes Zeichen eine fachliche Notiz; zwei davon
+ * nennen zusätzlich die abgeleitete Organisationszuordnung. Die Anzahl steht deshalb hier nicht
+ * mehr als Zahl: sie wäre wieder falsch, sobald sich der Ledger ändert.
  */
 const headNotes = [
   symbol.review.domain.status === 'deviation' && symbol.review.domain.note !== undefined
@@ -190,9 +194,10 @@ const noteHint =
 const builderHref = `/builder/?spec=${encodeSpec(symbol.spec)}`;
 
 /**
- * Die Karte kennt den Parameter `symbol` noch nicht; sie bekommt ihn in einem eigenen Task. Der
- * Link steht trotzdem schon in dieser Form, damit die Adresse sich später nicht ändert — ein
- * unbekannter Parameter öffnet die Karte einfach mit ihrer Voreinstellung.
+ * Die Karte liest `?symbol=<slug>` und wählt das Zeichen vor (`MapLibreLab.tsx`); einen Wert, den
+ * ihre Liste nicht kennt, meldet sie sichtbar, statt still ein anderes Zeichen zu zeigen. Der
+ * Slug ist derselbe wie in der Adresse dieser Seite — eine zweite Kodierung gäbe es nicht zu
+ * pflegen.
  */
 const mapHref = `/maplibre-lab/?symbol=${symbol.slug}`;
 

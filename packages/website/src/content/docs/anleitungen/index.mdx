@@ -4,10 +4,11 @@ description: Was willst du tun? Ein Zeichen finden, herunterladen, auf eine Kart
 ---
 
 import { loadSnapshot } from '../../../lib/snapshot';
-import { reviewSummary } from '../../../lib/review-summary';
+import { bulkApprovalClause, bulkDomainApproval, reviewSummary } from '../../../lib/review-summary';
 
 export const snapshot = loadSnapshot();
 export const domain = reviewSummary(snapshot.symbols).domain;
+export const bulkApproval = bulkApprovalClause(bulkDomainApproval(snapshot.symbols));
 
 Diese Seiten erklären, wie man die Zeichen benutzt. Sie setzen kein technisches Wissen voraus.
 Wo ein Schritt wirklich jemanden braucht, der Software baut, steht das ausdrücklich dabei — und
@@ -62,9 +63,14 @@ richtige Zeichen für diese Bedeutung ist.
 <p>
   {domain.approved === 0
     ? `Auf „geprüft“ steht der fachliche heute bei keinem der ${domain.total} Zeichen.`
-    : domain.pending === 0
-      ? `Auf „geprüft“ steht der fachliche inzwischen bei allen ${domain.total} Zeichen — sieh trotzdem am einzelnen Zeichen nach, wer wann geprüft hat.`
-      : `Auf „geprüft“ steht der fachliche heute bei ${domain.approved} der ${domain.total} Zeichen; bei den übrigen ${domain.total - domain.approved} steht er aus. Welcher Stand für dein Zeichen gilt, steht auf seiner Seite.`}
+    : domain.approved === domain.total
+      ? `Auf „geprüft“ steht der fachliche inzwischen bei allen ${domain.total} Zeichen${bulkApproval}. Sieh trotzdem am einzelnen Zeichen nach, wer wann geprüft hat.`
+      : [
+          `Auf „geprüft“ steht der fachliche heute bei ${domain.approved} der ${domain.total} Zeichen`,
+          domain.pending > 0 ? `; bei ${domain.pending} steht er aus` : '',
+          domain.deviation > 0 ? `, und ${domain.deviation} tragen eine dokumentierte Abweichung` : '',
+          '. Welcher Stand für dein Zeichen gilt, steht auf seiner Seite.',
+        ].join('')}
 </p>
 
 Woran das liegt und welche Vorlage dahintersteht, steht auf der Seite
