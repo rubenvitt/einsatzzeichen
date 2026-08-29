@@ -13,6 +13,7 @@ import {
   validationRuleCoverage,
 } from '@einsatzzeichen/catalog';
 import { VALIDATION_RULE_IDS } from '@einsatzzeichen/core';
+import { PALETTE } from '@einsatzzeichen/schema';
 import { buildSnapshot, chapterForSection, withoutReferenceFilenames } from './snapshot-build.js';
 
 describe('buildSnapshot', () => {
@@ -161,6 +162,24 @@ describe('buildSnapshot', () => {
 
   it('setzt generatedAt aus der übergebenen Zeit', () => {
     expect(snap.generatedAt).toBe('2026-08-28T00:00:00.000Z');
+  });
+
+  describe('Bezeichnungen im Baukastenvokabular', () => {
+    it('beschriftet jede technische Füllung mit einem deutschen Wort statt mit ihrem Token', () => {
+      const fills = snap.builder.technicalFill;
+      expect(fills.length).toBe(Object.keys(PALETTE).length);
+      for (const { id, label } of fills) {
+        // Ein Bindestrich im Label heißt, dass der Bezeichner durchgereicht wurde
+        // (`funktionslauf-kontrast`); ein Label gleich der ID heißt dasselbe für die übrigen.
+        expect(label).not.toContain('-');
+        expect(label).not.toBe(id);
+        expect(label).toMatch(/^[A-ZÄÖÜ]/);
+      }
+    });
+
+    it('lässt `bodyVariant` als dokumentierte Ausnahme bei seiner ID', () => {
+      for (const { id, label } of snap.builder.bodyVariant) expect(label).toBe(id);
+    });
   });
 
   describe('Kontrastausnahmen im Klartext', () => {

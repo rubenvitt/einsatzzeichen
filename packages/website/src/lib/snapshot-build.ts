@@ -348,9 +348,14 @@ const TECHNICAL_BODY_MARK_ID_SET = new Set<string>(TECHNICAL_BODY_MARK_IDS);
  * Erlaubte Werte je `SymbolSpec`-Achse. Die Bezeichnungen kommen aus denselben Registern, die
  * `describeSymbolSpec` vorliest — eine zweite Liste in der Website liefe auseinander.
  *
- * `technicalFill` und `bodyVariant` tragen ihre ID als Bezeichnung: die Farbtoken sind bereits
- * deutsche Wörter, und für die Körpervarianten führt der Katalog kein Bezeichnungsregister. Eines
- * hier zu erfinden hieße, Bezeichnungen ohne Quelle zu behaupten.
+ * `technicalFill` beschriftet seine Farbtoken über `COLOR_WORDS` — dieselbe Übersetzung, die auch
+ * die Kontrastausnahme in Prosa setzt. Die Token selbst sind Bezeichner (`weiss`, `gruen`,
+ * `funktionslauf-kontrast`) und haben in einem Auswahlfeld nichts verloren, das auch Menschen ohne
+ * Technikbezug bedienen.
+ *
+ * `bodyVariant` bleibt die dokumentierte Ausnahme und trägt weiter seine ID: für die
+ * Körpervarianten führt der Katalog kein Bezeichnungsregister, und eines hier zu erfinden hieße,
+ * Bezeichnungen ohne Quelle zu behaupten.
  */
 function builderVocabulary(): BuilderVocabulary {
   return {
@@ -359,7 +364,7 @@ function builderVocabulary(): BuilderVocabulary {
       ORGANIZATION_IDS,
       (id) => ORGANIZATION_LABELS[id as (typeof ORGANIZATION_IDS)[number]],
     ),
-    technicalFill: labelled(Object.keys(PALETTE), (id) => id),
+    technicalFill: labelled(Object.keys(PALETTE), (id) => COLOR_WORDS[id as ColorToken]),
     strength: labelled(STRENGTH_IDS, (id) => STRENGTH_LABELS[id as (typeof STRENGTH_IDS)[number]]),
     administrativeLevel: labelled(
       ADMIN_LEVEL_IDS,

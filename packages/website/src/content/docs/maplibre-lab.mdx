@@ -10,6 +10,9 @@ import { loadSnapshot } from '../../lib/snapshot.js';
 
 export const snapshot = loadSnapshot();
 export const symbols = labSymbols(snapshot.symbols);
+// Der Vorlagenstand trägt im Katalog eine Kennung (`bbk-babz-2025`). Im Anwendertext steht sein
+// Titel: die Kennung sagt einer Leserin nichts, und die Quelle führt ihren Namen selbst mit.
+export const baselineSource = snapshot.sources.find((source) => source.id === snapshot.baseline);
 export const themes = [
   { id: 'reference', label: 'Referenz', theme: RENDER_THEMES.reference },
   { id: 'accessible-light', label: 'Kontraststark hell', theme: RENDER_THEMES['accessible-light'] },
@@ -29,10 +32,12 @@ Schritt für Schritt, mit jedem Bedienfeld einzeln erklärt, steht das unter
 
 <MapLibreLab client:visible symbols={symbols} themes={themes} basemap="openfreemap" />
 
-Zur Auswahl stehen alle {symbols.length} Zeichen des Katalogs, gezeichnet nach dem Vorlagenstand
-`{snapshot.baseline}`. Kommst du von der Seite eines Zeichens über **Auf der Karte ansehen**,
-steht es schon im Auswahlfeld. Führt ein alter Link auf ein Zeichen, das es nicht mehr gibt, sagt
-die Karte das, statt stillschweigend ein anderes zu zeigen.
+Zur Auswahl stehen alle {symbols.length} Zeichen des Katalogs, gezeichnet nach der Vorlage, die
+dieses Projekt führt: {baselineSource === undefined ? snapshot.baseline : baselineSource.title}.
+Was das für ihre Verbindlichkeit heißt, steht auf [Grundlage](/grundlage/). Kommst du von der
+Seite eines Zeichens über **Auf der Karte ansehen**, steht es schon im Auswahlfeld. Führt ein
+alter Link auf ein Zeichen, das es nicht mehr gibt, sagt die Karte das, statt stillschweigend ein
+anderes zu zeigen.
 
 <div class="ez-note">
 <span class="ez-note__title">Woher der Kartenuntergrund kommt</span>

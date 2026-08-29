@@ -78,7 +78,7 @@ So sieht das an {example.title} aus, {example.chapter} der Vorlage:
 
 <p>
   {openDomainTotal === 0
-    ? `Für jeden der ${snapshot.coverage.matrix.length} geprüften Abschnitte der Vorlage steht ein fachliches Urteil im Katalog — einzeln, mit Name, Datum und Notiz, nicht als Sammelvermerk. Welches Urteil für ein bestimmtes Zeichen gilt, steht auf seiner Seite und in der Prüfliste unter „Stand der Prüfung".`
+    ? `Für jeden der ${snapshot.coverage.matrix.length} geprüften Abschnitte steht ein fachliches Urteil im Katalog, mit Name, Datum und Notiz. Es stammt aus einer Sammelfreigabe des Projektinhabers vom 28.08.2026 — ein Prüfer, ein Datum. Welches Urteil für ein bestimmtes Zeichen gilt, steht auf seiner Seite und in der Prüfliste unter „Stand der Prüfung".`
     : `${openDomainTotal} von ${snapshot.coverage.matrix.length} geprüften Abschnitten warten noch auf ein fachliches Urteil, verteilt auf ${snapshot.coverage.openDomainReviewsByArea.length} Bereiche. Welcher Abschnitt in welchem Bereich, steht unter „Stand der Prüfung".`}
 </p>
 

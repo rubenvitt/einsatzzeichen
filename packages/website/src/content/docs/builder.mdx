@@ -18,6 +18,8 @@ eine kürzere Liste.
 „Aus dem Katalog laden" öffnet jedes Zeichen des Katalogs im Baukasten. Die aktuelle
 Zusammenstellung steht in der Adresszeile; ein Link teilt damit genau diesen Stand.
 
+<Builder client:load />
+
 ## Für Entwicklerinnen und Entwickler
 
 Die Auswahlwerte kommen aus dem Katalog selbst, nicht aus einer zweiten Liste in der Website:
@@ -36,5 +38,3 @@ Unterschied nicht; dort ist die Spec die Quelle des Bildes.
 Gültig oder nicht weiß im Projekt nur `compose()`, nachträglich. Die gesperrten Einträge in den
 Auswahlfeldern entstehen deshalb durch Probieren: `allowedValues()` komponiert jeden Kandidaten
 einmal. Alle elf Felder mit zusammen 247 Kandidaten brauchen dafür 9,7 ms kalt und 3,4 ms warm.
-
-<Builder client:load />
