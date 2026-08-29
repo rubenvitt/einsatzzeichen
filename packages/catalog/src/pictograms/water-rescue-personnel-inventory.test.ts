@@ -141,7 +141,7 @@ describe('Wasserrettungsführung I.5.4 bis I.5.8', () => {
     }
   });
 
-  it('reserviert fünf getrennte und weiterhin offene Fachreviews', () => {
+  it('reserviert fünf getrennte, einzeln freigegebene Fachreviews', () => {
     const lfh490ReviewKeys: ReadonlySet<string> = new Set(
       EXPECTED.map(({ section }) => `bbk-babz-2025:${section}#primary`),
     );
@@ -157,7 +157,12 @@ describe('Wasserrettungsführung I.5.4 bis I.5.8', () => {
     ]);
     expect(keys.map((key) => MANIFEST_DOMAIN_REVIEWS[
       key as keyof typeof MANIFEST_DOMAIN_REVIEWS
-    ])).toEqual(keys.map(() => ({ status: 'pending' })));
+    ])).toEqual(keys.map(() => ({
+      status: 'approved',
+      reviewer: 'Ruben Vitt',
+      date: '2026-08-28',
+      note: 'Fachlich freigegeben durch den Projektinhaber am 28.08.2026 (Sammelfreigabe im Rahmen von LFH-429).',
+    })));
   });
 
   it('führt nur I.5.4 bis I.5.8 mit technischem Direktnachweis im Manifest', () => {
@@ -185,7 +190,7 @@ describe('Wasserrettungsführung I.5.4 bis I.5.8', () => {
         testEvidence: ['svg-snapshot', 'pictogram-contract'],
         review: {
           technical: { status: 'approved', reviewer: 'rv', date: '2026-08-27' },
-          domain: { status: 'pending' },
+          domain: { status: 'approved', reviewer: 'Ruben Vitt', date: '2026-08-28' },
         },
       });
       expect(row.review.technical.note).toContain('I.5.4 bis I.5.8');

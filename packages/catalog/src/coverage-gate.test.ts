@@ -308,12 +308,17 @@ describe('Gate-Prüfungen zu Quelle, Profil und Review', () => {
     expect(blockers.profileDomainReviewDeviations).toEqual([profile.id]);
   });
 
-  it('meldet für den echten Bestand keine Verletzung und alle Reviewträger als offen', () => {
+  it('meldet für den echten Bestand keine Verletzung und keinen offenen Reviewträger', () => {
     const result = checkCoverage();
     expect(result.violations).toEqual([]);
-    expect(result.openDomainReviews).toBe(
+    // Seit der Sammelfreigabe vom 28.08.2026 ist die Zahl 0 — und nicht 0, weil das Zählwerk
+    // nichts fände: `countOpenDomainReviews` zählt auch ein formal unvollständiges `approved`
+    // weiter als offen. Die Null belegt damit zugleich, dass jede der 558 Freigaben Reviewer,
+    // ISO-Datum und Notiz trägt.
+    expect(result.openDomainReviews).toBe(0);
+    expect(
       COVERAGE_MANIFEST.entries.length + Object.keys(SOURCE_REGISTRY).length + Object.keys(PROFILES).length,
-    );
+    ).toBe(558);
   });
 });
 
@@ -461,15 +466,23 @@ describe('Gate-Prüfungen zu Elementen und Versionen', () => {
 });
 
 describe('Release-Blocker für 1.0', () => {
-  it('führt jeden Eintrag ohne fachliches Review als Blocker', () => {
+  it('führt nach der Sammelfreigabe keinen Manifesteintrag mehr als Blocker', () => {
     const blockers = releaseBlockers();
-    expect(blockers.domainReviewOpen).toHaveLength(COVERAGE_MANIFEST.entries.length);
+    expect(blockers.domainReviewOpen).toEqual([]);
+    expect(blockers.domainReviewOpenByArea).toEqual({});
+    // Die Freigabe ist `approved` und nicht `deviation`: der Abweichungsblocker bleibt leer.
+    expect(blockers.domainReviewDeviations).toEqual([]);
   });
 
-  it('führt offene Quellen- und Profilreviews als eigene Blocker', () => {
+  it('führt auch Quellen- und Profilreviews nicht mehr als Blocker', () => {
     const blockers = releaseBlockers();
-    expect(blockers.sourceDomainReviewOpen.sort()).toEqual(Object.keys(SOURCE_REGISTRY).sort());
-    expect(blockers.profileDomainReviewOpen.sort()).toEqual(Object.keys(PROFILES).sort());
+    expect(blockers.sourceDomainReviewOpen).toEqual([]);
+    expect(blockers.profileDomainReviewOpen).toEqual([]);
+    expect(blockers.sourceDomainReviewDeviations).toEqual([]);
+    expect(blockers.profileDomainReviewDeviations).toEqual([]);
+    // Gegenprobe, dass die leeren Listen nicht aus einem leeren Register stammen.
+    expect(Object.keys(SOURCE_REGISTRY)).toHaveLength(13);
+    expect(Object.keys(PROFILES)).toHaveLength(1);
   });
 
   it('meldet keinen Eintrag ohne seinen arteigenen Pflichtnachweis', () => {
@@ -497,8 +510,11 @@ describe('Release-Blocker für 1.0', () => {
     expect(sections).toContain('C.1.1');
   });
 
-  it('ist ein Testbefund, kein CI-Abbruch: das Gate bleibt trotz offener Blocker grün', () => {
-    expect(releaseBlockers().domainReviewOpen.length).toBeGreaterThan(0);
+  it('ist ein Testbefund, kein CI-Abbruch: das Gate bleibt auch ohne offenen Blocker grün', () => {
+    // Die Blockermeldung war nie ein Abbruchgrund und ist es auch jetzt nicht, wo sie leer ist.
+    // Die Maschinerie bleibt stehen: kommt eine neue Manifestzeile ohne Freigabe hinzu, meldet
+    // sie dieselbe Zeile wieder — deshalb wird hier die leere Liste geprüft und nicht entfernt.
+    expect(releaseBlockers().domainReviewOpen).toEqual([]);
     expect(checkCoverage().violations).toEqual([]);
   });
 });
