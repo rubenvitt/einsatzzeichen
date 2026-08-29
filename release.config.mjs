@@ -75,7 +75,7 @@ Starte direkt mit den Release Notes, gruppiert wie oben beschrieben, mit ## ...`
       '@semantic-release/exec',
       {
         prepareCmd: 'node scripts/release/set-version.mjs ${nextRelease.version}',
-        publishCmd: 'pnpm -r publish --access public --no-git-checks',
+        publishCmd: 'pnpm -r publish --access public --no-git-checks --provenance',
       },
     ],
     [
