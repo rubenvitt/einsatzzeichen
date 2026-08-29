@@ -1653,7 +1653,7 @@ function BuilderForm() {
           gap: var(--ez-space-2);
           align-items: center;
         }
-        /* `.ez-action` ist in theme.css für Verweise gebaut; als Knopf braucht es die Grundwerte. */
+        /* .ez-action ist in theme.css für Verweise gebaut; als Knopf braucht es die Grundwerte. */
         .ez-builder button.ez-action {
           font: inherit;
           background: transparent;
