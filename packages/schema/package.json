@@ -1,7 +1,27 @@
 {
   "name": "@einsatzzeichen/schema",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
-  "main": "./src/index.ts"
+  "description": "Typen, Taxonomie und Validierung des semantischen Symbolsystems für taktische Zeichen der Gefahrenabwehr",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rubenvitt/einsatzzeichen.git",
+    "directory": "packages/schema"
+  },
+  "homepage": "https://github.com/rubenvitt/einsatzzeichen",
+  "keywords": ["taktische-zeichen", "gefahrenabwehr", "bos", "einsatzzeichen"],
+  "main": "./src/index.ts",
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  }
 }

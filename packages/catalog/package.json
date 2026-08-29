@@ -1,9 +1,29 @@
 {
   "name": "@einsatzzeichen/catalog",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
+  "description": "Kuratierter Zeichenkatalog samt Schrift-Assets (Arimo, OFL) für Einsatzzeichen",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rubenvitt/einsatzzeichen.git",
+    "directory": "packages/catalog"
+  },
+  "homepage": "https://github.com/rubenvitt/einsatzzeichen",
+  "keywords": ["taktische-zeichen", "gefahrenabwehr", "bos", "einsatzzeichen"],
   "main": "./src/index.ts",
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public",
+    "main": "./dist/src/index.js",
+    "types": "./dist/src/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      }
+    }
+  },
   "dependencies": {
     "@einsatzzeichen/core": "workspace:*",
     "@einsatzzeichen/schema": "workspace:*"

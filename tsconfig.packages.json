@@ -1,0 +1,14 @@
+{
+  // Solution-Datei für `tsc -b`: baut alle publizierbaren Pakete in Abhängigkeitsreihenfolge.
+  "files": [],
+  "references": [
+    { "path": "./packages/schema/tsconfig.build.json" },
+    { "path": "./packages/core/tsconfig.build.json" },
+    { "path": "./packages/catalog/tsconfig.build.json" },
+    { "path": "./packages/react/tsconfig.build.json" },
+    { "path": "./packages/web-component/tsconfig.build.json" },
+    { "path": "./packages/maplibre/tsconfig.build.json" },
+    { "path": "./packages/qgis/tsconfig.build.json" },
+    { "path": "./packages/cli/tsconfig.build.json" }
+  ]
+}

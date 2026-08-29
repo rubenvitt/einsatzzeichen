@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { isRenderThemeId, renderTheme } from '@einsatzzeichen/catalog';
 import { auditReference } from './commands/audit-reference.js';
 import { coverage } from './commands/coverage.js';

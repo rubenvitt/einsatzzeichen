@@ -1,9 +1,32 @@
 {
   "name": "@einsatzzeichen/cli",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
+  "description": "Kommandozeilenwerkzeug für Einsatzzeichen (Export, Coverage, Audits)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rubenvitt/einsatzzeichen.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/rubenvitt/einsatzzeichen",
+  "keywords": ["taktische-zeichen", "gefahrenabwehr", "bos", "einsatzzeichen", "cli"],
   "main": "./src/index.ts",
+  "bin": {
+    "einsatzzeichen": "./dist/index.js"
+  },
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
   "dependencies": {
     "@einsatzzeichen/catalog": "workspace:*",
     "@einsatzzeichen/core": "workspace:*",
