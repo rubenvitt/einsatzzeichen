@@ -12,12 +12,9 @@ Website-Ausgabe aus katalogeigenen Zeichnungen; keine Referenzdateien.
 | Anleitungen `/anleitungen/` | `assets/2026-08-29-lfh-429-anleitungen.png` | Sidebar-Gruppen (Anleitungen zuerst), sieben Karten „Was willst du tun?“, Hinweisblock zu den Prüfständen |
 
 > **Nachtrag vom 29.08.2026:** Die fachliche Sammelfreigabe vom 28.08.2026 wurde
-> zurückgenommen; alle 558 Fachreviews stehen wieder auf `pending`. Die Zahlen und
-> Marken oben sind auf den Stand danach korrigiert (Startseite 0/544 fachlich,
-> Symbolseite E.1.1 „fachlich: noch nicht geprüft“ ohne Freigabe-Notiz). **Die vier
-> aufgenommenen PNG-Dateien zeigen weiterhin den Stand vor der Rücknahme** — sie sind
-> als Beleg für Layout, Sidebar-Reihenfolge und Benennung aufgenommen, nicht als Beleg
-> für den Reviewstand, und wurden deshalb nicht neu aufgenommen.
+> zurückgenommen; alle 558 Fachreviews stehen wieder auf `pending`. Die vier Screenshots
+> wurden danach neu aufgenommen und zeigen diesen Stand (Startseite 0/544 fachlich,
+> Symbolseite E.1.1 „fachlich: noch nicht geprüft“ ohne Freigabe-Notiz).
 
 Befund: Layout, Sidebar-Reihenfolge, Anwender-Namen (Baukasten, Karte, Stand der Prüfung,
 Zeichen suchen) und Statusmarken erscheinen wie in der Spec §3/§4 beschrieben. Der Fehlerfall
