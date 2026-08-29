@@ -7,7 +7,14 @@ import {
   reviewSummaryOfRows,
   type Reviewed,
 } from './review-summary.js';
-import { loadSnapshot } from './snapshot.js';
+import { buildSnapshot } from './snapshot-build.js';
+
+// `buildSnapshot()` statt der ladenden Funktion aus `snapshot.js`: eine reine Funktion über den
+// Katalog, ohne die generierte, gitignorete Datei zu lesen. In CI läuft `pnpm test` vor dem
+// Website-`generate`, das die Datei erst erzeugt — die ladende Funktion würfe hier mit dem
+// Hinweis, den `snapshot-load.test.ts` dediziert prüft. Einmal pro Datei gebaut statt je Test: der
+// Aufbau ist deterministisch.
+const snapshot = buildSnapshot();
 
 function entry(technical: string, domain: string): Reviewed {
   return {
@@ -48,21 +55,19 @@ describe('reviewSummary', () => {
   });
 
   it('summiert die drei Stände zur Gesamtzahl — sonst stimmt keine Differenz auf den Seiten', () => {
-    const totals = reviewSummary(loadSnapshot().symbols);
+    const totals = reviewSummary(snapshot.symbols);
     for (const axis of [totals.technical, totals.domain]) {
       expect(axis.approved + axis.deviation + axis.pending).toBe(axis.total);
     }
   });
 
   it('zählt jedes Zeichen des Snapshots auf beiden Achsen genau einmal', () => {
-    const snapshot = loadSnapshot();
     const totals = reviewSummary(snapshot.symbols);
     expect(totals.technical.total).toBe(snapshot.symbols.length);
     expect(totals.domain.total).toBe(snapshot.symbols.length);
   });
 
   it('zählt die Prüfliste, deren Marken direkt am Objekt hängen', () => {
-    const snapshot = loadSnapshot();
     const totals = reviewSummaryOfRows(snapshot.coverage.matrix);
     expect(totals.technical.total).toBe(snapshot.coverage.matrix.length);
     expect(totals.domain.total).toBe(snapshot.coverage.matrix.length);
@@ -126,7 +131,6 @@ describe('bulkDomainApproval', () => {
   });
 
   it('findet die Sammelfreigabe in den echten Daten — Zeichen wie Prüfliste', () => {
-    const snapshot = loadSnapshot();
     const fromSymbols = bulkDomainApproval(snapshot.symbols);
     const fromRows = bulkDomainApprovalOfRows(snapshot.coverage.matrix);
     expect(fromSymbols).toBeDefined();
