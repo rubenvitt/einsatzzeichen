@@ -23,7 +23,8 @@ Lagekartenwerkzeug.
 
 2. Wähle oben unter **Zeichen** aus, was auf die Karte soll. Das Feld **Zeichen suchen** darüber
    grenzt die Liste ein, wenn du den Namen ungefähr kennst; daneben steht mit, wie viele Zeichen
-   deine Eingabe noch übrig lässt.
+   deine Eingabe noch übrig lässt. Rechts neben der Karte stehen Name, Kennung und Fundstelle des
+   gewählten Zeichens.
 
 3. Zieh den Regler **Größe** auf das Maß, das euch interessiert — zwischen 24 und 128 Bildpunkten
    in Schritten von 8. Das ist die Größe des Zeichens auf dem Bildschirm, nicht auf dem Papier.
@@ -32,18 +33,20 @@ Lagekartenwerkzeug.
    kontrastreichere Fassung oder die Schwarz-Weiß-Fassung für den Druck. Gerade auf einer hellen
    Karte lohnt der Vergleich.
 
-5. Unter **Darstellung** stehen zwei Wege, dasselbe Zeichen auf die Karte zu bringen. Für das Auge
-   sehen sie gleich aus; sie unterscheiden sich darin, wie die Karte sie technisch führt. Wenn du
-   nur schauen willst, lass die Voreinstellung stehen — der Unterschied ist im Abschnitt für
+5. Unter **Darstellung** stehen zwei Wege, dasselbe Zeichen auf die Karte zu bringen: „Als
+   eigenes Bild über der Karte“ und „Von der Karte selbst gezeichnet“. Für das Auge sehen sie
+   gleich aus; sie unterscheiden sich darin, wie die Karte sie technisch führt. Wenn du nur
+   schauen willst, lass die Voreinstellung stehen — der Unterschied ist im Abschnitt für
    Entwicklerinnen und Entwickler erklärt.
 
 6. Die drei Knöpfe unter **Zoom** springen auf Zoomstufe 8, 12 und 16 — grob: Region, Stadt,
    Straßenzug. Prüfe dein Zeichen auf allen dreien. Ein Zeichen, das auf Stufe 16 gut aussieht,
    kann auf Stufe 8 zu einem Fleck werden.
 
-7. **Pixel Ratio** brauchst du nur, wenn du prüfen willst, ob das Zeichen auf einem hochauflösenden
-   Bildschirm scharf bleibt. Die Größe auf dem Bildschirm ändert sich dabei nicht — nur die Anzahl
-   der Bildpunkte, mit denen gezeichnet wird.
+7. **Bildschärfe** brauchst du nur, wenn du prüfen willst, ob das Zeichen auf einem
+   hochauflösenden Bildschirm scharf bleibt. Die Größe auf dem Bildschirm ändert sich dabei nicht
+   — nur die Anzahl der Bildpunkte, mit denen gezeichnet wird. (Der Fachbegriff dafür, Pixel
+   Ratio, steht im Feld mit dabei.)
 
 ## Wenn die Karte leer bleibt
 
@@ -65,12 +68,12 @@ die nichts tut, steht hier dieser Satz.
 
 Die beiden Darstellungen sind die beiden Wege, die MapLibre GL anbietet:
 
-- **Marker · SVG im DOM** — das gerenderte SVG hängt als HTML-Element an einem `Marker`. Volle
-  Vektorschärfe auf jeder Zoomstufe, dafür ein DOM-Knoten je Zeichen; bei vielen Punkten wird das
-  teuer.
-- **Symbol Layer · Bild im Stil** — das Zeichen wird zu einem Rasterbild und über `map.addImage()`
-  in den Kartenstil gelegt, ein `symbol`-Layer verweist per `icon-image` darauf. Ein Bild für
-  beliebig viele Punkte, dafür an die gewählte Rastergröße gebunden.
+- **Als eigenes Bild über der Karte (Marker)** — das gerenderte SVG hängt als HTML-Element an
+  einem `Marker`. Volle Vektorschärfe auf jeder Zoomstufe, dafür ein DOM-Knoten je Zeichen; bei
+  vielen Punkten wird das teuer.
+- **Von der Karte selbst gezeichnet (Symbol Layer)** — das Zeichen wird zu einem Rasterbild und
+  über `map.addImage()` in den Kartenstil gelegt, ein `symbol`-Layer verweist per `icon-image`
+  darauf. Ein Bild für beliebig viele Punkte, dafür an die gewählte Rastergröße gebunden.
 
 Den zweiten Weg nimmt dir `@einsatzzeichen/maplibre` ab:
 

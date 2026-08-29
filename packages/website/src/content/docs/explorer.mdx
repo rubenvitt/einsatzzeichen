@@ -1,13 +1,45 @@
 ---
 title: Zeichen suchen
-description: Suche und Filter über alle Zeichen im Katalog-Snapshot.
+description: Alle Zeichen des Katalogs durchsuchen und nach Organisation, Kapitel, Quelle und Prüfstand eingrenzen.
 ---
 
 import Explorer from '../../components/islands/Explorer.tsx';
+import { loadSnapshot } from '../../lib/snapshot';
 
-Diese Seite durchsucht alle Zeichen aus dem Katalog-Snapshot: Titel, Synonyme, Legacy-Bezeichnungen
-und die semantische ID. Filtern nach Organisation, Kapitel/Anhang, Quelle, Profil sowie technischem
-und fachlichem Reviewstatus lässt sich mit der Suche kombinieren. Die aktuelle Auswahl steht in der
-URL, ein Link teilt also genau diese Suche und diese Filter.
+export const snapshot = loadSnapshot();
+
+Hier findest du ein Zeichen, wenn du seine Bedeutung, seine Abkürzung oder seine Organisation
+kennst. Getippt wird ins Feld **Suche**; gesucht wird gleichzeitig im Namen des Zeichens, in
+seinen anderen Bezeichnungen, in seinen früheren Kennungen und in seiner Kennung. Ein Wortteil
+genügt, Groß- und Kleinschreibung ist egal.
+
+Die Auswahlfelder daneben grenzen ein, wenn zu viel kommt: nach Organisation, nach Kapitel oder
+Anhang der Vorlage, nach Quelle, nach Zeichenprofil und nach den beiden Prüfständen. Hinter jedem
+Eintrag steht, wie viele Zeichen darauf entfallen — so siehst du vor dem Klick, ob sich der Filter
+lohnt.
+
+Ein Klick auf eine Kachel führt zum Zeichen: Vorschau in sechs Größen, Herkunft, Prüfstand und die
+Dateien zum Herunterladen. Deine Suche steht in der Adresszeile des Browsers; kopier sie, und wer
+den Link öffnet, sieht dieselbe Auswahl.
+
+Unter jeder Kachel stehen zwei Marken. **Technisch geprüft** heißt: das Bild stimmt mit der
+Vorlage überein. **Fachlich geprüft** heißt: jemand hat bestätigt, dass es das richtige Zeichen
+für diese Bedeutung ist. Schritt für Schritt erklärt das
+[Ein Zeichen finden](/anleitungen/zeichen-finden/).
 
 <Explorer client:load />
+
+## Für Entwicklerinnen und Entwickler
+
+Die Auswahl steht vollständig in der Adresse: `?q=` für die Suche, dazu `org`, `kapitel`,
+`quelle`, `profil`, `technisch` und `fachlich` für die Facetten. Werte, die es in der jeweiligen
+Auswahlliste nicht gibt, werden beim Laden verworfen, statt einen unsichtbaren Filter zu setzen.
+
+Durchsucht werden die {snapshot.symbols.length} Zeichen des Katalog-Snapshots, den diese Website
+zur Bauzeit erzeugt — nicht der Katalog-Index, der `node:url` ins Browserbündel zöge. Die
+Suchlogik liegt DOM-frei in `src/lib/explorer-search.ts` (`searchSymbols`, `facetOptions`,
+`sanitizeFacets`) und ist dort getestet; `src/components/islands/Explorer.tsx` setzt nur die
+Oberfläche darüber. Eine externe Suchbibliothek kommt nicht zum Einsatz — bei dieser Menge genügt
+eine normalisierte Teilzeichenketten- und Tokensuche. Die Facettenwerte stammen aus den
+tatsächlich vorhandenen Zeichen und nicht aus der Liste der im Baukasten erlaubten Werte: die
+Suche zeigt nur, was wirklich vorkommt.

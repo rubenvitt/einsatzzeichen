@@ -56,10 +56,28 @@ function count(entries: readonly Reviewed[], axis: 'technical' | 'domain'): Revi
  * Beide Prüfstände über dieselbe Menge gezählt.
  *
  * Die Menge bestimmt der Aufrufer, und das ist Absicht: die Anleitungen zählen
- * `snapshot.symbols` (Zeichen mit einer eigenen Seite), die Startseite zählt
- * `snapshot.coverage.matrix` (Zeilen des Manifests, also auch Elemente und Piktogramme). Beide
+ * `snapshot.symbols` (Zeichen mit einer eigenen Seite), die Startseite und die Prüfseite zählen
+ * `snapshot.coverage.matrix` (Zeilen der Prüfliste, also auch Bausteine ohne eigene Seite). Beide
  * Zahlen sind richtig und verschieden; sie zu vermischen wäre der Fehler.
  */
 export function reviewSummary(entries: readonly Reviewed[]): ReviewTotals {
   return { technical: count(entries, 'technical'), domain: count(entries, 'domain') };
+}
+
+/** Eine Zeile der Prüfliste: beide Marken hängen direkt am Objekt, nicht unter `review`. */
+export interface ReviewedRow {
+  technical: ReviewSummary;
+  domain: ReviewSummary;
+}
+
+/**
+ * Dasselbe für die Prüfliste (`snapshot.coverage.matrix`).
+ *
+ * Eine eigene Funktion und kein zweiter Zweig in `reviewSummary`: die beiden Datenformen kommen
+ * aus derselben Quelle, tragen die Marken aber an verschiedenen Stellen — `SymbolSummary.review`
+ * gegen `MatrixRow.technical`/`.domain`. Wer die falsche Form übergibt, bekam vorher erst beim
+ * Bauen einen Zugriff auf `undefined`; jetzt sagt es der Typ.
+ */
+export function reviewSummaryOfRows(rows: readonly ReviewedRow[]): ReviewTotals {
+  return reviewSummary(rows.map((row) => ({ review: { technical: row.technical, domain: row.domain } })));
 }

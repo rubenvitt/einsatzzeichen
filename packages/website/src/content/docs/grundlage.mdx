@@ -1,27 +1,33 @@
 ---
 title: Grundlage
-description: Status der fachlichen Grundlage (AFKzV), Quellenregister mit Prüfständen und Profilregister — die Antwort auf die Frage, ob man einem Zeichen trauen darf.
+description: Worauf sich die Zeichen stützen, welche Quellen dahinterstehen und was an ihnen geprüft wurde — die Antwort auf die Frage, ob man einem Zeichen trauen darf.
 ---
 
 import StatusPair from '../../components/StatusPair.astro';
 import { loadSnapshot } from '../../lib/snapshot';
+import { reviewSummary } from '../../lib/review-summary';
+import { formatReviewDate } from '../../components/StatusPair.tsx';
 
 export const snapshot = loadSnapshot();
 export const profiles = [...new Set(snapshot.symbols.map((symbol) => symbol.profile))].sort();
 export const openProfileReviews = snapshot.coverage.blockers.filter(
   (blocker) => blocker.kind === 'profil-review-offen',
 );
-export const openSourceReviews = snapshot.coverage.blockers.filter(
-  (blocker) => blocker.kind === 'quellen-review-offen',
-);
 export const clarifiedSources = snapshot.sources.filter((source) => source.status === 'clarified');
+export const sourceReview = reviewSummary(snapshot.sources);
+export const openDomainTotal = snapshot.coverage.openDomainReviewsByArea.reduce(
+  (sum, area) => sum + area.count,
+  0,
+);
 export const example = snapshot.symbols.find((symbol) => symbol.id === 'recipe.E.1.1') ?? snapshot.symbols[0];
+export const exampleDomain = example.review.domain;
 
-Wer ein Zeichen aus diesem Projekt in eine Lage einträgt, sollte drei Dinge wissen: woher es
-stammt, was daran geprüft wurde und was nicht. Diese Seite beantwortet alle drei — mit den Zahlen
-aus dem Katalog, nicht mit einer Zusammenfassung davon.
+Wer ein Zeichen aus diesem Projekt in eine Lage, eine Unterlage oder eine Ausbildung einträgt,
+sollte drei Dinge wissen: woher es stammt, was daran geprüft wurde und was das über seine
+Verbindlichkeit sagt. Diese Seite beantwortet alle drei — mit den Zahlen aus dem Katalog, nicht
+mit einer Zusammenfassung davon.
 
-## Status der fachlichen Grundlage
+## Der Stand der Vorlage
 
 <div class="ez-note">
 <span class="ez-note__title">Wortlaut aus der README des Projekts</span>
@@ -39,61 +45,92 @@ und Vergleiche, behauptet damit aber weder normative Geltung noch fachliche Frei
 
 </div>
 
-Daraus folgt für jedes Zeichen auf dieser Website dasselbe: die Geometrie ist gegen den lokalen
-Referenzstand gemessen und mit Tests belegt, die fachliche Aussage des Zeichens ist es nicht.
-Deshalb stehen an jedem Zeichen zwei Marken und nicht eine.
+In eigenen Worten: die Vorlage, aus der diese Zeichen stammen, ist zurzeit keine geltende
+Vorschrift, sondern ein Arbeitsstand. Ihre vorläufige Anwendung wurde aufgehoben, ihre Verbreitung
+ist bis zum Abschluss der Beratungen ausgesetzt. Wer ein Zeichen von hier verwendet, verwendet
+also keine gültige Norm, sondern einen nachvollziehbar dokumentierten Stand. Sag das dazu, wenn es
+darauf ankommt.
 
-So sieht das an <code class="ez-mono">{example.id}</code>, {example.title}, aus:
+## Die zwei Marken an jedem Zeichen
+
+Deshalb steht an jedem Zeichen nicht eine Marke, sondern zwei. Sie sagen Verschiedenes:
+
+- **Technisch geprüft** heißt: das Bild stimmt mit der Vorlage überein. Geometrie, Farben und
+  Schrift sind maschinell gegen die Vorlage gemessen, und die Messung läuft bei jeder Änderung
+  erneut.
+- **Fachlich geprüft** heißt: jemand hat bestätigt, dass es das richtige Zeichen für diese
+  Bedeutung ist. Das ist ein menschliches Urteil, keine Messung — und es steht mit Name und Datum
+  am Zeichen.
+
+So sieht das an {example.title} aus, {example.chapter} der Vorlage:
 
 <p>
   <StatusPair technical={example.review.technical} domain={example.review.domain} />
 </p>
 
-Die linke Marke sagt: die Zeichnung entspricht der Referenz, gemessen und gegatet. Die rechte sagt:
-ob dieses Zeichen fachlich das Richtige bedeutet, hat noch niemand aus Feuerwehr, THW oder
-Rettungsdienst bestätigt. Beide Marken sind gleich wichtig; die rechte ist die, die man leicht
-übersieht.
+<p>
+  {exampleDomain.status === 'approved' && exampleDomain.reviewer !== undefined && exampleDomain.date !== undefined
+    ? `Die rechte Marke nennt hier ${exampleDomain.reviewer} und den ${formatReviewDate(exampleDomain.date)}. Beide Marken sind gleich wichtig, und die rechte ist die, die man leicht übersieht: eine Bestätigung der Bedeutung ist etwas anderes als eine Messung des Bildes.`
+    : 'Beide Marken sind gleich wichtig, und die rechte ist die, die man leicht übersieht: eine Bestätigung der Bedeutung ist etwas anderes als eine Messung des Bildes.'}
+</p>
 
-## Offene fachliche Reviews
+## Stand der fachlichen Prüfung
 
-Die offenen fachlichen Reviews sind im Repository dokumentiert, nach Bereichen sortiert und mit
-den Fragen versehen, die dabei zu beantworten sind:
+<p>
+  {openDomainTotal === 0
+    ? `Für jeden der ${snapshot.coverage.matrix.length} geprüften Abschnitte der Vorlage steht ein fachliches Urteil im Katalog — einzeln, mit Name, Datum und Notiz, nicht als Sammelvermerk. Welches Urteil für ein bestimmtes Zeichen gilt, steht auf seiner Seite und in der Prüfliste unter „Stand der Prüfung".`
+    : `${openDomainTotal} von ${snapshot.coverage.matrix.length} geprüften Abschnitten warten noch auf ein fachliches Urteil, verteilt auf ${snapshot.coverage.openDomainReviewsByArea.length} Bereiche. Welcher Abschnitt in welchem Bereich, steht unter „Stand der Prüfung".`}
+</p>
+
+{snapshot.coverage.openDomainReviewsByArea.length > 0 && (
+  <div class="ez-table-scroll">
+    <table class="ez-table">
+      <thead>
+        <tr>
+          <th>Bereich</th>
+          <th>ausstehende Prüfungen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {snapshot.coverage.openDomainReviewsByArea.map((area) => (
+          <tr>
+            <td class="ez-table__id">{area.area}</td>
+            <td class="ez-table__id">{area.count}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
+
+Wie die Prüfung vorbereitet wurde und welche Fragen dabei zu beantworten waren, steht im
+Repository:
 [`docs/reviews/2026-08-06-domain-review-handoff.md`](https://github.com/rubenvitt/einsatzzeichen/blob/main/docs/reviews/2026-08-06-domain-review-handoff.md).
 
-Der aktuelle Stand aus dem Katalog: {snapshot.coverage.openDomainReviewsByArea.reduce((sum, area) => sum + area.count, 0)} von
-{snapshot.coverage.matrix.length} Manifestzeilen warten auf ein fachliches Review, verteilt auf
-{snapshot.coverage.openDomainReviewsByArea.length} Bereiche. Welche Zeile in welchem Bereich, steht
-auf der Seite [Stand der Prüfung](/coverage/).
+<div class="ez-note">
+<span class="ez-note__title">Ein Urteil ersetzt die Vorlage nicht</span>
 
-<div class="ez-table-scroll">
-  <table class="ez-table">
-    <thead>
-      <tr>
-        <th>Bereich</th>
-        <th>offene Reviews</th>
-      </tr>
-    </thead>
-    <tbody>
-      {snapshot.coverage.openDomainReviewsByArea.map((area) => (
-        <tr>
-          <td class="ez-table__id">{area.area}</td>
-          <td class="ez-table__id">{area.count}</td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
+Ein fachliches „geprüft“ sagt: diese Person hält das für das richtige Zeichen dieser Bedeutung. Es
+macht die Vorlage nicht zur geltenden Vorschrift und ersetzt keine Entscheidung eurer eigenen
+Organisation. Wer die Zeichen verbindlich einsetzen will, klärt das dort, wo es verbindlich
+entschieden wird.
+
 </div>
 
-## Quellenregister
+## Woher die Zeichen stammen
 
-{snapshot.sources.length} Quellen, jede mit Nutzungsgrundlage und eigenem Prüfstand. Der Lizenzstand
-steht als Feld im Register und nicht nur in Prosa: {clarifiedSources.length} Quellen sind geklärt,
-die übrigen {snapshot.sources.length - clarifiedSources.length} nicht — für die BABZ-Bestände ist
-die Lage `unclear`, und die Konsequenz daraus ist, dass dieses Projekt abgeleitete Kennzahlen
-zeigt und keine Referenzdateien.
+{snapshot.sources.length} Quellen, jede mit ihrer Nutzungsgrundlage und ihrem eigenen Prüfstand.
+Die Nutzungsgrundlage steht als eigene Angabe im Register und nicht nur im Fließtext:
+{clarifiedSources.length} Quellen sind geklärt, bei den übrigen
+{snapshot.sources.length - clarifiedSources.length} ist die Lage offen. Für die BABZ-Bestände ist
+sie offen — und die Folge daraus ist, dass dieses Projekt abgeleitete Zeichen und Kennzahlen zeigt
+und keine Dateien aus der Vorlage.
 
-Auch die Quellen selbst tragen zwei Reviews. {openSourceReviews.length} von
-{snapshot.sources.length} Quellenreviews sind fachlich offen.
+<p>
+  {sourceReview.domain.approved === snapshot.sources.length
+    ? `Auch die Quellen selbst tragen beide Marken, und beide stehen bei allen ${snapshot.sources.length} auf „geprüft“.`
+    : `Auch die Quellen selbst tragen beide Marken. Fachlich geprüft sind ${sourceReview.domain.approved} von ${snapshot.sources.length}.`}
+</p>
 
 <div class="ez-table-scroll">
   <table class="ez-table">
@@ -101,7 +138,7 @@ Auch die Quellen selbst tragen zwei Reviews. {openSourceReviews.length} von
       <tr>
         <th>Kennung</th>
         <th>Quelle</th>
-        <th>Lizenzstand</th>
+        <th>Nutzungsgrundlage</th>
         <th>Prüfstand</th>
       </tr>
     </thead>
@@ -116,7 +153,7 @@ Auch die Quellen selbst tragen zwei Reviews. {openSourceReviews.length} von
               <a href={source.url} rel="noreferrer">{source.title}</a>
             )}
           </td>
-          <td class="ez-table__id">{source.status === 'clarified' ? 'geklärt' : 'ungeklärt'}</td>
+          <td class="ez-table__id">{source.status === 'clarified' ? 'geklärt' : 'offen'}</td>
           <td>
             <StatusPair
               technical={source.review.technical}
@@ -130,19 +167,27 @@ Auch die Quellen selbst tragen zwei Reviews. {openSourceReviews.length} von
   </table>
 </div>
 
-## Profile
+## Zeichenprofile
 
-Ein Profil ist ein benannter Satz Layoutregeln. Der bundesweite Kern ist selbst das erste
-registrierte Profil, damit „kein Profil angegeben“ nicht mit „gehört zum Kern“ verwechselbar ist —
-`CatalogEntry.profile` ist deshalb Pflichtfeld.
+Ein Zeichenprofil ist ein benannter Satz Maßregeln — es legt fest, wie groß welcher Teil eines
+Zeichens gezeichnet wird. Der bundesweite Kern ist selbst das erste eingetragene Profil, damit
+„kein Profil angegeben“ nicht mit „gehört zum Kern“ verwechselt werden kann.
 
 Im Katalog steht derzeit {profiles.length === 1 ? 'genau ein Profil' : `${profiles.length} Profile`}:
 {profiles.map((profile) => <code class="ez-mono">{profile}</code>)}. Alle
 {snapshot.symbols.length} Zeichen dieser Website gehören dazu.
 {openProfileReviews.length > 0 && (
-  <> Das fachliche Review des Profils ist offen — es steht als Blocker im Coverage-Gate.</>
+  <> Die fachliche Prüfung des Profils steht noch aus; sie ist als offener Punkt vermerkt.</>
 )}
 
-Kern und Profile tragen eigene Datenversionen, unabhängig von den Paketversionen. Der Kern steht
-gerade auf <code class="ez-mono">{snapshot.coreVersion}</code>, die Baseline auf
+## Für Entwicklerinnen und Entwickler
+
+`CatalogEntry.profile` ist ein Pflichtfeld — deshalb kann ein Eintrag nicht ohne Profil im Katalog
+stehen. Kern und Profile tragen eigene Datenversionen, unabhängig von den Paketversionen: der Kern
+steht gerade auf <code class="ez-mono">{snapshot.coreVersion}</code>, der Vorlagenstand auf
 <code class="ez-mono">{snapshot.baseline}</code>.
+
+Die Reviewstände sind Daten, keine Prosa: `MANIFEST_DOMAIN_REVIEWS`, `SOURCE_DOMAIN_REVIEWS` und
+`PROFILE_DOMAIN_REVIEWS` in `packages/catalog/src/domain-reviews.ts` führen je Träger ein eigenes
+Reviewobjekt mit Status, Prüfer, Datum und Notiz; ein Test erzwingt die Deckungsgleichheit mit dem
+Manifest in beide Richtungen. Alle Zahlen dieser Seite sind daraus gezählt, nicht hingeschrieben.

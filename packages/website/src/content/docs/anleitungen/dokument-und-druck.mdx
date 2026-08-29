@@ -77,18 +77,19 @@ es trotzdem:
 
   {domain.approved === 0 ? (
     <p>
-      Keines der {domain.total} Zeichen ist fachlich freigegeben. Wenn die Unterlage in Ausbildung
+      Keines der {domain.total} Zeichen ist fachlich geprüft. Wenn die Unterlage in Ausbildung
       oder Einsatzvorbereitung geht, gehört ein Satz dazu, woher die Zeichen stammen und dass ihre
       fachliche Prüfung aussteht.
     </p>
   ) : domain.pending === 0 ? (
     <p>
-      Alle {domain.total} Zeichen sind inzwischen fachlich freigegeben. Woher die Zeichen stammen,
-      gehört trotzdem in die Unterlage — eine Freigabe ersetzt die Quellenangabe nicht.
+      Alle {domain.total} Zeichen sind inzwischen fachlich geprüft. Woher die Zeichen stammen,
+      gehört trotzdem in die Unterlage — ein fachliches Urteil ersetzt die Quellenangabe nicht, und
+      die Vorlage selbst ist weiterhin keine geltende Vorschrift.
     </p>
   ) : (
     <p>
-      Fachlich freigegeben sind {domain.approved} der {domain.total} Zeichen; bei den übrigen{' '}
+      Fachlich geprüft sind {domain.approved} der {domain.total} Zeichen; bei den übrigen{' '}
       {domain.total - domain.approved} steht die Prüfung aus. Wenn die Unterlage in Ausbildung oder
       Einsatzvorbereitung geht, gehört ein Satz dazu, woher die Zeichen stammen — und bei jedem
       Zeichen, dessen Prüfung noch aussteht, dass sie aussteht. Der Stand steht auf der Seite des

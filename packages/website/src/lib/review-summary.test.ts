@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { reviewSummary, type Reviewed } from './review-summary.js';
+import { reviewSummary, reviewSummaryOfRows, type Reviewed } from './review-summary.js';
 import { loadSnapshot } from './snapshot.js';
 
 function entry(technical: string, domain: string): Reviewed {
@@ -42,6 +42,15 @@ describe('reviewSummary', () => {
     const totals = reviewSummary(snapshot.symbols);
     expect(totals.technical.total).toBe(snapshot.symbols.length);
     expect(totals.domain.total).toBe(snapshot.symbols.length);
+  });
+
+  it('zählt die Prüfliste, deren Marken direkt am Objekt hängen', () => {
+    const snapshot = loadSnapshot();
+    const totals = reviewSummaryOfRows(snapshot.coverage.matrix);
+    expect(totals.technical.total).toBe(snapshot.coverage.matrix.length);
+    expect(totals.domain.total).toBe(snapshot.coverage.matrix.length);
+    // Die Prüfliste zählt mehr als die Zeichenseiten: Bausteine ohne eigene Seite stehen darin.
+    expect(totals.domain.total).toBeGreaterThan(reviewSummary(snapshot.symbols).domain.total);
   });
 
   it('bricht bei einem unbekannten Status ab, statt ihn stillschweigend zu verlieren', () => {

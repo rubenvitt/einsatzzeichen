@@ -20,8 +20,8 @@ sich zusätzlich filtern lässt.
    {snapshot.symbols.length} Zeichen als Kacheln.
 
 2. Tippe in das Feld **Suche**, wonach du suchst. Gesucht wird gleichzeitig im Namen des Zeichens,
-   in seinen Synonymen, in den älteren Bezeichnungen und in seiner Kennung. Es genügt ein
-   Wortteil; Groß- und Kleinschreibung ist egal.
+   in seinen anderen Bezeichnungen, in den früheren Kennungen und in seiner Kennung. Es genügt
+   ein Wortteil; Groß- und Kleinschreibung ist egal.
 
 3. Grenze mit den Auswahlfeldern daneben ein, wenn zu viel kommt:
 
@@ -39,8 +39,8 @@ sich zusätzlich filtern lässt.
    darunter ein Knopf, der alle Filter auf einmal löst.
 
 5. Klicke eine Kachel an. Du landest auf der Seite dieses Zeichens: mit der Fundstelle in der
-   Vorlage, den Vorschauen von 16 bis 256 Pixel auf hellem und dunklem Untergrund, den Synonymen,
-   den älteren Bezeichnungen und den beiden Prüfständen.
+   Vorlage, den Vorschauen von 16 bis 256 Bildpunkten auf hellem und dunklem Untergrund, den
+   anderen Bezeichnungen, den früheren Kennungen und den beiden Prüfständen.
 
 6. Willst du deine Suche jemandem schicken, kopiere einfach die Adresse aus der Adresszeile des
    Browsers. Suchbegriff und Filter stehen darin; wer den Link öffnet, sieht dieselbe Auswahl.
@@ -49,20 +49,24 @@ sich zusätzlich filtern lässt.
 
 Jedes Zeichen trägt zwei Marken nebeneinander. Sie sagen Verschiedenes, und beide sind wichtig:
 
-- **Technisch geprüft** heißt: die Zeichnung stimmt mit der Vorlage überein. Geometrie, Farben und
+- **Technisch geprüft** heißt: das Bild stimmt mit der Vorlage überein. Geometrie, Farben und
   Schrift wurden maschinell gegen die Vorlage verglichen, und der Vergleich läuft bei jeder
   Änderung erneut.
-- **Fachlich noch nicht geprüft** heißt: niemand aus der Fachwelt hat bestätigt, dass dies das
-  richtige Zeichen für diese Bedeutung ist. Es ist keine Aussage darüber, ob das Bild stimmt —
-  sondern darüber, ob die Bedeutung geprüft wurde.
+- **Fachlich geprüft** heißt: jemand aus der Fachwelt hat bestätigt, dass es das richtige Zeichen
+  für diese Bedeutung ist. Das ist keine Aussage darüber, ob das Bild stimmt — sondern darüber, ob
+  die Bedeutung geprüft wurde. Steht dort **fachlich noch nicht geprüft**, hat das niemand
+  bestätigt.
+
+Neben dem Wort steht bei einer Prüfung, wer sie gemacht hat und wann. Fahr mit dem Mauszeiger über
+die Marke, dann erscheint die Angabe auch dort, wo sie aus Platzgründen fehlt.
 
 <div class="ez-note">
   <span class="ez-note__title">
     {domain.approved === 0
-      ? 'Kein Zeichen ist heute fachlich freigegeben'
-      : domain.pending === 0
-        ? `Alle ${domain.total} Zeichen sind fachlich freigegeben`
-        : `${domain.approved} von ${domain.total} Zeichen sind fachlich freigegeben`}
+      ? 'Kein Zeichen ist heute fachlich geprüft'
+      : domain.approved === domain.total
+        ? `Alle ${domain.total} Zeichen sind fachlich geprüft`
+        : `${domain.approved} von ${domain.total} Zeichen sind fachlich geprüft`}
   </span>
 
   {domain.approved === 0 ? (
@@ -83,15 +87,15 @@ Jedes Zeichen trägt zwei Marken nebeneinander. Sie sagen Verschiedenes, und bei
           : '',
         '.',
       ].join('')}{' '}
-      Welcher Stand für dein Zeichen gilt, steht auf seiner Seite — verlass dich nicht auf den
-      Gesamtstand, sondern sieh am einzelnen Zeichen nach.
+      Wer wann geprüft hat, steht an jedem Zeichen einzeln — verlass dich darauf und nicht auf den
+      Gesamtstand.
     </p>
   )}
 
   <p>
     {domain.pending > 0
       ? 'Der Grund liegt nicht am Projekt, sondern an der Vorlage: die vorläufige Anwendung der Empfehlungen wurde aufgehoben, und ihre Verbreitung ist bis zum Abschluss der Beratungen ausgesetzt.'
-      : 'Der Stand der Vorlage selbst bleibt davon unberührt: die vorläufige Anwendung der Empfehlungen wurde aufgehoben, und ihre Verbreitung ist bis zum Abschluss der Beratungen ausgesetzt.'}{' '}
+      : 'Der Stand der Vorlage selbst bleibt davon unberührt: die vorläufige Anwendung der Empfehlungen wurde aufgehoben, und ihre Verbreitung ist bis zum Abschluss der Beratungen ausgesetzt. Ein fachliches „geprüft“ macht daraus keine geltende Vorschrift.'}{' '}
     Der genaue Wortlaut und das Register aller {snapshot.sources.length} Quellen stehen auf der
     Seite <a href="/grundlage/">Grundlage</a>.
   </p>
