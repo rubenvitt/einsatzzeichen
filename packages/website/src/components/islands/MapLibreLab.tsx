@@ -534,7 +534,7 @@ export default function MapLibreLab({
           </div>
           {symbol !== undefined ? (
             <dl className="ez-lab__meta">
-              <dt>Zeichen</dt>
+              <dt>Name</dt>
               <dd>{symbol.title}</dd>
               <dt>Kennung</dt>
               <dd>
