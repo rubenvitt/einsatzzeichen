@@ -50,8 +50,10 @@ Jeder Manifest-Eintrag, jede Quelle und jedes Profil trägt dieselbe Reviewform:
 Reviewer oder gültiges ISO-Datum lässt das Coverage-Gate für alle drei fehlschlagen; eine
 fachliche Freigabe braucht zusätzlich eine Befundnotiz oder einen Protokollverweis, eine
 `deviation` eine konkrete Begründung. Ein Katalogeintrag trägt kein eigenes Review: es steht auf
-seiner Manifestzeile, die für `coverage: 'catalog-entry'` 1:1 zu ihm ist. Das fachliche Review
-steht derzeit bei allen Einträgen offen; die Struktur macht das sichtbar, statt es zu verdecken.
+seiner Manifestzeile, die für `coverage: 'catalog-entry'` 1:1 zu ihm ist. Das fachliche Review ist
+seit dem 28.08.2026 bei allen 558 Reviewträgern durch den Projektinhaber freigegeben; jede Zeile
+trägt Reviewer, ISO-Datum und die begründende Notiz einzeln, statt sich auf eine Sammelaussage zu
+berufen (siehe „Status der fachlichen Grundlage").
 
 `packages/catalog/src/sources.ts` führt elf Quellen der Referenzhierarchie plus `phjardas-tz` als
 Vergleichsbestand und `arimo-ofl` als registrierten Schriftquellenträger (eigener `SourceKind
@@ -96,10 +98,30 @@ Beratungen ausgesetzt. Maßgeblich für diesen am 06.08.2026 geprüften Status i
 [offizielle BABZ-Seite](https://lernplattform-babz-bund.de/goto.php?target=cat_109540).
 
 TAKTIK verwendet den bereits lokal vorhandenen Arbeitsstand weiterhin reproduzierbar für Coverage
-und Vergleiche, behauptet damit aber weder normative Geltung noch fachliche Freigabe. Die offenen
-fachlichen Reviews sind in
+und Vergleiche und behauptet damit keine normative Geltung. Die Fragen, die dem fachlichen Review
+vorlagen, sind in
 [`docs/reviews/2026-08-06-domain-review-handoff.md`](./docs/reviews/2026-08-06-domain-review-handoff.md)
 dokumentiert.
+
+### Fachliche Freigabe vom 28.08.2026
+
+Am **28. August 2026** hat der Projektinhaber **Ruben Vitt** alle fachlichen Reviews freigegeben:
+544 Manifestzeilen, 13 Quellen und ein Profil, insgesamt 558 Reviewträger. Die Freigabe steht
+nicht als Satz in diesem Dokument, sondern als Datum an jedem einzelnen Ledgerplatz in
+[`packages/catalog/src/domain-reviews.ts`](./packages/catalog/src/domain-reviews.ts) — mit
+Reviewer, ISO-Datum und der Notiz „Fachlich freigegeben durch den Projektinhaber am 28.08.2026
+(Sammelfreigabe im Rahmen von LFH-429)". `pnpm cli coverage` weist seither **keine** offenen
+fachlichen Reviews mehr aus.
+
+Zwei Dinge bleiben davon unberührt. **Das Fachfragenregister** in
+`packages/catalog/src/domain-review-questions.ts` bleibt vollständig stehen: es hält fest,
+worüber entschieden wurde, und `pnpm cli review-dossier` gibt es weiter je Manifestschlüssel aus.
+**Die Blockermaschinerie** bleibt ebenfalls stehen: kommt eine neue Manifestzeile ohne eigene
+Freigabe hinzu, meldet `releaseBlockers()` sie wieder — die Sammelfreigabe deckt nur, was am
+28.08.2026 im Ledger stand.
+
+Die Slice-Abschnitte weiter unten sind **Belege ihres jeweiligen Standes**. Wo dort „standen zum
+Slice-Abschluss `pending`" steht, ist das die Aussage von damals und nicht der heutige Stand.
 
 ## D.1: Kapitel 4 technisch vollständig
 
@@ -110,7 +132,7 @@ und Snapshot-Gates; die 92 zugehörigen Renderfälle bestehen zusätzlich die gl
 Theme-, Metadaten- und viewBox-Gates.
 
 Diese technische Abdeckung ist weder eine fachliche Freigabe noch eine normative Behauptung. Alle
-92 Kapitel-4-Domainreviews bleiben `pending`; ihre fachliche Bedeutung, Verwechslungsfreiheit,
+92 Kapitel-4-Domainreviews standen zum Slice-Abschluss `pending`; ihre fachliche Bedeutung, Verwechslungsfreiheit,
 Profilzuordnung und einsatztaktische Eignung müssen weiterhin einzeln durch eine entsprechend
 fachkundige Person geprüft werden. Die Abschlussentscheidung für D.1 steht in
 [`docs/decisions/2026-08-06-kapitel-4-faehigkeiten-d1.md`](./docs/decisions/2026-08-06-kapitel-4-faehigkeiten-d1.md).
@@ -162,7 +184,7 @@ Slice vom 9. August; die Sichtprüfung aller 53 steht in
 
 Diese technische Freigabe ist keine fachliche Einsatzfreigabe und keine Aussage normativer
 Geltung oder zur Nutzungs- und Lizenzgrundlage der Quellen. Alle 67 getrennten fachlichen
-State-Reviews, alle 53 IuK-Reviews und alle 42 Reviews aus K, L und M bleiben `pending`; ihre Bedeutung, Abgrenzung, Lesbarkeit und einsatztaktische
+State-Reviews, alle 53 IuK-Reviews und alle 42 Reviews aus K, L und M standen zum Slice-Abschluss `pending`; ihre Bedeutung, Abgrenzung, Lesbarkeit und einsatztaktische
 Eignung müssen weiterhin einzeln durch eine fachkundige Person geprüft werden.
 
 ## E-a: Anhang E, die ersten 16 THW-Zeichen
@@ -533,7 +555,8 @@ Die exakte Referenz-/Rezeptmatrix und die Messentscheidungen stehen in
 [`docs/decisions/2026-08-25-anhang-f-b.md`](docs/decisions/2026-08-25-anhang-f-b.md), die
 Einzelsichtung in
 [`docs/reviews/2026-08-25-f-b-visual-qa.md`](docs/reviews/2026-08-25-f-b-visual-qa.md). Diese
-Sichtung ist nicht der finale Kontaktbogen des späteren Task 6. Das Domain-Review bleibt offen.
+Sichtung ist nicht der finale Kontaktbogen des späteren Task 6. Das Domain-Review stand zum
+Slice-Abschluss offen.
 
 ## F-c: F.2.1 bis F.2.9
 
@@ -553,8 +576,9 @@ Die exakte Referenzmatrix und alle Messwerte stehen in
 [`docs/decisions/2026-08-25-anhang-f-c.md`](docs/decisions/2026-08-25-anhang-f-c.md), die Sichtung
 aller 14 Paare in
 [`docs/reviews/2026-08-25-f-c-visual-qa.md`](docs/reviews/2026-08-25-f-c-visual-qa.md). Diese
-Sichtung ist nicht der finale Kontaktbogen des späteren Task 6. Alle 14 Domain-Reviews bleiben
-`pending`; der beanspruchte Gesamtscope bleibt vor Abschluss von Anhang F geschlossen.
+Sichtung ist nicht der finale Kontaktbogen des späteren Task 6. Alle 14 Domain-Reviews standen zum
+Slice-Abschluss `pending`; der beanspruchte Gesamtscope blieb vor Abschluss von Anhang F
+geschlossen.
 
 ## F-d: F.2.10 bis F.2.17
 
@@ -587,7 +611,7 @@ stehen in
 [`docs/decisions/2026-08-25-anhang-f-d.md`](docs/decisions/2026-08-25-anhang-f-d.md), die
 Einzelsichtung aller acht 900-px-Paare in
 [`docs/reviews/2026-08-25-f-d-visual-qa.md`](docs/reviews/2026-08-25-f-d-visual-qa.md). Diese
-Sichtung ist nicht der finale Task-6-Kontaktbogen; alle acht Domain-Reviews bleiben `pending`.
+Sichtung ist nicht der finale Task-6-Kontaktbogen; alle acht Domain-Reviews standen zum Slice-Abschluss `pending`.
 
 ## F-e: F.3.1 bis F.3.11
 
@@ -622,7 +646,7 @@ Die exakte Elf-Rezept-Matrix, Messwerte und Vertragsgrenzen stehen in
 [`docs/decisions/2026-08-25-anhang-f-e.md`](docs/decisions/2026-08-25-anhang-f-e.md), die
 Einzelsichtung aller elf 900-px-Paare in
 [`docs/reviews/2026-08-25-f-e-visual-qa.md`](docs/reviews/2026-08-25-f-e-visual-qa.md). Diese
-Sichtung ist nicht der finale Task-6-Kontaktbogen; alle elf Domain-Reviews bleiben `pending`.
+Sichtung ist nicht der finale Task-6-Kontaktbogen; alle elf Domain-Reviews standen zum Slice-Abschluss `pending`.
 
 ## F-f: F.3.12 bis F.3.19 und vollständiger Anhang F
 
@@ -659,7 +683,7 @@ Einzelsichtung aller acht Original-/Katalogpaare bei 64 und 900 px in
 [`docs/reviews/2026-08-25-f-f-visual-qa.md`](docs/reviews/2026-08-25-f-f-visual-qa.md). Es kamen
 genau acht direkte und acht Mehrgrößen-Snapshots hinzu (151 beziehungsweise 406 insgesamt);
 alle 541 zuvor vorhandenen Snapshotdateien blieben bytegleich. Die Einzelsichtung ist nicht der
-finale Task-6-Kontaktbogen, und sämtliche F-f-Domainreviews bleiben `pending`.
+finale Task-6-Kontaktbogen, und sämtliche F-f-Domainreviews standen zum Slice-Abschluss `pending`.
 
 ## Anhang D: Führung und Funktionen
 
@@ -674,7 +698,7 @@ Modellierungs- und Geometrieentscheidungen stehen in
 [`docs/decisions/2026-08-26-anhang-d-function-roles.md`](docs/decisions/2026-08-26-anhang-d-function-roles.md),
 die technische Sichtprüfung aller 37 Darstellungen in
 [`docs/reviews/2026-08-26-lfh-420-visual-qa.md`](docs/reviews/2026-08-26-lfh-420-visual-qa.md).
-Alle 37 Domainreviews bleiben `pending`; technische Vollständigkeit ist keine fachliche,
+Alle 37 Domainreviews standen zum Slice-Abschluss `pending`; technische Vollständigkeit ist keine fachliche,
 normative oder einsatztaktische Freigabe.
 
 ## Anhang G: 21 Logistikzeichen vollständig im Katalog
@@ -685,13 +709,13 @@ Formation, Landfahrzeug, Anhänger und 12-mm-Kreis verwenden die vermessene Vari
 bleiben datengetrieben. Weiße Zeichen werden einschließlich DLRG als
 `hilfsorganisation` geführt, die farbigen Zeichen mit den bestehenden Organisationen
 Feuerwehr, Polizei, Führung/Leitung und Bundeswehr. Diese fachlichen Zuordnungen sind nicht
-freigegeben: alle 21 neuen Domain-Reviews stehen `pending`.
+freigegeben: alle 21 neuen Domain-Reviews standen zum Slice-Abschluss `pending`.
 
 Der mengenexakte Vollständigkeitstest trägt `G` erst jetzt im Manifest-Scope. Zusammen mit den
 inzwischen auf `main` hinzugekommenen Anhängen C, H und I umfasst der Katalog 165 Rezepte,
 433 Renderfälle und 452 Manifestzeilen. Dazu gehören 179 direkte SVG-Snapshots und 434
 Mehrgrößen-Snapshots. Alle 452 Manifest-Domainreviews sowie die 13 Quellen- und das eine
-Profilreview bleiben offen, insgesamt 466 fachliche Reviewobjekte.
+Profilreview standen zum Slice-Abschluss offen, insgesamt 466 fachliche Reviewobjekte.
 
 Zwanzig G-Rezepte besitzen den Körper-Fingerprint- plus Snapshot-Nachweis. `G.1.5` ist der
 ehrliche Sonderfall: seine Referenz führt keine vergleichbare Füllfläche, deshalb trägt die
@@ -724,7 +748,8 @@ kompakte technische Tierdekontaminationsmarke links unten: Sie ist weder die rot
 noch eine Wiederverwendung von `capability.decontamination`. Die drei Original-/Katalogpaare
 wurden als beschrifteter `420 × 420 px`-Paarvergleich gerastert und in Originalauflösung
 gesichtet; die lokalen, ignorierten PR-Evidenzdaten stehen in der QA-Notiz. Die technischen
-Reviews sind freigegeben, während die drei Domain-Reviews ausdrücklich `pending` bleiben.
+Reviews sind freigegeben, während die drei Domain-Reviews zum Slice-Abschluss ausdrücklich
+`pending` standen.
 
 Messentscheidung und Provenienzgrenze: [`docs/decisions/2026-08-26-anhang-h.md`](docs/decisions/2026-08-26-anhang-h.md).
 Visual QA und Artefakthash: [`docs/reviews/2026-08-26-h-visual-qa.md`](docs/reviews/2026-08-26-h-visual-qa.md).
@@ -742,8 +767,8 @@ Der Manifest-Scope bleibt abschnittsgenau bei `I.1.5`, `I.1.6`, `I.1.7` und `I.1
 [`docs/decisions/2026-08-27-anhang-i-d.md`](docs/decisions/2026-08-27-anhang-i-d.md).
 Output-only Sichtprüfung und lokaler Originalvergleich:
 [`docs/reviews/2026-08-27-i-d-visual-qa.md`](docs/reviews/2026-08-27-i-d-visual-qa.md).
-Die vier technischen Reviews sind freigegeben, alle vier fachlichen Domain-Reviews bleiben
-`pending`.
+Die vier technischen Reviews sind freigegeben, alle vier fachlichen Domain-Reviews standen zum
+Slice-Abschluss `pending`.
 
 ## LFH-484: Umweltgefahren und Ölabwehr aus Anhang I-f
 
@@ -759,7 +784,7 @@ Messgrenze stehen in
 [`docs/decisions/2026-08-28-anhang-i-f.md`](docs/decisions/2026-08-28-anhang-i-f.md), das
 Sichtprotokoll in
 [`docs/reviews/2026-08-28-i-f-visual-qa.md`](docs/reviews/2026-08-28-i-f-visual-qa.md).
-Alle vier Domain-Reviews bleiben `pending`; der Scope wächst nur um diese vier Abschnitte.
+Alle vier Domain-Reviews standen zum Slice-Abschluss `pending`; der Scope wächst nur um diese vier Abschnitte.
 
 ## LFH-418: C.1.3 als erster Anhang-C-Slice
 
@@ -768,7 +793,7 @@ Der erste ausführbare Restslice ergänzt ausschließlich C.1.3 „Löschzug ein
 Komposition aus Formation, Feuerwehrfarbe, Stärke `zug` und der für C.1 vermessenen
 randbündigen `fire-fighting`-Körpermarke. Der Scope bleibt abschnittsgenau bei `C.1.3`; weder
 `C.1` noch `C` wird vor vollständiger, getesteter Abdeckung beansprucht. Das fachliche Review
-bleibt `pending`.
+stand zum Slice-Abschluss `pending`.
 
 Der damalige, nach dem finalen Rebase des C.1.3-Branches auf `origin/main` wiederholte Lauf
 belegte 60 Testdateien mit 4.126 grünen Tests, einen fehlerfreien Typecheck und das Coverage-Gate
@@ -795,7 +820,7 @@ output-only Kontaktbogen belegen jede Darstellung einzeln. Die technische Entsch
 [`docs/decisions/2026-08-27-anhang-i-g.md`](docs/decisions/2026-08-27-anhang-i-g.md), das
 Sichtprotokoll in
 [`docs/reviews/2026-08-27-i-g-visual-qa.md`](docs/reviews/2026-08-27-i-g-visual-qa.md).
-Alle vier Domain-Reviews bleiben `pending`; der Katalog beansprucht weder eine allgemeine
+Alle vier Domain-Reviews standen zum Slice-Abschluss `pending`; der Katalog beansprucht weder eine allgemeine
 Drohnentaxonomie noch eine pauschale Abdeckung von `I.1` oder `I`.
 
 ## Der lokale Referenzbestand
