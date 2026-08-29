@@ -3,8 +3,8 @@ title: Zeichen in eigene Software einbauen
 description: Für Entwicklerinnen und Entwickler — die acht Pakete, die vier Ausgabewege und der kürzeste Weg zum ersten Zeichen auf dem Bildschirm.
 ---
 
-import { loadSnapshot } from '../../../lib/snapshot';
-import { bulkApprovalClause, bulkDomainApproval, reviewSummary } from '../../../lib/review-summary';
+import { loadSnapshot } from '../../../../lib/snapshot';
+import { bulkApprovalClause, bulkDomainApproval, reviewSummary } from '../../../../lib/review-summary';
 
 export const snapshot = loadSnapshot();
 export const review = reviewSummary(snapshot.symbols);
@@ -12,7 +12,7 @@ export const bulkApproval = bulkApprovalClause(bulkDomainApproval(snapshot.symbo
 
 Diese Seite richtet sich an Menschen, die Software bauen. Wer selbst nicht programmiert, aber ein
 Zeichen in eine Anwendung bekommen möchte, kann sie einer entwickelnden Person weiterreichen — sie
-findet hier alles, was sie braucht, und die [übrigen Anleitungen](/anleitungen/) beschreiben die
+findet hier alles, was sie braucht, und die [übrigen Anleitungen](/docs/anleitungen/) beschreiben die
 Wege ohne Programmierung.
 
 ## Der Kern in einem Satz
@@ -30,7 +30,7 @@ const svg = renderSvg(composeFromCatalog(recipe.spec, recipe.title), { size: 64 
 ```
 
 Vollständige, lauffähige Beispiele in allen vier Kanälen stehen im
-[Quickstart](/quickstart/); sie werden aus derselben Vorlage erzeugt wie die Beispiele auf jeder
+[Quickstart](/docs/quickstart/); sie werden aus derselben Vorlage erzeugt wie die Beispiele auf jeder
 Zeichenseite und können daher nicht veralten.
 
 ## Die vier Ausgabewege
@@ -50,14 +50,14 @@ Markup selbst platzieren willst. Das Web-Component-Element beobachtet `size` und
 
 | Paket | Wofür |
 |---|---|
-| [`schema`](/pakete/schema/) | Typen, Palette, Millimeter-Helfer (`mmToUnits`, `unitsToMm`) |
-| [`core`](/pakete/core/) | Renderer, Kompositionsmotor, Regelvalidierung, Kontrast- und viewBox-Gates |
-| [`catalog`](/pakete/catalog/) | die Zeichen selbst: Grundzeichen, Rezepte, Themes, Quellenregister |
-| [`react`](/pakete/react/) | React-Komponente und Hook |
-| [`web-component`](/pakete/web-component/) | Custom Element ohne Rahmenwerk |
-| [`maplibre`](/pakete/maplibre/) | Zeichen als Bild im Kartenstil |
-| [`qgis`](/pakete/qgis/) | Stilbibliothek und SVG-Verzeichnis für QGIS |
-| [`cli`](/pakete/cli/) | `coverage`, `export`, `audit:reference`, `verify:repository`, `review-dossier`, `visual-proof` |
+| [`schema`](/docs/pakete/schema/) | Typen, Palette, Millimeter-Helfer (`mmToUnits`, `unitsToMm`) |
+| [`core`](/docs/pakete/core/) | Renderer, Kompositionsmotor, Regelvalidierung, Kontrast- und viewBox-Gates |
+| [`catalog`](/docs/pakete/catalog/) | die Zeichen selbst: Grundzeichen, Rezepte, Themes, Quellenregister |
+| [`react`](/docs/pakete/react/) | React-Komponente und Hook |
+| [`web-component`](/docs/pakete/web-component/) | Custom Element ohne Rahmenwerk |
+| [`maplibre`](/docs/pakete/maplibre/) | Zeichen als Bild im Kartenstil |
+| [`qgis`](/docs/pakete/qgis/) | Stilbibliothek und SVG-Verzeichnis für QGIS |
+| [`cli`](/docs/pakete/cli/) | `coverage`, `export`, `audit:reference`, `verify:repository`, `review-dossier`, `visual-proof` |
 
 Alle Pakete sind `private: true` und zeigen mit `main` auf `./src/index.ts`; es gibt keinen
 Build-Schritt und keine Veröffentlichung auf einer Registry. Im Workspace läuft die Einbindung
@@ -106,4 +106,4 @@ export const domainSentence =
 Wer die Zeichen in einer Anwendung anzeigt, sollte diesen Stand mit anzeigen und nicht
 wegoptimieren — er ist die zentrale Aussage des Projekts, nicht eine Fußnote. Lies ihn je Zeichen
 aus `review.technical` und `review.domain` und nicht aus einer Zahl, die du dir gemerkt hast; den
-Gesamtstand zeigt der [Stand der Prüfung](/coverage/).
+Gesamtstand zeigt der [Stand der Prüfung](/docs/coverage/).

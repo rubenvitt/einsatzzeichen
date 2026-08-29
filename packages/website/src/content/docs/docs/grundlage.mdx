@@ -3,10 +3,10 @@ title: Grundlage
 description: Worauf sich die Zeichen stützen, welche Quellen dahinterstehen und was an ihnen geprüft wurde — die Antwort auf die Frage, ob man einem Zeichen trauen darf.
 ---
 
-import StatusPair from '../../components/StatusPair.astro';
-import { loadSnapshot } from '../../lib/snapshot';
-import { bulkDomainApprovalOfRows, reviewSummary } from '../../lib/review-summary';
-import { formatReviewDate } from '../../components/StatusPair.tsx';
+import StatusPair from '../../../components/StatusPair.astro';
+import { loadSnapshot } from '../../../lib/snapshot';
+import { bulkDomainApprovalOfRows, reviewSummary } from '../../../lib/review-summary';
+import { formatReviewDate } from '../../../components/StatusPair.tsx';
 
 export const snapshot = loadSnapshot();
 export const profiles = [...new Set(snapshot.symbols.map((symbol) => symbol.profile))].sort();

@@ -3,11 +3,11 @@ title: Ein Zeichen auf eine Karte legen
 description: Auf der Karte dieser Website ausprobieren, wie ein Zeichen im Gelände wirkt — Größe, Farbprofil, Zoomstufe — und was für eine eigene Karte nötig ist.
 ---
 
-import { loadSnapshot } from '../../../lib/snapshot';
+import { loadSnapshot } from '../../../../lib/snapshot';
 
 export const snapshot = loadSnapshot();
 
-Auf der [Karte](/maplibre-lab/) liegt eine echte Landkarte, und du kannst jedes der
+Auf der [Karte](/docs/maplibre-lab/) liegt eine echte Landkarte, und du kannst jedes der
 {snapshot.symbols.length} Zeichen darauf legen. Das ist der schnellste Weg, um zu sehen, ob ein
 Zeichen in der Größe, die ihr verwenden wollt, auf einer Lagekarte noch lesbar ist.
 
@@ -16,7 +16,7 @@ Lagekartenwerkzeug.
 
 ## Schritt für Schritt
 
-1. Öffne die [Karte](/maplibre-lab/). Bist du schon auf der Seite eines Zeichens, bringt dich die
+1. Öffne die [Karte](/docs/maplibre-lab/). Bist du schon auf der Seite eines Zeichens, bringt dich die
    Schaltfläche **Auf der Karte ansehen** dorthin; das Zeichen steht dann bereits im Auswahlfeld,
    und du musst es nicht suchen. Führt ein alter Link auf ein Zeichen, das es nicht mehr gibt,
    sagt die Karte das und zeigt so lange das erste Zeichen des Katalogs.
@@ -85,7 +85,7 @@ addSymbolImage(map, 'ez-e-1-1', drawing, { size: 64, pixelRatio: 2 });
 
 `createStyleImage()` liefert dasselbe Bild ohne Karte, etwa für einen Test; `MapLike` ist die
 schmale Schnittstelle, gegen die beide arbeiten — ein Doppel genügt, es braucht keine echte Karte.
-Details auf der [Paketseite maplibre](/pakete/maplibre/).
+Details auf der [Paketseite maplibre](/docs/pakete/maplibre/).
 
 Marker und Symbolebene erscheinen bei Pixel Ratio 1, 2 und 3 gleich groß: gezeichnet wird mit
 `size × pixelRatio`, MapLibre rechnet über `pixelRatio` auf dieselbe CSS-Größe zurück.

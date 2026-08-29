@@ -1,24 +1,12 @@
 ---
-title: Taktische Zeichen aus einer Beschreibung erzeugen
-description: Taktische Zeichen des Bevölkerungsschutzes zum Finden, Herunterladen, Selbstbauen und Einbauen — an jedem Zeichen steht seine Fundstelle und sein Prüfstand.
-template: splash
+title: Dokumentation
+description: Anleitungen, Hintergrund und Paketdokumentation zu den taktischen Zeichen des Bevölkerungsschutzes — an jedem Zeichen steht seine Fundstelle und sein Prüfstand.
 editUrl: false
 lastUpdated: false
-hero:
-  tagline: Ein Zeichen finden, ansehen, herunterladen, auf eine Karte legen oder selbst zusammensetzen. An jedem Zeichen steht, woher es stammt und was daran geprüft wurde — technisch und fachlich, getrennt voneinander.
-  actions:
-    - text: Ich möchte ein Zeichen verwenden
-      link: /anleitungen/
-      attrs:
-        data-note: Finden, herunterladen, auf eine Karte legen, drucken
-    - text: Ich entwickle mit dem Paket
-      link: /quickstart/
-      attrs:
-        data-note: TypeScript, React, Web Component, MapLibre
 ---
 
-import { loadSnapshot } from '../../lib/snapshot';
-import { bulkApprovalClause, bulkDomainApprovalOfRows, reviewSummaryOfRows } from '../../lib/review-summary';
+import { loadSnapshot } from '../../../lib/snapshot';
+import { bulkApprovalClause, bulkDomainApprovalOfRows, reviewSummaryOfRows } from '../../../lib/review-summary';
 
 export const snapshot = loadSnapshot();
 export const matrix = snapshot.coverage.matrix;
@@ -88,11 +76,11 @@ wissen, worauf sie sich bezieht — deshalb stehen beide Zahlen hier und nicht e
 ## Wege auf dieser Website
 
 <div class="ez-grid ez-grid--2">
-  <a class="ez-card" href="/anleitungen/">
+  <a class="ez-card" href="/docs/anleitungen/">
     <span class="ez-card__title">Anleitungen</span>
     <span class="ez-card__text">Ein Zeichen finden, herunterladen, auf eine Karte legen, in ein Dokument setzen, drucken, selbst zusammensetzen oder in Software einbauen — Schritt für Schritt, ohne technisches Wissen vorauszusetzen.</span>
   </a>
-  <a class="ez-card" href="/explorer/">
+  <a class="ez-card" href="/docs/explorer/">
     <span class="ez-card__title">Zeichen suchen</span>
     <span class="ez-card__text">Alle {snapshot.symbols.length} Zeichen durchsuchen — nach Name, anderer Bezeichnung oder früherer Kennung — und nach Organisation, Kapitel, Quelle und Prüfstand eingrenzen.</span>
   </a>
@@ -100,15 +88,15 @@ wissen, worauf sie sich bezieht — deshalb stehen beide Zahlen hier und nicht e
     <span class="ez-card__title">Baukasten</span>
     <span class="ez-card__text">Ein Zeichen aus seinen Bestandteilen zusammensetzen und sofort sehen, wie es aussieht. Passt eine Kombination nicht zusammen, steht in Klartext daneben, welche der {snapshot.ruleIds.length} Regeln das sagt und warum.</span>
   </a>
-  <a class="ez-card" href="/maplibre-lab/">
+  <a class="ez-card" href="/docs/maplibre-lab/">
     <span class="ez-card__title">Karte</span>
     <span class="ez-card__text">Jedes Zeichen auf einer echten Landkarte ausprobieren: in der Größe, der Bildschärfe und dem Farbprofil, die ihr verwenden wollt — und auf jeder Zoomstufe.</span>
   </a>
-  <a class="ez-card" href="/quickstart/">
+  <a class="ez-card" href="/docs/quickstart/">
     <span class="ez-card__title">Quickstart</span>
     <span class="ez-card__text">Für Entwicklerinnen und Entwickler: ein Zeichen auf dem Bildschirm, in vier Kanälen — TypeScript, React, Web Component, MapLibre. Vollständige Beispiele mit einem Zeichen, das es im Katalog wirklich gibt.</span>
   </a>
-  <a class="ez-card" href="/coverage/">
+  <a class="ez-card" href="/docs/coverage/">
     <span class="ez-card__title">Stand der Prüfung</span>
     <span class="ez-card__text">Wie weit der Katalog ausgebaut und wie weit er geprüft ist: drei Kennzahlen, die Prüfliste Abschnitt für Abschnitt und die Punkte, die vor der ersten Vollversion noch offen sind.</span>
   </a>
@@ -117,7 +105,7 @@ wissen, worauf sie sich bezieht — deshalb stehen beide Zahlen hier und nicht e
 ## Was daneben noch da ist
 
 - [Alle Zeichen](/zeichen/) — eine Seite je Zeichen, mit Vorschau in sechs Größen, Herkunft, Prüfstand und den Dateien zum Herunterladen.
-- [Grundlage](/grundlage/) — der Stand der Vorlage im Wortlaut und das Register aller {snapshot.sources.length} Quellen mit ihrem Prüfstand.
-- [Belege](/belege/) — die Kontrollbögen, mit denen das Projekt prüft, dass sich kein Zeichen unbemerkt ändert.
-- [Sources & Diffs](/sources-und-diffs/) — der eine Einstieg, den es noch nicht gibt, mit der Auskunft, warum.
-- [Pakete](/pakete/core/) — für Entwicklerinnen und Entwickler: acht Pakete, vier davon Ausgabewege, jedes mit seinen echten Exporten.
+- [Grundlage](/docs/grundlage/) — der Stand der Vorlage im Wortlaut und das Register aller {snapshot.sources.length} Quellen mit ihrem Prüfstand.
+- [Belege](/docs/belege/) — die Kontrollbögen, mit denen das Projekt prüft, dass sich kein Zeichen unbemerkt ändert.
+- [Sources & Diffs](/docs/sources-und-diffs/) — der eine Einstieg, den es noch nicht gibt, mit der Auskunft, warum.
+- [Pakete](/docs/pakete/core/) — für Entwicklerinnen und Entwickler: acht Pakete, vier davon Ausgabewege, jedes mit seinen echten Exporten.
