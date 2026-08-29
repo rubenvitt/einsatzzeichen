@@ -1,6 +1,6 @@
 {
   "name": "@einsatzzeichen/react",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "React-Komponenten für Einsatzzeichen",
   "license": "MIT",
@@ -10,9 +10,17 @@
     "directory": "packages/react"
   },
   "homepage": "https://github.com/rubenvitt/einsatzzeichen",
-  "keywords": ["taktische-zeichen", "gefahrenabwehr", "bos", "einsatzzeichen", "react"],
+  "keywords": [
+    "taktische-zeichen",
+    "gefahrenabwehr",
+    "bos",
+    "einsatzzeichen",
+    "react"
+  ],
   "main": "./src/index.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "access": "public",
     "main": "./dist/index.js",

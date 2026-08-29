@@ -1,6 +1,6 @@
 {
   "name": "@einsatzzeichen/core",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "Kompositions- und Render-Kern (SVG, Canvas, Layout, Validierung) für Einsatzzeichen",
   "license": "MIT",
@@ -10,9 +10,17 @@
     "directory": "packages/core"
   },
   "homepage": "https://github.com/rubenvitt/einsatzzeichen",
-  "keywords": ["taktische-zeichen", "gefahrenabwehr", "bos", "einsatzzeichen", "svg"],
+  "keywords": [
+    "taktische-zeichen",
+    "gefahrenabwehr",
+    "bos",
+    "einsatzzeichen",
+    "svg"
+  ],
   "main": "./src/index.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "access": "public",
     "main": "./dist/index.js",

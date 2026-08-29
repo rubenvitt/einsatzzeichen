@@ -1,6 +1,6 @@
 {
   "name": "@einsatzzeichen/web-component",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "Web Component für Einsatzzeichen",
   "license": "MIT",
@@ -10,9 +10,17 @@
     "directory": "packages/web-component"
   },
   "homepage": "https://github.com/rubenvitt/einsatzzeichen",
-  "keywords": ["taktische-zeichen", "gefahrenabwehr", "bos", "einsatzzeichen", "web-components"],
+  "keywords": [
+    "taktische-zeichen",
+    "gefahrenabwehr",
+    "bos",
+    "einsatzzeichen",
+    "web-components"
+  ],
   "main": "./src/index.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "access": "public",
     "main": "./dist/index.js",
