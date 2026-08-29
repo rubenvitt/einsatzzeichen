@@ -1392,6 +1392,17 @@ function BuilderForm() {
           color: var(--sl-color-white);
           min-width: 0;
         }
+        /*
+         * Auf Touch-Geräten mindestens 16px: iOS zoomt beim Fokussieren jedes Feldes unter
+         * 16px automatisch hinein — die Viewport-Grenze im BaseLayout fängt das ab, diese Regel
+         * behebt die Ursache auch dort, wo die Meta nicht gilt. Desktop behält den kompakten Satz.
+         */
+        @media (pointer: coarse) {
+          .ez-builder__field input,
+          .ez-builder__field select {
+            font-size: max(var(--sl-text-base), 16px);
+          }
+        }
 
         /* --- Katalogsuche --- */
         .ez-builder__matches {

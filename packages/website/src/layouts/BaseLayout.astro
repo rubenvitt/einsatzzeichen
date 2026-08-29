@@ -33,7 +33,14 @@ const NAV = [
 <html lang="de">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!--
+      `maximum-scale=1` unterbindet in iOS Safari den automatischen Zoom beim Fokussieren eines
+      Formularfeldes (der die Baukasten-Bedienung auf dem Telefon zerreißt), lässt dort aber den
+      Pinch-Zoom der Nutzerin unangetastet — Safari ignoriert die Grenze für Nutzer-Zoom seit
+      iOS 10 bewusst. Kein `user-scalable=no`: das nähme Android-Geräten den Zoom ganz und wäre
+      eine Barriere (WCAG 1.4.4), ohne auf iOS irgendetwas zusätzlich zu bewirken.
+    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
