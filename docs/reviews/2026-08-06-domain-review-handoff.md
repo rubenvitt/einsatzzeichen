@@ -1,12 +1,5 @@
 # Fachreview-Übergabe für den aktuellen Katalogstand
 
-> **Erledigt am 28. August 2026.** Der Projektinhaber Ruben Vitt hat an diesem Tag alle
-> fachlichen Reviews freigegeben — 544 Manifestzeilen, 13 Quellen und ein Profil. Die Freigabe
-> steht mit Reviewer, ISO-Datum und Notiz an jedem einzelnen Ledgerplatz in
-> `packages/catalog/src/domain-reviews.ts`; `pnpm cli coverage` weist seither keine offenen
-> fachlichen Reviews mehr aus. Der offene externe Blocker unten ist damit aufgelöst. Der übrige
-> Text bleibt unverändert als Stand vom 7. August 2026.
-
 > **Abgelöst durch** [`2026-08-28-domain-review-handoff.md`](2026-08-28-domain-review-handoff.md)
 > (Deckblatt) und das Generat [`2026-08-28-domain-review-dossier.md`](2026-08-28-domain-review-dossier.md)
 > aus `pnpm cli review-dossier`. Die Handtabelle in Abschnitt 4 nennt 181 Einträge; der Ledger
