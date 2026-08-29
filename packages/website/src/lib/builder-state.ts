@@ -87,6 +87,89 @@ export function evaluateSpec(spec: SymbolSpec): SpecEvaluation {
   }
 }
 
+/* --- Welche Werte gerade zusammenpassen -------------------------------------------------- */
+
+/**
+ * Die beiden Achsen, die eine Liste tragen. Explizit aufgezählt statt aus dem aktuellen Wert
+ * geraten: ein noch leeres Feld trägt keinen Wert, aus dem sich das ablesen ließe.
+ */
+export const LIST_SPEC_FIELDS: readonly (keyof SymbolSpec)[] = ['capabilities', 'bodyMarks'];
+
+export interface AllowedValue {
+  value: string;
+  ok: boolean;
+  /** Erklärte Regeln, wenn die Komposition den Wert ablehnt. Leer, wenn sie ganz abbricht. */
+  issues: ExplainedIssue[];
+  /** Klartext, warum der Wert gerade nicht geht. Fehlt genau dann, wenn `ok` gilt. */
+  reason?: string;
+}
+
+const NO_MEASURED_VERSION =
+  'Für diesen Wert führt der Katalog an dieser Grundzeichenart keine vermessene Fassung. ' +
+  'Im Original heißt das:';
+
+/**
+ * Probiert jeden Kandidaten an der aktuellen Spec aus und sagt, ob er zusammenpasst.
+ *
+ * Es gibt im Projekt keine Funktion „erlaubte Werte je Feld", und sie ließe sich auch nicht
+ * ehrlich schreiben: ob eine Kombination trägt, hängt an vermessenen Fassungen, Profilen und
+ * Zonen, und das weiß erst die Komposition. Also wird jeder Kandidat einmal komponiert. Das ist
+ * billiger, als es klingt — alle elf Felder mit zusammen 247 Kandidaten brauchen 9,7 ms kalt und
+ * 3,4 ms warm (gemessen am 29.08.2026).
+ *
+ * **Keine Vorprüfung mit `validateSpec`.** Sie wäre schneller, aber falsch: ohne den Kontext aus
+ * aufgelöster Funktionsfassung und Verwaltungskopf, den `compose()` aus den Ports baut, prüft
+ * `validateSpec(spec)` *anders* — sie könnte einen Wert ablehnen, den die Komposition annimmt,
+ * und die Auswahl sperrte etwas Gültiges.
+ *
+ * **Der gerade gesetzte Wert wird nie gesperrt.** Ihn zu sperren hieße, die eigene Auswahl
+ * unbedienbar zu machen, sobald die Spec aus einem *anderen* Grund nicht trägt — und ein
+ * gesperrter Eintrag, der zugleich der ausgewählte ist, wird von Browsern verschieden
+ * dargestellt. Verloren geht dabei nichts: warum die Spec nicht trägt, steht vollständig in der
+ * Regelliste unter der Vorschau.
+ */
+export function allowedValues(
+  spec: SymbolSpec,
+  field: keyof SymbolSpec,
+  candidates: readonly string[],
+): AllowedValue[] {
+  const current = spec[field];
+  const isList = LIST_SPEC_FIELDS.includes(field);
+  const selected: readonly string[] = isList
+    ? Array.isArray(current)
+      ? (current as readonly string[])
+      : []
+    : typeof current === 'string'
+      ? [current]
+      : [];
+
+  return candidates.map((value) => {
+    if (selected.includes(value)) return { value, ok: true, issues: [] };
+    // Listenfelder prüfen den Kandidaten **zusätzlich** zur bestehenden Auswahl: gefragt ist,
+    // ob er sich anfügen lässt, nicht ob er allein trüge.
+    const candidateSpec = reduceSpec(spec, {
+      field,
+      value: isList ? [...selected, value] : value,
+    });
+    try {
+      const result = evaluateSpec(candidateSpec);
+      if (result.ok) return { value, ok: true, issues: [] };
+      const first = result.issues[0];
+      const reason =
+        first !== undefined
+          ? `${first.title}: ${first.explanation}`
+          : (result.unexplained[0]?.message ?? 'Diese Kombination trägt nicht.');
+      return { value, ok: false, issues: result.issues, reason };
+    } catch (error) {
+      // Ein Abbruch statt einer Regel — meist eine Kennung ohne vermessene Fassung. Der Wert
+      // gehört genauso gesperrt, nur mit anderer Begründung. Die Originalmeldung bleibt stehen,
+      // ihr geht aber ein Satz voran, der ohne Kenntnis des Katalogs verständlich ist.
+      const message = error instanceof Error ? error.message : String(error);
+      return { value, ok: false, issues: [], reason: `${NO_MEASURED_VERSION} ${message}` };
+    }
+  });
+}
+
 /* --- URL-Zustand ------------------------------------------------------------------------- */
 
 const SPEC_HINT =

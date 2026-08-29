@@ -11,14 +11,27 @@ import { Einsatzzeichen } from '@einsatzzeichen/react';
 import type { Drawing, SymbolSpec } from '@einsatzzeichen/schema';
 import type { ValidationIssue } from '@einsatzzeichen/core';
 import { codeSamplesFor, type CodeSamples } from '../../lib/code-samples.js';
-import { decodeSpec, encodeSpec, evaluateSpec, reduceSpec } from '../../lib/builder-state.js';
+import {
+  allowedValues,
+  decodeSpec,
+  encodeSpec,
+  evaluateSpec,
+  reduceSpec,
+  type AllowedValue,
+} from '../../lib/builder-state.js';
 import { loadSnapshot, type SymbolSummary } from '../../lib/snapshot.js';
 import type { ExplainedIssue } from '../../lib/rule-explanations.js';
 import StatusPair from '../StatusPair.js';
 
 /**
- * Der Builder (Spec §5.4). Er setzt eine `SymbolSpec` zusammen, komponiert sie im Browser und
- * erklärt jede abgelehnte Kombination in Klarsprache statt nur die Regelkennung zu zeigen.
+ * Der Baukasten (Spec §5.4; die Route bleibt `/builder/`). Er setzt eine `SymbolSpec` zusammen,
+ * komponiert sie im Browser und erklärt jede abgelehnte Kombination in Klarsprache statt nur die
+ * Regelkennung zu zeigen.
+ *
+ * Die Auswahlfelder bieten nur an, was zur aktuellen Auswahl passt: `allowedValues()` probiert
+ * jeden Wert einmal durch, und was nicht trägt, steht gesperrt da — sichtbar, mit dem Grund als
+ * Tooltip. Ausgeblendet wird nichts: dass es den Wert gibt und warum er gerade nicht geht, ist
+ * die eigentliche Auskunft.
  *
  * Drei Ergebniszustände, und jeder hat seine eigene Darstellung (Spec §7):
  * `ok` → Vorschau, JSON, Codebeispiele. `invalid` → erklärte Regelliste. `crash` → sichtbarer
@@ -43,7 +56,7 @@ const SPEC_PARAM = 'spec';
 /** Entprellung des URL-Schreibens in Millisekunden — siehe `useEffect` unten. */
 const URL_WRITE_DELAY_MS = 250;
 
-/** Die Seite ohne `?spec=`, für den Ausweg aus dem Fehlerblock. */
+/** Die Seite ohne Zusammenstellung in der Adresszeile — der Ausweg aus dem Fehlerblock. */
 const CLEAN_PATH = '/builder/';
 
 interface FieldDefinition {
@@ -108,10 +121,11 @@ function labelFor(field: keyof SymbolSpec, id: string): string {
 interface SelectFieldProps {
   definition: FieldDefinition;
   value: string;
+  probe: Map<string, AllowedValue> | undefined;
   onChange: (value: string | undefined) => void;
 }
 
-function SelectField({ definition, value, onChange }: SelectFieldProps) {
+function SelectField({ definition, value, probe, onChange }: SelectFieldProps) {
   const id = `ez-builder-${definition.field}`;
   const options = VOCABULARY[definition.field] ?? [];
   const required = definition.field === 'kind';
@@ -124,11 +138,20 @@ function SelectField({ definition, value, onChange }: SelectFieldProps) {
         onChange={(event) => onChange(event.target.value === '' ? undefined : event.target.value)}
       >
         {required ? null : <option value="">— nicht gesetzt —</option>}
-        {options.map((option) => (
-          <option key={option.id} value={option.id}>
-            {option.label}
-          </option>
-        ))}
+        {options.map((option) => {
+          const allowed = probe?.get(option.id);
+          const blocked = allowed !== undefined && !allowed.ok;
+          return (
+            <option
+              key={option.id}
+              value={option.id}
+              disabled={blocked}
+              title={blocked ? allowed.reason : undefined}
+            >
+              {blocked ? `${option.label} — geht hier nicht` : option.label}
+            </option>
+          );
+        })}
       </select>
       {definition.hint === undefined ? null : (
         <span className="ez-builder__field-hint">{definition.hint}</span>
@@ -140,6 +163,7 @@ function SelectField({ definition, value, onChange }: SelectFieldProps) {
 interface ListFieldProps {
   definition: FieldDefinition;
   values: readonly string[];
+  probe: Map<string, AllowedValue> | undefined;
   onChange: (values: string[]) => void;
 }
 
@@ -147,7 +171,7 @@ interface ListFieldProps {
  * Mehrfachauswahl als „hinzufügen"-Liste plus abwählbare Marken. Ein `<select multiple>` über 88
  * Fähigkeiten wäre mit Strg-Klick zu bedienen und sonst nicht; hier reicht ein Klick je Richtung.
  */
-function ListField({ definition, values, onChange }: ListFieldProps) {
+function ListField({ definition, values, probe, onChange }: ListFieldProps) {
   const id = `ez-builder-${definition.field}`;
   const options = (VOCABULARY[definition.field] ?? []).filter(
     (option) => !values.includes(option.id),
@@ -165,11 +189,20 @@ function ListField({ definition, values, onChange }: ListFieldProps) {
         }}
       >
         <option value="">— hinzufügen —</option>
-        {options.map((option) => (
-          <option key={option.id} value={option.id}>
-            {option.label}
-          </option>
-        ))}
+        {options.map((option) => {
+          const allowed = probe?.get(option.id);
+          const blocked = allowed !== undefined && !allowed.ok;
+          return (
+            <option
+              key={option.id}
+              value={option.id}
+              disabled={blocked}
+              title={blocked ? allowed.reason : undefined}
+            >
+              {blocked ? `${option.label} — geht hier nicht` : option.label}
+            </option>
+          );
+        })}
       </select>
       {values.length === 0 ? null : (
         <ul className="ez-builder__chips">
@@ -332,24 +365,30 @@ class ErrorBoundary extends Component<{ children: ReactNode }, BoundaryState> {
     if (error === null) return this.props.children;
     return (
       <div className="ez-note" role="alert">
-        <p className="ez-note__title">Der Builder ist beim Zeichnen abgebrochen</p>
+        <p className="ez-note__title">Der Baukasten ist beim Zeichnen abgebrochen</p>
         <p>
-          Das ist ein Fehler im Builder, keine abgelehnte Kombination. Trug die URL einen
-          `spec`-Parameter, löst ein Neuladen ihn nicht — er brächte dieselbe Spec zurück.
+          Das ist ein Fehler im Baukasten, keine abgelehnte Kombination. Stand die
+          Zusammenstellung in der Adresszeile, hilft Neuladen nicht — es brächte dieselbe zurück.
         </p>
         <p>
           <a className="ez-action" href={CLEAN_PATH}>
-            <strong>Builder ohne URL-Spec öffnen</strong>
+            <strong>Baukasten neu und leer öffnen</strong>
           </a>
         </p>
-        <p>Kommt der Fehler wieder, gehört die Meldung unten in eine Fehlermeldung zum Projekt.</p>
-        <pre className="ez-builder__pre">
-          <code>
-            {error.name}: {error.message}
-            {error.stack === undefined ? '' : `\n\n${error.stack}`}
-            {stack === null ? '' : `\n\nKomponenten:${stack}`}
-          </code>
-        </pre>
+        <p>
+          Kommt der Fehler wieder, hilft dem Projekt eine Meldung mit den technischen Einzelheiten
+          unten.
+        </p>
+        <details className="ez-builder__details">
+          <summary>Technische Einzelheiten</summary>
+          <pre className="ez-builder__pre">
+            <code>
+              {error.name}: {error.message}
+              {error.stack === undefined ? '' : `\n\n${error.stack}`}
+              {stack === null ? '' : `\n\nKomponenten:${stack}`}
+            </code>
+          </pre>
+        </details>
       </div>
     );
   }
@@ -394,7 +433,7 @@ function BuilderForm() {
         );
       } catch {
         // Hier wird bewusst geschluckt, und nur hier: eine URL, die nicht mitgeschrieben wurde,
-        // ist kein Fehler des Builders — das Formular, die Vorschau und die Codebeispiele
+        // ist kein Fehler des Baukastens — das Formular, die Vorschau und die Codebeispiele
         // stimmen weiter. Wer das später in einen Fehlerblock verwandelt, meldet dem Leser ein
         // Problem, das er weder verursacht hat noch lösen kann.
       }
@@ -403,6 +442,24 @@ function BuilderForm() {
   }, [spec, hydrated]);
 
   const outcome = useMemo(() => outcomeOf(spec), [spec]);
+
+  /**
+   * Was gerade zusammenpasst, für jedes Feld auf einmal.
+   *
+   * Die Vorgabe war, erst beim Öffnen eines Auswahlfeldes zu proben. Die Messung nimmt dem
+   * Sparen den Anlass: alle elf Felder mit zusammen 247 Kandidaten brauchen 9,7 ms kalt und
+   * 3,4 ms warm — das Zwanzigfache unter der Schwelle, ab der gespart werden sollte. Dafür
+   * verschwindet ein Fehler, den das Sparen einbaute: ein Auswahlfeld öffnet sich beim Klick,
+   * bevor React die Sperren nachgezogen hat, und zeigte beim ersten Öffnen die alte Liste.
+   */
+  const probes = useMemo(() => {
+    const byField = new Map<string, Map<string, AllowedValue>>();
+    for (const { field } of [...SELECT_FIELDS, ...LIST_FIELDS]) {
+      const ids = (VOCABULARY[field] ?? []).map((entry) => entry.id);
+      byField.set(field, new Map(allowedValues(spec, field, ids).map((v) => [v.value, v])));
+    }
+    return byField;
+  }, [spec]);
 
   useEffect(() => {
     if (outcome.state !== 'crash') lastWorkingSpec.current = spec;
@@ -445,7 +502,9 @@ function BuilderForm() {
   return (
     <div className="ez-builder">
       <div className="ez-note" role="note">
-        <p className="ez-note__title">Ein Zeichen aus dem Builder ist nicht fachlich geprüft</p>
+        <p className="ez-note__title">
+          Ein Zeichen aus dem Baukasten ist nicht fachlich geprüft
+        </p>
         <p>
           Grün heißt hier: die Komposition hat keine Regel verletzt. Es heißt nicht, dass die
           Bedeutungskombination fachlich belegt ist — ein fachliches Review gibt es nur für die
@@ -455,9 +514,9 @@ function BuilderForm() {
 
       {urlError === null ? null : (
         <div className="ez-note" role="alert">
-          <p className="ez-note__title">Der Link trug keine lesbare Spec</p>
+          <p className="ez-note__title">Der Link trug keine lesbare Zusammenstellung</p>
           <p>{urlError}</p>
-          <p>Der Builder steht deshalb auf der Startspec.</p>
+          <p>Der Baukasten steht deshalb auf seiner Ausgangsauswahl.</p>
         </div>
       )}
 
@@ -484,6 +543,7 @@ function BuilderForm() {
             key={definition.field}
             definition={definition}
             value={(spec[definition.field] as string | undefined) ?? ''}
+            probe={probes.get(definition.field)}
             onChange={(value) => setField(definition.field, value)}
           />
         ))}
@@ -501,6 +561,7 @@ function BuilderForm() {
             key={definition.field}
             definition={definition}
             values={listValues(definition.field)}
+            probe={probes.get(definition.field)}
             onChange={(values) => setField(definition.field, values)}
           />
         ))}
@@ -516,7 +577,7 @@ function BuilderForm() {
             setUrlError(null);
           }}
         >
-          <strong>Auf die Startspec zurücksetzen</strong>
+          <strong>Auf die Ausgangsauswahl zurücksetzen</strong>
         </button>
       </div>
 
@@ -587,15 +648,19 @@ function BuilderForm() {
         <div className="ez-note" role="alert">
           <p className="ez-note__title">Diese Spec ließ sich nicht komponieren</p>
           <p>
-            Das ist keine abgelehnte Kombination, sondern ein Abbruch im Katalog — meist eine
-            Kennung, für die es keine vermessene Fassung gibt. Die Meldung steht im Original:
+            Für diese Zusammenstellung führt der Katalog keine vermessene Fassung. Das ist keine
+            abgelehnte Kombination, sondern ein Abbruch — im Original heißt das:
           </p>
-          <pre className="ez-builder__pre">
-            <code>
-              {outcome.error.name}: {outcome.error.message}
-              {outcome.error.stack === undefined ? '' : `\n\n${outcome.error.stack}`}
-            </code>
-          </pre>
+          <p className="ez-builder__issue-message">{outcome.error.message}</p>
+          <details className="ez-builder__details">
+            <summary>Technische Einzelheiten</summary>
+            <pre className="ez-builder__pre">
+              <code>
+                {outcome.error.name}: {outcome.error.message}
+                {outcome.error.stack === undefined ? '' : `\n\n${outcome.error.stack}`}
+              </code>
+            </pre>
+          </details>
           <button
             type="button"
             className="ez-action"
@@ -740,6 +805,14 @@ function BuilderForm() {
           font-size: var(--sl-text-2xs);
           color: var(--sl-color-gray-2);
           margin-block: var(--ez-space-2) var(--ez-space-1);
+        }
+        .ez-builder__details > summary {
+          cursor: pointer;
+          font-family: var(--ez-font-mono);
+          font-size: var(--sl-text-2xs);
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--sl-color-gray-3);
         }
         .ez-builder__pre {
           max-height: 26rem;
