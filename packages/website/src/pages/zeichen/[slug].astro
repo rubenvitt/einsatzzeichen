@@ -21,18 +21,20 @@
  * aus — also steht bei Katalogeinträgen ein Hinweis an der Aktionsleiste und einer über dem JSON.
  * Die Downloads sind davon nicht betroffen, sie liefern `drawing`.
  *
- * **Reviewnotizen.** 241 der 256 Zeichen tragen eine technische Notiz mit im Mittel 895 Zeichen.
- * Abweichungen und fachliche Notizen stehen offen im Kopf, weil sie die Vertrauensfrage betreffen;
- * die Begründung einer erteilten Freigabe steht ebenfalls im Kopf, aber zugeklappt — sonst schöbe
- * eine Textwand die Vorschau unter den Falz.
+ * **Reviewnotizen.** 241 der 256 Zeichen tragen eine technische Notiz mit im Mittel 895 Zeichen,
+ * geschrieben in der Fachsprache der Prüfung. Sie steht zugeklappt im Kopf und als Zitat
+ * überschrieben — gleich ob Freigabe oder Abweichung. Dass es eine Abweichung gibt, sagt die
+ * Statusmarke mit ihrem Erklärsatz; die 12 Zeichen mit `technical.status === 'deviation'` bekommen
+ * dort einen eigenen Satz. Die kurzen fachlichen Notizen stehen offen.
  */
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import CodeTabs from '../../components/CodeTabs.astro';
 import StatusPair from '../../components/StatusPair.astro';
 import SymbolPreview from '../../components/SymbolPreview.astro';
+import { encodeSpec } from '../../lib/builder-state';
 import { codeSamplesFor } from '../../lib/code-samples';
 import { RULE_EXPLANATIONS } from '../../lib/rule-explanations';
-import { loadSnapshot, type SymbolSummary } from '../../lib/snapshot';
+import { loadSnapshot, type ReviewSummary, type SymbolSummary } from '../../lib/snapshot';
 
 interface Props {
   symbol: SymbolSummary;
@@ -83,6 +85,40 @@ const FIELD_LABELS: Record<string, string> = {
   designation: 'Kennung',
 };
 
+/**
+ * Was die beiden Statusmarken für die Leserin bedeuten — je Stand ein eigener Satz (Spec §3).
+ *
+ * Die Marke selbst sagt nur „technisch: mit Abweichung"; ohne Erklärung liest sich das wie ein
+ * offener Fehler. Es ist aber das Gegenteil: die Zeichnung ist nachgemessen worden, der Unterschied
+ * zur Vorlage ist benannt und aufgeschrieben. Genau das steht deshalb hier. Und die Sätze werden
+ * aus dem tatsächlichen Stand gewählt statt fest hingeschrieben: sobald eine fachliche Freigabe
+ * kommt, stünde ein fester Satz „fachlich noch nicht geprüft" als Unwahrheit auf der Seite.
+ */
+const TECHNICAL_MEANING: Record<ReviewSummary['status'], string> = {
+  approved:
+    '„Technisch geprüft" heißt: das Bild stimmt mit der Vorlage überein, nachgemessen und mit ' +
+    'Tests abgesichert.',
+  deviation:
+    '„Technisch: mit Abweichung" heißt: das Bild ist gegen die Vorlage nachgemessen worden und ' +
+    'weicht an einer benannten Stelle von ihr ab. Die Abweichung ist geprüft und benannt, sie ist ' +
+    'also kein offener Fehler, sondern eine bekannte Ausnahme.',
+  pending:
+    '„Technisch noch nicht geprüft" heißt: niemand hat das Bild bisher gegen die Vorlage ' +
+    'nachgemessen.',
+};
+
+const DOMAIN_MEANING: Record<ReviewSummary['status'], string> = {
+  approved:
+    '„Fachlich geprüft" heißt: jemand aus der Fachwelt hat bestätigt, dass dies das richtige ' +
+    'Zeichen für diese Bedeutung ist.',
+  deviation:
+    '„Fachlich: mit Abweichung" heißt: jemand aus der Fachwelt hat das Zeichen angesehen und eine ' +
+    'Stelle benannt, an der es von der fachlichen Erwartung abweicht.',
+  pending:
+    '„Fachlich noch nicht geprüft" heißt: niemand aus der Fachwelt hat bestätigt, dass dies das ' +
+    'richtige Zeichen für diese Bedeutung ist.',
+};
+
 /** Nachweisarten aus `CoverageEntry.testEvidence`, ausgeschrieben. */
 const EVIDENCE_LABELS: Record<string, string> = {
   'body-fingerprint': 'Körper-Fingerprint gegen die Referenzdatei (matchFingerprint)',
@@ -96,14 +132,10 @@ const sourceLabel =
   symbol.source.page === undefined ? symbol.chapter : `${symbol.chapter}, S. ${symbol.source.page}`;
 
 /**
- * Sichtbare Notizen im Kopf: jede Abweichung und jede fachliche Notiz. Eine Abweichung ohne ihren
- * Grund wäre eine Marke ohne Aussage, und die fachliche Notiz ist die Antwort auf die Frage, wegen
- * der jemand diese Seite aufruft.
+ * Sichtbare Notizen im Kopf: die **fachlichen**. Sie sind kurz (zwei Zeichen tragen eine, höchstens
+ * 78 Zeichen lang) und in Alltagssprache geschrieben, also stehen sie offen.
  */
 const headNotes = [
-  symbol.review.technical.status === 'deviation' && symbol.review.technical.note !== undefined
-    ? { title: 'Bekannte Abweichung beim technischen Prüfen', note: symbol.review.technical.note }
-    : undefined,
   symbol.review.domain.status === 'deviation' && symbol.review.domain.note !== undefined
     ? { title: 'Bekannte Abweichung beim fachlichen Prüfen', note: symbol.review.domain.note }
     : undefined,
@@ -113,23 +145,48 @@ const headNotes = [
 ].filter((entry) => entry !== undefined);
 
 /**
- * Die lange Begründung einer erteilten technischen Freigabe — im Kopf, aber zugeklappt und als
- * Zitat gekennzeichnet. Sie ist in der Fachsprache der Prüfung geschrieben (Fingerprint, Gate,
- * Rezept); umschreiben würde den Beleg verfälschen, weglassen ihn verstecken. Also wörtlich, mit
- * einer Aufschrift, die sagt, was da kommt (wie der README-Wortlaut auf der Grundlage-Seite).
+ * Der Wortlaut des technischen Reviews — zugeklappt, gleich ob Freigabe oder Abweichung.
+ *
+ * **Warum auch die Abweichung zugeklappt.** Diese Notizen sind lang (241 Zeichen tragen eine, im
+ * Mittel 895 und bis zu 3623 Zeichen) und in der Fachsprache der Prüfung geschrieben — Fingerprint,
+ * Gate, Rezept. Offen und unbeschriftet über der Vorschau lasen sie sich wie eine Fehlermeldung an
+ * die falsche Zielgruppe. Umschreiben würde den Beleg verfälschen, weglassen ihn verstecken. Also
+ * wörtlich, mit einer Aufschrift, die sagt, was kommt (wie der README-Wortlaut auf der
+ * Grundlage-Seite) — und die Aussage „hier gibt es eine Abweichung" trägt die Statusmarke oben
+ * zusammen mit ihrem Erklärsatz, nicht dieser Kasten.
  */
-const technicalNote =
-  symbol.review.technical.status === 'deviation' ? undefined : symbol.review.technical.note;
+const technicalNote = symbol.review.technical.note;
+
+const technicalNoteSummary =
+  symbol.review.technical.status === 'deviation'
+    ? 'Wortlaut der Abweichung aus dem technischen Review (Fachsprache)'
+    : 'Wortlaut aus dem technischen Review (Fachsprache)';
+
+/**
+ * Der Hinweis auf den aufklappbaren Wortlaut — **nur**, wenn es ihn gibt.
+ *
+ * Er hing zuerst als fester Halbsatz im Abweichungstext („der Wortlaut steht gleich darunter“).
+ * Das stimmte für die heutigen 12 Abweichungen, die alle eine Notiz tragen, wäre aber ein Verweis
+ * ins Leere, sobald ein neu erzeugter Snapshot eine Abweichung ohne Notiz führt. Der Satz hängt
+ * jetzt an derselben Bedingung wie das `<details>` und kann deshalb nicht mehr auseinanderlaufen.
+ */
+const noteHint =
+  technicalNote === undefined
+    ? undefined
+    : symbol.review.technical.status === 'deviation'
+      ? 'Was genau abweicht, steht darunter im Wortlaut der Prüfung zum Aufklappen.'
+      : 'Der Wortlaut der Prüfung steht darunter zum Aufklappen.';
 
 /* --- Aktionen ----------------------------------------------------------------------------- */
 
 /**
- * `?spec=` ist der Vertrag des Baukastens: base64url-kodiertes JSON ohne Füllzeichen
- * (`encodeSpec`/`decodeSpec` in `src/lib/builder-state.ts`). Hier steht die Node-Fassung derselben
- * Kodierung, damit diese Seite nicht den Browserpfad des Baukastens in den Build zieht; ein
- * Vergleich über alle 256 Specs — Umlaute eingeschlossen — hat beide Wege als bytegleich belegt.
+ * `?spec=` ist der Vertrag des Baukastens: base64url-kodiertes JSON ohne Füllzeichen. Kodiert wird
+ * mit **derselben** `encodeSpec()`, die der Baukasten zum Lesen spiegelt (`decodeSpec`) — nicht mit
+ * einer Node-Nachbildung daneben. Zwei Kodierungen für einen Parameter können auseinanderlaufen,
+ * und die Stelle, an der das auffiele, wäre ein toter Link statt ein roter Test. `encodeSpec()`
+ * kommt mit `TextEncoder` und `btoa` aus; beide gibt es in Node wie im Browser.
  */
-const builderHref = `/builder/?spec=${Buffer.from(JSON.stringify(symbol.spec), 'utf8').toString('base64url')}`;
+const builderHref = `/builder/?spec=${encodeSpec(symbol.spec)}`;
 
 /**
  * Die Karte kennt den Parameter `symbol` noch nicht; sie bekommt ihn in einem eigenen Task. Der
@@ -147,11 +204,6 @@ const isReconstruction = symbol.kind === 'catalog-entry';
 const specJson = JSON.stringify(symbol.spec, null, 2);
 const samples = codeSamplesFor(symbol.spec, symbol.id);
 
-/** `functionRole` → `function-role`; die Regelkennungen führen dieselben Wörter in Bindestrichform. */
-function kebab(field: string): string {
-  return field.replaceAll(/(?<lower>[a-z])(?<upper>[A-Z])/g, '$<lower>-$<upper>').toLowerCase();
-}
-
 function valueLabels(field: string, value: unknown): { text: string; id?: string }[] {
   const vocabulary = snapshot.builder[field] ?? [];
   const label = (id: string): string => vocabulary.find((entry) => entry.id === id)?.label ?? id;
@@ -165,20 +217,22 @@ function valueLabels(field: string, value: unknown): { text: string; id?: string
 }
 
 /**
- * Regeln je Feld nur dort, wo die Zuordnung nachweisbar ist: eine Regelkennung gehört zu einem Feld,
- * wenn sie mit dessen Namen in Bindestrichform beginnt (`functionRole` → `function-role-…`). Alles
- * andere wäre geraten — `validateSpec()` führt keine Feldzuordnung, und eine Regel nach Stichworten
- * in ihrem Text zuzuordnen, brächte falsche Treffer. Felder ohne eigene Regelfamilie stehen deshalb
- * ohne Regeln da, und der Text darunter sagt, dass die Liste nicht die vollständige Prüfung ist.
+ * Regeln je Feld über das kuratierte `field` aus `RULE_EXPLANATIONS`.
+ *
+ * **Warum nicht über den Namen der Kennung.** Genau das stand hier vorher — eine Regel gehörte zu
+ * einem Feld, wenn ihre Kennung mit dessen Namen in Bindestrichform begann. Deterministisch, aber
+ * falsch: von den 72 Regeln fanden so nur 17 ein Feld, und ausgerechnet `labels` — in 137 der 256
+ * Zeichen gesetzt — stand mit „keine Regelfamilie unter diesem Namen“ da, obwohl über vierzig
+ * Regeln nichts anderes prüfen. Ihre Kennungen sind nach der **Zone** benannt
+ * (`center-label-within-body`, `top-left-metrics-complete`), nicht nach dem Feld. Die Zuordnung
+ * steht deshalb jetzt an der Erklärung selbst, und ein Test hält sie gültig.
  */
 const setFields = (Object.entries(symbol.spec) as [string, unknown][])
   .filter(([, value]) => value !== undefined)
   .map(([field, value]) => {
-    const prefix = `${kebab(field)}-`;
     const rules = snapshot.ruleIds
-      .filter((rule) => rule.startsWith(prefix))
       .map((rule) => ({ id: rule, explanation: RULE_EXPLANATIONS[rule] }))
-      .filter((entry) => entry.explanation !== undefined);
+      .filter((entry) => entry.explanation !== undefined && entry.explanation.field === field);
     return {
       field,
       label: FIELD_LABELS[field] ?? field,
@@ -223,10 +277,10 @@ const description =
   </p>
 
   <p class="ez-head__explain">
-    „Technisch geprüft“ heißt: das Bild stimmt mit der Vorlage überein, nachgemessen und mit Tests
-    abgesichert. „Fachlich noch nicht geprüft“ heißt: niemand aus der Fachwelt hat bestätigt, dass
-    dies das richtige Zeichen für diese Bedeutung ist. Beide Angaben stehen an jedem Zeichen dieser
+    {TECHNICAL_MEANING[symbol.review.technical.status]}{' '}
+    {DOMAIN_MEANING[symbol.review.domain.status]} Beide Angaben stehen an jedem Zeichen dieser
     Website; die rechte ist die, die man leicht übersieht.
+    {noteHint !== undefined && ` ${noteHint}`}
   </p>
 
   {
@@ -241,7 +295,7 @@ const description =
   {
     technicalNote !== undefined && (
       <details class="ez-longnote">
-        <summary>Wortlaut aus dem technischen Review (Fachsprache)</summary>
+        <summary>{technicalNoteSummary}</summary>
         <p>{technicalNote}</p>
       </details>
     )
@@ -289,6 +343,12 @@ const description =
   <SymbolPreview drawing={symbol.drawing} idPrefix={`ez-${symbol.slug}`} />
 
   <h2 id="herkunft">Bedeutung und Herkunft</h2>
+
+  {
+    symbol.drawing.description !== undefined && (
+      <p class="ez-meaning">{symbol.drawing.description}</p>
+    )
+  }
 
   <dl class="ez-head">
     <dt>Kennung</dt>
@@ -390,8 +450,8 @@ const description =
   <h3 id="kombinationen">Zulässige Kombinationen</h3>
   <p>
     Diese Spec setzt {setFields.length} {setFields.length === 1 ? 'Feld' : 'Felder'}. Darunter steht,
-    welche Werte gesetzt sind und welche Regeln aus <code class="ez-mono">validateSpec()</code>{' '}
-    denselben Feldnamen tragen —{' '}
+    welche Werte gesetzt sind und welche Regeln aus <code class="ez-mono">validateSpec()</code> an
+    diesen Feldern hängen —{' '}
     {ruleCount === 0 ? 'für diese Felder keine' : `${ruleCount} an der Zahl`}.
   </p>
 
@@ -401,7 +461,7 @@ const description =
         <tr>
           <th>Feld</th>
           <th>Wert</th>
-          <th>Regeln mit diesem Feldnamen</th>
+          <th>Regeln an diesem Feld</th>
         </tr>
       </thead>
       <tbody>
@@ -428,7 +488,7 @@ const description =
               </td>
               <td>
                 {entry.rules.length === 0 ? (
-                  <span class="ez-muted">keine Regelfamilie unter diesem Namen</span>
+                  <span class="ez-muted">keine Regel allein an diesem Feld</span>
                 ) : (
                   entry.rules.map((rule) => (
                     <details class="ez-rule">
@@ -450,12 +510,15 @@ const description =
   </div>
 
   <p>
-    Die Zuordnung geht allein über den Namen: eine Regel gehört zu einem Feld, wenn ihre Kennung mit
-    dem Feldnamen in Bindestrichform beginnt. <code class="ez-mono">validateSpec()</code> führt keine
-    Feldzuordnung, deshalb ist diese Liste nicht die vollständige Prüfung — Regeln über mehrere
-    Achsen hinweg stehen nirgends in dieser Tabelle. Wer wissen will, ob eine geänderte Kombination
-    trägt, ändert sie im <a href="/builder/">Baukasten</a>: dort läuft dieselbe Komposition wie im
-    Katalog, und jede abgelehnte Kombination kommt mit ihrer Regel und deren Erklärung zurück.
+    Die Zuordnung ist von Hand gepflegt und steht an der Erklärung jeder Regel
+    (<code class="ez-mono">src/lib/rule-explanations.ts</code>): eingetragen ist das Feld, das man
+    ändern müsste, damit die Regel nicht mehr greift. <code class="ez-mono">validateSpec()</code>{' '}
+    selbst führt keine Feldzuordnung — deshalb bleibt diese Liste <strong>nicht</strong> die
+    vollständige Prüfung. Regeln, die zwei Achsen gegeneinander stellen, erscheinen nur unter einer
+    von beiden, und eine Regel ohne einzelnes Feld — wie der Streit um die Kopfzone — steht in
+    keiner Zeile dieser Tabelle. Wer wissen will, ob eine geänderte Kombination trägt, ändert sie im{' '}
+    <a href="/builder/">Baukasten</a>: dort läuft dieselbe Komposition wie im Katalog, und jede
+    abgelehnte Kombination kommt mit ihrer Regel und deren Erklärung zurück.
   </p>
 
   <h3 id="nachweise">Nachweise</h3>
@@ -507,6 +570,15 @@ const description =
   /* Kopierbar ohne Skript: ein Klick wählt die ganze Kennung, nicht das Wort unter dem Zeiger. */
   .ez-head__copy {
     user-select: all;
+  }
+
+  /*
+   * Die Bedeutung ist der Satz, wegen dem die meisten diese Seite öffnen — er steht deshalb als
+   * erstes unter der Überschrift und etwas größer als der Fließtext daneben.
+   */
+  .ez-meaning {
+    font-size: var(--sl-text-base);
+    line-height: 1.6;
   }
 
   .ez-head__status {

@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Resvg } from '@resvg/resvg-js';
 import type { APIRoute, GetStaticPaths } from 'astro';
 import { TEXT_FONT_FAMILY, TEXT_FONT_SHA256, resvgFontOptions } from '@einsatzzeichen/catalog';
@@ -29,10 +29,26 @@ import { loadSnapshot } from '../../lib/snapshot';
  */
 const WIDTH = 256;
 
-/** Kandidaten in dieser Reihenfolge: Arbeitsverzeichnis des Builds, dann der Pfad des Katalogs. */
+/**
+ * Kandidaten in dieser Reihenfolge: der Pfad relativ zu **dieser Datei**, dann der des Katalogs.
+ *
+ * `new URL(…, import.meta.url)` statt `resolve(process.cwd(), …)`: das Arbeitsverzeichnis ist eine
+ * Annahme über den Aufrufer (`pnpm --filter … build` aus dem Wurzelverzeichnis setzt ein anderes
+ * als ein `cd packages/website`), der eigene Dateipfad ist keine. Vier Ebenen hoch —
+ * `zeichen` → `pages` → `src` → `website` → `packages` — und dann in den Katalog.
+ *
+ * `fileURLToPath()` und nicht `.pathname`: die Datei heißt `Arimo[wght].ttf`, und eine `URL`
+ * prozentkodiert die eckigen Klammern zu `%5Bwght%5D`. `existsSync` fände die Datei dann nie, und
+ * der Fehler sähe aus wie eine fehlende Schrift statt wie ein falscher Pfad.
+ *
+ * Die Kandidatenliste bleibt eine Liste, und das mit Absicht: welchen Wert `import.meta.url` in
+ * einem gebündelten SSR-Chunk trägt, entscheidet der Bundler — genau daran ist diese Stelle schon
+ * einmal gescheitert. Trifft der erste Kandidat nicht, greift der Pfad des Katalogs; trifft keiner,
+ * bricht der Build ab (unten). Was es nicht gibt, ist ein PNG ohne Kürzel.
+ */
 function textFontFile(): string {
   const candidates = [
-    resolve(process.cwd(), '../catalog/assets/Arimo[wght].ttf'),
+    fileURLToPath(new URL('../../../../catalog/assets/Arimo[wght].ttf', import.meta.url)),
     ...resvgFontOptions().fontFiles,
   ];
   for (const candidate of candidates) {

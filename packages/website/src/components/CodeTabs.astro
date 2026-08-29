@@ -9,6 +9,13 @@
  * `:checked ~` über Attributselektoren, kein JavaScript. Die Reiterbeschriftungen entsprechen denen
  * der Builder-Insel (`CODE_TABS` in `islands/Builder.tsx`).
  *
+ * **Nicht in die Suche.** Alle vier Tafeln stehen im DOM (drei davon nur per CSS verborgen), also
+ * gingen ohne `data-pagefind-ignore` je Seite vier vollständige Listings in den Suchindex — auf den
+ * 256 Symbolseiten allein 1024 Stück. Die Seitensuche zeigte dann Codezeilen vor den Seiten, die
+ * jemand tatsächlich sucht. Das Attribut nimmt genau diesen Rahmen aus dem Index; Überschrift und
+ * Fließtext der Seite bleiben auffindbar. Es wirkt überall, wo diese Komponente steht — also auch
+ * auf der Quickstart-Seite.
+ *
  * Für die Auszeichnung nimmt die Seite Starlights `<Code>` (Expressive Code): dieselbe Darstellung
  * wie in den Markdown-Seiten, inklusive Kopierschaltfläche — die kommt aus Starlight und ist kein
  * eigenes Skript.
@@ -39,7 +46,7 @@ const panels = [
 ];
 ---
 
-<div class="ez-codetabs">
+<div class="ez-codetabs" data-pagefind-ignore>
   {
     panels.map((panel, index) => (
       <input

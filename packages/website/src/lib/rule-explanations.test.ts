@@ -5,6 +5,7 @@ import type { SymbolSpec } from '@einsatzzeichen/schema';
 import {
   COMPOSITION_RULE_EXPLANATIONS,
   RULE_EXPLANATIONS,
+  RULE_FIELDS,
   explainIssue,
 } from './rule-explanations.js';
 
@@ -20,6 +21,30 @@ describe('RULE_EXPLANATIONS', () => {
       expect(RULE_EXPLANATIONS[id].explanation.length).toBeGreaterThan(40);
       expect(RULE_EXPLANATIONS[id].explanation).not.toMatch(/TODO|TBD/);
     }
+  });
+
+  it('ordnet jede Regel einem gültigen Feld zu', () => {
+    for (const id of VALIDATION_RULE_IDS) {
+      expect(RULE_FIELDS, id).toContain(RULE_EXPLANATIONS[id].field);
+    }
+  });
+
+  /**
+   * Der Grund, warum es diese Zuordnung überhaupt gibt: die Symbolseite listet Regeln je gesetztem
+   * Feld, und `labels` ist in 137 der 256 Zeichen gesetzt. Die alte Zuordnung über das Präfix der
+   * Kennung fand dafür null Regeln — die Spalte sagte „keine Regelfamilie unter diesem Namen“,
+   * während vier Dutzend Zonenregeln genau dieses Feld prüfen. Ein Feld, das kein einziges Zeichen
+   * setzt, darf leer bleiben; `labels` und `functionRole` dürfen es nicht.
+   */
+  it('lässt die stark belegten Felder nicht ohne Regeln', () => {
+    const perField = new Map<string, number>();
+    for (const id of VALIDATION_RULE_IDS) {
+      const field = RULE_EXPLANATIONS[id].field;
+      perField.set(field, (perField.get(field) ?? 0) + 1);
+    }
+    expect(perField.get('labels') ?? 0).toBeGreaterThanOrEqual(20);
+    expect(perField.get('functionRole') ?? 0).toBeGreaterThanOrEqual(5);
+    expect(perField.get('bodyVariant') ?? 0).toBeGreaterThanOrEqual(2);
   });
 
   it('führt zu jeder Regel einen Titel und zwei bis vier Sätze', () => {
@@ -43,6 +68,7 @@ describe('explainIssue', () => {
     expect(explainIssue({ rule: id, message: 'y' })).toEqual({
       rule: id,
       message: 'y',
+      field: RULE_EXPLANATIONS[id].field,
       title: RULE_EXPLANATIONS[id].title,
       explanation: RULE_EXPLANATIONS[id].explanation,
     });
@@ -82,6 +108,13 @@ function issuesOf(spec: SymbolSpec) {
 }
 
 describe('COMPOSITION_RULE_EXPLANATIONS', () => {
+  it('ordnet jede Kompositionsregel einem gültigen Feld zu', () => {
+    for (const id of Object.keys(COMPOSITION_RULE_EXPLANATIONS)) {
+      expect(RULE_FIELDS, id).toContain(COMPOSITION_RULE_EXPLANATIONS[id].field);
+    }
+  });
+
+
   it('erklärt genau die sechs Kennungen aus assertTextRunsFit', () => {
     expect(Object.keys(COMPOSITION_RULE_EXPLANATIONS).sort()).toEqual(
       [...COMPOSITION_RULE_IDS].sort(),

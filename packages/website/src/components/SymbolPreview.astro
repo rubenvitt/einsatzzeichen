@@ -22,6 +22,11 @@
  * einen Satz Fließtext. Die Umschaltung selbst bleibt bedienbar: die Radiobuttons liegen außerhalb
  * der verborgenen Tafeln, sind fokussierbar und tragen sichtbare Beschriftungen.
  *
+ * **Nicht in die Suche.** Der Block trägt `data-pagefind-ignore`: 36 Kacheln, jede mit Titel und
+ * Beschreibung des Zeichens im Markup, blähten sonst den Suchindex und schöben Wiederholungen
+ * derselben Zeile vor die Seiten, die jemand sucht. Der Titel des Zeichens steht ohnehin in der
+ * Überschrift und in „Bedeutung und Herkunft" und bleibt darüber auffindbar.
+ *
  * Jede Instanz bekommt ein eigenes `idPrefix` — `renderSvg()` vergibt `id="<prefix>-title"` und
  * `id="<prefix>-desc"`, und die müssen im Dokument eindeutig bleiben.
  */
@@ -61,23 +66,76 @@ const BACKGROUNDS = [
 
 const { drawing, idPrefix, sizes = DEFAULT_SIZES } = Astro.props;
 
-const panels = PROFILES.map((profile) => ({
+/**
+ * Zerlegt die Ausgabe von `renderSvg()` in ViewBox und Inhalt.
+ *
+ * Kein stiller Rückfall (Spec §7): passt die Ausgabe nicht auf dieses Muster, bricht der Build ab.
+ * Ein „dann eben ohne Sprite“ hieße, dass eine geänderte Ausgabe der Bibliothek hier unbemerkt
+ * durchrutscht und die Seite ein leeres Kästchen zeigt.
+ */
+function splitSvg(markup: string): { viewBox: string; content: string } {
+  const open = /^<svg\b[^>]*>/.exec(markup);
+  const viewBox = /\bviewBox="([^"]+)"/.exec(markup);
+  if (open === null || viewBox === null || !markup.endsWith('</svg>')) {
+    throw new Error(
+      'renderSvg() hat kein <svg>-Element mit viewBox geliefert, aus dem sich ein <symbol> ' +
+        `bauen ließe. Anfang der Ausgabe: ${markup.slice(0, 120)}`,
+    );
+  }
+  return {
+    viewBox: viewBox[1],
+    content: markup.slice(open[0].length, -'</svg>'.length),
+  };
+}
+
+/**
+ * **Ein `<symbol>` je Profil statt 36 vollständiger SVG.**
+ *
+ * Innerhalb eines Profils sind die sechs Größen × zwei Untergründe bis auf `width`, `height` und
+ * die erzeugten `id`s bytegleich — nachgemessen, nicht vermutet: die Zeichnung rechnet in mm und
+ * steht in einer festen ViewBox, die Größe skaliert nur das Wurzelelement. 36-mal dieselben
+ * Pfaddaten auszuschreiben, kostete auf 256 Seiten rund 9 MiB im `dist`. Also liegt die Zeichnung
+ * einmal je Profil als `<symbol>` im Dokument, und die 36 Kacheln sind `<use>`-Verweise darauf.
+ *
+ * Die Sprite-Ablage ist `position: absolute; width: 0` und **nicht** `display: none` — verborgene
+ * Sprite-Container mit `display: none` haben `<use>` in manchen Engines schon aussetzen lassen.
+ *
+ * Der Text bleibt Text: `renderSvg()` schreibt `font-family="Arimo"` als Attribut an den `<text>`,
+ * und `@font-face` in `theme.css` gilt dokumentweit — beides überlebt den Weg durch `<use>`.
+ */
+const sprites = PROFILES.map((profile) => {
+  const spriteId = `${idPrefix}-sprite-${profile.id}`;
+  const { viewBox, content } = splitSvg(
+    renderSvg(drawing, { theme: profile.theme, idPrefix: spriteId }),
+  );
+  return {
+    ...profile,
+    spriteId,
+    markup: `<symbol id="${spriteId}" viewBox="${viewBox}">${content}</symbol>`,
+  };
+});
+
+const panels = sprites.map((profile) => ({
   ...profile,
   rows: BACKGROUNDS.map((background) => ({
     ...background,
-    cells: sizes.map((size) => ({
-      size,
-      svg: renderSvg(drawing, {
-        size,
-        theme: profile.theme,
-        idPrefix: `${idPrefix}-${profile.id}-${background.id}-${size}`,
-      }),
-    })),
+    cells: sizes.map((size) => ({ size })),
   })),
 }));
 ---
 
-<div class="ez-preview">
+<div class="ez-preview" data-pagefind-ignore>
+  <svg
+    class="ez-preview__sprite"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+    focusable="false"
+  >
+    {sprites.map((sprite) => (
+      <Fragment set:html={sprite.markup} />
+    ))}
+  </svg>
+
   {
     panels.map((panel, index) => (
       <input
@@ -109,7 +167,9 @@ const panels = PROFILES.map((profile) => ({
             <div class:list={['ez-canvas', 'ez-preview__row', row.className]}>
               {row.cells.map((cell) => (
                 <span class="ez-preview__cell">
-                  <Fragment set:html={cell.svg} />
+                  <svg width={cell.size} height={cell.size} aria-hidden="true" focusable="false">
+                    <use href={`#${panel.spriteId}`} />
+                  </svg>
                   <span class="ez-preview__size">{cell.size} px</span>
                 </span>
               ))}
@@ -125,6 +185,19 @@ const panels = PROFILES.map((profile) => ({
 <style>
   .ez-preview {
     margin-block: var(--ez-space-6);
+  }
+
+  /*
+   * Die Ablage der drei `<symbol>`. Nicht `display: none`: verborgene Sprite-Container mit
+   * `display: none` haben `<use>` in manchen Engines schon aussetzen lassen. Ausgeblendet wird
+   * deshalb über Größe null und `overflow: hidden`, und `position: absolute` nimmt das leere
+   * Element aus dem Fluss, damit es keine Zeile Höhe hinterlässt.
+   */
+  .ez-preview__sprite {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
   }
 
   /*
