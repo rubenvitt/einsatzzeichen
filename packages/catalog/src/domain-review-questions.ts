@@ -3,17 +3,13 @@ import { type ManifestDomainReviewKey, MANIFEST_DOMAIN_REVIEWS } from './domain-
 import { deepFreeze, type DeepReadonly } from './readonly-data.js';
 
 /**
- * Eine **Fachfrage** an das Domain-Review, die keine Messung und kein technisches Gate
+ * Eine offene **Fachfrage** an das Domain-Review, die keine Messung und kein technisches Gate
  * beantworten kann. Sie hängt an einem oder mehreren Manifestschlüsseln und ändert deren
  * Reviewstatus nicht: das Ledger in `domain-reviews.ts` bleibt die einzige Stelle, an der ein
  * benannter Mensch mit einsatztaktischer Fachkunde freigibt.
  *
- * **Das Register bleibt nach der Sammelfreigabe vom 28.08.2026 vollständig stehen.** Es hält
- * fest, worüber der Projektinhaber entschieden hat — eine Freigabe ohne die Fragen, die ihr
- * vorlagen, wäre nicht nachvollziehbar. Die Fragen sind damit historisch, nicht offen.
- *
- * Warum ein eigenes Register und keine `note` am Reviewobjekt: die Ledgerzeilen sind auf genau
- * ein Reviewobjekt je Träger festgenagelt (`domain-reviews.test.ts` prüft viele Blöcke per
+ * Warum ein eigenes Register und keine `note` am Reviewobjekt: die Ledgerzeilen sind mit
+ * `{ status: 'pending' }` festgenagelt (`domain-reviews.test.ts` prüft viele Blöcke per
  * `toEqual`), und eine `note` ist dort der Ort für den **Befund** des Reviewers, nicht für die
  * Frage an ihn. Die Fragen standen bis LFH-430 nur als Kommentare im Ledger — unerreichbar für
  * `pnpm cli review-dossier`. Hier sind sie Daten.
