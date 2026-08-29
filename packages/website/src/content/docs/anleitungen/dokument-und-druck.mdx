@@ -4,8 +4,11 @@ description: SVG in Word, PowerPoint oder LibreOffice einfügen, die richtige Gr
 ---
 
 import { loadSnapshot } from '../../../lib/snapshot';
+import { reviewSummary } from '../../../lib/review-summary';
 
 export const snapshot = loadSnapshot();
+export const domain = reviewSummary(snapshot.symbols).domain;
+export const contrastExceptions = snapshot.coverage.contrastExceptions;
 
 Für eine Unterlage, eine Präsentation, ein Merkblatt oder eine Legende brauchst du nur eine Datei
 und drei Klicks. Wichtig ist vor allem, die richtige Datei zu nehmen — sonst wird das Zeichen im
@@ -70,13 +73,32 @@ es trotzdem:
   ein einziges Kommando; es steht im nächsten Abschnitt.
 
 <div class="ez-note">
-<span class="ez-note__title">Was in der Unterlage danebenstehen sollte</span>
+  <span class="ez-note__title">Was in der Unterlage danebenstehen sollte</span>
 
-Keines der {snapshot.symbols.length} Zeichen ist fachlich freigegeben. Wenn die Unterlage in
-Ausbildung oder Einsatzvorbereitung geht, gehört ein Satz dazu, woher die Zeichen stammen und dass
-ihre fachliche Prüfung aussteht. Der Wortlaut zur Grundlage steht auf der
-Seite [Grundlage](/grundlage/).
+  {domain.approved === 0 ? (
+    <p>
+      Keines der {domain.total} Zeichen ist fachlich freigegeben. Wenn die Unterlage in Ausbildung
+      oder Einsatzvorbereitung geht, gehört ein Satz dazu, woher die Zeichen stammen und dass ihre
+      fachliche Prüfung aussteht.
+    </p>
+  ) : domain.pending === 0 ? (
+    <p>
+      Alle {domain.total} Zeichen sind inzwischen fachlich freigegeben. Woher die Zeichen stammen,
+      gehört trotzdem in die Unterlage — eine Freigabe ersetzt die Quellenangabe nicht.
+    </p>
+  ) : (
+    <p>
+      Fachlich freigegeben sind {domain.approved} der {domain.total} Zeichen; bei den übrigen{' '}
+      {domain.total - domain.approved} steht die Prüfung aus. Wenn die Unterlage in Ausbildung oder
+      Einsatzvorbereitung geht, gehört ein Satz dazu, woher die Zeichen stammen — und bei jedem
+      Zeichen, dessen Prüfung noch aussteht, dass sie aussteht. Der Stand steht auf der Seite des
+      Zeichens.
+    </p>
+  )}
 
+  <p>
+    Der Wortlaut zur Grundlage steht auf der Seite <a href="/grundlage/">Grundlage</a>.
+  </p>
 </div>
 
 ## Für Entwicklerinnen und Entwickler
@@ -97,16 +119,57 @@ import { renderSvg } from '@einsatzzeichen/core';
 const svg = renderSvg(drawing, { theme: PRINT_MONOCHROME_THEME });
 ```
 
-Ohne `size` trägt das SVG keine Pixelmaße, sondern nur seine `viewBox` in Millimetern — richtig
-für alles, was selbst skaliert (Satzprogramm, QGIS, CSS). Mit `size` bekommt es eine feste
-Pixelbreite.
+Ohne `size` trägt das SVG keine `width`/`height`, sondern nur seine `viewBox` — richtig für alles,
+was selbst skaliert (Satzprogramm, QGIS, CSS). Die `viewBox` steht dabei in SVG-Einheiten, nicht in
+Millimetern: aus 32 mm werden `90.709`. Mit `size` bekommt das SVG eine feste Pixelbreite.
 
 Die Millimeterregel gilt im ganzen Projekt: alle Längen in der Zwischendarstellung und im Katalog
 sind Millimeter, umgerechnet wird erst an der Renderergrenze mit `1 mm = 72 / 25.4` SVG-Einheiten
 über `mmToUnits`/`unitsToMm` aus `@einsatzzeichen/schema`. Die `viewBox` jedes Zeichens ist
 32 × 32 mm.
 
-Die Grauwerte der Druckfassung sind nicht frei gewählt, sondern auf Kontrast gerechnet: jeder
-Organisationswert hält einen Mindestabstand zu den übrigen und erreicht gegen weiße wie schwarze
-Schrift mindestens 4,5:1 (`packages/catalog/src/render-themes.ts`). Ein selbst entsättigtes
-Farb-SVG erreicht das nicht.
+Die Grauwerte der Druckfassung sind nicht frei gewählt, sondern gegeneinander gerechnet: jede
+Organisationsfarbe hält zu den übrigen einen Helligkeitsabstand von mehr als 0,045, damit zwei
+Organisationen im Ausdruck nicht zum selben Grau werden — der knappste Abstand ist die 0,0483
+zwischen `rot` (`#666666`) und `blau` (`#767676`). Wo ein Zeichen Schrift auf die
+Organisationsfarbe setzt, ist zusätzlich dieses Paar gerechnet: `blau` etwa erreicht 4,54:1 gegen
+weiße und 4,62:1 gegen schwarze Schrift (`packages/catalog/src/render-themes.ts`). Ein selbst
+entsättigtes Farb-SVG leistet beides nicht.
+
+Nicht jedes vorkommende Paar erreicht die Textschwelle von 4,5:1. Der Katalog verschweigt das
+nicht, sondern führt die Ausnahmen als Daten mit — `pnpm cli coverage` gibt sie aus, und ein Test
+prüft gegen genau diese Liste statt gegen eine aufgeweichte Schwelle
+(`packages/catalog/src/contrast-exceptions.ts`).
+
+<div class="ez-note">
+  <span class="ez-note__title">
+    {contrastExceptions.length === 0
+      ? 'Zurzeit keine Kontrastausnahme'
+      : contrastExceptions.length === 1
+        ? 'Eine benannte Kontrastausnahme'
+        : `${contrastExceptions.length} benannte Kontrastausnahmen`}
+  </span>
+
+  {contrastExceptions.length === 0 ? (
+    <p>
+      Zurzeit führt der Katalog kein Paar unterhalb seiner eigenen Schwelle. Sollte eines
+      dazukommen, steht es an dieser Stelle.
+    </p>
+  ) : (
+    <>
+      <ul>
+        {contrastExceptions.map((exception) => (
+          <li key={exception}>{exception}</li>
+        ))}
+      </ul>
+      <p>
+        Betroffen ist die Beschriftung in diesen Zeichen, nicht ihre Form. Sie sind so gebaut, wie
+        die Vorlage sie zeigt; abweichend ist nicht die Umsetzung, sondern die eigene
+        Kontrastschwelle des Katalogs. Wenn es bei euch auf die Lesbarkeit dieser Kürzel im
+        Ausdruck ankommt, druckt genau diese Zeichen probeweise und schaut sie euch an. Die
+        Entscheidung samt der geprüften und verworfenen Alternativen steht beim Zeichen und im{' '}
+        <a href="/coverage/">Stand der Prüfung</a>.
+      </p>
+    </>
+  )}
+</div>

@@ -99,6 +99,9 @@ export default function MapLibreLab({
   const [themeId, setThemeId] = useState(themes[0]?.id ?? 'reference');
   const [mode, setMode] = useState<LabMode>('marker');
 
+  /** Wert aus `?symbol=`, den die Liste nicht kennt — sichtbar gemeldet statt still verworfen. */
+  const [unknownSymbolParam, setUnknownSymbolParam] = useState<string | null>(null);
+
   const [styleReady, setStyleReady] = useState(false);
   const [fontsReady, setFontsReady] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
@@ -125,6 +128,33 @@ export default function MapLibreLab({
     [themes, themeId],
   );
   const theme = themeOption?.theme;
+
+  /*
+   * `?symbol=<slug>` aus der Adresse lesen. Die Symbolseite verlinkt so hierher („Auf der Karte
+   * ansehen"), und ohne diesen Effekt landete man auf der Karte mit dem ersten Zeichen des
+   * Katalogs statt mit dem, das man angesehen hat.
+   *
+   * Erst nach der Hydration, wie im Explorer: die Serverfassung und der erste Client-Render
+   * zeigen beide `symbols[0]`, sonst wiche das Markup ab, sobald die Adresse einen Parameter
+   * trägt. Gesucht wird über den `slug`, weil er in der Adresse steht; die Auswahl läuft über die
+   * `id`, und die beiden sind bei keinem Zeichen gleich (`base.formation` ↔ `base-formation`).
+   *
+   * Ein Wert, den die Liste nicht kennt, wird gemeldet statt still verworfen (Spec §7): sonst
+   * zeigte die Karte wortlos irgendein Zeichen, und wer einem veralteten Link gefolgt ist, hielte
+   * es für das gesuchte.
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const wanted = new URLSearchParams(window.location.search).get('symbol');
+    if (wanted === null || wanted === '') return;
+    const found = symbols.find((entry) => entry.slug === wanted);
+    if (found === undefined) {
+      setUnknownSymbolParam(wanted);
+      return;
+    }
+    setSymbolId(found.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /*
    * Auf die Schrift warten, bevor gerastert wird. `addSymbolImage` zeichnet über `renderCanvas`
@@ -323,6 +353,18 @@ export default function MapLibreLab({
 
   return (
     <section className="ez-lab" aria-label="MapLibre Lab">
+      {unknownSymbolParam === null ? null : (
+        <div className="ez-note" role="status">
+          <span className="ez-note__title">Dieses Zeichen gibt es hier nicht</span>
+          <p>
+            Die Adresse verlangt das Zeichen „{unknownSymbolParam}“. In der Liste steht es nicht —
+            gezeigt wird stattdessen {symbols[0]?.title ?? 'das erste Zeichen des Katalogs'}, das
+            erste Zeichen des Katalogs. Vermutlich ist der Link veraltet oder von Hand geändert;
+            such das Zeichen oben über <strong>Zeichen suchen</strong>.
+          </p>
+        </div>
+      )}
+
       <div className="ez-lab__controls">
         <label className="ez-lab__field ez-lab__field--wide" htmlFor="ez-lab-query">
           <span className="ez-lab__field-label">Zeichen suchen</span>

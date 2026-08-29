@@ -4,8 +4,10 @@ description: Für Entwicklerinnen und Entwickler — die acht Pakete, die vier A
 ---
 
 import { loadSnapshot } from '../../../lib/snapshot';
+import { reviewSummary } from '../../../lib/review-summary';
 
 export const snapshot = loadSnapshot();
+export const review = reviewSummary(snapshot.symbols);
 
 Diese Seite richtet sich an Menschen, die Software bauen. Wer selbst nicht programmiert, aber ein
 Zeichen in eine Anwendung bekommen möchte, kann sie einer entwickelnden Person weiterreichen — sie
@@ -74,8 +76,26 @@ liegt in `packages/catalog/assets` (SIL OFL 1.1).
 
 ## Was du in deiner Oberfläche mitführen solltest
 
-Zu jedem der {snapshot.symbols.length} Zeichen gehören zwei Prüfstände. Der technische ist
-durchgehend belegt, der fachliche steht bei keinem einzigen Zeichen auf „geprüft“. Wer die Zeichen
-in einer Anwendung anzeigt, sollte diesen Stand mit anzeigen und nicht wegoptimieren — er ist die
-zentrale Aussage des Projekts, nicht eine Fußnote. Die Daten dafür stehen je Zeichen im
-Katalog; den Gesamtstand zeigt der [Stand der Prüfung](/coverage/).
+Zu jedem der {snapshot.symbols.length} Zeichen gehören zwei Prüfstände.
+
+export const technicalSentence = [
+  `Technisch tragen ${review.technical.approved} der ${review.technical.total} Zeichen ein „geprüft“`,
+  review.technical.deviation > 0
+    ? `, ${review.technical.deviation} eine dokumentierte Abweichung`
+    : '',
+  review.technical.pending > 0 ? `, ${review.technical.pending} stehen offen` : '',
+  '.',
+].join('');
+export const domainSentence =
+  review.domain.approved === 0
+    ? `Fachlich steht keines der ${review.domain.total} Zeichen auf „geprüft“.`
+    : review.domain.pending === 0
+      ? `Fachlich stehen inzwischen alle ${review.domain.total} Zeichen auf „geprüft“.`
+      : `Fachlich stehen ${review.domain.approved} der ${review.domain.total} Zeichen auf „geprüft“; bei ${review.domain.pending} steht die Prüfung aus.`;
+
+<p>{`${technicalSentence} ${domainSentence}`}</p>
+
+Wer die Zeichen in einer Anwendung anzeigt, sollte diesen Stand mit anzeigen und nicht
+wegoptimieren — er ist die zentrale Aussage des Projekts, nicht eine Fußnote. Lies ihn je Zeichen
+aus `review.technical` und `review.domain` und nicht aus einer Zahl, die du dir gemerkt hast; den
+Gesamtstand zeigt der [Stand der Prüfung](/coverage/).

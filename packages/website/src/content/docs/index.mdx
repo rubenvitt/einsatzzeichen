@@ -45,7 +45,7 @@ export const openDomainTotal = snapshot.coverage.openDomainReviewsByArea.reduce(
   </div>
   <div class="ez-figure">
     <span class="ez-figure__value">{domainApproved}<small> / {matrix.length}</small></span>
-    <span class="ez-figure__label">Zeilen fachlich freigegeben. Keine einzige. Technisch grün ist nicht fachlich freigegeben.</span>
+    <span class="ez-figure__label">Zeilen fachlich freigegeben. {domainApproved === 0 ? 'Keine einzige.' : `${matrix.length - domainApproved} stehen noch aus.`} Technisch grün ist nicht fachlich freigegeben.</span>
     <span class="ez-figure__source">domain-reviews.ts</span>
   </div>
   <div class="ez-figure">

@@ -25,6 +25,11 @@ Zur Auswahl stehen alle {symbols.length} Zeichen aus dem Katalog-Snapshot (Bezug
 `{snapshot.baseline}`, gezeichnet von `@einsatzzeichen/core` {snapshot.coreVersion}). Die fünf
 Punkte auf der Karte liegen um Bonn und bedeuten nichts — sie sind Platzhalter, keine Lage.
 
+Ein `?symbol=<slug>` in der Adresse wählt das Zeichen vor; so verlinkt jede Symbolseite mit „Auf
+der Karte ansehen" hierher. Gelesen wird der Parameter erst nach der Hydration, damit das
+serverseitig gerenderte Markup mit dem ersten Client-Render übereinstimmt. Einen Wert, den die
+Liste nicht kennt, meldet die Seite sichtbar, statt stillschweigend ein anderes Zeichen zu zeigen.
+
 <MapLibreLab client:visible symbols={symbols} themes={themes} basemap="openfreemap" />
 
 ## Die zwei Wege

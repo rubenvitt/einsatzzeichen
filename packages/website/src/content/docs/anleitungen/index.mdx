@@ -4,8 +4,10 @@ description: Was willst du tun? Ein Zeichen finden, herunterladen, auf eine Kart
 ---
 
 import { loadSnapshot } from '../../../lib/snapshot';
+import { reviewSummary } from '../../../lib/review-summary';
 
 export const snapshot = loadSnapshot();
+export const domain = reviewSummary(snapshot.symbols).domain;
 
 Diese Seiten erklären, wie man die Zeichen benutzt. Sie setzen kein technisches Wissen voraus.
 Wo ein Schritt wirklich jemanden braucht, der Software baut, steht das ausdrücklich dabei — und
@@ -55,8 +57,15 @@ einen fachlichen. Was die beiden bedeuten, steht in [Ein Zeichen finden](/anleit
 
 Bei jedem Zeichen stehen zwei Prüfstände nebeneinander. Der technische sagt, dass die Zeichnung
 mit der Vorlage übereinstimmt. Der fachliche sagt, ob jemand aus der Fachwelt bestätigt hat, dass
-es das richtige Zeichen für diese Bedeutung ist. Der zweite steht heute bei **keinem** Zeichen auf
-„geprüft“.
+es das richtige Zeichen für diese Bedeutung ist.
+
+<p>
+  {domain.approved === 0
+    ? `Auf „geprüft“ steht der fachliche heute bei keinem der ${domain.total} Zeichen.`
+    : domain.pending === 0
+      ? `Auf „geprüft“ steht der fachliche inzwischen bei allen ${domain.total} Zeichen — sieh trotzdem am einzelnen Zeichen nach, wer wann geprüft hat.`
+      : `Auf „geprüft“ steht der fachliche heute bei ${domain.approved} der ${domain.total} Zeichen; bei den übrigen ${domain.total - domain.approved} steht er aus. Welcher Stand für dein Zeichen gilt, steht auf seiner Seite.`}
+</p>
 
 Woran das liegt und welche Vorlage dahintersteht, steht auf der Seite
 [Grundlage](/grundlage/).

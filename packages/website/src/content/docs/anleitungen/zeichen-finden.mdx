@@ -4,8 +4,10 @@ description: Nach Bedeutung, Abkürzung, Organisation oder Kapitel suchen — un
 ---
 
 import { loadSnapshot } from '../../../lib/snapshot';
+import { reviewSummary } from '../../../lib/review-summary';
 
 export const snapshot = loadSnapshot();
+export const domain = reviewSummary(snapshot.symbols).domain;
 
 Hier findest du heraus, ob es für eine Bedeutung ein Zeichen gibt, wie es aussieht und wie
 verlässlich es ist. Dafür gibt es zwei Wege: die Suche über der Seite, die alle Texte dieser
@@ -55,17 +57,44 @@ Jedes Zeichen trägt zwei Marken nebeneinander. Sie sagen Verschiedenes, und bei
   sondern darüber, ob die Bedeutung geprüft wurde.
 
 <div class="ez-note">
-<span class="ez-note__title">Kein Zeichen ist heute fachlich freigegeben</span>
+  <span class="ez-note__title">
+    {domain.approved === 0
+      ? 'Kein Zeichen ist heute fachlich freigegeben'
+      : domain.pending === 0
+        ? `Alle ${domain.total} Zeichen sind fachlich freigegeben`
+        : `${domain.approved} von ${domain.total} Zeichen sind fachlich freigegeben`}
+  </span>
 
-Der fachliche Prüfstand steht bei keinem der {snapshot.symbols.length} Zeichen auf „geprüft“. Wer
-ein Zeichen aus diesem Katalog in einer Übung, einer Unterlage oder einer Lagekarte verwendet,
-sollte das wissen und dazusagen.
+  {domain.approved === 0 ? (
+    <p>
+      Der fachliche Prüfstand steht bei keinem der {domain.total} Zeichen auf „geprüft“. Wer ein
+      Zeichen aus diesem Katalog in einer Übung, einer Unterlage oder einer Lagekarte verwendet,
+      sollte das wissen und dazusagen.
+    </p>
+  ) : (
+    <p>
+      {[
+        domain.approved === domain.total
+          ? `Der fachliche Prüfstand steht bei allen ${domain.total} Zeichen auf „geprüft“`
+          : `Der fachliche Prüfstand steht bei ${domain.approved} der ${domain.total} Zeichen auf „geprüft“`,
+        domain.pending > 0 ? `, bei ${domain.pending} steht er noch aus` : '',
+        domain.deviation > 0
+          ? `, und ${domain.deviation} tragen eine dokumentierte Abweichung`
+          : '',
+        '.',
+      ].join('')}{' '}
+      Welcher Stand für dein Zeichen gilt, steht auf seiner Seite — verlass dich nicht auf den
+      Gesamtstand, sondern sieh am einzelnen Zeichen nach.
+    </p>
+  )}
 
-Der Grund liegt nicht am Projekt, sondern an der Vorlage: die vorläufige Anwendung der
-Empfehlungen wurde aufgehoben, und ihre Verbreitung ist bis zum Abschluss der Beratungen
-ausgesetzt. Der genaue Wortlaut und das Register aller {snapshot.sources.length} Quellen stehen
-auf der Seite [Grundlage](/grundlage/).
-
+  <p>
+    {domain.pending > 0
+      ? 'Der Grund liegt nicht am Projekt, sondern an der Vorlage: die vorläufige Anwendung der Empfehlungen wurde aufgehoben, und ihre Verbreitung ist bis zum Abschluss der Beratungen ausgesetzt.'
+      : 'Der Stand der Vorlage selbst bleibt davon unberührt: die vorläufige Anwendung der Empfehlungen wurde aufgehoben, und ihre Verbreitung ist bis zum Abschluss der Beratungen ausgesetzt.'}{' '}
+    Der genaue Wortlaut und das Register aller {snapshot.sources.length} Quellen stehen auf der
+    Seite <a href="/grundlage/">Grundlage</a>.
+  </p>
 </div>
 
 Eine dritte Marke kommt vor: **Abweichung**. Sie heißt, dass die Zeichnung bewusst von der Vorlage
