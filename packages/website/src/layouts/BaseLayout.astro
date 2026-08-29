@@ -174,12 +174,19 @@ const NAV = [
         -webkit-font-smoothing: antialiased;
       }
 
-      .ez-shell {
+      /*
+       * `:global`, und das ist kein Stilbruch, sondern der Vertrag der Klasse: `.ez-shell` ist
+       * für die Seiten *in* diesem Layout da (Landingpage, Baukasten), und deren Elemente tragen
+       * die Scope-Kennung ihrer eigenen Komponente. Als scoped Regel griffe die Breite nur im
+       * Kopf und Fuß des Layouts — der Seiteninhalt liefe randlos bis an die Bildschirmkante
+       * (genau so auf dem Telefon aufgefallen).
+       */
+      :global(.ez-shell) {
         width: min(100% - 2 * var(--ez-space-4), 72rem);
         margin-inline: auto;
       }
 
-      body.ez-page--wide .ez-shell {
+      body.ez-page--wide :global(.ez-shell) {
         width: min(100% - 2 * var(--ez-space-4), 88rem);
       }
 
