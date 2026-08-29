@@ -38,14 +38,21 @@ Alle Zeichen dieses Katalogs sind quadratisch und in **32 × 32 Millimetern** ve
 ihre natürliche Größe, gut 3 Zentimeter Kantenlänge. In dieser Größe eingefügt stimmen
 Strichstärken und Schriftgrößen genau so, wie sie gemessen wurden.
 
-Kleiner geht, aber nicht beliebig: unter etwa 15 Millimetern werden Kürzel in der Fußzone auf
-Papier schwer lesbar. Größer geht ohne Grenze — das SVG wird nicht unscharf.
+Größer geht ohne Grenze — ein SVG wird nicht unscharf. Nach unten gibt es eine Grenze, und sie
+hängt am Kürzel in der Fußzone: Zeichen ohne Kürzel bleiben auch klein erkennbar, Zeichen mit
+Kürzel nicht.
 
-Ein praktischer Anhalt:
+Wie klein genau, ist im Projekt nur für den Bildschirm gemessen, nicht für Papier. Dort wurden
+Kürzel wie „HRT“, „FRT“ und „VoIP“ angesehen: bei einer Darstellung mit 16 Bildpunkten
+verschwimmen sie zu grauen Flächen, bei 24 sind sie mit Mühe zu erraten, ab 32 sind sie zweifelsfrei
+lesbar (`packages/core/src/render/text-policy.ts`). Auf Papier hängt dieselbe Grenze von Drucker,
+Papier und Betrachtungsabstand ab — dafür gibt es hier keine gemessene Zahl, und es wird auch keine
+erfunden.
 
-- **Legende oder Fließtext:** 8 bis 12 Millimeter, ohne Kürzel.
-- **Tabelle, Merkblatt, Handout:** 15 bis 25 Millimeter.
-- **Präsentationsfolie, Wandkarte:** 32 Millimeter und mehr.
+Der belastbare Rat lautet deshalb: **druck einen Probebogen.** Setz das Zeichen in den Größen, die
+in Frage kommen, nebeneinander auf eine Seite, druck sie auf dem Gerät und Papier, das ihr wirklich
+verwendet, und schau sie aus dem Abstand an, aus dem sie später gelesen werden. Das dauert fünf
+Minuten und ersetzt jede Faustregel.
 
 ## Schwarz-Weiß-Druck
 
