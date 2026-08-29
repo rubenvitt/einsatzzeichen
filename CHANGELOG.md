@@ -1,3 +1,11 @@
+## Version 1.0.1
+
+Diese Patch-Release behebt einen technischen Fehler im Release-Prozess. Es gibt keine funktionalen Änderungen an den Einsatzzeichen-Paketen.
+
+## Sonstiges
+
+- **NPM Provenance**: Die Pakete werden nun korrekt mit NPM Provenance Attestation veröffentlicht, was die Herkunft und Integrität der Pakete nachweisbar macht.
+
 ## Erste öffentliche Version
 
 Diese Version markiert den ersten Release von Einsatzzeichen – einem semantischen Symbolsystem für taktische Zeichen der Gefahrenabwehr. Das System umfasst 256 Zeichen mit vollständiger technischer Prüfung und 544 Manifestzeilen mit fachlicher Freigabe durch den Projektinhaber.
