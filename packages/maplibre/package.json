@@ -1,9 +1,29 @@
 {
   "name": "@einsatzzeichen/maplibre",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
+  "description": "MapLibre-GL-Integration für Einsatzzeichen",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rubenvitt/einsatzzeichen.git",
+    "directory": "packages/maplibre"
+  },
+  "homepage": "https://github.com/rubenvitt/einsatzzeichen",
+  "keywords": ["taktische-zeichen", "gefahrenabwehr", "bos", "einsatzzeichen", "maplibre"],
   "main": "./src/index.ts",
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
   "dependencies": {
     "@einsatzzeichen/core": "workspace:*",
     "@einsatzzeichen/schema": "workspace:*"

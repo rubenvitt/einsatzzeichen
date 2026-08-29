@@ -6,6 +6,7 @@
   "description": "Semantisches Symbolsystem für taktische Zeichen der Gefahrenabwehr",
   "license": "MIT",
   "scripts": {
+    "build": "tsc -b tsconfig.packages.json && node scripts/release/copy-catalog-assets.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -13,12 +14,18 @@
   },
   "devDependencies": {
     "@resvg/resvg-js": "2.6.2",
+    "@semantic-release/changelog": "^7.0.0",
+    "@semantic-release/exec": "^7.1.0",
+    "@semantic-release/git": "^11.0.1",
     "@types/node": "^22.20.1",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
+    "conventional-changelog-conventionalcommits": "^10.4.0",
     "happy-dom": "^20.11.11",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "semantic-release": "^25.0.9",
+    "semantic-release-claude-changelog": "^2.0.0",
     "tsx": "^4.23.5",
     "typescript": "^5.9.3",
     "vitest": "^3.2.7"

@@ -1,0 +1,31 @@
+{
+  // Gemeinsame Basis für die Publikations-Builds der Pakete (tsc project references).
+  // Die Entwicklungs-Typprüfung läuft weiter über ./tsconfig.json (noEmit, paths auf src).
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "verbatimModuleSyntax": true,
+    "types": ["node"],
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    // Paket-Importe zeigen auf die Quellen; über die project references landet die
+    // Auflösung beim gebauten d.ts des jeweiligen Pakets.
+    "paths": {
+      "@einsatzzeichen/schema": ["./packages/schema/src/index.ts"],
+      "@einsatzzeichen/core": ["./packages/core/src/index.ts"],
+      "@einsatzzeichen/catalog": ["./packages/catalog/src/index.ts"],
+      "@einsatzzeichen/react": ["./packages/react/src/index.ts"],
+      "@einsatzzeichen/web-component": ["./packages/web-component/src/index.ts"],
+      "@einsatzzeichen/maplibre": ["./packages/maplibre/src/index.ts"],
+      "@einsatzzeichen/qgis": ["./packages/qgis/src/index.ts"]
+    }
+  }
+}

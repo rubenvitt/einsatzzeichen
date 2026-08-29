@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Nur ein Release gleichzeitig; ein laufendes Release nicht abbrechen.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write # Release-Commit, Tag und GitHub-Release
+  issues: write # Erfolgs-/Fehlerkommentare auf Issues
+  pull-requests: write # Erfolgs-/Fehlerkommentare auf PRs
+  id-token: write # npm provenance
+
+jobs:
+  release:
+    if: github.repository == 'rubenvitt/einsatzzeichen'
+    runs-on: ubuntu-latest
+    steps:
+      # Token der GitHub App "R-Release Helper": pusht den Release-Commit als
+      # Bypass-Actor am Ruleset von main vorbei.
+      - name: App-Token erzeugen
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v4
+        with:
+          # semantic-release braucht die volle Historie samt Tags.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - run: pnpm install --frozen-lockfile
+
+      # Dieselben Prüfungen wie in der CI — nichts Ungeprüftes publizieren.
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+      - name: semantic-release
+        run: pnpm exec semantic-release
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

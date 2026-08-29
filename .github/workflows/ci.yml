@@ -28,6 +28,7 @@ jobs:
         run: pnpm cli verify:repository
 
       - run: pnpm typecheck
+      - run: pnpm build
       - run: pnpm test
       - run: pnpm cli coverage
 
