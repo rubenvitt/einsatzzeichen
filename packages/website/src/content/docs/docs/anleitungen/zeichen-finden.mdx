@@ -3,8 +3,8 @@ title: Ein Zeichen finden
 description: Nach Bedeutung, Abkürzung, Organisation oder Kapitel suchen — und verstehen, was der technische und der fachliche Prüfstand an jedem Zeichen aussagen.
 ---
 
-import { loadSnapshot } from '../../../lib/snapshot';
-import { bulkApprovalClause, bulkDomainApproval, reviewSummary } from '../../../lib/review-summary';
+import { loadSnapshot } from '../../../../lib/snapshot';
+import { bulkApprovalClause, bulkDomainApproval, reviewSummary } from '../../../../lib/review-summary';
 
 export const snapshot = loadSnapshot();
 export const domain = reviewSummary(snapshot.symbols).domain;
@@ -17,7 +17,7 @@ sich zusätzlich filtern lässt.
 
 ## Schritt für Schritt
 
-1. Öffne [Zeichen suchen](/explorer/). Ohne Eingabe stehen dort alle
+1. Öffne [Zeichen suchen](/docs/explorer/). Ohne Eingabe stehen dort alle
    {snapshot.symbols.length} Zeichen als Kacheln.
 
 2. Tippe in das Feld **Suche**, wonach du suchst. Gesucht wird gleichzeitig im Namen des Zeichens,
@@ -98,14 +98,14 @@ die Marke, dann erscheint die Angabe auch dort, wo sie aus Platzgründen fehlt.
       ? 'Der Grund liegt nicht am Projekt, sondern an der Vorlage: die vorläufige Anwendung der Empfehlungen wurde aufgehoben, und ihre Verbreitung ist bis zum Abschluss der Beratungen ausgesetzt.'
       : 'Der Stand der Vorlage selbst bleibt davon unberührt: die vorläufige Anwendung der Empfehlungen wurde aufgehoben, und ihre Verbreitung ist bis zum Abschluss der Beratungen ausgesetzt. Ein fachliches „geprüft“ macht daraus keine geltende Vorschrift.'}{' '}
     Der genaue Wortlaut und das Register aller {snapshot.sources.length} Quellen stehen auf der
-    Seite <a href="/grundlage/">Grundlage</a>.
+    Seite <a href="/docs/grundlage/">Grundlage</a>.
   </p>
 </div>
 
 Eine dritte Marke kommt vor: **Abweichung**. Sie heißt, dass die Zeichnung bewusst von der Vorlage
 abweicht, und der Grund steht daneben. Kein Zeichen weicht unbemerkt ab.
 
-Wie viele Zeichen auf welchem Prüfstand stehen, zeigt der [Stand der Prüfung](/coverage/).
+Wie viele Zeichen auf welchem Prüfstand stehen, zeigt der [Stand der Prüfung](/docs/coverage/).
 
 ## Für Entwicklerinnen und Entwickler
 

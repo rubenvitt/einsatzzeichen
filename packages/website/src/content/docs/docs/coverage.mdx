@@ -3,11 +3,11 @@ title: Stand der Prüfung
 description: Wie weit der Katalog ausgebaut ist, was an jedem Abschnitt der Vorlage geprüft wurde und was vor der ersten Vollversion noch offen ist — ohne Rundungen.
 ---
 
-import CoverageAxes from '../../components/CoverageAxes.astro';
-import CoverageMatrix from '../../components/islands/CoverageMatrix.tsx';
-import { axisByLabel } from '../../lib/coverage-axes';
-import { loadSnapshot } from '../../lib/snapshot';
-import { bulkApprovalClause, bulkDomainApprovalOfRows, reviewSummaryOfRows } from '../../lib/review-summary';
+import CoverageAxes from '../../../components/CoverageAxes.astro';
+import CoverageMatrix from '../../../components/islands/CoverageMatrix.tsx';
+import { axisByLabel } from '../../../lib/coverage-axes';
+import { loadSnapshot } from '../../../lib/snapshot';
+import { bulkApprovalClause, bulkDomainApprovalOfRows, reviewSummaryOfRows } from '../../../lib/review-summary';
 
 export const snapshot = loadSnapshot();
 export const coverage = snapshot.coverage;
@@ -26,7 +26,7 @@ geprüft hat. Unten steht die vollständige Prüfliste, durchsuchbar und sortier
 
 Wenn dich nur ein bestimmtes Zeichen interessiert, brauchst du diese Seite nicht — der Prüfstand
 steht auf der Seite jedes Zeichens, und was die Marken bedeuten, erklärt
-[Ein Zeichen finden](/anleitungen/zeichen-finden/).
+[Ein Zeichen finden](/docs/anleitungen/zeichen-finden/).
 
 ## Was geprüft wurde
 
@@ -52,7 +52,7 @@ steht auf der Seite jedes Zeichens, und was die Marken bedeuten, erklärt
         ].join('')}
 </p>
 
-Was ein fachliches Urteil nicht leistet, steht auf der Seite [Grundlage](/grundlage/): die Vorlage
+Was ein fachliches Urteil nicht leistet, steht auf der Seite [Grundlage](/docs/grundlage/): die Vorlage
 selbst ist zurzeit keine geltende Vorschrift. Ihre vorläufige Anwendung ist aufgehoben,
 Veröffentlichung und Verbreitung sind bis zum Abschluss der Beratungen ausgesetzt.
 

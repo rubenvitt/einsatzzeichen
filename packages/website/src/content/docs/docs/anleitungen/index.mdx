@@ -3,8 +3,8 @@ title: Anleitungen
 description: Was willst du tun? Ein Zeichen finden, herunterladen, auf eine Karte legen, in ein Dokument setzen, drucken, selbst zusammensetzen oder in Software einbauen — jeder Weg Schritt für Schritt.
 ---
 
-import { loadSnapshot } from '../../../lib/snapshot';
-import { bulkApprovalClause, bulkDomainApproval, reviewSummary } from '../../../lib/review-summary';
+import { loadSnapshot } from '../../../../lib/snapshot';
+import { bulkApprovalClause, bulkDomainApproval, reviewSummary } from '../../../../lib/review-summary';
 
 export const snapshot = loadSnapshot();
 export const domain = reviewSummary(snapshot.symbols).domain;
@@ -16,36 +16,36 @@ was du dieser Person sagen musst.
 
 Zur Zeit gibt es {snapshot.symbols.length} Zeichen mit einer eigenen Seite. Jede dieser Seiten
 zeigt das Zeichen, seine Fundstelle in der Vorlage und zwei Prüfstände: einen technischen und
-einen fachlichen. Was die beiden bedeuten, steht in [Ein Zeichen finden](/anleitungen/zeichen-finden/).
+einen fachlichen. Was die beiden bedeuten, steht in [Ein Zeichen finden](/docs/anleitungen/zeichen-finden/).
 
 ## Was willst du tun?
 
 <div class="ez-grid ez-grid--2">
-  <a class="ez-card" href="/anleitungen/zeichen-finden/">
+  <a class="ez-card" href="/docs/anleitungen/zeichen-finden/">
     <span class="ez-card__title">Ein Zeichen finden</span>
     <span class="ez-card__text">Nach Bedeutung, Abkürzung oder Organisation suchen — und verstehen, was die beiden Prüfstände an jedem Zeichen aussagen.</span>
   </a>
-  <a class="ez-card" href="/anleitungen/herunterladen/">
+  <a class="ez-card" href="/docs/anleitungen/herunterladen/">
     <span class="ez-card__title">Ein Zeichen herunterladen</span>
     <span class="ez-card__text">Eine Bilddatei vom Zeichen holen: SVG zum beliebigen Vergrößern, PNG für alles, was kein SVG kann.</span>
   </a>
-  <a class="ez-card" href="/anleitungen/karte/">
+  <a class="ez-card" href="/docs/anleitungen/karte/">
     <span class="ez-card__title">Ein Zeichen auf eine Karte legen</span>
     <span class="ez-card__text">Auf der Karte dieser Website ausprobieren, wie ein Zeichen im Gelände aussieht — in verschiedenen Größen und Farbprofilen.</span>
   </a>
-  <a class="ez-card" href="/anleitungen/qgis/">
+  <a class="ez-card" href="/docs/anleitungen/qgis/">
     <span class="ez-card__title">Zeichen in QGIS verwenden</span>
     <span class="ez-card__text">Eine fertige Symboldatei in QGIS einlesen und die Zeichen einer Punktebene zuweisen.</span>
   </a>
-  <a class="ez-card" href="/anleitungen/dokument-und-druck/">
+  <a class="ez-card" href="/docs/anleitungen/dokument-und-druck/">
     <span class="ez-card__title">Ein Zeichen in ein Dokument setzen oder drucken</span>
     <span class="ez-card__text">Zeichen in Word, PowerPoint oder LibreOffice einfügen, in der richtigen Größe — und was für Schwarz-Weiß-Druck gilt.</span>
   </a>
-  <a class="ez-card" href="/anleitungen/eigenes-zeichen/">
+  <a class="ez-card" href="/docs/anleitungen/eigenes-zeichen/">
     <span class="ez-card__title">Ein Zeichen selbst zusammensetzen</span>
     <span class="ez-card__text">Im Baukasten aus Grundzeichen, Organisation, Stärke und Fähigkeiten ein Zeichen bauen — und lesen, warum eine Kombination nicht erlaubt ist.</span>
   </a>
-  <a class="ez-card" href="/anleitungen/software/">
+  <a class="ez-card" href="/docs/anleitungen/software/">
     <span class="ez-card__title">Zeichen in eigene Software einbauen</span>
     <span class="ez-card__text">Für Entwicklerinnen und Entwickler: die vier Wege — TypeScript, React, Web Component, MapLibre.</span>
   </a>
@@ -74,6 +74,6 @@ richtige Zeichen für diese Bedeutung ist.
 </p>
 
 Woran das liegt und welche Vorlage dahintersteht, steht auf der Seite
-[Grundlage](/grundlage/).
+[Grundlage](/docs/grundlage/).
 
 </div>

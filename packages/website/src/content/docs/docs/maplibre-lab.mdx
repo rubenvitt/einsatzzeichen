@@ -4,9 +4,9 @@ description: Jedes Zeichen des Katalogs auf einer echten Landkarte ausprobieren 
 ---
 
 import { RENDER_THEMES } from '@einsatzzeichen/catalog';
-import MapLibreLab from '../../components/islands/MapLibreLab.tsx';
-import { labSymbols } from '../../lib/maplibre-lab.js';
-import { loadSnapshot } from '../../lib/snapshot.js';
+import MapLibreLab from '../../../components/islands/MapLibreLab.tsx';
+import { labSymbols } from '../../../lib/maplibre-lab.js';
+import { loadSnapshot } from '../../../lib/snapshot.js';
 
 export const snapshot = loadSnapshot();
 export const symbols = labSymbols(snapshot.symbols);
@@ -28,13 +28,13 @@ und nichts hochgeladen; die Karte ist ein Probierfeld, kein Lagekartenwerkzeug. 
 liegen um Bonn und bedeuten nichts — sie sind Platzhalter, keine Lage.
 
 Schritt für Schritt, mit jedem Bedienfeld einzeln erklärt, steht das unter
-[Ein Zeichen auf eine Karte legen](/anleitungen/karte/).
+[Ein Zeichen auf eine Karte legen](/docs/anleitungen/karte/).
 
 <MapLibreLab client:visible symbols={symbols} themes={themes} basemap="openfreemap" />
 
 Zur Auswahl stehen alle {symbols.length} Zeichen des Katalogs, gezeichnet nach der Vorlage, die
 dieses Projekt führt: {baselineSource === undefined ? snapshot.baseline : baselineSource.title}.
-Was das für ihre Verbindlichkeit heißt, steht auf [Grundlage](/grundlage/). Kommst du von der
+Was das für ihre Verbindlichkeit heißt, steht auf [Grundlage](/docs/grundlage/). Kommst du von der
 Seite eines Zeichens über **Auf der Karte ansehen**, steht es schon im Auswahlfeld. Führt ein
 alter Link auf ein Zeichen, das es nicht mehr gibt, sagt die Karte das, statt stillschweigend ein
 anderes zu zeigen.
@@ -66,7 +66,7 @@ Schaltfläche, die nichts tut, steht hier dieser Satz.
 Dass ein Zeichen hier sauber auf der Karte steht, sagt nur, dass die Darstellung funktioniert. Was
 an einem Zeichen geprüft wurde, steht auf seiner Seite. Und der Stand der Vorlage selbst (AFKzV,
 57. Sitzung, 13./14.03.2025: vorläufige Anwendung aufgehoben, Verbreitung ausgesetzt) steht auf
-der Seite [Grundlage](/grundlage/).
+der Seite [Grundlage](/docs/grundlage/).
 
 </div>
 

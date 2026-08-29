@@ -3,7 +3,7 @@ title: Sources & Diffs
 description: Der eine Einstieg, den es noch nicht gibt — was er zeigen soll, was ihm fehlt und was davon schon da ist.
 ---
 
-import { loadSnapshot } from '../../lib/snapshot';
+import { loadSnapshot } from '../../../lib/snapshot';
 
 export const snapshot = loadSnapshot();
 export const legacySource = snapshot.sources.find((source) => source.id === 'skk-2010');
@@ -16,7 +16,7 @@ export const symbolsWithLegacyIds = snapshot.symbols.filter(
 
 Hier gibt es nichts zu bedienen. Diese Seite ist die Auskunft darüber, warum ein geplanter
 Einstieg fehlt — mit den beiden Gründen, die dafür verantwortlich sind. Wenn du ein Zeichen suchen
-oder herunterladen willst, bist du bei den [Anleitungen](/anleitungen/) richtig.
+oder herunterladen willst, bist du bei den [Anleitungen](/docs/anleitungen/) richtig.
 
 </div>
 
@@ -62,14 +62,14 @@ Die Bausteine des Einstiegs gibt es einzeln, nur nicht als Gegenüberstellung.
 
 - **Das Quellenregister** führt {snapshot.sources.length} Quellen mit Zitierform, Bezugsadresse,
   Nutzungsgrundlage und eigenem Prüfstand. Es steht vollständig auf der Seite
-  [Grundlage](/grundlage/).
+  [Grundlage](/docs/grundlage/).
 - **Die Fundstelle** hängt an jedem Zeichen: aus welchem Abschnitt der Vorlage es stammt, steht im
   Kopf jeder [Zeichenseite](/zeichen/).
 - **Der Vergleich mit der Vorlage** findet statt — nur als Messung statt als Bild. Weicht ein
   Zeichen ab, steht die Begründung als Notiz an seinem technischen Prüfstand. Kein Zeichen weicht
   unbemerkt ab.
 - **Die Kontrollbögen** belegen, dass sich die Ausgabe über sechs Größen und drei Farbprofile nicht
-  unbemerkt ändert: [Belege](/belege/).
+  unbemerkt ändert: [Belege](/docs/belege/).
 
 Was fehlt, ist damit nicht die Messung. Was fehlt, ist das Recht, das Gemessene nebeneinander zu
 zeigen — und die Erhebung für die alten Namen.

@@ -1,0 +1,55 @@
+---
+/**
+ * Der Baukasten als eigenständige Seite (Route `/builder/`, Spec §5.4) — außerhalb von
+ * Starlight, mit `wide`, weil das Werkzeug die Breite braucht: links das Formular, rechts die
+ * klebende Vorschau. Der lange Doku-Text der früheren `builder.mdx` ist bewusst weg; was davon
+ * Entwicklerinnen betrifft, steht gekürzt im eingeklappten Abschnitt der Insel selbst. Über dem
+ * Werkzeug bleiben zwei Sätze — mehr Einleitung stünde zwischen der Leserin und dem Zeichen.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Builder from '../components/islands/Builder.tsx';
+---
+
+<BaseLayout
+  title="Baukasten – Einsatzzeichen"
+  description="Ein taktisches Zeichen aus seinen Bestandteilen zusammensetzen, sofort sehen und jede abgelehnte Kombination erklärt bekommen."
+  active="builder"
+  wide
+>
+  <div class="ez-shell">
+    <header class="ez-builder-head">
+      <span class="ez-eyebrow">Werkzeug</span>
+      <h1>Baukasten</h1>
+      <p>
+        Ein Zeichen aus seinen Bestandteilen zusammensetzen — Grundform, Organisation,
+        Fähigkeiten, Beschriftung — und sofort sehen, was entsteht. Passt eine Kombination
+        nicht, steht neben der Vorschau, welche Regel das verlangt und was sich ändern lässt;
+        die Adresszeile trägt jederzeit den aktuellen Stand als teilbaren Link.
+      </p>
+    </header>
+    <Builder client:load />
+  </div>
+</BaseLayout>
+
+<style>
+  .ez-builder-head {
+    padding-block-start: var(--ez-space-8);
+    max-width: 62ch;
+  }
+
+  .ez-builder-head h1 {
+    margin: 0 0 var(--ez-space-3);
+    font-size: clamp(var(--sl-text-3xl), calc(1rem + 2.4vw), var(--sl-text-4xl));
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    color: var(--sl-color-white);
+  }
+
+  .ez-builder-head p {
+    margin: 0;
+    font-size: var(--sl-text-base);
+    line-height: 1.65;
+    color: var(--sl-color-gray-2);
+    text-wrap: pretty;
+  }
+</style>

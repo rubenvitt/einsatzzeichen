@@ -3,8 +3,8 @@ title: Ein Zeichen in ein Dokument setzen oder drucken
 description: SVG in Word, PowerPoint oder LibreOffice einfügen, die richtige Größe wählen — und was heute für den Schwarz-Weiß-Druck möglich ist.
 ---
 
-import { loadSnapshot } from '../../../lib/snapshot';
-import { bulkApprovalClause, bulkDomainApproval, reviewSummary } from '../../../lib/review-summary';
+import { loadSnapshot } from '../../../../lib/snapshot';
+import { bulkApprovalClause, bulkDomainApproval, reviewSummary } from '../../../../lib/review-summary';
 
 export const snapshot = loadSnapshot();
 export const domain = reviewSummary(snapshot.symbols).domain;
@@ -18,7 +18,7 @@ Druck unscharf.
 ## Schritt für Schritt
 
 1. Hol dir das Zeichen als **SVG**. Wie das geht, steht unter
-   [Ein Zeichen herunterladen](/anleitungen/herunterladen/). Nimm SVG und nicht PNG: SVG bleibt in
+   [Ein Zeichen herunterladen](/docs/anleitungen/herunterladen/). Nimm SVG und nicht PNG: SVG bleibt in
    jeder Größe scharf, auch im Druck.
 
 2. Füge die Datei ein:
@@ -67,7 +67,7 @@ ist — anders als ein einfach entfärbtes Farbbild, bei dem Rot und Grün zum s
 **Heute lässt sich diese Fassung nicht direkt von der Zeichenseite herunterladen.** Zwei Wege gibt
 es trotzdem:
 
-- Auf der Seite [Belege](/belege/) liegt zu jeder Zeichnung ein Bogen, der sie unten auch in der
+- Auf der Seite [Belege](/docs/belege/) liegt zu jeder Zeichnung ein Bogen, der sie unten auch in der
   Schwarz-Weiß-Fassung zeigt. Rechtsklick, „Bild speichern unter …“ — dann hast du den ganzen
   Bogen als Datei und kannst den unteren Teil ausschneiden.
 - Oder du bittest jemanden, der das Projekt bauen kann, um einen Export in dieser Fassung. Das ist
@@ -103,7 +103,7 @@ es trotzdem:
   )}
 
   <p>
-    Der Wortlaut zur Grundlage steht auf der Seite <a href="/grundlage/">Grundlage</a>.
+    Der Wortlaut zur Grundlage steht auf der Seite <a href="/docs/grundlage/">Grundlage</a>.
   </p>
 </div>
 
@@ -175,7 +175,7 @@ prüft gegen genau diese Liste statt gegen eine aufgeweichte Schwelle
         Kontrastschwelle des Katalogs. Wenn es bei euch auf die Lesbarkeit dieser Kürzel im
         Ausdruck ankommt, druckt genau diese Zeichen probeweise und schaut sie euch an. Die
         Entscheidung samt der geprüften und verworfenen Alternativen steht beim Zeichen und im{' '}
-        <a href="/coverage/">Stand der Prüfung</a>.
+        <a href="/docs/coverage/">Stand der Prüfung</a>.
       </p>
     </>
   )}

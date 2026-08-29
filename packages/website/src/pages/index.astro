@@ -1,0 +1,741 @@
+---
+/**
+ * Die Landingpage (Wurzel `/`) — die Dokumentation liegt unter `/docs/…`, hier steht der eine
+ * Auftritt für alle Zielgruppen: was dieses Projekt ist, wie ein Zeichen entsteht, wie weit der
+ * Katalog geprüft ist, und die zwei Einstiege für Einsatz und Entwicklung.
+ *
+ * Alles Sichtbare kommt aus dem Katalog: die Zeichenwand und die Beispiele aus dem Snapshot, die
+ * vier Schritte aus dem Kompositionsmotor selbst (`composeFromCatalog` zur Buildzeit), jede Zahl
+ * aus `review-summary.ts`. Kein Bild, keine Zahl steht hier von Hand — was von Hand stünde, wäre
+ * an dem Tag falsch, an dem sich der Katalog ändert.
+ */
+import { composeFromCatalog } from '@einsatzzeichen/catalog/src/recipes.js';
+import { renderSvg } from '@einsatzzeichen/core';
+import type { SymbolSpec } from '@einsatzzeichen/schema';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import StatusPair from '../components/StatusPair.astro';
+import { formatReviewDate } from '../components/StatusPair.tsx';
+import {
+  bulkApprovalClause,
+  bulkDomainApprovalOfRows,
+  reviewSummaryOfRows,
+} from '../lib/review-summary';
+import { loadSnapshot, type SymbolSummary } from '../lib/snapshot';
+
+const snapshot = loadSnapshot();
+const bySlug = new Map(snapshot.symbols.map((symbol) => [symbol.slug, symbol]));
+
+/** Wirft statt eines stillen Rückfalls (Spec §7): ein kuratiertes Zeichen, das aus dem Katalog
+ * verschwindet, soll den Build brechen und nicht eine Lücke in der Wand hinterlassen. */
+function mustFind(slug: string): SymbolSummary {
+  const symbol = bySlug.get(slug);
+  if (symbol === undefined) {
+    throw new Error(
+      `Kuratiertes Zeichen "${slug}" steht nicht im Katalog-Snapshot. ` +
+        'Kuratierung in src/pages/index.astro anpassen oder Snapshot neu erzeugen: ' +
+        'pnpm --filter @einsatzzeichen/website generate',
+    );
+  }
+  return symbol;
+}
+
+/*
+ * Die Zeichenwand: 16 Zeichen, kuratiert auf Vielfalt statt Reihenfolge — verschiedene Kapitel
+ * und Anhänge, verschiedene Organisationen (und damit Farben), verschiedene Grundformen:
+ * Formation, Person, Land-/Luft-/Wasserfahrzeug, Anhänger, Stelle, Gebäude. Die Organisations-
+ * farben erscheinen auf dieser Seite nur hier und in den Beispielen: in den Zeichen, wo sie
+ * Bedeutung tragen.
+ */
+const WALL_SLUGS = [
+  'c-1-3', // Löschzug — Formation, Feuerwehr
+  'e-1-1', // Bergungsgruppe — Formation, THW
+  'f-1-4', // Einsatzeinheit — Formation, Hilfsorganisation
+  'd-3-3', // Leitender Notarzt — Person, Führung/Leitung
+  'f-2-3', // RTW — Landfahrzeug
+  'n-1-4', // Drehflügler Bundeswehr — Luftfahrzeug
+  'i-3-4', // Hochwasserboot — Wasserfahrzeug
+  'f-3-5', // Behandlungsplatz 50 — ortsgebundene Stelle
+  'd-4-4', // Leiter Gefahrenabwehrkräfte Bundespolizei — Person, Polizei
+  'g-5', // Versorgung mit Verpflegung — Fähigkeit im Fußband
+  'i-2-7', // Bootsanhänger — Anhänger
+  'i-5-3', // Taucher — Einsatzkraft
+  'h-1', // Veterinärzug — sonstige Gefahrenabwehr
+  'n-2-3', // Notfallinformationspunkt — zivile Einheiten
+  'base-building', // Gebäude — ein Grundzeichen aus Kapitel 1
+  'n-1-6', // Erkundungsflugzeug Feuerwehr — Luftfahrzeug
+];
+
+const wall = WALL_SLUGS.map((slug, index) => {
+  const symbol = mustFind(slug);
+  return {
+    slug: symbol.slug,
+    title: symbol.title,
+    // Eigenes idPrefix je Zeichnung: `renderSvg()` vergibt `id="<prefix>-desc"`, und auf dieser
+    // Seite liegen über zwanzig Zeichnungen in einem Dokument.
+    svg: renderSvg(symbol.drawing, { size: 76, idPrefix: `ez-wall-${index}` }),
+  };
+});
+
+/*
+ * Die vier Schritte: dieselbe Spezifikation wächst zum echten Zeichen E.1.1 (Bergungsgruppe).
+ * Jeder Schritt wird zur Buildzeit wirklich komponiert — dieselben Aufrufe wie im Baukasten.
+ * Komponiert ein Schritt nicht mehr (etwa nach einer Regeländerung im Kern), bricht der Build
+ * mit Hinweis, statt eine veraltete Erzählung auszuliefern.
+ */
+const STEPS: { spec: SymbolSpec; added: string; name: string; text: string }[] = [
+  {
+    spec: { kind: 'formation' },
+    added: 'formation',
+    name: 'Grundzeichen',
+    text: 'Ein Rechteck: die taktische Formation, das Grundzeichen für eine Einheit.',
+  },
+  {
+    spec: { kind: 'formation', organization: 'thw' } as SymbolSpec,
+    added: '+ Organisation',
+    name: 'Technisches Hilfswerk',
+    text: 'Blau gehört dem THW. Die Farbe trägt eine Aussage — deshalb bleibt sie den Zeichen vorbehalten.',
+  },
+  {
+    spec: { kind: 'formation', organization: 'thw', strength: 'gruppe' } as SymbolSpec,
+    added: '+ Stärke',
+    name: 'Gruppe',
+    text: 'Zwei Punkte über dem Körper nennen die Stärke: eine Gruppe.',
+  },
+  {
+    spec: {
+      kind: 'formation',
+      organization: 'thw',
+      strength: 'gruppe',
+      labels: { center: 'B', bottomRight: 'THW' },
+    } as SymbolSpec,
+    added: '+ Beschriftung',
+    name: 'Bergungsgruppe',
+    text: 'B für Bergung, THW als Träger — fertig ist die Bergungsgruppe aus Anhang E.1.1.',
+  },
+];
+
+const steps = STEPS.map((step, index) => {
+  let svg: string;
+  try {
+    svg = renderSvg(composeFromCatalog(step.spec), { size: 132, idPrefix: `ez-step-${index}` });
+  } catch (error) {
+    throw new Error(
+      `Schritt ${index + 1} der Landingpage („${step.added}") komponiert nicht mehr: ` +
+        `${error instanceof Error ? error.message : String(error)} — ` +
+        'Schrittfolge in src/pages/index.astro an den Katalog anpassen.',
+    );
+  }
+  return { ...step, svg };
+});
+
+// Das Ziel der Schrittfolge ist ein echtes Katalogzeichen mit eigener Seite — der Link dorthin
+// belegt, dass die Schritte nicht nachgestellt sind.
+const stepTarget = mustFind('e-1-1');
+
+/*
+ * Kennzahlen: gezählt aus der Prüfliste (`coverage.matrix`), nicht aus den Zeichen — dieselbe
+ * Zählmenge wie Doku-Startseite und Prüfseite (`review-summary.ts` erklärt, warum die beiden
+ * Mengen nicht vermischt werden dürfen).
+ */
+const matrix = snapshot.coverage.matrix;
+const listed = reviewSummaryOfRows(matrix);
+const clarifiedSources = snapshot.sources.filter((source) => source.status === 'clarified').length;
+const bulkApproval = bulkApprovalClause(bulkDomainApprovalOfRows(matrix));
+const snapshotDate = formatReviewDate(snapshot.generatedAt.slice(0, 10));
+
+// Sätze am Zählergebnis entschieden statt hingeschrieben — die Formulierungen folgen der
+// Doku-Startseite, damit beide Seiten nie Verschiedenes behaupten.
+const technicalSentence =
+  `Technisch geprüft heißt: das Bild stimmt mit der Vorlage überein — nachgemessen an der ` +
+  `Referenz, abgesichert durch Kontrollbögen gegen unbemerkte Änderungen. ` +
+  `${listed.technical.approved} von ${matrix.length} geprüften Abschnitten tragen diese Marke` +
+  (listed.technical.deviation === 0
+    ? ', keiner weicht ab.'
+    : `; ${listed.technical.deviation} weichen an einer benannten Stelle ab — geprüft, aufgeschrieben, kein unbemerkter Fehler.`);
+
+const domainSentence =
+  listed.domain.approved === 0
+    ? `Fachlich geprüft heißt: jemand aus der Fachwelt hat bestätigt, dass es das richtige ` +
+      `Zeichen für diese Bedeutung ist. Diese Bestätigung steht bisher für alle ` +
+      `${matrix.length} Abschnitte aus — und genau das steht an jedem Zeichen, statt hinter ` +
+      `einer Gesamtzahl zu verschwinden.`
+    : listed.domain.approved === matrix.length
+      ? `Fachlich geprüft heißt: jemand aus der Fachwelt hat bestätigt, dass es das richtige ` +
+        `Zeichen für diese Bedeutung ist. Das gilt inzwischen für alle ${matrix.length} ` +
+        `Abschnitte${bulkApproval}. Wer wann geprüft hat, steht an jedem Zeichen einzeln.`
+      : `Fachlich geprüft heißt: jemand aus der Fachwelt hat bestätigt, dass es das richtige ` +
+        `Zeichen für diese Bedeutung ist. Das gilt für ${listed.domain.approved} von ` +
+        `${matrix.length} Abschnitten${bulkApproval}; welcher Stand für ein bestimmtes Zeichen ` +
+        `gilt, steht auf seiner Seite.`;
+
+/*
+ * Zwei echte Beispiele für die Statusmarken: eines mit technischer Freigabe, eines mit
+ * dokumentierter Abweichung. Dynamisch gewählt, damit die Beispiele echt bleiben, wenn sich
+ * Prüfstände ändern; gibt es keinen Abweichungsfall mehr, entfällt das zweite Beispiel, statt
+ * eines zu erfinden.
+ */
+const approvedExample =
+  stepTarget.review.technical.status === 'approved'
+    ? stepTarget
+    : snapshot.symbols.find((symbol) => symbol.review.technical.status === 'approved');
+const deviationExample = snapshot.symbols.find(
+  (symbol) => symbol.review.technical.status === 'deviation',
+);
+const trustExamples = [approvedExample, deviationExample]
+  .filter((symbol): symbol is SymbolSummary => symbol !== undefined)
+  .map((symbol, index) => ({
+    symbol,
+    svg: renderSvg(symbol.drawing, { size: 64, idPrefix: `ez-trust-${index}` }),
+  }));
+
+// Das Codebeispiel der Entwicklerkarte nutzt dieselbe Spezifikation wie der letzte Schritt oben —
+// aus dem Schrittobjekt erzeugt, damit Erzählung und Beispiel nicht auseinanderlaufen können.
+const finalSpec = STEPS[STEPS.length - 1]!.spec;
+const codeSample =
+  `import { composeFromCatalog } from '@einsatzzeichen/catalog';\n` +
+  `import { renderSvg } from '@einsatzzeichen/core';\n\n` +
+  `// ${stepTarget.title} (${stepTarget.id})\n` +
+  `const drawing = composeFromCatalog(${JSON.stringify(finalSpec, null, 2)});\n` +
+  `const svg = renderSvg(drawing, { size: 64 });`;
+---
+
+<BaseLayout
+  title="Einsatzzeichen — Taktische Zeichen im Bevölkerungsschutz"
+  description={`Die taktischen Zeichen der Gefahrenabwehr, aus Bausteinen zusammengesetzt statt als Bilddateien abgelegt: ${snapshot.symbols.length} Zeichen mit Herkunft und Prüfstand, ein Baukasten und Pakete für Software.`}
+>
+  <section class="ez-landing-hero">
+    <div class="ez-shell ez-landing-hero__inner">
+      <div class="ez-landing-hero__copy">
+        <p class="ez-eyebrow">Taktische Zeichen im Bevölkerungsschutz</p>
+        <h1>Zeichen, die sich erklären.</h1>
+        <p class="ez-landing-hero__tagline">
+          Die taktischen Zeichen der Gefahrenabwehr — hier nicht als Bilddateien abgelegt, sondern
+          aus ihren Bausteinen zusammengesetzt: Grundzeichen, Organisation, Stärke, Fähigkeit. An
+          jedem Zeichen stehen seine Fundstelle in der Vorlage und sein Prüfstand.
+        </p>
+        <div class="ez-landing-hero__actions">
+          <a class="ez-action ez-action--primary" href="/builder/">
+            <strong>Zeichen zusammensetzen</strong>
+            <span>Baukasten, ohne Vorwissen</span>
+          </a>
+          <a class="ez-action" href="/zeichen/">
+            <strong>Alle {snapshot.symbols.length} Zeichen</strong>
+            <span>Katalog mit Prüfstand je Zeichen</span>
+          </a>
+          <a class="ez-action" href="/docs/">
+            <strong>Dokumentation</strong>
+            <span>Anleitungen &amp; Hintergrund</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="ez-landing-hero__wall">
+        <ul class="ez-wall" aria-label="Ausgewählte Zeichen aus dem Katalog">
+          {
+            wall.map((tile) => (
+              <li>
+                <a class="ez-wall__tile" href={`/zeichen/${tile.slug}/`} title={tile.title}>
+                  <span class="ez-canvas ez-canvas--light ez-wall__canvas" aria-hidden="true">
+                    <Fragment set:html={tile.svg} />
+                  </span>
+                  <span class="ez-wall__label">{tile.title}</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <p class="ez-wall__caption">
+          {wall.length} von {snapshot.symbols.length} Zeichen des Katalogs — jedes führt zu seiner
+          Seite mit Herkunft, Prüfstand und Dateien.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="ez-shell ez-landing-section" aria-labelledby="entstehung">
+    <p class="ez-eyebrow">Das Prinzip</p>
+    <h2 id="entstehung">So entsteht ein Zeichen</h2>
+    <p class="ez-landing-section__intro">
+      Jedes Zeichen dieser Website wird aus Bausteinen zusammengesetzt — zur Buildzeit, mit
+      denselben Aufrufen, die auch der Baukasten macht. Hier wächst eines in vier Schritten zur{' '}
+      <a href={`/zeichen/${stepTarget.slug}/`}>{stepTarget.title}</a> des THW:
+    </p>
+    <ol class="ez-steps">
+      {
+        steps.map((step, index) => (
+          <li class="ez-steps__item">
+            <span class="ez-steps__added" aria-hidden="true">
+              {index + 1} · {step.added}
+            </span>
+            <span class="ez-canvas ez-canvas--light ez-steps__canvas">
+              <Fragment set:html={step.svg} />
+            </span>
+            <span class="ez-steps__name">{step.name}</span>
+            <span class="ez-steps__text">{step.text}</span>
+          </li>
+        ))
+      }
+    </ol>
+    <p class="ez-landing-section__coda">
+      Passt eine Kombination nicht zusammen, sagt eine von {snapshot.ruleIds.length} Regeln in
+      Klartext, warum. <a href="/builder/">Selbst zusammensetzen im Baukasten</a> — oder das
+      fertige Zeichen ansehen: <a href={`/zeichen/${stepTarget.slug}/`}
+        >{stepTarget.title} <span class="ez-id">{stepTarget.id}</span></a
+      >.
+    </p>
+  </section>
+
+  <section class="ez-shell ez-landing-section" aria-labelledby="stand">
+    <p class="ez-eyebrow">Der Stand</p>
+    <h2 id="stand">Gezählt, nicht behauptet</h2>
+    <p class="ez-landing-section__intro">
+      Alle Zahlen stammen aus dem Katalog vom {snapshotDate} — ändert sich der Stand, ändern sich
+      die Zahlen, nicht die Sätze.
+    </p>
+    <div class="ez-grid ez-grid--4 ez-landing-figures">
+      <div class="ez-figure">
+        <span class="ez-figure__value">{snapshot.symbols.length}</span>
+        <span class="ez-figure__label"
+          >Zeichen mit eigener Seite — ansehen, herunterladen, auf die Karte legen, abwandeln.</span
+        >
+        <span class="ez-figure__source">Katalog-Snapshot</span>
+      </div>
+      <div class="ez-figure">
+        <span class="ez-figure__value">{matrix.length}</span>
+        <span class="ez-figure__label"
+          >geprüfte Abschnitte der Vorlage — darunter auch Bausteine, die erst in einem Zeichen
+          sichtbar werden.</span
+        >
+        <span class="ez-figure__source">Prüfliste des Katalogs</span>
+      </div>
+      <div class="ez-figure">
+        <span class="ez-figure__value"
+          >{listed.technical.approved}<small> / {matrix.length}</small></span
+        >
+        <span class="ez-figure__label"
+          >technisch geprüft: das Bild stimmt mit der Vorlage überein.{' '}
+          {
+            listed.technical.deviation === 0
+              ? 'Keiner weicht ab.'
+              : `${listed.technical.deviation} weichen an einer benannten Stelle ab — geprüft und aufgeschrieben.`
+          }</span
+        >
+        <span class="ez-figure__source">Prüfliste des Katalogs</span>
+      </div>
+      <div class="ez-figure">
+        <span class="ez-figure__value">{snapshot.ruleIds.length}</span>
+        <span class="ez-figure__label"
+          >Regeln prüfen jede Komposition — was nicht zusammenpasst, wird begründet abgelehnt.</span
+        >
+        <span class="ez-figure__source">Regelwerk des Kerns</span>
+      </div>
+      <div class="ez-figure">
+        <span class="ez-figure__value">{clarifiedSources}<small> / {snapshot.sources.length}</small></span>
+        <span class="ez-figure__label"
+          >Quellen mit geklärter Nutzungsgrundlage. Bei den übrigen{' '}
+          {snapshot.sources.length - clarifiedSources} ist die Rechtslage offen — deshalb zeigt
+          diese Website abgeleitete Zeichen, keine Dateien aus der Vorlage.</span
+        >
+        <span class="ez-figure__source">Quellenregister</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="ez-shell ez-landing-section" aria-labelledby="wege">
+    <p class="ez-eyebrow">Einstiege</p>
+    <h2 id="wege">Zwei Wege hinein</h2>
+    <div class="ez-grid ez-grid--2 ez-landing-audiences">
+      <div class="ez-card ez-audience">
+        <span class="ez-card__title">Für Einsatz, Stab und Verwaltung</span>
+        <span class="ez-card__text">
+          Ein Zeichen finden, als SVG oder PNG herunterladen, in ein Dokument setzen, drucken oder
+          auf einer Karte zeigen — Schritt für Schritt erklärt, ohne technisches Wissen
+          vorauszusetzen.
+        </span>
+        <ul class="ez-audience__links">
+          <li><a href="/docs/anleitungen/">Anleitungen</a></li>
+          <li><a href="/docs/explorer/">Zeichen suchen</a></li>
+          <li><a href="/docs/maplibre-lab/">Auf der Karte ausprobieren</a></li>
+        </ul>
+      </div>
+      <div class="ez-card ez-audience">
+        <span class="ez-card__title">Für Entwicklerinnen und Entwickler</span>
+        <span class="ez-card__text">
+          Dieselben Bausteine als Pakete: TypeScript-Kern, React, Web Component, MapLibre und
+          QGIS. Das Beispiel ist echt und nutzt dieselbe Spezifikation wie die vier Schritte oben:
+        </span>
+        <pre class="ez-audience__code" tabindex="0"><code>{codeSample}</code></pre>
+        <ul class="ez-audience__links">
+          <li><a href="/docs/quickstart/">Quickstart: vier Ausgabekanäle</a></li>
+          <li><a href="/docs/pakete/core/">Die Pakete im Überblick</a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="ez-shell ez-landing-section" aria-labelledby="pruefung">
+    <p class="ez-eyebrow">Verlässlichkeit</p>
+    <h2 id="pruefung">Zwei Prüfungen, zwei Aussagen</h2>
+    <div class="ez-trust">
+      <div class="ez-trust__copy">
+        <p>{technicalSentence}</p>
+        <p>{domainSentence}</p>
+        <p class="ez-trust__links">
+          <a href="/docs/coverage/">Stand der Prüfung</a>
+          <a href="/docs/grundlage/">Grundlage &amp; Quellen</a>
+        </p>
+      </div>
+      <div class="ez-trust__examples">
+        {
+          trustExamples.map((example) => (
+            <div class="ez-card ez-trust__example">
+              <span class="ez-canvas ez-canvas--light ez-trust__canvas" aria-hidden="true">
+                <Fragment set:html={example.svg} />
+              </span>
+              <span class="ez-trust__meta">
+                <a href={`/zeichen/${example.symbol.slug}/`}>{example.symbol.title}</a>
+                <code class="ez-id">{example.symbol.id}</code>
+                <StatusPair
+                  technical={example.symbol.review.technical}
+                  domain={example.symbol.review.domain}
+                />
+              </span>
+            </div>
+          ))
+        }
+        <p class="ez-trust__caption">
+          Zwei echte Beispiele aus dem Katalog — diese Marken stehen so an jedem Zeichen.
+        </p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* Schriftskala und Text-Akzent kommen aus BaseLayout (dort mit Begründung nachgetragen). */
+
+  /* --- Hero: Millimeterraster als Signatur, groß und nach unten auslaufend ----------------- */
+
+  .ez-landing-hero {
+    position: relative;
+    /* Die Rasterfarbe folgt dem Seitenmodus — dieselben Token wie die Zeichenflächen. */
+    --ez-hero-grid: var(--ez-grid-line-on-dark);
+  }
+
+  :global(:root[data-theme='light']) .ez-landing-hero {
+    --ez-hero-grid: var(--ez-grid-line-on-light);
+  }
+
+  .ez-landing-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-size: calc(var(--ez-grid-step) * 4) calc(var(--ez-grid-step) * 4);
+    background-image:
+      linear-gradient(to right, var(--ez-hero-grid) 0 1px, transparent 1px),
+      linear-gradient(to bottom, var(--ez-hero-grid) 0 1px, transparent 1px);
+    mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+  }
+
+  .ez-landing-hero__inner {
+    position: relative;
+    display: grid;
+    gap: var(--ez-space-8);
+    padding-block: var(--ez-space-8);
+  }
+
+  @media (min-width: 60rem) {
+    .ez-landing-hero__inner {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      gap: var(--ez-space-12);
+      padding-block: var(--ez-space-12);
+      align-items: center;
+    }
+  }
+
+  .ez-landing-hero__copy h1 {
+    margin: 0;
+    font-size: clamp(var(--sl-text-3xl), calc(1.2rem + 4vw), var(--sl-text-5xl));
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    color: var(--sl-color-white);
+  }
+
+  .ez-landing-hero__tagline {
+    margin-block: var(--ez-space-4) 0;
+    font-size: var(--sl-text-lg);
+    line-height: 1.6;
+    color: var(--sl-color-gray-2);
+    max-width: 44ch;
+    text-wrap: pretty;
+  }
+
+  .ez-landing-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ez-space-3);
+    margin-block-start: var(--ez-space-6);
+  }
+
+  /* Der eine Hauptweg trägt die Akzentkante — Pflaume, sparsam, wie an der Abweichungsmarke. */
+  .ez-action--primary {
+    border-color: var(--sl-color-accent);
+  }
+
+  /* --- Zeichenwand ------------------------------------------------------------------------- */
+
+  .ez-wall {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(7.25rem, 1fr));
+    gap: var(--ez-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ez-wall__tile {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ez-space-1);
+    text-decoration: none;
+    color: inherit;
+    border-radius: var(--ez-radius);
+  }
+
+  .ez-wall__canvas {
+    padding: var(--ez-space-3);
+    min-height: 6rem;
+    transition: border-color 120ms ease;
+  }
+
+  .ez-wall__tile:hover .ez-wall__canvas,
+  .ez-wall__tile:focus-visible .ez-wall__canvas {
+    border-color: var(--sl-color-accent);
+  }
+
+  .ez-wall__label {
+    font-family: var(--ez-font-mono);
+    font-size: var(--sl-text-2xs);
+    letter-spacing: 0.02em;
+    color: var(--sl-color-gray-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ez-wall__tile:hover .ez-wall__label,
+  .ez-wall__tile:focus-visible .ez-wall__label {
+    color: var(--sl-color-text-accent);
+  }
+
+  .ez-wall__caption {
+    margin-block: var(--ez-space-3) 0;
+    font-family: var(--ez-font-mono);
+    font-size: var(--sl-text-2xs);
+    letter-spacing: 0.02em;
+    color: var(--sl-color-gray-3);
+  }
+
+  /* --- Abschnitte --------------------------------------------------------------------------- */
+
+  .ez-landing-section {
+    padding-block: var(--ez-space-12) 0;
+  }
+
+  .ez-landing-section h2 {
+    margin: 0;
+    font-size: clamp(var(--sl-text-2xl), calc(1rem + 2vw), var(--sl-text-4xl));
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--sl-color-white);
+  }
+
+  .ez-landing-section__intro {
+    margin-block: var(--ez-space-4) 0;
+    max-width: 62ch;
+    color: var(--sl-color-gray-2);
+    text-wrap: pretty;
+  }
+
+  .ez-landing-section__coda {
+    margin-block: var(--ez-space-6) 0;
+    max-width: 62ch;
+    color: var(--sl-color-gray-2);
+  }
+
+  .ez-landing-section a {
+    color: var(--sl-color-text-accent);
+  }
+
+  /* --- Schrittfolge -------------------------------------------------------------------------- */
+
+  .ez-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: var(--ez-space-4);
+    margin-block: var(--ez-space-6) 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ez-steps__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ez-space-2);
+    padding: var(--ez-space-4);
+    border: 1px solid var(--ez-line);
+    border-radius: var(--ez-radius);
+    background: var(--ez-surface);
+  }
+
+  .ez-steps__added {
+    font-family: var(--ez-font-mono);
+    font-size: var(--sl-text-2xs);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sl-color-gray-3);
+  }
+
+  .ez-steps__canvas {
+    padding: var(--ez-space-4);
+  }
+
+  .ez-steps__name {
+    font-weight: 600;
+    color: var(--sl-color-white);
+  }
+
+  .ez-steps__text {
+    font-size: var(--sl-text-sm);
+    line-height: 1.55;
+    color: var(--sl-color-gray-2);
+  }
+
+  /* --- Kennzahlen ---------------------------------------------------------------------------- */
+
+  .ez-landing-figures {
+    margin-block-end: 0;
+  }
+
+  /* --- Zielgruppen ---------------------------------------------------------------------------- */
+
+  .ez-landing-audiences {
+    margin-block-end: 0;
+  }
+
+  .ez-audience__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ez-space-2) var(--ez-space-6);
+    margin: var(--ez-space-2) 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--sl-text-sm);
+  }
+
+  .ez-audience__code {
+    margin: var(--ez-space-2) 0 0;
+    padding: var(--ez-space-3);
+    border: 1px solid var(--ez-line);
+    border-radius: var(--ez-radius);
+    background: var(--sl-color-black);
+    font-family: var(--ez-font-mono);
+    font-size: var(--sl-text-xs);
+    line-height: 1.6;
+    color: var(--sl-color-gray-1);
+    overflow-x: auto;
+  }
+
+  .ez-audience__code:focus-visible {
+    outline: 2px solid var(--sl-color-accent);
+    outline-offset: 2px;
+  }
+
+  /* --- Prüfabschnitt -------------------------------------------------------------------------- */
+
+  .ez-trust {
+    display: grid;
+    gap: var(--ez-space-8);
+    margin-block-start: var(--ez-space-6);
+  }
+
+  @media (min-width: 60rem) {
+    .ez-trust {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+  }
+
+  .ez-trust__copy p {
+    margin-block: 0 var(--ez-space-4);
+    max-width: 58ch;
+    color: var(--sl-color-gray-2);
+    text-wrap: pretty;
+  }
+
+  .ez-trust__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ez-space-6);
+  }
+
+  .ez-trust__examples {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ez-space-3);
+  }
+
+  .ez-trust__example {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--ez-space-4);
+  }
+
+  .ez-trust__canvas {
+    flex: none;
+    padding: var(--ez-space-2);
+  }
+
+  .ez-trust__meta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ez-space-1);
+    min-width: 0;
+  }
+
+  .ez-trust__meta a {
+    font-weight: 600;
+    color: var(--sl-color-white);
+    text-decoration: none;
+  }
+
+  .ez-trust__meta a:hover,
+  .ez-trust__meta a:focus-visible {
+    color: var(--sl-color-text-accent);
+    text-decoration: underline;
+  }
+
+  .ez-trust__caption {
+    margin: 0;
+    font-family: var(--ez-font-mono);
+    font-size: var(--sl-text-2xs);
+    letter-spacing: 0.02em;
+    color: var(--sl-color-gray-3);
+  }
+
+  /* --- Barrierefreiheit & Bewegung ------------------------------------------------------------ */
+
+  .ez-wall__tile:focus-visible,
+  .ez-landing-section a:focus-visible {
+    outline: 2px solid var(--sl-color-accent);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ez-wall__canvas {
+      transition: none;
+    }
+  }
+</style>

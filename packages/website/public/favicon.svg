@@ -1,0 +1,5 @@
+<!-- Die Wortmarken-Glyphe: das Rechteck der taktischen Formation, in der Akzentfarbe der Seite.
+     Ein Zeichen des Katalogs wäre hier falsch — bei 16 px bliebe von ihm nichts Lesbares. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <rect x="1.5" y="3.5" width="13" height="9" fill="none" stroke="hsl(318, 44%, 48%)" stroke-width="2" />
+</svg>
