@@ -6,7 +6,7 @@
   "description": "Semantisches Symbolsystem für taktische Zeichen der Gefahrenabwehr",
   "license": "MIT",
   "scripts": {
-    "build": "tsc -b tsconfig.packages.json && node scripts/build/copy-catalog-assets.mjs",
+    "build": "tsc -b tsconfig.packages.json && node scripts/release/copy-catalog-assets.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
