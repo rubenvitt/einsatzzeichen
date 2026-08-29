@@ -17,12 +17,10 @@ describe('Fachfragenregister', () => {
       expect(Object.isFrozen(question)).toBe(true);
       expect(question.question.trim().length).toBeGreaterThan(0);
     }
-    // Das Register hängt am Ledger, nicht umgekehrt: es stellt Fragen, es setzt keinen Status.
-    // Seit der Sammelfreigabe vom 28.08.2026 trägt jede genannte Zeile `approved` — das Register
-    // bleibt trotzdem stehen und hält fest, worüber der Projektinhaber entschieden hat.
+    // Das Register hängt am Ledger, nicht umgekehrt: jede genannte Zeile bleibt pending.
     for (const question of DOMAIN_REVIEW_QUESTIONS) {
       for (const key of question.keys) {
-        expect(MANIFEST_DOMAIN_REVIEWS[key].status).toBe('approved');
+        expect(MANIFEST_DOMAIN_REVIEWS[key].status).toBe('pending');
       }
     }
   });

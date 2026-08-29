@@ -78,10 +78,7 @@ describe('Quellenregister', () => {
     for (const [id, record] of Object.entries(SOURCE_REGISTRY)) {
       expect(record.review.technical.status).toBe('approved');
       expect(record.review.technical.reviewer).toBe(id === 'bbk-babz-2025' ? 'codex' : 'rv');
-      expect(record.review.domain.status).toBe('approved');
-      expect(record.review.domain.reviewer).toBe('Ruben Vitt');
-      expect(record.review.domain.date).toBe('2026-08-28');
-      expect(record.review.domain.note).toContain('Sammelfreigabe im Rahmen von LFH-429');
+      expect(record.review.domain.status).toBe('pending');
     }
   });
 

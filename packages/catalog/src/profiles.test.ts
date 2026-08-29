@@ -37,13 +37,10 @@ describe('Profilregister', () => {
     expect(profileFor('bund').sources).toEqual(['bbk-babz-2025', 'babz-svg-2025']);
   });
 
-  it('trägt am Profil beide Reviewrollen, das fachliche zurechenbar freigegeben', () => {
+  it('trägt am Profil beide Reviewrollen mit offenem fachlichem Review', () => {
     const review = profileFor('bund').review;
     expect(review.technical.status).toBe('approved');
     expect(review.technical.reviewer).toBe('rv');
-    expect(review.domain.status).toBe('approved');
-    expect(review.domain.reviewer).toBe('Ruben Vitt');
-    expect(review.domain.date).toBe('2026-08-28');
-    expect(review.domain.note).toContain('Sammelfreigabe im Rahmen von LFH-429');
+    expect(review.domain.status).toBe('pending');
   });
 });

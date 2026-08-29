@@ -287,7 +287,7 @@ describe('Leadership-Inventar nach D.2', () => {
         implementation: definition.id,
         referenceAsset: definition.referenceAsset,
         testEvidence: ['svg-snapshot', 'pictogram-contract'],
-        review: { domain: { status: 'approved', reviewer: 'Ruben Vitt', date: '2026-08-28' } },
+        review: { domain: { status: 'pending' } },
       });
       expect(rows[0]?.review.domain).toBe(
         MANIFEST_DOMAIN_REVIEWS[manifestKey as keyof typeof MANIFEST_DOMAIN_REVIEWS],

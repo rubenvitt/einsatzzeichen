@@ -12,17 +12,6 @@ import {
 import { checkCoverage, findPrimaryViolations, releaseBlockers } from './coverage-gate.js';
 import { ALL_PICTOGRAMS, pictogramVariantKey } from './pictograms/index.js';
 
-/**
- * Die Sammelfreigabe des Projektinhabers vom 28. August 2026, ausgeschrieben statt aus
- * `ownerDomainApproval()` bezogen — sonst prüfte der Test die Fabrik gegen sich selbst.
- */
-const OWNER_APPROVAL = {
-  status: 'approved',
-  reviewer: 'Ruben Vitt',
-  date: '2026-08-28',
-  note: 'Fachlich freigegeben durch den Projektinhaber am 28.08.2026 (Sammelfreigabe im Rahmen von LFH-429).',
-} as const;
-
 // Dieselbe Vorlage wie in `coverage-gate.test.ts`: beide Dateien brauchen einen Katalogeintrag
 // mit einstellbarer Zahl von `primary`-Darstellungen, und ein gemeinsames Testmodul für eine
 // einzige Vorlage wäre eine Abhängigkeit ohne Gegenwert.
@@ -184,7 +173,7 @@ describe('Coverage-Manifest', () => {
         date: group === 'I-f' ? '2026-08-28' : '2026-08-27',
       });
       expect(row.review.technical.note).toContain(expectedReviewPhrase[group as keyof typeof expectedReviewPhrase]);
-      expect(row.review.domain.status).toBe('approved');
+      expect(row.review.domain.status).toBe('pending');
     }
 
     const technicalReviewAt = (key: string) =>
@@ -243,7 +232,7 @@ describe('Coverage-Manifest', () => {
     for (const row of rows) {
       expect(row.coverage).toBe('composition-recipe');
       expect(row.review.technical).toEqual(expectedReview);
-      expect(row.review.domain.status).toBe('approved');
+      expect(row.review.domain.status).toBe('pending');
     }
 
     expect(COVERAGE_MANIFEST.scope).toContain('I.4.1');
@@ -265,15 +254,15 @@ describe('Coverage-Manifest', () => {
     }))).toEqual([
       {
         section: 'I.5.1', implementation: 'recipe.I.5.1', coverage: 'composition-recipe',
-        testEvidence: ['body-fingerprint', 'svg-snapshot'], domain: OWNER_APPROVAL,
+        testEvidence: ['body-fingerprint', 'svg-snapshot'], domain: { status: 'pending' },
       },
       {
         section: 'I.5.2', implementation: 'recipe.I.5.2', coverage: 'composition-recipe',
-        testEvidence: ['body-fingerprint', 'svg-snapshot'], domain: OWNER_APPROVAL,
+        testEvidence: ['body-fingerprint', 'svg-snapshot'], domain: { status: 'pending' },
       },
       {
         section: 'I.5.3', implementation: 'recipe.I.5.3', coverage: 'composition-recipe',
-        testEvidence: ['body-fingerprint', 'svg-snapshot'], domain: OWNER_APPROVAL,
+        testEvidence: ['body-fingerprint', 'svg-snapshot'], domain: { status: 'pending' },
       },
     ]);
     expect(rows).toHaveLength(3);
@@ -310,7 +299,7 @@ describe('Coverage-Manifest', () => {
         status: 'approved', reviewer: 'rv', date: '2026-08-27',
       });
       expect(row.review.technical.note).toContain('I.5.4 bis I.5.8');
-      expect(row.review.domain).toEqual(OWNER_APPROVAL);
+      expect(row.review.domain).toEqual({ status: 'pending' });
     }
   });
 
@@ -390,7 +379,7 @@ describe('Coverage-Manifest', () => {
       expect(row.coverage).toBe('composition-recipe');
       expect(row.testEvidence).toEqual(['body-fingerprint', 'svg-snapshot']);
       expect(row.review.technical).toEqual(expectedReview);
-      expect(row.review.domain).toEqual(OWNER_APPROVAL);
+      expect(row.review.domain).toEqual({ status: 'pending' });
     }
 
     expect(rows).toHaveLength(4);
@@ -412,7 +401,7 @@ describe('Coverage-Manifest', () => {
       coverage: 'composition-recipe',
       review: {
         technical: { status: 'approved', reviewer: 'rv', date: '2026-08-26' },
-        domain: OWNER_APPROVAL,
+        domain: { status: 'pending' },
       },
     });
     expect(COVERAGE_MANIFEST.scope.filter((section) => section.startsWith('C'))).toEqual([
@@ -435,7 +424,7 @@ describe('Coverage-Manifest', () => {
         'Katalogfassung J.3.2 bleibt mit stationBody(17, 11.5) abweichend und ihre Korrektur ' +
         'liegt außerhalb dieses Teilslices.',
     ) === true)).toBe(true);
-    expect(entries.every((entry) => entry.review.domain.status === 'approved')).toBe(true);
+    expect(entries.every((entry) => entry.review.domain.status === 'pending')).toBe(true);
     expect(COVERAGE_MANIFEST.scope).toContain('F');
   });
 
@@ -475,7 +464,7 @@ describe('Coverage-Manifest', () => {
     expect(rows.every((entry) => entry.review.technical.note?.includes(
       'normalisierten Kreis-, Dach-, Text- und Innengeometrien',
     ) === true)).toBe(true);
-    expect(rows.every((entry) => entry.review.domain.status === 'approved')).toBe(true);
+    expect(rows.every((entry) => entry.review.domain.status === 'pending')).toBe(true);
   });
 
   it('führt Anhang E lückenlos und trägt damit das `E` im beanspruchten Umfang', () => {
@@ -583,7 +572,7 @@ describe('Coverage-Manifest', () => {
         expect(entry.review.technical.status).toBe('approved');
       }
       expect(entry.review.technical.reviewer).toBe('rv');
-      expect(entry.review.domain.status).toBe('approved');
+      expect(entry.review.domain.status).toBe('pending');
     }
   });
 
@@ -621,7 +610,7 @@ describe('Coverage-Manifest', () => {
     for (const row of rows) {
       expect(row.review.technical.date).toBe('2026-08-25');
       expect(row.review.technical.note).toContain('finale Task-6-Kontaktbogen');
-      expect(row.review.domain.status).toBe('approved');
+      expect(row.review.domain.status).toBe('pending');
     }
   });
 
@@ -633,7 +622,7 @@ describe('Coverage-Manifest', () => {
     for (const row of rows) {
       expect(row.review.technical.date).toBe('2026-08-26');
       expect(row.review.technical.note).toContain('finale Task-6-Kontaktbogen');
-      expect(row.review.domain.status).toBe('approved');
+      expect(row.review.domain.status).toBe('pending');
     }
   });
 
@@ -646,7 +635,7 @@ describe('Coverage-Manifest', () => {
       expect(row.review.technical.status).toBe('approved');
       expect(row.review.technical.date).toBe('2026-08-26');
       expect(row.review.technical.note).toContain('finale Task-6-Kontaktbogen');
-      expect(row.review.domain.status).toBe('approved');
+      expect(row.review.domain.status).toBe('pending');
     }
   });
 
@@ -694,7 +683,7 @@ describe('Coverage-Manifest', () => {
     expect(rows.map((entry) => entry.sourceId.slice('bbk-babz-2025:'.length))).toEqual(expectedIds);
     expect(rows).toHaveLength(21);
     expect(rows.every((entry) => entry.variant === 'primary')).toBe(true);
-    expect(rows.every((entry) => entry.review.domain.status === 'approved')).toBe(true);
+    expect(rows.every((entry) => entry.review.domain.status === 'pending')).toBe(true);
     expect(rows.every((entry) => entry.review.technical.status === 'approved')).toBe(true);
     expect(rows.every((entry) => entry.review.technical.note?.includes(
       '21-Karten-Referenzvergleich wurde in Originalauflösung gesichtet',
@@ -764,7 +753,7 @@ describe('Coverage-Manifest', () => {
       Array.from({ length: 15 }, (_, index) => `bbk-babz-2025:D.3.${index + 1}`),
     );
     expect(entries.every((entry) => entry.review.technical.status === 'approved')).toBe(true);
-    expect(entries.every((entry) => entry.review.domain.status === 'approved')).toBe(true);
+    expect(entries.every((entry) => entry.review.domain.status === 'pending')).toBe(true);
   });
 
   it('beweist exakt 37 Anhang-D-Darstellungen, 36 neue Keys und den vollständigen D-Scope', () => {
@@ -908,7 +897,7 @@ describe('Coverage-Manifest', () => {
     expect(rows.every((entry) => entry.review.technical.date === '2026-08-26')).toBe(true);
     expect(rows.every((entry) => entry.review.technical.note?.includes('kommunaler Bauhof') === true)).toBe(true);
     expect(rows.every((entry) => entry.review.technical.note?.includes('Beauftragter Dritter') === true)).toBe(true);
-    expect(rows.every((entry) => entry.review.domain.status === 'approved')).toBe(true);
+    expect(rows.every((entry) => entry.review.domain.status === 'pending')).toBe(true);
   });
 
   it('führt F.1 vollständig innerhalb des nun mengenexakt belegten F-Scope', () => {
@@ -987,7 +976,7 @@ describe('Manifest-Einträge für Piktogramme', () => {
     expect(entry?.review.technical.note).toContain('Clipping');
     expect(entry?.review.technical.note).toContain('Mehrgrößen');
     expect(entry?.review.technical.note).toContain('viewBox');
-    expect(entry?.review.domain.status).toBe('approved');
+    expect(entry?.review.domain.status).toBe('pending');
   });
 
   it('trennt den freigegebenen D.1-Review identisch vom freigegebenen State-Technikreview', () => {
