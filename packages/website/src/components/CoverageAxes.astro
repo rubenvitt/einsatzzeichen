@@ -76,56 +76,78 @@ const totalBlockers = coverage.blockers.length;
     <h2 id="was-offen-ist">Was offen ist</h2>
 
     <div class="ez-note">
-      <p class="ez-note__title">Blocker für Release 1.0</p>
-      <p>{totalBlockers} offene Punkte, gruppiert nach Art:</p>
-      <ul class="ez-coverage-keygroups">
-        {
-          blockerGroups.map((group) => (
-            <li>
-              <details>
-                <summary>
-                  {group.keys.length} × {group.detail}
-                </summary>
-                <ul class="ez-coverage-keygroups__keys" data-pagefind-ignore>
-                  {group.keys.map((key) => (
-                    <li class="ez-id">{key}</li>
-                  ))}
-                </ul>
-              </details>
-            </li>
-          ))
-        }
-      </ul>
+      <p class="ez-note__title">Offene Punkte vor Version 1.0</p>
+      {
+        totalBlockers === 0 ? (
+          <p>
+            Zurzeit keiner. Kein Zeichen, keine Quelle und kein Zeichenprofil hält die erste
+            Vollversion auf. Käme ein Punkt dazu, stünde er hier mit seiner Kennung.
+          </p>
+        ) : (
+          <>
+            <p>
+              {totalBlockers} offene Punkte, nach Art gruppiert. Aufklappen zeigt, welche Zeichen
+              oder Quellen dahinterstehen:
+            </p>
+            <ul class="ez-coverage-keygroups">
+              {blockerGroups.map((group) => (
+                <li>
+                  <details>
+                    <summary>
+                      {group.keys.length} × {group.detail}
+                    </summary>
+                    <ul class="ez-coverage-keygroups__keys" data-pagefind-ignore>
+                      {group.keys.map((key) => (
+                        <li class="ez-id">{key}</li>
+                      ))}
+                    </ul>
+                  </details>
+                </li>
+              ))}
+            </ul>
+          </>
+        )
+      }
     </div>
 
     <div class="ez-note">
-      <p class="ez-note__title">Offene fachliche Reviews je Bereich</p>
-      <ul class="ez-coverage-keygroups">
-        {
-          coverage.openDomainReviewsByArea.map((entry) => (
-            <li>
-              <details>
-                <summary>
-                  Bereich {entry.area}: {entry.count}
-                </summary>
-                <ul class="ez-coverage-keygroups__keys" data-pagefind-ignore>
-                  {entry.keys.map((key) => (
-                    <li class="ez-id">{key}</li>
-                  ))}
-                </ul>
-              </details>
-            </li>
-          ))
-        }
-      </ul>
+      <p class="ez-note__title">Zeichen, deren fachliche Prüfung noch aussteht</p>
+      {
+        coverage.openDomainReviewsByArea.length === 0 ? (
+          <p>
+            Zurzeit keines. Für jeden der {coverage.entries} Einträge steht ein fachliches Urteil
+            im Katalog — mit Name, Datum und Notiz an jedem einzelnen Eintrag. Welches Urteil für
+            ein bestimmtes Zeichen gilt, steht in der Prüfliste unten und auf der Seite des
+            Zeichens.
+          </p>
+        ) : (
+          <ul class="ez-coverage-keygroups">
+            {coverage.openDomainReviewsByArea.map((entry) => (
+              <li>
+                <details>
+                  <summary>
+                    Bereich {entry.area}: {entry.count}
+                  </summary>
+                  <ul class="ez-coverage-keygroups__keys" data-pagefind-ignore>
+                    {entry.keys.map((key) => (
+                      <li class="ez-id">{key}</li>
+                    ))}
+                  </ul>
+                </details>
+              </li>
+            ))}
+          </ul>
+        )
+      }
     </div>
   </section>
 
   <aside class="ez-note" aria-label="Kontrastausnahmen">
     <p class="ez-note__title">Kontrastausnahmen</p>
     <p>
-      Eine Kontrastausnahme ist kein Blocker: ein Blocker ist ein offener Punkt, eine Ausnahme
-      ist ein entschiedener.
+      Eine Kontrastausnahme ist kein offener Punkt, sondern ein entschiedener: der Katalog führt
+      hier bewusst ein Farbpaar, das seine eigene Lesbarkeitsschwelle verfehlt, weil die Vorlage es
+      so zeichnet.
     </p>
     {
       coverage.contrastExceptions.length === 0 ? (

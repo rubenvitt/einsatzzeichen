@@ -38,6 +38,7 @@ import {
   VEHICLE_CATEGORY_IDS,
   entryKey,
   type CatalogEntry,
+  type ColorToken,
   type CoverageEntry,
   type Depiction,
   type Review,
@@ -148,12 +149,69 @@ function sourceSummaries(): SourceSummary[] {
   }));
 }
 
-/** Klartext einer Kontrastausnahme, im Wortlaut der Coverage-Ausgabe. */
+/**
+ * Farbnamen, wie sie auf der Website stehen dürfen. Die Tokens des Schemas sind Bezeichner
+ * (`weiss`, `gruen`, `funktionslauf-kontrast`) — auf einer Seite, die auch Menschen ohne
+ * Technikbezug lesen, hat ein Bezeichner nichts verloren.
+ *
+ * Der Typ nennt jeden Token einzeln, statt `Record<string, string>` zu sein: ein neuer Farbton im
+ * Schema ist damit ein Übersetzungsfehler beim Bauen und nicht ein `undefined` mitten im Satz.
+ * `surface` ist kein Farbtoken, sondern die Fläche, auf der ausgegeben wird — `background` lässt
+ * beides zu.
+ */
+const COLOR_WORDS: Record<ColorToken | 'surface', string> = {
+  schwarz: 'Schwarz',
+  weiss: 'Weiß',
+  rot: 'Rot',
+  blau: 'Blau',
+  gelb: 'Gelb',
+  gruen: 'Grün',
+  hellgruen: 'Hellgrün',
+  orange: 'Orange',
+  braun: 'Braun',
+  grau: 'Grau',
+  hellgrau: 'Hellgrau',
+  hellblau: 'Hellblau',
+  'funktionslauf-kontrast': 'Kontrastfarbe des Funktionslaufs',
+  // Nur als Hintergrund möglich (`ContrastException.background`); daher der Dativ.
+  surface: 'der Ausgabefläche',
+};
+
+/**
+ * ISO-Datum als deutsches Datum. Bewusst eine eigene Zeile statt eines Imports aus
+ * `components/StatusPair.tsx`: jene Datei ist eine React-Komponente und wird auch im Browser
+ * gebündelt, dieser Baustein läuft nur in Node beim Erzeugen der Daten. Ein Datum, das nicht
+ * ISO-förmig ist, bleibt unverändert stehen, statt zu `NaN.NaN.NaN` zu werden.
+ */
+function germanDate(iso: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  return match === null ? iso : `${match[3]}.${match[2]}.${match[1]}`;
+}
+
+/** „E.2.6" → „Abschnitt E.2.6"; mehrere → „Abschnitte E.2.6 und E.2.7". */
+function sectionPhrase(sections: readonly string[]): string {
+  if (sections.length === 0) return 'ohne Abschnittsangabe';
+  if (sections.length === 1) return `Abschnitt ${sections[0]}`;
+  const head = sections.slice(0, -1).join(', ');
+  return `Abschnitte ${head} und ${sections[sections.length - 1]}`;
+}
+
+/**
+ * Klartext einer Kontrastausnahme — ein Satzteil, der ohne Nacharbeit in eine Liste und hinter
+ * einen Doppelpunkt passt: „Weiß auf Orange, Abschnitt E.2.6 (entschieden am 18.08.2026,
+ * Projektinhaber)".
+ *
+ * Nicht der Wortlaut der Coverage-Ausgabe: die druckt Tokens und ISO-Daten für ein Terminal.
+ * Die Zahlen und die Entscheidung sind dieselben, nur die Schreibweise ist die der Website. Wer
+ * die Person hinter `decidedBy` in den Satz zieht, tut das in Klammern und ohne Präposition —
+ * „durch Projektinhaber" wäre kein deutscher Satz, und der Wert ist frei belegbar.
+ */
 function contrastExceptionText(exception: (typeof CONTRAST_EXCEPTIONS)[number]): string {
+  const foreground = COLOR_WORDS[exception.foreground];
+  const background = COLOR_WORDS[exception.background];
   return (
-    `${exception.foreground} auf ${exception.background} ` +
-    `(${exception.sections.join(', ')}, entschieden am ${exception.decidedOn} ` +
-    `durch ${exception.decidedBy})`
+    `${foreground} auf ${background}, ${sectionPhrase(exception.sections)} ` +
+    `(entschieden am ${germanDate(exception.decidedOn)}, ${exception.decidedBy})`
   );
 }
 

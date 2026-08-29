@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   BASE_SYMBOLS,
+  CONTRAST_EXCEPTIONS,
   COVERAGE_MANIFEST,
   RECIPES,
   SOURCE_REGISTRY,
@@ -160,5 +161,43 @@ describe('buildSnapshot', () => {
 
   it('setzt generatedAt aus der übergebenen Zeit', () => {
     expect(snap.generatedAt).toBe('2026-08-28T00:00:00.000Z');
+  });
+
+  describe('Kontrastausnahmen im Klartext', () => {
+    // Die Zeichenkette steht auf drei Seiten: als Listenpunkt unter „Stand der Prüfung", als
+    // Listenpunkt in der Druckanleitung und mitten im Satz auf der Zeichenseite hinter einem
+    // Doppelpunkt. Deshalb wird sie hier wörtlich festgehalten und nicht nur auf Bestandteile
+    // geprüft — eine Formulierung, die nur in der Liste funktioniert, fiele sonst erst im Satz auf.
+    it('nennt Farben, Abschnitt, Datum und Entscheiderin in einem lesbaren Satzteil', () => {
+      expect(snap.coverage.contrastExceptions).toEqual([
+        'Weiß auf Orange, Abschnitt E.2.6 (entschieden am 18.08.2026, Projektinhaber)',
+      ]);
+    });
+
+    it('hängt denselben Klartext an das betroffene Zeichen', () => {
+      const affected = snap.symbols.filter((symbol) => symbol.contrastException !== undefined);
+      expect(affected.map((symbol) => symbol.id)).toEqual(['recipe.E.2.6']);
+      expect(affected[0]?.contrastException).toBe(snap.coverage.contrastExceptions[0]);
+    });
+
+    it('lässt kein Farbtoken und kein ISO-Datum in die Prosa durch', () => {
+      for (const text of snap.coverage.contrastExceptions) {
+        // `weiss`, `gruen`, `hellgruen` und Konsorten sind Bezeichner, keine deutschen Wörter.
+        expect(text).not.toMatch(/\b(weiss|gruen|hellgruen|hellblau|hellgrau|schwarz|braun)\b/);
+        expect(text).not.toMatch(/\d{4}-\d{2}-\d{2}/);
+      }
+    });
+
+    it('übersetzt jedes Farbtoken des Schemas, damit kein „undefined" im Satz landet', () => {
+      // `COLOR_WORDS` ist absichtlich nicht exportiert; geprüft wird die Zusage über die Daten:
+      // jede Ausnahme des Katalogs muss vollständig übersetzt herauskommen.
+      for (const exception of CONTRAST_EXCEPTIONS) {
+        const text = snap.coverage.contrastExceptions.find((candidate) =>
+          candidate.includes(exception.sections[0] ?? ''),
+        );
+        expect(text).toBeDefined();
+        expect(text).not.toContain('undefined');
+      }
+    });
   });
 });

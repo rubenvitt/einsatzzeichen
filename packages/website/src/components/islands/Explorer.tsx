@@ -179,7 +179,7 @@ export default function Explorer() {
             id="ez-explorer-q"
             type="search"
             value={filters.q}
-            placeholder="Titel, Synonym, Legacy-Bezeichnung oder ID"
+            placeholder="Name, andere Bezeichnung, frühere Kennung"
             onChange={(event) => setField('q')(event.target.value)}
           />
         </label>

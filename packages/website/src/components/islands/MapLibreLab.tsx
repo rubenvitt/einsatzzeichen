@@ -18,7 +18,6 @@ import {
   symbolImageId,
   LAB_CENTER,
   OPENFREEMAP_ATTRIBUTION,
-  OPENFREEMAP_STYLE_URL,
   PIXEL_RATIOS,
   SIZE_MAX,
   SIZE_MIN,
@@ -372,7 +371,7 @@ export default function MapLibreLab({
             id="ez-lab-query"
             type="search"
             value={query}
-            placeholder="Titel, ID oder Kapitel"
+            placeholder="Name, Kennung oder Kapitel"
             onChange={(event) => setQuery(event.target.value)}
           />
         </label>
@@ -408,7 +407,7 @@ export default function MapLibreLab({
         </label>
 
         <label className="ez-lab__field" htmlFor="ez-lab-ratio">
-          <span className="ez-lab__field-label">Pixel Ratio</span>
+          <span className="ez-lab__field-label">Bildschärfe · Pixel Ratio</span>
           <select
             id="ez-lab-ratio"
             value={pixelRatio}
@@ -447,7 +446,7 @@ export default function MapLibreLab({
               checked={mode === 'marker'}
               onChange={() => setMode('marker')}
             />
-            Marker · SVG im DOM
+            Als eigenes Bild über der Karte (Marker)
           </label>
           <label>
             <input
@@ -457,7 +456,7 @@ export default function MapLibreLab({
               checked={mode === 'symbol-layer'}
               onChange={() => setMode('symbol-layer')}
             />
-            Symbol Layer · Bild im Stil
+            Von der Karte selbst gezeichnet (Symbol Layer)
           </label>
         </fieldset>
 
@@ -537,20 +536,29 @@ export default function MapLibreLab({
             <dl className="ez-lab__meta">
               <dt>Zeichen</dt>
               <dd>{symbol.title}</dd>
-              <dt>ID</dt>
+              <dt>Kennung</dt>
               <dd>
                 <span className="ez-id">{symbol.id}</span>
               </dd>
-              <dt>Fundstelle</dt>
+              <dt>Fundstelle in der Vorlage</dt>
               <dd>{symbol.chapter}</dd>
-              <dt>Bild-ID im Stil</dt>
-              <dd>
+            </dl>
+          ) : null}
+          {symbol === undefined ? null : (
+            <details className="ez-lab__dev">
+              <summary>Für Entwicklerinnen und Entwickler</summary>
+              <p>
+                Unter dieser Bild-ID meldet <span className="ez-mono">addSymbolImage</span> das
+                Raster im Kartenstil an; Größe, Pixelverhältnis und Farbprofil stecken darin, weil
+                eine andere Einstellung ein anderes Bild ist:
+              </p>
+              <p>
                 <span className="ez-mono">
                   {symbolImageId({ symbolId: symbol.id, size, pixelRatio, themeId })}
                 </span>
-              </dd>
-            </dl>
-          ) : null}
+              </p>
+            </details>
+          )}
         </aside>
       </div>
 
@@ -581,11 +589,8 @@ export default function MapLibreLab({
       <p className="ez-lab__source">
         {basemap === 'openfreemap' ? (
           <>
-            Untergrund <span className="ez-mono">{OPENFREEMAP_STYLE_URL}</span> —{' '}
-            {OPENFREEMAP_ATTRIBUTION}. Marker und Symbolebene erscheinen bei Pixel Ratio 1, 2 und 3
-            gleich groß: das Raster wird mit <span className="ez-mono">size × pixelRatio</span>
-            {' '}gezeichnet, MapLibre rechnet über <span className="ez-mono">pixelRatio</span> auf
-            dieselbe CSS-Größe zurück.
+            Kartenuntergrund: {OPENFREEMAP_ATTRIBUTION}. Beide Darstellungen bleiben bei jeder
+            Bildschärfe gleich groß — nur die Anzahl der Bildpunkte ändert sich.
           </>
         ) : (
           <>Ohne Untergrund: die Karte zeigt nur eine Hintergrundfläche, es wird nichts geladen.</>
@@ -734,6 +739,22 @@ export default function MapLibreLab({
         }
         .ez-lab__meta dd {
           margin: 0;
+          overflow-wrap: anywhere;
+        }
+        .ez-lab__dev {
+          font-size: var(--sl-text-xs);
+          line-height: 1.6;
+          color: var(--sl-color-gray-3);
+        }
+        .ez-lab__dev summary {
+          cursor: pointer;
+          font-family: var(--ez-font-mono);
+          font-size: var(--sl-text-2xs);
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+        }
+        .ez-lab__dev p {
+          margin: var(--ez-space-2) 0 0;
           overflow-wrap: anywhere;
         }
         .ez-lab__source {

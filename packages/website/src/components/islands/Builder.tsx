@@ -583,7 +583,7 @@ function BuilderForm() {
             value={loadedId}
             onChange={(event) => loadFromCatalog(event.target.value)}
           >
-            <option value="">— eigene Spec —</option>
+            <option value="">— eigene Zusammenstellung —</option>
             {SYMBOLS.map((symbol) => (
               <option key={symbol.id} value={symbol.id}>
                 {symbol.id} · {symbol.title}
@@ -647,15 +647,16 @@ function BuilderForm() {
           />
           {loadedSymbol.kind === 'catalog-entry' ? (
             <p>
-              Das ist ein Katalogeintrag. Seine Zeichnung im Katalog stammt aus der vermessenen
-              Darstellung; die Spec hier ist dazu die Rekonstruktion. Die Vorschau unten zeigt, was
-              die Komposition aus dieser Spec macht — das kann von der Katalogzeichnung abweichen.
-              Maßgeblich ist die Zeichnung auf der Symbolseite.
+              Dieses Zeichen ist an der Vorlage vermessen. Die Auswahl hier ist der Nachbau
+              dazu, und die Vorschau unten zeigt, was der Baukasten daraus zusammensetzt — das
+              kann von der gemessenen Zeichnung leicht abweichen. Maßgeblich ist die Zeichnung
+              auf der Seite des Zeichens.
             </p>
           ) : (
             <p>
-              Das ist ein Kompositionsrezept. Die Vorschau unten entsteht aus derselben Spec, die
-              der Katalog führt — sie ist damit dasselbe Bild, nicht eine Annäherung.
+              Für dieses Zeichen führt der Katalog selbst eine Bauanleitung. Die Vorschau unten
+              entsteht aus genau dieser Anleitung — sie ist damit dasselbe Bild, keine
+              Annäherung.
             </p>
           )}
         </div>
@@ -701,10 +702,11 @@ function BuilderForm() {
 
       {outcome.state === 'crash' ? (
         <div className="ez-note" role="alert">
-          <p className="ez-note__title">Diese Spec ließ sich nicht komponieren</p>
+          <p className="ez-note__title">Diese Zusammenstellung ließ sich nicht zeichnen</p>
           <p>
             Für diese Zusammenstellung führt der Katalog keine vermessene Fassung. Das ist keine
-            abgelehnte Kombination, sondern ein Abbruch — im Original heißt das:
+            abgelehnte Kombination, sondern ein Abbruch mitten im Zeichnen. Im Wortlaut des
+            Programms heißt das:
           </p>
           <p className="ez-builder__issue-message">{outcome.error.message}</p>
           <details className="ez-builder__details">
@@ -727,7 +729,12 @@ function BuilderForm() {
       ) : null}
 
       <section className="ez-builder__json">
-        <h3>SymbolSpec</h3>
+        <h3>Für Entwicklerinnen und Entwickler</h3>
+        <p className="ez-builder__field-hint">
+          Ab hier stehen die Begriffe der Bibliothek. Wer das Zeichen nur bauen und mitnehmen
+          will, ist mit der Adresse in der Adresszeile fertig.
+        </p>
+        <h4>Die Zusammenstellung als JSON (<code>SymbolSpec</code>)</h4>
         <pre className="ez-builder__pre">
           <code>{json}</code>
         </pre>
@@ -735,7 +742,7 @@ function BuilderForm() {
       </section>
 
       <section>
-        <h3>Codebeispiele</h3>
+        <h4>Codebeispiele</h4>
         <p className="ez-builder__field-hint">
           Die Beispiele importieren `composeFromCatalog` aus dem Paketindex — in Node ist das der
           richtige Weg. Nur im Browserbündel dieser Website geht der Import über den Subpfad.
