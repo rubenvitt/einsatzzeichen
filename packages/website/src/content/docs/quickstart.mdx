@@ -1,0 +1,92 @@
+---
+title: Quickstart
+description: Ein echtes Zeichen aus dem Katalog in vier Kanälen anzeigen — TypeScript, React, Web Component, MapLibre — mit vollständigen, lauffähigen Beispielen.
+---
+
+import CodeTabs from '../../components/CodeTabs.astro';
+import QuickstartExample from '../../components/QuickstartExample.astro';
+import { codeSamplesFor } from '../../lib/code-samples';
+import { loadSnapshot } from '../../lib/snapshot';
+import { getQuickstartExample } from '../../lib/quickstart-example';
+
+export const snapshot = loadSnapshot();
+export const example = getQuickstartExample();
+export const samples = codeSamplesFor(example.spec, example.id);
+
+Diese Seite richtet sich an Entwicklerinnen und Entwickler. Wer selbst keine Software schreibt,
+ist hier falsch: Schritt-für-Schritt-Wege ohne Programmierkenntnisse stehen bei den
+[Anleitungen](/anleitungen/), und ein bestimmtes Zeichen findet sich am schnellsten über
+[Zeichen suchen](/explorer/).
+
+## Was du in fünf Minuten hast
+
+Am Ende dieser Seite steht ein echtes Zeichen aus dem Katalog — {example.title}
+(<code class="ez-mono">{example.id}</code>) — in vier vollständigen, lauffähigen Beispielen auf
+dem Bildschirm: als SVG-String ohne Framework, als React-Komponente, als Custom Element ohne
+Framework und als Bild auf einer echten MapLibre-Karte. Kein Beispiel ist ein Ausschnitt; jedes
+lässt sich unverändert in ein eigenes Projekt kopieren.
+
+## Voraussetzungen
+
+Die acht Pakete dieses Projekts sind **Workspace-Pakete**, kein npm-Release: alle
+`packages/*/package.json` tragen `"private": true` und zeigen mit `main` auf `./src/index.ts`.
+`npm install @einsatzzeichen/core` funktioniert nirgendwo — die Beispiele unten laufen innerhalb
+eines Checkouts dieses Repositories, eingebunden über `workspace:*`. Alle vier Kanäle setzen
+außerdem `@einsatzzeichen/catalog` voraus, für zwei Dinge bekannt aus der
+[Anleitung für Software](/anleitungen/software/#zwei-fallstricke):
+
+- **Der Katalog-Index ist nicht browsertauglich.** `fonts.ts` importiert `node:url`, und der Index
+  re-exportiert es. Ein Import von `@einsatzzeichen/catalog` läuft deshalb sicher in Node — ein
+  Build- oder Testskript, ein SSR-Schritt — aber nicht ungeprüft in einem Browser-Bundle. `core`,
+  `schema`, `react`, `web-component` und `maplibre` haben dieses Problem nicht.
+- **Die Schrift gehört zum Zeichen.** `renderSvg()` schreibt `font-family="Arimo"` in jedes Zeichen
+  mit Kürzel. Ohne ausgelieferte Schriftdatei setzt der Browser eine Ersatzschrift mit anderen
+  Vorschubbreiten. Das Subset liegt in `packages/catalog/assets` (SIL OFL 1.1).
+
+## Vier Wege zum ersten Zeichen
+
+<QuickstartExample symbol={example} />
+
+Alle vier Kanäle komponieren dieselbe <code class="ez-mono">SymbolSpec</code> mit
+`composeFromCatalog()` zu derselben Zeichnung; sie unterscheiden sich nur darin, wie diese
+Zeichnung danach auf den Bildschirm kommt. Die beiden Marken unter dem Zeichen gelten für jeden der
+vier Wege gleichermaßen: die linke sagt, ob die Geometrie gegen die Vorlage gemessen und mit Tests
+belegt ist, die rechte, ob eine Fachperson bestätigt hat, dass es das richtige Zeichen für seine
+Bedeutung ist. Beide Marken lassen sich programmatisch abfragen — `symbol.review.technical` und
+`symbol.review.domain` im Katalog-Snapshot, siehe [Baukasten](/builder/) und
+[Stand der Prüfung](/coverage/).
+
+**TypeScript, ohne Framework.** `renderSvg()` aus `@einsatzzeichen/core` macht aus einer Zeichnung
+einen SVG-String — das, was hinter den anderen drei Kanälen steckt. Läuft in Node genauso wie im
+Browser, ganz ohne Rahmenwerk.
+
+**React.** `<Einsatzzeichen>` aus `@einsatzzeichen/react` nimmt dieselbe Zeichnung entgegen und
+rendert sie als SVG-Element. Wer das Markup selbst platzieren will, nimmt stattdessen den Hook
+`useEinsatzzeichenSvg(drawing, options)` aus demselben Paket.
+
+**Web Component.** `defineEinsatzzeichenElement()` aus `@einsatzzeichen/web-component` registriert
+das Custom Element `<einsatzzeichen-symbol>` einmalig — danach reicht `element.drawing = …` in
+jeder Umgebung, mit oder ohne React. Der Aufruf ist idempotent und verträgt mehrfaches Ausführen.
+
+**MapLibre.** `addSymbolImage()` aus `@einsatzzeichen/maplibre` rastert die Zeichnung und ruft
+intern `map.addImage()` auf, damit das Zeichen in einem Symbol Layer der Karte erscheint. Zum
+Ausprobieren mit echter Karte, Größe und Pixel Ratio: [MapLibre Lab](/maplibre-lab/).
+
+<CodeTabs samples={samples} idPrefix="ez-quickstart" />
+
+## Und jetzt?
+
+<div class="ez-grid ez-grid--2">
+  <a class="ez-card" href="/builder/">
+    <span class="ez-card__title">Baukasten</span>
+    <span class="ez-card__text">Eine <code class="ez-mono">SymbolSpec</code> selbst zusammensetzen und sofort sehen, welche Kombinationen die Regeln erlauben.</span>
+  </a>
+  <a class="ez-card" href="/explorer/">
+    <span class="ez-card__title">Zeichen suchen</span>
+    <span class="ez-card__text">Alle {snapshot.symbols.length} Zeichen des Katalogs durchsuchen und nach Organisation, Kapitel oder Prüfstand filtern.</span>
+  </a>
+  <a class="ez-card" href="/anleitungen/software/">
+    <span class="ez-card__title">Anleitung für Software</span>
+    <span class="ez-card__text">Die acht Pakete, die vier Ausgabewege und die beiden Fallstricke im Zusammenhang.</span>
+  </a>
+</div>
