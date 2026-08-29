@@ -18,6 +18,7 @@ import {
   evaluateSpec,
   reduceSpec,
   type AllowedValue,
+  type BlockedValue,
 } from '../../lib/builder-state.js';
 import { loadSnapshot, type SymbolSummary } from '../../lib/snapshot.js';
 import type { ExplainedIssue } from '../../lib/rule-explanations.js';
@@ -62,6 +63,11 @@ const CLEAN_PATH = '/builder/';
 interface FieldDefinition {
   field: keyof SymbolSpec;
   label: string;
+  /**
+   * Die Sache, um die es geht, als Substantiv — für den Satz, der einen gesperrten Wert
+   * begründet („… ist als Körpermarke für die Grundzeichenart … nicht vermessen").
+   */
+  noun: string;
   /** Kurzer Hinweis unter dem Feld; nur dort, wo der Feldname allein irreführt. */
   hint?: string;
 }
@@ -75,24 +81,33 @@ interface FieldDefinition {
  * Spec-Achsen (`taxonomy.ts`), und ein Formularfeld dafür behauptete ein Feld, das es nicht gibt.
  */
 const SELECT_FIELDS: FieldDefinition[] = [
-  { field: 'kind', label: 'Grundzeichenart' },
-  { field: 'bodyVariant', label: 'Körpervariante' },
-  { field: 'organization', label: 'Organisation' },
+  { field: 'kind', label: 'Grundzeichenart', noun: 'Grundzeichenart' },
+  { field: 'bodyVariant', label: 'Körpervariante', noun: 'Körpervariante' },
+  { field: 'organization', label: 'Organisation', noun: 'Organisation' },
   {
     field: 'technicalFill',
     label: 'Technische Füllung',
+    noun: 'technische Füllung',
     hint: 'Schließt eine Organisation aus — die Regel dazu steht unten, sobald beides gesetzt ist.',
   },
-  { field: 'strength', label: 'Stärke' },
-  { field: 'functionRole', label: 'Funktionsfassung' },
-  { field: 'administrativeLevel', label: 'Verwaltungsstufe' },
-  { field: 'technicalHeadMark', label: 'Technische Kopfmarke' },
-  { field: 'vehicleCategory', label: 'Fahrzeugkategorie' },
+  { field: 'strength', label: 'Stärke', noun: 'Stärke' },
+  { field: 'functionRole', label: 'Funktionsfassung', noun: 'Funktionsfassung' },
+  { field: 'administrativeLevel', label: 'Verwaltungsstufe', noun: 'Verwaltungsstufe' },
+  { field: 'technicalHeadMark', label: 'Technische Kopfmarke', noun: 'technische Kopfmarke' },
+  { field: 'vehicleCategory', label: 'Fahrzeugkategorie', noun: 'Fahrzeugkategorie' },
 ];
 
 const LIST_FIELDS: FieldDefinition[] = [
-  { field: 'capabilities', label: 'Fähigkeiten (Piktogramme in der Standardbox)' },
-  { field: 'bodyMarks', label: 'Körpermarken (randbündig über die Körperfläche)' },
+  {
+    field: 'capabilities',
+    label: 'Fähigkeiten (Piktogramme in der Standardbox)',
+    noun: 'Fähigkeit',
+  },
+  {
+    field: 'bodyMarks',
+    label: 'Körpermarken (randbündig über die Körperfläche)',
+    noun: 'Körpermarke',
+  },
 ];
 
 /** Die drei Ergebniszustände einer Spec, wie die Insel sie darstellt. */
@@ -116,16 +131,46 @@ function labelFor(field: keyof SymbolSpec, id: string): string {
   return VOCABULARY[field]?.find((entry) => entry.id === id)?.label ?? id;
 }
 
+/**
+ * Der Satz, der einen gesperrten Wert begründet — in Alltagssprache und mit den Bezeichnungen
+ * aus dem Katalog, nicht mit seinen Kennungen.
+ *
+ * Die Rohmeldung des Katalogs (`Das Art-/Varianten-/Fähigkeitspaar formation/normal/hospital ist
+ * nicht vermessen …`) steht bewusst **nicht** im Tooltip: sie trifft 39 von 64 Körpermarken, ist
+ * also der Normalfall und nicht die Ausnahme, und sie spricht Kennungen, die auf dieser Seite
+ * niemand nachschlagen kann. Sie bleibt in `blocked.detail` erhalten, falls sie später ein
+ * Entwicklerabschnitt zeigen soll.
+ */
+function blockedTooltip(
+  definition: FieldDefinition,
+  blocked: BlockedValue,
+  valueLabel: string,
+  kindLabel: string,
+): string {
+  if (blocked.because === 'rule') return blocked.explanation;
+  if (definition.field === 'kind') {
+    return (
+      `Für „${valueLabel}" führt der Katalog mit der übrigen Auswahl keine vermessene Fassung. ` +
+      'Nimm einen Teil der Auswahl zurück oder wähle eine andere Grundzeichenart.'
+    );
+  }
+  return (
+    `„${valueLabel}" ist als ${definition.noun} für die Grundzeichenart „${kindLabel}" nicht ` +
+    'vermessen. Wähle einen anderen Wert oder eine andere Grundzeichenart.'
+  );
+}
+
 /* --- Bausteine ---------------------------------------------------------------------------- */
 
 interface SelectFieldProps {
   definition: FieldDefinition;
   value: string;
   probe: Map<string, AllowedValue> | undefined;
+  kindLabel: string;
   onChange: (value: string | undefined) => void;
 }
 
-function SelectField({ definition, value, probe, onChange }: SelectFieldProps) {
+function SelectField({ definition, value, probe, kindLabel, onChange }: SelectFieldProps) {
   const id = `ez-builder-${definition.field}`;
   const options = VOCABULARY[definition.field] ?? [];
   const required = definition.field === 'kind';
@@ -139,16 +184,19 @@ function SelectField({ definition, value, probe, onChange }: SelectFieldProps) {
       >
         {required ? null : <option value="">— nicht gesetzt —</option>}
         {options.map((option) => {
-          const allowed = probe?.get(option.id);
-          const blocked = allowed !== undefined && !allowed.ok;
+          const blocked = probe?.get(option.id)?.blocked;
           return (
             <option
               key={option.id}
               value={option.id}
-              disabled={blocked}
-              title={blocked ? allowed.reason : undefined}
+              disabled={blocked !== undefined}
+              title={
+                blocked === undefined
+                  ? undefined
+                  : blockedTooltip(definition, blocked, option.label, kindLabel)
+              }
             >
-              {blocked ? `${option.label} — geht hier nicht` : option.label}
+              {blocked === undefined ? option.label : `${option.label} — geht hier nicht`}
             </option>
           );
         })}
@@ -164,6 +212,7 @@ interface ListFieldProps {
   definition: FieldDefinition;
   values: readonly string[];
   probe: Map<string, AllowedValue> | undefined;
+  kindLabel: string;
   onChange: (values: string[]) => void;
 }
 
@@ -171,7 +220,7 @@ interface ListFieldProps {
  * Mehrfachauswahl als „hinzufügen"-Liste plus abwählbare Marken. Ein `<select multiple>` über 88
  * Fähigkeiten wäre mit Strg-Klick zu bedienen und sonst nicht; hier reicht ein Klick je Richtung.
  */
-function ListField({ definition, values, probe, onChange }: ListFieldProps) {
+function ListField({ definition, values, probe, kindLabel, onChange }: ListFieldProps) {
   const id = `ez-builder-${definition.field}`;
   const options = (VOCABULARY[definition.field] ?? []).filter(
     (option) => !values.includes(option.id),
@@ -190,16 +239,19 @@ function ListField({ definition, values, probe, onChange }: ListFieldProps) {
       >
         <option value="">— hinzufügen —</option>
         {options.map((option) => {
-          const allowed = probe?.get(option.id);
-          const blocked = allowed !== undefined && !allowed.ok;
+          const blocked = probe?.get(option.id)?.blocked;
           return (
             <option
               key={option.id}
               value={option.id}
-              disabled={blocked}
-              title={blocked ? allowed.reason : undefined}
+              disabled={blocked !== undefined}
+              title={
+                blocked === undefined
+                  ? undefined
+                  : blockedTooltip(definition, blocked, option.label, kindLabel)
+              }
             >
-              {blocked ? `${option.label} — geht hier nicht` : option.label}
+              {blocked === undefined ? option.label : `${option.label} — geht hier nicht`}
             </option>
           );
         })}
@@ -474,6 +526,7 @@ function BuilderForm() {
     [spec, loadedId],
   );
   const json = useMemo(() => JSON.stringify(spec, null, 2), [spec]);
+  const kindLabel = labelFor('kind', spec.kind);
 
   function setField(field: keyof SymbolSpec, value: unknown) {
     setSpec((current) => reduceSpec(current, { field, value }));
@@ -544,6 +597,7 @@ function BuilderForm() {
             definition={definition}
             value={(spec[definition.field] as string | undefined) ?? ''}
             probe={probes.get(definition.field)}
+            kindLabel={kindLabel}
             onChange={(value) => setField(definition.field, value)}
           />
         ))}
@@ -562,6 +616,7 @@ function BuilderForm() {
             definition={definition}
             values={listValues(definition.field)}
             probe={probes.get(definition.field)}
+            kindLabel={kindLabel}
             onChange={(values) => setField(definition.field, values)}
           />
         ))}

@@ -124,7 +124,10 @@ describe('allowedValues', () => {
       expect(entry.issues.map((issue) => issue.rule)).toContain(
         'technical-fill-organization-conflict',
       );
-      expect(entry.reason?.length ?? 0).toBeGreaterThan(40);
+      expect(entry.blocked?.because).toBe('rule');
+      if (entry.blocked?.because === 'rule') {
+        expect(entry.blocked.explanation.length).toBeGreaterThan(40);
+      }
     }
   });
 
@@ -153,8 +156,31 @@ describe('allowedValues', () => {
     ]);
     expect(entry.ok).toBe(false);
     expect(entry.issues).toEqual([]);
-    expect(entry.reason).toMatch(/keine vermessene Fassung/);
-    expect(entry.reason).toMatch(/ist nicht vermessen/);
+    expect(entry.blocked?.because).toBe('not-measured');
+    if (entry.blocked?.because === 'not-measured') {
+      // Die Rohmeldung bleibt erhalten, wandert aber nach `detail` — der Tooltip baut sich
+      // aus den Bezeichnungen, nicht aus dieser Zeile.
+      expect(entry.blocked.detail).toMatch(/ist nicht vermessen/);
+    }
+  });
+
+  it('reicht einen Programmfehler weiter, statt ihn als Vermessungslücke auszugeben', () => {
+    // Eine Zahl in `designation` — so kommt sie aus einer von Hand veränderten Adresszeile.
+    // `compose()` wirft dafür einen `TypeError` („spec.designation.trim is not a function"),
+    // und der ist kein Befund über die Referenz. Würde er gefangen, käme **jeder** Kandidat in
+    // **jedem** Feld als „nicht vermessen" zurück und behauptete eine Datenlücke, die es nicht
+    // gibt.
+    const broken = { kind: 'formation', designation: 123 } as unknown as SymbolSpec;
+    expect(() => evaluateSpec(broken)).toThrow(TypeError);
+    expect(() => allowedValues(broken, 'strength', ['gruppe'])).toThrow(TypeError);
+  });
+
+  it('sperrt nur bei einem gewöhnlichen Error mit Vermessungswortlaut', () => {
+    // Gegenprobe zum Vorigen an derselben Achse: hier ist der Abbruch eine echte Aussage über
+    // die Referenz und sperrt deshalb, statt zu fliegen.
+    const [entry] = allowedValues({ kind: 'formation' }, 'bodyMarks', ['hospital']);
+    expect(entry.ok).toBe(false);
+    expect(entry.blocked?.because).toBe('not-measured');
   });
 
   it('sperrt nie den Wert, der schon gesetzt ist — auch nicht bei kaputter Spec', () => {

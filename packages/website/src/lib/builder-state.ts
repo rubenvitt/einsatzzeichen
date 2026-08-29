@@ -95,18 +95,45 @@ export function evaluateSpec(spec: SymbolSpec): SpecEvaluation {
  */
 export const LIST_SPEC_FIELDS: readonly (keyof SymbolSpec)[] = ['capabilities', 'bodyMarks'];
 
+export type BlockedValue =
+  /** Eine Regel hat abgelehnt; `explanation` ist die Erklärung ihrer ersten Meldung. */
+  | { because: 'rule'; explanation: string }
+  /** Der Katalog führt für diese Kombination keine vermessene Fassung. */
+  | { because: 'not-measured'; detail: string };
+
 export interface AllowedValue {
   value: string;
   ok: boolean;
-  /** Erklärte Regeln, wenn die Komposition den Wert ablehnt. Leer, wenn sie ganz abbricht. */
+  /** Erklärte Regeln, wenn die Komposition den Wert ablehnt. Leer bei einer Vermessungslücke. */
   issues: ExplainedIssue[];
-  /** Klartext, warum der Wert gerade nicht geht. Fehlt genau dann, wenn `ok` gilt. */
-  reason?: string;
+  /** Warum der Wert gerade nicht geht. Fehlt genau dann, wenn `ok` gilt. */
+  blocked?: BlockedValue;
 }
 
-const NO_MEASURED_VERSION =
-  'Für diesen Wert führt der Katalog an dieser Grundzeichenart keine vermessene Fassung. ' +
-  'Im Original heißt das:';
+/**
+ * Erkennt eine Vermessungslücke des Katalogs an ihrem Wortlaut.
+ *
+ * **Eine Textprüfung, und das ist die zweite Wahl.** Die erste wäre eine eigene Fehlerklasse —
+ * `pictogram-gate.ts` führt mit `BodyNotMeasuredError` genau eine und begründet sie dort mit
+ * demselben Argument: „damit ein Programmierfehler in `checkClipping` nicht als harmloser
+ * Piktogramm-Befund erscheint". Für die Abbrüche aus `body-marks.ts`, `vehicle-categories.ts` und
+ * `base-symbols.ts` gibt es keine solche Klasse; sie werfen ein gewöhnliches `Error`. Sie hier
+ * anhand ihres Textes zu erkennen, ist deshalb ein Behelf. Eine Fehlerklasse im Katalog wäre die
+ * richtige Lösung; sie gehört dorthin und nicht in die Website.
+ *
+ * Der Wortlaut ist an allen 15 verschiedenen Abbruchmeldungen abgelesen, die sich über die Felder
+ * des Baukastens auslösen lassen (Erhebung am 29.08.2026 über alle Achsen × alle Kandidaten ×
+ * 34 Ausgangsspecs): jede nennt entweder „vermessen" oder „nicht belegt".
+ *
+ * Und die Prüfung ist eng, nicht weit: ein `TypeError`, `RangeError` oder sonst eine Unterklasse
+ * kommt aus einem Programmfehler, nie aus einer Aussage über die Referenz. Sie fällt hier durch
+ * und fliegt weiter, damit sie im sichtbaren Fehlerblock landet (Spec §7), statt als Datenlücke
+ * ausgegeben zu werden.
+ */
+function isMeasurementGap(error: unknown): error is Error {
+  if (!(error instanceof Error) || error.name !== 'Error') return false;
+  return /vermessen|nicht belegt/u.test(error.message);
+}
 
 /**
  * Probiert jeden Kandidaten an der aktuellen Spec aus und sagt, ob er zusammenpasst.
@@ -127,6 +154,12 @@ const NO_MEASURED_VERSION =
  * gesperrter Eintrag, der zugleich der ausgewählte ist, wird von Browsern verschieden
  * dargestellt. Verloren geht dabei nichts: warum die Spec nicht trägt, steht vollständig in der
  * Regelliste unter der Vorschau.
+ *
+ * **Was nicht gefangen wird, fliegt weiter.** Nur abgelehnte Regeln und erkannte
+ * Vermessungslücken sperren einen Wert. Ein Programmfehler — etwa eine Spec mit einer Zahl in
+ * `designation`, die aus einer von Hand veränderten Adresszeile stammt — würde sonst jeden
+ * Kandidaten in jedem Feld als „nicht vermessen" ausgeben und damit eine Datenlücke behaupten,
+ * die es nicht gibt.
  */
 export function allowedValues(
   spec: SymbolSpec,
@@ -155,17 +188,27 @@ export function allowedValues(
       const result = evaluateSpec(candidateSpec);
       if (result.ok) return { value, ok: true, issues: [] };
       const first = result.issues[0];
-      const reason =
+      const explanation =
         first !== undefined
           ? `${first.title}: ${first.explanation}`
           : (result.unexplained[0]?.message ?? 'Diese Kombination trägt nicht.');
-      return { value, ok: false, issues: result.issues, reason };
+      return {
+        value,
+        ok: false,
+        issues: result.issues,
+        blocked: { because: 'rule', explanation },
+      };
     } catch (error) {
-      // Ein Abbruch statt einer Regel — meist eine Kennung ohne vermessene Fassung. Der Wert
-      // gehört genauso gesperrt, nur mit anderer Begründung. Die Originalmeldung bleibt stehen,
-      // ihr geht aber ein Satz voran, der ohne Kenntnis des Katalogs verständlich ist.
-      const message = error instanceof Error ? error.message : String(error);
-      return { value, ok: false, issues: [], reason: `${NO_MEASURED_VERSION} ${message}` };
+      if (!isMeasurementGap(error)) throw error;
+      // Die Originalmeldung wandert nach `detail` und **nicht** in den Tooltip: sie nennt
+      // Katalogkennungen (`formation/normal/…`), und das ist bei 39 von 64 Körpermarken die
+      // Regel, nicht die Ausnahme. Den lesbaren Satz baut die Insel aus den Bezeichnungen.
+      return {
+        value,
+        ok: false,
+        issues: [],
+        blocked: { because: 'not-measured', detail: error.message },
+      };
     }
   });
 }
