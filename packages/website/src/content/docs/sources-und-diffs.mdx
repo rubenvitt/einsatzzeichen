@@ -1,6 +1,6 @@
 ---
 title: Sources & Diffs
-description: Der sechste Einstieg ist nicht gebaut. Diese Seite sagt, was er zeigen soll, was ihm heute fehlt und was davon schon da ist.
+description: Der eine Einstieg, den es noch nicht gibt — was er zeigen soll, was ihm fehlt und was davon schon da ist.
 ---
 
 import { loadSnapshot } from '../../lib/snapshot';
@@ -12,60 +12,76 @@ export const symbolsWithLegacyIds = snapshot.symbols.filter(
 ).length;
 
 <div class="ez-note">
-<span class="ez-note__title">Nicht gebaut</span>
+<span class="ez-note__title">Diese Seite ist kein Platzhalter</span>
 
-Diese Seite ist kein Platzhalter für etwas, das gleich kommt. Sie ist die Auskunft darüber, warum
-der sechste Einstieg fehlt — mit den beiden Gründen, die dafür verantwortlich sind.
+Hier gibt es nichts zu bedienen. Diese Seite ist die Auskunft darüber, warum ein geplanter
+Einstieg fehlt — mit den beiden Gründen, die dafür verantwortlich sind. Wenn du ein Zeichen suchen
+oder herunterladen willst, bist du bei den [Anleitungen](/anleitungen/) richtig.
 
 </div>
 
 ## Was der Einstieg zeigen soll
 
-Zu jedem Zeichen die Herkunft nebeneinander: die Referenzdarstellung aus der Quelle, die vom
-Katalog erzeugte Darstellung, und dazwischen der Unterschied — welche Kante, welches Maß, welche
-Farbe abweicht und mit welcher Begründung. Dazu die zweite Blickrichtung: wer ein Zeichen unter
-seinem alten Namen aus der SKK-/DV-102-Systematik von 2010/2011 sucht, soll entweder genau eine
-Entsprechung im heutigen Katalog finden oder eine begründete Mehrdeutigkeit — also die Auskunft,
-dass der alte Name auf mehrere heutige Zeichen zeigt, und warum.
+Zwei Dinge, die man heute nur einzeln bekommt.
+
+**Das Zeichen neben seiner Vorlage.** Links das Bild aus der Quelle, rechts das vom Katalog
+erzeugte, dazwischen der Unterschied: welche Kante, welches Maß, welche Farbe abweicht und mit
+welcher Begründung. Wer ein Zeichen fachlich beurteilen will, will genau diesen Vergleich sehen
+und nicht nur die Behauptung, dass er stattgefunden hat.
+
+**Das Zeichen unter seinem alten Namen.** Wer ein Zeichen unter der Bezeichnung sucht, die es in
+der SKK-/DV-102-Systematik von 2010/2011 trug, soll entweder genau eine Entsprechung im heutigen
+Katalog finden oder eine begründete Mehrdeutigkeit — also die Auskunft, dass der alte Name auf
+mehrere heutige Zeichen zeigt, und warum.
 
 ## Was heute nicht geht
 
-**Referenzdateien lassen sich nicht ausliefern.** Für die BABZ-Bestände ist der Lizenzstand im
-Quellenregister als `unclear` geführt. Eine Gegenüberstellung „Referenz neben Erzeugtem“ bräuchte
-genau diese Dateien im Auslieferungsverzeichnis der Website. Solange die Frage offen ist, zeigt
-dieses Projekt abgeleitete Kennzahlen und keine Referenzdateien — das ist keine Vorsichtsgeste,
-sondern eine Policy mit eigenem Gate: `pnpm cli verify:repository` prüft den Git-Index gegen
-Referenzassets, und der Katalog-Snapshot dieser Website enthält kein einziges Feld mit einem
-Referenzpfad.
+**Die Bilder aus der Vorlage dürfen nicht ausgeliefert werden.** Für die BABZ-Bestände ist die
+Nutzungsgrundlage im Quellenregister als offen geführt. Ein Vergleich „Vorlage neben Erzeugtem“
+bräuchte aber genau diese Dateien auf dieser Website. Solange die Frage offen ist, zeigt dieses
+Projekt abgeleitete Zeichen und Kennzahlen und keine Dateien aus der Vorlage. Das ist keine
+Vorsichtsgeste, sondern eine Regel mit eigener Prüfung: nichts aus dem Vorlagenbestand kommt in
+das Repository oder in die Daten dieser Website.
 
-**Die Legacy-Auflösung existiert nicht.** Die Quelle
-{legacySource === undefined ? 'skk-2010' : legacySource.id} ist im Register eingetragen, aber kein
-Katalogeintrag verweist auf sie; `legacyIds` steht heute an
+**Die Zuordnung der alten Namen gibt es noch nicht.** Die Quelle
+{legacySource === undefined ? 'skk-2010' : legacySource.id} steht im Register, aber kein
+Katalogeintrag verweist auf sie: eine frühere Kennung ist heute an
 {symbolsWithLegacyIds === 0 ? 'keinem' : String(symbolsWithLegacyIds)} der
-{snapshot.symbols.length} Zeichen. Es gibt also nichts aufzulösen, solange die Zuordnung nicht
-erhoben ist. Das Scoping dafür liegt vor — Aufgabe **LFH-433**, Dokument
+{snapshot.symbols.length} Zeichen hinterlegt. Es gibt also nichts zuzuordnen, solange die Zuordnung
+nicht erhoben ist. Was dafür zu tun ist, ist beschrieben — Aufgabe **LFH-433**, Dokument
 [`docs/superpowers/specs/2026-08-28-lfh-433-legacy-migration-scoping.md`](https://github.com/rubenvitt/einsatzzeichen/blob/main/docs/superpowers/specs/2026-08-28-lfh-433-legacy-migration-scoping.md).
 Es hält unter anderem fest, dass die im Register hinterlegte Bezugsadresse der Quelle nicht mehr
 erreichbar ist und ersetzt werden muss.
 
-Ein Diff-Bild aus Ersatzdaten zu bauen wäre schlimmer als keins: es sähe nach einer Aussage aus und
-wäre keine.
+Einen Vergleich aus Ersatzdaten zu bauen wäre schlimmer als keiner: er sähe nach einer Aussage aus
+und wäre keine.
 
 ## Was schon da ist
 
 Die Bausteine des Einstiegs gibt es einzeln, nur nicht als Gegenüberstellung.
 
 - **Das Quellenregister** führt {snapshot.sources.length} Quellen mit Zitierform, Bezugsadresse,
-  Lizenzstand und eigenem Prüfstand. Es steht vollständig auf der [Grundlage-Seite](/grundlage/).
-- **Die Seitenangabe** hängt an der Manifestzeile: jedes Zeichen weiß, aus welchem Abschnitt der
-  Baseline `{snapshot.baseline}` es stammt. Die Angabe steht im Kopf jeder
-  [Zeichenseite](/zeichen/).
-- **Das Fingerprint-Gate** ist der Vergleich, den die Seite zeigen würde — nur als Test statt als
-  Bild: `matchFingerprint` misst die Körperhülle der erzeugten Zeichnung gegen die Referenzdatei
-  mit einer Toleranz von 0,01 SVG-Einheiten. Wo es nicht greift, steht die Begründung als
-  Abweichungsnotiz am technischen Review des Zeichens.
-- **Die Kontaktbögen** belegen die Ausgabe über sechs Größen und drei Themes und schlagen bei jeder
-  unbemerkten Änderung fehl: [Belege](/belege/).
+  Nutzungsgrundlage und eigenem Prüfstand. Es steht vollständig auf der Seite
+  [Grundlage](/grundlage/).
+- **Die Fundstelle** hängt an jedem Zeichen: aus welchem Abschnitt der Vorlage es stammt, steht im
+  Kopf jeder [Zeichenseite](/zeichen/).
+- **Der Vergleich mit der Vorlage** findet statt — nur als Messung statt als Bild. Weicht ein
+  Zeichen ab, steht die Begründung als Notiz an seinem technischen Prüfstand. Kein Zeichen weicht
+  unbemerkt ab.
+- **Die Kontrollbögen** belegen, dass sich die Ausgabe über sechs Größen und drei Farbprofile nicht
+  unbemerkt ändert: [Belege](/belege/).
 
 Was fehlt, ist damit nicht die Messung. Was fehlt, ist das Recht, das Gemessene nebeneinander zu
-zeigen — und die Datenerhebung für die alten Namen.
+zeigen — und die Erhebung für die alten Namen.
+
+## Für Entwicklerinnen und Entwickler
+
+Die Policy „keine Referenzassets“ hat ein eigenes Gate: `pnpm cli verify:repository` prüft den
+Git-Index auf Referenzdateien und auf verletzte Paketgrenzen, und ein Test des Snapshot-Generators
+(`snapshot-policy.test.ts`) prüft, dass kein Feld des Katalog-Snapshots einen Referenzpfad, einen
+absoluten Pfad oder einen Referenzdateinamen trägt. Reviewnotizen, die einen Dateinamen nennen,
+werden sichtbar geschwärzt statt stillschweigend durchgereicht.
+
+Die Messung, die der Vergleich zeigen würde, ist `matchFingerprint`: sie misst die Körperhülle der
+erzeugten Zeichnung gegen die Referenzdatei mit einer Toleranz von 0,01 SVG-Einheiten. Die frühere
+Kennung eines Zeichens steht im Feld `legacyIds` von `SymbolSummary`; es ist heute überall leer.

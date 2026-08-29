@@ -12,7 +12,7 @@ export interface CoverageMatrixProps {
 
 const ART_LABELS: Record<MatrixRow['coverage'], string> = {
   'catalog-entry': 'Katalogeintrag',
-  'composition-recipe': 'Kompositionsrezept',
+  'composition-recipe': 'zusammengesetztes Zeichen',
   element: 'Element',
 };
 
@@ -36,7 +36,7 @@ interface Column {
 const COLUMNS: readonly Column[] = [
   { key: 'sourceId', label: 'Quelle/Abschnitt', value: (row) => row.sourceId },
   { key: 'title', label: 'Titel', value: (row) => row.title },
-  { key: 'implementation', label: 'Implementierung', value: (row) => row.implementation },
+  { key: 'implementation', label: 'Kennung im Katalog', value: (row) => row.implementation },
   { key: 'coverage', label: 'Art', value: (row) => ART_LABELS[row.coverage] ?? row.coverage },
   { key: 'profile', label: 'Profil', value: (row) => row.profile },
   {
@@ -61,7 +61,7 @@ function sortRows(rows: readonly MatrixRow[], sort: SortState): MatrixRow[] {
 }
 
 /**
- * Manifestmatrix mit Filter und Sortierung (Spec §5.4, Task 9). Die Filterlogik selbst ist die
+ * Die Prüfliste („Manifestmatrix") mit Filter und Sortierung (Spec §5.4, Task 9). Die Filterlogik selbst ist die
  * reine Funktion `filterMatrix` aus `src/lib/coverage-filter.ts` — hier steht nur der React-State
  * darum: Filterwerte, Sortierspalte/-richtung, und die Ableitung der sichtbaren Zeilen daraus.
  */
@@ -99,7 +99,7 @@ export default function CoverageMatrix({ rows }: CoverageMatrixProps) {
 
   return (
     <div className="ez-coverage-matrix">
-      <form className="ez-coverage-matrix__filters" aria-label="Manifestmatrix filtern">
+      <form className="ez-coverage-matrix__filters" aria-label="Prüfliste filtern">
         <label>
           Bereich
           <select value={area} onChange={(event) => setArea(event.target.value)}>
@@ -147,7 +147,7 @@ export default function CoverageMatrix({ rows }: CoverageMatrixProps) {
       </form>
 
       <p className="ez-coverage-matrix__count">
-        {visibleRows.length} von {rows.length} Manifestzeilen
+        {visibleRows.length} von {rows.length} Einträgen
       </p>
 
       <div className="ez-table-scroll">
@@ -168,7 +168,7 @@ export default function CoverageMatrix({ rows }: CoverageMatrixProps) {
             {visibleRows.map((row) => (
               <tr key={row.key}>
                 <td className="ez-table__id">{row.sourceId}</td>
-                <td>{row.slug !== undefined ? <a href={`/zeichen/${row.slug}`}>{row.title}</a> : row.title}</td>
+                <td>{row.slug !== undefined ? <a href={`/zeichen/${row.slug}/`}>{row.title}</a> : row.title}</td>
                 <td className="ez-table__id">{row.implementation}</td>
                 <td>{ART_LABELS[row.coverage] ?? row.coverage}</td>
                 <td>{row.profile}</td>

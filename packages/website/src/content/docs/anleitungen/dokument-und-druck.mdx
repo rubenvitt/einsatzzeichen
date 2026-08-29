@@ -1,0 +1,182 @@
+---
+title: Ein Zeichen in ein Dokument setzen oder drucken
+description: SVG in Word, PowerPoint oder LibreOffice einfügen, die richtige Größe wählen — und was heute für den Schwarz-Weiß-Druck möglich ist.
+---
+
+import { loadSnapshot } from '../../../lib/snapshot';
+import { bulkApprovalClause, bulkDomainApproval, reviewSummary } from '../../../lib/review-summary';
+
+export const snapshot = loadSnapshot();
+export const domain = reviewSummary(snapshot.symbols).domain;
+export const bulkApproval = bulkApprovalClause(bulkDomainApproval(snapshot.symbols));
+export const contrastExceptions = snapshot.coverage.contrastExceptions;
+
+Für eine Unterlage, eine Präsentation, ein Merkblatt oder eine Legende brauchst du nur eine Datei
+und drei Klicks. Wichtig ist vor allem, die richtige Datei zu nehmen — sonst wird das Zeichen im
+Druck unscharf.
+
+## Schritt für Schritt
+
+1. Hol dir das Zeichen als **SVG**. Wie das geht, steht unter
+   [Ein Zeichen herunterladen](/anleitungen/herunterladen/). Nimm SVG und nicht PNG: SVG bleibt in
+   jeder Größe scharf, auch im Druck.
+
+2. Füge die Datei ein:
+
+   - **Word und PowerPoint:** *Einfügen → Bilder → Dieses Gerät*, dann die `.svg`-Datei wählen.
+     Aktuelle Fassungen von Microsoft 365 und Office nehmen SVG direkt an. Meldet dein Word, es
+     kenne das Format nicht, ist es zu alt — dann nimm das PNG.
+   - **LibreOffice Writer und Impress:** *Einfügen → Bild*, dann die `.svg`-Datei wählen.
+   - **Google Docs und Slides** nehmen kein SVG an; dort brauchst du das PNG.
+
+3. Zieh das Zeichen auf die gewünschte Größe — aber **immer an einer Ecke**, nie an einer Kante.
+   An der Kante gezogen wird das Zeichen verzerrt, und ein verzerrtes taktisches Zeichen ist ein
+   falsches Zeichen.
+
+4. Gib die Größe lieber als Zahl ein als mit der Maus. In Word und LibreOffice findest du sie
+   unter den Bildeigenschaften; Breite und Höhe müssen gleich bleiben.
+
+## Welche Größe?
+
+Alle Zeichen dieses Katalogs sind quadratisch und in **32 × 32 Millimetern** vermessen — das ist
+ihre natürliche Größe, gut 3 Zentimeter Kantenlänge. In dieser Größe eingefügt stimmen
+Strichstärken und Schriftgrößen genau so, wie sie gemessen wurden.
+
+Größer geht ohne Grenze — ein SVG wird nicht unscharf. Nach unten gibt es eine Grenze, und sie
+hängt am Kürzel in der Fußzone: Zeichen ohne Kürzel bleiben auch klein erkennbar, Zeichen mit
+Kürzel nicht.
+
+Wie klein genau, ist im Projekt nur für den Bildschirm gemessen, nicht für Papier. Dort wurden
+Kürzel wie „HRT“, „FRT“ und „VoIP“ angesehen: bei einer Darstellung mit 16 Bildpunkten
+verschwimmen sie zu grauen Flächen, bei 24 sind sie mit Mühe zu erraten, ab 32 sind sie zweifelsfrei
+lesbar (`packages/core/src/render/text-policy.ts`). Auf Papier hängt dieselbe Grenze von Drucker,
+Papier und Betrachtungsabstand ab — dafür gibt es hier keine gemessene Zahl, und es wird auch keine
+erfunden.
+
+Der belastbare Rat lautet deshalb: **druck einen Probebogen.** Setz das Zeichen in den Größen, die
+in Frage kommen, nebeneinander auf eine Seite, druck sie auf dem Gerät und Papier, das ihr wirklich
+verwendet, und schau sie aus dem Abstand an, aus dem sie später gelesen werden. Das dauert fünf
+Minuten und ersetzt jede Faustregel.
+
+## Schwarz-Weiß-Druck
+
+Es gibt eine eigene Farbfassung für den Schwarz-Weiß-Druck. Sie ersetzt die Organisationsfarben
+durch abgestufte Grauwerte, die sich auch dann noch unterscheiden lassen, wenn keine Farbe mehr da
+ist — anders als ein einfach entfärbtes Farbbild, bei dem Rot und Grün zum selben Grau werden.
+
+**Heute lässt sich diese Fassung nicht direkt von der Zeichenseite herunterladen.** Zwei Wege gibt
+es trotzdem:
+
+- Auf der Seite [Belege](/belege/) liegt zu jeder Zeichnung ein Bogen, der sie unten auch in der
+  Schwarz-Weiß-Fassung zeigt. Rechtsklick, „Bild speichern unter …“ — dann hast du den ganzen
+  Bogen als Datei und kannst den unteren Teil ausschneiden.
+- Oder du bittest jemanden, der das Projekt bauen kann, um einen Export in dieser Fassung. Das ist
+  ein einziges Kommando; es steht im nächsten Abschnitt.
+
+<div class="ez-note">
+  <span class="ez-note__title">Was in der Unterlage danebenstehen sollte</span>
+
+  {domain.approved === 0 ? (
+    <p>
+      Keines der {domain.total} Zeichen ist fachlich geprüft. Wenn die Unterlage in Ausbildung
+      oder Einsatzvorbereitung geht, gehört ein Satz dazu, woher die Zeichen stammen und dass ihre
+      fachliche Prüfung aussteht.
+    </p>
+  ) : domain.approved === domain.total ? (
+    <p>
+      Alle {domain.total} Zeichen sind inzwischen fachlich geprüft{bulkApproval}. Woher die Zeichen
+      stammen, gehört trotzdem in die Unterlage — ein fachliches Urteil ersetzt die Quellenangabe
+      nicht, und die Vorlage selbst ist weiterhin keine geltende Vorschrift.
+    </p>
+  ) : (
+    <p>
+      {[
+        `Fachlich geprüft sind ${domain.approved} der ${domain.total} Zeichen`,
+        domain.pending > 0 ? `; bei ${domain.pending} steht die Prüfung aus` : '',
+        domain.deviation > 0 ? `, und ${domain.deviation} tragen eine dokumentierte Abweichung` : '',
+        '.',
+      ].join('')}{' '}
+      Wenn die Unterlage in Ausbildung oder Einsatzvorbereitung geht, gehört ein Satz dazu, woher
+      die Zeichen stammen — und bei jedem Zeichen, dessen Prüfung noch aussteht, dass sie aussteht.
+      Der Stand steht auf der Seite des Zeichens.
+    </p>
+  )}
+
+  <p>
+    Der Wortlaut zur Grundlage steht auf der Seite <a href="/grundlage/">Grundlage</a>.
+  </p>
+</div>
+
+## Für Entwicklerinnen und Entwickler
+
+Ein vollständiger Export in der Druckfassung, eine SVG-Datei je Zeichen:
+
+```bash
+pnpm cli export --out out/druck --size 128 --theme print-monochrome
+```
+
+`--theme` nimmt `reference`, `accessible-light` und `print-monochrome`
+(`packages/cli/src/index.ts`). Einzeln:
+
+```ts
+import { PRINT_MONOCHROME_THEME } from '@einsatzzeichen/catalog';
+import { renderSvg } from '@einsatzzeichen/core';
+
+const svg = renderSvg(drawing, { theme: PRINT_MONOCHROME_THEME });
+```
+
+Ohne `size` trägt das SVG keine `width`/`height`, sondern nur seine `viewBox` — richtig für alles,
+was selbst skaliert (Satzprogramm, QGIS, CSS). Die `viewBox` steht dabei in SVG-Einheiten, nicht in
+Millimetern: aus 32 mm werden `90.709`. Mit `size` bekommt das SVG eine feste Pixelbreite.
+
+Die Millimeterregel gilt im ganzen Projekt: alle Längen in der Zwischendarstellung und im Katalog
+sind Millimeter, umgerechnet wird erst an der Renderergrenze mit `1 mm = 72 / 25.4` SVG-Einheiten
+über `mmToUnits`/`unitsToMm` aus `@einsatzzeichen/schema`. Die `viewBox` jedes Zeichens ist
+32 × 32 mm.
+
+Die Grauwerte der Druckfassung sind nicht frei gewählt, sondern gegeneinander gerechnet: jede
+Organisationsfarbe hält zu den übrigen einen Helligkeitsabstand von mehr als 0,045, damit zwei
+Organisationen im Ausdruck nicht zum selben Grau werden — der knappste Abstand ist die 0,0483
+zwischen `rot` (`#666666`) und `blau` (`#767676`). Wo ein Zeichen Schrift auf die
+Organisationsfarbe setzt, wird zusätzlich dieses Paar gerechnet und geprüft — `blau` etwa erreicht
+4,54:1 gegen weiße und 4,62:1 gegen schwarze Schrift (`packages/catalog/src/render-themes.ts`).
+Geprüft heißt nicht, dass jedes Paar die Schwelle erreicht: welche sie verfehlen, steht unten.
+Ein selbst entsättigtes Farb-SVG rechnet dagegen überhaupt nichts nach.
+
+Nicht jedes vorkommende Paar erreicht die Textschwelle von 4,5:1. Der Katalog verschweigt das
+nicht, sondern führt die Ausnahmen als Daten mit — `pnpm cli coverage` gibt sie aus, und ein Test
+prüft gegen genau diese Liste statt gegen eine aufgeweichte Schwelle
+(`packages/catalog/src/contrast-exceptions.ts`).
+
+<div class="ez-note">
+  <span class="ez-note__title">
+    {contrastExceptions.length === 0
+      ? 'Zurzeit keine Kontrastausnahme'
+      : contrastExceptions.length === 1
+        ? 'Eine benannte Kontrastausnahme'
+        : `${contrastExceptions.length} benannte Kontrastausnahmen`}
+  </span>
+
+  {contrastExceptions.length === 0 ? (
+    <p>
+      Zurzeit führt der Katalog kein Paar unterhalb seiner eigenen Schwelle. Sollte eines
+      dazukommen, steht es an dieser Stelle.
+    </p>
+  ) : (
+    <>
+      <ul>
+        {contrastExceptions.map((exception) => (
+          <li key={exception}>{exception}</li>
+        ))}
+      </ul>
+      <p>
+        Betroffen ist die Beschriftung in diesen Zeichen, nicht ihre Form. Sie sind so gebaut, wie
+        die Vorlage sie zeigt; abweichend ist nicht die Umsetzung, sondern die eigene
+        Kontrastschwelle des Katalogs. Wenn es bei euch auf die Lesbarkeit dieser Kürzel im
+        Ausdruck ankommt, druckt genau diese Zeichen probeweise und schaut sie euch an. Die
+        Entscheidung samt der geprüften und verworfenen Alternativen steht beim Zeichen und im{' '}
+        <a href="/coverage/">Stand der Prüfung</a>.
+      </p>
+    </>
+  )}
+</div>

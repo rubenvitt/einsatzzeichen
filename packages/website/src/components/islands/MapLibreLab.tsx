@@ -18,7 +18,6 @@ import {
   symbolImageId,
   LAB_CENTER,
   OPENFREEMAP_ATTRIBUTION,
-  OPENFREEMAP_STYLE_URL,
   PIXEL_RATIOS,
   SIZE_MAX,
   SIZE_MIN,
@@ -99,6 +98,9 @@ export default function MapLibreLab({
   const [themeId, setThemeId] = useState(themes[0]?.id ?? 'reference');
   const [mode, setMode] = useState<LabMode>('marker');
 
+  /** Wert aus `?symbol=`, den die Liste nicht kennt — sichtbar gemeldet statt still verworfen. */
+  const [unknownSymbolParam, setUnknownSymbolParam] = useState<string | null>(null);
+
   const [styleReady, setStyleReady] = useState(false);
   const [fontsReady, setFontsReady] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
@@ -125,6 +127,33 @@ export default function MapLibreLab({
     [themes, themeId],
   );
   const theme = themeOption?.theme;
+
+  /*
+   * `?symbol=<slug>` aus der Adresse lesen. Die Symbolseite verlinkt so hierher („Auf der Karte
+   * ansehen"), und ohne diesen Effekt landete man auf der Karte mit dem ersten Zeichen des
+   * Katalogs statt mit dem, das man angesehen hat.
+   *
+   * Erst nach der Hydration, wie im Explorer: die Serverfassung und der erste Client-Render
+   * zeigen beide `symbols[0]`, sonst wiche das Markup ab, sobald die Adresse einen Parameter
+   * trägt. Gesucht wird über den `slug`, weil er in der Adresse steht; die Auswahl läuft über die
+   * `id`, und die beiden sind bei keinem Zeichen gleich (`base.formation` ↔ `base-formation`).
+   *
+   * Ein Wert, den die Liste nicht kennt, wird gemeldet statt still verworfen (Spec §7): sonst
+   * zeigte die Karte wortlos irgendein Zeichen, und wer einem veralteten Link gefolgt ist, hielte
+   * es für das gesuchte.
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const wanted = new URLSearchParams(window.location.search).get('symbol');
+    if (wanted === null || wanted === '') return;
+    const found = symbols.find((entry) => entry.slug === wanted);
+    if (found === undefined) {
+      setUnknownSymbolParam(wanted);
+      return;
+    }
+    setSymbolId(found.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /*
    * Auf die Schrift warten, bevor gerastert wird. `addSymbolImage` zeichnet über `renderCanvas`
@@ -322,7 +351,19 @@ export default function MapLibreLab({
   const mapUnavailable = mapError !== null;
 
   return (
-    <section className="ez-lab" aria-label="MapLibre Lab">
+    <section className="ez-lab" aria-label="Karte">
+      {unknownSymbolParam === null ? null : (
+        <div className="ez-note" role="status">
+          <span className="ez-note__title">Dieses Zeichen gibt es hier nicht</span>
+          <p>
+            Die Adresse verlangt das Zeichen „{unknownSymbolParam}“. In der Liste steht es nicht —
+            gezeigt wird stattdessen {symbols[0]?.title ?? 'das erste Zeichen des Katalogs'}, das
+            erste Zeichen des Katalogs. Vermutlich ist der Link veraltet oder von Hand geändert;
+            such das Zeichen oben über <strong>Zeichen suchen</strong>.
+          </p>
+        </div>
+      )}
+
       <div className="ez-lab__controls">
         <label className="ez-lab__field ez-lab__field--wide" htmlFor="ez-lab-query">
           <span className="ez-lab__field-label">Zeichen suchen</span>
@@ -330,7 +371,7 @@ export default function MapLibreLab({
             id="ez-lab-query"
             type="search"
             value={query}
-            placeholder="Titel, ID oder Kapitel"
+            placeholder="Name, Kennung oder Kapitel"
             onChange={(event) => setQuery(event.target.value)}
           />
         </label>
@@ -366,7 +407,7 @@ export default function MapLibreLab({
         </label>
 
         <label className="ez-lab__field" htmlFor="ez-lab-ratio">
-          <span className="ez-lab__field-label">Pixel Ratio</span>
+          <span className="ez-lab__field-label">Bildschärfe · Pixel Ratio</span>
           <select
             id="ez-lab-ratio"
             value={pixelRatio}
@@ -405,7 +446,7 @@ export default function MapLibreLab({
               checked={mode === 'marker'}
               onChange={() => setMode('marker')}
             />
-            Marker · SVG im DOM
+            Als eigenes Bild über der Karte (Marker)
           </label>
           <label>
             <input
@@ -415,7 +456,7 @@ export default function MapLibreLab({
               checked={mode === 'symbol-layer'}
               onChange={() => setMode('symbol-layer')}
             />
-            Symbol Layer · Bild im Stil
+            Von der Karte selbst gezeichnet (Symbol Layer)
           </label>
         </fieldset>
 
@@ -493,22 +534,31 @@ export default function MapLibreLab({
           </div>
           {symbol !== undefined ? (
             <dl className="ez-lab__meta">
-              <dt>Zeichen</dt>
+              <dt>Name</dt>
               <dd>{symbol.title}</dd>
-              <dt>ID</dt>
+              <dt>Kennung</dt>
               <dd>
                 <span className="ez-id">{symbol.id}</span>
               </dd>
-              <dt>Fundstelle</dt>
+              <dt>Fundstelle in der Vorlage</dt>
               <dd>{symbol.chapter}</dd>
-              <dt>Bild-ID im Stil</dt>
-              <dd>
+            </dl>
+          ) : null}
+          {symbol === undefined ? null : (
+            <details className="ez-lab__dev">
+              <summary>Für Entwicklerinnen und Entwickler</summary>
+              <p>
+                Unter dieser Bild-ID meldet <span className="ez-mono">addSymbolImage</span> das
+                Raster im Kartenstil an; Größe, Pixelverhältnis und Farbprofil stecken darin, weil
+                eine andere Einstellung ein anderes Bild ist:
+              </p>
+              <p>
                 <span className="ez-mono">
                   {symbolImageId({ symbolId: symbol.id, size, pixelRatio, themeId })}
                 </span>
-              </dd>
-            </dl>
-          ) : null}
+              </p>
+            </details>
+          )}
         </aside>
       </div>
 
@@ -539,11 +589,8 @@ export default function MapLibreLab({
       <p className="ez-lab__source">
         {basemap === 'openfreemap' ? (
           <>
-            Untergrund <span className="ez-mono">{OPENFREEMAP_STYLE_URL}</span> —{' '}
-            {OPENFREEMAP_ATTRIBUTION}. Marker und Symbolebene erscheinen bei Pixel Ratio 1, 2 und 3
-            gleich groß: das Raster wird mit <span className="ez-mono">size × pixelRatio</span>
-            {' '}gezeichnet, MapLibre rechnet über <span className="ez-mono">pixelRatio</span> auf
-            dieselbe CSS-Größe zurück.
+            Kartenuntergrund: {OPENFREEMAP_ATTRIBUTION}. Beide Darstellungen bleiben bei jeder
+            Bildschärfe gleich groß — nur die Anzahl der Bildpunkte ändert sich.
           </>
         ) : (
           <>Ohne Untergrund: die Karte zeigt nur eine Hintergrundfläche, es wird nichts geladen.</>
@@ -692,6 +739,22 @@ export default function MapLibreLab({
         }
         .ez-lab__meta dd {
           margin: 0;
+          overflow-wrap: anywhere;
+        }
+        .ez-lab__dev {
+          font-size: var(--sl-text-xs);
+          line-height: 1.6;
+          color: var(--sl-color-gray-3);
+        }
+        .ez-lab__dev summary {
+          cursor: pointer;
+          font-family: var(--ez-font-mono);
+          font-size: var(--sl-text-2xs);
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+        }
+        .ez-lab__dev p {
+          margin: var(--ez-space-2) 0 0;
           overflow-wrap: anywhere;
         }
         .ez-lab__source {

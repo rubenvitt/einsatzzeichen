@@ -1,98 +1,123 @@
 ---
 title: Taktische Zeichen aus einer Beschreibung erzeugen
-description: Semantisches Symbolsystem für taktische Zeichen im Bevölkerungsschutz — mit Quelle, technischem Prüfstand und offenem Fachreview an jedem Zeichen.
+description: Taktische Zeichen des Bevölkerungsschutzes zum Finden, Herunterladen, Selbstbauen und Einbauen — an jedem Zeichen steht seine Fundstelle und sein Prüfstand.
 template: splash
 editUrl: false
 lastUpdated: false
 hero:
-  tagline: Aus einer semantischen Beschreibung wird ein SVG. Zu jedem Zeichen gehören seine Quelle, sein technischer Prüfstand und die Frage, ob es fachlich freigegeben ist — die Antwort darauf steht überall dabei.
+  tagline: Ein Zeichen finden, ansehen, herunterladen, auf eine Karte legen oder selbst zusammensetzen. An jedem Zeichen steht, woher es stammt und was daran geprüft wurde — technisch und fachlich, getrennt voneinander.
   actions:
-    - text: Ich will ein Zeichen anzeigen
+    - text: Ich möchte ein Zeichen verwenden
+      link: /anleitungen/
+      attrs:
+        data-note: Finden, herunterladen, auf eine Karte legen, drucken
+    - text: Ich entwickle mit dem Paket
       link: /quickstart/
       attrs:
         data-note: TypeScript, React, Web Component, MapLibre
-    - text: Ich will wissen, ob ich diesem Zeichen trauen darf
-      link: /grundlage/
-      attrs:
-        data-note: Quellen, Prüfstände, offene Fachreviews
 ---
 
 import { loadSnapshot } from '../../lib/snapshot';
+import { bulkApprovalClause, bulkDomainApprovalOfRows, reviewSummaryOfRows } from '../../lib/review-summary';
 
 export const snapshot = loadSnapshot();
 export const matrix = snapshot.coverage.matrix;
-export const technicallyReviewed = matrix.filter((row) => row.technical.status === 'approved').length;
-export const withDeviation = matrix.filter((row) => row.technical.status === 'deviation').length;
-export const domainApproved = matrix.filter((row) => row.domain.status === 'approved').length;
-export const openDomainAreas = snapshot.coverage.openDomainReviewsByArea.length;
-export const openDomainTotal = snapshot.coverage.openDomainReviewsByArea.reduce(
-  (sum, area) => sum + area.count,
-  0,
-);
+// Zwei Zählmengen, bewusst getrennt (`review-summary.ts`): die Prüfliste zählt jeden geprüften
+// Abschnitt der Vorlage, also auch Bausteine ohne eigene Seite; `symbols` zählt die Zeichen mit
+// eigener Seite. Wer beides vermischt, nennt eine Zahl, die es nicht gibt.
+export const listed = reviewSummaryOfRows(matrix);
+export const clarifiedSources = snapshot.sources.filter((source) => source.status === 'clarified').length;
+// Die Herkunft der fachlichen Freigabe, aus den Daten belegt (`bulkDomainApproval`): ein Prüfer,
+// ein Datum, eine Notiz, die sie als Sammelfreigabe ausweist. Trifft das später nicht mehr zu,
+// fällt der Halbsatz weg, statt eine Herkunft zu behaupten, die es nicht gibt.
+export const bulkApproval = bulkApprovalClause(bulkDomainApprovalOfRows(matrix));
+
+## Was hier steht
+
+Dieses Projekt baut die taktischen Zeichen des Bevölkerungsschutzes aus ihren Bestandteilen —
+Grundzeichen, Organisation, Stärke, Fähigkeiten — statt sie als fertige Bilddateien abzulegen.
+Für dich heißt das: du kannst jedes Zeichen ansehen, herunterladen und weiterverwenden, und du
+kannst dir eines zusammensetzen, das es als fertige Datei nirgends gibt.
+
+Zu jedem Zeichen steht seine Fundstelle in der Vorlage und sein Prüfstand. Der Prüfstand hat zwei
+Seiten, und sie sagen Verschiedenes: **technisch geprüft** heißt, das Bild stimmt mit der Vorlage
+überein. **Fachlich geprüft** heißt, jemand hat bestätigt, dass es das richtige Zeichen für diese
+Bedeutung ist.
 
 ## Der Stand, in vier Zahlen
 
 <div class="ez-grid ez-grid--4">
   <div class="ez-figure">
     <span class="ez-figure__value">{matrix.length}</span>
-    <span class="ez-figure__label">Zeilen im Coverage-Manifest. {snapshot.symbols.length} davon haben eine eigene Zeichenseite; die übrigen sind Elemente und Piktogramme, aus denen Zeichen zusammengesetzt werden.</span>
-    <span class="ez-figure__source">coverage-manifest.ts</span>
+    <span class="ez-figure__label">geprüfte Abschnitte der Vorlage. {snapshot.symbols.length} davon ergeben ein Zeichen mit eigener Seite; die übrigen sind Bausteine — Piktogramme, Marken, Formen —, aus denen Zeichen zusammengesetzt werden.</span>
+    <span class="ez-figure__source">Prüfliste des Katalogs</span>
   </div>
   <div class="ez-figure">
-    <span class="ez-figure__value">{technicallyReviewed}<small> / {matrix.length}</small></span>
-    <span class="ez-figure__label">Zeilen technisch geprüft. Die restlichen {withDeviation} tragen eine dokumentierte Abweichung — keine ist ungeprüft.</span>
-    <span class="ez-figure__source">coverage-manifest.ts</span>
+    <span class="ez-figure__value">{listed.technical.approved}<small> / {matrix.length}</small></span>
+    <span class="ez-figure__label">technisch geprüft: das Bild stimmt mit der Vorlage überein. {listed.technical.deviation === 0 ? 'Keiner weicht ab.' : `Die übrigen ${listed.technical.deviation} weichen an einer benannten Stelle ab — geprüft, aufgeschrieben, kein unbemerkter Fehler.`}</span>
+    <span class="ez-figure__source">Prüfliste des Katalogs</span>
   </div>
   <div class="ez-figure">
-    <span class="ez-figure__value">{domainApproved}<small> / {matrix.length}</small></span>
-    <span class="ez-figure__label">Zeilen fachlich freigegeben. Keine einzige. Technisch grün ist nicht fachlich freigegeben.</span>
-    <span class="ez-figure__source">domain-reviews.ts</span>
+    <span class="ez-figure__value">{listed.domain.approved}<small> / {matrix.length}</small></span>
+    <span class="ez-figure__label">
+      {listed.domain.approved === 0
+        ? 'fachlich geprüft: kein einziger. Fachlich noch nicht geprüft heißt: niemand aus der Fachwelt hat bestätigt, dass es das richtige Zeichen für diese Bedeutung ist.'
+        : listed.domain.approved === matrix.length
+          ? `fachlich geprüft: bestätigt, dass es das richtige Zeichen für diese Bedeutung ist${bulkApproval}. Wer wann geprüft hat, steht an jedem Zeichen einzeln.`
+          : [
+              'fachlich geprüft',
+              listed.domain.pending > 0 ? `. Bei ${listed.domain.pending} steht die Prüfung aus` : '',
+              listed.domain.deviation > 0 ? `, ${listed.domain.deviation} tragen eine dokumentierte Abweichung` : '',
+              '. Welcher Stand für ein bestimmtes Zeichen gilt, steht auf seiner Seite.',
+            ].join('')}
+    </span>
+    <span class="ez-figure__source">fachliche Prüfungen im Katalog</span>
   </div>
   <div class="ez-figure">
-    <span class="ez-figure__value">{openDomainTotal}<small> / {openDomainAreas} Bereiche</small></span>
-    <span class="ez-figure__label">offene fachliche Reviews, verteilt auf Kapitel und Anhänge der Baseline <code class="ez-mono">{snapshot.baseline}</code>.</span>
-    <span class="ez-figure__source">domain-reviews.ts</span>
+    <span class="ez-figure__value">{clarifiedSources}<small> / {snapshot.sources.length}</small></span>
+    <span class="ez-figure__label">Quellen mit geklärter Nutzungsgrundlage. Bei den übrigen {snapshot.sources.length - clarifiedSources} ist die Rechtslage offen — deshalb zeigt diese Website abgeleitete Zeichen und keine Dateien aus der Vorlage.</span>
+    <span class="ez-figure__source">Quellenregister</span>
   </div>
 </div>
 
-Die beiden Zahlen zählen Verschiedenes, deshalb stehen sie getrennt: eine **Manifestzeile** ist ein
-Abschnitt der Baseline mit seiner Umsetzung — davon gibt es {matrix.length}. Eine **Zeichenseite**
-gibt es nur für die {snapshot.symbols.length} Zeilen, die ein eigenes Zeichen ergeben; Elemente und
-Piktogramme haben keine, weil sie allein kein Zeichen sind. Wer eine Vollständigkeitsaussage liest,
-sollte wissen, worauf sie sich bezieht.
+Die ersten drei Zahlen zählen Abschnitte der Vorlage, nicht Zeichen: ein Abschnitt kann ein
+Zeichen ergeben oder einen Baustein, der erst in einem Zeichen sichtbar wird. Eine eigene Seite
+haben nur die {snapshot.symbols.length} Zeichen. Wer eine Vollständigkeitsaussage liest, sollte
+wissen, worauf sie sich bezieht — deshalb stehen beide Zahlen hier und nicht eine gemittelte.
 
-## Sechs Einstiege
+## Wege auf dieser Website
 
 <div class="ez-grid ez-grid--2">
-  <a class="ez-card" href="/quickstart/">
-    <span class="ez-card__title">Quickstart</span>
-    <span class="ez-card__text">Ein Zeichen auf dem Bildschirm, in vier Kanälen: TypeScript, React, Web Component, MapLibre. Vollständige Beispiele mit einem Zeichen, das es im Katalog wirklich gibt.</span>
+  <a class="ez-card" href="/anleitungen/">
+    <span class="ez-card__title">Anleitungen</span>
+    <span class="ez-card__text">Ein Zeichen finden, herunterladen, auf eine Karte legen, in ein Dokument setzen, drucken, selbst zusammensetzen oder in Software einbauen — Schritt für Schritt, ohne technisches Wissen vorauszusetzen.</span>
   </a>
   <a class="ez-card" href="/explorer/">
-    <span class="ez-card__title">Symbol Explorer</span>
-    <span class="ez-card__text">Suche über Titel, Synonyme und Legacy-Bezeichnungen, Filter nach Organisation, Kapitel, Quelle und Prüfstand. {snapshot.symbols.length} Zeichen.</span>
+    <span class="ez-card__title">Zeichen suchen</span>
+    <span class="ez-card__text">Alle {snapshot.symbols.length} Zeichen durchsuchen — nach Name, anderer Bezeichnung oder früherer Kennung — und nach Organisation, Kapitel, Quelle und Prüfstand eingrenzen.</span>
   </a>
   <a class="ez-card" href="/builder/">
-    <span class="ez-card__title">Builder</span>
-    <span class="ez-card__text">Eine <code class="ez-mono">SymbolSpec</code> zusammensetzen und sofort sehen, was gilt. Verstößt sie gegen eine der {snapshot.ruleIds.length} Validierungsregeln, steht die Regel im Klartext daneben.</span>
-  </a>
-  <a class="ez-card" href="/coverage/">
-    <span class="ez-card__title">Coverage</span>
-    <span class="ez-card__text">Drei Achsen, die Manifestmatrix Zeile für Zeile, die offenen Fachreviews je Bereich und die Blocker — dieselben Zahlen, die <code class="ez-mono">pnpm cli coverage</code> ausgibt.</span>
+    <span class="ez-card__title">Baukasten</span>
+    <span class="ez-card__text">Ein Zeichen aus seinen Bestandteilen zusammensetzen und sofort sehen, wie es aussieht. Passt eine Kombination nicht zusammen, steht in Klartext daneben, welche der {snapshot.ruleIds.length} Regeln das sagt und warum.</span>
   </a>
   <a class="ez-card" href="/maplibre-lab/">
-    <span class="ez-card__title">MapLibre Lab</span>
-    <span class="ez-card__text">Eine echte Karte: Zeichen als Marker im DOM und als Symbol Layer über <code class="ez-mono">map.addImage</code>, mit Größe, Pixel Ratio und Theme zum Durchprobieren.</span>
+    <span class="ez-card__title">Karte</span>
+    <span class="ez-card__text">Jedes Zeichen auf einer echten Landkarte ausprobieren: in der Größe, der Bildschärfe und dem Farbprofil, die ihr verwenden wollt — und auf jeder Zoomstufe.</span>
   </a>
-  <a class="ez-card ez-card--muted" href="/sources-und-diffs/">
-    <span class="ez-card__title">Sources &amp; Diffs — noch nicht</span>
-    <span class="ez-card__text">Der sechste Einstieg fehlt, und die Seite sagt, warum: Referenzdateien dürfen nicht ausgeliefert werden, und die Auflösung der Legacy-Bezeichnungen ist noch nicht gebaut.</span>
+  <a class="ez-card" href="/quickstart/">
+    <span class="ez-card__title">Quickstart</span>
+    <span class="ez-card__text">Für Entwicklerinnen und Entwickler: ein Zeichen auf dem Bildschirm, in vier Kanälen — TypeScript, React, Web Component, MapLibre. Vollständige Beispiele mit einem Zeichen, das es im Katalog wirklich gibt.</span>
+  </a>
+  <a class="ez-card" href="/coverage/">
+    <span class="ez-card__title">Stand der Prüfung</span>
+    <span class="ez-card__text">Wie weit der Katalog ausgebaut und wie weit er geprüft ist: drei Kennzahlen, die Prüfliste Abschnitt für Abschnitt und die Punkte, die vor der ersten Vollversion noch offen sind.</span>
   </a>
 </div>
 
 ## Was daneben noch da ist
 
-- [Alle Zeichen](/zeichen/) — eine Seite je Katalogeintrag und je Rezept, mit Vorschau in sechs Größen, Spec, Codebeispielen und Nachweisen.
-- [Grundlage](/grundlage/) — der Status der fachlichen Grundlage im Wortlaut, das Quellenregister mit {snapshot.sources.length} Einträgen und das Profilregister.
-- [Belege](/belege/) — die Kontaktbögen, mit denen die Mehrgrößen- und Theme-Gates des Katalogs arbeiten.
-- [Pakete](/pakete/core/) — acht Pakete, vier davon Ausgabekanäle, jedes mit seinen echten Exporten.
+- [Alle Zeichen](/zeichen/) — eine Seite je Zeichen, mit Vorschau in sechs Größen, Herkunft, Prüfstand und den Dateien zum Herunterladen.
+- [Grundlage](/grundlage/) — der Stand der Vorlage im Wortlaut und das Register aller {snapshot.sources.length} Quellen mit ihrem Prüfstand.
+- [Belege](/belege/) — die Kontrollbögen, mit denen das Projekt prüft, dass sich kein Zeichen unbemerkt ändert.
+- [Sources & Diffs](/sources-und-diffs/) — der eine Einstieg, den es noch nicht gibt, mit der Auskunft, warum.
+- [Pakete](/pakete/core/) — für Entwicklerinnen und Entwickler: acht Pakete, vier davon Ausgabewege, jedes mit seinen echten Exporten.

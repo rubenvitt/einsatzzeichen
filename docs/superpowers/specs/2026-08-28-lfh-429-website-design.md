@@ -44,9 +44,47 @@ Entscheidung zu LFH-432 (Lizenz- und Quellengrundlage) sinnvoll ist.
 
 ## 3. Nutzer und Ton
 
-Zwei Leserinnen und Leser: die Entwicklerin, die in fünf Minuten ein Zeichen auf ihrer Karte
-sehen will, und der Fachmensch aus Feuerwehr, THW oder Rettungsdienst, der wissen will, ob er
-diesem Zeichen trauen darf. Beide bekommen ihre Antwort auf der Startseite, ohne zu scrollen.
+Zwei Zielgruppen, vom Projektinhaber am 28.08.2026 präzisiert: **Entwicklerinnen und
+Entwickler**, die die Zeichen in ihre Software einbauen wollen, und **Anwenderinnen und
+Anwender ohne technisches Verständnis** — Menschen aus Feuerwehr, THW, Rettungsdienst,
+Verwaltung oder Ausbildung, die ein Zeichen finden, verstehen, herunterladen oder auf einer
+Karte sehen wollen. Die zweite Gruppe ist die größere; sie darf auf keiner Seite das Gefühl
+haben, auf einer Entwicklerseite gelandet zu sein.
+
+Zweite Präzisierung vom selben Tag: **Die Website ist vor allem eine Anleitung zur Nutzung
+der Zeichen**, kein Spiegel des Projekt- oder Gate-Stands. Prüfstände, Coverage-Achsen und
+Governance bleiben erreichbar, aber als Hintergrund („Wie geprüft ist das?“), nicht als
+Hauptinhalt. Der Hauptinhalt ist: ein Zeichen finden, verstehen, herunterladen, in Karte,
+Dokument, QGIS oder Software verwenden, ein eigenes zusammensetzen, drucken.
+
+Daraus folgt eine eigene Sidebar-Gruppe **„Anleitungen“** (Abschnitt 4) mit Schritt-für-
+Schritt-Seiten in Alltagssprache, und auf jeder Symbolseite die Aktionen „Als SVG
+herunterladen“, „Als PNG herunterladen“ (256 px, hell), „Auf der Karte ansehen“, „Im Baukasten
+öffnen“. Die Startseite führt zuerst zu den Anleitungen, dann zu den Einstiegen.
+
+Dritte Präzisierung: Jede Seite trägt einen **subtilen Hinweis, dass Inhalte KI-generiert
+sind** — ein Satz im Seitenfuß (Starlight-`Footer`-Override oder `components.Footer`), klein,
+nicht als Banner: „Texte und Code dieser Website sind mit KI-Unterstützung entstanden und
+werden von Menschen geprüft; der fachliche Reviewstatus steht an jedem Zeichen.“ Kein
+Popup, kein Badge im Kopf.
+
+Folgen für die Texte:
+
+- Jede Seite beginnt mit dem, was man hier **tun** kann, in Alltagssprache — nicht mit
+  Architektur, Paketen oder Buildwegen. Technik kommt danach, klar abgesetzt („Für
+  Entwicklerinnen und Entwickler“).
+- Fachbegriffe der Gefahrenabwehr (Grundzeichen, Kopfzone, Stärke, Fähigkeit) sind erlaubt,
+  weil das Publikum sie kennt; Software-Begriffe (Snapshot, Island, Hydration, Manifest,
+  Slug, Chunk, Gate, Rezept, Spec, Fingerprint) sind es **nicht** — sie werden entweder
+  übersetzt („Bauanleitung eines Zeichens“) oder nur im Entwicklerabschnitt benutzt.
+- Zahlen und Status bleiben ehrlich (siehe unten), aber mit einer Erklärung, was sie für die
+  Leserin bedeuten: „technisch geprüft“ heißt „das Bild stimmt mit der Vorlage überein“,
+  „fachlich noch nicht geprüft“ heißt „niemand aus der Fachwelt hat bestätigt, dass es das
+  richtige Zeichen für diese Bedeutung ist“.
+- Handlungsaufforderungen statt Beschreibungen: „Zeichen suchen“, „Als SVG herunterladen“,
+  „Auf der Karte ausprobieren“.
+- Fehlermeldungen und Hinweise in den interaktiven Teilen (Builder, Explorer, Karte) sprechen
+  die Anwenderin an, nie den Entwickler — kein Dateipfad, kein Stacktrace im Normaltext.
 
 Sprachregeln für alle Texte (verbindlich für jeden Subagenten, der Prosa schreibt):
 
@@ -80,8 +118,26 @@ Sprachregeln für alle Texte (verbindlich für jeden Subagenten, der Prosa schre
 /pakete/<name>            je Ausgabekanal: react, web-component, maplibre, qgis, cli, core, schema, catalog
 ```
 
-Starlight-Sidebar in dieser Reihenfolge, Gruppen: *Einstiege*, *Zeichen*, *Grundlage*,
-*Pakete*. Suche: Starlights eingebaute Pagefind-Suche über alle Seiten; der Explorer hat
+Ergänzt am 28.08.2026 (Präzisierung „Anleitung zur Nutzung“):
+
+```
+/anleitungen/                      Übersicht: Was willst du tun?
+/anleitungen/zeichen-finden        Suchen nach Bedeutung, Abkürzung, Organisation; was die Statusmarken bedeuten
+/anleitungen/herunterladen         SVG/PNG einer Symbolseite; Kontaktbögen; Größen und Hintergründe
+/anleitungen/karte                 Zeichen auf einer Karte zeigen (MapLibre Lab, dann eigene Karte — Entwicklerabschnitt)
+/anleitungen/qgis                  Zeichen in QGIS verwenden (Style-Export aus dem Paket, Import in QGIS, Schritt für Schritt)
+/anleitungen/dokument-und-druck    Zeichen in Word/PowerPoint/Druck: SVG einfügen, Größenregel, Schwarz-Weiß-Profil
+/anleitungen/eigenes-zeichen       Ein Zeichen im Baukasten zusammensetzen, was die Regeln bedeuten, Ergebnis mitnehmen
+/anleitungen/software              Für Entwicklerinnen und Entwickler: Pakete, vier Wege (TS, React, Web Component, MapLibre), Verweis auf Quickstart
+/zeichen/<slug>.svg                Download-Endpunkt (statisch, aus `drawing`)
+/zeichen/<slug>.png                Download-Endpunkt 256 px hell (statisch, resvg zur Buildzeit)
+```
+
+Starlight-Sidebar in dieser Reihenfolge, Gruppen: *Anleitungen*, *Einstiege* (Explorer,
+Baukasten, Karte, Quickstart), *Zeichen*, *Hintergrund* (Grundlage, Stand der Prüfung =
+Coverage, Belege, Sources & Diffs), *Pakete*. „Builder“ heißt in der Oberfläche
+**„Baukasten“**, „Coverage“ heißt **„Stand der Prüfung“**, „MapLibre Lab“ heißt
+**„Karte“**; die URLs bleiben. Suche: Starlights eingebaute Pagefind-Suche über alle Seiten; der Explorer hat
 zusätzlich seine eigene, feldbezogene Suche (Bedeutung, Abkürzung, Organisation, Quelle,
 Kapitel).
 

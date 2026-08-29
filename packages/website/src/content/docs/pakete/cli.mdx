@@ -3,6 +3,10 @@ title: cli
 description: Kennzahlen aus der lokalen Referenz, Coverage-Gate, Repository-Policy-Gate und SVG-Export — die Kommandos, aus denen die Zahlen dieser Website stammen.
 ---
 
+Diese Seite richtet sich an Entwicklerinnen und Entwickler. Wer ein Zeichen nur finden,
+herunterladen, drucken oder auf eine Karte legen möchte, braucht sie nicht — dafür gibt es
+die [Anleitungen](/anleitungen/).
+
 `@einsatzzeichen/cli` ist das Werkzeug am Rand: es liest die lokale Referenz, rechnet Kennzahlen
 aus, prüft Gates und schreibt SVG-Dateien. Es ist das einzige Paket mit einer Fremdabhängigkeit
 zum Rastern (`@resvg/resvg-js`) und das einzige, das auf das Dateisystem zugreift.
@@ -27,17 +31,17 @@ pnpm cli coverage
 
 | Kommando | Was es tut |
 |---|---|
-| `coverage` | die drei Coverage-Achsen, die Blocker und die offenen Fachreviews |
+| `coverage` | die drei Coverage-Achsen, die Blocker und den Stand der fachlichen Reviews |
 | `verify:repository` | Repository-Policy: keine Referenzassets im Git-Index, keine verletzte Paketgrenze |
 | `audit:reference [--filter <präfix>] [--print]` | Kennzahlen aus dem lokalen Referenzbestand |
-| `review-dossier [--out <md-pfad>]` | Dossier der offenen fachlichen Reviews als Markdown |
+| `review-dossier [--out <md-pfad>]` | Dossier der fachlichen Reviews als Markdown |
 | `export [--out <pfad>] [--size <px>] [--theme <reference\|accessible-light\|print-monochrome>]` | alle Zeichen als SVG-Dateien |
 | `visual-proof --reference-root <pfad> [--out <png-pfad>]` | Sichtprüfungsblatt als PNG |
 
 ## Beispiel
 
 ```bash
-# Coverage mit denselben Zahlen wie auf der Coverage-Seite dieser Website
+# Coverage mit denselben Zahlen wie auf der Seite „Stand der Prüfung“ dieser Website
 pnpm cli coverage
 
 # Alle Zeichen als 256-px-SVG im Druckprofil

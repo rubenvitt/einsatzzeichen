@@ -87,6 +87,132 @@ export function evaluateSpec(spec: SymbolSpec): SpecEvaluation {
   }
 }
 
+/* --- Welche Werte gerade zusammenpassen -------------------------------------------------- */
+
+/**
+ * Die beiden Achsen, die eine Liste tragen. Explizit aufgezählt statt aus dem aktuellen Wert
+ * geraten: ein noch leeres Feld trägt keinen Wert, aus dem sich das ablesen ließe.
+ */
+export const LIST_SPEC_FIELDS: readonly (keyof SymbolSpec)[] = ['capabilities', 'bodyMarks'];
+
+export type BlockedValue =
+  /** Eine Regel hat abgelehnt; `explanation` ist die Erklärung ihrer ersten Meldung. */
+  | { because: 'rule'; explanation: string }
+  /** Der Katalog führt für diese Kombination keine vermessene Fassung. */
+  | { because: 'not-measured'; detail: string };
+
+export interface AllowedValue {
+  value: string;
+  ok: boolean;
+  /** Erklärte Regeln, wenn die Komposition den Wert ablehnt. Leer bei einer Vermessungslücke. */
+  issues: ExplainedIssue[];
+  /** Warum der Wert gerade nicht geht. Fehlt genau dann, wenn `ok` gilt. */
+  blocked?: BlockedValue;
+}
+
+/**
+ * Erkennt eine Vermessungslücke des Katalogs an ihrem Wortlaut.
+ *
+ * **Eine Textprüfung, und das ist die zweite Wahl.** Die erste wäre eine eigene Fehlerklasse —
+ * `pictogram-gate.ts` führt mit `BodyNotMeasuredError` genau eine und begründet sie dort mit
+ * demselben Argument: „damit ein Programmierfehler in `checkClipping` nicht als harmloser
+ * Piktogramm-Befund erscheint". Für die Abbrüche aus `body-marks.ts`, `vehicle-categories.ts` und
+ * `base-symbols.ts` gibt es keine solche Klasse; sie werfen ein gewöhnliches `Error`. Sie hier
+ * anhand ihres Textes zu erkennen, ist deshalb ein Behelf. Eine Fehlerklasse im Katalog wäre die
+ * richtige Lösung; sie gehört dorthin und nicht in die Website.
+ *
+ * Der Wortlaut ist an allen 15 verschiedenen Abbruchmeldungen abgelesen, die sich über die Felder
+ * des Baukastens auslösen lassen (Erhebung am 29.08.2026 über alle Achsen × alle Kandidaten ×
+ * 34 Ausgangsspecs): jede nennt entweder „vermessen" oder „nicht belegt".
+ *
+ * Und die Prüfung ist eng, nicht weit: ein `TypeError`, `RangeError` oder sonst eine Unterklasse
+ * kommt aus einem Programmfehler, nie aus einer Aussage über die Referenz. Sie fällt hier durch
+ * und fliegt weiter, damit sie im sichtbaren Fehlerblock landet (Spec §7), statt als Datenlücke
+ * ausgegeben zu werden.
+ */
+function isMeasurementGap(error: unknown): error is Error {
+  if (!(error instanceof Error) || error.name !== 'Error') return false;
+  return /vermessen|nicht belegt/u.test(error.message);
+}
+
+/**
+ * Probiert jeden Kandidaten an der aktuellen Spec aus und sagt, ob er zusammenpasst.
+ *
+ * Es gibt im Projekt keine Funktion „erlaubte Werte je Feld", und sie ließe sich auch nicht
+ * ehrlich schreiben: ob eine Kombination trägt, hängt an vermessenen Fassungen, Profilen und
+ * Zonen, und das weiß erst die Komposition. Also wird jeder Kandidat einmal komponiert. Das ist
+ * billiger, als es klingt — alle elf Felder mit zusammen 247 Kandidaten brauchen 9,7 ms kalt und
+ * 3,4 ms warm (gemessen am 29.08.2026).
+ *
+ * **Keine Vorprüfung mit `validateSpec`.** Sie wäre schneller, aber falsch: ohne den Kontext aus
+ * aufgelöster Funktionsfassung und Verwaltungskopf, den `compose()` aus den Ports baut, prüft
+ * `validateSpec(spec)` *anders* — sie könnte einen Wert ablehnen, den die Komposition annimmt,
+ * und die Auswahl sperrte etwas Gültiges.
+ *
+ * **Der gerade gesetzte Wert wird nie gesperrt.** Ihn zu sperren hieße, die eigene Auswahl
+ * unbedienbar zu machen, sobald die Spec aus einem *anderen* Grund nicht trägt — und ein
+ * gesperrter Eintrag, der zugleich der ausgewählte ist, wird von Browsern verschieden
+ * dargestellt. Verloren geht dabei nichts: warum die Spec nicht trägt, steht vollständig in der
+ * Regelliste unter der Vorschau.
+ *
+ * **Was nicht gefangen wird, fliegt weiter.** Nur abgelehnte Regeln und erkannte
+ * Vermessungslücken sperren einen Wert. Ein Programmfehler — etwa eine Spec mit einer Zahl in
+ * `designation`, die aus einer von Hand veränderten Adresszeile stammt — würde sonst jeden
+ * Kandidaten in jedem Feld als „nicht vermessen" ausgeben und damit eine Datenlücke behaupten,
+ * die es nicht gibt.
+ */
+export function allowedValues(
+  spec: SymbolSpec,
+  field: keyof SymbolSpec,
+  candidates: readonly string[],
+): AllowedValue[] {
+  const current = spec[field];
+  const isList = LIST_SPEC_FIELDS.includes(field);
+  const selected: readonly string[] = isList
+    ? Array.isArray(current)
+      ? (current as readonly string[])
+      : []
+    : typeof current === 'string'
+      ? [current]
+      : [];
+
+  return candidates.map((value) => {
+    if (selected.includes(value)) return { value, ok: true, issues: [] };
+    // Listenfelder prüfen den Kandidaten **zusätzlich** zur bestehenden Auswahl: gefragt ist,
+    // ob er sich anfügen lässt, nicht ob er allein trüge.
+    const candidateSpec = reduceSpec(spec, {
+      field,
+      value: isList ? [...selected, value] : value,
+    });
+    try {
+      const result = evaluateSpec(candidateSpec);
+      if (result.ok) return { value, ok: true, issues: [] };
+      const first = result.issues[0];
+      const explanation =
+        first !== undefined
+          ? `${first.title}: ${first.explanation}`
+          : (result.unexplained[0]?.message ?? 'Diese Kombination trägt nicht.');
+      return {
+        value,
+        ok: false,
+        issues: result.issues,
+        blocked: { because: 'rule', explanation },
+      };
+    } catch (error) {
+      if (!isMeasurementGap(error)) throw error;
+      // Die Originalmeldung wandert nach `detail` und **nicht** in den Tooltip: sie nennt
+      // Katalogkennungen (`formation/normal/…`), und das ist bei 39 von 64 Körpermarken die
+      // Regel, nicht die Ausnahme. Den lesbaren Satz baut die Insel aus den Bezeichnungen.
+      return {
+        value,
+        ok: false,
+        issues: [],
+        blocked: { because: 'not-measured', detail: error.message },
+      };
+    }
+  });
+}
+
 /* --- URL-Zustand ------------------------------------------------------------------------- */
 
 const SPEC_HINT =

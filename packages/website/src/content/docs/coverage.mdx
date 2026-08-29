@@ -1,12 +1,13 @@
 ---
-title: Coverage
-description: Drei Achsen, eine Manifestmatrix und was fachlich noch offen ist — der Ausbaustand des Katalogs ohne Rundungen.
+title: Stand der Prüfung
+description: Wie weit der Katalog ausgebaut ist, was an jedem Abschnitt der Vorlage geprüft wurde und was vor der ersten Vollversion noch offen ist — ohne Rundungen.
 ---
 
 import CoverageAxes from '../../components/CoverageAxes.astro';
 import CoverageMatrix from '../../components/islands/CoverageMatrix.tsx';
 import { axisByLabel } from '../../lib/coverage-axes';
 import { loadSnapshot } from '../../lib/snapshot';
+import { bulkApprovalClause, bulkDomainApprovalOfRows, reviewSummaryOfRows } from '../../lib/review-summary';
 
 export const snapshot = loadSnapshot();
 export const coverage = snapshot.coverage;
@@ -16,53 +17,93 @@ export const referenceAxis = axisByLabel(coverage.axes, 'Referenzabdeckung');
 // ein zweites Feld, das mit der ersten Zahl auseinanderlaufen könnte. `axisByLabel` wirft mit
 // Klartext, statt bei einem Tippfehler im Label still `undefined` zu rendern.
 export const ruleAxis = axisByLabel(coverage.axes, 'Regelabdeckung');
+export const listed = reviewSummaryOfRows(coverage.matrix);
+export const bulkApproval = bulkApprovalClause(bulkDomainApprovalOfRows(coverage.matrix));
 
-Der Katalog misst seinen Ausbaustand auf drei unabhängigen Achsen. Nur eine davon ist ein Gate;
-die anderen beiden sind Kennzahlen über den Stand, kein Fehlerabbruch. Alle drei Zahlen unten
-kommen aus demselben Lauf wie `pnpm cli coverage` — die Website rechnet nicht nach.
+Hier siehst du nach, wie belastbar ein Zeichen ist, bevor du dich darauf verlässt: wie viel der
+Vorlage überhaupt umgesetzt ist, was an jedem einzelnen Abschnitt geprüft wurde und wer wann
+geprüft hat. Unten steht die vollständige Prüfliste, durchsuchbar und sortierbar.
 
-**Referenzabdeckung** zählt, wie viele der {referenceAxis.of} Dateien des lokalen
-Referenzbestands eine Manifestzeile, ein Rezept oder ein Element beansprucht. Der Rest ist nicht
-verschwunden, sondern erklärt: außerhalb des beanspruchten Umfangs, als Beispielanwendung oder
-Übersichtsblatt begründet ausgeschlossen, fachlich zurückgestellt — oder, wenn keiner dieser
-Gründe zutrifft, als nicht zugeordnet gemeldet. Das ist die einzige der drei Achsen, die als
-Gate läuft: eine nicht zugeordnete Datei lässt `pnpm cli coverage` mit Exit 1 scheitern.
+Wenn dich nur ein bestimmtes Zeichen interessiert, brauchst du diese Seite nicht — der Prüfstand
+steht auf der Seite jedes Zeichens, und was die Marken bedeuten, erklärt
+[Ein Zeichen finden](/anleitungen/zeichen-finden/).
 
-**Regelabdeckung** stellt den Werteraum aus dem Schema gegen das, was der Katalog tatsächlich
-belegt — insgesamt {ruleAxis.of} Achsen: `SymbolSpec`-Felder wie Organisation, Stärke, Fahrwerk
-und Körpermarken, dazu die Piktogrammräume, die nicht Teil von `SymbolSpec` sind. Belegt heißt:
-ein Rezept, ein Katalogeintrag oder ein Element trägt den Wert. Dazu die Zahl der
-Validierungsregeln in `core` — für jede erzwingt ein core-Test einen eigenen Testfall. Auch
-diese Achse ist reine Kennzahl, kein Gate.
+## Was geprüft wurde
 
-**Generative Reichweite** misst, was der Kompositionsmotor aus den fünf Kernachsen von
-`SymbolSpec` (`kind`, Körpervariante, Organisation, Kopfzone, Fahrwerk) tatsächlich erzeugen
-kann — geprüft mit dem echten `validateSpec()` und `composeFromCatalog()`, nicht mit einer
-Nachbildung der Regeln. Bewusst ohne Prozentwert: Fähigkeiten, Körpermarken, Funktionsrollen und
-freie Bezeichnung machen den vollen Raum unbeschränkt, und ein Anteil an einem unendlichen Raum
-wäre eine Zahl ohne Aussage. Diese Achse ist dokumentiert, kein Gate.
+<p>
+  {listed.technical.approved === coverage.matrix.length
+    ? `Alle ${coverage.matrix.length} Abschnitte sind technisch geprüft: das Bild stimmt mit der Vorlage überein.`
+    : `${listed.technical.approved} der ${coverage.matrix.length} Abschnitte sind technisch geprüft: das Bild stimmt mit der Vorlage überein.`}
+  {listed.technical.deviation > 0 &&
+    ` ${listed.technical.deviation} weichen an einer benannten Stelle ab — nachgemessen, aufgeschrieben und mit Begründung am Zeichen, also kein unbemerkter Fehler.`}
+  {listed.technical.pending > 0 && ` Bei ${listed.technical.pending} steht die Messung noch aus.`}
+</p>
+
+<p>
+  {listed.domain.approved === coverage.matrix.length
+    ? `Fachlich geprüft sind alle ${coverage.matrix.length}: jemand hat bestätigt, dass es jeweils das richtige Zeichen für diese Bedeutung ist${bulkApproval}. Ein Prüfer, ein Datum; das Urteil steht mit Name, Datum und Notiz an jedem Abschnitt, und die Prüfliste unten zeigt es Zeile für Zeile.`
+    : listed.domain.approved === 0
+      ? `Fachlich geprüft ist bisher keiner der ${coverage.matrix.length} Abschnitte. Technisch geprüft ist nicht fachlich geprüft: dass ein Bild stimmt, sagt nichts darüber, ob es das richtige Zeichen für seine Bedeutung ist.`
+      : [
+          `Fachlich geprüft sind ${listed.domain.approved} der ${coverage.matrix.length} Abschnitte`,
+          listed.domain.pending > 0 ? `, bei ${listed.domain.pending} steht das Urteil aus` : '',
+          listed.domain.deviation > 0 ? `, und ${listed.domain.deviation} tragen eine dokumentierte Abweichung` : '',
+          '. Welcher Stand für ein bestimmtes Zeichen gilt, steht auf seiner Seite.',
+        ].join('')}
+</p>
+
+Was ein fachliches Urteil nicht leistet, steht auf der Seite [Grundlage](/grundlage/): die Vorlage
+selbst ist zurzeit keine geltende Vorschrift. Ihre vorläufige Anwendung ist aufgehoben,
+Veröffentlichung und Verbreitung sind bis zum Abschluss der Beratungen ausgesetzt.
+
+## Wie weit der Katalog ausgebaut ist
+
+Drei Kennzahlen, jede misst etwas anderes. Nur die erste ist eine Bedingung, an der das Projekt
+scheitern kann; die anderen beiden beschreiben den Stand.
+
+**Wie viel der Vorlage umgesetzt ist.** Von den {referenceAxis.of} Bildern des lokalen
+Vorlagenbestands beansprucht der Katalog {referenceAxis.value}. Der Rest ist nicht verschwunden,
+sondern erklärt: außerhalb des beanspruchten Umfangs, als Beispielanwendung oder Übersichtsblatt
+begründet ausgeschlossen, fachlich zurückgestellt — oder, wenn keiner dieser Gründe zutrifft,
+ausdrücklich als nicht zugeordnet gemeldet. Ein einziges nicht zugeordnetes Bild lässt die Prüfung
+scheitern; unerklärte Lücken kann es hier also nicht geben.
+
+**Wie viel des Beschreibungsraums belegt ist.** Diese Zahl stellt die möglichen Angaben eines
+Zeichens — Organisation, Stärke, Fahrwerk, Körpermarken und die Piktogrammgruppen — gegen die,
+die im Katalog tatsächlich vorkommen: {ruleAxis.value} von {ruleAxis.of} Angabearten sind belegt.
+Dazu zählt sie die {snapshot.ruleIds.length} Regeln, die beschreiben, welche Angaben zusammen ein
+gültiges Zeichen ergeben. Reine Kennzahl, keine Bedingung.
+
+**Wie viel sich zusammensetzen lässt.** Der Baukasten kann aus den fünf Kernangaben eines Zeichens
+mehr erzeugen, als in der Vorlage abgebildet ist. Diese Zahl sagt, wie viel — geprüft, indem jede
+Kombination wirklich zusammengesetzt wurde, nicht geschätzt. Bewusst ohne Prozentwert: Fähigkeiten,
+Körpermarken, Funktionsrollen und freie Beschriftung machen den vollen Raum unbegrenzt, und ein
+Anteil an etwas Unbegrenztem wäre eine Zahl ohne Aussage.
 
 <CoverageAxes />
 
-## Technisch grün heißt nicht fachlich freigegeben
+## Die Prüfliste, Zeile für Zeile
 
-{coverage.entries} Manifestzeilen aus {coverage.sources} Quellen — jede mit einem eigenen
-technischen und einem eigenen fachlichen Reviewstatus (`domain-reviews.ts`). Eine grüne
-Referenzabdeckung, Regelabdeckung oder generative Reichweite sagt, dass der Katalog technisch
-das tut, was er behauptet. Sie sagt nichts darüber, ob ein Fachmensch aus Feuerwehr, THW oder
-Rettungsdienst das Zeichen für richtig hält. Der Status der fachlichen Grundlage selbst ist
-offen — der vollständige Wortlaut steht auf [Grundlage](/grundlage). Kurz und in eigenen
-Worten: die vorläufige Anwendung der Empfehlungen ist aufgehoben, Veröffentlichung und
-Verbreitung sind bis zum Abschluss der Beratungen ausgesetzt. Unten stehen die
-{coverage.blockers.length} offenen Punkte für Release 1.0 und die offenen fachlichen Reviews je
-Bereich, mit Schlüssel — nicht nur als Zahl.
+Eine Zeile je geprüftem Abschnitt der Vorlage: Quelle und Fundstelle, Titel, Kennung im Katalog,
+Art, Zeichenprofil, beide Prüfstände und die Art des Nachweises. Filtern nach Bereich und
+Prüfstand, sortieren mit einem Klick auf die Spaltenüberschrift.
 
-## Manifestmatrix
-
-Eine Zeile je Manifesteintrag: Quelle und Abschnitt, Titel, Implementierung, Art, Profil,
-technischer und fachlicher Reviewstatus, Testnachweis. Filterbar nach Bereich und Status,
-sortierbar per Klick auf die Spaltenüberschrift. Zeilen mit Symbolseite verlinken auf
-`/zeichen/<slug>` — Elemente und Piktogramme haben keine eigene Seite und stehen ohne Link in
-der Tabelle.
+Nicht jede Zeile ist ein Zeichen: neben den {snapshot.symbols.length} Zeichen mit eigener Seite
+stehen hier die Bausteine, aus denen Zeichen zusammengesetzt werden — Piktogramme, Marken, Formen.
+Sie werden genauso geprüft, haben aber keine eigene Seite und stehen deshalb ohne Link in der
+Tabelle.
 
 <CoverageMatrix client:visible rows={coverage.matrix} />
+
+## Für Entwicklerinnen und Entwickler
+
+Die Zahlen dieser Seite kommen aus demselben Lauf wie `pnpm cli coverage` — `referenceInventory()`,
+`ruleCoverage()`, `validationRuleCoverage()`, `generativeReach()` und `releaseBlockers()` aus
+`@einsatzzeichen/catalog`, zur Bauzeit in den Katalog-Snapshot geschrieben. Die Website rechnet
+nichts nach; ein zweiter Rechenweg könnte vom ersten abweichen.
+
+Die Referenzabdeckung ist das einzige Gate der drei: eine nicht zugeordnete Referenzdatei lässt
+`pnpm cli coverage` mit Exit 1 scheitern. Die generative Reichweite wird mit dem echten
+`validateSpec()` und `composeFromCatalog()` ermittelt, nicht mit einer Nachbildung der Regeln.
+Die Namen der Referenzdateien stehen bewusst nicht im Snapshot (Repository-Policy, `pnpm cli
+verify:repository`); die Zahl der nicht zugeordneten Dateien steht darin.

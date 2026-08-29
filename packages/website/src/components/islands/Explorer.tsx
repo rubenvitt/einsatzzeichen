@@ -179,7 +179,7 @@ export default function Explorer() {
             id="ez-explorer-q"
             type="search"
             value={filters.q}
-            placeholder="Titel, Synonym, Legacy-Bezeichnung oder ID"
+            placeholder="Name, andere Bezeichnung, frühere Kennung"
             onChange={(event) => setField('q')(event.target.value)}
           />
         </label>
@@ -245,7 +245,7 @@ export default function Explorer() {
         <ul className="ez-grid ez-grid--4">
           {results.map((symbol) => (
             <li key={symbol.id}>
-              <a className="ez-card" href={`/zeichen/${symbol.slug}`}>
+              <a className="ez-card" href={`/zeichen/${symbol.slug}/`}>
                 <span className="ez-canvas ez-canvas--light">
                   <Einsatzzeichen drawing={symbol.drawing} size={64} />
                 </span>

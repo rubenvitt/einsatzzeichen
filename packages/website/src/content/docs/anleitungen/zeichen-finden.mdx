@@ -1,0 +1,122 @@
+---
+title: Ein Zeichen finden
+description: Nach Bedeutung, Abkürzung, Organisation oder Kapitel suchen — und verstehen, was der technische und der fachliche Prüfstand an jedem Zeichen aussagen.
+---
+
+import { loadSnapshot } from '../../../lib/snapshot';
+import { bulkApprovalClause, bulkDomainApproval, reviewSummary } from '../../../lib/review-summary';
+
+export const snapshot = loadSnapshot();
+export const domain = reviewSummary(snapshot.symbols).domain;
+export const bulkApproval = bulkApprovalClause(bulkDomainApproval(snapshot.symbols));
+
+Hier findest du heraus, ob es für eine Bedeutung ein Zeichen gibt, wie es aussieht und wie
+verlässlich es ist. Dafür gibt es zwei Wege: die Suche über der Seite, die alle Texte dieser
+Website durchsucht, und **Zeichen suchen** — die Übersicht, die nur die Zeichen durchsucht und
+sich zusätzlich filtern lässt.
+
+## Schritt für Schritt
+
+1. Öffne [Zeichen suchen](/explorer/). Ohne Eingabe stehen dort alle
+   {snapshot.symbols.length} Zeichen als Kacheln.
+
+2. Tippe in das Feld **Suche**, wonach du suchst. Gesucht wird gleichzeitig im Namen des Zeichens,
+   in seinen anderen Bezeichnungen, in den früheren Kennungen und in seiner Kennung. Es genügt
+   ein Wortteil; Groß- und Kleinschreibung ist egal.
+
+3. Grenze mit den Auswahlfeldern daneben ein, wenn zu viel kommt:
+
+   - **Organisation** — Feuerwehr, THW, Polizei und die übrigen.
+   - **Kapitel/Anhang** — die Stelle in der Vorlage, etwa „Anhang E.1“.
+   - **Quelle** — aus welchem Werk das Zeichen stammt.
+   - **Profil** — für welchen Anwendungsbereich das Zeichen gilt.
+   - **Technisch** und **Fachlich** — die beiden Prüfstände, siehe unten.
+
+   Hinter jedem Eintrag steht in Klammern, wie viele Zeichen darauf entfallen. So siehst du vor dem
+   Klick, ob sich der Filter lohnt.
+
+4. Über den Kacheln steht mit, wie viele Zeichen die aktuelle Auswahl übrig lässt („12 von
+   {snapshot.symbols.length} Zeichen“). Bleibt nichts übrig, erscheint **Kein Treffer** und
+   darunter ein Knopf, der alle Filter auf einmal löst.
+
+5. Klicke eine Kachel an. Du landest auf der Seite dieses Zeichens: mit der Fundstelle in der
+   Vorlage, den Vorschauen von 16 bis 256 Bildpunkten auf hellem und dunklem Untergrund, den
+   anderen Bezeichnungen, den früheren Kennungen und den beiden Prüfständen.
+
+6. Willst du deine Suche jemandem schicken, kopiere einfach die Adresse aus der Adresszeile des
+   Browsers. Suchbegriff und Filter stehen darin; wer den Link öffnet, sieht dieselbe Auswahl.
+
+## Was an jedem Zeichen steht
+
+Jedes Zeichen trägt zwei Marken nebeneinander. Sie sagen Verschiedenes, und beide sind wichtig:
+
+- **Technisch geprüft** heißt: das Bild stimmt mit der Vorlage überein. Geometrie, Farben und
+  Schrift wurden maschinell gegen die Vorlage verglichen, und der Vergleich läuft bei jeder
+  Änderung erneut.
+- **Fachlich geprüft** heißt: jemand hat bestätigt, dass es das richtige Zeichen für diese
+  Bedeutung ist. Das ist keine Aussage darüber, ob das Bild stimmt — sondern darüber, ob
+  die Bedeutung geprüft wurde. Steht dort **fachlich noch nicht geprüft**, hat das niemand
+  bestätigt.
+
+Neben dem Wort steht bei einer Prüfung, wer sie gemacht hat und wann. Fahr mit dem Mauszeiger über
+die Marke, dann erscheint die Angabe auch dort, wo sie aus Platzgründen fehlt.
+
+<div class="ez-note">
+  <span class="ez-note__title">
+    {domain.approved === 0
+      ? 'Kein Zeichen ist heute fachlich geprüft'
+      : domain.approved === domain.total
+        ? `Alle ${domain.total} Zeichen sind fachlich geprüft`
+        : `${domain.approved} von ${domain.total} Zeichen sind fachlich geprüft`}
+  </span>
+
+  {domain.approved === 0 ? (
+    <p>
+      Der fachliche Prüfstand steht bei keinem der {domain.total} Zeichen auf „geprüft“. Wer ein
+      Zeichen aus diesem Katalog in einer Übung, einer Unterlage oder einer Lagekarte verwendet,
+      sollte das wissen und dazusagen.
+    </p>
+  ) : (
+    <p>
+      {[
+        domain.approved === domain.total
+          ? `Der fachliche Prüfstand steht bei allen ${domain.total} Zeichen auf „geprüft“${bulkApproval}`
+          : `Der fachliche Prüfstand steht bei ${domain.approved} der ${domain.total} Zeichen auf „geprüft“`,
+        domain.pending > 0 ? `, bei ${domain.pending} steht er noch aus` : '',
+        domain.deviation > 0
+          ? `, und ${domain.deviation} tragen eine dokumentierte Abweichung`
+          : '',
+        '.',
+      ].join('')}{' '}
+      Wer wann geprüft hat, steht an jedem Zeichen einzeln — verlass dich darauf und nicht auf den
+      Gesamtstand.
+    </p>
+  )}
+
+  <p>
+    {domain.pending > 0
+      ? 'Der Grund liegt nicht am Projekt, sondern an der Vorlage: die vorläufige Anwendung der Empfehlungen wurde aufgehoben, und ihre Verbreitung ist bis zum Abschluss der Beratungen ausgesetzt.'
+      : 'Der Stand der Vorlage selbst bleibt davon unberührt: die vorläufige Anwendung der Empfehlungen wurde aufgehoben, und ihre Verbreitung ist bis zum Abschluss der Beratungen ausgesetzt. Ein fachliches „geprüft“ macht daraus keine geltende Vorschrift.'}{' '}
+    Der genaue Wortlaut und das Register aller {snapshot.sources.length} Quellen stehen auf der
+    Seite <a href="/grundlage/">Grundlage</a>.
+  </p>
+</div>
+
+Eine dritte Marke kommt vor: **Abweichung**. Sie heißt, dass die Zeichnung bewusst von der Vorlage
+abweicht, und der Grund steht daneben. Kein Zeichen weicht unbemerkt ab.
+
+Wie viele Zeichen auf welchem Prüfstand stehen, zeigt der [Stand der Prüfung](/coverage/).
+
+## Für Entwicklerinnen und Entwickler
+
+Die Auswahl steht vollständig in der Adresse: `?q=` für die Suche, dazu `org`, `kapitel`,
+`quelle`, `profil`, `technisch` und `fachlich` für die Facetten. Werte, die es in der jeweiligen
+Auswahlliste nicht gibt, werden beim Laden verworfen, statt einen unsichtbaren Filter zu setzen.
+
+Die Suchlogik liegt DOM-frei in `src/lib/explorer-search.ts` (`searchSymbols`, `facetOptions`,
+`sanitizeFacets`) und ist dort getestet; die Insel `src/components/islands/Explorer.tsx` setzt nur
+die Oberfläche darüber. Es kommt keine externe Suchbibliothek zum Einsatz — bei dieser Menge
+genügt eine normalisierte Teilzeichenketten- und Tokensuche.
+
+Die Facettenwerte stammen aus den tatsächlich vorhandenen Zeichen, nicht aus der Liste der
+erlaubten Werte des Baukastens: die Suche zeigt nur, was wirklich vorkommt.

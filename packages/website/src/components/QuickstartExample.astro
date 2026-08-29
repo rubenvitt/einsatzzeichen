@@ -1,0 +1,67 @@
+---
+/**
+ * Die Vorschau des Quickstart-Beispielzeichens (Spec §5.4).
+ *
+ * Gleiches Muster wie `Hero.astro`: `renderSvg()` läuft zur Buildzeit in Node, das Ergebnis steht
+ * inline im HTML (`set:html`). Ein eigenes Astro-Bauteil statt Markup direkt in `quickstart.mdx`,
+ * weil MDX-Dateien in diesem Projekt `set:html` nicht verwenden (kein Präzedenzfall im Repository)
+ * — die Direktive bleibt damit dort, wo sie unstrittig funktioniert.
+ *
+ * Zeigt zusätzlich den Reviewstand des Beispielzeichens — den tatsächlichen, aus dem Snapshot,
+ * nicht einen hier hingeschriebenen: wer die vier Codebeispiele abtippt, soll im selben Atemzug
+ * sehen, auf welchem technischen und welchem fachlichen Stand das entstehende Zeichen steht.
+ * Dieselbe Aussage wie auf jeder Zeichenseite, nicht nur auf der Startseite.
+ */
+import { renderSvg } from '@einsatzzeichen/core';
+import StatusPair from './StatusPair.astro';
+import type { SymbolSummary } from '../lib/snapshot';
+
+interface Props {
+  symbol: SymbolSummary;
+}
+
+const { symbol } = Astro.props;
+
+const svg = renderSvg(symbol.drawing, { idPrefix: 'ez-quickstart' });
+const sourceLabel =
+  symbol.source.page === undefined ? symbol.chapter : `${symbol.chapter}, S. ${symbol.source.page}`;
+---
+
+<figure class="ez-quickstart-plate">
+  <div class="ez-canvas ez-canvas--light" set:html={svg} />
+  <figcaption class="ez-quickstart-plate__caption">
+    <span class="ez-id">
+      {symbol.id} · {symbol.title}
+    </span>
+    <span>{sourceLabel} · {symbol.source.citation}</span>
+    <StatusPair technical={symbol.review.technical} domain={symbol.review.domain} compact />
+  </figcaption>
+</figure>
+
+<style>
+  .ez-quickstart-plate {
+    display: grid;
+    justify-items: start;
+    gap: var(--ez-space-3);
+    max-width: 18rem;
+    margin-block: var(--ez-space-4) var(--ez-space-6);
+  }
+
+  .ez-quickstart-plate .ez-canvas {
+    width: 100%;
+    max-width: 12rem;
+  }
+
+  .ez-quickstart-plate__caption {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ez-space-2);
+    font-size: var(--sl-text-2xs);
+    line-height: 1.5;
+    color: var(--sl-color-gray-3);
+  }
+
+  .ez-quickstart-plate__caption .ez-id {
+    font-size: var(--sl-text-xs);
+  }
+</style>

@@ -1,0 +1,657 @@
+---
+/**
+ * Eine Seite je Zeichen (Spec §5.5), zur Buildzeit aus dem Katalog-Snapshot erzeugt.
+ *
+ * **Aufbau.** Die Reihenfolge folgt der Präzisierung vom 28.08.2026 (Spec §3): erst was man mit
+ * dem Zeichen tun kann, dann wie es aussieht, dann was es bedeutet und woher es kommt — und ganz
+ * zuletzt, klar abgesetzt, der Teil für Entwicklerinnen und Entwickler. Die sieben Bestandteile
+ * aus §5.5 sind alle da, nur anders sortiert: Kopf mit den zwei Statusmarken, Vorschau,
+ * Bauanleitung als JSON mit „Im Baukasten öffnen“, Codebeispiele, weitere Benennungen, zulässige
+ * Kombinationen, Nachweise. Jeder Abschnitt erscheint nur, wenn Daten da sind — eine leere Rubrik
+ * behauptet, es gäbe dort nichts zu wissen, statt zu sagen, dass die Daten fehlen.
+ * „Änderungshistorie“ fehlt deshalb ganz: dafür gibt es keine Datenquelle.
+ *
+ * **Sprache.** Oberhalb des Entwicklerabschnitts stehen keine Software-Begriffe: kein Rezept, kein
+ * Manifest, kein Snapshot, keine Spec. Das Zeichen heißt Zeichen, die Datei heißt Datei, und die
+ * Statusmarken bekommen einen Satz, der sagt, was sie für die Leserin bedeuten (Spec §3).
+ *
+ * **Was aus welchem Feld kommt.** `drawing` ist die gezeigte und die heruntergeladene Zeichnung;
+ * bei einem Katalogeintrag (`kind: 'catalog-entry'`) ist sie die vermessene Darstellung und die
+ * `spec` dazu eine Rekonstruktion. JSON, Baukasten-Link und Codebeispiele gehen von dieser Spec
+ * aus — also steht bei Katalogeinträgen ein Hinweis an der Aktionsleiste und einer über dem JSON.
+ * Die Downloads sind davon nicht betroffen, sie liefern `drawing`.
+ *
+ * **Reviewnotizen.** 241 der 256 Zeichen tragen eine technische Notiz mit im Mittel 895 Zeichen,
+ * geschrieben in der Fachsprache der Prüfung. Sie steht zugeklappt im Kopf und als Zitat
+ * überschrieben — gleich ob Freigabe oder Abweichung. Dass es eine Abweichung gibt, sagt die
+ * Statusmarke mit ihrem Erklärsatz; die 12 Zeichen mit `technical.status === 'deviation'` bekommen
+ * dort einen eigenen Satz. Die kurzen fachlichen Notizen stehen offen.
+ */
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import CodeTabs from '../../components/CodeTabs.astro';
+import StatusPair from '../../components/StatusPair.astro';
+import SymbolPreview from '../../components/SymbolPreview.astro';
+import { encodeSpec } from '../../lib/builder-state';
+import { codeSamplesFor } from '../../lib/code-samples';
+import { RULE_EXPLANATIONS } from '../../lib/rule-explanations';
+import { loadSnapshot, type ReviewSummary, type SymbolSummary } from '../../lib/snapshot';
+
+interface Props {
+  symbol: SymbolSummary;
+}
+
+export function getStaticPaths(): { params: { slug: string }; props: Props }[] {
+  return loadSnapshot().symbols.map((symbol) => ({
+    params: { slug: symbol.slug },
+    props: { symbol },
+  }));
+}
+
+const { symbol } = Astro.props;
+const snapshot = loadSnapshot();
+
+/* --- Beschriftungen ----------------------------------------------------------------------- */
+
+/** Alltagssprache für den Kopf; die Fachwörter dazu stehen im Entwicklerabschnitt. */
+const KIND_LABELS: Record<SymbolSummary['kind'], string> = {
+  'catalog-entry': 'aus der Vorlage vermessen',
+  'composition-recipe': 'aus Grundzeichen zusammengesetzt',
+};
+
+const VARIANT_LABELS: Record<SymbolSummary['variant'], string> = {
+  primary: 'Hauptfassung',
+  alternative: 'Alternative Fassung',
+};
+
+/**
+ * Deutsche Bezeichnung der `SymbolSpec`-Achsen. Wortgleich mit den Formularfeldern des Baukastens
+ * (`SELECT_FIELDS`/`LIST_FIELDS` in `islands/Builder.tsx`), damit dasselbe Feld auf beiden Seiten
+ * denselben Namen trägt. `labels` hat dort kein Formularfeld und deshalb hier eine eigene
+ * Bezeichnung.
+ */
+const FIELD_LABELS: Record<string, string> = {
+  kind: 'Grundzeichenart',
+  bodyVariant: 'Körpervariante',
+  organization: 'Organisation',
+  technicalFill: 'Technische Füllung',
+  strength: 'Stärke',
+  functionRole: 'Funktionsfassung',
+  administrativeLevel: 'Verwaltungsstufe',
+  technicalHeadMark: 'Technische Kopfmarke',
+  vehicleCategory: 'Fahrzeugkategorie',
+  capabilities: 'Fähigkeiten',
+  bodyMarks: 'Körpermarken',
+  labels: 'Beschriftungen',
+  designation: 'Kennung',
+};
+
+/**
+ * Was die beiden Statusmarken für die Leserin bedeuten — je Stand ein eigener Satz (Spec §3).
+ *
+ * Die Marke selbst sagt nur „technisch: mit Abweichung"; ohne Erklärung liest sich das wie ein
+ * offener Fehler. Es ist aber das Gegenteil: die Zeichnung ist nachgemessen worden, der Unterschied
+ * zur Vorlage ist benannt und aufgeschrieben. Genau das steht deshalb hier. Und die Sätze werden
+ * aus dem tatsächlichen Stand gewählt statt fest hingeschrieben: sobald eine fachliche Freigabe
+ * kommt, stünde ein fester Satz „fachlich noch nicht geprüft" als Unwahrheit auf der Seite.
+ */
+const TECHNICAL_MEANING: Record<ReviewSummary['status'], string> = {
+  approved:
+    '„Technisch geprüft" heißt: das Bild stimmt mit der Vorlage überein, nachgemessen und mit ' +
+    'Tests abgesichert.',
+  deviation:
+    '„Technisch: mit Abweichung" heißt: das Bild ist gegen die Vorlage nachgemessen worden und ' +
+    'weicht an einer benannten Stelle von ihr ab. Die Abweichung ist geprüft und benannt, sie ist ' +
+    'also kein offener Fehler, sondern eine bekannte Ausnahme.',
+  pending:
+    '„Technisch noch nicht geprüft" heißt: niemand hat das Bild bisher gegen die Vorlage ' +
+    'nachgemessen.',
+};
+
+const DOMAIN_MEANING: Record<ReviewSummary['status'], string> = {
+  approved:
+    '„Fachlich geprüft" heißt: jemand hat bestätigt, dass dies das richtige Zeichen für diese ' +
+    'Bedeutung ist. Wer und wann, steht an der Marke — verlass dich darauf und nicht darauf, ' +
+    'dass „geprüft" dasteht.',
+  deviation:
+    '„Fachlich: mit Abweichung" heißt: jemand hat das Zeichen angesehen und eine Stelle benannt, ' +
+    'an der es von der fachlichen Erwartung abweicht.',
+  pending:
+    '„Fachlich noch nicht geprüft" heißt: niemand aus der Fachwelt hat bestätigt, dass dies das ' +
+    'richtige Zeichen für diese Bedeutung ist.',
+};
+
+/** Nachweisarten aus `CoverageEntry.testEvidence`, ausgeschrieben. */
+const EVIDENCE_LABELS: Record<string, string> = {
+  'body-fingerprint': 'Körper-Fingerprint gegen die Referenzdatei (matchFingerprint)',
+  'svg-snapshot': 'SVG-Snapshot: die Ausgabe von renderSvg bleibt bytegleich',
+  'body-geometry-regression': 'Regressionstest der Körpergeometrie',
+};
+
+/* --- Kopfdaten ---------------------------------------------------------------------------- */
+
+const sourceLabel =
+  symbol.source.page === undefined ? symbol.chapter : `${symbol.chapter}, S. ${symbol.source.page}`;
+
+/**
+ * Sichtbare Notizen im Kopf: die **fachlichen**. Sie sind kurz und in Alltagssprache geschrieben,
+ * also stehen sie offen statt zugeklappt — anders als der technische Wortlaut darunter.
+ *
+ * Nur wenige Zeichen tragen überhaupt eine fachliche Notiz — heute die beiden aus D.1.9, die
+ * ihre abgeleitete Organisationszuordnung nennen. Die Anzahl steht hier bewusst nicht als Zahl:
+ * sie wäre falsch, sobald sich der Ledger ändert.
+ */
+const headNotes = [
+  symbol.review.domain.status === 'deviation' && symbol.review.domain.note !== undefined
+    ? { title: 'Bekannte Abweichung beim fachlichen Prüfen', note: symbol.review.domain.note }
+    : undefined,
+  symbol.review.domain.status !== 'deviation' && symbol.review.domain.note !== undefined
+    ? { title: 'Anmerkung aus dem fachlichen Prüfen', note: symbol.review.domain.note }
+    : undefined,
+].filter((entry) => entry !== undefined);
+
+/**
+ * Der Wortlaut des technischen Reviews — zugeklappt, gleich ob Freigabe oder Abweichung.
+ *
+ * **Warum auch die Abweichung zugeklappt.** Diese Notizen sind lang (241 Zeichen tragen eine, im
+ * Mittel 895 und bis zu 3623 Zeichen) und in der Fachsprache der Prüfung geschrieben — Fingerprint,
+ * Gate, Rezept. Offen und unbeschriftet über der Vorschau lasen sie sich wie eine Fehlermeldung an
+ * die falsche Zielgruppe. Umschreiben würde den Beleg verfälschen, weglassen ihn verstecken. Also
+ * wörtlich, mit einer Aufschrift, die sagt, was kommt (wie der README-Wortlaut auf der
+ * Grundlage-Seite) — und die Aussage „hier gibt es eine Abweichung" trägt die Statusmarke oben
+ * zusammen mit ihrem Erklärsatz, nicht dieser Kasten.
+ */
+const technicalNote = symbol.review.technical.note;
+
+const technicalNoteSummary =
+  symbol.review.technical.status === 'deviation'
+    ? 'Wortlaut der Abweichung aus dem technischen Review (Fachsprache)'
+    : 'Wortlaut aus dem technischen Review (Fachsprache)';
+
+/**
+ * Der Hinweis auf den aufklappbaren Wortlaut — **nur**, wenn es ihn gibt.
+ *
+ * Er hing zuerst als fester Halbsatz im Abweichungstext („der Wortlaut steht gleich darunter“).
+ * Das stimmte für die heutigen 12 Abweichungen, die alle eine Notiz tragen, wäre aber ein Verweis
+ * ins Leere, sobald ein neu erzeugter Snapshot eine Abweichung ohne Notiz führt. Der Satz hängt
+ * jetzt an derselben Bedingung wie das `<details>` und kann deshalb nicht mehr auseinanderlaufen.
+ */
+const noteHint =
+  technicalNote === undefined
+    ? undefined
+    : symbol.review.technical.status === 'deviation'
+      ? 'Was genau abweicht, steht darunter im Wortlaut der Prüfung zum Aufklappen.'
+      : 'Der Wortlaut der Prüfung steht darunter zum Aufklappen.';
+
+/* --- Aktionen ----------------------------------------------------------------------------- */
+
+/**
+ * `?spec=` ist der Vertrag des Baukastens: base64url-kodiertes JSON ohne Füllzeichen. Kodiert wird
+ * mit **derselben** `encodeSpec()`, die der Baukasten zum Lesen spiegelt (`decodeSpec`) — nicht mit
+ * einer Node-Nachbildung daneben. Zwei Kodierungen für einen Parameter können auseinanderlaufen,
+ * und die Stelle, an der das auffiele, wäre ein toter Link statt ein roter Test. `encodeSpec()`
+ * kommt mit `TextEncoder` und `btoa` aus; beide gibt es in Node wie im Browser.
+ */
+const builderHref = `/builder/?spec=${encodeSpec(symbol.spec)}`;
+
+/**
+ * Die Karte liest `?symbol=<slug>` und wählt das Zeichen vor (`MapLibreLab.tsx`); einen Wert, den
+ * ihre Liste nicht kennt, meldet sie sichtbar, statt still ein anderes Zeichen zu zeigen. Der
+ * Slug ist derselbe wie in der Adresse dieser Seite — eine zweite Kodierung gäbe es nicht zu
+ * pflegen.
+ */
+const mapHref = `/maplibre-lab/?symbol=${symbol.slug}`;
+
+const svgHref = `/zeichen/${symbol.slug}.svg`;
+const pngHref = `/zeichen/${symbol.slug}.png`;
+
+/* --- Entwicklerabschnitt ------------------------------------------------------------------ */
+
+const isReconstruction = symbol.kind === 'catalog-entry';
+const specJson = JSON.stringify(symbol.spec, null, 2);
+const samples = codeSamplesFor(symbol.spec, symbol.id);
+
+function valueLabels(field: string, value: unknown): { text: string; id?: string }[] {
+  const vocabulary = snapshot.builder[field] ?? [];
+  const label = (id: string): string => vocabulary.find((entry) => entry.id === id)?.label ?? id;
+  if (Array.isArray(value))
+    return value.map((item) => ({ id: String(item), text: label(String(item)) }));
+  if (typeof value === 'object' && value !== null) {
+    return Object.entries(value).map(([key, entry]) => ({ id: key, text: String(entry) }));
+  }
+  const id = String(value);
+  return [{ id, text: label(id) }];
+}
+
+/**
+ * Regeln je Feld über das kuratierte `field` aus `RULE_EXPLANATIONS`.
+ *
+ * **Warum nicht über den Namen der Kennung.** Genau das stand hier vorher — eine Regel gehörte zu
+ * einem Feld, wenn ihre Kennung mit dessen Namen in Bindestrichform begann. Deterministisch, aber
+ * falsch: von den 72 Regeln fanden so nur 17 ein Feld, und ausgerechnet `labels` — in 137 der 256
+ * Zeichen gesetzt — stand mit „keine Regelfamilie unter diesem Namen“ da, obwohl über vierzig
+ * Regeln nichts anderes prüfen. Ihre Kennungen sind nach der **Zone** benannt
+ * (`center-label-within-body`, `top-left-metrics-complete`), nicht nach dem Feld. Die Zuordnung
+ * steht deshalb jetzt an der Erklärung selbst, und ein Test hält sie gültig.
+ */
+const setFields = (Object.entries(symbol.spec) as [string, unknown][])
+  .filter(([, value]) => value !== undefined)
+  .map(([field, value]) => {
+    const rules = snapshot.ruleIds
+      .map((rule) => ({ id: rule, explanation: RULE_EXPLANATIONS[rule] }))
+      .filter((entry) => entry.explanation !== undefined && entry.explanation.field === field);
+    return {
+      field,
+      label: FIELD_LABELS[field] ?? field,
+      values: valueLabels(field, value),
+      rules,
+    };
+  });
+
+const ruleCount = setFields.reduce((total, entry) => total + entry.rules.length, 0);
+
+/* --- Abschnitte und Inhaltsverzeichnis ---------------------------------------------------- */
+
+const hasNames = symbol.synonyms.length > 0 || symbol.legacyIds.length > 0;
+
+/**
+ * Starlight baut das Inhaltsverzeichnis aus `headings`; in einer `.astro`-Seite sammelt das niemand
+ * automatisch ein. Die Liste steht deshalb hier und trägt genau die `id`s der Überschriften unten.
+ */
+const headings = [
+  { depth: 2, slug: 'verwenden', text: 'Zeichen verwenden' },
+  { depth: 2, slug: 'ansehen', text: 'So sieht es aus' },
+  { depth: 2, slug: 'herkunft', text: 'Bedeutung und Herkunft' },
+  { depth: 2, slug: 'entwicklung', text: 'Für Entwicklerinnen und Entwickler' },
+  { depth: 3, slug: 'bauanleitung', text: 'Bauanleitung als JSON' },
+  { depth: 3, slug: 'codebeispiele', text: 'Codebeispiele' },
+  { depth: 3, slug: 'kombinationen', text: 'Zulässige Kombinationen' },
+  { depth: 3, slug: 'nachweise', text: 'Nachweise' },
+];
+
+const description =
+  `${symbol.title} aus ${symbol.chapter}: Zeichen ansehen, als SVG oder PNG herunterladen, auf ` +
+  'der Karte zeigen, im Baukasten abwandeln — mit Prüfstand, Herkunft und Codebeispielen.';
+---
+
+<StarlightPage frontmatter={{ title: symbol.title, description }} headings={headings}>
+  <p class="ez-eyebrow">
+    {symbol.chapter} · {KIND_LABELS[symbol.kind]} · {VARIANT_LABELS[symbol.variant]}
+  </p>
+
+  <p class="ez-head__status">
+    <StatusPair technical={symbol.review.technical} domain={symbol.review.domain} />
+  </p>
+
+  <p class="ez-head__explain">
+    {TECHNICAL_MEANING[symbol.review.technical.status]}{' '}
+    {DOMAIN_MEANING[symbol.review.domain.status]} Beide Angaben stehen an jedem Zeichen dieser
+    Website; die rechte ist die, die man leicht übersieht.
+    {noteHint !== undefined && ` ${noteHint}`}
+  </p>
+
+  {
+    headNotes.map((entry) => (
+      <div class="ez-note">
+        <span class="ez-note__title">{entry.title}</span>
+        <p>{entry.note}</p>
+      </div>
+    ))
+  }
+
+  {
+    technicalNote !== undefined && (
+      <details class="ez-longnote">
+        <summary>{technicalNoteSummary}</summary>
+        <p>{technicalNote}</p>
+      </details>
+    )
+  }
+
+  <h2 id="verwenden">Zeichen verwenden</h2>
+
+  <div class="ez-actions">
+    <a class="ez-action" href={svgHref} download={`${symbol.slug}.svg`}>
+      <strong>Als SVG herunterladen</strong>
+      <span>Bleibt in jeder Größe scharf — für Karten, Dokumente und Druck</span>
+    </a>
+    <a class="ez-action" href={pngHref} download={`${symbol.slug}.png`}>
+      <strong>Als PNG herunterladen</strong>
+      <span>Bilddatei, 256 Pixel breit, weißer Hintergrund — für Folien und ältere Programme</span>
+    </a>
+    <a class="ez-action" href={mapHref}>
+      <strong>Auf der Karte ansehen</strong>
+      <span>Das Zeichen auf einer echten Karte, in verschiedenen Größen</span>
+    </a>
+    <a class="ez-action" href={builderHref}>
+      <strong>Im Baukasten öffnen</strong>
+      <span>Dieses Zeichen abwandeln und sehen, welche Kombinationen erlaubt sind</span>
+    </a>
+  </div>
+
+  {
+    isReconstruction && (
+      <p class="ez-hint">
+        Dieses Zeichen ist an der Vorlage vermessen. Die beiden Dateien geben genau das wieder, was
+        oben zu sehen ist; im Baukasten kann das Ergebnis dagegen leicht anders aussehen, weil er es
+        aus Grundzeichen neu zusammensetzt.
+      </p>
+    )
+  }
+
+  <h2 id="ansehen">So sieht es aus</h2>
+  <p>
+    Dasselbe Zeichen in sechs Größen — von 16 bis 256 Pixel breit —, jeweils auf hellem und auf
+    dunklem Untergrund. Die drei Schaltflächen wechseln die Farbfassung: „Referenz“ ist die Palette
+    der Vorlage, „Kontraststark hell“ hebt die Farben für schwierige Bildschirme an, „Druck
+    monochrom“ ist die Fassung für Schwarz-Weiß-Druck und Kopien.
+  </p>
+
+  <SymbolPreview drawing={symbol.drawing} idPrefix={`ez-${symbol.slug}`} />
+
+  <h2 id="herkunft">Bedeutung und Herkunft</h2>
+
+  {
+    symbol.drawing.description !== undefined && (
+      <p class="ez-meaning">{symbol.drawing.description}</p>
+    )
+  }
+
+  <dl class="ez-head">
+    <dt>Kennung</dt>
+    <dd><code class="ez-id ez-head__copy">{symbol.id}</code></dd>
+
+    <dt>Quelle</dt>
+    <dd>
+      {sourceLabel} · {symbol.source.citation} ·{' '}
+      <a href="/grundlage/#woher-die-zeichen-stammen">alle Quellen mit Prüfstand</a>
+    </dd>
+
+    <dt>Zeichenprofil</dt>
+    <dd>
+      <a href="/grundlage/#zeichenprofile"><code class="ez-mono">{symbol.profile}</code></a> — die
+      Maßregeln, nach denen dieses Zeichen gezeichnet ist
+    </dd>
+
+    {
+      symbol.synonyms.length > 0 && (
+        <>
+          <dt>Andere Bezeichnungen</dt>
+          <dd>{symbol.synonyms.join(', ')}</dd>
+        </>
+      )
+    }
+
+    {
+      symbol.legacyIds.length > 0 && (
+        <>
+          <dt>Frühere Kennungen</dt>
+          <dd class="ez-mono">{symbol.legacyIds.join(', ')}</dd>
+        </>
+      )
+    }
+  </dl>
+
+  {
+    !hasNames && (
+      <p class="ez-hint">
+        Andere Bezeichnungen und frühere Kennungen führt der Katalog für dieses Zeichen noch nicht.
+      </p>
+    )
+  }
+
+  {
+    symbol.contrastException !== undefined && (
+      <div class="ez-note">
+        <span class="ez-note__title">Ausnahme beim Farbkontrast</span>
+        <p>
+          Für dieses Zeichen ist eine Ausnahme vom Kontrastmaß eingetragen:{' '}
+          {symbol.contrastException}. Sie ist entschieden und dokumentiert, also kein offener Punkt;
+          nachlesen lässt sie sich unter <a href="/coverage/">Stand der Prüfung</a>.
+        </p>
+      </div>
+    )
+  }
+
+  <h2 id="entwicklung">Für Entwicklerinnen und Entwickler</h2>
+  <p>
+    Ab hier stehen die Begriffe der Bibliothek: <code class="ez-mono">SymbolSpec</code>,{' '}
+    <code class="ez-mono">compose()</code>, <code class="ez-mono">renderSvg()</code>. Wer das
+    Zeichen nur benutzen will, ist mit den Dateien oben fertig.
+  </p>
+
+  <h3 id="bauanleitung">Bauanleitung als JSON</h3>
+
+  {
+    isReconstruction && (
+      <div class="ez-note">
+        <span class="ez-note__title">Rekonstruktion, keine Messung</span>
+        <p>
+          Dieses Zeichen ist ein Katalogeintrag: gezeigt und ausgeliefert wird die vermessene
+          Darstellung aus der Quelle. Die <code class="ez-mono">SymbolSpec</code> darunter ist die
+          Rekonstruktion dazu — sie beschreibt, mit welchen Achsen sich dasselbe Zeichen
+          zusammensetzen ließe. Was <code class="ez-mono">compose()</code> daraus baut, kann von der
+          Darstellung oben abweichen. Das gilt für das JSON, für den Baukasten-Link und für die vier
+          Codebeispiele gleichermaßen.
+        </p>
+      </div>
+    )
+  }
+
+  <pre class="ez-spec"><code>{specJson}</code></pre>
+
+  <p>
+    Manifestschlüssel dieser Zeile: <code class="ez-id">{symbol.sourceId}</code> ·{' '}
+    <a href={builderHref}>dieselbe Spec im Baukasten öffnen</a>
+  </p>
+
+  <h3 id="codebeispiele">Codebeispiele</h3>
+  <p>
+    Vier Kanäle, ein Zeichen. Die Beispiele entstehen aus derselben Vorlage wie im Quickstart und im
+    Baukasten (<code class="ez-mono">src/lib/code-samples.ts</code>), damit sie nicht hinter den
+    Paket-APIs zurückbleiben.
+  </p>
+
+  <CodeTabs samples={samples} idPrefix={`ez-${symbol.slug}`} />
+
+  <h3 id="kombinationen">Zulässige Kombinationen</h3>
+  <p>
+    Diese Spec setzt {setFields.length} {setFields.length === 1 ? 'Feld' : 'Felder'}. Darunter steht,
+    welche Werte gesetzt sind und welche Regeln aus <code class="ez-mono">validateSpec()</code> an
+    diesen Feldern hängen —{' '}
+    {ruleCount === 0 ? 'für diese Felder keine' : `${ruleCount} an der Zahl`}.
+  </p>
+
+  <div class="ez-table-scroll">
+    <table class="ez-table">
+      <thead>
+        <tr>
+          <th>Feld</th>
+          <th>Wert</th>
+          <th>Regeln an diesem Feld</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          setFields.map((entry) => (
+            <tr>
+              <td>
+                {entry.label}
+                <br />
+                <code class="ez-mono">{entry.field}</code>
+              </td>
+              <td>
+                {entry.values.map((value) => (
+                  <div>
+                    {value.text}
+                    {value.id !== undefined && value.id !== value.text && (
+                      <>
+                        {' '}
+                        <code class="ez-mono">{value.id}</code>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </td>
+              <td>
+                {entry.rules.length === 0 ? (
+                  <span class="ez-muted">keine Regel allein an diesem Feld</span>
+                ) : (
+                  entry.rules.map((rule) => (
+                    <details class="ez-rule">
+                      <summary>
+                        <code class="ez-mono">{rule.id}</code>
+                      </summary>
+                      <p>
+                        <strong>{rule.explanation.title}.</strong> {rule.explanation.explanation}
+                      </p>
+                    </details>
+                  ))
+                )}
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    Die Zuordnung ist von Hand gepflegt und steht an der Erklärung jeder Regel
+    (<code class="ez-mono">src/lib/rule-explanations.ts</code>): eingetragen ist das Feld, das man
+    ändern müsste, damit die Regel nicht mehr greift. <code class="ez-mono">validateSpec()</code>{' '}
+    selbst führt keine Feldzuordnung — deshalb bleibt diese Liste <strong>nicht</strong> die
+    vollständige Prüfung. Regeln, die zwei Achsen gegeneinander stellen, erscheinen nur unter einer
+    von beiden, und eine Regel ohne einzelnes Feld — wie der Streit um die Kopfzone — steht in
+    keiner Zeile dieser Tabelle. Wer wissen will, ob eine geänderte Kombination trägt, ändert sie im{' '}
+    <a href="/builder/">Baukasten</a>: dort läuft dieselbe Komposition wie im Katalog, und jede
+    abgelehnte Kombination kommt mit ihrer Regel und deren Erklärung zurück.
+  </p>
+
+  <h3 id="nachweise">Nachweise</h3>
+
+  {
+    symbol.evidence.length > 0 && (
+      <>
+        <p>Diese Testarten decken die Zeile dieses Zeichens in der Prüfliste ab:</p>
+        <ul>
+          {symbol.evidence.map((kind) => (
+            <li>
+              {EVIDENCE_LABELS[kind] ?? kind} <code class="ez-mono">{kind}</code>
+            </li>
+          ))}
+        </ul>
+      </>
+    )
+  }
+
+  <p>
+    Gemessen und gerendert wird im Profil <code class="ez-mono">{symbol.profile}</code>; die Profile
+    und ihre Prüfstände stehen auf der <a href="/grundlage/#zeichenprofile">Grundlage-Seite</a>, der
+    gesamte Prüfstand unter <a href="/coverage/">Stand der Prüfung</a>.
+  </p>
+</StarlightPage>
+
+<style>
+  .ez-head {
+    display: grid;
+    grid-template-columns: minmax(8rem, max-content) 1fr;
+    gap: var(--ez-space-2) var(--ez-space-4);
+    margin-block: var(--ez-space-6);
+    font-size: var(--sl-text-sm);
+  }
+
+  .ez-head dt {
+    font-family: var(--ez-font-mono);
+    font-size: var(--sl-text-2xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sl-color-gray-3);
+    padding-block-start: 0.15em;
+  }
+
+  .ez-head dd {
+    margin: 0;
+  }
+
+  /* Kopierbar ohne Skript: ein Klick wählt die ganze Kennung, nicht das Wort unter dem Zeiger. */
+  .ez-head__copy {
+    user-select: all;
+  }
+
+  /*
+   * Die Bedeutung ist der Satz, wegen dem die meisten diese Seite öffnen — er steht deshalb als
+   * erstes unter der Überschrift und etwas größer als der Fließtext daneben.
+   */
+  .ez-meaning {
+    font-size: var(--sl-text-base);
+    line-height: 1.6;
+  }
+
+  .ez-head__status {
+    margin-block: var(--ez-space-4) var(--ez-space-3);
+  }
+
+  .ez-head__explain {
+    font-size: var(--sl-text-sm);
+    line-height: 1.65;
+    color: var(--sl-color-gray-2);
+  }
+
+  /* Die vier Aktionen: mehrspaltig, sobald Platz ist; die zweite Zeile trägt die Erklärung. */
+  .ez-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: var(--ez-space-3);
+    margin-block: var(--ez-space-4);
+  }
+
+  .ez-hint {
+    font-size: var(--sl-text-sm);
+    color: var(--sl-color-gray-3);
+  }
+
+  .ez-spec {
+    max-height: 22rem;
+    overflow: auto;
+    padding: var(--ez-space-4);
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: var(--ez-radius);
+    background: var(--ez-surface);
+    font-family: var(--ez-font-mono);
+    font-size: var(--sl-text-xs);
+    line-height: 1.6;
+  }
+
+  .ez-muted {
+    color: var(--sl-color-gray-3);
+    font-size: var(--sl-text-xs);
+  }
+
+  .ez-rule summary,
+  .ez-longnote summary {
+    cursor: pointer;
+  }
+
+  .ez-rule p {
+    margin-block: var(--ez-space-2);
+    font-size: var(--sl-text-xs);
+    line-height: 1.6;
+  }
+
+  .ez-longnote {
+    margin-block: var(--ez-space-4);
+    padding: var(--ez-space-4);
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: var(--ez-radius);
+    font-size: var(--sl-text-sm);
+    line-height: 1.65;
+  }
+
+  .ez-longnote summary {
+    font-family: var(--ez-font-mono);
+    font-size: var(--sl-text-2xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sl-color-gray-3);
+  }
+</style>

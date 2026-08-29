@@ -13,6 +13,7 @@ import {
   EVIDENCE_LEGEND,
   ReviewDossierError,
   dossierAreaOrder,
+  openDomainReviewsBullet,
   renderReviewDossier,
   reviewDossier,
 } from './review-dossier.js';
@@ -174,5 +175,22 @@ describe('review-dossier CLI', () => {
     expect(mocks.mkdirSync).toHaveBeenCalledWith('docs/reviews', { recursive: true });
     expect(mocks.writeFileSync).toHaveBeenCalledWith('docs/reviews/dossier.md', markdown, 'utf8');
     expect(log).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('openDomainReviewsBullet', () => {
+  // Wie in `coverage.test.ts`: der Nullfall ist gegen den echten Ledger nicht auslösbar und
+  // wird deshalb gegen erfundene Zahlen geprüft.
+  it('sagt den Nullfall aus, statt „0 Manifest, 0 Quellen, 0 Profil" zu zählen', () => {
+    expect(openDomainReviewsBullet(0, 0, 0)).toBe(
+      '- Offene fachliche Reviews: keine — alle Manifestzeilen, Quellen und Profile sind ' +
+        'fachlich freigegeben',
+    );
+  });
+
+  it('zählt sonst je Trägerart', () => {
+    expect(openDomainReviewsBullet(544, 13, 1)).toBe(
+      '- Offene fachliche Reviews: 544 Manifest, 13 Quellen, 1 Profil',
+    );
   });
 });

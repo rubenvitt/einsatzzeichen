@@ -38,11 +38,13 @@ import {
   VEHICLE_CATEGORY_IDS,
   entryKey,
   type CatalogEntry,
+  type ColorToken,
   type CoverageEntry,
   type Depiction,
   type Review,
   type ReviewSet,
 } from '@einsatzzeichen/schema';
+import { formatReviewDate } from './review-date.js';
 import { slugForSymbolId } from './slug.js';
 import type {
   BuilderVocabulary,
@@ -148,12 +150,58 @@ function sourceSummaries(): SourceSummary[] {
   }));
 }
 
-/** Klartext einer Kontrastausnahme, im Wortlaut der Coverage-Ausgabe. */
+/**
+ * Farbnamen, wie sie auf der Website stehen dürfen. Die Tokens des Schemas sind Bezeichner
+ * (`weiss`, `gruen`, `funktionslauf-kontrast`) — auf einer Seite, die auch Menschen ohne
+ * Technikbezug lesen, hat ein Bezeichner nichts verloren.
+ *
+ * Der Typ nennt jeden Token einzeln, statt `Record<string, string>` zu sein: ein neuer Farbton im
+ * Schema ist damit ein Übersetzungsfehler beim Bauen und nicht ein `undefined` mitten im Satz.
+ * `surface` ist kein Farbtoken, sondern die Fläche, auf der ausgegeben wird — `background` lässt
+ * beides zu.
+ */
+const COLOR_WORDS: Record<ColorToken | 'surface', string> = {
+  schwarz: 'Schwarz',
+  weiss: 'Weiß',
+  rot: 'Rot',
+  blau: 'Blau',
+  gelb: 'Gelb',
+  gruen: 'Grün',
+  hellgruen: 'Hellgrün',
+  orange: 'Orange',
+  braun: 'Braun',
+  grau: 'Grau',
+  hellgrau: 'Hellgrau',
+  hellblau: 'Hellblau',
+  'funktionslauf-kontrast': 'Kontrastfarbe des Funktionslaufs',
+  // Nur als Hintergrund möglich (`ContrastException.background`); daher der Dativ.
+  surface: 'der Ausgabefläche',
+};
+
+/** „E.2.6" → „Abschnitt E.2.6"; mehrere → „Abschnitte E.2.6 und E.2.7". */
+function sectionPhrase(sections: readonly string[]): string {
+  if (sections.length === 0) return 'ohne Abschnittsangabe';
+  if (sections.length === 1) return `Abschnitt ${sections[0]}`;
+  const head = sections.slice(0, -1).join(', ');
+  return `Abschnitte ${head} und ${sections[sections.length - 1]}`;
+}
+
+/**
+ * Klartext einer Kontrastausnahme — ein Satzteil, der ohne Nacharbeit in eine Liste und hinter
+ * einen Doppelpunkt passt: „Weiß auf Orange, Abschnitt E.2.6 (entschieden am 18.08.2026,
+ * Projektinhaber)".
+ *
+ * Nicht der Wortlaut der Coverage-Ausgabe: die druckt Tokens und ISO-Daten für ein Terminal.
+ * Die Zahlen und die Entscheidung sind dieselben, nur die Schreibweise ist die der Website. Wer
+ * die Person hinter `decidedBy` in den Satz zieht, tut das in Klammern und ohne Präposition —
+ * „durch Projektinhaber" wäre kein deutscher Satz, und der Wert ist frei belegbar.
+ */
 function contrastExceptionText(exception: (typeof CONTRAST_EXCEPTIONS)[number]): string {
+  const foreground = COLOR_WORDS[exception.foreground];
+  const background = COLOR_WORDS[exception.background];
   return (
-    `${exception.foreground} auf ${exception.background} ` +
-    `(${exception.sections.join(', ')}, entschieden am ${exception.decidedOn} ` +
-    `durch ${exception.decidedBy})`
+    `${foreground} auf ${background}, ${sectionPhrase(exception.sections)} ` +
+    `(entschieden am ${formatReviewDate(exception.decidedOn)}, ${exception.decidedBy})`
   );
 }
 
@@ -290,9 +338,14 @@ const TECHNICAL_BODY_MARK_ID_SET = new Set<string>(TECHNICAL_BODY_MARK_IDS);
  * Erlaubte Werte je `SymbolSpec`-Achse. Die Bezeichnungen kommen aus denselben Registern, die
  * `describeSymbolSpec` vorliest — eine zweite Liste in der Website liefe auseinander.
  *
- * `technicalFill` und `bodyVariant` tragen ihre ID als Bezeichnung: die Farbtoken sind bereits
- * deutsche Wörter, und für die Körpervarianten führt der Katalog kein Bezeichnungsregister. Eines
- * hier zu erfinden hieße, Bezeichnungen ohne Quelle zu behaupten.
+ * `technicalFill` beschriftet seine Farbtoken über `COLOR_WORDS` — dieselbe Übersetzung, die auch
+ * die Kontrastausnahme in Prosa setzt. Die Token selbst sind Bezeichner (`weiss`, `gruen`,
+ * `funktionslauf-kontrast`) und haben in einem Auswahlfeld nichts verloren, das auch Menschen ohne
+ * Technikbezug bedienen.
+ *
+ * `bodyVariant` bleibt die dokumentierte Ausnahme und trägt weiter seine ID: für die
+ * Körpervarianten führt der Katalog kein Bezeichnungsregister, und eines hier zu erfinden hieße,
+ * Bezeichnungen ohne Quelle zu behaupten.
  */
 function builderVocabulary(): BuilderVocabulary {
   return {
@@ -301,7 +354,7 @@ function builderVocabulary(): BuilderVocabulary {
       ORGANIZATION_IDS,
       (id) => ORGANIZATION_LABELS[id as (typeof ORGANIZATION_IDS)[number]],
     ),
-    technicalFill: labelled(Object.keys(PALETTE), (id) => id),
+    technicalFill: labelled(Object.keys(PALETTE), (id) => COLOR_WORDS[id as ColorToken]),
     strength: labelled(STRENGTH_IDS, (id) => STRENGTH_LABELS[id as (typeof STRENGTH_IDS)[number]]),
     administrativeLevel: labelled(
       ADMIN_LEVEL_IDS,

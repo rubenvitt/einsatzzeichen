@@ -42,6 +42,31 @@ export const EVIDENCE_LEGEND: ReadonlyArray<readonly [code: string, meaning: str
   ['PG', 'Piktogramm besteht Kommando-, Box-, Clipping- und Snapshot-Gate; Bildidee und Verwechslungsfreiheit bleiben ungeprüft.'],
 ];
 
+/**
+ * Die Kopfzeile über die offenen Fachreviews — im Nullfall mit eigenen Worten.
+ *
+ * Der Nullfall bekommt eigene Worte, damit „0 Manifest, 0 Quellen, 0 Profil" nicht wie eine
+ * leere Erhebung aussieht. Die Tabelle darunter bleibt in beiden Fällen dieselbe und zeigt,
+ * wogegen die Null gemessen ist.
+ *
+ * Eigene, reine Funktion, weil der Ledger heute 558 offene Reviews führt: gegen die echten
+ * Daten ist der Nullzweig nicht auslösbar und wäre ohne diese Naht ungeprüft.
+ */
+export function openDomainReviewsBullet(
+  manifestOpen: number,
+  sourcesOpen: number,
+  profilesOpen: number,
+): string {
+  if (manifestOpen + sourcesOpen + profilesOpen === 0) {
+    return '- Offene fachliche Reviews: keine — alle Manifestzeilen, Quellen und Profile sind ' +
+      'fachlich freigegeben';
+  }
+  return (
+    `- Offene fachliche Reviews: ${manifestOpen} Manifest, ` +
+    `${sourcesOpen} Quellen, ${profilesOpen} Profil`
+  );
+}
+
 /** Wie `areaOf` in `coverage-gate.ts`: der Teil der Abschnittsnummer vor dem ersten Punkt. */
 function areaOf(sourceId: string): string {
   const separator = sourceId.indexOf(':');
@@ -146,9 +171,11 @@ export function renderReviewDossier(): string {
   );
   out(`- Umfang: ${COVERAGE_MANIFEST.scope.join(', ')}`);
   out(
-    `- Offene fachliche Reviews: ${blockers.domainReviewOpen.length} Manifest, ` +
-      `${blockers.sourceDomainReviewOpen.length} Quellen, ` +
-      `${blockers.profileDomainReviewOpen.length} Profil`,
+    openDomainReviewsBullet(
+      blockers.domainReviewOpen.length,
+      blockers.sourceDomainReviewOpen.length,
+      blockers.profileDomainReviewOpen.length,
+    ),
   );
   out();
   out('| Trägerart | offen (pending) | approved | deviation | gesamt |');

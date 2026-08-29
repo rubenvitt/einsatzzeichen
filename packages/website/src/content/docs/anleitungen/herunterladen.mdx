@@ -1,0 +1,91 @@
+---
+title: Ein Zeichen herunterladen
+description: SVG oder PNG von einer Zeichenseite holen, den Unterschied verstehen, und wo es die Zeichen in mehreren Größen und im Schwarz-Weiß-Profil gibt.
+---
+
+import { loadSnapshot } from '../../../lib/snapshot';
+
+export const snapshot = loadSnapshot();
+
+Jedes der {snapshot.symbols.length} Zeichen lässt sich als Bilddatei herunterladen — ohne Konto,
+ohne Werkzeug, mit zwei Klicks.
+
+## Schritt für Schritt
+
+1. Suche das Zeichen über [Zeichen suchen](/explorer/) und klicke die Kachel an. Du bist jetzt auf
+   der Seite dieses einen Zeichens.
+
+2. Gleich unter der Überschrift **Zeichen verwenden** — noch über den Vorschaubildern — stehen die
+   Schaltflächen **Als SVG herunterladen** und **Als PNG herunterladen**. Klicke die passende an;
+   die Datei landet im Download-Ordner deines Browsers.
+
+3. Benenne die Datei um, wenn du sie ablegst. Der Dateiname ist die Kennung des Zeichens in einer
+   Schreibweise, die in eine Adresse passt — aus `base.formation` wird `base-formation.svg`. Für
+   ein Verzeichnis gut, für eine Unterlage meist zu kryptisch.
+
+## Welche der beiden Dateien?
+
+**SVG** ist eine Zeichnung, kein Bild aus Bildpunkten. Sie lässt sich beliebig vergrößern, ohne
+unscharf zu werden — von der Fußnote bis zum Rollup. Nimm SVG, wann immer das Programm es
+annimmt. Word, PowerPoint, LibreOffice, Inkscape und alle Browser können es.
+
+**PNG** ist ein Bild aus Bildpunkten. Nimm es dort, wo SVG nicht geht: in älteren Programmen, in
+manchen Messengern, in Systemen, die nur „normale“ Bilddateien annehmen. Das PNG von der
+Zeichenseite ist 256 Bildpunkte breit und hat einen weißen Hintergrund — nicht durchsichtig, damit
+es auf einer dunklen Folie nicht unlesbar wird, ohne dass jemand es vor dem Druck merkt. Auf dem
+Bildschirm reicht das für rund 7 Zentimeter Breite, im Druck mit 300 dpi für rund 2 Zentimeter;
+wird es größer gezogen, wird es sichtbar unscharf. Für alles Größere nimm das SVG.
+
+<div class="ez-note">
+<span class="ez-note__title">Ein heruntergeladenes Zeichen trägt seinen Prüfstand nicht mit</span>
+
+In der Datei steht nichts über den technischen und den fachlichen Prüfstand des Zeichens — sie
+enthält nur die Zeichnung. Wer sie weitergibt, sollte den Stand danebenstellen; nachsehen lässt er
+sich auf der Seite des Zeichens.
+
+</div>
+
+## Mehrere Größen und Schwarz-Weiß
+
+Auf der Zeichenseite siehst du das Zeichen in sechs Größen von 16 bis 256 Bildpunkten und in drei
+Farbprofilen: dem normalen, einem kontrastreicheren und einem für den Schwarz-Weiß-Druck.
+**Herunterladen lässt sich davon heute nur das SVG und das PNG mit 256 Bildpunkten.**
+
+Wer alle Größen und Profile auf einmal braucht, findet sie auf der Seite [Belege](/belege/): dort
+liegt zu jeder Zeichnung ein Bogen, der sie in 16, 24, 32, 64, 128 und 256 Bildpunkten zeigt und
+darunter noch einmal in den beiden anderen Farbprofilen. Ein Rechtsklick auf den Bogen und
+„Bild speichern unter …“ legt ihn als Datei ab.
+
+Braucht ihr die Zeichen einzeln in einer bestimmten Größe oder im Schwarz-Weiß-Profil, ist das
+kein großer Aufwand — aber es braucht jemanden, der das Projekt bauen kann. Was diese Person tun
+muss, steht im nächsten Abschnitt; du kannst ihn ihr einfach weiterreichen.
+
+## Für Entwicklerinnen und Entwickler
+
+Ein vollständiger Export aller Grundzeichen und aller zusammengesetzten Zeichen, in einer Größe
+und einem Theme, kommt aus dem CLI:
+
+```bash
+pnpm cli export --out out/sw --size 128 --theme print-monochrome
+```
+
+`--theme` nimmt `reference`, `accessible-light` oder `print-monochrome`, `--size` eine Zahl größer
+als null; ohne Angaben werden 64 Pixel im Referenztheme geschrieben. Es entsteht eine SVG-Datei je
+Zeichen, benannt nach seiner Kennung
+(`packages/cli/src/commands/export.ts`).
+
+Einzeln und programmatisch:
+
+```ts
+import { composeFromCatalog, RECIPES, PRINT_MONOCHROME_THEME } from '@einsatzzeichen/catalog';
+import { renderSvg } from '@einsatzzeichen/core';
+
+const recipe = RECIPES['E.1.1'];
+const svg = renderSvg(composeFromCatalog(recipe.spec, recipe.title), {
+  size: 128,
+  theme: PRINT_MONOCHROME_THEME,
+});
+```
+
+Rasterbilder entstehen nicht im Browser: die Website legt ihre Vorschauen zur Bauzeit als
+Inline-SVG ab, und das PNG der Zeichenseite wird ebenfalls beim Bauen erzeugt.

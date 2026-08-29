@@ -4,7 +4,7 @@ import {
   PROFILE_DOMAIN_REVIEWS,
   SOURCE_DOMAIN_REVIEWS,
 } from '@einsatzzeichen/catalog';
-import { coverage } from './coverage.js';
+import { coverage, openDomainReviewsLine } from './coverage.js';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -108,4 +108,26 @@ describe('coverage CLI', () => {
     // (963 validateSpec-gültige, 894 komponierte Kombinationen) — allein ~140 ms, unter
     // Vitest-Parallellast bis ~4 s gemessen; das 5-s-Standardlimit wäre ein Lastflake.
   }, 30_000);
+});
+
+describe('openDomainReviewsLine', () => {
+  // Erfundene Zahlen und nicht der echte Ledger: der Nullfall ist gegen die 558 offenen
+  // Reviews des Katalogs nicht auslösbar. Er wird deshalb hier geprüft und nicht im Test über
+  // `coverage()` — sonst stünde der Zweig ungeprüft da, bis ihn eines Tages echte Daten zum
+  // ersten Mal auslösen.
+  const carriers = { manifestEntries: 20, sources: 4, profiles: 1 };
+  const open = { manifest: '7 Manifestreviews', sources: '2 Quellenreviews', profiles: '1 Profilreview' };
+
+  it('nennt bei null offenen Punkten den Bestand, gegen den die Null gemessen ist', () => {
+    expect(openDomainReviewsLine(0, carriers, open)).toBe(
+      'Offene fachliche Reviews: keine — alle 25 Reviewträger sind fachlich freigegeben ' +
+        '(20 Manifestzeilen, 4 Quellen, 1 Profil)',
+    );
+  });
+
+  it('zählt sonst die offenen Punkte je Trägerart auf', () => {
+    expect(openDomainReviewsLine(10, carriers, open)).toBe(
+      'Offene fachliche Reviews: 10 (7 Manifestreviews, 2 Quellenreviews, 1 Profilreview)',
+    );
+  });
 });

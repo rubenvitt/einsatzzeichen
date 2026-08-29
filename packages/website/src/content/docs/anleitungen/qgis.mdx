@@ -1,0 +1,116 @@
+---
+title: Zeichen in QGIS verwenden
+description: Eine fertige Symboldatei in QGIS einlesen, die Zeichen einer Punktebene zuweisen — und was jemand tun muss, der die Datei für euch erzeugt.
+---
+
+QGIS ist ein freies Geoinformationssystem. Wenn ihr damit Lagekarten baut, könnt ihr die Zeichen
+dieses Katalogs als Symbole für Punktebenen verwenden: ein Punkt in eurer Ebene wird zum Zeichen
+auf der Karte, in einer Größe, die ihr in Millimetern festlegt — auf dem Bildschirm wie im Druck.
+
+Der Einstieg braucht einmalig eine Datei, die es hier nicht zum Herunterladen gibt. Warum, steht
+im nächsten Absatz. Das Einlesen in QGIS danach kannst du allein erledigen.
+
+## Was du brauchst
+
+Eine Datei mit der Endung `.xml`, die eine QGIS-Symbolbibliothek enthält. Sie enthält genau die
+Zeichen, die beim Erzeugen hineingegeben wurden — mit dem Beispiel im Entwicklerabschnitt sind das
+alle zusammengesetzten Zeichen des Katalogs. Sag also dazu, welche Zeichen du brauchst, wenn es
+nicht alle sein sollen. Begleitdateien braucht die Datei nicht: jedes Zeichen steckt als Zeichnung
+in ihr selbst.
+
+Diese Datei entsteht nicht auf dieser Website, sondern muss von jemandem erzeugt werden, der das
+Projekt bauen kann — es gibt dafür bisher kein fertiges Kommando, sondern nur ein paar Zeilen
+Programm. Sag dieser Person:
+
+> „Bitte erzeuge mir eine QGIS-Stilbibliothek aus dem Einsatzzeichen-Katalog. Die Anleitung dafür
+> steht auf der Website unter Anleitungen → Zeichen in QGIS verwenden, im Abschnitt für
+> Entwicklerinnen und Entwickler. Ich brauche eine Markergröße von *(z. B. 10)* Millimetern."
+
+Die Millimeterangabe ist das Einzige, was du vorher entscheiden musst — sie bestimmt, wie groß die
+Zeichen auf der Karte und im Ausdruck stehen. 10 Millimeter sind der Vorgabewert und für die
+meisten Lagekarten ein guter Anfang; ändern lässt sich die Größe in QGIS später auch noch.
+
+## Schritt für Schritt in QGIS
+
+1. Leg die `.xml`-Datei irgendwo ab, wo du sie wiederfindest.
+
+2. Öffne in QGIS **Einstellungen → Stilverwaltung**.
+
+3. Wähle dort **Importieren/Exportieren → Objekte importieren**.
+
+4. Als Quelle die abgelegte `.xml`-Datei wählen, dann die Symbole auswählen, die du übernehmen
+   willst, und den Import bestätigen.
+
+5. Die Zeichen stehen jetzt als Marker-Symbole in deiner Symbolbibliothek — mit dem Namen, den die
+   Datei mitbringt, in der Regel Fundstelle und Bezeichnung des Zeichens.
+
+6. Wähle eine Punktebene aus, öffne ihre Eigenschaften unter **Symbolisierung** und weise als
+   Symbol eines der importierten Zeichen zu.
+
+7. Die Größe steht in Millimetern und lässt sich dort weiter anpassen. Weil die Einheit Millimeter
+   ist und nicht Bildpunkte, bleibt die Größe im Druck genau die, die du einstellst.
+
+<div class="ez-note">
+<span class="ez-note__title">Die Farben lassen sich nicht umstellen — mit Absicht</span>
+
+QGIS kann bei manchen Symbolen die Farbe je Ebene ändern. Bei diesen Zeichen geht das nicht: die
+Farben tragen eine Bedeutung. Blau heißt THW, nicht „eine Farbe, die zur Karte passt“. Wer eine
+andere Darstellung braucht — etwa Schwarz-Weiß für den Druck —, lässt sich eine zweite Datei mit
+dem entsprechenden Farbprofil erzeugen; die Person, die die erste gebaut hat, ändert dafür ein
+Wort.
+
+</div>
+
+<div class="ez-note">
+<span class="ez-note__title">Auch in QGIS gilt der Prüfstand</span>
+
+Ein importiertes Zeichen sieht fertig aus. Welchen Prüfstand es trägt, sieht man ihm in QGIS
+trotzdem nicht an — der Import bringt ihn nicht mit und ändert nichts an ihm. Der Stand jedes
+Zeichens steht auf seiner Seite; zu finden über [Zeichen suchen](/explorer/).
+
+</div>
+
+## Für Entwicklerinnen und Entwickler
+
+`@einsatzzeichen/qgis` erzeugt zwei Dinge, beide als reine Zeichenketten — das Schreiben bleibt
+beim Aufrufer. Ein CLI-Kommando dafür gibt es nicht; `pnpm cli` kennt nur `audit:reference`,
+`coverage`, `review-dossier`, `verify:repository`, `export` und `visual-proof`.
+
+Stilbibliothek mit allen zusammengesetzten Zeichen:
+
+```ts
+import { writeFileSync } from 'node:fs';
+import { RECIPES, composeFromCatalog } from '@einsatzzeichen/catalog';
+import { qgisSymbolLibrary } from '@einsatzzeichen/qgis';
+
+const entries = Object.entries(RECIPES).map(([section, recipe]) => ({
+  name: `${section} · ${recipe.title}`,
+  drawing: composeFromCatalog(recipe.spec, recipe.title),
+}));
+
+writeFileSync('einsatzzeichen.xml', qgisSymbolLibrary(entries, { sizeMm: 10 }), 'utf8');
+```
+
+`QgisLibraryOptions` nimmt `theme` (etwa `PRINT_MONOCHROME_THEME` aus `@einsatzzeichen/catalog`),
+`sizeMm` (Vorgabe 10) und `idPrefix`. Doppelte Namen und eine `sizeMm` unterhalb der
+Schreibgenauigkeit werfen — beides ergäbe in QGIS sonst still ein falsches oder unsichtbares
+Symbol.
+
+Das SVG steht als `base64:`-Wert im `name`-Option der Symbolebene, die Datei ist damit ohne
+Begleitdateien importierbar. Das `<Option type="Map">`-Format lesen erst QGIS ≥ 3.16; ältere
+3.x-Versionen erwarten `<prop k="…" v="…"/>`.
+
+Alternativ ein SVG-Verzeichnis, das QGIS unter **Einstellungen → Optionen → System → SVG-Pfade**
+findet:
+
+```ts
+import { qgisSvgFiles } from '@einsatzzeichen/qgis';
+
+for (const file of qgisSvgFiles(entries)) {
+  writeFileSync(join('qgis-svg', file.path), file.content, 'utf8');
+}
+```
+
+Bewusst keine `param()`-Umfärbung: die Farben taktischer Zeichen sind semantisch festgelegt.
+Abweichende Darstellungen laufen über ein `RenderTheme`, das die Palette als Ganzes ersetzt.
+Mehr auf der [Paketseite qgis](/pakete/qgis/).

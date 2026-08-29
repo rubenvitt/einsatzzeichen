@@ -1,0 +1,95 @@
+---
+title: Ein Zeichen auf eine Karte legen
+description: Auf der Karte dieser Website ausprobieren, wie ein Zeichen im Gelände wirkt — Größe, Farbprofil, Zoomstufe — und was für eine eigene Karte nötig ist.
+---
+
+import { loadSnapshot } from '../../../lib/snapshot';
+
+export const snapshot = loadSnapshot();
+
+Auf der [Karte](/maplibre-lab/) liegt eine echte Landkarte, und du kannst jedes der
+{snapshot.symbols.length} Zeichen darauf legen. Das ist der schnellste Weg, um zu sehen, ob ein
+Zeichen in der Größe, die ihr verwenden wollt, auf einer Lagekarte noch lesbar ist.
+
+Es wird nichts gespeichert und nichts hochgeladen. Die Karte ist ein Probierfeld, kein
+Lagekartenwerkzeug.
+
+## Schritt für Schritt
+
+1. Öffne die [Karte](/maplibre-lab/). Bist du schon auf der Seite eines Zeichens, bringt dich die
+   Schaltfläche **Auf der Karte ansehen** dorthin; das Zeichen steht dann bereits im Auswahlfeld,
+   und du musst es nicht suchen. Führt ein alter Link auf ein Zeichen, das es nicht mehr gibt,
+   sagt die Karte das und zeigt so lange das erste Zeichen des Katalogs.
+
+2. Wähle oben unter **Zeichen** aus, was auf die Karte soll. Das Feld **Zeichen suchen** darüber
+   grenzt die Liste ein, wenn du den Namen ungefähr kennst; daneben steht mit, wie viele Zeichen
+   deine Eingabe noch übrig lässt. Rechts neben der Karte stehen Name, Kennung und Fundstelle des
+   gewählten Zeichens.
+
+3. Zieh den Regler **Größe** auf das Maß, das euch interessiert — zwischen 24 und 128 Bildpunkten
+   in Schritten von 8. Das ist die Größe des Zeichens auf dem Bildschirm, nicht auf dem Papier.
+
+4. Stell unter **Farbprofil** ein, mit welchen Farben gezeichnet wird: die Farben der Vorlage, die
+   kontrastreichere Fassung oder die Schwarz-Weiß-Fassung für den Druck. Gerade auf einer hellen
+   Karte lohnt der Vergleich.
+
+5. Unter **Darstellung** stehen zwei Wege, dasselbe Zeichen auf die Karte zu bringen: „Als
+   eigenes Bild über der Karte“ und „Von der Karte selbst gezeichnet“. Für das Auge sehen sie
+   gleich aus; sie unterscheiden sich darin, wie die Karte sie technisch führt. Wenn du nur
+   schauen willst, lass die Voreinstellung stehen — der Unterschied ist im Abschnitt für
+   Entwicklerinnen und Entwickler erklärt.
+
+6. Die drei Knöpfe unter **Zoom** springen auf Zoomstufe 8, 12 und 16 — grob: Region, Stadt,
+   Straßenzug. Prüfe dein Zeichen auf allen dreien. Ein Zeichen, das auf Stufe 16 gut aussieht,
+   kann auf Stufe 8 zu einem Fleck werden.
+
+7. **Bildschärfe** brauchst du nur, wenn du prüfen willst, ob das Zeichen auf einem
+   hochauflösenden Bildschirm scharf bleibt. Die Größe auf dem Bildschirm ändert sich dabei nicht
+   — nur die Anzahl der Bildpunkte, mit denen gezeichnet wird. (Der Fachbegriff dafür, Pixel
+   Ratio, steht im Feld mit dabei.)
+
+## Wenn die Karte leer bleibt
+
+Der Kartenuntergrund kommt von einem fremden Dienst (OpenFreeMap, Daten aus OpenStreetMap). Ist er
+nicht erreichbar oder blockiert ein Netz den Zugriff, sagt die Seite das mit dem Grund — und zeigt
+das Zeichen trotzdem, auf neutralem Hintergrund statt auf der Karte. Es geht also nichts verloren;
+nur der Untergrund fehlt.
+
+<div class="ez-note">
+<span class="ez-note__title">Was diese Karte nicht kann</span>
+
+Sie fasst dichte Zeichen nicht zu Gruppen zusammen, und sie funktioniert nicht ohne Internet.
+Beides ist nicht gebaut, und beides wird hier auch nicht vorgetäuscht — statt einer Schaltfläche,
+die nichts tut, steht hier dieser Satz.
+
+</div>
+
+## Für Entwicklerinnen und Entwickler
+
+Die beiden Darstellungen sind die beiden Wege, die MapLibre GL anbietet:
+
+- **Als eigenes Bild über der Karte (Marker)** — das gerenderte SVG hängt als HTML-Element an
+  einem `Marker`. Volle Vektorschärfe auf jeder Zoomstufe, dafür ein DOM-Knoten je Zeichen; bei
+  vielen Punkten wird das teuer.
+- **Von der Karte selbst gezeichnet (Symbol Layer)** — das Zeichen wird zu einem Rasterbild und
+  über `map.addImage()` in den Kartenstil gelegt, ein `symbol`-Layer verweist per `icon-image`
+  darauf. Ein Bild für beliebig viele Punkte, dafür an die gewählte Rastergröße gebunden.
+
+Den zweiten Weg nimmt dir `@einsatzzeichen/maplibre` ab:
+
+```ts
+import { addSymbolImage } from '@einsatzzeichen/maplibre';
+
+addSymbolImage(map, 'ez-e-1-1', drawing, { size: 64, pixelRatio: 2 });
+```
+
+`createStyleImage()` liefert dasselbe Bild ohne Karte, etwa für einen Test; `MapLike` ist die
+schmale Schnittstelle, gegen die beide arbeiten — ein Doppel genügt, es braucht keine echte Karte.
+Details auf der [Paketseite maplibre](/pakete/maplibre/).
+
+Marker und Symbolebene erscheinen bei Pixel Ratio 1, 2 und 3 gleich groß: gezeichnet wird mit
+`size × pixelRatio`, MapLibre rechnet über `pixelRatio` auf dieselbe CSS-Größe zurück.
+
+Der Kartenstil ist `https://tiles.openfreemap.org/styles/positron`, ohne Schlüssel; im Repository
+liegt kein Zugangsdatum. Die Nennung „OpenFreeMap © OpenMapTiles Data from OpenStreetMap“ steht
+unter der Karte.

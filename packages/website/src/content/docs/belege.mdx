@@ -1,6 +1,6 @@
 ---
 title: Belege
-description: Die Kontaktbögen des Katalogs — jede Zeichnung in sechs Größen und drei Themes, als Rasterbeleg gegen unbemerkte Änderungen.
+description: Die Kontrollbögen des Katalogs — jedes Zeichen in sechs Größen und drei Farbprofilen, als Beleg gegen unbemerkte Änderungen.
 ---
 
 import ContactSheet from '../../components/ContactSheet.astro';
@@ -8,26 +8,41 @@ import { loadSnapshot } from '../../lib/snapshot';
 
 export const snapshot = loadSnapshot();
 
-Ein Kontaktbogen ist ein Rasterbeleg für genau eine Zeichnung. Er zeigt sie sechsmal im
-Referenztheme — 16, 24, 32, 64, 128 und 256 px — und darunter dieselbe Zeichnung bei 256 px in den
-beiden anderen Themes: `accessible-light` für erhöhten Kontrast und `print-monochrome` für den
-Schwarzweißdruck.
+Hier kannst du nachsehen, wie ein Zeichen in jeder Größe aussieht, in der es vorkommt — und wie es
+im kontrastreichen und im Schwarz-Weiß-Profil wirkt. Ein Kontrollbogen zeigt genau eine Zeichnung
+sechsmal nebeneinander (16, 24, 32, 64, 128 und 256 Bildpunkte breit) und darunter dieselbe
+Zeichnung noch einmal groß in den beiden anderen Farbprofilen.
 
-Die Bögen liegen im Repository, weil sie dort etwas leisten, was ein Bild in einer Dokumentation
-nicht leistet: `multi-size-snapshots.test.ts` rastert jede Zeichnung neu und vergleicht sie
-byteweise mit dem eingecheckten Bogen. Ändert jemand eine Geometrie, eine Farbe oder die Schrift,
-schlägt der Test fehl und der Unterschied ist sichtbar. Deshalb rastern die Bögen auch nicht mit
-einer Systemschrift, sondern mit dem Arimo-Subset aus `packages/catalog/assets` — eine
-Systemschrift würde ein maschinenabhängiges Ergebnis liefern und den Beleg entwerten.
+Das ist der schnellste Weg zu der Frage „ist unser Kürzel in dieser Größe noch lesbar?“. Und wer
+alle Größen auf einmal braucht: ein Rechtsklick auf den Bogen und „Bild speichern unter …“ legt
+ihn als Datei ab.
+
+Die Bögen liegen im Projekt, weil sie dort etwas leisten, was ein Bild in einer Dokumentation
+nicht leistet: bei jeder Änderung am Projekt wird jedes Zeichen neu gezeichnet und Bildpunkt für
+Bildpunkt mit dem abgelegten Bogen verglichen. Ändert jemand eine Geometrie, eine Farbe oder die
+Schrift, fällt das auf und der Unterschied ist sichtbar.
 
 Zu jedem der {snapshot.symbols.length} Zeichen des Katalogs gehört genau ein Bogen. Die übrigen
-zeigen die Elemente, aus denen Zeichen zusammengesetzt werden: Fähigkeiten, Zustände,
-Kommunikationsmittel, Schadens- und Führungsmarken. Sie haben keine eigene Zeichenseite, weil ein
-Element allein noch kein Zeichen ist — geprüft wird es trotzdem.
+zeigen die Bausteine, aus denen Zeichen zusammengesetzt werden: Fähigkeiten, Zustände,
+Kommunikationsmittel, Schadensmarken, Führungsmarken, Vegetationsbrandzeichen und
+Wasserrettungspersonal. Sie haben keine eigene Zeichenseite, weil ein Baustein allein noch kein
+Zeichen ist — geprüft werden sie trotzdem. Wie viele Bögen auf jede Gruppe entfallen, steht in der
+Galerie unten; die Zahlen dort kommen aus dem Verzeichnis und nicht aus diesem Absatz, damit sie
+nicht auseinanderlaufen können.
 
-Was ein Bogen **nicht** ist: eine fachliche Freigabe. Er belegt, dass die Ausgabe stabil und
-reproduzierbar ist, nicht dass das Zeichen die richtige Bedeutung trägt. Der Prüfstand jedes
-Zeichens steht auf seiner [Zeichenseite](/zeichen/).
+Ein Bogen fällt aus der Reihe: `organization-profiles` zeigt keine einzelne Zeichnung, sondern die
+Organisationsfarben nebeneinander in allen drei Farbprofilen. Er belegt, dass sich die
+Organisationen auch dann unterscheiden lassen, wenn die Farbe allein die Aussage nicht mehr trägt
+— im kontrastreichen Profil und im Schwarz-Weiß-Druck.
+
+<div class="ez-note">
+<span class="ez-note__title">Was ein Bogen nicht ist</span>
+
+Er ist kein fachliches Urteil. Er belegt, dass die Ausgabe stabil und wiederholbar ist, nicht dass
+das Zeichen die richtige Bedeutung trägt. Was an einem Zeichen geprüft wurde, steht auf seiner
+[Zeichenseite](/zeichen/).
+
+</div>
 
 ## Alle Bögen
 
@@ -35,3 +50,12 @@ Die Gruppen sind zugeklappt, damit die Seite ohne 15 MB Bilddaten aufgeht; der B
 Bögen einer Gruppe erst beim Aufklappen.
 
 <ContactSheet />
+
+## Für Entwicklerinnen und Entwickler
+
+Die Bögen sind eingecheckte PNG-Snapshots. `multi-size-snapshots.test.ts` rastert jede Zeichnung
+neu und vergleicht sie byteweise mit dem abgelegten Bogen; die sechs Größen laufen im
+`reference`-Theme, die beiden zusätzlichen Reihen bei 256 px in `accessible-light` und
+`print-monochrome`. Gerastert wird bewusst nicht mit einer Systemschrift, sondern mit dem
+Arimo-Subset aus `packages/catalog/assets` (SIL OFL 1.1) — eine Systemschrift lieferte ein
+maschinenabhängiges Ergebnis und entwertete den Beleg.
