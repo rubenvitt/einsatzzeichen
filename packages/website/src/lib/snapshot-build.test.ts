@@ -14,7 +14,7 @@ import {
 } from '@einsatzzeichen/catalog';
 import { VALIDATION_RULE_IDS } from '@einsatzzeichen/core';
 import { PALETTE } from '@einsatzzeichen/schema';
-import { buildSnapshot, chapterForSection, withoutReferenceFilenames } from './snapshot-build.js';
+import { buildSnapshot } from './snapshot-build.js';
 
 describe('buildSnapshot', () => {
   const snap = buildSnapshot(new Date('2026-08-28T00:00:00Z'));
@@ -134,26 +134,11 @@ describe('buildSnapshot', () => {
     }
   });
 
-  it('leitet die Kapitelbezeichnung aus der Abschnittsnummer ab', () => {
-    expect(chapterForSection('E.1.1')).toBe('Anhang E.1');
-    expect(chapterForSection('4.6.4')).toBe('Kapitel 4.6');
-    expect(chapterForSection('C.2.14')).toBe('Anhang C.2');
-    expect(chapterForSection('1.1')).toBe('Kapitel 1');
-    expect(() => chapterForSection('#')).toThrow(/Kapitelbezeichnung/);
-  });
-
   it('trägt die abgeleitete Kapitelbezeichnung an jedem Zeichen', () => {
     const bySourceId = new Map(snap.symbols.map((symbol) => [symbol.sourceId, symbol]));
     expect(bySourceId.get('bbk-babz-2025:E.1.1')?.chapter).toBe('Anhang E.1');
     expect(bySourceId.get('bbk-babz-2025:1.1')?.chapter).toBe('Kapitel 1');
     for (const symbol of snap.symbols) expect(symbol.chapter).toMatch(/^(Kapitel|Anhang) /);
-  });
-
-  it('schwärzt Referenzdateinamen in Reviewnotizen sichtbar', () => {
-    expect(
-      withoutReferenceFilenames('geprüft gegen `4.1.3_Dekontaminieren.svg` am Rand'),
-    ).toBe('geprüft gegen `[Referenzdatei]` am Rand');
-    expect(() => withoutReferenceFilenames('unerkannt: .svg')).toThrow(/Schwärzung/);
   });
 
   it('ist JSON-serialisierbar ohne Verlust', () => {
@@ -208,8 +193,9 @@ describe('buildSnapshot', () => {
     });
 
     it('übersetzt jedes Farbtoken des Schemas, damit kein „undefined" im Satz landet', () => {
-      // `COLOR_WORDS` ist absichtlich nicht exportiert; geprüft wird die Zusage über die Daten:
-      // jede Ausnahme des Katalogs muss vollständig übersetzt herauskommen.
+      // Nicht die Tabelle `COLOR_WORDS` (die steht seit dem Schnitt exportiert in
+      // `snapshot-colors.ts`), sondern die Zusage über die Daten: jede Ausnahme des Katalogs muss
+      // vollständig übersetzt herauskommen.
       for (const exception of CONTRAST_EXCEPTIONS) {
         const text = snap.coverage.contrastExceptions.find((candidate) =>
           candidate.includes(exception.sections[0] ?? ''),

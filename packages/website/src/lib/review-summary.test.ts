@@ -95,6 +95,57 @@ describe('reviewSummary', () => {
   });
 });
 
+/**
+ * Die drei Stände, an denen die Seiten ihren Satz wählen. Die Verzweigung selbst steht nicht in
+ * `review-summary.ts`, sondern neunmal in Prosa: `pages/index.astro`, `pages/zeichen/index.astro`,
+ * `content/docs/docs/index.mdx`, `coverage.mdx`, `grundlage.mdx` und die vier Anleitungen fragen
+ * alle dasselbe — `approved === 0` heißt „kein Zeichen ist fachlich freigegeben",
+ * `approved === total` heißt „alle", dazwischen kommt der Satz mit Zahlen. Ein Vitest erreicht
+ * diese Ausdrücke nicht; prüfbar ist die Zahl, die den Zweig auswählt, und die wird hier für jeden
+ * der drei Stände einzeln festgehalten statt nur als Summe.
+ *
+ * Synthetisch und ausdrücklich nicht auf den echten Daten: heute trifft der erste Stand zu (der
+ * Ledger führt 558 offene Fachreviews). Ihn festzunageln hieße, den Test beim ersten echten
+ * Fachreview scheitern zu lassen — gegen genau diesen festgeschriebenen Tagesstand ist das Modul
+ * gebaut.
+ */
+describe('die Stände, an denen die Seiten ihren Satz wählen', () => {
+  it('keine Freigabe: approved bleibt 0, obwohl gezählt wurde', () => {
+    // Der Unterschied zur leeren Menge ist der ganze Punkt: dort ist auch `total` 0, und ein Satz
+    // über „kein Zeichen von 42" wäre etwas anderes als einer über gar keine Zeichen.
+    const totals = reviewSummary([
+      entry('approved', 'pending'),
+      entry('approved', 'pending'),
+      entry('approved', 'pending'),
+    ]);
+    expect(totals.domain).toEqual({ approved: 0, deviation: 0, pending: 3, total: 3 });
+    expect(totals.domain.total).toBeGreaterThan(0);
+  });
+
+  it('alle freigegeben: approved trifft total genau', () => {
+    const totals = reviewSummary([
+      entry('approved', 'approved'),
+      entry('approved', 'approved'),
+      entry('approved', 'approved'),
+    ]);
+    expect(totals.domain).toEqual({ approved: 3, deviation: 0, pending: 0, total: 3 });
+    expect(totals.domain.approved).toBe(totals.domain.total);
+  });
+
+  it('teils: approved liegt zwischen beiden Rändern', () => {
+    // Eine Abweichung ist geprüft und trotzdem nicht freigegeben — sie darf den Satz „alle" nicht
+    // auslösen. Die Aufteilung auf beide Achsen prüft weiter oben `zählt beide Achsen getrennt`.
+    const totals = reviewSummary([
+      entry('approved', 'approved'),
+      entry('approved', 'deviation'),
+      entry('approved', 'pending'),
+    ]);
+    expect(totals.domain).toEqual({ approved: 1, deviation: 1, pending: 1, total: 3 });
+    expect(totals.domain.approved).toBeGreaterThan(0);
+    expect(totals.domain.approved).toBeLessThan(totals.domain.total);
+  });
+});
+
 describe('bulkDomainApproval', () => {
   it('nennt Prüfer und Datum, wenn alle Freigaben aus einer Sammelfreigabe stammen', () => {
     const approval = bulkDomainApproval([

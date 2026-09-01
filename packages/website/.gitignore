@@ -3,3 +3,6 @@ dist/
 src/generated/
 # Erzeugt von `pnpm generate` (LFH-500): Bauzeit-Quelle und ausgelieferter Endpunkt zugleich.
 public/catalog-snapshot.json
+# Bruchstück eines abgebrochenen `pnpm generate`: das atomare Schreiben räumt seine
+# temporäre Datei selbst weg, ein hartes Abwürgen kommt dem `finally` aber zuvor.
+public/.catalog-snapshot.json.*.tmp
