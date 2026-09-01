@@ -1,5 +1,6 @@
 import {
   Component,
+  useDeferredValue,
   useEffect,
   useMemo,
   useRef,
@@ -17,6 +18,7 @@ import {
   decodeSpec,
   encodeSpec,
   evaluateSpec,
+  issuesByField,
   reduceSpec,
   type AllowedValue,
   type BlockedValue,
@@ -225,8 +227,20 @@ function organizationSwatch(id: string): string | undefined {
  * also der Normalfall und nicht die Ausnahme, und sie spricht Kennungen, die auf dieser Seite
  * niemand nachschlagen kann. Sie bleibt in `blocked.detail` erhalten, falls sie später ein
  * Entwicklerabschnitt zeigen soll.
+ *
+ * **Woher der Unterschied zwischen fester Lücke und Kombinationslücke kommt.** Aus
+ * `blocked.scope` und damit aus der Wurfstelle im Katalog — nicht aus einer Feldliste hier. Eine
+ * solche Liste wäre eine zweite Fassung derselben Aussage über die Referenz, und sie liefe beim
+ * nächsten vermessenen Zeichen still auseinander: das Amphibienfahrzeug ist heute die einzige
+ * feste Lücke, und ob es das bleibt, entscheidet der Katalog und nicht die Website. Der Rat „oder
+ * eine andere Grundzeichenart" gilt deshalb nur bei `'combination'`; bei `'value'` wäre er
+ * falsch, weil ihn keine Art tragen kann.
+ *
+ * Exportiert allein für den Test daneben: die Fallunterscheidung ist die eigentliche Aussage
+ * dieser Funktion, und sie ungeprüft zu lassen wäre der teurere Preis als die etwas größere
+ * Oberfläche der Insel.
  */
-function blockedTooltip(
+export function blockedTooltip(
   definition: FieldDefinition,
   blocked: BlockedValue,
   valueLabel: string,
@@ -239,10 +253,56 @@ function blockedTooltip(
       'Nimm einen Teil der Auswahl zurück oder wähle eine andere Grundzeichenart.'
     );
   }
+  if (blocked.scope === 'value') {
+    return (
+      `„${valueLabel}" ist als ${definition.noun} im Katalog nicht vermessen — an keiner ` +
+      'Grundzeichenart. Wähle einen anderen Wert.'
+    );
+  }
   return (
     `„${valueLabel}" ist als ${definition.noun} für die Grundzeichenart „${kindLabel}" nicht ` +
     'vermessen. Wähle einen anderen Wert oder eine andere Grundzeichenart.'
   );
+}
+
+/**
+ * Die Sperre eines Kandidaten, so wie sie **dargestellt** werden darf — `undefined` für den nach
+ * der aktuellen Spec gesetzten Wert, egal was die Probe sagt.
+ *
+ * `allowedValues()` in `lib/builder-state.ts` sichert unter „Der gerade gesetzte Wert wird nie
+ * gesperrt" zu, dass genau das nie vorkommt, und begründet es dort: ein gesperrter Eintrag, der
+ * zugleich der ausgewählte ist, wird von Browsern verschieden dargestellt — und an einer Kachel
+ * stünden `aria-pressed="true"` und `aria-disabled="true"` nebeneinander, für Vorlesehilfen ein
+ * widersprüchlicher Zustand.
+ *
+ * Die Zusicherung gilt gegenüber der Spec, die hineingereicht wurde. Seit die Probe aufgeschoben
+ * läuft (`probeSpec`, siehe `useDeferredValue` in `BuilderForm`), ist das nicht mehr dieselbe Spec,
+ * aus der `value`/`values`/`selected` im Markup kommen. Bei einem Sprung, der mehrere Achsen auf
+ * einmal setzt — `loadFromCatalog`, „Beispiel laden", der `spec`-Parameter im Mount-Effekt — war
+ * der neue Wert in der vorigen Spec nicht gesetzt und kann dort gesperrt gewesen sein:
+ * `{ kind: 'formation', strength: 'trupp' }` sperrt `vehicle-land` über `strength-requires-unit`,
+ * und genau dorthin springt jedes Landfahrzeug aus dem Katalog.
+ *
+ * Durchgesetzt wird die Zusage deshalb dort, wo sie sichtbar wird, und gegen die **aktuelle** Spec.
+ * Alle drei Bausteine gehen durch diese eine Stelle, damit sie nicht an drei Bedingungen im Markup
+ * hängt, die einzeln verrutschen können.
+ */
+function displayedBlock(
+  probe: Map<string, AllowedValue> | undefined,
+  optionId: string,
+  selected: boolean,
+): BlockedValue | undefined {
+  return selected ? undefined : probe?.get(optionId)?.blocked;
+}
+
+/**
+ * Die `aria-describedby`-Liste aus den Teilen, die es gerade wirklich gibt. Ein fest verdrahteter
+ * Verweis auf einen Hinweis, den `FieldIssueNote` gar nicht rendert, zeigte auf eine Kennung ohne
+ * Element — Vorlesehilfen lesen dann nichts vor und sagen auch nicht, warum.
+ */
+function describedBy(...ids: readonly (string | undefined)[]): string | undefined {
+  const present = ids.filter((id): id is string => id !== undefined);
+  return present.length === 0 ? undefined : present.join(' ');
 }
 
 /* --- Bausteine ---------------------------------------------------------------------------- */
@@ -256,10 +316,47 @@ interface VocabularyProps {
   vocabulary: BuilderVocabulary;
 }
 
+/**
+ * Der Hinweis am Feld, dessen **gesetzter** Wert in einer Regelmeldung vorkommt.
+ *
+ * Er sperrt nichts und setzt weder `disabled` noch `aria-invalid`: ungültig ist die Kombination
+ * und nicht das Feld allein. Der Wortlaut sagt deshalb „steht in einer Regelmeldung" und nicht
+ * „ist falsch" — bei einer Regel zwischen zwei Feldern (`technical-fill-organization-conflict`)
+ * erscheint der Hinweis nur an der einen Seite, und „falsch" ließe die andere unverdächtig
+ * aussehen. Die Zuordnung stammt aus `issuesByField()`; dort stehen auch ihre Grenzen.
+ *
+ * Genannt wird nur der Titel. Die Erklärung steht vollständig in der Regelliste unter der
+ * Vorschau, und sie hier zu wiederholen machte aus einem Hinweis eine zweite Regelliste im
+ * Formular.
+ *
+ * **Wo dieser Hinweis stehen muss: außerhalb des `<label>`.** Er hängt am Steuerelement allein
+ * über `aria-describedby`. Lag er im `<label htmlFor>`, zählte sein Text nach der Berechnung des
+ * zugänglichen Namens **in den Namen** — und derselbe Satz käme über `aria-describedby` ein
+ * zweites Mal als Beschreibung. NVDA und VoiceOver lesen „Der gesetzte Wert steht in einer
+ * Regelmeldung: …" dann zweimal hintereinander. Das Muster ist deshalb überall dasselbe: `<div
+ * class="ez-builder__field">` als Hülle, `<label class="ez-builder__field-label" htmlFor>` als
+ * Name, Hinweis und Notiz daneben und allein über `aria-describedby` verknüpft — so hielt es
+ * `ListField` schon vorher, `SelectField` und das Beschriftungsfeld ziehen nach.
+ */
+function FieldIssueNote({ id, issues }: { id: string; issues: readonly ExplainedIssue[] }) {
+  if (issues.length === 0) return null;
+  const titles = issues.map((issue) => issue.title).join(' · ');
+  return (
+    <span className="ez-builder__field-issue" id={id}>
+      {issues.length === 1
+        ? 'Der gesetzte Wert steht in einer Regelmeldung: '
+        : `Der gesetzte Wert steht in ${issues.length} Regelmeldungen: `}
+      <strong>{titles}</strong>. Der ganze Wortlaut steht in der Regelliste unter der Vorschau.
+    </span>
+  );
+}
+
 interface SelectFieldProps extends VocabularyProps {
   definition: FieldDefinition;
   value: string;
   probe: Map<string, AllowedValue> | undefined;
+  /** Regelmeldungen, die auf den gesetzten Wert dieses Feldes zeigen; leer ist der Normalfall. */
+  issues?: readonly ExplainedIssue[];
   kindLabel: string;
   onChange: (value: string | undefined) => void;
 }
@@ -269,22 +366,35 @@ function SelectField({
   definition,
   value,
   probe,
+  issues = [],
   kindLabel,
   onChange,
 }: SelectFieldProps) {
   const id = `ez-builder-${definition.field}`;
+  const issueId = `${id}-issue`;
+  const hintId = `${id}-hint`;
   const options = optionsFor(vocabulary, definition.field);
+  // Hülle als `<div>`, Beschriftung als eigenes `<label htmlFor>` — das Muster von `ListField`,
+  // die Begründung steht bei `FieldIssueNote`. Der Feldhinweis wandert damit ebenfalls aus dem
+  // Namen heraus und braucht seinen eigenen `describedby`-Verweis; ohne ihn hinge er als Text
+  // ohne Bezug im Formular.
   return (
-    <label className="ez-builder__field" htmlFor={id}>
-      <span className="ez-builder__field-label">{definition.label}</span>
+    <div className="ez-builder__field">
+      <label className="ez-builder__field-label" htmlFor={id}>
+        {definition.label}
+      </label>
       <select
         id={id}
         value={value}
+        aria-describedby={describedBy(
+          definition.hint === undefined ? undefined : hintId,
+          issues.length === 0 ? undefined : issueId,
+        )}
         onChange={(event) => onChange(event.target.value === '' ? undefined : event.target.value)}
       >
         <option value="">— nicht gesetzt —</option>
         {options.map((option) => {
-          const blocked = probe?.get(option.id)?.blocked;
+          const blocked = displayedBlock(probe, option.id, option.id === value);
           return (
             <option
               key={option.id}
@@ -302,9 +412,12 @@ function SelectField({
         })}
       </select>
       {definition.hint === undefined ? null : (
-        <span className="ez-builder__field-hint">{definition.hint}</span>
+        <span className="ez-builder__field-hint" id={hintId}>
+          {definition.hint}
+        </span>
       )}
-    </label>
+      <FieldIssueNote id={issueId} issues={issues} />
+    </div>
   );
 }
 
@@ -312,6 +425,7 @@ interface ListFieldProps extends VocabularyProps {
   definition: FieldDefinition;
   values: readonly string[];
   probe: Map<string, AllowedValue> | undefined;
+  issues?: readonly ExplainedIssue[];
   kindLabel: string;
   onChange: (values: string[]) => void;
 }
@@ -325,10 +439,12 @@ function ListField({
   definition,
   values,
   probe,
+  issues = [],
   kindLabel,
   onChange,
 }: ListFieldProps) {
   const id = `ez-builder-${definition.field}`;
+  const issueId = `${id}-issue`;
   const options = optionsFor(vocabulary, definition.field).filter(
     (option) => !values.includes(option.id),
   );
@@ -340,13 +456,17 @@ function ListField({
       <select
         id={id}
         value=""
+        aria-describedby={issues.length === 0 ? undefined : issueId}
         onChange={(event) => {
           if (event.target.value !== '') onChange([...values, event.target.value]);
         }}
       >
         <option value="">— hinzufügen —</option>
         {options.map((option) => {
-          const blocked = probe?.get(option.id)?.blocked;
+          // Der Filter über `options` nimmt die gesetzten Werte schon aus der Liste; die Zusage
+          // aus `displayedBlock()` läuft hier trotzdem über dieselbe Stelle wie in den beiden
+          // anderen Bausteinen, statt an dieser einen Filterzeile zu hängen.
+          const blocked = displayedBlock(probe, option.id, values.includes(option.id));
           return (
             <option
               key={option.id}
@@ -380,6 +500,7 @@ function ListField({
           ))}
         </ul>
       )}
+      <FieldIssueNote id={issueId} issues={issues} />
     </div>
   );
 }
@@ -389,6 +510,7 @@ interface TileGroupProps extends VocabularyProps {
   /** '' heißt „nicht gesetzt". */
   value: string;
   probe: Map<string, AllowedValue> | undefined;
+  issues?: readonly ExplainedIssue[];
   kindLabel: string;
   onChange: (value: string | undefined) => void;
   /** Kachel zum Abwählen; fehlt beim Pflichtfeld `kind`. */
@@ -409,6 +531,7 @@ function TileGroup({
   definition,
   value,
   probe,
+  issues = [],
   kindLabel,
   onChange,
   unsetLabel,
@@ -418,6 +541,7 @@ function TileGroup({
   const [notice, setNotice] = useState<string | null>(null);
   const labelId = `ez-builder-${definition.field}-label`;
   const noticeId = `ez-builder-${definition.field}-notice`;
+  const issueId = `ez-builder-${definition.field}-issue`;
   const options = optionsFor(vocabulary, definition.field);
 
   // Ein stehen gebliebener Sperrgrund würde nach der nächsten Änderung etwas Falsches
@@ -435,6 +559,7 @@ function TileGroup({
       <div
         role="group"
         aria-labelledby={labelId}
+        aria-describedby={issues.length === 0 ? undefined : issueId}
         className={variant === 'tile' ? 'ez-builder__tiles' : 'ez-builder__orgchips'}
       >
         {unsetLabel === undefined ? null : (
@@ -452,8 +577,8 @@ function TileGroup({
           </button>
         )}
         {options.map((option) => {
-          const blocked = probe?.get(option.id)?.blocked;
           const selected = value === option.id;
+          const blocked = displayedBlock(probe, option.id, selected);
           const reason =
             blocked === undefined
               ? undefined
@@ -491,6 +616,7 @@ function TileGroup({
           );
         })}
       </div>
+      <FieldIssueNote id={issueId} issues={issues} />
       <p id={noticeId} className="ez-builder__tile-notice" role="status">
         {notice ?? ''}
       </p>
@@ -904,6 +1030,22 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
   const outcome = useMemo(() => outcomeOf(spec), [spec]);
 
   /**
+   * Welches Formularfeld eine Regelmeldung angeht — damit ein Befund am gesetzten Wert sichtbar
+   * ist und nicht nur unten in der Regelliste steht.
+   *
+   * `outcome.unexplained` bleibt draußen: eine unerklärte Meldung trägt kein Feld, und einen Anker
+   * für sie zu erfinden hieße, aus ihrer Kennung zu raten. Sie steht weiter in ihrem eigenen
+   * Block. Die Grenzen der Zuordnung stehen bei `issuesByField()`.
+   */
+  const fieldIssues = useMemo(
+    () =>
+      outcome.state === 'invalid'
+        ? issuesByField(outcome.issues, spec)
+        : new Map<keyof SymbolSpec, ExplainedIssue[]>(),
+    [outcome, spec],
+  );
+
+  /**
    * Was gerade zusammenpasst, für jedes Feld auf einmal — die Schleife selbst steht als
    * `probeFields()` in `lib/builder-vocabulary.ts`, wo sie ohne React geprüft ist.
    *
@@ -912,10 +1054,46 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
    * 3,4 ms warm — das Zwanzigfache unter der Schwelle, ab der gespart werden sollte. Dafür
    * verschwindet ein Fehler, den das Sparen einbaute: ein Auswahlfeld öffnet sich beim Klick,
    * bevor React die Sperren nachgezogen hat, und zeigte beim ersten Öffnen die alte Liste.
+   *
+   * **Warum `useDeferredValue` und nicht ein engerer Memo-Schlüssel** (LFH-504). `designation` ist
+   * das einzige freie Textfeld und schreibt bei jedem Tastenanschlag in die Spec; die Probe rechnet
+   * damit bei jedem Tastenanschlag neu. Sie an einem Ausschnitt der Spec zu memoisieren wäre eine
+   * Lüge über die Daten: gemessen am 01.09.2026 (Node 22, Vitest, `probeFields()` über
+   * `buildSnapshot().builder`) ändern 157 der 247 Kandidaten ihren Befund, wenn die Beschriftung
+   * von `LZ` auf `Sehr lange Beschriftung ohne Ende` wächst — die Probe liest `designation`
+   * wirklich, und ein Schlüssel ohne sie zeigte veraltete Sperren.
+   *
+   * Verzögert wird deshalb die Dringlichkeit, nicht der Schlüssel. Die Probe ist die einzige teure
+   * Ableitung und zugleich die einzige, die niemand sofort braucht — sie sperrt Werte, die gerade
+   * *nicht* gewählt werden. Dieselbe Messung: je Tastenanschlag 6,72 ms im Mittel (4,62–8,59) für
+   * die Probe gegen 0,01 ms für `outcome`, Codebeispiele und JSON zusammen. Über
+   * `useDeferredValue` läuft die Probe in einem nachrangigen Render; tippt jemand weiter, verwirft
+   * React den angefangenen Durchlauf und rechnet nur den letzten Stand.
+   *
+   * **Was ausdrücklich nicht verzögert wird:** `outcome`, Vorschau, Regelliste und die Hinweise am
+   * Feld hängen weiter unmittelbar an `spec`. Die Auswahl und ihr Ergebnis laufen also nicht
+   * hinterher — verzögert ist allein die Auskunft über die *anderen*, gerade nicht gewählten Werte.
+   *
+   * **Der Preis, damit ihn niemand später als Fehler meldet:** für die Dauer eines Renders gehören
+   * die Sperren zur vorigen Spec. `TileGroup` weist einen Klick auf eine für gesperrt gehaltene
+   * Kachel ab; eine veraltete Sperre könnte diesen Klick einmal zu Unrecht abweisen. Sie ändert
+   * dabei nichts und schreibt nur die Hinweiszeile — der zweite Klick geht durch. Das ist der
+   * bewusste Tausch gegen den Fehler zwei Absätze weiter oben, und deutlich kleiner als er.
+   *
+   * **Veraltet ist erlaubt, gemischt nicht.** Zwei Stellen halten das auseinander, und beide
+   * gehören zu diesem Preis: `kindLabel` unten kommt aus `probeSpec`, damit Sperre und Begründung
+   * dieselbe Spec meinen (sonst entstünde ein Satz, den keine der beiden Specs hergibt), und
+   * `displayedBlock()` stellt den nach der **aktuellen** Spec gesetzten Wert nie als gesperrt dar
+   * (sonst trüge er `disabled` beziehungsweise `aria-pressed="true"` neben `aria-disabled="true"`).
+   *
+   * **Verworfen:** das Beschriftungsfeld entprellen oder auf lokalem State führen und erst beim
+   * Verlassen in die Spec schreiben. Das verzögerte Vorschau **und** Regelliste — also genau das,
+   * wofür der Baukasten da ist.
    */
+  const probeSpec = useDeferredValue(spec);
   const probes = useMemo(
-    () => probeFields(vocabulary, spec, PROBED_FIELD_NAMES),
-    [vocabulary, spec],
+    () => probeFields(vocabulary, probeSpec, PROBED_FIELD_NAMES),
+    [vocabulary, probeSpec],
   );
 
   useEffect(() => {
@@ -931,7 +1109,24 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
     [spec, loadedId],
   );
   const json = useMemo(() => JSON.stringify(spec, null, 2), [spec]);
-  const kindLabel = labelFor(vocabulary, 'kind', spec.kind);
+  /**
+   * Die Grundzeichenart für den Sperrsatz — aus `probeSpec` und **nicht** aus `spec`.
+   *
+   * `kindLabel` fließt ausschließlich in `blockedTooltip()`, also in den Satz, der eine Sperre
+   * begründet; die Sperren selbst stammen aus `probes` und damit aus `probeSpec`. Aus `spec`
+   * gelesen mischte der Satz im aufgeschobenen Render beide Specs: nach dem Wechsel „Person" →
+   * „Taktische Formation" trüge die Körpermarke „ABC-/CBRN-Schutz" gesperrt den Satz „… ist als
+   * Körpermarke für die Grundzeichenart „Taktische Formation" nicht vermessen" — gesperrt ist sie
+   * unter „Person", unter „Taktische Formation" ist sie vermessen. Die Paarung kommt in keiner der
+   * beiden Specs vor: der Satz wäre nicht veraltet, sondern erfunden. Über alle Achsen sind 890
+   * solcher (Feld, Wert, Artwechsel)-Paare möglich, davon 146 an der Kachelgruppe `organization`,
+   * wo der Satz zusätzlich im sr-only-Text landet.
+   *
+   * Aus `probeSpec` gehören Sperre und Begründung zusammen zur selben Spec — dann ist der Satz für
+   * die Dauer eines Renders veraltet, und das ist der Preis, der beim `useDeferredValue` unten
+   * ohnehin schon steht.
+   */
+  const kindLabel = labelFor(vocabulary, 'kind', probeSpec.kind);
 
   const catalogMatches = useMemo(
     () => searchCatalog(symbols, catalogQuery, CATALOG_MATCH_LIMIT),
@@ -1160,6 +1355,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
               definition={KIND_FIELD}
               value={spec.kind}
               probe={probes.get('kind')}
+              issues={fieldIssues.get('kind')}
               kindLabel={kindLabel}
               onChange={(value) => setField('kind', value)}
               variant="tile"
@@ -1183,6 +1379,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
                 definition={definition}
                 value={(spec[definition.field] as string | undefined) ?? ''}
                 probe={probes.get(definition.field)}
+                issues={fieldIssues.get(definition.field)}
                 kindLabel={kindLabel}
                 onChange={(value) => setField(definition.field, value)}
               />
@@ -1192,6 +1389,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
               definition={ORGANIZATION_FIELD}
               value={spec.organization ?? ''}
               probe={probes.get('organization')}
+              issues={fieldIssues.get('organization')}
               kindLabel={kindLabel}
               onChange={(value) => setField('organization', value)}
               variant="chip"
@@ -1225,6 +1423,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
                 definition={definition}
                 values={listValues(definition.field)}
                 probe={probes.get(definition.field)}
+                issues={fieldIssues.get(definition.field)}
                 kindLabel={kindLabel}
                 onChange={(values) => setField(definition.field, values)}
               />
@@ -1236,6 +1435,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
                 definition={definition}
                 value={(spec[definition.field] as string | undefined) ?? ''}
                 probe={probes.get(definition.field)}
+                issues={fieldIssues.get(definition.field)}
                 kindLabel={kindLabel}
                 onChange={(value) => setField(definition.field, value)}
               />
@@ -1255,6 +1455,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
                   definition={definition}
                   value={(spec[definition.field] as string | undefined) ?? ''}
                   probe={probes.get(definition.field)}
+                  issues={fieldIssues.get(definition.field)}
                   kindLabel={kindLabel}
                   onChange={(value) => setField(definition.field, value)}
                 />
@@ -1268,19 +1469,32 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
               Das Kürzel in der Fußzone, unterhalb des Zeichens — etwa ein Rufname oder eine
               Einheitsbezeichnung.
             </p>
-            <label
-              className="ez-builder__field ez-builder__field--wide"
-              htmlFor="ez-builder-designation"
-            >
-              <span className="ez-builder__field-label">Beschriftung (Fußzone)</span>
+            {/*
+              Dasselbe Muster wie in `SelectField` und `ListField`: Hülle als `<div>`, Beschriftung
+              als eigenes `<label htmlFor>`, die Notiz daneben und allein über `aria-describedby`
+              verknüpft. Läge sie im `<label>`, stünde ihr Satz im zugänglichen Namen des Feldes
+              **und** ein zweites Mal in seiner Beschreibung; die Begründung steht bei
+              `FieldIssueNote`.
+            */}
+            <div className="ez-builder__field ez-builder__field--wide">
+              <label className="ez-builder__field-label" htmlFor="ez-builder-designation">
+                Beschriftung (Fußzone)
+              </label>
               <input
                 id="ez-builder-designation"
                 type="text"
                 placeholder="z. B. LZ 1"
                 value={spec.designation ?? ''}
+                aria-describedby={
+                  fieldIssues.has('designation') ? 'ez-builder-designation-issue' : undefined
+                }
                 onChange={(event) => setField('designation', event.target.value)}
               />
-            </label>
+              <FieldIssueNote
+                id="ez-builder-designation-issue"
+                issues={fieldIssues.get('designation') ?? []}
+              />
+            </div>
           </fieldset>
         </div>
       </div>
@@ -1307,9 +1521,12 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
             Gültig oder nicht weiß im Projekt nur <code>compose()</code>, nachträglich. Die
             gesperrten Werte entstehen deshalb durch Probieren: <code>allowedValues()</code>{' '}
             komponiert jeden Kandidaten einmal — alle elf Felder mit zusammen 247 Kandidaten
-            brauchen dafür 9,7 ms kalt und 3,4 ms warm. Beim Laden eines Katalogeintrags ist die
-            Spec die Rekonstruktion der vermessenen Darstellung; bei einem Kompositionsrezept ist
-            sie selbst die Quelle des Bildes.
+            brauchen dafür 9,7 ms kalt und 3,4 ms warm. Weil jeder Tastenanschlag im
+            Beschriftungsfeld die Spec ändert und die Probe die Beschriftung wirklich liest, läuft
+            sie nachrangig (<code>useDeferredValue</code>): wer weitertippt, bekommt die Vorschau
+            und die Regeln sofort, die Sperren einen Wimpernschlag später. Beim Laden eines
+            Katalogeintrags ist die Spec die Rekonstruktion der vermessenen Darstellung; bei einem
+            Kompositionsrezept ist sie selbst die Quelle des Bildes.
           </p>
           <section>
             <h3 className="ez-builder__dev-title">
@@ -1427,6 +1644,18 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
           font-size: var(--sl-text-2xs);
           color: var(--sl-color-gray-3);
           max-width: 34rem;
+        }
+        /*
+         * Ein Befund, kein Beiwerk: dieselbe Größe wie der Hinweis darüber, aber die kräftigere
+         * Textfarbe. Bewusst ohne Signalrot als einziges Merkmal — die Aussage trägt der Satz,
+         * und der Wert ist nicht falsch, sondern kommt in einer Regelmeldung vor.
+         */
+        .ez-builder__field-issue {
+          font-size: var(--sl-text-2xs);
+          color: var(--sl-color-white);
+          max-width: 34rem;
+          border-inline-start: 2px solid var(--sl-color-hairline);
+          padding-inline-start: var(--ez-space-2);
         }
         .ez-builder__field input,
         .ez-builder__field select {
