@@ -20,7 +20,10 @@ coverage/
 # SDD-Arbeitsverzeichnis (Ledger, Briefs, Review-Pakete) — reines Scratch
 .superpowers/
 
-# Worktree-Container von Claude Code: eigene Checkouts samt node_modules
-.claude/
+# Worktree-Container von Claude Code: eigene Checkouts samt node_modules.
+# Nur die versionierten Skills sind ausgenommen — ein `!.claude/skills/` allein
+# greift nicht, solange das Elternverzeichnis selbst ignoriert ist.
+.claude/*
+!.claude/skills/
 
 out
