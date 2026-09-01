@@ -14,7 +14,7 @@ permissions:
   contents: write # Release-Commit, Tag und GitHub-Release
   issues: write # Erfolgs-/Fehlerkommentare auf Issues
   pull-requests: write # Erfolgs-/Fehlerkommentare auf PRs
-  id-token: write # npm provenance
+  id-token: write # OIDC für npm Trusted Publishing (inkl. Provenance)
 
 jobs:
   release:
@@ -44,7 +44,6 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          registry-url: https://registry.npmjs.org
 
       - run: pnpm install --frozen-lockfile
 
@@ -57,6 +56,4 @@ jobs:
         run: pnpm exec semantic-release
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: 'true'
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
