@@ -93,7 +93,12 @@ stehen hier die Bausteine, aus denen Zeichen zusammengesetzt werden — Piktogra
 Sie werden genauso geprüft, haben aber keine eigene Seite und stehen deshalb ohne Link in der
 Tabelle.
 
-<CoverageMatrix client:visible rows={coverage.matrix} />
+{/* Ohne `rows`: die Insel holt die 544 Zeilen seit LFH-500 selbst aus `/catalog-snapshot.json`.
+    Als Prop serialisierte Astro sie in das `props`-Attribut der `<astro-island>` — 722 KB, die
+    diese Seite bei jedem Abruf mitschleppte. Der Fließtext oben rechnet weiterhin zur Bauzeit mit
+    `loadSnapshot()`; das ist Node-Code und landet in keinem Browserbündel. */}
+
+<CoverageMatrix client:visible />
 
 ## Für Entwicklerinnen und Entwickler
 

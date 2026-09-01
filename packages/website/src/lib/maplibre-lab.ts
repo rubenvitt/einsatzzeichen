@@ -4,8 +4,9 @@ import type { Drawing } from '@einsatzzeichen/schema';
  * Reine Logik des MapLibre Labs (Spec §5.4): Kartenstil, Bild-IDs, Beispielpunkte, Fehlertexte.
  *
  * Alles hier ist frei von DOM und frei von `maplibre-gl` — die Insel bringt die Karte, diese Datei
- * bringt die Entscheidungen, die man ohne Browser prüfen kann. Der Katalog kommt hier nicht vor:
- * die Insel bekommt Zeichen und Farbprofile als Props aus der Seite (Spec §5.2).
+ * bringt die Entscheidungen, die man ohne Browser prüfen kann. Der Katalog kommt hier nicht vor
+ * (Spec §5.2): die Farbprofile bekommt die Insel als Prop aus der Seite, die Zeichen holt sie
+ * seit LFH-500 zur Laufzeit aus dem Katalog-Snapshot.
  */
 
 /** Zwei Grundlagen: die freie Kachelquelle oder gar keine (neutraler Untergrund). */
@@ -75,9 +76,13 @@ export interface LabSymbol {
 }
 
 /**
- * Reduziert den Snapshot auf das, was die Karte zeichnet. Der Rest des Snapshots (Spec, Review,
- * Quellen) bleibt in der Seite: er wird als Prop mitgeschickt und würde die Seite nur größer
- * machen, ohne dass die Karte ihn liest.
+ * Reduziert den Snapshot auf das, was die Karte zeichnet. Der Rest (Spec, Review, Quellen) wird
+ * verworfen: die Karte liest ihn nicht, und die abgeleiteten Zeichen liegen für die Dauer der
+ * Seite im Speicher der Insel.
+ *
+ * Läuft seit LFH-500 im Browser statt in der Seite — die Insel ruft die Funktion auf dem
+ * geholten Snapshot auf. Genau einmal, in `snapshotState()`: das Ergebnis behält damit seine
+ * Objektidentität, sonst zeichnete jede Reglerbewegung alle Marker neu.
  */
 export function labSymbols(symbols: readonly LabSymbol[]): LabSymbol[] {
   return symbols.map(({ id, slug, title, chapter, drawing }) => ({

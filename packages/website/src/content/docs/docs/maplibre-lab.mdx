@@ -5,11 +5,15 @@ description: Jedes Zeichen des Katalogs auf einer echten Landkarte ausprobieren 
 
 import { RENDER_THEMES } from '@einsatzzeichen/catalog';
 import MapLibreLab from '../../../components/islands/MapLibreLab.tsx';
-import { labSymbols } from '../../../lib/maplibre-lab.js';
 import { loadSnapshot } from '../../../lib/snapshot.js';
 
 export const snapshot = loadSnapshot();
-export const symbols = labSymbols(snapshot.symbols);
+// Der Snapshot bleibt hier — für den Fließtext, zur Bauzeit, in Node. Was er über die Zeichen
+// weiß, geht seit LFH-500 nicht mehr als Prop an die Insel: die holt es selbst aus
+// `/catalog-snapshot.json`. `labSymbols()` läuft deshalb jetzt im Browser (in `MapLibreLab.tsx`)
+// statt hier. Der Kommentar steht bewusst *unter* dem ersten `export`: ein MDX-ESM-Block muss
+// mit `import` oder `export` beginnen — führt ihn ein `//`, endet der Block, und die Zeilen
+// darunter werden als Fließtext gelesen (die Themenliste scheitert dann an ihrem ersten `:`).
 // Der Vorlagenstand trägt im Katalog eine Kennung (`bbk-babz-2025`). Im Anwendertext steht sein
 // Titel: die Kennung sagt einer Leserin nichts, und die Quelle führt ihren Namen selbst mit.
 export const baselineSource = snapshot.sources.find((source) => source.id === snapshot.baseline);
@@ -19,7 +23,7 @@ export const themes = [
   { id: 'print-monochrome', label: 'Druck monochrom', theme: RENDER_THEMES['print-monochrome'] },
 ];
 
-Hier liegt eine echte Landkarte, und du kannst jedes der {symbols.length} Zeichen darauflegen. Das
+Hier liegt eine echte Landkarte, und du kannst jedes der {snapshot.symbols.length} Zeichen darauflegen. Das
 ist der schnellste Weg, um zu sehen, ob ein Zeichen in der Größe, die ihr verwenden wollt, auf
 einer Lagekarte noch lesbar ist — und wie es auf verschiedenen Zoomstufen wirkt.
 
@@ -30,9 +34,13 @@ liegen um Bonn und bedeuten nichts — sie sind Platzhalter, keine Lage.
 Schritt für Schritt, mit jedem Bedienfeld einzeln erklärt, steht das unter
 [Ein Zeichen auf eine Karte legen](/docs/anleitungen/karte/).
 
-<MapLibreLab client:visible symbols={symbols} themes={themes} basemap="openfreemap" />
+{/* Ohne `symbols`: die Insel holt die Zeichnungen selbst (LFH-500). `themes` bleibt eine Prop —
+    `RENDER_THEMES` kommt aus `@einsatzzeichen/catalog`, und ein Import daraus im Browser zöge
+    `node:url` ins Bündel (Spec §5.2). Es sind drei kleine Objekte; sie kosten im HTML nichts. */}
 
-Zur Auswahl stehen alle {symbols.length} Zeichen des Katalogs, gezeichnet nach der Vorlage, die
+<MapLibreLab client:visible themes={themes} basemap="openfreemap" />
+
+Zur Auswahl stehen alle {snapshot.symbols.length} Zeichen des Katalogs, gezeichnet nach der Vorlage, die
 dieses Projekt führt: {baselineSource === undefined ? snapshot.baseline : baselineSource.title}.
 Was das für ihre Verbindlichkeit heißt, steht auf [Grundlage](/docs/grundlage/). Kommst du von der
 Seite eines Zeichens über **Auf der Karte ansehen**, steht es schon im Auswahlfeld. Führt ein

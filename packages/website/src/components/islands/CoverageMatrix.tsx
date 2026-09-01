@@ -1,14 +1,19 @@
 import { useMemo, useState } from 'react';
 import { areaOfSourceId, filterMatrix, type MatrixFilter } from '../../lib/coverage-filter.js';
+import { useSnapshot } from '../../lib/snapshot-island.js';
 // Nur Typen: ein Wertimport aus `snapshot.ts` zöge dessen `import.meta.glob` auf die generierte
-// JSON-Datei in dieses Bundle (Spec §5.2/§5.3 — Inseln importieren ihre Daten als Prop, nie den
-// Snapshot selbst). `import type` wird beim Bauen entfernt.
-import type { MatrixRow, ReviewSummary } from '../../lib/snapshot.js';
+// JSON-Datei in dieses Bundle (Spec §5.2/§5.3). Die Daten holt die Insel seit LFH-500 zur
+// Laufzeit über `useSnapshot()`; von hier kommen nur Typen, und `import type` wird beim Bauen
+// entfernt.
+import type { CatalogSnapshot, MatrixRow, ReviewSummary } from '../../lib/snapshot.js';
 import StatusPair from '../StatusPair';
 
-export interface CoverageMatrixProps {
-  rows: MatrixRow[];
-}
+/**
+ * Die Auswahl aus dem Snapshot — auf Modulebene, also über Renders hinweg stabil. `useSnapshot()`
+ * hat sie in den Abhängigkeiten seines Effekts; eine im Renderkörper erzeugte Funktion löste bei
+ * jedem Tastendruck einen neuen Abruf aus.
+ */
+const coverageRows = (snapshot: CatalogSnapshot): MatrixRow[] => snapshot.coverage.matrix;
 
 const ART_LABELS: Record<MatrixRow['coverage'], string> = {
   'catalog-entry': 'Katalogeintrag',
@@ -61,11 +66,15 @@ function sortRows(rows: readonly MatrixRow[], sort: SortState): MatrixRow[] {
 }
 
 /**
- * Die Prüfliste („Manifestmatrix") mit Filter und Sortierung (Spec §5.4, Task 9). Die Filterlogik selbst ist die
+ * Die Tabelle selbst, sobald die Zeilen da sind (Spec §5.4, Task 9). Die Filterlogik ist die
  * reine Funktion `filterMatrix` aus `src/lib/coverage-filter.ts` — hier steht nur der React-State
  * darum: Filterwerte, Sortierspalte/-richtung, und die Ableitung der sichtbaren Zeilen daraus.
+ *
+ * Getrennt von der Hülle darunter, damit dieser Teil `rows` als echtes Array bekommt und nie mit
+ * einer leeren Liste rendern muss: „0 von 0 Einträgen" unter leeren Filterfeldern sähe aus wie
+ * ein Ergebnis, ist aber nur der Ladezustand.
  */
-export default function CoverageMatrix({ rows }: CoverageMatrixProps) {
+function CoverageTable({ rows }: { rows: MatrixRow[] }) {
   const [area, setArea] = useState<string>(ALL);
   const [technical, setTechnical] = useState<string>(ALL);
   const [domain, setDomain] = useState<string>(ALL);
@@ -98,7 +107,7 @@ export default function CoverageMatrix({ rows }: CoverageMatrixProps) {
   }
 
   return (
-    <div className="ez-coverage-matrix">
+    <>
       <form className="ez-coverage-matrix__filters" aria-label="Prüfliste filtern">
         <label>
           Bereich
@@ -181,8 +190,77 @@ export default function CoverageMatrix({ rows }: CoverageMatrixProps) {
           </tbody>
         </table>
       </div>
+    </>
+  );
+}
+
+/**
+ * Die Prüfliste (Spec §5.4). Die Insel holt ihre 544 Zeilen seit LFH-500 zur Laufzeit aus
+ * `/catalog-snapshot.json`, statt sie als Prop zu bekommen: als Prop standen sie serialisiert im
+ * `props`-Attribut der `<astro-island>` — 722 KB in einem 1,75 MB großen `/docs/coverage/`, bei
+ * jedem Seitenabruf neu übertragen.
+ *
+ * **`data-pagefind-ignore`, und das ist eine bewusste Entscheidung.** Weil `client:visible` die
+ * Insel serverseitig vorrendert, stand die fertige Tabelle bisher zusätzlich als HTML in der
+ * Seite und damit in Starlights Volltextsuche. Mit dem Laufzeitabruf steht dort nur noch der
+ * Ladezustand — der Verlust wird hier nicht bedauert, sondern festgeschrieben, weil er der Suche
+ * nützt und nicht schadet:
+ *
+ * - Die Website nimmt Massenlisten aus dem Index, wo immer sie entstehen: `CodeTabs.astro`,
+ *   `SymbolPreview.astro` und die Schlüssellisten in `CoverageAxes.astro` tragen alle
+ *   `data-pagefind-ignore`, mit derselben Begründung — 544 Zeilen à sieben Spalten ließen eine
+ *   Suche nach „E.1.1" oder „Feuerwehr" diese eine Seite vor der gesuchten finden.
+ * - 256 der 544 Zeilen sind Zeichen mit eigener Seite; ihre Titel und Kennungen stehen dort in
+ *   Überschrift und Fließtext und bleiben auffindbar — an der Stelle, die jemand sucht.
+ * - Die restlichen 288 sind Elemente (Piktogramme, Marken, Formen) ohne eigene Seite. Ihre
+ *   Kennungen waren auch vorher nicht auffindbar: `CoverageAxes.astro` nimmt genau diese
+ *   Schlüssel bereits vom Index aus.
+ * - Fließtext, Überschriften und Zahlen dieser Seite kommen aus `loadSnapshot()` zur Bauzeit,
+ *   stehen weiterhin im HTML und bleiben indexiert. Wer „Stand der Prüfung" sucht, findet die
+ *   Seite; nur die Tabellenzeilen führen nicht mehr auf sie.
+ *
+ * Ohne das Attribut käme statt der Tabelle der Satz „Die Prüfliste wird geladen …" in den Index —
+ * ein Treffer, der nichts aussagt. Beim serverseitigen Vorrendern läuft kein Effekt, der Zustand
+ * ist dort also immer `loading`; genau dieser Rahmen ist das, was Pagefind liest.
+ */
+export default function CoverageMatrix() {
+  const state = useSnapshot(coverageRows);
+
+  return (
+    <div className="ez-coverage-matrix" data-pagefind-ignore>
+      {state.status === 'loading' ? (
+        <p className="ez-coverage-matrix__status" role="status">
+          Die Prüfliste wird geladen …
+        </p>
+      ) : null}
+
+      {state.status === 'failed' ? (
+        <div className="ez-note" role="alert">
+          <span className="ez-note__title">Prüfliste nicht verfügbar</span>
+          <p>{state.message}</p>
+          <p>
+            Der Text oben auf dieser Seite steht davon unabhängig fest — er kommt aus demselben
+            Lauf, nur zur Bauzeit. Fehlt hier die Tabelle, hilft ein Neuladen; bleibt sie aus, ist
+            der Katalog-Snapshot auf dem Server nicht erreichbar.
+          </p>
+        </div>
+      ) : null}
+
+      {state.status === 'ready' ? <CoverageTable rows={state.data} /> : null}
 
       <style>{`
+        .ez-coverage-matrix__status {
+          margin-block: var(--ez-space-6);
+          padding: var(--ez-space-4);
+          border: 1px dashed var(--sl-color-gray-4);
+          border-radius: var(--ez-radius);
+          font-family: var(--ez-font-mono);
+          font-size: var(--sl-text-2xs);
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--sl-color-gray-3);
+          text-align: center;
+        }
         .ez-coverage-matrix__filters {
           display: flex;
           flex-wrap: wrap;
