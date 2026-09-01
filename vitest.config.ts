@@ -33,6 +33,6 @@ export default defineConfig({
     alias: workspaceAliases,
   },
   test: {
-    include: ['packages/*/src/**/*.test.ts'],
+    include: ['packages/*/src/**/*.test.ts', 'scripts/**/*.test.mjs'],
   },
 });
