@@ -1,6 +1,6 @@
 {
   "name": "@einsatzzeichen/core",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "description": "Kompositions- und Render-Kern (SVG, Canvas, Layout, Validierung) für Einsatzzeichen",
   "license": "MIT",

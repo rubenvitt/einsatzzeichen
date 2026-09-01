@@ -1,3 +1,16 @@
+## Website
+
+### Performance-Verbesserungen
+
+- **Drastisch reduzierte Seitengröße**: Die interaktiven Seiten (Explorer, Baukasten, Prüfliste, Karte) sind nun bis zu 95% kleiner. Der Katalog-Snapshot wird einmalig als JSON-Datei geladen statt in jede Seite eingebettet zu werden.
+  - Explorer: von 797 KB auf 34 KB
+  - Baukasten: von 1.755 KB auf 120 KB
+  - Kartenansicht: von 742 KB auf 46 KB
+
+### Fehlerbehebungen
+
+- **Korrekte URLs in Metadaten**: Canonical-Links, Open-Graph-Tags und die Sitemap verwenden jetzt die echte Domain statt eines Platzhalters. Alle 284 generierten Seiten zeigen korrekte URLs.
+
 ## Version 1.0.1
 
 Diese Patch-Release behebt einen technischen Fehler im Release-Prozess. Es gibt keine funktionalen Änderungen an den Einsatzzeichen-Paketen.
