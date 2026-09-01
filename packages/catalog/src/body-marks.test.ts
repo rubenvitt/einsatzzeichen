@@ -1,6 +1,6 @@
 import { Resvg } from '@resvg/resvg-js';
 import { describe, expect, it } from 'vitest';
-import { boundsOfMm, renderSvg, type BoundsMm } from '@einsatzzeichen/core';
+import { boundsOfMm, NotMeasuredError, renderSvg, type BoundsMm } from '@einsatzzeichen/core';
 import {
   DEFAULT_VIEWBOX_MM,
   DEFAULT_STROKE_WIDTH_MM,
@@ -2689,5 +2689,53 @@ describe('BODY_MARK_IDS', () => {
           : [{ kind: 'formation' } as const, formationBodyMm] as const;
       expect(bodyMarkWithContext(id, invocation[0], invocation[1]).length).toBeGreaterThanOrEqual(1);
     }
+  });
+});
+
+describe('bodyMark() — Vermessungslücken als eigene Fehlerklasse', () => {
+  /**
+   * Der Wortlaut der Meldungen bleibt geprüft (oben), aber der Baukasten der Website erkennt sie
+   * seit LFH-502 an der Klasse. Beide Lücken hier tragen `scope: 'combination'`: dieselbe Marke
+   * ist an einer anderen Art oder Variante sehr wohl vermessen — belegt durch die drei grünen
+   * Aufrufe am Ende dieser Datei, die jede Kennung an ihrer belegten Fassung bauen.
+   */
+  const gapOf = (call: () => unknown): unknown => {
+    try {
+      call();
+      return undefined;
+    } catch (error) {
+      return error;
+    }
+  };
+
+  it('wirft NotMeasuredError für ein nicht vermessenes Art-/Varianten-/Fähigkeitspaar', () => {
+    const thrown = gapOf(() => bodyMark('hospital', formationBodyMm));
+    expect(thrown).toBeInstanceOf(NotMeasuredError);
+    expect((thrown as NotMeasuredError).scope).toBe('combination');
+  });
+
+  it('wirft NotMeasuredError für die verschobene, gleich große I.4-Hülle', () => {
+    const thrown = gapOf(() => bodyMarkWithContext(
+      'circle-wide-bowl' as BodyMarkId,
+      { kind: 'circle-12' },
+      { minX: 3, minY: 4, maxX: 27, maxY: 28 },
+    ));
+    expect(thrown).toBeInstanceOf(NotMeasuredError);
+    expect((thrown as NotMeasuredError).scope).toBe('combination');
+  });
+
+  it('lässt eine ungültige Hüllenangabe ein gewöhnliches Error bleiben', () => {
+    // Gegenprobe und der Grund, warum die Erkennung typisiert sein muss: eine nicht endliche
+    // Hüllengrenze ist eine ungültige Eingabe des Aufrufers und keine Aussage über die Referenz.
+    // Käme sie als Vermessungslücke zurück, behauptete der Baukasten eine Datenlücke, die es
+    // nicht gibt — der bisherige Wortlaut-Behelf hätte sie hier fast getroffen.
+    const thrown = gapOf(() => bodyMarkWithContext(
+      'trailer-diving' as BodyMarkId,
+      { kind: 'trailer' },
+      { minX: Number.NaN, minY: 5.75, maxX: 31, maxY: 26 },
+    ));
+    expect(thrown).toBeInstanceOf(Error);
+    expect(thrown).not.toBeInstanceOf(NotMeasuredError);
+    expect((thrown as Error).message).toMatch(/endliche absolute Hüllengrenzen/);
   });
 });

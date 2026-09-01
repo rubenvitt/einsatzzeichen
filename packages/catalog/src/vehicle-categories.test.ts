@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkViewBox, renderSvg } from '@einsatzzeichen/core';
+import { checkViewBox, NotMeasuredError, renderSvg } from '@einsatzzeichen/core';
 import type { ChassisShape, VehicleCategoryId } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { composeFromCatalog, type Recipe } from './recipes.js';
@@ -148,6 +148,22 @@ describe('Fahrzeugkategorien', () => {
   it('führt genau die fünf vermessenen Kategorien und wirft für das Amphibienfahrzeug', () => {
     expect([...MEASURED_VEHICLE_CATEGORIES].sort()).toEqual(CHASSIS_CASES.map(([id]) => id).sort());
     expect(() => vehicleChassis('amphibienfahrzeug')).toThrow(/nicht vollständig vermessen/);
+  });
+
+  it('meldet das Amphibienfahrzeug als feste Lücke, nicht als Sache der Auswahl', () => {
+    // `scope: 'value'` ist hier die eigentliche Aussage: die Wellenlinie von 5.1.1.4 hängt an
+    // keiner Grundzeichenart, keine andere Auswahl bringt sie zurück. Ein Aufrufer, der daraus
+    // einen Satz baut (der Baukasten der Website), darf deshalb nicht auf eine andere
+    // Grundzeichenart verweisen. Dieselbe Aussage steht eine Ebene tiefer als Datum in
+    // `MEASURED_VEHICLE_CATEGORIES`; hier hängt sie am Fehler, den ein Aufrufer ohnehin fängt.
+    let thrown: unknown;
+    try {
+      vehicleChassis('amphibienfahrzeug');
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(NotMeasuredError);
+    expect((thrown as NotMeasuredError).scope).toBe('value');
   });
 
   it('hält jede Marke in der erklärten Zone und lässt sie oben genau das Strichband berühren', () => {

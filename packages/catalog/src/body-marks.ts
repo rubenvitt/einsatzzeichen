@@ -1,4 +1,4 @@
-import type { BoundsMm } from '@einsatzzeichen/core';
+import { NotMeasuredError, type BoundsMm } from '@einsatzzeichen/core';
 import {
   CAPABILITY_IDS,
   DEFAULT_STROKE_WIDTH_MM,
@@ -2154,18 +2154,20 @@ export function bodyMark(
   )
     .some((candidate) => Object.hasOwn(candidate, id));
   if (!hasAnyBuild) {
-    throw new Error(
+    throw new NotMeasuredError(
       `Für die Fähigkeit "${id}" ist keine randbündige Fassung vermessen. Sie fällt nicht auf ` +
         'die Boxfassung zurück: beide Zeichnungen unterscheiden sich in ihren Maßen und nicht ' +
         'nur in ihrer Größe.',
+      'combination',
     );
   }
 
   if (build === undefined) {
     const variant = context.bodyVariant ?? 'normal';
-    throw new Error(
+    throw new NotMeasuredError(
       `Das Art-/Varianten-/Fähigkeitspaar ${context.kind}/${variant}/${id} ist nicht vermessen. ` +
         'Randbündige Fachdienstzeichen fallen nicht auf eine andere Körperform oder Variante zurück.',
+      'combination',
     );
   }
 
@@ -2177,6 +2179,8 @@ export function bodyMark(
     ![bodyBoundsMm.minX, bodyBoundsMm.minY, bodyBoundsMm.maxX, bodyBoundsMm.maxY]
       .every(Number.isFinite)
   ) {
+    // Bewusst ein gewöhnliches `Error` und keine `NotMeasuredError`: eine nicht endliche
+    // Hüllengrenze ist eine ungültige Eingabe des Aufrufers, keine Aussage über die Referenz.
     throw new Error(
       `Die technische Anhängermarke "${id}" verlangt vier endliche absolute Hüllengrenzen ` +
         '(minX, minY, maxX, maxY).',
@@ -2190,9 +2194,10 @@ export function bodyMark(
       Math.abs(bodyBoundsMm.maxY - 26) > BODY_TOLERANCE_MM
     )
   ) {
-    throw new Error(
+    throw new NotMeasuredError(
       `Die technische Anhängermarke "${id}" ist ausschließlich an der absolut vermessenen ` +
         'Hülle 4 / 5,75 / 31 / 26 mm belegt; gleich große verschobene Anhängerhüllen sind nicht vermessen.',
+      'combination',
     );
   }
   const widthMm = bodyBoundsMm.maxX - bodyBoundsMm.minX;
@@ -2220,11 +2225,12 @@ export function bodyMark(
     Math.abs(widthMm - expected.width) > BODY_TOLERANCE_MM ||
     Math.abs(heightMm - expected.height) > BODY_TOLERANCE_MM
   ) {
-    throw new Error(
+    throw new NotMeasuredError(
       `Randbündige Fachdienstzeichen für "${context.kind}" sind nur an der Hülle ` +
         `${expected.label} vermessen. Diese Hülle misst ${widthMm.toFixed(3)} × ` +
         `${heightMm.toFixed(3)} mm; ihre Leisten- und Ringmaße sind eigene Messungen und werden ` +
         'nicht aus einer anderen Körperart fortgeschrieben.',
+      'combination',
     );
   }
 
@@ -2239,10 +2245,11 @@ export function bodyMark(
       Math.abs(bodyBoundsMm.maxY - exactBounds.maxY) > BODY_TOLERANCE_MM
     )
   ) {
-    throw new Error(
+    throw new NotMeasuredError(
       `Die technische Körpermarke "${id}" ist nur an der exakten Hülle ` +
         `${exactBounds.minX}/${exactBounds.minY}/${exactBounds.maxX}/${exactBounds.maxY} mm ` +
         'vermessen; gleich große verschobene Hüllen werden nicht fortgeschrieben.',
+      'combination',
     );
   }
 

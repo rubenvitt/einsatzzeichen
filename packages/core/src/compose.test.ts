@@ -7,6 +7,7 @@ import {
 } from '@einsatzzeichen/schema';
 import type { BoundsMm } from './bounds.js';
 import { bodyLabelInk, compose, type CatalogPorts, type ComposeOptions } from './compose.js';
+import { NotMeasuredError } from './not-measured.js';
 import { CompositionError } from './validate.js';
 import { ARIMO_CAP_HEIGHT_FRACTION, DIACRITIC_HEADROOM_FRACTION } from './render/text-policy.js';
 import { checkViewBox } from './viewbox-gate.js';
@@ -1937,5 +1938,43 @@ describe('compose() — seitliche Box-Grenze der Textläufe (LFH-411)', () => {
     expect(thrown).toBeInstanceOf(CompositionError);
     expect((thrown as CompositionError).issues.map((issue) => issue.rule))
       .toEqual(['designation-unknown-glyph']);
+  });
+});
+
+describe('compose() — Vermessungslücken als eigene Fehlerklasse', () => {
+  /**
+   * Der eine Abbruch des Kompositionsmotors, den der Baukasten der Website wirklich erreicht:
+   * eine Organisationsfarbe auf einem offenen Polyzug (`1.13 Ereignis`). Er sperrt dort einen
+   * Wert, statt die Insel abstürzen zu lassen — und das hängt seit LFH-502 an der Klasse und
+   * nicht mehr am Wortlaut der Meldung. Ohne diesen Test bliebe die Umstellung an einer Stelle
+   * unbemerkt, die kein Typfehler und keine Regelprüfung findet.
+   */
+  const openBody: Primitive = {
+    type: 'polyline',
+    role: 'body',
+    closed: false,
+    points: [
+      [4, 16],
+      [12, 26],
+      [28, 6],
+    ],
+  };
+
+  it('wirft NotMeasuredError für eine Körperfüllung am offenen Polyzug', () => {
+    const openCatalog: CatalogPorts = {
+      ...catalog,
+      baseDrawing: () => ({ viewBox: DEFAULT_VIEWBOX_MM, children: [openBody] }),
+      organizationColor: () => 'rot' as ColorToken,
+    };
+    let thrown: unknown;
+    try {
+      compose({ kind: 'event', organization: 'feuerwehr' }, openCatalog);
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(NotMeasuredError);
+    // `'combination'`: der Haken selbst ist gezeichnet, nur seine gefüllte Fassung ist es nicht.
+    expect((thrown as NotMeasuredError).scope).toBe('combination');
+    expect((thrown as Error).message).toMatch(/offener/);
   });
 });

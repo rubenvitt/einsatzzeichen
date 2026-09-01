@@ -6,6 +6,7 @@ import {
   type PrimitiveRole,
 } from '@einsatzzeichen/schema';
 import { compose, type CatalogPorts } from './compose.js';
+import { NotMeasuredError } from './not-measured.js';
 import {
   BodyNotMeasuredError,
   checkBox,
@@ -1021,6 +1022,30 @@ describe('Clipping-Gate', () => {
     expect(() =>
       checkClipping(withBox({ xMm: 4, yMm: 4, widthMm: 8, heightMm: 8 }), body),
     ).toThrow(BodyNotMeasuredError);
+  });
+
+  it('meldet sich auch als allgemeine Vermessungslücke der Kombination', () => {
+    // Seit LFH-502 ist `BodyNotMeasuredError` der Spezialfall von `NotMeasuredError`. Ein Fänger,
+    // der jede Vermessungslücke gleich behandelt (der Baukasten der Website), erkennt sie damit
+    // mit; `scope` steht auf `'combination'`, weil eine andere, vermessene Körperform dasselbe
+    // Piktogramm sehr wohl trägt.
+    let caught: unknown;
+    try {
+      checkClipping(withBox({ xMm: 4, yMm: 4, widthMm: 8, heightMm: 8 }), {
+        type: 'polyline',
+        role: 'body',
+        points: [
+          [4, 4],
+          [28, 4],
+          [28, 28],
+        ],
+      });
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(NotMeasuredError);
+    expect((caught as NotMeasuredError).scope).toBe('combination');
+    expect((caught as Error).name).toBe('BodyNotMeasuredError');
   });
 
   it('lehnt einen mehrfach notierten Polygonumlauf als nicht einfach ab', () => {

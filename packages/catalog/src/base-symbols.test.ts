@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   boundsOfMm,
   matchFingerprint,
+  NotMeasuredError,
   strokeBoundsOfMm,
   type BodyGeometryMode,
 } from '@einsatzzeichen/core';
@@ -842,5 +843,37 @@ describe('Körperformen des Anhangs F.3', () => {
   it('lehnt raised-gable und jede andere Variante am reduced-house ab', () => {
     expect(() => baseDrawing(reducedHouseKind, raisedGable)).toThrow(/Körpervariante/);
     expect(() => baseDrawing(reducedHouseKind, 'foot-band')).toThrow(/Körpervariante/);
+  });
+});
+
+describe('baseDrawing() — zwei Abbrüche, zwei Fehlerarten', () => {
+  /**
+   * Eine unbelegte Körpervariante ist eine Aussage über die Referenz und trägt deshalb seit
+   * LFH-502 `NotMeasuredError`; eine unbekannte Grundzeichenart ist eine Lücke im Katalog selbst
+   * und bleibt ein gewöhnliches `Error`. Der Wortlaut-Behelf davor traf keinen von beiden — die
+   * Meldungen nennen weder „vermessen" noch „nicht belegt" —, und genau daran hing, dass die
+   * Website diese Lücke gar nicht als solche sehen konnte.
+   */
+  it('meldet die unbelegte Körpervariante als Vermessungslücke der Kombination', () => {
+    let thrown: unknown;
+    try {
+      baseDrawing('reduced-house', 'raised-gable' as BodyVariantId);
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(NotMeasuredError);
+    expect((thrown as NotMeasuredError).scope).toBe('combination');
+  });
+
+  it('lässt die unbekannte Grundzeichenart ein gewöhnliches Error bleiben', () => {
+    let thrown: unknown;
+    try {
+      baseDrawing('gibt-es-nicht' as SymbolKind);
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(Error);
+    expect(thrown).not.toBeInstanceOf(NotMeasuredError);
+    expect((thrown as Error).message).toMatch(/Kein Grundzeichen/);
   });
 });
