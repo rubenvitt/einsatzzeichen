@@ -14,7 +14,6 @@ import { PALETTE, type ColorToken, type Drawing, type SymbolSpec } from '@einsat
 import { ORGANIZATION_COLORS } from '@einsatzzeichen/catalog/src/organizations.js';
 import { codeSamplesFor, type CodeSamples } from '../../lib/code-samples.js';
 import {
-  allowedValues,
   decodeSpec,
   encodeSpec,
   evaluateSpec,
@@ -23,7 +22,14 @@ import {
   type BlockedValue,
 } from '../../lib/builder-state.js';
 import { matchesLine, searchCatalog } from '../../lib/builder-catalog.js';
-import { loadSnapshot, type SymbolSummary } from '../../lib/snapshot.js';
+import {
+  kindPreviews,
+  labelFor,
+  optionsFor,
+  probeFields,
+} from '../../lib/builder-vocabulary.js';
+import { useSnapshot, type SnapshotSelect } from '../../lib/snapshot-island.js';
+import type { BuilderVocabulary, SymbolSummary } from '../../lib/snapshot.js';
 import type { ExplainedIssue } from '../../lib/rule-explanations.js';
 import StatusPair from '../StatusPair.js';
 
@@ -52,11 +58,37 @@ import StatusPair from '../StatusPair.js';
  * Die Daten kommen aus dem Snapshot (`snapshot.builder` für die erlaubten Werte,
  * `snapshot.symbols` für „Aus dem Katalog laden"), nie aus dem Katalog-Index: der zöge `node:url`
  * ins Browserbündel (Spec §5.2).
+ *
+ * **Und der Snapshot kommt zur Laufzeit (LFH-500).** Er wird per `fetch` geholt
+ * (`lib/snapshot-client.ts`), nicht mehr auf Modulebene mit `loadSnapshot()` importiert: das zog
+ * dessen `import.meta.glob` und damit 1,3 MB JSON in das Bündel jeder Seite, die diese Insel mit
+ * `client:load` mountet. Aus `lib/snapshot.js` kommen hier deshalb ausschließlich Typen
+ * (`import type`) — ein Wertimport von dort brächte die 1,3 MB zurück. Damit hat der Baukasten
+ * drei weitere sichtbare Zustände vor dem Formular: laden, gescheitert, geladen (siehe `Builder`
+ * am Dateiende). Das Vokabular reist ab hier als Argument beziehungsweise Prop; ein Modulzustand
+ * dafür wäre die alte Abhängigkeit vom Ladezeitpunkt in neuer Form.
  */
 
-const snapshot = loadSnapshot();
-const VOCABULARY = snapshot.builder;
-const SYMBOLS: SymbolSummary[] = snapshot.symbols;
+/** Was der Baukasten aus dem Snapshot braucht — mehr als das behält er nicht. */
+interface BuilderData {
+  vocabulary: BuilderVocabulary;
+  symbols: SymbolSummary[];
+  /** Die Kachel-Miniaturen der Grundzeichenarten, einmal komponiert. */
+  kindTiles: Map<string, Drawing | null>;
+}
+
+/**
+ * Auf Modulebene und nicht im Renderkörper: `useSnapshot` hat die Auswahl in den Abhängigkeiten
+ * seines Effekts, eine bei jedem Render neu erzeugte Funktion löste also einen neuen Abruf aus.
+ * Zugleich ist das die Stelle, an der die Kachel-Miniaturen **einmal** komponiert werden — genau
+ * das, was bis LFH-500 die Modulkonstante `KIND_PREVIEWS` über dem synchron geladenen Snapshot
+ * leistete.
+ */
+const selectBuilderData: SnapshotSelect<BuilderData> = (snapshot) => ({
+  vocabulary: snapshot.builder,
+  symbols: snapshot.symbols,
+  kindTiles: kindPreviews(snapshot.builder),
+});
 
 /** Startspec: das kleinste, was komponiert — eine taktische Formation ohne jede Zutat. */
 const DEFAULT_SPEC: SymbolSpec = { kind: 'formation' };
@@ -151,6 +183,11 @@ const PROBED_FIELDS: FieldDefinition[] = [
   ...LIST_FIELDS,
 ];
 
+/** Dieselbe Liste, nur die Feldnamen — das nimmt `probeFields()` entgegen. */
+const PROBED_FIELD_NAMES: readonly (keyof SymbolSpec)[] = PROBED_FIELDS.map(
+  (definition) => definition.field,
+);
+
 /** Die drei Ergebniszustände einer Spec, wie die Insel sie darstellt. */
 type BuilderOutcome =
   | { state: 'ok'; drawing: Drawing }
@@ -167,28 +204,6 @@ function outcomeOf(spec: SymbolSpec): BuilderOutcome {
     return { state: 'crash', error: error instanceof Error ? error : new Error(String(error)) };
   }
 }
-
-function labelFor(field: keyof SymbolSpec, id: string): string {
-  return VOCABULARY[field]?.find((entry) => entry.id === id)?.label ?? id;
-}
-
-/**
- * Miniaturen der Grundzeichenarten für die Kachel-Auswahl, einmal beim Laden komponiert: jede
- * Kachel zeigt die nackte Grundform `{ kind }`. Zwei Arten (`circle-12`, `reduced-house`)
- * komponieren ohne weitere Zutat nicht — dafür steht ein Platzhalterrahmen, keine erfundene
- * Zeichnung. Der try/catch ist hier richtig: eine fehlende Miniatur ist eine Darstellungslücke
- * der Kachel, kein Fehler der aktuellen Zusammenstellung.
- */
-const KIND_PREVIEWS = new Map<string, Drawing | null>(
-  (VOCABULARY.kind ?? []).map((option) => {
-    try {
-      const result = evaluateSpec({ kind: option.id } as SymbolSpec);
-      return [option.id, result.ok ? result.drawing : null];
-    } catch {
-      return [option.id, null];
-    }
-  }),
-);
 
 /**
  * Organisationsfarbe für den Farbfleck am Chip — aus `ORGANIZATION_COLORS` des Katalogs und der
@@ -232,7 +247,16 @@ function blockedTooltip(
 
 /* --- Bausteine ---------------------------------------------------------------------------- */
 
-interface SelectFieldProps {
+/**
+ * Das Vokabular reist als Prop durch die Bausteine (LFH-500). Vorher lag es als Modulkonstante
+ * daneben; seit der Snapshot zur Laufzeit kommt, gäbe es zum Zeitpunkt der Modulauswertung nichts
+ * zu lesen.
+ */
+interface VocabularyProps {
+  vocabulary: BuilderVocabulary;
+}
+
+interface SelectFieldProps extends VocabularyProps {
   definition: FieldDefinition;
   value: string;
   probe: Map<string, AllowedValue> | undefined;
@@ -240,9 +264,16 @@ interface SelectFieldProps {
   onChange: (value: string | undefined) => void;
 }
 
-function SelectField({ definition, value, probe, kindLabel, onChange }: SelectFieldProps) {
+function SelectField({
+  vocabulary,
+  definition,
+  value,
+  probe,
+  kindLabel,
+  onChange,
+}: SelectFieldProps) {
   const id = `ez-builder-${definition.field}`;
-  const options = VOCABULARY[definition.field] ?? [];
+  const options = optionsFor(vocabulary, definition.field);
   return (
     <label className="ez-builder__field" htmlFor={id}>
       <span className="ez-builder__field-label">{definition.label}</span>
@@ -277,7 +308,7 @@ function SelectField({ definition, value, probe, kindLabel, onChange }: SelectFi
   );
 }
 
-interface ListFieldProps {
+interface ListFieldProps extends VocabularyProps {
   definition: FieldDefinition;
   values: readonly string[];
   probe: Map<string, AllowedValue> | undefined;
@@ -289,9 +320,16 @@ interface ListFieldProps {
  * Mehrfachauswahl als „hinzufügen"-Liste plus abwählbare Marken. Ein `<select multiple>` über 88
  * Fähigkeiten wäre mit Strg-Klick zu bedienen und sonst nicht; hier reicht ein Klick je Richtung.
  */
-function ListField({ definition, values, probe, kindLabel, onChange }: ListFieldProps) {
+function ListField({
+  vocabulary,
+  definition,
+  values,
+  probe,
+  kindLabel,
+  onChange,
+}: ListFieldProps) {
   const id = `ez-builder-${definition.field}`;
-  const options = (VOCABULARY[definition.field] ?? []).filter(
+  const options = optionsFor(vocabulary, definition.field).filter(
     (option) => !values.includes(option.id),
   );
   return (
@@ -334,7 +372,7 @@ function ListField({ definition, values, probe, kindLabel, onChange }: ListField
                 className="ez-builder__chip"
                 onClick={() => onChange(values.filter((entry) => entry !== value))}
               >
-                <span>{labelFor(definition.field, value)}</span>
+                <span>{labelFor(vocabulary, definition.field, value)}</span>
                 <span aria-hidden="true">×</span>
                 <span className="ez-builder__sr">entfernen</span>
               </button>
@@ -346,7 +384,7 @@ function ListField({ definition, values, probe, kindLabel, onChange }: ListField
   );
 }
 
-interface TileGroupProps {
+interface TileGroupProps extends VocabularyProps {
   definition: FieldDefinition;
   /** '' heißt „nicht gesetzt". */
   value: string;
@@ -367,6 +405,7 @@ interface TileGroupProps {
  * `title`-Tooltip für die Maus), ausgewählt wird dabei nichts.
  */
 function TileGroup({
+  vocabulary,
   definition,
   value,
   probe,
@@ -379,7 +418,7 @@ function TileGroup({
   const [notice, setNotice] = useState<string | null>(null);
   const labelId = `ez-builder-${definition.field}-label`;
   const noticeId = `ez-builder-${definition.field}-notice`;
-  const options = VOCABULARY[definition.field] ?? [];
+  const options = optionsFor(vocabulary, definition.field);
 
   // Ein stehen gebliebener Sperrgrund würde nach der nächsten Änderung etwas Falsches
   // behaupten — mit der neuen Probe ist er entweder überholt oder kommt beim nächsten
@@ -811,7 +850,12 @@ class ErrorBoundary extends Component<{ children: ReactNode }, BoundaryState> {
 
 /* --- Die Insel ---------------------------------------------------------------------------- */
 
-function BuilderForm() {
+/**
+ * Der Baukasten mit vorliegendem Snapshot. Als eigene Komponente unterhalb des Ladezustands, damit
+ * kein Hook hier mit einem „vielleicht noch nicht da"-Fall rechnen muss: sie mountet erst, wenn
+ * der Abruf durch ist, und der Snapshot wechselt danach nicht mehr.
+ */
+function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
   const [spec, setSpec] = useState<SymbolSpec>(DEFAULT_SPEC);
   const [loadedId, setLoadedId] = useState<string>('');
   const [urlError, setUrlError] = useState<string | null>(null);
@@ -860,7 +904,8 @@ function BuilderForm() {
   const outcome = useMemo(() => outcomeOf(spec), [spec]);
 
   /**
-   * Was gerade zusammenpasst, für jedes Feld auf einmal.
+   * Was gerade zusammenpasst, für jedes Feld auf einmal — die Schleife selbst steht als
+   * `probeFields()` in `lib/builder-vocabulary.ts`, wo sie ohne React geprüft ist.
    *
    * Die Vorgabe war, erst beim Öffnen eines Auswahlfeldes zu proben. Die Messung nimmt dem
    * Sparen den Anlass: alle elf Felder mit zusammen 247 Kandidaten brauchen 9,7 ms kalt und
@@ -868,33 +913,29 @@ function BuilderForm() {
    * verschwindet ein Fehler, den das Sparen einbaute: ein Auswahlfeld öffnet sich beim Klick,
    * bevor React die Sperren nachgezogen hat, und zeigte beim ersten Öffnen die alte Liste.
    */
-  const probes = useMemo(() => {
-    const byField = new Map<string, Map<string, AllowedValue>>();
-    for (const { field } of PROBED_FIELDS) {
-      const ids = (VOCABULARY[field] ?? []).map((entry) => entry.id);
-      byField.set(field, new Map(allowedValues(spec, field, ids).map((v) => [v.value, v])));
-    }
-    return byField;
-  }, [spec]);
+  const probes = useMemo(
+    () => probeFields(vocabulary, spec, PROBED_FIELD_NAMES),
+    [vocabulary, spec],
+  );
 
   useEffect(() => {
     if (outcome.state !== 'crash') lastWorkingSpec.current = spec;
   }, [outcome, spec]);
 
   const loadedSymbol = useMemo(
-    () => SYMBOLS.find((symbol) => symbol.id === loadedId),
-    [loadedId],
+    () => symbols.find((symbol) => symbol.id === loadedId),
+    [symbols, loadedId],
   );
   const samples = useMemo(
     () => codeSamplesFor(spec, loadedId === '' ? 'builder-spec' : loadedId),
     [spec, loadedId],
   );
   const json = useMemo(() => JSON.stringify(spec, null, 2), [spec]);
-  const kindLabel = labelFor('kind', spec.kind);
+  const kindLabel = labelFor(vocabulary, 'kind', spec.kind);
 
   const catalogMatches = useMemo(
-    () => searchCatalog(SYMBOLS, catalogQuery, CATALOG_MATCH_LIMIT),
-    [catalogQuery],
+    () => searchCatalog(symbols, catalogQuery, CATALOG_MATCH_LIMIT),
+    [symbols, catalogQuery],
   );
 
   function setField(field: keyof SymbolSpec, value: unknown) {
@@ -909,7 +950,7 @@ function BuilderForm() {
       setLoadedId('');
       return;
     }
-    const symbol = SYMBOLS.find((candidate) => candidate.id === id);
+    const symbol = symbols.find((candidate) => candidate.id === id);
     if (symbol === undefined) return;
     setSpec(symbol.spec);
     setLoadedId(id);
@@ -918,7 +959,7 @@ function BuilderForm() {
   }
 
   function loadRandomExample() {
-    const symbol = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+    const symbol = symbols[Math.floor(Math.random() * symbols.length)];
     if (symbol !== undefined) loadFromCatalog(symbol.id);
   }
 
@@ -1115,6 +1156,7 @@ function BuilderForm() {
               Organisation, deren Farbe den Körper füllt.
             </p>
             <TileGroup
+              vocabulary={vocabulary}
               definition={KIND_FIELD}
               value={spec.kind}
               probe={probes.get('kind')}
@@ -1122,7 +1164,7 @@ function BuilderForm() {
               onChange={(value) => setField('kind', value)}
               variant="tile"
               renderIcon={(id) => {
-                const drawing = KIND_PREVIEWS.get(id) ?? null;
+                const drawing = kindTiles.get(id) ?? null;
                 return drawing === null ? (
                   <span className="ez-canvas ez-canvas--light ez-builder__tile-canvas">
                     <span className="ez-builder__tile-placeholder" aria-hidden="true" />
@@ -1136,6 +1178,7 @@ function BuilderForm() {
             />
             {BODY_SELECT_FIELDS.map((definition) => (
               <SelectField
+                vocabulary={vocabulary}
                 key={definition.field}
                 definition={definition}
                 value={(spec[definition.field] as string | undefined) ?? ''}
@@ -1145,6 +1188,7 @@ function BuilderForm() {
               />
             ))}
             <TileGroup
+              vocabulary={vocabulary}
               definition={ORGANIZATION_FIELD}
               value={spec.organization ?? ''}
               probe={probes.get('organization')}
@@ -1176,6 +1220,7 @@ function BuilderForm() {
             </p>
             {LIST_FIELDS.map((definition) => (
               <ListField
+                vocabulary={vocabulary}
                 key={definition.field}
                 definition={definition}
                 values={listValues(definition.field)}
@@ -1186,6 +1231,7 @@ function BuilderForm() {
             ))}
             {CAPABILITY_SELECT_FIELDS.map((definition) => (
               <SelectField
+                vocabulary={vocabulary}
                 key={definition.field}
                 definition={definition}
                 value={(spec[definition.field] as string | undefined) ?? ''}
@@ -1204,6 +1250,7 @@ function BuilderForm() {
             <div className="ez-builder__group-grid">
               {COMMAND_SELECT_FIELDS.map((definition) => (
                 <SelectField
+                  vocabulary={vocabulary}
                   key={definition.field}
                   definition={definition}
                   value={(spec[definition.field] as string | undefined) ?? ''}
@@ -1838,10 +1885,109 @@ function BuilderForm() {
   );
 }
 
+/* --- Laden, Fehler, geladen ---------------------------------------------------------------- */
+
+/**
+ * Die Stile der beiden Vorzustände stehen hier und nicht im `<style>` von `BuilderForm`: dessen
+ * Block wird gar nicht gerendert, solange das Formular noch nicht steht.
+ */
+function GateStyle() {
+  return (
+    <style>{`
+      .ez-builder-gate__loading {
+        margin-block: var(--ez-space-6);
+        font-family: var(--ez-font-mono);
+        font-size: var(--sl-text-sm);
+        color: var(--sl-color-gray-2);
+      }
+      .ez-builder-gate__reason {
+        font-family: var(--ez-font-mono);
+        font-size: var(--sl-text-2xs);
+        color: var(--sl-color-white);
+        overflow-wrap: anywhere;
+      }
+      /* .ez-action ist in theme.css für Verweise gebaut; als Knopf braucht es die Grundwerte. */
+      button.ez-builder-gate__retry {
+        font: inherit;
+        background: transparent;
+        color: var(--sl-color-white);
+        cursor: pointer;
+        text-align: start;
+      }
+    `}</style>
+  );
+}
+
+/**
+ * Der Vorbau vor dem Formular (LFH-500): der Snapshot wird zur Laufzeit geholt, und bis er da ist,
+ * gibt es kein Vokabular — ohne das hätte jedes Auswahlfeld null Optionen, was aussähe wie ein
+ * leerer Katalog. Also drei Zustände statt einem. Abruf, Abbruch und Zustandsübergang stehen in
+ * `lib/snapshot-island.ts` und sind dort geprüft; hier bleibt nur, wie die drei Zustände aussehen.
+ *
+ * Der Fehlerzustand nennt den Grund wörtlich, nicht als „Fehler": `fetch` unterscheidet einen
+ * Netzausfall, eine 404 nach halb ausgerolltem Deploy und ein verfälschtes Dokument, und wer den
+ * leeren Baukasten vor sich hat, kann mit dem geglätteten Wort nichts anfangen. Er lässt die Insel
+ * auch nicht stumm zurück: der Knopf lädt die Seite neu, und weil `snapshot-client.ts` sich einen
+ * Fehlschlag ausdrücklich nicht merkt, ist das ein echter zweiter Versuch. Die Zusammenstellung in
+ * der Adresszeile überlebt das Neuladen — sie steht in der URL, nicht im Zustand der Insel.
+ */
+function BuilderGate() {
+  const state = useSnapshot(selectBuilderData);
+
+  if (state.status === 'failed') {
+    return (
+      <div className="ez-builder-gate">
+        <div className="ez-note" role="alert">
+          <p className="ez-note__title">Der Baukasten hat keinen Katalog bekommen</p>
+          <p>
+            Ohne ihn gibt es weder die erlaubten Werte für die Auswahl noch die Zeichen zum Laden.
+            Der Grund ist dieser — nicht ein leerer Katalog:
+          </p>
+          <p className="ez-builder-gate__reason">{state.message}</p>
+          <p>
+            <button
+              type="button"
+              className="ez-action ez-builder-gate__retry"
+              onClick={() => window.location.reload()}
+            >
+              <strong>Erneut versuchen</strong>
+              <span>Seite neu laden</span>
+            </button>
+          </p>
+          <p>
+            Eine Zusammenstellung in der Adresszeile geht dabei nicht verloren: sie steht in der
+            URL und wird gelesen, sobald der Katalog da ist.
+          </p>
+        </div>
+        <GateStyle />
+      </div>
+    );
+  }
+
+  if (state.status === 'loading') {
+    return (
+      <div className="ez-builder-gate">
+        <p className="ez-builder-gate__loading" role="status">
+          Der Katalog wird geladen …
+        </p>
+        <GateStyle />
+      </div>
+    );
+  }
+
+  return (
+    <BuilderForm
+      vocabulary={state.data.vocabulary}
+      symbols={state.data.symbols}
+      kindTiles={state.data.kindTiles}
+    />
+  );
+}
+
 export default function Builder() {
   return (
     <ErrorBoundary>
-      <BuilderForm />
+      <BuilderGate />
     </ErrorBoundary>
   );
 }

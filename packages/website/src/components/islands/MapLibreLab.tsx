@@ -13,6 +13,7 @@ import {
   filterSymbols,
   labFeatureCollection,
   labPoints,
+  labSymbols,
   mapErrorMessage,
   markerIdPrefix,
   symbolImageId,
@@ -28,20 +29,61 @@ import {
   type LabSymbol,
   type PixelRatio,
 } from '../../lib/maplibre-lab.js';
+import { useSnapshot } from '../../lib/snapshot-island.js';
+// Nur Typen aus `snapshot.ts`: ein Wertimport zöge dessen `import.meta.glob` auf die generierte
+// JSON-Datei in dieses Bundle (Spec §5.2/§5.3). Die Zeichen holt die Insel seit LFH-500 zur
+// Laufzeit; `import type` wird beim Bauen entfernt.
+import type { CatalogSnapshot } from '../../lib/snapshot.js';
 
 /**
  * MapLibre Lab (Spec §5.4): dasselbe Zeichen zweimal auf derselben Karte — als SVG im DOM
  * (`Marker`) und als gerastertes Bild im Kartenstil (`symbol`-Ebene über `addSymbolImage`).
  *
- * Die Insel bekommt Zeichen und Farbprofile als Props: der Katalog bleibt in Node (Spec §5.2),
- * und der Snapshot mit allen Spec-, Review- und Quellenfeldern muss nicht in den Browser. Die
- * Kartenbibliothek wird erst im Effekt geladen (`await import`), damit sie nicht im ersten
- * Seitenpaket steckt.
+ * Die 256 Zeichen holt die Insel seit LFH-500 zur Laufzeit aus `/catalog-snapshot.json`; als Prop
+ * standen sie serialisiert im `props`-Attribut der `<astro-island>` und machten
+ * `/docs/maplibre-lab/` auf 742 KB. Die Farbprofile bleiben eine Prop: sie kommen aus
+ * `RENDER_THEMES` von `@einsatzzeichen/catalog`, und ein clientseitiger Import daraus zöge
+ * `node:url` ins Browserbündel (Spec §5.2) — es sind drei kleine Objekte, die im HTML nichts
+ * kosten. Die Kartenbibliothek wird erst im Effekt geladen (`await import`), damit sie nicht im
+ * ersten Seitenpaket steckt.
  */
 
 const SOURCE_ID = 'ez-lab-points';
 const LAYER_ID = 'ez-lab-symbols';
 const INITIAL_ZOOM = 12;
+
+/**
+ * Die Auswahl aus dem Snapshot — auf Modulebene, also über Renders hinweg stabil (`useSnapshot()`
+ * hat sie in den Abhängigkeiten seines Effekts). `labSymbols()` wirft alles weg, was die Karte
+ * nicht zeichnet: Spec, Review, Quellen. Das läuft jetzt im Browser statt in der Seite — dieselbe
+ * reine Funktion, nur an einer anderen Stelle aufgerufen.
+ */
+const labSymbolsOf = (snapshot: CatalogSnapshot): LabSymbol[] => labSymbols(snapshot.symbols);
+
+/**
+ * Die Regeln, die beide Fassungen brauchen: der äußere Rahmen und der Hinweiskasten. Sie stehen
+ * hier und nicht zweimal im Markup, weil die Hülle (Laden, Fehler) und die Karte selbst zwei
+ * Komponenten sind und ein Duplikat mit der Zeit auseinanderliefe. Die Karte hängt ihre eigenen
+ * Regeln unten an.
+ */
+const SHELL_STYLES = `
+        .ez-lab {
+          display: grid;
+          gap: var(--ez-space-4);
+          margin-block: var(--ez-space-6);
+        }
+        .ez-lab__hint {
+          padding: var(--ez-space-4);
+          border: 1px dashed var(--sl-color-gray-4);
+          border-radius: var(--ez-radius);
+          font-family: var(--ez-font-mono);
+          font-size: var(--sl-text-2xs);
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--sl-color-gray-3);
+          text-align: center;
+        }
+`;
 
 export interface LabThemeOption {
   id: string;
@@ -50,10 +92,13 @@ export interface LabThemeOption {
 }
 
 export interface MapLibreLabProps {
-  symbols: LabSymbol[];
   themes: LabThemeOption[];
   /** `none` zeichnet nur eine Hintergrundfläche — keine Kachelanfrage, kein fremder Dienst. */
   basemap?: BasemapId;
+}
+
+interface LabStageProps extends MapLibreLabProps {
+  symbols: LabSymbol[];
 }
 
 /** Nicht tödliche Kartenmeldung (einzelne Kacheln) — die Karte bleibt bedienbar. */
@@ -79,11 +124,16 @@ function releaseImage(
   applied.current = next;
 }
 
-export default function MapLibreLab({
-  symbols,
-  themes,
-  basemap = 'openfreemap',
-}: MapLibreLabProps) {
+/**
+ * Die Karte selbst, sobald die Zeichen da sind.
+ *
+ * Getrennt von der Hülle darunter, und zwar nicht der Ordnung halber: mehrere Effekte hier laufen
+ * genau einmal beim Mounten — der Leser von `?symbol=<slug>` und das Anlegen der Karte. Liefe
+ * dieser Teil schon während des Ladens mit einer leeren Zeichenliste, meldete der erste Effekt
+ * jeden verlinkten Slug als unbekannt („Dieses Zeichen gibt es hier nicht"), obwohl die Liste nur
+ * noch nicht da ist. Als eigene Komponente wird er erst gemountet, wenn die Zeichen stehen.
+ */
+function LabStage({ symbols, themes, basemap = 'openfreemap' }: LabStageProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const glRef = useRef<typeof import('maplibre-gl') | null>(null);
@@ -597,12 +647,7 @@ export default function MapLibreLab({
         )}
       </p>
 
-      <style>{`
-        .ez-lab {
-          display: grid;
-          gap: var(--ez-space-4);
-          margin-block: var(--ez-space-6);
-        }
+      <style>{`${SHELL_STYLES}
         .ez-lab__controls {
           display: flex;
           flex-wrap: wrap;
@@ -703,17 +748,6 @@ export default function MapLibreLab({
           gap: var(--ez-space-2);
           margin: 0;
         }
-        .ez-lab__hint {
-          padding: var(--ez-space-4);
-          border: 1px dashed var(--sl-color-gray-4);
-          border-radius: var(--ez-radius);
-          font-family: var(--ez-font-mono);
-          font-size: var(--sl-text-2xs);
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          color: var(--sl-color-gray-3);
-          text-align: center;
-        }
         .ez-lab__side {
           display: flex;
           flex-direction: column;
@@ -764,6 +798,54 @@ export default function MapLibreLab({
           color: var(--sl-color-gray-3);
         }
       `}</style>
+    </section>
+  );
+}
+
+/**
+ * Die Insel, wie die Seite sie einbindet: holt die Zeichen und zeigt drei Zustände.
+ *
+ * **`data-pagefind-ignore`, und das ist eine bewusste Entscheidung.** `client:visible` rendert die
+ * Insel serverseitig vor; bisher standen damit alle 256 Zeichentitel als `<option>` im HTML und
+ * in Starlights Volltextsuche. Mit dem Laufzeitabruf steht dort nur noch der Ladezustand — kein
+ * Verlust, sondern die Linie, die die Website ohnehin fährt: `SymbolPreview.astro`,
+ * `CodeTabs.astro` und die Schlüssellisten in `CoverageAxes.astro` nehmen Massenlisten aus
+ * demselben Grund vom Index aus. Jedes dieser Zeichen hat eine eigene Seite unter `/zeichen/…`,
+ * auf der sein Titel in der Überschrift steht; eine Suche danach soll dorthin führen und nicht in
+ * ein Auswahlfeld der Karte. Der Fließtext dieser Seite bleibt indexiert — er kommt zur Bauzeit
+ * aus `loadSnapshot()` und steht unverändert im HTML.
+ *
+ * Ohne das Attribut käme statt der Titel der Satz „Die Zeichen des Katalogs werden geladen …" in
+ * den Index — ein Treffer, der nichts aussagt. Es steht genau hier und nicht an `LabStage`, weil
+ * beim serverseitigen Vorrendern kein Effekt läuft: der Zustand ist dort immer `loading`, und nur
+ * dieser Rahmen landet im HTML, das Pagefind liest.
+ */
+export default function MapLibreLab({ themes, basemap = 'openfreemap' }: MapLibreLabProps) {
+  const state = useSnapshot(labSymbolsOf);
+
+  if (state.status === 'ready') {
+    return <LabStage symbols={state.data} themes={themes} basemap={basemap} />;
+  }
+
+  return (
+    <section className="ez-lab" aria-label="Karte" data-pagefind-ignore>
+      {state.status === 'loading' ? (
+        <p className="ez-lab__hint" role="status">
+          Die Zeichen des Katalogs werden geladen …
+        </p>
+      ) : (
+        <div className="ez-note" role="alert">
+          <span className="ez-note__title">Karte nicht verfügbar</span>
+          <p>{state.message}</p>
+          <p>
+            Ohne die Zeichen des Katalogs gäbe es hier nichts auf die Karte zu legen, deshalb wird
+            sie gar nicht erst angelegt — es wird auch kein Kartenuntergrund geladen. Ein Neuladen
+            der Seite versucht es erneut; bleibt es dabei, ist der Katalog-Snapshot auf dem Server
+            nicht erreichbar.
+          </p>
+        </div>
+      )}
+      <style>{SHELL_STYLES}</style>
     </section>
   );
 }

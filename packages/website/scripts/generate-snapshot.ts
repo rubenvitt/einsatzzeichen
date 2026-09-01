@@ -5,13 +5,18 @@ import { buildSnapshot } from '../src/lib/snapshot-build.js';
 
 const OUTPUT = resolve(
   dirname(fileURLToPath(import.meta.url)),
-  '../src/generated/catalog-snapshot.json',
+  '../public/catalog-snapshot.json',
 );
 
 /**
  * Erzeugt den Katalog-Snapshot vor `astro dev` und `astro build` (Spec §5.3). Kein stiller
  * Rückfall: jeder Fehler aus `buildSnapshot()` — fehlender Katalogeintrag, doppelter Slug,
  * unableitbares Kapitel — beendet den Lauf mit Exit 1 und Klartext (Spec §7).
+ *
+ * Ziel ist `public/`, nicht mehr `src/generated/` (LFH-500): von dort liefert Astro die Datei
+ * unverändert als `/catalog-snapshot.json` aus. Damit ist derselbe Snapshot zweierlei — die
+ * Bauzeit-Quelle für `loadSnapshot()` (Node) und der Laufzeit-Endpunkt für `fetchSnapshot()`
+ * (Browser). Eine Datei, keine zwei Stände, die auseinanderlaufen könnten.
  */
 function main(): void {
   const snapshot = buildSnapshot();

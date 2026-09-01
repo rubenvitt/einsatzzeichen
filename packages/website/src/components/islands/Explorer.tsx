@@ -1,33 +1,59 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Einsatzzeichen } from '@einsatzzeichen/react';
 import {
-  facetOptions,
-  reviewStatusOptions,
   sanitizeFacets,
   searchSymbols,
-  type ExplorerFacetField,
   type ExplorerFilters,
   type FacetGroup,
   type SymbolFacets,
 } from '../../lib/explorer-search.js';
-import { loadSnapshot, type ReviewSummary, type SymbolSummary } from '../../lib/snapshot.js';
+import {
+  explorerFacetGroups,
+  validFacetValues,
+  type ExplorerFacetGroups,
+} from '../../lib/explorer-facets.js';
+import { useSnapshot, type SnapshotSelect } from '../../lib/snapshot-island.js';
+import type { ReviewSummary, SymbolSummary } from '../../lib/snapshot.js';
 import StatusPair, { statusMark } from '../StatusPair.js';
 
 /**
- * Der Symbol Explorer (Spec §5.4). Importiert den Katalog-Snapshot direkt (nicht den
- * Katalog-Index — der zieht `node:url`, Spec §5.2) über `loadSnapshot()`, das genau diesen
- * statischen JSON-Import kapselt und zusätzlich prüft, dass der Snapshot vollständig ist.
+ * Der Symbol Explorer (Spec §5.4).
+ *
+ * **Woher die Daten kommen (LFH-500).** Der Snapshot wird zur Laufzeit per `fetch` geholt
+ * (`lib/snapshot-client.ts`), nicht mehr auf Modulebene importiert. Der frühere Aufruf von
+ * `loadSnapshot()` zog dessen `import.meta.glob` und damit 1,3 MB JSON als eigenes Bündelstück in
+ * jede Seite, die diese Insel mit `client:load` mountet. Aus `lib/snapshot.js` kommen hier deshalb
+ * ausschließlich Typen (`import type`) — ein Wertimport von dort brächte die 1,3 MB zurück.
+ * Der Katalog-Index bleibt ohnehin außen vor: der zöge `node:url` (Spec §5.2).
  *
  * Facetten-Werte kommen aus dem Snapshot selbst (nicht aus `builder.vocabulary`, das die
  * *erlaubten* Werte für den Builder führt): der Explorer soll nur zeigen, was tatsächlich
  * vorkommt, mit der echten Anzahl daneben. Zähl- und Validierungslogik (`facetOptions`,
- * `reviewStatusOptions`, `sanitizeFacets`) liegt bewusst in `lib/explorer-search.ts`: dort ist
- * sie ohne DOM/React testbar (Review 1: „Alle"-Zähler; Review 2: URL-Facetten validieren).
+ * `reviewStatusOptions`, `sanitizeFacets` in `lib/explorer-search.ts`) und die Ableitung der
+ * sechs Gruppen (`lib/explorer-facets.ts`) liegen bewusst außerhalb dieser Datei: dort sind sie
+ * ohne DOM/React testbar (Review 1: „Alle"-Zähler; Review 2: URL-Facetten validieren).
  */
 
-const snapshot = loadSnapshot();
-const ALL_SYMBOLS: SymbolSummary[] = snapshot.symbols;
-const ORGANIZATION_LABELS = new Map(snapshot.builder.organization.map((entry) => [entry.id, entry.label]));
+/** Was der Explorer aus dem Snapshot braucht — mehr als das behält er nicht. */
+interface ExplorerData {
+  symbols: SymbolSummary[];
+  groups: ExplorerFacetGroups;
+}
+
+/**
+ * Auf Modulebene und nicht im Renderkörper: `useSnapshot` hat die Auswahl in den Abhängigkeiten
+ * seines Effekts, eine bei jedem Render neu erzeugte Funktion löste also einen neuen Abruf aus.
+ * Zugleich ist das die Stelle, an der die Facettengruppen **einmal** entstehen — genau das, was
+ * bis LFH-500 der Modulebenen-Ausdruck über dem synchron geladenen Snapshot leistete.
+ */
+const selectExplorerData: SnapshotSelect<ExplorerData> = (snapshot) => ({
+  symbols: snapshot.symbols,
+  groups: explorerFacetGroups(
+    snapshot.symbols,
+    snapshot.builder,
+    (axis, status) => statusMark(axis, { status }).shortLabel,
+  ),
+});
 
 const EMPTY_FILTERS: ExplorerFilters = {
   q: '',
@@ -104,45 +130,20 @@ function FacetField({ id, label, value, group, onChange }: FacetFieldProps) {
   );
 }
 
-export default function Explorer() {
+/**
+ * Der Explorer mit vorliegendem Snapshot. Als eigene Komponente unterhalb des Ladezustands, damit
+ * kein Hook hier mit einem „vielleicht noch nicht da"-Fall rechnen muss: sie mountet erst, wenn
+ * der Abruf durch ist, und der Snapshot wechselt danach nicht mehr.
+ */
+function ExplorerView({ symbols: allSymbols, groups }: ExplorerData) {
   const [filters, setFilters] = useState<ExplorerFilters>(EMPTY_FILTERS);
 
-  const organizationGroup = useMemo(
-    () => facetOptions(ALL_SYMBOLS, (s) => s.spec.organization, (id) => ORGANIZATION_LABELS.get(id) ?? id),
-    [],
-  );
-  const chapterGroup = useMemo(() => facetOptions(ALL_SYMBOLS, (s) => s.chapter, (id) => id), []);
-  const sourceGroup = useMemo(() => {
-    const citations = new Map(ALL_SYMBOLS.map((s) => [s.source.id, s.source.citation]));
-    return facetOptions(ALL_SYMBOLS, (s) => s.source.id, (id) => citations.get(id) ?? id);
-  }, []);
-  const profileGroup = useMemo(() => facetOptions(ALL_SYMBOLS, (s) => s.profile, (id) => id), []);
-  const technicalGroup = useMemo(
-    () => reviewStatusOptions(ALL_SYMBOLS, 'technical', (status) => statusMark('technical', { status }).shortLabel),
-    [],
-  );
-  const domainGroup = useMemo(
-    () => reviewStatusOptions(ALL_SYMBOLS, 'domain', (status) => statusMark('domain', { status }).shortLabel),
-    [],
-  );
+  const validValues = useMemo(() => validFacetValues(groups), [groups]);
 
-  const validValues: Record<ExplorerFacetField, readonly string[]> = useMemo(
-    () => ({
-      org: organizationGroup.options.map((o) => o.value),
-      kapitel: chapterGroup.options.map((o) => o.value),
-      quelle: sourceGroup.options.map((o) => o.value),
-      profil: profileGroup.options.map((o) => o.value),
-      technisch: technicalGroup.options.map((o) => o.value),
-      fachlich: domainGroup.options.map((o) => o.value),
-    }),
-    [organizationGroup, chapterGroup, sourceGroup, profileGroup, technicalGroup, domainGroup],
-  );
-
-  // Erst nach der Hydration die URL lesen: SSR und der erste Client-Render zeigen dieselbe,
-  // ungefilterte Liste — sonst weicht das serverseitig gerenderte Markup vom ersten
-  // Client-Render ab, sobald die URL Parameter trägt. Werte, die keine Auswahlbox anbietet
-  // (veralteter oder von Hand geänderter Link, Review 2), werden dabei verworfen statt einen
-  // unsichtbaren Filter zu setzen.
+  // Die URL erst beim Mounten lesen: SSR und der erste Client-Render zeigen den Ladezustand, und
+  // sobald die Liste steht, sind die gültigen Facettenwerte bekannt. Werte, die keine Auswahlbox
+  // anbietet (veralteter oder von Hand geänderter Link, Review 2), werden dabei verworfen statt
+  // einen unsichtbaren Filter zu setzen.
   useEffect(() => {
     setFilters(sanitizeFacets(filtersFromLocation(), validValues));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -155,7 +156,10 @@ export default function Explorer() {
     window.history.replaceState(null, '', url);
   }, [filters]);
 
-  const results = useMemo(() => searchSymbols(ALL_SYMBOLS, filters.q, toFacets(filters)), [filters]);
+  const results = useMemo(
+    () => searchSymbols(allSymbols, filters.q, toFacets(filters)),
+    [allSymbols, filters],
+  );
 
   const hasActiveFilter =
     filters.q !== '' ||
@@ -187,48 +191,48 @@ export default function Explorer() {
           id="ez-explorer-org"
           label="Organisation"
           value={filters.org}
-          group={organizationGroup}
+          group={groups.organization}
           onChange={setField('org')}
         />
         <FacetField
           id="ez-explorer-kapitel"
           label="Kapitel/Anhang"
           value={filters.kapitel}
-          group={chapterGroup}
+          group={groups.chapter}
           onChange={setField('kapitel')}
         />
         <FacetField
           id="ez-explorer-quelle"
           label="Quelle"
           value={filters.quelle}
-          group={sourceGroup}
+          group={groups.source}
           onChange={setField('quelle')}
         />
         <FacetField
           id="ez-explorer-profil"
           label="Profil"
           value={filters.profil}
-          group={profileGroup}
+          group={groups.profile}
           onChange={setField('profil')}
         />
         <FacetField
           id="ez-explorer-technisch"
           label="Technisch"
           value={filters.technisch}
-          group={technicalGroup}
+          group={groups.technical}
           onChange={setField('technisch')}
         />
         <FacetField
           id="ez-explorer-fachlich"
           label="Fachlich"
           value={filters.fachlich}
-          group={domainGroup}
+          group={groups.domain}
           onChange={setField('fachlich')}
         />
       </div>
 
       <p className="ez-explorer__count">
-        {results.length} von {ALL_SYMBOLS.length} Zeichen
+        {results.length} von {allSymbols.length} Zeichen
       </p>
 
       {results.length === 0 ? (
@@ -311,4 +315,90 @@ export default function Explorer() {
       `}</style>
     </div>
   );
+}
+
+/* --- Laden, Fehler, geladen ---------------------------------------------------------------- */
+
+/**
+ * Die Stile der beiden Vorzustände stehen hier und nicht im `<style>` von `ExplorerView`: dessen
+ * Block wird gar nicht gerendert, solange die Liste noch nicht steht.
+ */
+function GateStyle() {
+  return (
+    <style>{`
+      .ez-explorer-gate__loading {
+        margin-block: var(--ez-space-6);
+        font-family: var(--ez-font-mono);
+        font-size: var(--sl-text-sm);
+        color: var(--sl-color-gray-2);
+      }
+      .ez-explorer-gate__reason {
+        font-family: var(--ez-font-mono);
+        font-size: var(--sl-text-2xs);
+        color: var(--sl-color-white);
+        overflow-wrap: anywhere;
+      }
+      /* .ez-action ist in theme.css für Verweise gebaut; als Knopf braucht es die Grundwerte. */
+      button.ez-explorer-gate__retry {
+        font: inherit;
+        background: transparent;
+        color: var(--sl-color-white);
+        cursor: pointer;
+        text-align: start;
+      }
+    `}</style>
+  );
+}
+
+/**
+ * Die Insel holt den Snapshot zur Laufzeit (LFH-500) und hat damit drei sichtbare Zustände statt
+ * einem: laden, gescheitert, geladen. Abruf, Abbruch und Zustandsübergang stehen in
+ * `lib/snapshot-island.ts` und sind dort geprüft; hier bleibt nur, wie die drei Zustände aussehen.
+ *
+ * Der Fehlerzustand nennt den Grund wörtlich — `fetch` unterscheidet einen Netzausfall, eine 404
+ * nach halb ausgerolltem Deploy und ein verfälschtes Dokument, und wer die leere Seite vor sich
+ * hat, kann mit „Fehler" nichts anfangen. Er lässt die Insel auch nicht stumm zurück: der Knopf
+ * lädt die Seite neu, und weil `snapshot-client.ts` sich einen Fehlschlag ausdrücklich nicht
+ * merkt, ist das ein echter zweiter Versuch.
+ */
+export default function Explorer() {
+  const state = useSnapshot(selectExplorerData);
+
+  if (state.status === 'failed') {
+    return (
+      <div className="ez-explorer-gate">
+        <div className="ez-note" role="alert">
+          <p className="ez-note__title">Der Explorer hat keine Zeichen bekommen</p>
+          <p>
+            Die Liste bleibt leer, und zwar aus diesem Grund — nicht, weil der Katalog leer wäre:
+          </p>
+          <p className="ez-explorer-gate__reason">{state.message}</p>
+          <p>
+            <button
+              type="button"
+              className="ez-action ez-explorer-gate__retry"
+              onClick={() => window.location.reload()}
+            >
+              <strong>Erneut versuchen</strong>
+              <span>Seite neu laden</span>
+            </button>
+          </p>
+        </div>
+        <GateStyle />
+      </div>
+    );
+  }
+
+  if (state.status === 'loading') {
+    return (
+      <div className="ez-explorer-gate">
+        <p className="ez-explorer-gate__loading" role="status">
+          Der Katalog wird geladen …
+        </p>
+        <GateStyle />
+      </div>
+    );
+  }
+
+  return <ExplorerView symbols={state.data.symbols} groups={state.data.groups} />;
 }

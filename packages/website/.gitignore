@@ -1,3 +1,5 @@
 dist/
 .astro/
 src/generated/
+# Erzeugt von `pnpm generate` (LFH-500): Bauzeit-Quelle und ausgelieferter Endpunkt zugleich.
+public/catalog-snapshot.json
