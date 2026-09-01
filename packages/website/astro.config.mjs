@@ -26,7 +26,7 @@ const workspaceAliases = [
 ];
 
 export default defineConfig({
-  site: 'https://einsatzzeichen.invalid', // bewusst kein echter Host: kein Deploy (LFH-432)
+  site: 'https://einsatzzeichen.rubeen.dev', // echter Host: Canonical, Sitemap und OG (LFH-501)
   // Die Dokumentation ist unter `/docs/…` gezogen; die Wurzel gehört der Landingpage. Alte
   // Pfade bleiben als Weiterleitung erreichbar, damit gemerkte Links nicht ins Leere führen.
   redirects: {
