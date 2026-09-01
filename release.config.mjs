@@ -6,8 +6,11 @@
  *     (feat → minor, fix/perf/refactor → patch, BREAKING CHANGE/`!` → major).
  *  2. semantic-release-claude-changelog erzeugt deutschsprachige Release Notes.
  *  3. changelog schreibt CHANGELOG.md fort.
- *  4. exec setzt die Version in alle package.json und publiziert die Pakete
- *     per `pnpm -r publish` in die npm-Org @einsatzzeichen.
+ *  4. exec setzt die Version in alle package.json und publiziert die Pakete per
+ *     `scripts/release/publish.mjs` in die npm-Org @einsatzzeichen. Das Skript vergleicht mit
+ *     dem letzten Release-Tag und überspringt npm ganz, wenn sich kein publizierbares Paket
+ *     bewegt hat — ein reines Website-, Doku- oder CI-Release bekommt Tag, CHANGELOG und
+ *     GitHub-Release, schiebt aber keine unveränderten Pakete nach.
  *  5. git committet CHANGELOG.md und die package.json zurück auf main.
  *  6. github legt das GitHub-Release an und kommentiert erledigte Issues/PRs.
  *
@@ -75,7 +78,7 @@ Starte direkt mit den Release Notes, gruppiert wie oben beschrieben, mit ## ...`
       '@semantic-release/exec',
       {
         prepareCmd: 'node scripts/release/set-version.mjs ${nextRelease.version}',
-        publishCmd: 'pnpm -r publish --access public --no-git-checks --provenance',
+        publishCmd: 'node scripts/release/publish.mjs ${lastRelease.gitTag}',
       },
     ],
     [
