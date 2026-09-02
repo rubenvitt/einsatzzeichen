@@ -1,3 +1,39 @@
+## Version 1.1.0
+
+### Website
+
+#### Interaktiver Baukasten
+
+- **Feldhinweise direkt am Formular**: Der Baukasten zeigt jetzt bei jedem Feld an, warum ein Wert nicht kombiniert werden kann – nicht mehr nur in der Regelliste unter der Vorschau. Hinweise erscheinen ohne das Feld zu sperren und sind barrierefrei mit Screenreadern nutzbar.
+- **Performantere Kandidatenprüfung**: Die Überprüfung aller 247 möglichen Werte läuft nicht mehr bei jedem Tastendruck im Beschriftungsfeld, sondern verzögert – für flüssigeres Tippen ohne Ruckeln.
+
+#### Zeichenkatalog-Seite
+
+- **15% kleinere Seitengröße**: Die 256 Miniaturansichten auf `/zeichen/` werden ohne redundante Metadaten gerendert (Titel und Beschreibungen, die ohnehin nicht vorgelesen wurden). Die Seite ist jetzt 75 KB kleiner (gzip) und hat 512 DOM-Knoten weniger – bei identischer Darstellung.
+
+#### Technische Infrastruktur
+
+- **Stabilere Entwicklungsumgebung**: Snapshot-Generierung nutzt atomare Dateischreiboperationen, sodass parallele Build-Prozesse laufende Tests nicht mehr stören können.
+- **Aufgeräumte Code-Organisation**: Der Snapshot-Build wurde von einer 554-Zeilen-Datei in zehn fokussierte Module aufgeteilt – wartbarer und dokumentierter.
+
+### Core & Katalog
+
+- **Präzisere Fehlermeldungen bei Vermessungslücken**: Nicht vermessene Symbol-Kombinationen werfen jetzt einen spezifischen `NotMeasuredError` statt allgemeiner Fehlermeldungen. Die Website kann dadurch besser unterscheiden, ob ein Wert generell nicht existiert oder nur für die aktuelle Kombination nicht verfügbar ist, und zeigt passendere Tooltips im Baukasten.
+
+### Qualitätssicherung
+
+- **Dokumentiertes adversariales Review**: Alle Änderungen wurden durch ein strukturiertes Review-Verfahren geprüft (6 Richtungen, 3 Skeptiker pro Befund). 8 potenzielle Probleme wurden identifiziert, 6 bestätigt und behoben, 2 widerlegt. Die 3 bewusst offenen Punkte sind dokumentiert.
+
+### Abhängigkeiten
+
+- TypeScript-Typen für Node.js aktualisiert (v22 → v26)
+- tsx aktualisiert (v4.23.5 → v4.23.12)
+- Vitest aktualisiert (v3.2.7 → v4.1.11)
+
+### Interne Verbesserungen
+
+- **Effizientere Release-Pipeline**: NPM-Pakete werden nur noch publiziert, wenn sich tatsächlich Package-Code geändert hat – nicht bei reinen Website-Updates.
+
 ## Website
 
 ### Performance-Verbesserungen

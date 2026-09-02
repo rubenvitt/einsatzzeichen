@@ -1,6 +1,6 @@
 {
   "name": "@einsatzzeichen/catalog",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "type": "module",
   "description": "Kuratierter Zeichenkatalog samt Schrift-Assets (Arimo, OFL) für Einsatzzeichen",
   "license": "MIT",
