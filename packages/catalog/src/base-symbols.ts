@@ -8,6 +8,7 @@ import {
   type BodyVariantId,
   type SymbolKind,
 } from '@einsatzzeichen/schema';
+import { NotMeasuredError } from '@einsatzzeichen/core';
 
 /** Umriss ohne Füllung. Organisationsfarben setzt der Kompositionsmotor. */
 const OUTLINE: Style = {
@@ -891,12 +892,15 @@ const SECTIONS: Partial<Record<SymbolKind, { section: string; asset: string }>> 
 export function baseDrawing(kind: SymbolKind, variant?: BodyVariantId): Drawing {
   const body = variant === undefined ? BODIES[kind] : VARIANT_BODIES[kind]?.[variant];
   if (!body) {
-    throw new Error(
-      variant === undefined
-        ? `Kein Grundzeichen für "${kind}" im Katalog.`
-        : `Für "${kind}" ist keine Körpervariante "${variant}" belegt. Der Katalog fällt nicht ` +
-          'auf die Zeichnung aus Kapitel 1 zurück: die wäre eine andere Geometrie, und die ' +
-          'Verwechslung bliebe unsichtbar.',
+    // Zwei Fälle, zwei Fehlerarten. Eine fehlende Grundart ist eine Lücke im Katalog selbst und
+    // damit ein Programmfehler; eine fehlende Variante ist eine Aussage über die Referenz und
+    // gehört als `NotMeasuredError` zu den Lücken, die ein Aufrufer als solche behandeln darf.
+    if (variant === undefined) throw new Error(`Kein Grundzeichen für "${kind}" im Katalog.`);
+    throw new NotMeasuredError(
+      `Für "${kind}" ist keine Körpervariante "${variant}" belegt. Der Katalog fällt nicht ` +
+        'auf die Zeichnung aus Kapitel 1 zurück: die wäre eine andere Geometrie, und die ' +
+        'Verwechslung bliebe unsichtbar.',
+      'combination',
     );
   }
   const title = TITLES[kind];

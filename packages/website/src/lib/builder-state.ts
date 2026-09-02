@@ -1,5 +1,10 @@
 import { composeFromCatalog } from '@einsatzzeichen/catalog/src/recipes.js';
-import { CompositionError, type ValidationIssue } from '@einsatzzeichen/core';
+import {
+  CompositionError,
+  NotMeasuredError,
+  type NotMeasuredScope,
+  type ValidationIssue,
+} from '@einsatzzeichen/core';
 import type { Drawing, SymbolSpec } from '@einsatzzeichen/schema';
 import { explainIssue, type ExplainedIssue } from './rule-explanations.js';
 
@@ -31,18 +36,23 @@ export type SpecEvaluation =
   | { ok: false; issues: ExplainedIssue[]; unexplained: ValidationIssue[] };
 
 /**
- * Ein Feld setzen oder entfernen. Leerer Text, leere Liste und `undefined` bedeuten „nicht
- * gesetzt": ein `designation: ''` wäre eine leere Beschriftung statt gar keiner, und ein
- * `bodyMarks: []` eine leere Marken-Liste statt keiner — beides sagt etwas anderes aus als das
- * Weglassen des Feldes und ergäbe eine Spec, die so nie in einem Rezept steht.
+ * Leerer Text, leere Liste und `undefined` bedeuten „nicht gesetzt": ein `designation: ''` wäre
+ * eine leere Beschriftung statt gar keiner, und ein `bodyMarks: []` eine leere Marken-Liste statt
+ * keiner — beides sagt etwas anderes aus als das Weglassen des Feldes und ergäbe eine Spec, die
+ * so nie in einem Rezept steht.
+ *
+ * Steht einmal hier, weil zwei Stellen dieselbe Grenze ziehen müssen: `reduceSpec` entfernt
+ * danach ein Feld, `issuesByField` verschweigt danach einen Hinweis. Liefen sie auseinander,
+ * hinge ein Hinweis an einem Feld, das die Spec gar nicht mehr trägt.
  */
+function isUnset(value: unknown): boolean {
+  return value === undefined || value === '' || (Array.isArray(value) && value.length === 0);
+}
+
+/** Ein Feld setzen oder entfernen; was „nicht gesetzt" heißt, steht bei `isUnset`. */
 export function reduceSpec(spec: SymbolSpec, action: SpecAction): SymbolSpec {
   const next: Record<string, unknown> = { ...spec };
-  const empty =
-    action.value === undefined ||
-    action.value === '' ||
-    (Array.isArray(action.value) && action.value.length === 0);
-  if (empty) delete next[action.field];
+  if (isUnset(action.value)) delete next[action.field];
   else next[action.field] = action.value;
   // Über `unknown`, und das ist keine Schlamperei: der Wert kommt aus einem Formularfeld und ist
   // hier ehrlich `unknown`; ob er zur Achse passt, entscheidet `compose()` und niemand sonst.
@@ -98,8 +108,13 @@ export const LIST_SPEC_FIELDS: readonly (keyof SymbolSpec)[] = ['capabilities', 
 export type BlockedValue =
   /** Eine Regel hat abgelehnt; `explanation` ist die Erklärung ihrer ersten Meldung. */
   | { because: 'rule'; explanation: string }
-  /** Der Katalog führt für diese Kombination keine vermessene Fassung. */
-  | { because: 'not-measured'; detail: string };
+  /**
+   * Der Katalog führt keine vermessene Fassung. `scope` kommt unverändert aus der Wurfstelle und
+   * wird hier nicht erraten: `'combination'` heißt, eine andere Art oder Variante trägt den Wert
+   * sehr wohl; `'value'` heißt, ihn trägt keine — der Rat „wähle eine andere Grundzeichenart"
+   * wäre dann falsch.
+   */
+  | { because: 'not-measured'; detail: string; scope: NotMeasuredScope };
 
 export interface AllowedValue {
   value: string;
@@ -108,31 +123,6 @@ export interface AllowedValue {
   issues: ExplainedIssue[];
   /** Warum der Wert gerade nicht geht. Fehlt genau dann, wenn `ok` gilt. */
   blocked?: BlockedValue;
-}
-
-/**
- * Erkennt eine Vermessungslücke des Katalogs an ihrem Wortlaut.
- *
- * **Eine Textprüfung, und das ist die zweite Wahl.** Die erste wäre eine eigene Fehlerklasse —
- * `pictogram-gate.ts` führt mit `BodyNotMeasuredError` genau eine und begründet sie dort mit
- * demselben Argument: „damit ein Programmierfehler in `checkClipping` nicht als harmloser
- * Piktogramm-Befund erscheint". Für die Abbrüche aus `body-marks.ts`, `vehicle-categories.ts` und
- * `base-symbols.ts` gibt es keine solche Klasse; sie werfen ein gewöhnliches `Error`. Sie hier
- * anhand ihres Textes zu erkennen, ist deshalb ein Behelf. Eine Fehlerklasse im Katalog wäre die
- * richtige Lösung; sie gehört dorthin und nicht in die Website.
- *
- * Der Wortlaut ist an allen 15 verschiedenen Abbruchmeldungen abgelesen, die sich über die Felder
- * des Baukastens auslösen lassen (Erhebung am 29.08.2026 über alle Achsen × alle Kandidaten ×
- * 34 Ausgangsspecs): jede nennt entweder „vermessen" oder „nicht belegt".
- *
- * Und die Prüfung ist eng, nicht weit: ein `TypeError`, `RangeError` oder sonst eine Unterklasse
- * kommt aus einem Programmfehler, nie aus einer Aussage über die Referenz. Sie fällt hier durch
- * und fliegt weiter, damit sie im sichtbaren Fehlerblock landet (Spec §7), statt als Datenlücke
- * ausgegeben zu werden.
- */
-function isMeasurementGap(error: unknown): error is Error {
-  if (!(error instanceof Error) || error.name !== 'Error') return false;
-  return /vermessen|nicht belegt/u.test(error.message);
 }
 
 /**
@@ -199,7 +189,16 @@ export function allowedValues(
         blocked: { because: 'rule', explanation },
       };
     } catch (error) {
-      if (!isMeasurementGap(error)) throw error;
+      // Erkannt an der Klasse, nicht mehr am Wortlaut. Der Behelf davor prüfte
+      // `/vermessen|nicht belegt/` auf einem gewöhnlichen `Error`: er hing an einer Formulierung,
+      // die jede neue Wurfstelle hätte treffen müssen, und ließ die Abbrüche aus
+      // `base-symbols.ts` von Anfang an durchfallen, weil deren Text keines der beiden Wörter
+      // trägt. `NotMeasuredError` sagt dasselbe zugesichert (LFH-502).
+      //
+      // Eng geblieben ist die Prüfung trotzdem, und das ist der Vertrag von oben: ein `TypeError`
+      // kommt aus einem Programmfehler, nie aus einer Aussage über die Referenz, und fliegt
+      // deshalb weiter.
+      if (!(error instanceof NotMeasuredError)) throw error;
       // Die Originalmeldung wandert nach `detail` und **nicht** in den Tooltip: sie nennt
       // Katalogkennungen (`formation/normal/…`), und das ist bei 39 von 64 Körpermarken die
       // Regel, nicht die Ausnahme. Den lesbaren Satz baut die Insel aus den Bezeichnungen.
@@ -207,10 +206,69 @@ export function allowedValues(
         value,
         ok: false,
         issues: [],
-        blocked: { because: 'not-measured', detail: error.message },
+        blocked: { because: 'not-measured', detail: error.message, scope: error.scope },
       };
     }
   });
+}
+
+/* --- Wo eine Meldung ans Formular gehört -------------------------------------------------- */
+
+/**
+ * Ordnet die Meldungen der aktuellen Spec den Feldern zu, an denen sie am Formular sichtbar
+ * werden sollen — Feldname → Meldungen, in der Reihenfolge der Eingabeliste.
+ *
+ * **Das Gegenstück zur Sperre, nicht ihre Erweiterung.** `allowedValues()` beantwortet „taugt
+ * dieser *Kandidat*?" und sperrt den gesetzten Wert bewusst nie (siehe dort). Hier geht es um die
+ * andere Frage: „ist der *gesetzte* Wert die Stelle, über die eine Regel spricht?" Die Antwort
+ * **weist hin und sperrt nicht** — ungültig ist die Kombination und nicht das Feld allein, und wer
+ * die Auswahl sperrte, machte die eigene Eingabe unbedienbar.
+ *
+ * **Die Zuordnung ist kuratiert, nicht geraten.** Sie kommt aus `ExplainedIssue.field`, also aus
+ * der Tabelle in `rule-explanations.ts` („das Feld, das die Leserin ändern müsste, damit die Regel
+ * nicht mehr greift"), und die ist in beide Richtungen gegattert. Aus der Rohmeldung ließe sie
+ * sich nicht bauen: `ValidationIssue` trägt nur `rule` und `message` und keinen Pfad — jeder
+ * Textvergleich auf der Meldung wäre Raten.
+ *
+ * **Drei gemessene Grenzen (Stand 01.09.2026), damit später niemand einen Fehler meldet, wo
+ * keiner ist.** (1) 45 der 78 Erklärungen zeigen auf `labels`; dafür hat der Baukasten kein Formularfeld, er
+ * führt als Beschriftung nur `designation`. Diese Mehrheit bleibt ohne Anker, und das ist ehrlicher
+ * als eine erfundene Zuordnung. (2) `kind`, `capabilities` und `bodyMarks` tragen **null**
+ * Erklärungen: sie scheitern nicht über Regeln, sondern über Vermessungslücken, und die kommen als
+ * Abbruch (`state: 'crash'`) und nicht als `issues` an. An diesen drei Feldern kann hier nie ein
+ * Hinweis erscheinen. (3) Wo eine Regel zwei Felder gegeneinander stellt
+ * (`technical-fill-organization-conflict`), zeigt der Hinweis nur an dem Feld, auf das die
+ * Erklärung zeigt — an `technicalFill`, nicht an `organization`. Der Wortlaut am Feld darf deshalb
+ * nicht „dieser Wert ist falsch" sagen, sondern muss auf die vollständige Regelliste verweisen.
+ *
+ * **Übersprungen wird zweierlei.** `'composition'`, weil diese Regeln per Definition kein
+ * einzelnes Feld benennen. Und jedes Feld, das die Spec **nicht gesetzt** hat — auch dann, wenn
+ * eine Regel darauf zeigt. Das trifft mehr als einen Randfall: am 01.09.2026 über alle
+ * Grundzeichenarten × acht Einzelachsen aus `buildSnapshot().builder` durchgerechnet kommen 134
+ * Kombinationen vor, in denen eine Meldung auf ein leeres Feld zeigt — alle 134 auf
+ * `organization`, und sie verteilen sich auf drei Regeln:
+ * `reduced-house-requires-hilfsorganisation` (67), `circle-12-requires-hilfsorganisation` (66)
+ * und `circle-12-requires-organization` (1). Wer den Hinweis später ausweitet, misst sich an den
+ * beiden ersten; die dritte ist ein Einzelfall. Sie bleiben trotzdem draußen,
+ * weil `ExplainedIssue` nicht sagt, ob die Regel eine Angabe *verlangt* oder die gesetzte
+ * *ablehnt*: an einer leeren Auswahl ließe sich nur ein geratener Satz hinschreiben. Diese Regeln
+ * stehen vollständig in der Liste unter der Vorschau, wo ihre Erklärung den Unterschied selbst
+ * ausspricht. Wer den Hinweis später auf fehlende Angaben ausweiten will, braucht dafür ein
+ * eigenes Merkmal an der Erklärung — keine zweite Lesart derselben Daten.
+ */
+export function issuesByField(
+  issues: readonly ExplainedIssue[],
+  spec: SymbolSpec,
+): Map<keyof SymbolSpec, ExplainedIssue[]> {
+  const byField = new Map<keyof SymbolSpec, ExplainedIssue[]>();
+  for (const issue of issues) {
+    if (issue.field === 'composition') continue;
+    if (isUnset(spec[issue.field])) continue;
+    const bucket = byField.get(issue.field);
+    if (bucket === undefined) byField.set(issue.field, [issue]);
+    else bucket.push(issue);
+  }
+  return byField;
 }
 
 /* --- URL-Zustand ------------------------------------------------------------------------- */

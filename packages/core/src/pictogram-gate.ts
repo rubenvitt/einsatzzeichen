@@ -17,6 +17,7 @@ import { boundsOfMm, type BoundsMm } from './bounds.js';
 import { tokenizePath, type PathCommand } from './path-commands.js';
 import { effectiveTextPx, MINIMUM_TEXT_RENDER_PX } from './render/text-policy.js';
 import { mergeStyle } from './render/style.js';
+import { NotMeasuredError } from './not-measured.js';
 
 /**
  * Ein Befund eines der drei Piktogramm-Gates. Eine gemeinsame Form statt dreier eigener: das
@@ -443,10 +444,14 @@ export function checkTextLegibility(
  * Die Körperfläche dieses Grundzeichens ist nicht vermessen. Eine eigene Klasse und keine
  * Textprüfung: `checkPictogram` fängt genau diesen Fall und reicht jeden anderen Fehler weiter,
  * damit ein Programmierfehler in `checkClipping` nicht als harmloser Piktogramm-Befund erscheint.
+ *
+ * Sie ist der engste Fall von `NotMeasuredError` und trägt deshalb dessen `scope: 'combination'`:
+ * eine andere, vermessene Körperform trägt dasselbe Piktogramm sehr wohl. Der Fang in
+ * `checkPictogram` bleibt trotzdem auf **diese** Klasse verengt — siehe dort.
  */
-export class BodyNotMeasuredError extends Error {
+export class BodyNotMeasuredError extends NotMeasuredError {
   constructor(message: string) {
-    super(message);
+    super(message, 'combination');
     this.name = 'BodyNotMeasuredError';
   }
 }

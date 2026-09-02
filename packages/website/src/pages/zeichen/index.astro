@@ -8,8 +8,11 @@
  * Zeichens sehen, ohne ihn einzeln aufrufen zu müssen.
  *
  * Die Miniaturen entstehen zur Buildzeit mit `renderSvg()` im Referenzprofil und stehen inline im
- * HTML; jedes bekommt ein eigenes `idPrefix`, weil `renderSvg()` `id="<prefix>-title"` vergibt und
- * hier 256 Zeichnungen in einem Dokument liegen.
+ * HTML — bewusst ohne Titel und Beschreibung: die Kachelfläche trägt `aria-hidden`, der Titel steht
+ * sichtbar direkt darunter, und Pagefind indexiert SVG-Inhalt nicht. 256 `<title>`/`<desc>`, die
+ * niemand liest und keine Vorlesehilfe erreicht, wären nur Gewicht. Ohne sie vergibt `renderSvg()`
+ * auch keine IDs mehr (`core/src/render/svg.ts`), deshalb braucht hier kein Zeichen ein eigenes
+ * `idPrefix`.
  */
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import { renderSvg } from '@einsatzzeichen/core';
@@ -64,10 +67,25 @@ const groups: ChapterGroup[] = [...buckets.entries()]
       rank(left.chapter) - rank(right.chapter) || collator.compare(left.chapter, right.chapter),
   );
 
+// Gemessen an `dist/zeichen/index.html` (LFH-510), damit die nächste Person nicht neu messen muss.
+// Ausgangslage: 853.303 B roh / 60.636 B gzip, davon 423.128 B in 768 eigenen SVG — 256 Miniaturen
+// (296.228 B, alle verschieden, kein Dedup möglich) und 512 Statusmarken (126.900 B). Drei Wege:
+//   - Miniaturen ohne Titel/Beschreibung: −75.266 B roh, −9.213 B gzip (−15,2 %). Kostet nichts
+//     außer dem nativen Tooltip, der denselben Titel zeigt, der sichtbar darunter steht. Umgesetzt.
+//   - Statusmarken als `<symbol>` + `<use>` (nur drei verschiedene Formen): −70.630 B roh, aber nur
+//     −1.309 B gzip (−2,2 %) — gzip teilt sich das Wörterbuch über die Wiederholungen ohnehin.
+//     Der Preis wäre eine Sprite-Umschaltung am geteilten `StatusPair`, die ohne Sprite auf der
+//     Seite stumm unsichtbare Marken erzeugt. Nicht umgesetzt: 1,3 KB sind das nicht wert.
+//   - Miniaturen als `<img src="/zeichen/<slug>.svg" loading="lazy">`: im Dokument −24.718 B gzip,
+//     die 256 Endpunktdateien wiegen einzeln gzippt aber 136.616 B. Wer die Seite durchblättert —
+//     ihr einziger Zweck — überträgt damit 172.534 statt 60.636 B, das 2,8-fache. Nicht umgesetzt.
 const thumbnails = new Map(
   snapshot.symbols.map((symbol) => [
     symbol.slug,
-    renderSvg(symbol.drawing, { size: THUMBNAIL_SIZE, idPrefix: `ez-thumb-${symbol.slug}` }),
+    renderSvg(
+      { ...symbol.drawing, title: undefined, description: undefined },
+      { size: THUMBNAIL_SIZE },
+    ),
   ]),
 );
 

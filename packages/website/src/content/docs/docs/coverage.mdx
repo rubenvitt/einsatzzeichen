@@ -12,7 +12,7 @@ import { bulkApprovalClause, bulkDomainApprovalOfRows, reviewSummaryOfRows } fro
 export const snapshot = loadSnapshot();
 export const coverage = snapshot.coverage;
 export const referenceAxis = axisByLabel(coverage.axes, 'Referenzabdeckung');
-// `of` ist bei der Achse „Regelabdeckung" bereits `ruleCoverage().length` (snapshot-build.ts,
+// `of` ist bei der Achse „Regelabdeckung" bereits `ruleCoverage().length` (snapshot-axes.ts,
 // `coverageAxes()`) — dieselbe Zahl, die ein eigenes `ruleAxisCount`-Feld liefern würde, nur ohne
 // ein zweites Feld, das mit der ersten Zahl auseinanderlaufen könnte. `axisByLabel` wirft mit
 // Klartext, statt bei einem Tippfehler im Label still `undefined` zu rendern.

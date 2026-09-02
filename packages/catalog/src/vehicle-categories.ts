@@ -1,3 +1,4 @@
+import { NotMeasuredError } from '@einsatzzeichen/core';
 import type { ChassisMark, ChassisShape, VehicleCategoryId } from '@einsatzzeichen/schema';
 
 /**
@@ -185,11 +186,16 @@ export function vehicleChassis(id: VehicleCategoryId): ChassisShape {
       // ihre Kurvenform: die Referenz zeichnet sie als Umriss eines Strichs, und aus einem
       // Umrisspaar folgt kein eindeutiger Kurvenzug. Ohne diese Form wäre ein Amphibienfahrzeug
       // von einem Kraftfahrzeug der Kategorie 1 nicht zu unterscheiden.
-      throw new Error(
+      //
+      // `scope: 'value'` und nicht `'combination'`: die Lücke hängt an keiner Grundzeichenart,
+      // keine andere Auswahl trägt diese Wellenlinie. Dieselbe Aussage führt der Katalog eine
+      // Ebene tiefer schon als Datum — `MEASURED_VEHICLE_CATEGORIES` weiter unten.
+      throw new NotMeasuredError(
         'Die Fahrwerkszone von "amphibienfahrzeug" ist nicht vollständig vermessen: die zwei ' +
           'Radplätze sind es (3,75 / 28,25 mm wie Kategorie 1), die Wellenlinie von 5.1.1.4 ist ' +
           'es nur als Strichhülle 7,4263/26,7000/24,5756/29,7998 mm. Vor der Umsetzung ihre ' +
           'Kurvenform an der Referenz vermessen — nicht nähern.',
+        'value',
       );
   }
 }

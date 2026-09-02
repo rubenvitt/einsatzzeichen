@@ -28,6 +28,7 @@ import {
 } from '@einsatzzeichen/schema';
 import { boundsOfMm, type BoundsMm } from './bounds.js';
 import { HEAD_GAP_MM, placeHead, profileFor } from './layout/profiles.js';
+import { NotMeasuredError } from './not-measured.js';
 import {
   ARIMO_CAP_HEIGHT_FRACTION,
   MINIMUM_TEXT_RENDER_PX,
@@ -461,7 +462,10 @@ function labelPrimitives(
       aboveLeftBaselineFromBodyTopMm === undefined ||
       aboveLeftAnchorFromBodyLeftMm === undefined
     ) {
-      throw new Error('Die Zone "aboveLeft" ist an dieser Körperform nicht vermessen.');
+      throw new NotMeasuredError(
+        'Die Zone "aboveLeft" ist an dieser Körperform nicht vermessen.',
+        'combination',
+      );
     }
     const metrics = labels.aboveLeftMetrics;
     const anchorXMm = bodyBoundsMm.minX +
@@ -488,10 +492,11 @@ function labelPrimitives(
       // Unerreichbar über `compose()` — `validateSpec` lehnt die Zone an jeder Körperform ohne
       // gemessene Grundlinie ab (`top-left-label-requires-measured-body`). Die Zeile hält die
       // Bedingung trotzdem am Ort ihrer Wirkung fest, wie beim Geschwisterfall `belowRight`.
-      throw new Error(
+      throw new NotMeasuredError(
         'Die Zone "topLeft" ist an dieser Körperform nicht vermessen. Eine Grundlinie führen ' +
           'nur die taktische Formation und die belegten F.2-Landfahrzeugprofile; andere ' +
           'Körperformen fallen nicht auf einen dieser Werte zurück.',
+        'combination',
       );
     }
     const topLeftMetrics = labels.topLeftMetrics;
@@ -533,7 +538,10 @@ function labelPrimitives(
   }
   if (labels.topLeftLines !== undefined) {
     if (topLeftLines === undefined) {
-      throw new Error('Die Zone "topLeftLines" ist an dieser Körperform nicht vermessen.');
+      throw new NotMeasuredError(
+        'Die Zone "topLeftLines" ist an dieser Körperform nicht vermessen.',
+        'combination',
+      );
     }
     if (labels.topLeftLines.length !== 2) {
       throw new Error('Die Zone "topLeftLines" muss exakt zwei nichtleere Zeilen enthalten.');
@@ -577,10 +585,11 @@ function labelPrimitives(
   }
   if (labels.bottomCenter !== undefined) {
     if (bottomCenterBaselineFromBodyBottomMm === undefined) {
-      throw new Error(
+      throw new NotMeasuredError(
         'Die Zone "bottomCenter" ist an dieser Körperform nicht vermessen: ihre Grundlinie ' +
           'steht für die taktische Formation (2,0 mm über der Körperunterkante, F.1.18/F.1.20) ' +
           'und den gebänderten 12-mm-Kreis (6,0 mm über der Körperunterkante, G.3.5) fest.',
+        'combination',
       );
     }
     primitives.push(
@@ -627,15 +636,19 @@ function labelPrimitives(
   }
   if (labels.belowRight !== undefined) {
     if (belowRight === undefined) {
-      throw new Error('Die Zone "belowRight" ist an dieser Körperform nicht vermessen.');
+      throw new NotMeasuredError(
+        'Die Zone "belowRight" ist an dieser Körperform nicht vermessen.',
+        'combination',
+      );
     }
     if (belowRight.ink === 'organization' && belowRightFill === null) {
       // Unerreichbar über `compose()` — `validateSpec` lehnt die Zone ohne Organisation ab. Die
       // Zeile hält die Bedingung trotzdem am Ort ihrer Wirkung fest: die Zone ist in der
       // Organisationsfarbe gemessen, eine schwarze oder weiße Fassung von ihr ist es nicht.
-      throw new Error(
+      throw new NotMeasuredError(
         'Die Zone "belowRight" ist nur in der Organisationsfarbe belegt (#003296 an E.2.27 bis ' +
           'E.2.31); ohne Organisation gibt es keine Farbe, die sie tragen dürfte.',
+        'combination',
       );
     }
     const anchorXMm = bodyBoundsMm.maxX + belowRight.anchorFromBodyRightMm;
@@ -656,12 +669,18 @@ function labelPrimitives(
   }
   if (labels.surfaceBelowLeft !== undefined || labels.surfaceBelowRight !== undefined) {
     if (surfaceLabels === undefined) {
-      throw new Error('Die schwarzen Oberflächenläufe sind an dieser Körperform nicht vermessen.');
+      throw new NotMeasuredError(
+        'Die schwarzen Oberflächenläufe sind an dieser Körperform nicht vermessen.',
+        'combination',
+      );
     }
     const baselineMm = bodyBoundsMm.maxY + surfaceLabels.baselineFromBodyBottomMm;
     if (labels.surfaceBelowLeft !== undefined) {
       if (surfaceLabels.leftAnchorFromBodyLeftMm === undefined) {
-        throw new Error('Der linke schwarze Oberflächenlauf hat keinen vermessenen Anker.');
+        throw new NotMeasuredError(
+          'Der linke schwarze Oberflächenlauf hat keinen vermessenen Anker.',
+          'combination',
+        );
       }
       const anchorXMm = bodyBoundsMm.minX + surfaceLabels.leftAnchorFromBodyLeftMm;
       primitives.push(labelPrimitive(
@@ -678,7 +697,10 @@ function labelPrimitives(
     }
     if (labels.surfaceBelowRight !== undefined) {
       if (surfaceLabels.rightAnchorFromBodyRightMm === undefined) {
-        throw new Error('Der rechte schwarze Oberflächenlauf hat keinen vermessenen Anker.');
+        throw new NotMeasuredError(
+          'Der rechte schwarze Oberflächenlauf hat keinen vermessenen Anker.',
+          'combination',
+        );
       }
       const anchorXMm = bodyBoundsMm.maxX + surfaceLabels.rightAnchorFromBodyRightMm;
       primitives.push(labelPrimitive(
@@ -1026,9 +1048,10 @@ export function compose(
     // Referenzbestands trägt beides. Der Anhang E.2 führt überhaupt keine Kopfzone (an allen 31
     // Dateien nachgesehen), und `validateSpec` lehnt eine Stärkeangabe an diesen Körperformen
     // ohnehin ab. Werfen statt raten — ein mitgeschobener L-Rahmen wäre eine erfundene Geometrie.
-    throw new Error(
+    throw new NotMeasuredError(
       `Das Grundzeichen "${spec.kind}" führt Zusatzgeometrie, und wie die einer Kopfzone ` +
         'ausweicht, ist an der Referenz nicht belegt: kein Zeichen des Bestands trägt beides.',
+      'combination',
     );
   }
 
@@ -1049,10 +1072,11 @@ export function compose(
     // Treffer); kein zusammengesetztes Zeichen des Bestands trägt ihn eingefärbt. Es gibt also
     // keinen Beleg für ein organisationsgefärbtes Ereignis. Werfen statt raten, dasselbe Muster
     // wie `organizationColor` und `circleBodyProfile.place`.
-    throw new Error(
+    throw new NotMeasuredError(
       `Eine Körperfüllung an "${spec.kind}" ist nicht belegt: der Körper ist ein offener ` +
         'Polyzug, und eine Füllung schlösse ihn implizit zu einer Fläche, die die Referenz nicht ' +
         'zeichnet.',
+      'combination',
     );
   }
 
