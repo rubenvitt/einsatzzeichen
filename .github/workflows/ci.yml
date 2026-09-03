@@ -32,6 +32,8 @@ jobs:
       - run: pnpm test
       - run: pnpm cli coverage
 
+      - run: pnpm --filter @einsatzzeichen/review typecheck
+
       - run: pnpm --filter @einsatzzeichen/website check
       - run: pnpm --filter @einsatzzeichen/website build
       - uses: actions/upload-artifact@v4

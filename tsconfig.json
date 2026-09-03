@@ -24,6 +24,8 @@
   },
   "include": ["packages/*/src/**/*.ts", "vitest.config.ts"],
   // Die Website bringt eigene Typprüfung mit (`astro check`): `astro:content` und die
-  // Starlight-Quellen sind unter `moduleResolution: NodeNext` nicht auflösbar.
-  "exclude": ["packages/website"]
+  // Starlight-Quellen sind unter `moduleResolution: NodeNext` nicht auflösbar. Das
+  // Fachreview-Werkzeug trägt JSX und wird aus demselben Grund eigenständig geprüft
+  // (`pnpm --filter @einsatzzeichen/review typecheck`, in CI).
+  "exclude": ["packages/website", "packages/review"]
 }

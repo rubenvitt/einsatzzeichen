@@ -1,0 +1,832 @@
+/*
+ * Eigene, kleine Gestaltung ohne Framework. Alle Farben stehen als Custom Properties oben; das
+ * dunkle Erscheinungsbild ist ein Austausch derselben Namen, kein zweiter Satz Regeln.
+ *
+ * Eine Entscheidung vorweg: die Bühne (`--buehne`) bleibt in beiden Erscheinungsbildern hell.
+ * Taktische Zeichen tragen schwarze Konturen und weiße Körper — auf dunklem Grund verschwindet
+ * beides. Das Zeichen ist hier das Prüfobjekt; die Oberfläche darf ihm keinen Grund unterschieben,
+ * den es nicht voraussetzt.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  --grund: #eef0f2;
+  --tafel: #ffffff;
+  --tafel-2: #f5f6f8;
+  --linie: #d2d7dc;
+  --linie-stark: #aeb5bd;
+  --text: #14181d;
+  --text-leise: #545d68;
+  --fokus: #0b53d6;
+
+  --buehne: #fbfbfc;
+  --buehne-linie: #e2e5e8;
+
+  --offen: #4d565f;
+  --offen-grund: #e3e6ea;
+  --freigegeben: #145c36;
+  --freigegeben-grund: #dcf0e4;
+  --abweichend: #7d4b00;
+  --abweichend-grund: #f7e8cd;
+
+  --radius: 6px;
+  --schrift: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --schrift-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --grund: #0f1215;
+    --tafel: #171b1f;
+    --tafel-2: #1e242a;
+    --linie: #2b3239;
+    --linie-stark: #414a53;
+    --text: #e9ecef;
+    --text-leise: #a6b0ba;
+    --fokus: #86b0ff;
+
+    --buehne: #e8ebee;
+    --buehne-linie: #cdd2d7;
+
+    --offen: #a3adb7;
+    --offen-grund: #262c33;
+    --freigegeben: #6ed69a;
+    --freigegeben-grund: #16301f;
+    --abweichend: #e8b263;
+    --abweichend-grund: #33240d;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--grund);
+  color: var(--text);
+  font-family: var(--schrift);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+:focus-visible {
+  outline: 2px solid var(--fokus);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+h1 {
+  font-size: 15px;
+}
+
+h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-leise);
+}
+
+h3 {
+  font-size: 13px;
+}
+
+code,
+.mono {
+  font-family: var(--schrift-mono);
+  font-size: 12px;
+}
+
+/* --- Gerüst ------------------------------------------------------------------------------- */
+
+.werkbank {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr) 380px;
+  grid-template-rows: minmax(0, 1fr) auto;
+  height: 100%;
+  gap: 1px;
+  background: var(--linie);
+}
+
+.spalte {
+  background: var(--tafel);
+  overflow-y: auto;
+  min-width: 0;
+}
+
+.spalte--mitte {
+  background: var(--grund);
+  padding: 16px 20px 28px;
+}
+
+.fusszeile {
+  grid-column: 1 / -1;
+  background: var(--tafel);
+  border-top: 1px solid var(--linie);
+  padding: 6px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  color: var(--text-leise);
+  font-size: 12px;
+}
+
+.fusszeile kbd,
+kbd {
+  font-family: var(--schrift-mono);
+  font-size: 11px;
+  background: var(--tafel-2);
+  border: 1px solid var(--linie-stark);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 0 4px;
+  color: var(--text);
+}
+
+/* --- Navigator ---------------------------------------------------------------------------- */
+
+.navigator__kopf {
+  position: sticky;
+  top: 0;
+  background: var(--tafel);
+  border-bottom: 1px solid var(--linie);
+  padding: 12px 14px;
+  display: grid;
+  gap: 8px;
+  z-index: 2;
+}
+
+.fortschritt {
+  display: flex;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--offen-grund);
+}
+
+.fortschritt__teil {
+  height: 100%;
+}
+
+.fortschritt__teil--freigegeben {
+  background: var(--freigegeben);
+}
+
+.fortschritt__teil--abweichend {
+  background: var(--abweichend);
+}
+
+.suchzeile {
+  display: grid;
+  gap: 6px;
+}
+
+.suchzeile input[type='search'] {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid var(--linie-stark);
+  border-radius: var(--radius);
+  background: var(--tafel-2);
+}
+
+.schalter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-leise);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.bereich__kopf {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--linie);
+  text-align: left;
+  cursor: pointer;
+}
+
+.bereich__kopf:hover {
+  background: var(--tafel-2);
+}
+
+.bereich__name {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.bereich__zahlen {
+  color: var(--text-leise);
+  font-size: 11px;
+  font-family: var(--schrift-mono);
+}
+
+.bereich__balken {
+  grid-column: 2 / -1;
+}
+
+.zeilen {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--linie);
+}
+
+.zeile {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 10px;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px 5px 22px;
+  background: none;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.zeile:hover {
+  background: var(--tafel-2);
+}
+
+.zeile[aria-current='true'] {
+  background: var(--offen-grund);
+  box-shadow: inset 3px 0 0 var(--fokus);
+}
+
+.zeile__vorschau {
+  width: 28px;
+  height: 28px;
+  background: var(--buehne);
+  border: 1px solid var(--buehne-linie);
+  border-radius: 3px;
+  object-fit: contain;
+}
+
+.zeile__text {
+  display: block;
+  min-width: 0;
+}
+
+.zeile__schluessel {
+  display: block;
+  font-family: var(--schrift-mono);
+  font-size: 11px;
+  color: var(--text-leise);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zeile__titel {
+  display: block;
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.punkt {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--offen);
+  display: inline-block;
+  flex: none;
+}
+
+.punkt--approved {
+  background: var(--freigegeben);
+}
+
+.punkt--deviation {
+  background: var(--abweichend);
+}
+
+.leer {
+  padding: 18px 14px;
+  color: var(--text-leise);
+  font-size: 12.5px;
+}
+
+/* --- Bühne -------------------------------------------------------------------------------- */
+
+.buehnenleiste {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.gruppe {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gruppe__marke {
+  color: var(--text-leise);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-right: 2px;
+}
+
+.knopf {
+  padding: 3px 9px;
+  border: 1px solid var(--linie-stark);
+  border-radius: var(--radius);
+  background: var(--tafel);
+  cursor: pointer;
+}
+
+.knopf:hover:not(:disabled) {
+  border-color: var(--fokus);
+}
+
+.knopf[aria-pressed='true'] {
+  background: var(--text);
+  color: var(--tafel);
+  border-color: var(--text);
+}
+
+.knopf:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.buehne {
+  background: var(--buehne);
+  border: 1px solid var(--buehne-linie);
+  border-radius: var(--radius);
+  padding: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  min-height: 340px;
+}
+
+.buehne__feld {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+
+.buehne__marke {
+  font-size: 11px;
+  color: #4a5259;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.buehne__bild {
+  display: block;
+  object-fit: contain;
+}
+
+.buehne__bild--gross {
+  width: 320px;
+  height: 320px;
+}
+
+.buehne__bild--echt {
+  border: 1px dashed var(--buehne-linie);
+}
+
+.traegerhinweis {
+  margin-top: 10px;
+  border-left: 4px solid var(--abweichend);
+  background: var(--abweichend-grund);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.traegerhinweis strong {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.abschnitt {
+  margin-top: 22px;
+}
+
+.abschnitt > h2 {
+  margin-bottom: 8px;
+}
+
+.nachbarn {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.nachbar {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 92px;
+  padding: 6px;
+  background: var(--tafel);
+  border: 1px solid var(--linie);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.nachbar[aria-pressed='true'] {
+  border-color: var(--fokus);
+  box-shadow: 0 0 0 1px var(--fokus);
+}
+
+.nachbar img {
+  width: 56px;
+  height: 56px;
+  background: var(--buehne);
+  border-radius: 3px;
+}
+
+.nachbar__label {
+  font-family: var(--schrift-mono);
+  font-size: 10px;
+  color: var(--text-leise);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vergleich {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.ueberblendung {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  background: var(--buehne);
+  border: 1px solid var(--buehne-linie);
+  border-radius: var(--radius);
+}
+
+.ueberblendung img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.regler {
+  display: grid;
+  gap: 4px;
+  min-width: 240px;
+}
+
+.regler input[type='range'] {
+  width: 100%;
+  accent-color: var(--fokus);
+}
+
+.hinweis {
+  background: var(--tafel-2);
+  border: 1px solid var(--linie);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  color: var(--text-leise);
+}
+
+.hinweis strong {
+  color: var(--text);
+}
+
+/* --- Befundtafel -------------------------------------------------------------------------- */
+
+.tafel {
+  padding: 14px;
+  display: grid;
+  /*
+   * Die einzige Spalte muss ausdrücklich `minmax(0, 1fr)` sein. Ohne sie sizet Grid die implizite
+   * Spur als `auto`, und deren Untergrenze ist die Mindestinhaltsbreite des breitesten Kindes —
+   * hier die Chipreihe und die einzeiligen Bezeichner wie `bbk-babz-2025:4.1.1#primary`. Gemessen
+   * löste die Spur dadurch auf 540 px auf, während die Spalte 380 px breit ist; der rechte Rand
+   * der Tafel samt „In den Ledger schreiben" wurde abgeschnitten, ohne dass eine Bildlaufleiste
+   * darauf hingewiesen hätte.
+   */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  align-content: start;
+}
+
+.karte {
+  background: var(--tafel-2);
+  border: 1px solid var(--linie);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+
+.merkmale {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  gap: 3px 10px;
+}
+
+.merkmale dt {
+  color: var(--text-leise);
+  font-size: 12px;
+}
+
+.merkmale dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  border: 1px solid var(--linie-stark);
+  border-radius: var(--radius);
+  background: var(--tafel-2);
+  padding: 2px 8px;
+  cursor: help;
+}
+
+.chip > summary {
+  list-style: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.chip > summary::-webkit-details-marker {
+  display: none;
+}
+
+.chip > p {
+  margin: 6px 0 2px;
+  font-size: 12px;
+  color: var(--text-leise);
+  max-width: 320px;
+}
+
+.chip[open] {
+  width: 100%;
+}
+
+.frage {
+  border-left: 4px solid var(--abweichend);
+  background: var(--abweichend-grund);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+
+.frage__id {
+  font-family: var(--schrift-mono);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.frage__kontext {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--text-leise);
+}
+
+/*
+ * Wie bei `.tafel`: jede einspaltige Grid-Ebene zwischen Tafel und Formularfeld braucht die
+ * ausdrückliche `minmax(0, 1fr)`-Spur, sonst reicht eine Ebene die Mindestinhaltsbreite ihrer
+ * Kinder nach oben durch und die Begrenzung der Tafel greift nicht mehr.
+ */
+.formular {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+
+.formular label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3px;
+  font-size: 12px;
+  color: var(--text-leise);
+}
+
+.formular textarea,
+.formular select,
+.formular input {
+  padding: 6px 8px;
+  border: 1px solid var(--linie-stark);
+  border-radius: var(--radius);
+  background: var(--tafel);
+  color: var(--text);
+}
+
+.formular textarea {
+  min-height: 130px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.statuswahl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.statusknopf {
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+  padding: 7px 4px;
+  border: 1px solid var(--linie-stark);
+  border-radius: var(--radius);
+  background: var(--tafel);
+  cursor: pointer;
+}
+
+.statusknopf small {
+  font-size: 10px;
+  color: var(--text-leise);
+}
+
+.statusknopf[aria-pressed='true'] {
+  border-width: 2px;
+  font-weight: 600;
+}
+
+.statusknopf--pending[aria-pressed='true'] {
+  border-color: var(--offen);
+  background: var(--offen-grund);
+}
+
+.statusknopf--approved[aria-pressed='true'] {
+  border-color: var(--freigegeben);
+  background: var(--freigegeben-grund);
+  color: var(--freigegeben);
+}
+
+.statusknopf--deviation[aria-pressed='true'] {
+  border-color: var(--abweichend);
+  background: var(--abweichend-grund);
+  color: var(--abweichend);
+}
+
+.speichern {
+  padding: 9px 12px;
+  border: 1px solid var(--fokus);
+  border-radius: var(--radius);
+  background: var(--fokus);
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.speichern:disabled {
+  background: var(--tafel-2);
+  color: var(--text-leise);
+  border-color: var(--linie-stark);
+  cursor: not-allowed;
+}
+
+.meldungen {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.meldung {
+  padding: 7px 10px;
+  border-radius: var(--radius);
+  font-size: 12.5px;
+  border-left: 4px solid var(--abweichend);
+  background: var(--abweichend-grund);
+}
+
+.meldung--sperre {
+  border-left-color: #a3151b;
+  background: var(--abweichend-grund);
+}
+
+@media (prefers-color-scheme: dark) {
+  .meldung--sperre {
+    border-left-color: #f08a8f;
+  }
+}
+
+.statuszeile {
+  font-size: 12px;
+  color: var(--text-leise);
+}
+
+/* --- Hilfe, Meldungsfahne, Ladezustand ---------------------------------------------------- */
+
+.hilfe {
+  position: fixed;
+  right: 20px;
+  bottom: 44px;
+  width: 420px;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: var(--tafel);
+  border: 1px solid var(--linie-stark);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.28);
+  padding: 14px 16px;
+  z-index: 10;
+}
+
+.hilfe table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+.hilfe td {
+  padding: 3px 0;
+  vertical-align: top;
+}
+
+.hilfe td:first-child {
+  width: 92px;
+}
+
+.fahne {
+  position: fixed;
+  bottom: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: var(--grund);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.3);
+  z-index: 11;
+}
+
+.platzhalter {
+  background: var(--tafel-2);
+  border-radius: var(--radius);
+  min-height: 16px;
+}
+
+.laedt {
+  color: var(--text-leise);
+  padding: 20px;
+}
+
+.setup {
+  display: grid;
+  gap: 10px;
+}
+
+.setup p {
+  margin: 0;
+  color: var(--text-leise);
+  font-size: 12.5px;
+}
