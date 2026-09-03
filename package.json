@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "cli": "tsx packages/cli/src/index.ts"
+    "cli": "tsx packages/cli/src/index.ts",
+    "review": "pnpm --filter @einsatzzeichen/review dev"
   },
   "devDependencies": {
     "@resvg/resvg-js": "2.6.2",

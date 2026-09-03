@@ -33,29 +33,53 @@ const tableRows = lines.filter((line) => line.startsWith('| `'));
 const manifestRows = tableRows.filter((line) => /^\| `[^`]+#(?:primary|alternative)`/.test(line));
 
 describe('review-dossier CLI', () => {
+  /**
+   * Die drei Statuszahlen einer Trägermenge, aus den Daten gezählt. Früher standen in der
+   * Dossierzeile `| … | pending | 0 | 0 | gesamt |` zwei feste Nullen für `approved` und
+   * `deviation` — das war eine Aussage über den heutigen Reviewstand und hätte die erste
+   * ehrliche Fachfreigabe rot gefärbt. Die Invariante ist stattdessen: das Dossier zählt
+   * dieselben Status wie die Daten, und die drei Spalten summieren sich auf die Trägerzahl.
+   */
+  function zaehleStatus(reviews: readonly { status: string }[]): {
+    pending: number;
+    approved: number;
+    deviation: number;
+  } {
+    return {
+      pending: reviews.filter((review) => review.status === 'pending').length,
+      approved: reviews.filter((review) => review.status === 'approved').length,
+      deviation: reviews.filter((review) => review.status === 'deviation').length,
+    };
+  }
+
+  function zeile(label: string, reviews: readonly { status: string }[]): string {
+    const count = zaehleStatus(reviews);
+    return `| ${label} | ${count.pending} | ${count.approved} | ${count.deviation} | ${reviews.length} |`;
+  }
+
   it('nennt dieselben Zählungen wie das Coverage-Manifest und die Release-Blocker', () => {
     const blockers = releaseBlockers();
-    const manifestPending = COVERAGE_MANIFEST.entries.filter(
-      (entry) => entry.review.domain.status === 'pending',
-    ).length;
-    const sourcePending = Object.values(SOURCE_REGISTRY).filter(
-      (source) => source.review.domain.status === 'pending',
-    ).length;
-    const profilePending = Object.values(PROFILES).filter(
-      (profile) => profile.review.domain.status === 'pending',
-    ).length;
+    const manifestDomain = COVERAGE_MANIFEST.entries.map((entry) => entry.review.domain);
+    const sourceDomain = Object.values(SOURCE_REGISTRY).map((source) => source.review.domain);
+    const profileDomain = Object.values(PROFILES).map((profile) => profile.review.domain);
 
-    expect(manifestPending).toBe(blockers.domainReviewOpen.length);
+    // `pending` und „offen" sind nicht dasselbe: eine formal unvollständige Freigabe zählt das
+    // Gate weiter als offen. Solange der Katalog keine solche Zeile führt (das gatet
+    // `checkReviewAttribution`), müssen beide Zahlen übereinstimmen — genau das ist hier die
+    // Aussage, und sie hält bei jedem Reviewstand.
+    expect(zaehleStatus(manifestDomain).pending).toBe(blockers.domainReviewOpen.length);
     expect(lines).toContain(
       `- Offene fachliche Reviews: ${blockers.domainReviewOpen.length} Manifest, ` +
         `${blockers.sourceDomainReviewOpen.length} Quellen, ` +
         `${blockers.profileDomainReviewOpen.length} Profil`,
     );
-    expect(lines).toContain(
-      `| Manifestzeilen | ${manifestPending} | 0 | 0 | ${COVERAGE_MANIFEST.entries.length} |`,
-    );
-    expect(lines).toContain(`| Quellen | ${sourcePending} | 0 | 0 | ${Object.keys(SOURCE_REGISTRY).length} |`);
-    expect(lines).toContain(`| Profile | ${profilePending} | 0 | 0 | ${Object.keys(PROFILES).length} |`);
+    expect(lines).toContain(zeile('Manifestzeilen', manifestDomain));
+    expect(lines).toContain(zeile('Quellen', sourceDomain));
+    expect(lines).toContain(zeile('Profile', profileDomain));
+    // Die Trägerzahlen selbst bleiben Strukturaussagen und damit festgenagelt.
+    expect(manifestDomain).toHaveLength(COVERAGE_MANIFEST.entries.length);
+    expect(sourceDomain).toHaveLength(Object.keys(SOURCE_REGISTRY).length);
+    expect(profileDomain).toHaveLength(Object.keys(PROFILES).length);
     expect(lines).toContain(`- Kernversion: ${COVERAGE_MANIFEST.coreVersion} (Profil \`bund\`: ${PROFILES.bund.version})`);
   });
 
@@ -67,8 +91,10 @@ describe('review-dossier CLI', () => {
       .filter((match): match is RegExpExecArray => match !== null)
       .map((match) => [match[1], Number(match[2])] as const);
     expect(headings.slice(0, byArea.length)).toEqual(byArea);
-    // Heute ist kein Bereich vollständig abgeschlossen: jeder distinkte Bereich des Manifests hat
-    // genau eine Überschrift, und es hängt nichts an.
+    // Jeder distinkte Bereich des Manifests hat genau eine Überschrift — auch ein vollständig
+    // abgeschlossener, der dann hinten mit „0 offen" anhängt. Deshalb steht hier `>=` statt der
+    // früheren Gleichheit zu `byArea.length`: die hätte vorausgesetzt, dass in **jedem** Bereich
+    // noch etwas offen ist, und wäre mit dem letzten freigegebenen Bereich rot geworden.
     const distinctAreas = new Set(
       COVERAGE_MANIFEST.entries.map((entry) => {
         const section = entry.sourceId.slice(entry.sourceId.indexOf(':') + 1);
@@ -76,7 +102,7 @@ describe('review-dossier CLI', () => {
       }),
     );
     expect(headings).toHaveLength(distinctAreas.size);
-    expect(headings.length).toBe(byArea.length);
+    expect(headings.length).toBeGreaterThanOrEqual(byArea.length);
   });
 
   it('hängt vollständig abgeschlossene Bereiche alphabetisch (localeCompare) hinter die offenen', () => {
@@ -158,9 +184,27 @@ describe('review-dossier CLI', () => {
   });
 
   it('ist deterministisch und ändert keinen Reviewstatus', () => {
+    // Die Zusage ist „das Generat fasst den Ledger nicht an", nicht „alles ist noch pending".
+    // Geprüft wird sie jetzt durch Vergleich des Ledgerzustands vor und nach dem Rendern —
+    // das hält auch dann, wenn Zeilen freigegeben sind, und ist zugleich schärfer: die alte
+    // Fassung hätte eine Statusänderung durch das Dossier gar nicht bemerkt, solange sie eine
+    // Zeile nur von `pending` auf `pending` gesetzt hätte.
+    const vorher = JSON.stringify([
+      ...COVERAGE_MANIFEST.entries.map((entry) => entry.review.domain),
+      ...Object.values(SOURCE_REGISTRY).map((source) => source.review.domain),
+      ...Object.values(PROFILES).map((profile) => profile.review.domain),
+    ]);
+
     expect(renderReviewDossier()).toBe(markdown);
     expect(markdown).not.toMatch(/\d{4}-\d{2}-\d{2}T/);
-    expect(COVERAGE_MANIFEST.entries.every((entry) => entry.review.domain.status === 'pending')).toBe(true);
+
+    expect(
+      JSON.stringify([
+        ...COVERAGE_MANIFEST.entries.map((entry) => entry.review.domain),
+        ...Object.values(SOURCE_REGISTRY).map((source) => source.review.domain),
+        ...Object.values(PROFILES).map((profile) => profile.review.domain),
+      ]),
+    ).toBe(vorher);
   });
 
   it('schreibt mit --out in eine Datei, sonst auf stdout', () => {

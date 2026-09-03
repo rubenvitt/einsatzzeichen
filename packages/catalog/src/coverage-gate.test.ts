@@ -308,12 +308,32 @@ describe('Gate-Prüfungen zu Quelle, Profil und Review', () => {
     expect(blockers.profileDomainReviewDeviations).toEqual([profile.id]);
   });
 
-  it('meldet für den echten Bestand keine Verletzung und alle Reviewträger als offen', () => {
+  it('meldet für den echten Bestand keine Verletzung und dieselbe Zahl offener Reviews wie die Blockerliste', () => {
     const result = checkCoverage();
     expect(result.violations).toEqual([]);
+
+    // **Die Zahl wird abgeleitet, nicht abgeschrieben.** Früher stand hier die Gesamtzahl aller
+    // Reviewträger; das war eine Aussage über den heutigen Reviewstand ("noch nichts
+    // freigegeben") und hätte die erste ehrliche Fachfreigabe rot gefärbt. Geprüft wird jetzt die
+    // eigentliche Invariante: `checkCoverage` (Summe über `countOpenDomainReviews`) und
+    // `releaseBlockers` (Listen aus `blockersOf`) sind zwei getrennte Wege durch dieselben Daten
+    // und müssen dieselbe Zahl nennen. Diese Aussage hält bei jedem Reviewstand — und sie ist
+    // stärker als eine Konstante, weil ein Auseinanderlaufen der beiden Wege sie bricht.
+    const blockers = releaseBlockers();
     expect(result.openDomainReviews).toBe(
-      COVERAGE_MANIFEST.entries.length + Object.keys(SOURCE_REGISTRY).length + Object.keys(PROFILES).length,
+      blockers.domainReviewOpen.length +
+        blockers.sourceDomainReviewOpen.length +
+        blockers.profileDomainReviewOpen.length,
     );
+
+    // Die **Zahl der Träger** bleibt dagegen gegatet: sie ist eine Strukturaussage über den
+    // Katalog und vom Reviewstand unabhängig. Offen kann nie mehr sein, als es Träger gibt.
+    const traeger =
+      COVERAGE_MANIFEST.entries.length +
+      Object.keys(SOURCE_REGISTRY).length +
+      Object.keys(PROFILES).length;
+    expect(traeger).toBe(558);
+    expect(result.openDomainReviews).toBeLessThanOrEqual(traeger);
   });
 });
 
@@ -461,15 +481,34 @@ describe('Gate-Prüfungen zu Elementen und Versionen', () => {
 });
 
 describe('Release-Blocker für 1.0', () => {
-  it('führt jeden Eintrag ohne fachliches Review als Blocker', () => {
-    const blockers = releaseBlockers();
-    expect(blockers.domainReviewOpen).toHaveLength(COVERAGE_MANIFEST.entries.length);
+  it('führt genau die Einträge ohne abgeschlossenes fachliches Review als Blocker', () => {
+    // Früher: `toHaveLength(COVERAGE_MANIFEST.entries.length)` — das galt nur, solange keine
+    // einzige Zeile freigegeben war. Geprüft wird jetzt die **Zuordnung**: die Blockerliste ist
+    // Zeile für Zeile genau die Menge der Einträge, die `countOpenDomainReviews` als offen zählt.
+    // Beide Wege sitzen in `coverage-gate.ts`, benutzen aber getrennte Schleifen; laufen sie
+    // auseinander, bricht dieser Test — unabhängig davon, wie viele Reviews entschieden sind.
+    const erwartet = COVERAGE_MANIFEST.entries
+      .filter((entry) => countOpenDomainReviews([entry]) === 1)
+      .map((entry) => entryKey(entry.sourceId, entry.variant));
+    expect(releaseBlockers().domainReviewOpen).toEqual(erwartet);
   });
 
-  it('führt offene Quellen- und Profilreviews als eigene Blocker', () => {
+  it('führt genau die offenen Quellen- und Profilreviews als eigene Blocker', () => {
+    // Dieselbe Umstellung wie oben: nicht mehr „alle Quellen und alle Profile sind offen",
+    // sondern „die Blockerlisten sind genau die von `countOpenDomainReviews` offen gezählten".
     const blockers = releaseBlockers();
-    expect(blockers.sourceDomainReviewOpen.sort()).toEqual(Object.keys(SOURCE_REGISTRY).sort());
-    expect(blockers.profileDomainReviewOpen.sort()).toEqual(Object.keys(PROFILES).sort());
+    expect(blockers.sourceDomainReviewOpen.sort()).toEqual(
+      Object.values(SOURCE_REGISTRY)
+        .filter((source) => countOpenDomainReviews([source]) === 1)
+        .map((source) => source.id)
+        .sort(),
+    );
+    expect(blockers.profileDomainReviewOpen.sort()).toEqual(
+      Object.values(PROFILES)
+        .filter((profile) => countOpenDomainReviews([profile]) === 1)
+        .map((profile) => profile.id)
+        .sort(),
+    );
   });
 
   it('meldet keinen Eintrag ohne seinen arteigenen Pflichtnachweis', () => {
@@ -497,13 +536,66 @@ describe('Release-Blocker für 1.0', () => {
     expect(sections).toContain('C.1.1');
   });
 
-  it('ist ein Testbefund, kein CI-Abbruch: das Gate bleibt trotz offener Blocker grün', () => {
-    expect(releaseBlockers().domainReviewOpen.length).toBeGreaterThan(0);
+  it('ist ein Testbefund, kein CI-Abbruch: ein offenes Fachreview erzeugt keine Gate-Verletzung', () => {
+    // Bisher stand hier `releaseBlockers().domainReviewOpen.length).toBeGreaterThan(0)`. Das war
+    // dieselbe Bauart wie die übrigen umgestellten Stellen, nur mit umgekehrtem Vorzeichen: es
+    // setzte voraus, dass **irgendetwas** offen ist. Am Ende der Reviewkampagne — alle 558 Träger
+    // entschieden — wäre ausgerechnet der Erfolgsfall rot geworden, und zwar an einem Test, der
+    // von offenen Reviews gar nicht handelt.
+    //
+    // Die eigentliche Zusage sind zwei getrennte Kanäle: ein offenes Fachreview ist ein
+    // Release-Blocker (Ausgabe), aber keine `CoverageViolation` (Abbruch). Das wird jetzt am
+    // Fixture gezeigt und hält bei jedem Reviewstand.
+    const offen = fixtureCoverageEntry({ sourceId: 'bbk-babz-2025:1.1' });
+    expect(blockersOf([offen], []).domainReviewOpen).toEqual(['bbk-babz-2025:1.1#primary']);
+    expect(checkReviewAttribution([offen], (e) => entryKey(e.sourceId, e.variant))).toEqual([]);
+
+    // Am Realbestand bleibt die Hälfte stehen, die dort tatsächlich eine Aussage ist: das Gate
+    // meldet nichts — unabhängig davon, wie viele Zeilen inzwischen entschieden sind.
     expect(checkCoverage().violations).toEqual([]);
   });
 });
 
 describe('blockersOf (parametrisierter Kern von releaseBlockers)', () => {
+  it('trennt an einem gemischten Fixture offene, freigegebene und abweichende Zeilen', () => {
+    // Die Blockerlogik wird am Fixture geprüft und nicht mehr am Realbestand: `blockersOf` nimmt
+    // seine Eingaben als Parameter, genau dafür. Erst ein Fixture mit **allen drei** Zuständen
+    // nebeneinander zeigt die Trennung — am Realbestand wäre sie erst sichtbar, wenn dort
+    // tatsächlich freigegeben ist, und der Test hinge damit wieder am Reviewstand.
+    const offen = fixtureCoverageEntry({ sourceId: 'bbk-babz-2025:1.1' });
+    const freigegeben = fixtureCoverageEntry({
+      sourceId: 'bbk-babz-2025:1.2',
+      review: {
+        technical: { status: 'approved', reviewer: 'rv', date: '2026-08-05' },
+        domain: {
+          status: 'approved',
+          reviewer: 'fachreview',
+          date: '2026-09-03',
+          note: 'Fachlich bestätigt.',
+        },
+      },
+    });
+    const abweichend = fixtureCoverageEntry({
+      sourceId: 'bbk-babz-2025:2.1',
+      review: {
+        technical: { status: 'approved', reviewer: 'rv', date: '2026-08-05' },
+        domain: {
+          status: 'deviation',
+          reviewer: 'fachreview',
+          date: '2026-09-03',
+          note: 'Bewusste fachliche Abweichung.',
+        },
+      },
+    });
+
+    const blockers = blockersOf([offen, freigegeben, abweichend], []);
+    expect(blockers.domainReviewOpen).toEqual(['bbk-babz-2025:1.1#primary']);
+    expect(blockers.domainReviewDeviations).toEqual(['bbk-babz-2025:2.1#primary']);
+    expect(blockers.domainReviewOpenByArea).toEqual({ '1': 1 });
+    expect(countOpenDomainReviews([offen, freigegeben, abweichend])).toBe(1);
+  });
+
+
   it('schützt ein Kapitelpräfix davor, von einer längeren Abschnittsnummer verdeckt zu werden', () => {
     // '5.41' beginnt zwar mit '5.4', ist aber nicht '5.4' plus Punkt plus Rest — der Scope-Eintrag
     // '5.4' muss trotz dieses Eintrags als unabgedeckt gelten.

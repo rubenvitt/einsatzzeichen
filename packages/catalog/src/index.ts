@@ -14,6 +14,7 @@ export * from './recipes.js';
 export * from './coverage-manifest.js';
 export * from './domain-reviews.js';
 export * from './domain-review-questions.js';
+export * from './domain-reviewers.js';
 export * from './coverage-gate.js';
 export * from './reference-inventory.js';
 export * from './rule-coverage.js';

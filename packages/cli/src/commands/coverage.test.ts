@@ -4,18 +4,62 @@ import {
   PROFILE_DOMAIN_REVIEWS,
   SOURCE_DOMAIN_REVIEWS,
 } from '@einsatzzeichen/catalog';
+import { reviewIssues, type Review } from '@einsatzzeichen/schema';
 import { coverage, openDomainReviewsLine } from './coverage.js';
 
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
+/**
+ * Wie viele Ledgereinträge fachlich **offen** sind — abgeleitet aus dem Ledger selbst, nicht
+ * abgeschrieben. Offen ist eine Zeile, die noch nicht entschieden ist **oder** deren Entscheidung
+ * nicht zurechenbar ist; das ist dieselbe Regel, nach der `countOpenDomainReviews` im
+ * Coverage-Gate zählt, hier über `reviewIssues()` aus `schema` nachvollzogen.
+ */
+function offeneReviews(ledger: Readonly<Record<string, Review>>): number {
+  return Object.values(ledger).filter(
+    (review) =>
+      review.status === 'pending' ||
+      reviewIssues({ technical: { status: 'pending' }, domain: review }).some(
+        (issue) => issue.role === 'domain',
+      ),
+  ).length;
+}
+
+/**
+ * Zurechenbar dokumentierte Abweichungen — der zweite Freigabeblocker neben den offenen Zeilen.
+ * Ebenfalls abgeleitet: eine Abweichung ist ein legitimes Reviewergebnis und darf im Ledger
+ * auftauchen, ohne diesen Test rot zu färben.
+ */
+function abweichendeReviews(ledger: Readonly<Record<string, Review>>): number {
+  return Object.values(ledger).filter(
+    (review) =>
+      review.status === 'deviation' &&
+      !reviewIssues({ technical: { status: 'pending' }, domain: review }).some(
+        (issue) => issue.role === 'domain',
+      ),
+  ).length;
+}
+
+/** Dieselbe Pluralisierung wie in `coverage.ts` — bewusst hier nachgebildet und nicht importiert. */
+function gezaehlt(count: number, singular: string, plural: string): string {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
 describe('coverage CLI', () => {
   it('weist alle Reviewträger getrennt aus und meldet null technische Nachweislücken', () => {
-    const manifestReviews = Object.keys(MANIFEST_DOMAIN_REVIEWS).length;
-    const sourceReviews = Object.keys(SOURCE_DOMAIN_REVIEWS).length;
-    const profileReviews = Object.keys(PROFILE_DOMAIN_REVIEWS).length;
-    const openReviews = manifestReviews + sourceReviews + profileReviews;
+    // **Träger und Reviewstand sind zwei verschiedene Zahlen.** Die Trägerzahlen bleiben
+    // festgenagelt (Strukturaussage, siehe unten); die offenen Reviews werden dagegen aus dem
+    // Ledger abgeleitet. Früher waren beide dieselbe Zahl — das setzte voraus, dass nichts
+    // freigegeben ist, und die erste ehrliche Fachfreigabe hätte diesen Test rot gefärbt.
+    const manifestCarriers = Object.keys(MANIFEST_DOMAIN_REVIEWS).length;
+    const sourceCarriers = Object.keys(SOURCE_DOMAIN_REVIEWS).length;
+    const profileCarriers = Object.keys(PROFILE_DOMAIN_REVIEWS).length;
+    const openManifest = offeneReviews(MANIFEST_DOMAIN_REVIEWS);
+    const openSources = offeneReviews(SOURCE_DOMAIN_REVIEWS);
+    const openProfiles = offeneReviews(PROFILE_DOMAIN_REVIEWS);
+    const openReviews = openManifest + openSources + openProfiles;
     const lines: string[] = [];
     vi.spyOn(console, 'log').mockImplementation((message?: unknown) => {
       lines.push(String(message));
@@ -42,10 +86,12 @@ describe('coverage CLI', () => {
     // LFH-483 fünf I-e-Darstellungen, LFH-481 vier I-c-Darstellungen und LFH-489 drei I-k-Rezepte:
     // insgesamt 536. LFH-487 ergänzt die vier fehlenden I.2.4 bis I.2.7: insgesamt 540;
     // LFH-484 ergänzt die vier I-f-Darstellungen I.1.13 bis I.1.16: insgesamt 544.
-    expect(manifestReviews).toBe(544);
-    expect(sourceReviews).toBe(13);
-    expect(profileReviews).toBe(1);
-    expect(openReviews).toBe(558);
+    expect(manifestCarriers).toBe(544);
+    expect(sourceCarriers).toBe(13);
+    expect(profileCarriers).toBe(1);
+    // Offen kann nie mehr sein als Träger da sind — die einzige Schranke, die der Reviewstand
+    // erlaubt. Die frühere Gleichheit (`openReviews === 558`) war keine.
+    expect(openReviews).toBeLessThanOrEqual(manifestCarriers + sourceCarriers + profileCarriers);
     expect(lines).toContain('Kernversion: 0.2.0 (Profil "bund": 0.2.0)');
     // **Die Umfangszeile ist wieder kurz.** Der Teilslice E.2 hatte sie auf 47 Einträge gedehnt,
     // weil E.2 mit einem fehlenden Abschnitt nur abschnittsweise behauptbar war. Seit E.2.6
@@ -64,10 +110,15 @@ describe('coverage CLI', () => {
     expect(lines).toContain(
       'Kontrastausnahmen: weiss auf orange (E.2.6, entschieden am 2026-08-18 durch Projektinhaber)',
     );
+    // **Die Invariante ist „CLI und Ledger nennen dieselbe Zahl".** Die Zahlen kommen aus dem
+    // Ledger (`offeneReviews`), die Zeile aus `coverage()`; stimmen sie nicht überein, zählt eine
+    // der beiden Seiten falsch. Das ist stärker als die frühere Konstante 558, die nur den
+    // damaligen Reviewstand abgeschrieben hatte.
     expect(lines).toContain(
       `Offene fachliche Reviews: ${openReviews} ` +
-        `(${manifestReviews} Manifestreviews, ${sourceReviews} Quellenreviews, ` +
-        `${profileReviews} Profilreview)`,
+        `(${gezaehlt(openManifest, 'Manifestreview', 'Manifestreviews')}, ` +
+        `${gezaehlt(openSources, 'Quellenreview', 'Quellenreviews')}, ` +
+        `${gezaehlt(openProfiles, 'Profilreview', 'Profilreviews')})`,
     );
     // Die Zeile bleibt auch nach E.2 wortgleich, obwohl das Manifest inzwischen fünf
     // technische Abweichungen führt (E.1.17, E.1.19, E.1.24, E.1.31, E.2.26): `ReleaseBlockers` liest
@@ -75,9 +126,13 @@ describe('coverage CLI', () => {
     // Sie ist damit korrekt und zugleich die Stelle, an der technische Abweichungen im Betrieb
     // unsichtbar bleiben — auffindbar sind sie nur in der Note ihrer Manifestzeile.
     expect(lines).toContain(
-      `1.0-Blocker: ${manifestReviews} Manifestreviews, ${sourceReviews} Quellenreviews und ` +
-        `${profileReviews} Profilreview noch ohne abgeschlossenes fachliches Review; ` +
-        '0 Manifestabweichungen, 0 Quellenabweichungen und 0 Profilabweichungen mit ' +
+      `1.0-Blocker: ${gezaehlt(openManifest, 'Manifestreview', 'Manifestreviews')}, ` +
+        `${gezaehlt(openSources, 'Quellenreview', 'Quellenreviews')} und ` +
+        `${gezaehlt(openProfiles, 'Profilreview', 'Profilreviews')} ` +
+        'noch ohne abgeschlossenes fachliches Review; ' +
+        `${gezaehlt(abweichendeReviews(MANIFEST_DOMAIN_REVIEWS), 'Manifestabweichung', 'Manifestabweichungen')}, ` +
+        `${gezaehlt(abweichendeReviews(SOURCE_DOMAIN_REVIEWS), 'Quellenabweichung', 'Quellenabweichungen')} und ` +
+        `${gezaehlt(abweichendeReviews(PROFILE_DOMAIN_REVIEWS), 'Profilabweichung', 'Profilabweichungen')} mit ` +
         'domain: deviation; 0 ohne Testnachweis, 0 Kapitel im beanspruchten Umfang ohne Eintrag',
     );
     // Die drei Achsen aus §7 der Slice-1-Spezifikation (LFH-413/LFH-414). Die Zahlen sind an
@@ -111,8 +166,9 @@ describe('coverage CLI', () => {
 });
 
 describe('openDomainReviewsLine', () => {
-  // Erfundene Zahlen und nicht der echte Ledger: der Nullfall ist gegen die 558 offenen
-  // Reviews des Katalogs nicht auslösbar. Er wird deshalb hier geprüft und nicht im Test über
+  // Erfundene Zahlen und nicht der echte Ledger: der Nullfall setzt voraus, dass **jeder**
+  // Reviewträger fachlich freigegeben ist, und ist gegen den echten Ledger auf absehbare Zeit
+  // nicht auslösbar. Er wird deshalb hier geprüft und nicht im Test über
   // `coverage()` — sonst stünde der Zweig ungeprüft da, bis ihn eines Tages echte Daten zum
   // ersten Mal auslösen.
   const carriers = { manifestEntries: 20, sources: 4, profiles: 1 };

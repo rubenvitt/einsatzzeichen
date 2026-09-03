@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { isDataVersion } from '@einsatzzeichen/schema';
 import { PROFILES, profileFor } from './profiles.js';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
+import { erwarteZurechenbaresFachreview } from './test-support/domain-review.js';
 
 describe('Profilregister', () => {
   it('führt den bundesweiten Kern als einziges Profil', () => {
@@ -37,10 +38,14 @@ describe('Profilregister', () => {
     expect(profileFor('bund').sources).toEqual(['bbk-babz-2025', 'babz-svg-2025']);
   });
 
-  it('trägt am Profil beide Reviewrollen mit offenem fachlichem Review', () => {
+  it('trägt am Profil beide Reviewrollen mit zurechenbarem fachlichem Review', () => {
+    // Strukturaussage bleibt: beide Rollen sind vorhanden, das technische ist freigegeben und
+    // von `rv` verantwortet. Beim Fachreview wird nur noch die Invariante geprüft — vorhanden,
+    // und falls entschieden zurechenbar. Der frühere `toBe('pending')` hätte bei der ersten
+    // Profilfreigabe durch das Fachreview-Werkzeug rot gemeldet, obwohl nichts kaputt wäre.
     const review = profileFor('bund').review;
     expect(review.technical.status).toBe('approved');
     expect(review.technical.reviewer).toBe('rv');
-    expect(review.domain.status).toBe('pending');
+    erwarteZurechenbaresFachreview(review, 'profile:bund');
   });
 });
