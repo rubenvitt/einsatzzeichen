@@ -1,3 +1,27 @@
+## Fachreview-Werkzeug
+
+Version 1.2.0 führt ein neues internes Werkzeug zur fachlichen Überprüfung von Zeichen durch Personen mit einsatztaktischer Fachkunde ein. Das Werkzeug ersetzt das bisherige 544-zeilige Markdown-Dossier durch eine interaktive Oberfläche mit drei Spalten: Navigator mit Fortschrittsanzeige je Bereich, große Zeichendarstellung und Befundtafel.
+
+**Wichtigste Verbesserungen:**
+
+- **Visuelle Darstellung aller Elemente**: 269 der bisher 288 nicht-dargestellten `element`-Zeilen werden nun als Piktogramm gerendert. 19 nicht eigenständig darstellbare Elemente (Organisationsfarben, Stärkegrade, Fahrzeugkategorien) werden mit einem Kontextträger angezeigt
+- **Tastaturgesteuerte Bedienung** mit automatischer Speicherung von Entwürfen über Neustart hinweg
+- **Atomare Schreibvorgänge** über die TypeScript-Compiler-API, die Kommentare und Nachbarzeilen unberührt lassen
+- **Serverseitige Validierung** mit Prüfung gegen das Reviewer-Register und dieselben Regeln wie das Coverage-Gate
+- **Optionaler Netzwerkzugriff** über `REVIEW_HOST=<adresse>` für externe Fachprüfende, standardmäßig auf `127.0.0.1` gebunden
+
+Das Werkzeug steht als privates Paket `@einsatzzeichen/review` zur Verfügung und kann mit `pnpm review` gestartet werden.
+
+## Katalog
+
+Die Qualitätssicherung wurde grundlegend überarbeitet:
+
+- **Reviewer-Register** (`DOMAIN_REVIEWERS`) zur Validierung von Fachfreigaben, zunächst bewusst leer gehalten
+- **Robuste Tests** die unabhängig vom aktuellen Reviewstand bleiben: Tests prüfen nun die Struktur der Freigaben (benannter Prüfer, ISO-Datum, Befund) statt feste Statuswerte vorauszusetzen
+- **Exportierte Hilfsfunktionen** `sectionOf()` und `areaOf()` zur Wiederverwendung der Bereichseinteilung
+
+Die Coverage-Gates zählen Freigaben nun aus den tatsächlichen Daten ab, sodass CLI, Gate und Ledger garantiert dieselben Zahlen liefern.
+
 ## Version 1.1.0
 
 ### Website
