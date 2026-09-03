@@ -10,7 +10,12 @@ import {
   technicalReviewForAnhangI,
 } from './coverage-manifest.js';
 import { checkCoverage, findPrimaryViolations, releaseBlockers } from './coverage-gate.js';
+import { PROFILE_DOMAIN_REVIEWS, SOURCE_DOMAIN_REVIEWS } from './domain-reviews.js';
 import { ALL_PICTOGRAMS, pictogramVariantKey } from './pictograms/index.js';
+// Der Helfer stand bis hierher lokal in dieser Datei. Er wird inzwischen von sechs Testdateien
+// gebraucht; die gemeinsame Ablage verhindert, dass sechs Kopien der Zurechenbarkeitsregel
+// auseinanderlaufen.
+import { erwarteZurechenbaresFachreview } from './test-support/domain-review.js';
 
 // Dieselbe Vorlage wie in `coverage-gate.test.ts`: beide Dateien brauchen einen Katalogeintrag
 // mit einstellbarer Zahl von `primary`-Darstellungen, und ein gemeinsames Testmodul für eine
@@ -27,6 +32,22 @@ function fixtureEntry(id: string, primaryCount: number): CatalogEntry {
       sourceRefs: [],
     })),
   };
+}
+
+/**
+ * Ledgerschlüssel mit fachlicher Abweichung. Eigene Funktion mit **absichtlich geweitetem**
+ * Parametertyp: `SOURCE_DOMAIN_REVIEWS` und `PROFILE_DOMAIN_REVIEWS` sind über `satisfies`
+ * typisiert, TypeScript kennt daher nur die heute vorkommenden Statusliterale und meldet einen
+ * Vergleich gegen `'deviation'` als unmöglich, solange dort keine Abweichung eingetragen ist.
+ * Das ist dieselbe Bauart wie eine festgenagelte Statuszusicherung, nur eine Ebene tiefer — im
+ * Typ statt im `expect`. Verglichen wird deshalb auf `string`.
+ */
+function abweichendeLedgerschluessel(
+  ledger: Readonly<Record<string, { readonly status: string }>>,
+): string[] {
+  return Object.entries(ledger)
+    .filter(([, review]) => review.status === 'deviation')
+    .map(([key]) => key);
 }
 
 describe('Coverage-Manifest', () => {
@@ -173,7 +194,9 @@ describe('Coverage-Manifest', () => {
         date: group === 'I-f' ? '2026-08-28' : '2026-08-27',
       });
       expect(row.review.technical.note).toContain(expectedReviewPhrase[group as keyof typeof expectedReviewPhrase]);
-      expect(row.review.domain.status).toBe('pending');
+      // Invariante statt Reviewstand: jede I-Zeile trägt ein Fachreview, und wenn es entschieden
+      // ist, ist es zurechenbar. Welchen Stand es hat, entscheidet das Fachreview-Werkzeug.
+      erwarteZurechenbaresFachreview(row.review, entryKey(row.sourceId, row.variant));
     }
 
     const technicalReviewAt = (key: string) =>
@@ -232,7 +255,10 @@ describe('Coverage-Manifest', () => {
     for (const row of rows) {
       expect(row.coverage).toBe('composition-recipe');
       expect(row.review.technical).toEqual(expectedReview);
-      expect(row.review.domain.status).toBe('pending');
+      // Invariante statt Reviewstand: I.4.1 bis I.4.3 tragen je ein Fachreview, entschieden nur
+      // zurechenbar. Die Notiz des **technischen** Reviews oben spricht weiterhin von offenen
+      // Fachklassifikationen — das ist ein historischer Befund im Ledger, keine Zusage über heute.
+      erwarteZurechenbaresFachreview(row.review, entryKey(row.sourceId, row.variant));
     }
 
     expect(COVERAGE_MANIFEST.scope).toContain('I.4.1');
@@ -250,23 +276,26 @@ describe('Coverage-Manifest', () => {
       implementation: row.implementation,
       coverage: row.coverage,
       testEvidence: row.testEvidence,
-      domain: row.review.domain,
     }))).toEqual([
       {
         section: 'I.5.1', implementation: 'recipe.I.5.1', coverage: 'composition-recipe',
-        testEvidence: ['body-fingerprint', 'svg-snapshot'], domain: { status: 'pending' },
+        testEvidence: ['body-fingerprint', 'svg-snapshot'],
       },
       {
         section: 'I.5.2', implementation: 'recipe.I.5.2', coverage: 'composition-recipe',
-        testEvidence: ['body-fingerprint', 'svg-snapshot'], domain: { status: 'pending' },
+        testEvidence: ['body-fingerprint', 'svg-snapshot'],
       },
       {
         section: 'I.5.3', implementation: 'recipe.I.5.3', coverage: 'composition-recipe',
-        testEvidence: ['body-fingerprint', 'svg-snapshot'], domain: { status: 'pending' },
+        testEvidence: ['body-fingerprint', 'svg-snapshot'],
       },
     ]);
     expect(rows).toHaveLength(3);
     for (const row of rows) {
+      // Das `domain`-Objekt ist aus der Projektion oben herausgenommen: `toEqual` hätte dort den
+      // Statuswert festgenagelt. Abschnitt, Implementierung, Deckungsart und Nachweisarten sind
+      // Strukturaussagen und bleiben Wort für Wort geprüft; das Fachreview prüft die Invariante.
+      erwarteZurechenbaresFachreview(row.review, entryKey(row.sourceId, row.variant));
       expect(row.review.technical).toMatchObject({
         status: 'approved', reviewer: 'rv', date: '2026-08-27',
       });
@@ -299,7 +328,9 @@ describe('Coverage-Manifest', () => {
         status: 'approved', reviewer: 'rv', date: '2026-08-27',
       });
       expect(row.review.technical.note).toContain('I.5.4 bis I.5.8');
-      expect(row.review.domain).toEqual({ status: 'pending' });
+      // Invariante statt Reviewstand: die fünf Wasserrettungs-Piktogramme tragen je ein
+      // Fachreview, entschieden nur zurechenbar.
+      erwarteZurechenbaresFachreview(row.review, entryKey(row.sourceId, row.variant));
     }
   });
 
@@ -379,7 +410,10 @@ describe('Coverage-Manifest', () => {
       expect(row.coverage).toBe('composition-recipe');
       expect(row.testEvidence).toEqual(['body-fingerprint', 'svg-snapshot']);
       expect(row.review.technical).toEqual(expectedReview);
-      expect(row.review.domain).toEqual({ status: 'pending' });
+      // Invariante statt Reviewstand: I.1.1 bis I.1.4 tragen je ein Fachreview, entschieden nur
+      // zurechenbar. Der Satz „domain classification remains pending" steht in der oben
+      // festgenagelten **technischen** Notiz und beschreibt deren Prüfzeitpunkt, nicht heute.
+      erwarteZurechenbaresFachreview(row.review, entryKey(row.sourceId, row.variant));
     }
 
     expect(rows).toHaveLength(4);
@@ -401,9 +435,13 @@ describe('Coverage-Manifest', () => {
       coverage: 'composition-recipe',
       review: {
         technical: { status: 'approved', reviewer: 'rv', date: '2026-08-26' },
-        domain: { status: 'pending' },
       },
     });
+    // Das Fachreview ist aus dem `toMatchObject` oben heraus: dort hätte `domain` den Statuswert
+    // festgenagelt. Geprüft wird stattdessen die Invariante — C.1.3 trägt ein Fachreview, und
+    // eine Entscheidung wäre zurechenbar.
+    expect(entry).toBeDefined();
+    erwarteZurechenbaresFachreview(entry!.review, 'bbk-babz-2025:C.1.3#primary');
     expect(COVERAGE_MANIFEST.scope.filter((section) => section.startsWith('C'))).toEqual([
       'C.1.1',
       'C.1.2',
@@ -424,7 +462,11 @@ describe('Coverage-Manifest', () => {
         'Katalogfassung J.3.2 bleibt mit stationBody(17, 11.5) abweichend und ihre Korrektur ' +
         'liegt außerhalb dieses Teilslices.',
     ) === true)).toBe(true);
-    expect(entries.every((entry) => entry.review.domain.status === 'pending')).toBe(true);
+    // Invariante statt Reviewstand: jede der elf F.3-Zeilen trägt ein Fachreview, entschieden nur
+    // zurechenbar.
+    for (const entry of entries) {
+      erwarteZurechenbaresFachreview(entry.review, entryKey(entry.sourceId, entry.variant));
+    }
     expect(COVERAGE_MANIFEST.scope).toContain('F');
   });
 
@@ -446,7 +488,7 @@ describe('Coverage-Manifest', () => {
     ]);
   });
 
-  it('führt D.2.1 bis D.2.7 direkt mit technischem Nachweis und offenem Fachreview', () => {
+  it('führt D.2.1 bis D.2.7 direkt mit technischem Nachweis und zurechenbarem Fachreview', () => {
     const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
       entry.sourceId.startsWith('bbk-babz-2025:D.2.'),
     );
@@ -464,7 +506,11 @@ describe('Coverage-Manifest', () => {
     expect(rows.every((entry) => entry.review.technical.note?.includes(
       'normalisierten Kreis-, Dach-, Text- und Innengeometrien',
     ) === true)).toBe(true);
-    expect(rows.every((entry) => entry.review.domain.status === 'pending')).toBe(true);
+    // Invariante statt Reviewstand: jede der sieben D.2-Zeilen trägt ein Fachreview, entschieden
+    // nur zurechenbar.
+    for (const row of rows) {
+      erwarteZurechenbaresFachreview(row.review, entryKey(row.sourceId, row.variant));
+    }
   });
 
   it('führt Anhang E lückenlos und trägt damit das `E` im beanspruchten Umfang', () => {
@@ -572,7 +618,9 @@ describe('Coverage-Manifest', () => {
         expect(entry.review.technical.status).toBe('approved');
       }
       expect(entry.review.technical.reviewer).toBe('rv');
-      expect(entry.review.domain.status).toBe('pending');
+      // Für die Rolle `domain` gilt hier dieselbe Zusage wie überall: das Review ist vorhanden
+      // (die Rolle fehlt an keiner der 544 Zeilen) und, falls entschieden, zurechenbar.
+      erwarteZurechenbaresFachreview(entry.review, entryKey(entry.sourceId, entry.variant));
     }
   });
 
@@ -610,7 +658,9 @@ describe('Coverage-Manifest', () => {
     for (const row of rows) {
       expect(row.review.technical.date).toBe('2026-08-25');
       expect(row.review.technical.note).toContain('finale Task-6-Kontaktbogen');
-      expect(row.review.domain.status).toBe('pending');
+      // Invariante statt Reviewstand: jede der 14 F-c-Zeilen trägt ein Fachreview, entschieden
+      // nur zurechenbar.
+      erwarteZurechenbaresFachreview(row.review, entryKey(row.sourceId, row.variant));
     }
   });
 
@@ -622,7 +672,9 @@ describe('Coverage-Manifest', () => {
     for (const row of rows) {
       expect(row.review.technical.date).toBe('2026-08-26');
       expect(row.review.technical.note).toContain('finale Task-6-Kontaktbogen');
-      expect(row.review.domain.status).toBe('pending');
+      // Invariante statt Reviewstand: jede der acht F-d-Zeilen trägt ein Fachreview, entschieden
+      // nur zurechenbar.
+      erwarteZurechenbaresFachreview(row.review, entryKey(row.sourceId, row.variant));
     }
   });
 
@@ -635,7 +687,9 @@ describe('Coverage-Manifest', () => {
       expect(row.review.technical.status).toBe('approved');
       expect(row.review.technical.date).toBe('2026-08-26');
       expect(row.review.technical.note).toContain('finale Task-6-Kontaktbogen');
-      expect(row.review.domain.status).toBe('pending');
+      // Invariante statt Reviewstand: jede der acht F-f-Zeilen trägt ein Fachreview, entschieden
+      // nur zurechenbar.
+      erwarteZurechenbaresFachreview(row.review, entryKey(row.sourceId, row.variant));
     }
   });
 
@@ -667,7 +721,9 @@ describe('Coverage-Manifest', () => {
     expect(releaseBlockers().uncoveredScope).toEqual([]);
   });
 
-  it('beansprucht G erst mit exakt allen 21 primary-Referenzen und pending Fachreviews', () => {
+  // Titel geändert: „pending Fachreviews" war eine Aussage über den Reviewstand vom Tag der
+  // Aufnahme. Geprüft wird die Vollzähligkeit der 21 Zeilen und ihre Zurechenbarkeit.
+  it('beansprucht G erst mit exakt allen 21 primary-Referenzen und zurechenbaren Fachreviews', () => {
     const rows = COVERAGE_MANIFEST.entries.filter(
       (entry) => entry.coverage === 'composition-recipe' && entry.sourceId.startsWith('bbk-babz-2025:G.'),
     );
@@ -683,7 +739,11 @@ describe('Coverage-Manifest', () => {
     expect(rows.map((entry) => entry.sourceId.slice('bbk-babz-2025:'.length))).toEqual(expectedIds);
     expect(rows).toHaveLength(21);
     expect(rows.every((entry) => entry.variant === 'primary')).toBe(true);
-    expect(rows.every((entry) => entry.review.domain.status === 'pending')).toBe(true);
+    // Invariante statt Reviewstand: alle 21 G-Zeilen tragen ein Fachreview, entschieden nur
+    // zurechenbar.
+    for (const row of rows) {
+      erwarteZurechenbaresFachreview(row.review, entryKey(row.sourceId, row.variant));
+    }
     expect(rows.every((entry) => entry.review.technical.status === 'approved')).toBe(true);
     expect(rows.every((entry) => entry.review.technical.note?.includes(
       '21-Karten-Referenzvergleich wurde in Originalauflösung gesichtet',
@@ -717,13 +777,41 @@ describe('Coverage-Manifest', () => {
     });
   });
 
-  it('hat keine Abweichungen, Evidenzlücken oder Scope-Lücken', () => {
+  it('hat keine Evidenz- oder Scope-Lücken und führt fachliche Abweichungen deckungsgleich', () => {
     const blockers = releaseBlockers();
-    expect(blockers.domainReviewDeviations).toEqual([]);
-    expect(blockers.sourceDomainReviewDeviations).toEqual([]);
-    expect(blockers.profileDomainReviewDeviations).toEqual([]);
+
+    // Strukturaussagen, vom Reviewstand unabhängig — bleiben festgenagelt.
     expect(blockers.withoutTestEvidence).toEqual([]);
     expect(blockers.uncoveredScope).toEqual([]);
+
+    // Die drei Abweichungslisten standen bis hierher auf `toEqual([])`. Das war dieselbe Bauart
+    // wie die umgestellten `pending`-Stellen, nur mit anderem Wert: es hieß „bisher hat niemand
+    // eine Abweichung eingetragen". Eine fachliche Abweichung ist aber ein zulässiges
+    // Reviewergebnis und eine der drei Entscheidungen, für die das Fachreview-Werkzeug gebaut
+    // ist. Geprüft wird jetzt die **Deckungsgleichheit**: die Listen aus `blockersOf` sind Zeile
+    // für Zeile genau die Träger mit `domain: deviation` — läuft einer der beiden Wege weg,
+    // bricht der Test, und zwar bei jedem Reviewstand.
+    const manifestAbweichungen = COVERAGE_MANIFEST.entries
+      .filter((entry) => entry.review.domain.status === 'deviation')
+      .map((entry) => entryKey(entry.sourceId, entry.variant));
+
+    expect(blockers.domainReviewDeviations).toEqual(manifestAbweichungen);
+    expect(blockers.sourceDomainReviewDeviations).toEqual(
+      abweichendeLedgerschluessel(SOURCE_DOMAIN_REVIEWS),
+    );
+    expect(blockers.profileDomainReviewDeviations).toEqual(
+      abweichendeLedgerschluessel(PROFILE_DOMAIN_REVIEWS),
+    );
+
+    // Und keine Abweichung ohne Begründung: `blockersOf` führt nur zurechenbare Abweichungen,
+    // die Deckungsgleichheit oben hielte sonst nicht. Diese Schleife sagt es unabhängig davon.
+    for (const key of blockers.domainReviewDeviations) {
+      const eintrag = COVERAGE_MANIFEST.entries.find(
+        (entry) => entryKey(entry.sourceId, entry.variant) === key,
+      );
+      expect(eintrag, key).toBeDefined();
+      erwarteZurechenbaresFachreview(eintrag!.review, key);
+    }
   });
 
   it('nennt die BABZ-Empfehlungen als Baseline', () => {
@@ -753,7 +841,11 @@ describe('Coverage-Manifest', () => {
       Array.from({ length: 15 }, (_, index) => `bbk-babz-2025:D.3.${index + 1}`),
     );
     expect(entries.every((entry) => entry.review.technical.status === 'approved')).toBe(true);
-    expect(entries.every((entry) => entry.review.domain.status === 'pending')).toBe(true);
+    // Invariante statt Reviewstand: alle 15 D.3-Zeilen tragen ein Fachreview, entschieden nur
+    // zurechenbar.
+    for (const entry of entries) {
+      erwarteZurechenbaresFachreview(entry.review, entryKey(entry.sourceId, entry.variant));
+    }
   });
 
   it('beweist exakt 37 Anhang-D-Darstellungen, 36 neue Keys und den vollständigen D-Scope', () => {
@@ -897,7 +989,11 @@ describe('Coverage-Manifest', () => {
     expect(rows.every((entry) => entry.review.technical.date === '2026-08-26')).toBe(true);
     expect(rows.every((entry) => entry.review.technical.note?.includes('kommunaler Bauhof') === true)).toBe(true);
     expect(rows.every((entry) => entry.review.technical.note?.includes('Beauftragter Dritter') === true)).toBe(true);
-    expect(rows.every((entry) => entry.review.domain.status === 'pending')).toBe(true);
+    // Invariante statt Reviewstand: alle neun N-Zeilen tragen ein Fachreview, entschieden nur
+    // zurechenbar.
+    for (const row of rows) {
+      erwarteZurechenbaresFachreview(row.review, entryKey(row.sourceId, row.variant));
+    }
   });
 
   it('führt F.1 vollständig innerhalb des nun mengenexakt belegten F-Scope', () => {
@@ -976,7 +1072,9 @@ describe('Manifest-Einträge für Piktogramme', () => {
     expect(entry?.review.technical.note).toContain('Clipping');
     expect(entry?.review.technical.note).toContain('Mehrgrößen');
     expect(entry?.review.technical.note).toContain('viewBox');
-    expect(entry?.review.domain.status).toBe('pending');
+    // Invariante statt Reviewstand: 4.3.2 trägt ein Fachreview, entschieden nur zurechenbar.
+    expect(entry).toBeDefined();
+    erwarteZurechenbaresFachreview(entry!.review, 'bbk-babz-2025:4.3.2#primary');
   });
 
   it('trennt den freigegebenen D.1-Review identisch vom freigegebenen State-Technikreview', () => {

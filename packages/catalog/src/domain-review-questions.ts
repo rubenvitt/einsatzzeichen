@@ -8,11 +8,10 @@ import { deepFreeze, type DeepReadonly } from './readonly-data.js';
  * Reviewstatus nicht: das Ledger in `domain-reviews.ts` bleibt die einzige Stelle, an der ein
  * benannter Mensch mit einsatztaktischer Fachkunde freigibt.
  *
- * Warum ein eigenes Register und keine `note` am Reviewobjekt: die Ledgerzeilen sind mit
- * `{ status: 'pending' }` festgenagelt (`domain-reviews.test.ts` prüft viele Blöcke per
- * `toEqual`), und eine `note` ist dort der Ort für den **Befund** des Reviewers, nicht für die
- * Frage an ihn. Die Fragen standen bis LFH-430 nur als Kommentare im Ledger — unerreichbar für
- * `pnpm cli review-dossier`. Hier sind sie Daten.
+ * Warum ein eigenes Register und keine `note` am Reviewobjekt: eine `note` ist im Ledger der Ort
+ * für den **Befund** des Reviewers, nicht für die Frage an ihn. Beides in dasselbe Feld zu legen
+ * hieße, die offene Frage beim ersten Befund zu überschreiben. Die Fragen standen bis LFH-430 nur
+ * als Kommentare im Ledger — unerreichbar für `pnpm cli review-dossier`. Hier sind sie Daten.
  */
 export interface DomainReviewQuestion {
   /** Stabiler Bezeichner, z. B. `Q-1-ereignis-ohne-organisation`. */

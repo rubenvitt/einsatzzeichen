@@ -5,6 +5,7 @@ import {
   domainReviewQuestionsFor,
 } from './domain-review-questions.js';
 import { MANIFEST_DOMAIN_REVIEWS } from './domain-reviews.js';
+import { erwarteZurechenbaresFachreviewImLedger } from './test-support/domain-review.js';
 
 describe('Fachfragenregister', () => {
   it('nennt nur Schlüssel mit Ledgerplatz, keine doppelten IDs und keine leeren Fragen', () => {
@@ -17,10 +18,19 @@ describe('Fachfragenregister', () => {
       expect(Object.isFrozen(question)).toBe(true);
       expect(question.question.trim().length).toBeGreaterThan(0);
     }
-    // Das Register hängt am Ledger, nicht umgekehrt: jede genannte Zeile bleibt pending.
+    // Das Register hängt am Ledger, nicht umgekehrt. Bisher stand hier `toBe('pending')` — das
+    // war die Aussage „über keine der benannten Zeilen ist entschieden", also der Reviewstand vom
+    // Tag der Aufnahme, und genau das Gegenteil des Zwecks: eine Frage wird gestellt, **damit**
+    // die Zeile entschieden werden kann. Geprüft wird stattdessen die Invariante: jeder benannte
+    // Schlüssel hat einen Ledgerplatz, dessen Reviewobjekt eingefroren ist und, falls es
+    // entschieden ist, zurechenbar. Damit fängt der Test weiterhin einen erfundenen Schlüssel
+    // und ein vom Fragenregister nebenbei erzeugtes Reviewobjekt ab.
     for (const question of DOMAIN_REVIEW_QUESTIONS) {
       for (const key of question.keys) {
-        expect(MANIFEST_DOMAIN_REVIEWS[key].status).toBe('pending');
+        const review = MANIFEST_DOMAIN_REVIEWS[key];
+        expect(review, key).toBeDefined();
+        expect(Object.isFrozen(review), key).toBe(true);
+        erwarteZurechenbaresFachreviewImLedger(review, key);
       }
     }
   });

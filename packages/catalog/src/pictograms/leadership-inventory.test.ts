@@ -4,6 +4,7 @@ import { COVERAGE_MANIFEST } from '../coverage-manifest.js';
 import { MANIFEST_DOMAIN_REVIEWS } from '../domain-reviews.js';
 import { resolveElement } from '../elements.js';
 import { RECIPES } from '../recipes.js';
+import { erwarteZurechenbaresFachreview } from '../test-support/domain-review.js';
 import { RENDER_CASES } from '../test-support/render-cases.js';
 import { ALL_PICTOGRAMS, pictogram, pictogramVariantKey } from './index.js';
 import { LEADERSHIP_PICTOGRAMS } from './leadership/index.js';
@@ -287,11 +288,15 @@ describe('Leadership-Inventar nach D.2', () => {
         implementation: definition.id,
         referenceAsset: definition.referenceAsset,
         testEvidence: ['svg-snapshot', 'pictogram-contract'],
-        review: { domain: { status: 'pending' } },
       });
+      // Das `review`-Feld ist aus dem `toMatchObject` heraus: dort hätte es den Statuswert
+      // festgenagelt. Die beiden Aussagen darunter bleiben und sind die eigentlichen: die Zeile
+      // holt ihr Fachreview als **dasselbe Objekt** aus dem Ledger (Verdrahtung), und dieses
+      // Review ist, falls entschieden, zurechenbar.
       expect(rows[0]?.review.domain).toBe(
         MANIFEST_DOMAIN_REVIEWS[manifestKey as keyof typeof MANIFEST_DOMAIN_REVIEWS],
       );
+      erwarteZurechenbaresFachreview(rows[0]!.review, manifestKey);
     }
   });
 });

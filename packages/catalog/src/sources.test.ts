@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SOURCE_REGISTRY, isRegisteredSource } from './sources.js';
+import { erwarteZurechenbaresFachreview } from './test-support/domain-review.js';
 
 describe('Quellenregister', () => {
   it('führt dreizehn Quellen', () => {
@@ -78,7 +79,11 @@ describe('Quellenregister', () => {
     for (const [id, record] of Object.entries(SOURCE_REGISTRY)) {
       expect(record.review.technical.status).toBe('approved');
       expect(record.review.technical.reviewer).toBe(id === 'bbk-babz-2025' ? 'codex' : 'rv');
-      expect(record.review.domain.status).toBe('pending');
+      // Strukturaussage bleibt: jede der dreizehn Quellen trägt beide Reviewrollen. Beim
+      // Fachreview wird nur noch die Invariante geprüft — vorhanden, und falls entschieden
+      // zurechenbar. Der frühere `toBe('pending')` hätte bei der ersten Quellenfreigabe durch das
+      // Fachreview-Werkzeug rot gemeldet, obwohl nichts kaputt wäre.
+      erwarteZurechenbaresFachreview(record.review, `source:${id}`);
     }
   });
 

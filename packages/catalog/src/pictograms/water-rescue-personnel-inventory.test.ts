@@ -5,6 +5,10 @@ import { PICTOGRAM_ELEMENT_KINDS, resolveElement } from '../elements.js';
 import { MANIFEST_DOMAIN_REVIEWS } from '../domain-reviews.js';
 import { COVERAGE_MANIFEST } from '../coverage-manifest.js';
 import {
+  erwarteZurechenbaresFachreview,
+  erwarteZurechenbaresFachreviewImLedger,
+} from '../test-support/domain-review.js';
+import {
   ALL_PICTOGRAMS,
   pictogram,
   pictogramVariantKey,
@@ -141,7 +145,8 @@ describe('Wasserrettungsführung I.5.4 bis I.5.8', () => {
     }
   });
 
-  it('reserviert fünf getrennte und weiterhin offene Fachreviews', () => {
+  // Titel geändert: „weiterhin offene" war die Aussage über den Reviewstand vom Tag der Aufnahme.
+  it('reserviert fünf getrennte Fachreviewplätze mit je eigenem, zurechenbarem Reviewobjekt', () => {
     const lfh490ReviewKeys: ReadonlySet<string> = new Set(
       EXPECTED.map(({ section }) => `bbk-babz-2025:${section}#primary`),
     );
@@ -155,9 +160,18 @@ describe('Wasserrettungsführung I.5.4 bis I.5.8', () => {
       'bbk-babz-2025:I.5.7#primary',
       'bbk-babz-2025:I.5.8#primary',
     ]);
-    expect(keys.map((key) => MANIFEST_DOMAIN_REVIEWS[
-      key as keyof typeof MANIFEST_DOMAIN_REVIEWS
-    ])).toEqual(keys.map(() => ({ status: 'pending' })));
+    // Vorher: `toEqual(keys.map(() => ({ status: 'pending' })))` — das nagelte den Statuswert
+    // fest. Gegatet bleibt die **Struktur**: fünf Ledgerplätze, und zwar fünf verschiedene
+    // Objekte. Genau darum geht es dem Test („getrennte"): über ein gemeinsam referenziertes
+    // Sammelreview würde die Freigabe von I.5.4 die vier übrigen still mitfreigeben. Dazu die
+    // Invariante je Platz — entschieden nur zurechenbar.
+    const reviews = keys.map(
+      (key) => MANIFEST_DOMAIN_REVIEWS[key as keyof typeof MANIFEST_DOMAIN_REVIEWS],
+    );
+    expect(new Set(reviews).size).toBe(5);
+    for (const [index, review] of reviews.entries()) {
+      erwarteZurechenbaresFachreviewImLedger(review, keys[index]!);
+    }
   });
 
   it('führt nur I.5.4 bis I.5.8 mit technischem Direktnachweis im Manifest', () => {
@@ -185,9 +199,12 @@ describe('Wasserrettungsführung I.5.4 bis I.5.8', () => {
         testEvidence: ['svg-snapshot', 'pictogram-contract'],
         review: {
           technical: { status: 'approved', reviewer: 'rv', date: '2026-08-27' },
-          domain: { status: 'pending' },
         },
       });
+      // `domain` ist aus dem `toMatchObject` heraus: dort hätte es den Statuswert festgenagelt.
+      // Geprüft wird die Invariante — jede der fünf I.5-Zeilen trägt ein Fachreview, entschieden
+      // nur zurechenbar.
+      erwarteZurechenbaresFachreview(row.review, `${row.sourceId}#${row.variant}`);
       expect(row.review.technical.note).toContain('I.5.4 bis I.5.8');
       expect(row.review.technical.note).toContain('keine FunctionRole-, Strength- oder Organisationssemantik');
     }

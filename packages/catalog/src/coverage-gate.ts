@@ -198,8 +198,14 @@ function tryResolveElement(id: string): ElementDescriptor | undefined {
 /**
  * Abschnittsnummer eines Manifest-Eintrags, also der Teil hinter dem Baseline-Präfix. Wird von
  * `checkElementEntries` und von `blockersOf` verwendet.
+ *
+ * Öffentlich seit dem Fachreview-Werkzeug (`packages/review`): dessen Datenschicht braucht die
+ * Abschnittsnummer **jeder** Zeile — für die Bereichseinteilung und für die Nachbarschaft
+ * desselben Abschnittspräfixes. `releaseBlockers().domainReviewOpenByArea` zählt nur die offenen
+ * Zeilen und reicht dafür nicht. Wiederverwendung statt einer zweiten, still auseinanderlaufenden
+ * Abschnittslogik im Werkzeug.
  */
-function sectionOf(sourceId: string): string {
+export function sectionOf(sourceId: string): string {
   const separator = sourceId.indexOf(':');
   return separator === -1 ? sourceId : sourceId.slice(separator + 1);
 }
@@ -614,8 +620,12 @@ export interface ReleaseBlockers {
  * Bereich einer Abschnittsnummer: der Teil vor dem ersten Punkt. `'4.3.2'` → `'4'`,
  * `'C.1.1'` → `'C'`, `'1'` → `'1'`. Grob genug, dass die Zählung nach dem vollen Ausbau lesbar
  * bleibt, und fein genug, dass Kapitel 4 und Anhang C nicht in einen Topf fallen.
+ *
+ * Öffentlich aus demselben Grund wie `sectionOf`: das Fachreview-Werkzeug (`packages/review`)
+ * gliedert alle 544 Manifestzeilen nach Bereich, nicht nur die offenen. Es gibt damit weiterhin
+ * genau eine Bereichslogik — die hier.
  */
-function areaOf(section: string): string {
+export function areaOf(section: string): string {
   const dot = section.indexOf('.');
   return dot === -1 ? section : section.slice(0, dot);
 }
