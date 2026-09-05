@@ -73,6 +73,27 @@ Das committed OracleManifest bindet jeden der 661 erwarteten Dateinamen an
 seinen SHA-256 und berechnet daraus einen kanonisch sortierten Orakelset-Digest.
 Es enthält weder Pfade noch Raster- oder XML-Inhalte.
 
+Jeder assetlokale Parservertrag bindet seine Identität vollständig:
+
+```ts
+interface CorpusFeatureContract {
+  readonly version: 'CorpusFeatureContract/v1';
+  readonly key: CorpusFeatureContractKey;
+  readonly oracleAsset: OracleAssetKey;
+  readonly oracleAssetDigest: Sha256Digest;
+  readonly expectedCounts: CorpusFeatureCounts;
+  readonly allowedElements: readonly string[];
+  readonly allowedAttributesByElement: Readonly<Record<string, readonly string[]>>;
+  readonly allowedPresentationAttributes: readonly string[];
+  readonly allowedTransformKinds: readonly string[];
+}
+```
+
+`key` ist kanonisch aus `oracleAsset` abgeleitet; `oracleAssetDigest` muss
+bytegleich dem Digest derselben OracleManifest-Zeile sein. Ein Contract ohne
+diese drei gebundenen Felder oder ein zweiter Contract für dasselbe Asset ist
+ungültig.
+
 Die 544 Display-Fixtures bilden zwei disjunkte und vollständige Mengen. Die 14
 Katalogeinträge, 242 Rezepte und 269 eigenständig dargestellten Piktogramme,
 insgesamt 525 Displays, verwenden `comparisonMode: 'whole'`. Die 19
@@ -213,11 +234,18 @@ Anzahl, Schlüsselset und Digest aller assetspezifischen Ausnahmen sind Teil des
 Releasevertrags; ein Worker kann nicht durch Umklassifizierung eine `UseEdge`
 umgehen.
 
-Feste Originalbeschriftungen sind ausschließlich explizit implementierte
-Glyphen- oder Laufkonturen. Das Arimo-Textprimitive und andere Fonts sind im
-Exact-Paint-Pfad verboten. Freie Nutzerbeschriftung bleibt ein gesonderter,
-semantischer Ausgabepfad ohne BABZ-Identitätsclaim; sie darf kein bestehendes
-Exact-Asset ersetzen oder dessen Attestation erben.
+Feste Originalbeschriftungen in bekannten `ExactAsset`s und
+`ComponentFixture`s sind ausschließlich explizit implementierte Glyphen- oder
+Laufkonturen. Sie sind niemals Generated-Overlays. Das Arimo-Textprimitive und
+andere Fonts sind im Exact-Paint-Pfad verboten. Alle benutzerbestimmten
+Textwerte aus `SymbolSpec.labels` sowie `designation` bleiben bei freien
+Builder-Specs gesonderte semantische Generated-Overlay-Payloads ohne
+BABZ-Identitätsclaim; ihre konkreten Bytes gehören weder zur Component-Identität
+noch zu Exact-Digests oder Exact-Attestation. Endliche Label-Zustände für
+Placement, Ink, Metriken, Accessibility und Profile bleiben dagegen im exakten
+`ComponentContextKey`-Projektion/`CompositionContract`. Freie
+Nutzerbeschriftung darf kein bestehendes Exact-Asset ersetzen oder dessen
+Attestation erben.
 Der Exact-Paint-`FontSet` ist deshalb die kanonisch leere Menge; sein Digest
 bindet genau diese Leere. Eine spätere Fontabhängigkeit wäre eine explizite
 Schema- und Vertragsänderung. Fonts für freie Nutzerbeschriftung werden
@@ -326,26 +354,131 @@ liegen in den nicht komponierbaren Registern `states` 61, `comms` 48,
 tatsächliche Schlüsselsets sind Baseline-Invarianten; passende Summen können
 keine Überschneidung oder einen stillen Registerwechsel verdecken.
 
+`ReachableBuilderContextSet/v1` bleibt die einzige öffentliche Buildermenge. Es
+wird deterministisch und ausschließlich aus der öffentlichen
+`SymbolSpec`-Validierung, sämtlichen endlichen Builder-Achsen und den
+Kombinationsregeln abgeleitet. Alle Enum-Projektionen des Labelkontexts sind
+endlich und erschöpfend. Numerische Placement-/Metrik-/Profilwerte werden
+endlich und erschöpfend als `absent`, registriertes Profil oder
+`custom-generated` projiziert; nicht endliche Werte sind ungültig. Beim
+unendlichen Freitext werden alle Labelzonen sowie `designation` ausschließlich
+als `absent|present` projiziert (`topLeftLines` als
+`absent|present-two-lines`). Die konkreten Textbytes und benutzerbestimmten
+Custom-Metrikwerte werden nur zur bedarfsgesteuerten Overlay-Erzeugung
+mitgeführt und gehören nicht zum exakten Kontextschlüssel. Für jeden
+erreichbaren kanonischen Spec-Kontext muss `composeExact` erfolgreich sein;
+`NotMeasuredError` ist nur für neue oder unbekannte Zustände außerhalb dieses
+versionierten Sets zulässig, nicht für eine heute valide Builder-Kombination.
+
+Die technische Referenzabdeckung verwendet darüber eine zweite, kanonische,
+schema-neutrale Menge. `ReferenceComponentContextSet/v1` ist definitionsgemäß
+die disjunkte Vereinigung aus allen Paaren des
+`ReachableBuilderContextSet/v1` und den expliziten nichtöffentlichen
+Referenzkontexten:
+
+```ts
+type ReferenceComponentContextAccess =
+  | 'public-builder'
+  | 'reference-only'
+  | 'direct-carrier';
+
+interface ReferenceComponentContextPair {
+  readonly component: ComponentKey;
+  readonly context: ComponentContextKey;
+  readonly contract: CompositionContractKey;
+  readonly access: ReferenceComponentContextAccess;
+}
+
+interface ReferenceComponentContextSetV1 {
+  readonly version: 'ReferenceComponentContextSet/v1';
+  readonly pairs: readonly ReferenceComponentContextPair[];
+  readonly componentContextSetDigestInput: readonly string[];
+}
+```
+
+Die kanonische Paaridentität ist
+`(ComponentKey, ComponentContextKey)`; jeder Paarwert verweist auf genau einen
+`CompositionContractKey` und genau eine `access`-Klasse. Die
+`public-builder`-Zeilen werden ausschließlich und bytegleich aus **sämtlichen**
+Paaren von `ReachableBuilderContextSet.pairs` projiziert. Ihre
+Component-Key-Projektion enthält exakt die 247 über `SymbolSpec` auswählbaren
+Keys; 247 ist ausdrücklich keine Paaranzahl, denn ein öffentlicher Component-Key
+kann mehrere erreichbare Kontexte besitzen. Daneben stehen exakt 151 literale
+`reference-only`-Zeilen, je genau eine pro Key aus `states`, `comms`, `damage`
+und `wildfire`, sowie exakt 15 literale `direct-carrier`-Zeilen, je genau eine
+pro Key aus `leadership` und `water-rescue-personnel`. Damit gilt
+`|ReferenceComponentContextSet.pairs| =
+|ReachableBuilderContextSet.pairs| + 151 + 15`; nur die Projektion auf
+eindeutige Component-Keys hat die Kardinalität 413.
+
+`componentContextSetDigestInput` ist die kanonisch sortierte, duplikatfreie
+Serialisierung dieser totalen Pairmenge und bindet Version, vollständige 413er
+Registry-Eingabe, die bytegleiche Public-Projektion und beide literalen
+nichtöffentlichen Tabellen. `referenceComponentContextSetDigest` entsteht
+ausschließlich aus diesem Digestinput. Der getrennte
+`reachableBuilderContextSetDigest` entsteht aus dem Reachability-Vertrag samt
+seinem `componentContextSetDigestInput` und seiner
+`SymbolSpecCompletenessCertificate`; keiner der beiden Digests kann den anderen
+ersetzen. Es gibt keine dritte Paarquelle, keine fixturegetriebene
+Rückableitung und keine handgeschriebene Kopie öffentlicher Paare.
+
+Die drei Access-Projektionen sind paar- und componentseitig disjunkt. Kein
+Eintrag der 166 nichtöffentlichen Keys darf in `ReachableBuilderContextSet`,
+`ResolvedBuilderContext.componentContexts` oder einem Ergebnis von
+`resolveReachableBuilderContext` erscheinen. Er bleibt aber über
+`exactComponent`, `exactComponentResult`, `exactComponentContextKeys` und seine
+`ComponentFixture` vollständig renderbar. Umgekehrt darf kein Reachable-Paar
+als `reference-only` oder `direct-carrier` klassifiziert werden.
+
+Pair-Ownership ist kein Feld des schema-neutralen Sets und keine zweite
+handgeschriebene Ownerquelle. Erst die finale Catalog-Registry leitet für jedes
+Total-Paar genau einen Record ab:
+
+```ts
+interface ReferenceComponentContextOwnershipRecord {
+  readonly component: ComponentKey;
+  readonly context: ComponentContextKey;
+  readonly fixture: ComponentFixtureKey;
+  readonly owner: ExactBatchId;
+}
+
+interface ReferenceComponentContextOwnershipV1 {
+  readonly version: 'ReferenceComponentContextOwnership/v1';
+  readonly records: readonly ReferenceComponentContextOwnershipRecord[];
+  readonly digestInput: readonly string[];
+}
+
+deriveReferenceComponentContextOwnership(
+  referenceSet: ReferenceComponentContextSetV1,
+  componentFixtures: ReadonlyMap<ComponentFixtureKey, ExactComponentFixture>,
+  ownerIndex: ExactBatchKeyOwnerIndex,
+): ReferenceComponentContextOwnershipV1;
+```
+
+Die Ableitung verifiziert zuerst die eindeutige Bijektion zwischen der totalen
+Pairmenge und `ComponentFixture.(component, context)` und löst danach den Owner
+der einen Fixture ausschließlich über deren bereits vorhandenen
+Descriptor-/Manifest-Eintrag `ownedKeys.componentFixtures` auf. Es gibt keine
+zusätzliche `ReferenceComponentContext`-OwnedKeys-Collection. Der
+`referenceComponentContextOwnershipDigest` entsteht ausschließlich aus
+`ReferenceComponentContextOwnershipV1.digestInput` und bindet die kanonisch
+sortierten, duplikatfreien `(component, context, fixture, owner)`-Records.
+Fehlende oder doppelte Fixture, fehlender oder doppelter
+Descriptor-/Manifest-Owner,
+Ownerwechsel ohne aktualisierten Digest oder ein handgeschriebener
+Ownership-Record schlagen fail-closed fehl.
+
 Das getrennte `CompositionContractRegistry` enthält Layoutprofile, Textzonen,
-Anker, Transform-/Placement-Regeln, zulässige Kombinationen und die endliche Menge
-kanonischer `ComponentContextKey`s. Diese Regeln sind keine Paint-Komponenten
+Anker, Transform-/Placement-Regeln, zulässige Kombinationen und die endliche
+Menge kanonischer `ComponentContextKey`s für **alle** Paare des
+`ReferenceComponentContextSet/v1`. Diese Regeln sind keine Paint-Komponenten
 und erhöhen die Zahl 413 nicht. Jede zulässige
 `(ComponentKey, ComponentContextKey, ExactComponentVariantKey)`-Fassung ist ein
 eigener `ComponentFixtureKey`; jeder unbekannte oder nicht registrierte Kontext
-ist ungültig. Jeder der 247 frei auswählbaren Werte besitzt mindestens eine
-Fixture, und jeder zur Laufzeit gültige Kontext löst fail-closed genau eine
-Fixture auf.
-
-`ReachableBuilderContextSet/v1` wird deterministisch aus der öffentlichen
-`SymbolSpec`-Validierung, sämtlichen endlichen Builder-Achsen und den
-Kombinationsregeln abgeleitet. Beim unendlichen Freitext wird nur der für die
-Exact-Komponenten relevante Zustand `designation absent|present` berücksichtigt;
-der Textinhalt gehört zum Generated-Overlay. Die Menge aller daraus
-erreichbaren `(ComponentKey, ComponentContextKey)`-Paare muss exakt der
-registrierten Kontextmenge entsprechen. Für jeden erreichbaren kanonischen
-Spec-Kontext muss `composeExact` erfolgreich sein; `NotMeasuredError` ist nur
-für neue oder unbekannte Zustände außerhalb dieses versionierten Sets zulässig,
-nicht für eine heute valide Builder-Kombination.
+ist ungültig. Die Paarprojektion der Registry ist exakt die totale
+Referenzmenge. Jeder ihrer 413 Component-Keys besitzt mindestens ein
+Gesamtpaar, jedes Gesamtpaar genau eine Fixture, und jeder
+öffentliche Laufzeitkontext löst fail-closed genau eine Fixture auf.
 
 Jeder Registry-Key besitzt genau einen `CompositionContractCase`. Dessen
 `CompositionWitnessEdge`s binden ihn an sämtliche im Orakel beobachteten
@@ -362,14 +495,23 @@ Das committed `ConformanceManifest` führt die vollständigen, kanonisch
 sortierten Sets der `OraclePartKey`s, `ComponentFixtureKey`s und `UseEdgeKey`s.
 Es führt ebenso `CompositionContractCaseKey`s und
 `CompositionWitnessEdgeKey`s. Für jedes Set werden sowohl erwartete
-Kardinalität als auch Set-Digest geprüft.
-Jeder der 413 Component-Keys besitzt mindestens eine Fixture und mindestens
-einen `OraclePart`-Referenzzeugen; ein fehlender Zeuge ist ein harter
+Kardinalität als auch Set-Digest geprüft. Für Component-/Context-Paare bindet
+es ausschließlich den aus
+`ReferenceComponentContextSet.componentContextSetDigestInput` berechneten
+Setdigest und die oben festgelegten Kardinalitäten, keine zweite Paarliste.
+Ownership wird nicht als weiteres Manifest-Keyset gespeichert, sondern aus
+Total-Paaren, Fixtures und dem bereits validierten Descriptor-Ownerindex
+abgeleitet und separat gedigestet.
+Jeder der 413 Component-Keys besitzt im totalen Referenzset mindestens ein
+Paar, mindestens eine Fixture und mindestens einen `OraclePart`- beziehungsweise
+Contract-Witness-Referenzzeugen; ein fehlender Zeuge ist ein harter
 Releasefehler, kein freistellbarer Status.
 
-Das freie Feld `designation` ist kein endliches Component. Seine feste
+Freie Labeltexte und `designation` sind keine endlichen Components. Ihre feste
 Typografie-, Layout- und Fehlerbehandlung wird separat getestet, ohne einen
-nicht existierenden Originalidentitätsclaim zu erzeugen.
+nicht existierenden Originalidentitätsclaim zu erzeugen; die endlichen
+Placement-, Ink-, Metrik-, Accessibility- und Profilzustände bleiben Teil der
+erschöpfend geprüften Context-/Contract-Auswahl.
 
 ## 4. Harte Mengen- und Graphinvarianten
 
@@ -384,6 +526,18 @@ Der eingefrorene Referenzstand hat die folgenden Release-Invarianten:
 |DisplayFixture[comparisonMode = part]|        = 19
 |DisplayCase|                                  = 544
 |PaintComponentRegistry|                       = 413
+|public Builder Component-Keys|                = 247
+|reference-only Component-Keys|                = 151
+|direct-carrier Component-Keys|                = 15
+|total Reference Component-Keys|               = 413
+|ReferenceComponentContextSet.pairs[public-builder]|
+  = |ReachableBuilderContextSet.pairs|
+|ReferenceComponentContextSet.pairs[reference-only]| = 151
+|ReferenceComponentContextSet.pairs[direct-carrier]| = 15
+|ReferenceComponentContextSet.pairs|
+  = |ReachableBuilderContextSet.pairs| + 166
+|ComponentFixture|                             = |ReferenceComponentContextSet.pairs|
+|ReferenceComponentContextOwnershipV1.records| = |ReferenceComponentContextSet.pairs|
 |ComponentCase|                                = |ComponentFixture|
 |CompositionContractCase|                      = |CompositionContractRegistry|
 |OracleAsset ohne ExactAssetFixture|            = 0
@@ -398,6 +552,11 @@ Der eingefrorene Referenzstand hat die folgenden Release-Invarianten:
 |Component ohne Fixture oder Referenzzeuge|    = 0
 |ComponentFixture ohne OraclePart-Zeugen|      = 0
 |CompositionContractCase ohne WitnessEdge|     = 0
+|ReferenceComponentContext-Paar ohne Owner|    = 0
+|ReferenceComponentContext-Paar mit != 1 Fixture| = 0
+|ReferenceComponentContext-Paar ohne Contract| = 0
+|ReferenceComponentContext-Paar ohne Witness|  = 0
+|nonpublic Paar in Builder-Auflösung|          = 0
 |beobachtetes Placement ohne Contract|         = 0
 |erreichbarer Builder-Kontext mit NotMeasured| = 0
 |Spec-Pflichtcomponent ohne Trace-Instanz|     = 0
@@ -413,20 +572,48 @@ Zusätzlich gelten Mengen- statt Zählinvarianten:
 set(DisplayFixture.key) = set(CoverageManifest.entryKey)
 set(OracleAsset.filename) = set(localOracleInventory.filename)
 set(ExactAssetFixture.filename) = set(OracleAsset.filename)
-set(AssetCase.key) = set(OracleAsset.key)
-set(DisplayCase.key) = set(DisplayFixture.key)
+set(AssetCase.exactAsset) = set(ExactAssetFixture.key)
+set(DisplayCase.displayFixture) = set(DisplayFixture.key)
 set(DisplayFixture[whole].key) = set(ConformanceManifest.wholeDisplayKey)
 set(DisplayFixture[part].key) = set(ConformanceManifest.partDisplayKey)
-set(ComponentCase.key) = set(ComponentFixture.key)
+set(ComponentCase.componentFixture) = set(ComponentFixture.key)
 set(ComponentFixture.key) = set(ConformanceManifest.componentFixtureKey)
 set(ComponentFixture.(component, context))
-  = set(ReachableBuilderContextSet.(component, context))
+  = set(ReferenceComponentContextSet.pairs.(component, context))
+set(ReferenceComponentContextSet.pairs[public-builder].(component, context, contract))
+  = set(ReachableBuilderContextSet.pairs.(component, context, contract))
+set(ReferenceComponentContextSet.pairs[public-builder].component)
+  = set(PaintComponentRegistry.kind | organization | technicalFill | strength
+      | administrativeLevel | functionRole | capabilities | bodyMarks
+      | vehicleCategory | bodyVariant | technicalHeadMark)
+set(ReferenceComponentContextSet.pairs[reference-only].component)
+  = set(PaintComponentRegistry.states | comms | damage | wildfire)
+set(ReferenceComponentContextSet.pairs[direct-carrier].component)
+  = set(PaintComponentRegistry.leadership | water-rescue-personnel)
+pairwise-disjoint(
+  set(ReferenceComponentContextSet.pairs[public-builder].component),
+  set(ReferenceComponentContextSet.pairs[reference-only].component),
+  set(ReferenceComponentContextSet.pairs[direct-carrier].component),
+)
+set(ReferenceComponentContextSet.pairs.component)
+  = set(PaintComponentRegistry.key)
+set(ReferenceComponentContextOwnershipV1.records.(component, context, fixture))
+  = set(join(
+      ReferenceComponentContextSet.pairs.(component, context),
+      ComponentFixture.(component, context, key),
+    ))
+owner(ReferenceComponentContextOwnershipV1.records.fixture)
+  = owner(ExactBatchDescriptor.manifest.ownedKeys.componentFixtures)
+set(CompositionContractRegistry.(component, context, contract))
+  = set(ReferenceComponentContextSet.pairs.(component, context, contract))
 set(OraclePart.key) = set(ConformanceManifest.oraclePartKey)
 set(UseEdge.key) = set(ConformanceManifest.useEdgeKey)
-set(CompositionContractCase.key)
+set(CompositionContractCase.contract)
   = set(CompositionContractRegistry.key)
 set(CompositionWitnessEdge.key)
   = set(ConformanceManifest.compositionWitnessEdgeKey)
+set(join(CompositionWitnessEdge.contract, CompositionContractRegistry).component)
+  = set(PaintComponentRegistry.key)
 set(UseEdge.component) = set(PaintComponentRegistry.key)
 set(UseEdge[fixture = ComponentFixture].fixture) = set(ComponentFixture.key)
 multiset(OwnedPaintIndex.owner projected to oracle records)
@@ -437,9 +624,13 @@ set(OracleOwnershipManifest.assetSpecificKey)
 
 Ein Asset kann mehrere Verwendungen besitzen, hat aber genau einen Asset-Case
 und genau eine Exact-Asset-Fixture. Jeder Component ist über die
-Exact-Component-API renderbar, besitzt für jeden gültigen Kontext einen
-Component-Case und hat wenigstens einen Referenzzeugen. Ein während der
-Entwicklung entdeckter `unreferenced-catalog-value` ist ein harter Fehler.
+Exact-Component-API renderbar, besitzt für jedes Paar des totalen
+Referenzsets genau eine Fixture mit Component-Case und hat wenigstens
+einen Referenzzeugen. Nur die öffentliche Projektion ist durch `SymbolSpec`
+auflösbar; ihre Paarmenge ist exakt das Reachability-Set. Ein während der
+Entwicklung entdeckter `unreferenced-catalog-value`, ein referenzexklusiver
+Buildertreffer oder eine ausschließlich in Fixtures vorhandene Paarzeile ist
+ein harter Fehler.
 
 Das `PaintComponentRegistry` umfasst die sichtbaren Grundkörper und
 Körpervarianten, Organisationsfarben, Stärkegrade, Fahrzeugkategorien,
@@ -449,6 +640,19 @@ Geometrie und Kombinationsregeln gehören ausschließlich in das
 `CompositionContractRegistry`. Beide Schlüsselmengen werden als versionierte
 Testwerte gegated; eine neue oder entfernte Zeile kann keinen stillen
 Mengenwechsel erzeugen.
+
+Ein eigener adversarialer Mutationstest berechnet Reachable-, Total- und den
+separat abgeleiteten Ownership-Digest aus den tatsächlich geladenen Records
+neu. Er muss mindestens Löschung, Zusatz, Dublette, Access-Crossover,
+Public/Reference-only-/Direct-Überlappung, Ownerwechsel, Contract-Retargeting,
+Fixture-Retargeting, fehlenden Contract-Case, fehlende Witness-Edge und das
+Einschleusen eines `reference-only`-/`direct-carrier`-Keys in
+`resolveReachableBuilderContext` jeweils bei ansonsten unveränderten
+Manifestwerten ablehnen. Umgekehrt darf eine Änderung am
+öffentlichen `SymbolSpec`-Sprachautomaten die Public-Projektion nicht mit einem
+alten Reachability- oder Total-Digest bestehen lassen. Fixture-, Contract- und
+Witness-Register sind Verbraucher des totalen Sets und dürfen es niemals aus
+ihrem eigenen Istzustand autorisieren.
 
 Jeder `ExactAssetFixture` wird ausschließlich aus geordneten Instanzen
 konkreter `ExactComponentVariant`s und expliziten assetspezifischen Fragments
@@ -561,6 +765,15 @@ interface ExactComponentVariant {
   readonly fragment: ReferenceExactFragmentKey;
 }
 
+interface GeneratedOverlayLayer {
+  readonly kind: 'generated-overlay';
+  readonly purpose: 'body-labels' | 'designation';
+  readonly drawing: Drawing;
+  readonly overlayToExact: ExactTransformSequence;
+  readonly overlayToExactDigest: Sha256Digest;
+  readonly claim: 'not-reference-identical';
+}
+
 interface LayeredDrawing {
   readonly kind: 'layered';
   readonly viewBox: ExactViewBox;
@@ -570,15 +783,52 @@ interface LayeredDrawing {
         readonly drawing: ReferenceExactDrawing;
         readonly claim: 'exact-reference-parity';
       }
-    | {
-        readonly kind: 'generated-overlay';
-        readonly purpose: 'designation';
-        readonly drawing: Drawing;
-        readonly overlayToExact: ExactTransformSequence;
-        readonly claim: 'not-reference-identical';
-      }
+    | GeneratedOverlayLayer
   )[];
 }
+
+type ComponentContextKey = string & {
+  readonly __componentContextKey: unique symbol;
+};
+
+interface ResolvedBuilderContext {
+  readonly key: BuilderCompositionKey;
+  readonly projection: SymbolSpecProjection;
+  readonly componentContexts: readonly {
+    readonly component: ComponentKey;
+    readonly context: ComponentContextKey;
+    readonly contract: CompositionContractKey;
+  }[];
+  readonly plan: CompositionPlan;
+  readonly generatedOverlays: readonly GeneratedOverlayLayer[];
+}
+
+type ExactCompositionSource =
+  | {
+      readonly kind: 'known-asset';
+      readonly exactAsset: ExactAssetKey;
+      readonly fixture: ExactAssetFixture;
+    }
+  | { readonly kind: 'free-builder' };
+
+interface ExactCompositionRequest {
+  readonly validatedSpec: SymbolSpec;
+  readonly resolved: ResolvedBuilderContext;
+  readonly source: ExactCompositionSource;
+  readonly selectedPlan: CompositionPlan;
+  readonly generatedOverlays: readonly GeneratedOverlayLayer[];
+}
+
+interface GeneratedOverlayTraceRecord {
+  readonly layer: GeneratedOverlayLayer;
+  readonly purpose: GeneratedOverlayLayer['purpose'];
+  readonly overlayToExact: ExactTransformSequence;
+  readonly overlayToExactDigest: Sha256Digest;
+}
+
+type CompositionTraceWithGeneratedOverlays = CompositionTrace & {
+  readonly generatedOverlays: readonly GeneratedOverlayTraceRecord[];
+};
 
 interface ExactCompositionResult<
   D extends ReferenceExactDrawing | LayeredDrawing =
@@ -586,7 +836,7 @@ interface ExactCompositionResult<
     | LayeredDrawing,
 > {
   readonly drawing: D;
-  readonly trace: CompositionTrace;
+  readonly trace: CompositionTraceWithGeneratedOverlays;
 }
 
 exactAsset(key: ExactAssetKey): ReferenceExactDrawing;
@@ -596,11 +846,11 @@ exactAssetResult(
 exactAssetKeys(): readonly ExactAssetKey[];
 exactComponent(
   key: ComponentKey,
-  context: ComponentContext,
+  context: ComponentContextKey,
 ): ReferenceExactDrawing;
 exactComponentResult(
   key: ComponentKey,
-  context: ComponentContext,
+  context: ComponentContextKey,
 ): ExactCompositionResult<ReferenceExactDrawing>;
 exactComponentKeys(): readonly ComponentKey[];
 exactComponentContextKeys(key: ComponentKey): readonly ComponentContextKey[];
@@ -609,15 +859,40 @@ exactComponentFixture(key: ComponentFixtureKey): ReferenceExactDrawing;
 exactComponentFixtureResult(
   key: ComponentFixtureKey,
 ): ExactCompositionResult<ReferenceExactDrawing>;
+resolveReachableBuilderContext(spec: SymbolSpec): ResolvedBuilderContext;
 composeExact(spec: SymbolSpec): ExactCompositionResult;
 composeFromCatalog(spec: SymbolSpec): RenderableDrawing;
-compositionTraceOf(spec: SymbolSpec): CompositionTrace;
+compositionTraceOf(spec: SymbolSpec): CompositionTraceWithGeneratedOverlays;
 ```
 
 `exactAssetResult`, `exactComponentResult`, `exactComponentFixtureResult` und
 `composeExact` sind die autoritativen atomaren Zugänge. Die reinen
 Drawing-/Trace-Helfer projizieren nur deren Ergebnis und dürfen keine
 unabhängige Materialisierung ausführen.
+
+`CompositionTraceWithGeneratedOverlays` ist der einzige öffentliche
+Tracevertrag dieser Ergebnis-APIs; der schmalere `CompositionTrace` bleibt ein
+interner Plan-/Materialisierungswert und darf nie direkt als API-Ergebnistrace
+erscheinen. Bekannte Exact-Assets sowie direkte Component- und
+ComponentFixture-Ergebnisse besitzen die kanonisch leere, immutable
+`generatedOverlays`-Folge. Bei einer freien Builderkomposition enthält sie
+exakt einen `GeneratedOverlayTraceRecord` pro erzeugtem Overlay, in derselben
+Reihenfolge wie Drawing und Request: zuerst optional `body-labels`, danach
+optional `designation`. Jeder Record referenziert denselben unveränderten
+`GeneratedOverlayLayer`, dieselbe `overlayToExact`-Objektreferenz und denselben
+`overlayToExactDigest`; eine zweite Traceform oder eine unabhängig
+rekonstruierte Overlayfolge ist unzulässig.
+
+`exactComponentContextKeys` projiziert für den angefragten Component-Key aus
+dem **totalen** `ReferenceComponentContextSet`; `exactComponent` und
+`exactComponentResult` akzeptieren damit öffentliche wie referenzexklusive
+Kontexte. `resolveReachableBuilderContext` liest dagegen ausschließlich
+`ReachableBuilderContextSet.pairs`; deren bytegleiche Totalset-Projektion trägt
+`access: 'public-builder'`. Vor jeder Auflösung verifiziert es den getrennten
+Reachability-Digest und die `SymbolSpecCompletenessCertificate`. Es gibt keinen
+Fallback von einem unbekannten öffentlichen Spec auf einen Reference-only-
+Kontext und keine umgekehrte Veröffentlichung eines Reference-only-Kontexts
+als Builderproduktion.
 
 Alle 661 `ExactAssetKey`s sind veröffentlicht und renderbar. Jede
 `ExactAssetFixture` besitzt einen einzigen autoritativen `CompositionPlan` aus
@@ -631,7 +906,19 @@ nach der normalen Validierung eindeutig auf die entsprechende
 `ExactAssetFixture` geroutet. Auch dieser schnelle Pfad liefert nur die
 gecachte Materialisierung desselben Komponentenplans. Die 242 heutigen
 Rezept-Specs behalten ihre semantischen Metadaten, tragen aber eine eindeutige
-Exact-Asset-Zuordnung.
+Exact-Asset-Zuordnung. Die einzige Routinggrenze ist der Foundation-Vertrag
+`KnownSymbolSpecAssetIndex = ReadonlyMap<KnownSymbolSpecDigest, ExactAssetKey>`.
+`canonicalKnownSymbolSpecDigest` hasht die RFC-8785-/JCS-UTF-8-Darstellung des
+vollständigen, validierten kanonischen `SymbolSpec`: alle tatsächlichen Felder,
+geordneten Arrays und freien Texte bleiben enthalten; eine endliche
+paintrelevante Projektion ist hierfür ausdrücklich unzulässig. Der finale Index
+enthält genau die 14 Base-Specs `{ kind: entry.kind }` und die 242 Rezept-Specs,
+also 256 eindeutige Digests, deren Werte sämtlich in der finalen
+`ExactCatalogRegistry.exactAssets`-Map existieren. Doppelte kanonische Bytes,
+ein SHA-256-Digestkonflikt bei verschiedenen Bytes oder eine voneinander
+abweichende Assetzuordnung für denselben Digest schlagen fail-closed fehl.
+Dadurch kann insbesondere ein freier beziehungsweise overlaytragender Spec
+nicht mit einem bekannten Asset aliasen.
 
 Freie Baukastenkombinationen werden aus exakten, kontextabhängigen
 Component-Fixtures zusammengesetzt. Ein Component darf mehrere belegte
@@ -640,35 +927,74 @@ Labelkontext besitzen. Die Auswahl geschieht über einen kanonischen
 Kontextschlüssel; ein unbelegter Kontext erzeugt `NotMeasuredError` und niemals
 einen generischen Fallback.
 
-Das freie Feld `designation` wird bei einer freien Builder-Kombination als
-einziger zulässiger `generated-overlay` über der exakten Paint-Schicht
-ausgegeben. Der Trace weist Layer, Transform und den fehlenden
-Originalidentitätsclaim separat aus; dieser Layer erhält keine
-Exact-Attestation. Ein bekanntes Exact-Asset und jede
+Bei einer freien Builder-Kombination werden alle gesetzten Labeltexte und
+`designation` als diskriminierte `generated-overlay`s über der exakten
+Paint-Schicht ausgegeben. Die Reihenfolge lautet: `exact-paint`, danach
+höchstens ein `body-labels`-Layer mit allen gesetzten Körperlabelzonen in
+kanonischer Renderreihenfolge `center`, `aboveLeft`, `topLeft`, `topLeftLines`,
+`bottomLeft`, `bottomCenter`, `bottomRight`, `belowRight`, `surfaceBelowLeft`,
+`surfaceBelowRight`, zuletzt höchstens ein `designation`-Layer. Innerhalb des
+`body-labels`-Layers bleibt `topLeftLines` ein geordnetes Zeilenpaar. Der Trace
+weist jeden Layer, Transform und fehlenden
+Originalidentitätsclaim separat in derselben Reihenfolge aus; kein solcher
+Layer erhält eine Exact-Attestation. Ein bekanntes Exact-Asset und jede
 `ExactAssetFixture`/`ComponentFixture` dürfen niemals einen Generated-Overlay
 enthalten. Feste Originalbeschriftungen bleiben stattdessen exakte
 Pfadkonturen im `exact-paint`-Layer.
-`overlayToExact` liegt direkt am Layer und ist die ausführbare Abbildung aus dem
-semantischen Drawing-Raum in die gemeinsame Exact-ViewBox. `composeExact`
-erzeugt Layer und Transform atomar; der Trace referenziert exakt denselben
-immutablen Wert und Digest statt einer zweiten Kopie. Jeder Renderer wendet
-dieses Feld an und darf den Transform nicht aus dem Trace oder aus Bounds
-rekonstruieren.
+Jedes `overlayToExact` liegt direkt am jeweiligen Layer und ist dessen
+immutable ausführbare Abbildung aus dem semantischen Drawing-Raum in die
+gemeinsame Exact-ViewBox. Direkt daneben liegt verpflichtend
+`overlayToExactDigest: Sha256Digest`, kanonisch berechnet über exakt diese
+Transformfolge. `composeExact` erzeugt Layer, Transform und Digest atomar; der
+zugehörige Trace-Eintrag referenziert exakt denselben immutablen Transformwert
+(dieselbe Objektidentität) und denselben Digest. Eine neu berechnete bloß
+äquivalente Transformfolge, eine zweite Digestkopie oder eine Mutation bei
+unverändertem Digest ist ungültig. Jeder Renderer wendet jedes dieser Felder an
+und darf den Transform nicht aus dem Trace oder aus Bounds rekonstruieren.
 
-`composeExact(spec)` ist der atomare Kern: Er validiert zuerst den `SymbolSpec`,
-leitet daraus ausschließlich registrierte `ComponentContextKey`s ab, löst für
-jede benötigte Komponente fail-closed genau eine `ExactComponentVariant` auf,
-platziert deren `ReferenceExactFragment`s über die registrierten exakten
-Transformfolgen in einer gemeinsamen ViewBox und vereinigt die Nodes in der
-festgelegten Paint-Reihenfolge. Drawing und vollständiger `CompositionTrace`
-werden gemeinsam zurückgegeben oder gemeinsam verworfen. `composeFromCatalog`
-und `compositionTraceOf` delegieren an dieses Ergebnis; sie dürfen Drawing und
-Trace nicht unabhängig berechnen.
+`resolveReachableBuilderContext(spec)` ist die einzige Übergabe aus der
+Builder-Auflösung und liefert atomar genau einen `ResolvedBuilderContext` mit
+exakt `key`, `projection`, `componentContexts`, `plan` und
+`generatedOverlays`. Das
+`componentContexts`-Array ist immer vorhanden und enthält ausschließlich
+gebrandete `ComponentContextKey`s; ein optionaler Kontext, `undefined`, ein Typ
+`ComponentContext` oder eine zweite Projektionsform existiert nicht.
 
-Für freie Kombinationen lautet der Claim
-„zusammengesetzt aus referenzidentischen Komponenten“, nicht
-„identisch mit einer BABZ-Ganzzeichnung“, sofern kein solches Original
-existiert.
+`composeExact(spec)` ist der atomare Kern. Validierung und
+`resolveReachableBuilderContext` dürfen für beide Routen denselben
+`ResolvedBuilderContext` als endlichen Kontextnachweis behalten; anschließend
+wählt der Kern jedoch genau einen `ExactCompositionRequest` mit genau einer
+autoritativen `source`, einem `selectedPlan`, einer Overlayfolge und einer
+Ergebnisquelle:
+
+- Bei einem eindeutig gemappten bekannten Spec ist `source.kind`
+  `known-asset`, `source.fixture` die vorhandene `ExactAssetFixture`,
+  `selectedPlan` objektidentisch zu deren Plan und `generatedOverlays` exakt
+  leer. Der Kern verwendet genau einmal das gecachte `exactAssetResult` dieser
+  Fixture. Dessen Plan- und Trace-Target bleibt das echte Asset; der nur zum
+  Validierungsnachweis vorhandene `resolved.plan` wird weder ausgewählt noch
+  materialisiert.
+- Nur bei einem freien Spec ist `source.kind` `free-builder`, `selectedPlan`
+  objektidentisch zu `resolved.plan` und `generatedOverlays` objektidentisch zu
+  `resolved.generatedOverlays`. Dieser ausgewählte Plan wird genau einmal
+  materialisiert; vorhandene Overlays werden danach in der festgelegten
+  Reihenfolge atomar angehängt.
+
+Keine Route darf beide Pläne oder Resultquellen kombinieren, einen Plan auf ein
+anderes Target umschreiben, ein Assetresultat als Builderresultat ausgeben oder
+einen Trace nachträglich erfinden. Drawing und vollständiger
+`CompositionTrace` werden aus der einen gewählten Quelle gemeinsam
+zurückgegeben oder gemeinsam verworfen. Overlay-Payload ändert weder Exact-Plan
+noch Component-Identitäten oder Exact-Digests. `composeFromCatalog` und
+`compositionTraceOf` projizieren ausschließlich dieses eine Ergebnis und
+dürfen Drawing oder Trace nicht unabhängig berechnen.
+
+Für freie Kombinationen ohne Generated-Overlay lautet der Claim
+„zusammengesetzt aus referenzidentischen Komponenten“, nicht „identisch mit
+einer BABZ-Ganzzeichnung“, sofern kein solches Original existiert. Sobald ein
+freies Label- oder Designation-Overlay vorhanden ist, lautet der Claim für das
+zusammengesetzte Ergebnis `not-reference-identical`; insbesondere erbt kein
+Overlay eine Exact-Attestation.
 
 Jede `DisplayFixture` referenziert genau einen `ExactAssetFixtureKey`. Bei
 `comparisonMode: 'whole'` teilen Display und Exact-Asset denselben normalisierten
@@ -764,6 +1090,9 @@ interface ConformanceAttestation {
   readonly fixtureDigest: string;
   readonly geometryDigest: string;
   readonly compositionTraceDigest: string;
+  readonly reachableBuilderContextSetDigest: string;
+  readonly referenceComponentContextSetDigest: string;
+  readonly referenceComponentContextOwnershipDigest: string;
   readonly compositionContractRegistryDigest: string;
   readonly compositionWitnessSetDigest: string;
   readonly normalizedPaintListDigest: string;
@@ -795,6 +1124,11 @@ interface ConformanceSignatureEnvelope {
   readonly payloadEncoding: 'RFC8785-JCS-UTF8';
   readonly signatureBase64Url: string;
 }
+
+interface RequiredConformancePair {
+  readonly case: ConformanceCaseKey;
+  readonly pair: EvidencePairKind;
+}
 ```
 
 Attestations sind immutable und append-only. Sie liegen als signiertes
@@ -812,6 +1146,30 @@ Gültigkeitszeitraum und Widerrufsstatus; sein Digest steht im Attest.
 Schlüsselrotation ergänzt einen neuen Key. Unbekannte, außerhalb ihres
 Gültigkeitszeitraums verwendete oder widerrufene Keys sowie ein abweichender
 Trust-Store-Digest führen vor Review-Anzeige und Publish fail-closed zum Fehler.
+
+Die Attestierungsprüfung erhält `requiredPairs` als gesonderte autoritative
+Eingabe. Diese Folge wird aus der finalisierten, für den Lauf ausgewählten
+Registry und deren vollständigem erwartetem Case-Set abgeleitet, niemals aus
+der Attestation oder ihrer Provenance. Für jede Attestation wird daraus die
+case-spezifische Pflichtfolge projiziert: Ein Whole-Case verlangt genau `full`,
+ein `source-node-set`-Case genau `selected`, ein `leave-one-out`-Case genau die
+geordnete Folge `full`, `without-selected`. Der Verifier verlangt für diesen
+Case exakte duplikatfreie 1:1-Gleichheit zwischen allen erwarteten
+`RequiredConformancePair`s und der signierten Provenance; das übergeordnete
+Gate verlangt dies zusätzlich für jeden Case des vollständigen ausgewählten
+Case-Sets. Eine gültige Signatur kann deshalb weder fehlende Cases oder
+Pflichtpaare selbst autorisieren noch durch eine selbst gewählte Teilmenge
+Vollständigkeit behaupten.
+
+Vor dem abschließenden technischen Freigabegate hält ein
+`SpecQualityReviewRecord` den geprüften HEAD, die gebundenen Spec-/Plandigests
+und ein erfolgreiches Prepare-Ergebnis fest; jeder offene Befund oder eine
+Abweichung zwischen diesen Identitäten macht ihn ungültig. Ein separater
+`ReviewFreezeRecord` darf erst entstehen, nachdem alle schreibenden und
+prüfenden Agenten geordnet beendet wurden und der Review-Tree danach als
+unveränderter, vollständig abgeschlossener Stand erneut geprüft wurde. Diese
+beiden Koordinationsrecords ersetzen weder Case-Evidenz noch technische
+Attestation oder Domain-/Rechtsfreigabe.
 
 Der Strict-Runner startet ausschließlich aus einem sauberen Checkout des
 attestierten `headCommit`. Vor Build und nach dem Lauf muss `git status` frei
@@ -833,14 +1191,17 @@ effectiveConformanceStatus(
 UI, CLI, Build- und Release-Gates verwenden ausschließlich diesen effektiven
 Status. `approved` gilt nur, wenn Commit-, HEAD-, Source-Tree-, Build-Input-,
 Fixture-, Orakel-, Oracle-Part-,
-Oracle-Ownership-, Geometry-, Trace-, Composition-Contract-, Witness-,
+Oracle-Ownership-, Geometry-, Trace-, Reachable-Builder-Context-,
+Reference-Component-Context-, Reference-Context-Ownership-,
+Composition-Contract-, Witness-,
 Paint-List-, Owned-Paint-Index-, Renderer-, Toolchain-, Rasterumgebungs-, Font-,
 Comparison-Profile-, Masken-, Trust-Store-, Vergleichs- und Strict-Run-Digests
 exakt dem aktuellen Zustand entsprechen. Diese Felder werden direkt
 verglichen; die Graphinvalidierung ist nur eine zusätzliche Abdeckung.
 
-Ändert sich ein Orakelasset, Geometry-Node, Component, Rezept, Trace,
-Renderer, Font, Maskenvertrag, Schwelle oder die festgelegte Rasterumgebung,
+Ändert sich ein Orakelasset, Geometry-Node, Component, Referenzkontext,
+Kontextowner, CompositionContract, Rezept, Trace, Renderer, Font,
+Maskenvertrag, Schwelle oder die festgelegte Rasterumgebung,
 liefert `effectiveConformanceStatus` für alle im Abhängigkeitsgraphen rückwärts
 erreichbaren Attestations unmittelbar `invalidated`, ohne die historischen
 Records umzuschreiben. Die Invalidation ist transitiv: Eine Body-Mark- oder
@@ -860,14 +1221,17 @@ Reviewoberfläche angeschlossen werden:
 1. Schema: Case-IDs, Statusautomat, Attestation und Digestvergleich.
 2. IR: adversariale Pfad-, Farb-, Transformations- und
    `NormalizedPaintList/v1`-Fixtures, insbesondere nicht gefaltete Rotationen.
-3. Inventory: Mengen-, Mengenunions- und Eindeutigkeitsprüfungen über kleine
-   adversariale Fixtures.
+3. Inventory: Mengen-, disjunkte
+   Public/Reference-only/Direct-carrier-Union-, abgeleitete Ownership-, Digest-
+   und Eindeutigkeitsprüfungen über kleine adversariale Fixtures.
 4. Graph: vollständige Use-/Witness-Edges, OracleOwnership, Contract-Cases,
    Leaf-Eigentümerschaft und transitive Invalidation.
 5. Raster: feste RGBA-Fixtures, Part-Frames, Isolation, Masken und
    Null-Diff-/Fehlerdiagnosen.
-6. Composition: eindeutige Kontextauflösung, atomare Drawing-/Trace-Erzeugung
-   sowie Layered-Designation ohne Exact-Claim.
+6. Composition: eindeutige öffentliche Kontextauflösung, ausgeschlossene
+   Reference-only-/Direct-carrier-Builderauflösung, totale
+   Exact-Component-Adressierung,
+   atomare Drawing-/Trace-Erzeugung sowie Layered-Designation ohne Exact-Claim.
 7. CLI: Strict-Fehler bei fehlendem Orakel, fehlenden Assets und nichtfrischen
    Attestations.
 8. Packaging: adversariale Tarballs und Bundles für jedes Artifact-Leak-Muster.
@@ -886,6 +1250,11 @@ Worker-Scope besitzt exklusiv genau ein Verzeichnis
 `cases.test.ts`; leere Shards exportieren explizit leere Mengen. Das
 Batchmanifest nennt die vollständig besessenen Asset-, ComponentFixture-,
 OraclePart-, CompositionContractCase-, Witness-, Plan-, Display- und Case-Keys.
+Es besitzt keine `ReferenceComponentContext`-OwnedKeys-Collection. Der
+Root-Aggregator ruft nach der Total-Pair↔Fixture-Bijektionsprüfung genau einmal
+`deriveReferenceComponentContextOwnership` auf; dessen `ownerIndex` stammt
+ausschließlich aus den bereits vorhandenen
+`ownedKeys.componentFixtures`-Descriptor-/Manifestwerten.
 Ein normaler Symbolbatch umfasst
 höchstens eine eng zusammengehörige Komponentenfamilie und höchstens zwölf
 Ganzzeichen; komplexe Übersichten erhalten einen eigenen Batch.
@@ -893,9 +1262,19 @@ Ganzzeichen; komplexe Übersichten erhalten einen eigenen Batch.
 Nur der Root-Integrator besitzt den zentralen Aggregator
 `packages/catalog/src/exact/batches/index.ts`. Er importiert Batch-Exports,
 sortiert sie kanonisch und lässt doppelte oder fehlende Schlüssel hart
-scheitern. Worker verändern weder den Aggregator noch fremde Shards. Eine
-Batchkante darf nur an einer bereits frisch geprüften Component-Fixture
-geschnitten werden; gemeinsame Grundkörper sind danach read-only. Dadurch
+scheitern. Worker verändern weder den Aggregator noch fremde Shards. Direkte
+Batchabhängigkeiten werden nicht nur aus Component-Fixtures abgeleitet. Für
+jeden vom Current-Batch besessenen Source-Record folgt die Ableitung jeder
+Zeile der erschöpfenden kanonischen Relationstabelle und sammelt den Owner jedes
+batch-besessenen fremden Targets. Das umfasst insbesondere fremde
+Witness-/Part-Evidenz sowie Asset-, Display-, Contract-, Ownership-,
+Plan-/Trace-, UseEdge-, FeatureContract-, Profile-/Mask- und Case-Endpunkte.
+Nur der Current-Owner wird entfernt; die übrigen Owner werden dedupliziert und
+kanonisch sortiert. Relationstargets ohne Batchowner werden validiert, erzeugen
+aber keine Dependency. Die deklarierte direkte Dependency-Menge muss exakt
+dieser Ableitung entsprechen: fehlende und bloß transitive/redundante Kanten
+sind Fehler, während fremde Witness-/Part-Evidenz ausdrücklich zulässig ist.
+Gemeinsame Grundkörper und andere fremde Ziele sind danach read-only. Dadurch
 können Asset-/Part-/Plan-Shards parallel entstehen, ohne zentrale
 Konfliktdateien oder doppelte Geometriequellen.
 
@@ -953,11 +1332,23 @@ folgenden Kriterien erfüllt sind:
   Bestand identifiziert;
 - 661 von 661 ExactAssetFixtures, 544 von 544 Display-Fixtures und alle
   Component-Fixtures sind gebaut und über die Library renderbar;
-- alle 413 PaintComponent-Keys und jeder gültige registrierte Kontext besitzen
-  eine eindeutige, geprüfte Component-Fixture;
-- registrierte und aus allen heute validen `SymbolSpec`s erreichbare
-  Component-Kontexte sind mengengleich; kein erreichbarer Spec-Kontext endet
-  mit `NotMeasuredError`;
+- alle 413 PaintComponent-Keys besitzen im totalen
+  `ReferenceComponentContextSet/v1` mindestens ein Paar, mindestens eine
+  geprüfte Component-Fixture und mindestens einen OraclePart-/Contract-Zeugen;
+- das totale Referenzset ist die disjunkte Union aus der öffentlichen
+  vollständigen `ReachableBuilderContextSet.pairs`-Projektion für exakt 247
+  eindeutige Component-Keys und exakt je einer literalen
+  `reference-only`-/`direct-carrier`-Zeile für 151 + 15 weitere Keys; seine
+  Paarzahl ist `|ReachableBuilderContextSet.pairs| + 166`, nicht 413;
+- die Fixture-Paarprojektion und die Paarprojektion des
+  `CompositionContractRegistry` sind jeweils mengengleich zum totalen
+  Referenzset; jedes Paar besitzt genau eine Fixture, einen Contract-Case und
+  mindestens eine Witness-Edge; genau ein Ownerrecord wird aus dieser Fixture
+  und ihrem Descriptor-/Manifest-Owner abgeleitet;
+- aus allen heute validen `SymbolSpec`s erreichbare Component-Kontexte sind
+  mengengleich zur öffentlichen Projektion; kein erreichbarer Spec-Kontext
+  endet mit `NotMeasuredError` und kein `reference-only`-/`direct-carrier`-Key
+  wird durch die Builder-Auflösung sichtbar;
 - die 544 Displays sind vollständig und disjunkt in 525 Whole- und 19
   Part-Cases eingeordnet und mit genau einem Exact-Asset verknüpft;
 - jeder Whole- und Part-Vergleich an jeder verpflichtenden Rastergröße hat
@@ -968,10 +1359,12 @@ folgenden Kriterien erfüllt sind:
 - es gibt keine offenen, fehlenden, `unresolved`, `deviation`, `failed` oder
   `invalidated` Conformance-Cases;
 - jede Attestation ist frisch zum aktuellen Orakel-, Geometry-, Trace-,
-  Oracle-Part-, Oracle-Ownership-, Composition-Contract-, Witness-, Paint-List-,
-  Owned-Paint-Index-, Renderer-, Toolchain-, Rasterumgebungs-, Font-, Masken-,
-  Comparison-Profile-, Trust-Store-, Commit-, HEAD-, Source-Tree-, Build-Input-
-  und Vergleichsvertragsdigest;
+  Oracle-Part-, Oracle-Ownership-, Reachable-Builder-Context-,
+  Reference-Component-Context-, Reference-Context-Ownership-,
+  Composition-Contract-, Witness-, Paint-List-, Owned-Paint-Index-, Renderer-,
+  Toolchain-, Rasterumgebungs-, Font-, Masken-, Comparison-Profile-,
+  Trust-Store-, Commit-, HEAD-, Source-Tree-, Build-Input- und
+  Vergleichsvertragsdigest;
 - alle Package-, Website-, QGIS- und Release-Artefakte bestehen das
   Artifact-Leak-Gate;
 - technische Agentenreviews sowie die protokollierte visuelle
@@ -980,8 +1373,9 @@ folgenden Kriterien erfüllt sind:
 
 Der technische Abschluss erzeugt ein signiertes Attest mit Commit-, Fixture-,
 HEAD-, Source-Tree-, Build-Input-, Orakelset-, Oracle-Part-, Oracle-Ownership-,
-Geometry-, Trace-,
-Composition-Contract-, Witness-, Paint-List-, Owned-Paint-Index-, Toolchain-,
+Geometry-, Trace-, Reachable-Builder-Context-, Reference-Component-Context-,
+Reference-Context-Ownership-, Composition-Contract-, Witness-, Paint-List-,
+Owned-Paint-Index-, Toolchain-,
 Rasterumgebungs-, Renderer-, Font-, Masken-, Comparison-Profile-, Trust-Store-,
 Strict-Run- und Gesamtergebnisdigest. Das Attest enthält keine Originalgrafik
 und ist nur für exakt diesen Commit und Orakelstand gültig.
