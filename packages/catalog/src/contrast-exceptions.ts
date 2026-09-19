@@ -45,6 +45,22 @@ export interface ContrastException {
 }
 
 /**
+ * Gemeinsame verworfene Alternative der drei Ausnahmen für roten Piktogrammtext vom 19.09.2026.
+ */
+const RED_TEXT_REJECTED_BLACK =
+  'Schwarzer statt roter Text: widerspricht dem Bild. Die Referenz setzt die Kennbuchstaben ' +
+  'und Kürzel der Warndreiecke (4.1.6 bis 4.1.8 alternativ, 5.8.1.7, 5.8.1.8, 5.8.1.10, ' +
+  '5.8.1.11) und den Prozentwert der Sickerlinie (L.10) rot; die Umsetzung würde die Quelle ' +
+  'verlassen und müsste als deviation geführt werden; entschieden ist, Maße und Farben wie in ' +
+  'der Referenz zu übernehmen.';
+
+const RED_TEXT_DERIVATION =
+  'Abgeleitet aus der Entscheidung vom 19.09.2026, Maße und Farben wie in der Referenz zu ' +
+  'übernehmen (docs/decisions/2026-09-19-masse-an-der-referenz-ablesen.md). Der Projektinhaber ' +
+  'hat die Folgeentscheidung, diesen Wert unter der Schwelle hinzunehmen, am selben Tag an den ' +
+  'Koordinator delegiert. ';
+
+/**
  * **Weiss auf Orange, entschieden am 18. August 2026.**
  *
  * `E.2.6` ist das einzige Zeichen des Referenzbestands mit orangem Körper (`#fa8c00` =
@@ -83,6 +99,84 @@ export const CONTRAST_EXCEPTIONS: DeepReadonly<ContrastException[]> = deepFreeze
       'E.2.6 ungebaut lassen: hält Anhang E dauerhaft bei 67 von 68 Abschnitten und begründet ' +
         'eine Lücke im Bestand mit einer Eigenschaft der Palette. Verworfen, weil die Lücke ' +
         'teurer ist als der dokumentierte Befund.',
+    ],
+  },
+  // **Roter Text wie in der Referenz, entschieden am 19. September 2026.** Die folgenden zwei
+  // Einträge sind eine Ableitung, aufgeteilt auf die zwei Paare, die sie im Gate erzeugt:
+  // `contrastExceptionFor` deckt paar- und themeweise, nicht zeichenweise. Entschieden ist
+  // „Maße und Farben wie in der Referenz“; ob damit Werte unter der Textschwelle akzeptiert
+  // sind, hat der Projektinhaber an den Koordinator delegiert, und der hat so entschieden wie bei
+  // E.2.6: gebaut wie die Quelle, der Befund als Datum geführt. Welche Paare Textpaare sind,
+  // bestimmt der Kontrastvertrag am tatsächlichen Hintergrund des Textelements
+  // (`pictograms/contrast-contract.ts`).
+  {
+    foreground: 'rot',
+    background: 'weiss',
+    themeIds: ['reference', 'accessible-light'],
+    sections: ['4.1.6', '4.1.7', '4.1.8', '5.8.1.7', '5.8.1.8', '5.8.1.10', '5.8.1.11'],
+    decidedOn: '2026-09-19',
+    decidedBy: 'Koordinator (delegiert)',
+    rationale:
+      RED_TEXT_DERIVATION +
+      'Die roten Kennbuchstaben und Kürzel stehen auf der weißen Innenfläche der Warndreiecke ' +
+      '(4.1.6 bis 4.1.8 alternativ, 5.8.1.7, 5.8.1.8, 5.8.1.10, 5.8.1.11). Rot (#fa1919) auf ' +
+      'Weiß erreicht 4,025:1 im Referenz- und im accessible-light-Theme gegen die Textschwelle ' +
+      '4,5:1. Die Referenz zeichnet die Beschriftung rot; der Katalog baut sie deckungsgleich. ' +
+      'Im Drucktheme ist rot #666666 und besteht auf Weiß mit 5,742:1.',
+    rejected: [
+      RED_TEXT_REJECTED_BLACK,
+      'Dunkleres Rot nur in accessible-light: dort lösbar, etwa #ea1717 mit 4,532:1 gegen ' +
+        'Weiss und 4,633:1 gegen Schwarz. Verworfen, weil das Referenztheme die Farbe der ' +
+        'Quelle behalten muss und der Befund dort stehen bliebe: eine Ausnahme mit zwei ' +
+        'Begründungen statt einer, dazu eine zweite Feuerwehrfarbe nur für ein Theme.',
+    ],
+  },
+  {
+    foreground: 'rot',
+    background: 'surface',
+    themeIds: ['reference', 'accessible-light'],
+    sections: ['L.10'],
+    decidedOn: '2026-09-19',
+    decidedBy: 'Koordinator (delegiert)',
+    rationale:
+      RED_TEXT_DERIVATION +
+      'Der Prozentwert „50 %“ der Sickerlinie in L.10 steht rot auf der Ausgabeoberfläche. Rot ' +
+      '(#fa1919) erreicht dort 4,025:1 im Referenz- und im accessible-light-Theme gegen die ' +
+      'Textschwelle 4,5:1. Im Drucktheme besteht der Text mit 5,742:1. Der Druckfall rot auf ' +
+      'schwarz (3,657:1) ist dagegen kein Textpaar: es ist die rote Sickerlinie an der schwarzen ' +
+      'Deichfigur, ein 0,5-mm-Strich, der die Nichttextschwelle 3:1 besteht. Erst die frühere ' +
+      'Regel, die die Textschwelle an alle Paare derselben Farbe hängte, machte daraus einen ' +
+      'Befund; seit der Kontrastvertrag die Schwelle am Textelement anlegt, entfällt er.',
+    rejected: [
+      RED_TEXT_REJECTED_BLACK,
+      'Dunkleres Rot nur in accessible-light: dort lösbar, etwa #ea1717 mit 4,532:1 gegen die ' +
+        'weiße Oberfläche. Verworfen aus demselben Grund wie beim Paar rot auf weiss: im ' +
+        'Referenztheme bliebe der Befund stehen, die Ausnahme hätte zwei Begründungen.',
+    ],
+  },
+  // **Schwarzer PSNV-Text auf Feuerwehr-Rot im Drucktheme, entschieden am 19. September 2026.**
+  {
+    foreground: 'schwarz',
+    background: 'rot',
+    themeIds: ['print-monochrome'],
+    sections: ['4.2.2'],
+    decidedOn: '2026-09-19',
+    decidedBy: 'Koordinator (delegiert)',
+    rationale:
+      'Abgeleitet aus der Entscheidung vom 19.09.2026, Maße und Farben wie in der Referenz zu ' +
+      'übernehmen (docs/decisions/2026-09-19-masse-an-der-referenz-ablesen.md). Der Projektinhaber ' +
+      'hat die Folgeentscheidung, diesen Wert unter der Schwelle hinzunehmen, am selben Tag an den ' +
+      'Koordinator delegiert. Das Kürzel „PSNV“ in 4.2.2 ist wie in der Referenz schwarz. Die rote ' +
+      'Fläche dahinter entsteht erst, wenn das Piktogramm in eine Feuerwehrformation gesetzt ' +
+      'wird; heute setzt das kein Katalogrezept. Im Drucktheme ist rot #666666, schwarzer Text ' +
+      'erreicht darauf 3,657:1 gegen die Textschwelle 4,5:1. Im Referenz- und im ' +
+      'accessible-light-Theme besteht das Paar mit 5,218:1.',
+    rejected: [
+      'Eigene Druckfarbe für Text auf Rot, wie funktionslauf-kontrast bei D.1.8 und D.4.2: ' +
+        'wäre eine neue Palettenentscheidung für Piktogrammtext und gehört nicht in diese ' +
+        'Runde; sie bliebe einer eigenen Entscheidung vorbehalten.',
+      'Weißer statt schwarzer Text: widerspricht dem Bild. Die Referenz setzt „PSNV“ schwarz; ' +
+        'die Umsetzung würde die Quelle verlassen und müsste als deviation geführt werden.',
     ],
   },
 ]);

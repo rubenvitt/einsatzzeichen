@@ -32,7 +32,9 @@ export interface DomainReviewer {
  * `addReviewer` des Fachreview-Werkzeugs), nie beiläufig durch eine Codeänderung.
  */
 export const DOMAIN_REVIEWERS: DeepReadonly<Record<string, DomainReviewer>> = deepFreeze(
-  {} satisfies Record<string, DomainReviewer>,
+  {
+    'rv': { id: 'rv', name: 'Ruben', qualification: 'GF' },
+  } satisfies Record<string, DomainReviewer>,
 );
 
 /**

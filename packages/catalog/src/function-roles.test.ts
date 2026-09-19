@@ -72,7 +72,7 @@ const EXPECTED_ROLE_BINDINGS = {
     organization: 'fuehrung-leitung', head: 'administrative', administrativeLevel: 'kreis',
   },
   'hazard-response-forces-director': {
-    organization: 'polizei', head: 'administrative', administrativeLevel: 'nationalstaat',
+    organization: 'bundespolizei', head: 'administrative', administrativeLevel: 'nationalstaat',
   },
   'international-relief-operation-director': {
     organization: 'fuehrung-leitung',

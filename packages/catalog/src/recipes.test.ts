@@ -42,6 +42,15 @@ import { ACCESSIBLE_LIGHT_THEME, PRINT_MONOCHROME_THEME } from './render-themes.
  * umschlossen werden, steht der an der Referenz vermessene Sollwert nicht mehr am Primitiv —
  * die fachliche Aussage ist unverändert, sie wird eine Ebene tiefer gelesen.
  */
+/**
+ * Farbe des Innenfelds bei weißer Innenkontur (Anhang E): der Körper selbst ist weiß, die
+ * Organisationsfarbe liegt in der Gruppe `role: 'innerField'`.
+ */
+function innerFieldFills(drawing: Drawing): (string | undefined)[] {
+  const group = drawing.children.find((child) => child.role === 'innerField');
+  return group?.type === 'group' ? group.children.map((child) => child.style?.fill) : [];
+}
+
 function horizontalPictogramLineYMm(drawing: Drawing): number | undefined {
   const directLine = drawing.children.find(
     (c): c is Primitive & { type: 'line' } =>
@@ -430,14 +439,13 @@ describe('Kompositionsrezepte', () => {
       (child): child is Primitive & { type: 'line' } =>
         child.type === 'line' && child.role === 'pictogram',
     );
+    // Seit dem Fachreview vom 19.09.2026 läuft die Mittellinie wie in der Referenz durch den
+    // Verzweigungspunkt bis zur rechten Kante (C.1.1 bis C.1.3 danach diff 0,0000).
     expect(pictogramLines.map(({ x1, y1, x2, y2 }) => ({ x1, y1, x2, y2 }))).toEqual([
-      { x1: 1, y1: 16, x2: 21, y2: 16 },
+      { x1: 1, y1: 16, x2: 31, y2: 16 },
       { x1: 21, y1: 16, x2: 31, y2: 6 },
       { x1: 21, y1: 16, x2: 31, y2: 26 },
     ]);
-    expect(pictogramLines).not.toContainEqual(
-      expect.objectContaining({ x1: 21, y1: 16, x2: 31, y2: 16 }),
-    );
 
     const body = drawing.children.find((child) => child.role === 'body');
     expect(body).toBeDefined();
@@ -880,14 +888,14 @@ describe('Anhang D.4, übergeordnete Funktionen', () => {
         title: 'Leiter Gefahrenabwehrkräfte Bundespolizei',
         referenceAsset: 'D.4.4_Leiter Gefahrenabwehrkräfte Bundespolizei.svg',
         spec: {
-          kind: 'person', organization: 'polizei', administrativeLevel: 'nationalstaat',
+          kind: 'person', organization: 'bundespolizei', administrativeLevel: 'nationalstaat',
           functionRole: 'hazard-response-forces-director',
         },
       },
       ['BuPol'],
       15,
       [3, 5, 29, 31],
-      'gruen',
+      'hellgruen',
     ],
     [
       'D.4.5',
@@ -1246,10 +1254,9 @@ describe('Anhang I, Teilslice I-b (I.3.1 bis I.3.11)', () => {
     ]);
     const firePrimitives = composeFromCatalog(recipes['I.3.11']!.spec, recipes['I.3.11']!.title).children.filter((child) => child.role === 'pictogram');
     expect(firePrimitives).toEqual([
-      { type: 'line', role: 'pictogram', x1: 2.263209, y1: 15.000055, x2: 21.249843, y2: 15.000055, style: { stroke: 'schwarz', strokeWidth: 0.5 } },
-      { type: 'line', role: 'pictogram', x1: 21.249843, y1: 15.000055, x2: 29.736438, y2: 15.000055, style: { stroke: 'schwarz', strokeWidth: 0.5 } },
-      { type: 'line', role: 'pictogram', x1: 21.249843, y1: 15.000055, x2: 26.749628, y2: 9.250152, style: { stroke: 'schwarz', strokeWidth: 0.5 } },
-      { type: 'line', role: 'pictogram', x1: 21.249843, y1: 15.000055, x2: 25.901906, y2: 19.901884, style: { stroke: 'schwarz', strokeWidth: 0.5 } },
+      { type: 'line', role: 'pictogram', x1: 2.25, y1: 15, x2: 29.75, y2: 15, style: { stroke: 'schwarz', strokeWidth: 0.5 } },
+      { type: 'line', role: 'pictogram', x1: 21, y1: 15, x2: 27, y2: 9, style: { stroke: 'schwarz', strokeWidth: 0.5 } },
+      { type: 'line', role: 'pictogram', x1: 21, y1: 15, x2: 25.9, y2: 19.9, style: { stroke: 'schwarz', strokeWidth: 0.5 } },
     ]);
   });
 });
@@ -1869,10 +1876,12 @@ describe('Anhang I, Teilslice I-c (I.1.1 bis I.1.4)', () => {
   });
 });
 describe('Anhang I, LFH-486 (I.2.1 bis I.2.3)', () => {
+  // An der Referenz abgelesen: `W` 9,081…12,000 mm (Versalhöhe 2,919), Grundlinie 12,0 mm bei
+  // Körperoberkante 5,75 mm; Anker aus der `G`-Tintenkante 2,724 mm minus Arimo-Seitenlager.
   const topLeftMetrics = {
-    capHeightMm: 3.18236,
-    baselineFromBodyTopMm: 6.55959,
-    anchorFromBodyLeftMm: 1.56869,
+    capHeightMm: 2.919,
+    baselineFromBodyTopMm: 6.25,
+    anchorFromBodyLeftMm: 1.51,
   } as const;
   const expected = {
     'I.2.1': {
@@ -2100,7 +2109,10 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
   it.each(cases)('%s steht auf blauem formation-Körper mit Trägerkürzel THW', (_section, recipe) => {
     const drawing = composeFromCatalog(recipe.spec, recipe.title);
     const body = drawing.children.find((c) => c.role === 'body');
-    expect(body?.style?.fill).toBe('blau');
+    // Weiße Innenkontur: weißer Körper, THW-Blau im um 1 mm eingerückten Innenfeld.
+    expect(body?.style?.fill).toBe('weiss');
+    expect(innerFieldFills(drawing).length).toBeGreaterThan(0);
+    expect(new Set(innerFieldFills(drawing))).toEqual(new Set(['blau']));
     expect(recipe.spec.kind).toBe('formation');
     expect(recipe.spec.labels?.bottomRight).toBe('THW');
     expect(recipe.referenceAsset.startsWith(`${_section}_`)).toBe(true);
@@ -2521,7 +2533,10 @@ describe('Anhang E, Teilslice E-b (E.1.17 bis E.1.28)', () => {
   it.each(cases)('%s steht auf blauem formation-Körper mit Trägerkürzel THW', (_section, recipe) => {
     const drawing = composeFromCatalog(recipe.spec, recipe.title);
     const body = drawing.children.find((c) => c.role === 'body');
-    expect(body?.style?.fill).toBe('blau');
+    // Weiße Innenkontur: weißer Körper, THW-Blau im um 1 mm eingerückten Innenfeld.
+    expect(body?.style?.fill).toBe('weiss');
+    expect(innerFieldFills(drawing).length).toBeGreaterThan(0);
+    expect(new Set(innerFieldFills(drawing))).toEqual(new Set(['blau']));
     expect(recipe.spec.kind).toBe('formation');
     expect(recipe.spec.labels?.bottomRight).toBe('THW');
     expect(recipe.referenceAsset.startsWith(`${_section}_`)).toBe(true);
@@ -2676,6 +2691,7 @@ describe('Anhang F, Teilslice F-b einschließlich F.1.3', () => {
           kind: 'formation',
           bodyVariant: 'foot-band',
           organization: 'hilfsorganisation',
+          technicalHeadMark: 'double-vertical-bar',
           bodyMarks: ['care', 'temporary-accommodation-resting'],
           labels: { topLeft: '5.000' },
         },
@@ -2707,6 +2723,7 @@ describe('Anhang F, Teilslice F-b einschließlich F.1.3', () => {
         spec: {
           kind: 'formation',
           organization: 'hilfsorganisation',
+          technicalHeadMark: 'single-vertical-bar',
           bodyMarks: ['care', 'physician', 'ring-7mm-offset-down-1mm'],
           labels: { topLeft: '50' },
         },
@@ -2803,6 +2820,7 @@ describe('Anhang F, Teilslice F-b einschließlich F.1.3', () => {
         spec: {
           kind: 'formation',
           organization: 'hilfsorganisation',
+          technicalHeadMark: 'single-vertical-bar',
           bodyMarks: ['ring-6-5mm-offset-down-2mm-with-roof'],
           labels: { topLeft: '500' },
         },
@@ -2901,7 +2919,7 @@ describe('Anhang F, Teilslice F-c', () => {
       'F.2.6': {
         title: 'Rettungstransporthubschrauber mit Winschmöglichkeit',
         referenceAsset: 'F.2.6_Rettungstransporthubschrauber mit Winschmöglichkeit.svg',
-        spec: { kind: 'vehicle-air', bodyVariant: 'raised-hull', organization: 'hilfsorganisation', bodyMarks: ['medical-service', 'air-winch-chevron-diamond'] },
+        spec: { kind: 'vehicle-air', bodyVariant: 'raised-hull', organization: 'hilfsorganisation', bodyMarks: ['physician', 'air-winch-chevron-diamond'] },
       },
       'F.2.7': {
         title: 'Intensivtransporthubschrauber',
@@ -3116,7 +3134,7 @@ describe('Anhang F, Teilslice F-d', () => {
       expect(pictograms.filter((primitive) =>
         primitive.type === 'polyline' && JSON.stringify(primitive.points) ===
           JSON.stringify(key === 'F.2.13' || key === 'F.2.17'
-            ? [[1, 23], [16, 8], [31, 23]]
+            ? [[1, 23.5], [16, 8], [31, 23.5]]
             : [[1, 26], [16, 8], [31, 26]]),
       ), key).toHaveLength(1);
     }
@@ -3404,7 +3422,10 @@ describe('Anhang E, Teilslice E-c (E.1.29 bis E.1.37)', () => {
   it.each(cases)('%s trägt THW-Blau, das Trägerkürzel THW und seine eigene Referenzdatei', (_section, recipe) => {
     const drawing = composeFromCatalog(recipe.spec, recipe.title);
     const body = drawing.children.find((c) => c.role === 'body');
-    expect(body?.style?.fill).toBe('blau');
+    // Weiße Innenkontur: weißer Körper, THW-Blau im um 1 mm eingerückten Innenfeld.
+    expect(body?.style?.fill).toBe('weiss');
+    expect(innerFieldFills(drawing).length).toBeGreaterThan(0);
+    expect(new Set(innerFieldFills(drawing))).toEqual(new Set(['blau']));
     expect(recipe.spec.labels?.bottomRight).toBe('THW');
     expect(recipe.referenceAsset.startsWith(`${_section}_`)).toBe(true);
   });
@@ -3452,7 +3473,7 @@ describe('Anhang E, Teilslice E-c (E.1.29 bis E.1.37)', () => {
     expect(center?.boxMm.yMm).toBeGreaterThan(10);
   });
 
-  it('trägt drei Kopfzonenbreiten und bei E.1.31 und E.1.37 keine', () => {
+  it('trägt drei Kopfzonenbreiten, bei E.1.31 die Balkenmarke und bei E.1.37 keine', () => {
     // Wie in E-b aus `spec.strength` abgeleitet und nicht aus einer Abschnittsliste. Der
     // Sonderfall ist hier ein doppelter: E.1.37 trägt keine Kopfzone, weil seine Strichebene
     // außer dem Rahmen nichts führt, und E.1.31 keine, weil die Referenz dort zwei senkrechte
@@ -3463,12 +3484,17 @@ describe('Anhang E, Teilslice E-c (E.1.29 bis E.1.37)', () => {
       const drawing = composeFromCatalog(recipe.spec, recipe.title);
       const head = drawing.children.filter((c) => c.role === 'head');
       const strength = recipe.spec.strength;
-      expect(head, section).toHaveLength(strength === undefined ? 0 : marksByStrength[strength]);
+      // E.1.31: eine Kopfgruppe mit den beiden Balken der technischen Kopfmarke.
+      const expected = strength !== undefined ? marksByStrength[strength] : section === 'E.1.31' ? 1 : 0;
+      expect(head, section).toHaveLength(expected);
     }
     const ohneKopfzone = cases
       .filter(([, recipe]) => recipe.spec.strength === undefined)
       .map(([section]) => section);
     expect(ohneKopfzone).toEqual(['E.1.31', 'E.1.37']);
+    // Seit dem Fachreview vom 19.09.2026 trägt E.1.31 die Balken als semantikfreie technische
+    // Kopfmarke `double-vertical-bar` (zwei Rechtecke in einer Kopfgruppe), ohne Stärkegrad.
+    expect(ANHANG_E_C_RECIPES['E.1.31'].spec.technicalHeadMark).toBe('double-vertical-bar');
   });
 
   it('setzt keinen Text unterhalb des Körpers und keine Zusatzkennzeichnung unten links', () => {
@@ -3536,7 +3562,8 @@ describe('Anhang E, Teilslice E-d (E.2.1 bis E.2.21)', () => {
     // zuließe, schwächte die Zusage für die übrigen 20.
     const recipe: Recipe = ANHANG_E_D_RECIPES['E.2.6'];
     const drawing = composeFromCatalog(recipe.spec, recipe.title);
-    expect(drawing.children.find((c) => c.role === 'body')?.style?.fill).toBe('orange');
+    expect(drawing.children.find((c) => c.role === 'body')?.style?.fill).toBe('weiss');
+    expect(innerFieldFills(drawing)).toEqual(['orange']);
     expect(recipe.spec.organization).toBe('sonstige-gefahrenabwehr');
     // Fahrwerk **nicht** wie E.2.5: der Baubeschluss des E.2-Slice hat „Fahrwerk und
     // Beschriftung sind zeichengleich mit E.2.5" übergeben, und die erste Hälfte ist an der Datei
@@ -3557,7 +3584,8 @@ describe('Anhang E, Teilslice E-d (E.2.1 bis E.2.21)', () => {
     // **Ausnahme E.2.6, und nur diese eine:** es trägt als einziges Zeichen des Anhangs den
     // orangen Körper der `sonstige-gefahrenabwehr`. Sein Trägerkürzel bleibt trotzdem `THW` —
     // die Quelle trennt hier Zuordnung und Betreiber.
-    expect(body?.style?.fill).toBe(section === 'E.2.6' ? 'orange' : 'blau');
+    expect(body?.style?.fill).toBe('weiss');
+    expect(innerFieldFills(drawing)).toEqual([section === 'E.2.6' ? 'orange' : 'blau']);
     expect(recipe.spec.labels?.bottomRight).toBe('THW');
     expect(recipe.referenceAsset.startsWith(`${section}_`)).toBe(true);
   });
@@ -4016,7 +4044,8 @@ describe('Pfad-Piktogramm in beiden Layoutfällen (Spec-Erfolgskriterium 1)', ()
     expect(pathTag).toBeDefined();
     expect(pathTag).toContain('transform="scale(');
     expect(pathTag).not.toContain('translate(');
-    expect(pathTag).toContain('fill="#000000"');
+    // Seit 19.09.2026 ist die Welle von 4.3.2 ein 0,5-mm-Strich statt eines gefüllten Bands.
+    expect(pathTag).toContain('stroke="#000000"');
   });
 
   it('wirft nicht, wenn zwei Fähigkeiten zusammen platziert werden', () => {

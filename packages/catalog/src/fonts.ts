@@ -51,13 +51,34 @@ export const TEXT_FONT_SOURCE_SHA256 =
  */
 export const TEXT_FONT_SHA256 = 'e68be22b52529b0541129578216dab440cb00026114868370b6d34798b2ce5a3';
 
+/**
+ * Statische Fettinstanz (wght 700) derselben Schrift, aus dem Subset erzeugt von
+ * `scripts/font/subset-arimo.sh` (fontTools `varLib.instancer`, Zeitstempel unverändert, damit die
+ * Datei reproduzierbar ist). Nötig, weil resvg 2.6 die wght-Achse der variablen Datei nicht
+ * auswertet: `font-weight="700"` rastert mit ihr allein bit-identisch zu 400. Liegt diese Datei
+ * zusätzlich vor, wählt resvg sie für fett gesetzte Läufe (`fontWeight: 700` am Textprimitiv);
+ * nicht fette Läufe rastern unverändert. Einen kursiven Schnitt führt das Projekt nicht.
+ */
+export const TEXT_FONT_BOLD_PATH = fileURLToPath(
+  new URL('../assets/Arimo-Bold.ttf', import.meta.url),
+);
+
+/** Laufweiten und Tintenhüllen der Fettinstanz, Format wie `TEXT_FONT_METRICS_PATH`. */
+export const TEXT_FONT_BOLD_METRICS_PATH = fileURLToPath(
+  new URL('../assets/arimo-bold-metrics.json', import.meta.url),
+);
+
+/** Prüfsumme der eingecheckten Fettinstanz. */
+export const TEXT_FONT_BOLD_SHA256 =
+  '0f8eb8ed8b92a80cbbbcadb382089e8fda8d50015b0e36212c341c1a6b96341a';
+
 export function resvgFontOptions(): {
   fontFiles: string[];
   loadSystemFonts: false;
   defaultFontFamily: string;
 } {
   return {
-    fontFiles: [TEXT_FONT_PATH],
+    fontFiles: [TEXT_FONT_PATH, TEXT_FONT_BOLD_PATH],
     loadSystemFonts: false,
     defaultFontFamily: TEXT_FONT_FAMILY,
   };

@@ -603,7 +603,7 @@ describe('Clipping-Gate', () => {
     };
 
     expect(checkBox(edgeLine)).toEqual([]);
-    expect(checkClipping(edgeLine, formationBody)[0]?.detail).toContain('Sichtbare Box-Ecke');
+    expect(checkClipping(edgeLine, formationBody)[0]?.detail).toContain('Sichtbare Ecke');
   });
 
   it('erbt für ein rollenloses Definitionsblatt die Piktogrammrolle der Kompositionswurzel', () => {
@@ -665,7 +665,7 @@ describe('Clipping-Gate', () => {
     expect(svg).toContain('stroke-linejoin="round"');
 
     expect(checkClipping(rolelessEdgeStroke, formationBody)[0]?.detail).toContain(
-      'Sichtbare Box-Ecke',
+      'Sichtbare Ecke',
     );
   });
 
@@ -686,7 +686,7 @@ describe('Clipping-Gate', () => {
     };
 
     expect(checkClipping(nestedRolelessEdgeStroke, formationBody)[0]?.detail).toContain(
-      'Sichtbare Box-Ecke',
+      'Sichtbare Ecke',
     );
   });
 
@@ -796,7 +796,7 @@ describe('Clipping-Gate', () => {
       ],
     };
 
-    expect(checkClipping(inheritedPolyline, formationBody)[0]?.detail).toContain('Sichtbare Box-Ecke');
+    expect(checkClipping(inheritedPolyline, formationBody)[0]?.detail).toContain('Sichtbare Ecke');
     expect(checkClipping(noStroke, formationBody)).toEqual([]);
     expect(checkClipping(fillOnly, formationBody)).toEqual([]);
     expect(checkClipping(invalidWidth, formationBody)[0]?.detail).toContain('Strichstärke');
@@ -890,7 +890,7 @@ describe('Clipping-Gate', () => {
 
     expect(checkClipping(ownStrokeWins, formationBody)).toEqual([]);
     expect(checkClipping(noStroke, formationBody)).toEqual([]);
-    expect(checkClipping(inheritedDefault, formationBody)[0]?.detail).toContain('Box-Ecke');
+    expect(checkClipping(inheritedDefault, formationBody)[0]?.detail).toContain('Sichtbare Ecke');
     expect(checkClipping(invalidWidth, formationBody)[0]?.detail).toContain('Strichstärke');
   });
 
@@ -1121,12 +1121,160 @@ describe('Clipping-Gate', () => {
     expect(issues[0]?.detail).toContain('Textbox');
   });
 
+  describe('sichtbare Ausdehnung je Blatt und Körperkontur', () => {
+    /** Der Formationskörper mit seiner realen 0,5-mm-Kontur aus `base-symbols.ts`. */
+    const outlinedFormation: Primitive = {
+      ...formationBody,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+    };
+
+    function withPrimitives(
+      box: PictogramDefinition['box'],
+      primitives: Primitive[],
+    ): PictogramDefinition {
+      return {
+        id: 'capability.fire-fighting',
+        viewBox: DEFAULT_VIEWBOX_MM,
+        variant: 'primary',
+        title: 'Blattprüfung',
+        box,
+        primitives,
+      };
+    }
+
+    function line(x1: number, y1: number, x2: number, y2: number, strokeWidth = 0.5): Primitive {
+      return {
+        type: 'line',
+        role: 'pictogram',
+        x1,
+        y1,
+        x2,
+        y2,
+        style: { stroke: 'schwarz', strokeWidth },
+      };
+    }
+
+    it('nimmt ein stumpfes Linienende genau auf dem Körperrand an', () => {
+      // 4.8.6, 4.7.12, 4.7.18: Die Linie endet bei x = 1. Eine Butt-Kappe trägt in Längsrichtung
+      // nichts auf; die frühere Pauschale (ganze Box ± halbe Strichstärke) meldete das fälschlich.
+      const definition = withPrimitives(
+        { xMm: 1, yMm: 16, widthMm: 30, heightMm: 0 },
+        [line(1, 16, 31, 16)],
+      );
+      expect(checkBox(definition)).toEqual([]);
+      expect(checkClipping(definition, formationBody)).toEqual([]);
+    });
+
+    it('nimmt eine Strichkante an, die auf der Außenkante der Körperkontur liegt', () => {
+      // Die C.1.2-Lage: Mittellinie auf der Konturmitte, Strichkante bei x = 0,75 = Außenkante.
+      const definition = withPrimitives(
+        { xMm: 1, yMm: 10, widthMm: 0, heightMm: 12 },
+        [line(1, 10, 1, 22)],
+      );
+      expect(checkClipping(definition, outlinedFormation)).toEqual([]);
+      // Ohne Konturstrich ist dieselbe Strichkante ein Überstand: das bisherige Verhalten.
+      expect(checkClipping(definition, formationBody)[0]?.detail).toContain('Sichtbare Ecke');
+    });
+
+    it('meldet eine Linie, deren Strichkante über die Außenkante der Körperkontur ragt', () => {
+      // Mittellinie bei x = 0,9 (im Konturband), Strichkante bei x = 0,65 < 0,75.
+      const definition = withPrimitives(
+        { xMm: 0.9, yMm: 10, widthMm: 0, heightMm: 12 },
+        [line(0.9, 10, 0.9, 22)],
+      );
+      const issues = checkClipping(definition, outlinedFormation);
+      expect(issues.length).toBeGreaterThan(0);
+      expect(issues.every((issue) => issue.detail.includes('Primitiv "line": Sichtbare Ecke'))).toBe(
+        true,
+      );
+    });
+
+    it('nimmt eine reine Füllfläche bündig am Rand an, auch neben einem dicken Strich', () => {
+      // Die Füllung endet exakt an ihrer Geometrie. Der 2-mm-Strich des zentralen Nachbarblatts
+      // darf ihr keinen Zuschlag vererben — genau das tat die frühere Pauschale.
+      const definition = withPrimitives(
+        { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
+        [
+          { type: 'rect', role: 'pictogram', x: 1, y: 6, width: 30, height: 20, style: { fill: 'schwarz' } },
+          line(10, 16, 22, 16, 2),
+        ],
+      );
+      expect(checkClipping(definition, formationBody)).toEqual([]);
+    });
+
+    it('meldet bei einer diagonalen Linie die Strichecke, die über die Körperecke ragt', () => {
+      // Beide Endpunkte liegen exakt auf Körperecken. Die Butt-Kappe steht senkrecht zur Linie,
+      // an jedem Ende ragt eine Strichecke seitlich (x ≈ 0,861 bzw. 31,139) und eine nach oben
+      // bzw. unten (y ≈ 5,792 bzw. 26,208) aus dem Körper: vier Befunde, keiner an der Box.
+      const definition = withPrimitives(
+        { xMm: 1, yMm: 6, widthMm: 30, heightMm: 20 },
+        [line(1, 6, 31, 26)],
+      );
+      const issues = checkClipping(definition, formationBody);
+      expect(issues).toHaveLength(4);
+      expect(issues.every((issue) => issue.detail.startsWith('Primitiv "line": Sichtbare Ecke'))).toBe(
+        true,
+      );
+    });
+
+    it('erweitert den Kreis um die halbe Konturbreite', () => {
+      // 2-mm-Strich, Strichecken bei (2, 15): Abstand 14,036 mm vom Mittelpunkt, außerhalb
+      // r = 14, aber innerhalb der Außenkante r + 0,25.
+      const definition = withPrimitives(
+        { xMm: 2, yMm: 16, widthMm: 28, heightMm: 0 },
+        [line(2, 16, 30, 16, 2)],
+      );
+      expect(checkClipping(definition, postBody)).not.toEqual([]);
+      expect(
+        checkClipping(definition, { ...postBody, style: { stroke: 'schwarz', strokeWidth: 0.5 } }),
+      ).toEqual([]);
+    });
+
+    it('erweitert das gegehrte Dreieck um die Konturbreite, das abgeschrägte nicht', () => {
+      const definition = withPrimitives(
+        { xMm: 6, yMm: 28, widthMm: 20, heightMm: 0 },
+        [line(6, 28, 26, 28)],
+      );
+      const mitered: Primitive = { ...hazardBody, style: { stroke: 'schwarz', strokeWidth: 0.5 } };
+      const beveled: Primitive = {
+        ...hazardBody,
+        style: { stroke: 'schwarz', strokeWidth: 0.5, strokeLinejoin: 'bevel' },
+      };
+      expect(checkClipping(definition, hazardBody)).not.toEqual([]);
+      expect(checkClipping(definition, mitered)).toEqual([]);
+      // Fail-closed: Bei abgeschrägten Ecken ist die Kantentoleranz nicht die Außenkante.
+      expect(checkClipping(definition, beveled)).not.toEqual([]);
+    });
+
+    it('gibt einer gestrichelten Körperkontur keine Toleranz', () => {
+      // In den Lücken fehlt die Tinte, die einen Überstand verdecken würde.
+      const definition = withPrimitives(
+        { xMm: 1, yMm: 10, widthMm: 0, heightMm: 12 },
+        [line(1, 10, 1, 22)],
+      );
+      const dashed: Primitive = {
+        ...formationBody,
+        style: { stroke: 'schwarz', strokeWidth: 0.5, bodyStrokeDashToken: 'schwarz' },
+      };
+      expect(checkClipping(definition, dashed)).not.toEqual([]);
+    });
+
+    it('meldet eine Verschiebung an einem Blatt als Befund statt zu werfen', () => {
+      const definition = withPrimitives(
+        { xMm: 10, yMm: 10, widthMm: 12, heightMm: 0 },
+        [{ ...line(10, 10, 22, 10), transform: { translate: { dxMm: 1, dyMm: 0 } } }],
+      );
+      const issues = checkClipping(definition, formationBody);
+      expect(issues).toHaveLength(1);
+      expect(issues[0]?.detail).toContain('transform.translate');
+    });
+  });
+
   it('lässt eine gesetzte Textstrichstärke die Piktogramm-Box nicht aufblähen', () => {
-    // Ohne die Ausnahme in pictogramStrokeWidths würde der gesetzte 4-mm-Strich auf dem Text eine
-    // halbe Strichbreite von 2 mm auf die gesamte Piktogramm-Box aufschlagen — obwohl weder SVG
-    // noch Canvas Text je stricheln (siehe svg.ts fillOnly, canvas.ts ohne strokeText). Die Box
-    // liegt hier bündig am Körper (wie im Flush-Test oben ohne Text): mit dem Fix bleibt
-    // halfStroke 0 und die Prüfung bleibt grün; ohne den Fix würde sie über den Körper hinausragen.
+    // Weder SVG noch Canvas stricheln Text (siehe svg.ts fillOnly, canvas.ts ohne strokeText).
+    // Der gesetzte 4-mm-Strich darf deshalb weder die Textbox noch ein anderes Blatt um 2 mm
+    // aufblähen. Die Box liegt hier bündig am Körper (wie im Flush-Test oben ohne Text): Text
+    // geht nur über seine boxMm in die Prüfung ein, die Prüfung bleibt grün.
     const definition: PictogramDefinition = {
       id: 'capability.fire-fighting',
       viewBox: DEFAULT_VIEWBOX_MM,

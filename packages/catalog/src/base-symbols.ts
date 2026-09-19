@@ -358,6 +358,13 @@ const BODIES: Partial<Record<SymbolKind, Primitive>> = {
     d: roundedPolygonPath(AREA_CORNERS, AREA_RADII_MM),
     style: OUTLINE,
   },
+  /**
+   * `1.10 Maßnahme` — Dreieck mit der Spitze nach unten, Mittellinie (1|4) → (16|29) → (31|4).
+   * Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert: Die Strichebene ist
+   * **blau** (#003296) und **1 mm** breit (Oberkante außen 3,5, innen 4,5 mm), die spitzen Ecken
+   * sind gerade abgeschnitten (Fasenpunkte außen 0,571|4,257 und 1|3,5 mm = Bevel-Ecke eines
+   * 1-mm-Strichs). Bis zum Fachreview vom 19.09.2026 stand hier der schwarze 0,5-mm-Umriss.
+   */
   measure: {
     type: 'polyline',
     role: 'body',
@@ -367,8 +374,13 @@ const BODIES: Partial<Record<SymbolKind, Primitive>> = {
       [16, 29],
       [31, 4],
     ],
-    style: OUTLINE,
+    style: { fill: 'none', stroke: 'blau', strokeWidth: 1, strokeLinejoin: 'bevel' },
   },
+  /**
+   * `1.11 Gefahr` — Dreieck mit der Spitze nach oben, Mittellinie (1|28) → (16|3) → (31|28).
+   * Wie `1.10`: Strich **rot** (#fa1919), **1 mm**, Ecken als Bevel (Referenz: Unterkante außen
+   * 28,5, innen 27,5 mm; Spitze außen gerade abgeschnitten bei y 2,743 mm).
+   */
   hazard: {
     type: 'polyline',
     role: 'body',
@@ -378,7 +390,7 @@ const BODIES: Partial<Record<SymbolKind, Primitive>> = {
       [16, 3],
       [31, 28],
     ],
-    style: OUTLINE,
+    style: { fill: 'none', stroke: 'rot', strokeWidth: 1, strokeLinejoin: 'bevel' },
   },
   point: {
     type: 'polyline',
@@ -536,12 +548,17 @@ const BODIES: Partial<Record<SymbolKind, Primitive>> = {
    * Reduzierte Hauskontur aus F.3.15/F.3.16. Die fünf Eckpunkte sind die Mittellinie der
    * gemeinsamen Kontur. F.3.16s zusätzlich vermessene Outline ist nur deren Strichhülle und
    * deshalb ausdrücklich kein zweiter Körper und kein abweichender Fingerprint-Präzedenzfall.
+   *
+   * Die Dachschrägen treffen die Wände bei y 9,85, nicht auf der Traufe y 10 (Fachreview vom
+   * 19.09.2026): Die Außenkante der Referenz läuft von (1,75|9,684) zum First (16|3,729), also mit
+   * Steigung 0,418; um den halben Strich nach innen versetzt ergibt das die Mittellinie
+   * (16|4) → (2|9,85).
    */
   'reduced-house': {
     type: 'polyline',
     role: 'body',
     closed: true,
-    points: [[16, 4], [2, 10], [2, 26], [30, 26], [30, 10]],
+    points: [[16, 4], [2, 9.85], [2, 26], [30, 26], [30, 9.85]],
     style: OUTLINE,
   },
 };
@@ -779,15 +796,18 @@ const VARIANT_BODIES: Partial<Record<SymbolKind, Partial<Record<BodyVariantId, P
  * Bandmitte — also auf die linke Körpermittellinie 4,0. Jede Lage im Band erzeugt dasselbe Bild;
  * belegt ist das Bild, nicht der Endpunkt.
  *
- * **L-Rahmen** (`swap-loader-vehicle`) — ein offener Polyzug (1|6) → (1|26) → (31|26), Strich
- * 0,5 mm. Gemessen an **drei** Dateien, die ihn zahlengleich führen: `E.2.15`, `5.1.1.8` und
- * `5.1.1.9`. Seine Innenkontur misst in `E.2.15` 1,2499/6,2502/30,7499/25,7503 mit dem Knick auf
- * x 2,2500 und y 24,7505; die senkrechte Mittellinie folgt daraus als (0,7497 + 1,2499)/2 =
- * 0,9998, die waagerechte als (25,7503 + 26,2502)/2 = 26,0003.
+ * **L-Rahmen** (`swap-loader-vehicle`) — ein offener Polyzug (2,5|6) → (1|6) → (1|26) → (31|26) →
+ * (31|24,5), Strich 0,5 mm. Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert
+ * (E.2.15, Strichebene): Die senkrechte Mittellinie liegt bei x 1,0 (Außen-/Innenkante 0,75/1,25),
+ * die waagerechte bei y 26,0 (25,75/26,25).
  *
- * Auch seine **beiden freien Enden** liegen in einem gedeckten Band: oben deckt der
- * Körperstrich y 5,75 bis 6,25 (Sehne 6,0), rechts x 30,75 bis 31,25 (Körperkante 31,0). Der
- * Katalog setzt beide auf die Bandmitte — dieselbe Begründung wie bei der Deichsel.
+ * **Beide Enden schließen an den Körper an.** Die Referenz verschmilzt Rahmen und Körper zu einer
+ * Fläche: oben verbindet ein waagerechtes Stück auf der Sehne y 6,0 den Rahmen mit der linken
+ * Körperecke (2,5|6), die Außenkante läuft durchgehend auf y 5,75 von x 0,75 bis zur Kurve; rechts
+ * führt die Körperkante x 31 ohne Lücke bis zur Rahmenecke hinunter (Außenkante 31,25 von y 26,25
+ * bis zur Sehne). Die Aussparung zwischen Rahmen und Körper beginnt erst bei y 6,25 und endet bei
+ * x 30,75. Die frühere Fassung ließ den Rahmen bei (1|6) und (31|26) stumpf enden; im Pixelvergleich
+ * fehlten dann die beiden Anschlussecken.
  *
  * Der L-Rahmen trägt zusätzlich die **Fahrwerkszone**: seine Unterkante 26,0 ist deren Oberkante,
  * 1,5 mm unter der Körperunterkante 24,5. Siehe `compose()`.
@@ -813,9 +833,11 @@ const EXTRA_PRIMITIVES: Partial<Record<SymbolKind, readonly Primitive[]>> = {
       role: 'bodyExtra',
       closed: false,
       points: [
+        [2.5, 6],
         [1, 6],
         [1, 26],
         [31, 26],
+        [31, 24.5],
       ],
       style: OUTLINE,
     },
@@ -881,6 +903,245 @@ const SECTIONS: Partial<Record<SymbolKind, { section: string; asset: string }>> 
 };
 
 /**
+ * Einrückung des Innenfelds bei weißer Innenkontur: 1 mm von der Körpermittellinie nach innen.
+ * Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert. Alle 68 Dateien des
+ * Anhangs E führen in der Ebene `Flächige_Fülung` zwei Flächen: den Körper in Weiß und darin
+ * die Organisationsfarbe, deren Rand überall genau 1 mm von der Körpermittellinie absteht
+ * (E.1.1: Rahmen 1/6/31/26, Innenfeld 2/7/30/25 mm; E.2.18: die Deckkurve als echter
+ * Parallelversatz, nachgerechnet auf 0,0024 mm). Sichtbar bleibt zwischen Strich und Innenfeld
+ * ein weißes Band von 0,75 mm.
+ */
+const INNER_CONTOUR_INSET_MM = 1;
+
+type Vec = readonly [number, number];
+
+function cubicPoint(q: readonly Vec[], t: number): Vec {
+  const u = 1 - t;
+  const w = [u * u * u, 3 * u * u * t, 3 * u * t * t, t * t * t];
+  return [
+    w[0]! * q[0]![0] + w[1]! * q[1]![0] + w[2]! * q[2]![0] + w[3]! * q[3]![0],
+    w[0]! * q[0]![1] + w[1]! * q[1]![1] + w[2]! * q[2]![1] + w[3]! * q[3]![1],
+  ];
+}
+
+function cubicTangent(q: readonly Vec[], t: number): Vec {
+  const u = 1 - t;
+  const d = (i: 0 | 1): number =>
+    3 * u * u * (q[1]![i] - q[0]![i]) +
+    6 * u * t * (q[2]![i] - q[1]![i]) +
+    3 * t * t * (q[3]![i] - q[2]![i]);
+  const x = d(0);
+  const y = d(1);
+  const length = Math.hypot(x, y);
+  return [x / length, y / length];
+}
+
+/**
+ * Die linke Hälfte einer Deckkurve (Scheitel → linke Kante) um `insetMm` nach innen versetzt und
+ * an der ebenso eingerückten linken Seite `leftXMm + insetMm` abgeschnitten.
+ *
+ * Der exakte Parallelversatz einer Kubik ist keine Kubik. Konstruiert wird deshalb eine Kubik,
+ * die ihn bestmöglich nachzeichnet: Endpunkte auf dem Versatz, Endtangenten parallel zur
+ * Ausgangskurve (Parallelkurven teilen ihre Tangenten), die beiden Henkellängen per
+ * Ausgleichsrechnung über 64 Stützpunkte des Versatzes. Abweichung vom exakten Versatz bei
+ * `1.3`-Maßen: unter 0,004 mm.
+ */
+function insetDeckHalf(outer: readonly Vec[], insetMm: number, sideXMm: number): Vec[] {
+  // Innere Normale: Die Kurve läuft vom Scheitel nach links, innen liegt unterhalb (+y).
+  const offset = (t: number): Vec => {
+    const [tx, ty] = cubicTangent(outer, t);
+    const [px, py] = cubicPoint(outer, t);
+    return [px + insetMm * ty, py - insetMm * tx];
+  };
+  let lo = 0;
+  let hi = 1;
+  for (let i = 0; i < 60; i += 1) {
+    const mid = (lo + hi) / 2;
+    if (offset(mid)[0] > sideXMm) lo = mid;
+    else hi = mid;
+  }
+  const tEnd = (lo + hi) / 2;
+  const start = offset(0);
+  const end = offset(tEnd);
+  const startDir = cubicTangent(outer, 0);
+  const endDir = cubicTangent(outer, tEnd);
+
+  const samples = Array.from({ length: 65 }, (_, i) => offset((tEnd * i) / 64));
+  const arc = [0];
+  for (let i = 1; i < samples.length; i += 1) {
+    arc.push(arc[i - 1]! + Math.hypot(
+      samples[i]![0] - samples[i - 1]![0],
+      samples[i]![1] - samples[i - 1]![1],
+    ));
+  }
+  // Gesucht: Henkellängen a, b in C1 = start + a·startDir, C2 = end − b·endDir.
+  let s11 = 0, s12 = 0, s22 = 0, r1 = 0, r2 = 0;
+  samples.forEach((sample, i) => {
+    const t = arc[i]! / arc[arc.length - 1]!;
+    const u = 1 - t;
+    const b0 = u * u * u, b1 = 3 * u * u * t, b2 = 3 * u * t * t, b3 = t * t * t;
+    for (const k of [0, 1] as const) {
+      const rest = sample[k] - (b0 + b1) * start[k] - (b2 + b3) * end[k];
+      const g1 = b1 * startDir[k];
+      const g2 = -b2 * endDir[k];
+      s11 += g1 * g1; s12 += g1 * g2; s22 += g2 * g2;
+      r1 += g1 * rest; r2 += g2 * rest;
+    }
+  });
+  const det = s11 * s22 - s12 * s12;
+  const a = (r1 * s22 - r2 * s12) / det;
+  const b = (s11 * r2 - s12 * r1) / det;
+  return [
+    start,
+    [start[0] + a * startDir[0], start[1] + a * startDir[1]],
+    [end[0] - b * endDir[0], end[1] - b * endDir[1]],
+    end,
+  ];
+}
+
+/**
+ * Innenfeld eines Deckkurvenkörpers (`deckCurveBody`): Deckkurve als Parallelversatz, Seiten und
+ * Unterkante um dasselbe Maß eingerückt. Die rechte Hälfte ist die Spiegelung der linken am
+ * Scheitel — die Deckkurve ist bis auf die Exportrundung der Quelle symmetrisch.
+ */
+function deckCurveInnerField(
+  leftXMm: number,
+  chordYMm: number,
+  bottomYMm: number,
+  insetMm: number,
+): string {
+  const scale = (DECK_PIVOT_X_MM - leftXMm) / DECK_REFERENCE_WIDTH_MM;
+  const x = (offsetMm: number): number => DECK_PIVOT_X_MM - scale * offsetMm;
+  const apexX = x(DECK_OFFSETS_MM.apex);
+  const outerLeft: Vec[] = [
+    [apexX, chordYMm + DECK_APEX_DROP_MM],
+    [x(DECK_OFFSETS_MM.leftInnerControl), chordYMm + DECK_APEX_DROP_MM],
+    [x(DECK_OFFSETS_MM.leftOuterControl), chordYMm + DECK_CONTROL_DROP_MM],
+    [leftXMm, chordYMm],
+  ];
+  const [p0, p1, p2, p3] = insetDeckHalf(outerLeft, insetMm, leftXMm + insetMm);
+  const mirror = (p: Vec): Vec => [2 * apexX - p[0], p[1]];
+  const [m1, m2, m3] = [mirror(p1!), mirror(p2!), mirror(p3!)];
+  const bottom = round(bottomYMm - insetMm);
+  const pt = (p: Vec): string => `${round(p[0])} ${round(p[1])}`;
+  return (
+    `M ${pt(p0!)} C ${pt(p1!)}, ${pt(p2!)}, ${pt(p3!)} ` +
+    `L ${round(p3![0])} ${bottom} L ${round(m3[0])} ${bottom} L ${pt(m3)} ` +
+    `C ${pt(m2)}, ${pt(m1)}, ${pt(p0!)} Z`
+  );
+}
+
+/**
+ * Innenfeld eines Halbkreisrumpfs unter der Sehne: Kreis mit dem um `insetMm` kleineren Radius um
+ * denselben Mittelpunkt, oben von der um `insetMm` abgesenkten Sehne begrenzt. Kein Halbkreis
+ * mehr, sondern ein Kreisabschnitt; der Bogen als zwei symmetrische Kubiken mit dem üblichen
+ * Henkel (4/3)·tan(φ/4)·r. Gemessen an E.2.27: Radius 13,99 mm, Sehne 9,0 mm.
+ */
+function halfCircleInnerField(cxMm: number, chordYMm: number, rMm: number, insetMm: number): string {
+  const r = rMm - insetMm;
+  const start = Math.asin(insetMm / r);
+  const span = Math.PI / 2 - start;
+  const handle = (4 / 3) * Math.tan(span / 4) * r;
+  const at = (angle: number): Vec => [cxMm + r * Math.cos(angle), chordYMm + r * Math.sin(angle)];
+  const along = (angle: number, sign: number): Vec => {
+    const [px, py] = at(angle);
+    return [px - sign * handle * Math.sin(angle), py + sign * handle * Math.cos(angle)];
+  };
+  const pt = (p: Vec): string => `${round(p[0])} ${round(p[1])}`;
+  const right = at(start);
+  const apex = at(Math.PI / 2);
+  const left = at(Math.PI - start);
+  return (
+    `M ${pt(left)} L ${pt(right)} ` +
+    `C ${pt(along(start, 1))}, ${pt(along(Math.PI / 2, -1))}, ${pt(apex)} ` +
+    `C ${pt(along(Math.PI / 2, 1))}, ${pt(along(Math.PI - start, -1))}, ${pt(left)} Z`
+  );
+}
+
+const INNER_FIELD_STYLE: Style = { stroke: 'none' };
+
+function insetRect(x: number, y: number, width: number, height: number): Primitive {
+  const d = INNER_CONTOUR_INSET_MM;
+  return {
+    type: 'rect', role: 'innerField',
+    x: x + d, y: y + d, width: width - 2 * d, height: height - 2 * d,
+    style: INNER_FIELD_STYLE,
+  };
+}
+
+/**
+ * Das Gebäude füllt Dach und Wand **getrennt**: Die Wand ist das Rechteck 1/10…31/26 um 1 mm
+ * eingerückt, das Dach ein Dreieck, dessen Schrägen um 1 mm nach innen versetzt sind und das auf
+ * der Traufe y = 10 steht. Dazwischen bleibt ein weißes Band von 1 mm (E.1.37, einzige Datei mit
+ * dieser Hülle: Dachdreieck 3,365/4,1035…28,635/10,0 mm, Wand 2/11…30/25 mm).
+ */
+function buildingInnerField(): Primitive[] {
+  const d = INNER_CONTOUR_INSET_MM;
+  const apexY = 3;
+  const eaveY = 10;
+  const slope = (eaveY - apexY) / 15;
+  const innerApexY = apexY + d * Math.hypot(1, slope);
+  const halfBase = (eaveY - innerApexY) / slope;
+  return [
+    {
+      type: 'polyline', role: 'innerField', closed: true,
+      points: [[16, round(innerApexY)], [round(16 - halfBase), eaveY], [round(16 + halfBase), eaveY]],
+      style: INNER_FIELD_STYLE,
+    },
+    insetRect(1, eaveY, 30, 26 - eaveY),
+  ];
+}
+
+const INNER_FIELDS: Partial<Record<SymbolKind, readonly Primitive[]>> = {
+  formation: [insetRect(1, 6, 30, 20)],
+  building: buildingInnerField(),
+  'upright-rectangle': [insetRect(3, 2, 26, 28)],
+  'vehicle-land': [{
+    type: 'path', role: 'innerField',
+    d: deckCurveInnerField(1, 5.75, 26, INNER_CONTOUR_INSET_MM), style: INNER_FIELD_STYLE,
+  }],
+  trailer: [{
+    type: 'path', role: 'innerField',
+    d: deckCurveInnerField(4, 5.75, 26, INNER_CONTOUR_INSET_MM), style: INNER_FIELD_STYLE,
+  }],
+  'swap-loader-vehicle': [{
+    type: 'path', role: 'innerField',
+    d: deckCurveInnerField(2.5, 6, 24.5, INNER_CONTOUR_INSET_MM), style: INNER_FIELD_STYLE,
+  }],
+};
+
+const VARIANT_INNER_FIELDS: Partial<
+  Record<SymbolKind, Partial<Record<BodyVariantId, readonly Primitive[]>>>
+> = {
+  'vehicle-water': {
+    'raised-hull': [{
+      type: 'path', role: 'innerField',
+      d: halfCircleInnerField(15.9997, 7.9999, 14.9897, INNER_CONTOUR_INSET_MM),
+      style: INNER_FIELD_STYLE,
+    }],
+  },
+};
+
+/**
+ * Das Innenfeld eines Körpers bei weißer Innenkontur (`SymbolSpec.whiteInnerContour`), in den
+ * Koordinaten der unverschobenen Grundzeichnung. Die Füllfarbe setzt `compose()`.
+ *
+ * Belegt nur für die Körper, die Anhang E damit zeichnet. Jeder andere wirft: Wie die Kontur an
+ * einer Raute oder einem Kreis sitzt, zeigt keine Referenz.
+ */
+export function innerField(kind: SymbolKind, variant?: BodyVariantId): readonly Primitive[] {
+  const field = variant === undefined ? INNER_FIELDS[kind] : VARIANT_INNER_FIELDS[kind]?.[variant];
+  if (field === undefined) {
+    throw new NotMeasuredError(
+      `Eine weiße Innenkontur ist für "${kind}"${variant === undefined ? '' : ` / "${variant}"`} ` +
+        'an keiner Referenz belegt.',
+      'combination',
+    );
+  }
+  return field;
+}
+
+/**
  * Die Zeichnung eines Grundzeichens. `variant` wählt eine zweite, in der Quelle belegte Zeichnung
  * derselben Art.
  *
@@ -924,6 +1185,19 @@ export function baseDrawing(kind: SymbolKind, variant?: BodyVariantId): Drawing 
   };
 }
 
+/**
+ * Geometrie, die nur die **Kapitel-1-Darstellung** trägt, nicht die Kompositionen auf demselben
+ * Körper. `1.7 Gebäude` zieht eine waagerechte Traufkante, E.1.37 (Ortsverband, derselbe Körper)
+ * nicht. Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert: In `1.7` endet die
+ * Dachaussparung bei y 10,0 mm und die Wandaussparung beginnt bei 10,5 mm, die Kante ist also ein
+ * 0,5-mm-Strich auf der Mittellinie y 10,25 von Wand zu Wand (x 1 bis 31).
+ */
+const CHAPTER_ONE_EXTRAS: Partial<Record<SymbolKind, readonly Primitive[]>> = {
+  building: [
+    { type: 'line', role: 'bodyExtra', x1: 1, y1: 10.25, x2: 31, y2: 10.25, style: OUTLINE },
+  ],
+};
+
 function entry(kind: SymbolKind): CatalogEntry {
   const title = TITLES[kind];
   if (title === undefined) throw new Error(`Kein Titel für "${kind}".`);
@@ -937,7 +1211,13 @@ function entry(kind: SymbolKind): CatalogEntry {
     depictions: [
       {
         variant: 'primary',
-        drawing: baseDrawing(kind),
+        drawing: (() => {
+          const drawing = baseDrawing(kind);
+          const extras = CHAPTER_ONE_EXTRAS[kind] ?? [];
+          return extras.length === 0
+            ? drawing
+            : { ...drawing, children: [...drawing.children, ...extras] };
+        })(),
         sourceRefs: [
           {
             source: 'babz-svg-2025',

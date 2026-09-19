@@ -108,6 +108,13 @@ export interface Style {
   strokeWidth?: Length;
   fillRule?: 'nonzero' | 'evenodd';
   /**
+   * Eckenform eines Strichs. Nur `bevel` ist belegt: `1.10 Maßnahme` und `1.11 Gefahr` schneiden
+   * die spitzen Dreiecksecken ihres 1-mm-Strichs gerade ab (Außenkontur der Referenz). Fehlt der
+   * Wert, gilt der SVG-Default (miter) und die Ausgabe bleibt bytegleich. Piktogramme behalten
+   * ihren runden Vertrag des Clipping-Gates; dort wird der Wert nicht ausgewertet.
+   */
+  strokeLinejoin?: 'bevel';
+  /**
    * Expliziter Schlüssel für die nicht-farbliche Organisationssignatur einer Körperkontur.
    * Getrennt von `fill`: dieselbe Farbe kann eine Organisation oder eine rein technische
    * Füllung darstellen. Nur eine tatsächlich gesetzte Organisationssemantik trägt diesen Wert.
@@ -165,6 +172,17 @@ export type Primitive =
        * gesetzt heißt „beansprucht Lesbarkeit in jeder Rendergröße".
        */
       minRenderPx?: number;
+      /**
+       * Schriftgewicht des Laufs. Nur 400 (Normalschnitt, Default) und 700 (fett) sind belegt:
+       * Die Projektschrift ist Arimo mit der wght-Achse 400–700, gerastert wird aber mit resvg,
+       * das die Achse nicht auswertet und fett gesetzte Läufe aus der statischen Fettinstanz
+       * `Arimo-Bold.ttf` zeichnet. Zwischenwerte (etwa 600 für „halbfett") rastert resvg als 700,
+       * ein Browser dagegen als 600 — zwei verschiedene Bilder aus derselben IR. Deshalb gibt es
+       * sie nicht. Fehlt der Wert, bleibt die Ausgabe bytegleich zum Stand ohne dieses Feld; auch
+       * 400 schreibt kein Attribut. Einen kursiven Schnitt führt das Projekt nicht, deshalb gibt es
+       * kein `fontStyle`.
+       */
+      fontWeight?: 400 | 700;
     })
   | (PrimitiveBase & { type: 'group'; children: readonly Primitive[] });
 

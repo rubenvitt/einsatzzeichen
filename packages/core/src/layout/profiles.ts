@@ -133,6 +133,11 @@ export interface LayoutProfile {
     readonly ink: 'organization' | 'black';
   };
   /**
+   * Abstand der Fahrwerkszonen-Oberkante unter der Unterkante des Grundzeichens. Fehlt der Wert,
+   * hängt die Zone direkt an dieser Unterkante (Regelfall, 25 E.2-Zeichen und 5.1.1.x).
+   */
+  chassisTopBelowBaseBottomMm?: number;
+  /**
    * Setzt den Körper relativ zur Kopfzone. `headBottomMm === null` bedeutet: keine Kopfzone,
    * der Körper behält seine Standardgeometrie.
    */
@@ -250,6 +255,10 @@ const invertedHullVehicleLandProfile: LayoutProfile = {
   ...vehicleLandProfile,
   allowsCenterBaselineOverride: undefined,
   measuredBodyBoundsMm: undefined,
+  // N.1.1: Die Unterkante des umgekehrten Rumpfs liegt an den Ecken bei 25,75 mm, die Kette aber
+  // wie im Regelfall mit Mittellinie 26,0…30,5 mm (Außenkante 25,75, Innenkante 26,25). Die Zone
+  // beginnt deshalb 0,25 mm unter der Körperunterkante.
+  chassisTopBelowBaseBottomMm: 0.25,
 };
 
 /** Das Kapitel-1-Luftfahrzeug belegt keine Beschriftungszone. */

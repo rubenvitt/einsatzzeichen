@@ -47,10 +47,10 @@ describe('5.8.7 Wetterzustände', () => {
 
     const hail = weather('weather-hailing');
     expect(hail.primitives.filter((item) => item.type === 'circle')).toHaveLength(3);
-    expect(hail.primitives.filter((item) => item.type === 'line')).toHaveLength(6);
+    expect(hail.primitives.filter((item) => item.type === 'line')).toHaveLength(12);
 
     const thunder = weather('weather-thunderstorm');
-    expect(thunder.primitives).toHaveLength(3);
+    expect(thunder.primitives).toHaveLength(6);
     expect(thunder.primitives.every((item) => item.type === 'polyline')).toBe(true);
 
     const snow = weather('weather-snowing');
@@ -58,15 +58,19 @@ describe('5.8.7 Wetterzustände', () => {
     expect(snow.primitives.every((item) => item.type === 'line')).toBe(true);
   });
 
-  it('kodiert 4/8-Bedeckung mit gefüllter Hälfte und nicht mit Text', () => {
+  it('kodiert 4/8-Bedeckung mit gefüllter linker Hälfte und nicht mit Text', () => {
     const cover = weather('weather-cloud-cover-four-eighths');
-    expect(cover.primitives.map((item) => item.type)).toEqual(['circle', 'path', 'line']);
+    expect(cover.primitives.map((item) => item.type)).toEqual(['circle', 'path']);
+    expect(cover.primitives[0]).toMatchObject({ cx: 16, cy: 16, r: 14 });
     expect(cover.primitives[0]?.style?.fill).toBe('weiss');
     expect(cover.primitives[1]?.style?.fill).toBe('schwarz');
+    const half = cover.primitives[1];
+    expect(half?.type === 'path' && half.d.startsWith('M 16 30 ')).toBe(true);
   });
 
-  it('deklariert Weiß nur für die drei tatsächlich weiß gefüllten Zeichen', () => {
+  it('deklariert Weiß nur für die vier tatsächlich weiß gefüllten Zeichen', () => {
     const whiteFilled = new Set([
+      'state.weather-sunny',
       'state.weather-cloudy',
       'state.weather-cloud-cover-four-eighths',
       'state.weather-temperature',
@@ -93,6 +97,15 @@ describe('5.8.7 Wetterzustände', () => {
             },
           ];
       expect(definition.contrastPairs).toEqual(expected);
+    }
+  });
+
+  it('zeichnet jeden Strich mit 0,5 mm wie die Referenz', () => {
+    for (const definition of WEATHER_STATES) {
+      for (const primitive of definition.primitives) {
+        if (primitive.style?.stroke === undefined || primitive.style.stroke === 'none') continue;
+        expect(primitive.style.strokeWidth, definition.id).toBe(0.5);
+      }
     }
   });
 

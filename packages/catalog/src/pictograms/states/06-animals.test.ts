@@ -36,18 +36,34 @@ describe('5.8.6 Tierzustände', () => {
     expect(animal('contaminated-animal', 'alternative').title).toBe('Kontaminiertes Tier');
   });
 
-  it('verwendet in allen vier Definitionen dieselbe lokale Tiersilhouette', () => {
-    const serialized = ANIMAL_STATES.map((definition) =>
-      JSON.stringify(definition.primitives[0]),
+  it('verwendet eine Tiersilhouette, beim kontaminierten Tier 5 mm tiefer', () => {
+    const silhouettes = ANIMAL_STATES.map((definition) => definition.primitives[0]);
+    for (const silhouette of silhouettes) {
+      expect(silhouette).toMatchObject({
+        type: 'polyline',
+        role: 'pictogram',
+        closed: false,
+        style: { stroke: 'schwarz', strokeWidth: 0.5 },
+      });
+    }
+    expect(animal('sick-animal').primitives[0]).toMatchObject({
+      points: [[2, 4], [6, 4], [16, 29], [26, 4], [30, 4]],
+    });
+    expect(animal('contaminated-animal').primitives[0]).toMatchObject({
+      points: [[2, 9], [6, 9], [16, 31], [26, 9], [30, 9]],
+    });
+    expect(JSON.stringify(animal('dead-animal').primitives[0])).toBe(
+      JSON.stringify(animal('sick-animal').primitives[0]),
     );
-    expect(new Set(serialized).size).toBe(1);
-    const silhouette = ANIMAL_STATES[0]?.primitives[0];
-    expect(silhouette).toMatchObject({ type: 'polyline', role: 'pictogram', closed: false });
+    expect(JSON.stringify(animal('contaminated-animal', 'alternative').primitives[0])).toBe(
+      JSON.stringify(animal('contaminated-animal').primitives[0]),
+    );
   });
 
   it('trennt Krankheit, Kontamination, K-Alternative und Tod geometrisch', () => {
     expect(animal('sick-animal').primitives.slice(1).map((item) => item.type)).toEqual(['line']);
     expect(animal('contaminated-animal').primitives.slice(1).map((item) => item.type)).toEqual([
+      'line',
       'circle',
       'circle',
       'line',
@@ -55,7 +71,12 @@ describe('5.8.6 Tierzustände', () => {
     ]);
     expect(
       animal('contaminated-animal', 'alternative').primitives.slice(1).map((item) => item.type),
-    ).toEqual(['line', 'line', 'line']);
+    ).toEqual(['line', 'text']);
+    expect(animal('contaminated-animal', 'alternative').primitives[2]).toMatchObject({
+      content: 'K',
+      sizeMm: 7.1,
+      y: 7,
+    });
     expect(animal('dead-animal').primitives.slice(1).map((item) => item.type)).toEqual([
       'line',
       'line',

@@ -118,10 +118,13 @@ function drawPrimitive(
         // bereits mit. Eine zusätzliche mmToUnits-Umrechnung würde sie doppelt skalieren.
         ctx.lineWidth = strokeWidth;
         if (role === 'pictogram') {
-          // Entspricht SVGs Butt/Round-Vertrag für das Clipping-Gate: die halbe Strichstärke ist
-          // damit eine konservative sichtbare Piktogrammausdehnung.
+          // Entspricht SVGs Butt/Round-Vertrag für das Clipping-Gate: je Blatt ist die halbe
+          // Strichstärke (bei Linien senkrecht zur Richtung) damit eine konservative sichtbare
+          // Piktogrammausdehnung.
           ctx.lineCap = 'butt';
           ctx.lineJoin = 'round';
+        } else if (style.strokeLinejoin !== undefined) {
+          ctx.lineJoin = style.strokeLinejoin;
         }
         const dashToken = style.bodyStrokeDashToken;
         const dash = role === 'body' && dashToken !== undefined
@@ -145,7 +148,8 @@ function drawPrimitive(
     // Grundlinie auswerten statt eine Plattformkonvention zu erraten.
     if (style?.fill !== undefined && style.fill !== 'none') {
       ctx.fillStyle = color(style.fill, theme);
-      ctx.font = `${mmToUnits(primitive.sizeMm)}px ${TEXT_FONT_FAMILY_ATTR}`;
+      ctx.font = `${primitive.fontWeight === 700 ? '700 ' : ''}` +
+        `${mmToUnits(primitive.sizeMm)}px ${TEXT_FONT_FAMILY_ATTR}`;
       ctx.textAlign = canvasTextAlign(primitive.anchor);
       ctx.textBaseline = canvasBaseline(primitive.baseline);
       ctx.fillText(primitive.content, mmToUnits(primitive.x), mmToUnits(primitive.y));
@@ -169,6 +173,8 @@ function drawPrimitive(
       if (role === 'pictogram') {
         ctx.lineCap = 'butt';
         ctx.lineJoin = 'round';
+      } else if (style.strokeLinejoin !== undefined) {
+        ctx.lineJoin = style.strokeLinejoin;
       }
       const dashToken = style.bodyStrokeDashToken;
       const dash = role === 'body' && dashToken !== undefined

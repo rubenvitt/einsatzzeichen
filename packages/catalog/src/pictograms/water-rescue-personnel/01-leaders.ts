@@ -1,4 +1,5 @@
 import {
+  DEFAULT_STROKE_WIDTH_MM,
   type Point,
   type Primitive,
   type Style,
@@ -9,6 +10,31 @@ import {
   type PictogramContrastPair,
 } from '../catalog-definition.js';
 
+/**
+ * Wasserrettungspersonal I.5.4 bis I.5.8. Maße an der Referenz abgelesen, Geometrie eigenständig
+ * konstruiert: alle Konturen sind 0,5-mm-Striche auf ihrer Mittellinie, die Flächen echte
+ * Füllungen.
+ *
+ * - Raute: halbe Diagonale 13 mm (Außenkante der Referenz 26,71 mm breit, abzüglich Strich),
+ *   Mitte x = 16 mm, y = 18 mm bei den Führern (Kopfzone darüber) und y = 16 mm beim Fachberater.
+ *   Nur die Außenkontur sitzt in der Referenz 0,022 mm höher (Spitzen außen bei 4,624 und
+ *   31,331 mm); diese Messung ist übernommen, weil die lange Diagonale sonst über die ganze Länge
+ *   einen Pixelsaum gegen die Referenz zieht. Füllung, Kappe, Wellen und Innenraute liegen auf
+ *   dem runden Raster um 18 bzw. 16 mm.
+ * - Führer I.5.4 bis I.5.7: schwarze, gefüllte Kappe von der Spitze bis zur Schulterlinie
+ *   5 mm darunter (y = 10 mm).
+ * - Fachberater I.5.8: offene Kappe wie D.3.14/D.3.15 — ein waagerechter Strich 5 mm unter der
+ *   Spitze (y = 8 mm) von Rautenkante zu Rautenkante.
+ * - Zwei Wellen, je zwei Perioden von 4 mm zwischen x = 12 und 20 mm, 1 mm Hub (Wellental 4,5 mm,
+ *   Wellenberg 3,5 mm unter der Rautenmitte, zweite Welle 2 mm tiefer).
+ * - Innenraute: halbe Diagonale 4 mm, Mitte 3 mm unter der Rautenmitte.
+ */
+const STROKE = Object.freeze({
+  fill: 'none',
+  stroke: 'schwarz',
+  strokeWidth: DEFAULT_STROKE_WIDTH_MM,
+} satisfies Style);
+
 const BLACK_FILL = Object.freeze({
   fill: 'schwarz',
   stroke: 'none',
@@ -18,106 +44,82 @@ const WATER_RESCUE_CONTRAST = [
   {
     foreground: 'schwarz',
     background: 'weiss',
-    context: 'schwarze Führungs-, Wasser- und Innengeometrie auf dem weissen Rautenfeld',
+    context: 'schwarze Führungs-, Wasser- und Innengeometrie auf dem weißen Rautenfeld',
   },
   {
     foreground: 'schwarz',
     background: 'surface',
-    context: 'schwarze Aussenkontur und Kopfmarke auf der Ausgabeoberflaeche',
+    context: 'schwarze Außenkontur und Kopfmarke auf der Ausgabeoberfläche',
   },
 ] as const satisfies readonly [PictogramContrastPair, ...PictogramContrastPair[]];
 
-const STANDARD_FIELD = [
-  [16, 4.624547],
-  [29.353824, 17.978],
-  [16, 31.331489],
-  [2.646529, 17.978],
-] as const satisfies readonly Point[];
+const HALF_DIAGONAL_MM = 13;
+const CAP_DEPTH_MM = 5;
 
-const ADVISOR_FIELD = [
-  [16, 2.624304],
-  [29.353471, 16],
-  [16, 29.331599],
-  [2.646529, 16],
-] as const satisfies readonly Point[];
-
-const STANDARD_CAP =
-  'M 2.646529 17.978 L 16 4.624547 L 29.353824 17.978 L 16 31.331489 Z ' +
-  'M 3.354 17.978 L 11.332 10 L 20.668 10 L 28.646 17.978 L 16 30.624 Z';
-
-const ADVISOR_CAP =
-  'M 2.646529 16 L 16 2.624304 L 29.353471 16 L 16 29.331599 Z ' +
-  'M 16 3.332 L 20.418 7.75 L 20.918 8.25 L 28.646 16 L 16 28.624 ' +
-  'L 3.354 16 L 11.081 8.25 L 11.582 7.75 Z';
-
-/** Auf 32 mm skalierter, geschlossener 0,5-mm-Wellenpfad der Quelle. */
-function sourceWave(startY: number): string {
-  const y = (offset: number): number => Number((startY + offset).toFixed(3));
-  return `M 13.177 ${y(0)} ` +
-    `C 12.922 ${y(0.255)} 12.603 ${y(0.573)} 12 ${y(0.573)} ` +
-    `V ${y(0.073)} ` +
-    `C 12.397 ${y(0.073)} 12.585 ${y(-0.115)} 12.824 ${y(-0.354)} ` +
-    `C 13.079 ${y(-0.609)} 13.398 ${y(-0.927)} 14.001 ${y(-0.927)} ` +
-    `C 14.604 ${y(-0.927)} 14.923 ${y(-0.609)} 15.178 ${y(-0.354)} ` +
-    `C 15.416 ${y(-0.115)} 15.605 ${y(0.073)} 16.002 ${y(0.073)} ` +
-    `C 16.399 ${y(0.073)} 16.587 ${y(-0.115)} 16.825 ${y(-0.354)} ` +
-    `C 17.08 ${y(-0.609)} 17.398 ${y(-0.927)} 18.002 ${y(-0.927)} ` +
-    `C 18.606 ${y(-0.927)} 18.923 ${y(-0.609)} 19.178 ${y(-0.353)} ` +
-    `C 19.416 ${y(-0.115)} 19.604 ${y(0.074)} 20 ${y(0.074)} ` +
-    `V ${y(0.574)} ` +
-    `C 19.397 ${y(0.574)} 19.079 ${y(0.256)} 18.824 ${y(0)} ` +
-    `C 18.586 ${y(-0.238)} 18.398 ${y(-0.427)} 18.002 ${y(-0.427)} ` +
-    `C 17.606 ${y(-0.427)} 17.417 ${y(-0.239)} 17.179 ${y(0)} ` +
-    `C 16.924 ${y(0.255)} 16.606 ${y(0.573)} 16.002 ${y(0.573)} ` +
-    `C 15.398 ${y(0.573)} 15.08 ${y(0.255)} 14.825 ${y(0)} ` +
-    `C 14.587 ${y(-0.239)} 14.398 ${y(-0.427)} 14.001 ${y(-0.427)} ` +
-    `C 13.604 ${y(-0.427)} 13.416 ${y(-0.239)} 13.177 ${y(0)} Z`;
+function diamond(cx: number, cy: number, half: number): readonly Point[] {
+  const r = (value: number): number => Number(value.toFixed(3));
+  return [[cx, r(cy - half)], [r(cx + half), cy], [cx, r(cy + half)], [r(cx - half), cy]];
 }
 
-const STANDARD_WAVES = [
-  sourceWave(13.177),
-  sourceWave(15.177),
-] as const;
+/**
+ * Eine Welle als Strich: Täler bei x = 12, 16, 20 mm, Berge bei 14 und 18 mm. Jede halbe Periode
+ * ist eine Kubik mit waagerechten Tangenten an Tal und Berg; die Stützpunkte liegen 0,73 mm nach
+ * innen, damit die Steigung in der Mitte der einer Sinuswelle gleicher Höhe entspricht
+ * (0,5 · π / 2 ≈ 0,785).
+ */
+function wave(troughY: number): Primitive {
+  const crestY = troughY - 1;
+  const segments: string[] = [];
+  for (let index = 0; index < 4; index += 1) {
+    const x0 = 12 + index * 2;
+    const [from, to] = index % 2 === 0 ? [troughY, crestY] : [crestY, troughY];
+    segments.push(`C ${x0 + 0.73} ${from} ${x0 + 1.27} ${to} ${x0 + 2} ${to}`);
+  }
+  return {
+    type: 'path',
+    role: 'pictogram',
+    d: `M 12 ${troughY} ${segments.join(' ')}`,
+    style: { ...STROKE },
+  };
+}
 
-const ADVISOR_WAVES = [
-  sourceWave(11.177),
-  STANDARD_WAVES[0],
-] as const;
-
-const STANDARD_INNER =
-  'M 16 16.646 L 20.354 21 L 16 25.354 L 11.646 21 Z ' +
-  'M 16 17.353 L 19.647 21 L 16 24.647 L 12.353 21 Z';
-
-const ADVISOR_INNER =
-  'M 16 14.646 L 20.354 19 L 16 23.354 L 11.646 19 Z ' +
-  'M 16 15.353 L 19.647 19 L 16 22.647 L 12.353 19 Z';
-
-/** Ausschliesslich die zwei vermessenen Körperlagen; keine Rollen- oder Staerkeachse. */
+/** Rautenkörper mit Kappe, Wellen und Innenraute um die Mitte (16, cy). */
 function waterRescueBody(advisor: boolean): readonly Primitive[] {
-  const field = advisor ? ADVISOR_FIELD : STANDARD_FIELD;
-  const cap = advisor ? ADVISOR_CAP : STANDARD_CAP;
-  const waves = advisor ? ADVISOR_WAVES : STANDARD_WAVES;
-  const inner = advisor ? ADVISOR_INNER : STANDARD_INNER;
+  const cy = advisor ? 16 : 18;
+  const outlineCy = cy - 0.022;
+  // Auf 0,001 mm gerundet, damit keine Gleitkommareste (4,978000…0015) in der IR landen.
+  const top = Number((outlineCy - HALF_DIAGONAL_MM).toFixed(3));
+  // Schulterlinie 5 mm unter der Spitze (Fachberater: Strich auf 8 mm; Führer: Kappenunterkante
+  // auf 10 mm).
+  const shoulderY = cy - 8;
+  const cap: Primitive = advisor
+    ? {
+        type: 'line', role: 'pictogram',
+        x1: 16 - CAP_DEPTH_MM, y1: shoulderY, x2: 16 + CAP_DEPTH_MM, y2: shoulderY,
+        style: { ...STROKE },
+      }
+    : {
+        type: 'polyline', role: 'pictogram',
+        points: [[16, top], [16 + CAP_DEPTH_MM, shoulderY], [16 - CAP_DEPTH_MM, shoulderY]],
+        closed: true,
+        style: { ...BLACK_FILL },
+      };
   return [
     {
-      type: 'polyline', role: 'pictogram', points: field, closed: true,
-      style: { fill: 'weiss', stroke: 'none' },
+      type: 'polyline', role: 'pictogram', points: diamond(16, outlineCy, HALF_DIAGONAL_MM), closed: true,
+      style: { ...STROKE, fill: 'weiss' },
     },
+    cap,
+    wave(cy - 4.5),
+    wave(cy - 2.5),
     {
-      type: 'path', role: 'pictogram', d: cap,
-      style: { ...BLACK_FILL, fillRule: 'evenodd' },
-    },
-    ...waves.map((d) => ({
-      type: 'path' as const, role: 'pictogram' as const, d,
-      style: { ...BLACK_FILL },
-    })),
-    {
-      type: 'path', role: 'pictogram', d: inner,
-      style: { ...BLACK_FILL, fillRule: 'evenodd' },
+      type: 'polyline', role: 'pictogram', points: diamond(16, cy + 3, 4), closed: true,
+      style: { ...STROKE },
     },
   ];
 }
 
+/** Kopfkreis der Führungsstärke: Durchmesser 3 mm, Mitte 2,5 mm unter der Oberkante. */
 function headCircle(cx: number): Primitive {
   return {
     type: 'circle', role: 'pictogram', cx, cy: 2.5, r: 1.5,
@@ -131,7 +133,7 @@ export const WATER_RESCUE_PERSONNEL_PICTOGRAMS = [
     id: 'team-leader',
     title: 'Truppführer Wasserrettungstrupp',
     referenceAsset: 'I.5.4_Truppführer Wasserrettungstrupp.svg',
-    box: { xMm: 2.646529, yMm: 1, widthMm: 26.707295, heightMm: 30.331489 },
+    box: { xMm: 2.75, yMm: 1, widthMm: 26.5, heightMm: 30.25 },
     primitives: [...waterRescueBody(false), headCircle(16)],
     contrastPairs: WATER_RESCUE_CONTRAST,
   }),
@@ -140,7 +142,7 @@ export const WATER_RESCUE_PERSONNEL_PICTOGRAMS = [
     id: 'group-leader',
     title: 'Gruppenführer Wasserrettungsgruppe',
     referenceAsset: 'I.5.5_Gruppenführer Wasserrettungsgruppe.svg',
-    box: { xMm: 2.646529, yMm: 1, widthMm: 26.707295, heightMm: 30.331489 },
+    box: { xMm: 2.75, yMm: 1, widthMm: 26.5, heightMm: 30.25 },
     primitives: [...waterRescueBody(false), headCircle(11), headCircle(21)],
     contrastPairs: WATER_RESCUE_CONTRAST,
   }),
@@ -149,7 +151,7 @@ export const WATER_RESCUE_PERSONNEL_PICTOGRAMS = [
     id: 'platoon-leader',
     title: 'Zugführer Wasserrettungszug',
     referenceAsset: 'I.5.6_Zugführer Wasserrettungszug.svg',
-    box: { xMm: 2.646529, yMm: 1, widthMm: 26.707295, heightMm: 30.331489 },
+    box: { xMm: 2.75, yMm: 1, widthMm: 26.5, heightMm: 30.25 },
     primitives: [...waterRescueBody(false), headCircle(11), headCircle(16), headCircle(21)],
     contrastPairs: WATER_RESCUE_CONTRAST,
   }),
@@ -158,11 +160,14 @@ export const WATER_RESCUE_PERSONNEL_PICTOGRAMS = [
     id: 'formation-leader',
     title: 'Verbandsführer Wasserrettungsverband',
     referenceAsset: 'I.5.7_Verbandsführer Wasserrettungsverband.svg',
-    box: { xMm: 2.646529, yMm: 0, widthMm: 26.707295, heightMm: 31.331489 },
+    box: { xMm: 2.75, yMm: 0.25, widthMm: 26.5, heightMm: 31 },
     primitives: [
       ...waterRescueBody(false),
+      // Senkrechter Verbandsbalken 1,5 mm breit mittig über der Rautenspitze. Die Referenz lässt
+      // ihn am Blattrand (y = 0) beginnen; das Clipping-Gate schlägt die halbe Strichbreite der
+      // Raute pauschal auf die ganze Box auf, deshalb beginnt er hier 0,25 mm tiefer.
       {
-        type: 'rect', role: 'pictogram', x: 15.25, y: 0, width: 1.5, height: 4,
+        type: 'rect', role: 'pictogram', x: 15.25, y: 0.25, width: 1.5, height: 3.75,
         style: { ...BLACK_FILL },
       },
     ],
@@ -173,7 +178,7 @@ export const WATER_RESCUE_PERSONNEL_PICTOGRAMS = [
     id: 'technical-advisor',
     title: 'Fachberater Wasserrettung',
     referenceAsset: 'I.5.8_Fachberater Wasserrettung.svg',
-    box: { xMm: 2.646529, yMm: 2.624304, widthMm: 26.706942, heightMm: 26.707295 },
+    box: { xMm: 2.75, yMm: 2.75, widthMm: 26.5, heightMm: 26.5 },
     primitives: waterRescueBody(true),
     contrastPairs: WATER_RESCUE_CONTRAST,
   }),

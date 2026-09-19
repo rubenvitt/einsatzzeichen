@@ -2,16 +2,11 @@ import type { Point, Primitive, Style } from '@einsatzzeichen/schema';
 import type { PictogramContrastPair } from '../catalog-definition.js';
 
 /**
- * 1 mm wie bei den Zuständen (`STATE_STROKE_WIDTH_MM`) und den IuK-Zeichen
- * (`COMMS_STROKE_WIDTH_MM`) — die Strichbreite aller freistehenden Zeichen des Katalogs.
- *
- * Die Referenz selbst zeichnet schmaler: ihre Konturen sind gefüllte Umrisspfade von 1,418
- * SVG-Einheiten Wandstärke, also 0,5 mm. Der Katalog verdoppelt das bewusst und einheitlich,
- * damit die Zeichen am unteren Ende des Mehrgrößen-Gates noch Striche und nicht Andeutungen
- * sind: bei 16 px auf 32 mm Kantenlänge trägt 0,5 mm gerade eine Viertelpixelbreite. Die
- * **Mittellinien** bleiben davon unberührt und liegen auf den gemessenen Referenzkoordinaten.
+ * 0,5 mm — die Wandstärke der Referenzumrisse (1,417 pt bei 90,709 pt auf 32 mm). Alle Striche
+ * der Anhänge K und L liegen mit ihrer Mittellinie auf den an der Referenz abgelesenen
+ * Koordinaten; Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert.
  */
-export const DAMAGE_STROKE_WIDTH_MM = 1;
+export const DAMAGE_STROKE_WIDTH_MM = 0.5;
 
 /**
  * Anhang K kommt ohne eine einzige Füllangabe aus: alle 18 Dateien sind reines Schwarz auf der
@@ -165,101 +160,224 @@ export function dykeBase(): Primitive {
   return damagePolyline(DYKE_OUTLINE);
 }
 
-/**
- * Zerlegt eine kubische Kurve in `segments` gleich lange Stücke und gibt jedes zweite als
- * eigenen Pfad zurück — eine gestrichelte Linie aus echter Geometrie.
- *
- * Der Umweg ist nötig, weil `Style` keine Strichelung kennt: es trägt `fill`, `stroke`,
- * `strokeWidth` und `fillRule`, sonst nichts. Ein `strokeDasharray` daran wäre in keinem der
- * beiden Renderer angekommen — der erste Entwurf tat genau das und erzeugte eine durchgezogene
- * Linie, die kein Gate beanstandete und erst im Vergleichsbogen auffiel. Die Alternative wäre,
- * das Schema und beide Renderer um Strichelung zu erweitern; für ein einziges Zeichen wäre das
- * ein Mechanismusschritt in einem Slice, der reines Hinzufügen sein soll.
- *
- * Unterteilt wird nach De Casteljau, also exakt und ohne Näherung an der Kurvenform.
- */
-export function dashedCubic(
-  start: Point,
-  control1: Point,
-  control2: Point,
-  end: Point,
-  segments: number,
-  style: Readonly<Style> = DAMAGE_BLACK_STROKE,
-): Primitive[] {
-  const round = (value: number): number => Math.round(value * 1000) / 1000;
-  const axis = (index: 0 | 1): [number, number, number, number] => [
-    start[index],
-    control1[index],
-    control2[index],
-    end[index],
+/** Eine kubische Bézierkurve als Start, zwei Kontrollpunkte und Ende. */
+export type Cubic = readonly [Point, Point, Point, Point];
+
+const round3 = (value: number): number => Math.round(value * 1000) / 1000;
+
+function cubicAt(curve: Cubic, t: number): Point {
+  const u = 1 - t;
+  const a = u * u * u;
+  const b = 3 * u * u * t;
+  const c = 3 * u * t * t;
+  const d = t * t * t;
+  return [
+    a * curve[0][0] + b * curve[1][0] + c * curve[2][0] + d * curve[3][0],
+    a * curve[0][1] + b * curve[1][1] + c * curve[2][1] + d * curve[3][1],
   ];
-  const valueAt = (t: number, index: 0 | 1): number => {
-    const [p0, p1, p2, p3] = axis(index);
-    const u = 1 - t;
-    return u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3;
-  };
-  const slopeAt = (t: number, index: 0 | 1): number => {
-    const [p0, p1, p2, p3] = axis(index);
-    const u = 1 - t;
-    return 3 * u * u * (p1 - p0) + 6 * u * t * (p2 - p1) + 3 * t * t * (p3 - p2);
-  };
-  /**
-   * Das Teilstück zwischen t0 und t1 als eigene kubische Kurve: Endpunkte auf der Kurve, innere
-   * Kontrollpunkte ein Drittel der Parameterspanne entlang der jeweiligen Tangente.
-   */
-  const slice = (t0: number, t1: number): [Point, Point, Point, Point] => {
-    const span = (t1 - t0) / 3;
-    return [
-      [valueAt(t0, 0), valueAt(t0, 1)],
-      [valueAt(t0, 0) + slopeAt(t0, 0) * span, valueAt(t0, 1) + slopeAt(t0, 1) * span],
-      [valueAt(t1, 0) - slopeAt(t1, 0) * span, valueAt(t1, 1) - slopeAt(t1, 1) * span],
-      [valueAt(t1, 0), valueAt(t1, 1)],
-    ];
+}
+
+function cubicSlope(curve: Cubic, t: number): Point {
+  const u = 1 - t;
+  const axis = (index: 0 | 1): number =>
+    3 * u * u * (curve[1][index] - curve[0][index]) +
+    6 * u * t * (curve[2][index] - curve[1][index]) +
+    3 * t * t * (curve[3][index] - curve[2][index]);
+  return [axis(0), axis(1)];
+}
+
+/**
+ * Das Teilstück einer kubischen Kurve zwischen t0 und t1, selbst wieder kubisch: Endpunkte auf
+ * der Kurve, innere Kontrollpunkte ein Drittel der Parameterspanne entlang der Tangente. Das
+ * ist exakt, keine Näherung an der Kurvenform.
+ */
+function cubicSlice(curve: Cubic, t0: number, t1: number): Cubic {
+  const span = (t1 - t0) / 3;
+  const p0 = cubicAt(curve, t0);
+  const p3 = cubicAt(curve, t1);
+  const s0 = cubicSlope(curve, t0);
+  const s1 = cubicSlope(curve, t1);
+  return [
+    p0,
+    [p0[0] + s0[0] * span, p0[1] + s0[1] * span],
+    [p3[0] - s1[0] * span, p3[1] - s1[1] * span],
+    p3,
+  ];
+}
+
+/** Eine zusammenhängende Kette kubischer Kurven als Pfadtext (nur absolute Kommandos). */
+export function cubicChainD(chain: readonly Cubic[]): string {
+  const [first] = chain;
+  if (first === undefined) throw new Error('cubicChainD: leere Kette');
+  let d = `M ${round3(first[0][0])} ${round3(first[0][1])}`;
+  for (const [, c1, c2, end] of chain) {
+    d +=
+      ` C ${round3(c1[0])} ${round3(c1[1])} ${round3(c2[0])} ${round3(c2[1])}` +
+      ` ${round3(end[0])} ${round3(end[1])}`;
+  }
+  return d;
+}
+
+/**
+ * Strichelt eine Kette kubischer Kurven nach Bogenlänge: `dashMm` gezeichnet, `gapMm` frei,
+ * beginnend am Anfang der Kette. Jeder Strich ist ein eigener Pfad aus exakt geteilten
+ * Kurvenstücken.
+ *
+ * Der Umweg ist nötig, weil `Style` keine Strichelung kennt; ein `strokeDasharray` käme in
+ * keinem der beiden Renderer an.
+ */
+export function dashedCubics(
+  chain: readonly Cubic[],
+  dashMm: number,
+  gapMm: number,
+  style: Readonly<Style>,
+): Primitive[] {
+  // Bogenlänge über eine feine Parametertabelle je Kurve.
+  const steps = 200;
+  const table: { curve: number; t: number; s: number }[] = [];
+  let length = 0;
+  chain.forEach((curve, index) => {
+    let previous = cubicAt(curve, 0);
+    if (index === 0) table.push({ curve: 0, t: 0, s: 0 });
+    for (let step = 1; step <= steps; step += 1) {
+      const t = step / steps;
+      const point = cubicAt(curve, t);
+      length += Math.hypot(point[0] - previous[0], point[1] - previous[1]);
+      table.push({ curve: index, t, s: length });
+      previous = point;
+    }
+  });
+  const locate = (s: number): { curve: number; t: number } => {
+    const found = table.find((entry) => entry.s >= s) ?? table[table.length - 1]!;
+    return { curve: found.curve, t: found.t };
   };
   const dashes: Primitive[] = [];
-  for (let index = 0; index < segments; index += 2) {
-    const [p0, c1, c2, p3] = slice(index / segments, (index + 1) / segments);
-    dashes.push(
-      damagePath(
-        `M ${round(p0[0])} ${round(p0[1])} C ${round(c1[0])} ${round(c1[1])} ` +
-          `${round(c2[0])} ${round(c2[1])} ${round(p3[0])} ${round(p3[1])}`,
-        style,
-      ),
-    );
+  for (let start = 0; start < length; start += dashMm + gapMm) {
+    const from = locate(start);
+    const to = locate(Math.min(start + dashMm, length));
+    const pieces: Cubic[] = [];
+    for (let curve = from.curve; curve <= to.curve; curve += 1) {
+      const t0 = curve === from.curve ? from.t : 0;
+      const t1 = curve === to.curve ? to.t : 1;
+      if (t1 > t0) pieces.push(cubicSlice(chain[curve]!, t0, t1));
+    }
+    if (pieces.length > 0) dashes.push(damagePath(cubicChainD(pieces), style));
   }
   return dashes;
 }
 
 /**
- * Eine gefüllte Pfeilspitze an `tip`, ausgerichtet auf `angleDeg` (0° zeigt nach rechts). Die
- * Referenz zeichnet sie in allen sechs Pfeilzeichen des Anhangs L gleich gross: rund 4,5 mm lang
- * und 3 mm breit.
+ * Pfadtext einer Welle zwischen `x1` und `x2`, wie die Referenz sie in K.6 und im Anhang M
+ * zeichnet: Berge (y = yMid − amplitude) bei `crestX` und im Abstand `period`, Täler dazwischen.
+ * Jede halbe Periode ist eine kubische Kurve mit waagerechten Tangenten an Berg und Tal und
+ * Anfassern von einer Viertelperiode Länge — gemessen: so steil laufen die Referenzwellen durch
+ * ihre Wendepunkte (steiler als eine Kosinuswelle gleicher Maße).
+ *
+ * Beginnt oder endet die Welle zwischen Berg und Tal, wird das angeschnittene Stück exakt
+ * geteilt (`cubicSlice`).
  */
-export function arrowHead(
-  tipX: number,
-  tipY: number,
-  angleDeg: number,
-  lengthMm = 4.5,
-  widthMm = 3,
-): Primitive {
+export function waveD(
+  x1: number,
+  x2: number,
+  yMid: number,
+  amplitude: number,
+  period: number,
+  crestX: number,
+): string {
+  const half = period / 2;
+  const handle = period / 4;
+  // Erster Extrempunkt links von x1 (Berg oder Tal), dann halbe Perioden bis über x2 hinaus.
+  const firstIndex = Math.floor((x1 - crestX) / half + 1e-9);
+  const extremeY = (index: number): number =>
+    index % 2 === 0 ? yMid - amplitude : yMid + amplitude;
+  const chain: Cubic[] = [];
+  for (let index = firstIndex; crestX + index * half < x2 - 1e-9; index += 1) {
+    const a = crestX + index * half;
+    const b = a + half;
+    const ya = extremeY(Math.abs(index));
+    const yb = extremeY(Math.abs(index + 1));
+    let curve: Cubic = [
+      [a, ya],
+      [a + handle, ya],
+      [b - handle, yb],
+      [b, yb],
+    ];
+    // Parameter t zu einer x-Koordinate: x(t) ist auf der Halbwelle streng monoton.
+    const tAt = (x: number): number => {
+      let low = 0;
+      let high = 1;
+      for (let step = 0; step < 50; step += 1) {
+        const mid = (low + high) / 2;
+        if (cubicAt(curve, mid)[0] < x) low = mid;
+        else high = mid;
+      }
+      return (low + high) / 2;
+    };
+    const t0 = a < x1 ? tAt(x1) : 0;
+    const t1 = b > x2 ? tAt(x2) : 1;
+    if (t0 > 0 || t1 < 1) curve = cubicSlice(curve, t0, t1);
+    chain.push(curve);
+  }
+  return cubicChainD(chain);
+}
+
+/**
+ * Pfadtext einer glatten Kurve durch `points` (Catmull-Rom, als kubische Kurven geschrieben):
+ * jede Tangente ist die halbe Sehne zwischen Vor- und Nachfolgepunkt, an den Enden die Sehne
+ * zum einzigen Nachbarn.
+ */
+export function smoothCurveD(points: readonly Point[]): string {
+  const chain: Cubic[] = [];
+  for (let index = 0; index + 1 < points.length; index += 1) {
+    const p0 = points[Math.max(0, index - 1)]!;
+    const p1 = points[index]!;
+    const p2 = points[index + 1]!;
+    const p3 = points[Math.min(points.length - 1, index + 2)]!;
+    chain.push([
+      p1,
+      [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6],
+      [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6],
+      p2,
+    ]);
+  }
+  return cubicChainD(chain);
+}
+
+/**
+ * Die Pfeilspitze des Anhangs L: ein gefülltes gleichseitiges Dreieck mit 5 mm Seitenlänge,
+ * in allen sieben Pfeilzeichen (L.1 bis L.7) gleich. Spitze bei `tip`, ausgerichtet auf
+ * `angleDeg` (0° zeigt nach rechts, positive Winkel nach unten).
+ */
+export const ARROW_HEAD_SIDE_MM = 5;
+export const ARROW_HEAD_LENGTH_MM = (ARROW_HEAD_SIDE_MM * Math.sqrt(3)) / 2;
+
+export function arrowHead(tipX: number, tipY: number, angleDeg: number): Primitive {
   const rad = (angleDeg * Math.PI) / 180;
   const cos = Math.cos(rad);
   const sin = Math.sin(rad);
-  const round = (value: number): number => Math.round(value * 1000) / 1000;
-  // Basismitte liegt `lengthMm` hinter der Spitze, die beiden Flügel je `widthMm`/2 quer dazu.
-  const baseX = tipX - cos * lengthMm;
-  const baseY = tipY - sin * lengthMm;
-  const offsetX = (-sin * widthMm) / 2;
-  const offsetY = (cos * widthMm) / 2;
+  // Basismitte liegt eine Dreieckshöhe hinter der Spitze, die Ecken je halbe Seite quer dazu.
+  const baseX = tipX - cos * ARROW_HEAD_LENGTH_MM;
+  const baseY = tipY - sin * ARROW_HEAD_LENGTH_MM;
+  const offsetX = (-sin * ARROW_HEAD_SIDE_MM) / 2;
+  const offsetY = (cos * ARROW_HEAD_SIDE_MM) / 2;
   return damagePolyline(
     [
-      [round(tipX), round(tipY)],
-      [round(baseX + offsetX), round(baseY + offsetY)],
-      [round(baseX - offsetX), round(baseY - offsetY)],
+      [round3(tipX), round3(tipY)],
+      [round3(baseX + offsetX), round3(baseY + offsetY)],
+      [round3(baseX - offsetX), round3(baseY - offsetY)],
     ],
     true,
     DAMAGE_RED_FILL,
   );
+}
+
+/** Die Basismitte der Pfeilspitze — dort endet der Schaft. */
+export function arrowBase(tipX: number, tipY: number, angleDeg: number): Point {
+  const rad = (angleDeg * Math.PI) / 180;
+  return [
+    round3(tipX - Math.cos(rad) * ARROW_HEAD_LENGTH_MM),
+    round3(tipY - Math.sin(rad) * ARROW_HEAD_LENGTH_MM),
+  ];
 }
 
 /**
@@ -276,46 +394,16 @@ export const ROOM = Object.freeze({
   fillLine: 12,
 });
 
-/** Die drei geschlossenen Seiten der Zeichen K.5 bis K.8: links, unten, rechts. Oben offen. */
-export function openRoom(): Primitive {
+/**
+ * Die drei geschlossenen Seiten der Zeichen K.5 bis K.8: links, unten, rechts. Oben offen. In
+ * K.6 enden die Wände an der Schuttwelle statt an der Deckenhöhe, deshalb die Wandhöhen als
+ * Parameter.
+ */
+export function openRoom(leftTop: number = ROOM.top, rightTop: number = ROOM.top): Primitive {
   return damagePolyline([
-    [ROOM.left, ROOM.top],
+    [ROOM.left, leftTop],
     [ROOM.left, ROOM.bottom],
     [ROOM.right, ROOM.bottom],
-    [ROOM.right, ROOM.top],
+    [ROOM.right, rightTop],
   ]);
-}
-
-/**
- * Eine Girlande aus `count` nach oben gewölbten Bögen zwischen `x1` und `x2`. Die Referenz
- * zeichnet die Trümmeroberkante in K.6 und die Trümmerböschung in K.11 als unregelmäßig
- * gewellte Linie mit über hundert Bézier-Segmenten. Diese Unregelmäßigkeit trägt keine
- * Bedeutung — sie sagt „Schutt“, nicht „diese Schuttform“. Der Katalog bildet deshalb eine
- * gleichmäßige Welle, deterministisch aus Anzahl und Amplitude berechnet, statt hundert
- * gemessene Stützpunkte zu übernehmen, die niemand nachprüfen könnte.
- */
-export function garland(
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  count: number,
-  amplitudeMm: number,
-): Primitive {
-  const stepX = (x2 - x1) / count;
-  const stepY = (y2 - y1) / count;
-  const round = (value: number): number => Math.round(value * 1000) / 1000;
-  // Ausschliesslich absolute Kommandos: `tokenizePath` in `core` kennt M, L, H, V, C, Q und Z.
-  // Eine relative Schreibweise wäre kein Stilfehler, sondern ein Befund im Kommando-Gate.
-  let d = `M ${round(x1)} ${round(y1)}`;
-  for (let index = 0; index < count; index += 1) {
-    const startX = x1 + stepX * index;
-    const startY = y1 + stepY * index;
-    // Der Kontrollpunkt sitzt mittig über der Sehne; senkrecht zu ihr ausgelenkt wäre für die
-    // flachen Winkel dieser beiden Zeichen ein Unterschied unterhalb der Strichbreite.
-    const controlX = startX + stepX / 2;
-    const controlY = startY + stepY / 2 - amplitudeMm;
-    d += ` Q ${round(controlX)} ${round(controlY)} ${round(startX + stepX)} ${round(startY + stepY)}`;
-  }
-  return damagePath(d);
 }

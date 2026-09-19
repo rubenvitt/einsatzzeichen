@@ -74,15 +74,21 @@ function controlCenterCap(): Primitive {
 /**
  * Der Bereitstellungsrahmen besitzt in D.2.1 und D.2.2 dieselbe gewölbte Oberkante. Die zweite
  * Fassung liegt unter dem Meldekopf um 1,5 mm tiefer; ihre Bodenlinie ist um 1 mm abgesenkt.
+ *
+ * Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert: Mittellinie des
+ * 0,5-mm-Strichs bei x = 8 und 24 mm, Boden bei 21 bzw. 22 mm, Ecken der Oberkante bei 11 bzw.
+ * 12,5 mm. Die Oberkante hängt zur Mitte um 1,5 mm durch (Referenz 12,5 bzw. 14 mm) und steigt an
+ * den Ecken mit der Steigung ≈ 0,43 an; eine symmetrische Kubik mit den Stützpunkten 2 mm unter
+ * den Ecken und 4,7 mm nach innen ergibt genau diesen Durchhang (¼ · 0 + ¾ · 2 = 1,5 mm).
  */
 function stagingFrame(withReportingHead: boolean): Primitive {
-  const top = withReportingHead ? 12.55 : 11.06;
-  const controlY = withReportingHead ? 14.7 : 13.2;
+  const top = withReportingHead ? 12.5 : 11;
+  const controlY = top + 2;
   const bottom = withReportingHead ? 22 : 21;
   return {
     type: 'path',
     role: 'pictogram',
-    d: `M 8 ${bottom} H 24 V ${top} C 19 ${controlY} 13 ${controlY} 8 ${top} Z`,
+    d: `M 8 ${bottom} H 24 V ${top} C 19.3 ${controlY} 12.7 ${controlY} 8 ${top} Z`,
     style: { ...BLACK_STROKE },
   };
 }
@@ -149,7 +155,8 @@ export const LOCATION_PICTOGRAMS = [
       locationText('M', {
         x: 16,
         y: 12,
-        sizeMm: 6.5,
+        // Versalhöhe der Referenz 4,87 mm ÷ Arimo-Versalhöhe 0,688 em.
+        sizeMm: 7.08,
         boxMm: { xMm: 13.654, yMm: 7.131, widthMm: 4.693, heightMm: 4.869 },
         minRenderPx: 64,
       }),
@@ -168,8 +175,9 @@ export const LOCATION_PICTOGRAMS = [
       locationText('M', {
         x: 16,
         y: 19,
-        sizeMm: 10,
-        boxMm: { xMm: 12.481, yMm: 11.698, widthMm: 7.037, heightMm: 7.302 },
+        // Versalhöhe der Referenz 7,30 mm ÷ Arimo-Versalhöhe 0,688 em.
+        sizeMm: 10.6,
+        boxMm: { xMm: 12.4, yMm: 11.698, widthMm: 7.2, heightMm: 7.302 },
         minRenderPx: 32,
       }),
     ],
@@ -185,6 +193,9 @@ export const LOCATION_PICTOGRAMS = [
     primitives: [
       locationCircle(),
       locationText('L', {
+        // Arimo ist im „L“ rund 13 % breiter als die Referenzschrift; bei voller Versalhöhe
+        // (10,6 mm) wächst die Abweichung, deshalb bleibt der Lauf bei 10 mm auf der
+        // Stammposition der Referenz (am Pixelvergleich bestimmt).
         x: 16.365,
         y: 19,
         sizeMm: 10,
@@ -206,6 +217,8 @@ export const LOCATION_PICTOGRAMS = [
       controlCenterCap(),
       locationRoof(),
       locationText('LtS', {
+        // Wie D.2.4: „LtS“ ist in Arimo rund 14 % breiter als in der Referenzschrift; 10 mm mit
+        // der am Pixelvergleich bestimmten Lage deckt besser als die volle Versalhöhe.
         x: 16.238,
         y: 22,
         sizeMm: 10,

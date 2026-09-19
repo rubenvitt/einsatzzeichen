@@ -13,6 +13,8 @@ import {
   TEXT_FONT_FAMILY,
   TEXT_FONT_METRICS_PATH,
   TEXT_FONT_PATH,
+  TEXT_FONT_BOLD_PATH,
+  TEXT_FONT_BOLD_SHA256,
   TEXT_FONT_SHA256,
   TEXT_FONT_SOURCE_SHA256,
   resvgFontOptions,
@@ -26,6 +28,32 @@ describe('Textschrift', () => {
   it('liegt im Repository und hat die erwartete Prüfsumme', () => {
     const bytes = readFileSync(TEXT_FONT_PATH);
     expect(createHash('sha256').update(bytes).digest('hex')).toBe(TEXT_FONT_SHA256);
+  });
+
+  it('führt die Fettinstanz wght 700 mit der erwarteten Prüfsumme', () => {
+    const bytes = readFileSync(TEXT_FONT_BOLD_PATH);
+    expect(createHash('sha256').update(bytes).digest('hex')).toBe(TEXT_FONT_BOLD_SHA256);
+  });
+
+  it('rastert fett gesetzten Text mit der Fettinstanz und normalen Text unverändert', () => {
+    const svg = (weight: string) =>
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 40">' +
+      `<text x="5" y="30" font-family="${TEXT_FONT_FAMILY}" font-size="24"${weight}>RKB</text></svg>`;
+    const ink = (source: string, fontFiles: string[]) => {
+      const pixels = new Resvg(source, {
+        fitTo: { mode: 'width', value: 400 },
+        background: 'white',
+        font: { ...resvgFontOptions(), fontFiles },
+      }).render().pixels;
+      let count = 0;
+      for (let index = 0; index < pixels.length; index += 4) if (pixels[index]! < 128) count += 1;
+      return count;
+    };
+    const regularOnly = [TEXT_FONT_PATH];
+    const both = resvgFontOptions().fontFiles;
+    expect(ink(svg(''), both)).toBe(ink(svg(''), regularOnly));
+    expect(ink(svg(' font-weight="700"'), regularOnly)).toBe(ink(svg(''), regularOnly));
+    expect(ink(svg(' font-weight="700"'), both)).toBeGreaterThan(ink(svg(''), both) * 1.2);
   });
 
   it('ist ein Subset, kein Austausch: das Original ist eine andere Datei', () => {
@@ -126,7 +154,7 @@ describe('Textschrift', () => {
   it('schließt Systemschriften aus', () => {
     const options = resvgFontOptions();
     expect(options.loadSystemFonts).toBe(false);
-    expect(options.fontFiles).toEqual([TEXT_FONT_PATH]);
+    expect(options.fontFiles).toEqual([TEXT_FONT_PATH, TEXT_FONT_BOLD_PATH]);
     expect(options.defaultFontFamily).toBe(TEXT_FONT_FAMILY);
   });
 });

@@ -13,14 +13,16 @@ import {
   type PictogramBox,
   type PictogramDefinition,
   type Primitive,
+  type SymbolSpec,
 } from '@einsatzzeichen/schema';
 import { BASE_SYMBOLS, baseDrawing } from '../base-symbols.js';
 import { COVERAGE_MANIFEST } from '../coverage-manifest.js';
 import { deepFreeze } from '../readonly-data.js';
+import { RECIPES } from '../recipes.js';
 import type { CatalogPictogramDefinition } from './catalog-definition.js';
 import * as catalogDefinitionExports from './catalog-definition.js';
 import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
-import { ALL_PICTOGRAMS, pictogramVariantKey } from './index.js';
+import { ALL_PICTOGRAMS, pictogram, pictogramVariantKey } from './index.js';
 import { STATE_PICTOGRAMS } from './states/index.js';
 
 /**
@@ -104,18 +106,92 @@ function defineLeadershipAtRuntime(input: unknown): unknown {
   return Reflect.apply(candidate, undefined, [input]);
 }
 
-function clippingBodyFor(definition: CatalogPictogramDefinition): Primitive {
-  return definition.placement.mode === 'in-body'
-    ? bodyOf(definition.placement.bodyKind)
-    : {
-        type: 'rect',
-        role: 'body',
-        x: 0,
-        y: 0,
-        width: definition.viewBox.width,
-        height: definition.viewBox.height,
-      };
+/**
+ * Der Prüfkörper der **Einzeldarstellung**: das Rechteck ihrer eigenen ViewBox, ohne Kontur.
+ *
+ * Seit dem Fachreview vom 19. September 2026 gilt das für jede Definition, auch für die
+ * Kapitel-4-Piktogramme mit `placement: in-body`. Sie sind deckungsgleich mit den
+ * BABZ-Referenzen konstruiert, und die Referenz zeichnet sie als Einzeldarstellung auf der vollen
+ * 32×32-mm-Fläche (docs/decisions/2026-09-19-masse-an-der-referenz-ablesen.md). Gegen den
+ * Formationskörper (y 6 bis 26) geprüft, wäre die Referenz selbst ein Überstand.
+ *
+ * Ob ein Piktogramm in einen Körper passt, prüft der Kompositionstest unten, und zwar an den
+ * Kompositionen, die es tatsächlich in einen Körper setzen. Die Placement-Deklaration
+ * (`in-body` für `formation`) bleibt unverändert; nur der Prüfkontext der Einzeldarstellung
+ * folgt der Referenz.
+ */
+function singleDepictionBodyFor(definition: CatalogPictogramDefinition): Primitive {
+  return {
+    type: 'rect',
+    role: 'body',
+    x: 0,
+    y: 0,
+    width: definition.viewBox.width,
+    height: definition.viewBox.height,
+  };
 }
+
+/**
+ * Kompositionen, die ein Kapitel-4-Piktogramm in einen Körper setzen, ohne ein Rezept in
+ * `RECIPES` zu sein.
+ *
+ * Stand 19. September 2026 setzt **kein** Katalogrezept ein Kapitel-4-Piktogramm per
+ * `capabilities` in einen Körper: C.1.1 bis C.1.3 zeichnen die Brandbekämpfung über `bodyMarks`.
+ * Die Mechanik `capabilities` → Piktogrammgruppe belegen nur die Testkompositionen in
+ * `recipes.test.ts` („Piktogramm-Platzierung als Gruppe", „Pfad-Piktogramm in beiden
+ * Layoutfällen"). Genau diese stehen hier ausdrücklich, damit der Kompositionstest nicht leer
+ * durchläuft.
+ *
+ * Belegt ist die in-body-Tauglichkeit damit nur für `fire-fighting` und `service-water`. Für die
+ * übrigen 90 Kapitel-4-Piktogramme ist sie **nicht** belegt, trotz ihrer Placement-Deklaration
+ * `in-body`. Ein künftiges Rezept mit `spec.capabilities` fällt ohne Zutun in den Test (siehe
+ * `COMPOSITION_CASES`) und wird rot, wenn sein Piktogramm übersteht.
+ */
+const CAPABILITY_TEST_COMPOSITIONS: ReadonlyArray<readonly [string, SymbolSpec]> = [
+  [
+    'Testkomposition Staffel + fire-fighting',
+    { kind: 'formation', organization: 'feuerwehr', strength: 'staffel', capabilities: ['fire-fighting'] },
+  ],
+  [
+    'Testkomposition Staffel + service-water',
+    { kind: 'formation', organization: 'feuerwehr', strength: 'staffel', capabilities: ['service-water'] },
+  ],
+  [
+    'Testkomposition Staffel + fire-fighting + service-water',
+    {
+      kind: 'formation',
+      organization: 'feuerwehr',
+      strength: 'staffel',
+      capabilities: ['fire-fighting', 'service-water'],
+    },
+  ],
+];
+
+/**
+ * Je Komposition und eingesetztem Piktogramm ein Fall: das Piktogramm gegen den **realen**
+ * Körper dieser Komposition, mit dessen Kontur (siehe `bodyOutlineHalfMm` in `core`). Die
+ * Pikto-Tinte darf die Kontur überdecken, aber nicht über ihre Außenkante ragen — so wie die
+ * Schenkel der Brandbekämpfung in C.1.2/C.1.3 exakt auf der Konturmitte enden.
+ *
+ * Geprüft wird gegen den unverschobenen Körper: compose() verschiebt Körper und Piktogrammgruppe
+ * um dasselbe Delta (siehe `checkClipping`). Ein Körper ohne Flächenmodell lässt
+ * `checkClipping` werfen, der Fall wird also rot statt still übersprungen.
+ */
+const COMPOSITION_CASES = [
+  ...Object.entries(RECIPES)
+    .map(([section, recipe]) => [section, recipe.spec as SymbolSpec] as const)
+    .filter(([, spec]) => (spec.capabilities ?? []).length > 0),
+  ...CAPABILITY_TEST_COMPOSITIONS,
+].flatMap(([label, spec]) =>
+  (spec.capabilities ?? []).map(
+    (capability) =>
+      [
+        `${label}: capability.${capability} in ${spec.kind}`,
+        pictogram(`capability.${capability}`),
+        bodyOf(spec.kind as keyof typeof BASE_SYMBOLS),
+      ] as const,
+  ),
+);
 
 function standaloneFixture(
   box: PictogramBox,
@@ -218,10 +294,28 @@ describe('Piktogramm-Gates über den Katalogbestand', () => {
     },
   );
 
+  // Die Einzeldarstellung folgt der Referenz auf ihrer ViewBox (32×32 mm für Kapitel 4), siehe
+  // `singleDepictionBodyFor`. Ob ein Piktogramm in einen Körper passt, prüft der Kompositionstest
+  // direkt darunter an den Kompositionen, die es tatsächlich einsetzen.
   it.each(ALL_PICTOGRAMS.map((definition) => [pictogramVariantKey(definition), definition] as const))(
-    'besteht für %s das Clipping-Gate im deklarierten Platzierungskontext',
+    'besteht für %s das Clipping-Gate als Einzeldarstellung in der eigenen ViewBox',
     (_id, definition) => {
-      expect(checkClipping(definition, clippingBodyFor(definition))).toEqual([]);
+      expect(checkClipping(definition, singleDepictionBodyFor(definition))).toEqual([]);
+    },
+  );
+
+  it('hat mindestens eine Komposition, die ein Piktogramm in einen Körper setzt', () => {
+    // Ohne diese Zusicherung liefe der Kompositionstest unten bei leerer Liste trivial grün.
+    expect(COMPOSITION_CASES.length).toBeGreaterThan(0);
+    const pictograms = new Set(COMPOSITION_CASES.map(([, definition]) => definition.id));
+    expect(pictograms).toEqual(new Set(['capability.fire-fighting', 'capability.service-water']));
+  });
+
+  // Ein künftiges Rezept, das ein überstehendes Piktogramm in einen Körper setzt, wird hier rot.
+  it.each(COMPOSITION_CASES)(
+    'besteht für %s das Clipping-Gate gegen den realen Körper samt Kontur',
+    (_label, definition, body) => {
+      expect(checkClipping(definition, body)).toEqual([]);
     },
   );
 
@@ -241,12 +335,12 @@ describe('Piktogramm-Gates über den Katalogbestand', () => {
   it('akzeptiert standalone außerhalb der Formation, solange die sichtbare Box in der ViewBox liegt', () => {
     const definition = standaloneFixture({ xMm: 1, yMm: 1, widthMm: 3, heightMm: 3 });
     expect(checkClipping(definition, bodyOf('formation'))).not.toEqual([]);
-    expect(checkClipping(definition, clippingBodyFor(definition))).toEqual([]);
+    expect(checkClipping(definition, singleDepictionBodyFor(definition))).toEqual([]);
   });
 
   it('lehnt standalone-Tinte außerhalb der 32×32-mm-ViewBox ab', () => {
     const definition = standaloneFixture({ xMm: 31, yMm: 31, widthMm: 2, heightMm: 2 });
-    expect(checkClipping(definition, clippingBodyFor(definition))).not.toEqual([]);
+    expect(checkClipping(definition, singleDepictionBodyFor(definition))).not.toEqual([]);
   });
 
   it('leitet den standalone-Clippingkörper aus der rechteckigen Definitions-ViewBox ab', () => {
@@ -254,7 +348,7 @@ describe('Piktogramm-Gates über den Katalogbestand', () => {
       { xMm: 1, yMm: 42, widthMm: 3, heightMm: 3 },
       { width: 32, height: 46 },
     );
-    expect(checkClipping(definition, clippingBodyFor(definition))).toEqual([]);
+    expect(checkClipping(definition, singleDepictionBodyFor(definition))).toEqual([]);
   });
 
   it.each(BODY_CASES)('kann die reale Körperfläche von %s prüfen', (_kind, body) => {

@@ -90,6 +90,19 @@ describe('measureTextRun()', () => {
   });
 });
 
+describe('measureTextRun() mit fontWeight', () => {
+  it('misst fett gesetzte Läufe mit dem Fettschnitt', () => {
+    const withBold: TextMetrics = { ...metrics, bold: uniformTextMetrics(0.75) };
+    expect(measureTextRun(text({ content: 'ab' }), withBold).widthMm).toBeCloseTo(4);
+    expect(measureTextRun(text({ content: 'ab', fontWeight: 400 }), withBold).widthMm).toBeCloseTo(4);
+    expect(measureTextRun(text({ content: 'ab', fontWeight: 700 }), withBold).widthMm).toBeCloseTo(6);
+  });
+
+  it('wirft bei fettem Lauf ohne Fettschnitt, statt zu schmal zu messen', () => {
+    expect(() => measureTextRun(text({ fontWeight: 700 }), metrics)).toThrow(/Fettschnitt/);
+  });
+});
+
 describe('checkTextMetrics()', () => {
   it('liefert keinen Befund für einen passenden Lauf', () => {
     expect(checkTextMetrics(drawing(text({})), metrics)).toEqual([]);

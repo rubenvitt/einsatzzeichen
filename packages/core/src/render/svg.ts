@@ -79,10 +79,16 @@ function styleAttrs(
       const strokeWidth = options.rawStrokeWidth ? formatUnits(strokeWidthMm) : u(strokeWidthMm);
       parts.push(`stroke-width="${strokeWidth}"`);
       if (options.pictogramStrokeContract) {
-        // Das Clipping-Gate erweitert die Autorenbox um die halbe Strichstärke. Butt-Kappen
-        // und Round-Joins begrenzen die reale Piktogrammausdehnung darauf; SVG-Defaults wären
-        // beim Miter-Join nicht ausreichend. Canvas setzt denselben Vertrag in drawPrimitive().
+        // Das Clipping-Gate misst jedes Blatt einzeln: Hülle ± halbe Strichstärke, bei `line`
+        // nur senkrecht zur Linienrichtung. Butt-Kappen und Round-Joins begrenzen die reale
+        // Piktogrammausdehnung genau darauf; ein Miter-Join ragte an spitzen Ecken weiter hinaus.
+        // Die Referenz zeichnet gegehrte Ecken — der Unterschied bleibt unter 0,25 mm und ist
+        // der Preis dafür, dass das Gate beweisbar konservativ bleibt. Canvas setzt denselben
+        // Vertrag in drawPrimitive().
         parts.push('stroke-linecap="butt"', 'stroke-linejoin="round"');
+      }
+      if (style.strokeLinejoin !== undefined && !options.pictogramStrokeContract) {
+        parts.push(`stroke-linejoin="${style.strokeLinejoin}"`);
       }
       const dashToken = style.bodyStrokeDashToken;
       const dash = options.role === 'body' && dashToken !== undefined
@@ -214,7 +220,10 @@ function renderPrimitive(
     const attrs =
       `x="${u(primitive.x)}" y="${u(primitive.y)}" text-anchor="${primitive.anchor}" ` +
       `dominant-baseline="${baselineAttr(primitive.baseline)}" font-family="${TEXT_FONT_FAMILY_ATTR}" ` +
-      `font-size="${u(primitive.sizeMm)}"`;
+      `font-size="${u(primitive.sizeMm)}"` +
+      // Nur fett schreibt ein Attribut: 400 ist der Default, und ohne Feld bleibt die Ausgabe
+      // bytegleich zum Stand vor `fontWeight`.
+      (primitive.fontWeight === 700 ? ' font-weight="700"' : '');
     return `<text ${attrs}${styleStr}${transform}>${escapeXml(primitive.content)}</text>`;
   }
 

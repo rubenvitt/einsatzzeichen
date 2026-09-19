@@ -1,335 +1,419 @@
-import type { ColorToken, Primitive } from '@einsatzzeichen/schema';
+import type { ColorToken, Point, Primitive, Style } from '@einsatzzeichen/schema';
 import { deepFreeze } from '../../readonly-data.js';
 import {
   defineState,
   type CatalogPictogramDefinition,
   type PictogramContrastPair,
 } from '../catalog-definition.js';
-import { stateCircle, statePath } from './authoring.js';
+import {
+  STATE_STROKE_WIDTH_MM,
+  arcCommands,
+  polarPoint,
+  stateCircle,
+  stateLine,
+  statePath,
+  statePolygon,
+  statePolyline,
+  stateText,
+} from './authoring.js';
 
-const TACTICAL_BLACK_WIDTH = 1;
-const TACTICAL_COLOR_WIDTH = 0.55;
-const SIGNAL_BLACK_WIDTH = 1;
-const SIGNAL_COLOR_WIDTH = 0.55;
+/**
+ * Taktik- und Gefahrenzeichen 5.8.1. Maße an der Referenz abgelesen, Geometrie eigenständig
+ * konstruiert.
+ *
+ * Die Referenz zeichnet ausschließlich in Rot und Hellblau: jeder Strich ist 0,5 mm stark und
+ * hat keine schwarze Kontur. Warndreiecke sind weiß gefüllt.
+ */
+const round3 = (value: number): number => Math.round(value * 1000) / 1000;
 
-/** Schwarzer Halo ist der sichtbare Trenner zwischen Farbe und ihrer Umgebung. */
-function haloStroke(d: string, color: ColorToken): readonly Primitive[] {
-  return [
-    statePath(d, {
-      fill: 'none',
-      stroke: 'schwarz',
-      strokeWidth: TACTICAL_BLACK_WIDTH,
-    }),
-    statePath(d, {
-      fill: 'none',
-      stroke: color,
-      strokeWidth: TACTICAL_COLOR_WIDTH,
-    }),
-  ];
+function strokeStyle(color: ColorToken, width = STATE_STROKE_WIDTH_MM): Style {
+  return { fill: 'none', stroke: color, strokeWidth: width };
 }
 
-/** Weisse Innenflaeche, schwarze Kontur und schmalere farbige Signallinie. */
-function framedStroke(d: string, color: ColorToken): readonly Primitive[] {
-  return [
-    statePath(d, {
-      fill: 'weiss',
-      stroke: 'schwarz',
-      strokeWidth: SIGNAL_BLACK_WIDTH,
-    }),
-    statePath(d, {
-      fill: 'none',
-      stroke: color,
-      strokeWidth: SIGNAL_COLOR_WIDTH,
-    }),
-  ];
-}
+const RED_FILL: Style = { fill: 'rot', stroke: 'none' };
 
-function filledSignalCircle(cx: number, cy: number, r: number): Primitive {
-  return stateCircle(cx, cy, r, {
-    fill: 'rot',
-    stroke: 'schwarz',
-    strokeWidth: 0.5,
-  });
-}
+/** Großes Warndreieck: Ecken (1, 28), (16, 3), (31, 28), weiß gefüllt. */
+const HAZARD_TRIANGLE: readonly Point[] = [[1, 28], [16, 3], [31, 28]];
+/** Kleines, nach rechts gerücktes Warndreieck der Hinweisvarianten: (7,5, 25), (19, 6), (30,5, 25). */
+const NOTICE_TRIANGLE: readonly Point[] = [[7.5, 25], [19, 6], [30.5, 25]];
 
-function filledSignalPath(d: string): Primitive {
-  return statePath(d, {
-    fill: 'rot',
-    stroke: 'schwarz',
-    strokeWidth: 0.5,
-  });
-}
-
-function haloCircleStroke(
-  cx: number,
-  cy: number,
-  r: number,
-  color: ColorToken,
-): readonly Primitive[] {
-  return [
-    stateCircle(cx, cy, r, {
-      fill: 'none',
-      stroke: 'schwarz',
-      strokeWidth: SIGNAL_BLACK_WIDTH,
-    }),
-    stateCircle(cx, cy, r, {
-      fill: 'none',
-      stroke: color,
-      strokeWidth: SIGNAL_COLOR_WIDTH,
-    }),
-  ];
+function triangle(points: readonly Point[], color: ColorToken): Primitive {
+  return statePolygon(points, { fill: 'weiss', stroke: color, strokeWidth: STATE_STROKE_WIDTH_MM });
 }
 
 const TACTICAL_CONTRAST = [
   {
-    foreground: 'schwarz',
+    foreground: 'rot',
     background: 'surface',
-    context: 'Schwarzer Aussenhalo der freistehenden Taktikmarke',
+    context: 'Rote Taktikmarke auf Ausgabeoberfläche',
   },
   {
-    foreground: 'schwarz',
-    background: 'rot',
-    context: 'Schwarzer Halo an der roten Taktikmarke',
-  },
-  {
-    foreground: 'schwarz',
-    background: 'hellblau',
-    context: 'Schwarzer Halo am blauen Richtungselement',
+    foreground: 'hellblau',
+    background: 'surface',
+    context: 'Hellblaue Taktikmarke auf Ausgabeoberfläche',
   },
 ] as const satisfies readonly [PictogramContrastPair, ...PictogramContrastPair[]];
 
 const WATER_CONTRAST = [
   {
-    foreground: 'schwarz',
+    foreground: 'hellblau',
     background: 'surface',
-    context: 'Schwarze Aussenkontur des Wasserzeichens',
+    context: 'Hellblaue Außenkontur des Wasserzeichens',
   },
   {
-    foreground: 'schwarz',
+    foreground: 'hellblau',
     background: 'weiss',
-    context: 'Schwarze Kontur auf weisser Innenflaeche',
-  },
-  {
-    foreground: 'schwarz',
-    background: 'hellblau',
-    context: 'Schwarzer Halo an blauer Wassergeometrie',
+    context: 'Hellblaue Wellen auf weißer Innenfläche',
   },
 ] as const satisfies readonly [PictogramContrastPair, ...PictogramContrastPair[]];
 
 const SIGNAL_CONTRAST = [
   {
-    foreground: 'schwarz',
+    foreground: 'rot',
     background: 'surface',
-    context: 'Schwarze Aussenkontur des Gefahrzeichens',
+    context: 'Rote Außenkontur des Warndreiecks',
   },
   {
-    foreground: 'schwarz',
+    foreground: 'rot',
     background: 'weiss',
-    context: 'Schwarze Gefahrkontur auf weisser Innenflaeche',
+    context: 'Rotes Gefahrsymbol auf weißer Innenfläche',
+  },
+] as const satisfies readonly [PictogramContrastPair, ...PictogramContrastPair[]];
+
+const NOTICE_CONTRAST = [
+  {
+    foreground: 'rot',
+    background: 'surface',
+    context: 'Rotes Hinweiszeichen auf Ausgabeoberfläche',
   },
   {
-    foreground: 'schwarz',
-    background: 'rot',
-    context: 'Schwarze Kontur an roter Signalgeometrie',
+    foreground: 'rot',
+    background: 'weiss',
+    context: 'Rote Kontur um die weiße Dreiecksfläche',
   },
 ] as const satisfies readonly [PictogramContrastPair, ...PictogramContrastPair[]];
 
 const FREE_SIGNAL_CONTRAST = [
   {
-    foreground: 'schwarz',
+    foreground: 'rot',
     background: 'surface',
-    context: 'Schwarzer Halo der freistehenden Signalform',
-  },
-  {
-    foreground: 'schwarz',
-    background: 'rot',
-    context: 'Schwarzer Halo an roter Signalgeometrie',
+    context: 'Freistehendes rotes Hinweiszeichen',
   },
 ] as const satisfies readonly [PictogramContrastPair, ...PictogramContrastPair[]];
 
-const TRIANGLE = 'M 16 2 L 30 29 H 2 Z';
-const FLOOD_OVAL =
-  'M 2 16 C 2 8 8 3 16 3 C 24 3 30 8 30 16 C 30 24 24 29 16 29 C 8 29 2 24 2 16 Z';
+/*
+ * 5.8.1.1–5.8.1.4 Einsatztaktik: eine Klammer und ein Umrisspfeil, beide 0,5 mm.
+ * Klammer: 4 mm tief, Schenkel von y = 4 bis 7 und 25 bis 28, Rücken von y = 7 bis 25.
+ * Pfeil (Beginn bei x = s): die Schaftkanten laufen gebogen von (s, 8) bzw. (s, 24) nach
+ * (s + 13, 11) bzw. (s + 13, 21), die Spitze ist ein rechter Winkel mit Scheitel (s + 21, 16),
+ * dessen Schenkel bei y = 8 und 24 senkrecht auf die Schaftkanten zurückspringen.
+ */
+function tacticalBracket(spineX: number, opensRight: boolean, color: ColorToken): Primitive {
+  const tipX = spineX + (opensRight ? 4 : -4);
+  return statePolyline(
+    [[tipX, 4], [spineX, 7], [spineX, 25], [tipX, 28]],
+    false,
+    strokeStyle(color),
+  );
+}
 
-const TACTIC_GEOMETRY = {
-  rescue: {
-    boundary: 'M 8 4 L 4 7 V 25 L 8 28',
-    boundaryColor: 'rot',
-    arrow:
-      'M 8 8 C 13 11 17 12 21 12 L 21 8 L 29 16 L 21 24 L 21 20 C 17 20 13 21 8 24',
-    arrowColor: 'hellblau',
-  },
-  attack: {
-    boundary: 'M 24 4 L 28 7 V 25 L 24 28',
-    boundaryColor: 'rot',
-    arrow:
-      'M 4 8 C 10 11 14 12 19 12 L 19 8 L 25 16 L 19 24 L 19 20 C 14 20 10 21 4 24',
-    arrowColor: 'hellblau',
-  },
-  defense: {
-    boundary: 'M 28 4 L 24 7 V 25 L 28 28',
-    boundaryColor: 'hellblau',
-    arrow:
-      'M 3 8 C 9 11 13 12 17 12 L 17 8 L 23 16 L 17 24 L 17 20 C 13 20 9 21 3 24',
-    arrowColor: 'rot',
-  },
-  retreat: {
-    boundary: 'M 3 4 L 7 7 V 25 L 3 28',
-    boundaryColor: 'rot',
-    arrow:
-      'M 10 8 C 15 11 19 12 23 12 L 23 8 L 30 16 L 23 24 L 23 20 C 19 20 15 21 10 24',
-    arrowColor: 'hellblau',
-  },
-} as const;
+function tacticalArrow(startX: number, color: ColorToken): Primitive {
+  const x = (offset: number): number => round3(startX + offset);
+  return statePath(
+    `M ${x(0)} 8 C ${x(4.1)} 10.05 ${x(8.1)} 11 ${x(13)} 11 L ${x(13)} 8 L ${x(21)} 16 ` +
+      `L ${x(13)} 24 L ${x(13)} 21 C ${x(8.1)} 21 ${x(4.1)} 21.95 ${x(0)} 24`,
+    strokeStyle(color),
+  );
+}
 
-type TacticKind = keyof typeof TACTIC_GEOMETRY;
+interface TacticGeometry {
+  /** x des Klammerrückens, Öffnungsrichtung und Farbe. */
+  readonly spineX: number;
+  readonly opensRight: boolean;
+  readonly bracketColor: ColorToken;
+  /** x des Pfeilbeginns und Farbe. */
+  readonly arrowX: number;
+  readonly arrowColor: ColorToken;
+}
 
-function tacticalPrimitives(kind: TacticKind): readonly Primitive[] {
-  const geometry = TACTIC_GEOMETRY[kind];
+const TACTICS = {
+  rescue: { spineX: 4, opensRight: true, bracketColor: 'rot', arrowX: 8, arrowColor: 'hellblau' },
+  attack: { spineX: 28, opensRight: false, bracketColor: 'rot', arrowX: 4, arrowColor: 'hellblau' },
+  defense: { spineX: 26, opensRight: true, bracketColor: 'hellblau', arrowX: 3, arrowColor: 'rot' },
+  retreat: { spineX: 6, opensRight: false, bracketColor: 'rot', arrowX: 9, arrowColor: 'hellblau' },
+} as const satisfies Record<string, TacticGeometry>;
+
+function tacticalPrimitives(kind: keyof typeof TACTICS): readonly Primitive[] {
+  const tactic: TacticGeometry = TACTICS[kind];
   return [
-    ...haloStroke(geometry.boundary, geometry.boundaryColor),
-    ...haloStroke(geometry.arrow, geometry.arrowColor),
+    tacticalBracket(tactic.spineX, tactic.opensRight, tactic.bracketColor),
+    tacticalArrow(tactic.arrowX, tactic.arrowColor),
   ];
+}
+
+/*
+ * 5.8.1.5 Überschwemmtes Gebiet: weißes Oval 1…31 × 4…28 mm (vier Kubiken, Hebel 6 bzw. 9 mm),
+ * vier Wellenlinien und ein „W". Eine Welle besteht aus Halbwellen von 8/3 mm Breite und 2 mm
+ * Höhe; jede Halbwelle ist eine Kubik mit beiden Kontrollpunkten auf ihrer Mitte.
+ */
+function wave(startX: number, startY: number, otherY: number, halfWaves: number): string {
+  const width = 8 / 3;
+  const commands = [`M ${startX} ${startY}`];
+  let y = startY;
+  for (let index = 0; index < halfWaves; index += 1) {
+    const from = startX + index * width;
+    const next = y === startY ? otherY : startY;
+    const middle = round3(from + width / 2);
+    commands.push(`C ${middle} ${y} ${middle} ${next} ${round3(from + width)} ${next}`);
+    y = next;
+  }
+  return commands.join(' ');
 }
 
 function floodedAreaPrimitives(): readonly Primitive[] {
-  const waves =
-    'M 7 9 C 8 9 8.5 7 10 7 C 11.5 7 12 9 13 9 ' +
-    'M 19 9 C 20 9 20.5 7 22 7 C 23.5 7 24 9 25 9 ' +
-    'M 5 16 C 6.5 16 7 14 8.5 14 C 10 14 10.5 16 12 16 ' +
-    'M 20 16 C 21.5 16 22 14 23.5 14 C 25 14 25.5 16 27 16 ' +
-    'M 7 23 C 8 23 8.5 21 10 21 C 11.5 21 12 23 13 23 ' +
-    'M 19 23 C 20 23 20.5 21 22 21 C 23.5 21 24 23 25 23';
-  const waterInitial = 'M 12 12 L 14.5 21 L 16 16 L 17.5 21 L 20 12';
+  const blue = strokeStyle('hellblau');
   return [
-    ...framedStroke(FLOOD_OVAL, 'hellblau'),
-    ...haloStroke(waves, 'hellblau'),
-    ...haloStroke(waterInitial, 'hellblau'),
+    statePath(
+      'M 1 16 C 1 10 7 4 16 4 C 25 4 31 10 31 16 C 31 22 25 28 16 28 C 7 28 1 22 1 16 Z',
+      { fill: 'weiss', stroke: 'hellblau', strokeWidth: STATE_STROKE_WIDTH_MM },
+    ),
+    statePath(wave(8, 9, 7, 6), blue),
+    statePath(wave(3, 17, 15, 3), blue),
+    statePath(wave(21, 15, 17, 3), blue),
+    statePath(wave(8, 24, 22, 6), blue),
+    statePolyline([[12, 12], [14, 18], [16, 12], [18, 18], [20, 12]], false, blue),
   ];
+}
+
+/*
+ * 5.8.1.6 Gefahr durch Wassereinbruch: hellblaues Warndreieck mit zwei spiegelsymmetrischen
+ * Wellen um x = 16. Obere Welle: Aufschwung von (9, 20) auf den Kamm (11, 18), Tal (16, 22);
+ * untere Welle: von (9, 24) auf den Kamm (11, 21), Tal (16, 25). Die linke Hälfte ist aus
+ * Kubiken gebaut, die rechte gespiegelt.
+ */
+type Cubic = readonly [Point, Point, Point];
+
+function mirroredWave(start: Point, leftHalf: readonly Cubic[]): string {
+  const mirror = ([x, y]: Point): Point => [round3(32 - x), y];
+  const commands = [`M ${start[0]} ${start[1]}`];
+  const format = (points: readonly Point[]): string =>
+    `C ${points.map(([x, y]) => `${x} ${y}`).join(' ')}`;
+  for (const cubic of leftHalf) commands.push(format(cubic));
+  const starts: Point[] = [start, ...leftHalf.map((cubic) => cubic[2])];
+  for (let index = leftHalf.length - 1; index >= 0; index -= 1) {
+    const [c1, c2] = leftHalf[index]!;
+    commands.push(format([mirror(c2), mirror(c1), mirror(starts[index]!)]));
+  }
+  return commands.join(' ');
 }
 
 function waterIngressPrimitives(): readonly Primitive[] {
-  const waves =
-    'M 8 18 C 10 16 12 16 14 18 C 16 20 18 20 20 18 C 22 16 24 16 26 18 ' +
-    'M 8 22 C 10 20 12 20 14 22 C 16 24 18 24 20 22 C 22 20 24 20 26 22';
+  const blue = strokeStyle('hellblau');
   return [
-    ...framedStroke(TRIANGLE, 'hellblau'),
-    ...haloStroke(waves, 'hellblau'),
+    triangle(HAZARD_TRIANGLE, 'hellblau'),
+    statePath(
+      mirroredWave([9, 20], [
+        [[9.28, 18.7], [10, 18], [11, 18]],
+        [[12.7, 18], [13.3, 19.1], [13.85, 20.15]],
+        [[14.35, 21.1], [14.8, 22], [16, 22]],
+      ]),
+      blue,
+    ),
+    statePath(
+      mirroredWave([9, 24], [
+        [[9, 21.3], [10.25, 21], [11, 21]],
+        [[12.1, 21], [12.6, 21.9], [13.15, 22.8]],
+        [[13.75, 23.9], [14.4, 25], [16, 25]],
+      ]),
+      blue,
+    ),
   ];
 }
 
+/*
+ * Kennbuchstaben im Warndreieck (5.8.1.7, 5.8.1.8, 5.8.1.10, 5.8.1.11): Projektschrift fett,
+ * rot, Grundlinie an der Referenz abgelesen. Die Referenzschrift ist eine schmale fette Grotesk;
+ * Schriftgrad und Mitte sind so gewählt, dass Versalhöhe und Laufbreite zusammen am besten
+ * decken (Pixelvergleich). Arimo Bold ist breiter, deshalb liegt der Grad unter dem, den die
+ * Versalhöhe allein ergäbe.
+ */
+function hazardText(
+  content: string,
+  x: number,
+  y: number,
+  sizeMm: number,
+  boxMm: { xMm: number; yMm: number; widthMm: number; heightMm: number },
+): Primitive {
+  return stateText(content, { x, y, sizeMm, boxMm, fill: 'rot', fontWeight: 700 });
+}
+
 function hazardousSubstancesPrimaryPrimitives(): readonly Primitive[] {
-  const glyph =
-    'M 13 11 C 12 9 10.5 8 9 8 C 6 8 5 11 5 16 C 5 21 6.5 24 10 24 ' +
-    'C 12 24 13.5 23 14 21 V 16 H 10 ' +
-    'M 26 10 C 24 8 20 8 18 10 C 16 12 17 14 20 15 L 23 16 ' +
-    'C 26 17 26 21 24 23 C 22 25 18 24 16 22';
-  return [...framedStroke(TRIANGLE, 'rot'), ...haloStroke(glyph, 'rot')];
+  return [
+    triangle(HAZARD_TRIANGLE, 'rot'),
+    hazardText('GS', 16.1, 24, 8.4, { xMm: 10, yMm: 17.8, widthMm: 12.2, heightMm: 6.6 }),
+  ];
 }
 
 function hazardousSubstancesAlternativePrimitives(): readonly Primitive[] {
-  const glyph =
-    'M 11.2 14 H 10 Q 9 14 9 17.5 Q 9 21 10 21 H 11.2 ' +
-    'M 11.8 14 V 21 M 14 14 V 21 M 11.8 17.5 H 14 ' +
-    'M 14.6 14 V 21 H 16.8 ' +
-    'M 17.4 17.5 Q 17.4 14 18.6 14 Q 19.8 14 19.8 17.5 ' +
-    'Q 19.8 21 18.6 21 Q 17.4 21 17.4 17.5 ' +
-    'M 20.5 21 V 14 H 21.8 Q 23 14 23 16 Q 23 18 21.8 18 H 20.5 ' +
-    'M 21.8 18 L 23.2 21';
-  return [...framedStroke(TRIANGLE, 'rot'), ...haloStroke(glyph, 'rot')];
+  return [
+    triangle(HAZARD_TRIANGLE, 'rot'),
+    hazardText('Chlor', 15.9, 24, 6.2, { xMm: 7.7, yMm: 19.2, widthMm: 16.6, heightMm: 5.2 }),
+  ];
 }
 
 function radioactivityPrimaryPrimitives(): readonly Primitive[] {
   return [
-    ...framedStroke(TRIANGLE, 'rot'),
-    ...haloStroke('M 10 24 L 16 8 L 22 24 M 12 19 H 20', 'rot'),
+    triangle(HAZARD_TRIANGLE, 'rot'),
+    hazardText('A', 16.2, 24, 12.5, { xMm: 11.6, yMm: 15, widthMm: 9.2, heightMm: 9.4 }),
   ];
+}
+
+/*
+ * 5.8.1.8 Alternative: Strahlenwarnzeichen. Nabe (16, 20): Punkt r = 1 mm, freier Ring bis
+ * r = 2 mm. Drei 60°-Flügel (oben, links unten, rechts unten) mit radialen Kanten durch die Nabe;
+ * ihr Außenbogen liegt wie in der Referenz auf einem Kreis r = 6,5 mm um (16, 19,5).
+ */
+const TREFOIL_HUB: Point = [16, 20];
+const TREFOIL_OUTER_CENTER: Point = [16, 19.5];
+const TREFOIL_OUTER_R = 6.5;
+
+function trefoilOuterPoint(degrees: number): { point: Point; angle: number } {
+  const radians = (degrees * Math.PI) / 180;
+  const ux = Math.cos(radians);
+  const uy = -Math.sin(radians);
+  const dx = TREFOIL_HUB[0] - TREFOIL_OUTER_CENTER[0];
+  const dy = TREFOIL_HUB[1] - TREFOIL_OUTER_CENTER[1];
+  const b = ux * dx + uy * dy;
+  const t = -b + Math.sqrt(b * b - (dx * dx + dy * dy - TREFOIL_OUTER_R ** 2));
+  const x = TREFOIL_HUB[0] + t * ux;
+  const y = TREFOIL_HUB[1] + t * uy;
+  const angle =
+    (Math.atan2(-(y - TREFOIL_OUTER_CENTER[1]), x - TREFOIL_OUTER_CENTER[0]) * 180) / Math.PI;
+  return { point: [round3(x), round3(y)], angle };
+}
+
+function trefoilBlade(fromDeg: number, toDeg: number): Primitive {
+  const [hx, hy] = TREFOIL_HUB;
+  const innerFrom = polarPoint(hx, hy, 2, fromDeg);
+  const innerTo = polarPoint(hx, hy, 2, toDeg);
+  const outerFrom = trefoilOuterPoint(fromDeg);
+  const outerTo = trefoilOuterPoint(toDeg);
+  const sweep = ((outerTo.angle - outerFrom.angle) % 360 + 360) % 360;
+  const [ox, oy] = TREFOIL_OUTER_CENTER;
+  return statePath(
+    `M ${innerFrom[0]} ${innerFrom[1]} L ${outerFrom.point[0]} ${outerFrom.point[1]} ` +
+      `${arcCommands(ox, oy, TREFOIL_OUTER_R, outerFrom.angle, outerFrom.angle + sweep)} ` +
+      `L ${innerTo[0]} ${innerTo[1]} ${arcCommands(hx, hy, 2, toDeg, fromDeg)} Z`,
+    RED_FILL,
+  );
 }
 
 function radioactivityAlternativePrimitives(): readonly Primitive[] {
   return [
-    ...framedStroke(TRIANGLE, 'rot'),
-    filledSignalPath(
-      'M 14.5 15.2 C 12.8 12.8 12.5 9.2 14 6 C 14.8 4.6 17.2 4.6 18 6 ' +
-        'C 19.5 9.2 19.2 12.8 17.5 15.2 C 16.6 14.8 15.4 14.8 14.5 15.2 Z',
-    ),
-    filledSignalPath(
-      'M 13.8 17 C 10.8 16.4 7.6 17.4 5.5 20 C 4.6 21.2 5.8 23.4 7.4 23.6 ' +
-        'C 10.9 24 13.8 22.2 15 19.5 C 14.3 18.8 14 17.9 13.8 17 Z',
-    ),
-    filledSignalPath(
-      'M 18.2 17 C 21.2 16.4 24.4 17.4 26.5 20 C 27.4 21.2 26.2 23.4 24.6 23.6 ' +
-        'C 21.1 24 18.2 22.2 17 19.5 C 17.7 18.8 18 17.9 18.2 17 Z',
-    ),
-    filledSignalCircle(16, 18, 1.4),
+    triangle(HAZARD_TRIANGLE, 'rot'),
+    trefoilBlade(60, 120),
+    trefoilBlade(180, 240),
+    trefoilBlade(300, 360),
+    stateCircle(TREFOIL_HUB[0], TREFOIL_HUB[1], 1, RED_FILL),
   ];
 }
 
+/*
+ * 5.8.1.9 Gefahr durch elektrische Energie: Blitz als 0,5-mm-Zickzack (16,05, 9) → (11,95, 16,95)
+ * → (19,05, 16,05) → Spitze (14,5, 26) mit offener Pfeilspitze zu (18, 25) und (13,5, 23).
+ */
 function electricalEnergyPrimitives(): readonly Primitive[] {
+  const red = strokeStyle('rot');
   return [
-    ...framedStroke(TRIANGLE, 'rot'),
-    filledSignalPath('M 16 7 L 11 16 L 16 15 L 13 25 L 22 14 L 17 15 L 20 7 Z'),
+    triangle(HAZARD_TRIANGLE, 'rot'),
+    statePolyline([[16.05, 9], [11.95, 16.95], [19.05, 16.05], [14.5, 26]], false, red),
+    statePolyline([[18, 25], [14.5, 26], [13.5, 23]], false, red),
   ];
 }
 
 function mineralOilPrimitives(): readonly Primitive[] {
-  const letter =
-    'M 11 16 C 11 11 13 9 16 9 C 19 9 21 11 21 16 ' +
-    'C 21 21 19 23 16 23 C 13 23 11 21 11 16 Z';
   return [
-    ...framedStroke(TRIANGLE, 'rot'),
-    ...haloStroke(letter, 'rot'),
-    filledSignalCircle(14, 6.5, 0.8),
-    filledSignalCircle(18, 6.5, 0.8),
+    triangle(HAZARD_TRIANGLE, 'rot'),
+    hazardText('Ö', 16, 23, 10.4, { xMm: 12, yMm: 13.8, widthMm: 8, heightMm: 9.7 }),
   ];
 }
 
 function explosionPrimitives(): readonly Primitive[] {
-  const glyph =
-    'M 9 9 H 16 M 9 9 V 23 M 9 16 H 15 M 9 23 H 16 ' +
-    'M 18 12 L 25 23 M 25 12 L 18 23';
-  return [...framedStroke(TRIANGLE, 'rot'), ...haloStroke(glyph, 'rot')];
+  return [
+    triangle(HAZARD_TRIANGLE, 'rot'),
+    hazardText('Ex', 16.2, 23, 8.3, { xMm: 11.3, yMm: 16.9, widthMm: 10.3, heightMm: 6.5 }),
+  ];
 }
 
+/*
+ * 5.8.1.12 Kampfmittel: Ring r = 5 mm (0,5 mm) um (16, 20), gefüllter Kern r = 3 mm und zwei
+ * radiale Zünderstriche von r = 5 bis 7 mm unter 45° und 135°.
+ */
 function explosiveOrdnancePrimitives(): readonly Primitive[] {
+  const red = strokeStyle('rot');
+  const fuse = (degrees: number): Primitive => {
+    const [x1, y1] = polarPoint(16, 20, 5, degrees);
+    const [x2, y2] = polarPoint(16, 20, 7, degrees);
+    return stateLine(x1, y1, x2, y2, red);
+  };
   return [
-    ...framedStroke(TRIANGLE, 'rot'),
-    ...haloCircleStroke(16, 17, 5, 'rot'),
-    filledSignalCircle(16, 17, 3),
-    ...haloStroke('M 11.5 12.5 L 9 10 M 20.5 12.5 L 23 10', 'rot'),
+    triangle(HAZARD_TRIANGLE, 'rot'),
+    stateCircle(16, 20, 5, red),
+    stateCircle(16, 20, 3, RED_FILL),
+    fuse(135),
+    fuse(45),
   ];
+}
+
+/*
+ * 5.8.1.13 Fragezeichen, 1,2 mm stark, Punkt r = 0,8 mm bei (16, 25). Mittellinie (Einheiten
+ * relativ zum Scheitel (16, 5)): Ansatz (−5, 3), Scheitel, rechter Bogen bis (5, 4,5), S-Schwung
+ * zur Bauchmitte (0,85, 9), Bauch (−3, 13) und (0, 16), Abschluss (3, 14). Die Alternative ist
+ * dieselbe Figur im Maßstab 1 : 2 um den Scheitel (5, 10), 0,8 mm stark, Punkt r = 0,6 mm.
+ */
+const QUESTION_MARK: readonly (readonly Point[])[] = [
+  [[-5, 3]],
+  [[-4, 1], [-2.35, 0], [0, 0]],
+  [[2.75, 0], [5, 1.65], [5, 4.5]],
+  [[5, 7], [2.9, 8], [0.85, 9]],
+  [[-1.05, 9.9], [-3, 10.85], [-3, 13]],
+  [[-3, 14.65], [-1.65, 16], [0, 16]],
+  [[1.4, 16], [2.55, 15.25], [3, 14]],
+];
+
+function questionMark(topX: number, topY: number, scale: number, width: number): Primitive {
+  const at = ([dx, dy]: Point): string => `${round3(topX + dx * scale)} ${round3(topY + dy * scale)}`;
+  const [start, ...curves] = QUESTION_MARK;
+  const d = [`M ${at(start![0]!)}`, ...curves.map((points) => `C ${points.map(at).join(' ')}`)];
+  return statePath(d.join(' '), strokeStyle('rot', width));
 }
 
 function suspectedPrimaryPrimitives(): readonly Primitive[] {
-  const question =
-    'M 8 9 C 9 5 12 4 16 4 C 21 4 24 7 24 11 ' +
-    'C 24 15 21 17 18 18.5 C 15 20 14 21.5 14 24';
-  return [...haloStroke(question, 'rot'), filledSignalCircle(14, 28, 1)];
+  return [questionMark(16, 5, 1, 1.2), stateCircle(16, 25, 0.8, RED_FILL)];
 }
 
 function suspectedAlternativePrimitives(): readonly Primitive[] {
-  const question =
-    'M 11 12 C 12 9 14 8 16.5 8 C 20 8 22 10 22 13 ' +
-    'C 22 16 20 17 17.5 18.5 C 16 19.5 15.5 20.5 15.5 22';
   return [
-    ...framedStroke(TRIANGLE, 'rot'),
-    ...haloStroke(question, 'rot'),
-    filledSignalCircle(15.5, 25, 1),
+    triangle(NOTICE_TRIANGLE, 'rot'),
+    questionMark(5, 10, 0.5, 0.8),
+    stateCircle(5, 20.05, 0.6, RED_FILL),
   ];
 }
 
+/*
+ * 5.8.1.14 Ausrufezeichen: Balken 1,2 mm breit von y = 5 bis 21 auf x = 16, Punkt r = 0,8 mm bei
+ * (16, 25). Alternative: Balken 0,8 mm von y = 10 bis 18 auf x = 6, Punkt r = 0,6 mm bei
+ * (6, 20,05), links neben dem kleinen Warndreieck.
+ */
 function acutePrimaryPrimitives(): readonly Primitive[] {
-  return [
-    filledSignalPath('M 15 5 H 17 V 23 H 15 Z'),
-    filledSignalCircle(16, 28, 1.5),
-  ];
+  return [stateLine(16, 5, 16, 21, strokeStyle('rot', 1.2)), stateCircle(16, 25, 0.8, RED_FILL)];
 }
 
 function acuteAlternativePrimitives(): readonly Primitive[] {
   return [
-    ...framedStroke(TRIANGLE, 'rot'),
-    filledSignalPath('M 15 8 H 17 V 21 H 15 Z'),
-    filledSignalCircle(16, 25, 1.2),
+    triangle(NOTICE_TRIANGLE, 'rot'),
+    stateLine(6, 10, 6, 18, strokeStyle('rot', 0.8)),
+    stateCircle(6, 20.05, 0.6, RED_FILL),
   ];
 }
 
@@ -357,7 +441,7 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     id: 'tactical-defense',
     title: 'Einsatztaktik: Verteidigen',
     referenceAsset: '5.8.1.3_Einsatztaktik_Verteidigen.svg',
-    box: { xMm: 3, yMm: 4, widthMm: 25, heightMm: 24 },
+    box: { xMm: 3, yMm: 4, widthMm: 27, heightMm: 24 },
     contrastPairs: TACTICAL_CONTRAST,
     primitives: tacticalPrimitives('defense'),
   }),
@@ -366,7 +450,7 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     id: 'tactical-retreat',
     title: 'Einsatztaktik: Rückzug',
     referenceAsset: '5.8.1.4_Einsatztaktik_Rückzug.svg',
-    box: { xMm: 3, yMm: 4, widthMm: 27, heightMm: 24 },
+    box: { xMm: 2, yMm: 4, widthMm: 28, heightMm: 24 },
     contrastPairs: TACTICAL_CONTRAST,
     primitives: tacticalPrimitives('retreat'),
   }),
@@ -375,7 +459,7 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     id: 'flooded-area',
     title: 'Überschwemmtes Gebiet',
     referenceAsset: '5.8.1.5_Überschwemmtes Gebiet.svg',
-    box: { xMm: 2, yMm: 3, widthMm: 28, heightMm: 26 },
+    box: { xMm: 1, yMm: 4, widthMm: 30, heightMm: 24 },
     contrastPairs: WATER_CONTRAST,
     primitives: floodedAreaPrimitives(),
   }),
@@ -384,7 +468,7 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     id: 'water-ingress-hazard',
     title: 'Gefahr durch Wassereinbruch',
     referenceAsset: '5.8.1.6_Gefahr durch Wassereinbruch.svg',
-    box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
+    box: { xMm: 1, yMm: 3, widthMm: 30, heightMm: 25 },
     contrastPairs: WATER_CONTRAST,
     primitives: waterIngressPrimitives(),
   }),
@@ -393,7 +477,7 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     id: 'hazardous-substances',
     title: 'Gefährliche Stoffe',
     referenceAsset: '5.8.1.7_Gefährliche Stoffe.svg',
-    box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
+    box: { xMm: 1, yMm: 3, widthMm: 30, heightMm: 25 },
     contrastPairs: SIGNAL_CONTRAST,
     primitives: hazardousSubstancesPrimaryPrimitives(),
   }),
@@ -403,7 +487,7 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     variant: 'alternative',
     title: 'Gefährliche Stoffe',
     referenceAsset: '5.8.1.7_Gefährliche Stoffe_Chlor.svg',
-    box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
+    box: { xMm: 1, yMm: 3, widthMm: 30, heightMm: 25 },
     contrastPairs: SIGNAL_CONTRAST,
     primitives: hazardousSubstancesAlternativePrimitives(),
   }),
@@ -412,7 +496,7 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     id: 'radioactivity-hazard',
     title: 'Gefahr durch Radioaktivität',
     referenceAsset: '5.8.1.8_Gefahr durch Radioaktivität.svg',
-    box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
+    box: { xMm: 1, yMm: 3, widthMm: 30, heightMm: 25 },
     contrastPairs: SIGNAL_CONTRAST,
     primitives: radioactivityPrimaryPrimitives(),
   }),
@@ -422,7 +506,7 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     variant: 'alternative',
     title: 'Gefahr durch Radioaktivität',
     referenceAsset: '5.8.1.8_Gefahr durch Radioaktivität _A.svg',
-    box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
+    box: { xMm: 1, yMm: 3, widthMm: 30, heightMm: 25 },
     contrastPairs: SIGNAL_CONTRAST,
     primitives: radioactivityAlternativePrimitives(),
   }),
@@ -431,7 +515,7 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     id: 'electrical-energy-hazard',
     title: 'Gefahr durch elektrische Energie',
     referenceAsset: '5.8.1.9_Gefahr durch elektrische Energie.svg',
-    box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
+    box: { xMm: 1, yMm: 3, widthMm: 30, heightMm: 25 },
     contrastPairs: SIGNAL_CONTRAST,
     primitives: electricalEnergyPrimitives(),
   }),
@@ -440,7 +524,7 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     id: 'mineral-oil-hazard',
     title: 'Gefahr durch Mineralöl',
     referenceAsset: '5.8.1.10_Gefahr durch Mineralöl.svg',
-    box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
+    box: { xMm: 1, yMm: 3, widthMm: 30, heightMm: 25 },
     contrastPairs: SIGNAL_CONTRAST,
     primitives: mineralOilPrimitives(),
   }),
@@ -449,7 +533,7 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     id: 'explosion-hazard',
     title: 'Gefahr durch Explosion',
     referenceAsset: '5.8.1.11_Gefahr durch Explosion.svg',
-    box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
+    box: { xMm: 1, yMm: 3, widthMm: 30, heightMm: 25 },
     contrastPairs: SIGNAL_CONTRAST,
     primitives: explosionPrimitives(),
   }),
@@ -458,7 +542,7 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     id: 'explosive-ordnance-hazard',
     title: 'Gefahr durch explosionsfähige Kampfmittel',
     referenceAsset: '5.8.1.12_Gefahr durch explosionsfähige Kampfmittel.svg',
-    box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
+    box: { xMm: 1, yMm: 3, widthMm: 30, heightMm: 25 },
     contrastPairs: SIGNAL_CONTRAST,
     primitives: explosiveOrdnancePrimitives(),
   }),
@@ -467,7 +551,7 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     id: 'suspected-situation',
     title: 'Hinweis auf Vermutung',
     referenceAsset: '5.8.1.13_Hinweis auf Vermutung.svg',
-    box: { xMm: 8, yMm: 4, widthMm: 16, heightMm: 25 },
+    box: { xMm: 11, yMm: 5, widthMm: 10, heightMm: 20.8 },
     contrastPairs: FREE_SIGNAL_CONTRAST,
     primitives: suspectedPrimaryPrimitives(),
   }),
@@ -477,8 +561,8 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     variant: 'alternative',
     title: 'Hinweis auf Vermutung',
     referenceAsset: '5.8.1.13_Hinweis auf Vermutung_2.svg',
-    box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
-    contrastPairs: SIGNAL_CONTRAST,
+    box: { xMm: 2.5, yMm: 6, widthMm: 28, heightMm: 19 },
+    contrastPairs: NOTICE_CONTRAST,
     primitives: suspectedAlternativePrimitives(),
   }),
   defineState({
@@ -486,7 +570,7 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     id: 'acute-situation',
     title: 'Hinweis auf akute Situation',
     referenceAsset: '5.8.1.14_Hinweis auf akute Situation.svg',
-    box: { xMm: 14.5, yMm: 5, widthMm: 3, heightMm: 24.5 },
+    box: { xMm: 15.2, yMm: 5, widthMm: 1.6, heightMm: 20.8 },
     contrastPairs: FREE_SIGNAL_CONTRAST,
     primitives: acutePrimaryPrimitives(),
   }),
@@ -496,8 +580,8 @@ export const TACTICS_HAZARDS_STATES = deepFreeze([
     variant: 'alternative',
     title: 'Hinweis auf akute Situation',
     referenceAsset: '5.8.1.14_Hinweis auf akute Situation_2.svg',
-    box: { xMm: 2, yMm: 2, widthMm: 28, heightMm: 27 },
-    contrastPairs: SIGNAL_CONTRAST,
+    box: { xMm: 5.4, yMm: 6, widthMm: 25.1, heightMm: 19 },
+    contrastPairs: NOTICE_CONTRAST,
     primitives: acuteAlternativePrimitives(),
   }),
 ] satisfies readonly CatalogPictogramDefinition[]);

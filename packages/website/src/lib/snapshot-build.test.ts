@@ -175,6 +175,10 @@ describe('buildSnapshot', () => {
     it('nennt Farben, Abschnitt, Datum und Entscheiderin in einem lesbaren Satzteil', () => {
       expect(snap.coverage.contrastExceptions).toEqual([
         'Weiß auf Orange, Abschnitt E.2.6 (entschieden am 18.08.2026, Projektinhaber)',
+        'Rot auf Weiß, Abschnitte 4.1.6, 4.1.7, 4.1.8, 5.8.1.7, 5.8.1.8, 5.8.1.10 und 5.8.1.11 ' +
+          '(entschieden am 19.09.2026, Koordinator (delegiert))',
+        'Rot auf der Ausgabefläche, Abschnitt L.10 (entschieden am 19.09.2026, Koordinator (delegiert))',
+        'Schwarz auf Rot, Abschnitt 4.2.2 (entschieden am 19.09.2026, Koordinator (delegiert))',
       ]);
     });
 

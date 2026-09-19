@@ -1,10 +1,11 @@
 import { deepFreeze } from '../../readonly-data.js';
+import type { Primitive } from '@einsatzzeichen/schema';
 import { defineWildfire, type CatalogPictogramDefinition } from '../catalog-definition.js';
 import {
   WILDFIRE_BLACK_STROKE,
   WILDFIRE_BLUE_STROKE,
   WILDFIRE_RED_STROKE,
-  flame,
+  flames,
   waterSupply,
   wildfireCircle,
   wildfireContrast,
@@ -34,23 +35,24 @@ import {
  * die Richtung, in die sich der Brand ausbreitet.
  *
  * Alle Zusatzmarken sind **schwarz**, nicht rot — sie beschreiben das Gelände, nicht das Feuer.
+ *
+ * Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert: Koordinaten sind die
+ * Mittellinien der 0,5 mm starken Referenzumrisse.
  */
 
 /**
- * Die Flamme der Dreieckszeichen — in drei Lagen, jede an ihrer Referenzdatei abgenommen. Sie
- * weicht der jeweiligen Zusatzmarke aus, statt sie zu schneiden:
+ * Die Doppelflamme der Dreieckszeichen — in drei Lagen, jede an ihrer Referenzdatei abgenommen.
+ * Sie weicht der jeweiligen Zusatzmarke aus, statt sie zu schneiden:
  *
- * - `high` (M.5): gross, oberhalb der Bodenlinie bei y = 23
- * - `low` (M.7): dieselbe Grösse, 4 mm tiefer — über ihr liegt die Erdschicht bei y = 14
- * - `compact` (M.8 bis M.10): kleiner und höher, damit Stamm und Ausbreitungspfeil Platz haben
- *
- * Eine erste Fassung nahm für alle fünf Zeichen dieselbe Lage an. Das Ergebnis bestand jedes
- * Gate und zeigte im Kontaktbogen eine Flamme, durch die eine schwarze Linie lief.
+ * - `high` (M.5): zwei Flammen 4 × 9 mm ab 11/21, oberhalb der Bodenlinie bei y = 23
+ * - `low` (M.7): dieselben 4 mm tiefer (ab 11/25) — über ihnen liegt die Erdschicht bei y = 14
+ * - `compact` (M.8 bis M.10): zwei Flammen 3 × 7 mm ab 11/17, damit Stamm und
+ *   Ausbreitungspfeil Platz haben
  */
-function triangleFlames(lage: 'high' | 'low' | 'compact'): ReturnType<typeof flame> {
-  if (lage === 'high') return flame(14.75, 13.2, 20.75, 3.35, 2, WILDFIRE_RED_STROKE);
-  if (lage === 'low') return flame(14.75, 17.2, 24.75, 3.35, 2, WILDFIRE_RED_STROKE);
-  return flame(13.75, 11.2, 16.75, 2.37, 2, WILDFIRE_RED_STROKE);
+function triangleFlames(lage: 'high' | 'low' | 'compact'): Primitive[] {
+  if (lage === 'high') return flames(11, 21, 4, 9, 2, WILDFIRE_RED_STROKE);
+  if (lage === 'low') return flames(11, 25, 4, 9, 2, WILDFIRE_RED_STROKE);
+  return flames(11, 17, 3, 7, 2, WILDFIRE_RED_STROKE);
 }
 
 const FIRE_CONTRAST = wildfireContrast('rot', 'Rote Brandmarke');
@@ -67,8 +69,8 @@ const FIRE_WITH_TERRAIN_CONTRAST = [
   },
 ] as const;
 
-const TRIANGLE_BOX = { xMm: 1.2, yMm: 3.2, widthMm: 29.6, heightMm: 24.7 } as const;
-const SUPPLY_BOX = { xMm: 1.2, yMm: 4.1, widthMm: 29.6, heightMm: 24.7 } as const;
+const TRIANGLE_BOX = { xMm: 1, yMm: 3, widthMm: 30, heightMm: 25 } as const;
+const SUPPLY_BOX = { xMm: 1, yMm: 4, widthMm: 30, heightMm: 25 } as const;
 const DISC_BOX = { xMm: 4, yMm: 4, widthMm: 24, heightMm: 24 } as const;
 
 export const WILDFIRE_PICTOGRAMS = deepFreeze([
@@ -81,19 +83,19 @@ export const WILDFIRE_PICTOGRAMS = deepFreeze([
     contrastPairs: PLACE_CONTRAST,
     primitives: [
       ...wildfireDisc('schwarz'),
-      // Der Ankerpunkt selbst: eine Linie, die sich zur Kreiskante hin gabelt — von hier aus
-      // wird der Brand aufgerollt.
-      wildfireLine(4.25, 16, 19.9, 16, WILDFIRE_BLACK_STROKE),
-      wildfireLine(19.9, 16, 25.9, 10, WILDFIRE_BLACK_STROKE),
-      wildfireLine(19.9, 16, 25.9, 22, WILDFIRE_BLACK_STROKE),
-      // Die Richtung, in die aufgerollt wird.
-      wildfireLine(10, 20.25, 10, 23.75, WILDFIRE_BLACK_STROKE),
-      wildfireLine(10, 22, 23.35, 22, WILDFIRE_BLACK_STROKE),
+      // Der Ankerpunkt: die Mittelachse von Kreiskante zu Kreiskante, bei 20/16 zusätzlich unter
+      // 45° zur Kreiskante hin gegabelt — von hier aus wird der Brand aufgerollt.
+      wildfireLine(4, 16, 28, 16, WILDFIRE_BLACK_STROKE),
+      wildfireLine(20, 16, 26.25, 9.75, WILDFIRE_BLACK_STROKE),
+      wildfireLine(20, 16, 26.25, 22.25, WILDFIRE_BLACK_STROKE),
+      // Die Richtung, in die aufgerollt wird: ein Pfeil auf y = 22 mit Anschlagstrich bei x = 10.
+      wildfireLine(10, 20, 10, 24, WILDFIRE_BLACK_STROKE),
+      wildfireLine(10, 22, 22.6, 22, WILDFIRE_BLACK_STROKE),
       wildfirePolyline(
         [
-          [21.7, 20.4],
-          [23.35, 22],
-          [21.7, 23.6],
+          [21, 20],
+          [23, 22],
+          [21, 24],
         ],
         false,
         WILDFIRE_BLACK_STROKE,
@@ -105,21 +107,23 @@ export const WILDFIRE_PICTOGRAMS = deepFreeze([
     id: 'lookout',
     title: 'Lookout',
     referenceAsset: 'M.2_Lookout.svg',
-    box: { xMm: 3.65, yMm: 3.65, widthMm: 24.7, heightMm: 24.7 },
+    box: { xMm: 4, yMm: 4, widthMm: 24, heightMm: 24 },
     contrastPairs: PLACE_CONTRAST,
     primitives: [
+      // Die Raute: Ecken 12 mm um den Mittelpunkt 16/16.
       wildfirePolyline(
         [
-          [16, 3.65],
-          [28.35, 16],
-          [16, 28.35],
-          [3.65, 16],
+          [16, 4],
+          [28, 16],
+          [16, 28],
+          [4, 16],
         ],
         true,
         WILDFIRE_BLACK_STROKE,
       ),
-      wildfireLine(10.6, 10, 21.4, 10, WILDFIRE_BLACK_STROKE),
-      wildfireLine(21.7, 10.3, 10.2, 21.8, WILDFIRE_BLACK_STROKE),
+      // Ein Z von Kante zu Kante: waagerecht auf y = 10, dann die Diagonale x + y = 32.
+      wildfireLine(10, 10, 22, 10, WILDFIRE_BLACK_STROKE),
+      wildfireLine(22, 10, 10, 22, WILDFIRE_BLACK_STROKE),
     ],
   }),
   defineWildfire({
@@ -131,10 +135,11 @@ export const WILDFIRE_PICTOGRAMS = deepFreeze([
     contrastPairs: wildfireContrast('gruen', 'Grüne Sicherheitsmarke'),
     primitives: [
       ...wildfireDisc('gruen'),
-      // Ein Schild — der einzige grüne Bestandteil des ganzen Anhangs.
+      // Ein Schild: Seiten bei x = 10 und 22, flacher Giebel mit First 16/9, unten gerundete
+      // Ecken, die in die Spitze 16/25 auslaufen.
       wildfirePath(
-        'M 10 9.9 V 19.93 C 10 20.68 10.375 21.38 11 21.8 L 16 25.1 L 21 21.8 ' +
-          'C 21.63 21.38 22 20.68 22 19.93 V 9.9 L 16 8.87 Z',
+        'M 10 10 V 19.95 C 10 20.6 10.35 21.2 10.9 21.6 L 16 25 L 21.1 21.6 ' +
+          'C 21.65 21.2 22 20.6 22 19.95 V 10 L 16 9 Z',
         wildfireStroke('gruen'),
       ),
     ],
@@ -148,8 +153,8 @@ export const WILDFIRE_PICTOGRAMS = deepFreeze([
     contrastPairs: FIRE_CONTRAST,
     primitives: [
       ...wildfireDisc('rot'),
-      // Im Kreis steht die Flamme allein und grösser als in den Dreieckszeichen.
-      ...flame(18, 7.5, 23, 7, 1, WILDFIRE_RED_STROKE),
+      // Im Kreis steht die Flamme allein und grösser als in den Dreieckszeichen: 7 × 16 mm.
+      ...flames(11, 23, 7, 16, 1, WILDFIRE_RED_STROKE),
     ],
   }),
   defineWildfire({
@@ -171,17 +176,18 @@ export const WILDFIRE_PICTOGRAMS = deepFreeze([
     id: 'acute-spot-fire',
     title: 'Akute Gefahr, Spotfeuer',
     referenceAsset: 'M.6_Akute Gefahr_Spotfeuer.svg',
-    box: { xMm: 1.2, yMm: 3.2, widthMm: 29.6, heightMm: 24.7 },
+    // Das Ausrufezeichen ragt mit seinem Punkt (x = 0,9 mm) links über das Dreieck hinaus.
+    box: { xMm: 0.9, yMm: 3, widthMm: 30.1, heightMm: 25 },
     contrastPairs: FIRE_CONTRAST,
     primitives: [
       ...wildfireTriangle('rot', 'up'),
-      // Das Spotfeuer aus M.4 im Kleinen, in das Warndreieck gesetzt.
-      wildfireCircle(16, 18.5, 5.5, WILDFIRE_RED_STROKE),
-      ...flame(17.5, 15, 21.5, 3.2, 1, WILDFIRE_RED_STROKE),
-      // Das Ausrufezeichen steht ausserhalb des Dreiecks — die akute Gefahr gilt der Lage,
-      // nicht dem Zeichen.
-      wildfireLine(3, 12.5, 3, 20, wildfireStroke('rot')),
-      wildfireCircle(3, 23, 0.9, { fill: 'rot', stroke: 'none' }),
+      // Das Spotfeuer aus M.4 im Kleinen: Kreis (Radius 6,5 mm um 16/18,5) mit Flamme 4 × 9 mm.
+      wildfireCircle(16, 18.5, 6.5, WILDFIRE_RED_STROKE),
+      ...flames(13.5, 22.5, 4, 9, 1, WILDFIRE_RED_STROKE),
+      // Das Ausrufezeichen steht links neben dem Dreieck — die akute Gefahr gilt der Lage,
+      // nicht dem Zeichen. Balken 0,8 × 8 mm, Punkt mit 0,6 mm Radius, beide gefüllt.
+      wildfireRect(1.1, 10, 0.8, 8, { fill: 'rot', stroke: 'none' }),
+      wildfireCircle(1.5, 20.05, 0.6, { fill: 'rot', stroke: 'none' }),
     ],
   }),
   defineWildfire({
@@ -222,12 +228,13 @@ export const WILDFIRE_PICTOGRAMS = deepFreeze([
     primitives: [
       ...wildfireTriangle('rot', 'up'),
       ...triangleFlames('compact'),
-      wildfireLine(13, 25, 21.8, 16.2, WILDFIRE_BLACK_STROKE),
+      // Der Ausbreitungspfeil unter 45° hangaufwärts, offene Spitze mit 2,83 mm langen Schenkeln.
+      wildfireLine(13, 25, 22, 16, WILDFIRE_BLACK_STROKE),
       wildfirePolyline(
         [
-          [19.2, 16],
+          [19.17, 16],
           [22, 16],
-          [22, 18.8],
+          [22, 18.83],
         ],
         false,
         WILDFIRE_BLACK_STROKE,
@@ -245,12 +252,12 @@ export const WILDFIRE_PICTOGRAMS = deepFreeze([
       ...wildfireTriangle('rot', 'up'),
       ...triangleFlames('compact'),
       // Derselbe Pfeil wie in M.9, umgekehrt: der Brand läuft hangabwärts.
-      wildfireLine(21.8, 16.2, 13, 25, WILDFIRE_BLACK_STROKE),
+      wildfireLine(22, 16, 13, 25, WILDFIRE_BLACK_STROKE),
       wildfirePolyline(
         [
-          [15.8, 25],
+          [15.83, 25],
           [13, 25],
-          [13, 22.2],
+          [13, 22.17],
         ],
         false,
         WILDFIRE_BLACK_STROKE,
@@ -266,7 +273,8 @@ export const WILDFIRE_PICTOGRAMS = deepFreeze([
     contrastPairs: PLACE_CONTRAST,
     primitives: [
       ...wildfireDisc('schwarz'),
-      ...waterSupply(8.5, 19, 24.4, 13.5, 7, 25, WILDFIRE_BLACK_STROKE),
+      // Welle zwischen 11,5 und 14,5 mm, Pfeil auf y = 19 bis zur Spitze bei x = 25.
+      ...waterSupply(8.5, 19, 25, 13, 1.5, WILDFIRE_BLACK_STROKE),
     ],
   }),
   defineWildfire({
@@ -278,33 +286,26 @@ export const WILDFIRE_PICTOGRAMS = deepFreeze([
     contrastPairs: SUPPLY_CONTRAST,
     primitives: [
       ...wildfireTriangle('hellblau', 'down'),
-      // Der Abwurf: eine Linie mit Spitze nach links und ein Doppelkeil als Luftfahrzeugmarke.
-      wildfireLine(7, 10.5, 19.5, 10.5, WILDFIRE_BLUE_STROKE),
-      wildfireLine(19.5, 10.5, 23, 7.5, WILDFIRE_BLUE_STROKE),
-      wildfireLine(19.5, 10.5, 23, 13.5, WILDFIRE_BLUE_STROKE),
+      // Die Abwurflinie auf y = 9 von 7 bis 25 mm, bei x = 20 unter 45° gegabelt.
+      wildfireLine(7, 9, 25, 9, WILDFIRE_BLUE_STROKE),
+      wildfireLine(20, 9, 24, 5, WILDFIRE_BLUE_STROKE),
+      wildfireLine(20, 9, 24, 13, WILDFIRE_BLUE_STROKE),
+      // Ein Doppelkeil als Luftfahrzeugmarke: zwei gefüllte Dreiecke, 5 mm lang und 3 mm hoch,
+      // die sich mit den Spitzen in 16/15,5 berühren.
       wildfirePolyline(
         [
-          [9.5, 8.2],
-          [7, 10.5],
-          [9.5, 12.8],
-        ],
-        false,
-        WILDFIRE_BLUE_STROKE,
-      ),
-      wildfirePolyline(
-        [
-          [11, 15],
-          [16, 17.4],
-          [11, 19.8],
+          [11, 14],
+          [16, 15.5],
+          [11, 17],
         ],
         true,
         { fill: 'hellblau', stroke: 'none' },
       ),
       wildfirePolyline(
         [
-          [21, 15],
-          [16, 17.4],
-          [21, 19.8],
+          [21, 14],
+          [16, 15.5],
+          [21, 17],
         ],
         true,
         { fill: 'hellblau', stroke: 'none' },
@@ -320,7 +321,8 @@ export const WILDFIRE_PICTOGRAMS = deepFreeze([
     contrastPairs: SUPPLY_CONTRAST,
     primitives: [
       ...wildfireTriangle('hellblau', 'down'),
-      ...waterSupply(11.5, 15, 23.6, 9.5, 7, 25, WILDFIRE_BLUE_STROKE),
+      // Welle zwischen 7 und 10 mm, Pfeil auf y = 15 bis zur Spitze bei x = 22.
+      ...waterSupply(11.5, 15, 22, 8.5, 1.5, WILDFIRE_BLUE_STROKE),
     ],
   }),
   defineWildfire({
@@ -332,9 +334,11 @@ export const WILDFIRE_PICTOGRAMS = deepFreeze([
     contrastPairs: SUPPLY_CONTRAST,
     primitives: [
       ...wildfireTriangle('hellblau', 'down'),
-      ...waterSupply(10.5, 13, 22.6, 8, 7, 25, WILDFIRE_BLUE_STROKE),
-      // Das Fahrzeug: derselbe Förderweg wie M.13, nur zusätzlich mit einem Körper darunter.
-      wildfireRect(13, 18, 6, 3.5, WILDFIRE_BLUE_STROKE),
+      // Flachere Welle (6 bis 8 mm), Pfeil auf y = 12 bis zur Spitze bei x = 23.
+      ...waterSupply(10.5, 12, 23, 7, 1, WILDFIRE_BLUE_STROKE),
+      // Das Fahrzeug: ein Kasten von 12 bis 20 mm Breite und bis y = 20, dessen Oberkante zur
+      // Mitte hin um 0,5 mm durchhängt.
+      wildfirePath('M 12 15 Q 16 16 20 15 L 20 20 L 12 20 Z', WILDFIRE_BLUE_STROKE),
     ],
   }),
 ] satisfies readonly CatalogPictogramDefinition[]);

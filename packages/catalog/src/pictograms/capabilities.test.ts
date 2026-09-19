@@ -160,16 +160,16 @@ describe('Fähigkeitspiktogramme', () => {
 });
 
 describe('Löschwasser/Brauchwasser (4.3.2)', () => {
-  it('zeichnet die Doppelwelle als einen gefüllten Pfad', () => {
+  it('zeichnet die Welle als einen 0,5-mm-Strichpfad', () => {
     const definition = pictogram('capability.service-water');
     expect(definition.title).toBe('Löschwasser, Brauchwasser');
     expect(definition.primitives).toHaveLength(1);
     const [wave] = definition.primitives;
     expect(wave?.type).toBe('path');
     expect(wave?.role).toBe('pictogram');
-    // Eine gefüllte Fläche, keine Strichzeichnung: die Bildidee der Referenz ist ein Wasserband.
-    expect(wave?.style?.fill).toBe('schwarz');
-    expect(wave?.style?.stroke).toBe('none');
+    // Nach dem Fachreview vom 19.09.2026 nach den Referenzmaßen neu konstruiert: eine offene
+    // Welle als 0,5-mm-Strich, keine gefüllte Fläche.
+    expect(wave?.style).toEqual({ fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 });
   });
 
   it('verwendet ausschließlich absolute Kommandos aus M L H V C Q Z', () => {

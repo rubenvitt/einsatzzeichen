@@ -31,13 +31,10 @@ import type { Recipe } from './recipes.js';
  */
 export const ANHANG_F_A_RECIPES = {
   /**
-   * Die Kopfzone fehlt, und das ist eine erklärte Abweichung: F.1.1 trägt zwei senkrechte Balken
-   * (je 1,5 × 4,0 mm auf x 12/20, y 1…5) statt der Marken eines Stärkegrads. Kapitel 5.4 führt
-   * vier Stärkegrade und keinen Balken; dieselbe Balkenform steht in genau drei der 661
-   * Referenzdateien (E.1.31, F.1.1, F.1.3), deren Namen kein gemeinsames Wort teilen. Der
-   * Teilslice E-c hat sie an E.1.31 als Abweichung gebaut, und diese Entscheidung wird hier
-   * fortgeschrieben statt umgestoßen — ein fünfter `StrengthId` braucht eine fachliche Zuordnung
-   * und keine weitere Messung.
+   * Die Kopfzone trägt zwei senkrechte Balken (je 1,5 × 4,0 mm auf x 12/20, y 1…5) statt der
+   * Marken eines Stärkegrads. Seit dem Fachreview vom 19.09.2026 zeichnet der Katalog sie als
+   * semantikfreie technische Kopfmarke `double-vertical-bar` — dieselbe Marke wie E.1.31; ein
+   * fünfter `StrengthId` wird damit nicht behauptet.
    */
   'F.1.1': {
     title: 'Medizinische Task Force',
@@ -45,6 +42,7 @@ export const ANHANG_F_A_RECIPES = {
     spec: {
       kind: 'formation',
       organization: 'hilfsorganisation',
+      technicalHeadMark: 'double-vertical-bar',
       bodyMarks: ['physician'],
       labels: { topLeft: 'MTF' },
     },
@@ -201,6 +199,7 @@ export const ANHANG_F_B_RECIPES = {
       kind: 'formation',
       bodyVariant: 'foot-band',
       organization: 'hilfsorganisation',
+      technicalHeadMark: 'double-vertical-bar',
       bodyMarks: ['care', 'temporary-accommodation-resting'],
       labels: { topLeft: '5.000' },
     },
@@ -223,6 +222,9 @@ export const ANHANG_F_B_RECIPES = {
       kind: 'formation',
       organization: 'hilfsorganisation',
       strength: 'gruppe',
+      // In dieser Kombination stehen Ring (r 5), Arztleiste (y 24) und Intensivbalken (x 25,5)
+      // anders als in ihren Einzelzeichen (F.1.8: r 5,5; F.1.7: y 22; F.1.10: x 23,5). Die Lage
+      // wählt `bodyMark()` aus der Markenmenge (`COMBINATION_MARKS`), Fachreview 19.09.2026.
       bodyMarks: ['patient-transport', 'physician', 'intensive-care'],
     },
   },
@@ -232,6 +234,9 @@ export const ANHANG_F_B_RECIPES = {
     spec: {
       kind: 'formation',
       organization: 'hilfsorganisation',
+      technicalHeadMark: 'single-vertical-bar',
+      // In dieser Kombination ist das Zelt ein Dach unter 45° bis y 20 und die Arztleiste steht
+      // auf y 21 statt 22 (F.1.13 selbst gemessen; `COMBINATION_MARKS`, Fachreview 19.09.2026).
       bodyMarks: ['care', 'physician', 'ring-7mm-offset-down-1mm'],
       labels: { topLeft: '50' },
     },
@@ -328,6 +333,7 @@ export const ANHANG_F_B_RECIPES = {
     spec: {
       kind: 'formation',
       organization: 'hilfsorganisation',
+      technicalHeadMark: 'single-vertical-bar',
       bodyMarks: ['ring-6-5mm-offset-down-2mm-with-roof'],
       labels: { topLeft: '500' },
     },
@@ -339,6 +345,8 @@ export const ANHANG_F_B_RECIPES = {
       kind: 'formation',
       organization: 'hilfsorganisation',
       strength: 'zug',
+      // Neben dem Zelt steht die Patiententransportmarke als Ring r 5 mit acht Speichen um
+      // (16|18,5) und ohne Fachdienstteilung (`COMBINATION_MARKS`, Fachreview 19.09.2026).
       bodyMarks: ['care', 'patient-transport'],
       labels: { topLeft: '50' },
     },
@@ -406,7 +414,7 @@ export const ANHANG_F_C_RECIPES = {
   'F.2.6': {
     title: 'Rettungstransporthubschrauber mit Winschmöglichkeit',
     referenceAsset: 'F.2.6_Rettungstransporthubschrauber mit Winschmöglichkeit.svg',
-    spec: { kind: 'vehicle-air', bodyVariant: 'raised-hull', organization: 'hilfsorganisation', bodyMarks: ['medical-service', 'air-winch-chevron-diamond'] },
+    spec: { kind: 'vehicle-air', bodyVariant: 'raised-hull', organization: 'hilfsorganisation', bodyMarks: ['physician', 'air-winch-chevron-diamond'] },
   },
   'F.2.7': {
     title: 'Intensivtransporthubschrauber',
@@ -432,7 +440,8 @@ export const ANHANG_F_C_FINDINGS: Readonly<Record<string, string>> = Object.free
   'F.2.6':
     'Die Pfeil-und-Rauten-Topologie des Winschzeichens ist sichtbar und vermessen; die Quelle ' +
     'belegt aber keine Gleichsetzung mit der Capability lifting-loads-persons. Sie bleibt eine ' +
-    'neutrale TechnicalBodyMarkId.',
+    'neutrale TechnicalBodyMarkId. Die Teilung trägt die Arztleiste (y 18, x 12…20) — deshalb ' +
+    'seit dem Fachreview vom 19.09.2026 `physician` statt `medical-service`.',
   'F.2.7': 'Der Lauf „ITH“ liegt vollständig oberhalb der Luftfahrzeughülle.',
   'F.2.8': '„GW-San“ und „50“ sind zwei getrennte linksbündige Läufe mit kleinerem Schriftgrad.',
 });
@@ -920,12 +929,16 @@ export const ANHANG_F_B_FINDINGS: Readonly<Record<string, string>> = Object.free
     'abweichenden Maße keinen gemeinsamen Capability-Begriff.',
 });
 export const ANHANG_F_B_DEVIATIONS: Readonly<Record<string, string>> = Object.freeze({
-  'F.1.3': 'Die zwei Kopfbalken werden ohne begrifflich belegte StrengthId nicht gezeichnet.',
+  'F.1.3':
+    'Die zwei Kopfbalken werden als semantikfreie technische Kopfmarke `double-vertical-bar` ' +
+    'gezeichnet, nicht als StrengthId (Fachreview 19.09.2026).',
   'F.1.13':
-    'Der einzelne Kopfbalken wird ohne begrifflich belegte StrengthId nicht gezeichnet. Der ' +
-    'Kreis ist als rein geometrische TechnicalBodyMarkId gebaut, nicht als CapabilityId.',
+    'Der einzelne Kopfbalken wird als semantikfreie technische Kopfmarke `single-vertical-bar` ' +
+    'gezeichnet, nicht als StrengthId (Fachreview 19.09.2026). Der Kreis ist als rein ' +
+    'geometrische TechnicalBodyMarkId gebaut, nicht als CapabilityId.',
   'F.1.21':
-    'Der einzelne Kopfbalken wird ohne begrifflich belegte StrengthId nicht gezeichnet. Die ' +
+    'Der einzelne Kopfbalken wird als semantikfreie technische Kopfmarke `single-vertical-bar` ' +
+    'gezeichnet, nicht als StrengthId (Fachreview 19.09.2026). Die ' +
     'komplexe Innenform ist als rein geometrische TechnicalBodyMarkId gebaut, nicht als ' +
     'CapabilityId.',
 });
@@ -977,11 +990,10 @@ export const ANHANG_F_A_FINDINGS: Readonly<Record<string, string>> = Object.free
  */
 export const ANHANG_F_A_DEVIATIONS: Readonly<Record<string, string>> = Object.freeze({
   'F.1.1':
-    'Die beiden Kopfbalken werden nicht gezeichnet: der Katalog kennt für sie keinen Begriff, und ' +
-    'ein erfundener fünfter Stärkegrad wäre eine fachliche Behauptung. Dieselbe Abweichung hat ' +
-    'der Teilslice E-c an E.1.31 erklärt. Das Zeichen ist damit von einem kopfzonenlosen Zeichen ' +
-    'derselben Bauart nicht zu unterscheiden — hier von keinem anderen aus F.1.1 bis F.1.11, ' +
-    'weil es als einziges die Arztleiste ohne Kopfzone trägt.',
+    'Die beiden Kopfbalken werden seit dem Fachreview vom 19.09.2026 als semantikfreie ' +
+    'technische Kopfmarke `double-vertical-bar` gezeichnet, nicht als Stärkegrad: der Katalog ' +
+    'kennt für sie keinen Begriff, und ein erfundener fünfter Stärkegrad wäre eine fachliche ' +
+    'Behauptung. Dieselbe Marke trägt E.1.31.',
   'F.1.2':
     'Das Innenzeichen wird symmetrisch zur Körpermitte gezeichnet, die Referenz zeichnet es ' +
     'schief (dritter Befund oben). Der Katalog nimmt die mittlere Neigung der beiden Schäfte ' +

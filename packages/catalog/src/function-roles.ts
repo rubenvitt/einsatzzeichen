@@ -344,7 +344,7 @@ const DEFINITIONS: Record<FunctionRoleId, FunctionRoleDefinition> = {
   }),
   'hazard-response-forces-director': personRole({
     id: 'hazard-response-forces-director', title: 'Leiter Gefahrenabwehrkräfte',
-    expectedOrganization: 'polizei',
+    expectedOrganization: 'bundespolizei',
     organizationHead: 'administrative', bodyCenterYMm: 18, capShoulderYMm: 10,
     expectedAdministrativeLevel: 'nationalstaat',
     carrierRun: carrierRun('BuPol', 31.75, 31, { xMm: 20.5, yMm: 27.7, widthMm: 11.375, heightMm: 3.6 }),

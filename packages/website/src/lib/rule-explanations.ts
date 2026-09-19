@@ -588,16 +588,18 @@ const EXPLANATIONS = {
     field: 'technicalHeadMark',
     title: 'Technische Kopfmarke nicht vermessen',
     explanation:
-      'Als technische Kopfmarke ist bisher nur `single-vertical-bar` vermessen. Jeder andere ' +
-      'Wert hätte keine belegte Geometrie. Setze diesen Wert oder entferne `technicalHeadMark`.',
+      'Als technische Kopfmarken sind bisher nur `single-vertical-bar` und ' +
+      '`double-vertical-bar` vermessen. Jeder andere Wert hätte keine belegte Geometrie. Setze ' +
+      'einen dieser Werte oder entferne `technicalHeadMark`.',
   },
   'technical-head-mark-requires-normal-formation': {
     field: 'technicalHeadMark',
-    title: 'Technische Kopfmarke nur an der normalen Formation',
+    title: 'Technische Kopfmarke nur an der Formation',
     explanation:
-      'Die technische Kopfmarke ist ausschließlich an der normalen Formation vermessen, also an ' +
-      '`kind: formation` ohne Körpervariante. An anderen Arten oder Varianten ist ihre Lage ' +
-      'nicht belegt. Entferne `bodyVariant` beziehungsweise `technicalHeadMark`.',
+      'Die technische Kopfmarke ist nur an der Formation vermessen: an `kind: formation` ohne ' +
+      'Körpervariante und mit der Variante `foot-band` (belegt an F.1.3). An anderen Arten oder ' +
+      'Varianten ist ihre Lage nicht belegt. Entferne `bodyVariant` beziehungsweise ' +
+      '`technicalHeadMark`.',
   },
   'top-left-anchor-within-body': {
     field: 'labels',

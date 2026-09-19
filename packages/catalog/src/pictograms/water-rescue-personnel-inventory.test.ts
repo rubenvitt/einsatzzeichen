@@ -15,36 +15,13 @@ import {
 } from './index.js';
 import { WATER_RESCUE_PERSONNEL_PICTOGRAMS } from './water-rescue-personnel/index.js';
 
-function sourceWave(startY: number): string {
-  const y = (offset: number): number => Number((startY + offset).toFixed(3));
-  return `M 13.177 ${y(0)} ` +
-    `C 12.922 ${y(0.255)} 12.603 ${y(0.573)} 12 ${y(0.573)} ` +
-    `V ${y(0.073)} ` +
-    `C 12.397 ${y(0.073)} 12.585 ${y(-0.115)} 12.824 ${y(-0.354)} ` +
-    `C 13.079 ${y(-0.609)} 13.398 ${y(-0.927)} 14.001 ${y(-0.927)} ` +
-    `C 14.604 ${y(-0.927)} 14.923 ${y(-0.609)} 15.178 ${y(-0.354)} ` +
-    `C 15.416 ${y(-0.115)} 15.605 ${y(0.073)} 16.002 ${y(0.073)} ` +
-    `C 16.399 ${y(0.073)} 16.587 ${y(-0.115)} 16.825 ${y(-0.354)} ` +
-    `C 17.08 ${y(-0.609)} 17.398 ${y(-0.927)} 18.002 ${y(-0.927)} ` +
-    `C 18.606 ${y(-0.927)} 18.923 ${y(-0.609)} 19.178 ${y(-0.353)} ` +
-    `C 19.416 ${y(-0.115)} 19.604 ${y(0.074)} 20 ${y(0.074)} ` +
-    `V ${y(0.574)} ` +
-    `C 19.397 ${y(0.574)} 19.079 ${y(0.256)} 18.824 ${y(0)} ` +
-    `C 18.586 ${y(-0.238)} 18.398 ${y(-0.427)} 18.002 ${y(-0.427)} ` +
-    `C 17.606 ${y(-0.427)} 17.417 ${y(-0.239)} 17.179 ${y(0)} ` +
-    `C 16.924 ${y(0.255)} 16.606 ${y(0.573)} 16.002 ${y(0.573)} ` +
-    `C 15.398 ${y(0.573)} 15.08 ${y(0.255)} 14.825 ${y(0)} ` +
-    `C 14.587 ${y(-0.239)} 14.398 ${y(-0.427)} 14.001 ${y(-0.427)} ` +
-    `C 13.604 ${y(-0.427)} 13.416 ${y(-0.239)} 13.177 ${y(0)} Z`;
-}
-
 const EXPECTED = [
   {
     id: 'water-rescue-personnel.team-leader',
     section: 'I.5.4',
     title: 'Truppführer Wasserrettungstrupp',
     referenceAsset: 'I.5.4_Truppführer Wasserrettungstrupp.svg',
-    box: { xMm: 2.646529, yMm: 1, widthMm: 26.707295, heightMm: 30.331489 },
+    box: { xMm: 2.75, yMm: 1, widthMm: 26.5, heightMm: 30.25 },
     head: [{ type: 'circle', cx: 16, cy: 2.5, r: 1.5 }],
   },
   {
@@ -52,7 +29,7 @@ const EXPECTED = [
     section: 'I.5.5',
     title: 'Gruppenführer Wasserrettungsgruppe',
     referenceAsset: 'I.5.5_Gruppenführer Wasserrettungsgruppe.svg',
-    box: { xMm: 2.646529, yMm: 1, widthMm: 26.707295, heightMm: 30.331489 },
+    box: { xMm: 2.75, yMm: 1, widthMm: 26.5, heightMm: 30.25 },
     head: [
       { type: 'circle', cx: 11, cy: 2.5, r: 1.5 },
       { type: 'circle', cx: 21, cy: 2.5, r: 1.5 },
@@ -63,7 +40,7 @@ const EXPECTED = [
     section: 'I.5.6',
     title: 'Zugführer Wasserrettungszug',
     referenceAsset: 'I.5.6_Zugführer Wasserrettungszug.svg',
-    box: { xMm: 2.646529, yMm: 1, widthMm: 26.707295, heightMm: 30.331489 },
+    box: { xMm: 2.75, yMm: 1, widthMm: 26.5, heightMm: 30.25 },
     head: [
       { type: 'circle', cx: 11, cy: 2.5, r: 1.5 },
       { type: 'circle', cx: 16, cy: 2.5, r: 1.5 },
@@ -75,47 +52,55 @@ const EXPECTED = [
     section: 'I.5.7',
     title: 'Verbandsführer Wasserrettungsverband',
     referenceAsset: 'I.5.7_Verbandsführer Wasserrettungsverband.svg',
-    box: { xMm: 2.646529, yMm: 0, widthMm: 26.707295, heightMm: 31.331489 },
-    head: [{ type: 'rect', x: 15.25, y: 0, width: 1.5, height: 4 }],
+    box: { xMm: 2.75, yMm: 0.25, widthMm: 26.5, heightMm: 31 },
+    head: [{ type: 'rect', x: 15.25, y: 0.25, width: 1.5, height: 3.75 }],
   },
   {
     id: 'water-rescue-personnel.technical-advisor',
     section: 'I.5.8',
     title: 'Fachberater Wasserrettung',
     referenceAsset: 'I.5.8_Fachberater Wasserrettung.svg',
-    box: { xMm: 2.646529, yMm: 2.624304, widthMm: 26.706942, heightMm: 26.707295 },
+    box: { xMm: 2.75, yMm: 2.75, widthMm: 26.5, heightMm: 26.5 },
     head: [],
   },
 ] as const;
 
+/**
+ * Rautenkörper nach der Neukonstruktion vom 19.09.2026: Raute als 0,5-mm-Strich mit weißer
+ * Füllung (halbe Diagonale 13 mm), Führerkappe als gefülltes Dreieck bzw. Fachberater-Kappe als
+ * 0,5-mm-Strich, zwei Wellen als offene 0,5-mm-Strichkubiken und die Innenraute als 0,5-mm-Strich.
+ */
 const STANDARD_BODY = {
-  field: [[16, 4.624547], [29.353824, 17.978], [16, 31.331489], [2.646529, 17.978]],
-  cap:
-    'M 2.646529 17.978 L 16 4.624547 L 29.353824 17.978 L 16 31.331489 Z ' +
-    'M 3.354 17.978 L 11.332 10 L 20.668 10 L 28.646 17.978 L 16 30.624 Z',
-  inner:
-    'M 16 16.646 L 20.354 21 L 16 25.354 L 11.646 21 Z ' +
-    'M 16 17.353 L 19.647 21 L 16 24.647 L 12.353 21 Z',
+  field: [[16, 4.978], [29, 17.978], [16, 30.978], [3, 17.978]],
+  cap: {
+    type: 'polyline', points: [[16, 4.978], [21, 10], [11, 10]], closed: true,
+    style: { fill: 'schwarz', stroke: 'none' },
+  },
+  inner: [[16, 17], [20, 21], [16, 25], [12, 21]],
   waves: [
-    sourceWave(13.177),
-    sourceWave(15.177),
+    'M 12 13.5 C 12.73 13.5 13.27 12.5 14 12.5 C 14.73 12.5 15.27 13.5 16 13.5 ' +
+      'C 16.73 13.5 17.27 12.5 18 12.5 C 18.73 12.5 19.27 13.5 20 13.5',
+    'M 12 15.5 C 12.73 15.5 13.27 14.5 14 14.5 C 14.73 14.5 15.27 15.5 16 15.5 ' +
+      'C 16.73 15.5 17.27 14.5 18 14.5 C 18.73 14.5 19.27 15.5 20 15.5',
   ],
 } as const;
 
 const ADVISOR_BODY = {
-  field: [[16, 2.624304], [29.353471, 16], [16, 29.331599], [2.646529, 16]],
-  cap:
-    'M 2.646529 16 L 16 2.624304 L 29.353471 16 L 16 29.331599 Z ' +
-    'M 16 3.332 L 20.418 7.75 L 20.918 8.25 L 28.646 16 L 16 28.624 ' +
-    'L 3.354 16 L 11.081 8.25 L 11.582 7.75 Z',
-  inner:
-    'M 16 14.646 L 20.354 19 L 16 23.354 L 11.646 19 Z ' +
-    'M 16 15.353 L 19.647 19 L 16 22.647 L 12.353 19 Z',
+  field: [[16, 2.978], [29, 15.978], [16, 28.978], [3, 15.978]],
+  cap: {
+    type: 'line', x1: 11, y1: 8, x2: 21, y2: 8,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 },
+  },
+  inner: [[16, 15], [20, 19], [16, 23], [12, 19]],
   waves: [
-    sourceWave(11.177),
-    sourceWave(13.177),
+    'M 12 11.5 C 12.73 11.5 13.27 10.5 14 10.5 C 14.73 10.5 15.27 11.5 16 11.5 ' +
+      'C 16.73 11.5 17.27 10.5 18 10.5 C 18.73 10.5 19.27 11.5 20 11.5',
+    'M 12 13.5 C 12.73 13.5 13.27 12.5 14 12.5 C 14.73 12.5 15.27 13.5 16 13.5 ' +
+      'C 16.73 13.5 17.27 12.5 18 12.5 C 18.73 12.5 19.27 13.5 20 13.5',
   ],
 } as const;
+
+const HALF_MM_STROKE = { fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 } as const;
 
 describe('Wasserrettungsführung I.5.4 bis I.5.8', () => {
   it('hält ID-Raum, Familie, Registry und Elementart bijektiv', () => {
@@ -241,7 +226,7 @@ describe('Wasserrettungsführung I.5.4 bis I.5.8', () => {
     }
   });
 
-  it('bewahrt Körper, Wasserlinien und Innenraute als handabgeleitete Literale', () => {
+  it('konstruiert Raute, Kappe, Wellen und Innenraute aus 0,5-mm-Strichen und echten Füllungen', () => {
     const definitions = ALL_PICTOGRAMS.filter((definition) =>
       definition.id.startsWith('water-rescue-personnel.'),
     );
@@ -249,37 +234,34 @@ describe('Wasserrettungsführung I.5.4 bis I.5.8', () => {
     expect(definitions).toHaveLength(5);
     for (const [index, definition] of definitions.entries()) {
       const expected = index === 4 ? ADVISOR_BODY : STANDARD_BODY;
-      expect(definition?.primitives[0]).toMatchObject({
+      expect(definition?.primitives[0]).toEqual({
         type: 'polyline', role: 'pictogram', points: expected.field, closed: true,
-        style: { fill: 'weiss', stroke: 'none' },
+        style: { ...HALF_MM_STROKE, fill: 'weiss' },
       });
-      expect(definition?.primitives[1]).toMatchObject({
-        type: 'path', role: 'pictogram', d: expected.cap,
-        style: { fill: 'schwarz', stroke: 'none', fillRule: 'evenodd' },
-      });
+      expect(definition?.primitives[1]).toEqual({ ...expected.cap, role: 'pictogram' });
       expect(definition?.primitives.slice(2, 4)).toEqual(expected.waves.map((d) => ({
-        type: 'path', role: 'pictogram', d,
-        style: { fill: 'schwarz', stroke: 'none' },
+        type: 'path', role: 'pictogram', d, style: HALF_MM_STROKE,
       })));
-      expect(definition?.primitives[4]).toMatchObject({
-        type: 'path', role: 'pictogram', d: expected.inner,
-        style: { fill: 'schwarz', stroke: 'none', fillRule: 'evenodd' },
+      expect(definition?.primitives[4]).toEqual({
+        type: 'polyline', role: 'pictogram', points: expected.inner, closed: true,
+        style: HALF_MM_STROKE,
       });
     }
   });
 
-  it('liefert die Wellen verlustfrei nur mit absoluten M/C/V/Z-Kommandos an die Pfad-Gates', () => {
+  it('liefert die Wellen als offene Kubiken nur mit absoluten M/C-Kommandos an die Pfad-Gates', () => {
     const wavePaths = WATER_RESCUE_PERSONNEL_PICTOGRAMS.flatMap((definition) =>
       definition.primitives.slice(2, 4),
     );
 
+    expect(wavePaths).toHaveLength(10);
     for (const wave of wavePaths) {
       expect(wave.type).toBe('path');
       if (wave.type !== 'path') continue;
       const tokenized = tokenizePath(wave.d);
       expect(tokenized.problems, wave.d).toEqual([]);
       expect(new Set(tokenized.commands.map(({ command }) => command))).toEqual(
-        new Set(['M', 'C', 'V', 'Z']),
+        new Set(['M', 'C']),
       );
     }
   });

@@ -1305,13 +1305,18 @@ describe('validateSpec', () => {
     })).toEqual([]);
 
     expect(validateRuntime({
-      kind: 'formation', technicalHeadMark: 'double-vertical-bar',
+      kind: 'formation', technicalHeadMark: 'triple-vertical-bar',
     }).map((issue) => issue.rule)).toContain('technical-head-mark-not-measured');
+
+    // Seit dem Fachreview vom 19.09.2026 ist die Formation mit Fußband belegt (F.1.3).
+    expect(validateSpec({
+      kind: 'formation', bodyVariant: 'foot-band', technicalHeadMark: 'double-vertical-bar',
+    })).toEqual([]);
 
     for (const spec of [
       { kind: 'person', technicalHeadMark: 'single-vertical-bar' },
       {
-        kind: 'formation', bodyVariant: 'foot-band',
+        kind: 'formation', bodyVariant: 'raised-gable' as never,
         technicalHeadMark: 'single-vertical-bar',
       },
     ] satisfies SymbolSpec[]) {

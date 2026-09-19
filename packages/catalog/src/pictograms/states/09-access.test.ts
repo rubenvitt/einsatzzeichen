@@ -60,8 +60,9 @@ describe('ACCESS_STATES', () => {
       expect(checkBox(item)).toEqual([]);
       expect(checkClipping(item, viewBoxBody(item))).toEqual([]);
       expect(item.primitives.every((primitive) =>
-        primitive.type === 'line' &&
+        (primitive.type === 'line' || primitive.type === 'polyline') &&
         primitive.role === 'pictogram' &&
+        primitive.style?.strokeWidth === 0.5 &&
         primitive.transform === undefined,
       )).toBe(true);
     }
@@ -70,34 +71,36 @@ describe('ACCESS_STATES', () => {
   it('zeichnet Gesperrt als Mittellinie mit zwei sich kreuzenden Sperrarmen', () => {
     expect(coordinatesOf(definition('state.route-closed'))).toEqual([
       [16, 2, 16, 30],
-      [10, 10, 22, 22],
-      [22, 10, 10, 22],
+      [10, 11, 22, 21],
+      [22, 11, 10, 21],
     ]);
   });
 
-  it('zeichnet die Einbahnregelung als zwei Laengslinien mit Richtungsarm', () => {
-    expect(coordinatesOf(definition('state.one-way-traffic'))).toEqual([
-      [8, 2, 8, 30],
-      [16, 5, 16, 27],
-      [16, 5, 21, 14],
-    ]);
+  it('zeichnet die Einbahnregelung als Fahrbahnstrich und Richtungsstrich mit Halbpfeil', () => {
+    const item = definition('state.one-way-traffic');
+    expect(coordinatesOf(item)).toEqual([[14, 2, 14, 30]]);
+    expect(item.primitives[1]).toMatchObject({
+      type: 'polyline',
+      closed: false,
+      points: [[18, 27], [18, 5], [22, 13]],
+    });
   });
 
   it('unterscheidet Teil- und Vollblockade durch exakt zwei beziehungsweise vier Balken', () => {
     expect(coordinatesOf(definition('state.route-difficult-to-pass'))).toEqual([
-      [12, 2, 12, 30],
-      [20, 2, 20, 30],
+      [14, 2, 14, 30],
+      [18, 2, 18, 30],
     ]);
     expect(coordinatesOf(definition('state.route-impassable'))).toEqual([
-      [8, 2, 8, 30],
-      [13, 2, 13, 30],
-      [19, 2, 19, 30],
-      [24, 2, 24, 30],
+      [10, 2, 10, 30],
+      [14, 2, 14, 30],
+      [18, 2, 18, 30],
+      [22, 2, 22, 30],
     ]);
   });
 
   it('liefert die erwarteten Anzahlen und vier verschiedene Signaturen', () => {
-    expect(ACCESS_STATES.map((item) => linesOf(item).length)).toEqual([3, 3, 2, 4]);
+    expect(ACCESS_STATES.map((item) => item.primitives.length)).toEqual([3, 2, 2, 4]);
     expect(new Set(ACCESS_STATES.map((item) => JSON.stringify(item.primitives))).size).toBe(4);
   });
 });

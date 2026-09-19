@@ -2,14 +2,18 @@ import { deepFreeze } from '../../readonly-data.js';
 import { defineDamage, type CatalogPictogramDefinition } from '../catalog-definition.js';
 import type { Point } from '@einsatzzeichen/schema';
 import {
+  DAMAGE_RED_FILL,
   DAMAGE_RED_STROKE,
   DYKE_CONTRAST,
+  arrowBase,
   arrowHead,
+  cubicChainD,
   damageLine,
   damagePath,
   damageText,
-  dashedCubic,
+  dashedCubics,
   dykeBase,
+  type Cubic,
 } from './authoring.js';
 
 /**
@@ -30,23 +34,73 @@ import {
  * das einzige Zeichen des Anhangs mit einer Beschriftung.
  *
  * Die Deichfigur steht in `dykeBase()`; sie ist in allen zehn Referenzdateien koordinatengleich.
+ * Alle Pfeile tragen dieselbe gefüllte Spitze (`arrowHead`, gleichseitig, 5 mm), der Schaft
+ * endet an ihrer Basismitte. Maße an der Referenz abgelesen, Geometrie eigenständig
+ * konstruiert; Koordinaten sind Mittellinien der 0,5 mm starken Referenzumrisse.
  */
 
 /**
- * Der Bogen, der die Krone überspült — von der Vorlandseite über den Deich nach binnen.
- * L.1 und L.2 teilen ihn; sie unterscheiden sich allein darin, ob er gestrichelt ist.
+ * Der Bogen, der die Krone überspült — von der Vorlandseite (2/7) über den Scheitel 16/3 bis
+ * zur Basis der Pfeilspitze. L.1 und L.2 teilen ihn; sie unterscheiden sich allein darin, ob
+ * er gestrichelt ist. Die Spitze sitzt bei 31,4/6,14 und ist um 18,6° nach unten geneigt.
  */
-const OVERFLOW_ARC = {
-  start: [2, 7.5],
-  control1: [8, 1.5],
-  control2: [21, 1.5],
-  end: [27.4, 4.6],
-} as const satisfies Record<string, Point>;
+const OVERFLOW_TIP = [31.4, 6.14, 18.6] as const;
+const OVERFLOW_ARC: readonly Cubic[] = [
+  [
+    [2, 7],
+    [3.8, 5.8],
+    [8.8, 3],
+    [16, 3],
+  ],
+  [[16, 3], [19.8, 3], [23.5, 3.6], arrowBase(...OVERFLOW_TIP)],
+];
 
-const OVERFLOW_ARC_D = 'M 2 7.5 C 8 1.5 21 1.5 27.4 4.6';
+/**
+ * Derselbe Bogen an der Waagerechten y = 13 gespiegelt (y ↦ 26 − y): unter dem Deich hindurch.
+ * Die Spiegelung ist an der Referenz nachgemessen — Start 2/19, Tiefpunkt 16/23, Spitze
+ * 31,4/19,86.
+ */
+const mirror = ([x, y]: Point): Point => [x, 26 - y];
+const UNDERCUT_TIP = [31.4, 19.86, -18.6] as const;
+const UNDERCUT_ARC: readonly Cubic[] = OVERFLOW_ARC.map(
+  ([a, b, c, d]) => [mirror(a), mirror(b), mirror(c), mirror(d)] as const,
+);
 
-/** Derselbe Bogen gespiegelt: von binnen unter dem Deich hindurch zurück ins Vorland. */
-const UNDERCUT_ARC_D = 'M 2 19.5 C 8 25.5 21 25.5 27.4 22.4';
+/** L.3: waagerecht aus dem Deichkörper bis 24,5/11, dann unter −50° hinaus zur Spitze. */
+const LOCAL_THROUGH_TIP = [29.3, 5.25, -50] as const;
+
+/** L.4: waagerecht auf halber Kronenhöhe durch den ganzen Querschnitt, Spitze bei 31,6/10. */
+const THROUGH_TIP = [31.6, 10, 0] as const;
+
+/**
+ * L.5: eine flache S-Kurve steigt vom Binnenfuß (26/19) über 27/15 auf; die Spitze zeigt steil
+ * nach oben (−104°) und endet bei 27,15/7,5.
+ */
+const LOCAL_UNDERCUT_TIP = [27.15, 7.5, -104] as const;
+const LOCAL_UNDERCUT_ARC: readonly Cubic[] = [
+  [
+    [26, 19],
+    [25.5, 17],
+    [26.25, 16],
+    [27, 15],
+  ],
+  [[27, 15], [27.65, 14.1], [28.3, 13.25], arrowBase(...LOCAL_UNDERCUT_TIP)],
+];
+
+/**
+ * L.7: ein Haken — von oberhalb der Krone (21/3) senkrecht hinab auf die Binnenböschung, unten
+ * (21,75/10,6) umgebogen und schräg nach rechts oben hinaus; Spitze bei 30,08/8,15 unter −31°.
+ */
+const SLIPPAGE_TIP = [30.08, 8.15, -31] as const;
+const SLIPPAGE_HOOK: readonly Cubic[] = [
+  [
+    [21, 3],
+    [19.95, 6.65],
+    [20.2, 9.45],
+    [21.75, 10.6],
+  ],
+  [[21.75, 10.6], [22.8, 11.4], [24.45, 11.35], arrowBase(...SLIPPAGE_TIP)],
+];
 
 export const DYKE_DAMAGE = deepFreeze([
   defineDamage({
@@ -54,21 +108,14 @@ export const DYKE_DAMAGE = deepFreeze([
     id: 'imminent-overflow',
     title: 'Drohende Überspülung',
     referenceAsset: 'L.1_Drohende Überspülung.svg',
-    box: { xMm: 2, yMm: 1.5, widthMm: 29.4, heightMm: 24.5 },
+    box: { xMm: 2, yMm: 2.35, widthMm: 29.4, heightMm: 23.65 },
     contrastPairs: DYKE_CONTRAST,
     primitives: [
       dykeBase(),
-      // Gestrichelt, weil die Überspülung noch nicht eingetreten ist — dieselbe Kurve wie L.2,
-      // in neun Stücke zerlegt, von denen fünf gezeichnet werden.
-      ...dashedCubic(
-        OVERFLOW_ARC.start,
-        OVERFLOW_ARC.control1,
-        OVERFLOW_ARC.control2,
-        OVERFLOW_ARC.end,
-        9,
-        DAMAGE_RED_STROKE,
-      ),
-      arrowHead(31.4, 6.1, 25),
+      // Gestrichelt, weil die Überspülung noch nicht eingetreten ist — derselbe Bogen wie L.2,
+      // nach Bogenlänge in 3-mm-Striche mit 2 mm Lücke zerlegt.
+      ...dashedCubics(OVERFLOW_ARC, 3, 2, DAMAGE_RED_STROKE),
+      arrowHead(...OVERFLOW_TIP),
     ],
   }),
   defineDamage({
@@ -76,12 +123,12 @@ export const DYKE_DAMAGE = deepFreeze([
     id: 'overflow',
     title: 'Überspülung',
     referenceAsset: 'L.2_Überspülung.svg',
-    box: { xMm: 2, yMm: 1.5, widthMm: 29.4, heightMm: 24.5 },
+    box: { xMm: 2, yMm: 2.35, widthMm: 29.4, heightMm: 23.65 },
     contrastPairs: DYKE_CONTRAST,
     primitives: [
       dykeBase(),
-      damagePath(OVERFLOW_ARC_D, DAMAGE_RED_STROKE),
-      arrowHead(31.4, 6.1, 25),
+      damagePath(cubicChainD(OVERFLOW_ARC), DAMAGE_RED_STROKE),
+      arrowHead(...OVERFLOW_TIP),
     ],
   }),
   defineDamage({
@@ -89,14 +136,14 @@ export const DYKE_DAMAGE = deepFreeze([
     id: 'local-through-flow',
     title: 'Punktuelle Durchspülung',
     referenceAsset: 'L.3_Punktuelle Durchspülung.svg',
-    box: { xMm: 2, yMm: 5.2, widthMm: 29, heightMm: 20.8 },
+    box: { xMm: 2, yMm: 5.25, widthMm: 29, heightMm: 20.75 },
     contrastPairs: DYKE_CONTRAST,
     primitives: [
       dykeBase(),
       // Kurz und nur an einer Stelle: waagerecht bis zur Binnenböschung, dann schräg hinaus.
-      damageLine(19.8, 10.4, 24.2, 10.4, DAMAGE_RED_STROKE),
-      damageLine(24.2, 10.4, 27.2, 7.4, DAMAGE_RED_STROKE),
-      arrowHead(29.4, 5.2, -45),
+      damageLine(20, 11, 24.5, 11, DAMAGE_RED_STROKE),
+      damageLine(24.5, 11, ...arrowBase(...LOCAL_THROUGH_TIP), DAMAGE_RED_STROKE),
+      arrowHead(...LOCAL_THROUGH_TIP),
     ],
   }),
   defineDamage({
@@ -104,16 +151,13 @@ export const DYKE_DAMAGE = deepFreeze([
     id: 'through-flow',
     title: 'Durchspülung',
     referenceAsset: 'L.4_Durchspülung.svg',
-    box: { xMm: 2, yMm: 6, widthMm: 29.4, heightMm: 20 },
+    box: { xMm: 2, yMm: 6, widthMm: 29.6, heightMm: 20 },
     contrastPairs: DYKE_CONTRAST,
     primitives: [
       dykeBase(),
-      // Quert den ganzen Querschnitt auf halber Höhe — die flächige Durchspülung.
-      damageLine(2, 10, 27.3, 10, DAMAGE_RED_STROKE),
-      // Die Spitze endet bei 31,4 mm und nicht bei den 31,6 der Referenz: mit dem
-      // Strichzuschlag der Hülle läge die Box-Ecke sonst bei 32,1 mm und damit ausserhalb der
-      // 32-mm-ViewBox. Alle übrigen Pfeile des Anhangs enden ohnehin auf dieser Linie.
-      arrowHead(31.4, 10, 0),
+      // Quert den ganzen Querschnitt auf halber Kronenhöhe — die flächige Durchspülung.
+      damageLine(2, 10, ...arrowBase(...THROUGH_TIP), DAMAGE_RED_STROKE),
+      arrowHead(...THROUGH_TIP),
     ],
   }),
   defineDamage({
@@ -125,9 +169,9 @@ export const DYKE_DAMAGE = deepFreeze([
     contrastPairs: DYKE_CONTRAST,
     primitives: [
       dykeBase(),
-      // Die S-Kurve steigt aus dem Deichfuss binnenseitig auf: Wasser findet einen Weg nach oben.
-      damagePath('M 26.4 18.6 C 24.6 16.4 27.4 15 27.1 12', DAMAGE_RED_STROKE),
-      arrowHead(27.1, 7.5, -90),
+      // Die S-Kurve steigt aus dem Deichfuß binnenseitig auf: Wasser findet einen Weg nach oben.
+      damagePath(cubicChainD(LOCAL_UNDERCUT_ARC), DAMAGE_RED_STROKE),
+      arrowHead(...LOCAL_UNDERCUT_TIP),
     ],
   }),
   defineDamage({
@@ -139,8 +183,8 @@ export const DYKE_DAMAGE = deepFreeze([
     contrastPairs: DYKE_CONTRAST,
     primitives: [
       dykeBase(),
-      damagePath(UNDERCUT_ARC_D, DAMAGE_RED_STROKE),
-      arrowHead(31.4, 19.9, -25),
+      damagePath(cubicChainD(UNDERCUT_ARC), DAMAGE_RED_STROKE),
+      arrowHead(...UNDERCUT_TIP),
     ],
   }),
   defineDamage({
@@ -148,13 +192,13 @@ export const DYKE_DAMAGE = deepFreeze([
     id: 'slope-slippage',
     title: 'Böschungsabrutschung',
     referenceAsset: 'L.7_Böschungsabrutschung.svg',
-    box: { xMm: 2, yMm: 4.4, widthMm: 29, heightMm: 21.6 },
+    box: { xMm: 2, yMm: 3, widthMm: 29, heightMm: 23 },
     contrastPairs: DYKE_CONTRAST,
     primitives: [
       dykeBase(),
-      // Über die Krone gehakt und an der Binnenböschung nach unten: die Böschung rutscht ab.
-      damagePath('M 21.5 4.4 C 25.5 5.5 26.5 9.5 25.5 11.5', DAMAGE_RED_STROKE),
-      arrowHead(25.1, 14.5, 90),
+      // Von oben auf die Binnenböschung gehakt und seitlich hinaus: die Böschung rutscht ab.
+      damagePath(cubicChainD(SLIPPAGE_HOOK), DAMAGE_RED_STROKE),
+      arrowHead(...SLIPPAGE_TIP),
     ],
   }),
   defineDamage({
@@ -200,12 +244,11 @@ export const DYKE_DAMAGE = deepFreeze([
       dykeBase(),
       // Die Sickerlinie: die Höhe, bis zu der das Wasser den Deichkörper durchdrungen hat.
       damageLine(2, 10, 31, 10, DAMAGE_RED_STROKE),
-      // Der Prozentwert gehört zur Linie und ist in der Referenz rot. Er steht hier **schwarz**:
-      // Rot erreicht auf der Ausgabeoberfläche 4,02:1 und verfehlt damit die Textschwelle von
-      // 4,5:1, die für jeden Textlauf des Katalogs gilt. Alle übrigen Beschriftungen des
-      // Katalogs sind ebenfalls schwarz — die Abweichung betrifft die Farbe, nicht die Aussage.
-      // „50 %" ist dabei der Beispielwert der Referenz, kein fester Bestandteil des Zeichens.
-      damageText('50 %', { x: 2, y: 8, sizeMm: 4, minRenderPx: 48 }),
+      // Der Prozentwert gehört zur Linie und ist wie in der Referenz rot (Arimo, 4 mm, Grundlinie
+      // 8 mm). Rot erreicht als Textfarbe nur 4,02:1; die Kontrastausnahme ist zentral
+      // geführt, wie bei den roten Beschriftungen in 5.8.1. „50 %" ist der Beispielwert der
+      // Referenz, kein fester Bestandteil des Zeichens.
+      damageText('50 %', { x: 2, y: 8, sizeMm: 4, minRenderPx: 48, style: DAMAGE_RED_FILL }),
     ],
   }),
 ] satisfies readonly CatalogPictogramDefinition[]);

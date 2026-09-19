@@ -726,6 +726,14 @@ export interface BodyMarkContext {
   readonly vehicleCategory?: VehicleCategoryId;
   readonly strength?: StrengthId;
   readonly occupiedLabelZones?: readonly ('bottomCenter' | 'bottomRight' | 'belowRight')[];
+  /**
+   * Alle Körpermarken derselben Komposition, in Spec-Reihenfolge (einschließlich der gerade
+   * aufgelösten). Manche Fachzeichen stehen in Kombination an anderer, eigens vermessener Stelle
+   * als allein — etwa die Arztleiste in F.1.12#alternative (y 24 statt 22 neben Ring und
+   * Intensivbalken). Mit diesem Kontext wählt der Katalog die vermessene Lage, ohne dass das
+   * Rezept den Fachbegriff gegen eine geometrische Ersatz-ID tauschen muss.
+   */
+  readonly bodyMarks?: readonly BodyMarkId[];
 }
 
 export interface CatalogPorts {
@@ -751,6 +759,12 @@ export interface CatalogPorts {
    * und ihre Marken sind nicht auf Kreise beschränkt.
    */
   vehicleChassis(id: VehicleCategoryId): ChassisShape;
+  /**
+   * Innenfeld bei weißer Innenkontur (`SymbolSpec.whiteInnerContour`), in den Koordinaten der
+   * unverschobenen Grundzeichnung. Optional, weil nur Anhang E es braucht; fehlt der Port oder
+   * die Körperform, wirft `compose()` statt die Kontur still wegzulassen.
+   */
+  innerField?(kind: SymbolKind, variant?: BodyVariantId): readonly Primitive[];
   /**
    * Liefert die volle Definition, nicht nur die Primitive: die deklarierte Box trägt die drei
    * Gates. Damit hat `PictogramDefinition` von Beginn an zwei Konsumenten und ist kein
@@ -1037,12 +1051,13 @@ export function compose(
     : placedBody;
 
   // Belegte Ausnahmen: F.1.17 sowie die drei vermessenen G-Köpfe `trupp`, `gruppe` und `zug`
-  // führen `foot-band` zusammen mit einer Kopfzone. Die Kopfzone verschiebt den Formationskörper
+  // führen `foot-band` zusammen mit einer Kopfzone, F.1.3 mit der technischen Kopfmarke
+  // `double-vertical-bar` (Fachreview 19.09.2026). Die Kopfzone verschiebt den Formationskörper
   // nicht; Band und Hülle bleiben auf y 23…26. Andere Stärken werden daraus nicht fortgeschrieben.
   const isMeasuredFootBandWithHead =
     spec.kind === 'formation' &&
     spec.bodyVariant === 'foot-band' &&
-    spec.strength !== undefined;
+    (spec.strength !== undefined || spec.technicalHeadMark !== undefined);
   if (extras.length > 0 && headBox !== null && !isMeasuredFootBandWithHead) {
     // Wie Zusatzgeometrie einer Kopfzone ausweicht, ist **nicht** belegt: kein Zeichen des
     // Referenzbestands trägt beides. Der Anhang E.2 führt überhaupt keine Kopfzone (an allen 31
@@ -1080,13 +1095,45 @@ export function compose(
     );
   }
 
+  // Weiße Innenkontur (Anhang E): Der Körper trägt Weiß, die Farbe liegt im um 1 mm
+  // eingerückten Innenfeld. Das Innenfeld folgt dem platzierten Körper wie die Piktogramme.
+  if (spec.whiteInnerContour === true && bodyFillOverride === undefined) {
+    throw new NotMeasuredError(
+      'Eine weiße Innenkontur setzt eine Körperfarbe voraus (Organisation oder technische Füllung).',
+      'combination',
+    );
+  }
+  if (spec.whiteInnerContour === true && catalog.innerField === undefined) {
+    throw new NotMeasuredError(
+      'Der Katalog liefert kein Innenfeld für eine weiße Innenkontur.',
+      'combination',
+    );
+  }
+  const innerFieldPrimitives: Primitive[] =
+    spec.whiteInnerContour === true && bodyFillOverride !== undefined
+      ? [
+          {
+            type: 'group',
+            role: 'innerField',
+            transform: {
+              translate: { dxMm: 0, dyMm: centerYMm(placedBody) - centerYMm(body) },
+            },
+            children: catalog.innerField!(spec.kind, spec.bodyVariant).map((field) => ({
+              ...field,
+              style: { ...field.style, fill: bodyFillOverride },
+            })),
+          },
+        ]
+      : [];
+  const bodySurfaceFill = spec.whiteInnerContour === true ? 'weiss' : bodyFillOverride;
+
   const filled: Primitive =
-    bodyFillOverride !== undefined
+    bodySurfaceFill !== undefined
       ? {
           ...bodyForFill,
           style: {
             ...bodyForFill.style,
-            fill: bodyFillOverride,
+            fill: bodySurfaceFill,
             ...(organizationFill === undefined
               ? {}
               : { bodyStrokeDashToken: organizationFill }),
@@ -1156,7 +1203,8 @@ export function compose(
   const chassisShape: ChassisShape | null =
     spec.vehicleCategory !== undefined ? catalog.vehicleChassis(spec.vehicleCategory) : null;
   const chassisPrimitives: Primitive[] =
-    chassisShape?.marks.map((mark) => chassisPrimitive(mark, baseBottomMm)) ?? [];
+    chassisShape?.marks.map((mark) =>
+      chassisPrimitive(mark, baseBottomMm + (profile.chassisTopBelowBaseBottomMm ?? 0))) ?? [];
 
   const footTopMm = bodyBoundsMm.maxY + HEAD_GAP_MM;
   // `boxMm` ist bei Text eine Zusicherung des Autors, keine Messung (siehe Primitive-Kommentar
@@ -1198,7 +1246,8 @@ export function compose(
   // die Beschriftung.
   // `'none'` und „kein Stil" fallen auf `weiss`: der Lauf steht dann auf der Ausgabeoberfläche,
   // und die ist in allen drei Themes weiss.
-  const declaredFill = filled.style?.fill;
+  // Bei weißer Innenkontur stehen die Läufe auf dem Innenfeld, nicht auf der weißen Körperfläche.
+  const declaredFill = spec.whiteInnerContour === true ? bodyFillOverride : filled.style?.fill;
   const bodyFill: ColorToken =
     declaredFill === undefined || declaredFill === 'none' ? 'weiss' : declaredFill;
 
@@ -1212,6 +1261,9 @@ export function compose(
         bodyVariant: spec.bodyVariant,
         ...(spec.vehicleCategory === undefined ? {} : { vehicleCategory: spec.vehicleCategory }),
         ...(spec.strength === undefined ? {} : { strength: spec.strength }),
+        // Nur bei mehreren Marken: eine einzelne Marke hat keine Kombination, der Kontext bleibt
+        // für sie unverändert.
+        ...((spec.bodyMarks?.length ?? 0) > 1 ? { bodyMarks: spec.bodyMarks } : {}),
         ...(
           spec.labels === undefined
             ? {}
@@ -1283,6 +1335,7 @@ export function compose(
       children: [
         ...headPrimitives,
         filled,
+        ...innerFieldPrimitives,
         ...extras,
         ...bodyMarkPrimitives,
         ...roleDefinition.layout.decorations,
@@ -1305,6 +1358,7 @@ export function compose(
     children: [
       ...headPrimitives,
       filled,
+      ...innerFieldPrimitives,
       // Zusatzgeometrie **nach** dem gefüllten Körper, aus demselben Grund wie das Fahrwerk: die
       // Deichsel endet innerhalb des Körperstrichs (rechtes Ende auf der Körpermittellinie 4,0),
       // und eine Organisationsfüllung zeichnete darüber. Sie nimmt die Farbe selbst nicht an —

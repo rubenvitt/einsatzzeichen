@@ -177,10 +177,9 @@ describe('bodyMark() — die technischen Innenzeichnungen der Körpermarken', ()
       { kind: 'vehicle-water', bodyVariant: 'inset-hull' },
       insetWaterBodyMm,
     )).toEqual([
-      line(2.263209, 15.000055, 21.249843, 15.000055),
-      line(21.249843, 15.000055, 29.736438, 15.000055),
-      line(21.249843, 15.000055, 26.749628, 9.250152),
-      line(21.249843, 15.000055, 25.901906, 19.901884),
+      line(2.25, 15, 29.75, 15),
+      line(21, 15, 27, 9),
+      line(21, 15, 25.9, 19.9),
     ]);
   });
 
@@ -247,14 +246,10 @@ describe('bodyMark() — Wasserrettungsfassung der Anhang-I-Landfahrzeuge', () =
       { kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-2' },
       landBodyMm,
     )).toEqual([
-      wave(
-        'M 12 12 C 13 11, 14 13, 15 12 C 16 11, 17 13, 18 12 ' +
-        'C 18.667 11.333, 19.333 11.333, 20 12',
-      ),
-      wave(
-        'M 12 14 C 13 13, 14 15, 15 14 C 16 13, 17 15, 18 14 ' +
-        'C 18.667 13.333, 19.333 13.333, 20 14',
-      ),
+      wave('M 12 12.5 C 13 12.5 13 11.5 14 11.5 C 15 11.5 15 12.5 16 12.5 ' +
+        'C 17 12.5 17 11.5 18 11.5 C 19 11.5 19 12.5 20 12.5'),
+      wave('M 12 14.5 C 13 14.5 13 13.5 14 13.5 C 15 13.5 15 14.5 16 14.5 ' +
+        'C 17 14.5 17 13.5 18 13.5 C 19 13.5 19 14.5 20 14.5'),
       diamond([[16, 16], [20, 20], [16, 24], [12, 20]]),
     ]);
   });
@@ -265,17 +260,11 @@ describe('bodyMark() — Wasserrettungsfassung der Anhang-I-Landfahrzeuge', () =
       { kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-1' },
       landBodyMm,
     )).toEqual([
-      wave(
-        'M 12.818 14.5 C 13.614 13.704, 14.409 15.296, 15.205 14.5 ' +
-        'C 16 13.704, 16.796 15.296, 17.591 14.5 ' +
-        'C 18.121 13.97, 18.652 13.97, 19.182 14.5',
-      ),
-      wave(
-        'M 12.818 16.25 C 13.614 15.454, 14.409 17.046, 15.205 16.25 ' +
-        'C 16 15.454, 16.796 17.046, 17.591 16.25 ' +
-        'C 18.121 15.72, 18.652 15.72, 19.182 16.25',
-      ),
-      diamond([[16, 17.636], [19.182, 20.818], [16, 24], [12.818, 20.818]]),
+      wave('M 12 15 C 13 15 13 14 14 14 C 15 14 15 15 16 15 ' +
+        'C 17 15 17 14 18 14 C 19 14 19 15 20 15'),
+      wave('M 12 16.6 C 13 16.6 13 15.6 14 15.6 C 15 15.6 15 16.6 16 16.6 ' +
+        'C 17 16.6 17 15.6 18 15.6 C 19 15.6 19 16.6 20 16.6'),
+      diamond([[16, 17.64], [19.18, 20.82], [16, 24], [12.82, 20.82]]),
     ]);
   });
 
@@ -311,10 +300,11 @@ describe('bodyMark() — die technischen Innenzeichnungen des Anhangs N', () => 
       { kind: 'vehicle-land', bodyVariant: 'inverted-hull-track' as BodyVariantId },
       invertedLandBodyMm,
     )).toEqual([
-      line(6, 14.75, 20.75, 14.75),
+      // Seit dem Fachreview vom 19.09.2026 an N.1.1 nachgemessen: Schild y 14,5, Senkrechte x 21.
+      line(6, 14.5, 21, 14.5),
       {
         type: 'polyline', role: 'pictogram',
-        points: [[20.75, 9.5], [20.75, 18.5], [26, 19.5]],
+        points: [[21, 9.5], [21, 18.5], [26, 19.5]],
         style: outlineStyle,
       },
     ]);
@@ -339,9 +329,10 @@ describe('bodyMark() — die technischen Innenzeichnungen des Anhangs N', () => 
     )).toEqual([
       line(16, 6, 16, 20.99),
       line(2.74, 14, 29.26, 14),
-      line(23, 14, 23, 9.5),
-      { type: 'polyline', role: 'pictogram', points: [[21.5, 11], [23, 9.5], [24.5, 11]], style: outlineStyle },
-      { type: 'rect', role: 'pictogram', x: 20.25, y: 15, width: 5.5, height: 5.5, style: outlineStyle },
+      // Fachreview 19.09.2026: an N.1.4 nachgemessene Mittellinien.
+      line(23, 15, 23, 9),
+      { type: 'polyline', role: 'pictogram', points: [[21, 11], [23, 9], [25, 11]], style: outlineStyle },
+      { type: 'rect', role: 'pictogram', x: 20.5, y: 15, width: 5, height: 5, style: outlineStyle },
     ]);
     expect(bodyMarkWithContext(
       'air-horizontal-left-chevron' as BodyMarkId,
@@ -353,7 +344,8 @@ describe('bodyMark() — die technischen Innenzeichnungen des Anhangs N', () => 
     expect(bodyMarkWithContext(
       'air-rising-diagonal' as BodyMarkId,
       { kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull' as BodyVariantId }, raisedAirBodyMm,
-    )).toEqual([line(2.07, 20.74, 24.96, 9.3)]);
+    // N.1.6: aus der linken Rumpfecke mit Steigung 1 : 2 bis auf den Bogen (Fachreview 19.09.2026).
+    )).toEqual([line(1.01, 20.9898, 24.994, 8.998)]);
   });
 
   it('zeichnet Sammelraum und Kontaktstelle ausschließlich auf dem normalen 12-mm-Kreis', () => {
@@ -431,7 +423,13 @@ describe('bodyMark() — die technische Innenzeichnung des Anhangs I.5', () => {
   const compactPersonDiamond = 'compact-person-diamond-26mm' as BodyVariantId;
   const loweredCompactPersonDiamond =
     'compact-person-diamond-26mm-lowered-2mm' as BodyVariantId;
-  const filledWaveStyle = { fill: 'schwarz', stroke: 'none' } as const;
+  const strokedWave = (troughY: number, crestY: number): Primitive => ({
+    type: 'path', role: 'pictogram',
+    d: `M 12 ${troughY} C 13 ${troughY} 13 ${crestY} 14 ${crestY} ` +
+      `C 15 ${crestY} 15 ${troughY} 16 ${troughY} C 17 ${troughY} 17 ${crestY} 18 ${crestY} ` +
+      `C 19 ${crestY} 19 ${troughY} 20 ${troughY}`,
+    style: outlineStyle,
+  });
 
   it('registriert die doppelte Welle mit innerer 8-mm-Raute und bindet sie nur an die I.5-Rauten', () => {
     expect(BODY_MARK_IDS).toContain(waterRescueMark);
@@ -440,16 +438,8 @@ describe('bodyMark() — die technische Innenzeichnung des Anhangs I.5', () => {
       { kind: 'person', bodyVariant: compactPersonDiamond },
       compactPersonDiamondBodyMm,
     )).toEqual([
-      {
-        type: 'path', role: 'pictogram',
-        d: expect.stringMatching(/^M 19\.999955903 10\.750157096 /),
-        style: filledWaveStyle,
-      },
-      {
-        type: 'path', role: 'pictogram',
-        d: expect.stringMatching(/^M 19\.999955903 12\.749694077 /),
-        style: filledWaveStyle,
-      },
+      strokedWave(11, 10),
+      strokedWave(13, 12),
       {
         type: 'polyline', role: 'pictogram', closed: true,
         points: [[16, 14.5], [20, 18.5], [16, 22.5], [12, 18.5]],
@@ -461,16 +451,8 @@ describe('bodyMark() — die technische Innenzeichnung des Anhangs I.5', () => {
       { kind: 'person', bodyVariant: loweredCompactPersonDiamond },
       loweredCompactPersonDiamondBodyMm,
     )).toEqual([
-      {
-        type: 'path', role: 'pictogram',
-        d: expect.stringMatching(/^M 19\.999955903 12\.750157096 /),
-        style: filledWaveStyle,
-      },
-      {
-        type: 'path', role: 'pictogram',
-        d: expect.stringMatching(/^M 19\.999955903 14\.749694077 /),
-        style: filledWaveStyle,
-      },
+      strokedWave(13, 12),
+      strokedWave(15, 14),
       {
         type: 'polyline', role: 'pictogram', closed: true,
         points: [[16, 16.5], [20, 20.5], [16, 24.5], [12, 20.5]],
@@ -503,7 +485,6 @@ describe('bodyMark() — die technische Innenzeichnung des Anhangs I.5', () => {
       for (const wave of waves) {
         expect(wave.d).toMatch(/^[MLHVCQZ0-9.,\s-]+$/);
         expect(wave.d).toContain('C');
-        expect(wave.d).toContain('L');
       }
     }
   });
@@ -518,17 +499,17 @@ describe('bodyMark() — die vermessenen Wasserrettungs-Anhänger', () => {
     )).toEqual([
       {
         type: 'path', role: 'pictogram',
-        d: 'M 13.5 12.427 C 14.5 12.427 14.5 11.427 15.5 11.427 C 16.5 11.427 16.5 12.427 17.5 12.427 C 18.5 12.427 18.5 11.427 19.5 11.427 C 20.5 11.427 20.5 12.427 21.5 12.427',
+        d: 'M 13.5 11.75 C 14.5 11.75 14.5 10.75 15.5 10.75 C 16.5 10.75 16.5 11.75 17.5 11.75 C 18.5 11.75 18.5 10.75 19.5 10.75 C 20.5 10.75 20.5 11.75 21.5 11.75',
         style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
       },
       {
         type: 'path', role: 'pictogram',
-        d: 'M 13.5 14.427 C 14.5 14.427 14.5 13.427 15.5 13.427 C 16.5 13.427 16.5 14.427 17.5 14.427 C 18.5 14.427 18.5 13.427 19.5 13.427 C 20.5 13.427 20.5 14.427 21.5 14.427',
+        d: 'M 13.5 13.75 C 14.5 13.75 14.5 12.75 15.5 12.75 C 16.5 12.75 16.5 13.75 17.5 13.75 C 18.5 13.75 18.5 12.75 19.5 12.75 C 20.5 12.75 20.5 13.75 21.5 13.75',
         style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
       },
       {
         type: 'polyline', role: 'pictogram', closed: true,
-        points: [[17.5, 15.146], [21.604, 19.25], [17.5, 23.354], [13.396, 19.25]],
+        points: [[17.5, 15.25], [21.5, 19.25], [17.5, 23.25], [13.5, 19.25]],
         style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
       },
     ]);
@@ -539,17 +520,17 @@ describe('bodyMark() — die vermessenen Wasserrettungs-Anhänger', () => {
     )).toEqual([
       {
         type: 'path', role: 'pictogram',
-        d: 'M 13.5 15.247 C 14.5 15.247 14.5 14.247 15.5 14.247 C 16.5 14.247 16.5 15.247 17.5 15.247 C 18.5 15.247 18.5 14.247 19.5 14.247 C 20.5 14.247 20.5 15.247 21.5 15.247',
+        d: 'M 13.5 15 C 14.5 15 14.5 14 15.5 14 C 16.5 14 16.5 15 17.5 15 C 18.5 15 18.5 14 19.5 14 C 20.5 14 20.5 15 21.5 15',
         style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
       },
       {
         type: 'path', role: 'pictogram',
-        d: 'M 13.5 16.847 C 14.5 16.847 14.5 15.847 15.5 15.847 C 16.5 15.847 16.5 16.847 17.5 16.847 C 18.5 16.847 18.5 15.847 19.5 15.847 C 20.5 15.847 20.5 16.847 21.5 16.847',
+        d: 'M 13.5 16.6 C 14.5 16.6 14.5 15.6 15.5 15.6 C 16.5 15.6 16.5 16.6 17.5 16.6 C 18.5 16.6 18.5 15.6 19.5 15.6 C 20.5 15.6 20.5 16.6 21.5 16.6',
         style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
       },
       {
         type: 'polyline', role: 'pictogram', closed: true,
-        points: [[17.5, 17.533], [20.785, 20.818], [17.5, 24.103], [14.215, 20.818]],
+        points: [[17.5, 17.64], [20.68, 20.82], [17.5, 24], [14.32, 20.82]],
         style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
       },
     ]);
@@ -560,13 +541,8 @@ describe('bodyMark() — die vermessenen Wasserrettungs-Anhänger', () => {
     )).toEqual([
       {
         type: 'path', role: 'pictogram',
-        d: 'M 11.25 13.765 H 23.75 V 14.015 C 23.75 17.86 21.355 20.25 17.5 20.25 C 13.645 20.25 11.25 17.86 11.25 14.015 Z',
-        style: { fill: 'schwarz', stroke: 'none' },
-      },
-      {
-        type: 'path', role: 'pictogram',
-        d: 'M 11.753 14.265 H 23.247 C 23.149 17.706 20.991 19.75 17.5 19.75 C 14.009 19.75 11.851 17.706 11.753 14.265 Z',
-        style: { fill: 'weiss', stroke: 'none' },
+        d: 'M 11.5 14 H 23.5 C 23.5 17.75 21.25 20 17.5 20 C 13.75 20 11.5 17.75 11.5 14 Z',
+        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
       },
     ]);
     expect(() => bodyMarkWithContext(
@@ -857,16 +833,17 @@ describe('bodyMark() — gebänderte Logistikkörper', () => {
     const marks = bodyMarkWithContext(
       'meal-preparation', { kind: 'trailer', bodyVariant: 'foot-band' }, trailerBodyMm,
     );
-    expect(marks).toEqual([logisticsSpoonPath(12), cateringPath(20, 15)]);
-    expect(boundsOfMm(marks[0]!)).toEqual({ minX: 10.5, minY: 9.5, maxX: 13.5, maxY: 20 });
-    expect(boundsOfMm(marks[1]!)).toEqual({ minX: 15, minY: 10, maxX: 24.5, maxY: 20 });
+    // G.2.3: am Anhänger liegen Löffel und Schüssel 0,5 mm tiefer als an der Formation.
+    expect(boundsOfMm(marks[0]!)).toEqual({ minX: 10.5, minY: 10, maxX: 13.5, maxY: 20.5 });
+    expect(boundsOfMm(marks[1]!)).toEqual({ minX: 15, minY: 10.5, maxX: 24.5, maxY: 20.5 });
     expect(() => bodyMarkWithContext('meal-preparation', { kind: 'trailer' }, trailerBodyMm))
       .toThrow(/nicht vermessen/);
   });
 
   it('zeichnet Instandhaltung als Mittellinie mit offenen Endbögen je Körperprofil', () => {
     for (const [context, bounds, expected] of [
-      [{ kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm, maintenancePath(16, 15)],
+      // G.7/G.1.1/G.1.5: auf der Formation mit Fußband y 14,5 (Fachreview 19.09.2026).
+      [{ kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm, maintenancePath(16, 14.5)],
       [{ kind: 'vehicle-land', bodyVariant: 'foot-band' }, landBodyMm, maintenancePath(16, 15)],
       [{ kind: 'trailer', bodyVariant: 'foot-band' }, trailerBodyMm, maintenancePath(17.5, 15)],
       [{ kind: 'circle-12', bodyVariant: 'foot-band' }, circleBodyMm, maintenancePath(16, 15.5)],
@@ -875,9 +852,9 @@ describe('bodyMark() — gebänderte Logistikkörper', () => {
       expect(marks).toEqual([expected]);
       expect(boundsOfMm(marks[0]!)).toEqual({
         minX: (bounds.minX + bounds.maxX) / 2 - 9,
-        minY: context.kind === 'circle-12' ? 12.5 : 12,
+        minY: context.kind === 'circle-12' ? 12.5 : context.kind === 'formation' ? 11.5 : 12,
         maxX: (bounds.minX + bounds.maxX) / 2 + 9,
-        maxY: context.kind === 'circle-12' ? 18.5 : 18,
+        maxY: context.kind === 'circle-12' ? 18.5 : context.kind === 'formation' ? 17.5 : 18,
       });
     }
     for (const [kind, bounds] of [
@@ -964,9 +941,11 @@ describe('bodyMark() — gebänderte Logistikkörper', () => {
 });
 
 describe('bodyMark() — Brandbekämpfung für C.1', () => {
-  it('zeichnet Brandbekämpfung für C.1 randbündig ohne rechten Horizontalast', () => {
+  // Seit dem Fachreview vom 19.09.2026: Die Mittellinie läuft wie in C.1.1 bis C.1.3 durch den
+  // Verzweigungspunkt bis zur rechten Kante (Pixelvergleich danach diff 0,0000).
+  it('zeichnet Brandbekämpfung für C.1 randbündig mit durchgehender Mittellinie', () => {
     expect(bodyMark('fire-fighting', formationBodyMm)).toEqual([
-      line(1, 16, 21, 16),
+      line(1, 16, 31, 16),
       line(21, 16, 31, 6),
       line(21, 16, 31, 26),
     ]);
@@ -1067,7 +1046,8 @@ describe('bodyMark() — H.2 Tierdekontamination', () => {
     expect(veterinaryV).toEqual({
       type: 'polyline',
       role: 'pictogram',
-      points: [[9, 9], [12, 9], [18, 23.6], [24, 9], [27, 9]],
+      // Fachreview 19.09.2026: Scheitel y 23,5 (Innenkante 22,846 bei Gehrung 0,65).
+      points: [[9, 9], [12, 9], [18, 23.5], [24, 9], [27, 9]],
       style: {
         fill: 'none',
         stroke: 'schwarz',
@@ -1077,42 +1057,76 @@ describe('bodyMark() — H.2 Tierdekontamination', () => {
   });
 
   it('hält die zwei kurzen kreuzenden Pfeildiagonalen kompakt links unten und vom Veterinär-V getrennt', () => {
-    // Sichtbare H.2-Quelle: die zwei Punkte um (4,583|18) und (10,417|18) tragen nur zwei
-    // kurze kreuzende Pfeildiagonalen in x = 3,75…11,25 und y = 16,75…23,25 mm. Sie reichen
-    // nicht bis zum Veterinär-V, dessen linker Schenkel in dieser unteren Zone erst deutlich
-    // rechts davon liegt. Die frühere globale compactX-Verschiebung erzeugte dagegen Diagonalen
-    // bis x = 19,75 und ließ sie das V kreuzen.
+    // Fachreview 19.09.2026, an H.2 nachgemessen: Scheiben um (4,586|18) und (10,414|18), zwei
+    // Diagonalen unter 45° mit Kreuzung (7,5|19,5), die in den Winkelecken (11|23) und (4|23)
+    // enden; Winkel 2 mm hoch und 2 mm breit. Alles bleibt links vom Veterinär-V.
     const marks = bodyMark('h-veterinary-decontamination', formationBodyMm);
     expect(marks.slice(1)).toEqual([
       {
-        type: 'circle', role: 'pictogram', cx: 4.583, cy: 18, r: 1.25,
+        type: 'circle', role: 'pictogram', cx: 4.586, cy: 18, r: 1.25,
         style: { fill: 'schwarz', stroke: 'none' },
       },
       {
-        type: 'circle', role: 'pictogram', cx: 10.417, cy: 18, r: 1.25,
+        type: 'circle', role: 'pictogram', cx: 10.414, cy: 18, r: 1.25,
         style: { fill: 'schwarz', stroke: 'none' },
       },
       {
         type: 'polyline', role: 'pictogram',
-        points: [[5.818, 18.167], [10.75, 22.4]],
+        points: [[5.293, 17.293], [11, 23]],
         style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
       },
       {
         type: 'polyline', role: 'pictogram',
-        points: [[3.75, 20.75], [3.75, 23.25], [6, 23.25]],
+        points: [[4, 21], [4, 23], [6, 23]],
         style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
       },
       {
         type: 'polyline', role: 'pictogram',
-        points: [[9.182, 18.167], [4.25, 22.4]],
+        points: [[9.707, 17.293], [4, 23]],
         style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
       },
       {
         type: 'polyline', role: 'pictogram',
-        points: [[9, 23.25], [11.25, 23.25], [11.25, 20.75]],
+        points: [[9, 23], [11, 23], [11, 21]],
         style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
       },
     ]);
+  });
+});
+
+describe('bodyMark() — Kombinationsfassungen aus der Markenmenge (Fachreview 19.09.2026)', () => {
+  const barYOf = (marks: readonly Primitive[]): number | undefined => {
+    const bar = marks.find((mark) =>
+      mark.type === 'line' && mark.y1 === mark.y2 && mark.x2 - mark.x1 === 8);
+    return bar?.type === 'line' ? bar.y1 : undefined;
+  };
+
+  it('setzt die Arztleiste allein auf y 22, in F.1.12#alternative auf y 24 und in F.1.13 auf y 21', () => {
+    expect(barYOf(bodyMark('physician', formationBodyMm))).toBe(22);
+    expect(barYOf(bodyMarkWithContext('physician', {
+      kind: 'formation', bodyMarks: ['patient-transport', 'physician', 'intensive-care'],
+    }, formationBodyMm))).toBe(24);
+    expect(barYOf(bodyMarkWithContext('physician', {
+      kind: 'formation', bodyMarks: ['care', 'physician', 'ring-7mm-offset-down-1mm'],
+    }, formationBodyMm))).toBe(21);
+  });
+
+  it('zeichnet den Patiententransport in F.1.22 ohne Teilung, Ring r 5 um (16|18,5)', () => {
+    const marks = bodyMarkWithContext('patient-transport', {
+      kind: 'formation', bodyMarks: ['care', 'patient-transport'],
+    }, formationBodyMm);
+    expect(marks[0]).toMatchObject({ type: 'circle', cx: 16, cy: 18.5, r: 5 });
+    expect(marks.some((mark) => mark.type === 'line' && mark.x1 === 1)).toBe(false);
+  });
+
+  it('setzt die Arztleiste in F.2.5#alternative auf y 23 und fällt sonst auf die Einzelfassung zurück', () => {
+    expect(barYOf(bodyMarkWithContext('physician', {
+      kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair',
+      bodyMarks: ['patient-transport', 'intensive-care', 'physician'],
+    }, landBodyMm))).toBe(23);
+    expect(barYOf(bodyMarkWithContext('physician', {
+      kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', bodyMarks: ['physician', 'care'],
+    }, landBodyMm))).toBe(22);
   });
 });
 
@@ -1122,7 +1136,7 @@ describe('bodyMark() — H.3 Schlacht- und Untersuchungsgruppe', () => {
     expect(veterinaryV).toEqual({
       type: 'polyline',
       role: 'pictogram',
-      points: [[9, 9], [12, 9], [18, 23.6], [24, 9], [27, 9]],
+      points: [[9, 9], [12, 9], [18, 23.5], [24, 9], [27, 9]],
       style: {
         fill: 'none',
         stroke: 'schwarz',
@@ -1295,10 +1309,20 @@ describe('bodyMark() — F.1.3-Mobilmodul', () => {
     ]);
   });
 
+  // Fachreview 19.09.2026: Die Liege ist je Datei nachgemessen — F.1.3 (Fußband) Leiste y 19,
+  // Beine 15…20,5; F.1.19 (Formation) Leiste y 22, Beine 18…24.
   it('zeichnet das Ruhebett mit Pfosten, gewölbter Liegefläche und Mittellinie', () => {
-    const marks = bodyMark('temporary-accommodation-resting', formationBodyMm);
-    expect(marks).toEqual(expect.arrayContaining([
-      line(11, 14.5, 11, 20), line(21, 14.5, 21, 20), line(11, 18.75, 21, 18.75),
+    const footBand = bodyMarkWithContext(
+      'temporary-accommodation-resting',
+      { kind: 'formation', bodyVariant: 'foot-band' },
+      formationBodyMm,
+    );
+    expect(footBand).toEqual(expect.arrayContaining([
+      line(11, 15, 11, 20.5), line(21, 15, 21, 20.5), line(11, 19, 21, 19),
+    ]));
+    const plain = bodyMark('temporary-accommodation-resting', formationBodyMm);
+    expect(plain).toEqual(expect.arrayContaining([
+      line(11, 18, 11, 24), line(21, 18, 21, 24), line(11, 22, 21, 22),
     ]));
   });
 });
@@ -1420,7 +1444,12 @@ describe('bodyMark() — rein geometrische technische Marken aus F.1', () => {
       {
         type: 'polyline',
         role: 'pictogram',
-        points: [[11.5, 22.5], [16, 11.5], [20.5, 22.5]],
+        // Fachreview 19.09.2026: Fußpunkte auf dem Ring unter ±45° unterhalb der Mitte.
+        points: [
+          [16 - 6.5 / Math.SQRT2, 18 + 6.5 / Math.SQRT2],
+          [16, 11.5],
+          [16 + 6.5 / Math.SQRT2, 18 + 6.5 / Math.SQRT2],
+        ],
         style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
       },
     ]);
@@ -1441,31 +1470,27 @@ describe('bodyMark() — rein geometrische technische Marken aus F.1', () => {
   });
 });
 
-describe('bodyMark() — LFH-485 Strömungsrettung und getrennte Luftmarken', () => {
-  const waterWave = (baselineYMm: number): Primitive => ({
+/** Die Anhang-I-Welle von x = 12 bis 20: Tal `troughYMm`, Kämme 1 mm darüber (siehe `iWave`). */
+function anhangIWave(troughYMm: number, crestYMm: number): Primitive {
+  return {
     type: 'path',
     role: 'pictogram',
     d:
-      `M 20 ${baselineYMm} C 19.604 ${baselineYMm} 19.416 ${baselineYMm - 0.188} ` +
-      `19.178 ${baselineYMm - 0.427} C 18.923 ${baselineYMm - 0.682} ` +
-      `18.605 ${baselineYMm - 1} 18.002 ${baselineYMm - 1} ` +
-      `C 17.399 ${baselineYMm - 1} 17.081 ${baselineYMm - 0.682} ` +
-      `16.826 ${baselineYMm - 0.427} C 16.587 ${baselineYMm - 0.188} ` +
-      `16.399 ${baselineYMm} 16.003 ${baselineYMm} ` +
-      `C 15.606 ${baselineYMm} 15.417 ${baselineYMm - 0.188} ` +
-      `15.179 ${baselineYMm - 0.427} C 14.924 ${baselineYMm - 0.682} ` +
-      `14.605 ${baselineYMm - 1} 14.002 ${baselineYMm - 1} ` +
-      `C 13.398 ${baselineYMm - 1} 13.08 ${baselineYMm - 0.682} ` +
-      `12.824 ${baselineYMm - 0.427} C 12.586 ${baselineYMm - 0.188} ` +
-      `12.398 ${baselineYMm} 12.001 ${baselineYMm}`,
+      `M 12 ${troughYMm} C 13 ${troughYMm} 13 ${crestYMm} 14 ${crestYMm} ` +
+      `C 15 ${crestYMm} 15 ${troughYMm} 16 ${troughYMm} ` +
+      `C 17 ${troughYMm} 17 ${crestYMm} 18 ${crestYMm} ` +
+      `C 19 ${crestYMm} 19 ${troughYMm} 20 ${troughYMm}`,
     style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
-  });
+  };
+}
+
+describe('bodyMark() — LFH-485 Strömungsrettung und getrennte Luftmarken', () => {
 
   it('hält die kompakte Wasserrettungsmarke unter der oberen Inhaltszone', () => {
     expect(bodyMark('formation-water-rescue-lower-zone' as BodyMarkId, formationBodyMm)).toEqual([
-      waterWave(13.25),
-      waterWave(15.25),
-      outline([[16, 16.646], [19.854, 20.5], [16, 24.354], [12.146, 20.5]], true),
+      anhangIWave(13.5, 12.5),
+      anhangIWave(15.5, 14.5),
+      outline([[16, 17], [19.5, 20.5], [16, 24], [12.5, 20.5]], true),
     ]);
   });
 
@@ -1521,67 +1546,30 @@ describe('bodyMark() — LFH-485 Strömungsrettung und getrennte Luftmarken', ()
 });
 
 describe('bodyMark() — LFH-484 Umweltgefahren als eigene technische Composite-Marke', () => {
-  const waterWave = (baselineYMm: number): Primitive => ({
-    type: 'path',
-    role: 'pictogram',
-    d: (() => {
-      const y = (offsetMm: number) => Number((baselineYMm + offsetMm).toFixed(3));
-      return `M 20 ${y(0)} C 19.604 ${y(0)} 19.416 ${y(-0.188)} ` +
-        `19.178 ${y(-0.427)} C 18.923 ${y(-0.682)} 18.605 ${y(-1)} 18.002 ${y(-1)} ` +
-        `C 17.399 ${y(-1)} 17.081 ${y(-0.682)} 16.826 ${y(-0.427)} ` +
-        `C 16.587 ${y(-0.188)} 16.399 ${y(0)} 16.003 ${y(0)} ` +
-        `C 15.606 ${y(0)} 15.417 ${y(-0.188)} 15.179 ${y(-0.427)} ` +
-        `C 14.924 ${y(-0.682)} 14.605 ${y(-1)} 14.002 ${y(-1)} ` +
-        `C 13.398 ${y(-1)} 13.08 ${y(-0.682)} 12.824 ${y(-0.427)} ` +
-        `C 12.586 ${y(-0.188)} 12.398 ${y(0)} 12.001 ${y(0)}`;
-    })(),
-    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
-  });
 
-  it('hält die verschmolzene Scheiben-/Schaft-/Klammerkontur und den Wasserteil literal fest', () => {
+  it('baut Scheiben, Schäfte, Haken und den Wasserteil aus eigenen Primitiven', () => {
     const marks = bodyMark(
       'formation-hooked-crossed-disks-over-lowered-wave-diamond' as BodyMarkId,
       formationBodyMm,
     );
-    expect(marks).toEqual([
-      {
-        type: 'path',
-        role: 'pictogram',
-        d:
-          'M 11.83565 8.150195 C 11.83565 7.460869 12.396212 6.899955 13.085537 6.899955 ' +
-          'C 13.4302 6.899955 13.74276 7.040007 13.96889 7.26649 ' +
-          'L 15.999471 9.296365 L 18.030052 7.26649 ' +
-          'C 18.256535 7.040007 18.568742 6.899955 18.913404 6.899955 ' +
-          'C 19.60273 6.899955 20.163291 7.460869 20.163291 8.150195 ' +
-          'C 20.163291 8.83952 19.60273 9.400434 18.913404 9.400434 ' +
-          'C 18.282993 9.400434 17.76547 8.929478 17.680803 8.321644 ' +
-          'L 16.3526 9.649847 L 19.249248 12.546495 L 19.249248 11.150206 ' +
-          'L 19.749132 11.150206 L 19.749132 13.400214 L 17.499124 13.400214 ' +
-          'L 17.499124 12.899977 L 18.895413 12.899977 L 15.999118 10.003329 ' +
-          'L 13.102823 12.899977 L 14.499113 12.899977 L 14.499113 13.400214 ' +
-          'L 12.249104 13.400214 L 12.249104 11.150206 L 12.748989 11.150206 ' +
-          'L 12.748989 12.546495 L 15.645636 9.649847 L 14.317785 8.321997 ' +
-          'C 14.233119 8.929478 13.715596 9.400434 13.085184 9.400434 ' +
-          'C 12.395859 9.400434 11.835297 8.83952 11.835297 8.150195 Z',
-        style: { fill: 'schwarz', stroke: 'none' },
-      },
-      waterWave(16),
-      waterWave(17.6),
-      {
-        type: 'path',
-        role: 'pictogram',
-        d:
-          'M 16 18.283 L 19.535 21.818 L 16 25.354 L 12.464 21.818 Z ' +
-          'M 16 18.99 L 13.171 21.818 L 16 24.647 L 18.828 21.818 Z',
-        style: { fill: 'schwarz', fillRule: 'evenodd', stroke: 'none' },
-      },
-    ]);
-    expect(boundsOfMm(marks[0]!)).toEqual({
-      minX: 11.835297,
-      minY: 6.899955,
-      maxX: 20.163291,
-      maxY: 13.400214,
+    const disk = (cx: number): Primitive => ({
+      type: 'circle', role: 'pictogram', cx, cy: 8.15, r: 1.25,
+      style: { fill: 'schwarz', stroke: 'none' },
     });
+    expect(marks).toEqual([
+      disk(13.1),
+      disk(18.9),
+      line(19.5, 13.15, 13.8, 7.45),
+      line(12.5, 13.15, 18.2, 7.45),
+      outline([[19.5, 11.15], [19.5, 13.15], [17.5, 13.15]]),
+      outline([[12.5, 11.15], [12.5, 13.15], [14.5, 13.15]]),
+      anhangIWave(16, 15),
+      anhangIWave(17.6, 16.6),
+      outline([[16, 18.64], [19.18, 21.82], [16, 25], [12.82, 21.82]], true),
+    ]);
+    // Die obere Hälfte bleibt in der Zone, die die Referenz belegt (Tinte 11,84…20,16 ×
+    // 6,90…13,40 mm; Scheiben- und Hakenkanten).
+    expect(boundsOfMm(marks[0]!)).toEqual({ minX: 11.85, minY: 6.9, maxX: 14.35, maxY: 9.4 });
   });
 
   it('lehnt die Composite-Marke außerhalb der normalen 30 × 20-mm-Formation ab', () => {
@@ -1634,7 +1622,8 @@ describe('bodyMark() — die drei getrennt vermessenen Fahrzeugkörper aus F.2',
     )).toEqual([
       line(16, 6, 16, 20.99),
       line(2.74, 14, 29.26, 14),
-      line(12, 17.75, 20, 17.75),
+      // Fachreview 19.09.2026: Arztleiste auf y 18 (F.2.6/F.2.7, Band 17,75…18,25).
+      line(12, 18, 20, 18),
     ]);
     expect(() => bodyMarkWithContext('physician', { kind: 'vehicle-air' }, airBodyMm))
       .toThrow(/nicht vermessen/);
@@ -1688,18 +1677,19 @@ describe('bodyMark() — die beiden Sondermarken aus F.2', () => {
       { kind: 'vehicle-air', bodyVariant: 'raised-hull' },
       raisedAirBodyMm,
     );
+    // Fachreview 19.09.2026: Mittellinien statt der früheren Außenkonturpunkte.
     expect(marks).toEqual([
-      line(24, 9.65, 24, 15.9),
+      line(24, 10, 24, 16),
       {
         type: 'polyline',
         role: 'pictogram',
-        points: [[21.82, 11.82], [24, 9.65], [26.18, 11.82]],
+        points: [[22, 12], [24, 10], [26, 12]],
         style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
       },
       {
         type: 'polyline',
         role: 'pictogram',
-        points: [[24, 15.9], [26.35, 18], [24, 19.65], [21.65, 18], [24, 15.9]],
+        points: [[24, 16], [26, 18], [24, 20], [22, 18], [24, 16]],
         style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
       },
     ]);
@@ -1714,15 +1704,15 @@ describe('bodyMark() — die beiden Sondermarken aus F.2', () => {
       { kind: 'vehicle-air', bodyVariant: 'raised-hull' },
       shifted,
     )).toEqual([
-      line(27, 11.65, 27, 17.9),
+      line(27, 12, 27, 18),
       {
         type: 'polyline', role: 'pictogram',
-        points: [[24.82, 13.82], [27, 11.65], [29.18, 13.82]],
+        points: [[25, 14], [27, 12], [29, 14]],
         style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
       },
       {
         type: 'polyline', role: 'pictogram',
-        points: [[27, 17.9], [29.35, 20], [27, 21.65], [24.65, 20], [27, 17.9]],
+        points: [[27, 18], [29, 20], [27, 22], [25, 20], [27, 18]],
         style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
       },
     ]);
@@ -1746,7 +1736,8 @@ describe('bodyMark() — F.2.10 bis F.2.17 auf normalen, gebänderten und Anhän
       'care', { kind: 'vehicle-land', bodyVariant: 'foot-band' }, landBodyMm,
     )).toEqual([{
       type: 'polyline', role: 'pictogram',
-      points: [[1, 23], [16, 8], [31, 23]],
+      // Fachreview 19.09.2026: Schenkelenden im Fußband bei y 23,5 (an F.2.14 gemessen).
+      points: [[1, 23.5], [16, 8], [31, 23.5]],
       style: outlineStyle,
     }]);
     expect(bodyMarkWithContext('care', { kind: 'trailer' }, trailerBodyMm)).toEqual([{
@@ -1765,7 +1756,8 @@ describe('bodyMark() — F.2.10 bis F.2.17 auf normalen, gebänderten und Anhän
         style: outlineStyle,
       },
       line(12, 17, 20, 17),
-      line(16, 15, 16, 23),
+      // Fachreview 19.09.2026: Fuß an F.2.11 nachgemessen (Scheitel y 22,85, Enden y 23,85).
+      line(16, 15, 16, 22.85),
       {
         type: 'polyline', role: 'pictogram', points: [[14, 15], [12, 17], [14, 19]],
         style: outlineStyle,
@@ -1775,7 +1767,7 @@ describe('bodyMark() — F.2.10 bis F.2.17 auf normalen, gebänderten und Anhän
         style: outlineStyle,
       },
       {
-        type: 'polyline', role: 'pictogram', points: [[14, 24], [16, 23], [18, 24]],
+        type: 'polyline', role: 'pictogram', points: [[14, 23.85], [16, 22.85], [18, 23.85]],
       style: outlineStyle,
       },
     ]);
@@ -1817,20 +1809,16 @@ describe('bodyMark() — F.2.10 bis F.2.17 auf normalen, gebänderten und Anhän
       throw new Error('Mobile Küche muss aus Löffelsilhouette und Schüsselpfad bestehen.');
     }
     expect(spoon.style).toEqual({ fill: 'schwarz', stroke: 'none' });
-    expect(boundsOfMm(spoon)).toEqual({
-      minX: 12.113991, minY: 14.2678, maxX: 13.88634, maxY: 21.60015,
-    });
-    expect(boundsOfMm(bowl)).toEqual({
-      minX: 14.500171, minY: 14.500347, maxX: 21.068339, maxY: 21.500138,
-    });
-    expect(bowl.d).toBe(
-      'M 21.068339 16.327377 ' +
-      'C 20.454508 15.197434, 19.289464 14.500347, 18.000243 14.500347 ' +
-      'C 16.070379 14.500347, 14.500171 16.070732, 14.500171 18.000419 ' +
-      'C 14.500171 19.930106, 16.070379 21.500138, 18.000243 21.500138 ' +
-      'C 19.269532 21.500138, 20.425404 20.819808, 21.045233 19.716853 ' +
-      'L 18 18 Z',
-    );
+    // Fachreview 19.09.2026: eigene Konstruktion statt der Referenzstützpunkte. Löffel mit
+    // gerundeten Maßen, Schüssel als Kreis r 3,5 um (18|18) mit Mundschenkeln der Steigung 1 : 2.
+    expect(boundsOfMm(spoon)).toEqual({ minX: 12.11, minY: 14.27, maxX: 13.89, maxY: 21.6 });
+    const bowlBounds = boundsOfMm(bowl);
+    expect(bowlBounds.minX).toBeCloseTo(14.5, 3);
+    expect(bowlBounds.maxX).toBeCloseTo(18 + 3.5 * Math.cos(Math.atan(0.5)), 3);
+    expect(bowlBounds.minY).toBeCloseTo(14.5, 2);
+    expect(bowlBounds.maxY).toBeCloseTo(21.5, 2);
+    expect(bowl.d.startsWith('M 21.1305 16.4348 C')).toBe(true);
+    expect(bowl.d.endsWith('21.1305 19.5652 L 18 18 Z')).toBe(true);
     expect(bowl.style).toEqual(outlineStyle);
 
     expect(bodyMarkWithContext(
@@ -1862,7 +1850,7 @@ describe('bodyMark() — F.2.10 bis F.2.17 auf normalen, gebänderten und Anhän
     );
     expect(marks[0]).toMatchObject({ type: 'circle', cx: 19, cy: 21, r: 6 });
     expect(marks).toContainEqual(line(15, 19, 23, 19));
-    expect(marks).toContainEqual(line(19, 17, 19, 25));
+    expect(marks).toContainEqual(line(19, 17, 19, 24.85));
   });
 
   it('verschiebt auch Löffelsilhouette und 3,5-mm-Schüssel nur über die platzierte Hülle', () => {
@@ -1871,14 +1859,12 @@ describe('bodyMark() — F.2.10 bis F.2.17 auf normalen, gebänderten und Anhän
       'meal-preparation', { kind: 'vehicle-land', bodyVariant: 'foot-band' }, shifted,
     );
     if (spoon === undefined || bowl === undefined) throw new Error('unreachable');
-    expect(boundsOfMm(spoon)).toEqual({
-      minX: 15.113991, minY: 16.2678, maxX: 16.88634, maxY: 23.60015,
-    });
+    expect(boundsOfMm(spoon)).toEqual({ minX: 15.11, minY: 16.27, maxX: 16.89, maxY: 23.6 });
     const bowlBounds = boundsOfMm(bowl);
-    expect(bowlBounds.minX).toBeCloseTo(17.500171, 9);
-    expect(bowlBounds.minY).toBeCloseTo(16.500347, 9);
-    expect(bowlBounds.maxX).toBeCloseTo(24.068339, 9);
-    expect(bowlBounds.maxY).toBeCloseTo(23.500138, 9);
+    expect(bowlBounds.minX).toBeCloseTo(17.5, 3);
+    expect(bowlBounds.minY).toBeCloseTo(16.5, 2);
+    expect(bowlBounds.maxX).toBeCloseTo(21 + 3.5 * Math.cos(Math.atan(0.5)), 3);
+    expect(bowlBounds.maxY).toBeCloseTo(23.5, 2);
   });
 });
 
@@ -2041,13 +2027,13 @@ describe('bodyMark() — was nicht fortgeschrieben wird', () => {
   it('zeichnet die eigens vermessenen Wasserrettungs- und Wasserfahrzeugfassungen nur auf der normalen Formation', () => {
     // I.1.9–I.1.12: Die Quellen führen nicht die Kapitel-4-Box (4.5.5: 24 × 16 mm,
     // 4.5.8: 24 × 16 mm), sondern zwei eigenständige, mittige Zeichen in der 30 × 20-mm-
-    // Körperhülle. Wasserrettung hat zwei Wellenläufe zwischen y=12…13 und y=14…15. Die
-    // miter-expandierte Quellraute braucht wegen des projektweiten Round-Joins an jeder Spitze
-    // 0,1036 mm Kompensation. Wasserfahrzeuge ergänzen das flache Boot auf der Mittellinie
-    // 11…21 × 15…20 und je zwei Wellen links 2…10 und rechts 22…30. So bleiben die in der
-    // Quelle sichtbaren 0,75 mm zwischen den fertigen 0,5-mm-Konturen frei.
+    // Körperhülle. Wasserrettung hat zwei Wellenläufe zwischen y=12…13 und y=14…15 und eine
+    // geschlossene Raute um (16|20) mit halber Diagonale 4 mm (Mittellinie, runde Ecken; die
+    // Kanten liegen damit genau auf den Kanten der Referenz). Wasserfahrzeuge ergänzen das
+    // flache Boot auf der Mittellinie 11…21 × 15…20 und je zwei Wellen links 2…10 und rechts
+    // 22…30. So bleiben die in der Quelle sichtbaren 0,75 mm zwischen den fertigen
+    // 0,5-mm-Konturen frei.
     const outline = { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM } as const;
-    const roundJoinTipCompensationMm = DEFAULT_STROKE_WIDTH_MM * (Math.SQRT2 - 1) / 2;
     const waterRescue: Primitive[] = [
       {
         type: 'path', role: 'pictogram',
@@ -2060,14 +2046,8 @@ describe('bodyMark() — was nicht fortgeschrieben wird', () => {
         style: outline,
       },
       {
-        type: 'polyline', role: 'pictogram',
-        points: [
-          [12 - roundJoinTipCompensationMm, 20],
-          [16, 16 - roundJoinTipCompensationMm],
-          [20 + roundJoinTipCompensationMm, 20],
-          [16, 24 + roundJoinTipCompensationMm],
-          [12 - roundJoinTipCompensationMm, 20],
-        ],
+        type: 'polyline', role: 'pictogram', closed: true,
+        points: [[16, 16], [20, 20], [16, 24], [12, 20]],
         style: outline,
       },
     ];
@@ -2099,12 +2079,7 @@ describe('bodyMark() — was nicht fortgeschrieben wird', () => {
 
     expect(bodyMark('water-rescue', formationBodyMm)).toEqual(waterRescue);
     expect(bodyMark('watercraft-operations', formationBodyMm)).toEqual(watercraftOperations);
-    expect(boundsOfMm(waterRescue[2]!)).toEqual({
-      minX: 12 - roundJoinTipCompensationMm,
-      minY: 16 - roundJoinTipCompensationMm,
-      maxX: 20 + roundJoinTipCompensationMm,
-      maxY: 24 + roundJoinTipCompensationMm,
-    });
+    expect(boundsOfMm(waterRescue[2]!)).toEqual({ minX: 12, minY: 16, maxX: 20, maxY: 24 });
     expect(boundsOfMm(watercraftOperations[0]!)).toEqual({
       minX: 11, minY: 15, maxX: 21, maxY: 20,
     });

@@ -16,8 +16,13 @@ const BLACK_STROKE = Object.freeze({
 const DIAMOND_SIDE_MM = 13 * Math.SQRT2;
 
 /**
- * Gemeinsame, rein geometrische Fassung der offenen Kappe. Sie ist keine oeffentliche
+ * Gemeinsame, rein geometrische Fassung der offenen Kappe. Sie ist keine öffentliche
  * Funktionsachse: D.3.14 und D.3.15 bleiben zwei getrennte Leadership-Definitionen.
+ *
+ * Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert: Die Raute ist ein 0,5-mm-
+ * Strich, dessen Mittellinie die Ecken bei 3 und 29 mm hat (Außenkante der Referenz 2,65 mm,
+ * Innenkante 3,35 mm). Die Kappenlinie liegt mittig zwischen Kappenöffnung (7,75 mm) und
+ * Körperoberkante (8,25 mm), also auf 8 mm, und läuft von Rautenkante zu Rautenkante.
  */
 function openCapBody(fill: ColorToken): readonly Primitive[] {
   return [
@@ -34,17 +39,17 @@ function openCapBody(fill: ColorToken): readonly Primitive[] {
     {
       type: 'polyline',
       role: 'pictogram',
-      points: [[16, 2.647], [29.354, 16], [16, 29.354], [2.647, 16]],
+      points: [[16, 3], [29, 16], [16, 29], [3, 16]],
       closed: true,
       style: { ...BLACK_STROKE },
     },
     {
       type: 'line',
       role: 'pictogram',
-      x1: 11.603,
-      y1: 7.75,
-      x2: 20.396,
-      y2: 7.75,
+      x1: 11,
+      y1: 8,
+      x2: 21,
+      y2: 8,
       style: { ...BLACK_STROKE },
     },
   ];
@@ -113,7 +118,7 @@ export const OPEN_CAP_FUNCTION_PICTOGRAMS = [
     title: 'Fachberater THW',
     referenceAsset: 'D.3.14_Fachberater THW.svg',
     viewBox: DEFAULT_VIEWBOX_MM,
-    box: { xMm: 2.397, yMm: 2.397, widthMm: 29.105, heightMm: 27.207 },
+    box: { xMm: 2.75, yMm: 2.75, widthMm: 28.75, heightMm: 26.5 },
     primitives: [
       ...openCapBody('blau'),
       text(
@@ -133,7 +138,7 @@ export const OPEN_CAP_FUNCTION_PICTOGRAMS = [
     title: 'Rotkreuzbeauftragter',
     referenceAsset: 'D.3.15_Rotkreuzbeauftragter.svg',
     viewBox: DEFAULT_VIEWBOX_MM,
-    box: { xMm: 2.397, yMm: 2.397, widthMm: 28.603, heightMm: 27.207 },
+    box: { xMm: 2.75, yMm: 2.75, widthMm: 28.25, heightMm: 26.5 },
     primitives: [
       ...openCapBody('weiss'),
       text(
