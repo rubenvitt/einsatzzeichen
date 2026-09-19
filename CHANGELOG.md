@@ -1,3 +1,39 @@
+## Katalog
+
+Die Darstellungen wurden nach einem Fachreview grundlegend überarbeitet und an die offizielle Referenz angeglichen. Dabei wurden **93 Abweichungen** korrigiert, die durch geschätzte Maße, ungenaue Winkel und inkorrekte Strichstärken entstanden waren.
+
+**Neu konstruiert:**
+- Alle 92 Piktogramme aus Kapitel 4 (Einsatzmittel)
+- Zustandszeichen 5.8
+- Alle Zeichen der Anhänge J, K, L, M
+- Körpermarken in den Anhängen C, D, F, G, H, I und N
+
+**Verbesserungen:**
+- Pixelvergleich mit der Referenz: **350 von 544 Darstellungen** sind nun deckungsgleich (vorher: 99)
+- Geometrie wird jetzt systematisch aus abgelesenen Referenzmaßen konstruiert statt nach Augenmaß gezeichnet
+- Schriften werden in exportierte SVGs eingebettet, damit taktische Zeichen auch ohne installierte Arimo-Schrift korrekt dargestellt werden
+- Körpermarken positionieren sich automatisch nach der Anzahl der vorhandenen Marken
+- Verbesserte Kontrastberechnung: Flächen mit eigener Kontur werden nicht mehr als Vordergrund gewertet
+
+## Rendering-Engine
+
+- **Schriftgewichte:** Textprimitive unterstützen jetzt `fontWeight` (400/700) mit statischer Arimo-Bold-Instanz
+- **Weiße Innenkonturen:** Neue `whiteInnerContour`-Unterstützung für Anhang E
+- **Clipping:** Optimierte Clipping-Gates pro Blatt, Körperkontur zählt nun zur Körperfläche
+- **Kontrastausnahmen:** Spezialbehandlung für roten Text (u.a. 4.1.6–4.1.8, 5.8.1, L.10) und 4.2.2 im Druck
+
+## Review-Werkzeug
+
+- Fachreview-Befunde vom 19.09.2026 übernommen: **81 Darstellungen freigegeben**
+- Anhängerfahrwerke werden jetzt korrekt am Anhänger dargestellt
+- SVGs betten die Arimo-Schrift als Data-URI ein, damit Zeichen in `<img>`-Tags korrekt gerendert werden
+
+## Dokumentation
+
+- **Produktvision präzisiert:** Einsatzzeichen ist eine **Grammatik taktischer Zeichen**, kein statischer Katalog – der Motor erzeugt alle systemkonformen Kombinationen
+- Neue Architekturentscheidung: Paketschnitt und Grammatik-Motor als Scope-Definition
+- Spezifikation für exakte Referenzparität dokumentiert
+
 ## Fachreview-Werkzeug
 
 Version 1.2.0 führt ein neues internes Werkzeug zur fachlichen Überprüfung von Zeichen durch Personen mit einsatztaktischer Fachkunde ein. Das Werkzeug ersetzt das bisherige 544-zeilige Markdown-Dossier durch eine interaktive Oberfläche mit drei Spalten: Navigator mit Fortschrittsanzeige je Bereich, große Zeichendarstellung und Befundtafel.
