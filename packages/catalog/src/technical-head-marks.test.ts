@@ -17,8 +17,19 @@ describe('technicalHeadMark()', () => {
     });
   });
 
+  it('liefert die beiden Vertikalbalken von E.1.31 (Achsen x 12 und 20 mm)', () => {
+    const bar = (x: number) => ({
+      type: 'rect', role: 'head', x, y: 0, width: 1.5, height: 4,
+      style: { fill: 'schwarz', stroke: 'none' },
+    });
+    expect(technicalHeadMark('double-vertical-bar')).toEqual({
+      heightMm: 4,
+      primitives: [bar(11.25), bar(19.25)],
+    });
+  });
+
   it('fällt bei unbekannten technischen Kopfmarken nicht zurück', () => {
-    expect(() => Reflect.apply(technicalHeadMark, undefined, ['double-vertical-bar']))
+    expect(() => Reflect.apply(technicalHeadMark, undefined, ['triple-vertical-bar']))
       .toThrow(/Unbekannte technische Kopfmarke/);
   });
 

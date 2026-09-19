@@ -1,17 +1,23 @@
 import { DEFAULT_STROKE_WIDTH_MM, type Primitive, type Style } from '@einsatzzeichen/schema';
 import { deepFreeze } from '../../readonly-data.js';
-import { strokeCapability as icon } from '../authoring.js';
 import { defineCapability } from '../catalog-definition.js';
 
+/** Strich der Referenz: 1,417 pt = 0,5 mm, schwarz, ohne Füllung. */
 const STROKE: Style = { stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM, fill: 'none' };
+/** Vollfläche ohne Kontur. */
+const SOLID: Style = { fill: 'schwarz', stroke: 'none' };
 
 function line(x1: number, y1: number, x2: number, y2: number): Primitive {
   return { type: 'line', role: 'pictogram', x1, y1, x2, y2, style: STROKE };
 }
 
 /**
- * Piktogramme des Kapitels 4.3 (Fähigkeiten). Alle Geometrien sind eigenständige Konstruktionen
- * nach der Bildidee der Referenz; Maße und Koordinaten stammen nicht aus den Referenzdateien.
+ * Piktogramme des Kapitels 4.3 (Fähigkeiten). Maße an der Referenz abgelesen, Geometrie
+ * eigenständig konstruiert: Striche als Striche mit 0,5 mm Stärke, Flächen als gefüllte
+ * Rechtecke, Kreise und Polygone (Umrechnung mm = pt × 32 / 90,709).
+ *
+ * Ohne Pfad-Primitive ist die Hülle vollständig berechenbar; das Box-Gate fordert dann Gleichheit
+ * von Box und Koordinatenhülle (ohne Strichbreiten-Aufschlag).
  */
 export const FIRE_FIGHTING_PICTOGRAMS = deepFreeze([
   defineCapability({
@@ -19,47 +25,90 @@ export const FIRE_FIGHTING_PICTOGRAMS = deepFreeze([
     id: 'fire-fighting',
     title: 'Brandbekämpfung',
     referenceAsset: '4.3.1_Brandbekämpfung.svg',
-    // Zusicherung des Autors, vom Box-Gate gegen die Geometrie geprüft. Ohne Pfad-Primitive ist
-    // die Hülle vollständig berechenbar, das Gate fordert deshalb Gleichheit statt Enthaltung.
-    box: { xMm: 3, yMm: 9, widthMm: 23, heightMm: 14 },
-    primitives: [line(3, 16, 26, 16), line(16, 16, 26, 9), line(16, 16, 26, 23)],
+    box: { xMm: 1, yMm: 6, widthMm: 29, heightMm: 20 },
+    // Waagerechter Balken von 1 bis 30 mm auf halber Höhe; zwei Schenkel ab der Mitte (16|16)
+    // nach rechts oben und rechts unten, Steigung 10 : 12 (Kappenmitten bei (28|6) und (28|26)).
+    primitives: [line(1, 16, 30, 16), line(16, 16, 28, 6), line(16, 16, 28, 26)],
   }),
   defineCapability({
     section: '4.3.2',
     id: 'service-water',
     title: 'Löschwasser, Brauchwasser',
     referenceAsset: '4.3.2_Löschwasser Brauchwasser.svg',
-    box: { xMm: 4, yMm: 12.5, widthMm: 24, heightMm: 5 },
+    box: { xMm: 1, yMm: 13, widthMm: 30, heightMm: 6 },
     primitives: [
       {
         type: 'path',
         role: 'pictogram',
-        // Eigenständige Konstruktion nach der Bildidee von 4.3.2: ein Wasserband aus zwei
-        // Wellenbergen mit Tal in der Mitte, 1 mm dick, mittig auf dem unverschobenen Körper.
-        // Oberkante von links nach rechts, Unterkante zurück, geschlossen — deshalb eine
-        // gefüllte Fläche und kein Strich.
-        //
-        // Nur absolute M, C, V und Z. Bewusst keine Ellipsenbögen (`A`): ihre Parameter sind
-        // keine Koordinaten, das Box-Gate könnte sie nicht prüfen. Alle Kontrollpunkte liegen
-        // in der deklarierten Box; da eine Bezierkurve die konvexe Hülle ihrer Kontrollpunkte
-        // nie verlässt, ist damit die ganze Kurve darin.
+        // Eine Welle als 0,5-mm-Strich: Start (1|19), Wellenberge bei (7,5|13) und (24,5|13),
+        // Tal bei (16|19), Ende (31|19). Kontrollpunkte als Mittel der beiden Strichkanten der
+        // Referenz abgelesen, symmetrisch zur Mittelachse x = 16 mm.
         d:
-          'M 4 16.5 C 6 16.5 8 12.5 10 12.5 C 12 12.5 14 16.5 16 16.5 ' +
-          'C 18 16.5 20 12.5 22 12.5 C 24 12.5 26 16.5 28 16.5 V 17.5 ' +
-          'C 26 17.5 24 13.5 22 13.5 C 20 13.5 18 17.5 16 17.5 ' +
-          'C 14 17.5 12 13.5 10 13.5 C 8 13.5 6 17.5 4 17.5 Z',
-        style: { fill: 'schwarz', stroke: 'none' },
+          'M 1 19 C 2.3 18.55 2.95 17.35 3.6 16.1 C 4.45 14.55 5.25 13 7.5 13 ' +
+          'C 9.2 13 10.3 14.4 11.45 15.85 C 12.65 17.4 13.95 19 16 19 ' +
+          'C 18.05 19 19.35 17.4 20.55 15.85 C 21.7 14.4 22.8 13 24.5 13 ' +
+          'C 26.75 13 27.55 14.55 28.4 16.1 C 29.05 17.35 29.7 18.55 31 19',
+        style: STROKE,
       },
     ],
   }),
-  icon({ section: '4.3.3', id: 'foam-agent', title: 'Schaummittel',
-    referenceAsset: '4.3.3_Schaummittel.svg', d: 'M 8 9 H 24 L 16 23 Z' }),
-  icon({ section: '4.3.4', id: 'solid-extinguishing-agent', title: 'Sonderlöschmittel, fest',
-    referenceAsset: '4.3.4_Sonderlöschmittel fest.svg', d: 'M 10 10 H 22 V 22 H 10 Z' }),
-  icon({ section: '4.3.5', id: 'gaseous-extinguishing-agent', title: 'Sonderlöschmittel, gasförmig',
+  defineCapability({
+    section: '4.3.3',
+    id: 'foam-agent',
+    title: 'Schaummittel',
+    referenceAsset: '4.3.3_Schaummittel.svg',
+    // Gefülltes, auf der Spitze stehendes Dreieck: Oberkante 8–24 mm bei y = 10, Spitze (16|23).
+    box: { xMm: 8, yMm: 10, widthMm: 16, heightMm: 13 },
+    primitives: [
+      {
+        type: 'polyline',
+        role: 'pictogram',
+        points: [[8, 10], [24, 10], [16, 23]],
+        closed: true,
+        style: SOLID,
+      },
+    ],
+  }),
+  defineCapability({
+    section: '4.3.4',
+    id: 'solid-extinguishing-agent',
+    title: 'Sonderlöschmittel, fest',
+    referenceAsset: '4.3.4_Sonderlöschmittel fest.svg',
+    // Gefülltes Quadrat, 12 mm Kantenlänge, mittig (Referenz: 34,016 pt ab 28,346 pt).
+    box: { xMm: 10, yMm: 10, widthMm: 12, heightMm: 12 },
+    primitives: [
+      { type: 'rect', role: 'pictogram', x: 10, y: 10, width: 12, height: 12, style: SOLID },
+    ],
+  }),
+  defineCapability({
+    section: '4.3.5',
+    id: 'gaseous-extinguishing-agent',
+    title: 'Sonderlöschmittel, gasförmig',
     referenceAsset: '4.3.5_Sonderlöschmittel gasförmig.svg',
-    d: 'M 16 10 C 12 10 10 12 10 16 C 10 20 12 22 16 22 C 20 22 22 20 22 16 C 22 12 20 10 16 10 Z' }),
-  icon({ section: '4.3.6', id: 'respiratory-protection', title: 'Atemschutz',
+    // Gefüllter Kreis, Radius 6,5 mm (Referenz: 18,425 pt), mittig.
+    box: { xMm: 9.5, yMm: 9.5, widthMm: 13, heightMm: 13 },
+    primitives: [{ type: 'circle', role: 'pictogram', cx: 16, cy: 16, r: 6.5, style: SOLID }],
+  }),
+  defineCapability({
+    section: '4.3.6',
+    id: 'respiratory-protection',
+    title: 'Atemschutz',
     referenceAsset: '4.3.6_Atemschutz.svg',
-    d: 'M 13 8 H 19 Q 21 8 21 10 V 19 Q 21 22 18 22 H 14 Q 11 22 11 19 V 10 Q 11 8 13 8 Z M 16 22 V 24 M 14 24 H 18' }),
+    box: { xMm: 11, yMm: 2, widthMm: 10, heightMm: 28 },
+    primitives: [
+      {
+        type: 'path',
+        role: 'pictogram',
+        // Maskenkörper als 0,5-mm-Strich: 10 × 22,5 mm (x 11–21, y 2–24,5), obere Ecken mit
+        // 1 mm, untere mit 4 mm Radius (Viertelkreise als Bézierkurven, k = 0,5523).
+        d:
+          'M 12 2 H 20 C 20.552 2 21 2.448 21 3 V 20.5 C 21 22.709 19.209 24.5 17 24.5 ' +
+          'H 15 C 12.791 24.5 11 22.709 11 20.5 V 3 C 11 2.448 11.448 2 12 2 Z',
+        style: STROKE,
+      },
+      // Verbindung zum Filter und Filter als Kreis mit 2 mm Radius um (16|28).
+      line(16, 24.5, 16, 26),
+      { type: 'circle', role: 'pictogram', cx: 16, cy: 28, r: 2, style: STROKE },
+    ],
+  }),
 ] as const);

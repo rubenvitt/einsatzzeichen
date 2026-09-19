@@ -83,25 +83,54 @@ function filledPolygon(points: readonly (readonly [number, number])[]): Primitiv
   };
 }
 
-function waterWave(centerXMm: number, baselineYMm: number): Primitive {
-  const x = (offsetMm: number) => Number((centerXMm + offsetMm).toFixed(3));
-  const y = (offsetMm: number) => Number((baselineYMm + offsetMm).toFixed(3));
+/**
+ * Die Welle der Wasserrettungsmarken aus Anhang I (I.1.x, I.2.x, I.5.x), als Strich konstruiert.
+ * Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert: 8 mm breit, 1 mm hoch, vier
+ * Halbwellen zu je 2 mm. Sie beginnt und endet im Wellental `troughYMm` (x = links und links + 8),
+ * die Kämme liegen bei links + 2 und links + 6, ein drittes Tal bei links + 4. Jede Halbwelle ist
+ * ein kubischer Bogen mit waagerechten Tangenten und 1 mm Henkellänge; damit steht die Tangente
+ * im Wendepunkt unter 45° — so, wie die Konturkanten der Referenz verlaufen.
+ */
+function iWave(leftXMm: number, troughYMm: number): Primitive {
+  // Auf 1 µm gerundet, damit z. B. 16,6 − 1 nicht als 15.600000000000001 im Pfad landet.
+  const round = (valueMm: number): number => Math.round(valueMm * 1e6) / 1e6;
+  const crestYMm = round(troughYMm - 1);
+  const troughMm = round(troughYMm);
+  const halfWaves = [0, 2, 4, 6].map((offsetMm, index) => {
+    const handleX = round(leftXMm + offsetMm + 1);
+    const endX = round(leftXMm + offsetMm + 2);
+    const fromY = index % 2 === 0 ? troughMm : crestYMm;
+    const toY = index % 2 === 0 ? crestYMm : troughMm;
+    return `C ${handleX} ${fromY} ${handleX} ${toY} ${endX} ${toY}`;
+  });
   return {
     type: 'path',
     role: 'pictogram',
-    d:
-      `M ${x(4)} ${y(0)} C ${x(3.604)} ${y(0)} ${x(3.416)} ${y(-0.188)} ` +
-      `${x(3.178)} ${y(-0.427)} C ${x(2.923)} ${y(-0.682)} ` +
-      `${x(2.605)} ${y(-1)} ${x(2.002)} ${y(-1)} ` +
-      `C ${x(1.399)} ${y(-1)} ${x(1.081)} ${y(-0.682)} ` +
-      `${x(0.826)} ${y(-0.427)} C ${x(0.587)} ${y(-0.188)} ` +
-      `${x(0.399)} ${y(0)} ${x(0.003)} ${y(0)} ` +
-      `C ${x(-0.394)} ${y(0)} ${x(-0.583)} ${y(-0.188)} ` +
-      `${x(-0.821)} ${y(-0.427)} C ${x(-1.076)} ${y(-0.682)} ` +
-      `${x(-1.395)} ${y(-1)} ${x(-1.998)} ${y(-1)} ` +
-      `C ${x(-2.602)} ${y(-1)} ${x(-2.92)} ${y(-0.682)} ` +
-      `${x(-3.176)} ${y(-0.427)} C ${x(-3.414)} ${y(-0.188)} ` +
-      `${x(-3.602)} ${y(0)} ${x(-3.999)} ${y(0)}`,
+    d: `M ${round(leftXMm)} ${troughMm} ${halfWaves.join(' ')}`,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  };
+}
+
+/**
+ * Die Raute der Wasserrettungsmarken aus Anhang I: Mittelpunkt und halbe Diagonale der
+ * Strichmitte, an den Referenzkonturen abgelesen. Die Referenz hat Gehrungsecken, der Renderer
+ * zeichnet runde Ecken. Die Spitzen werden bewusst nicht nach außen verschoben: das hielte die
+ * Tintenspitze, versetzte aber alle vier Kanten um 0,07 mm — im Rasterbild die größere
+ * Abweichung als die um 0,1 mm abgerundete Spitze.
+ */
+function iDiamond(cxMm: number, cyMm: number, halfDiagonalMm: number): Primitive {
+  const round = (valueMm: number): number => Math.round(valueMm * 1e6) / 1e6;
+  const [x, y, h] = [round(cxMm), round(cyMm), halfDiagonalMm];
+  return {
+    type: 'polyline',
+    role: 'pictogram',
+    closed: true,
+    points: [
+      [x, round(y - h)],
+      [round(x + h), y],
+      [x, round(y + h)],
+      [round(x - h), y],
+    ],
     style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
   };
 }
@@ -167,48 +196,15 @@ function quartering(bounds: BoundsMm): Primitive[] {
 /**
  * I.1.9, I.1.10, I.1.11 und I.1.12: Wasserrettung auf der normalen 30 × 20-mm-Formation.
  *
- * Die beiden Wellen wechseln auf den durch die Konturkanten zurückgerechneten Mittellinien
- * zwischen y=12…13 und y=14…15. Das acht Millimeter hohe Rautensignal ist mittig bei (16|20).
- * Die Quelle speichert seine 0,5-mm-Kontur bereits expandiert mit Miter-Spitzen. Der Renderer
- * zeichnet dagegen projektweit Round-Joins; deshalb werden die vier Mittellinienspitzen um
- * 0,1036 mm nach außen kompensiert. So bleiben die sichtbaren Ink-Bounds 11,646…20,354 bzw.
- * 15,646…24,354 mm erhalten. Das unterscheidet sich grundlegend von 4.5.8: dessen 24 × 16-mm-
- * Box führt die Wellen über fast die gesamte Breite und setzt die Raute tiefer.
+ * Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert: Wellentäler bei y = 13
+ * und 15 (die Wellen schwingen zwischen 12…13 und 14…15), Raute um (16 | 20) mit halber
+ * Diagonale 4 mm. Das unterscheidet sich grundlegend von 4.5.8: dessen 24 × 16-mm-Box führt die
+ * Wellen über fast die gesamte Breite und setzt die Raute tiefer.
  */
 function formationWaterRescue(bounds: BoundsMm): Primitive[] {
   const dx = bounds.minX - 1;
   const dy = bounds.minY - 6;
-  const point = (x: number, y: number) => `${x + dx} ${y + dy}`;
-  const outlineStyle = {
-    fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM,
-  } as const;
-  const wave = (middleY: number): Primitive => ({
-    type: 'path', role: 'pictogram',
-    d: `M ${point(12, middleY + 0.5)} ` +
-      `C ${point(13, middleY + 0.5)} ${point(13, middleY - 0.5)} ${point(14, middleY - 0.5)} ` +
-      `C ${point(15, middleY - 0.5)} ${point(15, middleY + 0.5)} ${point(16, middleY + 0.5)} ` +
-      `C ${point(17, middleY + 0.5)} ${point(17, middleY - 0.5)} ${point(18, middleY - 0.5)} ` +
-      `C ${point(19, middleY - 0.5)} ${point(19, middleY + 0.5)} ${point(20, middleY + 0.5)}`,
-    style: outlineStyle,
-  });
-  const roundJoinTipCompensationMm = DEFAULT_STROKE_WIDTH_MM * (Math.SQRT2 - 1) / 2;
-  return [
-    wave(12.5),
-    wave(14.5),
-    {
-      type: 'polyline', role: 'pictogram',
-      points: [
-        [12 - roundJoinTipCompensationMm, 20],
-        [16, 16 - roundJoinTipCompensationMm],
-        [20 + roundJoinTipCompensationMm, 20],
-        [16, 24 + roundJoinTipCompensationMm],
-        [12 - roundJoinTipCompensationMm, 20],
-      ].map(
-        ([x, y]) => [x + dx, y + dy] as const,
-      ),
-      style: outlineStyle,
-    },
-  ];
+  return [iWave(12 + dx, 13 + dy), iWave(12 + dx, 15 + dy), iDiamond(16 + dx, 20 + dy, 4)];
 }
 
 /**
@@ -333,6 +329,68 @@ function crossedSwabs(cx: number, cy: number): Primitive[] {
  * genannten Anhangsreferenzen gemessen und gegen die Hülle formuliert: die bestehenden F-Marken
  * an den F-Dateien, `fire-fighting` an C.1.1 bis C.1.3.
  */
+/**
+ * Liege der Notunterkunft (`temporary-accommodation-resting`) in der Formation. Maße an F.1.19
+ * und F.1.3 abgelesen, Geometrie eigenständig konstruiert: Beine auf x = Mitte ± 5, von 4 mm
+ * über der Leiste bis `bed.legBelowBarMm` darunter; der Bogen erreicht 3 mm über der Leiste
+ * seinen Scheitel. Die beiden Dateien führen verschiedene Bögen, deshalb stehen Ansatzhöhe und
+ * Griffe je Datei (als Kubik an Außen- und Innenkante der Referenz angeglichen, Abweichung
+ * ≤ 0,009 mm):
+ *
+ * | Datei | Leiste | Bogenansatz | erster Griff | Scheitelgriff |
+ * |---|---|---|---|---|
+ * | F.1.19 | y 22 | auf der Leiste | 0,15 einwärts, 2,0 hoch | 2,8 |
+ * | F.1.3 | y 19 | 0,5 über der Leiste | 0,05 einwärts, 2,3 hoch | 1,6 |
+ */
+function formationRestingBed(
+  cx: number,
+  barYMm: number,
+  bed: {
+    readonly legBelowBarMm: number;
+    readonly arcStartAboveBarMm: number;
+    readonly startHandle: readonly [number, number];
+    readonly apexHandleMm: number;
+  },
+): Primitive[] {
+  const legBelowBarMm = bed.legBelowBarMm;
+  const endY = barYMm - bed.arcStartAboveBarMm;
+  const apexY = barYMm - 3;
+  const [inward, up] = bed.startHandle;
+  const h = bed.apexHandleMm;
+  return [
+    stroke(cx - 5, barYMm - 4, cx - 5, barYMm + legBelowBarMm),
+    stroke(cx + 5, barYMm - 4, cx + 5, barYMm + legBelowBarMm),
+    {
+      type: 'path',
+      role: 'pictogram',
+      d:
+        `M ${cx - 5} ${endY} C ${cx - 5 + inward} ${endY - up}, ${cx - h} ${apexY}, ${cx} ${apexY} ` +
+        `C ${cx + h} ${apexY}, ${cx + 5 - inward} ${endY - up}, ${cx + 5} ${endY}`,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+    stroke(cx - 5, barYMm, cx + 5, barYMm),
+  ];
+}
+
+/** Ring mit acht Speichen (Mittellinien und Diagonalen), die Speichen enden auf dem Ring. */
+function formationEightSpokeRing(cx: number, cy: number, rMm: number): Primitive[] {
+  const diagonalMm = rMm / Math.SQRT2;
+  return [
+    {
+      type: 'circle',
+      role: 'pictogram',
+      cx,
+      cy,
+      r: rMm,
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+    },
+    stroke(cx - rMm, cy, cx + rMm, cy),
+    stroke(cx, cy - rMm, cx, cy + rMm),
+    stroke(cx - diagonalMm, cy - diagonalMm, cx + diagonalMm, cy + diagonalMm),
+    stroke(cx + diagonalMm, cy - diagonalMm, cx - diagonalMm, cy + diagonalMm),
+  ];
+}
+
 const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
   'water-rescue': formationWaterRescue,
   'watercraft-operations': formationWatercraftOperations,
@@ -425,12 +483,16 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
     ];
   },
 
-  /** C.1.1 bis C.1.3: die an der Formation vermessene Löschmarke mit zwei rechten Diagonalen. */
+  /**
+   * C.1.1 bis C.1.3: die an der Formation vermessene Löschmarke mit zwei rechten Diagonalen. Die
+   * Mittellinie läuft von Kante zu Kante durch den Verzweigungspunkt; in der Referenz endet sie
+   * nicht an der Verzweigung (Befund im Fachreview vom 19.09.2026: „unvollständig").
+   */
   'fire-fighting': (bounds) => {
     const cy = (bounds.minY + bounds.maxY) / 2;
     const branchX = bounds.maxX - 10;
     return [
-      stroke(bounds.minX, cy, branchX, cy),
+      stroke(bounds.minX, cy, bounds.maxX, cy),
       stroke(branchX, cy, bounds.maxX, bounds.minY),
       stroke(branchX, cy, bounds.maxX, bounds.maxY),
     ];
@@ -439,24 +501,18 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
   'formation-two-waves-diamond': formationTwoWavesDiamond,
 
   /**
-   * I.1.17 bis I.1.20: die kompakte Wasserrettungsmarke der Formation. Gegenüber der
+   * I.1.15 bis I.1.20: die kompakte Wasserrettungsmarke der Formation. Gegenüber der
    * eigenständigen Kapitel-4-Fassung bleiben Wellen und Raute bewusst in der unteren
-   * Inhaltszone; die Maße sind an den vier I-g-Dateien separat vermessen.
+   * Inhaltszone. Maße an der Referenz abgelesen (I.1.15, I.1.17, I.1.19), Geometrie
+   * eigenständig konstruiert: Wellentäler 7,5 und 9,5 mm unter der Körperoberkante, Raute um
+   * (Mitte | Oberkante + 14,5) mit halber Diagonale 3,5 mm.
    */
   'formation-water-rescue-lower-zone': (bounds) => {
     const cx = (bounds.minX + bounds.maxX) / 2;
     return [
-      waterWave(cx, bounds.minY + 7.25),
-      waterWave(cx, bounds.minY + 9.25),
-      {
-        ...outline([
-          [cx, bounds.minY + 10.646],
-          [cx + 3.854, bounds.minY + 14.5],
-          [cx, bounds.minY + 18.354],
-          [cx - 3.854, bounds.minY + 14.5],
-        ]),
-        closed: true,
-      },
+      iWave(cx - 4, bounds.minY + 7.5),
+      iWave(cx - 4, bounds.minY + 9.5),
+      iDiamond(cx, bounds.minY + 14.5, 3.5),
     ];
   },
 
@@ -465,44 +521,44 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
    * Scheiben-/Schaft-/Klammerkontur und der tiefer gesetzte Wasser-/Rautenteil sind gemeinsam
    * an genau diesen beiden normalen Formationskörpern vermessen. Weder die Kapitel-4-Box noch
    * die höher stehenden Wasserrettungsfassungen aus I-c, I-e oder I-g werden fortgeschrieben.
+   *
+   * Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert (Koordinaten für die
+   * Formation mit Oberkante y = 6):
+   *
+   * - zwei gefüllte Scheiben r = 1,25 mm um (13,1 | 8,15) und (18,9 | 8,15);
+   * - zwei Schäfte unter 45°, die sich bei (16 | 9,65) kreuzen. Jeder Schaft läuft 1 mm neben
+   *   dem Scheibenmittelpunkt vorbei und endet am Lotfuß, also innerhalb der Scheibe;
+   * - an den unteren Enden je ein rechtwinkliger Haken mit 2 mm Schenkeln, Ecke bei
+   *   (12,5 | 13,15) bzw. (19,5 | 13,15);
+   * - Wellentäler bei y = 16 und 17,6, Raute um (16 | 21,82) mit halber Diagonale 3,18 mm.
    */
   'formation-hooked-crossed-disks-over-lowered-wave-diamond': (bounds) => {
     const dx = bounds.minX - 1;
     const dy = bounds.minY - 6;
-    const point = (x: number, y: number): string => `${x + dx} ${y + dy}`;
-    const ink = { fill: 'schwarz', stroke: 'none' } as const;
-    const upperContour = [
-      `M ${point(11.83565, 8.150195)}`,
-      `C ${point(11.83565, 7.460869)} ${point(12.396212, 6.899955)} ${point(13.085537, 6.899955)}`,
-      `C ${point(13.4302, 6.899955)} ${point(13.74276, 7.040007)} ${point(13.96889, 7.26649)}`,
-      `L ${point(15.999471, 9.296365)} L ${point(18.030052, 7.26649)}`,
-      `C ${point(18.256535, 7.040007)} ${point(18.568742, 6.899955)} ${point(18.913404, 6.899955)}`,
-      `C ${point(19.60273, 6.899955)} ${point(20.163291, 7.460869)} ${point(20.163291, 8.150195)}`,
-      `C ${point(20.163291, 8.83952)} ${point(19.60273, 9.400434)} ${point(18.913404, 9.400434)}`,
-      `C ${point(18.282993, 9.400434)} ${point(17.76547, 8.929478)} ${point(17.680803, 8.321644)}`,
-      `L ${point(16.3526, 9.649847)} L ${point(19.249248, 12.546495)} L ${point(19.249248, 11.150206)}`,
-      `L ${point(19.749132, 11.150206)} L ${point(19.749132, 13.400214)} L ${point(17.499124, 13.400214)}`,
-      `L ${point(17.499124, 12.899977)} L ${point(18.895413, 12.899977)} L ${point(15.999118, 10.003329)}`,
-      `L ${point(13.102823, 12.899977)} L ${point(14.499113, 12.899977)} L ${point(14.499113, 13.400214)}`,
-      `L ${point(12.249104, 13.400214)} L ${point(12.249104, 11.150206)} L ${point(12.748989, 11.150206)}`,
-      `L ${point(12.748989, 12.546495)} L ${point(15.645636, 9.649847)} L ${point(14.317785, 8.321997)}`,
-      `C ${point(14.233119, 8.929478)} ${point(13.715596, 9.400434)} ${point(13.085184, 9.400434)}`,
-      `C ${point(12.395859, 9.400434)} ${point(11.835297, 8.83952)} ${point(11.835297, 8.150195)} Z`,
-    ].join(' ');
+    const disk = (cx: number): Primitive => ({
+      type: 'circle',
+      role: 'pictogram',
+      cx: cx + dx,
+      cy: 8.15 + dy,
+      r: 1.25,
+      style: { fill: 'schwarz', stroke: 'none' },
+    });
+    const hook = (cornerX: number, legX: number): Primitive =>
+      outline([
+        [cornerX + dx, 11.15 + dy],
+        [cornerX + dx, 13.15 + dy],
+        [legX + dx, 13.15 + dy],
+      ]);
     return [
-      { type: 'path', role: 'pictogram', d: upperContour, style: ink },
-      waterWave(16 + dx, 16 + dy),
-      waterWave(16 + dx, 17.6 + dy),
-      {
-        type: 'path',
-        role: 'pictogram',
-        d:
-          `M ${16 + dx} ${18.283 + dy} L ${19.535 + dx} ${21.818 + dy} ` +
-          `L ${16 + dx} ${25.354 + dy} L ${12.464 + dx} ${21.818 + dy} Z ` +
-          `M ${16 + dx} ${18.99 + dy} L ${13.171 + dx} ${21.818 + dy} ` +
-          `L ${16 + dx} ${24.647 + dy} L ${18.828 + dx} ${21.818 + dy} Z`,
-        style: { fill: 'schwarz', fillRule: 'evenodd', stroke: 'none' },
-      },
+      disk(13.1),
+      disk(18.9),
+      stroke(19.5 + dx, 13.15 + dy, 13.8 + dx, 7.45 + dy),
+      stroke(12.5 + dx, 13.15 + dy, 18.2 + dx, 7.45 + dy),
+      hook(19.5, 17.5),
+      hook(12.5, 14.5),
+      iWave(12 + dx, 16 + dy),
+      iWave(12 + dx, 17.6 + dy),
+      iDiamond(16 + dx, 21.82 + dy, 3.18),
     ];
   },
 
@@ -527,20 +583,24 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
     const { minX, minY, maxX, maxY } = bounds;
     const cx = (minX + maxX) / 2;
     const ink = { fill: 'schwarz', stroke: 'none' } as const;
+    // H.2, Maße an der Referenz abgelesen (Fachreview 19.09.2026): V-Scheitel (18|23,5) —
+    // Innenkante 22,846 bei Gehrung 0,65; Scheiben r 1,25 um (4,586|18) und (10,414|18);
+    // zwei Diagonalen unter 45° mit Kreuzung (7,5|19,5), die in den Winkelecken (11|23) und (4|23)
+    // enden; Winkel mit Schenkeln von y 21 bis 23 und 2 mm waagerecht.
     return [
       outline([
         [minX + 8, minY + 3],
         [minX + 11, minY + 3],
-        [cx + 2, maxY - 2.4],
+        [cx + 2, maxY - 2.5],
         [maxX - 7, minY + 3],
         [maxX - 4, minY + 3],
       ]),
-      { type: 'circle', role: 'pictogram', cx: minX + 3.583, cy: maxY - 8, r: 1.25, style: ink },
-      { type: 'circle', role: 'pictogram', cx: minX + 9.417, cy: maxY - 8, r: 1.25, style: ink },
-      outline([[minX + 4.818, maxY - 7.833], [minX + 9.75, maxY - 3.6]]),
-      outline([[minX + 2.75, maxY - 5.25], [minX + 2.75, maxY - 2.75], [minX + 5, maxY - 2.75]]),
-      outline([[minX + 8.182, maxY - 7.833], [minX + 3.25, maxY - 3.6]]),
-      outline([[minX + 8, maxY - 2.75], [minX + 10.25, maxY - 2.75], [minX + 10.25, maxY - 5.25]]),
+      { type: 'circle', role: 'pictogram', cx: minX + 3.586, cy: maxY - 8, r: 1.25, style: ink },
+      { type: 'circle', role: 'pictogram', cx: minX + 9.414, cy: maxY - 8, r: 1.25, style: ink },
+      outline([[minX + 4.293, maxY - 8.707], [minX + 10, maxY - 3]]),
+      outline([[minX + 3, maxY - 5], [minX + 3, maxY - 3], [minX + 5, maxY - 3]]),
+      outline([[minX + 8.707, maxY - 8.707], [minX + 3, maxY - 3]]),
+      outline([[minX + 8, maxY - 3], [minX + 10, maxY - 3], [minX + 10, maxY - 5]]),
     ];
   },
 
@@ -552,7 +612,8 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
       outline([
         [minX + 8, minY + 3],
         [minX + 11, minY + 3],
-        [cx + 2, maxY - 2.4],
+        // Derselbe V wie in H.2 (Innenkante des Scheitels 22,846): Scheitel y 23,5.
+        [cx + 2, maxY - 2.5],
         [maxX - 7, minY + 3],
         [maxX - 4, minY + 3],
       ]),
@@ -634,25 +695,11 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
       },
     ];
   },
-  'temporary-accommodation-resting': (bounds) => [
-    stroke(bounds.minX + 10, bounds.minY + 8.5, bounds.minX + 10, bounds.minY + 14),
-    stroke(bounds.minX + 20, bounds.minY + 8.5, bounds.minX + 20, bounds.minY + 14),
-    {
-      type: 'path',
-      role: 'pictogram',
-      d:
-        `M ${bounds.minX + 10} ${bounds.minY + 12.75} ` +
-        `C ${bounds.minX + 12} ${bounds.minY + 10.5}, ` +
-        `${bounds.minX + 18} ${bounds.minY + 10.5}, ` +
-        `${bounds.minX + 20} ${bounds.minY + 12.75}`,
-      style: {
-        fill: 'none',
-        stroke: 'schwarz',
-        strokeWidth: DEFAULT_STROKE_WIDTH_MM,
-      },
-    },
-    stroke(bounds.minX + 10, bounds.minY + 12.75, bounds.minX + 20, bounds.minY + 12.75),
-  ],
+  /** F.1.19: Liege mit Leiste auf y 22 (Körperunterkante − 4), Beine 18…24 mm. */
+  'temporary-accommodation-resting': (bounds) =>
+    formationRestingBed((bounds.minX + bounds.maxX) / 2, bounds.minY + 16, {
+      legBelowBarMm: 2, arcStartAboveBarMm: 0, startHandle: [0.15, 2], apexHandleMm: 2.8,
+    }),
 
   /**
    * 4.6.5 Patiententransport — Teilung mit Ring und Diagonalkreuz um die Körpermitte. Gemessen an
@@ -878,7 +925,14 @@ const MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
         r: 6.5,
         style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
       },
-      outline([[cx - 4.5, cy + 6.5], [cx, cy - 4.5], [cx + 4.5, cy + 6.5]]),
+      // Dem Ring eingeschriebenes Dreieck, Maße an F.1.21 abgelesen: Spitze im Scheitel des Rings
+      // (16|11,5), Fußpunkte auf dem Ring unter ±45° unterhalb der Mitte (Schenkelmitte der
+      // Referenz trifft den Ring bei 11,39|22,58).
+      outline([
+        [cx - 6.5 / Math.SQRT2, cy + 2 + 6.5 / Math.SQRT2],
+        [cx, cy - 4.5],
+        [cx + 6.5 / Math.SQRT2, cy + 2 + 6.5 / Math.SQRT2],
+      ]),
     ];
   },
 };
@@ -917,102 +971,19 @@ const PERSON_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]
 };
 
 /**
- * I.5.1 bis I.5.3: zwei gefüllte, 0,500237-mm hohe Bézier-Wellenbänder und die innere Raute.
- * Die absoluten Exportwerte sind gegen den Mittelpunkt der übergebenen 26-mm-Raute zerlegt;
- * dadurch verschiebt I.5.2/I.5.3 die vollständige Markierung ausschließlich mit ihrer Hülle.
+ * I.5.1 bis I.5.3: zwei Wellen und die innere Raute, relativ zum Mittelpunkt der übergebenen
+ * 26-mm-Raute — I.5.2/I.5.3 verschieben die Markierung dadurch ausschließlich mit ihrer Hülle.
+ * Maße an der Referenz abgelesen (I.5.1, I.5.2): Wellentäler 5 und 3 mm über der Mitte, Raute
+ * 2,5 mm unter der Mitte mit halber Diagonale 4 mm.
  */
-function i5Wave(cxMm: number, cyMm: number, startYFromCenterMm: number): Primitive {
-  const coordinate = (value: number): number => Number(value.toFixed(9));
-  let xMm = coordinate(cxMm + 3.999955903);
-  let yMm = coordinate(cyMm + startYFromCenterMm);
-  let previousControlXMm = xMm;
-  let previousControlYMm = yMm;
-  const commands = [`M ${xMm} ${yMm}`];
-  const cubic = (
-    control1DxMm: number,
-    control1DyMm: number,
-    control2DxMm: number,
-    control2DyMm: number,
-    endDxMm: number,
-    endDyMm: number,
-  ): void => {
-    const control1XMm = coordinate(xMm + control1DxMm);
-    const control1YMm = coordinate(yMm + control1DyMm);
-    const control2XMm = coordinate(xMm + control2DxMm);
-    const control2YMm = coordinate(yMm + control2DyMm);
-    xMm = coordinate(xMm + endDxMm);
-    yMm = coordinate(yMm + endDyMm);
-    previousControlXMm = control2XMm;
-    previousControlYMm = control2YMm;
-    commands.push(`C ${control1XMm} ${control1YMm} ${control2XMm} ${control2YMm} ${xMm} ${yMm}`);
-  };
-  const smoothCubic = (
-    control2DxMm: number,
-    control2DyMm: number,
-    endDxMm: number,
-    endDyMm: number,
-  ): void => {
-    const control1XMm = coordinate(2 * xMm - previousControlXMm);
-    const control1YMm = coordinate(2 * yMm - previousControlYMm);
-    const control2XMm = coordinate(xMm + control2DxMm);
-    const control2YMm = coordinate(yMm + control2DyMm);
-    xMm = coordinate(xMm + endDxMm);
-    yMm = coordinate(yMm + endDyMm);
-    previousControlXMm = control2XMm;
-    previousControlYMm = control2YMm;
-    commands.push(`C ${control1XMm} ${control1YMm} ${control2XMm} ${control2YMm} ${xMm} ${yMm}`);
-  };
-  const vertical = (dyMm: number): void => {
-    yMm = coordinate(yMm + dyMm);
-    commands.push(`L ${xMm} ${yMm}`);
-  };
-
-  cubic(-0.395815189, 0, -0.583845043, -0.188029854, -0.821969154, -0.426506741);
-  cubic(-0.255057381, -0.255762934, -0.572908973, -0.573614526, -1.175803944, -0.573614526);
-  smoothCubic(-0.921452116, 0.317851591, -1.176509497, 0.573261749);
-  cubic(-0.238476888, 0.238829664, -0.426506741, 0.426859518, -0.823027483, 0.426859518);
-  smoothCubic(-0.585256149, -0.188029854, -0.823733036, -0.426859518);
-  cubic(-0.255410158, -0.255410158, -0.573614526, -0.573261749, -1.17721505, -0.573261749);
-  smoothCubic(-0.921804893, 0.317851591, -1.17721505, 0.573261749);
-  cubic(-0.238476888, 0.238829664, -0.426859518, 0.426859518, -0.823733036, 0.426859518);
-  vertical(0.500237022);
-  cubic(0.603600525, 0, 0.921804893, -0.317851591, 1.17721505, -0.573261749);
-  cubic(0.238476888, -0.238829664, 0.426859518, -0.426859518, 0.823733036, -0.426859518);
-  smoothCubic(0.585256149, 0.188029854, 0.823733036, 0.426859518);
-  cubic(0.255410158, 0.255410158, 0.573614526, 0.573261749, 1.17721505, 0.573261749);
-  smoothCubic(0.921452116, -0.317851591, 1.176862274, -0.573261749);
-  cubic(0.238476888, -0.238829664, 0.426506741, -0.426859518, 0.823027483, -0.426859518);
-  smoothCubic(0.583845043, 0.188029854, 0.821969154, 0.426506741);
-  cubic(0.255057381, 0.255762934, 0.572908973, 0.573614526, 1.175803944, 0.573614526);
-  vertical(-0.500237022);
-
-  return {
-    type: 'path',
-    role: 'pictogram',
-    d: `${commands.join(' ')} Z`,
-    style: { fill: 'schwarz', stroke: 'none' },
-  };
-}
-
 const PERSON_I5_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
   'double-wave-inner-diamond-8mm': (bounds) => {
     const cxMm = (bounds.minX + bounds.maxX) / 2;
     const cyMm = (bounds.minY + bounds.maxY) / 2;
     return [
-      i5Wave(cxMm, cyMm, -5.249842904),
-      i5Wave(cxMm, cyMm, -3.250305923),
-      {
-        type: 'polyline',
-        role: 'pictogram',
-        closed: true,
-        points: [
-          [cxMm, cyMm - 1.5],
-          [cxMm + 4, cyMm + 2.5],
-          [cxMm, cyMm + 6.5],
-          [cxMm - 4, cyMm + 2.5],
-        ],
-        style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
-      },
+      iWave(cxMm - 4, cyMm - 5),
+      iWave(cxMm - 4, cyMm - 3),
+      iDiamond(cxMm, cyMm + 2.5, 4),
     ];
   },
 };
@@ -1458,10 +1429,12 @@ function landFourWayStem(bounds: BoundsMm): Primitive[] {
       style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
     },
     stroke(cx - 4, cy - 2, cx + 4, cy - 2),
-    stroke(cx, cy - 4, cx, cy + 4),
+    // Fuß an F.2.11 nachgemessen: Scheitel (16|22,85), Enden (14|23,85) und (18|23,85) —
+    // Oberkante des linken Schenkels (15,75|22,689) → (13,888|23,62), Steigung 1 : 2.
+    stroke(cx, cy - 4, cx, cy + 3.85),
     outline([[cx - 2, cy - 4], [cx - 4, cy - 2], [cx - 2, cy]]),
     outline([[cx + 2, cy - 4], [cx + 4, cy - 2], [cx + 2, cy]]),
-    outline([[cx - 2, cy + 5], [cx, cy + 4], [cx + 2, cy + 5]]),
+    outline([[cx - 2, cy + 4.85], [cx, cy + 3.85], [cx + 2, cy + 4.85]]),
   ];
 }
 
@@ -1486,61 +1459,70 @@ function landShiftedEightSpokes(bounds: BoundsMm): Primitive[] {
   ];
 }
 
+/**
+ * Kreisbogen um (cx|cy) mit Radius r von `fromDeg` nach `toDeg` (Grad, y nach unten, wachsend im
+ * Uhrzeigersinn), als Folge kubischer Viertel-oder-kleiner-Bögen mit dem Griff (4/3)·tan(φ/4)·r.
+ * Liefert nur die Segmente ab dem Startpunkt (`C …`), ohne `M`.
+ */
+function arcSegments(cx: number, cy: number, r: number, fromDeg: number, toDeg: number): string {
+  const count = Math.ceil(Math.abs(toDeg - fromDeg) / 90);
+  const step = ((toDeg - fromDeg) / count) * (Math.PI / 180);
+  const k = (4 / 3) * Math.tan(step / 4) * r;
+  const n = (value: number): number => Number(value.toFixed(4));
+  const parts: string[] = [];
+  for (let i = 0; i < count; i += 1) {
+    const a0 = fromDeg * (Math.PI / 180) + i * step;
+    const a1 = a0 + step;
+    parts.push(
+      `C ${n(cx + r * Math.cos(a0) - k * Math.sin(a0))} ${n(cy + r * Math.sin(a0) + k * Math.cos(a0))}, ` +
+        `${n(cx + r * Math.cos(a1) + k * Math.sin(a1))} ${n(cy + r * Math.sin(a1) - k * Math.cos(a1))}, ` +
+        `${n(cx + r * Math.cos(a1))} ${n(cy + r * Math.sin(a1))}`,
+    );
+  }
+  return parts.join(' ');
+}
+
+/**
+ * F.2.13: Löffel und Schüssel der Einsatzküche am Landfahrzeug mit Fußband. Maße an der Referenz
+ * abgelesen, Geometrie eigenständig konstruiert (die frühere Fassung trug die Stützpunkte der
+ * Referenzkontur mit sechs Nachkommastellen):
+ *
+ * - Löffel, gefüllt, Achse x 13: Kopf 1,78 mm breit von y 14,27 bis zum Hals bei y 16,4, Stiel
+ *   0,78 mm breit bis y 21,6 mit runder Spitze.
+ * - Schüssel: Kreis r 3,5 um (18|18) (Strichband 3,25…3,75), rechts offen; die Mundschenkel
+ *   laufen mit Steigung 1 : 2 vom Mittelpunkt auf den Kreis (Außenecke der Referenz 18,55|18,03).
+ */
 function landMealPreparation(bounds: BoundsMm): Primitive[] {
   const dxMm = bounds.minX - 1;
   const dyMm = bounds.minY - 5.75;
+  const sx = 13 + dxMm;
+  const y = (value: number): number => Number((value + dyMm).toFixed(4));
+  const x = (offset: number): number => Number((sx + offset).toFixed(4));
+  const bowlX = 18 + dxMm;
+  const bowlY = 18 + dyMm;
+  const mouthDeg = (Math.atan(0.5) * 180) / Math.PI;
+  const r = 3.5;
+  const start = (deg: number): string =>
+    `${Number((bowlX + r * Math.cos((deg * Math.PI) / 180)).toFixed(4))} ` +
+    `${Number((bowlY + r * Math.sin((deg * Math.PI) / 180)).toFixed(4))}`;
   return [
     {
-      // Die Quelle führt keine Kreis-plus-Rechteck-Abkürzung, sondern eine asymmetrische
-      // Löffelsilhouette. Ihre vier Tintenkanten sind 12,113991/14,2678/13,886340/21,600150 mm.
       type: 'path', role: 'pictogram',
       d:
-        `M ${13.88634 + dxMm} ${15.563792 + dyMm} ` +
-        `C ${13.88634 + dxMm} ${15.965957 + dyMm}, ` +
-        `${13.646805 + dxMm} ${16.24712 + dyMm}, ` +
-        `${13.391747 + dxMm} ${16.400225 + dyMm} ` +
-        `L ${13.391747 + dxMm} ${21.200101 + dyMm} ` +
-        `C ${13.391747 + dxMm} ${21.442812 + dyMm}, ` +
-        `${13.214653 + dxMm} ${21.60015 + dyMm}, ` +
-        `${13.000165 + dxMm} ${21.60015 + dyMm} ` +
-        `L ${13.000165 + dxMm} ${14.2678 + dyMm} ` +
-        `C ${13.510986 + dxMm} ${14.2678 + dyMm}, ` +
-        `${13.88634 + dxMm} ${14.680792 + dyMm}, ` +
-        `${13.88634 + dxMm} ${15.563792 + dyMm} Z ` +
-        `M ${13.000165 + dxMm} ${14.2678 + dyMm} ` +
-        `L ${13.000165 + dxMm} ${21.60015 + dyMm} ` +
-        `C ${12.785677 + dxMm} ${21.60015 + dyMm}, ` +
-        `${12.608583 + dxMm} ${21.442459 + dyMm}, ` +
-        `${12.608583 + dxMm} ${21.200101 + dyMm} ` +
-        `L ${12.608583 + dxMm} ${16.400225 + dyMm} ` +
-        `C ${12.353879 + dxMm} ${16.24712 + dyMm}, ` +
-        `${12.113991 + dxMm} ${15.965957 + dyMm}, ` +
-        `${12.113991 + dxMm} ${15.563792 + dyMm} ` +
-        `C ${12.113991 + dxMm} ${14.681145 + dyMm}, ` +
-        `${12.488992 + dxMm} ${14.2678 + dyMm}, ` +
-        `${13.000165 + dxMm} ${14.2678 + dyMm} Z`,
+        `M ${x(-0.39)} ${y(16.4)} C ${x(-0.64)} ${y(16.25)}, ${x(-0.89)} ${y(15.97)}, ` +
+        `${x(-0.89)} ${y(15.56)} C ${x(-0.89)} ${y(14.68)}, ${x(-0.51)} ${y(14.27)}, ` +
+        `${x(0)} ${y(14.27)} C ${x(0.51)} ${y(14.27)}, ${x(0.89)} ${y(14.68)}, ` +
+        `${x(0.89)} ${y(15.56)} C ${x(0.89)} ${y(15.97)}, ${x(0.64)} ${y(16.25)}, ` +
+        `${x(0.39)} ${y(16.4)} V ${y(21.21)} C ${x(0.39)} ${y(21.44)}, ${x(0.21)} ${y(21.6)}, ` +
+        `${x(0)} ${y(21.6)} C ${x(-0.21)} ${y(21.6)}, ${x(-0.39)} ${y(21.44)}, ` +
+        `${x(-0.39)} ${y(21.21)} Z`,
       style: { fill: 'schwarz', stroke: 'none' },
     },
     {
-      // Mittelpunkt (18|18), Außen-/Innenradius 3,7496/3,2501 mm: die Mittellinie ist r 3,5.
-      // Die vier Kubiken und beide Keilübergänge sind Punkt für Punkt aus dem arithmetischen
-      // Mittel der äußeren und inneren Quellkontur rekonstruiert, nicht aus dem alten r=3,75-Pfad.
       type: 'path', role: 'pictogram',
       d:
-        `M ${21.068339 + dxMm} ${16.327377 + dyMm} ` +
-        `C ${20.454508 + dxMm} ${15.197434 + dyMm}, ` +
-        `${19.289464 + dxMm} ${14.500347 + dyMm}, ` +
-        `${18.000243 + dxMm} ${14.500347 + dyMm} ` +
-        `C ${16.070379 + dxMm} ${14.500347 + dyMm}, ` +
-        `${14.500171 + dxMm} ${16.070732 + dyMm}, ` +
-        `${14.500171 + dxMm} ${18.000419 + dyMm} ` +
-        `C ${14.500171 + dxMm} ${19.930106 + dyMm}, ` +
-        `${16.070379 + dxMm} ${21.500138 + dyMm}, ` +
-        `${18.000243 + dxMm} ${21.500138 + dyMm} ` +
-        `C ${19.269532 + dxMm} ${21.500138 + dyMm}, ` +
-        `${20.425404 + dxMm} ${20.819808 + dyMm}, ` +
-        `${21.045233 + dxMm} ${19.716853 + dyMm} ` +
-        `L ${18 + dxMm} ${18 + dyMm} Z`,
+        `M ${start(-mouthDeg)} ${arcSegments(bowlX, bowlY, r, -mouthDeg, -360 + mouthDeg)} ` +
+        `L ${bowlX} ${bowlY} Z`,
       style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
     },
   ];
@@ -1584,22 +1566,6 @@ const VEHICLE_LAND_NORMAL_MARKS: Partial<
   },
 };
 
-function waterRescueWave(d: string): Primitive {
-  return {
-    type: 'path', role: 'pictogram', d,
-    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
-  };
-}
-
-function waterRescueDiamond(
-  points: readonly (readonly [number, number])[],
-): Primitive {
-  return {
-    type: 'polyline', role: 'pictogram', points, closed: true,
-    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
-  };
-}
-
 /**
  * I.2.1 bis I.2.3: zwei getrennt vermessene Wasserrettungsfassungen auf derselben normalen
  * Landfahrzeughülle. Die drei sichtbaren Räder von I.2.1 wählen Kategorie 2; die beiden äußeren
@@ -1612,47 +1578,24 @@ const VEHICLE_LAND_WATER_RESCUE_MARKS: Partial<
   'kfz-kategorie-2': (bounds) => {
     const dx = bounds.minX - 1;
     const dy = bounds.minY - 5.75;
+    // I.2.1, Maße an der Referenz abgelesen: Wellentäler bei y = 12,5 und 14,5, Raute um
+    // (16 | 20) mit halber Diagonale 4 mm.
     return [
-      waterRescueWave(
-        `M ${12 + dx} ${12 + dy} C ${13 + dx} ${11 + dy}, ${14 + dx} ${13 + dy}, ` +
-        `${15 + dx} ${12 + dy} C ${16 + dx} ${11 + dy}, ${17 + dx} ${13 + dy}, ` +
-        `${18 + dx} ${12 + dy} C ${18.667 + dx} ${11.333 + dy}, ` +
-        `${19.333 + dx} ${11.333 + dy}, ${20 + dx} ${12 + dy}`,
-      ),
-      waterRescueWave(
-        `M ${12 + dx} ${14 + dy} C ${13 + dx} ${13 + dy}, ${14 + dx} ${15 + dy}, ` +
-        `${15 + dx} ${14 + dy} C ${16 + dx} ${13 + dy}, ${17 + dx} ${15 + dy}, ` +
-        `${18 + dx} ${14 + dy} C ${18.667 + dx} ${13.333 + dy}, ` +
-        `${19.333 + dx} ${13.333 + dy}, ${20 + dx} ${14 + dy}`,
-      ),
-      waterRescueDiamond([
-        [16 + dx, 16 + dy], [20 + dx, 20 + dy],
-        [16 + dx, 24 + dy], [12 + dx, 20 + dy],
-      ]),
+      iWave(12 + dx, 12.5 + dy),
+      iWave(12 + dx, 14.5 + dy),
+      iDiamond(16 + dx, 20 + dy, 4),
     ];
   },
   'kfz-kategorie-1': (bounds) => {
     const dx = bounds.minX - 1;
     const dy = bounds.minY - 5.75;
+    // I.2.2/I.2.3, Maße an der Referenz abgelesen: Wellentäler bei y = 15 und 16,6 (die
+    // Wellen rücken enger zusammen als in I.2.1), Raute um (16 | 20,82) mit halber Diagonale
+    // 3,18 mm; ihre untere Spitze liegt wie in I.2.1 auf y = 24.
     return [
-      waterRescueWave(
-        `M ${12.818 + dx} ${14.5 + dy} C ${13.614 + dx} ${13.704 + dy}, ` +
-        `${14.409 + dx} ${15.296 + dy}, ${15.205 + dx} ${14.5 + dy} ` +
-        `C ${16 + dx} ${13.704 + dy}, ${16.796 + dx} ${15.296 + dy}, ` +
-        `${17.591 + dx} ${14.5 + dy} C ${18.121 + dx} ${13.97 + dy}, ` +
-        `${18.652 + dx} ${13.97 + dy}, ${19.182 + dx} ${14.5 + dy}`,
-      ),
-      waterRescueWave(
-        `M ${12.818 + dx} ${16.25 + dy} C ${13.614 + dx} ${15.454 + dy}, ` +
-        `${14.409 + dx} ${17.046 + dy}, ${15.205 + dx} ${16.25 + dy} ` +
-        `C ${16 + dx} ${15.454 + dy}, ${16.796 + dx} ${17.046 + dy}, ` +
-        `${17.591 + dx} ${16.25 + dy} C ${18.121 + dx} ${15.72 + dy}, ` +
-        `${18.652 + dx} ${15.72 + dy}, ${19.182 + dx} ${16.25 + dy}`,
-      ),
-      waterRescueDiamond([
-        [16 + dx, 17.636 + dy], [19.182 + dx, 20.818 + dy],
-        [16 + dx, 24 + dy], [12.818 + dx, 20.818 + dy],
-      ]),
+      iWave(12 + dx, 15 + dy),
+      iWave(12 + dx, 16.6 + dy),
+      iDiamond(16 + dx, 20.82 + dy, 3.18),
     ];
   },
 };
@@ -1663,11 +1606,14 @@ const VEHICLE_LAND_INVERTED_HULL_MARKS: Partial<
   'land-horizontal-blade-bent-upright': (bounds) => {
     const dxMm = bounds.minX - 1;
     const dyMm = bounds.minY - 6;
+    // N.1.1, Maße an der Referenz abgelesen: Schild waagerecht auf y 14,5 (Strich 14,25…14,75)
+    // von x 6 bis an den senkrechten Strich x 21 (20,75…21,25), dieser von y 9,5 bis zum Knick
+    // (21|18,5), dann schräg mit Steigung 1 : 5 bis (26|19,5).
     return [
-      stroke(6 + dxMm, 14.75 + dyMm, 20.75 + dxMm, 14.75 + dyMm),
+      stroke(6 + dxMm, 14.5 + dyMm, 21 + dxMm, 14.5 + dyMm),
       outline([
-        [20.75 + dxMm, 9.5 + dyMm],
-        [20.75 + dxMm, 18.5 + dyMm],
+        [21 + dxMm, 9.5 + dyMm],
+        [21 + dxMm, 18.5 + dyMm],
         [26 + dxMm, 19.5 + dyMm],
       ]),
     ];
@@ -1677,7 +1623,10 @@ const VEHICLE_LAND_INVERTED_HULL_MARKS: Partial<
 const VEHICLE_LAND_FOOT_BAND_MARKS: Partial<
   Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
 > = {
-  care: (bounds) => landCare(bounds, bounds.maxY - 3),
+  // F.2.13/F.2.14/F.2.17: Die Zeltschenkel laufen vom Deckscheitel (16|8) auf (1|23,5) und
+  // (31|23,5) — ihr Ende liegt im Fußband (23…26), sichtbar bleibt die Schnittkante bei y 23.
+  // Maße an F.2.14 abgelesen (Innenkante 1,831|23 und 16|8,359, Strich 0,5).
+  care: (bounds) => landCare(bounds, bounds.maxY - 2.5),
   'meal-preparation': landMealPreparation,
   'drinking-water': landDrinkingWater,
 };
@@ -1724,8 +1673,9 @@ function logisticsCatering(bounds: BoundsMm, shiftYMm = 0, shiftXMm = 0): Primit
 }
 
 /**
- * G.7/G.2.1/G.2.2/G.3.4: durchgehende Mittellinie zwischen zwei offenen 3-mm-Endbögen. Der
- * Kreis-Kontext liegt 0,5 mm tiefer; die übrigen Profile teilen y=15.
+ * G.7/G.2.1/G.2.2/G.3.4: durchgehende Mittellinie zwischen zwei offenen 3-mm-Endbögen. Fahrzeug
+ * und Anhänger liegen auf y=15, der Kreis-Kontext 0,5 mm tiefer, die Formation mit Fußband 0,5 mm
+ * höher (y=14,5).
  */
 function logisticsMaintenance(bounds: BoundsMm, centerYMm = 15): Primitive[] {
   const cx = (bounds.minX + bounds.maxX) / 2;
@@ -1769,36 +1719,39 @@ function logisticsWasteDisposal(): Primitive[] {
  * Die große G-Löffelsilhouette, rekonstruiert aus G.6/G.3.2/G.2.3. Sie ist nicht die kleinere
  * F.2.13-Silhouette: Kopfbreite 3 mm statt 1,772 mm, Unterkante y=20 statt y=21,60015.
  */
-function logisticsSpoon(cx: number): Primitive {
+function logisticsSpoon(cx: number, dy = 0): Primitive {
+  const y = (value: number): number => Number((value + dy).toFixed(4));
   return {
     type: 'path',
     role: 'pictogram',
     d:
-      `M ${cx - 0.7} 12.86 C ${cx - 0.573} 12.953 ${cx - 0.5} 13.103 ${cx - 0.5} 13.26 ` +
-      `V 19.5 C ${cx - 0.5} 19.776 ${cx - 0.276} 20 ${cx} 20 ` +
-      `C ${cx + 0.276} 20 ${cx + 0.5} 19.776 ${cx + 0.5} 19.5 V 13.26 ` +
-      `C ${cx + 0.5} 13.103 ${cx + 0.573} 12.953 ${cx + 0.7} 12.86 ` +
-      `C ${cx + 1.164} 12.521 ${cx + 1.5} 12.139 ${cx + 1.5} 11.5 ` +
-      `C ${cx + 1.5} 10.262 ${cx + 0.846} 9.5 ${cx} 9.5 ` +
-      `C ${cx - 0.846} 9.5 ${cx - 1.5} 10.262 ${cx - 1.5} 11.5 ` +
-      `C ${cx - 1.5} 12.139 ${cx - 1.164} 12.521 ${cx - 0.7} 12.86 Z`,
+      `M ${cx - 0.7} ${y(12.86)} C ${cx - 0.573} ${y(12.953)} ${cx - 0.5} ${y(13.103)} ${cx - 0.5} ${y(13.26)} ` +
+      `V ${y(19.5)} C ${cx - 0.5} ${y(19.776)} ${cx - 0.276} ${y(20)} ${cx} ${y(20)} ` +
+      `C ${cx + 0.276} ${y(20)} ${cx + 0.5} ${y(19.776)} ${cx + 0.5} ${y(19.5)} V ${y(13.26)} ` +
+      `C ${cx + 0.5} ${y(13.103)} ${cx + 0.573} ${y(12.953)} ${cx + 0.7} ${y(12.86)} ` +
+      `C ${cx + 1.164} ${y(12.521)} ${cx + 1.5} ${y(12.139)} ${cx + 1.5} ${y(11.5)} ` +
+      `C ${cx + 1.5} ${y(10.262)} ${cx + 0.846} ${y(9.5)} ${cx} ${y(9.5)} ` +
+      `C ${cx - 0.846} ${y(9.5)} ${cx - 1.5} ${y(10.262)} ${cx - 1.5} ${y(11.5)} ` +
+      `C ${cx - 1.5} ${y(12.139)} ${cx - 1.164} ${y(12.521)} ${cx - 0.7} ${y(12.86)} Z`,
     style: { fill: 'schwarz', stroke: 'none' },
   };
 }
 
 /**
  * Löffel und Schüssel behalten ihre je Körperprofil vermessenen horizontalen Abstände zur
- * Körpermitte. Formation und Kreis teilen -5/+3 mm; der Anhänger führt -5,5/+2,5 mm.
+ * Körpermitte. Formation und Kreis teilen -5/+3 mm; der Anhänger führt -5,5/+2,5 mm und liegt
+ * zusätzlich 0,5 mm tiefer.
  */
 function logisticsMealPreparation(
   bounds: BoundsMm,
   spoonCenterFromBodyCenterMm: number,
   bowlCenterFromBodyCenterMm: number,
+  shiftYMm = 0,
 ): Primitive[] {
   const bodyCenterXMm = (bounds.minX + bounds.maxX) / 2;
   return [
-    logisticsSpoon(bodyCenterXMm + spoonCenterFromBodyCenterMm),
-    ...logisticsCatering(bounds, 0, bowlCenterFromBodyCenterMm),
+    logisticsSpoon(bodyCenterXMm + spoonCenterFromBodyCenterMm, shiftYMm),
+    ...logisticsCatering(bounds, shiftYMm, bowlCenterFromBodyCenterMm),
   ];
 }
 
@@ -1827,15 +1780,23 @@ const FORMATION_FOOT_BAND_LOGISTICS_MARKS: Partial<
   }],
   catering: (bounds) => logisticsCatering(bounds),
   'meal-preparation': (bounds) => logisticsMealPreparation(bounds, -5, 3),
-  maintenance: logisticsMaintenance,
+  // Auf der Formation mit Fußband liegt die Mittellinie bei y 14,5 mm (G.7, G.1.1, G.1.5: Strich
+  // 14,25…14,75 mm, Bogenmitten ebenda) — 0,5 mm höher als auf Fahrzeug und Anhänger.
+  maintenance: (bounds) => logisticsMaintenance(bounds, 14.5),
   'waste-disposal': logisticsWasteDisposal,
+  /** F.1.3: Liege über dem Fußband, Leiste auf y 19, Beine 15…20,5 mm. */
+  'temporary-accommodation-resting': (bounds) =>
+    formationRestingBed((bounds.minX + bounds.maxX) / 2, bounds.minY + 13, {
+      legBelowBarMm: 1.5, arcStartAboveBarMm: 0.5, startHandle: [0.05, 2.3], apexHandleMm: 1.6,
+    }),
 };
 
 const TRAILER_FOOT_BAND_LOGISTICS_MARKS: Partial<
   Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
 > = {
   maintenance: logisticsMaintenance,
-  'meal-preparation': (bounds) => logisticsMealPreparation(bounds, -5.5, 2.5),
+  // G.2.3: Löffel 10,0…20,5 mm und Schüsselmitte y 15,5 mm — 0,5 mm tiefer als auf der Formation.
+  'meal-preparation': (bounds) => logisticsMealPreparation(bounds, -5.5, 2.5, 0.5),
 };
 
 const CIRCLE_FOOT_BAND_LOGISTICS_MARKS: Partial<
@@ -1868,17 +1829,24 @@ const VEHICLE_AIR_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primit
   'medical-service': airQuartering,
   physician: (bounds) => {
     const cx = (bounds.minX + bounds.maxX) / 2;
-    return [...airQuartering(bounds), stroke(cx - 4, bounds.minY + 11.75, cx + 4, bounds.minY + 11.75)];
+    // Arztleiste auf y 18 (F.2.6/F.2.7: Strichband 17,75…18,25), x 12…20.
+    return [...airQuartering(bounds), stroke(cx - 4, bounds.minY + 12, cx + 4, bounds.minY + 12)];
   },
+  /**
+   * F.2.6: Winde. Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert (Mittellinien
+   * statt der Außenkonturpunkte der früheren Fassung): senkrechter Schaft x 24 von der Pfeilspitze
+   * (24|10) bis zur oberen Rautenecke (24|16), Pfeilschenkel bis (22|12) und (26|12), Raute mit
+   * halber Diagonale 2 um (24|18).
+   */
   'air-winch-chevron-diamond': (bounds) => {
     const dxMm = bounds.minX - 1.01;
     const dyMm = bounds.minY - 6;
     const shifted = (points: readonly (readonly [number, number])[]) =>
       points.map(([xMm, yMm]) => [xMm + dxMm, yMm + dyMm] as const);
     return [
-      stroke(24 + dxMm, 9.65 + dyMm, 24 + dxMm, 15.9 + dyMm),
-      outline(shifted([[21.82, 11.82], [24, 9.65], [26.18, 11.82]])),
-      outline(shifted([[24, 15.9], [26.35, 18], [24, 19.65], [21.65, 18], [24, 15.9]])),
+      stroke(24 + dxMm, 10 + dyMm, 24 + dxMm, 16 + dyMm),
+      outline(shifted([[22, 12], [24, 10], [26, 12]])),
+      outline(shifted([[24, 16], [26, 18], [24, 20], [22, 18], [24, 16]])),
     ];
   },
   'air-quartering-up-arrow-box': (bounds) => {
@@ -1886,11 +1854,14 @@ const VEHICLE_AIR_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primit
     const dyMm = bounds.minY - 6;
     return [
       ...airQuartering(bounds),
-      stroke(23 + dxMm, 14 + dyMm, 23 + dxMm, 9.5 + dyMm),
-      outline([[21.5 + dxMm, 11 + dyMm], [23 + dxMm, 9.5 + dyMm], [24.5 + dxMm, 11 + dyMm]]),
+      // N.1.4, Maße an der Referenz abgelesen: Schaft x 23 von der Kastenoberkante y 15 bis zur
+      // Spitze (23|9), Schenkel bis (21|11) und (25|11); Kasten 5 × 5 mm ab (20,5|15)
+      // (Außen-/Innenkante 20,25/20,75 und 14,75/15,25).
+      stroke(23 + dxMm, 15 + dyMm, 23 + dxMm, 9 + dyMm),
+      outline([[21 + dxMm, 11 + dyMm], [23 + dxMm, 9 + dyMm], [25 + dxMm, 11 + dyMm]]),
       {
-        type: 'rect', role: 'pictogram', x: 20.25 + dxMm, y: 15 + dyMm,
-        width: 5.5, height: 5.5,
+        type: 'rect', role: 'pictogram', x: 20.5 + dxMm, y: 15 + dyMm,
+        width: 5, height: 5,
         style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
       },
     ];
@@ -1911,7 +1882,11 @@ const VEHICLE_AIR_FIXED_WING_MARKS: Partial<
   'air-rising-diagonal': (bounds) => {
     const dxMm = bounds.minX - 1.01;
     const dyMm = bounds.minY - 6;
-    return [stroke(2.07 + dxMm, 20.74 + dyMm, 24.96 + dxMm, 9.3 + dyMm)];
+    // N.1.6, Maße an der Referenz abgelesen: Die Diagonale steigt mit 1 : 2 aus der linken
+    // Rumpfecke (1,01|20,9898) bis auf den Bogen (r 14,9897 um 15,9997|20,9898), den sie bei
+    // (24,994|8,998) trifft. Beide Enden liegen auf Mittellinien des Rumpfstrichs, der Überstand
+    // der Strichenden verschwindet darin.
+    return [stroke(1.01 + dxMm, 20.9898 + dyMm, 24.994 + dxMm, 8.998 + dyMm)];
   },
 };
 
@@ -1950,69 +1925,39 @@ const CIRCLE_NORMAL_ANHANG_N_MARKS: Partial<
 };
 
 const TRAILER_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
-  /** I.2.4: zwei 0,5-mm-Wellen über der 8,207-mm-Raute, nur am normalen Anhängerrumpf. */
+  /**
+   * I.2.4: zwei Wellen über der Raute, nur am normalen Anhängerrumpf (Mittelachse x = 17,5).
+   * Maße an der Referenz abgelesen: Wellentäler bei y = 11,75 und 13,75, Raute um (17,5 | 19,25)
+   * mit halber Diagonale 4 mm.
+   */
   'trailer-water-rescue': () => [
-    {
-      type: 'path', role: 'pictogram',
-      d:
-        'M 13.5 12.427 C 14.5 12.427 14.5 11.427 15.5 11.427 ' +
-        'C 16.5 11.427 16.5 12.427 17.5 12.427 C 18.5 12.427 18.5 11.427 19.5 11.427 ' +
-        'C 20.5 11.427 20.5 12.427 21.5 12.427',
-      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
-    },
-    {
-      type: 'path', role: 'pictogram',
-      d:
-        'M 13.5 14.427 C 14.5 14.427 14.5 13.427 15.5 13.427 ' +
-        'C 16.5 13.427 16.5 14.427 17.5 14.427 C 18.5 14.427 18.5 13.427 19.5 13.427 ' +
-        'C 20.5 13.427 20.5 14.427 21.5 14.427',
-      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
-    },
-    {
-      type: 'polyline', role: 'pictogram', closed: true,
-      points: [[17.5, 15.146], [21.604, 19.25], [17.5, 23.354], [13.396, 19.25]],
-      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
-    },
+    iWave(13.5, 11.75),
+    iWave(13.5, 13.75),
+    iDiamond(17.5, 19.25, 4),
   ],
-  /** I.2.5/I.2.6: kompaktere Wellen-Rauten-Fassung, getrennt von I.2.4 vermessen. */
+  /**
+   * I.2.5/I.2.6: kompaktere Fassung, getrennt von I.2.4 abgelesen — dieselben Maße wie I.2.2 auf
+   * der Anhängerachse: Wellentäler bei y = 15 und 16,6, Raute um (17,5 | 20,82) mit halber
+   * Diagonale 3,18 mm.
+   */
   'trailer-diving': () => [
-    {
-      type: 'path', role: 'pictogram',
-      d:
-        'M 13.5 15.247 C 14.5 15.247 14.5 14.247 15.5 14.247 ' +
-        'C 16.5 14.247 16.5 15.247 17.5 15.247 C 18.5 15.247 18.5 14.247 19.5 14.247 ' +
-        'C 20.5 14.247 20.5 15.247 21.5 15.247',
-      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
-    },
-    {
-      type: 'path', role: 'pictogram',
-      d:
-        'M 13.5 16.847 C 14.5 16.847 14.5 15.847 15.5 15.847 ' +
-        'C 16.5 15.847 16.5 16.847 17.5 16.847 C 18.5 16.847 18.5 15.847 19.5 15.847 ' +
-        'C 20.5 15.847 20.5 16.847 21.5 16.847',
-      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
-    },
-    {
-      type: 'polyline', role: 'pictogram', closed: true,
-      points: [[17.5, 17.533], [20.785, 20.818], [17.5, 24.103], [14.215, 20.818]],
-      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
-    },
+    iWave(13.5, 15),
+    iWave(13.5, 16.6),
+    iDiamond(17.5, 20.82, 3.18),
   ],
-  /** I.2.7: der 12,5-mm-Bootsrumpf mit 0,5-mm-Innenkontur. */
+  /**
+   * I.2.7: der Bootsrumpf, als Strich konstruiert. Maße an der Referenz abgelesen: Deckkante
+   * auf y = 14 von x = 11,5 bis 23,5, Kiel bei (17,5 | 20). Die beiden Rumpfbögen sind
+   * kubische Viertelbögen mit Henkeln von 3,75 mm (0,625 × Halbmesser) — voller als eine
+   * Ellipse, wie der Rumpf der Referenz.
+   */
   'trailer-boat-hull': () => [
     {
       type: 'path', role: 'pictogram',
       d:
-        'M 11.25 13.765 H 23.75 V 14.015 C 23.75 17.86 21.355 20.25 17.5 20.25 ' +
-        'C 13.645 20.25 11.25 17.86 11.25 14.015 Z',
-      style: { fill: 'schwarz', stroke: 'none' },
-    },
-    {
-      type: 'path', role: 'pictogram',
-      d:
-        'M 11.753 14.265 H 23.247 C 23.149 17.706 20.991 19.75 17.5 19.75 ' +
-        'C 14.009 19.75 11.851 17.706 11.753 14.265 Z',
-      style: { fill: 'weiss', stroke: 'none' },
+        'M 11.5 14 H 23.5 C 23.5 17.75 21.25 20 17.5 20 ' +
+        'C 13.75 20 11.5 17.75 11.5 14 Z',
+      style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
     },
   ],
   'medical-service': (bounds) => {
@@ -2052,13 +1997,120 @@ const VEHICLE_WATER_INSET_HULL_MARKS: Partial<Record<BodyMarkId, (bounds: Bounds
       style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
     },
   ],
+  /**
+   * I.3.11, Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert: die Waagerechte
+   * auf y = 15 läuft von Rumpfbogen zu Rumpfbogen (Bogen r ≈ 15 mm um (16 | 9) schneidet y = 15
+   * bei x ≈ 2,26 und 29,74; die Enden liegen im Rumpfstrich). Vom Abzweig (21 | 15) gehen
+   * zwei Schrägen unter 45° ab: nach oben bis auf die Mittellinie des Deckstrichs (27 | 9),
+   * nach unten bis in den Rumpfstrich (25,9 | 19,9).
+   */
   'fire-fighting': () => [
-    stroke(2.263209, 15.000055, 21.249843, 15.000055),
-    stroke(21.249843, 15.000055, 29.736438, 15.000055),
-    stroke(21.249843, 15.000055, 26.749628, 9.250152),
-    stroke(21.249843, 15.000055, 25.901906, 19.901884),
+    stroke(2.25, 15, 29.75, 15),
+    stroke(21, 15, 27, 9),
+    stroke(21, 15, 25.9, 19.9),
   ],
 };
+/**
+ * Kombinationsfassungen: Fachmarken, die in einer bestimmten Kombination an anderer, eigens
+ * vermessener Stelle stehen als allein. Maße an der Referenz abgelesen, Geometrie eigenständig
+ * konstruiert (Fachreview 19.09.2026). Das Rezept behält die Fachbegriffe; welche Lage gilt,
+ * entscheidet die vollständige Markenmenge der Komposition (`context.bodyMarks`) zusammen mit
+ * Körperart und -variante. Nur exakt diese Mengen sind belegt, jede andere fällt auf die
+ * Einzelfassung zurück.
+ */
+interface CombinationMark {
+  readonly kind: SymbolKind;
+  readonly bodyVariant: BodyVariantId | undefined;
+  readonly marks: readonly BodyMarkId[];
+  readonly builds: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>>;
+}
+
+const COMBINATION_MARKS: readonly CombinationMark[] = [
+  /**
+   * F.1.12#alternative: Ring r 5 statt 5,5 (Band 4,75…5,25 um 16|16), Arztleiste auf y 24
+   * (2 mm über der Unterkante) statt 22, Intensivbalken auf x 25,5 (5,5 mm von rechts) statt 23,5.
+   */
+  {
+    kind: 'formation',
+    bodyVariant: undefined,
+    marks: ['patient-transport', 'physician', 'intensive-care'],
+    builds: {
+      'patient-transport': (b) => [
+        ...quartering(b),
+        ...formationEightSpokeRing((b.minX + b.maxX) / 2, (b.minY + b.maxY) / 2, 5),
+      ],
+      physician: (b) => {
+        const cx = (b.minX + b.maxX) / 2;
+        return [...quartering(b), stroke(cx - 4, b.maxY - 2, cx + 4, b.maxY - 2)];
+      },
+      'intensive-care': (b) => {
+        const cy = (b.minY + b.maxY) / 2;
+        return [...quartering(b), stroke(b.maxX - 5.5, cy - 4, b.maxX - 5.5, cy + 4)];
+      },
+    },
+  },
+  /**
+   * F.1.13: Das Zelt ist ein Dach unter 45° (Mittellinie (3|20) → (16|7) → (29|20), Bänder
+   * zwischen x + y = 22,65 und 23,35, stumpfe Enden), die Arztleiste steht auf y 21 (5 mm über der
+   * Unterkante).
+   */
+  {
+    kind: 'formation',
+    bodyVariant: undefined,
+    marks: ['care', 'physician', 'ring-7mm-offset-down-1mm'],
+    builds: {
+      care: (b) => {
+        const cx = (b.minX + b.maxX) / 2;
+        const apexY = b.minY + 1;
+        return [outline([[cx - 13, apexY + 13], [cx, apexY], [cx + 13, apexY + 13]])];
+      },
+      physician: (b) => {
+        const cx = (b.minX + b.maxX) / 2;
+        return [...quartering(b), stroke(cx - 4, b.maxY - 5, cx + 4, b.maxY - 5)];
+      },
+    },
+  },
+  /**
+   * F.1.22: Unter dem Zelt steht der Ring r 5 mit acht Speichen um (16|18,5), 2,5 mm unter der
+   * Körpermitte, und **ohne** Fachdienstteilung.
+   */
+  {
+    kind: 'formation',
+    bodyVariant: undefined,
+    marks: ['care', 'patient-transport'],
+    builds: {
+      'patient-transport': (b) =>
+        formationEightSpokeRing((b.minX + b.maxX) / 2, (b.minY + b.maxY) / 2 + 2.5, 5),
+    },
+  },
+  /** F.2.5#alternative: Arztleiste auf y 23 (3 mm über der Unterkante) statt 22 wie in F.2.4#alt. */
+  {
+    kind: 'vehicle-land',
+    bodyVariant: 'plain-wheel-pair',
+    marks: ['patient-transport', 'intensive-care', 'physician'],
+    builds: {
+      physician: (b) => {
+        const cx = (b.minX + b.maxX) / 2;
+        return [...landQuartering(b), stroke(cx - 4, b.maxY - 3, cx + 4, b.maxY - 3)];
+      },
+    },
+  },
+];
+
+function combinationBuild(
+  id: BodyMarkId,
+  context: { kind: SymbolKind; bodyVariant?: BodyVariantId; bodyMarks?: readonly BodyMarkId[] },
+): ((bounds: BoundsMm) => Primitive[]) | undefined {
+  const marks = context.bodyMarks;
+  if (marks === undefined || marks.length < 2) return undefined;
+  const entry = COMBINATION_MARKS.find((candidate) =>
+    candidate.kind === context.kind &&
+    candidate.bodyVariant === context.bodyVariant &&
+    candidate.marks.length === marks.length &&
+    candidate.marks.every((mark) => marks.includes(mark)));
+  return entry?.builds[id];
+}
+
 export function bodyMark(
   id: BodyMarkId,
   context: {
@@ -2067,9 +2119,13 @@ export function bodyMark(
     vehicleCategory?: VehicleCategoryId;
     strength?: StrengthId;
     occupiedLabelZones?: readonly ('bottomCenter' | 'bottomRight' | 'belowRight')[];
+    /** Alle Marken derselben Komposition; wählt die Kombinationsfassung (`COMBINATION_MARKS`). */
+    bodyMarks?: readonly BodyMarkId[];
   },
   bodyBoundsMm: BoundsMm,
 ): readonly Primitive[] {
+  const combination = combinationBuild(id, context);
+  if (combination !== undefined) return combination(bodyBoundsMm);
   const build = context.kind === 'formation' && context.bodyVariant === 'foot-band' &&
       id === 'catering' && context.strength === 'trupp' &&
       context.occupiedLabelZones?.includes('bottomRight')

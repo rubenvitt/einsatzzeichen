@@ -354,6 +354,20 @@ describe('renderSvg — Text', () => {
     expect(svg).not.toContain('font-weight');
   });
 
+  it('schreibt font-weight nur für fett gesetzte Läufe', () => {
+    const run = (fontWeight?: 400 | 700) => renderSvg({
+      viewBox: { width: 32, height: 32 },
+      children: [{
+        type: 'text', content: 'RKB', x: 16, y: 20, sizeMm: 10, anchor: 'middle',
+        baseline: 'alphabetic', boxMm: { xMm: 6, yMm: 12, widthMm: 20, heightMm: 10 },
+        ...(fontWeight === undefined ? {} : { fontWeight }),
+      }],
+    });
+    expect(run(700)).toContain('font-size="28.346" font-weight="700"');
+    expect(run(400)).toBe(run());
+    expect(run()).not.toContain('font-weight');
+  });
+
   it('maskiert Sonderzeichen im Textinhalt', () => {
     const svg = renderSvg({
       viewBox: { width: 32, height: 32 },

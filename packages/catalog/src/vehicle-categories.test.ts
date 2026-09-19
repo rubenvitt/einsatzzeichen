@@ -98,7 +98,9 @@ describe('Fahrzeugkategorien', () => {
       type: 'rect',
       role: 'chassis',
       x: 2,
-      y: 25.75,
+      // N.1.1: Kettenmittellinie 26,0…30,5 mm (Außenkante 25,75, Innenkante 26,25), 0,25 mm unter
+      // der Rumpfunterkante 25,75 — Fachreview vom 19.09.2026.
+      y: 26,
       width: 28,
       height: 4.5,
       rx: 2.25,

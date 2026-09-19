@@ -260,10 +260,17 @@ export const ANHANG_I_G_RECIPES = {
   },
 } as const satisfies Record<string, Recipe>;
 
+/**
+ * Kürzel oben links an I.2.1 bis I.2.3, an der Referenz abgelesen: Versalhöhe 2,919 mm (`W`
+ * 9,081…12,000 mm, flachfüßig), Grundlinie y = 12,0 mm, also 6,25 mm unter der Körperoberkante
+ * (5,75 mm). Linke Tintenkante des `G` 2,724 mm; abzüglich des Arimo-Seitenlagers von `G` bei
+ * dieser Versalhöhe (0,213 mm) liegt der Anker bei 2,51 mm, 1,51 mm rechts der Körperkante.
+ * Dieselbe Versalhöhe und Grundlinie misst F.2.12 (`GwBT`).
+ */
 const I_2_TOP_LEFT_METRICS = {
-  capHeightMm: 3.18236,
-  baselineFromBodyTopMm: 6.55959,
-  anchorFromBodyLeftMm: 1.56869,
+  capHeightMm: 2.919,
+  baselineFromBodyTopMm: 6.25,
+  anchorFromBodyLeftMm: 1.51,
 } as const;
 
 /** I.2.1 bis I.2.3: die drei literalen Wasserrettungs-Landfahrzeuge aus LFH-486. */

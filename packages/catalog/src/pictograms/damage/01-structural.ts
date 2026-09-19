@@ -7,8 +7,9 @@ import {
   damagePath,
   damagePolyline,
   damageRect,
-  garland,
+  waveD,
   openRoom,
+  smoothCurveD,
 } from './authoring.js';
 
 /**
@@ -31,9 +32,39 @@ import {
  *
  * Alle achtzehn sind reines Schwarz. Anhang K ist der einzige der drei D.4-Anhänge, der ohne
  * eine einzige Füllangabe auskommt, und deshalb der einzige ohne Kontrastentscheidung.
+ *
+ * Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert: jede Koordinate ist die
+ * Mittellinie der 0,5 mm starken Referenzumrisse, auf 0,05 mm gerundet.
  */
 
-/** Die Diagonale, die K.9, K.10 und die angeschlagenen Räume teilen: 20 mm hoch auf 19 mm breit. */
+/**
+ * Die Schuttoberkante in K.6: eine Welle (`waveD`) zwischen 6 mm (Berg) und 7,5 mm (Tal),
+ * Wellenberge bei x = 3 mm und danach alle 6,45 mm — fünf Berge über die Raumbreite.
+ */
+const DEBRIS_WAVE = { yMid: 6.75, amplitude: 0.75, period: 6.45, crestX: 3 } as const;
+
+/** Die Wände enden in K.6 an der Welle: beide Wandköpfe liegen auf 6,3 mm (abgelesen). */
+const DEBRIS_WALL_TOP = 6.3;
+
+/**
+ * Die Trümmerböschung in K.11: an der Referenz abgelesene Stützpunkte der Mittellinie (etwa
+ * alle 0,8 mm Bogenlänge), vom Überstand links oben (0,5/5,5) bis zur Bodenkante rechts
+ * (30/26). Die Böschung fällt in unregelmäßigen Stufen aus flachen Absätzen und kurzen steilen
+ * Abbrüchen; eine glatte Kurve (Catmull-Rom, `smoothCurveD`) verbindet die Punkte.
+ */
+const DEBRIS_SLOPE: readonly (readonly [number, number])[] = [
+  [0.5, 5.5], [1.85, 6.6], [3.3, 7.15], [4.1, 7.45], [4.75, 7.75], [5.3, 8.3], [5.55, 8.8],
+  [5.85, 9.3], [6.4, 9.85], [7.15, 10.05], [7.85, 9.95], [8.55, 9.8], [9.25, 10.05],
+  [9.85, 10.5], [10.25, 10.9], [10.6, 11.25], [11.2, 11.75], [11.65, 12.35], [11.75, 13.15],
+  [11.85, 13.95], [12.3, 14.6], [13.05, 14.85], [13.7, 14.75], [14.35, 14.7], [15.1, 14.95],
+  [15.65, 15.5], [15.85, 16.1], [16.05, 16.7], [16.6, 17.3], [17.4, 17.35], [18.35, 16.95],
+  [19.25, 16.5], [20.1, 16.6], [20.55, 17.2], [20.7, 17.95], [20.8, 18.7], [21.3, 19.3],
+  [22.05, 19.5], [22.85, 19.3], [23.6, 19.05], [24.35, 19.25], [24.85, 19.85], [25, 20.55],
+  [25.2, 21.25], [25.65, 21.85], [26.2, 22.4], [26.45, 23.05], [26.65, 23.65], [27.1, 24.25],
+  [27.7, 24.55], [28.35, 24.75], [29.2, 25.05], [30, 26],
+];
+
+/** Die Rutschfläche in K.9: 20 mm hoch auf 19 mm breit (dieselbe Neigung wie K.7 und K.10). */
 const SLIP_ANGLE_DX = 19;
 
 export const STRUCTURAL_DAMAGE = deepFreeze([
@@ -109,13 +140,22 @@ export const STRUCTURAL_DAMAGE = deepFreeze([
     id: 'room-filled-fine-debris',
     title: 'Raum ausgefüllt, kleinbrockige Trümmer',
     referenceAsset: 'K.6_Raum_ausgefüllt_kleinbrockige Trümmer.svg',
-    box: { xMm: ROOM.left, yMm: 4.8, widthMm: 28, heightMm: 21.2 },
+    box: { xMm: ROOM.left, yMm: 6, widthMm: 28, heightMm: 20 },
     contrastPairs: DAMAGE_BLACK_CONTRAST,
     primitives: [
-      openRoom(),
+      // Die Wände reichen bis an die Welle heran, die den Raum oben abschließt.
+      openRoom(DEBRIS_WALL_TOP, DEBRIS_WALL_TOP),
       damageLine(ROOM.left, ROOM.fillLine, ROOM.right, ROOM.fillLine),
-      // Sechs Bögen über die Raumbreite: die Oberfläche des kleinbrockigen Schutts.
-      garland(ROOM.left, ROOM.top, ROOM.right, ROOM.top, 6, 1.2),
+      damagePath(
+        waveD(
+          ROOM.left,
+          ROOM.right,
+          DEBRIS_WAVE.yMid,
+          DEBRIS_WAVE.amplitude,
+          DEBRIS_WAVE.period,
+          DEBRIS_WAVE.crestX,
+        ),
+      ),
     ],
   }),
   defineDamage({
@@ -128,12 +168,11 @@ export const STRUCTURAL_DAMAGE = deepFreeze([
     primitives: [
       openRoom(),
       damageLine(ROOM.left, ROOM.fillLine, ROOM.right, ROOM.fillLine),
-      // Vier Schraffurstriche im gefüllten Teil, 3 mm auseinander, von der Bodenkante zur
-      // Füllstandslinie. Die Fusspunkte sind an der Referenz gemessen (2,0 / 4,9 / 7,9 /
-      // 10,9 mm) — eine erste Fassung setzte sie um gut 1 mm zu weit rechts an, was die
-      // Schraffur sichtbar von der linken Wand ablöste, ohne ein Gate zu berühren.
+      // Vier Schichtlinien wie in K.10 (Fußpunkte 2, 5, 8, 11 mm, Kopfpunkte 21 bis 30 mm):
+      // sie laufen durch den gefüllten Teil bis zur Deckenhöhe, die letzte genau in die rechte
+      // obere Raumecke.
       ...[0, 3, 6, 9].map((offset) =>
-        damageLine(2 + offset, ROOM.bottom, 14.75 + offset, ROOM.fillLine),
+        damageLine(ROOM.left + offset, ROOM.bottom, 21 + offset, ROOM.top),
       ),
     ],
   }),
@@ -184,15 +223,16 @@ export const STRUCTURAL_DAMAGE = deepFreeze([
     id: 'edge-debris',
     title: 'Randtrümmer',
     referenceAsset: 'K.11_Randtrümmer.svg',
-    box: { xMm: ROOM.left, yMm: 6.2, widthMm: 28, heightMm: 19.8 },
+    box: { xMm: 0.5, yMm: 5.5, widthMm: 29.5, heightMm: 20.5 },
     contrastPairs: DAMAGE_BLACK_CONTRAST,
     primitives: [
-      damageLine(ROOM.left, 7, ROOM.left, ROOM.bottom),
-      damageLine(ROOM.left, ROOM.bottom, ROOM.right, ROOM.bottom),
-      // Die Trümmerböschung: eine gewellte Schräge vom Wandkopf zur Bodenkante hin. Sieben
-      // Bögen mit 1,1 mm Auslenkung — mit flacherer Welle liest sich die Schräge im
-      // Kontaktbogen wie eine gerade Linie und verliert damit ihre Aussage.
-      garland(ROOM.left, 7, 28, 25, 7, 1.1),
+      // Wand und Boden; die Wand endet an der Böschung (bei y = 6,95 mm).
+      damagePolyline([
+        [ROOM.left, 6.95],
+        [ROOM.left, ROOM.bottom],
+        [ROOM.right, ROOM.bottom],
+      ]),
+      damagePath(smoothCurveD(DEBRIS_SLOPE)),
     ],
   }),
   defineDamage({

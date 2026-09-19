@@ -270,7 +270,8 @@ export const ANHANG_D_TASK_6_RECIPES = {
     referenceAsset: 'D.4.4_Leiter Gefahrenabwehrkräfte Bundespolizei.svg',
     spec: {
       kind: 'person',
-      organization: 'polizei',
+      // Titel und Referenz nennen die Bundespolizei; die Referenz füllt #64dc32 (hellgrün).
+      organization: 'bundespolizei',
       administrativeLevel: 'nationalstaat',
       functionRole: 'hazard-response-forces-director',
     },

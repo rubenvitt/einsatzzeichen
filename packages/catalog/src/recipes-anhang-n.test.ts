@@ -219,7 +219,8 @@ describe('Anhang N — Fahrzeuge weiterer Träger', () => {
       .filter((primitive) => primitive.role === 'chassis');
     expect(tracked).toEqual([
       expect.objectContaining({
-        type: 'rect', x: 2, y: 25.75, width: 28, height: 4.5, rx: 2.25,
+        // Kettenmittellinie 26,0…30,5 mm wie in N.1.1 (Fachreview 19.09.2026).
+        type: 'rect', x: 2, y: 26, width: 28, height: 4.5, rx: 2.25,
       }),
     ]);
 

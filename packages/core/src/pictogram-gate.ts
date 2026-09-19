@@ -481,14 +481,16 @@ interface PictogramStrokeWidths {
  *
  * SVG und Canvas begrenzen mehrsegmentige Piktogramm-Striche auf Butt-Kappen und Round-Joins;
  * einzelne Linien haben bereits standardmäßig Butt-Kappen und keine Joins. Daher reicht die
- * halbe Strichstärke als konservative Ausdehnung in jede Achsenrichtung aus. Nicht-
+ * halbe Strichstärke als konservative Ausdehnung je Blatt aus (siehe `leafExtentsOf`). Nicht-
  * Piktogramm-Geometrie fällt bewusst nicht in diesen kleinen Strichvertrag.
+ *
+ * Seit dem 19. September 2026 dient diese Sammlung nur noch der Vertragsprüfung (Fremdrollen,
+ * ungültige Breiten). Die Ausdehnung selbst liest `leafExtentsOf` je Blatt.
  *
  * Text trägt zu keiner Strichbreite bei, unabhängig von seinem `style.stroke`: `svg.ts` gibt
  * `<text>` immer mit `fillOnly: true` aus, und `canvas.ts` kennt für Text kein `strokeText()` —
- * ein gesetzter Strich wird also nie sichtbar. Ihn hier trotzdem einzurechnen würde `halfStroke`
- * unten aufblähen und die gesamte Piktogramm-Box strenger gegen den Körper prüfen, als tatsächlich
- * gerendert wird — genau der Fehlermodus, den dieser Vertrag ausschließen soll.
+ * ein gesetzter Strich wird also nie sichtbar. Eine ungültige Textstrichstärke wäre deshalb auch
+ * kein Befund.
  */
 function pictogramStrokeWidths(
   primitives: readonly Primitive[],
@@ -667,11 +669,90 @@ function assertUniquePolygonPoints(
   }
 }
 
-/** Baut genau für die heute belegten konvexen Körperformen einen Punkt-in-Fläche-Test. */
+/**
+ * SVGs Vorgabe für `stroke-miterlimit`. Canvas nimmt 10; die kleinere Grenze ist die strengere,
+ * weil jenseits davon SVG die Ecke abschrägt statt sie spitz auszuziehen.
+ */
+const SVG_DEFAULT_MITER_LIMIT = 4;
+
+/**
+ * Halbe Breite der sichtbaren Körperkontur, um die die Körperfläche nach außen wachsen darf.
+ *
+ * Die Kontur ist Teil des Körpers: Ein Piktogramm, dessen Tinte die Kontur überdeckt, ragt
+ * sichtbar nicht aus dem Körper heraus. C.1.2 und C.1.3 belegen das an der Referenz, dort enden
+ * die Schenkel der Brandbekämpfung exakt auf der Konturmitte (y = 6 bzw. 26), und ihre
+ * Strichkante liegt in der Konturtinte. Die Grenze ist deshalb die **Außenkante** der Kontur,
+ * nicht ihre Mittellinie.
+ *
+ * Gelesen wird die Kontur aus dem Körperblatt selbst statt aus einem Aufruferparameter: Das Blatt
+ * ist dieselbe Wahrheit, aus der beide Renderer die Kontur zeichnen, und kein Aufrufer kann sie
+ * vergessen oder mit einer falschen Zahl überschreiben. Ohne aktiven Konturstrich bleibt die
+ * Fläche unverändert — genau das bisherige Verhalten, das die Viewbox-Prüfkörper der
+ * Einzeldarstellungen (ohne Stil) weiter tragen.
+ *
+ * Fail-closed in jedem Zweifelsfall, also Toleranz 0 statt einer Schätzung:
+ * - Nur der **eigene** Stil des Körperblatts zählt. Ein von einer Elterngruppe geerbter Strich ist
+ *   hier nicht sichtbar; er macht die Prüfung strenger, nie laxer.
+ * - Eine ungültige Strichstärke gibt keine Toleranz, denn sie wird nicht verlässlich gezeichnet.
+ * - Eine gestrichelte Kontur (`bodyStrokeDashToken`) gibt keine Toleranz. In ihren Lücken fehlt
+ *   die Tinte, die den Überstand verdecken würde.
+ */
+function bodyOutlineHalfMm(body: Primitive): number {
+  const style = body.style;
+  if (style?.stroke === undefined || style.stroke === 'none') return 0;
+  if (style.bodyStrokeDashToken !== undefined) return 0;
+  const width = style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
+  if (!Number.isFinite(width) || width <= 0) return 0;
+  return width / 2;
+}
+
+/**
+ * Ob an jeder Polygonecke die Außenkante der Kontur die spitze Gehrung ist. Nur dann ist die
+ * Kantentoleranz „höchstens h außerhalb jeder Kante" exakt die Außenkante: Die um h verschobenen
+ * Kanten schneiden sich genau in der Gehrungsspitze. Eine abgeschrägte Ecke (`bevel`, oder
+ * `miter` jenseits der Gehrungsgrenze) liegt innerhalb dieser Spitze, die Kantentoleranz würde
+ * dort Tinte außerhalb der Kontur durchlassen.
+ *
+ * Gehrungsverhältnis an einer Ecke mit Innenwinkel θ: 1 / sin(θ/2), berechnet aus den beiden
+ * anliegenden Kantenrichtungen.
+ */
+function polygonOutlineIsMitered(points: readonly Point[], style: Style | undefined): boolean {
+  if (style?.strokeLinejoin !== undefined) return false;
+  for (let index = 0; index < points.length; index += 1) {
+    const previous = points[(index + points.length - 1) % points.length];
+    const vertex = points[index];
+    const next = points[(index + 1) % points.length];
+    if (previous === undefined || vertex === undefined || next === undefined) return false;
+    const ax = previous[0] - vertex[0];
+    const ay = previous[1] - vertex[1];
+    const bx = next[0] - vertex[0];
+    const by = next[1] - vertex[1];
+    const interior = Math.acos(
+      Math.max(-1, Math.min(1, (ax * bx + ay * by) / (Math.hypot(ax, ay) * Math.hypot(bx, by)))),
+    );
+    const miterRatio = 1 / Math.sin(interior / 2);
+    if (!Number.isFinite(miterRatio) || miterRatio > SVG_DEFAULT_MITER_LIMIT) return false;
+  }
+  return true;
+}
+
+/**
+ * Baut genau für die heute belegten konvexen Körperformen einen Punkt-in-Fläche-Test.
+ *
+ * Die Fläche wächst um die halbe Konturbreite `bodyOutlineHalfMm` nach außen, jeweils so, dass
+ * das Ergebnis die gezeichnete Außenkante nicht überschreitet:
+ * - Rechteck: in seinem lokalen Koordinatensystem um h je Seite. Die Ecken sind rechtwinklig und
+ *   ohne `strokeLinejoin` gegehrt (Verhältnis √2 < 4), die Außenkante ist also wieder ein
+ *   Rechteck. Mit `bevel` bleibt es bei h = 0.
+ * - Kreis: Radius r + h, exakt.
+ * - Konvexes Polygon: höchstens h außerhalb jeder gerichteten Kante, aber nur, wenn jede Ecke
+ *   gegehrt gezeichnet wird (`polygonOutlineIsMitered`). Sonst h = 0.
+ */
 function containsPoint(
   definition: PictogramDefinition,
   body: Primitive,
 ): (point: Point) => boolean {
+  const outlineHalfMm = bodyOutlineHalfMm(body);
   if (body.type === 'rect') {
     if (!finite([body.x, body.y, body.width, body.height]) || body.width <= 0 || body.height <= 0) {
       throw invalidBody(body, 'x, y, Breite und Höhe müssen endlich; Breite und Höhe positiv sein.');
@@ -688,7 +769,13 @@ function containsPoint(
         );
       }
     }
-    const axes = axesOf({ xMm: body.x, yMm: body.y, widthMm: body.width, heightMm: body.height });
+    const grow = body.style?.strokeLinejoin === undefined ? outlineHalfMm : 0;
+    const axes = axesOf({
+      xMm: body.x - grow,
+      yMm: body.y - grow,
+      widthMm: body.width + 2 * grow,
+      heightMm: body.height + 2 * grow,
+    });
     return (point) => {
       const local = toBodyCoordinates(point, body.transform, body, definition);
       return within(local[0], axes.x) && within(local[1], axes.y);
@@ -701,7 +788,8 @@ function containsPoint(
     }
     return (point) => {
       const local = toBodyCoordinates(point, body.transform, body, definition);
-      const overflowMm = Math.hypot(local[0] - body.cx, local[1] - body.cy) - body.r;
+      const overflowMm =
+        Math.hypot(local[0] - body.cx, local[1] - body.cy) - (body.r + outlineHalfMm);
       return overflowMm <= 0 || unitsEqual(mmToUnits(overflowMm), 0);
     };
   }
@@ -728,14 +816,16 @@ function containsPoint(
     // Transformvalidierung geschieht auch ohne Prüfecke sofort und nicht erst im Closure-Aufruf.
     toBodyCoordinates(body.points[0] as Point, body.transform, body, definition);
     const orientation = convexOrientation(body.points, definition, body);
+    const grow = polygonOutlineIsMitered(body.points, body.style) ? outlineHalfMm : 0;
     return (point) => {
       const local = toBodyCoordinates(point, body.transform, body, definition);
       for (let index = 0; index < body.points.length; index += 1) {
         const from = body.points[index];
         const to = body.points[(index + 1) % body.points.length];
         if (from === undefined || to === undefined) continue;
-        const side = signOutsideTolerance(edgeDistanceMm(local, from, to));
-        if (side !== 0 && side !== orientation) return false;
+        // Nach innen positiv. Mit grow = 0 ist das exakt die frühere Seitenprüfung.
+        const inward = orientation * edgeDistanceMm(local, from, to);
+        if (signOutsideTolerance(inward + grow) === -1) return false;
       }
       return true;
     };
@@ -748,9 +838,183 @@ function containsPoint(
   );
 }
 
+/** Die sichtbare Ausdehnung eines Piktogramm-Blatts als Eckpunkte, die im Körper liegen müssen. */
+interface LeafExtent {
+  label: string;
+  corners: readonly Point[];
+}
+
+function rotateAbout(point: Point, transform: Transform | undefined): Point {
+  const rotate = transform?.rotate;
+  if (rotate === undefined) return point;
+  const radians = (rotate.angle * Math.PI) / 180;
+  const dx = point[0] - rotate.cx;
+  const dy = point[1] - rotate.cy;
+  return [
+    rotate.cx + dx * Math.cos(radians) - dy * Math.sin(radians),
+    rotate.cy + dx * Math.sin(radians) + dy * Math.cos(radians),
+  ];
+}
+
+/** Die vier Ecken einer achsparallelen Hülle, um `grow` nach außen vergrößert. */
+function grownCorners(bounds: BoundsMm, grow: number): readonly Point[] {
+  return cornersOf({
+    xMm: bounds.minX - grow,
+    yMm: bounds.minY - grow,
+    widthMm: bounds.maxX - bounds.minX + 2 * grow,
+    heightMm: bounds.maxY - bounds.minY + 2 * grow,
+  });
+}
+
 /**
- * Prüft, dass die deklarierte Box vollständig innerhalb der Körperfläche des **unverschobenen**
- * Grundzeichens liegt.
+ * Die Kontrollpunkte eines Pfads, konservativ wie in `checkBox`: Eine Bezierkurve verlässt die
+ * konvexe Hülle ihrer Kontrollpunkte nie. `undefined`, wenn der Pfad nicht zerlegbar ist — das
+ * meldet das Kommando-Gate.
+ */
+function pathControlPoints(d: string): Point[] | undefined {
+  const { commands, problems } = tokenizePath(d);
+  if (problems.length > 0) return undefined;
+  const points: Point[] = [];
+  let current: Point = [0, 0];
+  let subpathStart: Point = [0, 0];
+  for (const { command, numbers } of commands) {
+    if (command === 'Z') {
+      current = subpathStart;
+      continue;
+    }
+    if (command === 'H' || command === 'V') {
+      const [value] = numbers;
+      if (value === undefined) continue;
+      current = command === 'H' ? [value, current[1]] : [current[0], value];
+      points.push(current);
+      continue;
+    }
+    for (let i = 0; i + 1 < numbers.length; i += 2) {
+      const x = numbers[i];
+      const y = numbers[i + 1];
+      if (x === undefined || y === undefined) continue;
+      current = [x, y];
+      points.push(current);
+    }
+    if (command === 'M') subpathStart = current;
+  }
+  return points;
+}
+
+/**
+ * Sammelt die sichtbare Ausdehnung jedes aktiven Piktogramm-Blatts einzeln — statt, wie bis zum
+ * 19. September 2026, die Ecken der gesamten Autorenbox um die halbe **größte** Strichstärke zu
+ * vergrößern. Diese Pauschale meldete zwei Fälle fälschlich als Überstand, die an der Referenz
+ * bündig sind: stumpfe Linienenden direkt am Körperrand (4.8.6, 4.7.12, 4.7.18 enden bei x = 1;
+ * eine Butt-Kappe trägt in Längsrichtung nichts auf) und reine Füllflächen, die gar keinen Strich
+ * haben, aber den Zuschlag des dicksten Nachbarstrichs erbten.
+ *
+ * Je Blatt, mit dem Stil genau wie die Renderer feldweise aufgelöst (siehe
+ * `pictogramStrokeWidths`):
+ * - `line` mit aktivem Strich: die vier Ecken des gestrichenen Segments, also beide Endpunkte um
+ *   ± h senkrecht zur Linienrichtung. Kein Zuschlag in Längsrichtung: SVG gibt `<line>` ohne
+ *   eigenen Kappenvertrag aus, und dessen Vorgabe ist `butt`; Canvas setzt für Piktogramme
+ *   ausdrücklich `butt`. Eine Linie der Länge null zeichnet mit Butt-Kappen nichts; ihr Endpunkt
+ *   wird trotzdem geprüft.
+ * - `rect`, `circle`, `polyline`, `path` mit aktivem Strich: die achsparallele Hülle ± h dieses
+ *   Blatts. Für Mehrsegmentstriche gilt der Piktogrammvertrag Butt-Kappe/Round-Join, der jede
+ *   Tinte auf höchstens h um die Mittellinie begrenzt. Pfade gehen über ihre Kontrollpunkte ein
+ *   (konservativ wie `checkBox`), die übrigen über `boundsOfMm`.
+ * - Blätter ohne aktiven Strich: dieselbe Hülle ohne Zuschlag. Eine Füllung endet exakt an ihrer
+ *   Geometrie.
+ * - Text: nicht hier, sondern wie bisher über `boxMm` (siehe unten in `checkClipping`).
+ *
+ * Eine Drehung am Blatt wird auf die formdefinierenden Punkte angewendet, eine Verschiebung am
+ * Blatt wird als Befund gemeldet. Gruppen werden rekursiv gelesen und dürfen keine
+ * Transformation tragen (`rejectGroupTransform`).
+ */
+function leafExtentsOf(
+  primitives: readonly Primitive[],
+  inheritedStyle?: Style,
+): { extents: LeafExtent[]; problems: string[] } {
+  const extents: LeafExtent[] = [];
+  const problems: string[] = [];
+  for (const primitive of primitives) {
+    const style = mergeStyle(primitive.style, inheritedStyle);
+    if (primitive.type === 'group') {
+      rejectGroupTransform(primitive);
+      const nested = leafExtentsOf(primitive.children, style);
+      extents.push(...nested.extents);
+      problems.push(...nested.problems);
+      continue;
+    }
+    if (primitive.type === 'text') continue;
+
+    // Ungültige Breiten meldet `pictogramStrokeWidths` bereits, bevor diese Funktion läuft.
+    const stroked = style?.stroke !== undefined && style.stroke !== 'none';
+    const half = stroked ? (style?.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM) / 2 : 0;
+    const label = primitive.type;
+
+    if (primitive.transform?.translate !== undefined) {
+      // `translate` ist nur an Gruppen belegt; `boundsOfMm` lehnt es an Blättern mit einem Wurf
+      // ab. Hier als Befund statt als Wurf, weil beide Renderer die Verschiebung anwenden und
+      // die geschriebenen Koordinaten die sichtbare Lage deshalb nicht beschreiben.
+      problems.push(
+        `Primitiv "${label}": transform.translate an einem Blatt wird nicht unterstützt; die ` +
+          'sichtbare Ausdehnung ist nicht prüfbar.',
+      );
+      continue;
+    }
+
+    if (primitive.type === 'line') {
+      const from = rotateAbout([primitive.x1, primitive.y1], primitive.transform);
+      const to = rotateAbout([primitive.x2, primitive.y2], primitive.transform);
+      const length = Math.hypot(to[0] - from[0], to[1] - from[1]);
+      if (half === 0 || length === 0) {
+        extents.push({ label, corners: [from, to] });
+        continue;
+      }
+      const nx = (-(to[1] - from[1]) / length) * half;
+      const ny = ((to[0] - from[0]) / length) * half;
+      extents.push({
+        label,
+        corners: [
+          [from[0] + nx, from[1] + ny],
+          [from[0] - nx, from[1] - ny],
+          [to[0] + nx, to[1] + ny],
+          [to[0] - nx, to[1] - ny],
+        ],
+      });
+      continue;
+    }
+
+    if (primitive.type === 'path') {
+      const points = pathControlPoints(primitive.d);
+      // Einen Pfad, den das Kommando-Gate ablehnt, hier nicht zusätzlich bewerten — dieselbe
+      // Regel wie in `checkBox`: ein zweiter Befund zum selben Fehler hilft dem Autor nicht, und
+      // `checkPictogram` führt beide Gates zusammen. Die zugesicherte Box bleibt geprüft.
+      if (points === undefined || points.length === 0) continue;
+      const rotated = points.map((point) => rotateAbout(point, primitive.transform));
+      const xs = rotated.map(([x]) => x);
+      const ys = rotated.map(([, y]) => y);
+      extents.push({
+        label,
+        corners: grownCorners(
+          {
+            minX: Math.min(...xs),
+            minY: Math.min(...ys),
+            maxX: Math.max(...xs),
+            maxY: Math.max(...ys),
+          },
+          half,
+        ),
+      });
+      continue;
+    }
+
+    extents.push({ label, corners: grownCorners(boundsOfMm(primitive), half) });
+  }
+  return { extents, problems };
+}
+
+/**
+ * Prüft, dass die deklarierte Box und die sichtbare Tinte jedes Piktogramm-Blatts vollständig
+ * innerhalb der Körperfläche des **unverschobenen** Grundzeichens liegen.
  *
  * Unverschoben, weil die Referenz belegt, dass das Piktogramm der Körpermitte folgt: `C.1.1`
  * verschiebt Körper und Piktogramm um dieselben 3 mm (Entscheidungsnotiz vom 4. August 2026,
@@ -758,19 +1022,27 @@ function containsPoint(
  * Komposition — die Prüfung braucht keine `SymbolSpec` und läuft einmal je
  * Piktogramm-Grundzeichen-Paar, nicht je Komposition.
  *
- * Alle heute katalogisierten Körperflächen sind konvex. Deshalb ist die vollständige Box genau
- * dann enthalten, wenn ihre vier Ecken enthalten sind. Rechtecke werden in ihrem lokalen
+ * Alle heute katalogisierten Körperflächen sind konvex. Deshalb ist eine Punktmenge genau dann
+ * enthalten, wenn die Ecken ihrer konvexen Hülle enthalten sind. Rechtecke werden in ihrem lokalen
  * Koordinatensystem geprüft (damit auch das gedrehte Quadrat der Person), Kreise analytisch und
  * geschlossene konvexe Polygone gegen ihre gerichteten Kanten. Eine Prüfung nur gegen die
  * achsparallele Hülle wäre insbesondere bei Dreiecken und dem Personendiamanten falsch.
  *
+ * Die Körperfläche schließt die gezeichnete Körperkontur bis zu ihrer Außenkante ein (siehe
+ * `bodyOutlineHalfMm`): Piktogrammtinte darf die Kontur überdecken, aber nicht über sie
+ * hinausragen. Ein Körperblatt ohne Konturstrich prüft wie bisher gegen seine Geometrie.
+ *
  * Nimmt das Körper-Primitiv, nicht den `SymbolKind`: die Körpergeometrie liegt in `catalog`, und
  * die Paketrichtung ist `catalog → core`. Der Aufrufer holt sie aus `baseDrawing(kind)`.
  *
- * Aktive Piktogramm-Striche vergrößern die zu prüfende Autorenbox konservativ um die halbe
- * effektive Strichstärke. Das ergänzt den absichtlich koordinatenbasierten Pfadvertrag von
- * `checkBox()`, statt ihn umzudeuten: Die Koordinaten dürfen auf der Boxkante liegen, aber die
- * tatsächlich sichtbare Tinte darf die Körperfläche nicht verlassen.
+ * Zwei getrennte Aussagen:
+ * - Die **zugesicherte Box** muss ohne Zuschlag im Körper liegen. Sie ist der koordinatenbasierte
+ *   Vertrag aus `checkBox()`; Koordinaten dürfen auf der Körperkante liegen.
+ * - Die **sichtbare Tinte** wird je Blatt geprüft (`leafExtentsOf`), mit genau der halben
+ *   Strichstärke dieses Blatts und nur quer zur Linienrichtung, wo eine Butt-Kappe endet. Seit dem
+ *   19. September 2026 ersetzt das die frühere Pauschale „ganze Box ± halbe größte
+ *   Strichstärke". Unter `checkBox()` liegt jede Blatthülle in der Box, die neue Prüfung ist also
+ *   nirgends strenger als die alte, nur genauer.
  */
 export function checkClipping(
   definition: PictogramDefinition,
@@ -809,21 +1081,38 @@ export function checkClipping(
   }
   if (strokes.foreignRoles.length > 0 || strokes.invalid.length > 0) return issues;
 
-  const halfStroke = Math.max(0, ...strokes.widths) / 2;
-  const visibleBox: PictogramBox = {
-    xMm: definition.box.xMm - halfStroke,
-    yMm: definition.box.yMm - halfStroke,
-    widthMm: definition.box.widthMm + 2 * halfStroke,
-    heightMm: definition.box.heightMm + 2 * halfStroke,
-  };
-  for (const [x, y] of cornersOf(visibleBox)) {
+  for (const [x, y] of cornersOf(definition.box)) {
     if (!contains([x, y])) {
       issues.push({
         gate: 'clipping',
         pictogramId: definition.id,
         variant: definition.variant,
-        detail: `Sichtbare Box-Ecke (${x}, ${y}) mm liegt außerhalb der Körperfläche "${body.type}".`,
+        detail: `Zugesicherte Box-Ecke (${x}, ${y}) mm liegt außerhalb der Körperfläche "${body.type}".`,
       });
+    }
+  }
+
+  const leaves = leafExtentsOf(definition.primitives);
+  for (const problem of leaves.problems) {
+    issues.push({
+      gate: 'clipping',
+      pictogramId: definition.id,
+      variant: definition.variant,
+      detail: problem,
+    });
+  }
+  for (const { label, corners } of leaves.extents) {
+    for (const [x, y] of corners) {
+      if (!contains([x, y])) {
+        issues.push({
+          gate: 'clipping',
+          pictogramId: definition.id,
+          variant: definition.variant,
+          detail:
+            `Primitiv "${label}": Sichtbare Ecke (${x}, ${y}) mm liegt außerhalb der ` +
+            `Körperfläche "${body.type}".`,
+        });
+      }
     }
   }
 
@@ -831,7 +1120,7 @@ export function checkClipping(
   // `measurableOf`) — geprüft wird deshalb die deklarierte Box gegen den Körper, nicht die
   // Glyphen. Ohne halbe Strichbreite: Text wird gefüllt, nicht gestrichen (siehe
   // `pictogramStrokeWidths` oben), seine sichtbare Ausdehnung endet exakt an `boxMm`. Geprüft wird
-  // jede Textbox einzeln statt nur über die bereits geprüfte Gesamt-`visibleBox`: `checkBox`
+  // jede Textbox einzeln statt nur über die bereits geprüfte zugesicherte Box: `checkBox`
   // erzwingt zwar, dass jede Textbox innerhalb von `definition.box` liegt, aber diese Funktion
   // läuft auch unabhängig von `checkBox` (siehe die Tests dazu) — die Garantie soll hier lokal
   // stehen, nicht nur aus der Zusammensetzung der beiden Gates folgen.

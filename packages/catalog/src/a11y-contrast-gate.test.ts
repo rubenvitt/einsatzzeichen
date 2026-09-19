@@ -3,6 +3,7 @@ import {
   checkContrast,
   contrastRatio,
   relativeLuminance,
+  type ContrastIssue,
   type ContrastRequirement,
   type RenderTheme,
 } from '@einsatzzeichen/core';
@@ -50,19 +51,52 @@ function requirements(): ContrastRequirement[] {
   ];
 }
 
-function exceptionSectionsFromRecipes(
+/**
+ * Alle Abschnitte, die für das Paar der Ausnahme in einem ihrer Themes tatsächlich einen Befund
+ * erzeugen — aus Rezeptbeschriftungen **und** aus Piktogrammen. Die Piktogrammseite gehört dazu,
+ * seit die roten Kennbuchstaben und Prozentwerte (19.09.2026) als Ausnahme geführt werden.
+ */
+function exceptionSections(
   exception: (typeof CONTRAST_EXCEPTIONS)[number],
   recipes: Readonly<Record<string, Recipe>> = RECIPES,
 ): string[] {
-  return Object.entries<Recipe>(recipes)
-    .filter(([, recipe]) =>
-      labelContrastRequirements([recipe]).some(
-        (requirement) =>
-          requirement.foreground === exception.foreground &&
-          requirement.background === exception.background,
-      ),
-    )
+  const producesCoveredIssue = (candidates: readonly ContrastRequirement[]): boolean =>
+    exception.themeIds.some((themeId) => {
+      const theme = RENDER_THEMES[themeId as keyof typeof RENDER_THEMES];
+      if (theme === undefined) throw new Error(`Unbekanntes Theme in Ausnahme: ${themeId}`);
+      return checkContrast(theme, candidates).some(
+        (issue) =>
+          issue.foreground === exception.foreground &&
+          issue.background === exception.background,
+      );
+    });
+  const fromRecipes = Object.entries<Recipe>(recipes)
+    .filter(([, recipe]) => producesCoveredIssue(labelContrastRequirements([recipe])))
     .map(([section]) => section);
+  const fromPictograms = ALL_PICTOGRAMS
+    .filter((definition) => producesCoveredIssue(contrastRequirementsFor(definition)))
+    .map((definition) => definition.section);
+  return [...new Set([...fromRecipes, ...fromPictograms])];
+}
+
+/**
+ * Gedeckte Befunde je Theme, als Paar und Anzahl gepinnt. Roter Text (19.09.2026) fällt nur im
+ * Referenz- und accessible-light-Theme auf: acht Warndreiecke mit roter Schrift auf Weiß
+ * (4.1.6 bis 4.1.8 alternativ, 5.8.1.7 in beiden Darstellungen, 5.8.1.8, 5.8.1.10, 5.8.1.11) und
+ * „50 %“ in L.10 auf der Oberfläche. Im Drucktheme besteht rot als Text.
+ */
+const EXPECTED_KNOWN_ISSUES: Readonly<Record<string, Readonly<Record<string, number>>>> = {
+  'accessible-light': { 'weiss:orange': 1, 'rot:weiss': 8, 'rot:surface': 1 },
+  'print-monochrome': { 'weiss:orange': 1, 'schwarz:rot': 1 },
+};
+
+function countByPair(issues: readonly ContrastIssue[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const issue of issues) {
+    const key = `${issue.foreground}:${issue.background}`;
+    counts[key] = (counts[key] ?? 0) + 1;
+  }
+  return counts;
 }
 
 describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
@@ -93,12 +127,16 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
       // Die Ausnahme wirkt paarweise und themeweise (`contrastExceptionFor`), nicht als
       // gelockerte Schwelle: jedes andere Paar und jedes andere Theme fällt weiter auf.
       expect(unexpectedContrastIssues(issues)).toEqual([]);
-      // Und die Zahl der gedeckten Befunde ist **gepinnt**, nicht toleriert — genau einer je
-      // Theme: weiss auf orange aus E.2.6. Die schwarzen N-Läufe und Diesel bestehen regulär.
-      expect(knownContrastIssues(issues)).toHaveLength(1);
-      expect(knownContrastIssues(issues).map((issue) => issue.context)).toEqual([
-        'Beschriftung im Körper auf Organisation sonstige-gefahrenabwehr',
-      ]);
+      // Und die Zahl der gedeckten Befunde ist **gepinnt**, nicht toleriert — je Theme und Paar:
+      // weiss auf orange aus E.2.6 und der rote Text vom 19.09.2026. Die schwarzen N-Läufe und
+      // Diesel bestehen regulär.
+      const known = knownContrastIssues(issues);
+      expect(countByPair(known)).toEqual(EXPECTED_KNOWN_ISSUES[theme.id]);
+      expect(
+        known
+          .filter((issue) => issue.foreground === 'weiss' && issue.background === 'orange')
+          .map((issue) => issue.context),
+      ).toEqual(['Beschriftung im Körper auf Organisation sonstige-gefahrenabwehr']);
     },
   );
 
@@ -116,8 +154,11 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
       (issue) => issue.foreground === 'schwarz' && issue.background === 'blau',
     );
     expect(blue).toHaveLength(PRIMARY_PICTOGRAMS.length + 1);
+    // Die Kappenschulter ist ein 0,5-mm-Strich, kein Text: seit der Kontrastvertrag die
+    // Textschwelle am Textelement und seinem tatsächlichen Hintergrund anlegt, gilt für sie 3:1.
+    // Der schwarze Trägerlauf „stv OB“ steht auf der Oberfläche, nicht auf Blau.
     expect(blue.filter((issue) => issue.context === D3_14_CAP_CONTRAST_CONTEXT)).toEqual([
-      expect.objectContaining({ minimum: MINIMUM_TEXT_CONTRAST }),
+      expect.objectContaining({ minimum: MINIMUM_NON_TEXT_CONTRAST }),
     ]);
     expect(blue.every((issue) => issue.ratio < MINIMUM_NON_TEXT_CONTRAST)).toBe(true);
   });
@@ -147,7 +188,7 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
       foreground: 'schwarz',
       background: 'blau',
       context: D3_14_CAP_CONTRAST_CONTEXT,
-      minimum: MINIMUM_TEXT_CONTRAST,
+      minimum: MINIMUM_NON_TEXT_CONTRAST,
       themeId: 'synthetic-d3.14-cap-collision',
       ratio: 1,
     });
@@ -325,7 +366,12 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     for (const theme of [RENDER_THEMES.reference, ACCESSIBLE_LIGHT_THEME, PRINT_MONOCHROME_THEME]) {
       expect(checkContrast(theme, derived), theme.id).toEqual([]);
     }
-    expect(CONTRAST_EXCEPTIONS).toHaveLength(1);
+    // Die einzige Ausnahme für schwarz ist PSNV (4.2.2) auf Feuerwehr-Rot im Drucktheme; die
+    // Beschriftungsläufe hier bestehen regulär.
+    expect(
+      CONTRAST_EXCEPTIONS.filter((exception) => exception.foreground === 'schwarz')
+        .map((exception) => [exception.background, exception.sections]),
+    ).toEqual([['rot', ['4.2.2']]]);
   });
 
   it('hält weiss auf orange als entschiedene Ausnahme fest, die kein Theme löst', () => {
@@ -378,6 +424,76 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     }
   });
 
+  it('hält roten Text wie in der Referenz als delegiert entschiedene Ausnahme fest', () => {
+    // Abgeleitet aus der Entscheidung vom 19.09.2026 (Maße und Farben wie in der Referenz), die
+    // Folgeentscheidung hat der Projektinhaber an den Koordinator delegiert: rote Kennbuchstaben der
+    // Warndreiecke und der rote Prozentwert von L.10 bleiben rot. Nachgerechnet: rot auf Weiß
+    // bzw. Oberfläche 4,025:1 im Referenz- und accessible-light-Theme; im Drucktheme (#666666)
+    // besteht rot als Text mit 5,742:1.
+    for (const theme of [RENDER_THEMES.reference, ACCESSIBLE_LIGHT_THEME]) {
+      expect(contrastRatio(theme.palette.rot, theme.palette.weiss), theme.id).toBeCloseTo(4.025, 3);
+      expect(contrastRatio(theme.palette.rot, theme.surface), theme.id).toBeCloseTo(4.025, 3);
+    }
+    expect(contrastRatio(PRINT_MONOCHROME_THEME.palette.rot, PRINT_MONOCHROME_THEME.surface))
+      .toBeGreaterThanOrEqual(MINIMUM_TEXT_CONTRAST);
+    expect(
+      contrastExceptionFor({ foreground: 'rot', background: 'surface', themeId: 'print-monochrome' }),
+    ).toBeUndefined();
+    // Die rote Sickerlinie an der schwarzen Deichfigur (L.10) ist kein Text. Im Drucktheme
+    // erreicht sie 3,657:1 und besteht die Nichttextschwelle regulär — ohne Ausnahme.
+    expect(contrastRatio(PRINT_MONOCHROME_THEME.palette.rot, PRINT_MONOCHROME_THEME.palette.schwarz))
+      .toBeCloseTo(3.657, 3);
+    expect(
+      contrastExceptionFor({ foreground: 'rot', background: 'schwarz', themeId: 'print-monochrome' }),
+    ).toBeUndefined();
+
+    const redText = CONTRAST_EXCEPTIONS.filter((exception) => exception.foreground === 'rot');
+    expect(redText.map((exception) => [exception.background, exception.themeIds])).toEqual([
+      ['weiss', ['reference', 'accessible-light']],
+      ['surface', ['reference', 'accessible-light']],
+    ]);
+    for (const exception of redText) {
+      expect(exception.decidedOn).toBe('2026-09-19');
+      // Abgeleitet, nicht vom Projektinhaber ausdrücklich bestätigt — und das steht im Text.
+      expect(exception.decidedBy).toBe('Koordinator (delegiert)');
+      expect(exception.rationale).toContain('docs/decisions/2026-09-19-masse-an-der-referenz-ablesen.md');
+      expect(exception.rationale).toContain('an den Koordinator delegiert');
+      expect(exception.rationale).toContain('4,5:1');
+      // Schwarzer Text ist der naheliegende Ausweg und wurde verworfen, weil er vom Bild abweicht.
+      expect(exception.rejected.some((text) => text.startsWith('Schwarzer statt roter Text')))
+        .toBe(true);
+      for (const rejected of exception.rejected) {
+        expect(rejected.length, rejected).toBeGreaterThan(80);
+      }
+    }
+  });
+
+  it('hält schwarzen PSNV-Text auf Feuerwehr-Rot im Drucktheme als delegiert entschiedene Ausnahme fest', () => {
+    // 4.2.2: „PSNV“ ist wie in der Referenz schwarz. Nur im Drucktheme (rot = #666666) liegt es
+    // mit 3,657:1 unter der Textschwelle; in den farbigen Themes besteht es mit 5,218:1.
+    expect(contrastRatio(PRINT_MONOCHROME_THEME.palette.schwarz, PRINT_MONOCHROME_THEME.palette.rot))
+      .toBeCloseTo(3.657, 3);
+    for (const theme of [RENDER_THEMES.reference, ACCESSIBLE_LIGHT_THEME]) {
+      expect(contrastRatio(theme.palette.schwarz, theme.palette.rot), theme.id).toBeCloseTo(5.218, 3);
+      expect(
+        contrastExceptionFor({ foreground: 'schwarz', background: 'rot', themeId: theme.id }),
+        theme.id,
+      ).toBeUndefined();
+    }
+    const exception = contrastExceptionFor({
+      foreground: 'schwarz', background: 'rot', themeId: 'print-monochrome',
+    });
+    expect(exception?.sections).toEqual(['4.2.2']);
+    expect(exception?.decidedBy).toBe('Koordinator (delegiert)');
+    expect(exception?.rationale).toContain('an den Koordinator delegiert');
+    expect(exception?.rationale).toContain('kein Katalogrezept');
+    expect(exception?.rationale).toContain('3,657:1');
+    expect(exception?.rejected).toHaveLength(2);
+    for (const rejected of exception?.rejected ?? []) {
+      expect(rejected.length, rejected).toBeGreaterThan(80);
+    }
+  });
+
   it('leitet die quellenvermessene schwarze Tinte der N-Körperläufe ohne Ausnahme ab', () => {
     const nRecipes = Object.entries<Recipe>(RECIPES)
       .filter(([section]) => section.startsWith('N.'))
@@ -408,7 +524,12 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     for (const theme of [RENDER_THEMES.reference, ACCESSIBLE_LIGHT_THEME, PRINT_MONOCHROME_THEME]) {
       expect(checkContrast(theme, inBody), theme.id).toEqual([]);
     }
-    expect(CONTRAST_EXCEPTIONS).toHaveLength(1);
+    // Die einzige Ausnahme für schwarz ist PSNV (4.2.2) auf Feuerwehr-Rot im Drucktheme; die
+    // Beschriftungsläufe hier bestehen regulär.
+    expect(
+      CONTRAST_EXCEPTIONS.filter((exception) => exception.foreground === 'schwarz')
+        .map((exception) => [exception.background, exception.sections]),
+    ).toEqual([['rot', ['4.2.2']]]);
   });
 
   it('leitet den schwarzen Diesel-Lauf profilabhängig als reguläre Kontrastanforderung ab', () => {
@@ -459,19 +580,23 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     expect(moeglich).toEqual([]);
   });
 
-  it('bindet jede Ausnahme exakt an alle aktuell erzeugenden Rezeptabschnitte', () => {
+  it('bindet jede Ausnahme exakt an alle aktuell erzeugenden Rezept- und Piktogrammabschnitte', () => {
     // Die Befundzahl kann diese Vollständigkeit nicht halten: `labelContrastRequirements`
     // dedupliziert je Organisation in einem `Set`, und `contrastExceptionFor` matcht danach nur
     // noch Paar plus Theme. Ein zweites Rezept mit demselben Paar erzeugte deshalb weder eine
-    // zweite Anforderung noch einen zweiten bekannten Befund. Diese Zeile zählt die Rezepte.
+    // zweite Anforderung noch einen zweiten bekannten Befund. Diese Zeile zählt die Abschnitte —
+    // ein neues Zeichen mit rotem Text fiele hier auf, statt still unter die Ausnahme zu rutschen.
     const expectedByPair = {
       'weiss:orange': ['E.2.6'],
+      'rot:weiss': ['4.1.6', '4.1.7', '4.1.8', '5.8.1.7', '5.8.1.8', '5.8.1.10', '5.8.1.11'],
+      'rot:surface': ['L.10'],
+      'schwarz:rot': ['4.2.2'],
     } as const;
     expect(CONTRAST_EXCEPTIONS).toHaveLength(Object.keys(expectedByPair).length);
     for (const exception of CONTRAST_EXCEPTIONS) {
       const pair =
         `${exception.foreground}:${exception.background}` as keyof typeof expectedByPair;
-      const sections = exceptionSectionsFromRecipes(exception);
+      const sections = exceptionSections(exception);
       expect(sections, pair).toEqual(expectedByPair[pair]);
       expect(exception.sections, pair).toEqual(sections);
     }

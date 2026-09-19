@@ -806,28 +806,14 @@ const ANHANG_E_C_TECHNICAL_REVIEW: Review = {
  */
 const ANHANG_E_C_DEVIATIONS: Readonly<Record<string, string>> = Object.freeze({
   'E.1.31':
-    'Der Katalog baut das Zeichen ohne Kopfzone, weil die Referenz an dieser Stelle keinen ' +
-    'Stärkegrad trägt: zwei senkrechte Balken von je 1,500 × 4,000 mm bei cx 12,000 und ' +
-    '20,000 mm, y 1,000…5,000 mm (Pfad „M54.567,2.835h4.252v11.339h-4.252V2.835Z' +
-    'M31.89,14.173h4.252V2.835h-4.252v11.339Z"), Mitte also bei cy 3,000 mm. Alle vier ' +
-    'Stärkegrade sind dagegen aus Kreisen r 1,500 mm gebaut und keiner aus einem Rechteck: ' +
-    'trupp, gruppe und zug als Reihe auf den Plätzen 11/16/21 mm mit cyFromTopMm 1,5 (absolut ' +
-    'cy 3,500 mm), staffel als senkrechter Stapel zweier Marken auf der Mittelachse ' +
-    '(cyFromTopMm 1,5 und 5,5, vermessen an C.1.1/C.1.8 und in E.1 nicht vorkommend). Weder Form ' +
-    'noch Lage stimmen überein, und StrengthId kennt nur diese vier. Grund ist hier ' +
-    'ausdrücklich **nicht** die Fallzahl, anders als bei der Innenreihe von E.1.19/E.1.24: der ' +
-    'Balkenpfad kommt in genau drei von 661 Referenzdateien vor — E.1.31, ' +
-    '„F.1.1_Medizinische Task Force.svg" und „F.1.3_Mobiles Betreuungsmodul 5000.svg" — und dort ' +
-    'byteweise identisch, die Geometrie ist also eine vermessene Konstante. Was fehlt, ist die ' +
-    'Bedeutung: StrengthId ist ein Fachbegriff, und welchen Begriff diese Balken tragen, ' +
-    'entscheidet die Datei nicht. Die Zahl der Balken trifft „5.5.2_Bereitschaft (Verband II)", ' +
-    'das Maß nicht — dort 4,000 × 10,000 mm bei cx 7,000 und 25,000 mm, also Breite ×0,375, Höhe ' +
-    '×0,400 und Achsabstand ×0,444: keine gleichmäßige Verkleinerung. Eine ID zu vergeben hieße ' +
-    'einen Begriff zu behaupten, den die Quelle nicht trägt — dieselbe Falschaussage, aus der ' +
-    'E-b den capability.*-Weg verworfen hat. Die Platzierung wäre dabei nicht das Hindernis: die ' +
-    'Balken sind mit den Kreiskopfzonen aller acht anderen bündig unten auf 5,000 mm und wachsen ' +
-    'nur nach oben in freien Raum. Es fehlt eine Markenform (HeadMark ist {cxMm, cyFromTopMm, ' +
-    'rMm} und kann kein Rechteck ausdrücken) und ein Begriff, keine Platzierungsmathematik.',
+    'Seit dem 19. September 2026 trägt das Zeichen die zwei senkrechten Balken der Referenz als ' +
+    'technische Kopfmarke `double-vertical-bar` (je 1,5 × 4 mm, cx 12 und 20 mm, y 1…5 mm). Der ' +
+    'Name ist bewusst rein geometrisch: Die Balken behaupten keinen Stärkegrad, denn welchen ' +
+    'Begriff sie tragen, entscheidet die Datei nicht (dieselbe Marke steht byteweise identisch ' +
+    'in F.1.1 und F.1.3; „5.5.2_Bereitschaft (Verband II)" trifft die Zahl der Balken, nicht das ' +
+    'Maß). Offen bleibt deshalb nur die Bedeutung, nicht mehr die Geometrie. Der Status bleibt ' +
+    '`deviation`, bis das technische Review die neue Marke erneut geprüft hat; bis 18. September ' +
+    'baute der Katalog das Zeichen ohne Kopfzone.',
 });
 
 /**

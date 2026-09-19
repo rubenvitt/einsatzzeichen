@@ -619,7 +619,7 @@ describe('State-Piktogramminventur', () => {
     ).toBe(false);
   });
 
-  it('hält die außenliegenden P2-Marken in den exakten Autorenboxen', () => {
+  it('hält die außenliegenden Zusatzmarken (römische II, „TP“) in den exakten Autorenboxen', () => {
     const triage = PERSON_STATES.find(
       ({ id }) => id === 'state.person-injured-triage-category',
     );
@@ -627,12 +627,12 @@ describe('State-Piktogramminventur', () => {
       ({ id }) => id === 'state.person-injured-transport-priority',
     );
 
-    expect(triage?.box).toEqual({ xMm: 1.5, yMm: 4, widthMm: 25.5, heightMm: 27 });
+    expect(triage?.box).toEqual({ xMm: 2.55, yMm: 3, widthMm: 26.45, heightMm: 27 });
     expect(transportPriority?.box).toEqual({
-      xMm: 5,
-      yMm: 2.5,
-      widthMm: 26,
-      heightMm: 23.5,
+      xMm: 3,
+      yMm: 2,
+      widthMm: 27.5,
+      heightMm: 27,
     });
   });
 
@@ -660,9 +660,14 @@ describe('State-Piktogramminventur', () => {
   });
 
   it('kodiert die Aktivitätsgrade geometrisch und im Monochromtheme unterscheidbar', () => {
+    // Die Sektoren sind 12 × 12 mm große Viertel (rect), rot gefüllt für den Ausfallanteil.
     const outageSectorCounts = ACTIVITY_STATES.map((definition) =>
       definition.primitives.filter(
-        (primitive) => primitive.type === 'path' && primitive.style?.fill === 'rot',
+        (primitive) =>
+          primitive.type === 'rect' &&
+          primitive.width === 12 &&
+          primitive.height === 12 &&
+          primitive.style?.fill === 'rot',
       ).length,
     );
     const monochromeSvgs = ACTIVITY_STATES.map(monochromeSvg);

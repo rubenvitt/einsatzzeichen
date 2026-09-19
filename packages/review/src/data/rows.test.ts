@@ -72,7 +72,10 @@ describe('buildRows', () => {
     expect(carriers).toHaveLength(19);
     const hosts = carriers.map((row) => row.carrierContext?.host);
     expect(hosts.filter((host) => host === 'formation')).toHaveLength(12);
-    expect(hosts.filter((host) => host === 'vehicle-land')).toHaveLength(7);
+    // Die beiden Anhängerfahrwerke (5.1.2.4/5.1.2.5) am Anhängerrumpf, die übrigen fünf am
+    // Landfahrzeug — so, wie Referenz und Katalog sie zeigen.
+    expect(hosts.filter((host) => host === 'vehicle-land')).toHaveLength(5);
+    expect(hosts.filter((host) => host === 'trailer')).toHaveLength(2);
     // Acht Organisationsfarben, vier Stärkegrade, sieben Fahrzeugkategorien.
     const prefixes = carriers.map((row) => row.implementation?.split('.')[0]);
     expect(prefixes.filter((prefix) => prefix === 'organization')).toHaveLength(8);

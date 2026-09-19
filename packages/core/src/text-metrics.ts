@@ -87,6 +87,24 @@ export interface TextMetrics {
    * (für negative Paare) konservativ. `0` oder `undefined` für Paare ohne Eintrag.
    */
   kerningEm?(left: number, right: number): number | undefined;
+  /**
+   * Metriken des fetten Schnitts (`fontWeight: 700` am Textprimitiv). Optional: Ein Anbieter ohne
+   * Fettschnitt lässt es weg, und ein fetter Lauf wirft dann in `measureTextRun`, statt mit den
+   * schmaleren Normalbreiten still zu klein gemessen zu werden.
+   */
+  bold?: TextMetrics;
+}
+
+/** Die Metriken, mit denen ein Lauf gemessen wird: fett gesetzte Läufe mit dem Fettschnitt. */
+function metricsForRun(primitive: TextPrimitive, metrics: TextMetrics): TextMetrics {
+  if (primitive.fontWeight !== 700) return metrics;
+  if (metrics.bold === undefined) {
+    throw new Error(
+      `Lauf "${primitive.content}" ist fett gesetzt, der Metrikanbieter führt aber keinen ` +
+        'Fettschnitt (`TextMetrics.bold`).',
+    );
+  }
+  return metrics.bold;
 }
 
 export interface TextWidth {
@@ -168,7 +186,11 @@ export interface TextRunMeasure extends TextWidth {
  * Bei unbekannten Glyphen ist das Ergebnis unvollständig (`unknownCodepoints`); der Aufrufer
  * muss den Fall sehen, bevor er die Zahlen verwendet.
  */
-export function measureTextRun(primitive: TextPrimitive, metrics: TextMetrics): TextRunMeasure {
+export function measureTextRun(
+  primitive: TextPrimitive,
+  runMetrics: TextMetrics,
+): TextRunMeasure {
+  const metrics = metricsForRun(primitive, runMetrics);
   const width = textWidthMm(primitive.content, primitive.sizeMm, metrics);
   const offset =
     primitive.anchor === 'start' ? 0 : primitive.anchor === 'middle' ? width.widthMm / 2 : width.widthMm;

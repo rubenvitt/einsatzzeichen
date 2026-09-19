@@ -106,7 +106,10 @@ export type StrengthId = 'trupp' | 'staffel' | 'gruppe' | 'zug';
  * belegt ist. Die geschlossene Menge verhindert, dass ähnlich aussehende Balken stillschweigend
  * zwischen Anhängen wiederverwendet werden.
  */
-export const TECHNICAL_HEAD_MARK_IDS = Object.freeze(['single-vertical-bar'] as const);
+export const TECHNICAL_HEAD_MARK_IDS = Object.freeze([
+  'single-vertical-bar',
+  'double-vertical-bar',
+] as const);
 export type TechnicalHeadMarkId = (typeof TECHNICAL_HEAD_MARK_IDS)[number];
 
 /** Verwaltungsstufen nach Kapitel 5.7. */
@@ -729,6 +732,13 @@ export interface SymbolSpec {
    * `validateSpec()` lehnt die gleichzeitige Angabe von `organization` fail-closed ab.
    */
   technicalFill?: ColorToken;
+  /**
+   * Weiße Innenkontur: Der Körper wird weiß gefüllt, und die Organisations- bzw. technische Farbe
+   * liegt nur im Innenfeld, das 1 mm von der Körpermittellinie eingerückt ist. So zeichnet
+   * Anhang E alle 68 Zeichen (THW und E.2.6); die Personenzeichen des THW aus Anhang D führen
+   * die Kontur nicht. Setzt eine Füllfarbe voraus; das Innenfeld liefert der Katalog je Körperform.
+   */
+  whiteInnerContour?: true;
   strength?: StrengthId;
   /** Vermessene technische Kopfmarke ohne erfundene Stärke- oder Organisationssemantik. */
   technicalHeadMark?: TechnicalHeadMarkId;

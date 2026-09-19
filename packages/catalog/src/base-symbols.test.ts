@@ -13,7 +13,7 @@ import {
   type BodyVariantId,
   type SymbolKind,
 } from '@einsatzzeichen/schema';
-import { BASE_SYMBOLS, baseDrawing } from './base-symbols.js';
+import { BASE_SYMBOLS, baseDrawing, innerField } from './base-symbols.js';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { fingerprintFor } from './fingerprint-index.js';
 import { DEVICE_COMMS } from './pictograms/comms/03-devices.js';
@@ -659,10 +659,14 @@ describe('Körperformen des Anhangs E.2', () => {
     expect(frame?.role).toBe('bodyExtra');
     if (frame?.type !== 'polyline') throw new Error('unreachable');
     expect(frame.closed).toBe(false);
+    // Beide Enden schließen an den Körper an (E.2.15: oben an die Ecke 2,5|6, rechts an die
+    // Körperkante bis zur Unterkante 24,5) — die Referenz zeigt Rahmen und Körper verschmolzen.
     expect(frame.points).toEqual([
+      [2.5, 6],
       [1, 6],
       [1, 26],
       [31, 26],
+      [31, 24.5],
     ]);
     // Die Unterkante des L-Rahmens ist die Oberkante der Fahrwerkszone — 1,5 mm unter der
     // Körperunterkante. Ohne diese Zeile wäre die Fahrwerksverankerung in `compose()` ohne
@@ -758,7 +762,7 @@ describe('Körperformen des Anhangs F.3', () => {
     expect(baseDrawing(circleKind).children).toHaveLength(1);
   });
 
-  it('pinnt den quellgleichen J.3.2-Giebel und grenzt nur dessen aktuelle Katalogapproximation ab', () => {
+  it('pinnt den quellgleichen J.3.2-Giebel und denselben Kreis wie F.3.5', () => {
     const f35 = baseDrawing(circleKind, raisedGable);
     const f35Body = f35.children.find((primitive) => primitive.role === 'body');
     const f35Gable = f35.children.find((primitive) => primitive.role === 'bodyExtra');
@@ -777,8 +781,8 @@ describe('Körperformen des Anhangs F.3', () => {
 
     expect(j32Gable.points).toEqual(f35Gable.points);
     expect(f35Body).toMatchObject({ cx: 16, cy: 18, r: 12 });
-    expect(j32Body).toMatchObject({ cx: 16, cy: 17, r: 11.5 });
-    expect(j32Body).not.toMatchObject({ cx: f35Body.cx, cy: f35Body.cy, r: f35Body.r });
+    // Seit dem Fachreview vom 19.09.2026 folgt J.3.2 der Referenz: derselbe Kreis wie F.3.5.
+    expect(j32Body).toMatchObject({ cx: 16, cy: 18, r: 12 });
   });
 
   it('fällt mit raised-gable weder auf post noch auf eine andere Körperart zurück', () => {
@@ -796,7 +800,8 @@ describe('Körperformen des Anhangs F.3', () => {
     expect(drawing.children).toEqual([
       {
         type: 'polyline', role: 'body', closed: true,
-        points: [[16, 4], [2, 10], [2, 26], [30, 26], [30, 10]],
+        // Fachreview 19.09.2026: Dachschrägen treffen die Wände bei y 9,85 (F.3.15/F.3.16).
+        points: [[16, 4], [2, 9.85], [2, 26], [30, 26], [30, 9.85]],
         style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
       },
       {
@@ -875,5 +880,48 @@ describe('baseDrawing() — zwei Abbrüche, zwei Fehlerarten', () => {
     expect(thrown).toBeInstanceOf(Error);
     expect(thrown).not.toBeInstanceOf(NotMeasuredError);
     expect((thrown as Error).message).toMatch(/Kein Grundzeichen/);
+  });
+});
+
+/**
+ * Weiße Innenkontur des Anhangs E: Das Innenfeld steht überall 1 mm von der Körpermittellinie ab.
+ * Geprüft über die Stützpunkte der erzeugten Kurven gegen die Referenzmaße (in mm umgerechnet).
+ */
+describe('Innenfeld der weißen Innenkontur', () => {
+  const numbers = (d: string): number[] => (d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
+
+  it('rückt das Formationsrechteck um 1 mm ein (E.1.1: 2/7/30/25 mm)', () => {
+    expect(innerField('formation')).toEqual([
+      expect.objectContaining({ type: 'rect', role: 'innerField', x: 2, y: 7, width: 28, height: 18 }),
+    ]);
+  });
+
+  it('versetzt die Deckkurve des Landfahrzeugs parallel (E.2.18: Scheitel 16/9, Ecke 2/7,114 mm)', () => {
+    const [field] = innerField('vehicle-land');
+    if (field?.type !== 'path') throw new Error('Pfad erwartet');
+    const [apexX, apexY, , , , , cornerX, cornerY] = numbers(field.d);
+    expect(apexX).toBeCloseTo(16, 3);
+    expect(apexY).toBeCloseTo(9, 3);
+    expect(cornerX).toBeCloseTo(2, 3);
+    expect(cornerY).toBeCloseTo(7.114, 2);
+    expect(boundsOfMm(field)).toMatchObject({ minX: 2, maxX: 30, maxY: 25 });
+  });
+
+  it('teilt das Gebäude in Dachdreieck und Wandrechteck (E.1.37)', () => {
+    const [roof, wall] = innerField('building');
+    expect(roof).toMatchObject({ type: 'polyline', points: [[16, 4.1035], [3.3647, 10], [28.6353, 10]] });
+    expect(wall).toMatchObject({ type: 'rect', x: 2, y: 11, width: 28, height: 14 });
+  });
+
+  it('schneidet den Wasserrumpf als Kreisabschnitt r − 1 unter der abgesenkten Sehne (E.2.27)', () => {
+    const [field] = innerField('vehicle-water', 'raised-hull');
+    if (field?.type !== 'path') throw new Error('Pfad erwartet');
+    const b = boundsOfMm(field);
+    expect(b.minY).toBeCloseTo(8.9999, 3);
+    expect(b.maxY).toBeCloseTo(7.9999 + 13.9897, 3);
+  });
+
+  it('wirft für Körper ohne belegte Innenkontur', () => {
+    expect(() => innerField('person')).toThrow(NotMeasuredError);
   });
 });

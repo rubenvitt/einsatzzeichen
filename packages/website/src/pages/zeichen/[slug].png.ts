@@ -3,7 +3,12 @@ import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { Resvg } from '@resvg/resvg-js';
 import type { APIRoute, GetStaticPaths } from 'astro';
-import { TEXT_FONT_FAMILY, TEXT_FONT_SHA256, resvgFontOptions } from '@einsatzzeichen/catalog';
+import {
+  TEXT_FONT_BOLD_SHA256,
+  TEXT_FONT_FAMILY,
+  TEXT_FONT_SHA256,
+  resvgFontOptions,
+} from '@einsatzzeichen/catalog';
 import { renderSvg } from '@einsatzzeichen/core';
 import { loadSnapshot } from '../../lib/snapshot';
 
@@ -46,26 +51,34 @@ const WIDTH = 256;
  * einmal gescheitert. Trifft der erste Kandidat nicht, greift der Pfad des Katalogs; trifft keiner,
  * bricht der Build ab (unten). Was es nicht gibt, ist ein PNG ohne Kürzel.
  */
-function textFontFile(): string {
+function textFontFile(fileName: string, sha256: string): string {
   const candidates = [
-    fileURLToPath(new URL('../../../../catalog/assets/Arimo[wght].ttf', import.meta.url)),
+    fileURLToPath(new URL(`../../../../catalog/assets/${fileName}`, import.meta.url)),
     ...resvgFontOptions().fontFiles,
   ];
   for (const candidate of candidates) {
     if (!existsSync(candidate)) continue;
     const digest = createHash('sha256').update(readFileSync(candidate)).digest('hex');
-    if (digest === TEXT_FONT_SHA256) return candidate;
+    if (digest === sha256) return candidate;
   }
   throw new Error(
-    'Die Schriftdatei des Katalogs (Arimo-Subset) ist von der Website aus nicht auffindbar oder ' +
+    `Die Schriftdatei des Katalogs (${fileName}) ist von der Website aus nicht auffindbar oder ` +
       'hat einen anderen Inhalt als erwartet. Ohne sie rastert resvg jeden Text zu null Pixeln, ' +
       'und die PNG-Downloads verlören ihre Kürzel. Gesucht wurde in: ' +
       candidates.join(', '),
   );
 }
 
+/**
+ * Beide Schnitte: fett gesetzte Läufe (`fontWeight: 700`) rastert resvg nur mit der statischen
+ * Fettinstanz fett, weil es die wght-Achse der variablen Datei nicht auswertet. Fehlte sie hier,
+ * kämen fette Kürzel im PNG stillschweigend normal heraus, anders als im Katalog.
+ */
 const FONT = {
-  fontFiles: [textFontFile()],
+  fontFiles: [
+    textFontFile('Arimo[wght].ttf', TEXT_FONT_SHA256),
+    textFontFile('Arimo-Bold.ttf', TEXT_FONT_BOLD_SHA256),
+  ],
   loadSystemFonts: false as const,
   defaultFontFamily: TEXT_FONT_FAMILY,
 };

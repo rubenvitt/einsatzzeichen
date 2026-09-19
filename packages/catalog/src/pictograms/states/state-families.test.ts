@@ -12,8 +12,6 @@ import { TACTICS_HAZARDS_STATES } from './01-tactics-hazards.js';
 import { ACTIVITY_STATES } from './02-activity.js';
 import { TENDENCY_STATES } from './03-tendencies.js';
 
-type PathPrimitive = Extract<Primitive, { type: 'path' }>;
-
 function viewBoxBody(item: CatalogPictogramDefinition): Primitive {
   return {
     type: 'rect',
@@ -42,12 +40,6 @@ function leavesOf(primitives: readonly Primitive[]): readonly Primitive[] {
   };
   for (const primitive of primitives) visit(primitive);
   return result;
-}
-
-function pathsOf(definition: CatalogPictogramDefinition): readonly PathPrimitive[] {
-  return leavesOf(definition.primitives).filter(
-    (primitive): primitive is PathPrimitive => primitive.type === 'path',
-  );
 }
 
 function definition(
@@ -83,11 +75,17 @@ function monochromeSvg(definition: CatalogPictogramDefinition): string {
   });
 }
 
-function filledPathCount(
+/** Zählt die 12 × 12 mm großen Viertelsektoren (rect-Blätter) einer Füllfarbe. */
+function filledSectorCount(
   definition: CatalogPictogramDefinition,
   fill: 'rot' | 'gruen',
 ): number {
-  return pathsOf(definition).filter((primitive) => primitive.style?.fill === fill).length;
+  return leavesOf(definition.primitives).filter((primitive) =>
+    primitive.type === 'rect' &&
+    primitive.width === 12 &&
+    primitive.height === 12 &&
+    primitive.style?.fill === fill
+  ).length;
 }
 
 function standalonePairs(definition: CatalogPictogramDefinition) {
@@ -141,9 +139,15 @@ describe('5.8.1: Taktik und Gefahren', () => {
         return colors.has('rot') && colors.has('hellblau');
       });
       expect(directRedBlue, item.id).toBe(false);
-      expect(pathsOf(item).some((path) => path.style?.stroke === 'schwarz')).toBe(true);
-      expect(pathsOf(item).some((path) => path.style?.stroke === 'rot')).toBe(true);
-      expect(pathsOf(item).some((path) => path.style?.stroke === 'hellblau')).toBe(true);
+      // Klammer (polyline) und Pfeil (path) sind reine 0,5-mm-Striche in Rot bzw. Hellblau;
+      // ein schwarzer Strich existiert in der Referenz nicht.
+      const leaves = leavesOf(item.primitives);
+      expect(leaves.some((leaf) => leaf.style?.stroke === 'schwarz'), item.id).toBe(false);
+      for (const color of ['rot', 'hellblau'] as const) {
+        const strokes = leaves.filter((leaf) => leaf.style?.stroke === color);
+        expect(strokes, `${item.id}: ${color}`).toHaveLength(1);
+        expect(strokes[0]?.style?.strokeWidth, `${item.id}: ${color}`).toBe(0.5);
+      }
     }
   });
 
@@ -182,8 +186,8 @@ describe('5.8.1: Taktik und Gefahren', () => {
 
 describe('5.8.2: Aktivitaets- und Ausfallgrade', () => {
   it('kodiert 25, 50, 75 und 100 Prozent als 1, 2, 3 und 4 rote Sektoren', () => {
-    expect(ACTIVITY_STATES.map((item) => filledPathCount(item, 'rot'))).toEqual([1, 2, 3, 4]);
-    expect(ACTIVITY_STATES.map((item) => filledPathCount(item, 'gruen'))).toEqual([3, 2, 1, 0]);
+    expect(ACTIVITY_STATES.map((item) => filledSectorCount(item, 'rot'))).toEqual([1, 2, 3, 4]);
+    expect(ACTIVITY_STATES.map((item) => filledSectorCount(item, 'gruen'))).toEqual([3, 2, 1, 0]);
   });
 
   it('deklariert Gruen nur in den drei Definitionen, die Gruen wirklich zeichnen', () => {
@@ -207,24 +211,53 @@ describe('5.8.2: Aktivitaets- und Ausfallgrade', () => {
 describe('5.8.3: Tendenzen', () => {
   it('legt die drei Schaftrichtungen explizit fest', () => {
     const shafts = TENDENCY_STATES.map((item) =>
-      pathsOf(item).find((path) =>
-        path.style?.fill === 'none' &&
-        path.style.stroke === 'schwarz' &&
-        path.style.strokeWidth === 1
-      )?.d,
+      leavesOf(item.primitives).filter((leaf) => leaf.type === 'line'),
     );
     expect(shafts).toEqual([
-      'M 5 27 L 24 8',
-      'M 5 16 H 23',
-      'M 5 5 L 24 24',
+      [expect.objectContaining({ x1: 5, y1: 27, x2: 22.827, y2: 9.173 })],
+      [expect.objectContaining({ x1: 5, y1: 16, x2: 21, y2: 16 })],
+      [expect.objectContaining({ x1: 5, y1: 5, x2: 22.827, y2: 22.827 })],
+    ]);
+    for (const [shaft] of shafts) {
+      expect(shaft?.style).toEqual({ fill: 'none', stroke: 'schwarz', strokeWidth: 0.5 });
+    }
+  });
+
+  it('setzt die Pfeilspitzen als gefüllte geschlossene Dreiecke an das Schaftende', () => {
+    const heads = TENDENCY_STATES.map((item) =>
+      leavesOf(item.primitives).filter((leaf) => leaf.type === 'polyline'),
+    );
+    expect(heads).toEqual([
+      [expect.objectContaining({
+        closed: true,
+        points: [[19.999, 6.345], [27.07, 4.93], [25.655, 12.001]],
+        style: { fill: 'schwarz', stroke: 'none' },
+      })],
+      [expect.objectContaining({
+        closed: true,
+        points: [[21, 12], [27, 16], [21, 20]],
+        style: { fill: 'schwarz', stroke: 'none' },
+      })],
+      [expect.objectContaining({
+        closed: true,
+        points: [[25.655, 19.999], [27.07, 27.07], [19.999, 25.655]],
+        style: { fill: 'schwarz', stroke: 'none' },
+      })],
     ]);
   });
 
-  it('besitzt je einen weissen Rahmen und drei monochrom verschiedene Pfeile', () => {
+  it('besitzt je einen weißen Rahmen und drei monochrom verschiedene Pfeile', () => {
     for (const item of TENDENCY_STATES) {
-      expect(pathsOf(item).filter((path) =>
-        path.style?.fill === 'weiss' && path.style.stroke === 'schwarz'
-      )).toHaveLength(1);
+      const frames = leavesOf(item.primitives).filter((leaf) => leaf.type === 'rect');
+      expect(frames).toEqual([
+        expect.objectContaining({
+          x: 2,
+          y: 2,
+          width: 28,
+          height: 28,
+          style: { fill: 'weiss', stroke: 'schwarz', strokeWidth: 0.5 },
+        }),
+      ]);
     }
     expect(new Set(TENDENCY_STATES.map(colorBlindGeometrySignature)).size).toBe(3);
     expect(new Set(TENDENCY_STATES.map(monochromeSvg)).size).toBe(3);

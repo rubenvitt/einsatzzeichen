@@ -103,7 +103,7 @@ function strengthId(value: unknown): value is StrengthId {
 }
 
 function technicalHeadMarkId(value: unknown): value is TechnicalHeadMarkId {
-  return value === 'single-vertical-bar';
+  return value === 'single-vertical-bar' || value === 'double-vertical-bar';
 }
 
 function administrativeLevelId(value: unknown): value is AdminLevelId {
@@ -579,14 +579,18 @@ function validatePreparedSpec(
     });
   }
 
+  // Belegt sind die normale Formation (F.1.1, F.1.13, F.1.21, E.1.31, I.1.4) und die Formation
+  // mit Fußband (F.1.3: dieselben zwei Balken 1,5 × 4 mm über dem Körper). Jede andere Art oder
+  // Variante bleibt fail-closed.
   if (
     spec.technicalHeadMark !== undefined &&
-    (spec.kind !== 'formation' || spec.bodyVariant !== undefined)
+    (spec.kind !== 'formation' ||
+      (spec.bodyVariant !== undefined && spec.bodyVariant !== 'foot-band'))
   ) {
     issues.push({
       rule: 'technical-head-mark-requires-normal-formation',
       message:
-        'Die technische Kopfmarke ist ausschließlich an der normalen Formation vermessen.',
+        'Die technische Kopfmarke ist nur an der Formation ohne Variante oder mit Fußband vermessen.',
     });
   }
 

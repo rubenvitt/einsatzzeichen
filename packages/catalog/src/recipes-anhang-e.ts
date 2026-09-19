@@ -17,6 +17,15 @@ import type { Recipe } from './recipes.js';
  * Bedeutung gegen den Dateinamen halten, beides in der Sichtprüfung gegenprüfen
  * (`docs/reviews/2026-08-12-e-a-visual-qa.md`).
  *
+ * **Weiße Innenkontur (`whiteInnerContour`, seit dem Fachreview vom 19.09.2026).** Alle 68
+ * Zeichen des Anhangs setzen die Organisationsfarbe nicht auf den ganzen Körper: Der Körper ist
+ * weiß, die Farbe liegt in einem Innenfeld, das 1 mm von der Körpermittellinie eingerückt ist
+ * (Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert; Innenfeld je Körperform in
+ * `innerField()` in `base-symbols.ts`). Zwischen dem schwarzen Strich und der Farbe bleibt so ein
+ * weißes Band von 0,75 mm. Das ist eine Eigenheit des Anhangs und nicht der Organisation: Die
+ * THW-Personenzeichen D.3.8 und D.3.14 haben keine Innenkontur, das orange E.2.6 dagegen schon.
+ * Vorher fehlte die Kontur in allen 68 Darstellungen.
+ *
  * **`Typ A` ist eine eigene ID, keine Variante.** Sechs der 16 Dateien tragen „Typ A" im Namen
  * und ein „A" in der linken unteren Zone; ein Typ B existiert im gesamten Referenzbestand
  * nicht. Die Slice-Spec (`docs/decisions/2026-08-11-anhang-e-zuschnitt.md`, Abschnitt 5) hat
@@ -29,6 +38,7 @@ export const ANHANG_E_A_RECIPES = {
     referenceAsset: 'E.1.1_Bergungsgruppe.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'gruppe',
       labels: { center: 'B', bottomRight: 'THW' },
@@ -39,6 +49,7 @@ export const ANHANG_E_A_RECIPES = {
     referenceAsset: 'E.1.2_Bergungsgruppe_Abstützsystem Holz.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'gruppe',
       labels: { center: 'B', bottomLeft: 'ASH', bottomRight: 'THW' },
@@ -55,6 +66,7 @@ export const ANHANG_E_A_RECIPES = {
     referenceAsset: 'E.1.3_Einsatznachsorgeteam.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       labels: { center: 'ENT', bottomRight: 'THW' },
     },
@@ -64,6 +76,7 @@ export const ANHANG_E_A_RECIPES = {
     referenceAsset: 'E.1.4_Fachgruppe Bergungstauchen.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'gruppe',
       labels: { center: 'BT', bottomRight: 'THW' },
@@ -74,6 +87,7 @@ export const ANHANG_E_A_RECIPES = {
     referenceAsset: 'E.1.5_Fachgruppe Brückenbau.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'gruppe',
       labels: { center: 'BrB', bottomRight: 'THW' },
@@ -96,6 +110,7 @@ export const ANHANG_E_A_RECIPES = {
     referenceAsset: 'E.1.6_Fachgruppe Elektroversorgung.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'gruppe',
       labels: { center: 'E', bottomRight: 'THW' },
@@ -106,6 +121,7 @@ export const ANHANG_E_A_RECIPES = {
     referenceAsset: 'E.1.7_Fachgruppe Infrastruktur.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'gruppe',
       labels: { center: 'I', bottomRight: 'THW' },
@@ -116,6 +132,7 @@ export const ANHANG_E_A_RECIPES = {
     referenceAsset: 'E.1.8_Fachgruppe Notversorgung und Notinstandsetzung.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'gruppe',
       labels: { center: 'N', bottomRight: 'THW' },
@@ -126,6 +143,7 @@ export const ANHANG_E_A_RECIPES = {
     referenceAsset: 'E.1.9_Fachgruppe Ölschaden Typ A.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'gruppe',
       labels: { center: 'Öl', bottomLeft: 'A', bottomRight: 'THW' },
@@ -136,6 +154,7 @@ export const ANHANG_E_A_RECIPES = {
     referenceAsset: 'E.1.10_Fachgruppe Ortung Typ A.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'gruppe',
       labels: { center: 'O', bottomLeft: 'A', bottomRight: 'THW' },
@@ -146,6 +165,7 @@ export const ANHANG_E_A_RECIPES = {
     referenceAsset: 'E.1.11_Fachgruppe Räumen Typ A.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'gruppe',
       labels: { center: 'R', bottomLeft: 'A', bottomRight: 'THW' },
@@ -156,6 +176,7 @@ export const ANHANG_E_A_RECIPES = {
     referenceAsset: 'E.1.12_Fachgruppe Schwere Bergung Typ A.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'gruppe',
       labels: { center: 'SB', bottomLeft: 'A', bottomRight: 'THW' },
@@ -166,6 +187,7 @@ export const ANHANG_E_A_RECIPES = {
     referenceAsset: 'E.1.13_Fachgruppe Sprengen.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'gruppe',
       labels: { center: 'Sp', bottomRight: 'THW' },
@@ -177,6 +199,7 @@ export const ANHANG_E_A_RECIPES = {
     referenceAsset: 'E.1.14_Fachgruppe Trinkwasserversorgung.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'gruppe',
       labels: { center: 'TW', bottomRight: 'THW' },
@@ -187,6 +210,7 @@ export const ANHANG_E_A_RECIPES = {
     referenceAsset: 'E.1.15_Fachgruppe Wassergefahren Typ A.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'gruppe',
       labels: { center: 'W', bottomLeft: 'A', bottomRight: 'THW' },
@@ -197,6 +221,7 @@ export const ANHANG_E_A_RECIPES = {
     referenceAsset: 'E.1.16_Fachgruppe Wasserschaden Pumpen Typ A.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'gruppe',
       labels: { center: 'WP', bottomLeft: 'A', bottomRight: 'THW' },
@@ -276,6 +301,7 @@ export const ANHANG_E_B_RECIPES = {
     referenceAsset: 'E.1.17_Fachzug Grundzeichen.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'zug',
       labels: { center: 'FZ-', bottomRight: 'THW' },
@@ -294,6 +320,7 @@ export const ANHANG_E_B_RECIPES = {
     referenceAsset: 'E.1.18_Fachzug Führung-Kommunikation.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'zug',
       labels: { center: 'FZ-FK', bottomRight: 'THW' },
@@ -332,6 +359,7 @@ export const ANHANG_E_B_RECIPES = {
     referenceAsset: 'E.1.19_Zugtrupp_Fachzug Führung-Kommunikation.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'trupp',
       labels: { center: 'FZ-FK', bottomRight: 'THW' },
@@ -342,6 +370,7 @@ export const ANHANG_E_B_RECIPES = {
     referenceAsset: 'E.1.20_Fachgruppe Führungsunterstützung.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'gruppe',
       labels: { center: 'F', bottomRight: 'THW' },
@@ -358,6 +387,7 @@ export const ANHANG_E_B_RECIPES = {
     referenceAsset: 'E.1.21_Stab.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       labels: { center: 'Stab', bottomRight: 'THW' },
     },
@@ -372,6 +402,7 @@ export const ANHANG_E_B_RECIPES = {
     referenceAsset: 'E.1.22_Fachgruppe Kommunikation Typ A.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'gruppe',
       labels: { center: 'K', bottomLeft: 'A', bottomRight: 'THW' },
@@ -382,6 +413,7 @@ export const ANHANG_E_B_RECIPES = {
     referenceAsset: 'E.1.23_Fachzug Logistik.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'zug',
       labels: { center: 'FZ-Log', bottomRight: 'THW' },
@@ -393,6 +425,7 @@ export const ANHANG_E_B_RECIPES = {
     referenceAsset: 'E.1.24_Zugtrupp_Fachzug Logistik.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'trupp',
       labels: { center: 'FZ-Log', bottomRight: 'THW' },
@@ -403,6 +436,7 @@ export const ANHANG_E_B_RECIPES = {
     referenceAsset: 'E.1.25_Fachgruppe Logistik-Verpflegung.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'gruppe',
       labels: { center: 'Log-V', bottomRight: 'THW' },
@@ -421,6 +455,7 @@ export const ANHANG_E_B_RECIPES = {
     referenceAsset: 'E.1.26_Fachgruppe Logistik Materialwirtschaft.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'gruppe',
       labels: { center: 'Log-MW', bottomRight: 'THW' },
@@ -431,6 +466,7 @@ export const ANHANG_E_B_RECIPES = {
     referenceAsset: 'E.1.27_Trupp Logistik-Materialerhaltung.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'trupp',
       labels: { center: 'Log-M', bottomRight: 'THW' },
@@ -441,6 +477,7 @@ export const ANHANG_E_B_RECIPES = {
     referenceAsset: 'E.1.28_Trupp Logistik-Verbrauchsgüterversorgung.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'trupp',
       labels: { center: 'Log-VG', bottomRight: 'THW' },
@@ -589,6 +626,7 @@ export const ANHANG_E_C_RECIPES = {
     referenceAsset: 'E.1.29_Trupp Schwerer Transport.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'trupp',
       labels: { center: 'TS', bottomRight: 'THW' },
@@ -605,27 +643,21 @@ export const ANHANG_E_C_RECIPES = {
     referenceAsset: 'E.1.30_Media Team.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'gruppe',
       labels: { center: 'MT', bottomRight: 'THW' },
     },
   },
   /**
-   * Deklarierte Abweichung, die einzige dieses Teilslice. Die Referenz trägt an der Stelle der
-   * Kopfzone **keinen Stärkegrad**, sondern zwei senkrechte Balken: je 1,500 × 4,000 mm bei
-   * cx 12,000 und 20,000 mm, y 1,000…5,000 mm, Mitte also bei cy 3,000 mm. Alle vier Stärkegrade
-   * sind dagegen aus Kreisen r 1,500 mm gebaut und keiner aus einem Rechteck: `trupp`, `gruppe`
-   * und `zug` als Reihe auf den Plätzen 11/16/21 mm (absolut cy 3,500 mm), `staffel` als
-   * senkrechter Stapel zweier Marken auf der Mittelachse — weder Form noch Lage stimmen überein,
-   * und `StrengthId` kennt nur diese vier. Der Katalog baut das Zeichen
-   * deshalb ohne Kopfzone; `spec.strength` fehlt hier als Abweichung und nicht als Versehen. Die
-   * vollständige Begründung steht in der Note ihres technischen Reviews (`coverage-manifest.ts`).
-   *
-   * **Nicht die Fallzahl ist der Grund, sondern die fehlende Bedeutung** — das unterscheidet den
-   * Fall von der Innenreihe aus E-b. Der Balkenpfad kommt in genau drei von 661 Referenzdateien vor
-   * (E.1.31, `F.1.1_Medizinische Task Force.svg`, `F.1.3_Mobiles Betreuungsmodul 5000.svg`) und
-   * dort byteweise identisch; eine vermessene Konstante liegt also vor. Was fehlt, ist der Begriff,
-   * den diese Balken tragen — und den vergibt keine Messung.
+   * Die Referenz trägt an der Stelle der Kopfzone **keinen Stärkegrad**, sondern zwei senkrechte
+   * Balken: je 1,5 × 4 mm bei cx 12 und 20 mm, y 1…5 mm. Alle vier Stärkegrade sind aus Kreisen
+   * r 1,5 mm gebaut, `StrengthId` passt also nicht. Bis zum Fachreview vom 19.09.2026 baute der
+   * Katalog das Zeichen deshalb ohne Kopfzone. Seitdem trägt es die semantikfreie technische
+   * Kopfmarke `double-vertical-bar` (`technical-head-marks.ts`): Sie bildet die Balken ab, ohne
+   * einen Stärkebegriff zu behaupten — derselbe Weg wie `single-vertical-bar` bei I.1.4. Der
+   * Balkenpfad steht byteweise identisch auch in `F.1.1_Medizinische Task Force.svg` und
+   * `F.1.3_Mobiles Betreuungsmodul 5000.svg`.
    *
    * Die Zahl 500 des Dateinamens erscheint im Zeichen nicht: die Typo-Ebene führt genau acht
    * Glyphenpfade, fünf im mittigen Lauf und drei im `THW`-Lauf, und im gesamten E.1 kommt keine
@@ -642,7 +674,9 @@ export const ANHANG_E_C_RECIPES = {
     referenceAsset: 'E.1.31_System Bereitstellungsraum 500.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
+      technicalHeadMark: 'double-vertical-bar',
       labels: { center: 'SysBR', bottomRight: 'THW' },
     },
   },
@@ -651,6 +685,7 @@ export const ANHANG_E_C_RECIPES = {
     referenceAsset: 'E.1.32_Technischer Zug.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'zug',
       labels: { center: 'TZ', bottomRight: 'THW' },
@@ -661,6 +696,7 @@ export const ANHANG_E_C_RECIPES = {
     referenceAsset: 'E.1.33_Trupp Einsatzstellensicherung.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'trupp',
       labels: { center: 'ESS', bottomRight: 'THW' },
@@ -671,6 +707,7 @@ export const ANHANG_E_C_RECIPES = {
     referenceAsset: 'E.1.34_Trupp Mobiler Hochwasserpegel.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'trupp',
       labels: { center: 'MHP', bottomRight: 'THW' },
@@ -681,6 +718,7 @@ export const ANHANG_E_C_RECIPES = {
     referenceAsset: 'E.1.35_Trupp Unbemannte Luftfahrtsysteme.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'trupp',
       labels: { center: 'UL', bottomRight: 'THW' },
@@ -699,6 +737,7 @@ export const ANHANG_E_C_RECIPES = {
     referenceAsset: 'E.1.36_Virtual Operations Support Team.svg',
     spec: {
       kind: 'formation',
+      whiteInnerContour: true,
       organization: 'thw',
       strength: 'zug',
       labels: { center: 'VOST', bottomRight: 'THW' },
@@ -720,16 +759,15 @@ export const ANHANG_E_C_RECIPES = {
    * E.1.37 und nicht `1.7`.
    *
    * Die Füllfläche der Referenz ist zweiteilig (Dachdreieck 4,1035…10,0002 mm, Rechteck
-   * 11,0000…24,9999 mm, dazwischen ein weißes Band von 1,0 mm Höhe); `BODIES.building` bildet sie
-   * wie überall als **eine** Fläche ab — dieselbe geerbte Eigenschaft von `base-symbols.ts`, die
-   * schon in E-a und E-b das weiße Innenfeld der Referenz nicht abbildet, und keine Entscheidung
-   * dieses Teilslice.
+   * 11,0000…24,9999 mm, dazwischen ein weißes Band von 1,0 mm Höhe). Seit dem Fachreview vom
+   * 19.09.2026 bildet `innerField('building')` genau diese beiden Flächen ab.
    */
   'E.1.37': {
     title: 'Ortsverband',
     referenceAsset: 'E.1.37_Ortsverband.svg',
     spec: {
       kind: 'building',
+      whiteInnerContour: true,
       organization: 'thw',
       labels: { center: 'OV', bottomRight: 'THW' },
     },
@@ -851,6 +889,7 @@ export const ANHANG_E_D_RECIPES = {
     referenceAsset: 'E.2.1_Personenkraftwagen_straßenfähig.svg',
     spec: {
       kind: 'vehicle-land',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'kfz-kategorie-1',
       labels: { center: 'PKW', bottomRight: 'THW' },
@@ -861,6 +900,7 @@ export const ANHANG_E_D_RECIPES = {
     referenceAsset: 'E.2.2_Mannschaftstransportwagen_straßenfähig.svg',
     spec: {
       kind: 'vehicle-land',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'kfz-kategorie-1',
       labels: { center: 'MTW', bottomRight: 'THW' },
@@ -877,6 +917,7 @@ export const ANHANG_E_D_RECIPES = {
     referenceAsset: 'E.2.3_Gerätekraftwagen_geländefähig.svg',
     spec: {
       kind: 'vehicle-land',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'kfz-kategorie-2',
       labels: { center: 'GKW', bottomRight: 'THW' },
@@ -893,6 +934,7 @@ export const ANHANG_E_D_RECIPES = {
     referenceAsset: 'E.2.4_All Terrain Vehicle_geländegängig.svg',
     spec: {
       kind: 'vehicle-land',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'kfz-kategorie-3',
       labels: { center: 'ATV', bottomRight: 'THW' },
@@ -912,6 +954,7 @@ export const ANHANG_E_D_RECIPES = {
     referenceAsset: 'E.2.5_Gabelstapler_straßenfähig.svg',
     spec: {
       kind: 'vehicle-land',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'kfz-kategorie-1',
       labels: { center: 'Stapler', bottomRight: 'THW' },
@@ -956,6 +999,7 @@ export const ANHANG_E_D_RECIPES = {
     referenceAsset: 'E.2.6_Gabelstapler öffentliche Gefahrenabwehr_THW betrieben_geländegängig.svg',
     spec: {
       kind: 'vehicle-land',
+      whiteInnerContour: true,
       organization: 'sonstige-gefahrenabwehr',
       vehicleCategory: 'kfz-kategorie-3',
       labels: { center: 'Stapler', bottomRight: 'THW' },
@@ -976,6 +1020,7 @@ export const ANHANG_E_D_RECIPES = {
     referenceAsset: 'E.2.7_Teleskopstapler_geländegängig.svg',
     spec: {
       kind: 'vehicle-land',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'kfz-kategorie-3',
       labels: { center: 'Telelader', bottomRight: 'THW', centerCapHeightMm: 4.3829 },
@@ -991,6 +1036,7 @@ export const ANHANG_E_D_RECIPES = {
     referenceAsset: 'E.2.8_Bergungsräumgerät Radlader_geländegängig.svg',
     spec: {
       kind: 'vehicle-land',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'kfz-kategorie-3',
       labels: { center: 'Radlader', bottomRight: 'THW', centerCapHeightMm: 4.3826 },
@@ -1012,6 +1058,7 @@ export const ANHANG_E_D_RECIPES = {
     referenceAsset: 'E.2.9_Bergungsräumgerät Bagger_Kettenantrieb.svg',
     spec: {
       kind: 'vehicle-land',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'kettenfahrzeug',
       labels: { center: 'Bagger', bottomRight: 'THW' },
@@ -1031,6 +1078,7 @@ export const ANHANG_E_D_RECIPES = {
     referenceAsset: 'E.2.10_Bergungsräumgerät Bagger_Radantrieb.svg',
     spec: {
       kind: 'vehicle-land',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'kfz-kategorie-2',
       labels: { center: 'Bagger', bottomRight: 'THW' },
@@ -1042,6 +1090,7 @@ export const ANHANG_E_D_RECIPES = {
     referenceAsset: 'E.2.11_Einsatz-Rettungs-Spinne_geländefähig.svg',
     spec: {
       kind: 'vehicle-land',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'kfz-kategorie-3',
       labels: { center: 'ERS', bottomRight: 'THW' },
@@ -1058,6 +1107,7 @@ export const ANHANG_E_D_RECIPES = {
     referenceAsset: 'E.2.12_Mehrzweckgerätewagen Ladebordwand_geländegängig.svg',
     spec: {
       kind: 'vehicle-land',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'kfz-kategorie-2',
       labels: { center: 'MzGW Lbw', bottomRight: 'THW', centerCapHeightMm: 3.40995 },
@@ -1076,6 +1126,7 @@ export const ANHANG_E_D_RECIPES = {
     referenceAsset: 'E.2.13_Mannschaftslastwagen 4 Ladebordwand_geländegänig.svg',
     spec: {
       kind: 'vehicle-land',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'kfz-kategorie-2',
       labels: { center: 'MLW IV Lbw', bottomRight: 'THW', centerCapHeightMm: 3.40995 },
@@ -1092,6 +1143,7 @@ export const ANHANG_E_D_RECIPES = {
     referenceAsset: 'E.2.14_Mannschaftslastwagen 5_straßenfähig.svg',
     spec: {
       kind: 'vehicle-land',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'kfz-kategorie-1',
       labels: { center: 'MLW V', bottomRight: 'THW' },
@@ -1122,6 +1174,7 @@ export const ANHANG_E_D_RECIPES = {
     referenceAsset: 'E.2.15_Wechselladerfahrzeug_straßenfähig.svg',
     spec: {
       kind: 'swap-loader-vehicle',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'kfz-kategorie-1',
       labels: { center: 'LKW', bottomRight: 'THW' },
@@ -1142,6 +1195,7 @@ export const ANHANG_E_D_RECIPES = {
     referenceAsset: 'E.2.16_Lastkraftwagen Ladekran_straßenfähig.svg',
     spec: {
       kind: 'vehicle-land',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'kfz-kategorie-1',
       labels: { center: 'LKW Lkr', bottomRight: 'THW', centerCapHeightMm: 4.38273 },
@@ -1159,6 +1213,7 @@ export const ANHANG_E_D_RECIPES = {
     referenceAsset: 'E.2.17_Lastkraftwagen Ladebordwand_straßenfähig.svg',
     spec: {
       kind: 'vehicle-land',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'kfz-kategorie-1',
       labels: { center: 'LKW Lbw', bottomRight: 'THW', centerCapHeightMm: 4.38273 },
@@ -1175,6 +1230,7 @@ export const ANHANG_E_D_RECIPES = {
     referenceAsset: 'E.2.18_Lastkraftwagen Kipper_geländefähig.svg',
     spec: {
       kind: 'vehicle-land',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'kfz-kategorie-2',
       labels: { center: 'LKW-K', bottomRight: 'THW' },
@@ -1193,6 +1249,7 @@ export const ANHANG_E_D_RECIPES = {
     referenceAsset: 'E.2.19_Führungskraftwagen_geländefähig.svg',
     spec: {
       kind: 'vehicle-land',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'kfz-kategorie-2',
       labels: { center: 'FüKW', bottomRight: 'THW', centerCapHeightMm: 4.3829 },
@@ -1208,6 +1265,7 @@ export const ANHANG_E_D_RECIPES = {
     referenceAsset: 'E.2.20_Führungs- Kommunikationskraftwagen_straßenfähig.svg',
     spec: {
       kind: 'vehicle-land',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'kfz-kategorie-1',
       labels: { center: 'FüKomKW', bottomRight: 'THW', centerCapHeightMm: 3.65125 },
@@ -1222,6 +1280,7 @@ export const ANHANG_E_D_RECIPES = {
     referenceAsset: 'E.2.21_Mastkraftwagen_geländefähig.svg',
     spec: {
       kind: 'vehicle-land',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'kfz-kategorie-2',
       labels: { center: 'MastKW', bottomRight: 'THW', centerCapHeightMm: 4.3826 },
@@ -1291,8 +1350,8 @@ export const ANHANG_E_D_FINDINGS: Readonly<Record<string, string>> = Object.free
     'als um 1 mm eingerückte Körperform (Regelfall 2,0002/7,1138/30,0002/25,0007 mm); oberhalb ' +
     'bleibt ein leeres weisses Band. Beide Grundlinien stehen normgerecht. Dieselbe Klasse wie ' +
     'E.1.19 und E.1.24 aus E-b, dort aber gepaart mit einer Markenreihe im Körper, die hier ' +
-    'fehlt — die Paarung, die E-b noch vermutet hat, trägt damit nicht. Der Katalog färbt den ' +
-    'ganzen Körperpfad, wie in allen 68 Zeichen des Anhangs.',
+    'fehlt — die Paarung, die E-b noch vermutet hat, trägt damit nicht. Der Katalog färbt das ' +
+    'normgerechte, um 1 mm eingerückte Innenfeld, wie in allen 68 Zeichen des Anhangs.',
   'E.2.20':
     'Zwei Befunde in einer Datei. Erstens dasselbe zurückgesetzte Farbfeld wie E.2.19 ' +
     '(2,0002/9,9998/30,0002/25,0003 mm). Zweitens steht die mittige Grundlinie auf 17,5002 mm, ' +
@@ -1356,6 +1415,7 @@ export const ANHANG_E_E_RECIPES = {
     referenceAsset: 'E.2.22_Anhänger Grundzeichen.svg',
     spec: {
       kind: 'trailer',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'anhaenger-ein-rad',
       labels: { bottomRight: 'THW' },
@@ -1369,14 +1429,15 @@ export const ANHANG_E_E_RECIPES = {
    * Zweiter Befund, und er betrifft die Lagen: die Farbfläche endet unten bei 22,5002 statt
    * 25,0 mm, und beide Läufe stehen entsprechend höher (Grundlinien 16,5001 und 21,5000 statt
    * 18,0 und 24,0 mm). Der Katalog baut die Normlagen — dieselbe Einordnung wie bei E.1.6/E.1.14
-   * in E-a. Weil er den ganzen Körperpfad färbt, steht der `THW`-Lauf dabei auf Blau und nicht,
-   * wie in der Referenz, auf dem weissen Rest.
+   * in E-a. Weil er das normgerechte Innenfeld bis 25,0 mm färbt, steht der `THW`-Lauf dabei auf
+   * Blau und nicht, wie in der Referenz, auf dem weissen Rest.
    */
   'E.2.23': {
     title: 'Anhänger Netzersatzanlage, von LKW gezogen',
     referenceAsset: 'E.2.23_Anhänger Netzersatzanlage_von LKW gezogen.svg',
     spec: {
       kind: 'trailer',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'anhaenger-ein-rad',
       labels: { center: 'NEA', bottomRight: 'THW' },
@@ -1395,6 +1456,7 @@ export const ANHANG_E_E_RECIPES = {
     referenceAsset: 'E.2.24_Anhänger Führung und Lage_von LKW gezogen.svg',
     spec: {
       kind: 'trailer',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'anhaenger-zwei-raeder',
       labels: { center: 'FüLa', bottomRight: 'THW' },
@@ -1415,6 +1477,7 @@ export const ANHANG_E_E_RECIPES = {
     referenceAsset: 'E.2.25_Anhänger 0,6 t Leergewicht_von PKW gezogen.svg',
     spec: {
       kind: 'trailer',
+      whiteInnerContour: true,
       organization: 'thw',
       vehicleCategory: 'anhaenger-ein-rad',
       labels: { center: '0,6 t', bottomRight: 'THW' },
@@ -1446,6 +1509,7 @@ export const ANHANG_E_E_RECIPES = {
     referenceAsset: 'E.2.26_Trinkwasseraufbereitungsanlage.svg',
     spec: {
       kind: 'upright-rectangle',
+      whiteInnerContour: true,
       organization: 'thw',
       labels: { center: 'TW AA', bottomRight: 'THW' },
     },
@@ -1477,8 +1541,8 @@ export const ANHANG_E_E_FINDINGS: Readonly<Record<string, string>> = Object.free
     'Räder von 5.1.2.5 trägt. Der Katalog folgt der Zeichnung. Zweitens endet die Farbfläche ' +
     'unten bei 22,5002 statt 25,0 mm, und beide Läufe stehen um 1,5 bzw. 2,5 mm höher ' +
     '(Grundlinien 16,5001 und 21,5000 statt 18,0 und 24,0 mm; Grundlinienabstand damit 5,0 statt ' +
-    '6,0 mm). Der Katalog baut die Normlagen — dieselbe Einordnung wie E.1.6/E.1.14. Weil er den ' +
-    'ganzen Körperpfad färbt, steht der THW-Lauf dabei auf Blau und nicht auf dem weissen Rest.',
+    '6,0 mm). Der Katalog baut die Normlagen — dieselbe Einordnung wie E.1.6/E.1.14. Weil er das ' +
+    'normgerechte Innenfeld färbt, steht der THW-Lauf dabei auf Blau und nicht auf dem weissen Rest.',
   'E.2.24':
     'Zwei Befunde. Erstens ist der THW-Lauf zweimal byteidentisch übereinander gezeichnet: die ' +
     'Typo-Ebene führt drei Untergruppen, zwei davon mit derselben Hülle ' +
@@ -1486,8 +1550,8 @@ export const ANHANG_E_E_FINDINGS: Readonly<Record<string, string>> = Object.free
     'zeichengleich wieder — sichtbar ist der Unterschied nicht, messbar schon. Zweitens liegt die ' +
     'Organisationsfarbe als Rechteck 4,9999/10,0002/30,0002/25,0007 mm im Körper statt als um ' +
     '1 mm eingerückte Körperform; das ist dieselbe Klasse wie E.2.19, E.2.20, E.1.19 und E.1.24, ' +
-    'und mit E.2.24 steigt sie auf fünf Fälle über zwei Kapitel. Der Katalog färbt den ganzen ' +
-    'Körperpfad.',
+    'und mit E.2.24 steigt sie auf fünf Fälle über zwei Kapitel. Der Katalog färbt das ' +
+    'normgerechte, um 1 mm eingerückte Innenfeld.',
   'E.2.25':
     'Der Dateiname führt „Anhänger 0,6 t Leergewicht", das Bild nur „0,6 t" — vier Glyphen, ' +
     'darunter das einzige Komma und die einzigen Ziffern in ganz Anhang E. Zweiter Befund ohne ' +
@@ -1546,6 +1610,7 @@ export const ANHANG_E_F_RECIPES = {
     referenceAsset: 'E.2.27_Wasserfahrzeug allgemein.svg',
     spec: {
       kind: 'vehicle-water',
+      whiteInnerContour: true,
       bodyVariant: 'raised-hull',
       organization: 'thw',
       labels: { belowRight: 'THW' },
@@ -1562,6 +1627,7 @@ export const ANHANG_E_F_RECIPES = {
     referenceAsset: 'E.2.28_Kleines Boot.svg',
     spec: {
       kind: 'vehicle-water',
+      whiteInnerContour: true,
       bodyVariant: 'raised-hull',
       organization: 'thw',
       labels: { center: 'kl Boot', belowRight: 'THW' },
@@ -1573,6 +1639,7 @@ export const ANHANG_E_F_RECIPES = {
     referenceAsset: 'E.2.29_Mehrzweckboot.svg',
     spec: {
       kind: 'vehicle-water',
+      whiteInnerContour: true,
       bodyVariant: 'raised-hull',
       organization: 'thw',
       labels: { center: 'MzB', belowRight: 'THW' },
@@ -1583,6 +1650,7 @@ export const ANHANG_E_F_RECIPES = {
     referenceAsset: 'E.2.30_Mehrzweckarbeitsboot.svg',
     spec: {
       kind: 'vehicle-water',
+      whiteInnerContour: true,
       bodyVariant: 'raised-hull',
       organization: 'thw',
       labels: { center: 'MzAB', belowRight: 'THW' },
@@ -1598,6 +1666,7 @@ export const ANHANG_E_F_RECIPES = {
     referenceAsset: 'E.2.31_Mehrzweckponton.svg',
     spec: {
       kind: 'vehicle-water',
+      whiteInnerContour: true,
       bodyVariant: 'raised-hull',
       organization: 'thw',
       labels: { center: 'MzPt', belowRight: 'THW' },

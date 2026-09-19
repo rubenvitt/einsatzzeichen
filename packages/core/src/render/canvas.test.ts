@@ -849,6 +849,18 @@ describe('renderCanvas — Text', () => {
     expect(font?.[1]).toBe(`${mmToUnits(10)}px Arimo`);
   });
 
+  it('setzt fontWeight 700 als fetten Canvas-Font und lässt 400 unverändert', () => {
+    const [text] = textDrawing.children;
+    if (text?.type !== 'text') throw new Error('Text erwartet');
+    const fontFor = (fontWeight: 400 | 700): unknown => {
+      const { ctx, calls } = recordingContext();
+      renderCanvas({ ...textDrawing, children: [{ ...text, fontWeight }] }, ctx);
+      return calls.find(([name]) => name === 'set:font')?.[1];
+    };
+    expect(fontFor(700)).toBe(`700 ${mmToUnits(10)}px Arimo`);
+    expect(fontFor(400)).toBe(`${mmToUnits(10)}px Arimo`);
+  });
+
   it('ignoriert einen gesetzten stroke — dasselbe fillOnly-Verhalten wie SVG', () => {
     // Parität zu svg.ts' fillOnly: true (styleAttrs) — ein style.stroke an Text darf in keinem
     // der beiden Renderer eine Kontur erzeugen, sonst zeichnete SVG etwas, das Canvas nie tut.

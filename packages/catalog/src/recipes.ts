@@ -7,7 +7,7 @@ import {
   type ContrastRequirement,
 } from '@einsatzzeichen/core';
 import type { BodyLabelInk, Drawing, OrganizationId, SymbolSpec } from '@einsatzzeichen/schema';
-import { baseDrawing } from './base-symbols.js';
+import { baseDrawing, innerField } from './base-symbols.js';
 import { bodyMark } from './body-marks.js';
 import { administrativeHead } from './administrative-heads.js';
 import { functionRole } from './function-roles.js';
@@ -43,6 +43,7 @@ import { ANHANG_I_RECIPES } from './recipes-anhang-i.js';
 
 const PORTS: CatalogPorts = {
   baseDrawing,
+  innerField,
   bodyMark,
   organizationColor,
   strengthHead,

@@ -24,6 +24,8 @@ SOURCE_SHA256='e43898b143ec826ac8cb4034816458a7047fbe0836558de2a1f8c6223ae3e0ca'
 SOURCE_TTF="$OUT/Arimo[wght]-source.ttf"
 SUBSET_TTF="$ASSETS/Arimo[wght].ttf"
 METRICS_JSON="$ASSETS/arimo-metrics.json"
+BOLD_TTF="$ASSETS/Arimo-Bold.ttf"
+BOLD_METRICS_JSON="$ASSETS/arimo-bold-metrics.json"
 PYFTSUBSET="${PYFTSUBSET:-$HOME/.local/bin/pyftsubset}"
 FONTTOOLS_PYTHON="${FONTTOOLS_PYTHON:-$HOME/.local/pipx/venvs/fonttools/bin/python}"
 
@@ -58,6 +60,20 @@ fi
   --no-recalc-bounds
 
 "$FONTTOOLS_PYTHON" "$ROOT/scripts/font/export-metrics.py" "$SUBSET_TTF" "$SOURCE_SHA256" "$METRICS_JSON"
+
+# Statische Instanz wght 700 aus dem Subset. resvg (2.6) wertet die wght-Achse einer variablen
+# Schrift nicht aus: font-weight="700" rastert mit der variablen Datei allein bit-identisch zu 400.
+# Mit einer zweiten Datei der Familie „Arimo" und usWeightClass 700 wählt resvg für fett gesetzte
+# Läufe diese Instanz; nicht fette Läufe rastern unverändert. Browser lesen weiterhin die Achse.
+"$FONTTOOLS_PYTHON" - "$SUBSET_TTF" "$BOLD_TTF" <<'PY'
+import sys
+from fontTools.ttLib import TTFont
+from fontTools.varLib import instancer
+font = instancer.instantiateVariableFont(TTFont(sys.argv[1]), {"wght": 700}, updateFontNames=True)
+font.recalcTimestamp = False  # head.modified bleibt, die Datei ist reproduzierbar
+font.save(sys.argv[2])
+PY
+"$FONTTOOLS_PYTHON" "$ROOT/scripts/font/export-metrics.py" "$BOLD_TTF" "$SOURCE_SHA256" "$BOLD_METRICS_JSON"
 
 echo "Original: $(wc -c < "$SOURCE_TTF" | tr -d ' ') Byte, SHA-256 $SOURCE_SHA256"
 echo "Subset:   $(wc -c < "$SUBSET_TTF" | tr -d ' ') Byte, SHA-256 $(shasum -a 256 "$SUBSET_TTF" | cut -d' ' -f1)"

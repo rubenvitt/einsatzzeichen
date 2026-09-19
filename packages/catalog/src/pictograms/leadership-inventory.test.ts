@@ -196,7 +196,7 @@ describe('Leadership-Inventar nach D.2', () => {
         section: 'D.3.14',
         title: 'Fachberater THW',
         referenceAsset: 'D.3.14_Fachberater THW.svg',
-        box: { xMm: 2.397, yMm: 2.397, widthMm: 29.105, heightMm: 27.207 },
+        box: { xMm: 2.75, yMm: 2.75, widthMm: 28.75, heightMm: 26.5 },
         bodyFill: 'blau',
         role: ['THW', 'weiss', 16, 18.5, 7.08, 'middle'],
         carrier: ['stv OB', 'schwarz', 31.5, 29, 4.243, 'end'],
@@ -206,7 +206,7 @@ describe('Leadership-Inventar nach D.2', () => {
         section: 'D.3.15',
         title: 'Rotkreuzbeauftragter',
         referenceAsset: 'D.3.15_Rotkreuzbeauftragter.svg',
-        box: { xMm: 2.397, yMm: 2.397, widthMm: 28.603, heightMm: 27.207 },
+        box: { xMm: 2.75, yMm: 2.75, widthMm: 28.25, heightMm: 26.5 },
         bodyFill: 'weiss',
         role: ['RKB', 'schwarz', 16, 18.5, 7.08, 'middle'],
         carrier: ['DRK', 'schwarz', 31, 29, 4.243, 'end'],
@@ -239,10 +239,10 @@ describe('Leadership-Inventar nach D.2', () => {
       const [outer, shoulder] = definition?.primitives.slice(1, 3) ?? [];
       expect(outer).toMatchObject({
         type: 'polyline', role: 'pictogram', closed: true,
-        points: [[16, 2.647], [29.354, 16], [16, 29.354], [2.647, 16]],
+        points: [[16, 3], [29, 16], [16, 29], [3, 16]],
       });
       expect(shoulder).toMatchObject({
-        type: 'line', role: 'pictogram', x1: 11.603, y1: 7.75, x2: 20.396, y2: 7.75,
+        type: 'line', role: 'pictogram', x1: 11, y1: 8, x2: 21, y2: 8,
       });
 
       const texts = definition?.primitives.filter((primitive) => primitive.type === 'text') ?? [];

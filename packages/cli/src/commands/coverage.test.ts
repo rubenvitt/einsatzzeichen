@@ -108,7 +108,11 @@ describe('coverage CLI', () => {
     // der Blockerzeile darunter: ein Blocker ist ein offener Punkt, diese Ausnahme ist ein
     // entschiedener.
     expect(lines).toContain(
-      'Kontrastausnahmen: weiss auf orange (E.2.6, entschieden am 2026-08-18 durch Projektinhaber)',
+      'Kontrastausnahmen: weiss auf orange (E.2.6, entschieden am 2026-08-18 durch Projektinhaber); ' +
+        'rot auf weiss (4.1.6, 4.1.7, 4.1.8, 5.8.1.7, 5.8.1.8, 5.8.1.10, 5.8.1.11, ' +
+        'entschieden am 2026-09-19 durch Koordinator (delegiert)); ' +
+        'rot auf surface (L.10, entschieden am 2026-09-19 durch Koordinator (delegiert)); ' +
+        'schwarz auf rot (4.2.2, entschieden am 2026-09-19 durch Koordinator (delegiert))',
     );
     // **Die Invariante ist „CLI und Ledger nennen dieselbe Zahl".** Die Zahlen kommen aus dem
     // Ledger (`offeneReviews`), die Zeile aus `coverage()`; stimmen sie nicht überein, zählt eine
@@ -152,15 +156,15 @@ describe('coverage CLI', () => {
         'vehicleCategory 7/8 (amphibienfahrzeug)',
     );
     expect(lines).toContain(
-      'Generative Reichweite (Stufe 1): 894 gültige Kompositionen aus kind × Körpervariante × ' +
-        'Organisation × Kopfzone × Fahrwerk (225720 enumeriert), davon 67 in der Referenz belegt — ' +
-        '827 erzeugbar ohne Referenzbeleg, 8 Rezeptsignaturen außerhalb der Stufe ' +
+      'Generative Reichweite (Stufe 1): 924 gültige Kompositionen aus kind × Körpervariante × ' +
+        'Organisation × Kopfzone × Fahrwerk (244530 enumeriert), davon 71 in der Referenz belegt — ' +
+        '853 erzeugbar ohne Referenzbeleg, 8 Rezeptsignaturen außerhalb der Stufe ' +
         '(dokumentiert, kein Gate); nicht enumeriert: 88 Fähigkeiten, ' +
         '132 Körpermarken, 25 Funktionsrollen, freie Bezeichnung',
     );
     expect(lines.at(-1)).toBe('Coverage-Gate bestanden.');
     // Expliziter Timeout: `coverage()` rechnet seit LFH-413 `generativeReach()` mit
-    // (963 validateSpec-gültige, 894 komponierte Kombinationen) — allein ~140 ms, unter
+    // (993 validateSpec-gültige, 924 komponierte Kombinationen) — allein ~140 ms, unter
     // Vitest-Parallellast bis ~4 s gemessen; das 5-s-Standardlimit wäre ein Lastflake.
   }, 30_000);
 });

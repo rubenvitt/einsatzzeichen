@@ -68,3 +68,20 @@ pyftsubset 'Arimo[wght].ttf' --output-file=packages/catalog/assets/Arimo[wght].t
   `{ links: { rechts: XAdvance } }` aus dem GPOS-Feature `kern`, nur Werte ≠ 0; Kopfwerte;
   beide SHA-256) wird von `scripts/font/export-metrics.py`
   aus dem Subset exportiert; `src/fonts.test.ts` gleicht sie gegen die TTF ab.
+
+## Fettinstanz (2026-09-19)
+
+`Arimo-Bold.ttf` ist eine statische Instanz der `wght`-Achse bei 700, erzeugt aus dem Subset oben
+mit fontTools `varLib.instancer` (`updateFontNames=True`) durch `scripts/font/subset-arimo.sh`.
+Sie ist wie das Subset eine nach OFL §1 zulässige „Modified Version" desselben Originals und steht
+unter derselben Lizenz (`Arimo-OFL.txt`).
+
+- **Warum:** `@resvg/resvg-js` 2.6 wertet die `wght`-Achse der variablen Datei nicht aus; mit ihr
+  allein rastert `font-weight="700"` bit-identisch zu 400. Liegt die Fettinstanz zusätzlich in
+  `fontFiles`, wählt resvg sie für Läufe mit `fontWeight: 700`. Nicht fette Läufe rastern
+  unverändert.
+- **Prüfsumme:** SHA-256 `0f8eb8ed8b92a80cbbbcadb382089e8fda8d50015b0e36212c341c1a6b96341a`
+  (`TEXT_FONT_BOLD_SHA256` in `src/fonts.ts`), 53.436 Byte.
+- **Metriken:** `arimo-bold-metrics.json`, gleiches Format wie `arimo-metrics.json`, exportiert
+  von `scripts/font/export-metrics.py` aus der Fettinstanz.
+- **Kursiv:** Einen kursiven Schnitt führt das Projekt nicht.

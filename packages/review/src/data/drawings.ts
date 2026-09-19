@@ -97,7 +97,28 @@ function strengthCarrier(id: StrengthId): Carrier {
   };
 }
 
+/**
+ * Anhängerfahrwerke gehören an den Anhängerrumpf, nicht an das Landfahrzeug: die Referenzen
+ * 5.1.2.4/5.1.2.5 zeigen sie mit Deichsel, und der Katalog setzt sie ebenso nur an `trailer`
+ * (E.2.22 ff.). Am Landfahrzeug gezeigt, prüfte der Mensch ein Bild, das es im Katalog nicht gibt.
+ */
+const TRAILER_CATEGORIES: ReadonlySet<VehicleCategoryId> = new Set([
+  'anhaenger-ein-rad',
+  'anhaenger-zwei-raeder',
+]);
+
 function vehicleCategoryCarrier(id: VehicleCategoryId): Carrier {
+  if (TRAILER_CATEGORIES.has(id)) {
+    return {
+      spec: { kind: 'trailer', vehicleCategory: id },
+      context: {
+        host: 'trailer',
+        explanation:
+          'Die Fahrzeugkategorie ist als Fahrwerkszone unter einem Anhänger gezeigt. Der ' +
+          'Anhängerrumpf ist nur Träger des Fahrwerks und nicht Teil der geprüften Aussage.',
+      },
+    };
+  }
   return {
     spec: { kind: 'vehicle-land', vehicleCategory: id },
     context: {

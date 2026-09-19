@@ -55,10 +55,6 @@ function boxMaxX(item: CatalogPictogramDefinition): number {
   return item.box.xMm + item.box.widthMm;
 }
 
-function boxMaxY(item: CatalogPictogramDefinition): number {
-  return item.box.yMm + item.box.heightMm;
-}
-
 describe('PERSON_STATES', () => {
   it('enthaelt 17 IDs und 18 Darstellungen in Kapitelreihenfolge', () => {
     expect(PERSON_STATES.map((item) => [
@@ -97,11 +93,18 @@ describe('PERSON_STATES', () => {
     expect(Object.isFrozen(PERSON_STATES[0]?.primitives)).toBe(true);
     for (const item of PERSON_STATES) {
       expect(item.placement).toEqual({ mode: 'standalone' });
-      expect(item.contrastPairs).toEqual([{
-        foreground: 'schwarz',
-        background: 'surface',
-        context: 'Personendiamant und Zustandsmarke auf Ausgabeoberfläche',
-      }]);
+      expect(item.contrastPairs).toEqual([
+        {
+          foreground: 'schwarz',
+          background: 'weiss',
+          context: 'Zustandsmarke auf weißer Personenraute',
+        },
+        {
+          foreground: 'schwarz',
+          background: 'surface',
+          context: 'Personendiamant und Zustandsmarke auf Ausgabeoberfläche',
+        },
+      ]);
       expect(checkCommands(item)).toEqual([]);
       expect(checkBox(item)).toEqual([]);
       expect(checkClipping(item, viewBoxBody(item))).toEqual([]);
@@ -109,84 +112,84 @@ describe('PERSON_STATES', () => {
         expect(leaf.role).toBe('pictogram');
         expect(leaf.role).not.toBe('foot');
         expect(leaf.transform).toBeUndefined();
+        if (leaf.style?.stroke !== undefined && leaf.style.stroke !== 'none') {
+          expect(leaf.style.strokeWidth).toBe(0.5);
+        }
       }
     }
   });
 
-  it('setzt B, II und TP als Geometrie ausserhalb des Grunddiamanten um', () => {
-    const affected = definition('state.person-affected');
-    expect(pathsOf(affected)).toHaveLength(2);
-    expect(pathsOf(affected).filter((path) => path.d.includes('C'))).toHaveLength(1);
-    expect(boxMaxX(affected)).toBe(31);
+  it('zeichnet die Personenraute weiß gefüllt mit 13 mm halber Diagonale', () => {
+    const diamond = polylinesOf(definition('state.person-uninjured'))[0];
+    expect(diamond?.closed).toBe(true);
+    expect(diamond?.points).toEqual([[16, 3], [29, 16], [16, 29], [3, 16]]);
+    expect(diamond?.style).toEqual({ fill: 'weiss', stroke: 'schwarz', strokeWidth: 0.5 });
+  });
+
+  it('setzt B und TP als Text, II als gezeichnete Serifenziffern', () => {
+    const textsOf = (id: string) =>
+      leavesOf(definition(id).primitives).filter((leaf) => leaf.type === 'text');
+    expect(textsOf('state.person-affected')).toMatchObject([
+      { content: 'B', sizeMm: 7.1, y: 7, anchor: 'middle' },
+    ]);
+    expect(textsOf('state.person-injured-transport-priority')).toMatchObject([
+      { content: 'TP', sizeMm: 7.1, y: 7, anchor: 'middle' },
+    ]);
 
     const triage = definition('state.person-injured-triage-category');
-    const triageMark = linesOf(triage).filter((line) =>
-      Math.max(line.x1, line.x2) <= 10.5 && Math.min(line.y1, line.y2) >= 23.5,
-    );
-    expect(triageMark).toHaveLength(6);
-    expect(triage.box.xMm).toBe(1.5);
-    expect(boxMaxY(triage)).toBe(31);
-    expect(triage.box.xMm).toBeLessThan(5);
-    expect(boxMaxY(triage)).toBeGreaterThan(26);
-
-    const priority = definition('state.person-injured-transport-priority');
-    expect(pathsOf(priority)).toHaveLength(3);
-    expect(priority.box.yMm).toBe(2.5);
-    expect(boxMaxX(priority)).toBe(31);
-    expect(priority.box.yMm).toBeLessThan(4);
-    expect(boxMaxX(priority)).toBeGreaterThan(27);
+    const rects = leavesOf(triage.primitives).filter((leaf) => leaf.type === 'rect');
+    expect(rects).toHaveLength(6);
+    expect(rects.every((rect) => rect.style?.fill === 'schwarz')).toBe(true);
+    expect(triage.box).toEqual({ xMm: 2.55, yMm: 3, widthMm: 26.45, heightMm: 27 });
   });
 
   it('trennt beide Kontaminationsdarstellungen geometrisch', () => {
     const primary = definition('state.person-contaminated');
-    const filledCircles = circlesOf(primary).filter((circle) =>
-      circle.style?.fill === 'schwarz' && circle.style.stroke === 'none',
-    );
-    const crossedStems = linesOf(primary).filter((line) =>
-      Math.min(line.x1, line.x2) >= 25.5 && Math.max(line.y1, line.y2) === 10.5,
-    );
-    expect(filledCircles.map(({ cx, cy, r }) => [cx, cy, r])).toEqual([
-      [26.5, 4, 1.5],
-      [30, 4, 1.5],
+    expect(circlesOf(primary).map(({ cx, cy, r, style }) => [cx, cy, r, style?.fill])).toEqual([
+      [22.5, 2, 1.75, 'schwarz'],
+      [30, 2, 1.75, 'schwarz'],
     ]);
-    expect(crossedStems).toHaveLength(2);
-    expect(boxMaxX(primary)).toBe(31.5);
+    const crossed = linesOf(primary).filter((line) => line.y1 === 8);
+    expect(crossed.map(({ x1, y1, x2, y2 }) => [x1, y1, x2, y2])).toEqual([
+      [22.5, 8, 28.939, 0.939],
+      [29.5, 8, 23.561, 0.939],
+    ]);
+    expect(boxMaxX(primary)).toBe(31.75);
 
     const alternative = definition('state.person-contaminated', 'alternative');
     expect(circlesOf(alternative)).toEqual([]);
-    expect(pathsOf(alternative)).toHaveLength(2);
-    expect(alternative.primitives).not.toEqual(primary.primitives);
+    expect(
+      leavesOf(alternative.primitives).filter((leaf) => leaf.type === 'text'),
+    ).toMatchObject([{ content: 'K' }]);
   });
 
   it('kodiert Tod, Vermisstsein und Wassergefahr mit verschiedenen Formkanaelen', () => {
     const dead = definition('state.person-dead');
     expect(linesOf(dead).map(({ x1, y1, x2, y2 }) => [x1, y1, x2, y2])).toEqual([
-      [16, 4, 16, 26],
-      [10.5, 9.5, 21.5, 9.5],
+      [16, 3, 16, 29],
+      [10, 10, 22, 10],
     ]);
 
     const missing = definition('state.person-missing');
     expect(linesOf(missing).map(({ x1, y1, x2, y2 }) => [x1, y1, x2, y2])).toEqual([
-      [3, 10, 10, 3],
-      [22, 29, 29, 22],
+      [1, 14, 14, 1],
+      [18, 31, 31, 18],
     ]);
-    expect(missing.box.xMm).toBeLessThan(5);
-    expect(boxMaxX(missing)).toBeGreaterThan(27);
-    expect(missing.box.yMm).toBeLessThan(4);
-    expect(boxMaxY(missing)).toBeGreaterThan(26);
+    expect(missing.box).toEqual({ xMm: 1, yMm: 1, widthMm: 30, heightMm: 30 });
 
     const water = definition('state.person-in-water-danger');
-    expect(pathsOf(water)).toHaveLength(3);
-    expect(pathsOf(water).filter((path) => path.d.includes('C'))).toHaveLength(2);
-    expect(water.box).toEqual({ xMm: 4, yMm: 1, widthMm: 27, heightMm: 30 });
+    expect(polylinesOf(water)[0]?.points).toEqual([[16, 10], [26.5, 20.5], [16, 31], [5.5, 20.5]]);
+    expect(pathsOf(water)).toHaveLength(2);
+    expect(pathsOf(water).every((path) => path.d.startsWith('M 5 '))).toBe(true);
+    expect(water.box).toEqual({ xMm: 5, yMm: 1, widthMm: 22, heightMm: 30 });
   });
 
   it('stellt Zwangslage und Rettung an gegenueberliegenden Diamantseiten dar', () => {
     const horizontalOf = (id: string): Line[] => linesOf(definition(id)).filter(
       (line) => line.y1 === line.y2,
     );
-    expect(horizontalOf('state.person-in-distress').map((line) => line.y1)).toEqual([4]);
-    expect(horizontalOf('state.person-rescued').map((line) => line.y1)).toEqual([26]);
+    expect(horizontalOf('state.person-in-distress').map((line) => line.y1)).toEqual([3]);
+    expect(horizontalOf('state.person-rescued').map((line) => line.y1)).toEqual([29]);
   });
 
   it('kodiert die Transportfolge mit linker, keiner und rechter Abschlussmarke', () => {
@@ -199,47 +202,46 @@ describe('PERSON_STATES', () => {
         terminals: linesOf(item)
           .filter((line) => line.x1 === line.x2)
           .map((line) => line.x1),
-        arrows: polylinesOf(item).map((line) => line.points),
+        arrows: polylinesOf(item)
+          .filter((line) => line.closed !== true)
+          .map((line) => line.points),
       };
     };
 
     expect(transportSignature('state.person-to-be-transported')).toEqual({
-      baselines: [[3, 24, 30, 24]],
+      baselines: [[3, 27, 30, 27]],
       terminals: [3],
-      arrows: [[[26, 20], [30, 24], [26, 28]]],
+      arrows: [[[26, 23], [30, 27], [26, 31]]],
     });
     expect(transportSignature('state.person-in-transport')).toEqual({
-      baselines: [[3, 24, 30, 24]],
+      baselines: [[3, 27, 30, 27]],
       terminals: [],
-      arrows: [[[26, 20], [30, 24], [26, 28]]],
+      arrows: [[[26, 23], [30, 27], [26, 31]]],
     });
     expect(transportSignature('state.person-transported')).toEqual({
-      baselines: [[3, 24, 30, 24]],
+      baselines: [[3, 27, 30, 27]],
       terminals: [30],
-      arrows: [[[26, 20], [30, 24], [26, 28]]],
+      arrows: [[[25.9, 23], [29.9, 27], [25.9, 31]]],
     });
   });
 
-  it('haelt Betreuungs- und Mobilitaetsmarken ausserhalb der Diamantflaeche auseinander', () => {
+  it('haelt Betreuungs- und Mobilitaetsmarken auseinander', () => {
     const specialCare = definition('state.person-needing-special-care');
     expect(linesOf(specialCare).map(({ x1, y1, x2, y2 }) => [x1, y1, x2, y2])).toEqual([
-      [16, 4, 4, 31],
-      [16, 4, 28, 31],
+      [16, 3, 5, 29],
+      [16, 3, 27, 29],
     ]);
-    expect(boxMaxY(specialCare)).toBe(31);
 
     const careDependent = definition('state.person-care-dependent');
     expect(linesOf(careDependent).map(({ x1, y1, x2, y2 }) => [x1, y1, x2, y2])).toEqual([
-      [5, 8, 5, 22],
+      [3, 10, 3, 22],
     ]);
 
     const mobility = definition('state.person-mobility-impaired');
     expect(circlesOf(mobility).map(({ cx, cy, r }) => [cx, cy, r])).toEqual([
-      [8, 28.5, 2],
-      [24, 28.5, 2],
+      [7, 27, 2],
+      [25, 27, 2],
     ]);
-    expect(circlesOf(mobility).every((circle) => circle.cy - circle.r > 26)).toBe(true);
-    expect(boxMaxY(mobility)).toBe(30.5);
   });
 
   it('liefert 18 paarweise verschiedene Primitivsignaturen', () => {

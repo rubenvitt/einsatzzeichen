@@ -94,12 +94,18 @@ def main(subset_path: str, source_sha256: str, target_path: str) -> None:
     head = font["head"]
     hhea = font["hhea"]
     os2 = font["OS/2"]
-    fvar = font["fvar"]
+    # Die statische Fettinstanz (Arimo-Bold.ttf) trägt keine fvar-Tabelle; ihr Gewicht steht dann
+    # in OS/2.usWeightClass.
+    fvar = font["fvar"] if "fvar" in font else None
     hmtx = font["hmtx"]
     glyf = font["glyf"]
     cmap = font.getBestCmap()
 
-    wght = next(axis for axis in fvar.axes if axis.axisTag == "wght")
+    default_weight = (
+        int(next(axis for axis in fvar.axes if axis.axisTag == "wght").defaultValue)
+        if fvar is not None
+        else os2.usWeightClass
+    )
     advances = {
         str(codepoint): hmtx[glyph_name][0]
         for codepoint, glyph_name in cmap.items()
@@ -127,7 +133,7 @@ def main(subset_path: str, source_sha256: str, target_path: str) -> None:
         "ascender": hhea.ascent,
         "descender": hhea.descent,
         "capHeight": os2.sCapHeight,
-        "defaultWeight": int(wght.defaultValue),
+        "defaultWeight": default_weight,
         "advances": advances,
         "inkExtents": ink_extents,
         "kerning": kerning_table(font, cmap),

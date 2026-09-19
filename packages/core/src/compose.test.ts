@@ -299,6 +299,57 @@ describe('compose() — technische Körperfüllung', () => {
   });
 });
 
+describe('compose() — weiße Innenkontur', () => {
+  const innerRect: Primitive = {
+    type: 'rect', role: 'innerField', x: 2, y: 7, width: 28, height: 18, style: { stroke: 'none' },
+  };
+  const blueCatalog: CatalogPorts = {
+    ...catalog,
+    organizationColor: () => 'blau',
+    innerField: () => [innerRect],
+  };
+
+  it('füllt den Körper weiß und legt die Organisationsfarbe ins Innenfeld', () => {
+    const drawing = compose({
+      kind: 'formation',
+      organization: 'thw',
+      whiteInnerContour: true,
+      labels: { center: 'B' },
+    }, blueCatalog);
+    const bodyIndex = drawing.children.findIndex((child) => child.role === 'body');
+    const inner = drawing.children[bodyIndex + 1];
+
+    expect(drawing.children[bodyIndex]?.style).toMatchObject({
+      fill: 'weiss',
+      bodyStrokeDashToken: 'blau',
+    });
+    expect(inner).toMatchObject({ type: 'group', role: 'innerField' });
+    expect(inner?.type === 'group' ? inner.children : []).toEqual([
+      { ...innerRect, style: { stroke: 'none', fill: 'blau' } },
+    ]);
+    // Die Beschriftung steht auf dem blauen Innenfeld und bleibt deshalb weiß.
+    const label = drawing.children.find((child) => child.role === 'label');
+    expect(label?.style).toMatchObject({ fill: 'weiss' });
+  });
+
+  it('lässt Zeichen ohne Innenkontur unverändert', () => {
+    const drawing = compose({ kind: 'formation', organization: 'thw' }, blueCatalog);
+    expect(drawing.children.some((child) => child.role === 'innerField')).toBe(false);
+    expect(drawing.children.find((child) => child.role === 'body')?.style)
+      .toMatchObject({ fill: 'blau' });
+  });
+
+  it('wirft ohne Körperfarbe oder ohne Innenfeld-Port', () => {
+    expect(() => compose({ kind: 'formation', whiteInnerContour: true }, blueCatalog))
+      .toThrow(NotMeasuredError);
+    const { innerField: _unused, ...withoutPort } = blueCatalog;
+    expect(() => compose(
+      { kind: 'formation', organization: 'thw', whiteInnerContour: true },
+      withoutPort,
+    )).toThrow(NotMeasuredError);
+  });
+});
+
 describe('compose() — technische Kopfmarke', () => {
   it('setzt den relativen Einzelbalken über placeHead absolut auf y = 1…5 mm', () => {
     const technicalCatalog: CatalogPorts = {

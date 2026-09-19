@@ -34,6 +34,27 @@ export const COMMS_WHITE_BODY = Object.freeze({
   strokeWidth: COMMS_STROKE_WIDTH_MM,
 } satisfies Style);
 
+/**
+ * Strichstärke der Referenz für Anhang J: 1,417 pt = 0,5 mm (an den umgewandelten Konturen
+ * der BABZ-Dateien abgelesen). Getrennt von `COMMS_STROKE_WIDTH_MM`, damit die Umstellung je
+ * Kapitelmodul erfolgen kann.
+ */
+export const COMMS_REFERENCE_STROKE_WIDTH_MM = 0.5;
+
+/** Schwarzer Strich in Referenzstärke, ohne Füllung. */
+export const COMMS_REFERENCE_STROKE = Object.freeze({
+  fill: 'none',
+  stroke: 'schwarz',
+  strokeWidth: COMMS_REFERENCE_STROKE_WIDTH_MM,
+} satisfies Style);
+
+/** Weiße Fläche mit schwarzer Kontur in Referenzstärke. */
+export const COMMS_REFERENCE_WHITE_BODY = Object.freeze({
+  fill: 'weiss',
+  stroke: 'schwarz',
+  strokeWidth: COMMS_REFERENCE_STROKE_WIDTH_MM,
+} satisfies Style);
+
 function copyStyle(style: Readonly<Style>): Style {
   return { ...style };
 }
@@ -96,6 +117,8 @@ export function commsText(
     minRenderPx: number;
     anchor?: 'start' | 'middle' | 'end';
     baseline?: 'alphabetic' | 'middle' | 'hanging';
+    /** 700 für fett oder halbfett gesetzte Kürzel der Referenz; ohne Angabe normal (400). */
+    fontWeight?: 400 | 700;
     style?: Readonly<Style>;
   },
 ): Primitive {
@@ -110,6 +133,7 @@ export function commsText(
     baseline: options.baseline ?? 'alphabetic',
     boxMm: { ...options.boxMm },
     minRenderPx: options.minRenderPx,
+    ...(options.fontWeight === undefined ? {} : { fontWeight: options.fontWeight }),
     style: copyStyle(options.style ?? COMMS_BLACK_FILL),
   };
 }

@@ -1,8 +1,13 @@
 import type { ColorToken, Point, Primitive, Style } from '@einsatzzeichen/schema';
 import type { PictogramContrastPair } from '../catalog-definition.js';
+import { waveD } from '../damage/authoring.js';
 
-/** Dieselbe Strichbreite wie bei allen freistehenden Zeichen des Katalogs. */
-export const WILDFIRE_STROKE_WIDTH_MM = 1;
+/**
+ * 0,5 mm — die Wandstärke der Referenzumrisse (1,417 pt bei 90,709 pt auf 32 mm). Alle
+ * Koordinaten des Anhangs M sind Mittellinien dieser Umrisse: Maße an der Referenz abgelesen,
+ * Geometrie eigenständig konstruiert.
+ */
+export const WILDFIRE_STROKE_WIDTH_MM = 0.5;
 
 function copyStyle(style: Readonly<Style>): Style {
   return { ...style };
@@ -88,16 +93,18 @@ export function wildfireDisc(color: ColorToken): readonly Primitive[] {
   ];
 }
 
+/** Warndreieck: Grundlinie y = 28 von 1 bis 31 mm, Spitze 16/3. */
 const WARNING_TRIANGLE: readonly Point[] = Object.freeze([
-  [1.2, 27.9],
-  [16, 3.2],
-  [30.8, 27.9],
+  [1, 28],
+  [16, 3],
+  [31, 28],
 ] as const);
 
+/** Maßnahmendreieck: dieselbe Form gestürzt — Oberkante y = 4, Spitze 16/29. */
 const SUPPLY_TRIANGLE: readonly Point[] = Object.freeze([
-  [1.2, 4.1],
-  [30.8, 4.1],
-  [16, 28.8],
+  [1, 4],
+  [31, 4],
+  [16, 29],
 ] as const);
 
 /**
@@ -114,26 +121,27 @@ export function wildfireTriangle(color: ColorToken, pointing: 'up' | 'down'): re
 }
 
 /**
- * Das Flammenzeichen: ein rechtwinkliges Dreieck mit senkrechter rechter Kante und einer
- * Hypotenuse, die nach links unten fällt. `count` bestimmt, ob eine Flamme steht (M.4) oder
- * zwei nebeneinander (M.5 und die übrigen Brandzeichen).
+ * Das Flammenzeichen: rechtwinklige Dreiecke mit waagerechter Grundlinie, senkrechter rechter
+ * Kante und einer Hypotenuse, die von links unten zur Spitze oben rechts steigt. Bei `count` = 2
+ * stehen die Flammen Kante an Kante: die zweite beginnt an der rechten unteren Ecke der ersten.
  */
-export function flame(
-  rightX: number,
-  topY: number,
+export function flames(
+  leftX: number,
   bottomY: number,
   widthMm: number,
+  heightMm: number,
   count: number,
   style: Readonly<Style>,
 ): Primitive[] {
-  const flames: Primitive[] = [];
+  const result: Primitive[] = [];
   for (let index = 0; index < count; index += 1) {
-    const right = rightX + index * (widthMm + 0.65);
-    flames.push(
+    const left = leftX + index * widthMm;
+    const right = left + widthMm;
+    result.push(
       wildfirePolyline(
         [
-          [right - widthMm, bottomY],
-          [right, topY],
+          [left, bottomY],
+          [right, bottomY - heightMm],
           [right, bottomY],
         ],
         true,
@@ -141,47 +149,44 @@ export function flame(
       ),
     );
   }
-  return flames;
+  return result;
 }
 
 /**
- * Die Wasserförderung: eine Wellenlinie über einem Kreis mit Pfeil. In M.11, M.13 und M.14
- * identisch aufgebaut und nur unterschiedlich platziert — der Kreis ist die Entnahmestelle, der
- * Pfeil die Förderrichtung, die Welle das Wasser.
+ * Die Wasserförderung in M.11, M.13 und M.14: eine Welle über einem Pfeil, der aus einem kleinen
+ * Kreis kommt — der Kreis ist die Entnahmestelle, der Pfeil die Förderrichtung, die Welle das
+ * Wasser.
  *
- * Die Pfeilspitze ist bewusst **offen** (zwei Striche) und nicht gefüllt: so zeichnet die
- * Referenz sie in allen drei Zeichen, anders als die gefüllten Spitzen des Anhangs L.
+ * - Kreis: Radius 1,5 mm, Mittelpunkt `circleX`/`lineY`.
+ * - Pfeil: waagerecht vom Kreisrand bis `tipX`, offene Spitze aus zwei 45°-Schenkeln von 2 mm
+ *   Breite und Höhe — so zeichnet die Referenz sie in allen drei Zeichen, anders als die
+ *   gefüllten Spitzen des Anhangs L.
+ * - Welle: Welle (`waveD`) von 7 bis 25 mm, Periode 9 mm, Berge bei 11,5 und 20,5 mm. Mittellage
+ *   und Ausschlag unterscheiden sich je Zeichen.
  */
 export function waterSupply(
   circleX: number,
-  circleY: number,
-  arrowEndX: number,
-  waveY: number,
-  waveFromX: number,
-  waveToX: number,
+  lineY: number,
+  tipX: number,
+  waveMidY: number,
+  waveAmplitude: number,
   style: Readonly<Style>,
 ): Primitive[] {
-  const round = (value: number): number => Math.round(value * 1000) / 1000;
-  // Vier nach oben gewölbte Bögen, wie die Referenz sie über der Entnahmestelle führt.
-  const count = 4;
-  const step = (waveToX - waveFromX) / count;
-  let wave = `M ${round(waveFromX)} ${round(waveY)}`;
-  for (let index = 0; index < count; index += 1) {
-    const startX = waveFromX + step * index;
-    wave += ` Q ${round(startX + step / 2)} ${round(waveY - 2)} ${round(startX + step)} ${round(waveY)}`;
-  }
+  const radius = 1.5;
+  const leg = 2;
   return [
-    wildfireCircle(circleX, circleY, 1.25, style),
-    wildfireLine(circleX + 1.25, circleY, arrowEndX, circleY, style),
+    wildfireCircle(circleX, lineY, radius, style),
+    // Der Schaft endet knapp vor der Spitze, damit sein stumpfes Ende in der Schenkelecke liegt.
+    wildfireLine(circleX + radius, lineY, tipX - 0.4, lineY, style),
     wildfirePolyline(
       [
-        [arrowEndX - 1.6, circleY - 1.6],
-        [arrowEndX, circleY],
-        [arrowEndX - 1.6, circleY + 1.6],
+        [tipX - leg, lineY - leg],
+        [tipX, lineY],
+        [tipX - leg, lineY + leg],
       ],
       false,
       style,
     ),
-    wildfirePath(wave, style),
+    wildfirePath(waveD(7, 25, waveMidY, waveAmplitude, 9, 11.5), style),
   ];
 }

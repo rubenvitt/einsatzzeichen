@@ -15,7 +15,7 @@ const VIEWBOX_BODY: Primitive = {
 describe('5.8.5 Brandphasen', () => {
   it('steigert Flammenzahl und belegte Breite gemeinsam', () => {
     expect(FIRE_STATES.map((definition) => definition.primitives.length)).toEqual([1, 2, 3]);
-    expect(FIRE_STATES.map((definition) => definition.box.widthMm)).toEqual([8, 22, 26]);
+    expect(FIRE_STATES.map((definition) => definition.box.widthMm)).toEqual([10, 20, 30]);
     expect(FIRE_STATES.map((definition) => definition.section)).toEqual([
       '5.8.5.1',
       '5.8.5.2',
@@ -23,16 +23,22 @@ describe('5.8.5 Brandphasen', () => {
     ]);
   });
 
-  it('verwendet geschlossene rote Flammenkonturen mit sichtbarer Schrägkante', () => {
+  it('zeichnet jede Flamme als rotes, weiß gefülltes Dreieck 10 × 24 mm auf y = 28 mm', () => {
     for (const definition of FIRE_STATES) {
       for (const flame of definition.primitives) {
         if (flame.type !== 'polyline') throw new Error('Flamme muss eine Polylinie sein.');
         expect(flame.closed).toBe(true);
-        expect(flame.points).toHaveLength(3);
         expect(flame.role).toBe('pictogram');
-        expect(flame.style).toEqual({ fill: 'none', stroke: 'rot', strokeWidth: 1.3 });
+        expect(flame.style).toEqual({ fill: 'weiss', stroke: 'rot', strokeWidth: 0.5 });
+        const right = flame.points[1]?.[0] ?? Number.NaN;
+        expect(flame.points).toEqual([[right - 10, 28], [right, 28], [right, 4]]);
       }
       expect(definition.contrastPairs).toEqual([
+        {
+          foreground: 'rot',
+          background: 'weiss',
+          context: 'rote Flammenkontur auf weißer Flammenfläche',
+        },
         {
           foreground: 'rot',
           background: 'surface',

@@ -62,6 +62,7 @@ export const STRENGTH_LABELS: Record<StrengthId, string> = {
 
 export const TECHNICAL_HEAD_MARK_LABELS = Object.freeze({
   'single-vertical-bar': 'Einzelner Vertikalbalken',
+  'double-vertical-bar': 'Zwei Vertikalbalken',
 } satisfies Record<TechnicalHeadMarkId, string>);
 
 /** Öffentlich aus demselben Grund wie `ORGANIZATION_LABELS`. */

@@ -1,5 +1,6 @@
 import type { TextMetrics } from '@einsatzzeichen/core';
 import arimoMetrics from '../assets/arimo-metrics.json' with { type: 'json' };
+import arimoBoldMetrics from '../assets/arimo-bold-metrics.json' with { type: 'json' };
 
 /**
  * Laufweiten von Arimo für das Textmetrik-Gate in `core` (`checkTextMetrics`, LFH-410) und die
@@ -66,35 +67,38 @@ function assertArimoMetrics(value: unknown): ArimoMetricsFile {
   return value;
 }
 
-const raw: unknown = arimoMetrics;
-const file = assertArimoMetrics(raw);
+function textMetricsFrom(file: ArimoMetricsFile): TextMetrics {
+  const advanceEm = new Map<number, number>(
+    Object.entries(file.advances).map(([codepoint, advance]) => [Number(codepoint), advance / file.unitsPerEm]),
+  );
+  const inkExtentEm = new Map<number, readonly [number, number, number, number]>(
+    Object.entries(file.inkExtents).map(([codepoint, box]) => [
+      Number(codepoint),
+      [box[0] / file.unitsPerEm, box[1] / file.unitsPerEm, box[2] / file.unitsPerEm, box[3] / file.unitsPerEm],
+    ]),
+  );
+  const kerningEm = new Map<number, Map<number, number>>(
+    Object.entries(file.kerning).map(([left, row]) => [
+      Number(left),
+      new Map(Object.entries(row).map(([right, value]) => [Number(right), value / file.unitsPerEm])),
+    ]),
+  );
+  return {
+    // `undefined` für Codepoints ohne cmap-Eintrag: kein `.notdef`-Vorschub als stiller Ersatz —
+    // das Gate meldet den Tofu-Fall (`unknown-glyph`), statt eine Breite zu erfinden.
+    advanceEm: (codepoint) => advanceEm.get(codepoint),
+    inkExtentEm: (codepoint) => inkExtentEm.get(codepoint),
+    kerningEm: (left, right) => kerningEm.get(left)?.get(right),
+  };
+}
 
-/** Vorschub je Codepoint in em — einmal umgerechnet, damit das Gate nicht bei jedem Zeichen dividiert. */
-const ADVANCE_EM = new Map<number, number>(
-  Object.entries(file.advances).map(([codepoint, advance]) => [Number(codepoint), advance / file.unitsPerEm]),
-);
+const file = assertArimoMetrics(arimoMetrics as unknown);
+/** Fettinstanz wght 700 (`assets/Arimo-Bold.ttf`), dasselbe Format, erzeugt vom selben Skript. */
+const boldFile = assertArimoMetrics(arimoBoldMetrics as unknown);
 
-const INK_EXTENT_EM = new Map<number, readonly [number, number, number, number]>(
-  Object.entries(file.inkExtents).map(([codepoint, box]) => [
-    Number(codepoint),
-    [box[0] / file.unitsPerEm, box[1] / file.unitsPerEm, box[2] / file.unitsPerEm, box[3] / file.unitsPerEm],
-  ]),
-);
-
-const KERNING_EM = new Map<number, Map<number, number>>(
-  Object.entries(file.kerning).map(([left, row]) => [
-    Number(left),
-    new Map(Object.entries(row).map(([right, value]) => [Number(right), value / file.unitsPerEm])),
-  ]),
-);
-
-/** Die Schriftfamilie, für die die Metrik gilt — `fonts.ts` bindet dieselbe (`TEXT_FONT_FAMILY`). */
 export const TEXT_METRICS_FAMILY = file.family;
 
 export const ARIMO_TEXT_METRICS: TextMetrics = {
-  // `undefined` für Codepoints ohne cmap-Eintrag: kein `.notdef`-Vorschub als stiller Ersatz —
-  // das Gate meldet den Tofu-Fall (`unknown-glyph`), statt eine Breite zu erfinden.
-  advanceEm: (codepoint) => ADVANCE_EM.get(codepoint),
-  inkExtentEm: (codepoint) => INK_EXTENT_EM.get(codepoint),
-  kerningEm: (left, right) => KERNING_EM.get(left)?.get(right),
+  ...textMetricsFrom(file),
+  bold: textMetricsFrom(boldFile),
 };

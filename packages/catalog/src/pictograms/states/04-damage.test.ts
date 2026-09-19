@@ -13,31 +13,32 @@ const VIEWBOX_BODY: Primitive = {
 };
 
 describe('5.8.4 Schadensgrade', () => {
-  it('liefert die drei Abschnitte mit streng wachsender Schadensmarkenzahl', () => {
+  it('liefert die drei Abschnitte mit streng wachsender Zahl roter Diagonalen', () => {
     expect(DAMAGE_STATES.map((definition) => definition.section)).toEqual([
       '5.8.4.1',
       '5.8.4.2',
       '5.8.4.3',
     ]);
-    expect(DAMAGE_STATES.map((definition) => definition.primitives.length)).toEqual([1, 3, 5]);
-    expect(DAMAGE_STATES.map((definition) => definition.box)).toEqual([
-      { xMm: 9, yMm: 9, widthMm: 14, heightMm: 14 },
-      { xMm: 6, yMm: 6, widthMm: 20, heightMm: 20 },
-      { xMm: 4, yMm: 5, widthMm: 24, heightMm: 19 },
-    ]);
+    // Referenz: je Richtung 1, 2 bzw. 3 parallele Diagonalen (X, gedrehtes Doppelkreuz, Gitter).
+    expect(DAMAGE_STATES.map((definition) => definition.primitives.length)).toEqual([2, 4, 6]);
+    // Mittellinienhülle: halbe Diagonale 13/√2 mm, Scharabstand 7 mm senkrecht.
+    const reach = [0, 1, 2].map((step) => 13 / Math.SQRT2 + (step * 3.5) / Math.SQRT2);
+    DAMAGE_STATES.forEach((definition, index) => {
+      expect(definition.box.xMm).toBeCloseTo(16 - reach[index]!, 9);
+      expect(definition.box.yMm).toBeCloseTo(16 - reach[index]!, 9);
+      expect(definition.box.widthMm).toBeCloseTo(2 * reach[index]!, 9);
+      expect(definition.box.heightMm).toBeCloseTo(2 * reach[index]!, 9);
+    });
   });
 
-  it('kodiert jede Schadensmarke als eigenes rotes X statt als Farbwechsel', () => {
+  it('zeichnet jede Diagonale als 26 mm lange rote 0,5-mm-Linie unter 45°', () => {
     for (const definition of DAMAGE_STATES) {
-      for (const mark of definition.primitives) {
-        if (mark.type !== 'group') throw new Error('Schadensmarke muss eine Gruppe sein.');
-        expect(mark.role).toBe('pictogram');
-        expect(mark.children).toHaveLength(2);
-        for (const stroke of mark.children) {
-          if (stroke.type !== 'line') throw new Error('X-Schenkel muss eine Linie sein.');
-          expect(stroke.role).toBe('pictogram');
-          expect(stroke.style).toEqual({ fill: 'none', stroke: 'rot', strokeWidth: 1.5 });
-        }
+      for (const stroke of definition.primitives) {
+        if (stroke.type !== 'line') throw new Error('Diagonale muss eine Linie sein.');
+        expect(stroke.role).toBe('pictogram');
+        expect(stroke.style).toEqual({ fill: 'none', stroke: 'rot', strokeWidth: 0.5 });
+        expect(Math.abs(stroke.x2 - stroke.x1)).toBeCloseTo(26 / Math.SQRT2, 9);
+        expect(Math.abs(stroke.y2 - stroke.y1)).toBeCloseTo(26 / Math.SQRT2, 9);
       }
       expect(definition.contrastPairs).toEqual([
         {
