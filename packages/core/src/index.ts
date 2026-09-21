@@ -57,3 +57,4 @@ export {
   type RulePhase,
   type RuleReasonSource,
 } from './rules/rule-catalog.js';
+export { specKey } from './spec-key.js';

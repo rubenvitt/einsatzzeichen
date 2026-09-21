@@ -5,6 +5,7 @@ import {
   generativeReach,
   reachSignature,
   ruleCoverage,
+  ruleEvidenceCoverage,
   validationRuleCoverage,
 } from './rule-coverage.js';
 import type { Recipe } from './recipes.js';
@@ -87,6 +88,64 @@ describe('ruleCoverage (echter Bestand)', () => {
   it('zählt die Validierungsregeln aus core, ohne sie zu wiederholen', () => {
     expect(validationRuleCoverage()).toEqual({ total: VALIDATION_RULE_IDS.length });
     expect(validationRuleCoverage().total).toBe(72);
+  });
+});
+
+describe('ruleEvidenceCoverage (Regelsicht)', () => {
+  it('zählt einen Fall nur, wenn er seine Regel wirklich auslöst', () => {
+    const catalog = [
+      { id: 'strength-requires-unit', kind: 'systematik', dimension: 'strength', phase: 'spec', reason: null, reasonSource: null, source: null, sites: 1 },
+      { id: 'head-zone-conflict', kind: 'systematik', dimension: 'composition', phase: 'spec', reason: null, reasonSource: null, source: null, sites: 1 },
+      { id: 'label-too-wide', kind: 'engine', dimension: 'label', phase: 'composition', reason: null, reasonSource: null, source: null, sites: 1 },
+    ] as const;
+    const coverage = ruleEvidenceCoverage(
+      [
+        { rule: 'strength-requires-unit', spec: { kind: 'hazard', strength: 'gruppe' }, via: 'validateSpec', note: '' },
+        // Gültige Spec: löst nichts aus und darf deshalb nicht als belegt zählen.
+        { rule: 'head-zone-conflict', spec: { kind: 'formation', strength: 'gruppe' }, via: 'validateSpec', note: '' },
+      ],
+      [{ rule: 'label-too-wide', reason: 'x', location: 'packages/x' }],
+      catalog,
+    );
+    expect(coverage.rules.map((row) => [row.id, row.status])).toEqual([
+      ['strength-requires-unit', 'triggered'],
+      ['head-zone-conflict', 'untriggered'],
+      ['label-too-wide', 'gap'],
+    ]);
+    expect(coverage.total).toEqual({ total: 3, triggered: 1, gap: 1, untriggered: 1 });
+  });
+
+  // Seit LFH-568 (21.09.2026): „Eine Regel gilt als belegt, wenn ein Testfall sie auslöst." Die
+  // Zahlen wachsen mit den Katalogen und schrumpfen nur, wenn eine Lücke einen Fall bekommt.
+  it('belegt 74 von 78 Regeln durch Auslösung; vier benannte Lücken, keine stille', () => {
+    const coverage = ruleEvidenceCoverage();
+    expect(coverage.total).toEqual({ total: 78, triggered: 74, gap: 4, untriggered: 0 });
+    expect(coverage.byPhase).toEqual({
+      spec: { total: 72, triggered: 70, gap: 2, untriggered: 0 },
+      composition: { total: 6, triggered: 4, gap: 2, untriggered: 0 },
+    });
+    expect(coverage.byKind).toEqual({
+      systematik: { total: 8, triggered: 8, gap: 0, untriggered: 0 },
+      engine: { total: 70, triggered: 66, gap: 4, untriggered: 0 },
+    });
+    expect(coverage.byDimension.map((entry) => [entry.dimension, entry.total, entry.triggered, entry.gap])).toEqual([
+      ['body-variant', 7, 7, 0],
+      ['organization', 3, 3, 0],
+      ['technical-fill', 2, 2, 0],
+      ['strength', 2, 2, 0],
+      ['administrative-level', 1, 1, 0],
+      ['technical-head-mark', 2, 2, 0],
+      ['chassis', 2, 2, 0],
+      ['function-role', 10, 7, 3],
+      ['label', 48, 47, 1],
+      ['composition', 1, 1, 0],
+    ]);
+    expect(coverage.rules.filter((row) => row.status === 'gap').map((row) => row.id)).toEqual([
+      'function-role-label-metrics-required',
+      'surface-right-label-requires-measured-anchor',
+      'function-role-run-too-wide',
+      'function-role-run-unknown-glyph',
+    ]);
   });
 });
 

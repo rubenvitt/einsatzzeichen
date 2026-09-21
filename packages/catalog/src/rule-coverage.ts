@@ -1,4 +1,14 @@
-import { VALIDATION_RULE_IDS, validateSpec } from '@einsatzzeichen/core';
+import {
+  COMPOSITION_RULE_CATALOG,
+  RULE_CATALOG,
+  RULE_DIMENSIONS,
+  VALIDATION_RULE_IDS,
+  validateSpec,
+  type RuleCatalogEntry,
+  type RuleDimension,
+  type RuleKind,
+  type RulePhase,
+} from '@einsatzzeichen/core';
 import {
   ADMIN_LEVEL_IDS,
   BODY_VARIANT_IDS,
@@ -25,6 +35,13 @@ import { ELEMENTS } from './elements.js';
 import { ALL_PICTOGRAMS } from './pictograms/index.js';
 import type { CatalogPictogramDefinition } from './pictograms/catalog-definition.js';
 import { RECIPES, composeFromCatalog, type Recipe } from './recipes.js';
+import {
+  RULE_EVIDENCE,
+  RULE_EVIDENCE_GAPS,
+  ruleEvidenceTriggers,
+  type RuleEvidence,
+  type RuleEvidenceGap,
+} from './rule-evidence.js';
 
 /**
  * Eine Achse der Regelabdeckung: der Werteraum aus dem Schema gegen die Werte, die der Katalog
@@ -134,14 +151,103 @@ export function ruleCoverage(
 }
 
 /**
- * Zahl der Validierungsregeln in `core`. Es gibt bewusst **kein** zweites Feld „mit Testfall":
- * dass jede Regel einen Testfall hat, erzwingt `validation-rules.test.ts` in `core` als
- * Mengengleichheit — der Katalog müsste dafür Testdateien eines fremden Pakets lesen, und die
- * Aussage wäre dort nur eine Wiederholung. Die eine derzeit nicht auslösbare Regel steht dort
- * als benanntes Todo und ist im selben Test festgenagelt.
+ * Zahl der Validierungsregeln in `core`. Wie viele davon ein Testfall tatsächlich auslöst, steht
+ * nicht hier, sondern in `ruleEvidenceCoverage()`: dort wird jeder Fall aus `RULE_EVIDENCE` zur
+ * Laufzeit ausgeführt. Dieses Feld bleibt die reine Zahl, damit die bisherigen Leser (CLI,
+ * Website) unverändert weiterlaufen.
  */
 export function validationRuleCoverage(): { total: number } {
   return { total: VALIDATION_RULE_IDS.length };
+}
+
+/**
+ * Stand einer Regel in der Regelsicht:
+ *
+ * - `'triggered'` — ein Fall aus `RULE_EVIDENCE` löst sie in diesem Lauf tatsächlich aus.
+ * - `'gap'` — sie steht in `RULE_EVIDENCE_GAPS`, also als benannte Lücke mit Begründung.
+ * - `'untriggered'` — weder noch, oder ihr Fall feuert nicht mehr. Das ist ein Fehler des
+ *   Bestands, kein Ausbaustand; der Test verlangt hier null.
+ */
+export type RuleEvidenceStatus = 'triggered' | 'gap' | 'untriggered';
+
+export interface RuleEvidenceRow {
+  readonly id: string;
+  readonly kind: RuleKind;
+  readonly dimension: RuleDimension;
+  readonly phase: RulePhase;
+  readonly status: RuleEvidenceStatus;
+}
+
+export interface RuleEvidenceTally {
+  readonly total: number;
+  readonly triggered: number;
+  readonly gap: number;
+  readonly untriggered: number;
+}
+
+export interface RuleEvidenceCoverage {
+  /** Alle Regeln beider Kataloge: zuerst `RULE_CATALOG`, dann `COMPOSITION_RULE_CATALOG`. */
+  readonly rules: readonly RuleEvidenceRow[];
+  readonly total: RuleEvidenceTally;
+  readonly byPhase: Readonly<Record<RulePhase, RuleEvidenceTally>>;
+  readonly byKind: Readonly<Record<RuleKind, RuleEvidenceTally>>;
+  /** Nur Dimensionen, zu denen mindestens eine Regel existiert — in der Reihenfolge von `RULE_DIMENSIONS`. */
+  readonly byDimension: readonly (RuleEvidenceTally & { readonly dimension: RuleDimension })[];
+}
+
+function tally(rows: readonly RuleEvidenceRow[]): RuleEvidenceTally {
+  return Object.freeze({
+    total: rows.length,
+    triggered: rows.filter((row) => row.status === 'triggered').length,
+    gap: rows.filter((row) => row.status === 'gap').length,
+    untriggered: rows.filter((row) => row.status === 'untriggered').length,
+  });
+}
+
+/**
+ * **Regelsicht** der Abdeckung (LFH-568): je Regel, ob ein Testfall sie auslöst. Das Maß folgt
+ * der Entscheidung des Eigentümers vom 21. September 2026 — „Eine Regel gilt als belegt, wenn
+ * ein Testfall sie auslöst." Anders als der frühere String-Scan in `core` führt diese Funktion
+ * jeden Fall **zur Laufzeit** aus; ein Fall, der seine Regel nicht mehr auslöst, zählt als
+ * `'untriggered'` und nicht als belegt.
+ *
+ * Die Wertabdeckung (`ruleCoverage`) und die Reichweite (`generativeReach`) bleiben davon
+ * unberührt: sie messen Werte und Kombinationen, diese Sicht misst Regeln.
+ */
+export function ruleEvidenceCoverage(
+  evidence: readonly RuleEvidence[] = RULE_EVIDENCE,
+  gaps: readonly RuleEvidenceGap[] = RULE_EVIDENCE_GAPS,
+  catalog: readonly RuleCatalogEntry[] = [...RULE_CATALOG, ...COMPOSITION_RULE_CATALOG],
+): RuleEvidenceCoverage {
+  const triggered = new Set(
+    evidence.filter((item) => ruleEvidenceTriggers(item).includes(item.rule)).map((item) => item.rule),
+  );
+  const gapIds = new Set(gaps.map((gap) => gap.rule));
+  const rules = catalog.map((rule): RuleEvidenceRow => Object.freeze({
+    id: rule.id,
+    kind: rule.kind,
+    dimension: rule.dimension,
+    phase: rule.phase,
+    status: triggered.has(rule.id) ? 'triggered' : gapIds.has(rule.id) ? 'gap' : 'untriggered',
+  }));
+  const where = (predicate: (row: RuleEvidenceRow) => boolean) => tally(rules.filter(predicate));
+  return Object.freeze({
+    rules: Object.freeze(rules),
+    total: tally(rules),
+    byPhase: Object.freeze({
+      spec: where((row) => row.phase === 'spec'),
+      composition: where((row) => row.phase === 'composition'),
+    }),
+    byKind: Object.freeze({
+      systematik: where((row) => row.kind === 'systematik'),
+      engine: where((row) => row.kind === 'engine'),
+    }),
+    byDimension: Object.freeze(
+      RULE_DIMENSIONS
+        .map((dimension) => Object.freeze({ dimension, ...where((row) => row.dimension === dimension) }))
+        .filter((entry) => entry.total > 0),
+    ),
+  });
 }
 
 /**

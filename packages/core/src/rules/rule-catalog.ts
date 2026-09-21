@@ -23,9 +23,11 @@ import type { SourceReference } from '@einsatzzeichen/schema';
  * zählt zusätzlich die Auslösestellen je Kennung im Quelltext gegen das Feld `sites`.
  *
  * Die Umstellung von `validate.ts` selbst ist ein **späterer Slice**. Sie braucht dann einen
- * Ersatz für den Quelltextscan: ein Laufzeit-Gate, das belegt, dass jede Katalogregel von einer
- * Fixture tatsächlich ausgelöst wird. Dieses Gate existiert heute nicht — deshalb heute kein
- * Umbau. Siehe `docs/decisions/2026-09-20-regelkatalog-als-daten.md`.
+ * Ersatz für den Quelltextscan: ein Laufzeit-Gate, das belegt, dass jede Katalogregel von einem
+ * Fall tatsächlich ausgelöst wird. Seit LFH-568 gibt es dieses Gate: `catalog/src/rule-evidence.ts`
+ * führt je Regel einen auslösenden Fall oder eine benannte Lücke, und `rule-evidence.test.ts` löst
+ * jeden Fall zur Laufzeit aus. Der Umbau von `validate.ts` bleibt trotzdem ein eigener Slice. Siehe
+ * `docs/decisions/2026-09-20-regelkatalog-als-daten.md`.
  *
  * ---------------------------------------------------------------------------------------------
  * **Einordnung `kind`: fachliche Regel der Systematik vs. technische Grenze des Motors**
