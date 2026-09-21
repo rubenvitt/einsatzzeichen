@@ -2,8 +2,8 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import {
-  OUTPUT_CHANNEL_PACKAGE_IDS,
   REFERENCE_IGNORE_TARGETS,
+  WORKSPACE_PACKAGE_IDS,
   findRepositoryPolicyViolations,
   type RepositoryManifest,
   type RepositoryPolicyInput,
@@ -12,7 +12,10 @@ import {
   type RepositorySourceSymlink,
 } from './repository-policy.js';
 
-export { findRepositoryPolicyViolations } from './repository-policy.js';
+export {
+  ALLOWED_WORKSPACE_DEPENDENCIES,
+  findRepositoryPolicyViolations,
+} from './repository-policy.js';
 export type {
   RepositoryManifest,
   RepositoryPolicyInput,
@@ -22,13 +25,6 @@ export type {
   WorkspacePackageId,
 } from './repository-policy.js';
 
-const PACKAGE_IDS = [
-  'cli',
-  'conformance',
-  'core',
-  'schema',
-  ...OUTPUT_CHANNEL_PACKAGE_IDS,
-] as const;
 const DEPENDENCY_SECTIONS = [
   'dependencies',
   'devDependencies',
@@ -38,6 +34,7 @@ const DEPENDENCY_SECTIONS = [
 
 interface RawPackageManifest {
   name?: unknown;
+  private?: unknown;
   dependencies?: unknown;
   devDependencies?: unknown;
   peerDependencies?: unknown;
@@ -171,7 +168,7 @@ export function readRepositoryPolicyInput(
   const sourceFiles: RepositorySourceFile[] = [];
   const sourceSymlinks: RepositorySourceSymlink[] = [];
 
-  for (const id of PACKAGE_IDS) {
+  for (const id of WORKSPACE_PACKAGE_IDS) {
     const manifestPath = join(options.root, 'packages', id, 'package.json');
     const raw = JSON.parse(readFileSync(manifestPath, 'utf8')) as RawPackageManifest;
     if (typeof raw.name !== 'string') {
@@ -182,6 +179,7 @@ export function readRepositoryPolicyInput(
       id,
       name: raw.name,
       path: repositoryPath(options.root, manifestPath),
+      isPrivate: raw.private === true,
       dependencies: dependencyModel.dependencies,
       malformedDependencySections: dependencyModel.malformedSections,
     });

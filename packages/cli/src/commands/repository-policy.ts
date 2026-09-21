@@ -2,25 +2,96 @@ import { posix } from 'node:path';
 import * as ts from 'typescript';
 
 /**
- * Die vier Ausgabekanäle (LFH-405) stehen auf demselben Rang wie `conformance`: sie dürfen `core` und
- * `schema` importieren, aber weder `conformance` noch einander — und `conformance` darf keinen Kanal
- * importieren. Katalogdaten kommen über die Anwendung in den Kanal, nicht über eine Paketkante.
- * Ein gleicher Rang genügt dafür, weil nur eine echt kleinere Rangzahl als Abhängigkeit zulässig
- * ist; die Kette `cli → conformance → core → schema` bleibt damit zyklenfrei.
+ * Die vier Ausgabekanäle (LFH-405). Sie hängen nur an `core` und `schema`, weder an `conformance`
+ * noch aneinander. Katalogdaten kommen über die Anwendung in den Kanal, nicht über eine Paketkante.
  */
 export const OUTPUT_CHANNEL_PACKAGE_IDS = ['react', 'web-component', 'maplibre', 'qgis'] as const;
 
-export type WorkspacePackageId =
-  | 'cli'
-  | 'conformance'
-  | 'core'
-  | 'schema'
-  | (typeof OUTPUT_CHANNEL_PACKAGE_IDS)[number];
+/**
+ * Private Werkzeuge, die nie veröffentlicht werden: das Fachreview-Werkzeug und die Website.
+ * Sie dürfen jedes veröffentlichte Paket nutzen, aber nicht aneinander hängen.
+ */
+export const PRIVATE_PACKAGE_IDS = ['review', 'website'] as const;
+
+export const PUBLISHED_PACKAGE_IDS = [
+  'cli',
+  'conformance',
+  'core',
+  'schema',
+  ...OUTPUT_CHANNEL_PACKAGE_IDS,
+] as const;
+
+export type PublishedPackageId = (typeof PUBLISHED_PACKAGE_IDS)[number];
+export type PrivatePackageId = (typeof PRIVATE_PACKAGE_IDS)[number];
+export type WorkspacePackageId = PublishedPackageId | PrivatePackageId;
+
+export const WORKSPACE_PACKAGE_IDS: readonly WorkspacePackageId[] = [
+  ...PUBLISHED_PACKAGE_IDS,
+  ...PRIVATE_PACKAGE_IDS,
+];
+
+/**
+ * Abhängigkeitsrichtung nach LFH-560: `cli → conformance → core → schema`, Kanäle → `core`.
+ * `core` ist das Produkt, `conformance` das Prüfpaket, das für die Nutzung nicht nötig ist. Jede
+ * Kante, die hier nicht steht, ist verboten — im Paketmanifest wie im Quelltext. Die Tabelle ist
+ * zyklenfrei; von den veröffentlichten Paketen darf nur `cli` an `conformance` hängen.
+ */
+export const ALLOWED_WORKSPACE_DEPENDENCIES: Readonly<
+  Record<WorkspacePackageId, readonly WorkspacePackageId[]>
+> = {
+  schema: [],
+  core: ['schema'],
+  conformance: ['core', 'schema'],
+  react: ['core', 'schema'],
+  'web-component': ['core', 'schema'],
+  maplibre: ['core', 'schema'],
+  qgis: ['core', 'schema'],
+  cli: ['conformance', 'core', 'schema'],
+  review: PUBLISHED_PACKAGE_IDS,
+  website: PUBLISHED_PACKAGE_IDS,
+};
+
+export function isPrivatePackage(id: WorkspacePackageId): id is PrivatePackageId {
+  return (PRIVATE_PACKAGE_IDS as readonly WorkspacePackageId[]).includes(id);
+}
+
+export function isAllowedWorkspaceDependency(
+  importer: WorkspacePackageId,
+  target: WorkspacePackageId,
+): boolean {
+  return ALLOWED_WORKSPACE_DEPENDENCIES[importer].includes(target);
+}
+
+/** Begründung einer verbotenen Kante, damit die Meldung sagt, welche Regel greift. */
+export function forbiddenEdgeReason(
+  importer: WorkspacePackageId,
+  target: WorkspacePackageId,
+): string {
+  const allowed = ALLOWED_WORKSPACE_DEPENDENCIES[importer];
+  const allowedText =
+    allowed.length === 0
+      ? `${importer} hängt an keinem Workspace-Paket`
+      : `${importer} darf nur an ${allowed.join(', ')} hängen`;
+  if (importer === target) {
+    return `ein Paket bezieht sich nicht über seinen eigenen Paketnamen, innerhalb des Pakets gilt ein relativer Import`;
+  }
+  if (isPrivatePackage(target)) {
+    return isPrivatePackage(importer)
+      ? `private Pakete hängen nicht aneinander`
+      : `${target} ist privat und wird nicht veröffentlicht; ein veröffentlichtes Paket kann nicht daran hängen`;
+  }
+  if (target === 'conformance') {
+    return `conformance ist das Prüfpaket und für die Nutzung nicht nötig; von den veröffentlichten Paketen hängt nur cli daran (${allowedText})`;
+  }
+  return allowedText;
+}
 
 export interface RepositoryManifest {
   id: WorkspacePackageId;
   name: string;
   path: string;
+  /** Wert von `private` im Paketmanifest; nur `true` gilt als privat. */
+  isPrivate: boolean;
   dependencies: Record<string, unknown>;
   malformedDependencySections: string[];
 }
@@ -53,17 +124,6 @@ export interface RepositoryPolicyViolation {
   specifier?: string;
   detail: string;
 }
-
-const PACKAGE_RANK: Readonly<Record<WorkspacePackageId, number>> = {
-  schema: 0,
-  core: 1,
-  conformance: 2,
-  react: 2,
-  'web-component': 2,
-  maplibre: 2,
-  qgis: 2,
-  cli: 3,
-};
 
 export const REFERENCE_IGNORE_TARGETS = [
   'taktische-zeichen/',
@@ -166,6 +226,9 @@ function externalPackageName(specifier: string): string | undefined {
   ) {
     return undefined;
   }
+  // Virtuelle Module eines Frameworks (`astro:content`) gehören zum Paket vor dem Doppelpunkt.
+  const scheme = /^([a-z][\w.-]*):/u.exec(specifier);
+  if (scheme !== null) return scheme[1];
   const parts = specifier.split('/');
   if (specifier.startsWith('@')) {
     return parts.length >= 2 ? `${parts[0]}/${parts[1]}` : specifier;
@@ -201,6 +264,18 @@ export function findRepositoryPolicyViolations(
         importer: manifest.id,
         specifier: manifest.name,
         detail: `${manifest.path} muss den Paketnamen ${expectedName} verwenden.`,
+      });
+    }
+
+    const expectedPrivate = isPrivatePackage(manifest.id);
+    if (manifest.isPrivate !== expectedPrivate) {
+      violations.push({
+        code: 'unexpected-publish-status',
+        path: manifest.path,
+        importer: manifest.id,
+        detail: expectedPrivate
+          ? `${manifest.id} ist ein privates Werkzeug und muss "private": true setzen.`
+          : `${manifest.id} wird veröffentlicht und darf nicht "private": true setzen.`,
       });
     }
 
@@ -245,12 +320,12 @@ export function findRepositoryPolicyViolations(
             path: manifest.path,
             importer: manifest.id,
             specifier: dependencyName,
-            detail: `${manifest.id} muss ohne externe Abhängigkeit bleiben (${dependencyName}).`,
+            detail: `${manifest.id} bleibt ohne Fremdabhängigkeit, damit es ohne Node im Browser läuft (${dependencyName}).`,
           });
         }
         continue;
       }
-      if (PACKAGE_RANK[target] < PACKAGE_RANK[manifest.id]) continue;
+      if (isAllowedWorkspaceDependency(manifest.id, target)) continue;
 
       violations.push({
         code: 'forbidden-internal-dependency',
@@ -258,7 +333,9 @@ export function findRepositoryPolicyViolations(
         importer: manifest.id,
         target,
         specifier: dependencyName,
-        detail: `${manifest.id} darf nicht von ${target} abhängen.`,
+        detail:
+          `Verbotene Abhängigkeit ${manifest.id} → ${target} in ${manifest.path}: ` +
+          `${forbiddenEdgeReason(manifest.id, target)}.`,
       });
     }
   }
@@ -335,7 +412,7 @@ export function findRepositoryPolicyViolations(
             path: file.path,
             importer: file.packageId,
             specifier,
-            detail: `${file.packageId} muss ohne externen Import bleiben (${specifier}).`,
+            detail: `${file.packageId} bleibt außerhalb von Tests ohne Fremd- und node:-Import, damit es im Browser läuft (${specifier}).`,
           });
           continue;
         }
@@ -354,14 +431,16 @@ export function findRepositoryPolicyViolations(
         }
         continue;
       }
-      if (PACKAGE_RANK[target] >= PACKAGE_RANK[file.packageId]) {
+      if (!isAllowedWorkspaceDependency(file.packageId, target)) {
         violations.push({
           code: 'forbidden-internal-import',
           path: file.path,
           importer: file.packageId,
           target,
           specifier,
-          detail: `${file.packageId} darf ${target} nicht importieren.`,
+          detail:
+            `Verbotener Import ${file.packageId} → ${target} (${specifier}): ` +
+            `${forbiddenEdgeReason(file.packageId, target)}.`,
         });
         continue;
       }

@@ -10,6 +10,7 @@ import {
   readRepositoryPolicyInput,
   verifyRepository,
   type RepositoryPolicyInput,
+  type WorkspacePackageId,
 } from './verify-repository.js';
 
 const CLI_ENTRY = fileURLToPath(new URL('../index.ts', import.meta.url));
@@ -25,6 +26,7 @@ function validPolicyInput(): RepositoryPolicyInput {
         id: 'cli',
         name: '@einsatzzeichen/cli',
         path: 'packages/cli/package.json',
+        isPrivate: false,
         dependencies: {
           '@einsatzzeichen/conformance': 'workspace:*',
           '@einsatzzeichen/core': 'workspace:*',
@@ -36,6 +38,7 @@ function validPolicyInput(): RepositoryPolicyInput {
         id: 'conformance',
         name: '@einsatzzeichen/conformance',
         path: 'packages/conformance/package.json',
+        isPrivate: false,
         dependencies: {
           '@einsatzzeichen/core': 'workspace:*',
           '@einsatzzeichen/schema': 'workspace:*',
@@ -46,6 +49,7 @@ function validPolicyInput(): RepositoryPolicyInput {
         id: 'core',
         name: '@einsatzzeichen/core',
         path: 'packages/core/package.json',
+        isPrivate: false,
         dependencies: { '@einsatzzeichen/schema': 'workspace:*' },
         malformedDependencySections: [],
       },
@@ -53,6 +57,7 @@ function validPolicyInput(): RepositoryPolicyInput {
         id: 'schema',
         name: '@einsatzzeichen/schema',
         path: 'packages/schema/package.json',
+        isPrivate: false,
         dependencies: {},
         malformedDependencySections: [],
       },
@@ -60,12 +65,42 @@ function validPolicyInput(): RepositoryPolicyInput {
         id,
         name: `@einsatzzeichen/${id}`,
         path: `packages/${id}/package.json`,
+        isPrivate: false,
         dependencies: {
           '@einsatzzeichen/core': 'workspace:*',
           '@einsatzzeichen/schema': 'workspace:*',
         },
         malformedDependencySections: [],
       })),
+      {
+        id: 'review',
+        name: '@einsatzzeichen/review',
+        path: 'packages/review/package.json',
+        isPrivate: true,
+        dependencies: {
+          '@einsatzzeichen/conformance': 'workspace:*',
+          '@einsatzzeichen/core': 'workspace:*',
+          '@einsatzzeichen/schema': 'workspace:*',
+        },
+        malformedDependencySections: [],
+      },
+      {
+        id: 'website',
+        name: '@einsatzzeichen/website',
+        path: 'packages/website/package.json',
+        isPrivate: true,
+        dependencies: {
+          '@einsatzzeichen/conformance': 'workspace:*',
+          '@einsatzzeichen/core': 'workspace:*',
+          '@einsatzzeichen/maplibre': 'workspace:*',
+          '@einsatzzeichen/qgis': 'workspace:*',
+          '@einsatzzeichen/react': 'workspace:*',
+          '@einsatzzeichen/schema': 'workspace:*',
+          '@einsatzzeichen/web-component': 'workspace:*',
+          astro: '7.2.9',
+        },
+        malformedDependencySections: [],
+      },
     ],
     sourceFiles: [],
     sourceSymlinks: [],
@@ -84,7 +119,11 @@ function writeValidRepositoryFixture(root: string): void {
     mkdirSync(join(packageRoot, 'src'), { recursive: true });
     writeFileSync(
       join(packageRoot, 'package.json'),
-      JSON.stringify({ name: manifest.name, dependencies: manifest.dependencies }),
+      JSON.stringify({
+        name: manifest.name,
+        ...(manifest.isPrivate ? { private: true } : {}),
+        dependencies: manifest.dependencies,
+      }),
       'utf8',
     );
     writeFileSync(join(packageRoot, 'src/index.ts'), 'export {};\n', 'utf8');
@@ -96,9 +135,193 @@ function writeValidRepositoryFixture(root: string): void {
   );
 }
 
+function manifestOf(input: RepositoryPolicyInput, id: WorkspacePackageId) {
+  const manifest = input.manifests.find((candidate) => candidate.id === id);
+  if (manifest === undefined) throw new Error(`Testfixture ohne ${id}-Manifest`);
+  return manifest;
+}
+
+function internalEdges(input: RepositoryPolicyInput): Record<string, string[]> {
+  return Object.fromEntries(
+    input.manifests.map((manifest) => [
+      manifest.id,
+      Object.keys(manifest.dependencies)
+        .filter((name) => name.startsWith('@einsatzzeichen/'))
+        .sort(),
+    ]),
+  );
+}
+
+/**
+ * Jede Kante, die das Zielbild `cli → conformance → core → schema`, Kanäle → core, verbietet.
+ * Erlaubte Kanten stehen im Positivfall, der das echte Repository abbildet.
+ */
+const FORBIDDEN_EDGES: ReadonlyArray<readonly [WorkspacePackageId, WorkspacePackageId, string]> = [
+  ['schema', 'core', 'schema hängt an keinem Workspace-Paket'],
+  ['core', 'conformance', 'conformance ist das Prüfpaket'],
+  ['core', 'react', 'core darf nur an schema hängen'],
+  ['core', 'cli', 'core darf nur an schema hängen'],
+  ['conformance', 'cli', 'conformance darf nur an core, schema hängen'],
+  ['conformance', 'maplibre', 'conformance darf nur an core, schema hängen'],
+  ['react', 'conformance', 'von den veröffentlichten Paketen hängt nur cli daran'],
+  ['web-component', 'react', 'web-component darf nur an core, schema hängen'],
+  ['qgis', 'cli', 'qgis darf nur an core, schema hängen'],
+  ['cli', 'react', 'cli darf nur an conformance, core, schema hängen'],
+  ['cli', 'web-component', 'cli darf nur an conformance, core, schema hängen'],
+  ['cli', 'review', 'review ist privat und wird nicht veröffentlicht'],
+  ['core', 'website', 'website ist privat und wird nicht veröffentlicht'],
+  ['review', 'website', 'private Pakete hängen nicht aneinander'],
+  ['website', 'review', 'private Pakete hängen nicht aneinander'],
+  ['core', 'core', 'ein Paket bezieht sich nicht über seinen eigenen Paketnamen'],
+];
+
 describe('Repository-Policy — Paketgrenzen', () => {
-  it('akzeptiert die vier Ausgabekanäle mit Abhängigkeit auf core und schema', () => {
+  it('akzeptiert das Zielbild: cli → conformance → core → schema, Kanäle → core, private Werkzeuge → alles Veröffentlichte', () => {
     expect(findRepositoryPolicyViolations(validPolicyInput())).toEqual([]);
+  });
+
+  it(
+    'bildet mit dem Positivfall die internen Kanten des echten Repositorys ab',
+    { timeout: 30_000 },
+    () => {
+      const real = readRepositoryPolicyInput({
+        root: REPOSITORY_ROOT,
+        trackedFiles: [],
+        effectivelyIgnoredReferenceTargets: ['taktische-zeichen/', 'taktische-zeichen.zip'],
+      });
+      expect(internalEdges(real)).toEqual(internalEdges(validPolicyInput()));
+      expect(
+        Object.fromEntries(real.manifests.map((manifest) => [manifest.id, manifest.isPrivate])),
+      ).toEqual(
+        Object.fromEntries(
+          validPolicyInput().manifests.map((manifest) => [manifest.id, manifest.isPrivate]),
+        ),
+      );
+    },
+  );
+
+  it.each(FORBIDDEN_EDGES)(
+    'weist die verbotene Kante %s → %s im Paketmanifest mit Begründung zurück',
+    (importer, target, reason) => {
+      const input = validPolicyInput();
+      manifestOf(input, importer).dependencies[`@einsatzzeichen/${target}`] = 'workspace:*';
+
+      const violations = findRepositoryPolicyViolations(input);
+      expect(violations).toEqual([
+        expect.objectContaining({
+          code: 'forbidden-internal-dependency',
+          path: `packages/${importer}/package.json`,
+          importer,
+          target,
+          specifier: `@einsatzzeichen/${target}`,
+        }),
+      ]);
+      expect(violations[0]?.detail).toContain(`Verbotene Abhängigkeit ${importer} → ${target}`);
+      expect(violations[0]?.detail).toContain(reason);
+    },
+  );
+
+  it.each(FORBIDDEN_EDGES)(
+    'weist die verbotene Kante %s → %s im Quelltext mit Begründung zurück',
+    (importer, target, reason) => {
+      const input = validPolicyInput();
+      const path = `packages/${importer}/src/edge.ts`;
+      input.sourceFiles.push({
+        packageId: importer,
+        path,
+        source: `import '@einsatzzeichen/${target}';\n`,
+      });
+
+      const violations = findRepositoryPolicyViolations(input);
+      expect(violations).toContainEqual(
+        expect.objectContaining({
+          code: 'forbidden-internal-import',
+          path,
+          importer,
+          target,
+          specifier: `@einsatzzeichen/${target}`,
+        }),
+      );
+      const detail = violations.find((violation) => violation.path === path)?.detail ?? '';
+      expect(detail).toContain(`Verbotener Import ${importer} → ${target}`);
+      expect(detail).toContain(reason);
+    },
+  );
+
+  it.each([
+    ['review', true, false, 'muss "private": true setzen'],
+    ['conformance', false, true, 'darf nicht "private": true setzen'],
+  ] as const)(
+    'bindet %s an seinen Veröffentlichungsstatus',
+    (id, expectedPrivate, actualPrivate, message) => {
+      const input = validPolicyInput();
+      const manifest = manifestOf(input, id);
+      expect(manifest.isPrivate).toBe(expectedPrivate);
+      manifest.isPrivate = actualPrivate;
+
+      expect(findRepositoryPolicyViolations(input)).toEqual([
+        expect.objectContaining({
+          code: 'unexpected-publish-status',
+          path: `packages/${id}/package.json`,
+          importer: id,
+          detail: expect.stringContaining(message),
+        }),
+      ]);
+    },
+  );
+
+  it('erkennt node:-Importe in core an der Importkante, nicht am Wort im Kommentar', () => {
+    const input = validPolicyInput();
+    input.sourceFiles.push(
+      {
+        packageId: 'core',
+        path: 'packages/core/src/rules/comment.ts',
+        source:
+          '// Früher lag hier ein Zugriff über node:fs; import { readFileSync } from "node:fs";\n' +
+          "export const note = 'node:fs';\n",
+      },
+      {
+        packageId: 'core',
+        path: 'packages/core/src/rules/comment.test.ts',
+        source: "import { readFileSync } from 'node:fs';\n",
+      },
+    );
+    expect(findRepositoryPolicyViolations(input)).toEqual([]);
+
+    input.sourceFiles.push({
+      packageId: 'core',
+      path: 'packages/core/src/rules/io.ts',
+      source: "export { readFileSync } from 'node:fs';\n",
+    });
+    expect(findRepositoryPolicyViolations(input)).toEqual([
+      expect.objectContaining({
+        code: 'forbidden-external-import',
+        path: 'packages/core/src/rules/io.ts',
+        importer: 'core',
+        specifier: 'node:fs',
+        detail: expect.stringContaining('Browser'),
+      }),
+    ]);
+  });
+
+  it('ordnet virtuelle Framework-Module wie astro:content dem deklarierten Framework zu', () => {
+    const input = validPolicyInput();
+    input.sourceFiles.push({
+      packageId: 'website',
+      path: 'packages/website/src/content.config.ts',
+      source: "import { defineCollection } from 'astro:content';\n",
+    });
+    expect(findRepositoryPolicyViolations(input)).toEqual([]);
+
+    delete manifestOf(input, 'website').dependencies.astro;
+    expect(findRepositoryPolicyViolations(input)).toContainEqual(
+      expect.objectContaining({
+        code: 'undeclared-external-import',
+        path: 'packages/website/src/content.config.ts',
+        importer: 'website',
+        specifier: 'astro:content',
+      }),
+    );
   });
 
   it.each(['react', 'web-component', 'maplibre', 'qgis'] as const)(
