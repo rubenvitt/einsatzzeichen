@@ -29,6 +29,12 @@ jobs:
 
       - run: pnpm typecheck
       - run: pnpm build
+
+      # Misst den Publish-Umfang von core (gepackt, entpackt, Inhalt) — braucht den Build davor.
+      # Grenzen und Begründung stehen im Skript.
+      - name: Größen-Gate core
+        run: node scripts/gates/core-package.mjs
+
       - run: pnpm test
       - run: pnpm cli coverage
 
