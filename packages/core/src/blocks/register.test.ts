@@ -26,6 +26,7 @@ import {
   BLOCK_ENTRIES,
   BLOCK_REGISTER,
   blockEntry,
+  blockGaps,
 } from './register.js';
 
 const packagesRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
@@ -151,5 +152,44 @@ describe('Bausteinregister: Herkunft und benannte Ausnahmen', () => {
         expect(entry.binding.gap.reason.trim(), entry.id).not.toBe('');
       }
     }
+  });
+});
+
+describe('Bausteinregister: festgenagelter Stand', () => {
+  it('zählt die Einträge je Kategorie', () => {
+    const counts = Object.fromEntries(
+      BLOCK_CATEGORIES.map((category) => [category, BLOCK_REGISTER[category].length]),
+    );
+    expect(counts).toEqual({
+      'base-symbol': 33,
+      color: 9,
+      strength: 4,
+      'unit-grouping': 3,
+      'administrative-level': 6,
+      'technical-head-mark': 2,
+      chassis: 8,
+      capability: 88,
+      'body-mark': 44,
+      'function-role': 25,
+      state: 58,
+      tendency: 3,
+      arrow: 0,
+      line: 0,
+    });
+  });
+
+  it('nagelt die Bausteine ohne Zeichnung fest', () => {
+    // Dieselben Lücken wie in der Wertabdeckung (`catalog/src/rule-coverage.ts`): drei
+    // Verwaltungsstufen und das Amphibienfahrzeug. Dazu kommen die Verbände aus 5.5, die dort
+    // keine Achse haben, weil `SymbolSpec` kein Feld für sie führt.
+    expect(blockGaps()).toEqual([
+      { id: 'administrative-level/bezirk', status: 'not-measured' },
+      { id: 'administrative-level/bundesland', status: 'not-measured' },
+      { id: 'administrative-level/gemeinde', status: 'not-measured' },
+      { id: 'chassis/amphibienfahrzeug', status: 'not-measured' },
+      { id: 'unit-grouping/verband-i', status: 'not-measured' },
+      { id: 'unit-grouping/verband-ii', status: 'not-measured' },
+      { id: 'unit-grouping/verband-iii', status: 'not-measured' },
+    ]);
   });
 });
