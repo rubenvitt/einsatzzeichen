@@ -1,9 +1,19 @@
 #!/usr/bin/env node
+/*
+ * Befehle nach Paket (LFH-560, LFH-572):
+ *
+ * Prüfen (conformance) — Rezepte, Coverage-Manifest, Domain-Reviews, Referenzinventar, Gates:
+ *   audit:reference, coverage, review-dossier, verify:repository, visual-proof
+ * Export (core) — Geometrie, Themes und Renderer des Produkts:
+ *   export (Rezeptliste noch über commands/export-recipes.ts aus conformance, bis LFH-580)
+ *
+ * `cli-packages.test.ts` hält die Zuordnung an den Importen fest.
+ */
 import { isRenderThemeId, renderTheme } from '@einsatzzeichen/core';
+// Prüfen (conformance)
 import { auditReference } from './commands/audit-reference.js';
 import { coverage } from './commands/coverage.js';
 import { ReviewDossierError, reviewDossier } from './commands/review-dossier.js';
-import { InvalidExportSizeError, exportSvg, parseExportSize } from './commands/export.js';
 import {
   RepositoryPolicyError,
   verifyRepository,
@@ -12,6 +22,8 @@ import {
   DEFAULT_ANHANG_G_PROOF_OUTPUT,
   generateAnhangGVisualProof,
 } from './commands/visual-proof.js';
+// Export (core)
+import { InvalidExportSizeError, exportSvg, parseExportSize } from './commands/export.js';
 
 class CliUsageError extends Error {}
 
@@ -32,6 +44,7 @@ function flag(name: string): string | undefined {
 const command = process.argv[2];
 
 switch (command) {
+  // ── Prüfen (conformance) ──
   case 'audit:reference': {
     try {
       const filter = flag('filter');
@@ -76,24 +89,6 @@ switch (command) {
     }
     break;
   }
-  case 'export': {
-    try {
-      const themeId = flag('theme') ?? 'reference';
-      if (!isRenderThemeId(themeId)) {
-        throw new CliUsageError(
-          `Unbekanntes Theme "${themeId}". Zulässig: reference, accessible-light, print-monochrome.`,
-        );
-      }
-      exportSvg(flag('out') ?? 'out', parseExportSize(flag('size') ?? '64'), renderTheme(themeId));
-    } catch (error) {
-      if (error instanceof CliUsageError || error instanceof InvalidExportSizeError) {
-        console.error(error.message);
-        process.exit(1);
-      }
-      throw error;
-    }
-    break;
-  }
   case 'visual-proof': {
     try {
       const referenceRoot = flag('reference-root');
@@ -118,15 +113,35 @@ switch (command) {
     }
     break;
   }
+  // ── Export (core) ──
+  case 'export': {
+    try {
+      const themeId = flag('theme') ?? 'reference';
+      if (!isRenderThemeId(themeId)) {
+        throw new CliUsageError(
+          `Unbekanntes Theme "${themeId}". Zulässig: reference, accessible-light, print-monochrome.`,
+        );
+      }
+      exportSvg(flag('out') ?? 'out', parseExportSize(flag('size') ?? '64'), renderTheme(themeId));
+    } catch (error) {
+      if (error instanceof CliUsageError || error instanceof InvalidExportSizeError) {
+        console.error(error.message);
+        process.exit(1);
+      }
+      throw error;
+    }
+    break;
+  }
   default:
     console.error(`Unbekanntes Kommando: ${command ?? '(keines)'}`);
     console.error(
-      'Verfügbar: audit:reference [--filter <präfix>] [--print] | coverage | ' +
+      'Verfügbar:\n' +
+        '  Prüfen (conformance): audit:reference [--filter <präfix>] [--print] | coverage | ' +
         'review-dossier [--out <md-pfad>] | ' +
         'verify:repository | ' +
-        'export [--out <pfad>] [--size <px>] ' +
-        '[--theme <reference|accessible-light|print-monochrome>] | ' +
-        'visual-proof --reference-root <pfad> [--out <png-pfad>]',
+        'visual-proof --reference-root <pfad> [--out <png-pfad>]\n' +
+        '  Export (core): export [--out <pfad>] [--size <px>] ' +
+        '[--theme <reference|accessible-light|print-monochrome>]',
     );
     process.exit(1);
 }
