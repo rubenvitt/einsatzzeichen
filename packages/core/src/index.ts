@@ -33,3 +33,4 @@ export * from './a11y/contrast.js';
 export * from './a11y/metadata.js';
 export * from './viewbox-gate.js';
 export * from './text-metrics.js';
+export * from './layout/zones.js';

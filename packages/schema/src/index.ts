@@ -11,3 +11,4 @@ export * from './head.js';
 export * from './chassis.js';
 export * from './function-role.js';
 export * from './taxonomy-values.js';
+export * from './zones.js';
