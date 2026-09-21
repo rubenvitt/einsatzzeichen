@@ -1,3 +1,54 @@
+## 🚨 Breaking Changes
+
+**@einsatzzeichen/catalog wurde in @einsatzzeichen/conformance umbenannt**
+
+Das bisherige Paket `@einsatzzeichen/catalog` heißt ab sofort `@einsatzzeichen/conformance` und ist nun ausschließlich als Prüfpaket gedacht. Die gesamte Geometrie (Grundzeichen, Marken, Piktogramme, Beschriftung, Themes, Textmetriken) wird jetzt aus `@einsatzzeichen/core` importiert.
+
+**Migration:**
+- Ersetzen Sie `@einsatzzeichen/catalog` durch `@einsatzzeichen/conformance` in Ihren Abhängigkeiten
+- Importieren Sie Geometrie und Rendering-Komponenten aus `@einsatzzeichen/core` statt aus dem Catalog
+- Das Conformance-Paket wird nur noch für Validierung, Rezeptauflösung und Domain-Reviews benötigt
+
+## Paketarchitektur
+
+**Klare Trennung zwischen Produktpaket und Prüfpaket**
+
+Die Paketarchitektur wurde grundlegend neu strukturiert:
+
+- **@einsatzzeichen/core** ist das Hauptprodukt und enthält alle Bausteine für die Verwendung des Symbolsystems: Grundzeichen, Körpermarken, Fahrwerk, Kopfmarken, Piktogramme, Beschriftung, Render-Themes und Textmetriken
+- **@einsatzzeichen/conformance** (ehemals catalog) ist das Prüfpaket mit Rezepten, Coverage-Manifesten, Domain-Reviews, Fingerprints, Referenzinventar und Schriftdateien
+- Core bleibt vollständig frei von Node.js-Abhängigkeiten und läuft im Browser ohne das Conformance-Paket
+
+**Repository-weite Abhängigkeitsrichtung**
+
+Die erlaubten Paketabhängigkeiten sind nun strikt definiert: CLI → Conformance → Core → Schema. Ein automatischer Gate prüft bei jedem Build die Einhaltung dieser Architektur.
+
+## Core-Paket
+
+**Größen-Monitoring für Publish-Artefakte**
+
+Ein automatischer Gate überwacht die Größe des veröffentlichten Core-Pakets (gepackt max. 500 KB, entpackt max. 6,5 MB) und prüft den Paketinhalt gegen eine Positivliste.
+
+**Browser-Kompatibilität ohne Prüfpaket**
+
+Neue Smoke-Tests stellen sicher, dass der öffentliche Core-Export keine Node.js-Builtins oder Conformance-Abhängigkeiten enthält und vollständig im Browser lauffähig ist.
+
+## CLI
+
+**Befehle nach Funktion gruppiert**
+
+Die CLI-Befehle sind jetzt klar in zwei Kategorien gegliedert: Prüfbefehle nutzen das Conformance-Paket, Export-Befehle arbeiten ausschließlich mit Core. Die Hilfeausgabe spiegelt diese Aufteilung wider.
+
+## Website
+
+**Website-Inseln ohne Conformance-Abhängigkeit**
+
+Alle interaktiven Website-Komponenten beziehen Geometrie und Rendering-Logik jetzt direkt aus dem öffentlichen Core-Index, nicht mehr über Subpfade oder das Conformance-Paket.
+
+## Dokumentation
+
+Die gesamte Dokumentation (README, Paketseiten, Vision, Quickstart) wurde aktualisiert und beschreibt Core als Hauptprodukt und Conformance als optionales Prüfpaket. Die Paketseite für Conformance ist unter einer neuen URL erreichbar; die alte Adresse leitet automatisch weiter.
+
 ## Release Notes 1.5.0
 
 ### Bausteinregister

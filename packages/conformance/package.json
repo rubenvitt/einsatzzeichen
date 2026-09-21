@@ -1,6 +1,6 @@
 {
   "name": "@einsatzzeichen/conformance",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "type": "module",
   "description": "Prüfpaket für Einsatzzeichen: Rezepte, Coverage-Manifest, Domain-Reviews, Fingerprints, Referenzinventar und Gates samt Schrift-Assets (Arimo, OFL). Für die Nutzung nicht nötig – dafür reicht @einsatzzeichen/core.",
   "license": "MIT",
