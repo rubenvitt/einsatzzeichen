@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { isRenderThemeId, renderTheme } from '@einsatzzeichen/catalog';
+import { isRenderThemeId, renderTheme } from '@einsatzzeichen/core';
 import { auditReference } from './commands/audit-reference.js';
 import { coverage } from './commands/coverage.js';
 import { ReviewDossierError, reviewDossier } from './commands/review-dossier.js';

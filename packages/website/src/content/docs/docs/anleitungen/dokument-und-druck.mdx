@@ -119,7 +119,7 @@ pnpm cli export --out out/druck --size 128 --theme print-monochrome
 (`packages/cli/src/index.ts`). Einzeln:
 
 ```ts
-import { PRINT_MONOCHROME_THEME } from '@einsatzzeichen/catalog';
+import { PRINT_MONOCHROME_THEME } from '@einsatzzeichen/core';
 import { renderSvg } from '@einsatzzeichen/core';
 
 const svg = renderSvg(drawing, { theme: PRINT_MONOCHROME_THEME });

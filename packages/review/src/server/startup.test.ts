@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RENDER_THEMES } from '@einsatzzeichen/catalog';
+import { RENDER_THEMES } from '@einsatzzeichen/core';
 import {
   DEFAULT_HOST,
   DEFAULT_PORT,

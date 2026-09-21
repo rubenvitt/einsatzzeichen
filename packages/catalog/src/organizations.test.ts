@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PALETTE, type OrganizationId, type SymbolSpec } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
-import { ORGANIZATION_COLORS, organizationColor } from './organizations.js';
+import { ORGANIZATION_COLORS, organizationColor } from '@einsatzzeichen/core';
 import { fingerprintFor } from './fingerprint-index.js';
 import { composeFromCatalog } from './recipes.js';
 

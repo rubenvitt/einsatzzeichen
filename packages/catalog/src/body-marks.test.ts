@@ -9,7 +9,7 @@ import {
   type Primitive,
   type SymbolKind,
 } from '@einsatzzeichen/schema';
-import { BODY_MARK_IDS, bodyMark as bodyMarkWithContext } from './body-marks.js';
+import { BODY_MARK_IDS, bodyMark as bodyMarkWithContext } from '@einsatzzeichen/core';
 
 /**
  * Die einzige vermessene Körperhülle dieser Zeichnungen: das Rechteck 30 × 20 mm der taktischen

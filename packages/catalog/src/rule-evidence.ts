@@ -1,7 +1,7 @@
 import { CompositionError, validateSpec } from '@einsatzzeichen/core';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
-import { administrativeHead } from './administrative-heads.js';
-import { functionRole } from './function-roles.js';
+import { administrativeHead } from '@einsatzzeichen/core';
+import { functionRole } from '@einsatzzeichen/core';
 import { composeFromCatalog } from './recipes.js';
 
 /**

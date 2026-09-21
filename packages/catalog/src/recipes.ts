@@ -7,18 +7,18 @@ import {
   type ContrastRequirement,
 } from '@einsatzzeichen/core';
 import type { BodyLabelInk, Drawing, OrganizationId, SymbolSpec } from '@einsatzzeichen/schema';
-import { baseDrawing, innerField } from './base-symbols.js';
-import { bodyMark } from './body-marks.js';
-import { administrativeHead } from './administrative-heads.js';
-import { functionRole } from './function-roles.js';
-import { organizationColor } from './organizations.js';
-import { MINIMUM_TEXT_CONTRAST } from './pictograms/contrast-contract.js';
-import { pictogram } from './pictograms/index.js';
-import { strengthHead } from './strengths.js';
-import { technicalHeadMark } from './technical-head-marks.js';
-import { vehicleChassis } from './vehicle-categories.js';
-import { ARIMO_TEXT_METRICS } from './text-metrics.js';
-import { describeSymbolSpec } from './labels.js';
+import { baseDrawing, innerField } from '@einsatzzeichen/core';
+import { bodyMark } from '@einsatzzeichen/core';
+import { administrativeHead } from '@einsatzzeichen/core';
+import { functionRole } from '@einsatzzeichen/core';
+import { organizationColor } from '@einsatzzeichen/core';
+import { MINIMUM_TEXT_CONTRAST } from '@einsatzzeichen/core';
+import { pictogram } from '@einsatzzeichen/core';
+import { strengthHead } from '@einsatzzeichen/core';
+import { technicalHeadMark } from '@einsatzzeichen/core';
+import { vehicleChassis } from '@einsatzzeichen/core';
+import { ARIMO_TEXT_METRICS } from '@einsatzzeichen/core';
+import { describeSymbolSpec } from '@einsatzzeichen/core';
 import {
   ANHANG_E_A_RECIPES,
   ANHANG_E_B_RECIPES,

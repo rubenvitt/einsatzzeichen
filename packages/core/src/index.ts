@@ -58,3 +58,29 @@ export {
   type RuleReasonSource,
 } from './rules/rule-catalog.js';
 export { specKey } from './spec-key.js';
+// Geometrie der Bausteine (LFH-570): Grundzeichen, Körpermarken, Farbe, Stärke, Kopfmarken,
+// Verwaltungsstufe, Funktionsfassung, Piktogramme, Beschriftung, Themes, Kontrastbefunde und die
+// Arimo-Laufweiten. Vorher in `catalog`; `core` bleibt dabei ohne Node- und Fremdabhängigkeit.
+export * from './geometry/base-symbols.js';
+export * from './geometry/body-marks.js';
+export * from './geometry/vehicle-categories.js';
+export * from './geometry/organizations.js';
+export * from './geometry/strengths.js';
+export * from './geometry/technical-head-marks.js';
+export * from './geometry/administrative-heads.js';
+export * from './geometry/function-roles.js';
+export * from './geometry/pictograms/index.js';
+export * from './geometry/render-themes.js';
+export * from './geometry/labels.js';
+export * from './geometry/contrast-exceptions.js';
+export * from './geometry/text-metrics.js';
+// Bisher nur innerhalb von `catalog` genutzt; das Prüfpaket braucht sie weiter für seine Daten
+// (`deepFreeze`), die Rezepte (`MINIMUM_TEXT_CONTRAST`) und die Piktogrammtypen.
+export * from './geometry/readonly-data.js';
+export * from './geometry/pictograms/contrast-contract.js';
+export type {
+  CatalogPictogramDefinition,
+  PictogramContrastPair,
+  PictogramPlacement,
+  PictogramSection,
+} from './geometry/pictograms/catalog-definition.js';

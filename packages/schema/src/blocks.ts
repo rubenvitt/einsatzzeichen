@@ -47,7 +47,7 @@ export type BlockZone = ZoneId | 'freestanding';
  * keine Messung, sondern zeigt auf die Stelle, an der die Geometrie mit ihrer Herkunft steht.
  */
 export interface BlockProvenance {
-  /** Datei und Zeilenbereich relativ zu `packages/`, z. B. `catalog/src/strengths.ts:63–90`. */
+  /** Datei und Zeilenbereich relativ zu `packages/`, z. B. `core/src/geometry/strengths.ts:63–90`. */
   readonly definedAt: string;
   /** Die Herkunftsaussage des Fundorts, übernommen und nicht neu formuliert. */
   readonly note: string;

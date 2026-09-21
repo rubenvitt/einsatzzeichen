@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { BLOCK_REGISTER } from '@einsatzzeichen/core';
+import { BLOCK_REGISTER } from './register.js';
 import type {
   BlockCategory,
   BlockEntry,
@@ -10,13 +10,13 @@ import type {
   CapabilityId,
   FunctionRoleId,
 } from '@einsatzzeichen/schema';
-import { BODY_MARK_IDS } from '../body-marks.js';
-import { functionRole } from '../function-roles.js';
-import { pictogram } from '../pictograms/index.js';
+import { BODY_MARK_IDS } from '../geometry/body-marks.js';
+import { functionRole } from '../geometry/function-roles.js';
+import { pictogram } from '../geometry/pictograms/index.js';
 
 /**
  * Laufzeit-Gate des Bausteinregisters für Fähigkeit, Körpermarke und Funktionsfassung (LFH-564).
- * `core` darf `catalog` nicht importieren. Deshalb prüft erst dieser Test, ob sich die Fundorte
+ * Das Register nennt nur Fundorte. Deshalb prüft erst dieser Test, ob sich die Fundorte
  * des Registers wirklich zu Geometrie auflösen: `measured` muss auflösen, alles andere nicht.
  *
  * Körpermarken werden über `BODY_MARK_IDS` geprüft und nicht über `bodyMark()`: der Aufruf

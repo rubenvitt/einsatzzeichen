@@ -1,6 +1,6 @@
 import { readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { renderSvg } from '@einsatzzeichen/core';
+import { renderSvg } from '../../render/svg.js';
 import { type Drawing } from '@einsatzzeichen/schema';
 import { ALL_PICTOGRAMS, pictogramRenderId } from './index.js';
 import { describePictogram } from '../labels.js';

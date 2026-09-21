@@ -1,5 +1,5 @@
 import type { BodyLabels } from '@einsatzzeichen/schema';
-import { deepFreeze, type DeepReadonly } from './readonly-data.js';
+import { deepFreeze, type DeepReadonly } from '@einsatzzeichen/core';
 import type { GRAMMAR_FIXTURES } from './recipes.js';
 
 /**

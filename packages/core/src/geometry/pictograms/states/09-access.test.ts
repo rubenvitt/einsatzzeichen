@@ -1,4 +1,4 @@
-import { checkBox, checkClipping, checkCommands } from '@einsatzzeichen/core';
+import { checkBox, checkClipping, checkCommands } from '../../../pictogram-gate.js';
 import { type Primitive } from '@einsatzzeichen/schema';
 import { describe, expect, it } from 'vitest';
 import type { CatalogPictogramDefinition } from '../catalog-definition.js';

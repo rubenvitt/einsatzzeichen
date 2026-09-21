@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { CAPABILITY_IDS } from '@einsatzzeichen/schema';
 import { fingerprintFor } from '../fingerprint-index.js';
-import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
-import { pictogram, pictogramVariantKey } from './index.js';
+import { CAPABILITY_PICTOGRAMS } from '@einsatzzeichen/core/src/geometry/pictograms/capabilities.js';
+import { pictogram, pictogramVariantKey } from '@einsatzzeichen/core';
 
 type CapabilityDefinition = (typeof CAPABILITY_PICTOGRAMS)[number];
 

@@ -4,7 +4,7 @@ import type {
   FingerprintShapeLike,
   MatchFingerprintOptions,
 } from '@einsatzzeichen/core';
-import { deepFreeze, type DeepReadonly } from './readonly-data.js';
+import { deepFreeze, type DeepReadonly } from '@einsatzzeichen/core';
 
 /**
  * **Benannte Vergleichsausnahmen** des Körpervergleichs (`matchFingerprint`, LFH-568).

@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { BLOCK_REGISTER, NotMeasuredError } from '@einsatzzeichen/core';
+import { BLOCK_REGISTER } from './register.js';
+import { NotMeasuredError } from '../not-measured.js';
 import {
   BODY_VARIANT_IDS,
   ORGANIZATION_IDS,
@@ -14,22 +15,22 @@ import {
   type SymbolKind,
   type VehicleCategoryId,
 } from '@einsatzzeichen/schema';
-import { baseDrawing } from '../base-symbols.js';
-import { organizationColor } from '../organizations.js';
-import { MEASURED_VEHICLE_CATEGORIES, vehicleChassis } from '../vehicle-categories.js';
+import { baseDrawing } from '../geometry/base-symbols.js';
+import { organizationColor } from '../geometry/organizations.js';
+import { MEASURED_VEHICLE_CATEGORIES, vehicleChassis } from '../geometry/vehicle-categories.js';
 
 /**
  * Laufzeit-Gate des Bausteinregisters für Grundzeichen, Farbe und Fahrwerk (LFH-564).
  *
- * `core` darf `catalog` nicht importieren. Das Register zeigt deshalb nur mit `definedAt` auf die
- * Zeichnung. Dieses Gate prüft von der Katalogseite zwei Dinge:
+ * Das Register zeigt nur mit `definedAt` auf die Zeichnung in `core/src/geometry/`. Dieses Gate
+ * prüft zwei Dinge:
  *
  * 1. Der Messstand stimmt mit dem Resolver überein. `measured` muss sich auflösen, `not-measured`
  *    und `measured-absent` müssen mit `NotMeasuredError` scheitern. Umgekehrt muss jede Fassung,
  *    die der Resolver zeichnet, im Register stehen. Wird ein Wert neu vermessen, bricht der Test,
  *    bis das Register nachgezogen ist.
  * 2. Der Fundort stimmt mit dem Quelltext überein. Für jeden `measured`-Eintrag wird die
- *    Definition im Katalogmodul gesucht, und `definedAt` muss genau ihren Zeilenbereich nennen:
+ *    Definition im Geometriemodul gesucht, und `definedAt` muss genau ihren Zeilenbereich nennen:
  *    vom Kommentar direkt darüber (falls vorhanden) bis zum Ende des Eintrags. Rutscht eine Zeile,
  *    fällt das auf.
  */
@@ -94,9 +95,9 @@ function place(file: string, start: number, end: number): string {
   return start === end ? `${file}:${start + 1}` : `${file}:${start + 1}–${end + 1}`;
 }
 
-const BASE_FILE = 'catalog/src/base-symbols.ts';
-const ORGANIZATION_FILE = 'catalog/src/organizations.ts';
-const CHASSIS_FILE = 'catalog/src/vehicle-categories.ts';
+const BASE_FILE = 'core/src/geometry/base-symbols.ts';
+const ORGANIZATION_FILE = 'core/src/geometry/organizations.ts';
+const CHASSIS_FILE = 'core/src/geometry/vehicle-categories.ts';
 
 /** Der Block eines `const NAME … = {` bis zu seinem `};`, 0-basiert. */
 function constBlock(lines: readonly string[], name: string): readonly [number, number] {

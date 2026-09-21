@@ -1,4 +1,4 @@
-import type { ContrastIssue } from '@einsatzzeichen/core';
+import type { ContrastIssue } from '../a11y/contrast.js';
 import type { ColorToken } from '@einsatzzeichen/schema';
 import { deepFreeze, type DeepReadonly } from './readonly-data.js';
 

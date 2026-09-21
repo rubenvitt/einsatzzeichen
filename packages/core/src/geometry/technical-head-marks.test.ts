@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { technicalHeadMark } from './index.js';
+import { technicalHeadMark } from './technical-head-marks.js';
 
 describe('technicalHeadMark()', () => {
   it('liefert den vermessenen einzelnen Vertikalbalken relativ zur Kopfoberkante', () => {

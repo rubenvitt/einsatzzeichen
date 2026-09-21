@@ -1,5 +1,4 @@
 import {
-  CONTRAST_EXCEPTIONS,
   COVERAGE_MANIFEST,
   PROFILES,
   SOURCE_REGISTRY,
@@ -12,6 +11,7 @@ import {
   sortedDomainReviewOpenByArea,
   validationRuleCoverage,
 } from '@einsatzzeichen/catalog';
+import { CONTRAST_EXCEPTIONS } from '@einsatzzeichen/core';
 
 function counted(count: number, singular: string, plural: string): string {
   return `${count} ${count === 1 ? singular : plural}`;

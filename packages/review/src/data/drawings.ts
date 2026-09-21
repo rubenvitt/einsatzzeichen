@@ -11,13 +11,15 @@
  * wäre eine blind entschiedene Zeile.
  */
 import {
-  ALL_PICTOGRAMS,
-  BASE_SYMBOLS,
   RECIPES,
   composeFromCatalog,
-  describePictogram,
   type Recipe,
 } from '@einsatzzeichen/catalog';
+import {
+  ALL_PICTOGRAMS,
+  BASE_SYMBOLS,
+  describePictogram,
+} from '@einsatzzeichen/core';
 import {
   ORGANIZATION_IDS,
   STRENGTH_IDS,

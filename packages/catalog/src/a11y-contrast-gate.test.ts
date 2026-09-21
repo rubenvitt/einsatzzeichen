@@ -12,22 +12,22 @@ import {
   contrastExceptionFor,
   knownContrastIssues,
   unexpectedContrastIssues,
-} from './contrast-exceptions.js';
-import { ORGANIZATION_COLORS } from './organizations.js';
-import { ALL_PICTOGRAMS } from './pictograms/index.js';
+} from '@einsatzzeichen/core';
+import { ORGANIZATION_COLORS } from '@einsatzzeichen/core';
+import { ALL_PICTOGRAMS } from '@einsatzzeichen/core';
 import { RECIPES, labelContrastRequirements, type Recipe } from './recipes.js';
 import {
   MINIMUM_NON_TEXT_CONTRAST,
   MINIMUM_TEXT_CONTRAST,
   contrastPairProblems,
   contrastRequirementsFor,
-} from './pictograms/contrast-contract.js';
+} from '@einsatzzeichen/core';
 import {
   ACCESSIBLE_LIGHT_THEME,
   PRINT_MONOCHROME_THEME,
   RENDER_THEMES,
   ORGANIZATION_BODY_DASHES,
-} from './render-themes.js';
+} from '@einsatzzeichen/core';
 
 const PRIMARY_PICTOGRAMS = ALL_PICTOGRAMS.filter(
   (definition) => definition.variant === 'primary' && definition.placement.mode === 'in-body',

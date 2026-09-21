@@ -11,7 +11,7 @@ import {
 } from './coverage-manifest.js';
 import { checkCoverage, findPrimaryViolations, releaseBlockers } from './coverage-gate.js';
 import { PROFILE_DOMAIN_REVIEWS, SOURCE_DOMAIN_REVIEWS } from './domain-reviews.js';
-import { ALL_PICTOGRAMS, pictogramVariantKey } from './pictograms/index.js';
+import { ALL_PICTOGRAMS, pictogramVariantKey } from '@einsatzzeichen/core';
 // Der Helfer stand bis hierher lokal in dieser Datei. Er wird inzwischen von sechs Testdateien
 // gebraucht; die gemeinsame Ablage verhindert, dass sechs Kopien der Zurechenbarkeitsregel
 // auseinanderlaufen.

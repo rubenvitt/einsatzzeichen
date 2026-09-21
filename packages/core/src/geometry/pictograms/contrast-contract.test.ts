@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { checkContrast, paintTokensOf, type RenderTheme } from '@einsatzzeichen/core';
+import { checkContrast, paintTokensOf } from '../../a11y/contrast.js';
+import type { RenderTheme } from '../../render/theme.js';
 import { PALETTE, type ColorToken } from '@einsatzzeichen/schema';
 import { unexpectedContrastIssues } from '../contrast-exceptions.js';
 import { ORGANIZATION_COLORS } from '../organizations.js';

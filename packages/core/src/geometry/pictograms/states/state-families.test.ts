@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-  checkBox,
-  checkClipping,
-  checkCommands,
-  renderSvg,
-} from '@einsatzzeichen/core';
+import { checkBox, checkClipping, checkCommands } from '../../../pictogram-gate.js';
+import { renderSvg } from '../../../render/svg.js';
 import { type Drawing, type Primitive } from '@einsatzzeichen/schema';
 import { PRINT_MONOCHROME_THEME } from '../../render-themes.js';
 import type { CatalogPictogramDefinition } from '../catalog-definition.js';

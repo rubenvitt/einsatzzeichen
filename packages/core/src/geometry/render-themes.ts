@@ -1,5 +1,5 @@
 import { PALETTE, type ColorPalette } from '@einsatzzeichen/schema';
-import { REFERENCE_THEME, type RenderTheme } from '@einsatzzeichen/core';
+import { REFERENCE_THEME, type RenderTheme } from '../render/theme.js';
 import { deepFreeze } from './readonly-data.js';
 
 const ACCESSIBLE_LIGHT_PALETTE: ColorPalette = deepFreeze({

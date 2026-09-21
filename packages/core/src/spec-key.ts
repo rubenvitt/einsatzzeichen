@@ -6,7 +6,7 @@ import type { SymbolSpec } from '@einsatzzeichen/schema';
  * Belegt am Code, nicht angenommen (Stand LFH-568, 21.09.2026):
  *
  * - `bodyMarks`: `validateSpec` liest die Liste nur als Menge (`some`, Länge, „genau eine Marke");
- *   die Kombinationsfassungen in `catalog/src/body-marks.ts` (`combinationBuild`) wählen über
+ *   die Kombinationsfassungen in `core/src/geometry/body-marks.ts` (`combinationBuild`) wählen über
  *   `candidate.marks.every((mark) => marks.includes(mark))` bei gleicher Länge — ebenfalls
  *   reihenfolgefrei.
  * - `capabilities`: `validateSpec` prüft nur, ob das Feld gesetzt ist; `compose` hängt die

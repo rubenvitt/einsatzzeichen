@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { BASE_SYMBOLS, RECIPES, baseDrawing, composeFromCatalog } from '@einsatzzeichen/catalog';
+import { RECIPES, composeFromCatalog } from '@einsatzzeichen/catalog';
+import { BASE_SYMBOLS, baseDrawing } from '@einsatzzeichen/core';
 import { REFERENCE_THEME, renderSvg, type RenderTheme } from '@einsatzzeichen/core';
 
 export class InvalidExportSizeError extends Error {

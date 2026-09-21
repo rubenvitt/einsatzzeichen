@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  BASE_SYMBOLS,
-  CONTRAST_EXCEPTIONS,
   COVERAGE_MANIFEST,
   RECIPES,
   SOURCE_REGISTRY,
@@ -12,6 +10,10 @@ import {
   ruleCoverage,
   validationRuleCoverage,
 } from '@einsatzzeichen/catalog';
+import {
+  BASE_SYMBOLS,
+  CONTRAST_EXCEPTIONS,
+} from '@einsatzzeichen/core';
 import { VALIDATION_RULE_IDS } from '@einsatzzeichen/core';
 import { PALETTE } from '@einsatzzeichen/schema';
 import { buildSnapshot } from './snapshot-build.js';

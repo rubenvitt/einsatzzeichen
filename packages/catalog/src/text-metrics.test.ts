@@ -11,7 +11,7 @@ import { DEFAULT_VIEWBOX_MM, type Primitive } from '@einsatzzeichen/schema';
 import { TEXT_FONT_FAMILY, resvgFontOptions } from './fonts.js';
 import { composeFromCatalog } from './recipes.js';
 import { RENDER_CASES } from './test-support/render-cases.js';
-import { ARIMO_TEXT_METRICS, TEXT_METRICS_FAMILY } from './text-metrics.js';
+import { ARIMO_TEXT_METRICS, TEXT_METRICS_FAMILY } from '@einsatzzeichen/core';
 
 type TextPrimitive = Extract<Primitive, { type: 'text' }>;
 

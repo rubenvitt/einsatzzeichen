@@ -1,4 +1,4 @@
-import { NotMeasuredError } from '@einsatzzeichen/core';
+import { NotMeasuredError } from '../not-measured.js';
 import type { ChassisMark, ChassisShape, VehicleCategoryId } from '@einsatzzeichen/schema';
 
 /**

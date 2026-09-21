@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { StrengthId } from '@einsatzzeichen/schema';
 import { ELEMENTS, PICTOGRAM_ELEMENT_KINDS, resolveElement } from './elements.js';
-import { ORGANIZATION_COLORS } from './organizations.js';
+import { ORGANIZATION_COLORS } from '@einsatzzeichen/core';
 import { fingerprintFor } from './fingerprint-index.js';
-import { ALL_PICTOGRAMS, pictogram } from './pictograms/index.js';
+import { ALL_PICTOGRAMS, pictogram } from '@einsatzzeichen/core';
 
 describe('Element-Register', () => {
   it('gibt Elementdeskriptoren als tief readonly typisiert zurück', () => {

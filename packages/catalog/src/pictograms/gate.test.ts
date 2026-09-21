@@ -15,15 +15,15 @@ import {
   type Primitive,
   type SymbolSpec,
 } from '@einsatzzeichen/schema';
-import { BASE_SYMBOLS, baseDrawing } from '../base-symbols.js';
+import { BASE_SYMBOLS, baseDrawing } from '@einsatzzeichen/core';
 import { COVERAGE_MANIFEST } from '../coverage-manifest.js';
-import { deepFreeze } from '../readonly-data.js';
+import { deepFreeze } from '@einsatzzeichen/core';
 import { RECIPES } from '../recipes.js';
-import type { CatalogPictogramDefinition } from './catalog-definition.js';
-import * as catalogDefinitionExports from './catalog-definition.js';
-import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
-import { ALL_PICTOGRAMS, pictogram, pictogramVariantKey } from './index.js';
-import { STATE_PICTOGRAMS } from './states/index.js';
+import type { CatalogPictogramDefinition } from '@einsatzzeichen/core';
+import * as catalogDefinitionExports from '@einsatzzeichen/core/src/geometry/pictograms/catalog-definition.js';
+import { CAPABILITY_PICTOGRAMS } from '@einsatzzeichen/core/src/geometry/pictograms/capabilities.js';
+import { ALL_PICTOGRAMS, pictogram, pictogramVariantKey } from '@einsatzzeichen/core';
+import { STATE_PICTOGRAMS } from '@einsatzzeichen/core';
 
 /**
  * Ein Körper aus dem realen Katalog. Das Gate liest weiterhin das Primitiv statt eines

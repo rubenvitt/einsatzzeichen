@@ -1,9 +1,9 @@
 import {
   colorFor,
-  tokenizePath,
-  type ContrastRequirement,
   type RenderTheme,
-} from '@einsatzzeichen/core';
+} from '../../render/theme.js';
+import { tokenizePath } from '../../path-commands.js';
+import type { ContrastRequirement } from '../../a11y/contrast.js';
 import {
   DEFAULT_STROKE_WIDTH_MM,
   type ColorToken,

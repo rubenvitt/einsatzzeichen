@@ -1,4 +1,4 @@
-import type { TextMetrics } from '@einsatzzeichen/core';
+import type { TextMetrics } from '../text-metrics.js';
 import arimoMetrics from '../assets/arimo-metrics.json' with { type: 'json' };
 import arimoBoldMetrics from '../assets/arimo-bold-metrics.json' with { type: 'json' };
 
@@ -14,9 +14,9 @@ import arimoBoldMetrics from '../assets/arimo-bold-metrics.json' with { type: 'j
  * `fingerprint-index.ts` eine Vertrauensgrenze zu einem Generat, nicht zu TypeScript — der
  * `with { type: 'json' }`-Typ behauptet die Form, prüft sie aber nicht; deshalb Laufzeitvalidierung.
  *
- * Kein Fontparser in `core`, keiner hier: die Metrik ist Datenbestand des Katalogs wie die
- * Schriftdatei selbst. Ob das Generat zur Schriftdatei passt (`sourceSha256`, `subsetSha256`),
- * prüft `fonts.test.ts` neben dem Hash der Schrift.
+ * Kein Fontparser in `core`, keiner hier: die Metrik ist Layoutdatum, keine Schriftdatei; die
+ * Schrift selbst liegt im Prüfpaket. Ob das Generat zur Schriftdatei passt (`sourceSha256`,
+ * `subsetSha256`), prüft `catalog/src/fonts.test.ts` neben dem Hash der Schrift.
  */
 interface ArimoMetricsFile {
   readonly family: string;
@@ -57,7 +57,7 @@ function isArimoMetricsFile(value: unknown): value is ArimoMetricsFile {
 function assertArimoMetrics(value: unknown): ArimoMetricsFile {
   if (!isArimoMetricsFile(value)) {
     throw new Error(
-      'packages/catalog/assets/arimo-metrics.json hat nicht die erwartete Form ("family": string, ' +
+      'packages/core/src/assets/arimo-metrics.json hat nicht die erwartete Form ("family": string, ' +
         '"unitsPerEm": number > 0, "advances": { "<codepoint dezimal>": number ≥ 0 }, ' +
         '"inkExtents": { "<codepoint dezimal>": [xMin, yMin, xMax, yMax] }, ' +
         '"kerning": { "<links>": { "<rechts>": number } }). ' +

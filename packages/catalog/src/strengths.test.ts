@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { HeadShape, StrengthId } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
-import { strengthHead } from './strengths.js';
+import { strengthHead } from '@einsatzzeichen/core';
 
 /**
  * Vermessen an elf Referenzdateien (C.1.1, C.1.2, C.1.3, C.1.7, C.1.8, C.1.9, C.1.11, C.1.13,

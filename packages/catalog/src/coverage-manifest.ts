@@ -6,12 +6,12 @@ import {
   type ReviewSet,
   type TestEvidenceKind,
 } from '@einsatzzeichen/schema';
-import { BASE_SYMBOLS } from './base-symbols.js';
+import { BASE_SYMBOLS } from '@einsatzzeichen/core';
 import { manifestDomainReviewFor } from './domain-reviews.js';
 import { resolveElement } from './elements.js';
 import { referenceLacksComparableShape } from './fingerprint-index.js';
-import { ALL_PICTOGRAMS } from './pictograms/index.js';
-import { deepFreeze, type DeepReadonly } from './readonly-data.js';
+import { ALL_PICTOGRAMS } from '@einsatzzeichen/core';
+import { deepFreeze, type DeepReadonly } from '@einsatzzeichen/core';
 import { RECIPES } from './recipes.js';
 import {
   ANHANG_D_TASK_3_RECIPES,

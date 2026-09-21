@@ -1,4 +1,5 @@
-import { NotMeasuredError, type BoundsMm } from '@einsatzzeichen/core';
+import { NotMeasuredError } from '../not-measured.js';
+import type { BoundsMm } from '../bounds.js';
 import {
   CAPABILITY_IDS,
   DEFAULT_STROKE_WIDTH_MM,

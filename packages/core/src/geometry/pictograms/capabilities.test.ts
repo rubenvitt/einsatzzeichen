@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { boundsOfMm, checkBox, checkCommands } from '@einsatzzeichen/core';
+import { boundsOfMm } from '../../bounds.js';
+import { checkBox, checkCommands } from '../../pictogram-gate.js';
 import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
 import { CBRN_CAPABILITIES } from './capabilities/01-cbrn.js';
 import { strokeCapability } from './authoring.js';

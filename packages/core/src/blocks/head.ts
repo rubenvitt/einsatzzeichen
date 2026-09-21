@@ -5,8 +5,8 @@ import { babz, block, measured, notMeasured } from './helpers.js';
 /**
  * Die Bausteine der Kopfzone: Stärke, Verband, Verwaltungsstufe und technische Kopfmarke.
  *
- * Jeder Fundort zeigt in `catalog`, wo die Zeichnung heute steht. `core` importiert nichts aus
- * `catalog`; ob sich die Fundorte zur Laufzeit wirklich zu Geometrie auflösen, prüft
+ * Jeder Fundort zeigt in `core/src/geometry/`, wo die Zeichnung steht. Das Register importiert sie
+ * nicht; ob sich die Fundorte zur Laufzeit wirklich zu Geometrie auflösen, prüft
  * `catalog/src/block-register/head.test.ts`. `sourceRefs` stehen nur dort, wo der Fundort selbst
  * einen Abschnitt der Referenz nennt.
  */
@@ -23,7 +23,7 @@ export const STRENGTH_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'trupp',
     'head',
     measured(
-      'catalog/src/strengths.ts:3–31',
+      'core/src/geometry/strengths.ts:3–31',
       `${STRENGTH_RADIUS_NOTE} Waagerechte Reihe, nur der mittlere Platz: vermessen an C.1.7/C.1.13/C.1.14 (trupp: nur die Mitte).`,
       babz('C.1.7', 'C.1.13', 'C.1.14'),
     ),
@@ -33,7 +33,7 @@ export const STRENGTH_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'staffel',
     'head',
     measured(
-      'catalog/src/strengths.ts:3–16',
+      'core/src/geometry/strengths.ts:3–16',
       `${STRENGTH_RADIUS_NOTE} Zwei gestapelte Marken: Abstand vermessen an C.1.1/C.1.8: 1,5 und 5,5.`,
       babz('C.1.1', 'C.1.8'),
     ),
@@ -43,7 +43,7 @@ export const STRENGTH_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'gruppe',
     'head',
     measured(
-      'catalog/src/strengths.ts:3–31',
+      'core/src/geometry/strengths.ts:3–31',
       `${STRENGTH_RADIUS_NOTE} Waagerechte Reihe, die äußeren zwei Plätze: vermessen an C.1.2/C.1.9 (gruppe: äußere zwei).`,
       babz('C.1.2', 'C.1.9'),
     ),
@@ -53,7 +53,7 @@ export const STRENGTH_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'zug',
     'head',
     measured(
-      'catalog/src/strengths.ts:3–31',
+      'core/src/geometry/strengths.ts:3–31',
       `${STRENGTH_RADIUS_NOTE} Waagerechte Reihe, alle drei Plätze: vermessen an C.1.3/C.1.11/D.3.7/E.1.18 (zug: alle drei).`,
       babz('C.1.3', 'C.1.11', 'D.3.7', 'E.1.18'),
     ),
@@ -66,7 +66,7 @@ export const STRENGTH_BLOCKS: readonly BlockEntry[] = Object.freeze([
 
 /**
  * Die Lücke steht schon im Regelkatalog (`RULE_DIMENSION_GAPS`, Dimension `unit-grouping`). Die
- * zwei senkrechten Balken aus `catalog/src/technical-head-marks.ts` sind **kein** Verband: der
+ * zwei senkrechten Balken aus `core/src/geometry/technical-head-marks.ts` sind **kein** Verband: der
  * Befund zu E.1.31 in `coverage-manifest.ts` hält fest, dass „5.5.2_Bereitschaft (Verband II)"
  * die Zahl der Balken trifft, nicht das Maß.
  */
@@ -168,7 +168,7 @@ export const ADMINISTRATIVE_LEVEL_BLOCKS: readonly BlockEntry[] = Object.freeze(
     'administrative-level',
     'kreis',
     'head',
-    measured('catalog/src/administrative-heads.ts:35–39', ADMIN_UNDOCUMENTED),
+    measured('core/src/geometry/administrative-heads.ts:35–39', ADMIN_UNDOCUMENTED),
     ADMIN_BINDING_MEASURED,
   ),
   block(
@@ -189,14 +189,14 @@ export const ADMINISTRATIVE_LEVEL_BLOCKS: readonly BlockEntry[] = Object.freeze(
     'administrative-level',
     'nationalstaat',
     'head',
-    measured('catalog/src/administrative-heads.ts:41–45', ADMIN_UNDOCUMENTED),
+    measured('core/src/geometry/administrative-heads.ts:41–45', ADMIN_UNDOCUMENTED),
     ADMIN_BINDING_MEASURED,
   ),
   block(
     'administrative-level',
     'europaeische-union',
     'head',
-    measured('catalog/src/administrative-heads.ts:47–55', ADMIN_UNDOCUMENTED),
+    measured('core/src/geometry/administrative-heads.ts:47–55', ADMIN_UNDOCUMENTED),
     ADMIN_BINDING_MEASURED,
   ),
 ]);
@@ -217,7 +217,7 @@ export const TECHNICAL_HEAD_MARK_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'single-vertical-bar',
     'head',
     measured(
-      'catalog/src/technical-head-marks.ts:7–18',
+      'core/src/geometry/technical-head-marks.ts:7–18',
       UNDOCUMENTED_AT_SOURCE +
         'Die Konstante trägt keinen Kommentar. Belege nennt nur `validate.ts:580–582`, und zwar ' +
         'für die technische Kopfmarke als Ganzes (F.1.1, F.1.13, F.1.21, E.1.31, I.1.4), nicht je Wert.',
@@ -228,7 +228,7 @@ export const TECHNICAL_HEAD_MARK_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'double-vertical-bar',
     'head',
     measured(
-      'catalog/src/technical-head-marks.ts:20–38',
+      'core/src/geometry/technical-head-marks.ts:20–38',
       'Zwei senkrechte Balken 1,5 × 4 mm mit den Mittelachsen x 12 und 20 mm. Maße an der ' +
         'Referenz abgelesen, Geometrie eigenständig konstruiert: E.1.31 führt die Balken bei ' +
         'x 11,25…12,75 und 19,25…20,75 mm, y 1…5 mm; dieselben Balken stehen in F.1.1 und F.1.3. ' +

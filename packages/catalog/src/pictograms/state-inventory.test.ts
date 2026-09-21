@@ -9,13 +9,13 @@ import {
 } from '@einsatzzeichen/schema';
 import { paintTokensOf, renderSvg } from '@einsatzzeichen/core';
 import { fingerprintFor } from '../fingerprint-index.js';
-import { PRINT_MONOCHROME_THEME } from '../render-themes.js';
+import { PRINT_MONOCHROME_THEME } from '@einsatzzeichen/core';
 import {
   defineState,
   type CatalogPictogramDefinition,
   type PictogramContrastPair,
-} from './catalog-definition.js';
-import { pictogram, pictogramRenderId, pictogramVariantKey } from './index.js';
+} from '@einsatzzeichen/core/src/geometry/pictograms/catalog-definition.js';
+import { pictogram, pictogramRenderId, pictogramVariantKey } from '@einsatzzeichen/core';
 import {
   ACCESS_STATES,
   ACTIVITY_STATES,
@@ -27,7 +27,7 @@ import {
   TACTICS_HAZARDS_STATES,
   TENDENCY_STATES,
   WEATHER_STATES,
-} from './states/index.js';
+} from '@einsatzzeichen/core/src/geometry/pictograms/states/index.js';
 
 const EXPECTED_STATE_IDS = [
   'tactical-rescue',

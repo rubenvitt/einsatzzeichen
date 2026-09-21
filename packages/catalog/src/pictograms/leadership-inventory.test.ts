@@ -6,8 +6,8 @@ import { resolveElement } from '../elements.js';
 import { RECIPES } from '../recipes.js';
 import { erwarteZurechenbaresFachreview } from '../test-support/domain-review.js';
 import { RENDER_CASES } from '../test-support/render-cases.js';
-import { ALL_PICTOGRAMS, pictogram, pictogramVariantKey } from './index.js';
-import { LEADERSHIP_PICTOGRAMS } from './leadership/index.js';
+import { ALL_PICTOGRAMS, pictogram, pictogramVariantKey } from '@einsatzzeichen/core';
+import { LEADERSHIP_PICTOGRAMS } from '@einsatzzeichen/core';
 
 const D2_CONTRAST_PAIRS = [
   {

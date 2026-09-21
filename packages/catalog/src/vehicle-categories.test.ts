@@ -3,7 +3,7 @@ import { checkViewBox, NotMeasuredError, renderSvg } from '@einsatzzeichen/core'
 import type { ChassisShape, VehicleCategoryId } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { composeFromCatalog, type Recipe } from './recipes.js';
-import { MEASURED_VEHICLE_CATEGORIES, vehicleChassis } from './vehicle-categories.js';
+import { MEASURED_VEHICLE_CATEGORIES, vehicleChassis } from '@einsatzzeichen/core';
 
 /**
  * Vermessen am 18. August 2026 an `5.1.1.1`, `5.1.1.2`, `5.1.1.3`, `5.1.1.5` und `5.1.1.6` sowie

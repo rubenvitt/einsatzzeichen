@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { matchFingerprint } from '@einsatzzeichen/core';
-import { BASE_SYMBOLS } from './base-symbols.js';
+import { BASE_SYMBOLS } from '@einsatzzeichen/core';
 import {
   COMPARISON_EXCEPTIONS,
   comparableFingerprint,

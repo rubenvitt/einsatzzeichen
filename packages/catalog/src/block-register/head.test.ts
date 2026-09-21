@@ -10,17 +10,17 @@ import type {
   StrengthId,
   TechnicalHeadMarkId,
 } from '@einsatzzeichen/schema';
-import { administrativeHead } from '../administrative-heads.js';
-import { ALL_PICTOGRAMS } from '../pictograms/index.js';
+import { administrativeHead } from '@einsatzzeichen/core';
+import { ALL_PICTOGRAMS } from '@einsatzzeichen/core';
 import { RECIPES } from '../recipes.js';
-import { strengthHead } from '../strengths.js';
-import { technicalHeadMark } from '../technical-head-marks.js';
+import { strengthHead } from '@einsatzzeichen/core';
+import { technicalHeadMark } from '@einsatzzeichen/core';
 
 /**
- * Laufzeit-Gate des Bausteinregisters für die Kopfzone (LFH-564). `core` kann `catalog` nicht
- * importieren; deshalb prüft erst dieser Test, ob die Fundorte des Registers wirklich zu Geometrie
- * führen. Wird ein Wert neu vermessen oder verschwindet eine Zeichnung, bricht er, und das
- * Register muss nachgezogen werden.
+ * Laufzeit-Gate des Bausteinregisters für die Kopfzone (LFH-564). Das Register nennt nur Fundorte
+ * in `core/src/geometry/`; deshalb prüft erst dieser Test, ob sie wirklich zu Geometrie führen.
+ * Er bleibt im Prüfpaket, weil er zusätzlich die Rezepte liest. Wird ein Wert neu vermessen oder
+ * verschwindet eine Zeichnung, bricht er, und das Register muss nachgezogen werden.
  */
 
 const packagesRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
@@ -141,16 +141,20 @@ describe('Bausteinregister, Kopfzone: Lücken lösen sich nicht auf', () => {
     ];
     expect(assets.filter((asset) => asset.startsWith('5.5.'))).toEqual([]);
 
-    const catalogSrc = join(packagesRoot, 'catalog', 'src');
-    const sources = (readdirSync(catalogSrc, { recursive: true }) as string[])
-      .filter((file) => file.endsWith('.ts') && !file.endsWith('.test.ts'))
-      .filter((file) => !file.startsWith('block-register'));
-    const hits = sources.flatMap((file) => {
-      const text = readFileSync(join(catalogSrc, file), 'utf8');
-      return gaps
-        .filter((entry) => text.includes(`'${entry.valueId}'`))
-        .map((entry) => `${file}: ${entry.valueId}`);
-    });
+    // Seit LFH-570 liegt die Geometrie in `core/src/geometry/`; geprüft werden sie und der Rest
+    // des Katalogs. Das Register selbst (`core/src/blocks/`) nennt die Kennungen zwangsläufig.
+    const roots = [join(packagesRoot, 'catalog', 'src'), join(packagesRoot, 'core', 'src', 'geometry')];
+    const hits = roots.flatMap((root) =>
+      (readdirSync(root, { recursive: true }) as string[])
+        .filter((file) => file.endsWith('.ts') && !file.endsWith('.test.ts'))
+        .filter((file) => !file.startsWith('block-register'))
+        .flatMap((file) => {
+          const text = readFileSync(join(root, file), 'utf8');
+          return gaps
+            .filter((entry) => text.includes(`'${entry.valueId}'`))
+            .map((entry) => `${file}: ${entry.valueId}`);
+        }),
+    );
     expect(hits).toEqual([]);
   });
 

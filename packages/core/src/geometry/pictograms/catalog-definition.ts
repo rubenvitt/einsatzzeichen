@@ -14,7 +14,7 @@ import type {
   WildfireId,
 } from '@einsatzzeichen/schema';
 import { DEFAULT_VIEWBOX_MM } from '@einsatzzeichen/schema';
-import { checkViewBox } from '@einsatzzeichen/core';
+import { checkViewBox } from '../../viewbox-gate.js';
 import { deepFreeze, type DeepReadonly } from '../readonly-data.js';
 
 /**

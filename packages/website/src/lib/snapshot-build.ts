@@ -1,4 +1,5 @@
-import { CONTRAST_EXCEPTIONS, COVERAGE_MANIFEST, SOURCE_REGISTRY } from '@einsatzzeichen/catalog';
+import { COVERAGE_MANIFEST, SOURCE_REGISTRY } from '@einsatzzeichen/catalog';
+import { CONTRAST_EXCEPTIONS } from '@einsatzzeichen/core';
 import { VALIDATION_RULE_IDS } from '@einsatzzeichen/core';
 import { entryKey } from '@einsatzzeichen/schema';
 import { coverageAxes } from './snapshot-axes.js';

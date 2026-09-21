@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 import { Resvg, type RenderedImage } from '@resvg/resvg-js';
 import { describe, expect, it } from 'vitest';
 import { compose, renderSvg, type CatalogPorts } from '@einsatzzeichen/core';
@@ -11,7 +12,6 @@ import {
 } from '@einsatzzeichen/schema';
 import {
   TEXT_FONT_FAMILY,
-  TEXT_FONT_METRICS_PATH,
   TEXT_FONT_PATH,
   TEXT_FONT_BOLD_PATH,
   TEXT_FONT_BOLD_SHA256,
@@ -21,8 +21,18 @@ import {
 } from './fonts.js';
 import { readFontHeadMetrics } from './test-support/ttf-tables.js';
 import { RECIPES, composeFromCatalog, type Recipe } from './recipes.js';
-import { FUNCTION_ROLE_DEFINITIONS } from './function-roles.js';
-import { ARIMO_TEXT_METRICS } from './text-metrics.js';
+import { FUNCTION_ROLE_DEFINITIONS } from '@einsatzzeichen/core';
+import { ARIMO_TEXT_METRICS } from '@einsatzzeichen/core';
+
+/**
+ * Textmetriken des Subsets (Vorschubbreiten je Codepoint, Kopfwerte) als JSON — von
+ * `scripts/font/export-metrics.py` aus derselben Schrift exportiert. Seit LFH-570 liegen sie als
+ * Layoutdaten in `core` (`core/src/assets/`), die Schriftdatei bleibt hier; der Abgleich beider
+ * braucht die TTF und steht deshalb im Prüfpaket.
+ */
+const TEXT_FONT_METRICS_PATH = fileURLToPath(
+  new URL('../../core/src/assets/arimo-metrics.json', import.meta.url),
+);
 
 describe('Textschrift', () => {
   it('liegt im Repository und hat die erwartete Prüfsumme', () => {

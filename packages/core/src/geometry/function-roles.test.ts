@@ -7,7 +7,7 @@ import {
   type OrganizationId,
   type StrengthId,
 } from '@einsatzzeichen/schema';
-import { boundsOfMm } from '@einsatzzeichen/core';
+import { boundsOfMm } from '../bounds.js';
 import { FUNCTION_ROLE_DEFINITIONS, functionRole } from './function-roles.js';
 
 interface ExpectedRoleBinding {

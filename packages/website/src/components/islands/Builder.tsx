@@ -12,7 +12,7 @@ import { Einsatzzeichen } from '@einsatzzeichen/react';
 import { renderSvg } from '@einsatzzeichen/core';
 import type { ValidationIssue } from '@einsatzzeichen/core';
 import { PALETTE, type ColorToken, type Drawing, type SymbolSpec } from '@einsatzzeichen/schema';
-import { ORGANIZATION_COLORS } from '@einsatzzeichen/catalog/src/organizations.js';
+import { ORGANIZATION_COLORS } from '@einsatzzeichen/core/src/geometry/organizations.js';
 import { codeSamplesFor, type CodeSamples } from '../../lib/code-samples.js';
 import {
   decodeSpec,

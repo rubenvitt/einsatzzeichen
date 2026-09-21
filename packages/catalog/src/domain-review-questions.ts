@@ -1,6 +1,6 @@
 import type { DepictionVariant } from '@einsatzzeichen/schema';
 import { type ManifestDomainReviewKey, MANIFEST_DOMAIN_REVIEWS } from './domain-reviews.js';
-import { deepFreeze, type DeepReadonly } from './readonly-data.js';
+import { deepFreeze, type DeepReadonly } from '@einsatzzeichen/core';
 
 /**
  * Eine offene **Fachfrage** an das Domain-Review, die keine Messung und kein technisches Gate

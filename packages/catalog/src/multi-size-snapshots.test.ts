@@ -11,7 +11,7 @@ import {
   ACCESSIBLE_LIGHT_THEME,
   PRINT_MONOCHROME_THEME,
   RENDER_THEMES,
-} from './render-themes.js';
+} from '@einsatzzeichen/core';
 import { RENDER_CASES, type RenderCase } from './test-support/render-cases.js';
 import { composeFromCatalog } from './recipes.js';
 import { resvgFontOptions } from './fonts.js';

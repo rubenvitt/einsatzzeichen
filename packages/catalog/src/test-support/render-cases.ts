@@ -1,7 +1,7 @@
 import { type CatalogEntry, type Drawing } from '@einsatzzeichen/schema';
-import { BASE_SYMBOLS } from '../base-symbols.js';
-import { describePictogram } from '../labels.js';
-import { ALL_PICTOGRAMS, pictogramRenderId } from '../pictograms/index.js';
+import { BASE_SYMBOLS } from '@einsatzzeichen/core';
+import { describePictogram } from '@einsatzzeichen/core';
+import { ALL_PICTOGRAMS, pictogramRenderId } from '@einsatzzeichen/core';
 import { RECIPES, composeFromCatalog } from '../recipes.js';
 
 export interface RenderCase {

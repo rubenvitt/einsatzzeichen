@@ -18,15 +18,6 @@ export const TEXT_FONT_PATH = fileURLToPath(
 );
 
 /**
- * Textmetriken des Subsets (Vorschubbreiten je Codepoint, Kopfwerte) als JSON — von
- * `scripts/font/export-metrics.py` aus derselben Datei exportiert, damit eine Laufweitenprüfung
- * ohne Fontparser auskommt. Wird von `fonts.test.ts` gegen die TTF selbst abgeglichen.
- */
-export const TEXT_FONT_METRICS_PATH = fileURLToPath(
-  new URL('../assets/arimo-metrics.json', import.meta.url),
-);
-
-/**
  * Prüfsumme des Upstream-Originals (Google Fonts, Arimo 1.341, 496 268 Byte), aus dem das
  * eingecheckte Subset erzeugt wurde. `scripts/font/subset-arimo.sh` prüft den Download dagegen,
  * bevor es etwas erzeugt — der Wert ist die Provenienzkette, nicht die Datei im Repository.
@@ -61,11 +52,6 @@ export const TEXT_FONT_SHA256 = 'e68be22b52529b0541129578216dab440cb000261148683
  */
 export const TEXT_FONT_BOLD_PATH = fileURLToPath(
   new URL('../assets/Arimo-Bold.ttf', import.meta.url),
-);
-
-/** Laufweiten und Tintenhüllen der Fettinstanz, Format wie `TEXT_FONT_METRICS_PATH`. */
-export const TEXT_FONT_BOLD_METRICS_PATH = fileURLToPath(
-  new URL('../assets/arimo-bold-metrics.json', import.meta.url),
 );
 
 /** Prüfsumme der eingecheckten Fettinstanz. */

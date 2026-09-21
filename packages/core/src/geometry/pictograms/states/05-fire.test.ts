@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkBox, checkClipping, checkCommands } from '@einsatzzeichen/core';
+import { checkBox, checkClipping, checkCommands } from '../../../pictogram-gate.js';
 import { DEFAULT_VIEWBOX_MM, type Primitive } from '@einsatzzeichen/schema';
 import { FIRE_STATES } from './05-fire.js';
 

@@ -12,7 +12,7 @@ import { mmToUnits, type Drawing, type Primitive } from '@einsatzzeichen/schema'
 import { comparableFingerprint } from './comparison-exceptions.js';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { fingerprintFor, referenceLacksComparableShape } from './fingerprint-index.js';
-import { pictogram } from './pictograms/index.js';
+import { pictogram } from '@einsatzzeichen/core';
 import {
   RECIPES,
   composeFromCatalog,
@@ -35,7 +35,7 @@ import {
   ANHANG_E_F_RECIPES,
 } from './recipes-anhang-e.js';
 import { ANHANG_F_B_RECIPES } from './recipes-anhang-f.js';
-import { ACCESSIBLE_LIGHT_THEME, PRINT_MONOCHROME_THEME } from './render-themes.js';
+import { ACCESSIBLE_LIGHT_THEME, PRINT_MONOCHROME_THEME } from '@einsatzzeichen/core';
 
 /**
  * Effektive y-Lage der waagerechten Brandbekämpfungs-Linie: ihre Autorenkoordinate plus die

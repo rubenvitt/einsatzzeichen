@@ -12,8 +12,8 @@ import {
   ALL_PICTOGRAMS,
   pictogram,
   pictogramVariantKey,
-} from './index.js';
-import { WATER_RESCUE_PERSONNEL_PICTOGRAMS } from './water-rescue-personnel/index.js';
+} from '@einsatzzeichen/core';
+import { WATER_RESCUE_PERSONNEL_PICTOGRAMS } from '@einsatzzeichen/core';
 
 const EXPECTED = [
   {

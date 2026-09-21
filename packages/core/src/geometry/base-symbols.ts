@@ -8,7 +8,7 @@ import {
   type BodyVariantId,
   type SymbolKind,
 } from '@einsatzzeichen/schema';
-import { NotMeasuredError } from '@einsatzzeichen/core';
+import { NotMeasuredError } from '../not-measured.js';
 
 /** Umriss ohne Füllung. Organisationsfarben setzt der Kompositionsmotor. */
 const OUTLINE: Style = {

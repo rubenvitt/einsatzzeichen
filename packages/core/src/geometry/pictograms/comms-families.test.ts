@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { effectiveTextPx, MINIMUM_TEXT_RENDER_PX, renderSvg } from '@einsatzzeichen/core';
+import { effectiveTextPx, MINIMUM_TEXT_RENDER_PX } from '../../render/text-policy.js';
+import { renderSvg } from '../../render/svg.js';
 import { DEFAULT_VIEWBOX_MM, type Primitive } from '@einsatzzeichen/schema';
 import { PRINT_MONOCHROME_THEME } from '../render-themes.js';
 import { COMMS_PICTOGRAMS } from './comms/index.js';

@@ -29,11 +29,11 @@ import {
   type CatalogEntry,
   type SymbolSpec,
 } from '@einsatzzeichen/schema';
-import { BASE_SYMBOLS } from './base-symbols.js';
+import { BASE_SYMBOLS } from '@einsatzzeichen/core';
 import type { ElementDescriptor } from './elements.js';
 import { ELEMENTS } from './elements.js';
-import { ALL_PICTOGRAMS } from './pictograms/index.js';
-import type { CatalogPictogramDefinition } from './pictograms/catalog-definition.js';
+import { ALL_PICTOGRAMS } from '@einsatzzeichen/core';
+import type { CatalogPictogramDefinition } from '@einsatzzeichen/core';
 import { RECIPES, composeFromCatalog, type Recipe } from './recipes.js';
 import {
   RULE_EVIDENCE,

@@ -3,13 +3,13 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import type { BlockEntry, PictogramId } from '@einsatzzeichen/schema';
-import { BLOCK_REGISTER } from '@einsatzzeichen/core';
-import { pictogram } from '../pictograms/index.js';
-import { STATE_PICTOGRAMS } from '../pictograms/states/index.js';
+import { BLOCK_REGISTER } from './register.js';
+import { pictogram } from '../geometry/pictograms/index.js';
+import { STATE_PICTOGRAMS } from '../geometry/pictograms/states/index.js';
 
 /**
- * Laufzeit-Gate des Bausteinregisters für Zustand und Tendenz (LFH-564). `core` darf `catalog`
- * nicht importieren; deshalb prüft erst dieser Test, dass der Messstand im Register zum Katalog
+ * Laufzeit-Gate des Bausteinregisters für Zustand und Tendenz (LFH-564). Das Register nennt nur
+ * Fundorte; deshalb prüft erst dieser Test, dass der Messstand im Register zu den Piktogrammen
  * passt. Wird ein Zustand neu gezeichnet, verschoben oder entfernt, muss das Register nachziehen.
  */
 

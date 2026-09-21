@@ -1,5 +1,5 @@
-import { ALL_PICTOGRAMS, pictogramVariantKey } from './pictograms/index.js';
-import { deepFreeze, type DeepReadonly } from './readonly-data.js';
+import { ALL_PICTOGRAMS, pictogramVariantKey } from '@einsatzzeichen/core';
+import { deepFreeze, type DeepReadonly } from '@einsatzzeichen/core';
 
 /**
  * Die Arten von Einzelelementen. Wasserrettungs-Personen stehen in einem eigenen direkten

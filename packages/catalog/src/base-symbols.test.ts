@@ -13,10 +13,10 @@ import {
   type BodyVariantId,
   type SymbolKind,
 } from '@einsatzzeichen/schema';
-import { BASE_SYMBOLS, baseDrawing, innerField } from './base-symbols.js';
+import { BASE_SYMBOLS, baseDrawing, innerField } from '@einsatzzeichen/core';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { fingerprintFor } from './fingerprint-index.js';
-import { DEVICE_COMMS } from './pictograms/comms/03-devices.js';
+import { DEVICE_COMMS } from '@einsatzzeichen/core/src/geometry/pictograms/comms/03-devices.js';
 import { composeFromCatalog } from './recipes.js';
 
 /**
