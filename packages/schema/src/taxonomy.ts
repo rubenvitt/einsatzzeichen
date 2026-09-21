@@ -121,6 +121,14 @@ export type AdminLevelId =
   | 'nationalstaat'
   | 'europaeische-union';
 
+/**
+ * Verbände nach Kapitel 5.5, belegt durch die Referenzdateien
+ * `5.5.1–5.5.3_Bereitschaft (Verband I–III).svg`. Die Kennungen benennen den Verbandsgrad und
+ * nicht die Organisationsbezeichnung. Ein Feld in `SymbolSpec` gibt es noch nicht (LFH-577), und
+ * Geometrie fehlt ebenfalls. Das Bausteinregister führt die drei Werte als Lücke.
+ */
+export type UnitGroupingId = 'verband-i' | 'verband-ii' | 'verband-iii';
+
 /** Gemessene Funktionstraeger aus Anhang D.1, D.3 und D.4. */
 export const FUNCTION_ROLE_IDS = Object.freeze([
   'disaster-control-command',

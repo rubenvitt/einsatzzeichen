@@ -4,6 +4,7 @@ import type {
   OrganizationId,
   StrengthId,
   SymbolKind,
+  UnitGroupingId,
   VehicleCategoryId,
 } from './taxonomy.js';
 
@@ -85,6 +86,12 @@ export const ADMIN_LEVEL_IDS: readonly AdminLevelId[] = keysOf<AdminLevelId>({
   bundesland: true,
   nationalstaat: true,
   'europaeische-union': true,
+});
+
+export const UNIT_GROUPING_IDS: readonly UnitGroupingId[] = keysOf<UnitGroupingId>({
+  'verband-i': true,
+  'verband-ii': true,
+  'verband-iii': true,
 });
 
 export const VEHICLE_CATEGORY_IDS: readonly VehicleCategoryId[] = keysOf<VehicleCategoryId>({
