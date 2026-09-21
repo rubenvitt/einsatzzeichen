@@ -31,17 +31,23 @@ lässt sich unverändert in ein eigenes Projekt kopieren.
 Die acht Pakete dieses Projekts sind **Workspace-Pakete**, kein npm-Release: alle
 `packages/*/package.json` tragen `"private": true` und zeigen mit `main` auf `./src/index.ts`.
 `npm install @einsatzzeichen/core` funktioniert nirgendwo — die Beispiele unten laufen innerhalb
-eines Checkouts dieses Repositories, eingebunden über `workspace:*`. Alle vier Kanäle setzen
-außerdem `@einsatzzeichen/catalog` voraus, für zwei Dinge bekannt aus der
-[Anleitung für Software](/docs/anleitungen/software/#zwei-fallstricke):
+eines Checkouts dieses Repositories, eingebunden über `workspace:*`.
 
-- **Der Katalog-Index ist nicht browsertauglich.** `fonts.ts` importiert `node:url`, und der Index
-  re-exportiert es. Ein Import von `@einsatzzeichen/catalog` läuft deshalb sicher in Node — ein
-  Build- oder Testskript, ein SSR-Schritt — aber nicht ungeprüft in einem Browser-Bundle. `core`,
-  `schema`, `react`, `web-component` und `maplibre` haben dieses Problem nicht.
+Grundzeichen, Farben, Themes, Piktogramme und der Renderer liegen in `@einsatzzeichen/core`. Die
+vier Beispiele unten holen sich ihr Zeichen aber über das Vorlagenrezept `RECIPES['…']` und den
+Kurzweg `composeFromCatalog()` — und beide liegen noch im Prüfpaket `@einsatzzeichen/conformance`
+(bis 1.5 `@einsatzzeichen/catalog`). Ein Einstieg ohne Prüfpaket ist geplant; wie es heute schon
+mit `core` allein geht, zeigt das Beispiel auf der [Seite zu `core`](/docs/pakete/core/#beispiel).
+Zwei Dinge sind bekannt aus der [Anleitung für Software](/docs/anleitungen/software/#zwei-fallstricke):
+
+- **Der Index des Prüfpakets ist nicht browsertauglich.** `fonts.ts` importiert `node:url`, und
+  der Index re-exportiert es. Ein Import von `@einsatzzeichen/conformance` läuft deshalb sicher in
+  Node — ein Build- oder Testskript, ein SSR-Schritt — aber nicht ungeprüft in einem
+  Browser-Bundle. `core`, `schema`, `react`, `web-component` und `maplibre` haben dieses Problem
+  nicht.
 - **Die Schrift gehört zum Zeichen.** `renderSvg()` schreibt `font-family="Arimo"` in jedes Zeichen
   mit Kürzel. Ohne ausgelieferte Schriftdatei setzt der Browser eine Ersatzschrift mit anderen
-  Vorschubbreiten. Das Subset liegt in `packages/catalog/assets` (SIL OFL 1.1).
+  Vorschubbreiten. Das Subset liegt in `packages/conformance/assets` (SIL OFL 1.1).
 
 ## Vier Wege zum ersten Zeichen
 

@@ -3,7 +3,7 @@ import {
   MANIFEST_DOMAIN_REVIEWS,
   PROFILE_DOMAIN_REVIEWS,
   SOURCE_DOMAIN_REVIEWS,
-} from '@einsatzzeichen/catalog';
+} from '@einsatzzeichen/conformance';
 import { reviewIssues, type Review } from '@einsatzzeichen/schema';
 import { coverage, openDomainReviewsLine } from './coverage.js';
 

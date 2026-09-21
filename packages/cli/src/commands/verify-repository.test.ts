@@ -10,6 +10,7 @@ import {
   readRepositoryPolicyInput,
   verifyRepository,
   type RepositoryPolicyInput,
+  type WorkspacePackageId,
 } from './verify-repository.js';
 
 const CLI_ENTRY = fileURLToPath(new URL('../index.ts', import.meta.url));
@@ -25,17 +26,19 @@ function validPolicyInput(): RepositoryPolicyInput {
         id: 'cli',
         name: '@einsatzzeichen/cli',
         path: 'packages/cli/package.json',
+        isPrivate: false,
         dependencies: {
-          '@einsatzzeichen/catalog': 'workspace:*',
+          '@einsatzzeichen/conformance': 'workspace:*',
           '@einsatzzeichen/core': 'workspace:*',
           '@einsatzzeichen/schema': 'workspace:*',
         },
         malformedDependencySections: [],
       },
       {
-        id: 'catalog',
-        name: '@einsatzzeichen/catalog',
-        path: 'packages/catalog/package.json',
+        id: 'conformance',
+        name: '@einsatzzeichen/conformance',
+        path: 'packages/conformance/package.json',
+        isPrivate: false,
         dependencies: {
           '@einsatzzeichen/core': 'workspace:*',
           '@einsatzzeichen/schema': 'workspace:*',
@@ -46,6 +49,7 @@ function validPolicyInput(): RepositoryPolicyInput {
         id: 'core',
         name: '@einsatzzeichen/core',
         path: 'packages/core/package.json',
+        isPrivate: false,
         dependencies: { '@einsatzzeichen/schema': 'workspace:*' },
         malformedDependencySections: [],
       },
@@ -53,6 +57,7 @@ function validPolicyInput(): RepositoryPolicyInput {
         id: 'schema',
         name: '@einsatzzeichen/schema',
         path: 'packages/schema/package.json',
+        isPrivate: false,
         dependencies: {},
         malformedDependencySections: [],
       },
@@ -60,12 +65,42 @@ function validPolicyInput(): RepositoryPolicyInput {
         id,
         name: `@einsatzzeichen/${id}`,
         path: `packages/${id}/package.json`,
+        isPrivate: false,
         dependencies: {
           '@einsatzzeichen/core': 'workspace:*',
           '@einsatzzeichen/schema': 'workspace:*',
         },
         malformedDependencySections: [],
       })),
+      {
+        id: 'review',
+        name: '@einsatzzeichen/review',
+        path: 'packages/review/package.json',
+        isPrivate: true,
+        dependencies: {
+          '@einsatzzeichen/conformance': 'workspace:*',
+          '@einsatzzeichen/core': 'workspace:*',
+          '@einsatzzeichen/schema': 'workspace:*',
+        },
+        malformedDependencySections: [],
+      },
+      {
+        id: 'website',
+        name: '@einsatzzeichen/website',
+        path: 'packages/website/package.json',
+        isPrivate: true,
+        dependencies: {
+          '@einsatzzeichen/conformance': 'workspace:*',
+          '@einsatzzeichen/core': 'workspace:*',
+          '@einsatzzeichen/maplibre': 'workspace:*',
+          '@einsatzzeichen/qgis': 'workspace:*',
+          '@einsatzzeichen/react': 'workspace:*',
+          '@einsatzzeichen/schema': 'workspace:*',
+          '@einsatzzeichen/web-component': 'workspace:*',
+          astro: '7.2.9',
+        },
+        malformedDependencySections: [],
+      },
     ],
     sourceFiles: [],
     sourceSymlinks: [],
@@ -84,7 +119,11 @@ function writeValidRepositoryFixture(root: string): void {
     mkdirSync(join(packageRoot, 'src'), { recursive: true });
     writeFileSync(
       join(packageRoot, 'package.json'),
-      JSON.stringify({ name: manifest.name, dependencies: manifest.dependencies }),
+      JSON.stringify({
+        name: manifest.name,
+        ...(manifest.isPrivate ? { private: true } : {}),
+        dependencies: manifest.dependencies,
+      }),
       'utf8',
     );
     writeFileSync(join(packageRoot, 'src/index.ts'), 'export {};\n', 'utf8');
@@ -96,22 +135,206 @@ function writeValidRepositoryFixture(root: string): void {
   );
 }
 
+function manifestOf(input: RepositoryPolicyInput, id: WorkspacePackageId) {
+  const manifest = input.manifests.find((candidate) => candidate.id === id);
+  if (manifest === undefined) throw new Error(`Testfixture ohne ${id}-Manifest`);
+  return manifest;
+}
+
+function internalEdges(input: RepositoryPolicyInput): Record<string, string[]> {
+  return Object.fromEntries(
+    input.manifests.map((manifest) => [
+      manifest.id,
+      Object.keys(manifest.dependencies)
+        .filter((name) => name.startsWith('@einsatzzeichen/'))
+        .sort(),
+    ]),
+  );
+}
+
+/**
+ * Jede Kante, die das Zielbild `cli → conformance → core → schema`, Kanäle → core, verbietet.
+ * Erlaubte Kanten stehen im Positivfall, der das echte Repository abbildet.
+ */
+const FORBIDDEN_EDGES: ReadonlyArray<readonly [WorkspacePackageId, WorkspacePackageId, string]> = [
+  ['schema', 'core', 'schema hängt an keinem Workspace-Paket'],
+  ['core', 'conformance', 'conformance ist das Prüfpaket'],
+  ['core', 'react', 'core darf nur an schema hängen'],
+  ['core', 'cli', 'core darf nur an schema hängen'],
+  ['conformance', 'cli', 'conformance darf nur an core, schema hängen'],
+  ['conformance', 'maplibre', 'conformance darf nur an core, schema hängen'],
+  ['react', 'conformance', 'von den veröffentlichten Paketen hängt nur cli daran'],
+  ['web-component', 'react', 'web-component darf nur an core, schema hängen'],
+  ['qgis', 'cli', 'qgis darf nur an core, schema hängen'],
+  ['cli', 'react', 'cli darf nur an conformance, core, schema hängen'],
+  ['cli', 'web-component', 'cli darf nur an conformance, core, schema hängen'],
+  ['cli', 'review', 'review ist privat und wird nicht veröffentlicht'],
+  ['core', 'website', 'website ist privat und wird nicht veröffentlicht'],
+  ['review', 'website', 'private Pakete hängen nicht aneinander'],
+  ['website', 'review', 'private Pakete hängen nicht aneinander'],
+  ['core', 'core', 'ein Paket bezieht sich nicht über seinen eigenen Paketnamen'],
+];
+
 describe('Repository-Policy — Paketgrenzen', () => {
-  it('akzeptiert die vier Ausgabekanäle mit Abhängigkeit auf core und schema', () => {
+  it('akzeptiert das Zielbild: cli → conformance → core → schema, Kanäle → core, private Werkzeuge → alles Veröffentlichte', () => {
     expect(findRepositoryPolicyViolations(validPolicyInput())).toEqual([]);
   });
 
+  it(
+    'bildet mit dem Positivfall die internen Kanten des echten Repositorys ab',
+    { timeout: 30_000 },
+    () => {
+      const real = readRepositoryPolicyInput({
+        root: REPOSITORY_ROOT,
+        trackedFiles: [],
+        effectivelyIgnoredReferenceTargets: ['taktische-zeichen/', 'taktische-zeichen.zip'],
+      });
+      expect(internalEdges(real)).toEqual(internalEdges(validPolicyInput()));
+      expect(
+        Object.fromEntries(real.manifests.map((manifest) => [manifest.id, manifest.isPrivate])),
+      ).toEqual(
+        Object.fromEntries(
+          validPolicyInput().manifests.map((manifest) => [manifest.id, manifest.isPrivate]),
+        ),
+      );
+    },
+  );
+
+  it.each(FORBIDDEN_EDGES)(
+    'weist die verbotene Kante %s → %s im Paketmanifest mit Begründung zurück',
+    (importer, target, reason) => {
+      const input = validPolicyInput();
+      manifestOf(input, importer).dependencies[`@einsatzzeichen/${target}`] = 'workspace:*';
+
+      const violations = findRepositoryPolicyViolations(input);
+      expect(violations).toEqual([
+        expect.objectContaining({
+          code: 'forbidden-internal-dependency',
+          path: `packages/${importer}/package.json`,
+          importer,
+          target,
+          specifier: `@einsatzzeichen/${target}`,
+        }),
+      ]);
+      expect(violations[0]?.detail).toContain(`Verbotene Abhängigkeit ${importer} → ${target}`);
+      expect(violations[0]?.detail).toContain(reason);
+    },
+  );
+
+  it.each(FORBIDDEN_EDGES)(
+    'weist die verbotene Kante %s → %s im Quelltext mit Begründung zurück',
+    (importer, target, reason) => {
+      const input = validPolicyInput();
+      const path = `packages/${importer}/src/edge.ts`;
+      input.sourceFiles.push({
+        packageId: importer,
+        path,
+        source: `import '@einsatzzeichen/${target}';\n`,
+      });
+
+      const violations = findRepositoryPolicyViolations(input);
+      expect(violations).toContainEqual(
+        expect.objectContaining({
+          code: 'forbidden-internal-import',
+          path,
+          importer,
+          target,
+          specifier: `@einsatzzeichen/${target}`,
+        }),
+      );
+      const detail = violations.find((violation) => violation.path === path)?.detail ?? '';
+      expect(detail).toContain(`Verbotener Import ${importer} → ${target}`);
+      expect(detail).toContain(reason);
+    },
+  );
+
+  it.each([
+    ['review', true, false, 'muss "private": true setzen'],
+    ['conformance', false, true, 'darf nicht "private": true setzen'],
+  ] as const)(
+    'bindet %s an seinen Veröffentlichungsstatus',
+    (id, expectedPrivate, actualPrivate, message) => {
+      const input = validPolicyInput();
+      const manifest = manifestOf(input, id);
+      expect(manifest.isPrivate).toBe(expectedPrivate);
+      manifest.isPrivate = actualPrivate;
+
+      expect(findRepositoryPolicyViolations(input)).toEqual([
+        expect.objectContaining({
+          code: 'unexpected-publish-status',
+          path: `packages/${id}/package.json`,
+          importer: id,
+          detail: expect.stringContaining(message),
+        }),
+      ]);
+    },
+  );
+
+  it('erkennt node:-Importe in core an der Importkante, nicht am Wort im Kommentar', () => {
+    const input = validPolicyInput();
+    input.sourceFiles.push(
+      {
+        packageId: 'core',
+        path: 'packages/core/src/rules/comment.ts',
+        source:
+          '// Früher lag hier ein Zugriff über node:fs; import { readFileSync } from "node:fs";\n' +
+          "export const note = 'node:fs';\n",
+      },
+      {
+        packageId: 'core',
+        path: 'packages/core/src/rules/comment.test.ts',
+        source: "import { readFileSync } from 'node:fs';\n",
+      },
+    );
+    expect(findRepositoryPolicyViolations(input)).toEqual([]);
+
+    input.sourceFiles.push({
+      packageId: 'core',
+      path: 'packages/core/src/rules/io.ts',
+      source: "export { readFileSync } from 'node:fs';\n",
+    });
+    expect(findRepositoryPolicyViolations(input)).toEqual([
+      expect.objectContaining({
+        code: 'forbidden-external-import',
+        path: 'packages/core/src/rules/io.ts',
+        importer: 'core',
+        specifier: 'node:fs',
+        detail: expect.stringContaining('Browser'),
+      }),
+    ]);
+  });
+
+  it('ordnet virtuelle Framework-Module wie astro:content dem deklarierten Framework zu', () => {
+    const input = validPolicyInput();
+    input.sourceFiles.push({
+      packageId: 'website',
+      path: 'packages/website/src/content.config.ts',
+      source: "import { defineCollection } from 'astro:content';\n",
+    });
+    expect(findRepositoryPolicyViolations(input)).toEqual([]);
+
+    delete manifestOf(input, 'website').dependencies.astro;
+    expect(findRepositoryPolicyViolations(input)).toContainEqual(
+      expect.objectContaining({
+        code: 'undeclared-external-import',
+        path: 'packages/website/src/content.config.ts',
+        importer: 'website',
+        specifier: 'astro:content',
+      }),
+    );
+  });
+
   it.each(['react', 'web-component', 'maplibre', 'qgis'] as const)(
-    'weist eine Abhängigkeit und einen Import des Ausgabekanals %s auf catalog zurück',
+    'weist eine Abhängigkeit und einen Import des Ausgabekanals %s auf conformance zurück',
     (packageId) => {
       const input = validPolicyInput();
       const manifest = input.manifests.find((candidate) => candidate.id === packageId);
       if (manifest === undefined) throw new Error(`Testfixture ohne ${packageId}-Manifest`);
-      manifest.dependencies['@einsatzzeichen/catalog'] = 'workspace:*';
+      manifest.dependencies['@einsatzzeichen/conformance'] = 'workspace:*';
       input.sourceFiles.push({
         packageId,
         path: `packages/${packageId}/src/pull.ts`,
-        source: "export { RECIPES } from '@einsatzzeichen/catalog';\n",
+        source: "export { RECIPES } from '@einsatzzeichen/conformance';\n",
       });
 
       const violations = findRepositoryPolicyViolations(input);
@@ -119,31 +342,31 @@ describe('Repository-Policy — Paketgrenzen', () => {
         expect.objectContaining({
           code: 'forbidden-internal-dependency',
           importer: packageId,
-          target: 'catalog',
+          target: 'conformance',
         }),
       );
       expect(violations).toContainEqual(
         expect.objectContaining({
           code: 'forbidden-internal-import',
           importer: packageId,
-          target: 'catalog',
+          target: 'conformance',
         }),
       );
     },
   );
 
-  it('weist einen Import von catalog auf einen Ausgabekanal zurück', () => {
+  it('weist einen Import von conformance auf einen Ausgabekanal zurück', () => {
     const input = validPolicyInput();
     input.sourceFiles.push({
-      packageId: 'catalog',
-      path: 'packages/catalog/src/channel.ts',
+      packageId: 'conformance',
+      path: 'packages/conformance/src/channel.ts',
       source: "export { qgisSymbolLibrary } from '@einsatzzeichen/qgis';\n",
     });
 
     expect(findRepositoryPolicyViolations(input)).toContainEqual(
       expect.objectContaining({
         code: 'forbidden-internal-import',
-        importer: 'catalog',
+        importer: 'conformance',
         target: 'qgis',
       }),
     );
@@ -166,18 +389,18 @@ describe('Repository-Policy — Paketgrenzen', () => {
     );
   });
 
-  it('weist eine rückwärts gerichtete Workspace-Abhängigkeit von core auf catalog zurück', () => {
+  it('weist eine rückwärts gerichtete Workspace-Abhängigkeit von core auf conformance zurück', () => {
     const input = validPolicyInput();
     const core = input.manifests.find((manifest) => manifest.id === 'core');
     if (core === undefined) throw new Error('Testfixture ohne core-Manifest');
-    core.dependencies['@einsatzzeichen/catalog'] = 'workspace:*';
+    core.dependencies['@einsatzzeichen/conformance'] = 'workspace:*';
 
     expect(findRepositoryPolicyViolations(input)).toContainEqual(
       expect.objectContaining({
         code: 'forbidden-internal-dependency',
         path: 'packages/core/package.json',
         importer: 'core',
-        target: 'catalog',
+        target: 'conformance',
       }),
     );
   });
@@ -233,12 +456,12 @@ describe('Repository-Policy — Paketgrenzen', () => {
     );
   });
 
-  it('weist einen rückwärts gerichteten Quellcode-Import von core auf catalog zurück', () => {
+  it('weist einen rückwärts gerichteten Quellcode-Import von core auf conformance zurück', () => {
     const input = validPolicyInput();
     input.sourceFiles.push({
       packageId: 'core',
       path: 'packages/core/src/reverse.ts',
-      source: "import { catalogEntry } from '@einsatzzeichen/catalog';\n",
+      source: "import { catalogEntry } from '@einsatzzeichen/conformance';\n",
     });
 
     expect(findRepositoryPolicyViolations(input)).toContainEqual(
@@ -246,24 +469,24 @@ describe('Repository-Policy — Paketgrenzen', () => {
         code: 'forbidden-internal-import',
         path: 'packages/core/src/reverse.ts',
         importer: 'core',
-        target: 'catalog',
-        specifier: '@einsatzzeichen/catalog',
+        target: 'conformance',
+        specifier: '@einsatzzeichen/conformance',
       }),
     );
   });
 
   it.each([
-    ['Re-Export', "export { catalogEntry } from '@einsatzzeichen/catalog';\n"],
-    ['dynamischen Import', "void import('@einsatzzeichen/catalog');\n"],
+    ['Re-Export', "export { catalogEntry } from '@einsatzzeichen/conformance';\n"],
+    ['dynamischen Import', "void import('@einsatzzeichen/conformance');\n"],
     [
       'Inline-Importtyp',
-      "type Catalog = import('@einsatzzeichen/catalog').CatalogEntry;\n",
+      "type Catalog = import('@einsatzzeichen/conformance').CatalogEntry;\n",
     ],
-    ['dynamischen Template-Import', "void import(`@einsatzzeichen/catalog`);\n"],
-    ['require-Aufruf', "const catalog = require('@einsatzzeichen/catalog');\n"],
+    ['dynamischen Template-Import', "void import(`@einsatzzeichen/conformance`);\n"],
+    ['require-Aufruf', "const conformance = require('@einsatzzeichen/conformance');\n"],
     [
       'TypeScript-import-equals',
-      "import catalog = require('@einsatzzeichen/catalog');\n",
+      "import conformance = require('@einsatzzeichen/conformance');\n",
     ],
   ])('erkennt auch einen rückwärts gerichteten %s', (_form, source) => {
     const input = validPolicyInput();
@@ -278,8 +501,8 @@ describe('Repository-Policy — Paketgrenzen', () => {
         code: 'forbidden-internal-import',
         path: 'packages/core/src/reverse.ts',
         importer: 'core',
-        target: 'catalog',
-        specifier: '@einsatzzeichen/catalog',
+        target: 'conformance',
+        specifier: '@einsatzzeichen/conformance',
       }),
     );
   });
@@ -290,7 +513,7 @@ describe('Repository-Policy — Paketgrenzen', () => {
       packageId: 'cli',
       path: 'packages/cli/src/dynamic.ts',
       source:
-        "const target = '@einsatzzeichen/catalog';\n" +
+        "const target = '@einsatzzeichen/conformance';\n" +
         'void import(target);\n',
     });
 
@@ -309,7 +532,7 @@ describe('Repository-Policy — Paketgrenzen', () => {
       packageId: 'core',
       path: 'packages/core/src/reverse.tsx',
       source:
-        "export const view = <button>{import('@einsatzzeichen/catalog')}</button>;\n",
+        "export const view = <button>{import('@einsatzzeichen/conformance')}</button>;\n",
     });
 
     expect(findRepositoryPolicyViolations(input)).toContainEqual(
@@ -317,8 +540,8 @@ describe('Repository-Policy — Paketgrenzen', () => {
         code: 'forbidden-internal-import',
         path: 'packages/core/src/reverse.tsx',
         importer: 'core',
-        target: 'catalog',
-        specifier: '@einsatzzeichen/catalog',
+        target: 'conformance',
+        specifier: '@einsatzzeichen/conformance',
       }),
     );
   });
@@ -328,7 +551,7 @@ describe('Repository-Policy — Paketgrenzen', () => {
     input.sourceFiles.push({
       packageId: 'core',
       path: 'packages/core/src/malformed.ts',
-      source: "import { catalogEntry } from '@einsatzzeichen/catalog\n",
+      source: "import { catalogEntry } from '@einsatzzeichen/conformance\n",
     });
 
     expect(findRepositoryPolicyViolations(input)).toContainEqual(
@@ -373,20 +596,20 @@ describe('Repository-Policy — Paketgrenzen', () => {
 
   it('weist einen erlaubten, aber im Paketmanifest nicht deklarierten internen Import zurück', () => {
     const input = validPolicyInput();
-    const catalog = input.manifests.find((manifest) => manifest.id === 'catalog');
-    if (catalog === undefined) throw new Error('Testfixture ohne catalog-Manifest');
-    delete catalog.dependencies['@einsatzzeichen/core'];
+    const conformance = input.manifests.find((manifest) => manifest.id === 'conformance');
+    if (conformance === undefined) throw new Error('Testfixture ohne conformance-Manifest');
+    delete conformance.dependencies['@einsatzzeichen/core'];
     input.sourceFiles.push({
-      packageId: 'catalog',
-      path: 'packages/catalog/src/undeclared.ts',
+      packageId: 'conformance',
+      path: 'packages/conformance/src/undeclared.ts',
       source: "import { renderSvg } from '@einsatzzeichen/core';\n",
     });
 
     expect(findRepositoryPolicyViolations(input)).toContainEqual(
       expect.objectContaining({
         code: 'undeclared-internal-import',
-        path: 'packages/catalog/src/undeclared.ts',
-        importer: 'catalog',
+        path: 'packages/conformance/src/undeclared.ts',
+        importer: 'conformance',
         target: 'core',
         specifier: '@einsatzzeichen/core',
       }),
@@ -450,16 +673,16 @@ describe('Repository-Policy — Paketgrenzen', () => {
   it('weist einen relativen Import über eine Paketgrenze auch in erlaubter Abhängigkeitsrichtung zurück', () => {
     const input = validPolicyInput();
     input.sourceFiles.push({
-      packageId: 'catalog',
-      path: 'packages/catalog/src/nested/bypass.ts',
+      packageId: 'conformance',
+      path: 'packages/conformance/src/nested/bypass.ts',
       source: "import { renderSvg } from '../../../core/src/index.js';\n",
     });
 
     expect(findRepositoryPolicyViolations(input)).toContainEqual(
       expect.objectContaining({
         code: 'relative-cross-package-import',
-        path: 'packages/catalog/src/nested/bypass.ts',
-        importer: 'catalog',
+        path: 'packages/conformance/src/nested/bypass.ts',
+        importer: 'conformance',
         target: 'core',
         specifier: '../../../core/src/index.js',
       }),
@@ -548,13 +771,13 @@ describe('Repository-Policy — Repository-Adapter', () => {
         JSON.stringify({
           name: coreManifest.name,
           dependencies: coreManifest.dependencies,
-          devDependencies: { '@einsatzzeichen/catalog': 'workspace:*' },
+          devDependencies: { '@einsatzzeichen/conformance': 'workspace:*' },
         }),
         'utf8',
       );
       writeFileSync(
         join(root, 'packages/core/src/reverse.ts'),
-        "export { catalogEntry } from '@einsatzzeichen/catalog';\n",
+        "export { catalogEntry } from '@einsatzzeichen/conformance';\n",
         'utf8',
       );
 
@@ -574,12 +797,12 @@ describe('Repository-Policy — Repository-Adapter', () => {
           expect.objectContaining({
             code: 'forbidden-internal-dependency',
             importer: 'core',
-            target: 'catalog',
+            target: 'conformance',
           }),
           expect.objectContaining({
             code: 'forbidden-internal-import',
             importer: 'core',
-            target: 'catalog',
+            target: 'conformance',
           }),
         ]),
       );
@@ -685,14 +908,14 @@ describe('Repository-Policy — Repository-Adapter', () => {
     try {
       writeValidRepositoryFixture(root);
       execFileSync('git', ['init', '--quiet'], { cwd: root });
-      const symlinkPath = join(root, 'packages/core/src/catalog-link.ts');
-      symlinkSync('../../catalog/src/index.ts', symlinkPath);
-      execFileSync('git', ['add', 'packages/core/src/catalog-link.ts'], { cwd: root });
+      const symlinkPath = join(root, 'packages/core/src/conformance-link.ts');
+      symlinkSync('../../conformance/src/index.ts', symlinkPath);
+      execFileSync('git', ['add', 'packages/core/src/conformance-link.ts'], { cwd: root });
 
       expect(findRepositoryPolicyViolations(readRepositoryPolicyInput({ root }))).toContainEqual(
         expect.objectContaining({
           code: 'source-symlink',
-          path: 'packages/core/src/catalog-link.ts',
+          path: 'packages/core/src/conformance-link.ts',
           importer: 'core',
         }),
       );

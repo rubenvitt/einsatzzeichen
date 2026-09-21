@@ -20,7 +20,7 @@ import {
   sectionOf,
   sortedDomainReviewOpenByArea,
   sourceDomainReviewFor,
-} from '@einsatzzeichen/catalog';
+} from '@einsatzzeichen/conformance';
 import {
   entryKey,
   type CoverageEntry,

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 import { specKey } from './spec-key.js';
 
-// Die Zählung über alle 242 Rezepte steht in catalog/src/combination-provenance.test.ts: `core`
+// Die Zählung über alle 242 Rezepte steht in conformance/src/combination-provenance.test.ts: `core`
 // darf `catalog` nicht importieren (Importgrenze catalog → core).
 
 const base: SymbolSpec = {

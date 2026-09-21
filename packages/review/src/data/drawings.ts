@@ -11,13 +11,15 @@
  * wäre eine blind entschiedene Zeile.
  */
 import {
-  ALL_PICTOGRAMS,
-  BASE_SYMBOLS,
   RECIPES,
   composeFromCatalog,
-  describePictogram,
   type Recipe,
-} from '@einsatzzeichen/catalog';
+} from '@einsatzzeichen/conformance';
+import {
+  ALL_PICTOGRAMS,
+  BASE_SYMBOLS,
+  describePictogram,
+} from '@einsatzzeichen/core';
 import {
   ORGANIZATION_IDS,
   STRENGTH_IDS,
@@ -207,7 +209,7 @@ function recipeDrawing(entry: CoverageEntry, key: string): Drawing {
 
 /**
  * Die Piktogrammdefinition als eigenständige Zeichnung — dieselbe Bildung wie im Renderfall-Gate
- * (`packages/catalog/src/test-support/render-cases.ts`), damit die Oberfläche genau das zeigt,
+ * (`packages/conformance/src/test-support/render-cases.ts`), damit die Oberfläche genau das zeigt,
  * was dort gegatet ist. Der Pfad selbst liegt unter `test-support/` und wird vom Paketindex nicht
  * ausgeliefert; hier stehen deshalb die Bausteine aus dem Paketindex, nicht die Testhilfe.
  */

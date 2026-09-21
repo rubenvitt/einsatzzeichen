@@ -24,7 +24,7 @@ import type { SourceReference } from '@einsatzzeichen/schema';
  *
  * Die Umstellung von `validate.ts` selbst ist ein **späterer Slice**. Sie braucht dann einen
  * Ersatz für den Quelltextscan: ein Laufzeit-Gate, das belegt, dass jede Katalogregel von einem
- * Fall tatsächlich ausgelöst wird. Seit LFH-568 gibt es dieses Gate: `catalog/src/rule-evidence.ts`
+ * Fall tatsächlich ausgelöst wird. Seit LFH-568 gibt es dieses Gate: `conformance/src/rule-evidence.ts`
  * führt je Regel einen auslösenden Fall oder eine benannte Lücke, und `rule-evidence.test.ts` löst
  * jeden Fall zur Laufzeit aus. Der Umbau von `validate.ts` bleibt trotzdem ein eigener Slice. Siehe
  * `docs/decisions/2026-09-20-regelkatalog-als-daten.md`.
@@ -126,7 +126,7 @@ export type RuleReasonSource = 'core' | 'website';
 /**
  * Die Dimensionen der Systematik, über die Regeln überhaupt sprechen können — geschlossene Union.
  *
- * Abgeglichen mit den 16 Wertachsen in `packages/catalog/src/rule-coverage.ts`. Unterschiede und
+ * Abgeglichen mit den 16 Wertachsen in `packages/conformance/src/rule-coverage.ts`. Unterschiede und
  * ihr Grund:
  *
  * - `kind` und `bodyVariant` der Achsenliste stehen hier als `'base-symbol'` und

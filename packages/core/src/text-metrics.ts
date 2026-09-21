@@ -31,7 +31,7 @@ import type { Drawing, Primitive } from '@einsatzzeichen/schema';
  * Boxkante; das Paar „Ta" trägt −227/2048 em. `kerningEm` ist deshalb Teil der Schnittstelle,
  * optional, weil ein Doppel ohne Paare auskommt. Ob die Rechnung die gerasterte Tinte
  * tatsächlich überdeckt, ist trotzdem eine **Messfrage** und wird im Katalog belegt
- * (`packages/catalog/src/text-metrics.test.ts`, Kalibrierung gegen dieselbe Rasterung wie
+ * (`packages/conformance/src/text-metrics.test.ts`, Kalibrierung gegen dieselbe Rasterung wie
  * `footInkAgainstBox` in fonts.test.ts).
  *
  * **Toleranz: ein Rasterpixel bei 8 px/mm** (`BOX_TOLERANCE_MM`). Die handvermessenen Boxen

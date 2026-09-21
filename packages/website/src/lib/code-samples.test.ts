@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { RECIPES, composeFromCatalog } from '@einsatzzeichen/catalog';
+import { RECIPES, composeFromCatalog } from '@einsatzzeichen/conformance';
 import { renderSvg } from '@einsatzzeichen/core';
 import { Einsatzzeichen } from '@einsatzzeichen/react';
 import { codeSamplesFor } from './code-samples.js';

@@ -24,7 +24,7 @@ import type { ReferencePort } from './reference.js';
 /**
  * Der Server wird hier ohne Zeilenmodul, ohne Ledger und ohne Dateisystem geprüft: alle drei
  * kommen als Abhängigkeit herein. Der Ledger-Schreiber ist ein Doppel — kein Test dieser Datei
- * darf `packages/catalog/src/domain-reviews.ts` anfassen.
+ * darf `packages/conformance/src/domain-reviews.ts` anfassen.
  *
  * `ReviewRow` gehört dem Zeilenmodul. Der Server fasst davon nur drei Felder an (Zeichnung,
  * Referenzname, fachlicher Stand); die Testzeile trägt genau diese plus Kennung und Bereich und

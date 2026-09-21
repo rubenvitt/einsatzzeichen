@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@einsatzzeichen/catalog": "workspace:*",
+    "@einsatzzeichen/conformance": "workspace:*",
     "@einsatzzeichen/core": "workspace:*",
     "@einsatzzeichen/schema": "workspace:*",
     "react": "^19.2.8",

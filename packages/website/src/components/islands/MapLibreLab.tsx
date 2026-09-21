@@ -41,10 +41,10 @@ import type { CatalogSnapshot } from '../../lib/snapshot.js';
  *
  * Die 256 Zeichen holt die Insel seit LFH-500 zur Laufzeit aus `/catalog-snapshot.json`; als Prop
  * standen sie serialisiert im `props`-Attribut der `<astro-island>` und machten
- * `/docs/maplibre-lab/` auf 742 KB. Die Farbprofile bleiben eine Prop: sie kommen aus
- * `RENDER_THEMES` von `@einsatzzeichen/catalog`, und ein clientseitiger Import daraus zöge
- * `node:url` ins Browserbündel (Spec §5.2) — es sind drei kleine Objekte, die im HTML nichts
- * kosten. Die Kartenbibliothek wird erst im Effekt geladen (`await import`), damit sie nicht im
+ * `/docs/maplibre-lab/` auf 742 KB. Die Farbprofile bleiben eine Prop: die Seite wählt sie aus
+ * `RENDER_THEMES` von `@einsatzzeichen/core` aus und benennt sie — es sind drei kleine Objekte,
+ * die im HTML nichts kosten. (Bis LFH-570 lagen die Themes im Prüfpaket, dessen Index `node:url`
+ * ins Browserbündel gezogen hätte; `core` ist browsertauglich.) Die Kartenbibliothek wird erst im Effekt geladen (`await import`), damit sie nicht im
  * ersten Seitenpaket steckt.
  */
 

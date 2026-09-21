@@ -9,10 +9,9 @@ import {
   type ReactNode,
 } from 'react';
 import { Einsatzzeichen } from '@einsatzzeichen/react';
-import { renderSvg } from '@einsatzzeichen/core';
+import { ORGANIZATION_COLORS, renderSvg } from '@einsatzzeichen/core';
 import type { ValidationIssue } from '@einsatzzeichen/core';
 import { PALETTE, type ColorToken, type Drawing, type SymbolSpec } from '@einsatzzeichen/schema';
-import { ORGANIZATION_COLORS } from '@einsatzzeichen/catalog/src/organizations.js';
 import { codeSamplesFor, type CodeSamples } from '../../lib/code-samples.js';
 import {
   decodeSpec,
@@ -208,9 +207,9 @@ function outcomeOf(spec: SymbolSpec): BuilderOutcome {
 }
 
 /**
- * Organisationsfarbe für den Farbfleck am Chip — aus `ORGANIZATION_COLORS` des Katalogs und der
+ * Organisationsfarbe für den Farbfleck am Chip — aus `ORGANIZATION_COLORS` von `core` und der
  * `PALETTE` des Schemas, nie aus einer eigenen Zuordnung: die Farben gehören den Zeichen, und
- * ihre einzige Quelle ist der Katalog. `hilfsorganisation` ist quellengetreu weiß und braucht
+ * ihre einzige Quelle ist die Geometrie in `core`. `hilfsorganisation` ist quellengetreu weiß und braucht
  * deshalb den Rahmen, den der Chip ohnehin zeichnet.
  */
 function organizationSwatch(id: string): string | undefined {

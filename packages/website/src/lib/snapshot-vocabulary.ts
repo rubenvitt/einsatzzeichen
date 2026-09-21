@@ -10,7 +10,7 @@ import {
   functionRole,
   pictogram,
   symbolKindLabel,
-} from '@einsatzzeichen/catalog';
+} from '@einsatzzeichen/core';
 import {
   ADMIN_LEVEL_IDS,
   BODY_VARIANT_IDS,

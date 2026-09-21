@@ -77,8 +77,8 @@ Zeichen, benannt nach seiner Kennung
 Einzeln und programmatisch:
 
 ```ts
-import { composeFromCatalog, RECIPES, PRINT_MONOCHROME_THEME } from '@einsatzzeichen/catalog';
-import { renderSvg } from '@einsatzzeichen/core';
+import { composeFromCatalog, RECIPES } from '@einsatzzeichen/conformance';
+import { PRINT_MONOCHROME_THEME, renderSvg } from '@einsatzzeichen/core';
 
 const recipe = RECIPES['E.1.1'];
 const svg = renderSvg(composeFromCatalog(recipe.spec, recipe.title), {

@@ -15,25 +15,39 @@ und welche begründet offen bleiben, der Coverage-Manifest-Scope):
 Acht Pakete, mit einer festen, zyklenfreien Abhängigkeitsrichtung:
 
 ```
-cli → catalog → core → schema
+cli → conformance → core → schema
       react ────────┐
       web-component ┼→ core → schema
       maplibre ─────┤
       qgis ─────────┘
 ```
 
+**`core` ist das Produkt.** Wer die Bibliothek nutzt, braucht `core`, `schema` und einen
+Ausgabekanal. `core` enthält die Bausteine (Grundzeichen, Farben, Stärken, Kopfmarken,
+Piktogramme, Themes, Textlaufweiten), den Kompositionsmotor, die Regeln und die Renderer.
+**`conformance` ist das Prüfpaket:** Rezepte, Coverage-Manifest, Domain-Reviews, Fingerprints,
+Referenzinventar und die Gates — die Mittel, mit denen die Zeichen gegen die Vorlagen belegt
+werden. Für die Nutzung ist es nicht erforderlich. Die Entscheidung dazu steht in
+[`docs/decisions/2026-09-13-grammatik-motor-und-paketschnitt.md`](./docs/decisions/2026-09-13-grammatik-motor-und-paketschnitt.md).
+
+Eine Einschränkung gilt heute noch: Den Kurzweg von einer `SymbolSpec` zur Zeichnung,
+`composeFromCatalog()`, und die benannten Vorlagenzeichen (`RECIPES`) gibt es nur in
+`conformance`. Ohne Prüfpaket übergibt man `compose()` die Bausteine aus `core` selbst als Ports;
+einen fertigen Einstieg dafür gibt es noch nicht.
+
 Die vier **Ausgabekanäle** `react`, `web-component`, `maplibre` und `qgis` (LFH-405) stehen auf
-demselben Rang wie `catalog`: Sie dürfen `core` und `schema` importieren, aber weder `catalog`
-noch einander, und `catalog` darf keinen Kanal importieren. Katalogdaten kommen über die
-Anwendung in den Kanal — `composeFromCatalog(...)` liefert die `Drawing`, der Kanal trägt sie nur
-in sein Zielformat. Kein Kanal rendert selbst aus der IR; alle vier verwenden `renderSvg` bzw.
-`renderCanvas` aus `core`, damit aus derselben Zeichnung in jedem Kanal dasselbe Bild entsteht.
+demselben Rang wie `conformance`: Sie dürfen `core` und `schema` importieren, aber weder
+`conformance` noch einander, und `conformance` darf keinen Kanal importieren. Die Zeichnung kommt
+über die Anwendung in den Kanal — `compose(...)` oder `composeFromCatalog(...)` liefert die
+`Drawing`, der Kanal trägt sie nur in sein Zielformat. Kein Kanal rendert selbst aus der IR; alle
+vier verwenden `renderSvg` bzw. `renderCanvas` aus `core`, damit aus derselben Zeichnung in jedem
+Kanal dasselbe Bild entsteht.
 
 | Paket | Inhalt |
 |---|---|
 | `schema` | Typen der internen Repräsentation (IR), Einheiten, Farbpalette. Null Fremdabhängigkeiten. |
-| `core` | Renderer (SVG, Canvas), Render-Theme-Vertrag, A11y-/Kontrast- und viewBox-Gates, Hüllenberechnung, Fingerprint-Vergleich, Layoutprofile, Kompositionsmotor, Regelvalidierung. Hängt **nie** von `catalog` ab. |
-| `catalog` | Grundzeichen, Organisationsfarben, Stärkeangaben, Fähigkeiten, Kompositionsrezepte, konkrete Render-Themes, Quellenregister, Profilregister, Elementregister, Coverage-Manifest. |
+| `core` | Bausteine und ihre Geometrie: Grundzeichen, Körpermarken, Fahrwerk, Organisationsfarben, Stärkeangaben, technische Kopfmarken, Verwaltungsstufen, Funktionsfassungen, Piktogramme, deutsche Bezeichnungen, konkrete Render-Themes, Kontrastausnahmen, Arimo-Laufweiten (`src/geometry/`, `src/assets/`). Dazu Bausteinregister, Zonenmodell, Regelkatalog, Kompositionsmotor, Regelvalidierung, Renderer (SVG, Canvas), Render-Theme-Vertrag, A11y-/Kontrast- und viewBox-Gates, Hüllenberechnung, Fingerprint-Vergleich, Layoutprofile. Hängt **nie** von `conformance` ab und importiert kein `node:*`. |
+| `conformance` | Prüfpaket: Kompositionsrezepte (`RECIPES`, `composeFromCatalog`), Coverage-Manifest und -Gate, Domain-Reviews und -Fragen, Fingerprints, Referenzinventar, Regelbelege und Regelabdeckung, Herkunft je Kombination, Vergleichs- und benannte Ausnahmen, Quellenregister, Profilregister, Elementregister sowie die Schriftbehandlung für die Rasterung (`fonts.ts`, Arimo-TTF). Bis 1.5 als `@einsatzzeichen/catalog` veröffentlicht. |
 | `cli` | Kennzahlenableitung aus der lokalen Referenz, Coverage-Gate, SVG-Export. |
 | `react` | Hook `useEinsatzzeichenSvg` (liefert das `core`-SVG bytegleich als String) und Komponente `<Einsatzzeichen drawing size theme idPrefix />`, die Wurzelattribute und Inhalt dieses SVGs unverändert in den React-Baum trägt — React ordnet nur die Attribute selbst (kein JSX-Build, `react` als Peer-Abhängigkeit). |
 | `web-component` | Custom Element `<einsatzzeichen-symbol>` mit offenem Shadow DOM; Properties `drawing`/`theme`, Attribute `size`/`id-prefix`. Registrierung idempotent und ohne `customElements` folgenlos. |
@@ -42,6 +56,23 @@ in sein Zielformat. Kein Kanal rendert selbst aus der IR; alle vier verwenden `r
 
 `schema` und `core` haben **null Fremdabhängigkeiten** — beide sind reines TypeScript ohne
 externe Pakete.
+
+### Umstieg von `@einsatzzeichen/catalog`
+
+Bis Version 1.5 hieß das Prüfpaket `@einsatzzeichen/catalog` und enthielt auch die Geometrie;
+unter dem neuen Namen erscheint es mit dem ersten Release nach 1.5. Wer umsteigt:
+
+```bash
+pnpm remove @einsatzzeichen/catalog
+pnpm add @einsatzzeichen/core                # Bausteine, Themes, Renderer
+pnpm add @einsatzzeichen/conformance         # nur, wenn RECIPES oder composeFromCatalog gebraucht werden
+```
+
+Bausteine und Themes (`baseDrawing`, `organizationColor`, `pictogram`, `RENDER_THEMES`,
+`PRINT_MONOCHROME_THEME`, `describeSymbolSpec`, `ARIMO_TEXT_METRICS` und ihre Nachbarn) kommen
+jetzt aus `@einsatzzeichen/core`; der Index von `conformance` führt sie nicht mehr. Rezepte,
+Coverage, Reviews, Quellen-, Profil- und Elementregister sowie `fonts.ts` bleiben in
+`conformance`.
 
 ## Provenienz
 
@@ -53,7 +84,7 @@ fachliche Freigabe braucht zusätzlich eine Befundnotiz oder einen Protokollverw
 seiner Manifestzeile, die für `coverage: 'catalog-entry'` 1:1 zu ihm ist. Das fachliche Review
 steht derzeit bei allen Einträgen offen; die Struktur macht das sichtbar, statt es zu verdecken.
 
-`packages/catalog/src/sources.ts` führt elf Quellen der Referenzhierarchie plus `phjardas-tz` als
+`packages/conformance/src/sources.ts` führt elf Quellen der Referenzhierarchie plus `phjardas-tz` als
 Vergleichsbestand und `arimo-ofl` als registrierten Schriftquellenträger (eigener `SourceKind
 'typeface'`, kein Teil der Referenzhierarchie) — insgesamt 13 Quellen, jeweils mit
 Nutzungsgrundlage, Beschaffungsstand und Umgang mit der Geometrie. Für die BABZ-Assets ist die
@@ -452,7 +483,7 @@ das Leergewicht. Die Begründungen stehen in
 [`docs/decisions/2026-08-18-anhang-e2.md`](docs/decisions/2026-08-18-anhang-e2.md), im
 Sichtprüfungsprotokoll
 [`docs/reviews/2026-08-18-anhang-e2-visual-qa.md`](docs/reviews/2026-08-18-anhang-e2-visual-qa.md),
-in `packages/catalog/src/recipes-anhang-e.ts` und im Coverage-Manifest.
+in `packages/conformance/src/recipes-anhang-e.ts` und im Coverage-Manifest.
 
 ## F-a: Anhang F, die sanitätsdienstlichen Einheiten
 
@@ -804,12 +835,12 @@ Drohnentaxonomie noch eine pauschale Abdeckung von `I.1` oder `I`.
 Referenz-SVGs**. Er wird **niemals eingecheckt** — die Nutzungs- und Lizenzgrundlage ist ungeklärt,
 siehe `.gitignore`, und die weitere BABZ-Veröffentlichung und -Verbreitung des Arbeitsstands ist
 ausgesetzt. Ohne diesen Ordner lässt sich der Katalog trotzdem bauen, testen und typprüfen: das
-abgeleitete Kennzahlenartefakt `packages/catalog/src/fingerprints.json` ist eingecheckt und wird von
+abgeleitete Kennzahlenartefakt `packages/conformance/src/fingerprints.json` ist eingecheckt und wird von
 CI verwendet.
 
 `pnpm cli audit:reference` braucht diesen Ordner — es liest die 661 SVGs, leitet daraus
 Kennzahlen ab (Hüllen, Strichstärken, Füllfarben; **keine** Pfaddaten oder Geometrie) und
-schreibt sie nach `packages/catalog/src/fingerprints.json`. Dieser Lauf überschreibt das
+schreibt sie nach `packages/conformance/src/fingerprints.json`. Dieser Lauf überschreibt das
 eingecheckte Artefakt — nur ausführen, wenn das ausdrücklich beabsichtigt ist.
 
 ## Aufruf
@@ -843,10 +874,12 @@ rtk pnpm cli visual-proof --reference-root "$REFERENCE_ROOT" \
   Blockern: ein Blocker ist ein offener Punkt, eine Ausnahme ein entschiedener.
 - `verify:repository` — prüft Paketabhängigkeiten sowie statische Imports, Re-Exports,
   Inline-Importtypen, `import = require(...)`, dynamische Imports und direkte `require(...)`
-  gegen `cli → catalog → core → schema` sowie die vier Ausgabekanäle auf dem Rang von `catalog`
-  (kein Kanal importiert `catalog` oder einen anderen Kanal, `catalog` keinen Kanal). Syntaxfehler, nicht statisch auflösbare Modulziele,
+  gegen `cli → conformance → core → schema` sowie die vier Ausgabekanäle auf dem Rang von
+  `conformance` (kein Kanal importiert `conformance` oder einen anderen Kanal, `conformance` keinen
+  Kanal); von den veröffentlichten Paketen hängt nur `cli` an `conformance`, die privaten
+  `review` und `website` dürfen jedes veröffentlichte Paket nutzen. Syntaxfehler, nicht statisch auflösbare Modulziele,
   relative Paketgrenzen-Umgehungen und Quell-Symlinks werden zurückgewiesen. Externe
-  Produktionsimporte bleiben in `core` und `schema` verboten und müssen in `cli` und `catalog`
+  Produktionsimporte bleiben in `core` und `schema` verboten und müssen in `cli` und `conformance`
   im Paketmanifest deklariert sein. Per NUL-getrenntem Git-Index kontrolliert das Gate außerdem,
   dass weder `taktische-zeichen/` noch `taktische-zeichen.zip` eingecheckt sind, und lässt Git
   die Schutzwirkung der Rootregeln einschließlich späterer Negationen auswerten. Wirksam
@@ -870,7 +903,7 @@ Jede renderbare Manifest-Implementierung durchläuft echte PNG-Regressionen bei 
 128 und 256 Pixeln. Zusätzlich werden Accessible- und Schwarz-Weiß-Ausgabe gerastert,
 semantischer Titel und Beschreibung verlangt und die sichtbare Geometrie gegen die kanonische
 32×32-mm-viewBox geprüft. Die Rasterungen liegen als direkt sichtbare SVG-Kontaktbögen unter
-`packages/catalog/src/__snapshots__/multi-size/`; ein eigener Profilbogen zeigt sieben der acht
+`packages/conformance/src/__snapshots__/multi-size/`; ein eigener Profilbogen zeigt sieben der acht
 Organisationen in beiden Alternativthemes bei 64 px. Die achte, `hilfsorganisation` aus LFH-424,
 fehlt **auf dem Profilbogen** weiterhin — Katalogeinträge, die sie setzen, gibt es seit dem
 Teilslice F-a allerdings: alle 66 F-Rezepte tragen sie, und mit ihnen steht ihre Punktsignatur in

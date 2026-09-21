@@ -10,7 +10,7 @@ import {
   referenceInventoryAssets,
   releaseBlockers,
   sortedDomainReviewOpenByArea,
-} from '@einsatzzeichen/catalog';
+} from '@einsatzzeichen/conformance';
 import type { CoverageEntry, Review, TestEvidenceKind } from '@einsatzzeichen/schema';
 import { entryKey } from '@einsatzzeichen/schema';
 
@@ -162,7 +162,7 @@ export function renderReviewDossier(): string {
   out();
   out('> Erzeugt mit `pnpm cli review-dossier`. Dieses Dokument **bereitet** das fachliche Review vor;');
   out('> es erteilt keine Freigabe und ändert keinen Reviewstatus. Freigeben darf nur eine benannte');
-  out('> Person mit einsatztaktischer Fachkunde, und zwar im Ledger `packages/catalog/src/domain-reviews.ts`.');
+  out('> Person mit einsatztaktischer Fachkunde, und zwar im Ledger `packages/conformance/src/domain-reviews.ts`.');
   out();
   out(`- Baseline: ${code(COVERAGE_MANIFEST.baseline)}`);
   out(

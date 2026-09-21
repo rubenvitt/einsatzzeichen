@@ -260,8 +260,8 @@ describe('Zonenmodell: Bindung an die bestehenden Fundorte', () => {
       }
     }
     expect([...files].sort()).toEqual([
-      'catalog/src/base-symbols.ts',
       'core/src/compose.ts',
+      'core/src/geometry/base-symbols.ts',
       'core/src/layout/profiles.ts',
       'core/src/validate.ts',
       'schema/src/chassis.ts',

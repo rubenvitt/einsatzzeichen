@@ -21,7 +21,7 @@ import Builder, { blockedTooltip } from './Builder.js';
  *
  * **Warum happy-dom von Hand angemeldet wird und nicht über `@vitest-environment`.** Die
  * Umgebungsangabe stellt Vitest auf den Browser-Transform um, und der schreibt jedes
- * `new URL(…, import.meta.url)` auf eine http-Adresse um. `packages/catalog/src/fonts.ts` tut
+ * `new URL(…, import.meta.url)` auf eine http-Adresse um. `packages/conformance/src/fonts.ts` tut
  * genau das auf Modulebene, und `fileURLToPath` lehnt eine http-Adresse ab — der Paketindex des
  * Katalogs und mit ihm `buildSnapshot()` ließen sich dann gar nicht erst laden. Von Hand
  * angemeldet bleibt die Datei im selben Node-Transform wie die übrigen 108 Testdateien, und der

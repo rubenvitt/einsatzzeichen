@@ -15,7 +15,7 @@ import {
 } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { Resvg, type RenderedImage } from '@resvg/resvg-js';
-import { RECIPES, composeFromCatalog, resvgFontOptions } from '@einsatzzeichen/catalog';
+import { RECIPES, composeFromCatalog, resvgFontOptions } from '@einsatzzeichen/conformance';
 import { REFERENCE_THEME, renderSvg } from '@einsatzzeichen/core';
 
 const COLUMNS = 3;

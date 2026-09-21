@@ -459,7 +459,7 @@ describe('compose() — Fußzone', () => {
     // zwischen Kopf- und Fußzone: `formation` allein trägt eine Fußzone anstandslos (siehe die
     // Tests oben), aber eine Stärkeangabe kann den Körper so weit nach unten verschieben, dass die
     // Fußzone danach nicht mehr passt. `strengthHead('staffel')` liefert nach
-    // `packages/catalog/src/strengths.ts` einen senkrechten Stapel zweier Marken (cyFromTopMm 1.5
+    // `packages/core/src/geometry/strengths.ts` einen senkrechten Stapel zweier Marken (cyFromTopMm 1.5
     // und 5.5, rMm 1.5) mit `heightMm: 7` (STACK_CY_FROM_TOP_MM[1] + DOT_RADIUS_MM) — dieselben
     // Zahlen hier fest verdrahtet, weil `core` nicht von `catalog` abhängen darf.
     //
@@ -512,7 +512,7 @@ describe('compose() — Fahrwerkszone', () => {
   };
 
   /**
-   * Die Fahrwerkszone der Kategorie 3 mit den Zahlen aus `packages/catalog/src/vehicle-categories.ts`
+   * Die Fahrwerkszone der Kategorie 3 mit den Zahlen aus `packages/core/src/geometry/vehicle-categories.ts`
    * — hier fest verdrahtet, aus demselben Grund wie die Stapelkopfzone oben.
    */
   const vehicleCatalog: CatalogPorts = {

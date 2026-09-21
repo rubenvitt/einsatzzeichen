@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RECIPES } from '@einsatzzeichen/catalog';
+import { RECIPES } from '@einsatzzeichen/conformance';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 import {
   allowedValues,

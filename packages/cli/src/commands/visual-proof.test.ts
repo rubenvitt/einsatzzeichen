@@ -14,11 +14,13 @@ import { fileURLToPath } from 'node:url';
 import { inflateSync } from 'node:zlib';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
-  ACCESSIBLE_LIGHT_THEME,
-  PRINT_MONOCHROME_THEME,
   RECIPES,
   composeFromCatalog,
-} from '@einsatzzeichen/catalog';
+} from '@einsatzzeichen/conformance';
+import {
+  ACCESSIBLE_LIGHT_THEME,
+  PRINT_MONOCHROME_THEME,
+} from '@einsatzzeichen/core';
 import { mmToUnits } from '@einsatzzeichen/schema';
 import { renderCanvas, renderSvg } from '@einsatzzeichen/core';
 import {

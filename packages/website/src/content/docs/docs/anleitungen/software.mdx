@@ -22,12 +22,16 @@ Kompositionsmotor eine Zeichnung (`Drawing`), und aus der Zeichnung ein SVG. All
 Millimeter; umgerechnet wird erst am Renderer.
 
 ```ts
-import { composeFromCatalog, RECIPES } from '@einsatzzeichen/catalog';
+import { composeFromCatalog, RECIPES } from '@einsatzzeichen/conformance';
 import { renderSvg } from '@einsatzzeichen/core';
 
 const recipe = RECIPES['E.1.1'];
 const svg = renderSvg(composeFromCatalog(recipe.spec, recipe.title), { size: 64 });
 ```
+
+Die Bausteine und der Renderer kommen aus `core`. Das Vorlagenrezept `RECIPES['E.1.1']` und der
+Kurzweg `composeFromCatalog()` liegen noch im Prüfpaket `conformance` (bis 1.5 `catalog`); wie es
+ohne Prüfpaket geht, zeigt das Beispiel auf der [Seite zu `core`](/docs/pakete/core/#beispiel).
 
 Vollständige, lauffähige Beispiele in allen vier Kanälen stehen im
 [Quickstart](/docs/quickstart/); sie werden aus derselben Vorlage erzeugt wie die Beispiele auf jeder
@@ -51,8 +55,8 @@ Markup selbst platzieren willst. Das Web-Component-Element beobachtet `size` und
 | Paket | Wofür |
 |---|---|
 | [`schema`](/docs/pakete/schema/) | Typen, Palette, Millimeter-Helfer (`mmToUnits`, `unitsToMm`) |
-| [`core`](/docs/pakete/core/) | Renderer, Kompositionsmotor, Regelvalidierung, Kontrast- und viewBox-Gates |
-| [`catalog`](/docs/pakete/catalog/) | die Zeichen selbst: Grundzeichen, Rezepte, Themes, Quellenregister |
+| [`core`](/docs/pakete/core/) | das Produkt: Grundzeichen, Farben, Kopfmarken, Piktogramme, Themes, Kompositionsmotor, Regelvalidierung, Renderer, Kontrast- und viewBox-Gates |
+| [`conformance`](/docs/pakete/conformance/) | das Prüfpaket: Rezepte, Coverage-Manifest, Quellen- und Profilregister, fachliche Reviews, Fingerprints; für die Nutzung nicht erforderlich (bis 1.5 `catalog`) |
 | [`react`](/docs/pakete/react/) | React-Komponente und Hook |
 | [`web-component`](/docs/pakete/web-component/) | Custom Element ohne Rahmenwerk |
 | [`maplibre`](/docs/pakete/maplibre/) | Zeichen als Bild im Kartenstil |
@@ -65,15 +69,16 @@ Build-Schritt und keine Veröffentlichung auf einer Registry. Im Workspace läuf
 
 ## Zwei Fallstricke
 
-**`@einsatzzeichen/catalog` ist nicht browsertauglich, wenn er über den Index geladen wird.**
+**`@einsatzzeichen/conformance` ist nicht browsertauglich, wenn es über den Index geladen wird.**
 `fonts.ts` importiert `node:url`, und der Index re-exportiert es. Im Browser läuft deshalb
 entweder ein Subpfad-Import oder — wie auf dieser Website — eine zur Bauzeit erzeugte Datendatei.
-`core`, `schema`, `react`, `web-component` und `maplibre` sind frei von `node:*`.
+`core`, `schema`, `react`, `web-component` und `maplibre` sind frei von `node:*`; was ein Browser
+zum Zeichnen braucht, Themes und Bausteine eingeschlossen, liegt in `core`.
 
 **Die Schrift gehört zum Zeichen.** `renderSvg()` schreibt `font-family="Arimo"` in jedes Zeichen
 mit Kürzel. Ohne ausgelieferte Schriftdatei setzt der Browser eine Ersatzschrift mit anderen
 Vorschubbreiten, und das Kürzel steht nicht mehr dort, wo die Geometrie es vorsieht. Das Subset
-liegt in `packages/catalog/assets` (SIL OFL 1.1).
+liegt in `packages/conformance/assets` (SIL OFL 1.1).
 
 ## Was du in deiner Oberfläche mitführen solltest
 

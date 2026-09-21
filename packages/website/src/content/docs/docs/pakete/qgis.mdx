@@ -1,6 +1,6 @@
 ---
 title: qgis
-description: QGIS-Stilbibliothek und SVG-Verzeichnis aus dem Katalog — ohne Dateisystemzugriff, ohne param()-Umfärbung.
+description: QGIS-Stilbibliothek und SVG-Verzeichnis aus fertigen Zeichnungen — ohne Dateisystemzugriff, ohne param()-Umfärbung.
 ---
 
 Diese Seite richtet sich an Entwicklerinnen und Entwickler. Wer ein Zeichen nur finden,
@@ -50,7 +50,7 @@ sonst still ein falsches oder unsichtbares Symbol ergeben.
 
    ```ts
    import { writeFileSync } from 'node:fs';
-   import { RECIPES, composeFromCatalog } from '@einsatzzeichen/catalog';
+   import { RECIPES, composeFromCatalog } from '@einsatzzeichen/conformance';
    import { qgisSymbolLibrary } from '@einsatzzeichen/qgis';
 
    const entries = Object.entries(RECIPES).map(([section, recipe]) => ({

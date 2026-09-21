@@ -119,7 +119,7 @@ pnpm cli export --out out/druck --size 128 --theme print-monochrome
 (`packages/cli/src/index.ts`). Einzeln:
 
 ```ts
-import { PRINT_MONOCHROME_THEME } from '@einsatzzeichen/catalog';
+import { PRINT_MONOCHROME_THEME } from '@einsatzzeichen/core';
 import { renderSvg } from '@einsatzzeichen/core';
 
 const svg = renderSvg(drawing, { theme: PRINT_MONOCHROME_THEME });
@@ -139,14 +139,14 @@ Organisationsfarbe hält zu den übrigen einen Helligkeitsabstand von mehr als 0
 Organisationen im Ausdruck nicht zum selben Grau werden — der knappste Abstand ist die 0,0483
 zwischen `rot` (`#666666`) und `blau` (`#767676`). Wo ein Zeichen Schrift auf die
 Organisationsfarbe setzt, wird zusätzlich dieses Paar gerechnet und geprüft — `blau` etwa erreicht
-4,54:1 gegen weiße und 4,62:1 gegen schwarze Schrift (`packages/catalog/src/render-themes.ts`).
+4,54:1 gegen weiße und 4,62:1 gegen schwarze Schrift (`packages/core/src/geometry/render-themes.ts`).
 Geprüft heißt nicht, dass jedes Paar die Schwelle erreicht: welche sie verfehlen, steht unten.
 Ein selbst entsättigtes Farb-SVG rechnet dagegen überhaupt nichts nach.
 
 Nicht jedes vorkommende Paar erreicht die Textschwelle von 4,5:1. Der Katalog verschweigt das
 nicht, sondern führt die Ausnahmen als Daten mit — `pnpm cli coverage` gibt sie aus, und ein Test
 prüft gegen genau diese Liste statt gegen eine aufgeweichte Schwelle
-(`packages/catalog/src/contrast-exceptions.ts`).
+(`packages/core/src/geometry/contrast-exceptions.ts`).
 
 <div class="ez-note">
   <span class="ez-note__title">

@@ -1,0 +1,733 @@
+import {
+  entryKey,
+  isDataVersion,
+  reviewIssues,
+  type CatalogEntry,
+  type CoverageEntry,
+  type ProfileRecord,
+  type ReviewIssueCode,
+  type ReviewSet,
+  type SourceId,
+  type SourceRecord,
+  type TestEvidenceKind,
+} from '@einsatzzeichen/schema';
+import { BASE_SYMBOLS } from '@einsatzzeichen/core';
+import { COVERAGE_MANIFEST } from './coverage-manifest.js';
+import { resolveElement, type ElementDescriptor } from './elements.js';
+import { referenceInventoryAssets, referenceLacksComparableShape } from './fingerprint-index.js';
+import { PROFILES } from './profiles.js';
+import {
+  INVENTORY_EXCLUSIONS,
+  claimedReferenceAssets,
+  inventoryOf,
+  type InventoryExclusion,
+} from './reference-inventory.js';
+import { SOURCE_REGISTRY, isRegisteredSource } from './sources.js';
+
+/**
+ * Katalogeinträge, die nicht genau eine `primary`-Darstellung haben. `CatalogEntry.depictions`
+ * ist `readonly Depiction[]` — der Typ erzwingt die im Schema-Kommentar dokumentierte Invariante
+ * ("Mindestens eine Darstellung; `primary` genau einmal") nicht. Leeres Array, zwei `primary`,
+ * kein `primary` sind alle typkorrekt; die Prüfung sitzt deshalb hier, am Coverage-Gate.
+ */
+export function findPrimaryViolations(entries: readonly CatalogEntry[]): string[] {
+  const violations: string[] = [];
+  for (const entry of entries) {
+    const primaryCount = entry.depictions.filter((d) => d.variant === 'primary').length;
+    if (primaryCount !== 1) violations.push(entry.id);
+  }
+  return violations;
+}
+
+/**
+ * Eine Verletzung einer der zehn in Slice 2 hinzugekommenen Prüfungen. Eine gemeinsame Liste
+ * statt zehn einzelner Arrays: das CLI gibt sie einheitlich aus, und eine elfte Prüfung kostet
+ * keine Änderung an der Rückgabeform.
+ */
+export interface CoverageViolation {
+  /** Kurzname der Prüfung, z. B. 'baseline-prefix'. */
+  check: string;
+  /** Manifestschlüssel, Katalog-ID oder Registerschlüssel — je nachdem, was geprüft wurde. */
+  key: string;
+  detail: string;
+}
+
+/**
+ * Das Präfix jedes `sourceId` muss die Baseline sein — nicht irgendeine registrierte Quelle.
+ * Das Präfix bezeichnet die Abschnittsnummerierung, und nur im Hauptdokument ist definiert,
+ * dass `5.4.3` „Gruppe" bedeutet.
+ */
+export function checkBaselinePrefix(
+  entries: readonly CoverageEntry[],
+  baseline: SourceId,
+): CoverageViolation[] {
+  const violations: CoverageViolation[] = [];
+  for (const entry of entries) {
+    const separator = entry.sourceId.indexOf(':');
+    const prefix = separator === -1 ? '' : entry.sourceId.slice(0, separator);
+    if (prefix !== baseline) {
+      violations.push({
+        check: 'baseline-prefix',
+        key: entryKey(entry.sourceId, entry.variant),
+        detail: `Präfix "${prefix}" statt der Baseline "${baseline}".`,
+      });
+    }
+  }
+  return violations;
+}
+
+/**
+ * Jede `primary`-Darstellung eines Katalogeintrags muss mindestens einen Quellenbezug auf eine
+ * registrierte Quelle tragen. Das ist die zweite Hälfte der Provenienz: das Manifest-Präfix
+ * nennt die Abschnittsnummerierung, dieser Bezug nennt, woraus die Kennzahlen abgeleitet sind.
+ */
+export function checkCatalogSourceRefs(entries: readonly CatalogEntry[]): CoverageViolation[] {
+  const violations: CoverageViolation[] = [];
+  for (const entry of entries) {
+    const primary = entry.depictions.find((d) => d.variant === 'primary');
+    const registered = primary?.sourceRefs.some((ref) => isRegisteredSource(ref.source)) ?? false;
+    if (!registered) {
+      violations.push({
+        check: 'unregistered-source',
+        key: entry.id,
+        detail: 'Die primary-Darstellung nennt keine registrierte Quelle.',
+      });
+    }
+  }
+  return violations;
+}
+
+/**
+ * Für Zeilen mit `coverage: 'catalog-entry'` ist der Manifestwert `profile` aus dem
+ * Katalogeintrag abgeleitet — hier wird die Gleichheit geprüft. Für Rezepte und Elemente ist der
+ * Manifestwert die einzige Angabe; dort gibt es nichts zu vergleichen.
+ */
+export function checkProfileAgreement(
+  entries: readonly CoverageEntry[],
+  catalog: readonly CatalogEntry[],
+): CoverageViolation[] {
+  const byId = new Map(catalog.map((entry) => [entry.id, entry]));
+  const violations: CoverageViolation[] = [];
+  for (const entry of entries) {
+    if (entry.coverage !== 'catalog-entry') continue;
+    const target = byId.get(entry.implementation);
+    if (target === undefined) {
+      violations.push({
+        check: 'profile-mismatch',
+        key: entryKey(entry.sourceId, entry.variant),
+        detail: `Kein Katalogeintrag "${entry.implementation}" — das Profil ist nicht ableitbar.`,
+      });
+      continue;
+    }
+    if (target.profile !== entry.profile) {
+      violations.push({
+        check: 'profile-mismatch',
+        key: entryKey(entry.sourceId, entry.variant),
+        detail: `Manifest nennt "${entry.profile}", der Katalogeintrag "${target.profile}".`,
+      });
+    }
+  }
+  return violations;
+}
+
+/**
+ * Kein abgeschlossenes Review ohne Reviewer und gültiges ISO-Datum; eine Abweichung braucht
+ * zusätzlich eine Begründung. Ein formell unvollständiger Status ist wertlos.
+ *
+ * Generisch über allem, was ein `ReviewSet` trägt — das sind genau die drei Träger
+ * `CoverageEntry`, `SourceRecord` und `ProfileRecord`. Auf `CoverageEntry` verengt hätte die
+ * Prüfung nur einen der drei gedeckt, obwohl die Zusage für alle drei gilt; `key` liefert je
+ * Träger seine eigene Bezeichnung, weil ein Manifestschlüssel für eine Quelle nicht existiert.
+ */
+export function checkReviewAttribution<T extends { review: ReviewSet }>(
+  items: readonly T[],
+  key: (item: T) => string,
+): CoverageViolation[] {
+  const violations: CoverageViolation[] = [];
+  for (const item of items) {
+    for (const issue of reviewIssues(item.review)) {
+      const details: Record<ReviewIssueCode, string> = {
+        'missing-reviewer': `Rolle "${issue.role}": abgeschlossenes Review ohne Reviewer.`,
+        'invalid-date':
+          `Rolle "${issue.role}": abgeschlossenes Review ohne gültiges ISO-Datum YYYY-MM-DD.`,
+        'missing-domain-note':
+          `Rolle "${issue.role}": fachliche Freigabe ohne Befundnotiz oder Protokollverweis.`,
+        'missing-deviation-note':
+          `Rolle "${issue.role}": Abweichung ohne begründende Notiz.`,
+      };
+      violations.push({
+        check: 'review-attribution',
+        key: key(item),
+        detail: details[issue.code],
+      });
+    }
+  }
+  return violations;
+}
+
+/** Nur ein zurechenbares abgeschlossenes Review ist nicht mehr offen. */
+function hasCompletedDomainReview(review: ReviewSet): boolean {
+  return (
+    review.domain.status !== 'pending' &&
+    !reviewIssues(review).some((issue) => issue.role === 'domain')
+  );
+}
+
+function hasDomainDeviation(review: ReviewSet): boolean {
+  return review.domain.status === 'deviation' && hasCompletedDomainReview(review);
+}
+
+/** Nur Ausgabe, kein Fehler: wäre sie einer, wäre CI ab dem ersten Tag dauerhaft rot. */
+export function countOpenDomainReviews<T extends { review: ReviewSet }>(items: readonly T[]): number {
+  return items.filter((item) => !hasCompletedDomainReview(item.review)).length;
+}
+
+/**
+ * `resolveElement` wirft bei unbekannter ID — für das Gate ist eine unbekannte ID aber ein
+ * Befund und kein Abbruch. Dieser Wrapper übersetzt das eine ins andere, ohne dass
+ * `resolveElement` seine Wurf-Semantik aufgeben muss.
+ */
+function tryResolveElement(id: string): ElementDescriptor | undefined {
+  try {
+    return resolveElement(id);
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Abschnittsnummer eines Manifest-Eintrags, also der Teil hinter dem Baseline-Präfix. Wird von
+ * `checkElementEntries` und von `blockersOf` verwendet.
+ *
+ * Öffentlich seit dem Fachreview-Werkzeug (`packages/review`): dessen Datenschicht braucht die
+ * Abschnittsnummer **jeder** Zeile — für die Bereichseinteilung und für die Nachbarschaft
+ * desselben Abschnittspräfixes. `releaseBlockers().domainReviewOpenByArea` zählt nur die offenen
+ * Zeilen und reicht dafür nicht. Wiederverwendung statt einer zweiten, still auseinanderlaufenden
+ * Abschnittslogik im Werkzeug.
+ */
+export function sectionOf(sourceId: string): string {
+  const separator = sourceId.indexOf(':');
+  return separator === -1 ? sourceId : sourceId.slice(separator + 1);
+}
+
+/**
+ * Jeder Eintrag mit `coverage: 'element'` muss über `resolveElement` auflösbar sein, und seine
+ * genannte Referenzdatei muss in den Belegstellen des Deskriptors vorkommen — damit kann ein
+ * Eintrag keine Datei nennen, die das Element nicht belegt.
+ *
+ * Dazu muss die Abschnittsnummer im `sourceId` zu dem Element passen, das der Eintrag
+ * beansprucht. Ohne diese Prüfung ließe sich `'organization.polizei'` von `2.5` auf `9.9` setzen,
+ * und das Gate bliebe grün, während das Manifest behauptet, Abschnitt 9.9 der Baseline
+ * dokumentiere die Polizeifarbe. Die namensgebende Belegdatei ist bauartbedingt die
+ * Abschnittsnummer plus `_` — das gilt für alle dreizehn Elemente und ist der prüfbare Anker.
+ * Damit fängt die Prüfung zugleich ein Auseinanderlaufen von `ELEMENTS` und `ELEMENT_SECTIONS`.
+ */
+export function checkElementEntries(entries: readonly CoverageEntry[]): CoverageViolation[] {
+  const violations: CoverageViolation[] = [];
+  for (const entry of entries) {
+    if (entry.coverage !== 'element') continue;
+    const key = entryKey(entry.sourceId, entry.variant);
+    const descriptor = tryResolveElement(entry.implementation);
+    if (descriptor === undefined) {
+      violations.push({
+        check: 'unknown-element',
+        key,
+        detail: `Element "${entry.implementation}" ist im Katalog nicht auflösbar.`,
+      });
+      continue;
+    }
+    if (!descriptor.referenceAssets.includes(entry.referenceAsset)) {
+      violations.push({
+        check: 'asset-not-in-element',
+        key,
+        detail: `"${entry.referenceAsset}" belegt "${entry.implementation}" nicht.`,
+      });
+    }
+    const section = sectionOf(entry.sourceId);
+    const namesake = descriptor.referenceAssets[0] ?? '';
+    if (!namesake.startsWith(`${section}_`)) {
+      violations.push({
+        check: 'section-mismatch',
+        key,
+        detail: `Abschnitt "${section}" passt nicht zur namensgebenden Belegdatei "${namesake}".`,
+      });
+    }
+  }
+  return violations;
+}
+
+const DRAWING_EVIDENCE = [
+  'body-fingerprint',
+  'svg-snapshot',
+] as const satisfies readonly TestEvidenceKind[];
+/**
+ * Für Zeichnungen, deren Kennwertartefakt keine vergleichbare Form führt. Die Unterscheidung wird
+ * **am Artefakt** getroffen und nicht an einer gepflegten Liste: `shapes: []` ist eine Eigenschaft
+ * des Generats, und ein späterer Extraktorausbau löst die Ausnahme dann von selbst auf, statt eine
+ * Liste zurückzulassen, die niemand mehr prüft.
+ */
+const UNGATED_DRAWING_EVIDENCE = [
+  'body-geometry-regression',
+  'svg-snapshot',
+] as const satisfies readonly TestEvidenceKind[];
+const PICTOGRAM_EVIDENCE = [
+  'svg-snapshot',
+  'pictogram-contract',
+] as const satisfies readonly TestEvidenceKind[];
+
+/**
+ * Pflichtnachweise nach der Form der Implementierung. Ein universelles Fingerprint-plus-Snapshot-
+ * Kriterium wäre für Elemente falsch: Farben und Kopfzonen besitzen keinen eigenen SVG-Output,
+ * Piktogramme keinen `body`, den `matchFingerprint` vergleichen könnte.
+ */
+export function requiredTestEvidence(entry: CoverageEntry): readonly TestEvidenceKind[] {
+  if (entry.coverage === 'catalog-entry' || entry.coverage === 'composition-recipe') {
+    return referenceLacksComparableShape(entry.referenceAsset)
+      ? UNGATED_DRAWING_EVIDENCE
+      : DRAWING_EVIDENCE;
+  }
+
+  const descriptor = tryResolveElement(entry.implementation);
+  if (descriptor === undefined) return [];
+  switch (descriptor.kind) {
+    case 'organization':
+      return ['reference-fill'];
+    case 'strength':
+      return ['head-shape-regression'];
+    case 'vehicle-category':
+      return ['chassis-shape-regression'];
+    case 'capability':
+    case 'state':
+    case 'comms':
+    case 'damage':
+    case 'wildfire':
+    case 'leadership':
+    case 'water-rescue-personnel':
+      return PICTOGRAM_EVIDENCE;
+    default: {
+      const exhaustive: never = descriptor.kind;
+      throw new Error(`Keine Testevidenz-Policy für Elementart "${String(exhaustive)}".`);
+    }
+  }
+}
+
+/** Fehlende Pflichtnachweise einer Manifestzeile; zusätzliche Claims zählen nicht als Ersatz. */
+export function missingTestEvidence(entry: CoverageEntry): TestEvidenceKind[] {
+  const claimed = new Set(entry.testEvidence);
+  return requiredTestEvidence(entry).filter((kind) => !claimed.has(kind));
+}
+
+/**
+ * Hält Evidenzclaims exakt an ihrer Policy. Fehlende, zusätzliche und doppelte Arten sind eigene
+ * Befunde; die Set-Gleichheit zu den ausgeführten Testfällen sitzt in den jeweiligen Testsuiten.
+ */
+export function checkTestEvidence(entries: readonly CoverageEntry[]): CoverageViolation[] {
+  const violations: CoverageViolation[] = [];
+  for (const entry of entries) {
+    const key = entryKey(entry.sourceId, entry.variant);
+    const required = requiredTestEvidence(entry);
+    const requiredSet = new Set<TestEvidenceKind>(required);
+    const claimedSet = new Set<TestEvidenceKind>();
+
+    for (const kind of entry.testEvidence) {
+      if (claimedSet.has(kind)) {
+        violations.push({
+          check: 'duplicate-test-evidence',
+          key,
+          detail: `Nachweisart "${kind}" ist doppelt eingetragen.`,
+        });
+      }
+      claimedSet.add(kind);
+      if (!requiredSet.has(kind)) {
+        violations.push({
+          check: 'unexpected-test-evidence',
+          key,
+          detail: `Nachweisart "${kind}" ist für diese Implementierungsart nicht vorgesehen.`,
+        });
+      }
+    }
+
+    for (const kind of required) {
+      if (!claimedSet.has(kind)) {
+        violations.push({
+          check: 'missing-test-evidence',
+          key,
+          detail: `Pflichtnachweis "${kind}" fehlt.`,
+        });
+      }
+    }
+  }
+  return violations;
+}
+
+/**
+ * Jeder Eintrag trägt ein im Profilregister existierendes Profil. Der Typ `ProfileId` deckt das
+ * für sauber getippte Daten ab; diese Prüfung fängt Einträge, die über eine Typzusicherung oder
+ * aus einer künftigen externen Quelle ins Manifest gelangen.
+ */
+export function checkProfileRegistry(
+  entries: readonly CoverageEntry[],
+  profiles: readonly ProfileRecord[],
+): CoverageViolation[] {
+  const known = new Set<string>(profiles.map((record) => record.id));
+  const violations: CoverageViolation[] = [];
+  for (const entry of entries) {
+    if (!known.has(entry.profile)) {
+      violations.push({
+        check: 'unknown-profile',
+        key: entryKey(entry.sourceId, entry.variant),
+        detail: `Profil "${entry.profile}" ist nicht registriert.`,
+      });
+    }
+  }
+  return violations;
+}
+
+/**
+ * Jede Datenversion hat die Form `major.minor.patch`, und `verifiedAgainstCore` jedes Profils
+ * nennt eine bekannte Kernversion. Für den Kern selbst gilt
+ * `verifiedAgainstCore === version === coreVersion`; die Menge der bekannten Kernversionen ist
+ * heute einelementig und wächst, sobald eine Versionshistorie geführt wird.
+ */
+export function checkVersions(
+  coreVersion: string,
+  profiles: readonly ProfileRecord[],
+): CoverageViolation[] {
+  const violations: CoverageViolation[] = [];
+  if (!isDataVersion(coreVersion)) {
+    violations.push({
+      check: 'version-format',
+      key: 'coreVersion',
+      detail: `"${coreVersion}" hat nicht die Form major.minor.patch.`,
+    });
+  }
+
+  const knownCoreVersions = new Set([coreVersion]);
+
+  for (const record of profiles) {
+    if (!isDataVersion(record.version)) {
+      violations.push({
+        check: 'version-format',
+        key: `profile:${record.id}`,
+        detail: `version "${record.version}" hat nicht die Form major.minor.patch.`,
+      });
+    }
+    if (!isDataVersion(record.verifiedAgainstCore)) {
+      violations.push({
+        check: 'version-format',
+        key: `profile:${record.id}`,
+        detail: `verifiedAgainstCore "${record.verifiedAgainstCore}" hat nicht die Form major.minor.patch.`,
+      });
+    } else if (!knownCoreVersions.has(record.verifiedAgainstCore)) {
+      violations.push({
+        check: 'unknown-core-version',
+        key: `profile:${record.id}`,
+        detail: `verifiedAgainstCore "${record.verifiedAgainstCore}" ist keine bekannte Kernversion.`,
+      });
+    }
+  }
+  return violations;
+}
+
+/**
+ * Vollständigkeit gegen das Referenzinventar. Bis LFH-414 maß kein Gate, ob jede der 661 Dateien
+ * des Referenzbestands irgendwo beansprucht ist: `uncoveredScope` prüft je Kapitelpräfix nur, ob
+ * **eine** Zeile damit beginnt, und ein Abschnitt mit null Zeilen (J.2.3) war strukturell
+ * unsichtbar. Die deklarierte Liste, die dafür fehlte, gibt es faktisch — das Kennwertartefakt
+ * `fingerprints.json` führt jede Datei genau einmal.
+ *
+ * Fünf Befunde, jeder in beide Richtungen fail-closed:
+ * - `unaccounted-reference`: Datei im Umfang, weder beansprucht noch ausgeschlossen — der
+ *   „fünfte Posten", den D.2 und D.3 an diese Aufgabe verwiesen hatten und der ohne Gate wieder
+ *   entstünde.
+ * - `stale-exclusion`: Ausschluss für eine Datei, die es nicht gibt oder die inzwischen
+ *   beansprucht ist — damit ein Ausschluss nicht länger lebt als sein Grund.
+ * - `ambiguous-disposition`, `exclusion-without-reason`, `exclusion-without-decision`: Form der
+ *   Ausschlussliste. Ein Ausschluss ohne Notiz wäre ein stilles Vergessen mit anderem Namen.
+ * - `claimed-asset-not-in-inventory`: Beanspruchung einer Datei, die das Artefakt nicht kennt —
+ *   entweder ein Tippfehler oder ein nicht nachgezogenes `pnpm cli audit:reference`.
+ * - `section-without-entry`: Abschnitt im Umfang mit nicht ausgeschlossenen Dateien, aber ohne
+ *   Manifestzeile — genau die Lücke, die `uncoveredScope` nicht sieht.
+ */
+export function checkReferenceInventory(
+  inventory: readonly string[],
+  claimedAssets: readonly string[] | ReadonlySet<string>,
+  exclusions: readonly InventoryExclusion[],
+  scope: readonly string[],
+  manifestSections: readonly string[],
+): CoverageViolation[] {
+  const violations: CoverageViolation[] = [];
+  const inventorySet = new Set(inventory);
+  const claimedList = claimedAssets instanceof Set ? [...claimedAssets] : [...claimedAssets];
+
+  const seen = new Set<string>();
+  for (const exclusion of exclusions) {
+    if (seen.has(exclusion.asset)) {
+      violations.push({
+        check: 'ambiguous-disposition',
+        key: exclusion.asset,
+        detail: 'Die Datei steht mehrfach in INVENTORY_EXCLUSIONS; ihre Disposition ist mehrdeutig.',
+      });
+    }
+    seen.add(exclusion.asset);
+    if (exclusion.reason.trim() === '') {
+      violations.push({
+        check: 'exclusion-without-reason',
+        key: exclusion.asset,
+        detail: 'Der Ausschluss trägt keine fachliche Begründung.',
+      });
+    }
+    if (!/^docs\/decisions\/[0-9a-z-]+\.md$/.test(exclusion.decidedIn)) {
+      violations.push({
+        check: 'exclusion-without-decision',
+        key: exclusion.asset,
+        detail: `"${exclusion.decidedIn}" ist kein Pfad einer Entscheidungsnotiz unter docs/decisions/.`,
+      });
+    }
+  }
+
+  for (const asset of claimedList) {
+    if (!inventorySet.has(asset)) {
+      violations.push({
+        check: 'claimed-asset-not-in-inventory',
+        key: asset,
+        detail: 'Die beanspruchte Datei fehlt im Kennwertartefakt (fingerprints.json).',
+      });
+    }
+  }
+
+  const result = inventoryOf(inventory, claimedList, exclusions, scope, manifestSections);
+  for (const asset of result.staleExclusions) {
+    violations.push({
+      check: 'stale-exclusion',
+      key: asset,
+      detail: inventorySet.has(asset)
+        ? 'Die Datei ist inzwischen beansprucht; der Ausschluss ist hinfällig.'
+        : 'Die Datei existiert nicht im Referenzinventar.',
+    });
+  }
+  for (const asset of result.unaccounted) {
+    violations.push({
+      check: 'unaccounted-reference',
+      key: asset,
+      detail:
+        'Die Datei liegt im beanspruchten Umfang, ist aber weder beansprucht noch in ' +
+        'INVENTORY_EXCLUSIONS begründet ausgeschlossen.',
+    });
+  }
+  for (const section of result.sectionsWithoutEntry) {
+    violations.push({
+      check: 'section-without-entry',
+      key: section,
+      detail: 'Der Abschnitt hat nicht ausgeschlossene Referenzdateien, aber keine Manifestzeile.',
+    });
+  }
+  return violations;
+}
+
+/**
+ * Das CI-Gate. Die vier Prüfungen aus Slice 1 (Referenzdatei vorhanden, eindeutige Schlüssel,
+ * genau eine `primary`-Darstellung) bleiben in ihren eigenen Feldern; die in Slice 2
+ * hinzugekommenen Prüfungen sammeln sich in `violations`.
+ */
+export function checkCoverage(): {
+  missing: string[];
+  duplicates: string[];
+  invalidPrimary: string[];
+  violations: CoverageViolation[];
+  openDomainReviews: number;
+} {
+  const seen = new Set<string>();
+  const duplicates: string[] = [];
+  const missing: string[] = [];
+
+  for (const entry of COVERAGE_MANIFEST.entries) {
+    const key = entryKey(entry.sourceId, entry.variant);
+    if (seen.has(key)) duplicates.push(key);
+    seen.add(key);
+    if (entry.referenceAsset === '' || entry.implementation === '') missing.push(key);
+  }
+
+  const catalog = Object.values(BASE_SYMBOLS);
+  const invalidPrimary = findPrimaryViolations(catalog);
+
+  const violations = [
+    ...checkBaselinePrefix(COVERAGE_MANIFEST.entries, COVERAGE_MANIFEST.baseline),
+    ...checkCatalogSourceRefs(catalog),
+    ...checkProfileAgreement(COVERAGE_MANIFEST.entries, catalog),
+    ...checkReviewAttribution(COVERAGE_MANIFEST.entries, (e) => entryKey(e.sourceId, e.variant)),
+    ...checkReviewAttribution(Object.values(SOURCE_REGISTRY), (s) => `source:${s.id}`),
+    ...checkReviewAttribution(Object.values(PROFILES), (p) => `profile:${p.id}`),
+    ...checkElementEntries(COVERAGE_MANIFEST.entries),
+    ...checkTestEvidence(COVERAGE_MANIFEST.entries),
+    ...checkProfileRegistry(COVERAGE_MANIFEST.entries, Object.values(PROFILES)),
+    ...checkVersions(COVERAGE_MANIFEST.coreVersion, Object.values(PROFILES)),
+    ...checkReferenceInventory(
+      referenceInventoryAssets(),
+      claimedReferenceAssets(),
+      INVENTORY_EXCLUSIONS,
+      COVERAGE_MANIFEST.scope,
+      COVERAGE_MANIFEST.entries.map((entry) => sectionOf(entry.sourceId)),
+    ),
+  ];
+
+  return {
+    missing,
+    duplicates,
+    invalidPrimary,
+    violations,
+    openDomainReviews:
+      countOpenDomainReviews(COVERAGE_MANIFEST.entries) +
+      countOpenDomainReviews(Object.values(SOURCE_REGISTRY)) +
+      countOpenDomainReviews(Object.values(PROFILES)),
+  };
+}
+
+export interface ReleaseBlockers {
+  /** Manifestschlüssel der noch offenen oder formal unvollständigen Domain-Reviews. */
+  domainReviewOpen: string[];
+  /**
+   * Dieselben Einträge, gezählt je Kapitel und Anhang. Nach dem vollen Katalogausbau tragen
+   * mehrere hundert Einträge `domain: pending` und dominieren `domainReviewOpen` vollständig.
+   * Die Liste bleibt trotzdem ungekürzt — das fachliche Review ist der Engpass zu 1.0, und das
+   * darzustellen ist ihr Zweck. Diese Zählung macht daneben sichtbar, welcher Bereich geprüft
+   * ist und welcher nicht.
+   *
+   * Trägt keine Reihenfolge: ECMAScript zählt Objektschlüssel, die kanonische Ganzzahl-Strings
+   * sind (`'4'`, `'12'`, …), immer aufsteigend numerisch vor allen anderen Schlüsseln auf —
+   * unabhängig von der Einfügereihenfolge. Da Bereiche wie `'1'` bis `'14'` genau solche
+   * Schlüssel sind, kann kein `Record` die gewünschte Sortierung tragen. Wer sie braucht, ruft
+   * `sortedDomainReviewOpenByArea` auf.
+   */
+  domainReviewOpenByArea: Record<string, number>;
+  /** Formal zurechenbar geprüfte Manifestabweichungen, die ohne `approved` 1.0 blockieren. */
+  domainReviewDeviations: string[];
+  /** Quellen-IDs mit noch offenem oder formal unvollständigem Domain-Review. */
+  sourceDomainReviewOpen: string[];
+  /** Formal zurechenbar geprüfte Quellenabweichungen, die ohne `approved` 1.0 blockieren. */
+  sourceDomainReviewDeviations: string[];
+  /** Profil-IDs mit noch offenem oder formal unvollständigem Domain-Review. */
+  profileDomainReviewOpen: string[];
+  /** Formal zurechenbar geprüfte Profilabweichungen, die ohne `approved` 1.0 blockieren. */
+  profileDomainReviewDeviations: string[];
+  /** Manifestschlüssel der Einträge, denen mindestens eine arteigene Pflichtnachweisart fehlt. */
+  withoutTestEvidence: string[];
+  /** Kapitel im Scope, die kein einziger Eintrag trägt. */
+  uncoveredScope: string[];
+}
+
+/**
+ * Bereich einer Abschnittsnummer: der Teil vor dem ersten Punkt. `'4.3.2'` → `'4'`,
+ * `'C.1.1'` → `'C'`, `'1'` → `'1'`. Grob genug, dass die Zählung nach dem vollen Ausbau lesbar
+ * bleibt, und fein genug, dass Kapitel 4 und Anhang C nicht in einen Topf fallen.
+ *
+ * Öffentlich aus demselben Grund wie `sectionOf`: das Fachreview-Werkzeug (`packages/review`)
+ * gliedert alle 544 Manifestzeilen nach Bereich, nicht nur die offenen. Es gibt damit weiterhin
+ * genau eine Bereichslogik — die hier.
+ */
+export function areaOf(section: string): string {
+  const dot = section.indexOf('.');
+  return dot === -1 ? section : section.slice(0, dot);
+}
+
+/**
+ * `domainReviewOpenByArea` als Paare, absteigend nach Anzahl und bei Gleichstand alphabetisch
+ * sortiert — die Reihenfolge, die der `Record` selbst nicht tragen kann (siehe dessen
+ * Dokumentation). Einzige Stelle, die diese Sortierung herstellt, damit CLI und Tests dieselbe
+ * Reihenfolge sehen.
+ */
+export function sortedDomainReviewOpenByArea(
+  byArea: Record<string, number>,
+): Array<[area: string, count: number]> {
+  return Object.entries(byArea).sort(([areaA, countA], [areaB, countB]) =>
+    countB - countA !== 0 ? countB - countA : areaA.localeCompare(areaB),
+  );
+}
+
+/**
+ * Der parametrisierte Kern von `releaseBlockers`, im Muster der Gate-Prüfungen oben: Eingaben
+ * als Parameter statt als Modul-Singleton, damit Randfälle — die Punkt-Abgrenzung bei
+ * Kapitelpräfixen, ein `sourceId` ohne Trenner und fehlende einzelne Pflichtnachweisarten — sich
+ * mit Fixtures nachstellen lassen, ohne das echte Manifest zu verändern.
+ */
+export function blockersOf(
+  entries: readonly CoverageEntry[],
+  scope: readonly string[],
+  sources: readonly SourceRecord[] = [],
+  profiles: readonly ProfileRecord[] = [],
+): ReleaseBlockers {
+  const domainReviewOpen: string[] = [];
+  const domainReviewDeviations: string[] = [];
+  const withoutTestEvidence: string[] = [];
+  const pendingByArea = new Map<string, number>();
+
+  for (const entry of entries) {
+    const key = entryKey(entry.sourceId, entry.variant);
+    if (!hasCompletedDomainReview(entry.review)) {
+      domainReviewOpen.push(key);
+      const area = areaOf(sectionOf(entry.sourceId));
+      pendingByArea.set(area, (pendingByArea.get(area) ?? 0) + 1);
+    } else if (hasDomainDeviation(entry.review)) {
+      domainReviewDeviations.push(key);
+    }
+    if (missingTestEvidence(entry).length > 0) withoutTestEvidence.push(key);
+  }
+
+  const sections = entries.map((entry) => sectionOf(entry.sourceId));
+  const uncoveredScope = scope.filter(
+    (chapter) =>
+      !sections.some((section) => section === chapter || section.startsWith(`${chapter}.`)),
+  );
+
+  // Keine Sortierung hier: der `Record` kann sie ohnehin nicht tragen (siehe Dokumentation des
+  // Felds). Wer eine Reihenfolge braucht, ruft `sortedDomainReviewOpenByArea` auf.
+  const domainReviewOpenByArea = Object.fromEntries(pendingByArea);
+  const sourceDomainReviewOpen = sources
+    .filter((source) => !hasCompletedDomainReview(source.review))
+    .map((source) => source.id);
+  const sourceDomainReviewDeviations = sources
+    .filter((source) => hasDomainDeviation(source.review))
+    .map((source) => source.id);
+  const profileDomainReviewOpen = profiles
+    .filter((profile) => !hasCompletedDomainReview(profile.review))
+    .map((profile) => profile.id);
+  const profileDomainReviewDeviations = profiles
+    .filter((profile) => hasDomainDeviation(profile.review))
+    .map((profile) => profile.id);
+
+  return {
+    domainReviewOpen,
+    domainReviewOpenByArea,
+    domainReviewDeviations,
+    sourceDomainReviewOpen,
+    sourceDomainReviewDeviations,
+    profileDomainReviewOpen,
+    profileDomainReviewDeviations,
+    withoutTestEvidence,
+    uncoveredScope,
+  };
+}
+
+/**
+ * Was Release 1.0 nach den Vision-Kriterien noch blockiert. Läuft als Test, nicht als CI-Abbruch:
+ * die Ausgabe ist stabil und prüfbar, aber ein offener Punkt lässt die Pipeline nicht scheitern.
+ *
+ * Ein ungeklärter Lizenzstatus ist ausdrücklich **kein** Blocker. Wäre er einer, wäre
+ * `babz-svg-2025` ein dauerhafter Blocker — und die Architektur beantwortet die unklare Lage
+ * bereits: abgeleitete Kennzahlen statt Dateien, eigenständige Geometrie statt übernommener Pfade.
+ *
+ * Die Vollständigkeit gegenüber der Baseline wird hier bewusst **nicht** als Blocker geführt:
+ * `uncoveredScope` meldet Lücken innerhalb des beanspruchten Umfangs (`COVERAGE_MANIFEST.scope`),
+ * nicht Lücken des Umfangs gegenüber dem Gesamtdokument. Diese zweite Messung sitzt seit LFH-414
+ * in `checkReferenceInventory` und `referenceInventory()` — gegen das Kennwertartefakt als
+ * Inventar, nicht gegen eine Kapitelliste: jede Datei ist beansprucht, begründet ausgeschlossen
+ * oder außerhalb des Umfangs, und die Zahl „außerhalb" ist der gemessene Rest zur Baseline.
+ */
+export function releaseBlockers(): ReleaseBlockers {
+  return blockersOf(
+    COVERAGE_MANIFEST.entries,
+    COVERAGE_MANIFEST.scope,
+    Object.values(SOURCE_REGISTRY),
+    Object.values(PROFILES),
+  );
+}

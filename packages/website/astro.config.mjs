@@ -3,14 +3,14 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import react from '@astrojs/react';
 
-const PACKAGE_IDS = ['schema', 'core', 'catalog', 'react', 'web-component', 'maplibre', 'qgis'];
+const PACKAGE_IDS = ['schema', 'core', 'conformance', 'react', 'web-component', 'maplibre', 'qgis'];
 
 const pkg = (name) => fileURLToPath(new URL(`../${name}/src/index.ts`, import.meta.url));
 const pkgSrc = (name) => fileURLToPath(new URL(`../${name}/src/`, import.meta.url));
 
 /**
  * Aliase in Listenform statt als Objekt: Vite/Rollup vergleicht Objektschlüssel als Präfix, damit
- * würde `@einsatzzeichen/catalog/src/recipes.js` zu `../catalog/src/index.ts/src/recipes.js`
+ * würde `@einsatzzeichen/conformance/src/recipes.js` zu `../conformance/src/index.ts/src/recipes.js`
  * verstümmelt (belegt im Setup-Spike, Spec §5.3). Die erste Regel bedient Subpfade auf die
  * Paketquellen, die zweite den Paketindex — exakt, nicht als Präfix.
  */
@@ -51,6 +51,9 @@ export default defineConfig({
     '/explorer': '/docs/explorer',
     '/belege': '/docs/belege',
     '/sources-und-diffs': '/docs/sources-und-diffs',
+    // Bis 1.5 hieß das Prüfpaket `catalog` (LFH-571); gemerkte Links auf die alte Paketseite.
+    '/pakete/catalog': '/docs/pakete/conformance',
+    '/docs/pakete/catalog': '/docs/pakete/conformance',
   },
   integrations: [
     starlight({

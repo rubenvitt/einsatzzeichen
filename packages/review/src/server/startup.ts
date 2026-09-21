@@ -3,7 +3,7 @@
  * `index.ts`, weil dieses Modul beim Import einen Server hochfährt und deshalb selbst nicht
  * prüfbar ist — hier steht alles, was ohne Server eine Aussage hat.
  */
-import { RENDER_THEMES, type RenderThemeId } from '@einsatzzeichen/catalog';
+import { RENDER_THEMES, type RenderThemeId } from '@einsatzzeichen/core';
 import type { ReviewerRecord, ThemeOption } from '../contract.js';
 import { REFERENCE_DIRECTORY } from './repository.js';
 

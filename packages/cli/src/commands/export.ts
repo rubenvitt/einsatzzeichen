@@ -1,7 +1,15 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { BASE_SYMBOLS, RECIPES, baseDrawing, composeFromCatalog } from '@einsatzzeichen/catalog';
+import { BASE_SYMBOLS, baseDrawing } from '@einsatzzeichen/core';
 import { REFERENCE_THEME, renderSvg, type RenderTheme } from '@einsatzzeichen/core';
+import { exportRecipeDrawings } from './export-recipes.js';
+
+/*
+ * Export gehört zum Produkt: Geometrie, Themes und Renderer kommen aus `@einsatzzeichen/core`.
+ * Die Rezeptliste liegt noch im Prüfpaket und ist in `export-recipes.ts` gekapselt (LFH-572,
+ * Ablösung mit LFH-580). `cli-packages.test.ts` hält fest, dass dieses Modul `conformance` nicht
+ * direkt importiert.
+ */
 
 export class InvalidExportSizeError extends Error {
   constructor(readonly value: string | number) {
@@ -35,9 +43,9 @@ export function exportSvg(
     count += 1;
   }
 
-  for (const [section, recipe] of Object.entries(RECIPES)) {
-    const svg = renderSvg(composeFromCatalog(recipe.spec, recipe.title), { size, theme });
-    writeFileSync(join(outDir, `${section}.svg`), svg, 'utf8');
+  for (const { id, drawing } of exportRecipeDrawings()) {
+    const svg = renderSvg(drawing, { size, theme });
+    writeFileSync(join(outDir, `${id}.svg`), svg, 'utf8');
     count += 1;
   }
 

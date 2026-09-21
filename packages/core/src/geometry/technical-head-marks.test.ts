@@ -1,0 +1,50 @@
+import { describe, expect, it } from 'vitest';
+import { technicalHeadMark } from './technical-head-marks.js';
+
+describe('technicalHeadMark()', () => {
+  it('liefert den vermessenen einzelnen Vertikalbalken relativ zur Kopfoberkante', () => {
+    expect(technicalHeadMark('single-vertical-bar')).toEqual({
+      heightMm: 4,
+      primitives: [{
+        type: 'rect',
+        role: 'head',
+        x: 15.25,
+        y: 0,
+        width: 1.5,
+        height: 4,
+        style: { fill: 'schwarz', stroke: 'none' },
+      }],
+    });
+  });
+
+  it('liefert die beiden Vertikalbalken von E.1.31 (Achsen x 12 und 20 mm)', () => {
+    const bar = (x: number) => ({
+      type: 'rect', role: 'head', x, y: 0, width: 1.5, height: 4,
+      style: { fill: 'schwarz', stroke: 'none' },
+    });
+    expect(technicalHeadMark('double-vertical-bar')).toEqual({
+      heightMm: 4,
+      primitives: [bar(11.25), bar(19.25)],
+    });
+  });
+
+  it('fällt bei unbekannten technischen Kopfmarken nicht zurück', () => {
+    expect(() => Reflect.apply(technicalHeadMark, undefined, ['triple-vertical-bar']))
+      .toThrow(/Unbekannte technische Kopfmarke/);
+  });
+
+  it('teilt ausschließlich tief eingefrorene Geometrie zwischen Aufrufen', () => {
+    const first = technicalHeadMark('single-vertical-bar');
+    const primitive = first.primitives[0];
+    expect(primitive).toBeDefined();
+    if (primitive === undefined) return;
+
+    expect(Object.isFrozen(first)).toBe(true);
+    expect(Object.isFrozen(first.primitives)).toBe(true);
+    expect(Object.isFrozen(primitive)).toBe(true);
+    expect(Object.isFrozen(primitive.style)).toBe(true);
+    expect(Reflect.set(primitive, 'x', 0)).toBe(false);
+
+    expect(technicalHeadMark('single-vertical-bar').primitives[0]).toMatchObject({ x: 15.25 });
+  });
+});

@@ -6,7 +6,7 @@ import {
   MANIFEST_DOMAIN_REVIEWS,
   PROFILE_DOMAIN_REVIEWS,
   SOURCE_DOMAIN_REVIEWS,
-} from '@einsatzzeichen/catalog/src/domain-reviews.js';
+} from '@einsatzzeichen/conformance/src/domain-reviews.js';
 import { insertReviewerSource, rewriteLedgerSource } from './rewrite.js';
 
 /**
@@ -39,7 +39,7 @@ export const SOURCE_DOMAIN_REVIEWS = deepFreeze({
 const PENDING_1_2 = "  'bbk-babz-2025:1.2#primary': { status: 'pending' },";
 
 const REGISTER_FILE = fileURLToPath(
-  new URL('../../../catalog/src/domain-reviewers.ts', import.meta.url),
+  new URL('../../../conformance/src/domain-reviewers.ts', import.meta.url),
 );
 
 /**
@@ -84,7 +84,7 @@ const REGISTER_FIXTURE_GEFUELLT = REGISTER_FIXTURE.replace(
 );
 
 const LEDGER_FILE = fileURLToPath(
-  new URL('../../../catalog/src/domain-reviews.ts', import.meta.url),
+  new URL('../../../conformance/src/domain-reviews.ts', import.meta.url),
 );
 
 describe('rewriteLedgerSource', () => {

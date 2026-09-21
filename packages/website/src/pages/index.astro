@@ -9,7 +9,7 @@
  * aus `review-summary.ts`. Kein Bild, keine Zahl steht hier von Hand — was von Hand stünde, wäre
  * an dem Tag falsch, an dem sich der Katalog ändert.
  */
-import { composeFromCatalog } from '@einsatzzeichen/catalog/src/recipes.js';
+import { composeFromCatalog } from '@einsatzzeichen/conformance/src/recipes.js';
 import { renderSvg } from '@einsatzzeichen/core';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 import BaseLayout from '../layouts/BaseLayout.astro';
@@ -192,7 +192,7 @@ const trustExamples = [approvedExample, deviationExample]
 // aus dem Schrittobjekt erzeugt, damit Erzählung und Beispiel nicht auseinanderlaufen können.
 const finalSpec = STEPS[STEPS.length - 1]!.spec;
 const codeSample =
-  `import { composeFromCatalog } from '@einsatzzeichen/catalog';\n` +
+  `import { composeFromCatalog } from '@einsatzzeichen/conformance';\n` +
   `import { renderSvg } from '@einsatzzeichen/core';\n\n` +
   `// ${stepTarget.title} (${stepTarget.id})\n` +
   `const drawing = composeFromCatalog(${JSON.stringify(finalSpec, null, 2)});\n` +

@@ -181,8 +181,8 @@ const CHASSIS_KINDS: readonly SymbolKind[] = ['vehicle-land', 'trailer', 'swap-l
 
 /**
  * Körperformen mit vermessenem Innenfeld (`INNER_FIELDS` in
- * `catalog/src/base-symbols.ts:1095–1111`). `core` importiert nichts aus `catalog` — die
- * Abhängigkeit läuft andersherum —, die Liste steht deshalb als Fundortangabe hier.
+ * `core/src/geometry/base-symbols.ts:1095–1111`). Das Zonenmodell importiert die Geometrie nicht;
+ * die Liste steht deshalb als Fundortangabe hier.
  */
 const INNER_FIELD_KINDS: readonly SymbolKind[] = [
   'formation',
@@ -597,7 +597,7 @@ function innerFieldZone(kind: SymbolKind, variant?: BodyVariantId): ZoneBinding 
   if (!hasField) {
     return notMeasured(
       'combination',
-      'catalog/src/base-symbols.ts:1125–1142',
+      'core/src/geometry/base-symbols.ts:1125–1142',
       `Eine weiße Innenkontur ist für "${kind}"` +
         `${variant === undefined ? '' : ` / "${variant}"`} an keiner Referenz belegt. Wie die ` +
         'Kontur an einer Raute oder einem Kreis sitzt, zeigt keine Referenz; `innerField()` ' +
@@ -612,7 +612,7 @@ function innerFieldZone(kind: SymbolKind, variant?: BodyVariantId): ZoneBinding 
         'Koordinaten der unverschobenen Grundzeichnung. Als Zonendatum liegt die Einrückung vor, ' +
         'nicht eine je Körperform eingetragene Hülle.',
       source(
-        'catalog/src/base-symbols.ts:1095–1123, core/src/compose.ts:762–767',
+        'core/src/geometry/base-symbols.ts:1095–1123, core/src/compose.ts:762–767',
         'Belegt nur für die Körper, die Anhang E damit zeichnet. Optional, weil nur Anhang E es ' +
           'braucht; fehlt der Port oder die Körperform, wirft `compose()`, statt die Kontur ' +
           'still wegzulassen.',

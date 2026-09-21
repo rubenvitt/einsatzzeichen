@@ -34,7 +34,7 @@ export default {
       'semantic-release-claude-changelog',
       {
         escaping: 'none',
-        promptTemplate: `Erstelle Release Notes für Version {{version}} des Projekts Einsatzzeichen – ein semantisches Symbolsystem für taktische Zeichen der Gefahrenabwehr (npm-Pakete unter @einsatzzeichen, u.a. core, catalog, react, web-component, maplibre, qgis, cli).
+        promptTemplate: `Erstelle Release Notes für Version {{version}} des Projekts Einsatzzeichen – ein semantisches Symbolsystem für taktische Zeichen der Gefahrenabwehr (npm-Pakete unter @einsatzzeichen, u.a. core, conformance, react, web-component, maplibre, qgis, cli).
 
 Hier sind die Commits dieses Releases:
 

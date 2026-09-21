@@ -9,7 +9,7 @@ import { babz, block, measured, notMeasured } from './helpers.js';
  * `VARIANT_BODIES` für `baseDrawing()`, `ORGANIZATION_COLORS` für `organizationColor()` und den
  * `case`-Zweig von `vehicleChassis()`. Der Bereich beginnt beim Kommentar direkt über dem Eintrag,
  * wenn es einen gibt, sonst beim Schlüssel, und endet mit dem Eintrag. Genau das prüft
- * `catalog/src/block-register/base.test.ts` am Quelltext; verschiebt sich eine Zeile, bricht er.
+ * `core/src/blocks/base.test.ts` am Quelltext; verschiebt sich eine Zeile, bricht er.
  *
  * `sourceRefs` stehen nur dort, wo der Fundort selbst einen Abschnitt nennt. Bei den Grundzeichen
  * aus Kapitel 1 zählt dazu die Quellenangabe in `SECTIONS` desselben Moduls, weil `entry()` die
@@ -23,7 +23,7 @@ import { babz, block, measured, notMeasured } from './helpers.js';
  * Verwaltungsstufe tut.
  */
 
-const BASE = 'catalog/src/base-symbols.ts';
+const BASE = 'core/src/geometry/base-symbols.ts';
 
 /** Die Quellenangabe, mit der `entry()` ein Kapitel-1-Grundzeichen ausgibt (`SECTIONS`). */
 function sections(line: number, asset: string): string {
@@ -362,7 +362,7 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
   ),
 ]);
 
-const ORGANIZATIONS = 'catalog/src/organizations.ts';
+const ORGANIZATIONS = 'core/src/geometry/organizations.ts';
 
 /** Die Herkunftsaussage am Kopf von `ORGANIZATION_COLORS` (organizations.ts:3–24). */
 const CHAPTER_TWO =
@@ -423,7 +423,7 @@ export const COLOR_BLOCKS: readonly BlockEntry[] = Object.freeze([
   ),
 ]);
 
-const CHASSIS = 'catalog/src/vehicle-categories.ts';
+const CHASSIS = 'core/src/geometry/vehicle-categories.ts';
 
 /**
  * Die Fahrwerkszone je Fahrzeugkategorie. Vermessen sind genau die Kategorien aus

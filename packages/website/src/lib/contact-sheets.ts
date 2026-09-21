@@ -17,7 +17,7 @@ import { dirname, join, resolve } from 'node:path';
  * bei zusammen 15 MB ist das der Unterschied zwischen bedienbar und unbedienbar.
  */
 
-const SHEET_PATH_IN_REPOSITORY = 'packages/catalog/src/__snapshots__/multi-size';
+const SHEET_PATH_IN_REPOSITORY = 'packages/conformance/src/__snapshots__/multi-size';
 
 /**
  * Das Verzeichnis wird vom Arbeitsverzeichnis aus aufwärts gesucht, nicht aus `import.meta.url`

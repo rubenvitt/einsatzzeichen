@@ -1,6 +1,6 @@
 # @einsatzzeichen/core
 
-Kompositions- und Render-Kern: setzt Zeichen-Spezifikationen zu SVG zusammen, validiert sie und liefert Layout-Profile, Bounds und Canvas-Rendering.
+Das Produkt von Einsatzzeichen: Bausteine und Geometrie der Zeichen (Grundzeichen, Organisationsfarben, Stärken, Kopfmarken, Piktogramme, Render-Themes, Textlaufweiten), Kompositionsmotor, Regelvalidierung, Layout-Profile sowie Renderer für SVG und Canvas. Ohne Fremd- und ohne Node-Abhängigkeit, läuft auch im Browser. Für die Nutzung reichen `@einsatzzeichen/core`, `@einsatzzeichen/schema` und ein Ausgabekanal; das Prüfpaket `@einsatzzeichen/conformance` ist nicht nötig. Die Vorlagenrezepte (`RECIPES`) und der Kurzweg `composeFromCatalog()` liegen allerdings noch dort — ohne sie übergibt man `compose()` die Bausteine aus `core` selbst.
 
 ## Installation
 

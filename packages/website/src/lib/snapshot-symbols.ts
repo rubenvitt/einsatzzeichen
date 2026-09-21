@@ -1,4 +1,5 @@
-import { BASE_SYMBOLS, RECIPES, composeFromCatalog, type Recipe } from '@einsatzzeichen/catalog';
+import { RECIPES, composeFromCatalog, type Recipe } from '@einsatzzeichen/conformance';
+import { BASE_SYMBOLS } from '@einsatzzeichen/core';
 import { entryKey, type CatalogEntry, type CoverageEntry, type Depiction } from '@einsatzzeichen/schema';
 import { slugForSymbolId } from './slug.js';
 import { contrastExceptionForSection } from './snapshot-contrast.js';
