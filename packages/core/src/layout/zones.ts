@@ -57,9 +57,10 @@ export const NOT_A_CLAIM_AT_SOURCE = 'Ausdrücklich keine Behauptung: ';
  * `docs/decisions/2026-09-20-zonenmodell-als-daten.md` §2). Das Zonenmodell führt sie deshalb
  * mit ihrer Herkunftsaussage, ohne sie je Körperform zu variieren.
  *
- * Nicht mehr in dieser Tabelle steht der Fußzonenabstand: er war die einzige Ausnahme der
- * Entscheidung und ist als `FOOT_GAP_MM` nach `profiles.ts` gewandert, weil er dort eine eigene
- * Bedeutung hat und `compose()` ihn vorher mit `HEAD_GAP_MM` teilte.
+ * Der Fußzonenabstand — die einzige Ausnahme jener Entscheidung — stand **nie** in dieser
+ * Tabelle: er war gar keine eigene Konstante, sondern eine Verwendung von `HEAD_GAP_MM` mitten
+ * in `compose()`. Genau das war der Befund. Seit dem 21. September 2026 heißt er `FOOT_GAP_MM`
+ * und steht in `profiles.ts` neben `HEAD_GAP_MM`, wird also importiert und nicht wiederholt.
  *
  * **Die Wiederholung ist gegatet, nicht gehofft.** `zones.test.ts` liest den Quelltext von
  * `compose.ts` und vergleicht jede dieser Zahlen mit ihrer dortigen Deklaration — dieselbe
