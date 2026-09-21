@@ -1,5 +1,11 @@
+import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { CompositionError, VALIDATION_RULE_IDS } from '@einsatzzeichen/core';
+import {
+  COMPOSITION_RULE_CATALOG,
+  CompositionError,
+  RULE_CATALOG,
+  VALIDATION_RULE_IDS,
+} from '@einsatzzeichen/core';
 import { composeFromCatalog } from '@einsatzzeichen/catalog/src/recipes.js';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 import {
@@ -180,4 +186,98 @@ describe('Kompositionsregeln über den echten Weg', () => {
       }
     });
   }
+});
+
+/**
+ * Entscheidung vom 21. September 2026 zu LFH-563, Option 2 aus
+ * `docs/decisions/2026-09-20-regelkatalog-als-daten.md` §8: **Der Kern besitzt die Begründung,
+ * die Website den Klartext.**
+ *
+ * Der Anlass: 28 Einträge des Regelkatalogs tragen `reasonSource: 'website'`. Ihr Begründungssatz
+ * ist aus der Erklärung dieser Datei von Hand gezogen, denn der Kern selbst wiederholt an diesen
+ * Prüfstellen nur den Prüfausdruck in Worten. Ein Gate dafür kann nicht in `core` stehen —
+ * `core` darf `website` nicht importieren. Hier läuft die Richtung `website → core`, und die ist
+ * erlaubt (`@einsatzzeichen/core` steht in den Abhängigkeiten dieses Pakets, und dieselbe Datei
+ * importiert `VALIDATION_RULE_IDS` schon).
+ *
+ * **Warum ein Fingerabdruck und kein Textvergleich.** Der Kernsatz ist eine Verdichtung der
+ * Erklärung, kein Ausschnitt daraus; ein `toContain` fände ihn nicht. Festgenagelt wird deshalb
+ * die Erklärung selbst. Wird sie umgeschrieben, bricht dieser Test — nicht weil die neue Fassung
+ * falsch wäre, sondern damit jemand nachsieht, ob der Satz im Kern noch stimmt, und den
+ * Fingerabdruck danach bewusst nachzieht. Genau dieses Nachsehen fehlte bisher.
+ *
+ * Die Liste schrumpft, sobald eine Begründung in den Kern wandert und der Eintrag dort auf
+ * `reasonSource: 'core'` wechselt.
+ */
+describe('Begründungen, die der Kern aus dieser Datei bezieht', () => {
+  const PINNED_EXPLANATIONS: readonly (readonly [string, string])[] = [
+    ['above-left-metrics-complete', '90f03cde7bf2'],
+    ['above-left-metrics-within-viewbox', 'f28eb0f932fe'],
+    ['bottom-right-metrics-complete', '3f970828a7ac'],
+    ['bottom-right-metrics-require-measured-body', '14897ad3dc2c'],
+    ['bottom-right-metrics-within-body', '3f3166d30535'],
+    ['center-anchor-override-requires-measured-trailer', '3b52c89707e8'],
+    ['center-baseline-not-measured', '088776742708'],
+    ['center-baseline-override-requires-measured-body', '9ccb785a44b3'],
+    ['center-baseline-positive', '3d67d4f5ab20'],
+    ['center-baseline-requires-center-label', '48f16a6d83c3'],
+    ['center-box-margin-non-negative', '3df29823b3a3'],
+    ['center-box-margin-override-requires-measured-body', 'ab673f2d2ecf'],
+    ['center-box-margin-requires-center-label', 'fd69e63462b2'],
+    ['center-box-margin-within-body', '77573c500fae'],
+    ['center-label-within-body', '5856a1a3c172'],
+    ['function-role-body-mark-mismatch', '86fc897d91d7'],
+    ['function-role-head-mismatch', 'b893c10d0256'],
+    ['function-role-label-metrics-required', '1115bcee6938'],
+    ['function-role-organization-mismatch', '5e19981ea945'],
+    ['function-role-run-too-wide', 'c8889df6b529'],
+    ['surface-label-requires-measured-body', 'a52cc0d2579f'],
+    ['surface-left-label-requires-measured-anchor', '854e4d9cc6f9'],
+    ['surface-right-label-requires-measured-anchor', '7cc18ec84924'],
+    ['technical-fill-token-invalid', 'd7fc65090809'],
+    ['technical-head-mark-not-measured', '8734409f68a9'],
+    ['top-left-anchor-within-body', '4c4cd1a7e212'],
+    ['top-left-cap-height-positive', '8432d0f77f5a'],
+    ['top-left-lines-exactly-two', 'df4f7cabac3f'],
+  ];
+
+  function explanationOf(id: string): string | undefined {
+    const spec = (RULE_EXPLANATIONS as Record<string, { explanation: string } | undefined>)[id];
+    const composed = (
+      COMPOSITION_RULE_EXPLANATIONS as Record<string, { explanation: string } | undefined>
+    )[id];
+    return (spec ?? composed)?.explanation;
+  }
+
+  function fingerprint(text: string): string {
+    return createHash('sha256').update(text, 'utf8').digest('hex').slice(0, 12);
+  }
+
+  it('deckt genau die Einträge ab, die der Katalog als hier begründet führt', () => {
+    const fromCatalog = [...RULE_CATALOG, ...COMPOSITION_RULE_CATALOG]
+      .filter((entry) => entry.reasonSource === 'website')
+      .map((entry) => entry.id)
+      .sort();
+    expect(PINNED_EXPLANATIONS.map(([id]) => id)).toEqual(fromCatalog);
+  });
+
+  it('trägt zu jeder dieser Regeln einen Kernsatz, der nicht leer ist', () => {
+    for (const [id] of PINNED_EXPLANATIONS) {
+      const entry = [...RULE_CATALOG, ...COMPOSITION_RULE_CATALOG].find((e) => e.id === id);
+      expect(entry, `${id}: kein Katalogeintrag`).toBeDefined();
+      expect(entry?.reason ?? '', `${id}: Kernsatz fehlt`).not.toBe('');
+    }
+  });
+
+  it('hält die Erklärung fest, aus der der Kernsatz stammt', () => {
+    for (const [id, pinned] of PINNED_EXPLANATIONS) {
+      const explanation = explanationOf(id);
+      expect(explanation, `${id}: keine Erklärung in dieser Datei`).toBeDefined();
+      expect(
+        fingerprint(explanation as string),
+        `${id}: Erklärung geändert. Prüfe, ob "reason" im Regelkatalog (packages/core/src/` +
+          'rules/rule-catalog.ts) noch stimmt, und trage den neuen Fingerabdruck danach hier ein.',
+      ).toBe(pinned);
+    }
+  });
 });

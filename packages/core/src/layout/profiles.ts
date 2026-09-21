@@ -7,6 +7,24 @@ import { boundsOfMm, shiftY, type BoundsMm } from '../bounds.js';
  */
 export const HEAD_GAP_MM = 1;
 
+/**
+ * Abstand zwischen der Unterkante der Körperhülle und der Oberkante der Fußzone.
+ *
+ * **Der Wert ist nicht an der Fußzone vermessen.** Bis zur Entscheidung vom 21. September 2026
+ * rechnete `compose()` die Fußzone mit `HEAD_GAP_MM` — eine Konstante, zwei Bedeutungen, und
+ * nirgends niedergeschrieben (Befund aus LFH-562, siehe
+ * `docs/decisions/2026-09-20-zonenmodell-als-daten.md` §2 Punkt 2). Das fiel nicht auf, weil
+ * beide Zahlen 1 sind.
+ *
+ * Diese Konstante ändert daran nichts am Bild: sie trägt denselben Wert. Sie trennt nur die
+ * beiden Bedeutungen, damit eine künftige Messung an der Kopfzone nicht stillschweigend jede
+ * Fußzeile verschiebt. Die 1 mm bleiben bis zu einer eigenen Messung eine **übernommene Zahl**;
+ * das Zonenmodell führt sie mit genau dieser Herkunftsaussage. `zones.test.ts` hält die
+ * Gleichheit der beiden Werte fest — nicht als Zusicherung, dass sie gleich bleiben müssen,
+ * sondern damit ein Auseinanderlaufen eine bewusste Änderung ist und keine stille.
+ */
+export const FOOT_GAP_MM = 1;
+
 /** Kleinster Abstand der Kopfzone zum oberen Rand der Grundfläche. */
 export const HEAD_TOP_MARGIN_MM = 1;
 
