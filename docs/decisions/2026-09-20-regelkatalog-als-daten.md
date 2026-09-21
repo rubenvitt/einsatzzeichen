@@ -1,7 +1,8 @@
 # Regelkatalog als Daten — neben der Regelliste, nicht an ihrer Stelle
 
-> Entscheidung vom 20. September 2026
-> Status: Vorschlag, Entscheidung offen
+> Entscheidung vom 20. September 2026, offener Punkt entschieden am 21. September 2026
+> Status: **Entschieden.** Der Strukturvorschlag ist umgesetzt; der offene Punkt aus Abschnitt 8
+> ist vom Projektinhaber zugunsten von Option 2 entschieden und dort umgesetzt.
 > Umsetzung: LFH-563 (`packages/core/src/rules/rule-catalog.ts`), Initiative A aus
 > `2026-09-13-grammatik-motor-und-paketschnitt.md`
 
@@ -225,7 +226,43 @@ Nebenfrage, die an derselben Entscheidung hängt: `explainIssue()` **wirft** heu
 Kennung. Der Katalog gibt stattdessen `undefined` zurück und überlässt der Erklärungsschicht die
 Entscheidung. Wird Option 2 oder 3 gewählt, ist zu klären, welches Verhalten gilt.
 
-Hier wird **nicht** entschieden.
+### Entschieden am 21.09.2026: Option 2 — die Website leitet aus dem Kern ab
+
+**Der Kern besitzt die Begründung, die Website den Klartext und den Bezug zum Formular.**
+
+Gegen Option 1 spricht, dass sie den heutigen Zustand festschreibt: 28 Sätze, die von ihrer
+Vorlage abdriften können, ohne dass es jemand merkt. Gegen Option 3 spricht, dass sie `core` für
+eine Oberflächenfrage verantwortlich macht — `field` beantwortet „was muss die Leserin ändern",
+und das ist eine Entscheidung der Website über ihr eigenes Formular, keine des Motors.
+
+**Umgesetzt ist der tragende Teil: das fehlende Gate.** In
+`packages/website/src/lib/rule-explanations.test.ts` steht jetzt ein Block, der die 28 Regeln
+mit `reasonSource: 'website'` aus dem Katalog zieht, prüft, dass es zu jeder einen Kernsatz gibt,
+und die Erklärung, aus der dieser Satz stammt, per Fingerabdruck **festnagelt**. Die Richtung
+`website → core` verletzt keine Grenze; dieselbe Datei importiert `VALIDATION_RULE_IDS` bereits.
+
+Ein Textvergleich wäre das Naheliegende, geht hier aber nicht: der Kernsatz ist eine Verdichtung
+der Erklärung, kein Ausschnitt daraus. Festgenagelt wird deshalb die Erklärung selbst. Wer sie
+umschreibt, bekommt einen Fehlschlag mit der Aufforderung, den Satz im Kern zu prüfen und den
+Fingerabdruck danach bewusst nachzuziehen. Genau dieses Nachsehen fehlte.
+
+**Nicht umgesetzt ist die Anzeige.** Dass `rule-explanations.ts` den Kernsatz auch darstellt, ist
+eine Oberflächenänderung ohne Anlass: die Erklärung der Website ist zwei bis vier Sätze mit
+Handlungsanweisung und erfüllt einen anderen Zweck als der eine Satz des Katalogs. Sie gehört in
+den Slice, der die Regelseite ohnehin anfasst. Der Drift war das Problem, nicht die Anzeige.
+
+**Die Liste soll schrumpfen.** Jede Begründung, die in den Kern wandert, wechselt dort auf
+`reasonSource: 'core'` und fällt aus dem Gate — der erste Testfall des Blocks erzwingt, dass
+beide Listen deckungsgleich bleiben.
+
+### Nebenfrage entschieden: `explainIssue()` wirft weiter
+
+`explainIssue()` behält sein Werfen, `ruleCatalogEntry()` behält sein `undefined`. Das ist kein
+Widerspruch, sondern die Unterscheidung zwischen Nachschlagen und Anzeigen: Ein Nachschlagen darf
+ergebnislos bleiben, und der Aufrufer entscheidet. Eine Erklärung, die in der Oberfläche fehlt,
+ist dagegen ein Programmfehler — die Kennung kommt aus `validateSpec`, und dass die Website sie
+nicht kennt, ist genau der Fall, den das Mengengleichheits-Gate ausschließt. Dort still nichts
+anzuzeigen, würde den Fehler verstecken, statt ihn zu melden.
 
 ## 9. Was diese Notiz nicht ändert
 

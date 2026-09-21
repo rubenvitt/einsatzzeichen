@@ -73,12 +73,19 @@ import type { SourceReference } from '@einsatzzeichen/schema';
  * - `'website'` — die Begründung steht **nur** in
  *   `packages/website/src/lib/rule-explanations.ts`. Der Kern selbst wiederholt an diesen Stellen
  *   nur den Prüfausdruck in Worten („muss endlich und größer als null sein"). Diese Sätze sind
- *   hierher **von Hand kopiert**, und kein Gate hält sie in Deckung: `core` darf `website` nicht
- *   importieren, die Prüfung liefe also gegen die Importgrenze.
+ *   hierher **von Hand gezogen**.
  *
- * Das ist die eigentliche Aussage dieses Feldes: **27 der 72 Regeln** begründet heute allein die
- * Website. Für sie ist die Begründung eine ungegatete Kopie — genau der Befund, aus dem die offene
- * Frage der Entscheidungsnotiz folgt, wer die Prosa künftig besitzt.
+ * Das ist die eigentliche Aussage dieses Feldes: **27 der 72 Beschreibungsregeln** (mit der
+ * einen Kompositionsregel 28 Einträge) begründet heute allein die Website.
+ *
+ * **Gegatet sind sie seit dem 21. September 2026.** Ein Gate in `core` ist unmöglich — `core`
+ * darf `website` nicht importieren —, aber die Gegenrichtung ist erlaubt: In
+ * `packages/website/src/lib/rule-explanations.test.ts` steht seit der Entscheidung zu Option 2
+ * ein Block, der genau die Einträge mit `reasonSource: 'website'` aus diesem Katalog zieht und
+ * die Erklärung, aus der ihr Satz stammt, per Fingerabdruck festnagelt. Wer die Erklärung
+ * umschreibt, wird dort aufgefordert, den Satz hier zu prüfen. Wandert eine Begründung in den
+ * Kern, wechselt ihr Eintrag auf `'core'` und fällt aus dem Gate — die Deckungsgleichheit beider
+ * Listen erzwingt derselbe Block.
  *
  * `reason: null` heißt **Begründung nicht belegt** und ist der ausdrückliche Vermerk für den Fall,
  * dass weder Kern noch Website einen Grund nennen. Diese Liste ist derzeit **leer** und im Test
