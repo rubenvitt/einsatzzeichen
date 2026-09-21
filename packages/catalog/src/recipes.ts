@@ -156,6 +156,27 @@ export const RECIPES = {
 } as const satisfies Record<string, Recipe>;
 
 /**
+ * **Die Rezepte in ihrer Rolle als Fixtures der Grammatik** (LFH-569, Scope-Entscheidung vom
+ * 13. September 2026, `docs/decisions/2026-09-13-grammatik-motor-und-paketschnitt.md`).
+ *
+ * Das Produkt ist die Grammatik, nicht die Liste fertiger Zeichen. Die 242 Einträge oben sind
+ * deshalb keine Auswahl „gebauter Zeichen" mehr, sondern die Belege, an denen der Motor gegen die
+ * Referenz geprüft wird: je Eintrag eine gültige `SymbolSpec`, deren Zeichnung einem Original
+ * entspricht. Wörtlich aus der Scope-Entscheidung: „Die 242 heutigen Rezepte wechseln damit ihre
+ * Rolle: von ‚fertigen Zeichen' zu Fixtures, die den Motor belegen."
+ *
+ * Dieser Export ist **dasselbe Objekt** wie `RECIPES`, keine Kopie und keine Umformung: Daten,
+ * Schlüssel und Anzahl bleiben unverändert. Die Rolle steht hier im Namen und im Kommentar, nicht
+ * in einer Umbenennung — die gehört zu LFH-571.
+ *
+ * Was eine Fixture an je Zeichen gemessenen Sonderwerten trägt (etwa den einzeln gemessenen
+ * Schriftgrad des mittigen Laufs in Anhang E.2), steht nicht still im Rezept, sondern ist in
+ * `NAMED_EXCEPTIONS` (`named-exceptions.ts`) als benannte Ausnahme mit Begründung und Fundort
+ * geführt; `named-exceptions.test.ts` hält beide Richtungen.
+ */
+export const GRAMMAR_FIXTURES = RECIPES;
+
+/**
  * Kontrastvertrag der Beschriftungszonen. Ein Piktogramm deklariert seine Paare selbst
  * (`contrastPairs`), eine Komposition kann das nicht: ihre Farben entstehen erst beim
  * Zusammensetzen aus Grundzeichen, Organisation und Beschriftung. Diese Funktion leitet die
