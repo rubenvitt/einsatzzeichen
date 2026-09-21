@@ -1,3 +1,25 @@
+## Release Notes 1.5.0
+
+### Bausteinregister
+
+Das neue **Bausteinregister** dokumentiert systematisch alle 283 grafischen Bausteine des taktischen Zeichensystems über zwölf Kategorien (Körper, Funktionen, Einheiten, Fahrzeuge, Ausstattung, Zusätze, Führungsebenen, Verwaltungsstufen, Verbände, Trupps, Spezialformen und Organisationen). Jeder Eintrag verweist auf seinen Fundort im Katalog, wodurch die Herkunft und Verwendung jedes Symbols nachvollziehbar wird.
+
+Das Register macht transparent, welche Kombinationen von Bausteinen aneinander gebunden sind (z.B. Verwaltungsstufe an Funktionsfassung, Radpaarmarke an eingesenkten Rumpf) und dokumentiert sieben Bausteine ohne eigene Zeichnung (drei Verwaltungsstufen, das Amphibienfahrzeug und die Verbände I–III).
+
+### Herkunft und Regelabdeckung
+
+**Herkunftsverfolgung**: Jede Symbol-Kombination erhält nun eine klare Herkunftsangabe – entweder `verbatim` (direkt aus einer der 242 Mustervorlagen) oder `derived` (neu kombiniert). Die 242 Rezepte des Katalogs bilden jeweils eindeutige Schlüssel, 241 davon gelten als verbatim-belegt.
+
+**Regelabdeckung**: Die Implementierung deckt nun 74 von 78 semantischen Regeln durch Tests ab. Die vier verbleibenden Lücken sind dokumentiert und werden in zukünftigen Versionen geschlossen.
+
+### Qualitätssicherung
+
+Neue automatische Prüfungen (Gates) stellen sicher, dass:
+- Alle Sonderwerte in den Fixtures dokumentiert sind (50 Sonderwerte über 37 Fixtures in acht Feldern)
+- Keine veralteten Einträge existieren
+- Das Bausteinregister mit den Katalog-Resolvern synchron bleibt
+- Die 49 Einträge mit Zeichnung aber ohne Herkunftsaussage gezählt bleiben, damit diese Lücke nicht unbemerkt wächst
+
 ## Version 1.4.0
 
 ### Zonenmodell und Komposition
