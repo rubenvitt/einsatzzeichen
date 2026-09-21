@@ -35,7 +35,7 @@ Glyphen-Subset, erzeugt mit **fontTools 4.63.0** (`pyftsubset`) durch
 prüft dessen SHA-256 gegen den Upstream-Wert und ruft auf:
 
 ```
-pyftsubset 'Arimo[wght].ttf' --output-file=packages/catalog/assets/Arimo[wght].ttf \
+pyftsubset 'Arimo[wght].ttf' --output-file=packages/conformance/assets/Arimo[wght].ttf \
   --unicodes='U+0000-00FF,U+0100-017F,U+0180-024F,U+2000-206F,U+20AC,U+2122,U+2212,U+FEFF,U+FFFD' \
   --layout-features='*' --notdef-glyph --notdef-outline --recommended-glyphs \
   --name-IDs='*' --name-legacy --name-languages='*' --glyph-names \
@@ -62,12 +62,13 @@ pyftsubset 'Arimo[wght].ttf' --output-file=packages/catalog/assets/Arimo[wght].t
   `snapshots.test.ts`, `multi-size-snapshots.test.ts`, `pictograms/text-ink.test.ts`,
   `body-marks.test.ts` grün). Der erste Flag-Satz war bereits bit-identisch; weitere Varianten
   (`--retain-gids`, `--passthrough-tables`) waren nicht nötig.
-- **Metriken:** `arimo-metrics.json` (Vorschubbreiten `advances` und glyf-Tintenboxen
+- **Metriken:** `packages/core/src/assets/arimo-metrics.json` (Vorschubbreiten `advances` und glyf-Tintenboxen
   `inkExtents` `[xMin, yMin, xMax, yMax]` aller 645 cmap-Einträge in Font-Einheiten der
   Default-Instanz wght 400, leere Glyphen als `[0, 0, 0, 0]`; Unterschneidung `kerning`
   `{ links: { rechts: XAdvance } }` aus dem GPOS-Feature `kern`, nur Werte ≠ 0; Kopfwerte;
   beide SHA-256) wird von `scripts/font/export-metrics.py`
-  aus dem Subset exportiert; `src/fonts.test.ts` gleicht sie gegen die TTF ab.
+  aus dem Subset exportiert; `src/fonts.test.ts` gleicht sie gegen die TTF ab. Die Metrik-JSONs
+  liegen seit LFH-570 in `core`: Laufweiten sind Layoutdaten, die Schriftdatei selbst bleibt hier.
 
 ## Fettinstanz (2026-09-19)
 
@@ -82,6 +83,6 @@ unter derselben Lizenz (`Arimo-OFL.txt`).
   unverändert.
 - **Prüfsumme:** SHA-256 `0f8eb8ed8b92a80cbbbcadb382089e8fda8d50015b0e36212c341c1a6b96341a`
   (`TEXT_FONT_BOLD_SHA256` in `src/fonts.ts`), 53.436 Byte.
-- **Metriken:** `arimo-bold-metrics.json`, gleiches Format wie `arimo-metrics.json`, exportiert
+- **Metriken:** `packages/core/src/assets/arimo-bold-metrics.json`, gleiches Format wie `arimo-metrics.json`, exportiert
   von `scripts/font/export-metrics.py` aus der Fettinstanz.
 - **Kursiv:** Einen kursiven Schnitt führt das Projekt nicht.

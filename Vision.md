@@ -181,14 +181,23 @@ Die Dokumentationswebsite generiert daraus:
 ## Vorgeschlagene Pakete
 
 - `@taktik/schema`: JSON Schema, stabile IDs, Taxonomie und TypeScript-Typen
-- `@taktik/catalog`: vollständiger Katalog, Synonyme, Provenienz, Legacy-Aliase und Coverage-Manifest
-- `@taktik/core`: Komposition, Regelvalidierung, SVG-Renderer, Canvas-Renderer und A11y-Metadaten
+- `@taktik/core`: das Produkt — Bausteine, Zonen und Regeln, Komposition, Regelvalidierung, SVG-Renderer, Canvas-Renderer und A11y-Metadaten; enthält alles, um jedes Zeichen zu bauen, ohne Fremd- und Node-Abhängigkeit und browsertauglich
+- `@taktik/conformance`: das Prüfpaket — Rezepte, Coverage-Manifest, Domain-Reviews, Fingerprints, Referenzinventar, Fachreview-Werkzeug sowie Coverage- und Regel-Gates; Quelle und Prüfmittel, für die Nutzung nicht erforderlich
 - `@taktik/react`: React-Komponenten und Hooks
 - `@taktik/web-component`: frameworkunabhängige Custom Element API
 - `@taktik/maplibre`: MapLibre GL JS Images, Style Expressions, Clustering und Custom Layers
 - `@taktik/qgis`: Exportprofile und Metadaten für QGIS-Symbolbibliotheken
 - `@taktik/cli`: Export, Audit, Migration, Batch-Rendering und Coverage-Prüfung
 - `@taktik/docs`: Dokumentation, Playground, Katalog, Quellenbrowser und Coverage-Dashboard
+
+Die Ausgabekanäle hängen nur an `core`. Die Abhängigkeitsrichtung ist
+`cli → conformance → core → schema`; wer die Bibliothek nutzt, braucht `core`, `schema` und einen
+Ausgabekanal. Die Aufteilung zwischen `core` und `conformance` folgt der Entscheidung
+[„Grammatik-Motor und Paketschnitt“](./docs/decisions/2026-09-13-grammatik-motor-und-paketschnitt.md)
+vom 13. September 2026; das frühere `catalog` ist darin zu `conformance` geworden. Wo Synonyme,
+Provenienz und Legacy-Aliase, die dieser Abschnitt früher dem Katalog zuschrieb, künftig liegen,
+legt die Entscheidung nicht fest; die Legacy-Migration ist ausdrücklich nicht Teil davon. Die
+Pakete sind heute als `@einsatzzeichen/*` veröffentlicht.
 
 ## MapLibre-Integration
 

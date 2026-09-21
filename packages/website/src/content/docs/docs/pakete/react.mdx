@@ -13,7 +13,7 @@ Inhalt und setzt beides ein. Damit ist ausgeschlossen, dass React ein anderes Bi
 Kanal daneben.
 
 Kein JSX-Build im Paket, `react` ist Peer-Abhängigkeit (`>=18`). Das Paket importiert `core` und
-`schema`, aber **nicht** `catalog` — Katalogdaten kommen über die Anwendung herein.
+`schema`, aber **nicht** das Prüfpaket `conformance` — die Zeichnung kommt über die Anwendung herein.
 
 ## Installation
 
@@ -47,7 +47,7 @@ erzeugten Element-IDs müssen eindeutig bleiben.
 
 ```tsx
 import { Einsatzzeichen } from '@einsatzzeichen/react';
-import { RECIPES, composeFromCatalog } from '@einsatzzeichen/catalog';
+import { RECIPES, composeFromCatalog } from '@einsatzzeichen/conformance';
 
 const recipe = RECIPES['E.1.1'];
 const drawing = composeFromCatalog(recipe.spec, recipe.title);

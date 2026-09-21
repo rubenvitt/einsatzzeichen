@@ -1,0 +1,79 @@
+---
+title: conformance
+description: Das Prüfpaket — Rezepte, Coverage-Manifest, Quellen- und Profilregister, fachliche Reviews, Fingerprints und die Schrift für die Rasterung. Für die Nutzung der Zeichen nicht erforderlich.
+---
+
+Diese Seite richtet sich an Entwicklerinnen und Entwickler. Wer ein Zeichen nur finden,
+herunterladen, drucken oder auf eine Karte legen möchte, braucht sie nicht — dafür gibt es
+die [Anleitungen](/docs/anleitungen/).
+
+`@einsatzzeichen/conformance` ist das Prüfpaket. Hier liegt, woran sich die Zeichen messen lassen
+müssen: die Rezepte, die die Vorlagen nachbauen, aus welcher Quelle ein Zeichen stammt, was daran
+geprüft ist und was noch offen steht. Die Zeichen selbst — Grundzeichen, Farben, Kopfmarken,
+Piktogramme, Themes — liegen in [`core`](/docs/pakete/core/). Wer Zeichen nur anzeigen will,
+braucht dieses Paket nicht.
+
+Bis Version 1.5 hieß das Paket `@einsatzzeichen/catalog` und enthielt auch die Geometrie. Wer
+umsteigt, ändert zwei Dinge: den Paketnamen, und die Herkunft der Bausteine — `baseDrawing`,
+`RENDER_THEMES`, `PRINT_MONOCHROME_THEME`, `pictogram`, `describeSymbolSpec`,
+`ARIMO_TEXT_METRICS` und ihre Nachbarn kommen jetzt aus `@einsatzzeichen/core`; der Index dieses
+Pakets führt sie nicht mehr.
+
+Hier liegt auch das Coverage-Manifest: eine Zeile je Abschnitt der Baseline, mit Titel,
+Implementierung, Art, Profil, Testnachweis und beiden Reviews. Die Zahlen dieser Website kommen
+aus denselben Funktionen, die `pnpm cli coverage` aufruft — es gibt keinen zweiten Rechenweg.
+
+Eine Einschränkung für den Browser: `fonts.ts` importiert `node:url`, und der Index re-exportiert
+es. Ein Import über den Index scheitert deshalb in einem Browser-Bundle. Diese Website umgeht das
+mit einem Snapshot, der zur Buildzeit in Node entsteht.
+
+## Wo es heute noch gebraucht wird
+
+Der bequeme Weg von einer `SymbolSpec` zur Zeichnung, `composeFromCatalog()`, liegt noch in diesem
+Paket, ebenso die benannten Vorlagenzeichen in `RECIPES`. Deshalb importieren die Beispiele auf
+den Kanalseiten es weiterhin. Ohne Prüfpaket geht es schon heute, mit etwas mehr Schreibarbeit:
+`compose()` aus `core` nimmt die Bausteine aus `core` direkt entgegen — das Beispiel steht auf der
+[Seite zu `core`](/docs/pakete/core/#beispiel). Ein fertiger Einstieg dafür ist geplant, aber noch
+nicht gebaut.
+
+## Installation
+
+<div class="ez-note">
+<span class="ez-note__title">Nicht veröffentlicht</span>
+
+`private: true`, `main` zeigt auf `./src/index.ts`, kein Build-Schritt. Im Workspace:
+
+```json
+{ "dependencies": { "@einsatzzeichen/conformance": "workspace:*" } }
+```
+
+Im Browser nur über einen Subpfad-Import oder über vorher erzeugte Daten — nicht über den Index.
+
+</div>
+
+## Hauptexporte
+
+| Export | Was es ist |
+|---|---|
+| `RECIPES`, `composeFromCatalog(spec, title?)` | die Rezepte je Abschnitt und der Weg von der Spec zur `Drawing` |
+| `ELEMENTS`, `resolveElement(...)`, `PICTOGRAM_ELEMENT_KINDS` | das Elementregister |
+| `SOURCE_REGISTRY`, `isRegisteredSource(id)` | das Quellenregister |
+| `PROFILES`, `profileFor(id)` | das Profilregister (nicht zu verwechseln mit dem Layoutprofil gleichen Namens in `core`) |
+| `COVERAGE_MANIFEST`, `checkCoverage()`, `releaseBlockers()`, `sortedDomainReviewOpenByArea()` | Manifest und Coverage-Gate |
+| `MANIFEST_DOMAIN_REVIEWS`, `SOURCE_DOMAIN_REVIEWS`, `PROFILE_DOMAIN_REVIEWS` | die fachlichen Reviews |
+| `referenceInventory()`, `fingerprintFor(...)` | Referenzinventar und abgeleitete Kennzahlen der Vorlagen |
+| `ruleCoverage()`, `validationRuleCoverage()`, `generativeReach()`, `RULE_EVIDENCE` | Regelabdeckung und Regelbelege |
+| `combinationProvenance(...)`, `NAMED_EXCEPTIONS`, `COMPARISON_EXCEPTIONS` | Herkunft je Kombination, benannte und Vergleichsausnahmen |
+| `resvgFontOptions()`, `TEXT_FONT_PATH` | die Schrift für die Rasterung (nur Node) |
+
+## Beispiel
+
+```ts
+import { RECIPES, composeFromCatalog } from '@einsatzzeichen/conformance';
+import { renderSvg, renderTheme } from '@einsatzzeichen/core';
+
+const recipe = RECIPES['E.1.1'];
+const drawing = composeFromCatalog(recipe.spec, recipe.title);
+
+const svg = renderSvg(drawing, { size: 128, theme: renderTheme('print-monochrome') });
+```

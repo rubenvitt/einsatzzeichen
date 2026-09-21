@@ -51,6 +51,9 @@ export default defineConfig({
     '/explorer': '/docs/explorer',
     '/belege': '/docs/belege',
     '/sources-und-diffs': '/docs/sources-und-diffs',
+    // Bis 1.5 hieß das Prüfpaket `catalog` (LFH-571); gemerkte Links auf die alte Paketseite.
+    '/pakete/catalog': '/docs/pakete/conformance',
+    '/docs/pakete/catalog': '/docs/pakete/conformance',
   },
   integrations: [
     starlight({

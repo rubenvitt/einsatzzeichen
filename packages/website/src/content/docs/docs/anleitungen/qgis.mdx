@@ -80,7 +80,7 @@ Stilbibliothek mit allen zusammengesetzten Zeichen:
 
 ```ts
 import { writeFileSync } from 'node:fs';
-import { RECIPES, composeFromCatalog } from '@einsatzzeichen/catalog';
+import { RECIPES, composeFromCatalog } from '@einsatzzeichen/conformance';
 import { qgisSymbolLibrary } from '@einsatzzeichen/qgis';
 
 const entries = Object.entries(RECIPES).map(([section, recipe]) => ({
@@ -91,7 +91,7 @@ const entries = Object.entries(RECIPES).map(([section, recipe]) => ({
 writeFileSync('einsatzzeichen.xml', qgisSymbolLibrary(entries, { sizeMm: 10 }), 'utf8');
 ```
 
-`QgisLibraryOptions` nimmt `theme` (etwa `PRINT_MONOCHROME_THEME` aus `@einsatzzeichen/catalog`),
+`QgisLibraryOptions` nimmt `theme` (etwa `PRINT_MONOCHROME_THEME` aus `@einsatzzeichen/core`),
 `sizeMm` (Vorgabe 10) und `idPrefix`. Doppelte Namen und eine `sizeMm` unterhalb der
 Schreibgenauigkeit werfen — beides ergäbe in QGIS sonst still ein falsches oder unsichtbares
 Symbol.
