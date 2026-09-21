@@ -34,3 +34,17 @@ export * from './a11y/metadata.js';
 export * from './viewbox-gate.js';
 export * from './text-metrics.js';
 export * from './layout/zones.js';
+export {
+  COMPOSITION_RULE_CATALOG,
+  RULE_CATALOG,
+  RULE_DIMENSIONS,
+  RULE_DIMENSION_GAPS,
+  ruleCatalogEntry,
+  type RuleCatalogEntry,
+  type RuleDimension,
+  type RuleDimensionCoverage,
+  type RuleDimensionGap,
+  type RuleKind,
+  type RulePhase,
+  type RuleReasonSource,
+} from './rules/rule-catalog.js';
