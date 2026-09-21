@@ -59,7 +59,7 @@
  * mit Kürzel oder Trägerkürzel (`TEXT_FONT_FAMILY_ATTR` in core). Ohne die Datei setzt der Browser
  * eine Ersatzschrift mit anderen Vorschubbreiten, und das Kürzel steht nicht mehr da, wo die
  * Geometrie es vorsieht — die Vorschau zeigte dann etwas anderes als der Katalog rastert.
- * Die Datei liegt bereits im Repository (`packages/catalog/assets`, Subset, SIL OFL 1.1, im
+ * Die Datei liegt bereits im Repository (`packages/conformance/assets`, Subset, SIL OFL 1.1, im
  * Quellenregister als `arimo-ofl` geführt); Vite kopiert sie in die Ausgabe. Kein externer Request.
  */
 @font-face {
@@ -72,8 +72,8 @@
    * wght-Achse bleibt über `font-weight: 400 700` erreichbar.
    */
   src:
-    url('../../../catalog/assets/Arimo[wght].ttf') format('truetype-variations'),
-    url('../../../catalog/assets/Arimo[wght].ttf') format('truetype');
+    url('../../../conformance/assets/Arimo[wght].ttf') format('truetype-variations'),
+    url('../../../conformance/assets/Arimo[wght].ttf') format('truetype');
   font-weight: 400 700;
   font-style: normal;
   font-display: block;

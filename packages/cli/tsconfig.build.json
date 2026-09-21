@@ -14,6 +14,6 @@
   "references": [
     { "path": "../schema/tsconfig.build.json" },
     { "path": "../core/tsconfig.build.json" },
-    { "path": "../catalog/tsconfig.build.json" }
+    { "path": "../conformance/tsconfig.build.json" }
   ]
 }

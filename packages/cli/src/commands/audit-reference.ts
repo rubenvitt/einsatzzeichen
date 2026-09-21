@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { extractFingerprint, type Fingerprint } from '../scan/extract.js';
 
 const REFERENCE_DIR = 'taktische-zeichen';
-const OUTPUT = 'packages/catalog/src/fingerprints.json';
+const OUTPUT = 'packages/conformance/src/fingerprints.json';
 
 export interface AuditOptions {
   /** Nur Dateien, deren Name mit diesem Präfix beginnt (z. B. "1." oder "C.1.1"). */

@@ -26,16 +26,16 @@ function validPolicyInput(): RepositoryPolicyInput {
         name: '@einsatzzeichen/cli',
         path: 'packages/cli/package.json',
         dependencies: {
-          '@einsatzzeichen/catalog': 'workspace:*',
+          '@einsatzzeichen/conformance': 'workspace:*',
           '@einsatzzeichen/core': 'workspace:*',
           '@einsatzzeichen/schema': 'workspace:*',
         },
         malformedDependencySections: [],
       },
       {
-        id: 'catalog',
-        name: '@einsatzzeichen/catalog',
-        path: 'packages/catalog/package.json',
+        id: 'conformance',
+        name: '@einsatzzeichen/conformance',
+        path: 'packages/conformance/package.json',
         dependencies: {
           '@einsatzzeichen/core': 'workspace:*',
           '@einsatzzeichen/schema': 'workspace:*',
@@ -102,16 +102,16 @@ describe('Repository-Policy — Paketgrenzen', () => {
   });
 
   it.each(['react', 'web-component', 'maplibre', 'qgis'] as const)(
-    'weist eine Abhängigkeit und einen Import des Ausgabekanals %s auf catalog zurück',
+    'weist eine Abhängigkeit und einen Import des Ausgabekanals %s auf conformance zurück',
     (packageId) => {
       const input = validPolicyInput();
       const manifest = input.manifests.find((candidate) => candidate.id === packageId);
       if (manifest === undefined) throw new Error(`Testfixture ohne ${packageId}-Manifest`);
-      manifest.dependencies['@einsatzzeichen/catalog'] = 'workspace:*';
+      manifest.dependencies['@einsatzzeichen/conformance'] = 'workspace:*';
       input.sourceFiles.push({
         packageId,
         path: `packages/${packageId}/src/pull.ts`,
-        source: "export { RECIPES } from '@einsatzzeichen/catalog';\n",
+        source: "export { RECIPES } from '@einsatzzeichen/conformance';\n",
       });
 
       const violations = findRepositoryPolicyViolations(input);
@@ -119,31 +119,31 @@ describe('Repository-Policy — Paketgrenzen', () => {
         expect.objectContaining({
           code: 'forbidden-internal-dependency',
           importer: packageId,
-          target: 'catalog',
+          target: 'conformance',
         }),
       );
       expect(violations).toContainEqual(
         expect.objectContaining({
           code: 'forbidden-internal-import',
           importer: packageId,
-          target: 'catalog',
+          target: 'conformance',
         }),
       );
     },
   );
 
-  it('weist einen Import von catalog auf einen Ausgabekanal zurück', () => {
+  it('weist einen Import von conformance auf einen Ausgabekanal zurück', () => {
     const input = validPolicyInput();
     input.sourceFiles.push({
-      packageId: 'catalog',
-      path: 'packages/catalog/src/channel.ts',
+      packageId: 'conformance',
+      path: 'packages/conformance/src/channel.ts',
       source: "export { qgisSymbolLibrary } from '@einsatzzeichen/qgis';\n",
     });
 
     expect(findRepositoryPolicyViolations(input)).toContainEqual(
       expect.objectContaining({
         code: 'forbidden-internal-import',
-        importer: 'catalog',
+        importer: 'conformance',
         target: 'qgis',
       }),
     );
@@ -166,18 +166,18 @@ describe('Repository-Policy — Paketgrenzen', () => {
     );
   });
 
-  it('weist eine rückwärts gerichtete Workspace-Abhängigkeit von core auf catalog zurück', () => {
+  it('weist eine rückwärts gerichtete Workspace-Abhängigkeit von core auf conformance zurück', () => {
     const input = validPolicyInput();
     const core = input.manifests.find((manifest) => manifest.id === 'core');
     if (core === undefined) throw new Error('Testfixture ohne core-Manifest');
-    core.dependencies['@einsatzzeichen/catalog'] = 'workspace:*';
+    core.dependencies['@einsatzzeichen/conformance'] = 'workspace:*';
 
     expect(findRepositoryPolicyViolations(input)).toContainEqual(
       expect.objectContaining({
         code: 'forbidden-internal-dependency',
         path: 'packages/core/package.json',
         importer: 'core',
-        target: 'catalog',
+        target: 'conformance',
       }),
     );
   });
@@ -233,12 +233,12 @@ describe('Repository-Policy — Paketgrenzen', () => {
     );
   });
 
-  it('weist einen rückwärts gerichteten Quellcode-Import von core auf catalog zurück', () => {
+  it('weist einen rückwärts gerichteten Quellcode-Import von core auf conformance zurück', () => {
     const input = validPolicyInput();
     input.sourceFiles.push({
       packageId: 'core',
       path: 'packages/core/src/reverse.ts',
-      source: "import { catalogEntry } from '@einsatzzeichen/catalog';\n",
+      source: "import { catalogEntry } from '@einsatzzeichen/conformance';\n",
     });
 
     expect(findRepositoryPolicyViolations(input)).toContainEqual(
@@ -246,24 +246,24 @@ describe('Repository-Policy — Paketgrenzen', () => {
         code: 'forbidden-internal-import',
         path: 'packages/core/src/reverse.ts',
         importer: 'core',
-        target: 'catalog',
-        specifier: '@einsatzzeichen/catalog',
+        target: 'conformance',
+        specifier: '@einsatzzeichen/conformance',
       }),
     );
   });
 
   it.each([
-    ['Re-Export', "export { catalogEntry } from '@einsatzzeichen/catalog';\n"],
-    ['dynamischen Import', "void import('@einsatzzeichen/catalog');\n"],
+    ['Re-Export', "export { catalogEntry } from '@einsatzzeichen/conformance';\n"],
+    ['dynamischen Import', "void import('@einsatzzeichen/conformance');\n"],
     [
       'Inline-Importtyp',
-      "type Catalog = import('@einsatzzeichen/catalog').CatalogEntry;\n",
+      "type Catalog = import('@einsatzzeichen/conformance').CatalogEntry;\n",
     ],
-    ['dynamischen Template-Import', "void import(`@einsatzzeichen/catalog`);\n"],
-    ['require-Aufruf', "const catalog = require('@einsatzzeichen/catalog');\n"],
+    ['dynamischen Template-Import', "void import(`@einsatzzeichen/conformance`);\n"],
+    ['require-Aufruf', "const conformance = require('@einsatzzeichen/conformance');\n"],
     [
       'TypeScript-import-equals',
-      "import catalog = require('@einsatzzeichen/catalog');\n",
+      "import conformance = require('@einsatzzeichen/conformance');\n",
     ],
   ])('erkennt auch einen rückwärts gerichteten %s', (_form, source) => {
     const input = validPolicyInput();
@@ -278,8 +278,8 @@ describe('Repository-Policy — Paketgrenzen', () => {
         code: 'forbidden-internal-import',
         path: 'packages/core/src/reverse.ts',
         importer: 'core',
-        target: 'catalog',
-        specifier: '@einsatzzeichen/catalog',
+        target: 'conformance',
+        specifier: '@einsatzzeichen/conformance',
       }),
     );
   });
@@ -290,7 +290,7 @@ describe('Repository-Policy — Paketgrenzen', () => {
       packageId: 'cli',
       path: 'packages/cli/src/dynamic.ts',
       source:
-        "const target = '@einsatzzeichen/catalog';\n" +
+        "const target = '@einsatzzeichen/conformance';\n" +
         'void import(target);\n',
     });
 
@@ -309,7 +309,7 @@ describe('Repository-Policy — Paketgrenzen', () => {
       packageId: 'core',
       path: 'packages/core/src/reverse.tsx',
       source:
-        "export const view = <button>{import('@einsatzzeichen/catalog')}</button>;\n",
+        "export const view = <button>{import('@einsatzzeichen/conformance')}</button>;\n",
     });
 
     expect(findRepositoryPolicyViolations(input)).toContainEqual(
@@ -317,8 +317,8 @@ describe('Repository-Policy — Paketgrenzen', () => {
         code: 'forbidden-internal-import',
         path: 'packages/core/src/reverse.tsx',
         importer: 'core',
-        target: 'catalog',
-        specifier: '@einsatzzeichen/catalog',
+        target: 'conformance',
+        specifier: '@einsatzzeichen/conformance',
       }),
     );
   });
@@ -328,7 +328,7 @@ describe('Repository-Policy — Paketgrenzen', () => {
     input.sourceFiles.push({
       packageId: 'core',
       path: 'packages/core/src/malformed.ts',
-      source: "import { catalogEntry } from '@einsatzzeichen/catalog\n",
+      source: "import { catalogEntry } from '@einsatzzeichen/conformance\n",
     });
 
     expect(findRepositoryPolicyViolations(input)).toContainEqual(
@@ -373,20 +373,20 @@ describe('Repository-Policy — Paketgrenzen', () => {
 
   it('weist einen erlaubten, aber im Paketmanifest nicht deklarierten internen Import zurück', () => {
     const input = validPolicyInput();
-    const catalog = input.manifests.find((manifest) => manifest.id === 'catalog');
-    if (catalog === undefined) throw new Error('Testfixture ohne catalog-Manifest');
-    delete catalog.dependencies['@einsatzzeichen/core'];
+    const conformance = input.manifests.find((manifest) => manifest.id === 'conformance');
+    if (conformance === undefined) throw new Error('Testfixture ohne conformance-Manifest');
+    delete conformance.dependencies['@einsatzzeichen/core'];
     input.sourceFiles.push({
-      packageId: 'catalog',
-      path: 'packages/catalog/src/undeclared.ts',
+      packageId: 'conformance',
+      path: 'packages/conformance/src/undeclared.ts',
       source: "import { renderSvg } from '@einsatzzeichen/core';\n",
     });
 
     expect(findRepositoryPolicyViolations(input)).toContainEqual(
       expect.objectContaining({
         code: 'undeclared-internal-import',
-        path: 'packages/catalog/src/undeclared.ts',
-        importer: 'catalog',
+        path: 'packages/conformance/src/undeclared.ts',
+        importer: 'conformance',
         target: 'core',
         specifier: '@einsatzzeichen/core',
       }),
@@ -450,16 +450,16 @@ describe('Repository-Policy — Paketgrenzen', () => {
   it('weist einen relativen Import über eine Paketgrenze auch in erlaubter Abhängigkeitsrichtung zurück', () => {
     const input = validPolicyInput();
     input.sourceFiles.push({
-      packageId: 'catalog',
-      path: 'packages/catalog/src/nested/bypass.ts',
+      packageId: 'conformance',
+      path: 'packages/conformance/src/nested/bypass.ts',
       source: "import { renderSvg } from '../../../core/src/index.js';\n",
     });
 
     expect(findRepositoryPolicyViolations(input)).toContainEqual(
       expect.objectContaining({
         code: 'relative-cross-package-import',
-        path: 'packages/catalog/src/nested/bypass.ts',
-        importer: 'catalog',
+        path: 'packages/conformance/src/nested/bypass.ts',
+        importer: 'conformance',
         target: 'core',
         specifier: '../../../core/src/index.js',
       }),
@@ -548,13 +548,13 @@ describe('Repository-Policy — Repository-Adapter', () => {
         JSON.stringify({
           name: coreManifest.name,
           dependencies: coreManifest.dependencies,
-          devDependencies: { '@einsatzzeichen/catalog': 'workspace:*' },
+          devDependencies: { '@einsatzzeichen/conformance': 'workspace:*' },
         }),
         'utf8',
       );
       writeFileSync(
         join(root, 'packages/core/src/reverse.ts'),
-        "export { catalogEntry } from '@einsatzzeichen/catalog';\n",
+        "export { catalogEntry } from '@einsatzzeichen/conformance';\n",
         'utf8',
       );
 
@@ -574,12 +574,12 @@ describe('Repository-Policy — Repository-Adapter', () => {
           expect.objectContaining({
             code: 'forbidden-internal-dependency',
             importer: 'core',
-            target: 'catalog',
+            target: 'conformance',
           }),
           expect.objectContaining({
             code: 'forbidden-internal-import',
             importer: 'core',
-            target: 'catalog',
+            target: 'conformance',
           }),
         ]),
       );
@@ -685,14 +685,14 @@ describe('Repository-Policy — Repository-Adapter', () => {
     try {
       writeValidRepositoryFixture(root);
       execFileSync('git', ['init', '--quiet'], { cwd: root });
-      const symlinkPath = join(root, 'packages/core/src/catalog-link.ts');
-      symlinkSync('../../catalog/src/index.ts', symlinkPath);
-      execFileSync('git', ['add', 'packages/core/src/catalog-link.ts'], { cwd: root });
+      const symlinkPath = join(root, 'packages/core/src/conformance-link.ts');
+      symlinkSync('../../conformance/src/index.ts', symlinkPath);
+      execFileSync('git', ['add', 'packages/core/src/conformance-link.ts'], { cwd: root });
 
       expect(findRepositoryPolicyViolations(readRepositoryPolicyInput({ root }))).toContainEqual(
         expect.objectContaining({
           code: 'source-symlink',
-          path: 'packages/core/src/catalog-link.ts',
+          path: 'packages/core/src/conformance-link.ts',
           importer: 'core',
         }),
       );

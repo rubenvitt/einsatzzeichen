@@ -9,7 +9,7 @@ import {
   releaseBlockers,
   ruleCoverage,
   validationRuleCoverage,
-} from '@einsatzzeichen/catalog';
+} from '@einsatzzeichen/conformance';
 import {
   BASE_SYMBOLS,
   CONTRAST_EXCEPTIONS,

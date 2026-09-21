@@ -36,7 +36,7 @@
     }
   },
   "dependencies": {
-    "@einsatzzeichen/catalog": "workspace:*",
+    "@einsatzzeichen/conformance": "workspace:*",
     "@einsatzzeichen/core": "workspace:*",
     "@einsatzzeichen/schema": "workspace:*",
     "@resvg/resvg-js": "2.6.2",

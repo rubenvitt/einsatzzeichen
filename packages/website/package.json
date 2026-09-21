@@ -16,7 +16,7 @@
   "dependencies": {
     "@astrojs/react": "6.0.4",
     "@astrojs/starlight": "0.41.10",
-    "@einsatzzeichen/catalog": "workspace:*",
+    "@einsatzzeichen/conformance": "workspace:*",
     "@einsatzzeichen/core": "workspace:*",
     "@einsatzzeichen/maplibre": "workspace:*",
     "@einsatzzeichen/qgis": "workspace:*",

@@ -7,7 +7,7 @@ import { babz, block, measured, notMeasured } from './helpers.js';
  *
  * Jeder Fundort zeigt in `core/src/geometry/`, wo die Zeichnung steht. Das Register importiert sie
  * nicht; ob sich die Fundorte zur Laufzeit wirklich zu Geometrie auflösen, prüft
- * `catalog/src/block-register/head.test.ts`. `sourceRefs` stehen nur dort, wo der Fundort selbst
+ * `conformance/src/block-register/head.test.ts`. `sourceRefs` stehen nur dort, wo der Fundort selbst
  * einen Abschnitt der Referenz nennt.
  */
 

@@ -13,13 +13,13 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { addReviewer, writeDomainReview } from './write.js';
 
-const CATALOG_SOURCE_DIR = fileURLToPath(new URL('../../../catalog/src/', import.meta.url));
+const CATALOG_SOURCE_DIR = fileURLToPath(new URL('../../../conformance/src/', import.meta.url));
 
 let repoRoot: string;
 
 /** Das Zielverzeichnis ist eine Kopie der echten Katalogdateien — kein vereinfachtes Fixture. */
 function catalogFile(name: string): string {
-  return join(repoRoot, 'packages', 'catalog', 'src', name);
+  return join(repoRoot, 'packages', 'conformance', 'src', name);
 }
 
 /**
@@ -59,7 +59,7 @@ function setzeRegister(source: string): void {
 
 beforeEach(() => {
   repoRoot = mkdtempSync(join(tmpdir(), 'einsatzzeichen-review-'));
-  const target = join(repoRoot, 'packages', 'catalog', 'src');
+  const target = join(repoRoot, 'packages', 'conformance', 'src');
   mkdirSync(target, { recursive: true });
   for (const name of ['domain-reviews.ts', 'domain-reviewers.ts']) {
     copyFileSync(join(CATALOG_SOURCE_DIR, name), join(target, name));
@@ -160,7 +160,7 @@ describe('writeDomainReview', () => {
       status: 'pending',
     });
 
-    expect(readdirSync(join(repoRoot, 'packages', 'catalog', 'src')).sort()).toEqual([
+    expect(readdirSync(join(repoRoot, 'packages', 'conformance', 'src')).sort()).toEqual([
       'domain-reviewers.ts',
       'domain-reviews.ts',
     ]);

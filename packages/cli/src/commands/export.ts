@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { RECIPES, composeFromCatalog } from '@einsatzzeichen/catalog';
+import { RECIPES, composeFromCatalog } from '@einsatzzeichen/conformance';
 import { BASE_SYMBOLS, baseDrawing } from '@einsatzzeichen/core';
 import { REFERENCE_THEME, renderSvg, type RenderTheme } from '@einsatzzeichen/core';
 

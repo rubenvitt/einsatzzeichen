@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TEXT_FONT_FAMILY } from '@einsatzzeichen/catalog';
+import { TEXT_FONT_FAMILY } from '@einsatzzeichen/conformance';
 import { embedTextFont } from './render.js';
 
 describe('embedTextFont', () => {

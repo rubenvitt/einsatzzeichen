@@ -6,7 +6,7 @@ import {
   SOURCE_REGISTRY,
   releaseBlockers,
   sortedDomainReviewOpenByArea,
-} from '@einsatzzeichen/catalog';
+} from '@einsatzzeichen/conformance';
 import { entryKey } from '@einsatzzeichen/schema';
 import {
   EVIDENCE_CODES,

@@ -30,8 +30,8 @@ import {
 } from './rewrite.js';
 
 /** Alle drei Fachreview-Ledger stehen in derselben Datei; die Trägerart wählt die Konstante. */
-const DOMAIN_REVIEWS_PATH = ['packages', 'catalog', 'src', 'domain-reviews.ts'];
-const DOMAIN_REVIEWERS_PATH = ['packages', 'catalog', 'src', 'domain-reviewers.ts'];
+const DOMAIN_REVIEWS_PATH = ['packages', 'conformance', 'src', 'domain-reviews.ts'];
+const DOMAIN_REVIEWERS_PATH = ['packages', 'conformance', 'src', 'domain-reviewers.ts'];
 
 /**
  * Welche Ledgerkonstante zu welcher Trägerart gehört. Fail-closed adressiert: ein Manifestschlüssel
@@ -46,7 +46,7 @@ export const LEDGER_CONSTANTS: Record<CarrierKind, string> = {
 const REVIEW_FIELDS: readonly string[] = ['status', 'reviewer', 'date', 'note'];
 
 /**
- * Schreibt genau **einen** Fachreview-Eintrag in `packages/catalog/src/domain-reviews.ts` und
+ * Schreibt genau **einen** Fachreview-Eintrag in `packages/conformance/src/domain-reviews.ts` und
  * liest ihn anschließend aus der geschriebenen Datei zurück. Steht dort nicht genau der
  * beabsichtigte Wert, wirft die Funktion — die Oberfläche darf einen Schreibvorgang nur dann als
  * erfolgt melden, wenn er nachweislich erfolgt ist.
@@ -76,7 +76,7 @@ export function writeDomainReview(repoRoot: string, ref: CarrierRef, review: Rev
 }
 
 /**
- * Trägt einen Fachprüfer in `packages/catalog/src/domain-reviewers.ts` ein. Ohne Registereintrag
+ * Trägt einen Fachprüfer in `packages/conformance/src/domain-reviewers.ts` ein. Ohne Registereintrag
  * verweigert das Werkzeug jede Freigabe; deshalb ist das Anlegen ein eigener, ebenso sorgfältig
  * nachgeprüfter Schreibvorgang.
  */

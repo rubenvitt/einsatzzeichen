@@ -84,8 +84,8 @@ export const COMPARISON_EXCEPTIONS: DeepReadonly<ComparisonException[]> = deepFr
       'verglichen wird deshalb die ebenfalls extrahierte `rect`-Hülle, nicht die durch Übermalung ' +
       'verkürzte sichtbare Kontur.',
     foundAt:
-      'packages/catalog/src/fingerprints.json (Einträge D.1.2 bis D.1.8: `ring` ab y 7,375 neben ' +
-      '`rect`); bis LFH-568 inline in packages/catalog/src/recipes.test.ts „reproduziert die ' +
+      'packages/conformance/src/fingerprints.json (Einträge D.1.2 bis D.1.8: `ring` ab y 7,375 neben ' +
+      '`rect`); bis LFH-568 inline in packages/conformance/src/recipes.test.ts „reproduziert die ' +
       'Referenz".',
   },
   {
@@ -107,9 +107,9 @@ export const COMPARISON_EXCEPTIONS: DeepReadonly<ComparisonException[]> = deepFr
       'Körper. Genau diese zwei vermessenen Hüllen werden aus dem Körpervergleich genommen, und ' +
       'nur, wenn die `bounds`-Teilmenge exakt ihnen entspricht.',
     foundAt:
-      'packages/catalog/src/fingerprints.json (Eintrag D.4.3: zwei `bounds` 9,143…12,857 und ' +
+      'packages/conformance/src/fingerprints.json (Eintrag D.4.3: zwei `bounds` 9,143…12,857 und ' +
       '19,143…22,857 × 0…4 mm); bis LFH-568 `comparableBodyFingerprint` in ' +
-      'packages/catalog/src/recipes.test.ts.',
+      'packages/conformance/src/recipes.test.ts.',
   },
   {
     id: 'i5-3-label-t-outline',
@@ -129,8 +129,8 @@ export const COMPARISON_EXCEPTIONS: DeepReadonly<ComparisonException[]> = deepFr
       'nicht Teil der Raute. Er wird nur entfernt, wenn die `outline`-Teilmenge exakt dieser ' +
       'vermessenen Hülle entspricht.',
     foundAt:
-      'packages/catalog/src/fingerprints.json (Eintrag I.5.3: `outline` 1,089/1,081/3,339/4); bis ' +
-      'LFH-568 `comparableBodyFingerprint` in packages/catalog/src/recipes.test.ts.',
+      'packages/conformance/src/fingerprints.json (Eintrag I.5.3: `outline` 1,089/1,081/3,339/4); bis ' +
+      'LFH-568 `comparableBodyFingerprint` in packages/conformance/src/recipes.test.ts.',
   },
   {
     id: '1-13-stroke-outline',
@@ -146,7 +146,7 @@ export const COMPARISON_EXCEPTIONS: DeepReadonly<ComparisonException[]> = deepFr
       'das um 0,71 Einheiten falsch (siehe `strokeBoundsOfMm`).',
     foundAt:
       'packages/core/src/fingerprint.ts (`BodyGeometryMode`, „genau ein Fall"); Tabelle ' +
-      '`REFERENCE` in packages/catalog/src/base-symbols.test.ts.',
+      '`REFERENCE` in packages/conformance/src/base-symbols.test.ts.',
   },
 ]);
 

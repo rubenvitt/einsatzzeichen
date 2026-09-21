@@ -9,7 +9,7 @@
     "paths": {
       "@einsatzzeichen/schema": ["../schema/src/index.ts"],
       "@einsatzzeichen/core": ["../core/src/index.ts"],
-      "@einsatzzeichen/catalog": ["../catalog/src/index.ts"],
+      "@einsatzzeichen/conformance": ["../conformance/src/index.ts"],
       "@einsatzzeichen/react": ["../react/src/index.ts"],
       "@einsatzzeichen/web-component": ["../web-component/src/index.ts"],
       "@einsatzzeichen/maplibre": ["../maplibre/src/index.ts"],

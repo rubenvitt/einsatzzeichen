@@ -6,7 +6,7 @@ import {
   RULE_CATALOG,
   VALIDATION_RULE_IDS,
 } from '@einsatzzeichen/core';
-import { composeFromCatalog } from '@einsatzzeichen/catalog/src/recipes.js';
+import { composeFromCatalog } from '@einsatzzeichen/conformance/src/recipes.js';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 import {
   COMPOSITION_RULE_EXPLANATIONS,

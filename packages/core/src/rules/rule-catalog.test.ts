@@ -194,7 +194,7 @@ describe('COMPOSITION_RULE_CATALOG gegen den Quelltext von compose.ts', () => {
    *
    * `rule-explanations.test.ts` in der Website löst die Kennungen stattdessen über
    * `composeFromCatalog` aus. Dieser Weg steht `core` nicht offen: er führte über
-   * `@einsatzzeichen/catalog`, und die Importgrenze `catalog → core` verbietet die Gegenrichtung.
+   * `@einsatzzeichen/conformance`, und die Importgrenze `conformance → core` verbietet die Gegenrichtung.
    *
    * Also derselbe Gedanke wie in `validation-rules.test.ts` — Quelltextscan aus einer Testdatei,
    * die `node:fs` benutzen darf —, nur auf die beiden Bestandteile angewendet: die drei Präfixe

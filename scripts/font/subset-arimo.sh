@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Erzeugt das eingecheckte Arimo-Subset (packages/catalog/assets/Arimo[wght].ttf) reproduzierbar
+# Erzeugt das eingecheckte Arimo-Subset (packages/conformance/assets/Arimo[wght].ttf) reproduzierbar
 # aus dem Upstream-Original und exportiert die Textmetriken (arimo-metrics.json, seit LFH-570 in
 # packages/core/src/assets/).
 #
@@ -17,11 +17,11 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-ASSETS="$ROOT/packages/catalog/assets"
+ASSETS="$ROOT/packages/conformance/assets"
 METRICS_DIR="$ROOT/packages/core/src/assets"
 OUT="$ROOT/out/font"
 SOURCE_URL='https://raw.githubusercontent.com/google/fonts/main/ofl/arimo/Arimo%5Bwght%5D.ttf'
-# Muss mit TEXT_FONT_SOURCE_SHA256 in packages/catalog/src/fonts.ts übereinstimmen.
+# Muss mit TEXT_FONT_SOURCE_SHA256 in packages/conformance/src/fonts.ts übereinstimmen.
 SOURCE_SHA256='e43898b143ec826ac8cb4034816458a7047fbe0836558de2a1f8c6223ae3e0ca'
 SOURCE_TTF="$OUT/Arimo[wght]-source.ttf"
 SUBSET_TTF="$ASSETS/Arimo[wght].ttf"

@@ -61,7 +61,7 @@ function sourceReviewFor(id: SourceId, technical: Review): ReviewSet {
 /**
  * Elf Quellen der Referenzhierarchie aus `Vision.md`, dazu `phjardas-tz` als Vergleichsbestand
  * (Slice-3-Spec, Abschnitt 4) und `arimo-ofl` als Schriftquelle des Textprimitivs
- * (siehe `packages/catalog/src/fonts.ts`).
+ * (siehe `packages/conformance/src/fonts.ts`).
  *
  * Typannotation **und** `satisfies` zusammen: die Annotation weitet jeden Eintrag auf
  * `SourceRecord` — sonst behielte er seinen engsten Typ, bei `geometryUse` also ein eigenes
@@ -313,12 +313,12 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
     scope:
       'Einzige Textschrift des Projekts für das Textprimitiv aus Anhang J. Metrisch ' +
       'Arial-kompatibel; im Repository als OFL-Modified-Version gesubsettet (Unicode-Decke für ' +
-      'freie Bezeichnungen, wght-Achse erhalten), siehe packages/catalog/assets/README.md.',
+      'freie Bezeichnungen, wght-Achse erhalten), siehe packages/conformance/assets/README.md.',
     acquisition: 'local',
     geometryUse: ['none'],
     licence: {
       basis:
-        'SIL Open Font License 1.1, vollständiger Text in packages/catalog/assets/Arimo-OFL.txt; ' +
+        'SIL Open Font License 1.1, vollständiger Text in packages/conformance/assets/Arimo-OFL.txt; ' +
         'erlaubt Einbettung, Verbreitung und Modifikation der Schrift.',
       status: 'clarified',
     },

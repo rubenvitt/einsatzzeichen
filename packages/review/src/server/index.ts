@@ -16,7 +16,7 @@
  */
 import { createServer as createHttpServer } from 'node:http';
 import { createServer as createViteServer, type ViteDevServer } from 'vite';
-import { COVERAGE_MANIFEST, DOMAIN_REVIEWERS } from '@einsatzzeichen/catalog';
+import { COVERAGE_MANIFEST, DOMAIN_REVIEWERS } from '@einsatzzeichen/conformance';
 import { areaSummaries, buildRows, rowById, rowDetail, rowSummaries } from '../data/index.js';
 import { addReviewer, writeDomainReview } from '../ledger/index.js';
 import type { ReviewerRecord } from '../contract.js';

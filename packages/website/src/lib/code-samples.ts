@@ -20,7 +20,7 @@ export function codeSamplesFor(spec: SymbolSpec, id: string): CodeSamples {
   const specLiteral = JSON.stringify(spec, null, 2);
   const idLiteral = JSON.stringify(id);
 
-  const typescript = `import { composeFromCatalog } from '@einsatzzeichen/catalog';
+  const typescript = `import { composeFromCatalog } from '@einsatzzeichen/conformance';
 import { renderSvg } from '@einsatzzeichen/core';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 
@@ -32,7 +32,7 @@ const svg = renderSvg(drawing, { size: 64 });
 `;
 
   const react = `import { Einsatzzeichen } from '@einsatzzeichen/react';
-import { composeFromCatalog } from '@einsatzzeichen/catalog';
+import { composeFromCatalog } from '@einsatzzeichen/conformance';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 
 // Spezifikation für ${idLiteral}
@@ -50,7 +50,7 @@ export function Symbol() {
   defineEinsatzzeichenElement,
   type EinsatzzeichenElement,
 } from '@einsatzzeichen/web-component';
-import { composeFromCatalog } from '@einsatzzeichen/catalog';
+import { composeFromCatalog } from '@einsatzzeichen/conformance';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 
 // Spezifikation für ${idLiteral}
@@ -66,7 +66,7 @@ document.body.append(element);
 
   const maplibre = `import maplibregl from 'maplibre-gl';
 import { addSymbolImage } from '@einsatzzeichen/maplibre';
-import { composeFromCatalog } from '@einsatzzeichen/catalog';
+import { composeFromCatalog } from '@einsatzzeichen/conformance';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 
 // Spezifikation für ${idLiteral}

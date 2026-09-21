@@ -143,7 +143,7 @@ describe('Bausteinregister, Kopfzone: Lücken lösen sich nicht auf', () => {
 
     // Seit LFH-570 liegt die Geometrie in `core/src/geometry/`; geprüft werden sie und der Rest
     // des Katalogs. Das Register selbst (`core/src/blocks/`) nennt die Kennungen zwangsläufig.
-    const roots = [join(packagesRoot, 'catalog', 'src'), join(packagesRoot, 'core', 'src', 'geometry')];
+    const roots = [join(packagesRoot, 'conformance', 'src'), join(packagesRoot, 'core', 'src', 'geometry')];
     const hits = roots.flatMap((root) =>
       (readdirSync(root, { recursive: true }) as string[])
         .filter((file) => file.endsWith('.ts') && !file.endsWith('.test.ts'))

@@ -3,7 +3,7 @@ import {
   referenceInventory,
   ruleCoverage,
   validationRuleCoverage,
-} from '@einsatzzeichen/catalog';
+} from '@einsatzzeichen/conformance';
 import type { CoverageAxis } from './snapshot.js';
 
 /**

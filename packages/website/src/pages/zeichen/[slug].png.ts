@@ -8,7 +8,7 @@ import {
   TEXT_FONT_FAMILY,
   TEXT_FONT_SHA256,
   resvgFontOptions,
-} from '@einsatzzeichen/catalog';
+} from '@einsatzzeichen/conformance';
 import { renderSvg } from '@einsatzzeichen/core';
 import { loadSnapshot } from '../../lib/snapshot';
 
@@ -21,11 +21,11 @@ import { loadSnapshot } from '../../lib/snapshot';
  * und niemand den Grund sieht, bevor es gedruckt ist.
  *
  * **Die Schriftbindung ist der heikle Teil.** `@resvg/resvg-js` rastert Text ohne Fontdatei zu null
- * Pixeln — stillschweigend (belegt in `packages/catalog/src/fonts.test.ts`). Kürzel wie „DLRG" oder
+ * Pixeln — stillschweigend (belegt in `packages/conformance/src/fonts.test.ts`). Kürzel wie „DLRG" oder
  * „MTF" wären dann im Bild einfach weg, und niemand merkte es am Build. `resvgFontOptions()` aus
  * dem Katalog liefert den Pfad zur Arimo-Datei, **aber** dieser Pfad entsteht aus
  * `import.meta.url` der Katalogquelle: im gebündelten Build zeigt er auf das Chunk-Verzeichnis
- * unter `dist/`, nicht auf `packages/catalog/assets`. Genau das ist hier zuerst passiert — die
+ * unter `dist/`, nicht auf `packages/conformance/assets`. Genau das ist hier zuerst passiert — die
  * ersten gebauten PNG waren byteweise identisch mit einer Rasterung ganz ohne Schrift.
  *
  * Deshalb: der Pfad wird hier aus dem Arbeitsverzeichnis des Builds abgeleitet, der Fund gegen
@@ -53,7 +53,7 @@ const WIDTH = 256;
  */
 function textFontFile(fileName: string, sha256: string): string {
   const candidates = [
-    fileURLToPath(new URL(`../../../../catalog/assets/${fileName}`, import.meta.url)),
+    fileURLToPath(new URL(`../../../../conformance/assets/${fileName}`, import.meta.url)),
     ...resvgFontOptions().fontFiles,
   ];
   for (const candidate of candidates) {

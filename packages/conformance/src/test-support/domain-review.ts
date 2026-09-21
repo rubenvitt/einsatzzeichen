@@ -38,7 +38,7 @@ export function fachreviewBefunde(review: ReviewSet, key: string): string[] {
  * Dieselbe Prüfung als Zusicherung. Wirft statt `expect` aufzurufen: `test-support/` ist für das
  * Repository-Gate (`pnpm cli verify:repository`) **keine** Testquelle — nur `*.test.ts` darf dort
  * undeklarierte externe Pakete importieren, und `vitest` steht nicht in
- * `packages/catalog/package.json`. Ein geworfener Fehler mit sprechender Meldung lässt den
+ * `packages/conformance/package.json`. Ein geworfener Fehler mit sprechender Meldung lässt den
  * aufrufenden Test genauso fallen und hält die Aufrufstellen bei einer Zeile.
  */
 export function erwarteZurechenbaresFachreview(review: ReviewSet, key: string): void {

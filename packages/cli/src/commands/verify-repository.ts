@@ -24,7 +24,7 @@ export type {
 
 const PACKAGE_IDS = [
   'cli',
-  'catalog',
+  'conformance',
   'core',
   'schema',
   ...OUTPUT_CHANNEL_PACKAGE_IDS,

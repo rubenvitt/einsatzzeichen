@@ -13,7 +13,7 @@ import {
   SOURCE_REGISTRY,
   releaseBlockers,
   sortedDomainReviewOpenByArea,
-} from '@einsatzzeichen/catalog';
+} from '@einsatzzeichen/conformance';
 import { entryKey, type TestEvidenceKind } from '@einsatzzeichen/schema';
 import { carrierId } from '../contract.js';
 import { EVIDENCE_KINDS, evidenceChip } from './evidence.js';

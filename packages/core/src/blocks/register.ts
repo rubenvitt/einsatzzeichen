@@ -21,7 +21,7 @@ import { STATE_BLOCKS, TENDENCY_BLOCKS } from './states.js';
  * **Es verschiebt keine Geometrie.** Die Zeichnungen liegen seit LFH-570 in `core/src/geometry/`,
  * und das Register importiert sie nicht. Deshalb zeigt jeder Eintrag mit `definedAt` auf den Fundort
  * seiner Zeichnung. Ob sich dieser Fundort zur Laufzeit wirklich zu Geometrie auflöst, prüfen die
- * Gates `core/src/blocks/*.test.ts` und `catalog/src/block-register/head.test.ts`. Spec:
+ * Gates `core/src/blocks/*.test.ts` und `conformance/src/block-register/head.test.ts`. Spec:
  * `docs/superpowers/specs/2026-09-21-lfh-564-bausteinregister-design.md`.
  *
  * Der Typ ist `Record<BlockCategory, …>` und nicht `Partial`: Fehlt eine Kategorie, lehnt der

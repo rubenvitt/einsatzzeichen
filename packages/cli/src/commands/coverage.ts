@@ -10,7 +10,7 @@ import {
   ruleCoverage,
   sortedDomainReviewOpenByArea,
   validationRuleCoverage,
-} from '@einsatzzeichen/catalog';
+} from '@einsatzzeichen/conformance';
 import { CONTRAST_EXCEPTIONS } from '@einsatzzeichen/core';
 
 function counted(count: number, singular: string, plural: string): string {

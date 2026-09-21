@@ -179,7 +179,7 @@ describe('Bausteinregister: festgenagelter Stand', () => {
   });
 
   it('nagelt die Bausteine ohne Zeichnung fest', () => {
-    // Dieselben Lücken wie in der Wertabdeckung (`catalog/src/rule-coverage.ts`): drei
+    // Dieselben Lücken wie in der Wertabdeckung (`conformance/src/rule-coverage.ts`): drei
     // Verwaltungsstufen und das Amphibienfahrzeug. Dazu kommen die Verbände aus 5.5, die dort
     // keine Achse haben, weil `SymbolSpec` kein Feld für sie führt.
     expect(blockGaps()).toEqual([

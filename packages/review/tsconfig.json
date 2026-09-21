@@ -21,8 +21,8 @@
     "paths": {
       "@einsatzzeichen/schema": ["../schema/src/index.ts"],
       "@einsatzzeichen/core": ["../core/src/index.ts"],
-      "@einsatzzeichen/catalog": ["../catalog/src/index.ts"],
-      "@einsatzzeichen/catalog/src/*": ["../catalog/src/*"]
+      "@einsatzzeichen/conformance": ["../conformance/src/index.ts"],
+      "@einsatzzeichen/conformance/src/*": ["../conformance/src/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"]

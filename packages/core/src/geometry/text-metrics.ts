@@ -16,7 +16,7 @@ import arimoBoldMetrics from '../assets/arimo-bold-metrics.json' with { type: 'j
  *
  * Kein Fontparser in `core`, keiner hier: die Metrik ist Layoutdatum, keine Schriftdatei; die
  * Schrift selbst liegt im Prüfpaket. Ob das Generat zur Schriftdatei passt (`sourceSha256`,
- * `subsetSha256`), prüft `catalog/src/fonts.test.ts` neben dem Hash der Schrift.
+ * `subsetSha256`), prüft `conformance/src/fonts.test.ts` neben dem Hash der Schrift.
  */
 interface ArimoMetricsFile {
   readonly family: string;

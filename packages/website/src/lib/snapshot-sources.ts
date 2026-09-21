@@ -1,4 +1,4 @@
-import { SOURCE_REGISTRY } from '@einsatzzeichen/catalog';
+import { SOURCE_REGISTRY } from '@einsatzzeichen/conformance';
 import { reviewSetSummary } from './snapshot-review.js';
 import type { SourceSummary } from './snapshot.js';
 

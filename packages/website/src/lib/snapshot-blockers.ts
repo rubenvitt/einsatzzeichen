@@ -1,4 +1,4 @@
-import { releaseBlockers, sortedDomainReviewOpenByArea } from '@einsatzzeichen/catalog';
+import { releaseBlockers, sortedDomainReviewOpenByArea } from '@einsatzzeichen/conformance';
 import { areaOf, sectionOf } from './snapshot-sections.js';
 import type { CoverageSummary } from './snapshot.js';
 

@@ -3,8 +3,8 @@ import type { MatrixRow, ReviewSummary } from './snapshot.js';
 /**
  * Bereich einer Abschnittsnummer aus `MatrixRow.sourceId` — der Teil vor dem ersten Punkt
  * (`bbk-babz-2025:E.1.1` → `E`, `bbk-babz-2025:4.6.4` → `4`). Dieselbe Bildung wie `areaOf` in
- * `packages/catalog/src/coverage-gate.ts`, mit der `openDomainReviewsByArea()` im Snapshot ihre
- * Bereiche bildet — die Matrixfilter-Insel darf `@einsatzzeichen/catalog` aber nicht importieren
+ * `packages/conformance/src/coverage-gate.ts`, mit der `openDomainReviewsByArea()` im Snapshot ihre
+ * Bereiche bildet — die Matrixfilter-Insel darf `@einsatzzeichen/conformance` aber nicht importieren
  * (Spec §5.2), deshalb steht die Bildung hier noch einmal als reine Stringoperation auf einem
  * bereits im Snapshot vorhandenen Feld, nicht als zweite Berechnung eigener Zahlen.
  */

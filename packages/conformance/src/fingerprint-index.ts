@@ -15,7 +15,7 @@ function isFingerprintLike(value: unknown): value is FingerprintLike {
 function assertFingerprints(value: unknown): FingerprintLike[] {
   if (!Array.isArray(value) || !value.every(isFingerprintLike)) {
     throw new Error(
-      'packages/catalog/src/fingerprints.json hat nicht die erwartete Form (Array von ' +
+      'packages/conformance/src/fingerprints.json hat nicht die erwartete Form (Array von ' +
         'Einträgen mit "asset": string und "shapes": Array). Mit "pnpm cli audit:reference" neu erzeugen.',
     );
   }

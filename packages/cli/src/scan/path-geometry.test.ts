@@ -239,7 +239,7 @@ describe('deriveRing', () => {
 describe('parsePathBounds', () => {
   /**
    * Die vier Kurvenkörper des Katalogs, als reine `d`-Strings. Sie sind hier **wörtlich
-   * eingetragen und nicht aus `@einsatzzeichen/catalog` importiert**: `cli` hängt zwar von
+   * eingetragen und nicht aus `@einsatzzeichen/conformance` importiert**: `cli` hängt zwar von
    * `catalog` ab, aber ein Import machte den Test gegen eine spätere Änderung an `base-symbols.ts`
    * blind — er prüfte dann nur noch, dass zwei Implementierungen dasselbe rechnen, ohne dass
    * jemand merkt, wenn sich die Eingabe verschiebt.

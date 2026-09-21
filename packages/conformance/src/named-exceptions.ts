@@ -132,12 +132,12 @@ interface NamedExceptionOf<Field extends SpecialValueField> {
 /** Eine benannte Ausnahme: je (Fixture, Feld) genau ein Eintrag. */
 export type NamedException = { [Field in SpecialValueField]: NamedExceptionOf<Field> }[SpecialValueField];
 
-const E = 'packages/catalog/src/recipes-anhang-e.ts';
-const F = 'packages/catalog/src/recipes-anhang-f.ts';
-const I = 'packages/catalog/src/recipes-anhang-i.ts';
-const N = 'packages/catalog/src/recipes-anhang-n.ts';
+const E = 'packages/conformance/src/recipes-anhang-e.ts';
+const F = 'packages/conformance/src/recipes-anhang-f.ts';
+const I = 'packages/conformance/src/recipes-anhang-i.ts';
+const N = 'packages/conformance/src/recipes-anhang-n.ts';
 const TAXONOMY = 'packages/schema/src/taxonomy.ts';
-const RECIPES_TEST = 'packages/catalog/src/recipes.test.ts';
+const RECIPES_TEST = 'packages/conformance/src/recipes.test.ts';
 
 function exception<Field extends SpecialValueField>(
   fixture: GrammarFixtureKey,
@@ -168,7 +168,7 @@ const N_INK =
   'Schwarzer Quellenlauf im Körper statt der aus der Körperfüllung abgeleiteten Tinte; „die ' +
   'schwarzen Quellenläufe von N.1.2 bis N.1.5 werden über den gemessenen inBodyInk-Vertrag ' +
   'gerendert und bestehen den Kontrastvertrag ohne neue Ausnahme".';
-const N_INK_AT = `${TAXONOMY}:554–559; packages/catalog/src/coverage-manifest.ts:388–390`;
+const N_INK_AT = `${TAXONOMY}:554–559; packages/conformance/src/coverage-manifest.ts:388–390`;
 
 const I_2_TOP_LEFT =
   'Kürzel oben links an I.2.1 bis I.2.3, an der Referenz abgelesen: Versalhöhe 2,919 mm (W, ' +
