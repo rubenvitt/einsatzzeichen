@@ -124,6 +124,12 @@ describe('renderSvg', () => {
     expect(svg).toContain('<desc id="symbol-desc">Eine taktische Formation.</desc>');
   });
 
+  it('maskiert den ID-Präfix, damit er kein Markup einschleust', () => {
+    const svg = renderSvg(formation, { idPrefix: '"><script>x</script>' });
+    expect(svg).not.toContain('<script>');
+    expect(svg).toContain('aria-labelledby="&quot;&gt;&lt;script&gt;x&lt;/script&gt;-title"');
+  });
+
   it('lässt A11y-Metadaten weg, wenn kein Titel gesetzt ist', () => {
     const svg = renderSvg({ viewBox: DEFAULT_VIEWBOX_MM, children: [] });
     expect(svg).not.toContain('<title');

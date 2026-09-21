@@ -76,7 +76,7 @@ function areaOf(sourceId: string): string {
 }
 
 function cell(text: string | undefined): string {
-  return (text ?? '').replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
+  return (text ?? '').replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
 }
 
 function code(text: string): string {

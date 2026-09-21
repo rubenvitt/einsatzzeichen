@@ -56,7 +56,7 @@ describe('Inventar des Anhangs J', () => {
   it('bindet jede Darstellung an eine Belegdatei mit ihrem Abschnittspräfix', () => {
     for (const definition of COMMS_PICTOGRAMS) {
       expect(definition.referenceAsset, definition.section).toMatch(
-        new RegExp(`^${definition.section.replace(/\./g, '\\.')}_`),
+        new RegExp(`^${definition.section.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}_`),
       );
     }
   });

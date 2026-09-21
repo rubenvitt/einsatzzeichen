@@ -253,7 +253,9 @@ function renderPrimitive(
 }
 
 export function renderSvg(drawing: Drawing, options: SvgOptions = {}): string {
-  const prefix = options.idPrefix ?? 'ez';
+  // Der Präfix kommt aus Nutzereingaben (etwa dem Attribut `id-prefix` des Web-Components) und
+  // landet in `id`- und `aria-labelledby`-Attributen; maskiert, damit er kein Markup einschleust.
+  const prefix = escapeXml(options.idPrefix ?? 'ez');
   const theme = options.theme === undefined ? REFERENCE_THEME : options.theme;
   assertValidRenderTheme(theme);
   assertValidActiveStrokeWidths(drawing);
