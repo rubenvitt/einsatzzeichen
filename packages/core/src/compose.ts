@@ -27,7 +27,11 @@ import {
   type VehicleCategoryId,
 } from '@einsatzzeichen/schema';
 import { boundsOfMm, type BoundsMm } from './bounds.js';
-import { HEAD_GAP_MM, placeHead, profileFor } from './layout/profiles.js';
+// `HEAD_GAP_MM` steht hier bewusst nicht mehr: die Fußzone war seine einzige Verwendung in
+// dieser Datei — die Kopfzone rechnet damit in `placeHead()`, also in `profiles.ts`. Der
+// Kopfzonenabstand wurde hier also ausschließlich für die Fußzone importiert. Siehe
+// `docs/decisions/2026-09-20-zonenmodell-als-daten.md` §2 Punkt 2.
+import { FOOT_GAP_MM, placeHead, profileFor } from './layout/profiles.js';
 import { NotMeasuredError } from './not-measured.js';
 import {
   ARIMO_CAP_HEIGHT_FRACTION,
@@ -1206,7 +1210,11 @@ export function compose(
     chassisShape?.marks.map((mark) =>
       chassisPrimitive(mark, baseBottomMm + (profile.chassisTopBelowBaseBottomMm ?? 0))) ?? [];
 
-  const footTopMm = bodyBoundsMm.maxY + HEAD_GAP_MM;
+  // `FOOT_GAP_MM` trägt denselben Wert wie `HEAD_GAP_MM`, ist aber seit der Entscheidung vom
+  // 21. September 2026 eine eigene Konstante: die 1 mm sind für die **Kopfzone** belegt
+  // (C.1.1, C.1.2, D.3.7), nicht für die Fußzone. Vorher standen hier beide Bedeutungen auf
+  // einer Zahl, sodass eine Messung an der Kopfzone jede Fußzeile mitverschoben hätte.
+  const footTopMm = bodyBoundsMm.maxY + FOOT_GAP_MM;
   // `boxMm` ist bei Text eine Zusicherung des Autors, keine Messung (siehe Primitive-Kommentar
   // in geometry.ts) — sie muss deshalb selbst den Diakritika-Überstand einkalkulieren, den kein
   // Gate mehr erkennt. `verticalTextBoxMm` liefert die dafür nötige Ober­kante/Höhe aus Anker,

@@ -1,9 +1,9 @@
 # Zonenmodell als Daten: welche festen Werte werden Zonendaten?
 
-> Stand: 20. September 2026
-> Status: **Vorschlag, Entscheidung offen.** Vorbereitet vom Koordinator zu LFH-562
-> (Initiative A, Zeichen-Grammatik). Die Empfehlungen sind als solche gekennzeichnet und
-> ausdrücklich nicht umgesetzt.
+> Stand: 20. September 2026, entschieden am 21. September 2026
+> Status: **Entschieden.** Vorbereitet vom Koordinator zu LFH-562 (Initiative A,
+> Zeichen-Grammatik), entschieden vom Projektinhaber, der allen acht Empfehlungen gefolgt ist.
+> Der Umsetzungsstand steht je Wert unten; Abschnitt 5 fasst ihn zusammen.
 > Bezug: `docs/decisions/2026-09-13-grammatik-motor-und-paketschnitt.md` (Scope),
 > `docs/decisions/2026-09-19-masse-an-der-referenz-ablesen.md` §6 (offener Punkt)
 
@@ -20,10 +20,11 @@ Das Zonenmodell liegt als Daten vor und trifft **keine** der Entscheidungen dies
 
 Jede Zahl des Modells wird über `profileFor()` aus den Profilen **bezogen**, nicht kopiert.
 Ausgenommen sind die sechs modulprivaten Konstanten aus `compose.ts`: sie sind wiederholt, weil
-`compose.ts` sie nicht exportiert und dieser Teilslice `compose()` nicht umbaut. Ein
-Quelltextscan im Test hält jede Wiederholung an ihrer Deklaration fest.
+`compose.ts` sie nicht exportiert. Ein Quelltextscan im Test hält jede Wiederholung an ihrer
+Deklaration fest. Der Umbau von `compose()` auf das Zonenmodell bleibt ein eigener Slice; der
+einzige Eingriff dieser Entscheidung in `compose.ts` ist die eine Zeile der Fußzone (Punkt 2).
 
-**Genau diese sechs Konstanten und zwei unvermessene Profilwerte sind der Gegenstand dieser
+**Genau diese sechs Konstanten und zwei unvermessene Profilwerte waren der Gegenstand dieser
 Notiz.** Sie sind heute Konstanten des Kompositionsmotors und gelten damit für **alle**
 Körperformen gleich. Als Zonendatum könnten sie je Körperform verschieden sein — das ist die
 Frage, und sie ist eine Eigentümerfrage, weil sie festlegt, was die Grammatik später überhaupt
@@ -34,7 +35,7 @@ unterscheiden kann.
 | # | Wert | Heutiger Ort | Geltungsbereich heute | Messherkunft |
 |---|---|---|---|---|
 | 1 | `FOOT_TEXT_SIZE_MM = 4` | `core/src/compose.ts:78` | alle 19 Körperformen | **keine Messung.** Gespiegelt aus `placeHead`: `defaultAnchorMm 6 − HEAD_GAP_MM − HEAD_TOP_MARGIN_MM` am Rechteckkörper |
-| 2 | Fußzone erbt `HEAD_GAP_MM` | `core/src/compose.ts:1209` | alle 19 Körperformen | **keine eigene Messung.** Die 1 mm sind an C.1.1, C.1.2 und D.3.7 für die **Kopfzone** belegt |
+| 2 | Fußzone erbt `HEAD_GAP_MM` | vorher `core/src/compose.ts`, jetzt `FOOT_GAP_MM` in `profiles.ts:26` | alle 19 Körperformen | **keine eigene Messung.** Die 1 mm sind an C.1.1, C.1.2 und D.3.7 für die **Kopfzone** belegt |
 | 3 | `CENTER_LABEL_BOX_MARGIN_MM = 1` / 28-mm-Box | `core/src/compose.ts:201` | alle Rechteckkörper | gemessen am weißen Innenfeld der Referenz (`rect` 2/7 bis 30/25) — aber nur am **Formationskörper** |
 | 4 | `LABEL_SIDE_MARGIN_MM = 2` | `core/src/compose.ts:120` | alle 19 Körperformen | gemessen an E.1.1 bis E.1.16 (Tintenkanten 3,03 und 29,03) — nur am Formationskörper |
 | 5 | `TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM = 1.5` | `core/src/compose.ts:135` | alle Körperformen mit `topLeft`-Grundlinie | **zurückgerechnet, nicht abgelesen** (Rasterung 4096 px); vier der fünf F-a-Läufe, Ausreißer F.1.3 |
@@ -56,6 +57,8 @@ unterscheiden kann.
   Platzrechnung; ihn je Körperform zu variieren, erzeugt sechs neue unvermessene Zahlen statt
   einer. Das Zonenmodell führt ihn deshalb heute als `foot / foot-text-size` mit der
   Herkunftsaussage „nicht an der Referenz abgelesen".
+- **Entschieden am 21.09.2026: A.** Keine Codeänderung; der Wert bleibt Konstante in
+  `compose.ts`.
 
 ### 2 — Die Fußzone erbt die Kopfzonenkonstante
 
@@ -70,6 +73,18 @@ unterscheiden kann.
   Kopfzone").
 - **Empfehlung des Koordinators:** B, und zwar unabhängig von allen übrigen Punkten. Es ist die
   billigste Änderung dieser Liste und die einzige, die einen stillen Kopplungsfehler beseitigt.
+- **Entschieden am 21.09.2026: B — umgesetzt.** `FOOT_GAP_MM` steht in
+  `core/src/layout/profiles.ts` neben `HEAD_GAP_MM`, trägt denselben Wert 1 und eine eigene
+  Herkunftsaussage: **an der Fußzone nicht vermessen, Wert von der Kopfzone übernommen.**
+  `compose()` rechnet die Fußzone seitdem mit `FOOT_GAP_MM`. Das Bild ändert sich nicht.
+  `zones.test.ts` sichert drei Dinge: dass `compose.ts` die neue Konstante benutzt und die alte
+  Zeile verschwunden ist, dass beide Werte heute gleich sind, und dass jede Körperform die
+  Übernahme in ihrer Herkunftsaussage nennt. Ein Auseinanderlaufen ist damit eine bewusste
+  Änderung und keine stille mehr.
+- **Nebenbefund der Umsetzung, der den Punkt schärfer macht als die Vorlage:** Nach der Umstellung
+  war `HEAD_GAP_MM` in `compose.ts` **unbenutzt**. Die Fußzone war dort seine einzige
+  Verwendung — die Kopfzone rechnet damit in `placeHead()`, also in `profiles.ts`. Der
+  Kopfzonenabstand wurde in `compose.ts` folglich ausschließlich für die Fußzone importiert.
 
 ### 3 — `CENTER_LABEL_BOX_MARGIN_MM = 1` und die 28-mm-Box
 
@@ -87,6 +102,9 @@ unterscheiden kann.
 - **Empfehlung des Koordinators:** B, aber erst nach der Vermessung der übrigen Innenfelder. Bis
   dahin A mit der heutigen Herkunftsaussage. Dieser Punkt ist der teuerste der Liste und der
   einzige, der neue Messarbeit auslöst.
+- **Entschieden am 21.09.2026: A bis zur Messung, danach B.** Keine Codeänderung heute. Die
+  Vermessung der übrigen Innenfelder ist Voraussetzung und keine Nebenarbeit — sie gehört in ein
+  eigenes Ticket, nicht in diesen Slice.
 
 ### 4 — `LABEL_SIDE_MARGIN_MM = 2`
 
@@ -101,6 +119,8 @@ unterscheiden kann.
 - **Empfehlung des Koordinators:** A, mit der Herkunftsaussage im Zonendatum statt einer
   Verhaltensänderung. Die 2 mm sind ein **belegter** Wert mit engem Geltungsbereich, nicht eine
   erfundene Zahl; ihn fail-closed zu machen, kostet mehr, als er an Risiko trägt.
+- **Entschieden am 21.09.2026: A.** Keine Codeänderung; der enge Geltungsbereich steht im
+  Zonenmodell.
 
 ### 5 — `TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM = 1.5`
 
@@ -117,6 +137,15 @@ unterscheiden kann.
 - **Empfehlung des Koordinators:** B. Diese Zone führt ihre senkrechte Lage schon je Körperform;
   dass die waagerechte global ist, ist eine Inkonsistenz ohne Begründung. Der Aufwand ist gering,
   weil die Zone ohnehin nur an sechs Fassungen belegt ist.
+- **Entschieden am 21.09.2026: B — beschlossen, Umsetzung im Umstellungsslice.** Bewusst **nicht**
+  jetzt, und der Grund ist inhaltlich: Option B verlangt laut dieser Notiz „die Rückrechnung zu
+  wiederholen oder die Lücke zu deklarieren". Die Rückrechnung braucht die Rasterung der
+  Referenz und ist hier nicht durchführbar; die Lücke zu deklarieren würde `compose()` dort
+  abbrechen lassen, wo es heute zeichnet — ein sichtbarer Funktionsverlust. Die Zahl mit dem
+  Vermerk „übernommen, hier nicht zurückgerechnet" nach `profiles.ts` zu schieben, brächte nur
+  Sichtbarkeit und keinen Beleg, und zwar um den Preis eines Eingriffs in genau die Datei, die
+  dieser Slice unberührt lassen soll. Der Anker wandert deshalb zusammen mit der Umstellung von
+  `compose()` — dort ist die Rückrechnung ohnehin fällig.
 
 ### 6 — Die beiden Versalhöhen 4,87 und 2,92
 
@@ -130,6 +159,7 @@ unterscheiden kann.
   gemessen, nicht je Körperform — ein Zonendatum träfe die falsche Ebene.
 - **Empfehlung des Koordinators:** A. Hier ist die je-Zeichen-Ausnahme bereits die richtige
   Bauart; ein Zonendatum würde sie verdecken.
+- **Entschieden am 21.09.2026: A.** Keine Codeänderung.
 
 ### 7 und 8 — Die zwei unvermessenen Achten
 
@@ -147,6 +177,7 @@ unterscheiden kann.
 - **Empfehlung des Koordinators:** A jetzt, B im Umstellungsslice. Die Lücke ist im Zonenmodell
   bereits deklariert und festgenagelt; ein zweiter Eingriff in `profiles.ts` brächte heute kein
   zusätzliches Sicherheitsnetz.
+- **Entschieden am 21.09.2026: A jetzt, B im Umstellungsslice.** Keine Codeänderung heute.
 
 ## 3. Abweichungen zwischen den Körperformen, die beim Bauen aufgefallen sind
 
@@ -158,7 +189,9 @@ Alle Punkte sind Befunde am Bestand, keine Vorschläge.
    `topLeftBaselineFromBodyTopMm` bleibt die vom Landfahrzeug geerbte 6,75; `topLeftLines`
    beginnen aber bei 5,79 (F.2.8). Ein einzeiliger Lauf säße an dieser Fassung 0,96 mm tiefer als
    die erste Zeile eines zweizeiligen. Vermutlich unbeabsichtigt, aber nicht belegt — deshalb
-   bildet das Zonenmodell beide Zahlen ab, statt eine davon zu bevorzugen.
+   bildet das Zonenmodell beide Zahlen ab, statt eine davon zu bevorzugen. **Am 21.09.2026 als
+   LFH-597 erfasst**, nicht entschieden: beide Zahlen wählen hieße raten, solange die einzeilige
+   Grundlinie an dieser Fassung nicht nachgemessen ist.
 3. **Vier Zahlen ohne jede Herkunftsaussage am Fundort.** `fixedWingVehicleAirProfile` trägt
    `topLeftBaselineFromBodyTopMm: 7`, `aboveLeftBaselineFromBodyTopMm: -1`,
    `aboveLeftAnchorFromBodyLeftMm: -0.01`, `requiresTopLeftMetrics` und eine `measuredBodyBoundsMm`
@@ -210,10 +243,34 @@ der `profileFor()` an das Zonenmodell bindet — er ändert das Verhalten von `c
 deshalb hier bewusst nicht vorgenommen. Bis dahin ist die Grenze in `zones.test.ts` als solche
 festgehalten, nicht als gewolltes Verhalten gebilligt.
 
-## 5. Was diese Notiz nicht entscheidet
+## 5. Umsetzungsstand am 21. September 2026
+
+| # | Wert | Entscheidung | Im Code |
+|---|---|---|---|
+| 1 | `FOOT_TEXT_SIZE_MM` | A — bleibt Konstante | unverändert |
+| 2 | Fußzonenabstand | B | **umgesetzt**: `FOOT_GAP_MM` in `profiles.ts`, benutzt in `compose.ts`, drei Gates in `zones.test.ts` |
+| 3 | 28-mm-Box | A bis zur Messung, danach B | unverändert; Messung als eigenes Ticket |
+| 4 | `LABEL_SIDE_MARGIN_MM` | A | unverändert |
+| 5 | Anker oben links | B, im Umstellungsslice | unverändert; Begründung der Verschiebung siehe §2 Punkt 5 |
+| 6 | Die zwei Versalhöhen | A | unverändert |
+| 7 | Raute, mittige Grundlinie | A jetzt, B im Umstellungsslice | unverändert; Lücke im Zonenmodell deklariert |
+| 8 | Kreiskörper, mittige Grundlinie | A jetzt, B im Umstellungsslice | unverändert; Lücke im Zonenmodell deklariert |
+
+Sechs der acht Werte bleiben damit, was sie waren — der Gewinn dieser Notiz liegt nicht in
+Codeänderungen, sondern darin, dass ihr Geltungsbereich und ihre Messherkunft jetzt als
+Zonendatum sichtbar sind statt als Zahl im Motor. Zwei Werte ändern sich, einer davon sofort.
+
+**Aus Abschnitt 3 ist ein Ticket geworden:** Befund 2 (`vehicle-land/plain-wheel-pair` trägt zwei
+obere Grundlinien, 0,96 mm auseinander) ist nicht entschieden worden, weil keine der beiden
+Zahlen belegt ist und die Referenz hier nicht nachgemessen werden konnte. Eine Zahl zu wählen
+hieße raten. Der Widerspruch ist als **LFH-597** auf der Liste „Einsatzzeichen" erfasst.
+
+## 6. Was diese Notiz nicht entscheidet
 
 - Die Umstellung von `compose()` auf das Zonenmodell. Das Modell entsteht **neben** `compose.ts`
-  und `layout/profiles.ts`, nicht als deren Umbau; beide sind in diesem Teilslice unverändert.
+  und `layout/profiles.ts`, nicht als deren Umbau. Der einzige Eingriff dieser Entscheidung ist
+  der getrennte Fußzonenabstand aus Punkt 2 — eine Konstante und eine Zeile, ohne Änderung am
+  Bild.
 - Die Vermessung der Randlagen für Zustand und Tendenz. Sie bleiben deklarierte Lücken.
 - Die Radienfrage zwischen 12 und 14 mm am Kreiskörper (eigenes Ticket, siehe `profiles.ts`).
 - Ob `LayoutProfileId` (`rect-body` / `rotated-square-body` / `circle-body`) neben dem Zonenmodell

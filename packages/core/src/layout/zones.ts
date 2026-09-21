@@ -13,7 +13,13 @@ import type {
   ZoneProvenance,
 } from '@einsatzzeichen/schema';
 import type { NotMeasuredScope } from '../not-measured.js';
-import { HEAD_GAP_MM, HEAD_TOP_MARGIN_MM, profileFor, type LayoutProfile } from './profiles.js';
+import {
+  FOOT_GAP_MM,
+  HEAD_GAP_MM,
+  HEAD_TOP_MARGIN_MM,
+  profileFor,
+  type LayoutProfile,
+} from './profiles.js';
 
 /**
  * Hält `ZoneGapScope` (in `schema`, abhängigkeitsfrei) an `NotMeasuredScope` (in `core`). Beide
@@ -42,11 +48,18 @@ export const UNDOCUMENTED_AT_SOURCE = 'Ohne Herkunftsaussage am Fundort: ';
 export const NOT_A_CLAIM_AT_SOURCE = 'Ausdrücklich keine Behauptung: ';
 
 /**
- * Die Zonenkonstanten, die heute als modulprivate `const` in `compose.ts` stehen und dort **nicht
- * exportiert** sind. Sie werden hier als Wert wiederholt und nicht importiert, weil dieser
- * Teilslice `compose.ts` ausdrücklich nicht umbaut: ob sie Konstante bleiben oder Zonendatum
- * werden, ist eine Eigentümerentscheidung (siehe
- * `docs/decisions/2026-09-20-zonenmodell-als-daten.md`).
+ * Die Zonenkonstanten, die als modulprivate `const` in `compose.ts` stehen und dort **nicht
+ * exportiert** sind. Sie werden hier als Wert wiederholt und nicht importiert.
+ *
+ * **Sie bleiben Konstanten — das ist entschieden, nicht offen.** Am 21. September 2026 hat der
+ * Eigentümer die sechs Werte dieser Tabelle bei Option A belassen: sie gelten weiter für alle
+ * Körperformen gleich (Begründung je Wert in
+ * `docs/decisions/2026-09-20-zonenmodell-als-daten.md` §2). Das Zonenmodell führt sie deshalb
+ * mit ihrer Herkunftsaussage, ohne sie je Körperform zu variieren.
+ *
+ * Nicht mehr in dieser Tabelle steht der Fußzonenabstand: er war die einzige Ausnahme der
+ * Entscheidung und ist als `FOOT_GAP_MM` nach `profiles.ts` gewandert, weil er dort eine eigene
+ * Bedeutung hat und `compose()` ihn vorher mit `HEAD_GAP_MM` teilte.
  *
  * **Die Wiederholung ist gegatet, nicht gehofft.** `zones.test.ts` liest den Quelltext von
  * `compose.ts` und vergleicht jede dieser Zahlen mit ihrer dortigen Deklaration — dieselbe
@@ -642,15 +655,17 @@ function footZone(profile: LayoutProfile): ZoneBinding {
   const measures: ZoneMeasure[] = [
     offset(
       'foot-top',
-      HEAD_GAP_MM,
+      FOOT_GAP_MM,
       'body-bottom',
       'down',
       source(
-        'core/src/compose.ts:1209',
-        'Befund: `footTopMm = bodyBoundsMm.maxY + HEAD_GAP_MM`. Die Fußzone rechnet mit der ' +
-          'Konstante der **Kopfzone**; ein eigener, an der Fußzone vermessener Abstand existiert ' +
-          'im Repository nicht. Die 1 mm sind an C.1.1, C.1.2 und D.3.7 für die Kopfzone belegt, ' +
-          'nicht für die Fußzone.',
+        'core/src/layout/profiles.ts:26',
+        'Übernommene Zahl, an der Fußzone **nicht** vermessen. Die 1 mm sind an C.1.1, C.1.2 ' +
+          'und D.3.7 für die **Kopfzone** belegt. Bis zur Entscheidung vom 21. September 2026 ' +
+          'rechnete `compose()` die Fußzone mit `HEAD_GAP_MM` selbst — eine Konstante, zwei ' +
+          'Bedeutungen. `FOOT_GAP_MM` trägt denselben Wert und trennt nur die Bedeutungen, ' +
+          'damit eine Messung an der Kopfzone nicht stillschweigend jede Fußzeile verschiebt. ' +
+          'Der eigene Messwert der Fußzone fehlt weiterhin.',
       ),
     ),
     size(

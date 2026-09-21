@@ -11,7 +11,7 @@ import {
   type ZoneId,
   type ZoneMeasure,
 } from '@einsatzzeichen/schema';
-import { profileFor } from './profiles.js';
+import { FOOT_GAP_MM, HEAD_GAP_MM, profileFor } from './profiles.js';
 import {
   COMPOSE_ZONE_CONSTANTS,
   NOT_A_CLAIM_AT_SOURCE,
@@ -484,3 +484,38 @@ const PINNED_NOT_A_CLAIM: readonly string[] = [
   'trailer | body | default-anchor',
   'upright-rectangle | body | default-anchor',
 ];
+
+describe('Fußzonenabstand: eigene Konstante, übernommener Wert', () => {
+  /**
+   * Entscheidung vom 21. September 2026 zu LFH-562 (Befund 2 der Vorlage
+   * `docs/decisions/2026-09-20-zonenmodell-als-daten.md`): Die Fußzone rechnete mit
+   * `HEAD_GAP_MM` — eine Konstante für zwei Bedeutungen, nirgends niedergeschrieben. Sie hat
+   * jetzt `FOOT_GAP_MM`, denselben Wert, eine eigene Herkunftsaussage.
+   *
+   * Die drei Fälle hier sichern genau das ab, was die Trennung wert ist: dass `compose()` die
+   * neue Konstante tatsächlich benutzt, dass die Gleichheit der Werte heute gilt und dass ein
+   * Auseinanderlaufen auffällt statt stillschweigend jede Fußzeile zu verschieben.
+   */
+  it('compose() rechnet die Fußzone mit FOOT_GAP_MM, nicht mit HEAD_GAP_MM', () => {
+    const source = readPackageSource('compose.ts');
+    expect(source).toContain('const footTopMm = bodyBoundsMm.maxY + FOOT_GAP_MM;');
+    expect(source).not.toContain('const footTopMm = bodyBoundsMm.maxY + HEAD_GAP_MM;');
+  });
+
+  it('trägt heute denselben Wert wie die Kopfzone — als Übernahme, nicht als Zusicherung', () => {
+    // Kein „muss gleich bleiben": sobald jemand die Fußzone eigens vermisst, gehört dieser Fall
+    // geändert. Er steht hier, damit das eine bewusste Änderung ist.
+    expect(FOOT_GAP_MM).toBe(HEAD_GAP_MM);
+  });
+
+  it('nennt die Übernahme in der Herkunftsaussage jeder Körperform', () => {
+    for (const form of ZONE_MODEL_FORMS) {
+      const foot = form.zones.foot;
+      if (foot.status !== 'measured') continue;
+      const footTop = foot.measures.find((measure) => measure.id === 'foot-top');
+      expect(footTop, `${formKey(form.kind, form.variant)}: foot-top fehlt`).toBeDefined();
+      expect(footTop?.provenance.note).toContain('nicht** vermessen');
+      expect(footTop?.provenance.note).toContain('Kopfzone');
+    }
+  });
+});
