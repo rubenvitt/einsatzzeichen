@@ -1,3 +1,31 @@
+## Version 1.4.0
+
+### Zonenmodell und Komposition
+
+Die mathematischen Grundlagen der Symbolkomposition wurden als strukturierte Daten dokumentiert und erweitert:
+
+- **Zonenmodell als Datenstruktur**: Alle 16 Zonen je Körperform (insgesamt 19 Körperformen und 13 Variantenzweige) sind nun als explizite Datenstruktur verfügbar. Jedes Maß ist mit seiner Herkunft dokumentiert und an die Quelldaten gebunden.
+
+- **Fußzonenabstand präzisiert**: Der Abstand zwischen Körper und Fußzone wird nun separat von der Kopfzone behandelt. Bisher nutzte die Implementierung den Kopfzonenabstand (1 mm) auch für die Fußzone – dies ist nun explizit dokumentiert und getrennt benannt, ohne die Darstellung zu ändern.
+
+- **303 dokumentierte Lücken**: Fehlende Messungen sind systematisch erfasst, darunter die Randlagen für Zustand und Tendenz (Kapitel 5.8) sowie unvermessene mittlere Grundlinien bei Raute und Kreiskörper.
+
+### Validierung und Regelkatalog
+
+Das Validierungssystem wurde um einen maschinenlesbaren Regelkatalog erweitert:
+
+- **Regelkatalog mit 72 Prüfregeln**: Alle Validierungsregeln sind nun als Datenstruktur verfügbar, einschließlich stabiler Kennungen, fachlicher/technischer Einordnung, betroffener Dimensionen, Begründungen und Quellenverweisen.
+
+- **Kompositionsregeln und Lücken**: Die sechs Kompositionsregeln sind als eigene Klasse dokumentiert, ergänzt um neun Lücken je Dimension als zählbare Daten.
+
+- **Befundanalyse**: 64 von 72 Ablehnungen beruhen auf fehlenden Messungen, nur 8 auf Regeln der Systematik – diese Unterscheidung ist nun nachvollziehbar.
+
+### Dokumentation
+
+- Herkunftsangaben für alle Zonenmaße über `SourceReference`
+- Präzisierte Kommentare zu Kompositionskonstanten
+- Begründungen für Validierungsregeln aus der Website in Tests abgesichert
+
 ## Katalog
 
 Die Darstellungen wurden nach einem Fachreview grundlegend überarbeitet und an die offizielle Referenz angeglichen. Dabei wurden **93 Abweichungen** korrigiert, die durch geschätzte Maße, ungenaue Winkel und inkorrekte Strichstärken entstanden waren.
