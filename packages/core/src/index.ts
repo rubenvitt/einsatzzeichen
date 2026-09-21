@@ -35,6 +35,15 @@ export * from './viewbox-gate.js';
 export * from './text-metrics.js';
 export * from './layout/zones.js';
 export {
+  BLOCK_CATEGORIES,
+  BLOCK_CATEGORY_GAPS,
+  BLOCK_ENTRIES,
+  BLOCK_REGISTER,
+  blockEntry,
+  blockGaps,
+  type BlockGapEntry,
+} from './blocks/register.js';
+export {
   COMPOSITION_RULE_CATALOG,
   RULE_CATALOG,
   RULE_DIMENSIONS,
@@ -48,3 +57,4 @@ export {
   type RulePhase,
   type RuleReasonSource,
 } from './rules/rule-catalog.js';
+export { specKey } from './spec-key.js';

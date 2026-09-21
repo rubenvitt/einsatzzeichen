@@ -9,6 +9,7 @@ import {
   validateSpec,
 } from '@einsatzzeichen/core';
 import { mmToUnits, type Drawing, type Primitive } from '@einsatzzeichen/schema';
+import { comparableFingerprint } from './comparison-exceptions.js';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { fingerprintFor, referenceLacksComparableShape } from './fingerprint-index.js';
 import { pictogram } from './pictograms/index.js';
@@ -70,43 +71,17 @@ function horizontalPictogramLineYMm(drawing: Drawing): number | undefined {
 }
 
 const D_4_3_REFERENCE_ASSET = 'D.4.3_Leiter Gefahrenabwehr Mönchengladbach.svg';
-const I_5_3_REFERENCE_ASSET = 'I.5.3_Taucher.svg';
-const D_4_3_STAR_BOUNDS = [
-  {
-    kind: 'bounds',
-    boundsMm: { minXMm: 9.143, minYMm: 0, maxXMm: 12.857, maxYMm: 4 },
-  },
-  {
-    kind: 'bounds',
-    boundsMm: { minXMm: 19.143, minYMm: 0, maxXMm: 22.857, maxYMm: 4 },
-  },
-] as const;
 
+/**
+ * Kennwert, wie ihn der Körpervergleich sieht. Die Sonderpfade (D.1.2–D.1.8, D.4.3, I.5.3) stehen
+ * seit LFH-568 als benannte Vergleichsausnahmen in `comparison-exceptions.ts`; dieser Helfer
+ * reicht nur den Kennwert durch. Rezepte tragen keine `body-geometry`-Ausnahme — das prüft
+ * `comparison-exceptions.test.ts`.
+ */
 function comparableBodyFingerprint(
   fingerprint: ReturnType<typeof fingerprintFor>,
 ): ReturnType<typeof fingerprintFor> {
-  if (fingerprint.asset === I_5_3_REFERENCE_ASSET) {
-    const labelTOutline = fingerprint.shapes.filter((shape) => shape.kind === 'outline');
-    expect(labelTOutline).toEqual([{
-      kind: 'outline',
-      boundsMm: { minXMm: 1.089, minYMm: 1.081, maxXMm: 3.339, maxYMm: 4 },
-    }]);
-    return {
-      ...fingerprint,
-      // Der zusätzliche Pfad ist das T des literalen Labels „Taucher", nicht Teil der Raute.
-      shapes: fingerprint.shapes.filter((shape) => shape.kind !== 'outline'),
-    };
-  }
-  if (fingerprint.asset !== D_4_3_REFERENCE_ASSET) return fingerprint;
-  const starBounds = fingerprint.shapes.filter((shape) => shape.kind === 'bounds');
-  expect(starBounds).toEqual(D_4_3_STAR_BOUNDS);
-  const [leftStarBounds, rightStarBounds] = starBounds;
-  return {
-    ...fingerprint,
-    shapes: fingerprint.shapes.filter(
-      (shape) => shape !== leftStarBounds && shape !== rightStarBounds,
-    ),
-  };
+  return comparableFingerprint(fingerprint).fingerprint;
 }
 
 describe('composeFromCatalog() — vorbereitete inset-hull-Spec', () => {
@@ -343,19 +318,10 @@ describe('Kompositionsrezepte', () => {
   it.each(fingerprintCases)('reproduziert die Referenz %s', (_section, recipe) => {
     const drawing = composeFromCatalog(recipe.spec);
     const fingerprint = fingerprintFor(recipe.referenceAsset);
-    // D.1.2–D.1.8 verdecken die obere Rahmenlinie mit ihrer 3-mm-Kappe. Der Extraktor führt
-    // deshalb neben der exakten 1/6–31/26-mm-Füllhülle einen nur noch ab y=7,375 sichtbaren
-    // `ring`. Der semantische `body` bleibt die vollständige Füllhülle; die Kappe ist eine
-    // getrennte Dekoration. Für genau diese sieben Quellen vergleichen wir daher die ebenfalls
-    // extrahierte `rect`-Hülle und nicht die durch Übermalung verkürzte sichtbare Kontur.
-    const comparableFingerprint = /^D\.1\.[2-8][._]/.test(recipe.referenceAsset)
-      ? { ...fingerprint, shapes: fingerprint.shapes.filter((shape) => shape.kind !== 'ring') }
-      // D.4.3s `rect`-Körper steht im JSON zuerst; `matchFingerprint` bevorzugt durch seine
-      // Kind-Präzedenz trotzdem die beiden als `bounds` extrahierten Sternpfade. Nur wenn ihre
-      // vollständige Teilmenge exakt den zwei vermessenen Hüllen entspricht, werden genau diese
-      // beiden Objekte aus dem Körpervergleich entfernt.
-      : comparableBodyFingerprint(fingerprint);
-    const result = matchFingerprint(drawing, comparableFingerprint);
+    // Benannte Vergleichsausnahmen (D.1.2–D.1.8 ohne `ring`, D.4.3 ohne Sternhüllen, I.5.3 ohne
+    // das T des Labels) kommen aus `comparison-exceptions.ts`, nicht aus diesem Test.
+    const comparable = comparableFingerprint(fingerprint);
+    const result = matchFingerprint(drawing, comparable.fingerprint, comparable.options);
     expect(result.problems).toEqual([]);
     expect(result.ok).toBe(true);
   });
