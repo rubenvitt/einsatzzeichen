@@ -18,7 +18,7 @@ import {
   type BlockCategory,
   type BlockEntry,
 } from '@einsatzzeichen/schema';
-import { ZONE_IDS } from '../layout/zones.js';
+import { UNDOCUMENTED_AT_SOURCE, ZONE_IDS } from '../layout/zones.js';
 import { ruleCatalogEntry } from '../rules/rule-catalog.js';
 import {
   BLOCK_CATEGORIES,
@@ -191,5 +191,28 @@ describe('Bausteinregister: festgenagelter Stand', () => {
       { id: 'unit-grouping/verband-ii', status: 'not-measured' },
       { id: 'unit-grouping/verband-iii', status: 'not-measured' },
     ]);
+  });
+
+  it('nagelt die Fundorte ohne Herkunftsaussage fest', () => {
+    // Die Zeichnung liegt vor, aber am Fundort steht nicht, woher sie stammt. Das ist kein
+    // Messfehler, sondern eine Dokumentationslücke. Sie soll nicht still wachsen.
+    const undocumented = BLOCK_ENTRIES.filter(
+      (entry) =>
+        entry.binding.status === 'measured' &&
+        entry.binding.geometry.note.startsWith(UNDOCUMENTED_AT_SOURCE),
+    ).map((entry) => entry.id);
+    const byCategory = Object.fromEntries(
+      BLOCK_CATEGORIES.map((category) => [
+        category,
+        undocumented.filter((id) => id.startsWith(`${category}/`)).length,
+      ]).filter(([, count]) => count !== 0),
+    );
+    expect(byCategory).toEqual({
+      'base-symbol': 12,
+      'administrative-level': 3,
+      'technical-head-mark': 1,
+      'body-mark': 8,
+      'function-role': 25,
+    });
   });
 });
