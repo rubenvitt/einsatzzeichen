@@ -1,5 +1,17 @@
 ## Katalog
 
+- **Kapitel 5.8 „Zustände der Lage" vollständig implementiert**: Alle neun Zustandsgruppen (5.8.1 bis 5.8.9) sind nun als semantische Bausteine verfügbar. Jede Gruppe definiert Form, Zone, Träger und Grenze für die jeweiligen Zeichen – beispielsweise wird bei Schneefall (5.8.7) die Wolke als Träger verwendet, während Nebel (5.8.6) und Starkregen (5.8.8) ihre eigenen Trägerformen mitbringen.
+
+- Die sieben Beispielzeichen aus dem Katalog sind vollständig spezifiziert und als Referenzdaten hinterlegt. Die Zuordnung basiert auf den Kopfkommentaren der technischen Zeichnungen und den Kennzahlenartefakten.
+
+- Vier neue Validierungsregeln für Zustandszeichen wurden vorbereitet und stehen zur Aktivierung bereit, sobald die Spezifikationsfelder vollständig implementiert sind.
+
+## Konformität
+
+- Neue Testfixtures für alle Zustandszeichen (Kapitel 5.8) wurden hinzugefügt und gegen das Referenzinventar sowie gespeicherte Fingerprints abgesichert.
+
+## Katalog
+
 - **Landfahrzeuge**: Die obere Grundlinie für einzeilige Beschriftungen an der Radpaar-Fassung (`plain-wheel-pair`) wurde als eigenständige Ausnahme definiert und liegt jetzt explizit bei 6,75 mm. Dies betrifft Zeichen F.2.1 bis F.2.5, bei denen die Fassung nicht die Standard-Grundlinie des allgemeinen Landfahrzeug-Profils übernimmt. Die zweizeilige Beschriftung (z.B. F.2.8) verwendet weiterhin 5,79 mm als erste Zeilenposition.
 
 ## Abhängigkeiten
