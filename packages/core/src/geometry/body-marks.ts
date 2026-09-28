@@ -2098,6 +2098,29 @@ const COMBINATION_MARKS: readonly CombinationMark[] = [
   },
 ];
 
+/**
+ * Die Kombinationsfassungen als Datum ohne Zeichnung (LFH-567): Körperform, Markenmenge und die
+ * Marken, deren Zeichnung die Menge ändert. `CAPABILITY_COMBINATION_RULES` führt sie als benannte
+ * Ausnahmen der Überlagerungsregel; `capability-combinations.test.ts` hält beide Listen gleich.
+ */
+export interface BodyMarkCombinationOverride {
+  readonly kind: SymbolKind;
+  readonly bodyVariant: BodyVariantId | undefined;
+  readonly marks: readonly BodyMarkId[];
+  readonly overrides: readonly BodyMarkId[];
+}
+
+export const BODY_MARK_COMBINATION_OVERRIDES: readonly BodyMarkCombinationOverride[] =
+  Object.freeze(
+    COMBINATION_MARKS.map((entry) =>
+      Object.freeze({
+        kind: entry.kind,
+        bodyVariant: entry.bodyVariant,
+        marks: Object.freeze([...entry.marks]),
+        overrides: Object.freeze(Object.keys(entry.builds) as BodyMarkId[]),
+      })),
+  );
+
 function combinationBuild(
   id: BodyMarkId,
   context: { kind: SymbolKind; bodyVariant?: BodyVariantId; bodyMarks?: readonly BodyMarkId[] },

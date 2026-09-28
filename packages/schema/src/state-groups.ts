@@ -1,4 +1,10 @@
 import type { BlockId, BlockZone } from './blocks.js';
+import type {
+  GrammarEvidence,
+  GrammarFinding,
+  GrammarFixtureEvidence,
+  GrammarSourceEvidence,
+} from './grammar-findings.js';
 
 /**
  * Die neun Gruppen aus Kapitel 5.8, in Kapitelreihenfolge 5.8.1 bis 5.8.9 (LFH-565).
@@ -18,43 +24,19 @@ export type StateGroupId =
   | 'persons'
   | 'access';
 
-/** Beleg im Quelltext: Datei und Zeilenbereich relativ zu `packages/`, wie im Bausteinregister. */
-export interface StateGroupSourceEvidence {
-  readonly definedAt: string;
-  readonly note: string;
-}
+/** Beleg im Quelltext. Seit LFH-567 ein Alias von `GrammarSourceEvidence`. */
+export type StateGroupSourceEvidence = GrammarSourceEvidence;
+
+/** Beleg an einem Beispielzeichen der Referenz. Seit LFH-567 ein Alias von `GrammarFixtureEvidence`. */
+export type StateGroupFixtureEvidence = GrammarFixtureEvidence;
+
+export type StateGroupEvidence = GrammarEvidence;
 
 /**
- * Beleg an einem Beispielzeichen der Referenz. Die Werte stammen aus dem eingecheckten
- * Kennzahlenartefakt (`conformance/src/fingerprints.json`), nicht aus der Datei selbst; das
- * Gate dazu steht in `conformance`.
+ * Stand einer Aussage über eine Gruppe: belegt, empfohlen oder offen. Seit LFH-567 ein Alias von
+ * `GrammarFinding`, den auch Mehrfachfähigkeiten und Sonderformen benutzen.
  */
-export interface StateGroupFixtureEvidence {
-  readonly asset: `${string}.svg`;
-  readonly note: string;
-}
-
-export type StateGroupEvidence = StateGroupSourceEvidence | StateGroupFixtureEvidence;
-
-/**
- * Stand einer Aussage über eine Gruppe. Es gibt drei Zustände wie bei `ZoneBinding` und
- * `BlockBinding`, damit „nicht belegt" nie als Nullwert erscheint:
- *
- * - `evidenced`: im Bestand belegt. `evidence` nennt die Stellen, `remaining` das, was der Beleg
- *   offen lässt.
- * - `proposed`: nicht belegt, aber empfohlen. Die Entscheidung des Eigentümers steht aus; `reason`
- *   begründet die Empfehlung.
- * - `open`: weder belegt noch empfohlen. `question` ist die Frage an den Eigentümer.
- */
-export type StateGroupFinding<T> =
-  | {
-      readonly status: 'evidenced';
-      readonly value: T;
-      readonly evidence: readonly [StateGroupEvidence, ...StateGroupEvidence[]];
-      readonly remaining?: string;
-    }
-  | { readonly status: 'proposed'; readonly value: T; readonly reason: string }
-  | { readonly status: 'open'; readonly question: string };
+export type StateGroupFinding<T> = GrammarFinding<T>;
 
 /**
  * Wie die Referenz einen Wert der Gruppe zeichnet:

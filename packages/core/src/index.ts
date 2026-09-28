@@ -46,6 +46,13 @@ export {
 export { STATE_GROUPS, stateGroup, stateGroupOf } from './blocks/state-groups.js';
 export { ARROW_BLOCKS, LINE_BLOCKS, PARAMETRIC_BLOCKS, parametricBlock } from './blocks/parametric.js';
 export {
+  CAPABILITY_COMBINATION_EXCEPTIONS,
+  CAPABILITY_COMBINATION_RULES,
+  capabilityCombinationForm,
+  capabilityCombinationRule,
+} from './blocks/capability-combinations.js';
+export { SPECIAL_FORMS, specialForm } from './layout/special-forms.js';
+export {
   COMPOSITION_RULE_CATALOG,
   RULE_CATALOG,
   RULE_DIMENSIONS,
@@ -60,6 +67,7 @@ export {
   type RuleReasonSource,
 } from './rules/rule-catalog.js';
 export { PLANNED_STATE_RULES, type PlannedRule } from './rules/planned-state-rules.js';
+export { PLANNED_CAPABILITY_RULES } from './rules/planned-capability-rules.js';
 export { PLANNED_PARAMETRIC_RULES } from './rules/planned-parametric-rules.js';
 export { specKey } from './spec-key.js';
 // Geometrie der Bausteine (LFH-570): Grundzeichen, Körpermarken, Farbe, Stärke, Kopfmarken,
