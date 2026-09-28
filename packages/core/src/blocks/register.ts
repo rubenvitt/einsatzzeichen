@@ -12,6 +12,7 @@ import {
   UNIT_GROUPING_BLOCKS,
 } from './head.js';
 import { BODY_MARK_BLOCKS, CAPABILITY_BLOCKS, FUNCTION_ROLE_BLOCKS } from './marks.js';
+import { ARROW_BLOCKS, LINE_BLOCKS } from './parametric.js';
 import { STATE_BLOCKS, TENDENCY_BLOCKS } from './states.js';
 
 /**
@@ -41,8 +42,8 @@ export const BLOCK_REGISTER: Readonly<Record<BlockCategory, readonly BlockEntry[
   'function-role': FUNCTION_ROLE_BLOCKS,
   state: STATE_BLOCKS,
   tendency: TENDENCY_BLOCKS,
-  arrow: [],
-  line: [],
+  arrow: ARROW_BLOCKS,
+  line: LINE_BLOCKS,
 } satisfies Record<BlockCategory, readonly BlockEntry[]>);
 
 /** Alle Kategorien in Registerreihenfolge. */
@@ -56,26 +57,11 @@ export const BLOCK_ENTRIES: readonly BlockEntry[] = Object.freeze(
 );
 
 /**
- * Kategorien, für die das Schema noch keine Werte kennt. Für Pfeil und Linie gibt es die
- * Referenzdateien (5.2.1–5.2.6, 2.14–2.20), aber keine Kennungen. Kennungen zu erfinden wäre
- * Scope von LFH-566, der Richtung und Länge mitbringt.
+ * Kategorien, für die das Schema noch keine Werte kennt. Seit LFH-566 ist die Liste leer: Pfeil
+ * und Linie haben ihre Kennungen (`MOVEMENT_IDS`, `LINE_IDS`). Die Liste bleibt, damit eine neue
+ * Kategorie ohne Werte hier erscheinen muss und nicht still leer bleibt.
  */
-export const BLOCK_CATEGORY_GAPS: readonly BlockCategoryGap[] = Object.freeze([
-  Object.freeze({
-    category: 'arrow',
-    reason:
-      'Keine Kennungen im Schema. Bewegung und Maßnahmen aus 5.2 brauchen Richtung und Länge; Pfeile gibt es heute nur eingebettet in andere Geometrie.',
-    definedAt: 'core/src/rules/rule-catalog.ts:934–939',
-    ticket: 'LFH-566',
-  } satisfies BlockCategoryGap),
-  Object.freeze({
-    category: 'line',
-    reason:
-      'Keine Kennungen im Schema. Linien und Grenzen aus Kapitel 2 sind keine Zeichen auf der 32-mm-Grundfläche.',
-    definedAt: 'core/src/rules/rule-catalog.ts:940–945',
-    ticket: 'LFH-566',
-  } satisfies BlockCategoryGap),
-]);
+export const BLOCK_CATEGORY_GAPS: readonly BlockCategoryGap[] = Object.freeze([]);
 
 /** Nachschlag über die Kennung, `undefined` statt Wurf. */
 export function blockEntry(id: BlockId | string): BlockEntry | undefined {

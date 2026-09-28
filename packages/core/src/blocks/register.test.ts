@@ -7,6 +7,8 @@ import {
   BODY_VARIANT_IDS,
   CAPABILITY_IDS,
   FUNCTION_ROLE_IDS,
+  LINE_IDS,
+  MOVEMENT_IDS,
   ORGANIZATION_IDS,
   STATE_IDS,
   STRENGTH_IDS,
@@ -49,8 +51,8 @@ const EXPECTED_VALUES: Readonly<Record<Exclude<BlockCategory, 'base-symbol'>, re
   'function-role': FUNCTION_ROLE_IDS,
   state: STATE_IDS.filter((id) => !id.startsWith('tendency-')),
   tendency: TENDENCY_IDS,
-  arrow: [],
-  line: [],
+  arrow: MOVEMENT_IDS,
+  line: LINE_IDS,
 };
 
 function placesOf(entry: BlockEntry): readonly string[] {
@@ -173,20 +175,27 @@ describe('Bausteinregister: festgenagelter Stand', () => {
       'function-role': 25,
       state: 58,
       tendency: 3,
-      arrow: 0,
-      line: 0,
+      arrow: 6,
+      line: 7,
     });
   });
 
   it('nagelt die Bausteine ohne Zeichnung fest', () => {
     // Dieselben Lücken wie in der Wertabdeckung (`conformance/src/rule-coverage.ts`): drei
     // Verwaltungsstufen und das Amphibienfahrzeug. Dazu kommen die Verbände aus 5.5, die dort
-    // keine Achse haben, weil `SymbolSpec` kein Feld für sie führt.
+    // keine Achse haben, weil `SymbolSpec` kein Feld für sie führt. Seit LFH-566 außerdem die
+    // Pfeile und Linien, deren Geometrie das Kennzahlenartefakt nicht erfasst oder nur als Hülle.
     expect(blockGaps()).toEqual([
       { id: 'administrative-level/bezirk', status: 'not-measured' },
       { id: 'administrative-level/bundesland', status: 'not-measured' },
       { id: 'administrative-level/gemeinde', status: 'not-measured' },
+      { id: 'arrow/end-of-movement', status: 'not-measured' },
+      { id: 'arrow/gathering', status: 'not-measured' },
+      { id: 'arrow/start-of-action', status: 'not-measured' },
       { id: 'chassis/amphibienfahrzeug', status: 'not-measured' },
+      { id: 'line/barrier-position', status: 'not-measured' },
+      { id: 'line/escape-route', status: 'not-measured' },
+      { id: 'line/fire-spread', status: 'not-measured' },
       { id: 'unit-grouping/verband-i', status: 'not-measured' },
       { id: 'unit-grouping/verband-ii', status: 'not-measured' },
       { id: 'unit-grouping/verband-iii', status: 'not-measured' },

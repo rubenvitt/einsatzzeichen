@@ -449,6 +449,15 @@ const TENDENCY_MARGIN_GAP = notMeasured(
     'offen und wird hier nicht entschieden.',
 );
 
+const MOVEMENT_ANCHOR_GAP = notMeasured(
+  'value',
+  'core/src/geometry/parametric.ts:39–40, 316–321',
+  'Die Pfeile aus 5.2 sind in der Referenz nur freistehend gezeichnet, jeder in seiner eigenen ' +
+    '32-mm-Fläche. Kein Original zeigt einen Pfeil an einem Grundzeichen, deshalb ist die Stelle, ' +
+    'an der er am Körper beginnt, an keiner Körperform vermessen. Eine andere Grundzeichenart ' +
+    'hilft nicht, deshalb `scope: "value"`.',
+);
+
 function bodyZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
   const anchorSource = provenanceFor(DEFAULT_ANCHOR_SOURCE, profile.id, 'den Standardanker');
   const anchor = HEADLESS_E2_KINDS.includes(kind)
@@ -1102,6 +1111,7 @@ export function zonesFor(kind: SymbolKind, variant?: BodyVariantId): BodyFormZon
     'label-surface-below-right': surfaceZone('right', kind, variant, profile),
     'state-margin': STATE_MARGIN_GAP,
     'tendency-margin': TENDENCY_MARGIN_GAP,
+    'movement-anchor': MOVEMENT_ANCHOR_GAP,
   };
   return variant === undefined ? { kind, zones } : { kind, variant, zones };
 }
@@ -1129,6 +1139,7 @@ export const ZONE_IDS: readonly ZoneId[] = Object.freeze(
     'label-surface-below-right': true,
     'state-margin': true,
     'tendency-margin': true,
+    'movement-anchor': true,
   } satisfies Record<ZoneId, true>) as ZoneId[],
 );
 
