@@ -15,7 +15,8 @@ import type { BodyVariantId, SymbolKind } from './taxonomy.js';
  *
  * `state-margin` und `tendency-margin` sind bewusst aufgeführt, obwohl an ihnen nichts vermessen
  * ist: eine Zone, die im Modell fehlt, ist von einer Zone ohne Messung nicht zu unterscheiden.
- * Die Randlage trägt deshalb eine Lückenbegründung, keine ausgedachte Lage.
+ * Die Randlage trägt deshalb eine Lückenbegründung, keine ausgedachte Lage. Dasselbe gilt für
+ * `movement-anchor`, den Anbindungspunkt der Pfeile aus 5.2 (LFH-566).
  */
 export type ZoneId =
   /** Die Hülle des platzierten Körpers. Bezugsrahmen aller übrigen Zonen. */
@@ -49,7 +50,12 @@ export type ZoneId =
   /** Randlage für einen Zustand aus Kapitel 5.8. */
   | 'state-margin'
   /** Randlage für eine Tendenz aus Kapitel 5.8. */
-  | 'tendency-margin';
+  | 'tendency-margin'
+  /**
+   * Anbindungspunkt eines Pfeils aus 5.2 am Körper (LFH-566). Keine Fläche wie die übrigen Zonen,
+   * sondern die Stelle, an der ein Verlauf beginnt, dessen Richtung und Länge der Nutzer setzt.
+   */
+  | 'movement-anchor';
 
 /** Kante, gegen die die Lage einer Zone gerechnet wird. */
 export type ZoneAnchorEdge =

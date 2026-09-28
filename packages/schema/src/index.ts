@@ -14,3 +14,4 @@ export * from './taxonomy-values.js';
 export * from './zones.js';
 export * from './blocks.js';
 export * from './state-groups.js';
+export * from './parametric.js';

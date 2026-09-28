@@ -44,6 +44,7 @@ export {
   type BlockGapEntry,
 } from './blocks/register.js';
 export { STATE_GROUPS, stateGroup, stateGroupOf } from './blocks/state-groups.js';
+export { ARROW_BLOCKS, LINE_BLOCKS, PARAMETRIC_BLOCKS, parametricBlock } from './blocks/parametric.js';
 export {
   COMPOSITION_RULE_CATALOG,
   RULE_CATALOG,
@@ -59,6 +60,7 @@ export {
   type RuleReasonSource,
 } from './rules/rule-catalog.js';
 export { PLANNED_STATE_RULES, type PlannedRule } from './rules/planned-state-rules.js';
+export { PLANNED_PARAMETRIC_RULES } from './rules/planned-parametric-rules.js';
 export { specKey } from './spec-key.js';
 // Geometrie der Bausteine (LFH-570): Grundzeichen, Körpermarken, Farbe, Stärke, Kopfmarken,
 // Verwaltungsstufe, Funktionsfassung, Piktogramme, Beschriftung, Themes, Kontrastbefunde und die
@@ -71,6 +73,7 @@ export * from './geometry/strengths.js';
 export * from './geometry/technical-head-marks.js';
 export * from './geometry/administrative-heads.js';
 export * from './geometry/function-roles.js';
+export * from './geometry/parametric.js';
 export * from './geometry/pictograms/index.js';
 export * from './geometry/render-themes.js';
 export * from './geometry/labels.js';
