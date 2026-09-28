@@ -56,7 +56,7 @@ export async function findMissingPackages({
   const unklar = [];
   await Promise.all(
     names.map(async (name) => {
-      const url = `${basis}/${name.replace('/', '%2f')}`;
+      const url = `${basis}/${name.replace(/\//g, '%2f')}`;
       try {
         const antwort = await fetchImpl(url, {
           method: 'GET',
