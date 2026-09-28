@@ -1,3 +1,7 @@
+## Release-Prozess
+
+- **Verbesserte Paket-Veröffentlichung**: Das Release-System erkennt jetzt neue npm-Pakete vor der Veröffentlichung und verhindert dadurch unvollständige Releases. Bisher konnten Situationen auftreten, in denen nur ein Teil der Pakete (core, schema) publiziert wurde, während andere Pakete (react, cli, qgis, maplibre, web-component) auf älteren Versionen hängen blieben. Mit dieser Änderung werden alle Pakete konsistent auf die gleiche Version aktualisiert.
+
 ## ⚠️ Breaking Changes
 
 Keine Breaking Changes in dieser Version.
