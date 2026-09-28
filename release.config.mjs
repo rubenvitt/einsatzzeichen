@@ -2,6 +2,8 @@
  * Automatische Versionierung und Veröffentlichung mit semantic-release.
  *
  * Ablauf pro Push auf main (.github/workflows/release.yml):
+ *  0. exec prüft vorab (verifyConditions), ob jedes publizierbare Paket schon auf npm existiert —
+ *     Trusted Publishing kann keine neuen Pakete anlegen (`scripts/release/check-registry.mjs`).
  *  1. commit-analyzer bestimmt aus den Conventional Commits die nächste Version
  *     (feat → minor, fix/perf/refactor → patch, BREAKING CHANGE/`!` → major).
  *  2. semantic-release-claude-changelog erzeugt deutschsprachige Release Notes.
@@ -77,6 +79,7 @@ Starte direkt mit den Release Notes, gruppiert wie oben beschrieben, mit ## ...`
     [
       '@semantic-release/exec',
       {
+        verifyConditionsCmd: 'node scripts/release/check-registry.mjs',
         prepareCmd: 'node scripts/release/set-version.mjs ${nextRelease.version}',
         publishCmd: 'node scripts/release/publish.mjs ${lastRelease.gitTag}',
       },
