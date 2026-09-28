@@ -1,3 +1,14 @@
+## Katalog
+
+- **Landfahrzeuge**: Die obere Grundlinie für einzeilige Beschriftungen an der Radpaar-Fassung (`plain-wheel-pair`) wurde als eigenständige Ausnahme definiert und liegt jetzt explizit bei 6,75 mm. Dies betrifft Zeichen F.2.1 bis F.2.5, bei denen die Fassung nicht die Standard-Grundlinie des allgemeinen Landfahrzeug-Profils übernimmt. Die zweizeilige Beschriftung (z.B. F.2.8) verwendet weiterhin 5,79 mm als erste Zeilenposition.
+
+## Abhängigkeiten
+
+- Vite auf Version 8.3.0 aktualisiert
+- @vitejs/plugin-react auf Version 6.1.1 aktualisiert
+- @types/node auf Version 26.6.1 aktualisiert
+- Playwright auf Version 1.62.1 aktualisiert
+
 ## 🚨 Breaking Changes
 
 **@einsatzzeichen/catalog wurde in @einsatzzeichen/conformance umbenannt**

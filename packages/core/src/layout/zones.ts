@@ -277,10 +277,19 @@ const TOP_LEFT_BASELINE_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
     babz('F.1.1–F.1.11'),
   ),
   'vehicle-land': source(
-    'core/src/layout/profiles.ts:227–236',
+    'core/src/layout/profiles.ts:245–260',
     'F.2-Landfahrzeuge mit normaler oder gebänderter Hülle: obere Grundlinie 6,75 mm unter der ' +
-      'Körperoberkante (F.2.1 bis F.2.5, Grundlinie 12,5 bei Oberkante 5,75). Das ' +
-      'Kapitel-1-Grundzeichen selbst trägt keinen Lauf.',
+      'Körperoberkante (F.2.1 bis F.2.5, Grundlinie 12,5 bei Oberkante 5,75). Diese Zeichen ' +
+      'tragen die Fassung `plain-wheel-pair`; an der normalen und der gebänderten Hülle ist der ' +
+      'Wert auf denselben Rumpf übertragen. Das Kapitel-1-Grundzeichen selbst trägt keinen Lauf.',
+    babz('F.2.1–F.2.5'),
+  ),
+  'vehicle-land/plain-wheel-pair': source(
+    'core/src/layout/profiles.ts:268–286',
+    'Unmittelbar an dieser Fassung gemessen: die sechs einzeiligen Läufe aus F.2.1 bis F.2.5 ' +
+      '(`KTW`, `N-KTW_B`, `2`, `RTW`, `NEF`, `NAW`) stehen auf Grundlinie 12,5 bei ' +
+      'Körperoberkante 5,75. **Benannte Ausnahme (LFH-597):** der zweizeilige Satz aus F.2.8 ' +
+      'beginnt 0,96 mm höher; die Referenz führt an dieser Fassung zwei Lagen.',
     babz('F.2.1–F.2.5'),
   ),
   'circle-12': source(
@@ -915,10 +924,11 @@ function topLeftZone(
     const linesSource =
       key === 'vehicle-land/plain-wheel-pair'
         ? source(
-            'core/src/layout/profiles.ts:246–252',
+            'core/src/layout/profiles.ts:268–286',
             'F.2.8: Grundlinien 11,54/15,07 mm bei Körperoberkante 5,75, also 5,79 und 9,32 mm; ' +
-              'gemeinsame Versalhöhe 2,43 mm. **Abweichung:** die einzeilige Grundlinie dieses ' +
-              'Profils bleibt die geerbte 6,75 und deckt sich nicht mit der ersten Zeile 5,79.',
+              'gemeinsame Versalhöhe 2,43 mm. **Benannte Ausnahme (LFH-597):** die erste Zeile ' +
+              'liegt 0,96 mm über der einzeiligen Grundlinie 6,75. Beide Lagen sind an dieser ' +
+              'Fassung gemessen (6,75 an F.2.1 bis F.2.5, 5,79 an F.2.8); die Referenz führt zwei.',
             babz('F.2.8'),
           )
         : source(

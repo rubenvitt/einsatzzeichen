@@ -192,6 +192,10 @@ Alle Punkte sind Befunde am Bestand, keine Vorschläge.
    bildet das Zonenmodell beide Zahlen ab, statt eine davon zu bevorzugen. **Am 21.09.2026 als
    LFH-597 erfasst**, nicht entschieden: beide Zahlen wählen hieße raten, solange die einzeilige
    Grundlinie an dieser Fassung nicht nachgemessen ist.
+   **Aufgelöst am 28.09.2026** (`2026-09-28-lfh-597-zwei-obere-lagen-plain-wheel-pair.md`): Die
+   6,75 ist nicht geerbt. Sie ist an F.2.1 bis F.2.5 gemessen, und diese Zeichen tragen selbst
+   `plain-wheel-pair`. Die Referenz führt an dieser Fassung zwei Lagen, und das Zonenmodell führt
+   sie jetzt als benannte Ausnahme.
 3. **Vier Zahlen ohne jede Herkunftsaussage am Fundort.** `fixedWingVehicleAirProfile` trägt
    `topLeftBaselineFromBodyTopMm: 7`, `aboveLeftBaselineFromBodyTopMm: -1`,
    `aboveLeftAnchorFromBodyLeftMm: -0.01`, `requiresTopLeftMetrics` und eine `measuredBodyBoundsMm`
@@ -264,6 +268,8 @@ Zonendatum sichtbar sind statt als Zahl im Motor. Zwei Werte ändern sich, einer
 obere Grundlinien, 0,96 mm auseinander) ist nicht entschieden worden, weil keine der beiden
 Zahlen belegt ist und die Referenz hier nicht nachgemessen werden konnte. Eine Zahl zu wählen
 hieße raten. Der Widerspruch ist als **LFH-597** auf der Liste „Einsatzzeichen" erfasst.
+Am 28. September 2026 ist er als benannte Ausnahme aufgelöst, denn beide Zahlen sind an dieser
+Fassung gemessen (siehe §3 Punkt 2).
 
 ## 6. Was diese Notiz nicht entscheidet
 
