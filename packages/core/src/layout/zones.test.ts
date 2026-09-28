@@ -74,7 +74,7 @@ describe('Zonenmodell: Vollständigkeit', () => {
   });
 
   it('belegt an jeder Körperfassung jede Zone', () => {
-    expect(ZONE_IDS).toHaveLength(16);
+    expect(ZONE_IDS).toHaveLength(17);
     for (const form of ZONE_MODEL_FORMS) {
       expect(Object.keys(form.zones).sort(), formKey(form.kind, form.variant)).toEqual(
         [...ZONE_IDS].sort(),
@@ -276,6 +276,7 @@ describe('Zonenmodell: Bindung an die bestehenden Fundorte', () => {
     expect([...files].sort()).toEqual([
       'core/src/compose.ts',
       'core/src/geometry/base-symbols.ts',
+      'core/src/geometry/parametric.ts',
       'core/src/layout/profiles.ts',
       'core/src/validate.ts',
       'schema/src/chassis.ts',
@@ -287,7 +288,7 @@ describe('Zonenmodell: Bindung an die bestehenden Fundorte', () => {
 describe('Zonenmodell: deklarierte Lücken', () => {
   it('nagelt die Liste der Lücken fest', () => {
     // Je Zone und Zustand eine Zeile mit allen betroffenen Körperfassungen. Dieselbe Aussage wie
-    // 303 Einzelzeilen, nur lesbar: eine still geschlossene Lücke verschwindet aus ihrer Zeile,
+    // 335 Einzelzeilen, nur lesbar: eine still geschlossene Lücke verschwindet aus ihrer Zeile,
     // eine neue erscheint darin, und eine Zone, die kippt, wechselt die Zeile.
     const byZone: Record<string, string[]> = {};
     for (const entry of zoneGaps()) {
@@ -296,7 +297,7 @@ describe('Zonenmodell: deklarierte Lücken', () => {
     }
     for (const forms of Object.values(byZone)) forms.sort();
     expect(byZone).toEqual(PINNED_GAPS);
-    expect(zoneGaps()).toHaveLength(303);
+    expect(zoneGaps()).toHaveLength(335);
   });
 
   it('führt Zustand und Tendenz an jeder Körperfassung als unvermessen', () => {
@@ -313,6 +314,16 @@ describe('Zonenmodell: deklarierte Lücken', () => {
     expect(ZONE_MODEL.formation.zones['tendency-margin'].status === 'not-measured'
       ? ZONE_MODEL.formation.zones['tendency-margin'].gap.reason
       : '').toContain('keine eigene Achse');
+  });
+
+  it('führt den Anbindungspunkt der Pfeile an jeder Körperfassung als unvermessen', () => {
+    // LFH-566: kein Original zeigt einen Pfeil aus 5.2 an einem Grundzeichen. `value` und nicht
+    // `combination`, weil keine Körperform die Anbindung trägt.
+    for (const form of ZONE_MODEL_FORMS) {
+      const binding = form.zones['movement-anchor'];
+      expect(binding.status, formKey(form.kind, form.variant)).toBe('not-measured');
+      expect(binding.status === 'not-measured' ? binding.gap.scope : undefined).toBe('value');
+    }
   });
 
   it('nagelt die Zahlen ohne Herkunftsaussage am Fundort fest', () => {
@@ -444,6 +455,16 @@ const PINNED_GAPS: Readonly<Record<string, readonly string[]>> = {
     'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'upright-rectangle', 'vehicle-air',
     'vehicle-air/raised-hull', 'vehicle-water', 'vehicle-water/inset-hull',
     'vehicle-water/raised-hull',
+  ],
+  'movement-anchor | not-measured | value': [
+    'area', 'building', 'circle-12', 'circle-12/foot-band', 'circle-12/raised-circle-1mm',
+    'circle-12/raised-gable', 'container', 'event', 'formation', 'formation/foot-band', 'hazard',
+    'measure', 'person', 'person/compact-person-diamond-26mm',
+    'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post', 'reduced-house',
+    'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'upright-rectangle', 'vehicle-air',
+    'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull', 'vehicle-land',
+    'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track', 'vehicle-land/plain-wheel-pair',
+    'vehicle-water', 'vehicle-water/inset-hull', 'vehicle-water/raised-hull',
   ],
   'state-margin | not-measured | value': [
     'area', 'building', 'circle-12', 'circle-12/foot-band', 'circle-12/raised-circle-1mm',

@@ -1,3 +1,18 @@
+## Core-Bibliothek
+
+**Neue Bausteinart: Parametrisierte Linien und Pfeile**
+
+Mit diesem Release erweitert Einsatzzeichen das Symbolsystem um die erste Bausteinart ohne feste Ausdehnung. Pfeile (5.2) und Grenzen (2.14–2.20) werden nun als parametrisierte Bausteine unterstützt:
+
+- **Bewegungspfeile (5.2.1, 5.2.3, 5.2.4)**: Zeichnung von Richtungspfeilen mit konfigurierbarem Verlauf. Der Pfeilkopf, Strichstärken und Beschriftungen (TEL/EA/UEA) entsprechen den vermessenen Werten aus dem Kennzahlenartefakt
+- **Grenzlinien (2.17–2.20)**: Darstellung von Grenzmarkierungen mit charakteristischen Zug-Marken, ebenfalls parametrisch über Stützpunkte oder Richtung und Länge definierbar
+- Neue Zone `movement-anchor` für die Anbindung von Bewegungselementen an Körpersymbole
+- Rendering erfolgt präzise: Die Zeichnung trifft die Referenzhülle auf drei Nachkommastellen
+
+Die neuen Bausteinarten `movementDrawing` und `lineDrawing` ermöglichen erstmals die Konstruktion von Symbolelementen aus Verläufen statt aus festen Konturen. Das Symbolregister wurde um 13 Einträge in den Kategorien `arrow` und `line` erweitert.
+
+**Hinweis**: Einige Symbole (5.2.2, 5.2.5, 5.2.6 sowie Flächengrenzen 2.14–2.16) sind noch nicht vermessen und werden künftig ergänzt.
+
 ## Katalog
 
 - **Kapitel 5.8 „Zustände der Lage" vollständig implementiert**: Alle neun Zustandsgruppen (5.8.1 bis 5.8.9) sind nun als semantische Bausteine verfügbar. Jede Gruppe definiert Form, Zone, Träger und Grenze für die jeweiligen Zeichen – beispielsweise wird bei Schneefall (5.8.7) die Wolke als Träger verwendet, während Nebel (5.8.6) und Starkregen (5.8.8) ihre eigenen Trägerformen mitbringen.

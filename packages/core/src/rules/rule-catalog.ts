@@ -937,13 +937,13 @@ export const RULE_DIMENSION_GAPS: readonly RuleDimensionGap[] = Object.freeze([
     dimension: 'movement',
     coverage: 'none',
     chapter: '5.2',
-    note: 'Keine Regel und kein Feld in `SymbolSpec`. Bewegung und Maßnahmen brauchen Richtung und Länge, für die es im Zonenmodell noch keinen Ort gibt.',
+    note: 'Keine Regel und kein Feld in `SymbolSpec`. Die Pfeile sind seit LFH-566 Bausteine mit Verlauf als Parameter (`movementDrawing`); ihr Anbindungspunkt am Körper ist die Zone `movement-anchor`, aber an keiner Körperform vermessen. Zwei Regeln sind vorgemerkt (`PLANNED_PARAMETRIC_RULES`).',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'lines-and-boundaries',
     coverage: 'none',
     chapter: 'Kapitel 2',
-    note: 'Keine Regel und kein Feld in `SymbolSpec`. Linien und Grenzen sind keine Zeichen auf der 32-mm-Grundfläche und sprengen das heutige Ausgabeformat.',
+    note: 'Keine Regel und kein Feld in `SymbolSpec`. Linien und Grenzen sind keine Zeichen auf der 32-mm-Grundfläche; seit LFH-566 baut `lineDrawing` sie aus einem Verlauf in eigener Zeichenfläche. Zwei Regeln sind vorgemerkt (`PLANNED_PARAMETRIC_RULES`).',
   } satisfies RuleDimensionGap),
 ]);
 
