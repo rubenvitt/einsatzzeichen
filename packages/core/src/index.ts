@@ -43,6 +43,7 @@ export {
   blockGaps,
   type BlockGapEntry,
 } from './blocks/register.js';
+export { STATE_GROUPS, stateGroup, stateGroupOf } from './blocks/state-groups.js';
 export {
   COMPOSITION_RULE_CATALOG,
   RULE_CATALOG,
@@ -57,6 +58,7 @@ export {
   type RulePhase,
   type RuleReasonSource,
 } from './rules/rule-catalog.js';
+export { PLANNED_STATE_RULES, type PlannedRule } from './rules/planned-state-rules.js';
 export { specKey } from './spec-key.js';
 // Geometrie der Bausteine (LFH-570): Grundzeichen, Körpermarken, Farbe, Stärke, Kopfmarken,
 // Verwaltungsstufe, Funktionsfassung, Piktogramme, Beschriftung, Themes, Kontrastbefunde und die
