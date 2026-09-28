@@ -94,6 +94,10 @@ describe('Layoutprofile', () => {
       baselinesFromBodyTopMm: [5.79, 9.32],
       capHeightMm: 2.43,
     });
+    // LFH-597: zwei gemessene Lagen an derselben Fassung, 0,96 mm auseinander.
+    const plainWheel = profileFor('vehicle-land', 'plain-wheel-pair');
+    expect(plainWheel.topLeftBaselineFromBodyTopMm! - plainWheel.topLeftLines!.baselinesFromBodyTopMm[0])
+      .toBeCloseTo(0.96, 6);
     expect(profileFor('vehicle-air').aboveLeftBaselineFromBodyTopMm).toBeUndefined();
     expect(profileFor('vehicle-air', 'raised-hull').aboveLeftBaselineFromBodyTopMm).toBe(0);
     expect(profileFor('vehicle-air', 'raised-hull').aboveLeftAnchorFromBodyLeftMm).toBe(-0.01);

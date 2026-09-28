@@ -246,6 +246,10 @@ const formationFootBandProfile: LayoutProfile = {
  * F.2-Landfahrzeuge mit normaler oder gebänderter Hülle: obere Grundlinie 6,75 mm unter der
  * Körperoberkante. Das Kapitel-1-Grundzeichen selbst trägt keinen Lauf; der Wert wird nur
  * erreicht, wenn ein SymbolSpec die Zone ausdrücklich belegt.
+ *
+ * Gemessen ist die 6,75 an F.2.1 bis F.2.5 (Grundlinie 12,5 bei Oberkante 5,75), und diese
+ * Zeichen tragen alle die Fassung `plain-wheel-pair`. An der normalen und der gebänderten Hülle
+ * ist der Wert übertragen, nicht abgelesen: der Rumpf ist derselbe (x = 1…31, y = 5,75…26).
  */
 const vehicleLandProfile: LayoutProfile = {
   ...rectBody(8),
@@ -261,10 +265,22 @@ const footBandVehicleLandProfile: LayoutProfile = {
   topLeftLines: undefined,
 };
 
-/** F.2-Landfahrzeuge: Grundlinie 12,5 mm und die zweizeilige F.2.8-Zone. */
+/**
+ * F.2-Landfahrzeuge: Grundlinie 12,5 mm und die zweizeilige F.2.8-Zone.
+ *
+ * **Benannte Ausnahme (LFH-597): zwei obere Lagen an derselben Fassung.** Der einzeilige Lauf
+ * steht 6,75 mm unter der Körperoberkante, die erste von zwei Zeilen 5,79 mm. Beide Zahlen sind
+ * an dieser Fassung gemessen, keine ist geerbt: die 6,75 an den sechs einzeiligen Läufen aus
+ * F.2.1 bis F.2.5 (`KTW`, `N-KTW_B`, `2`, `RTW`, `NEF`, `NAW`), die 5,79 an F.2.8. Die Referenz
+ * führt also zwei Lagen; der zweizeilige Satz rückt 0,96 mm nach oben und setzt kleiner
+ * (Versalhöhe 2,43 statt 2,92). Die Grundlinie steht deshalb hier ausdrücklich, obwohl sie dem
+ * Landfahrzeugprofil gleicht.
+ */
 const plainWheelVehicleLandProfile: LayoutProfile = {
   ...vehicleLandProfile,
   allowsCenterBaselineOverride: undefined,
+  // F.2.1–F.2.5: einzeiliger Lauf auf Grundlinie 12,5 mm.
+  topLeftBaselineFromBodyTopMm: 6.75,
   // F.2.8: Grundlinien 11,54/15,07 mm; gemeinsame Versalhöhe 2,43 mm.
   topLeftLines: { baselinesFromBodyTopMm: [5.79, 9.32], capHeightMm: 2.43 },
 };

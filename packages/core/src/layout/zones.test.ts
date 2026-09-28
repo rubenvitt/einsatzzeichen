@@ -157,6 +157,7 @@ describe('Zonenmodell: Herkunft der Zahlen', () => {
     ['vehicle-land', 'chassis', 'chassis-top', 0],
     ['vehicle-land', 'chassis', 'chassis-height', 4.75],
     ['vehicle-land/inverted-hull-track', 'chassis', 'chassis-top', 0.25],
+    ['vehicle-land/plain-wheel-pair', 'label-top-left', 'top-left-baseline', 6.75],
     ['vehicle-land/plain-wheel-pair', 'label-top-left', 'top-left-line-1-baseline', 5.79],
     ['vehicle-land/plain-wheel-pair', 'label-top-left', 'top-left-line-2-baseline', 9.32],
     ['vehicle-land/plain-wheel-pair', 'label-top-left', 'top-left-lines-cap-height', 2.43],
@@ -180,6 +181,19 @@ describe('Zonenmodell: Herkunft der Zahlen', () => {
 
   it.each(FIXTURES)('%s / %s / %s trägt %d mm', (key, zone, id, expected) => {
     expect(valueMmOf(key, zone, id)).toBeCloseTo(expected, 6);
+  });
+
+  it('führt die zwei oberen Lagen an `plain-wheel-pair` als benannte Ausnahme (LFH-597)', () => {
+    const single = measureOf('vehicle-land/plain-wheel-pair', 'label-top-left', 'top-left-baseline');
+    const firstLine = measureOf('vehicle-land/plain-wheel-pair', 'label-top-left', 'top-left-line-1-baseline');
+    // Beide Lagen sind an dieser Fassung gemessen, keine ist vom Landfahrzeug geerbt.
+    expect(single.provenance.note).toMatch(/Unmittelbar an dieser Fassung gemessen/);
+    expect(single.provenance.sourceRefs?.map((ref) => ref.section)).toEqual(['F.2.1–F.2.5']);
+    expect(firstLine.provenance.sourceRefs?.map((ref) => ref.section)).toEqual(['F.2.8']);
+    for (const measure of [single, firstLine]) {
+      expect(measure.provenance.note).toMatch(/Benannte Ausnahme \(LFH-597\)/);
+      expect(measure.provenance.note).not.toMatch(/geerbt/);
+    }
   });
 
   it('führt die vermessenen Hüllen als Zonendaten', () => {
