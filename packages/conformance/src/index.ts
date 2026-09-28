@@ -14,4 +14,5 @@ export * from './rule-evidence.js';
 export * from './combination-provenance.js';
 export * from './comparison-exceptions.js';
 export * from './named-exceptions.js';
+export * from './state-group-fixtures.js';
 export * from './fonts.js';
