@@ -1,3 +1,20 @@
+## ⚠️ Breaking Changes
+
+Keine Breaking Changes in dieser Version.
+
+## Katalog
+
+**Mehrfachfähigkeiten als Überlagerungsregel**  
+Das Symbolsystem unterstützt nun die korrekte Darstellung von Einheiten mit mehreren Fähigkeiten. Die Fähigkeitsmarken werden nach einer neuen Überlagerungsregel positioniert: Jede Marke behält ihre Position und Größe aus der Einzelfassung bei und wird randbündig auf der Körperfläche platziert. Dies gilt für 15 Fixtures mit zwei oder drei Fähigkeiten über sieben verschiedene Körperfassungen hinweg. Vier Sonderfälle (F.1.12#alt, F.1.13, F.1.22, F.2.5#alt) bleiben als benannte Ausnahmen bestehen.
+
+**Sonderformen 3.6–3.9 im Zonenmodell**  
+Die speziellen Symbolformen (Drohne, Hubschrauber, Flugzeug, Wasserfahrzeug) sind nun vollständig im Zonenmodell abgebildet. Für jede Sonderform sind alle 16 Zonen definiert, wodurch die geometrische Struktur dieser Zeichen systematisch erfasst ist.
+
+## Kern-API
+
+**Neue Typaliase für Grammatik-Befunde**  
+`GrammarFinding` ist nun der gemeinsame Typ für alle Regelprüfungen im System. `StateGroupFinding` wurde als Alias eingeführt, um die Konsistenz mit bestehenden Zustandsgruppen-Prüfungen zu gewährleisten.
+
 ## Core-Bibliothek
 
 **Neue Bausteinart: Parametrisierte Linien und Pfeile**
