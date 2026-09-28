@@ -894,8 +894,8 @@ export const RULE_DIMENSION_GAPS: readonly RuleDimensionGap[] = Object.freeze([
   Object.freeze({
     dimension: 'base-symbol',
     coverage: 'partial',
-    chapter: 'Kapitel 1, 5.1',
-    note: 'Gegenstand keiner Regel, Bedingung in vielen: die Grundzeichenart tritt nur als Voraussetzung anderer Regeln auf. Welche Arten es überhaupt gibt, regelt die Typebene, nicht der Katalog.',
+    chapter: 'Kapitel 1, 3.6–3.9, 5.1',
+    note: 'Gegenstand keiner Regel, Bedingung in vielen: die Grundzeichenart tritt nur als Voraussetzung anderer Regeln auf. Welche Arten es überhaupt gibt, regelt die Typebene, nicht der Katalog. Die Sonderformen 3.6 bis 3.9 sind keine Arten: sie stehen ungezeichnet neben dem Zonenmodell (`SPECIAL_FORMS`, LFH-567).',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'administrative-level',
@@ -906,14 +906,14 @@ export const RULE_DIMENSION_GAPS: readonly RuleDimensionGap[] = Object.freeze([
   Object.freeze({
     dimension: 'body-marks',
     coverage: 'partial',
-    chapter: '3.6–3.9',
-    note: 'Körpermarken kommen nur mittelbar vor — über die eingesenkte Hülle und über die Funktionsfassung. Eine eigene Regel, welche Marke an welcher Körperform sitzen darf, gibt es nicht.',
+    chapter: 'Kapitel 4, Anhang D und F',
+    note: 'Körpermarken kommen nur mittelbar vor — über die eingesenkte Hülle und über die Funktionsfassung. Eine eigene Regel, welche Marke an welcher Körperform sitzen darf, gibt es nicht. Wie mehrere Marken zusammen stehen, ist als Daten belegt (Überlagerung, `CAPABILITY_COMBINATION_RULES`, LFH-567), aber keine Prüfregel.',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'capabilities',
     coverage: 'none',
-    chapter: '3.6–3.9',
-    note: 'Keine Regel. Insbesondere Mehrfachfähigkeiten und Sonderformen sind ungeregelt: der Motor nimmt beliebig viele Fähigkeiten an, ohne zu prüfen, ob sie zusammen belegt sind.',
+    chapter: 'Kapitel 4',
+    note: 'Keine Regel in Kraft: der Motor nimmt beliebig viele Boxfähigkeiten an und legt sie deckungsgleich in dieselbe Box. Kein Original belegt das. Die Anordnung ist als offene Frage in `CAPABILITY_COMBINATION_RULES` geführt, zwei Regeln sind vorgemerkt (`PLANNED_CAPABILITY_RULES`, LFH-567).',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'unit-grouping',

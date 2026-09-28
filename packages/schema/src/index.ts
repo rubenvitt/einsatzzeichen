@@ -13,4 +13,7 @@ export * from './function-role.js';
 export * from './taxonomy-values.js';
 export * from './zones.js';
 export * from './blocks.js';
+export * from './grammar-findings.js';
 export * from './state-groups.js';
+export * from './capability-combinations.js';
+export * from './special-forms.js';
