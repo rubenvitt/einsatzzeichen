@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { matchFingerprint, specKey } from '@einsatzzeichen/core';
+import { matchFingerprint, specKey, symbolProvenance } from '@einsatzzeichen/core';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
-import { combinationProvenance, verbatimFixtures } from './combination-provenance.js';
+import {
+  combinationProvenance,
+  provenanceReview,
+  verbatimFixtures,
+  verbatimTableSource,
+} from './combination-provenance.js';
 import { comparableFingerprint } from './comparison-exceptions.js';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { fingerprintFor, referenceLacksComparableShape } from './fingerprint-index.js';
@@ -100,5 +105,59 @@ describe('combinationProvenance()', () => {
       claim: 'body-hull',
     });
     expect(combinationProvenance(relabelled)).toEqual({ status: 'derived' });
+  });
+});
+
+describe('verbatimTableSource() — Generator der core-Tabelle (LFH-581)', () => {
+  const source = verbatimTableSource();
+  const rows = source
+    .split('\n')
+    .filter((line) => line.startsWith('  ['))
+    .map((line) => JSON.parse(line.trim().replace(/,$/, '')) as [string, string, string]);
+
+  it('nennt den Generatorbefehl und exportiert VERBATIM_TABLE mit expliziter Typangabe', () => {
+    expect(source).toContain('pnpm cli provenance:table');
+    expect(source).toMatch(/^export const VERBATIM_TABLE: ReadonlyArray<$/m);
+    expect(source).not.toMatch(/as const/);
+    expect(source.endsWith('];\n')).toBe(true);
+  });
+
+  it('führt je verbatim-Fixture eine Zeile [specKey, Fixture, Referenz], nach Fixture sortiert', () => {
+    const expected = verbatimFixtures()
+      .slice()
+      .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+      .map((fixture) => {
+        const recipe = RECIPES[fixture as keyof typeof RECIPES];
+        return [specKey(recipe.spec), fixture, recipe.referenceAsset];
+      });
+    expect(rows).toHaveLength(241);
+    expect(rows).toEqual(expected);
+  });
+
+  it('enthält keine Fingerabdrücke — nur Schlüssel und Namen', () => {
+    expect(source).not.toMatch(/fingerprint|shapes|edges/i);
+  });
+});
+
+describe('Reviewstand optional aus conformance (LFH-581)', () => {
+  it.each(fingerprintCases)('%s: core liefert die Herkunft, conformance den Reviewstand dazu', (section, recipe) => {
+    const provenance = symbolProvenance(recipe.spec);
+    const manifestRow = COVERAGE_MANIFEST.entries.find(
+      (entry) => entry.implementation === `recipe.${section}`,
+    );
+    expect(provenance).toEqual({
+      status: 'verbatim',
+      claim: 'body-hull',
+      fixture: section,
+      referenceAsset: recipe.referenceAsset,
+    });
+    expect(provenanceReview(provenance)).toEqual(manifestRow?.review);
+    expect(combinationProvenance(recipe.spec)).toEqual({ ...provenance, review: manifestRow?.review });
+  });
+
+  it('derived trägt keinen Reviewstand — ein abgeleitetes Zeichen behauptet keine Freigabe', () => {
+    const derived = symbolProvenance(RECIPES['G.1.5'].spec);
+    expect(derived).toEqual({ status: 'derived' });
+    expect(provenanceReview(derived)).toBeUndefined();
   });
 });

@@ -112,3 +112,7 @@ export {
   type RuleExplanation,
   type RuleField,
 } from './rules/rule-explanations.js';
+// LFH-581: Herkunft im Produkt — `verbatim` (nur Körperhülle belegt, `claim: 'body-hull'`) oder
+// `derived`, aus einer generierten Tabelle ohne Prüfpaket. Der fachliche Reviewstand bleibt in
+// conformance (`provenanceReview`, `combinationProvenance`).
+export { symbolProvenance, type SymbolProvenance } from './provenance/symbol-provenance.js';

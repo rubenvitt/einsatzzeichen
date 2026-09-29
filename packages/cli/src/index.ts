@@ -3,7 +3,7 @@
  * Befehle nach Paket (LFH-560, LFH-572):
  *
  * Prüfen (conformance) — Rezepte, Coverage-Manifest, Domain-Reviews, Referenzinventar, Gates:
- *   audit:reference, coverage, review-dossier, verify:repository, visual-proof
+ *   audit:reference, coverage, provenance:table, review-dossier, verify:repository, visual-proof
  * Export (core) — Geometrie, Themes und Renderer des Produkts:
  *   export (Rezeptliste noch über commands/export-recipes.ts aus conformance, bis LFH-580)
  *
@@ -13,6 +13,7 @@ import { isRenderThemeId, renderTheme } from '@einsatzzeichen/core';
 // Prüfen (conformance)
 import { auditReference } from './commands/audit-reference.js';
 import { coverage } from './commands/coverage.js';
+import { writeProvenanceTable } from './commands/provenance-table.js';
 import { ReviewDossierError, reviewDossier } from './commands/review-dossier.js';
 import {
   RepositoryPolicyError,
@@ -77,6 +78,11 @@ switch (command) {
     }
     break;
   }
+  case 'provenance:table': {
+    const result = writeProvenanceTable();
+    console.log(`${result.rows} verbatim-Zeilen nach ${result.file} geschrieben.`);
+    break;
+  }
   case 'verify:repository': {
     try {
       verifyRepository();
@@ -137,7 +143,7 @@ switch (command) {
     console.error(
       'Verfügbar:\n' +
         '  Prüfen (conformance): audit:reference [--filter <präfix>] [--print] | coverage | ' +
-        'review-dossier [--out <md-pfad>] | ' +
+        'provenance:table | review-dossier [--out <md-pfad>] | ' +
         'verify:repository | ' +
         'visual-proof --reference-root <pfad> [--out <png-pfad>]\n' +
         '  Export (core): export [--out <pfad>] [--size <px>] ' +
