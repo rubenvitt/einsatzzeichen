@@ -138,6 +138,21 @@ describe('blockedTooltip()', () => {
     expect(text).toMatch(/an keiner Grundzeichenart/);
     expect(text).not.toMatch(/oder eine andere Grundzeichenart/);
   });
+
+  it('rät zu keinem anderen Wert, wenn im ganzen Feld keiner vermessen ist', () => {
+    // Die Tendenz: alle drei Werte sind nirgends vermessen. „Wähle einen anderen Wert" schickte
+    // die Leserin zu einem Wert, der genauso gesperrt ist.
+    const text = blockedTooltip(
+      { field: 'tendency', label: 'Tendenz', noun: 'Tendenz' },
+      { because: 'not-measured', detail: 'egal', scope: 'value' },
+      'Tendenz steigend',
+      'Person',
+      true,
+    );
+    expect(text).toMatch(/„Tendenz steigend" ist als Tendenz noch nicht vermessen/);
+    expect(text).not.toMatch(/anderen Wert/);
+    expect(text).not.toMatch(/andere Grundzeichenart/);
+  });
 });
 
 /* --- Die aufgeschobene Probe an der gerenderten Insel -------------------------------------- */
@@ -175,6 +190,9 @@ afterEach(() => {
   unmount?.();
   unmount = undefined;
   document.body.innerHTML = '';
+  // Die Insel liest `?spec=` beim Mounten und schreibt ihn danach selbst — ein Fall, der einen
+  // Link öffnet, darf ihn dem nächsten nicht hinterlassen.
+  window.history.replaceState(null, '', '/builder/');
 });
 
 async function mountBuilder(): Promise<HTMLElement> {
@@ -287,5 +305,119 @@ describe('Der Baukasten mit aufgeschobener Probe', () => {
     ).toBe('false');
     expect(chosen.getAttribute('title')).toBeNull();
     expect(chosen.textContent).not.toMatch(/geht hier nicht/);
+  });
+});
+
+/* --- Ein geteilter Link beim Öffnen ------------------------------------------------------ */
+
+/** Ein Link, wie ihn der Baukasten bis LFH-577 schrieb: base64url über das rohe JSON. */
+function legacyLink(value: unknown): string {
+  const bytes = new TextEncoder().encode(JSON.stringify(value));
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  const param = btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+  return `/builder/?spec=${param}`;
+}
+
+describe('Der Baukasten mit einem Link (LFH-578)', () => {
+  it('meldet ein unbekanntes Feld sichtbar, statt es still zu übergehen', async () => {
+    // Bis LFH-578 las der Baukasten diesen Tippfehler still als Person ohne Organisation.
+    window.history.replaceState(null, '', legacyLink({ kind: 'person', organisation: 'thw' }));
+    const container = await mountBuilder();
+
+    const alert = [...container.querySelectorAll('[role="alert"]')].find((element) =>
+      /Der Link trug keine lesbare Zusammenstellung/.test(element.textContent ?? ''),
+    );
+    expect(alert, 'Kein Hinweis zum unlesbaren Link.').toBeDefined();
+    // Der Pfad in die Eingabe gehört in die aufklappbaren Einzelheiten, nicht in den Fließtext.
+    const prose = [...(alert as Element).children]
+      .filter((child) => child.tagName === 'P')
+      .map((child) => child.textContent)
+      .join(' ');
+    expect(prose).not.toContain('$.');
+    expect(alert?.querySelector('details')?.textContent).toContain('$.organisation');
+    expect(tile(container, 'kind', 'Taktische Formation').getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('öffnet einen alten Link ohne Hülle wie bisher', async () => {
+    window.history.replaceState(null, '', legacyLink({ kind: 'person', organization: 'thw' }));
+    const container = await mountBuilder();
+    expect(container.textContent).not.toMatch(/Der Link trug keine lesbare Zusammenstellung/);
+    expect(tile(container, 'kind', 'Person').getAttribute('aria-pressed')).toBe('true');
+  });
+});
+
+/* --- Verband, Zustand und Tendenz (LFH-577) ----------------------------------------------- */
+
+/** Die Vorschau zeigt ein gezeichnetes Zeichen — kein Regelblock, kein Abbruch. */
+function expectDrawn(container: HTMLElement): void {
+  const stage = container.querySelector('.ez-builder__stage');
+  expect(stage?.classList.contains('ez-builder__stage--void'), stage?.textContent ?? '').toBe(false);
+  expect(stage?.querySelector('svg')).not.toBeNull();
+}
+
+/** Die Bezeichnungen der abwählbaren Marken eines Listenfeldes. */
+function chipsOf(container: HTMLElement, field: string): string[] {
+  const wrapper = container.querySelector(`#ez-builder-${field}`)?.closest('.ez-builder__field');
+  return [...(wrapper?.querySelectorAll('.ez-builder__chip > span:first-child') ?? [])].map(
+    (chip) => chip.textContent ?? '',
+  );
+}
+
+describe('Der Baukasten mit Verband, Zustand und Tendenz (LFH-577)', () => {
+  it('zeichnet die Formation mit Verband II und sperrt den nicht vermessenen Verband III', async () => {
+    const container = await mountBuilder();
+    expect(
+      container.querySelector('label[for="ez-builder-unitGrouping"]')?.textContent,
+    ).toBe('Verband');
+
+    choose(container, 'unitGrouping', 'verband-ii');
+    await settle();
+
+    expect(optionOf(container, 'unitGrouping', 'verband-ii').textContent).toBe('Verband II');
+    expectDrawn(container);
+    const third = optionOf(container, 'unitGrouping', 'verband-iii');
+    expect(third.disabled).toBe(true);
+    expect(third.getAttribute('title')).toMatch(/„Verband III" ist als Verband .*nicht vermessen/);
+  });
+
+  it('setzt an der Person einen Zustand und den Hinweis „?" und sperrt einen zweiten Zustand mit Regel', async () => {
+    const container = await mountBuilder();
+    expect(container.querySelector('label[for="ez-builder-states"]')?.textContent).toBe('Zustand');
+    tile(container, 'kind', 'Person').click();
+    await settle();
+
+    choose(container, 'states', 'person-injured');
+    await settle();
+    choose(container, 'states', 'suspected-situation');
+    await settle();
+
+    expect(chipsOf(container, 'states')).toEqual(['Person verletzt', 'Hinweis auf Vermutung']);
+    expectDrawn(container);
+    // Höchstens ein Personenzustand aus 5.8.8: ein zweiter ist gesperrt, und zwar mit der
+    // erklärten Regel, nicht als Vermessungslücke.
+    const dead = optionOf(container, 'states', 'person-dead');
+    expect(dead.disabled).toBe(true);
+    expect(dead.getAttribute('title')).not.toMatch(/nicht vermessen/);
+    expect(dead.getAttribute('title')?.length).toBeGreaterThan(0);
+  });
+
+  it('zeigt die Tendenz als noch nicht vermessen, ohne zu einem anderen Wert zu raten', async () => {
+    const container = await mountBuilder();
+    expect(container.querySelector('label[for="ez-builder-tendency"]')?.textContent).toBe(
+      'Tendenz',
+    );
+    for (const value of ['tendency-rising', 'tendency-unchanged', 'tendency-falling']) {
+      const option = optionOf(container, 'tendency', value);
+      expect(option.disabled, value).toBe(true);
+      expect(option.getAttribute('title'), value).toMatch(/noch nicht vermessen/);
+      // Kein Wert des Feldes lässt sich zeichnen — „wähle einen anderen Wert" wäre falsch.
+      expect(option.getAttribute('title'), value).not.toMatch(/anderen Wert/);
+    }
+    const select = container.querySelector('#ez-builder-tendency');
+    const notes = (select?.getAttribute('aria-describedby') ?? '')
+      .split(' ')
+      .map((id) => container.querySelector(`#${id}`)?.textContent ?? '');
+    expect(notes.join(' ')).toMatch(/Noch nicht vermessen/);
   });
 });

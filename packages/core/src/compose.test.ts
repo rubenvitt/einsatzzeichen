@@ -393,6 +393,65 @@ describe('compose() — technische Kopfmarke', () => {
   });
 });
 
+describe('compose() — Verband (LFH-577)', () => {
+  const bar = (x: number): Primitive => ({
+    type: 'rect',
+    role: 'head',
+    x,
+    y: 0,
+    width: 1.5,
+    height: 4,
+    style: { fill: 'schwarz', stroke: 'none' },
+  });
+  const unitCatalog: CatalogPorts = {
+    ...catalog,
+    unitGroupingHead: (id) =>
+      id === 'verband-iii' ? undefined : { heightMm: 4, primitives: [bar(15.25)] },
+  };
+
+  it('setzt den Verband über placeHead wie die technische Kopfmarke auf y = 1…5 mm', () => {
+    const drawing = compose({ kind: 'formation', unitGrouping: 'verband-i' }, unitCatalog);
+    expect(drawing.children[0]).toEqual({
+      type: 'group',
+      role: 'head',
+      transform: { translate: { dxMm: 0, dyMm: 1 } },
+      children: [bar(15.25)],
+    });
+    expect(drawing.children[1]).toMatchObject({
+      type: 'rect', role: 'body', x: 1, y: 6, width: 30, height: 20,
+    });
+  });
+
+  it('zeichnet dasselbe wie die gleichgebaute technische Kopfmarke', () => {
+    const technical: CatalogPorts = {
+      ...unitCatalog,
+      technicalHeadMark: () => ({ heightMm: 4, primitives: [bar(15.25)] }),
+    };
+    expect(compose({ kind: 'formation', unitGrouping: 'verband-i' }, technical).children)
+      .toEqual(compose({ kind: 'formation', technicalHeadMark: 'single-vertical-bar' }, technical).children);
+  });
+
+  it('meldet Verband III als nicht vermessenen Wert', () => {
+    expect(() => compose({ kind: 'formation', unitGrouping: 'verband-iii' }, unitCatalog))
+      .toThrow(expect.objectContaining({ name: 'NotMeasuredError', scope: 'value' }));
+  });
+
+  it('meldet jeden anderen Körper als nicht vermessene Kombination', () => {
+    for (const spec of [
+      { kind: 'person', unitGrouping: 'verband-i' },
+      { kind: 'building', unitGrouping: 'verband-i' },
+    ] satisfies SymbolSpec[]) {
+      expect(() => compose(spec, unitCatalog), spec.kind)
+        .toThrow(expect.objectContaining({ name: 'NotMeasuredError', scope: 'combination' }));
+    }
+  });
+
+  it('wirft ohne Port statt den Verband still wegzulassen', () => {
+    expect(() => compose({ kind: 'formation', unitGrouping: 'verband-i' }, catalog))
+      .toThrow(NotMeasuredError);
+  });
+});
+
 describe('compose() — Fußzone', () => {
   it('gibt die Bezeichnung als Fußzone aus', () => {
     const drawing = compose({ kind: 'formation', designation: '2. Zug' }, catalog);

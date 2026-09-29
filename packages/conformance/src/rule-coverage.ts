@@ -1,5 +1,6 @@
 import {
   COMPOSITION_RULE_CATALOG,
+  FREESTANDING_RULE_CATALOG,
   RULE_CATALOG,
   RULE_DIMENSIONS,
   VALIDATION_RULE_IDS,
@@ -23,6 +24,7 @@ import {
   SYMBOL_KINDS,
   TECHNICAL_BODY_MARK_IDS,
   TECHNICAL_HEAD_MARK_IDS,
+  UNIT_GROUPING_IDS,
   VEHICLE_CATEGORY_IDS,
   WATER_RESCUE_PERSONNEL_IDS,
   WILDFIRE_IDS,
@@ -36,9 +38,12 @@ import { ALL_PICTOGRAMS } from '@einsatzzeichen/core';
 import type { CatalogPictogramDefinition } from '@einsatzzeichen/core';
 import { RECIPES, composeFromCatalog, type Recipe } from './recipes.js';
 import {
+  FREESTANDING_RULE_EVIDENCE,
   RULE_EVIDENCE,
   RULE_EVIDENCE_GAPS,
+  freestandingRuleEvidenceTriggers,
   ruleEvidenceTriggers,
+  type FreestandingRuleEvidence,
   type RuleEvidence,
   type RuleEvidenceGap,
 } from './rule-evidence.js';
@@ -125,6 +130,9 @@ export function ruleCoverage(
       ...elementValues(elements, 'strength'),
     ]),
     axis('technicalHeadMark', ids(TECHNICAL_HEAD_MARK_IDS), defined(specs.map((spec) => spec.technicalHeadMark))),
+    // Seit LFH-577: der Verband im eigenen Feld. Die sechs Rezepte mit Kopfbalken tragen ihn statt
+    // der gleich gezeichneten technischen Kopfmarke; Verband III zeigt kein Original am Körper.
+    axis('unitGrouping', ids(UNIT_GROUPING_IDS), defined(specs.map((spec) => spec.unitGrouping))),
     axis('administrativeLevel', ids(ADMIN_LEVEL_IDS), defined(specs.map((spec) => spec.administrativeLevel))),
     axis('functionRole', ids(FUNCTION_ROLE_IDS), defined(specs.map((spec) => spec.functionRole))),
     axis('vehicleCategory', ids(VEHICLE_CATEGORY_IDS), [
@@ -186,7 +194,10 @@ export interface RuleEvidenceTally {
 }
 
 export interface RuleEvidenceCoverage {
-  /** Alle Regeln beider Kataloge: zuerst `RULE_CATALOG`, dann `COMPOSITION_RULE_CATALOG`. */
+  /**
+   * Alle Regeln der drei Kataloge: zuerst `RULE_CATALOG`, dann `COMPOSITION_RULE_CATALOG`, dann
+   * `FREESTANDING_RULE_CATALOG` (LFH-577).
+   */
   readonly rules: readonly RuleEvidenceRow[];
   readonly total: RuleEvidenceTally;
   readonly byPhase: Readonly<Record<RulePhase, RuleEvidenceTally>>;
@@ -217,11 +228,15 @@ function tally(rows: readonly RuleEvidenceRow[]): RuleEvidenceTally {
 export function ruleEvidenceCoverage(
   evidence: readonly RuleEvidence[] = RULE_EVIDENCE,
   gaps: readonly RuleEvidenceGap[] = RULE_EVIDENCE_GAPS,
-  catalog: readonly RuleCatalogEntry[] = [...RULE_CATALOG, ...COMPOSITION_RULE_CATALOG],
+  catalog: readonly RuleCatalogEntry[] = [...RULE_CATALOG, ...COMPOSITION_RULE_CATALOG, ...FREESTANDING_RULE_CATALOG],
+  freestandingEvidence: readonly FreestandingRuleEvidence[] = FREESTANDING_RULE_EVIDENCE,
 ): RuleEvidenceCoverage {
-  const triggered = new Set(
-    evidence.filter((item) => ruleEvidenceTriggers(item).includes(item.rule)).map((item) => item.rule),
-  );
+  const triggered = new Set([
+    ...evidence.filter((item) => ruleEvidenceTriggers(item).includes(item.rule)).map((item) => item.rule),
+    ...freestandingEvidence
+      .filter((item) => freestandingRuleEvidenceTriggers(item).includes(item.rule))
+      .map((item) => item.rule),
+  ]);
   const gapIds = new Set(gaps.map((gap) => gap.rule));
   const rules = catalog.map((rule): RuleEvidenceRow => Object.freeze({
     id: rule.id,
@@ -260,9 +275,11 @@ export function reachSignature(spec: SymbolSpec): string {
     ? `strength:${spec.strength}`
     : spec.technicalHeadMark !== undefined
       ? `technicalHeadMark:${spec.technicalHeadMark}`
-      : spec.administrativeLevel !== undefined
-        ? `administrativeLevel:${spec.administrativeLevel}`
-        : '';
+      : spec.unitGrouping !== undefined
+        ? `unitGrouping:${spec.unitGrouping}`
+        : spec.administrativeLevel !== undefined
+          ? `administrativeLevel:${spec.administrativeLevel}`
+          : '';
   return [spec.kind, spec.bodyVariant ?? '', spec.organization ?? '', head, spec.vehicleCategory ?? ''].join('|');
 }
 
@@ -306,6 +323,7 @@ export function generativeReach(recipes: readonly Recipe[] = Object.values(RECIP
     {},
     ...STRENGTH_IDS.map((strength) => ({ strength })),
     ...TECHNICAL_HEAD_MARK_IDS.map((technicalHeadMark) => ({ technicalHeadMark })),
+    ...UNIT_GROUPING_IDS.map((unitGrouping) => ({ unitGrouping })),
     ...ADMIN_LEVEL_IDS.map((administrativeLevel) => ({ administrativeLevel })),
   ];
   const bodyVariants = [undefined, ...BODY_VARIANT_IDS];

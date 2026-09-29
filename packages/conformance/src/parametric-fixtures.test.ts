@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   ARIMO_CAP_HEIGHT_FRACTION,
-  NotMeasuredError,
   PARAMETRIC_BLOCKS,
   blockEntry,
   boundsOfMm,
@@ -10,7 +9,7 @@ import {
   strokeBoundsOfMm,
   type BoundsMm,
 } from '@einsatzzeichen/core';
-import type { Drawing, LineId, MovementId, Primitive } from '@einsatzzeichen/schema';
+import { PALETTE, type Drawing, type Primitive } from '@einsatzzeichen/schema';
 import fingerprints from './fingerprints.json' with { type: 'json' };
 import { referenceInventoryAssets } from './fingerprint-index.js';
 import { PARAMETRIC_FIXTURES, type ParametricFixture } from './parametric-fixtures.js';
@@ -38,6 +37,7 @@ interface Fingerprint {
   readonly viewBox: { readonly width: number; readonly height: number };
   readonly shapes: readonly Shape[];
   readonly curvedPaths: number;
+  readonly fills: readonly string[];
 }
 
 const FINGERPRINTS = fingerprints as readonly Fingerprint[];
@@ -58,15 +58,22 @@ function drawFixture(fixture: ParametricFixture): Drawing {
     ? movementDrawing(fixture.valueId, { path: fixture.path }, fixture.canvasMm)
     : lineDrawing(
         fixture.valueId,
-        fixture.strength === undefined ? { path: fixture.path } : { path: fixture.path, strength: fixture.strength },
+        {
+          path: fixture.path,
+          ...(fixture.strength === undefined ? {} : { strength: fixture.strength }),
+          ...(fixture.variant === undefined ? {} : { variant: fixture.variant }),
+        },
         fixture.canvasMm,
       );
 }
 
 function hullOf(primitives: readonly Primitive[]): BoundsMm {
-  const all = primitives.map((primitive) =>
-    primitive.type === 'polyline' ? strokeBoundsOfMm(primitive) : boundsOfMm(primitive),
-  );
+  const all = primitives.map((primitive) => {
+    if (primitive.type === 'polyline') return strokeBoundsOfMm(primitive);
+    const bounds = boundsOfMm(primitive);
+    const half = primitive.type === 'circle' && primitive.style?.stroke !== undefined ? (primitive.style.strokeWidth ?? 0) / 2 : 0;
+    return { minX: bounds.minX - half, minY: bounds.minY - half, maxX: bounds.maxX + half, maxY: bounds.maxY + half };
+  });
   return {
     minX: Math.min(...all.map((b) => b.minX)),
     minY: Math.min(...all.map((b) => b.minY)),
@@ -83,12 +90,15 @@ function expectBounds(actual: BoundsMm, expected: Bounds, label: string): void {
 }
 
 describe('Fixtures der parametrisierten Bausteine', () => {
-  it('führt je Baustein mit Zeichnung genau seine Primärdarstellung als Fixture', () => {
+  it('führt jede Darstellung jedes Bausteins mit Zeichnung als Fixture', () => {
     const measured = PARAMETRIC_BLOCKS.filter((entry) => blockEntry(entry.id)?.binding.status === 'measured');
-    expect(PARAMETRIC_FIXTURES.map((fixture) => fixture.asset)).toEqual(measured.map((entry) => entry.assets[0]));
+    expect(measured).toHaveLength(PARAMETRIC_BLOCKS.length);
+    expect(PARAMETRIC_FIXTURES.map((fixture) => fixture.asset)).toEqual(measured.flatMap((entry) => entry.assets));
     for (const fixture of PARAMETRIC_FIXTURES) {
-      const entry = PARAMETRIC_BLOCKS.find((candidate) => candidate.assets[0] === fixture.asset);
+      const entry = PARAMETRIC_BLOCKS.find((candidate) => candidate.assets.includes(fixture.asset));
       expect(entry?.id, fixture.asset).toBe(`${fixture.category}/${fixture.valueId}`);
+      const alternative = entry?.assets.indexOf(fixture.asset) !== 0;
+      expect(fixture.category === 'line' && fixture.variant === 'alternative', fixture.asset).toBe(alternative);
     }
   });
 
@@ -110,7 +120,14 @@ describe('Fixtures der parametrisierten Bausteine', () => {
 });
 
 describe('Pfeile aus 5.2 gegen das Kennzahlenartefakt', () => {
-  const arrows = PARAMETRIC_FIXTURES.filter((fixture) => fixture.category === 'arrow');
+  const arrows = PARAMETRIC_FIXTURES.filter(
+    (fixture) => fixture.category === 'arrow' && fingerprintOf(fixture.asset).shapes.length > 0,
+  );
+
+  it('führt 5.2.1 bis 5.2.5 mit Hülle, 5.2.6 als Kurvenpfad', () => {
+    expect(arrows.map((fixture) => fixture.asset.slice(0, 5))).toEqual(['5.2.1', '5.2.2', '5.2.3', '5.2.4', '5.2.5']);
+    expect(fingerprintOf('5.2.6_Sammeln_Zusammenführen.svg').curvedPaths).toBe(1);
+  });
 
   it.each(arrows.map((fixture) => [fixture.asset, fixture] as const))(
     'trifft die Hülle des umgewandelten Strichs von %s',
@@ -123,7 +140,9 @@ describe('Pfeile aus 5.2 gegen das Kennzahlenartefakt', () => {
 });
 
 describe('Grenzen aus Kapitel 2 gegen das Kennzahlenartefakt', () => {
-  const lines = PARAMETRIC_FIXTURES.filter((fixture) => fixture.category === 'line');
+  const lines = PARAMETRIC_FIXTURES.filter(
+    (fixture) => fixture.category === 'line' && fixture.valueId.startsWith('boundary-'),
+  );
 
   it.each(lines.map((fixture) => [fixture.asset, fixture] as const))(
     'trifft Striche und Marken von %s',
@@ -173,35 +192,36 @@ describe('Grenzen aus Kapitel 2 gegen das Kennzahlenartefakt', () => {
   });
 });
 
-describe('Lücken gegen das Kennzahlenartefakt', () => {
-  const gaps = PARAMETRIC_BLOCKS.filter((entry) => blockEntry(entry.id)?.binding.status === 'not-measured');
+describe('Linien mit Marken aus Kapitel 2 gegen das Kennzahlenartefakt', () => {
+  const marked = PARAMETRIC_FIXTURES.filter(
+    (fixture) => fixture.category === 'line' && !fixture.valueId.startsWith('boundary-'),
+  );
 
-  it('meldet jede Lücke als NotMeasuredError', () => {
-    for (const entry of gaps) {
-      const draw = () =>
-        entry.category === 'arrow'
-          ? movementDrawing(entry.valueId as MovementId, { path: { points: [[2, 16], [30, 16]] } }, { width: 32, height: 32 })
-          : lineDrawing(entry.valueId as LineId, { path: { points: [[1, 16], [47, 16]] } }, { width: 48, height: 32 });
-      expect(draw, entry.id).toThrow(NotMeasuredError);
-    }
+  it('führt 2.14 in zwei Darstellungen, 2.15 und 2.16', () => {
+    expect(marked.map((fixture) => fixture.asset)).toEqual([
+      '2.14_Escape Route.svg',
+      '2.14_Escape Route_2.svg',
+      '2.15_Riegelstellung.svg',
+      '2.16_Brandausbreitung.svg',
+    ]);
   });
 
-  it('begründet jede Kurvenlücke mit einer Datei ohne Form', () => {
-    for (const entry of gaps.filter((candidate) => ['5.2.6', '2.14', '2.15', '2.16'].includes(candidate.section))) {
-      for (const asset of entry.assets) {
-        const fingerprint = fingerprintOf(asset);
-        expect(fingerprint.shapes, asset).toEqual([]);
-        expect(fingerprint.curvedPaths, asset).toBeGreaterThan(0);
-      }
-    }
-  });
-
-  it('liest an 5.2.2 und 5.2.5 den Querstrich ab, aber nicht seine Länge', () => {
-    const start = fingerprintOf('5.2.2_Beginn einer Maßnahme.svg').shapes[0]?.boundsMm;
-    const end = fingerprintOf('5.2.5_Ende einer Bewegung.svg').shapes[0]?.boundsMm;
-    // Querstrich bei x 2 mit 0,5 mm Strich; Kopf von 4 mm Halbbreite am Ende.
-    expect(start).toEqual({ minXMm: 1.75, minYMm: 11.823, maxXMm: 30.354, maxYMm: 20.177 });
-    // Querstrich bei x 30, keine Pfeilspitze über ihn hinaus.
-    expect(end).toEqual({ minXMm: 2, minYMm: 11.823, maxXMm: 30.25, maxYMm: 20.177 });
-  });
+  it.each(marked.map((fixture) => [fixture.asset, fixture] as const))(
+    'zeichnet %s in der einzigen Farbe der Referenz, als Kurvenpfad ohne Form im Artefakt',
+    (asset, fixture) => {
+      const fingerprint = fingerprintOf(asset);
+      expect(fingerprint.shapes).toEqual([]);
+      expect(fingerprint.curvedPaths).toBe(1);
+      expect(fingerprint.fills).toHaveLength(1);
+      const colors = new Set(
+        drawFixture(fixture).children.map((child) => {
+          const style = child.style ?? {};
+          return style.stroke !== undefined && style.stroke !== 'none' ? style.stroke : style.fill;
+        }),
+      );
+      expect(colors.size, asset).toBe(1);
+      const [token] = [...colors];
+      expect(PALETTE[token as keyof typeof PALETTE], asset).toBe(fingerprint.fills[0]);
+    },
+  );
 });

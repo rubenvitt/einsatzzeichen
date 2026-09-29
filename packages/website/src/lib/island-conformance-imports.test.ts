@@ -14,26 +14,15 @@ import { describe, expect, it } from 'vitest';
  * erreicht: ein Import aus `conformance` in einer Hilfsdatei landet genauso im Bündel wie einer in
  * der Insel. Typimporte zählen nicht, sie verschwinden beim Bauen.
  *
- * Gelesen wird mit dem TypeScript-Parser statt mit einem Muster: `code-samples.ts` zeigt dem
- * Leser Beispielcode mit `import … from '@einsatzzeichen/conformance'` in Template-Strings, und
- * ein Zeilenmuster hielte das für einen echten Import.
+ * Gelesen wird mit dem TypeScript-Parser statt mit einem Muster: Beispielcode in Template-Strings
+ * (wie in `code-samples.ts`) oder in Kommentaren kann `import … from '@einsatzzeichen/conformance'`
+ * zeigen, und ein Zeilenmuster hielte das für einen echten Import.
  */
 
 const ISLANDS_DIR = fileURLToPath(new URL('../components/islands/', import.meta.url));
 const WEBSITE_DIR = fileURLToPath(new URL('../../', import.meta.url));
 
 const CONFORMANCE = /^@einsatzzeichen\/conformance(\/|$)/;
-
-/**
- * Die eine bekannte Ausnahme, mit Grund: der Baukasten komponiert frei zusammengesetzte Specs im
- * Browser, und `compose()` braucht dafür `CatalogPorts`. Eine Zusammenstellung, mit der `core`
- * ohne Prüfpaket rendert, ist LFH-580 (Spec LFH-560: „Keine Standard-Ports in diesem Schnitt").
- * Bis dahin holt `builder-state.ts` `composeFromCatalog` über den Subpfad `src/recipes.js` — nie
- * über den Paketindex, der `fonts.ts` und damit `node:url` zieht. Mit LFH-580 fällt der Eintrag.
- */
-const ALLOWED: ReadonlyArray<{ file: string; specifier: string }> = [
-  { file: 'src/lib/builder-state.ts', specifier: '@einsatzzeichen/conformance/src/recipes.js' },
-];
 
 /** Wertimporte und -reexporte einer Datei; `import type`/`export type` fallen heraus. */
 function valueImports(text: string, fileName = 'datei.ts'): string[] {
@@ -98,9 +87,6 @@ function conformanceImportsReachableFrom(island: string): Array<{ file: string; 
   return found;
 }
 
-const isAllowed = (hit: { file: string; specifier: string }): boolean =>
-  ALLOWED.some((entry) => entry.file === hit.file && entry.specifier === hit.specifier);
-
 it('keine Insel importiert selbst aus `@einsatzzeichen/conformance`', () => {
   const islands = islandFiles();
   expect(islands.length, 'Es wurde keine Insel gefunden — läuft der Wächter ins Leere?').toBeGreaterThan(0);
@@ -117,23 +103,20 @@ it('keine Insel importiert selbst aus `@einsatzzeichen/conformance`', () => {
   ).toEqual([]);
 });
 
-it('was eine Insel lädt, importiert `conformance` nur über die benannte Ausnahme', () => {
+/**
+ * Ohne Ausnahme seit LFH-580. Bis dahin durfte `builder-state.ts` `composeFromCatalog` über den
+ * Subpfad `@einsatzzeichen/conformance/src/recipes.js` holen, weil `core` keine fertige Belegung der
+ * `CatalogPorts` führte; seitdem zeichnet der Baukasten mit `drawSymbol()` aus `core`.
+ */
+it('was eine Insel lädt, importiert `conformance` nicht', () => {
   const offenders = islandFiles()
     .flatMap(conformanceImportsReachableFrom)
-    .filter((hit) => !isAllowed(hit))
     .map((hit) => `${hit.file}: ${hit.specifier}`);
   expect(
     [...new Set(offenders)],
     'Diese Dateien liegen im Browserbündel einer Insel und ziehen das Prüfpaket mit. ' +
       'Geometrie und Renderer kommen aus `@einsatzzeichen/core`.',
   ).toEqual([]);
-});
-
-it('die Ausnahme ist noch nötig — sonst gehört sie gestrichen', () => {
-  const reached = islandFiles().flatMap(conformanceImportsReachableFrom);
-  for (const entry of ALLOWED) {
-    expect(reached.some((hit) => hit.file === entry.file && hit.specifier === entry.specifier)).toBe(true);
-  }
 });
 
 /** Gegenproben: der Wächter taugt nur, wenn er echte Importe findet und Scheinimporte übergeht. */

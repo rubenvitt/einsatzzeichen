@@ -1,6 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { COMPOSITION_RULE_CATALOG, RULE_CATALOG, validateSpec } from '@einsatzzeichen/core';
-import { RULE_EVIDENCE, RULE_EVIDENCE_GAPS, ruleEvidenceTriggers } from './rule-evidence.js';
+import {
+  COMPOSITION_RULE_CATALOG,
+  CompositionError,
+  FREESTANDING_RULE_CATALOG,
+  RULE_CATALOG,
+  drawFreestanding,
+  validateSpec,
+} from '@einsatzzeichen/core';
+import {
+  FREESTANDING_RULE_EVIDENCE,
+  RULE_EVIDENCE,
+  RULE_EVIDENCE_GAPS,
+  freestandingRuleEvidenceTriggers,
+  ruleEvidenceTriggers,
+} from './rule-evidence.js';
 
 const catalogIds = [...RULE_CATALOG, ...COMPOSITION_RULE_CATALOG].map((rule) => rule.id);
 const evidenceIds = RULE_EVIDENCE.map((item) => item.rule);
@@ -22,7 +35,7 @@ describe('RULE_EVIDENCE', () => {
 
   it('führt je Regel genau einen Fall, alphabetisch', () => {
     expect(evidenceIds).toEqual([...new Set(evidenceIds)].sort());
-    expect(RULE_EVIDENCE).toHaveLength(77);
+    expect(RULE_EVIDENCE).toHaveLength(81);
   });
 
   it('nagelt die Lücken fest', () => {
@@ -66,7 +79,7 @@ describe('RULE_EVIDENCE', () => {
     ]);
   });
 
-  it('meldet in 68 von 74 Fällen nur die eigene Regel', () => {
+  it('meldet in 72 von 78 Fällen nur die eigene Regel', () => {
     // Randregeln verletzen oft eine allgemeinere mit. Die sechs Fälle, die zusätzlich eine
     // andere Regel melden, stehen hier, damit ein neuer Mitläufer auffällt.
     const withOthers = RULE_EVIDENCE
@@ -80,5 +93,32 @@ describe('RULE_EVIDENCE', () => {
       'surface-label-foot-conflict',
       'top-left-metrics-complete',
     ]);
+  });
+});
+
+describe('FREESTANDING_RULE_EVIDENCE', () => {
+  // Dasselbe Gate für die freistehende Spec-Art (LFH-577): je Regel ein Fall, zur Laufzeit
+  // ausgelöst, und keine Regel ohne Fall.
+  it.each(FREESTANDING_RULE_EVIDENCE.map((item) => [item.rule, item] as const))('%s: der Fall löst die Regel aus', (_rule, item) => {
+    expect(freestandingRuleEvidenceTriggers(item)).toEqual([item.rule]);
+  });
+
+  it('ist mengengleich mit FREESTANDING_RULE_CATALOG, alphabetisch, ohne Lücke', () => {
+    const ids = FREESTANDING_RULE_EVIDENCE.map((item) => item.rule);
+    expect(ids).toEqual(FREESTANDING_RULE_CATALOG.map((rule) => rule.id));
+    expect(ids).toEqual([...new Set(ids)].sort());
+  });
+
+  it('lehnt jeden Fall auch beim Zeichnen mit derselben Regel ab', () => {
+    for (const item of FREESTANDING_RULE_EVIDENCE) {
+      let caught: unknown;
+      try {
+        drawFreestanding(item.spec);
+      } catch (error) {
+        caught = error;
+      }
+      expect(caught, item.rule).toBeInstanceOf(CompositionError);
+      expect((caught as CompositionError).issues.map((issue) => issue.rule), item.rule).toEqual([item.rule]);
+    }
   });
 });

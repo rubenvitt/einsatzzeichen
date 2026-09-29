@@ -119,3 +119,121 @@ export type {
   PictogramPlacement,
   PictogramSection,
 } from './geometry/pictograms/catalog-definition.js';
+// LFH-580: Der Einstieg von der Spec zur Zeichnung ohne Prüfpaket — die Standardbelegung der
+// Ports und `drawSymbol()`, das `compose()` damit aufruft.
+export { DEFAULT_PORTS, drawSymbol } from './default-ports.js';
+// LFH-579: Erklärbare Ablehnung — Titel, Erklärung und kuratiertes Spec-Feld je Regel, vorher in
+// der Website. `explainIssue()` verbindet sie mit dem Regelkatalog; unbekannte Kennungen werfen.
+export {
+  COMPOSITION_RULE_EXPLANATIONS,
+  RULE_EXPLANATIONS,
+  RULE_FIELDS,
+  explainIssue,
+  explainRejection,
+  type ExplainedIssue,
+  type RuleExplanation,
+  type RuleField,
+} from './rules/rule-explanations.js';
+// LFH-581: Herkunft im Produkt — `verbatim` (nur Körperhülle belegt, `claim: 'body-hull'`) oder
+// `derived`, aus einer generierten Tabelle ohne Prüfpaket. Der fachliche Reviewstand bleibt in
+// conformance (`provenanceReview`, `combinationProvenance`).
+export { symbolProvenance, type SymbolProvenance } from './provenance/symbol-provenance.js';
+// LFH-577: Kanonische Serialisierung der SymbolSpec — JSON in der Hülle `{"v":1,"spec":{…}}`,
+// strenges Lesen mit Pfad in der Fehlermeldung und die base64url-Form für URLs (liest auch die
+// alten Baukasten-Links ohne Hülle). Prüft Form und Wertevorrat, nicht die Kombinationsregeln.
+export {
+  SPEC_FORMAT_VERSION,
+  SpecParseError,
+  canonicalSpec,
+  decodeSpecParam,
+  encodeSpecParam,
+  parseSpec,
+  serializeSpec,
+} from './spec-codec.js';
+// LFH-578: Vokabular je Stand der Spec — der Wertevorrat je Feld (`SPEC_FIELD_VALUES`), welche
+// Werte zur übrigen Spec passen (`vocabulary`, probiert über `drawSymbol`) und die erklärbare
+// Ablehnung einer ganzen Spec als Ergebnis statt Wurf (`checkSpec`).
+export {
+  LIST_SPEC_FIELDS,
+  SPEC_FIELD_VALUES,
+  VOCABULARY_FIELDS,
+  checkSpec,
+  specFieldValues,
+  vocabulary,
+  type SpecCheck,
+  type SpecDraft,
+  type SpecFieldDomain,
+  type SpecFieldValue,
+  type VocabularyField,
+  type VocabularyOption,
+  type VocabularyOptions,
+} from './vocabulary.js';
+// LFH-577 (Integration, Zeichen mit Körper): die Bausteine hinter den neuen Spec-Feldern
+// `unitGrouping`, `states` und `tendency`. `placeStates()` legt Zustände an einen Träger und
+// wirft `NotMeasuredError`, wo die Referenz keine Lage zeigt; die Lagen selbst stehen als Daten
+// daneben. `stateCarriersOf()` ist der Inhalt der Regel `state-carrier-not-allowed`. Dazu die
+// Verbandsköpfe (Port `unitGroupingHead`) und die gezeichneten Sonderformen 3.6–3.9. Der Vorschlag
+// für Verband III (`UNIT_GROUPING_III_PROPOSAL_CX_MM`) bleibt bewusst intern: er ist nicht
+// vermessen und keine Zusage.
+export {
+  placeStates,
+  type PlacedStateCarrier,
+  type PlacedStatePart,
+  type StateCarrierInput,
+  type StatePlacement,
+  type StatePlacementBasis,
+  type StatePlacementInput,
+  type StateTendencyId,
+} from './layout/state-placement.js';
+export {
+  PERSON_STATE_CORNERS_MM,
+  PERSON_STATE_FRAMES,
+  STATE_HINT_LAYOUTS,
+  type PersonStateCorner,
+  type PersonStateFrame,
+  type StateCarrierFrameId,
+  type StateHintId,
+  type StateHintLayout,
+} from './layout/state-frames.js';
+export { stateCarriersOf } from './blocks/state-groups.js';
+export { UNIT_GROUPING_HEADS, unitGroupingHead } from './geometry/unit-groupings.js';
+export { SPECIAL_FORM_IDS_DRAWN, specialFormDrawing } from './geometry/special-form-bodies.js';
+// LFH-577 (Integration, freistehende Zeichen): Pfeile 5.2, Linien und Grenzen 2.14–2.20, Wetter
+// 5.8.7 und Tierzustand 5.8.6 als eigene Spec-Art neben `SymbolSpec` (`FreestandingSpec` im
+// Schema). `drawFreestanding()` zeichnet sie, `drawAnySpec()` ist der gemeinsame Einstieg für beide
+// Arten. Geprüft wird mit eigenen Regelkennungen (`validateFreestandingSpec`, eigener Katalog und
+// eigene Erklärungen, über `explainIssue` erklärbar); der Codec schreibt sie in dieselbe Hülle
+// unter den Schlüssel `freestanding`. Die Zeichenfunktionen für Wetter und Tierzustand und die
+// Wetterregeln als Datum stehen daneben (`movementDrawing` und `lineDrawing` sind schon exportiert).
+export {
+  FREESTANDING_DEFAULT_CANVAS_MM,
+  describeFreestandingSpec,
+  drawAnySpec,
+  drawFreestanding,
+  type FreestandingDrawOptions,
+} from './draw-freestanding.js';
+export { validateFreestandingSpec } from './validate-freestanding.js';
+export { FREESTANDING_RULE_IDS } from './freestanding-rules.js';
+export { FREESTANDING_RULE_CATALOG } from './rules/rule-catalog.js';
+export { FREESTANDING_RULE_EXPLANATIONS } from './rules/rule-explanations.js';
+export { RETIRED_PARAMETRIC_RULES } from './rules/planned-parametric-rules.js';
+export { RETIRED_STATE_RULES, type RetiredRule } from './rules/planned-state-rules.js';
+export {
+  canonicalAnySpec,
+  decodeAnySpecParam,
+  encodeAnySpecParam,
+  parseAnySpec,
+  serializeAnySpec,
+} from './spec-codec.js';
+export { FREESTANDING_FIELD_VALUES, checkAnySpec } from './vocabulary.js';
+export {
+  WEATHER_CLOUD_PRECIPITATION,
+  WEATHER_PRECIPITATIONS,
+  classifyWeather,
+  weatherDrawing,
+  type WeatherCloudPrecipitationRules,
+  type WeatherInvalidReason,
+  type WeatherPrecipitationId,
+  type WeatherVerdict,
+} from './geometry/weather.js';
+export { animalStateDrawing } from './geometry/animal-state.js';

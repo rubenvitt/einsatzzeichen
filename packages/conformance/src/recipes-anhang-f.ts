@@ -32,9 +32,9 @@ import type { Recipe } from './recipes.js';
 export const ANHANG_F_A_RECIPES = {
   /**
    * Die Kopfzone trägt zwei senkrechte Balken (je 1,5 × 4,0 mm auf x 12/20, y 1…5) statt der
-   * Marken eines Stärkegrads. Seit dem Fachreview vom 19.09.2026 zeichnet der Katalog sie als
-   * semantikfreie technische Kopfmarke `double-vertical-bar` — dieselbe Marke wie E.1.31; ein
-   * fünfter `StrengthId` wird damit nicht behauptet.
+   * Marken eines Stärkegrads: nach dem Fachreview vom 19.09.2026 als technische Kopfmarke
+   * `double-vertical-bar` gezeichnet, seit LFH-577 als Verband II (`unitGrouping`, dasselbe Bild,
+   * `docs/decisions/2026-09-29-lfh-577-verband-5-5.md`) — dieselbe Marke wie E.1.31.
    */
   'F.1.1': {
     title: 'Medizinische Task Force',
@@ -42,7 +42,7 @@ export const ANHANG_F_A_RECIPES = {
     spec: {
       kind: 'formation',
       organization: 'hilfsorganisation',
-      technicalHeadMark: 'double-vertical-bar',
+      unitGrouping: 'verband-ii',
       bodyMarks: ['physician'],
       labels: { topLeft: 'MTF' },
     },
@@ -199,7 +199,7 @@ export const ANHANG_F_B_RECIPES = {
       kind: 'formation',
       bodyVariant: 'foot-band',
       organization: 'hilfsorganisation',
-      technicalHeadMark: 'double-vertical-bar',
+      unitGrouping: 'verband-ii',
       bodyMarks: ['care', 'temporary-accommodation-resting'],
       labels: { topLeft: '5.000' },
     },
@@ -234,7 +234,7 @@ export const ANHANG_F_B_RECIPES = {
     spec: {
       kind: 'formation',
       organization: 'hilfsorganisation',
-      technicalHeadMark: 'single-vertical-bar',
+      unitGrouping: 'verband-i',
       // In dieser Kombination ist das Zelt ein Dach unter 45° bis y 20 und die Arztleiste steht
       // auf y 21 statt 22 (F.1.13 selbst gemessen; `COMBINATION_MARKS`, Fachreview 19.09.2026).
       bodyMarks: ['care', 'physician', 'ring-7mm-offset-down-1mm'],
@@ -333,7 +333,7 @@ export const ANHANG_F_B_RECIPES = {
     spec: {
       kind: 'formation',
       organization: 'hilfsorganisation',
-      technicalHeadMark: 'single-vertical-bar',
+      unitGrouping: 'verband-i',
       bodyMarks: ['ring-6-5mm-offset-down-2mm-with-roof'],
       labels: { topLeft: '500' },
     },
@@ -930,15 +930,15 @@ export const ANHANG_F_B_FINDINGS: Readonly<Record<string, string>> = Object.free
 });
 export const ANHANG_F_B_DEVIATIONS: Readonly<Record<string, string>> = Object.freeze({
   'F.1.3':
-    'Die zwei Kopfbalken werden als semantikfreie technische Kopfmarke `double-vertical-bar` ' +
-    'gezeichnet, nicht als StrengthId (Fachreview 19.09.2026).',
+    'Die zwei Kopfbalken sind Verband II (`unitGrouping`, LFH-577), nicht StrengthId; bis dahin ' +
+    'dieselbe Zeichnung als technische Kopfmarke `double-vertical-bar` (Fachreview 19.09.2026).',
   'F.1.13':
-    'Der einzelne Kopfbalken wird als semantikfreie technische Kopfmarke `single-vertical-bar` ' +
-    'gezeichnet, nicht als StrengthId (Fachreview 19.09.2026). Der Kreis ist als rein ' +
+    'Der Kopfbalken ist Verband I (`unitGrouping`, LFH-577), nicht StrengthId; vorher dieselbe ' +
+    'Zeichnung als technische Kopfmarke `single-vertical-bar` (Fachreview 19.09.2026). Der Kreis ist als rein ' +
     'geometrische TechnicalBodyMarkId gebaut, nicht als CapabilityId.',
   'F.1.21':
-    'Der einzelne Kopfbalken wird als semantikfreie technische Kopfmarke `single-vertical-bar` ' +
-    'gezeichnet, nicht als StrengthId (Fachreview 19.09.2026). Die ' +
+    'Der Kopfbalken ist Verband I (`unitGrouping`, LFH-577), nicht StrengthId; vorher dieselbe ' +
+    'Zeichnung als technische Kopfmarke `single-vertical-bar` (Fachreview 19.09.2026). Die ' +
     'komplexe Innenform ist als rein geometrische TechnicalBodyMarkId gebaut, nicht als ' +
     'CapabilityId.',
 });

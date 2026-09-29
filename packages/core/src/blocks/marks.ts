@@ -674,7 +674,7 @@ const ANHANG_C_BODY_MARKS_DIR = 'core/src/geometry/body-marks-anhang-c';
 /** Die einzige technische Körpermarke, deren Körperbindung eine Regel im Regelkatalog trägt. */
 const INSET_HULL_BINDING = {
   ruleId: 'inset-hull-requires-measured-body-mark',
-  definedAt: 'core/src/validate.ts:419–446',
+  definedAt: 'core/src/validate.ts:423–450',
   reason:
     'An der eingesenkten Hülle sind die Körpermarken nur als keine oder inset-hull-wheel-pair für die Hilfsorganisation und als fire-fighting für die Feuerwehr vermessen.',
 } as const;
@@ -957,7 +957,7 @@ const FUNCTION_ROLES_FILE = 'core/src/geometry/function-roles.ts';
  */
 const FUNCTION_ROLE_BINDING = {
   ruleId: 'function-role-requires-measured-kind',
-  definedAt: 'core/src/validate.ts:300–318',
+  definedAt: 'core/src/validate.ts:304–322',
   reason:
     'Eine gemessene Funktion ist nur an Formation oder Person belegt, und jede einzelne Fassung zusätzlich nur an der Art, für die sie vermessen wurde.',
 } as const;

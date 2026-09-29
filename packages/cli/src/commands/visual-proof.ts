@@ -15,8 +15,8 @@ import {
 } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { Resvg, type RenderedImage } from '@resvg/resvg-js';
-import { RECIPES, composeFromCatalog, resvgFontOptions } from '@einsatzzeichen/conformance';
-import { REFERENCE_THEME, renderSvg } from '@einsatzzeichen/core';
+import { RECIPES, resvgFontOptions } from '@einsatzzeichen/conformance';
+import { REFERENCE_THEME, drawSymbol, renderSvg } from '@einsatzzeichen/core';
 
 const COLUMNS = 3;
 const CARD_WIDTH = 720;
@@ -99,7 +99,7 @@ function proofSvg(referenceRoot: string): {
     const referenceSvg = referenceBytes.toString('utf8');
     const contentDigest = createHash('sha256').update(referenceBytes).digest('hex');
     sourceSetRows.push(`${section}\t${recipe.referenceAsset}\t${contentDigest}\n`);
-    const catalogSvg = renderSvg(composeFromCatalog(recipe.spec, recipe.title), {
+    const catalogSvg = renderSvg(drawSymbol(recipe.spec, { title: recipe.title }), {
       size: IMAGE_WIDTH,
       theme: REFERENCE_THEME,
       idPrefix: `visual-proof-${section.replaceAll('.', '-')}`,

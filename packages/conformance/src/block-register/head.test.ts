@@ -102,8 +102,18 @@ describe('Bausteinregister, Kopfzone: vermessene Einträge lösen sich zu Geomet
     }
   });
 
+  /**
+   * Der Verband hat noch keinen öffentlichen Resolver (`unitGroupingHead` ist nicht exportiert,
+   * LFH-577). Ob seine Einträge zu Geometrie auflösen, prüft `core/src/blocks/head.test.ts`; hier
+   * bleibt die Namensprobe am Fundort (`verband-i` → `const VERBAND_I`).
+   */
   it('nennt im Fundort jedes vermessenen Eintrags den Namen der Definition', () => {
-    const categories: readonly BlockCategory[] = ['strength', 'administrative-level', 'technical-head-mark'];
+    const categories: readonly BlockCategory[] = [
+      'strength',
+      'unit-grouping',
+      'administrative-level',
+      'technical-head-mark',
+    ];
     const problems = categories
       .flatMap(measuredEntries)
       .filter((entry) => !sourceAt(definedAt(entry)).includes(expectedKey(entry)))
@@ -123,17 +133,19 @@ describe('Bausteinregister, Kopfzone: Lücken lösen sich nicht auf', () => {
   });
 
   /**
-   * Für den Verband gibt es keinen Resolver, gegen den man die Lücke laufen lassen könnte. Geprüft
-   * wird, was sich ohne ihn prüfen lässt: kein Rezept und kein Piktogramm baut eine der drei
-   * Referenzdateien 5.5.1–5.5.3 nach, und kein Katalogmodul außerhalb der Tests nennt eine der
-   * Kennungen. **Grenze:** eine Verbandsgeometrie unter anderem Namen, etwa als Balkenmarke, fängt
-   * das nicht. Die zwei Balken von `double-vertical-bar` sind laut Befund zu E.1.31 ausdrücklich
-   * kein Verband.
+   * Seit LFH-577 sind Verband I und II am Körper vermessen (`core/src/geometry/unit-groupings.ts`);
+   * sie sind dieselbe Zeichnung wie `single-vertical-bar` und `double-vertical-bar`, und
+   * `core/src/geometry/unit-groupings.test.ts` hält das fest. Offen bleibt Verband III: kein
+   * Original zeigt ihn am Körper. Geprüft wird, dass kein Rezept und kein Piktogramm eine der
+   * Kapiteldateien 5.5.1–5.5.3 nachbaut und kein Katalogmodul außerhalb der Tests die Kennung der
+   * Lücke nennt. **Grenze:** eine Geometrie mit drei Balken unter anderem Namen fängt das nicht.
    */
-  it('Verband: der Katalog führt keine Geometrie unter den Verbandskennungen', () => {
+  it('Verband: der Katalog führt keine Geometrie unter der Kennung der Lücke', () => {
     const gaps = notMeasuredEntries('unit-grouping');
-    expect(gaps.map((entry) => entry.valueId).sort()).toEqual(['verband-i', 'verband-ii', 'verband-iii']);
-    expect(measuredEntries('unit-grouping')).toEqual([]);
+    expect(gaps.map((entry) => entry.valueId).sort()).toEqual(['verband-iii']);
+    expect(measuredEntries('unit-grouping').map((entry) => entry.valueId).sort()).toEqual(
+      ['verband-i', 'verband-ii'],
+    );
 
     const assets = [
       ...Object.values(RECIPES).map((recipe) => recipe.referenceAsset),
@@ -148,6 +160,9 @@ describe('Bausteinregister, Kopfzone: Lücken lösen sich nicht auf', () => {
       (readdirSync(root, { recursive: true }) as string[])
         .filter((file) => file.endsWith('.ts') && !file.endsWith('.test.ts'))
         .filter((file) => !file.startsWith('block-register'))
+        // Die Vorlesenamen nennen jeden Wert des Typs, auch die Lücke (`UNIT_GROUPING_LABELS`,
+        // LFH-577) — ein Name, keine Geometrie.
+        .filter((file) => file !== 'labels.ts')
         .flatMap((file) => {
           const text = readFileSync(join(root, file), 'utf8');
           return gaps
@@ -165,8 +180,9 @@ describe('Bausteinregister, Kopfzone: Lücken lösen sich nicht auf', () => {
       'verband-iii': '5.5.3_Bereitschaft (Verband III).svg',
     };
     for (const entry of entries('unit-grouping')) {
-      if (entry.binding.status === 'measured') throw new Error(`${entry.id} ist vermessen`);
-      expect(entry.binding.gap.reason, entry.id).toContain(files[entry.valueId]);
+      const text =
+        entry.binding.status === 'measured' ? entry.binding.geometry.note : entry.binding.gap.reason;
+      expect(text, entry.id).toContain(files[entry.valueId]);
     }
   });
 });

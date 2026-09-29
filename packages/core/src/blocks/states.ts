@@ -8,9 +8,11 @@ import { babz, block, measured } from './helpers.js';
  * `core/src/geometry/pictograms/states/` sind eigenständige Piktogramme in der 32×32-mm-ViewBox
  * (`placement: { mode: 'standalone' }`), keine Randlagen-Fassung an einem Grundzeichen
  * (`docs/decisions/2026-08-07-kapitel-5-8-zustaende-d2.md` §2). Das Register führt als Zone die
- * Zielzone `state-margin` bzw. `tendency-margin`. Diese Randlagen sind im Zonenmodell an keiner
- * Körperform vermessen (`core/src/layout/zones.ts`, `STATE_MARGIN_GAP` und
- * `TENDENCY_MARGIN_GAP`). Der Messstand bezieht sich allein auf die vorhandene Zeichnung.
+ * Zielzone `state-margin` bzw. `tendency-margin`. Seit dem 29. September 2026 ist die
+ * Zustandsrandlage an Person und Gefahr vermessen, belegt allerdings nur für die Hinweise 5.8.1.13
+ * und 5.8.1.14; die Lage baut `core/src/layout/state-placement.ts`. Die Tendenzrandlage zeigt kein
+ * Original (`core/src/layout/zones.ts`, `TENDENCY_MARGIN_GAP`). Der Messstand dieses Registers
+ * bezieht sich allein auf die vorhandene Zeichnung.
  *
  * Die Entscheidung vom 7. August 2026 nennt 61 Kennungen und 67 Darstellungen. Sechs Kennungen
  * haben neben der Primärdarstellung eine Alternative. Der Eintrag zeigt auf die
@@ -72,16 +74,16 @@ export const STATE_BLOCKS: readonly BlockEntry[] = Object.freeze([
   // Zweite Darstellung `variant: 'alternative'` in 06-animals.ts:121–130.
   state('contaminated-animal', 'core/src/geometry/pictograms/states/06-animals.ts:111–120', '5.8.6.2'),
   state('dead-animal', 'core/src/geometry/pictograms/states/06-animals.ts:131–145', '5.8.6.3'),
-  state('weather-sunny', 'core/src/geometry/pictograms/states/07-weather.ts:287–295', '5.8.7.1'),
-  state('weather-cloudy', 'core/src/geometry/pictograms/states/07-weather.ts:296–304', '5.8.7.2'),
-  state('weather-cloud-cover-four-eighths', 'core/src/geometry/pictograms/states/07-weather.ts:305–313', '5.8.7.3'),
-  state('weather-foggy', 'core/src/geometry/pictograms/states/07-weather.ts:314–323', '5.8.7.4'),
-  state('weather-rainy', 'core/src/geometry/pictograms/states/07-weather.ts:324–332', '5.8.7.5'),
-  state('weather-hailing', 'core/src/geometry/pictograms/states/07-weather.ts:333–341', '5.8.7.6'),
-  state('weather-thunderstorm', 'core/src/geometry/pictograms/states/07-weather.ts:342–350', '5.8.7.7'),
-  state('weather-snowing', 'core/src/geometry/pictograms/states/07-weather.ts:351–360', '5.8.7.8'),
-  state('weather-temperature', 'core/src/geometry/pictograms/states/07-weather.ts:361–372', '5.8.7.9'),
-  state('weather-windy', 'core/src/geometry/pictograms/states/07-weather.ts:373–390', '5.8.7.10'),
+  state('weather-sunny', 'core/src/geometry/pictograms/states/07-weather.ts:299–307', '5.8.7.1'),
+  state('weather-cloudy', 'core/src/geometry/pictograms/states/07-weather.ts:308–316', '5.8.7.2'),
+  state('weather-cloud-cover-four-eighths', 'core/src/geometry/pictograms/states/07-weather.ts:317–325', '5.8.7.3'),
+  state('weather-foggy', 'core/src/geometry/pictograms/states/07-weather.ts:326–335', '5.8.7.4'),
+  state('weather-rainy', 'core/src/geometry/pictograms/states/07-weather.ts:336–344', '5.8.7.5'),
+  state('weather-hailing', 'core/src/geometry/pictograms/states/07-weather.ts:345–353', '5.8.7.6'),
+  state('weather-thunderstorm', 'core/src/geometry/pictograms/states/07-weather.ts:354–362', '5.8.7.7'),
+  state('weather-snowing', 'core/src/geometry/pictograms/states/07-weather.ts:363–372', '5.8.7.8'),
+  state('weather-temperature', 'core/src/geometry/pictograms/states/07-weather.ts:373–384', '5.8.7.9'),
+  state('weather-windy', 'core/src/geometry/pictograms/states/07-weather.ts:385–402', '5.8.7.10'),
   state('person-uninjured', 'core/src/geometry/pictograms/states/08-persons.ts:187–195', '5.8.8.1'),
   state('person-affected', 'core/src/geometry/pictograms/states/08-persons.ts:196–205', '5.8.8.2'),
   state('person-injured', 'core/src/geometry/pictograms/states/08-persons.ts:206–214', '5.8.8.3'),

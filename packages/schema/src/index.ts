@@ -19,4 +19,5 @@ export * from './capability-combinations.js';
 export * from './capability-inset.js';
 export * from './special-forms.js';
 export * from './parametric.js';
+export * from './freestanding.js';
 export * from './body-mark-renditions.js';

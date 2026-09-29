@@ -652,12 +652,12 @@ export const ANHANG_E_C_RECIPES = {
   /**
    * Die Referenz trägt an der Stelle der Kopfzone **keinen Stärkegrad**, sondern zwei senkrechte
    * Balken: je 1,5 × 4 mm bei cx 12 und 20 mm, y 1…5 mm. Alle vier Stärkegrade sind aus Kreisen
-   * r 1,5 mm gebaut, `StrengthId` passt also nicht. Bis zum Fachreview vom 19.09.2026 baute der
-   * Katalog das Zeichen deshalb ohne Kopfzone. Seitdem trägt es die semantikfreie technische
-   * Kopfmarke `double-vertical-bar` (`technical-head-marks.ts`): Sie bildet die Balken ab, ohne
-   * einen Stärkebegriff zu behaupten — derselbe Weg wie `single-vertical-bar` bei I.1.4. Der
-   * Balkenpfad steht byteweise identisch auch in `F.1.1_Medizinische Task Force.svg` und
-   * `F.1.3_Mobiles Betreuungsmodul 5000.svg`.
+   * r 1,5 mm gebaut, `StrengthId` passt nicht. Bis zum Fachreview vom 19.09.2026 ohne Kopfzone,
+   * danach als technische Kopfmarke `double-vertical-bar`; **seit LFH-577 Verband II**
+   * (`unitGrouping`): die Marke aus `5.5.2_Bereitschaft (Verband II).svg`, am Körper im selben
+   * Verhältnis 0,375 verkleinert wie die Stärkepunkte aus 5.4, das Bild unverändert
+   * (`docs/decisions/2026-09-29-lfh-577-verband-5-5.md`). Der Balkenpfad steht byteweise gleich
+   * auch in `F.1.1_Medizinische Task Force.svg` und `F.1.3_Mobiles Betreuungsmodul 5000.svg`.
    *
    * Die Zahl 500 des Dateinamens erscheint im Zeichen nicht: die Typo-Ebene führt genau acht
    * Glyphenpfade, fünf im mittigen Lauf und drei im `THW`-Lauf, und im gesamten E.1 kommt keine
@@ -676,7 +676,7 @@ export const ANHANG_E_C_RECIPES = {
       kind: 'formation',
       whiteInnerContour: true,
       organization: 'thw',
-      technicalHeadMark: 'double-vertical-bar',
+      unitGrouping: 'verband-ii',
       labels: { center: 'SysBR', bottomRight: 'THW' },
     },
   },

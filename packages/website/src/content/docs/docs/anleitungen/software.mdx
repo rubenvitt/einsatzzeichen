@@ -22,16 +22,24 @@ Kompositionsmotor eine Zeichnung (`Drawing`), und aus der Zeichnung ein SVG. All
 Millimeter; umgerechnet wird erst am Renderer.
 
 ```ts
-import { composeFromCatalog, RECIPES } from '@einsatzzeichen/conformance';
-import { renderSvg } from '@einsatzzeichen/core';
+import { drawSymbol, renderSvg } from '@einsatzzeichen/core';
+import type { SymbolSpec } from '@einsatzzeichen/schema';
 
-const recipe = RECIPES['E.1.1'];
-const svg = renderSvg(composeFromCatalog(recipe.spec, recipe.title), { size: 64 });
+// E.1.1 „Bergungsgruppe" des THW
+const spec: SymbolSpec = {
+  kind: 'formation',
+  whiteInnerContour: true,
+  organization: 'thw',
+  strength: 'gruppe',
+  labels: { center: 'B', bottomRight: 'THW' },
+};
+
+const svg = renderSvg(drawSymbol(spec, { title: 'Bergungsgruppe' }), { size: 64 });
 ```
 
-Die Bausteine und der Renderer kommen aus `core`. Das Vorlagenrezept `RECIPES['E.1.1']` und der
-Kurzweg `composeFromCatalog()` liegen noch im Prüfpaket `conformance` (bis 1.5 `catalog`); wie es
-ohne Prüfpaket geht, zeigt das Beispiel auf der [Seite zu `core`](/docs/pakete/core/#beispiel).
+Alles dafür kommt aus `core` und `schema`; das Prüfpaket `conformance` ist nicht nötig. Mehr zu
+`drawSymbol()` und zum Austausch einzelner Bausteine steht auf der
+[Seite zu `core`](/docs/pakete/core/#beispiel).
 
 Vollständige, lauffähige Beispiele in allen vier Kanälen stehen im
 [Quickstart](/docs/quickstart/); sie werden aus derselben Vorlage erzeugt wie die Beispiele auf jeder
@@ -71,10 +79,10 @@ Build-Schritt und keine Veröffentlichung auf einer Registry. Im Workspace läuf
 ## Zwei Fallstricke
 
 **`@einsatzzeichen/conformance` ist nicht browsertauglich, wenn es über den Index geladen wird.**
-`fonts.ts` importiert `node:url`, und der Index re-exportiert es. Im Browser läuft deshalb
-entweder ein Subpfad-Import oder — wie auf dieser Website — eine zur Bauzeit erzeugte Datendatei.
-`core`, `schema`, `react`, `web-component` und `maplibre` sind frei von `node:*`; was ein Browser
-zum Zeichnen braucht, Themes und Bausteine eingeschlossen, liegt in `core`.
+`fonts.ts` importiert `node:url`, und der Index re-exportiert es. Zum Zeichnen braucht es das
+Prüfpaket nicht: `core`, `schema`, `react`, `web-component` und `maplibre` sind frei von `node:*`,
+und was ein Browser zum Zeichnen braucht — `drawSymbol()`, Themes und Bausteine — liegt in `core`.
+Wer Prüfdaten im Browser zeigen will, erzeugt sie wie diese Website zur Bauzeit als Datendatei.
 
 **Die Schrift gehört zum Zeichen.** `renderSvg()` schreibt `font-family="Arimo"` in jedes Zeichen
 mit Kürzel. Ohne ausgelieferte Schriftdatei setzt der Browser eine Ersatzschrift mit anderen

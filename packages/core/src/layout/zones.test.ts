@@ -279,6 +279,8 @@ describe('Zonenmodell: Bindung an die bestehenden Fundorte', () => {
       'core/src/geometry/base-symbols.ts',
       'core/src/geometry/parametric.ts',
       'core/src/layout/profiles.ts',
+      'core/src/layout/state-frames.ts',
+      'core/src/layout/state-placement.ts',
       'core/src/validate.ts',
       'schema/src/chassis.ts',
       'schema/src/taxonomy.ts',
@@ -298,28 +300,121 @@ describe('Zonenmodell: deklarierte Lücken', () => {
     }
     for (const forms of Object.values(byZone)) forms.sort();
     expect(byZone).toEqual(PINNED_GAPS);
-    expect(zoneGaps()).toHaveLength(345);
+    expect(zoneGaps()).toHaveLength(342);
   });
 
-  it('führt Zustand und Tendenz an jeder Körperfassung als unvermessen', () => {
+  it('führt die Tendenz an jeder Körperfassung als unvermessen', () => {
+    // `value` und nicht `combination`: keine der 661 Referenzdateien zeigt eine Tendenz an einem
+    // Träger (Durchsicht vom 29. September 2026), eine andere Grundzeichenart hilft nicht.
     for (const form of ZONE_MODEL_FORMS) {
-      for (const zone of ['state-margin', 'tendency-margin'] as const) {
-        const binding = form.zones[zone];
-        expect(binding.status, `${formKey(form.kind, form.variant)} / ${zone}`)
-          .toBe('not-measured');
-        // `value` und nicht `combination`: Kapitel 5.8 ist an **keiner** Kombination vermessen,
-        // eine andere Grundzeichenart hilft nicht.
-        expect(binding.status === 'not-measured' ? binding.gap.scope : undefined).toBe('value');
+      const binding = form.zones['tendency-margin'];
+      expect(binding.status, formKey(form.kind, form.variant)).toBe('not-measured');
+      expect(binding.status === 'not-measured' ? binding.gap.scope : undefined).toBe('value');
+    }
+    const reason = ZONE_MODEL.formation.zones['tendency-margin'];
+    expect(reason.status === 'not-measured' ? reason.gap.reason : '').toContain('661');
+  });
+
+  it('belegt die Zustandsrandlage an Person und Gefahr, sonst als fehlende Zusammenstellung', () => {
+    // Die Hinweise aus 5.8.1 stehen in den Originalen an der Person (5.8.1_Beispiel 1–3) und an
+    // der Gefahr (5.8.1.13_2, 5.8.1.14_2, M.6). An jeder anderen Körperfassung fehlt die
+    // Zusammenstellung — `combination`, weil Person und Gefahr sie tragen.
+    const measuredForms = ['hazard', 'person', 'person/compact-person-diamond-26mm'];
+    for (const form of ZONE_MODEL_FORMS) {
+      const key = formKey(form.kind, form.variant);
+      const binding = form.zones['state-margin'];
+      if (measuredForms.includes(key)) {
+        expect(binding.status, key).toBe('measured');
+      } else {
+        expect(binding.status, key).toBe('not-measured');
+        expect(binding.status === 'not-measured' ? binding.gap.scope : undefined, key)
+          .toBe('combination');
       }
     }
-    expect(ZONE_MODEL.formation.zones['tendency-margin'].status === 'not-measured'
-      ? ZONE_MODEL.formation.zones['tendency-margin'].gap.reason
-      : '').toContain('keine eigene Achse');
+  });
+
+  it('liest die Hinweislage an der Person an 5.8.1_Beispiel 3 ab', () => {
+    expect(valueMmOf('person', 'state-margin', 'hint-canvas-width')).toBe(36);
+    expect(valueMmOf('person', 'state-margin', 'hint-mark-axis')).toBe(4.5);
+    const carrier = measureOf('person', 'state-margin', 'hint-carrier-hull');
+    expect(carrier.kind === 'bounds' ? carrier.boundsMm : undefined).toEqual({
+      minX: 11, minY: 6, maxX: 31, maxY: 26,
+    });
+    const base = measureOf('person', 'state-margin', 'hint-base-area');
+    expect(base.kind === 'bounds' ? base.boundsMm : undefined).toEqual({
+      minX: 4, minY: 0, maxX: 36, maxY: 32,
+    });
+    expect(measureOf('person', 'state-margin', 'hint-frame').kind).toBe('rule');
+    expect(measureOf('person', 'state-margin', 'hint-mark-ink').kind).toBe('rule');
+  });
+
+  it('führt an der kompakten 26-mm-Raute zusätzlich die Ecklagen aus 5.8.8', () => {
+    const topRight = measureOf('person/compact-person-diamond-26mm', 'state-margin', 'corner-top-right');
+    expect(topRight.kind === 'bounds' ? topRight.boundsMm : undefined).toEqual({
+      minX: 20.75, minY: 0.25, maxX: 31.75, maxY: 8,
+    });
+    const bottomLeft = measureOf(
+      'person/compact-person-diamond-26mm',
+      'state-margin',
+      'corner-bottom-left',
+    );
+    expect(bottomLeft.kind === 'bounds' ? bottomLeft.boundsMm : undefined).toEqual({
+      minX: 2.533, minY: 25.13, maxX: 7.112, maxY: 30,
+    });
+  });
+
+  it('zeigt mit jeder Herkunft in state-frames.ts und state-placement.ts auf die Stelle, die die Zahl trägt', () => {
+    // Die Zeilenbereiche stehen als Text; läuft die Datei weg, fällt es hier auf und nicht erst
+    // beim Leser, der ins Leere schlägt. Seit LFH-577 stehen die Lagen als reine Daten in
+    // `state-frames.ts`; die Tendenz bleibt an der Stelle in `state-placement.ts`, die wirft.
+    const expected: Record<string, string> = {
+      'state-frames.ts:129–172': 'STATE_HINT_LAYOUTS',
+      'state-frames.ts:63–95': 'PERSON_STATE_FRAMES',
+      'state-frames.ts:99–110': 'PERSON_STATE_CORNERS_MM',
+      'state-placement.ts:477–483': 'tendency-margin',
+    };
+    const seen = new Set<string>();
+    for (const form of ZONE_MODEL_FORMS) {
+      for (const zone of ZONE_IDS) {
+        const binding = form.zones[zone];
+        const places =
+          binding.status === 'measured'
+            ? binding.measures.map((measure) => measure.provenance.definedAt)
+            : [binding.gap.definedAt];
+        for (const place of places) {
+          const match = /(state-frames\.ts|state-placement\.ts):(\d+)–(\d+)/u.exec(place);
+          if (match === null) continue;
+          const key = `${match[1]}:${match[2]}–${match[3]}`;
+          seen.add(key);
+          const lines = readPackageSource(`layout/${match[1]}`).split('\n');
+          const text = lines.slice(Number(match[2]) - 1, Number(match[3])).join('\n');
+          expect(expected[key], place).toBeDefined();
+          expect(text, place).toContain(expected[key]);
+        }
+      }
+    }
+    expect([...seen].sort()).toEqual(Object.keys(expected).sort());
+  });
+
+  it('importiert im Zonenmodell keine Geometrie der Zustände', () => {
+    const source = readPackageSource('layout/zones.ts');
+    expect(source).not.toMatch(/from '\.\/state-placement\.js'/u);
+    expect(readPackageSource('layout/state-frames.ts')).not.toMatch(/from '\.\.\/geometry\//u);
+  });
+
+  it('liest die Hinweislage an der Gefahr an 5.8.1.13_2 und 5.8.1.14_2 ab', () => {
+    expect(valueMmOf('hazard', 'state-margin', 'hint-canvas-width')).toBe(32);
+    expect(valueMmOf('hazard', 'state-margin', 'hint-mark-axis')).toBe(2.5);
+    const carrier = measureOf('hazard', 'state-margin', 'hint-carrier-hull');
+    expect(carrier.kind === 'bounds' ? carrier.boundsMm : undefined).toEqual({
+      minX: 7.5, minY: 6, maxX: 30.5, maxY: 25,
+    });
   });
 
   it('führt den Anbindungspunkt der Pfeile an jeder Körperfassung als unvermessen', () => {
-    // LFH-566: kein Original zeigt einen Pfeil aus 5.2 an einem Grundzeichen. `value` und nicht
-    // `combination`, weil keine Körperform die Anbindung trägt.
+    // LFH-566/LFH-577: belegt ist die Anbindung nur am Personenzustand 5.8.8.12 bis 5.8.8.14, an
+    // einer angehobenen Raute, die keine Körpervariante ist. `value` und nicht `combination`,
+    // weil keine Körperform des Modells die Anbindung trägt.
     for (const form of ZONE_MODEL_FORMS) {
       const binding = form.zones['movement-anchor'];
       expect(binding.status, formKey(form.kind, form.variant)).toBe('not-measured');
@@ -478,16 +573,15 @@ const PINNED_GAPS: Readonly<Record<string, readonly string[]>> = {
     'vehicle-land/plain-wheel-pair', 'vehicle-water', 'vehicle-water/inset-hull',
     'vehicle-water/raised-hull',
   ],
-  'state-margin | not-measured | value': [
+  'state-margin | not-measured | combination': [
     'area', 'building', 'circle-12', 'circle-12/foot-band', 'circle-12/raised-circle-1mm',
-    'circle-12/raised-gable', 'container', 'event', 'formation', 'formation/foot-band', 'hazard',
-    'measure', 'person', 'person/compact-person-diamond-26mm',
-    'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post', 'reduced-house',
-    'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'trailer/foot-band',
-    'upright-rectangle', 'vehicle-air', 'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull',
-    'vehicle-land', 'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track',
-    'vehicle-land/plain-wheel-pair', 'vehicle-water', 'vehicle-water/inset-hull',
-    'vehicle-water/raised-hull',
+    'circle-12/raised-gable', 'container', 'event', 'formation', 'formation/foot-band',
+    'measure', 'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post',
+    'reduced-house', 'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'trailer/foot-band',
+    'upright-rectangle',
+    'vehicle-air', 'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull', 'vehicle-land',
+    'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track', 'vehicle-land/plain-wheel-pair',
+    'vehicle-water', 'vehicle-water/inset-hull', 'vehicle-water/raised-hull',
   ],
   'tendency-margin | not-measured | value': [
     'area', 'building', 'circle-12', 'circle-12/foot-band', 'circle-12/raised-circle-1mm',

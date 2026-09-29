@@ -817,14 +817,14 @@ const ANHANG_E_C_TECHNICAL_REVIEW: Review = {
  */
 const ANHANG_E_C_DEVIATIONS: Readonly<Record<string, string>> = Object.freeze({
   'E.1.31':
-    'Seit dem 19. September 2026 trägt das Zeichen die zwei senkrechten Balken der Referenz als ' +
-    'technische Kopfmarke `double-vertical-bar` (je 1,5 × 4 mm, cx 12 und 20 mm, y 1…5 mm). Der ' +
-    'Name ist bewusst rein geometrisch: Die Balken behaupten keinen Stärkegrad, denn welchen ' +
-    'Begriff sie tragen, entscheidet die Datei nicht (dieselbe Marke steht byteweise identisch ' +
-    'in F.1.1 und F.1.3; „5.5.2_Bereitschaft (Verband II)" trifft die Zahl der Balken, nicht das ' +
-    'Maß). Offen bleibt deshalb nur die Bedeutung, nicht mehr die Geometrie. Der Status bleibt ' +
-    '`deviation`, bis das technische Review die neue Marke erneut geprüft hat; bis 18. September ' +
-    'baute der Katalog das Zeichen ohne Kopfzone.',
+    'Zwei senkrechte Balken (je 1,5 × 4 mm, cx 12 und 20 mm, y 1…5 mm), ab 19.09.2026 als ' +
+    'technische Kopfmarke `double-vertical-bar`, seit LFH-577 (29.09.2026) als Verband II ' +
+    '(`unitGrouping`), dasselbe Bild. Der frühere Befund, „5.5.2_Bereitschaft (Verband II)" ' +
+    'treffe nur die Zahl der Balken, verglich die vergrößerte Kapiteldatei mit der Marke am ' +
+    'Körper; dort verkleinert 5.5 wie die Stärke aus 5.4 um 0,375 (docs/decisions/2026-09-29-' +
+    'lfh-577-verband-5-5.md). Dieselbe Marke steht in F.1.1 und F.1.3; die fachliche Zuordnung ' +
+    'bestätigt ein Fachreview. Der Status bleibt `deviation`, bis das technische Review die ' +
+    'Marke erneut geprüft hat; bis 18. September baute der Katalog das Zeichen ohne Kopfzone.',
 });
 
 /**

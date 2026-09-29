@@ -126,6 +126,8 @@ describe('buildSnapshot', () => {
         'strength',
         'technicalFill',
         'technicalHeadMark',
+        'tendency',
+        'unitGrouping',
         'vehicleCategory',
         'wildfire',
       ].sort(),
@@ -162,6 +164,21 @@ describe('buildSnapshot', () => {
         expect(label).not.toBe(id);
         expect(label).toMatch(/^[A-ZÄÖÜ]/);
       }
+    });
+
+    // Dieselben Bezeichnungen, die `describeSymbolSpec` vorliest: der Verband aus
+    // `UNIT_GROUPING_LABELS`, Zustand und Tendenz mit dem Titel ihrer Zeichnung aus Kapitel 5.8.
+    it('beschriftet Verband, Zustand und Tendenz wie die vorgelesene Beschreibung', () => {
+      const label = (field: string, id: string) =>
+        snap.builder[field]?.find((entry) => entry.id === id)?.label;
+      expect(label('unitGrouping', 'verband-ii')).toBe('Verband II');
+      expect(label('states', 'person-injured')).toBe('Person verletzt');
+      expect(label('tendency', 'tendency-rising')).toBe('Tendenz steigend');
+      expect(snap.builder.tendency?.map((entry) => entry.id)).toEqual([
+        'tendency-rising',
+        'tendency-unchanged',
+        'tendency-falling',
+      ]);
     });
 
     it('lässt `bodyVariant` als dokumentierte Ausnahme bei seiner ID', () => {

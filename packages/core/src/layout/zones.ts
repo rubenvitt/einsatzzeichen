@@ -20,6 +20,11 @@ import {
   profileFor,
   type LayoutProfile,
 } from './profiles.js';
+import {
+  PERSON_STATE_CORNERS_MM,
+  PERSON_STATE_FRAMES,
+  STATE_HINT_LAYOUTS,
+} from './state-frames.js';
 
 /**
  * Hält `ZoneGapScope` (in `schema`, abhängigkeitsfrei) an `NotMeasuredScope` (in `core`). Beide
@@ -174,7 +179,7 @@ function formKey(kind: SymbolKind, variant?: BodyVariantId): string {
 
 /**
  * Die drei Körperformen, an denen die Referenz überhaupt eine Fahrwerkszone führt. Wiederholt aus
- * `CHASSIS_KINDS` in `validate.ts:62–66`, das dort modulprivat ist; `zones.test.ts` hält die
+ * `CHASSIS_KINDS` in `validate.ts:66–70`, das dort modulprivat ist; `zones.test.ts` hält die
  * Liste an der Meldung der Regel `vehicle-category-requires-vehicle` fest.
  */
 const CHASSIS_KINDS: readonly SymbolKind[] = ['vehicle-land', 'trailer', 'swap-loader-vehicle'];
@@ -350,7 +355,7 @@ const ABOVE_LEFT_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
 /** Herkunft des Laufs rechts unterhalb des Körpers. */
 const BELOW_RIGHT_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
   'vehicle-water/raised-hull': source(
-    'core/src/compose.ts:205–245, core/src/layout/profiles.ts:356–363',
+    'core/src/compose.ts:207–247, core/src/layout/profiles.ts:356–363',
     'Belegt an den fünf Wasserfahrzeugen E.2.27 bis E.2.31, deren Typo-Ebene diesen Lauf ' +
       'byteidentisch führt. Gemessen ist die Tinte, nicht der Anker: der Anker 31,5512 ist aus ' +
       'der an E.2.1 gemessenen Differenz von 0,0266 mm zwischen Anker und Tintenkante ' +
@@ -411,7 +416,7 @@ const BOTTOM_LABEL_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
 };
 
 const BOTTOM_LABEL_DEFAULT = source(
-  'core/src/compose.ts:81–121',
+  'core/src/compose.ts:84–124',
   'Gemessen an den 16 Referenzdateien E.1.1 bis E.1.16 (11./12. August 2026): Grundlinie 24,00 ' +
     'bei Körperunterkante 26,0, linke Tintenkante 3,03, rechte 29,03. Geltungsbereich sind diese ' +
     '16 Dateien auf dem Formationskörper — keine Aussage über E.1 insgesamt und keine eigene ' +
@@ -439,31 +444,128 @@ const DEFAULT_ANCHOR_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
   ),
 };
 
+/**
+ * Die Zustandsrandlage ist seit der Durchsicht aller 661 Referenzdateien am 29. September 2026 an
+ * zwei Grundzeichen vermessen: an der Person (`5.8.1_Beispiel 1` bis `3`) und an der Gefahr
+ * (`5.8.1.13_…_2`, `5.8.1.14_…_2`). Belegt sind dort nur die Hinweise „?" und „!" aus 5.8.1; an
+ * jeder anderen Körperform fehlt die Zusammenstellung. `combination` und nicht mehr `value`, weil
+ * Person und Gefahr sie tragen.
+ */
 const STATE_MARGIN_GAP = notMeasured(
-  'value',
-  'core/src/compose.ts:827–832',
-  'Kapitel 5.8 bleibt bewusst ein eigenständiger Piktogrammkatalog ohne `SymbolSpec.states` und ' +
-    'ohne Integration in `compose()`. Eine Randlage für einen Zustand ist damit an keiner ' +
-    'Körperform vermessen — eine andere Grundzeichenart hilft nicht, deshalb `scope: "value"`.',
+  'combination',
+  'core/src/layout/state-frames.ts:129–172',
+  'Kein Original zeigt einen Zustand aus 5.8 in der Randlage dieser Körperform. Belegt sind die ' +
+    'Hinweise 5.8.1.13 und 5.8.1.14 links neben der Person (5.8.1_Beispiel 1–3) und neben der ' +
+    'Gefahr (5.8.1.13_2, 5.8.1.14_2, M.6); `placeStates()` wirft hier `NotMeasuredError`.',
 );
 
 const TENDENCY_MARGIN_GAP = notMeasured(
   'value',
-  'core/src/compose.ts:827–832, schema/src/taxonomy.ts:359–361',
-  'Wie die Zustandsrandlage nicht vermessen. Zusätzlich zu benennen: **die Tendenz ist im ' +
-    'Repository heute keine eigene Achse.** `tendency-rising`, `tendency-unchanged` und ' +
-    '`tendency-falling` stehen als drei Werte innerhalb von `STATE_IDS`, also als Zustände. Ob ' +
-    'die Tendenz eine eigene Randlage bekommt oder eine Lage der Zustandsrandlage bleibt, ist ' +
-    'offen und wird hier nicht entschieden.',
+  'core/src/layout/state-placement.ts:477–483',
+  'Keine der 661 Referenzdateien zeigt eine Tendenz aus 5.8.3 an einem Träger (Durchsicht vom ' +
+    '29. September 2026); die Pfeile in M.9 und M.10 sind offene Winkelpfeile ohne Rahmen und ' +
+    'keine Tendenz. Die Tendenz ist ein eigenes Spec-Feld mit eigener Randlage (Entscheidung des ' +
+    'Eigentümers vom 29. September 2026); wo diese Randlage liegt, ist eine offene Frage an ihn ' +
+    '(docs/decisions/2026-09-28-lfh-565-kapitel-5-8-bausteine.md, Nachtrag).',
 );
 
+const HINT_LAYOUT_SOURCE = 'core/src/layout/state-frames.ts:129–172';
+const PERSON_FRAME_SOURCE = 'core/src/layout/state-frames.ts:63–95';
+const PERSON_CORNER_SOURCE = 'core/src/layout/state-frames.ts:99–110';
+
+/** Die Hinweislage eines Trägers, in Koordinaten der (bei der Person verbreiterten) Zeichenfläche. */
+function hintMeasures(carrier: 'person' | 'hazard'): readonly ZoneMeasure[] {
+  const layout = STATE_HINT_LAYOUTS[carrier];
+  const provenance =
+    carrier === 'person'
+      ? source(
+          HINT_LAYOUT_SOURCE,
+          '5.8.1_Beispiel 3 (29.09.2026): Fläche 36 × 32 mm, Grundfläche x 4…36, 20-mm-Raute um ' +
+            '(21 | 16) mit 0,4-mm-Strich, schwarzes „?" mit Achse x = 6,5 (Tinte 3,642…9,4 × ' +
+            '9,6…20,5 mm). „!" ist an der Person nicht gezeichnet und um 1 mm versetzt übertragen.',
+          babz('5.8.1'),
+        )
+      : source(
+          HINT_LAYOUT_SOURCE,
+          '5.8.1.13_2 und 5.8.1.14_2 (29.09.2026): Dreieck (7,5 | 25), (19 | 6), (30,5 | 25) mit ' +
+            '0,5-mm-Strich, rotes „?" mit Achse x = 5, rotes „!" mit Achse x = 6, Tinte y 9,6…20,65.',
+          babz('5.8.1.13', '5.8.1.14'),
+        );
+  const markAxis = layout.carrierHullMm.minX - layout.markAxisXMm['suspected-situation'];
+  return [
+    rule(
+      'hint-frame',
+      'Alle Maße dieser Zone gelten in Koordinaten der Zeichenfläche des Hinweises, nicht der ' +
+        '32-mm-Grundfläche: an der Person wächst die Fläche nach links auf 36 mm, die Grundfläche ' +
+        'liegt dann bei x 4…36. Der Träger wird verkleinert und ersetzt den Körper.',
+      provenance,
+    ),
+    size('hint-canvas-width', layout.canvasMm.width, 'width', provenance),
+    hull('hint-base-area', layout.baseAreaMm, provenance),
+    hull('hint-carrier-hull', layout.carrierHullMm, provenance),
+    offset('hint-mark-axis', markAxis, 'body-left', 'left', provenance),
+    rule(
+      'hint-mark-ink',
+      'Die Hinweismarke übernimmt die Strichfarbe des Trägers: schwarz an der Person, rot an der ' +
+        'Gefahr. Sie ist die auf die Hälfte verkleinerte Figur aus 5.8.1.13 bzw. 5.8.1.14.',
+      provenance,
+    ),
+  ];
+}
+
+/** Die Ecklagen der Zusatzkennungen aus 5.8.8 an der 26-mm-Raute. */
+function cornerMeasures(): readonly ZoneMeasure[] {
+  const provenance = source(
+    PERSON_CORNER_SOURCE,
+    'Tintenhüllen an 5.8.8.2, 5.8.8.5, 5.8.8.6 (oben rechts: B, TP, K, Kontaminationszeichen) und ' +
+      '5.8.8.4 (unten links: Sichtungskategorie), abgelesen am 29.09.2026.',
+    babz('5.8.8.2', '5.8.8.4', '5.8.8.5', '5.8.8.6'),
+  );
+  return [
+    rule(
+      'person-state-frame',
+      'Ein Personenzustand aus 5.8.8 ersetzt den 30-mm-Körper durch seine eigene Raute: 26 mm um ' +
+        '(16 | 16), 26 mm um (16 | 14) bei 5.8.8.12 bis 5.8.8.14, 21 mm um (16 | 20,5) bei 5.8.8.9.',
+      source(
+        PERSON_FRAME_SOURCE,
+        'Rautenlagen an 5.8.8.3, 5.8.8.12 und 5.8.8.9 abgelesen (29.09.2026); die Standardlage ' +
+          `hat die Hülle ${PERSON_STATE_FRAMES['person-diamond-26mm'].hullMm.minX}…` +
+          `${PERSON_STATE_FRAMES['person-diamond-26mm'].hullMm.maxX} mm wie I.5.1.`,
+        babz('5.8.8.3', '5.8.8.9', '5.8.8.12'),
+      ),
+    ),
+    hull('corner-top-right', PERSON_STATE_CORNERS_MM['top-right'], provenance),
+    hull('corner-bottom-left', PERSON_STATE_CORNERS_MM['bottom-left'], provenance),
+  ];
+}
+
+function stateMarginZone(kind: SymbolKind, variant: BodyVariantId | undefined): ZoneBinding {
+  if (kind === 'hazard' && variant === undefined) return measured(...hintMeasures('hazard'));
+  if (kind === 'person' && (variant === undefined || variant === 'compact-person-diamond-26mm')) {
+    return measured(...hintMeasures('person'), ...cornerMeasures());
+  }
+  return STATE_MARGIN_GAP;
+}
+
+/**
+ * Seit der Vermessung vom 29.09.2026 ist die Anbindung **einmal** belegt: an der Personenraute
+ * unten in 5.8.8.12 bis 5.8.8.14 (`anchoredMovementPath`: Verlauf von (minX | maxY) nach
+ * (maxX + 1 | maxY), nur an der 26-mm-Raute). Diese Raute ist aber die um 2 mm angehobene
+ * Fassung des Personenzustands (`PERSON_STATE_FRAMES`, Mitte 16 | 14), keine `BodyVariantId`:
+ * weder `person` (30-mm-Raute, dort ließe die Fläche dem Pfeil keinen Platz) noch
+ * `compact-person-diamond-26mm` (Mitte 16 | 16) tragen sie. Das Zonenmodell ist nach Körperform
+ * und Variante geschlüsselt und kann die Lage deshalb an keiner seiner Formen führen; sie gehört
+ * zum Personenzustand. Die Lücke bleibt, mit diesem Grund.
+ */
 const MOVEMENT_ANCHOR_GAP = notMeasured(
   'value',
-  'core/src/geometry/parametric.ts:39–40, 316–321',
-  'Die Pfeile aus 5.2 sind in der Referenz nur freistehend gezeichnet, jeder in seiner eigenen ' +
-    '32-mm-Fläche. Kein Original zeigt einen Pfeil an einem Grundzeichen, deshalb ist die Stelle, ' +
-    'an der er am Körper beginnt, an keiner Körperform vermessen. Eine andere Grundzeichenart ' +
-    'hilft nicht, deshalb `scope: "value"`.',
+  'core/src/geometry/parametric.ts:549–596',
+  'Die Pfeile aus 5.2 sind in der Referenz freistehend gezeichnet, jeder in seiner eigenen ' +
+    '32-mm-Fläche. An einem Körper zeigt sie nur der Personenzustand 5.8.8.12 bis 5.8.8.14: ' +
+    'der Pfeil liegt auf der Waagerechten durch die untere Ecke einer 26-mm-Raute, die um 2 mm ' +
+    'angehoben ist (`anchoredMovementPath`). Diese Raute ist eine Fassung des Zustands und keine ' +
+    'Körpervariante; an keiner Körperform dieses Modells ist die Anbindung vermessen, deshalb ' +
+    '`scope: "value"`.',
 );
 
 function bodyZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
@@ -481,7 +583,7 @@ function bodyZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
       'Die Körperzone ist die Hülle des **platzierten** Körpers. Alle übrigen Zonen rechnen ' +
         'gegen sie, damit sie mitwandern, wenn eine Kopfzone den Körper verschiebt.',
       source(
-        'core/src/compose.ts:1197–1200',
+        'core/src/compose.ts:1348–1351',
         'Die Hülle entsteht zur Laufzeit aus dem Katalogprimitiv (`boundsOfMm`) und wird um die ' +
           'zusätzlichen Körperprimitive erweitert; sie ist deshalb kein je Körperform ' +
           'eingetragener Zahlenwert.',
@@ -558,7 +660,7 @@ function chassisZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
   if (!CHASSIS_KINDS.includes(kind)) {
     return measuredAbsent(
       'combination',
-      'core/src/validate.ts:494–500',
+      'core/src/validate.ts:498–504',
       'Eine Fahrzeugkategorie ist nur am Landfahrzeug, am Anhängerrumpf und am ' +
         `Wechselladerrumpf belegt. "${kind}" trägt in der Referenz keine Fahrwerkszone ` +
         '(Regel `vehicle-category-requires-vehicle`).',
@@ -569,7 +671,7 @@ function chassisZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
   const topSource =
     profile.chassisTopBelowBaseBottomMm === undefined
       ? source(
-          'core/src/layout/profiles.ts:145–149, core/src/compose.ts:1202–1212',
+          'core/src/layout/profiles.ts:145–149, core/src/compose.ts:1353–1363',
           'Regelfall: die Zone hängt unmittelbar an der Unterkante des Grundzeichens. Gemessen ' +
             'an 5.1.1.1 bis 5.1.1.6 und an allen 25 E.2-Zeichen mit Fahrwerk — Körperunterkante ' +
             '26,0004 mm, Markenmitte 28,2501 mm, Unterkante der Zone 30,7502 mm.',
@@ -640,7 +742,7 @@ function innerFieldZone(kind: SymbolKind, variant?: BodyVariantId): ZoneBinding 
         'Koordinaten der unverschobenen Grundzeichnung. Als Zonendatum liegt die Einrückung vor, ' +
         'nicht eine je Körperform eingetragene Hülle.',
       source(
-        'core/src/geometry/base-symbols.ts:1095–1123, core/src/compose.ts:767–772',
+        'core/src/geometry/base-symbols.ts:1095–1123, core/src/compose.ts:777–782',
         'Belegt nur für die Körper, die Anhang E damit zeichnet. Optional, weil nur Anhang E es ' +
           'braucht; fehlt der Port oder die Körperform, wirft `compose()`, statt die Kontur ' +
           'still wegzulassen.',
@@ -671,7 +773,7 @@ function innerFieldZone(kind: SymbolKind, variant?: BodyVariantId): ZoneBinding 
         'inner-field-hull',
         { minX: 2, minY: 7, maxX: 30, maxY: 25 },
         source(
-          'core/src/compose.ts:105–119',
+          'core/src/compose.ts:108–122',
           'Die Referenz zieht ihre Ränder gegen dieses weiße Innenfeld, das 1 mm in den Körper ' +
             'eingerückt ist: `rect` 2/7 bis 30/25 neben dem Körper 1/6 bis 31/26 — belegt an ' +
             'dessen `rect` und nicht aus dem Überstand zurückgerechnet.',
@@ -684,7 +786,7 @@ function innerFieldZone(kind: SymbolKind, variant?: BodyVariantId): ZoneBinding 
         'body-left',
         'inward',
         source(
-          'core/src/compose.ts:106–120, 202–203',
+          'core/src/compose.ts:108–122, 202–203',
           'Die vermessene Grenze des mittigen Laufs ist dieses weiße Innenfeld, also 1 mm Marge ' +
             'und 28 mm Breite. Der Katalog kennt das Innenfeld als eigene Fläche in `compose()` ' +
             'nicht — die Formation ist dort **ein** Rechteck.',
@@ -719,7 +821,7 @@ function footZone(profile: LayoutProfile): ZoneBinding {
       COMPOSE_ZONE_CONSTANTS.FOOT_TEXT_SIZE_MM,
       'height',
       source(
-        'core/src/compose.ts:40–79',
+        'core/src/compose.ts:43–82',
         'Nicht an der Referenz abgelesen, sondern gespiegelt aus derselben Rechnung wie ' +
           '`placeHead`: die Kopfzone darf beim Rechteck-Körper bis zu ' +
           '`defaultAnchorMm − HEAD_GAP_MM − HEAD_TOP_MARGIN_MM` = 4 mm hoch werden. Bewusst ein ' +
@@ -737,7 +839,7 @@ function footZone(profile: LayoutProfile): ZoneBinding {
           'gewollter `outside-viewbox`-Befund im viewBox-Gate statt einer Zone, die lautlos ' +
           'verschwindet.',
         source(
-          'core/src/compose.ts:63–70',
+          'core/src/compose.ts:66–73',
           'Ein bedingungsloses Abschneiden auf 0 würde dort einen unsichtbaren `sizeMm: ' +
             '0`-Text erzeugen; belegt in `compose.test.ts`.',
         ),
@@ -783,7 +885,7 @@ function centerZone(
       'body-left',
       'inward',
       source(
-        'core/src/compose.ts:106–120, 188–203',
+        'core/src/compose.ts:108–122, 188–203',
         'Symmetrischer Rand der Ausgabebox gegen die Körperhülle; am 30 mm breiten ' +
           'Formationskörper ergibt das die 28-mm-Box. Vermessen ist das weiße Innenfeld der ' +
           'Referenz (`rect` 2/7 bis 30/25), nicht die Box selbst: die 28 mm sind eine ' +
@@ -797,7 +899,7 @@ function centerZone(
       COMPOSE_ZONE_CONSTANTS.CENTER_LABEL_CAP_HEIGHT_MM,
       'height',
       source(
-        'core/src/compose.ts:245–246',
+        'core/src/compose.ts:248–249',
         'Versalhöhe des mittigen Schriftgrads, gemessen an den 16 Dateien E.1.1 bis E.1.16. Der ' +
           'Schriftgrad selbst ist daraus über `ARIMO_CAP_HEIGHT_FRACTION` abgeleitet und nicht ' +
           'gewählt; je Zeichen kann eine eigene gemessene Höhe danebenstehen.',
@@ -809,7 +911,7 @@ function centerZone(
       'Waagerecht mittig auf der Körperhülle. Eine waagerechte Randvermessung des mittigen ' +
         'Laufs gibt es nicht — ablesbar sind nur Grundlinie, Versalhöhe und Mittenlage.',
       source(
-        'core/src/compose.ts:99–111',
+        'core/src/compose.ts:102–114',
         'Die 2 mm der unteren Läufe waren für die mittige Box eine übernommene Annahme; seit ' +
           'dem Teilslice E-b gilt diese Übertragung nicht mehr.',
       ),
@@ -840,7 +942,7 @@ function bottomLabelZone(
       side === 'left' ? 'body-left' : 'body-right',
       'inward',
       source(
-        'core/src/compose.ts:99–121',
+        'core/src/compose.ts:102–124',
         'Gemessen an den unteren Läufen von E.1.1 bis E.1.16 (linke Tintenkante 3,03, rechte ' +
           '29,03 bei Körperkanten 1 und 31). Gegen die **Körperkante** sind es 2 mm statt der ' +
           '1 mm des weißen Innenfelds; der sichtbare Abstand ist derselbe wie in der Referenz.',
@@ -852,7 +954,7 @@ function bottomLabelZone(
       COMPOSE_ZONE_CONSTANTS.BOTTOM_LABEL_CAP_HEIGHT_MM,
       'height',
       source(
-        'core/src/compose.ts:246–248, 250–262',
+        'core/src/compose.ts:248–250, 250–262',
         'Versalhöhe der unteren Schriftgrade, gemessen an E.1.1 bis E.1.16. Der Schriftgrad ' +
           '(4,24 mm) ist daraus über `ARIMO_CAP_HEIGHT_FRACTION` abgeleitet: an der Referenz ist ' +
           'die Versalhöhe ablesbar, der Schriftgrad nicht.',
@@ -871,7 +973,7 @@ function bottomCenterZone(
   if (baselineMm === undefined) {
     return notMeasured(
       'combination',
-      'schema/src/taxonomy.ts:573–580',
+      'schema/src/taxonomy.ts:588–595',
       'Profile ohne eingetragene `bottomCenter`-Zone lehnt `compose()` fail-closed ab. Gemessen ' +
         'ist die Zone bisher nur an der Formation (F.1.18/F.1.20) und an `circle-12/foot-band` ' +
         '(G.3.5).',
@@ -891,7 +993,7 @@ function bottomCenterZone(
       'bottom-center-anchor',
       'Um x = 16,0 mm zentriert, im Schriftgrad der unteren Zonen.',
       source(
-        'schema/src/taxonomy.ts:573–580',
+        'schema/src/taxonomy.ts:588–595',
         'Beide belegten Läufe sind um x = 16,0 mm zentriert und verwenden den Schriftgrad der ' +
           'unteren Zonen.',
       ),
@@ -944,7 +1046,7 @@ function topLeftZone(
       'body-left',
       'right',
       source(
-        'core/src/compose.ts:123–136',
+        'core/src/compose.ts:126–139',
         'Zurückgerechnet und nicht abgelesen: dieselben Läufe mit Anker 3,0 mm gerastert ' +
           '(4096 px, 18. August 2026) und die Differenz abgezogen ergibt 2,524 für `MTF`/`RettD`, ' +
           '2,498 für `SEG` und 2,442 für `10` — vier der fünf F-a-Läufe auf 2,5 mm, also 1,5 mm ' +
@@ -1136,7 +1238,7 @@ export function zonesFor(kind: SymbolKind, variant?: BodyVariantId): BodyFormZon
     'label-below-right': belowRightZone(kind, variant, profile),
     'label-surface-below-left': surfaceZone('left', kind, variant, profile),
     'label-surface-below-right': surfaceZone('right', kind, variant, profile),
-    'state-margin': STATE_MARGIN_GAP,
+    'state-margin': stateMarginZone(kind, variant),
     'tendency-margin': TENDENCY_MARGIN_GAP,
     'movement-anchor': MOVEMENT_ANCHOR_GAP,
   };

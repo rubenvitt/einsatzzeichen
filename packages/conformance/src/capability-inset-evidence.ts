@@ -1,17 +1,9 @@
 import {
-  ARIMO_TEXT_METRICS,
-  administrativeHead,
-  baseDrawing,
+  DEFAULT_PORTS,
   bodyMark,
   compose,
-  functionRole,
-  innerField,
   measureCapabilityInset,
-  organizationColor,
   pictogram,
-  strengthHead,
-  technicalHeadMark,
-  vehicleChassis,
   type CapabilityInsetMeasurement,
   type CatalogPorts,
 } from '@einsatzzeichen/core';
@@ -59,17 +51,11 @@ function isCapability(id: string): id is CapabilityId {
 function evidenceOf(fixture: string, spec: SymbolSpec): CapabilityInsetEvidence[] {
   const found: CapabilityInsetEvidence[] = [];
   const combination = (spec.bodyMarks?.length ?? 0) > 1;
+  // Die Standardbelegung aus core (`DEFAULT_PORTS`, LFH-580), damit auch der Verbandsport dabei ist:
+  // seit LFH-577 tragen die sechs Rezepte mit Verband I/II `unitGrouping`, und ohne den Port lehnte
+  // `compose()` sie als nicht vermessen ab.
   const ports: CatalogPorts = {
-    baseDrawing,
-    innerField,
-    organizationColor,
-    strengthHead,
-    technicalHeadMark,
-    functionRole,
-    administrativeHead,
-    vehicleChassis,
-    pictogram,
-    textMetrics: ARIMO_TEXT_METRICS,
+    ...DEFAULT_PORTS,
     bodyMark: (id, context, bounds) => {
       const drawn = bodyMark(id, context, bounds);
       if (isCapability(id)) {

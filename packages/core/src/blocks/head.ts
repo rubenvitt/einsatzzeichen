@@ -65,41 +65,56 @@ export const STRENGTH_BLOCKS: readonly BlockEntry[] = Object.freeze([
 // ---------------------------------------------------------------------------------------------
 
 /**
- * Die Lücke steht schon im Regelkatalog (`RULE_DIMENSION_GAPS`, Dimension `unit-grouping`). Die
- * zwei senkrechten Balken aus `core/src/geometry/technical-head-marks.ts` sind **kein** Verband: der
- * Befund zu E.1.31 in `coverage-manifest.ts` hält fest, dass „5.5.2_Bereitschaft (Verband II)"
- * die Zahl der Balken trifft, nicht das Maß.
+ * Vermessen am Körper seit LFH-577 (29.09.2026), siehe `core/src/geometry/unit-groupings.ts` und
+ * `docs/decisions/2026-09-29-lfh-577-verband-5-5.md`. Der frühere Befund zu E.1.31
+ * (`coverage-manifest.ts`: „5.5.2 trifft die Zahl der Balken, nicht das Maß") verglich die
+ * vergrößerte Kapiteldatei mit der Marke am Körper. Dieselbe Abweichung zeigt die Stärke (5.4: r 4
+ * gegen 1,5 mm); maßgeblich ist die Marke am Körper. Seit dem Integrationsschritt trägt
+ * `SymbolSpec.unitGrouping` den Verband (Port `unitGroupingHead`).
  */
-const UNIT_GROUPING_GAP_AT = 'core/src/rules/rule-catalog.ts:940–945';
+const UNIT_GROUPING_NOTE =
+  'Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert. Balken 1,5 × 4 mm, ' +
+  'Kopfzone y 1…5 mm über dem Formationskörper. Die Kapiteldatei zeigt die Marke vergrößert ' +
+  '(4 × 10 mm); das Verhältnis 1,5/4 ist dasselbe wie bei der Stärke (Durchmesser 3/8).';
 
-function unitGroupingReason(file: string): string {
-  return (
-    `Keine Geometrie. Die Kennung ist belegt durch die Referenzdatei \`${file}\`, vermessen ist ` +
-    'sie nicht, und ein Feld in `SymbolSpec` fehlt ebenfalls (LFH-577). Der Regelkatalog: ' +
-    '„Keine Regel und kein Feld in `SymbolSpec`: Verbände oberhalb des Zuges sind im Motor nicht ' +
-    'darstellbar." Die Balkenmarke `double-vertical-bar` ist ausdrücklich kein Verband: sie trifft ' +
-    'die Zahl der Balken von 5.5.2, nicht das Maß (`coverage-manifest.ts`, Befund zu E.1.31).'
-  );
-}
+const UNIT_GROUPING_III_GAP_AT = 'core/src/geometry/unit-groupings.ts:75–82';
 
 export const UNIT_GROUPING_BLOCKS: readonly BlockEntry[] = Object.freeze([
   block(
     'unit-grouping',
     'verband-i',
     'head',
-    notMeasured(UNIT_GROUPING_GAP_AT, unitGroupingReason('5.5.1_Bereitschaft (Verband I).svg')),
+    measured(
+      'core/src/geometry/unit-groupings.ts:52–56',
+      `${UNIT_GROUPING_NOTE} Verband I: ein Balken x 15,25…16,75 mm, vermessen an I.1.4, F.1.13, ` +
+        'F.1.21 und C.1.6 (Formation, y 1…5) sowie I.5.7 (Person, y 0…4); Kapiteldatei ' +
+        '`5.5.1_Bereitschaft (Verband I).svg`.',
+      babz('5.5.1', 'I.1.4', 'F.1.13', 'F.1.21', 'C.1.6', 'I.5.7'),
+    ),
   ),
   block(
     'unit-grouping',
     'verband-ii',
     'head',
-    notMeasured(UNIT_GROUPING_GAP_AT, unitGroupingReason('5.5.2_Bereitschaft (Verband II).svg')),
+    measured(
+      'core/src/geometry/unit-groupings.ts:58–62',
+      `${UNIT_GROUPING_NOTE} Verband II: zwei Balken x 11,25…12,75 und 19,25…20,75 mm, vermessen ` +
+        'an E.1.31, F.1.1 und F.1.3; Kapiteldatei `5.5.2_Bereitschaft (Verband II).svg`.',
+      babz('5.5.2', 'E.1.31', 'F.1.1', 'F.1.3'),
+    ),
   ),
   block(
     'unit-grouping',
     'verband-iii',
     'head',
-    notMeasured(UNIT_GROUPING_GAP_AT, unitGroupingReason('5.5.3_Bereitschaft (Verband III).svg')),
+    notMeasured(
+      UNIT_GROUPING_III_GAP_AT,
+      'Keine Geometrie. Die Kennung ist belegt durch `5.5.3_Bereitschaft (Verband III).svg`, aber ' +
+        'keine der 661 Referenzdateien zeigt drei Balken am Körper. Vorschlag, nicht vermessen: ' +
+        'die Vereinigung von Verband I und II, also Balken auf x 12, 16 und 20 mm — so wie 5.5.3 ' +
+        'in der Kapiteldatei die Vereinigung von 5.5.1 und 5.5.2 ist und der Zug am Körper die ' +
+        'von Trupp und Gruppe (x 11/16/21). Entscheidung des Eigentümers offen.',
+    ),
   ),
 ]);
 
@@ -112,7 +127,7 @@ export const UNIT_GROUPING_BLOCKS: readonly BlockEntry[] = Object.freeze([
  * und im Regelkatalog; der Bereich schließt Kommentar und Kennung ein.
  */
 const ADMIN_BINDING_RULE = 'administrative-level-not-measured';
-const ADMIN_BINDING_AT = 'core/src/validate.ts:561–574';
+const ADMIN_BINDING_AT = 'core/src/validate.ts:565–578';
 
 /**
  * Benannte Ausnahme für die drei vermessenen Stufen. Hier ist die Bindung an die Funktionsfassung
@@ -124,7 +139,7 @@ const ADMIN_BINDING_MEASURED: BlockCombinationBinding = Object.freeze({
   definedAt: ADMIN_BINDING_AT,
   reason:
     'Der Verwaltungskopf wird nur zusammen mit einer exakt aufgelösten Funktionsfassung gesetzt. ' +
-    '`compose.ts:1017–1026` platziert ihn nur, wenn `roleDefinition` vorliegt, und zwar an deren ' +
+    '`compose.ts:1168–1177` platziert ihn nur, wenn `roleDefinition` vorliegt, und zwar an deren ' +
     '`layout.headTopMm`, also nicht über die allgemeine Kopfzone. `validate.ts` lehnt die Stufe ' +
     'ohne aufgelöste Funktionsfassung mit dieser Regel ab, obwohl der Kopf vermessen ist. Ohne ' +
     'Funktionsfassung ist der Baustein heute nicht darstellbar.',
@@ -148,9 +163,9 @@ const ADMIN_BINDING_NOT_MEASURED: BlockCombinationBinding = Object.freeze({
 const ADMIN_UNDOCUMENTED =
   UNDOCUMENTED_AT_SOURCE +
   'Die Konstante in `administrative-heads.ts` trägt keinen Kommentar. Den Abschnitt D.3/D.4 nennen ' +
-  'erst `validate.ts:561–563` und die Regel `administrative-level-not-measured`.';
+  'erst `validate.ts:565–567` und die Regel `administrative-level-not-measured`.';
 
-const ADMIN_GAP_AT = 'core/src/rules/rule-catalog.ts:922–927';
+const ADMIN_GAP_AT = 'core/src/rules/rule-catalog.ts:1034–1039';
 const ADMIN_GAP_REASON =
   'Keine Geometrie in `ADMINISTRATIVE_HEADS`. Der Regelkatalog: „Eine Regel, aber nur drei der ' +
   'sechs Stufen belegt (D.3/D.4). Gemeinde, Bezirk und Bundesland lehnt der Motor pauschal ab, ' +
@@ -219,7 +234,7 @@ export const TECHNICAL_HEAD_MARK_BLOCKS: readonly BlockEntry[] = Object.freeze([
     measured(
       'core/src/geometry/technical-head-marks.ts:7–18',
       UNDOCUMENTED_AT_SOURCE +
-        'Die Konstante trägt keinen Kommentar. Belege nennt nur `validate.ts:585–587`, und zwar ' +
+        'Die Konstante trägt keinen Kommentar. Belege nennt nur `validate.ts:589–591`, und zwar ' +
         'für die technische Kopfmarke als Ganzes (F.1.1, F.1.13, F.1.21, E.1.31, I.1.4), nicht je Wert.',
     ),
   ),

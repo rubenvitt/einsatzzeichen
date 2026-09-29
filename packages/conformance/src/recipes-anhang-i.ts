@@ -33,7 +33,7 @@ export const ANHANG_I_C_RECIPES = {
     referenceAsset: 'I.1.4_Wasserrettungsverband.svg',
     spec: {
       kind: 'formation',
-      technicalHeadMark: 'single-vertical-bar',
+      unitGrouping: 'verband-i',
       bodyMarks: ['formation-two-waves-diamond'],
     },
   },

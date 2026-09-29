@@ -1386,6 +1386,94 @@ describe('validateSpec', () => {
     }
   });
 
+  it('nimmt den Verband an der Formation an und zählt ihn als Belegung der Kopfzone (LFH-577)', () => {
+    expect(validateSpec({ kind: 'formation', unitGrouping: 'verband-i' })).toEqual([]);
+    expect(validateSpec({ kind: 'formation', bodyVariant: 'foot-band', unitGrouping: 'verband-ii' }))
+      .toEqual([]);
+
+    const conflictingSpecs = [
+      { kind: 'formation', unitGrouping: 'verband-i', strength: 'gruppe' },
+      { kind: 'formation', unitGrouping: 'verband-i', administrativeLevel: 'kreis' },
+      { kind: 'formation', unitGrouping: 'verband-ii', technicalHeadMark: 'double-vertical-bar' },
+      { kind: 'formation', unitGrouping: 'verband-i', functionRole: 'fire-service-platoon-commander' },
+    ] satisfies SymbolSpec[];
+    for (const spec of conflictingSpecs) {
+      expect(validateSpec(spec).map((issue) => issue.rule), JSON.stringify(spec))
+        .toContain('head-zone-conflict');
+    }
+  });
+
+  describe('Zustände aus Kapitel 5.8 (LFH-577)', () => {
+    const rules = (spec: SymbolSpec) => validateSpec(spec).map((issue) => issue.rule);
+
+    it('nimmt die belegten Zusammenstellungen an', () => {
+      expect(validateSpec({ kind: 'person', states: ['person-injured'] })).toEqual([]);
+      expect(validateSpec({ kind: 'person', states: ['person-injured', 'suspected-situation'] }))
+        .toEqual([]);
+      expect(validateSpec({ kind: 'hazard', states: ['acute-situation'] })).toEqual([]);
+      expect(validateSpec({ kind: 'person', states: [] })).toEqual([]);
+    });
+
+    it('lehnt Wetter, Tierzustand und Tendenz in states ab: sie gehören woandershin', () => {
+      for (const value of ['weather-sunny', 'sick-animal', 'tendency-rising'] as const) {
+        expect(rules({ kind: 'person', states: [value] }), value).toEqual(['state-value-not-attachable']);
+      }
+    });
+
+    it('bindet Personenzustand und Hinweis an ihre Träger (stateCarriersOf)', () => {
+      expect(rules({ kind: 'formation', states: ['person-injured'] })).toEqual(['state-carrier-not-allowed']);
+      expect(rules({ kind: 'formation', states: ['suspected-situation'] })).toEqual(['state-carrier-not-allowed']);
+      expect(rules({ kind: 'hazard', states: ['person-dead'] })).toEqual(['state-carrier-not-allowed']);
+    });
+
+    it('lässt Werte ohne belegten oder entschiedenen Träger durch: die Lage meldet compose()', () => {
+      // stateCarriersOf gibt für 5.8.2, 5.8.4, 5.8.5 und 5.8.9 undefined; placeStates wirft dann
+      // NotMeasuredError statt einer Regel, die etwas verböte, was niemand entschieden hat.
+      expect(validateSpec({ kind: 'formation', states: ['damaged'] })).toEqual([]);
+      expect(validateSpec({ kind: 'building', states: ['route-closed'] })).toEqual([]);
+    });
+
+    it('lässt höchstens einen Hinweis, einen Personenzustand und einen Wert je Skala zu', () => {
+      for (const states of [
+        ['suspected-situation', 'acute-situation'],
+        ['person-injured', 'person-dead'],
+        ['damaged', 'destroyed'],
+        ['incipient-fire', 'developed-fire'],
+        [
+          'activity-slightly-increased-outage-up-to-25-percent',
+          'activity-strongly-increased-total-outage',
+        ],
+      ] as const) {
+        const kind = states[0].startsWith('person') || states[0].endsWith('situation') ? 'person' : 'formation';
+        expect(rules({ kind, states }), states.join(' + ')).toEqual(['state-group-limit-exceeded']);
+      }
+    });
+
+    it('meldet jede überfüllte Gruppe einzeln', () => {
+      expect(rules({
+        kind: 'person',
+        states: ['person-injured', 'person-dead', 'suspected-situation', 'acute-situation'],
+      })).toEqual(['state-group-limit-exceeded', 'state-group-limit-exceeded']);
+    });
+
+    it('lässt keine Einsatztaktik an einem Träger zu', () => {
+      for (const value of ['tactical-rescue', 'tactical-attack', 'tactical-defense', 'tactical-retreat'] as const) {
+        expect(rules({ kind: 'person', states: [value] }), value).toEqual(['state-tactics-not-allowed']);
+        // Kein zweiter Befund zum Träger: die Taktik steht an gar keinem Träger.
+        expect(rules({ kind: 'formation', states: [value] }), value).toEqual(['state-tactics-not-allowed']);
+      }
+    });
+
+    it('wirft nicht bei einer Zustandsliste außerhalb des Typs (Laufzeitfall)', () => {
+      expect(() => validateRuntime({ kind: 'person', states: 'person-injured' })).not.toThrow();
+      expect(() => validateRuntime({ kind: 'person', states: ['person-happy'] })).not.toThrow();
+    });
+
+    it('prüft die Tendenz nicht als Regel: ohne belegten Träger meldet compose() die Lücke', () => {
+      expect(validateSpec({ kind: 'person', tendency: 'tendency-rising' })).toEqual([]);
+    });
+  });
+
   it('lehnt eine leere Bezeichnung ab', () => {
     const issues = validateSpec({ kind: 'formation', designation: '   ' });
     expect(issues.map((i) => i.rule)).toContain('designation-not-blank');

@@ -1,9 +1,15 @@
-import { composeFromCatalog } from '@einsatzzeichen/conformance/src/recipes.js';
 import {
   CompositionError,
-  NotMeasuredError,
+  LIST_SPEC_FIELDS,
+  SPEC_FIELD_VALUES,
+  decodeSpecParam,
+  drawSymbol,
+  encodeSpecParam,
+  vocabulary,
   type NotMeasuredScope,
+  type SpecFieldValue,
   type ValidationIssue,
+  type VocabularyField,
 } from '@einsatzzeichen/core';
 import type { Drawing, SymbolSpec } from '@einsatzzeichen/schema';
 import { explainIssue, type ExplainedIssue } from './rule-explanations.js';
@@ -12,13 +18,9 @@ import { explainIssue, type ExplainedIssue } from './rule-explanations.js';
  * Der Zustand des Builders (Spec §5.4): eine `SymbolSpec` ändern, das Ergebnis beurteilen und die
  * Spec in die URL schreiben. Reine Funktionen — die Insel hält nur den React-State.
  *
- * **Warum der Subpfad `@einsatzzeichen/conformance/src/recipes.js` und nicht der Paketindex.** Der
- * Index zieht `fonts.ts` und damit `node:url` (Spec §5.2); im Browserbündel wäre das ein Fehler
- * zur Ladezeit. Der Spike aus Task 0 hat belegt, dass der Subpfad ohne `node:*` bündelt. Die
- * Aliasregeln in `astro.config.mjs` und `vitest.config.ts` bilden den Subpfad exakt (per RegExp,
- * nicht als Präfix) auf die Paketquelle ab.
+ * Gezeichnet wird seit LFH-580 mit `drawSymbol()` aus `core` — ohne Prüfpaket im Browserbündel.
  *
- * **Warum `composeFromCatalog` und nicht `validateSpec`.** `validateSpec(spec, context)` liest
+ * **Warum `drawSymbol` und nicht `validateSpec`.** `validateSpec(spec, context)` liest
  * einen Kontext aus aufgelöster Funktionsfassung und Verwaltungskopf; `compose()` baut diesen
  * Kontext aus den Ports und prüft damit mehr als ein blanker `validateSpec(spec)`. Zwei Wege
  * liefen auseinander — die Vorschau zeigte dann Regeln, die die Komposition nicht stellt, oder
@@ -90,7 +92,7 @@ function explainAll(issues: readonly ValidationIssue[]): {
  */
 export function evaluateSpec(spec: SymbolSpec): SpecEvaluation {
   try {
-    return { ok: true, drawing: composeFromCatalog(spec) };
+    return { ok: true, drawing: drawSymbol(spec) };
   } catch (error) {
     if (error instanceof CompositionError) return { ok: false, ...explainAll(error.issues) };
     throw error;
@@ -100,10 +102,10 @@ export function evaluateSpec(spec: SymbolSpec): SpecEvaluation {
 /* --- Welche Werte gerade zusammenpassen -------------------------------------------------- */
 
 /**
- * Die beiden Achsen, die eine Liste tragen. Explizit aufgezählt statt aus dem aktuellen Wert
- * geraten: ein noch leeres Feld trägt keinen Wert, aus dem sich das ablesen ließe.
+ * Die beiden Achsen, die eine Liste tragen — seit LFH-578 aus `core`, wo sie aus dem Wertevorrat
+ * je Feld (`SPEC_FIELD_VALUES`) abgeleitet sind. Der Name bleibt, damit die Importe stehen.
  */
-export const LIST_SPEC_FIELDS: readonly (keyof SymbolSpec)[] = ['capabilities', 'bodyMarks'];
+export { LIST_SPEC_FIELDS };
 
 export type BlockedValue =
   /** Eine Regel hat abgelehnt; `explanation` ist die Erklärung ihrer ersten Meldung. */
@@ -128,77 +130,41 @@ export interface AllowedValue {
 /**
  * Probiert jeden Kandidaten an der aktuellen Spec aus und sagt, ob er zusammenpasst.
  *
- * Es gibt im Projekt keine Funktion „erlaubte Werte je Feld", und sie ließe sich auch nicht
- * ehrlich schreiben: ob eine Kombination trägt, hängt an vermessenen Fassungen, Profilen und
- * Zonen, und das weiß erst die Komposition. Also wird jeder Kandidat einmal komponiert. Das ist
- * billiger, als es klingt — alle elf Felder mit zusammen 247 Kandidaten brauchen 9,7 ms kalt und
- * 3,4 ms warm (gemessen am 29.08.2026).
+ * **Gerechnet wird in `core`** (`vocabulary()`, LFH-578). Bis dahin stand die Probe hier; seit
+ * die Regeltexte und das Vokabular zur API gehören (LFH-561), ist der Baukasten ein Konsument und
+ * übersetzt nur noch in die Form, die die Insel liest. Die Gründe für den Weg — jeder Kandidat
+ * wird über `drawSymbol()` gezeichnet, keine Vorprüfung mit einem nackten `validateSpec`, ein
+ * Programmfehler fliegt weiter statt als Vermessungslücke zu erscheinen — stehen jetzt dort.
+ * Gemessen am 29.09.2026 (Node 22, Vitest): alle elf Felder mit dem vollen Vorrat aus `core`,
+ * zusammen 316 Kandidaten, brauchen an der nackten Formation 7,8 ms kalt und rund 4 ms warm. Mit
+ * Verband, Zustand und Tendenz (LFH-577) sind es 14 Felder und 383 Kandidaten: 8,8 ms kalt und
+ * rund 2,6 ms warm (am selben Tag, Node 26, tsx).
  *
- * **Keine Vorprüfung mit `validateSpec`.** Sie wäre schneller, aber falsch: ohne den Kontext aus
- * aufgelöster Funktionsfassung und Verwaltungskopf, den `compose()` aus den Ports baut, prüft
- * `validateSpec(spec)` *anders* — sie könnte einen Wert ablehnen, den die Komposition annimmt,
- * und die Auswahl sperrte etwas Gültiges.
+ * Kandidaten außerhalb des Wertevorrats lehnt `core` mit einem `RangeError` ab; die Liste kommt
+ * aus `builderVocabulary()`, die denselben Vorrat liest (ein Test hält beide in Deckung).
  *
- * **Der gerade gesetzte Wert wird nie gesperrt.** Ihn zu sperren hieße, die eigene Auswahl
- * unbedienbar zu machen, sobald die Spec aus einem *anderen* Grund nicht trägt — und ein
- * gesperrter Eintrag, der zugleich der ausgewählte ist, wird von Browsern verschieden
- * dargestellt. Verloren geht dabei nichts: warum die Spec nicht trägt, steht vollständig in der
- * Regelliste unter der Vorschau.
- *
- * **Was nicht gefangen wird, fliegt weiter.** Nur abgelehnte Regeln und erkannte
- * Vermessungslücken sperren einen Wert. Ein Programmfehler — etwa eine Spec mit einer Zahl in
- * `designation`, die aus einer von Hand veränderten Adresszeile stammt — würde sonst jeden
- * Kandidaten in jedem Feld als „nicht vermessen" ausgeben und damit eine Datenlücke behaupten,
- * die es nicht gibt.
+ * **Der gerade gesetzte Wert wird nie gesperrt.** `core` gibt ihm `selected: true` und den Befund
+ * der Spec, wie sie ist — trägt sie aus einem anderen Grund nicht, stünde er dort gesperrt. Ihn
+ * hier zu sperren hieße, die eigene Auswahl unbedienbar zu machen, und ein gesperrter Eintrag,
+ * der zugleich der ausgewählte ist, wird von Browsern verschieden dargestellt. Verloren geht dabei
+ * nichts: warum die Spec nicht trägt, steht vollständig in der Regelliste unter der Vorschau.
  */
 export function allowedValues(
   spec: SymbolSpec,
   field: keyof SymbolSpec,
   candidates: readonly string[],
 ): AllowedValue[] {
-  const current = spec[field];
-  const isList = LIST_SPEC_FIELDS.includes(field);
-  const selected: readonly string[] = isList
-    ? Array.isArray(current)
-      ? (current as readonly string[])
-      : []
-    : typeof current === 'string'
-      ? [current]
-      : [];
-
-  return candidates.map((value) => {
-    if (selected.includes(value)) return { value, ok: true, issues: [] };
-    // Listenfelder prüfen den Kandidaten **zusätzlich** zur bestehenden Auswahl: gefragt ist,
-    // ob er sich anfügen lässt, nicht ob er allein trüge.
-    const candidateSpec = reduceSpec(spec, {
-      field,
-      value: isList ? [...selected, value] : value,
-    });
-    try {
-      const result = evaluateSpec(candidateSpec);
-      if (result.ok) return { value, ok: true, issues: [] };
-      const first = result.issues[0];
-      const explanation =
-        first !== undefined
-          ? `${first.title}: ${first.explanation}`
-          : (result.unexplained[0]?.message ?? 'Diese Kombination trägt nicht.');
-      return {
-        value,
-        ok: false,
-        issues: result.issues,
-        blocked: { because: 'rule', explanation },
-      };
-    } catch (error) {
-      // Erkannt an der Klasse, nicht mehr am Wortlaut. Der Behelf davor prüfte
-      // `/vermessen|nicht belegt/` auf einem gewöhnlichen `Error`: er hing an einer Formulierung,
-      // die jede neue Wurfstelle hätte treffen müssen, und ließ die Abbrüche aus
-      // `base-symbols.ts` von Anfang an durchfallen, weil deren Text keines der beiden Wörter
-      // trägt. `NotMeasuredError` sagt dasselbe zugesichert (LFH-502).
-      //
-      // Eng geblieben ist die Prüfung trotzdem, und das ist der Vertrag von oben: ein `TypeError`
-      // kommt aus einem Programmfehler, nie aus einer Aussage über die Referenz, und fliegt
-      // deshalb weiter.
-      if (!(error instanceof NotMeasuredError)) throw error;
+  if (candidates.length === 0) return [];
+  // Die Umwandlung gehört hierher und nicht nach `core`: Feld und Kandidaten kommen aus dem
+  // Vokabular des Snapshots und sind in der Insel nur `string`. `core` prüft zur Laufzeit trotzdem
+  // jeden Kandidaten gegen den Wertevorrat und wirft sonst einen `RangeError`.
+  const options = {
+    candidates: candidates as readonly SpecFieldValue<VocabularyField>[],
+  };
+  return vocabulary(spec, field as VocabularyField, options).map((option) => {
+    const { value } = option;
+    if (option.selected || option.status === 'allowed') return { value, ok: true, issues: [] };
+    if (option.reason === 'not-measured') {
       // Die Originalmeldung wandert nach `detail` und **nicht** in den Tooltip: sie nennt
       // Katalogkennungen (`formation/normal/…`), und das ist bei 39 von 64 Körpermarken die
       // Regel, nicht die Ausnahme. Den lesbaren Satz baut die Insel aus den Bezeichnungen.
@@ -206,9 +172,13 @@ export function allowedValues(
         value,
         ok: false,
         issues: [],
-        blocked: { because: 'not-measured', detail: error.message, scope: error.scope },
+        blocked: { because: 'not-measured', detail: option.message, scope: option.scope },
       };
     }
+    const first = option.issues[0];
+    const explanation =
+      first !== undefined ? `${first.title}: ${first.explanation}` : 'Diese Kombination trägt nicht.';
+    return { value, ok: false, issues: option.issues, blocked: { because: 'rule', explanation } };
   });
 }
 
@@ -264,7 +234,7 @@ export function issuesByField(
 ): Map<keyof SymbolSpec, ExplainedIssue[]> {
   const byField = new Map<keyof SymbolSpec, ExplainedIssue[]>();
   for (const issue of issues) {
-    if (issue.field === 'composition') continue;
+    if (!isSymbolSpecField(issue.field)) continue;
     if (isUnset(spec[issue.field])) continue;
     const bucket = byField.get(issue.field);
     if (bucket === undefined) byField.set(issue.field, [issue]);
@@ -273,39 +243,38 @@ export function issuesByField(
   return byField;
 }
 
-/* --- URL-Zustand ------------------------------------------------------------------------- */
-
-const SPEC_HINT =
-  'Der Parameter `spec` in der URL lässt sich nicht lesen. Er muss eine base64url-kodierte ' +
-  'SymbolSpec im JSON-Format sein — am einfachsten aus einem geteilten Builder-Link.';
-
 /**
- * `btoa` nimmt nur Latin-1; `designation` trägt Umlaute. Also erst UTF-8-Bytes, dann base64, dann
- * die URL-sichere Zeichenauswahl ohne Füllzeichen.
+ * Ob eine Erklärung auf ein Feld der `SymbolSpec` zeigt. Seit die freistehenden Zeichen eine eigene
+ * Spec-Art bekommen (LFH-577), kann `ExplainedIssue.field` auch deren Felder nennen (`path`,
+ * `line`, …); der Baukasten baut nur `SymbolSpec` und hat für jene kein Formularfeld. Geprüft wird
+ * gegen `SPEC_FIELD_VALUES`, die über alle Schlüssel der `SymbolSpec` vollständige Tabelle aus
+ * `core` — keine zweite Feldliste hier. `'composition'` steht dort nicht und fällt damit ebenfalls
+ * heraus.
  */
-export function encodeSpec(spec: SymbolSpec): string {
-  const bytes = new TextEncoder().encode(JSON.stringify(spec));
-  let binary = '';
-  for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+function isSymbolSpecField(field: ExplainedIssue['field']): field is keyof SymbolSpec {
+  return Object.hasOwn(SPEC_FIELD_VALUES, field);
 }
 
-/** Umkehrung von `encodeSpec`. Wirft mit Klartext, statt still auf eine leere Spec zu fallen. */
+/* --- URL-Zustand ------------------------------------------------------------------------- */
+
+/**
+ * Die URL-Form aus `core` (`encodeSpecParam`, LFH-577): base64url über das kanonische JSON in der
+ * Hülle `{"v":1,"spec":{…}}`. Kanonisch heißt auch: was `decodeSpec` nicht wieder läse, wird gar
+ * nicht erst geschrieben (`SpecParseError`).
+ */
+export function encodeSpec(spec: SymbolSpec): string {
+  return encodeSpecParam(spec);
+}
+
+/**
+ * Umkehrung von `encodeSpec`, streng: liest die Hülle und die Links von vor LFH-577 (rohes JSON
+ * ohne Hülle), lehnt aber unbekannte Felder, Werte außerhalb der Wertelisten und falsche Typen ab.
+ * Bis LFH-578 prüfte diese Funktion nur, ob `kind` eine Zeichenkette ist — ein Tippfehler wie
+ * `organisation` rutschte still durch, und das Zeichen stand anders da als gemeint.
+ *
+ * Wirft `SpecParseError` mit Pfad (`path`) und Meldung ohne Pfad (`reason`); die Insel fängt ihn
+ * an der Klasse und zeigt ihn als Hinweis mit aufklappbaren Einzelheiten.
+ */
 export function decodeSpec(param: string): SymbolSpec {
-  let parsed: unknown;
-  try {
-    const padded = param.replaceAll('-', '+').replaceAll('_', '/');
-    const binary = atob(padded.padEnd(Math.ceil(padded.length / 4) * 4, '='));
-    const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
-    parsed = JSON.parse(new TextDecoder().decode(bytes));
-  } catch (error) {
-    throw new Error(`${SPEC_HINT} (${(error as Error).message})`);
-  }
-  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-    throw new Error(`${SPEC_HINT} Gelesen wurde stattdessen: ${JSON.stringify(parsed)}.`);
-  }
-  if (typeof (parsed as { kind?: unknown }).kind !== 'string') {
-    throw new Error(`${SPEC_HINT} Es fehlt das Pflichtfeld \`kind\`.`);
-  }
-  return parsed as SymbolSpec;
+  return decodeSpecParam(param);
 }

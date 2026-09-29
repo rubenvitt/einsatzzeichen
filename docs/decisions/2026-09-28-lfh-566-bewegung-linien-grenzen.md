@@ -1,7 +1,8 @@
 # Bewegung (5.2), Linien und Grenzen (2.14–2.20) als parametrisierte Bausteine
 
 > Stand: 28. September 2026
-> Status: **Vorlage, Entscheidung des Eigentümers offen.** Vorbereitet zu LFH-566 (Initiative A,
+> Status: **Teilweise entschieden am 29. September 2026** (freistehende Spec-Art, Übersicht in
+> `docs/decisions/2026-09-29-lfh-561-zugaengliche-api.md`); offen bleibt, was Abschnitt 7 als Frage führt. Vorbereitet zu LFH-566 (Initiative A,
 > Zeichen-Grammatik, LFH-559). Umgesetzt ist, was das Kennzahlenartefakt belegt. Die offenen
 > Fragen stehen in Abschnitt 5, jeweils mit Empfehlung.
 > Bezug: `docs/decisions/2026-09-13-grammatik-motor-und-paketschnitt.md` (Scope),
@@ -132,6 +133,11 @@ Lage zu raten.
 | `line-anchor-not-allowed` | lines-and-boundaries | Linien und Grenzen binden an kein Grundzeichen an. |
 | `line-strength-mismatch` | lines-and-boundaries | Die Stärke gehört nur an 2.20: dort Pflicht, sonst ein Fehler. |
 
+*Stand nach LFH-577 (29.09.2026):* `line-strength-mismatch` ist in Kraft, `line-anchor-not-allowed`
+ist gestrichen, weil die freistehende Spec-Art keine Anbindung kennt. Die beiden Pfeilregeln bleiben
+vorgemerkt, bis ein Pfeil an einem Grundzeichen angebunden werden kann (`RETIRED_PARAMETRIC_RULES`,
+`PLANNED_PARAMETRIC_RULES`).
+
 ## 5. Offene Fragen
 
 Jede Empfehlung ist eine Empfehlung und keine Ablesung.
@@ -180,3 +186,113 @@ Jede Empfehlung ist eine Empfehlung und keine Ablesung.
 - Georeferenzierte Verläufe, also Koordinaten auf der Karte statt Millimeter auf der
   Zeichenfläche. Das ist Aufgabe des Kanals `maplibre`, nicht des Bausteins.
 - Eine fachliche Freigabe. Keiner der 13 Bausteine hat ein Domain-Review.
+
+## 7. Vermessung an den Referenzdateien (29.09.2026)
+
+> Nachtrag zu LFH-577. Abgelesen an den Referenzdateien selbst, nicht mehr nur am
+> Kennzahlenartefakt. Einheit der Dateien ist pt, 1 mm = 72/25,4 pt (90,709 pt = 32 mm). Maße an
+> der Referenz abgelesen, Geometrie eigenständig konstruiert. Bei gekrümmten Linien ist die Achse
+> aus den beiden Strichkanten rekonstruiert; Längen entlang der Achse sind auf etwa 0,05 mm genau.
+
+### 7.1 Entscheidungen des Eigentümers
+
+Ruben hat am 29.09.2026 entschieden:
+
+1. Pfeile 5.2, Linien, Grenzen und Flächen 2.14 bis 2.20, Wetter 5.8.7 und Tierzustand 5.8.6
+   sind **freistehende Zeichen** und bekommen eine eigene Spec-Art neben `SymbolSpec`.
+2. Ein Pfeil bindet nur dann an einen Körper an, wenn ein Original das belegt.
+
+In `PARAMETRIC_BLOCKS` stehen die Träger deshalb als `decided` (freistehend, kein Grundzeichen),
+außer bei den drei Pfeilen, für die es einen Beleg gibt (7.3).
+
+### 7.2 Was jetzt belegt ist
+
+Alle 13 Bausteine haben eine Zeichnung. `BLOCK_CATEGORY_GAPS` bleibt leer, das Register führt
+keine Lücke mehr in `arrow` und `line`.
+
+| Datei | Befund | gebaut |
+|---|---|---|
+| 5.2.1 | **zwei** Schäfte, Strichkanten 38,976…40,393 und 50,315…51,732 pt, also Mitten y 14 und 18; sie enden am inneren Schenkelrand | Doppelschaft 2 mm links und rechts der Achse, bis 2 mm vor der Spitze; auf Knicken gegehrt, Innenwinkel mindestens 45° |
+| 5.2.2 | Querstrich 4,96…6,377 × 34,015…56,693 pt: bei x 2 von y 12 bis 20 | Querstrich **8 mm**, mittig quer zum Anfang (Frage 1 beantwortet) |
+| 5.2.5 | Querstrich 84,331…85,748 × 34,015…56,693 pt: bei x 30 von y 12 bis 20; Schenkelenden bei 73,635 pt = 25,977 mm | Querstrich 8 mm am Ende, Kopfspitze **0,2 mm davor** (5.8.8.14 zeigt 0,1 mm); der Schaft läuft bis zur Spitze |
+| 5.2.6 | Ring um 73,701\|45,354 pt, Radien 12,047 und 10,63 pt; Pfeil wie 5.2.3, Schenkelenden bei 48,69 pt | Ring mit **4 mm** Radius um das Verlaufsende, Kopfspitze **1 mm vor dem Ring** (5 mm vor der Mitte) |
+| 2.14 | grüner Strich (#14a01e), 0,5 mm; sieben gefüllte Punkte, Radius 1,5 mm (4,252 pt), Abstand 7,96…7,97 mm entlang der Achse (60,36 mm) | Punkte alle **8 mm** |
+| 2.14_2 | fünf Punkte gleichen Radius, Abstand 12,16…12,19 mm (58,70 mm); dazwischen vier rechtwinklige Pfeilköpfe, Schenkel 3 mm, Spitze zum Verlaufsende | Punkte alle **12 mm**, dazwischen Pfeilköpfe in Fahrtrichtung; als `variant: 'alternative'` |
+| 2.15 | hellblauer Strich (#3264fa); zwölf Querstriche, 0,5 mm breit, Ende 2,26…2,28 mm von der Achse, Abstand 3,99 mm (52,11 mm) | Querstriche **2,25 mm** von der Achse, alle **4 mm**, links der Fahrtrichtung |
+| 2.16 | roter Strich (#fa1919); vierzehn Querstriche wie 2.15, Abstand 4,15 mm (61,83 mm) | wie 2.15 |
+| 2.19 | der Kurvenpfad vor E und A ist ein U (zwei Stämme, Bogen unten, x 18,822…22,074) | „UEA“ ist jetzt belegt, nicht mehr aus dem Dateinamen gelesen |
+
+**Flächen 2.14 bis 2.16 (Frage 2).** Keine der drei ist eine Fläche. Jede ist ein durchgehender,
+farbiger Strich von 0,5 mm mit Marken darauf; Illustrator hat Strich und Marken zu einer Fläche
+umgewandelt. Die Marken werden **wiederholt, nicht gestreckt**: Radius, Querstrichlänge und
+Pfeilkopf sind auf allen Abständen gleich. Gebaut ist das als `lineDrawing` mit der Querschnittsart
+`marked` (Farbe, Teilung, Marke).
+
+**Wiederholung, vorgeschlagen.** Feste Teilung, die Marken mittig auf dem Verlauf, die erste und
+die letzte mindestens 3 mm vom Ende. Diese Regel ergibt an allen vier Darstellungen genau die
+abgelesene Anzahl (7, 5, 12, 14); jeder Randabstand zwischen 2,92 und 4,05 mm täte das. Die Lage
+weicht um höchstens 1,65 mm ab (2.14_2, erster Punkt), weil die Referenzen die Marken nicht streng
+mittig setzen (2.14: 5,5 mm am Anfang, 7,06 mm am Ende).
+
+**Sammeln (Frage 2).** Die Referenz zeigt genau einen Zulauf auf einen Ring. Der Verlauf endet am
+Sammelpunkt in der Ringmitte.
+
+### 7.3 Pfeil an einem Grundzeichen (Frage 3)
+
+Durchgesehen wurden alle 661 Referenzen als Übersichtsbogen (12 Bogen zu je 60 Vorschaubildern),
+dazu eine Zahlensuche nach den Kopfmaßen aus 5.2. Genau drei Originale zeigen einen Pfeil aus 5.2
+an einem Grundzeichen: **5.8.8.12 Person zu transportieren** (5.2.2), **5.8.8.13 Transport einer
+Person** (5.2.3) und **5.8.8.14 Person transportiert** (5.2.5). Träger ist die 26-mm-Personenraute,
+um 2 mm angehoben (Ecken 3\|14, 16\|1, 29\|14, 16\|27).
+
+Der Pfeil liegt dort **nicht** an einer Kante in eigener Richtung, wie Frage 3 empfohlen hatte,
+sondern **parallel zum Körper**: auf der Waagerechten durch die untere Ecke (Schaft 75,827…77,244 pt,
+Mitte y 27), nach rechts, vom linken Körperrand (x 3) bis 1 mm hinter den rechten (x 30).
+Querstrich und Kopf haben dieselben Maße wie in 5.2.2, 5.2.3 und 5.2.5.
+
+Das ist die erste Zahl für `movement-anchor`: an `person`, Kante `body-bottom`, Verlauf von
+(minX, maxY) nach (maxX + 1, maxY) der Körperhülle. `anchoredMovementPath` baut ihn und verlangt dafür genau diese 26-mm-Raute; die volle Raute aus 1.2 (30 mm) ließe dem Pfeil in 32 × 32 mm keinen Platz. Jede andere
+Kante, jeder andere Träger und die Pfeile 5.2.1, 5.2.4 und 5.2.6 bleiben Lücken. Die übrigen
+Pfeile im Bestand sind anders gebaut: als Piktogramm **in** einem Körper (F.3.6, F.3.7, F.3.10,
+N.2.1, M.1, M.12 bis M.14; 4.5.7 und 4.7.10 mit eigenen, kleineren Köpfen), schräg in einem Dreieck
+(M.9, M.10), als Pfeil mit gefülltem Kopf über dem Deichprofil (L.1 bis L.7), als eigene Form der
+Einsatztaktik (5.8.1.1 bis 5.8.1.4) oder als freistehende Linie mit Köpfen (J.2.1 Wechselverkehr,
+J.2.2 Gegenverkehr).
+
+Die Zone steht im Zonenmodell weiter als `not-measured`; das nachzutragen gehört zum
+Integrationsschritt.
+
+### 7.4 Was die Referenz wirklich nicht zeigt
+
+Offen bleiben, jeweils mit Empfehlung:
+
+- **Beschriftung der Grenzen (Frage 6).** Die Buchstaben liegen in 2.17 bis 2.19 auf einer
+  eigenen Ebene „Takt. Zeichen (Typo)“, die Striche auf „Takt_Zeichen (umgewandelt)“. Das spricht
+  für einen Textbaustein, belegt aber nicht, ob der Text fest ist. *Empfehlung wie bisher:*
+  optionaler Parameter `label` mit „TEL“, „EA“, „UEA“ als Vorgabe. Dafür braucht es eine Regel,
+  wie die Lücke mit dem Text wächst (gemessen: mindestens 2,07 mm Rand je Seite bei 2.17); gebaut
+  ist sie nicht.
+- **Stärke an 2.20 (Frage 7).** Nur der Zug ist abgebildet. *Empfehlung wie bisher:* Trupp und
+  Gruppe als Teilmengen der Reihe, Staffel offen.
+- **Seite der Querstriche an 2.15 und 2.16.** Belegt ist nur „links der Fahrtrichtung“ bei einem
+  Verlauf, dessen Anfang die Datei nicht auszeichnet. Was die Seite bedeutet (zur Gefahr hin, in
+  Ausbreitungsrichtung), zeigt kein Original. *Empfehlung:* die Seite fachlich festlegen und in
+  der Spec als Verlaufsrichtung erklären.
+- **Mehrere Zuläufe bei 5.2.6.** *Empfehlung:* nicht zulassen, bis ein Original das zeigt;
+  mehrere Pfeile auf denselben Punkt ergeben sich auch aus mehreren Zeichen.
+- **Pfeil an anderen Körpern oder Kanten.** *Empfehlung:* nur `person`/`body-bottom` und nur
+  5.2.2, 5.2.3 und 5.2.5, wie belegt. Weil alle drei Belege Personenzustände sind, kann der Pfeil
+  dort auch als Teil des Zustands 5.8.8 gelesen werden statt als eigener Baustein; das entscheidet
+  der Integrationsschritt zusammen mit LFH-565.
+- **Farbe der Grenzen (Frage 9).** Die Grenzen sind in allen vier Dateien schwarz. Keine Datei
+  zeigt eine Grenze in Organisationsfarbe.
+- **Kurven.** Der Verlauf ist ein Polyzug. Die Referenzen zeigen gekrümmte Linien; eine Glättung
+  der Stützpunkte ist nicht gebaut.
+
+### 7.5 Zielschnittstelle
+
+Die Zeichenfunktionen liefern je Art eine `Drawing` und sind so geschnitten, dass die neue
+Spec-Art sie direkt aufruft: `movementDrawing`, `lineDrawing` (jetzt mit `variant`),
+`weatherDrawing` und `animalStateDrawing`. Der Vorschlag für die Spec-Art steht im Bericht zu
+LFH-577; die Anbindung an Codec, `validateSpec` und die vier vorgemerkten Regeln macht der
+Integrationsschritt.

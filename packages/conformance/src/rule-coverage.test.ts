@@ -67,27 +67,33 @@ describe('ruleCoverage (Fixtures)', () => {
 describe('ruleCoverage (echter Bestand)', () => {
   // Die Zahlen wachsen mit dem Katalog; sie stehen hier, damit eine Erweiterung sichtbar
   // hier ankommt und damit die Ausgabe von `pnpm cli coverage` an einer Stelle belegt ist.
-  it('führt 16 Achsen, davon 14 vollständig; Lücken bei administrativeLevel und vehicleCategory', () => {
+  it('führt 17 Achsen, davon 13 vollständig; Lücken bei Kopfmarke, Verband, Verwaltungsstufe und Fahrwerk', () => {
     const axes = ruleCoverage();
     expect(axes.map((axis) => axis.id)).toEqual([
-      'kind', 'bodyVariant', 'organization', 'strength', 'technicalHeadMark', 'administrativeLevel',
+      'kind', 'bodyVariant', 'organization', 'strength', 'technicalHeadMark', 'unitGrouping', 'administrativeLevel',
       'functionRole', 'vehicleCategory', 'capabilities', 'bodyMarks',
       'state', 'comms', 'damage', 'wildfire', 'leadership', 'water-rescue-personnel',
     ]);
     const gaps = axes.filter((axis) => axis.missing.length > 0).map((axis) => [axis.id, axis.missing]);
     expect(gaps).toEqual([
+      // Seit LFH-577 tragen die sechs Rezepte mit Kopfbalken den Verband im eigenen Feld; die
+      // gleich gezeichneten technischen Kopfmarken nutzt kein Rezept mehr (Entscheidung 8 vom
+      // 29.09.2026). Sie bleiben für Balken ohne belegten Verbandsbegriff.
+      ['technicalHeadMark', ['single-vertical-bar', 'double-vertical-bar']],
+      // Verband III zeigt kein Original am Körper (docs/decisions/2026-09-29-lfh-577-verband-5-5.md).
+      ['unitGrouping', ['verband-iii']],
       // Drei der sechs Verwaltungsstufen haben in Kopfform keine Referenz
       // (`docs/decisions/2026-08-18-grundlagen-restpunkte.md`).
       ['administrativeLevel', ['gemeinde', 'bezirk', 'bundesland']],
       // Wellenlinie nur als Strichhülle vermessen; siehe `INVENTORY_EXCLUSIONS`.
       ['vehicleCategory', ['amphibienfahrzeug']],
     ]);
-    expect(axes.filter((axis) => axis.missing.length === 0)).toHaveLength(14);
+    expect(axes.filter((axis) => axis.missing.length === 0)).toHaveLength(13);
   });
 
   it('zählt die Validierungsregeln aus core, ohne sie zu wiederholen', () => {
     expect(validationRuleCoverage()).toEqual({ total: VALIDATION_RULE_IDS.length });
-    expect(validationRuleCoverage().total).toBe(75);
+    expect(validationRuleCoverage().total).toBe(79);
   });
 });
 
@@ -117,16 +123,18 @@ describe('ruleEvidenceCoverage (Regelsicht)', () => {
 
   // Seit LFH-568 (21.09.2026): „Eine Regel gilt als belegt, wenn ein Testfall sie auslöst." Die
   // Zahlen wachsen mit den Katalogen und schrumpfen nur, wenn eine Lücke einen Fall bekommt.
-  it('belegt 77 von 81 Regeln durch Auslösung; vier benannte Lücken, keine stille', () => {
+  it('belegt 87 von 91 Regeln durch Auslösung; vier benannte Lücken, keine stille', () => {
+    // Seit LFH-577 zählen die sechs Regeln der freistehenden Zeichen mit
+    // (`FREESTANDING_RULE_CATALOG`, Fälle in `FREESTANDING_RULE_EVIDENCE`).
     const coverage = ruleEvidenceCoverage();
-    expect(coverage.total).toEqual({ total: 81, triggered: 77, gap: 4, untriggered: 0 });
+    expect(coverage.total).toEqual({ total: 91, triggered: 87, gap: 4, untriggered: 0 });
     expect(coverage.byPhase).toEqual({
-      spec: { total: 75, triggered: 73, gap: 2, untriggered: 0 },
+      spec: { total: 85, triggered: 83, gap: 2, untriggered: 0 },
       composition: { total: 6, triggered: 4, gap: 2, untriggered: 0 },
     });
     expect(coverage.byKind).toEqual({
-      systematik: { total: 8, triggered: 8, gap: 0, untriggered: 0 },
-      engine: { total: 73, triggered: 69, gap: 4, untriggered: 0 },
+      systematik: { total: 17, triggered: 17, gap: 0, untriggered: 0 },
+      engine: { total: 74, triggered: 70, gap: 4, untriggered: 0 },
     });
     expect(coverage.byDimension.map((entry) => [entry.dimension, entry.total, entry.triggered, entry.gap])).toEqual([
       ['body-variant', 7, 7, 0],
@@ -139,6 +147,10 @@ describe('ruleEvidenceCoverage (Regelsicht)', () => {
       ['capabilities', 2, 2, 0],
       ['body-marks', 1, 1, 0],
       ['function-role', 10, 7, 3],
+      ['state', 4, 4, 0],
+      ['lines-and-boundaries', 2, 2, 0],
+      ['weather', 3, 3, 0],
+      ['animal', 1, 1, 0],
       ['label', 48, 47, 1],
       ['composition', 1, 1, 0],
     ]);
@@ -168,9 +180,13 @@ const REACH_TIMEOUT_MS = 30_000;
 
 describe('generativeReach (echter Bestand)', () => {
   it('enumeriert Stufe 1 mit echtem validateSpec und compose', () => {
-    // 19 Arten × (∅+10) Varianten × (∅+8) Organisationen × (∅+4+2+6) Kopfzonen × (∅+8) Fahrwerke.
-    // Seit LFH-586 (29.09.2026) acht statt neun Organisationen: `bundespolizei` entfiel, die
-    // Reichweite sank von 993/924 auf 894/832; die belegten Signaturen blieben davon unberührt.
+    // 19 Arten × (∅+10) Varianten × (∅+8) Organisationen × (∅+4+2+3+6) Kopfzonen × (∅+8) Fahrwerke.
+    // Seit LFH-586 (29.09.2026) acht statt neun Organisationen: `bundespolizei` entfiel; die
+    // belegten Signaturen blieben davon unberührt.
+    // Seit LFH-577 drei Verbände in der Kopfzone. `validateSpec` bindet den Verband an keine Art —
+    // wo er nicht vermessen ist (jeder andere Körper, Verband III), lehnt erst die Komposition ab
+    // (`NotMeasuredError`); daher der Sprung in validBySpec. Gültig sind Verband I und II an der
+    // Formation ohne Variante und mit Fußband: +36 (2 × 2 × 9 Organisationswerte einschließlich ∅).
     // Seit dem 19.09.2026 zwei technische Kopfmarken (`double-vertical-bar` für E.1.31): +10 gültige
     // Kombinationen an der Formation, und E.1.31 bringt eine eigene Rezeptsignatur mit.
     // Die Reichweitenzahlen wachsen mit den vermessenen Verträgen (ein neues Fahrwerk, eine neue
@@ -178,19 +194,20 @@ describe('generativeReach (echter Bestand)', () => {
     // sind Kombinationen, die die Regeln durchlassen und erst der Motor ablehnt — heute das
     // Amphibienfahrzeug-Fahrwerk (60) und die Körperfüllung an `event` (9).
     const reach = generativeReach();
-    expect(reach.enumerated).toBe(19 * 11 * 9 * 13 * 9);
-    expect(reach.validBySpec).toBe(894);
-    expect(reach.valid).toBe(832);
+    expect(reach.enumerated).toBe(19 * 11 * 9 * 16 * 9);
+    expect(reach.validBySpec).toBe(2955);
+    expect(reach.valid).toBe(868);
     // F.1.1 und F.1.3 (Doppelbalken) sowie F.1.13 und F.1.21 (Einzelbalken) tragen seit dem
     // Fachreview ihre Kopfmarke; dazu +20 gültige Kombinationen, weil die technische Kopfmarke
-    // jetzt auch an der Formation mit Fußband belegt ist (2 Marken × 10 Organisationen).
+    // jetzt auch an der Formation mit Fußband belegt ist (2 Marken × 10 Organisationen). Seit
+    // LFH-577 tragen diese sechs Rezepte `unitGrouping`; die Zahl der Signaturen bleibt.
     // LFH-786 bringt sechs neue Signaturen, alle mit Feuerwehrfarbe: die Formation mit Trupp
     // (C.1.7), das Landfahrzeug mit Kategorie 1 und mit Kategorie 2, den Anhänger mit einem Rad
     // (C.2.29), denselben Anhänger mit Fußband (C.2.30) und das Kettenfahrzeug mit
     // inverted-hull-track (C.2.31). C.1.8 teilt seine Signatur mit C.1.1. Keine der sechs liegt
     // außerhalb der Reichweite; sie bleiben auch mit acht Organisationen (LFH-586) gültig.
     expect(reach.referenced).toBe(77);
-    expect(reach.reachOnly).toBe(832 - 77);
+    expect(reach.reachOnly).toBe(868 - 77);
     // Acht Rezeptsignaturen sind für sich allein nicht gültig: die farbigen Kreisverträge
     // brauchen ihre Körpermarke, die Personen mit Verwaltungsstufe ihre Funktionsrolle, das
     // eingesenkte Wasserfahrzeug seine Beschriftung. Stufe 1 enumeriert keine dieser Achsen.
