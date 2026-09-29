@@ -8,9 +8,10 @@ import {
 import { pictogram } from './pictograms/index.js';
 
 describe('semantische Zeichenbeschreibungen', () => {
-  it('benennt die Bundespolizei als eigene Organisation', () => {
-    expect(describeSymbolSpec({ kind: 'vehicle-land', organization: 'bundespolizei' }))
-      .toContain('Organisation: Bundespolizei');
+  it('führt die Bundespolizei unter der Polizei (LFH-586)', () => {
+    const description = describeSymbolSpec({ kind: 'vehicle-land', organization: 'polizei' });
+    expect(description).toContain('Organisation: Polizei');
+    expect(description).not.toContain('Bundespolizei');
   });
 
   it('beschreibt alle gesetzten Bestandteile einer Komposition', () => {

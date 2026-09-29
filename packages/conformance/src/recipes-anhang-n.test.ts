@@ -36,7 +36,7 @@ const expected = {
     referenceAsset: 'N.1.3_Einsatzfahrzeug_Bundespolizei.svg',
     spec: {
       kind: 'vehicle-land',
-      organization: 'bundespolizei',
+      organization: 'polizei',
       vehicleCategory: 'kfz-kategorie-1',
       labels: {
         accessibilityMode: 'neutral-zones',
@@ -191,11 +191,12 @@ describe('Anhang N — Fahrzeuge weiterer Träger', () => {
     }
   });
 
-  it('trägt die fünf quellengetreuen Organisationsfüllungen ohne Umdeutung', () => {
+  it('trägt die quellengetreuen Organisationsfüllungen ohne Umdeutung', () => {
+    // N.1.3 fehlt hier bewusst: Die Referenz füllt hellgrün (#64dc32), der Katalog zeichnet die
+    // Bundespolizei seit LFH-586 als Polizei in `gruen`. Die Abweichung prüft der Test unten.
     const expectedFill = {
       'N.1.1': 'braun',
       'N.1.2': 'orange',
-      'N.1.3': 'hellgruen',
       'N.1.4': 'braun',
       'N.1.5': 'orange',
       'N.1.6': 'rot',
@@ -212,6 +213,17 @@ describe('Anhang N — Fahrzeuge weiterer Träger', () => {
       );
       expect(body?.style?.fill, section).toBe(fill);
     }
+  });
+
+  it('zeichnet N.1.3 bewusst im Polizei-Grün statt im hellgrünen Referenzwert (LFH-586)', () => {
+    const recipe = nRecipes()['N.1.3'];
+    expect(recipe?.spec.organization).toBe('polizei');
+    if (recipe === undefined) return;
+    const body = composeFromCatalog(recipe.spec, recipe.title).children.find(
+      (primitive) => primitive.role === 'body',
+    );
+    expect(body?.style?.fill).toBe('gruen');
+    expect(fingerprintFor(recipe.referenceAsset).fills).toContain('#64dc32');
   });
 
   it('verwendet genau die drei quellbestätigten Fahrwerke und keine geländegängig-Semantik', () => {
@@ -312,7 +324,7 @@ describe('Anhang N — Fahrzeuge weiterer Träger', () => {
         'Fahrzeugkategorie: Kraftfahrzeugkategorie 2. Technische Körpermarke: Ring 5 mm mit ' +
         'acht Speichen, 3,5 mm nach unten versetzt. Beschriftung im Körper: Kipper, / 26 t.',
       'N.1.3':
-        'Grundzeichen: Landfahrzeug. Organisation: Bundespolizei. Fahrzeugkategorie: ' +
+        'Grundzeichen: Landfahrzeug. Organisation: Polizei. Fahrzeugkategorie: ' +
         'Kraftfahrzeugkategorie 1. Beschriftung im Körper: BuPol.',
       'N.1.4':
         'Grundzeichen: Luftfahrzeug. Organisation: Bundeswehr. Technische Körpermarke: ' +
@@ -451,7 +463,7 @@ describe('Anhang N — gemessene Labelmetriken bleiben fail-closed', () => {
   function landWithCenterBaseline(centerBaselineFromBodyBottomMm: number): SymbolSpec {
     return {
       kind: 'vehicle-land',
-      organization: 'bundespolizei',
+      organization: 'polizei',
       vehicleCategory: 'kfz-kategorie-1',
       labels: { center: 'BuPol', centerBaselineFromBodyBottomMm },
     };

@@ -7,6 +7,10 @@ Status: **Vorbereitung, keine Entscheidung.** Das Dokument sammelt Belege zu ein
 Registerfrage `Q-N-traegerzuordnung` und formuliert die Frage an den Projektinhaber. Es ändert
 weder Code noch Reviewstatus.
 
+> Nachtrag 29.09.2026: Entschieden von Ruben — die Bundespolizei ist keine eigene Organisation,
+> die Polizei bleibt Grün `#14a01e`; D.4.4, G.3.2 und N.1.3 tragen `polizei`. Siehe
+> `docs/decisions/2026-09-29-lfh-586-bundespolizei-ist-polizei.md`.
+
 Die Registerfrage lautet vollständig: „Gehören kommunaler Bauhof und Beauftragter Dritter zur
 sonstigen Gefahrenabwehr, ist die Bundespolizei zu Recht eine getrennte Organisation, und stimmen
 die Bundeswehr-/Feuerwehr-/ZIV-Zuordnungen?“ (N.1.1 bis N.1.6). Am 29.09.2026 wurde entschieden,

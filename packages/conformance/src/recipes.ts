@@ -200,7 +200,7 @@ export const GRAMMAR_FIXTURES = RECIPES;
  * erfüllt.
  *
  * **Seit LFH-422 kann die Quelle diese Ableitung je Rezept überschreiben.** N.1.2 bis N.1.5
- * führen schwarze Körperläufe auf orange, hellgruen und braun. `bodyLabelInk()` nimmt denselben
+ * führen schwarze Körperläufe auf orange, gruen und braun. `bodyLabelInk()` nimmt denselben
  * optionalen `inBodyInk`-Wert entgegen wie die Zeichnung; der Kontrastvertrag pflegt keine
  * zweite Farblogik. Da E.2.6 auf derselben orangefarbenen Organisation weiterhin den weissen
  * Default trägt, wird die Körperanforderung nach Organisation **und** Vordergrund dedupliziert.

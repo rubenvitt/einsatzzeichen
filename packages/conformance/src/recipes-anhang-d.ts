@@ -270,8 +270,9 @@ export const ANHANG_D_TASK_6_RECIPES = {
     referenceAsset: 'D.4.4_Leiter Gefahrenabwehrkräfte Bundespolizei.svg',
     spec: {
       kind: 'person',
-      // Titel und Referenz nennen die Bundespolizei; die Referenz füllt #64dc32 (hellgrün).
-      organization: 'bundespolizei',
+      // Die Bundespolizei gehört zur Polizei (LFH-586). Die Referenz füllt hellgrün (#64dc32);
+      // der Katalog zeichnet bewusst im Polizei-Grün #14a01e. „BuPol“ bleibt Trägertext.
+      organization: 'polizei',
       administrativeLevel: 'nationalstaat',
       functionRole: 'hazard-response-forces-director',
     },

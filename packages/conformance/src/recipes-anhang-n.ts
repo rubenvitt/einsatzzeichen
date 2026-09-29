@@ -2,9 +2,9 @@ import type { Recipe } from './recipes.js';
 
 /**
  * Anhang N: sechs Fahrzeuge weiterer Träger und drei Zeichen für Spontanhelfende bzw. einen
- * Notfallinformationspunkt. Die Trägerzuordnungen bilden ausschließlich die vermessenen
- * Organisationsfarben ab; ihre fachliche Bestätigung bleibt ausstehend. Insbesondere erzeugt
- * der Dateinamensbestandteil „geländegängig“ keine zusätzliche Semantik.
+ * Notfallinformationspunkt. Die Trägerzuordnungen folgen den vermessenen Organisationsfarben,
+ * außer N.1.3: `polizei` in Grün statt des hellgrünen Referenzwerts (LFH-586, bewusst). Die
+ * fachliche Bestätigung bleibt ausstehend; „geländegängig“ erzeugt keine zusätzliche Semantik.
  */
 export const ANHANG_N_RECIPES = {
   'N.1.1': {
@@ -38,7 +38,7 @@ export const ANHANG_N_RECIPES = {
     referenceAsset: 'N.1.3_Einsatzfahrzeug_Bundespolizei.svg',
     spec: {
       kind: 'vehicle-land',
-      organization: 'bundespolizei',
+      organization: 'polizei',
       vehicleCategory: 'kfz-kategorie-1',
       labels: {
         accessibilityMode: 'neutral-zones',

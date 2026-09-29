@@ -164,7 +164,8 @@ describe('Bausteinregister: festgenagelter Stand', () => {
     );
     expect(counts).toEqual({
       'base-symbol': 33,
-      color: 9,
+      // Seit LFH-586 acht: `bundespolizei` ist keine eigene Organisation mehr.
+      color: 8,
       strength: 4,
       'unit-grouping': 3,
       'administrative-level': 6,

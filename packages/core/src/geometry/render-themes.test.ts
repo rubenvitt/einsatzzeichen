@@ -90,8 +90,8 @@ describe('Render-Theme-Register', () => {
     expect(renderTheme('print-monochrome')).toBe(PRINT_MONOCHROME_THEME);
   });
 
-  it('gibt hellgruen eine von gruen getrennte Kontursignatur', () => {
-    expect(ORGANIZATION_BODY_DASHES.hellgruen).toEqual([3, 1]);
-    expect(ORGANIZATION_BODY_DASHES.hellgruen).not.toEqual(ORGANIZATION_BODY_DASHES.gruen);
+  it('führt für hellgruen keine Kontursignatur mehr, seit keine Organisation es trägt (LFH-586)', () => {
+    expect(Object.hasOwn(ORGANIZATION_BODY_DASHES, 'hellgruen')).toBe(false);
+    expect(ORGANIZATION_BODY_DASHES.gruen).toEqual([6, 2]);
   });
 });

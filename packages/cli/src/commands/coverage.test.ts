@@ -156,15 +156,15 @@ describe('coverage CLI', () => {
         'vehicleCategory 7/8 (amphibienfahrzeug)',
     );
     expect(lines).toContain(
-      'Generative Reichweite (Stufe 1): 924 gültige Kompositionen aus kind × Körpervariante × ' +
-        'Organisation × Kopfzone × Fahrwerk (244530 enumeriert), davon 71 in der Referenz belegt — ' +
-        '853 erzeugbar ohne Referenzbeleg, 8 Rezeptsignaturen außerhalb der Stufe ' +
+      'Generative Reichweite (Stufe 1): 832 gültige Kompositionen aus kind × Körpervariante × ' +
+        'Organisation × Kopfzone × Fahrwerk (220077 enumeriert), davon 71 in der Referenz belegt — ' +
+        '761 erzeugbar ohne Referenzbeleg, 8 Rezeptsignaturen außerhalb der Stufe ' +
         '(dokumentiert, kein Gate); nicht enumeriert: 88 Fähigkeiten, ' +
         '132 Körpermarken, 25 Funktionsrollen, freie Bezeichnung',
     );
     expect(lines.at(-1)).toBe('Coverage-Gate bestanden.');
     // Expliziter Timeout: `coverage()` rechnet seit LFH-413 `generativeReach()` mit
-    // (993 validateSpec-gültige, 924 komponierte Kombinationen) — allein ~140 ms, unter
+    // (894 validateSpec-gültige, 832 komponierte Kombinationen) — allein ~140 ms, unter
     // Vitest-Parallellast bis ~4 s gemessen; das 5-s-Standardlimit wäre ein Lastflake.
   }, 30_000);
 });

@@ -207,7 +207,6 @@ const ORGANIZATION_IDS = [
   'thw',
   'fuehrung-leitung',
   'polizei',
-  'bundespolizei',
   'bundeswehr',
   'sonstige-gefahrenabwehr',
   'zivile-einheiten',

@@ -854,14 +854,15 @@ describe('Anhang D.4, übergeordnete Funktionen', () => {
         title: 'Leiter Gefahrenabwehrkräfte Bundespolizei',
         referenceAsset: 'D.4.4_Leiter Gefahrenabwehrkräfte Bundespolizei.svg',
         spec: {
-          kind: 'person', organization: 'bundespolizei', administrativeLevel: 'nationalstaat',
+          kind: 'person', organization: 'polizei', administrativeLevel: 'nationalstaat',
           functionRole: 'hazard-response-forces-director',
         },
       },
       ['BuPol'],
       15,
       [3, 5, 29, 31],
-      'hellgruen',
+      // Referenz hellgrün #64dc32; bewusst Polizei-Grün seit LFH-586.
+      'gruen',
     ],
     [
       'D.4.5',
@@ -2200,7 +2201,7 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
     //
     // Die dritte Zeile ist E.2.6 mit dem unveränderten Default „weiss auf orange" — 2,382:1
     // bzw. 2,323:1 und deshalb die einzige entschiedene Ausnahme. Anhang N setzt auf derselben
-    // orangefarbenen Fläche sowie auf hellgruen und braun die jeweils an der Quelle vermessene
+    // orangefarbenen Fläche sowie auf gruen (Polizei, LFH-586) und braun die an der Quelle vermessene
     // schwarze Tinte. Diese drei Paare stehen separat, obwohl eines denselben Organisationskontext
     // wie E.2.6 trägt; sonst würde der Resolveroverride im Kontrastvertrag unsichtbar. G.3.5
     // ergänzt denselben schwarz/braun-Farbwert als separat benannten bottomCenter-Vertrag.
@@ -2411,8 +2412,8 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
       },
       {
         foreground: 'schwarz',
-        background: 'hellgruen',
-        context: 'Beschriftung im Körper auf Organisation bundespolizei',
+        background: 'gruen',
+        context: 'Beschriftung im Körper auf Organisation polizei',
         minimum: 4.5,
       },
       {
