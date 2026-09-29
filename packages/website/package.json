@@ -14,7 +14,7 @@
     "generate": "tsx scripts/generate-snapshot.ts"
   },
   "dependencies": {
-    "@astrojs/react": "6.0.4",
+    "@astrojs/react": "7.0.0",
     "@astrojs/starlight": "0.41.10",
     "@einsatzzeichen/conformance": "workspace:*",
     "@einsatzzeichen/core": "workspace:*",
