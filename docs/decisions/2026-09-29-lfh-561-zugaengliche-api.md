@@ -64,7 +64,8 @@ für Screenreader gewesen. **Vom Eigentümer am 29. September 2026 bestätigt.**
 ## 5. Offen beim Eigentümer
 
 > Am 29. September 2026 hat der Eigentümer die Empfehlungen dieses Abschnitts bestätigt („passt
-> was du geschrieben hast"). Umsetzung von Punkt 2, 3, 6 und 7 als Folgeaufgaben; Punkt 4 und 5
+> was du geschrieben hast"). Umsetzung von Punkt 2, 3, 6 und 7 als Folgeaufgaben (LFH-798,
+> LFH-799, LFH-800, LFH-801); Punkt 4 und 5
 > bleiben, wie empfohlen, ungezeichnet.
 
 Die Einzelfragen stehen in den Vorlagen (LFH-565 §9 und §10.3, LFH-566 §7, LFH-567 §5,
