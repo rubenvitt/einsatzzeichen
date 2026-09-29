@@ -263,3 +263,22 @@ Die Geometrie ist deckungsgleich, abweichend ist nur die Schriftart (Arimo statt
 | `4.1.7#alternative` | Biologische Stoffe | „B nicht fett, falsche Maße Dreieck, falscher Hintergrund“ | Dreieck größer und weiß gefüllt, „B“ jetzt fett (Arimo Bold). | 12,18 % → 3,23 % | 30,20 % | **sichtbar abweichend:** Wie 4.1.6 Alternative: Dreieck und Füllung stimmen. Das „B“ in Arimo Bold ist breiter und sitzt etwas weiter links als in der Referenz. |
 | `4.1.8#alternative` | Chemische Stoffe | „C kursiv, nicht fett, Dreieck ohne Hintergrund, falsche Maße“ | Dreieck größer und weiß gefüllt, „C“ jetzt fett und nicht mehr kursiv (Arimo Bold). | 10,86 % → 2,31 % | 25,87 % | **sichtbar abweichend:** Wie 4.1.6 Alternative: Dreieck und Füllung stimmen, das „C“ ist nicht mehr kursiv. In Arimo Bold ist es etwas breiter als in der Referenz. |
 | `4.2.2#primary` | PSNV | „PW falsch - PSNV. Falsche Font“ | Text „PSNV“ statt „PW“, fett; Dreieck in Referenzmaßen. | 10,06 % → 4,90 % | 52,05 % | **sichtbar abweichend:** Das Dreieck ist deckungsgleich, „PSNV“ statt „PW“ ist behoben. Der Schriftzug in Arimo Bold läuft aber sichtbar breiter als in der Referenz (Befund „Falsche Font“ also nur zum Teil behoben). |
+
+## Nachtrag 29.09.2026: Stand nach PR #72
+
+PR #72 setzt Katalogtext in Arimo Medium (500) und D.1.1 kursiv, und die Bundespolizei entfällt als
+eigene Organisation (D.4.4 und N.1.3 werden in Polizei-Grün gezeichnet). Die Zahlen oben beziehen
+sich auf den Stand davor. Vergleich mit `pnpm cli reference-diff` auf `main` (nach PR #70) und auf
+PR #72, gleiche Methode:
+
+- **Gesamt:** 361 → 360 von 544 Zeilen deckungsgleich, 283 → 284 innerhalb der Strichgrenze.
+- **Die 93 Zeilen dieser Liste:** Vier haben sich verändert, alle aus Gruppe C (nur Schrift):
+  4.1.6, 4.1.7 und 4.1.8 jeweils Alternative sowie 4.2.2. Der Text steht jetzt in Stufe 500 statt
+  fett; die Abweichung sinkt leicht (4.1.7: 3,2 % → 2,8 %, 4.2.2: 4,9 % → 4,6 %), bleibt aber
+  sichtbar, weil die Referenzschrift schmaler läuft. 89 der 93 Zeilen bleiben deckungsgleich.
+- **Bereits freigegebene Zeilen, deren Bild sich verändert hat (12):** 5.8.1.10, 5.8.2.1–5.8.2.4,
+  5.8.6.2 (Alternative), 5.8.8.2, 5.8.8.5, 5.8.8.6 (Alternative), E.1.1, E.1.2, E.1.3. Überall ist
+  nur der Text betroffen (Stufe 500 statt 400 oder 700). Neun bleiben deckungsgleich; E.1.1–E.1.3
+  waren schon vorher knapp über der Schwelle (1,9–3,1 %) und ändern sich um höchstens 0,1 Punkte.
+  Die Freigaben bleiben stehen; ob sie für das neue Schriftgewicht gelten, entscheidet der
+  Fachreviewer im Werkzeug.
