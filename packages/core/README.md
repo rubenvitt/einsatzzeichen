@@ -24,6 +24,27 @@ const svg = renderSvg(drawSymbol(spec, { title: 'Bergungsgruppe' }), { size: 64 
 
 Verstößt die Spec gegen eine Regel, wirft `drawSymbol()` eine `CompositionError` mit der Regel-ID jedes Befunds.
 
+## Aus der Grammatik speisen
+
+Für Oberflächen und Skripte, die Zeichen zusammensetzen lassen:
+
+- `SPEC_FIELD_VALUES` / `specFieldValues(field)` — der Wertevorrat je Feld der `SymbolSpec`.
+- `vocabulary(spec, field)` — welche Werte zur übrigen Spec passen; je Wert `allowed` oder `blocked` mit Grund `rule` (erklärte Regeln) oder `not-measured`. Gerechnet über `drawSymbol()`. Ein Skript beginnt bei `vocabulary({}, 'kind')`.
+- `checkSpec(spec)` — die Zeichnung oder der erklärte Grund, warum es keine gibt, statt eines Wurfs.
+- `explainIssue()` / `explainRejection()` — Titel, Erklärung und Feld je Regel.
+- `symbolProvenance(spec)` — `verbatim` oder `derived`.
+- `serializeSpec` / `parseSpec` / `encodeSpecParam` / `decodeSpecParam` — die kanonische Form für Dateien und Links.
+
+```ts
+import { checkSpec, vocabulary } from '@einsatzzeichen/core';
+
+const fills = vocabulary({ kind: 'formation', organization: 'thw' }, 'technicalFill');
+// → alle `blocked`, reason 'rule': Organisation und technische Füllung schließen sich aus
+
+const result = checkSpec({ kind: 'formation', organization: 'thw', strength: 'gruppe' });
+if (!result.ok && result.reason === 'rule') console.log(result.issues.map((issue) => issue.title));
+```
+
 ## Installation
 
 ```bash

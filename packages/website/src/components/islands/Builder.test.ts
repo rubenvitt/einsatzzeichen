@@ -175,6 +175,9 @@ afterEach(() => {
   unmount?.();
   unmount = undefined;
   document.body.innerHTML = '';
+  // Die Insel liest `?spec=` beim Mounten und schreibt ihn danach selbst — ein Fall, der einen
+  // Link öffnet, darf ihn dem nächsten nicht hinterlassen.
+  window.history.replaceState(null, '', '/builder/');
 });
 
 async function mountBuilder(): Promise<HTMLElement> {
@@ -287,5 +290,44 @@ describe('Der Baukasten mit aufgeschobener Probe', () => {
     ).toBe('false');
     expect(chosen.getAttribute('title')).toBeNull();
     expect(chosen.textContent).not.toMatch(/geht hier nicht/);
+  });
+});
+
+/* --- Ein geteilter Link beim Öffnen ------------------------------------------------------ */
+
+/** Ein Link, wie ihn der Baukasten bis LFH-577 schrieb: base64url über das rohe JSON. */
+function legacyLink(value: unknown): string {
+  const bytes = new TextEncoder().encode(JSON.stringify(value));
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  const param = btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+  return `/builder/?spec=${param}`;
+}
+
+describe('Der Baukasten mit einem Link (LFH-578)', () => {
+  it('meldet ein unbekanntes Feld sichtbar, statt es still zu übergehen', async () => {
+    // Bis LFH-578 las der Baukasten diesen Tippfehler still als Person ohne Organisation.
+    window.history.replaceState(null, '', legacyLink({ kind: 'person', organisation: 'thw' }));
+    const container = await mountBuilder();
+
+    const alert = [...container.querySelectorAll('[role="alert"]')].find((element) =>
+      /Der Link trug keine lesbare Zusammenstellung/.test(element.textContent ?? ''),
+    );
+    expect(alert, 'Kein Hinweis zum unlesbaren Link.').toBeDefined();
+    // Der Pfad in die Eingabe gehört in die aufklappbaren Einzelheiten, nicht in den Fließtext.
+    const prose = [...(alert as Element).children]
+      .filter((child) => child.tagName === 'P')
+      .map((child) => child.textContent)
+      .join(' ');
+    expect(prose).not.toContain('$.');
+    expect(alert?.querySelector('details')?.textContent).toContain('$.organisation');
+    expect(tile(container, 'kind', 'Taktische Formation').getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('öffnet einen alten Link ohne Hülle wie bisher', async () => {
+    window.history.replaceState(null, '', legacyLink({ kind: 'person', organization: 'thw' }));
+    const container = await mountBuilder();
+    expect(container.textContent).not.toMatch(/Der Link trug keine lesbare Zusammenstellung/);
+    expect(tile(container, 'kind', 'Person').getAttribute('aria-pressed')).toBe('true');
   });
 });

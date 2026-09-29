@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { SPEC_FIELD_VALUES, VOCABULARY_FIELDS, checkSpec } from '@einsatzzeichen/core';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 import { kindPreviews, labelFor, optionsFor, probeFields } from './builder-vocabulary.js';
+import { builderVocabulary } from './snapshot-vocabulary.js';
 import type { BuilderVocabulary } from './snapshot.js';
 
 /**
@@ -46,8 +48,30 @@ describe('labelFor', () => {
   });
 });
 
+describe('builderVocabulary() gegen den Wertevorrat aus core', () => {
+  /**
+   * Die Auswahllisten entstehen zur Bauzeit aus den Registern des Katalogs, die Probe rechnet in
+   * `core` gegen `SPEC_FIELD_VALUES` — und lehnt einen Kandidaten außerhalb davon mit einem
+   * `RangeError` ab. Liefen beide auseinander, bräche der Baukasten beim ersten Render.
+   */
+  it('bietet je Feld nur Werte aus dem Vorrat an', () => {
+    const vocabulary = builderVocabulary();
+    for (const field of VOCABULARY_FIELDS) {
+      const domain = new Set<string>(SPEC_FIELD_VALUES[field].values);
+      for (const entry of optionsFor(vocabulary, field)) {
+        expect(domain.has(entry.id), `${field}: ${entry.id}`).toBe(true);
+      }
+    }
+  });
+});
+
 describe('kindPreviews', () => {
   const previews = kindPreviews(VOCABULARY);
+
+  it('zeigt dieselbe Zeichnung wie checkSpec aus core', () => {
+    const result = checkSpec({ kind: 'formation' });
+    expect(result.ok && previews.get('formation')).toEqual(result.ok && result.drawing);
+  });
 
   it('komponiert für jede Grundzeichenart einen Eintrag', () => {
     expect([...previews.keys()]).toEqual(['formation', 'reduced-house']);

@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { RECIPES } from '@einsatzzeichen/conformance';
+import * as core from '@einsatzzeichen/core';
+import { SpecParseError, encodeSpecParam } from '@einsatzzeichen/core';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 import {
+  LIST_SPEC_FIELDS,
   allowedValues,
   decodeSpec,
   encodeSpec,
@@ -9,6 +12,17 @@ import {
   issuesByField,
   reduceSpec,
 } from './builder-state.js';
+
+/**
+ * So schrieb der Baukasten seine Links bis LFH-578: base64url über das rohe JSON der Spec, ohne
+ * Hülle und ohne jede Prüfung. Solche Links sind geteilt und müssen lesbar bleiben.
+ */
+function legacyParam(value: unknown): string {
+  const bytes = new TextEncoder().encode(JSON.stringify(value));
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+}
 
 const RECIPE_SPEC: SymbolSpec = Object.values(RECIPES)[0]!.spec;
 
@@ -103,18 +117,51 @@ describe('encodeSpec/decodeSpec', () => {
     }
   });
 
-  it('wirft mit Klartext bei kaputtem Parameter', () => {
-    expect(() => decodeSpec('%%%kein-base64%%%')).toThrow(/spec/i);
+  it('schreibt die kanonische Form aus core', () => {
+    const spec: SymbolSpec = { strength: 'gruppe', kind: 'formation' };
+    expect(encodeSpec(spec)).toBe(encodeSpecParam(spec));
+  });
+
+  it('liest alte Links ohne Hülle weiter', () => {
+    expect(decodeSpec(legacyParam({ kind: 'person', organization: 'thw' }))).toEqual({
+      kind: 'person',
+      organization: 'thw',
+    });
+  });
+
+  it('wirft einen SpecParseError bei kaputtem Parameter', () => {
+    expect(() => decodeSpec('%%%kein-base64%%%')).toThrow(SpecParseError);
   });
 
   it('wirft, wenn der Parameter keine Spec mit `kind` trägt', () => {
-    expect(() => decodeSpec(encodeSpec({ designation: 'ohne kind' } as unknown as SymbolSpec))).toThrow(
-      /kind/,
-    );
+    expect(() => decodeSpec(legacyParam({ designation: 'ohne kind' }))).toThrow(/kind/);
+  });
+
+  it('lehnt ein unbekanntes Feld ab, statt es still zu übergehen', () => {
+    // Bis LFH-578 rutschte der Tippfehler durch, und das Zeichen stand ohne Organisation da.
+    const param = legacyParam({ kind: 'formation', organisation: 'thw' });
+    expect(() => decodeSpec(param)).toThrow(SpecParseError);
+    try {
+      decodeSpec(param);
+    } catch (error) {
+      expect((error as SpecParseError).path).toBe('$.organisation');
+    }
   });
 });
 
 describe('allowedValues', () => {
+  it('rechnet über das Vokabular aus core und lehnt fremde Kandidaten ab', () => {
+    expect(() => allowedValues({ kind: 'formation' }, 'strength', ['verband'])).toThrow(RangeError);
+  });
+
+  it('führt die Listenfelder aus core', () => {
+    expect(LIST_SPEC_FIELDS).toBe(core.LIST_SPEC_FIELDS);
+  });
+
+  it('gibt für eine leere Kandidatenliste eine leere Liste', () => {
+    expect(allowedValues({ kind: 'formation' }, 'strength', [])).toEqual([]);
+  });
+
   it('sperrt Werte, die mit der aktuellen Spec nicht zusammengehen, und begründet sie', () => {
     // `technicalFill` und `organization` schließen sich aus — bei gesetzter Organisation darf
     // also kein Füllwert mehr durchkommen.

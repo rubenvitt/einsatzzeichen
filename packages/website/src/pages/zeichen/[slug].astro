@@ -185,11 +185,13 @@ const noteHint =
 /* --- Aktionen ----------------------------------------------------------------------------- */
 
 /**
- * `?spec=` ist der Vertrag des Baukastens: base64url-kodiertes JSON ohne Füllzeichen. Kodiert wird
- * mit **derselben** `encodeSpec()`, die der Baukasten zum Lesen spiegelt (`decodeSpec`) — nicht mit
- * einer Node-Nachbildung daneben. Zwei Kodierungen für einen Parameter können auseinanderlaufen,
- * und die Stelle, an der das auffiele, wäre ein toter Link statt ein roter Test. `encodeSpec()`
- * kommt mit `TextEncoder` und `btoa` aus; beide gibt es in Node wie im Browser.
+ * `?spec=` ist der Vertrag des Baukastens: seit LFH-578 die URL-Form aus `core`
+ * (`encodeSpecParam`) — base64url ohne Füllzeichen über das kanonische JSON in der Hülle
+ * `{"v":1,"spec":{…}}`. Links von vorher (rohes JSON der Spec ohne Hülle) liest `decodeSpec`
+ * weiter. Kodiert wird mit **derselben** `encodeSpec()`, die der Baukasten zum Lesen spiegelt
+ * (`decodeSpec`) — nicht mit einer Nachbildung daneben. Zwei Kodierungen für einen Parameter können
+ * auseinanderlaufen, und die Stelle, an der das auffiele, wäre ein toter Link statt ein roter Test.
+ * `encodeSpecParam` kommt ohne `btoa` und `Buffer` aus und läuft in Node wie im Browser.
  */
 const builderHref = `/builder/?spec=${encodeSpec(symbol.spec)}`;
 

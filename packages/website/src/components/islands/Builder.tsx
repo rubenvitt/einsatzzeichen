@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { Einsatzzeichen } from '@einsatzzeichen/react';
-import { ORGANIZATION_COLORS, renderSvg } from '@einsatzzeichen/core';
+import { ORGANIZATION_COLORS, SpecParseError, renderSvg } from '@einsatzzeichen/core';
 import type { ValidationIssue } from '@einsatzzeichen/core';
 import { PALETTE, type ColorToken, type Drawing, type SymbolSpec } from '@einsatzzeichen/schema';
 import { codeSamplesFor, type CodeSamples } from '../../lib/code-samples.js';
@@ -45,7 +45,7 @@ import StatusPair from '../StatusPair.js';
  * Schirmen steht das Ergebnis über dem Formular, damit jede Änderung ohne Scrollen sichtbar ist.
  *
  * Die Auswahl bietet nur an, was zur aktuellen Zusammenstellung passt: `allowedValues()` probiert
- * jeden Wert einmal durch, und was nicht trägt, steht gesperrt da — sichtbar, mit dem Grund als
+ * über `vocabulary()` aus `core` (LFH-578) jeden Wert einmal durch, und was nicht trägt, steht gesperrt da — sichtbar, mit dem Grund als
  * Tooltip beziehungsweise als Hinweiszeile bei den Kacheln. Ausgeblendet wird nichts: dass es den
  * Wert gibt und warum er gerade nicht geht, ist die eigentliche Auskunft.
  *
@@ -973,6 +973,28 @@ class ErrorBoundary extends Component<{ children: ReactNode }, BoundaryState> {
   }
 }
 
+/* --- Ein unlesbarer Link ------------------------------------------------------------------ */
+
+/** Was der Hinweis zu einem unlesbaren `?spec=` braucht: die Einzelheiten zum Aufklappen. */
+interface LinkError {
+  detail: string;
+}
+
+/**
+ * Seit LFH-578 liest der Baukasten Links streng über `decodeSpecParam` aus `core`: ein
+ * unbekanntes Feld, ein Wert außerhalb der Wertelisten oder ein falscher Typ wirft einen
+ * `SpecParseError`, statt still durchzurutschen. Erkannt wird er an der Klasse; Pfad und Meldung
+ * (`$.spec.organisation: unbekanntes Feld …`) wandern in die aufklappbaren Einzelheiten und nicht
+ * in den Fließtext — sie sprechen Feldnamen, die auf dieser Seite niemand nachschlagen kann.
+ * Alles andere ist kein Befund über den Link, sondern ein Fehler; auch er bleibt sichtbar.
+ */
+function linkErrorOf(error: unknown): LinkError {
+  if (error instanceof SpecParseError) return { detail: `${error.path}: ${error.reason}` };
+  return {
+    detail: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
+  };
+}
+
 /* --- Die Insel ---------------------------------------------------------------------------- */
 
 /**
@@ -983,7 +1005,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, BoundaryState> {
 function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
   const [spec, setSpec] = useState<SymbolSpec>(DEFAULT_SPEC);
   const [loadedId, setLoadedId] = useState<string>('');
-  const [urlError, setUrlError] = useState<string | null>(null);
+  const [urlError, setUrlError] = useState<LinkError | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [catalogQuery, setCatalogQuery] = useState('');
   const lastWorkingSpec = useRef<SymbolSpec>(DEFAULT_SPEC);
@@ -997,7 +1019,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
     try {
       setSpec(decodeSpec(param));
     } catch (error) {
-      setUrlError(error instanceof Error ? error.message : String(error));
+      setUrlError(linkErrorOf(error));
     }
   }, []);
 
@@ -1050,7 +1072,8 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
    *
    * Die Vorgabe war, erst beim Öffnen eines Auswahlfeldes zu proben. Die Messung nimmt dem
    * Sparen den Anlass: alle elf Felder mit zusammen 247 Kandidaten brauchen 9,7 ms kalt und
-   * 3,4 ms warm — das Zwanzigfache unter der Schwelle, ab der gespart werden sollte. Dafür
+   * 3,4 ms warm (über `core` gerechnet seit LFH-578: 248 Kandidaten in rund 2 ms, gemessen am
+   * 29.09.2026) — das Zwanzigfache unter der Schwelle, ab der gespart werden sollte. Dafür
    * verschwindet ein Fehler, den das Sparen einbaute: ein Auswahlfeld öffnet sich beim Klick,
    * bevor React die Sperren nachgezogen hat, und zeigte beim ersten Öffnen die alte Liste.
    *
@@ -1167,8 +1190,16 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
       {urlError === null ? null : (
         <div className="ez-note" role="alert">
           <p className="ez-note__title">Der Link trug keine lesbare Zusammenstellung</p>
-          <p>{urlError}</p>
-          <p>Der Baukasten steht deshalb auf seiner Ausgangsauswahl.</p>
+          <p>
+            Er ist unvollständig, beim Kopieren beschädigt worden oder enthält eine Angabe, die
+            dieser Baukasten nicht kennt. Der Baukasten steht deshalb auf seiner Ausgangsauswahl.
+          </p>
+          <details className="ez-builder__details">
+            <summary>Technische Einzelheiten</summary>
+            <pre className="ez-builder__pre">
+              <code>{urlError.detail}</code>
+            </pre>
+          </details>
         </div>
       )}
 
@@ -1518,9 +1549,10 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
           </p>
           <p>
             Gültig oder nicht weiß im Projekt nur <code>compose()</code>, nachträglich. Die
-            gesperrten Werte entstehen deshalb durch Probieren: <code>allowedValues()</code>{' '}
-            komponiert jeden Kandidaten einmal — alle elf Felder mit zusammen 247 Kandidaten
-            brauchen dafür 9,7 ms kalt und 3,4 ms warm. Weil jeder Tastenanschlag im
+            gesperrten Werte entstehen deshalb durch Probieren: <code>vocabulary()</code> aus{' '}
+            <code>@einsatzzeichen/core</code> zeichnet jeden Kandidaten einmal über{' '}
+            <code>drawSymbol()</code> — alle elf Felder mit zusammen 248 Kandidaten brauchen
+            dafür rund 2 ms. Weil jeder Tastenanschlag im
             Beschriftungsfeld die Spec ändert und die Probe die Beschriftung wirklich liest, läuft
             sie nachrangig (<code>useDeferredValue</code>): wer weitertippt, bekommt die Vorschau
             und die Regeln sofort, die Sperren einen Wimpernschlag später. Beim Laden eines

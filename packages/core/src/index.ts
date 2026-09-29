@@ -128,3 +128,21 @@ export {
   parseSpec,
   serializeSpec,
 } from './spec-codec.js';
+// LFH-578: Vokabular je Stand der Spec — der Wertevorrat je Feld (`SPEC_FIELD_VALUES`), welche
+// Werte zur übrigen Spec passen (`vocabulary`, probiert über `drawSymbol`) und die erklärbare
+// Ablehnung einer ganzen Spec als Ergebnis statt Wurf (`checkSpec`).
+export {
+  LIST_SPEC_FIELDS,
+  SPEC_FIELD_VALUES,
+  VOCABULARY_FIELDS,
+  checkSpec,
+  specFieldValues,
+  vocabulary,
+  type SpecCheck,
+  type SpecDraft,
+  type SpecFieldDomain,
+  type SpecFieldValue,
+  type VocabularyField,
+  type VocabularyOption,
+  type VocabularyOptions,
+} from './vocabulary.js';

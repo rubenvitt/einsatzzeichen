@@ -1,5 +1,6 @@
+import { checkSpec } from '@einsatzzeichen/core';
 import type { Drawing, SymbolSpec } from '@einsatzzeichen/schema';
-import { allowedValues, evaluateSpec, type AllowedValue } from './builder-state.js';
+import { allowedValues, type AllowedValue } from './builder-state.js';
 import type { BuilderVocabulary } from './snapshot.js';
 
 /**
@@ -51,16 +52,18 @@ export function labelFor(
 
 /**
  * Miniaturen der Grundzeichenarten für die Kachel-Auswahl: jede Kachel zeigt die nackte Grundform
- * `{ kind }`. Manche Arten (`circle-12`, `reduced-house`) komponieren ohne weitere Zutat nicht —
- * dafür steht `null`, und die Insel zeichnet einen Platzhalterrahmen statt einer erfundenen
- * Zeichnung. Der try/catch ist hier richtig: eine fehlende Miniatur ist eine Darstellungslücke der
- * Kachel, kein Fehler der aktuellen Zusammenstellung.
+ * `{ kind }`, gezeichnet über `checkSpec()` aus `core`. Manche Arten (`circle-12`,
+ * `reduced-house`) komponieren ohne weitere Zutat nicht — dafür steht `null`, und die Insel
+ * zeichnet einen Platzhalterrahmen statt einer erfundenen Zeichnung. Dieselbe Auskunft gibt
+ * `vocabulary({}, 'kind')` in `core` als gesperrten Wert. Der try/catch ist hier richtig: eine
+ * fehlende Miniatur ist eine Darstellungslücke der Kachel, kein Fehler der aktuellen
+ * Zusammenstellung.
  */
 export function kindPreviews(vocabulary: BuilderVocabulary): Map<string, Drawing | null> {
   return new Map(
     optionsFor(vocabulary, 'kind').map((option) => {
       try {
-        const result = evaluateSpec({ kind: option.id } as SymbolSpec);
+        const result = checkSpec({ kind: option.id } as SymbolSpec);
         return [option.id, result.ok ? result.drawing : null];
       } catch {
         return [option.id, null];
@@ -71,9 +74,12 @@ export function kindPreviews(vocabulary: BuilderVocabulary): Map<string, Drawing
 
 /**
  * Was gerade zusammenpasst, für jedes genannte Feld auf einmal — Feldname → (Kennung → Befund).
+ * Gerechnet wird über `allowedValues()` und damit in `core` (`vocabulary()`, LFH-578).
  *
  * Alle Felder auf einmal statt erst beim Öffnen eines Auswahlfeldes: alle elf Felder mit zusammen
- * 247 Kandidaten brauchen 9,7 ms kalt und 3,4 ms warm. Das Sparen baute dafür einen Fehler ein —
+ * 247 Kandidaten brauchen 9,7 ms kalt und 3,4 ms warm (29.08.2026); über `core` gerechnet und mit
+ * dem vollen Vorrat von 316 Kandidaten 7,8 ms kalt und rund 4 ms warm (29.09.2026). Das Sparen
+ * baute dafür einen Fehler ein —
  * ein Auswahlfeld öffnet sich beim Klick, bevor React die Sperren nachgezogen hat, und zeigte beim
  * ersten Öffnen die alte Liste.
  */
