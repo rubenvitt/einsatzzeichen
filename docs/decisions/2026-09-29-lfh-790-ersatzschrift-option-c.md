@@ -1,12 +1,14 @@
 # LFH-790: Ersatzschrift näher an der Referenz (Option C) — Entscheidungsvorlage
 
 > Stand: 29. September 2026
-> Status: **Offen. Die Entscheidung liegt beim Projektinhaber.**
+> Status: **Entschieden (Ruben, 29.09.2026): C1, IBM Plex Sans auf Weg R, Name „Einsatzzeichen
+> Sans".** Umbau nach dem erneuten Fachreview (LFH-583). Entscheidung und Prüfmessung in Abschnitt 10.
 > Bezug: `docs/decisions/2026-09-29-lfh-585-ersatzschrift-und-kursiv.md` (Option C, §7 und §8),
 > `docs/reviews/2026-09-29-lfh-585-schriftmessung.md` (Messung der Kandidaten); Parent LFH-582
-> Diese Notiz ändert keinen Code und keine Schriftdatei. Neu geladen wurde nichts. Die Messwerte
-> stammen aus der Schriftmessung, eine Abschätzung (Abschnitt 3.2) aus der dort schon geladenen
-> Plex-Datei.
+> Diese Notiz ändert keinen Code und keine Schriftdatei. Abschnitte 1–9 sind die Vorlage, wie sie
+> zur Entscheidung vorlag. Ihre Messwerte stammen aus der Schriftmessung, eine Abschätzung
+> (Abschnitt 3.2) aus der dort schon geladenen Plex-Datei. Die nach der Freigabe geladenen Dateien
+> und ihre Messung stehen in Abschnitt 10.
 
 ## Kurzfassung
 
@@ -367,3 +369,157 @@ Er folgt den Punkten aus Abschnitt 5:
 3. **Weg:** R (umbenennen, geeicht) oder U (Originaldateien).
 4. **Name**, falls Weg R: „Einsatzzeichen Sans" oder ein anderer.
 5. **Downloads** aus Abschnitt 7 freigeben.
+
+## 10. Entscheidung und Prüfmessung (29. September 2026)
+
+**Entscheidung.** Der Projektinhaber hat am 29. September 2026 entschieden:
+
+- **Zeitpunkt C1:** Die Familie steht jetzt fest. Umbauplan und Umsetzung folgen nach dem erneuten
+  Fachreview (LFH-583).
+- **Familie und Weg:** IBM Plex Sans auf Weg R, also abgeleitet (Teilmenge, Stufe, Breite) und
+  umbenannt.
+- **Name:** „Einsatzzeichen Sans".
+- **Downloads:** alle drei aus Abschnitt 7 freigegeben.
+
+### 10.1 Darf die abgeleitete Schrift „Einsatzzeichen Sans" heißen?
+
+Ja (Selbsteinschätzung, keine Rechtsauskunft). Die OFL erlaubt, eine veränderte Fassung unter
+einem anderen Namen weiterzugeben. Bei reserviertem Namen verlangt sie das sogar. Dabei gilt:
+
+- **Der Name darf „Plex" nicht enthalten** (Bedingung 3). „Einsatzzeichen Sans" enthält weder
+  „Plex" noch „IBM".
+- **Die Lizenz bleibt die OFL** (Bedingung 5). Die Schrift darf nicht unter eine andere Lizenz
+  gestellt werden. Der Copyright-Vermerk von IBM bleibt in der Datei und im Lizenztext. Ein
+  eigener Vermerk für die Änderungen darf dazukommen.
+- **Die Schrift wird nicht allein verkauft** (Bedingung 1). Das npm-Paket ist frei.
+- **Keine Werbung mit IBM** (Bedingung 4). Die Herkunft „abgeleitet aus IBM Plex Sans" darf im
+  README und in der Quellenführung stehen, als Nennung, nicht als Werbung.
+- Namenseintrag 7 (Markenhinweis „IBM Plex™ is a trademark of IBM Corp.") ist nach der Ableitung
+  der einzige Eintrag, der „Plex" noch nennt. Er ist ein Hinweis, kein Schriftname. Ob er bleibt
+  oder entfällt, legt der Umbauplan fest. Vorschlag: entfernen, weil die Schrift den Namen nicht
+  mehr führt.
+
+### 10.2 Geladene Dateien
+
+Alle aus google/fonts, Zweig `main`, Kopf `23e54b51ddff` (24. September 2026), abgerufen am
+29. September 2026. Die Größen stimmen mit Abschnitt 7 überein.
+
+| Datei | Byte | SHA-256 |
+|---|---|---|
+| `ofl/ibmplexsans/IBMPlexSans-Italic[wdth,wght].ttf` | 599.624 | `0b94c5e981993764db32bf9c610ecc60cbd34ad77ec2f10ba03c64ab75124d8e` |
+| `ofl/ibmplexsanscondensed/IBMPlexSansCondensed-Medium.ttf` | 111.176 | `426350c298277f7f9d1a93956572799ca3d16e2d43e7f60eec8382bcd795ec30` |
+| `ofl/ibmplexsanscondensed/IBMPlexSansCondensed-MediumItalic.ttf` | 115.728 | `ab8931c7274aff5b0315b798ac68149f92a667d9647cb9d6263f5f44403e5452` |
+| `ofl/ibmplexsanscondensed/OFL.txt` | 4.456 | `7e6b2818edbd8f6a01ae80641cc8f16a51080d08fb4e532be3a0b6f74adb07da` |
+| `ofl/firasans/FiraSans-Regular.ttf` | 456.996 | `c29556a2719bf613ef3d5e070e40d903a8965d9c081beca1375dc1e6e0f93c23` |
+
+Die aufrechte Datei ist `IBMPlexSans[wdth,wght].ttf` aus der Schriftmessung (SHA-256
+`3b031aa4…e2fe3`). `OFL.txt` von Plex Condensed ist byte-gleich mit dem von Plex Sans.
+
+### 10.3 Probeableitung „Einsatzzeichen Sans"
+
+Abgeleitet im Scratchpad, nicht im Repository. Die Schritte:
+
+- Teilmenge mit denselben `pyftsubset`-Argumenten wie `scripts/font/subset-arimo.sh`;
+- fontTools-Instancer bei **wdth 86** und wght 400, 500, 700 (aufrecht) bzw. 500 (kursiv);
+- neue Namen in den Einträgen 1–4, 6, 16 und 17, wie bei Arimo:
+  - Stufe 500: Familie „Einsatzzeichen Sans Medium" (1), typografische Familie
+    „Einsatzzeichen Sans" (16), Stil „Medium" bzw. „Medium Italic" (17);
+  - PostScript-Namen `EinsatzzeichenSans-Regular`, `-Medium`, `-Bold`, `-MediumItalic`;
+- `usWeightClass`, `fsSelection` und `macStyle` passend gesetzt, STAT entfernt.
+
+Die Breite: Geeicht auf den Median 1,000 liegt sie bei wght 500 bei wdth 86,14. Gewählt ist der
+runde Wert 86. Er ergibt ebenfalls 1,000.
+
+| Datei | Byte |
+|---|---|
+| `EinsatzzeichenSans-Regular.ttf` | 89.108 |
+| `EinsatzzeichenSans-Medium.ttf` | 89.220 |
+| `EinsatzzeichenSans-Bold.ttf` | 89.068 |
+| `EinsatzzeichenSans-MediumItalic.ttf` | 94.256 |
+
+Die vier Dateien sind rund 60 % größer als die Arimo-Ableitungen (53–58 KB). Die Teilmenge von
+Plex hat bei denselben Zeichenbereichen mehr Glyphen. Die Metrikdateien in core bemessen sich
+nach den Zeichen, nicht nach der Dateigröße. Ob sie größer werden, zeigt der Umbau am Gate
+`core-package.mjs`.
+
+### 10.4 Messung
+
+Methode wie in der Schriftmessung, Abschnitt 1 und 3.2.
+
+| Schrift | Strich (Ref. 0,156) | Laufweite (p10–p90) | \|1−r\| | x-Höhe (Ref. 0,700) | I / l (Ref. 2,58 / 1,60) | g | verkl. Läufe |
+|---|---|---|---|---|---|---|---|
+| Arimo 500 (heute) | 0,160 | 0,893 (0,825–0,944) | 10,7 % | 0,768 | 1,00 / 1,00 | einstöckig | 0 von 17 |
+| **Einsatzzeichen Sans 500** | **0,156** | **1,000** (0,943–1,052) | **2,9 %** | 0,745 | 2,65 / 1,40 | zweistöckig | **14 von 17** |
+| Einsatzzeichen Sans 400 | 0,117 | 1,025 | 3,3 % | 0,739 | 3,26 / 1,71 | zweistöckig | 14 von 17 |
+| Einsatzzeichen Sans 700 | 0,211 | 0,964 | 3,8 % | 0,752 | 2,16 / 1,15 | zweistöckig | 12 von 17 |
+| Plex Sans Condensed Medium (Original, Weg U) | 0,152 | 1,046 (0,988–1,102) | 4,8 % | 0,745 | 2,60 / 1,40 | zweistöckig | 15 von 17 |
+| Fira Sans Regular | 0,138 | 1,018 | 4,1 % | 0,765 | 1,00 / 1,66 | zweistöckig (untere Schleife offen) | 14 von 17 |
+
+- **Einsatzzeichen Sans 500 trifft die Strichstärke genau und die Laufweite im Median genau.** Alle
+  drei Formmerkmale stimmen.
+- **Die Abschätzung für Plex Condensed (Abschnitt 3.2) bestätigt sich.** Die Originaldatei misst
+  1,046 statt geschätzt 1,047, die Formen stimmen auch dort.
+- **Fira Sans Regular scheidet aus.** Sie ist 12 % zu dünn, Medium 22 % zu dick, und das I hat
+  keine Serifen.
+- **400 und 700** werden vom Katalog nicht gesetzt (Abschnitt 5). Für fremde IR und Kapitel 2
+  reichen sie. Die Referenz misst in Kapitel 2 0,126. Einsatzzeichen Sans 400 liegt mit 0,117 um
+  7 % darunter, Arimo 400 mit 0,136 um 8 % darüber.
+
+**Kursiv, „Bezeichnung" in D.1.1** (Referenz: Versalhöhe 2,920 mm, Tinte 21,34 mm breit, Neigung
+9,0°, g einstöckig):
+
+| Schnitt | Neigung | Laufweite Ref. ÷ Schrift | Schriftgrad für 2,920 mm | Tinte (Box 2,673 … 27,823 mm) | g |
+|---|---|---|---|---|---|
+| Arimo 500 kursiv (heute) | 11,0° | 0,854 | 4,244 mm | 2,785 … 27,783 mm | einstöckig |
+| **Einsatzzeichen Sans 500 kursiv** | 11,3° | 0,943 | 4,183 mm | 2,790 … 25,432 mm | zweistöckig |
+| Plex Condensed Medium Italic (Original) | 11,4° | 0,981 | 4,183 mm | 2,778 … 24,537 mm | zweistöckig |
+
+- **Der Lauf wird 2,35 mm kürzer** und passt mit Abstand in die Box. Die Laufweite weicht noch
+  um 6 % ab statt um 15 %.
+- **Die Neigung bleibt 2,3° zu stark**, wie bei Arimo.
+- **Das g ist kursiv zweistöckig.** Die Referenz setzt es kursiv einstöckig. Arimo traf das
+  zufällig, Plex trifft es nicht. Das betrifft einen Buchstaben in einem Lauf.
+
+### 10.5 Wie resvg wählt
+
+Geprüft mit `@resvg/resvg-js` 2.6.2 aus dem Repository, `loadSystemFonts: false`,
+`defaultFontFamily: 'Einsatzzeichen Sans'`, Prüfsumme über die Pixel wie in der Schriftmessung,
+Abschnitt 2.5.
+
+| Dateien | ohne Angabe | 500 | 700 | italic | italic + 500 | italic + 700 |
+|---|---|---|---|---|---|---|
+| Regular + Bold | Regular | Regular | Bold | Regular | Regular | Bold |
+| + Medium | Regular | **Medium** | Bold | Regular | **Medium** | Bold |
+| + Medium + MediumItalic | Regular | Medium | Bold | **MediumItalic** | **MediumItalic** | **MediumItalic** |
+
+- **Das Verhalten ist dasselbe wie bei Arimo.** 400 und 700 bleiben bit-gleich, wenn Medium und
+  MediumItalic hinzukommen. Jede kursive Anfrage bekommt die eine Kursivdatei. Die Regel „kursiv
+  nur mit 500" (LFH-585 §11.2) gilt unverändert.
+- Die Bildunterschriften der Kontaktbögen (`sans-serif`, fett) bekommen über `defaultFontFamily`
+  Einsatzzeichen Sans Bold. Arimo muss dafür nicht im Paket bleiben.
+
+### 10.6 Formvergleich
+
+Ein Vergleichsbogen zeigt Referenz, Arimo 500 und Einsatzzeichen Sans 500. Verwendet sind die
+Läufe „MLW IV Lbw" (E.2.13), „BuPol" (D.4.4) und „Evakuierung" (D.1.3), dazu „Bezeichnung" kursiv.
+Der Bogen liegt nicht im Repository. Er wurde dem Projektinhaber mit dieser Notiz übergeben.
+
+Augenschein:
+
+- Aufrecht liegt Einsatzzeichen Sans in Laufweite, I-Serifen, l-Fuß und g deutlich näher an der
+  Referenz als Arimo.
+- Einzelne Rundungen wirken straffer als in der Referenz.
+
+### 10.7 Nächste Schritte
+
+1. LFH-583 abwarten: das erneute Fachreview des Stands nach B.
+2. Danach den Umbauplan schreiben (`docs/superpowers/plans/`), nach Abschnitt 8, mit diesen
+   Festlegungen:
+   - Quelle `IBMPlexSans[wdth,wght].ttf` und `IBMPlexSans-Italic[wdth,wght].ttf`, gepinnt mit den
+     Prüfsummen oben;
+   - wdth 86, Stufen 400, 500, 700 und 500 kursiv;
+   - Name „Einsatzzeichen Sans";
+   - Namenseintrag 7 entfernen (Vorschlag aus 10.1).
+3. Das Messskript gehört dann nach `scripts/font/`, wie in LFH-585 §9 vorgesehen. Die Probeskripte
+   dieser Notiz liegen im Scratchpad der Sitzung.
+
