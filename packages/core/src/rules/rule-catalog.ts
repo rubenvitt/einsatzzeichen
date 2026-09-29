@@ -913,7 +913,7 @@ export const RULE_DIMENSION_GAPS: readonly RuleDimensionGap[] = Object.freeze([
     dimension: 'capabilities',
     coverage: 'none',
     chapter: 'Kapitel 4',
-    note: 'Keine Regel in Kraft: der Motor nimmt beliebig viele Boxfähigkeiten an und legt sie deckungsgleich in dieselbe Box. Kein Original belegt das. Die Anordnung ist als offene Frage in `CAPABILITY_COMBINATION_RULES` geführt, zwei Regeln sind vorgemerkt (`PLANNED_CAPABILITY_RULES`, LFH-567).',
+    note: 'Keine Regel in Kraft: der Motor nimmt beliebig viele Boxfähigkeiten an und legt sie deckungsgleich in dieselbe Box. Kein Original belegt das. Die Anordnung ist als offene Frage in `CAPABILITY_COMBINATION_RULES` geführt, zwei Regeln sind vorgemerkt (`PLANNED_CAPABILITY_RULES`, LFH-567). Die Boxfassung setzt die Einzeldarstellung unskaliert ein; 65 der 92 ragen dabei über den Formationskörper. Wie die Referenz ein Piktogramm in einen Körper setzt, ist gemessen (`CAPABILITY_INSET_RULE`, LFH-587), als Prüfregel aber nicht in Kraft.',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'unit-grouping',
