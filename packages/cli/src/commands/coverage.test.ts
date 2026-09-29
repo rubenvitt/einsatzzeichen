@@ -148,7 +148,7 @@ describe('coverage CLI', () => {
     );
     expect(lines.some((line) => line.startsWith('  Nicht zugeordnet:'))).toBe(false);
     expect(lines).toContain(
-      'Regelabdeckung:      13/17 Achsen vollständig belegt; 76 Validierungsregeln ' +
+      'Regelabdeckung:      13/17 Achsen vollständig belegt; 77 Validierungsregeln ' +
         '(Testfall je Regel durch core-Test erzwungen)',
     );
     expect(lines).toContain(

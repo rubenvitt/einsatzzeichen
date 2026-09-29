@@ -116,6 +116,11 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
     { kind: 'vehicle-air', bodyVariant: 'raised-hull', labels: { bottomRight: '7', bottomRightMetrics: { capHeightMm: 2.750245, baselineFromBodyTopMm: 3, anchorFromBodyLeftMm: 21.99, boxLeftFromBodyLeftMm: 19.24, boxWidthMm: 5.5 } } },
     `bottomRight-Grundlinie außerhalb der Hülle (${VT}).`,
   ),
+  evidence(
+    'capabilities-pictogram-overflows-body',
+    { kind: 'formation', organization: 'feuerwehr', strength: 'gruppe', capabilities: ['medical-service'] },
+    `Das Sanitätskreuz 4.6.1 ragt unskaliert über den Formationskörper (${VT}, LFH-587).`,
+  ),
   evidence('center-anchor-override-requires-measured-trailer', { kind: 'trailer', labels: { center: 'Tauchen', centerAnchorFromBodyLeftMm: 8.23 } }, `Linksanker am nicht vermessenen Anhänger (${VT}).`),
   evidence('center-baseline-not-measured', { kind: 'trailer', labels: { center: 'X', centerBaselineFromBodyBottomMm: 10, centerCapHeightMm: 2.191447 } }, `Nicht vermessene Anhänger-Grundlinie (${VT}).`),
   evidence('center-baseline-override-requires-measured-body', { kind: 'vehicle-air', labels: { center: 'X', centerBaselineFromBodyBottomMm: 6.5 } }, `Grundlinienüberschreibung am Luftfahrzeug (${VT}).`),

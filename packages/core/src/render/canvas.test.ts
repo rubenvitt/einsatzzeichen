@@ -1042,3 +1042,155 @@ describe('renderCanvas — Nullstriche und ungültige aktive Strichstärken', ()
     expect(renderSvg(drawing)).toContain(`stroke-width="${formatUnits(mmToUnits(expected))}"`);
   });
 });
+
+describe('renderCanvas — Mindeststrichbreite (LFH-584), Parität zu SVG', () => {
+  // Beide Räume in einer Zeichnung: ein gewöhnliches Blatt (Strichstärke über mmToUnits) und ein
+  // Pfad unter seiner eigenen scale(...)-Umrechnung (Rohmaß mm), dazu eine Gruppe mit Drehung und
+  // Verschiebung, die den Maßstab nicht ändern darf, und ein Strich, der schon über der Grenze liegt.
+  const mixed: Drawing = {
+    viewBox: DEFAULT_VIEWBOX_MM,
+    children: [
+      {
+        type: 'rect',
+        role: 'body',
+        x: 1,
+        y: 6,
+        width: 30,
+        height: 20,
+        style: { fill: 'weiss', stroke: 'schwarz', strokeWidth: 0.5 },
+      },
+      {
+        type: 'group',
+        role: 'pictogram',
+        transform: { translate: { dxMm: 1, dyMm: 2 }, rotate: { angle: 30, cx: 16, cy: 16 } },
+        style: { stroke: 'schwarz', strokeWidth: 0.5 },
+        children: [
+          { type: 'path', d: 'M 4 16 L 28 16' },
+          { type: 'polyline', points: [[4, 10], [16, 20], [28, 10]] },
+          { type: 'circle', cx: 16, cy: 16, r: 5, style: { strokeWidth: 2.5 } },
+        ],
+      },
+    ],
+  };
+
+  /** Pixelbreiten der SVG-Striche in Dokumentreihenfolge. */
+  function svgStrokePx(svg: string, size: number): number[] {
+    const pxPerUnit = size / mmToUnits(DEFAULT_VIEWBOX_MM.width);
+    return [...svg.matchAll(/<(\w+)[^>]*?stroke-width="([^"]+)"[^>]*?\/>/g)].map((match) => {
+      const width = Number(match[2]);
+      // Pfade tragen Rohmaß mm unter scale(mmToUnits(1)); der Faktor steht im Tag.
+      const scale = /scale\(([^)]+)\)/.exec(match[0]);
+      const factor = match[1] === 'path' && scale !== null ? Number(scale[1]) : 1;
+      return width * factor * pxPerUnit;
+    });
+  }
+
+  /** Pixelbreiten der Canvas-Striche: lineWidth × kumulierte Skalierung zum Zeitpunkt von stroke(). */
+  function canvasStrokePx(drawing: Drawing, size: number, minStrokeWidthPx?: number): number[] {
+    const { ctx, calls } = recordingContext();
+    renderCanvas(drawing, ctx, { size, minStrokeWidthPx });
+    const scales: number[] = [1];
+    const saved: number[] = [];
+    let lineWidth = 1;
+    const widths: number[] = [];
+    for (const [name, ...args] of calls) {
+      if (name === 'save') saved.push(scales.at(-1) ?? 1);
+      else if (name === 'restore') scales.push(saved.pop() ?? 1);
+      else if (name === 'scale') scales.push((scales.at(-1) ?? 1) * Number(args[0]));
+      else if (name === 'set:lineWidth') lineWidth = Number(args[0]);
+      else if (name === 'stroke') widths.push(lineWidth * (scales.at(-1) ?? 1));
+    }
+    return widths;
+  }
+
+  it.each([16, 24, 32])('hebt bei %i px alle Striche in SVG und Canvas auf dieselbe Pixelbreite', (size) => {
+    const svgPx = svgStrokePx(renderSvg(mixed, { size, minStrokeWidthPx: 1 }), size);
+    const canvasPx = canvasStrokePx(mixed, size, 1);
+    expect(canvasPx).toHaveLength(4);
+    expect(svgPx).toHaveLength(4);
+    canvasPx.forEach((px, index) => {
+      // u() rundet auf drei Nachkommastellen, der Pfadfaktor auf vier.
+      expect(px).toBeCloseTo(svgPx[index] ?? Number.NaN, 2);
+    });
+    const floor = 1;
+    const reference = (0.5 * size) / DEFAULT_VIEWBOX_MM.width;
+    expect(canvasPx[0]).toBeCloseTo(Math.max(reference, floor), 2);
+    expect(canvasPx[1]).toBeCloseTo(Math.max(reference, floor), 2);
+    expect(canvasPx[2]).toBeCloseTo(Math.max(reference, floor), 2);
+    // 2,5 mm liegen bei jeder dieser Größen über 1 px und bleiben unverändert.
+    expect(canvasPx[3]).toBeCloseTo((2.5 * size) / DEFAULT_VIEWBOX_MM.width, 2);
+  });
+
+  it('ändert ohne Option weder Canvas-Aufrufe noch SVG-Ausgabe', () => {
+    const plain = recordingContext();
+    renderCanvas(mixed, plain.ctx, { size: 16 });
+    const explicit = recordingContext();
+    renderCanvas(mixed, explicit.ctx, { size: 16, minStrokeWidthPx: undefined });
+    expect(explicit.calls).toEqual(plain.calls);
+    expect(renderSvg(mixed, { size: 16, minStrokeWidthPx: undefined })).toBe(
+      renderSvg(mixed, { size: 16 }),
+    );
+  });
+
+  it('lässt Striche unverändert, die bei der Rastergröße schon breiter als die Grenze sind', () => {
+    const plain = recordingContext();
+    renderCanvas(mixed, plain.ctx, { size: 128 });
+    const floored = recordingContext();
+    renderCanvas(mixed, floored.ctx, { size: 128, minStrokeWidthPx: 1 });
+    expect(floored.calls).toEqual(plain.calls);
+    expect(renderSvg(mixed, { size: 128, minStrokeWidthPx: 1 })).toBe(renderSvg(mixed, { size: 128 }));
+  });
+
+  it('lehnt die Option ohne Rastergröße in beiden Renderern vor jeder Ausgabe ab', () => {
+    const { ctx, calls } = recordingContext();
+    expect(() => renderCanvas(mixed, ctx, { minStrokeWidthPx: 1 })).toThrow(RangeError);
+    expect(calls).toEqual([]);
+    expect(() => renderSvg(mixed, { minStrokeWidthPx: 1 })).toThrow(RangeError);
+  });
+
+  it('macht einen Nullstrich auch mit Untergrenze nicht sichtbar', () => {
+    const zero: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        { type: 'line', x1: 2, y1: 16, x2: 30, y2: 16, style: { stroke: 'schwarz', strokeWidth: 0 } },
+        { type: 'path', d: 'M 2 20 L 30 20', style: { stroke: 'schwarz', strokeWidth: 0 } },
+      ],
+    };
+    expect(canvasStrokePx(zero, 16, 1)).toEqual([]);
+    expect(renderSvg(zero, { size: 16, minStrokeWidthPx: 1 })).toBe(renderSvg(zero, { size: 16 }));
+  });
+
+  it('streckt Strichmuster nicht mit, nur die Breite', () => {
+    const theme: RenderTheme = {
+      id: 'dash-probe',
+      palette: PALETTE,
+      surface: '#ffffff',
+      bodyStrokeDashes: { weiss: [2, 1] },
+    };
+    const dashed: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'rect',
+          role: 'body',
+          x: 1,
+          y: 6,
+          width: 30,
+          height: 20,
+          style: { stroke: 'schwarz', strokeWidth: 0.5, bodyStrokeDashToken: 'weiss' },
+        },
+      ],
+    };
+    const plain = renderSvg(dashed, { size: 16, theme });
+    const floored = renderSvg(dashed, { size: 16, theme, minStrokeWidthPx: 1 });
+    const dash = (svg: string) => /stroke-dasharray="([^"]+)"/.exec(svg)?.[1];
+    expect(dash(floored)).toBe(dash(plain));
+    expect(floored).toContain(`stroke-width="${formatUnits(mmToUnits(2))}"`);
+
+    // Canvas: dasselbe Muster, dieselbe angehobene Breite.
+    const { ctx, calls } = recordingContext();
+    renderCanvas(dashed, ctx, { size: 16, theme, minStrokeWidthPx: 1 });
+    expect(calls).toContainEqual(['setLineDash', [mmToUnits(2), mmToUnits(1)]]);
+    expect(calls).toContainEqual(['set:lineWidth', mmToUnits(2)]);
+  });
+});

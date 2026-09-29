@@ -142,9 +142,13 @@ function singleDepictionBodyFor(definition: CatalogPictogramDefinition): Primiti
  * Layoutfällen"). Genau diese stehen hier ausdrücklich, damit der Kompositionstest nicht leer
  * durchläuft.
  *
- * Belegt ist die in-body-Tauglichkeit damit nur für `fire-fighting` und `service-water`. Für die
- * übrigen 90 Kapitel-4-Piktogramme ist sie **nicht** belegt, trotz ihrer Placement-Deklaration
- * `in-body`. Ein künftiges Rezept mit `spec.capabilities` fällt ohne Zutun in den Test (siehe
+ * Belegt ist die in-body-Tauglichkeit hier damit nur für `fire-fighting` und `service-water`. Für
+ * alle 92 Kapitel-4-Piktogramme und die acht Körperformen mit Flächenmodell steht seit LFH-587
+ * fest, welche unskaliert passen (`CAPABILITY_UNSCALED_FIT`, gegatet in
+ * `capability-inset-fixtures.test.ts`): in `formation` 27, `container` 16, `building` 14,
+ * `post` 7, `person` 3, `point` 2, in `measure` und `hazard` keines. Dass die Referenz auch
+ * passende Piktogramme nicht unverändert einsetzt, hält `CAPABILITY_INSET_RULE` fest. Ein
+ * künftiges Rezept mit `spec.capabilities` fällt ohne Zutun in den Test (siehe
  * `COMPOSITION_CASES`) und wird rot, wenn sein Piktogramm übersteht.
  */
 const CAPABILITY_TEST_COMPOSITIONS: ReadonlyArray<readonly [string, SymbolSpec]> = [

@@ -1519,3 +1519,34 @@ describe('validateSpec', () => {
     }
   });
 });
+
+describe('capabilities-pictogram-overflows-body (LFH-587, Übergangsregel)', () => {
+  const rulesOf = (spec: SymbolSpec): string[] => validateSpec(spec).map((issue) => issue.rule);
+
+  it('lässt eine Einzeldarstellung zu, die unskaliert im Körper bleibt', () => {
+    expect(rulesOf({ kind: 'formation', organization: 'feuerwehr', strength: 'staffel', capabilities: ['fire-fighting'] }))
+      .not.toContain('capabilities-pictogram-overflows-body');
+    expect(rulesOf({ kind: 'container', capabilities: ['catering'] }))
+      .not.toContain('capabilities-pictogram-overflows-body');
+  });
+
+  it('lehnt eine Einzeldarstellung ab, die über den Körper ragt, und nennt sie', () => {
+    const issues = validateSpec({ kind: 'formation', capabilities: ['medical-service', 'service-water'] })
+      .filter((issue) => issue.rule === 'capabilities-pictogram-overflows-body');
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.message).toContain('"medical-service"');
+    expect(issues[0]?.message).not.toContain('"service-water"');
+  });
+
+  it('lehnt Körperformen ohne Flächenmodell und Körpervarianten ab, weil dort nichts geprüft ist', () => {
+    expect(rulesOf({ kind: 'vehicle-land', capabilities: ['foam-agent'] }))
+      .toContain('capabilities-pictogram-overflows-body');
+    expect(rulesOf({ kind: 'formation', bodyVariant: 'foot-band', capabilities: ['fire-fighting'] }))
+      .toContain('capabilities-pictogram-overflows-body');
+  });
+
+  it('meldet an einer Funktionsrolle nur deren eigene Regel', () => {
+    expect(rulesOf({ kind: 'person', organization: 'feuerwehr', strength: 'zug', functionRole: 'fire-service-platoon-commander', capabilities: ['medical-service'] }))
+      .not.toContain('capabilities-pictogram-overflows-body');
+  });
+});

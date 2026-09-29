@@ -116,7 +116,7 @@ describe('RULE_CATALOG: Vollständigkeit je Eintrag', () => {
       'top-left-lines-exactly-two',
     ]);
     expect(fromWebsite).toHaveLength(27);
-    expect(RULE_CATALOG.filter((rule) => rule.reasonSource === 'core')).toHaveLength(49);
+    expect(RULE_CATALOG.filter((rule) => rule.reasonSource === 'core')).toHaveLength(50);
   });
 
   /**
@@ -165,7 +165,7 @@ describe('RULE_CATALOG: Vollständigkeit je Eintrag', () => {
 
 describe('RULE_CATALOG gegen den Quelltext von validate.ts', () => {
   /**
-   * `validate.ts` löst 79 Mal aus, führt aber nur 76 Kennungen: drei Regeln haben zwei
+   * `validate.ts` löst 80 Mal aus, führt aber nur 77 Kennungen: drei Regeln haben zwei
    * Auslösestellen. Im Katalog bleiben sie **ein** Eintrag — sonst bräche die Dublettenprüfung —
    * und tragen die Zahl ihrer Stellen im Feld `sites`. Dieser Test zählt die Stellen im
    * Quelltext dagegen, damit eine künftige dritte Stelle nicht still dazukommt.
@@ -182,9 +182,9 @@ describe('RULE_CATALOG gegen den Quelltext von validate.ts', () => {
     );
   });
 
-  it('bleibt bei 79 Auslösestellen für 76 Kennungen', () => {
-    expect(pushedIds).toHaveLength(79);
-    expect(new Set(pushedIds).size).toBe(76);
+  it('bleibt bei 80 Auslösestellen für 77 Kennungen', () => {
+    expect(pushedIds).toHaveLength(80);
+    expect(new Set(pushedIds).size).toBe(77);
     expect(RULE_CATALOG.filter((rule) => rule.sites > 1).map((rule) => rule.id)).toEqual([
       'function-role-requires-measured-kind',
       'function-role-requires-measured-layout',
@@ -343,14 +343,15 @@ describe('Lücken je Dimension', () => {
    * Festgenagelt, damit die Aussage „Lücken je Dimension benannt" zählbar bleibt und nicht
    * unbemerkt schrumpft, wenn jemand eine Dimension aus der Union nimmt.
    */
-  it('zählt elf Lücken, davon vier ohne jede Regel', () => {
+  it('zählt elf Lücken, davon drei ohne jede Regel', () => {
     // Seit LFH-577 trägt `state` vier Regeln und ist nur noch teilweise offen. Mit der
     // freistehenden Spec-Art tragen auch Linien, Wetter und Tierzustand Regeln; die Pfeile nicht.
+    // Seit LFH-587 trägt `capabilities` eine Regel (`capabilities-pictogram-overflows-body`).
     expect(RULE_DIMENSION_GAPS).toHaveLength(11);
     expect(RULE_DIMENSION_GAPS.filter((gap) => gap.coverage === 'none').map((g) => g.dimension))
-      .toEqual(['capabilities', 'unit-grouping', 'tendency', 'movement']);
+      .toEqual(['unit-grouping', 'tendency', 'movement']);
     expect(RULE_DIMENSION_GAPS.filter((gap) => gap.coverage === 'partial').map((g) => g.dimension))
-      .toEqual(['base-symbol', 'administrative-level', 'body-marks', 'state', 'lines-and-boundaries', 'weather', 'animal']);
+      .toEqual(['base-symbol', 'administrative-level', 'body-marks', 'capabilities', 'state', 'lines-and-boundaries', 'weather', 'animal']);
   });
 
   /**
@@ -385,7 +386,7 @@ describe('Einordnung fachlich gegen technisch', () => {
       'surface-label-foot-conflict',
       'technical-fill-organization-conflict',
     ]);
-    expect(RULE_CATALOG.filter((rule) => rule.kind === 'engine')).toHaveLength(64);
+    expect(RULE_CATALOG.filter((rule) => rule.kind === 'engine')).toHaveLength(65);
   });
 });
 

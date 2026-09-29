@@ -11,6 +11,7 @@ import { escapeXml, formatUnits } from './format.js';
 import { assertValidActiveStrokeWidths, mergeStyle } from './style.js';
 import { baselineAttr, TEXT_FONT_FAMILY_ATTR } from './text-policy.js';
 import { rasterDimensionsForWidth } from './raster-dimensions.js';
+import { effectiveStrokeWidthMm, strokeWidthFloorMm } from './min-stroke-width.js';
 import { REFERENCE_THEME, type RenderTheme } from './theme.js';
 import { assertValidRenderTheme } from './theme-validation.js';
 
@@ -23,6 +24,14 @@ export interface SvgOptions {
   idPrefix?: string;
   /** Farbprofil der Ausgabe. Ohne Angabe bleibt die BABZ-Referenzpalette bytegleich erhalten. */
   theme?: RenderTheme;
+  /**
+   * Mindeststrichbreite in Pixeln der Ausgabe (LFH-584). Hebt jeden gestrichenen Strich, der bei
+   * `size` schmaler als dieser Wert würde, auf ihn an; Füllflächen, Text und Strichmuster bleiben
+   * unverändert. Standardmäßig aus: ohne Angabe ist die Ausgabe bytegleich zum Stand davor.
+   * Verlangt `size`, weil ein frei skalierendes SVG keinen festen Pixelmaßstab hat. Empfohlener
+   * Wert: `RASTER_MIN_STROKE_WIDTH_PX` (siehe min-stroke-width.ts).
+   */
+  minStrokeWidthPx?: number;
 }
 
 function u(mm: number): string {
@@ -67,6 +76,8 @@ function styleAttrs(
     role?: Primitive['role'];
     pictogramStrokeContract?: boolean;
     fillOnly?: boolean;
+    /** Untergrenze der Strichstärke in mm (siehe min-stroke-width.ts); `undefined` heißt aus. */
+    strokeFloorMm?: number;
   } = {},
 ): string {
   const parts: string[] = [
@@ -75,7 +86,10 @@ function styleAttrs(
   if (style?.stroke !== undefined && !options.fillOnly) {
     parts.push(`stroke="${color(style.stroke, theme)}"`);
     if (style.stroke !== 'none') {
-      const strokeWidthMm = style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
+      const strokeWidthMm = effectiveStrokeWidthMm(
+        style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM,
+        options.strokeFloorMm,
+      );
       const strokeWidth = options.rawStrokeWidth ? formatUnits(strokeWidthMm) : u(strokeWidthMm);
       parts.push(`stroke-width="${strokeWidth}"`);
       if (options.pictogramStrokeContract) {
@@ -183,6 +197,7 @@ function pathTransformAttr(transform: Transform | undefined): string {
 function renderPrimitive(
   primitive: Primitive,
   theme: RenderTheme,
+  strokeFloorMm: number | undefined,
   inheritedStyle?: Style,
   inheritedRole?: Primitive['role'],
 ): string {
@@ -194,6 +209,9 @@ function renderPrimitive(
       rawStrokeWidth: true,
       role,
       pictogramStrokeContract: role === 'pictogram',
+      // Rohmaß mm unter scale(mmToUnits(1)): die Untergrenze steht ebenfalls in mm und gilt damit
+      // auch hier im tatsächlichen Pixelraum (siehe min-stroke-width.ts).
+      strokeFloorMm,
     });
     const transform = pathTransformAttr(primitive.transform);
     return `<path d="${pathDataForXml(primitive.d)}"${styleStr}${transform}/>`;
@@ -202,7 +220,7 @@ function renderPrimitive(
   if (primitive.type === 'group') {
     const transform = transformAttr(primitive.transform);
     const children = primitive.children
-      .map((child) => renderPrimitive(child, theme, style, role))
+      .map((child) => renderPrimitive(child, theme, strokeFloorMm, style, role))
       .join('');
     return `<g${transform}>${children}</g>`;
   }
@@ -233,6 +251,7 @@ function renderPrimitive(
   const tail = `${styleAttrs(style, theme, {
     role,
     pictogramStrokeContract: role === 'pictogram' && primitive.type !== 'line',
+    strokeFloorMm,
   })}${transformAttr(primitive.transform)}`;
 
   switch (primitive.type) {
@@ -258,6 +277,11 @@ export function renderSvg(drawing: Drawing, options: SvgOptions = {}): string {
   assertValidRenderTheme(theme);
   assertValidActiveStrokeWidths(drawing);
   const raster = rasterDimensionsForWidth(drawing.viewBox, options.size ?? 1);
+  const strokeFloorMm = strokeWidthFloorMm(
+    drawing.viewBox,
+    options.size,
+    options.minStrokeWidthPx,
+  );
   const width = u(drawing.viewBox.width);
   const height = u(drawing.viewBox.height);
 
@@ -283,6 +307,8 @@ export function renderSvg(drawing: Drawing, options: SvgOptions = {}): string {
     attrs.push('aria-hidden="true"');
   }
 
-  const body = drawing.children.map((child) => renderPrimitive(child, theme)).join('');
+  const body = drawing.children
+    .map((child) => renderPrimitive(child, theme, strokeFloorMm))
+    .join('');
   return `<svg ${attrs.join(' ')}>${metadata.join('')}${body}</svg>`;
 }

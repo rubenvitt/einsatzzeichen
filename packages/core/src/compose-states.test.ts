@@ -119,7 +119,10 @@ describe('compose() mit Zuständen — was die Referenz nicht zeigt', () => {
       { strength: 'trupp' },
       { designation: 'A' },
       { labels: { center: 'A' } },
-      { capabilities: ['fire-fighting'] },
+      // Seit LFH-587 lehnt `validateSpec` Boxfähigkeiten ab, die an der Person nicht im Körper
+      // bleiben (`capabilities-pictogram-overflows-body`); Schaummittel bleibt, also erreicht die
+      // Spec die Komposition.
+      { capabilities: ['foam-agent'] },
       { bodyMarks: ['care'] },
     ] satisfies Partial<SymbolSpec>[]) {
       const error = notMeasured({ ...base, ...extra });

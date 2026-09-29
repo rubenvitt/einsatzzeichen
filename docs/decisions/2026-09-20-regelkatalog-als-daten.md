@@ -294,3 +294,7 @@ verschoben.
   ein Einzelfeld ist (`packages/core/src/rules/planned-state-rules.ts`).
 - **Lücken.** `state` ist nur noch teilweise offen; `unit-grouping` und `tendency` haben ein Feld,
   aber keine eigene Regel (`RULE_DIMENSION_GAPS`).
+- **Zusammen mit LFH-587.** Parallel ist auf `main` die technische Regel
+  `capabilities-pictogram-overflows-body` dazugekommen. Nach dem Zusammenführen prüft der Kern 77
+  Regeln an der Beschreibung (80 Befundstellen), davon 65 technisch und 12 fachlich;
+  `capabilities` ist damit nur noch teilweise offen.

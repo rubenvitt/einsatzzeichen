@@ -242,6 +242,15 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'innerhalb der Box. Sonst stünde der Lauf teilweise außerhalb des Körpers. Verschiebe Box ' +
       'oder Anker nach innen oder verkleinere Breite und Versalhöhe.',
   },
+  'capabilities-pictogram-overflows-body': {
+    field: 'capabilities',
+    title: 'Piktogramm passt nicht in den Körper',
+    explanation:
+      'Die Boxfassung setzt die Einzeldarstellung eines Kapitel-4-Piktogramms unskaliert in den ' +
+      'Körper. Zugelassen ist das nur, wo sie nachweislich im Körper bleibt; die Referenz selbst ' +
+      'zeichnet jedes Piktogramm je Körperform in einer eigenen Fassung. Nutze die randbündige ' +
+      'Fassung über `bodyMarks`, wo sie vermessen ist, oder entferne die Fähigkeit.',
+  },
   'center-anchor-override-requires-measured-trailer': {
     field: 'labels',
     title: 'Abweichender mittiger Anker nur am Anhänger',

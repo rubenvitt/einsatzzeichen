@@ -4,8 +4,11 @@ import type { Drawing } from '@einsatzzeichen/schema';
 /** Standard-Tagname; Custom Elements verlangen einen Bindestrich im Namen. */
 export const DEFAULT_TAG_NAME = 'einsatzzeichen-symbol';
 
-/** Beobachtete Attribute des Elements. `size` in px (positive ganze Zahl), `id-prefix` frei. */
-export const OBSERVED_ATTRIBUTES = ['size', 'id-prefix'] as const;
+/**
+ * Beobachtete Attribute des Elements. `size` in px (positive ganze Zahl), `id-prefix` frei,
+ * `min-stroke-width` als Mindeststrichbreite in px (positive Dezimalzahl, nur zusammen mit `size`).
+ */
+export const OBSERVED_ATTRIBUTES = ['size', 'id-prefix', 'min-stroke-width'] as const;
 
 export interface ElementMarkupOptions {
   /** Rohwert des `size`-Attributs; `null`/`undefined` heißt „nicht gesetzt“ (frei skalierend). */
@@ -13,6 +16,12 @@ export interface ElementMarkupOptions {
   /** Rohwert des `id-prefix`-Attributs; `null`/`undefined` überlässt core die Vorgabe. */
   idPrefix?: string | null;
   theme?: RenderTheme;
+  /**
+   * Rohwert des `min-stroke-width`-Attributs: Mindeststrichbreite in Pixeln (LFH-584, siehe
+   * `SvgOptions.minStrokeWidthPx`). `null`/`undefined` heißt aus. Verlangt `size`, weil ein frei
+   * skalierendes SVG keinen festen Pixelmaßstab hat; core wirft sonst einen `RangeError`.
+   */
+  minStrokeWidth?: string | null;
 }
 
 /**
@@ -36,6 +45,21 @@ export function parseSizeAttribute(value: string): number {
 }
 
 /**
+ * Wandelt das `min-stroke-width`-Attribut in eine Pixelzahl um. Dieselbe Strenge wie
+ * `parseSizeAttribute`, aber mit Nachkommastellen, weil Bruchteile eines Pixels hier sinnvoll sind
+ * (`"0.75"`). Nur Ziffern mit optionalem Dezimalpunkt; alles andere, auch `"0"`, wirft.
+ */
+export function parseMinStrokeWidthAttribute(value: string): number {
+  const width = /^\d+(\.\d+)?$/u.test(value) ? Number(value) : Number.NaN;
+  if (!Number.isFinite(width) || width <= 0) {
+    throw new RangeError(
+      `Attribut "min-stroke-width" muss eine positive Pixelzahl sein, erhalten: ${JSON.stringify(value)}`,
+    );
+  }
+  return width;
+}
+
+/**
  * Reine Abbildung von Zeichnung und Attributwerten auf das Shadow-Markup. Ohne DOM testbar und
  * vom Element unverändert übernommen, damit die Attributauswertung nur an einer Stelle lebt.
  * Ohne Zeichnung ist das Markup leer: ein Element ohne Inhalt zeigt bewusst nichts.
@@ -49,7 +73,9 @@ export function renderElementMarkup(
   }
   const size = options.size == null ? undefined : parseSizeAttribute(options.size);
   const idPrefix = options.idPrefix == null ? undefined : options.idPrefix;
-  return renderSvg(drawing, { size, idPrefix, theme: options.theme });
+  const minStrokeWidthPx =
+    options.minStrokeWidth == null ? undefined : parseMinStrokeWidthAttribute(options.minStrokeWidth);
+  return renderSvg(drawing, { size, idPrefix, theme: options.theme, minStrokeWidthPx });
 }
 
 /**
@@ -122,6 +148,7 @@ export class EinsatzzeichenElement extends Base {
     this.#root.innerHTML = renderElementMarkup(this.#drawing, {
       size: this.getAttribute('size'),
       idPrefix: this.getAttribute('id-prefix'),
+      minStrokeWidth: this.getAttribute('min-stroke-width'),
       theme: this.#theme,
     });
   }

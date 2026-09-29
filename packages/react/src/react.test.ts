@@ -114,6 +114,14 @@ describe('Einsatzzeichen', () => {
     expect(html).toContain('<title id="ez-title">Taktische Formation</title>');
   });
 
+  it('reicht minStrokeWidthPx durch (LFH-584)', () => {
+    const html = renderToStaticMarkup(
+      createElement(Einsatzzeichen, { drawing: formation, size: 16, minStrokeWidthPx: 1 }),
+    );
+    expectSameSvg(html, renderSvg(formation, { size: 16, minStrokeWidthPx: 1 }));
+    expect(html).not.toBe(renderToStaticMarkup(createElement(Einsatzzeichen, { drawing: formation, size: 16 })));
+  });
+
   it('reicht idPrefix und theme durch', () => {
     const theme: RenderTheme = {
       ...REFERENCE_THEME,

@@ -35,13 +35,26 @@ Kein JSX-Build im Paket, `react` ist Peer-Abhängigkeit (`>=18`). Das Paket impo
 
 | Export | Was es tut |
 |---|---|
-| `Einsatzzeichen({ drawing, size, theme, idPrefix, className, style })` | die Komponente; gibt ein `<svg>`-Element zurück |
+| `Einsatzzeichen({ drawing, size, theme, idPrefix, minStrokeWidthPx, className, style })` | die Komponente; gibt ein `<svg>`-Element zurück |
 | `useEinsatzzeichenSvg(drawing, options)` | der Hook: liefert das SVG von `core` als String |
 | `splitSvgMarkup(svg)` | zerlegt Markup in Wurzelattribute und Inhalt |
 | `svgAttributeToReactProp(name)` | Attributnamen zu React-Props (`stroke-width` → `strokeWidth`) |
 
 `idPrefix` ist nicht optional gedacht, wenn mehrere Zeichen im selben Dokument stehen: die
 erzeugten Element-IDs müssen eindeutig bleiben.
+
+`minStrokeWidthPx` macht die Striche kleiner Zeichen kräftiger: Bei 16 oder 24 Pixeln Breite sind
+die feinen Striche der Vorlage schmaler als ein Bildpunkt und wirken blassgrau. Mit dem Wert werden
+sie mindestens so breit gezeichnet; die Zeichendaten bleiben unverändert. Die Prop ist
+standardmäßig aus, verlangt `size` (sonst `RangeError` aus `core`) und gilt ebenso für
+`useEinsatzzeichenSvg`. Empfohlen ist `RASTER_MIN_STROKE_WIDTH_PX` (1 px) aus `core`; Hintergrund
+auf der [Seite zu `core`](/docs/pakete/core/#kräftigere-striche-in-kleinen-bildern).
+
+```tsx
+import { RASTER_MIN_STROKE_WIDTH_PX } from '@einsatzzeichen/core';
+
+<Einsatzzeichen drawing={drawing} size={24} minStrokeWidthPx={RASTER_MIN_STROKE_WIDTH_PX} />;
+```
 
 ## Beispiel
 

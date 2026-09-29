@@ -91,6 +91,6 @@ Verband §6). Die wichtigsten, je mit Empfehlung:
 - Vokabular je Wert für freistehende Zeichen (heute Wertevorrat und `checkAnySpec`).
 - Verlaufsfehler (zu kurz, außerhalb der Fläche) werfen ein gewöhnliches `Error` und sind nicht
   erklärbar; als Kompositionsregeln mit Kennung führen.
-- `pnpm cli coverage` zählt nur die 76 Prüfregeln der `SymbolSpec`, nicht die freistehenden.
+- `pnpm cli coverage` zählt nur die 77 Prüfregeln der `SymbolSpec`, nicht die freistehenden.
 - `provenance:table` schreibt relativ zum aktuellen Verzeichnis; nur im Repository erlauben.
 - Technische Kopfmarken nutzt kein Rezept mehr (Abdeckung 0/2): behalten oder als veraltet markieren.

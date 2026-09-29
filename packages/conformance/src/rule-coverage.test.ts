@@ -93,7 +93,7 @@ describe('ruleCoverage (echter Bestand)', () => {
 
   it('zählt die Validierungsregeln aus core, ohne sie zu wiederholen', () => {
     expect(validationRuleCoverage()).toEqual({ total: VALIDATION_RULE_IDS.length });
-    expect(validationRuleCoverage().total).toBe(76);
+    expect(validationRuleCoverage().total).toBe(77);
   });
 });
 
@@ -123,18 +123,18 @@ describe('ruleEvidenceCoverage (Regelsicht)', () => {
 
   // Seit LFH-568 (21.09.2026): „Eine Regel gilt als belegt, wenn ein Testfall sie auslöst." Die
   // Zahlen wachsen mit den Katalogen und schrumpfen nur, wenn eine Lücke einen Fall bekommt.
-  it('belegt 84 von 88 Regeln durch Auslösung; vier benannte Lücken, keine stille', () => {
+  it('belegt 85 von 89 Regeln durch Auslösung; vier benannte Lücken, keine stille', () => {
     // Seit LFH-577 zählen die sechs Regeln der freistehenden Zeichen mit
     // (`FREESTANDING_RULE_CATALOG`, Fälle in `FREESTANDING_RULE_EVIDENCE`).
     const coverage = ruleEvidenceCoverage();
-    expect(coverage.total).toEqual({ total: 88, triggered: 84, gap: 4, untriggered: 0 });
+    expect(coverage.total).toEqual({ total: 89, triggered: 85, gap: 4, untriggered: 0 });
     expect(coverage.byPhase).toEqual({
-      spec: { total: 82, triggered: 80, gap: 2, untriggered: 0 },
+      spec: { total: 83, triggered: 81, gap: 2, untriggered: 0 },
       composition: { total: 6, triggered: 4, gap: 2, untriggered: 0 },
     });
     expect(coverage.byKind).toEqual({
       systematik: { total: 17, triggered: 17, gap: 0, untriggered: 0 },
-      engine: { total: 71, triggered: 67, gap: 4, untriggered: 0 },
+      engine: { total: 72, triggered: 68, gap: 4, untriggered: 0 },
     });
     expect(coverage.byDimension.map((entry) => [entry.dimension, entry.total, entry.triggered, entry.gap])).toEqual([
       ['body-variant', 7, 7, 0],
@@ -144,6 +144,7 @@ describe('ruleEvidenceCoverage (Regelsicht)', () => {
       ['administrative-level', 1, 1, 0],
       ['technical-head-mark', 2, 2, 0],
       ['chassis', 2, 2, 0],
+      ['capabilities', 1, 1, 0],
       ['function-role', 10, 7, 3],
       ['state', 4, 4, 0],
       ['lines-and-boundaries', 2, 2, 0],

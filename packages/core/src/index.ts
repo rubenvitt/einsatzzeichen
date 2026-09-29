@@ -1,6 +1,7 @@
 export * from './render/svg.js';
 export * from './render/canvas.js';
 export * from './render/raster-dimensions.js';
+export * from './render/min-stroke-width.js';
 export * from './render/theme.js';
 export * from './bounds.js';
 export * from './fingerprint.js';
@@ -51,6 +52,19 @@ export {
   capabilityCombinationForm,
   capabilityCombinationRule,
 } from './blocks/capability-combinations.js';
+export {
+  CAPABILITY_INSET_FORMS,
+  CAPABILITY_INSET_RULE,
+  CAPABILITY_UNSCALED_FIT,
+  capabilityInsetForm,
+  type CapabilityUnscaledFit,
+} from './blocks/capability-inset.js';
+export {
+  CAPABILITY_INSET_FLUSH_TOLERANCE_MM,
+  CAPABILITY_INSET_REDUCED_UNIFORMITY_LIMIT,
+  measureCapabilityInset,
+  type CapabilityInsetMeasurement,
+} from './blocks/capability-inset-measure.js';
 export { SPECIAL_FORMS, specialForm } from './layout/special-forms.js';
 export {
   COMPOSITION_RULE_CATALOG,
