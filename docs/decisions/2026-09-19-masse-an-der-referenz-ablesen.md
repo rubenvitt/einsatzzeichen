@@ -105,7 +105,10 @@ selben Tag an den Koordinator delegiert; die Antworten stehen in Abschnitt 5.
 ## 6. Was offen bleibt
 
 - Die Referenzschrift ist eine halbfette, schmal laufende Grotesk, nicht Arimo. Sie ist der größte
-  verbleibende Unterschied in allen Familien mit Text (siehe 5.4).
-- Mindeststrichbreite je Ausgabegröße (siehe 5.2).
+  verbleibende Unterschied in allen Familien mit Text (siehe 5.4). Die Vermessung in LFH-585
+  relativiert das: nur rund 9 % schmaler als Arimo, eine einzige Strichstärke zwischen Arimo 400
+  und 700; siehe `2026-09-29-lfh-585-ersatzschrift-und-kursiv.md` (Vorlage, offen).
+- Mindeststrichbreite je Ausgabegröße (siehe 5.2). Umgesetzt in LFH-584, siehe
+  `2026-09-29-lfh-584-mindeststrichbreite.md`.
 - Die übrigen Kapitel-4-Piktogramme passen nicht in den Formationskörper. Wie ein Piktogramm in
   einen Körper eingesetzt wird, gehört in das Zonenmodell des Grammatik-Motors (LFH-562).

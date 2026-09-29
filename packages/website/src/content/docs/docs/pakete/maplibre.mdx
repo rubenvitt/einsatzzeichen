@@ -39,11 +39,38 @@ still übergehen, und der Aufrufer sähe unter dem neuen Namen das alte Bild.
 |---|---|
 | `addSymbolImage(map, id, drawing, options)` | rastert und registriert das Bild; wirft, wenn `id` belegt ist |
 | `createStyleImage(drawing, options)` | nur rastern: `{ width, height, data }` |
-| `SymbolImageOptions` | `size` (CSS-Pixel), `pixelRatio`, `theme`, `createCanvas` |
+| `SymbolImageOptions` | `size` (CSS-Pixel), `pixelRatio`, `theme`, `minStrokeWidthPx` (Vorgabe 1 Gerätepixel, `null` schaltet ab), `createCanvas` |
 | `MapLike`, `CanvasLike`, `StyleImageData` | die strukturellen Typen |
 
 `size × pixelRatio` muss ganzzahlig sein — ein Bildpuffer kennt keine Bruchteile von Pixeln, und
 stilles Runden würde die CSS-Größe verfälschen.
+
+## Kräftigere Striche in kleinen Symbolen
+
+Kartensymbole sind immer Bilder aus einzelnen Bildpunkten, und meist kleine. Die feinen Striche der
+Vorlage (0,5 mm) wären darin schmaler als ein Bildpunkt und erschienen nur als blassgraue Spur.
+Deshalb zeichnet dieses Paket jeden Strich **standardmäßig mindestens einen Bildpunkt breit**. Die
+Zeichendaten bleiben dabei unverändert; nur das gerasterte Bild wird kräftiger. Wie die Untergrenze
+rechnet, steht auf der [Seite zu `core`](/docs/pakete/core/#kräftigere-striche-in-kleinen-bildern).
+
+| `minStrokeWidthPx` | Wirkung |
+|---|---|
+| nicht gesetzt | 1 Gerätepixel (`RASTER_MIN_STROKE_WIDTH_PX` aus `core`) |
+| Zahl, z. B. `0.75` | diese Breite in Gerätepixeln |
+| `null` | keine Untergrenze: die unveränderte Rasterung des Katalogs |
+
+Die Untergrenze gilt in **Gerätepixeln**, also in `size × pixelRatio`. Ein 32-px-Symbol mit
+`pixelRatio: 2` wird 64 Gerätepixel breit gezeichnet; dort sind die 0,5-mm-Striche schon einen
+Bildpunkt breit, und das Bild ändert sich nicht. Sichtbar kräftiger werden Symbole unter
+64 Gerätepixeln Breite.
+
+```ts
+// Vorgabe: Striche mindestens 1 Gerätepixel breit
+addSymbolImage(map, 'ez-e-1-1', drawing, { size: 24 });
+
+// abgeschaltet: genau die Rasterung ohne Untergrenze
+addSymbolImage(map, 'ez-e-1-1-fein', drawing, { size: 24, minStrokeWidthPx: null });
+```
 
 ## Beispiel
 

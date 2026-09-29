@@ -33,6 +33,29 @@ describe('renderElementMarkup (ohne DOM)', () => {
     expect(() => renderElementMarkup(formation, { size })).toThrow(RangeError);
   });
 
+  it('reicht min-stroke-width als Mindeststrichbreite in Pixeln durch (LFH-584)', () => {
+    expect(renderElementMarkup(formation, { size: '16', minStrokeWidth: '1' })).toBe(
+      renderSvg(formation, { size: 16, minStrokeWidthPx: 1 }),
+    );
+    expect(renderElementMarkup(formation, { size: '16', minStrokeWidth: '0.75' })).toBe(
+      renderSvg(formation, { size: 16, minStrokeWidthPx: 0.75 }),
+    );
+    expect(renderElementMarkup(formation, { size: '16', minStrokeWidth: null })).toBe(
+      renderSvg(formation, { size: 16 }),
+    );
+  });
+
+  it.each(['0', '-1', '.5', '1.', 'abc', '', ' 1 ', '1e0'])(
+    'wirft bei ungültiger Mindeststrichbreite %j',
+    (minStrokeWidth) => {
+      expect(() => renderElementMarkup(formation, { size: '16', minStrokeWidth })).toThrow(RangeError);
+    },
+  );
+
+  it('wirft bei min-stroke-width ohne size, weil der Pixelmaßstab fehlt', () => {
+    expect(() => renderElementMarkup(formation, { minStrokeWidth: '1' })).toThrow(RangeError);
+  });
+
   it('reicht das Theme durch', () => {
     const theme: RenderTheme = { id: 't', palette: { ...PALETTE, rot: '#123456' }, surface: '#ffffff' };
     expect(renderElementMarkup(formation, { theme })).toBe(renderSvg(formation, { theme }));

@@ -49,9 +49,10 @@ Textmetrik, Fingerprint-Vergleich gegen die Referenz.
 
 | Export | Was es tut |
 |---|---|
-| `renderSvg(drawing, options)` | SVG als String; `options`: `size`, `idPrefix`, `theme` |
-| `renderCanvas(drawing, ctx, options)` | dieselbe Zeichnung auf einen 2D-Kontext |
+| `renderSvg(drawing, options)` | SVG als String; `options`: `size`, `idPrefix`, `theme`, `minStrokeWidthPx` |
+| `renderCanvas(drawing, ctx, options)` | dieselbe Zeichnung auf einen 2D-Kontext; `options`: `size`, `theme`, `minStrokeWidthPx` |
 | `rasterDimensionsForWidth(viewBox, width)` | Rastermaße zu einer Zielbreite |
+| `RASTER_MIN_STROKE_WIDTH_PX`, `strokeWidthFloorMm`, `effectiveStrokeWidthMm` | [Mindeststrichbreite](#kräftigere-striche-in-kleinen-bildern): empfohlener Wert (1 px) und die Rechnung dahinter |
 | `REFERENCE_THEME`, `colorFor`, `RenderTheme` | der Farbvertrag am Rendererrand |
 | `compose(spec, ports, options)`, `CompositionError` | Komposition aus der `SymbolSpec` |
 | `validateSpec(spec)`, `ValidationIssue`, `VALIDATION_RULE_IDS` | Regelprüfung mit Regel-ID je Befund |
@@ -69,6 +70,59 @@ Textmetrik, Fingerprint-Vergleich gegen die Referenz.
 | `CONTRAST_EXCEPTIONS`, `contrastExceptionFor(...)` | dokumentierte Kontrastausnahmen |
 | `ARIMO_TEXT_METRICS` | Laufweiten der Schrift, ohne Schriftdatei |
 | `describeSymbolSpec(spec)`, `ORGANIZATION_LABELS`, `STRENGTH_LABELS`, … | deutsche Bezeichnungen |
+
+## Kräftigere Striche in kleinen Bildern
+
+Die Zeichen sind wie in der Vorlage mit Strichen von 0,5 mm gezeichnet. Wird ein Zeichen als
+kleines Bild ausgegeben, etwa 16, 24 oder 32 Pixel breit, ist so ein Strich schmaler als ein
+einzelner Bildpunkt. Der Bildschirm kann ihn dann nur als blassgraue Spur zeigen, nicht als klare
+Linie. Das liegt nicht an der Zeichnung, sondern daran, dass ein Bild aus ganzen Bildpunkten
+besteht.
+
+Eine **Mindeststrichbreite** hebt solche Striche beim Zeichnen auf die Breite eines Bildpunkts an.
+Die Zeichendaten ändern sich dabei nicht: sie bleiben so fein wie die Vorlage, nur das Bild in der
+gewählten Größe wird kräftiger. In größeren Bildern sind die Striche ohnehin breit genug; dort
+ändert sich nichts.
+
+In `core` ist die Mindeststrichbreite standardmäßig **aus**. Ohne die Option erzeugen `renderSvg`
+und `renderCanvas` byteweise dieselbe Ausgabe wie zuvor. Eingeschaltet wird sie mit einer Zahl:
+
+```ts
+import { RASTER_MIN_STROKE_WIDTH_PX, renderSvg } from '@einsatzzeichen/core';
+
+// 1 px: der empfohlene Wert, für jede Größe derselbe
+const svg = renderSvg(drawing, { size: 24, minStrokeWidthPx: RASTER_MIN_STROKE_WIDTH_PX });
+```
+
+| Punkt | Verhalten |
+|---|---|
+| Option | `minStrokeWidthPx` an `renderSvg` und `renderCanvas`, in Pixeln der Ausgabe |
+| Vorgabe | aus (`undefined`) |
+| Empfohlener Wert | `RASTER_MIN_STROKE_WIDTH_PX` = `1` |
+| Voraussetzung | `size` muss gesetzt sein; sonst `RangeError`, weil ein frei skalierendes SVG keinen festen Pixelmaßstab hat |
+| Ungültiger Wert | `0`, negativ oder nicht endlich: `RangeError` |
+| Was angehoben wird | gestrichene Linien, die bei `size` schmaler als der Wert würden |
+| Was bleibt | breitere Striche, Füllflächen, Text, Strichmuster; ein Strich der Breite 0 bleibt unsichtbar |
+| `renderCanvas` | gemeint sind die Pixel der Leinwand, auf hochauflösenden Bildschirmen also Gerätepixel |
+
+Was 1 px bei den üblichen 32 mm breiten Zeichen bedeutet:
+
+| Ausgabebreite | 1 px entspricht | Wirkung auf 0,5-mm-Striche |
+|---|---|---|
+| 16 px | 2 mm | vierfach so breit |
+| 24 px | 1,33 mm | knapp dreifach so breit |
+| 32 px | 1 mm | doppelt so breit |
+| 64 px | 0,5 mm | unverändert |
+| ab 128 px | höchstens 0,25 mm | kein Zeichen des Katalogs ändert sich |
+
+Mehr als 1 px ist nicht empfohlen: Die meisten Grundzeichen führen ihre Kontur 1 mm vom Rand. Bei
+16 px reicht ein 1-px-Strich genau bis an den Rand, ein breiterer würde abgeschnitten, und enge
+Innenzeichnungen liefen zu. Die Messwerte stehen in der Entscheidungsnotiz
+[`docs/decisions/2026-09-29-lfh-584-mindeststrichbreite.md`](https://github.com/rubenvitt/einsatzzeichen/blob/main/docs/decisions/2026-09-29-lfh-584-mindeststrichbreite.md).
+
+Das Kartenpaket [`maplibre`](/docs/pakete/maplibre/) schaltet die Mindeststrichbreite von sich aus
+ein, weil Kartensymbole immer kleine Bilder sind. [React](/docs/pakete/react/) und die
+[Web Component](/docs/pakete/web-component/) reichen sie nur durch.
 
 ## Beispiel
 

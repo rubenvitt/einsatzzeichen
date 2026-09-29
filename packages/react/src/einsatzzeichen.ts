@@ -8,10 +8,10 @@ import { splitSvgMarkup } from './split-svg-markup.js';
  * damit ein bei jedem Render neu erzeugtes Options-Objekt die Memoisierung nicht aushebelt.
  */
 export function useEinsatzzeichenSvg(drawing: Drawing, options: SvgOptions = {}): string {
-  const { size, idPrefix, theme } = options;
+  const { size, idPrefix, theme, minStrokeWidthPx } = options;
   return useMemo(
-    () => renderSvg(drawing, { size, idPrefix, theme }),
-    [drawing, size, idPrefix, theme],
+    () => renderSvg(drawing, { size, idPrefix, theme, minStrokeWidthPx }),
+    [drawing, size, idPrefix, theme, minStrokeWidthPx],
   );
 }
 
@@ -42,10 +42,11 @@ export function Einsatzzeichen({
   size,
   idPrefix,
   theme,
+  minStrokeWidthPx,
   className,
   style,
 }: EinsatzzeichenProps): ReactElement {
-  const svg = useEinsatzzeichenSvg(drawing, { size, idPrefix, theme });
+  const svg = useEinsatzzeichenSvg(drawing, { size, idPrefix, theme, minStrokeWidthPx });
   // Zerlegung und Prop-Abbildung hängen nur vom Markup ab und werden deshalb mit ihm
   // memoisiert — sonst liefe der Split bei jedem Render erneut, auch ohne neues SVG.
   const svgProps = useMemo(() => {

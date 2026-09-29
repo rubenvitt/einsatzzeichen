@@ -12,8 +12,8 @@ offenem Shadow DOM, das dieselbe Zeichnung über `renderSvg` ausgibt wie jeder a
 Framework, keine Build-Voraussetzung im Zielprojekt.
 
 Die Aufteilung folgt der Natur der Werte: `drawing` und `theme` sind **Properties**, weil Objekte
-sich nicht sinnvoll als Attribut tragen lassen; `size` und `id-prefix` sind **Attribute**, weil sie
-Strings sind und aus dem Markup kommen sollen. Die Registrierung ist idempotent und ohne
+sich nicht sinnvoll als Attribut tragen lassen; `size`, `id-prefix` und `min-stroke-width` sind
+**Attribute**, weil sie Strings sind und aus dem Markup kommen sollen. Die Registrierung ist idempotent und ohne
 `customElements` folgenlos — der Import scheitert also auch in Node nicht.
 
 ## Installation
@@ -35,9 +35,10 @@ Strings sind und aus dem Markup kommen sollen. Die Registrierung ist idempotent 
 |---|---|
 | `defineEinsatzzeichenElement(tagName?)` | registriert das Element; Vorgabe `einsatzzeichen-symbol` |
 | `EinsatzzeichenElement` | die Klasse selbst |
-| `DEFAULT_TAG_NAME`, `OBSERVED_ATTRIBUTES` | `'einsatzzeichen-symbol'` und `['size', 'id-prefix']` |
+| `DEFAULT_TAG_NAME`, `OBSERVED_ATTRIBUTES` | `'einsatzzeichen-symbol'` und `['size', 'id-prefix', 'min-stroke-width']` |
 | `renderElementMarkup(drawing, options)` | das Markup ohne DOM — für Serverausgabe und Tests |
 | `parseSizeAttribute(value)` | wirft bei einem ungültigen `size`, statt still zu raten |
+| `parseMinStrokeWidthAttribute(value)` | dasselbe für `min-stroke-width`, mit Nachkommastellen (`"0.75"`) |
 
 ## Beispiel
 
@@ -63,4 +64,26 @@ document.body.append(element);
 
 ```html
 <einsatzzeichen-symbol size="64" id-prefix="ez-e-1-1"></einsatzzeichen-symbol>
+```
+
+## Kräftigere Striche in kleinen Zeichen
+
+Bei kleinen Zeichen, etwa 16 oder 24 Pixel breit, sind die feinen Striche der Vorlage schmaler als
+ein Bildpunkt und wirken blassgrau. Das Attribut `min-stroke-width` zeichnet sie mindestens so
+breit wie angegeben. Die Zeichendaten bleiben unverändert; nur das Bild in dieser Größe wird
+kräftiger. Hintergrund und Zahlen stehen auf der
+[Seite zu `core`](/docs/pakete/core/#kräftigere-striche-in-kleinen-bildern).
+
+| Attribut | Werte | Vorgabe |
+|---|---|---|
+| `min-stroke-width` | positive Pixelzahl, auch mit Nachkommastellen (`1`, `0.75`) | nicht gesetzt: aus |
+
+`min-stroke-width` wirkt nur zusammen mit `size`. Fehlt `size`, ist das Zeichen frei skalierbar, und
+es steht nicht fest, wie breit ein Bildpunkt wird; `core` wirft dann einen `RangeError`. Ein
+ungültiger Wert wie `0` oder `"dünn"` wirft ebenfalls, statt still übergangen zu werden. Wer die
+Attribute per Skript an einem Element setzt, das schon im Dokument steht, setzt deshalb `size`
+zuerst — jedes Attribut löst sofort ein neues Zeichnen aus.
+
+```html
+<einsatzzeichen-symbol size="24" id-prefix="ez-e-1-1" min-stroke-width="1"></einsatzzeichen-symbol>
 ```

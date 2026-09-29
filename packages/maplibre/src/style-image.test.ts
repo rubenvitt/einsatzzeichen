@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { REFERENCE_THEME, type RenderTheme } from '@einsatzzeichen/core';
-import type { Drawing } from '@einsatzzeichen/schema';
+import { mmToUnits, type Drawing } from '@einsatzzeichen/schema';
 import {
   addSymbolImage,
   createStyleImage,
@@ -98,6 +98,39 @@ const TEST_THEME: RenderTheme = {
 };
 
 describe('createStyleImage', () => {
+  it('setzt standardmäßig eine Mindeststrichbreite von einem Gerätepixel (LFH-584)', () => {
+    // 16 px auf 32 mm: 1 px ≙ 2 mm. Die 0,5-mm-Kontur wird deshalb mit 2 mm gezeichnet.
+    const recorder = recordingCanvas();
+    createStyleImage(DRAWING, { size: 16, createCanvas: () => recorder.canvas });
+    expect(recorder.sets).toContainEqual(['lineWidth', mmToUnits(2)]);
+  });
+
+  it('rechnet die Untergrenze in Gerätepixeln, also mit pixelRatio', () => {
+    // 16 CSS-px × 2 = 32 Gerätepixel: 1 px ≙ 1 mm.
+    const recorder = recordingCanvas();
+    createStyleImage(DRAWING, { size: 16, pixelRatio: 2, createCanvas: () => recorder.canvas });
+    expect(recorder.sets).toContainEqual(['lineWidth', mmToUnits(1)]);
+  });
+
+  it('lässt sich mit null abschalten und nimmt einen eigenen Wert an', () => {
+    const off = recordingCanvas();
+    createStyleImage(DRAWING, { size: 16, minStrokeWidthPx: null, createCanvas: () => off.canvas });
+    expect(off.sets).toContainEqual(['lineWidth', mmToUnits(0.5)]);
+
+    const custom = recordingCanvas();
+    createStyleImage(DRAWING, { size: 16, minStrokeWidthPx: 0.5, createCanvas: () => custom.canvas });
+    expect(custom.sets).toContainEqual(['lineWidth', mmToUnits(1)]);
+  });
+
+  it('ändert ab 64 Gerätepixeln nichts gegenüber der abgeschalteten Untergrenze', () => {
+    const plain = recordingCanvas();
+    createStyleImage(DRAWING, { size: 64, minStrokeWidthPx: null, createCanvas: () => plain.canvas });
+    const floored = recordingCanvas();
+    createStyleImage(DRAWING, { size: 64, createCanvas: () => floored.canvas });
+    expect(floored.sets).toEqual(plain.sets);
+    expect(floored.calls).toEqual(plain.calls);
+  });
+
   it('liefert Rastermaße aus Größe × pixelRatio und einen passend großen RGBA-Puffer', () => {
     const recorder = recordingCanvas();
     const image = createStyleImage(DRAWING, {
