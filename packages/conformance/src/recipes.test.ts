@@ -1834,7 +1834,7 @@ describe('Anhang I, Teilslice I-c (I.1.1 bis I.1.4)', () => {
       referenceAsset: 'I.1.4_Wasserrettungsverband.svg',
       spec: {
         kind: 'formation',
-        technicalHeadMark: 'single-vertical-bar',
+        unitGrouping: 'verband-i',
         bodyMarks: ['formation-two-waves-diamond'],
       },
     },
@@ -2736,7 +2736,7 @@ describe('Anhang F, Teilslice F-b einschließlich F.1.3', () => {
           kind: 'formation',
           bodyVariant: 'foot-band',
           organization: 'hilfsorganisation',
-          technicalHeadMark: 'double-vertical-bar',
+          unitGrouping: 'verband-ii',
           bodyMarks: ['care', 'temporary-accommodation-resting'],
           labels: { topLeft: '5.000' },
         },
@@ -2768,7 +2768,7 @@ describe('Anhang F, Teilslice F-b einschließlich F.1.3', () => {
         spec: {
           kind: 'formation',
           organization: 'hilfsorganisation',
-          technicalHeadMark: 'single-vertical-bar',
+          unitGrouping: 'verband-i',
           bodyMarks: ['care', 'physician', 'ring-7mm-offset-down-1mm'],
           labels: { topLeft: '50' },
         },
@@ -2865,7 +2865,7 @@ describe('Anhang F, Teilslice F-b einschließlich F.1.3', () => {
         spec: {
           kind: 'formation',
           organization: 'hilfsorganisation',
-          technicalHeadMark: 'single-vertical-bar',
+          unitGrouping: 'verband-i',
           bodyMarks: ['ring-6-5mm-offset-down-2mm-with-roof'],
           labels: { topLeft: '500' },
         },
@@ -3538,9 +3538,9 @@ describe('Anhang E, Teilslice E-c (E.1.29 bis E.1.37)', () => {
       .filter(([, recipe]) => recipe.spec.strength === undefined)
       .map(([section]) => section);
     expect(ohneKopfzone).toEqual(['E.1.31', 'E.1.37']);
-    // Seit dem Fachreview vom 19.09.2026 trägt E.1.31 die Balken als semantikfreie technische
-    // Kopfmarke `double-vertical-bar` (zwei Rechtecke in einer Kopfgruppe), ohne Stärkegrad.
-    expect(ANHANG_E_C_RECIPES['E.1.31'].spec.technicalHeadMark).toBe('double-vertical-bar');
+    // Seit dem Fachreview vom 19.09.2026 trägt E.1.31 die Balken (zwei Rechtecke in einer
+    // Kopfgruppe) ohne Stärkegrad, seit LFH-577 als Verband II statt als technische Kopfmarke.
+    expect(ANHANG_E_C_RECIPES['E.1.31'].spec.unitGrouping).toBe('verband-ii');
   });
 
   it('setzt keinen Text unterhalb des Körpers und keine Zusatzkennzeichnung unten links', () => {

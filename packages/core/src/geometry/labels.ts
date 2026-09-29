@@ -9,6 +9,7 @@ import type {
   SymbolSpec,
   TechnicalBodyMarkId,
   TechnicalHeadMarkId,
+  UnitGroupingId,
   VehicleCategoryId,
 } from '@einsatzzeichen/schema';
 import { pictogram } from './pictograms/index.js';
@@ -63,6 +64,16 @@ export const TECHNICAL_HEAD_MARK_LABELS = Object.freeze({
   'single-vertical-bar': 'Einzelner Vertikalbalken',
   'double-vertical-bar': 'Zwei Vertikalbalken',
 } satisfies Record<TechnicalHeadMarkId, string>);
+
+/**
+ * Öffentlich aus demselben Grund wie `ORGANIZATION_LABELS`. Benannt nach dem Verbandsgrad aus
+ * 5.5, nicht nach der Organisationsbezeichnung („Bereitschaft"), die die Kapiteldateien führen.
+ */
+export const UNIT_GROUPING_LABELS = Object.freeze({
+  'verband-i': 'Verband I',
+  'verband-ii': 'Verband II',
+  'verband-iii': 'Verband III',
+} satisfies Record<UnitGroupingId, string>);
 
 /** Öffentlich aus demselben Grund wie `ORGANIZATION_LABELS`. */
 export const ADMIN_LEVEL_LABELS: Record<AdminLevelId, string> = {
@@ -175,6 +186,11 @@ export function describeSymbolSpec(spec: SymbolSpec): string {
   if (spec.technicalHeadMark !== undefined) {
     parts.push(`Technische Kopfmarke: ${TECHNICAL_HEAD_MARK_LABELS[spec.technicalHeadMark]}`);
   }
+  // Der Verband steht an der Stelle der Kopfzone, an der vorher die gleich gezeichnete technische
+  // Kopfmarke stand (LFH-577): die Bilder sind gleich, die Beschreibung nennt jetzt die Bedeutung.
+  if (spec.unitGrouping !== undefined) {
+    parts.push(`Verband: ${UNIT_GROUPING_LABELS[spec.unitGrouping]}`);
+  }
   if (spec.administrativeLevel !== undefined) {
     parts.push(`Verwaltungsstufe: ${ADMIN_LEVEL_LABELS[spec.administrativeLevel]}`);
   }
@@ -215,6 +231,13 @@ export function describeSymbolSpec(spec: SymbolSpec): string {
       parts.push(`Fachdienst: ${pictogram(`capability.${mark}`).title}`);
     }
   }
+  // Zustände und Tendenz (LFH-577) mit dem Titel ihrer Zeichnung aus Kapitel 5.8 — derselbe
+  // Begriff wie beim eigenständigen Zustandszeichen. Der Titel der Tendenz nennt das Wort bereits
+  // („Tendenz steigend"), er steht deshalb ohne Vorsatz.
+  for (const state of spec.states ?? []) {
+    parts.push(`Zustand: ${pictogram(`state.${state}`).title}`);
+  }
+  if (spec.tendency !== undefined) parts.push(pictogram(`state.${spec.tendency}`).title);
   if (spec.designation !== undefined) parts.push(`Bezeichnung: ${spec.designation}`);
   // Die Beschriftungen tragen bei Anhang E die gesamte fachliche Unterscheidung — ohne sie sind
   // E.1.1 und E.1.7 dasselbe blaue Rechteck. Sie gehören deshalb in die Beschreibung, die

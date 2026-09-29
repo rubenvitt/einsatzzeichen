@@ -77,11 +77,18 @@ Zeichen, benannt nach seiner Kennung
 Einzeln und programmatisch:
 
 ```ts
-import { composeFromCatalog, RECIPES } from '@einsatzzeichen/conformance';
-import { PRINT_MONOCHROME_THEME, renderSvg } from '@einsatzzeichen/core';
+import { PRINT_MONOCHROME_THEME, drawSymbol, renderSvg } from '@einsatzzeichen/core';
+import type { SymbolSpec } from '@einsatzzeichen/schema';
 
-const recipe = RECIPES['E.1.1'];
-const svg = renderSvg(composeFromCatalog(recipe.spec, recipe.title), {
+// E.1.1 „Bergungsgruppe" des THW
+const spec: SymbolSpec = {
+  kind: 'formation',
+  whiteInnerContour: true,
+  organization: 'thw',
+  strength: 'gruppe',
+  labels: { center: 'B', bottomRight: 'THW' },
+};
+const svg = renderSvg(drawSymbol(spec, { title: 'Bergungsgruppe' }), {
   size: 128,
   theme: PRINT_MONOCHROME_THEME,
 });

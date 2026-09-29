@@ -4,6 +4,7 @@ import type {
   OrganizationId,
   StrengthId,
   SymbolKind,
+  TendencyId,
   UnitGroupingId,
   VehicleCategoryId,
 } from './taxonomy.js';
@@ -91,6 +92,13 @@ export const UNIT_GROUPING_IDS: readonly UnitGroupingId[] = keysOf<UnitGroupingI
   'verband-i': true,
   'verband-ii': true,
   'verband-iii': true,
+});
+
+/** Die drei Tendenzen aus 5.8.3 in Kapitelreihenfolge — der Wertevorrat von `SymbolSpec.tendency`. */
+export const TENDENCY_IDS: readonly TendencyId[] = keysOf<TendencyId>({
+  'tendency-rising': true,
+  'tendency-unchanged': true,
+  'tendency-falling': true,
 });
 
 export const VEHICLE_CATEGORY_IDS: readonly VehicleCategoryId[] = keysOf<VehicleCategoryId>({

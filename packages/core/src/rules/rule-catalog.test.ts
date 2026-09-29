@@ -2,9 +2,11 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { FREESTANDING_RULE_IDS } from '../freestanding-rules.js';
 import { VALIDATION_RULE_IDS } from '../validation-rules.js';
 import {
   COMPOSITION_RULE_CATALOG,
+  FREESTANDING_RULE_CATALOG,
   RULE_CATALOG,
   RULE_DIMENSIONS,
   RULE_DIMENSION_GAPS,
@@ -75,12 +77,13 @@ describe('RULE_CATALOG: Vollständigkeit je Eintrag', () => {
 
   /**
    * Der Befund, aus dem die offene Frage der Entscheidungsnotiz folgt: für diese Regeln steht die
-   * Begründung **nur** in `packages/website/src/lib/rule-explanations.ts`; der Kern wiederholt
-   * dort lediglich den Prüfausdruck in Worten. Die Sätze sind von Hand kopiert, und kein Gate
-   * hält sie in Deckung — `core` darf `website` nicht importieren, eine Prüfung liefe gegen die
-   * Importgrenze. Die Menge ist festgenagelt, damit sie nicht unbemerkt wächst.
+   * Begründung **nur** in der Leserinnenerklärung (`rules/rule-explanations.ts`, bis LFH-579 in
+   * der Website, daher der Wert `'website'`); die Prüfstelle wiederholt lediglich den
+   * Prüfausdruck in Worten. Die Sätze sind von Hand gezogen; seit LFH-579 hält
+   * `rule-explanations.test.ts` sie per Fingerabdruck in Deckung. Die Menge ist festgenagelt,
+   * damit sie nicht unbemerkt wächst.
    */
-  it('nagelt die Begründungen fest, die nur die Website belegt', () => {
+  it('nagelt die Begründungen fest, die nur die Erklärung belegt', () => {
     const fromWebsite = RULE_CATALOG.filter((rule) => rule.reasonSource === 'website')
       .map((rule) => rule.id);
     expect(fromWebsite.sort()).toEqual([
@@ -113,7 +116,7 @@ describe('RULE_CATALOG: Vollständigkeit je Eintrag', () => {
       'top-left-lines-exactly-two',
     ]);
     expect(fromWebsite).toHaveLength(27);
-    expect(RULE_CATALOG.filter((rule) => rule.reasonSource === 'core')).toHaveLength(47);
+    expect(RULE_CATALOG.filter((rule) => rule.reasonSource === 'core')).toHaveLength(51);
   });
 
   /**
@@ -146,6 +149,10 @@ describe('RULE_CATALOG: Vollständigkeit je Eintrag', () => {
       'colored-circle-top-left-not-measured',
       'inset-hull-requires-center-label-only',
       'reduced-house-requires-hilfsorganisation',
+      'state-carrier-not-allowed',
+      'state-group-limit-exceeded',
+      'state-tactics-not-allowed',
+      'state-value-not-attachable',
       'technical-head-mark-requires-normal-formation',
       'top-left-anchor-within-body',
       'top-left-baseline-within-body',
@@ -159,7 +166,7 @@ describe('RULE_CATALOG: Vollständigkeit je Eintrag', () => {
 
 describe('RULE_CATALOG gegen den Quelltext von validate.ts', () => {
   /**
-   * `validate.ts` löst 77 Mal aus, führt aber nur 74 Kennungen: drei Regeln haben zwei
+   * `validate.ts` löst 81 Mal aus, führt aber nur 78 Kennungen: drei Regeln haben zwei
    * Auslösestellen. Im Katalog bleiben sie **ein** Eintrag — sonst bräche die Dublettenprüfung —
    * und tragen die Zahl ihrer Stellen im Feld `sites`. Dieser Test zählt die Stellen im
    * Quelltext dagegen, damit eine künftige dritte Stelle nicht still dazukommt.
@@ -176,9 +183,9 @@ describe('RULE_CATALOG gegen den Quelltext von validate.ts', () => {
     );
   });
 
-  it('bleibt bei 77 Auslösestellen für 74 Kennungen', () => {
-    expect(pushedIds).toHaveLength(77);
-    expect(new Set(pushedIds).size).toBe(74);
+  it('bleibt bei 81 Auslösestellen für 78 Kennungen', () => {
+    expect(pushedIds).toHaveLength(81);
+    expect(new Set(pushedIds).size).toBe(78);
     expect(RULE_CATALOG.filter((rule) => rule.sites > 1).map((rule) => rule.id)).toEqual([
       'function-role-requires-measured-kind',
       'function-role-requires-measured-layout',
@@ -258,11 +265,71 @@ describe('COMPOSITION_RULE_CATALOG gegen den Quelltext von compose.ts', () => {
   });
 });
 
+describe('FREESTANDING_RULE_CATALOG gegen FREESTANDING_RULE_IDS und validate-freestanding.ts', () => {
+  /**
+   * Dasselbe Gate wie für `RULE_CATALOG`, auf der Prüfstelle der freistehenden Zeichen
+   * (LFH-577): Katalog und Liste mengengleich, Auslösestellen je Kennung gegen `sites`.
+   */
+  const listed = new Set(FREESTANDING_RULE_IDS);
+  const cataloged = new Set(FREESTANDING_RULE_CATALOG.map((rule) => rule.id));
+  const pushedIds = [...source('../validate-freestanding.ts').matchAll(/rule: '([a-z0-9-]+)'/g)]
+    .map((match) => match[1] as string);
+
+  it('ist mengengleich mit FREESTANDING_RULE_IDS, alphabetisch', () => {
+    expect([...cataloged].filter((id) => !listed.has(id)).sort()).toEqual([]);
+    expect([...listed].filter((id) => !cataloged.has(id)).sort()).toEqual([]);
+    expect(FREESTANDING_RULE_CATALOG.map((rule) => rule.id)).toEqual([...cataloged].sort());
+  });
+
+  it('zählt die Auslösestellen je Kennung gegen das Feld sites', () => {
+    const perId = new Map<string, number>();
+    for (const id of pushedIds) perId.set(id, (perId.get(id) ?? 0) + 1);
+    expect(Object.fromEntries([...perId].sort())).toEqual(
+      Object.fromEntries(FREESTANDING_RULE_CATALOG.map((rule) => [rule.id, rule.sites]).sort()),
+    );
+    // Die Stärkenregel greift in beide Richtungen: fehlt an 2.20, steht an einer anderen Linie.
+    expect(FREESTANDING_RULE_CATALOG.filter((rule) => rule.sites > 1).map((rule) => rule.id)).toEqual([
+      'line-strength-mismatch',
+    ]);
+  });
+
+  it('prüft die Beschreibung, mit Quelle aus der Referenz und Begründung im Kern', () => {
+    const others = new Set([...RULE_CATALOG, ...COMPOSITION_RULE_CATALOG].map((rule) => rule.id));
+    // Der doppelte Wetterwert ist Datenhygiene; die Referenz sagt darüber nichts.
+    expect(FREESTANDING_RULE_CATALOG.filter((rule) => rule.source === null).map((rule) => rule.id)).toEqual([
+      'weather-value-duplicate',
+    ]);
+    for (const rule of FREESTANDING_RULE_CATALOG) {
+      expect(rule.phase, rule.id).toBe('spec');
+      expect(rule.reasonSource, rule.id).toBe('core');
+      if (rule.source === null) continue;
+      expect(rule.source.source, rule.id).toBe('babz-svg-2025');
+      expect(rule.source.status, rule.id).toBe('derived');
+      expect(rule.source.section?.trim(), rule.id).not.toBe('');
+      expect(RULE_DIMENSIONS, rule.id).toContain(rule.dimension);
+      expect(others.has(rule.id), rule.id).toBe(false);
+      expect(ruleCatalogEntry(rule.id), rule.id).toBe(rule);
+    }
+  });
+
+  it('ordnet die Regeln den Dimensionen der freistehenden Zeichen zu', () => {
+    expect(FREESTANDING_RULE_CATALOG.map((rule) => [rule.id, rule.kind, rule.dimension])).toEqual([
+      ['animal-state-variant-not-available', 'systematik', 'animal'],
+      ['line-strength-mismatch', 'systematik', 'lines-and-boundaries'],
+      ['line-variant-not-available', 'systematik', 'lines-and-boundaries'],
+      ['weather-intensity-without-precipitation', 'systematik', 'weather'],
+      ['weather-value-duplicate', 'engine', 'weather'],
+      ['weather-values-exceed-limit', 'systematik', 'weather'],
+    ]);
+  });
+});
+
 describe('Lücken je Dimension', () => {
   it('kennt jede Dimension der Union aus einem Eintrag oder aus der Lückenliste', () => {
     const inEntries = new Set([
       ...RULE_CATALOG.map((rule) => rule.dimension),
       ...COMPOSITION_RULE_CATALOG.map((rule) => rule.dimension),
+      ...FREESTANDING_RULE_CATALOG.map((rule) => rule.dimension),
     ]);
     const inGaps = new Set(RULE_DIMENSION_GAPS.map((gap) => gap.dimension));
     const unaccounted = RULE_DIMENSIONS.filter((id) => !inEntries.has(id) && !inGaps.has(id));
@@ -284,10 +351,15 @@ describe('Lücken je Dimension', () => {
    * Festgenagelt, damit die Aussage „Lücken je Dimension benannt" zählbar bleibt und nicht
    * unbemerkt schrumpft, wenn jemand eine Dimension aus der Union nimmt.
    */
-  it('zählt neun Lücken, davon fünf ohne jede Regel', () => {
-    expect(RULE_DIMENSION_GAPS).toHaveLength(9);
+  it('zählt elf Lücken, davon drei ohne jede Regel', () => {
+    // Seit LFH-577 trägt `state` vier Regeln und ist nur noch teilweise offen. Mit der
+    // freistehenden Spec-Art tragen auch Linien, Wetter und Tierzustand Regeln; die Pfeile nicht.
+    // Seit LFH-587 trägt `capabilities` eine Regel (`capabilities-pictogram-overflows-body`).
+    expect(RULE_DIMENSION_GAPS).toHaveLength(11);
     expect(RULE_DIMENSION_GAPS.filter((gap) => gap.coverage === 'none').map((g) => g.dimension))
-      .toEqual(['unit-grouping', 'state', 'tendency', 'movement', 'lines-and-boundaries']);
+      .toEqual(['unit-grouping', 'tendency', 'movement']);
+    expect(RULE_DIMENSION_GAPS.filter((gap) => gap.coverage === 'partial').map((g) => g.dimension))
+      .toEqual(['base-symbol', 'administrative-level', 'body-marks', 'capabilities', 'state', 'lines-and-boundaries', 'weather', 'animal']);
   });
 
   /**
@@ -307,13 +379,17 @@ describe('Einordnung fachlich gegen technisch', () => {
    * Messung fehlt — nicht, weil die Systematik es verbietet. Festgenagelt, weil sich genau diese
    * Zahl mit dem Grammatik-Umbau verschieben soll und die Verschiebung sichtbar sein muss.
    */
-  it('nagelt die acht fachlichen Regeln fest', () => {
+  it('nagelt die zwölf fachlichen Regeln fest', () => {
     expect(RULE_CATALOG.filter((rule) => rule.kind === 'systematik').map((r) => r.id)).toEqual([
       'body-variant-foot-conflict',
       'chassis-foot-conflict',
       'circle-12-requires-organization',
       'head-zone-conflict',
       'plain-wheel-pair-chassis-conflict',
+      'state-carrier-not-allowed',
+      'state-group-limit-exceeded',
+      'state-tactics-not-allowed',
+      'state-value-not-attachable',
       'strength-requires-unit',
       'surface-label-foot-conflict',
       'technical-fill-organization-conflict',
@@ -323,9 +399,10 @@ describe('Einordnung fachlich gegen technisch', () => {
 });
 
 describe('ruleCatalogEntry', () => {
-  it('findet über beide Klassen', () => {
+  it('findet über alle drei Kataloge', () => {
     expect(ruleCatalogEntry('strength-requires-unit')?.phase).toBe('spec');
     expect(ruleCatalogEntry('label-too-wide')?.phase).toBe('composition');
+    expect(ruleCatalogEntry('weather-values-exceed-limit')?.dimension).toBe('weather');
   });
 
   it('gibt bei unbekannter Kennung undefined zurück', () => {

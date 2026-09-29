@@ -156,11 +156,14 @@ function sunPrimitives(): readonly Primitive[] {
  * Wolke: Vereinigung dreier Kreise über einer gemeinsamen waagerechten Grundlinie y = 24 mm —
  * links (6 | 19) r = 5, Mitte (16 | 15) r = 9, rechts (25 | 18) r = 6. Links und rechts berührt
  * die Grundlinie die Kreise tangential; oben wechselt die Kontur an den Kreisschnittpunkten.
+ *
+ * `raiseMm` hebt die ganze Wolke an. In den Beispielen `5.8.7_Beispiel_Schneiend_*` steht sie
+ * 3 mm höher (Fläche 25,512 statt 34,016 pt oben, Grundlinie y 21), darunter der Niederschlag.
  */
-function cloudPath(): string {
-  const left = [6, 19, 5] as const;
-  const middle = [16, 15, 9] as const;
-  const right = [25, 18, 6] as const;
+export function cloudPath(raiseMm = 0): string {
+  const left = [6, 19 - raiseMm, 5] as const;
+  const middle = [16, 15 - raiseMm, 9] as const;
+  const right = [25, 18 - raiseMm, 6] as const;
   const leftMiddle = upperIntersection(left, middle);
   const middleRight = upperIntersection(middle, right);
   let leftEnd = angleDeg(left[0], left[1], leftMiddle);
@@ -172,12 +175,17 @@ function cloudPath(): string {
   let rightStart = angleDeg(right[0], right[1], middleRight);
   if (rightStart < 0) rightStart += 360;
   return [
-    'M 6 24',
+    `M 6 ${mm(24 - raiseMm)}`,
     arc(...left, 90, leftEnd),
     arc(...middle, middleStart, middleEnd),
     arc(...right, rightStart, 450),
     'Z',
   ].join(' ');
+}
+
+/** Die Wolke als Primitiv: weiße Fläche mit 0,5-mm-Kontur. */
+export function cloudPrimitive(raiseMm = 0): Primitive {
+  return weatherPath(cloudPath(raiseMm), WEATHER_WHITE);
 }
 
 /** Bedeckung 4/8: Kreis r = 14 mm um die Zeichenmitte, linke Hälfte schwarz gefüllt. */
@@ -255,11 +263,15 @@ function lightning(dx: number): readonly Primitive[] {
   ];
 }
 
-/** Schneeflocke: drei Durchmesser (senkrecht und ±30° zur Waagerechten), Radius 4 mm. */
-function snowflake(cx: number): readonly Primitive[] {
+/**
+ * Schneeflocke: drei Durchmesser (senkrecht und ±30° zur Waagerechten), Radius 4 mm auf der
+ * Mittellinie y = 16 mm. An der Wolke (`5.8.7_Beispiel_Schneiend_*`) ist sie kleiner: Radius 3 mm
+ * um y 26 (senkrechter Durchmesser 65,227…82,235 pt).
+ */
+export function snowflake(cx: number, cy = 16, r = 4): readonly Primitive[] {
   return [90, 30, 150].map((angle) => {
-    const [x1, y1] = pointOnCircle(cx, 16, 4, angle);
-    const [x2, y2] = pointOnCircle(cx, 16, 4, angle + 180);
+    const [x1, y1] = pointOnCircle(cx, cy, r, angle);
+    const [x2, y2] = pointOnCircle(cx, cy, r, angle + 180);
     return weatherLine(x1, y1, x2, y2);
   });
 }
@@ -300,7 +312,7 @@ export const WEATHER_STATES = deepFreeze([
     referenceAsset: '5.8.7.2_Wolkig.svg',
     box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 18 },
     contrastPairs: BLACK_ON_WHITE_AND_SURFACE,
-    primitives: [weatherPath(cloudPath(), WEATHER_WHITE)],
+    primitives: [cloudPrimitive()],
   }),
   defineState({
     section: '5.8.7.3',
@@ -389,3 +401,56 @@ export const WEATHER_STATES = deepFreeze([
     ],
   }),
 ] satisfies readonly CatalogPictogramDefinition[]);
+
+/**
+ * Niederschlagsmarken an der Wolke (LFH-561). Übertragen, nicht abgelesen: Der Eigentümer hat am
+ * 29.09.2026 entschieden, Regen, Hagel und Gewitter an der Wolke wie den Schnee zu bauen
+ * (`geometry/weather.ts`). Kein Original zeigt diese Marken verkleinert. Sie stehen hinter dem
+ * Katalog, damit die Zeilenangaben im Bausteinregister (`blocks/states.ts`) gültig bleiben.
+ */
+
+/** Punkt auf der Niederschlagsspur durch (cx | cy): 7 mm nach rechts auf 26 mm nach oben. */
+function trackPoint(cx: number, cy: number, y: number): Point {
+  return [cx + (7 * (cy - y)) / 26, y];
+}
+
+/**
+ * Ein Strich der Regenspur aus 5.8.7.5 (15° gegen die Senkrechte, von unten links nach oben
+ * rechts), `heightMm` hoch, mittig auf (cx | cy).
+ */
+export function rainMark(cx: number, cy: number, heightMm: number): readonly Primitive[] {
+  const [x1, y1] = trackPoint(cx, cy, cy + heightMm / 2);
+  const [x2, y2] = trackPoint(cx, cy, cy - heightMm / 2);
+  return [weatherLine(x1, y1, x2, y2)];
+}
+
+/**
+ * Ein Hagelkorn aus 5.8.7.6 (Kreis, Strich 0,5 mm) mit Radius `radiusMm` auf (cx | cy), dazu die
+ * Spur darunter und darüber bis an die Kanten eines `heightMm` hohen Bands. Wie in 5.8.7.6 endet
+ * die Spur am Kornrand.
+ */
+export function hailMark(cx: number, cy: number, heightMm: number, radiusMm: number): readonly Primitive[] {
+  const halfChord = (radiusMm * 26) / TRACK_LENGTH_MM;
+  const [bx1, by1] = trackPoint(cx, cy, cy + heightMm / 2);
+  const [bx2, by2] = trackPoint(cx, cy, cy + halfChord);
+  const [tx1, ty1] = trackPoint(cx, cy, cy - halfChord);
+  const [tx2, ty2] = trackPoint(cx, cy, cy - heightMm / 2);
+  return [weatherLine(bx1, by1, bx2, by2), weatherCircle(cx, cy, radiusMm), weatherLine(tx1, ty1, tx2, ty2)];
+}
+
+/** Hülle des Blitzes aus 5.8.7.7: x 3,45 … 9,05, y 7,5 … 25,5. */
+const LIGHTNING_HULL = { minX: 3.45, maxX: 9.05, minY: 7.5, maxY: 25.5 } as const;
+
+/**
+ * Der Blitz aus 5.8.7.7 (Zickzack und offener Pfeilkopf), gleichmäßig auf `heightMm` Höhe
+ * verkleinert und mit der Mitte seiner Hülle auf (cx | cy) gesetzt. Der Strich bleibt 0,5 mm.
+ */
+export function lightningMark(cx: number, cy: number, heightMm: number): readonly Primitive[] {
+  const scale = heightMm / (LIGHTNING_HULL.maxY - LIGHTNING_HULL.minY);
+  const midX = (LIGHTNING_HULL.minX + LIGHTNING_HULL.maxX) / 2;
+  const midY = (LIGHTNING_HULL.minY + LIGHTNING_HULL.maxY) / 2;
+  return lightning(0).map((part) => {
+    if (part.type !== 'polyline') throw new Error('Blitz: Linienzug erwartet.');
+    return weatherPolyline(part.points.map(([x, y]) => [cx + (x - midX) * scale, cy + (y - midY) * scale] as const));
+  });
+}

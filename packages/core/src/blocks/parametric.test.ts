@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { LINE_IDS, MOVEMENT_IDS, type ParametricBlock, type ParametricFinding } from '@einsatzzeichen/schema';
 import { PLANNED_PARAMETRIC_RULES } from '../rules/planned-parametric-rules.js';
+import { FREESTANDING_RULE_CATALOG } from '../rules/rule-catalog.js';
 import { ARROW_BLOCKS, LINE_BLOCKS, PARAMETRIC_BLOCKS, parametricBlock } from './parametric.js';
 import { BLOCK_REGISTER, blockEntry } from './register.js';
 
@@ -100,25 +101,36 @@ describe('Parametrisierte Bausteine: Tabelle', () => {
         if (finding.status === 'proposed') expect(finding.reason.trim(), entry.id).not.toBe('');
         if (finding.status === 'evidenced') {
           for (const evidence of finding.evidence) {
-            expect('asset' in evidence && entry.assets.includes(evidence.asset), entry.id).toBe(true);
+            // Eine Referenzdatei des Bausteins selbst, oder ein Fundort im Quelltext, der eine andere
+            // Referenz ausweist (die Anbindung an die Personenraute ist an 5.8.8.12 bis 5.8.8.14 belegt).
+            if ('asset' in evidence) expect(entry.assets.includes(evidence.asset), entry.id).toBe(true);
+            else expect(linesAt(evidence.definedAt), `${entry.id} → ${evidence.definedAt}`).toContain(evidence.note.split(':')[0]);
           }
+        }
+        if (finding.status === 'decided') {
+          expect(finding.decidedOn, entry.id).toBe('2026-09-29');
+          expect(finding.ref, entry.id).toMatch(/^docs\/decisions\/2026-09-28-lfh-566-bewegung-linien-grenzen\.md §/);
         }
       }
     }
   });
 
-  it('benutzt nur vorgemerkte Regeln, und jede vorgemerkte Regel wird benutzt', () => {
+  it('benutzt nur vorgemerkte oder geltende Regeln, und jede vorgemerkte Regel wird benutzt', () => {
+    // Seit LFH-577 gelten die Linienregeln (`FREESTANDING_RULE_CATALOG`); die Pfeile tragen weiter
+    // nur die vorgemerkten Anbindungsregeln.
+    const known = [...PLANNED_PARAMETRIC_RULES, ...FREESTANDING_RULE_CATALOG];
     const planned = PLANNED_PARAMETRIC_RULES.map((rule) => rule.id);
     const used = new Set(PARAMETRIC_BLOCKS.flatMap((entry) => entry.rules));
-    expect([...used].filter((id) => !planned.includes(id))).toEqual([]);
+    expect([...used].filter((id) => !known.some((rule) => rule.id === id))).toEqual([]);
     expect(planned.filter((id) => !used.has(id))).toEqual([]);
     for (const entry of PARAMETRIC_BLOCKS) {
       const dimension = entry.category === 'arrow' ? 'movement' : 'lines-and-boundaries';
       for (const id of entry.rules) {
-        expect(PLANNED_PARAMETRIC_RULES.find((rule) => rule.id === id)?.dimension, `${entry.id} / ${id}`)
-          .toBe(dimension);
+        expect(known.find((rule) => rule.id === id)?.dimension, `${entry.id} / ${id}`).toBe(dimension);
       }
     }
+    const lineRules = new Set(PARAMETRIC_BLOCKS.filter((entry) => entry.category === 'line').flatMap((entry) => entry.rules));
+    expect([...lineRules].sort()).toEqual(['line-strength-mismatch', 'line-variant-not-available']);
   });
 });
 
@@ -129,19 +141,19 @@ describe('Parametrisierte Bausteine: festgenagelter Stand', () => {
       counts[entry.id] = findingsOf(entry).map((finding) => finding.status).join(' / ');
     }
     expect(counts).toEqual({
-      'arrow/direction-of-action': 'evidenced / open / open',
-      'arrow/start-of-action': 'open / open / open',
-      'arrow/directed-movement': 'evidenced / open / open',
-      'arrow/movement-both-directions': 'evidenced / open / open',
-      'arrow/end-of-movement': 'open / open / open',
-      'arrow/gathering': 'open / open / open',
-      'line/escape-route': 'open / proposed / proposed',
-      'line/barrier-position': 'open / proposed / proposed',
-      'line/fire-spread': 'open / proposed / proposed',
-      'line/boundary-command-area': 'evidenced / proposed / proposed',
-      'line/boundary-section': 'evidenced / proposed / proposed',
-      'line/boundary-subsection': 'evidenced / proposed / proposed',
-      'line/boundary-with-strength': 'evidenced / proposed / proposed',
+      'arrow/direction-of-action': 'evidenced / decided / open',
+      'arrow/start-of-action': 'evidenced / evidenced / open',
+      'arrow/directed-movement': 'evidenced / evidenced / open',
+      'arrow/movement-both-directions': 'evidenced / decided / open',
+      'arrow/end-of-movement': 'evidenced / evidenced / open',
+      'arrow/gathering': 'evidenced / decided / open',
+      'line/escape-route': 'evidenced / decided / proposed',
+      'line/barrier-position': 'evidenced / decided / proposed',
+      'line/fire-spread': 'evidenced / decided / proposed',
+      'line/boundary-command-area': 'evidenced / decided / proposed',
+      'line/boundary-section': 'evidenced / decided / proposed',
+      'line/boundary-subsection': 'evidenced / decided / proposed',
+      'line/boundary-with-strength': 'evidenced / decided / proposed',
     });
   });
 });

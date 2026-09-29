@@ -50,16 +50,38 @@ sonst still ein falsches oder unsichtbares Symbol ergeben.
 
    ```ts
    import { writeFileSync } from 'node:fs';
-   import { RECIPES, composeFromCatalog } from '@einsatzzeichen/conformance';
+   import { drawSymbol } from '@einsatzzeichen/core';
    import { qgisSymbolLibrary } from '@einsatzzeichen/qgis';
 
-   const entries = Object.entries(RECIPES).map(([section, recipe]) => ({
-     name: `${section} · ${recipe.title}`,
-     drawing: composeFromCatalog(recipe.spec, recipe.title),
-   }));
+   const entries = [
+     {
+       name: 'Bergungsgruppe THW',
+       drawing: drawSymbol(
+         {
+           kind: 'formation',
+           whiteInnerContour: true,
+           organization: 'thw',
+           strength: 'gruppe',
+           labels: { center: 'B', bottomRight: 'THW' },
+         },
+         { title: 'Bergungsgruppe' },
+       ),
+     },
+     {
+       name: 'Löschgruppe',
+       drawing: drawSymbol(
+         { kind: 'formation', organization: 'feuerwehr', strength: 'gruppe', bodyMarks: ['fire-fighting'] },
+         { title: 'Löschgruppe' },
+       ),
+     },
+   ];
 
    writeFileSync('einsatzzeichen.xml', qgisSymbolLibrary(entries, { sizeMm: 10 }), 'utf8');
    ```
+
+   Alle nachgebauten Zeichen des Katalogs auf einmal liefert die Liste `RECIPES` aus dem
+   Prüfpaket (nur in Node); das Beispiel dafür steht in der
+   [Anleitung für QGIS](/docs/anleitungen/qgis/).
 
 2. In QGIS: **Einstellungen → Stilverwaltung → Importieren/Exportieren → Objekte importieren**,
    die Datei wählen, Symbole übernehmen.

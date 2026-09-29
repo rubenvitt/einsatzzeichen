@@ -75,11 +75,19 @@ addSymbolImage(map, 'ez-e-1-1-fein', drawing, { size: 24, minStrokeWidthPx: null
 ## Beispiel
 
 ```ts
+import { drawSymbol } from '@einsatzzeichen/core';
 import { addSymbolImage } from '@einsatzzeichen/maplibre';
-import { RECIPES, composeFromCatalog } from '@einsatzzeichen/conformance';
+import type { SymbolSpec } from '@einsatzzeichen/schema';
 
-const recipe = RECIPES['E.1.1'];
-const drawing = composeFromCatalog(recipe.spec, recipe.title);
+// E.1.1 „Bergungsgruppe" des THW
+const spec: SymbolSpec = {
+  kind: 'formation',
+  whiteInnerContour: true,
+  organization: 'thw',
+  strength: 'gruppe',
+  labels: { center: 'B', bottomRight: 'THW' },
+};
+const drawing = drawSymbol(spec, { title: 'Bergungsgruppe' });
 
 addSymbolImage(map, 'ez-e-1-1', drawing, { size: 32, pixelRatio: 2 });
 

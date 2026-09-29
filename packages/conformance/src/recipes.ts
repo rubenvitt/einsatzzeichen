@@ -1,24 +1,14 @@
 import {
   bodyLabelInk,
-  compose,
+  drawSymbol,
   functionRoleTextInk,
   profileFor,
-  type CatalogPorts,
   type ContrastRequirement,
 } from '@einsatzzeichen/core';
 import type { BodyLabelInk, Drawing, OrganizationId, SymbolSpec } from '@einsatzzeichen/schema';
-import { baseDrawing, innerField } from '@einsatzzeichen/core';
-import { bodyMark } from '@einsatzzeichen/core';
-import { administrativeHead } from '@einsatzzeichen/core';
 import { functionRole } from '@einsatzzeichen/core';
 import { organizationColor } from '@einsatzzeichen/core';
 import { MINIMUM_TEXT_CONTRAST } from '@einsatzzeichen/core';
-import { pictogram } from '@einsatzzeichen/core';
-import { strengthHead } from '@einsatzzeichen/core';
-import { technicalHeadMark } from '@einsatzzeichen/core';
-import { vehicleChassis } from '@einsatzzeichen/core';
-import { ARIMO_TEXT_METRICS } from '@einsatzzeichen/core';
-import { describeSymbolSpec } from '@einsatzzeichen/core';
 import {
   ANHANG_E_A_RECIPES,
   ANHANG_E_B_RECIPES,
@@ -42,25 +32,14 @@ import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
 import { ANHANG_I_RECIPES } from './recipes-anhang-i.js';
 import { ANHANG_C_2_RECIPES } from './recipes-anhang-c.js';
 
-const PORTS: CatalogPorts = {
-  baseDrawing,
-  innerField,
-  bodyMark,
-  organizationColor,
-  strengthHead,
-  technicalHeadMark,
-  functionRole,
-  administrativeHead,
-  vehicleChassis,
-  pictogram,
-  textMetrics: ARIMO_TEXT_METRICS,
-};
-
+/**
+ * Zeichnet eine Spec mit der Standardbelegung aus `core`. Bleibt als dünne Hülle um `drawSymbol()`
+ * erhalten, damit bestehende Aufrufer nicht brechen; die Ports verdrahtete bis LFH-580 diese
+ * Datei selbst. **Der Einstieg von der Spec zur Zeichnung ist `drawSymbol()` aus
+ * `@einsatzzeichen/core`** — dafür braucht niemand mehr das Prüfpaket.
+ */
 export function composeFromCatalog(spec: SymbolSpec, title?: string): Drawing {
-  return compose(spec, PORTS, {
-    ...(title !== undefined ? { title } : {}),
-    descriptionFromSpec: describeSymbolSpec,
-  });
+  return drawSymbol(spec, title !== undefined ? { title } : {});
 }
 
 export interface Recipe {

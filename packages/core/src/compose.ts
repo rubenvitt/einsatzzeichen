@@ -25,6 +25,7 @@ import {
   type SymbolKind,
   type SymbolSpec,
   type TechnicalHeadMarkId,
+  type UnitGroupingId,
   type VehicleCategoryId,
 } from '@einsatzzeichen/schema';
 import { boundsOfMm, type BoundsMm } from './bounds.js';
@@ -33,6 +34,7 @@ import { boundsOfMm, type BoundsMm } from './bounds.js';
 // Kopfzonenabstand wurde hier also ausschließlich für die Fußzone importiert. Siehe
 // `docs/decisions/2026-09-20-zonenmodell-als-daten.md` §2 Punkt 2.
 import { FOOT_GAP_MM, placeHead, profileFor } from './layout/profiles.js';
+import { placeStates, type StatePlacement } from './layout/state-placement.js';
 import { NotMeasuredError } from './not-measured.js';
 import {
   ARIMO_CAP_HEIGHT_FRACTION,
@@ -758,6 +760,14 @@ export interface CatalogPorts {
   strengthHead(id: StrengthId): HeadShape;
   /** Totaler Resolver fuer relativ vermessene, semantikfreie Kopfprimitive. */
   technicalHeadMark(id: TechnicalHeadMarkId): PrimitiveHeadShape;
+  /**
+   * Verband nach Kapitel 5.5 (LFH-577), relativ zur Oberkante der Kopfzone wie
+   * `technicalHeadMark`. Partiell: `undefined` für einen Verband, den kein Original am Körper zeigt
+   * (Verband III); `compose()` meldet ihn dann als nicht vermessenen Wert. Optional, damit
+   * bestehende Portsätze gültig bleiben; fehlt der Port, wirft `compose()` für jede Spec mit
+   * `unitGrouping`, statt den Verband still wegzulassen.
+   */
+  unitGroupingHead?(id: UnitGroupingId): PrimitiveHeadShape | undefined;
   /** Totaler Resolver fuer alle 25 vollstaendig vermessenen Funktionsfassungen. */
   functionRole(id: FunctionRoleId): FunctionRoleDefinition;
   /** Partieller Resolver: nur Kreis, Nationalstaat und EU sind als Kopf vermessen. */
@@ -831,9 +841,9 @@ export interface ComposeOptions {
 /**
  * `SymbolSpec.capabilities` trägt `CapabilityId` (`'fire-fighting'`), der Piktogrammraum trägt
  * präfigierte IDs (`'capability.fire-fighting'`). Die Abbildung steht hier an einer Stelle und
- * nicht an jedem Aufrufort. Kapitel 5.8 bleibt bewusst ein eigenständiger Piktogrammkatalog ohne
- * `SymbolSpec.states` und ohne Integration in `compose()`. Weitere ID-Räume erhalten erst dann
- * `SymbolSpec`-Felder, wenn ein realer Konsument fachlich freigegeben ist.
+ * nicht an jedem Aufrufort. Zustände aus Kapitel 5.8 laufen nicht über diese Abbildung: sie
+ * stehen seit LFH-577 in `SymbolSpec.states` und werden über `placeStates()` an den Träger gelegt
+ * (`placedStatesOf`), nicht als Boxpiktogramm in den Körper.
  */
 function pictogramIdOf(id: CapabilityId): PictogramId {
   return `capability.${id}`;
@@ -947,6 +957,137 @@ function assertTextRunsFit(
   if (issues.length > 0) throw new CompositionError(issues);
 }
 
+/**
+ * Die Kopfzone des Verbands (LFH-577). Belegt ist sie nur am Formationskörper — ohne Variante an
+ * I.1.4, F.1.1, F.1.13, F.1.21, E.1.31 und C.1.6, mit Fußband an F.1.3, jeweils y 1…5 mm, also
+ * genau die Lage, die `placeHead` am Formationsprofil rechnet. Der Verbandsführer I.5.7 trägt den
+ * Balken am Personenkörper auf y 0…4; diese Lage erreicht `placeHead` nicht
+ * (`HEAD_TOP_MARGIN_MM` = 1), deshalb bleibt die Person eine nicht vermessene Kombination, statt
+ * den Balken 1 mm zu tief zu setzen. Maße und Belege: `geometry/unit-groupings.ts` und
+ * `docs/decisions/2026-09-29-lfh-577-verband-5-5.md`.
+ *
+ * Die Reihenfolge der Prüfungen folgt der Reichweite: zuerst der Wert (Verband III zeigt kein
+ * Original an irgendeinem Körper), dann die Kombination.
+ */
+function unitGroupingHeadFor(spec: SymbolSpec, catalog: CatalogPorts): PrimitiveHeadShape | null {
+  if (spec.unitGrouping === undefined) return null;
+  if (catalog.unitGroupingHead === undefined) {
+    throw new NotMeasuredError(
+      'Der Katalog liefert keinen Verbandskopf (Port unitGroupingHead fehlt).',
+      'combination',
+    );
+  }
+  const shape = catalog.unitGroupingHead(spec.unitGrouping);
+  if (shape === undefined) {
+    throw new NotMeasuredError(
+      `Der Verband "${spec.unitGrouping}" ist am Körper nicht vermessen: keine der 661 ` +
+        'Referenzdateien zeigt ihn an einem Grundzeichen.',
+      'value',
+    );
+  }
+  if (
+    spec.kind !== 'formation' ||
+    (spec.bodyVariant !== undefined && spec.bodyVariant !== 'foot-band')
+  ) {
+    throw new NotMeasuredError(
+      `Ein Verband an "${spec.kind}${spec.bodyVariant === undefined ? '' : `/${spec.bodyVariant}`}" ` +
+        'ist nicht vermessen: belegt ist er nur über der Taktischen Formation (ohne Variante und ' +
+        'mit Fußband). Der Verbandsführer I.5.7 zeigt den Balken an der Person auf einer Lage, ' +
+        'die die Kopfzone nicht erreicht.',
+      'combination',
+    );
+  }
+  return shape;
+}
+
+/**
+ * Felder, die neben einem Zustand etwas an den Körper, über oder unter ihn setzen. Keines davon
+ * zeigt ein Original zusammen mit einem Zustand an einem Träger.
+ */
+const FIELDS_BESIDE_STATES = [
+  'functionRole',
+  'organization',
+  'technicalFill',
+  'whiteInnerContour',
+  'strength',
+  'technicalHeadMark',
+  'administrativeLevel',
+  'unitGrouping',
+  'vehicleCategory',
+  'capabilities',
+  'bodyMarks',
+  'designation',
+  'labels',
+] as const satisfies readonly (keyof SymbolSpec)[];
+
+/**
+ * Legt `states` und `tendency` über `placeStates()` an den Träger (LFH-577) — oder gibt `null`,
+ * wenn die Spec keinen Zustand trägt.
+ *
+ * **Was die Referenz zeigt, und nur das.** Ein Zustand ersetzt den Körper des Grundzeichens durch
+ * den Träger in seiner Zustandsfassung (die Personenraute aus 5.8.8, das verkleinerte
+ * Gefahrendreieck neben einem Hinweis), und ein Hinweis an der Person verbreitert die Fläche auf
+ * 36 × 32 mm und rückt die Grundfläche um 4 mm nach rechts (`baseAreaMm`). Kein Original zeigt
+ * daneben eine Organisationsfarbe, einen Kopf, einen Fuß, eine Beschriftung oder eine Marke.
+ * Wie diese mit dem verkleinerten oder verschobenen Träger mitwanderten, wäre geraten; die
+ * Zusammenstellung wird deshalb als nicht vermessen abgelehnt statt gezeichnet.
+ *
+ * **Reihenfolge der Befunde.** Zuerst `placeStates()`: meldet es einen Wert als an keinem Träger
+ * vermessen (`scope: 'value'`, etwa jede Tendenz oder ein Schadensgrad), ist das die
+ * weitergehende Aussage als „diese Kombination fehlt". Erst danach die übrigen Felder.
+ */
+function placedStatesOf(spec: SymbolSpec): StatePlacement | null {
+  const states = spec.states ?? [];
+  if (states.length === 0 && spec.tendency === undefined) return null;
+  const placement = placeStates({
+    carrier: {
+      kind: spec.kind,
+      ...(spec.bodyVariant === undefined ? {} : { variant: spec.bodyVariant }),
+    },
+    states,
+    ...(spec.tendency === undefined ? {} : { tendency: spec.tendency }),
+  });
+  const beside = FIELDS_BESIDE_STATES.filter((field) => {
+    const value = spec[field];
+    return value !== undefined && !(Array.isArray(value) && value.length === 0);
+  });
+  if (beside.length > 0) {
+    throw new NotMeasuredError(
+      `Zustände an "${spec.kind}" zusammen mit ${beside.join(', ')}: kein Original zeigt einen ` +
+        'Zustand an einem Träger, der daneben eine dieser Angaben trägt. Der Träger wird in seiner ' +
+        'Zustandsfassung ersetzt, und wie diese Angaben mitwanderten, ist nicht belegt.',
+      'combination',
+    );
+  }
+  return placement;
+}
+
+/**
+ * Die Zeichnung eines Trägers mit Zuständen. Der Träger nimmt die Rolle `body` an: er ersetzt den
+ * Körper des Grundzeichens, und Hüllen-, Kennzahlen- und Kontrastprüfungen suchen den Körper an
+ * dieser Rolle. Die platzierten Teile folgen in der Reihenfolge, die `placeStates()` liefert —
+ * erst auf und um den Träger, dann in der Randlage.
+ */
+function stateDrawing(
+  placement: StatePlacement,
+  options: ComposeOptions,
+  description: string | undefined,
+): Drawing {
+  if (placement.carrier === null) throw new Error('Zustandsplatzierung ohne Träger.');
+  const [carrierBody, ...carrierRest] = placement.carrier.primitives;
+  if (carrierBody === undefined) throw new Error('Zustandsträger ohne Primitiv.');
+  return {
+    viewBox: { width: placement.canvasMm.width, height: placement.canvasMm.height },
+    children: [
+      { ...carrierBody, role: 'body' },
+      ...carrierRest,
+      ...placement.parts.flatMap((part) => part.primitives),
+    ],
+    ...(options.title !== undefined ? { title: options.title } : {}),
+    ...(description !== undefined ? { description } : {}),
+  };
+}
+
 export function compose(
   sourceSpec: SymbolSpec,
   catalog: CatalogPorts,
@@ -965,6 +1106,11 @@ export function compose(
   const effectiveLabels = spec.labels;
   const description = options.descriptionFromSpec?.(spec) ?? options.description;
 
+  const statePlacement = placedStatesOf(spec);
+  if (statePlacement !== null && statePlacement.carrier !== null) {
+    return stateDrawing(statePlacement, options, description);
+  }
+
   const base = roleDefinition === undefined
     ? catalog.baseDrawing(spec.kind, spec.bodyVariant)
     : {
@@ -981,9 +1127,11 @@ export function compose(
 
   const profile = profileFor(spec.kind, spec.bodyVariant);
   const headShape = spec.strength !== undefined ? catalog.strengthHead(spec.strength) : null;
+  // Technische Kopfmarke und Verband zeichnen beide relative Kopfprimitive; `head-zone-conflict`
+  // schließt aus, dass beide zugleich gesetzt sind.
   const primitiveHeadShape = spec.technicalHeadMark !== undefined
     ? catalog.technicalHeadMark(spec.technicalHeadMark)
-    : null;
+    : unitGroupingHeadFor(spec, catalog);
   const headHeightMm = headShape?.heightMm ?? primitiveHeadShape?.heightMm;
 
   // Dieselbe Kopfzone sitzt je nach Körperform unterschiedlich hoch — deshalb
@@ -1061,12 +1209,15 @@ export function compose(
 
   // Belegte Ausnahmen: F.1.17 sowie die drei vermessenen G-Köpfe `trupp`, `gruppe` und `zug`
   // führen `foot-band` zusammen mit einer Kopfzone, F.1.3 mit der technischen Kopfmarke
-  // `double-vertical-bar` (Fachreview 19.09.2026). Die Kopfzone verschiebt den Formationskörper
-  // nicht; Band und Hülle bleiben auf y 23…26. Andere Stärken werden daraus nicht fortgeschrieben.
+  // `double-vertical-bar` (Fachreview 19.09.2026), seit LFH-577 als Verband II beschrieben. Die
+  // Kopfzone verschiebt den Formationskörper nicht; Band und Hülle bleiben auf y 23…26. Andere
+  // Stärken werden daraus nicht fortgeschrieben.
   const isMeasuredFootBandWithHead =
     spec.kind === 'formation' &&
     spec.bodyVariant === 'foot-band' &&
-    (spec.strength !== undefined || spec.technicalHeadMark !== undefined);
+    (spec.strength !== undefined ||
+      spec.technicalHeadMark !== undefined ||
+      spec.unitGrouping !== undefined);
   if (extras.length > 0 && headBox !== null && !isMeasuredFootBandWithHead) {
     // Wie Zusatzgeometrie einer Kopfzone ausweicht, ist **nicht** belegt: kein Zeichen des
     // Referenzbestands trägt beides. Der Anhang E.2 führt überhaupt keine Kopfzone (an allen 31

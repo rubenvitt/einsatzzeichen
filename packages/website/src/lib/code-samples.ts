@@ -3,7 +3,8 @@ import type { SymbolSpec } from '@einsatzzeichen/schema';
 /**
  * Codebeispiele für die vier Ausgabekanäle eines Symbols. Reine Template-Strings — keine
  * Codegenerator-Bibliothek — damit jedes Snippet Zeile für Zeile lesbar bleibt und mit den
- * Paket-APIs Schritt hält, statt sie nachzubilden.
+ * Paket-APIs Schritt hält, statt sie nachzubilden. Seit LFH-580 zeichnen alle vier mit
+ * `drawSymbol()` aus `core`; das Prüfpaket kommt in keinem Beispiel mehr vor.
  */
 export interface CodeSamples {
   typescript: string;
@@ -20,25 +21,24 @@ export function codeSamplesFor(spec: SymbolSpec, id: string): CodeSamples {
   const specLiteral = JSON.stringify(spec, null, 2);
   const idLiteral = JSON.stringify(id);
 
-  const typescript = `import { composeFromCatalog } from '@einsatzzeichen/conformance';
-import { renderSvg } from '@einsatzzeichen/core';
+  const typescript = `import { drawSymbol, renderSvg } from '@einsatzzeichen/core';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 
 // Spezifikation für ${idLiteral}
 const spec: SymbolSpec = ${specLiteral};
 
-const drawing = composeFromCatalog(spec);
+const drawing = drawSymbol(spec);
 const svg = renderSvg(drawing, { size: 64 });
 `;
 
   const react = `import { Einsatzzeichen } from '@einsatzzeichen/react';
-import { composeFromCatalog } from '@einsatzzeichen/conformance';
+import { drawSymbol } from '@einsatzzeichen/core';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 
 // Spezifikation für ${idLiteral}
 const spec: SymbolSpec = ${specLiteral};
 
-const drawing = composeFromCatalog(spec);
+const drawing = drawSymbol(spec);
 
 export function Symbol() {
   return <Einsatzzeichen drawing={drawing} size={64} />;
@@ -50,7 +50,7 @@ export function Symbol() {
   defineEinsatzzeichenElement,
   type EinsatzzeichenElement,
 } from '@einsatzzeichen/web-component';
-import { composeFromCatalog } from '@einsatzzeichen/conformance';
+import { drawSymbol } from '@einsatzzeichen/core';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 
 // Spezifikation für ${idLiteral}
@@ -60,13 +60,13 @@ const spec: SymbolSpec = ${specLiteral};
 defineEinsatzzeichenElement();
 
 const element = document.createElement(DEFAULT_TAG_NAME) as EinsatzzeichenElement;
-element.drawing = composeFromCatalog(spec);
+element.drawing = drawSymbol(spec);
 document.body.append(element);
 `;
 
   const maplibre = `import maplibregl from 'maplibre-gl';
 import { addSymbolImage } from '@einsatzzeichen/maplibre';
-import { composeFromCatalog } from '@einsatzzeichen/conformance';
+import { drawSymbol } from '@einsatzzeichen/core';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 
 // Spezifikation für ${idLiteral}
@@ -76,7 +76,7 @@ const map = new maplibregl.Map({ container: 'map', style: 'https://example.org/s
 
 map.on('load', () => {
   // addSymbolImage rastert die Zeichnung und ruft intern map.addImage(...) auf.
-  addSymbolImage(map, ${idLiteral}, composeFromCatalog(spec), { size: 64 });
+  addSymbolImage(map, ${idLiteral}, drawSymbol(spec), { size: 64 });
 });
 `;
 

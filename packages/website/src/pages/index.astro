@@ -5,12 +5,11 @@
  * Katalog geprüft ist, und die zwei Einstiege für Einsatz und Entwicklung.
  *
  * Alles Sichtbare kommt aus dem Katalog: die Zeichenwand und die Beispiele aus dem Snapshot, die
- * vier Schritte aus dem Kompositionsmotor selbst (`composeFromCatalog` zur Buildzeit), jede Zahl
+ * vier Schritte aus dem Kompositionsmotor selbst (`drawSymbol` aus `core` zur Buildzeit), jede Zahl
  * aus `review-summary.ts`. Kein Bild, keine Zahl steht hier von Hand — was von Hand stünde, wäre
  * an dem Tag falsch, an dem sich der Katalog ändert.
  */
-import { composeFromCatalog } from '@einsatzzeichen/conformance/src/recipes.js';
-import { renderSvg } from '@einsatzzeichen/core';
+import { drawSymbol, renderSvg } from '@einsatzzeichen/core';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import StatusPair from '../components/StatusPair.astro';
@@ -117,7 +116,7 @@ const STEPS: { spec: SymbolSpec; added: string; name: string; text: string }[] =
 const steps = STEPS.map((step, index) => {
   let svg: string;
   try {
-    svg = renderSvg(composeFromCatalog(step.spec), { size: 132, idPrefix: `ez-step-${index}` });
+    svg = renderSvg(drawSymbol(step.spec), { size: 132, idPrefix: `ez-step-${index}` });
   } catch (error) {
     throw new Error(
       `Schritt ${index + 1} der Landingpage („${step.added}") komponiert nicht mehr: ` +
@@ -192,10 +191,9 @@ const trustExamples = [approvedExample, deviationExample]
 // aus dem Schrittobjekt erzeugt, damit Erzählung und Beispiel nicht auseinanderlaufen können.
 const finalSpec = STEPS[STEPS.length - 1]!.spec;
 const codeSample =
-  `import { composeFromCatalog } from '@einsatzzeichen/conformance';\n` +
-  `import { renderSvg } from '@einsatzzeichen/core';\n\n` +
+  `import { drawSymbol, renderSvg } from '@einsatzzeichen/core';\n\n` +
   `// ${stepTarget.title} (${stepTarget.id})\n` +
-  `const drawing = composeFromCatalog(${JSON.stringify(finalSpec, null, 2)});\n` +
+  `const drawing = drawSymbol(${JSON.stringify(finalSpec, null, 2)});\n` +
   `const svg = renderSvg(drawing, { size: 64 });`;
 ---
 
