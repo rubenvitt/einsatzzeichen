@@ -302,6 +302,31 @@ describe('parseSpec()', () => {
     expect(error.message).toMatch(message);
   });
 
+  it('liest Fassungskennungen je Körpermarke und die Körperlauftinte aus LFH-786', () => {
+    const spec: SymbolSpec = {
+      kind: 'vehicle-land',
+      bodyMarks: ['decontamination'],
+      bodyMarkRenditions: { decontamination: 'centered-large-tongs' },
+      labels: { center: 'P', inBodyInk: 'koerperlauf-kontrast' },
+    };
+    expect(parseSpec(serializeSpec(spec))).toEqual(spec);
+    // Ein leeres Objekt ist nicht dasselbe wie ein fehlendes Feld (`specKey` trennt beide).
+    expect(parseSpec({ kind: 'vehicle-land', bodyMarkRenditions: {} }).bodyMarkRenditions).toEqual({});
+    // Ob die Fassung an diesem Paar vermessen ist, entscheidet validateSpec, nicht der Leser.
+    expect(parseSpec({ kind: 'formation', bodyMarkRenditions: { care: 'shifted-left-1mm' } }))
+      .toEqual({ kind: 'formation', bodyMarkRenditions: { care: 'shifted-left-1mm' } });
+  });
+
+  it.each([
+    [{ kind: 'vehicle-land', bodyMarkRenditions: { decontamination: 'bigger' } }, '$.bodyMarkRenditions.decontamination', /unbekannter Wert/],
+    [{ kind: 'vehicle-land', bodyMarkRenditions: { 'no-such-mark': 'shifted-left-1mm' } }, '$.bodyMarkRenditions["no-such-mark"]', /unbekanntes Feld/],
+    [{ kind: 'vehicle-land', bodyMarkRenditions: ['centered-large-tongs'] }, '$.bodyMarkRenditions', /Objekt/],
+  ])('lehnt %j in bodyMarkRenditions mit Pfad ab', (input, path, message) => {
+    const error = parseError(input);
+    expect(error.path).toBe(path);
+    expect(error.message).toMatch(message);
+  });
+
   it('meldet einen Fehler als SpecParseError mit Pfad in der Meldung', () => {
     const error = parseError({ kind: 'formation', strength: 'kompanie' });
     expect(error).toBeInstanceOf(Error);

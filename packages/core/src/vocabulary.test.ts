@@ -49,6 +49,7 @@ describe('SPEC_FIELD_VALUES', () => {
     expect(Object.keys(SPEC_FIELD_VALUES).sort()).toEqual(
       [
         'administrativeLevel',
+        'bodyMarkRenditions',
         'bodyMarks',
         'bodyVariant',
         'capabilities',

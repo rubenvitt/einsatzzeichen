@@ -1,6 +1,7 @@
 import {
   ADMIN_LEVEL_IDS,
   ANIMAL_STATE_IDS,
+  BODY_MARK_RENDITION_IDS,
   BODY_VARIANT_IDS,
   CAPABILITY_IDS,
   FREESTANDING_KINDS,
@@ -217,7 +218,11 @@ function record(fields: Readonly<Record<string, Reader>>, required: readonly str
  */
 type FieldTable<T> = { readonly [K in keyof Required<T>]: Reader };
 
-const BODY_LABEL_INKS = Object.keys({ schwarz: true, weiss: true } satisfies Record<BodyLabelInk, true>);
+const BODY_LABEL_INKS = Object.keys({
+  schwarz: true,
+  weiss: true,
+  'koerperlauf-kontrast': true,
+} satisfies Record<BodyLabelInk, true>);
 const ACCESSIBILITY_MODES = Object.keys({ 'neutral-zones': true } satisfies Record<
   NonNullable<BodyLabels['accessibilityMode']>,
   true
@@ -266,6 +271,23 @@ const LABEL_FIELDS: FieldTable<BodyLabels> = {
   centerCapHeightMm: finiteNumber,
 };
 
+/** Der volle lesbare Vorrat an Körpermarken, für `bodyMarks` und die Schlüssel von `bodyMarkRenditions`. */
+const BODY_MARK_KEYS = [...CAPABILITY_IDS, ...TECHNICAL_BODY_MARK_IDS];
+const bodyMarkId = oneOf(BODY_MARK_KEYS, 'CAPABILITY_IDS und TECHNICAL_BODY_MARK_IDS');
+
+/**
+ * Fassung je Körpermarke (LFH-786): ein Objekt aus Körpermarke und Fassungskennung. Die Schlüssel
+ * sind die lesbaren Körpermarken, die Werte die geschlossene Liste `BODY_MARK_RENDITION_IDS`. Ob
+ * die Fassung an diesem Paar vermessen ist und ob die Marke in `bodyMarks` steht, ist Grammatik
+ * (`body-mark-rendition-not-measured`), kein Formfehler. Ein leeres Objekt bleibt erhalten, weil
+ * `specKey` es von einem fehlenden Feld unterscheidet.
+ */
+const bodyMarkRenditions = record(
+  Object.fromEntries(BODY_MARK_KEYS.map((id) => [id, oneOf(BODY_MARK_RENDITION_IDS, 'BODY_MARK_RENDITION_IDS')])),
+  [],
+  'bodyMarkRenditions',
+);
+
 const SPEC_FIELDS: FieldTable<SymbolSpec> = {
   kind: oneOf(SYMBOL_KINDS, 'SYMBOL_KINDS'),
   functionRole: oneOf(FUNCTION_ROLE_IDS, 'FUNCTION_ROLE_IDS'),
@@ -285,7 +307,8 @@ const SPEC_FIELDS: FieldTable<SymbolSpec> = {
   // Ein Einzelwert: eine Liste lehnt der Leser schon der Form nach ab.
   tendency: oneOf(TENDENCY_IDS, 'TENDENCY_IDS'),
   capabilities: list(oneOf(CAPABILITY_IDS, 'CAPABILITY_IDS')),
-  bodyMarks: list(oneOf([...CAPABILITY_IDS, ...TECHNICAL_BODY_MARK_IDS], 'CAPABILITY_IDS und TECHNICAL_BODY_MARK_IDS')),
+  bodyMarks: list(bodyMarkId),
+  bodyMarkRenditions,
   designation: text,
   labels: record(LABEL_FIELDS, [], 'labels'),
 };

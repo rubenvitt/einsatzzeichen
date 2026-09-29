@@ -41,9 +41,11 @@ function legacyBuilderParam(spec: SymbolSpec): string {
 }
 
 describe('kanonische Serialisierung über den Rezeptbestand', () => {
-  it('deckt alle 242 Rezepte ab, jedes mit eigener Serialisierung', () => {
-    expect(recipeEntries).toHaveLength(242);
-    expect(new Set(recipeEntries.map(([, recipe]) => serializeSpec(recipe.spec))).size).toBe(242);
+  it('deckt alle 279 Rezepte ab, jedes mit eigener Serialisierung', () => {
+    // 242 bis LFH-786, dazu die 37 Anhang-C-Fixtures; ihre Fassungskennungen (`bodyMarkRenditions`)
+    // laufen durch dieselbe Rundreise.
+    expect(recipeEntries).toHaveLength(279);
+    expect(new Set(recipeEntries.map(([, recipe]) => serializeSpec(recipe.spec))).size).toBe(279);
   });
 
   it.each(recipeEntries)('%s: JSON-Rundreise liest dieselbe Spec und zeichnet byte-gleich', (_id, recipe) => {
@@ -74,8 +76,9 @@ describe('Reihenfolge der Körpermarken', () => {
    */
   const multiMark = recipeEntries.filter(([, recipe]) => (recipe.spec.bodyMarks?.length ?? 0) >= 2);
 
-  it('betrifft 28 Rezepte mit mindestens zwei Körpermarken', () => {
-    expect(multiMark.map(([id]) => id)).toHaveLength(28);
+  it('betrifft 29 Rezepte mit mindestens zwei Körpermarken', () => {
+    // 28 bis LFH-786; dazu C.2.31 (Löschdrohne: Brandbekämpfung und Drohnenwinkel).
+    expect(multiMark.map(([id]) => id)).toHaveLength(29);
   });
 
   it.each(multiMark)('%s: umgekehrte Reihenfolge zeichnet anders und serialisiert anders', (_id, recipe) => {

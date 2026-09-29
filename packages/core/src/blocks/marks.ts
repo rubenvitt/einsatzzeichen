@@ -668,11 +668,13 @@ export const CAPABILITY_BLOCKS: readonly BlockEntry[] = Object.freeze([
 ]);
 
 const BODY_MARKS_FILE = 'core/src/geometry/body-marks.ts';
+/** Die Anhang-C-Fassungen aus LFH-786 stehen je Familie in einer eigenen Datei. */
+const ANHANG_C_BODY_MARKS_DIR = 'core/src/geometry/body-marks-anhang-c';
 
 /** Die einzige technische Körpermarke, deren Körperbindung eine Regel im Regelkatalog trägt. */
 const INSET_HULL_BINDING = {
   ruleId: 'inset-hull-requires-measured-body-mark',
-  definedAt: 'core/src/validate.ts:419–446',
+  definedAt: 'core/src/validate.ts:423–450',
   reason:
     'An der eingesenkten Hülle sind die Körpermarken nur als keine oder inset-hull-wheel-pair für die Hilfsorganisation und als fire-fighting für die Feuerwehr vermessen.',
 } as const;
@@ -682,13 +684,14 @@ function bodyMark(
   lines: string,
   note: string,
   sourceRefs?: readonly string[],
+  file: string = BODY_MARKS_FILE,
 ): BlockEntry {
   return block(
     'body-mark',
     valueId,
     'body',
     measured(
-      `${BODY_MARKS_FILE}:${lines}`,
+      `${file}:${lines}`,
       note,
       sourceRefs === undefined ? undefined : babz(...sourceRefs),
     ),
@@ -699,242 +702,249 @@ function bodyMark(
 export const BODY_MARK_BLOCKS: readonly BlockEntry[] = Object.freeze([
   bodyMark(
     'ring-7mm-offset-down-1mm',
-    '835–845',
+    '837–847',
     'F.1.13: Kreis r 7 mm, Mittelpunkt 1 mm unter der Körpermitte.',
     ['F.1.13'],
   ),
   bodyMark(
     'chevron-over-opposed-triangles',
-    '847–870',
+    '849–872',
     'F.1.16: ein gefüllter Winkel über zwei zur Körpermitte gerichteten Dreiecken.',
     ['F.1.16'],
   ),
   bodyMark(
     'ring-6-5mm-offset-down-2mm-with-roof',
-    '909–938',
+    '911–940',
     'F.1.21: eigener Ring r 6,5 mm, Dach und eingeschriebenes Dreieck.',
     ['F.1.21'],
   ),
   bodyMark(
     'top-center-rect-0-5x0-6mm',
-    '1400–1408',
+    '1402–1410',
     `${UNDOCUMENTED_AT_SOURCE}0,5 × 0,6 mm großes gefülltes Rechteck mittig 2,5 mm unter der Oberkante, nur am Landfahrzeug mit Radpaar (\`VEHICLE_LAND_PLAIN_WHEEL_PAIR_MARKS\`).`,
   ),
   bodyMark(
     'air-winch-chevron-diamond',
-    '1836–1852',
+    '1838–1854',
     'F.2.6: Winde. Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert (Mittellinien statt der Außenkonturpunkte der früheren Fassung).',
     ['F.2.6'],
   ),
   bodyMark(
     'ring-6mm-offset-down-3mm-four-way-stem',
-    '1553',
+    '1555',
     `${UNDOCUMENTED_AT_SOURCE}Eintrag in \`VEHICLE_LAND_NORMAL_MARKS\`, gezeichnet von \`landFourWayStem\`; dort ist nur der Fuß an F.2.11 nachgemessen.`,
   ),
   bodyMark(
     'ring-5mm-offset-down-3mm-eight-spokes',
-    '1554',
+    '1556',
     `${UNDOCUMENTED_AT_SOURCE}Eintrag in \`VEHICLE_LAND_NORMAL_MARKS\`, gezeichnet von \`landShiftedEightSpokes\`.`,
   ),
   bodyMark(
     'circle-patient-staging-arrows',
-    '1123–1132',
+    '1125–1134',
     'Tabelle `CIRCLE_NORMAL_MARKS`: F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen, gegen die 24 × 24-mm-Hülle gerechnet.',
   ),
   bodyMark(
     'circle-collection-arrow',
-    '1133–1141',
+    '1135–1143',
     'Tabelle `CIRCLE_NORMAL_MARKS`: F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen, gegen die 24 × 24-mm-Hülle gerechnet.',
   ),
   bodyMark(
     'circle-staging-frame-arrow',
-    '1142–1156',
+    '1144–1158',
     'Tabelle `CIRCLE_NORMAL_MARKS`: F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen, gegen die 24 × 24-mm-Hülle gerechnet.',
   ),
   bodyMark(
     'circle-staging-frame',
-    '1157–1166',
+    '1159–1168',
     'Tabelle `CIRCLE_NORMAL_MARKS`: F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen, gegen die 24 × 24-mm-Hülle gerechnet.',
   ),
   bodyMark(
     'circle-staging-frame-quadrants-arrows',
-    '1167–1183',
+    '1169–1185',
     'Tabelle `CIRCLE_NORMAL_MARKS`: F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen, gegen die 24 × 24-mm-Hülle gerechnet.',
   ),
   bodyMark(
     'circle-diamond-arrow',
-    '1184–1197',
+    '1186–1199',
     'F.3.10: aus den jeweils gegenüberliegenden Konturseiten des 0,5-mm-Umrisses gemittelte Mittellinienpunkte; Anschlag und Pfeil darunter getrennt vermessen.',
     ['F.3.10'],
   ),
   bodyMark(
     'circle-cross-ring',
-    '1198–1209',
+    '1200–1211',
     'Tabelle `CIRCLE_NORMAL_MARKS`: F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen, gegen die 24 × 24-mm-Hülle gerechnet.',
   ),
   bodyMark(
     'circle-double-arrow-lower-v',
-    '1210–1220',
+    '1212–1222',
     'Tabelle `CIRCLE_NORMAL_MARKS`: F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen, gegen die 24 × 24-mm-Hülle gerechnet.',
   ),
   bodyMark(
     'circle-information-stem',
-    '1221',
+    '1223',
     'Tabelle `CIRCLE_NORMAL_MARKS` (F.3, am 26. August 2026 vermessen); zusätzlich in `CIRCLE_RAISED_ONE_MM_MARKS` (N.2.3: am um 1 mm angehobenen Kreis ausschließlich diese eine Marke vermessen).',
   ),
   bodyMark(
     'circle-transport-diamond-arrows',
-    '1222–1230',
+    '1224–1232',
     'Tabelle `CIRCLE_NORMAL_MARKS`: F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen, gegen die 24 × 24-mm-Hülle gerechnet.',
   ),
   bodyMark(
     'circle-transport-diamond-wheels-arrows',
-    '1231–1239',
+    '1233–1241',
     'Tabelle `CIRCLE_NORMAL_MARKS`: F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen, gegen die 24 × 24-mm-Hülle gerechnet.',
   ),
   bodyMark(
     'circle-two-waves-diamond',
-    '1290–1314',
+    '1292–1316',
     'Tabelle `CIRCLE_RAISED_GABLE_MARKS`: I.4.1 ergänzt seit der unabhängigen Messung vom 27. August 2026 eine technische Marke ausschließlich an der exakten raised-gable-Hülle (4|6)–(28|30).',
   ),
   bodyMark(
     'circle-diagonal-double-arrow-offset-bowl',
-    '1240–1254',
+    '1242–1256',
     'Tabelle `CIRCLE_NORMAL_MARKS`: I.4.2 und I.4.3 am 27. August 2026 unabhängig ergänzt, auf die exakte Lage (4|4)–(28|28) begrenzt.',
   ),
   bodyMark(
     'circle-wide-bowl',
-    '1255–1263',
+    '1257–1265',
     'Tabelle `CIRCLE_NORMAL_MARKS`: I.4.2 und I.4.3 am 27. August 2026 unabhängig ergänzt, auf die exakte Lage (4|4)–(28|28) begrenzt.',
   ),
   bodyMark(
     'formation-solid-cap-3mm',
-    '398–406',
+    '400–408',
     `${UNDOCUMENTED_AT_SOURCE}3 mm hohe gefüllte Kappe über die volle Breite der Formation (\`MARKS\`).`,
   ),
   bodyMark(
     'formation-solid-cap-3.7mm-three-hole-row',
-    '407–425',
+    '409–427',
     `${UNDOCUMENTED_AT_SOURCE}3,7 mm hohe gefüllte Kappe mit drei weißen Löchern r 1,5 mm (\`MARKS\`).`,
   ),
   bodyMark(
     'formation-solid-cap-4mm-three-hole-row',
-    '426–441',
+    '428–443',
     `${UNDOCUMENTED_AT_SOURCE}4 mm hohe gefüllte Kappe mit drei weißen Löchern r 1,5 mm (\`MARKS\`).`,
   ),
   bodyMark(
     'formation-water-rescue-compact',
-    '443–485',
+    '445–487',
     'I.1.5 bis I.1.8: die kompakte, körperbezogene Wasserrettungsfassung — ausdrücklich nicht die 23 mm breite Boxfassung aus 4.5.8.',
     ['I.1.5–I.1.8'],
   ),
   bodyMark(
     'h-veterinary-decontamination',
-    '579–606',
+    '581–608',
     'H.2: Veterinär- und Tierdekontaminationsmarke, Maße an der Referenz abgelesen (Fachreview 19.09.2026).',
     ['H.2'],
   ),
   bodyMark(
     'h-veterinary-slaughter',
-    '608–633',
+    '610–635',
     'H.3: Veterinär-V mit der eigenständig vermessenen Schlacht-/Untersuchungsmarke links.',
     ['H.3'],
   ),
   bodyMark(
     'land-horizontal-blade-bent-upright',
-    '1607–1621',
+    '1609–1623',
     'N.1.1, Maße an der Referenz abgelesen: Schild waagerecht auf y 14,5, senkrechter Strich x 21 mit Knick bei (21|18,5).',
     ['N.1.1'],
   ),
   bodyMark(
     'ring-5mm-offset-down-3-5mm-eight-spokes',
-    '1555–1567',
+    '1557–1569',
     `${UNDOCUMENTED_AT_SOURCE}Ring r 5 mm mit acht Speichen, 6,5 mm über der Unterkante (\`VEHICLE_LAND_NORMAL_MARKS\`).`,
   ),
   bodyMark(
     'air-quartering-up-arrow-box',
-    '1853–1869',
+    '1855–1871',
     'N.1.4, Maße an der Referenz abgelesen: Schaft x 23 bis zur Spitze (23|9), Kasten 5 × 5 mm ab (20,5|15).',
     ['N.1.4'],
   ),
   bodyMark(
     'air-horizontal-left-chevron',
-    '1875–1882',
+    '1877–1884',
     `${UNDOCUMENTED_AT_SOURCE}waagerechter Strich mit nach links weisendem Winkel am Festflügelrumpf (\`VEHICLE_AIR_FIXED_WING_MARKS\`).`,
   ),
   bodyMark(
     'air-rising-diagonal',
-    '1883–1891',
+    '1885–1893',
     'N.1.6, Maße an der Referenz abgelesen: die Diagonale steigt mit 1 : 2 aus der linken Rumpfecke bis auf den Bogen.',
     ['N.1.6'],
   ),
   bodyMark(
     'spontaneous-helper-collection-arrow',
-    '1906–1915',
+    '1908–1917',
     'Tabelle `CIRCLE_NORMAL_ANHANG_N_MARKS`: N.2.1/N.2.2, Innenmarken ausschließlich auf dem normalen 12-mm-Kreis (Hülle 4…28).',
   ),
   bodyMark(
     'spontaneous-helper-contact-double-arrow',
-    '1916–1925',
+    '1918–1927',
     'Tabelle `CIRCLE_NORMAL_ANHANG_N_MARKS`: N.2.1/N.2.2, Innenmarken ausschließlich auf dem normalen 12-mm-Kreis (Hülle 4…28).',
   ),
   bodyMark(
     'inset-hull-wheel-pair',
-    '1991–2000',
+    '1993–2002',
     'Tabelle `VEHICLE_WATER_INSET_HULL_MARKS`: I.3.4 und I.3.11, eigenständig vermessene Marken des eingesenkten Wasserrumpfs.',
   ),
   bodyMark(
     'formation-two-waves-diamond',
-    '501–502',
+    '503–504',
     'I.1.1 bis I.1.4: zwei Wellen über einer Raute auf der normalen Formationshülle.',
     ['I.1.1–I.1.4'],
   ),
   bodyMark(
     'formation-water-rescue-lower-zone',
-    '504–518',
+    '506–520',
     'I.1.15 bis I.1.20: die kompakte Wasserrettungsmarke der Formation. Maße an der Referenz abgelesen (I.1.15, I.1.17, I.1.19), Geometrie eigenständig konstruiert.',
     ['I.1.15–I.1.20'],
   ),
   bodyMark(
     'formation-hooked-crossed-disks-over-lowered-wave-diamond',
-    '520–564',
+    '522–566',
     'I.1.13 und I.1.14: eine eigene technische Composite-Marke, gemeinsam an genau diesen beiden normalen Formationskörpern vermessen. Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert.',
     ['I.1.13', 'I.1.14'],
   ),
   bodyMark(
     'formation-opposed-triangles-top',
-    '872–891',
+    '874–893',
     'I.1.19: zwei gefüllte, zur Mitte gerichtete Dreiecke in der oberen Inhaltszone.',
     ['I.1.19'],
   ),
   bodyMark(
     'formation-chevron-top',
-    '893–907',
+    '895–909',
     'I.1.20: ein einzelner gefüllter Winkel in der oberen Inhaltszone.',
     ['I.1.20'],
   ),
   bodyMark(
     'double-wave-inner-diamond-8mm',
-    '981–989',
+    '983–991',
     'Tabelle `PERSON_I5_MARKS`: I.5.1 bis I.5.3, zwei Wellen und die innere Raute relativ zum Mittelpunkt der 26-mm-Raute; Maße an der Referenz abgelesen (I.5.1, I.5.2).',
   ),
   bodyMark(
     'trailer-water-rescue',
-    '1929–1938',
+    '1931–1940',
     'I.2.4: zwei Wellen über der Raute, nur am normalen Anhängerrumpf. Maße an der Referenz abgelesen.',
     ['I.2.4'],
   ),
   bodyMark(
     'trailer-diving',
-    '1939–1948',
+    '1941–1950',
     'I.2.5/I.2.6: kompaktere Fassung, getrennt von I.2.4 abgelesen.',
     ['I.2.5', 'I.2.6'],
   ),
   bodyMark(
     'trailer-boat-hull',
-    '1949–1963',
+    '1951–1965',
     'I.2.7: der Bootsrumpf, als Strich konstruiert. Maße an der Referenz abgelesen.',
     ['I.2.7'],
+  ),
+  bodyMark(
+    'track-chevron-top',
+    '142–153',
+    'C.2.31: gefüllter Winkel in der oberen Zone des Kettenfahrzeugs, halbe Breite 7 mm, Ecken 2 / 3,2 / 5,6 / 8 mm unter der Oberkante; nicht der Formationswinkel aus I.1.20. Maße an der Referenz abgelesen.',
+    ['C.2.31'],
+    `${ANHANG_C_BODY_MARKS_DIR}/fire-fighting.ts`,
   ),
 ]);
 
@@ -947,7 +957,7 @@ const FUNCTION_ROLES_FILE = 'core/src/geometry/function-roles.ts';
  */
 const FUNCTION_ROLE_BINDING = {
   ruleId: 'function-role-requires-measured-kind',
-  definedAt: 'core/src/validate.ts:300–318',
+  definedAt: 'core/src/validate.ts:304–322',
   reason:
     'Eine gemessene Funktion ist nur an Formation oder Person belegt, und jede einzelne Fassung zusätzlich nur an der Art, für die sie vermessen wurde.',
 } as const;

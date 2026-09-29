@@ -58,9 +58,9 @@ import type { SourceReference } from '@einsatzzeichen/schema';
  *   Motorbegründung: ein leerer Lauf erzeugt ein Textprimitiv ohne Tinte, das jedes Gate besteht
  *   und im Bild fehlt. Deshalb `'engine'`.
  *
- * Die sechs `-not-measured`-Kennungen und alle „… requires measured …"-Kennungen sind
+ * Die sieben `-not-measured`-Kennungen und alle „… requires measured …"-Kennungen sind
  * durchweg `'engine'`; das ist der erwartete Befund und zugleich der Kern des Grammatik-Umbaus:
- * heute lehnt der Motor **65 von 77** Kombinationen ab, weil eine Messung fehlt, und nur **12**,
+ * heute lehnt der Motor **66 von 78** Kombinationen ab, weil eine Messung fehlt, und nur **12**,
  * weil die Systematik sie verbietet. Die vier fachlichen Regeln zu den Zuständen aus 5.8 sind mit
  * LFH-577 dazugekommen (Entscheidungen des Eigentümers vom 29. September 2026).
  *
@@ -80,7 +80,7 @@ import type { SourceReference } from '@einsatzzeichen/schema';
  *   wiederholt an diesen Stellen nur den Prüfausdruck in Worten („muss endlich und größer als
  *   null sein"). Diese Sätze sind hierher **von Hand gezogen**.
  *
- * Das ist die eigentliche Aussage dieses Feldes: **27 der 77 Beschreibungsregeln** (mit der
+ * Das ist die eigentliche Aussage dieses Feldes: **27 der 78 Beschreibungsregeln** (mit der
  * einen Kompositionsregel 28 Einträge) begründet allein die Erklärung, nicht die Prüfstelle.
  *
  * **Gegatet sind sie seit dem 21. September 2026**, seit LFH-579 im Kern: Die Erklärungen und
@@ -134,7 +134,7 @@ export type RuleReasonSource = 'core' | 'website';
  * - `kind` und `bodyVariant` der Achsenliste stehen hier als `'base-symbol'` und
  *   `'body-variant'` — die Regeln trennen beide deutlich.
  * - `'label'` hat **keine** Wertachse (Beschriftung ist freier Text, kein Werteraum), trägt aber
- *   44 der 77 Regeln. Ohne diese Dimension wäre der Katalog unbrauchbar.
+ *   44 der 78 Regeln. Ohne diese Dimension wäre der Katalog unbrauchbar.
  * - `'composition'` ist keine Dimension der Systematik, sondern die Einordnung für Regeln, deren
  *   Auflösung überhaupt kein einzelnes Feld benennt. Dasselbe Wort und derselbe Grund wie in
  *   `rule-explanations.ts`; bislang genau `head-zone-conflict`.
@@ -253,7 +253,7 @@ function entry(
 }
 
 /**
- * Die 77 Regeln, die `validateSpec()` an der Beschreibung prüft — alphabetisch wie
+ * Die 78 Regeln, die `validateSpec()` an der Beschreibung prüft — alphabetisch wie
  * `VALIDATION_RULE_IDS`, damit ein Vergleich der beiden Listen ohne Umsortieren lesbar bleibt.
  */
 export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
@@ -302,6 +302,14 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'Dieses Körperprofil führt die Zone in der Organisationsfarbe (#003296 an E.2.27 bis E.2.31); ohne Organisation hat sie keine gemessene Farbe.',
     'core',
     babz('E.2.27–E.2.31'),
+  ),
+  entry(
+    'body-mark-rendition-not-measured',
+    'engine',
+    'body-marks',
+    'Eine zweite Fassung derselben Körpermarke ist nur an den Paaren aus Marke und Körperfassung vermessen, an denen Anhang C sie zeichnet (LFH-786); an jedem anderen Paar gäbe es keine Messung, und ein Rückfall auf die Grundfassung zeichnete still etwas anderes als verlangt.',
+    'core',
+    babz('C.2'),
   ),
   entry(
     'body-variant-foot-conflict',
@@ -364,7 +372,7 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'center-anchor-override-requires-measured-trailer',
     'engine',
     'label',
-    'Ein abweichender mittiger x-Anker ist allein am vermessenen Anhängerprofil und nur mit dessen vollständigem gemessenen Anker belegt; ein freier Wert wäre keine Messung, sondern eine Schätzung.',
+    'Ein abweichender mittiger x-Anker ist nur an Profilen belegt, die ihn vermessen haben (Anhänger I.2.5, Landfahrzeug C.2.25), und nur mit einem dort gemessenen Wert; ein freier Wert wäre keine Messung, sondern eine Schätzung.',
     'website',
   ),
   entry(
@@ -1025,7 +1033,7 @@ export const RULE_DIMENSION_GAPS: readonly RuleDimensionGap[] = Object.freeze([
     dimension: 'body-marks',
     coverage: 'partial',
     chapter: 'Kapitel 4, Anhang D und F',
-    note: 'Körpermarken kommen nur mittelbar vor — über die eingesenkte Hülle und über die Funktionsfassung. Eine eigene Regel, welche Marke an welcher Körperform sitzen darf, gibt es nicht. Wie mehrere Marken zusammen stehen, ist als Daten belegt (Überlagerung, `CAPABILITY_COMBINATION_RULES`, LFH-567), aber keine Prüfregel.',
+    note: 'Körpermarken kommen sonst nur mittelbar vor — über die eingesenkte Hülle und über die Funktionsfassung. Seit LFH-786 prüft `body-mark-rendition-not-measured` die Fassungskennungen (`bodyMarkRenditions`) gegen das Anhang-C-Register. Eine eigene Regel, welche Marke an welcher Körperform sitzen darf, gibt es nicht; ohne vermessene Fassung wirft erst `bodyMark()` beim Zeichnen. Wie mehrere Marken zusammen stehen, ist als Daten belegt (Überlagerung, `CAPABILITY_COMBINATION_RULES`, LFH-567), aber keine Prüfregel.',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'capabilities',

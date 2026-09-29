@@ -93,6 +93,11 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
     { kind: 'vehicle-water', bodyVariant: 'raised-hull', labels: { belowRight: 'X' } },
     'belowRight am angehobenen Wasserfahrzeug (Profil mit Organisationstinte) ohne Organisation. Neu: der Bestand nannte die Kennung nur in einer Negativprüfung (`not.toContain`) in validate.test.ts.',
   ),
+  evidence(
+    'body-mark-rendition-not-measured',
+    { kind: 'formation', organization: 'feuerwehr', strength: 'staffel', bodyMarks: ['fire-fighting'], bodyMarkRenditions: { 'fire-fighting': 'shifted-right-6.5mm' } },
+    `Fassungskennung an einem Paar, an dem Anhang C sie nicht zeichnet (${VT}, LFH-786).`,
+  ),
   evidence('body-variant-foot-conflict', { kind: 'vehicle-air', bodyVariant: 'raised-hull', designation: 'RTH' }, `Bezeichnung am angehobenen Rumpf (${VT}).`),
   evidence('body-variant-requires-measured-kind', { kind: 'post', bodyVariant: 'foot-band' }, `Fußband an der Stelle (${VT}).`),
   evidence('bottom-center-label-requires-measured-body', { kind: 'vehicle-land', labels: { bottomCenter: 'X' } }, `bottomCenter am Landfahrzeug (${CT}).`),

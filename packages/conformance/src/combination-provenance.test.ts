@@ -17,7 +17,9 @@ const fingerprintCases = recipeEntries.filter(([, recipe]) =>
   !referenceLacksComparableShape(recipe.referenceAsset));
 
 describe('specKey() über den Rezeptbestand', () => {
-  it('trägt für 242 Rezepte 242 verschiedene Schlüssel — keine Kollision', () => {
+  it('trägt für 279 Rezepte 279 verschiedene Schlüssel — keine Kollision', () => {
+    // 242 bis LFH-786, dazu die 37 Anhang-C-Fixtures. C.2.24#alternative ist nicht darunter: sie
+    // ergäbe dieselbe Spec und damit denselben Schlüssel wie C.2.20#alternative.
     const byKey = new Map<string, string[]>();
     for (const [section, recipe] of recipeEntries) {
       const key = specKey(recipe.spec);
@@ -25,16 +27,18 @@ describe('specKey() über den Rezeptbestand', () => {
     }
     const collisions = [...byKey.values()].filter((sections) => sections.length > 1);
 
-    expect(recipeEntries).toHaveLength(242);
-    expect(byKey.size).toBe(242);
+    expect(recipeEntries).toHaveLength(279);
+    expect(byKey.size).toBe(279);
     expect(collisions).toEqual([]);
   });
 });
 
 describe('combinationProvenance()', () => {
-  it('führt genau 241 verbatim-Fixtures: alle Rezepte mit vergleichbarer Form', () => {
-    expect(fingerprintCases).toHaveLength(241);
-    expect(verbatimFixtures()).toHaveLength(241);
+  it('führt genau 278 verbatim-Fixtures: alle Rezepte mit vergleichbarer Form', () => {
+    // 241 bis LFH-786; alle 37 Anhang-C-Referenzen führen eine vergleichbare Körperform, einzig
+    // G.1.5 bleibt weiterhin ohne.
+    expect(fingerprintCases).toHaveLength(278);
+    expect(verbatimFixtures()).toHaveLength(278);
     expect(verbatimFixtures()).toEqual(fingerprintCases.map(([section]) => section));
   });
 
@@ -130,7 +134,7 @@ describe('verbatimTableSource() — Generator der core-Tabelle (LFH-581)', () =>
         const recipe = RECIPES[fixture as keyof typeof RECIPES];
         return [specKey(recipe.spec), fixture, recipe.referenceAsset];
       });
-    expect(rows).toHaveLength(241);
+    expect(rows).toHaveLength(278);
     expect(rows).toEqual(expected);
   });
 

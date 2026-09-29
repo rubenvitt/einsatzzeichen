@@ -128,6 +128,9 @@ const FIELD_TABLE = {
   // Kennung ohne jede Fassung ist ein Befund des Vokabulars („nicht vermessen"), kein
   // unbekannter Wert.
   bodyMarks: list(Object.freeze([...CAPABILITY_IDS, ...TECHNICAL_BODY_MARK_IDS])),
+  // Ein Objekt aus Körpermarke und Fassungskennung (LFH-786), kein Wert zum Anhängen: welche
+  // Fassung an einer Marke vermessen ist, hängt an Marke und Körperfassung zugleich.
+  bodyMarkRenditions: STRUCTURED,
   designation: TEXT,
   labels: STRUCTURED,
 } as const satisfies { readonly [K in keyof Required<SymbolSpec>]: SpecFieldDomain };

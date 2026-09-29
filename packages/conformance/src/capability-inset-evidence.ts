@@ -9,6 +9,7 @@ import {
 } from '@einsatzzeichen/core';
 import {
   CAPABILITY_IDS,
+  type BodyMarkRenditionId,
   type BodyVariantId,
   type CapabilityId,
   type SymbolKind,
@@ -34,6 +35,8 @@ export interface CapabilityInsetEvidence {
   readonly capability: CapabilityId;
   readonly kind: SymbolKind;
   readonly variant?: BodyVariantId;
+  /** Die Fassung, die `compose()` angefordert hat (`BodyMarkContext.rendition`, LFH-786). */
+  readonly rendition?: BodyMarkRenditionId;
   /** Ob die Fixture mehr als eine Körpermarke trägt. */
   readonly combination: boolean;
   readonly measurement: CapabilityInsetMeasurement;
@@ -61,6 +64,7 @@ function evidenceOf(fixture: string, spec: SymbolSpec): CapabilityInsetEvidence[
           capability: id,
           kind: context.kind,
           ...(context.bodyVariant === undefined ? {} : { variant: context.bodyVariant }),
+          ...(context.rendition === undefined ? {} : { rendition: context.rendition }),
           combination,
           measurement: measureCapabilityInset(
             drawn,

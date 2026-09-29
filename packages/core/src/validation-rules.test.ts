@@ -33,7 +33,7 @@ describe('VALIDATION_RULE_IDS', () => {
   it('zählt die Regeln des Kernslices', () => {
     // Wächst mit `validate.ts`. Die Zahl steht hier, damit `rule-coverage` im Katalog sie nicht
     // erraten muss und eine neue Regel sichtbar hier und in der Liste ankommt.
-    expect(VALIDATION_RULE_IDS).toHaveLength(77);
+    expect(VALIDATION_RULE_IDS).toHaveLength(78);
   });
 
   it('kommt mit jeder Kennung in einem Testfall vor — oder in einem benannten Todo', () => {

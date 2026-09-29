@@ -93,8 +93,8 @@ describe('Zonenmodell: Vollständigkeit', () => {
     }
     const modelled = ZONE_MODEL_BODY_VARIANTS.map((form) => formKey(form.kind, form.variant));
     expect(branches.sort()).toEqual([...modelled].sort());
-    expect(ZONE_MODEL_BODY_VARIANTS).toHaveLength(13);
-    expect(ZONE_MODEL_FORMS).toHaveLength(32);
+    expect(ZONE_MODEL_BODY_VARIANTS).toHaveLength(14);
+    expect(ZONE_MODEL_FORMS).toHaveLength(33);
   });
 
   it('trägt an jeder Zone entweder Herkunft oder eine Lückenbegründung', () => {
@@ -291,7 +291,7 @@ describe('Zonenmodell: Bindung an die bestehenden Fundorte', () => {
 describe('Zonenmodell: deklarierte Lücken', () => {
   it('nagelt die Liste der Lücken fest', () => {
     // Je Zone und Zustand eine Zeile mit allen betroffenen Körperfassungen. Dieselbe Aussage wie
-    // 335 Einzelzeilen, nur lesbar: eine still geschlossene Lücke verschwindet aus ihrer Zeile,
+    // 345 Einzelzeilen, nur lesbar: eine still geschlossene Lücke verschwindet aus ihrer Zeile,
     // eine neue erscheint darin, und eine Zone, die kippt, wechselt die Zeile.
     const byZone: Record<string, string[]> = {};
     for (const entry of zoneGaps()) {
@@ -300,7 +300,7 @@ describe('Zonenmodell: deklarierte Lücken', () => {
     }
     for (const forms of Object.values(byZone)) forms.sort();
     expect(byZone).toEqual(PINNED_GAPS);
-    expect(zoneGaps()).toHaveLength(332);
+    expect(zoneGaps()).toHaveLength(342);
   });
 
   it('führt die Tendenz an jeder Körperfassung als unvermessen', () => {
@@ -455,12 +455,19 @@ describe('Zonenmodell: deklarierte Lücken', () => {
     // korrekt ab (Variante angegeben → nur die Variantentabelle zählt), die übrigen Zonen folgen
     // dem Profil. Ein Abbruch gehört in den Slice, der `profileFor()` an das Zonenmodell bindet;
     // bis dahin steht die Grenze hier und in Abschnitt 4 der Entscheidungsvorlage.
+    //
+    // Bis LFH-786 stand hier `trailer/foot-band`. Seit C.2.30 hat diese Fassung einen eigenen
+    // Zweig (die Zone oben links); ihr mittiger Lauf erbt aber weiter unverändert vom Anhänger.
+    // Als Beispiel dient jetzt eine Variante, die am Anhänger gar nicht vorkommt.
+    expect(zonesFor('trailer', 'raised-hull').zones['label-center']).toEqual(
+      ZONE_MODEL.trailer.zones['label-center'],
+    );
     expect(zonesFor('trailer', 'foot-band').zones['label-center']).toEqual(
       ZONE_MODEL.trailer.zones['label-center'],
     );
     // Die Gegenprobe: die Variantenliste des Modells führt diese Fassung **nicht**.
     expect(ZONE_MODEL_BODY_VARIANTS.map((form) => formKey(form.kind, form.variant)))
-      .not.toContain('trailer/foot-band');
+      .not.toContain('trailer/raised-hull');
   });
 });
 
@@ -482,43 +489,45 @@ const PINNED_GAPS: Readonly<Record<string, readonly string[]>> = {
   ],
   'head | measured-absent | combination': [
     'circle-12', 'circle-12/foot-band', 'circle-12/raised-circle-1mm', 'circle-12/raised-gable',
-    'post', 'swap-loader-vehicle', 'trailer', 'upright-rectangle',
+    'post', 'swap-loader-vehicle', 'trailer', 'trailer/foot-band', 'upright-rectangle',
   ],
   'inner-field | not-measured | combination': [
     'area', 'circle-12', 'circle-12/foot-band', 'circle-12/raised-circle-1mm',
     'circle-12/raised-gable', 'container', 'event', 'formation/foot-band', 'hazard', 'measure',
     'person', 'person/compact-person-diamond-26mm',
     'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post', 'reduced-house',
-    'spontaneous-helper', 'vehicle-air', 'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull',
-    'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track', 'vehicle-land/plain-wheel-pair',
-    'vehicle-water', 'vehicle-water/inset-hull',
+    'spontaneous-helper', 'trailer/foot-band', 'vehicle-air', 'vehicle-air/fixed-wing-hull',
+    'vehicle-air/raised-hull', 'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track',
+    'vehicle-land/plain-wheel-pair', 'vehicle-water', 'vehicle-water/inset-hull',
   ],
   'label-above-left | not-measured | combination': [
     'area', 'building', 'circle-12', 'circle-12/foot-band', 'circle-12/raised-circle-1mm',
     'circle-12/raised-gable', 'container', 'event', 'formation', 'formation/foot-band', 'hazard',
     'measure', 'person', 'person/compact-person-diamond-26mm', 'point', 'post', 'reduced-house',
-    'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'upright-rectangle', 'vehicle-air',
-    'vehicle-land', 'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track',
-    'vehicle-land/plain-wheel-pair', 'vehicle-water', 'vehicle-water/inset-hull',
-    'vehicle-water/raised-hull',
+    'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'trailer/foot-band',
+    'upright-rectangle', 'vehicle-air', 'vehicle-land', 'vehicle-land/foot-band',
+    'vehicle-land/inverted-hull-track', 'vehicle-land/plain-wheel-pair', 'vehicle-water',
+    'vehicle-water/inset-hull', 'vehicle-water/raised-hull',
   ],
   'label-below-right | not-measured | combination': [
     'area', 'building', 'circle-12', 'circle-12/raised-circle-1mm', 'circle-12/raised-gable',
     'container', 'event', 'formation', 'formation/foot-band', 'hazard', 'measure', 'person',
-    'person/compact-person-diamond-26mm', 'person/compact-person-diamond-26mm-lowered-2mm',
-    'point', 'post', 'reduced-house', 'spontaneous-helper', 'swap-loader-vehicle', 'trailer',
-    'upright-rectangle', 'vehicle-air', 'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull',
-    'vehicle-land', 'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track',
-    'vehicle-land/plain-wheel-pair', 'vehicle-water', 'vehicle-water/inset-hull',
+    'person/compact-person-diamond-26mm', 'person/compact-person-diamond-26mm-lowered-2mm', 'point',
+    'post', 'reduced-house', 'spontaneous-helper', 'swap-loader-vehicle', 'trailer',
+    'trailer/foot-band', 'upright-rectangle', 'vehicle-air', 'vehicle-air/fixed-wing-hull',
+    'vehicle-air/raised-hull', 'vehicle-land', 'vehicle-land/foot-band',
+    'vehicle-land/inverted-hull-track', 'vehicle-land/plain-wheel-pair', 'vehicle-water',
+    'vehicle-water/inset-hull',
   ],
   'label-bottom-center | not-measured | combination': [
     'area', 'building', 'circle-12', 'circle-12/raised-circle-1mm', 'circle-12/raised-gable',
     'container', 'event', 'hazard', 'measure', 'person', 'person/compact-person-diamond-26mm',
     'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post', 'reduced-house',
-    'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'upright-rectangle', 'vehicle-air',
-    'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull', 'vehicle-land',
-    'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track', 'vehicle-land/plain-wheel-pair',
-    'vehicle-water', 'vehicle-water/inset-hull', 'vehicle-water/raised-hull',
+    'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'trailer/foot-band',
+    'upright-rectangle', 'vehicle-air', 'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull',
+    'vehicle-land', 'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track',
+    'vehicle-land/plain-wheel-pair', 'vehicle-water', 'vehicle-water/inset-hull',
+    'vehicle-water/raised-hull',
   ],
   'label-center | not-measured | combination': [
     'circle-12', 'circle-12/foot-band', 'circle-12/raised-circle-1mm', 'circle-12/raised-gable',
@@ -528,25 +537,26 @@ const PINNED_GAPS: Readonly<Record<string, readonly string[]>> = {
   'label-surface-below-left | not-measured | combination': [
     'area', 'building', 'circle-12', 'circle-12/foot-band', 'circle-12/raised-gable', 'container',
     'event', 'formation', 'formation/foot-band', 'hazard', 'measure', 'person',
-    'person/compact-person-diamond-26mm', 'person/compact-person-diamond-26mm-lowered-2mm',
-    'point', 'post', 'reduced-house', 'spontaneous-helper', 'swap-loader-vehicle', 'trailer',
-    'upright-rectangle', 'vehicle-air', 'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull',
-    'vehicle-land', 'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track',
-    'vehicle-land/plain-wheel-pair', 'vehicle-water', 'vehicle-water/inset-hull',
-    'vehicle-water/raised-hull',
+    'person/compact-person-diamond-26mm', 'person/compact-person-diamond-26mm-lowered-2mm', 'point',
+    'post', 'reduced-house', 'spontaneous-helper', 'swap-loader-vehicle', 'trailer',
+    'trailer/foot-band', 'upright-rectangle', 'vehicle-air', 'vehicle-air/fixed-wing-hull',
+    'vehicle-air/raised-hull', 'vehicle-land', 'vehicle-land/foot-band',
+    'vehicle-land/inverted-hull-track', 'vehicle-land/plain-wheel-pair', 'vehicle-water',
+    'vehicle-water/inset-hull', 'vehicle-water/raised-hull',
   ],
   'label-surface-below-right | not-measured | combination': [
     'area', 'building', 'circle-12', 'circle-12/foot-band', 'circle-12/raised-gable', 'container',
     'event', 'formation', 'formation/foot-band', 'hazard', 'measure', 'person',
-    'person/compact-person-diamond-26mm', 'person/compact-person-diamond-26mm-lowered-2mm',
-    'point', 'post', 'reduced-house', 'spontaneous-helper', 'swap-loader-vehicle', 'trailer',
-    'upright-rectangle', 'vehicle-air', 'vehicle-air/fixed-wing-hull', 'vehicle-land',
-    'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track', 'vehicle-land/plain-wheel-pair',
-    'vehicle-water', 'vehicle-water/inset-hull', 'vehicle-water/raised-hull',
+    'person/compact-person-diamond-26mm', 'person/compact-person-diamond-26mm-lowered-2mm', 'point',
+    'post', 'reduced-house', 'spontaneous-helper', 'swap-loader-vehicle', 'trailer',
+    'trailer/foot-band', 'upright-rectangle', 'vehicle-air', 'vehicle-air/fixed-wing-hull',
+    'vehicle-land', 'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track',
+    'vehicle-land/plain-wheel-pair', 'vehicle-water', 'vehicle-water/inset-hull',
+    'vehicle-water/raised-hull',
   ],
   'label-top-left | not-measured | combination': [
-    'area', 'building', 'circle-12/foot-band', 'circle-12/raised-circle-1mm', 'container',
-    'event', 'hazard', 'measure', 'person', 'person/compact-person-diamond-26mm',
+    'area', 'building', 'circle-12/foot-band', 'circle-12/raised-circle-1mm', 'container', 'event',
+    'hazard', 'measure', 'person', 'person/compact-person-diamond-26mm',
     'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post', 'reduced-house',
     'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'upright-rectangle', 'vehicle-air',
     'vehicle-air/raised-hull', 'vehicle-water', 'vehicle-water/inset-hull',
@@ -557,16 +567,18 @@ const PINNED_GAPS: Readonly<Record<string, readonly string[]>> = {
     'circle-12/raised-gable', 'container', 'event', 'formation', 'formation/foot-band', 'hazard',
     'measure', 'person', 'person/compact-person-diamond-26mm',
     'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post', 'reduced-house',
-    'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'upright-rectangle', 'vehicle-air',
-    'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull', 'vehicle-land',
-    'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track', 'vehicle-land/plain-wheel-pair',
-    'vehicle-water', 'vehicle-water/inset-hull', 'vehicle-water/raised-hull',
+    'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'trailer/foot-band',
+    'upright-rectangle', 'vehicle-air', 'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull',
+    'vehicle-land', 'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track',
+    'vehicle-land/plain-wheel-pair', 'vehicle-water', 'vehicle-water/inset-hull',
+    'vehicle-water/raised-hull',
   ],
   'state-margin | not-measured | combination': [
     'area', 'building', 'circle-12', 'circle-12/foot-band', 'circle-12/raised-circle-1mm',
     'circle-12/raised-gable', 'container', 'event', 'formation', 'formation/foot-band',
     'measure', 'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post',
-    'reduced-house', 'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'upright-rectangle',
+    'reduced-house', 'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'trailer/foot-band',
+    'upright-rectangle',
     'vehicle-air', 'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull', 'vehicle-land',
     'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track', 'vehicle-land/plain-wheel-pair',
     'vehicle-water', 'vehicle-water/inset-hull', 'vehicle-water/raised-hull',
@@ -576,10 +588,11 @@ const PINNED_GAPS: Readonly<Record<string, readonly string[]>> = {
     'circle-12/raised-gable', 'container', 'event', 'formation', 'formation/foot-band', 'hazard',
     'measure', 'person', 'person/compact-person-diamond-26mm',
     'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post', 'reduced-house',
-    'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'upright-rectangle', 'vehicle-air',
-    'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull', 'vehicle-land',
-    'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track', 'vehicle-land/plain-wheel-pair',
-    'vehicle-water', 'vehicle-water/inset-hull', 'vehicle-water/raised-hull',
+    'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'trailer/foot-band',
+    'upright-rectangle', 'vehicle-air', 'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull',
+    'vehicle-land', 'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track',
+    'vehicle-land/plain-wheel-pair', 'vehicle-water', 'vehicle-water/inset-hull',
+    'vehicle-water/raised-hull',
   ],
 };
 
@@ -612,6 +625,7 @@ const PINNED_UNDOCUMENTED: readonly string[] = [
 const PINNED_NOT_A_CLAIM: readonly string[] = [
   'swap-loader-vehicle | body | default-anchor',
   'trailer | body | default-anchor',
+  'trailer/foot-band | body | default-anchor',
   'upright-rectangle | body | default-anchor',
 ];
 

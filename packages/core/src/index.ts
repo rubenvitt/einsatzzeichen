@@ -89,6 +89,12 @@ export { specKey } from './spec-key.js';
 // Arimo-Laufweiten. Vorher in `catalog`; `core` bleibt dabei ohne Node- und Fremdabhängigkeit.
 export * from './geometry/base-symbols.js';
 export * from './geometry/body-marks.js';
+// Die Anhang-C-Körperfassungen mit ihrem Kontext (LFH-786), damit Prüfungen jede Fassung an
+// ihrem eigenen Körper zeichnen können. Nur lesend; `bodyMark()` bleibt der einzige Zeichenweg.
+export {
+  ANHANG_C_BODY_MARK_CONTEXTS,
+} from './geometry/body-marks-anhang-c/index.js';
+export type { AnhangCContext } from './geometry/body-marks-anhang-c/shared.js';
 export * from './geometry/vehicle-categories.js';
 export * from './geometry/organizations.js';
 export * from './geometry/strengths.js';

@@ -35,7 +35,7 @@ type VerbatimProvenance = Extract<SymbolProvenance, { status: 'verbatim' }>;
 
 let byKey: ReadonlyMap<string, VerbatimProvenance> | undefined;
 
-/** Baut den Index beim ersten Aufruf aus der generierten Tabelle (241 Zeilen). */
+/** Baut den Index beim ersten Aufruf aus der generierten Tabelle (278 Zeilen seit LFH-786). */
 function index(): ReadonlyMap<string, VerbatimProvenance> {
   if (byKey !== undefined) return byKey;
   const built = new Map<string, VerbatimProvenance>();

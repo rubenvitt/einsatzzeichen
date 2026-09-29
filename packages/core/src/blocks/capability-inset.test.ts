@@ -72,12 +72,15 @@ describe('measureCapabilityInset', () => {
 
 describe('CAPABILITY_INSET_FORMS', () => {
   const key = (form: (typeof CAPABILITY_INSET_FORMS)[number]): string =>
-    `${form.capability} ${form.kind}/${form.variant ?? '-'}`;
+    `${form.capability} ${form.kind}/${form.variant ?? '-'}` +
+    (form.rendition === undefined ? '' : `#${form.rendition}`);
 
   it('führt jedes Paar aus Fähigkeit und Körperfassung genau einmal', () => {
     const keys = CAPABILITY_INSET_FORMS.map(key);
     expect(new Set(keys).size).toBe(keys.length);
-    expect(keys).toHaveLength(52);
+    // 52 aus LFH-587, dazu 24 aus Anhang C (LFH-786), davon 8 zweite Fassungen.
+    expect(keys).toHaveLength(76);
+    expect(CAPABILITY_INSET_FORMS.filter((form) => form.rendition !== undefined)).toHaveLength(8);
   });
 
   it('nennt nur Fähigkeiten aus Kapitel 4', () => {
@@ -105,7 +108,7 @@ describe('CAPABILITY_INSET_FORMS', () => {
   it('zählt die drei Behandlungen', () => {
     const count = (treatment: string): number =>
       CAPABILITY_INSET_FORMS.filter((form) => form.treatment === treatment).length;
-    expect([count('flush'), count('reduced'), count('reshaped')]).toEqual([24, 23, 5]);
+    expect([count('flush'), count('reduced'), count('reshaped')]).toEqual([28, 43, 5]);
   });
 
   it('findet eine Fassung über Fähigkeit, Körperform und Variante, und keine ohne Messung', () => {
@@ -153,12 +156,13 @@ describe('CAPABILITY_INSET_RULE', () => {
     });
   });
 
-  it('widerlegt die drei Rechenregeln und hält Strich und Breite fest', () => {
+  it('widerlegt die drei Rechenregeln und die körperunabhängige Breite, hält den Strich fest', () => {
     const value = (finding: { status: string; value?: string }): string | undefined => finding.value;
     expect(value(CAPABILITY_INSET_RULE.strokeWidthKept)).toBe('holds');
     expect(value(CAPABILITY_INSET_RULE.commonScale)).toBe('refuted');
     expect(value(CAPABILITY_INSET_RULE.fitToBox)).toBe('refuted');
     expect(value(CAPABILITY_INSET_RULE.unscaledWhereFits)).toBe('refuted');
-    expect(value(CAPABILITY_INSET_RULE.reducedSizeBodyInvariant)).toBe('holds');
+    // Seit LFH-786 widerlegt: Anhang C führt dieselbe Fähigkeit am selben Körper verschieden breit.
+    expect(value(CAPABILITY_INSET_RULE.reducedSizeBodyInvariant)).toBe('refuted');
   });
 });

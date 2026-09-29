@@ -925,6 +925,102 @@ const ANHANG_E_2_DEVIATIONS: Readonly<Record<string, string>> = Object.freeze({
 });
 
 /**
+ * Technisches Review der 37 Fixtures aus LFH-786: C.1.7, C.1.8 und die 35 C.2-Darstellungen mit
+ * einem Kapitel-4-Piktogramm im Körper. Eigener Eintrag und nicht `ANHANG_C_A_TECHNICAL_REVIEW`,
+ * weil C.1.3 am 26. August gegen eine andere Fassung geprüft wurde und dieser Slice drei neue
+ * Mechanismen mitbringt: die zweiten Fassungen desselben Paars (`bodyMarkRenditions`), das
+ * Drucktoken `koerperlauf-kontrast` und die Laufzone oben links am Anhänger mit Fußband.
+ */
+const ANHANG_C_LFH_786_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-09-29',
+  note:
+    'Alle 37 Originalreferenzen (C.1.7, C.1.8 und 35 Darstellungen aus C.2) wurden einzeln ' +
+    'vermessen und als Rasterbild gegen die Fixture gelegt. Die Kapitel-4-Fassungen im Körper ' +
+    'sind an der Referenz vermessen und eigenständig aus der Körperhülle konstruiert ' +
+    '(core/src/geometry/body-marks-anhang-c/); zweite Fassungen desselben Paars wählt die Spec ' +
+    'ausdrücklich über bodyMarkRenditions, und validateSpec lehnt eine nicht vermessene Kennung ' +
+    'mit body-mark-rendition-not-measured ab. Körper-Fingerprint, literale Rezepte, direkte ' +
+    'Snapshots und Mehrgrößen-Snapshots sind gegatet; die Rasterprüfung in fonts.test.ts hält ' +
+    'jeden Lauf in seiner deklarierten Box. Die schwarzen Läufe auf Feuerwehrrot tragen das ' +
+    'Drucktoken koerperlauf-kontrast und bestehen den Kontrastvertrag in allen drei Themes ohne ' +
+    'neue Ausnahme. Reine Ziffernläufe (12/9, 18/12, 23/12, 9, 30, 120) stehen im ' +
+    'Profilschriftgrad: die Quelle setzt Ziffern dort 2,75 mm hoch, Versalien 2,92 mm. Dazu ' +
+    'die globalen viewBox-, Metadaten- und Kontrast-Gates. C.2.1 bis C.2.3, C.2.19, C.2.21 ' +
+    'und C.2.22 tragen kein Kapitel-4-Piktogramm und sind nicht Teil dieses Umfangs. ' +
+    'Sämtliche Fachzuordnungen bleiben im Domain-Review pending.',
+};
+
+/**
+ * Die Schlüssel, die `ANHANG_C_LFH_786_TECHNICAL_REVIEW` trägt, als Liste statt Präfixschluss:
+ * ein späterer C.2-Abschnitt (etwa C.2.1 mit Kopfband) erbt dieses Review nicht still, sondern
+ * fällt in `technicalReviewFor` laut auf.
+ */
+const ANHANG_C_LFH_786_KEYS = [
+  'C.1.7',
+  'C.1.8',
+  'C.2.4',
+  'C.2.5',
+  'C.2.6',
+  'C.2.7',
+  'C.2.8',
+  'C.2.9',
+  'C.2.10',
+  'C.2.11',
+  'C.2.12',
+  'C.2.13',
+  'C.2.14',
+  'C.2.14#alternative',
+  'C.2.15',
+  'C.2.15#alternative',
+  'C.2.16',
+  'C.2.16#alternative',
+  'C.2.17',
+  'C.2.17#alternative',
+  'C.2.18',
+  'C.2.20',
+  'C.2.20#alternative',
+  'C.2.23',
+  'C.2.23#alternative',
+  'C.2.24',
+  'C.2.25',
+  'C.2.25#alternative',
+  'C.2.26',
+  'C.2.26#alternative',
+  'C.2.27',
+  'C.2.27#alternative',
+  'C.2.28',
+  'C.2.28#alternative',
+  'C.2.29',
+  'C.2.30',
+  'C.2.31',
+] as const satisfies readonly (keyof typeof RECIPES)[];
+
+/**
+ * Befunde an den Referenzdateien selbst, in der Bauart von `ANHANG_F_A_FINDINGS`. Abweichungen der
+ * Umsetzung trägt dieser Slice keine: die Textmetrik (Laufweite der Katalogschrift, Ziffernhöhe)
+ * weicht wie im übrigen Bestand ab und ist dort nirgends als `deviation` geführt.
+ */
+const ANHANG_C_LFH_786_FINDINGS: Readonly<Record<string, string>> = Object.freeze({
+  'C.2.16#alternative':
+    'Die Leiter liegt 1 mm höher als in C.2.14_Alternative und C.2.15_Alternative und trifft die ' +
+    'linke Korbseite statt der Korbecke; der Korb steht unverändert. Einen Platzgrund gibt es ' +
+    'nicht: der Lauf „DLAK 23/12“ endet auf derselben Tinte wie „DLAK 18/12“ (rechte Kante ' +
+    '23,6441 mm in beiden Dateien). Möglicherweise ein Zeichenfehler der Quelle; gebaut wie ' +
+    'gezeichnet, als eigene Fassung shifted-right-6.5mm-ladder-raised-1mm.',
+  'C.2.24':
+    'Die Alternativdarstellung C.2.24_CBRN-Erkundungswagen_Alternative.svg ist nicht ' +
+    'aufgenommen. Sie zeigt 4.1.1 (CBRN-Schutz) ohne Messstrich statt 4.1.2 wie die ' +
+    'Hauptdarstellung und ist bildgleich mit C.2.20_Gerätewagen Gefahrgut_Alternative.svg; als ' +
+    'Fixture ergäbe sie dieselbe Spec wie C.2.20#alternative und wäre keine Messung von 4.1.2. ' +
+    'Im Referenzinventar ist sie als zurückgestellt geführt.',
+  'C.2.28':
+    'Der Lauf heißt in der Referenz „Telelader“ (neun Glyphen), der Dateiname „Teleskoplader“. ' +
+    'Gesetzt ist der gezeichnete Lauf; der Titel folgt dem Dateinamen.',
+});
+
+/**
  * Befund und Abweichung sind zwei unabhängige Achsen und werden deshalb **addiert, nicht
  * verzweigt**: sieben der 21 Zeichen aus E-b und E-c tragen keines von beidem, zehn nur einen
  * Befund an der Referenzdatei, E.1.17 nur eine Abweichung der Umsetzung, und E.1.19, E.1.24 sowie
@@ -964,6 +1060,18 @@ function technicalReviewFor(section: string): Review {
     return ANHANG_D_TASK_6_TECHNICAL_REVIEW;
   }
   if (section === 'C.1.3') return ANHANG_C_A_TECHNICAL_REVIEW;
+  if ((ANHANG_C_LFH_786_KEYS as readonly string[]).includes(section)) {
+    return withFindingAndDeviation(
+      ANHANG_C_LFH_786_TECHNICAL_REVIEW,
+      ANHANG_C_LFH_786_FINDINGS[section],
+      undefined,
+    );
+  }
+  if (section.startsWith('C.') && section !== 'C.1.1' && section !== 'C.1.2') {
+    throw new Error(
+      `Der Anhang-C-Schlüssel "${section}" ist keinem technischen Review zugeordnet.`,
+    );
+  }
   if (Object.hasOwn(ANHANG_E_A_RECIPES, section)) {
     const defect = ANHANG_E_A_FILL_DEFECTS[section];
     if (defect === undefined) return ANHANG_E_A_TECHNICAL_REVIEW;
@@ -1257,6 +1365,37 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'C.1.1',
     'C.1.2',
     'C.1.3',
+    // LFH-786: C.1.7, C.1.8 und jede gebaute C.2-Nummer **einzeln**, weder `C.1` noch `C.2`.
+    // Beide Präfixe bestünden `uncoveredScope` schon mit einer Zeile, wären aber falsch: C.1.4 bis
+    // C.1.6 und C.1.9 bis C.1.15 sind nicht gebaut, in C.2 fehlen C.2.1 bis C.2.3, C.2.19, C.2.21
+    // und C.2.22 (kein Kapitel-4-Piktogramm) sowie die zurückgestellte C.2.24-Alternative.
+    'C.1.7',
+    'C.1.8',
+    'C.2.4',
+    'C.2.5',
+    'C.2.6',
+    'C.2.7',
+    'C.2.8',
+    'C.2.9',
+    'C.2.10',
+    'C.2.11',
+    'C.2.12',
+    'C.2.13',
+    'C.2.14',
+    'C.2.15',
+    'C.2.16',
+    'C.2.17',
+    'C.2.18',
+    'C.2.20',
+    'C.2.23',
+    'C.2.24',
+    'C.2.25',
+    'C.2.26',
+    'C.2.27',
+    'C.2.28',
+    'C.2.29',
+    'C.2.30',
+    'C.2.31',
     'D',
     'E',
     'F',

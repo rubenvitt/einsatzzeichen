@@ -21,7 +21,7 @@ describe('Render-Theme-Register', () => {
   it('enthält in jedem totalen Theme ausschließlich sechsstellige RGB-Hexwerte', () => {
     for (const theme of Object.values(RENDER_THEMES)) {
       expect(theme.surface).toMatch(/^#[0-9a-f]{6}$/);
-      expect(Object.keys(theme.palette)).toHaveLength(13);
+      expect(Object.keys(theme.palette)).toHaveLength(14);
       for (const color of Object.values(theme.palette)) expect(color).toMatch(/^#[0-9a-f]{6}$/);
     }
   });
@@ -34,6 +34,17 @@ describe('Render-Theme-Register', () => {
           'funktionslauf-kontrast'
         ],
       ]),
+    );
+    expect(resolved).toEqual({
+      reference: '#000000',
+      'accessible-light': '#000000',
+      'print-monochrome': '#ffffff',
+    });
+  });
+
+  it('löst den Körperlauf auf Rot wie den Funktionslauf nur im Drucktheme auf Weiß auf', () => {
+    const resolved = Object.fromEntries(
+      Object.entries(RENDER_THEMES).map(([id, theme]) => [id, theme.palette['koerperlauf-kontrast']]),
     );
     expect(resolved).toEqual({
       reference: '#000000',

@@ -23,8 +23,19 @@ import { CAPABILITY_INSET_EVIDENCE, type CapabilityInsetEvidence } from './capab
  * bis die Daten nachgezogen sind.
  */
 
-const key = (entry: { capability: string; kind: string; variant?: string }): string =>
-  `${entry.capability} ${entry.kind}/${entry.variant ?? '-'}`;
+/**
+ * Schlüssel einer Körperfassung: Fähigkeit, Körperform, Variante und — seit LFH-786 — Fassung.
+ * Ohne Kennung bleibt der Schlüssel zeichengleich wie zuvor; eine zweite Fassung desselben Paars
+ * (`#<Kennung>`) zählt für sich, weil ihre Faktoren von der Grundfassung abweichen dürfen.
+ */
+const key = (entry: {
+  capability: string;
+  kind: string;
+  variant?: string;
+  rendition?: string;
+}): string =>
+  `${entry.capability} ${entry.kind}/${entry.variant ?? '-'}` +
+  (entry.rendition === undefined ? '' : `#${entry.rendition}`);
 
 function round2(value: number): number {
   return Math.round(value * 100) / 100;
@@ -90,7 +101,12 @@ describe('Körperfassungen der Kapitel-4-Piktogramme gegen den Motor', () => {
 });
 
 describe('Die Regel des Innenfelds, Aussage für Aussage', () => {
-  it('strokeWidthKept: jeder Strich jeder Körperfassung hat die Strichstärke der Einzeldarstellung', () => {
+  it('strokeWidthKept: jeder Strich jeder Körperfassung ist 0,5 mm, auch wo die Einzeldarstellung dünner zeichnet', () => {
+    // 4.7.18 zeichnet als einzige betroffene Einzeldarstellung mit 0,4 mm; ihre Körperfassung im
+    // Rüstwagen (C.2.18) mit 0,5 mm wie alle übrigen (LFH-786).
+    const thinnerStandalone: Readonly<Record<string, readonly number[]>> = {
+      'technical-assistance': [0.4],
+    };
     for (const entry of CAPABILITY_INSET_EVIDENCE) {
       const standalone = [
         ...new Set(
@@ -100,7 +116,9 @@ describe('Die Regel des Innenfelds, Aussage für Aussage', () => {
             .filter((width) => width !== undefined),
         ),
       ];
-      expect(standalone, entry.capability).toEqual([DEFAULT_STROKE_WIDTH_MM]);
+      expect(standalone, entry.capability).toEqual(
+        thinnerStandalone[entry.capability] ?? [DEFAULT_STROKE_WIDTH_MM],
+      );
       expect(
         entry.measurement.strokeWidthsMm.filter((width) => width !== DEFAULT_STROKE_WIDTH_MM),
         `${entry.fixture} ${entry.capability}`,
@@ -114,16 +132,24 @@ describe('Die Regel des Innenfelds, Aussage für Aussage', () => {
     ).toEqual(['G.4 power-supply']);
   });
 
-  it('die Grenze zwischen reduced und reshaped liegt in einer leeren Lücke der Messwerte', () => {
+  it('die Grenze zwischen reduced und reshaped liegt am unteren Rand der verbliebenen Lücke', () => {
     const reducedMax = Math.max(...reduced.map((entry) => entry.measurement.uniformity));
     const reshapedMin = Math.min(
       ...nonFlush
         .filter((entry) => entry.measurement.treatment === 'reshaped')
         .map((entry) => entry.measurement.uniformity),
     );
-    expect(reducedMax).toBe(0.22);
+    // Bis LFH-587 lag zwischen 0,22 und 0,37 kein Messwert. Anhang C setzt zwei Fassungen hinein
+    // (LFH-786): C.2.18 mit 0,28 und C.2.26 genau auf die Grenze 0,30. Leer ist nur noch 0,30…0,37.
+    expect(
+      nonFlush
+        .filter((entry) => entry.measurement.uniformity > 0.22 && entry.measurement.uniformity < 0.37)
+        .map((entry) => `${entry.fixture} ${entry.measurement.uniformity}`)
+        .sort(),
+    ).toEqual(['C.2.18 0.28', 'C.2.26 0.3']);
+    expect(reducedMax).toBe(0.3);
     expect(reshapedMin).toBe(0.37);
-    expect(reducedMax).toBeLessThan(CAPABILITY_INSET_REDUCED_UNIFORMITY_LIMIT);
+    expect(reducedMax).toBeLessThanOrEqual(CAPABILITY_INSET_REDUCED_UNIFORMITY_LIMIT);
     expect(reshapedMin).toBeGreaterThan(CAPABILITY_INSET_REDUCED_UNIFORMITY_LIMIT);
   });
 
@@ -148,7 +174,8 @@ describe('Die Regel des Innenfelds, Aussage für Aussage', () => {
         );
         return round2(Math.max(entry.measurement.scaleX, entry.measurement.scaleY) / fit);
       });
-    expect([Math.min(...ratios), Math.max(...ratios)]).toEqual([0.62, 1.17]);
+    // Bis LFH-587 höchstens 1,17; C.2.18 (Technische Hilfeleistung, 0,90 × 1,25) hebt es auf 1,51.
+    expect([Math.min(...ratios), Math.max(...ratios)]).toEqual([0.62, 1.51]);
     // Unter 1 zeichnet die Referenz kleiner als die Box, über 1 größer: die Box ist nicht einmal Hülle.
     // Die Verpflegung: gezeichnet 0,42, eingepasst wären es 0,67.
     const catering = hull(pictogram('capability.catering').primitives);
@@ -173,23 +200,37 @@ describe('Die Regel des Innenfelds, Aussage für Aussage', () => {
     }
   });
 
-  it('reducedSizeBodyInvariant: eine verkleinerte Einzelmarke hat in jeder Körperform dieselbe Breite', () => {
+  it('reducedSizeBodyInvariant: widerlegt — dieselbe Fähigkeit hat am selben Körper verschieden breite Fassungen', () => {
     const byCapability = new Map<string, CapabilityInsetEvidence[]>();
     for (const entry of single.filter((candidate) => candidate.measurement.treatment === 'reduced')) {
       byCapability.set(entry.capability, [...(byCapability.get(entry.capability) ?? []), entry]);
     }
-    const heightYields: string[] = [];
-    for (const [capability, entries] of byCapability) {
-      const scaleX = entries.map((entry) => entry.measurement.scaleX);
-      expect(Math.max(...scaleX) - Math.min(...scaleX), capability).toBeLessThanOrEqual(0.01);
-      const scaleY = entries.map((entry) => entry.measurement.scaleY);
-      const usual = scaleY.sort((a, b) =>
-        scaleY.filter((value) => value === b).length - scaleY.filter((value) => value === a).length)[0];
-      heightYields.push(
-        ...entries.filter((entry) => entry.measurement.scaleY !== usual).map((entry) => entry.fixture),
-      );
-    }
-    expect(heightYields.sort()).toEqual(['G.3.5', 'I.2.1', 'I.2.2', 'I.2.3']);
+    // Die Faktoren sind auf 0,01 gerundet; 0,42 − 0,41 ist in Gleitkomma 0,010000000000000009.
+    const spread = (values: readonly number[]) => Math.max(...values) - Math.min(...values);
+    const widthVaries = [...byCapability]
+      .filter(([, entries]) => spread(entries.map((entry) => entry.measurement.scaleX)) > 0.01 + 1e-9)
+      .map(([capability, entries]) =>
+        `${capability}: ${entries.map((entry) => `${entry.fixture} ${entry.measurement.scaleX}`).join(', ')}`)
+      .sort();
+    // Bis LFH-786 leer. Anhang C zeichnet Haupt- und Alternativdarstellung verschieden breit.
+    expect(widthVaries).toEqual([
+      'cbrn-protection: C.2.20 0.56, C.2.20#alternative 0.7',
+      'crane-lifting: C.2.27 0.41, C.2.27#alternative 0.46',
+      'decontamination: C.2.25 0.56, C.2.25#alternative 0.7, C.1.8 0.7',
+    ]);
+    // Wo die Breite trägt, gibt die Höhe nach.
+    const heightVaries = [...byCapability]
+      .filter(([capability]) => !widthVaries.some((line) => line.startsWith(`${capability}:`)))
+      .filter(([, entries]) => spread(entries.map((entry) => entry.measurement.scaleY)) > 1e-9)
+      .map(([capability]) => capability)
+      .sort();
+    expect(heightVaries).toEqual([
+      'fuels-consumables',
+      'power-supply',
+      'rescue-aerial-ladder',
+      'water-conveyance',
+      'water-rescue',
+    ]);
     // Belegt über mehrere Körperformen, nicht nur an einer.
     const kinds = (capability: string) =>
       new Set((byCapability.get(capability) ?? []).map((entry) => `${entry.kind}/${entry.variant ?? '-'}`)).size;

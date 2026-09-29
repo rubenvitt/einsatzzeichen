@@ -19,11 +19,14 @@ export const CAPABILITY_INSET_FLUSH_TOLERANCE_MM = 0.01;
  * Grenze zwischen `reduced` und `reshaped`: die relative Abweichung der beiden Faktoren,
  * `|sx − sy| / max(sx, sy)`.
  *
- * **Die Zahl ist aus der Lücke der Messwerte gewählt, nicht vorab gesetzt.** Unter den nicht
- * randbündigen Fassungen des Bestands liegt die Abweichung entweder bei höchstens 0,22
- * (Wasserrettung am Landfahrzeug, I.2.1) oder bei mindestens 0,37 (Zelt im Kreiskörper, F.3.13).
- * Dazwischen liegt kein Messwert. 0,3 steht in dieser Lücke; das Gate hält fest, dass sie leer
- * bleibt, und wird rot, sobald eine neue Fassung hineinfällt.
+ * **Die Zahl ist aus einer Lücke der Messwerte gewählt, nicht vorab gesetzt.** Bis LFH-587 lag
+ * die Abweichung der nicht randbündigen Fassungen entweder bei höchstens 0,22 (Wasserrettung am
+ * Landfahrzeug, I.2.1) oder bei mindestens 0,37 (Zelt im Kreiskörper, F.3.13), und 0,3 stand in
+ * dieser leeren Lücke. **Anhang C hat sie verkleinert (LFH-786):** die Technische Hilfeleistung im
+ * Rüstwagen (C.2.18) liegt bei 0,28, die Wasserförderung im Schlauchwagen (C.2.26) auf 0,30 selbst.
+ * Die Grenze bleibt 0,3; leer ist nur noch 0,30 bis 0,37. C.2.26 gilt mit `≤` als `reduced`, ohne
+ * Rundung der Faktoren läge sein Wert bei 0,2987. Das Gate hält beide Ränder fest und wird rot,
+ * sobald eine neue Fassung in die verbliebene Lücke fällt.
  */
 export const CAPABILITY_INSET_REDUCED_UNIFORMITY_LIMIT = 0.3;
 

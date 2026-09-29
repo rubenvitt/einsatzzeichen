@@ -298,3 +298,6 @@ verschoben.
   `capabilities-pictogram-overflows-body` dazugekommen. Nach dem Zusammenführen prüft der Kern 77
   Regeln an der Beschreibung (80 Befundstellen), davon 65 technisch und 12 fachlich;
   `capabilities` ist damit nur noch teilweise offen.
+- **Zusammen mit LFH-786.** Ebenfalls auf `main` kam `body-mark-rendition-not-measured` dazu
+  (technisch, Dimension `body-marks`). Seitdem prüft der Kern 78 Regeln an der Beschreibung
+  (81 Befundstellen), davon 66 technisch und 12 fachlich.

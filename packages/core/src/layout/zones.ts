@@ -179,7 +179,7 @@ function formKey(kind: SymbolKind, variant?: BodyVariantId): string {
 
 /**
  * Die drei Körperformen, an denen die Referenz überhaupt eine Fahrwerkszone führt. Wiederholt aus
- * `CHASSIS_KINDS` in `validate.ts:62–66`, das dort modulprivat ist; `zones.test.ts` hält die
+ * `CHASSIS_KINDS` in `validate.ts:66–70`, das dort modulprivat ist; `zones.test.ts` hält die
  * Liste an der Meldung der Regel `vehicle-category-requires-vehicle` fest.
  */
 const CHASSIS_KINDS: readonly SymbolKind[] = ['vehicle-land', 'trailer', 'swap-loader-vehicle'];
@@ -202,7 +202,7 @@ const INNER_FIELD_KINDS: readonly SymbolKind[] = [
 const INNER_FIELD_VARIANT_KEYS: readonly string[] = ['vehicle-water/raised-hull'];
 
 /**
- * Die drei Körperformen ohne Kapitel-1-Abschnitt, für die `profiles.ts:440–445` das Fehlen der
+ * Die drei Körperformen ohne Kapitel-1-Abschnitt, für die `profiles.ts:538–543` das Fehlen der
  * Kopfzone als **nachgesehenes** Ergebnis festhält und nicht als offene Frage.
  */
 const HEADLESS_E2_KINDS: readonly SymbolKind[] = [
@@ -228,39 +228,39 @@ const CIRCLE_NO_HEAD_ZONE =
  */
 const CENTER_BASELINE_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
   'swap-loader-vehicle': source(
-    'core/src/layout/profiles.ts:447–450',
+    'core/src/layout/profiles.ts:511–514',
     '7,5004 gemessen an E.2.15 (Grundlinie 17,0000 bei Körperunterkante 24,5004) — n = 1. Ein ' +
       'Wert in einem stehenden Mechanismus, kein eigener Mechanismus.',
     babz('E.2.15'),
   ),
   'upright-rectangle': source(
-    'core/src/layout/profiles.ts:451–452',
+    'core/src/layout/profiles.ts:515–516',
     '12,9999 gemessen an E.2.26 (Grundlinie 17,0000 bei Körperunterkante 29,9999) — n = 1.',
     babz('E.2.26'),
   ),
   'vehicle-water': source(
-    'core/src/layout/profiles.ts:455–458',
+    'core/src/layout/profiles.ts:519–522',
     '6,9896 gemessen an E.2.28 bis E.2.31 (Grundlinie 16,0002 bei Körperunterkante 22,9898). ' +
       'Gilt für beide Zeichnungen der Art; der Rumpf aus Kapitel 1 trägt im gesamten Bestand ' +
       'keinen mittigen Lauf, für ihn ist keine der beiden Zahlen gemessen.',
     babz('E.2.28', 'E.2.29', 'E.2.30', 'E.2.31'),
   ),
   'vehicle-water/raised-hull': source(
-    'core/src/layout/profiles.ts:292–299',
+    'core/src/layout/profiles.ts:356–363',
     '6,9896 gemessen an E.2.28 bis E.2.31 (Grundlinie 16,0002 bei Körperunterkante 22,9898). ' +
       'Die elf I.3-Dateien tragen denselben Rumpf 1,0002 mm tiefer und ihre Grundlinie auf ' +
       'derselben absoluten Höhe — beide Lesarten erzeugen für die fünf E.2-Zeichen dasselbe Bild.',
     babz('E.2.28', 'E.2.29', 'E.2.30', 'E.2.31'),
   ),
   'vehicle-water/inset-hull': source(
-    'core/src/layout/profiles.ts:301–302',
+    'core/src/layout/profiles.ts:365–366',
     'I.3.5 bis I.3.7: 7,9900 mm über der separat gemessenen Rumpfunterkante 23,9899.',
     babz('I.3.5', 'I.3.6', 'I.3.7'),
   ),
 };
 
 const CENTER_BASELINE_DEFAULT = source(
-  'core/src/layout/profiles.ts:26–58, 184–185',
+  'core/src/layout/profiles.ts:26–58, 189–190',
   'Der Normfall 8 mm, gemessen an `formation` (Unterkante 26,0004, Grundlinie 18,0001) und an ' +
     '`building`; 19 der 20 Landfahrzeuge des E.2-Blocks setzen dieselbe Grundlinie. Ausreißer ' +
     'sind E.2.20 (8,5005) und E.2.23; der Katalog folgt der Mehrheit.',
@@ -270,27 +270,35 @@ const CENTER_BASELINE_DEFAULT = source(
 /** Herkunft der Grundlinie oben links je Körperform. */
 const TOP_LEFT_BASELINE_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
   formation: source(
-    'core/src/layout/profiles.ts:77–89, 213',
+    'core/src/layout/profiles.ts:77–99, 218',
     '5,0 mm an den neun beschrifteten Zeichen aus F.1.1 bis F.1.11 (Körperoberkante 6,0, ' +
       'Grundlinie 11,0 — eigene Vermessung, 18. August 2026).',
     babz('F.1.1–F.1.11'),
   ),
   'formation/foot-band': source(
-    'core/src/layout/profiles.ts:217–225',
+    'core/src/layout/profiles.ts:253–261',
     'Geerbt vom Formationsprofil: 5,0 mm an F.1.1 bis F.1.11. Das gebänderte Profil setzt die ' +
       'Grundlinie nicht neu.',
     babz('F.1.1–F.1.11'),
   ),
   'vehicle-land': source(
-    'core/src/layout/profiles.ts:245–260',
+    'core/src/layout/profiles.ts:281–318',
     'F.2-Landfahrzeuge mit normaler oder gebänderter Hülle: obere Grundlinie 6,75 mm unter der ' +
       'Körperoberkante (F.2.1 bis F.2.5, Grundlinie 12,5 bei Oberkante 5,75). Diese Zeichen ' +
       'tragen die Fassung `plain-wheel-pair`; an der normalen und der gebänderten Hülle ist der ' +
       'Wert auf denselben Rumpf übertragen. Das Kapitel-1-Grundzeichen selbst trägt keinen Lauf.',
     babz('F.2.1–F.2.5'),
   ),
+  'trailer/foot-band': source(
+    'core/src/layout/profiles.ts:230–252',
+    'Unmittelbar an C.2.30 gemessen (LFH-786): „120“ auf Grundlinie 12,5 bei Körperoberkante ' +
+      '5,75, also 6,75 mm — dieselbe Zahl wie am Landfahrzeug, hier aber an dieser Fassung ' +
+      'abgelesen. Der normale Anhänger trägt die Grundlinie nicht (I.2.1 bis I.2.3 setzen ihre ' +
+      'Läufe über Metriken auf 6,25).',
+    babz('C.2.30'),
+  ),
   'vehicle-land/plain-wheel-pair': source(
-    'core/src/layout/profiles.ts:268–286',
+    'core/src/layout/profiles.ts:328–348',
     'Unmittelbar an dieser Fassung gemessen: die sechs einzeiligen Läufe aus F.2.1 bis F.2.5 ' +
       '(`KTW`, `N-KTW_B`, `2`, `RTW`, `NEF`, `NAW`) stehen auf Grundlinie 12,5 bei ' +
       'Körperoberkante 5,75. **Benannte Ausnahme (LFH-597):** der zweizeilige Satz aus F.2.8 ' +
@@ -298,18 +306,18 @@ const TOP_LEFT_BASELINE_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
     babz('F.2.1–F.2.5'),
   ),
   'circle-12': source(
-    'core/src/layout/profiles.ts:401–410',
+    'core/src/layout/profiles.ts:465–474',
     'Unmittelbar an F.3.3/F.3.4 gemessen; die Grundlinie liegt teilweise außerhalb der ' +
       'Kreisfläche und ist keine Ableitung des 14-mm-`post`-Profils.',
     babz('F.3.3', 'F.3.4'),
   ),
   'circle-12/raised-gable': source(
-    'core/src/layout/profiles.ts:401–415',
+    'core/src/layout/profiles.ts:465–479',
     'Unmittelbar an F.3.5 gemessen; keine Ableitung des 14-mm-`post`-Profils.',
     babz('F.3.5'),
   ),
   'vehicle-air/fixed-wing-hull': source(
-    'core/src/layout/profiles.ts:283–290',
+    'core/src/layout/profiles.ts:345–352',
     UNDOCUMENTED_AT_SOURCE +
       '`fixedWingVehicleAirProfile` trägt die 7 ohne Kommentar; weder Abschnitt noch Messdatum ' +
       'stehen am Fundort.',
@@ -317,7 +325,7 @@ const TOP_LEFT_BASELINE_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
 };
 
 const TOP_LEFT_BASELINE_INHERITED = source(
-  'core/src/layout/profiles.ts:227–252',
+  'core/src/layout/profiles.ts:263–288',
   'Geerbt vom Landfahrzeugprofil: 6,75 mm an F.2.1 bis F.2.5. Die Variante setzt die Grundlinie ' +
     'nicht neu.',
   babz('F.2.1–F.2.5'),
@@ -326,18 +334,18 @@ const TOP_LEFT_BASELINE_INHERITED = source(
 /** Herkunft des oberhalb liegenden Laufs je Körperform. */
 const ABOVE_LEFT_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
   'vehicle-air/raised-hull': source(
-    'core/src/layout/profiles.ts:269–281',
+    'core/src/layout/profiles.ts:329–341',
     'F.2.6/F.2.7: dieselbe absolute ITH-Grundlinie y = 6 am auf y = 6 angehobenen Rumpf.',
     babz('F.2.6', 'F.2.7'),
   ),
   'vehicle-air/fixed-wing-hull': source(
-    'core/src/layout/profiles.ts:283–290',
+    'core/src/layout/profiles.ts:345–352',
     UNDOCUMENTED_AT_SOURCE +
       '`fixedWingVehicleAirProfile` trägt −1 und −0,01 ohne Kommentar; weder Abschnitt noch ' +
       'Messdatum stehen am Fundort.',
   ),
   'person/compact-person-diamond-26mm-lowered-2mm': source(
-    'core/src/layout/profiles.ts:345–355',
+    'core/src/layout/profiles.ts:409–419',
     'I.5.2/I.5.3: dieselbe Raute wie I.5.1, nur 2 mm abgesenkt. Die oberhalb liegende Zone ' +
       'bleibt je Rezept überschreibbar; ihre Defaultwerte ergeben Anker (1|3,5) mm.',
     babz('I.5.2', 'I.5.3'),
@@ -347,7 +355,7 @@ const ABOVE_LEFT_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
 /** Herkunft des Laufs rechts unterhalb des Körpers. */
 const BELOW_RIGHT_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
   'vehicle-water/raised-hull': source(
-    'core/src/compose.ts:205–245, core/src/layout/profiles.ts:292–299',
+    'core/src/compose.ts:206–246, core/src/layout/profiles.ts:356–363',
     'Belegt an den fünf Wasserfahrzeugen E.2.27 bis E.2.31, deren Typo-Ebene diesen Lauf ' +
       'byteidentisch führt. Gemessen ist die Tinte, nicht der Anker: der Anker 31,5512 ist aus ' +
       'der an E.2.1 gemessenen Differenz von 0,0266 mm zwischen Anker und Tintenkante ' +
@@ -355,7 +363,7 @@ const BELOW_RIGHT_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
     babz('E.2.27', 'E.2.28', 'E.2.29', 'E.2.30', 'E.2.31'),
   ),
   'circle-12/foot-band': source(
-    'core/src/layout/profiles.ts:426–437',
+    'core/src/layout/profiles.ts:490–501',
     'G.3.5: Bw rechts außen auf (31|29) bei Körperhülle 4…28 mm.',
     babz('G.3.5'),
   ),
@@ -364,13 +372,13 @@ const BELOW_RIGHT_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
 /** Herkunft der Läufe auf der Ausgabeoberfläche unterhalb des Körpers. */
 const SURFACE_LABEL_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
   'vehicle-air/raised-hull': source(
-    'core/src/layout/profiles.ts:269–281',
+    'core/src/layout/profiles.ts:329–341',
     'F.2.6/F.2.7 am auf y = 6 angehobenen Rumpf; der reale Katalogpfad spannt ' +
       '1,0100…30,9894 × 6,0001…20,9898 mm auf.',
     babz('F.2.6', 'F.2.7'),
   ),
   'circle-12/raised-circle-1mm': source(
-    'core/src/layout/profiles.ts:417–424',
+    'core/src/layout/profiles.ts:481–488',
     UNDOCUMENTED_AT_SOURCE +
       '`raisedCircleOneMmProfile` trägt Grundlinie 4 und die Anker −3/+3 ohne Kommentar; weder ' +
       'Abschnitt noch Messdatum stehen am Fundort.',
@@ -380,18 +388,18 @@ const SURFACE_LABEL_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
 /** Herkunft des unten mittigen Laufs. */
 const BOTTOM_CENTER_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
   formation: source(
-    'core/src/layout/profiles.ts:115–120, 214',
+    'core/src/layout/profiles.ts:125–130, 219',
     'Gemessen sind 2,0 mm an F.1.18/F.1.20 für die Formation (absolut y = 24,0 mm), um ' +
       'x = 16,0 mm zentriert und im Schriftgrad der unteren Zonen.',
     babz('F.1.18', 'F.1.20'),
   ),
   'formation/foot-band': source(
-    'core/src/layout/profiles.ts:217–225',
+    'core/src/layout/profiles.ts:253–261',
     'Geerbt vom Formationsprofil: 2,0 mm an F.1.18/F.1.20.',
     babz('F.1.18', 'F.1.20'),
   ),
   'circle-12/foot-band': source(
-    'core/src/layout/profiles.ts:426–437',
+    'core/src/layout/profiles.ts:490–501',
     'G.3.5: Diesel auf y = 22 bei Körperhülle 4…28 mm, also 6,0 mm über der Unterkante. Der in ' +
       'Pfade umgewandelte Lauf ist in der Referenz schwarz, nicht weiß.',
     babz('G.3.5'),
@@ -401,14 +409,14 @@ const BOTTOM_CENTER_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
 /** Herkunft der unteren Grundlinie, wo sie vom Normwert abweicht. */
 const BOTTOM_LABEL_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
   'formation/foot-band': source(
-    'core/src/layout/profiles.ts:217–225',
+    'core/src/layout/profiles.ts:253–261',
     'G.1.2: DLRG-Grundlinie 21 mm bei Körperunterkante 26 mm, also 5,0 mm.',
     babz('G.1.2'),
   ),
 };
 
 const BOTTOM_LABEL_DEFAULT = source(
-  'core/src/compose.ts:82–122',
+  'core/src/compose.ts:83–123',
   'Gemessen an den 16 Referenzdateien E.1.1 bis E.1.16 (11./12. August 2026): Grundlinie 24,00 ' +
     'bei Körperunterkante 26,0, linke Tintenkante 3,03, rechte 29,03. Geltungsbereich sind diese ' +
     '16 Dateien auf dem Formationskörper — keine Aussage über E.1 insgesamt und keine eigene ' +
@@ -418,18 +426,18 @@ const BOTTOM_LABEL_DEFAULT = source(
 
 const DEFAULT_ANCHOR_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
   'rect-body': source(
-    'core/src/layout/profiles.ts:23–24, 166–182',
+    'core/src/layout/profiles.ts:23–24, 171–187',
     'Oberster Punkt der Körper-Mittellinie ohne Kopfzone. Belegt an C.1.2 (Reihe: bleibt bei ' +
       '6 mm wie 1.1) und C.1.1 (Stapel: rückt auf 9 mm).',
     babz('C.1.1', 'C.1.2'),
   ),
   'rotated-square-body': source(
-    'core/src/layout/profiles.ts:304–310',
+    'core/src/layout/profiles.ts:368–374',
     'D.3.7: halbe Diagonale 15 → 13 mm, Mittelpunkt 16 → 18 mm, Unterkante bleibt 31 mm.',
     babz('D.3.7'),
   ),
   'circle-body': source(
-    'core/src/layout/profiles.ts:384–386',
+    'core/src/layout/profiles.ts:448–450',
     UNDOCUMENTED_AT_SOURCE +
       '`circleBodyProfile` trägt den Anker 2 ohne Kommentar. Er ist ohne Kopfzone ohnehin ' +
       'unerreichbar, weil `place()` für den Kreiskörper wirft.',
@@ -564,7 +572,7 @@ function bodyZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
   const anchorSource = provenanceFor(DEFAULT_ANCHOR_SOURCE, profile.id, 'den Standardanker');
   const anchor = HEADLESS_E2_KINDS.includes(kind)
     ? source(
-        'core/src/layout/profiles.ts:438–445',
+        'core/src/layout/profiles.ts:502–509',
         NOT_A_CLAIM_AT_SOURCE + E2_NO_HEAD_ZONE,
       )
     : anchorSource;
@@ -575,7 +583,7 @@ function bodyZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
       'Die Körperzone ist die Hülle des **platzierten** Körpers. Alle übrigen Zonen rechnen ' +
         'gegen sie, damit sie mitwandern, wenn eine Kopfzone den Körper verschiebt.',
       source(
-        'core/src/compose.ts:1343–1346',
+        'core/src/compose.ts:1346–1349',
         'Die Hülle entsteht zur Laufzeit aus dem Katalogprimitiv (`boundsOfMm`) und wird um die ' +
           'zusätzlichen Körperprimitive erweitert; sie ist deshalb kein je Körperform ' +
           'eingetragener Zahlenwert.',
@@ -604,10 +612,10 @@ function bodyZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
 
 function headZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
   if (profile.id === 'circle-body') {
-    return measuredAbsent('combination', 'core/src/layout/profiles.ts:357–398', CIRCLE_NO_HEAD_ZONE);
+    return measuredAbsent('combination', 'core/src/layout/profiles.ts:421–462', CIRCLE_NO_HEAD_ZONE);
   }
   if (HEADLESS_E2_KINDS.includes(kind)) {
-    return measuredAbsent('combination', 'core/src/layout/profiles.ts:438–445', E2_NO_HEAD_ZONE);
+    return measuredAbsent('combination', 'core/src/layout/profiles.ts:502–509', E2_NO_HEAD_ZONE);
   }
   return measured(
     offset(
@@ -640,7 +648,7 @@ function headZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
         'kann: `topMm = max(HEAD_TOP_MARGIN_MM, defaultAnchorMm − HEAD_GAP_MM − headHeightMm)`. ' +
         'Passt sie dort nicht, rutscht sie an den oberen Rand und der Körper weicht aus.',
       source(
-        'core/src/layout/profiles.ts:147–164',
+        'core/src/layout/profiles.ts:157–174',
         'Belegt an: Rechteck + Reihe (6, 3) → 2/5; Rechteck + Stapel (6, 7) → 1/8; gedrehtes ' +
           'Quadrat + Reihe (1, 3) → 1/4.',
       ),
@@ -652,7 +660,7 @@ function chassisZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
   if (!CHASSIS_KINDS.includes(kind)) {
     return measuredAbsent(
       'combination',
-      'core/src/validate.ts:494–500',
+      'core/src/validate.ts:498–504',
       'Eine Fahrzeugkategorie ist nur am Landfahrzeug, am Anhängerrumpf und am ' +
         `Wechselladerrumpf belegt. "${kind}" trägt in der Referenz keine Fahrwerkszone ` +
         '(Regel `vehicle-category-requires-vehicle`).',
@@ -663,14 +671,14 @@ function chassisZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
   const topSource =
     profile.chassisTopBelowBaseBottomMm === undefined
       ? source(
-          'core/src/layout/profiles.ts:135–139, core/src/compose.ts:1348–1358',
+          'core/src/layout/profiles.ts:145–149, core/src/compose.ts:1351–1361',
           'Regelfall: die Zone hängt unmittelbar an der Unterkante des Grundzeichens. Gemessen ' +
             'an 5.1.1.1 bis 5.1.1.6 und an allen 25 E.2-Zeichen mit Fahrwerk — Körperunterkante ' +
             '26,0004 mm, Markenmitte 28,2501 mm, Unterkante der Zone 30,7502 mm.',
           babz('5.1.1.1', '5.1.1.6'),
         )
       : source(
-          'core/src/layout/profiles.ts:254–262',
+          'core/src/layout/profiles.ts:290–320',
           'N.1.1: Die Unterkante des umgekehrten Rumpfs liegt an den Ecken bei 25,75 mm, die ' +
             'Kette aber wie im Regelfall mit Mittellinie 26,0…30,5 mm. Die Zone beginnt deshalb ' +
             '0,25 mm unter der Körperunterkante.',
@@ -734,7 +742,7 @@ function innerFieldZone(kind: SymbolKind, variant?: BodyVariantId): ZoneBinding 
         'Koordinaten der unverschobenen Grundzeichnung. Als Zonendatum liegt die Einrückung vor, ' +
         'nicht eine je Körperform eingetragene Hülle.',
       source(
-        'core/src/geometry/base-symbols.ts:1095–1123, core/src/compose.ts:772–777',
+        'core/src/geometry/base-symbols.ts:1095–1123, core/src/compose.ts:775–780',
         'Belegt nur für die Körper, die Anhang E damit zeichnet. Optional, weil nur Anhang E es ' +
           'braucht; fehlt der Port oder die Körperform, wirft `compose()`, statt die Kontur ' +
           'still wegzulassen.',
@@ -749,9 +757,9 @@ function innerFieldZone(kind: SymbolKind, variant?: BodyVariantId): ZoneBinding 
         'nur Piktogramme zu, die unskaliert im Körper bleiben (`capabilities-pictogram-overflows-body`, ' +
         '`CAPABILITY_INSET_RULE.unmeasuredPairs`).',
       source(
-        'core/src/blocks/capability-inset.ts:80–260',
-        'Gemessen an allen 52 Körperfassungen des Bestands gegen ihre Einzeldarstellung ' +
-          '(LFH-587). Weder ein gemeinsamer Faktor noch das Einpassen in die Box 4/8/24/16 mm ' +
+        'core/src/blocks/capability-inset.ts:88–307',
+        'Gemessen an allen 76 Körperfassungen des Bestands gegen ihre Einzeldarstellung ' +
+          '(LFH-587, LFH-786). Weder ein gemeinsamer Faktor noch das Einpassen in die Box 4/8/24/16 mm ' +
           'noch das unveränderte Einsetzen reproduziert die Referenz.',
       ),
     ),
@@ -763,7 +771,7 @@ function innerFieldZone(kind: SymbolKind, variant?: BodyVariantId): ZoneBinding 
         'inner-field-hull',
         { minX: 2, minY: 7, maxX: 30, maxY: 25 },
         source(
-          'core/src/compose.ts:106–120',
+          'core/src/compose.ts:107–121',
           'Die Referenz zieht ihre Ränder gegen dieses weiße Innenfeld, das 1 mm in den Körper ' +
             'eingerückt ist: `rect` 2/7 bis 30/25 neben dem Körper 1/6 bis 31/26 — belegt an ' +
             'dessen `rect` und nicht aus dem Überstand zurückgerechnet.',
@@ -776,7 +784,7 @@ function innerFieldZone(kind: SymbolKind, variant?: BodyVariantId): ZoneBinding 
         'body-left',
         'inward',
         source(
-          'core/src/compose.ts:106–120, 200–201',
+          'core/src/compose.ts:107–121, 201–202',
           'Die vermessene Grenze des mittigen Laufs ist dieses weiße Innenfeld, also 1 mm Marge ' +
             'und 28 mm Breite. Der Katalog kennt das Innenfeld als eigene Fläche in `compose()` ' +
             'nicht — die Formation ist dort **ein** Rechteck.',
@@ -811,7 +819,7 @@ function footZone(profile: LayoutProfile): ZoneBinding {
       COMPOSE_ZONE_CONSTANTS.FOOT_TEXT_SIZE_MM,
       'height',
       source(
-        'core/src/compose.ts:41–80',
+        'core/src/compose.ts:42–81',
         'Nicht an der Referenz abgelesen, sondern gespiegelt aus derselben Rechnung wie ' +
           '`placeHead`: die Kopfzone darf beim Rechteck-Körper bis zu ' +
           '`defaultAnchorMm − HEAD_GAP_MM − HEAD_TOP_MARGIN_MM` = 4 mm hoch werden. Bewusst ein ' +
@@ -829,7 +837,7 @@ function footZone(profile: LayoutProfile): ZoneBinding {
           'gewollter `outside-viewbox`-Befund im viewBox-Gate statt einer Zone, die lautlos ' +
           'verschwindet.',
         source(
-          'core/src/compose.ts:64–71',
+          'core/src/compose.ts:65–72',
           'Ein bedingungsloses Abschneiden auf 0 würde dort einen unsichtbaren `sizeMm: ' +
             '0`-Text erzeugen; belegt in `compose.test.ts`.',
         ),
@@ -849,8 +857,8 @@ function centerZone(
     return notMeasured(
       'combination',
       profile.id === 'circle-body'
-        ? 'core/src/layout/profiles.ts:384–388'
-        : 'core/src/layout/profiles.ts:308–313',
+        ? 'core/src/layout/profiles.ts:448–452'
+        : 'core/src/layout/profiles.ts:372–377',
       'Kein Zeichen des Bestands beschriftet diese Körperform mittig. Der Normwert 8 steht im ' +
         'Profil, damit die Zahl nicht fehlt — er ist **keine Messung an dieser Körperform** und ' +
         'darf nicht als Zonendatum gelesen werden.',
@@ -875,7 +883,7 @@ function centerZone(
       'body-left',
       'inward',
       source(
-        'core/src/compose.ts:106–120, 186–201',
+        'core/src/compose.ts:107–121, 187–202',
         'Symmetrischer Rand der Ausgabebox gegen die Körperhülle; am 30 mm breiten ' +
           'Formationskörper ergibt das die 28-mm-Box. Vermessen ist das weiße Innenfeld der ' +
           'Referenz (`rect` 2/7 bis 30/25), nicht die Box selbst: die 28 mm sind eine ' +
@@ -889,7 +897,7 @@ function centerZone(
       COMPOSE_ZONE_CONSTANTS.CENTER_LABEL_CAP_HEIGHT_MM,
       'height',
       source(
-        'core/src/compose.ts:246–247',
+        'core/src/compose.ts:247–248',
         'Versalhöhe des mittigen Schriftgrads, gemessen an den 16 Dateien E.1.1 bis E.1.16. Der ' +
           'Schriftgrad selbst ist daraus über `ARIMO_CAP_HEIGHT_FRACTION` abgeleitet und nicht ' +
           'gewählt; je Zeichen kann eine eigene gemessene Höhe danebenstehen.',
@@ -901,7 +909,7 @@ function centerZone(
       'Waagerecht mittig auf der Körperhülle. Eine waagerechte Randvermessung des mittigen ' +
         'Laufs gibt es nicht — ablesbar sind nur Grundlinie, Versalhöhe und Mittenlage.',
       source(
-        'core/src/compose.ts:100–112',
+        'core/src/compose.ts:101–113',
         'Die 2 mm der unteren Läufe waren für die mittige Box eine übernommene Annahme; seit ' +
           'dem Teilslice E-b gilt diese Übertragung nicht mehr.',
       ),
@@ -932,7 +940,7 @@ function bottomLabelZone(
       side === 'left' ? 'body-left' : 'body-right',
       'inward',
       source(
-        'core/src/compose.ts:100–122',
+        'core/src/compose.ts:101–123',
         'Gemessen an den unteren Läufen von E.1.1 bis E.1.16 (linke Tintenkante 3,03, rechte ' +
           '29,03 bei Körperkanten 1 und 31). Gegen die **Körperkante** sind es 2 mm statt der ' +
           '1 mm des weißen Innenfelds; der sichtbare Abstand ist derselbe wie in der Referenz.',
@@ -944,7 +952,7 @@ function bottomLabelZone(
       COMPOSE_ZONE_CONSTANTS.BOTTOM_LABEL_CAP_HEIGHT_MM,
       'height',
       source(
-        'core/src/compose.ts:246–248, 248–260',
+        'core/src/compose.ts:247–249, 249–261',
         'Versalhöhe der unteren Schriftgrade, gemessen an E.1.1 bis E.1.16. Der Schriftgrad ' +
           '(4,24 mm) ist daraus über `ARIMO_CAP_HEIGHT_FRACTION` abgeleitet: an der Referenz ist ' +
           'die Versalhöhe ablesbar, der Schriftgrad nicht.',
@@ -963,7 +971,7 @@ function bottomCenterZone(
   if (baselineMm === undefined) {
     return notMeasured(
       'combination',
-      'schema/src/taxonomy.ts:580–587',
+      'schema/src/taxonomy.ts:588–595',
       'Profile ohne eingetragene `bottomCenter`-Zone lehnt `compose()` fail-closed ab. Gemessen ' +
         'ist die Zone bisher nur an der Formation (F.1.18/F.1.20) und an `circle-12/foot-band` ' +
         '(G.3.5).',
@@ -983,7 +991,7 @@ function bottomCenterZone(
       'bottom-center-anchor',
       'Um x = 16,0 mm zentriert, im Schriftgrad der unteren Zonen.',
       source(
-        'schema/src/taxonomy.ts:580–587',
+        'schema/src/taxonomy.ts:588–595',
         'Beide belegten Läufe sind um x = 16,0 mm zentriert und verwenden den Schriftgrad der ' +
           'unteren Zonen.',
       ),
@@ -996,7 +1004,7 @@ function bottomCenterZone(
         'bottom-center-ink',
         `Tinte des Laufs: ${profile.bottomCenterInk}.`,
         source(
-          'core/src/layout/profiles.ts:426–431',
+          'core/src/layout/profiles.ts:490–495',
           'G.3.5: Der in Pfade umgewandelte Diesel-Lauf ist in der Referenz schwarz, nicht weiß. ' +
             'Ohne Angabe gilt weiter die Körperfarben-Ableitung.',
           babz('G.3.5'),
@@ -1017,7 +1025,7 @@ function topLeftZone(
   if (baselineMm === undefined) {
     return notMeasured(
       'combination',
-      'core/src/layout/profiles.ts:77–89',
+      'core/src/layout/profiles.ts:77–99',
       'Fehlt die Grundlinie, ist die Zone an dieser Körperform nicht vermessen und `compose()` ' +
         'wirft, statt eine Lage zu raten. Die 5,0 mm der Formation gehören nicht als stille ' +
         'Miterbschaft an die zehn Körperformen, die sich `rectBodyProfile` teilen.',
@@ -1036,7 +1044,7 @@ function topLeftZone(
       'body-left',
       'right',
       source(
-        'core/src/compose.ts:124–137',
+        'core/src/compose.ts:125–138',
         'Zurückgerechnet und nicht abgelesen: dieselben Läufe mit Anker 3,0 mm gerastert ' +
           '(4096 px, 18. August 2026) und die Differenz abgezogen ergibt 2,524 für `MTF`/`RettD`, ' +
           '2,498 für `SEG` und 2,442 für `10` — vier der fünf F-a-Läufe auf 2,5 mm, also 1,5 mm ' +
@@ -1052,7 +1060,7 @@ function topLeftZone(
     const linesSource =
       key === 'vehicle-land/plain-wheel-pair'
         ? source(
-            'core/src/layout/profiles.ts:268–286',
+            'core/src/layout/profiles.ts:328–348',
             'F.2.8: Grundlinien 11,54/15,07 mm bei Körperoberkante 5,75, also 5,79 und 9,32 mm; ' +
               'gemeinsame Versalhöhe 2,43 mm. **Benannte Ausnahme (LFH-597):** die erste Zeile ' +
               'liegt 0,96 mm über der einzeiligen Grundlinie 6,75. Beide Lagen sind an dieser ' +
@@ -1060,7 +1068,7 @@ function topLeftZone(
             babz('F.2.8'),
           )
         : source(
-            'core/src/layout/profiles.ts:227–238',
+            'core/src/layout/profiles.ts:263–274',
             'Zwei gemeinsam vermessene obere Läufe am F.2-Landfahrzeugrumpf; die erste Zeile ist ' +
               'die einzeilige Grundlinie 6,75 mm, die zweite steht 4,0 mm darunter. Der Fundort ' +
               'nennt für die zweite Zeile keinen eigenen Abschnitt.',
@@ -1079,7 +1087,7 @@ function topLeftZone(
         'top-left-requires-metrics',
         'Dieses Profil belegt `topLeft` ausschließlich mit einem vollständigen je-Spec-Metriksatz.',
         source(
-          'core/src/layout/profiles.ts:90–91, 283–290',
+          'core/src/layout/profiles.ts:100–101, 339–346',
           UNDOCUMENTED_AT_SOURCE +
             'Der Fundort nennt für diese Forderung keinen Abschnitt und kein Messdatum.',
         ),
@@ -1099,7 +1107,7 @@ function aboveLeftZone(
   if (baselineMm === undefined) {
     return notMeasured(
       'combination',
-      'core/src/layout/profiles.ts:92–95',
+      'core/src/layout/profiles.ts:102–105',
       'Ein linksbündiger Lauf oberhalb des Körpers ist an dieser Körperform nicht vermessen. ' +
         'Belegt ist er bisher an `vehicle-air/raised-hull` (F.2.6/F.2.7), an ' +
         '`vehicle-air/fixed-wing-hull` und an der abgesenkten I.5-Personraute.',
@@ -1139,7 +1147,7 @@ function belowRightZone(
   if (below === undefined) {
     return notMeasured(
       'combination',
-      'core/src/layout/profiles.ts:129–134',
+      'core/src/layout/profiles.ts:139–144',
       'Vermessene Zone rechts unterhalb des Körpers. Fehlt sie, ist die Zone an dieser ' +
         'Körperform nicht zulässig — belegt ist sie an `vehicle-water/raised-hull` ' +
         '(E.2.27–E.2.31) und an `circle-12/foot-band` (G.3.5).',
@@ -1171,7 +1179,7 @@ function surfaceZone(
   if (surface === undefined || anchorMm === undefined) {
     return notMeasured(
       'combination',
-      'core/src/layout/profiles.ts:101–106',
+      'core/src/layout/profiles.ts:111–116',
       `Ein schwarzer Oberflächenlauf ${side === 'left' ? 'links' : 'rechts'} unterhalb des ` +
         'Körpers ist an dieser Körperform nicht vermessen. Belegt sind ' +
         '`vehicle-air/raised-hull` (nur rechts, F.2.6/F.2.7) und `circle-12/raised-circle-1mm` ' +
@@ -1289,7 +1297,7 @@ export const ZONE_MODEL: Readonly<Record<SymbolKind, BodyFormZones>> = Object.fr
 } satisfies Record<SymbolKind, BodyFormZones>);
 
 /**
- * Die Körperformvarianten mit eigenen Zonenmaßen — die 13 Zweige aus `profileFor()`. Die Liste
+ * Die Körperformvarianten mit eigenen Zonenmaßen — die 14 Zweige aus `profileFor()`. Die Liste
  * steht hier als Wert, weil `profileFor()` seine Zweige nicht ausgibt; `zones.test.ts` prüft sie
  * gegen alle 190 Paare aus `SYMBOL_KINDS` und `BODY_VARIANT_IDS`, sodass ein neuer Zweig hier
  * ankommt und keiner still verschwindet.
@@ -1305,12 +1313,13 @@ export const ZONE_MODEL_BODY_VARIANTS: readonly BodyFormZones[] = Object.freeze(
   zonesFor('vehicle-land', 'plain-wheel-pair'),
   zonesFor('vehicle-land', 'foot-band'),
   zonesFor('vehicle-land', 'inverted-hull-track'),
+  zonesFor('trailer', 'foot-band'),
   zonesFor('circle-12', 'raised-gable'),
   zonesFor('circle-12', 'raised-circle-1mm'),
   zonesFor('circle-12', 'foot-band'),
 ]);
 
-/** Alle belegten Körperfassungen: die 19 Körperformen und die 13 Variantenzweige. */
+/** Alle belegten Körperfassungen: die 19 Körperformen und die 14 Variantenzweige. */
 export const ZONE_MODEL_FORMS: readonly BodyFormZones[] = Object.freeze([
   ...Object.values(ZONE_MODEL),
   ...ZONE_MODEL_BODY_VARIANTS,
