@@ -20,6 +20,11 @@ import {
   profileFor,
   type LayoutProfile,
 } from './profiles.js';
+import {
+  PERSON_STATE_CORNERS_MM,
+  PERSON_STATE_FRAMES,
+  STATE_HINT_LAYOUTS,
+} from './state-placement.js';
 
 /**
  * Hält `ZoneGapScope` (in `schema`, abhängigkeitsfrei) an `NotMeasuredScope` (in `core`). Beide
@@ -431,23 +436,108 @@ const DEFAULT_ANCHOR_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
   ),
 };
 
+/**
+ * Die Zustandsrandlage ist seit der Durchsicht aller 661 Referenzdateien am 29. September 2026 an
+ * zwei Grundzeichen vermessen: an der Person (`5.8.1_Beispiel 1` bis `3`) und an der Gefahr
+ * (`5.8.1.13_…_2`, `5.8.1.14_…_2`). Belegt sind dort nur die Hinweise „?" und „!" aus 5.8.1; an
+ * jeder anderen Körperform fehlt die Zusammenstellung. `combination` und nicht mehr `value`, weil
+ * Person und Gefahr sie tragen.
+ */
 const STATE_MARGIN_GAP = notMeasured(
-  'value',
-  'core/src/compose.ts:822–827',
-  'Kapitel 5.8 bleibt bewusst ein eigenständiger Piktogrammkatalog ohne `SymbolSpec.states` und ' +
-    'ohne Integration in `compose()`. Eine Randlage für einen Zustand ist damit an keiner ' +
-    'Körperform vermessen — eine andere Grundzeichenart hilft nicht, deshalb `scope: "value"`.',
+  'combination',
+  'core/src/layout/state-placement.ts:208–251',
+  'Kein Original zeigt einen Zustand aus 5.8 in der Randlage dieser Körperform. Belegt sind die ' +
+    'Hinweise 5.8.1.13 und 5.8.1.14 links neben der Person (5.8.1_Beispiel 1–3) und neben der ' +
+    'Gefahr (5.8.1.13_2, 5.8.1.14_2, M.6); `placeStates()` wirft hier `NotMeasuredError`.',
 );
 
 const TENDENCY_MARGIN_GAP = notMeasured(
   'value',
-  'core/src/compose.ts:822–827, schema/src/taxonomy.ts:358–360',
-  'Wie die Zustandsrandlage nicht vermessen. Zusätzlich zu benennen: **die Tendenz ist im ' +
-    'Repository heute keine eigene Achse.** `tendency-rising`, `tendency-unchanged` und ' +
-    '`tendency-falling` stehen als drei Werte innerhalb von `STATE_IDS`, also als Zustände. Ob ' +
-    'die Tendenz eine eigene Randlage bekommt oder eine Lage der Zustandsrandlage bleibt, ist ' +
-    'offen und wird hier nicht entschieden.',
+  'core/src/layout/state-placement.ts:602–608',
+  'Keine der 661 Referenzdateien zeigt eine Tendenz aus 5.8.3 an einem Träger (Durchsicht vom ' +
+    '29. September 2026); die Pfeile in M.9 und M.10 sind offene Winkelpfeile ohne Rahmen und ' +
+    'keine Tendenz. Die Tendenz ist ein eigenes Spec-Feld mit eigener Randlage (Entscheidung des ' +
+    'Eigentümers vom 29. September 2026); wo diese Randlage liegt, ist eine offene Frage an ihn ' +
+    '(docs/decisions/2026-09-28-lfh-565-kapitel-5-8-bausteine.md, Nachtrag).',
 );
+
+const HINT_LAYOUT_SOURCE = 'core/src/layout/state-placement.ts:208–251';
+const PERSON_FRAME_SOURCE = 'core/src/layout/state-placement.ts:142–174';
+const PERSON_CORNER_SOURCE = 'core/src/layout/state-placement.ts:178–189';
+
+/** Die Hinweislage eines Trägers, in Koordinaten der (bei der Person verbreiterten) Zeichenfläche. */
+function hintMeasures(carrier: 'person' | 'hazard'): readonly ZoneMeasure[] {
+  const layout = STATE_HINT_LAYOUTS[carrier];
+  const provenance =
+    carrier === 'person'
+      ? source(
+          HINT_LAYOUT_SOURCE,
+          '5.8.1_Beispiel 3 (29.09.2026): Fläche 36 × 32 mm, Grundfläche x 4…36, 20-mm-Raute um ' +
+            '(21 | 16) mit 0,4-mm-Strich, schwarzes „?" mit Achse x = 6,5 (Tinte 3,642…9,4 × ' +
+            '9,6…20,5 mm). „!" ist an der Person nicht gezeichnet und um 1 mm versetzt übertragen.',
+          babz('5.8.1'),
+        )
+      : source(
+          HINT_LAYOUT_SOURCE,
+          '5.8.1.13_2 und 5.8.1.14_2 (29.09.2026): Dreieck (7,5 | 25), (19 | 6), (30,5 | 25) mit ' +
+            '0,5-mm-Strich, rotes „?" mit Achse x = 5, rotes „!" mit Achse x = 6, Tinte y 9,6…20,65.',
+          babz('5.8.1.13', '5.8.1.14'),
+        );
+  const markAxis = layout.carrierHullMm.minX - layout.markAxisXMm['suspected-situation'];
+  return [
+    rule(
+      'hint-frame',
+      'Alle Maße dieser Zone gelten in Koordinaten der Zeichenfläche des Hinweises, nicht der ' +
+        '32-mm-Grundfläche: an der Person wächst die Fläche nach links auf 36 mm, die Grundfläche ' +
+        'liegt dann bei x 4…36. Der Träger wird verkleinert und ersetzt den Körper.',
+      provenance,
+    ),
+    size('hint-canvas-width', layout.canvasMm.width, 'width', provenance),
+    hull('hint-base-area', layout.baseAreaMm, provenance),
+    hull('hint-carrier-hull', layout.carrierHullMm, provenance),
+    offset('hint-mark-axis', markAxis, 'body-left', 'left', provenance),
+    rule(
+      'hint-mark-ink',
+      'Die Hinweismarke übernimmt die Strichfarbe des Trägers: schwarz an der Person, rot an der ' +
+        'Gefahr. Sie ist die auf die Hälfte verkleinerte Figur aus 5.8.1.13 bzw. 5.8.1.14.',
+      provenance,
+    ),
+  ];
+}
+
+/** Die Ecklagen der Zusatzkennungen aus 5.8.8 an der 26-mm-Raute. */
+function cornerMeasures(): readonly ZoneMeasure[] {
+  const provenance = source(
+    PERSON_CORNER_SOURCE,
+    'Tintenhüllen an 5.8.8.2, 5.8.8.5, 5.8.8.6 (oben rechts: B, TP, K, Kontaminationszeichen) und ' +
+      '5.8.8.4 (unten links: Sichtungskategorie), abgelesen am 29.09.2026.',
+    babz('5.8.8.2', '5.8.8.4', '5.8.8.5', '5.8.8.6'),
+  );
+  return [
+    rule(
+      'person-state-frame',
+      'Ein Personenzustand aus 5.8.8 ersetzt den 30-mm-Körper durch seine eigene Raute: 26 mm um ' +
+        '(16 | 16), 26 mm um (16 | 14) bei 5.8.8.12 bis 5.8.8.14, 21 mm um (16 | 20,5) bei 5.8.8.9.',
+      source(
+        PERSON_FRAME_SOURCE,
+        'Rautenlagen an 5.8.8.3, 5.8.8.12 und 5.8.8.9 abgelesen (29.09.2026); die Standardlage ' +
+          `hat die Hülle ${PERSON_STATE_FRAMES['person-diamond-26mm'].hullMm.minX}…` +
+          `${PERSON_STATE_FRAMES['person-diamond-26mm'].hullMm.maxX} mm wie I.5.1.`,
+        babz('5.8.8.3', '5.8.8.9', '5.8.8.12'),
+      ),
+    ),
+    hull('corner-top-right', PERSON_STATE_CORNERS_MM['top-right'], provenance),
+    hull('corner-bottom-left', PERSON_STATE_CORNERS_MM['bottom-left'], provenance),
+  ];
+}
+
+function stateMarginZone(kind: SymbolKind, variant: BodyVariantId | undefined): ZoneBinding {
+  if (kind === 'hazard' && variant === undefined) return measured(...hintMeasures('hazard'));
+  if (kind === 'person' && (variant === undefined || variant === 'compact-person-diamond-26mm')) {
+    return measured(...hintMeasures('person'), ...cornerMeasures());
+  }
+  return STATE_MARGIN_GAP;
+}
 
 const MOVEMENT_ANCHOR_GAP = notMeasured(
   'value',
@@ -1109,7 +1199,7 @@ export function zonesFor(kind: SymbolKind, variant?: BodyVariantId): BodyFormZon
     'label-below-right': belowRightZone(kind, variant, profile),
     'label-surface-below-left': surfaceZone('left', kind, variant, profile),
     'label-surface-below-right': surfaceZone('right', kind, variant, profile),
-    'state-margin': STATE_MARGIN_GAP,
+    'state-margin': stateMarginZone(kind, variant),
     'tendency-margin': TENDENCY_MARGIN_GAP,
     'movement-anchor': MOVEMENT_ANCHOR_GAP,
   };

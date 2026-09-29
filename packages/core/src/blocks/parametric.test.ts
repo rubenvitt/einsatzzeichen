@@ -100,8 +100,15 @@ describe('Parametrisierte Bausteine: Tabelle', () => {
         if (finding.status === 'proposed') expect(finding.reason.trim(), entry.id).not.toBe('');
         if (finding.status === 'evidenced') {
           for (const evidence of finding.evidence) {
-            expect('asset' in evidence && entry.assets.includes(evidence.asset), entry.id).toBe(true);
+            // Eine Referenzdatei des Bausteins selbst, oder ein Fundort im Quelltext, der eine andere
+            // Referenz ausweist (die Anbindung an die Personenraute ist an 5.8.8.12 bis 5.8.8.14 belegt).
+            if ('asset' in evidence) expect(entry.assets.includes(evidence.asset), entry.id).toBe(true);
+            else expect(linesAt(evidence.definedAt), `${entry.id} → ${evidence.definedAt}`).toContain(evidence.note.split(':')[0]);
           }
+        }
+        if (finding.status === 'decided') {
+          expect(finding.decidedOn, entry.id).toBe('2026-09-29');
+          expect(finding.ref, entry.id).toMatch(/^docs\/decisions\/2026-09-28-lfh-566-bewegung-linien-grenzen\.md §/);
         }
       }
     }
@@ -129,19 +136,19 @@ describe('Parametrisierte Bausteine: festgenagelter Stand', () => {
       counts[entry.id] = findingsOf(entry).map((finding) => finding.status).join(' / ');
     }
     expect(counts).toEqual({
-      'arrow/direction-of-action': 'evidenced / open / open',
-      'arrow/start-of-action': 'open / open / open',
-      'arrow/directed-movement': 'evidenced / open / open',
-      'arrow/movement-both-directions': 'evidenced / open / open',
-      'arrow/end-of-movement': 'open / open / open',
-      'arrow/gathering': 'open / open / open',
-      'line/escape-route': 'open / proposed / proposed',
-      'line/barrier-position': 'open / proposed / proposed',
-      'line/fire-spread': 'open / proposed / proposed',
-      'line/boundary-command-area': 'evidenced / proposed / proposed',
-      'line/boundary-section': 'evidenced / proposed / proposed',
-      'line/boundary-subsection': 'evidenced / proposed / proposed',
-      'line/boundary-with-strength': 'evidenced / proposed / proposed',
+      'arrow/direction-of-action': 'evidenced / decided / open',
+      'arrow/start-of-action': 'evidenced / evidenced / open',
+      'arrow/directed-movement': 'evidenced / evidenced / open',
+      'arrow/movement-both-directions': 'evidenced / decided / open',
+      'arrow/end-of-movement': 'evidenced / evidenced / open',
+      'arrow/gathering': 'evidenced / decided / open',
+      'line/escape-route': 'evidenced / decided / proposed',
+      'line/barrier-position': 'evidenced / decided / proposed',
+      'line/fire-spread': 'evidenced / decided / proposed',
+      'line/boundary-command-area': 'evidenced / decided / proposed',
+      'line/boundary-section': 'evidenced / decided / proposed',
+      'line/boundary-subsection': 'evidenced / decided / proposed',
+      'line/boundary-with-strength': 'evidenced / decided / proposed',
     });
   });
 });

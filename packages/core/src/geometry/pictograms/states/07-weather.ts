@@ -156,11 +156,14 @@ function sunPrimitives(): readonly Primitive[] {
  * Wolke: Vereinigung dreier Kreise über einer gemeinsamen waagerechten Grundlinie y = 24 mm —
  * links (6 | 19) r = 5, Mitte (16 | 15) r = 9, rechts (25 | 18) r = 6. Links und rechts berührt
  * die Grundlinie die Kreise tangential; oben wechselt die Kontur an den Kreisschnittpunkten.
+ *
+ * `raiseMm` hebt die ganze Wolke an. In den Beispielen `5.8.7_Beispiel_Schneiend_*` steht sie
+ * 3 mm höher (Fläche 25,512 statt 34,016 pt oben, Grundlinie y 21), darunter der Niederschlag.
  */
-function cloudPath(): string {
-  const left = [6, 19, 5] as const;
-  const middle = [16, 15, 9] as const;
-  const right = [25, 18, 6] as const;
+export function cloudPath(raiseMm = 0): string {
+  const left = [6, 19 - raiseMm, 5] as const;
+  const middle = [16, 15 - raiseMm, 9] as const;
+  const right = [25, 18 - raiseMm, 6] as const;
   const leftMiddle = upperIntersection(left, middle);
   const middleRight = upperIntersection(middle, right);
   let leftEnd = angleDeg(left[0], left[1], leftMiddle);
@@ -172,12 +175,17 @@ function cloudPath(): string {
   let rightStart = angleDeg(right[0], right[1], middleRight);
   if (rightStart < 0) rightStart += 360;
   return [
-    'M 6 24',
+    `M 6 ${mm(24 - raiseMm)}`,
     arc(...left, 90, leftEnd),
     arc(...middle, middleStart, middleEnd),
     arc(...right, rightStart, 450),
     'Z',
   ].join(' ');
+}
+
+/** Die Wolke als Primitiv: weiße Fläche mit 0,5-mm-Kontur. */
+export function cloudPrimitive(raiseMm = 0): Primitive {
+  return weatherPath(cloudPath(raiseMm), WEATHER_WHITE);
 }
 
 /** Bedeckung 4/8: Kreis r = 14 mm um die Zeichenmitte, linke Hälfte schwarz gefüllt. */
@@ -255,11 +263,15 @@ function lightning(dx: number): readonly Primitive[] {
   ];
 }
 
-/** Schneeflocke: drei Durchmesser (senkrecht und ±30° zur Waagerechten), Radius 4 mm. */
-function snowflake(cx: number): readonly Primitive[] {
+/**
+ * Schneeflocke: drei Durchmesser (senkrecht und ±30° zur Waagerechten), Radius 4 mm auf der
+ * Mittellinie y = 16 mm. An der Wolke (`5.8.7_Beispiel_Schneiend_*`) ist sie kleiner: Radius 3 mm
+ * um y 26 (senkrechter Durchmesser 65,227…82,235 pt).
+ */
+export function snowflake(cx: number, cy = 16, r = 4): readonly Primitive[] {
   return [90, 30, 150].map((angle) => {
-    const [x1, y1] = pointOnCircle(cx, 16, 4, angle);
-    const [x2, y2] = pointOnCircle(cx, 16, 4, angle + 180);
+    const [x1, y1] = pointOnCircle(cx, cy, r, angle);
+    const [x2, y2] = pointOnCircle(cx, cy, r, angle + 180);
     return weatherLine(x1, y1, x2, y2);
   });
 }
@@ -300,7 +312,7 @@ export const WEATHER_STATES = deepFreeze([
     referenceAsset: '5.8.7.2_Wolkig.svg',
     box: { xMm: 1, yMm: 6, widthMm: 30, heightMm: 18 },
     contrastPairs: BLACK_ON_WHITE_AND_SURFACE,
-    primitives: [weatherPath(cloudPath(), WEATHER_WHITE)],
+    primitives: [cloudPrimitive()],
   }),
   defineState({
     section: '5.8.7.3',

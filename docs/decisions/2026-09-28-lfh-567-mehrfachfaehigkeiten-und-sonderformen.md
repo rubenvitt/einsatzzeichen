@@ -1,9 +1,10 @@
 # Mehrfachfähigkeiten und Sonderformen 3.6–3.9: was belegt ist, was zu entscheiden bleibt
 
-> Stand: 28. September 2026
+> Stand: 28. September 2026, Nachtrag 29. September 2026 (Abschnitt 4.1)
 > Status: **Vorlage, Entscheidung des Eigentümers offen.** Vorbereitet zu LFH-567 (Initiative A,
 > Zeichen-Grammatik, LFH-559). Die belegten Befunde sind umgesetzt, die offenen Fragen stehen in
-> Abschnitt 5 mit Empfehlung.
+> Abschnitt 5 mit Empfehlung. Die Sonderformen sind seit dem Nachtrag an den Referenzdateien
+> vermessen (LFH-577); Abschnitt 4.1 korrigiert zwei Lesarten aus Abschnitt 4.
 > Bezug: `docs/decisions/2026-09-13-grammatik-motor-und-paketschnitt.md` (Scope),
 > `docs/decisions/2026-09-20-zonenmodell-als-daten.md`,
 > `docs/decisions/2026-08-05-vermessung-kapitel-1-und-verwaltungsstufen.md` (Kapitel 3),
@@ -143,6 +144,81 @@ liefert keine Zahlen für eine Sonderform.
 | Zweirad | offen | `vehicle-land` (empfohlen) |
 | Zweirad motorgetrieben | offen | `vehicle-land` (empfohlen) |
 | temporär ortsfeste Strukturen | offen | `building` (empfohlen, aus dem Legacy-Scoping) |
+
+### 4.1 Nachtrag: Vermessung an den Referenzdateien (29.09.2026)
+
+Auf Weisung des Eigentümers vom 29. September 2026 („vermessen und bauen statt zurückstellen")
+sind die vier Dateien jetzt selbst gelesen und nicht mehr nur das Kennzahlenartefakt. Methode wie
+in `2026-09-19-masse-an-der-referenz-ablesen.md`: Maße abgelesen (1 mm = 90,709/32 px), Geometrie
+eigenständig konstruiert. Gebaut ist `packages/core/src/geometry/special-form-bodies.ts`
+(`specialFormDrawing(id)`, Einzeldarstellung auf der 32-mm-Fläche); `SPECIAL_FORMS` trägt die
+Hüllen in der Körperzone.
+
+**Zwei Lesarten der Vorlage waren falsch:**
+
+- **3.6 hat eine Form.** Die Datei führt ein schwarz gefülltes Sechseck, einen nach unten offenen
+  Winkel. „Keine Füllung" hieß nur: keine Füllebene. Die Form ist Tinte, keine färbbare Fläche.
+- **3.9 hat keine graue Fläche mit dieser Hülle.** Die Hülle 1,837/1,671/30,162/14,19 gehört zum
+  **schwarzen Giebel**. Das Grau `#bebebe` gehört zu einem gestrichelten Kreis, den das Artefakt
+  nur als Kurvenpfad zählt. `strokeBoundsOfMm` auf der Mittellinie (2|14) → (16|2) → (30|14) bei
+  0,5 mm trifft die vier Zahlen auf 0,001 mm.
+
+**Was die Dateien zeigen:**
+
+| Abschnitt | Form | abgelesene Maße |
+|---|---|---|
+| 3.6 Drohne | gefülltes Sechseck | Enden senkrecht bei x 4 und 28, y 10…13 (Endstärke 3 mm); Scheitel außen (16\|22), innen (16\|17,273). Außenkanten Steigung 0,75, Innenkanten 0,606: kein gleich starker Strich. Einziger Wert neben dem Millimeterraster: 17,273 (48,963 px). |
+| 3.7 Zweirad | 0,5-mm-Strich | oberer Halbbogen um (16\|10), Mittellinie r 6 (außen 6,25, innen 5,75), Enden waagerecht bei y 10; ein Stiel auf x 16 vom Bogen bis y 28. Tintenhülle 9,75/3,75/22,25/28. |
+| 3.8 Zweirad motorgetrieben | 0,5-mm-Strich | derselbe Bogen; zwei Stiele auf x 15 und 17 (lichter Abstand 1,5 mm) bis y 28. |
+| 3.9 temporär ortsfeste Strukturen | 0,5-mm-Giebel, Gehrung | Mittellinie (2\|14) → (16\|2) → (30\|14). Darunter ein grauer Platzhalter: Kreis um (16\|20), Mittellinie r 10, 0,4-mm-Strich, 28 Striche zu 1,5 mm mit 0,75 mm Lücke. |
+
+Keine der vier Dateien zeigt Kopf, Fuß, Beschriftung oder Innenfeld. Das Innenfeld steht jetzt als
+**gemessen leer** (keine Füllebene, also keine weiße Innenkontur), alle übrigen Zonen bleiben
+Lücken mit `scope: 'value'`.
+
+**Wo die Formen sonst vorkommen** (Suche über alle 661 Dateien, nach Dateinamen und nach Form):
+
+- **Drohne:** fünfmal, immer als Innenzeichen in einem anderen Körper und jedes Mal in eigenem Maß:
+  C.1.13 und C.1.14 (18 mm breit, Endstärke 1,5 mm, verschiedene Steigungen), F.1.16 (16 mm),
+  C.2.31 (14 mm, Endstärke 1,2 mm, im Fahrzeugkörper), I.1.20 (10,67 mm, Endstärke 1 mm). Keine
+  Fassung ist eine Verkleinerung von 3.6. Als Körper mit Kopf oder Beschriftung erscheint die Drohne
+  nirgends. E.1.35 „Trupp Unbemannte Luftfahrtsysteme" trägt Text statt Winkel.
+- **Zweirad:** nirgends. Kein anderer Dateiname nennt ein Zweirad, Krad oder Motorrad, und keine Form außerhalb von
+  3.7/3.8 hat Bogen und Stiel.
+- **Giebel:** sechsmal am Körper, immer über dem um 2 mm abgesenkten 12-mm-Kreis und dort mit der
+  Mittellinie (3|11) → (16|1) → (29|11): D.2.5 Leitstelle, D.2.7 Hubschrauberlandeplatz, F.3.5,
+  F.3.14, I.4.1 (diese drei „ortsgebunden") und J.3.2 Basisstation (die mobile J.3.3 hat keinen). Das
+  ist die vorhandene Variante `circle-12`/`raised-gable`. F.1.21 führt den Giebel ein drittes Mal
+  kleiner im Ring. Der graue Platzhalter unter dem Giebel in 3.9 folgt der Konvention von Kapitel 3:
+  3.1 zeigt denselben grau gestrichelten Rahmen für „irgendein Grundzeichen".
+
+**Was jetzt belegt ist:**
+
+| Sonderform | Rolle | verwandte Körperform |
+|---|---|---|
+| Drohne | **Marke** (belegt an C.1.13, C.1.14, F.1.16, I.1.20, C.2.31) | `vehicle-air` (empfohlen) |
+| Zweirad | offen | `vehicle-land` (empfohlen) |
+| Zweirad motorgetrieben | offen | `vehicle-land` (empfohlen) |
+| temporär ortsfeste Strukturen | **Marke** über einem Träger (belegt am Platzhalter und an sechs Originalen) | **`circle-12`** (belegt: `raised-gable`) |
+
+**Empfehlung zu Frage 7 (`SymbolKind`):** keine der vier jetzt aufnehmen. Die Drohne und der
+Giebel sind Marken, keine Körper; eine Körperart für sie hätte keine einzige belegte Zone außer
+dem Körper selbst. Für die Zweiräder gibt es kein Original außer der Kapiteldatei, also auch keine
+Zone. Eine Körperart ohne Zonen stünde in den Vokabularen und würfe bei jedem Kopf, Fuß oder Label
+`NotMeasuredError`. Wer die Einzeldarstellungen (3.6, 3.7, 3.8) allein auf die Karte setzen will,
+hat mit der eigenen Spec-Art für freistehende Zeichen (Entscheidung vom 29.09.2026, Punkt 1) eine
+Möglichkeit, die ohne Zonen auskommt. Das ist eine Option, keine Empfehlung.
+
+**Echte Eigentümerfragen, die die Dateien nicht beantworten:**
+
+1. **Drohne:** Soll die Marke ein einheitliches Maß bekommen, oder bleibt jede Anhangsfassung
+   eigene Körpermarke wie heute (`chevron-over-opposed-triangles`, `formation-chevron-top`)? Die
+   fünf Originale widersprechen einem einheitlichen Maß.
+2. **Zweiräder:** Körperform, Marke (etwa statt des Fahrwerks) oder freistehendes Zeichen? Kein
+   Original entscheidet das.
+3. **Giebel:** Unterscheidet das Zeichen „temporär" von „dauerhaft" ortsfest? Leitstelle und
+   Basisstation sind dauerhaft und tragen denselben Giebel. Und darf er über einem anderen Träger
+   als dem 12-mm-Kreis stehen? Belegt ist nur dieser.
 
 ## 5. Offene Fragen mit Empfehlung
 

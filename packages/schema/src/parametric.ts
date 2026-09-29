@@ -1,7 +1,8 @@
 import type { BlockId } from './blocks.js';
 import type { Point } from './geometry.js';
+import type { DepictionVariant } from './provenance.js';
 import type { StateGroupFinding } from './state-groups.js';
-import type { StrengthId } from './taxonomy.js';
+import type { StateId, StrengthId } from './taxonomy.js';
 import type { ZoneAnchorEdge } from './zones.js';
 
 /**
@@ -118,6 +119,11 @@ export interface LineParameters {
    * ein Fehler, keine stillschweigend übergangene Angabe.
    */
   readonly strength?: StrengthId;
+  /**
+   * Die zweite Darstellung, nur bei 2.14 Escape Route (`2.14_Escape Route_2`: Punkte und
+   * Pfeilköpfe im Wechsel). Ohne Angabe gilt die erste. An jeder anderen Linie ein Fehler.
+   */
+  readonly variant?: DepictionVariant;
 }
 
 /**
@@ -168,4 +174,39 @@ export interface ParametricBlock {
   readonly withStateOrTendency: ParametricFinding<string>;
   /** Die vorgemerkten Regeln des Bausteins, als Kennungen aus `PLANNED_PARAMETRIC_RULES`. */
   readonly rules: readonly string[];
+}
+
+/**
+ * Freistehende Zeichen aus 5.8.6 und 5.8.7 (LFH-577). Wie Pfeile und Linien stehen sie ohne
+ * Grundzeichen auf der Lagekarte: der Tierzustand bringt die Tiersilhouette als Träger mit, der
+ * Wetterzustand kombiniert Werte miteinander, nicht mit einem Körper.
+ */
+
+/** Die zehn Wetterwerte aus 5.8.7. */
+export type WeatherStateId = Extract<StateId, `weather-${string}`>;
+
+/** Die drei Tierzustände aus 5.8.6. */
+export type AnimalStateId = Extract<StateId, 'sick-animal' | 'contaminated-animal' | 'dead-animal'>;
+
+/**
+ * Intensität eines Niederschlags an der Wolke, in den vier Stufen der Beispieldateien
+ * `5.8.7_Beispiel_Schneiend_{schwach,mittel,stark,extrem}`: `weak` (schwach), `moderate` (mittel),
+ * `strong` (stark), `extreme` (extrem). Gezeichnet als ein bis vier Flocken.
+ */
+export type WeatherIntensity = 'weak' | 'moderate' | 'strong' | 'extreme';
+
+export const WEATHER_INTENSITIES: readonly WeatherIntensity[] = Object.freeze(
+  Object.keys({ weak: true, moderate: true, strong: true, extreme: true } satisfies Record<WeatherIntensity, true>) as WeatherIntensity[],
+);
+
+/** Der Parametersatz eines Wetterzeichens: ein oder mehrere Werte, bei Niederschlag eine Intensität. */
+export interface WeatherParameters {
+  readonly values: readonly [WeatherStateId, ...WeatherStateId[]];
+  readonly intensity?: WeatherIntensity;
+}
+
+/** Der Parametersatz eines Tierzustands. `alternative` ist die Darstellung mit „K“ (5.8.6.2_K). */
+export interface AnimalStateParameters {
+  readonly state: AnimalStateId;
+  readonly variant?: DepictionVariant;
 }

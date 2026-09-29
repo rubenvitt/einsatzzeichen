@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { STATE_GROUPS } from '@einsatzzeichen/core';
 import fingerprints from './fingerprints.json' with { type: 'json' };
 import { INVENTORY_EXCLUSIONS } from './reference-inventory.js';
-import { STATE_GROUP_FIXTURES } from './state-group-fixtures.js';
+import {
+  PERSON_STATE_FRAMES,
+  STATE_HINT_LAYOUTS,
+} from '@einsatzzeichen/core/src/layout/state-placement.js';
+import { STATE_CARRIER_EVIDENCE, STATE_GROUP_FIXTURES } from './state-group-fixtures.js';
 
 /**
  * Gate der Kapitel-5.8-Fixtures (LFH-565): jede Zahl aus `STATE_GROUP_FIXTURES` gegen das
@@ -64,9 +68,9 @@ describe('Fixtures der Zustandsgruppen gegen das Kennzahlenartefakt', () => {
 
   it('stimmt mit den Fixtures jeder Gruppe in core überein', () => {
     for (const group of STATE_GROUPS) {
-      const here = STATE_GROUP_FIXTURES.filter((fixture) => fixture.group === group.id).map(
-        (fixture) => fixture.asset,
-      );
+      const here = [...STATE_GROUP_FIXTURES, ...STATE_CARRIER_EVIDENCE]
+        .filter((fixture) => fixture.group === group.id)
+        .map((fixture) => fixture.asset);
       expect(here, group.id).toEqual([...group.fixtures]);
     }
   });
@@ -123,5 +127,71 @@ describe('Fixtures der Zustandsgruppen gegen das Kennzahlenartefakt', () => {
       );
       expect(cloud.boundsMm.minYMm - hull.minY, fixture.asset).toBeCloseTo(3, 2);
     }
+  });
+});
+
+/**
+ * Referenzdateien außerhalb der Beispiele, die einen Zustand an einem Träger zeigen (Durchsicht aller
+ * 661 Dateien am 29. September 2026). Das Artefakt erfasst je Datei die Fläche, die den Beleg trägt;
+ * sie wird hier gegen die Zahl der Fixture und gegen die Platzierung in `core` gehalten.
+ */
+describe('Trägerbelege der Zustandsgruppen gegen das Kennzahlenartefakt', () => {
+  function shapeOf(asset: string, kind: string, fill: string | undefined): Shape {
+    const found = fingerprintOf(asset).shapes.find(
+      (shape) => shape.kind === kind && shape.fill === fill,
+    );
+    expect(found, `${asset}: keine Fläche ${kind}/${fill ?? '-'}`).toBeDefined();
+    return found as Shape;
+  }
+
+  it('findet jede Fläche mit der angegebenen Hülle im Artefakt', () => {
+    for (const evidence of STATE_CARRIER_EVIDENCE) {
+      const shape = shapeOf(evidence.asset, evidence.shape.kind, evidence.shape.fill);
+      expect(asZoneBounds(shape.boundsMm), evidence.asset).toEqual(evidence.shape.boundsMm);
+      if (evidence.shape.rotate !== undefined) expect(shape.rotate, evidence.asset).toBe(evidence.shape.rotate);
+    }
+  });
+
+  it('hält die Hinweislage an der Gefahr an der Platzierung in core fest', () => {
+    for (const asset of ['5.8.1.13_Hinweis auf Vermutung_2.svg', '5.8.1.14_Hinweis auf akute Situation_2.svg']) {
+      const evidence = STATE_CARRIER_EVIDENCE.find((item) => item.asset === asset);
+      expect(evidence?.shape.boundsMm, asset).toEqual(STATE_HINT_LAYOUTS.hazard.carrierHullMm);
+    }
+    const example = STATE_GROUP_FIXTURES.find((item) => item.asset === '5.8.1_Beispiel 3.svg');
+    expect(example?.carrierHullMm).toEqual(STATE_HINT_LAYOUTS.person.carrierHullMm);
+    expect(example?.canvasMm).toEqual(STATE_HINT_LAYOUTS.person.canvasMm);
+  });
+
+  it('zeigt an M.6 das unverkleinerte Dreieck der Gefahr 1.11', () => {
+    const gefahr = shapeOf('1.11_Gefahr.svg', 'bounds', WHITE);
+    const m6 = STATE_CARRIER_EVIDENCE.find((item) => item.asset === 'M.6_Akute Gefahr_Spotfeuer.svg');
+    expect(m6?.shape.boundsMm).toEqual(asZoneBounds(gefahr.boundsMm));
+  });
+
+  it('hält die drei Rautenlagen aus 5.8.8 an der Platzierung in core fest', () => {
+    const byAsset = (asset: string) =>
+      STATE_CARRIER_EVIDENCE.find((item) => item.asset === asset)?.shape.boundsMm;
+    expect(byAsset('5.8.8.3_Person Verletzt.svg')).toEqual(PERSON_STATE_FRAMES['person-diamond-26mm'].hullMm);
+    expect(byAsset('5.8.8.9_Person in Wassergefahr.svg')).toEqual(
+      PERSON_STATE_FRAMES['person-diamond-21mm-lowered-4-5mm'].hullMm,
+    );
+    // 5.8.8.12: das Artefakt erfasst nur den Umriss samt Pfeil. Die Raute um (16 | 14) reicht mit
+    // halbem Strich von 0,647 bis 27,353; darunter hängt der Pfeil bis 31,177.
+    const raised = PERSON_STATE_FRAMES['person-diamond-26mm-raised-2mm'].hullMm;
+    const outline = byAsset('5.8.8.12_Person zu transportieren.svg');
+    expect(outline?.minY).toBeCloseTo(raised.minY - 0.5 / Math.SQRT2, 2);
+  });
+
+  it('zeigt an L.9 die Diagonalen von 5.8.4.2 unverändert und an L.8 das Kreuz von 5.8.4.1 verkleinert', () => {
+    const l9 = STATE_CARRIER_EVIDENCE.find((item) => item.asset === 'L.9_Deichbruch.svg');
+    expect(l9?.shape.boundsMm).toEqual(asZoneBounds(shapeOf('5.8.4.2_Teilzerstört.svg', 'outline', undefined).boundsMm));
+    const l8 = STATE_CARRIER_EVIDENCE.find((item) => item.asset === 'L.8_Schäden am Außendeich.svg');
+    const cross = shapeOf('5.8.4.1_Angeschlagen.svg', 'bounds', '#fa1919').boundsMm;
+    const hull = l8?.shape.boundsMm;
+    expect(hull).toBeDefined();
+    if (hull === undefined) return;
+    expect((hull.maxX - hull.minX) / (cross.maxXMm - cross.minXMm)).toBeCloseTo(0.4717, 3);
+    expect((hull.minX + hull.maxX) / 2).toBeCloseTo(13.5, 2);
+    expect((hull.minY + hull.maxY) / 2).toBeCloseTo(16, 2);
   });
 });

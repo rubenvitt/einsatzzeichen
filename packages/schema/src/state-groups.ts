@@ -33,8 +33,9 @@ export type StateGroupFixtureEvidence = GrammarFixtureEvidence;
 export type StateGroupEvidence = GrammarEvidence;
 
 /**
- * Stand einer Aussage über eine Gruppe: belegt, empfohlen oder offen. Seit LFH-567 ein Alias von
- * `GrammarFinding`, den auch Mehrfachfähigkeiten und Sonderformen benutzen.
+ * Stand einer Aussage über eine Gruppe: belegt, empfohlen, offen oder (seit LFH-577) vom Eigentümer
+ * entschieden. Seit LFH-567 ein Alias von `GrammarFinding`, den auch Mehrfachfähigkeiten und
+ * Sonderformen benutzen.
  */
 export type StateGroupFinding<T> = GrammarFinding<T>;
 
@@ -77,6 +78,10 @@ export interface StateGroup {
   /** Wie viele Werte der Gruppe ein Zeichen zugleich tragen darf. */
   readonly perSign: StateGroupFinding<number>;
   readonly rules: StateGroupRuleIds;
-  /** Beispielzeichen der Referenz, die die Gruppe am Träger zeigen. Leer heißt: keines. */
+  /**
+   * Referenzdateien, die die Gruppe am Träger zeigen: die Beispielzeichen aus Kapitel 5.8 und seit
+   * dem 29.09.2026 die Trägerbelege aus der Durchsicht aller 661 Dateien (etwa 5.8.1.13_2, M.6,
+   * L.9). Leer heißt: keine.
+   */
   readonly fixtures: readonly `${string}.svg`[];
 }

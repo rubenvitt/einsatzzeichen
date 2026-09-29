@@ -65,41 +65,56 @@ export const STRENGTH_BLOCKS: readonly BlockEntry[] = Object.freeze([
 // ---------------------------------------------------------------------------------------------
 
 /**
- * Die Lücke steht schon im Regelkatalog (`RULE_DIMENSION_GAPS`, Dimension `unit-grouping`). Die
- * zwei senkrechten Balken aus `core/src/geometry/technical-head-marks.ts` sind **kein** Verband: der
- * Befund zu E.1.31 in `coverage-manifest.ts` hält fest, dass „5.5.2_Bereitschaft (Verband II)"
- * die Zahl der Balken trifft, nicht das Maß.
+ * Vermessen am Körper seit LFH-577 (29.09.2026), siehe `core/src/geometry/unit-groupings.ts` und
+ * `docs/decisions/2026-09-29-lfh-577-verband-5-5.md`. Der frühere Befund zu E.1.31
+ * (`coverage-manifest.ts`: „5.5.2 trifft die Zahl der Balken, nicht das Maß") verglich die
+ * vergrößerte Kapiteldatei mit der Marke am Körper. Dieselbe Abweichung zeigt die Stärke (5.4: r 4
+ * gegen 1,5 mm); maßgeblich ist die Marke am Körper. Ein Feld in `SymbolSpec` fehlt weiterhin
+ * (LFH-577, Integrationsschritt).
  */
-const UNIT_GROUPING_GAP_AT = 'core/src/rules/rule-catalog.ts:916–921';
+const UNIT_GROUPING_NOTE =
+  'Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert. Balken 1,5 × 4 mm, ' +
+  'Kopfzone y 1…5 mm über dem Formationskörper. Die Kapiteldatei zeigt die Marke vergrößert ' +
+  '(4 × 10 mm); das Verhältnis 1,5/4 ist dasselbe wie bei der Stärke (Durchmesser 3/8).';
 
-function unitGroupingReason(file: string): string {
-  return (
-    `Keine Geometrie. Die Kennung ist belegt durch die Referenzdatei \`${file}\`, vermessen ist ` +
-    'sie nicht, und ein Feld in `SymbolSpec` fehlt ebenfalls (LFH-577). Der Regelkatalog: ' +
-    '„Keine Regel und kein Feld in `SymbolSpec`: Verbände oberhalb des Zuges sind im Motor nicht ' +
-    'darstellbar." Die Balkenmarke `double-vertical-bar` ist ausdrücklich kein Verband: sie trifft ' +
-    'die Zahl der Balken von 5.5.2, nicht das Maß (`coverage-manifest.ts`, Befund zu E.1.31).'
-  );
-}
+const UNIT_GROUPING_III_GAP_AT = 'core/src/geometry/unit-groupings.ts:75–82';
 
 export const UNIT_GROUPING_BLOCKS: readonly BlockEntry[] = Object.freeze([
   block(
     'unit-grouping',
     'verband-i',
     'head',
-    notMeasured(UNIT_GROUPING_GAP_AT, unitGroupingReason('5.5.1_Bereitschaft (Verband I).svg')),
+    measured(
+      'core/src/geometry/unit-groupings.ts:52–56',
+      `${UNIT_GROUPING_NOTE} Verband I: ein Balken x 15,25…16,75 mm, vermessen an I.1.4, F.1.13, ` +
+        'F.1.21 und C.1.6 (Formation, y 1…5) sowie I.5.7 (Person, y 0…4); Kapiteldatei ' +
+        '`5.5.1_Bereitschaft (Verband I).svg`.',
+      babz('5.5.1', 'I.1.4', 'F.1.13', 'F.1.21', 'C.1.6', 'I.5.7'),
+    ),
   ),
   block(
     'unit-grouping',
     'verband-ii',
     'head',
-    notMeasured(UNIT_GROUPING_GAP_AT, unitGroupingReason('5.5.2_Bereitschaft (Verband II).svg')),
+    measured(
+      'core/src/geometry/unit-groupings.ts:58–62',
+      `${UNIT_GROUPING_NOTE} Verband II: zwei Balken x 11,25…12,75 und 19,25…20,75 mm, vermessen ` +
+        'an E.1.31, F.1.1 und F.1.3; Kapiteldatei `5.5.2_Bereitschaft (Verband II).svg`.',
+      babz('5.5.2', 'E.1.31', 'F.1.1', 'F.1.3'),
+    ),
   ),
   block(
     'unit-grouping',
     'verband-iii',
     'head',
-    notMeasured(UNIT_GROUPING_GAP_AT, unitGroupingReason('5.5.3_Bereitschaft (Verband III).svg')),
+    notMeasured(
+      UNIT_GROUPING_III_GAP_AT,
+      'Keine Geometrie. Die Kennung ist belegt durch `5.5.3_Bereitschaft (Verband III).svg`, aber ' +
+        'keine der 661 Referenzdateien zeigt drei Balken am Körper. Vorschlag, nicht vermessen: ' +
+        'die Vereinigung von Verband I und II, also Balken auf x 12, 16 und 20 mm — so wie 5.5.3 ' +
+        'in der Kapiteldatei die Vereinigung von 5.5.1 und 5.5.2 ist und der Zug am Körper die ' +
+        'von Trupp und Gruppe (x 11/16/21). Entscheidung des Eigentümers offen.',
+    ),
   ),
 ]);
 
