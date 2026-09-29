@@ -90,12 +90,12 @@ Verband §6). Die wichtigsten, je mit Empfehlung:
 
 ## 6. Folgeaufgaben
 
-- `baseAreaMm` geht nicht in `Drawing` über: beim Hinweis an der Person liegt die Mitte der
+- LFH-802: `baseAreaMm` geht nicht in `Drawing` über: beim Hinweis an der Person liegt die Mitte der
   Zeichenfläche 2 mm neben der Mitte der Grundfläche (Anker in MapLibre und QGIS).
-- `08-persons.ts` auf `movementDrawing` und `anchoredMovementPath` umstellen (5.8.8.12–14).
-- Vokabular je Wert für freistehende Zeichen (heute Wertevorrat und `checkAnySpec`).
-- Verlaufsfehler (zu kurz, außerhalb der Fläche) werfen ein gewöhnliches `Error` und sind nicht
+- LFH-803: `08-persons.ts` auf `movementDrawing` und `anchoredMovementPath` umstellen (5.8.8.12–14).
+- LFH-804: Vokabular je Wert für freistehende Zeichen (heute Wertevorrat und `checkAnySpec`).
+- LFH-805: Verlaufsfehler (zu kurz, außerhalb der Fläche) werfen ein gewöhnliches `Error` und sind nicht
   erklärbar; als Kompositionsregeln mit Kennung führen.
-- `pnpm cli coverage` zählt nur die 77 Prüfregeln der `SymbolSpec`, nicht die freistehenden.
-- `provenance:table` schreibt relativ zum aktuellen Verzeichnis; nur im Repository erlauben.
-- Technische Kopfmarken nutzt kein Rezept mehr (Abdeckung 0/2): behalten oder als veraltet markieren.
+- LFH-806: `pnpm cli coverage` zählt nur die 77 Prüfregeln der `SymbolSpec`, nicht die freistehenden.
+- LFH-807: `provenance:table` schreibt relativ zum aktuellen Verzeichnis; nur im Repository erlauben.
+- LFH-808: Technische Kopfmarken nutzt kein Rezept mehr (Abdeckung 0/2): behalten oder als veraltet markieren.
