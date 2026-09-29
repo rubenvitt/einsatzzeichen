@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import type { SymbolKind, SymbolSpec } from '@einsatzzeichen/schema';
+import type { BodyMarkId, SymbolKind, SymbolSpec } from '@einsatzzeichen/schema';
+import {
+  ANHANG_C_BODY_MARK_CONTEXTS,
+  measuredBodyMarkRenditions,
+} from './geometry/body-marks-anhang-c/index.js';
 import { validateSpec } from './validate.js';
 
 const runtimeRoleRun = (overrides: Record<string, unknown> = {}) => ({
@@ -372,6 +376,39 @@ describe('validateSpec', () => {
         'center-anchor-override-requires-measured-trailer',
       );
     }
+  });
+
+  it('lässt am Landfahrzeug genau die zwei an C.2.25 vermessenen mittigen Anker zu (LFH-786)', () => {
+    const main = {
+      kind: 'vehicle-land', organization: 'feuerwehr',
+      labels: {
+        center: 'P', centerAnchorFromBodyLeftMm: 21.3, centerBaselineFromBodyBottomMm: 3,
+        centerCapHeightMm: 2.919, inBodyInk: 'koerperlauf-kontrast',
+      },
+    } as SymbolSpec;
+    const alternative = {
+      kind: 'vehicle-land', organization: 'feuerwehr',
+      labels: {
+        center: 'P', centerAnchorFromBodyLeftMm: 15.5, centerBaselineFromBodyBottomMm: 2,
+        inBodyInk: 'koerperlauf-kontrast',
+      },
+    } as SymbolSpec;
+    expect(validateSpec(main)).toEqual([]);
+    expect(validateSpec(alternative)).toEqual([]);
+
+    const rules = (spec: SymbolSpec) => validateSpec(spec).map((issue) => issue.rule);
+    // Ein Zwischenwert, der Anhängeranker am Landfahrzeug und eine Landfahrzeugvariante fallen.
+    for (const spec of [
+      { ...main, labels: { ...main.labels, centerAnchorFromBodyLeftMm: 21.41 } },
+      { ...main, labels: { ...main.labels, centerAnchorFromBodyLeftMm: 8.24 } },
+      { ...main, bodyVariant: 'plain-wheel-pair', labels: { center: 'P', centerAnchorFromBodyLeftMm: 21.3 } },
+      { ...main, bodyVariant: 'foot-band', labels: { center: 'P', centerAnchorFromBodyLeftMm: 21.3 } },
+    ] as SymbolSpec[]) {
+      expect(rules(spec)).toContain('center-anchor-override-requires-measured-trailer');
+    }
+    // Und umgekehrt: die Landfahrzeuganker gelten nicht am Anhänger.
+    expect(rules({ kind: 'trailer', labels: { center: 'P', centerAnchorFromBodyLeftMm: 21.3 } }))
+      .toContain('center-anchor-override-requires-measured-trailer');
   });
 
   it('beschränkt Anhänger-Mittenbaselines auf die zwei vermessenen Werte', () => {
@@ -1460,5 +1497,73 @@ describe('capabilities-pictogram-overflows-body (LFH-587, Übergangsregel)', () 
   it('meldet an einer Funktionsrolle nur deren eigene Regel', () => {
     expect(rulesOf({ kind: 'person', organization: 'feuerwehr', strength: 'zug', functionRole: 'fire-service-platoon-commander', capabilities: ['medical-service'] }))
       .not.toContain('capabilities-pictogram-overflows-body');
+  });
+});
+
+describe('body-mark-rendition-not-measured (LFH-786)', () => {
+  const rendition = (spec: SymbolSpec) => validateSpec(spec)
+    .filter((issue) => issue.rule === 'body-mark-rendition-not-measured');
+  // Das erste Paar mit Fassung aus dem Register; die Familientabellen dürfen wachsen.
+  const measured = ANHANG_C_BODY_MARK_CONTEXTS.find((entry) => entry.rendition !== undefined);
+  const mark = Object.keys(measured?.marks ?? {})[0] as BodyMarkId | undefined;
+
+  it('lässt eine Kennung genau an dem Paar zu, an dem Anhang C sie führt', () => {
+    expect(measured).toBeDefined();
+    expect(mark).toBeDefined();
+    if (measured?.rendition === undefined || mark === undefined) return;
+    const spec = {
+      kind: measured.kind,
+      ...(measured.bodyVariant === undefined ? {} : { bodyVariant: measured.bodyVariant }),
+      ...(measured.vehicleCategory === undefined ? {} : { vehicleCategory: measured.vehicleCategory }),
+      bodyMarks: [mark],
+      bodyMarkRenditions: { [mark]: measured.rendition },
+    } as SymbolSpec;
+    expect(rendition(spec)).toEqual([]);
+    expect(measuredBodyMarkRenditions(mark, spec)).toContain(measured.rendition);
+
+    // Dieselbe Kennung an einer anderen Körperform fällt, mit Nennung des Paars.
+    const elsewhere = rendition({ ...spec, kind: 'formation', bodyVariant: undefined, vehicleCategory: undefined });
+    expect(elsewhere).toHaveLength(1);
+    expect(elsewhere[0]?.message).toContain(`"${measured.rendition}"`);
+    expect(elsewhere[0]?.message).toContain('formation/normal');
+  });
+
+  it('lehnt eine Kennung an einer Marke ab, die die Spec nicht zeichnet', () => {
+    const issues = rendition({
+      kind: 'formation', bodyMarks: ['fire-fighting'],
+      bodyMarkRenditions: { 'rescue-aerial-ladder': 'shifted-right-6.5mm' },
+    } as unknown as SymbolSpec);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.message).toContain('`bodyMarks`');
+  });
+
+  it('lehnt unbekannte Kennungen und eine Nicht-Objekt-Angabe ab', () => {
+    expect(rendition({
+      kind: 'formation', bodyMarks: ['fire-fighting'],
+      bodyMarkRenditions: { 'fire-fighting': 'erfunden' },
+    } as unknown as SymbolSpec)).toHaveLength(1);
+    expect(rendition({
+      kind: 'formation', bodyMarks: ['fire-fighting'], bodyMarkRenditions: ['shifted-left-4mm'],
+    } as unknown as SymbolSpec)).toHaveLength(1);
+  });
+
+  it('liest nur eigene Schlüssel: geerbte Einträge wirken nicht', () => {
+    const inherited = Object.create({ 'fire-fighting': 'erfunden' }) as Record<string, string>;
+    expect(rendition({
+      kind: 'formation', organization: 'feuerwehr', strength: 'staffel', bodyMarks: ['fire-fighting'],
+      bodyMarkRenditions: inherited,
+    } as unknown as SymbolSpec)).toEqual([]);
+  });
+
+  it('meldet vorab genau den Fall, in dem bodyMark() wirft', () => {
+    // Die Evidenz aus rule-evidence.ts: eine Fassung an der Formation, die nur das Landfahrzeug
+    // führt. `bodyMark()` würde hier `NotMeasuredError` werfen; die Regel sagt es vorher.
+    expect(rendition({
+      kind: 'formation', organization: 'feuerwehr', strength: 'staffel',
+      bodyMarks: ['fire-fighting'], bodyMarkRenditions: { 'fire-fighting': 'shifted-right-6.5mm' },
+    } as SymbolSpec).map((issue) => issue.message)).toEqual([
+      'Die Fassung "shifted-right-6.5mm" von "fire-fighting" ist an formation/normal nicht ' +
+        'vermessen; dort gibt es nur die Grundfassung.',
+    ]);
   });
 });

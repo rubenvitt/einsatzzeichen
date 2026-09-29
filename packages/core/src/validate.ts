@@ -1,6 +1,9 @@
 import {
+  BODY_MARK_RENDITION_IDS,
   DEFAULT_VIEWBOX_MM,
   PALETTE,
+  type BodyMarkId,
+  type BodyMarkRenditionId,
   type BodyVariantId,
   type ColorToken,
   type AdminLevelId,
@@ -14,6 +17,7 @@ import {
   type TechnicalHeadMarkId,
 } from '@einsatzzeichen/schema';
 import { CAPABILITY_UNSCALED_FIT } from './blocks/capability-inset.js';
+import { measuredBodyMarkRenditions } from './geometry/body-marks-anhang-c/index.js';
 import { profileFor } from './layout/profiles.js';
 import { ARIMO_CAP_HEIGHT_FRACTION, verticalTextBoxMm } from './render/text-policy.js';
 
@@ -1072,15 +1076,17 @@ function validatePreparedSpec(
       spec.labels.center === undefined ||
       !Number.isFinite(spec.labels.centerAnchorFromBodyLeftMm) ||
       profile.allowsCenterAnchorOverride !== true ||
-      profile.measuredCenterAnchorFromBodyLeftMm === undefined ||
-      spec.labels.centerAnchorFromBodyLeftMm !== profile.measuredCenterAnchorFromBodyLeftMm
+      profile.measuredCenterAnchorsFromBodyLeftMm === undefined ||
+      !profile.measuredCenterAnchorsFromBodyLeftMm.includes(spec.labels.centerAnchorFromBodyLeftMm)
     )
   ) {
+    // Die Kennung stammt aus der Zeit, als nur der Anhänger (I.2.5) einen Anker führte; seit
+    // LFH-786 führt auch das Landfahrzeug (C.2.25) zwei. Die Kennung bleibt als API stehen.
     issues.push({
       rule: 'center-anchor-override-requires-measured-trailer',
       message:
-        'Ein abweichender mittiger x-Anker ist nur am vermessenen Anhängerprofil und nur mit ' +
-        'dessen vollständigem gemessenen Anker zulässig.',
+        'Ein abweichender mittiger x-Anker ist nur an einem Körperprofil zulässig, das ihn ' +
+        'vermessen hat (Anhänger, Landfahrzeug), und nur mit einem dort gemessenen Wert.',
     });
   }
   if (
@@ -1372,6 +1378,49 @@ function validatePreparedSpec(
                 'Piktogramme in einer eigenen Fassung je Körperform ein; nutze eine vermessene ' +
                 'randbündige Fassung (`bodyMarks`).',
       });
+    }
+  }
+
+  // LFH-786: Fassungskennungen je Körpermarke (`bodyMarkRenditions`). `bodyMark()` wirft, wenn
+  // eine Kennung an ihrem Paar nicht vermessen ist; diese Regel meldet denselben Fall vorab, mit
+  // denselben Kontextfeldern wie `compose()`. Dazu jede Kennung an einer Marke, die die Spec gar
+  // nicht zeichnet — sie bliebe sonst still wirkungslos. Gelesen werden nur eigene Schlüssel.
+  const renditions = spec.bodyMarkRenditions as unknown;
+  if (renditions !== undefined) {
+    const record = typeof renditions === 'object' && renditions !== null &&
+        !Array.isArray(renditions)
+      ? renditions as Record<string, unknown>
+      : undefined;
+    const problems: string[] = record === undefined
+      ? ['`bodyMarkRenditions` muss ein Objekt aus Körpermarke und Fassungskennung sein.']
+      : [];
+    for (const mark of record === undefined ? [] : Object.keys(record)) {
+      const rendition = record?.[mark];
+      if (!(spec.bodyMarks ?? []).includes(mark as BodyMarkId)) {
+        problems.push(`Die Fassung für "${mark}" verlangt diese Marke in \`bodyMarks\`.`);
+        continue;
+      }
+      const measured = measuredBodyMarkRenditions(mark as BodyMarkId, {
+        kind: spec.kind,
+        ...(spec.bodyVariant === undefined ? {} : { bodyVariant: spec.bodyVariant }),
+        ...(spec.vehicleCategory === undefined ? {} : { vehicleCategory: spec.vehicleCategory }),
+      });
+      if (
+        typeof rendition !== 'string' ||
+        !(BODY_MARK_RENDITION_IDS as readonly string[]).includes(rendition) ||
+        !measured.includes(rendition as BodyMarkRenditionId)
+      ) {
+        problems.push(
+          `Die Fassung "${String(rendition)}" von "${mark}" ist an ` +
+            `${spec.kind}/${spec.bodyVariant ?? 'normal'} nicht vermessen; ` +
+            (measured.length === 0
+              ? 'dort gibt es nur die Grundfassung.'
+              : `vermessen sind dort ${measured.map((id) => `"${id}"`).join(', ')}.`),
+        );
+      }
+    }
+    for (const message of problems) {
+      issues.push({ rule: 'body-mark-rendition-not-measured', message });
     }
   }
   return issues;

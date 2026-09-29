@@ -70,7 +70,7 @@ export const STRENGTH_BLOCKS: readonly BlockEntry[] = Object.freeze([
  * Befund zu E.1.31 in `coverage-manifest.ts` hält fest, dass „5.5.2_Bereitschaft (Verband II)"
  * die Zahl der Balken trifft, nicht das Maß.
  */
-const UNIT_GROUPING_GAP_AT = 'core/src/rules/rule-catalog.ts:916–921';
+const UNIT_GROUPING_GAP_AT = 'core/src/rules/rule-catalog.ts:933–938';
 
 function unitGroupingReason(file: string): string {
   return (
@@ -112,7 +112,7 @@ export const UNIT_GROUPING_BLOCKS: readonly BlockEntry[] = Object.freeze([
  * und im Regelkatalog; der Bereich schließt Kommentar und Kennung ein.
  */
 const ADMIN_BINDING_RULE = 'administrative-level-not-measured';
-const ADMIN_BINDING_AT = 'core/src/validate.ts:557–570';
+const ADMIN_BINDING_AT = 'core/src/validate.ts:561–574';
 
 /**
  * Benannte Ausnahme für die drei vermessenen Stufen. Hier ist die Bindung an die Funktionsfassung
@@ -148,9 +148,9 @@ const ADMIN_BINDING_NOT_MEASURED: BlockCombinationBinding = Object.freeze({
 const ADMIN_UNDOCUMENTED =
   UNDOCUMENTED_AT_SOURCE +
   'Die Konstante in `administrative-heads.ts` trägt keinen Kommentar. Den Abschnitt D.3/D.4 nennen ' +
-  'erst `validate.ts:557–559` und die Regel `administrative-level-not-measured`.';
+  'erst `validate.ts:561–563` und die Regel `administrative-level-not-measured`.';
 
-const ADMIN_GAP_AT = 'core/src/rules/rule-catalog.ts:898–903';
+const ADMIN_GAP_AT = 'core/src/rules/rule-catalog.ts:915–920';
 const ADMIN_GAP_REASON =
   'Keine Geometrie in `ADMINISTRATIVE_HEADS`. Der Regelkatalog: „Eine Regel, aber nur drei der ' +
   'sechs Stufen belegt (D.3/D.4). Gemeinde, Bezirk und Bundesland lehnt der Motor pauschal ab, ' +
@@ -219,7 +219,7 @@ export const TECHNICAL_HEAD_MARK_BLOCKS: readonly BlockEntry[] = Object.freeze([
     measured(
       'core/src/geometry/technical-head-marks.ts:7–18',
       UNDOCUMENTED_AT_SOURCE +
-        'Die Konstante trägt keinen Kommentar. Belege nennt nur `validate.ts:581–583`, und zwar ' +
+        'Die Konstante trägt keinen Kommentar. Belege nennt nur `validate.ts:585–587`, und zwar ' +
         'für die technische Kopfmarke als Ganzes (F.1.1, F.1.13, F.1.21, E.1.31, I.1.4), nicht je Wert.',
     ),
   ),

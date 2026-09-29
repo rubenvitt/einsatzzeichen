@@ -15,7 +15,7 @@ import type {
 } from '@einsatzzeichen/schema';
 
 /**
- * Adressiert einen der 558 Reviewträger über die drei Ledger hinweg. Ein einziger String statt
+ * Adressiert einen der 595 Reviewträger über die drei Ledger hinweg. Ein einziger String statt
  * eines Verbundtyps, weil er als URL-Segment und als Schlüssel im Client-Zustand gebraucht wird:
  *
  * - `manifest:bbk-babz-2025:1.1#primary`
@@ -66,7 +66,7 @@ export interface QuestionCard {
   context?: string;
 }
 
-/** Die Kurzfassung für den Navigator — bewusst klein, es sind 558 davon. */
+/** Die Kurzfassung für den Navigator — bewusst klein, es sind 595 davon. */
 export interface RowSummary {
   id: CarrierId;
   kind: CarrierKind;

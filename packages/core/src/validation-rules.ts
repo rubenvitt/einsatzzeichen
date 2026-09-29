@@ -22,6 +22,7 @@ export const VALIDATION_RULE_IDS: readonly string[] = Object.freeze([
   'administrative-level-not-measured',
   'below-right-label-requires-measured-body',
   'below-right-label-requires-organization',
+  'body-mark-rendition-not-measured',
   'body-variant-foot-conflict',
   'body-variant-requires-measured-kind',
   'bottom-center-label-requires-measured-body',

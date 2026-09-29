@@ -110,7 +110,7 @@ export function App(): JSX.Element {
     void load();
   }, [load]);
 
-  // Detailsatz nachladen. Bereits geladene Zeilen bleiben im Speicher: beim Blättern durch 558
+  // Detailsatz nachladen. Bereits geladene Zeilen bleiben im Speicher: beim Blättern durch 595
   // Zeilen ist das Zurückspringen häufig, und ein erneuter Aufruf würde nur flackern.
   useEffect(() => {
     if (selectedId === undefined || details.has(selectedId)) return;

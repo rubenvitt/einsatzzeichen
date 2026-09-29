@@ -49,7 +49,7 @@ function isPlainFileName(asset: string): boolean {
 
 /**
  * Löst einen Dateinamen im Referenzordner auf. Getrennt vom Lesen, weil die Detailansicht nur
- * wissen will, *ob* die Datei da ist — dafür ihren Inhalt zu lesen wäre für 558 Zeilen unnötig.
+ * wissen will, *ob* die Datei da ist — dafür ihren Inhalt zu lesen wäre für 595 Zeilen unnötig.
  */
 export function resolveReferencePath(repositoryRoot: string, asset: string): ResolveResult {
   if (!isPlainFileName(asset)) {

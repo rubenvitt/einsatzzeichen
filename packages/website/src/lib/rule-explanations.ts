@@ -124,6 +124,16 @@ const EXPLANATIONS = {
       'E.2.31), braucht der Lauf eine Organisation, die diese Farbe liefert. Ohne sie hätte der ' +
       'Text keine gemessene Farbe. Setze `organization` oder entferne `labels.belowRight`.',
   },
+  'body-mark-rendition-not-measured': {
+    field: 'bodyMarks',
+    title: 'Fassung der Körpermarke nicht vermessen',
+    explanation:
+      'Manche Körpermarken zeichnet die Referenz am selben Fahrzeug in mehr als einer Fassung, ' +
+      'etwa weiter rechts oder größer. Eine solche Fassung gilt nur dort, wo sie an einem ' +
+      'Original abgelesen ist, und nur für eine Marke, die das Zeichen auch trägt. Sonst würde ' +
+      'etwas anderes gezeichnet als verlangt. Nimm die Marke in `bodyMarks` auf, wähle eine der ' +
+      'genannten Fassungen oder entferne den Eintrag aus `bodyMarkRenditions`.',
+  },
   'body-variant-foot-conflict': {
     field: 'bodyVariant',
     title: 'Körpervariante und Bezeichnung im selben Streifen',
@@ -199,12 +209,13 @@ const EXPLANATIONS = {
   },
   'center-anchor-override-requires-measured-trailer': {
     field: 'labels',
-    title: 'Abweichender mittiger Anker nur am Anhänger',
+    title: 'Abweichender mittiger Anker nur mit vermessenem Wert',
     explanation:
-      'Ein eigener x-Anker des mittigen Laufs ist allein am vermessenen Anhängerprofil belegt, ' +
-      'und dort nur mit genau dessen gemessenem Wert; außerdem braucht er einen `labels.center`. ' +
-      'Ein freier Wert wäre keine Messung, sondern eine Schätzung. Setze den gemessenen Wert am ' +
-      'Anhänger oder entferne `labels.centerAnchorFromBodyLeftMm`.',
+      'Ein eigener x-Anker des mittigen Laufs ist nur an Körperformen belegt, die ihn vermessen ' +
+      'haben: am Anhänger (I.2.5) und am Landfahrzeug ohne Variante (C.2.25, Haupt- und ' +
+      'Alternativdarstellung). Zulässig sind dort nur die gemessenen Werte; außerdem braucht er ' +
+      'einen `labels.center`. Ein freier Wert wäre keine Messung, sondern eine Schätzung. Setze ' +
+      'einen gemessenen Wert oder entferne `labels.centerAnchorFromBodyLeftMm`.',
   },
   'center-baseline-not-measured': {
     field: 'labels',

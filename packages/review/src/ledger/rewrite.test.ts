@@ -188,7 +188,7 @@ describe('rewriteLedgerSource', () => {
   });
 
   // Eigene Zeitgrenze statt der voreingestellten fünf Sekunden: der Test parst die Ledgerdatei
-  // 558-mal, und ihre Größe wächst mit jeder Entscheidung — eine vollständig entschiedene Fassung
+  // 595-mal, und ihre Größe wächst mit jeder Entscheidung — eine vollständig entschiedene Fassung
   // trägt statt `{ status: 'pending' }` je fünf Zeilen. Nachgemessen 5,5 s bei vollbesetztem
   // Ledger; die Grenze fiele also ausgerechnet am Ende der Reviewkampagne, und zwar mit einer
   // Zeitüberschreitung statt einem inhaltlichen Befund.
@@ -197,16 +197,17 @@ describe('rewriteLedgerSource', () => {
   // `format.ts` gibt sie so aus, und eine von Hand mit `+` verkettete Notiz ließe den Rundlauf
   // die Datei verändern.
   it('ändert am echten Ledger bei gleichem Wert kein einziges Zeichen', () => {
-    // Der schärfste Test für den Drucker: 558 echte Einträge, darunter die beiden mehrzeiligen
-    // D.1.9-Zeilen mit Umlauten. Bleibt die Datei byteweise gleich, erzeugt eine Freigabe später
-    // garantiert nur die eine Zeile als Diff — und keine Formatierungswelle.
+    // Der schärfste Test für den Drucker: 595 echte Einträge (558 + 37 aus LFH-786), darunter
+    // die beiden mehrzeiligen D.1.9-Zeilen mit Umlauten. Bleibt die Datei byteweise gleich,
+    // erzeugt eine Freigabe später garantiert nur die eine Zeile als Diff — und keine
+    // Formatierungswelle.
     const source = readFileSync(LEDGER_FILE, 'utf8');
     const eintraege: Array<[string, Review]> = [
       ...Object.entries(MANIFEST_DOMAIN_REVIEWS),
       ...Object.entries(SOURCE_DOMAIN_REVIEWS),
       ...Object.entries(PROFILE_DOMAIN_REVIEWS),
     ];
-    expect(eintraege).toHaveLength(558);
+    expect(eintraege).toHaveLength(595);
 
     const abweichend = eintraege
       .filter(
