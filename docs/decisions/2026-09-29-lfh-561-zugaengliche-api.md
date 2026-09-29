@@ -48,7 +48,7 @@ Beim Umzug nach Punkt 8 ändern sich die sechs Snapshots **ausschließlich im `<
 „Technische Kopfmarke: Zwei Vertikalbalken" steht dort „Verband: Verband II". Die Zeichnung ist
 identisch (per Skript mit neutralisiertem `<desc>` geprüft; ein Test hält fest, dass alte und neue
 Spec dieselben Zeichnungskinder liefern). Die Alternative wäre eine wissentlich falsche Beschreibung
-für Screenreader gewesen. **Bitte bestätigen.**
+für Screenreader gewesen. **Vom Eigentümer am 29. September 2026 bestätigt.**
 
 ## 4. Befunde, die Annahmen korrigieren
 
@@ -62,6 +62,10 @@ für Screenreader gewesen. **Bitte bestätigen.**
   Die Serialisierung erhält deshalb die Reihenfolge, `specKey` sortiert weiter.
 
 ## 5. Offen beim Eigentümer
+
+> Am 29. September 2026 hat der Eigentümer die Empfehlungen dieses Abschnitts bestätigt („passt
+> was du geschrieben hast"). Umsetzung von Punkt 2, 3, 6 und 7 als Folgeaufgaben; Punkt 4 und 5
+> bleiben, wie empfohlen, ungezeichnet.
 
 Die Einzelfragen stehen in den Vorlagen (LFH-565 §9 und §10.3, LFH-566 §7, LFH-567 §5,
 Verband §6). Die wichtigsten, je mit Empfehlung:
