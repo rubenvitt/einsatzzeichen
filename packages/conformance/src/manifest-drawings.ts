@@ -6,20 +6,16 @@
  * entscheidet, ist das der Unterschied zwischen Prüfen und Raten: 53 % der Zeilen hätten kein
  * Bild. Deshalb vier Fälle statt zweier (Designnotiz vom 3. September 2026, Abschnitt 4).
  *
+ * Eine Fassung für zwei Verbraucher: das Fachreview-Werkzeug (`packages/review`) zeigt dieses Bild
+ * dem Fachreviewer, und der Pixelvergleich der CLI (`reference-diff`) rechnet genau dieses Bild
+ * gegen die Referenz. Weil die CLI das private Paket `review` nicht importieren darf, liegt die
+ * Bildung hier im Prüfpaket, aus dem beide ohnehin lesen.
+ *
  * Fail-closed in jedem Zweig: lässt sich keine Zeichnung bilden, wirft der Aufbau mit
  * Manifestschlüssel und Grund. Kein Platzhalter und kein `undefined` — eine unsichtbare Zeile
  * wäre eine blind entschiedene Zeile.
  */
-import {
-  RECIPES,
-  composeFromCatalog,
-  type Recipe,
-} from '@einsatzzeichen/conformance';
-import {
-  ALL_PICTOGRAMS,
-  BASE_SYMBOLS,
-  describePictogram,
-} from '@einsatzzeichen/core';
+import { ALL_PICTOGRAMS, BASE_SYMBOLS, describePictogram } from '@einsatzzeichen/core';
 import {
   ORGANIZATION_IDS,
   STRENGTH_IDS,
@@ -34,13 +30,24 @@ import {
   type SymbolSpec,
   type VehicleCategoryId,
 } from '@einsatzzeichen/schema';
-import type { CarrierContext } from '../contract.js';
+import { RECIPES, composeFromCatalog, type Recipe } from './recipes.js';
+
+/**
+ * Warum eine Zeile ein Trägerzeichen bekommt statt einer eigenen Zeichnung. Gehört sichtbar an die
+ * Darstellung, damit niemand den Träger für Teil der geprüften Aussage hält.
+ */
+export interface ManifestCarrierContext {
+  /** Die Trägerart — für die Beschriftung. */
+  host: 'formation' | 'trailer' | 'vehicle-land';
+  /** Kurzer Satz, z. B. „Die Organisationsfarbe ist auf einer taktischen Formation gezeigt. …“ */
+  explanation: string;
+}
 
 /** Zeichnung einer Manifestzeile, bei Trägerzeichen samt der Begründung für die Oberfläche. */
-export interface RowDrawing {
+export interface ManifestEntryDrawing {
   drawing: Drawing;
   /** Nur gesetzt, wenn die Zeile über ein Trägerzeichen dargestellt wird. */
-  carrierContext?: CarrierContext;
+  carrierContext?: ManifestCarrierContext;
 }
 
 const RECIPE_PREFIX = 'recipe.';
@@ -72,7 +79,7 @@ const PICTOGRAMS_BY_KEY = new Map<string, CatalogPictogram>(
  */
 interface Carrier {
   spec: SymbolSpec;
-  context: CarrierContext;
+  context: ManifestCarrierContext;
 }
 
 function organizationCarrier(id: OrganizationId): Carrier {
@@ -166,7 +173,8 @@ function failed(key: string, reason: string, cause: unknown): Error {
  * liefern dieselbe Geometrie (das ist geprüft), aber nur diese trägt die Abschnittsangabe der
  * Baseline in ihrer Beschreibung — und genau die liest der Fachreviewer mit.
  *
- * Kopiert wird bewusst: die Datenschicht gibt keine Referenz auf das Katalogobjekt heraus.
+ * Kopiert wird bewusst: die Funktion gibt keine Referenz auf das Katalogobjekt heraus, damit ein
+ * Aufrufer den Katalog nicht versehentlich verändert.
  */
 function catalogEntryDrawing(entry: CoverageEntry, key: string): Drawing {
   const catalogEntry = CATALOG_ENTRIES_BY_ID.get(entry.implementation);
@@ -209,9 +217,9 @@ function recipeDrawing(entry: CoverageEntry, key: string): Drawing {
 
 /**
  * Die Piktogrammdefinition als eigenständige Zeichnung — dieselbe Bildung wie im Renderfall-Gate
- * (`packages/conformance/src/test-support/render-cases.ts`), damit die Oberfläche genau das zeigt,
- * was dort gegatet ist. Der Pfad selbst liegt unter `test-support/` und wird vom Paketindex nicht
- * ausgeliefert; hier stehen deshalb die Bausteine aus dem Paketindex, nicht die Testhilfe.
+ * (`test-support/render-cases.ts`), damit die Darstellung genau das zeigt, was dort gegatet ist.
+ * Die Testhilfe wird mit dem Paket nicht ausgeliefert; hier stehen deshalb die Bausteine aus dem
+ * Index von `core`, nicht die Testhilfe.
  */
 function pictogramDrawing(
   implementation: string,
@@ -227,7 +235,7 @@ function pictogramDrawing(
   };
 }
 
-function elementDrawing(entry: CoverageEntry, key: string): RowDrawing {
+function elementDrawing(entry: CoverageEntry, key: string): ManifestEntryDrawing {
   const pictogram = pictogramDrawing(entry.implementation, entry.variant);
   if (pictogram !== undefined) return { drawing: pictogram };
 
@@ -250,7 +258,7 @@ function elementDrawing(entry: CoverageEntry, key: string): RowDrawing {
 }
 
 /** Die Zeichnung einer Manifestzeile, je nach Coverage-Art auf einem der vier Wege. */
-export function drawingForManifestEntry(entry: CoverageEntry): RowDrawing {
+export function drawingForManifestEntry(entry: CoverageEntry): ManifestEntryDrawing {
   const key = entryKey(entry.sourceId, entry.variant);
   switch (entry.coverage) {
     case 'catalog-entry':

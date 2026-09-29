@@ -39,10 +39,13 @@ import {
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { deflateSync } from 'node:zlib';
 import { Resvg } from '@resvg/resvg-js';
-import { COVERAGE_MANIFEST, resvgFontOptions } from '@einsatzzeichen/conformance';
+import {
+  COVERAGE_MANIFEST,
+  drawingForManifestEntry,
+  resvgFontOptions,
+} from '@einsatzzeichen/conformance';
 import { REFERENCE_THEME, renderSvg } from '@einsatzzeichen/core';
 import { entryKey, type CoverageEntry, type Drawing } from '@einsatzzeichen/schema';
-import { drawingForManifestEntry } from './reference-diff-drawings.js';
 
 /** Rasterbreite beider Bilder in Pixeln. */
 export const REFERENCE_DIFF_RASTER = 512;
@@ -610,7 +613,7 @@ export function referenceDiff(options: ReferenceDiffOptions): ReferenceDiffResul
   const rows: ReferenceDiffRow[] = [];
   const sheetEntries: SheetEntry[] = [];
   for (const { entry, key } of entries) {
-    const drawing: Drawing = drawingForManifestEntry(entry);
+    const drawing: Drawing = drawingForManifestEntry(entry).drawing;
     const ownSvg = renderSvg(drawing, {
       size: REFERENCE_DIFF_RASTER,
       theme: REFERENCE_THEME,

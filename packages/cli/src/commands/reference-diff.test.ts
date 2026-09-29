@@ -12,10 +12,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
-import { COVERAGE_MANIFEST } from '@einsatzzeichen/conformance';
+import { COVERAGE_MANIFEST, drawingForManifestEntry } from '@einsatzzeichen/conformance';
 import { REFERENCE_THEME, renderSvg } from '@einsatzzeichen/core';
 import { entryKey, type CoverageEntry } from '@einsatzzeichen/schema';
-import { drawingForManifestEntry } from './reference-diff-drawings.js';
 import {
   REFERENCE_DIFF_RASTER,
   ReferenceDiffError,
@@ -76,7 +75,7 @@ function sampleEntries(): CoverageEntry[] {
 }
 
 function ownSvg(entry: CoverageEntry): string {
-  return renderSvg(drawingForManifestEntry(entry), {
+  return renderSvg(drawingForManifestEntry(entry).drawing, {
     size: REFERENCE_DIFF_RASTER,
     theme: REFERENCE_THEME,
     idPrefix: 'fixture',
