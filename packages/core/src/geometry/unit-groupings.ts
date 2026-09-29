@@ -27,9 +27,9 @@ import { deepFreeze, type DeepReadonly } from './readonly-data.js';
  *
  * **Dieselbe Zeichnung wie die technischen Kopfmarken.** `single-vertical-bar` und
  * `double-vertical-bar` (`technical-head-marks.ts`) sind an denselben Dateien vermessen und
- * geometrisch identisch; `unit-groupings.test.ts` hält das fest. Die Kopfmarken bleiben bestehen,
- * weil die Rezepte sie tragen. Ob diese Rezepte auf den Verband umziehen, entscheidet der Eigentümer
- * (`docs/decisions/2026-09-29-lfh-577-verband-5-5.md`).
+ * geometrisch identisch; `unit-groupings.test.ts` hält das fest. Seit dem Integrationsschritt
+ * (Entscheidung 8 des Eigentümers vom 29.09.2026) tragen die sechs Rezepte `unitGrouping`; die
+ * Kopfmarken bleiben für Balken ohne belegten Verbandsbegriff.
  */
 
 /** Balkenbreite und -höhe am Körper, an allen acht Dateien oben gleich. */

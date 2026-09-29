@@ -22,7 +22,7 @@ describe('RULE_EVIDENCE', () => {
 
   it('führt je Regel genau einen Fall, alphabetisch', () => {
     expect(evidenceIds).toEqual([...new Set(evidenceIds)].sort());
-    expect(RULE_EVIDENCE).toHaveLength(74);
+    expect(RULE_EVIDENCE).toHaveLength(78);
   });
 
   it('nagelt die Lücken fest', () => {
@@ -66,7 +66,7 @@ describe('RULE_EVIDENCE', () => {
     ]);
   });
 
-  it('meldet in 68 von 74 Fällen nur die eigene Regel', () => {
+  it('meldet in 72 von 78 Fällen nur die eigene Regel', () => {
     // Randregeln verletzen oft eine allgemeinere mit. Die sechs Fälle, die zusätzlich eine
     // andere Regel melden, stehen hier, damit ein neuer Mitläufer auffällt.
     const withOthers = RULE_EVIDENCE

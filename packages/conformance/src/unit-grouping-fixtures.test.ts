@@ -1,16 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { BLOCK_REGISTER, boundsOfMm, technicalHeadMark } from '@einsatzzeichen/core';
-import type { SourceReference } from '@einsatzzeichen/schema';
+import { BLOCK_REGISTER, boundsOfMm, drawSymbol, technicalHeadMark } from '@einsatzzeichen/core';
+import type { SourceReference, SymbolSpec, TechnicalHeadMarkId, UnitGroupingId } from '@einsatzzeichen/schema';
 import fingerprints from './fingerprints.json' with { type: 'json' };
+import { RECIPES } from './recipes.js';
 
 /**
  * Gate der Verbandsmarken aus 5.5 gegen das Kennzahlenartefakt (LFH-577).
  *
- * Die Verbandsgeometrie selbst (`core/src/geometry/unit-groupings.ts`) ist noch nicht öffentlich.
- * `core/src/geometry/unit-groupings.test.ts` hält fest, dass Verband I und II dieselbe Zeichnung wie
- * `single-vertical-bar` und `double-vertical-bar` sind; hier wird diese Zeichnung, 1 mm unter die
- * Oberkante gesetzt wie `placeHead` es am Formationskörper tut, gegen jede im Register genannte
- * Anhangsdatei gehalten.
+ * `core/src/geometry/unit-groupings.test.ts` hält fest, dass Verband I und II dieselbe Zeichnung
+ * wie `single-vertical-bar` und `double-vertical-bar` sind; hier wird diese Zeichnung, 1 mm unter
+ * die Oberkante gesetzt wie `placeHead` es am Formationskörper tut, gegen jede im Register genannte
+ * Anhangsdatei gehalten. Seit dem Integrationsschritt tragen die sechs Rezepte mit diesen Balken
+ * das Feld `unitGrouping` (Entscheidung 8 des Eigentümers vom 29.09.2026); der letzte Block hält
+ * fest, dass sich dabei nur die Beschreibung ändert und nicht das Bild.
  */
 
 interface Bounds {
@@ -88,6 +90,49 @@ describe('Verband gegen das Kennzahlenartefakt', () => {
       expect(fingerprintOfSection(section).shapes.map((shape) => shape.boundsMm), section).toEqual([
         { minXMm: 5, minYMm: 11, maxXMm: 27, maxYMm: 21 },
       ]);
+    }
+  });
+});
+
+/** Die Rezepte, die bis LFH-577 den Verband als technische Kopfmarke trugen. */
+const UNIT_GROUPING_RECIPES: readonly (readonly [keyof typeof RECIPES, UnitGroupingId])[] = [
+  ['I.1.4', 'verband-i'],
+  ['F.1.13', 'verband-i'],
+  ['F.1.21', 'verband-i'],
+  ['F.1.1', 'verband-ii'],
+  ['F.1.3', 'verband-ii'],
+  ['E.1.31', 'verband-ii'],
+];
+
+const SAME_DRAWING: Readonly<Record<'verband-i' | 'verband-ii', TechnicalHeadMarkId>> = {
+  'verband-i': 'single-vertical-bar',
+  'verband-ii': 'double-vertical-bar',
+};
+
+describe('Rezepte mit Verband (LFH-577, Entscheidung 8)', () => {
+  it('tragen den Verband im eigenen Feld und keine technische Kopfmarke mehr', () => {
+    for (const [section, unitGrouping] of UNIT_GROUPING_RECIPES) {
+      const spec: SymbolSpec = RECIPES[section].spec;
+      expect(spec.unitGrouping, section).toBe(unitGrouping);
+      expect(spec.technicalHeadMark, section).toBeUndefined();
+    }
+  });
+
+  it('zeichnen dasselbe Bild wie mit der gleich gebauten technischen Kopfmarke', () => {
+    for (const [section, unitGrouping] of UNIT_GROUPING_RECIPES) {
+      const spec: SymbolSpec = RECIPES[section].spec;
+      const { unitGrouping: _moved, ...rest } = spec;
+      const before = drawSymbol({ ...rest, technicalHeadMark: SAME_DRAWING[unitGrouping as 'verband-i' | 'verband-ii'] });
+      const after = drawSymbol(RECIPES[section].spec);
+      expect(after.children, section).toEqual(before.children);
+      expect(after.viewBox, section).toEqual(before.viewBox);
+      // Nur die Beschreibung gewinnt die Bedeutung: dieselbe Stelle, der Verband statt der Marke.
+      expect(after.description, section).toBe(
+        before.description?.replace(
+          /Technische Kopfmarke: (Einzelner Vertikalbalken|Zwei Vertikalbalken)/u,
+          `Verband: ${unitGrouping === 'verband-i' ? 'Verband I' : 'Verband II'}`,
+        ),
+      );
     }
   });
 });

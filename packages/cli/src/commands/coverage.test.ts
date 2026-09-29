@@ -148,23 +148,24 @@ describe('coverage CLI', () => {
     );
     expect(lines.some((line) => line.startsWith('  Nicht zugeordnet:'))).toBe(false);
     expect(lines).toContain(
-      'Regelabdeckung:      14/16 Achsen vollständig belegt; 72 Validierungsregeln ' +
+      'Regelabdeckung:      13/17 Achsen vollständig belegt; 76 Validierungsregeln ' +
         '(Testfall je Regel durch core-Test erzwungen)',
     );
     expect(lines).toContain(
-      '  Achsen mit Lücke:  administrativeLevel 3/6 (gemeinde, bezirk, bundesland); ' +
+      '  Achsen mit Lücke:  technicalHeadMark 0/2 (single-vertical-bar, double-vertical-bar); ' +
+        'unitGrouping 2/3 (verband-iii); administrativeLevel 3/6 (gemeinde, bezirk, bundesland); ' +
         'vehicleCategory 7/8 (amphibienfahrzeug)',
     );
     expect(lines).toContain(
-      'Generative Reichweite (Stufe 1): 924 gültige Kompositionen aus kind × Körpervariante × ' +
-        'Organisation × Kopfzone × Fahrwerk (244530 enumeriert), davon 71 in der Referenz belegt — ' +
-        '853 erzeugbar ohne Referenzbeleg, 8 Rezeptsignaturen außerhalb der Stufe ' +
+      'Generative Reichweite (Stufe 1): 964 gültige Kompositionen aus kind × Körpervariante × ' +
+        'Organisation × Kopfzone × Fahrwerk (300960 enumeriert), davon 71 in der Referenz belegt — ' +
+        '893 erzeugbar ohne Referenzbeleg, 8 Rezeptsignaturen außerhalb der Stufe ' +
         '(dokumentiert, kein Gate); nicht enumeriert: 88 Fähigkeiten, ' +
         '132 Körpermarken, 25 Funktionsrollen, freie Bezeichnung',
     );
     expect(lines.at(-1)).toBe('Coverage-Gate bestanden.');
     // Expliziter Timeout: `coverage()` rechnet seit LFH-413 `generativeReach()` mit
-    // (993 validateSpec-gültige, 924 komponierte Kombinationen) — allein ~140 ms, unter
+    // (3282 validateSpec-gültige, 964 komponierte Kombinationen) — allein ~140 ms, unter
     // Vitest-Parallellast bis ~4 s gemessen; das 5-s-Standardlimit wäre ein Lastflake.
   }, 30_000);
 });

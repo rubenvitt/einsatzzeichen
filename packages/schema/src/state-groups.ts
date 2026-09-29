@@ -49,9 +49,11 @@ export type StateGroupFinding<T> = GrammarFinding<T>;
 export type StateGroupForm = 'mark' | 'carrier-included';
 
 /**
- * Die Regelkennungen einer Gruppe. Sie sind **vorgemerkt**, nicht in Kraft: `validateSpec` prüft
- * sie erst, wenn `SymbolSpec` ein Feld für Zustände bekommt (LFH-577). Bis dahin stehen sie in
- * `PLANNED_STATE_RULES` und ausdrücklich nicht im Regelkatalog.
+ * Die Regelkennungen einer Gruppe. Seit LFH-577 trägt `SymbolSpec` die Felder `states` und
+ * `tendency`: `state-carrier-not-allowed` und `state-group-limit-exceeded` prüft `validateSpec`
+ * (Regelkatalog), `tendency-carrier-not-allowed` ist weiter vorgemerkt (`PLANNED_STATE_RULES`),
+ * `tendency-limit-exceeded` ist gestrichen, weil `tendency` ein Einzelfeld ist
+ * (`RETIRED_STATE_RULES` in `core`).
  */
 export interface StateGroupRuleIds {
   /** Ablehnung eines Trägers, den die Gruppe nicht zulässt. */

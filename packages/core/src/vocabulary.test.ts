@@ -16,8 +16,11 @@ import {
   ADMIN_LEVEL_IDS,
   CAPABILITY_IDS,
   PALETTE,
+  STATE_IDS,
   SYMBOL_KINDS,
   TECHNICAL_BODY_MARK_IDS,
+  TENDENCY_IDS,
+  UNIT_GROUPING_IDS,
   type SymbolSpec,
 } from '@einsatzzeichen/schema';
 import { describe, expect, expectTypeOf, test } from 'vitest';
@@ -59,6 +62,9 @@ describe('SPEC_FIELD_VALUES', () => {
         'technicalHeadMark',
         'vehicleCategory',
         'whiteInnerContour',
+        'unitGrouping',
+        'states',
+        'tendency',
       ].sort(),
     );
   });
@@ -78,6 +84,9 @@ describe('SPEC_FIELD_VALUES', () => {
       shape: 'list',
       values: [...CAPABILITY_IDS, ...TECHNICAL_BODY_MARK_IDS],
     });
+    expect(SPEC_FIELD_VALUES.unitGrouping).toEqual({ shape: 'one-of', values: UNIT_GROUPING_IDS });
+    expect(SPEC_FIELD_VALUES.states).toEqual({ shape: 'list', values: STATE_IDS });
+    expect(SPEC_FIELD_VALUES.tendency).toEqual({ shape: 'one-of', values: TENDENCY_IDS });
   });
 
   test('kennzeichnet Schalter, Freitext und Beschriftungen, statt sie aufzuzählen', () => {
@@ -117,7 +126,7 @@ describe('SPEC_FIELD_VALUES', () => {
   });
 
   test('leitet die Vokabular- und Listenfelder aus der Tabelle ab', () => {
-    expect(LIST_SPEC_FIELDS).toEqual(['capabilities', 'bodyMarks']);
+    expect(LIST_SPEC_FIELDS).toEqual(['states', 'capabilities', 'bodyMarks']);
     expect(VOCABULARY_FIELDS).not.toContain('designation');
     expect(VOCABULARY_FIELDS).not.toContain('labels');
     expect(VOCABULARY_FIELDS).not.toContain('whiteInnerContour');

@@ -3,7 +3,7 @@
  *
  * `compose()` bekommt seine Bausteine über `CatalogPorts` injiziert, damit der Motor nicht an eine
  * bestimmte Geometrie gebunden ist. Seit dem Paketschnitt (LFH-560) sind alle elf Ports ohnehin
- * öffentliche Exporte von `core` — bis hierher musste sie trotzdem jeder Nutzer selbst verdrahten
+ * öffentliche Exporte von `core` (seit LFH-577 dazu der optionale Verbandsport) — bis hierher musste sie trotzdem jeder Nutzer selbst verdrahten
  * oder dafür `composeFromCatalog()` aus `@einsatzzeichen/conformance` holen. Beides entfällt: die
  * Standardbelegung steht hier einmal, und `drawSymbol()` ist der eine Weg von der `SymbolSpec` zur
  * `Drawing`. `composeFromCatalog()` bleibt im Prüfpaket als Hülle darum.
@@ -22,6 +22,7 @@ import { organizationColor } from './geometry/organizations.js';
 import { pictogram } from './geometry/pictograms/index.js';
 import { strengthHead } from './geometry/strengths.js';
 import { technicalHeadMark } from './geometry/technical-head-marks.js';
+import { unitGroupingHead } from './geometry/unit-groupings.js';
 import { ARIMO_TEXT_METRICS } from './geometry/text-metrics.js';
 import { vehicleChassis } from './geometry/vehicle-categories.js';
 
@@ -38,6 +39,7 @@ export const DEFAULT_PORTS: CatalogPorts = Object.freeze({
   organizationColor,
   strengthHead,
   technicalHeadMark,
+  unitGroupingHead,
   functionRole,
   administrativeHead,
   vehicleChassis,

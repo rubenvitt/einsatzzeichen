@@ -160,6 +160,9 @@ describe('Bausteinregister, Kopfzone: Lücken lösen sich nicht auf', () => {
       (readdirSync(root, { recursive: true }) as string[])
         .filter((file) => file.endsWith('.ts') && !file.endsWith('.test.ts'))
         .filter((file) => !file.startsWith('block-register'))
+        // Die Vorlesenamen nennen jeden Wert des Typs, auch die Lücke (`UNIT_GROUPING_LABELS`,
+        // LFH-577) — ein Name, keine Geometrie.
+        .filter((file) => file !== 'labels.ts')
         .flatMap((file) => {
           const text = readFileSync(join(root, file), 'utf8');
           return gaps

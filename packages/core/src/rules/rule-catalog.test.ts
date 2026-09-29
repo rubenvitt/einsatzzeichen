@@ -75,12 +75,13 @@ describe('RULE_CATALOG: Vollständigkeit je Eintrag', () => {
 
   /**
    * Der Befund, aus dem die offene Frage der Entscheidungsnotiz folgt: für diese Regeln steht die
-   * Begründung **nur** in `packages/website/src/lib/rule-explanations.ts`; der Kern wiederholt
-   * dort lediglich den Prüfausdruck in Worten. Die Sätze sind von Hand kopiert, und kein Gate
-   * hält sie in Deckung — `core` darf `website` nicht importieren, eine Prüfung liefe gegen die
-   * Importgrenze. Die Menge ist festgenagelt, damit sie nicht unbemerkt wächst.
+   * Begründung **nur** in der Leserinnenerklärung (`rules/rule-explanations.ts`, bis LFH-579 in
+   * der Website, daher der Wert `'website'`); die Prüfstelle wiederholt lediglich den
+   * Prüfausdruck in Worten. Die Sätze sind von Hand gezogen; seit LFH-579 hält
+   * `rule-explanations.test.ts` sie per Fingerabdruck in Deckung. Die Menge ist festgenagelt,
+   * damit sie nicht unbemerkt wächst.
    */
-  it('nagelt die Begründungen fest, die nur die Website belegt', () => {
+  it('nagelt die Begründungen fest, die nur die Erklärung belegt', () => {
     const fromWebsite = RULE_CATALOG.filter((rule) => rule.reasonSource === 'website')
       .map((rule) => rule.id);
     expect(fromWebsite.sort()).toEqual([
@@ -113,7 +114,7 @@ describe('RULE_CATALOG: Vollständigkeit je Eintrag', () => {
       'top-left-lines-exactly-two',
     ]);
     expect(fromWebsite).toHaveLength(27);
-    expect(RULE_CATALOG.filter((rule) => rule.reasonSource === 'core')).toHaveLength(45);
+    expect(RULE_CATALOG.filter((rule) => rule.reasonSource === 'core')).toHaveLength(49);
   });
 
   /**
@@ -145,6 +146,10 @@ describe('RULE_CATALOG: Vollständigkeit je Eintrag', () => {
       'colored-circle-top-left-not-measured',
       'inset-hull-requires-center-label-only',
       'reduced-house-requires-hilfsorganisation',
+      'state-carrier-not-allowed',
+      'state-group-limit-exceeded',
+      'state-tactics-not-allowed',
+      'state-value-not-attachable',
       'technical-head-mark-requires-normal-formation',
       'top-left-anchor-within-body',
       'top-left-baseline-within-body',
@@ -158,7 +163,7 @@ describe('RULE_CATALOG: Vollständigkeit je Eintrag', () => {
 
 describe('RULE_CATALOG gegen den Quelltext von validate.ts', () => {
   /**
-   * `validate.ts` löst 75 Mal aus, führt aber nur 72 Kennungen: drei Regeln haben zwei
+   * `validate.ts` löst 79 Mal aus, führt aber nur 76 Kennungen: drei Regeln haben zwei
    * Auslösestellen. Im Katalog bleiben sie **ein** Eintrag — sonst bräche die Dublettenprüfung —
    * und tragen die Zahl ihrer Stellen im Feld `sites`. Dieser Test zählt die Stellen im
    * Quelltext dagegen, damit eine künftige dritte Stelle nicht still dazukommt.
@@ -175,9 +180,9 @@ describe('RULE_CATALOG gegen den Quelltext von validate.ts', () => {
     );
   });
 
-  it('bleibt bei 75 Auslösestellen für 72 Kennungen', () => {
-    expect(pushedIds).toHaveLength(75);
-    expect(new Set(pushedIds).size).toBe(72);
+  it('bleibt bei 79 Auslösestellen für 76 Kennungen', () => {
+    expect(pushedIds).toHaveLength(79);
+    expect(new Set(pushedIds).size).toBe(76);
     expect(RULE_CATALOG.filter((rule) => rule.sites > 1).map((rule) => rule.id)).toEqual([
       'function-role-requires-measured-kind',
       'function-role-requires-measured-layout',
@@ -276,10 +281,11 @@ describe('Lücken je Dimension', () => {
    * Festgenagelt, damit die Aussage „Lücken je Dimension benannt" zählbar bleibt und nicht
    * unbemerkt schrumpft, wenn jemand eine Dimension aus der Union nimmt.
    */
-  it('zählt neun Lücken, davon sechs ohne jede Regel', () => {
+  it('zählt neun Lücken, davon fünf ohne jede Regel', () => {
+    // Seit LFH-577 trägt `state` vier Regeln und ist nur noch teilweise offen.
     expect(RULE_DIMENSION_GAPS).toHaveLength(9);
     expect(RULE_DIMENSION_GAPS.filter((gap) => gap.coverage === 'none').map((g) => g.dimension))
-      .toEqual(['capabilities', 'unit-grouping', 'state', 'tendency', 'movement', 'lines-and-boundaries']);
+      .toEqual(['capabilities', 'unit-grouping', 'tendency', 'movement', 'lines-and-boundaries']);
   });
 
   /**
@@ -299,13 +305,17 @@ describe('Einordnung fachlich gegen technisch', () => {
    * Messung fehlt — nicht, weil die Systematik es verbietet. Festgenagelt, weil sich genau diese
    * Zahl mit dem Grammatik-Umbau verschieben soll und die Verschiebung sichtbar sein muss.
    */
-  it('nagelt die acht fachlichen Regeln fest', () => {
+  it('nagelt die zwölf fachlichen Regeln fest', () => {
     expect(RULE_CATALOG.filter((rule) => rule.kind === 'systematik').map((r) => r.id)).toEqual([
       'body-variant-foot-conflict',
       'chassis-foot-conflict',
       'circle-12-requires-organization',
       'head-zone-conflict',
       'plain-wheel-pair-chassis-conflict',
+      'state-carrier-not-allowed',
+      'state-group-limit-exceeded',
+      'state-tactics-not-allowed',
+      'state-value-not-attachable',
       'strength-requires-unit',
       'surface-label-foot-conflict',
       'technical-fill-organization-conflict',

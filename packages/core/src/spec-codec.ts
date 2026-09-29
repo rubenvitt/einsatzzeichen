@@ -5,10 +5,13 @@ import {
   FUNCTION_ROLE_IDS,
   ORGANIZATION_IDS,
   PALETTE,
+  STATE_IDS,
   STRENGTH_IDS,
   SYMBOL_KINDS,
   TECHNICAL_BODY_MARK_IDS,
   TECHNICAL_HEAD_MARK_IDS,
+  TENDENCY_IDS,
+  UNIT_GROUPING_IDS,
   VEHICLE_CATEGORY_IDS,
   type BodyLabelInk,
   type BodyLabels,
@@ -257,7 +260,14 @@ const SPEC_FIELDS: FieldTable<SymbolSpec> = {
   strength: oneOf(STRENGTH_IDS, 'STRENGTH_IDS'),
   technicalHeadMark: oneOf(TECHNICAL_HEAD_MARK_IDS, 'TECHNICAL_HEAD_MARK_IDS'),
   administrativeLevel: oneOf(ADMIN_LEVEL_IDS, 'ADMIN_LEVEL_IDS'),
+  unitGrouping: oneOf(UNIT_GROUPING_IDS, 'UNIT_GROUPING_IDS'),
   vehicleCategory: oneOf(VEHICLE_CATEGORY_IDS, 'VEHICLE_CATEGORY_IDS'),
+  // Der volle Vorrat aus 5.8: dass Wetter, Tierzustand und Tendenz nicht in `states` gehören, ist
+  // eine Regel (`state-value-not-attachable`), kein Formfehler. Die Reihenfolge bleibt wie bei
+  // `bodyMarks` erhalten.
+  states: list(oneOf(STATE_IDS, 'STATE_IDS')),
+  // Ein Einzelwert: eine Liste lehnt der Leser schon der Form nach ab.
+  tendency: oneOf(TENDENCY_IDS, 'TENDENCY_IDS'),
   capabilities: list(oneOf(CAPABILITY_IDS, 'CAPABILITY_IDS')),
   bodyMarks: list(oneOf([...CAPABILITY_IDS, ...TECHNICAL_BODY_MARK_IDS], 'CAPABILITY_IDS und TECHNICAL_BODY_MARK_IDS')),
   designation: text,

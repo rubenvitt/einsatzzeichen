@@ -56,7 +56,10 @@ export const RULE_FIELDS: readonly RuleField[] = Object.freeze([
   'strength',
   'technicalHeadMark',
   'administrativeLevel',
+  'unitGrouping',
   'vehicleCategory',
+  'states',
+  'tendency',
   'capabilities',
   'bodyMarks',
   'designation',
@@ -486,10 +489,10 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
     field: 'composition',
     title: 'Mehrere Angaben in der Kopfzone',
     explanation:
-      'Stärke, Verwaltungsstufe und technische Kopfmarke belegen dieselbe Kopfzone; höchstens ' +
-      'eine davon darf gesetzt sein. Auch eine technische Kopfmarke zusammen mit einer ' +
-      'Funktionsfassung ist ausgeschlossen, weil die Fassung ihre Kopfzone selbst bindet. Lass ' +
-      'alle bis auf eine Angabe weg.',
+      'Stärke, Verwaltungsstufe, technische Kopfmarke und Verband belegen dieselbe Kopfzone; ' +
+      'höchstens eine davon darf gesetzt sein. Auch eine technische Kopfmarke oder ein Verband ' +
+      'zusammen mit einer Funktionsfassung ist ausgeschlossen, weil die Fassung ihre Kopfzone ' +
+      'selbst bindet. Lass alle bis auf eine Angabe weg.',
   },
   'in-body-ink-requires-in-body-label': {
     field: 'labels',
@@ -561,6 +564,40 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'Die reduzierte Hauskontur ist in beiden F.3-Belegen ausschließlich als weiße ' +
       'HiOrg-Körperfläche vermessen. Andere oder fehlende Organisationszuordnungen sind auch ' +
       'ohne Beschriftung nicht belegt. Setze `organization` auf `hilfsorganisation`.',
+  },
+  'state-carrier-not-allowed': {
+    field: 'states',
+    title: 'Zustand passt nicht zu diesem Grundzeichen',
+    explanation:
+      'Ein Personenzustand wie „verletzt" gehört an das Grundzeichen Person, ebenso die übrigen ' +
+      'Werte aus 5.8.1. Die Hinweise „?" und „!" dürfen außerdem an der Gefahr stehen, weil die ' +
+      'Vorlage sie dort zeigt. Wechsle das Grundzeichen oder entferne den Zustand aus `states`.',
+  },
+  'state-group-limit-exceeded': {
+    field: 'states',
+    title: 'Zwei Werte derselben Skala',
+    explanation:
+      'Ein Zeichen trägt höchstens einen Hinweis („?" oder „!"), einen Personenzustand und je ' +
+      'einen Wert für Aktivität, Schadensgrad und Brandphase. Zwei Stufen derselben Skala ' +
+      'widersprechen sich, etwa „beschädigt" und „zerstört". Behalte in `states` je Skala nur ' +
+      'einen Wert.',
+  },
+  'state-tactics-not-allowed': {
+    field: 'states',
+    title: 'Einsatztaktik steht nicht an einem Zeichen',
+    explanation:
+      'Retten, Angriff, Verteidigung und Rückzug (5.8.1.1 bis 5.8.1.4) sind eigene Zeichen und ' +
+      'werden nicht an ein anderes Zeichen gehängt. Keine Vorlage zeigt sie an einem Träger, und ' +
+      'so ist es für dieses Projekt am 29. September 2026 entschieden. Entferne den Wert aus `states` und setze die Taktik als ' +
+      'eigenes Zeichen.',
+  },
+  'state-value-not-attachable': {
+    field: 'states',
+    title: 'Dieser Zustand gehört nicht in die Zustandsliste',
+    explanation:
+      'Wetter und der Zustand eines Tieres sind eigenständige Zeichen und stehen nicht an einem ' +
+      'anderen Zeichen. Eine Tendenz (steigend, gleichbleibend, fallend) hat ihr eigenes Feld ' +
+      '`tendency`. Entferne den Wert aus `states` und setze ihn dort, wo er hingehört.',
   },
   'strength-requires-unit': {
     field: 'strength',

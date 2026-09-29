@@ -36,6 +36,23 @@ describe('semantische Zeichenbeschreibungen', () => {
     );
   });
 
+  it('benennt den Verband an der Stelle der Kopfzone (LFH-577)', () => {
+    expect(describeSymbolSpec({
+      kind: 'formation', organization: 'hilfsorganisation', unitGrouping: 'verband-ii',
+    })).toBe(
+      'Grundzeichen: Taktische Formation. Organisation: Hilfsorganisation. Verband: Verband II.',
+    );
+  });
+
+  it('nennt Zustände und Tendenz mit dem Titel ihrer Zeichnung (LFH-577)', () => {
+    expect(describeSymbolSpec({
+      kind: 'person', states: ['person-injured', 'suspected-situation'], tendency: 'tendency-rising',
+    })).toBe(
+      'Grundzeichen: Person. Zustand: Person verletzt. Zustand: Hinweis auf Vermutung. ' +
+        'Tendenz steigend.',
+    );
+  });
+
   it('beschreibt das Trägerkürzel unterhalb des Körpers wie das im Körper', () => {
     // Die vierte Zone unterscheidet sich in Lage und Farbe, nicht in der Bedeutung. Für eine
     // Vorlesestimme ist das derselbe Sachverhalt — sonst verlöre E.2.27 seine einzige

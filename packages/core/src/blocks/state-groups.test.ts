@@ -4,9 +4,10 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import type { StateGroup, StateGroupEvidence, StateGroupFinding } from '@einsatzzeichen/schema';
 import { STATE_PICTOGRAMS } from '../geometry/pictograms/states/index.js';
-import { PLANNED_STATE_RULES } from '../rules/planned-state-rules.js';
+import { PLANNED_STATE_RULES, RETIRED_STATE_RULES } from '../rules/planned-state-rules.js';
+import { ruleCatalogEntry } from '../rules/rule-catalog.js';
 import { BLOCK_REGISTER, blockEntry } from './register.js';
-import { STATE_GROUPS, stateCarriersOf, stateGroup, stateGroupOf } from './state-groups.js';
+import { STATE_GROUPS, stateCarriersOf, stateGroup, stateGroupOf, stateValueGroup } from './state-groups.js';
 
 /**
  * Gate der Zustandsgruppen (LFH-565). Die Tabelle nennt Fundorte und Beispielzeichen; dieser Test
@@ -150,10 +151,15 @@ describe('Zustandsgruppen aus Kapitel 5.8', () => {
     }
   });
 
-  it('verweist auf vorgemerkte Regeln der eigenen Dimension', () => {
+  it('verweist auf Regeln der eigenen Dimension: in Kraft, vorgemerkt oder gestrichen', () => {
+    // Seit LFH-577 stehen die Zustandsregeln im Katalog, die Trägerregel der Tendenz ist weiter
+    // vorgemerkt und ihre Grenzregel gestrichen (`tendency` ist ein Einzelfeld).
     for (const group of STATE_GROUPS) {
       for (const ruleId of [group.rules.carrier, group.rules.limit]) {
-        const rule = PLANNED_STATE_RULES.find((candidate) => candidate.id === ruleId);
+        const rule =
+          ruleCatalogEntry(ruleId) ??
+          PLANNED_STATE_RULES.find((candidate) => candidate.id === ruleId) ??
+          RETIRED_STATE_RULES.find((candidate) => candidate.id === ruleId);
         expect(rule, `${group.id}: ${ruleId}`).toBeDefined();
         expect(rule?.dimension, `${group.id}: ${ruleId}`).toBe(group.category);
       }
@@ -196,7 +202,7 @@ describe('Zustandsgruppen aus Kapitel 5.8', () => {
       '5.8.4': 'evidenced | evidenced | open | decided',
       '5.8.5': 'evidenced | open | open | decided',
       '5.8.6': 'evidenced | evidenced | open | open',
-      '5.8.7': 'evidenced | evidenced | evidenced | open',
+      '5.8.7': 'evidenced | evidenced | evidenced | decided',
       '5.8.8': 'evidenced | evidenced | evidenced | proposed',
       '5.8.9': 'evidenced | open | open | open',
     });
@@ -244,6 +250,23 @@ describe('Zustandsgruppen aus Kapitel 5.8', () => {
     expect(stateCarriersOf('activity-slightly-increased-outage-up-to-25-percent')).toBeUndefined();
   });
 
+  it('ordnet jedem Wert aus STATE_IDS seine Gruppe zu, wie der Abschnitt seiner Zeichnung sagt', () => {
+    expect(stateValueGroup('tactical-rescue')).toBe('tactics-hazards');
+    expect(stateValueGroup('suspected-situation')).toBe('tactics-hazards');
+    expect(stateValueGroup('activity-strongly-increased-total-outage')).toBe('activity');
+    expect(stateValueGroup('tendency-falling')).toBe('tendency');
+    expect(stateValueGroup('destroyed')).toBe('damage');
+    expect(stateValueGroup('developed-fire')).toBe('fire');
+    expect(stateValueGroup('dead-animal')).toBe('animals');
+    expect(stateValueGroup('weather-windy')).toBe('weather');
+    expect(stateValueGroup('person-rescued')).toBe('persons');
+    expect(stateValueGroup('route-impassable')).toBe('access');
+    for (const entry of STATE_ENTRIES) {
+      const value = entry.valueId as Parameters<typeof stateValueGroup>[0];
+      expect(stateValueGroup(value), value).toBe(stateGroupOf(entry)?.id);
+    }
+  });
+
   it('hält die Entscheidungen des Eigentümers vom 29.09.2026 als eigenen Stand fest', () => {
     const decided = STATE_GROUPS.flatMap((group) =>
       (['zone', 'carriers', 'perSign'] as const).flatMap((key) => {
@@ -257,6 +280,7 @@ describe('Zustandsgruppen aus Kapitel 5.8', () => {
       '5.8.3 perSign 1',
       '5.8.4 perSign 1',
       '5.8.5 perSign 1',
+      '5.8.7 perSign 2',
     ]);
   });
 });

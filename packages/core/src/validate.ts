@@ -1,6 +1,7 @@
 import {
   DEFAULT_VIEWBOX_MM,
   PALETTE,
+  STATE_IDS,
   type BodyVariantId,
   type ColorToken,
   type AdminLevelId,
@@ -8,11 +9,14 @@ import {
   type FunctionRoleTextRun,
   type AdministrativeHeadShape,
   type OrganizationId,
+  type StateGroupId,
+  type StateId,
   type StrengthId,
   type SymbolKind,
   type SymbolSpec,
   type TechnicalHeadMarkId,
 } from '@einsatzzeichen/schema';
+import { stateCarriersOf, stateValueGroup } from './blocks/state-groups.js';
 import { profileFor } from './layout/profiles.js';
 import { ARIMO_CAP_HEIGHT_FRACTION, verticalTextBoxMm } from './render/text-policy.js';
 
@@ -610,14 +614,21 @@ function validatePreparedSpec(
   // `head: {strength} | {administrativeLevel}`) zöge alle Rezepte und ihre Tests nach. Die
   // Entscheidung steht in der Notiz vom 18. August 2026, damit sie nicht als Versäumnis gelesen
   // wird.
+  //
+  // Seit LFH-577 belegt auch der Verband (`unitGrouping`) die Kopfzone. Kein Original setzt seine
+  // Balken zusammen mit Stärkepunkten, Verwaltungssternen, einer technischen Kopfmarke oder einer
+  // Funktionsfassung (`docs/decisions/2026-09-29-lfh-577-verband-5-5.md` §2); er zählt deshalb
+  // wie die technische Kopfmarke, auch gegen die Funktionsfassung.
   const explicitHeadOccupants = [
     spec.strength,
     spec.administrativeLevel,
     spec.technicalHeadMark,
+    spec.unitGrouping,
   ].filter((value) => value !== undefined).length;
   if (
     explicitHeadOccupants > 1 ||
-    (spec.technicalHeadMark !== undefined && spec.functionRole !== undefined)
+    ((spec.technicalHeadMark !== undefined || spec.unitGrouping !== undefined) &&
+      spec.functionRole !== undefined)
   ) {
     issues.push({
       rule: 'head-zone-conflict',
@@ -1321,6 +1332,8 @@ function validatePreparedSpec(
     }
   }
 
+  issues.push(...stateIssues(spec));
+
   // Dieselbe Regel wie für `designation`, je Zone einzeln benannt: ein leerer Lauf erzeugte ein
   // Textprimitiv ohne Tinte, das jedes Gate besteht und im Bild fehlt — genau der lautlose
   // Ausfall, den die Fußzone mit ihrem festen Schriftgrad vermeidet.
@@ -1388,4 +1401,101 @@ export function validateSpec(
   context: ValidationContext = {},
 ): ValidationIssue[] {
   return analyzeSymbolSpec(spec, context).issues;
+}
+
+/**
+ * Gruppen aus 5.8, die nicht in `SymbolSpec.states` gehören: Wetter (5.8.7) und Tierzustand
+ * (5.8.6) sind freistehende Zeichen mit eigener Spec-Art, die Tendenz (5.8.3) hat ihr eigenes Feld
+ * `tendency` (Entscheidungen des Eigentümers vom 29.09.2026, `docs/decisions/
+ * 2026-09-28-lfh-565-kapitel-5-8-bausteine.md` §8).
+ */
+const NOT_ATTACHABLE_STATE_GROUPS: Readonly<Partial<Record<StateGroupId, string>>> = {
+  weather: 'ist ein freistehendes Wetterzeichen (5.8.7)',
+  animals: 'ist ein freistehender Tierzustand (5.8.6)',
+  tendency: 'ist eine Tendenz (5.8.3) und gehört in das Feld "tendency"',
+};
+
+/**
+ * Skalen, von denen ein Zeichen höchstens einen Wert trägt (Entscheidung des Eigentümers vom
+ * 29.09.2026, dort Punkt 7): zwei Stufen derselben Skala widersprechen sich, und zwei
+ * Personenzustände an einer Raute zeigt kein Original — die Verbindungen „verletzt und …" sind in
+ * 5.8.8 eigene Werte. Die Hinweise „?" und „!" aus 5.8.1 zählen als eigene Skala.
+ */
+const ONE_PER_SIGN_STATE_GROUPS: readonly StateGroupId[] = ['activity', 'damage', 'fire', 'persons'];
+const KNOWN_STATE_IDS: ReadonlySet<StateId> = new Set<StateId>(STATE_IDS);
+const STATE_HINTS: ReadonlySet<StateId> = new Set<StateId>(['suspected-situation', 'acute-situation']);
+/** Einsatztaktik 5.8.1.1 bis 5.8.1.4. */
+const STATE_TACTICS: ReadonlySet<StateId> = new Set<StateId>([
+  'tactical-rescue',
+  'tactical-attack',
+  'tactical-defense',
+  'tactical-retreat',
+]);
+
+/**
+ * Die Regeln zu `SymbolSpec.states` (LFH-577). Sie prüfen, ob ein Zustand an dieses Zeichen darf
+ * und wie viele zugleich; **wo** er steht, entscheidet danach `placeStates()` in `compose()` — und
+ * wirft `NotMeasuredError`, wenn die Referenz die Lage nicht zeigt. Ein Wert, für den weder ein
+ * Träger belegt noch entschieden ist (`stateCarriersOf` gibt `undefined`), wird hier deshalb nicht
+ * abgelehnt: eine Regel verböte, was niemand entschieden hat, und verdeckte die ehrlichere Aussage
+ * „nicht vermessen".
+ */
+function stateIssues(spec: SymbolSpec): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const attachable: StateId[] = [];
+  // Eine Liste außerhalb des Typs (etwa aus JSON am Leser vorbei) prüft diese Funktion nicht; sie
+  // wirft auch nicht. Unbekannte Werte lehnt `parseSpec` mit Pfad ab.
+  const values: readonly unknown[] = Array.isArray(spec.states) ? spec.states : [];
+  for (const value of values.filter((item): item is StateId => KNOWN_STATE_IDS.has(item as StateId))) {
+    const reason = NOT_ATTACHABLE_STATE_GROUPS[stateValueGroup(value)];
+    if (reason !== undefined) {
+      issues.push({
+        rule: 'state-value-not-attachable',
+        message: `Der Zustand "${value}" ${reason}; er steht nicht in "states".`,
+      });
+    } else {
+      attachable.push(value);
+    }
+  }
+
+  for (const value of attachable) {
+    // Taktik zuerst und ohne Trägerbefund: sie steht an gar keinem Träger, ein Hinweis auf die
+    // Person führte in die nächste Ablehnung.
+    if (STATE_TACTICS.has(value)) {
+      issues.push({
+        rule: 'state-tactics-not-allowed',
+        message:
+          `Die Einsatztaktik "${value}" (5.8.1.1 bis 5.8.1.4) steht nicht an einem Träger; ` +
+          'sie ist ein eigenes Zeichen.',
+      });
+      continue;
+    }
+    const carriers = stateCarriersOf(value);
+    if (carriers !== undefined && !carriers.includes(`base-symbol/${spec.kind}`)) {
+      issues.push({
+        rule: 'state-carrier-not-allowed',
+        message:
+          `Der Zustand "${value}" steht nur an ${carriers.map((id) => `"${id.slice('base-symbol/'.length)}"`).join(' oder ')}, ` +
+          `nicht an "${spec.kind}".`,
+      });
+    }
+  }
+
+  const perScale = new Map<string, StateId[]>();
+  for (const value of attachable) {
+    const group = stateValueGroup(value);
+    const scale = STATE_HINTS.has(value)
+      ? 'hints'
+      : ONE_PER_SIGN_STATE_GROUPS.includes(group) ? group : undefined;
+    if (scale !== undefined) perScale.set(scale, [...(perScale.get(scale) ?? []), value]);
+  }
+  for (const values of perScale.values()) {
+    if (values.length < 2) continue;
+    issues.push({
+      rule: 'state-group-limit-exceeded',
+      message:
+        `${values.join(' und ')} gehören zur selben Skala; ein Zeichen trägt davon höchstens einen Wert.`,
+    });
+  }
+  return issues;
 }

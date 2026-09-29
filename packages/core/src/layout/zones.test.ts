@@ -278,6 +278,7 @@ describe('Zonenmodell: Bindung an die bestehenden Fundorte', () => {
       'core/src/geometry/base-symbols.ts',
       'core/src/geometry/parametric.ts',
       'core/src/layout/profiles.ts',
+      'core/src/layout/state-frames.ts',
       'core/src/layout/state-placement.ts',
       'core/src/validate.ts',
       'schema/src/chassis.ts',
@@ -361,15 +362,15 @@ describe('Zonenmodell: deklarierte Lücken', () => {
     });
   });
 
-  it('zeigt mit jeder Herkunft in state-placement.ts auf die Stelle, die die Zahl trägt', () => {
+  it('zeigt mit jeder Herkunft in state-frames.ts und state-placement.ts auf die Stelle, die die Zahl trägt', () => {
     // Die Zeilenbereiche stehen als Text; läuft die Datei weg, fällt es hier auf und nicht erst
-    // beim Leser, der ins Leere schlägt.
-    const lines = readPackageSource('layout/state-placement.ts').split('\n');
+    // beim Leser, der ins Leere schlägt. Seit LFH-577 stehen die Lagen als reine Daten in
+    // `state-frames.ts`; die Tendenz bleibt an der Stelle in `state-placement.ts`, die wirft.
     const expected: Record<string, string> = {
-      '208–251': 'STATE_HINT_LAYOUTS',
-      '142–174': 'PERSON_STATE_FRAMES',
-      '178–189': 'PERSON_STATE_CORNERS_MM',
-      '602–608': 'tendency-margin',
+      'state-frames.ts:129–172': 'STATE_HINT_LAYOUTS',
+      'state-frames.ts:63–95': 'PERSON_STATE_FRAMES',
+      'state-frames.ts:99–110': 'PERSON_STATE_CORNERS_MM',
+      'state-placement.ts:477–483': 'tendency-margin',
     };
     const seen = new Set<string>();
     for (const form of ZONE_MODEL_FORMS) {
@@ -380,17 +381,24 @@ describe('Zonenmodell: deklarierte Lücken', () => {
             ? binding.measures.map((measure) => measure.provenance.definedAt)
             : [binding.gap.definedAt];
         for (const place of places) {
-          const match = /state-placement\.ts:(\d+)–(\d+)/u.exec(place);
+          const match = /(state-frames\.ts|state-placement\.ts):(\d+)–(\d+)/u.exec(place);
           if (match === null) continue;
-          const range = `${match[1]}–${match[2]}`;
-          seen.add(range);
-          const text = lines.slice(Number(match[1]) - 1, Number(match[2])).join('\n');
-          expect(expected[range], place).toBeDefined();
-          expect(text, place).toContain(expected[range]);
+          const key = `${match[1]}:${match[2]}–${match[3]}`;
+          seen.add(key);
+          const lines = readPackageSource(`layout/${match[1]}`).split('\n');
+          const text = lines.slice(Number(match[2]) - 1, Number(match[3])).join('\n');
+          expect(expected[key], place).toBeDefined();
+          expect(text, place).toContain(expected[key]);
         }
       }
     }
     expect([...seen].sort()).toEqual(Object.keys(expected).sort());
+  });
+
+  it('importiert im Zonenmodell keine Geometrie der Zustände', () => {
+    const source = readPackageSource('layout/zones.ts');
+    expect(source).not.toMatch(/from '\.\/state-placement\.js'/u);
+    expect(readPackageSource('layout/state-frames.ts')).not.toMatch(/from '\.\.\/geometry\//u);
   });
 
   it('liest die Hinweislage an der Gefahr an 5.8.1.13_2 und 5.8.1.14_2 ab', () => {

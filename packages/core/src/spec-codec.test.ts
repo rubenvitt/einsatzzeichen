@@ -270,6 +270,38 @@ describe('parseSpec()', () => {
     expect(error.message).toMatch(message);
   });
 
+  it('liest Verband, Zustände und Tendenz aus den Wertelisten des Schemas (LFH-577)', () => {
+    const spec = {
+      kind: 'person',
+      unitGrouping: 'verband-ii',
+      states: ['suspected-situation', 'person-injured'],
+      tendency: 'tendency-rising',
+    };
+    expect(parseSpec(spec)).toEqual(spec);
+    // Die Reihenfolge der Zustände bleibt, wie bei bodyMarks: der Leser sortiert nicht.
+    expect(serializeSpec({ kind: 'person', states: ['person-injured', 'suspected-situation'] })).toBe(
+      '{"v":1,"spec":{"kind":"person","states":["person-injured","suspected-situation"]}}',
+    );
+  });
+
+  it('prüft in states nur den Wertevorrat: Wetter lehnt erst validateSpec ab', () => {
+    expect(parseSpec({ kind: 'person', states: ['weather-sunny'] }).states).toEqual(['weather-sunny']);
+  });
+
+  it.each([
+    [{ kind: 'formation', unitGrouping: 'verband-iv' }, '$.unitGrouping', /unbekannter Wert/],
+    [{ kind: 'person', states: ['person-happy'] }, '$.states[0]', /unbekannter Wert/],
+    [{ kind: 'person', states: 'person-injured' }, '$.states', /Liste/],
+    // Die Tendenz ist ein Einzelwert: eine Liste ist schon der Form nach falsch.
+    [{ kind: 'person', tendency: ['tendency-rising'] }, '$.tendency', /Zeichenkette/],
+    // Ein Zustand, der keine Tendenz ist, gehört nicht in tendency.
+    [{ kind: 'person', tendency: 'person-injured' }, '$.tendency', /unbekannter Wert/],
+  ])('lehnt %j in den neuen Feldern mit Pfad ab', (input, path, message) => {
+    const error = parseError(input);
+    expect(error.path).toBe(path);
+    expect(error.message).toMatch(message);
+  });
+
   it('meldet einen Fehler als SpecParseError mit Pfad in der Meldung', () => {
     const error = parseError({ kind: 'formation', strength: 'kompanie' });
     expect(error).toBeInstanceOf(Error);

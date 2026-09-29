@@ -352,7 +352,8 @@ Das Schema hat dafür `WeatherIntensity` (`weak`, `moderate`, `strong`, `extreme
 `WeatherParameters`. Die vier Beispiele sind Fixtures (`conformance/src/freestanding-state-fixtures.ts`),
 die Wolke trifft die Hülle im Kennzahlenartefakt.
 
-Weiterhin nicht belegt, jeweils mit Empfehlung:
+Weiterhin nicht belegt, jeweils mit Empfehlung (die drei Punkte sind inzwischen entschieden, siehe
+§10.3):
 
 - **Regen, Hagel, Gewitter an der Wolke.** *Empfehlung:* genauso bauen wie den Schnee (Wolke 3 mm
   hoch, darunter ein bis vier Marken in 8-mm-Teilung), sobald der Eigentümer das bestätigt. Die
@@ -387,3 +388,70 @@ Weiterhin nicht belegt, mit Empfehlung:
   Zustand je Tier, wie bei der Person.
 - **Tier als Grundzeichen.** *Empfehlung:* nein, solange kein Original die Silhouette ohne Zustand
   zeigt. Die Tierzustände bleiben freistehende Zeichen.
+
+### 10.3 5.8.7 Wetter: Entscheidung und Übertragung (29.09.2026, LFH-561)
+
+Ruben Vitt hat am 29. September 2026 entschieden: Ein Wetterzeichen trägt höchstens **die Wolke
+und einen Niederschlag**, dazu eine Intensität. Regen (5.8.7.5), Hagel (5.8.7.6) und Gewitter
+(5.8.7.7) an der Wolke werden **wie der Schnee** gebaut. Das ist eine Übertragung und keine
+Ablesung. Kein Original zeigt diese drei Niederschläge an der Wolke.
+
+Die Übertragung folgt einer Regel, die am Schnee abgelesen ist:
+
+- Die Wolke steht 3 mm angehoben wie in §10.1.
+- Jede Marke füllt das **Band der kleinen Flocke**, y 23 bis 29 (6 mm, ihr Durchmesser), und steht
+  mittig auf derselben Teilung: 8 mm, mittig auf x 16, eine bis vier Marken für schwach bis extrem.
+- Der Strich bleibt 0,5 mm. Elemente mit eigener Größe schrumpfen wie die Flocke auf 3/4 (r 4 → 3).
+
+Angewandt auf die drei Marken:
+
+| Niederschlag | Marke je Stufe an der Wolke | Herleitung |
+| --- | --- | --- |
+| Regen | ein Strich der Regenspur, 15° geneigt, von y 29 bis 23 | Spur aus 5.8.7.5; die Strichelung (4,5 mm Strich, 3 mm Lücke) passt nicht in 6 mm |
+| Hagel | Korn r 1,5 mm auf (x \| 26), Spur darunter und darüber bis an die Bandkanten | Korn r 2 mm aus 5.8.7.6, auf 3/4 verkleinert; die Spur endet am Kornrand wie im Original |
+| Gewitter | der ganze Blitz aus 5.8.7.7, von 18 mm auf 6 mm Höhe verkleinert (1/3), mittig auf (x \| 26) | Zickzack und offener Pfeilkopf unverändert in der Form |
+
+Gebaut ist das in `core/src/geometry/weather.ts`, die Marken stehen in
+`core/src/geometry/pictograms/states/07-weather.ts` (`rainMark`, `hailMark`, `lightningMark`).
+Welche Kombination gilt, steht als Datum in `WEATHER_CLOUD_PRECIPITATION`: Der Schnee ist
+`evidenced` mit den vier Beispielen, Regen, Hagel und Gewitter sind `decided`, ebenso die Grenzen
+„höchstens zwei Werte“ und „Intensität nur an einem Niederschlag unter der Wolke“.
+`classifyWeather` liest diese Daten und ordnet jeden Parametersatz ein: `drawable` (mit
+`basis: 'measured'` oder `'transferred'`), `invalid` (verstößt gegen eine Entscheidung) oder
+`not-measured`. `weatherDrawing` folgt dem Urteil. Im Bausteinregister steht die Grenze des
+Wetters (`perSign`) jetzt als `decided`. Neue Fixtures gibt es nicht, denn eine Übertragung ist
+kein Beleg.
+
+Fragen an den Eigentümer:
+
+1. **Blitz auf 1/3.** Auf 6 mm Höhe werden die Kopfarme rund 1 mm lang, bei 0,5 mm Strich verläuft
+   der Pfeilkopf. *Alternative:* Blitz auf 3/4 wie die Flocke (13,5 mm hoch). Er überdeckte dann
+   die Wolke, oder die Wolke müsste weiter angehoben werden. Ohne Original ist beides eine
+   Konstruktion. *Empfehlung:* 1/3 lassen, bis ein Original oder eine Rückmeldung aus der Praxis
+   vorliegt.
+2. **Regen als ein Strich.** Die Strichelung aus 5.8.7.5 geht im 6-mm-Band verloren; an der Wolke
+   ist Regen deshalb ein durchgezogener Strich je Stufe. Hagel unterscheidet sich durch das Korn,
+   Schnee durch die Flocke. *Empfehlung:* so bestätigen.
+3. **Andere Paare.** Sonne und Wind oder Regen und Schnee ohne Wolke meldet `weatherDrawing`
+   weiter als Lücke (`NotMeasuredError`) und nicht als Fehler. Die Entscheidung nennt nur die
+   Obergrenze. *Frage:* Gilt die zweite Hälfte der Empfehlung aus §10.1 auch („Sonne, Bedeckung,
+   Nebel, Temperatur und Wind nur allein“)? Dann würden diese Paare zum Fehler.
+4. **Niederschlag an der Wolke ohne Intensität.** Bleibt eine Lücke, kein Fehler. *Empfehlung:*
+   wie §10.1, nicht zulassen. Das wäre dann ein Fehler statt einer Lücke.
+
+## 11. Nachtrag: Integrationsschritt (29.09.2026)
+
+`SymbolSpec` trägt `states?: readonly StateId[]` und `tendency?: TendencyId`. `validateSpec` prüft
+`state-value-not-attachable` (Wetter, Tierzustand und Tendenz gehören nicht in `states`),
+`state-carrier-not-allowed` (liest `stateCarriersOf`; ohne belegten oder entschiedenen Träger
+lehnt die Regel nicht ab), `state-group-limit-exceeded` (höchstens ein Hinweis, ein
+Personenzustand und ein Wert je Skala 5.8.2, 5.8.4, 5.8.5) und `state-tactics-not-allowed`
+(5.8.1.1 bis 5.8.1.4). `compose()` legt die Zustände über `placeStates()` an und reicht dessen
+`NotMeasuredError` durch; der Träger ersetzt den Körper. Jede weitere Angabe neben einem Zustand
+(Organisation, Kopf, Fuß, Beschriftung, Marken) lehnt `compose()` als nicht vermessene Kombination
+ab, weil kein Original sie zeigt.
+
+Frage 1 ist nach der Empfehlung umgesetzt: jede Tendenz meldet die Komposition als nicht
+vermessen. Die Trägerregel der Tendenz bleibt deshalb vorgemerkt, die Grenzregel ist gestrichen
+(`tendency` ist ein Einzelfeld). Die belegten Zusammenstellungen stehen als Spec gegen das
+Kennzahlenartefakt in `conformance/src/state-spec-fixtures.test.ts`.

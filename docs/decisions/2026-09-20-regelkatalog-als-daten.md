@@ -272,3 +272,25 @@ anzuzeigen, würde den Fehler verstecken, statt ihn zu melden.
   prüft — er ändert nicht, was er prüft.
 - `core` bleibt ohne Fremd- und Node-Abhängigkeit und browsertauglich: der Katalog ist reine
   Daten, `node:fs` steht nur in der Testdatei.
+
+## 10. Nachtrag 29. September 2026: Erklärungen im Kern, Regeln für Zustände (LFH-579, LFH-577)
+
+Zwei Stellen dieser Notiz sind überholt; die Entscheidungen oben bleiben, ihre Umgebung hat sich
+verschoben.
+
+- **Die Erklärungen liegen im Kern.** Seit LFH-579 stehen Titel, Erklärung und Feld jeder Regel in
+  `packages/core/src/rules/rule-explanations.ts`; `packages/website/src/lib/rule-explanations.ts`
+  reicht sie nur durch. Das Gate aus Abschnitt 8 (Option 2) steht damit neben beiden Hälften in
+  `packages/core/src/rules/rule-explanations.test.ts`. Die Aussage aus Abschnitt 8, ein Gate in
+  `core` sei unmöglich, gilt nicht mehr. Der Wert `reasonSource: 'website'` behält seinen Namen und
+  heißt jetzt: die Begründung steht nur in der Leserinnenerklärung, nicht an der Prüfstelle.
+- **Vier Regeln mehr.** `SymbolSpec` trägt seit LFH-577 `unitGrouping`, `states` und `tendency`.
+  Neu in `validate.ts` sind `state-carrier-not-allowed`, `state-group-limit-exceeded`,
+  `state-tactics-not-allowed` und `state-value-not-attachable`, alle vier fachlich
+  (`'systematik'`) und mit Quellenbezug auf Kapitel 5.8. Damit prüft der Kern 76 Regeln an der
+  Beschreibung (79 Befundstellen) und 6 bei der Komposition; fachlich sind 12 statt 8. Der Verband
+  hat keine eigene Regel, er teilt `head-zone-conflict`. Für die Tendenz bleibt die Trägerregel
+  vorgemerkt (kein Träger belegt oder entschieden), die Grenzregel ist gestrichen, weil `tendency`
+  ein Einzelfeld ist (`packages/core/src/rules/planned-state-rules.ts`).
+- **Lücken.** `state` ist nur noch teilweise offen; `unit-grouping` und `tendency` haben ein Feld,
+  aber keine eigene Regel (`RULE_DIMENSION_GAPS`).

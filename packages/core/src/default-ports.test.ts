@@ -33,6 +33,7 @@ describe('DEFAULT_PORTS', () => {
       organizationColor: core.organizationColor,
       strengthHead: core.strengthHead,
       technicalHeadMark: core.technicalHeadMark,
+      unitGroupingHead: core.unitGroupingHead,
       functionRole: core.functionRole,
       administrativeHead: core.administrativeHead,
       vehicleChassis: core.vehicleChassis,

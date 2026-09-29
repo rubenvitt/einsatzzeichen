@@ -5,10 +5,13 @@ import {
   FUNCTION_ROLE_IDS,
   ORGANIZATION_IDS,
   PALETTE,
+  STATE_IDS,
   STRENGTH_IDS,
   SYMBOL_KINDS,
   TECHNICAL_BODY_MARK_IDS,
   TECHNICAL_HEAD_MARK_IDS,
+  TENDENCY_IDS,
+  UNIT_GROUPING_IDS,
   VEHICLE_CATEGORY_IDS,
   type ColorToken,
   type Drawing,
@@ -100,7 +103,12 @@ const FIELD_TABLE = {
   strength: oneOf(STRENGTH_IDS),
   technicalHeadMark: oneOf(TECHNICAL_HEAD_MARK_IDS),
   administrativeLevel: oneOf(ADMIN_LEVEL_IDS),
+  unitGrouping: oneOf(UNIT_GROUPING_IDS),
   vehicleCategory: oneOf(VEHICLE_CATEGORY_IDS),
+  // Der volle Vorrat wie im Leser: Wetter, Tierzustand und Tendenz erscheinen im Vokabular als
+  // von einer Regel gesperrt, nicht als unbekannt.
+  states: list(STATE_IDS),
+  tendency: oneOf(TENDENCY_IDS),
   capabilities: list(CAPABILITY_IDS),
   // Der volle lesbare Vorrat, nicht nur die irgendwo vermessenen Marken (`BODY_MARK_IDS`): eine
   // Kennung ohne jede Fassung ist ein Befund des Vokabulars („nicht vermessen"), kein

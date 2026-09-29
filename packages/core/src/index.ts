@@ -146,3 +146,33 @@ export {
   type VocabularyOption,
   type VocabularyOptions,
 } from './vocabulary.js';
+// LFH-577 (Integration, Zeichen mit Körper): die Bausteine hinter den neuen Spec-Feldern
+// `unitGrouping`, `states` und `tendency`. `placeStates()` legt Zustände an einen Träger und
+// wirft `NotMeasuredError`, wo die Referenz keine Lage zeigt; die Lagen selbst stehen als Daten
+// daneben. `stateCarriersOf()` ist der Inhalt der Regel `state-carrier-not-allowed`. Dazu die
+// Verbandsköpfe (Port `unitGroupingHead`) und die gezeichneten Sonderformen 3.6–3.9. Der Vorschlag
+// für Verband III (`UNIT_GROUPING_III_PROPOSAL_CX_MM`) bleibt bewusst intern: er ist nicht
+// vermessen und keine Zusage.
+export {
+  placeStates,
+  type PlacedStateCarrier,
+  type PlacedStatePart,
+  type StateCarrierInput,
+  type StatePlacement,
+  type StatePlacementBasis,
+  type StatePlacementInput,
+  type StateTendencyId,
+} from './layout/state-placement.js';
+export {
+  PERSON_STATE_CORNERS_MM,
+  PERSON_STATE_FRAMES,
+  STATE_HINT_LAYOUTS,
+  type PersonStateCorner,
+  type PersonStateFrame,
+  type StateCarrierFrameId,
+  type StateHintId,
+  type StateHintLayout,
+} from './layout/state-frames.js';
+export { stateCarriersOf } from './blocks/state-groups.js';
+export { UNIT_GROUPING_HEADS, unitGroupingHead } from './geometry/unit-groupings.js';
+export { SPECIAL_FORM_IDS_DRAWN, specialFormDrawing } from './geometry/special-form-bodies.js';

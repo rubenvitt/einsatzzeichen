@@ -124,8 +124,9 @@ export type AdminLevelId =
 /**
  * Verbände nach Kapitel 5.5, belegt durch die Referenzdateien
  * `5.5.1–5.5.3_Bereitschaft (Verband I–III).svg`. Die Kennungen benennen den Verbandsgrad und
- * nicht die Organisationsbezeichnung. Ein Feld in `SymbolSpec` gibt es noch nicht (LFH-577), und
- * Geometrie fehlt ebenfalls. Das Bausteinregister führt die drei Werte als Lücke.
+ * nicht die Organisationsbezeichnung. Seit LFH-577 trägt `SymbolSpec.unitGrouping` den Wert.
+ * Verband I und II sind am Formationskörper vermessen (`core/src/geometry/unit-groupings.ts`);
+ * Verband III zeigt kein Original am Körper und bleibt nicht vermessen.
  */
 export type UnitGroupingId = 'verband-i' | 'verband-ii' | 'verband-iii';
 
@@ -409,6 +410,13 @@ export const STATE_IDS = Object.freeze([
 ] as const);
 
 export type StateId = (typeof STATE_IDS)[number];
+
+/**
+ * Die drei Tendenzen aus 5.8.3. Sie stehen als Werte in `STATE_IDS`, gehören an einem Zeichen
+ * aber in das eigene Feld `SymbolSpec.tendency` und nicht in `states` (Entscheidung des
+ * Eigentümers vom 29.09.2026).
+ */
+export type TendencyId = Extract<StateId, 'tendency-rising' | 'tendency-unchanged' | 'tendency-falling'>;
 
 /** IuK-Zeichen nach Anhang J in verbindlicher Kapitelreihenfolge. */
 export const COMMS_IDS = Object.freeze([
@@ -751,7 +759,30 @@ export interface SymbolSpec {
   /** Vermessene technische Kopfmarke ohne erfundene Stärke- oder Organisationssemantik. */
   technicalHeadMark?: TechnicalHeadMarkId;
   administrativeLevel?: AdminLevelId;
+  /**
+   * Verband nach Kapitel 5.5 in der Kopfzone (LFH-577). Vermessen sind Verband I und II am
+   * Formationskörper (ohne Variante und mit Fußband); dieselbe Zeichnung wie die technischen
+   * Kopfmarken `single-vertical-bar` und `double-vertical-bar`, aber mit der Bedeutung des
+   * Verbands. Verband III und jeder andere Körper lehnt `compose()` als nicht vermessen ab. Die
+   * Kopfzone trägt genau eine Angabe: zusammen mit Stärke, Verwaltungsstufe, technischer
+   * Kopfmarke oder Funktionsfassung meldet `validateSpec` `head-zone-conflict`.
+   */
+  unitGrouping?: UnitGroupingId;
   vehicleCategory?: VehicleCategoryId;
+  /**
+   * Zustände nach Kapitel 5.8 an diesem Zeichen (LFH-577): 5.8.1, 5.8.2, 5.8.4, 5.8.5, 5.8.8 und
+   * 5.8.9. Wetter (5.8.7) und Tierzustand (5.8.6) sind freistehende Zeichen, eine Tendenz (5.8.3)
+   * gehört in `tendency` — alle drei lehnt `validateSpec` hier ab. Gezeichnet wird, was die
+   * Referenz an einem Träger zeigt (`placeStates`): ein Personenzustand an der Person und die
+   * Hinweise „?" und „!" an Person und Gefahr. Alles andere wirft `NotMeasuredError`.
+   */
+  states?: readonly StateId[];
+  /**
+   * Höchstens eine Tendenz aus 5.8.3 (Entscheidung des Eigentümers vom 29.09.2026), deshalb ein
+   * Einzelwert und keine Liste. Kein Original zeigt eine Tendenz an einem Träger; `compose()` wirft
+   * bis zu einem Beleg `NotMeasuredError`.
+   */
+  tendency?: TendencyId;
   capabilities?: readonly CapabilityId[];
   /**
    * Dieselben Fähigkeiten wie `capabilities`, aber in ihrer **randbündigen** Darstellung: das

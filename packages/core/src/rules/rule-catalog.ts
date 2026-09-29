@@ -60,8 +60,9 @@ import type { SourceReference } from '@einsatzzeichen/schema';
  *
  * Die sechs `-not-measured`-Kennungen und alle „… requires measured …"-Kennungen sind
  * durchweg `'engine'`; das ist der erwartete Befund und zugleich der Kern des Grammatik-Umbaus:
- * heute lehnt der Motor **64 von 72** Kombinationen ab, weil eine Messung fehlt, und nur **8**,
- * weil die Systematik sie verbietet.
+ * heute lehnt der Motor **64 von 76** Kombinationen ab, weil eine Messung fehlt, und nur **12**,
+ * weil die Systematik sie verbietet. Die vier fachlichen Regeln zu den Zuständen aus 5.8 sind mit
+ * LFH-577 dazugekommen (Entscheidungen des Eigentümers vom 29. September 2026).
  *
  * ---------------------------------------------------------------------------------------------
  * **`reason` und `reasonSource`: warum es die Regel gibt — und wo das heute steht**
@@ -72,22 +73,23 @@ import type { SourceReference } from '@einsatzzeichen/schema';
  * - `'core'` — die Begründung steht in `packages/core` selbst: in der Meldung oder im Kommentar
  *   an der Prüfstelle in `validate.ts`, bei den Kompositionsregeln in `compose.ts` oder
  *   `text-metrics.ts`. Sie liegt damit neben dem Code, den sie erklärt.
- * - `'website'` — die Begründung steht **nur** in
- *   `packages/website/src/lib/rule-explanations.ts`. Der Kern selbst wiederholt an diesen Stellen
- *   nur den Prüfausdruck in Worten („muss endlich und größer als null sein"). Diese Sätze sind
- *   hierher **von Hand gezogen**.
+ * - `'website'` — die Begründung steht **nur** in der Leserinnenerklärung der Regel, nicht an der
+ *   Prüfstelle. Der Wert heißt so, weil diese Erklärungen bis LFH-579 in
+ *   `packages/website/src/lib/rule-explanations.ts` standen; seitdem liegen sie im Kern
+ *   (`rules/rule-explanations.ts`), und die Website ist ihr Konsument. Der Prüfcode selbst
+ *   wiederholt an diesen Stellen nur den Prüfausdruck in Worten („muss endlich und größer als
+ *   null sein"). Diese Sätze sind hierher **von Hand gezogen**.
  *
- * Das ist die eigentliche Aussage dieses Feldes: **27 der 72 Beschreibungsregeln** (mit der
- * einen Kompositionsregel 28 Einträge) begründet heute allein die Website.
+ * Das ist die eigentliche Aussage dieses Feldes: **27 der 76 Beschreibungsregeln** (mit der
+ * einen Kompositionsregel 28 Einträge) begründet allein die Erklärung, nicht die Prüfstelle.
  *
- * **Gegatet sind sie seit dem 21. September 2026.** Ein Gate in `core` ist unmöglich — `core`
- * darf `website` nicht importieren —, aber die Gegenrichtung ist erlaubt: In
- * `packages/website/src/lib/rule-explanations.test.ts` steht seit der Entscheidung zu Option 2
- * ein Block, der genau die Einträge mit `reasonSource: 'website'` aus diesem Katalog zieht und
- * die Erklärung, aus der ihr Satz stammt, per Fingerabdruck festnagelt. Wer die Erklärung
- * umschreibt, wird dort aufgefordert, den Satz hier zu prüfen. Wandert eine Begründung in den
- * Kern, wechselt ihr Eintrag auf `'core'` und fällt aus dem Gate — die Deckungsgleichheit beider
- * Listen erzwingt derselbe Block.
+ * **Gegatet sind sie seit dem 21. September 2026**, seit LFH-579 im Kern: Die Erklärungen und
+ * dieser Katalog liegen im selben Paket, und `rules/rule-explanations.test.ts` zieht genau die
+ * Einträge mit `reasonSource: 'website'` aus diesem Katalog und nagelt die Erklärung, aus der ihr
+ * Satz stammt, per Fingerabdruck fest. Wer die Erklärung umschreibt, wird dort aufgefordert, den
+ * Satz hier zu prüfen. Wandert eine Begründung an die Prüfstelle, wechselt ihr Eintrag auf
+ * `'core'` und fällt aus dem Gate — die Deckungsgleichheit beider Listen erzwingt derselbe Block.
+ * (Bis LFH-579 stand das Gate in der Website, weil `core` `website` nicht importieren darf.)
  *
  * `reason: null` heißt **Begründung nicht belegt** und ist der ausdrückliche Vermerk für den Fall,
  * dass weder Kern noch Website einen Grund nennen. Diese Liste ist derzeit **leer** und im Test
@@ -132,14 +134,17 @@ export type RuleReasonSource = 'core' | 'website';
  * - `kind` und `bodyVariant` der Achsenliste stehen hier als `'base-symbol'` und
  *   `'body-variant'` — die Regeln trennen beide deutlich.
  * - `'label'` hat **keine** Wertachse (Beschriftung ist freier Text, kein Werteraum), trägt aber
- *   44 der 72 Regeln. Ohne diese Dimension wäre der Katalog unbrauchbar.
+ *   44 der 76 Regeln. Ohne diese Dimension wäre der Katalog unbrauchbar.
  * - `'composition'` ist keine Dimension der Systematik, sondern die Einordnung für Regeln, deren
  *   Auflösung überhaupt kein einzelnes Feld benennt. Dasselbe Wort und derselbe Grund wie in
  *   `rule-explanations.ts`; bislang genau `head-zone-conflict`.
- * - `'unit-grouping'` (Verbände 5.5), `'state'` und `'tendency'` (5.8), `'movement'` (5.2) und
- *   `'lines-and-boundaries'` (Kapitel 2) haben **weder** eine Wertachse **noch** ein Feld in
- *   `SymbolSpec` — sie stehen hier, weil der Katalog sonst nicht sagen könnte, dass zu ihnen
- *   keine Regel existiert. Genau das steht in `RULE_DIMENSION_GAPS`.
+ * - `'movement'` (5.2) und `'lines-and-boundaries'` (Kapitel 2) haben **weder** eine Wertachse
+ *   **noch** ein Feld in `SymbolSpec` — sie stehen hier, weil der Katalog sonst nicht sagen
+ *   könnte, dass zu ihnen keine Regel existiert. Genau das steht in `RULE_DIMENSION_GAPS`.
+ * - `'unit-grouping'` (Verbände 5.5), `'state'` und `'tendency'` (5.8) haben seit LFH-577 je ein
+ *   Feld in `SymbolSpec` (`unitGrouping`, `states`, `tendency`). Regeln trägt davon nur `'state'`;
+ *   der Verband teilt die Kopfzonenregel `head-zone-conflict`, die Tendenz hat keinen belegten
+ *   Träger. Was fehlt, steht in `RULE_DIMENSION_GAPS`.
  * - Die Piktogrammachsen `comms`, `damage`, `wildfire`, `leadership` und
  *   `water-rescue-personnel` fehlen bewusst: sie beschreiben eigenständige Piktogramme, die
  *   nicht in `SymbolSpec` stehen und an denen `validateSpec` nichts prüft.
@@ -242,7 +247,7 @@ function entry(
 }
 
 /**
- * Die 72 Regeln, die `validateSpec()` an der Beschreibung prüft — alphabetisch wie
+ * Die 76 Regeln, die `validateSpec()` an der Beschreibung prüft — alphabetisch wie
  * `VALIDATION_RULE_IDS`, damit ein Vergleich der beiden Listen ohne Umsortieren lesbar bleibt.
  */
 export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
@@ -557,7 +562,7 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'head-zone-conflict',
     'systematik',
     'composition',
-    'Stärke, Verwaltungsstufe und technische Kopfmarke belegen dieselbe Kopfzone, und eine Funktionsfassung bindet ihre Kopfzone selbst.',
+    'Stärke, Verwaltungsstufe, technische Kopfmarke und Verband belegen dieselbe Kopfzone, und eine Funktionsfassung bindet ihre Kopfzone selbst.',
     'core',
   ),
   entry(
@@ -619,6 +624,38 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'Die reduzierte Hauskontur ist in beiden F.3-Belegen ausschließlich als weiße HiOrg-Körperfläche vermessen.',
     'core',
     babz('F.3'),
+  ),
+  entry(
+    'state-carrier-not-allowed',
+    'systematik',
+    'state',
+    'Ein Personenzustand aus 5.8.8 und die Werte aus 5.8.1 gehören an die Person, die Hinweise „?" und „!" zusätzlich an die Gefahr; an jedem anderen Grundzeichen hätten sie weder eine belegte Lage noch eine entschiedene Bedeutung (Entscheidung des Eigentümers vom 29.09.2026).',
+    'core',
+    babz('5.8.1, 5.8.8'),
+  ),
+  entry(
+    'state-group-limit-exceeded',
+    'systematik',
+    'state',
+    'Zwei Stufen derselben Skala widersprechen sich; ein Zeichen trägt höchstens einen Hinweis, einen Personenzustand und je einen Wert aus 5.8.2, 5.8.4 und 5.8.5 (Entscheidung des Eigentümers vom 29.09.2026).',
+    'core',
+    babz('5.8.1, 5.8.2, 5.8.4, 5.8.5, 5.8.8'),
+  ),
+  entry(
+    'state-tactics-not-allowed',
+    'systematik',
+    'state',
+    'Die Einsatztaktik 5.8.1.1 bis 5.8.1.4 ist ein eigenes Zeichen und steht an keinem Träger (Entscheidung des Eigentümers vom 29.09.2026).',
+    'core',
+    babz('5.8.1'),
+  ),
+  entry(
+    'state-value-not-attachable',
+    'systematik',
+    'state',
+    'Wetter und Tierzustand sind freistehende Zeichen, und eine Tendenz hat ihr eigenes Feld; in der Liste der Zustände an einem Träger stünden sie an der falschen Stelle.',
+    'core',
+    babz('5.8.3, 5.8.6, 5.8.7'),
   ),
   entry(
     'strength-requires-unit',
@@ -895,7 +932,7 @@ export const RULE_DIMENSION_GAPS: readonly RuleDimensionGap[] = Object.freeze([
     dimension: 'base-symbol',
     coverage: 'partial',
     chapter: 'Kapitel 1, 3.6–3.9, 5.1',
-    note: 'Gegenstand keiner Regel, Bedingung in vielen: die Grundzeichenart tritt nur als Voraussetzung anderer Regeln auf. Welche Arten es überhaupt gibt, regelt die Typebene, nicht der Katalog. Die Sonderformen 3.6 bis 3.9 sind keine Arten: sie stehen ungezeichnet neben dem Zonenmodell (`SPECIAL_FORMS`, LFH-567).',
+    note: 'Gegenstand keiner Regel, Bedingung in vielen: die Grundzeichenart tritt nur als Voraussetzung anderer Regeln auf. Welche Arten es überhaupt gibt, regelt die Typebene, nicht der Katalog. Die Sonderformen 3.6 bis 3.9 sind keine Arten: sie stehen als Einzeldarstellung ihrer Kapiteldatei neben dem Zonenmodell (`specialFormDrawing`, `SPECIAL_FORMS`, LFH-567/LFH-577), ohne Zonen und ohne Spec-Feld, weil kein Original sie an einem Körper zeigt.',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'administrative-level',
@@ -919,25 +956,25 @@ export const RULE_DIMENSION_GAPS: readonly RuleDimensionGap[] = Object.freeze([
     dimension: 'unit-grouping',
     coverage: 'none',
     chapter: '5.5',
-    note: 'Keine Regel und kein Feld in `SymbolSpec`: Verbände oberhalb des Zuges sind im Motor nicht darstellbar.',
+    note: 'Keine eigene Regel: seit LFH-577 trägt `SymbolSpec.unitGrouping` den Verband, und er teilt die Kopfzonenregel `head-zone-conflict` mit Stärke, Verwaltungsstufe und technischer Kopfmarke. Vermessen sind Verband I und II über der Taktischen Formation; Verband III und jeden anderen Körper lehnt die Komposition als nicht vermessen ab (`NotMeasuredError`), bis der Eigentümer entscheidet.',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'state',
-    coverage: 'none',
+    coverage: 'partial',
     chapter: '5.8',
-    note: 'Keine Regel und kein Feld in `SymbolSpec`. Zustände existieren heute nur als eigenständige Piktogramme im Katalog, nicht als Baustein an einem Zeichen.',
+    note: 'Seit LFH-577 trägt `SymbolSpec.states` die Zustände, und vier Regeln sind in Kraft (Träger, Grenze je Skala, keine Taktik am Träger, freistehende Werte). Eine Lage zeigt die Referenz aber nur für einen Personenzustand an der Person und für die Hinweise „?" und „!" an Person und Gefahr; für 5.8.1.5 bis 5.8.1.12, 5.8.2, 5.8.4, 5.8.5 und 5.8.9 ist weder ein Träger belegt noch entschieden, und die Komposition meldet sie als nicht vermessen.',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'tendency',
     coverage: 'none',
     chapter: '5.8',
-    note: 'Keine Regel und kein Feld in `SymbolSpec`; auch keine Wertachse in der Regelabdeckung.',
+    note: 'Keine Regel in Kraft: seit LFH-577 trägt `SymbolSpec.tendency` höchstens eine Tendenz (ein Einzelfeld, eine zweite lässt sich nicht beschreiben), aber kein Original zeigt eine Tendenz an einem Träger. Die Komposition meldet jede Tendenz als nicht vermessen; die Trägerregel bleibt vorgemerkt (`PLANNED_STATE_RULES`), bis ein Träger belegt oder entschieden ist.',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'movement',
     coverage: 'none',
     chapter: '5.2',
-    note: 'Keine Regel und kein Feld in `SymbolSpec`. Die Pfeile sind seit LFH-566 Bausteine mit Verlauf als Parameter (`movementDrawing`); ihr Anbindungspunkt am Körper ist die Zone `movement-anchor`, aber an keiner Körperform vermessen. Zwei Regeln sind vorgemerkt (`PLANNED_PARAMETRIC_RULES`).',
+    note: 'Keine Regel und kein Feld in `SymbolSpec`. Die Pfeile sind seit LFH-566 Bausteine mit Verlauf als Parameter (`movementDrawing`); ihr Anbindungspunkt am Körper ist die Zone `movement-anchor`, belegt nur an der Personenraute unten (5.8.8.12 bis 5.8.8.14, `anchoredMovementPath`), dort als Teil des Personenzustands gezeichnet. Zwei Regeln sind vorgemerkt (`PLANNED_PARAMETRIC_RULES`).',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'lines-and-boundaries',

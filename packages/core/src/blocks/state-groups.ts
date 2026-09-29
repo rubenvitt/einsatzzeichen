@@ -28,8 +28,10 @@ import { STATE_BLOCKS, TENDENCY_BLOCKS } from './states.js';
  *   steht.
  *
  * Alles, was `proposed` oder `open` ist, entscheidet der Eigentümer. Die Fragen stehen gesammelt in
- * `docs/decisions/2026-09-28-lfh-565-kapitel-5-8-bausteine.md`. Die Regelkennungen sind vorgemerkt
- * (`core/src/rules/planned-state-rules.ts`) und treten mit dem Spec-Feld aus LFH-577 in Kraft.
+ * `docs/decisions/2026-09-28-lfh-565-kapitel-5-8-bausteine.md`. Die Regelkennungen für Zustände sind
+ * seit LFH-577 mit den Spec-Feldern `states` und `tendency` in Kraft (Regelkatalog); die
+ * Trägerregel der Tendenz bleibt vorgemerkt, ihre Grenzregel ist gestrichen
+ * (`core/src/rules/planned-state-rules.ts`).
  *
  * Die Maße an den Beispielen stammen aus dem Kennzahlenartefakt, weil die Referenzdateien nicht
  * eingecheckt sind. Das Artefakt erfasst Hüllen gefüllter Flächen, aber keine umgewandelten
@@ -376,12 +378,16 @@ export const STATE_GROUPS: readonly StateGroup[] = Object.freeze([
         'Träger des Niederschlags ist die Wolke aus 5.8.7.2: weiß gefüllt, gleich breit (x 1…31) und gleich hoch (18 mm).',
       ),
       remaining:
-        'Belegt ist nur Schnee an der Wolke. Ob Regen, Hagel und Gewitter ebenso an die Wolke gehen und ob Wetter an einem Grundzeichen stehen darf, ist offen.',
+        'Belegt ist nur Schnee an der Wolke. Regen, Hagel und Gewitter gehen nach der Entscheidung vom 29.09.2026 ebenso an die Wolke, übertragen und nicht abgelesen (`WEATHER_CLOUD_PRECIPITATION` in `core/src/geometry/weather.ts`). Ob Wetter an einem Grundzeichen stehen darf, ist offen.',
     },
     perSign: {
-      status: 'open',
-      question:
-        'Die Beispiele zeigen zwei Wetterwerte zugleich (Wolke und Schnee). Wie viele sind höchstens zulässig, und welche Paare — etwa Sonne und Bedeckung — schließen einander aus?',
+      status: 'decided',
+      value: 2,
+      decision:
+        'Höchstens die Wolke und ein Niederschlag (Regen, Hagel, Gewitter oder Schnee), dazu eine Intensität. Regen, Hagel und Gewitter werden wie der Schnee gebaut; das ist übertragen, nicht abgelesen.',
+      decidedOn: '2026-09-29',
+      by: 'owner',
+      ref: 'docs/decisions/2026-09-28-lfh-565-kapitel-5-8-bausteine.md §10',
     },
     rules: STATE_RULES,
     fixtures: WEATHER_EXAMPLES,
@@ -492,7 +498,7 @@ const PERSON_OR_HAZARD: readonly BlockId[] = Object.freeze(['base-symbol/person'
 
 /**
  * Die Träger, an denen ein einzelner Wert stehen darf — der Inhalt der Regel
- * `state-carrier-not-allowed`, sobald `SymbolSpec.states` sie in Kraft setzt. Feiner als
+ * `state-carrier-not-allowed`, seit LFH-577 von `validateSpec` geprüft. Feiner als
  * `carriers` der Gruppe, weil 5.8.1 zwei Stände hat: die Hinweise 5.8.1.13 und 5.8.1.14 sind an
  * Person und Gefahr belegt, alle übrigen Werte der Gruppe bleiben nach der Entscheidung vom
  * 29.09.2026 an der Person, bis ein Original einen anderen Träger belegt.
@@ -502,9 +508,21 @@ const PERSON_OR_HAZARD: readonly BlockId[] = Object.freeze(['base-symbol/person'
  */
 export function stateCarriersOf(value: StateId): readonly BlockId[] | undefined {
   if (value === 'suspected-situation' || value === 'acute-situation') return PERSON_OR_HAZARD;
+  const group = stateValueGroup(value);
+  if (group === 'tactics-hazards' || group === 'persons') return PERSON;
+  return undefined;
+}
+
+/**
+ * Die Gruppe aus 5.8, zu der ein einzelner Wert gehört — über den Abschnitt seiner Zeichnung im
+ * Register, wie `stateGroupOf`. `validateSpec` liest damit, ob ein Wert überhaupt in
+ * `SymbolSpec.states` gehört und welche Skala er belegt (LFH-577). Wirft für einen Wert ohne
+ * Registereintrag: das wäre ein Programmfehler, keine Eingabe.
+ */
+export function stateValueGroup(value: StateId): StateGroupId {
   const entry = [...STATE_BLOCKS, ...TENDENCY_BLOCKS].find((candidate) => candidate.valueId === value);
   if (entry === undefined) throw new Error(`Zustand ohne Registereintrag: ${value}`);
   const group = stateGroupOf(entry);
-  if (group?.id === 'tactics-hazards' || group?.id === 'persons') return PERSON;
-  return undefined;
+  if (group === undefined) throw new Error(`Zustand ohne Gruppe: ${value}`);
+  return group.id;
 }

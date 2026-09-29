@@ -23,6 +23,7 @@ import {
   SYMBOL_KINDS,
   TECHNICAL_BODY_MARK_IDS,
   TECHNICAL_HEAD_MARK_IDS,
+  UNIT_GROUPING_IDS,
   VEHICLE_CATEGORY_IDS,
   WATER_RESCUE_PERSONNEL_IDS,
   WILDFIRE_IDS,
@@ -125,6 +126,9 @@ export function ruleCoverage(
       ...elementValues(elements, 'strength'),
     ]),
     axis('technicalHeadMark', ids(TECHNICAL_HEAD_MARK_IDS), defined(specs.map((spec) => spec.technicalHeadMark))),
+    // Seit LFH-577: der Verband im eigenen Feld. Die sechs Rezepte mit Kopfbalken tragen ihn statt
+    // der gleich gezeichneten technischen Kopfmarke; Verband III zeigt kein Original am Körper.
+    axis('unitGrouping', ids(UNIT_GROUPING_IDS), defined(specs.map((spec) => spec.unitGrouping))),
     axis('administrativeLevel', ids(ADMIN_LEVEL_IDS), defined(specs.map((spec) => spec.administrativeLevel))),
     axis('functionRole', ids(FUNCTION_ROLE_IDS), defined(specs.map((spec) => spec.functionRole))),
     axis('vehicleCategory', ids(VEHICLE_CATEGORY_IDS), [
@@ -260,9 +264,11 @@ export function reachSignature(spec: SymbolSpec): string {
     ? `strength:${spec.strength}`
     : spec.technicalHeadMark !== undefined
       ? `technicalHeadMark:${spec.technicalHeadMark}`
-      : spec.administrativeLevel !== undefined
-        ? `administrativeLevel:${spec.administrativeLevel}`
-        : '';
+      : spec.unitGrouping !== undefined
+        ? `unitGrouping:${spec.unitGrouping}`
+        : spec.administrativeLevel !== undefined
+          ? `administrativeLevel:${spec.administrativeLevel}`
+          : '';
   return [spec.kind, spec.bodyVariant ?? '', spec.organization ?? '', head, spec.vehicleCategory ?? ''].join('|');
 }
 
@@ -306,6 +312,7 @@ export function generativeReach(recipes: readonly Recipe[] = Object.values(RECIP
     {},
     ...STRENGTH_IDS.map((strength) => ({ strength })),
     ...TECHNICAL_HEAD_MARK_IDS.map((technicalHeadMark) => ({ technicalHeadMark })),
+    ...UNIT_GROUPING_IDS.map((unitGrouping) => ({ unitGrouping })),
     ...ADMIN_LEVEL_IDS.map((administrativeLevel) => ({ administrativeLevel })),
   ];
   const bodyVariants = [undefined, ...BODY_VARIANT_IDS];

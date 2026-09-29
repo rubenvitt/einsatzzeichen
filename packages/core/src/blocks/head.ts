@@ -69,8 +69,8 @@ export const STRENGTH_BLOCKS: readonly BlockEntry[] = Object.freeze([
  * `docs/decisions/2026-09-29-lfh-577-verband-5-5.md`. Der frühere Befund zu E.1.31
  * (`coverage-manifest.ts`: „5.5.2 trifft die Zahl der Balken, nicht das Maß") verglich die
  * vergrößerte Kapiteldatei mit der Marke am Körper. Dieselbe Abweichung zeigt die Stärke (5.4: r 4
- * gegen 1,5 mm); maßgeblich ist die Marke am Körper. Ein Feld in `SymbolSpec` fehlt weiterhin
- * (LFH-577, Integrationsschritt).
+ * gegen 1,5 mm); maßgeblich ist die Marke am Körper. Seit dem Integrationsschritt trägt
+ * `SymbolSpec.unitGrouping` den Verband (Port `unitGroupingHead`).
  */
 const UNIT_GROUPING_NOTE =
   'Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert. Balken 1,5 × 4 mm, ' +
@@ -127,7 +127,7 @@ export const UNIT_GROUPING_BLOCKS: readonly BlockEntry[] = Object.freeze([
  * und im Regelkatalog; der Bereich schließt Kommentar und Kennung ein.
  */
 const ADMIN_BINDING_RULE = 'administrative-level-not-measured';
-const ADMIN_BINDING_AT = 'core/src/validate.ts:556–569';
+const ADMIN_BINDING_AT = 'core/src/validate.ts:560–573';
 
 /**
  * Benannte Ausnahme für die drei vermessenen Stufen. Hier ist die Bindung an die Funktionsfassung
@@ -139,7 +139,7 @@ const ADMIN_BINDING_MEASURED: BlockCombinationBinding = Object.freeze({
   definedAt: ADMIN_BINDING_AT,
   reason:
     'Der Verwaltungskopf wird nur zusammen mit einer exakt aufgelösten Funktionsfassung gesetzt. ' +
-    '`compose.ts:1015–1024` platziert ihn nur, wenn `roleDefinition` vorliegt, und zwar an deren ' +
+    '`compose.ts:1163–1172` platziert ihn nur, wenn `roleDefinition` vorliegt, und zwar an deren ' +
     '`layout.headTopMm`, also nicht über die allgemeine Kopfzone. `validate.ts` lehnt die Stufe ' +
     'ohne aufgelöste Funktionsfassung mit dieser Regel ab, obwohl der Kopf vermessen ist. Ohne ' +
     'Funktionsfassung ist der Baustein heute nicht darstellbar.',
@@ -163,9 +163,9 @@ const ADMIN_BINDING_NOT_MEASURED: BlockCombinationBinding = Object.freeze({
 const ADMIN_UNDOCUMENTED =
   UNDOCUMENTED_AT_SOURCE +
   'Die Konstante in `administrative-heads.ts` trägt keinen Kommentar. Den Abschnitt D.3/D.4 nennen ' +
-  'erst `validate.ts:556–558` und die Regel `administrative-level-not-measured`.';
+  'erst `validate.ts:560–562` und die Regel `administrative-level-not-measured`.';
 
-const ADMIN_GAP_AT = 'core/src/rules/rule-catalog.ts:898–903';
+const ADMIN_GAP_AT = 'core/src/rules/rule-catalog.ts:935–940';
 const ADMIN_GAP_REASON =
   'Keine Geometrie in `ADMINISTRATIVE_HEADS`. Der Regelkatalog: „Eine Regel, aber nur drei der ' +
   'sechs Stufen belegt (D.3/D.4). Gemeinde, Bezirk und Bundesland lehnt der Motor pauschal ab, ' +
@@ -234,7 +234,7 @@ export const TECHNICAL_HEAD_MARK_BLOCKS: readonly BlockEntry[] = Object.freeze([
     measured(
       'core/src/geometry/technical-head-marks.ts:7–18',
       UNDOCUMENTED_AT_SOURCE +
-        'Die Konstante trägt keinen Kommentar. Belege nennt nur `validate.ts:580–582`, und zwar ' +
+        'Die Konstante trägt keinen Kommentar. Belege nennt nur `validate.ts:584–586`, und zwar ' +
         'für die technische Kopfmarke als Ganzes (F.1.1, F.1.13, F.1.21, E.1.31, I.1.4), nicht je Wert.',
     ),
   ),

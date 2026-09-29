@@ -85,8 +85,9 @@ fachkundigen Person vorgelegt.
 ## Für Entwicklerinnen und Entwickler
 
 Der Baukasten ist ein Formular über die Felder der `SymbolSpec`. Bei jeder Änderung läuft
-`validateSpec()`; die gefundenen Verstöße tragen eine Regel-ID, die über
-`src/lib/rule-explanations.ts` auf einen Satz in Klarsprache abgebildet wird. Ein Test verlangt,
+`validateSpec()`; die gefundenen Verstöße tragen eine Regel-ID, die `explainIssue()` aus
+`@einsatzzeichen/core` auf einen Satz in Klarsprache abbildet. Die Texte stehen seit LFH-579 im
+Kern (`src/rules/rule-explanations.ts`), die Website reicht sie nur durch. Ein Test verlangt,
 dass jede ID aus `VALIDATION_RULE_IDS` dort einen Eintrag hat — deshalb bleibt keine Meldung
 unerklärt.
 
