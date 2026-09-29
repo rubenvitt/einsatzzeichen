@@ -78,8 +78,8 @@ describe('CAPABILITY_INSET_FORMS', () => {
   it('führt jedes Paar aus Fähigkeit und Körperfassung genau einmal', () => {
     const keys = CAPABILITY_INSET_FORMS.map(key);
     expect(new Set(keys).size).toBe(keys.length);
-    // 52 aus LFH-587, dazu 24 aus Anhang C (LFH-786), davon 8 zweite Fassungen.
-    expect(keys).toHaveLength(76);
+    // 52 aus LFH-587, dazu 24 aus Anhang C (LFH-786), davon 8 zweite Fassungen, und C.1.4 (LFH-787).
+    expect(keys).toHaveLength(77);
     expect(CAPABILITY_INSET_FORMS.filter((form) => form.rendition !== undefined)).toHaveLength(8);
   });
 
@@ -108,7 +108,7 @@ describe('CAPABILITY_INSET_FORMS', () => {
   it('zählt die drei Behandlungen', () => {
     const count = (treatment: string): number =>
       CAPABILITY_INSET_FORMS.filter((form) => form.treatment === treatment).length;
-    expect([count('flush'), count('reduced'), count('reshaped')]).toEqual([28, 43, 5]);
+    expect([count('flush'), count('reduced'), count('reshaped')]).toEqual([28, 44, 5]);
   });
 
   it('findet eine Fassung über Fähigkeit, Körperform und Variante, und keine ohne Messung', () => {
@@ -147,12 +147,13 @@ describe('CAPABILITY_INSET_RULE', () => {
       expect(finding.evidence.length, name).toBeGreaterThan(0);
     }
     expect(unmeasuredPairs).toEqual({
-      target: 'measured-rendition-only',
-      inForce: 'unscaled-if-fits',
+      target: 'measured-rendition-else-unscaled-if-fits',
+      inForce: 'measured-rendition-else-unscaled-if-fits',
       rule: 'capabilities-pictogram-overflows-body',
+      measuredRule: 'capabilities-pictogram-has-measured-rendition',
       decidedOn: '2026-09-29',
-      decidedBy: 'Koordinator (delegiert)',
-      decidedIn: 'docs/decisions/2026-09-29-lfh-587-kapitel-4-piktogramme-im-innenfeld.md',
+      decidedBy: 'Projektinhaber',
+      decidedIn: 'docs/decisions/2026-09-29-lfh-787-boxfassung-abloesen.md',
     });
   });
 

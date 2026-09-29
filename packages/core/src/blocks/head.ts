@@ -165,7 +165,7 @@ const ADMIN_UNDOCUMENTED =
   'Die Konstante in `administrative-heads.ts` trägt keinen Kommentar. Den Abschnitt D.3/D.4 nennen ' +
   'erst `validate.ts:565–567` und die Regel `administrative-level-not-measured`.';
 
-const ADMIN_GAP_AT = 'core/src/rules/rule-catalog.ts:1027–1032';
+const ADMIN_GAP_AT = 'core/src/rules/rule-catalog.ts:1034–1039';
 const ADMIN_GAP_REASON =
   'Keine Geometrie in `ADMINISTRATIVE_HEADS`. Der Regelkatalog: „Eine Regel, aber nur drei der ' +
   'sechs Stufen belegt (D.3/D.4). Gemeinde, Bezirk und Bundesland lehnt der Motor pauschal ab, ' +

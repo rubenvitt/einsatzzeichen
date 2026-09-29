@@ -141,12 +141,13 @@ describe('Die Regel des Innenfelds, Aussage für Aussage', () => {
     );
     // Bis LFH-587 lag zwischen 0,22 und 0,37 kein Messwert. Anhang C setzt zwei Fassungen hinein
     // (LFH-786): C.2.18 mit 0,28 und C.2.26 genau auf die Grenze 0,30. Leer ist nur noch 0,30…0,37.
+    // C.1.4 (LFH-787) zeichnet dieselbe Fassung wie C.2.18 in der Formation, also ebenfalls 0,28.
     expect(
       nonFlush
         .filter((entry) => entry.measurement.uniformity > 0.22 && entry.measurement.uniformity < 0.37)
         .map((entry) => `${entry.fixture} ${entry.measurement.uniformity}`)
         .sort(),
-    ).toEqual(['C.2.18 0.28', 'C.2.26 0.3']);
+    ).toEqual(['C.1.4 0.28', 'C.2.18 0.28', 'C.2.26 0.3']);
     expect(reducedMax).toBe(0.3);
     expect(reshapedMin).toBe(0.37);
     expect(reducedMax).toBeLessThanOrEqual(CAPABILITY_INSET_REDUCED_UNIFORMITY_LIMIT);
@@ -191,6 +192,7 @@ describe('Die Regel des Innenfelds, Aussage für Aussage', () => {
       'drinking-water',
       'fire-fighting',
       'maintenance',
+      'technical-assistance',
       'temporary-accommodation-resting',
       'waste-disposal',
       'water-conveyance',

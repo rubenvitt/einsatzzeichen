@@ -122,9 +122,14 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
     `bottomRight-Grundlinie außerhalb der Hülle (${VT}).`,
   ),
   evidence(
-    'capabilities-pictogram-overflows-body',
+    'capabilities-pictogram-has-measured-rendition',
     { kind: 'formation', organization: 'feuerwehr', strength: 'gruppe', capabilities: ['medical-service'] },
-    `Das Sanitätskreuz 4.6.1 ragt unskaliert über den Formationskörper (${VT}, LFH-587).`,
+    `Das Sanitätskreuz 4.6.1 hat an der Formation eine vermessene Körperfassung (D.1.9, F.1.4 ff.); die Boxfassung ist dort abgelehnt (${VT}, LFH-787).`,
+  ),
+  evidence(
+    'capabilities-pictogram-overflows-body',
+    { kind: 'formation', organization: 'feuerwehr', strength: 'gruppe', capabilities: ['blasting'] },
+    `Das Sprengen ragt unskaliert über den Formationskörper und hat dort keine vermessene Fassung (${VT}, LFH-587).`,
   ),
   evidence('center-anchor-override-requires-measured-trailer', { kind: 'trailer', labels: { center: 'Tauchen', centerAnchorFromBodyLeftMm: 8.23 } }, `Linksanker am nicht vermessenen Anhänger (${VT}).`),
   evidence('center-baseline-not-measured', { kind: 'trailer', labels: { center: 'X', centerBaselineFromBodyBottomMm: 10, centerCapHeightMm: 2.191447 } }, `Nicht vermessene Anhänger-Grundlinie (${VT}).`),

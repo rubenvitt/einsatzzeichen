@@ -10,6 +10,7 @@ export const VERBATIM_TABLE: ReadonlyArray<
   ["{\"bodyMarks\":[\"fire-fighting\"],\"kind\":\"formation\",\"organization\":\"feuerwehr\",\"strength\":\"staffel\"}","C.1.1","C.1.1_Löschstaffel.svg"],
   ["{\"bodyMarks\":[\"fire-fighting\"],\"kind\":\"formation\",\"organization\":\"feuerwehr\",\"strength\":\"gruppe\"}","C.1.2","C.1.2_Löschgruppe.svg"],
   ["{\"bodyMarks\":[\"fire-fighting\"],\"kind\":\"formation\",\"organization\":\"feuerwehr\",\"strength\":\"zug\"}","C.1.3","C.1.3_Löschzug einer Feuerwehr.svg"],
+  ["{\"bodyMarks\":[\"technical-assistance\"],\"kind\":\"formation\",\"organization\":\"feuerwehr\",\"strength\":\"zug\"}","C.1.4","C.1.4_Rüstzug einer Feuerwehr.svg"],
   ["{\"bodyMarks\":[\"cbrn-detection\"],\"kind\":\"formation\",\"organization\":\"feuerwehr\",\"strength\":\"trupp\"}","C.1.7","C.1.7_CBRN-Erkundungstrupp.svg"],
   ["{\"bodyMarks\":[\"decontamination\"],\"kind\":\"formation\",\"labels\":{\"center\":\"P\",\"centerBaselineFromBodyBottomMm\":3,\"inBodyInk\":\"koerperlauf-kontrast\"},\"organization\":\"feuerwehr\",\"strength\":\"staffel\"}","C.1.8","C.1.8_Staffel Dekontamination  von Personal.svg"],
   ["{\"bodyMarks\":[\"fire-fighting\"],\"kind\":\"vehicle-land\",\"labels\":{\"inBodyInk\":\"koerperlauf-kontrast\",\"topLeft\":\"LF 20 KatS\",\"topLeftMetrics\":{\"anchorFromBodyLeftMm\":1.520031,\"baselineFromBodyTopMm\":6.25,\"capHeightMm\":2.919225}},\"organization\":\"feuerwehr\",\"vehicleCategory\":\"kfz-kategorie-2\"}","C.2.10","C.2.10_Löschgruppenfahrzeug 20 Katastrophenschutz.svg"],

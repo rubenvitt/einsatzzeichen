@@ -622,7 +622,7 @@ export interface ReleaseBlockers {
  * bleibt, und fein genug, dass Kapitel 4 und Anhang C nicht in einen Topf fallen.
  *
  * Öffentlich aus demselben Grund wie `sectionOf`: das Fachreview-Werkzeug (`packages/review`)
- * gliedert alle 581 Manifestzeilen nach Bereich, nicht nur die offenen. Es gibt damit weiterhin
+ * gliedert alle 582 Manifestzeilen nach Bereich, nicht nur die offenen. Es gibt damit weiterhin
  * genau eine Bereichslogik — die hier.
  */
 export function areaOf(section: string): string {

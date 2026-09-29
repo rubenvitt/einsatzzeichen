@@ -43,8 +43,8 @@ describe('specKey()', () => {
 
   it('liest bodyMarks und capabilities als Multimenge (Belegstellen im Modulkommentar)', () => {
     expect(specKey({ ...base, bodyMarks: ['care', 'medical-service'] })).toBe(specKey(base));
-    expect(specKey({ kind: 'formation', capabilities: ['fire-fighting', 'decontamination'] }))
-      .toBe(specKey({ kind: 'formation', capabilities: ['decontamination', 'fire-fighting'] }));
+    expect(specKey({ kind: 'formation', capabilities: ['foam-agent', 'service-water'] }))
+      .toBe(specKey({ kind: 'formation', capabilities: ['service-water', 'foam-agent'] }));
     // Doppelte bleiben erhalten: keine stille Gleichsetzung von ['a', 'a'] und ['a'].
     expect(specKey({ kind: 'formation', bodyMarks: ['care', 'care'] }))
       .not.toBe(specKey({ kind: 'formation', bodyMarks: ['care'] }));

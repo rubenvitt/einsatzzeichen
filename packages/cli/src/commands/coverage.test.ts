@@ -86,8 +86,8 @@ describe('coverage CLI', () => {
     // LFH-483 fünf I-e-Darstellungen, LFH-481 vier I-c-Darstellungen und LFH-489 drei I-k-Rezepte:
     // insgesamt 536. LFH-487 ergänzt die vier fehlenden I.2.4 bis I.2.7: insgesamt 540;
     // LFH-484 ergänzt die vier I-f-Darstellungen I.1.13 bis I.1.16: insgesamt 544. LFH-786
-    // ergänzt C.1.7, C.1.8 und 35 Darstellungen aus C.2: insgesamt 581.
-    expect(manifestCarriers).toBe(581);
+    // ergänzt C.1.7, C.1.8 und 35 Darstellungen aus C.2: insgesamt 581. LFH-787 ergänzt C.1.4: 582.
+    expect(manifestCarriers).toBe(582);
     expect(sourceCarriers).toBe(13);
     expect(profileCarriers).toBe(1);
     // Offen kann nie mehr sein als Träger da sind — die einzige Schranke, die der Reviewstand
@@ -104,7 +104,7 @@ describe('coverage CLI', () => {
     // werden deshalb weiter einzeln ausgewiesen. Dasselbe gilt seit LFH-786 für C.1.7, C.1.8 und
     // die gebauten C.2-Nummern: weder C.1 noch C.2 ist lückenlos.
     expect(lines).toContain(
-      'Umfang:      1, 2, 4, 5.1.1, 5.4, 5.8, C.1.1, C.1.2, C.1.3, C.1.7, C.1.8, C.2.4, C.2.5, C.2.6, C.2.7, C.2.8, C.2.9, C.2.10, C.2.11, C.2.12, C.2.13, C.2.14, C.2.15, C.2.16, C.2.17, C.2.18, C.2.20, C.2.23, C.2.24, C.2.25, C.2.26, C.2.27, C.2.28, C.2.29, C.2.30, C.2.31, D, E, F, G, H, I.1.1, I.1.2, I.1.3, I.1.4, I.1.5, I.1.6, I.1.7, I.1.8, I.1.9, I.1.10, I.1.11, I.1.12, I.1.13, I.1.14, I.1.15, I.1.16, I.1.17, I.1.18, I.1.19, I.1.20, I.2.1, I.2.2, I.2.3, I.2.4, I.2.5, I.2.6, I.2.7, I.3, I.4.1, I.4.2, I.4.3, I.5.1, I.5.2, I.5.3, I.5.4, I.5.5, I.5.6, I.5.7, I.5.8, J.1, J.2, J.3, J.4, K, L, M, N',
+      'Umfang:      1, 2, 4, 5.1.1, 5.4, 5.8, C.1.1, C.1.2, C.1.3, C.1.4, C.1.7, C.1.8, C.2.4, C.2.5, C.2.6, C.2.7, C.2.8, C.2.9, C.2.10, C.2.11, C.2.12, C.2.13, C.2.14, C.2.15, C.2.16, C.2.17, C.2.18, C.2.20, C.2.23, C.2.24, C.2.25, C.2.26, C.2.27, C.2.28, C.2.29, C.2.30, C.2.31, D, E, F, G, H, I.1.1, I.1.2, I.1.3, I.1.4, I.1.5, I.1.6, I.1.7, I.1.8, I.1.9, I.1.10, I.1.11, I.1.12, I.1.13, I.1.14, I.1.15, I.1.16, I.1.17, I.1.18, I.1.19, I.1.20, I.2.1, I.2.2, I.2.3, I.2.4, I.2.5, I.2.6, I.2.7, I.3, I.4.1, I.4.2, I.4.3, I.5.1, I.5.2, I.5.3, I.5.4, I.5.5, I.5.6, I.5.7, I.5.8, J.1, J.2, J.3, J.4, K, L, M, N',
     );
     // Die Ausnahme ist im Betrieb sichtbar und nicht nur im Gate. Sie steht bewusst **nicht** in
     // der Blockerzeile darunter: ein Blocker ist ein offener Punkt, diese Ausnahme ist ein
@@ -147,14 +147,16 @@ describe('coverage CLI', () => {
     expect(lines).toContain(
       // LFH-786: 585 = 550 + 35 neu beanspruchte Dateien (C.1.7 und C.1.8 waren schon Belege der
       // Stärkegrade); 76 = 47 außerhalb + 9 + 1 + 19 zurückgestellt (neu: C.2.24-Alternative).
-      'Referenzabdeckung:   585/661 Dateien beansprucht; 76 nicht — 47 außerhalb des Umfangs, ' +
+      // LFH-787: C.1.4 beansprucht, 586 und 75 = 46 + 9 + 1 + 19.
+      'Referenzabdeckung:   586/661 Dateien beansprucht; 75 nicht — 46 außerhalb des Umfangs, ' +
         '9 Beispielanwendungen, 1 Übersichtsblatt, 19 zurückgestellt, 0 nicht zugeordnet',
     );
     expect(lines.some((line) => line.startsWith('  Nicht zugeordnet:'))).toBe(false);
     // 78 seit LFH-786 (74 auf main plus die vier Zustandsregeln aus LFH-577):
     // `body-mark-rendition-not-measured` ist die eine neue Validierungsregel.
+    // 79 seit LFH-787: `capabilities-pictogram-has-measured-rendition`.
     expect(lines).toContain(
-      'Regelabdeckung:      13/17 Achsen vollständig belegt; 78 Validierungsregeln ' +
+      'Regelabdeckung:      13/17 Achsen vollständig belegt; 79 Validierungsregeln ' +
         '(Testfall je Regel durch core-Test erzwungen)',
     );
     expect(lines).toContain(

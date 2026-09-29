@@ -39,6 +39,8 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   },
   'bbk-babz-2025:C.1.2#primary': { status: 'pending' },
   'bbk-babz-2025:C.1.3#primary': { status: 'pending' },
+  // LFH-787: Rüstzug mit der Formationsfassung der Technischen Hilfeleistung; fachlich offen.
+  'bbk-babz-2025:C.1.4#primary': { status: 'pending' },
   'bbk-babz-2025:C.1.7#primary': { status: 'pending' },
   'bbk-babz-2025:C.1.8#primary': { status: 'pending' },
   'bbk-babz-2025:C.2.4#primary': { status: 'pending' },

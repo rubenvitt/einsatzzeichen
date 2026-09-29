@@ -4,12 +4,60 @@ import { stroke } from './shared.js';
 
 /*
  * C.2.18 und C.2.30: Technische Hilfeleistung (4.7.18) am Landfahrzeug und Stromversorgung (4.8.11) am Anhänger mit Fußband (LFH-786).
+ * Die Konstruktion der Technischen Hilfeleistung nutzt auch die Formation in C.1.4 (LFH-787, `formation.ts`).
  */
 
 const STROKE: Style = { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM };
 
 /** Auf 1 µm gerundet, damit keine Gleitkommareste wie 15.600000000000001 im Pfad landen. */
 const um = (valueMm: number): number => Math.round(valueMm * 1e6) / 1e6;
+
+/**
+ * Die Marke der Technischen Hilfeleistung aus C.2.18 und C.1.4, konstruiert gegen die Körpermitte
+ * `cx` und die senkrechte Mitte der Marke `cy` (Mitte des Geräts). Maße und Herleitung stehen an
+ * der Fassung des Landfahrzeugs unten; C.1.4 setzt dieselbe Marke nur an ein anderes `cy`.
+ */
+export function technicalAssistanceMark(cx: number, cy: number): Primitive[] {
+  const leftX = cx - 13;
+  const deviceLeftX = cx - 6;
+  const deviceRightX = cx + 7;
+  const rayEndX = cx + 13;
+  const deviceTopY = cy - 2.5;
+  const deviceBottomY = cy + 2.5;
+
+  const wave = (troughY: number): Primitive => {
+    const crestY = um(troughY - 2);
+    const midX = um((leftX + deviceLeftX) / 2);
+    const half = (deviceLeftX - leftX) / 2;
+    const lever = half / 2;
+    return {
+      type: 'path',
+      role: 'pictogram',
+      d:
+        `M ${um(leftX)} ${um(troughY)} ` +
+        `C ${um(leftX + lever)} ${um(troughY)} ${um(midX - lever)} ${crestY} ${midX} ${crestY} ` +
+        `C ${um(midX + lever)} ${crestY} ${um(deviceLeftX - lever)} ${um(troughY)} ` +
+        `${um(deviceLeftX)} ${um(troughY)}`,
+      style: STROKE,
+    };
+  };
+
+  return [
+    {
+      type: 'rect',
+      role: 'pictogram',
+      x: deviceLeftX,
+      y: deviceTopY,
+      width: deviceRightX - deviceLeftX,
+      height: deviceBottomY - deviceTopY,
+      style: STROKE,
+    },
+    wave(cy - 0.5),
+    wave(cy + 1.5),
+    stroke(deviceRightX, deviceTopY, rayEndX, cy - 5),
+    stroke(deviceRightX, deviceBottomY, rayEndX, cy + 5),
+  ];
+}
 
 /** Landfahrzeug ohne Variante (Hülle x 1…31, y 5,75…26). */
 const VEHICLE_LAND_MARKS: MarkTable = {
@@ -42,52 +90,12 @@ const VEHICLE_LAND_MARKS: MarkTable = {
    * (29 → 26 mm).
    *
    * C.1.4 (Rüstzug, Formation) trägt dieselbe Marke Maß für Maß, nur 0,5 mm höher: Gerät
-   * y 13,5…18,5, also auf der Formationsmitte 16 statt auf `maxY − 9,5`. C.1.4 ist nicht Teil
-   * dieser Fassung.
+   * y 13,5…18,5, also auf der Formationsmitte 16 statt auf `maxY − 9,5`. Diese Fassung steht als
+   * eigenes Paar mit der Formation in `formation.ts` (LFH-787) und nutzt dieselbe Konstruktion
+   * (`technicalAssistanceMark`).
    */
-  'technical-assistance': (bounds) => {
-    const cx = (bounds.minX + bounds.maxX) / 2;
-    const cy = bounds.maxY - 9.5;
-    const leftX = cx - 13;
-    const deviceLeftX = cx - 6;
-    const deviceRightX = cx + 7;
-    const rayEndX = cx + 13;
-    const deviceTopY = cy - 2.5;
-    const deviceBottomY = cy + 2.5;
-
-    const wave = (troughY: number): Primitive => {
-      const crestY = um(troughY - 2);
-      const midX = um((leftX + deviceLeftX) / 2);
-      const half = (deviceLeftX - leftX) / 2;
-      const lever = half / 2;
-      return {
-        type: 'path',
-        role: 'pictogram',
-        d:
-          `M ${um(leftX)} ${um(troughY)} ` +
-          `C ${um(leftX + lever)} ${um(troughY)} ${um(midX - lever)} ${crestY} ${midX} ${crestY} ` +
-          `C ${um(midX + lever)} ${crestY} ${um(deviceLeftX - lever)} ${um(troughY)} ` +
-          `${um(deviceLeftX)} ${um(troughY)}`,
-        style: STROKE,
-      };
-    };
-
-    return [
-      {
-        type: 'rect',
-        role: 'pictogram',
-        x: deviceLeftX,
-        y: deviceTopY,
-        width: deviceRightX - deviceLeftX,
-        height: deviceBottomY - deviceTopY,
-        style: STROKE,
-      },
-      wave(cy - 0.5),
-      wave(cy + 1.5),
-      stroke(deviceRightX, deviceTopY, rayEndX, cy - 5),
-      stroke(deviceRightX, deviceBottomY, rayEndX, cy + 5),
-    ];
-  },
+  'technical-assistance': (bounds) =>
+    technicalAssistanceMark((bounds.minX + bounds.maxX) / 2, bounds.maxY - 9.5),
 };
 
 /** Anhänger mit Fußband (Hülle x 4…31, y 5,75…26; Band y 23…26). */

@@ -9,8 +9,9 @@ import type { SymbolSpec } from '@einsatzzeichen/schema';
  *   die Kombinationsfassungen in `core/src/geometry/body-marks.ts` (`combinationBuild`) wählen über
  *   `candidate.marks.every((mark) => marks.includes(mark))` bei gleicher Länge — ebenfalls
  *   reihenfolgefrei.
- * - `capabilities`: `validateSpec` prüft nur, ob das Feld gesetzt ist; `compose` hängt die
- *   Piktogramme je Fähigkeit aneinander.
+ * - `capabilities`: `validateSpec` liest die Liste nur je Eintrag (`filter`, `includes`), also
+ *   ebenfalls als Menge (LFH-587, LFH-787); `compose` hängt die Piktogramme je Fähigkeit
+ *   aneinander.
  *
  * **Was die Reihenfolge trotzdem ändert:** `compose` legt die Primitive in Listenreihenfolge ab,
  * zwei Specs mit gleichem Schlüssel können also Zeichnungen mit anderer Kindreihenfolge (und damit

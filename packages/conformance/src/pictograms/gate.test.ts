@@ -142,7 +142,11 @@ function singleDepictionBodyFor(definition: CatalogPictogramDefinition): Primiti
  * Layoutfällen"). Genau diese stehen hier ausdrücklich, damit der Kompositionstest nicht leer
  * durchläuft.
  *
- * Belegt ist die in-body-Tauglichkeit hier damit nur für `fire-fighting` und `service-water`. Für
+ * Seit LFH-787 (Entscheidung AB) setzen sie `foam-agent` statt `fire-fighting`: Die
+ * Brandbekämpfung hat an der Formation eine vermessene Körperfassung, und `validateSpec` lehnt die
+ * Boxfassung dort ab (`capabilities-pictogram-has-measured-rendition`).
+ *
+ * Belegt ist die in-body-Tauglichkeit hier damit nur für `foam-agent` und `service-water`. Für
  * alle 92 Kapitel-4-Piktogramme und die acht Körperformen mit Flächenmodell steht seit LFH-587
  * fest, welche unskaliert passen (`CAPABILITY_UNSCALED_FIT`, gegatet in
  * `capability-inset-fixtures.test.ts`): in `formation` 27, `container` 16, `building` 14,
@@ -153,20 +157,20 @@ function singleDepictionBodyFor(definition: CatalogPictogramDefinition): Primiti
  */
 const CAPABILITY_TEST_COMPOSITIONS: ReadonlyArray<readonly [string, SymbolSpec]> = [
   [
-    'Testkomposition Staffel + fire-fighting',
-    { kind: 'formation', organization: 'feuerwehr', strength: 'staffel', capabilities: ['fire-fighting'] },
+    'Testkomposition Staffel + foam-agent',
+    { kind: 'formation', organization: 'feuerwehr', strength: 'staffel', capabilities: ['foam-agent'] },
   ],
   [
     'Testkomposition Staffel + service-water',
     { kind: 'formation', organization: 'feuerwehr', strength: 'staffel', capabilities: ['service-water'] },
   ],
   [
-    'Testkomposition Staffel + fire-fighting + service-water',
+    'Testkomposition Staffel + foam-agent + service-water',
     {
       kind: 'formation',
       organization: 'feuerwehr',
       strength: 'staffel',
-      capabilities: ['fire-fighting', 'service-water'],
+      capabilities: ['foam-agent', 'service-water'],
     },
   ],
 ];
@@ -312,7 +316,7 @@ describe('Piktogramm-Gates über den Katalogbestand', () => {
     // Ohne diese Zusicherung liefe der Kompositionstest unten bei leerer Liste trivial grün.
     expect(COMPOSITION_CASES.length).toBeGreaterThan(0);
     const pictograms = new Set(COMPOSITION_CASES.map(([, definition]) => definition.id));
-    expect(pictograms).toEqual(new Set(['capability.fire-fighting', 'capability.service-water']));
+    expect(pictograms).toEqual(new Set(['capability.foam-agent', 'capability.service-water']));
   });
 
   // Ein künftiges Rezept, das ein überstehendes Piktogramm in einen Körper setzt, wird hier rot.

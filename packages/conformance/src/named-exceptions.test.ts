@@ -46,10 +46,10 @@ function carriedSpecialValues(): Carried[] {
 const id = (fixture: string, field: string): string => `${fixture}/${field}`;
 
 describe('GRAMMAR_FIXTURES', () => {
-  it('ist dasselbe Objekt wie RECIPES mit 279 Einträgen', () => {
+  it('ist dasselbe Objekt wie RECIPES mit 280 Einträgen', () => {
     expect(GRAMMAR_FIXTURES).toBe(RECIPES);
     // 242 bis LFH-786; dazu C.1.7, C.1.8 und 35 C.2-Darstellungen, zusammen 37.
-    expect(fixtures).toHaveLength(279);
+    expect(fixtures).toHaveLength(280);
   });
 });
 
@@ -130,7 +130,7 @@ describe('NAMED_EXCEPTIONS: festgenagelte Zahlen', () => {
     expect(NAMED_EXCEPTIONS).toHaveLength(87);
   });
 
-  it('betrifft genau 67 der 279 Fixtures', () => {
+  it('betrifft genau 67 der 280 Fixtures', () => {
     const affected = [...new Set(NAMED_EXCEPTIONS.map((entry) => entry.fixture))];
     // 37 bis LFH-786; dazu die 30 beschrifteten neuen Fixtures. Ohne Lauf und damit ohne
     // Sonderwert bleiben C.1.7, C.2.18, C.2.20#alternative, C.2.26#alternative,

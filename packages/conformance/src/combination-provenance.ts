@@ -65,7 +65,7 @@ function index(): ReadonlyMap<string, VerbatimFixture> {
     const key = specKey(recipe.spec);
     const existing = built.get(key);
     if (existing !== undefined) {
-      // Heute tragen alle 279 Rezepte verschiedene Schlüssel. Käme eine Kollision hinzu, wäre die
+      // Heute tragen alle 280 Rezepte verschiedene Schlüssel. Käme eine Kollision hinzu, wäre die
       // Fixture nicht eindeutig — das soll auffallen, nicht still die erste gewinnen.
       throw new Error(
         `combinationProvenance: ${existing.fixture} und ${fixture} tragen denselben specKey.`,

@@ -29,4 +29,18 @@ export const ANHANG_C_ASSISTANCE_POWER_RECIPES = {
       labels: { topLeft: '120', inBodyInk: 'koerperlauf-kontrast' },
     },
   },
+  // LFH-787: C.1.4 steht hier und nicht bei C.1.1 bis C.1.8 in `recipes.ts`, weil es dieselbe
+  // Marke wie C.2.18 trägt und `recipes.ts` Fundorte mit Zeilennummern führt. Am Ende dieser
+  // Datei, damit der Fundort `assistance-power.ts:29` (C.2.30) stehen bleibt.
+  'C.1.4': {
+    title: 'Rüstzug einer Feuerwehr',
+    referenceAsset: 'C.1.4_Rüstzug einer Feuerwehr.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'feuerwehr',
+      // Referenz: drei Kreise r 1,5 bei x 11, 16 und 21, y 3,5; kein Lauf.
+      strength: 'zug',
+      bodyMarks: ['technical-assistance'],
+    },
+  },
 } as const satisfies Record<string, Recipe>;

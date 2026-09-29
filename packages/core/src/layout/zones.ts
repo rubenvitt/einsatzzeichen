@@ -753,11 +753,13 @@ function innerFieldZone(kind: SymbolKind, variant?: BodyVariantId): ZoneBinding 
       'Ein Kapitel-4-Piktogramm steht im Körper in einer **eigenen Fassung je Paar aus Fähigkeit ' +
         'und Körperform** (`CAPABILITY_INSET_FORMS`), nicht als skalierte Einzeldarstellung. ' +
         'Drei Behandlungen kommen vor: randbündig umgeformt, gleichmäßig verkleinert oder frei ' +
-        'umgeformt. Die Strichstärke bleibt 0,5 mm. Für Paare ohne Fassung lässt die Boxfassung ' +
-        'nur Piktogramme zu, die unskaliert im Körper bleiben (`capabilities-pictogram-overflows-body`, ' +
-        '`CAPABILITY_INSET_RULE.unmeasuredPairs`).',
+        'umgeformt. Die Strichstärke bleibt 0,5 mm. Wo eine Fassung vermessen ist, lehnt ' +
+        '`validateSpec` die Boxfassung ab und verweist auf `bodyMarks` ' +
+        '(`capabilities-pictogram-has-measured-rendition`, LFH-787). Für Paare ohne Fassung lässt ' +
+        'die Boxfassung nur Piktogramme zu, die unskaliert im Körper bleiben ' +
+        '(`capabilities-pictogram-overflows-body`, `CAPABILITY_INSET_RULE.unmeasuredPairs`).',
       source(
-        'core/src/blocks/capability-inset.ts:88–307',
+        'core/src/blocks/capability-inset.ts:91–315',
         'Gemessen an allen 76 Körperfassungen des Bestands gegen ihre Einzeldarstellung ' +
           '(LFH-587, LFH-786). Weder ein gemeinsamer Faktor noch das Einpassen in die Box 4/8/24/16 mm ' +
           'noch das unveränderte Einsetzen reproduziert die Referenz.',

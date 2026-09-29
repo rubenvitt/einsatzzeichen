@@ -41,11 +41,11 @@ function legacyBuilderParam(spec: SymbolSpec): string {
 }
 
 describe('kanonische Serialisierung über den Rezeptbestand', () => {
-  it('deckt alle 279 Rezepte ab, jedes mit eigener Serialisierung', () => {
+  it('deckt alle 280 Rezepte ab, jedes mit eigener Serialisierung', () => {
     // 242 bis LFH-786, dazu die 37 Anhang-C-Fixtures; ihre Fassungskennungen (`bodyMarkRenditions`)
-    // laufen durch dieselbe Rundreise.
-    expect(recipeEntries).toHaveLength(279);
-    expect(new Set(recipeEntries.map(([, recipe]) => serializeSpec(recipe.spec))).size).toBe(279);
+    // laufen durch dieselbe Rundreise. LFH-787 ergänzt C.1.4.
+    expect(recipeEntries).toHaveLength(280);
+    expect(new Set(recipeEntries.map(([, recipe]) => serializeSpec(recipe.spec))).size).toBe(280);
   });
 
   it.each(recipeEntries)('%s: JSON-Rundreise liest dieselbe Spec und zeichnet byte-gleich', (_id, recipe) => {

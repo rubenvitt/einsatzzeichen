@@ -57,30 +57,42 @@ export interface CapabilityInsetForm {
 export type CapabilityInsetClaim = 'holds' | 'refuted';
 
 /**
- * Wie ein Kapitel-4-Piktogramm in einen Körper kommt, für den keine Körperfassung vermessen ist:
+ * Wie ein Kapitel-4-Piktogramm aus der Boxfassung (`capabilities`) in einen Körper kommt:
  *
  * - `measured-rendition-only` — nur über eine eigene, an der Referenz vermessene Körperfassung
  *   (`bodyMarks`); sonst fail-closed.
  * - `unscaled-if-fits` — die Einzeldarstellung unverändert, sofern sie in den Körper passt.
  * - `uniform-scale-to-box` — die Einzeldarstellung gleichmäßig in die Fähigkeitsbox skaliert, bei
  *   fester Strichstärke.
+ * - `measured-rendition-else-unscaled-if-fits` — „A, wo die Referenz spricht; B, wo sie schweigt“
+ *   (LFH-787): Hat das Paar aus Fähigkeit und Körperfassung eine vermessene Fassung, gilt
+ *   `measured-rendition-only`, die Boxfassung ist dort also abgelehnt und das Piktogramm kommt
+ *   über `bodyMarks`. Ohne vermessene Fassung gilt `unscaled-if-fits`.
  */
 export type CapabilityInsetPolicy =
   | 'measured-rendition-only'
   | 'unscaled-if-fits'
-  | 'uniform-scale-to-box';
+  | 'uniform-scale-to-box'
+  | 'measured-rendition-else-unscaled-if-fits';
 
 /**
- * Die Entscheidung, was für Paare ohne vermessene Fassung gilt. Sie ist kein Beleg und steht
- * deshalb nicht als `GrammarFinding`, sondern mit Datum, Entscheider und Fundort.
+ * Die Entscheidung, was für die Boxfassung gilt: an Paaren ohne vermessene Fassung und, seit
+ * LFH-787, auch an Paaren mit einer. Sie ist kein Beleg und steht deshalb nicht als
+ * `GrammarFinding`, sondern mit Datum, Entscheider und Fundort.
  */
 export interface CapabilityInsetDecision {
   /** Die Regel, auf die der Katalog hinarbeitet. */
   readonly target: CapabilityInsetPolicy;
   /** Was bis dahin gilt und von `validateSpec` geprüft wird. */
   readonly inForce: CapabilityInsetPolicy;
-  /** Die Regelkennung, mit der `inForce` geprüft wird. */
+  /** Die Regelkennung, mit der `inForce` an Paaren ohne vermessene Fassung geprüft wird. */
   readonly rule: string;
+  /**
+   * Die Regelkennung, mit der `validateSpec` die Boxfassung an Paaren mit vermessener Fassung
+   * ablehnt. Gesetzt, wenn `inForce` zwischen beiden Fällen unterscheidet
+   * (`measured-rendition-else-unscaled-if-fits`).
+   */
+  readonly measuredRule?: string;
   /** ISO-Datum der Entscheidung. */
   readonly decidedOn: string;
   readonly decidedBy: string;
@@ -105,6 +117,9 @@ export interface CapabilityInsetRule {
   readonly unscaledWhereFits: GrammarFinding<CapabilityInsetClaim>;
   /** Eine verkleinerte Fassung hat in jeder Körperform dieselbe Größe. */
   readonly reducedSizeBodyInvariant: GrammarFinding<CapabilityInsetClaim>;
-  /** Was für Paare aus Fähigkeit und Körperform ohne vermessene Fassung gilt. */
+  /**
+   * Was für die Boxfassung gilt: an Paaren aus Fähigkeit und Körperform ohne vermessene Fassung
+   * und, seit LFH-787, auch an Paaren mit einer.
+   */
   readonly unmeasuredPairs: CapabilityInsetDecision;
 }

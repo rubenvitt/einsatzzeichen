@@ -19,7 +19,7 @@ import type {
  * Gefragt war eine Regel für das Innenfeld: Skalierung, Umformung oder eigene Innenfeld-Fassung,
  * gemessen und nicht angenommen.
  *
- * **Die Messung.** Der Bestand kennt 76 Fassungen im Körper, von 28 Fähigkeiten an 15 Körperfassungen,
+ * **Die Messung.** Der Bestand kennt 77 Fassungen im Körper, von 28 Fähigkeiten an 15 Körperfassungen,
  * alle über `bodyMarks` gezeichnet und in Anhang C, D, F, G, H und I an der Referenz abgelesen.
  * Acht davon sind zweite Fassungen desselben Paars (`rendition`, LFH-786): Anhang C zeichnet
  * dieselbe Fähigkeit am selben Landfahrzeug in Haupt- und Alternativdarstellung verschieden.
@@ -28,16 +28,19 @@ import type {
  *
  * **Das Ergebnis.** Die Referenz setzt kein Piktogramm unverändert ein und skaliert keines mit
  * einem gemeinsamen Faktor. Jede Körperfassung ist eine eigene Zeichnung, in drei Arten:
- * randbündig umgeformt (`flush`, 28), annähernd gleichmäßig verkleinert (`reduced`, 43) oder
+ * randbündig umgeformt (`flush`, 28), annähernd gleichmäßig verkleinert (`reduced`, 44) oder
  * frei umgeformt (`reshaped`, 5). Gemeinsam ist allen nur die
  * Strichstärke 0,5 mm. Die Regel lautet deshalb: **eigene Innenfeld-Fassung je Paar aus Fähigkeit
  * und Körperform**, so wie `bodyMarks` sie heute schon führt. Was für Paare ohne Fassung gilt, steht in
  * `CAPABILITY_INSET_RULE.unmeasuredPairs`; die Entscheidung steht in
  * `docs/decisions/2026-09-29-lfh-587-kapitel-4-piktogramme-im-innenfeld.md`.
  *
- * Seit der Entscheidung vom 29. September 2026 lehnt `validateSpec` mit
- * `capabilities-pictogram-overflows-body` jede Boxfähigkeit ab, deren Einzeldarstellung an der
- * Körperform nicht nachweislich im Körper bleibt (`CAPABILITY_UNSCALED_FIT`).
+ * Seit der Entscheidung vom 29. September 2026 (LFH-787, „A, wo die Referenz spricht; B, wo sie
+ * schweigt“) lehnt `validateSpec` die Boxfassung in zwei Fällen ab: mit
+ * `capabilities-pictogram-has-measured-rendition` jede Boxfähigkeit, für die an dieser
+ * Körperfassung eine vermessene Fassung existiert (`capabilityInsetForm`), und mit
+ * `capabilities-pictogram-overflows-body` jede übrige, deren Einzeldarstellung an der Körperform
+ * nicht nachweislich im Körper bleibt (`CAPABILITY_UNSCALED_FIT`).
  */
 
 function source(definedAt: string, note: string): GrammarEvidence {
@@ -149,6 +152,7 @@ export const CAPABILITY_INSET_FORMS: readonly CapabilityInsetForm[] = Object.fre
   form('rescue-aerial-ladder', 'vehicle-land', undefined, 'reduced', [0.51, 0.51], [0.46, 0.46], ['C.2.16#alternative'], [], 'shifted-right-6.5mm-ladder-raised-1mm'),
   form('rescue-articulated-boom', 'vehicle-land', undefined, 'reduced', [0.55, 0.55], [0.5, 0.5], ['C.2.17']),
   form('rescue-articulated-boom', 'vehicle-land', undefined, 'reduced', [0.55, 0.55], [0.5, 0.5], ['C.2.17#alternative'], [], 'shifted-left-1mm'),
+  form('technical-assistance', 'formation', undefined, 'reduced', [0.9, 0.9], [1.25, 1.25], ['C.1.4']),
   form('technical-assistance', 'vehicle-land', undefined, 'reduced', [0.9, 0.9], [1.25, 1.25], ['C.2.18']),
   form('temporary-accommodation-resting', 'formation', undefined, 'reduced', [0.36, 0.36], [0.38, 0.38], ['F.1.19']),
   form('temporary-accommodation-resting', 'formation', 'foot-band', 'reduced', [0.36, 0.36], [0.34, 0.34], ['F.1.3']),
@@ -225,7 +229,7 @@ export const CAPABILITY_INSET_RULE: CapabilityInsetRule = Object.freeze({
     evidence: [
       source(
         GATE,
-        'Jeder Strich jeder der 76 Körperfassungen ist 0,5 mm breit, auch in C.1.7 und C.1.8, an denen LFH-587 dieselbe Beobachtung nannte. Die Fassung wird kleiner, der Strich nicht.',
+        'Jeder Strich jeder der 77 Körperfassungen ist 0,5 mm breit, auch in C.1.7 und C.1.8, an denen LFH-587 dieselbe Beobachtung nannte. Die Fassung wird kleiner, der Strich nicht.',
       ),
       asset(
         'C.2.18_Rüstwagen.svg',
@@ -265,7 +269,7 @@ export const CAPABILITY_INSET_RULE: CapabilityInsetRule = Object.freeze({
       ),
       source(
         GATE,
-        'Sechs Fähigkeiten passen unskaliert in die Formation und haben dort eine vermessene Fassung (Brandbekämpfung, Ruhen, Wasserförderung, Abfallentsorgung, Instandsetzung, Trinkwasser). Keine ist unverändert eingesetzt.',
+        'Sieben Fähigkeiten passen unskaliert in die Formation und haben dort eine vermessene Fassung (Brandbekämpfung, Ruhen, Technische Hilfeleistung, Wasserförderung, Abfallentsorgung, Instandsetzung, Trinkwasser). Keine ist unverändert eingesetzt.',
       ),
     ],
   },
@@ -293,16 +297,20 @@ export const CAPABILITY_INSET_RULE: CapabilityInsetRule = Object.freeze({
       'Wo die Breite trägt, weicht die Höhe ab: in G.3.5 für den unteren Lauf, in I.2.1 bis I.2.3 je nach Fahrzeugkategorie (`VEHICLE_LAND_WATER_RESCUE_MARKS`), bei der Drehleiter in C.2.16#alternative, bei der Wasserförderung zwischen C.2.26 und C.2.26#alternative und bei der Stromversorgung zwischen G.4 und C.2.30. Unter dem Zelt (4.2.1) stehen drei verkleinerte Marken kleiner als in ihren Einzelfixtures (Ruhen in F.1.3 und F.1.19, Mahlzeitenzubereitung in F.2.13, Trinkwasser in F.2.17), die Verpflegung in F.1.17 nicht.',
   },
   // Ziel ist A, weil keine der drei Rechenregeln die Referenz reproduziert (oben). In Kraft ist
-  // bis dahin B: die Boxfassung bleibt, wo die Einzeldarstellung nachweislich im Körper bleibt,
-  // und wird sonst von `validateSpec` abgelehnt. C scheidet aus, weil es an keinem vermessenen
-  // Fall die richtige Größe träfe.
+  // seit LFH-787 AB: Hat ein Paar eine vermessene Fassung, lehnt `validateSpec` die Boxfassung
+  // ab und verweist auf `bodyMarks` (A). Ohne Fassung bleibt B: die Boxfassung bleibt, wo die
+  // Einzeldarstellung nachweislich im Körper bleibt, und wird sonst abgelehnt. Für die meisten
+  // Paare ohne Fassung zeigt die Referenz kein Kapitel-4-Piktogramm (LFH-787 §3.2), dort gibt es
+  // nichts zu vermessen. C scheidet aus, weil es an keinem vermessenen Fall die richtige Größe
+  // träfe.
   unmeasuredPairs: {
-    target: 'measured-rendition-only',
-    inForce: 'unscaled-if-fits',
+    target: 'measured-rendition-else-unscaled-if-fits',
+    inForce: 'measured-rendition-else-unscaled-if-fits',
     rule: 'capabilities-pictogram-overflows-body',
+    measuredRule: 'capabilities-pictogram-has-measured-rendition',
     decidedOn: '2026-09-29',
-    decidedBy: 'Koordinator (delegiert)',
-    decidedIn: 'docs/decisions/2026-09-29-lfh-587-kapitel-4-piktogramme-im-innenfeld.md',
+    decidedBy: 'Projektinhaber',
+    decidedIn: 'docs/decisions/2026-09-29-lfh-787-boxfassung-abloesen.md',
   },
 } satisfies CapabilityInsetRule);
 

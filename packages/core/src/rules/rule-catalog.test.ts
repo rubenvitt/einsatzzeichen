@@ -116,7 +116,7 @@ describe('RULE_CATALOG: Vollständigkeit je Eintrag', () => {
       'top-left-lines-exactly-two',
     ]);
     expect(fromWebsite).toHaveLength(27);
-    expect(RULE_CATALOG.filter((rule) => rule.reasonSource === 'core')).toHaveLength(51);
+    expect(RULE_CATALOG.filter((rule) => rule.reasonSource === 'core')).toHaveLength(52);
   });
 
   /**
@@ -166,7 +166,7 @@ describe('RULE_CATALOG: Vollständigkeit je Eintrag', () => {
 
 describe('RULE_CATALOG gegen den Quelltext von validate.ts', () => {
   /**
-   * `validate.ts` löst 81 Mal aus, führt aber nur 78 Kennungen: drei Regeln haben zwei
+   * `validate.ts` löst 82 Mal aus, führt aber nur 79 Kennungen: drei Regeln haben zwei
    * Auslösestellen. Im Katalog bleiben sie **ein** Eintrag — sonst bräche die Dublettenprüfung —
    * und tragen die Zahl ihrer Stellen im Feld `sites`. Dieser Test zählt die Stellen im
    * Quelltext dagegen, damit eine künftige dritte Stelle nicht still dazukommt.
@@ -183,9 +183,9 @@ describe('RULE_CATALOG gegen den Quelltext von validate.ts', () => {
     );
   });
 
-  it('bleibt bei 81 Auslösestellen für 78 Kennungen', () => {
-    expect(pushedIds).toHaveLength(81);
-    expect(new Set(pushedIds).size).toBe(78);
+  it('bleibt bei 82 Auslösestellen für 79 Kennungen', () => {
+    expect(pushedIds).toHaveLength(82);
+    expect(new Set(pushedIds).size).toBe(79);
     expect(RULE_CATALOG.filter((rule) => rule.sites > 1).map((rule) => rule.id)).toEqual([
       'function-role-requires-measured-kind',
       'function-role-requires-measured-layout',
@@ -394,7 +394,7 @@ describe('Einordnung fachlich gegen technisch', () => {
       'surface-label-foot-conflict',
       'technical-fill-organization-conflict',
     ]);
-    expect(RULE_CATALOG.filter((rule) => rule.kind === 'engine')).toHaveLength(66);
+    expect(RULE_CATALOG.filter((rule) => rule.kind === 'engine')).toHaveLength(67);
   });
 });
 

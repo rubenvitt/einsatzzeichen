@@ -20,12 +20,12 @@ describe('semantische Zeichenbeschreibungen', () => {
         kind: 'formation',
         organization: 'feuerwehr',
         strength: 'staffel',
-        capabilities: ['fire-fighting'],
+        capabilities: ['foam-agent'],
         designation: 'Beispiel',
       }),
     ).toBe(
       'Grundzeichen: Taktische Formation. Organisation: Feuerwehr. Stärke: Staffel. ' +
-        'Fähigkeit: Brandbekämpfung. Bezeichnung: Beispiel.',
+        'Fähigkeit: Schaummittel. Bezeichnung: Beispiel.',
     );
   });
 
