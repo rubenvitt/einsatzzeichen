@@ -20,7 +20,11 @@ export { formatUnits };
 export interface SvgOptions {
   /** Pixelbreite. Ohne Angabe skaliert das SVG frei. */
   size?: number;
-  /** Präfix für erzeugte Element-IDs. Erforderlich, wenn mehrere SVGs im selben DOM liegen. */
+  /**
+   * Präfix für erzeugte Element-IDs. Erforderlich, wenn mehrere SVGs im selben DOM liegen. Darf
+   * nicht leer sein und keine Leerzeichen, Anführungszeichen, `<`, `>` oder `&` enthalten
+   * (`ID_PREFIX_PATTERN`); sonst wirft `renderSvg` einen `RangeError`.
+   */
   idPrefix?: string;
   /** Farbprofil der Ausgabe. Ohne Angabe bleibt die BABZ-Referenzpalette bytegleich erhalten. */
   theme?: RenderTheme;
@@ -241,9 +245,7 @@ function renderPrimitive(
       `font-size="${u(primitive.sizeMm)}"` +
       // Nur 500 und 700 schreiben ein Attribut: 400 ist der Default, und ohne Feld bleibt die
       // Ausgabe bytegleich zum Stand vor `fontWeight`. Dieselbe Regel steht in canvas.ts.
-      (primitive.fontWeight === undefined || primitive.fontWeight === 400
-        ? ''
-        : ` font-weight="${primitive.fontWeight}"`) +
+      fontWeightAttr(primitive.fontWeight) +
       // Kursiv nur, wenn gesetzt (LFH-585, nur zusammen mit 500): ohne Feld bleibt die Ausgabe
       // bytegleich. Canvas nimmt denselben Stil in die Schriftangabe auf.
       (primitive.fontStyle === 'italic' ? ' font-style="italic"' : '');
@@ -276,8 +278,35 @@ function renderPrimitive(
   }
 }
 
+/**
+ * Erlaubte Form von `idPrefix`. Der Präfix steht in `id="…"` und `aria-labelledby="…"`; die
+ * Web-Component reicht ihn als frei setzbares Attribut durch. Ohne Prüfung könnte ein Wert wie
+ * `x" onload="…` eigene Attribute ins Markup schreiben. Maskieren allein genügt nicht:
+ * Leerzeichen trennen in `aria-labelledby` die Verweise, ein Präfix mit Leerzeichen zerbräche die
+ * Verknüpfung still. Deshalb abweisen statt reparieren (fail-closed wie `size`).
+ */
+export const ID_PREFIX_PATTERN = /^[^\s"'<>&]+$/u;
+
+function assertValidIdPrefix(prefix: string): void {
+  if (typeof prefix !== 'string' || !ID_PREFIX_PATTERN.test(prefix)) {
+    throw new RangeError(
+      'idPrefix darf nicht leer sein und keine Leerzeichen, Anführungszeichen, „<“, „>“ oder „&“ ' +
+        `enthalten (ist ${JSON.stringify(prefix)}).`,
+    );
+  }
+}
+
+/** Nur 500 und 700 schreiben ein Attribut; alles andere (auch ungültige Laufzeitwerte) fällt auf 400. */
+function fontWeightAttr(fontWeight: unknown): string {
+  return fontWeight === 500 || fontWeight === 700 ? ` font-weight="${fontWeight}"` : '';
+}
+
 export function renderSvg(drawing: Drawing, options: SvgOptions = {}): string {
-  const prefix = options.idPrefix ?? 'ez';
+  const rawPrefix = options.idPrefix ?? 'ez';
+  assertValidIdPrefix(rawPrefix);
+  // Nach der Prüfung eine Leeroperation; hält die Maskierung aber an der Stelle, an der der Wert
+  // ins Markup geht, falls das Muster je gelockert wird.
+  const prefix = escapeXml(rawPrefix);
   const theme = options.theme === undefined ? REFERENCE_THEME : options.theme;
   assertValidRenderTheme(theme);
   assertValidActiveStrokeWidths(drawing);

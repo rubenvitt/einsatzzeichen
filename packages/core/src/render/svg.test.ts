@@ -124,6 +124,37 @@ describe('renderSvg', () => {
     expect(svg).toContain('<desc id="symbol-desc">Eine taktische Formation.</desc>');
   });
 
+  it('nimmt idPrefix nur als XML-Namen an und schreibt nie fremde Attribute ins Markup', () => {
+    expect(() => renderSvg(formation, { idPrefix: 'recipe.D.1.9#alternative-16' })).not.toThrow();
+    for (const prefix of ['x" onload="alert(1)', "x' y", 'a b', '', 'ez>', 'a&b', 'a\tb']) {
+      expect(() => renderSvg(formation, { idPrefix: prefix })).toThrow(RangeError);
+    }
+  });
+
+  it('gibt font-weight nur für 500 und 700 aus, auch bei ungültigen Laufzeitwerten', () => {
+    const text = (fontWeight: unknown) =>
+      renderSvg({
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [
+          {
+            type: 'text',
+            x: 1,
+            y: 1,
+            content: 'A',
+            sizeMm: 3,
+            anchor: 'start',
+            baseline: 'alphabetic',
+            boxMm: { xMm: 0, yMm: 0, widthMm: 32, heightMm: 32 },
+            fontWeight: fontWeight as 400,
+          },
+        ],
+      });
+    expect(text(500)).toContain('font-weight="500"');
+    expect(text(700)).toContain('font-weight="700"');
+    expect(text(400)).not.toContain('font-weight');
+    expect(text('700" onload="x')).not.toContain('font-weight');
+  });
+
   it('lässt A11y-Metadaten weg, wenn kein Titel gesetzt ist', () => {
     const svg = renderSvg({ viewBox: DEFAULT_VIEWBOX_MM, children: [] });
     expect(svg).not.toContain('<title');

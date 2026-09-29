@@ -5,7 +5,8 @@ import type { Drawing } from '@einsatzzeichen/schema';
 export const DEFAULT_TAG_NAME = 'einsatzzeichen-symbol';
 
 /**
- * Beobachtete Attribute des Elements. `size` in px (positive ganze Zahl), `id-prefix` frei,
+ * Beobachtete Attribute des Elements. `size` in px (positive ganze Zahl), `id-prefix` ohne
+ * Leerzeichen, Anführungszeichen, `<`, `>` und `&` (sonst wirft core einen `RangeError`),
  * `min-stroke-width` als Mindeststrichbreite in px (positive Dezimalzahl, nur zusammen mit `size`).
  */
 export const OBSERVED_ATTRIBUTES = ['size', 'id-prefix', 'min-stroke-width'] as const;
