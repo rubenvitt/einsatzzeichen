@@ -179,6 +179,15 @@ const EXPLANATIONS = {
       'Luftfahrzeugrumpf. An anderen Profilen gäbe es keine Hülle, gegen die die Box geprüft ' +
       'würde. Wechsle Art und Variante oder verzichte auf den Metriksatz.',
   },
+  'capabilities-pictogram-overflows-body': {
+    field: 'capabilities',
+    title: 'Piktogramm passt nicht in den Körper',
+    explanation:
+      'Die Boxfassung setzt die Einzeldarstellung eines Kapitel-4-Piktogramms unskaliert in den ' +
+      'Körper. Zugelassen ist das nur, wo sie nachweislich im Körper bleibt; die Referenz selbst ' +
+      'zeichnet jedes Piktogramm je Körperform in einer eigenen Fassung. Nutze die randbündige ' +
+      'Fassung über `bodyMarks`, wo sie vermessen ist, oder entferne die Fähigkeit.',
+  },
   'bottom-right-metrics-within-body': {
     field: 'labels',
     title: 'bottomRight-Textbox muss im Körper liegen',

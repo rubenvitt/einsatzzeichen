@@ -13,6 +13,7 @@ import {
   type SymbolSpec,
   type TechnicalHeadMarkId,
 } from '@einsatzzeichen/schema';
+import { CAPABILITY_UNSCALED_FIT } from './blocks/capability-inset.js';
 import { profileFor } from './layout/profiles.js';
 import { ARIMO_CAP_HEIGHT_FRACTION, verticalTextBoxMm } from './render/text-policy.js';
 
@@ -1344,6 +1345,35 @@ function validatePreparedSpec(
     }
   }
 
+  // LFH-587, Übergangsregel (Entscheidung vom 29. September 2026): die Boxfassung setzt die
+  // Einzeldarstellung unskaliert ein. Zugelassen ist sie nur, wo das Clipping-Gate belegt, dass
+  // das Piktogramm an dieser Körperform im Körper bleibt (`CAPABILITY_UNSCALED_FIT`). An
+  // Körperformen ohne Flächenmodell und an Körpervarianten ist das nicht geprüft, also fail-closed.
+  if (spec.capabilities !== undefined && spec.functionRole === undefined) {
+    const fitting = CAPABILITY_UNSCALED_FIT.find((entry) => entry.kind === spec.kind);
+    const overflowing = spec.capabilities.filter(
+      (id) =>
+        spec.bodyVariant !== undefined ||
+        fitting === undefined ||
+        !fitting.capabilities.includes(id),
+    );
+    if (overflowing.length > 0) {
+      issues.push({
+        rule: 'capabilities-pictogram-overflows-body',
+        message:
+          spec.bodyVariant !== undefined
+            ? `Kapitel-4-Piktogramme in der Boxfassung sind an der Körpervariante "${spec.bodyVariant}" ` +
+              'nicht auf Einsetzbarkeit geprüft. Nutze eine vermessene randbündige Fassung (`bodyMarks`).'
+            : fitting === undefined
+              ? `Für "${spec.kind}" ist nicht prüfbar, ob ein Kapitel-4-Piktogramm im Körper bleibt ` +
+                '(kein Flächenmodell). Nutze eine vermessene randbündige Fassung (`bodyMarks`).'
+              : `Die Einzeldarstellung von ${overflowing.map((id) => `"${id}"`).join(', ')} ragt ` +
+                `unskaliert über den Körper von "${spec.kind}". Die Referenz setzt Kapitel-4-` +
+                'Piktogramme in einer eigenen Fassung je Körperform ein; nutze eine vermessene ' +
+                'randbündige Fassung (`bodyMarks`).',
+      });
+    }
+  }
   return issues;
 }
 
