@@ -262,7 +262,7 @@ export const STATE_GROUPS: readonly StateGroup[] = Object.freeze([
       value: 'carrier-included',
       evidence: [
         source(
-          'core/src/geometry/pictograms/states/06-animals.ts:5–13',
+          'core/src/geometry/pictograms/states/06-animals.ts:6–14',
           'Jede Darstellung zeichnet die Tiersilhouette mit; beim kontaminierten Tier rückt sie 5 mm nach unten, um dem Kontaminationszeichen Platz zu machen.',
         ),
       ],
@@ -272,7 +272,7 @@ export const STATE_GROUPS: readonly StateGroup[] = Object.freeze([
       value: 'freestanding',
       evidence: [
         source(
-          'core/src/geometry/pictograms/states/06-animals.ts:5–13',
+          'core/src/geometry/pictograms/states/06-animals.ts:6–14',
           'Der Träger ist Teil der Darstellung, das Zeichen steht damit für sich.',
         ),
       ],
@@ -347,7 +347,7 @@ export const STATE_GROUPS: readonly StateGroup[] = Object.freeze([
       value: 'carrier-included',
       evidence: [
         source(
-          'core/src/geometry/pictograms/states/08-persons.ts:9–16',
+          'core/src/geometry/pictograms/states/08-persons.ts:10–17',
           'Grundform jeder Darstellung ist die Personenraute mit weißer Fläche.',
         ),
       ],
@@ -357,7 +357,7 @@ export const STATE_GROUPS: readonly StateGroup[] = Object.freeze([
       value: 'body',
       evidence: [
         source(
-          'core/src/geometry/pictograms/states/08-persons.ts:9–16',
+          'core/src/geometry/pictograms/states/08-persons.ts:10–17',
           'Die Zustandsmarken liegen auf der Raute, der Verletzungsstrich etwa ist ihre senkrechte Diagonale.',
         ),
       ],
@@ -369,15 +369,15 @@ export const STATE_GROUPS: readonly StateGroup[] = Object.freeze([
       value: ['base-symbol/person'],
       evidence: [
         source(
-          'core/src/geometry/pictograms/states/08-persons.ts:76–77',
+          'core/src/geometry/pictograms/states/08-persons.ts:77–78',
           'Standardlage: 26-mm-Raute um die Zeichenmitte, Hülle 3…29.',
         ),
         source(
-          'core/src/geometry/pictograms/states/08-persons.ts:181–182',
+          'core/src/geometry/pictograms/states/08-persons.ts:183–184',
           'Um 2 mm angehobene 26-mm-Raute der Transportzeichen 5.8.8.12 bis 5.8.8.14.',
         ),
         source(
-          'core/src/geometry/pictograms/states/08-persons.ts:279–281',
+          'core/src/geometry/pictograms/states/08-persons.ts:281–283',
           'Um 4,5 mm abgesenkte 21-mm-Raute bei 5.8.8.9.',
         ),
       ],

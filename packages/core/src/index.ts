@@ -16,8 +16,9 @@ export * from './compose.js';
 export { VALIDATION_RULE_IDS } from './validation-rules.js';
 export * from './path-commands.js';
 export * from './pictogram-gate.js';
-// Drei Teile der Textpolitik führen nach außen: effectiveTextPx/MINIMUM_TEXT_RENDER_PX, die
-// Task 6 als Schnittstelle vorsieht (siehe Brief: "Produces"), sowie TEXT_FONT_FAMILY_ATTR — catalog
+// Vier Teile der Textpolitik führen nach außen: effectiveTextPx/MINIMUM_TEXT_RENDER_PX, die
+// Task 6 als Schnittstelle vorsieht (siehe Brief: "Produces"), CATALOG_TEXT_FONT_WEIGHT (das
+// Gewicht allen Katalogtexts, gegen das conformance prüft) sowie TEXT_FONT_FAMILY_ATTR — catalog
 // bezieht darüber die Schriftfamilie für `resvgFontOptions()` (siehe fonts.ts), statt sie dort als
 // eigenes Literal zu wiederholen. Die Abhängigkeitsrichtung ist ohnehin catalog → core (siehe
 // package.json); ohne diesen Export müsste catalog das Literal duplizieren, und eine künftige
@@ -26,6 +27,7 @@ export * from './pictogram-gate.js';
 // svg.ts/canvas.ts, keine fremdpaketige Schnittstelle.
 export {
   ARIMO_CAP_HEIGHT_FRACTION,
+  CATALOG_TEXT_FONT_WEIGHT,
   effectiveTextPx,
   MINIMUM_TEXT_RENDER_PX,
   TEXT_FONT_FAMILY_ATTR,

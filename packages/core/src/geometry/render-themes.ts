@@ -79,14 +79,17 @@ const PRINT_MONOCHROME_PALETTE: ColorPalette = deepFreeze({
 /**
  * Zweiter visueller Kanal neben der Füllfarbe. Ein leerer Wert bedeutet bewusst „durchgezogen“;
  * alle anderen Signaturen sind in Millimetern angegeben und bleiben beim Skalieren stabil.
+ *
+ * Eine Signatur gibt es nur für Farben, die eine Organisation trägt (`compose.ts` setzt den
+ * Schlüssel allein aus der Organisationsfüllung). `hellgruen` hatte als Farbe der Bundespolizei
+ * das Muster `[3, 1]`; seit LFH-586 ist die Bundespolizei keine eigene Organisation mehr, und
+ * der Eintrag entfiel.
  */
 export const ORGANIZATION_BODY_DASHES = deepFreeze({
   rot: [],
   blau: [2, 1.5],
   gelb: [4, 2],
   gruen: [6, 2],
-  // Bundespolizei aus N.1.3: eigenständig zu Polizei (`gruen`) und allen acht Altprofilen.
-  hellgruen: [3, 1],
   orange: [6, 2, 1, 2],
   braun: [2, 2, 2, 4],
   hellgrau: [8, 2],

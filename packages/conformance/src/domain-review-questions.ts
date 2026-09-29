@@ -499,10 +499,14 @@ export const DOMAIN_REVIEW_QUESTIONS: DeepReadonly<readonly DomainReviewQuestion
     id: 'Q-N-traegerzuordnung',
     keys: keysOf(['N.1.1', 'N.1.2', 'N.1.3', 'N.1.4', 'N.1.5', 'N.1.6']),
     question:
-      'Gehören kommunaler Bauhof und Beauftragter Dritter zur sonstigen Gefahrenabwehr, ist die ' +
-      'Bundespolizei zu Recht eine getrennte Organisation, und stimmen die Bundeswehr-/Feuerwehr-/' +
-      'ZIV-Zuordnungen?',
-    context: '„Geländegängig" aus dem Dateinamen von N.1.2 ist ausdrücklich keine neue Katalogsemantik.',
+      'Gehören kommunaler Bauhof und Beauftragter Dritter zur sonstigen Gefahrenabwehr, und ' +
+      'stimmen die Bundeswehr-/Feuerwehr-/ZIV-Zuordnungen?',
+    context:
+      '„Geländegängig" aus dem Dateinamen von N.1.2 ist ausdrücklich keine neue Katalogsemantik. ' +
+      'Der frühere Teil „Ist die Bundespolizei zu Recht eine getrennte Organisation?" ist ' +
+      'beantwortet (Projektinhaber, 29.09.2026, LFH-586): nein. N.1.3 trägt `polizei` in Grün ' +
+      '#14a01e, „BuPol" bleibt Beschriftung; die hellgrüne Referenzfüllung ist eine bewusste ' +
+      'Abweichung. Belege: docs/decisions/2026-09-29-lfh-586-bundespolizei-ist-polizei.md.',
   },
   {
     id: 'Q-N.2-marken',

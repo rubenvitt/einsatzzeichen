@@ -14,6 +14,7 @@ import {
   SOURCE_REGISTRY,
   areaOf,
   domainReviewQuestionsFor,
+  drawingForManifestEntry,
   manifestDomainReviewFor,
   profileDomainReviewFor,
   releaseBlockers,
@@ -39,7 +40,6 @@ import {
   type QuestionCard,
   type ReviewValue,
 } from '../contract.js';
-import { drawingForManifestEntry } from './drawings.js';
 import { evidenceChips } from './evidence.js';
 import { profileProse, sourceProse } from './prose.js';
 

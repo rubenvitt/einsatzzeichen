@@ -811,9 +811,10 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
  * mit dieser Liste — nicht die Liste gegen sich selbst.
  *
  * Nicht enthalten sind die Kennungen von `textRunIssues` (`text-too-wide`, `text-outside-box`,
- * `unknown-glyph`, `text-too-tall`, `unmeasured-baseline` in `text-metrics.ts`): sie gehören zum
- * Messgate `TextMetricsIssue` und erreichen nie ein `ValidationIssue.rule` — `assertTextRunsFit`
- * übersetzt die ersten drei in die sechs Kennungen hier, die übrigen zwei gar nicht.
+ * `unknown-glyph`, `text-too-tall`, `unmeasured-baseline`, `unsupported-font-style` in
+ * `text-metrics.ts`): sie gehören zum Messgate `TextMetricsIssue` und erreichen nie ein
+ * `ValidationIssue.rule` — `assertTextRunsFit` übersetzt die ersten drei in die sechs Kennungen
+ * hier, die übrigen drei gar nicht.
  */
 export const COMPOSITION_RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
   Object.freeze({

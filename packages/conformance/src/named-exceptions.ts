@@ -201,6 +201,9 @@ const I_2_TOP_LEFT_AT = `${I}:263–273`;
 const I_G_CENTER =
   'Der Textlauf steht auf y = 10,0 mm; seine „aus dem einzigen versalen S idealisierte" ' +
   'Versalhöhe beträgt 2,5 mm. Idealisiert, nicht als Einzelwert gemessen.';
+const I_G_CENTER_CAP =
+  I_G_CENTER + ' Gesetzt sind seit LFH-585 2,45 mm: In Arimo 500 läuft der Lauf rund 3 % breiter ' +
+  'und reichte bei 2,5 mm bis in die Körperkontur.';
 const I_G_CENTER_AT = `${I}:198–204`;
 
 const I_G_BOX_MARGIN =
@@ -369,14 +372,14 @@ export const NAMED_EXCEPTIONS: DeepReadonly<NamedException[]> = deepFreeze<Named
     I_F_WITHOUT_RATIONALE, I_F_WITHOUT_RATIONALE_AT),
   exception('I.1.17', 'centerBaselineFromBodyBottomMm', 16, `${I}:219`,
     I_G_CENTER, I_G_CENTER_AT),
-  exception('I.1.17', 'centerCapHeightMm', 2.5, `${I}:220`,
-    I_G_CENTER, I_G_CENTER_AT),
+  exception('I.1.17', 'centerCapHeightMm', 2.45, `${I}:220`,
+    I_G_CENTER_CAP, I_G_CENTER_AT),
   exception('I.1.17', 'centerBoxMarginMm', 0.5, `${I}:221`,
     I_G_BOX_MARGIN, I_G_BOX_MARGIN_AT),
   exception('I.1.18', 'centerBaselineFromBodyBottomMm', 16, `${I}:235`,
     I_G_CENTER, I_G_CENTER_AT),
-  exception('I.1.18', 'centerCapHeightMm', 2.5, `${I}:236`,
-    I_G_CENTER, I_G_CENTER_AT),
+  exception('I.1.18', 'centerCapHeightMm', 2.45, `${I}:236`,
+    I_G_CENTER_CAP, I_G_CENTER_AT),
   exception('I.1.18', 'centerBoxMarginMm', 0.5, `${I}:237`,
     I_G_BOX_MARGIN, I_G_BOX_MARGIN_AT),
 
@@ -405,8 +408,10 @@ export const NAMED_EXCEPTIONS: DeepReadonly<NamedException[]> = deepFreeze<Named
   exception('I.2.6', 'centerBaselineFromBodyBottomMm', 14.327, `${I}:346`,
     'Am Fundort ohne Begründung und ohne eigenen Wirkungstest.',
     `${I}:337–350`),
-  exception('I.2.6', 'centerCapHeightMm', 2.191447, `${I}:347`,
-    'Am Fundort ohne Begründung. Derselbe Wert wie der BTKombi-Lauf von F.2.10/F.2.11.',
+  exception('I.2.6', 'centerCapHeightMm', 2.12, `${I}:347`,
+    'Bis LFH-585 derselbe Wert wie der BTKombi-Lauf von F.2.10/F.2.11 (2,191447 mm), am Fundort ' +
+    'ohne Begründung. In Arimo 500 läuft „Strömungsrettung" rund 3 % breiter und passte so ' +
+    'nicht mehr in die Box des Anhängers; 2,12 mm hält sie.',
     `${I}:337–350`),
 
   // --- Anhang I.3 und I.5 ---------------------------------------------------------------------

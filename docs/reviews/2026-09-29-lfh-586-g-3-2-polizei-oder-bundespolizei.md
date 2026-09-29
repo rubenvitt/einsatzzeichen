@@ -6,6 +6,10 @@ Stand: 29.09.2026 · Parent LFH-582 · Grundlage: Entscheidungsnotiz
 Status: **Vorbereitung, keine Entscheidung.** Dieses Dokument trägt Belege zusammen und
 formuliert die Frage an den Projektinhaber. Es ändert weder Code noch Reviewstatus.
 
+> Nachtrag 29.09.2026: Entschieden von Ruben — die Bundespolizei ist keine eigene Organisation,
+> die Polizei bleibt Grün `#14a01e`; D.4.4, G.3.2 und N.1.3 tragen `polizei`. Siehe
+> `docs/decisions/2026-09-29-lfh-586-bundespolizei-ist-polizei.md`.
+
 ## Kurzfassung
 
 Das Zeichen G.3.2 heißt in der Quelle „Verpflegungszubereitungsstelle betrieben durch

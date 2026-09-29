@@ -1,5 +1,6 @@
 import type { Primitive } from '@einsatzzeichen/schema';
 import { defineLeadership } from '../catalog-definition.js';
+import { CATALOG_TEXT_FONT_WEIGHT } from '../../../render/text-policy.js';
 
 const BLACK_STROKE = {
   fill: 'none' as const,
@@ -73,8 +74,16 @@ const COMMAND_POST_PRIMITIVES: readonly Primitive[] = [
     sizeMm: 4.243,
     anchor: 'start',
     baseline: 'alphabetic',
-    boxMm: { xMm: 2.673, yMm: 9.971, widthMm: 24.3, heightMm: 3.927 },
+    // Box bis 27,823 mm (LFH-585): Arimo 500 endet aufrecht bei 27,551 mm, als Kursive in 500
+    // laut Schriftmessung vom 29.09.2026 bei 27,779 mm.
+    boxMm: { xMm: 2.673, yMm: 9.971, widthMm: 25.15, heightMm: 3.927 },
     minRenderPx: 61,
+    // Kursiv wie in der Referenz, der einzige geneigte Lauf des Katalogs (LFH-585). Arimo
+    // Italic neigt um 11,0°, die Referenz um 9,0°; an 2,92 mm Versalhöhe sind das 0,1 mm.
+    // Hingenommen, eine künstliche Neigung per Transformation ist verworfen
+    // (docs/decisions/2026-09-29-lfh-585-ersatzschrift-und-kursiv.md, Abschnitt 11).
+    fontWeight: CATALOG_TEXT_FONT_WEIGHT,
+    fontStyle: 'italic',
     style: { fill: 'schwarz', stroke: 'none' },
   },
   ...tetherDashes(),

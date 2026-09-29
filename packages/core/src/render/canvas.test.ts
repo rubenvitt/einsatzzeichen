@@ -849,16 +849,36 @@ describe('renderCanvas — Text', () => {
     expect(font?.[1]).toBe(`${mmToUnits(10)}px Arimo`);
   });
 
-  it('setzt fontWeight 700 als fetten Canvas-Font und lässt 400 unverändert', () => {
+  it('setzt fontWeight 500 und 700 in den Canvas-Font und lässt 400 unverändert', () => {
     const [text] = textDrawing.children;
     if (text?.type !== 'text') throw new Error('Text erwartet');
-    const fontFor = (fontWeight: 400 | 700): unknown => {
+    const fontFor = (fontWeight: 400 | 500 | 700): unknown => {
       const { ctx, calls } = recordingContext();
       renderCanvas({ ...textDrawing, children: [{ ...text, fontWeight }] }, ctx);
       return calls.find(([name]) => name === 'set:font')?.[1];
     };
     expect(fontFor(700)).toBe(`700 ${mmToUnits(10)}px Arimo`);
+    expect(fontFor(500)).toBe(`500 ${mmToUnits(10)}px Arimo`);
     expect(fontFor(400)).toBe(`${mmToUnits(10)}px Arimo`);
+  });
+
+  it('nimmt Kursiv in die Schriftangabe auf, parallel zu font-style in SVG (LFH-585)', () => {
+    const [text] = textDrawing.children;
+    if (text?.type !== 'text') throw new Error('Text erwartet');
+    const italic: Drawing = {
+      ...textDrawing,
+      children: [{ ...text, fontWeight: 500, fontStyle: 'italic' }],
+    };
+    const { ctx, calls } = recordingContext();
+    renderCanvas(italic, ctx);
+    expect(calls.find(([name]) => name === 'set:font')?.[1]).toBe(
+      `italic 500 ${mmToUnits(10)}px Arimo`,
+    );
+    // Parität: dieselbe IR schreibt in SVG Gewicht und Stil, in Canvas beides in `ctx.font`.
+    expect(renderSvg(italic)).toContain('font-weight="500" font-style="italic"');
+    const upright = recordingContext();
+    renderCanvas(textDrawing, upright.ctx);
+    expect(upright.calls.find(([name]) => name === 'set:font')?.[1]).not.toContain('italic');
   });
 
   it('ignoriert einen gesetzten stroke — dasselbe fillOnly-Verhalten wie SVG', () => {

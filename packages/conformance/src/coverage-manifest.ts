@@ -98,7 +98,11 @@ const ANHANG_D_TASK_6_TECHNICAL_REVIEW: Review = {
     'D.4.5 seinen kompakten Körper und den sechsblättrigen EU-Kopf. LtS/ST, KBM/ME, LtrGA/MG ' +
     'und BuPol bleiben sichtbare Rollen- beziehungsweise Trägertexte. Fingerprint-, Snapshot-, ' +
     'Mehrgrößen-, viewBox-, Metadaten- und Kontrast-Gates prüfen alle fünf Rezepte; ' +
-    'Rollenbenennungen und Organisationszuordnungen bleiben im Domain-Review pending.',
+    'Rollenbenennungen und Organisationszuordnungen bleiben im Domain-Review pending. ' +
+    'Nachtrag 29.09.2026 (LFH-586): D.4.4 trägt `polizei`, weil die Bundespolizei keine eigene ' +
+    'Organisation ist (docs/decisions/2026-09-29-lfh-586-bundespolizei-ist-polizei.md). Die ' +
+    'Referenz füllt hellgrün #64dc32, der Katalog bewusst Polizei-Grün #14a01e; BuPol bleibt ' +
+    'Trägertext.',
 };
 
 const ANHANG_D_TASK_3_TECHNICAL_REVIEW: Review = {
@@ -390,7 +394,11 @@ const ANHANG_N_TECHNICAL_REVIEW: Review = {
     'Ausnahme; die bestehende E.2.6-Ausnahme bleibt allein. Der finale LFH-422-Kontaktbogen ' +
     'war zu diesem ' +
     'Zeitpunkt noch nicht erzeugt oder gesichtet; sämtliche Fachzuordnungen bleiben im ' +
-    'Domain-Review pending.',
+    'Domain-Review pending. Nachtrag 29.09.2026 (LFH-586): N.1.3 trägt `polizei` statt ' +
+    '`bundespolizei`, weil die Bundespolizei keine eigene Organisation ist ' +
+    '(docs/decisions/2026-09-29-lfh-586-bundespolizei-ist-polizei.md). Die Referenz füllt ' +
+    'hellgrün #64dc32, der Katalog bewusst Polizei-Grün #14a01e; BuPol bleibt Trägertext, und ' +
+    'der Körperlauf besteht schwarz auf Grün ohne Kontrastausnahme.',
 };
 
 /**
@@ -411,7 +419,10 @@ const ANHANG_G_TECHNICAL_REVIEW: Review = {
     'Der deterministische 21-Karten-Referenzvergleich wurde in Originalauflösung gesichtet; ' +
     'DLRG, Diesel und Bw sind sichtbar, und die acht kopflosen Formationen bewahren ihre offene ' +
     'Oberkante. Die abweichende bestehende Polizei-Grünpalette von G.3.2 ist dokumentiert. ' +
-    'Sämtliche fachlichen Zuordnungen bleiben pending.',
+    'Sämtliche fachlichen Zuordnungen bleiben pending. Nachtrag 29.09.2026 (LFH-586): Die ' +
+    'Bundespolizei ist keine eigene Organisation, die Polizei bleibt Grün #14a01e. G.3.2 bleibt ' +
+    '`polizei`; seine hellgrüne Referenzfüllung #64dc32 ist eine bewusste Abweichung ' +
+    '(docs/decisions/2026-09-29-lfh-586-bundespolizei-ist-polizei.md).',
 };
 const ANHANG_H_TECHNICAL_REVIEW: Review = {
   status: 'approved',

@@ -350,7 +350,7 @@ const ABOVE_LEFT_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
 /** Herkunft des Laufs rechts unterhalb des Körpers. */
 const BELOW_RIGHT_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
   'vehicle-water/raised-hull': source(
-    'core/src/compose.ts:204–244, core/src/layout/profiles.ts:356–363',
+    'core/src/compose.ts:205–245, core/src/layout/profiles.ts:356–363',
     'Belegt an den fünf Wasserfahrzeugen E.2.27 bis E.2.31, deren Typo-Ebene diesen Lauf ' +
       'byteidentisch führt. Gemessen ist die Tinte, nicht der Anker: der Anker 31,5512 ist aus ' +
       'der an E.2.1 gemessenen Differenz von 0,0266 mm zwischen Anker und Tintenkante ' +
@@ -441,7 +441,7 @@ const DEFAULT_ANCHOR_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
 
 const STATE_MARGIN_GAP = notMeasured(
   'value',
-  'core/src/compose.ts:825–830',
+  'core/src/compose.ts:827–832',
   'Kapitel 5.8 bleibt bewusst ein eigenständiger Piktogrammkatalog ohne `SymbolSpec.states` und ' +
     'ohne Integration in `compose()`. Eine Randlage für einen Zustand ist damit an keiner ' +
     'Körperform vermessen — eine andere Grundzeichenart hilft nicht, deshalb `scope: "value"`.',
@@ -449,7 +449,7 @@ const STATE_MARGIN_GAP = notMeasured(
 
 const TENDENCY_MARGIN_GAP = notMeasured(
   'value',
-  'core/src/compose.ts:825–830, schema/src/taxonomy.ts:359–361',
+  'core/src/compose.ts:827–832, schema/src/taxonomy.ts:359–361',
   'Wie die Zustandsrandlage nicht vermessen. Zusätzlich zu benennen: **die Tendenz ist im ' +
     'Repository heute keine eigene Achse.** `tendency-rising`, `tendency-unchanged` und ' +
     '`tendency-falling` stehen als drei Werte innerhalb von `STATE_IDS`, also als Zustände. Ob ' +
@@ -481,7 +481,7 @@ function bodyZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
       'Die Körperzone ist die Hülle des **platzierten** Körpers. Alle übrigen Zonen rechnen ' +
         'gegen sie, damit sie mitwandern, wenn eine Kopfzone den Körper verschiebt.',
       source(
-        'core/src/compose.ts:1195–1198',
+        'core/src/compose.ts:1197–1200',
         'Die Hülle entsteht zur Laufzeit aus dem Katalogprimitiv (`boundsOfMm`) und wird um die ' +
           'zusätzlichen Körperprimitive erweitert; sie ist deshalb kein je Körperform ' +
           'eingetragener Zahlenwert.',
@@ -569,7 +569,7 @@ function chassisZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
   const topSource =
     profile.chassisTopBelowBaseBottomMm === undefined
       ? source(
-          'core/src/layout/profiles.ts:145–149, core/src/compose.ts:1200–1210',
+          'core/src/layout/profiles.ts:145–149, core/src/compose.ts:1202–1212',
           'Regelfall: die Zone hängt unmittelbar an der Unterkante des Grundzeichens. Gemessen ' +
             'an 5.1.1.1 bis 5.1.1.6 und an allen 25 E.2-Zeichen mit Fahrwerk — Körperunterkante ' +
             '26,0004 mm, Markenmitte 28,2501 mm, Unterkante der Zone 30,7502 mm.',
@@ -640,7 +640,7 @@ function innerFieldZone(kind: SymbolKind, variant?: BodyVariantId): ZoneBinding 
         'Koordinaten der unverschobenen Grundzeichnung. Als Zonendatum liegt die Einrückung vor, ' +
         'nicht eine je Körperform eingetragene Hülle.',
       source(
-        'core/src/geometry/base-symbols.ts:1095–1123, core/src/compose.ts:765–770',
+        'core/src/geometry/base-symbols.ts:1095–1123, core/src/compose.ts:767–772',
         'Belegt nur für die Körper, die Anhang E damit zeichnet. Optional, weil nur Anhang E es ' +
           'braucht; fehlt der Port oder die Körperform, wirft `compose()`, statt die Kontur ' +
           'still wegzulassen.',
@@ -682,7 +682,7 @@ function innerFieldZone(kind: SymbolKind, variant?: BodyVariantId): ZoneBinding 
         'body-left',
         'inward',
         source(
-          'core/src/compose.ts:105–119, 200–201',
+          'core/src/compose.ts:106–120, 202–203',
           'Die vermessene Grenze des mittigen Laufs ist dieses weiße Innenfeld, also 1 mm Marge ' +
             'und 28 mm Breite. Der Katalog kennt das Innenfeld als eigene Fläche in `compose()` ' +
             'nicht — die Formation ist dort **ein** Rechteck.',
@@ -781,7 +781,7 @@ function centerZone(
       'body-left',
       'inward',
       source(
-        'core/src/compose.ts:105–119, 186–201',
+        'core/src/compose.ts:106–120, 188–203',
         'Symmetrischer Rand der Ausgabebox gegen die Körperhülle; am 30 mm breiten ' +
           'Formationskörper ergibt das die 28-mm-Box. Vermessen ist das weiße Innenfeld der ' +
           'Referenz (`rect` 2/7 bis 30/25), nicht die Box selbst: die 28 mm sind eine ' +
@@ -850,7 +850,7 @@ function bottomLabelZone(
       COMPOSE_ZONE_CONSTANTS.BOTTOM_LABEL_CAP_HEIGHT_MM,
       'height',
       source(
-        'core/src/compose.ts:245–247, 248–260',
+        'core/src/compose.ts:246–248, 250–262',
         'Versalhöhe der unteren Schriftgrade, gemessen an E.1.1 bis E.1.16. Der Schriftgrad ' +
           '(4,24 mm) ist daraus über `ARIMO_CAP_HEIGHT_FRACTION` abgeleitet: an der Referenz ist ' +
           'die Versalhöhe ablesbar, der Schriftgrad nicht.',

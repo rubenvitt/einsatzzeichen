@@ -65,7 +65,6 @@ export const ORGANIZATION_IDS: readonly OrganizationId[] = keysOf<OrganizationId
   thw: true,
   'fuehrung-leitung': true,
   polizei: true,
-  bundespolizei: true,
   bundeswehr: true,
   'sonstige-gefahrenabwehr': true,
   'zivile-einheiten': true,

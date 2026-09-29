@@ -103,11 +103,14 @@ export function arcPath(
 }
 
 /*
- * Kürzel: Die Referenz setzt sie halbfett in einer schmaleren Schrift als Arimo. Gesetzt wird
- * Arimo Bold (`fontWeight: 700`, Ausnahme „mBS"). Der Schriftgrad ist das geometrische Mittel
- * aus Passung auf die Referenzhöhe und auf die Referenzbreite der Tinte, auf 0,05 mm gerundet; die
- * Tintenmitte liegt auf der Referenzmitte. Wo Arimo auf Referenzhöhe den Körper berühren würde
- * („mBS", „APRT"), gilt allein die Referenzbreite.
+ * Kürzel: Die Referenz setzt sie in einer schmaleren Schrift als Arimo, in derselben
+ * Strichstärke wie allen Katalogtext. Gesetzt wird Arimo 500 (`CATALOG_TEXT_FONT_WEIGHT`,
+ * LFH-585). Der Schriftgrad ist das geometrische Mittel aus Passung auf die Referenzhöhe und auf
+ * die Referenzbreite der Tinte, auf 0,05 mm gerundet, gerechnet mit den Metriken von Arimo Bold,
+ * in dem die Kürzel bis LFH-585 standen; die Tintenmitte liegt auf der Referenzmitte. Wo Arimo
+ * auf Referenzhöhe den Körper berühren würde („mBS", „APRT"), gilt allein die Referenzbreite.
+ * Arimo 500 läuft in diesen Kürzeln 0,6 bis 3,6 % schmaler als Bold; die Grade bleiben stehen,
+ * denn keins der Kürzel passt bei voller Referenzhöhe in seine Box.
  */
 
 const DEVICE_CONTRAST = [
@@ -150,7 +153,6 @@ function deviceLabel(
     sizeMm,
     boxMm,
     minRenderPx: 32,
-    fontWeight: 700,
   });
 }
 
@@ -165,7 +167,6 @@ function exchangeLabel() {
     sizeMm: 12.55,
     boxMm: { xMm: 11.7, yMm: 11.95, widthMm: 8.85, heightMm: 9.55 },
     minRenderPx: 32,
-    fontWeight: 700,
   });
 }
 
@@ -175,8 +176,10 @@ function exchangeBar() {
 }
 
 /**
- * Kleines Kürzel (Gateway, Repeater): Referenzversalhöhe 4,9 mm, daraus 6,9 mm Schriftgrad.
- * `minRenderPx: 64`, weil 6,9 mm bei 32 px nur 6,9 px effektiv tragen.
+ * Kleines Kürzel (Gateway, Repeater): Referenzversalhöhe 4,9 mm, daraus 7,1 mm Schriftgrad.
+ * Bis LFH-585 stand der Grad in Arimo Bold bei 6,9 mm; in Arimo 500 passt die volle Versalhöhe
+ * in die Boxen („DMO" 15,69 mm Tinte in 16 mm, „TMO" 15,32 mm in 15,6 mm).
+ * `minRenderPx: 64`, weil 7,1 mm bei 32 px nur 7,1 px effektiv tragen.
  */
 function smallLabel(
   content: string,
@@ -187,10 +190,9 @@ function smallLabel(
   return commsText(content, {
     x: xMm,
     y: baselineMm,
-    sizeMm: 6.9,
+    sizeMm: 7.1,
     boxMm,
     minRenderPx: 64,
-    fontWeight: 700,
   });
 }
 
@@ -241,14 +243,13 @@ export const DEVICE_COMMS = deepFreeze([
         sizeMm: 9.15,
         boxMm: { xMm: 10.05, yMm: 14.35, widthMm: 12.35, heightMm: 7.1 },
         minRenderPx: 32,
-        fontWeight: 700,
       }),
     ],
   }),
   /**
    * Mobile Basisstation: Kreis um (16|16) mit r 12, ohne Giebel. „mBS" läuft in Arimo bei
-   * Referenzhöhe in den Kreis hinein; der Schriftgrad (9,15 mm, Arimo Regular — fett lag hier im
-   * Pixelvergleich knapp schlechter) folgt deshalb der
+   * Referenzhöhe in den Kreis hinein; der Schriftgrad (9,15 mm, damals in Arimo Regular bestimmt,
+   * seit LFH-585 in 500 gesetzt; die Tinte passt weiter in die Box) folgt deshalb der
    * Referenzbreite 6,75 … 25,5 mm, Grundlinie 19 mm.
    */
   defineComms({
@@ -378,7 +379,6 @@ export const DEVICE_COMMS = deepFreeze([
         sizeMm: 8.7,
         boxMm: { xMm: 4.1, yMm: 12.7, widthMm: 23.9, heightMm: 6.6 },
         minRenderPx: 32,
-        fontWeight: 700,
       }),
     ],
   }),
@@ -465,7 +465,8 @@ export const DEVICE_COMMS = deepFreeze([
   /**
    * Dieselbe Vermittlung als VoIP. Ohne das Wort unten links wäre dieses Zeichen von J.3.14 nicht
    * zu unterscheiden — die Referenzgeometrien sind bis auf Rundungsstellen identisch. „VoIP":
-   * Versalhöhe 2,9 mm ab x 5,5 mm, Grundlinie 26 mm, daraus 4,1 mm Schriftgrad. Deshalb trägt
+   * Versalhöhe 2,92 mm ab x 5,5 mm, Grundlinie 26 mm, daraus 4,243 mm Schriftgrad (bis LFH-585
+   * in Arimo Bold verkleinert auf 4,1 mm; in Arimo 500 passt die volle Höhe). Deshalb trägt
    * das Zeichen zwei Läufe mit sehr verschiedenen Einsatzgrenzen: 32 px für das „C", 64 px für
    * das kleine „VoIP".
    */
@@ -483,11 +484,10 @@ export const DEVICE_COMMS = deepFreeze([
       commsText('VoIP', {
         x: 5.35,
         y: 26,
-        sizeMm: 4.1,
+        sizeMm: 4.243,
         anchor: 'start',
         boxMm: { xMm: 5.05, yMm: 22.85, widthMm: 9.3, heightMm: 3.5 },
         minRenderPx: 64,
-        fontWeight: 700,
       }),
     ],
   }),

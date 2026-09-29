@@ -48,7 +48,10 @@ export const TEXT_FONT_SHA256 = 'e68be22b52529b0541129578216dab440cb000261148683
  * Datei reproduzierbar ist). Nötig, weil resvg 2.6 die wght-Achse der variablen Datei nicht
  * auswertet: `font-weight="700"` rastert mit ihr allein bit-identisch zu 400. Liegt diese Datei
  * zusätzlich vor, wählt resvg sie für fett gesetzte Läufe (`fontWeight: 700` am Textprimitiv);
- * nicht fette Läufe rastern unverändert. Einen kursiven Schnitt führt das Projekt nicht.
+ * nicht fette Läufe rastern unverändert. Der Katalog selbst setzt seit LFH-585 keinen fetten Lauf
+ * mehr; die Datei bleibt für eigene IR mit `fontWeight: 700`, die Beschriftung von
+ * `visual-proof.ts` und die Bildunterschriften der Kontaktbögen. Den einzigen kursiven Schnitt
+ * führt `TEXT_FONT_MEDIUM_ITALIC_PATH` (Stufe 500).
  */
 export const TEXT_FONT_BOLD_PATH = fileURLToPath(
   new URL('../assets/Arimo-Bold.ttf', import.meta.url),
@@ -58,13 +61,65 @@ export const TEXT_FONT_BOLD_PATH = fileURLToPath(
 export const TEXT_FONT_BOLD_SHA256 =
   '0f8eb8ed8b92a80cbbbcadb382089e8fda8d50015b0e36212c341c1a6b96341a';
 
+/**
+ * Statische Instanz wght 500 („Medium") derselben Schrift, erzeugt wie die Fettinstanz von
+ * `scripts/font/subset-arimo.sh` (LFH-585 Option B). In ihr setzt der Katalog allen Text
+ * (`CATALOG_TEXT_FONT_WEIGHT` in core): Die Referenz kennt nur eine Strichstärke, und Arimo 500
+ * trifft sie auf rund 3 %. Die Datei heißt in der Namenstabelle „Arimo Medium" (ID 1) mit der
+ * typografischen Familie „Arimo" (ID 16) und usWeightClass 500; nur so wählt resvg sie für
+ * `font-weight="500"`. Läufe in 400 und 700 rastern mit ihr bit-gleich wie ohne sie.
+ */
+export const TEXT_FONT_MEDIUM_PATH = fileURLToPath(
+  new URL('../assets/Arimo-Medium.ttf', import.meta.url),
+);
+
+/** Prüfsumme der eingecheckten Instanz wght 500. */
+export const TEXT_FONT_MEDIUM_SHA256 =
+  '0eb23f0177e7ab333c7ddee337deb2ed133363777c40dae3c078695b0f8bdd35';
+
+/**
+ * Prüfsumme des zweiten Upstream-Originals: `Arimo-Italic[wght].ttf` aus demselben Verzeichnis von
+ * google/fonts (Arimo 1.341, 543 196 Byte, Achse wght 400–700, keine Achse ital oder slnt). Aus
+ * ihm leitet `scripts/font/subset-arimo.sh` die Kursivinstanz ab. Die Datei selbst liegt nicht im
+ * Repository: resvg wertet ihre wght-Achse nicht aus und zeichnete sie immer in 400.
+ */
+export const TEXT_FONT_ITALIC_SOURCE_SHA256 =
+  'a80fc54fd0233c1dfe298577c4d00f5ae81d5bb83510975e473c47e699b7f4ed';
+
+/**
+ * Statische Kursivinstanz wght 500 („Medium Italic", LFH-585). Die Referenz setzt genau einen
+ * Lauf kursiv, „Bezeichnung" in D.1.1. `scripts/font/subset-arimo.sh` reduziert das kursive
+ * Original mit denselben `pyftsubset`-Argumenten wie die aufrechte Datei und instanziiert es bei
+ * 500. Namen: Familie „Arimo Medium" (ID 1), Stil „Italic" (ID 2), typografische Familie „Arimo"
+ * (ID 16), Stil „Medium Italic" (ID 17), PostScript-Name `Arimo-MediumItalic`, usWeightClass
+ * 500, Kursiv-Bit gesetzt.
+ *
+ * resvg gibt **jedem** kursiven Lauf diese Datei, auch einem, der 400 oder 700 verlangt; ein
+ * Browser zeichnete dort eine andere Stufe. Deshalb lässt das Schema `fontStyle: 'italic'` nur
+ * zusammen mit `fontWeight: 500` zu; das Textmetrik-Gate in core prüft das. Aufrechte Läufe
+ * rastern mit ihr bit-gleich wie ohne sie.
+ * Arimo Italic neigt um 11,0°, die Referenz um 9,0°; hingenommen.
+ */
+export const TEXT_FONT_MEDIUM_ITALIC_PATH = fileURLToPath(
+  new URL('../assets/Arimo-MediumItalic.ttf', import.meta.url),
+);
+
+/** Prüfsumme der eingecheckten Kursivinstanz wght 500. */
+export const TEXT_FONT_MEDIUM_ITALIC_SHA256 =
+  '72cdd3f0395bf0bf3752dcf6d92fb4d5b3559323aa0dc4bde95acff94eb03bd1';
+
 export function resvgFontOptions(): {
   fontFiles: string[];
   loadSystemFonts: false;
   defaultFontFamily: string;
 } {
   return {
-    fontFiles: [TEXT_FONT_PATH, TEXT_FONT_BOLD_PATH],
+    fontFiles: [
+      TEXT_FONT_PATH,
+      TEXT_FONT_MEDIUM_PATH,
+      TEXT_FONT_BOLD_PATH,
+      TEXT_FONT_MEDIUM_ITALIC_PATH,
+    ],
     loadSystemFonts: false,
     defaultFontFamily: TEXT_FONT_FAMILY,
   };

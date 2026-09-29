@@ -124,7 +124,7 @@ const ADMIN_BINDING_MEASURED: BlockCombinationBinding = Object.freeze({
   definedAt: ADMIN_BINDING_AT,
   reason:
     'Der Verwaltungskopf wird nur zusammen mit einer exakt aufgelösten Funktionsfassung gesetzt. ' +
-    '`compose.ts:1015–1024` platziert ihn nur, wenn `roleDefinition` vorliegt, und zwar an deren ' +
+    '`compose.ts:1017–1026` platziert ihn nur, wenn `roleDefinition` vorliegt, und zwar an deren ' +
     '`layout.headTopMm`, also nicht über die allgemeine Kopfzone. `validate.ts` lehnt die Stufe ' +
     'ohne aufgelöste Funktionsfassung mit dieser Regel ab, obwohl der Kopf vermessen ist. Ohne ' +
     'Funktionsfassung ist der Baustein heute nicht darstellbar.',

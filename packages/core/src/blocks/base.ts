@@ -369,9 +369,10 @@ const CHAPTER_TWO =
   'Aus Kapitel 2 der BBK/BABZ-Empfehlung abgeleitet, Werte per `pnpm cli audit:reference` gegen `fingerprints.json` belegt (organizations.ts:4–5).';
 
 /**
- * Die neun Organisationsfarben. Seit LFH-424 sind alle neun `OrganizationId`-Werte belegt; der
- * Wurf in `organizationColor()` ist unerreichbar. Einen Abschnitt je Organisation nennt der
- * Fundort nur für die Hilfsorganisation (2.2) und die Bundespolizei (N.1.3).
+ * Die acht Organisationsfarben. Seit LFH-424 sind alle `OrganizationId`-Werte belegt; der
+ * Wurf in `organizationColor()` ist für typgerechte Aufrufer unerreichbar. Einen Abschnitt je
+ * Organisation nennt der Fundort nur für die Hilfsorganisation (2.2). Die frühere neunte
+ * Organisation `bundespolizei` entfiel mit LFH-586: Die Bundespolizei ist Polizei (Tafel 2.5).
  */
 export const COLOR_BLOCKS: readonly BlockEntry[] = Object.freeze([
   block('color', 'feuerwehr', 'body', measured(`${ORGANIZATIONS}:26`, `Farbton \`rot\`. ${CHAPTER_TWO}`)),
@@ -385,38 +386,28 @@ export const COLOR_BLOCKS: readonly BlockEntry[] = Object.freeze([
   block('color', 'polizei', 'body', measured(`${ORGANIZATIONS}:29`, `Farbton \`gruen\`. ${CHAPTER_TWO}`)),
   block(
     'color',
-    'bundespolizei',
-    'body',
-    measured(
-      `${ORGANIZATIONS}:30`,
-      `Farbton \`hellgruen\`. Anhang N.1.3 belegt die Bundespolizei als eigenständige hellgrüne Organisation; sie darf nicht mit der grünen Polizei kollabieren (organizations.ts:6–7).`,
-      babz('N.1.3'),
-    ),
-  ),
-  block(
-    'color',
     'bundeswehr',
     'body',
-    measured(`${ORGANIZATIONS}:31`, `Farbton \`braun\`. ${CHAPTER_TWO}`),
+    measured(`${ORGANIZATIONS}:30`, `Farbton \`braun\`. ${CHAPTER_TWO}`),
   ),
   block(
     'color',
     'sonstige-gefahrenabwehr',
     'body',
-    measured(`${ORGANIZATIONS}:32`, `Farbton \`orange\`. ${CHAPTER_TWO}`),
+    measured(`${ORGANIZATIONS}:31`, `Farbton \`orange\`. ${CHAPTER_TWO}`),
   ),
   block(
     'color',
     'zivile-einheiten',
     'body',
-    measured(`${ORGANIZATIONS}:33`, `Farbton \`hellgrau\`. ${CHAPTER_TWO}`),
+    measured(`${ORGANIZATIONS}:32`, `Farbton \`hellgrau\`. ${CHAPTER_TWO}`),
   ),
   block(
     'color',
     'hilfsorganisation',
     'body',
     measured(
-      `${ORGANIZATIONS}:34`,
+      `${ORGANIZATIONS}:33`,
       'Farbton `weiss`. `2.2_Organisationen.svg` trägt einen vollflächigen Fleck `#ffffff` über 0/0/32/32, seine Typo-Ebene liest gerastert „HiOrg". Vorbehalt: `#ffffff` ist zugleich die neutrale Grundfüllung; ein Zeichen mit dieser Organisation ist von einem organisationslosen farblich nicht unterscheidbar (organizations.ts:9–23).',
       babz('2.2'),
     ),

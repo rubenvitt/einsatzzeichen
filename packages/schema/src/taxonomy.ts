@@ -92,7 +92,7 @@ export type OrganizationId =
   | 'thw'
   | 'fuehrung-leitung'
   | 'polizei'
-  | 'bundespolizei'
+  // `bundespolizei` entfiel mit LFH-586: Die Bundespolizei gehört zur Polizei (Tafel 2.5).
   | 'bundeswehr'
   | 'sonstige-gefahrenabwehr'
   | 'zivile-einheiten'

@@ -14,7 +14,7 @@ describe('Wertelisten der SymbolSpec-Achsen', () => {
   it('trägt die Zahlen der Achsen aus taxonomy.ts', () => {
     expect(SYMBOL_KINDS).toHaveLength(19);
     expect(BODY_VARIANT_IDS).toHaveLength(10);
-    expect(ORGANIZATION_IDS).toHaveLength(9);
+    expect(ORGANIZATION_IDS).toHaveLength(8);
     expect(STRENGTH_IDS).toHaveLength(4);
     expect(ADMIN_LEVEL_IDS).toHaveLength(6);
     expect(VEHICLE_CATEGORY_IDS).toHaveLength(8);

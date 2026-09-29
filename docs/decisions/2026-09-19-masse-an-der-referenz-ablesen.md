@@ -93,6 +93,13 @@ selben Tag an den Koordinator delegiert; die Antworten stehen in Abschnitt 5.
    Fläche in der Farbe der Bundespolizei, der Titel nennt die Polizei, und die Fachfrage „wer
    betreibt die farbigen Kreiszeichen?“ ist offen. Die Farbe allein belegt nicht genug, um die
    fachliche Aussage des Zeichens zu ändern; die Zeile bleibt `deviation` mit diesem Befund.
+
+   > **Nachtrag vom 29. September 2026 (LFH-586).** Die Bundespolizei ist keine eigene
+   > Organisation, die Polizei bleibt Grün `#14a01e` (Entscheidung Ruben Vitt). Damit trägt die
+   > Fläche von G.3.2 nicht „die Farbe der Bundespolizei“: `bundespolizei` gibt es im Katalog
+   > nicht mehr, D.4.4 und N.1.3 sind ebenfalls `polizei`. G.3.2 bleibt `polizei`; die hellgrüne
+   > Füllung der Vorlage ist wie bei D.4.4 und N.1.3 eine bewusste Farbabweichung. Siehe
+   > `2026-09-29-lfh-586-bundespolizei-ist-polizei.md`.
 4. **Schrift:** Arimo bleibt. Die Referenzschrift ist in Umrisse umgewandelt und nicht bestimmbar;
    eine schmal laufende Ersatzschrift bräuchte eine Lizenzprüfung und neue Metriken für alle
    Textläufe. Kursiv (D.1.1) entfällt aus demselben Grund. Beides ist eine eigene Aufgabe.
@@ -107,7 +114,8 @@ selben Tag an den Koordinator delegiert; die Antworten stehen in Abschnitt 5.
 - Die Referenzschrift ist eine halbfette, schmal laufende Grotesk, nicht Arimo. Sie ist der größte
   verbleibende Unterschied in allen Familien mit Text (siehe 5.4). Die Vermessung in LFH-585
   relativiert das: nur rund 9 % schmaler als Arimo, eine einzige Strichstärke zwischen Arimo 400
-  und 700; siehe `2026-09-29-lfh-585-ersatzschrift-und-kursiv.md` (Vorlage, offen).
+  und 700; siehe `2026-09-29-lfh-585-ersatzschrift-und-kursiv.md` (entschieden: Option B,
+  Stufe 500). Kursiv umgesetzt, siehe LFH-585 (dort Abschnitt 11).
 - Mindeststrichbreite je Ausgabegröße (siehe 5.2). Umgesetzt in LFH-584, siehe
   `2026-09-29-lfh-584-mindeststrichbreite.md`.
 - Die übrigen Kapitel-4-Piktogramme passen nicht in den Formationskörper. Wie ein Piktogramm in

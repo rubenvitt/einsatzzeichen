@@ -58,7 +58,8 @@ export interface ElementDescriptor {
  * Fleck der Hilfsorganisationen (vollflächig `#ffffff` wie 2.1 und 2.3 bis 2.8, Typo-Ebene liest
  * gerastert „HiOrg"). Die frühere Annahme, aus dem Namen folge keine Zuordnung, ist damit
  * widerlegt — nachgezählt: genau acht Dateien des Kapitels tragen Fleck **und** Typo-Ebene.
- * Anhang N.1.3 ergänzt als neunte Organisation die Bundespolizei mit hellgrünem Fleck.
+ * Eine neunte Organisation `bundespolizei` (hellgrüner Fleck aus N.1.3) gab es bis LFH-586; seit
+ * der Entscheidung vom 29.09.2026 gehört die Bundespolizei zur Polizei (Tafel 2.5).
  *
  * Bei den Stärkegraden enthält `referenceAssets` mehr als die namensgebende Datei: die
  * `5.4.x`-Dateien sind eigenständige Anzeigedarstellungen mit r = 4 und selbst keine Kopfzonen;
@@ -90,12 +91,6 @@ const STATIC_ELEMENTS = {
     kind: 'organization',
     title: 'Polizei',
     referenceAssets: ['2.5_Polizei.svg'],
-  },
-  'organization.bundespolizei': {
-    id: 'organization.bundespolizei',
-    kind: 'organization',
-    title: 'Bundespolizei',
-    referenceAssets: ['N.1.3_Einsatzfahrzeug_Bundespolizei.svg'],
   },
   'organization.bundeswehr': {
     id: 'organization.bundeswehr',

@@ -3,8 +3,8 @@ import type { ColorToken, OrganizationId } from '@einsatzzeichen/schema';
 /**
  * Aus Kapitel 2 der BBK/BABZ-Empfehlung abgeleitet, Werte per `pnpm cli audit:reference`
  * gegen `fingerprints.json` belegt. **Seit LFH-424 vollständig: acht Organisationsflecken für die
- * acht Organisationen aus Kapitel 2.** Anhang N.1.3 belegt zusätzlich die Bundespolizei als
- * eigenständige hellgrüne Organisation; sie darf nicht mit der grünen Polizei kollabieren.
+ * acht Organisationen aus Kapitel 2.** Die Bundespolizei ist Polizei (Tafel 2.5), keine eigene
+ * Organisation; `bundespolizei` entfiel mit LFH-586 (Entscheidung vom 29.09.2026).
  *
  * `hilfsorganisation` fehlte bis dahin mit der Begründung, Kapitel 2 enthalte dafür keine
  * Referenzdatei. Das ist widerlegt: `2.2_Organisationen.svg` trägt einen vollflächigen Fleck
@@ -27,7 +27,6 @@ export const ORGANIZATION_COLORS = {
   thw: 'blau',
   'fuehrung-leitung': 'gelb',
   polizei: 'gruen',
-  bundespolizei: 'hellgruen',
   bundeswehr: 'braun',
   'sonstige-gefahrenabwehr': 'orange',
   'zivile-einheiten': 'hellgrau',
@@ -42,10 +41,11 @@ export const ORGANIZATION_COLORS = {
 const colorsByOrganization: Partial<Record<OrganizationId, ColorToken>> = ORGANIZATION_COLORS;
 
 /**
- * Wirft, wenn die Organisation im Referenzumfang dieses Slice nicht belegt ist. Seit alle neun
- * `OrganizationId`-Werte belegt sind, ist der Wurf unerreichbar — er bleibt trotzdem stehen: der
- * Typ ist weiterhin `Partial<Record<…>>`, und eine künftige Erweiterung von `OrganizationId` soll
- * hier auffallen statt `undefined` weiterzureichen.
+ * Wirft, wenn die Organisation im Referenzumfang dieses Slice nicht belegt ist. Alle acht
+ * `OrganizationId`-Werte sind belegt; für typgerechte Aufrufer ist der Wurf deshalb unerreichbar.
+ * Er bleibt trotzdem stehen: der Typ ist weiterhin `Partial<Record<…>>`, eine künftige
+ * Erweiterung von `OrganizationId` soll hier auffallen statt `undefined` weiterzureichen, und
+ * ungetypte Eingaben mit einem entfallenen Wert (etwa `bundespolizei`, LFH-586) landen hier.
  */
 export function organizationColor(id: OrganizationId): ColorToken {
   const color = colorsByOrganization[id];

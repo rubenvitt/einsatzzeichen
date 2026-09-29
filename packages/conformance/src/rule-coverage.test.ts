@@ -168,7 +168,9 @@ const REACH_TIMEOUT_MS = 30_000;
 
 describe('generativeReach (echter Bestand)', () => {
   it('enumeriert Stufe 1 mit echtem validateSpec und compose', () => {
-    // 19 Arten × (∅+10) Varianten × (∅+9) Organisationen × (∅+4+2+6) Kopfzonen × (∅+8) Fahrwerke.
+    // 19 Arten × (∅+10) Varianten × (∅+8) Organisationen × (∅+4+2+6) Kopfzonen × (∅+8) Fahrwerke.
+    // Seit LFH-586 (29.09.2026) acht statt neun Organisationen: `bundespolizei` entfiel, die
+    // Reichweite sank von 993/924 auf 894/832; die belegten Signaturen blieben davon unberührt.
     // Seit dem 19.09.2026 zwei technische Kopfmarken (`double-vertical-bar` für E.1.31): +10 gültige
     // Kombinationen an der Formation, und E.1.31 bringt eine eigene Rezeptsignatur mit.
     // Die Reichweitenzahlen wachsen mit den vermessenen Verträgen (ein neues Fahrwerk, eine neue
@@ -176,9 +178,9 @@ describe('generativeReach (echter Bestand)', () => {
     // sind Kombinationen, die die Regeln durchlassen und erst der Motor ablehnt — heute das
     // Amphibienfahrzeug-Fahrwerk (60) und die Körperfüllung an `event` (9).
     const reach = generativeReach();
-    expect(reach.enumerated).toBe(19 * 11 * 10 * 13 * 9);
-    expect(reach.validBySpec).toBe(993);
-    expect(reach.valid).toBe(924);
+    expect(reach.enumerated).toBe(19 * 11 * 9 * 13 * 9);
+    expect(reach.validBySpec).toBe(894);
+    expect(reach.valid).toBe(832);
     // F.1.1 und F.1.3 (Doppelbalken) sowie F.1.13 und F.1.21 (Einzelbalken) tragen seit dem
     // Fachreview ihre Kopfmarke; dazu +20 gültige Kombinationen, weil die technische Kopfmarke
     // jetzt auch an der Formation mit Fußband belegt ist (2 Marken × 10 Organisationen).
@@ -186,9 +188,9 @@ describe('generativeReach (echter Bestand)', () => {
     // (C.1.7), das Landfahrzeug mit Kategorie 1 und mit Kategorie 2, den Anhänger mit einem Rad
     // (C.2.29), denselben Anhänger mit Fußband (C.2.30) und das Kettenfahrzeug mit
     // inverted-hull-track (C.2.31). C.1.8 teilt seine Signatur mit C.1.1. Keine der sechs liegt
-    // außerhalb der Reichweite; die Gültigkeitszahlen bleiben unverändert.
+    // außerhalb der Reichweite; sie bleiben auch mit acht Organisationen (LFH-586) gültig.
     expect(reach.referenced).toBe(77);
-    expect(reach.reachOnly).toBe(924 - 77);
+    expect(reach.reachOnly).toBe(832 - 77);
     // Acht Rezeptsignaturen sind für sich allein nicht gültig: die farbigen Kreisverträge
     // brauchen ihre Körpermarke, die Personen mit Verwaltungsstufe ihre Funktionsrolle, das
     // eingesenkte Wasserfahrzeug seine Beschriftung. Stufe 1 enumeriert keine dieser Achsen.

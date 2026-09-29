@@ -21,16 +21,22 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { gunzipSync } from 'node:zlib';
 
 /**
- * Grenzen, gemessen am 21. September 2026 auf `feat/lfh-560-paketschnitt` nach LFH-570/571
- * (`tsc -b packages/core/tsconfig.build.json`, dann `pnpm pack`):
+ * Grenzen, zuletzt gemessen am 29. September 2026 auf `claude/lfh-582-orchestrierung-b01e7a` nach
+ * dem Merge von LFH-786 (`tsc -b packages/core/tsconfig.build.json`, dann `pnpm pack`):
  *
  * | Größe | gemessen | Obergrenze | Untergrenze |
  * |---|---|---|---|
- * | Tarball (gepackt) | 422 660 B | 500 000 B (+18 %) | 250 000 B |
- * | entpackt | 6 060 107 B | 6 500 000 B (+7 %) | 3 000 000 B |
- * | Einträge | 275 | — | 200 |
+ * | Tarball (gepackt) | 515 836 B | 600 000 B (+16 %) | 250 000 B |
+ * | entpackt | 6 469 058 B | 6 900 000 B (+7 %) | 3 000 000 B |
+ * | Einträge | 331 | — | 200 |
  *
- * **Entpackt ist die scharfe Grenze.** Der Puffer von rund 440 KB ist kleiner als
+ * Angehoben am 29.09.2026 (vorher 500 000 / 6 500 000 B, gemessen am 21.09.2026 mit 422 660 /
+ * 6 060 107 B): legitimes Wachstum durch zwei weitere Textmetriken (Arimo Medium und Medium
+ * Italic, je rund 78 KB, LFH-585), das Feld `fontStyle` in allen Piktogramm-Deklarationen und die
+ * in Anhang C eingesetzten Kapitel-4-Piktogramme (LFH-786). Einzeln lag jeder Stand unter der
+ * alten Grenze, zusammen gepackt 515 836 B darüber.
+ *
+ * **Entpackt ist die scharfe Grenze.** Der Puffer von rund 430 KB ist kleiner als
  * `fingerprints.json` (503 954 B): landet die Datei — oder ihr Inhalt, in ein `.ts`-Modul
  * verpackt — in `dist`, reißt die Grenze. Gepackt fiele dieselbe Datei nicht auf, sie komprimiert
  * auf rund 23 KB; die Tarball-Grenze fängt nur den groben Fall (die Snapshots komprimieren auf
@@ -42,9 +48,9 @@ import { gunzipSync } from 'node:zlib';
  * winziges Paket, und eine reine Obergrenze wäre dann grün.
  */
 export const LIMITS = Object.freeze({
-  maxPackedBytes: 500_000,
+  maxPackedBytes: 600_000,
   minPackedBytes: 250_000,
-  maxUnpackedBytes: 6_500_000,
+  maxUnpackedBytes: 6_900_000,
   minUnpackedBytes: 3_000_000,
   minEntries: 200,
 });
@@ -70,7 +76,7 @@ const FORBIDDEN = [
 const ALLOWED = [
   /^package\/(package\.json|README\.md|LICENSE)$/,
   /^package\/dist\/.+\.(js|d\.ts|d\.ts\.map)$/,
-  /^package\/dist\/assets\/arimo(-bold)?-metrics\.json$/,
+  /^package\/dist\/assets\/arimo(-bold|-medium|-medium-italic)?-metrics\.json$/,
 ];
 
 /**

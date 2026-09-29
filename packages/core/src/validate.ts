@@ -119,7 +119,7 @@ function administrativeLevelId(value: unknown): value is AdminLevelId {
 
 function organizationId(value: unknown): value is OrganizationId {
   return value === 'feuerwehr' || value === 'thw' || value === 'fuehrung-leitung' ||
-    value === 'polizei' || value === 'bundespolizei' || value === 'bundeswehr' ||
+    value === 'polizei' || value === 'bundeswehr' ||
     value === 'sonstige-gefahrenabwehr' || value === 'zivile-einheiten' ||
     value === 'hilfsorganisation';
 }

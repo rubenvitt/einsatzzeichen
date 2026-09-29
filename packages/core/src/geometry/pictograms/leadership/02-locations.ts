@@ -1,6 +1,7 @@
 import type { Point, Primitive, Style } from '@einsatzzeichen/schema';
 import { DEFAULT_VIEWBOX_MM } from '@einsatzzeichen/schema';
 import { defineLeadership, type PictogramContrastPair } from '../catalog-definition.js';
+import { CATALOG_TEXT_FONT_WEIGHT } from '../../../render/text-policy.js';
 
 const LOCATION_STROKE_WIDTH_MM = 0.5;
 
@@ -114,6 +115,7 @@ function locationText(
     baseline: 'alphabetic',
     boxMm: { ...options.boxMm },
     minRenderPx: options.minRenderPx,
+    fontWeight: CATALOG_TEXT_FONT_WEIGHT,
     style: { ...BLACK_FILL },
   };
 }
@@ -199,7 +201,7 @@ export const LOCATION_PICTOGRAMS = [
         x: 16.365,
         y: 19,
         sizeMm: 10,
-        boxMm: { xMm: 14.375, yMm: 12.125, widthMm: 4.4375, heightMm: 6.875 },
+        boxMm: { xMm: 14.25, yMm: 12.125, widthMm: 4.6875, heightMm: 6.875 },
         minRenderPx: 32,
       }),
     ],
@@ -222,7 +224,7 @@ export const LOCATION_PICTOGRAMS = [
         x: 16.238,
         y: 22,
         sizeMm: 10,
-        boxMm: { xMm: 9.5625, yMm: 15, widthMm: 13.75, heightMm: 7.125 },
+        boxMm: { xMm: 9.3125, yMm: 15, widthMm: 14.1875, heightMm: 7.125 },
         minRenderPx: 32,
       }),
     ],

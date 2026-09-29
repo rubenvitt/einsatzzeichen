@@ -200,12 +200,12 @@ export const ANHANG_I_F_RECIPES = {
  * separat vermessene kompakte Formationsfassung. Dreieckspaar und Winkel bleiben geometrisch
  * getrennt, damit weder die kombinierte F.1.16-Zeichnung noch eine ungeklärte Drohnensemantik
  * übernommen wird. Der Textlauf der ersten beiden Rezepte steht auf y=10,0 mm; seine aus dem
- * einzigen versalen S idealisierte Versalhöhe beträgt 2,5 mm.
+ * einzigen versalen S idealisierte Versalhöhe beträgt 2,5 mm (gesetzt seit LFH-585: 2,45 mm).
  */
 export const ANHANG_I_G_RECIPES = {
   // LFH-485 / Anhang I-g: Die Wasserrettungsmarke ist die separat vermessene kompakte
   // Formationsfassung. Dreieckspaar und Winkel bleiben geometrisch getrennt. Der Textlauf der
-  // ersten beiden Rezepte steht auf y=10,0 mm; die idealisierte Versalhöhe beträgt 2,5 mm.
+  // ersten beiden Rezepte steht auf y=10,0 mm; Versalhöhe idealisiert 2,5 mm, gesetzt 2,45 mm.
   'I.1.17': {
     title: 'Strömungsrettungstrupp',
     referenceAsset: 'I.1.17_Strömungsrettungstrupp.svg',
@@ -217,7 +217,7 @@ export const ANHANG_I_G_RECIPES = {
       labels: {
         center: 'Strömungsrettung',
         centerBaselineFromBodyBottomMm: 16,
-        centerCapHeightMm: 2.5,
+        centerCapHeightMm: 2.45,
         centerBoxMarginMm: 0.5,
       },
     },
@@ -233,7 +233,7 @@ export const ANHANG_I_G_RECIPES = {
       labels: {
         center: 'Strömungsrettung',
         centerBaselineFromBodyBottomMm: 16,
-        centerCapHeightMm: 2.5,
+        centerCapHeightMm: 2.45,
         centerBoxMarginMm: 0.5,
       },
     },
@@ -344,7 +344,7 @@ export const ANHANG_I_B_RECIPES = {
       labels: {
         center: 'Strömungsrettung',
         centerBaselineFromBodyBottomMm: 14.327,
-        centerCapHeightMm: 2.191447,
+        centerCapHeightMm: 2.12,
       },
     },
   },
