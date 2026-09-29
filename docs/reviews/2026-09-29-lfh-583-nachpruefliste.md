@@ -137,11 +137,10 @@ aus, siehe Schritt 3.
 - **Sichtprüfung:** Alle 93 Zeilen wurden als Kontaktbogen angesehen (vorher, Referenz, heute,
   Überlagerung). Die Gruppen B und C wurden zusätzlich vergrößert angesehen. Die Beschreibungen
   in der Spalte „Änderung durch PR #56“ stammen aus diesem Sichtvergleich.
-- **Skripte und Bilder** liegen außerhalb des Repos im Scratchpad der Sitzung:
-  `/private/tmp/claude-501/-Users-rubeen-dev-personal-taktik--claude-worktrees-lfh-582-orchestrierung-b01e7a/9db83bf3-3e21-419a-aa04-fe88fba2715f/scratchpad/lfh-583/`.
-  Dort liegen `compare.mts` (Vergleich), `snapshots.mts` (vorher/nachher), `sheets.mts` und
-  `zoom.mts` (Bilder), `parse_reviews.py` (Ledger-Stände) und `tables.py` (Tabellen).
-  Aufruf im Repo: `pnpm exec tsx <Pfad>/compare.mts <Pfad>`.
+- **Skripte und Bilder** sind nicht eingecheckt. Sie lagen nur in der Arbeitsumgebung der
+  Sitzung vom 29.09.2026 (Vergleich, vorher/nachher, Kontaktbögen, Ledger-Auswertung) und sind
+  dort vergänglich. Die Methode oben reicht, um den Vergleich neu zu schreiben; ob ein
+  Vergleichswerkzeug ins Repo gehört, ist offen.
 
 Lesehilfe für die Tabellen: **Fläche vorher → heute** ist der Anteil abweichender Pixel am
 ganzen Bild am 19.09. und heute. **Strichanteil heute** ist der Anteil abweichender Pixel an der
