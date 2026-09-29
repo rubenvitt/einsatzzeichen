@@ -38,18 +38,27 @@ vierte folgt daraus.
 4. **Versionssprung.** Jeder Weg ändert das `font-family` in jedem SVG mit Text und den
    exportierten Namen `ARIMO_CAP_HEIGHT_FRACTION`. C ist ein **Major-Release (3.0.0)**.
 
-Vor dem Umbau stehen drei Prüfungen aus. Alle brauchen Downloads (Abschnitt 7):
+Vor dem Umbau stehen Prüfungen aus (Abschnitt 7):
 
-- die Kursive von Plex (Neigung, Breite, g);
-- die Originaldatei von Plex Condensed, falls Weg U;
-- die Wahl der Datei durch resvg.
+- Download nötig: die Kursive von Plex (Neigung, Breite, g) und, falls Weg U, die Originaldateien
+  von Plex Condensed;
+- ohne Download möglich: bei Weg R die Wahl der Datei durch resvg und der Formvergleich aufrecht.
+  Die variable Plex-Datei aus der Schriftmessung genügt dafür.
 
 ## 1. Anlass und Auftrag
 
 LFH-585 hat Option B umgesetzt: Arimo in der statischen Stufe 500. B trifft die Strichstärke (3 %),
-nicht die Laufweite. Ein Lauf ist im Median 10,7 % breiter als in der Referenz. Keiner der 17
-verkleinerten Läufe kehrt deshalb über die Schrift auf Referenzgröße zurück. Sieben Läufe sind
-über ihre Boxen zurückgewachsen (LFH-585 §10.4), 14 bleiben verkleinert.
+nicht die Laufweite. Ein Lauf ist im Median 10,7 % breiter als in der Referenz.
+
+Zwei Zählweisen kommen vor:
+
+- **21 Läufe im Katalog** waren vor B verkleinert (LFH-585 §3.4). Davon sind 8 zurückgewachsen,
+  sieben in §10.4 und das große „DMO" per Nachtrag. Es bleiben **13**. Neu verkleinert sind die drei
+  Läufe „Strömungsrettung" (I.1.17, I.1.18, I.2.6).
+- **17 verschiedene Läufe** zählt die Schriftmessung, weil wortgleiche Läufe nur einmal zählen. Auf
+  diese Basis beziehen sich alle Angaben „x von 17" unten. Sie schätzen, wie viele in die Tinte
+  passen würden, die Arimo dort vor B belegte. Gegen diese Tinte kehrt mit B keiner zurück; die acht
+  sind über ihre Boxen gewachsen.
 
 LFH-790 verlangt:
 
@@ -159,7 +168,7 @@ Abschätzung mit der Methode der Schriftmessung an der variablen Datei:
 | | Weg R (Plex, umbenannt) | Weg U (Plex Condensed, Original) | Weg U (Source Sans 3, Original) |
 |---|---|---|---|
 | Laufweitenfehler | **2,7 %** | ≈ 4,8 % (zu schmal) | 3,8 % |
-| Formen | 3 von 3 | 3 von 3 | 2 von 3 |
+| Formen | 3 von 3 | 3 von 3 (angenommen, gemessen nur bei wdth 100) | 2 von 3 |
 | `font-family` im SVG | eigener Name, z. B. „Einsatzzeichen Sans" | „IBM Plex Sans Condensed" | „Source Sans 3" |
 | Teilmenge | ja, wie heute (Arimo: −83 %) | nein | nein |
 | vier Schnitte im Paket (400, 500, 700, 500 kursiv) | geschätzt 4 × 50–60 KB (wie die Arimo-Ableitungen) | 4 × 111–117 KB (google/fonts) | 4 × 318–431 KB |
@@ -276,12 +285,12 @@ im Paket. Einfacher ist es, sie mitzuwechseln. Sie zeigen nur Größenangaben, k
 ### (C0) Zurückstellen bis zum erneuten Fachreview
 
 - Die Familie wird nicht festgelegt, nichts wird umgebaut. Zuerst prüft das erneute Fachreview
-  (LFH-582) den Stand nach B.
+  (LFH-583) den Stand nach B.
 - Meldet es „falsche Schrift" nicht mehr, entfällt C.
 - **Dafür:** Es gibt kein Release 3.0.0 ohne fachlichen Anlass. Die Empfehlung aus LFH-585 §8.5
   gilt weiter.
 - **Dagegen:** Laufweite und Formen sind messbar falsch, auch wenn das Review sie nicht nennt. Die
-  14 verkleinerten Läufe bleiben.
+  13 verkleinerten Läufe (Katalogzählung) und die drei neu verkleinerten bleiben.
 
 ### (C1) Familie jetzt festlegen, Umbau nach dem Fachreview (Vorschlag)
 
@@ -303,7 +312,7 @@ im Paket. Einfacher ist es, sie mitzuwechseln. Sie zeigen nur Größenangaben, k
 | Wahl | Ergebnis | Aufwand zusätzlich zum Grundumbau |
 |---|---|---|
 | **Plex, Weg R** (Vorschlag) | am genauesten: 2,7 %, 3 von 3 Formen, 14 von 17 Läufen | Umbenennung; Eichung der Breite im Skript |
-| Plex Condensed, Weg U | ≈ 4,8 % zu schmal, 3 von 3 Formen, 15 von 17 Läufen | keine Umbenennung; größere Dateien; Condensed-Datei erst prüfen |
+| Plex Condensed, Weg U | ≈ 4,8 % zu schmal, 3 von 3 Formen (angenommen), 15 von 17 Läufen | keine Umbenennung; größere Dateien; Condensed-Datei erst prüfen |
 | Source Sans 3, Weg U | 3,8 %, 2 von 3 Formen, 13 von 17 Läufen | keine Umbenennung; Dateien je 318–431 KB |
 | Open Sans, abgeleitet | 2,6 %, nur 1 von 3 Formen | keine Umbenennung nötig |
 
@@ -317,8 +326,13 @@ Keine Datei ist geladen. Jede Zeile braucht die Freigabe des Projektinhabers.
 | Plex Condensed prüfen: Breite und Strich der Originaldatei, Abgleich mit der Abschätzung (nur Weg U) | `IBMPlexSansCondensed-Medium.ttf`, `IBMPlexSansCondensed-MediumItalic.ttf`, `OFL.txt` | google/fonts, `ofl/ibmplexsanscondensed/` | 111.176 und 115.728 Byte, OFL etwa 4 KB |
 | Fira Sans Regular als Gegenprobe zur Strichstärke (optional) | `FiraSans-Regular.ttf` | google/fonts, `ofl/firasans/` | 456.996 Byte |
 
-Die aufrechte variable Datei von Plex liegt aus der Schriftmessung noch im Scratchpad. Sie genügt,
-um bei Weg R die Stufen 400, 500 und 700 in geeichter Breite abzuleiten.
+Für die aufrechten Schnitte bei Weg R ist kein neuer Download nötig: `IBMPlexSans[wdth,wght].ttf`
+(537.244 Byte, SHA-256 `3b031aa4216174205bd8471f88a49b91f093169e9e87bd5262242bc5967fe2e3`,
+Schriftmessung §1) ist schon freigegeben und geladen worden. Daraus lassen sich 400, 500 und 700 in
+geeichter Breite ableiten, der resvg-Test und der Formvergleich laufen damit. Das Skript lädt die
+Datei später wie heute bei Arimo und prüft sie gegen diese Prüfsumme. Die Wahl durch resvg wird
+kaum scheitern: Eine abgeleitete Arimo-Medium mit denselben Namenseinträgen wählt resvg schon
+heute.
 
 **Was die Prüfung zeigen muss, bevor umgebaut wird:**
 
