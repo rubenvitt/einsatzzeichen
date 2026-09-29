@@ -38,6 +38,25 @@ export interface SvgOptions {
   minStrokeWidthPx?: number;
 }
 
+/**
+ * Aufzählungswerte der IR gehen nur über diese Tabellen ins Markup, nie als interpolierter
+ * Rohwert: Der Typ beschränkt sie, zur Laufzeit kann ein JavaScript-Aufrufer aber beliebige
+ * Strings übergeben (CodeQL js/html-constructed-from-input). Ein unbekannter Wert ergibt
+ * `undefined` und damit kein Attribut statt eingeschleusten Markups.
+ */
+const TEXT_ANCHOR_ATTR: Readonly<Record<string, string>> = Object.freeze({
+  start: 'text-anchor="start"',
+  middle: 'text-anchor="middle"',
+  end: 'text-anchor="end"',
+});
+const STROKE_LINEJOIN_ATTR: Readonly<Record<string, string>> = Object.freeze({
+  bevel: 'stroke-linejoin="bevel"',
+});
+const FILL_RULE_ATTR: Readonly<Record<string, string>> = Object.freeze({
+  nonzero: 'fill-rule="nonzero"',
+  evenodd: 'fill-rule="evenodd"',
+});
+
 function u(mm: number): string {
   return formatUnits(mmToUnits(mm));
 }
@@ -106,7 +125,7 @@ function styleAttrs(
         parts.push('stroke-linecap="butt"', 'stroke-linejoin="round"');
       }
       if (style.strokeLinejoin !== undefined && !options.pictogramStrokeContract) {
-        parts.push(`stroke-linejoin="${style.strokeLinejoin}"`);
+        parts.push(STROKE_LINEJOIN_ATTR[style.strokeLinejoin] ?? '');
       }
       const dashToken = style.bodyStrokeDashToken;
       const dash = options.role === 'body' && dashToken !== undefined
@@ -120,8 +139,8 @@ function styleAttrs(
       }
     }
   }
-  if (style?.fillRule !== undefined) parts.push(`fill-rule="${style.fillRule}"`);
-  return ` ${parts.join(' ')}`;
+  if (style?.fillRule !== undefined) parts.push(FILL_RULE_ATTR[style.fillRule] ?? '');
+  return ` ${parts.filter((part) => part !== '').join(' ')}`;
 }
 
 /**
@@ -240,7 +259,7 @@ function renderPrimitive(
     const styleStr = styleAttrs(style, theme, { role, fillOnly: true });
     const transform = transformAttr(primitive.transform);
     const attrs =
-      `x="${u(primitive.x)}" y="${u(primitive.y)}" text-anchor="${primitive.anchor}" ` +
+      `x="${u(primitive.x)}" y="${u(primitive.y)}" ${TEXT_ANCHOR_ATTR[primitive.anchor] ?? ''} ` +
       `dominant-baseline="${baselineAttr(primitive.baseline)}" font-family="${TEXT_FONT_FAMILY_ATTR}" ` +
       `font-size="${u(primitive.sizeMm)}"` +
       // Nur 500 und 700 schreiben ein Attribut: 400 ist der Default, und ohne Feld bleibt die
@@ -298,7 +317,9 @@ function assertValidIdPrefix(prefix: string): void {
 
 /** Nur 500 und 700 schreiben ein Attribut; alles andere (auch ungültige Laufzeitwerte) fällt auf 400. */
 function fontWeightAttr(fontWeight: unknown): string {
-  return fontWeight === 500 || fontWeight === 700 ? ` font-weight="${fontWeight}"` : '';
+  if (fontWeight === 500) return ' font-weight="500"';
+  if (fontWeight === 700) return ' font-weight="700"';
+  return '';
 }
 
 export function renderSvg(drawing: Drawing, options: SvgOptions = {}): string {
@@ -321,7 +342,7 @@ export function renderSvg(drawing: Drawing, options: SvgOptions = {}): string {
 
   const attrs = ['xmlns="http://www.w3.org/2000/svg"', `viewBox="0 0 ${width} ${height}"`];
   if (options.size !== undefined) {
-    attrs.push(`width="${raster.widthPx}"`, `height="${raster.heightPx}"`);
+    attrs.push(`width="${formatUnits(raster.widthPx)}"`, `height="${formatUnits(raster.heightPx)}"`);
   }
 
   const labelled: string[] = [];

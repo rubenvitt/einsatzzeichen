@@ -155,6 +155,39 @@ describe('renderSvg', () => {
     expect(text('700" onload="x')).not.toContain('font-weight');
   });
 
+  it('schreibt Aufzählungswerte nur als feste Literale, nie als Rohwert', () => {
+    const payload = 'x" onload="alert(1)';
+    const svg = renderSvg({
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'text',
+          x: 1,
+          y: 1,
+          content: 'A',
+          sizeMm: 3,
+          anchor: payload as 'start',
+          baseline: 'alphabetic',
+          boxMm: { xMm: 0, yMm: 0, widthMm: 32, heightMm: 32 },
+        },
+        {
+          type: 'rect',
+          x: 1,
+          y: 1,
+          width: 2,
+          height: 2,
+          style: {
+            stroke: 'schwarz',
+            strokeLinejoin: payload as 'bevel',
+            fillRule: payload as 'evenodd',
+          },
+        },
+      ],
+    });
+    expect(svg).not.toContain('onload');
+    expect(svg).not.toContain('undefined');
+  });
+
   it('lässt A11y-Metadaten weg, wenn kein Titel gesetzt ist', () => {
     const svg = renderSvg({ viewBox: DEFAULT_VIEWBOX_MM, children: [] });
     expect(svg).not.toContain('<title');
