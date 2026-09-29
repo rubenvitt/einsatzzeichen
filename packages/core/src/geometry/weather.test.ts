@@ -4,7 +4,13 @@ import { boundsOfMm } from '../bounds.js';
 import { NotMeasuredError } from '../not-measured.js';
 import { renderSvg } from '../render/svg.js';
 import { WEATHER_STATES } from './pictograms/states/07-weather.js';
-import { weatherDrawing } from './weather.js';
+import {
+  WEATHER_CLOUD_PRECIPITATION,
+  WEATHER_PRECIPITATIONS,
+  classifyWeather,
+  weatherDrawing,
+  type WeatherPrecipitationId,
+} from './weather.js';
 
 /**
  * Wetterzeichen aus 5.8.7 als freistehendes Zeichen (LFH-577): ein Wert allein ist das
@@ -32,8 +38,9 @@ describe('Ein Wetterwert allein', () => {
     }
   });
 
-  it('trägt keine Intensität', () => {
-    expect(() => weatherDrawing({ values: ['weather-snowing'], intensity: 'strong' })).toThrow(NotMeasuredError);
+  it('trägt keine Intensität: das ist nach der Entscheidung vom 29.09.2026 eine ungültige Eingabe', () => {
+    expect(() => weatherDrawing({ values: ['weather-snowing'], intensity: 'strong' })).toThrow(/Intensität/);
+    expect(() => weatherDrawing({ values: ['weather-snowing'], intensity: 'strong' })).not.toThrow(NotMeasuredError);
   });
 });
 
@@ -84,17 +91,201 @@ describe('Schnee an der Wolke mit Intensität (5.8.7_Beispiel_Schneiend_*)', () 
   });
 });
 
-describe('Was die Referenz nicht zeigt', () => {
-  it('meldet Wolke und Schnee ohne Intensität als Lücke', () => {
-    expect(() => weatherDrawing({ values: ['weather-cloudy', 'weather-snowing'] })).toThrow(NotMeasuredError);
+const CENTERS = { weak: [16], moderate: [12, 20], strong: [8, 16, 24], extreme: [4, 12, 20, 28] } as const;
+type Intensity = keyof typeof CENTERS;
+const SLANT = 7 / 26;
+
+function atCloud(precipitation: WeatherPrecipitationId, intensity: Intensity) {
+  return weatherDrawing({ values: ['weather-cloudy', precipitation], intensity });
+}
+
+/** Die Wolke an erster Stelle ist dieselbe wie beim Schnee: 3 mm angehoben. */
+function expectRaisedCloud(children: readonly Primitive[]) {
+  const snowCloud = weatherDrawing({ values: ['weather-cloudy', 'weather-snowing'], intensity: 'weak' }).children[0];
+  expect(children[0]).toEqual(snowCloud);
+}
+
+describe('Regen, Hagel und Gewitter an der Wolke: wie Schnee gebaut (übertragen, Entscheidung 29.09.2026)', () => {
+  it('hebt die Wolke wie beim Schnee um 3 mm an', () => {
+    for (const precipitation of ['weather-rainy', 'weather-hailing', 'weather-thunderstorm'] as const) {
+      expectRaisedCloud(atCloud(precipitation, 'moderate').children);
+    }
   });
 
-  it('meldet jede andere Kombination als Lücke', () => {
-    for (const other of ['weather-rainy', 'weather-hailing', 'weather-thunderstorm', 'weather-sunny'] as const) {
-      expect(() => weatherDrawing({ values: ['weather-cloudy', other], intensity: 'weak' }), other).toThrow(NotMeasuredError);
+  it('Regen: je Stufe ein Strich der Regenspur, 15° geneigt, im Band der Flocke y 23…29, mittig auf der Teilung', () => {
+    for (const [intensity, centers] of Object.entries(CENTERS)) {
+      const streaks = lines(atCloud('weather-rainy', intensity as Intensity).children);
+      expect(streaks, intensity).toHaveLength(centers.length);
+      streaks.forEach((line, i) => {
+        if (line.type !== 'line') throw new Error('Strich erwartet');
+        // Von unten links nach oben rechts wie in 5.8.7.5.
+        expect(line.y1).toBeCloseTo(29, 3);
+        expect(line.y2).toBeCloseTo(23, 3);
+        expect((line.x2 - line.x1) / (line.y1 - line.y2)).toBeCloseTo(SLANT, 3);
+        expect((line.x1 + line.x2) / 2).toBeCloseTo(centers[i] as number, 3);
+        expect(line.style).toMatchObject({ stroke: 'schwarz', strokeWidth: 0.5 });
+      });
     }
-    expect(() => weatherDrawing({ values: ['weather-cloudy', 'weather-snowing', 'weather-windy'], intensity: 'weak' }))
-      .toThrow(NotMeasuredError);
+  });
+
+  it('Hagel: je Stufe ein Korn r 1,5 mm (3/4 von 5.8.7.6) auf der Spur, Spurstücke bis an die Bandkanten', () => {
+    for (const [intensity, centers] of Object.entries(CENTERS)) {
+      const children = atCloud('weather-hailing', intensity as Intensity).children;
+      const grains = children.filter((child) => child.type === 'circle');
+      expect(grains.map((grain) => (grain.type === 'circle' ? [grain.cx, grain.cy, grain.r] : [])), intensity).toEqual(
+        centers.map((x) => [x, 26, 1.5]),
+      );
+      const stubs = lines(children);
+      expect(stubs).toHaveLength(2 * centers.length);
+      for (const line of stubs) {
+        if (line.type !== 'line') continue;
+        expect((line.x2 - line.x1) / (line.y1 - line.y2)).toBeCloseTo(SLANT, 3);
+        // Jedes Stück reicht von einer Bandkante bis an den Kornrand.
+        const touchesEdge = [line.y1, line.y2].some((y) => Math.abs(y - 29) < 1e-3 || Math.abs(y - 23) < 1e-3);
+        expect(touchesEdge).toBe(true);
+      }
+      expect(Math.max(...stubs.map((line) => boundsOfMm(line).maxY))).toBeLessThanOrEqual(29.3);
+    }
+  });
+
+  it('Gewitter: je Stufe ein Blitz aus 5.8.7.7, auf die Bandhöhe 6 mm verkleinert (1/3), mittig auf der Teilung', () => {
+    const catalogBolt = WEATHER_STATES.find((definition) => definition.id === 'state.weather-thunderstorm')?.primitives.slice(0, 2);
+    if (catalogBolt === undefined) throw new Error('Blitz fehlt');
+    for (const [intensity, centers] of Object.entries(CENTERS)) {
+      const polylines = atCloud('weather-thunderstorm', intensity as Intensity).children.filter(
+        (child) => child.type === 'polyline',
+      );
+      expect(polylines, intensity).toHaveLength(2 * centers.length);
+      centers.forEach((x, i) => {
+        const bolt = polylines.slice(2 * i, 2 * i + 2);
+        const minY = Math.min(...bolt.map((part) => (part.type === 'polyline' ? Math.min(...part.points.map((p) => p[1])) : 0)));
+        const maxY = Math.max(...bolt.map((part) => (part.type === 'polyline' ? Math.max(...part.points.map((p) => p[1])) : 0)));
+        const minX = Math.min(...bolt.map((part) => (part.type === 'polyline' ? Math.min(...part.points.map((p) => p[0])) : 0)));
+        const maxX = Math.max(...bolt.map((part) => (part.type === 'polyline' ? Math.max(...part.points.map((p) => p[0])) : 0)));
+        expect(minY).toBeCloseTo(23, 2);
+        expect(maxY).toBeCloseTo(29, 2);
+        expect((minX + maxX) / 2).toBeCloseTo(x, 2);
+        expect(maxX - minX).toBeCloseTo(5.6 / 3, 2);
+        // Dieselbe Form wie im Katalog: gleiche Punktzahl je Linienzug, Strich 0,5 mm.
+        bolt.forEach((part, k) => {
+          const original = catalogBolt[k];
+          if (part.type !== 'polyline' || original?.type !== 'polyline') throw new Error('Linienzug erwartet');
+          expect(part.points).toHaveLength(original.points.length);
+          expect(part.style).toEqual(original.style);
+        });
+      });
+    }
+  });
+
+  it('benennt die Kombination im Titel', () => {
+    expect(atCloud('weather-rainy', 'weak').title).toBe('Wolkig, regnerisch');
+    expect(atCloud('weather-hailing', 'weak').title).toBe('Wolkig, hagelnd');
+    expect(atCloud('weather-thunderstorm', 'weak').title).toBe('Wolkig, gewittrig');
+    expect(atCloud('weather-snowing', 'weak').title).toBe('Wolkig, schneiend');
+  });
+});
+
+describe('Gültige Kombinationen als Daten (WEATHER_CLOUD_PRECIPITATION)', () => {
+  it('führt vier Niederschläge: Schnee belegt, Regen, Hagel und Gewitter vom Eigentümer entschieden', () => {
+    expect([...WEATHER_PRECIPITATIONS].sort()).toEqual(
+      ['weather-hailing', 'weather-rainy', 'weather-snowing', 'weather-thunderstorm'].sort(),
+    );
+    expect(WEATHER_CLOUD_PRECIPITATION.carrier).toBe('weather-cloudy');
+    expect(WEATHER_CLOUD_PRECIPITATION.maxValues).toBe(2);
+    const snow = WEATHER_CLOUD_PRECIPITATION.precipitations['weather-snowing'];
+    expect(snow.status).toBe('evidenced');
+    if (snow.status === 'evidenced') {
+      expect(snow.evidence.map((item) => ('asset' in item ? item.asset : ''))).toEqual([
+        '5.8.7_Beispiel_Schneiend_schwach.svg',
+        '5.8.7_Beispiel_Schneiend_mittel.svg',
+        '5.8.7_Beispiel_Schneiend_stark.svg',
+        '5.8.7_Beispiel_Schneiend_extrem.svg',
+      ]);
+    }
+    for (const transferred of ['weather-rainy', 'weather-hailing', 'weather-thunderstorm'] as const) {
+      const finding = WEATHER_CLOUD_PRECIPITATION.precipitations[transferred];
+      expect(finding, transferred).toMatchObject({ status: 'decided', by: 'owner', decidedOn: '2026-09-29' });
+      if (finding.status === 'decided') expect(finding.ref).toMatch(/2026-09-28-lfh-565-kapitel-5-8-bausteine\.md §10/);
+    }
+    for (const rule of [WEATHER_CLOUD_PRECIPITATION.limit, WEATHER_CLOUD_PRECIPITATION.intensity]) {
+      expect(rule).toMatchObject({ status: 'decided', by: 'owner' });
+    }
+  });
+
+  it('klassifiziert: gezeichnet, ungültig (entschiedene Grenze) oder nicht vermessen', () => {
+    expect(classifyWeather({ values: ['weather-sunny'] })).toMatchObject({ kind: 'drawable', basis: 'measured' });
+    expect(classifyWeather({ values: ['weather-snowing', 'weather-cloudy'], intensity: 'weak' })).toMatchObject({
+      kind: 'drawable',
+      basis: 'measured',
+    });
+    expect(classifyWeather({ values: ['weather-cloudy', 'weather-rainy'], intensity: 'weak' })).toMatchObject({
+      kind: 'drawable',
+      basis: 'transferred',
+    });
+    expect(classifyWeather({ values: ['weather-rainy', 'weather-rainy'] })).toMatchObject({
+      kind: 'invalid',
+      reason: 'duplicate-value',
+    });
+    expect(
+      classifyWeather({ values: ['weather-cloudy', 'weather-snowing', 'weather-rainy'], intensity: 'weak' }),
+    ).toMatchObject({ kind: 'invalid', reason: 'too-many-values' });
+    expect(classifyWeather({ values: ['weather-snowing'], intensity: 'weak' })).toMatchObject({
+      kind: 'invalid',
+      reason: 'intensity-without-precipitation-at-cloud',
+    });
+    expect(classifyWeather({ values: ['weather-sunny', 'weather-windy'] })).toMatchObject({ kind: 'not-measured' });
+    expect(classifyWeather({ values: ['weather-rainy', 'weather-snowing'] })).toMatchObject({ kind: 'not-measured' });
+    expect(classifyWeather({ values: ['weather-cloudy', 'weather-hailing'] })).toMatchObject({ kind: 'not-measured' });
+  });
+
+  it('weatherDrawing folgt der Klassifikation für jeden Wert und jedes Paar, mit und ohne Intensität', () => {
+    const values = WEATHER_STATES.map((definition) => definition.id.replace(/^state\./, '') as WeatherStateId);
+    const sets: (readonly [WeatherStateId, ...WeatherStateId[]])[] = [
+      ...values.map((a) => [a] as const),
+      ...values.flatMap((a, i) => values.slice(i + 1).map((b) => [a, b] as const)),
+      ['weather-cloudy', 'weather-snowing', 'weather-hailing'],
+    ];
+    for (const set of sets) {
+      for (const intensity of [undefined, 'strong'] as const) {
+        const parameters = intensity === undefined ? { values: set } : { values: set, intensity };
+        const verdict = classifyWeather(parameters);
+        const label = `${set.join('+')} ${intensity ?? ''}`;
+        if (verdict.kind === 'drawable') {
+          expect(() => weatherDrawing(parameters), label).not.toThrow();
+        } else if (verdict.kind === 'not-measured') {
+          expect(() => weatherDrawing(parameters), label).toThrow(NotMeasuredError);
+        } else {
+          let error: unknown;
+          try {
+            weatherDrawing(parameters);
+          } catch (caught) {
+            error = caught;
+          }
+          expect(error, label).toBeInstanceOf(Error);
+          expect(error, label).not.toBeInstanceOf(NotMeasuredError);
+        }
+      }
+    }
+  });
+});
+
+describe('Was weder Original noch Entscheidung trägt', () => {
+  it('meldet einen Niederschlag an der Wolke ohne Intensität als Lücke', () => {
+    for (const precipitation of WEATHER_PRECIPITATIONS) {
+      expect(() => weatherDrawing({ values: ['weather-cloudy', precipitation] }), precipitation).toThrow(NotMeasuredError);
+    }
+  });
+
+  it('meldet andere Paare als Lücke', () => {
+    expect(() => weatherDrawing({ values: ['weather-cloudy', 'weather-sunny'] })).toThrow(NotMeasuredError);
+    expect(() => weatherDrawing({ values: ['weather-rainy', 'weather-snowing'] })).toThrow(NotMeasuredError);
+  });
+
+  it('lehnt mehr als die Wolke und einen Niederschlag als ungültige Eingabe ab', () => {
+    const three = () =>
+      weatherDrawing({ values: ['weather-cloudy', 'weather-snowing', 'weather-windy'], intensity: 'weak' });
+    expect(three).toThrow(/höchstens/);
+    expect(three).not.toThrow(NotMeasuredError);
   });
 
   it('lehnt einen doppelten Wert als ungültige Eingabe ab', () => {

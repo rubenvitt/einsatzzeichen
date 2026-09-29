@@ -401,3 +401,56 @@ export const WEATHER_STATES = deepFreeze([
     ],
   }),
 ] satisfies readonly CatalogPictogramDefinition[]);
+
+/**
+ * Niederschlagsmarken an der Wolke (LFH-561). Übertragen, nicht abgelesen: Der Eigentümer hat am
+ * 29.09.2026 entschieden, Regen, Hagel und Gewitter an der Wolke wie den Schnee zu bauen
+ * (`geometry/weather.ts`). Kein Original zeigt diese Marken verkleinert. Sie stehen hinter dem
+ * Katalog, damit die Zeilenangaben im Bausteinregister (`blocks/states.ts`) gültig bleiben.
+ */
+
+/** Punkt auf der Niederschlagsspur durch (cx | cy): 7 mm nach rechts auf 26 mm nach oben. */
+function trackPoint(cx: number, cy: number, y: number): Point {
+  return [cx + (7 * (cy - y)) / 26, y];
+}
+
+/**
+ * Ein Strich der Regenspur aus 5.8.7.5 (15° gegen die Senkrechte, von unten links nach oben
+ * rechts), `heightMm` hoch, mittig auf (cx | cy).
+ */
+export function rainMark(cx: number, cy: number, heightMm: number): readonly Primitive[] {
+  const [x1, y1] = trackPoint(cx, cy, cy + heightMm / 2);
+  const [x2, y2] = trackPoint(cx, cy, cy - heightMm / 2);
+  return [weatherLine(x1, y1, x2, y2)];
+}
+
+/**
+ * Ein Hagelkorn aus 5.8.7.6 (Kreis, Strich 0,5 mm) mit Radius `radiusMm` auf (cx | cy), dazu die
+ * Spur darunter und darüber bis an die Kanten eines `heightMm` hohen Bands. Wie in 5.8.7.6 endet
+ * die Spur am Kornrand.
+ */
+export function hailMark(cx: number, cy: number, heightMm: number, radiusMm: number): readonly Primitive[] {
+  const halfChord = (radiusMm * 26) / TRACK_LENGTH_MM;
+  const [bx1, by1] = trackPoint(cx, cy, cy + heightMm / 2);
+  const [bx2, by2] = trackPoint(cx, cy, cy + halfChord);
+  const [tx1, ty1] = trackPoint(cx, cy, cy - halfChord);
+  const [tx2, ty2] = trackPoint(cx, cy, cy - heightMm / 2);
+  return [weatherLine(bx1, by1, bx2, by2), weatherCircle(cx, cy, radiusMm), weatherLine(tx1, ty1, tx2, ty2)];
+}
+
+/** Hülle des Blitzes aus 5.8.7.7: x 3,45 … 9,05, y 7,5 … 25,5. */
+const LIGHTNING_HULL = { minX: 3.45, maxX: 9.05, minY: 7.5, maxY: 25.5 } as const;
+
+/**
+ * Der Blitz aus 5.8.7.7 (Zickzack und offener Pfeilkopf), gleichmäßig auf `heightMm` Höhe
+ * verkleinert und mit der Mitte seiner Hülle auf (cx | cy) gesetzt. Der Strich bleibt 0,5 mm.
+ */
+export function lightningMark(cx: number, cy: number, heightMm: number): readonly Primitive[] {
+  const scale = heightMm / (LIGHTNING_HULL.maxY - LIGHTNING_HULL.minY);
+  const midX = (LIGHTNING_HULL.minX + LIGHTNING_HULL.maxX) / 2;
+  const midY = (LIGHTNING_HULL.minY + LIGHTNING_HULL.maxY) / 2;
+  return lightning(0).map((part) => {
+    if (part.type !== 'polyline') throw new Error('Blitz: Linienzug erwartet.');
+    return weatherPolyline(part.points.map(([x, y]) => [cx + (x - midX) * scale, cy + (y - midY) * scale] as const));
+  });
+}
