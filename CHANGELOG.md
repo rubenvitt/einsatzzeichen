@@ -1,3 +1,19 @@
+## Rendering
+
+**Mindeststrichbreite für kleine Symbolgrößen** – Zeichen mit dünnen Strichen (0,5 mm laut Referenz) werden bei 16 oder 24 Pixel Ausgabegröße nun besser lesbar dargestellt. Eine neue Option `minStrokeWidthPx` hebt zu feine Linien beim Rastern auf eine konfigurierbare Pixelstärke an.
+
+- In `@einsatzzeichen/core` (`renderSvg`, `renderCanvas`), `@einsatzzeichen/react` und `@einsatzzeichen/web-component` (neues Attribut `min-stroke-width`) standardmäßig deaktiviert – ohne Angabe bytegleiche Ausgabe wie bisher
+- In `@einsatzzeichen/maplibre` standardmäßig aktiv mit 1 Gerätepixel; mit `null` abschaltbar
+- Empfohlener Wert: 1 px (validiert an allen 525 Renderfällen)
+
+## Dokumentation
+
+**Schriftauswahl und Vermessung** – Entscheidungsvorlage zur Ersatzschrift: Vermessung von 132 Textläufen der Referenz zeigt, dass Arimo 400 eine gute Näherung ist. Eine statische Stufe 500 könnte Normal- und Fettschnitt ersetzen; Kursivschnitt als separater Schritt vorgeschlagen.
+
+**Nachprüfung Symbolkatalog** – Dokumentation der 93 am 19. September beanstandeten Darstellungen mit Befunden, Korrekturen und Pixelabweichungen nach aktueller Messung.
+
+**Fachfrage Bundespolizei** – Belege zur Füllung #64dc32 (Hellgrün der Bundespolizei) dokumentiert; Lesarten und offene Frage zur korrekten Darstellung festgehalten.
+
 ## Katalog & Grammatik
 
 **Kapitel-4-Piktogramme im Innenfeld präzise vermessen**  
