@@ -1,7 +1,8 @@
 # Kapitel 5.8 als kombinierbare Bausteine: was belegt ist, was zu entscheiden bleibt
 
 > Stand: 28. September 2026
-> Status: **Vorlage, Entscheidung des Eigentümers offen.** Vorbereitet zu LFH-565 (Initiative A,
+> Status: **Teilweise entschieden am 29. September 2026** (Abschnitt 8, Übersicht in
+> `docs/decisions/2026-09-29-lfh-561-zugaengliche-api.md`); die verbliebenen Fragen stehen in Abschnitt 9. Vorbereitet zu LFH-565 (Initiative A,
 > Zeichen-Grammatik, LFH-559). Die belegten Befunde sind umgesetzt, die offenen Fragen stehen in
 > Abschnitt 4 mit Empfehlung.
 > Nachtrag 29. September 2026 (LFH-577): Vermessung an den Referenzdateien in Abschnitt 7,

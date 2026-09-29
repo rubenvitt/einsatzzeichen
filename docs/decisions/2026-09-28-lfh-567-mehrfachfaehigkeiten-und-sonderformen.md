@@ -1,7 +1,8 @@
 # Mehrfachfähigkeiten und Sonderformen 3.6–3.9: was belegt ist, was zu entscheiden bleibt
 
 > Stand: 28. September 2026, Nachtrag 29. September 2026 (Abschnitt 4.1)
-> Status: **Vorlage, Entscheidung des Eigentümers offen.** Vorbereitet zu LFH-567 (Initiative A,
+> Status: **Vorlage, Mehrfachfähigkeiten weiter offen** (Abschnitt 5, Fragen 1–5); Sonderformen
+> vermessen, Übersicht in `docs/decisions/2026-09-29-lfh-561-zugaengliche-api.md`. Vorbereitet zu LFH-567 (Initiative A,
 > Zeichen-Grammatik, LFH-559). Die belegten Befunde sind umgesetzt, die offenen Fragen stehen in
 > Abschnitt 5 mit Empfehlung. Die Sonderformen sind seit dem Nachtrag an den Referenzdateien
 > vermessen (LFH-577); Abschnitt 4.1 korrigiert zwei Lesarten aus Abschnitt 4.

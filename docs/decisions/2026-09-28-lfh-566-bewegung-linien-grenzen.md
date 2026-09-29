@@ -1,7 +1,8 @@
 # Bewegung (5.2), Linien und Grenzen (2.14–2.20) als parametrisierte Bausteine
 
 > Stand: 28. September 2026
-> Status: **Vorlage, Entscheidung des Eigentümers offen.** Vorbereitet zu LFH-566 (Initiative A,
+> Status: **Teilweise entschieden am 29. September 2026** (freistehende Spec-Art, Übersicht in
+> `docs/decisions/2026-09-29-lfh-561-zugaengliche-api.md`); offen bleibt, was Abschnitt 7 als Frage führt. Vorbereitet zu LFH-566 (Initiative A,
 > Zeichen-Grammatik, LFH-559). Umgesetzt ist, was das Kennzahlenartefakt belegt. Die offenen
 > Fragen stehen in Abschnitt 5, jeweils mit Empfehlung.
 > Bezug: `docs/decisions/2026-09-13-grammatik-motor-und-paketschnitt.md` (Scope),
@@ -131,6 +132,11 @@ Lage zu raten.
 | `movement-anchor-conflict` | movement | Ein Pfeil bindet nicht an einer Kante an, an der schon eine Zustands- oder Tendenzrandlage sitzt. |
 | `line-anchor-not-allowed` | lines-and-boundaries | Linien und Grenzen binden an kein Grundzeichen an. |
 | `line-strength-mismatch` | lines-and-boundaries | Die Stärke gehört nur an 2.20: dort Pflicht, sonst ein Fehler. |
+
+*Stand nach LFH-577 (29.09.2026):* `line-strength-mismatch` ist in Kraft, `line-anchor-not-allowed`
+ist gestrichen, weil die freistehende Spec-Art keine Anbindung kennt. Die beiden Pfeilregeln bleiben
+vorgemerkt, bis ein Pfeil an einem Grundzeichen angebunden werden kann (`RETIRED_PARAMETRIC_RULES`,
+`PLANNED_PARAMETRIC_RULES`).
 
 ## 5. Offene Fragen
 
