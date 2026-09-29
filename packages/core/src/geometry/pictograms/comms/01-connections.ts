@@ -29,7 +29,7 @@ import {
  *
  * Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert: Alle Striche sind 0,5 mm
  * stark (1,417 pt in den BABZ-Dateien), alle Koordinaten sind Strichmitten, auf 0,05 mm
- * gerundet. Die Kürzel setzt die Projektschrift Arimo fett, wie die Referenz (siehe `label`).
+ * gerundet. Die Kürzel stehen in Arimo 500 wie allen Katalogtext (siehe `label`, LFH-585).
  */
 
 const stroke = COMMS_REFERENCE_STROKE;
@@ -102,9 +102,10 @@ function radioArcs(centerYMm: number) {
 }
 
 /**
- * Ein Kürzel, fett gesetzt wie in der Referenz. `sizeMm` ist der Schriftgrad; die Box ist die
- * Tintenfläche in Arimo Bold (Versalhöhe = 0,688 × Schriftgrad), mittig um `xMm`; `xMm` ist so
- * gesetzt, dass die Tintenmitte auf der Tintenmitte der Referenz liegt.
+ * Ein Kürzel in der Katalogstärke (Arimo 500, LFH-585). `sizeMm` ist der Schriftgrad; die Box
+ * ist die Tintenfläche, damals in Arimo Bold vermessen (Versalhöhe = 0,688 × Schriftgrad), mittig
+ * um `xMm`; `xMm` ist so gesetzt, dass die Tintenmitte auf der Tintenmitte der Referenz liegt.
+ * Arimo 500 läuft in diesen Versalkürzeln schmaler als Bold, die Boxen bleiben gültig.
  * `minRenderPx: 64` unter 9 mm Schriftgrad, weil solche Läufe bei 32 px Rendergröße unter
  * `MINIMUM_TEXT_RENDER_PX` fallen.
  */
@@ -120,7 +121,6 @@ function label(
     x: xMm,
     y: baselineMm,
     sizeMm,
-    fontWeight: 700,
     boxMm: {
       xMm: xMm - boxWidthMm / 2,
       yMm: baselineMm - heightMm,
@@ -132,17 +132,26 @@ function label(
 }
 
 /**
- * Schriftgrade. Die Referenzschrift läuft schmaler als Arimo Bold; jeder Grad liegt deshalb
- * zwischen dem Wert, der die Versalhöhe trifft, und dem, der die Laufbreite trifft:
+ * Schriftgrade. Die Referenzschrift läuft schmaler als Arimo. Bis LFH-585 lag jeder Grad deshalb
+ * zwischen dem Wert, der die Versalhöhe trifft, und dem, der die Laufbreite in Arimo Bold trifft
+ * (Breitenwerte unten mit den Bold-Metriken gerechnet):
  *
  * - Kürzel unter dem kurzen Balken (J.1.3/J.1.4): Versalhöhe 4,9 mm → 7,1;
  *   Breite 14,8 mm → 6,65.
  * - Große Betriebsart (J.1.5–J.1.7): Versalhöhe 7,3 mm → 10,6; Breite 22,2 mm → 10,0.
  * - Fax (J.1.9): Versalhöhe 7,3 mm → 10,6; Breite 13,7 mm → 8,3.
  * - SDS im Rahmen: Versalhöhe 4,9 mm → 7,1; Breite 11,2 mm → 5,65.
+ *
+ * Seit LFH-585 (Arimo 500) passen die kleinen Betriebsarten und das große „TMO" bei voller
+ * Versalhöhe in ihre Boxen (DMO bei 7,1 mm: 15,69 mm Tinte in 16 mm; TMO bei 10,6 mm: 22,87 mm
+ * in 23,5 mm). `SMALL` und `LARGE` stehen deshalb wieder auf der Referenzversalhöhe. Das große
+ * „DMO" (`LARGE_DMO`) reichte bei 10,6 mm rechts 0,13 mm über seine 23,5-mm-Box und bleibt beim
+ * Kompromissgrad. Fax und SDS ebenso: Fax läge bei 10,6 mm mit 16,97 mm Tinte über seiner
+ * 16-mm-Box, SDS füllte seinen Rahmen bis an die Kontur.
  */
-const SMALL = 6.9;
-const LARGE = 10.3;
+const SMALL = 7.1;
+const LARGE = 10.6;
+const LARGE_DMO = 10.3;
 const FAX = 9.4;
 const SDS = 6.4;
 
@@ -322,7 +331,7 @@ export const CONNECTION_COMMS = deepFreeze([
     referenceAsset: 'J.1.5_SDS im DMO.svg',
     box: { xMm: 4, yMm: 6, widthMm: 24, heightMm: 18.5 },
     contrastPairs: SDS_CONTRAST,
-    primitives: [...sdsFrame(), label('DMO', 16.05, 24, LARGE, 23.5)],
+    primitives: [...sdsFrame(), label('DMO', 16.05, 24, LARGE_DMO, 23.5)],
   }),
   defineComms({
     section: 'J.1.6',
@@ -344,7 +353,7 @@ export const CONNECTION_COMMS = deepFreeze([
     referenceAsset: 'J.1.7_Sprechfunk im DMO_Repeater.svg',
     box: { xMm: 3, yMm: 7, widthMm: 26, heightMm: 20 },
     contrastPairs: CONNECTION_CONTRAST,
-    primitives: [connectionBar(7), label('DMO', 16.05, 17, LARGE, 23.5), ...radioArcs(23)],
+    primitives: [connectionBar(7), label('DMO', 16.05, 17, LARGE_DMO, 23.5), ...radioArcs(23)],
   }),
   /**
    * Ab J.1.8 trägt die Marke oben, **was** übertragen wird, und der Zickzack darunter, **dass**

@@ -165,7 +165,7 @@ const DEFINITIONS: Record<FunctionRoleId, FunctionRoleDefinition> = {
     'disaster-control-command',
     'Katastrophenschutzleitung',
     'fuehrung-leitung',
-    [roleRun('KatSL', 20, FORMATION_LARGE, { xMm: 2.2, yMm: 12.3, widthMm: 28.1, heightMm: 8 }, 25)],
+    [roleRun('KatSL', 20, FORMATION_LARGE, { xMm: 2, yMm: 12.3, widthMm: 28.45, heightMm: 8 }, 25)],
   ),
   'technical-incident-command-evacuation': formationRole(
     'technical-incident-command-evacuation',

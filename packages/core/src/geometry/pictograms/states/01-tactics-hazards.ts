@@ -231,11 +231,11 @@ function waterIngressPrimitives(): readonly Primitive[] {
 }
 
 /*
- * Kennbuchstaben im Warndreieck (5.8.1.7, 5.8.1.8, 5.8.1.10, 5.8.1.11): Projektschrift fett,
- * rot, Grundlinie an der Referenz abgelesen. Die Referenzschrift ist eine schmale fette Grotesk;
+ * Kennbuchstaben im Warndreieck (5.8.1.7, 5.8.1.8, 5.8.1.10, 5.8.1.11): Arimo 500 (LFH-585),
+ * rot, Grundlinie an der Referenz abgelesen. Die Referenzschrift läuft schmaler als Arimo;
  * Schriftgrad und Mitte sind so gewählt, dass Versalhöhe und Laufbreite zusammen am besten
- * decken (Pixelvergleich). Arimo Bold ist breiter, deshalb liegt der Grad unter dem, den die
- * Versalhöhe allein ergäbe.
+ * decken (Pixelvergleich, noch mit Arimo Bold). Arimo ist breiter, deshalb liegt der Grad unter
+ * dem, den die Versalhöhe allein ergäbe; in 500 passt auch „Ex" bei voller Höhe nicht.
  */
 function hazardText(
   content: string,
@@ -244,7 +244,7 @@ function hazardText(
   sizeMm: number,
   boxMm: { xMm: number; yMm: number; widthMm: number; heightMm: number },
 ): Primitive {
-  return stateText(content, { x, y, sizeMm, boxMm, fill: 'rot', fontWeight: 700 });
+  return stateText(content, { x, y, sizeMm, boxMm, fill: 'rot' });
 }
 
 function hazardousSubstancesPrimaryPrimitives(): readonly Primitive[] {

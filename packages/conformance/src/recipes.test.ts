@@ -1409,7 +1409,8 @@ describe('Anhang I, Teilslice I-b (I.2.4 bis I.2.7)', () => {
       labels: {
         center: 'Strömungsrettung',
         centerBaselineFromBodyBottomMm: 14.327,
-        centerCapHeightMm: 2.191447,
+        // LFH-585: in Arimo 500 auf 2,12 mm gesenkt (vorher 2,191447 mm), damit der Lauf in die Box passt.
+        centerCapHeightMm: 2.12,
       },
     },
     'I.2.7': {
@@ -1485,7 +1486,7 @@ describe('Anhang I, Teilslice I-g (I.1.17 bis I.1.20)', () => {
         labels: {
           center: 'Strömungsrettung',
           centerBaselineFromBodyBottomMm: 16,
-          centerCapHeightMm: 2.5,
+          centerCapHeightMm: 2.45,
           centerBoxMarginMm: 0.5,
         },
       },
@@ -1501,7 +1502,7 @@ describe('Anhang I, Teilslice I-g (I.1.17 bis I.1.20)', () => {
         labels: {
           center: 'Strömungsrettung',
           centerBaselineFromBodyBottomMm: 16,
-          centerCapHeightMm: 2.5,
+          centerCapHeightMm: 2.45,
           centerBoxMarginMm: 0.5,
         },
       },
@@ -1553,7 +1554,7 @@ describe('Anhang I, Teilslice I-g (I.1.17 bis I.1.20)', () => {
             content: 'Strömungsrettung',
             x: 16,
             y: 10,
-            sizeMm: 2.5 / ARIMO_CAP_HEIGHT_FRACTION,
+            sizeMm: 2.45 / ARIMO_CAP_HEIGHT_FRACTION,
             anchor: 'middle',
             boxMm: expect.objectContaining({ xMm: 1.5, widthMm: 29 }),
           }),

@@ -1,8 +1,8 @@
 # LFH-585: Ersatzschrift und kursiver Schnitt — Prüfnotiz und Entscheidungsvorlage
 
 > Stand: 29. September 2026
-> Status: **Vorlage, offen.** Die Entscheidung trifft der Projektinhaber. Diese Notiz ändert
-> keinen Code und keine Schriftdatei.
+> Status: **Entschieden (Option B, Ruben, 29.09.2026).** Gate-Lauf und Umsetzung stehen in
+> Abschnitt 10. Kursiv (Abschnitt 5) folgt als eigener Schritt.
 > Bezug: `docs/decisions/2026-09-19-masse-an-der-referenz-ablesen.md` §4 („Schriftgewicht"),
 > §5.4 und §6; Parent LFH-582
 
@@ -19,7 +19,7 @@
   normal und fett aus der Notiz vom 19. September (§4) hat in der Referenz kein Gegenstück.
 - **Die Buchstabenformen verraten eine humanistische Grotesk**, also eine serifenlose Schrift mit
   handschriftlich geprägten Formen. Das große I trägt Serifen, das kleine l einen Fuß, das g ist
-  einstöckig. Welche Schrift es genau ist, bleibt eine Vermutung (Abschnitt 3.5). Frei verfügbar
+  aufrecht zweistöckig (korrigiert, siehe Abschnitt 3.5). Welche Schrift es genau ist, bleibt eine Vermutung (Abschnitt 3.5). Frei verfügbar
   ist sie in keinem Fall.
 - **Kursiv betrifft einen einzigen Lauf:** „Bezeichnung" in D.1.1. Arimo hat einen freien
   Kursivschnitt unter derselben Lizenz. Ob er dieselben Breiten hat, lässt sich erst nach einem
@@ -175,7 +175,9 @@ Die Formmerkmale, gesehen an gerenderten Textebenen:
 - großes I mit Serifen (E.1.7, E.2.13, I.3.3, J.3.15, N.2.3, 5.8.8.4)
 - kleines l mit Fuß nach rechts
 - t mit schräg angeschnittenem Kopf
-- einstöckiges g
+- zweistöckiges g (aufrecht; alle sechs Vorkommen haben drei Konturen). Einstöckig ist nur das
+  kursive g in D.1.1. Korrigiert nach `docs/reviews/2026-09-29-lfh-585-schriftmessung.md`,
+  Abschnitt 3.2; die erste Fassung dieser Notiz nannte es einstöckig.
 - Ziffer 1 mit Fähnchen
 - x-Höhe 0,70 der Versalhöhe, Stärke „medium"
 
@@ -409,8 +411,12 @@ Stärke (siehe Abschnitt 5).
   - Die fetten Läufe werden rund 4 % schmaler. Schätzung: Die etwa acht Läufe in Anhang J, die
     heute um höchstens 3,5 % verkleinert sind (VoIP, die DMO-/TMO-Läufe), könnten auf
     Referenzgröße zurück. Die übrigen zehn fetten gewinnen rund 4 Prozentpunkte. Die drei
-    normalen („mBS", „LtS", „L" in D.2.4) werden knapp 1 % breiter und passen noch knapper. Ob ein Lauf wirklich wachsen
-    darf, hängt zusätzlich an seiner Box.
+    normalen („mBS", „LtS", „L" in D.2.4) werden knapp 1 % breiter und passen noch knapper. Ob
+    ein Lauf wirklich wachsen darf, hängt zusätzlich an seiner Box.
+    *Korrektur nach dem Gate-Lauf (Abschnitt 10):* Bei reinen Versalien ist 500 nur 0,5–1 %
+    schmaler als 700, bis 4,3 % nur mit Kleinbuchstaben. Normal gesetzte Läufe werden in 500 um
+    2,3–5,4 % breiter, nicht um knapp 1 %. Sieben der acht Läufe kehren trotzdem zurück, weil
+    ihre Boxen mehr Platz ließen als ihre Tinte in 700 (Abschnitt 10.4).
   - Kein Download, keine neue Lizenz, kein neuer Schriftname.
   - Schriftgrade und Handmaße bleiben gültig.
   - Die Unterscheidung normal/fett ohne Gegenstück in der Referenz entfällt.
@@ -498,3 +504,143 @@ Die Stufe 500 für B braucht keinen Download. Sie wird aus der eingecheckten
   die Entscheidung aber nicht nötig: Die Schrift ist nicht frei.
 - Die Messskripte liegen außerhalb des Repositorys, im Sitzungs-Scratchpad. Die Methode ist in
   Abschnitt 2 beschrieben. Wird C verfolgt, gehört ein Messskript nach `scripts/font/`.
+
+## 10. Entscheidung, Gate-Lauf und Umsetzung (29. September 2026)
+
+**Entscheidung.** Der Projektinhaber hat am 29. September 2026 Option B gewählt: Arimo bleibt, eine
+statische Stufe 500 („Medium") ersetzt normal und fett für allen Katalogtext. Kursiv ist ein
+eigener Schritt; Abschnitt 5 gilt unverändert.
+
+### 10.1 Die Datei
+
+- `packages/conformance/assets/Arimo-Medium.ttf`, 53.080 Byte, SHA-256 `0eb23f01…b0f8bdd35`
+  (`TEXT_FONT_MEDIUM_SHA256`). `scripts/font/subset-arimo.sh` leitet sie wie `Arimo-Bold.ttf` aus
+  dem eingecheckten Subset ab (fontTools-Instancer, wght 500) und exportiert
+  `packages/core/src/assets/arimo-medium-metrics.json`.
+- Das Upstream-Original wurde neu geladen und gegen `TEXT_FONT_SOURCE_SHA256` geprüft. fontTools
+  4.66.0 erzeugt Subset, Fett- und Medium-Instanz bit-gleich zu den eingecheckten Dateien. Die
+  unabhängige Ableitung der Schriftmessung (`docs/reviews/2026-09-29-lfh-585-schriftmessung.md`)
+  ist byte-gleich.
+- Namen: Familie „Arimo Medium" (Eintrag 1), typografische Familie „Arimo" (16), Stil „Medium"
+  (17), `usWeightClass` 500. Damit wählt resvg die Datei für `font-weight="500"`. Läufe in 400 und
+  700 rastern mit ihr bit-gleich wie ohne sie, auch die Bildunterschriften der Kontaktbögen
+  (`sans-serif`, fett). Das prüft `fonts.test.ts`.
+- Die Kopfwerte sind unverändert, die Versalhöhe ist 1409/2048 wie in 400.
+  `ARIMO_CAP_HEIGHT_FRACTION` und alle daraus abgeleiteten Schriftgrade gelten weiter. Die Akzente
+  reichen in 500 um 12/2048 em höher (Ä 1726 statt 1714). Die Rasterbelege für Fußzone und
+  Beschriftungen laufen jetzt in 500 und bestehen mit `DIACRITIC_HEADROOM_FRACTION` und
+  `ALPHABETIC_ASCENT_FRACTION` unverändert.
+- Browser (Website, Review-Server) liefern weiter die variable Datei aus und setzen 500 aus der
+  Achse.
+
+### 10.2 Gate-Lauf
+
+Alle 298 Textläufe aus 525 Renderfällen (Grundzeichen, Rezepte, Piktogramme) wurden in 500 gegen
+ihre unveränderten Boxen gerechnet. Danach liefen Textmetrik-Gate, Rasterbelege (`fonts.test.ts`,
+`pictograms/text-ink.test.ts`), Clipping- und Kontrast-Gates.
+
+- **B scheitert nicht grundsätzlich.** Kein bisher fetter Lauf überschreitet seine Box.
+- **Acht bisher normale Läufe** überschreiten ihre Box um 0,1–0,8 mm:
+  - „KatSL" (D.1.2), „Bezeichnung" (D.1.1), „L" (D.2.4), „LtS" (D.2.5), „stv OB" (D.3.14);
+  - „Strömungsrettung" in I.1.17, I.1.18 und I.2.6.
+- **Korrektur der Schätzungen aus Abschnitt 6 und 7.**
+  - Normal gesetzte Läufe werden in 500 um 2,3–5,4 % breiter, nicht um knapp 1 %. Maßgeblich
+    sind die Kleinbuchstaben: a, g, x und ähnliche haben in 500 größere Vorschübe.
+  - Bisher fette Läufe werden 0,6–4,3 % schmaler. Bei reinen Versalien (DMO, TMO, VoIP) sind es
+    nur 0,5–1 %. Die „rund 4 %" gelten nur für Läufe mit Kleinbuchstaben.
+  - Gegen die heutige Tintenbreite gemessen, wächst deshalb kein Lauf zurück. Das steht so in
+    der Schriftmessung, Abschnitt 4. Entscheidend ist aber die Box: Viele Boxen in Anhang J
+    ließen mehr Platz als die Tinte in 700.
+
+### 10.3 Umsetzungsentscheidung: Schema erweitert, Rezepte setzen 500 ausdrücklich
+
+- `fontWeight` im Textprimitiv kennt jetzt `400 | 500 | 700`. Die Erweiterung ist abwärts
+  verträglich.
+- Fehlt der Wert, gilt weiter 400. Die Ausgabe bleibt dann bytegleich. Eigene IR anderer Nutzer
+  ändert sich also nicht.
+- Jede Stelle in core, die Katalogtext erzeugt, setzt `fontWeight: CATALOG_TEXT_FONT_WEIGHT`
+  (500, `render/text-policy.ts`). Das sind Kompositionsläufe samt Fußzone, Piktogramm-Hilfen und
+  Funktionsrollen. Die Hilfen `commsText` und `stateText` nehmen kein Gewicht mehr entgegen.
+- `conformance/src/catalog-text-weight.test.ts` prüft, dass kein Katalogfall einen Lauf ohne 500
+  trägt.
+- **Verworfen wurde die Abbildung „400/700 bedeuten im Katalog 500".** Dann stünde in der IR ein
+  anderes Gewicht, als gerendert wird. Die Textmetrik müsste raten, welchen Schnitt sie misst.
+  SVG, Canvas und Browser müssten dieselbe versteckte Umdeutung kennen.
+- **Verworfen wurde auch „ohne Angabe heißt 500".** Das hätte jede fremde IR ohne Gewicht
+  verändert und den dokumentierten Default gebrochen.
+- SVG schreibt `font-weight="500"`, Canvas setzt `500 <px>px Arimo`. 400 schreibt in beiden
+  Renderern nichts.
+- Der Textmetrik-Anbieter hat einen Schnitt `medium`. Ein Lauf in 500 ohne diesen Schnitt wirft,
+  wie ein fetter Lauf ohne `bold`.
+- **Ausnahme Kapitel 2.** Die Lückenbeschriftungen der Grenzlinien (`gapLabel` in
+  `geometry/parametric.ts`) bleiben ohne Gewicht, also 400. Die Referenz misst dort 0,126 ×
+  Versalhöhe (Abschnitt 3.2).
+- `Arimo-Bold.ttf` bleibt im Paket. Sie dient eigener IR mit 700, `visual-proof.ts` und den
+  Bildunterschriften der Kontaktbögen.
+
+### 10.4 Was mit den Läufen geschah
+
+**Zurückgewachsen auf Referenzversalhöhe**: 7 Läufe, alle aus der Liste in Abschnitt 3.4. Ihre
+Tinte passt in 500 bei voller Höhe in die bestehende, unveränderte Box.
+
+| Lauf | Zeichen | Schriftgrad vorher → nachher | Versalhöhe nachher / Referenz |
+|---|---|---|---|
+| „DMO", „TMO" (klein) | J.1.3, J.1.4 (`SMALL`) | 6,9 → 7,1 mm | 4,885 / 4,869 mm |
+| „TMO" (groß) | J.1.6 (`LARGE`) | 10,3 → 10,6 mm | 7,293 / 7,302 mm |
+| „TMO", „DMO" | J.3.4 (`smallLabel`) | 6,9 → 7,1 mm | 4,885 / 4,869 mm |
+| „DMO" | J.3.5 (`smallLabel`) | 6,9 → 7,1 mm | 4,885 / 4,869 mm |
+| „VoIP" | J.3.15 | 4,1 → 4,243 mm | 2,919 / 2,919 mm |
+
+- Das große „DMO" in J.1.5 und J.1.7 bleibt bei 10,3 mm (eigene Konstante `LARGE_DMO`). Bei
+  10,6 mm reichte seine Tinte rechts 0,13 mm über die 23,5-mm-Box, knapp über der Toleranz von
+  0,125 mm. Mit einer Box von 23,8 mm bestünde es alle Gates. Die Box läge weiter innerhalb der
+  Piktogrammbox. Das ist eine Entscheidung, die offen bleibt: Ein Lauf soll nicht zugleich
+  wachsen und seine Box vergrößern, ohne dass jemand das bestätigt.
+- Nicht zurückgewachsen: „Ex", „APRT", „BS", „mBS", „Fax", „FRT", „HRT", „MRT", „L" (J.4.8),
+  „SDS" (J.1.5, J.1.6), „LtS" (D.2.5), „L" (D.2.4). In voller Höhe passen sie nicht in ihre Box
+  (MRT um 0,06 mm). „L" in J.4.8 bräuchte eine höhere Box. Bei „SDS" ist die Box der Rahmen
+  selbst. Ihre Schriftgrade bleiben, wie sie mit den Metriken von 700 bzw. 400 bestimmt wurden.
+  Die Kommentare nennen das.
+- Nicht zurückgewachsen ist außerdem das große „DMO" in J.1.5 (siehe oben).
+- Von 21 verkleinerten Läufen bleiben damit 14. Neu verkleinert sind 3 (unten).
+
+**Box verbreitert, Schriftgrad unverändert.** Die Tinte in 500 bleibt dabei innerhalb der
+Körperkontur.
+
+| Lauf | Zeichen | Box vorher → nachher |
+|---|---|---|
+| „KatSL" | D.1.2 | 2,2 … 30,3 → 2,0 … 30,45 mm |
+| „Bezeichnung" | D.1.1 | Breite 24,3 → 25,15 mm |
+| „L" | D.2.4 | Breite 4,4375 → 4,6875 mm |
+| „LtS" | D.2.5 | Breite 13,75 → 14,1875 mm |
+| „stv OB" | D.3.14 | 18,8 … 31,5 → 18,55 … 31,5 mm |
+
+Die Breite 25,15 mm bei D.1.1 lässt schon Platz für den kursiven Lauf in 500. Laut Schriftmessung
+endet er bei 27,779 mm und braucht mindestens 25,11 mm.
+
+**Neu verkleinert**: „Strömungsrettung".
+
+- In I.1.17 und I.1.18 sinkt die Versalhöhe von 2,5 auf 2,45 mm (−2 %). Bei 2,5 mm reichte die
+  Tinte in 500 bis 1,24 mm, also in die Körperkontur (Innenkante 1,25 mm).
+- In I.2.6 sinkt sie von 2,191447 auf 2,12 mm (−3,3 %). Ein eigener Boxrand ist am Anhängerkörper
+  nicht zulässig (`center-box-margin-override-requires-measured-body`).
+- Beide Werte stehen in `named-exceptions.ts`.
+
+### 10.5 Snapshots
+
+406 Snapshot-Dateien ändern sich (Stand nach allen Änderungen gegenüber `b2a8697f`):
+
+- 160 Katalog-SVGs und 43 Piktogramm-SVGs mit Text. Dort ändern sich nur `font-weight`
+  (neu 500, bisher fehlend oder 700) und die Schriftgrade aus 10.4.
+- 203 Kontaktbögen unter `__snapshots__/multi-size`, die neu rastern.
+
+Ein Kontaktbogen mit Referenz, Stand vorher und Stand nachher für 15 Zeichen wurde angesehen. Die
+Stichprobe umfasst die Läufe aus 10.4 sowie 4.2.2 und 5.8.1.11. Die Strichstärke liegt sichtbar
+näher an der Referenz. „Strömungsrettung" und „KatSL" füllen ihren Körper so knapp wie vorher.
+„stv OB" (D.3.14) berührt mit dem s die Rautenkontur, wie vorher und wie in der Referenz; in 500
+reicht es 0,2 mm weiter nach links. Sonst berührt kein Lauf fremde Geometrie.
+
+### 10.6 Offen
+
+- Kursiv in D.1.1 (Abschnitt 5, Vorschlag in der Schriftmessung, Abschnitt 2.6).
+- Laufweite und Formen: Sie kann nur Option C beheben. Die Schriftmessung beziffert den Gewinn.

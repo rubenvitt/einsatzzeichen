@@ -161,7 +161,9 @@ function drawPrimitive(
     // Grundlinie auswerten statt eine Plattformkonvention zu erraten.
     if (style?.fill !== undefined && style.fill !== 'none') {
       ctx.fillStyle = color(style.fill, theme);
-      ctx.font = `${primitive.fontWeight === 700 ? '700 ' : ''}` +
+      // Gewicht wie in svg.ts: 400 bleibt ungeschrieben, 500 und 700 stehen vor dem Schriftgrad.
+      const weight = primitive.fontWeight;
+      ctx.font = `${weight === undefined || weight === 400 ? '' : `${weight} `}` +
         `${mmToUnits(primitive.sizeMm)}px ${TEXT_FONT_FAMILY_ATTR}`;
       ctx.textAlign = canvasTextAlign(primitive.anchor);
       ctx.textBaseline = canvasBaseline(primitive.baseline);

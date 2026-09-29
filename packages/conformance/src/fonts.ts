@@ -48,7 +48,10 @@ export const TEXT_FONT_SHA256 = 'e68be22b52529b0541129578216dab440cb000261148683
  * Datei reproduzierbar ist). Nötig, weil resvg 2.6 die wght-Achse der variablen Datei nicht
  * auswertet: `font-weight="700"` rastert mit ihr allein bit-identisch zu 400. Liegt diese Datei
  * zusätzlich vor, wählt resvg sie für fett gesetzte Läufe (`fontWeight: 700` am Textprimitiv);
- * nicht fette Läufe rastern unverändert. Einen kursiven Schnitt führt das Projekt nicht.
+ * nicht fette Läufe rastern unverändert. Der Katalog selbst setzt seit LFH-585 keinen fetten Lauf
+ * mehr; die Datei bleibt für eigene IR mit `fontWeight: 700`, die Beschriftung von
+ * `visual-proof.ts` und die Bildunterschriften der Kontaktbögen. Einen kursiven Schnitt führt das
+ * Projekt nicht.
  */
 export const TEXT_FONT_BOLD_PATH = fileURLToPath(
   new URL('../assets/Arimo-Bold.ttf', import.meta.url),
@@ -58,13 +61,29 @@ export const TEXT_FONT_BOLD_PATH = fileURLToPath(
 export const TEXT_FONT_BOLD_SHA256 =
   '0f8eb8ed8b92a80cbbbcadb382089e8fda8d50015b0e36212c341c1a6b96341a';
 
+/**
+ * Statische Instanz wght 500 („Medium") derselben Schrift, erzeugt wie die Fettinstanz von
+ * `scripts/font/subset-arimo.sh` (LFH-585 Option B). In ihr setzt der Katalog allen Text
+ * (`CATALOG_TEXT_FONT_WEIGHT` in core): Die Referenz kennt nur eine Strichstärke, und Arimo 500
+ * trifft sie auf rund 3 %. Die Datei heißt in der Namenstabelle „Arimo Medium" (ID 1) mit der
+ * typografischen Familie „Arimo" (ID 16) und usWeightClass 500; nur so wählt resvg sie für
+ * `font-weight="500"`. Läufe in 400 und 700 rastern mit ihr bit-gleich wie ohne sie.
+ */
+export const TEXT_FONT_MEDIUM_PATH = fileURLToPath(
+  new URL('../assets/Arimo-Medium.ttf', import.meta.url),
+);
+
+/** Prüfsumme der eingecheckten Instanz wght 500. */
+export const TEXT_FONT_MEDIUM_SHA256 =
+  '0eb23f0177e7ab333c7ddee337deb2ed133363777c40dae3c078695b0f8bdd35';
+
 export function resvgFontOptions(): {
   fontFiles: string[];
   loadSystemFonts: false;
   defaultFontFamily: string;
 } {
   return {
-    fontFiles: [TEXT_FONT_PATH, TEXT_FONT_BOLD_PATH],
+    fontFiles: [TEXT_FONT_PATH, TEXT_FONT_MEDIUM_PATH, TEXT_FONT_BOLD_PATH],
     loadSystemFonts: false,
     defaultFontFamily: TEXT_FONT_FAMILY,
   };

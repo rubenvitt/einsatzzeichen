@@ -101,6 +101,19 @@ describe('measureTextRun() mit fontWeight', () => {
   it('wirft bei fettem Lauf ohne Fettschnitt, statt zu schmal zu messen', () => {
     expect(() => measureTextRun(text({ fontWeight: 700 }), metrics)).toThrow(/Fettschnitt/);
   });
+
+  it('misst Läufe in 500 mit dem mittleren Schnitt', () => {
+    const withMedium: TextMetrics = { ...metrics, medium: uniformTextMetrics(0.625) };
+    expect(measureTextRun(text({ content: 'ab', fontWeight: 500 }), withMedium).widthMm).toBeCloseTo(5);
+    expect(measureTextRun(text({ content: 'ab' }), withMedium).widthMm).toBeCloseTo(4);
+  });
+
+  it('wirft bei einem Lauf in 500 ohne mittleren Schnitt, statt zu schmal zu messen', () => {
+    const withoutMedium: TextMetrics = { ...metrics, medium: undefined };
+    expect(() => measureTextRun(text({ fontWeight: 500 }), withoutMedium)).toThrow(
+      /mittleren Schnitt/,
+    );
+  });
 });
 
 describe('checkTextMetrics()', () => {

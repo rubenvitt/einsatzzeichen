@@ -93,18 +93,32 @@ export interface TextMetrics {
    * schmaleren Normalbreiten still zu klein gemessen zu werden.
    */
   bold?: TextMetrics;
+  /**
+   * Metriken des mittleren Schnitts (`fontWeight: 500`, „Medium"), in dem der Katalog allen
+   * Text setzt (LFH-585). Optional wie `bold`, mit derselben Folge: Ein Lauf in 500 wirft ohne
+   * diesen Schnitt, statt mit den Normalbreiten gemessen zu werden. Die Vorschübe einzelner
+   * Kleinbuchstaben (etwa a, x, g) sind in 500 breiter als in 400.
+   */
+  medium?: TextMetrics;
 }
 
-/** Die Metriken, mit denen ein Lauf gemessen wird: fett gesetzte Läufe mit dem Fettschnitt. */
+/**
+ * Die Metriken, mit denen ein Lauf gemessen wird: jeder Lauf mit dem Schnitt seines Gewichts.
+ * Fehlt der Schnitt beim Anbieter, wirft die Rechnung — eine stille Messung mit den
+ * Normalbreiten wäre für 500 und 700 zu schmal.
+ */
 function metricsForRun(primitive: TextPrimitive, metrics: TextMetrics): TextMetrics {
-  if (primitive.fontWeight !== 700) return metrics;
-  if (metrics.bold === undefined) {
+  if (primitive.fontWeight === undefined || primitive.fontWeight === 400) return metrics;
+  const [cut, label, field] =
+    primitive.fontWeight === 700
+      ? [metrics.bold, 'fett gesetzt', 'Fettschnitt (`TextMetrics.bold`)']
+      : [metrics.medium, 'in Stufe 500 gesetzt', 'mittleren Schnitt (`TextMetrics.medium`)'];
+  if (cut === undefined) {
     throw new Error(
-      `Lauf "${primitive.content}" ist fett gesetzt, der Metrikanbieter führt aber keinen ` +
-        'Fettschnitt (`TextMetrics.bold`).',
+      `Lauf "${primitive.content}" ist ${label}, der Metrikanbieter führt aber keinen ${field}.`,
     );
   }
-  return metrics.bold;
+  return cut;
 }
 
 export interface TextWidth {

@@ -85,4 +85,32 @@ unter derselben Lizenz (`Arimo-OFL.txt`).
   (`TEXT_FONT_BOLD_SHA256` in `src/fonts.ts`), 53.436 Byte.
 - **Metriken:** `packages/core/src/assets/arimo-bold-metrics.json`, gleiches Format wie `arimo-metrics.json`, exportiert
   von `scripts/font/export-metrics.py` aus der Fettinstanz.
+- **Nutzung:** Der Katalog setzt seit LFH-585 keinen fetten Lauf mehr. Die Datei bleibt für eigene
+  IR mit `fontWeight: 700`, die Beschriftung von `visual-proof.ts` und die Bildunterschriften der
+  Kontaktbögen.
 - **Kursiv:** Einen kursiven Schnitt führt das Projekt nicht.
+
+## Instanz „Medium" (2026-09-29, LFH-585)
+
+`Arimo-Medium.ttf` ist eine statische Instanz der `wght`-Achse bei 500, erzeugt aus dem Subset
+oben mit fontTools `varLib.instancer` (`updateFontNames=True`) durch
+`scripts/font/subset-arimo.sh`. In ihr setzt der Katalog allen Text: Die Referenz kennt nur eine
+Strichstärke (0,156 × Versalhöhe), Arimo 500 trifft sie auf rund 3 % (400: 0,136, 700: 0,209).
+Entscheidung und Messung: `docs/decisions/2026-09-29-lfh-585-ersatzschrift-und-kursiv.md`. Wie
+das Subset und die Fettinstanz ist sie eine nach OFL §1 zulässige „Modified Version" desselben
+Originals unter derselben Lizenz (`Arimo-OFL.txt`); die OFL nennt keinen Reserved Font Name.
+
+- **Namen:** Familie „Arimo Medium" (Namenseintrag 1), typografische Familie „Arimo" (16),
+  Stil „Medium" (17), PostScript-Name `Arimo-Medium`, `usWeightClass` 500. Unter genau diesen
+  Namen wählt resvg die Datei für `font-weight="500"`; eine Zwischenstufe wie 480 wählt es nicht.
+  Läufe in 400 und 700 rastern mit ihr bit-gleich wie ohne sie (`src/fonts.test.ts`).
+- **Kopfwerte:** unverändert gegenüber dem Subset (`unitsPerEm` 2048, Ascender 1854,
+  Descender −434, `sCapHeight` 1409). Die Versalhöhe je Schriftgrad bleibt damit gleich.
+- **Prüfsumme:** SHA-256 `0eb23f0177e7ab333c7ddee337deb2ed133363777c40dae3c078695b0f8bdd35`
+  (`TEXT_FONT_MEDIUM_SHA256` in `src/fonts.ts`), 53.080 Byte. fontTools 4.66.0 erzeugt am
+  2026-09-29 Subset, Fett- und Medium-Instanz bit-gleich zu den eingecheckten Dateien.
+- **Metriken:** `packages/core/src/assets/arimo-medium-metrics.json`, gleiches Format wie
+  `arimo-metrics.json`, exportiert von `scripts/font/export-metrics.py` aus dieser Instanz
+  (`family` aus der typografischen Familie, also „Arimo").
+- **Browser:** Website und Review-Server liefern weiter die variable Datei aus und setzen die
+  Stufe 500 aus ihrer Achse.

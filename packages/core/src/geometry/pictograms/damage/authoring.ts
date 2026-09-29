@@ -1,5 +1,6 @@
 import type { Point, Primitive, Style } from '@einsatzzeichen/schema';
 import type { PictogramContrastPair } from '../catalog-definition.js';
+import { CATALOG_TEXT_FONT_WEIGHT } from '../../../render/text-policy.js';
 
 /**
  * 0,5 mm — die Wandstärke der Referenzumrisse (1,417 pt bei 90,709 pt auf 32 mm). Alle Striche
@@ -95,6 +96,7 @@ export function damageText(
       heightMm: options.sizeMm * 0.94,
     },
     minRenderPx: options.minRenderPx,
+    fontWeight: CATALOG_TEXT_FONT_WEIGHT,
     style: copyStyle(options.style ?? DAMAGE_BLACK_FILL),
   };
 }

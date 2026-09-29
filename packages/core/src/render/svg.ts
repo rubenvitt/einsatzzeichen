@@ -239,9 +239,11 @@ function renderPrimitive(
       `x="${u(primitive.x)}" y="${u(primitive.y)}" text-anchor="${primitive.anchor}" ` +
       `dominant-baseline="${baselineAttr(primitive.baseline)}" font-family="${TEXT_FONT_FAMILY_ATTR}" ` +
       `font-size="${u(primitive.sizeMm)}"` +
-      // Nur fett schreibt ein Attribut: 400 ist der Default, und ohne Feld bleibt die Ausgabe
-      // bytegleich zum Stand vor `fontWeight`.
-      (primitive.fontWeight === 700 ? ' font-weight="700"' : '');
+      // Nur 500 und 700 schreiben ein Attribut: 400 ist der Default, und ohne Feld bleibt die
+      // Ausgabe bytegleich zum Stand vor `fontWeight`. Dieselbe Regel steht in canvas.ts.
+      (primitive.fontWeight === undefined || primitive.fontWeight === 400
+        ? ''
+        : ` font-weight="${primitive.fontWeight}"`);
     return `<text ${attrs}${styleStr}${transform}>${escapeXml(primitive.content)}</text>`;
   }
 

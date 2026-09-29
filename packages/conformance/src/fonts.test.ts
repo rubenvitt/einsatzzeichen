@@ -15,6 +15,8 @@ import {
   TEXT_FONT_PATH,
   TEXT_FONT_BOLD_PATH,
   TEXT_FONT_BOLD_SHA256,
+  TEXT_FONT_MEDIUM_PATH,
+  TEXT_FONT_MEDIUM_SHA256,
   TEXT_FONT_SHA256,
   TEXT_FONT_SOURCE_SHA256,
   resvgFontOptions,
@@ -32,6 +34,10 @@ import { ARIMO_TEXT_METRICS } from '@einsatzzeichen/core';
  */
 const TEXT_FONT_METRICS_PATH = fileURLToPath(
   new URL('../../core/src/assets/arimo-metrics.json', import.meta.url),
+);
+/** Dieselben Metriken für die Instanz wght 500 (LFH-585), aus `Arimo-Medium.ttf` exportiert. */
+const TEXT_FONT_MEDIUM_METRICS_PATH = fileURLToPath(
+  new URL('../../core/src/assets/arimo-medium-metrics.json', import.meta.url),
 );
 
 describe('Textschrift', () => {
@@ -64,6 +70,78 @@ describe('Textschrift', () => {
     expect(ink(svg(''), both)).toBe(ink(svg(''), regularOnly));
     expect(ink(svg(' font-weight="700"'), regularOnly)).toBe(ink(svg(''), regularOnly));
     expect(ink(svg(' font-weight="700"'), both)).toBeGreaterThan(ink(svg(''), both) * 1.2);
+  });
+
+  it('führt die Instanz wght 500 mit der erwarteten Prüfsumme', () => {
+    const bytes = readFileSync(TEXT_FONT_MEDIUM_PATH);
+    expect(createHash('sha256').update(bytes).digest('hex')).toBe(TEXT_FONT_MEDIUM_SHA256);
+  });
+
+  it('rastert Läufe in 500 mit der Medium-Instanz, 400 und 700 unverändert (LFH-585)', () => {
+    // Bit-gleich, nicht nur gleich viel Tinte: Die Medium-Datei darf weder normale noch fette
+    // Läufe verschieben (Kontaktbogen-Unterschriften setzen `sans-serif` fett, visual-proof.ts
+    // setzt 700). Ohne die Datei fällt 500 still auf 400 zurück — deshalb der Vergleich mit.
+    const svg = (weight: string, family = TEXT_FONT_FAMILY) =>
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 40">' +
+      `<text x="5" y="30" font-family="${family}" font-size="24"${weight}>RKBa</text></svg>`;
+    const raster = (source: string, fontFiles: string[]) =>
+      new Resvg(source, {
+        fitTo: { mode: 'width', value: 400 },
+        background: 'white',
+        font: { ...resvgFontOptions(), fontFiles },
+      }).render().pixels;
+    const hash = (source: string, fontFiles: string[]) =>
+      createHash('sha256').update(raster(source, fontFiles)).digest('hex');
+    const ink = (source: string, fontFiles: string[]) => {
+      const pixels = raster(source, fontFiles);
+      let count = 0;
+      for (let index = 0; index < pixels.length; index += 4) if (pixels[index]! < 128) count += 1;
+      return count;
+    };
+    const withoutMedium = [TEXT_FONT_PATH, TEXT_FONT_BOLD_PATH];
+    const all = resvgFontOptions().fontFiles;
+    expect(all).toContain(TEXT_FONT_MEDIUM_PATH);
+    for (const weight of ['', ' font-weight="400"', ' font-weight="700"', ' font-weight="bold"']) {
+      expect(hash(svg(weight), all), weight).toBe(hash(svg(weight), withoutMedium));
+    }
+    expect(hash(svg(' font-weight="bold"', 'sans-serif'), all)).toBe(
+      hash(svg(' font-weight="bold"', 'sans-serif'), withoutMedium),
+    );
+    expect(ink(svg(' font-weight="500"'), withoutMedium)).toBe(ink(svg(''), withoutMedium));
+    const regular = ink(svg(''), all);
+    const medium = ink(svg(' font-weight="500"'), all);
+    const bold = ink(svg(' font-weight="700"'), all);
+    expect(medium).toBeGreaterThan(regular);
+    expect(medium).toBeLessThan(bold);
+  });
+
+  it('exportiert Metriken der Instanz wght 500, die zur eingecheckten Datei passen', () => {
+    type MetricsFile = {
+      family: string;
+      sourceSha256: string;
+      subsetSha256: string;
+      unitsPerEm: number;
+      ascender: number;
+      descender: number;
+      capHeight: number;
+      defaultWeight: number;
+      advances: Record<string, number>;
+      inkExtents: Record<string, [number, number, number, number]>;
+    };
+    const regular = JSON.parse(readFileSync(TEXT_FONT_METRICS_PATH, 'utf8')) as MetricsFile;
+    const medium = JSON.parse(readFileSync(TEXT_FONT_MEDIUM_METRICS_PATH, 'utf8')) as MetricsFile;
+    // Familie „Arimo" aus der typografischen Familie (ID 16); ID 1 heißt „Arimo Medium".
+    expect(medium.family).toBe(TEXT_FONT_FAMILY);
+    expect(medium.sourceSha256).toBe(TEXT_FONT_SOURCE_SHA256);
+    expect(medium.subsetSha256).toBe(TEXT_FONT_MEDIUM_SHA256);
+    expect(medium.defaultWeight).toBe(500);
+    // Die Versalhöhe je Schriftgrad bleibt: ARIMO_CAP_HEIGHT_FRACTION gilt auch in 500.
+    for (const key of ['unitsPerEm', 'ascender', 'descender', 'capHeight'] as const) {
+      expect(medium[key], key).toBe(regular[key]);
+    }
+    expect(medium.inkExtents[String('H'.codePointAt(0))]?.[3]).toBe(1409);
+    expect(Object.keys(medium.advances).sort()).toEqual(Object.keys(regular.advances).sort());
+    expect(Object.keys(medium.inkExtents).sort()).toEqual(Object.keys(regular.advances).sort());
   });
 
   it('ist ein Subset, kein Austausch: das Original ist eine andere Datei', () => {
@@ -164,7 +242,7 @@ describe('Textschrift', () => {
   it('schließt Systemschriften aus', () => {
     const options = resvgFontOptions();
     expect(options.loadSystemFonts).toBe(false);
-    expect(options.fontFiles).toEqual([TEXT_FONT_PATH, TEXT_FONT_BOLD_PATH]);
+    expect(options.fontFiles).toEqual([TEXT_FONT_PATH, TEXT_FONT_MEDIUM_PATH, TEXT_FONT_BOLD_PATH]);
     expect(options.defaultFontFamily).toBe(TEXT_FONT_FAMILY);
   });
 });

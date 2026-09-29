@@ -1,6 +1,7 @@
 import type { Point, Primitive, Style } from '@einsatzzeichen/schema';
 import { deepFreeze } from '../../readonly-data.js';
 import { defineState, type CatalogPictogramDefinition } from '../catalog-definition.js';
+import { CATALOG_TEXT_FONT_WEIGHT } from '../../../render/text-policy.js';
 
 /**
  * 5.8.6 Tierzustände. Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert.
@@ -91,6 +92,7 @@ function contaminationLetter(): Primitive {
     baseline: 'alphabetic',
     boxMm: { xMm: 26, yMm: 2, widthMm: 5, heightMm: 5 },
     minRenderPx: 64,
+    fontWeight: CATALOG_TEXT_FONT_WEIGHT,
     style: { ...ANIMAL_FILL },
   };
 }

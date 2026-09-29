@@ -371,6 +371,8 @@ export function layoutDashes(
 }
 
 function gapLabel(content: string, center: Point, gapMm: number, viewBoxWidthMm: number): Primitive {
+  // Ohne `fontWeight`, also Arimo 400, anders als allen übrigen Katalogtext (LFH-585): Die
+  // Beschriftungen in Kapitel 2 messen in der Referenz 0,126 × Versalhöhe, fast Arimo normal.
   const sizeMm = GAP_LABEL_CAP_HEIGHT_MM / ARIMO_CAP_HEIGHT_FRACTION;
   const baselineMm = center[1] + GAP_LABEL_BASELINE_BELOW_AXIS_MM;
   const box = verticalTextBoxMm(baselineMm, sizeMm, 'alphabetic');

@@ -1,6 +1,7 @@
 import type { TextMetrics } from '../text-metrics.js';
 import arimoMetrics from '../assets/arimo-metrics.json' with { type: 'json' };
 import arimoBoldMetrics from '../assets/arimo-bold-metrics.json' with { type: 'json' };
+import arimoMediumMetrics from '../assets/arimo-medium-metrics.json' with { type: 'json' };
 
 /**
  * Laufweiten von Arimo für das Textmetrik-Gate in `core` (`checkTextMetrics`, LFH-410) und die
@@ -95,10 +96,16 @@ function textMetricsFrom(file: ArimoMetricsFile): TextMetrics {
 const file = assertArimoMetrics(arimoMetrics as unknown);
 /** Fettinstanz wght 700 (`assets/Arimo-Bold.ttf`), dasselbe Format, erzeugt vom selben Skript. */
 const boldFile = assertArimoMetrics(arimoBoldMetrics as unknown);
+/**
+ * Mittlere Instanz wght 500 (`assets/Arimo-Medium.ttf`, LFH-585), dasselbe Format, erzeugt vom
+ * selben Skript. In ihr setzt der Katalog allen Text (`CATALOG_TEXT_FONT_WEIGHT`).
+ */
+const mediumFile = assertArimoMetrics(arimoMediumMetrics as unknown);
 
 export const TEXT_METRICS_FAMILY = file.family;
 
 export const ARIMO_TEXT_METRICS: TextMetrics = {
   ...textMetricsFrom(file),
   bold: textMetricsFrom(boldFile),
+  medium: textMetricsFrom(mediumFile),
 };

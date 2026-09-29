@@ -1,4 +1,5 @@
 import type { Point, Primitive, Style } from '@einsatzzeichen/schema';
+import { CATALOG_TEXT_FONT_WEIGHT } from '../../../render/text-policy.js';
 
 /**
  * 0,5 mm — die Wandstärke der Referenzumrisse (1,417 pt bei 90,709 pt auf 32 mm). Die Mittellinien
@@ -127,8 +128,6 @@ export function stateText(
     sizeMm: number;
     boxMm: { xMm: number; yMm: number; widthMm: number; heightMm: number };
     fill: Style['fill'];
-    /** 700 für den fetten Schnitt; ohne Angabe regulär. */
-    fontWeight?: 400 | 700;
   },
 ): Primitive {
   return {
@@ -142,7 +141,7 @@ export function stateText(
     baseline: 'alphabetic',
     boxMm: options.boxMm,
     minRenderPx: Math.ceil((8 * 32) / options.sizeMm),
-    ...(options.fontWeight === undefined ? {} : { fontWeight: options.fontWeight }),
+    fontWeight: CATALOG_TEXT_FONT_WEIGHT,
     style: { fill: options.fill, stroke: 'none' },
   };
 }

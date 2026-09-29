@@ -22,6 +22,10 @@ import type { TextMetrics } from '../text-metrics.js';
  * `vertical[0]` (unter der Grundlinie, negativ) bis `vertical[1]` (darüber) — die Vorgabe liegt
  * innerhalb der gemessenen Arimo-Anteile (`ALPHABETIC_ASCENT_FRACTION` 0,86 /
  * `ALPHABETIC_DESCENT_FRACTION` 0,212), damit `labelPrimitive`-Boxen im Bestand passen.
+ *
+ * Der mittlere Schnitt (`medium`, Gewicht 500) ist dasselbe Doppel: `compose()` setzt allen
+ * Katalogtext in 500 (LFH-585), und die Geometriefälle sollen dieselben rechenbaren Breiten
+ * sehen. Einen Fettschnitt führt das Doppel nicht; wer ihn braucht, setzt ihn selbst.
  */
 export function uniformTextMetrics(
   em = 0.25,
@@ -45,7 +49,7 @@ export function uniformTextMetrics(
   const unknownCodepoints = new Set(unknown.map((character) => character.codePointAt(0)));
   const advanceEm = (codepoint: number): number | undefined =>
     unknownCodepoints.has(codepoint) ? undefined : (overrideByCodepoint.get(codepoint) ?? em);
-  return {
+  const metrics: TextMetrics = {
     advanceEm,
     inkExtentEm: (codepoint) => {
       const advance = advanceEm(codepoint);
@@ -55,4 +59,6 @@ export function uniformTextMetrics(
       return [left, vertical[0], advance - right, vertical[1]];
     },
   };
+  metrics.medium = metrics;
+  return metrics;
 }

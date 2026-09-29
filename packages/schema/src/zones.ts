@@ -97,7 +97,7 @@ export interface ZoneBoundsMm {
  * das Feld leer — ein erfundener Abschnitt wäre schlimmer als gar keiner.
  */
 export interface ZoneProvenance {
-  /** Fundort der Zahl, Datei und Zeilenbereich, z. B. `core/src/compose.ts:78`. */
+  /** Fundort der Zahl, Datei und Zeilenbereich, z. B. `core/src/compose.ts:79`. */
   readonly definedAt: string;
   /** Die Herkunftsaussage des Fundorts, von dort übernommen und nicht neu formuliert. */
   readonly note: string;

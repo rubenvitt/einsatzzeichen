@@ -69,7 +69,9 @@
    * Eine Engine, die ein Formatkürzel nicht kennt, verwirft den Eintrag stillschweigend — und
    * genau dann stünde das Kürzel wieder in einer Ersatzschrift, also im Fehlerfall, den dieses
    * `@font-face` verhindern soll. `truetype` als zweiter Eintrag lädt dieselbe Datei; die
-   * wght-Achse bleibt über `font-weight: 400 700` erreichbar.
+   * wght-Achse bleibt über `font-weight: 400 700` erreichbar. Der Katalog setzt seine Kürzel
+   * seit LFH-585 in 500; der Browser setzt diese Stufe aus der Achse, resvg aus der statischen
+   * Instanz `Arimo-Medium.ttf`, die aus derselben Datei abgeleitet ist.
    */
   src:
     url('../../../conformance/assets/Arimo[wght].ttf') format('truetype-variations'),
