@@ -40,32 +40,36 @@ nicht als Grundfassung.
 
 ## 3. Was die Referenz zeigt
 
-Durchsucht sind alle 381 Anhangdateien (C bis N) unter den lokalen BABZ-Referenzen, gebaute wie
+Durchsucht sind alle 411 Anhangdateien (C bis N, 381 Nummern) unter den lokalen BABZ-Referenzen, gebaute wie
 ungebaute. Das Kapitel-4-Piktogramm ist jeweils über die Geometrie gegen die 92 Einzeldarstellungen
 bestimmt, nicht über den Dateinamen. `referenceInventory()` meldet für E und J bis N nichts
 Unbeanspruchtes. Ungebaut sind nur noch Teile von C.1 und C.2.
 
-### 3.1 Zwei der 67 Paare haben einen Beleg
+### 3.1 Ein Paar hat einen Beleg, ein zweites nur in Kombination
 
 | Paar | Referenz | Stand | Fassung |
 |---|---|---|---|
 | `technical-assistance` × Formation | C.1.4 Rüstzug | nicht gebaut | Bis auf 0,001 mm gleich der Fassung im Rüstwagen C.2.18, nur 0,5 mm höher gesetzt. Übertragen: 0,90 × 1,25, `reduced` (Uniformität 0,28, knapp unter der Grenze 0,30), Strich 0,5 mm |
-| `slaughter-culling` × Formation | H.3 | gebaut, aber als technische Marke `h-veterinary-slaughter` zusammen mit dem V aus 4.10.1 | Wippe verkleinert links unten, Mittellinie gegen Mittellinie etwa 0,40 × 0,42. Die Marke ist als gefüllte Kontur gebaut; `measureCapabilityInset` misst deshalb 0,40 × 0,50 |
+| `slaughter-culling` × Formation, **nur in Kombination** | H.3 | gebaut, aber als technische Marke `h-veterinary-slaughter` zusammen mit dem V aus 4.10.1, das 2 mm nach rechts rückt | Wippe verkleinert links unten, Mittellinie gegen Mittellinie etwa 0,40 × 0,42. Die Marke ist als gefüllte Kontur gebaut; `measureCapabilityInset` misst deshalb 0,40 × 0,50 |
 
-Beide sind **eine weitere Absage an „unverändert einsetzen, wo es passt“**: 4.7.18 und 4.10.2
-stehen beide in `CAPABILITY_UNSCALED_FIT` für die Formation, die Referenz verkleinert sie trotzdem.
+Sauber belegt ist nur C.1.4. H.3 zeigt die Wippe nur neben dem V, also als Kombinationsbild wie
+C.2.31; eine Einzelfassung daraus wäre ein Schluss, keine Messung (so LFH-786 §5 zum
+Kettenfahrzeug). Die Verkleinerung in H.3 kann auch vom geteilten Körper kommen.
 
-### 3.2 65 Paare zeigt die Referenz nirgends
+C.1.4 ist **eine weitere Absage an „unverändert einsetzen, wo es passt“**: 4.7.18 steht in
+`CAPABILITY_UNSCALED_FIT` für die Formation, die Referenz verkleinert und formt es trotzdem um.
 
-| Körperform | offen | mit Beleg | ohne Beleg |
-|---|---:|---:|---:|
-| Formation | 25 | 2 | 23 |
-| Container | 16 | 0 | 16 |
-| Gebäude | 14 | 0 | 14 |
-| Posten | 7 | 0 | 7 |
-| Person | 3 | 0 | 3 |
-| Punkt | 2 | 0 | 2 |
-| **zusammen** | **67** | **2** | **65** |
+### 3.2 65 Paare zeigt die Referenz nirgends, eines nur in Kombination
+
+| Körperform | offen | Einzelbeleg | nur Kombination | ohne Beleg |
+|---|---:|---:|---:|---:|
+| Formation | 25 | 1 | 1 | 23 |
+| Container | 16 | 0 | 0 | 16 |
+| Gebäude | 14 | 0 | 0 | 14 |
+| Posten | 7 | 0 | 0 | 7 |
+| Person | 3 | 0 | 0 | 3 |
+| Punkt | 2 | 0 | 0 | 2 |
+| **zusammen** | **67** | **1** | **1** | **65** |
 
 - **Container, Gebäude, Posten, Person, Punkt:** Keine Referenz zeigt ein Kapitel-4-Piktogramm in
   einem dieser Körper. Das einzige Gebäude (E.1.37) trägt Text. Die Posten in D.2 tragen kein
@@ -100,7 +104,11 @@ bleibt, wie sie ist. Unter A heißt „bewusst aufgeben“ für sie: dauerhaft g
 - **4.4.1 Erkunden weicht von der Referenz ab.** Die Referenz zeichnet die Mittellinie von
   (2|26) nach (30|6), 28 × 20 mm; der Katalog `M 5 24 L 27 8`, 22 × 16 mm, also etwa 0,79-fach.
   Das Piktogramm ist fachlich freigegeben (04.09.) und trägt den Vermerk „bleibt unverändert“.
-  Außerhalb dieses Tickets; eigenes Folgeticket.
+  Das widerspricht „deckungsgleich“ aus PR #56 und **berührt diese Inventur**: Mit der
+  Referenzlinie (Strich 0,5 mm, stumpfe Enden) läge die untere Ecke bei y ≈ 26,2, also über der
+  Körperunterkante der Formation (y 26). `reconnaissance` × Formation, möglicherweise auch ×
+  Container, stünde dann nur wegen der zu kleinen Katalogzeichnung in `CAPABILITY_UNSCALED_FIT`.
+  Mit `checkClipping` nicht nachgerechnet. **Die 69 Paare sind also nicht gesichert.**
 
 ## 4. Was das Abschalten kostet
 
@@ -119,8 +127,9 @@ bleibt, wie sie ist. Unter A heißt „bewusst aufgeben“ für sie: dauerhaft g
 - **Alias auf `bodyMarks`.** Keine reine Umbenennung:
   - `bodyMarks` kann die Boxfassung nicht ausdrücken, und die Fassungswahl liegt in einer eigenen
     Map (`bodyMarkRenditions`), eine je Marke;
-  - 65 der 69 Paare würfen in `compose()` einen `NotMeasuredError` statt einer Regelmeldung, denn
-    für unvermessene Körpermarken gibt es keine Validierungsregel. Die würde neu gebraucht;
+  - 67 der 69 Paare würfen heute in `compose()` einen `NotMeasuredError` statt einer
+    Regelmeldung, denn für unvermessene Körpermarken gibt es keine Validierungsregel. Die würde
+    neu gebraucht;
   - die zwei vermessenen Paare zeichneten ein anderes Bild als heute;
   - der Feldname verspräche eine Box, die es nicht mehr gibt.
 - **Snapshot-Achsen und Tests.** Die einzige Datei-Snapshot-Achse mit `capabilities` ist
@@ -137,27 +146,29 @@ bleibt, wie sie ist. Unter A heißt „bewusst aufgeben“ für sie: dauerhaft g
 |---|---|---|
 | **A1 — A vollziehen, `capabilities` entfernen** | `inForce: measured-rendition-only`; das Feld entfällt, ein Altschlüssel wird fail-closed abgelehnt. | Referenztreu ohne Ausnahme. 65 Paare dauerhaft gesperrt (§3.2), die übrigen nur noch über `bodyMarks`. 3.0.0. |
 | **A2 — A vollziehen, Alias** | wie A1, `capabilities` wird auf `bodyMarks` abgebildet, neue Regel für unvermessene Körpermarken. | Wie A1, dazu ein Feld mit irreführendem Namen und doppelter Semantik. 3.0.0. |
-| **AB — A, wo die Referenz spricht; B, wo sie schweigt** | Hat ein Paar eine vermessene Fassung, lehnt `validateSpec` die Boxfassung ab und verweist auf `bodyMarks`. Ohne Fassung bleibt B. `target` wird zu einer neuen Politik. | Nichts Referenzuntreues, wo es eine Referenz gibt. Die 65 stummen Paare zeichnen weiter unskaliert, wie heute. Bricht nur die Paare mit Fassung: heute 2, nach §3.1 4. Ebenfalls 3.0.0, aber schmal. Ändert die Entscheidung vom 29.09. (Ziel A). |
-| **B bleibt, Ticket ruht** | Nur die zwei belegten Fassungen (C.1.4, H.3) als `bodyMarks` bauen, kein Wechsel. | Kein Breaking Change (`feat`). Die Boxfassung bleibt überall, wo sie heute gilt, auch dort, wo die Referenz jetzt anders zeichnet. |
+| **AB — A, wo die Referenz spricht; B, wo sie schweigt** | Hat ein Paar eine vermessene Fassung, lehnt `validateSpec` die Boxfassung ab und verweist auf `bodyMarks`. Ohne Fassung bleibt B. `target` wird zu einer neuen Politik. | Nichts Referenzuntreues, wo es eine Referenz gibt. Die 65 stummen Paare zeichnen weiter unskaliert, wie heute. Bricht nur die Paare mit Fassung: heute 2, mit C.1.4 3. Ebenfalls 3.0.0, aber schmal. Ändert die Entscheidung vom 29.09. (Ziel A). **Kosten:** Für die 65 stummen Paare bleibt eine Darstellung, der jeder vermessene Fall widerspricht (jetzt auch C.1.4). |
+| **B bleibt, Ticket ruht** | Nur die belegte Fassung aus C.1.4 als `bodyMarks` bauen, kein Wechsel. | Kein Breaking Change (`feat`). Die Boxfassung bleibt überall, wo sie heute gilt, auch dort, wo die Referenz jetzt anders zeichnet. |
 
 **Empfehlung des Vorbereiters: AB.** A setzt voraus, dass die Paare nach und nach vermessen werden.
 §3 zeigt, dass das für 65 der 67 nicht geht: die Quelle zeigt sie nicht. A1 und A2 würden damit
 zwei Drittel der Formationsfähigkeiten und alle Fähigkeiten an Container, Gebäude, Posten, Person
 und Punkt dauerhaft sperren, ohne dass je ein Beleg sie wieder öffnen könnte. AB hält die Linie
 „gemessen, nicht angenommen“ dort, wo es etwas zu messen gibt, und lässt B als erklärte Lücke
-stehen, wo die Quelle schweigt. Wenn A1 gewählt wird, dann Entfernen statt Alias (§4).
+stehen, wo die Quelle schweigt. Der Preis: Dort zeichnet der Motor weiter etwas, das die Referenz
+an keinem vermessenen Fall so zeichnet. Wer das nicht hinnehmen will, wählt A1. Wenn A1 gewählt
+wird, dann Entfernen statt Alias (§4).
 
 ## 6. Zu entscheiden
 
 1. **Politik für Paare ohne Fassung:** A1, A2, AB oder B bleibt?
-2. **Bau der zwei belegten Fassungen** (C.1.4 als Fixture mit `technical-assistance` × Formation;
-   H.3 von der technischen Marke auf eine Kapitel-4-Fassung umstellen, als Strich statt Kontur):
-   in diesem Ticket oder in LFH-418?
+2. **Bau von C.1.4** als Fixture mit der Fassung `technical-assistance` × Formation: in diesem
+   Ticket oder in LFH-418? Und darf aus dem Kombinationsbild H.3 eine Einzelfassung
+   `slaughter-culling` × Formation abgeleitet werden (Schluss, keine Messung)?
 3. **Zweite Fassungen** aus C.1.11, C.1.12 und C.1.15 (§3.3): mitbauen oder LFH-418?
 
 ## 7. Nicht Teil
 
-- 4.4.1 Erkunden (§3.3). Eigenes Folgeticket.
+- Die Korrektur von 4.4.1 Erkunden (§3.3). Eigenes Folgeticket.
 - Die übrigen ungebauten C.1-Zeichen (LFH-418).
 - Mehrere Piktogramme in der Boxfassung (LFH-567 §5 Frage 1).
 - Eine fachliche Freigabe.
