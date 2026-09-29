@@ -22,7 +22,7 @@ describe('RULE_EVIDENCE', () => {
 
   it('führt je Regel genau einen Fall, alphabetisch', () => {
     expect(evidenceIds).toEqual([...new Set(evidenceIds)].sort());
-    expect(RULE_EVIDENCE).toHaveLength(74);
+    expect(RULE_EVIDENCE).toHaveLength(75);
   });
 
   it('nagelt die Lücken fest', () => {

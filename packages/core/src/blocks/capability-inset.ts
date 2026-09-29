@@ -28,11 +28,13 @@ import type {
  * randbündig umgeformt (`flush`, 24), annähernd gleichmäßig verkleinert (`reduced`, 23) oder
  * frei umgeformt (`reshaped`, 5). Gemeinsam ist allen nur die
  * Strichstärke 0,5 mm. Die Regel lautet deshalb: **eigene Innenfeld-Fassung je Paar aus Fähigkeit
- * und Körperform**, so wie `bodyMarks` sie heute schon führt. Für Paare ohne Fassung ist sie eine
- * Empfehlung (`CAPABILITY_INSET_RULE.unmeasuredPairs`); die Entscheidung steht in
+ * und Körperform**, so wie `bodyMarks` sie heute schon führt. Was für Paare ohne Fassung gilt, steht in
+ * `CAPABILITY_INSET_RULE.unmeasuredPairs`; die Entscheidung steht in
  * `docs/decisions/2026-09-29-lfh-587-kapitel-4-piktogramme-im-innenfeld.md`.
  *
- * `compose.ts` ist unverändert. Kein Bild ändert sich.
+ * Seit der Entscheidung vom 29. September 2026 lehnt `validateSpec` mit
+ * `capabilities-pictogram-overflows-body` jede Boxfähigkeit ab, deren Einzeldarstellung an der
+ * Körperform nicht nachweislich im Körper bleibt (`CAPABILITY_UNSCALED_FIT`).
  */
 
 function source(definedAt: string, note: string): GrammarEvidence {
@@ -243,11 +245,17 @@ export const CAPABILITY_INSET_RULE: CapabilityInsetRule = Object.freeze({
     remaining:
       'Die Höhe weicht an vier Fixtures ab: in G.3.5 für den unteren Lauf, in I.2.1 bis I.2.3 je nach Fahrzeugkategorie (`VEHICLE_LAND_WATER_RESCUE_MARKS`). Unter dem Zelt (4.2.1) stehen drei verkleinerte Marken kleiner als in ihren Einzelfixtures (Ruhen in F.1.3 und F.1.19, Mahlzeitenzubereitung in F.2.13, Trinkwasser in F.2.17), die Verpflegung in F.1.17 nicht.',
   },
+  // Ziel ist A, weil keine der drei Rechenregeln die Referenz reproduziert (oben). In Kraft ist
+  // bis dahin B: die Boxfassung bleibt, wo die Einzeldarstellung nachweislich im Körper bleibt,
+  // und wird sonst von `validateSpec` abgelehnt. C scheidet aus, weil es an keinem vermessenen
+  // Fall die richtige Größe träfe.
   unmeasuredPairs: {
-    status: 'proposed',
-    value: 'measured-rendition-only',
-    reason:
-      'Keine der drei rechnerischen Regeln reproduziert die Referenz: unverändert einsetzen ist an sechs Fällen widerlegt, ein gemeinsamer Faktor und das Einpassen in die Box an allen verkleinerten Fassungen. Was die Referenz tut, ist eine eigene Fassung je Paar. Eine Rechenregel für die übrigen Paare zeichnete ein Bild, das die Referenz so nicht zeigt, und behauptete damit eine Messung, die es nicht gibt.',
+    target: 'measured-rendition-only',
+    inForce: 'unscaled-if-fits',
+    rule: 'capabilities-pictogram-overflows-body',
+    decidedOn: '2026-09-29',
+    decidedBy: 'Koordinator (delegiert)',
+    decidedIn: 'docs/decisions/2026-09-29-lfh-587-kapitel-4-piktogramme-im-innenfeld.md',
   },
 } satisfies CapabilityInsetRule);
 

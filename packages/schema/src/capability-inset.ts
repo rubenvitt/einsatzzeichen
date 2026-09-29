@@ -63,6 +63,24 @@ export type CapabilityInsetPolicy =
   | 'unscaled-if-fits'
   | 'uniform-scale-to-box';
 
+/**
+ * Die Entscheidung, was für Paare ohne vermessene Fassung gilt. Sie ist kein Beleg und steht
+ * deshalb nicht als `GrammarFinding`, sondern mit Datum, Entscheider und Fundort.
+ */
+export interface CapabilityInsetDecision {
+  /** Die Regel, auf die der Katalog hinarbeitet. */
+  readonly target: CapabilityInsetPolicy;
+  /** Was bis dahin gilt und von `validateSpec` geprüft wird. */
+  readonly inForce: CapabilityInsetPolicy;
+  /** Die Regelkennung, mit der `inForce` geprüft wird. */
+  readonly rule: string;
+  /** ISO-Datum der Entscheidung. */
+  readonly decidedOn: string;
+  readonly decidedBy: string;
+  /** Pfad der Entscheidungsnotiz unter `docs/decisions/`. */
+  readonly decidedIn: string;
+}
+
 /** Die Regel des Innenfelds für Kapitel-4-Piktogramme, Aussage für Aussage mit Belegstand. */
 export interface CapabilityInsetRule {
   /** Die Körperfassung behält die Strichstärke der Einzeldarstellung. */
@@ -76,5 +94,5 @@ export interface CapabilityInsetRule {
   /** Eine verkleinerte Fassung hat in jeder Körperform dieselbe Größe. */
   readonly reducedSizeBodyInvariant: GrammarFinding<CapabilityInsetClaim>;
   /** Was für Paare aus Fähigkeit und Körperform ohne vermessene Fassung gilt. */
-  readonly unmeasuredPairs: GrammarFinding<CapabilityInsetPolicy>;
+  readonly unmeasuredPairs: CapabilityInsetDecision;
 }

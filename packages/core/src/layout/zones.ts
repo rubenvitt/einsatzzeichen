@@ -174,7 +174,7 @@ function formKey(kind: SymbolKind, variant?: BodyVariantId): string {
 
 /**
  * Die drei Körperformen, an denen die Referenz überhaupt eine Fahrwerkszone führt. Wiederholt aus
- * `CHASSIS_KINDS` in `validate.ts:57–61`, das dort modulprivat ist; `zones.test.ts` hält die
+ * `CHASSIS_KINDS` in `validate.ts:58–62`, das dort modulprivat ist; `zones.test.ts` hält die
  * Liste an der Meldung der Regel `vehicle-category-requires-vehicle` fest.
  */
 const CHASSIS_KINDS: readonly SymbolKind[] = ['vehicle-land', 'trailer', 'swap-loader-vehicle'];
@@ -550,7 +550,7 @@ function chassisZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
   if (!CHASSIS_KINDS.includes(kind)) {
     return measuredAbsent(
       'combination',
-      'core/src/validate.ts:489–495',
+      'core/src/validate.ts:490–496',
       'Eine Fahrzeugkategorie ist nur am Landfahrzeug, am Anhängerrumpf und am ' +
         `Wechselladerrumpf belegt. "${kind}" trägt in der Referenz keine Fahrwerkszone ` +
         '(Regel `vehicle-category-requires-vehicle`).',
@@ -643,10 +643,11 @@ function innerFieldZone(kind: SymbolKind, variant?: BodyVariantId): ZoneBinding 
       'Ein Kapitel-4-Piktogramm steht im Körper in einer **eigenen Fassung je Paar aus Fähigkeit ' +
         'und Körperform** (`CAPABILITY_INSET_FORMS`), nicht als skalierte Einzeldarstellung. ' +
         'Drei Behandlungen kommen vor: randbündig umgeformt, gleichmäßig verkleinert oder frei ' +
-        'umgeformt. Die Strichstärke bleibt 0,5 mm. Für Paare ohne Fassung gilt die Empfehlung ' +
-        '`CAPABILITY_INSET_RULE.unmeasuredPairs`.',
+        'umgeformt. Die Strichstärke bleibt 0,5 mm. Für Paare ohne Fassung lässt die Boxfassung ' +
+        'nur Piktogramme zu, die unskaliert im Körper bleiben (`capabilities-pictogram-overflows-body`, ' +
+        '`CAPABILITY_INSET_RULE.unmeasuredPairs`).',
       source(
-        'core/src/blocks/capability-inset.ts:78–252',
+        'core/src/blocks/capability-inset.ts:80–260',
         'Gemessen an allen 52 Körperfassungen des Bestands gegen ihre Einzeldarstellung ' +
           '(LFH-587). Weder ein gemeinsamer Faktor noch das Einpassen in die Box 4/8/24/16 mm ' +
           'noch das unveränderte Einsetzen reproduziert die Referenz.',

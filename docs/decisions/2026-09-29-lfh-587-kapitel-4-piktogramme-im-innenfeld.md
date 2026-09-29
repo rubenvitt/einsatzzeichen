@@ -1,9 +1,10 @@
 # Kapitel-4-Piktogramme im Körper: was die Referenz tut und welche Regel daraus folgt
 
 > Stand: 29. September 2026
-> Status: **Vorlage, Entscheidung des Eigentümers offen.** Vorbereitet zu LFH-587 (Subtask von
-> LFH-562, Zonenmodell; verlinkt aus LFH-582). Die Messung und die belegten Befunde sind als
-> Daten und Gates umgesetzt, die offene Frage steht in Abschnitt 5 mit Empfehlung.
+> Status: **Entschieden am 29. September 2026** vom Koordinator, dem der Projektinhaber die
+> Entscheidung übertragen hat. Vorbereitet zu LFH-587 (Subtask von LFH-562, Zonenmodell; verlinkt
+> aus LFH-582). Messung, Befunde und die Übergangsregel sind umgesetzt; Abschnitt 5 hält die
+> Entscheidung fest.
 > Bezug: `docs/decisions/2026-09-19-masse-an-der-referenz-ablesen.md` §6,
 > `docs/decisions/2026-09-20-zonenmodell-als-daten.md` (Punkt 3 und §3 Befund 6),
 > `docs/decisions/2026-09-28-lfh-567-mehrfachfaehigkeiten-und-sonderformen.md` (Kombinationen)
@@ -132,7 +133,10 @@ Polyzug ist. Die Liste je Körperform steht in `CAPABILITY_UNSCALED_FIT`.
   die zwei Schwellen (Randbündigkeit 0,01 mm, Gleichmäßigkeit 0,3).
 - `core/src/blocks/capability-inset.ts`: `CAPABILITY_INSET_FORMS` (52 Fassungen),
   `CAPABILITY_UNSCALED_FIT` (acht Körperformen) und `CAPABILITY_INSET_RULE` mit fünf belegten
-  Aussagen und einer Empfehlung.
+  Aussagen und der Entscheidung (`unmeasuredPairs`: Ziel, in Kraft, Regel, Datum, Fundort).
+- `core/src/validate.ts`: die Regel `capabilities-pictogram-overflows-body` (siehe §5). Sie steht
+  im Regelkatalog (`engine`, Dimension `capabilities`, die damit von `none` auf `partial` geht),
+  hat einen auslösenden Fall in `rule-evidence.ts` und eine Erklärung auf der Website.
 - Zonenmodell: die Zone `inner-field` trägt an den sieben Körperfassungen mit Innenfeld die Regel
   `capability-inset`. Die Lückenbegründung der übrigen nennt jetzt, dass die Lücke die weiße Kontur
   betrifft und nicht die Fähigkeit.
@@ -141,16 +145,18 @@ Polyzug ist. Die Liste je Körperform steht in `CAPABILITY_UNSCALED_FIT`.
   Fassungen) und `capability-inset-fixtures.test.ts` in `conformance` (Daten gegen den Motor, jede
   Aussage der Regel an den Zahlen, die unskalierte Einsetzbarkeit gegen `checkClipping`).
 
-`compose.ts`, `validate.ts` und `layout/profiles.ts` sind unverändert. Kein Bild ändert sich.
+`compose.ts` und `layout/profiles.ts` sind unverändert. Kein Bild eines Rezepts ändert sich:
+keine Fixture setzt `capabilities`, und die Testkompositionen mit Brandbekämpfung und
+Brauchwasser liegen in der Formation, wo beide unskaliert passen.
 
-## 5. Die Regel und die offene Entscheidung
+## 5. Die Regel und die Entscheidung
 
 **Was die Referenz tut, ist belegt:** Sie setzt ein Kapitel-4-Piktogramm nie unverändert und nie
 nach einer gemeinsamen Rechnung in einen Körper. Sie zeichnet eine **eigene Innenfeld-Fassung je
 Paar aus Fähigkeit und Körperform**, randbündig, verkleinert oder umgeformt, immer mit 0,5 mm
 Strich. Der Katalog führt genau diese Fassungen schon als `bodyMarks`.
 
-**Offen ist, was für die Paare ohne Fassung gilt**, und damit, was aus der Boxfassung
+**Zu entscheiden war, was für die Paare ohne Fassung gilt**, und damit, was aus der Boxfassung
 `capabilities` wird. Drei Möglichkeiten:
 
 | Option | Was sie tut | Folge |
@@ -159,23 +165,40 @@ Strich. Der Katalog führt genau diese Fassungen schon als `bodyMarks`.
 | **B — unskaliert, wo es passt** (`unscaled-if-fits`) | Die Boxfassung bleibt. `validateSpec` lehnt ein Piktogramm ab, das an dieser Körperform das Clipping-Gate nicht besteht. | Kein überstehendes Bild mehr. Die 27 passenden in der Formation zeichnen weiter, aber nicht so, wie die Referenz sie zeigt (3.3). |
 | **C — in die Box skalieren** (`uniform-scale-to-box`) | Jedes Piktogramm wird gleichmäßig in die Fähigkeitsbox eingepasst, bei fester Strichstärke. | Jedes Paar zeichnet etwas. Die Größe ist an keinem vermessenen Fall richtig (Faktor 0,62 bis 1,17 daneben), und randbündige Zeichen wie das Sanitätskreuz verlören ihre Randbündigkeit. |
 
-**Empfehlung des Koordinators: A als Regel, B als Übergang.** A ist die einzige Option, die die
-Referenz trägt. B verhindert bis dahin, dass der Motor überstehende Bilder zeichnet, ohne die 27
-heute passenden Fälle zu brechen. C wird nicht empfohlen: es erzeugte für 92 × 19 Paare ein Bild,
-das an keinem vermessenen Fall stimmt, und behauptete damit eine Messung, die es nicht gibt.
+**Entschieden am 29. September 2026: A als Ziel, B ab sofort in Kraft.** Der Projektinhaber hat
+die Entscheidung an den Koordinator übertragen.
 
-In den Daten steht die Empfehlung als `CAPABILITY_INSET_RULE.unmeasuredPairs`, Status `proposed`,
-Wert `measured-rendition-only`.
+- **Warum A als Ziel.** A ist die einzige Option, die die Referenz trägt (§3). Neue Paare kommen
+  als vermessene Körperfassung in `bodyMarks` dazu, nicht über eine Rechenregel.
+- **Warum B jetzt.** B verhindert, dass der Motor überstehende Bilder zeichnet, und bricht keinen
+  Fall, der heute im Körper bleibt. A sofort hätte die Boxfassung ganz abgeschaltet, auch für die
+  27 passenden Piktogramme in der Formation, ohne dass es für sie schon eine vermessene Fassung
+  gibt.
+- **Warum nicht C.** C erzeugte für 92 × 19 Paare ein Bild, das an keinem vermessenen Fall stimmt,
+  und behauptete damit eine Messung, die es nicht gibt.
 
-Beschlossen werden müsste mit B außerdem eine Prüfregel (Vorschlag:
-`capabilities-inset-not-measured`). Sie ist hier bewusst **nicht** vorgemerkt: die vorgemerkten
-Regeln der Dimension `capabilities` sind an LFH-567 gebunden, und eine dritte würde
-`planned-capability-rules.test.ts` und `capability-combinations.test.ts` für eine noch nicht
-getroffene Entscheidung umbauen.
+**Die Regel in Kraft: `capabilities-pictogram-overflows-body`.** `validateSpec` lehnt eine
+Boxfähigkeit ab, wenn
+
+1. ihre Einzeldarstellung an dieser Körperform nicht in `CAPABILITY_UNSCALED_FIT` steht, also
+   das Clipping-Gate einen Überstand meldet;
+2. die Körperform kein Flächenmodell hat (die elf Pfad- und Polyzugkörper): dort ist nichts
+   geprüft, also fail-closed;
+3. eine Körpervariante gesetzt ist: `CAPABILITY_UNSCALED_FIT` ist an der Grundfassung gemessen,
+   nicht an der Variante.
+
+An einer Funktionsrolle meldet sie nichts, dort lehnt `function-role-capabilities-not-measured`
+die Boxfähigkeit schon ab. `compose()` wirft wie bei jeder Validierungsregel.
+
+In den Daten steht die Entscheidung als `CAPABILITY_INSET_RULE.unmeasuredPairs` mit
+`target: 'measured-rendition-only'` und `inForce: 'unscaled-if-fits'`. Die vorgemerkten Regeln
+aus LFH-567 (`capabilities-box-limit-exceeded`, `capabilities-presentation-mixed`) bleiben
+vorgemerkt; sie betreffen die Anordnung mehrerer Fähigkeiten, nicht die Einsetzbarkeit einer.
 
 ## 6. Nicht Teil
 
-- Die Umsetzung von A oder B in `compose()` oder `validateSpec`. Das entscheidet der Eigentümer.
+- Der Schritt von B zu A, also das Abschalten der Boxfassung. Er folgt, sobald die Paare, die
+  heute über `capabilities` zeichnen, eine vermessene Körperfassung haben.
 - Die Vermessung weiterer Paare, insbesondere C.1.7, C.1.8 und C.2. Sie braucht die
   Referenzdateien und gehört in ein eigenes Ticket.
 - Mehrere Piktogramme in der Boxfassung. Das ist LFH-567 §5 Frage 1.

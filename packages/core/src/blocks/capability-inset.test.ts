@@ -136,14 +136,21 @@ describe('CAPABILITY_UNSCALED_FIT', () => {
 });
 
 describe('CAPABILITY_INSET_RULE', () => {
-  it('belegt jede Aussage außer der Empfehlung für unvermessene Paare', () => {
+  it('belegt jede Aussage und führt die Entscheidung für unvermessene Paare getrennt', () => {
     const { unmeasuredPairs, ...evidenced } = CAPABILITY_INSET_RULE;
     for (const [name, finding] of Object.entries(evidenced)) {
       expect(finding.status, name).toBe('evidenced');
       if (finding.status !== 'evidenced') continue;
       expect(finding.evidence.length, name).toBeGreaterThan(0);
     }
-    expect(unmeasuredPairs).toMatchObject({ status: 'proposed', value: 'measured-rendition-only' });
+    expect(unmeasuredPairs).toEqual({
+      target: 'measured-rendition-only',
+      inForce: 'unscaled-if-fits',
+      rule: 'capabilities-pictogram-overflows-body',
+      decidedOn: '2026-09-29',
+      decidedBy: 'Koordinator (delegiert)',
+      decidedIn: 'docs/decisions/2026-09-29-lfh-587-kapitel-4-piktogramme-im-innenfeld.md',
+    });
   });
 
   it('widerlegt die drei Rechenregeln und hält Strich und Breite fest', () => {
