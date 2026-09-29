@@ -70,7 +70,7 @@ export const STRENGTH_BLOCKS: readonly BlockEntry[] = Object.freeze([
  * Befund zu E.1.31 in `coverage-manifest.ts` hält fest, dass „5.5.2_Bereitschaft (Verband II)"
  * die Zahl der Balken trifft, nicht das Maß.
  */
-const UNIT_GROUPING_GAP_AT = 'core/src/rules/rule-catalog.ts:933–938';
+const UNIT_GROUPING_GAP_AT = 'core/src/rules/rule-catalog.ts:940–945';
 
 function unitGroupingReason(file: string): string {
   return (
@@ -150,7 +150,7 @@ const ADMIN_UNDOCUMENTED =
   'Die Konstante in `administrative-heads.ts` trägt keinen Kommentar. Den Abschnitt D.3/D.4 nennen ' +
   'erst `validate.ts:561–563` und die Regel `administrative-level-not-measured`.';
 
-const ADMIN_GAP_AT = 'core/src/rules/rule-catalog.ts:915–920';
+const ADMIN_GAP_AT = 'core/src/rules/rule-catalog.ts:922–927';
 const ADMIN_GAP_REASON =
   'Keine Geometrie in `ADMINISTRATIVE_HEADS`. Der Regelkatalog: „Eine Regel, aber nur drei der ' +
   'sechs Stufen belegt (D.3/D.4). Gemeinde, Bezirk und Bundesland lehnt der Motor pauschal ab, ' +

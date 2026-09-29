@@ -60,7 +60,7 @@ import type { SourceReference } from '@einsatzzeichen/schema';
  *
  * Die sieben `-not-measured`-Kennungen und alle „… requires measured …"-Kennungen sind
  * durchweg `'engine'`; das ist der erwartete Befund und zugleich der Kern des Grammatik-Umbaus:
- * heute lehnt der Motor **66 von 74** Kombinationen ab, weil eine Messung fehlt, und nur **8**,
+ * heute lehnt der Motor **67 von 75** Kombinationen ab, weil eine Messung fehlt, und nur **8**,
  * weil die Systematik sie verbietet.
  *
  * ---------------------------------------------------------------------------------------------
@@ -77,7 +77,7 @@ import type { SourceReference } from '@einsatzzeichen/schema';
  *   nur den Prüfausdruck in Worten („muss endlich und größer als null sein"). Diese Sätze sind
  *   hierher **von Hand gezogen**.
  *
- * Das ist die eigentliche Aussage dieses Feldes: **27 der 74 Beschreibungsregeln** (mit der
+ * Das ist die eigentliche Aussage dieses Feldes: **27 der 75 Beschreibungsregeln** (mit der
  * einen Kompositionsregel 28 Einträge) begründet heute allein die Website.
  *
  * **Gegatet sind sie seit dem 21. September 2026.** Ein Gate in `core` ist unmöglich — `core`
@@ -242,7 +242,7 @@ function entry(
 }
 
 /**
- * Die 74 Regeln, die `validateSpec()` an der Beschreibung prüft — alphabetisch wie
+ * Die 75 Regeln, die `validateSpec()` an der Beschreibung prüft — alphabetisch wie
  * `VALIDATION_RULE_IDS`, damit ein Vergleich der beiden Listen ohne Umsortieren lesbar bleibt.
  */
 export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
@@ -351,10 +351,17 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'website',
   ),
   entry(
+    'capabilities-pictogram-has-measured-rendition',
+    'engine',
+    'capabilities',
+    'Wo eine Körperfassung an der Referenz vermessen ist, zeichnet die Referenz das Kapitel-4-Piktogramm in dieser Fassung und nicht als Einzeldarstellung in der Standardbox; die Boxfassung wiche dort vom Original ab, der Weg führt über `bodyMarks` (LFH-787, Entscheidung AB).',
+    'core',
+  ),
+  entry(
     'capabilities-pictogram-overflows-body',
     'engine',
     'capabilities',
-    'Die Referenz setzt kein Kapitel-4-Piktogramm unverändert in einen Körper, sondern zeichnet je Körperform eine eigene Fassung; bis eine solche Fassung vermessen ist, lässt die Boxfassung nur Piktogramme zu, die nachweislich im Körper bleiben (LFH-587).',
+    'Die Referenz setzt kein Kapitel-4-Piktogramm unverändert in einen Körper, sondern zeichnet je Körperform eine eigene Fassung; wo keine solche Fassung vermessen ist, lässt die Boxfassung nur Piktogramme zu, die nachweislich im Körper bleiben (LFH-587, LFH-787).',
     'core',
   ),
   entry(
@@ -929,7 +936,7 @@ export const RULE_DIMENSION_GAPS: readonly RuleDimensionGap[] = Object.freeze([
     dimension: 'capabilities',
     coverage: 'partial',
     chapter: 'Kapitel 4',
-    note: 'Eine Regel in Kraft: `capabilities-pictogram-overflows-body` lässt die Boxfassung nur zu, wo die Einzeldarstellung unskaliert im Körper bleibt (`CAPABILITY_UNSCALED_FIT`, LFH-587); die Referenz selbst setzt jedes Piktogramm in einer eigenen Fassung je Körperform ein (`CAPABILITY_INSET_RULE`). Die Anordnung mehrerer Boxfähigkeiten ist weiter ohne Regel: der Motor legt sie deckungsgleich in dieselbe Box, kein Original belegt das. Sie ist als offene Frage in `CAPABILITY_COMBINATION_RULES` geführt, zwei Regeln sind vorgemerkt (`PLANNED_CAPABILITY_RULES`, LFH-567).',
+    note: 'Zwei Regeln in Kraft, je Paar aus Fähigkeit und Körperform genau eine (LFH-787, Entscheidung AB): Hat das Paar eine vermessene Fassung, lehnt `capabilities-pictogram-has-measured-rendition` die Boxfassung ab und verweist auf `bodyMarks`; ohne Fassung lässt `capabilities-pictogram-overflows-body` sie nur zu, wo die Einzeldarstellung unskaliert im Körper bleibt (`CAPABILITY_UNSCALED_FIT`, LFH-587). Die Lücke: an diesen Paaren ohne Fassung zeichnet der Motor weiter die unveränderte Einzeldarstellung, obwohl die Referenz an keinem vermessenen Fall so zeichnet (`CAPABILITY_INSET_RULE`); für die meisten von ihnen zeigt die Referenz gar kein Kapitel-4-Piktogramm. Die Anordnung mehrerer Boxfähigkeiten ist weiter ohne Regel: der Motor legt sie deckungsgleich in dieselbe Box, kein Original belegt das. Sie ist als offene Frage in `CAPABILITY_COMBINATION_RULES` geführt, zwei Regeln sind vorgemerkt (`PLANNED_CAPABILITY_RULES`, LFH-567).',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'unit-grouping',

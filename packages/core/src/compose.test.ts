@@ -1723,7 +1723,7 @@ describe('compose() — randbündige Fachdienstzeichen', () => {
       {
         kind: 'formation',
         organization: 'thw',
-        capabilities: ['fire-fighting'],
+        capabilities: ['foam-agent'],
         bodyMarks: ['medical-service'],
         labels: { topLeft: 'MTF' },
       },

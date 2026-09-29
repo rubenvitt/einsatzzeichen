@@ -565,8 +565,8 @@ describe('Anhang D.1, Führungsstellen im Einsatz', () => {
 
   it('führt exakt die neun komponierten D.1-Darstellungen', () => {
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('D.1.'))).toEqual(expectedKeys);
-    // 242 bis LFH-786, dazu 37 Anhang-C-Fixtures (C.1.7, C.1.8 und 35 aus C.2).
-    expect(Object.keys(RECIPES)).toHaveLength(279);
+    // 242 bis LFH-786, dazu 37 Anhang-C-Fixtures (C.1.7, C.1.8 und 35 aus C.2) und C.1.4 (LFH-787).
+    expect(Object.keys(RECIPES)).toHaveLength(280);
   });
 
   it('bindet D.1.2 bis D.1.8 an die sieben gemessenen Formationsrollen', () => {
@@ -1111,8 +1111,8 @@ describe('Anhang G — vollständiges Logistikinventar', () => {
     expect(actual).toEqual(expected);
     expect(Object.keys(actual)).toEqual(Object.keys(expected));
     expect(Object.keys(actual).every((key) => !key.includes('#'))).toBe(true);
-    // 242 bis LFH-786, dazu 37 Anhang-C-Fixtures.
-    expect(Object.keys(RECIPES)).toHaveLength(279);
+    // 242 bis LFH-786, dazu 37 Anhang-C-Fixtures und C.1.4 (LFH-787).
+    expect(Object.keys(RECIPES)).toHaveLength(280);
   });
 
   it('bindet die 21 primary- und Referenz-IDs exakt und ohne Alternative', () => {
@@ -3377,8 +3377,8 @@ describe('Anhang F, Teilslice F-f', () => {
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    // 242 bis LFH-786, dazu 37 Anhang-C-Fixtures.
-    expect(Object.keys(RECIPES)).toHaveLength(279);
+    // 242 bis LFH-786, dazu 37 Anhang-C-Fixtures und C.1.4 (LFH-787).
+    expect(Object.keys(RECIPES)).toHaveLength(280);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {
@@ -3952,13 +3952,16 @@ describe('Anhang E, Teilslice E-f (E.2.27 bis E.2.31)', () => {
   });
 });
 
+// Seit LFH-787 (Entscheidung AB) mit dem Schaummittel statt der Brandbekämpfung: Die
+// Brandbekämpfung hat an der Formation eine vermessene Körperfassung (C.1.1 bis C.1.3), die
+// Boxfassung ist dort abgelehnt. Das Schaummittel hat keine und passt unskaliert.
 describe('Piktogramm-Platzierung als Gruppe', () => {
   it('erzeugt genau eine Piktogramm-Gruppe mit der Verschiebung als Transformation', () => {
     const drawing = composeFromCatalog({
       kind: 'formation',
       organization: 'feuerwehr',
       strength: 'staffel',
-      capabilities: ['fire-fighting'],
+      capabilities: ['foam-agent'],
     });
     const pictograms = drawing.children.filter((c) => c.role === 'pictogram');
     expect(pictograms).toHaveLength(1);
@@ -3969,7 +3972,7 @@ describe('Piktogramm-Platzierung als Gruppe', () => {
     expect(group.transform?.translate?.dxMm).toBe(0);
     expect(group.transform?.translate?.dyMm).toBeCloseTo(3, 6);
     // Die Kinder tragen ihre Autorenkoordinaten unverändert — die Verschiebung sitzt außen.
-    expect(group.children).toHaveLength(3);
+    expect(group.children).toHaveLength(1);
     for (const child of group.children) {
       expect(child.role).toBe('pictogram');
     }
@@ -3982,7 +3985,7 @@ describe('Piktogramm-Platzierung als Gruppe', () => {
       kind: 'formation',
       organization: 'feuerwehr',
       strength: 'gruppe',
-      capabilities: ['fire-fighting'],
+      capabilities: ['foam-agent'],
     });
     const group = drawing.children.find((c) => c.role === 'pictogram');
     expect(group?.type).toBe('group');
@@ -4101,7 +4104,7 @@ describe('Pfad-Piktogramm in beiden Layoutfällen (Spec-Erfolgskriterium 1)', ()
       kind: 'formation',
       organization: 'feuerwehr',
       strength: 'staffel',
-      capabilities: ['fire-fighting', 'service-water'],
+      capabilities: ['foam-agent', 'service-water'],
     });
     // Ergänzung gegenüber dem Brief: `find` liefert nur die erste Gruppe und würde eine zweite
     // Gruppe daneben nicht ausschließen. Erst diese Zusicherung schließt die aus Task 8 offene
@@ -4110,10 +4113,10 @@ describe('Pfad-Piktogramm in beiden Layoutfällen (Spec-Erfolgskriterium 1)', ()
     const group = drawing.children.find(
       (c): c is Primitive & { type: 'group' } => c.type === 'group' && c.role === 'pictogram',
     );
-    expect(group?.children).toHaveLength(4);
-    // Vier Kinder sind drei Linien (Brandbekämpfung) plus ein Pfad (Löschwasser/Brauchwasser),
-    // nicht irgendeine Vierergruppe.
+    expect(group?.children).toHaveLength(2);
+    // Zwei Kinder sind ein Polyzug (Schaummittel) plus ein Pfad (Löschwasser/Brauchwasser),
+    // nicht irgendeine Zweiergruppe.
     expect(group?.children.filter((c) => c.type === 'path')).toHaveLength(1);
-    expect(group?.children.filter((c) => c.type === 'line')).toHaveLength(3);
+    expect(group?.children.filter((c) => c.type === 'polyline')).toHaveLength(1);
   });
 });

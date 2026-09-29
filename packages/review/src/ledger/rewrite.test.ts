@@ -207,7 +207,7 @@ describe('rewriteLedgerSource', () => {
       ...Object.entries(SOURCE_DOMAIN_REVIEWS),
       ...Object.entries(PROFILE_DOMAIN_REVIEWS),
     ];
-    expect(eintraege).toHaveLength(595);
+    expect(eintraege).toHaveLength(596);
 
     const abweichend = eintraege
       .filter(

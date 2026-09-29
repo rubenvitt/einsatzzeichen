@@ -760,6 +760,14 @@ export interface SymbolSpec {
   technicalHeadMark?: TechnicalHeadMarkId;
   administrativeLevel?: AdminLevelId;
   vehicleCategory?: VehicleCategoryId;
+  /**
+   * Fähigkeiten in der **Boxfassung**: die Einzeldarstellung aus Kapitel 4 unverändert in der
+   * Standardbox 4/8/24/16 mm. Seit LFH-787 (Entscheidung AB) lehnt `validateSpec` sie an jedem
+   * Paar aus Fähigkeit und Körperfassung ab, für das eine Körperfassung vermessen ist
+   * (`capabilities-pictogram-has-measured-rendition`); dort gehört die Fähigkeit in `bodyMarks`.
+   * Ohne vermessene Fassung ist sie nur zugelassen, wo die Einzeldarstellung nachweislich im
+   * Körper bleibt (`capabilities-pictogram-overflows-body`).
+   */
   capabilities?: readonly CapabilityId[];
   /**
    * Dieselben Fähigkeiten wie `capabilities`, aber in ihrer **randbündigen** Darstellung: das

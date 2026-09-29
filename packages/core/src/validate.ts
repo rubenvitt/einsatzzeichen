@@ -16,7 +16,7 @@ import {
   type SymbolSpec,
   type TechnicalHeadMarkId,
 } from '@einsatzzeichen/schema';
-import { CAPABILITY_UNSCALED_FIT } from './blocks/capability-inset.js';
+import { CAPABILITY_UNSCALED_FIT, capabilityInsetForm } from './blocks/capability-inset.js';
 import { measuredBodyMarkRenditions } from './geometry/body-marks-anhang-c/index.js';
 import { profileFor } from './layout/profiles.js';
 import { ARIMO_CAP_HEIGHT_FRACTION, verticalTextBoxMm } from './render/text-policy.js';
@@ -1351,32 +1351,64 @@ function validatePreparedSpec(
     }
   }
 
-  // LFH-587, Übergangsregel (Entscheidung vom 29. September 2026): die Boxfassung setzt die
-  // Einzeldarstellung unskaliert ein. Zugelassen ist sie nur, wo das Clipping-Gate belegt, dass
-  // das Piktogramm an dieser Körperform im Körper bleibt (`CAPABILITY_UNSCALED_FIT`). An
-  // Körperformen ohne Flächenmodell und an Körpervarianten ist das nicht geprüft, also fail-closed.
+  // LFH-787, Entscheidung „AB“ vom 29. September 2026: A, wo die Referenz spricht; B, wo sie
+  // schweigt. Jede Boxfähigkeit geht genau an eine der beiden Regeln, nie an beide.
+  //
+  // A — `capabilities-pictogram-has-measured-rendition`: Hat das Paar aus Fähigkeit und
+  // Körperfassung eine vermessene Fassung (`capabilityInsetForm`), zeichnet die Referenz das
+  // Piktogramm dort in dieser Fassung und nicht als Einzeldarstellung in der Box. Die Boxfassung
+  // ist abgelehnt, der Weg führt über `bodyMarks`. Gelesen wird dynamisch aus
+  // `CAPABILITY_INSET_FORMS`, damit jede neu vermessene Fassung die Regel ohne Zutun erweitert.
+  // Eine gesetzte Körpervariante zählt mit: Ihre vermessenen Fassungen (etwa die Instandsetzung
+  // an der Formation mit Fußband, G.1.1) zeichnet `bodyMarks` an derselben Variante.
+  //
+  // B — `capabilities-pictogram-overflows-body` (LFH-587): Ohne vermessene Fassung setzt die
+  // Boxfassung die Einzeldarstellung unskaliert ein. Zugelassen ist das nur, wo das Clipping-Gate
+  // belegt, dass das Piktogramm an dieser Körperform im Körper bleibt (`CAPABILITY_UNSCALED_FIT`).
+  // An Körperformen ohne Flächenmodell und an Körpervarianten ist das nicht geprüft, also
+  // fail-closed.
   if (spec.capabilities !== undefined && spec.functionRole === undefined) {
+    const measured = spec.capabilities.filter(
+      (id) => capabilityInsetForm(id, spec.kind, spec.bodyVariant) !== undefined,
+    );
+    if (measured.length > 0) {
+      const body = spec.bodyVariant === undefined
+        ? `"${spec.kind}"`
+        : `"${spec.kind}" mit der Körpervariante "${spec.bodyVariant}"`;
+      issues.push({
+        rule: 'capabilities-pictogram-has-measured-rendition',
+        message:
+          `Für ${measured.map((id) => `"${id}"`).join(', ')} an ${body} ist eine eigene ` +
+          'Körperfassung an der Referenz vermessen; die Referenz zeichnet das Piktogramm dort in ' +
+          'dieser Fassung, nicht als Einzeldarstellung in der Standardbox. Setze die Fähigkeit ' +
+          'unter `bodyMarks` statt unter `capabilities`.',
+      });
+    }
     const fitting = CAPABILITY_UNSCALED_FIT.find((entry) => entry.kind === spec.kind);
     const overflowing = spec.capabilities.filter(
       (id) =>
-        spec.bodyVariant !== undefined ||
-        fitting === undefined ||
-        !fitting.capabilities.includes(id),
+        !measured.includes(id) &&
+        (spec.bodyVariant !== undefined ||
+          fitting === undefined ||
+          !fitting.capabilities.includes(id)),
     );
     if (overflowing.length > 0) {
+      const names = overflowing.map((id) => `"${id}"`).join(', ');
       issues.push({
         rule: 'capabilities-pictogram-overflows-body',
         message:
           spec.bodyVariant !== undefined
             ? `Kapitel-4-Piktogramme in der Boxfassung sind an der Körpervariante "${spec.bodyVariant}" ` +
-              'nicht auf Einsetzbarkeit geprüft. Nutze eine vermessene randbündige Fassung (`bodyMarks`).'
+              `nicht auf Einsetzbarkeit geprüft, und für ${names} ist dort keine Körperfassung ` +
+              'vermessen. Entferne die Fähigkeit oder verzichte auf die Körpervariante.'
             : fitting === undefined
               ? `Für "${spec.kind}" ist nicht prüfbar, ob ein Kapitel-4-Piktogramm im Körper bleibt ` +
-                '(kein Flächenmodell). Nutze eine vermessene randbündige Fassung (`bodyMarks`).'
-              : `Die Einzeldarstellung von ${overflowing.map((id) => `"${id}"`).join(', ')} ragt ` +
-                `unskaliert über den Körper von "${spec.kind}". Die Referenz setzt Kapitel-4-` +
-                'Piktogramme in einer eigenen Fassung je Körperform ein; nutze eine vermessene ' +
-                'randbündige Fassung (`bodyMarks`).',
+                `(kein Flächenmodell), und für ${names} ist dort keine Körperfassung vermessen. ` +
+                'Entferne die Fähigkeit oder wähle eine andere Körperform.'
+              : `Die Einzeldarstellung von ${names} ragt unskaliert über den Körper von ` +
+                `"${spec.kind}". Die Referenz setzt Kapitel-4-Piktogramme in einer eigenen Fassung ` +
+                'je Körperform ein, und an dieser Körperform ist dafür keine vermessen. Entferne ' +
+                'die Fähigkeit oder wähle eine andere Körperform.',
       });
     }
   }

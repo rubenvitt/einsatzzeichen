@@ -233,10 +233,12 @@ export function allowedValues(
  * **Drei gemessene Grenzen (Stand 01.09.2026), damit später niemand einen Fehler meldet, wo
  * keiner ist.** (1) 45 der 78 Erklärungen zeigen auf `labels`; dafür hat der Baukasten kein Formularfeld, er
  * führt als Beschriftung nur `designation`. Diese Mehrheit bleibt ohne Anker, und das ist ehrlicher
- * als eine erfundene Zuordnung. (2) `kind`, `capabilities` und `bodyMarks` tragen **null**
- * Erklärungen: sie scheitern nicht über Regeln, sondern über Vermessungslücken, und die kommen als
- * Abbruch (`state: 'crash'`) und nicht als `issues` an. An diesen drei Feldern kann hier nie ein
- * Hinweis erscheinen. (3) Wo eine Regel zwei Felder gegeneinander stellt
+ * als eine erfundene Zuordnung. (2) `kind` und `bodyMarks` tragen **null** Erklärungen: sie
+ * scheitern nicht über Regeln, sondern über Vermessungslücken, und die kommen als Abbruch
+ * (`state: 'crash'`) und nicht als `issues` an. An diesen beiden Feldern kann hier nie ein Hinweis
+ * erscheinen. `capabilities` stand bis LFH-587 mit in dieser Liste; seit LFH-787 (29.09.2026)
+ * zeigen zwei Regeln darauf (`capabilities-pictogram-has-measured-rendition`,
+ * `capabilities-pictogram-overflows-body`), dort erscheint also ein Hinweis. (3) Wo eine Regel zwei Felder gegeneinander stellt
  * (`technical-fill-organization-conflict`), zeigt der Hinweis nur an dem Feld, auf das die
  * Erklärung zeigt — an `technicalFill`, nicht an `organization`. Der Wortlaut am Feld darf deshalb
  * nicht „dieser Wert ist falsch" sagen, sondern muss auf die vollständige Regelliste verweisen.

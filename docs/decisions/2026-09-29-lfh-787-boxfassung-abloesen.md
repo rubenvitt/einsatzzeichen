@@ -1,8 +1,9 @@
 # Boxfassung `capabilities` ablösen: was die Referenz hergibt und was zu entscheiden ist
 
 > Stand: 29. September 2026
-> Status: **Vorlage, offen.** Zu entscheiden hat der Projektinhaber (§6). Nichts am Motor ist
-> geändert.
+> Status: **Entschieden am 29. September 2026** vom Projektinhaber: Option AB, C.1.4 in diesem
+> Ticket, keine Einzelfassung aus H.3, zweite Fassungen in LFH-418 (§8). Das ändert das Ziel A
+> aus LFH-587 §5.
 > Ticket: LFH-787 (Subtask von LFH-562, Zonenmodell; Folgeticket von LFH-587 und LFH-786).
 > Bezug: `docs/decisions/2026-09-29-lfh-587-kapitel-4-piktogramme-im-innenfeld.md` §5 und §6,
 > `docs/decisions/2026-09-29-lfh-786-kapitel-4-piktogramme-in-anhang-c.md` §7
@@ -49,7 +50,7 @@ Unbeanspruchtes. Ungebaut sind nur noch Teile von C.1 und C.2.
 
 | Paar | Referenz | Stand | Fassung |
 |---|---|---|---|
-| `technical-assistance` × Formation | C.1.4 Rüstzug | nicht gebaut | Bis auf 0,001 mm gleich der Fassung im Rüstwagen C.2.18, nur 0,5 mm höher gesetzt. Übertragen: 0,90 × 1,25, `reduced` (Uniformität 0,28, knapp unter der Grenze 0,30), Strich 0,5 mm |
+| `technical-assistance` × Formation | C.1.4 Rüstzug | bei der Inventur nicht gebaut, seit LFH-787 Fixture (§8) | Bis auf 0,001 mm gleich der Fassung im Rüstwagen C.2.18, nur 0,5 mm höher gesetzt. Übertragen: 0,90 × 1,25, `reduced` (Uniformität 0,28, knapp unter der Grenze 0,30), Strich 0,5 mm |
 | `slaughter-culling` × Formation, **nur in Kombination** | H.3 | gebaut, aber als technische Marke `h-veterinary-slaughter` zusammen mit dem V aus 4.10.1, das 2 mm nach rechts rückt | Wippe verkleinert links unten, Mittellinie gegen Mittellinie etwa 0,40 × 0,42. Die Marke ist als gefüllte Kontur gebaut; `measureCapabilityInset` misst deshalb 0,40 × 0,50 |
 
 Sauber belegt ist nur C.1.4. H.3 zeigt die Wippe nur neben dem V, also als Kombinationsbild wie
@@ -172,3 +173,43 @@ wird, dann Entfernen statt Alias (§4).
 - Die übrigen ungebauten C.1-Zeichen (LFH-418).
 - Mehrere Piktogramme in der Boxfassung (LFH-567 §5 Frage 1).
 - Eine fachliche Freigabe.
+
+## 8. Entscheidung
+
+Am 29. September 2026 hat der Projektinhaber die Fragen aus §6 so beantwortet:
+
+| Frage | Entscheidung |
+|---|---|
+| 1. Politik für Paare ohne Fassung | **AB.** Hat ein Paar eine vermessene Grundfassung, lehnt `validateSpec` die Boxfassung ab und verweist auf `bodyMarks`. Ohne Fassung gilt B weiter. `capabilities` bleibt als Feld, weder entfernt noch Alias. |
+| 2a. C.1.4 | in diesem Ticket bauen, mit der Fassung `technical-assistance` × Formation |
+| 2b. Einzelfassung aus H.3 | nein. H.3 bleibt technische Marke, `slaughter-culling` × Formation bleibt unbelegt |
+| 3. Zweite Fassungen aus C.1.11, C.1.12, C.1.15 | in LFH-418 |
+
+In den Daten steht das als `CAPABILITY_INSET_RULE.unmeasuredPairs` mit `target` und `inForce`
+`measured-rendition-else-unscaled-if-fits`. Die neue Regel
+`capabilities-pictogram-has-measured-rendition` wächst mit `CAPABILITY_INSET_FORMS`: Jede neu
+vermessene Grundfassung sperrt die Boxfassung für ihr Paar, ohne dass eine Liste nachgezogen
+werden muss.
+
+Die Änderung ist ein Breaking Change. Specs, die heute `capabilities` mit
+`fire-fighting` oder `temporary-accommodation-resting` in der Formation setzen, lehnt
+`validateSpec` künftig ab; mit C.1.4 kommt `technical-assistance` dazu. Umstieg: dieselbe
+Fähigkeit in `bodyMarks` setzen.
+
+Die Regel liest `capabilityInsetForm(Fähigkeit, Körperform, Körpervariante)` und greift deshalb auch
+an vermessenen Variantenfassungen (etwa die Instandsetzung an der Formation mit Fußband) und an
+Körperformen ohne Flächenmodell (etwa die Brandbekämpfung am Landfahrzeug). Dort ändert sich nur
+Regelkennung und Meldung; abgelehnt waren diese Specs schon vorher.
+
+**Bekannte Lücke:** Einige vermessene Fassungen hängen an weiterem Kontext. Für sie führt der Rat
+„unter `bodyMarks` setzen“ allein noch in einen `NotMeasuredError`: Person × `care`,
+`fire-fighting` und `medical-service` (nur mit Funktionsrolle vermessen), `water-rescue` ×
+Landfahrzeug (braucht eine Fahrzeugkategorie), `fire-fighting` × eingesenkter Rumpf (braucht
+Organisation und Beschriftung). Auch diese Specs waren vorher schon abgelehnt.
+
+C.1.4 ist gebaut und an der Referenz nachgemessen: Die Marke ist bis auf 0,00035 mm die um 0,5 mm
+angehobene Fassung aus C.2.18. Das Rasterbild weicht in der Marke um 0,07 mm² ab, davon 0,03 mm² an
+den beiden linken Geräteecken (runde gegen eckige Ecken, wie in C.2.18). Gemessen 0,90 × 1,25
+(ungerundet 0,8966 × 1,25), `reduced` mit Uniformität 0,28. Der Bestand hat damit 77 Fassungen
+(28 randbündig, 44 verkleinert, 5 frei umgeformt).
+

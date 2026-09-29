@@ -5,13 +5,13 @@ import { BASE_SYMBOLS, baseDrawing } from '@einsatzzeichen/core';
 import { RECIPES, composeFromCatalog } from './recipes.js';
 
 describe('SVG-Snapshots', () => {
-  it('schreibt exakt 293 direkte SVG-Snapshots', () => {
+  it('schreibt exakt 294 direkte SVG-Snapshots', () => {
     const snapshots = readdirSync(new URL('./__snapshots__/', import.meta.url), {
       withFileTypes: true,
     }).filter((entry) => entry.isFile() && entry.name.endsWith('.svg'));
     const names = snapshots.map((entry) => entry.name);
     // 256 bis LFH-786, dazu je ein direkter Snapshot der 37 Anhang-C-Fixtures.
-    expect(snapshots).toHaveLength(293);
+    expect(snapshots).toHaveLength(294);
     expect(names).toContain('C.1.3.svg');
     expect(names).toContain('C.1.8.svg');
     expect(names).toContain('C.2.31.svg');

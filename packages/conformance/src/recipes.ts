@@ -183,8 +183,8 @@ export const RECIPES = {
  * **Die Rezepte in ihrer Rolle als Fixtures der Grammatik** (LFH-569, Scope-Entscheidung vom
  * 13. September 2026, `docs/decisions/2026-09-13-grammatik-motor-und-paketschnitt.md`).
  *
- * Das Produkt ist die Grammatik, nicht die Liste fertiger Zeichen. Die Einträge oben (279 seit
- * LFH-786) sind deshalb keine Auswahl „gebauter Zeichen" mehr, sondern die Belege, an denen der
+ * Das Produkt ist die Grammatik, nicht die Liste fertiger Zeichen. Die Einträge oben (280 seit
+ * LFH-787) sind deshalb keine Auswahl „gebauter Zeichen" mehr, sondern die Belege, an denen der
  * Motor gegen die Referenz geprüft wird: je Eintrag eine gültige `SymbolSpec`, deren Zeichnung einem Original
  * entspricht. Wörtlich aus der Scope-Entscheidung: „Die 242 heutigen Rezepte wechseln damit ihre
  * Rolle: von ‚fertigen Zeichen' zu Fixtures, die den Motor belegen."

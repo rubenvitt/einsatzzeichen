@@ -1009,6 +1009,28 @@ const ANHANG_C_LFH_786_KEYS = [
 ] as const satisfies readonly (keyof typeof RECIPES)[];
 
 /**
+ * Technisches Review von C.1.4 (LFH-787). Eigener Eintrag und nicht `ANHANG_C_LFH_786_KEYS`: C.1.4
+ * ist nach LFH-786 gebaut, gegen eine eigene Fassung (`technical-assistance` an der Formation), und
+ * das Review von LFH-786 zählt seine 37 Referenzen namentlich.
+ */
+const ANHANG_C_LFH_787_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-09-29',
+  note:
+    'Die Originalreferenz C.1.4_Rüstzug einer Feuerwehr.svg wurde vermessen (Umriss auf die ' +
+    'Mittellinie zurückgerechnet) und als Rasterbild gegen die Fixture gelegt: Körper und Köpfe ' +
+    'decken sich, die Marke weicht um 0,07 mm² ab, davon 0,03 mm² an den beiden linken ' +
+    'Geräteecken (runder Eckenvertrag der Piktogramme gegen die eckigen Ecken der Referenz, wie ' +
+    'in C.2.18), der Rest ist Kantenglättung. Die Marke ist die aus C.2.18, 0,5 mm höher auf der ' +
+    'Formationsmitte (jeder Umrisspunkt höchstens 0,0004 mm daneben), eigenständig konstruiert ' +
+    'mit derselben Funktion wie dort (core/src/geometry/body-marks-anhang-c/formation.ts). ' +
+    'measureCapabilityInset misst 0,90 × 1,25, reduced, Uniformität 0,28. Die Spec besteht ' +
+    'validateSpec ohne Befund; Stärke zug und Organisation feuerwehr wie C.1.3. Sämtliche ' +
+    'Fachzuordnungen bleiben im Domain-Review pending.',
+};
+
+/**
  * Befunde an den Referenzdateien selbst, in der Bauart von `ANHANG_F_A_FINDINGS`. Abweichungen der
  * Umsetzung trägt dieser Slice keine: die Textmetrik (Laufweite der Katalogschrift, Ziffernhöhe)
  * weicht wie im übrigen Bestand ab und ist dort nirgends als `deviation` geführt.
@@ -1078,6 +1100,7 @@ function technicalReviewFor(section: string): Review {
       undefined,
     );
   }
+  if (section === 'C.1.4') return ANHANG_C_LFH_787_TECHNICAL_REVIEW;
   if (section.startsWith('C.') && section !== 'C.1.1' && section !== 'C.1.2') {
     throw new Error(
       `Der Anhang-C-Schlüssel "${section}" ist keinem technischen Review zugeordnet.`,
@@ -1377,9 +1400,11 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'C.1.2',
     'C.1.3',
     // LFH-786: C.1.7, C.1.8 und jede gebaute C.2-Nummer **einzeln**, weder `C.1` noch `C.2`.
-    // Beide Präfixe bestünden `uncoveredScope` schon mit einer Zeile, wären aber falsch: C.1.4 bis
+    // Beide Präfixe bestünden `uncoveredScope` schon mit einer Zeile, wären aber falsch: C.1.5,
     // C.1.6 und C.1.9 bis C.1.15 sind nicht gebaut, in C.2 fehlen C.2.1 bis C.2.3, C.2.19, C.2.21
     // und C.2.22 (kein Kapitel-4-Piktogramm) sowie die zurückgestellte C.2.24-Alternative.
+    // LFH-787 baut C.1.4 (Rüstzug) und führt es ebenso einzeln.
+    'C.1.4',
     'C.1.7',
     'C.1.8',
     'C.2.4',

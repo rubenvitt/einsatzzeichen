@@ -172,6 +172,10 @@ Strich. Der Katalog führt genau diese Fassungen schon als `bodyMarks`.
 | **B — unskaliert, wo es passt** (`unscaled-if-fits`) | Die Boxfassung bleibt. `validateSpec` lehnt ein Piktogramm ab, das an dieser Körperform das Clipping-Gate nicht besteht. | Kein überstehendes Bild mehr. Die 27 passenden in der Formation zeichnen weiter, aber nicht so, wie die Referenz sie zeigt (3.3). |
 | **C — in die Box skalieren** (`uniform-scale-to-box`) | Jedes Piktogramm wird gleichmäßig in die Fähigkeitsbox eingepasst, bei fester Strichstärke. | Jedes Paar zeichnet etwas. Die Größe ist an keinem vermessenen Fall richtig (Faktor 0,62 bis 1,17 daneben), und randbündige Zeichen wie das Sanitätskreuz verlören ihre Randbündigkeit. |
 
+> **Nachtrag 29. September 2026 (LFH-787):** Das Ziel A ist durch AB ersetzt: A, wo eine
+> vermessene Fassung existiert, B, wo die Referenz das Paar nicht zeigt (65 von 67 offenen
+> Paaren). Siehe `docs/decisions/2026-09-29-lfh-787-boxfassung-abloesen.md` §8.
+
 **Entschieden am 29. September 2026: A als Ziel, B ab sofort in Kraft.** Der Projektinhaber hat
 die Entscheidung an den Koordinator übertragen.
 

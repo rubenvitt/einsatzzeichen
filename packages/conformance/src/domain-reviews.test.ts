@@ -269,11 +269,12 @@ describe('Fachreview-Ledger', () => {
     // Anhang D schließt den damaligen Stand bei 497. I-c, I-d, I-f und I-g ergänzen je vier, I-e
     // und I.5.4 bis I.5.8 je fünf, I-b sieben, I.3 elf, I-j drei und I-k drei. Der integrierte
     // Stand schließt nach LFH-484 bei 544. LFH-786 ergänzt 37 offene Plätze für C.1.7, C.1.8 und
-    // die 35 C.2-Darstellungen (ohne C.2.24#alternative, die nicht gebaut ist): 581.
-    expect(manifestReviews).toHaveLength(581);
+    // die 35 C.2-Darstellungen (ohne C.2.24#alternative, die nicht gebaut ist): 581. LFH-787
+    // ergänzt C.1.4: 582.
+    expect(manifestReviews).toHaveLength(582);
     expect(sourceReviews).toHaveLength(13);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(595);
+    expect(reviews).toHaveLength(596);
 
     // Die neue Invariante: **keine Freigabe ohne benannten, registrierten Prüfer, gültiges
     // ISO-Datum und Befund.** Offene Zeilen sind erlaubt und liefern nichts; solange alles offen

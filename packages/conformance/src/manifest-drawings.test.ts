@@ -6,7 +6,7 @@ import { drawingForManifestEntry } from './manifest-drawings.js';
 
 /*
  * Die gemeinsame Zeichnung je Manifestzeile für Fachreview-Werkzeug und Pixelvergleich. Der Kern
- * ist die Lückenlosigkeit — jede der 581 Zeilen bekommt ein Bild — und das Fail-closed-Verhalten:
+ * ist die Lückenlosigkeit — jede der 582 Zeilen bekommt ein Bild — und das Fail-closed-Verhalten:
  * eine Zeile ohne bildbare Zeichnung wirft mit Manifestschlüssel, statt still leer zu bleiben.
  */
 
@@ -31,8 +31,8 @@ describe('drawingForManifestEntry', () => {
     result: drawingForManifestEntry(entry),
   }));
 
-  it('zeichnet alle 581 Manifestzeilen, jede mit viewBox und Inhalt', () => {
-    expect(results).toHaveLength(581);
+  it('zeichnet alle 582 Manifestzeilen, jede mit viewBox und Inhalt', () => {
+    expect(results).toHaveLength(582);
     for (const { key, result } of results) {
       expect(result.drawing.viewBox, `ohne viewBox: ${key}`).toBeDefined();
       expect(result.drawing.children.length, `leere Zeichnung: ${key}`).toBeGreaterThan(0);

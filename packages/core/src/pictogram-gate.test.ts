@@ -651,7 +651,7 @@ describe('Clipping-Gate', () => {
     // Rolle` auf; der SVG-Nachweis des Butt/Round-Vertrags zeigt, dass dieses Blatt tatsächlich
     // als Piktogramm gerendert wird. checkClipping() muss dieselbe implizite Wurzelrolle ansetzen.
     const drawing = compose(
-      { kind: 'formation', capabilities: ['fire-fighting'] },
+      { kind: 'formation', capabilities: ['service-water'] },
       catalog,
     );
     const group = drawing.children.find(

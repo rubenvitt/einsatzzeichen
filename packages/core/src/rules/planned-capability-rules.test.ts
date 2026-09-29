@@ -33,9 +33,10 @@ describe('Vorgemerkte Regeln für mehrere Fähigkeiten', () => {
     expect(PLANNED_CAPABILITY_RULES.filter((rule) => state.has(rule.id))).toEqual([]);
   });
 
-  // Seit LFH-587 (29.09.2026) trägt die Dimension eine Regel in Kraft,
-  // `capabilities-pictogram-overflows-body`. Sie betrifft die Einsetzbarkeit eines einzelnen
-  // Piktogramms, nicht die Anordnung mehrerer; für die gelten die vorgemerkten Regeln weiter.
+  // Seit LFH-587 (29.09.2026) trägt die Dimension Regeln in Kraft, seit LFH-787 zwei:
+  // `capabilities-pictogram-has-measured-rendition` und `capabilities-pictogram-overflows-body`.
+  // Sie betreffen die Einsetzbarkeit eines einzelnen Piktogramms, nicht die Anordnung mehrerer;
+  // für die gelten die vorgemerkten Regeln weiter.
   it('gilt nur, solange der Katalog die Anordnung mehrerer Boxfähigkeiten als Lücke führt', () => {
     const gap = RULE_DIMENSION_GAPS.find((candidate) => candidate.dimension === 'capabilities');
     expect(gap?.coverage).toBe('partial');

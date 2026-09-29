@@ -189,14 +189,24 @@ const EXPLANATIONS = {
       'Luftfahrzeugrumpf. An anderen Profilen gäbe es keine Hülle, gegen die die Box geprüft ' +
       'würde. Wechsle Art und Variante oder verzichte auf den Metriksatz.',
   },
+  'capabilities-pictogram-has-measured-rendition': {
+    field: 'capabilities',
+    title: 'Fähigkeit gehört als Körpermarke ins Zeichen',
+    explanation:
+      'Für diese Fähigkeit an dieser Körperform gibt es ein Vorbild in der Referenz: Dort ist ' +
+      'das Piktogramm eigens für den Körper gezeichnet, oft größer, kleiner oder anders geformt ' +
+      'als in der Standardbox. Die Standardbox würde also ein anderes Bild zeichnen als das ' +
+      'Original. Wähle die Fähigkeit deshalb unter Körpermarken (`bodyMarks`) statt unter ' +
+      'Fähigkeiten (`capabilities`).',
+  },
   'capabilities-pictogram-overflows-body': {
     field: 'capabilities',
     title: 'Piktogramm passt nicht in den Körper',
     explanation:
-      'Die Boxfassung setzt die Einzeldarstellung eines Kapitel-4-Piktogramms unskaliert in den ' +
-      'Körper. Zugelassen ist das nur, wo sie nachweislich im Körper bleibt; die Referenz selbst ' +
-      'zeichnet jedes Piktogramm je Körperform in einer eigenen Fassung. Nutze die randbündige ' +
-      'Fassung über `bodyMarks`, wo sie vermessen ist, oder entferne die Fähigkeit.',
+      'Die Standardbox setzt das Piktogramm einer Fähigkeit in unveränderter Größe in den ' +
+      'Körper. Das ist nur dort zugelassen, wo es nachweislich ganz im Körper bleibt, denn für ' +
+      'diese Fähigkeit an dieser Körperform gibt es keine eigens vermessene Fassung. Entferne die ' +
+      'Fähigkeit oder wähle eine andere Körperform.',
   },
   'bottom-right-metrics-within-body': {
     field: 'labels',

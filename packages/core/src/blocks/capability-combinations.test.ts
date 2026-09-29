@@ -176,7 +176,7 @@ describe('Vorgemerkte Regeln der Mehrfachfähigkeiten sind nicht in Kraft', () =
       kind: 'formation',
       organization: 'feuerwehr',
       strength: 'staffel',
-      capabilities: ['fire-fighting', 'service-water'],
+      capabilities: ['foam-agent', 'service-water'],
     };
     expect(validateSpec(spec)).toEqual([]);
   });
@@ -185,7 +185,7 @@ describe('Vorgemerkte Regeln der Mehrfachfähigkeiten sind nicht in Kraft', () =
     const spec: SymbolSpec = {
       kind: 'formation',
       organization: 'hilfsorganisation',
-      capabilities: ['fire-fighting'],
+      capabilities: ['foam-agent'],
       bodyMarks: ['medical-service'],
     };
     expect(validateSpec(spec).map((issue) => issue.rule))

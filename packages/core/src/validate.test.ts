@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { BodyMarkId, SymbolKind, SymbolSpec } from '@einsatzzeichen/schema';
+import { CAPABILITY_IDS } from '@einsatzzeichen/schema';
+import { capabilityInsetForm } from './blocks/capability-inset.js';
 import {
   ANHANG_C_BODY_MARK_CONTEXTS,
   measuredBodyMarkRenditions,
@@ -193,11 +195,12 @@ describe('validateSpec', () => {
   });
 
   it('akzeptiert eine Löschstaffel', () => {
+    // C.1.1: die Brandbekämpfung in ihrer vermessenen Körperfassung, nicht in der Boxfassung.
     const spec: SymbolSpec = {
       kind: 'formation',
       organization: 'feuerwehr',
       strength: 'staffel',
-      capabilities: ['fire-fighting'],
+      bodyMarks: ['fire-fighting'],
     };
     expect(validateSpec(spec)).toEqual([]);
   });
@@ -1473,18 +1476,20 @@ describe('capabilities-pictogram-overflows-body (LFH-587, Übergangsregel)', () 
   const rulesOf = (spec: SymbolSpec): string[] => validateSpec(spec).map((issue) => issue.rule);
 
   it('lässt eine Einzeldarstellung zu, die unskaliert im Körper bleibt', () => {
-    expect(rulesOf({ kind: 'formation', organization: 'feuerwehr', strength: 'staffel', capabilities: ['fire-fighting'] }))
-      .not.toContain('capabilities-pictogram-overflows-body');
+    expect(validateSpec({ kind: 'formation', organization: 'feuerwehr', strength: 'staffel', capabilities: ['service-water'] }))
+      .toEqual([]);
     expect(rulesOf({ kind: 'container', capabilities: ['catering'] }))
       .not.toContain('capabilities-pictogram-overflows-body');
   });
 
   it('lehnt eine Einzeldarstellung ab, die über den Körper ragt, und nennt sie', () => {
-    const issues = validateSpec({ kind: 'formation', capabilities: ['medical-service', 'service-water'] })
+    // `blasting` hat an der Formation weder eine vermessene Fassung noch passt es unskaliert.
+    const issues = validateSpec({ kind: 'formation', capabilities: ['blasting', 'service-water'] })
       .filter((issue) => issue.rule === 'capabilities-pictogram-overflows-body');
     expect(issues).toHaveLength(1);
-    expect(issues[0]?.message).toContain('"medical-service"');
+    expect(issues[0]?.message).toContain('"blasting"');
     expect(issues[0]?.message).not.toContain('"service-water"');
+    expect(issues[0]?.message).not.toContain('`bodyMarks`');
   });
 
   it('lehnt Körperformen ohne Flächenmodell und Körpervarianten ab, weil dort nichts geprüft ist', () => {
@@ -1497,6 +1502,97 @@ describe('capabilities-pictogram-overflows-body (LFH-587, Übergangsregel)', () 
   it('meldet an einer Funktionsrolle nur deren eigene Regel', () => {
     expect(rulesOf({ kind: 'person', organization: 'feuerwehr', strength: 'zug', functionRole: 'fire-service-platoon-commander', capabilities: ['medical-service'] }))
       .not.toContain('capabilities-pictogram-overflows-body');
+  });
+});
+
+describe('capabilities-pictogram-has-measured-rendition (LFH-787, Entscheidung AB)', () => {
+  const RULE = 'capabilities-pictogram-has-measured-rendition';
+  const OVERFLOW = 'capabilities-pictogram-overflows-body';
+  const rulesOf = (spec: SymbolSpec): string[] => validateSpec(spec).map((issue) => issue.rule);
+
+  it('lehnt die Boxfassung ab, wo eine Körperfassung vermessen ist, und verweist auf bodyMarks', () => {
+    // Die Brandbekämpfung passt unskaliert in die Formation, die Referenz zeichnet sie dort aber
+    // in ihrer eigenen Fassung (C.1.1 bis C.1.3).
+    const issues = validateSpec({ kind: 'formation', organization: 'feuerwehr', strength: 'staffel', capabilities: ['fire-fighting'] });
+    expect(issues.map((issue) => issue.rule)).toEqual([RULE]);
+    expect(issues[0]?.message).toContain('"fire-fighting"');
+    expect(issues[0]?.message).toContain('"formation"');
+    expect(issues[0]?.message).toContain('`bodyMarks`');
+    // Die referenztreue Fassung besteht.
+    expect(validateSpec({ kind: 'formation', organization: 'feuerwehr', strength: 'staffel', bodyMarks: ['fire-fighting'] }))
+      .toEqual([]);
+  });
+
+  it('greift nicht, wo keine Körperfassung vermessen ist', () => {
+    expect(rulesOf({ kind: 'formation', organization: 'feuerwehr', strength: 'staffel', capabilities: ['service-water'] }))
+      .not.toContain(RULE);
+    expect(rulesOf({ kind: 'formation', capabilities: ['foam-agent'] })).not.toContain(RULE);
+  });
+
+  it('liest die vermessenen Paare aus capabilityInsetForm, nicht aus einer festen Liste', () => {
+    // Jedes vermessene Grundpaar an der Formation löst die Regel aus, ohne dass hier eine Zahl
+    // steht: eine neu vermessene Fassung kommt ohne Zutun dazu.
+    const measured = CAPABILITY_IDS.filter(
+      (id) => capabilityInsetForm(id, 'formation', undefined) !== undefined,
+    );
+    expect(measured).toContain('fire-fighting');
+    expect(measured).toContain('temporary-accommodation-resting');
+    // C.1.4 (LFH-787): die Technische Hilfeleistung passt unskaliert, ist aber jetzt vermessen.
+    expect(measured).toContain('technical-assistance');
+    for (const id of measured) {
+      expect(rulesOf({ kind: 'formation', capabilities: [id] }), id).toContain(RULE);
+    }
+    for (const id of CAPABILITY_IDS.filter((candidate) => !measured.includes(candidate))) {
+      expect(rulesOf({ kind: 'formation', capabilities: [id] }), id).not.toContain(RULE);
+    }
+  });
+
+  it('meldet jedes Paar genau einmal: vermessene über diese Regel, die übrigen über den Überstand', () => {
+    const issues = validateSpec({
+      kind: 'formation',
+      capabilities: ['medical-service', 'fire-fighting', 'blasting', 'service-water'],
+    });
+    const measured = issues.filter((issue) => issue.rule === RULE);
+    const overflowing = issues.filter((issue) => issue.rule === OVERFLOW);
+    expect(measured).toHaveLength(1);
+    expect(overflowing).toHaveLength(1);
+    expect(measured[0]?.message).toContain('"medical-service", "fire-fighting"');
+    expect(measured[0]?.message).not.toContain('"blasting"');
+    expect(overflowing[0]?.message).toContain('"blasting"');
+    expect(overflowing[0]?.message).not.toContain('"medical-service"');
+    expect(overflowing[0]?.message).not.toContain('"fire-fighting"');
+    // Ein Paar, das heute schon übersteht und eine Fassung hat, bekommt nur die präzisere Meldung.
+    expect(rulesOf({ kind: 'formation', capabilities: ['medical-service'] })).toEqual([RULE]);
+  });
+
+  it('greift auch an Körperformen ohne Flächenmodell, wo eine Fassung vermessen ist', () => {
+    // Das Landfahrzeug hat kein Flächenmodell; für die Brandbekämpfung ist dort aber eine
+    // Körperfassung vermessen (C.2.4 bis C.2.13).
+    expect(rulesOf({ kind: 'vehicle-land', capabilities: ['fire-fighting'] })).toEqual([RULE]);
+    expect(rulesOf({ kind: 'vehicle-land', capabilities: ['foam-agent'] })).toEqual([OVERFLOW]);
+  });
+
+  it('zählt eine gesetzte Körpervariante mit ihrer vermessenen Fassung mit', () => {
+    // Die Instandsetzung ist an der Formation nur mit Fußband vermessen (G.1.1), ohne Variante
+    // nicht: dort passt sie unskaliert und bleibt in der Boxfassung zulässig.
+    expect(capabilityInsetForm('maintenance', 'formation', 'foot-band')).toBeDefined();
+    expect(capabilityInsetForm('maintenance', 'formation', undefined)).toBeUndefined();
+    expect(rulesOf({ kind: 'formation', bodyVariant: 'foot-band', capabilities: ['maintenance'] }))
+      .toContain(RULE);
+    expect(rulesOf({ kind: 'formation', bodyVariant: 'foot-band', capabilities: ['maintenance'] }))
+      .not.toContain(OVERFLOW);
+    expect(validateSpec({ kind: 'formation', bodyVariant: 'foot-band', capabilities: ['maintenance'] })
+      .find((issue) => issue.rule === RULE)?.message).toContain('"foot-band"');
+    expect(rulesOf({ kind: 'formation', capabilities: ['maintenance'] })).not.toContain(RULE);
+    // Ohne vermessene Variantenfassung bleibt es beim Überstand: an der Variante ist nichts geprüft.
+    expect(rulesOf({ kind: 'formation', bodyVariant: 'foot-band', capabilities: ['fire-fighting'] }))
+      .toEqual([OVERFLOW]);
+  });
+
+  it('meldet an einer Funktionsrolle nur deren eigene Regel', () => {
+    const rules = rulesOf({ kind: 'person', organization: 'feuerwehr', strength: 'zug', functionRole: 'fire-service-platoon-commander', capabilities: ['medical-service'] });
+    expect(rules).not.toContain(RULE);
+    expect(rules).not.toContain(OVERFLOW);
   });
 });
 

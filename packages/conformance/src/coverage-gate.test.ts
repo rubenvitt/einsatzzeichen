@@ -332,8 +332,8 @@ describe('Gate-Prüfungen zu Quelle, Profil und Review', () => {
       COVERAGE_MANIFEST.entries.length +
       Object.keys(SOURCE_REGISTRY).length +
       Object.keys(PROFILES).length;
-    // 581 Manifestzeilen (544 + 37 aus LFH-786), 13 Quellen, ein Profil.
-    expect(traeger).toBe(595);
+    // 582 Manifestzeilen (544 + 37 aus LFH-786 + C.1.4 aus LFH-787), 13 Quellen, ein Profil.
+    expect(traeger).toBe(596);
     expect(result.openDomainReviews).toBeLessThanOrEqual(traeger);
   });
 });
@@ -540,7 +540,7 @@ describe('Release-Blocker für 1.0', () => {
   it('ist ein Testbefund, kein CI-Abbruch: ein offenes Fachreview erzeugt keine Gate-Verletzung', () => {
     // Bisher stand hier `releaseBlockers().domainReviewOpen.length).toBeGreaterThan(0)`. Das war
     // dieselbe Bauart wie die übrigen umgestellten Stellen, nur mit umgekehrtem Vorzeichen: es
-    // setzte voraus, dass **irgendetwas** offen ist. Am Ende der Reviewkampagne — alle 595 Träger
+    // setzte voraus, dass **irgendetwas** offen ist. Am Ende der Reviewkampagne — alle 596 Träger
     // entschieden — wäre ausgerechnet der Erfolgsfall rot geworden, und zwar an einem Test, der
     // von offenen Reviews gar nicht handelt.
     //
