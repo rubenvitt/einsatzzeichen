@@ -30,15 +30,30 @@ Referenzinventar und die Gates — die Mittel, mit denen die Zeichen gegen die V
 werden. Für die Nutzung ist es nicht erforderlich. Die Entscheidung dazu steht in
 [`docs/decisions/2026-09-13-grammatik-motor-und-paketschnitt.md`](./docs/decisions/2026-09-13-grammatik-motor-und-paketschnitt.md).
 
-Eine Einschränkung gilt heute noch: Den Kurzweg von einer `SymbolSpec` zur Zeichnung,
-`composeFromCatalog()`, und die benannten Vorlagenzeichen (`RECIPES`) gibt es nur in
-`conformance`. Ohne Prüfpaket übergibt man `compose()` die Bausteine aus `core` selbst als Ports;
-einen fertigen Einstieg dafür gibt es noch nicht.
+Der Einstieg von einer `SymbolSpec` zur Zeichnung ist `drawSymbol()` aus `core` (LFH-580): es
+ruft `compose()` mit der Standardbelegung `DEFAULT_PORTS` auf und leitet die Beschreibung für
+Screenreader aus der Spec ab. Ein Prüfpaket braucht es dafür nicht:
+
+```ts
+import { drawSymbol, renderSvg } from '@einsatzzeichen/core';
+
+const svg = renderSvg(
+  drawSymbol(
+    { kind: 'formation', whiteInnerContour: true, organization: 'thw', strength: 'gruppe',
+      labels: { center: 'B', bottomRight: 'THW' } },
+    { title: 'Bergungsgruppe' },
+  ),
+  { size: 64 },
+);
+```
+
+Die benannten Vorlagenzeichen (`RECIPES`) bleiben als Belege im Prüfpaket, ebenso
+`composeFromCatalog()` als nicht brechende Hülle um `drawSymbol()`.
 
 Die vier **Ausgabekanäle** `react`, `web-component`, `maplibre` und `qgis` (LFH-405) stehen auf
 demselben Rang wie `conformance`: Sie dürfen `core` und `schema` importieren, aber weder
 `conformance` noch einander, und `conformance` darf keinen Kanal importieren. Die Zeichnung kommt
-über die Anwendung in den Kanal — `compose(...)` oder `composeFromCatalog(...)` liefert die
+über die Anwendung in den Kanal — `drawSymbol(...)` oder `compose(...)` liefert die
 `Drawing`, der Kanal trägt sie nur in sein Zielformat. Kein Kanal rendert selbst aus der IR; alle
 vier verwenden `renderSvg` bzw. `renderCanvas` aus `core`, damit aus derselben Zeichnung in jedem
 Kanal dasselbe Bild entsteht.
@@ -47,7 +62,7 @@ Kanal dasselbe Bild entsteht.
 |---|---|
 | `schema` | Typen der internen Repräsentation (IR), Einheiten, Farbpalette. Null Fremdabhängigkeiten. |
 | `core` | Bausteine und ihre Geometrie: Grundzeichen, Körpermarken, Fahrwerk, Organisationsfarben, Stärkeangaben, technische Kopfmarken, Verwaltungsstufen, Funktionsfassungen, Piktogramme, Pfeile und Grenzen aus einem Verlauf, deutsche Bezeichnungen, konkrete Render-Themes, Kontrastausnahmen, Arimo-Laufweiten (`src/geometry/`, `src/assets/`). Dazu Bausteinregister, Zonenmodell, Regelkatalog, Kompositionsmotor, Regelvalidierung, Renderer (SVG, Canvas), Render-Theme-Vertrag, A11y-/Kontrast- und viewBox-Gates, Hüllenberechnung, Fingerprint-Vergleich, Layoutprofile. Hängt **nie** von `conformance` ab und importiert kein `node:*`. |
-| `conformance` | Prüfpaket: Kompositionsrezepte (`RECIPES`, `composeFromCatalog`), Coverage-Manifest und -Gate, Domain-Reviews und -Fragen, Fingerprints, Referenzinventar, Regelbelege und Regelabdeckung, Herkunft je Kombination, Vergleichs- und benannte Ausnahmen, Quellenregister, Profilregister, Elementregister sowie die Schriftbehandlung für die Rasterung (`fonts.ts`, Arimo-TTF). Bis 1.5 als `@einsatzzeichen/catalog` veröffentlicht. |
+| `conformance` | Prüfpaket: Kompositionsrezepte (`RECIPES`; `composeFromCatalog` als Hülle um `drawSymbol` aus `core`), Coverage-Manifest und -Gate, Domain-Reviews und -Fragen, Fingerprints, Referenzinventar, Regelbelege und Regelabdeckung, Herkunft je Kombination, Vergleichs- und benannte Ausnahmen, Quellenregister, Profilregister, Elementregister sowie die Schriftbehandlung für die Rasterung (`fonts.ts`, Arimo-TTF). Bis 1.5 als `@einsatzzeichen/catalog` veröffentlicht. |
 | `cli` | Kennzahlenableitung aus der lokalen Referenz, Coverage-Gate, SVG-Export. |
 | `react` | Hook `useEinsatzzeichenSvg` (liefert das `core`-SVG bytegleich als String) und Komponente `<Einsatzzeichen drawing size theme idPrefix />`, die Wurzelattribute und Inhalt dieses SVGs unverändert in den React-Baum trägt — React ordnet nur die Attribute selbst (kein JSX-Build, `react` als Peer-Abhängigkeit). |
 | `web-component` | Custom Element `<einsatzzeichen-symbol>` mit offenem Shadow DOM; Properties `drawing`/`theme`, Attribute `size`/`id-prefix`. Registrierung idempotent und ohne `customElements` folgenlos. |
@@ -64,8 +79,8 @@ unter dem neuen Namen erscheint es mit dem ersten Release nach 1.5. Wer umsteigt
 
 ```bash
 pnpm remove @einsatzzeichen/catalog
-pnpm add @einsatzzeichen/core                # Bausteine, Themes, Renderer
-pnpm add @einsatzzeichen/conformance         # nur, wenn RECIPES oder composeFromCatalog gebraucht werden
+pnpm add @einsatzzeichen/core                # Bausteine, Themes, Renderer, drawSymbol()
+pnpm add @einsatzzeichen/conformance         # nur für Prüfdaten wie RECIPES, Coverage, Reviews
 ```
 
 Bausteine und Themes (`baseDrawing`, `organizationColor`, `pictogram`, `RENDER_THEMES`,

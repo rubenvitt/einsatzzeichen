@@ -97,3 +97,6 @@ export type {
   PictogramPlacement,
   PictogramSection,
 } from './geometry/pictograms/catalog-definition.js';
+// LFH-580: Der Einstieg von der Spec zur Zeichnung ohne Prüfpaket — die Standardbelegung der
+// Ports und `drawSymbol()`, das `compose()` damit aufruft.
+export { DEFAULT_PORTS, drawSymbol } from './default-ports.js';

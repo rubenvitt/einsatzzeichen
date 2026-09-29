@@ -1539,9 +1539,8 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
           <section>
             <h3 className="ez-builder__dev-title">Codebeispiele</h3>
             <p className="ez-builder__field-hint">
-              Die Beispiele importieren `composeFromCatalog` aus dem Paketindex — in Node ist das
-              der richtige Weg. Nur im Browserbündel dieser Website geht der Import über den
-              Subpfad.
+              Die Beispiele zeichnen mit `drawSymbol` aus `@einsatzzeichen/core` — auf demselben
+              Weg wie dieser Baukasten, im Browser wie in Node.
             </p>
             <CodeTabs samples={samples} />
           </section>

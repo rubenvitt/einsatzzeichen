@@ -8,9 +8,10 @@ herunterladen, drucken oder auf eine Karte legen möchte, braucht sie nicht — 
 die [Anleitungen](/docs/anleitungen/).
 
 `@einsatzzeichen/core` ist das Produkt: alles, was es braucht, um ein Zeichen zu bauen und
-auszugeben. Wer die Bibliothek nutzt, braucht `core`, `schema` und einen Ausgabekanal. Das
-[Prüfpaket](/docs/pakete/conformance/) braucht nur, wer die fertigen Vorlagenrezepte (`RECIPES`)
-oder den Kurzweg `composeFromCatalog()` verwenden will — beide liegen dort noch.
+auszugeben. Wer die Bibliothek nutzt, braucht `core`, `schema` und einen Ausgabekanal. Der Weg
+von der Beschreibung eines Zeichens zum fertigen Bild ist ein einziger Aufruf, `drawSymbol()`. Das
+[Prüfpaket](/docs/pakete/conformance/) braucht dafür niemand; es hält die Belege, an denen sich
+die Zeichen messen lassen.
 
 Hier liegen die Bausteine: Grundzeichen, Organisationsfarben, Stärkeangaben, Kopfmarken,
 Verwaltungsstufen, Funktionsfassungen, Fahrwerk, Körpermarken, Piktogramme, deutsche
@@ -24,7 +25,8 @@ Regel.
 
 Daneben sitzt hier der Kompositionsmotor: `compose()` setzt aus einer `SymbolSpec` und den
 Bausteinen eine `Drawing` zusammen, `validateSpec()` prüft die Spec gegen die
-Validierungsregeln, bevor gezeichnet wird. Und die Gates: Kontrast, viewBox, A11y-Metadaten,
+Validierungsregeln, bevor gezeichnet wird. `drawSymbol()` ruft `compose()` mit der fertigen
+Standardbelegung `DEFAULT_PORTS` auf und gibt dem Zeichen eine Beschreibung für Screenreader mit. Und die Gates: Kontrast, viewBox, A11y-Metadaten,
 Textmetrik, Fingerprint-Vergleich gegen die Referenz.
 
 `core` hat **null Fremdabhängigkeiten**, importiert kein `node:*` und hängt **nie** von
@@ -53,7 +55,9 @@ Textmetrik, Fingerprint-Vergleich gegen die Referenz.
 | `renderCanvas(drawing, ctx, options)` | dieselbe Zeichnung auf einen 2D-Kontext |
 | `rasterDimensionsForWidth(viewBox, width)` | Rastermaße zu einer Zielbreite |
 | `REFERENCE_THEME`, `colorFor`, `RenderTheme` | der Farbvertrag am Rendererrand |
-| `compose(spec, ports, options)`, `CompositionError` | Komposition aus der `SymbolSpec` |
+| `drawSymbol(spec, options?)` | der Einstieg: `SymbolSpec` → `Drawing`, mit Standardbelegung und Beschreibung |
+| `DEFAULT_PORTS` | die Standardbelegung der Bausteine (`CatalogPorts`), eingefroren |
+| `compose(spec, ports, options)`, `CompositionError` | Komposition aus der `SymbolSpec` mit eigenen Bausteinen |
 | `validateSpec(spec)`, `ValidationIssue`, `VALIDATION_RULE_IDS` | Regelprüfung mit Regel-ID je Befund |
 | `matchFingerprint(...)` | Hüllenvergleich gegen die Referenz, Toleranz 0,01 SVG-Einheiten |
 | `boundsOfMm`, `strokeBoundsOfMm` | Hüllenberechnung in Millimetern |
@@ -72,56 +76,45 @@ Textmetrik, Fingerprint-Vergleich gegen die Referenz.
 
 ## Beispiel
 
-Ohne Prüfpaket: `compose()` bekommt die Bausteine aus `core` als Ports übergeben. Genau so
-arbeitet intern auch `composeFromCatalog()` aus `conformance`. Einen fertigen Einstieg, der diese
-Zusammenstellung abnimmt, gibt es noch nicht; er ist geplant.
+Ein Zeichen beschreiben, zeichnen und als SVG ausgeben — ohne Prüfpaket. Die Spec ist E.1.1
+„Bergungsgruppe" des THW: blaue Gruppe mit weißer Innenkontur, „B" im Körper, „THW" unten rechts.
 
 ```ts
-import {
-  ARIMO_TEXT_METRICS,
-  REFERENCE_THEME,
-  administrativeHead,
-  baseDrawing,
-  bodyMark,
-  compose,
-  describeSymbolSpec,
-  functionRole,
-  innerField,
-  organizationColor,
-  pictogram,
-  renderSvg,
-  strengthHead,
-  technicalHeadMark,
-  validateSpec,
-  vehicleChassis,
-  type CatalogPorts,
-} from '@einsatzzeichen/core';
+import { CompositionError, REFERENCE_THEME, drawSymbol, renderSvg } from '@einsatzzeichen/core';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 
-const ports: CatalogPorts = {
-  baseDrawing,
-  innerField,
-  bodyMark,
-  organizationColor,
-  strengthHead,
-  technicalHeadMark,
-  functionRole,
-  administrativeHead,
-  vehicleChassis,
-  pictogram,
-  textMetrics: ARIMO_TEXT_METRICS,
+const spec: SymbolSpec = {
+  kind: 'formation',
+  whiteInnerContour: true,
+  organization: 'thw',
+  strength: 'gruppe',
+  labels: { center: 'B', bottomRight: 'THW' },
 };
 
-// Ohne `labels` ist das die THW-Gruppe als Grundform, nicht E.1.1 „Bergungsgruppe" — das Kürzel
-// im Körper gehört zum Rezept, und die Rezepte liegen im Prüfpaket (`RECIPES` in `conformance`).
-const spec: SymbolSpec = { kind: 'formation', organization: 'thw', strength: 'gruppe' };
+try {
+  const drawing = drawSymbol(spec, { title: 'Bergungsgruppe' });
+  const svg = renderSvg(drawing, { size: 64, idPrefix: 'ez-bergungsgruppe', theme: REFERENCE_THEME });
+} catch (error) {
+  // Verstößt die Spec gegen eine Regel, nennt die CompositionError jede Regel-ID einzeln.
+  if (error instanceof CompositionError) console.error(error.issues.map((issue) => issue.rule));
+  else throw error;
+}
+```
 
-const issues = validateSpec(spec);
-if (issues.length > 0) throw new Error(issues.map((issue) => issue.rule).join(', '));
+Ohne `title` bleibt das Zeichen ohne Titel; die Beschreibung leitet `drawSymbol()` immer selbst aus
+der Spec ab, es sei denn, man gibt `description` oder `descriptionFromSpec` mit.
 
-const svg = renderSvg(compose(spec, ports, { descriptionFromSpec: describeSymbolSpec }), {
-  size: 64,
-  idPrefix: 'ez-thw-gruppe',
-  theme: REFERENCE_THEME,
-});
+Wer einzelne Bausteine austauschen will, übergibt `compose()` eine abgewandelte Belegung.
+`DEFAULT_PORTS` selbst ist eingefroren; die Änderung gilt nur für die eigene Kopie:
+
+```ts
+import { DEFAULT_PORTS, compose, describeSymbolSpec, type CatalogPorts } from '@einsatzzeichen/core';
+
+// `spec` wie im Beispiel oben
+const ports: CatalogPorts = {
+  ...DEFAULT_PORTS,
+  // Eigene Farbe für eine Organisation, alle anderen wie gehabt.
+  organizationColor: (id) => (id === 'thw' ? 'schwarz' : DEFAULT_PORTS.organizationColor(id)),
+};
+const drawing = compose(spec, ports, { descriptionFromSpec: describeSymbolSpec });
 ```

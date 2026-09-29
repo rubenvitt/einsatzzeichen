@@ -33,28 +33,23 @@ Die acht Pakete dieses Projekts sind **Workspace-Pakete**, kein npm-Release: all
 `npm install @einsatzzeichen/core` funktioniert nirgendwo — die Beispiele unten laufen innerhalb
 eines Checkouts dieses Repositories, eingebunden über `workspace:*`.
 
-Grundzeichen, Farben, Themes, Piktogramme und der Renderer liegen in `@einsatzzeichen/core`. Die
-vier Beispiele unten holen sich ihr Zeichen aber über das Vorlagenrezept `RECIPES['…']` und den
-Kurzweg `composeFromCatalog()` — und beide liegen noch im Prüfpaket `@einsatzzeichen/conformance`
-(bis 1.5 `@einsatzzeichen/catalog`). Ein Einstieg ohne Prüfpaket ist geplant; wie es heute schon
-mit `core` allein geht, zeigt das Beispiel auf der [Seite zu `core`](/docs/pakete/core/#beispiel).
-Zwei Dinge sind bekannt aus der [Anleitung für Software](/docs/anleitungen/software/#zwei-fallstricke):
+Alles, was die Beispiele brauchen, liegt in `@einsatzzeichen/core` und `@einsatzzeichen/schema`:
+Bausteine, Renderer und der eine Aufruf `drawSymbol()`, der aus der Beschreibung eines Zeichens
+(`SymbolSpec`) die Zeichnung macht. Das Prüfpaket `@einsatzzeichen/conformance` ist dafür nicht
+nötig.
 
-- **Der Index des Prüfpakets ist nicht browsertauglich.** `fonts.ts` importiert `node:url`, und
-  der Index re-exportiert es. Ein Import von `@einsatzzeichen/conformance` läuft deshalb sicher in
-  Node — ein Build- oder Testskript, ein SSR-Schritt — aber nicht ungeprüft in einem
-  Browser-Bundle. `core`, `schema`, `react`, `web-component` und `maplibre` haben dieses Problem
-  nicht.
-- **Die Schrift gehört zum Zeichen.** `renderSvg()` schreibt `font-family="Arimo"` in jedes Zeichen
-  mit Kürzel. Ohne ausgelieferte Schriftdatei setzt der Browser eine Ersatzschrift mit anderen
-  Vorschubbreiten. Das Subset liegt in `packages/conformance/assets` (SIL OFL 1.1).
+**Die Schrift gehört zum Zeichen** (mehr dazu in der
+[Anleitung für Software](/docs/anleitungen/software/#zwei-fallstricke)). `renderSvg()` schreibt
+`font-family="Arimo"` in jedes Zeichen mit Kürzel. Ohne ausgelieferte Schriftdatei setzt der
+Browser eine Ersatzschrift mit anderen Vorschubbreiten. Das Subset liegt in
+`packages/conformance/assets` (SIL OFL 1.1).
 
 ## Vier Wege zum ersten Zeichen
 
 <QuickstartExample symbol={example} />
 
 Alle vier Kanäle komponieren dieselbe <code class="ez-mono">SymbolSpec</code> mit
-`composeFromCatalog()` zu derselben Zeichnung; sie unterscheiden sich nur darin, wie diese
+`drawSymbol()` zu derselben Zeichnung; sie unterscheiden sich nur darin, wie diese
 Zeichnung danach auf den Bildschirm kommt. Die beiden Marken unter dem Zeichen gelten für jeden der
 vier Wege gleichermaßen: die linke sagt, ob die Geometrie gegen die Vorlage gemessen und mit Tests
 belegt ist, die rechte, ob eine Fachperson bestätigt hat, dass es das richtige Zeichen für seine

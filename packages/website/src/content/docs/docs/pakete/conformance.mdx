@@ -27,14 +27,15 @@ Eine Einschränkung für den Browser: `fonts.ts` importiert `node:url`, und der 
 es. Ein Import über den Index scheitert deshalb in einem Browser-Bundle. Diese Website umgeht das
 mit einem Snapshot, der zur Buildzeit in Node entsteht.
 
-## Wo es heute noch gebraucht wird
+## Wofür man es braucht — und wofür nicht
 
-Der bequeme Weg von einer `SymbolSpec` zur Zeichnung, `composeFromCatalog()`, liegt noch in diesem
-Paket, ebenso die benannten Vorlagenzeichen in `RECIPES`. Deshalb importieren die Beispiele auf
-den Kanalseiten es weiterhin. Ohne Prüfpaket geht es schon heute, mit etwas mehr Schreibarbeit:
-`compose()` aus `core` nimmt die Bausteine aus `core` direkt entgegen — das Beispiel steht auf der
-[Seite zu `core`](/docs/pakete/core/#beispiel). Ein fertiger Einstieg dafür ist geplant, aber noch
-nicht gebaut.
+Zum Zeichnen nicht. Der Weg von einer `SymbolSpec` zur Zeichnung ist `drawSymbol()` aus
+[`core`](/docs/pakete/core/#beispiel); alle Beispiele auf den Kanalseiten kommen ohne dieses Paket
+aus. Gebraucht wird es, wer prüfen will, was die Zeichen belegen: die Rezepte in `RECIPES` als
+Nachbauten der Vorlagen, Quellen, Reviews, Abdeckung und Herkunft.
+
+`composeFromCatalog(spec, title?)` gibt es hier weiterhin, damit bestehender Code nicht bricht. Es
+ruft nur noch `drawSymbol()` auf; neuer Code nimmt direkt `drawSymbol()` aus `core`.
 
 ## Installation
 
@@ -55,7 +56,8 @@ Im Browser nur über einen Subpfad-Import oder über vorher erzeugte Daten — n
 
 | Export | Was es ist |
 |---|---|
-| `RECIPES`, `composeFromCatalog(spec, title?)` | die Rezepte je Abschnitt und der Weg von der Spec zur `Drawing` |
+| `RECIPES`, `GRAMMAR_FIXTURES` | die Rezepte je Abschnitt: je eine `SymbolSpec`, deren Zeichnung einer Vorlage entspricht |
+| `composeFromCatalog(spec, title?)` | Hülle um `drawSymbol()` aus `core`, bleibt für bestehenden Code |
 | `ELEMENTS`, `resolveElement(...)`, `PICTOGRAM_ELEMENT_KINDS` | das Elementregister |
 | `SOURCE_REGISTRY`, `isRegisteredSource(id)` | das Quellenregister |
 | `PROFILES`, `profileFor(id)` | das Profilregister (nicht zu verwechseln mit dem Layoutprofil gleichen Namens in `core`) |
@@ -68,12 +70,18 @@ Im Browser nur über einen Subpfad-Import oder über vorher erzeugte Daten — n
 
 ## Beispiel
 
+Jedes Rezept mit dem Einstieg aus `core` zeichnen, etwa um alle nachgebauten Zeichen im
+Schwarz-Weiß-Profil auszugeben:
+
 ```ts
-import { RECIPES, composeFromCatalog } from '@einsatzzeichen/conformance';
-import { renderSvg, renderTheme } from '@einsatzzeichen/core';
+import { RECIPES } from '@einsatzzeichen/conformance';
+import { drawSymbol, renderSvg, renderTheme } from '@einsatzzeichen/core';
 
-const recipe = RECIPES['E.1.1'];
-const drawing = composeFromCatalog(recipe.spec, recipe.title);
-
-const svg = renderSvg(drawing, { size: 128, theme: renderTheme('print-monochrome') });
+const svgs = Object.entries(RECIPES).map(([section, recipe]) => ({
+  section,
+  svg: renderSvg(drawSymbol(recipe.spec, { title: recipe.title }), {
+    size: 128,
+    theme: renderTheme('print-monochrome'),
+  }),
+}));
 ```

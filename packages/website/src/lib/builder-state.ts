@@ -1,6 +1,6 @@
-import { composeFromCatalog } from '@einsatzzeichen/conformance/src/recipes.js';
 import {
   CompositionError,
+  drawSymbol,
   NotMeasuredError,
   type NotMeasuredScope,
   type ValidationIssue,
@@ -12,13 +12,9 @@ import { explainIssue, type ExplainedIssue } from './rule-explanations.js';
  * Der Zustand des Builders (Spec §5.4): eine `SymbolSpec` ändern, das Ergebnis beurteilen und die
  * Spec in die URL schreiben. Reine Funktionen — die Insel hält nur den React-State.
  *
- * **Warum der Subpfad `@einsatzzeichen/conformance/src/recipes.js` und nicht der Paketindex.** Der
- * Index zieht `fonts.ts` und damit `node:url` (Spec §5.2); im Browserbündel wäre das ein Fehler
- * zur Ladezeit. Der Spike aus Task 0 hat belegt, dass der Subpfad ohne `node:*` bündelt. Die
- * Aliasregeln in `astro.config.mjs` und `vitest.config.ts` bilden den Subpfad exakt (per RegExp,
- * nicht als Präfix) auf die Paketquelle ab.
+ * Gezeichnet wird seit LFH-580 mit `drawSymbol()` aus `core` — ohne Prüfpaket im Browserbündel.
  *
- * **Warum `composeFromCatalog` und nicht `validateSpec`.** `validateSpec(spec, context)` liest
+ * **Warum `drawSymbol` und nicht `validateSpec`.** `validateSpec(spec, context)` liest
  * einen Kontext aus aufgelöster Funktionsfassung und Verwaltungskopf; `compose()` baut diesen
  * Kontext aus den Ports und prüft damit mehr als ein blanker `validateSpec(spec)`. Zwei Wege
  * liefen auseinander — die Vorschau zeigte dann Regeln, die die Komposition nicht stellt, oder
@@ -90,7 +86,7 @@ function explainAll(issues: readonly ValidationIssue[]): {
  */
 export function evaluateSpec(spec: SymbolSpec): SpecEvaluation {
   try {
-    return { ok: true, drawing: composeFromCatalog(spec) };
+    return { ok: true, drawing: drawSymbol(spec) };
   } catch (error) {
     if (error instanceof CompositionError) return { ok: false, ...explainAll(error.issues) };
     throw error;

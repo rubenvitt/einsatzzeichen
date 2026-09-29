@@ -46,11 +46,19 @@ erzeugten Element-IDs müssen eindeutig bleiben.
 ## Beispiel
 
 ```tsx
+import { drawSymbol } from '@einsatzzeichen/core';
 import { Einsatzzeichen } from '@einsatzzeichen/react';
-import { RECIPES, composeFromCatalog } from '@einsatzzeichen/conformance';
+import type { SymbolSpec } from '@einsatzzeichen/schema';
 
-const recipe = RECIPES['E.1.1'];
-const drawing = composeFromCatalog(recipe.spec, recipe.title);
+// E.1.1 „Bergungsgruppe" des THW
+const spec: SymbolSpec = {
+  kind: 'formation',
+  whiteInnerContour: true,
+  organization: 'thw',
+  strength: 'gruppe',
+  labels: { center: 'B', bottomRight: 'THW' },
+};
+const drawing = drawSymbol(spec, { title: 'Bergungsgruppe' });
 
 export function Bergungsgruppe() {
   return <Einsatzzeichen drawing={drawing} size={64} idPrefix="ez-e-1-1" />;

@@ -80,12 +80,14 @@ Stilbibliothek mit allen zusammengesetzten Zeichen:
 
 ```ts
 import { writeFileSync } from 'node:fs';
-import { RECIPES, composeFromCatalog } from '@einsatzzeichen/conformance';
+import { RECIPES } from '@einsatzzeichen/conformance';
+import { drawSymbol } from '@einsatzzeichen/core';
 import { qgisSymbolLibrary } from '@einsatzzeichen/qgis';
 
+// Die Liste aller nachgebauten Zeichen kommt aus dem Prüfpaket, gezeichnet wird mit `core`.
 const entries = Object.entries(RECIPES).map(([section, recipe]) => ({
   name: `${section} · ${recipe.title}`,
-  drawing: composeFromCatalog(recipe.spec, recipe.title),
+  drawing: drawSymbol(recipe.spec, { title: recipe.title }),
 }));
 
 writeFileSync('einsatzzeichen.xml', qgisSymbolLibrary(entries, { sizeMm: 10 }), 'utf8');

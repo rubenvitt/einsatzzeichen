@@ -15,7 +15,7 @@
  *    hier klaglos laden und erst im Bundle eines Nutzers brechen. `import type` zählt mit — auch
  *    ein Typimport aus dem Prüfpaket kehrte die Paketrichtung um.
  * 2. **Rendern im DOM.** In einer happy-dom-Umgebung lädt der Test den öffentlichen Index, setzt
- *    ein echtes Zeichen allein aus dem zusammen, was `core` exportiert, rendert es als SVG und
+ *    ein echtes Zeichen mit `drawSymbol` und der Standardbelegung `DEFAULT_PORTS` zusammen, rendert es als SVG und
  *    lässt den Browser-Parser (`DOMParser`) das Ergebnis lesen.
  */
 import { builtinModules } from 'node:module';
@@ -128,21 +128,6 @@ describe('core — rendert im Browser ohne Prüfpaket', () => {
   });
 
   test('setzt ein echtes Zeichen aus den öffentlichen Exporten zusammen und rendert es als SVG', () => {
-    // Die Ports sind dieselben, die `conformance/src/recipes.ts` verdrahtet — jeder einzelne ist
-    // ein Export von `core`. Eine fertige Standardbelegung gibt es noch nicht (LFH-580).
-    const ports: core.CatalogPorts = {
-      baseDrawing: core.baseDrawing,
-      innerField: core.innerField,
-      bodyMark: core.bodyMark,
-      organizationColor: core.organizationColor,
-      strengthHead: core.strengthHead,
-      technicalHeadMark: core.technicalHeadMark,
-      functionRole: core.functionRole,
-      administrativeHead: core.administrativeHead,
-      vehicleChassis: core.vehicleChassis,
-      pictogram: core.pictogram,
-      textMetrics: core.ARIMO_TEXT_METRICS,
-    };
     // Spezifikation von E.1.1 (Bergungsgruppe, THW) aus dem Rezeptbestand des Prüfpakets.
     const spec: SymbolSpec = {
       kind: 'formation',
@@ -152,10 +137,9 @@ describe('core — rendert im Browser ohne Prüfpaket', () => {
       labels: { center: 'B', bottomRight: 'THW' },
     };
 
-    const drawing = core.compose(spec, ports, {
-      title: 'Bergungsgruppe',
-      descriptionFromSpec: core.describeSymbolSpec,
-    });
+    // Seit LFH-580 mit der fertigen Standardbelegung statt von Hand verdrahteter Ports; die
+    // Beschreibung leitet `drawSymbol` selbst aus der Spec ab.
+    const drawing = core.drawSymbol(spec, { title: 'Bergungsgruppe' });
     const svg = core.renderSvg(drawing, { size: 128 });
 
     const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
