@@ -30,6 +30,17 @@ import { gunzipSync } from 'node:zlib';
  * | entpackt | 6 060 107 B | 6 500 000 B (+7 %) | 3 000 000 B |
  * | Einträge | 275 | — | 200 |
  *
+ * **Angehoben am 29. September 2026 (LFH-561)**, Entscheidung des Eigentümers: Die API-Initiative
+ * bringt legitim Produktinhalt nach `core` — Regeltexte (LFH-579, rund 52 KB entpackt), die
+ * generierte Herkunftstabelle (LFH-581, rund 59 KB), Vokabular und Codec (LFH-578/577), die an den
+ * Referenzdateien vermessene Geometrie für Verband, Sonderformen, Zustände, Pfeile, Linien, Wetter
+ * und Tierzustand samt freistehender Spec-Art (LFH-577). Gemessen auf
+ * `claude/lfh-561-orchestrierung-cb6ed0`: 344 Einträge, gepackt 545 962 B, entpackt 6 507 407 B.
+ * Neue Obergrenzen: gepackt 650 000 B (+19 %), entpackt 6 950 000 B (+7 %). Der entpackte Puffer
+ * bleibt mit rund 440 KB bewusst kleiner als `fingerprints.json`. Kommentare im Build wegzulassen
+ * war die Alternative; `removeComments` entfernt aber auch die JSDoc aus den `.d.ts`, und die Doku
+ * soll im npm-Paket bleiben.
+ *
  * **Entpackt ist die scharfe Grenze.** Der Puffer von rund 440 KB ist kleiner als
  * `fingerprints.json` (503 954 B): landet die Datei — oder ihr Inhalt, in ein `.ts`-Modul
  * verpackt — in `dist`, reißt die Grenze. Gepackt fiele dieselbe Datei nicht auf, sie komprimiert
@@ -42,9 +53,9 @@ import { gunzipSync } from 'node:zlib';
  * winziges Paket, und eine reine Obergrenze wäre dann grün.
  */
 export const LIMITS = Object.freeze({
-  maxPackedBytes: 500_000,
+  maxPackedBytes: 650_000,
   minPackedBytes: 250_000,
-  maxUnpackedBytes: 6_500_000,
+  maxUnpackedBytes: 6_950_000,
   minUnpackedBytes: 3_000_000,
   minEntries: 200,
 });
