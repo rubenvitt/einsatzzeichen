@@ -1,6 +1,6 @@
 {
   "name": "@einsatzzeichen/maplibre",
-  "version": "1.9.1",
+  "version": "1.10.0",
   "type": "module",
   "description": "MapLibre-GL-Integration für Einsatzzeichen",
   "license": "MIT",
