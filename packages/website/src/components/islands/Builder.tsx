@@ -28,6 +28,7 @@ import {
   labelFor,
   optionsFor,
   probeFields,
+  unmeasuredField,
 } from '../../lib/builder-vocabulary.js';
 import { useSnapshot, type SnapshotSelect } from '../../lib/snapshot-island.js';
 import type { BuilderVocabulary, SymbolSummary } from '../../lib/snapshot.js';
@@ -39,7 +40,7 @@ import StatusPair from '../StatusPair.js';
  * komponiert sie im Browser und erklärt jede abgelehnte Kombination in Klarsprache statt nur die
  * Regelkennung zu zeigen.
  *
- * Aufbau als Werkstatt, nicht als Formularspalte: links die Auswahl in vier verständlichen
+ * Aufbau als Werkstatt, nicht als Formularspalte: links die Auswahl in fünf verständlichen
  * Gruppen, rechts (auf breiten Schirmen klebend) das Ergebnis — eine große Vorschau mit
  * Untergrund-Umschalter, Größenreihe und den Mitnahme-Aktionen (SVG, PNG, Link). Auf schmalen
  * Schirmen steht das Ergebnis über dem Formular, damit jede Änderung ohne Scrollen sichtbar ist.
@@ -137,8 +138,9 @@ const ORGANIZATION_FIELD: FieldDefinition = {
  * von innen nach außen wirken: erst der Körper, dann seine Füllung, dann Kopf- und Fußzonen.
  *
  * Nur Achsen, die `SymbolSpec` wirklich führt. Der Snapshot bringt darüber hinaus die
- * Piktogrammregister `states`, `comms`, `damage` und `wildfire` mit — die sind Register, keine
+ * Piktogrammregister `comms`, `damage` und `wildfire` mit — die sind Register, keine
  * Spec-Achsen (`taxonomy.ts`), und ein Formularfeld dafür behauptete ein Feld, das es nicht gibt.
+ * `states` war bis LFH-577 dasselbe und ist seitdem ein Feld der Spec (Zustände nach 5.8).
  */
 const BODY_SELECT_FIELDS: FieldDefinition[] = [
   { field: 'bodyVariant', label: 'Körpervariante', noun: 'Körpervariante' },
@@ -155,6 +157,12 @@ const CAPABILITY_SELECT_FIELDS: FieldDefinition[] = [
 
 const COMMAND_SELECT_FIELDS: FieldDefinition[] = [
   { field: 'strength', label: 'Stärke', noun: 'Stärke' },
+  {
+    field: 'unitGrouping',
+    label: 'Verband',
+    noun: 'Verband',
+    hint: 'Steht wie die Stärke über dem Zeichen — dort ist nur für eine Angabe Platz.',
+  },
   { field: 'functionRole', label: 'Funktionsfassung', noun: 'Funktionsfassung' },
   { field: 'administrativeLevel', label: 'Verwaltungsstufe', noun: 'Verwaltungsstufe' },
   { field: 'technicalHeadMark', label: 'Technische Kopfmarke', noun: 'technische Kopfmarke' },
@@ -174,7 +182,29 @@ const LIST_FIELDS: FieldDefinition[] = [
   },
 ];
 
-/** Alle Achsen, die durchprobiert werden — Kacheln, Auswahlfelder und Listen gemeinsam. */
+/**
+ * Zustände und Tendenz nach Kapitel 5.8 (LFH-577). Zustände sind eine Liste — ein Personenzustand
+ * und ein Hinweis „?" oder „!" stehen zusammen an einem Zeichen —, die Tendenz ist höchstens eine
+ * und deshalb ein Einzelwert.
+ */
+const STATE_LIST_FIELD: FieldDefinition = {
+  field: 'states',
+  label: 'Zustand',
+  noun: 'Zustand',
+  hint: 'Auch mehrere zusammen, etwa „Person verletzt" und der Hinweis „?" für eine Vermutung.',
+};
+
+const TENDENCY_FIELD: FieldDefinition = {
+  field: 'tendency',
+  label: 'Tendenz',
+  noun: 'Tendenz',
+  hint: 'Ob die Lage steigt, gleich bleibt oder fällt — höchstens eine Angabe.',
+};
+
+/**
+ * Alle Achsen, die durchprobiert werden — Kacheln, Auswahlfelder und Listen gemeinsam. Ein Feld,
+ * das hier fehlt, hat keine Probe, und `displayedBlock()` zeigt dann jeden Wert als frei.
+ */
 const PROBED_FIELDS: FieldDefinition[] = [
   KIND_FIELD,
   ORGANIZATION_FIELD,
@@ -182,6 +212,8 @@ const PROBED_FIELDS: FieldDefinition[] = [
   ...CAPABILITY_SELECT_FIELDS,
   ...COMMAND_SELECT_FIELDS,
   ...LIST_FIELDS,
+  STATE_LIST_FIELD,
+  TENDENCY_FIELD,
 ];
 
 /** Dieselbe Liste, nur die Feldnamen — das nimmt `probeFields()` entgegen. */
@@ -235,6 +267,10 @@ function organizationSwatch(id: string): string | undefined {
  * eine andere Grundzeichenart" gilt deshalb nur bei `'combination'`; bei `'value'` wäre er
  * falsch, weil ihn keine Art tragen kann.
  *
+ * **Wenn im ganzen Feld kein Wert vermessen ist** (`fieldUnmeasured`, aus `unmeasuredField()`),
+ * fällt auch der Rat „wähle einen anderen Wert" weg: jeder andere ist genauso gesperrt. Heute
+ * trifft das die Tendenz (LFH-577); die Insel sagt es dann zusätzlich einmal am Feld.
+ *
  * Exportiert allein für den Test daneben: die Fallunterscheidung ist die eigentliche Aussage
  * dieser Funktion, und sie ungeprüft zu lassen wäre der teurere Preis als die etwas größere
  * Oberfläche der Insel.
@@ -244,8 +280,15 @@ export function blockedTooltip(
   blocked: BlockedValue,
   valueLabel: string,
   kindLabel: string,
+  fieldUnmeasured = false,
 ): string {
   if (blocked.because === 'rule') return blocked.explanation;
+  if (blocked.scope === 'value' && fieldUnmeasured) {
+    return (
+      `„${valueLabel}" ist als ${definition.noun} noch nicht vermessen — an keiner ` +
+      'Grundzeichenart. Für dieses Feld lässt sich bisher überhaupt kein Wert zeichnen.'
+    );
+  }
   if (definition.field === 'kind') {
     return (
       `Für „${valueLabel}" führt der Katalog mit der übrigen Auswahl keine vermessene Fassung. ` +
@@ -350,6 +393,22 @@ function FieldIssueNote({ id, issues }: { id: string; issues: readonly Explained
   );
 }
 
+/**
+ * Der Hinweis am Feld, in dem sich kein einziger Wert zeichnen lässt (`unmeasuredField()`). Er
+ * steht einmal am Feld statt nur in den Tooltips der gesperrten Einträge: auf Touch-Geräten gibt
+ * es keinen Tooltip, und eine Auswahl aus lauter gesperrten Einträgen sähe sonst kaputt aus.
+ */
+function UnmeasuredNote({ id, show }: { id: string; show: boolean }) {
+  if (!show) return null;
+  return (
+    <span className="ez-builder__field-hint" id={id}>
+      Noch nicht vermessen: Für dieses Feld führt der Katalog bisher keinen Wert, der sich an
+      einem Zeichen zeichnen lässt. Die Werte stehen trotzdem da, damit sichtbar bleibt, dass es
+      sie gibt.
+    </span>
+  );
+}
+
 interface SelectFieldProps extends VocabularyProps {
   definition: FieldDefinition;
   value: string;
@@ -372,7 +431,9 @@ function SelectField({
   const id = `ez-builder-${definition.field}`;
   const issueId = `${id}-issue`;
   const hintId = `${id}-hint`;
+  const unmeasuredId = `${id}-unmeasured`;
   const options = optionsFor(vocabulary, definition.field);
+  const unmeasured = unmeasuredField(probe);
   // Hülle als `<div>`, Beschriftung als eigenes `<label htmlFor>` — das Muster von `ListField`,
   // die Begründung steht bei `FieldIssueNote`. Der Feldhinweis wandert damit ebenfalls aus dem
   // Namen heraus und braucht seinen eigenen `describedby`-Verweis; ohne ihn hinge er als Text
@@ -387,6 +448,7 @@ function SelectField({
         value={value}
         aria-describedby={describedBy(
           definition.hint === undefined ? undefined : hintId,
+          unmeasured ? unmeasuredId : undefined,
           issues.length === 0 ? undefined : issueId,
         )}
         onChange={(event) => onChange(event.target.value === '' ? undefined : event.target.value)}
@@ -402,7 +464,7 @@ function SelectField({
               title={
                 blocked === undefined
                   ? undefined
-                  : blockedTooltip(definition, blocked, option.label, kindLabel)
+                  : blockedTooltip(definition, blocked, option.label, kindLabel, unmeasured)
               }
             >
               {blocked === undefined ? option.label : `${option.label} — geht hier nicht`}
@@ -415,6 +477,7 @@ function SelectField({
           {definition.hint}
         </span>
       )}
+      <UnmeasuredNote id={unmeasuredId} show={unmeasured} />
       <FieldIssueNote id={issueId} issues={issues} />
     </div>
   );
@@ -444,9 +507,12 @@ function ListField({
 }: ListFieldProps) {
   const id = `ez-builder-${definition.field}`;
   const issueId = `${id}-issue`;
+  const hintId = `${id}-hint`;
+  const unmeasuredId = `${id}-unmeasured`;
   const options = optionsFor(vocabulary, definition.field).filter(
     (option) => !values.includes(option.id),
   );
+  const unmeasured = unmeasuredField(probe);
   return (
     <div className="ez-builder__field ez-builder__field--wide">
       <label className="ez-builder__field-label" htmlFor={id}>
@@ -455,7 +521,11 @@ function ListField({
       <select
         id={id}
         value=""
-        aria-describedby={issues.length === 0 ? undefined : issueId}
+        aria-describedby={describedBy(
+          definition.hint === undefined ? undefined : hintId,
+          unmeasured ? unmeasuredId : undefined,
+          issues.length === 0 ? undefined : issueId,
+        )}
         onChange={(event) => {
           if (event.target.value !== '') onChange([...values, event.target.value]);
         }}
@@ -474,7 +544,7 @@ function ListField({
               title={
                 blocked === undefined
                   ? undefined
-                  : blockedTooltip(definition, blocked, option.label, kindLabel)
+                  : blockedTooltip(definition, blocked, option.label, kindLabel, unmeasured)
               }
             >
               {blocked === undefined ? option.label : `${option.label} — geht hier nicht`}
@@ -499,6 +569,12 @@ function ListField({
           ))}
         </ul>
       )}
+      {definition.hint === undefined ? null : (
+        <span className="ez-builder__field-hint" id={hintId}>
+          {definition.hint}
+        </span>
+      )}
+      <UnmeasuredNote id={unmeasuredId} show={unmeasured} />
       <FieldIssueNote id={issueId} issues={issues} />
     </div>
   );
@@ -1073,7 +1149,9 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
    * Die Vorgabe war, erst beim Öffnen eines Auswahlfeldes zu proben. Die Messung nimmt dem
    * Sparen den Anlass: alle elf Felder mit zusammen 247 Kandidaten brauchen 9,7 ms kalt und
    * 3,4 ms warm (über `core` gerechnet seit LFH-578: 248 Kandidaten in rund 2 ms, gemessen am
-   * 29.09.2026) — das Zwanzigfache unter der Schwelle, ab der gespart werden sollte. Dafür
+   * 29.09.2026; mit Verband, Zustand und Tendenz seit LFH-577 14 Felder und 315 Kandidaten,
+   * 7,9 ms kalt und rund 2,5 ms warm, am selben Tag unter Node 26 und tsx nachgemessen) — das
+   * Zwanzigfache unter der Schwelle, ab der gespart werden sollte. Dafür
    * verschwindet ein Fehler, den das Sparen einbaute: ein Auswahlfeld öffnet sich beim Klick,
    * bevor React die Sperren nachgezogen hat, und zeigte beim ersten Öffnen die alte Liste.
    *
@@ -1494,6 +1572,32 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
           </fieldset>
 
           <fieldset className="ez-builder__group">
+            <legend>Zustand und Tendenz</legend>
+            <p className="ez-builder__group-hint">
+              Wie es um eine Person oder die Lage steht — etwa „verletzt" oder der Hinweis „?"
+              für eine Vermutung und „!" für eine akute Lage.
+            </p>
+            <ListField
+              vocabulary={vocabulary}
+              definition={STATE_LIST_FIELD}
+              values={listValues('states')}
+              probe={probes.get('states')}
+              issues={fieldIssues.get('states')}
+              kindLabel={kindLabel}
+              onChange={(values) => setField('states', values)}
+            />
+            <SelectField
+              vocabulary={vocabulary}
+              definition={TENDENCY_FIELD}
+              value={spec.tendency ?? ''}
+              probe={probes.get('tendency')}
+              issues={fieldIssues.get('tendency')}
+              kindLabel={kindLabel}
+              onChange={(value) => setField('tendency', value)}
+            />
+          </fieldset>
+
+          <fieldset className="ez-builder__group">
             <legend>Beschriftung</legend>
             <p className="ez-builder__group-hint">
               Das Kürzel in der Fußzone, unterhalb des Zeichens — etwa ein Rufname oder eine
@@ -1541,18 +1645,18 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
             Website: <code>kind</code>, <code>bodyVariant</code>, <code>organization</code>,{' '}
             <code>technicalFill</code>, <code>strength</code>, <code>functionRole</code>,{' '}
             <code>administrativeLevel</code>, <code>technicalHeadMark</code>,{' '}
-            <code>vehicleCategory</code>, <code>capabilities</code> und <code>bodyMarks</code>.
-            Die Piktogrammregister <code>states</code>, <code>comms</code>, <code>damage</code>{' '}
-            und <code>wildfire</code> haben kein Formularfeld, weil <code>SymbolSpec</code> keine
-            solche Achse führt — ein Feld dafür behauptete eine Eingabe, die die Komposition
-            nicht annimmt.
+            <code>unitGrouping</code>, <code>vehicleCategory</code>, <code>capabilities</code>,{' '}
+            <code>bodyMarks</code>, <code>states</code> und <code>tendency</code>. Die
+            Piktogrammregister <code>comms</code>, <code>damage</code> und <code>wildfire</code>{' '}
+            haben kein Formularfeld, weil <code>SymbolSpec</code> keine solche Achse führt — ein
+            Feld dafür behauptete eine Eingabe, die die Komposition nicht annimmt.
           </p>
           <p>
             Gültig oder nicht weiß im Projekt nur <code>compose()</code>, nachträglich. Die
             gesperrten Werte entstehen deshalb durch Probieren: <code>vocabulary()</code> aus{' '}
             <code>@einsatzzeichen/core</code> zeichnet jeden Kandidaten einmal über{' '}
-            <code>drawSymbol()</code> — alle elf Felder mit zusammen 248 Kandidaten brauchen
-            dafür rund 2 ms. Weil jeder Tastenanschlag im
+            <code>drawSymbol()</code> — alle 14 Felder mit zusammen 315 Kandidaten brauchen
+            dafür rund 2,5 ms. Weil jeder Tastenanschlag im
             Beschriftungsfeld die Spec ändert und die Probe die Beschriftung wirklich liest, läuft
             sie nachrangig (<code>useDeferredValue</code>): wer weitertippt, bekommt die Vorschau
             und die Regeln sofort, die Sperren einen Wimpernschlag später. Beim Laden eines

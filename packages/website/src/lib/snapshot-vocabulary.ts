@@ -6,6 +6,7 @@ import {
   STRENGTH_LABELS,
   TECHNICAL_BODY_MARK_LABELS,
   TECHNICAL_HEAD_MARK_LABELS,
+  UNIT_GROUPING_LABELS,
   VEHICLE_CATEGORY_LABELS,
   functionRole,
   pictogram,
@@ -17,10 +18,13 @@ import {
   FUNCTION_ROLE_IDS,
   ORGANIZATION_IDS,
   PALETTE,
+  STATE_IDS,
   STRENGTH_IDS,
   SYMBOL_KINDS,
   TECHNICAL_BODY_MARK_IDS,
   TECHNICAL_HEAD_MARK_IDS,
+  TENDENCY_IDS,
+  UNIT_GROUPING_IDS,
   VEHICLE_CATEGORY_IDS,
   type ColorToken,
 } from '@einsatzzeichen/schema';
@@ -52,6 +56,14 @@ function pictogramVocabulary(namespace: string): { id: string; label: string }[]
 }
 
 const TECHNICAL_BODY_MARK_ID_SET = new Set<string>(TECHNICAL_BODY_MARK_IDS);
+
+/**
+ * Zustand und Tendenz mit dem Titel ihrer Zeichnung aus Kapitel 5.8 — derselbe Begriff, den
+ * `describeSymbolSpec` für `states` und `tendency` vorliest.
+ */
+function stateLabel(id: string): string {
+  return pictogram(`state.${id}` as Parameters<typeof pictogram>[0]).title;
+}
 
 /**
  * Erlaubte Werte je `SymbolSpec`-Achse. Die Bezeichnungen kommen aus denselben Registern, die
@@ -89,7 +101,15 @@ export function builderVocabulary(): BuilderVocabulary {
         ? TECHNICAL_BODY_MARK_LABELS[id as keyof typeof TECHNICAL_BODY_MARK_LABELS]
         : pictogram(`capability.${id}` as Parameters<typeof pictogram>[0]).title,
     ),
-    states: pictogramVocabulary('state'),
+    unitGrouping: labelled(
+      UNIT_GROUPING_IDS,
+      (id) => UNIT_GROUPING_LABELS[id as (typeof UNIT_GROUPING_IDS)[number]],
+    ),
+    // Seit LFH-577 ist `states` ein Feld der Spec und nicht mehr nur ein Piktogrammregister. Der
+    // volle Vorrat aus `STATE_IDS`, wie ihn `core` probiert: Wetter, Tierzustand und Tendenz
+    // stehen im Baukasten als von einer Regel gesperrt da, nicht als fehlend.
+    states: labelled(STATE_IDS, stateLabel),
+    tendency: labelled(TENDENCY_IDS, stateLabel),
     comms: pictogramVocabulary('comms'),
     damage: pictogramVocabulary('damage'),
     wildfire: pictogramVocabulary('wildfire'),

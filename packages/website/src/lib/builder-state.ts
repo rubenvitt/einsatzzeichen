@@ -1,6 +1,7 @@
 import {
   CompositionError,
   LIST_SPEC_FIELDS,
+  SPEC_FIELD_VALUES,
   decodeSpecParam,
   drawSymbol,
   encodeSpecParam,
@@ -135,7 +136,9 @@ export interface AllowedValue {
  * wird über `drawSymbol()` gezeichnet, keine Vorprüfung mit einem nackten `validateSpec`, ein
  * Programmfehler fliegt weiter statt als Vermessungslücke zu erscheinen — stehen jetzt dort.
  * Gemessen am 29.09.2026 (Node 22, Vitest): alle elf Felder mit dem vollen Vorrat aus `core`,
- * zusammen 316 Kandidaten, brauchen an der nackten Formation 7,8 ms kalt und rund 4 ms warm.
+ * zusammen 316 Kandidaten, brauchen an der nackten Formation 7,8 ms kalt und rund 4 ms warm. Mit
+ * Verband, Zustand und Tendenz (LFH-577) sind es 14 Felder und 383 Kandidaten: 8,8 ms kalt und
+ * rund 2,6 ms warm (am selben Tag, Node 26, tsx).
  *
  * Kandidaten außerhalb des Wertevorrats lehnt `core` mit einem `RangeError` ab; die Liste kommt
  * aus `builderVocabulary()`, die denselben Vorrat liest (ein Test hält beide in Deckung).
@@ -229,13 +232,25 @@ export function issuesByField(
 ): Map<keyof SymbolSpec, ExplainedIssue[]> {
   const byField = new Map<keyof SymbolSpec, ExplainedIssue[]>();
   for (const issue of issues) {
-    if (issue.field === 'composition') continue;
+    if (!isSymbolSpecField(issue.field)) continue;
     if (isUnset(spec[issue.field])) continue;
     const bucket = byField.get(issue.field);
     if (bucket === undefined) byField.set(issue.field, [issue]);
     else bucket.push(issue);
   }
   return byField;
+}
+
+/**
+ * Ob eine Erklärung auf ein Feld der `SymbolSpec` zeigt. Seit die freistehenden Zeichen eine eigene
+ * Spec-Art bekommen (LFH-577), kann `ExplainedIssue.field` auch deren Felder nennen (`path`,
+ * `line`, …); der Baukasten baut nur `SymbolSpec` und hat für jene kein Formularfeld. Geprüft wird
+ * gegen `SPEC_FIELD_VALUES`, die über alle Schlüssel der `SymbolSpec` vollständige Tabelle aus
+ * `core` — keine zweite Feldliste hier. `'composition'` steht dort nicht und fällt damit ebenfalls
+ * heraus.
+ */
+function isSymbolSpecField(field: ExplainedIssue['field']): field is keyof SymbolSpec {
+  return Object.hasOwn(SPEC_FIELD_VALUES, field);
 }
 
 /* --- URL-Zustand ------------------------------------------------------------------------- */

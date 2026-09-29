@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { SPEC_FIELD_VALUES, VOCABULARY_FIELDS, checkSpec } from '@einsatzzeichen/core';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
-import { kindPreviews, labelFor, optionsFor, probeFields } from './builder-vocabulary.js';
+import {
+  kindPreviews,
+  labelFor,
+  optionsFor,
+  probeFields,
+  unmeasuredField,
+} from './builder-vocabulary.js';
 import { builderVocabulary } from './snapshot-vocabulary.js';
 import type { BuilderVocabulary } from './snapshot.js';
 
@@ -63,6 +69,18 @@ describe('builderVocabulary() gegen den Wertevorrat aus core', () => {
       }
     }
   });
+
+  /**
+   * Die Gegenrichtung: jedes Feld mit aufzählbarem Vorrat hat auch eine Auswahlliste. Bekommt
+   * `SymbolSpec` ein neues Feld (LFH-577: Verband, Zustände, Tendenz), stünde es im Baukasten
+   * sonst ohne Werte da — und `probeFields` probierte still gar nichts.
+   */
+  it('führt für jedes aufzählbare Feld eine Auswahlliste', () => {
+    const vocabulary = builderVocabulary();
+    for (const field of VOCABULARY_FIELDS) {
+      expect(optionsFor(vocabulary, field).length, field).toBeGreaterThan(0);
+    }
+  });
 });
 
 describe('kindPreviews', () => {
@@ -114,5 +132,31 @@ describe('probeFields', () => {
   it('legt für eine Achse ohne Register eine leere Zuordnung an, statt zu werfen', () => {
     const bare = probeFields({}, spec, ['strength']);
     expect(bare.get('strength')?.size).toBe(0);
+  });
+});
+
+describe('unmeasuredField', () => {
+  const vocabulary = builderVocabulary();
+
+  /**
+   * Die Tendenz: kein Original zeigt sie an einem Träger, `core` meldet alle drei Werte als nicht
+   * vermessen mit `scope: 'value'`. Dann gibt es im Feld keinen anderen Wert, zu dem sich raten
+   * ließe — genau das soll die Insel erkennen, ohne die Tendenz beim Namen zu kennen.
+   */
+  it('erkennt ein Feld, in dem sich kein einziger Wert zeichnen lässt', () => {
+    const probes = probeFields(vocabulary, { kind: 'person' }, ['tendency']);
+    expect(unmeasuredField(probes.get('tendency'))).toBe(true);
+  });
+
+  it('meldet ein Feld mit wenigstens einem zeichenbaren Wert nicht', () => {
+    // Verband III ist nicht vermessen, I und II an der Formation schon.
+    const probes = probeFields(vocabulary, { kind: 'formation' }, ['unitGrouping']);
+    expect(probes.get('unitGrouping')?.get('verband-iii')?.blocked?.because).toBe('not-measured');
+    expect(unmeasuredField(probes.get('unitGrouping'))).toBe(false);
+  });
+
+  it('meldet ein Feld ohne Probe oder ohne Werte nicht', () => {
+    expect(unmeasuredField(undefined)).toBe(false);
+    expect(unmeasuredField(new Map())).toBe(false);
   });
 });

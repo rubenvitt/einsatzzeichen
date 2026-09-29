@@ -78,8 +78,9 @@ export function kindPreviews(vocabulary: BuilderVocabulary): Map<string, Drawing
  *
  * Alle Felder auf einmal statt erst beim Öffnen eines Auswahlfeldes: alle elf Felder mit zusammen
  * 247 Kandidaten brauchen 9,7 ms kalt und 3,4 ms warm (29.08.2026); über `core` gerechnet und mit
- * dem vollen Vorrat von 316 Kandidaten 7,8 ms kalt und rund 4 ms warm (29.09.2026). Das Sparen
- * baute dafür einen Fehler ein —
+ * dem vollen Vorrat von 316 Kandidaten 7,8 ms kalt und rund 4 ms warm (29.09.2026). Seit
+ * LFH-577 (Verband, Zustand, Tendenz) probiert der Baukasten 14 Felder mit 315 Kandidaten: 7,9 ms
+ * kalt und rund 2,5 ms warm (29.09.2026, Node 26, tsx). Das Sparen baute dafür einen Fehler ein —
  * ein Auswahlfeld öffnet sich beim Klick, bevor React die Sperren nachgezogen hat, und zeigte beim
  * ersten Öffnen die alte Liste.
  */
@@ -94,4 +95,25 @@ export function probeFields(
     byField.set(field, new Map(allowedValues(spec, field, ids).map((v) => [v.value, v])));
   }
   return byField;
+}
+
+/**
+ * Ob sich in einem Feld **kein einziger** Wert zeichnen lässt: jeder probierte Kandidat ist als
+ * nicht vermessen gesperrt, und zwar mit `scope: 'value'` — an keiner Grundzeichenart.
+ *
+ * Dann ist der übliche Rat „wähle einen anderen Wert" falsch, denn jeder andere ist genauso
+ * gesperrt. Die Insel sagt stattdessen einmal am Feld, dass es noch nicht vermessen ist. Gelesen
+ * wird das aus der Probe und nicht aus einer Feldliste: die Tendenz ist heute so ein Feld (kein
+ * Original zeigt sie an einem Träger, LFH-577), und wann sie es nicht mehr ist, entscheidet der
+ * Katalog und nicht die Website.
+ *
+ * Eine Regelsperre oder ein gesetzter (und deshalb nie gesperrter) Wert heben den Befund auf; ein
+ * Feld ohne Probe oder ohne Werte ist kein Befund.
+ */
+export function unmeasuredField(probe: ReadonlyMap<string, AllowedValue> | undefined): boolean {
+  if (probe === undefined || probe.size === 0) return false;
+  for (const entry of probe.values()) {
+    if (entry.blocked?.because !== 'not-measured' || entry.blocked.scope !== 'value') return false;
+  }
+  return true;
 }
