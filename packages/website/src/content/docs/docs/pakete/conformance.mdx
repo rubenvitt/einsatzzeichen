@@ -38,10 +38,17 @@ nicht gebaut.
 
 ## Installation
 
-<div class="ez-note">
-<span class="ez-note__title">Nicht veröffentlicht</span>
+Das Paket liegt öffentlich auf npm. Wer nur Zeichen zeichnen will, braucht es nicht, dafür reicht
+`@einsatzzeichen/core`.
 
-`private: true`, `main` zeigt auf `./src/index.ts`, kein Build-Schritt. Im Workspace:
+```bash
+npm install @einsatzzeichen/conformance
+```
+
+<div class="ez-note">
+<span class="ez-note__title">Im Workspace</span>
+
+Innerhalb dieses Repositorys zeigt `main` auf `./src/index.ts`, ohne Build-Schritt:
 
 ```json
 { "dependencies": { "@einsatzzeichen/conformance": "workspace:*" } }
