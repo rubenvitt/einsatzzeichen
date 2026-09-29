@@ -90,7 +90,12 @@ export interface CapabilityInsetDecision {
 
 /** Die Regel des Innenfelds für Kapitel-4-Piktogramme, Aussage für Aussage mit Belegstand. */
 export interface CapabilityInsetRule {
-  /** Die Körperfassung behält die Strichstärke der Einzeldarstellung. */
+  /**
+   * Die Körperfassung zeichnet ihre Striche mit 0,5 mm: sie wird kleiner, der Strich nicht. Bis
+   * LFH-786 hieß die Aussage „behält die Strichstärke der Einzeldarstellung“; seit C.2.18 ist sie
+   * so gefasst, weil 4.7.18 als einzige Einzeldarstellung mit 0,4 mm zeichnet und seine
+   * Körperfassung trotzdem mit 0,5 mm.
+   */
   readonly strokeWidthKept: GrammarFinding<CapabilityInsetClaim>;
   /** Es gibt einen Faktor, der alle Einzeldarstellungen in ihre Körperfassung überführt. */
   readonly commonScale: GrammarFinding<CapabilityInsetClaim>;

@@ -1,9 +1,11 @@
 # Kapitel-4-Piktogramme in C.1.7, C.1.8 und C.2: vermessen, gebaut und was sie an der Regel ändern
 
 > Stand: 29. September 2026
-> Status: **Umgesetzt.** Umfang, Drucktoken und Umgang mit widerlegten Aussagen hat der
-> Projektinhaber am 29. September 2026 entschieden (voller Umfang, eigenes Drucktoken, Fixtures
-> bauen und Regelaussagen anpassen). Domain-Reviews aller neuen Fixtures bleiben `pending`.
+> Status: **Umgesetzt.** Drei Fragen hat der Projektinhaber am 29. September 2026 entschieden:
+> voller Umfang einschließlich der dafür nötigen Mechanismen, ein eigenes Drucktoken für Läufe auf
+> Feuerwehrrot, und Fixtures bauen und Regelaussagen an die Belege anpassen. Drei
+> Folgeentscheidungen hat der Koordinator getroffen; sie stehen in §8 und sind überstimmbar.
+> Domain-Reviews aller neuen Fixtures bleiben `pending`.
 > Ticket: LFH-786 (Subtask von LFH-562, Zonenmodell). Folgeticket: LFH-787 (Schritt B → A).
 > Bezug: `docs/decisions/2026-09-29-lfh-587-kapitel-4-piktogramme-im-innenfeld.md` §3.6 und §6,
 > `docs/decisions/2026-08-26-anhang-c-zuschnitt.md`
@@ -166,3 +168,11 @@ Weitere Befunde an einzelnen Fassungen:
 - C.2.1 bis C.2.3, C.2.19, C.2.21 und C.2.22 (kein Kapitel-4-Piktogramm) und die übrigen C.1-Zeichen.
   Sie gehören zu LFH-418.
 - Eine fachliche Freigabe. Alle neuen Domain-Reviews bleiben `pending`.
+
+## 8. Folgeentscheidungen des Koordinators
+
+| Entscheidung | Begründung | Alternative |
+|---|---|---|
+| C.2.24#alternative nicht als Fixture aufgenommen, als `deferred` im Referenzinventar | bildgleich mit C.2.20#alternative, gleiche Spec (Spec-Schlüssel müssen eindeutig sein), keine Messung von 4.1.2 | aufnehmen, dann bräuchte die Herkunftsprüfung eine erklärte Dublette |
+| Reine Ziffernläufe im Profilschriftgrad, ohne Metriksatz | die Ziffern sind beim Profilschriftgrad 2,75 mm hoch; „1“ steht in „DLAK 12/9“ und „12/9“ auf denselben Koordinaten | Metriksatz auf Ziffernhöhe wie F.2.16 („40“), der dann vermutlich rund 6 % zu klein setzt |
+| Brandbekämpfung am Kettenfahrzeug als Einzelfassung des Körpers | in C.2.31 überschneiden sich Marke und Drohnenwinkel nicht | als Kombinationsfassung (`COMBINATION_MARKS`) nur zusammen mit dem Winkel gültig |
