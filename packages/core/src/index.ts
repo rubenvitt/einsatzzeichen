@@ -116,3 +116,15 @@ export {
 // `derived`, aus einer generierten Tabelle ohne Prüfpaket. Der fachliche Reviewstand bleibt in
 // conformance (`provenanceReview`, `combinationProvenance`).
 export { symbolProvenance, type SymbolProvenance } from './provenance/symbol-provenance.js';
+// LFH-577: Kanonische Serialisierung der SymbolSpec — JSON in der Hülle `{"v":1,"spec":{…}}`,
+// strenges Lesen mit Pfad in der Fehlermeldung und die base64url-Form für URLs (liest auch die
+// alten Baukasten-Links ohne Hülle). Prüft Form und Wertevorrat, nicht die Kombinationsregeln.
+export {
+  SPEC_FORMAT_VERSION,
+  SpecParseError,
+  canonicalSpec,
+  decodeSpecParam,
+  encodeSpecParam,
+  parseSpec,
+  serializeSpec,
+} from './spec-codec.js';
