@@ -20,6 +20,8 @@ const FOREIGN = /^commands\/(verify-repository[^/]*|repository-policy)\.ts$/;
 const CONFORMANCE_IMPORTERS = [
   'commands/coverage.ts',
   'commands/export-recipes.ts',
+  'commands/reference-diff-drawings.ts',
+  'commands/reference-diff.ts',
   'commands/review-dossier.ts',
   'commands/visual-proof.ts',
 ];

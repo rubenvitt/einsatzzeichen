@@ -137,10 +137,14 @@ aus, siehe Schritt 3.
 - **Sichtprüfung:** Alle 93 Zeilen wurden als Kontaktbogen angesehen (vorher, Referenz, heute,
   Überlagerung). Die Gruppen B und C wurden zusätzlich vergrößert angesehen. Die Beschreibungen
   in der Spalte „Änderung durch PR #56“ stammen aus diesem Sichtvergleich.
-- **Skripte und Bilder** sind nicht eingecheckt. Sie lagen nur in der Arbeitsumgebung der
-  Sitzung vom 29.09.2026 (Vergleich, vorher/nachher, Kontaktbögen, Ledger-Auswertung) und sind
-  dort vergänglich. Die Methode oben reicht, um den Vergleich neu zu schreiben; ob ein
-  Vergleichswerkzeug ins Repo gehört, ist offen.
+- **Befehl:** Der Vergleich „heute“ steht seit dem 29.09.2026 als
+  `pnpm cli reference-diff --reference-root <referenzordner> [--filter <präfix>] [--sheets]` im
+  Repo (`packages/cli/src/commands/reference-diff.ts`). Er rechnet beide Kennzahlen mit genau
+  dieser Methode und schreibt Bericht und Kontaktbögen (Referenz, eigene Darstellung,
+  Überlagerung) nach `out/reference-diff/`. Über alle 544 Zeilen ergibt er auf dem Stand
+  `b2a8697f` Zeile für Zeile dieselben Werte wie die Rechnung für diese Liste, also 361
+  deckungsgleiche. Nicht eingecheckt sind die Vorher-Rechnung gegen `ebcb78d` und die
+  Ledger-Auswertung; sie lagen nur in der Arbeitsumgebung der Sitzung vom 29.09.2026.
 
 Lesehilfe für die Tabellen: **Fläche vorher → heute** ist der Anteil abweichender Pixel am
 ganzen Bild am 19.09. und heute. **Strichanteil heute** ist der Anteil abweichender Pixel an der
