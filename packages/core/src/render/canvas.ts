@@ -9,6 +9,7 @@ import {
 import { assertValidActiveStrokeWidths, mergeStyle } from './style.js';
 import { canvasBaseline, canvasTextAlign, TEXT_FONT_FAMILY_ATTR } from './text-policy.js';
 import { rasterDimensionsForWidth } from './raster-dimensions.js';
+import { effectiveStrokeWidthMm, strokeWidthFloorMm } from './min-stroke-width.js';
 import { REFERENCE_THEME, type RenderTheme } from './theme.js';
 import { assertValidRenderTheme } from './theme-validation.js';
 
@@ -17,6 +18,12 @@ export interface CanvasOptions {
   size?: number;
   /** Farbprofil der Ausgabe. Ohne Angabe wird die unveränderte Referenzpalette verwendet. */
   theme?: RenderTheme;
+  /**
+   * Mindeststrichbreite in Pixeln der Ausgabe (LFH-584), dieselbe Rechnung wie
+   * `SvgOptions.minStrokeWidthPx`. Standardmäßig aus; verlangt `size`. Gemeint sind die Pixel der
+   * Leinwand — bei HiDPI also Gerätepixel, nicht CSS-Pixel.
+   */
+  minStrokeWidthPx?: number;
 }
 
 function color(token: ColorToken | 'none', theme: RenderTheme): string {
@@ -72,6 +79,7 @@ function drawPrimitive(
   primitive: Primitive,
   ctx: CanvasRenderingContext2D,
   theme: RenderTheme,
+  strokeFloorMm: number | undefined,
   inheritedStyle?: Style,
   inheritedRole?: Primitive['role'],
 ): void {
@@ -97,7 +105,7 @@ function drawPrimitive(
   const role = primitive.role ?? inheritedRole;
 
   if (primitive.type === 'group') {
-    for (const child of primitive.children) drawPrimitive(child, ctx, theme, style, role);
+    for (const child of primitive.children) drawPrimitive(child, ctx, theme, strokeFloorMm, style, role);
     ctx.restore();
     return;
   }
@@ -111,7 +119,12 @@ function drawPrimitive(
       ctx.fill(path, style.fillRule ?? 'nonzero');
     }
     if (style?.stroke !== undefined && style.stroke !== 'none') {
-      const strokeWidth = style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
+      // Untergrenze in mm wie in svg.ts (styleAttrs): unter scale(mmToUnits(1)) gilt sie damit
+      // ohne weitere Umrechnung im tatsächlichen Pixelraum.
+      const strokeWidth = effectiveStrokeWidthMm(
+        style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM,
+        strokeFloorMm,
+      );
       if (strokeWidth > 0) {
         ctx.strokeStyle = color(style.stroke, theme);
         // Rohes Millimetermaß: das umgebende scale(mmToUnits(1)) skaliert die Strichstärke
@@ -166,7 +179,10 @@ function drawPrimitive(
     ctx.fill(style.fillRule ?? 'nonzero');
   }
   if (style?.stroke !== undefined && style.stroke !== 'none') {
-    const strokeWidth = style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM;
+    const strokeWidth = effectiveStrokeWidthMm(
+      style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM,
+      strokeFloorMm,
+    );
     if (strokeWidth > 0) {
       ctx.strokeStyle = color(style.stroke, theme);
       ctx.lineWidth = mmToUnits(strokeWidth);
@@ -198,6 +214,12 @@ export function renderCanvas(
   assertValidRenderTheme(theme);
   assertValidActiveStrokeWidths(drawing);
   const raster = rasterDimensionsForWidth(drawing.viewBox, options.size ?? 1);
+  // Vor jeder Leinwandmutation: eine ungültige Untergrenze bricht ab, bevor etwas gezeichnet ist.
+  const strokeFloorMm = strokeWidthFloorMm(
+    drawing.viewBox,
+    options.size,
+    options.minStrokeWidthPx,
+  );
   if (options.size !== undefined) {
     ctx.canvas.width = raster.widthPx;
     ctx.canvas.height = raster.heightPx;
@@ -207,6 +229,6 @@ export function renderCanvas(
     const scale = raster.widthPx / mmToUnits(drawing.viewBox.width);
     ctx.scale(scale, scale);
   }
-  for (const child of drawing.children) drawPrimitive(child, ctx, theme);
+  for (const child of drawing.children) drawPrimitive(child, ctx, theme, strokeFloorMm);
   ctx.restore();
 }

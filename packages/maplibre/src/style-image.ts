@@ -1,4 +1,5 @@
 import {
+  RASTER_MIN_STROKE_WIDTH_PX,
   rasterDimensionsForWidth,
   renderCanvas,
   type RenderTheme,
@@ -48,6 +49,15 @@ export interface SymbolImageOptions {
   readonly pixelRatio?: number;
   /** Farbprofil der Ausgabe; ohne Angabe die Referenzpalette. */
   readonly theme?: RenderTheme;
+  /**
+   * Mindeststrichbreite in Gerätepixeln (LFH-584). Kartensymbole sind immer Rasterbilder und meist
+   * klein; die referenztreuen 0,5-mm-Striche wären dort nur eine blassgraue Spur (bei 24 px
+   * 0,375 px breit). Deshalb hier standardmäßig an, mit `RASTER_MIN_STROKE_WIDTH_PX` (1 px) aus
+   * core. `null` schaltet die Untergrenze ab und liefert die unveränderte Katalograsterung. Ab
+   * 64 Gerätepixeln Breite ändert die Vorgabe an den üblichen 0,5-mm-Strichen nichts mehr, weil sie
+   * dort schon 1 px breit sind.
+   */
+  readonly minStrokeWidthPx?: number | null;
   /**
    * Leinwandfabrik für Umgebungen ohne `OffscreenCanvas`/`document` (Node mit `@napi-rs/canvas`,
    * Tests). Ohne Angabe wird `OffscreenCanvas`, dann `document.createElement('canvas')` versucht.
@@ -169,7 +179,12 @@ export function createStyleImage(drawing: Drawing, options: SymbolImageOptions):
 
   // `renderCanvas` setzt bei `size` selbst `ctx.canvas.width/height` auf dieselben Maße und
   // skaliert den Kontext; wir übergeben die Gerätepixelbreite, nicht die CSS-Breite.
-  renderCanvas(drawing, ctx, { size: raster.widthPx, theme: options.theme });
+  // Die Untergrenze gilt in Gerätepixeln: gezeichnet wird in `raster.widthPx`, nicht in CSS-Pixeln.
+  const minStrokeWidthPx =
+    options.minStrokeWidthPx === null
+      ? undefined
+      : (options.minStrokeWidthPx ?? RASTER_MIN_STROKE_WIDTH_PX);
+  renderCanvas(drawing, ctx, { size: raster.widthPx, theme: options.theme, minStrokeWidthPx });
   const imageData = ctx.getImageData(0, 0, raster.widthPx, raster.heightPx);
 
   return { width: raster.widthPx, height: raster.heightPx, data: imageData.data };

@@ -1,3 +1,41 @@
+## Rendering
+
+**Mindeststrichbreite für kleine Symbolgrößen** – Zeichen mit dünnen Strichen (0,5 mm laut Referenz) werden bei 16 oder 24 Pixel Ausgabegröße nun besser lesbar dargestellt. Eine neue Option `minStrokeWidthPx` hebt zu feine Linien beim Rastern auf eine konfigurierbare Pixelstärke an.
+
+- In `@einsatzzeichen/core` (`renderSvg`, `renderCanvas`), `@einsatzzeichen/react` und `@einsatzzeichen/web-component` (neues Attribut `min-stroke-width`) standardmäßig deaktiviert – ohne Angabe bytegleiche Ausgabe wie bisher
+- In `@einsatzzeichen/maplibre` standardmäßig aktiv mit 1 Gerätepixel; mit `null` abschaltbar
+- Empfohlener Wert: 1 px (validiert an allen 525 Renderfällen)
+
+## Dokumentation
+
+**Schriftauswahl und Vermessung** – Entscheidungsvorlage zur Ersatzschrift: Vermessung von 132 Textläufen der Referenz zeigt, dass Arimo 400 eine gute Näherung ist. Eine statische Stufe 500 könnte Normal- und Fettschnitt ersetzen; Kursivschnitt als separater Schritt vorgeschlagen.
+
+**Nachprüfung Symbolkatalog** – Dokumentation der 93 am 19. September beanstandeten Darstellungen mit Befunden, Korrekturen und Pixelabweichungen nach aktueller Messung.
+
+**Fachfrage Bundespolizei** – Belege zur Füllung #64dc32 (Hellgrün der Bundespolizei) dokumentiert; Lesarten und offene Frage zur korrekten Darstellung festgehalten.
+
+## Katalog & Grammatik
+
+**Kapitel-4-Piktogramme im Innenfeld präzise vermessen**  
+Alle Kapitel-4-Piktogramme (Fähigkeiten) wurden für jede Körperform individuell vermessen und werden nun korrekt im Körper platziert. Die Vermessung umfasst 52 Fassungen an 14 Körperformen mit drei verschiedenen Behandlungsarten: randbündiges Umformen (24), gleichmäßiges Verkleinern (23) und freies Umformen (5). Die Strichstärke bleibt dabei konstant bei 0,5 mm.
+
+**Boxfähigkeit nur noch für passende Piktogramme**  
+Die Validierung prüft nun, ob Piktogramme mit Boxfähigkeit tatsächlich innerhalb der Körperform bleiben. Piktogramme, die über den Körper hinausragen würden, werden nicht mehr als boxfähig zugelassen. Diese Regelung gilt bis zur vollständigen Vermessung aller Kombinationen aus Fähigkeit und Körperform.
+
+## Technische Verbesserungen
+
+**Neue Datenstrukturen für Piktogramm-Vermessung**  
+Die Grammatik wurde um `CapabilityInsetForm` und `CapabilityInsetRule` erweitert, die das präzise Einsetzen von Piktogrammen in Körperformen beschreiben. Die neue Funktion `measureCapabilityInset()` ermöglicht die Nachvollziehbarkeit der Vermessungen.
+
+**Zonenmodell um Innenfeld-Regeln erweitert**  
+Das Zonenmodell kennt nun die Regel `capability-inset` für die Zone `inner-field`, die das Verhalten von Piktogrammen im Innenfeld steuert.
+
+## Abhängigkeiten
+
+- `happy-dom` aktualisiert auf 20.14.5
+- `tsx` aktualisiert auf 4.23.15
+- `@astrojs/react` aktualisiert auf 7.0.0
+
 ## Release-Prozess
 
 - **Verbesserte Paket-Veröffentlichung**: Das Release-System erkennt jetzt neue npm-Pakete vor der Veröffentlichung und verhindert dadurch unvollständige Releases. Bisher konnten Situationen auftreten, in denen nur ein Teil der Pakete (core, schema) publiziert wurde, während andere Pakete (react, cli, qgis, maplibre, web-component) auf älteren Versionen hängen blieben. Mit dieser Änderung werden alle Pakete konsistent auf die gleiche Version aktualisiert.

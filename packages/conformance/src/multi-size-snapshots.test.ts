@@ -2,11 +2,12 @@ import { readdirSync } from 'node:fs';
 import { Resvg, type RenderedImage } from '@resvg/resvg-js';
 import { describe, expect, it } from 'vitest';
 import {
+  RASTER_MIN_STROKE_WIDTH_PX,
   rasterDimensionsForWidth,
   renderSvg,
   type RenderTheme,
 } from '@einsatzzeichen/core';
-import type { Drawing } from '@einsatzzeichen/schema';
+import type { Drawing, Primitive, Style } from '@einsatzzeichen/schema';
 import {
   ACCESSIBLE_LIGHT_THEME,
   PRINT_MONOCHROME_THEME,
@@ -349,4 +350,136 @@ describe('echte Mehrgrößen- und Profilregression', () => {
     },
     20_000,
   );
+});
+
+/**
+ * Mindeststrichbreite beim Rastern (LFH-584). Belegt mit Zahlen statt mit Dateien: dieser Block
+ * schreibt bewusst keinen Snapshot, damit die 526 Kontaktbögen oben unverändert bleiben und die
+ * Zählung stimmt. Gemessen werden alle Renderfälle bei 16 und 24 px, jeweils ohne und mit
+ * `minStrokeWidthPx: RASTER_MIN_STROKE_WIDTH_PX`.
+ */
+describe('Mindeststrichbreite beim Rastern (LFH-584)', () => {
+  /** Nur die Striche: Füllungen aus, Text weg. So misst die Deckung genau die Strichtinte. */
+  function strokesOnly(primitive: Primitive, inherited?: Style): Primitive | undefined {
+    const style: Style = { ...inherited, ...primitive.style };
+    if (primitive.type === 'text') return undefined;
+    if (primitive.type === 'group') {
+      const children = primitive.children
+        .map((child) => strokesOnly(child, style))
+        .filter((child): child is Primitive => child !== undefined);
+      return { ...primitive, style: undefined, children };
+    }
+    return { ...primitive, style: { ...style, fill: 'none' } };
+  }
+
+  function strokeInk(drawing: Drawing, size: number, minStrokeWidthPx?: number) {
+    const children = drawing.children
+      .map((child) => strokesOnly(child))
+      .filter((child): child is Primitive => child !== undefined);
+    const svg = renderSvg({ ...drawing, children }, { size, minStrokeWidthPx });
+    const pixels = new Resvg(svg, { font: resvgFontOptions() }).render().pixels;
+    let touched = 0;
+    let alpha = 0;
+    for (let index = 3; index < pixels.length; index += 4) {
+      const value = (pixels[index] ?? 0) / 255;
+      if (value > 0) {
+        touched += 1;
+        alpha += value;
+      }
+    }
+    return { touched, alpha };
+  }
+
+  /**
+   * Tinte jenseits der ViewBox. Die Zeichnung wird mit 4 mm Rand in eine größere ViewBox gesetzt
+   * und im selben Maßstab gerastert (bei 32 mm Breite und 16/24 px liegt der Rahmen damit auf
+   * ganzen Pixeln). Was außerhalb des ursprünglichen Rahmens landet, schnitte die echte Ausgabe ab.
+   */
+  const MARGIN_MM = 4;
+  function inkOutsideFrame(drawing: Drawing, size: number, minStrokeWidthPx?: number): number {
+    const outer = drawing.viewBox.width + 2 * MARGIN_MM;
+    const outerSize = (size * outer) / drawing.viewBox.width;
+    const wrapped: Drawing = {
+      viewBox: { width: outer, height: drawing.viewBox.height + 2 * MARGIN_MM },
+      children: [
+        {
+          type: 'group',
+          transform: { translate: { dxMm: MARGIN_MM, dyMm: MARGIN_MM } },
+          children: drawing.children,
+        },
+      ],
+    };
+    // Dieselbe Untergrenze in Pixeln: der Maßstab (px je mm) ist in beiden Rasterungen gleich.
+    const image = new Resvg(renderSvg(wrapped, { size: outerSize, minStrokeWidthPx }), {
+      font: resvgFontOptions(),
+    }).render();
+    const pixels = image.pixels;
+    const offset = (MARGIN_MM * size) / drawing.viewBox.width;
+    const frame = rasterDimensionsForWidth(drawing.viewBox, size);
+    let outside = 0;
+    for (let y = 0; y < image.height; y += 1) {
+      for (let x = 0; x < image.width; x += 1) {
+        const inside =
+          x >= offset && y >= offset && x < offset + frame.widthPx && y < offset + frame.heightPx;
+        if (!inside) outside += (pixels[(y * image.width + x) * 4 + 3] ?? 0) / 255;
+      }
+    }
+    return outside;
+  }
+
+  it.each([16, 24] as const)(
+    'macht aus blassgrauen Strichen bei %i px sichtbare Striche, ohne über den Rand zu drucken',
+    (size) => {
+      let plainAlpha = 0;
+      let plainTouched = 0;
+      let flooredAlpha = 0;
+      let flooredTouched = 0;
+      let plainOutside = 0;
+      let flooredOutside = 0;
+      const lostInk: string[] = [];
+      const clipped: string[] = [];
+      for (const renderCase of RENDER_CASES) {
+        const plain = strokeInk(renderCase.drawing, size);
+        const floored = strokeInk(renderCase.drawing, size, RASTER_MIN_STROKE_WIDTH_PX);
+        plainAlpha += plain.alpha;
+        plainTouched += plain.touched;
+        flooredAlpha += floored.alpha;
+        flooredTouched += floored.touched;
+        if (floored.alpha + 1e-9 < plain.alpha) lostInk.push(renderCase.id);
+
+        const before = inkOutsideFrame(renderCase.drawing, size);
+        const after = inkOutsideFrame(renderCase.drawing, size, RASTER_MIN_STROKE_WIDTH_PX);
+        plainOutside += before;
+        flooredOutside += after;
+        // Ein Viertelpixel Tinte je Zeichen ist Kantenglättung, kein abgeschnittener Strich.
+        if (after - before > 0.25) clipped.push(`${renderCase.id} (+${(after - before).toFixed(2)})`);
+      }
+
+      const plainCoverage = plainAlpha / plainTouched;
+      const flooredCoverage = flooredAlpha / flooredTouched;
+      // Gemessen: 16 px 0,138 → 0,526; 24 px 0,200 → 0,545 (Notiz 2026-09-29, Tabelle 1).
+      expect(plainCoverage, 'ohne Untergrenze sind die Striche blass').toBeLessThan(0.25);
+      expect(flooredCoverage, 'mit Untergrenze deckt ein Strichpixel im Mittel mehr als halb')
+        .toBeGreaterThan(0.5);
+      expect(flooredCoverage / plainCoverage).toBeGreaterThan(2.5);
+      // Tintenmenge insgesamt mindestens verdoppelt, in keinem Zeichen weniger.
+      expect(flooredAlpha / plainAlpha).toBeGreaterThan(2);
+      expect(lostInk).toEqual([]);
+      // Kein Zeichen druckt nennenswert über den Rand; insgesamt unter einem halben Pixel Tinte.
+      expect(clipped).toEqual([]);
+      expect(flooredOutside - plainOutside).toBeLessThan(0.5);
+    },
+    60_000,
+  );
+
+  it('ändert ab 128 px kein einziges Zeichen (die Referenzstriche sind dort breiter als 1 px)', () => {
+    for (const renderCase of RENDER_CASES) {
+      for (const size of [128, 256]) {
+        expect(
+          renderSvg(renderCase.drawing, { size, minStrokeWidthPx: RASTER_MIN_STROKE_WIDTH_PX }),
+          `${renderCase.id}/${size}`,
+        ).toBe(renderSvg(renderCase.drawing, { size }));
+      }
+    }
+  });
 });

@@ -35,7 +35,10 @@ Lagekartenwerkzeug.
 
 5. Unter **Darstellung** stehen zwei Wege, dasselbe Zeichen auf die Karte zu bringen: „Als
    eigenes Bild über der Karte“ und „Von der Karte selbst gezeichnet“. Für das Auge sehen sie
-   gleich aus; sie unterscheiden sich darin, wie die Karte sie technisch führt. Wenn du nur
+   fast gleich aus; sie unterscheiden sich darin, wie die Karte sie technisch führt. Nur bei
+   kleinen Größen fällt ein Unterschied auf: „Von der Karte selbst gezeichnet“ zeigt die Striche
+   dort etwas kräftiger (warum, steht unter
+   [Kräftigere Striche bei kleinen Zeichen](#kräftigere-striche-bei-kleinen-zeichen)). Wenn du nur
    schauen willst, lass die Voreinstellung stehen — der Unterschied ist im Abschnitt für
    Entwicklerinnen und Entwickler erklärt.
 
@@ -47,6 +50,20 @@ Lagekartenwerkzeug.
    hochauflösenden Bildschirm scharf bleibt. Die Größe auf dem Bildschirm ändert sich dabei nicht
    — nur die Anzahl der Bildpunkte, mit denen gezeichnet wird. (Der Fachbegriff dafür, Pixel
    Ratio, steht im Feld mit dabei.)
+
+## Kräftigere Striche bei kleinen Zeichen
+
+Die Zeichen sind mit sehr feinen Strichen gezeichnet, so wie in der Vorlage. Auf einer Karte sind
+sie oft nur wenige Bildpunkte groß. Dann ist ein Strich schmaler als ein einzelner Bildpunkt, und
+der Bildschirm kann ihn nur als blassgraue Linie zeigen. Damit die Zeichen auf der Karte trotzdem
+klar lesbar bleiben, werden solche Striche beim Zeichnen auf die Breite eines Bildpunkts
+verstärkt.
+
+Am Zeichen selbst ändert sich dadurch nichts: Heruntergeladene Dateien, Druck und große
+Darstellungen bleiben genau so fein wie die Vorlage. Verstärkt wird nur das kleine Bild auf der
+Karte, und nur so weit, wie es nötig ist. Ab einer Größe von etwa 64 Bildpunkten, auf
+hochauflösenden Bildschirmen schon früher, sind die Striche ohnehin breit genug, und nichts ändert
+sich.
 
 ## Wenn die Karte leer bleibt
 
@@ -89,6 +106,20 @@ Details auf der [Paketseite maplibre](/docs/pakete/maplibre/).
 
 Marker und Symbolebene erscheinen bei Pixel Ratio 1, 2 und 3 gleich groß: gezeichnet wird mit
 `size × pixelRatio`, MapLibre rechnet über `pixelRatio` auf dieselbe CSS-Größe zurück.
+
+`addSymbolImage()` und `createStyleImage()` zeichnen jeden Strich standardmäßig mindestens
+1 Gerätepixel breit. Unter 64 Gerätepixeln Breite ist das Rasterbild deshalb kräftiger als der
+Marker, der ohne Untergrenze bleibt. Abschalten lässt sich das pro Bild:
+
+```ts
+addSymbolImage(map, 'ez-e-1-1', drawing, { size: 24, minStrokeWidthPx: null });
+```
+
+| `minStrokeWidthPx` | Wirkung |
+|---|---|
+| nicht gesetzt | Striche mindestens 1 Gerätepixel breit |
+| Zahl | Striche mindestens so viele Gerätepixel breit |
+| `null` | keine Untergrenze |
 
 Der Kartenstil ist `https://tiles.openfreemap.org/styles/positron`, ohne Schlüssel; im Repository
 liegt kein Zugangsdatum. Die Nennung „OpenFreeMap © OpenMapTiles Data from OpenStreetMap“ steht
