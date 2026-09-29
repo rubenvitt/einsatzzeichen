@@ -2,7 +2,7 @@
 
 > Stand: 29. September 2026
 > Status: **Entschieden (Option B, Ruben, 29.09.2026).** Gate-Lauf und Umsetzung stehen in
-> Abschnitt 10. Kursiv (Abschnitt 5) folgt als eigener Schritt.
+> Abschnitt 10. Kursiv (Abschnitt 5) ist als eigener Schritt umgesetzt, siehe Abschnitt 11.
 > Bezug: `docs/decisions/2026-09-19-masse-an-der-referenz-ablesen.md` §4 („Schriftgewicht"),
 > §5.4 und §6; Parent LFH-582
 
@@ -642,5 +642,127 @@ reicht es 0,2 mm weiter nach links. Sonst berührt kein Lauf fremde Geometrie.
 
 ### 10.6 Offen
 
-- Kursiv in D.1.1 (Abschnitt 5, Vorschlag in der Schriftmessung, Abschnitt 2.6).
+- Kursiv in D.1.1 (Abschnitt 5, Vorschlag in der Schriftmessung, Abschnitt 2.6). Umgesetzt,
+  siehe Abschnitt 11.
 - Laufweite und Formen: Sie kann nur Option C beheben. Die Schriftmessung beziffert den Gewinn.
+
+## 11. Kursiv in D.1.1 umgesetzt (29. September 2026)
+
+Umgesetzt ist der Vorschlag aus der Schriftmessung
+(`docs/reviews/2026-09-29-lfh-585-schriftmessung.md`, Abschnitt 2.6). „Bezeichnung" in D.1.1
+steht jetzt kursiv in Stufe 500, wie in der Referenz. Der Download des kursiven Originals war
+freigegeben.
+
+### 11.1 Die Datei
+
+- **Original:** `ofl/arimo/Arimo-Italic[wght].ttf` aus google/fonts, 543.196 Byte, SHA-256
+  `a80fc54fd0233c1dfe298577c4d00f5ae81d5bb83510975e473c47e699b7f4ed`
+  (`TEXT_FONT_ITALIC_SOURCE_SHA256`). Die Datei liegt nicht im Repository.
+- **Abgeleitet:** `packages/conformance/assets/Arimo-MediumItalic.ttf`, 57.632 Byte, SHA-256
+  `72cdd3f0395bf0bf3752dcf6d92fb4d5b3559323aa0dc4bde95acff94eb03bd1`
+  (`TEXT_FONT_MEDIUM_ITALIC_SHA256`). Die Schriftmessung nannte 57.656 Byte; die 24 Byte
+  Unterschied sind die kürzeren Namen in den Einträgen 3 und 6 (unten).
+- **Herleitung:** `scripts/font/subset-arimo.sh` reduziert das Original mit denselben
+  `pyftsubset`-Argumenten wie die aufrechte Datei und leitet mit dem fontTools-Instancer die
+  Stufe 500 ab.
+  - Den PostScript-Namen und die eindeutige Kennung setzt das Skript auf `Arimo-MediumItalic`.
+    Der Instancer hätte `ArimoItalic-MediumItalic` übernommen.
+  - Zwei Läufe ergeben dieselbe Datei. Subset, Fett- und Medium-Instanz bleiben dabei bit-gleich.
+- **Lizenz:** `Arimo-OFL.txt` deckt die Datei. Die Quellenführung (`arimo-ofl` in
+  `packages/conformance/src/sources.ts`) und `packages/conformance/assets/README.md` nennen sie.
+- **Kopfwerte:** wie aufrecht, Versalhöhe 1409/2048. `ARIMO_CAP_HEIGHT_FRACTION` gilt auch für den
+  kursiven Lauf. Der Schriftgrad von D.1.1 (4,243 mm) bleibt.
+
+### 11.2 Schema, Gate und Renderer
+
+- **Schema:** Das Textprimitiv kennt `fontStyle?: 'italic'`, zulässig nur zusammen mit
+  `fontWeight: 500` (`packages/schema/src/geometry.ts`).
+  - Der Grund: resvg zeichnet jeden kursiven Lauf aus der einen Kursivdatei, auch einen, der 400
+    oder 700 verlangt. Ein Browser setzte dort eine andere Stufe. Aus derselben IR entstünden zwei
+    verschiedene Bilder.
+  - Fehlt das Feld, bleibt die Ausgabe bytegleich.
+  - **Die Regel steht nicht im Typ.** Versucht war eine Vereinigung (kursiv nur mit 500). Die
+    Deklarationen der Piktogrammtabellen falten jedes Primitiv aus. Mit einer zweiten
+    Textvariante brach der Build an `capabilities/07-technical-assistance.ts` ab (TS7056: Typ zu
+    lang zum Schreiben). Schon ohne diese Datei maß das entpackte Paket `core` im abgebrochenen
+    Build über 7,0 MB, über der Grenze von 6.500.000 Byte. Das Feld ist deshalb ein einfaches
+    optionales Feld.
+  - Folge: IR, die nur `renderSvg` durchläuft, prüft niemand. Der Katalog ist abgedeckt, weil das
+    Textmetrik-Gate über alle Renderfälle läuft.
+- **Gate:** Die Regel prüft das Textmetrik-Gate in core.
+  - Ein anderer Schnitt, etwa kursiv in 400, in 700 oder ohne Gewicht, ist ein Befund
+    `unsupported-font-style` in `checkTextMetrics`. `measureTextRun` wirft dafür.
+  - Gemessen wird ein kursiver Lauf mit einem eigenen Metrikanbieter `TextMetrics.mediumItalic`
+    aus `packages/core/src/assets/arimo-medium-italic-metrics.json`. Ohne diesen Anbieter wirft
+    die Messung, wie ein Lauf in 500 ohne `medium`.
+- **Renderer:** SVG schreibt `font-style="italic"` nach `font-weight="500"`. Canvas setzt
+  `italic 500 <px>px Arimo`. Ein Test prüft, dass beide aus derselben IR denselben Schnitt
+  verlangen.
+- **Browser:** Website (`theme.css`) und Review-Server (`embedTextFont`) erklären ein zweites
+  `@font-face` mit `font-style: italic; font-weight: 500` auf dieselbe statische Datei. Der
+  Review-Server bettet es nur in SVGs mit kursivem Lauf ein. Alle anderen bleiben bytegleich. Die
+  PNG-Route der Website pinnt die Datei mit ihrer Prüfsumme.
+
+### 11.3 Zahlen
+
+**Metrikdatei und Paketgröße.**
+
+- Die Metrikdatei führt dieselben 645 Zeichen wie die aufrechten.
+- `tsc` schreibt JSON neu formatiert nach `dist`. Dort misst die Datei 78.551 Byte.
+- Eine Teilmenge bis U+00FF samt Satzzeichen (309 Zeichen) hätte 39.351 Byte gemessen, also
+  39.200 Byte weniger. Verworfen, weil ein kursiver Lauf mit Ł, š oder ž dann als
+  `unknown-glyph` gemeldet würde, obwohl die Schrift das Zeichen zeichnet.
+- Das entpackte Paket `@einsatzzeichen/core` misst danach 6.352.522 Byte, vorher 6.245.354 Byte.
+  Die Grenze liegt bei 6.500.000 Byte, es bleiben 147.478 Byte Luft.
+- Vom Zuwachs (107.168 Byte) entfallen 78.552 Byte auf die Metrikdatei. Rund 27.000 Byte kommen
+  aus den Deklarationen: Das neue Feld `fontStyle` steht 456-mal in den ausgefalteten
+  Primitivtypen der Piktogrammtabellen.
+
+**Arimo Italic gegen die Metrik aufrecht in 500.**
+
+- Bis U+00FF gleiche Vorschübe, außer µ.
+- Eigene Unterschneidung und eigene Tintenränder. Das f ragt kursiv um 175/2048 em über seinen
+  Vorschub hinaus, aufrecht um 3/2048 em.
+
+**„Bezeichnung" in D.1.1** (Schriftgrad 4,243 mm, Box 2,673 … 27,823 mm, Breite 25,15 mm):
+
+| | Tinte links | Tinte rechts | Tintenbreite | Abstand zur Boxkante rechts |
+|---|---|---|---|---|
+| Arimo 500 aufrecht (Rechnung) | 3,000 mm | 27,551 mm | 24,551 mm | 0,272 mm |
+| Arimo 500 kursiv (Rechnung) | 2,785 mm | 27,779 mm | 24,994 mm | 0,044 mm |
+| kursiv gerastert, 8 px/mm | 2,750 mm | 27,875 mm | – | 0,052 mm darüber (weniger als 1 px) |
+| kursiv gerastert, 16 px/mm | 2,750 mm | 27,813 mm | – | 0,010 mm |
+
+- Die gerechneten Werte stimmen mit der Schriftmessung überein (Abschnitt 2.4 dort: 2,785 und
+  27,779 mm).
+- Das Textmetrik-Gate meldet für D.1.1 keinen Befund. Die Kalibrierung „gerechnet gegen
+  gerastert" (`packages/conformance/src/text-metrics.test.ts`) läuft jetzt auch kursiv in 500,
+  mit denselben Läufen wie aufrecht und zusätzlich „Bezeichnung" bei 4,243 mm. Alle liegen
+  innerhalb eines Rasterpixels.
+- Clipping-, Kontrast-, Tinten- und Snapshot-Gates sind grün.
+
+**Neigung.** Arimo Italic neigt um 11,0°, die Referenz um 9,0°. An 2,92 mm Versalhöhe versetzt
+das die Oberkante eines Stamms um 0,1 mm mehr als in der Referenz. Der Unterschied ist
+hingenommen.
+
+- Eine künstliche Neigung von Arimo 500 per Transformation (`skewX(-9)`) träfe den Winkel, ist
+  aber verworfen, aus den Gründen in der Schriftmessung, Abschnitt 2.6.
+- Die Kursivformen der Referenz (etwa das e) bildet Arimo nicht nach. Das einstöckige g passt.
+
+### 11.4 Snapshots
+
+Zwei Dateien ändern sich, beide D.1.1:
+
+- `packages/core/src/geometry/pictograms/__snapshots__/leadership.command-post-in-operation.svg`:
+  nur das neue Attribut `font-style="italic"`;
+- der Kontaktbogen `packages/conformance/src/__snapshots__/multi-size/leadership.command-post-in-operation.svg`,
+  der neu rastert.
+
+Kein anderer Snapshot ändert sich. Aufrechte Läufe rastern mit der Kursivdatei bit-gleich wie
+ohne sie (`fonts.test.ts`).
+
+### 11.5 Offen
+
+- Die Website-Insel `MapLibreLab.tsx` wartet vor dem Rastern nur auf die aufrechte Schrift
+  (`16px Arimo`). Zeigte sie je D.1.1, stünde der Lauf dort bis zum Nachladen in der aufrechten
+  Datei.

@@ -314,7 +314,8 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
       'Einzige Textschrift des Projekts für das Textprimitiv aus Anhang J. Metrisch ' +
       'Arial-kompatibel; im Repository als OFL-Modified-Version gesubsettet (Unicode-Decke für ' +
       'freie Bezeichnungen, wght-Achse erhalten), dazu statische Instanzen wght 500 und 700 ' +
-      'aus dem Subset, siehe packages/conformance/assets/README.md.',
+      'aus dem Subset und eine kursive Instanz wght 500 aus Arimo-Italic[wght].ttf desselben ' +
+      'Verzeichnisses (dieselbe Lizenz), siehe packages/conformance/assets/README.md.',
     acquisition: 'local',
     geometryUse: ['none'],
     licence: {

@@ -120,6 +120,7 @@ describe('Leadership-Inventar nach D.2', () => {
       boxMm: { xMm: 2.673, yMm: 9.971, widthMm: 25.15, heightMm: 3.927 },
       minRenderPx: 61,
       fontWeight: 500,
+      fontStyle: 'italic',
       style: { fill: 'schwarz', stroke: 'none' },
     });
   });

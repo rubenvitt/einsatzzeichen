@@ -243,7 +243,10 @@ function renderPrimitive(
       // Ausgabe bytegleich zum Stand vor `fontWeight`. Dieselbe Regel steht in canvas.ts.
       (primitive.fontWeight === undefined || primitive.fontWeight === 400
         ? ''
-        : ` font-weight="${primitive.fontWeight}"`);
+        : ` font-weight="${primitive.fontWeight}"`) +
+      // Kursiv nur, wenn gesetzt (LFH-585, nur zusammen mit 500): ohne Feld bleibt die Ausgabe
+      // bytegleich. Canvas nimmt denselben Stil in die Schriftangabe auf.
+      (primitive.fontStyle === 'italic' ? ' font-style="italic"' : '');
     return `<text ${attrs}${styleStr}${transform}>${escapeXml(primitive.content)}</text>`;
   }
 

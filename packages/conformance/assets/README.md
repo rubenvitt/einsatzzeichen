@@ -88,7 +88,7 @@ unter derselben Lizenz (`Arimo-OFL.txt`).
 - **Nutzung:** Der Katalog setzt seit LFH-585 keinen fetten Lauf mehr. Die Datei bleibt für eigene
   IR mit `fontWeight: 700`, die Beschriftung von `visual-proof.ts` und die Bildunterschriften der
   Kontaktbögen.
-- **Kursiv:** Einen kursiven Schnitt führt das Projekt nicht.
+- **Kursiv:** Den einzigen kursiven Schnitt führt die Kursivinstanz in Stufe 500 (unten).
 
 ## Instanz „Medium" (2026-09-29, LFH-585)
 
@@ -114,3 +114,51 @@ Originals unter derselben Lizenz (`Arimo-OFL.txt`); die OFL nennt keinen Reserve
   (`family` aus der typografischen Familie, also „Arimo").
 - **Browser:** Website und Review-Server liefern weiter die variable Datei aus und setzen die
   Stufe 500 aus ihrer Achse.
+
+## Kursivinstanz „Medium Italic" (2026-09-29, LFH-585)
+
+`Arimo-MediumItalic.ttf` ist die statische Kursive in Stufe 500. Die Referenz setzt genau einen
+Lauf kursiv: „Bezeichnung" in D.1.1. Messung und Vorschlag:
+`docs/reviews/2026-09-29-lfh-585-schriftmessung.md` (Abschnitt 2), Umsetzung:
+`docs/decisions/2026-09-29-lfh-585-ersatzschrift-und-kursiv.md` (Abschnitt 11).
+
+- **Bezugsquelle:** https://raw.githubusercontent.com/google/fonts/main/ofl/arimo/Arimo-Italic%5Bwght%5D.ttf,
+  abgerufen am 2026-09-29 (Kopf des Zweigs `main`: Commit `23e54b51ddff`).
+- **Upstream-Datei:** `Arimo-Italic[wght].ttf` (543.196 Byte, Version 1.341, Achse `wght`
+  400–700, keine Achse `ital` oder `slnt`), SHA-256
+  `a80fc54fd0233c1dfe298577c4d00f5ae81d5bb83510975e473c47e699b7f4ed`
+  (nicht im Repository; `TEXT_FONT_ITALIC_SOURCE_SHA256` in `src/fonts.ts`).
+- **Herleitung:** `scripts/font/subset-arimo.sh` prüft die Prüfsumme, reduziert die Datei mit
+  denselben `pyftsubset`-Argumenten wie die aufrechte (dieselbe Zeichendecke, 645 Codepoints) und
+  instanziiert sie mit fontTools `varLib.instancer` bei `wght` 500 (`updateFontNames=True`,
+  Zeitstempel unverändert). Das kursive Subset selbst bleibt in `out/font/`; resvg wertet die
+  Achse der variablen Kursive ebenso wenig aus und zeichnete sie immer in 400.
+- **Namen:** Familie „Arimo Medium" (Namenseintrag 1), Stil „Italic" (2), typografische Familie
+  „Arimo" (16), Stil „Medium Italic" (17), `usWeightClass` 500, Kursiv-Bit in `fsSelection`,
+  `macStyle` 2. Den PostScript-Namen (6) und die eindeutige Kennung (3) übernimmt der Instancer
+  aus der variablen Kursive als `ArimoItalic-MediumItalic`; das Skript setzt beide auf
+  `Arimo-MediumItalic`, passend zu `Arimo-Medium` und `Arimo-Bold`.
+- **Kopfwerte:** wie aufrecht (`unitsPerEm` 2048, Ascender 1854, Descender −434, `sCapHeight`
+  1409). `post.italicAngle` ist −12°, an den Umrissen gemessen neigt die Schrift um 11,0°. Die
+  Referenz neigt um 9,0°; der Unterschied ist hingenommen.
+- **Prüfsumme:** SHA-256 `72cdd3f0395bf0bf3752dcf6d92fb4d5b3559323aa0dc4bde95acff94eb03bd1`
+  (`TEXT_FONT_MEDIUM_ITALIC_SHA256` in `src/fonts.ts`), 57.632 Byte, erzeugt mit fontTools 4.66.0
+  am 2026-09-29. Zwei Läufe des Skripts ergeben dieselbe Datei; Subset, Fett- und
+  Medium-Instanz bleiben dabei bit-gleich.
+- **Metriken:** `packages/core/src/assets/arimo-medium-italic-metrics.json`, gleiches Format wie
+  `arimo-metrics.json`, exportiert von `scripts/font/export-metrics.py` aus dieser Instanz
+  (`sourceSha256` ist die Prüfsumme des kursiven Originals). Eine eigene Datei ist nötig: Die
+  Vorschübe gleichen bis U+00FF denen von Arimo 500 (außer µ), die Unterschneidung und die
+  Tintenränder nicht. Kursive Buchstaben ragen weiter über ihren Vorschub hinaus (f rechts um
+  175/2048 em, aufrecht 3/2048 em).
+- **resvg:** Liegt die Datei in `fontFiles`, zeichnet resvg mit ihr **jeden** kursiven Lauf, gleich
+  welches Gewicht er verlangt. Deshalb lässt das Schema `fontStyle: 'italic'` nur zusammen mit
+  `fontWeight: 500` zu; das Textmetrik-Gate in core prüft das (`unsupported-font-style`).
+  Aufrechte Läufe rastern mit ihr bit-gleich wie ohne sie
+  (`src/fonts.test.ts`).
+- **Browser:** Website (`theme.css`) und Review-Server (`embedTextFont`) erklären für diese Datei
+  ein zweites `@font-face` mit `font-style: italic; font-weight: 500`. So zeichnen Browser und
+  resvg dieselben Umrisse.
+- **Lizenz:** Dieselbe OFL 1.1 wie die aufrechte Datei, ohne Reserved Font Name; `ofl/arimo/OFL.txt`
+  ist byte-gleich mit `Arimo-OFL.txt`. Die Datei ist wie Subset, Fett- und Medium-Instanz eine
+  nach OFL §1 zulässige „Modified Version" und steht unter derselben Lizenz.

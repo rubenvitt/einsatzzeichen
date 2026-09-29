@@ -81,6 +81,20 @@
   font-display: block;
 }
 
+/*
+ * Der eine kursive Lauf des Katalogs („Bezeichnung" in D.1.1, LFH-585) steht in Arimo Medium
+ * Italic. Ohne diesen Eintrag neigte der Browser die aufrechte Datei künstlich, resvg dagegen
+ * zeichnet die echte Kursive. Mit derselben statischen Datei setzen beide dieselben Umrisse.
+ * Kursiv gibt es nur in 500, deshalb nur dieser eine Eintrag.
+ */
+@font-face {
+  font-family: 'Arimo';
+  src: url('../../../conformance/assets/Arimo-MediumItalic.ttf') format('truetype');
+  font-weight: 500;
+  font-style: italic;
+  font-display: block;
+}
+
 /* --- Token: Dunkelmodus (Starlights Voreinstellung steht auf `:root`) -------------------- */
 
 :root {

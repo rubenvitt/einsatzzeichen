@@ -162,8 +162,10 @@ function drawPrimitive(
     if (style?.fill !== undefined && style.fill !== 'none') {
       ctx.fillStyle = color(style.fill, theme);
       // Gewicht wie in svg.ts: 400 bleibt ungeschrieben, 500 und 700 stehen vor dem Schriftgrad.
+      // Der Stil steht nach CSS-Kurzschreibweise davor („italic 500 12px Arimo", LFH-585).
       const weight = primitive.fontWeight;
-      ctx.font = `${weight === undefined || weight === 400 ? '' : `${weight} `}` +
+      ctx.font = `${primitive.fontStyle === 'italic' ? 'italic ' : ''}` +
+        `${weight === undefined || weight === 400 ? '' : `${weight} `}` +
         `${mmToUnits(primitive.sizeMm)}px ${TEXT_FONT_FAMILY_ATTR}`;
       ctx.textAlign = canvasTextAlign(primitive.anchor);
       ctx.textBaseline = canvasBaseline(primitive.baseline);

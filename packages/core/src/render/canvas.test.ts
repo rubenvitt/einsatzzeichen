@@ -862,6 +862,25 @@ describe('renderCanvas — Text', () => {
     expect(fontFor(400)).toBe(`${mmToUnits(10)}px Arimo`);
   });
 
+  it('nimmt Kursiv in die Schriftangabe auf, parallel zu font-style in SVG (LFH-585)', () => {
+    const [text] = textDrawing.children;
+    if (text?.type !== 'text') throw new Error('Text erwartet');
+    const italic: Drawing = {
+      ...textDrawing,
+      children: [{ ...text, fontWeight: 500, fontStyle: 'italic' }],
+    };
+    const { ctx, calls } = recordingContext();
+    renderCanvas(italic, ctx);
+    expect(calls.find(([name]) => name === 'set:font')?.[1]).toBe(
+      `italic 500 ${mmToUnits(10)}px Arimo`,
+    );
+    // Parität: dieselbe IR schreibt in SVG Gewicht und Stil, in Canvas beides in `ctx.font`.
+    expect(renderSvg(italic)).toContain('font-weight="500" font-style="italic"');
+    const upright = recordingContext();
+    renderCanvas(textDrawing, upright.ctx);
+    expect(upright.calls.find(([name]) => name === 'set:font')?.[1]).not.toContain('italic');
+  });
+
   it('ignoriert einen gesetzten stroke — dasselbe fillOnly-Verhalten wie SVG', () => {
     // Parität zu svg.ts' fillOnly: true (styleAttrs) — ein style.stroke an Text darf in keinem
     // der beiden Renderer eine Kontur erzeugen, sonst zeichnete SVG etwas, das Canvas nie tut.

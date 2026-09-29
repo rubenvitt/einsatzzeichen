@@ -79,7 +79,10 @@ zum Zeichnen braucht, Themes und Bausteine eingeschlossen, liegt in `core`.
 **Die Schrift gehört zum Zeichen.** `renderSvg()` schreibt `font-family="Arimo"` in jedes Zeichen
 mit Kürzel. Ohne ausgelieferte Schriftdatei setzt der Browser eine Ersatzschrift mit anderen
 Vorschubbreiten, und das Kürzel steht nicht mehr dort, wo die Geometrie es vorsieht. Das Subset
-liegt in `packages/conformance/assets` (SIL OFL 1.1).
+liegt in `packages/conformance/assets` (SIL OFL 1.1). Ein einziger Lauf steht schräg, die
+„Bezeichnung“ der Befehlsstelle (D.1.1). Für ihn liegt daneben `Arimo-MediumItalic.ttf`. Binde
+sie als zweite Schriftdatei derselben Familie ein, mit `font-style: italic` und
+`font-weight: 500`, sonst neigt der Browser die aufrechte Schrift selbst.
 
 ## Was du in deiner Oberfläche mitführen solltest
 

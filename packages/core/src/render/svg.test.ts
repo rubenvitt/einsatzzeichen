@@ -369,6 +369,24 @@ describe('renderSvg — Text', () => {
     expect(run()).not.toContain('font-weight');
   });
 
+  it('schreibt font-style="italic" nur für kursive Läufe in 500 (LFH-585)', () => {
+    const base = {
+      type: 'text', content: 'Bezeichnung', x: 2, y: 20, sizeMm: 4, anchor: 'start',
+      baseline: 'alphabetic', boxMm: { xMm: 2, yMm: 16, widthMm: 28, heightMm: 6 },
+    } as const;
+    const italic = renderSvg({
+      viewBox: { width: 32, height: 32 },
+      children: [{ ...base, fontWeight: 500, fontStyle: 'italic' }],
+    });
+    const upright = renderSvg({
+      viewBox: { width: 32, height: 32 },
+      children: [{ ...base, fontWeight: 500 }],
+    });
+    expect(italic).toContain('font-weight="500" font-style="italic"');
+    expect(upright).not.toContain('font-style');
+    expect(italic.replace(' font-style="italic"', '')).toBe(upright);
+  });
+
   it('maskiert Sonderzeichen im Textinhalt', () => {
     const svg = renderSvg({
       viewBox: { width: 32, height: 32 },

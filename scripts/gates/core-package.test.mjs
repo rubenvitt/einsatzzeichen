@@ -18,6 +18,7 @@ const healthy = () => ({
     { path: 'package/dist/assets/arimo-metrics.json', size: 78_000 },
     { path: 'package/dist/assets/arimo-bold-metrics.json', size: 78_000 },
     { path: 'package/dist/assets/arimo-medium-metrics.json', size: 78_000 },
+    { path: 'package/dist/assets/arimo-medium-italic-metrics.json', size: 78_000 },
     ...Array.from({ length: 250 }, (_, i) => ({ path: `package/dist/m${i}.js`, size: 20_000 })),
   ],
 });

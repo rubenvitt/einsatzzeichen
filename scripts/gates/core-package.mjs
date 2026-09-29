@@ -70,7 +70,7 @@ const FORBIDDEN = [
 const ALLOWED = [
   /^package\/(package\.json|README\.md|LICENSE)$/,
   /^package\/dist\/.+\.(js|d\.ts|d\.ts\.map)$/,
-  /^package\/dist\/assets\/arimo(-bold|-medium)?-metrics\.json$/,
+  /^package\/dist\/assets\/arimo(-bold|-medium|-medium-italic)?-metrics\.json$/,
 ];
 
 /**

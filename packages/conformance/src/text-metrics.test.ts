@@ -49,10 +49,12 @@ function run(
   sizeMm: number,
   anchor: TextPrimitive['anchor'] = 'middle',
   fontWeight?: TextPrimitive['fontWeight'],
+  fontStyle?: 'italic',
 ): TextPrimitive {
   return {
     type: 'text',
     ...(fontWeight === undefined ? {} : { fontWeight }),
+    ...(fontStyle === undefined ? {} : { fontStyle }),
     content,
     // Der Anker so, dass der Lauf in der viewBox bleibt — ein an der viewBox geclippter Lauf
     // hätte eine gerasterte Kante, die nichts über die Schrift sagt.
@@ -125,6 +127,24 @@ describe('Kalibrierung: gerechnete gegen gerasterte Tinte (8 px/mm)', () => {
   // Katalog tatsächlich setzt, nicht kalibriert.
   it.each(cases)('"%s" bei %s mm in 500: Tinte liegt innerhalb eines Pixels um die Rechnung', (content, sizeMm, anchor) => {
     const primitive = run(content, sizeMm, anchor, CATALOG_TEXT_FONT_WEIGHT);
+    const metric = measureTextRun(primitive, ARIMO_TEXT_METRICS);
+    const ink = inkExtentMm(primitive);
+    expect(ink.minXMm).toBeGreaterThanOrEqual(metric.inkMinXMm - onePixelMm);
+    expect(ink.minXMm).toBeLessThanOrEqual(metric.inkMinXMm + onePixelMm);
+    expect(ink.maxXMm).toBeLessThanOrEqual(metric.inkMaxXMm + onePixelMm);
+    expect(ink.maxXMm).toBeGreaterThanOrEqual(metric.inkMaxXMm - onePixelMm);
+  });
+
+  // Kursiv in 500 (LFH-585): gemessen mit `ARIMO_TEXT_METRICS.mediumItalic`, gerastert mit
+  // `Arimo-MediumItalic.ttf`. Kursive Buchstaben ragen weiter über ihren Vorschub hinaus („jjj
+  // fff"); diese Reihe belegt, dass das Gate die geneigte Tinte liest und nicht die aufrechte.
+  // Dazu der eine kursive Lauf des Katalogs in seiner Größe (D.1.1).
+  const italicCases: readonly [string, number, TextPrimitive['anchor']][] = [
+    ...cases,
+    ['Bezeichnung', 4.243, 'start'],
+  ];
+  it.each(italicCases)('"%s" bei %s mm kursiv in 500: Tinte liegt innerhalb eines Pixels um die Rechnung', (content, sizeMm, anchor) => {
+    const primitive = run(content, sizeMm, anchor, CATALOG_TEXT_FONT_WEIGHT, 'italic');
     const metric = measureTextRun(primitive, ARIMO_TEXT_METRICS);
     const ink = inkExtentMm(primitive);
     expect(ink.minXMm).toBeGreaterThanOrEqual(metric.inkMinXMm - onePixelMm);

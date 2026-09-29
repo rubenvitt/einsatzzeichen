@@ -15,6 +15,9 @@ import {
   TEXT_FONT_PATH,
   TEXT_FONT_BOLD_PATH,
   TEXT_FONT_BOLD_SHA256,
+  TEXT_FONT_ITALIC_SOURCE_SHA256,
+  TEXT_FONT_MEDIUM_ITALIC_PATH,
+  TEXT_FONT_MEDIUM_ITALIC_SHA256,
   TEXT_FONT_MEDIUM_PATH,
   TEXT_FONT_MEDIUM_SHA256,
   TEXT_FONT_SHA256,
@@ -38,6 +41,10 @@ const TEXT_FONT_METRICS_PATH = fileURLToPath(
 /** Dieselben Metriken für die Instanz wght 500 (LFH-585), aus `Arimo-Medium.ttf` exportiert. */
 const TEXT_FONT_MEDIUM_METRICS_PATH = fileURLToPath(
   new URL('../../core/src/assets/arimo-medium-metrics.json', import.meta.url),
+);
+/** Dieselben Metriken für die Kursivinstanz wght 500 (LFH-585), aus `Arimo-MediumItalic.ttf`. */
+const TEXT_FONT_MEDIUM_ITALIC_METRICS_PATH = fileURLToPath(
+  new URL('../../core/src/assets/arimo-medium-italic-metrics.json', import.meta.url),
 );
 
 describe('Textschrift', () => {
@@ -113,6 +120,86 @@ describe('Textschrift', () => {
     const bold = ink(svg(' font-weight="700"'), all);
     expect(medium).toBeGreaterThan(regular);
     expect(medium).toBeLessThan(bold);
+  });
+
+  it('führt die Kursivinstanz wght 500 mit der erwarteten Prüfsumme', () => {
+    const bytes = readFileSync(TEXT_FONT_MEDIUM_ITALIC_PATH);
+    expect(createHash('sha256').update(bytes).digest('hex')).toBe(TEXT_FONT_MEDIUM_ITALIC_SHA256);
+    // Zwei Originale, zwei Pins: die Kursive stammt nicht aus der aufrechten Datei.
+    expect(TEXT_FONT_ITALIC_SOURCE_SHA256).toMatch(/^[0-9a-f]{64}$/);
+    expect(TEXT_FONT_ITALIC_SOURCE_SHA256).not.toBe(TEXT_FONT_SOURCE_SHA256);
+  });
+
+  it('rastert kursive Läufe mit der Kursivinstanz, aufrechte bit-gleich wie ohne sie (LFH-585)', () => {
+    const svg = (face: string, family = TEXT_FONT_FAMILY) =>
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 40">' +
+      `<text x="5" y="30" font-family="${family}" font-size="24"${face}>RKBa</text></svg>`;
+    const raster = (source: string, fontFiles: string[]) =>
+      new Resvg(source, {
+        fitTo: { mode: 'width', value: 400 },
+        background: 'white',
+        font: { ...resvgFontOptions(), fontFiles },
+      }).render().pixels;
+    const hash = (source: string, fontFiles: string[]) =>
+      createHash('sha256').update(raster(source, fontFiles)).digest('hex');
+    const all = resvgFontOptions().fontFiles;
+    const withoutItalic = all.filter((file) => file !== TEXT_FONT_MEDIUM_ITALIC_PATH);
+    expect(all).toContain(TEXT_FONT_MEDIUM_ITALIC_PATH);
+    // Aufrechte Läufe jeder Stufe und die fetten Kontaktbogen-Unterschriften bleiben bit-gleich.
+    for (const weight of ['', ' font-weight="500"', ' font-weight="700"', ' font-weight="bold"']) {
+      expect(hash(svg(weight), all), weight).toBe(hash(svg(weight), withoutItalic));
+    }
+    expect(hash(svg(' font-weight="bold"', 'sans-serif'), all)).toBe(
+      hash(svg(' font-weight="bold"', 'sans-serif'), withoutItalic),
+    );
+    const italic = svg(' font-weight="500" font-style="italic"');
+    // Ohne die Datei bliebe der Lauf still aufrecht, resvg neigt nicht künstlich.
+    expect(hash(italic, withoutItalic)).toBe(hash(svg(' font-weight="500"'), withoutItalic));
+    // Mit ihr zeichnet resvg genau die Kursivinstanz, bit-gleich zur Datei allein.
+    expect(hash(italic, all)).not.toBe(hash(svg(' font-weight="500"'), all));
+    expect(hash(italic, all)).toBe(hash(italic, [TEXT_FONT_MEDIUM_ITALIC_PATH]));
+  });
+
+  it('exportiert Metriken der Kursivinstanz wght 500, die zur eingecheckten Datei passen', () => {
+    type MetricsFile = {
+      family: string;
+      sourceSha256: string;
+      subsetSha256: string;
+      unitsPerEm: number;
+      ascender: number;
+      descender: number;
+      capHeight: number;
+      defaultWeight: number;
+      advances: Record<string, number>;
+      inkExtents: Record<string, [number, number, number, number]>;
+    };
+    const regular = JSON.parse(readFileSync(TEXT_FONT_METRICS_PATH, 'utf8')) as MetricsFile;
+    const medium = JSON.parse(readFileSync(TEXT_FONT_MEDIUM_METRICS_PATH, 'utf8')) as MetricsFile;
+    const italic = JSON.parse(
+      readFileSync(TEXT_FONT_MEDIUM_ITALIC_METRICS_PATH, 'utf8'),
+    ) as MetricsFile;
+    expect(italic.family).toBe(TEXT_FONT_FAMILY);
+    expect(italic.sourceSha256).toBe(TEXT_FONT_ITALIC_SOURCE_SHA256);
+    expect(italic.subsetSha256).toBe(TEXT_FONT_MEDIUM_ITALIC_SHA256);
+    expect(italic.defaultWeight).toBe(500);
+    // Gleiche Kopfwerte: ARIMO_CAP_HEIGHT_FRACTION gilt auch für den kursiven Lauf.
+    for (const key of ['unitsPerEm', 'ascender', 'descender', 'capHeight'] as const) {
+      expect(italic[key], key).toBe(regular[key]);
+    }
+    // Dieselbe Zeichendecke wie aufrecht: dieselben pyftsubset-Argumente.
+    expect(Object.keys(italic.advances).sort()).toEqual(Object.keys(regular.advances).sort());
+    expect(Object.keys(italic.inkExtents).sort()).toEqual(Object.keys(regular.advances).sort());
+    // Im Grundbestand bis U+00FF gleiche Vorschübe wie Arimo 500, außer µ (Schriftmessung 2.3).
+    const differing = Object.keys(medium.advances).filter(
+      (codepoint) => Number(codepoint) <= 0xff && italic.advances[codepoint] !== medium.advances[codepoint],
+    );
+    expect(differing).toEqual([String(0xb5)]);
+    // Die Tinte ist geneigt: das f ragt kursiv 175/2048 em rechts über seinen Vorschub hinaus,
+    // aufrecht 3/2048 em. Mit den aufrechten Tintenrändern würde das Gate zu knapp messen.
+    const f = String('f'.codePointAt(0));
+    const overhang = (file: MetricsFile) => (file.inkExtents[f]?.[2] ?? 0) - (file.advances[f] ?? 0);
+    expect(overhang(italic)).toBe(175);
+    expect(overhang(medium)).toBe(3);
   });
 
   it('exportiert Metriken der Instanz wght 500, die zur eingecheckten Datei passen', () => {
@@ -242,7 +329,12 @@ describe('Textschrift', () => {
   it('schließt Systemschriften aus', () => {
     const options = resvgFontOptions();
     expect(options.loadSystemFonts).toBe(false);
-    expect(options.fontFiles).toEqual([TEXT_FONT_PATH, TEXT_FONT_MEDIUM_PATH, TEXT_FONT_BOLD_PATH]);
+    expect(options.fontFiles).toEqual([
+      TEXT_FONT_PATH,
+      TEXT_FONT_MEDIUM_PATH,
+      TEXT_FONT_BOLD_PATH,
+      TEXT_FONT_MEDIUM_ITALIC_PATH,
+    ]);
     expect(options.defaultFontFamily).toBe(TEXT_FONT_FAMILY);
   });
 });

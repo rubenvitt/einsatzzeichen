@@ -186,10 +186,24 @@ export type Primitive =
        * und 700 bleiben für eigene IR und Hilfsausgaben (Beweisblätter, Kontaktbögen).
        *
        * Fehlt der Wert, bleibt die Ausgabe bytegleich zum Stand ohne dieses Feld; auch 400
-       * schreibt kein Attribut. Einen kursiven Schnitt führt das Projekt nicht, deshalb gibt es
-       * kein `fontStyle`.
+       * schreibt kein Attribut.
        */
       fontWeight?: 400 | 500 | 700;
+      /**
+       * Kursiv, **nur zusammen mit `fontWeight: 500` zulässig** (LFH-585). Die Referenz setzt
+       * genau einen Lauf kursiv, „Bezeichnung" in D.1.1. Gerastert wird er aus der statischen
+       * Datei `Arimo-MediumItalic.ttf`. resvg gibt jedem kursiven Lauf diese eine Datei, auch
+       * einem, der 400 oder 700 verlangt; ein Browser setzte dort eine andere Stufe. Andere
+       * Kombinationen ergäben also wieder zwei verschiedene Bilder aus derselben IR.
+       *
+       * Die Regel prüft das Textmetrik-Gate in core (`checkTextMetrics`, Befund
+       * `unsupported-font-style`; `measureTextRun` wirft). Im Typ steht sie bewusst nicht als
+       * Vereinigung: Die Deklarationen der Piktogrammtabellen falten jedes Primitiv aus, und eine
+       * zweite Textvariante sprengte dort die Grenze des Compilers (TS7056) und die Paketgröße.
+       *
+       * Fehlt der Wert, bleibt die Ausgabe bytegleich zum Stand ohne dieses Feld.
+       */
+      fontStyle?: 'italic';
     })
   | (PrimitiveBase & { type: 'group'; children: readonly Primitive[] });
 

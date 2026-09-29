@@ -244,7 +244,14 @@ describe('COMPOSITION_RULE_CATALOG gegen den Quelltext von compose.ts', () => {
       ...RULE_CATALOG.map((rule) => rule.id),
       ...COMPOSITION_RULE_CATALOG.map((rule) => rule.id),
     ]);
-    for (const id of ['text-too-wide', 'text-outside-box', 'unknown-glyph', 'text-too-tall']) {
+    for (const id of [
+      'text-too-wide',
+      'text-outside-box',
+      'unknown-glyph',
+      'text-too-tall',
+      'unmeasured-baseline',
+      'unsupported-font-style',
+    ]) {
       expect(ids.has(id), id).toBe(false);
     }
   });
