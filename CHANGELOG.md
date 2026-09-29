@@ -1,3 +1,15 @@
+## Release Notes – Version 1.12.0
+
+## Conformance & Symbolkatalog
+
+**Kapitel-4-Piktogramme in Anhang C**: Der Conformance-Katalog wurde um 37 neue Fixtures erweitert, die Piktogramme aus Kapitel 4 der Leitfaden-Feuerwehrfahrzeuge in den Anhang-C-Darstellungen C.1.7, C.1.8 und 35 C.2-Varianten vermessen. Alle Piktogramme sind als eigenständige geometrische Körperfassungen konstruiert und präzise an den Referenzdarstellungen ausgerichtet.
+
+**Alternative Körperfassungen**: Die `SymbolSpec` unterstützt jetzt `bodyMarkRenditions` – alternative geometrische Fassungen desselben Paars aus Marke und Körper. Insgesamt stehen nun 76 verschiedene Capability-Inset-Formen zur Verfügung (Wachstum um 24 neue Fassungen).
+
+**Verbesserte Laufdarstellung**: Neue vermessene Anker für Läufe am Landfahrzeug sowie eine technische Körpermarke `track-chevron-top` für spezielle C.2-Darstellungen. Der neue Drucktoken `koerperlauf-kontrast` sorgt für optimale Kontraste bei Läufen auf Feuerwehrrot – themenabhängig schwarz oder weiß gerendert.
+
+**Geometrische Präzision**: Die Lücke zwischen `reduced`- und `reshaped`-Fassungen wurde auf 0,30–0,37 mm reduziert. Körperfassungen zeichnen konsistent mit 0,5 mm Strichstärke.
+
 ## Rendering
 
 **Mindeststrichbreite für kleine Symbolgrößen** – Zeichen mit dünnen Strichen (0,5 mm laut Referenz) werden bei 16 oder 24 Pixel Ausgabegröße nun besser lesbar dargestellt. Eine neue Option `minStrokeWidthPx` hebt zu feine Linien beim Rastern auf eine konfigurierbare Pixelstärke an.
