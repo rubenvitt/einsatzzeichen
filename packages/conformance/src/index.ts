@@ -17,3 +17,4 @@ export * from './named-exceptions.js';
 export * from './state-group-fixtures.js';
 export * from './parametric-fixtures.js';
 export * from './fonts.js';
+export * from './freestanding-spec-fixtures.js';

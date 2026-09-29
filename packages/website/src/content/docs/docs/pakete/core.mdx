@@ -131,6 +131,50 @@ const param = encodeSpecParam(spec);
 console.log(decodeSpecParam(param)); // { kind: 'formation', organization: 'thw' }
 ```
 
+## Freistehende Zeichen
+
+Manche Zeichen stehen ohne Grundzeichen auf der Lagekarte: Pfeile für Bewegungen und Maßnahmen
+(5.2), Linien und Grenzen (2.14 bis 2.20), das Wetter (5.8.7) und der Zustand eines Tieres
+(5.8.6). Ein Pfeil folgt einem Verlauf, den man selbst legt; eine Grenze trennt Abschnitte; das
+Wetter zeigt einen Wert allein oder die Wolke mit Regen, Hagel, Gewitter oder Schnee in einer von
+vier Stärken; der Tierzustand bringt die Tierform gleich mit. Diese Zeichen beschreibt eine eigene
+Art von Beschreibung neben der `SymbolSpec`, erkennbar am Feld `kind`.
+
+| Export | Was es tut |
+|---|---|
+| `drawFreestanding(spec, options?)` | freistehendes Zeichen → `Drawing`, mit Beschreibung für Screenreader |
+| `drawAnySpec(spec, options?)` | der gemeinsame Einstieg für beide Arten |
+| `checkAnySpec(spec)` | die Zeichnung oder der erklärte Grund, statt eines Wurfs |
+| `validateFreestandingSpec(spec)`, `FREESTANDING_RULE_IDS` | die Regeln der freistehenden Zeichen, mit Regel-ID; erklärt über `explainIssue()` |
+| `FREESTANDING_FIELD_VALUES` | der Wertevorrat je Feld, je Art |
+| `serializeAnySpec`, `parseAnySpec`, `encodeAnySpecParam`, `decodeAnySpecParam` | die kanonische Form für beide Arten; freistehende Zeichen stehen unter `freestanding` |
+| `weatherDrawing`, `classifyWeather`, `WEATHER_CLOUD_PRECIPITATION`, `animalStateDrawing` | die Zeichenfunktionen und die Wetterregeln als Daten |
+
+```ts
+import { drawAnySpec, encodeAnySpecParam, renderSvg } from '@einsatzzeichen/core';
+import type { AnySpec } from '@einsatzzeichen/schema';
+
+// Schneefall unter der Wolke, mittlere Stärke
+const schnee: AnySpec = { kind: 'weather', values: ['weather-cloudy', 'weather-snowing'], intensity: 'moderate' };
+const zeichen: AnySpec[] = [
+  // Gerichtete Bewegung, Verlauf in Millimetern auf 32 × 32 mm
+  { kind: 'movement', movement: 'directed-movement', path: { points: [[2, 16], [30, 16]] } },
+  // Grenze mit taktischer Stärke, auf 48 × 32 mm
+  { kind: 'line', line: 'boundary-with-strength', path: { points: [[1, 16], [47, 16]] }, strength: 'zug' },
+  schnee,
+  { kind: 'animal-state', state: 'dead-animal' },
+];
+const svgs = zeichen.map((spec) => renderSvg(drawAnySpec(spec), { size: 64 }));
+const link = encodeAnySpecParam(schnee); // base64url über {"v":1,"freestanding":{…}}
+```
+
+Die Grenzen dieser Zeichen sind Regeln mit eigener Kennung: eine Stärke gehört nur an die Grenze
+mit taktischer Stärke, eine zweite Darstellung gibt es nur bei der Escape Route (Fluchtweg) und
+beim kontaminierten Tier, ein Wetterzeichen trägt höchstens die Wolke und einen Niederschlag. Ein
+Pfeil hängt nicht an einem Grundzeichen; die Vorlage zeigt das nur beim Transport einer Person,
+und dort gehört der Pfeil zum Personenzustand. Ein Verlauf, der zu kurz ist oder über die
+Zeichenfläche hinausragt, ist keine Regel, sondern ein gewöhnlicher Fehler der Zeichnung.
+
 ## Beispiel
 
 Ein Zeichen beschreiben, zeichnen und als SVG ausgeben — ohne Prüfpaket. Die Spec ist E.1.1

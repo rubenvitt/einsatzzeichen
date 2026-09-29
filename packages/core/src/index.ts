@@ -176,3 +176,42 @@ export {
 export { stateCarriersOf } from './blocks/state-groups.js';
 export { UNIT_GROUPING_HEADS, unitGroupingHead } from './geometry/unit-groupings.js';
 export { SPECIAL_FORM_IDS_DRAWN, specialFormDrawing } from './geometry/special-form-bodies.js';
+// LFH-577 (Integration, freistehende Zeichen): Pfeile 5.2, Linien und Grenzen 2.14–2.20, Wetter
+// 5.8.7 und Tierzustand 5.8.6 als eigene Spec-Art neben `SymbolSpec` (`FreestandingSpec` im
+// Schema). `drawFreestanding()` zeichnet sie, `drawAnySpec()` ist der gemeinsame Einstieg für beide
+// Arten. Geprüft wird mit eigenen Regelkennungen (`validateFreestandingSpec`, eigener Katalog und
+// eigene Erklärungen, über `explainIssue` erklärbar); der Codec schreibt sie in dieselbe Hülle
+// unter den Schlüssel `freestanding`. Die Zeichenfunktionen für Wetter und Tierzustand und die
+// Wetterregeln als Datum stehen daneben (`movementDrawing` und `lineDrawing` sind schon exportiert).
+export {
+  FREESTANDING_DEFAULT_CANVAS_MM,
+  describeFreestandingSpec,
+  drawAnySpec,
+  drawFreestanding,
+  type FreestandingDrawOptions,
+} from './draw-freestanding.js';
+export { validateFreestandingSpec } from './validate-freestanding.js';
+export { FREESTANDING_RULE_IDS } from './freestanding-rules.js';
+export { FREESTANDING_RULE_CATALOG } from './rules/rule-catalog.js';
+export { FREESTANDING_RULE_EXPLANATIONS } from './rules/rule-explanations.js';
+export { RETIRED_PARAMETRIC_RULES } from './rules/planned-parametric-rules.js';
+export { RETIRED_STATE_RULES, type RetiredRule } from './rules/planned-state-rules.js';
+export {
+  canonicalAnySpec,
+  decodeAnySpecParam,
+  encodeAnySpecParam,
+  parseAnySpec,
+  serializeAnySpec,
+} from './spec-codec.js';
+export { FREESTANDING_FIELD_VALUES, checkAnySpec } from './vocabulary.js';
+export {
+  WEATHER_CLOUD_PRECIPITATION,
+  WEATHER_PRECIPITATIONS,
+  classifyWeather,
+  weatherDrawing,
+  type WeatherCloudPrecipitationRules,
+  type WeatherInvalidReason,
+  type WeatherPrecipitationId,
+  type WeatherVerdict,
+} from './geometry/weather.js';
+export { animalStateDrawing } from './geometry/animal-state.js';

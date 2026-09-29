@@ -1,4 +1,4 @@
-import type { SymbolSpec, SourceReference } from '@einsatzzeichen/schema';
+import type { FreestandingSpec, SymbolSpec, SourceReference } from '@einsatzzeichen/schema';
 import type { CompositionError, ValidationIssue } from '../validate.js';
 import {
   ruleCatalogEntry,
@@ -37,10 +37,16 @@ import {
  */
 
 /**
- * Das Feld einer `SymbolSpec`, um das eine Regel geht — oder `'composition'`, wenn sie über
- * mehrere Achsen zugleich geht und kein einzelnes Feld benennt.
+ * Die Felder der freistehenden Spec-Art (LFH-577), über alle vier Arten. `kind` und `strength`
+ * teilt sie mit `SymbolSpec`.
  */
-export type RuleField = keyof SymbolSpec | 'composition';
+type FreestandingField = FreestandingSpec extends infer S ? (S extends unknown ? keyof S : never) : never;
+
+/**
+ * Das Feld einer `SymbolSpec` oder einer freistehenden Spec, um das eine Regel geht — oder
+ * `'composition'`, wenn sie über mehrere Achsen zugleich geht und kein einzelnes Feld benennt.
+ */
+export type RuleField = keyof SymbolSpec | FreestandingField | 'composition';
 
 /**
  * Genau die Werte, die `RuleField` in den Tabellen annimmt, als Liste zur Laufzeit. Der Test
@@ -64,6 +70,15 @@ export const RULE_FIELDS: readonly RuleField[] = Object.freeze([
   'bodyMarks',
   'designation',
   'labels',
+  // Die übrigen Felder der freistehenden Spec-Art (LFH-577).
+  'movement',
+  'line',
+  'path',
+  'canvasMm',
+  'variant',
+  'values',
+  'intensity',
+  'state',
   'composition',
 ] as const satisfies readonly RuleField[]);
 
@@ -571,7 +586,7 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
     explanation:
       'Ein Personenzustand wie „verletzt" gehört an das Grundzeichen Person, ebenso die übrigen ' +
       'Werte aus 5.8.1. Die Hinweise „?" und „!" dürfen außerdem an der Gefahr stehen, weil die ' +
-      'Vorlage sie dort zeigt. Wechsle das Grundzeichen oder entferne den Zustand aus `states`.',
+      'Vorlage sie dort zeigt. Wechsle das Grundzeichen oder nimm den Zustand wieder heraus.',
   },
   'state-group-limit-exceeded': {
     field: 'states',
@@ -579,8 +594,8 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
     explanation:
       'Ein Zeichen trägt höchstens einen Hinweis („?" oder „!"), einen Personenzustand und je ' +
       'einen Wert für Aktivität, Schadensgrad und Brandphase. Zwei Stufen derselben Skala ' +
-      'widersprechen sich, etwa „beschädigt" und „zerstört". Behalte in `states` je Skala nur ' +
-      'einen Wert.',
+      'widersprechen sich, etwa „beschädigt" und „zerstört". Behalte je Skala nur einen ' +
+      'Zustand.',
   },
   'state-tactics-not-allowed': {
     field: 'states',
@@ -588,16 +603,17 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
     explanation:
       'Retten, Angriff, Verteidigung und Rückzug (5.8.1.1 bis 5.8.1.4) sind eigene Zeichen und ' +
       'werden nicht an ein anderes Zeichen gehängt. Keine Vorlage zeigt sie an einem Träger, und ' +
-      'so ist es für dieses Projekt am 29. September 2026 entschieden. Entferne den Wert aus `states` und setze die Taktik als ' +
-      'eigenes Zeichen.',
+      'so ist es für dieses Projekt am 29. September 2026 entschieden. Nimm die Taktik aus der ' +
+      'Zustandsliste wieder heraus.',
   },
   'state-value-not-attachable': {
     field: 'states',
     title: 'Dieser Zustand gehört nicht in die Zustandsliste',
     explanation:
       'Wetter und der Zustand eines Tieres sind eigenständige Zeichen und stehen nicht an einem ' +
-      'anderen Zeichen. Eine Tendenz (steigend, gleichbleibend, fallend) hat ihr eigenes Feld ' +
-      '`tendency`. Entferne den Wert aus `states` und setze ihn dort, wo er hingehört.',
+      'anderen Zeichen; sie werden als freistehendes Zeichen gezeichnet. Eine Tendenz (steigend, ' +
+      'unverändert, fallend) gehört nicht in die Zustandsliste; zeichnen lässt sie sich bisher ' +
+      'noch nicht. Entferne den Wert aus den Zuständen.',
   },
   'strength-requires-unit': {
     field: 'strength',
@@ -860,6 +876,65 @@ export const COMPOSITION_RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanat
   freezeTable(COMPOSITION_TABLE);
 
 /**
+ * Erklärung je Regel aus `validateFreestandingSpec()` (LFH-577): Linien, Wetter und
+ * Tierzustand als freistehende Zeichen. Das Feld ist eines der freistehenden Spec-Art.
+ */
+export const FREESTANDING_RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = freezeTable({
+  'animal-state-variant-not-available': {
+    field: 'variant',
+    title: 'Zweite Darstellung nur beim kontaminierten Tier',
+    explanation:
+      'Unter den Tierzuständen zeigt die Referenz eine zweite Darstellung nur beim kontaminierten ' +
+      'Tier: mit dem Buchstaben K statt des Zeichens aus Kreisen und Strichen (5.8.6.2). Das ' +
+      'erkrankte und das tote Tier haben genau eine. Wähle die erste Darstellung oder das ' +
+      'kontaminierte Tier.',
+  },
+  'line-strength-mismatch': {
+    field: 'strength',
+    title: 'Taktische Stärke nur an der Grenze mit Stärke',
+    explanation:
+      'Die Grenze mit taktischer Stärke (2.20) setzt die Stärke in die Lücken zwischen ihren ' +
+      'Strichen; ohne Stärke fehlt ihr, was sie von der Grenze Einsatzabschnitt unterscheidet. ' +
+      'An jeder anderen Linie hat die Stärke keinen Platz. Gib an der Grenze mit taktischer ' +
+      'Stärke eine Stärke an und lass sie an jeder anderen Linie weg.',
+  },
+  'line-variant-not-available': {
+    field: 'variant',
+    title: 'Zweite Darstellung nur bei der Escape Route',
+    explanation:
+      'Unter den Linien zeigt die Referenz eine zweite Darstellung nur bei 2.14 Escape Route: ' +
+      'Punkte und Pfeilköpfe im Wechsel statt Punkten allein. Jede andere Linie hat genau eine. ' +
+      'Wähle die erste Darstellung oder die Escape Route.',
+  },
+  'weather-intensity-without-precipitation': {
+    field: 'intensity',
+    title: 'Intensität nur am Niederschlag unter der Wolke',
+    explanation:
+      'Die Intensität ist die Zahl der Niederschlagsmarken unter der Wolke: eine bis vier ' +
+      'Flocken, Tropfen, Körner oder Blitze (5.8.7, Beispiele zum Schnee). Ein Wert allein oder ' +
+      'ein Paar ohne Wolke und Niederschlag hat nichts, was sie zählte. Lass die Intensität weg ' +
+      'oder wähle die Wolke mit einem Niederschlag.',
+  },
+  'weather-value-duplicate': {
+    field: 'values',
+    title: 'Wetterwert doppelt',
+    explanation:
+      'Jeder Wetterwert steht in einem Wetterzeichen höchstens einmal. Ein doppelter Wert ' +
+      'beschreibt kein anderes Zeichen, er unterliefe nur die Grenze von zwei verschiedenen ' +
+      'Werten. Streiche den doppelten Wert.',
+  },
+  'weather-values-exceed-limit': {
+    field: 'values',
+    title: 'Höchstens die Wolke und ein Niederschlag',
+    explanation:
+      'Ein Wetterzeichen trägt einen Wert allein oder die Wolke mit einem Niederschlag (Regen, ' +
+      'Hagel, Gewitter oder Schnee). Mehr als zwei Werte zeigt kein Original, und der ' +
+      'Eigentümer hat die Grenze am 29. September 2026 so entschieden. Verteile die Werte auf ' +
+      'mehrere Wetterzeichen.',
+  },
+});
+
+/**
  * Eine Meldung mit allem, was das Regelwerk über ihre Regel weiß: die Meldung selbst (mit den
  * konkreten Werten), Titel, Erklärung und kuratiertes Feld aus dieser Datei sowie Einordnung,
  * Begründung und Quellenbezug aus dem Regelkatalog.
@@ -877,9 +952,10 @@ export interface ExplainedIssue extends ValidationIssue, RuleExplanation {
 }
 
 /**
- * Ergänzt eine Meldung aus `validateSpec()` oder aus der Komposition um Klartext und Katalogdaten
- * ihrer Regel. Gefragt wird erst die Prüftabelle, dann die Kompositionstabelle; der Test hält
- * beide überschneidungsfrei, damit diese Reihenfolge nie eine Entscheidung trifft.
+ * Ergänzt eine Meldung aus `validateSpec()`, aus der Komposition oder aus
+ * `validateFreestandingSpec()` um Klartext und Katalogdaten ihrer Regel. Gefragt wird erst die
+ * Prüftabelle, dann die Kompositionstabelle, dann die der freistehenden Zeichen; der Test hält
+ * alle drei überschneidungsfrei, damit diese Reihenfolge nie eine Entscheidung trifft.
  *
  * Kein stiller Rückfall: eine unbekannte Kennung wirft, statt eine Erklärung zu erfinden. Ebenso,
  * wenn nur eine der beiden Hälften — Erklärung oder Katalogeintrag — die Kennung kennt; ein halber
@@ -887,7 +963,9 @@ export interface ExplainedIssue extends ValidationIssue, RuleExplanation {
  */
 export function explainIssue(issue: ValidationIssue): ExplainedIssue {
   const text: RuleExplanation | undefined =
-    RULE_EXPLANATIONS[issue.rule] ?? COMPOSITION_RULE_EXPLANATIONS[issue.rule];
+    RULE_EXPLANATIONS[issue.rule] ??
+    COMPOSITION_RULE_EXPLANATIONS[issue.rule] ??
+    FREESTANDING_RULE_EXPLANATIONS[issue.rule];
   const catalog = ruleCatalogEntry(issue.rule);
   if (text === undefined || catalog === undefined) {
     throw new Error(

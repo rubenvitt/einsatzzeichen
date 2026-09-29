@@ -18,3 +18,4 @@ export * from './state-groups.js';
 export * from './capability-combinations.js';
 export * from './special-forms.js';
 export * from './parametric.js';
+export * from './freestanding.js';

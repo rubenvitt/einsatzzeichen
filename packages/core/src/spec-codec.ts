@@ -1,8 +1,12 @@
 import {
   ADMIN_LEVEL_IDS,
+  ANIMAL_STATE_IDS,
   BODY_VARIANT_IDS,
   CAPABILITY_IDS,
+  FREESTANDING_KINDS,
   FUNCTION_ROLE_IDS,
+  LINE_IDS,
+  MOVEMENT_IDS,
   ORGANIZATION_IDS,
   PALETTE,
   STATE_IDS,
@@ -13,9 +17,21 @@ import {
   TENDENCY_IDS,
   UNIT_GROUPING_IDS,
   VEHICLE_CATEGORY_IDS,
+  WEATHER_INTENSITIES,
+  WEATHER_STATE_IDS,
+  isFreestandingSpec,
+  type AnimalStateSpec,
+  type AnySpec,
   type BodyLabelInk,
   type BodyLabels,
+  type CanvasMm,
+  type DepictionVariant,
+  type FreestandingKind,
+  type FreestandingSpec,
+  type LineSpec,
+  type MovementSpec,
   type SymbolSpec,
+  type WeatherSpec,
 } from '@einsatzzeichen/schema';
 
 /**
@@ -27,10 +43,10 @@ import {
  * - Die Formatversion gehört zum Format, nicht zum Zeichen. Ein Feld `v` in der Spec selbst wäre
  *   ein neues Feld am Schema-Typ und ließe sich von einer künftigen Spec-Dimension nicht mehr
  *   sauber trennen.
- * - Die Nutzlast steht unter einem **benannten** Schlüssel. Eine zweite Spec-Art — etwa
- *   freistehende Zeichen — bekommt später einen eigenen Schlüssel neben `spec`, ohne dass sich an
- *   `spec` etwas ändert. Ein Leser dieser Fassung lehnt den fremden Schlüssel mit Pfad ab, statt ihn
- *   als Formation zu deuten (fail-closed).
+ * - Die Nutzlast steht unter einem **benannten** Schlüssel. Die zweite Spec-Art, die
+ *   freistehenden Zeichen (LFH-577), hat den eigenen Schlüssel `freestanding` neben `spec`
+ *   (`serializeAnySpec`, `parseAnySpec`), ohne dass sich an `spec` etwas geändert hat. `parseSpec`
+ *   lehnt den fremden Schlüssel weiter mit Pfad ab, statt ihn als Formation zu deuten (fail-closed).
  * - `v` bleibt 1, solange Änderungen **additiv** sind: neue optionale Felder (Zustände, Tendenz,
  *   Pfeile, …) lesen neue Leser in alten Dokumenten nie, und ein alter Leser lehnt sie mit Pfad ab
  *   — was richtig ist, weil er sie nicht zeichnen könnte. Erhöht wird `v` nur, wenn ein bestehendes
@@ -276,6 +292,125 @@ const SPEC_FIELDS: FieldTable<SymbolSpec> = {
 
 const readSpec = record(SPEC_FIELDS, ['kind'], 'der SymbolSpec');
 
+/* --- Freistehende Zeichen (LFH-577) ------------------------------------------------------- */
+
+/*
+ * Dieselben Leser wie für die `SymbolSpec`, je Art eine geschlossene Feldtabelle. Die Art wird
+ * zuerst am Feld `kind` gelesen, dann die Tabelle genau dieser Art: ein Feld einer anderen Art
+ * (etwa `strength` an einem Pfeil) ist damit ein unbekanntes Feld mit Pfad, keine stille Beigabe.
+ */
+
+const positiveNumber: Reader = (value, path) => {
+  finiteNumber(value, path);
+  if ((value as number) <= 0) {
+    throw new SpecParseError(path, `erwartet eine Zahl größer als null, gefunden ${String(value)}.`);
+  }
+  return value;
+};
+
+/** Ein Stützpunkt: genau zwei endliche Zahlen in Millimetern der Zeichenfläche. */
+const point = pair(finiteNumber);
+
+/** Liste mit Mindestlänge, etwa zwei Stützpunkte oder ein Wetterwert. */
+function listOfAtLeast(item: Reader, minimum: number, what: string): Reader {
+  const read = list(item);
+  return (value, path) => {
+    const result = read(value, path) as unknown[];
+    if (result.length < minimum) {
+      throw new SpecParseError(path, `erwartet mindestens ${what}, gefunden ${result.length}.`);
+    }
+    return result;
+  };
+}
+
+const POINTS_PATH_FIELDS = { points: listOfAtLeast(point, 2, 'zwei Stützpunkte') };
+const STRAIGHT_PATH_FIELDS = { start: point, directionDeg: finiteNumber, lengthMm: positiveNumber };
+const readPointsPath = record(POINTS_PATH_FIELDS, ['points'], 'dem Verlauf');
+const readStraightPath = record(STRAIGHT_PATH_FIELDS, Object.keys(STRAIGHT_PATH_FIELDS), 'dem Verlauf');
+
+/**
+ * `PathParameters` hat zwei Schreibweisen, die einander ausschließen: Stützpunkte oder ein gerader
+ * Verlauf aus Anfang, Richtung und Länge. Beide zugleich wären zwei Verläufe; welcher gälte, legte
+ * der Leser fest statt der Schreiberin — deshalb abgelehnt.
+ */
+const pathParameters: Reader = (value, path) => {
+  if (!isRecord(value)) {
+    throw new SpecParseError(path, `erwartet ein Objekt (einen Verlauf), gefunden ${describeValue(value)}.`);
+  }
+  const has = (key: string) => Object.hasOwn(value, key) && value[key] !== undefined;
+  const byPoints = has('points');
+  const straight = Object.keys(STRAIGHT_PATH_FIELDS).some(has);
+  if (byPoints && straight) {
+    throw new SpecParseError(path, 'ein Verlauf ist entweder points oder start, directionDeg und lengthMm, nicht beides.');
+  }
+  if (byPoints) return readPointsPath(value, path);
+  if (straight) return readStraightPath(value, path);
+  throw new SpecParseError(path, 'erwartet einen Verlauf: points oder start, directionDeg und lengthMm.');
+};
+
+const canvasMm = record(
+  { width: positiveNumber, height: positiveNumber } satisfies FieldTable<CanvasMm>,
+  ['width', 'height'],
+  'canvasMm',
+);
+
+const DEPICTION_VARIANTS = Object.keys({ primary: true, alternative: true } satisfies Record<DepictionVariant, true>);
+
+const MOVEMENT_FIELDS: FieldTable<MovementSpec> = {
+  kind: oneOf(['movement'], 'FREESTANDING_KINDS'),
+  movement: oneOf(MOVEMENT_IDS, 'MOVEMENT_IDS'),
+  path: pathParameters,
+  canvasMm,
+};
+
+const LINE_FIELDS: FieldTable<LineSpec> = {
+  kind: oneOf(['line'], 'FREESTANDING_KINDS'),
+  line: oneOf(LINE_IDS, 'LINE_IDS'),
+  path: pathParameters,
+  // Der volle Vorrat: dass die Stärke nur an 2.20 gehört, ist eine Regel
+  // (`line-strength-mismatch`), kein Formfehler — wie beim Zustand am falschen Träger.
+  strength: oneOf(STRENGTH_IDS, 'STRENGTH_IDS'),
+  variant: oneOf(DEPICTION_VARIANTS, 'DepictionVariant'),
+  canvasMm,
+};
+
+const WEATHER_FIELDS: FieldTable<WeatherSpec> = {
+  kind: oneOf(['weather'], 'FREESTANDING_KINDS'),
+  // Nur die Wetterwerte aus 5.8.7, nicht der volle Vorrat aus `STATE_IDS`: ein Tierzustand im
+  // Wetterzeichen ist kein Wert dieser Art. Die Reihenfolge bleibt wie geschrieben.
+  values: listOfAtLeast(oneOf(WEATHER_STATE_IDS, 'WEATHER_STATE_IDS'), 1, 'einen Wetterwert'),
+  intensity: oneOf(WEATHER_INTENSITIES, 'WEATHER_INTENSITIES'),
+};
+
+const ANIMAL_STATE_FIELDS: FieldTable<AnimalStateSpec> = {
+  kind: oneOf(['animal-state'], 'FREESTANDING_KINDS'),
+  state: oneOf(ANIMAL_STATE_IDS, 'ANIMAL_STATE_IDS'),
+  variant: oneOf(DEPICTION_VARIANTS, 'DepictionVariant'),
+};
+
+const FREESTANDING_READERS: { readonly [K in FreestandingKind]: Reader } = {
+  movement: record(MOVEMENT_FIELDS, ['kind', 'movement', 'path'], 'einem Pfeil (movement)'),
+  line: record(LINE_FIELDS, ['kind', 'line', 'path'], 'einer Linie (line)'),
+  weather: record(WEATHER_FIELDS, ['kind', 'values'], 'einem Wetterzeichen (weather)'),
+  'animal-state': record(ANIMAL_STATE_FIELDS, ['kind', 'state'], 'einem Tierzustand (animal-state)'),
+};
+
+const freestandingKind = oneOf(FREESTANDING_KINDS, 'FREESTANDING_KINDS');
+
+const readFreestanding: Reader = (value, path) => {
+  if (!isRecord(value)) {
+    throw new SpecParseError(path, `erwartet ein Objekt (ein freistehendes Zeichen), gefunden ${describeValue(value)}.`);
+  }
+  const kindPath = fieldPath(path, 'kind');
+  if (!Object.hasOwn(value, 'kind') || value.kind === undefined) {
+    throw new SpecParseError(kindPath, 'Pflichtfeld „kind“ fehlt im freistehenden Zeichen.');
+  }
+  const kind = freestandingKind(value.kind, kindPath) as FreestandingKind;
+  return FREESTANDING_READERS[kind](value, path);
+};
+
+const FREESTANDING_KIND_SET: ReadonlySet<unknown> = new Set(FREESTANDING_KINDS);
+
 /* --- Öffentliche API -------------------------------------------------------------------- */
 
 /**
@@ -297,6 +432,16 @@ export function serializeSpec(spec: SymbolSpec): string {
 }
 
 const ENVELOPE_KEYS: ReadonlySet<string> = new Set(['v', 'spec']);
+
+function checkFormatVersion(version: unknown): void {
+  if (version !== SPEC_FORMAT_VERSION) {
+    throw new SpecParseError(
+      '$.v',
+      `Formatversion ${describeValue(version).replace(/^die Zahl /, '')} wird nicht gelesen; ` +
+        `diese Fassung kennt nur Version ${SPEC_FORMAT_VERSION}.`,
+    );
+  }
+}
 
 /**
  * Liest eine Spec streng: als JSON-Zeichenkette oder als bereits geparster Wert, in der Hülle
@@ -322,13 +467,7 @@ export function parseSpec(input: string | unknown): SymbolSpec {
   }
   if (!Object.hasOwn(value, 'v')) return readSpec(value, '$') as SymbolSpec;
 
-  if (value.v !== SPEC_FORMAT_VERSION) {
-    throw new SpecParseError(
-      '$.v',
-      `Formatversion ${describeValue(value.v).replace(/^die Zahl /, '')} wird nicht gelesen; ` +
-        `diese Fassung kennt nur Version ${SPEC_FORMAT_VERSION}.`,
-    );
-  }
+  checkFormatVersion(value.v);
   for (const key of Object.keys(value)) {
     if (!ENVELOPE_KEYS.has(key)) {
       throw new SpecParseError(fieldPath('$', key), `unbekanntes Feld „${key}“ in der Hülle; erlaubt sind v und spec.`);
@@ -337,6 +476,81 @@ export function parseSpec(input: string | unknown): SymbolSpec {
   if (!Object.hasOwn(value, 'spec') || value.spec === undefined) {
     throw new SpecParseError('$.spec', 'Pflichtfeld „spec“ fehlt in der Hülle.');
   }
+  return readSpec(value.spec, '$.spec') as SymbolSpec;
+}
+
+/* --- Beide Spec-Arten (LFH-577) ---------------------------------------------------------- */
+
+/**
+ * Kanonische Form einer Spec beider Arten, wie `canonicalSpec`: Schlüssel sortiert, `undefined`
+ * entfernt, Listen in ihrer Reihenfolge — auch die Stützpunkte und die Wetterwerte.
+ */
+export function canonicalAnySpec(spec: SymbolSpec): SymbolSpec;
+export function canonicalAnySpec(spec: FreestandingSpec): FreestandingSpec;
+export function canonicalAnySpec(spec: AnySpec): AnySpec;
+export function canonicalAnySpec(spec: AnySpec): AnySpec {
+  return isFreestandingSpec(spec) ? (readFreestanding(spec, '$') as FreestandingSpec) : canonicalSpec(spec);
+}
+
+/**
+ * Kanonisches JSON für beide Spec-Arten. Eine `SymbolSpec` steht wie bei `serializeSpec` unter
+ * `spec` (die Zeichenkette ist dieselbe), ein freistehendes Zeichen unter dem eigenen Schlüssel
+ * `freestanding`: `{"v":1,"freestanding":{…}}`. Ein Leser, der nur `parseSpec` kennt, lehnt diesen
+ * Schlüssel mit Pfad ab, statt ihn als Grundzeichen zu deuten.
+ */
+export function serializeAnySpec(spec: AnySpec): string {
+  if (!isFreestandingSpec(spec)) return serializeSpec(spec);
+  return `{"v":${SPEC_FORMAT_VERSION},"freestanding":${JSON.stringify(canonicalAnySpec(spec))}}`;
+}
+
+const ANY_ENVELOPE_KEYS: ReadonlySet<string> = new Set(['v', 'spec', 'freestanding']);
+
+/**
+ * Liest eine Spec beider Arten so streng wie `parseSpec`: in der Hülle mit `spec` oder
+ * `freestanding` (genau einem von beiden), oder nackt — dann entscheidet das Feld `kind`, welche
+ * Art gelesen wird. Abgelehnt werden unbekannte Felder je Art, Werte außerhalb der Wertelisten,
+ * ein Verlauf mit weniger als zwei Stützpunkten oder in beiden Schreibweisen zugleich,
+ * nicht endliche Zahlen und eine Zeichenfläche ohne positive Maße — jeweils mit Pfad. Regeln wie
+ * die Stärke an der falschen Linie prüft erst `validateFreestandingSpec`.
+ */
+export function parseAnySpec(input: string | unknown): AnySpec {
+  let value: unknown = input;
+  if (typeof input === 'string') {
+    try {
+      value = JSON.parse(input);
+    } catch (error) {
+      throw new SpecParseError('$', `kein gültiges JSON (${(error as Error).message}).`);
+    }
+  }
+  if (!isRecord(value)) {
+    throw new SpecParseError(
+      '$',
+      `erwartet ein Objekt — eine Spec oder die Hülle {"v":${SPEC_FORMAT_VERSION},"spec":{…}} bzw. ` +
+        `{"v":${SPEC_FORMAT_VERSION},"freestanding":{…}} —, gefunden ${describeValue(value)}.`,
+    );
+  }
+  if (!Object.hasOwn(value, 'v')) {
+    return FREESTANDING_KIND_SET.has(value.kind)
+      ? (readFreestanding(value, '$') as FreestandingSpec)
+      : (readSpec(value, '$') as SymbolSpec);
+  }
+
+  checkFormatVersion(value.v);
+  for (const key of Object.keys(value)) {
+    if (!ANY_ENVELOPE_KEYS.has(key)) {
+      throw new SpecParseError(
+        fieldPath('$', key),
+        `unbekanntes Feld „${key}“ in der Hülle; erlaubt sind v und entweder spec oder freestanding.`,
+      );
+    }
+  }
+  const hasSpec = Object.hasOwn(value, 'spec') && value.spec !== undefined;
+  const hasFreestanding = Object.hasOwn(value, 'freestanding') && value.freestanding !== undefined;
+  if (hasSpec && hasFreestanding) {
+    throw new SpecParseError('$', 'die Hülle trägt entweder spec oder freestanding, nicht beides.');
+  }
+  if (hasFreestanding) return readFreestanding(value.freestanding, '$.freestanding') as FreestandingSpec;
+  if (!hasSpec) throw new SpecParseError('$.spec', 'Pflichtfeld „spec“ oder „freestanding“ fehlt in der Hülle.');
   return readSpec(value.spec, '$.spec') as SymbolSpec;
 }
 
@@ -392,12 +606,27 @@ export function encodeSpecParam(spec: SymbolSpec): string {
  * Füllzeichen am Ende sind erlaubt. Wirft `SpecParseError`, nie eine leere Spec.
  */
 export function decodeSpecParam(param: string): SymbolSpec {
+  return parseSpec(utf8OfParam(param));
+}
+
+function utf8OfParam(param: string): string {
   const bytes = fromBase64url(param);
-  let json: string;
   try {
-    json = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
   } catch {
     throw new SpecParseError('$', 'der URL-Parameter enthält kein gültiges UTF-8.');
   }
-  return parseSpec(json);
+}
+
+/** URL-Form beider Spec-Arten: base64url ohne Füllzeichen über das UTF-8 von `serializeAnySpec`. */
+export function encodeAnySpecParam(spec: AnySpec): string {
+  return toBase64url(new TextEncoder().encode(serializeAnySpec(spec)));
+}
+
+/**
+ * Umkehrung von `encodeAnySpecParam`; liest auch jeden Parameter aus `encodeSpecParam` und die
+ * alten Baukasten-Links. Wirft `SpecParseError`.
+ */
+export function decodeAnySpecParam(param: string): AnySpec {
+  return parseAnySpec(utf8OfParam(param));
 }

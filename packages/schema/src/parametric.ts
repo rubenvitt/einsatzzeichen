@@ -97,9 +97,11 @@ export type MovementAnchorEdge = Extract<
 
 /**
  * Die Anbindung eines Pfeils an ein Grundzeichen: an welcher Körperkante der Pfeil beginnt. Die
- * Lage auf der Kante ist die Zone `movement-anchor` des Zonenmodells, und die ist an keiner
- * Körperform vermessen. Wer eine Anbindung angibt, bekommt deshalb heute eine Lücke gemeldet und
- * keine geratene Lage.
+ * Lage auf der Kante ist die Zone `movement-anchor` des Zonenmodells. Belegt ist sie nur an der
+ * Personenraute unten (5.8.8.12 bis 5.8.8.14, `anchoredMovementPath` in `core`), und dort gehört
+ * der Pfeil zum Personenzustand. `movementDrawing` zeichnet freistehende Pfeile und meldet jede
+ * Anbindung als Lücke statt einer geratenen Lage; die freistehende Spec-Art (`MovementSpec`) hat
+ * deshalb kein Feld dafür.
  */
 export interface MovementAnchor {
   readonly edge: MovementAnchorEdge;
@@ -172,7 +174,10 @@ export interface ParametricBlock {
   readonly carriers: ParametricFinding<readonly BlockId[]>;
   /** Wie der Baustein mit Zustand und Tendenz aus 5.8 zusammengeht. */
   readonly withStateOrTendency: ParametricFinding<string>;
-  /** Die vorgemerkten Regeln des Bausteins, als Kennungen aus `PLANNED_PARAMETRIC_RULES`. */
+  /**
+   * Die Regeln des Bausteins: in Kraft (`FREESTANDING_RULE_CATALOG`, geprüft von
+   * `validateFreestandingSpec`) oder vorgemerkt (`PLANNED_PARAMETRIC_RULES`).
+   */
   readonly rules: readonly string[];
 }
 

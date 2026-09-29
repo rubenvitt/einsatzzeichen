@@ -123,16 +123,18 @@ describe('ruleEvidenceCoverage (Regelsicht)', () => {
 
   // Seit LFH-568 (21.09.2026): „Eine Regel gilt als belegt, wenn ein Testfall sie auslöst." Die
   // Zahlen wachsen mit den Katalogen und schrumpfen nur, wenn eine Lücke einen Fall bekommt.
-  it('belegt 78 von 82 Regeln durch Auslösung; vier benannte Lücken, keine stille', () => {
+  it('belegt 84 von 88 Regeln durch Auslösung; vier benannte Lücken, keine stille', () => {
+    // Seit LFH-577 zählen die sechs Regeln der freistehenden Zeichen mit
+    // (`FREESTANDING_RULE_CATALOG`, Fälle in `FREESTANDING_RULE_EVIDENCE`).
     const coverage = ruleEvidenceCoverage();
-    expect(coverage.total).toEqual({ total: 82, triggered: 78, gap: 4, untriggered: 0 });
+    expect(coverage.total).toEqual({ total: 88, triggered: 84, gap: 4, untriggered: 0 });
     expect(coverage.byPhase).toEqual({
-      spec: { total: 76, triggered: 74, gap: 2, untriggered: 0 },
+      spec: { total: 82, triggered: 80, gap: 2, untriggered: 0 },
       composition: { total: 6, triggered: 4, gap: 2, untriggered: 0 },
     });
     expect(coverage.byKind).toEqual({
-      systematik: { total: 12, triggered: 12, gap: 0, untriggered: 0 },
-      engine: { total: 70, triggered: 66, gap: 4, untriggered: 0 },
+      systematik: { total: 17, triggered: 17, gap: 0, untriggered: 0 },
+      engine: { total: 71, triggered: 67, gap: 4, untriggered: 0 },
     });
     expect(coverage.byDimension.map((entry) => [entry.dimension, entry.total, entry.triggered, entry.gap])).toEqual([
       ['body-variant', 7, 7, 0],
@@ -144,6 +146,9 @@ describe('ruleEvidenceCoverage (Regelsicht)', () => {
       ['chassis', 2, 2, 0],
       ['function-role', 10, 7, 3],
       ['state', 4, 4, 0],
+      ['lines-and-boundaries', 2, 2, 0],
+      ['weather', 3, 3, 0],
+      ['animal', 1, 1, 0],
       ['label', 48, 47, 1],
       ['composition', 1, 1, 0],
     ]);

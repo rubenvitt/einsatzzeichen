@@ -1,8 +1,11 @@
 import {
   ADMIN_LEVEL_IDS,
+  ANIMAL_STATE_IDS,
   BODY_VARIANT_IDS,
   CAPABILITY_IDS,
   FUNCTION_ROLE_IDS,
+  LINE_IDS,
+  MOVEMENT_IDS,
   ORGANIZATION_IDS,
   PALETTE,
   STATE_IDS,
@@ -13,12 +16,23 @@ import {
   TENDENCY_IDS,
   UNIT_GROUPING_IDS,
   VEHICLE_CATEGORY_IDS,
+  WEATHER_INTENSITIES,
+  WEATHER_STATE_IDS,
+  isFreestandingSpec,
+  type AnimalStateSpec,
+  type AnySpec,
   type ColorToken,
+  type DepictionVariant,
   type Drawing,
+  type FreestandingKind,
+  type LineSpec,
+  type MovementSpec,
   type SymbolSpec,
+  type WeatherSpec,
 } from '@einsatzzeichen/schema';
 import type { ComposeOptions } from './compose.js';
 import { drawSymbol } from './default-ports.js';
+import { drawFreestanding, type FreestandingDrawOptions } from './draw-freestanding.js';
 import { NotMeasuredError, type NotMeasuredScope } from './not-measured.js';
 import { explainRejection, type ExplainedIssue } from './rules/rule-explanations.js';
 import { CompositionError } from './validate.js';
@@ -157,6 +171,57 @@ export const LIST_SPEC_FIELDS: readonly VocabularyField[] = Object.freeze(
   VOCABULARY_FIELDS.filter((field) => FIELD_TABLE[field].shape === 'list'),
 );
 
+/* --- Wertevorrat der freistehenden Zeichen (LFH-577) ------------------------------------ */
+
+const DEPICTION_VARIANTS: readonly DepictionVariant[] = Object.freeze(['primary', 'alternative']);
+
+/*
+ * Je Art über die Schlüssel ihres Schema-Typs vollständig, wie `FIELD_TABLE`: bekommt eine Art ein
+ * Feld, lehnt der Compiler die Tabelle ab, bis es hier einen Eintrag hat. `kind` steht mit genau
+ * einem Wert darin — die Art selbst, damit jede Tabelle alle Felder ihrer Spec nennt.
+ */
+const FREESTANDING_TABLE = {
+  movement: {
+    kind: oneOf(['movement'] as const),
+    movement: oneOf(MOVEMENT_IDS),
+    // Der Verlauf und die Zeichenfläche sind Zahlen, kein Vorrat: ob sie tragen, sagt erst die
+    // Zeichnung (`checkAnySpec`).
+    path: STRUCTURED,
+    canvasMm: STRUCTURED,
+  } satisfies { readonly [K in keyof Required<MovementSpec>]: SpecFieldDomain },
+  line: {
+    kind: oneOf(['line'] as const),
+    line: oneOf(LINE_IDS),
+    path: STRUCTURED,
+    // Der volle lesbare Vorrat: dass nur 2.20 eine Stärke trägt und nur der Zug vermessen ist,
+    // sagen Regel und Zeichnung, nicht der Vorrat.
+    strength: oneOf(STRENGTH_IDS),
+    variant: oneOf(DEPICTION_VARIANTS),
+    canvasMm: STRUCTURED,
+  } satisfies { readonly [K in keyof Required<LineSpec>]: SpecFieldDomain },
+  weather: {
+    kind: oneOf(['weather'] as const),
+    values: list(WEATHER_STATE_IDS),
+    intensity: oneOf(WEATHER_INTENSITIES),
+  } satisfies { readonly [K in keyof Required<WeatherSpec>]: SpecFieldDomain },
+  'animal-state': {
+    kind: oneOf(['animal-state'] as const),
+    state: oneOf(ANIMAL_STATE_IDS),
+    variant: oneOf(DEPICTION_VARIANTS),
+  } satisfies { readonly [K in keyof Required<AnimalStateSpec>]: SpecFieldDomain },
+} as const satisfies { readonly [K in FreestandingKind]: Readonly<Record<string, SpecFieldDomain>> };
+
+/**
+ * Wertevorrat je Feld der freistehenden Spec-Art, je Art (`movement`, `line`, `weather`,
+ * `animal-state`) — das Gegenstück zu `SPEC_FIELD_VALUES`. Die Werte kommen aus denselben
+ * Wertelisten, gegen die `parseAnySpec` liest.
+ */
+export const FREESTANDING_FIELD_VALUES: typeof FREESTANDING_TABLE = Object.freeze(
+  Object.fromEntries(
+    Object.entries(FREESTANDING_TABLE).map(([kind, table]) => [kind, Object.freeze(table)]),
+  ) as typeof FREESTANDING_TABLE,
+);
+
 /* --- Prüfung einer ganzen Spec ---------------------------------------------------------- */
 
 /**
@@ -189,8 +254,13 @@ export type SpecCheck =
  * von `core` halten jede Regelkennung erklärt; ein solcher Wurf ist ein Fehler dieses Pakets.
  */
 export function checkSpec(spec: SymbolSpec, options?: ComposeOptions): SpecCheck {
+  return checkDrawing(() => drawSymbol(spec, options));
+}
+
+/** Die drei Ausgänge einer Zeichnung als Ergebnis, für beide Spec-Arten gleich. */
+function checkDrawing(draw: () => Drawing): SpecCheck {
   try {
-    return { ok: true, drawing: drawSymbol(spec, options) };
+    return { ok: true, drawing: draw() };
   } catch (error) {
     if (error instanceof CompositionError) {
       return { ok: false, reason: 'rule', issues: explainRejection(error) };
@@ -200,6 +270,21 @@ export function checkSpec(spec: SymbolSpec, options?: ComposeOptions): SpecCheck
     }
     throw error;
   }
+}
+
+/**
+ * `checkSpec` für beide Spec-Arten: eine `SymbolSpec` genau wie `checkSpec`, ein freistehendes
+ * Zeichen über `drawFreestanding`. Dieselben drei Ausgänge — Zeichnung, erklärte Regelverstöße
+ * (`FREESTANDING_RULE_EXPLANATIONS`), Vermessungslücke mit Reichweite.
+ *
+ * Ein Verlauf, den die Zeichnung nicht tragen kann (zu kurz für Pfeilköpfe oder Striche, aus der
+ * Zeichenfläche ragend, ein zu spitzer Knick am Doppelschaft), ist weder Regel noch Lücke: er
+ * fliegt als gewöhnlicher Fehler weiter, wie jede Eingabe, die `checkSpec` nicht erklären kann.
+ */
+export function checkAnySpec(spec: AnySpec, options?: FreestandingDrawOptions): SpecCheck {
+  return isFreestandingSpec(spec)
+    ? checkDrawing(() => drawFreestanding(spec, options))
+    : checkSpec(spec, options);
 }
 
 /* --- Vokabular ---------------------------------------------------------------------------- */

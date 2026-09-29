@@ -539,13 +539,25 @@ function stateMarginZone(kind: SymbolKind, variant: BodyVariantId | undefined): 
   return STATE_MARGIN_GAP;
 }
 
+/**
+ * Seit der Vermessung vom 29.09.2026 ist die Anbindung **einmal** belegt: an der Personenraute
+ * unten in 5.8.8.12 bis 5.8.8.14 (`anchoredMovementPath`: Verlauf von (minX | maxY) nach
+ * (maxX + 1 | maxY), nur an der 26-mm-Raute). Diese Raute ist aber die um 2 mm angehobene
+ * Fassung des Personenzustands (`PERSON_STATE_FRAMES`, Mitte 16 | 14), keine `BodyVariantId`:
+ * weder `person` (30-mm-Raute, dort ließe die Fläche dem Pfeil keinen Platz) noch
+ * `compact-person-diamond-26mm` (Mitte 16 | 16) tragen sie. Das Zonenmodell ist nach Körperform
+ * und Variante geschlüsselt und kann die Lage deshalb an keiner seiner Formen führen; sie gehört
+ * zum Personenzustand. Die Lücke bleibt, mit diesem Grund.
+ */
 const MOVEMENT_ANCHOR_GAP = notMeasured(
   'value',
-  'core/src/geometry/parametric.ts:39–40, 316–321',
-  'Die Pfeile aus 5.2 sind in der Referenz nur freistehend gezeichnet, jeder in seiner eigenen ' +
-    '32-mm-Fläche. Kein Original zeigt einen Pfeil an einem Grundzeichen, deshalb ist die Stelle, ' +
-    'an der er am Körper beginnt, an keiner Körperform vermessen. Eine andere Grundzeichenart ' +
-    'hilft nicht, deshalb `scope: "value"`.',
+  'core/src/geometry/parametric.ts:549–596',
+  'Die Pfeile aus 5.2 sind in der Referenz freistehend gezeichnet, jeder in seiner eigenen ' +
+    '32-mm-Fläche. An einem Körper zeigt sie nur der Personenzustand 5.8.8.12 bis 5.8.8.14: ' +
+    'der Pfeil liegt auf der Waagerechten durch die untere Ecke einer 26-mm-Raute, die um 2 mm ' +
+    'angehoben ist (`anchoredMovementPath`). Diese Raute ist eine Fassung des Zustands und keine ' +
+    'Körpervariante; an keiner Körperform dieses Modells ist die Anbindung vermessen, deshalb ' +
+    '`scope: "value"`.',
 );
 
 function bodyZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {

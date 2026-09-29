@@ -368,7 +368,7 @@ export const STATE_GROUPS: readonly StateGroup[] = Object.freeze([
         'Die Beispiele kombinieren zwei Wetterwerte ohne Grundzeichen auf der 32-mm-Fläche: die Wolke steht um 3 mm angehoben (Hülle y 3…21 statt 6…24 in 5.8.7.2), der Schnee darunter.',
       ),
       remaining:
-        'Die Lage des Schnees unter der Wolke ist nicht abgelesen, das Kennzahlenartefakt erfasst ihn nicht. Wie die vier Intensitätsstufen schwach, mittel, stark und extrem gezeichnet werden, ist ebenso wenig abgelesen; das Schema kennt keine Intensität.',
+        'Seit dem 29.09.2026 an den Dateien abgelesen: eine bis vier Flocken mit Radius 3 mm um y 26 in 8-mm-Teilung, mittig auf x 16; die Intensität (schwach, mittel, stark, extrem) ist ihre Anzahl (`WeatherIntensity`, `weatherDrawing`). Das Kennzahlenartefakt erfasst die Flocken nicht, ihre Lage prüft `core/src/geometry/weather.test.ts` an den abgelesenen Zahlen. Regen, Hagel und Gewitter an der Wolke sind übertragen, nicht abgelesen.',
     },
     carriers: {
       status: 'evidenced',

@@ -138,9 +138,11 @@ export type RuleReasonSource = 'core' | 'website';
  * - `'composition'` ist keine Dimension der Systematik, sondern die Einordnung für Regeln, deren
  *   Auflösung überhaupt kein einzelnes Feld benennt. Dasselbe Wort und derselbe Grund wie in
  *   `rule-explanations.ts`; bislang genau `head-zone-conflict`.
- * - `'movement'` (5.2) und `'lines-and-boundaries'` (Kapitel 2) haben **weder** eine Wertachse
- *   **noch** ein Feld in `SymbolSpec` — sie stehen hier, weil der Katalog sonst nicht sagen
- *   könnte, dass zu ihnen keine Regel existiert. Genau das steht in `RULE_DIMENSION_GAPS`.
+ * - `'movement'` (5.2), `'lines-and-boundaries'` (Kapitel 2), `'weather'` (5.8.7) und `'animal'`
+ *   (5.8.6) haben keine Wertachse und kein Feld in `SymbolSpec`: seit LFH-577 beschreibt sie die
+ *   freistehende Spec-Art (`FreestandingSpec`), geprüft von `validateFreestandingSpec`. Ihre
+ *   Regeln stehen in `FREESTANDING_RULE_CATALOG`; die Pfeile tragen keine, das steht in
+ *   `RULE_DIMENSION_GAPS`.
  * - `'unit-grouping'` (Verbände 5.5), `'state'` und `'tendency'` (5.8) haben seit LFH-577 je ein
  *   Feld in `SymbolSpec` (`unitGrouping`, `states`, `tendency`). Regeln trägt davon nur `'state'`;
  *   der Verband teilt die Kopfzonenregel `head-zone-conflict`, die Tendenz hat keinen belegten
@@ -166,6 +168,8 @@ export type RuleDimension =
   | 'tendency'
   | 'movement'
   | 'lines-and-boundaries'
+  | 'weather'
+  | 'animal'
   | 'label'
   | 'composition';
 
@@ -190,6 +194,8 @@ export const RULE_DIMENSIONS: readonly RuleDimension[] = Object.freeze([
   'tendency',
   'movement',
   'lines-and-boundaries',
+  'weather',
+  'animal',
   'label',
   'composition',
 ] as const satisfies readonly RuleDimension[]);
@@ -653,7 +659,7 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'state-value-not-attachable',
     'systematik',
     'state',
-    'Wetter und Tierzustand sind freistehende Zeichen, und eine Tendenz hat ihr eigenes Feld; in der Liste der Zustände an einem Träger stünden sie an der falschen Stelle.',
+    'Wetter und Tierzustand sind freistehende Zeichen, und eine Tendenz gehört nicht in die Zustandsliste; in der Liste der Zustände an einem Träger stünden sie an der falschen Stelle.',
     'core',
     babz('5.8.3, 5.8.6, 5.8.7'),
   ),
@@ -906,6 +912,74 @@ export const COMPOSITION_RULE_CATALOG: readonly RuleCatalogEntry[] = Object.free
   } satisfies RuleCatalogEntry),
 ]);
 
+/* --- Freistehende Zeichen ---------------------------------------------------------------- */
+
+/**
+ * Die Regeln der freistehenden Spec-Art (LFH-577): Linien und Grenzen aus Kapitel 2, Wetter aus
+ * 5.8.7 und Tierzustand aus 5.8.6. `validateFreestandingSpec` löst sie aus, `FREESTANDING_RULE_IDS`
+ * zählt sie; alphabetisch wie `RULE_CATALOG`.
+ *
+ * Ein eigener Katalog und kein Zuwachs von `RULE_CATALOG`, weil dessen Mengengleichheit mit
+ * `VALIDATION_RULE_IDS` die Kernaussage „jede Regel der `SymbolSpec` hat eine Prüfstelle in
+ * `validate.ts`" ist. Hier gilt dieselbe Aussage für `validate-freestanding.ts`, mit eigenem Gate
+ * in `rule-catalog.test.ts`. `ruleCatalogEntry` und `explainIssue` fragen alle drei Kataloge.
+ *
+ * Die Pfeile aus 5.2 tragen keine Regel: ihre einzigen vorgemerkten Regeln sprechen über die
+ * Anbindung an einen Körper, und die hat die Spec-Art nicht (`PLANNED_PARAMETRIC_RULES`).
+ */
+export const FREESTANDING_RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
+  entry(
+    'animal-state-variant-not-available',
+    'systematik',
+    'animal',
+    'Eine zweite Darstellung zeigt die Referenz unter den Tierzuständen nur beim kontaminierten Tier, mit dem Buchstaben K statt des Kontaminationszeichens; an den anderen gäbe es nichts, was sie zeichnete.',
+    'core',
+    babz('5.8.6.2'),
+  ),
+  entry(
+    'line-strength-mismatch',
+    'systematik',
+    'lines-and-boundaries',
+    'Die taktische Stärke gehört nur an 2.20 Grenze mit taktischer Stärke: dort füllt sie die Lücke zwischen den Strichen und ist Pflicht, an jeder anderen Linie hat sie keinen Platz.',
+    'core',
+    babz('2.20'),
+    2,
+  ),
+  entry(
+    'line-variant-not-available',
+    'systematik',
+    'lines-and-boundaries',
+    'Eine zweite Darstellung zeigt die Referenz unter den Linien nur bei 2.14 Escape Route (Punkte und Pfeilköpfe im Wechsel); jede andere Linie hat genau eine.',
+    'core',
+    babz('2.14'),
+  ),
+  entry(
+    'weather-intensity-without-precipitation',
+    'systematik',
+    'weather',
+    'Die Intensität ist die Zahl der Niederschlagsmarken unter der Wolke (5.8.7_Beispiel_Schneiend); ein Wert allein oder ein Paar ohne Niederschlag an der Wolke hat nichts, was sie zählte.',
+    'core',
+    babz('5.8.7'),
+  ),
+  entry(
+    'weather-value-duplicate',
+    'engine',
+    'weather',
+    'Ein doppelter Wert beschreibt kein anderes Zeichen, sondern unterliefe die Grenze von zwei Werten, die verschiedene Werte zählt.',
+    'core',
+    // Kein Quellenbezug: über doppelte Werte sagt die Referenz nichts, die Regel ist Datenhygiene.
+    null,
+  ),
+  entry(
+    'weather-values-exceed-limit',
+    'systematik',
+    'weather',
+    'Ein Wetterzeichen trägt höchstens die Wolke und einen Niederschlag; mehr Werte zeigt kein Original, und der Eigentümer hat die Grenze am 29. September 2026 so entschieden.',
+    'core',
+    babz('5.8.7'),
+  ),
+]);
+
 /* --- Lücken je Dimension ----------------------------------------------------------------- */
 
 /** `'none'` — zu dieser Dimension gibt es keine Regel. `'partial'` — es gibt sie nur teilweise. */
@@ -974,18 +1048,31 @@ export const RULE_DIMENSION_GAPS: readonly RuleDimensionGap[] = Object.freeze([
     dimension: 'movement',
     coverage: 'none',
     chapter: '5.2',
-    note: 'Keine Regel und kein Feld in `SymbolSpec`. Die Pfeile sind seit LFH-566 Bausteine mit Verlauf als Parameter (`movementDrawing`); ihr Anbindungspunkt am Körper ist die Zone `movement-anchor`, belegt nur an der Personenraute unten (5.8.8.12 bis 5.8.8.14, `anchoredMovementPath`), dort als Teil des Personenzustands gezeichnet. Zwei Regeln sind vorgemerkt (`PLANNED_PARAMETRIC_RULES`).',
+    note: 'Keine Regel in Kraft. Seit LFH-577 beschreibt die freistehende Spec-Art einen Pfeil (`kind: "movement"`, Verlauf als Parameter), ohne Anbindung an einen Körper: der Anbindungspunkt, die Zone `movement-anchor`, ist nur an der Personenraute unten belegt (5.8.8.12 bis 5.8.8.14, `anchoredMovementPath`) und dort Teil des Personenzustands. Die beiden Regeln über die Anbindung bleiben vorgemerkt (`PLANNED_PARAMETRIC_RULES`); ein zu kurzer oder aus der Fläche ragender Verlauf ist ein gewöhnlicher Fehler der Zeichnung, keine Regel.',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'lines-and-boundaries',
-    coverage: 'none',
+    coverage: 'partial',
     chapter: 'Kapitel 2',
-    note: 'Keine Regel und kein Feld in `SymbolSpec`. Linien und Grenzen sind keine Zeichen auf der 32-mm-Grundfläche; seit LFH-566 baut `lineDrawing` sie aus einem Verlauf in eigener Zeichenfläche. Zwei Regeln sind vorgemerkt (`PLANNED_PARAMETRIC_RULES`).',
+    note: 'Seit LFH-577 prüft `validateFreestandingSpec` die Stärke (nur an 2.20) und die zweite Darstellung (nur an 2.14). Keine Regel ist der Verlauf selbst: ein zu kurzer oder aus der Fläche ragender Verlauf ist ein gewöhnlicher Fehler der Zeichnung, und eine Stärke außer dem Zug an 2.20 meldet sie als nicht vermessen. Die Anbindung an ein Grundzeichen erzwingt die Form (`RETIRED_PARAMETRIC_RULES`).',
+  } satisfies RuleDimensionGap),
+  Object.freeze({
+    dimension: 'weather',
+    coverage: 'partial',
+    chapter: '5.8.7',
+    note: 'Drei Regeln in Kraft (doppelter Wert, mehr als zwei Werte, Intensität ohne Niederschlag an der Wolke). Andere Paare als die Wolke mit einem Niederschlag, etwa Sonne und Wind, und ein Niederschlag an der Wolke ohne Intensität sind weder belegt noch entschieden: die Zeichnung meldet sie als nicht vermessen, keine Regel verbietet sie. Ob Wetter an einem Grundzeichen stehen darf, ist offen.',
+  } satisfies RuleDimensionGap),
+  Object.freeze({
+    dimension: 'animal',
+    coverage: 'partial',
+    chapter: '5.8.6',
+    note: 'Eine Regel in Kraft (zweite Darstellung nur beim kontaminierten Tier). Die freistehende Spec-Art trägt genau einen Tierzustand; ob ein Tier zugleich erkrankt und kontaminiert sein darf und ob der Tierzustand an einem Grundzeichen stehen darf, ist offen (`STATE_GROUPS`, Gruppe `animals`).',
   } satisfies RuleDimensionGap),
 ]);
 
-/** Nachschlag über beide Klassen; `undefined` statt Wurf, die Erklärungsschicht entscheidet. */
+/** Nachschlag über alle drei Kataloge; `undefined` statt Wurf, die Erklärungsschicht entscheidet. */
 export function ruleCatalogEntry(id: string): RuleCatalogEntry | undefined {
   return RULE_CATALOG.find((rule) => rule.id === id) ??
-    COMPOSITION_RULE_CATALOG.find((rule) => rule.id === id);
+    COMPOSITION_RULE_CATALOG.find((rule) => rule.id === id) ??
+    FREESTANDING_RULE_CATALOG.find((rule) => rule.id === id);
 }

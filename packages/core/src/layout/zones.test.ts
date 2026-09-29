@@ -411,8 +411,9 @@ describe('Zonenmodell: deklarierte Lücken', () => {
   });
 
   it('führt den Anbindungspunkt der Pfeile an jeder Körperfassung als unvermessen', () => {
-    // LFH-566: kein Original zeigt einen Pfeil aus 5.2 an einem Grundzeichen. `value` und nicht
-    // `combination`, weil keine Körperform die Anbindung trägt.
+    // LFH-566/LFH-577: belegt ist die Anbindung nur am Personenzustand 5.8.8.12 bis 5.8.8.14, an
+    // einer angehobenen Raute, die keine Körpervariante ist. `value` und nicht `combination`,
+    // weil keine Körperform des Modells die Anbindung trägt.
     for (const form of ZONE_MODEL_FORMS) {
       const binding = form.zones['movement-anchor'];
       expect(binding.status, formKey(form.kind, form.variant)).toBe('not-measured');

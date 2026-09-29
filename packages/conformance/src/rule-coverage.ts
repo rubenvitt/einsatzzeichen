@@ -1,5 +1,6 @@
 import {
   COMPOSITION_RULE_CATALOG,
+  FREESTANDING_RULE_CATALOG,
   RULE_CATALOG,
   RULE_DIMENSIONS,
   VALIDATION_RULE_IDS,
@@ -37,9 +38,12 @@ import { ALL_PICTOGRAMS } from '@einsatzzeichen/core';
 import type { CatalogPictogramDefinition } from '@einsatzzeichen/core';
 import { RECIPES, composeFromCatalog, type Recipe } from './recipes.js';
 import {
+  FREESTANDING_RULE_EVIDENCE,
   RULE_EVIDENCE,
   RULE_EVIDENCE_GAPS,
+  freestandingRuleEvidenceTriggers,
   ruleEvidenceTriggers,
+  type FreestandingRuleEvidence,
   type RuleEvidence,
   type RuleEvidenceGap,
 } from './rule-evidence.js';
@@ -190,7 +194,10 @@ export interface RuleEvidenceTally {
 }
 
 export interface RuleEvidenceCoverage {
-  /** Alle Regeln beider Kataloge: zuerst `RULE_CATALOG`, dann `COMPOSITION_RULE_CATALOG`. */
+  /**
+   * Alle Regeln der drei Kataloge: zuerst `RULE_CATALOG`, dann `COMPOSITION_RULE_CATALOG`, dann
+   * `FREESTANDING_RULE_CATALOG` (LFH-577).
+   */
   readonly rules: readonly RuleEvidenceRow[];
   readonly total: RuleEvidenceTally;
   readonly byPhase: Readonly<Record<RulePhase, RuleEvidenceTally>>;
@@ -221,11 +228,15 @@ function tally(rows: readonly RuleEvidenceRow[]): RuleEvidenceTally {
 export function ruleEvidenceCoverage(
   evidence: readonly RuleEvidence[] = RULE_EVIDENCE,
   gaps: readonly RuleEvidenceGap[] = RULE_EVIDENCE_GAPS,
-  catalog: readonly RuleCatalogEntry[] = [...RULE_CATALOG, ...COMPOSITION_RULE_CATALOG],
+  catalog: readonly RuleCatalogEntry[] = [...RULE_CATALOG, ...COMPOSITION_RULE_CATALOG, ...FREESTANDING_RULE_CATALOG],
+  freestandingEvidence: readonly FreestandingRuleEvidence[] = FREESTANDING_RULE_EVIDENCE,
 ): RuleEvidenceCoverage {
-  const triggered = new Set(
-    evidence.filter((item) => ruleEvidenceTriggers(item).includes(item.rule)).map((item) => item.rule),
-  );
+  const triggered = new Set([
+    ...evidence.filter((item) => ruleEvidenceTriggers(item).includes(item.rule)).map((item) => item.rule),
+    ...freestandingEvidence
+      .filter((item) => freestandingRuleEvidenceTriggers(item).includes(item.rule))
+      .map((item) => item.rule),
+  ]);
   const gapIds = new Set(gaps.map((gap) => gap.rule));
   const rules = catalog.map((rule): RuleEvidenceRow => Object.freeze({
     id: rule.id,

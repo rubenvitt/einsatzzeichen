@@ -102,8 +102,13 @@ export const LINE_BLOCKS: readonly BlockEntry[] = Object.freeze(
   (Object.keys(LINE_SECTION) as LineId[]).map(line),
 );
 
+/** Vorgemerkt (`PLANNED_PARAMETRIC_RULES`): die Spec-Art hat keine Anbindung an einen Körper. */
 const MOVEMENT_RULES = ['movement-carrier-not-allowed', 'movement-anchor-conflict'] as const;
-const LINE_RULES = ['line-anchor-not-allowed', 'line-strength-mismatch'] as const;
+/**
+ * In Kraft seit LFH-577 (`FREESTANDING_RULE_CATALOG`). `line-anchor-not-allowed` ist gestrichen:
+ * die Form erzwingt sie (`RETIRED_PARAMETRIC_RULES`).
+ */
+const LINE_RULES = ['line-strength-mismatch', 'line-variant-not-available'] as const;
 
 function fixture(asset: `${string}.svg`, note: string): readonly [StateGroupEvidence] {
   return [{ asset, note }];

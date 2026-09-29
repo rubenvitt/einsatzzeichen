@@ -1,5 +1,5 @@
-import { CompositionError, validateSpec } from '@einsatzzeichen/core';
-import type { SymbolSpec } from '@einsatzzeichen/schema';
+import { CompositionError, validateFreestandingSpec, validateSpec } from '@einsatzzeichen/core';
+import type { FreestandingSpec, SymbolSpec } from '@einsatzzeichen/schema';
 import { administrativeHead } from '@einsatzzeichen/core';
 import { functionRole } from '@einsatzzeichen/core';
 import { composeFromCatalog } from './recipes.js';
@@ -311,6 +311,68 @@ export const RULE_EVIDENCE_GAPS: readonly RuleEvidenceGap[] = Object.freeze([
     location: 'packages/core/src/validation-rules.cases.test.ts (it.todo)',
   }),
 ]);
+
+/**
+ * Ein Beleg für eine Regel der freistehenden Zeichen (LFH-577). Eine eigene Liste und kein Fall in
+ * `RULE_EVIDENCE`: dessen Feld `spec` ist eine `SymbolSpec`, und Nutzer lesen es so. Der Weg ist
+ * immer `validateFreestandingSpec`; `rule-evidence.test.ts` prüft zusätzlich, dass
+ * `drawFreestanding` mit derselben Regel ablehnt.
+ */
+export interface FreestandingRuleEvidence {
+  readonly rule: string;
+  readonly spec: FreestandingSpec;
+  /** Was der Fall zeigt und woher er stammt. */
+  readonly note: string;
+}
+
+const FT = 'validate-freestanding.test.ts';
+const LINE_PATH = { points: [[1, 16], [47, 16]] } as const;
+
+function freestandingEvidence(rule: string, spec: FreestandingSpec, note: string): FreestandingRuleEvidence {
+  return Object.freeze({ rule, spec, note });
+}
+
+/**
+ * Je Regel aus `FREESTANDING_RULE_CATALOG` genau ein Fall, alphabetisch. Keine Lücke: jede Regel
+ * ist aus einer freistehenden Spec heraus auslösbar.
+ */
+export const FREESTANDING_RULE_EVIDENCE: readonly FreestandingRuleEvidence[] = Object.freeze([
+  freestandingEvidence(
+    'animal-state-variant-not-available',
+    { kind: 'animal-state', state: 'sick-animal', variant: 'alternative' },
+    `Zweite Darstellung am erkrankten Tier (${FT}).`,
+  ),
+  freestandingEvidence(
+    'line-strength-mismatch',
+    { kind: 'line', line: 'boundary-section', path: LINE_PATH, strength: 'zug' },
+    `Stärke an der Grenze Einsatzabschnitt (${FT}).`,
+  ),
+  freestandingEvidence(
+    'line-variant-not-available',
+    { kind: 'line', line: 'fire-spread', path: LINE_PATH, variant: 'alternative' },
+    `Zweite Darstellung an der Brandausbreitung (${FT}).`,
+  ),
+  freestandingEvidence(
+    'weather-intensity-without-precipitation',
+    { kind: 'weather', values: ['weather-snowing'], intensity: 'strong' },
+    `Intensität am Schnee ohne Wolke (${FT}).`,
+  ),
+  freestandingEvidence(
+    'weather-value-duplicate',
+    { kind: 'weather', values: ['weather-cloudy', 'weather-cloudy'] },
+    `Wolke doppelt (${FT}).`,
+  ),
+  freestandingEvidence(
+    'weather-values-exceed-limit',
+    { kind: 'weather', values: ['weather-cloudy', 'weather-snowing', 'weather-rainy'], intensity: 'weak' },
+    `Wolke mit zwei Niederschlägen (${FT}).`,
+  ),
+]);
+
+/** Führt einen Fall der freistehenden Zeichen aus und liefert alle gemeldeten Regelkennungen. */
+export function freestandingRuleEvidenceTriggers(item: FreestandingRuleEvidence): readonly string[] {
+  return validateFreestandingSpec(item.spec).map((issue) => issue.rule);
+}
 
 /** Der Kontext, den `composeFromCatalog` an `validateSpec` übergibt — aus Katalogdaten, nicht erfunden. */
 function catalogValidationContext(spec: SymbolSpec): Parameters<typeof validateSpec>[1] {

@@ -45,6 +45,23 @@ const result = checkSpec({ kind: 'formation', organization: 'thw', strength: 'gr
 if (!result.ok && result.reason === 'rule') console.log(result.issues.map((issue) => issue.title));
 ```
 
+## Freistehende Zeichen
+
+Pfeile (5.2), Linien und Grenzen (2.14–2.20), Wetter (5.8.7) und Tierzustände (5.8.6) stehen ohne Grundzeichen auf der Lagekarte. Sie haben eine eigene Beschreibung neben der `SymbolSpec`, erkennbar am Feld `kind`: ein Pfeil folgt einem selbst gelegten Verlauf, das Wetter zeigt einen Wert allein oder die Wolke mit einem Niederschlag in einer von vier Stärken.
+
+- `drawFreestanding(spec)` zeichnet sie, `drawAnySpec(spec)` nimmt beide Arten.
+- `checkAnySpec(spec)` gibt die Zeichnung oder den erklärten Grund zurück; die Regeln (`validateFreestandingSpec`, `FREESTANDING_RULE_IDS`) sind über `explainIssue()` erklärbar.
+- `serializeAnySpec` / `parseAnySpec` / `encodeAnySpecParam` / `decodeAnySpecParam` schreiben sie in dieselbe Hülle, unter `freestanding` statt `spec`.
+
+```ts
+import { drawAnySpec, renderSvg } from '@einsatzzeichen/core';
+
+const svg = renderSvg(
+  drawAnySpec({ kind: 'weather', values: ['weather-cloudy', 'weather-snowing'], intensity: 'moderate' }),
+  { size: 64 },
+);
+```
+
 ## Installation
 
 ```bash

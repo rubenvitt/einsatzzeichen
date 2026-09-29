@@ -1,10 +1,17 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { CompositionError } from '../validate.js';
+import { FREESTANDING_RULE_IDS } from '../freestanding-rules.js';
 import { VALIDATION_RULE_IDS } from '../validation-rules.js';
-import { COMPOSITION_RULE_CATALOG, RULE_CATALOG, ruleCatalogEntry } from './rule-catalog.js';
+import {
+  COMPOSITION_RULE_CATALOG,
+  FREESTANDING_RULE_CATALOG,
+  RULE_CATALOG,
+  ruleCatalogEntry,
+} from './rule-catalog.js';
 import {
   COMPOSITION_RULE_EXPLANATIONS,
+  FREESTANDING_RULE_EXPLANATIONS,
   RULE_EXPLANATIONS,
   RULE_FIELDS,
   explainIssue,
@@ -107,6 +114,30 @@ describe('COMPOSITION_RULE_EXPLANATIONS', () => {
   });
 });
 
+describe('FREESTANDING_RULE_EXPLANATIONS', () => {
+  it('erklärt genau die Regeln der freistehenden Zeichen', () => {
+    expect(Object.keys(FREESTANDING_RULE_EXPLANATIONS).sort()).toEqual([...FREESTANDING_RULE_IDS].sort());
+  });
+
+  it('führt zu jeder Regel ein Feld der freistehenden Spec, einen Titel und zwei bis vier Sätze', () => {
+    for (const id of FREESTANDING_RULE_IDS) {
+      const entry = FREESTANDING_RULE_EXPLANATIONS[id];
+      expect(RULE_FIELDS, id).toContain(entry.field);
+      expect(['strength', 'variant', 'values', 'intensity'], id).toContain(entry.field);
+      expect(entry.title.trim(), id).not.toBe('');
+      expect(entry.explanation.length, id).toBeGreaterThan(40);
+      expect(entry.explanation, id).not.toMatch(/TODO|TBD/);
+      expect(sentenceCount(entry.explanation), id).toBeGreaterThanOrEqual(2);
+      expect(sentenceCount(entry.explanation), id).toBeLessThanOrEqual(4);
+    }
+  });
+
+  it('überschneidet sich mit keiner anderen Tabelle', () => {
+    const others = new Set([...Object.keys(RULE_EXPLANATIONS), ...Object.keys(COMPOSITION_RULE_EXPLANATIONS)]);
+    expect(Object.keys(FREESTANDING_RULE_EXPLANATIONS).filter((id) => others.has(id))).toEqual([]);
+  });
+});
+
 describe('explainIssue', () => {
   it('ergänzt Meldung um Klartext und Katalogdaten der Regel', () => {
     const id = 'strength-requires-unit';
@@ -146,8 +177,19 @@ describe('explainIssue', () => {
     expect(() => explainIssue({ rule: 'gibt-es-nicht', message: 'z' })).toThrow(/gibt-es-nicht/);
   });
 
+  it('erklärt eine Regel der freistehenden Zeichen mit ihrer Dimension', () => {
+    expect(explainIssue({ rule: 'weather-values-exceed-limit', message: 'w' })).toMatchObject({
+      rule: 'weather-values-exceed-limit',
+      message: 'w',
+      field: 'values',
+      phase: 'spec',
+      dimension: 'weather',
+      kind: 'systematik',
+    });
+  });
+
   it('erklärt jeden Katalogeintrag vollständig — kein halber Verbund', () => {
-    for (const entry of [...RULE_CATALOG, ...COMPOSITION_RULE_CATALOG]) {
+    for (const entry of [...RULE_CATALOG, ...COMPOSITION_RULE_CATALOG, ...FREESTANDING_RULE_CATALOG]) {
       const explained = explainIssue({ rule: entry.id, message: 'm' });
       expect(explained.title.trim(), entry.id).not.toBe('');
       expect(explained.phase, entry.id).toBe(entry.phase);

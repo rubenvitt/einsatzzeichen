@@ -2,9 +2,11 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { FREESTANDING_RULE_IDS } from '../freestanding-rules.js';
 import { VALIDATION_RULE_IDS } from '../validation-rules.js';
 import {
   COMPOSITION_RULE_CATALOG,
+  FREESTANDING_RULE_CATALOG,
   RULE_CATALOG,
   RULE_DIMENSIONS,
   RULE_DIMENSION_GAPS,
@@ -255,11 +257,71 @@ describe('COMPOSITION_RULE_CATALOG gegen den Quelltext von compose.ts', () => {
   });
 });
 
+describe('FREESTANDING_RULE_CATALOG gegen FREESTANDING_RULE_IDS und validate-freestanding.ts', () => {
+  /**
+   * Dasselbe Gate wie für `RULE_CATALOG`, auf der Prüfstelle der freistehenden Zeichen
+   * (LFH-577): Katalog und Liste mengengleich, Auslösestellen je Kennung gegen `sites`.
+   */
+  const listed = new Set(FREESTANDING_RULE_IDS);
+  const cataloged = new Set(FREESTANDING_RULE_CATALOG.map((rule) => rule.id));
+  const pushedIds = [...source('../validate-freestanding.ts').matchAll(/rule: '([a-z0-9-]+)'/g)]
+    .map((match) => match[1] as string);
+
+  it('ist mengengleich mit FREESTANDING_RULE_IDS, alphabetisch', () => {
+    expect([...cataloged].filter((id) => !listed.has(id)).sort()).toEqual([]);
+    expect([...listed].filter((id) => !cataloged.has(id)).sort()).toEqual([]);
+    expect(FREESTANDING_RULE_CATALOG.map((rule) => rule.id)).toEqual([...cataloged].sort());
+  });
+
+  it('zählt die Auslösestellen je Kennung gegen das Feld sites', () => {
+    const perId = new Map<string, number>();
+    for (const id of pushedIds) perId.set(id, (perId.get(id) ?? 0) + 1);
+    expect(Object.fromEntries([...perId].sort())).toEqual(
+      Object.fromEntries(FREESTANDING_RULE_CATALOG.map((rule) => [rule.id, rule.sites]).sort()),
+    );
+    // Die Stärkenregel greift in beide Richtungen: fehlt an 2.20, steht an einer anderen Linie.
+    expect(FREESTANDING_RULE_CATALOG.filter((rule) => rule.sites > 1).map((rule) => rule.id)).toEqual([
+      'line-strength-mismatch',
+    ]);
+  });
+
+  it('prüft die Beschreibung, mit Quelle aus der Referenz und Begründung im Kern', () => {
+    const others = new Set([...RULE_CATALOG, ...COMPOSITION_RULE_CATALOG].map((rule) => rule.id));
+    // Der doppelte Wetterwert ist Datenhygiene; die Referenz sagt darüber nichts.
+    expect(FREESTANDING_RULE_CATALOG.filter((rule) => rule.source === null).map((rule) => rule.id)).toEqual([
+      'weather-value-duplicate',
+    ]);
+    for (const rule of FREESTANDING_RULE_CATALOG) {
+      expect(rule.phase, rule.id).toBe('spec');
+      expect(rule.reasonSource, rule.id).toBe('core');
+      if (rule.source === null) continue;
+      expect(rule.source.source, rule.id).toBe('babz-svg-2025');
+      expect(rule.source.status, rule.id).toBe('derived');
+      expect(rule.source.section?.trim(), rule.id).not.toBe('');
+      expect(RULE_DIMENSIONS, rule.id).toContain(rule.dimension);
+      expect(others.has(rule.id), rule.id).toBe(false);
+      expect(ruleCatalogEntry(rule.id), rule.id).toBe(rule);
+    }
+  });
+
+  it('ordnet die Regeln den Dimensionen der freistehenden Zeichen zu', () => {
+    expect(FREESTANDING_RULE_CATALOG.map((rule) => [rule.id, rule.kind, rule.dimension])).toEqual([
+      ['animal-state-variant-not-available', 'systematik', 'animal'],
+      ['line-strength-mismatch', 'systematik', 'lines-and-boundaries'],
+      ['line-variant-not-available', 'systematik', 'lines-and-boundaries'],
+      ['weather-intensity-without-precipitation', 'systematik', 'weather'],
+      ['weather-value-duplicate', 'engine', 'weather'],
+      ['weather-values-exceed-limit', 'systematik', 'weather'],
+    ]);
+  });
+});
+
 describe('Lücken je Dimension', () => {
   it('kennt jede Dimension der Union aus einem Eintrag oder aus der Lückenliste', () => {
     const inEntries = new Set([
       ...RULE_CATALOG.map((rule) => rule.dimension),
       ...COMPOSITION_RULE_CATALOG.map((rule) => rule.dimension),
+      ...FREESTANDING_RULE_CATALOG.map((rule) => rule.dimension),
     ]);
     const inGaps = new Set(RULE_DIMENSION_GAPS.map((gap) => gap.dimension));
     const unaccounted = RULE_DIMENSIONS.filter((id) => !inEntries.has(id) && !inGaps.has(id));
@@ -281,11 +343,14 @@ describe('Lücken je Dimension', () => {
    * Festgenagelt, damit die Aussage „Lücken je Dimension benannt" zählbar bleibt und nicht
    * unbemerkt schrumpft, wenn jemand eine Dimension aus der Union nimmt.
    */
-  it('zählt neun Lücken, davon fünf ohne jede Regel', () => {
-    // Seit LFH-577 trägt `state` vier Regeln und ist nur noch teilweise offen.
-    expect(RULE_DIMENSION_GAPS).toHaveLength(9);
+  it('zählt elf Lücken, davon vier ohne jede Regel', () => {
+    // Seit LFH-577 trägt `state` vier Regeln und ist nur noch teilweise offen. Mit der
+    // freistehenden Spec-Art tragen auch Linien, Wetter und Tierzustand Regeln; die Pfeile nicht.
+    expect(RULE_DIMENSION_GAPS).toHaveLength(11);
     expect(RULE_DIMENSION_GAPS.filter((gap) => gap.coverage === 'none').map((g) => g.dimension))
-      .toEqual(['capabilities', 'unit-grouping', 'tendency', 'movement', 'lines-and-boundaries']);
+      .toEqual(['capabilities', 'unit-grouping', 'tendency', 'movement']);
+    expect(RULE_DIMENSION_GAPS.filter((gap) => gap.coverage === 'partial').map((g) => g.dimension))
+      .toEqual(['base-symbol', 'administrative-level', 'body-marks', 'state', 'lines-and-boundaries', 'weather', 'animal']);
   });
 
   /**
@@ -325,9 +390,10 @@ describe('Einordnung fachlich gegen technisch', () => {
 });
 
 describe('ruleCatalogEntry', () => {
-  it('findet über beide Klassen', () => {
+  it('findet über alle drei Kataloge', () => {
     expect(ruleCatalogEntry('strength-requires-unit')?.phase).toBe('spec');
     expect(ruleCatalogEntry('label-too-wide')?.phase).toBe('composition');
+    expect(ruleCatalogEntry('weather-values-exceed-limit')?.dimension).toBe('weather');
   });
 
   it('gibt bei unbekannter Kennung undefined zurück', () => {

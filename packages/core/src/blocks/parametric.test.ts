@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { LINE_IDS, MOVEMENT_IDS, type ParametricBlock, type ParametricFinding } from '@einsatzzeichen/schema';
 import { PLANNED_PARAMETRIC_RULES } from '../rules/planned-parametric-rules.js';
+import { FREESTANDING_RULE_CATALOG } from '../rules/rule-catalog.js';
 import { ARROW_BLOCKS, LINE_BLOCKS, PARAMETRIC_BLOCKS, parametricBlock } from './parametric.js';
 import { BLOCK_REGISTER, blockEntry } from './register.js';
 
@@ -114,18 +115,22 @@ describe('Parametrisierte Bausteine: Tabelle', () => {
     }
   });
 
-  it('benutzt nur vorgemerkte Regeln, und jede vorgemerkte Regel wird benutzt', () => {
+  it('benutzt nur vorgemerkte oder geltende Regeln, und jede vorgemerkte Regel wird benutzt', () => {
+    // Seit LFH-577 gelten die Linienregeln (`FREESTANDING_RULE_CATALOG`); die Pfeile tragen weiter
+    // nur die vorgemerkten Anbindungsregeln.
+    const known = [...PLANNED_PARAMETRIC_RULES, ...FREESTANDING_RULE_CATALOG];
     const planned = PLANNED_PARAMETRIC_RULES.map((rule) => rule.id);
     const used = new Set(PARAMETRIC_BLOCKS.flatMap((entry) => entry.rules));
-    expect([...used].filter((id) => !planned.includes(id))).toEqual([]);
+    expect([...used].filter((id) => !known.some((rule) => rule.id === id))).toEqual([]);
     expect(planned.filter((id) => !used.has(id))).toEqual([]);
     for (const entry of PARAMETRIC_BLOCKS) {
       const dimension = entry.category === 'arrow' ? 'movement' : 'lines-and-boundaries';
       for (const id of entry.rules) {
-        expect(PLANNED_PARAMETRIC_RULES.find((rule) => rule.id === id)?.dimension, `${entry.id} / ${id}`)
-          .toBe(dimension);
+        expect(known.find((rule) => rule.id === id)?.dimension, `${entry.id} / ${id}`).toBe(dimension);
       }
     }
+    const lineRules = new Set(PARAMETRIC_BLOCKS.filter((entry) => entry.category === 'line').flatMap((entry) => entry.rules));
+    expect([...lineRules].sort()).toEqual(['line-strength-mismatch', 'line-variant-not-available']);
   });
 });
 
