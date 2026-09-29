@@ -1,3 +1,71 @@
+## ⚠️ Breaking Changes
+
+### Organisation `bundespolizei` entfällt
+
+Die Bundespolizei wird gemäß BBK-Heft 2025 (Tafel 2.5) nicht mehr als eigene Organisation geführt, sondern der Polizei zugeordnet. Die Zeichen D.4.4 und N.1.3 werden nun in Polizei-Grün (#14a01e) statt Hellgrün (#64dc32) gerendert. „BuPol" bleibt als Beschriftung verwendbar.
+
+**Migration:** Verwenden Sie `polizei` statt `bundespolizei` als Organisationswert.
+
+**Betroffene Pakete:**
+- `@einsatzzeichen/schema`: `OrganizationId` und `ORGANIZATION_IDS` enthalten nur noch 8 statt 9 Werte
+- `@einsatzzeichen/core`: Baustein `color.bundespolizei` entfernt; `ORGANIZATION_COLORS`, `ORGANIZATION_LABELS` und `ORGANIZATION_BODY_DASHES` entsprechend angepasst
+- `@einsatzzeichen/conformance`: Element `organization.bundespolizei` entfernt
+
+## Katalog
+
+### Arimo Medium als neue Standard-Schriftstärke
+
+Der gesamte Katalogtext wird nun in Arimo Medium (Schriftstärke 500) gesetzt, um die Referenzdarstellung präziser zu treffen. Die Strichstärke der Referenz liegt zwischen Arimo Regular und Bold; Arimo Medium weicht nur 3% ab.
+
+- Schema unterstützt nun `fontWeight: 400 | 500 | 700` (Standard bleibt 400)
+- Katalogtext verwendet automatisch Medium (500)
+- Sieben Textläufe in Anhang J wachsen auf Referenzhöhe zurück
+- Geringfügige Anpassungen bei Strömungsrettung (I.1.17/18, I.2.6)
+
+### Kursivschrift für Zusatzinformationen
+
+Zeichen D.1.1 („Bezeichnung") wird nun korrekt kursiv gesetzt, wie in der Referenz dargestellt.
+
+- Schema unterstützt `fontStyle: 'italic'` (nur mit Schriftstärke 500)
+- Neue statische Schriftdatei Arimo Medium Italic integriert
+
+### Größenanpassung DMO-Symbol
+
+Die Box des großen „DMO" in J.1.5/J.1.7 wurde auf 23,8 mm Breite vergrößert (vorher 23,5 mm), um wie „TMO" in J.1.6 die Referenzversalhöhe 10,6 mm zu erreichen.
+
+## Rendering
+
+### Verbesserte Sicherheit gegen Injection
+
+Die SVG-Erzeugung wurde gehärtet:
+
+- `idPrefix` wird vor der Verwendung validiert und maskiert – ungültige Zeichen (Leerzeichen, Anführungszeichen, `<`, `>`, `&`) werden abgewiesen
+- Aufzählungswerte wie `text-anchor`, `stroke-linejoin`, `fill-rule` und `font-weight` werden nur noch als vordefinierte Literale ausgegeben
+- Ungültige Laufzeitwerte führen nicht mehr zu beliebigen Attributen im Markup
+
+## CLI
+
+### Neuer Befehl `reference-diff`
+
+Mit `pnpm cli reference-diff --reference-root <dir>` können Zeichen pixelgenau mit der offiziellen Referenz verglichen werden:
+
+- Rastert Referenz und eigene Darstellung identisch
+- Meldet Abweichungen pro Zeile (Bild- und Strichfläche)
+- Optional: Kontaktbögen zur visuellen Prüfung (Referenz | eigene | Überlagerung)
+- Deterministische Ausgabe unter `out/`
+
+## Conformance
+
+### Gemeinsame Zeichnungsfunktion
+
+Die Funktion `drawingForManifestEntry` ist nun zentral in `@einsatzzeichen/conformance` verfügbar und wird sowohl vom Review-Server als auch vom CLI-Befehl `reference-diff` genutzt.
+
+## Website
+
+### Dokumentation aktualisiert
+
+Das `@einsatzzeichen/conformance`-Paket wird nun korrekt als veröffentlichtes npm-Paket dokumentiert (nicht mehr als privat).
+
 ## Release Notes – Version 1.12.0
 
 ## Conformance & Symbolkatalog

@@ -1,6 +1,6 @@
 {
   "name": "@einsatzzeichen/schema",
-  "version": "1.12.0",
+  "version": "2.0.0",
   "type": "module",
   "description": "Typen, Taxonomie und Validierung des semantischen Symbolsystems für taktische Zeichen der Gefahrenabwehr",
   "license": "MIT",
