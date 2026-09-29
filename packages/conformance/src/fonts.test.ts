@@ -677,7 +677,10 @@ describe('Rasterevidenz für Text (resvgFontOptions())', () => {
     // F.3.14 genau einen weiteren vermessenen Lauf: `500` im ortsgebundenen Betreuungsplatz.
     // G ergänzt zwei, I-d vier, I-e fünf, I-f zwei, I-g zwei, I-b fünf, I.3 neun, I.5 genau zwei
     // (I.5.2/I.5.3) und Anhang N sechs beschriftete Rezepte. I.5.1 trägt bewusst keinen Lauf.
-    expect(labelRecipes).toHaveLength(137);
+    // **167 seit LFH-786:** 30 der 37 Anhang-C-Fixtures tragen einen Lauf. Ohne Lauf bleiben
+    // C.1.7, C.2.18, C.2.20#alternative, C.2.26#alternative, C.2.28#alternative, C.2.29 und
+    // C.2.31.
+    expect(labelRecipes).toHaveLength(167);
   });
 
   it('behandelt die ULP-äquivalente linke I.5.3-Boxkante als innerhalb', () => {

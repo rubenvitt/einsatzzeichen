@@ -244,6 +244,7 @@ describe('semantische Zeichenbeschreibungen', () => {
       'trailer-water-rescue',
       'trailer-diving',
       'trailer-boat-hull',
+      'track-chevron-top',
     ] as const;
     const task2RoleTechnicalIds = [
       'formation-solid-cap-3mm',
@@ -294,6 +295,7 @@ describe('semantische Zeichenbeschreibungen', () => {
       'trailer-water-rescue': 'Zwei Wellenlinien über einer Raute',
       'trailer-diving': 'Doppelwelle mit kleiner Raute',
       'trailer-boat-hull': 'Schwarzer Bootsrumpf mit weißem Innenraum',
+      'track-chevron-top': 'Gefüllter Winkel in der oberen Zone des Kettenfahrzeugs',
     });
   });
 

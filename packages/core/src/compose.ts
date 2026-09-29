@@ -4,6 +4,7 @@ import {
   type BodyVariantId,
   type BodyLabelInk,
   type BodyMarkId,
+  type BodyMarkRenditionId,
   type CapabilityId,
   type ChassisMark,
   type ChassisShape,
@@ -351,8 +352,8 @@ function labelPrimitive(
  * überschrieben.
  *
  * **Die Ableitung bleibt der Default.** Ein optionaler `BodyLabels.inBodyInk`-Wert überschreibt
- * sie nur dort, wo eine konkrete Quelle eine andere schwarze oder weisse Tinte vermisst. Specs
- * ohne diese Messung behalten denselben Rückgabewert und dieselben gerenderten Bytes.
+ * sie nur dort, wo eine Quelle eine andere Tinte vermisst (schwarz, weiss oder, seit LFH-786,
+ * `koerperlauf-kontrast`). Specs ohne diese Messung behalten Rückgabewert und gerenderte Bytes.
  *
  * **Exportiert, weil der Kontrastvertrag denselben Resolver braucht.** Der Katalog leitet in
  * `labelContrastRequirements()` ab, welches Paar aus einer Beschriftung im Körper überhaupt
@@ -437,9 +438,9 @@ function labelPrimitives(
   const defaultCenterBoxLeftMm = bodyBoundsMm.minX + CENTER_LABEL_BOX_MARGIN_MM;
   const defaultCenterBoxRightMm = bodyBoundsMm.maxX - CENTER_LABEL_BOX_MARGIN_MM;
   const centerBoxMarginMm = labels.centerBoxMarginMm ?? CENTER_LABEL_BOX_MARGIN_MM;
-  // I.2.5s vermessener linker Anker beginnt bei x = 5,088 mm. Nur dieser verifizierte
-  // Anker darf deshalb links bis an die Körperkante reichen; alle anderen mittigen Läufe
-  // verwenden den individuellen oder globalen symmetrischen Rand.
+  // Vermessene Anker (I.2.5, Tinte ab x = 5,088 mm; C.2.25, `measuredCenterAnchorsFromBodyLeftMm`)
+  // dürfen links bis an die Körperkante reichen; alle anderen mittigen Läufe verwenden den
+  // individuellen oder globalen symmetrischen Rand.
   const centerLabelBoxLeftMm = centerAnchorFromBodyLeftMm === undefined
     ? bodyBoundsMm.minX + centerBoxMarginMm
     : bodyBoundsMm.minX;
@@ -740,6 +741,8 @@ export interface BodyMarkContext {
    * Rezept den Fachbegriff gegen eine geometrische Ersatz-ID tauschen muss.
    */
   readonly bodyMarks?: readonly BodyMarkId[];
+  /** Die in der Spec gewählte Fassung dieser Marke (`SymbolSpec.bodyMarkRenditions`). */
+  readonly rendition?: BodyMarkRenditionId;
 }
 
 export interface CatalogPorts {
@@ -1275,6 +1278,9 @@ export function compose(
         // Nur bei mehreren Marken: eine einzelne Marke hat keine Kombination, der Kontext bleibt
         // für sie unverändert.
         ...((spec.bodyMarks?.length ?? 0) > 1 ? { bodyMarks: spec.bodyMarks } : {}),
+        ...(spec.bodyMarkRenditions === undefined || !Object.hasOwn(spec.bodyMarkRenditions, id)
+          ? {}
+          : { rendition: spec.bodyMarkRenditions[id] }),
         ...(
           spec.labels === undefined
             ? {}

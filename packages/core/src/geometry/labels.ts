@@ -143,6 +143,7 @@ export const TECHNICAL_BODY_MARK_LABELS = Object.freeze({
   'formation-opposed-triangles-top':
     'Zwei gegenüberliegende Dreiecke in der oberen Formationszone',
   'formation-chevron-top': 'Gefüllter Winkel in der oberen Formationszone',
+  'track-chevron-top': 'Gefüllter Winkel in der oberen Zone des Kettenfahrzeugs',
   'double-wave-inner-diamond-8mm': 'Doppelwelle mit Innenraute (8 mm)',
   'inset-hull-wheel-pair': 'Radpaar in der eingesenkten Wasserfahrzeughülle',
   'h-veterinary-decontamination':
@@ -203,6 +204,10 @@ export function describeSymbolSpec(spec: SymbolSpec): string {
   // Randbündige Fachdienstzeichen tragen denselben Begriff wie die Boxfassung und werden für eine
   // Vorlesestimme deshalb gleich benannt — der Unterschied ist die Zeichnung, nicht die Sache. Der
   // Titel kommt aus demselben Piktogrammregister, damit beide Fassungen nicht auseinanderlaufen.
+  // Aus demselben Grund steht `bodyMarkRenditions` (LFH-786) hier nicht: eine zweite Fassung
+  // verschiebt oder vergrößert dieselbe Marke, sie trägt keine eigene Bedeutung. Haupt- und
+  // Alternativdarstellung heißen für eine Vorlesestimme gleich; unterscheiden sie sich fachlich,
+  // dann über ihre Beschriftung, und die steht weiter unten.
   for (const mark of spec.bodyMarks ?? []) {
     if (isTechnicalBodyMarkId(mark)) {
       parts.push(`Technische Körpermarke: ${TECHNICAL_BODY_MARK_LABELS[mark]}`);

@@ -1,7 +1,7 @@
 /**
  * Die Reduzierlogik des Navigators als reine Funktionen. Bewusst außerhalb von React: Filter,
  * Blätterschritt und „nächste offene Zeile" sind die Regeln, an denen sich beim Abarbeiten von
- * 558 Zeilen Fehler zeigen — sie gehören in Tests und nicht in einen Komponentenrumpf.
+ * 595 Zeilen Fehler zeigen — sie gehören in Tests und nicht in einen Komponentenrumpf.
  */
 import type { AreaSummary, CarrierId, RowSummary } from '../contract';
 
@@ -16,7 +16,7 @@ export const DEFAULT_FILTER: RowFilter = { search: '', pendingOnly: true };
 
 /**
  * `RowSummary` trägt die Implementierungs-ID nicht — der Vertrag hält die Kurzfassung klein, es
- * sind 558 Stück. Die Suche bekommt sie deshalb aus den bereits geladenen Detailsätzen gereicht;
+ * sind 595 Stück. Die Suche bekommt sie deshalb aus den bereits geladenen Detailsätzen gereicht;
  * eine nie geöffnete Zeile bleibt über Schlüssel und Titel trotzdem auffindbar.
  */
 export type ImplementationIndex = ReadonlyMap<CarrierId, string>;

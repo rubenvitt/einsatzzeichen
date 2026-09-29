@@ -28,6 +28,27 @@ const PRINT_MONOCHROME_PALETTE: ColorPalette = deepFreeze({
   // D.1.8 und D.4.2 bleiben in Farbe schwarz auf Rot; nur auf dem Druckgrau brauchen ihre
   // Rollenläufe Weiss.
   'funktionslauf-kontrast': '#ffffff',
+  /**
+   * **Kontrastfarbe des Körperlaufs (LFH-786, Entscheidung des Projektinhabers vom
+   * 29. September 2026).** Die Referenz setzt Läufe im Körper schwarz auf Feuerwehrrot — C.1.8
+   * „P“, und mit den C.2-Fixtures auch C.2.25 „P“ und C.2.30 „120“. Im Drucktheme ist `rot`
+   * `#666666`; schwarzer Text erreicht darauf 3,657:1 und verfehlt die Textschwelle 4,5:1.
+   * Weiß erreicht 5,742:1. Referenz und accessible-light behalten Schwarz (`#000000` auf
+   * `#fa1919`, 5,218:1), das Bild der Quelle bleibt dort unverändert.
+   *
+   * **Antwort auf die verworfene Alternative an der PSNV-Ausnahme** (`contrast-exceptions.ts`,
+   * 4.2.2): dort ist „eigene Druckfarbe für Text auf Rot“ verworfen, weil sie „eine neue
+   * Palettenentscheidung für Piktogrammtext“ wäre und einer eigenen Entscheidung vorbehalten
+   * bliebe. Diese eigene Entscheidung ist hiermit getroffen, aber mit engerem Zuschnitt: das Token
+   * gilt für **Körperläufe** (`labels.inBodyInk`), nicht für Piktogrammtext. „PSNV“ ist Teil der
+   * Piktogrammzeichnung 4.2.2 und färbt sich damit nicht um; seine Ausnahme bleibt stehen. Ein
+   * eigenes Token und kein zweiter Wert für `funktionslauf-kontrast`: die beiden Läufe gehören
+   * verschiedenen Mechanismen (Rollenlauf aus `function-roles.ts` gegen Beschriftung aus
+   * `labels`), und ein geteiltes Token machte jede künftige Änderung an einem zur stillen
+   * Änderung am anderen. `bodyLabelInk()` leitet es nie selbst ab — es entsteht nur, wo ein
+   * Rezept es ausdrücklich als gemessene Tinte setzt; bestehende Fixtures bleiben bytegleich.
+   */
+  'koerperlauf-kontrast': '#ffffff',
   weiss: '#ffffff',
   rot: '#666666',
   /**

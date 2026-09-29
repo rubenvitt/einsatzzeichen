@@ -151,6 +151,18 @@ export const INVENTORY_EXCLUSIONS: readonly InventoryExclusion[] = Object.freeze
     '5.1.1.9_Kraftfahrzeug_straßenfähig_Wechselbehälter.svg',
     'Wechselbehälter-Fahrwerk aus 5.1.1 ist nicht vermessen; `VehicleCategoryId` führt es nicht.',
   ),
+  // Seit LFH-786 steht C.2.24 einzeln im Umfang; ohne diesen Eintrag wäre die nicht gebaute
+  // Alternative `unaccounted-reference`.
+  {
+    asset: 'C.2.24_CBRN-Erkundungswagen_Alternative.svg',
+    disposition: 'deferred',
+    reason:
+      'Befund an der Quelle: die Alternative des CBRN-Erkundungswagens zeigt 4.1.1 (CBRN-Schutz) ' +
+      'ohne Messstrich statt 4.1.2 wie die Hauptdarstellung und ist bildgleich mit ' +
+      'C.2.20_Gerätewagen Gefahrgut_Alternative.svg. Als Fixture ergäbe sie dieselbe Spec wie ' +
+      'C.2.20#alternative und wäre keine Messung von 4.1.2; zurückgestellt bis zum Fachreview.',
+    decidedIn: 'docs/decisions/2026-09-29-lfh-786-kapitel-4-piktogramme-in-anhang-c.md',
+  },
 ]);
 
 /**

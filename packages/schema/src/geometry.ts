@@ -6,6 +6,7 @@ export type Point = readonly [Length, Length];
 export type ColorToken =
   | 'schwarz'
   | 'funktionslauf-kontrast'
+  | 'koerperlauf-kontrast'
   | 'weiss'
   | 'rot'
   | 'blau'
@@ -29,6 +30,12 @@ export const PALETTE: ColorPalette = Object.freeze({
   schwarz: '#000000',
   /** Quellengetreuer Rollenlauf; nur das Drucktheme darf ihn zur Kontrasterhaltung invertieren. */
   'funktionslauf-kontrast': '#000000',
+  /**
+   * Quellengetreuer schwarzer Körperlauf auf Feuerwehrrot (LFH-786, C.1.8 „P“). In Farbe schwarz
+   * wie die Referenz; nur das Drucktheme hebt ihn auf Weiß, weil Druckrot `#666666` gegen Schwarz
+   * die Textschwelle verfehlt. Begründung und Kontrastwerte an `PRINT_MONOCHROME_PALETTE`.
+   */
+  'koerperlauf-kontrast': '#000000',
   weiss: '#ffffff',
   rot: '#fa1919',
   blau: '#003296',

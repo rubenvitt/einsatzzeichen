@@ -9,7 +9,11 @@ import {
   type Primitive,
   type SymbolKind,
 } from '@einsatzzeichen/schema';
-import { BODY_MARK_IDS, bodyMark as bodyMarkWithContext } from '@einsatzzeichen/core';
+import {
+  ANHANG_C_BODY_MARK_CONTEXTS,
+  BODY_MARK_IDS,
+  bodyMark as bodyMarkWithContext,
+} from '@einsatzzeichen/core';
 
 /**
  * Die einzige vermessene Körperhülle dieser Zeichnungen: das Rechteck 30 × 20 mm der taktischen
@@ -2118,8 +2122,16 @@ describe('bodyMark() — was nicht fortgeschrieben wird', () => {
     expect(() =>
       bodyMarkWithContext('medical-service', { kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm),
     ).toThrow(/nicht vermessen/);
+    // Bis LFH-786 stand hier `fire-fighting` am normalen Landfahrzeug. Das Paar ist seit C.2.4
+    // bis C.2.13 vermessen und zeichnet; der Nachbar mit Fußband und die Drehleiter am Anhänger
+    // sind es nicht und fallen nicht auf die vermessene Fassung zurück.
+    expect(bodyMarkWithContext('fire-fighting', { kind: 'vehicle-land' }, landBodyMm).length)
+      .toBeGreaterThanOrEqual(1);
     expect(() =>
-      bodyMarkWithContext('fire-fighting', { kind: 'vehicle-land' }, landBodyMm),
+      bodyMarkWithContext('fire-fighting', { kind: 'vehicle-land', bodyVariant: 'foot-band' }, landBodyMm),
+    ).toThrow(/nicht vermessen/);
+    expect(() =>
+      bodyMarkWithContext('rescue-aerial-ladder', { kind: 'trailer' }, trailerBodyMm),
     ).toThrow(/nicht vermessen/);
   });
 
@@ -2623,11 +2635,24 @@ describe('BODY_MARK_IDS', () => {
       'waste-disposal',
     ]);
     for (const id of task1LogisticsIds) expect(BODY_MARK_IDS).toContain(id);
+    // Seit LFH-786: Marken, deren einzige Fassungen in Anhang C stehen (Landfahrzeug, Anhänger,
+    // Kettenfahrzeug). Sie haben keine Formationsfassung und zeichnen deshalb unten in der
+    // zweiten Schleife an ihrem eigenen Kontext statt in der ersten an der Formation.
+    const anhangCOnlyIds = new Set<BodyMarkId>([
+      'rescue-aerial-ladder',
+      'rescue-articulated-boom',
+      'crane-lifting',
+      'lifting-clearing',
+      'technical-assistance',
+      'transport',
+      'track-chevron-top',
+    ]);
     for (const id of BODY_MARK_IDS) {
       // Sämtliche Task-1-Logistikrouten sind oben je Körperprofil mit exakten Primitiven,
       // Pfaden, Stilen, Bounds und negativen Nachbarkontexten abgesichert. Ein zusätzlicher
       // Existenzcheck würde diese stärkeren Verträge wieder zu `length > 0` verwässern.
       if (task1LogisticsIds.has(id)) continue;
+      if (anhangCOnlyIds.has(id)) continue;
       // Kein Mindestmaß von zwei Primitiven: `care` steht mit **einem** Polyzug ohne Teilung da,
       // und genau das ist an F.1.3 belegt (siehe den Block zur Zeltmarke oben).
       const invocation = id === 'water-rescue'
@@ -2664,6 +2689,35 @@ describe('BODY_MARK_IDS', () => {
           : [{ kind: 'formation' } as const, formationBodyMm] as const;
       expect(bodyMarkWithContext(id, invocation[0], invocation[1]).length).toBeGreaterThanOrEqual(1);
     }
+    // Jede Anhang-C-Fassung an ihrem eigenen Kontext, einschließlich der zweiten Fassungen
+    // (`rendition`). Die Hüllen sind die platzierten Körper der Fixtures, die den Kontext nutzen
+    // (C.1.7, C.2.4, C.2.29, C.2.30, C.2.31).
+    const anhangCBounds = (kind: string, variant: string | undefined): BoundsMm => {
+      if (kind === 'formation' && variant === undefined) return formationBodyMm;
+      if (kind === 'vehicle-land' && variant === undefined) return landBodyMm;
+      if (kind === 'vehicle-land' && variant === 'inverted-hull-track') return invertedLandBodyMm;
+      if (kind === 'trailer' && (variant === undefined || variant === 'foot-band')) return trailerBodyMm;
+      throw new Error(`Anhang-C-Kontext ${kind}/${variant ?? '-'} ohne Hülle im Test`);
+    };
+    const drawnInAnhangC = new Set<BodyMarkId>();
+    for (const context of ANHANG_C_BODY_MARK_CONTEXTS) {
+      for (const id of Object.keys(context.marks) as BodyMarkId[]) {
+        const drawn = bodyMarkWithContext(
+          id,
+          {
+            kind: context.kind,
+            ...(context.bodyVariant === undefined ? {} : { bodyVariant: context.bodyVariant }),
+            ...(context.vehicleCategory === undefined ? {} : { vehicleCategory: context.vehicleCategory }),
+            ...(context.rendition === undefined ? {} : { rendition: context.rendition }),
+          },
+          anhangCBounds(context.kind, context.bodyVariant),
+        );
+        expect(drawn.length, `${context.kind}/${context.bodyVariant ?? '-'}/${context.rendition ?? '-'}/${id}`)
+          .toBeGreaterThanOrEqual(1);
+        drawnInAnhangC.add(id);
+      }
+    }
+    for (const id of anhangCOnlyIds) expect(drawnInAnhangC, id).toContain(id);
   });
 });
 

@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   ARIMO_CAP_HEIGHT_FRACTION,
   boundsOfMm,
+  checkContrast,
   CompositionError,
   formatUnits,
   matchFingerprint,
+  RENDER_THEMES,
   renderSvg,
   validateSpec,
 } from '@einsatzzeichen/core';
@@ -563,7 +565,8 @@ describe('Anhang D.1, Führungsstellen im Einsatz', () => {
 
   it('führt exakt die neun komponierten D.1-Darstellungen', () => {
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('D.1.'))).toEqual(expectedKeys);
-    expect(Object.keys(RECIPES)).toHaveLength(242);
+    // 242 bis LFH-786, dazu 37 Anhang-C-Fixtures (C.1.7, C.1.8 und 35 aus C.2).
+    expect(Object.keys(RECIPES)).toHaveLength(279);
   });
 
   it('bindet D.1.2 bis D.1.8 an die sieben gemessenen Formationsrollen', () => {
@@ -1108,7 +1111,8 @@ describe('Anhang G — vollständiges Logistikinventar', () => {
     expect(actual).toEqual(expected);
     expect(Object.keys(actual)).toEqual(Object.keys(expected));
     expect(Object.keys(actual).every((key) => !key.includes('#'))).toBe(true);
-    expect(Object.keys(RECIPES)).toHaveLength(242);
+    // 242 bis LFH-786, dazu 37 Anhang-C-Fixtures.
+    expect(Object.keys(RECIPES)).toHaveLength(279);
   });
 
   it('bindet die 21 primary- und Referenz-IDs exakt und ohne Alternative', () => {
@@ -1471,6 +1475,72 @@ describe('Anhang I, Teilslice I-b (I.2.4 bis I.2.7)', () => {
       content: 'Tauchen', anchor: 'middle', x: 12.24, y: 11.5,
       sizeMm: 2.919 / ARIMO_CAP_HEIGHT_FRACTION,
     })]);
+  });
+});
+
+/**
+ * LFH-786: die Profilverträge, die C.2.25 und C.2.30 brauchen, am echten Katalog und ohne
+ * Körpermarken — die Marken bauen die Familienslices, die Läufe hängen allein am Profil.
+ */
+describe('LFH-786: Läufe der C.2-Fixtures an Landfahrzeug und Anhänger mit Fußband', () => {
+  const labelRuns = (drawing: Drawing) => drawing.children.filter(
+    (child): child is Primitive & { type: 'text' } => child.type === 'text' && child.role === 'label',
+  );
+  const cases: readonly (readonly [string, Recipe, number, number])[] = [
+    ['C.2.25 „P“', {
+      title: 'Prüffall C.2.25', referenceAsset: 'C.2.25_Gerätewagen Dekontamination Personal.svg',
+      spec: {
+        kind: 'vehicle-land', organization: 'feuerwehr',
+        labels: {
+          center: 'P', centerAnchorFromBodyLeftMm: 21.3, centerBaselineFromBodyBottomMm: 3,
+          centerCapHeightMm: 2.919, inBodyInk: 'koerperlauf-kontrast',
+        },
+      },
+    }, 22.3, 23],
+    ['C.2.25#alternative „P“', {
+      title: 'Prüffall C.2.25#alternative',
+      referenceAsset: 'C.2.25_Gerätewagen Dekontamination Personal_Alternative.svg',
+      spec: {
+        kind: 'vehicle-land', organization: 'feuerwehr',
+        labels: {
+          center: 'P', centerAnchorFromBodyLeftMm: 15.5, centerBaselineFromBodyBottomMm: 2,
+          inBodyInk: 'koerperlauf-kontrast',
+        },
+      },
+    }, 16.5, 24],
+    ['C.2.30 „120“', {
+      title: 'Prüffall C.2.30', referenceAsset: 'C.2.30_Feuerwehr Netzersatzanlage 120 kVA.svg',
+      spec: {
+        kind: 'trailer', bodyVariant: 'foot-band', organization: 'feuerwehr',
+        labels: { topLeft: '120', inBodyInk: 'koerperlauf-kontrast' },
+      },
+    }, 5.5, 12.5],
+  ];
+
+  it.each(cases)('%s: gültig, am vermessenen Anker gesetzt und in allen drei Themes lesbar',
+    (_label, recipe, x, y) => {
+      expect(validateSpec(recipe.spec)).toEqual([]);
+      const [run, ...rest] = labelRuns(composeFromCatalog(recipe.spec, recipe.title));
+      expect(rest).toEqual([]);
+      expect(run?.x).toBeCloseTo(x, 9);
+      expect(run?.y).toBeCloseTo(y, 9);
+      expect(run?.style?.fill).toBe('koerperlauf-kontrast');
+      const derived = labelContrastRequirements([recipe]);
+      expect(derived.map((entry) => `${entry.foreground}/${entry.background}`))
+        .toEqual(['koerperlauf-kontrast/rot']);
+      for (const theme of Object.values(RENDER_THEMES)) {
+        expect(checkContrast(theme, derived), theme.id).toEqual([]);
+      }
+    });
+
+  it('liest Fassungskennungen wie validateSpec nur aus eigenen Schlüsseln', () => {
+    // Eine geerbte Kennung wirkt weder in der Regel noch beim Zeichnen: C.1.8 bleibt bytegleich,
+    // statt an der Formation eine nur am Landfahrzeug vermessene Fassung anzufordern und zu werfen.
+    const recipe = RECIPES['C.1.8'];
+    const inherited = Object.create({ decontamination: 'centered-large-tongs' }) as object;
+    const spec = { ...recipe.spec, bodyMarkRenditions: inherited } as typeof recipe.spec;
+    expect(validateSpec(spec)).toEqual([]);
+    expect(composeFromCatalog(spec, recipe.title)).toEqual(composeFromCatalog(recipe.spec, recipe.title));
   });
 });
 
@@ -2205,6 +2275,7 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
     // schwarze Tinte. Diese drei Paare stehen separat, obwohl eines denselben Organisationskontext
     // wie E.2.6 trägt; sonst würde der Resolveroverride im Kontrastvertrag unsichtbar. G.3.5
     // ergänzt denselben schwarz/braun-Farbwert als separat benannten bottomCenter-Vertrag.
+    // C.1.8 (LFH-786) setzt sein „P“ mit dem eigenen Token `koerperlauf-kontrast` auf Rot.
     expect(requirements).toEqual([
       {
         foreground: 'schwarz',
@@ -2420,6 +2491,12 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
         foreground: 'schwarz',
         background: 'braun',
         context: 'Beschriftung im Körper auf Organisation bundeswehr',
+        minimum: 4.5,
+      },
+      {
+        foreground: 'koerperlauf-kontrast',
+        background: 'rot',
+        context: 'Beschriftung im Körper auf Organisation feuerwehr',
         minimum: 4.5,
       },
       {
@@ -3295,12 +3372,13 @@ describe('Anhang F, Teilslice F-f', () => {
     },
   } as const;
 
-  it('deckt F.3.12 bis F.3.19 lückenlos ab und erreicht integriert 242 Rezepte', () => {
+  it('deckt F.3.12 bis F.3.19 lückenlos ab und erreicht integriert 279 Rezepte', () => {
     const entries = Object.entries<Recipe>(RECIPES)
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
-    expect(Object.keys(RECIPES)).toHaveLength(242);
+    // 242 bis LFH-786, dazu 37 Anhang-C-Fixtures.
+    expect(Object.keys(RECIPES)).toHaveLength(279);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {

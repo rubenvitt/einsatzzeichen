@@ -1,5 +1,5 @@
 /**
- * Gates der Zeilenmenge. Der Kern ist die Vollständigkeit: 558 Träger, jeder Manifestschlüssel
+ * Gates der Zeilenmenge. Der Kern ist die Vollständigkeit: 595 Träger, jeder Manifestschlüssel
  * genau einmal, und **jede** Manifestzeile mit einer Zeichnung. Eine Zeile ohne Bild wäre eine,
  * die der Reviewer blind entscheidet — das ist der Befund, wegen dessen dieses Werkzeug
  * überhaupt entsteht.
@@ -23,8 +23,9 @@ const rows = buildRows();
 const manifestRows = rows.filter((row) => row.kind === 'manifest');
 
 describe('buildRows', () => {
-  it('führt genau 558 Träger: 544 Manifestzeilen, 13 Quellen, ein Profil', () => {
-    expect(rows).toHaveLength(558);
+  it('führt genau 595 Träger: 581 Manifestzeilen, 13 Quellen, ein Profil', () => {
+    // 544 Manifestzeilen bis LFH-786, dazu die 37 Anhang-C-Fixtures.
+    expect(rows).toHaveLength(595);
     expect(manifestRows).toHaveLength(COVERAGE_MANIFEST.entries.length);
     expect(rows.filter((row) => row.kind === 'source')).toHaveLength(
       Object.keys(SOURCE_REGISTRY).length,
@@ -63,7 +64,8 @@ describe('buildRows', () => {
     const byCoverage = (kind: string) =>
       manifestRows.filter((row) => row.coverage === kind).length;
     expect(byCoverage('catalog-entry')).toBe(14);
-    expect(byCoverage('composition-recipe')).toBe(242);
+    // 242 bis LFH-786, dazu 37 Anhang-C-Fixtures.
+    expect(byCoverage('composition-recipe')).toBe(279);
     expect(byCoverage('element')).toBe(288);
   });
 

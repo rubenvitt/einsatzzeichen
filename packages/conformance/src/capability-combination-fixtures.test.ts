@@ -116,8 +116,15 @@ describe('Mehrfachfähigkeiten gegen die Fixtures', () => {
 describe('Die Überlagerungsregel gegen den Motor', () => {
   const multiMark = entries.filter(([, recipe]) => (recipe.spec.bodyMarks?.length ?? 0) >= 2);
 
-  it('prüft alle 28 Fixtures mit mehreren Körpermarken, auch mit rein technischen Marken', () => {
-    expect(multiMark).toHaveLength(28);
+  it('prüft alle 29 Fixtures mit mehreren Körpermarken, auch mit rein technischen Marken', () => {
+    // 28 bis LFH-786; dazu C.2.31, die geschützte Löschdrohne: `fire-fighting` und der
+    // technische Drohnenwinkel `track-chevron-top` am Kettenfahrzeug (inverted-hull-track). Mit
+    // einer einzigen Fähigkeit steht sie nicht in den `forms` der Regel (wie F.2.16, Betreuung
+    // mit technischem Ring), fällt aber unter die Überlagerungsprüfung unten: beide Marken
+    // überschneiden sich nicht und zeichnen bytegleich wie allein. Die fire-fighting-Fassung am
+    // Kettenfahrzeug ist in der Quelle nur zusammen mit dem Winkel belegt; „wie allein“ heißt
+    // hier deshalb die Einzelfassung derselben Hülle, nicht ein eigenes Original.
+    expect(multiMark).toHaveLength(29);
   });
 
   it('zeichnet in jeder regelgemäßen Fixture jede Marke wie allein', () => {

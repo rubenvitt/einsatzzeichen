@@ -164,7 +164,7 @@ export interface ZoneGap {
  * Belegung einer Zone an einer Körperform.
  *
  * Drei Zustände und nicht zwei, weil das Repository zwischen „nicht belegt" und „gemessen leer"
- * unterscheidet (`profiles.ts:371–372`): das erste lädt zum Nachschauen ein, das zweite hält
+ * unterscheidet (`profiles.ts:493–494`): das erste lädt zum Nachschauen ein, das zweite hält
  * fest, dass nachgeschaut wurde.
  *
  * - `measured` — die Zone liegt mit mindestens einem Maß und dessen Herkunft vor.

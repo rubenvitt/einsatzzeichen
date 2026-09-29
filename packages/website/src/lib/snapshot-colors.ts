@@ -31,6 +31,7 @@ export const COLOR_WORDS: Record<ColorToken | 'surface', string> = {
   hellgrau: 'Hellgrau',
   hellblau: 'Hellblau',
   'funktionslauf-kontrast': 'Kontrastfarbe des Funktionslaufs',
+  'koerperlauf-kontrast': 'Kontrastfarbe des Körperlaufs',
   // Nur als Hintergrund möglich (`ContrastException.background`); daher der Dativ.
   surface: 'der Ausgabefläche',
 };

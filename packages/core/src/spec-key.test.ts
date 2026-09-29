@@ -94,4 +94,17 @@ describe('specKey()', () => {
       labels: { centerCapHeightMm: Number.NaN },
     })).toThrow(/nicht endliche Zahl/);
   });
+
+  it('unterscheidet Specs, die sich allein in der Fassung einer Körpermarke unterscheiden', () => {
+    // LFH-786: Haupt- und Alternativdarstellung derselben Marke zeichnen verschieden; der
+    // Schlüssel muss sie trennen. Er tut das ohne eigenen Code, weil er jedes Feld aufnimmt.
+    const land: SymbolSpec = { kind: 'vehicle-land', bodyMarks: ['decontamination'] };
+    const keys = ([
+      land,
+      { ...land, bodyMarkRenditions: { decontamination: 'centered-large-tongs' } },
+      { ...land, bodyMarkRenditions: {} },
+    ] satisfies SymbolSpec[]).map(specKey);
+    expect(keys[0]).not.toBe(keys[1]);
+    expect(new Set(keys).size).toBe(3);
+  });
 });

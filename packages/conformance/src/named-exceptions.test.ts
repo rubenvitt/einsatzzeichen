@@ -46,9 +46,10 @@ function carriedSpecialValues(): Carried[] {
 const id = (fixture: string, field: string): string => `${fixture}/${field}`;
 
 describe('GRAMMAR_FIXTURES', () => {
-  it('ist dasselbe Objekt wie RECIPES mit unveränderten 242 Einträgen', () => {
+  it('ist dasselbe Objekt wie RECIPES mit 279 Einträgen', () => {
     expect(GRAMMAR_FIXTURES).toBe(RECIPES);
-    expect(fixtures).toHaveLength(242);
+    // 242 bis LFH-786; dazu C.1.7, C.1.8 und 35 C.2-Darstellungen, zusammen 37.
+    expect(fixtures).toHaveLength(279);
   });
 });
 
@@ -107,27 +108,40 @@ describe('NAMED_EXCEPTIONS: Gate in beide Richtungen', () => {
 });
 
 describe('NAMED_EXCEPTIONS: festgenagelte Zahlen', () => {
-  it('zählt 50 Ausnahmen, je Feld festgenagelt', () => {
+  it('zählt 87 Ausnahmen, je Feld festgenagelt', () => {
+    // LFH-786 ergänzt 37: 30 × inBodyInk (koerperlauf-kontrast an jeder beschrifteten neuen
+    // Fixture), topLeftMetrics an C.2.10, die Versalhöhe des kleinen „P“ in C.2.25, Grundlinien
+    // an C.2.25, C.2.25#alternative und C.1.8 sowie die beiden Anker des „P“ in C.2.25 und
+    // C.2.25#alternative.
     const perField = Object.fromEntries(SPECIAL_VALUE_FIELDS.map((field) => [
       field,
       NAMED_EXCEPTIONS.filter((entry) => entry.field === field).length,
     ]));
     expect(perField).toEqual({
-      centerCapHeightMm: 16,
-      centerBaselineFromBodyBottomMm: 7,
-      centerAnchorFromBodyLeftMm: 1,
+      centerCapHeightMm: 17,
+      centerBaselineFromBodyBottomMm: 10,
+      centerAnchorFromBodyLeftMm: 3,
       centerBoxMarginMm: 2,
-      topLeftMetrics: 15,
+      topLeftMetrics: 16,
       aboveLeftMetrics: 4,
       bottomRightMetrics: 1,
-      inBodyInk: 4,
+      inBodyInk: 34,
     });
-    expect(NAMED_EXCEPTIONS).toHaveLength(50);
+    expect(NAMED_EXCEPTIONS).toHaveLength(87);
   });
 
-  it('betrifft genau 37 der 242 Fixtures', () => {
+  it('betrifft genau 67 der 279 Fixtures', () => {
     const affected = [...new Set(NAMED_EXCEPTIONS.map((entry) => entry.fixture))];
+    // 37 bis LFH-786; dazu die 30 beschrifteten neuen Fixtures. Ohne Lauf und damit ohne
+    // Sonderwert bleiben C.1.7, C.2.18, C.2.20#alternative, C.2.26#alternative,
+    // C.2.28#alternative, C.2.29 und C.2.31.
     expect(affected).toEqual([
+      'C.1.8',
+      'C.2.4', 'C.2.5', 'C.2.6', 'C.2.7', 'C.2.8', 'C.2.9', 'C.2.10', 'C.2.11', 'C.2.12', 'C.2.13',
+      'C.2.14', 'C.2.14#alternative', 'C.2.15', 'C.2.15#alternative',
+      'C.2.16', 'C.2.16#alternative', 'C.2.17', 'C.2.17#alternative',
+      'C.2.20', 'C.2.23', 'C.2.23#alternative', 'C.2.24', 'C.2.25', 'C.2.25#alternative', 'C.2.26',
+      'C.2.27', 'C.2.27#alternative', 'C.2.28', 'C.2.30',
       'E.2.7', 'E.2.8', 'E.2.12', 'E.2.13', 'E.2.16', 'E.2.17', 'E.2.19', 'E.2.20', 'E.2.21',
       'F.2.10', 'F.2.11', 'F.2.12', 'F.2.13', 'F.2.14', 'F.2.16', 'F.2.17',
       'F.3.3', 'F.3.4', 'F.3.5', 'F.3.14',
@@ -136,7 +150,7 @@ describe('NAMED_EXCEPTIONS: festgenagelte Zahlen', () => {
       'I.3.2', 'I.5.2', 'I.5.3',
       'N.1.2', 'N.1.3', 'N.1.4', 'N.1.5', 'N.1.6',
     ]);
-    expect(affected).toHaveLength(37);
+    expect(affected).toHaveLength(67);
   });
 });
 

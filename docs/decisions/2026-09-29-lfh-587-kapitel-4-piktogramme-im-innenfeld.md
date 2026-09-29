@@ -124,6 +124,13 @@ Polyzug ist. Die Liste je Körperform steht in `CAPABILITY_UNSCALED_FIT`.
   C.2.14 Alternative). Welche davon ein Kapitel-4-Piktogramm ist, lässt sich ohne die
   Referenzdatei nicht sagen.
 
+> **Nachtrag 29. September 2026 (LFH-786):** C.1.7, C.1.8 und alle C.2-Darstellungen mit
+> Kapitel-4-Piktogramm sind inzwischen an den Referenzdateien vermessen und als Fixtures gebaut.
+> Sie ändern drei Aussagen dieser Notiz: die Lücke zwischen `reduced` und `reshaped` ist nur noch
+> 0,30 bis 0,37 breit, die Strichstärke der Körperfassung ist 0,5 mm auch dort, wo die
+> Einzeldarstellung dünner zeichnet, und die körperunabhängige Breite verkleinerter Fassungen ist
+> widerlegt. Siehe `docs/decisions/2026-09-29-lfh-786-kapitel-4-piktogramme-in-anhang-c.md`.
+
 ## 4. Was gebaut ist
 
 - `schema/src/capability-inset.ts`: die Typen `CapabilityInsetTreatment`, `CapabilityInsetForm`,

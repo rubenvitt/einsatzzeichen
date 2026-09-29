@@ -81,7 +81,17 @@ export interface LayoutProfile {
   measuredCenterBaselineOverridesMm?: readonly number[];
   /** Erlaubt einen ausdrücklich vermessenen, von der linken Körperkante gerechneten Mittelpunkt. */
   allowsCenterAnchorOverride?: true;
-  /** Der einzige an diesem Profil vermessene relative x-Anker des mittigen Laufs. */
+  /**
+   * Geschlossene Liste der an diesem Profil vermessenen relativen x-Anker des mittigen Laufs.
+   * Bis LFH-786 ein Einzelwert, weil nur der Anhänger (I.2.5) einen führte; C.2.25 setzt am
+   * Landfahrzeug in Haupt- und Alternativdarstellung zwei verschiedene. Anker und Grundlinie sind
+   * wie am Anhänger nicht paarweise gebunden.
+   */
+  measuredCenterAnchorsFromBodyLeftMm?: readonly number[];
+  /**
+   * @deprecated Seit LFH-786 `measuredCenterAnchorsFromBodyLeftMm`. Bleibt für bestehende Leser
+   * am Anhänger gesetzt (8,24); `validateSpec` liest nur die Liste.
+   */
   measuredCenterAnchorFromBodyLeftMm?: number;
   /** Erlaubt eine je Lauf deklarierte horizontale Center-Ausgabebox. */
   allowsCenterBoxMarginOverride?: true;
@@ -211,8 +221,34 @@ const trailerProfile: LayoutProfile = {
   allowsCenterBaselineOverride: true,
   measuredCenterBaselineOverridesMm: [14.5, 14.327] as const,
   allowsCenterAnchorOverride: true,
+  // I.2.5 „Tauchen“: Tintenmitte der Referenz (5,088 + 19,392) / 2 = 12,24, minus Körperkante 4.
+  measuredCenterAnchorsFromBodyLeftMm: [8.24] as const,
   measuredCenterAnchorFromBodyLeftMm: 8.24,
   measuredBodyBoundsMm: { minX: 4, minY: 5.75, maxX: 31, maxY: 26 },
+};
+
+/**
+ * Anhänger mit Fußband (LFH-786): die Zone oben links, vermessen an C.2.30 „120“.
+ *
+ * Körperhülle wie am Anhänger (x 4…31, y 5,75…26,0, an C.2.30 abgelesen). Grundlinie y 12,4999,
+ * also **6,75** unter der Körperoberkante 5,75 — dieselbe Zahl wie am Landfahrzeug (F.2.1 bis
+ * F.2.5), hier aber unmittelbar gemessen. Den Anker übernimmt `compose()` unverändert
+ * (`TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM`, 1,5 ab der linken Körperkante): die linke
+ * Tintenkante der „1“ liegt bei x 5,7623; abzüglich der linken Seitenlage der Arimo-„1“
+ * (0,3233 mm im Grad der unteren Zonen) ergibt das 5,4390, also 1,439 ab der Körperkante 4.
+ * Derselbe Unterschied wie am ziffernführenden Lauf „10“ aus F.1 (zurückgerechnet 1,442) — die
+ * Ziffern der Referenzschrift sitzen etwas weiter links, der Katalog folgt der Mehrheit auf 1,5.
+ * Die Versalhöhe der Ziffern misst 2,75 statt 2,92 (auch das wie in F.2.16 „40“); sie gehört,
+ * wo gewollt, als `topLeftMetrics` ins Rezept und nicht ins Profil.
+ *
+ * Ein eigener Zweig und keine Grundlinie am Anhänger selbst: der normale Anhänger setzt seine
+ * oberen Läufe in I.2.1 bis I.2.3 auf 6,25 (über `topLeftMetrics`), die 6,75 gehören nicht als
+ * stille Miterbschaft dorthin. Die Verträge des mittigen Laufs erbt die Fassung unverändert vom
+ * Anhänger, wie vor diesem Zweig über `profileFor()`; sie sind an ihr nicht eigens vermessen.
+ */
+const footBandTrailerProfile: LayoutProfile = {
+  ...trailerProfile,
+  topLeftBaselineFromBodyTopMm: 6.75,
 };
 
 /**
@@ -254,6 +290,28 @@ const formationFootBandProfile: LayoutProfile = {
 const vehicleLandProfile: LayoutProfile = {
   ...rectBody(8),
   allowsCenterBaselineOverride: true,
+  /**
+   * **Zwei vermessene Anker des mittigen Laufs (LFH-786, C.2.25).** Beide „P“ stehen nicht auf
+   * der Körpermitte 16, sondern rechts davon. Kalibriert an C.1.8, wo dasselbe „P“ in derselben
+   * Referenzschrift auf dem bekannten Anker 16 (Körpermitte der Formation) steht: dort liegt der
+   * Stamm bei x 14,6032 und die Tintenmitte 0,1803 mm rechts des Ankers (das „P“ ist mit dem
+   * Bauch rechts asymmetrisch).
+   *
+   * - **21,3** — C.2.25 Hauptdarstellung, „P“ unter der kleinen Zange: Versalhöhe 2,9192
+   *   (C.1.8: 4,8694, Maßstab 0,5995), Grundlinie y 23,0 = 3,0 über der Unterkante 26,0, Stamm bei
+   *   x 21,4615, Tinte bis 23,3527. Anker = 21,4615 + (16 − 14,6032) × 0,5995 = 22,2989, also
+   *   21,2989 ab der Körperkante 1, auf 0,01 wie am Anhänger. Verworfen: die reine Tintenmitte wie
+   *   bei I.2.5 (22,4071, also 21,41) — sie übersähe die Asymmetrie des Einzelbuchstabens, die bei
+   *   „Tauchen“ fast herausfällt, hier aber 0,108 mm ausmacht.
+   * - **15,5** — C.2.25#alternative, „P“ im Normgrad 4,8694 auf Grundlinie y 24,0 (2,0 über der
+   *   Unterkante): deckungsgleich mit dem C.1.8-„P“, um (+0,5002 | −1,9998) verschoben, Stamm bei
+   *   x 15,1034. Anker also 16,5002, ab der Körperkante 15,5.
+   *
+   * Die Grundlinien 3 und 2 laufen über `allowsCenterBaselineOverride`; eine geschlossene
+   * Grundlinienliste führt das Landfahrzeug nicht (N.1.3 setzt 6,5).
+   */
+  allowsCenterAnchorOverride: true,
+  measuredCenterAnchorsFromBodyLeftMm: [21.3, 15.5] as const,
   measuredBodyBoundsMm: { minX: 1, minY: 5.75, maxX: 31, maxY: 26 },
   topLeftBaselineFromBodyTopMm: 6.75,
   topLeftLines: { baselinesFromBodyTopMm: [6.75, 10.75], capHeightMm: 2.919225 },
@@ -262,6 +320,8 @@ const vehicleLandProfile: LayoutProfile = {
 const footBandVehicleLandProfile: LayoutProfile = {
   ...vehicleLandProfile,
   allowsCenterBaselineOverride: undefined,
+  allowsCenterAnchorOverride: undefined,
+  measuredCenterAnchorsFromBodyLeftMm: undefined,
   topLeftLines: undefined,
 };
 
@@ -279,6 +339,8 @@ const footBandVehicleLandProfile: LayoutProfile = {
 const plainWheelVehicleLandProfile: LayoutProfile = {
   ...vehicleLandProfile,
   allowsCenterBaselineOverride: undefined,
+  allowsCenterAnchorOverride: undefined,
+  measuredCenterAnchorsFromBodyLeftMm: undefined,
   // F.2.1–F.2.5: einzeiliger Lauf auf Grundlinie 12,5 mm.
   topLeftBaselineFromBodyTopMm: 6.75,
   // F.2.8: Grundlinien 11,54/15,07 mm; gemeinsame Versalhöhe 2,43 mm.
@@ -288,6 +350,8 @@ const plainWheelVehicleLandProfile: LayoutProfile = {
 const invertedHullVehicleLandProfile: LayoutProfile = {
   ...vehicleLandProfile,
   allowsCenterBaselineOverride: undefined,
+  allowsCenterAnchorOverride: undefined,
+  measuredCenterAnchorsFromBodyLeftMm: undefined,
   measuredBodyBoundsMm: undefined,
   // N.1.1: Die Unterkante des umgekehrten Rumpfs liegt an den Ecken bei 25,75 mm, die Kette aber
   // wie im Regelfall mit Mittellinie 26,0…30,5 mm (Außenkante 25,75, Innenkante 26,25). Die Zone
@@ -521,6 +585,7 @@ export function profileFor(kind: SymbolKind, variant?: BodyVariantId): LayoutPro
     return plainWheelVehicleLandProfile;
   }
   if (kind === 'vehicle-land' && variant === 'foot-band') return footBandVehicleLandProfile;
+  if (kind === 'trailer' && variant === 'foot-band') return footBandTrailerProfile;
   if (kind === 'vehicle-land' && variant === 'inverted-hull-track') {
     return invertedHullVehicleLandProfile;
   }

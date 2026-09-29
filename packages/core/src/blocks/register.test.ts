@@ -172,7 +172,7 @@ describe('Bausteinregister: festgenagelter Stand', () => {
       'technical-head-mark': 2,
       chassis: 8,
       capability: 88,
-      'body-mark': 44,
+      'body-mark': 45,
       'function-role': 25,
       state: 58,
       tendency: 3,

@@ -1,5 +1,5 @@
 /**
- * Die Zeichnung zu einer Manifestzeile — für **alle** 544, ohne Lücke.
+ * Die Zeichnung zu einer Manifestzeile — für **alle** 581, ohne Lücke.
  *
  * `buildSnapshot` der Website zeichnet nur `catalog-entry` und `composition-recipe`; die 288
  * `element`-Zeilen fallen dort durch. Für ein Werkzeug, in dem ein Mensch jede Zeile einzeln

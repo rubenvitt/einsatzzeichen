@@ -1,4 +1,5 @@
 import type { GrammarFinding } from './grammar-findings.js';
+import type { BodyMarkRenditionId } from './body-mark-renditions.js';
 import type { BodyVariantId, CapabilityId, SymbolKind } from './taxonomy.js';
 
 /**
@@ -31,6 +32,12 @@ export interface CapabilityInsetForm {
   readonly kind: SymbolKind;
   /** Gesetzt, wenn die Fassung eine Variante ist (wie in `BodyFormZones`). */
   readonly variant?: BodyVariantId;
+  /**
+   * Gesetzt, wenn die Fassung eine zweite oder weitere Fassung desselben Paars ist
+   * (`SymbolSpec.bodyMarkRenditions`, LFH-786). Ohne Kennung gilt die Grundfassung; mit Kennung
+   * zählt die Form für sich, weil ihre Faktoren von der Grundfassung abweichen dürfen.
+   */
+  readonly rendition?: BodyMarkRenditionId;
   readonly treatment: CapabilityInsetTreatment;
   /** Breite der Körperfassung durch Breite der Einzeldarstellung, auf 0,01 gerundet. */
   readonly scaleX: CapabilityInsetScale;
@@ -83,7 +90,12 @@ export interface CapabilityInsetDecision {
 
 /** Die Regel des Innenfelds für Kapitel-4-Piktogramme, Aussage für Aussage mit Belegstand. */
 export interface CapabilityInsetRule {
-  /** Die Körperfassung behält die Strichstärke der Einzeldarstellung. */
+  /**
+   * Die Körperfassung zeichnet ihre Striche mit 0,5 mm: sie wird kleiner, der Strich nicht. Bis
+   * LFH-786 hieß die Aussage „behält die Strichstärke der Einzeldarstellung“; seit C.2.18 ist sie
+   * so gefasst, weil 4.7.18 als einzige Einzeldarstellung mit 0,4 mm zeichnet und seine
+   * Körperfassung trotzdem mit 0,5 mm.
+   */
   readonly strokeWidthKept: GrammarFinding<CapabilityInsetClaim>;
   /** Es gibt einen Faktor, der alle Einzeldarstellungen in ihre Körperfassung überführt. */
   readonly commonScale: GrammarFinding<CapabilityInsetClaim>;

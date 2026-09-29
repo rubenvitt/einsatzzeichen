@@ -1,10 +1,12 @@
 import { NotMeasuredError } from '../not-measured.js';
+import { ANHANG_C_BODY_MARK_TABLES, anhangCBodyMarkBuild } from './body-marks-anhang-c/index.js';
 import type { BoundsMm } from '../bounds.js';
 import {
   CAPABILITY_IDS,
   DEFAULT_STROKE_WIDTH_MM,
   TECHNICAL_BODY_MARK_IDS,
   type BodyMarkId,
+  type BodyMarkRenditionId,
   type BodyVariantId,
   type Primitive,
   type StrengthId,
@@ -2145,12 +2147,24 @@ export function bodyMark(
     occupiedLabelZones?: readonly ('bottomCenter' | 'bottomRight' | 'belowRight')[];
     /** Alle Marken derselben Komposition; wählt die Kombinationsfassung (`COMBINATION_MARKS`). */
     bodyMarks?: readonly BodyMarkId[];
+    /** Gewählte Fassung (`SymbolSpec.bodyMarkRenditions`); nur Anhang C führt solche Fassungen. */
+    rendition?: BodyMarkRenditionId;
   },
   bodyBoundsMm: BoundsMm,
 ): readonly Primitive[] {
+  const anhangC = anhangCBodyMarkBuild(id, context);
+  if (context.rendition !== undefined && anhangC === undefined) {
+    throw new NotMeasuredError(
+      `Die Fassung "${context.rendition}" von "${id}" ist an ` +
+        `${context.kind}/${context.bodyVariant ?? 'normal'} nicht vermessen. Sie fällt nicht auf ` +
+        'die Grundfassung zurück.',
+      'combination',
+    );
+  }
   const combination = combinationBuild(id, context);
   if (combination !== undefined) return combination(bodyBoundsMm);
-  const build = context.kind === 'formation' && context.bodyVariant === 'foot-band' &&
+  const build = anhangC ?? (
+    context.kind === 'formation' && context.bodyVariant === 'foot-band' &&
       id === 'catering' && context.strength === 'trupp' &&
       context.occupiedLabelZones?.includes('bottomRight')
     ? (bounds: BoundsMm) => logisticsCatering(bounds, -2)
@@ -2208,11 +2222,13 @@ export function bodyMark(
                 ? CIRCLE_FOOT_BAND_LOGISTICS_MARKS[id]
               : context.kind === 'reduced-house' && context.bodyVariant === undefined
                 ? REDUCED_HOUSE_MARKS[id]
-          : undefined;
+          : undefined
+  );
   const hasAnyBuild = id === 'water-rescue' || (
     context.kind === 'person'
       ? [PERSON_MARKS, PERSON_I5_MARKS]
       : [
+          ...ANHANG_C_BODY_MARK_TABLES,
           MARKS,
           VEHICLE_LAND_NORMAL_MARKS,
           VEHICLE_LAND_FOOT_BAND_MARKS,
@@ -2367,6 +2383,7 @@ export function bodyMark(
 export const BODY_MARK_IDS: readonly BodyMarkId[] = Object.freeze(
   [...CAPABILITY_IDS, ...TECHNICAL_BODY_MARK_IDS].filter((id) =>
     id === 'water-rescue' || [
+      ...ANHANG_C_BODY_MARK_TABLES,
       MARKS,
       VEHICLE_LAND_NORMAL_MARKS,
       VEHICLE_LAND_FOOT_BAND_MARKS,

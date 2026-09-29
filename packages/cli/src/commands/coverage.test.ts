@@ -85,8 +85,9 @@ describe('coverage CLI', () => {
     // Wasserrettungszeilen: insgesamt 516. LFH-480 ergänzt genau acht zuvor fehlende I.3-Zeilen,
     // LFH-483 fünf I-e-Darstellungen, LFH-481 vier I-c-Darstellungen und LFH-489 drei I-k-Rezepte:
     // insgesamt 536. LFH-487 ergänzt die vier fehlenden I.2.4 bis I.2.7: insgesamt 540;
-    // LFH-484 ergänzt die vier I-f-Darstellungen I.1.13 bis I.1.16: insgesamt 544.
-    expect(manifestCarriers).toBe(544);
+    // LFH-484 ergänzt die vier I-f-Darstellungen I.1.13 bis I.1.16: insgesamt 544. LFH-786
+    // ergänzt C.1.7, C.1.8 und 35 Darstellungen aus C.2: insgesamt 581.
+    expect(manifestCarriers).toBe(581);
     expect(sourceCarriers).toBe(13);
     expect(profileCarriers).toBe(1);
     // Offen kann nie mehr sein als Träger da sind — die einzige Schranke, die der Reviewstand
@@ -100,9 +101,10 @@ describe('coverage CLI', () => {
     // `E` eine widerlegbare Aussage statt einer kürzeren. Seit LFH-480 ist I.3 vollständig und
     // darf als Kapitel beansprucht werden; I.1, I.2, I.4 und I.5 bleiben dagegen auf ihre
     // tatsächlich gebauten Einzelabschnitte begrenzt. I.2.1 bis I.2.7 und I.5.1 bis I.5.8
-    // werden deshalb weiter einzeln ausgewiesen.
+    // werden deshalb weiter einzeln ausgewiesen. Dasselbe gilt seit LFH-786 für C.1.7, C.1.8 und
+    // die gebauten C.2-Nummern: weder C.1 noch C.2 ist lückenlos.
     expect(lines).toContain(
-      'Umfang:      1, 2, 4, 5.1.1, 5.4, 5.8, C.1.1, C.1.2, C.1.3, D, E, F, G, H, I.1.1, I.1.2, I.1.3, I.1.4, I.1.5, I.1.6, I.1.7, I.1.8, I.1.9, I.1.10, I.1.11, I.1.12, I.1.13, I.1.14, I.1.15, I.1.16, I.1.17, I.1.18, I.1.19, I.1.20, I.2.1, I.2.2, I.2.3, I.2.4, I.2.5, I.2.6, I.2.7, I.3, I.4.1, I.4.2, I.4.3, I.5.1, I.5.2, I.5.3, I.5.4, I.5.5, I.5.6, I.5.7, I.5.8, J.1, J.2, J.3, J.4, K, L, M, N',
+      'Umfang:      1, 2, 4, 5.1.1, 5.4, 5.8, C.1.1, C.1.2, C.1.3, C.1.7, C.1.8, C.2.4, C.2.5, C.2.6, C.2.7, C.2.8, C.2.9, C.2.10, C.2.11, C.2.12, C.2.13, C.2.14, C.2.15, C.2.16, C.2.17, C.2.18, C.2.20, C.2.23, C.2.24, C.2.25, C.2.26, C.2.27, C.2.28, C.2.29, C.2.30, C.2.31, D, E, F, G, H, I.1.1, I.1.2, I.1.3, I.1.4, I.1.5, I.1.6, I.1.7, I.1.8, I.1.9, I.1.10, I.1.11, I.1.12, I.1.13, I.1.14, I.1.15, I.1.16, I.1.17, I.1.18, I.1.19, I.1.20, I.2.1, I.2.2, I.2.3, I.2.4, I.2.5, I.2.6, I.2.7, I.3, I.4.1, I.4.2, I.4.3, I.5.1, I.5.2, I.5.3, I.5.4, I.5.5, I.5.6, I.5.7, I.5.8, J.1, J.2, J.3, J.4, K, L, M, N',
     );
     // Die Ausnahme ist im Betrieb sichtbar und nicht nur im Gate. Sie steht bewusst **nicht** in
     // der Blockerzeile darunter: ein Blocker ist ein offener Punkt, diese Ausnahme ist ein
@@ -143,24 +145,30 @@ describe('coverage CLI', () => {
     // `reference-inventory.test.ts` und `rule-coverage.test.ts` festgenagelt; hier zählt, dass
     // sie im Betrieb sichtbar sind und **vor** der Gate-Zeile stehen.
     expect(lines).toContain(
-      'Referenzabdeckung:   550/661 Dateien beansprucht; 111 nicht — 83 außerhalb des Umfangs, ' +
-        '9 Beispielanwendungen, 1 Übersichtsblatt, 18 zurückgestellt, 0 nicht zugeordnet',
+      // LFH-786: 585 = 550 + 35 neu beanspruchte Dateien (C.1.7 und C.1.8 waren schon Belege der
+      // Stärkegrade); 76 = 47 außerhalb + 9 + 1 + 19 zurückgestellt (neu: C.2.24-Alternative).
+      'Referenzabdeckung:   585/661 Dateien beansprucht; 76 nicht — 47 außerhalb des Umfangs, ' +
+        '9 Beispielanwendungen, 1 Übersichtsblatt, 19 zurückgestellt, 0 nicht zugeordnet',
     );
     expect(lines.some((line) => line.startsWith('  Nicht zugeordnet:'))).toBe(false);
+    // 74 seit LFH-786: `body-mark-rendition-not-measured` ist die eine neue Validierungsregel.
     expect(lines).toContain(
-      'Regelabdeckung:      14/16 Achsen vollständig belegt; 73 Validierungsregeln ' +
+      'Regelabdeckung:      14/16 Achsen vollständig belegt; 74 Validierungsregeln ' +
         '(Testfall je Regel durch core-Test erzwungen)',
     );
     expect(lines).toContain(
       '  Achsen mit Lücke:  administrativeLevel 3/6 (gemeinde, bezirk, bundesland); ' +
         'vehicleCategory 7/8 (amphibienfahrzeug)',
     );
+    // LFH-786: sechs neue belegte Signaturen (71 → 77) und eine technische Körpermarke mehr
+    // (`track-chevron-top`, 132 → 133); LFH-586: acht statt neun Organisationen (244530 → 220077
+    // enumeriert, 924 → 832 gültig). Zusammen 832 − 77 = 755; hergeleitet in `rule-coverage.test.ts`.
     expect(lines).toContain(
       'Generative Reichweite (Stufe 1): 832 gültige Kompositionen aus kind × Körpervariante × ' +
-        'Organisation × Kopfzone × Fahrwerk (220077 enumeriert), davon 71 in der Referenz belegt — ' +
-        '761 erzeugbar ohne Referenzbeleg, 8 Rezeptsignaturen außerhalb der Stufe ' +
+        'Organisation × Kopfzone × Fahrwerk (220077 enumeriert), davon 77 in der Referenz belegt — ' +
+        '755 erzeugbar ohne Referenzbeleg, 8 Rezeptsignaturen außerhalb der Stufe ' +
         '(dokumentiert, kein Gate); nicht enumeriert: 88 Fähigkeiten, ' +
-        '132 Körpermarken, 25 Funktionsrollen, freie Bezeichnung',
+        '133 Körpermarken, 25 Funktionsrollen, freie Bezeichnung',
     );
     expect(lines.at(-1)).toBe('Coverage-Gate bestanden.');
     // Expliziter Timeout: `coverage()` rechnet seit LFH-413 `generativeReach()` mit

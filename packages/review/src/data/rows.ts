@@ -1,5 +1,5 @@
 /**
- * Die 558 Reviewzeilen: 544 Manifestzeilen, 13 Quellen, ein Profil. Rein und ohne Seiteneffekt —
+ * Die 595 Reviewzeilen: 581 Manifestzeilen, 13 Quellen, ein Profil. Rein und ohne Seiteneffekt —
  * kein `node:fs`, kein Netz. Dateisystem und HTTP sitzen im Server, damit dieselbe Zeilenmenge in
  * einem Test entstehen kann wie im Betrieb.
  *
@@ -210,8 +210,8 @@ function profileRows(): ReviewRow[] {
 }
 
 /**
- * Alle 558 Zeilen in Anzeigereihenfolge. Die Funktion baut jedes Mal neu und hält bewusst keinen
- * Modul-Cache: 558 Zeilen sind billig, und ein Cache wäre genau die Stelle, an der die Oberfläche
+ * Alle 595 Zeilen in Anzeigereihenfolge. Die Funktion baut jedes Mal neu und hält bewusst keinen
+ * Modul-Cache: 595 Zeilen sind billig, und ein Cache wäre genau die Stelle, an der die Oberfläche
  * nach einer Freigabe noch den alten Stand zeigte. Wer den Stand festhalten will, hält das
  * Ergebnis selbst — der Aufrufer entscheidet über die Lebensdauer, nicht dieses Modul.
  */
