@@ -338,6 +338,7 @@ export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
   'trailer-water-rescue',
   'trailer-diving',
   'trailer-boat-hull',
+  'track-chevron-top',
 ] as const);
 
 export type TechnicalBodyMarkId = (typeof TECHNICAL_BODY_MARK_IDS)[number];
@@ -528,8 +529,15 @@ export const WILDFIRE_IDS = Object.freeze([
 
 export type WildfireId = (typeof WILDFIRE_IDS)[number];
 
-/** Quellenvermessene Tinte eines Textlaufs innerhalb der Körperfläche. */
-export type BodyLabelInk = 'schwarz' | 'weiss';
+/**
+ * Quellenvermessene Tinte eines Textlaufs innerhalb der Körperfläche.
+ *
+ * `koerperlauf-kontrast` (LFH-786) ist schwarz wie die Quelle in Referenz und accessible-light
+ * und nur im Drucktheme weiß: für schwarze Läufe auf Feuerwehrrot, die im Druckgrau `#666666`
+ * sonst die Textschwelle verfehlten (C.1.8 „P“). Die Ableitung aus der Körperfüllung
+ * (`bodyLabelInk()`) erzeugt diesen Wert nie; er steht nur dort, wo ein Rezept ihn setzt.
+ */
+export type BodyLabelInk = 'schwarz' | 'weiss' | 'koerperlauf-kontrast';
 
 /**
  * Beschriftungen **im** Körper, in den drei Zonen, die Anhang E belegt. Die Zonen sind nach
@@ -773,6 +781,12 @@ export interface SymbolSpec {
    * Fassung zurück.
    */
   bodyMarks?: readonly BodyMarkId[];
+  /**
+   * Die Fassung einer Körpermarke, wo dasselbe Paar aus Marke und Körperfassung mehr als eine
+   * vermessene Zeichnung hat (LFH-786, Anhang C). Fehlt der Eintrag, gilt die Grundfassung. Eine
+   * Kennung ohne Fassung an diesem Paar wirft; sie fällt nicht auf die Grundfassung zurück.
+   */
+  bodyMarkRenditions?: import('./body-mark-renditions.js').BodyMarkRenditions;
   designation?: string;
   labels?: BodyLabels;
 }

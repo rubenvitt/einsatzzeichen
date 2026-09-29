@@ -40,6 +40,7 @@ import { ANHANG_N_RECIPES } from './recipes-anhang-n.js';
 import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
 import { ANHANG_I_RECIPES } from './recipes-anhang-i.js';
+import { ANHANG_C_2_RECIPES } from './recipes-anhang-c.js';
 
 const PORTS: CatalogPorts = {
   baseDrawing,
@@ -123,6 +124,7 @@ export const RECIPES = {
   ...ANHANG_E_F_RECIPES,
   ...ANHANG_N_RECIPES,
   ...ANHANG_H_RECIPES,
+  ...ANHANG_C_2_RECIPES,
   'C.1.1': {
     title: 'Löschstaffel',
     referenceAsset: 'C.1.1_Löschstaffel.svg',
@@ -153,15 +155,37 @@ export const RECIPES = {
       bodyMarks: ['fire-fighting'],
     },
   },
+  'C.1.7': {
+    title: 'CBRN-Erkundungstrupp',
+    referenceAsset: 'C.1.7_CBRN-Erkundungstrupp.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'feuerwehr',
+      strength: 'trupp',
+      bodyMarks: ['cbrn-detection'],
+    },
+  },
+  'C.1.8': {
+    title: 'Staffel Dekontamination von Personal',
+    referenceAsset: 'C.1.8_Staffel Dekontamination  von Personal.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'feuerwehr',
+      strength: 'staffel',
+      bodyMarks: ['decontamination'],
+      // Referenz: schwarzes „P“, Grundlinie y 26,0 bei Körperunterkante 29,0, Versalhöhe 4,8693.
+      labels: { center: 'P', centerBaselineFromBodyBottomMm: 3, inBodyInk: 'koerperlauf-kontrast' },
+    },
+  },
 } as const satisfies Record<string, Recipe>;
 
 /**
  * **Die Rezepte in ihrer Rolle als Fixtures der Grammatik** (LFH-569, Scope-Entscheidung vom
  * 13. September 2026, `docs/decisions/2026-09-13-grammatik-motor-und-paketschnitt.md`).
  *
- * Das Produkt ist die Grammatik, nicht die Liste fertiger Zeichen. Die 242 Einträge oben sind
- * deshalb keine Auswahl „gebauter Zeichen" mehr, sondern die Belege, an denen der Motor gegen die
- * Referenz geprüft wird: je Eintrag eine gültige `SymbolSpec`, deren Zeichnung einem Original
+ * Das Produkt ist die Grammatik, nicht die Liste fertiger Zeichen. Die Einträge oben (279 seit
+ * LFH-786) sind deshalb keine Auswahl „gebauter Zeichen" mehr, sondern die Belege, an denen der
+ * Motor gegen die Referenz geprüft wird: je Eintrag eine gültige `SymbolSpec`, deren Zeichnung einem Original
  * entspricht. Wörtlich aus der Scope-Entscheidung: „Die 242 heutigen Rezepte wechseln damit ihre
  * Rolle: von ‚fertigen Zeichen' zu Fixtures, die den Motor belegen."
  *
@@ -205,6 +229,14 @@ export const GRAMMAR_FIXTURES = RECIPES;
  * zweite Farblogik. Da E.2.6 auf derselben orangefarbenen Organisation weiterhin den weissen
  * Default trägt, wird die Körperanforderung nach Organisation **und** Vordergrund dedupliziert.
  * So bleiben weiss/orange und schwarz/orange zugleich sichtbar.
+ *
+ * **Seit LFH-786 kann der Override auch `koerperlauf-kontrast` sein.** C.1.8 setzt sein „P“
+ * schwarz auf Feuerwehrrot; mit `schwarz` entstünde im Drucktheme (rot `#666666`) 3,657:1 gegen
+ * die Textschwelle. Das Token ist in Referenz und accessible-light schwarz (5,218:1 auf
+ * `#fa1919`) und im Druck weiß (5,742:1 auf `#666666`). Die Ableitung braucht dafür keinen
+ * Sonderfall: sie übernimmt den Override als Vordergrund, und `checkContrast` löst das Token je
+ * Theme auf. Daraus entsteht die Anforderung „koerperlauf-kontrast auf rot“, die alle drei
+ * Themes bestehen, statt eines neuen gedeckten Befunds „schwarz auf rot“.
  *
  * **Seit dem Teilslice E.2 gibt es eine zweite Richtung.** Die vierte Beschriftungszone steht
  * unter dem Körper auf der Ausgabeoberfläche. Ihre Tinte kommt wie beim Zeichnen aus dem

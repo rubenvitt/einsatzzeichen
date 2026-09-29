@@ -1,7 +1,7 @@
 /**
  * Quellen- und Profilzeilen tragen kein Zeichen. Ihr Prüfgegenstand ist Text: Nutzungsgrundlage,
  * Beschaffungsstand und Umgang mit der Geometrie. Er steht deshalb an der Stelle, an der sonst das
- * Zeichen steht — die Zeile ist genauso ein Reviewträger wie die anderen 544.
+ * Zeichen steht — die Zeile ist genauso ein Reviewträger wie die anderen 581.
  */
 import type { JSX } from 'react';
 import type { ProseSection } from '../contract';

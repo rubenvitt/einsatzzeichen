@@ -98,7 +98,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 544 Zeilen mit 288 Elementdarstellungen', () => {
+  it('enthält exakt 581 Zeilen mit 288 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -131,7 +131,9 @@ describe('Coverage-Manifest', () => {
       // G ergänzt 21 Rezepte, H drei, I-c, I-d, I-f und I-g je vier, I-e fünf, I-b sieben,
       // I.3 elf, I-j drei, I-k drei, C.1.3 eins und N neun.
       // Anhang D ergänzt 26 neue Rezepte; D.3.7 bleibt eine Migration desselben Schlüssels.
-      'composition-recipe': 242,
+      // LFH-786 ergänzt 37 aus Anhang C: C.1.7, C.1.8 und 35 Darstellungen aus C.2 (25
+      // Hauptdarstellungen und zehn Alternativen), 242 + 37 = 279.
+      'composition-recipe': 279,
       // 269 Piktogramme plus acht Manifest-Organisationen, vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
@@ -139,7 +141,7 @@ describe('Coverage-Manifest', () => {
       // Strichhülle vermessen ist.
       element: 288,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(544);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(581);
     expect(elementRows).toHaveLength(288);
     expect(pictogramRows).toHaveLength(269);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
@@ -442,11 +444,69 @@ describe('Coverage-Manifest', () => {
     // eine Entscheidung wäre zurechenbar.
     expect(entry).toBeDefined();
     erwarteZurechenbaresFachreview(entry!.review, 'bbk-babz-2025:C.1.3#primary');
+    // Seit LFH-786 dazu C.1.7, C.1.8 und jede gebaute C.2-Nummer einzeln, nie `C.1` oder `C.2`.
     expect(COVERAGE_MANIFEST.scope.filter((section) => section.startsWith('C'))).toEqual([
       'C.1.1',
       'C.1.2',
       'C.1.3',
+      'C.1.7',
+      'C.1.8',
+      'C.2.4',
+      'C.2.5',
+      'C.2.6',
+      'C.2.7',
+      'C.2.8',
+      'C.2.9',
+      'C.2.10',
+      'C.2.11',
+      'C.2.12',
+      'C.2.13',
+      'C.2.14',
+      'C.2.15',
+      'C.2.16',
+      'C.2.17',
+      'C.2.18',
+      'C.2.20',
+      'C.2.23',
+      'C.2.24',
+      'C.2.25',
+      'C.2.26',
+      'C.2.27',
+      'C.2.28',
+      'C.2.29',
+      'C.2.30',
+      'C.2.31',
     ]);
+  });
+
+  it('führt die 37 LFH-786-Fixtures aus Anhang C mit eigenem Technikreview und Befunden', () => {
+    const rows = COVERAGE_MANIFEST.entries.filter((entry) =>
+      /^bbk-babz-2025:C\.(?:1\.[78]|2\.\d+)$/.test(entry.sourceId),
+    );
+    const keyOf = (entry: (typeof rows)[number]) =>
+      `${entry.sourceId.slice('bbk-babz-2025:'.length)}${entry.variant === 'alternative' ? '#alternative' : ''}`;
+    // 25 C.2-Hauptdarstellungen und zehn Alternativen; C.2.24#alternative ist nicht gebaut.
+    expect(rows).toHaveLength(37);
+    expect(rows.filter((entry) => entry.variant === 'alternative').map(keyOf).sort()).toEqual([
+      'C.2.14#alternative', 'C.2.15#alternative', 'C.2.16#alternative', 'C.2.17#alternative',
+      'C.2.20#alternative', 'C.2.23#alternative', 'C.2.25#alternative', 'C.2.26#alternative',
+      'C.2.27#alternative', 'C.2.28#alternative',
+    ]);
+    for (const row of rows) {
+      expect(row.coverage).toBe('composition-recipe');
+      expect(row.testEvidence).toEqual(['body-fingerprint', 'svg-snapshot']);
+      expect(row.review.technical).toMatchObject({ status: 'approved', reviewer: 'rv', date: '2026-09-29' });
+      expect(row.review.technical.note).toContain('Alle 37 Originalreferenzen (C.1.7, C.1.8');
+      erwarteZurechenbaresFachreview(row.review, entryKey(row.sourceId, row.variant));
+    }
+    const withFinding = rows
+      .filter((row) => row.review.technical.note?.includes('Befund an der Referenzdatei:'))
+      .map(keyOf)
+      .sort();
+    expect(withFinding).toEqual(['C.2.16#alternative', 'C.2.24', 'C.2.28']);
+    expect(COVERAGE_MANIFEST.scope).not.toContain('C');
+    expect(COVERAGE_MANIFEST.scope).not.toContain('C.1');
+    expect(COVERAGE_MANIFEST.scope).not.toContain('C.2');
   });
 
   it('bewahrt das technische F-e-Review für F.3.1 bis F.3.11', () => {
@@ -619,7 +679,7 @@ describe('Coverage-Manifest', () => {
       }
       expect(entry.review.technical.reviewer).toBe('rv');
       // Für die Rolle `domain` gilt hier dieselbe Zusage wie überall: das Review ist vorhanden
-      // (die Rolle fehlt an keiner der 544 Zeilen) und, falls entschieden, zurechenbar.
+      // (die Rolle fehlt an keiner der 581 Zeilen) und, falls entschieden, zurechenbar.
       erwarteZurechenbaresFachreview(entry.review, entryKey(entry.sourceId, entry.variant));
     }
   });
@@ -913,6 +973,34 @@ describe('Coverage-Manifest', () => {
       'C.1.1',
       'C.1.2',
       'C.1.3',
+      // LFH-786: einzeln, weil C.1 und C.2 nicht lückenlos gebaut sind.
+      'C.1.7',
+      'C.1.8',
+      'C.2.4',
+      'C.2.5',
+      'C.2.6',
+      'C.2.7',
+      'C.2.8',
+      'C.2.9',
+      'C.2.10',
+      'C.2.11',
+      'C.2.12',
+      'C.2.13',
+      'C.2.14',
+      'C.2.15',
+      'C.2.16',
+      'C.2.17',
+      'C.2.18',
+      'C.2.20',
+      'C.2.23',
+      'C.2.24',
+      'C.2.25',
+      'C.2.26',
+      'C.2.27',
+      'C.2.28',
+      'C.2.29',
+      'C.2.30',
+      'C.2.31',
       'D',
       // Anhang E seit dem 18. August 2026 als **ein** `E` statt `E.1` plus 30 E.2-Einzelzeilen.
       // Die Zusammenziehung hängt nicht daran, dass sie kürzer ist, sondern daran, dass sie

@@ -142,7 +142,7 @@ export const CAPABILITY_COMBINATION_RULES: readonly CapabilityCombinationRule[] 
           'Teilung (4.6.1) und Zelt (4.2.1) stehen als zwei Marken in ihrer Einzelfassung auf derselben Körperfläche; das Zelt zerschneidet die Felder der Teilung.',
         ),
         source(
-          'core/src/geometry/body-marks.ts:670–698',
+          'core/src/geometry/body-marks.ts:672–700',
           'Die Zeltmarke trägt die Teilung nicht mit: F.1.3 zeigt das Zelt ohne Kreuz. Die Teilung ist das Zeichen 4.6.1 und keine Teilung der Fläche für mehrere Fähigkeiten.',
         ),
         source(
@@ -162,7 +162,7 @@ export const CAPABILITY_COMBINATION_RULES: readonly CapabilityCombinationRule[] 
           '`bodyMarks` wird als Menge gelesen: `validateSpec` prüft nur Enthaltensein und Länge, die Kombinationsfassungen wählen reihenfolgefrei.',
         ),
         source(
-          'conformance/src/combination-provenance.test.ts:68–77',
+          'conformance/src/combination-provenance.test.ts:72–81',
           'F.1.4 mit vertauschter Markenfolge besteht denselben Vergleich gegen die Referenz.',
         ),
       ],

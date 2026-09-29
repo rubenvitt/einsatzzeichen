@@ -1,6 +1,6 @@
 /**
  * Die Datenschicht des Fachreview-Werkzeugs: aus Katalog, Manifest, Ledger und Fragenregister
- * werden 558 Reviewzeilen samt Zeichnung. Rein und seiteneffektfrei — kein `node:fs`, kein Netz.
+ * werden 595 Reviewzeilen samt Zeichnung. Rein und seiteneffektfrei — kein `node:fs`, kein Netz.
  * Der Server (`../server/`) legt das Dateisystem darum, die Oberfläche (`../ui/`) sieht nur die
  * Vertragstypen aus `../contract.js`.
  *

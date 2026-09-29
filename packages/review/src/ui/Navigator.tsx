@@ -37,7 +37,7 @@ function Balken({ area }: { area: { total: number; approved: number; deviation: 
 export function Navigator(props: NavigatorProps): JSX.Element {
   const { areas, rowsByArea, progress, filter, onFilterChange, openAreas, selectedId } = props;
 
-  // Beim Blättern mit j/k muss die gewählte Zeile sichtbar bleiben; bei 558 Zeilen liefe sie
+  // Beim Blättern mit j/k muss die gewählte Zeile sichtbar bleiben; bei 595 Zeilen liefe sie
   // sonst nach wenigen Anschlägen aus dem Bild.
   const currentRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {

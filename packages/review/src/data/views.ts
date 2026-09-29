@@ -1,5 +1,5 @@
 /**
- * Die Vertragssichten auf die 558 Zeilen: Navigatorliste, Bereichssummen, Nachbarschaft und
+ * Die Vertragssichten auf die 595 Zeilen: Navigatorliste, Bereichssummen, Nachbarschaft und
  * Detailansicht. Alle rein und alle aus derselben Zeilenmenge abgeleitet — es gibt keine zweite
  * Quelle, aus der eine Zählung stammen könnte, und damit auch nichts, was auseinanderlaufen kann.
  */
@@ -19,7 +19,7 @@ import type { ReviewRow } from './rows.js';
  */
 const MAX_NEIGHBOURS = 12;
 
-/** Die Kurzfassung für den Navigator — 558 Stück, deshalb ohne Zeichnung und ohne Prosa. */
+/** Die Kurzfassung für den Navigator — 595 Stück, deshalb ohne Zeichnung und ohne Prosa. */
 export function rowSummaries(rows: readonly ReviewRow[]): readonly RowSummary[] {
   return rows.map((row) => ({
     id: row.id,

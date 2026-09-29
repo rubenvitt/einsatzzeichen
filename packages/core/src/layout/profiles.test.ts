@@ -104,13 +104,28 @@ describe('Layoutprofile', () => {
     expect(profileFor('formation').topLeftLines).toBeUndefined();
     expect(profileFor('formation').aboveLeftBaselineFromBodyTopMm).toBeUndefined();
     expect(profileFor('trailer').topLeftBaselineFromBodyTopMm).toBeUndefined();
+    // LFH-786, C.2.30: der Anhänger mit Fußband trägt die obere Zone 6,75 mm unter der Oberkante,
+    // der normale Anhänger weiterhin nicht (I.2.1 bis I.2.3 setzen ihre Läufe über Metriken).
+    expect(profileFor('trailer', 'foot-band').topLeftBaselineFromBodyTopMm).toBe(6.75);
+    expect(profileFor('trailer', 'foot-band').measuredBodyBoundsMm)
+      .toEqual(profileFor('trailer').measuredBodyBoundsMm);
   });
 
   it('führt vermessene Baseline-Overrides nur an den belegten Flächenprofilen', () => {
     expect(profileFor('vehicle-land').allowsCenterBaselineOverride).toBe(true);
     expect(profileFor('trailer').allowsCenterBaselineOverride).toBe(true);
     expect(profileFor('trailer').allowsCenterAnchorOverride).toBe(true);
-    expect(profileFor('trailer').measuredCenterAnchorFromBodyLeftMm).toBe(8.24);
+    expect(profileFor('trailer').measuredCenterAnchorsFromBodyLeftMm).toEqual([8.24]);
+    // LFH-786, C.2.25 und C.2.25#alternative: zwei vermessene Anker, nur am Landfahrzeug ohne
+    // Variante; die Varianten erben sie nicht.
+    expect(profileFor('vehicle-land').allowsCenterAnchorOverride).toBe(true);
+    expect(profileFor('vehicle-land').measuredCenterAnchorsFromBodyLeftMm).toEqual([21.3, 15.5]);
+    for (const variant of ['foot-band', 'plain-wheel-pair', 'inverted-hull-track'] as const) {
+      expect(profileFor('vehicle-land', variant).allowsCenterAnchorOverride, variant)
+        .toBeUndefined();
+      expect(profileFor('vehicle-land', variant).measuredCenterAnchorsFromBodyLeftMm, variant)
+        .toBeUndefined();
+    }
     expect(profileFor('trailer').measuredBodyBoundsMm).toEqual({
       minX: 4, minY: 5.75, maxX: 31, maxY: 26,
     });

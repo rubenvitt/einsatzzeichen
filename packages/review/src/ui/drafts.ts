@@ -23,7 +23,7 @@ export interface DraftStorage {
 
 export const DRAFT_PREFIX = 'einsatzzeichen.fachreview.entwurf:';
 
-/** Ein Schlüssel je `CarrierId`: 558 unabhängige Entwürfe, kein gemeinsamer Klumpen. */
+/** Ein Schlüssel je `CarrierId`: 595 unabhängige Entwürfe, kein gemeinsamer Klumpen. */
 export function draftKey(id: CarrierId): string {
   return `${DRAFT_PREFIX}${id}`;
 }
@@ -110,8 +110,8 @@ export function dropDraft(storage: DraftStorage, id: CarrierId): void {
 }
 
 /**
- * Der zuletzt gewählte Prüfer als Sitzungseinstellung. Eine Person arbeitet 558 Zeilen ab; sie
- * soll sich nicht 558-mal selbst auswählen müssen.
+ * Der zuletzt gewählte Prüfer als Sitzungseinstellung. Eine Person arbeitet 595 Zeilen ab; sie
+ * soll sich nicht 595-mal selbst auswählen müssen.
  */
 export const SESSION_REVIEWER_KEY = 'einsatzzeichen.fachreview.pruefer';
 

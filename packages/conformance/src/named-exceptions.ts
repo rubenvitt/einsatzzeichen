@@ -48,13 +48,13 @@ import type { GRAMMAR_FIXTURES } from './recipes.js';
  *   abgeleitete Geometrie und keine Farbe.
  *
  * Das Gate prüft auch diese Abgrenzung. Jedes Feld aus `BodyLabels` gehört genau einer der beiden
- * Mengen an, zur Übersetzungszeit über den Typ und zur Laufzeit über alle 242 Fixtures. Ein später
+ * Mengen an, zur Übersetzungszeit über den Typ und zur Laufzeit über alle 279 Fixtures. Ein später
  * hinzugefügtes Feld fällt deshalb auf. Es kann nicht still weder gelistet noch ausgenommen sein.
  *
  * ## Herkunft der Einträge
  *
- * Die Menge ist zur Laufzeit gezählt: 50 Einträge an 37 Fixtures. Sie ist nicht per Textsuche
- * geschätzt. Das betrifft vor allem I.2.1 bis I.2.3: sie teilen die Konstante
+ * Die Menge ist zur Laufzeit gezählt: 87 Einträge an 67 Fixtures (bis LFH-786 50 an 37). Sie ist
+ * nicht per Textsuche geschätzt. Das betrifft vor allem I.2.1 bis I.2.3: sie teilen die Konstante
  * `I_2_TOP_LEFT_METRICS`, die eine Suche nach Zahlen nicht findet. Die Werte stehen hier
  * trotzdem als Literale. Nur so prüft das Gate eine Gleichheit und nicht die Fixture gegen sich
  * selbst.
@@ -138,6 +138,11 @@ const I = 'packages/conformance/src/recipes-anhang-i.ts';
 const N = 'packages/conformance/src/recipes-anhang-n.ts';
 const TAXONOMY = 'packages/schema/src/taxonomy.ts';
 const RECIPES_TEST = 'packages/conformance/src/recipes.test.ts';
+const RECIPES_FILE = 'packages/conformance/src/recipes.ts';
+const C_FF = 'packages/conformance/src/recipes-anhang-c/fire-fighting.ts';
+const C_HRL = 'packages/conformance/src/recipes-anhang-c/height-rescue-lifting.ts';
+const C_CTW = 'packages/conformance/src/recipes-anhang-c/cbrn-transport-water.ts';
+const C_AP = 'packages/conformance/src/recipes-anhang-c/assistance-power.ts';
 
 function exception<Field extends SpecialValueField>(
   fixture: GrammarFixtureKey,
@@ -147,7 +152,8 @@ function exception<Field extends SpecialValueField>(
   rationale: string,
   rationaleAt: string,
 ): NamedExceptionOf<Field> {
-  return { fixture, field, value, section: fixture, rationale, rationaleAt, foundAt };
+  // Der Abschnitt ist der Schlüssel ohne Darstellung: `C.2.14#alternative` gehört zu C.2.14.
+  return { fixture, field, value, section: fixture.split('#')[0]!, rationale, rationaleAt, foundAt };
 }
 
 // --- Gemeinsame Begründungen, je einmal übernommen -------------------------------------------
@@ -157,7 +163,7 @@ const E2_CAP_HEIGHT =
   'gesetzt. „Es gibt keine Auslöseregel, und das ist gemessen, nicht offen": nur drei der neun ' +
   'bräuchten die Verkleinerung, eine Breitenschwelle ist widerlegt. Am 21.09.2026 als je-Zeichen-' +
   'Wert bestätigt (docs/decisions/2026-09-20-zonenmodell-als-daten.md, Punkt 6, Option A). ';
-const E2_CAP_HEIGHT_AT = `${TAXONOMY}:703–722; ${E}:862–867`;
+const E2_CAP_HEIGHT_AT = `${TAXONOMY}:711–730; ${E}:862–867`;
 
 const F2_TOP_LEFT =
   'Drei gemeinsam erforderliche Quellenmaße für einen einzelnen topLeft-Lauf, am in Pfade ' +
@@ -168,7 +174,22 @@ const N_INK =
   'Schwarzer Quellenlauf im Körper statt der aus der Körperfüllung abgeleiteten Tinte; „die ' +
   'schwarzen Quellenläufe von N.1.2 bis N.1.5 werden über den gemessenen inBodyInk-Vertrag ' +
   'gerendert und bestehen den Kontrastvertrag ohne neue Ausnahme".';
-const N_INK_AT = `${TAXONOMY}:554–559; packages/conformance/src/coverage-manifest.ts:388–390`;
+const N_INK_AT = `${TAXONOMY}:562–567; packages/conformance/src/coverage-manifest.ts:388–390`;
+
+const C_INK =
+  'Schwarzer Quellenlauf auf Feuerwehrrot statt der aus der Körperfüllung abgeleiteten Tinte. Das ' +
+  'Drucktoken ist „schwarz wie die Quelle in Referenz und accessible-light und nur im Drucktheme ' +
+  'weiß“: mit `schwarz` entstünde im Drucktheme (rot #666666) 3,657:1 gegen die Textschwelle.';
+const C_INK_AT = `${TAXONOMY}:533–539; ${RECIPES_FILE}:233–239`;
+
+const C_2_25_P =
+  'Das „P“ steht zwischen den Klammern und ist das „P“ aus C.1.8, auf 0,5995 verkleinert: ' +
+  'Grundlinie y 23,0 (3 mm über der Unterkante 26), Versalhöhe 2,9192 mm; der Anker liegt bei ' +
+  'x 21,4615 + 1,3968 × 0,5995 = 22,299, also 21,3 mm ab der linken Körperkante. ';
+const C_2_25_ALT_P =
+  'Das „P“ im Normgrad auf Grundlinie y 24,0, 2 mm über der Unterkante. Nicht ganz mittig: es ' +
+  'ist das „P“ aus C.1.8, um (+0,5002|−1,9998) verschoben; sein Anker liegt bei x 16,5, 15,5 mm ' +
+  'ab der linken Körperkante. ';
 
 const I_2_TOP_LEFT =
   'Kürzel oben links an I.2.1 bis I.2.3, an der Referenz abgelesen: Versalhöhe 2,919 mm (W, ' +
@@ -186,7 +207,7 @@ const I_G_BOX_MARGIN =
   'Laut Feldkommentar „keine Quellmessung und kein Auto-Fit": die für den konkreten, bereits ' +
   'vermessenen Lauf „Strömungsrettung" erforderliche Ausgabebox, 0,5 mm statt des globalen ' +
   '1-mm-Rands. Modellierungsentscheidung je Zeichen.';
-const I_G_BOX_MARGIN_AT = `${TAXONOMY}:573–577`;
+const I_G_BOX_MARGIN_AT = `${TAXONOMY}:581–585`;
 
 const I_F_WITHOUT_RATIONALE =
   'Am Fundort ohne Begründung; der Teilslicekommentar sagt nur „vier literale Formationen". ' +
@@ -200,10 +221,63 @@ const I_5_ABOVE_LEFT =
 const I_5_ABOVE_LEFT_AT = `${I}:505; ${RECIPES_TEST}, Test „%s hält die gemessene Above-left-Textlage fest"`;
 
 /**
- * Alle benannten Ausnahmen der 242 Fixtures. Reihenfolge: je Anhang, darin je Fixture und Feld in
+ * Alle benannten Ausnahmen der 279 Fixtures. Reihenfolge: je Anhang, darin je Fixture und Feld in
  * Quelltextreihenfolge.
  */
 export const NAMED_EXCEPTIONS: DeepReadonly<NamedException[]> = deepFreeze<NamedException[]>([
+  // --- Anhang C (LFH-786): Läufe auf Feuerwehrrot, Anker des „P“ ------------------------------
+  exception('C.1.8', 'centerBaselineFromBodyBottomMm', 3, `${RECIPES_FILE}:177`,
+    'Schwarzes „P“ auf Grundlinie y 26,0 bei Körperunterkante 29,0 des Staffelkörpers, also 3 mm ' +
+    'darüber. Am Fundort als Referenzablesung vermerkt.',
+    `${RECIPES_FILE}:176; ${TAXONOMY}:576–579`),
+  exception('C.1.8', 'inBodyInk', 'koerperlauf-kontrast', `${RECIPES_FILE}:177`, C_INK, C_INK_AT),
+  exception('C.2.4', 'inBodyInk', 'koerperlauf-kontrast', `${C_FF}:33`, C_INK, C_INK_AT),
+  exception('C.2.5', 'inBodyInk', 'koerperlauf-kontrast', `${C_FF}:33`, C_INK, C_INK_AT),
+  exception('C.2.6', 'inBodyInk', 'koerperlauf-kontrast', `${C_FF}:33`, C_INK, C_INK_AT),
+  exception('C.2.7', 'inBodyInk', 'koerperlauf-kontrast', `${C_FF}:33`, C_INK, C_INK_AT),
+  exception('C.2.8', 'inBodyInk', 'koerperlauf-kontrast', `${C_FF}:33`, C_INK, C_INK_AT),
+  exception('C.2.9', 'inBodyInk', 'koerperlauf-kontrast', `${C_FF}:33`, C_INK, C_INK_AT),
+  exception('C.2.10', 'inBodyInk', 'koerperlauf-kontrast', `${C_FF}:75`, C_INK, C_INK_AT),
+  exception('C.2.10', 'topLeftMetrics',
+    { capHeightMm: 2.919225, baselineFromBodyTopMm: 6.25, anchorFromBodyLeftMm: 1.520031 },
+    `${C_FF}:77`, F2_TOP_LEFT + 'Lauf LF 20 KatS; gegen den Profildefault neu ist allein die ' +
+    'Grundlinie, 0,5 mm höher. Die 0,02 mm des Ankers sind die Rundung des Defaults.',
+    `${C_FF}:57–65; ${TAXONOMY}:635–659`),
+  exception('C.2.11', 'inBodyInk', 'koerperlauf-kontrast', `${C_FF}:33`, C_INK, C_INK_AT),
+  exception('C.2.12', 'inBodyInk', 'koerperlauf-kontrast', `${C_FF}:33`, C_INK, C_INK_AT),
+  exception('C.2.13', 'inBodyInk', 'koerperlauf-kontrast', `${C_FF}:33`, C_INK, C_INK_AT),
+  exception('C.2.14', 'inBodyInk', 'koerperlauf-kontrast', `${C_HRL}:27`, C_INK, C_INK_AT),
+  exception('C.2.14#alternative', 'inBodyInk', 'koerperlauf-kontrast', `${C_HRL}:39`, C_INK, C_INK_AT),
+  exception('C.2.15', 'inBodyInk', 'koerperlauf-kontrast', `${C_HRL}:50`, C_INK, C_INK_AT),
+  exception('C.2.15#alternative', 'inBodyInk', 'koerperlauf-kontrast', `${C_HRL}:62`, C_INK, C_INK_AT),
+  exception('C.2.16', 'inBodyInk', 'koerperlauf-kontrast', `${C_HRL}:73`, C_INK, C_INK_AT),
+  exception('C.2.16#alternative', 'inBodyInk', 'koerperlauf-kontrast', `${C_HRL}:92`, C_INK, C_INK_AT),
+  exception('C.2.17', 'inBodyInk', 'koerperlauf-kontrast', `${C_HRL}:103`, C_INK, C_INK_AT),
+  exception('C.2.17#alternative', 'inBodyInk', 'koerperlauf-kontrast', `${C_HRL}:115`, C_INK, C_INK_AT),
+  exception('C.2.20', 'inBodyInk', 'koerperlauf-kontrast', `${C_CTW}:28`, C_INK, C_INK_AT),
+  exception('C.2.23', 'inBodyInk', 'koerperlauf-kontrast', `${C_CTW}:50`, C_INK, C_INK_AT),
+  exception('C.2.23#alternative', 'inBodyInk', 'koerperlauf-kontrast', `${C_CTW}:62`, C_INK, C_INK_AT),
+  exception('C.2.24', 'inBodyInk', 'koerperlauf-kontrast', `${C_CTW}:73`, C_INK, C_INK_AT),
+  exception('C.2.25', 'inBodyInk', 'koerperlauf-kontrast', `${C_CTW}:92`, C_INK, C_INK_AT),
+  exception('C.2.25', 'centerAnchorFromBodyLeftMm', 21.3, `${C_CTW}:95`,
+    C_2_25_P + 'validateSpec() akzeptiert den Anker nur an dem Profil, das ihn vermessen hat.',
+    `${C_CTW}:76–82; ${TAXONOMY}:570–574`),
+  exception('C.2.25', 'centerBaselineFromBodyBottomMm', 3, `${C_CTW}:96`,
+    C_2_25_P + 'Hier gilt die Grundlinie.', `${C_CTW}:76–82; ${TAXONOMY}:576–579`),
+  exception('C.2.25', 'centerCapHeightMm', 2.919225, `${C_CTW}:97`,
+    C_2_25_P + 'Hier gilt die Versalhöhe statt des Normgrads 4,87 mm.',
+    `${C_CTW}:76–82; ${TAXONOMY}:711–730`),
+  exception('C.2.25#alternative', 'inBodyInk', 'koerperlauf-kontrast', `${C_CTW}:117`, C_INK, C_INK_AT),
+  exception('C.2.25#alternative', 'centerAnchorFromBodyLeftMm', 15.5, `${C_CTW}:119`,
+    C_2_25_ALT_P + 'Hier gilt der Anker.', `${C_CTW}:101–106; ${TAXONOMY}:570–574`),
+  exception('C.2.25#alternative', 'centerBaselineFromBodyBottomMm', 2, `${C_CTW}:120`,
+    C_2_25_ALT_P + 'Hier gilt die Grundlinie.', `${C_CTW}:101–106; ${TAXONOMY}:576–579`),
+  exception('C.2.26', 'inBodyInk', 'koerperlauf-kontrast', `${C_CTW}:132`, C_INK, C_INK_AT),
+  exception('C.2.27', 'inBodyInk', 'koerperlauf-kontrast', `${C_HRL}:126`, C_INK, C_INK_AT),
+  exception('C.2.27#alternative', 'inBodyInk', 'koerperlauf-kontrast', `${C_HRL}:138`, C_INK, C_INK_AT),
+  exception('C.2.28', 'inBodyInk', 'koerperlauf-kontrast', `${C_HRL}:153`, C_INK, C_INK_AT),
+  exception('C.2.30', 'inBodyInk', 'koerperlauf-kontrast', `${C_AP}:29`, C_INK, C_INK_AT),
+
   // --- Anhang E.2: gemessener Schriftgrad des mittigen Laufs --------------------------------
   exception('E.2.7', 'centerCapHeightMm', 4.3829, `${E}:1026`,
     E2_CAP_HEIGHT + 'Gemessen an der einzigen flachen Versalie des Laufs (T), 0,9001 des Normwerts.',
@@ -239,25 +313,25 @@ export const NAMED_EXCEPTIONS: DeepReadonly<NamedException[]> = deepFreeze<Named
   // --- Anhang F.2: Metriksatz des Kürzels oben links -----------------------------------------
   exception('F.2.10', 'topLeftMetrics',
     { capHeightMm: 2.191447, baselineFromBodyTopMm: 5.249923, anchorFromBodyLeftMm: 0.51423 },
-    `${F}:467`, F2_TOP_LEFT + 'Lauf BTKombi.', `${TAXONOMY}:627–651`),
+    `${F}:467`, F2_TOP_LEFT + 'Lauf BTKombi.', `${TAXONOMY}:635–659`),
   exception('F.2.11', 'topLeftMetrics',
     { capHeightMm: 2.191447, baselineFromBodyTopMm: 5.249923, anchorFromBodyLeftMm: 0.51423 },
-    `${F}:485`, F2_TOP_LEFT + 'Lauf BTKombi, gleich F.2.10.', `${TAXONOMY}:627–651`),
+    `${F}:485`, F2_TOP_LEFT + 'Lauf BTKombi, gleich F.2.10.', `${TAXONOMY}:635–659`),
   exception('F.2.12', 'topLeftMetrics',
     { capHeightMm: 2.919225, baselineFromBodyTopMm: 6.249691, anchorFromBodyLeftMm: 1.010503 },
-    `${F}:503`, F2_TOP_LEFT + 'Lauf GwBT.', `${TAXONOMY}:627–651`),
+    `${F}:503`, F2_TOP_LEFT + 'Lauf GwBT.', `${TAXONOMY}:635–659`),
   exception('F.2.13', 'topLeftMetrics',
     { capHeightMm: 2.919225, baselineFromBodyTopMm: 6.249691, anchorFromBodyLeftMm: 1.010503 },
-    `${F}:522`, F2_TOP_LEFT + 'Lauf GwBT, gleich F.2.12.', `${TAXONOMY}:627–651`),
+    `${F}:522`, F2_TOP_LEFT + 'Lauf GwBT, gleich F.2.12.', `${TAXONOMY}:635–659`),
   exception('F.2.14', 'topLeftMetrics',
     { capHeightMm: 2.432746, baselineFromBodyTopMm: 5.249923, anchorFromBodyLeftMm: 1.009024 },
-    `${F}:541`, F2_TOP_LEFT + 'Lauf GwLog.', `${TAXONOMY}:627–651`),
+    `${F}:541`, F2_TOP_LEFT + 'Lauf GwLog.', `${TAXONOMY}:635–659`),
   exception('F.2.16', 'topLeftMetrics',
     { capHeightMm: 2.749893, baselineFromBodyTopMm: 6.749576, anchorFromBodyLeftMm: 1.497298 },
-    `${F}:569`, F2_TOP_LEFT + 'Lauf 40.', `${TAXONOMY}:627–651`),
+    `${F}:569`, F2_TOP_LEFT + 'Lauf 40.', `${TAXONOMY}:635–659`),
   exception('F.2.17', 'topLeftMetrics',
     { capHeightMm: 2.432746, baselineFromBodyTopMm: 5.749807, anchorFromBodyLeftMm: 0.766269 },
-    `${F}:588`, F2_TOP_LEFT + 'Lauf BtlLKW.', `${TAXONOMY}:627–651`),
+    `${F}:588`, F2_TOP_LEFT + 'Lauf BtlLKW.', `${TAXONOMY}:635–659`),
 
   // --- Anhang F.3: Kreisprofile, Metriksatz zwingend -----------------------------------------
   exception('F.3.3', 'topLeftMetrics',
@@ -266,23 +340,23 @@ export const NAMED_EXCEPTIONS: DeepReadonly<NamedException[]> = deepFreeze<Named
     'Der Lauf „UHS" beginnt 2,984684 mm links der Kreis-Hüllenkante und ist deshalb nur mit ' +
     'seinem vollständigen, gegen die ViewBox geprüften Metriksatz belegt. An den F.3-Kreisprofilen ' +
     'ist der Override zwingend.',
-    `${F}:757–759; ${TAXONOMY}:627–635`),
+    `${F}:757–759; ${TAXONOMY}:635–643`),
   exception('F.3.4', 'topLeftMetrics',
     { capHeightMm: 2.919225, baselineFromBodyTopMm: 1.000254, anchorFromBodyLeftMm: -2.984684 },
     `${F}:667`,
     'Derselbe außerhalb beginnende UHS-Lauf wie F.3.3.',
-    `${F}:760–762; ${TAXONOMY}:627–635`),
+    `${F}:760–762; ${TAXONOMY}:635–643`),
   exception('F.3.5', 'topLeftMetrics',
     { capHeightMm: 2.749893, baselineFromBodyTopMm: -0.999746, anchorFromBodyLeftMm: -2.974002 },
     `${F}:685`,
     'Kreis um 2 mm abgesenkt; der teilweise oberhalb liegende Lauf „50" ist separat vermessen.',
-    `${F}:763–765; ${TAXONOMY}:627–635`),
+    `${F}:763–765; ${TAXONOMY}:635–643`),
   exception('F.3.14', 'topLeftMetrics',
     { capHeightMm: 2.749893, baselineFromBodyTopMm: -0.999746, anchorFromBodyLeftMm: -2.974002 },
     `${F}:822`,
     'Kreis, Giebel und Lauf „500" verwenden dieselbe abgesenkte Fassung und denselben ' +
     'vollständigen Metriksatz wie der vermessene F.3.5-Beleg.',
-    `${F}:885–887; ${TAXONOMY}:627–635`),
+    `${F}:885–887; ${TAXONOMY}:635–643`),
 
   // --- Anhang I.1: Formationen mit eigenem mittigen Lauf -------------------------------------
   exception('I.1.15', 'centerBaselineFromBodyBottomMm', 15.45, `${I}:176`,
@@ -320,7 +394,7 @@ export const NAMED_EXCEPTIONS: DeepReadonly<NamedException[]> = deepFreeze<Named
     'Quellenspezifischer x-Anker des Laufs „Tauchen"; der Test nennt ihn „aus der Quelle ' +
     'gemessen" (absolut x = 12,24 mm). validateSpec() akzeptiert ihn nur an dem Profil, das ' +
     'genau diesen Anker vermessen hat.',
-    `${RECIPES_TEST}, Test „setzt I.2.5s Tauchen-Lauf auf den aus der Quelle gemessenen Anker x = 12,24 mm"; ${TAXONOMY}:562–566`),
+    `${RECIPES_TEST}, Test „setzt I.2.5s Tauchen-Lauf auf den aus der Quelle gemessenen Anker x = 12,24 mm"; ${TAXONOMY}:570–574`),
   exception('I.2.5', 'centerBaselineFromBodyBottomMm', 14.5, `${I}:332`,
     'Am Fundort ohne Begründung; festgehalten ist allein die Wirkung (Grundlinie y = 11,5 mm).',
     `${RECIPES_TEST}, Test „setzt I.2.5s Tauchen-Lauf auf den aus der Quelle gemessenen Anker x = 12,24 mm"`),
@@ -360,7 +434,7 @@ export const NAMED_EXCEPTIONS: DeepReadonly<NamedException[]> = deepFreeze<Named
     `${N}:63`,
     'Am Fundort ohne Begründung. Laut Feldkommentar müssen Anker und abgeleitete Textbox in ' +
     'Profilbox und 32-mm-ViewBox bleiben.',
-    `${N}:3–8; ${TAXONOMY}:663–665`),
+    `${N}:3–8; ${TAXONOMY}:671–673`),
   exception('N.1.4', 'bottomRightMetrics',
     {
       capHeightMm: 2.750245,
@@ -372,17 +446,17 @@ export const NAMED_EXCEPTIONS: DeepReadonly<NamedException[]> = deepFreeze<Named
     `${N}:69`,
     'Am Fundort ohne Begründung. Laut Feldkommentar ein „vollständiger, körperrelativer ' +
     'Metriksatz für einen einzeln vermessenen bottomRight-Lauf".',
-    `${N}:3–8; ${TAXONOMY}:591–594`),
+    `${N}:3–8; ${TAXONOMY}:599–602`),
   exception('N.1.5', 'inBodyInk', 'schwarz', `${N}:90`, N_INK, N_INK_AT),
   exception('N.1.5', 'topLeftMetrics',
     { capHeightMm: 2.919225, baselineFromBodyTopMm: 7, anchorFromBodyLeftMm: 5.99 },
     `${N}:92`,
     '„Am Festflügel-Luftfahrzeug ist der vollständige Satz zwingend; dort ist kein unabhängiger ' +
     'Default für den Lauf belegt."',
-    `${TAXONOMY}:634–635`),
+    `${TAXONOMY}:642–643`),
   exception('N.1.6', 'aboveLeftMetrics',
     { capHeightMm: 2.919225, baselineFromBodyTopMm: -1, anchorFromBodyLeftMm: -0.01 },
     `${N}:111`,
     'Am Fundort ohne Begründung; derselbe Metriksatz wie N.1.4 (CH-53).',
-    `${N}:3–8; ${TAXONOMY}:663–665`),
+    `${N}:3–8; ${TAXONOMY}:671–673`),
 ]);

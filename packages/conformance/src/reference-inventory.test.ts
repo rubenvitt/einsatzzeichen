@@ -135,7 +135,7 @@ describe('INVENTORY_EXCLUSIONS', () => {
     }
   });
 
-  it('enthält genau die drei entschiedenen Gruppen: 1 Übersichtsblatt, 9 Beispiele, 18 zurückgestellt', () => {
+  it('enthält genau die drei entschiedenen Gruppen: 1 Übersichtsblatt, 9 Beispiele, 19 zurückgestellt', () => {
     const by = (d: InventoryExclusion['disposition']) =>
       INVENTORY_EXCLUSIONS.filter((e) => e.disposition === d).map((e) => e.asset).sort();
     expect(by('overview-sheet')).toEqual(['J_Bedienungszeichen.svg']);
@@ -150,7 +150,10 @@ describe('INVENTORY_EXCLUSIONS', () => {
       'J.2.3._Beispiel Telefon.svg',
       'J.2.3._Beispiel Wählbetrieb.svg',
     ]);
-    expect(by('deferred')).toHaveLength(18);
+    // 18 bis LFH-786; dazu die nicht gebaute Alternative des CBRN-Erkundungswagens, die mit
+    // C.2.24 in den Umfang kam.
+    expect(by('deferred')).toHaveLength(19);
+    expect(by('deferred')).toContain('C.2.24_CBRN-Erkundungswagen_Alternative.svg');
   });
 });
 
@@ -170,7 +173,7 @@ describe('SECTIONS_WITHOUT_SIGN', () => {
 });
 
 describe('referenceInventory (echter Bestand)', () => {
-  it('rechnet das Inventar restlos auf: 661 = 550 beansprucht + 83 außerhalb + 28 ausgeschlossen', () => {
+  it('rechnet das Inventar restlos auf: 661 = 585 beansprucht + 47 außerhalb + 29 ausgeschlossen', () => {
     // Die Zahlen sind absichtlich hart: das Inventar ist ein Generat aus `pnpm cli audit:reference`
     // und ändert sich nur, wenn der Referenzbestand sich ändert; die Beanspruchung wächst mit
     // jedem Slice. Wer eine Zahl hier anpassen muss, hat entweder eine Datei neu beansprucht
@@ -180,9 +183,13 @@ describe('referenceInventory (echter Bestand)', () => {
     const result = referenceInventory();
     expect(result.total).toBe(661);
     expect(referenceInventoryAssets()).toHaveLength(661);
-    expect(result.claimed).toBe(550);
-    expect(result.outOfScope).toBe(83);
-    expect(result.excludedByDisposition).toEqual({ example: 9, 'overview-sheet': 1, deferred: 18 });
+    // LFH-786: 37 neue Rezepte, aber nur 35 neu beanspruchte Dateien — C.1.7 und C.1.8 waren
+    // schon Belegdateien der Stärkegrade trupp und staffel (`ELEMENTS`). Also 550 + 35 = 585.
+    // Außerhalb: 83 − 35 = 48 und mit dem neuen Umfang C.2.24 noch eine weniger, weil dessen
+    // nicht gebaute Alternative jetzt als zurückgestellt zählt (47; deferred 18 + 1 = 19).
+    expect(result.claimed).toBe(585);
+    expect(result.outOfScope).toBe(47);
+    expect(result.excludedByDisposition).toEqual({ example: 9, 'overview-sheet': 1, deferred: 19 });
     expect(result.unaccounted).toEqual([]);
     expect(result.staleExclusions).toEqual([]);
     expect(result.sectionsWithoutEntry).toEqual([]);
@@ -199,7 +206,7 @@ describe('referenceInventory (echter Bestand)', () => {
   it('beansprucht aus drei Quellen, und jede beanspruchte Datei liegt im Inventar', () => {
     const claimed = claimedReferenceAssets();
     const inventory = new Set(referenceInventoryAssets());
-    expect(claimed.size).toBe(550);
+    expect(claimed.size).toBe(585);
     for (const asset of claimed) expect(inventory.has(asset)).toBe(true);
     // Jeder Manifest-Eintrag beansprucht seine Datei; die übrigen Quellen sind Rezepte und
     // Elemente mit mehreren Belegen (Stärkegrade, Fahrwerke).

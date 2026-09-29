@@ -353,6 +353,36 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
     }
   });
 
+  it('hält C.1.8s „P“ quellentreu schwarz und hebt nur im Drucktheme auf Weiß (LFH-786)', () => {
+    // Ohne das eigene Token trüge C.1.8 „schwarz auf rot“ und erzeugte im Drucktheme einen
+    // zweiten gedeckten Befund neben PSNV (4.2.2). Mit `inBodyInk: 'koerperlauf-kontrast'`
+    // entsteht stattdessen eine Anforderung, die alle drei Themes bestehen.
+    const derived = labelContrastRequirements([RECIPES['C.1.8']]);
+    expect(derived).toEqual([{
+      foreground: 'koerperlauf-kontrast',
+      background: 'rot',
+      context: 'Beschriftung im Körper auf Organisation feuerwehr',
+      minimum: MINIMUM_TEXT_CONTRAST,
+    }]);
+
+    const cases = [
+      [RENDER_THEMES.reference, '#000000', 5.218],
+      [ACCESSIBLE_LIGHT_THEME, '#000000', 5.218],
+      [PRINT_MONOCHROME_THEME, '#ffffff', 5.742],
+    ] as const;
+    for (const [theme, expectedInk, expectedRatio] of cases) {
+      const ink = theme.palette['koerperlauf-kontrast'];
+      expect(ink, theme.id).toBe(expectedInk);
+      const ratio = contrastRatio(ink, theme.palette.rot);
+      expect(ratio, theme.id).toBeCloseTo(expectedRatio, 3);
+      expect(ratio, theme.id).toBeGreaterThanOrEqual(MINIMUM_TEXT_CONTRAST);
+      expect(checkContrast(theme, derived), theme.id).toEqual([]);
+    }
+    // Die Gegenprobe: schwarz auf Druckrot verfehlt die Textschwelle, deshalb das Token.
+    expect(contrastRatio(PRINT_MONOCHROME_THEME.palette.schwarz, PRINT_MONOCHROME_THEME.palette.rot))
+      .toBeCloseTo(3.657, 3);
+  });
+
   it('leitet N.2.3s schwarze Oberflächenläufe eigenständig und dedupliziert ab', () => {
     const derived = labelContrastRequirements([RECIPES['N.2.3']]);
     expect(derived).toEqual([

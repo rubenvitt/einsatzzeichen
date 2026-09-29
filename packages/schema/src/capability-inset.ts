@@ -1,4 +1,5 @@
 import type { GrammarFinding } from './grammar-findings.js';
+import type { BodyMarkRenditionId } from './body-mark-renditions.js';
 import type { BodyVariantId, CapabilityId, SymbolKind } from './taxonomy.js';
 
 /**
@@ -31,6 +32,12 @@ export interface CapabilityInsetForm {
   readonly kind: SymbolKind;
   /** Gesetzt, wenn die Fassung eine Variante ist (wie in `BodyFormZones`). */
   readonly variant?: BodyVariantId;
+  /**
+   * Gesetzt, wenn die Fassung eine zweite oder weitere Fassung desselben Paars ist
+   * (`SymbolSpec.bodyMarkRenditions`, LFH-786). Ohne Kennung gilt die Grundfassung; mit Kennung
+   * zählt die Form für sich, weil ihre Faktoren von der Grundfassung abweichen dürfen.
+   */
+  readonly rendition?: BodyMarkRenditionId;
   readonly treatment: CapabilityInsetTreatment;
   /** Breite der Körperfassung durch Breite der Einzeldarstellung, auf 0,01 gerundet. */
   readonly scaleX: CapabilityInsetScale;

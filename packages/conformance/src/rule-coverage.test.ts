@@ -87,7 +87,7 @@ describe('ruleCoverage (echter Bestand)', () => {
 
   it('zählt die Validierungsregeln aus core, ohne sie zu wiederholen', () => {
     expect(validationRuleCoverage()).toEqual({ total: VALIDATION_RULE_IDS.length });
-    expect(validationRuleCoverage().total).toBe(73);
+    expect(validationRuleCoverage().total).toBe(74);
   });
 });
 
@@ -117,16 +117,16 @@ describe('ruleEvidenceCoverage (Regelsicht)', () => {
 
   // Seit LFH-568 (21.09.2026): „Eine Regel gilt als belegt, wenn ein Testfall sie auslöst." Die
   // Zahlen wachsen mit den Katalogen und schrumpfen nur, wenn eine Lücke einen Fall bekommt.
-  it('belegt 75 von 79 Regeln durch Auslösung; vier benannte Lücken, keine stille', () => {
+  it('belegt 76 von 80 Regeln durch Auslösung; vier benannte Lücken, keine stille', () => {
     const coverage = ruleEvidenceCoverage();
-    expect(coverage.total).toEqual({ total: 79, triggered: 75, gap: 4, untriggered: 0 });
+    expect(coverage.total).toEqual({ total: 80, triggered: 76, gap: 4, untriggered: 0 });
     expect(coverage.byPhase).toEqual({
-      spec: { total: 73, triggered: 71, gap: 2, untriggered: 0 },
+      spec: { total: 74, triggered: 72, gap: 2, untriggered: 0 },
       composition: { total: 6, triggered: 4, gap: 2, untriggered: 0 },
     });
     expect(coverage.byKind).toEqual({
       systematik: { total: 8, triggered: 8, gap: 0, untriggered: 0 },
-      engine: { total: 71, triggered: 67, gap: 4, untriggered: 0 },
+      engine: { total: 72, triggered: 68, gap: 4, untriggered: 0 },
     });
     expect(coverage.byDimension.map((entry) => [entry.dimension, entry.total, entry.triggered, entry.gap])).toEqual([
       ['body-variant', 7, 7, 0],
@@ -137,6 +137,7 @@ describe('ruleEvidenceCoverage (Regelsicht)', () => {
       ['technical-head-mark', 2, 2, 0],
       ['chassis', 2, 2, 0],
       ['capabilities', 1, 1, 0],
+      ['body-marks', 1, 1, 0],
       ['function-role', 10, 7, 3],
       ['label', 48, 47, 1],
       ['composition', 1, 1, 0],
@@ -181,15 +182,22 @@ describe('generativeReach (echter Bestand)', () => {
     // F.1.1 und F.1.3 (Doppelbalken) sowie F.1.13 und F.1.21 (Einzelbalken) tragen seit dem
     // Fachreview ihre Kopfmarke; dazu +20 gültige Kombinationen, weil die technische Kopfmarke
     // jetzt auch an der Formation mit Fußband belegt ist (2 Marken × 10 Organisationen).
-    expect(reach.referenced).toBe(71);
-    expect(reach.reachOnly).toBe(924 - 71);
+    // LFH-786 bringt sechs neue Signaturen, alle mit Feuerwehrfarbe: die Formation mit Trupp
+    // (C.1.7), das Landfahrzeug mit Kategorie 1 und mit Kategorie 2, den Anhänger mit einem Rad
+    // (C.2.29), denselben Anhänger mit Fußband (C.2.30) und das Kettenfahrzeug mit
+    // inverted-hull-track (C.2.31). C.1.8 teilt seine Signatur mit C.1.1. Keine der sechs liegt
+    // außerhalb der Reichweite; die Gültigkeitszahlen bleiben unverändert.
+    expect(reach.referenced).toBe(77);
+    expect(reach.reachOnly).toBe(924 - 77);
     // Acht Rezeptsignaturen sind für sich allein nicht gültig: die farbigen Kreisverträge
     // brauchen ihre Körpermarke, die Personen mit Verwaltungsstufe ihre Funktionsrolle, das
     // eingesenkte Wasserfahrzeug seine Beschriftung. Stufe 1 enumeriert keine dieser Achsen.
     expect(reach.referencedOutsideReach).toHaveLength(8);
+    // `bodyMarks` = 88 Fähigkeiten + technische Marken; LFH-786 ergänzt mit `track-chevron-top`
+    // (Drohnenwinkel der Löschdrohne C.2.31) genau eine technische Marke, daher 133 statt 132.
     expect(reach.notEnumerated.map((axis) => [axis.id, axis.size])).toEqual([
       ['capabilities', 88],
-      ['bodyMarks', 132],
+      ['bodyMarks', 133],
       ['functionRole', 25],
       ['designation', Number.POSITIVE_INFINITY],
     ]);

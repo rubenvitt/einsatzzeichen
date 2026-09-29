@@ -18,15 +18,16 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 525: 14 Grundzeichen, 242 Rezeptfälle und 269 Piktogrammvarianten. Die Anhang-I-Slices
-    // I.2.4 bis I.2.7 ergänzen den bereits vollständigen I.3-Bestand und I.5.1 bis I.5.3.
-    expect(ids).toHaveLength(525);
+    // 562: 14 Grundzeichen, 279 Rezeptfälle und 269 Piktogrammvarianten. Die Anhang-I-Slices
+    // I.2.4 bis I.2.7 ergänzen den bereits vollständigen I.3-Bestand und I.5.1 bis I.5.3; LFH-786
+    // ergänzt 37 Rezeptfälle aus Anhang C (525 + 37).
+    expect(ids).toHaveLength(562);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
     // Dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66, G 21, H drei,
     // I-c, I-d, I-f und I-g je vier, I-e fünf, I.2 sieben, I.3 elf, I-j drei und I.5 drei,
-    // C.1.3 einen, N neun und D 26 Rezeptfälle.
-    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(242);
+    // C.1.3 einen, N neun und D 26 Rezeptfälle. LFH-786 ergänzt C.1.7, C.1.8 und 35 aus C.2.
+    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(279);
     const anhangIRecipeIds = ids.filter((id) => id.startsWith('recipe.I.'));
     const expectedAnhangIRecipeIds = [
       ...Array.from({ length: 4 }, (_, index) => `recipe.I.1.${index + 1}`),
