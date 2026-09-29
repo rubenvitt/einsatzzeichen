@@ -1,3 +1,76 @@
+## Breaking Changes
+
+Die Datenstruktur für Zeichen wurde erweitert: Die Union-Typen `RuleDimension` und `RuleField` sind nun breiter und umfassen auch die neuen freistehenden Zeichen. `LINE_GEOMETRY` hat eine neue Querschnittsform erhalten. Bestehender Code, der diese Typen direkt verwendet, muss möglicherweise angepasst werden.
+
+## Neue Zeichenarten
+
+**Freistehende Zeichen** sind nun als eigene Kategorie neben den regulären Symbolen verfügbar:
+- **Bewegungspfeile** (5.2) – alle sechs Pfeilformen inklusive doppelschäftiger Varianten
+- **Linien und Grenzen** (2.14–2.20) – als Striche mit wiederholten Marken
+- **Wetter** (5.8.7) – Wolken mit Niederschlägen (Schnee, Regen, Hagel, Gewitter) in verschiedenen Intensitätsstufen
+- **Tierzustand** (5.8.6) – eigenständige Zustandsmarkierungen
+
+Die neuen Spec-Arten (`MovementSpec`, `LineSpec`, `WeatherSpec`, `AnimalStateSpec`) werden über eigene Funktionen gezeichnet und über `AnySpec` typsicher verarbeitet.
+
+## Katalog
+
+**Verband** – Verbandskennzeichnungen (I, II) können nun über das neue `unitGrouping`-Feld an Symbolen angebracht werden. Die Darstellung erfolgt als Vertikalbalken in der Kopfzone (1,5 × 4 mm).
+
+**Zustände und Tendenz** – Drei neue Felder für Symbole:
+- `states` – Liste von Zuständen wie „Vermisst", „Verletzt", „Kontaminiert" mit visuellen Hinweisen an Personen und Gefahren
+- `tendency` – Einzelfeld für Richtungstendenzen
+- Hinweis „?" neben verkleinerter Person bei unklaren Zuständen (gemäß Beispiele 5.8.1)
+
+**Sonderformen** – Körperformen 3.6–3.9 sind nun vollständig vermessen und können verwendet werden (Drohne und Giebel bleiben Marken, keine Körperformen).
+
+## Regelwerk
+
+**24 neue Prüfregeln** stellen die korrekte Verwendung sicher:
+- Verbandskennzeichnungen und deren Kompatibilität mit Körperformen
+- Zustandsmarkierungen und deren erlaubte Träger
+- Freistehende Zeichen (Linienstärken, Wetterkombinationen, Tierzustände)
+- Grenzwerte für Listen (Zustände, Wetterwerte)
+
+Insgesamt sind nun **88 Prüfregeln** aktiv (vorher 76). Alle Regeln liefern verständliche Fehlermeldungen mit Erklärungen.
+
+## API
+
+**Zugängliche Einstiegsfunktion** – `drawSymbol(spec, options?)` zeichnet ein Zeichen direkt aus einer Beschreibung, ohne dass das Prüfpaket `@einsatzzeichen/conformance` geladen werden muss. Die Funktion nutzt `DEFAULT_PORTS` mit allen Standard-Bausteinen aus `@einsatzzeichen/core`.
+
+**Kanonische Serialisierung** – Neue Codec-Funktionen für standardisiertes Speichern und Laden:
+- `serializeSpec()` / `parseSpec()` – JSON-Format mit Versionshülle
+- `encodeSpecParam()` / `decodeSpecParam()` – kompakte URL-Form für Links
+- `serializeAnySpec()` / `parseAnySpec()` – einheitliche Verarbeitung aller Zeichenarten
+- Strikte Validierung mit aussagekräftigen Fehlermeldungen bei ungültigen Feldern
+
+**Vokabular-API** – `vocabulary(spec, field)` prüft für jedes Feld, welche Werte zum aktuellen Zeichen passen, welche durch Regeln gesperrt sind (mit Begründung) und welche noch nicht vermessen wurden. `checkSpec(spec)` liefert die vollständige Prüfung einer Beschreibung mit verständlichen Ablehnungsgründen.
+
+**Herkunftsinformationen** – `symbolProvenance(spec)` gibt Auskunft, ob ein Zeichen originalgetreu (`verbatim`) oder abgeleitet (`derived`) ist, inklusive Verweis auf die Referenzdatei. Die Funktion kommt ohne das Prüfpaket aus, die Herkunftstabelle ist im Produkt enthalten.
+
+**Erklärbare Regeln** – `explainIssue()` und `explainRejection()` liefern zu jedem Validierungsfehler einen kuratierten Titel, eine Erklärung und das betroffene Feld. Alle 88 Regeltexte sind in `@einsatzzeichen/core` enthalten.
+
+## Website
+
+Der **Baukasten** unterstützt die neuen Felder:
+- Verband-Auswahl nach der Stärke
+- Neue Gruppe „Zustand und Tendenz" mit Listenfeld und Einzelauswahl
+- Felder zeigen Hinweis „Noch nicht vermessen", wenn keine Geometrie vorliegt
+- Ungültige Links werden mit verständlichen Meldungen abgefangen statt stillschweigend ignoriert
+
+## CLI
+
+Neuer Befehl `pnpm cli provenance:table` erzeugt die Herkunftstabelle aus dem Körpervergleich.
+
+## Paketgröße
+
+Die Paketgröße von `@einsatzzeichen/core` ist gestiegen, da nun Produktinhalte enthalten sind:
+- Regeltexte (88 Erklärungen)
+- Herkunftstabelle
+- Vokabular und Codec
+- Vermessene Geometrie für alle neuen Zeichen
+
+**Neue Obergrenzen:** 650 KB gepackt, 6,95 MB entpackt (vorher: 550 KB / 6,2 MB)
+
 ## ⚠️ Breaking Changes
 
 ### Organisation `bundespolizei` entfällt
