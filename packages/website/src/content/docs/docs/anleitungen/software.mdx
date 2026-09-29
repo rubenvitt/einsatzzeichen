@@ -47,8 +47,9 @@ Zeichenseite und können daher nicht veralten.
 | Karte | `@einsatzzeichen/maplibre` | `addSymbolImage(map, id, drawing, { size, pixelRatio })` |
 
 `@einsatzzeichen/react` bringt zusätzlich `useEinsatzzeichenSvg(drawing, options)`, wenn du das
-Markup selbst platzieren willst. Das Web-Component-Element beobachtet `size` und `id-prefix`;
-`defineEinsatzzeichenElement()` ist idempotent und lässt sich gefahrlos mehrfach aufrufen.
+Markup selbst platzieren willst. Das Web-Component-Element beobachtet `size`, `id-prefix` und
+`min-stroke-width`; `defineEinsatzzeichenElement()` ist idempotent und lässt sich gefahrlos
+mehrfach aufrufen.
 
 ## Die acht Pakete
 

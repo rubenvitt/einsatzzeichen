@@ -98,6 +98,13 @@ Zeichnen übernimmt dann MapLibre, auch bei vielen tausend Punkten. Dafür ist d
 Größe, Pixel Ratio und Farbprofil stehen beim Anlegen fest, und eine andere Einstellung ist ein
 anderes Bild unter einer anderen ID.
 
+Im Raster zeichnet `addSymbolImage()` jeden Strich standardmäßig mindestens 1 Gerätepixel breit;
+sonst wären die 0,5-mm-Striche der Vorlage in kleinen Symbolen nur eine blassgraue Spur. Die
+Zeichendaten bleiben dabei unverändert. Unter 64 Gerätepixeln Breite wirkt die Symbolebene deshalb
+etwas kräftiger als der Marker, der als SVG ohne Untergrenze gezeichnet wird.
+`minStrokeWidthPx: null` schaltet die Untergrenze ab, Einzelheiten auf der
+[Paketseite maplibre](/docs/pakete/maplibre/#kräftigere-striche-in-kleinen-symbolen).
+
 ```ts
 import { addSymbolImage } from '@einsatzzeichen/maplibre';
 
