@@ -87,7 +87,7 @@ describe('ruleCoverage (echter Bestand)', () => {
 
   it('zählt die Validierungsregeln aus core, ohne sie zu wiederholen', () => {
     expect(validationRuleCoverage()).toEqual({ total: VALIDATION_RULE_IDS.length });
-    expect(validationRuleCoverage().total).toBe(72);
+    expect(validationRuleCoverage().total).toBe(73);
   });
 });
 
@@ -117,16 +117,16 @@ describe('ruleEvidenceCoverage (Regelsicht)', () => {
 
   // Seit LFH-568 (21.09.2026): „Eine Regel gilt als belegt, wenn ein Testfall sie auslöst." Die
   // Zahlen wachsen mit den Katalogen und schrumpfen nur, wenn eine Lücke einen Fall bekommt.
-  it('belegt 74 von 78 Regeln durch Auslösung; vier benannte Lücken, keine stille', () => {
+  it('belegt 75 von 79 Regeln durch Auslösung; vier benannte Lücken, keine stille', () => {
     const coverage = ruleEvidenceCoverage();
-    expect(coverage.total).toEqual({ total: 78, triggered: 74, gap: 4, untriggered: 0 });
+    expect(coverage.total).toEqual({ total: 79, triggered: 75, gap: 4, untriggered: 0 });
     expect(coverage.byPhase).toEqual({
-      spec: { total: 72, triggered: 70, gap: 2, untriggered: 0 },
+      spec: { total: 73, triggered: 71, gap: 2, untriggered: 0 },
       composition: { total: 6, triggered: 4, gap: 2, untriggered: 0 },
     });
     expect(coverage.byKind).toEqual({
       systematik: { total: 8, triggered: 8, gap: 0, untriggered: 0 },
-      engine: { total: 70, triggered: 66, gap: 4, untriggered: 0 },
+      engine: { total: 71, triggered: 67, gap: 4, untriggered: 0 },
     });
     expect(coverage.byDimension.map((entry) => [entry.dimension, entry.total, entry.triggered, entry.gap])).toEqual([
       ['body-variant', 7, 7, 0],
@@ -136,6 +136,7 @@ describe('ruleEvidenceCoverage (Regelsicht)', () => {
       ['administrative-level', 1, 1, 0],
       ['technical-head-mark', 2, 2, 0],
       ['chassis', 2, 2, 0],
+      ['capabilities', 1, 1, 0],
       ['function-role', 10, 7, 3],
       ['label', 48, 47, 1],
       ['composition', 1, 1, 0],

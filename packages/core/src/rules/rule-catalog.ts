@@ -60,7 +60,7 @@ import type { SourceReference } from '@einsatzzeichen/schema';
  *
  * Die sechs `-not-measured`-Kennungen und alle „… requires measured …"-Kennungen sind
  * durchweg `'engine'`; das ist der erwartete Befund und zugleich der Kern des Grammatik-Umbaus:
- * heute lehnt der Motor **64 von 72** Kombinationen ab, weil eine Messung fehlt, und nur **8**,
+ * heute lehnt der Motor **65 von 73** Kombinationen ab, weil eine Messung fehlt, und nur **8**,
  * weil die Systematik sie verbietet.
  *
  * ---------------------------------------------------------------------------------------------
@@ -77,7 +77,7 @@ import type { SourceReference } from '@einsatzzeichen/schema';
  *   nur den Prüfausdruck in Worten („muss endlich und größer als null sein"). Diese Sätze sind
  *   hierher **von Hand gezogen**.
  *
- * Das ist die eigentliche Aussage dieses Feldes: **27 der 72 Beschreibungsregeln** (mit der
+ * Das ist die eigentliche Aussage dieses Feldes: **27 der 73 Beschreibungsregeln** (mit der
  * einen Kompositionsregel 28 Einträge) begründet heute allein die Website.
  *
  * **Gegatet sind sie seit dem 21. September 2026.** Ein Gate in `core` ist unmöglich — `core`
@@ -132,7 +132,7 @@ export type RuleReasonSource = 'core' | 'website';
  * - `kind` und `bodyVariant` der Achsenliste stehen hier als `'base-symbol'` und
  *   `'body-variant'` — die Regeln trennen beide deutlich.
  * - `'label'` hat **keine** Wertachse (Beschriftung ist freier Text, kein Werteraum), trägt aber
- *   44 der 72 Regeln. Ohne diese Dimension wäre der Katalog unbrauchbar.
+ *   44 der 73 Regeln. Ohne diese Dimension wäre der Katalog unbrauchbar.
  * - `'composition'` ist keine Dimension der Systematik, sondern die Einordnung für Regeln, deren
  *   Auflösung überhaupt kein einzelnes Feld benennt. Dasselbe Wort und derselbe Grund wie in
  *   `rule-explanations.ts`; bislang genau `head-zone-conflict`.
@@ -242,7 +242,7 @@ function entry(
 }
 
 /**
- * Die 72 Regeln, die `validateSpec()` an der Beschreibung prüft — alphabetisch wie
+ * Die 73 Regeln, die `validateSpec()` an der Beschreibung prüft — alphabetisch wie
  * `VALIDATION_RULE_IDS`, damit ein Vergleich der beiden Listen ohne Umsortieren lesbar bleibt.
  */
 export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
@@ -341,6 +341,13 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'label',
     'Box, Anker und abgeleitete vertikale Schriftmetriken müssen in der vermessenen Körperhülle liegen, sonst stünde der Lauf teilweise außerhalb des Körpers.',
     'website',
+  ),
+  entry(
+    'capabilities-pictogram-overflows-body',
+    'engine',
+    'capabilities',
+    'Die Referenz setzt kein Kapitel-4-Piktogramm unverändert in einen Körper, sondern zeichnet je Körperform eine eigene Fassung; bis eine solche Fassung vermessen ist, lässt die Boxfassung nur Piktogramme zu, die nachweislich im Körper bleiben (LFH-587).',
+    'core',
   ),
   entry(
     'center-anchor-override-requires-measured-trailer',
@@ -912,9 +919,9 @@ export const RULE_DIMENSION_GAPS: readonly RuleDimensionGap[] = Object.freeze([
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'capabilities',
-    coverage: 'none',
+    coverage: 'partial',
     chapter: 'Kapitel 4',
-    note: 'Keine Regel in Kraft: der Motor nimmt beliebig viele Boxfähigkeiten an und legt sie deckungsgleich in dieselbe Box. Kein Original belegt das. Die Anordnung ist als offene Frage in `CAPABILITY_COMBINATION_RULES` geführt, zwei Regeln sind vorgemerkt (`PLANNED_CAPABILITY_RULES`, LFH-567).',
+    note: 'Eine Regel in Kraft: `capabilities-pictogram-overflows-body` lässt die Boxfassung nur zu, wo die Einzeldarstellung unskaliert im Körper bleibt (`CAPABILITY_UNSCALED_FIT`, LFH-587); die Referenz selbst setzt jedes Piktogramm in einer eigenen Fassung je Körperform ein (`CAPABILITY_INSET_RULE`). Die Anordnung mehrerer Boxfähigkeiten ist weiter ohne Regel: der Motor legt sie deckungsgleich in dieselbe Box, kein Original belegt das. Sie ist als offene Frage in `CAPABILITY_COMBINATION_RULES` geführt, zwei Regeln sind vorgemerkt (`PLANNED_CAPABILITY_RULES`, LFH-567).',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'unit-grouping',

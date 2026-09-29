@@ -113,7 +113,7 @@ describe('RULE_CATALOG: Vollständigkeit je Eintrag', () => {
       'top-left-lines-exactly-two',
     ]);
     expect(fromWebsite).toHaveLength(27);
-    expect(RULE_CATALOG.filter((rule) => rule.reasonSource === 'core')).toHaveLength(45);
+    expect(RULE_CATALOG.filter((rule) => rule.reasonSource === 'core')).toHaveLength(46);
   });
 
   /**
@@ -158,7 +158,7 @@ describe('RULE_CATALOG: Vollständigkeit je Eintrag', () => {
 
 describe('RULE_CATALOG gegen den Quelltext von validate.ts', () => {
   /**
-   * `validate.ts` löst 75 Mal aus, führt aber nur 72 Kennungen: drei Regeln haben zwei
+   * `validate.ts` löst 76 Mal aus, führt aber nur 73 Kennungen: drei Regeln haben zwei
    * Auslösestellen. Im Katalog bleiben sie **ein** Eintrag — sonst bräche die Dublettenprüfung —
    * und tragen die Zahl ihrer Stellen im Feld `sites`. Dieser Test zählt die Stellen im
    * Quelltext dagegen, damit eine künftige dritte Stelle nicht still dazukommt.
@@ -175,9 +175,9 @@ describe('RULE_CATALOG gegen den Quelltext von validate.ts', () => {
     );
   });
 
-  it('bleibt bei 75 Auslösestellen für 72 Kennungen', () => {
-    expect(pushedIds).toHaveLength(75);
-    expect(new Set(pushedIds).size).toBe(72);
+  it('bleibt bei 76 Auslösestellen für 73 Kennungen', () => {
+    expect(pushedIds).toHaveLength(76);
+    expect(new Set(pushedIds).size).toBe(73);
     expect(RULE_CATALOG.filter((rule) => rule.sites > 1).map((rule) => rule.id)).toEqual([
       'function-role-requires-measured-kind',
       'function-role-requires-measured-layout',
@@ -283,10 +283,10 @@ describe('Lücken je Dimension', () => {
    * Festgenagelt, damit die Aussage „Lücken je Dimension benannt" zählbar bleibt und nicht
    * unbemerkt schrumpft, wenn jemand eine Dimension aus der Union nimmt.
    */
-  it('zählt neun Lücken, davon sechs ohne jede Regel', () => {
+  it('zählt neun Lücken, davon fünf ohne jede Regel', () => {
     expect(RULE_DIMENSION_GAPS).toHaveLength(9);
     expect(RULE_DIMENSION_GAPS.filter((gap) => gap.coverage === 'none').map((g) => g.dimension))
-      .toEqual(['capabilities', 'unit-grouping', 'state', 'tendency', 'movement', 'lines-and-boundaries']);
+      .toEqual(['unit-grouping', 'state', 'tendency', 'movement', 'lines-and-boundaries']);
   });
 
   /**
@@ -317,7 +317,7 @@ describe('Einordnung fachlich gegen technisch', () => {
       'surface-label-foot-conflict',
       'technical-fill-organization-conflict',
     ]);
-    expect(RULE_CATALOG.filter((rule) => rule.kind === 'engine')).toHaveLength(64);
+    expect(RULE_CATALOG.filter((rule) => rule.kind === 'engine')).toHaveLength(65);
   });
 });
 

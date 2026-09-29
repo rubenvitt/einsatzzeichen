@@ -29,6 +29,7 @@ export const VALIDATION_RULE_IDS: readonly string[] = Object.freeze([
   'bottom-right-metrics-require-bottom-right-label',
   'bottom-right-metrics-require-measured-body',
   'bottom-right-metrics-within-body',
+  'capabilities-pictogram-overflows-body',
   'center-anchor-override-requires-measured-trailer',
   'center-baseline-not-measured',
   'center-baseline-override-requires-measured-body',
