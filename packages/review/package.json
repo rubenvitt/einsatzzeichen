@@ -21,7 +21,7 @@
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^6.1.1",
     "playwright": "1.62.1",
-    "tsx": "^4.23.5",
+    "tsx": "^4.23.15",
     "vite": "^8.3.0"
   }
 }
