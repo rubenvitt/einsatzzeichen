@@ -1,3 +1,39 @@
+## ⚠️ Breaking Changes
+
+### Körperfassungen haben Vorrang vor Boxfassungen
+
+**Betrifft:** `@einsatzzeichen/core`, `@einsatzzeichen/react`, `@einsatzzeichen/web-component`, `@einsatzzeichen/maplibre`
+
+Die Boxfassung `capabilities` wird jetzt dort abgelehnt, wo für das Paar aus Fähigkeit und Körperform eine vermessene Körperfassung existiert. Dies betrifft insbesondere:
+
+- **Brandbekämpfung** (`fire-fighting`) an Formationen
+- **Vorläufige Unterkunft/Ruhe** (`temporary-accommodation-resting`) an Formationen  
+- **Technische Hilfeleistung** (`technical-assistance`) an Formationen
+
+**Grund:** Die Referenz zeigt 65 von 67 Paarungen nirgends, daher bleibt dort die Boxfassung zulässig. Wo jedoch eine Fassung vermessen ist, gilt ausschließlich diese.
+
+**Migration:** Nutzen Sie `bodyMarks` statt `capabilities` für die betroffenen Fähigkeiten. Die Validierung gibt jetzt die neue Kennung `capabilities-pictogram-has-measured-rendition` zurück, wenn eine vermessene Fassung verfügbar ist.
+
+**Beispiel:** Ein Rüstzug mit technischer Hilfeleistung muss jetzt als `bodyMarks` mit der Körperfassung `technical-assistance × formation` (0,90 × 1,25, reduced) spezifiziert werden – 77 Fassungen stehen zur Verfügung.
+
+## Katalog & Validierung
+
+- Neue Validierungsregel `capabilities-pictogram-has-measured-rendition` prüft dynamisch, ob eine vermessene Körperfassung vorliegt und erzwingt deren Verwendung
+- Die bestehende Überstandsregel `capabilities-pictogram-overflows-body` wurde für vermessene Paare präzisiert – drei Meldungen neu formuliert
+- Insgesamt 79 Validierungsregeln aktiv (vorher 77), 280 Rezepte verfügbar
+- Schema erweitert um neue Politik `measured-rendition-else-unscaled-if-fits` und optionales Feld `measuredRule` in `CapabilityInsetDecision`
+
+## Website & Baukasten
+
+- Der interaktive Baukasten sperrt betroffene Fähigkeiten (Brandbekämpfung, vorläufige Unterkunft, technische Hilfeleistung) unter "Fähigkeiten" an Formationen
+- Nutzer werden zur Verwendung von `bodyMarks` geleitet
+
+## Dokumentation
+
+- Entscheidungsdokumentation LFH-787 ergänzt mit Inventur aller 69 Fähigkeits-Körperform-Paare
+- Kombinationsbeleg H.3 und Referenzzählungen präzisiert
+- Regeltexte vollständig in `core` konsolidiert
+
 ## Breaking Changes
 
 Die Datenstruktur für Zeichen wurde erweitert: Die Union-Typen `RuleDimension` und `RuleField` sind nun breiter und umfassen auch die neuen freistehenden Zeichen. `LINE_GEOMETRY` hat eine neue Querschnittsform erhalten. Bestehender Code, der diese Typen direkt verwendet, muss möglicherweise angepasst werden.
