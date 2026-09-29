@@ -3,7 +3,7 @@
  * Befehle nach Paket (LFH-560, LFH-572):
  *
  * Prüfen (conformance) — Rezepte, Coverage-Manifest, Domain-Reviews, Referenzinventar, Gates:
- *   audit:reference, coverage, provenance:table, review-dossier, verify:repository, visual-proof
+ *   audit:reference, coverage, provenance:table, reference-diff, review-dossier, verify:repository, visual-proof
  * Export (core) — Geometrie, Themes und Renderer des Produkts:
  *   export (Rezeptliste noch über commands/export-recipes.ts aus conformance, bis LFH-580)
  *
@@ -14,6 +14,11 @@ import { isRenderThemeId, renderTheme } from '@einsatzzeichen/core';
 import { auditReference } from './commands/audit-reference.js';
 import { coverage } from './commands/coverage.js';
 import { writeProvenanceTable } from './commands/provenance-table.js';
+import {
+  DEFAULT_REFERENCE_DIFF_OUTPUT,
+  ReferenceDiffError,
+  referenceDiff,
+} from './commands/reference-diff.js';
 import { ReviewDossierError, reviewDossier } from './commands/review-dossier.js';
 import {
   RepositoryPolicyError,
@@ -65,6 +70,42 @@ switch (command) {
   case 'coverage':
     coverage();
     break;
+  case 'reference-diff': {
+    try {
+      const referenceRoot = flag('reference-root');
+      if (referenceRoot === undefined) {
+        throw new CliUsageError('reference-diff benötigt --reference-root <pfad>.');
+      }
+      const filter = flag('filter');
+      const outDir = flag('out') ?? DEFAULT_REFERENCE_DIFF_OUTPUT;
+      const result = referenceDiff({
+        referenceRoot,
+        outDir,
+        ...(filter !== undefined ? { filter } : {}),
+        sheets: process.argv.includes('--sheets'),
+      });
+      if (process.argv.includes('--json')) {
+        console.log(JSON.stringify(result.report, null, 2));
+      } else {
+        const { summary } = result.report;
+        console.log(
+          `${summary.rows} Manifestzeilen, ${summary.compared} verglichen: ` +
+            `${summary.congruent} deckungsgleich (Fläche höchstens 1 %), ` +
+            `${summary.withinStrokeLimit} mit Strichanteil höchstens 3 %, ` +
+            `${summary.missingReference} ohne Referenzdatei, ` +
+            `${summary.sizeMismatch} mit abweichender Rastergröße.`,
+        );
+        console.log(`Geschrieben nach ${result.outDir}: ${result.files.join(', ')}.`);
+      }
+    } catch (error) {
+      if (error instanceof CliUsageError || error instanceof ReferenceDiffError) {
+        console.error(error.message);
+        process.exit(1);
+      }
+      throw error;
+    }
+    break;
+  }
   case 'review-dossier': {
     try {
       const out = flag('out');
@@ -143,7 +184,10 @@ switch (command) {
     console.error(
       'Verfügbar:\n' +
         '  Prüfen (conformance): audit:reference [--filter <präfix>] [--print] | coverage | ' +
-        'provenance:table | review-dossier [--out <md-pfad>] | ' +
+        'provenance:table | ' +
+        'reference-diff --reference-root <pfad> [--out <verzeichnis>] [--filter <präfix>] ' +
+        '[--sheets] [--json] | ' +
+        'review-dossier [--out <md-pfad>] | ' +
         'verify:repository | ' +
         'visual-proof --reference-root <pfad> [--out <png-pfad>]\n' +
         '  Export (core): export [--out <pfad>] [--size <px>] ' +

@@ -93,18 +93,74 @@ export interface TextMetrics {
    * schmaleren Normalbreiten still zu klein gemessen zu werden.
    */
   bold?: TextMetrics;
+  /**
+   * Metriken des mittleren Schnitts (`fontWeight: 500`, „Medium"), in dem der Katalog allen
+   * Text setzt (LFH-585). Optional wie `bold`, mit derselben Folge: Ein Lauf in 500 wirft ohne
+   * diesen Schnitt, statt mit den Normalbreiten gemessen zu werden. Die Vorschübe einzelner
+   * Kleinbuchstaben (etwa a, x, g) sind in 500 breiter als in 400.
+   */
+  medium?: TextMetrics;
+  /**
+   * Metriken des kursiven Schnitts in 500 (`fontStyle: 'italic'` mit `fontWeight: 500`,
+   * LFH-585). Optional wie `bold` und `medium`: Ein kursiver Lauf wirft ohne diesen Schnitt,
+   * statt mit den aufrechten Werten gemessen zu werden. Die Vorschübe gleichen in Latin-1 denen
+   * von `medium`, die Unterschneidung und die Tintenränder nicht: Kursive Buchstaben ragen links
+   * und rechts weiter über ihren Vorschub hinaus.
+   */
+  mediumItalic?: TextMetrics;
 }
 
-/** Die Metriken, mit denen ein Lauf gemessen wird: fett gesetzte Läufe mit dem Fettschnitt. */
-function metricsForRun(primitive: TextPrimitive, metrics: TextMetrics): TextMetrics {
-  if (primitive.fontWeight !== 700) return metrics;
-  if (metrics.bold === undefined) {
-    throw new Error(
-      `Lauf "${primitive.content}" ist fett gesetzt, der Metrikanbieter führt aber keinen ` +
-        'Fettschnitt (`TextMetrics.bold`).',
+/**
+ * Ob der Schnitt eines Laufs zulässig ist. Kursiv gibt es nur in 500 (siehe `fontStyle` im
+ * Schema): resvg zeichnet jeden kursiven Lauf aus der einen Datei `Arimo-MediumItalic.ttf`, ein
+ * Browser setzte 400 oder 700 anders. Der Typ kann die Regel nicht ausdrücken, ohne die
+ * Deklarationen der Piktogrammtabellen zu sprengen; sie steht deshalb hier. Auch ein anderer
+ * Stilwert aus ungeprüfter IR fällt hier auf.
+ */
+function unsupportedFontStyle(primitive: TextPrimitive): string | undefined {
+  const style: unknown = primitive.fontStyle;
+  if (style === undefined) return undefined;
+  if (style !== 'italic') {
+    return `Lauf "${primitive.content}" trägt fontStyle "${String(style)}"; zulässig ist nur "italic".`;
+  }
+  const weight: unknown = primitive.fontWeight;
+  if (weight !== 500) {
+    return (
+      `Lauf "${primitive.content}" ist kursiv in ${weight === undefined ? 'Stufe 400 (ohne Angabe)' : `Stufe ${String(weight)}`} ` +
+      'gesetzt; einen kursiven Schnitt gibt es nur in 500 (Arimo-MediumItalic.ttf).'
     );
   }
-  return metrics.bold;
+  return undefined;
+}
+
+/**
+ * Die Metriken, mit denen ein Lauf gemessen wird: jeder Lauf mit dem Schnitt seines Gewichts.
+ * Fehlt der Schnitt beim Anbieter, wirft die Rechnung — eine stille Messung mit den
+ * Normalbreiten wäre für 500 und 700 zu schmal.
+ */
+function metricsForRun(primitive: TextPrimitive, metrics: TextMetrics): TextMetrics {
+  const unsupported = unsupportedFontStyle(primitive);
+  if (unsupported !== undefined) throw new Error(unsupported);
+  if (primitive.fontStyle === 'italic') {
+    if (metrics.mediumItalic === undefined) {
+      throw new Error(
+        `Lauf "${primitive.content}" ist kursiv gesetzt, der Metrikanbieter führt aber keinen ` +
+          'kursiven Schnitt (`TextMetrics.mediumItalic`).',
+      );
+    }
+    return metrics.mediumItalic;
+  }
+  if (primitive.fontWeight === undefined || primitive.fontWeight === 400) return metrics;
+  const [cut, label, field] =
+    primitive.fontWeight === 700
+      ? [metrics.bold, 'fett gesetzt', 'Fettschnitt (`TextMetrics.bold`)']
+      : [metrics.medium, 'in Stufe 500 gesetzt', 'mittleren Schnitt (`TextMetrics.medium`)'];
+  if (cut === undefined) {
+    throw new Error(
+      `Lauf "${primitive.content}" ist ${label}, der Metrikanbieter führt aber keinen ${field}.`,
+    );
+  }
+  return cut;
 }
 
 export interface TextWidth {
@@ -231,7 +287,8 @@ export type TextMetricsRule =
   | 'text-too-wide'
   | 'text-outside-box'
   | 'text-too-tall'
-  | 'unmeasured-baseline';
+  | 'unmeasured-baseline'
+  | 'unsupported-font-style';
 
 /** Befundformat wie `ViewBoxIssue`: Regel, Primitivpfad, Klartext mit Zahlen. */
 export interface TextMetricsIssue {
@@ -271,6 +328,14 @@ export function textRunIssues(
   const issues: Omit<TextMetricsIssue, 'primitive'>[] = [];
   const { xMm, yMm, widthMm, heightMm } = primitive.boxMm;
   const content = `"${primitive.content}"`;
+
+  // Ein unzulässiger Schnitt (etwa kursiv in 700) hat keine Metrik, gegen die sich messen ließe:
+  // Befund statt Abbruch, damit ein Gate über viele Fälle nicht am ersten hängen bleibt.
+  const unsupported = unsupportedFontStyle(primitive);
+  if (unsupported !== undefined) {
+    issues.push({ rule: 'unsupported-font-style', detail: unsupported });
+    return issues;
+  }
 
   // `verticalTextBoxMm` wirft für `middle`; hier wird daraus ein Befund, kein Abbruch, damit ein
   // Gate über 525 Fälle nicht am ersten hängen bleibt.

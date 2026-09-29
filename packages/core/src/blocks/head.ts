@@ -139,7 +139,7 @@ const ADMIN_BINDING_MEASURED: BlockCombinationBinding = Object.freeze({
   definedAt: ADMIN_BINDING_AT,
   reason:
     'Der Verwaltungskopf wird nur zusammen mit einer exakt aufgelösten Funktionsfassung gesetzt. ' +
-    '`compose.ts:1166–1175` platziert ihn nur, wenn `roleDefinition` vorliegt, und zwar an deren ' +
+    '`compose.ts:1168–1177` platziert ihn nur, wenn `roleDefinition` vorliegt, und zwar an deren ' +
     '`layout.headTopMm`, also nicht über die allgemeine Kopfzone. `validate.ts` lehnt die Stufe ' +
     'ohne aufgelöste Funktionsfassung mit dieser Regel ab, obwohl der Kopf vermessen ist. Ohne ' +
     'Funktionsfassung ist der Baustein heute nicht darstellbar.',
@@ -165,7 +165,7 @@ const ADMIN_UNDOCUMENTED =
   'Die Konstante in `administrative-heads.ts` trägt keinen Kommentar. Den Abschnitt D.3/D.4 nennen ' +
   'erst `validate.ts:565–567` und die Regel `administrative-level-not-measured`.';
 
-const ADMIN_GAP_AT = 'core/src/rules/rule-catalog.ts:1026–1031';
+const ADMIN_GAP_AT = 'core/src/rules/rule-catalog.ts:1027–1032';
 const ADMIN_GAP_REASON =
   'Keine Geometrie in `ADMINISTRATIVE_HEADS`. Der Regelkatalog: „Eine Regel, aber nur drei der ' +
   'sechs Stufen belegt (D.3/D.4). Gemeinde, Bezirk und Bundesland lehnt der Motor pauschal ab, ' +

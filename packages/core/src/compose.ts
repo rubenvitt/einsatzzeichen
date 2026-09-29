@@ -38,6 +38,7 @@ import { placeStates, type StatePlacement } from './layout/state-placement.js';
 import { NotMeasuredError } from './not-measured.js';
 import {
   ARIMO_CAP_HEIGHT_FRACTION,
+  CATALOG_TEXT_FONT_WEIGHT,
   MINIMUM_TEXT_RENDER_PX,
   verticalTextBoxMm,
 } from './render/text-policy.js';
@@ -327,6 +328,7 @@ function labelPrimitive(
     baseline: 'alphabetic',
     boxMm: { xMm: boxXMm, yMm: box.topMm, widthMm: boxWidthMm, heightMm: box.heightMm },
     minRenderPx: minRenderPxFor(sizeMm, viewBoxWidthMm),
+    fontWeight: CATALOG_TEXT_FONT_WEIGHT,
     style: { fill },
   };
 }
@@ -1396,6 +1398,7 @@ export function compose(
               widthMm: bodyBoundsMm.maxX - bodyBoundsMm.minX,
               heightMm: footBoxMm.heightMm,
             },
+            fontWeight: CATALOG_TEXT_FONT_WEIGHT,
             style: { fill: 'schwarz' },
           },
         ]
@@ -1485,6 +1488,7 @@ export function compose(
         baseline: 'alphabetic',
         boxMm: run.boxMm,
         minRenderPx: run.minRenderPx,
+        fontWeight: CATALOG_TEXT_FONT_WEIGHT,
         style: { fill: functionRoleTextInk(run, bodyFill) },
       }));
 

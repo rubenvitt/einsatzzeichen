@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { PALETTE, type OrganizationId, type SymbolSpec } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { ORGANIZATION_COLORS, organizationColor } from '@einsatzzeichen/core';
-import { fingerprintFor } from './fingerprint-index.js';
-import { composeFromCatalog } from './recipes.js';
+import { fingerprintFor, referenceInventoryAssets } from './fingerprint-index.js';
+import { composeFromCatalog, RECIPES } from './recipes.js';
 
 /** Organisationen aus Kapitel 2, deren Referenzdatei eine Füllfarbe trägt — per audit:reference belegt. */
 const COLORED = [
@@ -19,10 +19,16 @@ const COLORED = [
   ['hilfsorganisation', '2.2_Organisationen.svg'],
 ] as const satisfies ReadonlyArray<[keyof typeof ORGANIZATION_COLORS, string]>;
 
-/** Zusätzlicher Farbbeleg außerhalb Kapitel 2; gehört deshalb nicht in dessen Coverage-Claim. */
-const ANHANG_N_COLORED = [
-  ['bundespolizei', 'N.1.3_Einsatzfahrzeug_Bundespolizei.svg'],
-] as const satisfies ReadonlyArray<[keyof typeof ORGANIZATION_COLORS, string]>;
+/**
+ * Die drei Referenzzeichen mit hellgrüner Fläche (`#64dc32`). Seit LFH-586 (Entscheidung vom
+ * 29.09.2026) zeichnet der Katalog sie bewusst im Polizei-Grün der Tafel 2.5: Die Bundespolizei
+ * ist keine eigene Organisation, und die Polizei bleibt `gruen`.
+ */
+const LIGHT_GREEN_POLICE_REFERENCES = [
+  ['D.4.4', 'D.4.4_Leiter Gefahrenabwehrkräfte Bundespolizei.svg'],
+  ['G.3.2', 'G.3.2_Verpflegungszubereitungsstelle_betrieben durch Polizei.svg'],
+  ['N.1.3', 'N.1.3_Einsatzfahrzeug_Bundespolizei.svg'],
+] as const;
 
 /**
  * Erzwingt zur Kompilierzeit, dass jede in `ORGANIZATION_COLORS` belegte Organisation auch in
@@ -33,9 +39,7 @@ const ANHANG_N_COLORED = [
  * `keyof typeof ORGANIZATION_COLORS`, und die Zuweisung unten wird zum Typfehler
  * ("Type 'false' does not satisfy the constraint 'true'").
  */
-type ReferencedOrganization =
-  | (typeof COLORED)[number][0]
-  | (typeof ANHANG_N_COLORED)[number][0];
+type ReferencedOrganization = (typeof COLORED)[number][0];
 type Extends<Type, Constraint> = Type extends Constraint ? true : false;
 type AssertTrue<Check extends true> = Check;
 const referenceCoversAllOrganizationColors: AssertTrue<
@@ -126,7 +130,7 @@ describe('Organisationsfarben Kapitel 2', () => {
       .toContain(PALETTE[organizationColor(id)]);
   });
 
-  it('belegt jede der neun Organisationen der Taxonomie', () => {
+  it('belegt jede der acht Organisationen der Taxonomie', () => {
     // Bis LFH-424 sicherte diese Stelle das Gegenteil zu: `organizationColor('hilfsorganisation')`
     // warf, weil Kapitel 2 angeblich keine Referenzdatei dafür führte. 2.2_Organisationen.svg ist
     // die Datei — vollflächiger Fleck #ffffff, Typo-Ebene liest „HiOrg".
@@ -135,7 +139,6 @@ describe('Organisationsfarben Kapitel 2', () => {
       'thw',
       'fuehrung-leitung',
       'polizei',
-      'bundespolizei',
       'bundeswehr',
       'sonstige-gefahrenabwehr',
       'zivile-einheiten',
@@ -152,12 +155,21 @@ describe('Organisationsfarben Kapitel 2', () => {
     expect(PALETTE[organizationColor('hilfsorganisation')]).toBe('#ffffff');
   });
 
-  it('trennt die hellgrüne Bundespolizei von der grünen Polizei', () => {
-    const [[, asset]] = ANHANG_N_COLORED;
-    expect(fingerprintFor(asset).fills).toContain('#64dc32');
-    expect(PALETTE[organizationColor('bundespolizei')]).toBe('#64dc32');
-    expect(organizationColor('bundespolizei')).toBe('hellgruen');
+  it('zeichnet die drei hellgrünen Polizeizeichen bewusst im Grün der Tafel 2.5 (LFH-586)', () => {
     expect(organizationColor('polizei')).toBe('gruen');
+    expect(PALETTE[organizationColor('polizei')]).toBe('#14a01e');
+    expect(Object.values(ORGANIZATION_COLORS)).not.toContain('hellgruen');
+    // Genau diese drei Dateien des Referenzbestands tragen das Hellgrün, keine weitere.
+    const lightGreen = referenceInventoryAssets().filter((asset) =>
+      (fingerprintFor(asset).fills ?? []).includes('#64dc32'));
+    expect(lightGreen.sort()).toEqual(LIGHT_GREEN_POLICE_REFERENCES.map(([, asset]) => asset).sort());
+    for (const [section, asset] of LIGHT_GREEN_POLICE_REFERENCES) {
+      const recipe = RECIPES[section];
+      expect(recipe?.referenceAsset, section).toBe(asset);
+      expect(recipe?.spec.organization, section).toBe('polizei');
+      expect(fingerprintFor(asset).fills, section).toContain('#64dc32');
+      expect(fingerprintFor(asset).fills, section).not.toContain('#14a01e');
+    }
   });
 
   it('definiert für jede belegte Organisation genau ein gültiges Palettentoken', () => {

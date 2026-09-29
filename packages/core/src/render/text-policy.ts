@@ -1,7 +1,8 @@
 /**
  * Renderpolitik für Text. Sie steht hier und nicht im Primitiv, weil sie für jeden Text
- * dieselbe ist: eine Schriftfamilie, kein gesetztes Gewicht. Ein nicht gesetztes Gewicht ist
- * eine Achse weniger, die einen Snapshot verschieben kann.
+ * dieselbe ist: eine Schriftfamilie. Das Gewicht steht dagegen am Primitiv (`fontWeight`), weil
+ * die Textmetrik je Lauf den passenden Schnitt wählen muss; welches Gewicht der Katalog setzt,
+ * legt `CATALOG_TEXT_FONT_WEIGHT` unten fest.
  *
  * Einzige Quelle des Literals: `catalog`s `TEXT_FONT_FAMILY` (fonts.ts, für `resvgFontOptions()`)
  * bezieht seinen Wert von hier über den Reexport in core/src/index.ts, statt ihn zu wiederholen —
@@ -9,6 +10,23 @@
  * Schriftfamilie kann so nicht mehr in den beiden Paketen auseinanderlaufen.
  */
 export const TEXT_FONT_FAMILY_ATTR = 'Arimo';
+
+/**
+ * Das eine Schriftgewicht allen Katalogtexts: Arimo 500 („Medium"), LFH-585 Option B
+ * (entschieden am 29. September 2026). Die Referenz setzt jeden Lauf in derselben Strichstärke,
+ * 0,156 × Versalhöhe; Arimo 400 liegt bei 0,136, Arimo 700 bei 0,209, Arimo 500 bei 0,160.
+ * Die frühere Aufteilung in normal und fett hatte in der Referenz kein Gegenstück.
+ *
+ * Jede Stelle in core, die Katalogtext erzeugt (Kompositionsläufe samt Fußzone,
+ * Piktogramm-Hilfen, Funktionsrollen), setzt dieses Gewicht ausdrücklich ans Primitiv. Eine
+ * Prüfung im Katalog (`conformance/src/catalog-text-weight.test.ts`) hält fest, dass kein Lauf
+ * ohne es bleibt. Einzige Ausnahme sind die Lückenbeschriftungen der Grenzlinien aus Kapitel 2
+ * (`gapLabel` in `geometry/parametric.ts`): Dort misst die Referenz 0,126 × Versalhöhe, fast
+ * Arimo 400, und sie bleiben ohne Gewicht.
+ * Gerastert wird es aus der statischen Instanz `Arimo-Medium.ttf`; ihre Versalhöhe gleicht der
+ * normalen (1409/2048), `ARIMO_CAP_HEIGHT_FRACTION` gilt unverändert.
+ */
+export const CATALOG_TEXT_FONT_WEIGHT = 500;
 
 /**
  * SVGs `dominant-baseline` kennt kein `middle` — der nächstliegende Wert heißt `central`.
@@ -133,6 +151,11 @@ export const DIACRITIC_HEADROOM_FRACTION = 0.125;
  * `DIACRITIC_HEADROOM_FRACTION` (0,125 für einen bindenden Wert von 0,113–0,125). Der Wert
  * bleibt unterhalb von Arimos deklariertem hhea-Ascender (0,9053) — die Box ist also enger als
  * die Zeilenmetrik der Schrift und keine bloße Übernahme ihrer Tabellenwerte.
+ *
+ * Gemessen in Arimo 400. Seit LFH-585 steht der Katalogtext in 500, dessen Akzente 12/2048 em
+ * höher reichen (Ä: 1726 statt 1714 Einheiten). Die Rasterbelege in `fonts.test.ts` laufen über
+ * `compose()` und damit in 500; sie bestehen mit diesem Anteil und mit
+ * `DIACRITIC_HEADROOM_FRACTION` unverändert.
  */
 export const ALPHABETIC_ASCENT_FRACTION = 0.86;
 

@@ -69,13 +69,29 @@
    * Eine Engine, die ein Formatkürzel nicht kennt, verwirft den Eintrag stillschweigend — und
    * genau dann stünde das Kürzel wieder in einer Ersatzschrift, also im Fehlerfall, den dieses
    * `@font-face` verhindern soll. `truetype` als zweiter Eintrag lädt dieselbe Datei; die
-   * wght-Achse bleibt über `font-weight: 400 700` erreichbar.
+   * wght-Achse bleibt über `font-weight: 400 700` erreichbar. Der Katalog setzt seine Kürzel
+   * seit LFH-585 in 500; der Browser setzt diese Stufe aus der Achse, resvg aus der statischen
+   * Instanz `Arimo-Medium.ttf`, die aus derselben Datei abgeleitet ist.
    */
   src:
     url('../../../conformance/assets/Arimo[wght].ttf') format('truetype-variations'),
     url('../../../conformance/assets/Arimo[wght].ttf') format('truetype');
   font-weight: 400 700;
   font-style: normal;
+  font-display: block;
+}
+
+/*
+ * Der eine kursive Lauf des Katalogs („Bezeichnung" in D.1.1, LFH-585) steht in Arimo Medium
+ * Italic. Ohne diesen Eintrag neigte der Browser die aufrechte Datei künstlich, resvg dagegen
+ * zeichnet die echte Kursive. Mit derselben statischen Datei setzen beide dieselben Umrisse.
+ * Kursiv gibt es nur in 500, deshalb nur dieser eine Eintrag.
+ */
+@font-face {
+  font-family: 'Arimo';
+  src: url('../../../conformance/assets/Arimo-MediumItalic.ttf') format('truetype');
+  font-weight: 500;
+  font-style: italic;
   font-display: block;
 }
 

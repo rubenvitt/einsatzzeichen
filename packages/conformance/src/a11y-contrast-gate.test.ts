@@ -540,8 +540,8 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
       },
       {
         foreground: 'schwarz',
-        background: 'hellgruen',
-        context: 'Beschriftung im Körper auf Organisation bundespolizei',
+        background: 'gruen',
+        context: 'Beschriftung im Körper auf Organisation polizei',
         minimum: MINIMUM_TEXT_CONTRAST,
       },
       {

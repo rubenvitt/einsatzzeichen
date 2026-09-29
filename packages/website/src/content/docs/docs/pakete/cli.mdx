@@ -37,6 +37,7 @@ pnpm cli coverage
 | `review-dossier [--out <md-pfad>]` | Dossier der fachlichen Reviews als Markdown |
 | `export [--out <pfad>] [--size <px>] [--theme <reference\|accessible-light\|print-monochrome>]` | alle Zeichen als SVG-Dateien |
 | `visual-proof --reference-root <pfad> [--out <png-pfad>]` | Sichtprüfungsblatt als PNG |
+| `reference-diff --reference-root <pfad> [--out <verzeichnis>] [--filter <präfix>] [--sheets] [--json]` | Pixelvergleich Referenz ↔ eigene Darstellung je Manifestzeile |
 
 ## Beispiel
 
@@ -55,3 +56,31 @@ ist:
 pnpm cli verify:repository
 # Repository-Gate bestanden.
 ```
+
+## Pixelvergleich mit der Referenz
+
+`reference-diff` legt jede Zeile des Coverage-Manifests neben ihre Datei aus dem lokalen
+Referenzbestand. Beide Bilder werden gleich groß gerastert (512 px Breite, weißer Grund, dieselben
+Schriftdateien wie im Export) und Pixel für Pixel verglichen. Ein Pixel weicht ab, wenn sich ein
+Farbkanal um mehr als 32 von 255 unterscheidet. Heraus kommen zwei Kennzahlen je Zeile:
+
+- **Fläche:** abweichende Pixel geteilt durch alle Pixel. Höchstens 1 % gilt als deckungsgleich.
+- **Strichanteil:** abweichende Pixel geteilt durch die Pixel, auf denen in mindestens einem der
+  beiden Bilder etwas gezeichnet ist. Diese Kennzahl ist bei dünnen Piktogrammen strenger.
+
+Die Schwellen sortieren nur vor. Ob eine Darstellung stimmt, entscheidet der Blick auf das Bild.
+Dafür schreibt `--sheets` Kontaktbögen mit Referenz, eigener Darstellung und Überlagerung. In der
+Überlagerung ist rot nur in der Referenz gezeichnet, blau nur in der eigenen Darstellung, orange
+in beiden, aber in anderer Farbe.
+
+```bash
+# Alle Manifestzeilen; Bericht nach out/reference-diff/report.json und report.md
+pnpm cli reference-diff --reference-root ./taktische-zeichen
+
+# Nur Anhang C, mit Kontaktbögen
+pnpm cli reference-diff --reference-root ./taktische-zeichen --filter C. --sheets --out out/reference-diff-c
+```
+
+Die Ausgabe liegt immer unter `out/` und enthält weder Zeitstempel noch den Pfad des
+Referenzordners. Zwei Läufe auf demselben Stand liefern dieselben Dateien. Der Referenzbestand
+wird nie eingecheckt; ohne ihn bricht der Befehl mit einer Meldung ab.

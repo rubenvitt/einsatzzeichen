@@ -5,6 +5,7 @@ import {
   type CatalogPictogramDefinition,
   type PictogramContrastPair,
 } from '../catalog-definition.js';
+import { CATALOG_TEXT_FONT_WEIGHT } from '../../../render/text-policy.js';
 
 /**
  * 5.8.8 Personenzustände. Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert.
@@ -96,6 +97,7 @@ function letters(content: string, centerX: number, box: { xMm: number; widthMm: 
     baseline: 'alphabetic',
     boxMm: { xMm: box.xMm, yMm: 2, widthMm: box.widthMm, heightMm: 5 },
     minRenderPx: 64,
+    fontWeight: CATALOG_TEXT_FONT_WEIGHT,
     style: { ...PERSON_FILL },
   };
 }

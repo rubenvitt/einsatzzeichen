@@ -101,6 +101,66 @@ describe('measureTextRun() mit fontWeight', () => {
   it('wirft bei fettem Lauf ohne Fettschnitt, statt zu schmal zu messen', () => {
     expect(() => measureTextRun(text({ fontWeight: 700 }), metrics)).toThrow(/Fettschnitt/);
   });
+
+  it('misst Läufe in 500 mit dem mittleren Schnitt', () => {
+    const withMedium: TextMetrics = { ...metrics, medium: uniformTextMetrics(0.625) };
+    expect(measureTextRun(text({ content: 'ab', fontWeight: 500 }), withMedium).widthMm).toBeCloseTo(5);
+    expect(measureTextRun(text({ content: 'ab' }), withMedium).widthMm).toBeCloseTo(4);
+  });
+
+  it('wirft bei einem Lauf in 500 ohne mittleren Schnitt, statt zu schmal zu messen', () => {
+    const withoutMedium: TextMetrics = { ...metrics, medium: undefined };
+    expect(() => measureTextRun(text({ fontWeight: 500 }), withoutMedium)).toThrow(
+      /mittleren Schnitt/,
+    );
+  });
+});
+
+describe('measureTextRun() mit fontStyle (LFH-585)', () => {
+  /** Ein Lauf mit beliebigem Schnitt, auch einem, den der Typ ausschließt (ungeprüfte IR). */
+  const untyped = (face: Record<string, unknown>): TextPrimitive =>
+    ({ ...text({ content: 'ab' }), ...face }) as unknown as TextPrimitive;
+
+  it('misst einen kursiven Lauf in 500 mit dem kursiven Schnitt', () => {
+    const withItalic: TextMetrics = {
+      ...metrics,
+      medium: uniformTextMetrics(0.625),
+      mediumItalic: uniformTextMetrics(0.75),
+    };
+    const italic = text({ content: 'ab', fontWeight: 500, fontStyle: 'italic' });
+    expect(measureTextRun(italic, withItalic).widthMm).toBeCloseTo(6);
+    expect(measureTextRun(text({ content: 'ab', fontWeight: 500 }), withItalic).widthMm).toBeCloseTo(5);
+  });
+
+  it('wirft bei einem kursiven Lauf ohne kursiven Schnitt, statt aufrecht zu messen', () => {
+    const withoutItalic: TextMetrics = { ...metrics, mediumItalic: undefined };
+    expect(() =>
+      measureTextRun(text({ fontWeight: 500, fontStyle: 'italic' }), withoutItalic),
+    ).toThrow(/kursiven Schnitt/);
+  });
+
+  it.each([
+    [{ fontStyle: 'italic' }, /Stufe 400 \(ohne Angabe\)/],
+    [{ fontStyle: 'italic', fontWeight: 400 }, /Stufe 400/],
+    [{ fontStyle: 'italic', fontWeight: 700 }, /Stufe 700/],
+    [{ fontStyle: 'oblique', fontWeight: 500 }, /nur "italic"/],
+  ])('wirft für den unzulässigen Schnitt %o', (face, message) => {
+    expect(() => measureTextRun(untyped(face), metrics)).toThrow(message);
+  });
+
+  it('meldet einen unzulässigen Schnitt im Gate als Befund statt abzubrechen', () => {
+    const issues = checkTextMetrics(
+      drawing(untyped({ fontStyle: 'italic', fontWeight: 700 }), text({})),
+      metrics,
+    );
+    expect(issues).toEqual([
+      {
+        rule: 'unsupported-font-style',
+        primitive: 'children[0]',
+        detail: expect.stringMatching(/kursiv in Stufe 700.*nur in 500/),
+      },
+    ]);
+  });
 });
 
 describe('checkTextMetrics()', () => {

@@ -314,7 +314,7 @@ export const STATE_GROUPS: readonly StateGroup[] = Object.freeze([
       value: 'carrier-included',
       evidence: [
         source(
-          'core/src/geometry/pictograms/states/06-animals.ts:5–13',
+          'core/src/geometry/pictograms/states/06-animals.ts:6–14',
           'Jede Darstellung zeichnet die Tiersilhouette mit; beim kontaminierten Tier rückt sie 5 mm nach unten, um dem Kontaminationszeichen Platz zu machen.',
         ),
       ],
@@ -324,7 +324,7 @@ export const STATE_GROUPS: readonly StateGroup[] = Object.freeze([
       value: 'freestanding',
       evidence: [
         source(
-          'core/src/geometry/pictograms/states/06-animals.ts:5–13',
+          'core/src/geometry/pictograms/states/06-animals.ts:6–14',
           'Der Träger ist Teil der Darstellung, das Zeichen steht damit für sich.',
         ),
       ],
@@ -403,7 +403,7 @@ export const STATE_GROUPS: readonly StateGroup[] = Object.freeze([
       value: 'carrier-included',
       evidence: [
         source(
-          'core/src/geometry/pictograms/states/08-persons.ts:9–16',
+          'core/src/geometry/pictograms/states/08-persons.ts:10–17',
           'Grundform jeder Darstellung ist die Personenraute mit weißer Fläche.',
         ),
       ],
@@ -413,7 +413,7 @@ export const STATE_GROUPS: readonly StateGroup[] = Object.freeze([
       value: 'body',
       evidence: [
         source(
-          'core/src/geometry/pictograms/states/08-persons.ts:9–16',
+          'core/src/geometry/pictograms/states/08-persons.ts:10–17',
           'Die Zustandsmarken liegen auf der Raute, der Verletzungsstrich etwa ist ihre senkrechte Diagonale.',
         ),
       ],

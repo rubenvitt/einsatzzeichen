@@ -6,6 +6,7 @@ import {
   type Style,
 } from '@einsatzzeichen/schema';
 import { defineLeadership, type PictogramContrastPair } from '../catalog-definition.js';
+import { CATALOG_TEXT_FONT_WEIGHT } from '../../../render/text-policy.js';
 
 const BLACK_STROKE = Object.freeze({
   fill: 'none',
@@ -76,6 +77,7 @@ function text(
     baseline: 'alphabetic',
     boxMm,
     minRenderPx,
+    fontWeight: CATALOG_TEXT_FONT_WEIGHT,
     style: { fill, stroke: 'none' },
   };
 }
@@ -127,7 +129,7 @@ export const OPEN_CAP_FUNCTION_PICTOGRAMS = [
       ),
       text(
         'stv OB', 31.5, 29, 4.243, 'end',
-        { xMm: 18.8, yMm: 25.6, widthMm: 12.7, heightMm: 3.65 }, 61, 'schwarz',
+        { xMm: 18.55, yMm: 25.6, widthMm: 12.95, heightMm: 3.65 }, 61, 'schwarz',
       ),
     ],
     contrastPairs: THW_CONTRAST,

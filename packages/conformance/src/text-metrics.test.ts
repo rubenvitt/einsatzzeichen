@@ -1,6 +1,7 @@
 import { Resvg } from '@resvg/resvg-js';
 import { describe, expect, it } from 'vitest';
 import {
+  CATALOG_TEXT_FONT_WEIGHT,
   CompositionError,
   checkTextMetrics,
   measureTextRun,
@@ -43,9 +44,17 @@ function inkExtentMm(run: TextPrimitive): { minXMm: number; maxXMm: number } {
   return { minXMm: minX / PX_PER_MM, maxXMm: (maxX + 1) / PX_PER_MM };
 }
 
-function run(content: string, sizeMm: number, anchor: TextPrimitive['anchor'] = 'middle'): TextPrimitive {
+function run(
+  content: string,
+  sizeMm: number,
+  anchor: TextPrimitive['anchor'] = 'middle',
+  fontWeight?: TextPrimitive['fontWeight'],
+  fontStyle?: 'italic',
+): TextPrimitive {
   return {
     type: 'text',
+    ...(fontWeight === undefined ? {} : { fontWeight }),
+    ...(fontStyle === undefined ? {} : { fontStyle }),
     content,
     // Der Anker so, dass der Lauf in der viewBox bleibt — ein an der viewBox geclippter Lauf
     // hätte eine gerasterte Kante, die nichts über die Schrift sagt.
@@ -105,6 +114,37 @@ describe('Kalibrierung: gerechnete gegen gerasterte Tinte (8 px/mm)', () => {
 
   it.each(cases)('"%s" bei %s mm: Tinte liegt innerhalb eines Pixels um die Rechnung', (content, sizeMm, anchor) => {
     const primitive = run(content, sizeMm, anchor);
+    const metric = measureTextRun(primitive, ARIMO_TEXT_METRICS);
+    const ink = inkExtentMm(primitive);
+    expect(ink.minXMm).toBeGreaterThanOrEqual(metric.inkMinXMm - onePixelMm);
+    expect(ink.minXMm).toBeLessThanOrEqual(metric.inkMinXMm + onePixelMm);
+    expect(ink.maxXMm).toBeLessThanOrEqual(metric.inkMaxXMm + onePixelMm);
+    expect(ink.maxXMm).toBeGreaterThanOrEqual(metric.inkMaxXMm - onePixelMm);
+  });
+
+  // Dieselben Läufe in der Katalogstärke 500 (LFH-585): gemessen mit `ARIMO_TEXT_METRICS.medium`,
+  // gerastert mit `Arimo-Medium.ttf`. Ohne diese Reihe wäre das Gate für die Stärke, in der der
+  // Katalog tatsächlich setzt, nicht kalibriert.
+  it.each(cases)('"%s" bei %s mm in 500: Tinte liegt innerhalb eines Pixels um die Rechnung', (content, sizeMm, anchor) => {
+    const primitive = run(content, sizeMm, anchor, CATALOG_TEXT_FONT_WEIGHT);
+    const metric = measureTextRun(primitive, ARIMO_TEXT_METRICS);
+    const ink = inkExtentMm(primitive);
+    expect(ink.minXMm).toBeGreaterThanOrEqual(metric.inkMinXMm - onePixelMm);
+    expect(ink.minXMm).toBeLessThanOrEqual(metric.inkMinXMm + onePixelMm);
+    expect(ink.maxXMm).toBeLessThanOrEqual(metric.inkMaxXMm + onePixelMm);
+    expect(ink.maxXMm).toBeGreaterThanOrEqual(metric.inkMaxXMm - onePixelMm);
+  });
+
+  // Kursiv in 500 (LFH-585): gemessen mit `ARIMO_TEXT_METRICS.mediumItalic`, gerastert mit
+  // `Arimo-MediumItalic.ttf`. Kursive Buchstaben ragen weiter über ihren Vorschub hinaus („jjj
+  // fff"); diese Reihe belegt, dass das Gate die geneigte Tinte liest und nicht die aufrechte.
+  // Dazu der eine kursive Lauf des Katalogs in seiner Größe (D.1.1).
+  const italicCases: readonly [string, number, TextPrimitive['anchor']][] = [
+    ...cases,
+    ['Bezeichnung', 4.243, 'start'],
+  ];
+  it.each(italicCases)('"%s" bei %s mm kursiv in 500: Tinte liegt innerhalb eines Pixels um die Rechnung', (content, sizeMm, anchor) => {
+    const primitive = run(content, sizeMm, anchor, CATALOG_TEXT_FONT_WEIGHT, 'italic');
     const metric = measureTextRun(primitive, ARIMO_TEXT_METRICS);
     const ink = inkExtentMm(primitive);
     expect(ink.minXMm).toBeGreaterThanOrEqual(metric.inkMinXMm - onePixelMm);

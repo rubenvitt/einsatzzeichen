@@ -39,10 +39,17 @@ ruft nur noch `drawSymbol()` auf; neuer Code nimmt direkt `drawSymbol()` aus `co
 
 ## Installation
 
-<div class="ez-note">
-<span class="ez-note__title">Nicht veröffentlicht</span>
+Das Paket liegt öffentlich auf npm. Wer nur Zeichen zeichnen will, braucht es nicht, dafür reicht
+`@einsatzzeichen/core`.
 
-`private: true`, `main` zeigt auf `./src/index.ts`, kein Build-Schritt. Im Workspace:
+```bash
+npm install @einsatzzeichen/conformance
+```
+
+<div class="ez-note">
+<span class="ez-note__title">Im Workspace</span>
+
+Innerhalb dieses Repositorys zeigt `main` auf `./src/index.ts`, ohne Build-Schritt:
 
 ```json
 { "dependencies": { "@einsatzzeichen/conformance": "workspace:*" } }
@@ -62,6 +69,7 @@ Im Browser nur über einen Subpfad-Import oder über vorher erzeugte Daten — n
 | `SOURCE_REGISTRY`, `isRegisteredSource(id)` | das Quellenregister |
 | `PROFILES`, `profileFor(id)` | das Profilregister (nicht zu verwechseln mit dem Layoutprofil gleichen Namens in `core`) |
 | `COVERAGE_MANIFEST`, `checkCoverage()`, `releaseBlockers()`, `sortedDomainReviewOpenByArea()` | Manifest und Coverage-Gate |
+| `drawingForManifestEntry(entry)` | die Zeichnung zu einer Manifestzeile — auch für Merkmale, die erst auf einem Trägerzeichen sichtbar werden, etwa eine Organisationsfarbe auf einer Formation; dasselbe Bild sehen Fachreview und Pixelvergleich |
 | `MANIFEST_DOMAIN_REVIEWS`, `SOURCE_DOMAIN_REVIEWS`, `PROFILE_DOMAIN_REVIEWS` | die fachlichen Reviews |
 | `referenceInventory()`, `fingerprintFor(...)` | Referenzinventar und abgeleitete Kennzahlen der Vorlagen |
 | `ruleCoverage()`, `validationRuleCoverage()`, `generativeReach()`, `RULE_EVIDENCE` | Regelabdeckung und Regelbelege |

@@ -124,6 +124,70 @@ describe('renderSvg', () => {
     expect(svg).toContain('<desc id="symbol-desc">Eine taktische Formation.</desc>');
   });
 
+  it('nimmt idPrefix nur als XML-Namen an und schreibt nie fremde Attribute ins Markup', () => {
+    expect(() => renderSvg(formation, { idPrefix: 'recipe.D.1.9#alternative-16' })).not.toThrow();
+    for (const prefix of ['x" onload="alert(1)', "x' y", 'a b', '', 'ez>', 'a&b', 'a\tb']) {
+      expect(() => renderSvg(formation, { idPrefix: prefix })).toThrow(RangeError);
+    }
+  });
+
+  it('gibt font-weight nur für 500 und 700 aus, auch bei ungültigen Laufzeitwerten', () => {
+    const text = (fontWeight: unknown) =>
+      renderSvg({
+        viewBox: DEFAULT_VIEWBOX_MM,
+        children: [
+          {
+            type: 'text',
+            x: 1,
+            y: 1,
+            content: 'A',
+            sizeMm: 3,
+            anchor: 'start',
+            baseline: 'alphabetic',
+            boxMm: { xMm: 0, yMm: 0, widthMm: 32, heightMm: 32 },
+            fontWeight: fontWeight as 400,
+          },
+        ],
+      });
+    expect(text(500)).toContain('font-weight="500"');
+    expect(text(700)).toContain('font-weight="700"');
+    expect(text(400)).not.toContain('font-weight');
+    expect(text('700" onload="x')).not.toContain('font-weight');
+  });
+
+  it('schreibt Aufzählungswerte nur als feste Literale, nie als Rohwert', () => {
+    const payload = 'x" onload="alert(1)';
+    const svg = renderSvg({
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [
+        {
+          type: 'text',
+          x: 1,
+          y: 1,
+          content: 'A',
+          sizeMm: 3,
+          anchor: payload as 'start',
+          baseline: 'alphabetic',
+          boxMm: { xMm: 0, yMm: 0, widthMm: 32, heightMm: 32 },
+        },
+        {
+          type: 'rect',
+          x: 1,
+          y: 1,
+          width: 2,
+          height: 2,
+          style: {
+            stroke: 'schwarz',
+            strokeLinejoin: payload as 'bevel',
+            fillRule: payload as 'evenodd',
+          },
+        },
+      ],
+    });
+    expect(svg).not.toContain('onload');
+    expect(svg).not.toContain('undefined');
+  });
+
   it('lässt A11y-Metadaten weg, wenn kein Titel gesetzt ist', () => {
     const svg = renderSvg({ viewBox: DEFAULT_VIEWBOX_MM, children: [] });
     expect(svg).not.toContain('<title');
@@ -354,8 +418,8 @@ describe('renderSvg — Text', () => {
     expect(svg).not.toContain('font-weight');
   });
 
-  it('schreibt font-weight nur für fett gesetzte Läufe', () => {
-    const run = (fontWeight?: 400 | 700) => renderSvg({
+  it('schreibt font-weight nur für Läufe in 500 oder 700', () => {
+    const run = (fontWeight?: 400 | 500 | 700) => renderSvg({
       viewBox: { width: 32, height: 32 },
       children: [{
         type: 'text', content: 'RKB', x: 16, y: 20, sizeMm: 10, anchor: 'middle',
@@ -364,8 +428,27 @@ describe('renderSvg — Text', () => {
       }],
     });
     expect(run(700)).toContain('font-size="28.346" font-weight="700"');
+    expect(run(500)).toContain('font-size="28.346" font-weight="500"');
     expect(run(400)).toBe(run());
     expect(run()).not.toContain('font-weight');
+  });
+
+  it('schreibt font-style="italic" nur für kursive Läufe in 500 (LFH-585)', () => {
+    const base = {
+      type: 'text', content: 'Bezeichnung', x: 2, y: 20, sizeMm: 4, anchor: 'start',
+      baseline: 'alphabetic', boxMm: { xMm: 2, yMm: 16, widthMm: 28, heightMm: 6 },
+    } as const;
+    const italic = renderSvg({
+      viewBox: { width: 32, height: 32 },
+      children: [{ ...base, fontWeight: 500, fontStyle: 'italic' }],
+    });
+    const upright = renderSvg({
+      viewBox: { width: 32, height: 32 },
+      children: [{ ...base, fontWeight: 500 }],
+    });
+    expect(italic).toContain('font-weight="500" font-style="italic"');
+    expect(upright).not.toContain('font-style');
+    expect(italic.replace(' font-style="italic"', '')).toBe(upright);
   });
 
   it('maskiert Sonderzeichen im Textinhalt', () => {

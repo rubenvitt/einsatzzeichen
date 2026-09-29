@@ -162,18 +162,19 @@ describe('coverage CLI', () => {
         'unitGrouping 2/3 (verband-iii); administrativeLevel 3/6 (gemeinde, bezirk, bundesland); ' +
         'vehicleCategory 7/8 (amphibienfahrzeug)',
     );
-    // LFH-786: sechs neue belegte Signaturen (71 → 77, also 893 → 887) und eine technische
-    // Körpermarke mehr (`track-chevron-top`, 132 → 133); hergeleitet in `rule-coverage.test.ts`.
+    // LFH-786: sechs neue belegte Signaturen (71 → 77) und eine technische Körpermarke mehr
+    // (`track-chevron-top`, 132 → 133); LFH-586: acht statt neun Organisationen (300960 → 270864
+    // enumeriert, 964 → 868 gültig). Zusammen 868 − 77 = 791; hergeleitet in `rule-coverage.test.ts`.
     expect(lines).toContain(
-      'Generative Reichweite (Stufe 1): 964 gültige Kompositionen aus kind × Körpervariante × ' +
-        'Organisation × Kopfzone × Fahrwerk (300960 enumeriert), davon 77 in der Referenz belegt — ' +
-        '887 erzeugbar ohne Referenzbeleg, 8 Rezeptsignaturen außerhalb der Stufe ' +
+      'Generative Reichweite (Stufe 1): 868 gültige Kompositionen aus kind × Körpervariante × ' +
+        'Organisation × Kopfzone × Fahrwerk (270864 enumeriert), davon 77 in der Referenz belegt — ' +
+        '791 erzeugbar ohne Referenzbeleg, 8 Rezeptsignaturen außerhalb der Stufe ' +
         '(dokumentiert, kein Gate); nicht enumeriert: 88 Fähigkeiten, ' +
         '133 Körpermarken, 25 Funktionsrollen, freie Bezeichnung',
     );
     expect(lines.at(-1)).toBe('Coverage-Gate bestanden.');
     // Expliziter Timeout: `coverage()` rechnet seit LFH-413 `generativeReach()` mit
-    // (3282 validateSpec-gültige, 964 komponierte Kombinationen) — allein ~140 ms, unter
+    // (2955 validateSpec-gültige, 868 komponierte Kombinationen) — allein ~140 ms, unter
     // Vitest-Parallellast bis ~4 s gemessen; das 5-s-Standardlimit wäre ein Lastflake.
   }, 30_000);
 });

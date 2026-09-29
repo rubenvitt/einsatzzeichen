@@ -21,27 +21,37 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { gunzipSync } from 'node:zlib';
 
 /**
- * Grenzen, gemessen am 21. September 2026 auf `feat/lfh-560-paketschnitt` nach LFH-570/571
- * (`tsc -b packages/core/tsconfig.build.json`, dann `pnpm pack`):
+ * Grenzen, zuletzt gemessen am 29. September 2026 auf `claude/lfh-561-orchestrierung-cb6ed0` nach
+ * dem Merge von LFH-561 mit LFH-585/586/786 (`tsc -b packages/core/tsconfig.build.json`, dann
+ * `pnpm pack`):
  *
  * | Größe | gemessen | Obergrenze | Untergrenze |
  * |---|---|---|---|
- * | Tarball (gepackt) | 422 660 B | 500 000 B (+18 %) | 250 000 B |
- * | entpackt | 6 060 107 B | 6 500 000 B (+7 %) | 3 000 000 B |
- * | Einträge | 275 | — | 200 |
+ * | Tarball (gepackt) | 616 306 B | 730 000 B (+18 %) | 250 000 B |
+ * | entpackt | 6 843 338 B | 7 300 000 B (+7 %) | 3 000 000 B |
+ * | Einträge | 376 | — | 200 |
  *
- * **Angehoben am 29. September 2026 (LFH-561)**, Entscheidung des Eigentümers: Die API-Initiative
- * bringt legitim Produktinhalt nach `core` — Regeltexte (LFH-579, rund 52 KB entpackt), die
- * generierte Herkunftstabelle (LFH-581, rund 59 KB), Vokabular und Codec (LFH-578/577), die an den
- * Referenzdateien vermessene Geometrie für Verband, Sonderformen, Zustände, Pfeile, Linien, Wetter
- * und Tierzustand samt freistehender Spec-Art (LFH-577). Gemessen auf
- * `claude/lfh-561-orchestrierung-cb6ed0`: 344 Einträge, gepackt 545 962 B, entpackt 6 507 407 B.
- * Neue Obergrenzen: gepackt 650 000 B (+19 %), entpackt 6 950 000 B (+7 %). Der entpackte Puffer
- * bleibt mit rund 440 KB bewusst kleiner als `fingerprints.json`. Kommentare im Build wegzulassen
- * war die Alternative; `removeComments` entfernt aber auch die JSDoc aus den `.d.ts`, und die Doku
- * soll im npm-Paket bleiben.
+ * Zwei Anhebungen am 29. September 2026, unabhängig voneinander entschieden und beim
+ * Zusammenführen zusammengerechnet:
  *
- * **Entpackt ist die scharfe Grenze.** Der Puffer von rund 440 KB ist kleiner als
+ * - **Auf `main` (LFH-585, LFH-786)**, vorher 500 000 / 6 500 000 B (gemessen am 21.09.2026 mit
+ *   422 660 / 6 060 107 B): zwei weitere Textmetriken (Arimo Medium und Medium Italic, je rund
+ *   78 KB), das Feld `fontStyle` in allen Piktogramm-Deklarationen und die in Anhang C eingesetzten
+ *   Kapitel-4-Piktogramme. Gemessen 515 836 / 6 469 058 B, neue Grenzen 600 000 / 6 900 000 B.
+ * - **Auf der API-Initiative (LFH-561)**, Entscheidung des Eigentümers: Die Initiative bringt
+ *   legitim Produktinhalt nach `core` — Regeltexte (LFH-579, rund 52 KB entpackt), die generierte
+ *   Herkunftstabelle (LFH-581, rund 59 KB), Vokabular und Codec (LFH-578/577), die an den
+ *   Referenzdateien vermessene Geometrie für Verband, Sonderformen, Zustände, Pfeile, Linien,
+ *   Wetter und Tierzustand samt freistehender Spec-Art (LFH-577). Gemessen 545 962 / 6 507 407 B,
+ *   neue Grenzen 650 000 / 6 950 000 B. Kommentare im Build wegzulassen war die Alternative;
+ *   `removeComments` entfernt aber auch die JSDoc aus den `.d.ts`, und die Doku soll im npm-Paket
+ *   bleiben.
+ *
+ * Zusammen liegt der Stand über beiden Grenzen; die neuen Grenzen halten dieselben Abstände
+ * (gepackt rund +18 %, entpackt +7 %). Der entpackte Puffer bleibt mit rund 457 KB kleiner als
+ * `fingerprints.json`.
+ *
+ * **Entpackt ist die scharfe Grenze.** Der Puffer von rund 457 KB ist kleiner als
  * `fingerprints.json` (503 954 B): landet die Datei — oder ihr Inhalt, in ein `.ts`-Modul
  * verpackt — in `dist`, reißt die Grenze. Gepackt fiele dieselbe Datei nicht auf, sie komprimiert
  * auf rund 23 KB; die Tarball-Grenze fängt nur den groben Fall (die Snapshots komprimieren auf
@@ -53,9 +63,9 @@ import { gunzipSync } from 'node:zlib';
  * winziges Paket, und eine reine Obergrenze wäre dann grün.
  */
 export const LIMITS = Object.freeze({
-  maxPackedBytes: 650_000,
+  maxPackedBytes: 730_000,
   minPackedBytes: 250_000,
-  maxUnpackedBytes: 6_950_000,
+  maxUnpackedBytes: 7_300_000,
   minUnpackedBytes: 3_000_000,
   minEntries: 200,
 });
@@ -81,7 +91,7 @@ const FORBIDDEN = [
 const ALLOWED = [
   /^package\/(package\.json|README\.md|LICENSE)$/,
   /^package\/dist\/.+\.(js|d\.ts|d\.ts\.map)$/,
-  /^package\/dist\/assets\/arimo(-bold)?-metrics\.json$/,
+  /^package\/dist\/assets\/arimo(-bold|-medium|-medium-italic)?-metrics\.json$/,
 ];
 
 /**

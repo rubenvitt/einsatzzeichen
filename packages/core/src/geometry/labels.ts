@@ -46,7 +46,6 @@ export const ORGANIZATION_LABELS: Record<OrganizationId, string> = {
   thw: 'Technisches Hilfswerk',
   'fuehrung-leitung': 'Führung und Leitung',
   polizei: 'Polizei',
-  bundespolizei: 'Bundespolizei',
   bundeswehr: 'Bundeswehr',
   'sonstige-gefahrenabwehr': 'Sonstige Gefahrenabwehr',
   'zivile-einheiten': 'Zivile Einheiten',

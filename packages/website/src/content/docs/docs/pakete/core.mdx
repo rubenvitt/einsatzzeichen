@@ -51,7 +51,7 @@ Textmetrik, Fingerprint-Vergleich gegen die Referenz.
 
 | Export | Was es tut |
 |---|---|
-| `renderSvg(drawing, options)` | SVG als String; `options`: `size`, `idPrefix`, `theme`, `minStrokeWidthPx` |
+| `renderSvg(drawing, options)` | SVG als String; `options`: `size`, `idPrefix` (ohne Leerzeichen, Anführungszeichen, `<`, `>`, `&`; sonst `RangeError`), `theme`, `minStrokeWidthPx` |
 | `renderCanvas(drawing, ctx, options)` | dieselbe Zeichnung auf einen 2D-Kontext; `options`: `size`, `theme`, `minStrokeWidthPx` |
 | `rasterDimensionsForWidth(viewBox, width)` | Rastermaße zu einer Zielbreite |
 | `RASTER_MIN_STROKE_WIDTH_PX`, `strokeWidthFloorMm`, `effectiveStrokeWidthMm` | [Mindeststrichbreite](#kräftigere-striche-in-kleinen-bildern): empfohlener Wert (1 px) und die Rechnung dahinter |

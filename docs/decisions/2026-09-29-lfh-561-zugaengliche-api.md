@@ -34,6 +34,8 @@
 5. **Größen-Gate:** Kommentare im Build wegzulassen nur, wenn die Doku im npm-Paket bleibt.
    `removeComments` entfernt auch die JSDoc aus den `.d.ts`, deshalb ist die Grenze angehoben
    (gepackt 650 000 B, entpackt 6 950 000 B; Begründung in `scripts/gates/core-package.mjs`).
+   Zusammen mit der Anhebung auf `main` (LFH-585, LFH-786) nach dem Merge neu gemessen und auf
+   730 000 B / 7 300 000 B gesetzt; der entpackte Puffer bleibt kleiner als `fingerprints.json`.
 6. Die neue Querschnittsform von `LINE_GEOMETRY` (seit 1.8.0) gilt als **Ausnahme im Minor**.
 7. **Grenzen als Regeln:** höchstens ein Hinweis, höchstens ein 5.8.8-Wert, 5.8.8 zusammen mit
    einem Hinweis zulässig, keine Taktik 5.8.1.1–4 an einem Träger. Wetter: Wolke und ein

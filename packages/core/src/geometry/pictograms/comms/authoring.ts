@@ -1,5 +1,6 @@
 import type { Point, Primitive, Style } from '@einsatzzeichen/schema';
 import type { PictogramContrastPair } from '../catalog-definition.js';
+import { CATALOG_TEXT_FONT_WEIGHT } from '../../../render/text-policy.js';
 
 export const COMMS_STROKE_WIDTH_MM = 1;
 
@@ -117,8 +118,6 @@ export function commsText(
     minRenderPx: number;
     anchor?: 'start' | 'middle' | 'end';
     baseline?: 'alphabetic' | 'middle' | 'hanging';
-    /** 700 für fett oder halbfett gesetzte Kürzel der Referenz; ohne Angabe normal (400). */
-    fontWeight?: 400 | 700;
     style?: Readonly<Style>;
   },
 ): Primitive {
@@ -133,7 +132,7 @@ export function commsText(
     baseline: options.baseline ?? 'alphabetic',
     boxMm: { ...options.boxMm },
     minRenderPx: options.minRenderPx,
-    ...(options.fontWeight === undefined ? {} : { fontWeight: options.fontWeight }),
+    fontWeight: CATALOG_TEXT_FONT_WEIGHT,
     style: copyStyle(options.style ?? COMMS_BLACK_FILL),
   };
 }

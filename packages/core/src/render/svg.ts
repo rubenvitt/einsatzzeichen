@@ -20,7 +20,11 @@ export { formatUnits };
 export interface SvgOptions {
   /** Pixelbreite. Ohne Angabe skaliert das SVG frei. */
   size?: number;
-  /** Präfix für erzeugte Element-IDs. Erforderlich, wenn mehrere SVGs im selben DOM liegen. */
+  /**
+   * Präfix für erzeugte Element-IDs. Erforderlich, wenn mehrere SVGs im selben DOM liegen. Darf
+   * nicht leer sein und keine Leerzeichen, Anführungszeichen, `<`, `>` oder `&` enthalten
+   * (`ID_PREFIX_PATTERN`); sonst wirft `renderSvg` einen `RangeError`.
+   */
   idPrefix?: string;
   /** Farbprofil der Ausgabe. Ohne Angabe bleibt die BABZ-Referenzpalette bytegleich erhalten. */
   theme?: RenderTheme;
@@ -33,6 +37,25 @@ export interface SvgOptions {
    */
   minStrokeWidthPx?: number;
 }
+
+/**
+ * Aufzählungswerte der IR gehen nur über diese Tabellen ins Markup, nie als interpolierter
+ * Rohwert: Der Typ beschränkt sie, zur Laufzeit kann ein JavaScript-Aufrufer aber beliebige
+ * Strings übergeben (CodeQL js/html-constructed-from-input). Ein unbekannter Wert ergibt
+ * `undefined` und damit kein Attribut statt eingeschleusten Markups.
+ */
+const TEXT_ANCHOR_ATTR: Readonly<Record<string, string>> = Object.freeze({
+  start: 'text-anchor="start"',
+  middle: 'text-anchor="middle"',
+  end: 'text-anchor="end"',
+});
+const STROKE_LINEJOIN_ATTR: Readonly<Record<string, string>> = Object.freeze({
+  bevel: 'stroke-linejoin="bevel"',
+});
+const FILL_RULE_ATTR: Readonly<Record<string, string>> = Object.freeze({
+  nonzero: 'fill-rule="nonzero"',
+  evenodd: 'fill-rule="evenodd"',
+});
 
 function u(mm: number): string {
   return formatUnits(mmToUnits(mm));
@@ -102,7 +125,7 @@ function styleAttrs(
         parts.push('stroke-linecap="butt"', 'stroke-linejoin="round"');
       }
       if (style.strokeLinejoin !== undefined && !options.pictogramStrokeContract) {
-        parts.push(`stroke-linejoin="${style.strokeLinejoin}"`);
+        parts.push(STROKE_LINEJOIN_ATTR[style.strokeLinejoin] ?? '');
       }
       const dashToken = style.bodyStrokeDashToken;
       const dash = options.role === 'body' && dashToken !== undefined
@@ -116,8 +139,8 @@ function styleAttrs(
       }
     }
   }
-  if (style?.fillRule !== undefined) parts.push(`fill-rule="${style.fillRule}"`);
-  return ` ${parts.join(' ')}`;
+  if (style?.fillRule !== undefined) parts.push(FILL_RULE_ATTR[style.fillRule] ?? '');
+  return ` ${parts.filter((part) => part !== '').join(' ')}`;
 }
 
 /**
@@ -236,12 +259,15 @@ function renderPrimitive(
     const styleStr = styleAttrs(style, theme, { role, fillOnly: true });
     const transform = transformAttr(primitive.transform);
     const attrs =
-      `x="${u(primitive.x)}" y="${u(primitive.y)}" text-anchor="${primitive.anchor}" ` +
+      `x="${u(primitive.x)}" y="${u(primitive.y)}" ${TEXT_ANCHOR_ATTR[primitive.anchor] ?? ''} ` +
       `dominant-baseline="${baselineAttr(primitive.baseline)}" font-family="${TEXT_FONT_FAMILY_ATTR}" ` +
       `font-size="${u(primitive.sizeMm)}"` +
-      // Nur fett schreibt ein Attribut: 400 ist der Default, und ohne Feld bleibt die Ausgabe
-      // bytegleich zum Stand vor `fontWeight`.
-      (primitive.fontWeight === 700 ? ' font-weight="700"' : '');
+      // Nur 500 und 700 schreiben ein Attribut: 400 ist der Default, und ohne Feld bleibt die
+      // Ausgabe bytegleich zum Stand vor `fontWeight`. Dieselbe Regel steht in canvas.ts.
+      fontWeightAttr(primitive.fontWeight) +
+      // Kursiv nur, wenn gesetzt (LFH-585, nur zusammen mit 500): ohne Feld bleibt die Ausgabe
+      // bytegleich. Canvas nimmt denselben Stil in die Schriftangabe auf.
+      (primitive.fontStyle === 'italic' ? ' font-style="italic"' : '');
     return `<text ${attrs}${styleStr}${transform}>${escapeXml(primitive.content)}</text>`;
   }
 
@@ -271,8 +297,37 @@ function renderPrimitive(
   }
 }
 
+/**
+ * Erlaubte Form von `idPrefix`. Der Präfix steht in `id="…"` und `aria-labelledby="…"`; die
+ * Web-Component reicht ihn als frei setzbares Attribut durch. Ohne Prüfung könnte ein Wert wie
+ * `x" onload="…` eigene Attribute ins Markup schreiben. Maskieren allein genügt nicht:
+ * Leerzeichen trennen in `aria-labelledby` die Verweise, ein Präfix mit Leerzeichen zerbräche die
+ * Verknüpfung still. Deshalb abweisen statt reparieren (fail-closed wie `size`).
+ */
+export const ID_PREFIX_PATTERN = /^[^\s"'<>&]+$/u;
+
+function assertValidIdPrefix(prefix: string): void {
+  if (typeof prefix !== 'string' || !ID_PREFIX_PATTERN.test(prefix)) {
+    throw new RangeError(
+      'idPrefix darf nicht leer sein und keine Leerzeichen, Anführungszeichen, „<“, „>“ oder „&“ ' +
+        `enthalten (ist ${JSON.stringify(prefix)}).`,
+    );
+  }
+}
+
+/** Nur 500 und 700 schreiben ein Attribut; alles andere (auch ungültige Laufzeitwerte) fällt auf 400. */
+function fontWeightAttr(fontWeight: unknown): string {
+  if (fontWeight === 500) return ' font-weight="500"';
+  if (fontWeight === 700) return ' font-weight="700"';
+  return '';
+}
+
 export function renderSvg(drawing: Drawing, options: SvgOptions = {}): string {
-  const prefix = options.idPrefix ?? 'ez';
+  const rawPrefix = options.idPrefix ?? 'ez';
+  assertValidIdPrefix(rawPrefix);
+  // Nach der Prüfung eine Leeroperation; hält die Maskierung aber an der Stelle, an der der Wert
+  // ins Markup geht, falls das Muster je gelockert wird.
+  const prefix = escapeXml(rawPrefix);
   const theme = options.theme === undefined ? REFERENCE_THEME : options.theme;
   assertValidRenderTheme(theme);
   assertValidActiveStrokeWidths(drawing);
@@ -287,7 +342,7 @@ export function renderSvg(drawing: Drawing, options: SvgOptions = {}): string {
 
   const attrs = ['xmlns="http://www.w3.org/2000/svg"', `viewBox="0 0 ${width} ${height}"`];
   if (options.size !== undefined) {
-    attrs.push(`width="${raster.widthPx}"`, `height="${raster.heightPx}"`);
+    attrs.push(`width="${formatUnits(raster.widthPx)}"`, `height="${formatUnits(raster.heightPx)}"`);
   }
 
   const labelled: string[] = [];

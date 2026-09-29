@@ -126,7 +126,10 @@ def main(subset_path: str, source_sha256: str, target_path: str) -> None:
         subset_sha256 = hashlib.sha256(handle.read()).hexdigest()
 
     metrics = {
-        "family": font["name"].getDebugName(1),
+        # Typografische Familie (ID 16) vor der Familie (ID 1): Die Instanz wght 500 heißt in
+        # ID 1 „Arimo Medium", gehört aber zur Familie „Arimo" (ID 16). Subset und Fettinstanz
+        # führen keine ID 16; für sie bleibt der Wert unverändert „Arimo".
+        "family": font["name"].getDebugName(16) or font["name"].getDebugName(1),
         "sourceSha256": source_sha256,
         "subsetSha256": subset_sha256,
         "unitsPerEm": head.unitsPerEm,

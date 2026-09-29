@@ -1,6 +1,7 @@
 import { DEFAULT_STROKE_WIDTH_MM, type Primitive, type Style } from '@einsatzzeichen/schema';
 import { deepFreeze } from '../../readonly-data.js';
 import { defineCapability } from '../catalog-definition.js';
+import { CATALOG_TEXT_FONT_WEIGHT } from '../../../render/text-policy.js';
 
 /** Strich der Referenz: 1,417 pt = 0,5 mm, schwarz, ohne Füllung. */
 const STROKE: Style = { stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM, fill: 'none' };
@@ -42,8 +43,8 @@ export const CARE_CAPABILITIES = deepFreeze([
     primitives: [
       CARE_ROOF,
       // Kürzel „PSNV" in der Projektschrift auf der Grundlinie y = 28 mm (Referenz: 79,37 pt),
-      // Versalhöhe 4,87 mm (13,803 pt), Lauf von x ≈ 8,0 bis 24,2 mm. Die Referenz setzt
-      // halbfett, dafür steht der Fettschnitt (700); er läuft in Arimo breiter (≈ 7,0–25,7 mm).
+      // Versalhöhe 4,87 mm (13,803 pt), Lauf von x ≈ 8,0 bis 24,2 mm. Gesetzt in der Stärke
+      // allen Katalogtexts (500, LFH-585); Arimo läuft breiter (≈ 7,0–25,7 mm, wie in 700).
       {
         type: 'text',
         role: 'pictogram',
@@ -55,7 +56,7 @@ export const CARE_CAPABILITIES = deepFreeze([
         baseline: 'alphabetic',
         boxMm: { xMm: 6.5, yMm: 22.5, widthMm: 19.3, heightMm: 5.8 },
         minRenderPx: 64,
-        fontWeight: 700,
+        fontWeight: CATALOG_TEXT_FONT_WEIGHT,
         style: { fill: 'schwarz', stroke: 'none' },
       },
     ],

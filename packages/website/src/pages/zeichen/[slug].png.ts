@@ -6,6 +6,8 @@ import type { APIRoute, GetStaticPaths } from 'astro';
 import {
   TEXT_FONT_BOLD_SHA256,
   TEXT_FONT_FAMILY,
+  TEXT_FONT_MEDIUM_ITALIC_SHA256,
+  TEXT_FONT_MEDIUM_SHA256,
   TEXT_FONT_SHA256,
   resvgFontOptions,
 } from '@einsatzzeichen/conformance';
@@ -70,14 +72,19 @@ function textFontFile(fileName: string, sha256: string): string {
 }
 
 /**
- * Beide Schnitte: fett gesetzte Läufe (`fontWeight: 700`) rastert resvg nur mit der statischen
- * Fettinstanz fett, weil es die wght-Achse der variablen Datei nicht auswertet. Fehlte sie hier,
- * kämen fette Kürzel im PNG stillschweigend normal heraus, anders als im Katalog.
+ * Alle vier Schnitte, in derselben Reihenfolge wie `resvgFontOptions()`: resvg wertet die
+ * wght-Achse der variablen Datei nicht aus und rastert Läufe in 500 (`fontWeight: 500`, der ganze
+ * Katalogtext seit LFH-585) nur mit `Arimo-Medium.ttf` in dieser Stärke, fette Läufe nur mit
+ * `Arimo-Bold.ttf`, den kursiven Lauf in D.1.1 nur mit `Arimo-MediumItalic.ttf`. Fehlte eine der
+ * Dateien, kämen die Kürzel im PNG stillschweigend im Normalschnitt oder aufrecht heraus, anders
+ * als im Katalog.
  */
 const FONT = {
   fontFiles: [
     textFontFile('Arimo[wght].ttf', TEXT_FONT_SHA256),
+    textFontFile('Arimo-Medium.ttf', TEXT_FONT_MEDIUM_SHA256),
     textFontFile('Arimo-Bold.ttf', TEXT_FONT_BOLD_SHA256),
+    textFontFile('Arimo-MediumItalic.ttf', TEXT_FONT_MEDIUM_ITALIC_SHA256),
   ],
   loadSystemFonts: false as const,
   defaultFontFamily: TEXT_FONT_FAMILY,

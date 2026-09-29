@@ -165,7 +165,7 @@ const DEFINITIONS: Record<FunctionRoleId, FunctionRoleDefinition> = {
     'disaster-control-command',
     'Katastrophenschutzleitung',
     'fuehrung-leitung',
-    [roleRun('KatSL', 20, FORMATION_LARGE, { xMm: 2.2, yMm: 12.3, widthMm: 28.1, heightMm: 8 }, 25)],
+    [roleRun('KatSL', 20, FORMATION_LARGE, { xMm: 2, yMm: 12.3, widthMm: 28.45, heightMm: 8 }, 25)],
   ),
   'technical-incident-command-evacuation': formationRole(
     'technical-incident-command-evacuation',
@@ -344,7 +344,7 @@ const DEFINITIONS: Record<FunctionRoleId, FunctionRoleDefinition> = {
   }),
   'hazard-response-forces-director': personRole({
     id: 'hazard-response-forces-director', title: 'Leiter Gefahrenabwehrkräfte',
-    expectedOrganization: 'bundespolizei',
+    expectedOrganization: 'polizei',
     organizationHead: 'administrative', bodyCenterYMm: 18, capShoulderYMm: 10,
     expectedAdministrativeLevel: 'nationalstaat',
     carrierRun: carrierRun('BuPol', 31.75, 31, { xMm: 20.5, yMm: 27.7, widthMm: 11.375, heightMm: 3.6 }),

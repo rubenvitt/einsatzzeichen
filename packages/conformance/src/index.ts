@@ -4,6 +4,7 @@ export * from './elements.js';
 export * from './fingerprint-index.js';
 export * from './recipes.js';
 export * from './coverage-manifest.js';
+export * from './manifest-drawings.js';
 export * from './domain-reviews.js';
 export * from './domain-review-questions.js';
 export * from './domain-reviewers.js';
