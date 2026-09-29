@@ -145,13 +145,14 @@ function label(
  * Seit LFH-585 (Arimo 500) passen die kleinen Betriebsarten und das große „TMO" bei voller
  * Versalhöhe in ihre Boxen (DMO bei 7,1 mm: 15,69 mm Tinte in 16 mm; TMO bei 10,6 mm: 22,87 mm
  * in 23,5 mm). `SMALL` und `LARGE` stehen deshalb wieder auf der Referenzversalhöhe. Das große
- * „DMO" (`LARGE_DMO`) reichte bei 10,6 mm rechts 0,13 mm über seine 23,5-mm-Box und bleibt beim
- * Kompromissgrad. Fax und SDS ebenso: Fax läge bei 10,6 mm mit 16,97 mm Tinte über seiner
- * 16-mm-Box, SDS füllte seinen Rahmen bis an die Kontur.
+ * „DMO" reichte bei 10,6 mm rechts 0,13 mm über eine 23,5-mm-Box; seine Box ist deshalb 23,8 mm
+ * breit (`LARGE_DMO_BOX`), sie bleibt innerhalb der Piktogrammbox von J.1.5 (4–28 mm) und J.1.7
+ * (3–29 mm). Fax und SDS bleiben beim Kompromissgrad: Fax läge bei 10,6 mm mit 16,97 mm Tinte
+ * über seiner 16-mm-Box, SDS füllte seinen Rahmen bis an die Kontur.
  */
 const SMALL = 7.1;
 const LARGE = 10.6;
-const LARGE_DMO = 10.3;
+const LARGE_DMO_BOX = 23.8;
 const FAX = 9.4;
 const SDS = 6.4;
 
@@ -331,7 +332,7 @@ export const CONNECTION_COMMS = deepFreeze([
     referenceAsset: 'J.1.5_SDS im DMO.svg',
     box: { xMm: 4, yMm: 6, widthMm: 24, heightMm: 18.5 },
     contrastPairs: SDS_CONTRAST,
-    primitives: [...sdsFrame(), label('DMO', 16.05, 24, LARGE_DMO, 23.5)],
+    primitives: [...sdsFrame(), label('DMO', 16.05, 24, LARGE, LARGE_DMO_BOX)],
   }),
   defineComms({
     section: 'J.1.6',
@@ -353,7 +354,7 @@ export const CONNECTION_COMMS = deepFreeze([
     referenceAsset: 'J.1.7_Sprechfunk im DMO_Repeater.svg',
     box: { xMm: 3, yMm: 7, widthMm: 26, heightMm: 20 },
     contrastPairs: CONNECTION_CONTRAST,
-    primitives: [connectionBar(7), label('DMO', 16.05, 17, LARGE_DMO, 23.5), ...radioArcs(23)],
+    primitives: [connectionBar(7), label('DMO', 16.05, 17, LARGE, LARGE_DMO_BOX), ...radioArcs(23)],
   }),
   /**
    * Ab J.1.8 trägt die Marke oben, **was** übertragen wird, und der Zickzack darunter, **dass**

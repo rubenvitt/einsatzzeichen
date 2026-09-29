@@ -596,12 +596,16 @@ Tinte passt in 500 bei voller Höhe in die bestehende, unveränderte Box.
   0,125 mm. Mit einer Box von 23,8 mm bestünde es alle Gates. Die Box läge weiter innerhalb der
   Piktogrammbox. Das ist eine Entscheidung, die offen bleibt: Ein Lauf soll nicht zugleich
   wachsen und seine Box vergrößern, ohne dass jemand das bestätigt.
+  **Nachtrag 29.09.2026:** Entschieden (vom Projektinhaber an den Koordinator delegiert): Die Box
+  ist 23,8 mm breit (`LARGE_DMO_BOX`), das große „DMO“ steht bei der Referenzversalhöhe 10,6 mm wie
+  „TMO“ in J.1.6. Alle Gates grün; die Box bleibt innerhalb der Piktogrammbox von J.1.5 (4–28 mm)
+  und J.1.7 (3–29 mm). Damit bleiben 13 statt 14 der 21 Läufe verkleinert.
 - Nicht zurückgewachsen: „Ex", „APRT", „BS", „mBS", „Fax", „FRT", „HRT", „MRT", „L" (J.4.8),
   „SDS" (J.1.5, J.1.6), „LtS" (D.2.5), „L" (D.2.4). In voller Höhe passen sie nicht in ihre Box
   (MRT um 0,06 mm). „L" in J.4.8 bräuchte eine höhere Box. Bei „SDS" ist die Box der Rahmen
   selbst. Ihre Schriftgrade bleiben, wie sie mit den Metriken von 700 bzw. 400 bestimmt wurden.
   Die Kommentare nennen das.
-- Nicht zurückgewachsen ist außerdem das große „DMO" in J.1.5 (siehe oben).
+- Das große „DMO" in J.1.5 und J.1.7 ist per Nachtrag zurückgewachsen (siehe oben).
 - Von 21 verkleinerten Läufen bleiben damit 14. Neu verkleinert sind 3 (unten).
 
 **Box verbreitert, Schriftgrad unverändert.** Die Tinte in 500 bleibt dabei innerhalb der
