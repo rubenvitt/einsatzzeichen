@@ -261,10 +261,9 @@ describe('vocabulary', () => {
     const options = byValue(vocabulary({}, 'kind'));
     expect([...options.keys()]).toEqual([...SYMBOL_KINDS]);
     expect(options.get('formation')).toEqual({ value: 'formation', selected: false, status: 'allowed' });
-    // Beide komponieren ohne Organisation nicht — dieselbe Auskunft, für die der Baukasten eine
-    // leere Kachel zeigt.
-    expect(options.get('circle-12')).toMatchObject({ status: 'blocked', reason: 'rule' });
-    expect(options.get('reduced-house')).toMatchObject({ status: 'blocked', reason: 'rule' });
+    // Seit dem 2. Oktober 2026 komponieren beide auch ohne Organisation (weiße Fläche).
+    expect(options.get('circle-12')).toMatchObject({ status: 'allowed' });
+    expect(options.get('reduced-house')).toMatchObject({ status: 'allowed' });
   });
 
   test('verlangt kind, bevor ein anderes Feld gefragt wird', () => {

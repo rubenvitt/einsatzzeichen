@@ -175,59 +175,6 @@ function roleRunsOverlap(left: FunctionRoleTextRun, right: FunctionRoleTextRun):
     a.yMm < b.yMm + b.heightMm && a.yMm + a.heightMm > b.yMm;
 }
 
-/**
- * Farbige 12-mm-Kreisverträge außerhalb der weißen F.3-Fassung. Die technischen Marken sind
- * sichtbare Geometrie-IDs; die Tabelle behauptet keine Abschnitts- oder Rezeptsemantik.
- */
-const MEASURED_COLORED_CIRCLE_CONTRACTS = [
-  {
-    bodyVariant: undefined,
-    organization: 'zivile-einheiten',
-    bodyMark: 'spontaneous-helper-collection-arrow',
-  },
-  {
-    bodyVariant: undefined,
-    organization: 'feuerwehr',
-    bodyMark: 'spontaneous-helper-contact-double-arrow',
-  },
-  {
-    bodyVariant: 'raised-circle-1mm',
-    organization: 'zivile-einheiten',
-    bodyMark: 'circle-information-stem',
-  },
-] as const satisfies ReadonlyArray<{
-  readonly bodyVariant: SymbolSpec['bodyVariant'];
-  readonly organization: SymbolSpec['organization'];
-  readonly bodyMark: NonNullable<SymbolSpec['bodyMarks']>[number];
-}>;
-
-const COLORED_NORMAL_CIRCLE_ONLY_MARKS = new Set<
-  NonNullable<SymbolSpec['bodyMarks']>[number]
->([
-  'spontaneous-helper-collection-arrow',
-  'spontaneous-helper-contact-double-arrow',
-]);
-
-function hasMeasuredColoredCircleContract(spec: SymbolSpec): boolean {
-  if (spec.kind !== 'circle-12') return false;
-  const [bodyMark, ...additionalBodyMarks] = spec.bodyMarks ?? [];
-  return additionalBodyMarks.length === 0 && bodyMark !== undefined &&
-    MEASURED_COLORED_CIRCLE_CONTRACTS.some((contract) =>
-      contract.bodyVariant === spec.bodyVariant &&
-      contract.organization === spec.organization &&
-      contract.bodyMark === bodyMark);
-}
-
-function hasMeasuredCircleOrganizationContract(spec: SymbolSpec): boolean {
-  if (spec.kind !== 'circle-12') return false;
-  if (hasMeasuredColoredCircleContract(spec)) return true;
-
-  const isWhiteF3Contract = spec.organization === 'hilfsorganisation' &&
-    (spec.bodyVariant === undefined || spec.bodyVariant === 'raised-gable');
-  return isWhiteF3Contract &&
-    !(spec.bodyMarks ?? []).some((mark) => COLORED_NORMAL_CIRCLE_ONLY_MARKS.has(mark));
-}
-
 const INSET_HULL_LABEL_FIELDS = new Set<PropertyKey>([
   'accessibilityMode',
   'center',
@@ -692,21 +639,14 @@ function validatePreparedSpec(
     });
   }
 
-  const isCircle12 = spec.kind === 'circle-12';
-  const isMeasuredCircleVariant = isCircle12 &&
+  // Die Messsperren `circle-top-left-requires-metrics`, `circle-12-requires-organization`,
+  // `circle-12-requires-hilfsorganisation`, `colored-circle-top-left-not-measured` und
+  // `reduced-house-requires-hilfsorganisation` sind am 2. Oktober 2026 gefallen
+  // (`derive/circle.ts`): Jede Organisation, auch keine, füllt den Kreis und die reduzierte
+  // Hauskontur, und ein topLeft-Lauf am 12-mm-Kreis ohne Metriksatz übernimmt den vermessenen
+  // F.3.3- bzw. F.3.5-Satz.
+  const isMeasuredCircleVariant = spec.kind === 'circle-12' &&
     (spec.bodyVariant === undefined || spec.bodyVariant === 'raised-gable');
-  if (
-    isMeasuredCircleVariant &&
-    spec.labels?.topLeft !== undefined &&
-    spec.labels.topLeftMetrics === undefined
-  ) {
-    issues.push({
-      rule: 'circle-top-left-requires-metrics',
-      message:
-        'Ein topLeft-Lauf am 12-mm-Kreis verlangt immer den vollständigen vermessenen ' +
-        'Metriksatz; die beiden Kreisfassungen haben keinen allgemeinen Profildefault.',
-    });
-  }
   if (
     spec.labels?.topLeft !== undefined &&
     profile.requiresTopLeftMetrics === true &&
@@ -717,52 +657,6 @@ function validatePreparedSpec(
       message:
         'Dieses Körperprofil belegt den topLeft-Lauf ausschließlich mit einem vollständigen ' +
         'quellenspezifischen Metriksatz; ein Profildefault wäre nur eine Teilmessung.',
-    });
-  }
-  if (
-    isCircle12 &&
-    spec.bodyVariant === 'foot-band' &&
-    spec.organization === undefined
-  ) {
-    issues.push({
-      rule: 'circle-12-requires-organization',
-      message: 'Der gebänderte 12-mm-Kreis verlangt die Organisationsfarbe seiner Körperfläche.',
-    });
-  }
-  if (
-    isCircle12 &&
-    spec.bodyVariant !== 'foot-band' &&
-    !hasMeasuredCircleOrganizationContract(spec)
-  ) {
-    issues.push({
-      rule: 'circle-12-requires-hilfsorganisation',
-      message:
-        'Der 12-mm-Kreis verlangt einen vollständig vermessenen Organisationsvertrag: die ' +
-        'weiße HiOrg-Fassung aus F.3 oder genau eine der farbigen technischen ' +
-        'Art-/Varianten-/Markenfassungen. Fehlende oder vertauschte Werte sind nicht belegt.',
-    });
-  }
-  if (
-    hasMeasuredColoredCircleContract(spec) &&
-    (spec.labels?.topLeft !== undefined || spec.labels?.topLeftMetrics !== undefined)
-  ) {
-    issues.push({
-      rule: 'colored-circle-top-left-not-measured',
-      message:
-        'Die exakt vermessenen farbigen Kreisverträge führen keinen topLeft-Lauf und keine ' +
-        'zugehörigen F.3-Metriken. Diese weißen Kreislabelverträge werden nicht vererbt.',
-    });
-  }
-  if (
-    spec.kind === 'reduced-house' &&
-    spec.organization !== 'hilfsorganisation'
-  ) {
-    issues.push({
-      rule: 'reduced-house-requires-hilfsorganisation',
-      message:
-        'Die reduzierte Hauskontur ist in beiden F.3-Belegen ausschließlich als weiße ' +
-        'HiOrg-Körperfläche vermessen. Andere oder fehlende Organisationszuordnungen sind ' +
-        'auch ohne Beschriftung nicht belegt.',
     });
   }
 

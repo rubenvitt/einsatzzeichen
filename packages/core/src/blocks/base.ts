@@ -16,9 +16,9 @@ import { babz, block, measured, notMeasured } from './helpers.js';
  * Zeichnung genau mit diesem Abschnitt ausgibt.
  *
  * **Keine Kombinationsbindung.** Die Regeln `vehicle-category-requires-vehicle`,
- * `plain-wheel-pair-chassis-conflict`, `inset-hull-requires-measured-organization`,
- * `circle-12-requires-hilfsorganisation` und `reduced-house-requires-hilfsorganisation` schränken
- * ein, welche Bausteine zusammen stehen dürfen. Sie gehören in den Regelkatalog. Keine davon setzt
+ * `plain-wheel-pair-chassis-conflict` und `inset-hull-requires-measured-organization` schränken
+ * ein, welche Bausteine zusammen stehen dürfen (die Kreis- und Hauskonturregeln zur Organisation
+ * sind am 2. Oktober 2026 gefallen). Sie gehören in den Regelkatalog. Keine davon setzt
  * einen dieser Bausteine nur als Teil eines anderen, wie es die Funktionsfassung mit der
  * Verwaltungsstufe tut.
  */
@@ -358,6 +358,38 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     measured(
       `${BASE}:771–778`,
       `${UNDOCUMENTED_AT_SOURCE}12-mm-Kreis mit Mittelpunkt (16|15), also 1 mm angehoben.`,
+    ),
+  ),
+  // Abgeleitete Fassungen der Funktionsstelle (2. Oktober 2026, `CIRCLE_VARIANT_PAIRS`). Die
+  // Zeichnung trägt dafür eine Ableitungsnotiz; der Fundort ist der Eintrag in `VARIANT_BODIES`.
+  block(
+    'base-symbol',
+    'post/raised-gable',
+    'body',
+    measured(
+      `${BASE}:784`,
+      'Abgeleitet von F.3.5: Mit Giebel bleibt unter dem Scheitel y 1 und über der Unterkante 30 genau der abgesenkte 12-mm-Kreis (16|18) r 12; der 14-mm-Kreis wird auf diese Fassung verkleinert (`POST_VARIANT_BODIES`, derive/circle.ts).',
+      babz('F.3.5'),
+    ),
+  ),
+  block(
+    'base-symbol',
+    'post/raised-circle-1mm',
+    'body',
+    measured(
+      `${BASE}:785`,
+      'Abgeleitet von N.2.3: Oberkante 1 (1 mm über der Funktionsstelle), Unterkante 27 wie am angehobenen 12-mm-Kreis, damit die Oberflächenläufe auf Grundlinie 31 Platz finden; (16|14) r 13 (`POST_VARIANT_BODIES`, derive/circle.ts).',
+      babz('N.2.3'),
+    ),
+  ),
+  block(
+    'base-symbol',
+    'post/foot-band',
+    'body',
+    measured(
+      `${BASE}:786`,
+      'Abgeleitet von G.3.x: Kreis der Funktionsstelle unverändert, Fußband als Segment unter der Sehne 4 mm über der Unterkante (`POST_VARIANT_EXTRAS`, derive/circle.ts).',
+      babz('G.3.1', 'G.3.5'),
     ),
   ),
 ]);

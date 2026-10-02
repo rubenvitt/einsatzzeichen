@@ -38,6 +38,14 @@ import { placeStates, type StatePlacement } from './layout/state-placement.js';
 import { NotMeasuredError } from './not-measured.js';
 import { collectDerivations } from './derive/record.js';
 import {
+  circleCenterBaselineFromBodyBottomMm,
+  circleCornerRuns,
+  circleTopLeftMetrics,
+  circleTopLeftOnSurface,
+  noteCircleVariantBody,
+  type CircleCornerRuns,
+} from './derive/circle.js';
+import {
   ARIMO_CAP_HEIGHT_FRACTION,
   CATALOG_TEXT_FONT_WEIGHT,
   MINIMUM_TEXT_RENDER_PX,
@@ -435,6 +443,8 @@ function labelPrimitives(
   bottomCenterBaselineFromBodyBottomMm: number | undefined,
   bottomCenterInk: 'body' | 'black' | undefined,
   ink: ColorToken,
+  circleCorners: CircleCornerRuns | undefined,
+  topLeftInk: ColorToken,
 ): Primitive[] {
   const centerXMm = centerAnchorFromBodyLeftMm === undefined
     ? (bodyBoundsMm.minX + bodyBoundsMm.maxX) / 2
@@ -518,9 +528,11 @@ function labelPrimitives(
       );
     }
     const topLeftMetrics = labels.topLeftMetrics;
-    const anchorRawMm = bodyBoundsMm.minX +
+    // Am Kreis ohne Außenlage steht der Lauf innen auf der Sehne (`circleCornerRuns`).
+    const corner = circleCorners?.topLeft;
+    const anchorRawMm = corner?.anchorXMm ?? bodyBoundsMm.minX +
       (topLeftMetrics?.anchorFromBodyLeftMm ?? TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM);
-    const baselineRawMm = bodyBoundsMm.minY +
+    const baselineRawMm = corner?.baselineYMm ?? bodyBoundsMm.minY +
       (topLeftMetrics?.baselineFromBodyTopMm ?? topLeftBaselineFromBodyTopMm);
     // Die privat kind-/variantengebundenen F.3-Werte sind auf sechs Dezimalstellen vermessen.
     // Ihre negative
@@ -548,9 +560,9 @@ function labelPrimitives(
         // bleibt derselbe wie in F-a; die Box endet deshalb erst an der rechten Innenmarge des
         // Körpers. Eine Begrenzung auf das obere linke Viertel wäre seit F-b eine falsche
         // Clipping-Zusage, obwohl die Zone weiterhin durch ihren linken Anker benannt ist.
-        rightMm - anchorXMm,
+        corner?.boxWidthMm ?? rightMm - anchorXMm,
         viewBoxWidthMm,
-        ink,
+        topLeftInk,
       ),
     );
   }
@@ -587,15 +599,16 @@ function labelPrimitives(
     }
   }
   if (labels.bottomLeft !== undefined) {
+    const corner = circleCorners?.bottomLeft;
     primitives.push(
       labelPrimitive(
         labels.bottomLeft,
         BOTTOM_LABEL_SIZE_MM,
-        bottomBaselineMm,
+        corner?.baselineYMm ?? bottomBaselineMm,
         'start',
-        leftMm,
-        leftMm,
-        centerXMm - leftMm,
+        corner?.anchorXMm ?? leftMm,
+        corner?.boxXMm ?? leftMm,
+        corner?.boxWidthMm ?? centerXMm - leftMm,
         viewBoxWidthMm,
         ink,
       ),
@@ -626,17 +639,18 @@ function labelPrimitives(
   }
   if (labels.bottomRight !== undefined) {
     const metrics = labels.bottomRightMetrics;
+    const corner = circleCorners?.bottomRight;
     const sizeMm = metrics === undefined
       ? BOTTOM_LABEL_SIZE_MM
       : metrics.capHeightMm / ARIMO_CAP_HEIGHT_FRACTION;
     const baselineYMm = metrics === undefined
-      ? bottomBaselineMm
+      ? corner?.baselineYMm ?? bottomBaselineMm
       : bodyBoundsMm.minY + metrics.baselineFromBodyTopMm;
     const anchorXMm = metrics === undefined
-      ? rightMm
+      ? corner?.anchorXMm ?? rightMm
       : bodyBoundsMm.minX + metrics.anchorFromBodyLeftMm;
     const boxXMm = metrics === undefined
-      ? centerXMm
+      ? corner?.boxXMm ?? centerXMm
       : bodyBoundsMm.minX + metrics.boxLeftFromBodyLeftMm;
     primitives.push(
       labelPrimitive(
@@ -646,7 +660,7 @@ function labelPrimitives(
         metrics === undefined ? 'end' : 'middle',
         anchorXMm,
         boxXMm,
-        metrics?.boxWidthMm ?? (rightMm - centerXMm),
+        metrics?.boxWidthMm ?? corner?.boxWidthMm ?? (rightMm - centerXMm),
         viewBoxWidthMm,
         ink,
       ),
@@ -1150,6 +1164,7 @@ function composeMeasuredOrDerived(
     );
   }
   const profile = profileFor(spec.kind, spec.bodyVariant);
+  noteCircleVariantBody(spec.kind, spec.bodyVariant);
   const headShape = spec.strength !== undefined ? catalog.strengthHead(spec.strength) : null;
   // Technische Kopfmarke und Verband zeichnen beide relative Kopfprimitive; `head-zone-conflict`
   // schließt aus, dass beide zugleich gesetzt sind.
@@ -1468,19 +1483,38 @@ function composeMeasuredOrDerived(
       }, bodyBoundsMm)),
   );
 
-  const labelChildren = effectiveLabels !== undefined
+  // Kreiskörper (`derive/circle.ts`): ein topLeft-Lauf ohne Metriksatz übernimmt den F.3-Satz,
+  // Ecken stehen auf der Kreissehne, der mittige Lauf ohne vermessenen Override mit der
+  // Versalmitte auf der Kreismitte.
+  const isCircleBody = profile.id === 'circle-body';
+  const circleTopLeftDefaults = isCircleBody && effectiveLabels?.topLeft !== undefined &&
+      effectiveLabels.topLeftMetrics === undefined
+    ? circleTopLeftMetrics(spec.kind, spec.bodyVariant)
+    : undefined;
+  const placedLabels = effectiveLabels !== undefined && circleTopLeftDefaults !== undefined
+    ? { ...effectiveLabels, topLeftMetrics: circleTopLeftDefaults }
+    : effectiveLabels;
+  const centerBaselineOverrideMm = profile.allowsCenterBaselineOverride === true
+    ? effectiveLabels?.centerBaselineFromBodyBottomMm
+    : undefined;
+  const labelChildren = placedLabels !== undefined
     ? labelPrimitives(
-        effectiveLabels,
+        placedLabels,
         bodyBoundsMm,
         DEFAULT_VIEWBOX_MM.width,
         organizationFill ?? null,
         profile.bottomLabelBaselineFromBodyBottomMm,
         profile.belowRight,
-        profile.allowsCenterBaselineOverride === true
-          ? effectiveLabels.centerBaselineFromBodyBottomMm ?? profile.centerBaselineFromBodyBottomMm
-          : profile.centerBaselineFromBodyBottomMm,
+        centerBaselineOverrideMm ?? (
+          isCircleBody && placedLabels.center !== undefined
+            ? circleCenterBaselineFromBodyBottomMm(
+                bodyBoundsMm,
+                placedLabels.centerCapHeightMm ?? CENTER_LABEL_CAP_HEIGHT_MM,
+              )
+            : profile.centerBaselineFromBodyBottomMm
+        ),
         profile.allowsCenterAnchorOverride === true
-          ? effectiveLabels.centerAnchorFromBodyLeftMm
+          ? placedLabels.centerAnchorFromBodyLeftMm
           : undefined,
         profile.topLeftBaselineFromBodyTopMm,
         normalizesMeasuredCircleTopLeftCoordinates(spec.kind, spec.bodyVariant),
@@ -1490,7 +1524,13 @@ function composeMeasuredOrDerived(
         profile.topLeftLines,
         profile.bottomCenterBaselineFromBodyBottomMm,
         profile.bottomCenterInk,
-        bodyLabelInk(bodyFill, effectiveLabels.inBodyInk),
+        bodyLabelInk(bodyFill, placedLabels.inBodyInk),
+        isCircleBody
+          ? circleCornerRuns(spec.kind, spec.bodyVariant, bodyBoundsMm, placedLabels)
+          : undefined,
+        isCircleBody && circleTopLeftOnSurface(spec.kind, spec.bodyVariant)
+          ? 'schwarz'
+          : bodyLabelInk(bodyFill, placedLabels.inBodyInk),
       )
     : [];
 

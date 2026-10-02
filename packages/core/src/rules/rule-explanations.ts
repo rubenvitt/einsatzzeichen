@@ -385,26 +385,6 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'Nutze `labels.center` oder `labels.topLeft` statt `designation`, oder lass ' +
       '`vehicleCategory` weg.',
   },
-  'circle-12-requires-hilfsorganisation': {
-    field: 'organization',
-    title: '12-mm-Kreis braucht einen vermessenen Organisationsvertrag',
-    explanation:
-      'Der 12-mm-Kreis außerhalb der gebänderten Fassung verlangt einen vollständig vermessenen ' +
-      'Organisationsvertrag: die weiße HiOrg-Fassung aus F.3 oder genau eine der drei farbigen ' +
-      'Art-, Varianten- und Markenfassungen. Die weiße F.3-Fassung gilt nur für `bodyVariant` ' +
-      '`undefined` oder `raised-gable`, nicht für `raised-circle-1mm`; fehlende oder ' +
-      'vertauschte Werte sind an keiner Datei belegt. Setze `organization` auf ' +
-      '`hilfsorganisation` mit einem dieser beiden `bodyVariant`-Werte oder bilde eine der ' +
-      'gemessenen farbigen Kombinationen genau nach.',
-  },
-  'circle-12-requires-organization': {
-    field: 'organization',
-    title: 'Gebänderter Kreis braucht eine Organisation',
-    explanation:
-      'Der gebänderte 12-mm-Kreis füllt seine Körperfläche in der Organisationsfarbe und ' +
-      'braucht deshalb eine Organisation. Ohne sie hätte die Fläche keine gemessene Farbe. ' +
-      'Setze `organization` oder wechsle die Körpervariante.',
-  },
   'circle-top-left-anchor-within-viewbox': {
     field: 'labels',
     title: 'Kreislabel-Anker muss in der ViewBox bleiben',
@@ -423,24 +403,6 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'Versalhöhe berechnete Textbox muss aber vollständig innerhalb der 32-mm-ViewBox bleiben. ' +
       'Ein Lauf über der Oberkante wäre im Bild abgeschnitten. Verschiebe ' +
       '`baselineFromBodyTopMm` nach unten oder verkleinere die Versalhöhe.',
-  },
-  'circle-top-left-requires-metrics': {
-    field: 'labels',
-    title: 'Kreislabel nur mit vollständigem Metriksatz',
-    explanation:
-      'Ein topLeft-Lauf an den beiden vermessenen Kreisfassungen verlangt immer den ' +
-      'vollständigen Metriksatz aus Versalhöhe, Grundlinie und Anker. Die Kreisprofile führen ' +
-      'keinen allgemeinen Default, aus dem sich die Lage ergäbe. Ergänze ' +
-      '`labels.topLeftMetrics` oder entferne den Lauf.',
-  },
-  'colored-circle-top-left-not-measured': {
-    field: 'labels',
-    title: 'Farbige Kreisverträge tragen kein topLeft-Label',
-    explanation:
-      'Die drei exakt vermessenen farbigen Kreisverträge führen weder einen topLeft-Lauf noch ' +
-      'die zugehörigen F.3-Metriken; die weißen Kreislabelverträge werden nicht auf sie ' +
-      'vererbt. Entferne `labels.topLeft` samt `labels.topLeftMetrics` oder wechsle auf die ' +
-      'weiße HiOrg-Fassung.',
   },
   'designation-not-blank': {
     field: 'designation',
@@ -601,14 +563,6 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'Die Variante plain-wheel-pair zeichnet bereits zwei vermessene Radringe. Eine ' +
       'Fahrzeugkategorie legte darüber eine zweite, nicht belegte Fahrwerksgeometrie. Entferne ' +
       '`vehicleCategory` oder wähle die Normalfassung des Landfahrzeugs.',
-  },
-  'reduced-house-requires-hilfsorganisation': {
-    field: 'organization',
-    title: 'Reduzierte Hauskontur nur als HiOrg-Fläche',
-    explanation:
-      'Die reduzierte Hauskontur ist in beiden F.3-Belegen ausschließlich als weiße ' +
-      'HiOrg-Körperfläche vermessen. Andere oder fehlende Organisationszuordnungen sind auch ' +
-      'ohne Beschriftung nicht belegt. Setze `organization` auf `hilfsorganisation`.',
   },
   'state-carrier-not-allowed': {
     field: 'states',

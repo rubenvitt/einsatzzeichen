@@ -128,8 +128,8 @@ describe('validateSpec', () => {
       expect(validateSpec({ kind, bodyVariant: 'foot-band' }).map((issue) => issue.rule), kind)
         .toContain('body-variant-requires-measured-kind');
     }
-    expect(validateSpec({ kind: 'circle-12', bodyVariant: 'foot-band' })
-      .map((issue) => issue.rule)).toContain('circle-12-requires-organization');
+    // Seit dem 2. Oktober 2026 trägt der gebänderte Kreis auch ohne Organisation: weiße Fläche.
+    expect(validateSpec({ kind: 'circle-12', bodyVariant: 'foot-band' })).toEqual([]);
   });
 
   it('verlangt für ein schwarzes belowRight-Profil keine Organisationsfarbe', () => {
@@ -137,7 +137,7 @@ describe('validateSpec', () => {
       kind: 'circle-12', bodyVariant: 'foot-band', labels: { belowRight: 'Bw' },
     }).map((issue) => issue.rule);
     expect(rules).not.toContain('below-right-label-requires-organization');
-    expect(rules).toContain('circle-12-requires-organization');
+    expect(rules).toEqual([]);
   });
 
   it('trennt den offenen G-Kreisvertrag von den exakten farbigen N-Kreisverträgen', () => {
@@ -179,10 +179,10 @@ describe('validateSpec', () => {
         organization: 'feuerwehr', bodyMarks: ['circle-information-stem'],
       },
     ];
+    // Seit dem 2. Oktober 2026 trägt jede Organisation den Kreis; die vertauschten Verträge sind
+    // abgeleitete Füllungen und keine Ablehnung mehr.
     for (const spec of crossedNContracts) {
-      expect(validateSpec(spec).map((issue) => issue.rule), JSON.stringify(spec)).toContain(
-        'circle-12-requires-hilfsorganisation',
-      );
+      expect(validateSpec(spec), JSON.stringify(spec)).toEqual([]);
     }
   });
 
@@ -238,9 +238,7 @@ describe('validateSpec', () => {
     } as SymbolSpec)).toEqual([]);
     expect(validateSpec({
       kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
-    } as SymbolSpec).map((issue) => issue.rule)).toContain(
-      'circle-12-requires-hilfsorganisation',
-    );
+    } as SymbolSpec)).toEqual([]);
 
     for (const spec of [
       { kind: 'vehicle-air', bodyVariant: 'inverted-hull-track' },
@@ -586,13 +584,12 @@ describe('validateSpec', () => {
     ))).toEqual([]);
   });
 
-  it('verlangt an beiden Kreisfassungen immer einen vollständigen topLeft-Metriksatz', () => {
+  it('verlangt an beiden Kreisfassungen einen vollständigen topLeft-Metriksatz, falls einer steht', () => {
+    // Ohne Satz übernimmt `compose()` seit dem 2. Oktober 2026 den F.3.3-Satz (`derive/circle.ts`).
     const withoutMetrics = {
       kind: 'circle-12', organization: 'hilfsorganisation', labels: { topLeft: 'UHS' },
     } as unknown as SymbolSpec;
-    expect(validateSpec(withoutMetrics).map((issue) => issue.rule)).toContain(
-      'circle-top-left-requires-metrics',
-    );
+    expect(validateSpec(withoutMetrics)).toEqual([]);
     expect(validateSpec(circleSpec(
       'raised-gable', '50', { capHeightMm: 2.749893 },
     )).map((issue) => issue.rule)).toContain('top-left-metrics-complete');
@@ -837,38 +834,28 @@ describe('validateSpec', () => {
     })).toEqual([]);
   });
 
-  it('bindet reduced-house auch ohne Label an HiOrg und lehnt jede Variante ab', () => {
+  it('lässt die reduzierte Hauskontur mit jeder Organisation zu und lehnt jede Variante ab', () => {
     const reducedHouse = 'reduced-house' as SymbolSpec['kind'];
     expect(validateSpec({ kind: reducedHouse, organization: 'hilfsorganisation' })).toEqual([]);
     for (const organization of [undefined, 'thw'] as const) {
       expect(validateSpec({
         kind: reducedHouse,
         ...(organization === undefined ? {} : { organization }),
-      }).map((issue) => issue.rule)).toContain('reduced-house-requires-hilfsorganisation');
+      })).toEqual([]);
     }
     expect(validateSpec({
       kind: reducedHouse, bodyVariant: 'raised-gable', organization: 'hilfsorganisation',
     }).map((issue) => issue.rule)).toContain('body-variant-requires-measured-kind');
   });
 
-  it('bindet jeden gemessenen 12-mm-Kreis auch ohne Label an die weiße HiOrg-Fläche', () => {
-    const wrongOrganization = {
-      kind: 'circle-12', organization: 'feuerwehr',
-    } as unknown as SymbolSpec;
-    const missingOrganization = {
-      kind: 'circle-12',
-    } as unknown as SymbolSpec;
-    expect(validateSpec(wrongOrganization).map((issue) => issue.rule)).toContain(
-      'circle-12-requires-hilfsorganisation',
-    );
-    expect(validateSpec(missingOrganization).map((issue) => issue.rule)).toContain(
-      'circle-12-requires-hilfsorganisation',
-    );
-    expect(validateSpec({
-      kind: 'circle-12', bodyVariant: 'raised-gable', organization: 'feuerwehr',
-    } as unknown as SymbolSpec).map((issue) => issue.rule)).toContain(
-      'circle-12-requires-hilfsorganisation',
-    );
+  it('lässt den 12-mm-Kreis mit jeder und ohne Organisation zu (2. Oktober 2026)', () => {
+    for (const spec of [
+      { kind: 'circle-12', organization: 'feuerwehr' },
+      { kind: 'circle-12' },
+      { kind: 'circle-12', bodyVariant: 'raised-gable', organization: 'feuerwehr' },
+    ] as unknown as SymbolSpec[]) {
+      expect(validateSpec(spec), JSON.stringify(spec)).toEqual([]);
+    }
   });
 
   it('begrenzt negative Kreis-Metriken gegen die ViewBox statt gegen die Kreisfläche', () => {

@@ -522,13 +522,15 @@ describe('Anhang N — belegte Ausgabezonen dürfen sich nicht überlagern', () 
   });
 });
 
-describe('Anhang N — farbige Kreisverträge erben keine weißen F.3-Labelmetriken', () => {
+describe('Anhang N — farbige Kreisverträge übernehmen die F.3-Außenlage oben links', () => {
   const f3NormalMetrics = {
     capHeightMm: 2.919225,
     baselineFromBodyTopMm: 1.000254,
     anchorFromBodyLeftMm: -2.984684,
   };
 
+  // Seit dem 2. Oktober 2026 (`derive/circle.ts`): Der Lauf steht wie an F.3.3 außerhalb des
+  // Kreises auf der Ausgabeoberfläche und ist deshalb schwarz, auch auf einem farbigen Kreis.
   it.each([
     {
       kind: 'circle-12',
@@ -540,25 +542,30 @@ describe('Anhang N — farbige Kreisverträge erben keine weißen F.3-Labelmetri
       kind: 'circle-12',
       organization: 'feuerwehr',
       bodyMarks: ['spontaneous-helper-contact-double-arrow'],
-      labels: { topLeft: 'UHS', topLeftMetrics: f3NormalMetrics },
+      labels: { topLeft: 'UHS' },
     },
-    {
+  ] as const)('zeichnet topLeft am farbigen Kreis schwarz an der F.3.3-Lage', (spec) => {
+    const drawing = composeFromCatalog(spec as unknown as SymbolSpec);
+    const run = drawing.children.find((child) => child.type === 'text' && child.role === 'label');
+    expect(run).toMatchObject({ x: 1.015316, y: 5.000254, style: { fill: 'schwarz' } });
+  });
+
+  it.each([
+    [{
       kind: 'circle-12',
       bodyVariant: 'raised-circle-1mm',
       organization: 'zivile-einheiten',
       bodyMarks: ['circle-information-stem'],
       labels: { topLeft: 'UHS', topLeftMetrics: f3NormalMetrics },
-    },
-    {
+    }, /top-left-metrics-require-measured-vehicle-land/],
+    [{
       kind: 'circle-12',
       organization: 'zivile-einheiten',
       bodyMarks: ['spontaneous-helper-collection-arrow'],
       labels: { topLeftMetrics: f3NormalMetrics },
-    },
-  ] as const)('lehnt topLeft und topLeftMetrics am exakten farbigen Kreisvertrag ab', (spec) => {
-    expect(() => composeFromCatalog(spec as unknown as SymbolSpec)).toThrow(
-      /colored-circle-top-left-not-measured/,
-    );
+    }, /top-left-metrics-require-top-left-label/],
+  ] as const)('lehnt einen fremden oder verwaisten Metriksatz weiter ab', (spec, rule) => {
+    expect(() => composeFromCatalog(spec as unknown as SymbolSpec)).toThrow(rule);
   });
 
   it('erhält die realen weißen HiOrg-Kreislabels in normaler und raised-gable-Fassung', () => {

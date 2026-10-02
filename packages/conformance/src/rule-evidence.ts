@@ -152,8 +152,6 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
   ),
   evidence('center-label-within-body', { kind: 'formation', labels: { center: 'X', centerBaselineFromBodyBottomMm: 100 } }, `Grundlinie weit über der Körperoberkante (${CT}).`),
   evidence('chassis-foot-conflict', { kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-1', designation: 'MTW 1' }, `Fahrwerk und Bezeichnung zugleich (${VT}).`),
-  evidence('circle-12-requires-hilfsorganisation', { kind: 'circle-12' }, `12-mm-Kreis ohne Organisation (${VT}).`),
-  evidence('circle-12-requires-organization', { kind: 'circle-12', bodyVariant: 'foot-band' }, `Gebänderter Kreis ohne Organisation (${VT}).`),
   evidence(
     'circle-top-left-anchor-within-viewbox',
     runtime({ kind: 'circle-12', organization: 'hilfsorganisation', labels: { topLeft: 'UHS', topLeftMetrics: { capHeightMm: 2.919225, baselineFromBodyTopMm: 1.000254, anchorFromBodyLeftMm: null } } }),
@@ -163,12 +161,6 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
     'circle-top-left-baseline-within-viewbox',
     { kind: 'circle-12', bodyVariant: 'raised-gable', organization: 'hilfsorganisation', labels: { topLeft: '50', topLeftMetrics: { capHeightMm: 2.749893, baselineFromBodyTopMm: -6.01, anchorFromBodyLeftMm: -2.974002 } } },
     `Kreisgrundlinie oberhalb der ViewBox (${VT}).`,
-  ),
-  evidence('circle-top-left-requires-metrics', { kind: 'circle-12', organization: 'hilfsorganisation', labels: { topLeft: 'UHS' } }, `topLeft am Kreis ohne Metriksatz (${VT}).`),
-  evidence(
-    'colored-circle-top-left-not-measured',
-    { kind: 'circle-12', organization: 'zivile-einheiten', bodyMarks: ['spontaneous-helper-collection-arrow'], labels: { topLeft: 'X' } },
-    `topLeft am farbigen Kreisvertrag (${CT}).`,
   ),
   evidence('designation-not-blank', { kind: 'formation', designation: '   ' }, `Leere Bezeichnung (${VT}).`),
   evidence('designation-too-wide', { kind: 'formation', designation: 'W'.repeat(30) }, 'Dreißig W sprengen die Fußzone. Neu: Kompositionsregel.', 'composeFromCatalog'),
@@ -236,7 +228,6 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
   evidence('label-too-wide', { kind: 'formation', labels: { center: 'W'.repeat(24) } }, 'Mittiger Lauf breiter als seine Box. Neu: Kompositionsregel.', 'composeFromCatalog'),
   evidence('label-unknown-glyph', { kind: 'formation', labels: { center: '☃' } }, 'Schneemann (U+2603) im mittigen Lauf. Neu: Kompositionsregel.', 'composeFromCatalog'),
   evidence('plain-wheel-pair-chassis-conflict', { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', vehicleCategory: 'kfz-kategorie-1' }, `Fahrwerk am Radpaarkörper (${VT}).`),
-  evidence('reduced-house-requires-hilfsorganisation', { kind: 'reduced-house' }, `Reduziertes Haus ohne Organisation (${VT}).`),
   evidence('state-carrier-not-allowed', { kind: 'formation', states: ['person-injured'] }, `Personenzustand an der Formation (${VT}).`),
   evidence(
     'state-group-limit-exceeded',

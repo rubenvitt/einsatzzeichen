@@ -322,6 +322,35 @@ const TOP_LEFT_BASELINE_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
       '`fixedWingVehicleAirProfile` trägt die 7 ohne Kommentar; weder Abschnitt noch Messdatum ' +
       'stehen am Fundort.',
   ),
+  // Abgeleitete Kreislagen (2. Oktober 2026, `derive/circle.ts`).
+  'circle-12/raised-circle-1mm': source(
+    'core/src/derive/circle.ts',
+    'Abgeleitet: der F.3.3-Lauf außerhalb oben links, gegen die angehobene Hülle übertragen.',
+    babz('F.3.3'),
+  ),
+  'circle-12/foot-band': source(
+    'core/src/derive/circle.ts',
+    'Abgeleitet: der F.3.3-Lauf außerhalb oben links an derselben 12-mm-Hülle.',
+    babz('F.3.3'),
+  ),
+  post: source(
+    'core/src/derive/circle.ts',
+    'Abgeleitet: innen auf der Kreissehne, die untere Eckenbox an der Kreismitte gespiegelt; ' +
+      'außerhalb des 14-mm-Kreises bleibt oben links kein Platz.',
+  ),
+  'post/raised-gable': source(
+    'core/src/derive/circle.ts',
+    'Abgeleitet: derselbe abgesenkte 12-mm-Kreis wie F.3.5, Lauf außerhalb oben links.',
+    babz('F.3.5'),
+  ),
+  'post/raised-circle-1mm': source(
+    'core/src/derive/circle.ts',
+    'Abgeleitet: innen auf der Kreissehne wie an der Funktionsstelle.',
+  ),
+  'post/foot-band': source(
+    'core/src/derive/circle.ts',
+    'Abgeleitet: innen auf der Kreissehne wie an der Funktionsstelle.',
+  ),
 };
 
 const TOP_LEFT_BASELINE_INHERITED = source(
@@ -367,6 +396,11 @@ const BELOW_RIGHT_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
     'G.3.5: Bw rechts außen auf (31|29) bei Körperhülle 4…28 mm.',
     babz('G.3.5'),
   ),
+  'post/foot-band': source(
+    'core/src/layout/profiles.ts',
+    'Abgeleitet von G.3.5: Anker absolut auf x 31, Grundlinie 1 mm unter dem 14-mm-Kreis.',
+    babz('G.3.5'),
+  ),
 };
 
 /** Herkunft der Läufe auf der Ausgabeoberfläche unterhalb des Körpers. */
@@ -382,6 +416,12 @@ const SURFACE_LABEL_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
     UNDOCUMENTED_AT_SOURCE +
       '`raisedCircleOneMmProfile` trägt Grundlinie 4 und die Anker −3/+3 ohne Kommentar; weder ' +
       'Abschnitt noch Messdatum stehen am Fundort.',
+  ),
+  'post/raised-circle-1mm': source(
+    'core/src/layout/profiles.ts',
+    'Abgeleitet von N.2.3: dieselben absoluten Lagen (x 1 und 31, Grundlinie 31) gegen die ' +
+      'Hülle 3…29 × 1…27 des angehobenen 13-mm-Kreises.',
+    babz('N.2.3'),
   ),
 };
 
@@ -402,6 +442,11 @@ const BOTTOM_CENTER_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
     'core/src/layout/profiles.ts:490–501',
     'G.3.5: Diesel auf y = 22 bei Körperhülle 4…28 mm, also 6,0 mm über der Unterkante. Der in ' +
       'Pfade umgewandelte Lauf ist in der Referenz schwarz, nicht weiß.',
+    babz('G.3.5'),
+  ),
+  'post/foot-band': source(
+    'core/src/layout/profiles.ts',
+    'Abgeleitet von G.3.5: 6,0 mm über der Unterkante, 2 mm über der Fußbandsehne.',
     babz('G.3.5'),
   ),
 };
@@ -1319,6 +1364,10 @@ export const ZONE_MODEL_BODY_VARIANTS: readonly BodyFormZones[] = Object.freeze(
   zonesFor('circle-12', 'raised-gable'),
   zonesFor('circle-12', 'raised-circle-1mm'),
   zonesFor('circle-12', 'foot-band'),
+  // Abgeleitete Fassungen der Funktionsstelle (`CIRCLE_VARIANT_PAIRS`, 2. Oktober 2026).
+  zonesFor('post', 'raised-gable'),
+  zonesFor('post', 'raised-circle-1mm'),
+  zonesFor('post', 'foot-band'),
 ]);
 
 /** Alle belegten Körperfassungen: die 19 Körperformen und die 14 Variantenzweige. */

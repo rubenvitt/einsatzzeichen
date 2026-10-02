@@ -785,8 +785,12 @@ describe('Körperformen des Anhangs F.3', () => {
     expect(j32Body).toMatchObject({ cx: 16, cy: 18, r: 12 });
   });
 
-  it('fällt mit raised-gable weder auf post noch auf eine andere Körperart zurück', () => {
-    expect(() => baseDrawing('post', raisedGable)).toThrow(/Körpervariante/);
+  it('leitet raised-gable an post aus F.3.5 ab und fällt an anderen Arten nicht zurück', () => {
+    // Seit dem 2. Oktober 2026 (`derive/circle.ts`): die Funktionsstelle mit Giebel ist der
+    // abgesenkte 12-mm-Kreis aus F.3.5; der 14-mm-Kreis ließe über sich keinen Platz.
+    expect(baseDrawing('post', raisedGable).children).toEqual(
+      baseDrawing(circleKind, raisedGable).children,
+    );
     expect(() => baseDrawing('formation', raisedGable)).toThrow(/Körpervariante/);
     expect(baseDrawing(circleKind, 'foot-band').children).toHaveLength(2);
   });
