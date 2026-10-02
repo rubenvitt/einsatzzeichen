@@ -83,6 +83,9 @@ describe('abgeleitete Beschriftungszonen: Übertragung der vermessenen Lagen', (
     const banded = run({ kind: 'vehicle-land', bodyVariant: 'foot-band', organization: 'feuerwehr', labels: { bottomCenter: 'SEG' } }, 'SEG');
     expect(banded.text.y).toBeCloseTo(bodyOf(banded.drawing).maxY - 5, 10);
     expect(banded.drawing.derivations?.[0]).toMatchObject({ part: 'Lage unten mittig über dem Fußband' });
+    // Die Formation mit Fußband erbte die 2,0 mm ungemessen und setzte den Lauf ins Band.
+    const formation = run({ kind: 'formation', bodyVariant: 'foot-band', organization: 'feuerwehr', labels: { bottomCenter: 'SEG' } }, 'SEG');
+    expect(formation.text.y).toBe(21);
   });
 
   it('lässt unten mittig den oberen Läufen ausweichen', () => {

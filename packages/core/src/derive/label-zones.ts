@@ -534,9 +534,18 @@ export function deriveLabelZones(context: LabelZoneContext): DerivedLabelZones {
   }
 
   // --- bottomCenter ---------------------------------------------------------------------------
-  if (labels.bottomCenter !== undefined && measured.bottomCenterBaselineFromBodyBottomMm === undefined) {
-    const bandMm = footBandHeightMm(context, bounds);
-    const offsetMm = bandMm + formation.bottomCenterBaselineFromBodyBottomMm!;
+  const bandMm = footBandHeightMm(context, bounds);
+  const bandOffsetMm = bandMm + formation.bottomCenterBaselineFromBodyBottomMm!;
+  // Die Formation mit Fußband erbt die 2,0 mm der Formation (F.1.18/F.1.20) ungemessen; auf dem
+  // Band stünde der Lauf im Schwarz. Diese geerbte Lage gilt deshalb als nicht vermessen.
+  const inheritedIntoBand = bandMm > 0 &&
+    measured.bottomCenterBaselineFromBodyBottomMm !== undefined &&
+    measured.bottomCenterBaselineFromBodyBottomMm < bandOffsetMm;
+  if (
+    labels.bottomCenter !== undefined &&
+    (measured.bottomCenterBaselineFromBodyBottomMm === undefined || inheritedIntoBand)
+  ) {
+    const offsetMm = bandOffsetMm;
     // Der untere Lauf weicht dem mittigen und den oberen Läufen aus.
     const above = [...(centerBox === undefined ? [] : [centerBox]), ...topBands({ ...measured, ...derived })];
     const placed = placeInBody(

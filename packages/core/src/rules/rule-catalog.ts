@@ -275,7 +275,7 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'above-left-metrics-within-viewbox',
     'engine',
     'label',
-    'Anker und abgeleitete Textbox müssen in der vermessenen Profilbox und in der 32-mm-ViewBox liegen, sonst stünde Text außerhalb der Zeichenfläche.',
+    'Anker und abgeleitete Textbox müssen in der Profilbox der Körperhülle und in der 32-mm-ViewBox liegen, sonst stünde Text außerhalb der Zeichenfläche.',
     'website',
   ),
   entry(
@@ -333,7 +333,7 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'bottom-right-metrics-within-body',
     'engine',
     'label',
-    'Box, Anker und abgeleitete vertikale Schriftmetriken müssen in der vermessenen Körperhülle liegen, sonst stünde der Lauf teilweise außerhalb des Körpers.',
+    'Box, Anker und abgeleitete vertikale Schriftmetriken müssen in der Körperhülle liegen, sonst stünde der Lauf teilweise außerhalb des Körpers.',
     'website',
   ),
   entry(
@@ -410,7 +410,7 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'center-label-within-body',
     'engine',
     'label',
-    'Die aus Grundlinie und Versalhöhe abgeleitete Textbox muss vollständig in der vermessenen Körperhülle liegen, sonst ragte der Lauf über den Körper hinaus.',
+    'Die aus Grundlinie und Versalhöhe abgeleitete Textbox muss vollständig in der Körperhülle liegen, sonst ragte der Lauf über den Körper hinaus.',
     'website',
   ),
   entry(
@@ -723,7 +723,7 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'top-left-metrics-within-body',
     'engine',
     'label',
-    'Anker und abgeleitete vertikale Textbox müssen innerhalb der vermessenen Körperhülle liegen.',
+    'Anker und abgeleitete vertikale Textbox müssen innerhalb der Körperhülle liegen.',
     'core',
   ),
   entry(

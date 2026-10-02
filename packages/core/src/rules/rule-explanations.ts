@@ -147,8 +147,8 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
     title: 'aboveLeft-Lauf muss in der ViewBox bleiben',
     explanation:
       'Aus Anker, Grundlinie und Versalhöhe berechnet die Komposition eine Textbox. Ihr Anker ' +
-      'muss innerhalb der vermessenen Profilbox liegen, die Box selbst vollständig innerhalb der ' +
-      '32-mm-ViewBox. Sonst stünde Text außerhalb der Zeichenfläche und wäre im Bild ' +
+      'muss innerhalb der Profilbox der Körperhülle liegen, die Box selbst vollständig innerhalb ' +
+      'der 32-mm-ViewBox. Sonst stünde Text außerhalb der Zeichenfläche und wäre im Bild ' +
       'abgeschnitten. Rücke Anker oder Grundlinie nach innen oder verkleinere die Versalhöhe.',
   },
   'administrative-level-not-measured': {
@@ -225,9 +225,9 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
     title: 'bottomRight-Textbox muss im Körper liegen',
     explanation:
       'Die vollständige Textbox aus Boxanfang, Boxbreite und den abgeleiteten vertikalen ' +
-      'Schriftmetriken muss innerhalb der vermessenen Körperhülle liegen, und der Anker ' +
-      'innerhalb der Box. Sonst stünde der Lauf teilweise außerhalb des Körpers. Verschiebe Box ' +
-      'oder Anker nach innen oder verkleinere Breite und Versalhöhe.',
+      'Schriftmetriken muss innerhalb der Körperhülle liegen, und der Anker innerhalb der Box. ' +
+      'Sonst stünde der Lauf teilweise außerhalb des Körpers. Verschiebe Box oder Anker nach ' +
+      'innen oder verkleinere Breite und Versalhöhe.',
   },
   'capabilities-pictogram-has-measured-rendition': {
     field: 'capabilities',
@@ -295,7 +295,7 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
     title: 'Boxrand muss Breite übrig lassen',
     explanation:
       'Der Rand wird links und rechts abgezogen; die doppelte Angabe muss kleiner bleiben als ' +
-      'die vermessene Körperbreite, damit eine positive Boxbreite übrig bleibt. Sonst entstünde ' +
+      'die Breite der Körperhülle, damit eine positive Boxbreite übrig bleibt. Sonst entstünde ' +
       'eine Box ohne Fläche, in der kein Text stünde. Verkleinere `labels.centerBoxMarginMm`.',
   },
   'center-cap-height-positive': {
@@ -318,10 +318,10 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
     field: 'labels',
     title: 'Mittige Textbox muss im Körper liegen',
     explanation:
-      'Erlaubt das Profil eine eigene mittige Grundlinie, prüft die Regel die daraus und aus der ' +
-      'Versalhöhe abgeleitete Textbox gegen die vermessene Körperhülle. Sie muss vollständig ' +
-      'darin liegen, sonst ragte der Lauf über den Körper hinaus. Rücke die Grundlinie näher an ' +
-      'die Unterkante oder verkleinere die Versalhöhe.',
+      'Bei einer eigenen mittigen Grundlinie prüft die Regel die daraus und aus der Versalhöhe ' +
+      'abgeleitete Textbox gegen die Körperhülle, vermessen oder aus dem Körperprimitiv. Sie muss ' +
+      'vollständig darin liegen, sonst ragte der Lauf über den Körper hinaus. Rücke die ' +
+      'Grundlinie näher an die Unterkante oder verkleinere die Versalhöhe.',
   },
   'chassis-foot-conflict': {
     field: 'vehicleCategory',
@@ -690,10 +690,10 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
     field: 'labels',
     title: 'topLeft-Lauf muss in der Körperhülle liegen',
     explanation:
-      'Am Festflügel-Luftfahrzeug müssen der Anker und die aus Grundlinie und Versalhöhe ' +
-      'abgeleitete vertikale Textbox innerhalb der vermessenen Körperhülle liegen, mit 2 mm ' +
-      'Innenmarge an der rechten Kante. Sonst stünde der Lauf über dem Rumpf. Rücke Anker oder ' +
-      'Grundlinie nach innen oder verkleinere die Versalhöhe.',
+      'An jeder Körperform außer dem F.2-Landfahrzeug und den F.3-Kreisfassungen müssen der ' +
+      'Anker und die aus Grundlinie und Versalhöhe abgeleitete vertikale Textbox innerhalb der ' +
+      'Körperhülle liegen, mit 2 mm Innenmarge an der rechten Kante. Sonst stünde der Lauf über ' +
+      'dem Körper. Rücke Anker oder Grundlinie nach innen oder verkleinere die Versalhöhe.',
   },
   'vehicle-category-requires-vehicle': {
     field: 'vehicleCategory',
