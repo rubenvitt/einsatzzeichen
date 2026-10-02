@@ -407,6 +407,25 @@ export function circleCornerRuns(
       boxWidthMm: right - boxLeft,
     };
   }
+  // Unten mittig und rechts unterhalb sind nur am gebänderten 12-mm-Kreis vermessen (G.3.5); an
+  // jeder anderen Kreisfassung stehen sie übertragen im Profil und werden hier vermerkt.
+  const measuredBand = kind === 'circle-12' && variant === 'foot-band';
+  if (labels.bottomCenter !== undefined && !measuredBand) {
+    noteDerivation({
+      dimension: 'labels.bottomCenter',
+      part: `Lauf unten mittig an ${kind}/${variant ?? 'normal'}`,
+      basis: 'transferred',
+      from: 'G.3.5 („Diesel“ 6 mm über der Unterkante)',
+    });
+  }
+  if (labels.belowRight !== undefined && !measuredBand) {
+    noteDerivation({
+      dimension: 'labels.belowRight',
+      part: `Lauf rechts unterhalb an ${kind}/${variant ?? 'normal'}`,
+      basis: 'transferred',
+      from: 'G.3.5 („Bw“ 1 mm unter dem Kreis, Anker x 31)',
+    });
+  }
   if (labels.topLeft !== undefined && !circleTopLeftOnSurface(kind, variant)) {
     note('Lauf oben links auf der Kreissehne');
     const left = cx - upperHalf;

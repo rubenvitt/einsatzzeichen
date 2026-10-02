@@ -298,3 +298,28 @@ describe('Kreiskappe circle-solid-cap-4mm', () => {
     }
   });
 });
+
+describe('Unten mittig und rechts unterhalb an ungebänderten Kreisen (von G.3.5 übertragen)', () => {
+  it.each([
+    ['post', undefined],
+    ['circle-12', undefined],
+    ['circle-12', 'raised-gable'],
+  ] as const)('zeichnet beide Läufe an %s/%s in der Fläche und vermerkt sie', (kind, bodyVariant) => {
+    const drawing = drawSymbol({
+      kind, ...(bodyVariant === undefined ? {} : { bodyVariant }), organization: 'thw',
+      labels: { bottomCenter: 'Diesel', belowRight: 'Bw' },
+    });
+    const [center, below] = labelRuns(drawing);
+    const body = circleBody(drawing);
+    expect(center?.y).toBeCloseTo(body.cy + body.r - 6, 6);
+    expect(center?.style?.fill).toBe('weiss');
+    expectInkInsideCircle(center!, body);
+    expect(below).toMatchObject({ x: 31, y: body.cy + body.r + 1, style: { fill: 'schwarz' } });
+    const ink = measureTextRun(below!, ARIMO_TEXT_METRICS);
+    expect(below!.y + ink.inkDescentMm).toBeLessThanOrEqual(32);
+    expect(drawing.derivations?.map((note) => note.dimension)).toEqual([
+      'labels.bottomCenter',
+      'labels.belowRight',
+    ]);
+  });
+});

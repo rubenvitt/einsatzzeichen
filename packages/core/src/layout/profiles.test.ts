@@ -205,7 +205,9 @@ describe('Layoutprofile', () => {
       anchorFromBodyRightMm: 3,
       ink: 'black',
     });
-    expect(profileFor('circle-12').belowRight).toBeUndefined();
+    // Seit dem 2. Oktober 2026 von G.3.5 auf die übrigen Kreisfassungen übertragen
+    // (`derive/circle.ts` vermerkt es an der Zeichnung).
+    expect(profileFor('circle-12').belowRight).toEqual(circleFootBand.belowRight);
     expect(profileFor('vehicle-water', 'raised-hull').belowRight).toEqual({
       baselineFromBodyBottomMm: 4.01,
       anchorFromBodyRightMm: 0.5618,
@@ -214,8 +216,9 @@ describe('Layoutprofile', () => {
 
     const raisedCircle = profileFor('circle-12', 'raised-circle-1mm' as BodyVariantId);
     expect(circleFootBand.surfaceLabels).toBeUndefined();
-    expect(raisedCircle.bottomCenterBaselineFromBodyBottomMm).toBeUndefined();
+    expect(raisedCircle.bottomCenterBaselineFromBodyBottomMm).toBe(6);
     expect(raisedCircle.bottomCenterInk).toBeUndefined();
+    // Rechts unterhalb liegt am angehobenen Kreis der Streifen der Oberflächenläufe.
     expect(raisedCircle.belowRight).toBeUndefined();
   });
 

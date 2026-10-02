@@ -489,6 +489,15 @@ const circleBodyProfile: LayoutProfile = {
   // nicht fehlt.
   centerBaselineFromBodyBottomMm: 8,
   bottomLabelBaselineFromBodyBottomMm: 2,
+  // Übertragen von G.3.5 (2. Oktober 2026, `derive/circle.ts`): unten mittig 6 mm über der
+  // Unterkante in der Körpertinte, rechts unterhalb 1 mm unter und 3 mm rechts der Hülle schwarz
+  // auf der Oberfläche. Vermessen sind beide nur am gebänderten Kreis.
+  bottomCenterBaselineFromBodyBottomMm: 6,
+  belowRight: {
+    baselineFromBodyBottomMm: 1,
+    anchorFromBodyRightMm: 3,
+    ink: 'black',
+  },
   // Das gemessene Negativ oben bleibt bestehen; seit dem 2. Oktober 2026 wird die Lage abgeleitet
   // statt abgelehnt: verschieben wie C.1.1, sonst von oben verkleinern wie D.3.7.
   place(body, headBottomMm) {
@@ -505,6 +514,13 @@ const circleBodyProfile: LayoutProfile = {
 const postProfile: LayoutProfile = {
   ...circleBodyProfile,
   topLeftBaselineFromBodyTopMm: circleInnerTopLeftBaselineFromBodyTopMm(14),
+  // G.3.5 setzt „Bw“ auf (31|29); an der Hülle 2…30 bliebe x 33 außerhalb der Fläche. Der Anker
+  // bleibt absolut auf 31.
+  belowRight: {
+    baselineFromBodyBottomMm: 1,
+    anchorFromBodyRightMm: 1,
+    ink: 'black',
+  },
 };
 
 /**
@@ -541,6 +557,9 @@ const raisedCircleOneMmProfile: LayoutProfile = {
     leftAnchorFromBodyLeftMm: -3,
     rightAnchorFromBodyRightMm: 3,
   },
+  // Rechts unterhalb liegt hier der Streifen der Oberflächenläufe (N.2.3); die von G.3.5
+  // übertragene Zone stieße auf sie und entfällt.
+  belowRight: undefined,
   // Der Kreis weicht einer Kopfzone nicht nach unten aus: darunter stehen die Oberflächenläufe.
   place(body, headBottomMm) {
     if (headBottomMm === null) return body;
