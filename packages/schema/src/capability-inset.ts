@@ -68,12 +68,18 @@ export type CapabilityInsetClaim = 'holds' | 'refuted';
  *   (LFH-787): Hat das Paar aus Fähigkeit und Körperfassung eine vermessene Fassung, gilt
  *   `measured-rendition-only`, die Boxfassung ist dort also abgelehnt und das Piktogramm kommt
  *   über `bodyMarks`. Ohne vermessene Fassung gilt `unscaled-if-fits`.
+ * - `measured-rendition-else-unscaled-if-fits-else-fitted` — seit dem 2. Oktober 2026 (Entscheidung
+ *   „ableiten statt ablehnen“): Hat das Paar eine vermessene Fassung, zeichnet `compose()` sie
+ *   (die Boxfähigkeit wird wie `bodyMarks` gezeichnet); sonst die Einzeldarstellung unverändert,
+ *   wo sie nachweislich in den Körper passt, und sonst gleichmäßig ins Innenfeld eingepasst
+ *   (`uniform-scale-to-box` an der Körperform, als Ableitung vermerkt). Abgelehnt wird nichts.
  */
 export type CapabilityInsetPolicy =
   | 'measured-rendition-only'
   | 'unscaled-if-fits'
   | 'uniform-scale-to-box'
-  | 'measured-rendition-else-unscaled-if-fits';
+  | 'measured-rendition-else-unscaled-if-fits'
+  | 'measured-rendition-else-unscaled-if-fits-else-fitted';
 
 /**
  * Die Entscheidung, was für die Boxfassung gilt: an Paaren ohne vermessene Fassung und, seit
@@ -85,8 +91,11 @@ export interface CapabilityInsetDecision {
   readonly target: CapabilityInsetPolicy;
   /** Was bis dahin gilt und von `validateSpec` geprüft wird. */
   readonly inForce: CapabilityInsetPolicy;
-  /** Die Regelkennung, mit der `inForce` an Paaren ohne vermessene Fassung geprüft wird. */
-  readonly rule: string;
+  /**
+   * Die Regelkennung, mit der `inForce` an Paaren ohne vermessene Fassung geprüft wird. Fehlt,
+   * wenn `inForce` nichts ablehnt (`measured-rendition-else-unscaled-if-fits-else-fitted`).
+   */
+  readonly rule?: string;
   /**
    * Die Regelkennung, mit der `validateSpec` die Boxfassung an Paaren mit vermessener Fassung
    * ablehnt. Gesetzt, wenn `inForce` zwischen beiden Fällen unterscheidet

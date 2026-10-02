@@ -8,6 +8,7 @@ import {
 } from '@einsatzzeichen/schema';
 import { parametricBlock } from './blocks/parametric.js';
 import { drawSymbol } from './default-ports.js';
+import { collectDerivations } from './derive/record.js';
 import { animalStateDrawing } from './geometry/animal-state.js';
 import { STRENGTH_LABELS } from './geometry/labels.js';
 import { lineDrawing, movementDrawing } from './geometry/parametric.js';
@@ -109,8 +110,9 @@ function drawingOf(spec: FreestandingSpec): Drawing {
  *
  * - **Regelverstoß** → `CompositionError` mit den Meldungen aus `validateFreestandingSpec`, jede
  *   über `explainIssue` erklärbar. Geprüft wird vor dem Zeichnen.
- * - **Vermessungslücke** → `NotMeasuredError` aus der Zeichenfunktion, etwa ein Wetterpaar, das
- *   weder ein Original zeigt noch eine Entscheidung trägt, oder eine Stärke außer dem Zug an 2.20.
+ * - **Abgeleitet** → die Zeichnung trägt `derivations`: ein Wetterpaar ohne belegte Anordnung, eine
+ *   Stärke außer dem Zug an 2.20, Regen, Hagel oder Gewitter an der Wolke (Eigentümerentscheide vom
+ *   29.09. und 02.10.2026).
  * - **Verlauf, der nicht passt** (zu kurz, aus der Fläche ragend, zu spitzer Knick) → ein
  *   gewöhnliches `Error` aus der Zeichenfunktion.
  *
@@ -121,12 +123,15 @@ function drawingOf(spec: FreestandingSpec): Drawing {
 export function drawFreestanding(spec: FreestandingSpec, options: FreestandingDrawOptions = {}): Drawing {
   const issues = validateFreestandingSpec(spec);
   if (issues.length > 0) throw new CompositionError(issues);
-  const { viewBox, children } = drawingOf(spec);
+  // Abgeleitete Teile (Stärken an 2.20, Wetterpaare) melden sich wie bei `drawSymbol` über
+  // `Drawing.derivations`; ohne Ableitung bleibt das Feld weg.
+  const { viewBox, children, derivations } = collectDerivations(() => drawingOf(spec));
   return {
     viewBox,
     children,
     ...(options.title === undefined ? {} : { title: options.title }),
     description: options.description ?? describeFreestandingSpec(spec),
+    ...(derivations === undefined ? {} : { derivations }),
   };
 }
 

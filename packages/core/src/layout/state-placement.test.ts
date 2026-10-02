@@ -227,10 +227,9 @@ describe('placeStates: Hinweis aus 5.8.1 an der Gefahr (5.8.1.13_2, 5.8.1.14_2)'
   });
 });
 
-describe('placeStates: unbelegte Lagen', () => {
-  it('wirft für Werte, die kein Original an einem Träger zeigt, mit scope "value"', () => {
+describe('placeStates: abgeleitete Lagen (Entscheidung vom 02.10.2026)', () => {
+  it('leitet Werte ohne Trägerbeleg ab, statt zu werfen, und kennzeichnet sie als übertragen', () => {
     const values: StateId[] = [
-      'tactical-rescue',
       'flooded-area',
       'explosion-hazard',
       'activity-slightly-increased-outage-up-to-25-percent',
@@ -239,37 +238,47 @@ describe('placeStates: unbelegte Lagen', () => {
       'route-closed',
     ];
     for (const value of values) {
-      expectNotMeasured(() => placeStates({ carrier: person, states: [value] }), 'value');
+      const placement = placeStates({ carrier: person, states: [value] });
+      const part = placement.parts.find((candidate) => candidate.value === value);
+      expect(part?.basis, value).toBe('transferred');
+      expect(part?.zone, value).toBe(value === 'damaged' ? 'body' : 'state-margin');
+      expect(placement.carrier?.basis, value).toBe('transferred');
     }
   });
 
-  it('wirft für jede Tendenz mit scope "value": kein Original zeigt eine an einem Träger', () => {
-    expectNotMeasured(
-      () => placeStates({ carrier: person, states: [], tendency: 'tendency-rising' }),
-      'value',
-    );
+  it('leitet jede Tendenz in die Randlage rechts ab (`tendency-margin`)', () => {
+    const placement = placeStates({ carrier: person, states: [], tendency: 'tendency-rising' });
+    const [tendency] = partsOf(placement, 'tendency-margin');
+    expect(tendency?.value).toBe('tendency-rising');
+    expect(tendency?.basis).toBe('transferred');
   });
 
-  it('wirft für Zusammenstellungen, die kein Original zeigt, mit scope "combination"', () => {
-    const cases: { kind: 'person' | 'hazard' | 'formation'; states: StateId[] }[] = [
+  it('leitet Zusammenstellungen ab, die kein Original zeigt', () => {
+    const cases: { kind: 'person' | 'formation'; states: StateId[] }[] = [
       { kind: 'formation', states: ['suspected-situation'] },
-      { kind: 'hazard', states: ['person-injured'] },
       { kind: 'person', states: ['suspected-situation', 'acute-situation'] },
-      { kind: 'person', states: ['person-injured', 'person-rescued'] },
       { kind: 'person', states: ['person-in-water-danger', 'suspected-situation'] },
       { kind: 'person', states: ['person-transported', 'acute-situation'] },
     ];
     for (const { kind, states } of cases) {
-      expectNotMeasured(() => placeStates({ carrier: { kind }, states }), 'combination');
+      const placement = placeStates({ carrier: { kind }, states });
+      expect(placement.carrier?.basis, states.join(' + ')).toBe('transferred');
+      expect(partsOf(placement, 'state-margin').length, states.join(' + ')).toBeGreaterThan(0);
     }
+    const lowered = placeStates({
+      carrier: { kind: 'person', variant: 'compact-person-diamond-26mm-lowered-2mm' },
+      states: ['person-injured'],
+    });
+    expect(lowered.carrier?.basis).toBe('transferred');
+  });
+
+  it('wirft weiter, wo die Systematik widerspricht: Personenzustand an Nicht-Person, zwei Personenzustände, Taktik', () => {
+    expectNotMeasured(() => placeStates({ carrier: hazard, states: ['person-injured'] }), 'combination');
     expectNotMeasured(
-      () =>
-        placeStates({
-          carrier: { kind: 'person', variant: 'compact-person-diamond-26mm-lowered-2mm' },
-          states: ['person-injured'],
-        }),
+      () => placeStates({ carrier: person, states: ['person-injured', 'person-rescued'] }),
       'combination',
     );
+    expectNotMeasured(() => placeStates({ carrier: person, states: ['tactical-rescue'] }), 'value');
   });
 
   it('lehnt Werte ab, die nicht in `states` gehören, mit einem gewöhnlichen Fehler', () => {

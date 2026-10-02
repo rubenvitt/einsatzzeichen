@@ -16,8 +16,10 @@ import {
   type VehicleCategoryId,
 } from '@einsatzzeichen/schema';
 import { baseDrawing } from '../geometry/base-symbols.js';
+import { isDerivedBodyVariant } from '../derive/body-variant-pairs.js';
 import { organizationColor } from '../geometry/organizations.js';
 import { MEASURED_VEHICLE_CATEGORIES, vehicleChassis } from '../geometry/vehicle-categories.js';
+import { drawSymbol } from '../default-ports.js';
 
 /**
  * Laufzeit-Gate des Bausteinregisters für Grundzeichen, Farbe und Fahrwerk (LFH-564).
@@ -127,16 +129,18 @@ function expectedColorPlace(valueId: string): string {
   return place(ORGANIZATION_FILE, key, key);
 }
 
-/** Ein `case`-Zweig von `vehicleChassis()`: vom `case` bis zur ersten Anweisung, die mit `;` endet. */
+/**
+ * Ein `case`-Zweig von `vehicleChassis()`: vom `case` bis zum Ende seiner `return`- oder
+ * `throw`-Anweisung. Seit dem 2. Oktober 2026 steht im Zweig des Amphibienfahrzeugs vor dem
+ * `return` ein `noteDerivation({…});` — die erste Anweisung mit `;` ist dort nicht mehr die, die
+ * zeichnet.
+ */
 function expectedChassisPlace(valueId: string): string {
   const lines = sourceLines(CHASSIS_FILE);
   const start = findLine(lines, new RegExp(`^ +case '${escape(valueId)}':$`));
   let end = start + 1;
-  while (end < lines.length) {
-    const line = (lines[end] ?? '').trim();
-    if (!line.startsWith('//') && line.endsWith(';')) break;
-    end += 1;
-  }
+  while (end < lines.length && !/^(?:return|throw)\b/.test((lines[end] ?? '').trim())) end += 1;
+  while (end < lines.length && !(lines[end] ?? '').trim().endsWith(';')) end += 1;
   return place(CHASSIS_FILE, start, end);
 }
 
@@ -156,8 +160,10 @@ describe('Bausteinregister gegen Katalog: Grundzeichen', () => {
     }
   });
 
-  it('führt jede Variante, die der Katalog zeichnet, und keine andere', () => {
+  it('führt jede Variante, die der Katalog vermessen zeichnet, und keine andere', () => {
+    // Abgeleitete Paare (`derive/body-variant-pairs.ts`) sind keine Bausteine des Registers.
     const drawn = variantPairs()
+      .filter(([kind, variant]) => !isDerivedBodyVariant(kind, variant))
       .filter(([kind, variant]) => resolves(() => baseDrawing(kind, variant)))
       .map(([kind, variant]) => `${kind}/${variant}`);
     const registered = entries
@@ -206,12 +212,15 @@ describe('Bausteinregister gegen Katalog: Farbe', () => {
 describe('Bausteinregister gegen Katalog: Fahrwerk', () => {
   const entries = BLOCK_REGISTER.chassis;
 
-  it('löst jeden Eintrag so auf, wie sein Messstand sagt', () => {
+  it('löst jeden Eintrag auf; nur die nicht vermessenen melden eine Ableitung', () => {
+    // Seit dem 02.10.2026 zeichnet `vehicleChassis()` auch das Amphibienfahrzeug (Wellenlinie aus
+    // der Strichhülle konstruiert). Der Messstand im Register bleibt eine Aussage über die
+    // Referenz; an der Zeichnung zeigt er sich als Ableitungsnotiz.
     for (const entry of entries) {
       const id = entry.valueId as VehicleCategoryId;
-      expect(resolves(() => vehicleChassis(id)), entry.id).toBe(
-        entry.binding.status === 'measured',
-      );
+      expect(resolves(() => vehicleChassis(id)), entry.id).toBe(true);
+      const drawing = drawSymbol({ kind: 'vehicle-land', vehicleCategory: id });
+      expect(drawing.derivations === undefined, entry.id).toBe(entry.binding.status === 'measured');
     }
   });
 

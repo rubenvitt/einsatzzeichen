@@ -9,6 +9,7 @@ import type {
   ZoneBoundsMm,
 } from '@einsatzzeichen/schema';
 import { boundsOfMm } from '../bounds.js';
+import { deriveStatePlacement } from '../derive/states.js';
 import type { CatalogPictogramDefinition } from '../geometry/pictograms/catalog-definition.js';
 import { STATE_PICTOGRAMS } from '../geometry/pictograms/states/index.js';
 import { NotMeasuredError } from '../not-measured.js';
@@ -43,7 +44,7 @@ export {
  * abgelesen am 29. September 2026, Geometrie eigenständig konstruiert; Befunde und Fragen in
  * `docs/decisions/2026-09-28-lfh-565-kapitel-5-8-bausteine.md`, Nachtrag vom 29. September 2026.
  *
- * **Was die 661 Referenzdateien an einem Träger zeigen — und nur das wird hier gezeichnet:**
+ * **Was die 661 Referenzdateien an einem Träger zeigen — das ist vermessen:**
  *
  * - 5.8.8 an der Personenraute: jede Darstellung bringt ihre Raute mit, in einer von drei Lagen
  *   (`PERSON_STATE_FRAMES`). Die Raute ersetzt den 30-mm-Körper des Grundzeichens 1.2.
@@ -51,15 +52,17 @@ export {
  *   Person in `5.8.1_Beispiel 1` bis `3`, an der Gefahr in `5.8.1.13_…_2`, `5.8.1.14_…_2` und
  *   `M.6` (`STATE_HINT_LAYOUTS`).
  *
- * Alles andere — Taktik und Gefahrenhinweise 5.8.1.1 bis 5.8.1.12, Aktivität 5.8.2, Tendenz 5.8.3,
- * Schadensgrad 5.8.4 an einem Grundzeichen, Brandphase 5.8.5, Zugang 5.8.9 — zeigt kein Original an
- * einem Träger. `placeStates()` wirft dafür `NotMeasuredError` und rät keine Lage.
+ * Alles andere — Gefahrenhinweise 5.8.1.5 bis 5.8.1.12, Aktivität 5.8.2, Tendenz 5.8.3,
+ * Schadensgrad 5.8.4 an einem Grundzeichen, Brandphase 5.8.5, Zugang 5.8.9, zwei Hinweise, jeder
+ * andere Träger — zeigt kein Original an einem Träger. Seit der Entscheidung des Eigentümers vom
+ * 02.10.2026 wird es aus den belegten Lagen abgeleitet (`derive/states.ts`) und als abgeleitet
+ * gekennzeichnet; die Zeichnung des Zustands bleibt dabei die vermessene, nur ihre Lage ist
+ * übertragen.
  *
  * **Die Funktion prüft Lagen, nicht Zulässigkeit.** Ob ein Zustand an einem Träger stehen darf und
  * wie viele zugleich, prüft seit LFH-577 `validateSpec` an `SymbolSpec.states` (Regeln
  * `state-carrier-not-allowed`, `state-group-limit-exceeded`, `state-tactics-not-allowed`,
- * `state-value-not-attachable`); `compose()` ruft danach diese Funktion. Hier wird nur gesagt, ob
- * die Zusammenstellung vermessen ist.
+ * `state-value-not-attachable`); `compose()` ruft danach diese Funktion.
  */
 
 /**
@@ -104,8 +107,11 @@ export interface PlacedStateCarrier {
 export interface PlacedStatePart {
   readonly value: StateId;
   readonly group: StateGroupId;
-  /** `body` auf oder um den Träger, `state-margin` in der Randlage daneben. */
-  readonly zone: 'body' | 'state-margin';
+  /**
+   * `body` auf oder um den Träger, `state-margin` in der Randlage links daneben,
+   * `tendency-margin` in der (abgeleiteten) Randlage der Tendenz rechts daneben.
+   */
+  readonly zone: 'body' | 'state-margin' | 'tendency-margin';
   /** Nur bei den Eckmarken aus 5.8.8. */
   readonly corner?: PersonStateCorner;
   readonly primitives: readonly Primitive[];
@@ -141,7 +147,7 @@ const GROUP_OF_SECTION: Readonly<Record<string, StateGroupId>> = {
   '5.8.9': 'access',
 };
 
-function definitionOf(value: StateId, variant: 'primary' | 'alternative'): CatalogPictogramDefinition {
+export function definitionOf(value: StateId, variant: 'primary' | 'alternative'): CatalogPictogramDefinition {
   const found = STATE_PICTOGRAMS.find(
     (definition) => definition.id === `state.${value}` && definition.variant === variant,
   );
@@ -149,14 +155,14 @@ function definitionOf(value: StateId, variant: 'primary' | 'alternative'): Catal
   return found;
 }
 
-function groupOf(value: StateId): StateGroupId {
+export function groupOf(value: StateId): StateGroupId {
   const section = definitionOf(value, 'primary').section.split('.').slice(0, 3).join('.');
   const group = GROUP_OF_SECTION[section];
   if (group === undefined) throw new Error(`Zustand ohne Gruppe: ${value} (${section})`);
   return group;
 }
 
-const HINTS: readonly StateId[] = ['suspected-situation', 'acute-situation'];
+export const HINTS: readonly StateId[] = ['suspected-situation', 'acute-situation'];
 
 // ---------------------------------------------------------------------------------------------
 // Abbildung von Primitiven: verschieben, verkleinern, umfärben
@@ -164,7 +170,7 @@ const HINTS: readonly StateId[] = ['suspected-situation', 'acute-situation'];
 
 const round3 = (value: number): number => Math.round(value * 1000) / 1000;
 
-interface Mapping {
+export interface Mapping {
   /** Punkt, um den verkleinert wird. */
   readonly originX: number;
   readonly originY: number;
@@ -185,7 +191,7 @@ function mapY(m: Mapping, y: number): number {
   return round3(m.toY + (y - m.originY) * m.scale);
 }
 
-function mapStyle(m: Mapping, style: Primitive['style']): Primitive['style'] {
+export function mapStyle(m: Mapping, style: Primitive['style']): Primitive['style'] {
   if (style === undefined) return undefined;
   const swap = <T>(color: T): T =>
     m.recolor !== undefined && color === m.recolor.from ? (m.recolor.to as T) : color;
@@ -218,7 +224,7 @@ function mapPath(m: Mapping, d: string): string {
  * Eine gedrehte Form oder eine Gruppe käme hier nur durch eine neue Zeichnung an; sie soll dann
  * sichtbar scheitern, statt still falsch zu stehen.
  */
-function mapPrimitive(m: Mapping, primitive: Primitive): Primitive {
+export function mapPrimitive(m: Mapping, primitive: Primitive): Primitive {
   if (primitive.transform !== undefined) {
     throw new Error(`Zustandsplatzierung: Primitiv mit transform nicht abbildbar (${primitive.type}).`);
   }
@@ -289,7 +295,7 @@ function mapPrimitive(m: Mapping, primitive: Primitive): Primitive {
 // Personenzustand 5.8.8
 // ---------------------------------------------------------------------------------------------
 
-type PersonFrameId = keyof typeof PERSON_STATE_FRAMES;
+export type PersonFrameId = keyof typeof PERSON_STATE_FRAMES;
 
 function sameHull(a: ZoneBoundsMm, b: ZoneBoundsMm): boolean {
   return (
@@ -310,7 +316,7 @@ function within(inner: ZoneBoundsMm, outer: ZoneBoundsMm): boolean {
   );
 }
 
-interface PersonDrawing {
+export interface PersonDrawing {
   readonly frame: PersonFrameId;
   readonly diamond: Primitive;
   readonly body: readonly Primitive[];
@@ -323,7 +329,7 @@ interface PersonDrawing {
  * ist in jeder Zeichnung das erste Primitiv; ihre Hülle bestimmt die Lage, und eine Hülle, die zu
  * keiner vermessenen Lage passt, ist ein Programmfehler.
  */
-function personDrawing(value: StateId): PersonDrawing {
+export function personDrawing(value: StateId): PersonDrawing {
   const definition = definitionOf(value, 'primary');
   const [diamond, ...marks] = definition.primitives;
   if (diamond === undefined || diamond.type !== 'polyline') {
@@ -352,7 +358,7 @@ function personDrawing(value: StateId): PersonDrawing {
   };
 }
 
-function personParts(
+export function personParts(
   value: StateId,
   drawing: PersonDrawing,
   map: (primitive: Primitive) => Primitive,
@@ -377,7 +383,7 @@ function personParts(
   return parts;
 }
 
-const IDENTITY: Mapping = { originX: 0, originY: 0, scale: 1, toX: 0, toY: 0, strokeScale: 1 };
+export const IDENTITY: Mapping = { originX: 0, originY: 0, scale: 1, toX: 0, toY: 0, strokeScale: 1 };
 
 // ---------------------------------------------------------------------------------------------
 // Hinweis 5.8.1.13 / 5.8.1.14
@@ -387,7 +393,7 @@ const IDENTITY: Mapping = { originX: 0, originY: 0, scale: 1, toX: 0, toY: 0, st
  * Die Hinweismarke aus der Alternativdarstellung (5.8.1.13_2 bzw. 5.8.1.14_2): alles außer dem
  * Dreieck, das dort das erste Primitiv ist. An der Person verschoben und schwarz gefärbt.
  */
-function hintMark(hint: StateHintId, layout: StateHintLayout): readonly Primitive[] {
+export function hintMark(hint: StateHintId, layout: StateHintLayout): readonly Primitive[] {
   const [, ...mark] = definitionOf(hint, 'alternative').primitives;
   const sourceAxis = STATE_HINT_LAYOUTS.hazard.markAxisXMm[hint];
   const shift: Mapping = {
@@ -401,7 +407,7 @@ function hintMark(hint: StateHintId, layout: StateHintLayout): readonly Primitiv
   });
 }
 
-function hazardTriangle(hint: StateHintId): Primitive {
+export function hazardTriangle(hint: StateHintId): Primitive {
   const [triangle] = definitionOf(hint, 'alternative').primitives;
   if (triangle === undefined) throw new Error(`5.8.1-Alternative ohne Dreieck: ${hint}`);
   return triangle;
@@ -411,18 +417,7 @@ function hazardTriangle(hint: StateHintId): Primitive {
 // Einstieg
 // ---------------------------------------------------------------------------------------------
 
-const NO_CARRIER_EVIDENCE: Partial<Record<StateGroupId, string>> = {
-  activity: 'Kein Original zeigt einen Aktivitäts- oder Ausfallgrad (5.8.2) an einem Träger.',
-  damage:
-    'Kein Original zeigt einen Schadensgrad (5.8.4) an einem Grundzeichen; belegt ist er nur über ' +
-    'dem Deichprofil aus Anhang L (L.8, L.9).',
-  fire:
-    'Kein Original zeigt eine Brandphase (5.8.5) an einem Träger; die Flammen in Anhang M sind ' +
-    'eine eigene Figur.',
-  access: 'Kein Original zeigt einen Zugangszustand (5.8.9) an einem Träger.',
-};
-
-function isPersonCarrier(carrier: StateCarrierInput): boolean {
+export function isPersonCarrier(carrier: StateCarrierInput): boolean {
   return (
     carrier.kind === 'person' &&
     (carrier.variant === undefined || carrier.variant === 'compact-person-diamond-26mm')
@@ -434,17 +429,12 @@ function carrierName(carrier: StateCarrierInput): string {
 }
 
 /**
- * Platziert Zustände und Tendenz an einem Träger.
- *
- * Wirft `NotMeasuredError` mit `scope: 'value'`, wenn kein Original den Wert an irgendeinem Träger
- * zeigt, und mit `scope: 'combination'`, wenn die Zusammenstellung fehlt, ein anderer Träger oder
- * eine andere Auswahl sie aber trägt. Wetter (5.8.7) und Tier (5.8.6) sind freistehend und gehören
- * nicht in `states`; eine Tendenz gehört ins Feld `tendency` — beides ist eine ungültige Eingabe
- * und wirft ein gewöhnliches `Error`.
+ * Prüft, was keine Lage, sondern eine falsche Eingabe oder eine Doppelung der Systematik ist.
+ * `validateSpec` lehnt dieselben Fälle vorher mit Regel ab; wer `placeStates()` unmittelbar ruft,
+ * bekommt hier denselben Befund als Wurf.
  */
-export function placeStates(input: StatePlacementInput): StatePlacement {
+function assertPlaceable(input: StatePlacementInput): void {
   const { carrier, states, tendency } = input;
-
   for (const value of states) {
     const group = groupOf(value);
     if (group === 'tendency') {
@@ -456,58 +446,77 @@ export function placeStates(input: StatePlacementInput): StatePlacement {
           'eigene Spec-Art, nicht in "states".',
       );
     }
-  }
-  if (tendency !== undefined && !TENDENCY_IDS.includes(tendency)) {
-    throw new Error(`"${String(tendency)}" ist keine Tendenz aus 5.8.3.`);
-  }
-
-  // Zuerst die Werte, die an keinem Träger vermessen sind: eine andere Auswahl hilft nicht.
-  for (const value of states) {
-    const group = groupOf(value);
-    const reason = NO_CARRIER_EVIDENCE[group];
-    if (reason !== undefined) throw new NotMeasuredError(`${value}: ${reason}`, 'value');
-    if (group === 'tactics-hazards' && !HINTS.includes(value)) {
+    if (group === 'tactics-hazards' && TACTICS.includes(value)) {
       throw new NotMeasuredError(
-        `${value}: Kein Original zeigt Taktik oder Gefahrenhinweis 5.8.1.1 bis 5.8.1.12 an einem ` +
-          'Träger; belegt sind nur die Hinweise „?" und „!".',
+        `${value}: Die Einsatztaktik 5.8.1.1 bis 5.8.1.4 steht an keinem Träger; sie ist ein ` +
+          'eigenes Zeichen (Regel `state-tactics-not-allowed`).',
         'value',
       );
     }
   }
-  if (tendency !== undefined) {
-    throw new NotMeasuredError(
-      `${tendency}: Keine der 661 Referenzdateien zeigt eine Tendenz (5.8.3) an einem Träger. ` +
-        'Die Randlage `tendency-margin` ist nicht vermessen.',
-      'value',
-    );
+  if (tendency !== undefined && !TENDENCY_IDS.includes(tendency)) {
+    throw new Error(`"${String(tendency)}" ist keine Tendenz aus 5.8.3.`);
   }
-
-  if (states.length === 0) {
-    return { canvasMm: CANVAS_32, baseAreaMm: BASE_AREA_32, carrier: null, parts: [] };
-  }
-
-  const hints = states.filter((value): value is StateHintId => HINTS.includes(value));
   const persons = states.filter((value) => groupOf(value) === 'persons');
-
-  if (hints.length > 1) {
-    throw new NotMeasuredError(
-      `${hints.join(' + ')}: Kein Original zeigt zwei Hinweise aus 5.8.1 an einem Zeichen.`,
-      'combination',
-    );
-  }
   if (persons.length > 1) {
     throw new NotMeasuredError(
-      `${persons.join(' + ')}: Kein Original zeigt zwei Personenzustände an einer Raute; die ` +
-        'Verbindungen „verletzt und …" sind in 5.8.8 eigene Werte.',
+      `${persons.join(' + ')}: Zwei Personenzustände widersprechen sich; die Verbindungen ` +
+        '„verletzt und …" sind in 5.8.8 eigene Werte (Regel `state-group-limit-exceeded`).',
       'combination',
     );
   }
-  if (!isPersonCarrier(carrier) && persons.length > 0) {
+  if (carrier.kind !== 'person' && persons.length > 0) {
     throw new NotMeasuredError(
-      `${persons[0]} an ${carrierName(carrier)}: 5.8.8 ist nur an der Personenraute gezeichnet.`,
+      `${persons[0]} an ${carrierName(carrier)}: Ein Personenzustand aus 5.8.8 steht nur an der ` +
+        'Person (Regel `state-carrier-not-allowed`).',
       'combination',
     );
   }
+}
+
+const TACTICS: readonly StateId[] = [
+  'tactical-rescue',
+  'tactical-attack',
+  'tactical-defense',
+  'tactical-retreat',
+];
+
+/**
+ * Platziert Zustände und Tendenz an einem Träger.
+ *
+ * Gibt die vermessene Lage, wo eine Referenzdatei genau diese Zusammenstellung zeigt
+ * (`measuredStatePlacement`), und sonst die aus ihr abgeleitete (`deriveStatePlacement` in
+ * `derive/states.ts`, Teile mit `basis: 'transferred'`). Ohne weitere Angaben der Spec gilt dabei
+ * das Grundzeichen aus `baseDrawing()`; `compose()` legt dieselbe Ableitung an das fertig
+ * komponierte Zeichen, das bei Formen wie dem Fußband vom bloßen Grundzeichen abweichen kann.
+ *
+ * Wirft nur noch, wo keine Lage fehlt, sondern die Eingabe falsch ist: Wetter (5.8.7) und Tier
+ * (5.8.6) gehören in die eigene Spec-Art, eine Tendenz ins Feld `tendency` (gewöhnliches
+ * `Error`); Einsatztaktik, zwei Personenzustände und ein Personenzustand an einer Nicht-Person
+ * widersprechen der Systematik (`NotMeasuredError`, den Befund stellt `validateSpec` vorher).
+ * Die Randlage `tendency-margin` ist nicht vermessen; ihre Lage ist gespiegelt abgeleitet.
+ */
+export function placeStates(input: StatePlacementInput): StatePlacement {
+  assertPlaceable(input);
+  if (input.states.length === 0 && input.tendency === undefined) {
+    return { canvasMm: CANVAS_32, baseAreaMm: BASE_AREA_32, carrier: null, parts: [] };
+  }
+  return measuredStatePlacement(input) ?? deriveStatePlacement(input);
+}
+
+/**
+ * Die Lage, wenn genau diese Zusammenstellung an einer Referenzdatei abgelesen ist, sonst
+ * `undefined`. Belegt sind ein Personenzustand an der Personenraute, ein Hinweis an der Gefahr
+ * und ein Hinweis neben der Personenraute der Standardlage (mit oder ohne Personenzustand).
+ */
+export function measuredStatePlacement(input: StatePlacementInput): StatePlacement | undefined {
+  const { carrier, states, tendency } = input;
+  if (tendency !== undefined || states.length === 0) return undefined;
+  const hints = states.filter((value): value is StateHintId => HINTS.includes(value));
+  const persons = states.filter((value) => groupOf(value) === 'persons');
+  if (hints.length + persons.length !== states.length) return undefined;
+  if (hints.length > 1 || persons.length > 1) return undefined;
+  if (persons.length > 0 && !isPersonCarrier(carrier)) return undefined;
 
   const hint = hints[0];
   const personValue = persons[0];
@@ -531,7 +540,9 @@ export function placeStates(input: StatePlacementInput): StatePlacement {
     };
   }
 
-  if (carrier.kind === 'hazard') {
+  // Nur die Gefahr ohne Körpervariante: die Zustandsfassung ersetzt den Körper und zeichnete ein
+  // Fußband oder einen Giebel nicht mit.
+  if (carrier.kind === 'hazard' && carrier.variant === undefined) {
     const layout = STATE_HINT_LAYOUTS.hazard;
     return {
       canvasMm: layout.canvasMm,
@@ -556,34 +567,14 @@ export function placeStates(input: StatePlacementInput): StatePlacement {
     };
   }
 
-  if (!isPersonCarrier(carrier)) {
-    throw new NotMeasuredError(
-      `${hint} an ${carrierName(carrier)}: Hinweise aus 5.8.1 sind nur an Person und Gefahr gezeichnet.`,
-      'combination',
-    );
-  }
+  if (!isPersonCarrier(carrier)) return undefined;
 
   // Hinweis an der Person: Raute auf 20 mm verkleinert, 36 mm breite Fläche.
   const layout = STATE_HINT_LAYOUTS.person;
   const target = PERSON_STATE_FRAMES['person-diamond-20mm-beside-hint'];
-  const source = PERSON_STATE_FRAMES['person-diamond-26mm'];
   const drawing = personDrawing(personValue ?? 'person-uninjured');
-  if (drawing.frame !== 'person-diamond-26mm') {
-    throw new NotMeasuredError(
-      `${personValue} + ${hint}: Neben einem Hinweis ist nur die Raute der Standardlage gezeichnet, ` +
-        `nicht die Lage "${drawing.frame}".`,
-      'combination',
-    );
-  }
-  const shrink: Mapping = {
-    originX: source.centerXMm,
-    originY: source.centerYMm,
-    scale: target.halfDiagonalMm / source.halfDiagonalMm,
-    toX: target.centerXMm,
-    toY: target.centerYMm,
-    strokeScale: target.strokeWidthMm / source.strokeWidthMm,
-  };
-  const map = (primitive: Primitive): Primitive => mapPrimitive(shrink, primitive);
+  if (drawing.frame !== 'person-diamond-26mm') return undefined;
+  const map = (primitive: Primitive): Primitive => mapPrimitive(PERSON_HINT_SHRINK, primitive);
   // Abgelesen ist nur die verletzte Person (Beispiel 1 bis 3); jede andere Füllung der Raute ist
   // übertragen, auch die Person ohne Zustand.
   const personBasis: StatePlacementBasis = personValue === 'person-injured' ? 'measured' : 'transferred';
@@ -613,3 +604,21 @@ export function placeStates(input: StatePlacementInput): StatePlacement {
     ],
   };
 }
+
+/**
+ * Die Verkleinerung der 26-mm-Personenraute auf die 20-mm-Raute neben einem Hinweis
+ * (`5.8.1_Beispiel 3`): um die Mitte (16 | 16) auf (21 | 16), Strich 0,5 → 0,4 mm gemessen.
+ * Dieselbe Abbildung trägt `derive/states.ts` auf jeden anderen Träger neben einer Randlage über.
+ */
+export const PERSON_HINT_SHRINK: Mapping = (() => {
+  const source = PERSON_STATE_FRAMES['person-diamond-26mm'];
+  const target = PERSON_STATE_FRAMES['person-diamond-20mm-beside-hint'];
+  return {
+    originX: source.centerXMm,
+    originY: source.centerYMm,
+    scale: target.halfDiagonalMm / source.halfDiagonalMm,
+    toX: target.centerXMm,
+    toY: target.centerYMm,
+    strokeScale: target.strokeWidthMm / source.strokeWidthMm,
+  };
+})();

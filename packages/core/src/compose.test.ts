@@ -5,7 +5,7 @@ import {
   type Primitive,
   type SymbolSpec,
 } from '@einsatzzeichen/schema';
-import type { BoundsMm } from './bounds.js';
+import { boundsOfMm, type BoundsMm } from './bounds.js';
 import { bodyLabelInk, compose, type CatalogPorts, type ComposeOptions } from './compose.js';
 import { NotMeasuredError } from './not-measured.js';
 import { CompositionError } from './validate.js';
@@ -436,14 +436,11 @@ describe('compose() — Verband (LFH-577)', () => {
       .toThrow(expect.objectContaining({ name: 'NotMeasuredError', scope: 'value' }));
   });
 
-  it('meldet jeden anderen Körper als nicht vermessene Kombination', () => {
-    for (const spec of [
-      { kind: 'person', unitGrouping: 'verband-i' },
-      { kind: 'building', unitGrouping: 'verband-i' },
-    ] satisfies SymbolSpec[]) {
-      expect(() => compose(spec, unitCatalog), spec.kind)
-        .toThrow(expect.objectContaining({ name: 'NotMeasuredError', scope: 'combination' }));
-    }
+  it('zeichnet den Verband seit dem 2. Oktober 2026 auch an anderen Körpern', () => {
+    // Abgeleitet über die allgemeine Kopfzone; die Person (I.5.7, Balken auf y 0…4) und die
+    // Ableitungsnotizen prüft `derive/head-zone.test.ts` mit der Standardbelegung.
+    const building = compose({ kind: 'building', unitGrouping: 'verband-i' }, unitCatalog);
+    expect(building.children[0]).toMatchObject({ role: 'head', transform: { translate: { dyMm: 1 } } });
   });
 
   it('wirft ohne Port statt den Verband still wegzulassen', () => {
@@ -876,10 +873,17 @@ describe('compose() — Beschriftungszonen', () => {
     if (bw?.type !== 'text') throw new Error('BW-Oberflächenlauf fehlt.');
     expect(bw.x).toBeCloseTo(31, 10);
 
-    expect(() => compose({
+    // Der linke Lauf ist hier nicht vermessen: gespiegelt vom rechten Anker (−0,01 mm), auf der
+    // vermessenen Grundlinie.
+    const mirrored = compose({
       kind: 'vehicle-air', bodyVariant: 'raised-hull',
       labels: { surfaceBelowLeft: 'X' },
-    } as SymbolSpec, metricCatalog)).toThrow(/surface-left-label-requires-measured-anchor/);
+    } as SymbolSpec, metricCatalog);
+    const [left] = mirrored.children.filter((child) => child.role === 'label');
+    if (left?.type !== 'text') throw new Error('Linker Oberflächenlauf fehlt.');
+    expect(left).toMatchObject({ content: 'X', y: 29, anchor: 'start', style: { fill: 'schwarz' } });
+    expect(left.x).toBeCloseTo(1, 10);
+    expect(mirrored.derivations?.map((note) => note.dimension)).toEqual(['labels.surfaceBelowLeft']);
 
     const circle = compose({
       kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
@@ -1050,21 +1054,41 @@ describe('compose() — vierte Beschriftungszone', () => {
     expect(below.sizeMm).toBe(inBody.sizeMm);
   });
 
-  it('lehnt die Zone an jeder anderen Körperform ab', () => {
-    // n = 5, alle auf einer Körperform. Ohne die Ablehnung setzte der Katalog einen blauen Lauf
-    // unter eine Taktische Formation — und kein Gate meldete ihn.
-    expect(() =>
-      compose({ kind: 'formation', organization: 'thw', labels: { belowRight: 'THW' } }, e2Catalog),
-    ).toThrow(/below-right-label-requires-measured-body/);
-    expect(() =>
-      compose({ kind: 'vehicle-water', organization: 'thw', labels: { belowRight: 'THW' } }, e2Catalog),
-    ).toThrow(/below-right-label-requires-measured-body/);
+  it('überträgt die Zone auf andere Körperformen und markiert sie als abgeleitet', () => {
+    // n = 5, alle auf einer Körperform. Seit dem 2. Oktober 2026 trägt jede Körperform die Zone,
+    // gegen ihre eigene Hülle gerechnet: 4,01 mm unter der Unterkante, 0,5618 mm rechts davon.
+    const formation = compose(
+      { kind: 'formation', organization: 'thw', labels: { belowRight: 'THW' } },
+      e2Catalog,
+    );
+    const run = formation.children.find((child) => child.role === 'label');
+    if (run?.type !== 'text') throw new Error('unreachable');
+    expect(run).toMatchObject({ anchor: 'end', style: { fill: 'blau' } });
+    expect(run.x).toBeCloseTo(31.5618, 10);
+    expect(run.y).toBeCloseTo(30.01, 10);
+    expect(formation.derivations).toEqual([
+      expect.objectContaining({ dimension: 'labels.belowRight', basis: 'transferred' }),
+    ]);
+    const water = compose(
+      { kind: 'vehicle-water', organization: 'thw', labels: { belowRight: 'THW' } },
+      e2Catalog,
+    );
+    const waterRun = water.children.find((child) => child.role === 'label');
+    const waterBody = water.children.find((child) => child.role === 'body');
+    if (waterRun?.type !== 'text' || waterBody === undefined) throw new Error('unreachable');
+    expect(waterRun.y).toBeCloseTo(boundsOfMm(waterBody).maxY + 4.01, 10);
   });
 
-  it('lehnt die Zone ohne Organisation ab', () => {
-    expect(() =>
-      compose({ kind: 'vehicle-water', bodyVariant: 'raised-hull', labels: { belowRight: 'THW' } }, e2Catalog),
-    ).toThrow(/below-right-label-requires-organization/);
+  it('setzt die Zone ohne Organisation schwarz wie am gebänderten Kreis (G.3.5)', () => {
+    const drawing = compose(
+      { kind: 'vehicle-water', bodyVariant: 'raised-hull', labels: { belowRight: 'THW' } },
+      e2Catalog,
+    );
+    expect(drawing.children.find((child) => child.role === 'label'))
+      .toMatchObject({ style: { fill: 'schwarz' } });
+    expect(drawing.derivations).toEqual([
+      expect.objectContaining({ dimension: 'labels.belowRight', from: expect.stringContaining('G.3.5') }),
+    ]);
   });
 
   it('reicht die Körpervariante an den Katalog durch', () => {
@@ -1348,21 +1372,22 @@ describe('compose() — Beschriftungszone oben links', () => {
     expect(topLeft.sizeMm).toBe(bottomLeft.sizeMm);
   });
 
-  it('lehnt die Zone an jeder Körperform ohne vermessene Grundlinie ab', () => {
-    // `building` läuft über `rectBodyProfile`, das die Zahl nicht führt — sie steht allein am
-    // eigenen Profil der taktischen Formation. Ohne den Wurf wäre die geratene Grundlinie
-    // minY + 5 = 8 mm, und auf y = 8 führt das Gebäudepolygon nur die Breite 5,286…26,714
-    // (Traufkante von (16|3) nach (1|10)): der Anker 2,5 läge **außerhalb** des Umrisses, und
-    // kein Gate meldete es. Der Landfahrzeugrumpf trägt denselben Lauf auf 6,75 mm unter seiner
-    // Oberkante (F.2.1 bis F.2.5) — die Zahl ist je Körperform eine eigene Messung.
-    //
-    // Geprüft wird der Regelkode und nicht die Prosa: die Ablehnung steht seit dem Teilslice F-a
-    // in `validateSpec` und trägt damit dieselbe maschinenlesbare Kennung wie ihr Geschwisterfall
-    // `below-right-label-requires-measured-body`. Der Wurf in `compose.ts` bleibt als
-    // unerreichbare Zusicherung stehen.
-    expect(() => compose({ kind: 'building', labels: { topLeft: 'MTF' } }, catalog)).toThrow(
-      /top-left-label-requires-measured-body/,
-    );
+  it('legt die Zone an Körperformen ohne vermessene Grundlinie in den Umriss', () => {
+    // `building` läuft über `rectBodyProfile`, das die Zahl nicht führt. Mit der Formationslage
+    // minY + 5 = 8 mm führte das Gebäudepolygon dort nur die Breite 5,286…26,714 (Traufkante von
+    // (16|3) nach (1|10)): der Anker 2,5 läge **außerhalb** des Umrisses. Seit dem 2. Oktober
+    // 2026 rückt der Lauf deshalb so weit nach unten, bis der Giebel ihn bis zur Körpermitte
+    // trägt, und sein Anker steht 1,5 mm innerhalb der Dachkante (`derive/label-zones.ts`).
+    const drawing = compose({ kind: 'building', labels: { topLeft: 'MTF' } }, catalog);
+    const run = drawing.children.find((child) => child.role === 'label');
+    if (run?.type !== 'text') throw new Error('unreachable');
+    const roofXAtBoxTop = 1 + ((10 - run.boxMm.yMm) * 15) / 7;
+    expect(run.y).toBeGreaterThan(8);
+    expect(run.x).toBeCloseTo(roofXAtBoxTop + 1.5, 2);
+    expect(run.boxMm.xMm + run.boxMm.widthMm).toBeCloseTo(32 - roofXAtBoxTop - 2, 2);
+    expect(drawing.derivations).toEqual([
+      expect.objectContaining({ dimension: 'labels.topLeft', basis: 'constructed' }),
+    ]);
   });
 
   it('passiert das viewBox-Gate mit allen vier Zonen im Körper', () => {
@@ -1530,11 +1555,13 @@ describe('compose() — Beschriftungszone unten mittig', () => {
     expect(label.boxMm).toMatchObject({ xMm: 2, widthMm: 28 });
   });
 
-  it('lehnt die Zone an jeder Körperform ohne vermessene Grundlinie ab', () => {
-    expect(() => compose(
-      { kind: 'building', labels: { bottomCenter: 'SOZ' } },
-      catalog,
-    )).toThrow(/bottom-center-label-requires-measured-body/);
+  it('überträgt die Formationslage auf Körperformen ohne vermessene Grundlinie', () => {
+    const drawing = compose({ kind: 'building', labels: { bottomCenter: 'SOZ' } }, catalog);
+    const label = drawing.children.find((child) => child.role === 'label');
+    expect(label).toMatchObject({ type: 'text', x: 16, y: 24, anchor: 'middle' });
+    expect(drawing.derivations).toEqual([
+      expect.objectContaining({ dimension: 'labels.bottomCenter', basis: 'transferred' }),
+    ]);
   });
 });
 
@@ -2051,13 +2078,13 @@ describe('compose() — seitliche Box-Grenze der Textläufe (LFH-411)', () => {
   });
 });
 
-describe('compose() — Vermessungslücken als eigene Fehlerklasse', () => {
+describe('compose() — Farbe am offenen Polyzug', () => {
   /**
-   * Der eine Abbruch des Kompositionsmotors, den der Baukasten der Website wirklich erreicht:
-   * eine Organisationsfarbe auf einem offenen Polyzug (`1.13 Ereignis`). Er sperrt dort einen
-   * Wert, statt die Insel abstürzen zu lassen — und das hängt seit LFH-502 an der Klasse und
-   * nicht mehr am Wortlaut der Meldung. Ohne diesen Test bliebe die Umstellung an einer Stelle
-   * unbemerkt, die kein Typfehler und keine Regelprüfung findet.
+   * Bis zum 02.10.2026 der eine Abbruch des Kompositionsmotors, den der Baukasten der Website
+   * wirklich erreichte: eine Organisationsfarbe auf einem offenen Polyzug (`1.13 Ereignis`). Seit
+   * dem Eigentümerentscheid geht die Farbe in den Strich (derive/open-body-tint.ts); eine Füllung
+   * schlösse den Haken zu einer Fläche, die die Referenz nicht zeichnet. Die Fälle am echten
+   * Katalog stehen in derive/open-body-tint.test.ts.
    */
   const openBody: Primitive = {
     type: 'polyline',
@@ -2070,21 +2097,18 @@ describe('compose() — Vermessungslücken als eigene Fehlerklasse', () => {
     ],
   };
 
-  it('wirft NotMeasuredError für eine Körperfüllung am offenen Polyzug', () => {
+  it('färbt den Strich statt einer Fläche und meldet die Ableitung', () => {
     const openCatalog: CatalogPorts = {
       ...catalog,
       baseDrawing: () => ({ viewBox: DEFAULT_VIEWBOX_MM, children: [openBody] }),
       organizationColor: () => 'rot' as ColorToken,
     };
-    let thrown: unknown;
-    try {
-      compose({ kind: 'event', organization: 'feuerwehr' }, openCatalog);
-    } catch (error) {
-      thrown = error;
-    }
-    expect(thrown).toBeInstanceOf(NotMeasuredError);
-    // `'combination'`: der Haken selbst ist gezeichnet, nur seine gefüllte Fassung ist es nicht.
-    expect((thrown as NotMeasuredError).scope).toBe('combination');
-    expect((thrown as Error).message).toMatch(/offener/);
+    const drawing = compose({ kind: 'event', organization: 'feuerwehr' }, openCatalog);
+    const body = drawing.children.find((child) => child.role === 'body');
+    expect(body?.type).toBe('polyline');
+    expect(body?.style).toMatchObject({ fill: 'none', stroke: 'rot', bodyStrokeDashToken: 'rot' });
+    expect(drawing.derivations).toEqual([
+      expect.objectContaining({ dimension: 'organization', basis: 'constructed' }),
+    ]);
   });
 });

@@ -90,33 +90,24 @@ describe('RULE_CATALOG: Vollständigkeit je Eintrag', () => {
       'above-left-metrics-complete',
       'above-left-metrics-within-viewbox',
       'bottom-right-metrics-complete',
-      'bottom-right-metrics-require-measured-body',
       'bottom-right-metrics-within-body',
-      'center-anchor-override-requires-measured-trailer',
-      'center-baseline-not-measured',
-      'center-baseline-override-requires-measured-body',
       'center-baseline-positive',
       'center-baseline-requires-center-label',
       'center-box-margin-non-negative',
-      'center-box-margin-override-requires-measured-body',
       'center-box-margin-requires-center-label',
       'center-box-margin-within-body',
       'center-label-within-body',
-      'function-role-body-mark-mismatch',
       'function-role-head-mismatch',
       'function-role-label-metrics-required',
       'function-role-organization-mismatch',
-      'surface-label-requires-measured-body',
-      'surface-left-label-requires-measured-anchor',
-      'surface-right-label-requires-measured-anchor',
       'technical-fill-token-invalid',
       'technical-head-mark-not-measured',
       'top-left-anchor-within-body',
       'top-left-cap-height-positive',
       'top-left-lines-exactly-two',
     ]);
-    expect(fromWebsite).toHaveLength(27);
-    expect(RULE_CATALOG.filter((rule) => rule.reasonSource === 'core')).toHaveLength(52);
+    expect(fromWebsite).toHaveLength(18);
+    expect(RULE_CATALOG.filter((rule) => rule.reasonSource === 'core')).toHaveLength(32);
   });
 
   /**
@@ -137,28 +128,16 @@ describe('RULE_CATALOG: Vollständigkeit je Eintrag', () => {
   it('nagelt die Regeln mit belegtem Quellenbezug fest', () => {
     const withSource = RULE_CATALOG.filter((rule) => rule.source !== null).map((r) => r.id);
     expect(withSource.sort()).toEqual([
-      'above-left-label-requires-measured-body',
-      'administrative-level-not-measured',
-      'below-right-label-requires-measured-body',
-      'below-right-label-requires-organization',
       'body-mark-rendition-not-measured',
-      'bottom-center-label-requires-measured-body',
       'chassis-foot-conflict',
-      'circle-12-requires-hilfsorganisation',
       'circle-top-left-anchor-within-viewbox',
-      'colored-circle-top-left-not-measured',
       'inset-hull-requires-center-label-only',
-      'reduced-house-requires-hilfsorganisation',
       'state-carrier-not-allowed',
       'state-group-limit-exceeded',
       'state-tactics-not-allowed',
       'state-value-not-attachable',
-      'technical-head-mark-requires-normal-formation',
       'top-left-anchor-within-body',
       'top-left-baseline-within-body',
-      'top-left-label-requires-measured-body',
-      'top-left-lines-require-measured-body',
-      'top-left-metrics-require-measured-vehicle-land',
       'vehicle-category-requires-vehicle',
     ]);
   });
@@ -166,7 +145,7 @@ describe('RULE_CATALOG: Vollständigkeit je Eintrag', () => {
 
 describe('RULE_CATALOG gegen den Quelltext von validate.ts', () => {
   /**
-   * `validate.ts` löst 82 Mal aus, führt aber nur 79 Kennungen: drei Regeln haben zwei
+   * `validate.ts` löst 53 Mal aus, führt aber nur 50 Kennungen: drei Regeln haben zwei
    * Auslösestellen. Im Katalog bleiben sie **ein** Eintrag — sonst bräche die Dublettenprüfung —
    * und tragen die Zahl ihrer Stellen im Feld `sites`. Dieser Test zählt die Stellen im
    * Quelltext dagegen, damit eine künftige dritte Stelle nicht still dazukommt.
@@ -183,9 +162,11 @@ describe('RULE_CATALOG gegen den Quelltext von validate.ts', () => {
     );
   });
 
-  it('bleibt bei 82 Auslösestellen für 79 Kennungen', () => {
-    expect(pushedIds).toHaveLength(82);
-    expect(new Set(pushedIds).size).toBe(79);
+  it('bleibt bei 53 Auslösestellen für 50 Kennungen', () => {
+    // Bis zum 2. Oktober 2026 waren es 82 Stellen für 79 Kennungen; die Messsperren sind mit dem
+    // Ableiten entfallen (docs/decisions/2026-10-02-ableiten-statt-messsperre.md).
+    expect(pushedIds).toHaveLength(53);
+    expect(new Set(pushedIds).size).toBe(50);
     expect(RULE_CATALOG.filter((rule) => rule.sites > 1).map((rule) => rule.id)).toEqual([
       'function-role-requires-measured-kind',
       'function-role-requires-measured-layout',
@@ -351,25 +332,30 @@ describe('Lücken je Dimension', () => {
    * Festgenagelt, damit die Aussage „Lücken je Dimension benannt" zählbar bleibt und nicht
    * unbemerkt schrumpft, wenn jemand eine Dimension aus der Union nimmt.
    */
-  it('zählt elf Lücken, davon drei ohne jede Regel', () => {
+  it('zählt zwölf Lücken, davon fünf ohne Abdeckung', () => {
     // Seit LFH-577 trägt `state` vier Regeln und ist nur noch teilweise offen. Mit der
     // freistehenden Spec-Art tragen auch Linien, Wetter und Tierzustand Regeln; die Pfeile nicht.
-    // Seit LFH-587 trägt `capabilities` eine Regel (`capabilities-pictogram-overflows-body`).
-    expect(RULE_DIMENSION_GAPS).toHaveLength(11);
+    // Seit dem 2. Oktober 2026 (Ableiten statt Messsperre) haben `organization` und
+    // `administrative-level` keine eigene Regel mehr: die Sperren am 12-mm-Kreis, an der
+    // reduzierten Hauskontur und an der Verwaltungsstufe sind entfallen. Auch `capabilities`
+    // (bis dahin `capabilities-pictogram-overflows-body`, LFH-587) trägt keine Regel mehr, bleibt
+    // aber `partial`: eingepasste Fähigkeiten sind Ableitungen, keine vermessenen Fassungen.
+    expect(RULE_DIMENSION_GAPS).toHaveLength(12);
     expect(RULE_DIMENSION_GAPS.filter((gap) => gap.coverage === 'none').map((g) => g.dimension))
-      .toEqual(['unit-grouping', 'tendency', 'movement']);
+      .toEqual(['organization', 'administrative-level', 'unit-grouping', 'tendency', 'movement']);
     expect(RULE_DIMENSION_GAPS.filter((gap) => gap.coverage === 'partial').map((g) => g.dimension))
-      .toEqual(['base-symbol', 'administrative-level', 'body-marks', 'capabilities', 'state', 'lines-and-boundaries', 'weather', 'animal']);
+      .toEqual(['base-symbol', 'body-marks', 'capabilities', 'state', 'lines-and-boundaries', 'weather', 'animal']);
   });
 
   /**
-   * Eine Dimension darf in beiden Listen stehen: `administrative-level` trägt eine Regel und ist
-   * trotzdem nur zu drei von sechs Stufen belegt. Der Fall ist hier festgehalten, damit ihn
-   * niemand als Widerspruch „aufräumt".
+   * Eine Dimension darf in beiden Listen stehen: `state` trägt vier Regeln und ist trotzdem nur
+   * für wenige Zustände an einem Träger belegt. Der Fall ist hier festgehalten, damit ihn
+   * niemand als Widerspruch „aufräumt". Bis zum 2. Oktober 2026 stand hier
+   * `administrative-level`; dessen einzige Regel ist mit der abgeleiteten Kopfzone entfallen.
    */
   it('erlaubt eine Dimension mit Regel und Lücke zugleich', () => {
-    expect(RULE_CATALOG.some((rule) => rule.dimension === 'administrative-level')).toBe(true);
-    expect(RULE_DIMENSION_GAPS.some((gap) => gap.dimension === 'administrative-level')).toBe(true);
+    expect(RULE_CATALOG.some((rule) => rule.dimension === 'state')).toBe(true);
+    expect(RULE_DIMENSION_GAPS.some((gap) => gap.dimension === 'state')).toBe(true);
   });
 });
 
@@ -378,12 +364,20 @@ describe('Einordnung fachlich gegen technisch', () => {
    * Der Befund, auf den LFH-563 hinausläuft: der Motor lehnt heute fast alles ab, weil eine
    * Messung fehlt — nicht, weil die Systematik es verbietet. Festgenagelt, weil sich genau diese
    * Zahl mit dem Grammatik-Umbau verschieben soll und die Verschiebung sichtbar sein muss.
+   *
+   * Am 2. Oktober 2026 verschoben (Ableiten statt Messsperre): 12 fachliche gegen 67 technische
+   * wurden 15 gegen 35. `circle-12-requires-organization` ist entfallen, neu sind
+   * `above-left-label-head-conflict` und `below-body-zone-conflict`, von `engine` auf
+   * `systematik` gewechselt sind `vehicle-category-requires-vehicle` und
+   * `body-variant-requires-measured-kind` (artgebundene Formen).
    */
-  it('nagelt die zwölf fachlichen Regeln fest', () => {
+  it('nagelt die fünfzehn fachlichen Regeln fest', () => {
     expect(RULE_CATALOG.filter((rule) => rule.kind === 'systematik').map((r) => r.id)).toEqual([
+      'above-left-label-head-conflict',
+      'below-body-zone-conflict',
       'body-variant-foot-conflict',
+      'body-variant-requires-measured-kind',
       'chassis-foot-conflict',
-      'circle-12-requires-organization',
       'head-zone-conflict',
       'plain-wheel-pair-chassis-conflict',
       'state-carrier-not-allowed',
@@ -393,8 +387,9 @@ describe('Einordnung fachlich gegen technisch', () => {
       'strength-requires-unit',
       'surface-label-foot-conflict',
       'technical-fill-organization-conflict',
+      'vehicle-category-requires-vehicle',
     ]);
-    expect(RULE_CATALOG.filter((rule) => rule.kind === 'engine')).toHaveLength(67);
+    expect(RULE_CATALOG.filter((rule) => rule.kind === 'engine')).toHaveLength(35);
   });
 });
 

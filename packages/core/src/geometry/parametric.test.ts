@@ -151,7 +151,9 @@ describe('Pfeile aus 5.2', () => {
     ).toThrow(/Knick/);
   });
 
-  it('meldet jede Anbindung an ein Grundzeichen als Lücke der Zone movement-anchor', () => {
+  it('lehnt eine Anbindung am freistehenden Pfeil als unvollständige Eingabe ab', () => {
+    // Ohne Körper gibt es keine Kante; das ist keine Vermessungslücke (mehr), sondern eine
+    // fehlende Angabe. Den Verlauf an einem Körper bestimmt `anchoredMovementPath`.
     for (const edge of ['body-top', 'body-bottom', 'body-left', 'body-right'] as const) {
       let error: unknown;
       try {
@@ -159,9 +161,9 @@ describe('Pfeile aus 5.2', () => {
       } catch (caught) {
         error = caught;
       }
-      expect(error, edge).toBeInstanceOf(NotMeasuredError);
-      expect((error as NotMeasuredError).scope).toBe('value');
-      expect((error as Error).message).toContain('movement-anchor');
+      expect(error, edge).toBeInstanceOf(Error);
+      expect(error, edge).not.toBeInstanceOf(NotMeasuredError);
+      expect((error as Error).message).toContain('anchoredMovementPath');
     }
   });
 
@@ -226,18 +228,22 @@ describe('Anbindung eines Pfeils an die Personenraute (5.8.8.12 bis 5.8.8.14)', 
     expect(arrow.minX).toBeCloseTo(3, 9);
   });
 
-  it('meldet die Raute in anderer Größe als Lücke: belegt ist nur die 26-mm-Raute', () => {
+  // Seit dem 02.10.2026 übertragen statt Lücke: dieselbe Regel (parallel zur Kante, vom
+  // Kantenanfang bis 1 mm über ihr Ende) an jeder Hülle, Kante, jedem Träger und Pfeil.
+  it('überträgt die Regel auf die Raute in anderer Größe', () => {
     // 1.2 Person in voller Größe: 30-mm-Raute, Hülle 1…31.
-    expect(() =>
+    expect(
       anchoredMovementPath('directed-movement', 'person', { minX: 1, minY: 1, maxX: 31, maxY: 31 }, 'body-bottom'),
-    ).toThrow(NotMeasuredError);
+    ).toEqual({ points: [[1, 31], [32, 31]] });
   });
 
-  it('meldet jede andere Kante, jeden anderen Träger und jeden anderen Pfeil als Lücke', () => {
-    expect(() => anchoredMovementPath('directed-movement', 'person', RAISED_DIAMOND, 'body-top')).toThrow(NotMeasuredError);
-    expect(() => anchoredMovementPath('directed-movement', 'formation', RAISED_DIAMOND, 'body-bottom')).toThrow(NotMeasuredError);
+  it('überträgt die Regel auf jede andere Kante, jeden anderen Träger und jeden anderen Pfeil', () => {
+    expect(anchoredMovementPath('directed-movement', 'person', RAISED_DIAMOND, 'body-top')).toEqual({ points: [[3, 1], [30, 1]] });
+    expect(anchoredMovementPath('directed-movement', 'person', RAISED_DIAMOND, 'body-left')).toEqual({ points: [[3, 1], [3, 28]] });
+    expect(anchoredMovementPath('directed-movement', 'person', RAISED_DIAMOND, 'body-right')).toEqual({ points: [[29, 1], [29, 28]] });
+    expect(anchoredMovementPath('directed-movement', 'formation', RAISED_DIAMOND, 'body-bottom')).toEqual({ points: [[3, 27], [30, 27]] });
     for (const id of ['direction-of-action', 'movement-both-directions', 'gathering'] as const) {
-      expect(() => anchoredMovementPath(id, 'person', RAISED_DIAMOND, 'body-bottom'), id).toThrow(NotMeasuredError);
+      expect(anchoredMovementPath(id, 'person', RAISED_DIAMOND, 'body-bottom'), id).toEqual({ points: [[3, 27], [30, 27]] });
     }
   });
 });
@@ -247,13 +253,14 @@ describe('Linien und Grenzen aus Kapitel 2', () => {
     expect(MEASURED_LINES).toEqual([...LINE_IDS]);
   });
 
-  it('verlangt die Stärke genau an 2.20 und baut nur den Zug', () => {
+  it('verlangt die Stärke genau an 2.20 und baut jede Stärke', () => {
     const path = { points: [[1, 16], [47, 16]] as [Point, Point] };
     expect(() => lineDrawing('boundary-with-strength', { path }, CANVAS_96)).toThrow(/braucht eine Stärke/);
     expect(() => lineDrawing('boundary-section', { path, strength: 'zug' }, CANVAS_96)).toThrow(/nur die Grenze/);
+    // Trupp, Staffel und Gruppe seit dem 02.10.2026 aus der Kopfzone übertragen; Lage in
+    // derive/freestanding.test.ts.
     for (const strength of ['trupp', 'staffel', 'gruppe'] as const) {
-      expect(() => lineDrawing('boundary-with-strength', { path, strength }, CANVAS_96), strength)
-        .toThrow(NotMeasuredError);
+      expect(() => lineDrawing('boundary-with-strength', { path, strength }, CANVAS_96), strength).not.toThrow();
     }
   });
 

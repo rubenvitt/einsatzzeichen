@@ -25,7 +25,15 @@ import type { ValidationIssue } from './validate.js';
  *   unbekannter Pfeil, ein Verlauf mit einem Stützpunkt kommen gar nicht erst als Spec an.
  * - **Vermessungslücken** — eine Wetterkombination, die weder ein Original zeigt noch eine
  *   Entscheidung trägt (Sonne und Wind), oder eine Stärke außer dem Zug an 2.20. Das ist keine
- *   Regel, sondern ein Befund über die Quelle; die Zeichnung meldet ihn als `NotMeasuredError`.
+ *   Regel, sondern ein Befund über die Quelle; seit dem 02.10.2026 zeichnet die Zeichnung sie
+ *   abgeleitet und meldet sie in `Drawing.derivations`.
+ *
+ * **Warum `line-strength-mismatch` bleibt.** Die Stärke ist an 2.20 der Inhalt der Lücke selbst —
+ * „Grenze mit taktischer Stärke“ heißt genau das. Die Grenzen 2.17 bis 2.19 tragen in derselben
+ * Lücke ihr Kürzel (TEL, EA, UEA); eine Stärke dort ersetzte es und machte daraus eine 2.20. Die
+ * Linien 2.14 bis 2.16 (Rettungsweg, Sperrstelle, Brandausbreitung) haben keine Lücke und keinen
+ * Einheitenbezug. Eine Stärke an einer anderen Linie ist also kein unvermessener Fall, sondern ein
+ * anderes Zeichen; eine 2.20 ohne Stärke wäre eine Lücke ohne Inhalt. Beides bleibt Systematik.
  * - **Geometrie des Verlaufs** — zu kurz für Pfeilköpfe oder Striche, aus der Zeichenfläche
  *   ragend, ein zu spitzer Knick am Doppelschaft. Das entscheidet erst die Zeichnung, mit einem
  *   gewöhnlichen Fehler.

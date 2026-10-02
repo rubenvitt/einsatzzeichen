@@ -785,9 +785,18 @@ describe('Körperformen des Anhangs F.3', () => {
     expect(j32Body).toMatchObject({ cx: 16, cy: 18, r: 12 });
   });
 
-  it('fällt mit raised-gable weder auf post noch auf eine andere Körperart zurück', () => {
-    expect(() => baseDrawing('post', raisedGable)).toThrow(/Körpervariante/);
-    expect(() => baseDrawing('formation', raisedGable)).toThrow(/Körpervariante/);
+  it('leitet raised-gable an post aus F.3.5 ab und fällt an anderen Arten nicht zurück', () => {
+    // Seit dem 2. Oktober 2026 (`derive/circle.ts`): die Funktionsstelle mit Giebel ist der
+    // abgesenkte 12-mm-Kreis aus F.3.5; der 14-mm-Kreis ließe über sich keinen Platz.
+    expect(baseDrawing('post', raisedGable).children).toEqual(
+      baseDrawing(circleKind, raisedGable).children,
+    );
+    // An der Formation ist der Giebel abgeleitet und keine Rückfallzeichnung: der Körper ist
+    // verkleinert, nicht der Kapitel-1-Körper.
+    expect(baseDrawing('formation', raisedGable).children[0]).not.toEqual(
+      baseDrawing('formation').children[0],
+    );
+    expect(() => baseDrawing('formation', 'raised-circle-1mm')).toThrow(/Körpervariante/);
     expect(baseDrawing(circleKind, 'foot-band').children).toHaveLength(2);
   });
 
@@ -845,9 +854,10 @@ describe('Körperformen des Anhangs F.3', () => {
     expectWithinTolerance(outline.maxY, 26.25, 'F.3.16 outline maxY');
   });
 
-  it('lehnt raised-gable und jede andere Variante am reduced-house ab', () => {
-    expect(() => baseDrawing(reducedHouseKind, raisedGable)).toThrow(/Körpervariante/);
-    expect(() => baseDrawing(reducedHouseKind, 'foot-band')).toThrow(/Körpervariante/);
+  it('zeichnet Giebel und Fußband am reduced-house abgeleitet, Rumpfvarianten nicht', () => {
+    expect(() => baseDrawing(reducedHouseKind, raisedGable)).not.toThrow();
+    expect(() => baseDrawing(reducedHouseKind, 'foot-band')).not.toThrow();
+    expect(() => baseDrawing(reducedHouseKind, 'raised-hull')).toThrow(/Körpervariante/);
   });
 });
 
@@ -862,7 +872,7 @@ describe('baseDrawing() — zwei Abbrüche, zwei Fehlerarten', () => {
   it('meldet die unbelegte Körpervariante als Vermessungslücke der Kombination', () => {
     let thrown: unknown;
     try {
-      baseDrawing('reduced-house', 'raised-gable' as BodyVariantId);
+      baseDrawing('formation', 'fixed-wing-hull' as BodyVariantId);
     } catch (error) {
       thrown = error;
     }
@@ -921,7 +931,8 @@ describe('Innenfeld der weißen Innenkontur', () => {
     expect(b.maxY).toBeCloseTo(7.9999 + 13.9897, 3);
   });
 
-  it('wirft für Körper ohne belegte Innenkontur', () => {
-    expect(() => innerField('person')).toThrow(NotMeasuredError);
+  it('wirft nur am offenen Haken des Ereignisses, der keine Fläche hat', () => {
+    expect(() => innerField('event')).toThrow(NotMeasuredError);
+    expect(() => innerField('person')).not.toThrow();
   });
 });

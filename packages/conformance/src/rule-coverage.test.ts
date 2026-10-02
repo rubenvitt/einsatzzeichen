@@ -67,7 +67,7 @@ describe('ruleCoverage (Fixtures)', () => {
 describe('ruleCoverage (echter Bestand)', () => {
   // Die Zahlen wachsen mit dem Katalog; sie stehen hier, damit eine Erweiterung sichtbar
   // hier ankommt und damit die Ausgabe von `pnpm cli coverage` an einer Stelle belegt ist.
-  it('führt 17 Achsen, davon 13 vollständig; Lücken bei Kopfmarke, Verband, Verwaltungsstufe und Fahrwerk', () => {
+  it('führt 17 Achsen, davon 12 vollständig; Lücken bei Kopfmarke, Verband, Verwaltungsstufe, Fahrwerk und Körpermarke', () => {
     const axes = ruleCoverage();
     expect(axes.map((axis) => axis.id)).toEqual([
       'kind', 'bodyVariant', 'organization', 'strength', 'technicalHeadMark', 'unitGrouping', 'administrativeLevel',
@@ -87,13 +87,18 @@ describe('ruleCoverage (echter Bestand)', () => {
       ['administrativeLevel', ['gemeinde', 'bezirk', 'bundesland']],
       // Wellenlinie nur als Strichhülle vermessen; siehe `INVENTORY_EXCLUSIONS`.
       ['vehicleCategory', ['amphibienfahrzeug']],
+      // Seit dem 2. Oktober 2026: die Kappe der Leitstelle (D.2.5) ist gezeichnet und gegen das
+      // Original geprüft (`leitstelle-d25.test.ts`), aber noch in keinem Rezept verwendet.
+      ['bodyMarks', ['circle-solid-cap-4mm']],
     ]);
-    expect(axes.filter((axis) => axis.missing.length === 0)).toHaveLength(13);
+    expect(axes.filter((axis) => axis.missing.length === 0)).toHaveLength(12);
   });
 
   it('zählt die Validierungsregeln aus core, ohne sie zu wiederholen', () => {
     expect(validationRuleCoverage()).toEqual({ total: VALIDATION_RULE_IDS.length });
-    expect(validationRuleCoverage().total).toBe(79);
+    // Am 2. Oktober 2026 von 79 auf 50: die Messsperren sind dem Ableiten gewichen
+    // (docs/decisions/2026-10-02-ableiten-statt-messsperre.md).
+    expect(validationRuleCoverage().total).toBe(50);
   });
 });
 
@@ -123,40 +128,40 @@ describe('ruleEvidenceCoverage (Regelsicht)', () => {
 
   // Seit LFH-568 (21.09.2026): „Eine Regel gilt als belegt, wenn ein Testfall sie auslöst." Die
   // Zahlen wachsen mit den Katalogen und schrumpfen nur, wenn eine Lücke einen Fall bekommt.
-  it('belegt 87 von 91 Regeln durch Auslösung; vier benannte Lücken, keine stille', () => {
+  it('belegt 59 von 62 Regeln durch Auslösung; drei benannte Lücken, keine stille', () => {
     // Seit LFH-577 zählen die sechs Regeln der freistehenden Zeichen mit
     // (`FREESTANDING_RULE_CATALOG`, Fälle in `FREESTANDING_RULE_EVIDENCE`).
+    // Am 2. Oktober 2026 von 91 auf 62 Regeln (Ableiten statt Messsperre,
+    // docs/decisions/2026-10-02-ableiten-statt-messsperre.md): die Prüfphase führt 29 Kennungen
+    // weniger, mit ihnen entfiel die Lücke `surface-right-label-requires-measured-anchor`. Die Dimensionen
+    // `organization`, `administrative-level` und `capabilities` tragen keine Regel mehr.
     const coverage = ruleEvidenceCoverage();
-    expect(coverage.total).toEqual({ total: 91, triggered: 87, gap: 4, untriggered: 0 });
+    expect(coverage.total).toEqual({ total: 62, triggered: 59, gap: 3, untriggered: 0 });
     expect(coverage.byPhase).toEqual({
-      spec: { total: 85, triggered: 83, gap: 2, untriggered: 0 },
+      spec: { total: 56, triggered: 55, gap: 1, untriggered: 0 },
       composition: { total: 6, triggered: 4, gap: 2, untriggered: 0 },
     });
     expect(coverage.byKind).toEqual({
-      systematik: { total: 17, triggered: 17, gap: 0, untriggered: 0 },
-      engine: { total: 74, triggered: 70, gap: 4, untriggered: 0 },
+      systematik: { total: 20, triggered: 20, gap: 0, untriggered: 0 },
+      engine: { total: 42, triggered: 39, gap: 3, untriggered: 0 },
     });
     expect(coverage.byDimension.map((entry) => [entry.dimension, entry.total, entry.triggered, entry.gap])).toEqual([
-      ['body-variant', 7, 7, 0],
-      ['organization', 3, 3, 0],
+      ['body-variant', 4, 4, 0],
       ['technical-fill', 2, 2, 0],
-      ['strength', 2, 2, 0],
-      ['administrative-level', 1, 1, 0],
-      ['technical-head-mark', 2, 2, 0],
+      ['strength', 1, 1, 0],
+      ['technical-head-mark', 1, 1, 0],
       ['chassis', 2, 2, 0],
-      ['capabilities', 2, 2, 0],
       ['body-marks', 1, 1, 0],
-      ['function-role', 10, 7, 3],
+      ['function-role', 7, 4, 3],
       ['state', 4, 4, 0],
       ['lines-and-boundaries', 2, 2, 0],
       ['weather', 3, 3, 0],
       ['animal', 1, 1, 0],
-      ['label', 48, 47, 1],
+      ['label', 33, 33, 0],
       ['composition', 1, 1, 0],
     ]);
     expect(coverage.rules.filter((row) => row.status === 'gap').map((row) => row.id)).toEqual([
       'function-role-label-metrics-required',
-      'surface-right-label-requires-measured-anchor',
       'function-role-run-too-wide',
       'function-role-run-unknown-glyph',
     ]);
@@ -173,9 +178,10 @@ describe('reachSignature', () => {
 });
 
 // Expliziter Timeout für jeden Test, der `generativeReach()` ausführt: die Enumeration prüft
-// 225 720 Kombinationen mit `validateSpec` (963 bestehen) und komponiert 894 davon. Allein
-// ~140 ms, unter Vitest-Parallellast bis ~4 s gemessen — das Vitest-Standardlimit von 5 s ist
-// dann ein Lastflake, kein Befund.
+// 270 864 Kombinationen mit `validateSpec` und komponiert die 26 964, die bestehen. Seit dem
+// 2. Oktober 2026 allein rund 3 s (vorher ~140 ms, weil fast alles schon an der Prüfung
+// scheiterte), unter Vitest-Parallellast mehr — das Vitest-Standardlimit von 5 s wäre ein
+// Lastflake, kein Befund.
 const REACH_TIMEOUT_MS = 30_000;
 
 describe('generativeReach (echter Bestand)', () => {
@@ -191,12 +197,16 @@ describe('generativeReach (echter Bestand)', () => {
     // Kombinationen an der Formation, und E.1.31 bringt eine eigene Rezeptsignatur mit.
     // Die Reichweitenzahlen wachsen mit den vermessenen Verträgen (ein neues Fahrwerk, eine neue
     // Körpervariante); `referenced` wächst mit den Rezepten. Der Unterschied validBySpec − valid
-    // sind Kombinationen, die die Regeln durchlassen und erst der Motor ablehnt — heute das
-    // Amphibienfahrzeug-Fahrwerk (60) und die Körperfüllung an `event` (9).
+    // sind Kombinationen, die die Regeln durchlassen und erst der Motor ablehnt — bis zum
+    // 2. Oktober 2026 das Amphibienfahrzeug-Fahrwerk (60) und die Körperfüllung an `event` (9).
+    // Seit dem Ableiten (docs/decisions/2026-10-02-ableiten-statt-messsperre.md) zeichnet der
+    // Motor fast jede Kombination: 2955 → 26 964 bestehen die Prüfung, 868 → 22 644 komponieren.
+    // Abgelehnt bleibt allein das Fahrwerk unter dem Giebel (4320 = 26 964 − 22 644,
+    // `NotMeasuredError`: die Radplätze sind absolut vermessen, der Körper für den Giebel verkleinert).
     const reach = generativeReach();
     expect(reach.enumerated).toBe(19 * 11 * 9 * 16 * 9);
-    expect(reach.validBySpec).toBe(2955);
-    expect(reach.valid).toBe(868);
+    expect(reach.validBySpec).toBe(26964);
+    expect(reach.valid).toBe(22644);
     // F.1.1 und F.1.3 (Doppelbalken) sowie F.1.13 und F.1.21 (Einzelbalken) tragen seit dem
     // Fachreview ihre Kopfmarke; dazu +20 gültige Kombinationen, weil die technische Kopfmarke
     // jetzt auch an der Formation mit Fußband belegt ist (2 Marken × 10 Organisationen). Seit
@@ -206,17 +216,21 @@ describe('generativeReach (echter Bestand)', () => {
     // (C.2.29), denselben Anhänger mit Fußband (C.2.30) und das Kettenfahrzeug mit
     // inverted-hull-track (C.2.31). C.1.8 teilt seine Signatur mit C.1.1. Keine der sechs liegt
     // außerhalb der Reichweite; sie bleiben auch mit acht Organisationen (LFH-586) gültig.
-    expect(reach.referenced).toBe(77);
-    expect(reach.reachOnly).toBe(868 - 77);
-    // Acht Rezeptsignaturen sind für sich allein nicht gültig: die farbigen Kreisverträge
-    // brauchen ihre Körpermarke, die Personen mit Verwaltungsstufe ihre Funktionsrolle, das
-    // eingesenkte Wasserfahrzeug seine Beschriftung. Stufe 1 enumeriert keine dieser Achsen.
-    expect(reach.referencedOutsideReach).toHaveLength(8);
+    // Seit dem 2. Oktober 2026 85 statt 77: die acht Signaturen, die bis dahin außerhalb lagen,
+    // sind jetzt für sich allein gültig.
+    expect(reach.referenced).toBe(85);
+    expect(reach.reachOnly).toBe(22644 - 85);
+    // Bis zum 2. Oktober 2026 waren acht Rezeptsignaturen für sich allein nicht gültig: die
+    // farbigen Kreisverträge brauchten ihre Körpermarke, die Personen mit Verwaltungsstufe ihre
+    // Funktionsrolle, das eingesenkte Wasserfahrzeug seine Beschriftung. Seit dem Ableiten zeichnet
+    // der Motor sie auch ohne diese Achsen; keine Rezeptsignatur liegt mehr außerhalb.
+    expect(reach.referencedOutsideReach).toHaveLength(0);
     // `bodyMarks` = 88 Fähigkeiten + technische Marken; LFH-786 ergänzt mit `track-chevron-top`
-    // (Drohnenwinkel der Löschdrohne C.2.31) genau eine technische Marke, daher 133 statt 132.
+    // (Drohnenwinkel der Löschdrohne C.2.31) genau eine technische Marke, die Leitstelle D.2.5
+    // (2. Oktober 2026) mit `circle-solid-cap-4mm` eine weitere, daher 134.
     expect(reach.notEnumerated.map((axis) => [axis.id, axis.size])).toEqual([
       ['capabilities', 88],
-      ['bodyMarks', 133],
+      ['bodyMarks', 134],
       ['functionRole', 25],
       ['designation', Number.POSITIVE_INFINITY],
     ]);

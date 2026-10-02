@@ -1,4 +1,4 @@
-import type { BlockCombinationBinding, BlockEntry } from '@einsatzzeichen/schema';
+import type { BlockEntry } from '@einsatzzeichen/schema';
 import { UNDOCUMENTED_AT_SOURCE } from '../layout/zones.js';
 import { babz, block, measured, notMeasured } from './helpers.js';
 
@@ -109,11 +109,13 @@ export const UNIT_GROUPING_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'head',
     notMeasured(
       UNIT_GROUPING_III_GAP_AT,
-      'Keine Geometrie. Die Kennung ist belegt durch `5.5.3_Bereitschaft (Verband III).svg`, aber ' +
-        'keine der 661 Referenzdateien zeigt drei Balken am Körper. Vorschlag, nicht vermessen: ' +
-        'die Vereinigung von Verband I und II, also Balken auf x 12, 16 und 20 mm — so wie 5.5.3 ' +
-        'in der Kapiteldatei die Vereinigung von 5.5.1 und 5.5.2 ist und der Zug am Körper die ' +
-        'von Trupp und Gruppe (x 11/16/21). Entscheidung des Eigentümers offen.',
+      'Keine vermessene Geometrie. Die Kennung ist belegt durch `5.5.3_Bereitschaft (Verband ' +
+        'III).svg`, aber keine der 661 Referenzdateien zeigt drei Balken am Körper. Seit dem ' +
+        '2. Oktober 2026 zeichnet der Standardport den Vorschlag abgeleitet ' +
+        '(`derive/head-zone.ts`, Ableitungsnotiz an der Zeichnung): die Vereinigung von Verband I ' +
+        'und II, also Balken auf x 12, 16 und 20 mm — so wie 5.5.3 in der Kapiteldatei die ' +
+        'Vereinigung von 5.5.1 und 5.5.2 ist und der Zug am Körper die von Trupp und Gruppe ' +
+        '(x 11/16/21).',
     ),
   ),
 ]);
@@ -122,54 +124,17 @@ export const UNIT_GROUPING_BLOCKS: readonly BlockEntry[] = Object.freeze([
 // Verwaltungsstufe (Kapitel 5.7)
 // ---------------------------------------------------------------------------------------------
 
-/**
- * Die Regel, die die Verwaltungsstufe an die Funktionsfassung bindet. Sie steht in `validate.ts`
- * und im Regelkatalog; der Bereich schließt Kommentar und Kennung ein.
- */
-const ADMIN_BINDING_RULE = 'administrative-level-not-measured';
-const ADMIN_BINDING_AT = 'core/src/validate.ts:565–578';
-
-/**
- * Benannte Ausnahme für die drei vermessenen Stufen. Hier ist die Bindung an die Funktionsfassung
- * nachweisbar: der Kopf liegt vor, und trotzdem lehnt die Regel die Stufe ohne aufgelöste
- * Funktionsfassung ab.
- */
-const ADMIN_BINDING_MEASURED: BlockCombinationBinding = Object.freeze({
-  ruleId: ADMIN_BINDING_RULE,
-  definedAt: ADMIN_BINDING_AT,
-  reason:
-    'Der Verwaltungskopf wird nur zusammen mit einer exakt aufgelösten Funktionsfassung gesetzt. ' +
-    '`compose.ts:1168–1177` platziert ihn nur, wenn `roleDefinition` vorliegt, und zwar an deren ' +
-    '`layout.headTopMm`, also nicht über die allgemeine Kopfzone. `validate.ts` lehnt die Stufe ' +
-    'ohne aufgelöste Funktionsfassung mit dieser Regel ab, obwohl der Kopf vermessen ist. Ohne ' +
-    'Funktionsfassung ist der Baustein heute nicht darstellbar.',
-});
-
-/**
- * Für die drei unvermessenen Stufen ist die Bindung **leer**: dieselbe Regel lehnt sie schon am
- * fehlenden Kopf ab, mit oder ohne Funktionsfassung. Sie wird trotzdem geführt, weil die Bedingung
- * im Motor für alle sechs Stufen dieselbe ist und eine Vermessung die Bindung sofort wirksam machte.
- */
-const ADMIN_BINDING_NOT_MEASURED: BlockCombinationBinding = Object.freeze({
-  ruleId: ADMIN_BINDING_RULE,
-  definedAt: ADMIN_BINDING_AT,
-  reason:
-    'Die Bedingung der Regel gilt für alle sechs Stufen gleich: Kopf **und** aufgelöste ' +
-    'Funktionsfassung. Für diese Stufe fehlt der Kopf, die Regel lehnt sie deshalb mit oder ohne ' +
-    'Funktionsfassung ab; die Bindung ist hier nicht nachweisbar, sondern nur vorgezeichnet. Wird ' +
-    'die Stufe vermessen, greift sie wie bei Kreis, Nationalstaat und Europäischer Union.',
-});
-
 const ADMIN_UNDOCUMENTED =
   UNDOCUMENTED_AT_SOURCE +
   'Die Konstante in `administrative-heads.ts` trägt keinen Kommentar. Den Abschnitt D.3/D.4 nennen ' +
-  'erst `validate.ts:565–567` und die Regel `administrative-level-not-measured`.';
+  'die Funktionsfassungen in `function-roles.ts` und die Herkunftsangaben in `derive/head-zone.ts`.';
 
-const ADMIN_GAP_AT = 'core/src/rules/rule-catalog.ts:1034–1039';
+const ADMIN_GAP_AT = 'core/src/rules/rule-catalog.ts:824–829';
 const ADMIN_GAP_REASON =
-  'Keine Geometrie in `ADMINISTRATIVE_HEADS`. Der Regelkatalog: „Eine Regel, aber nur drei der ' +
-  'sechs Stufen belegt (D.3/D.4). Gemeinde, Bezirk und Bundesland lehnt der Motor pauschal ab, ' +
-  'statt eine Regel für sie zu führen."';
+  'Keine vermessene Geometrie in `ADMINISTRATIVE_HEADS`. Seit dem 2. Oktober 2026 zeichnet der ' +
+  'Standardport den Kopf abgeleitet (`derive/head-zone.ts`, Ableitungsnotiz an der Zeichnung): ' +
+  'Sternzahl und Teilung aus der Kapiteldatei 5.7.1, 5.7.3 bzw. 5.7.4, am Körper auf 5/6 der ' +
+  'Teilung gerückt wie Kreis (D.4.1) und Nationalstaat (D.4.4), Stern verbatim aus dem Kreiskopf.';
 
 export const ADMINISTRATIVE_LEVEL_BLOCKS: readonly BlockEntry[] = Object.freeze([
   block(
@@ -177,42 +142,36 @@ export const ADMINISTRATIVE_LEVEL_BLOCKS: readonly BlockEntry[] = Object.freeze(
     'gemeinde',
     'head',
     notMeasured(ADMIN_GAP_AT, ADMIN_GAP_REASON),
-    ADMIN_BINDING_NOT_MEASURED,
   ),
   block(
     'administrative-level',
     'kreis',
     'head',
     measured('core/src/geometry/administrative-heads.ts:35–39', ADMIN_UNDOCUMENTED),
-    ADMIN_BINDING_MEASURED,
   ),
   block(
     'administrative-level',
     'bezirk',
     'head',
     notMeasured(ADMIN_GAP_AT, ADMIN_GAP_REASON),
-    ADMIN_BINDING_NOT_MEASURED,
   ),
   block(
     'administrative-level',
     'bundesland',
     'head',
     notMeasured(ADMIN_GAP_AT, ADMIN_GAP_REASON),
-    ADMIN_BINDING_NOT_MEASURED,
   ),
   block(
     'administrative-level',
     'nationalstaat',
     'head',
     measured('core/src/geometry/administrative-heads.ts:41–45', ADMIN_UNDOCUMENTED),
-    ADMIN_BINDING_MEASURED,
   ),
   block(
     'administrative-level',
     'europaeische-union',
     'head',
     measured('core/src/geometry/administrative-heads.ts:47–55', ADMIN_UNDOCUMENTED),
-    ADMIN_BINDING_MEASURED,
   ),
 ]);
 
@@ -222,9 +181,9 @@ export const ADMINISTRATIVE_LEVEL_BLOCKS: readonly BlockEntry[] = Object.freeze(
 
 /**
  * Keine Kombinationsbindung: `compose.ts` löst die Marke unabhängig von anderen Bausteinen auf
- * und setzt sie in die allgemeine Kopfzone. `technical-head-mark-requires-normal-formation` und
- * `head-zone-conflict` sind Zulässigkeitsregeln (welche Bausteine zusammen dürfen), keine Bindung
- * der Geometrie an einen anderen Baustein.
+ * und setzt sie in die allgemeine Kopfzone, seit dem 2. Oktober 2026 an jedem Grundzeichen mit
+ * Kopfzone. `head-zone-conflict` ist eine Zulässigkeitsregel (welche Bausteine zusammen dürfen),
+ * keine Bindung der Geometrie an einen anderen Baustein.
  */
 export const TECHNICAL_HEAD_MARK_BLOCKS: readonly BlockEntry[] = Object.freeze([
   block(
@@ -234,7 +193,7 @@ export const TECHNICAL_HEAD_MARK_BLOCKS: readonly BlockEntry[] = Object.freeze([
     measured(
       'core/src/geometry/technical-head-marks.ts:7–18',
       UNDOCUMENTED_AT_SOURCE +
-        'Die Konstante trägt keinen Kommentar. Belege nennt nur `validate.ts:589–591`, und zwar ' +
+        'Die Konstante trägt keinen Kommentar. Belege nennt nur `derive/head-zone.ts:230`, und zwar ' +
         'für die technische Kopfmarke als Ganzes (F.1.1, F.1.13, F.1.21, E.1.31, I.1.4), nicht je Wert.',
     ),
   ),

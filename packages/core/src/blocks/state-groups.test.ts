@@ -236,14 +236,15 @@ describe('Zustandsgruppen aus Kapitel 5.8', () => {
   });
 
   it('nennt je Wert die Träger, an denen ein Zustand stehen darf, für die Regel', () => {
-    // 5.8.1 nur an der Person, bis ein Original einen anderen Träger belegt (Entscheidung vom
-    // 29.09.2026) — für die Hinweise belegen 5.8.1.13_2, 5.8.1.14_2 und M.6 die Gefahr.
-    expect(stateCarriersOf('tactical-rescue')).toEqual(['base-symbol/person']);
-    expect(stateCarriersOf('explosion-hazard')).toEqual(['base-symbol/person']);
-    expect(stateCarriersOf('suspected-situation')).toEqual(['base-symbol/person', 'base-symbol/hazard']);
-    expect(stateCarriersOf('acute-situation')).toEqual(['base-symbol/person', 'base-symbol/hazard']);
+    // Bis 02.10.2026 stand 5.8.1 nur an der Person, „bis ein Original einen anderen Träger
+    // belegt“ (Entscheidung vom 29.09.2026). Seit 02.10.2026 bindet die Regel nur noch den Personenzustand; die Taktik sperrt
+    // `state-tactics-not-allowed`, nicht die Trägerregel.
+    expect(stateCarriersOf('tactical-rescue')).toBeUndefined();
+    expect(stateCarriersOf('explosion-hazard')).toBeUndefined();
+    expect(stateCarriersOf('suspected-situation')).toBeUndefined();
+    expect(stateCarriersOf('acute-situation')).toBeUndefined();
     expect(stateCarriersOf('person-injured')).toEqual(['base-symbol/person']);
-    // Offen: kein Träger belegt oder entschieden.
+    // Kein Träger ausgeschlossen.
     for (const value of ['damaged', 'incipient-fire', 'route-closed', 'tendency-rising'] as const) {
       expect(stateCarriersOf(value), value).toBeUndefined();
     }

@@ -7,6 +7,14 @@ export * from './bounds.js';
 export * from './fingerprint.js';
 export * from './layout/profiles.js';
 export * from './not-measured.js';
+export { bodyBoundsMeasured, bodyBoundsMm } from './derive/body-bounds.js';
+export { noteDerivation } from './derive/record.js';
+// Standardports der Kopfzone: vermessener Kopf, sonst der abgeleitete (seit 2. Oktober 2026).
+export { administrativeHeadOrDerived, unitGroupingHeadOrDerived } from './derive/head-zone.js';
+// Vor dem Sternexport aus `geometry/body-marks.js`: der benannte Export verdeckt dessen
+// vermessenen `bodyMark` und leitet für jedes andere Paar ab.
+export { bodyMark, hasFlushRendition } from './derive/body-marks.js';
+export { CIRCLE_VARIANT_PAIRS, circleTopLeftInk } from './derive/circle.js';
 export {
   CompositionError,
   validateSpec,
@@ -170,7 +178,7 @@ export {
 } from './vocabulary.js';
 // LFH-577 (Integration, Zeichen mit Körper): die Bausteine hinter den neuen Spec-Feldern
 // `unitGrouping`, `states` und `tendency`. `placeStates()` legt Zustände an einen Träger und
-// wirft `NotMeasuredError`, wo die Referenz keine Lage zeigt; die Lagen selbst stehen als Daten
+// leitet die Lage ab, wo die Referenz keine zeigt (`basis: 'transferred'`); die Lagen stehen als Daten
 // daneben. `stateCarriersOf()` ist der Inhalt der Regel `state-carrier-not-allowed`. Dazu die
 // Verbandsköpfe (Port `unitGroupingHead`) und die gezeichneten Sonderformen 3.6–3.9. Der Vorschlag
 // für Verband III (`UNIT_GROUPING_III_PROPOSAL_CX_MM`) bleibt bewusst intern: er ist nicht

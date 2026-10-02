@@ -5,7 +5,6 @@ import {
   STATE_IDS,
   type BodyMarkId,
   type BodyMarkRenditionId,
-  type BodyVariantId,
   type ColorToken,
   type AdminLevelId,
   type FunctionRoleDefinition,
@@ -19,10 +18,18 @@ import {
   type SymbolSpec,
   type TechnicalHeadMarkId,
 } from '@einsatzzeichen/schema';
-import { CAPABILITY_UNSCALED_FIT, capabilityInsetForm } from './blocks/capability-inset.js';
 import { stateCarriersOf, stateValueGroup } from './blocks/state-groups.js';
-import { measuredBodyMarkRenditions } from './geometry/body-marks-anhang-c/index.js';
+import { isAllowedBodyVariant } from './derive/body-variant-pairs.js';
+import { bodyMarkRenditionsAnywhere } from './derive/body-marks.js';
+import type { BoundsMm } from './bounds.js';
+import { bodyBoundsMm } from './derive/body-bounds.js';
+import { plainLabelValue } from './label-snapshot.js';
 import { profileFor } from './layout/profiles.js';
+import {
+  functionRoleHeadIsFree,
+  functionRoleOrganizationIsFree,
+} from './derive/function-roles.js';
+import { chassisLiftForForm } from './derive/vehicle-category.js';
 import { ARIMO_CAP_HEIGHT_FRACTION, verticalTextBoxMm } from './render/text-policy.js';
 
 export interface ValidationIssue {
@@ -44,29 +51,29 @@ export class CompositionError extends Error {
 const UNIT_KINDS = new Set<SymbolKind>(['formation', 'person']);
 
 /**
- * Grundzeichenarten, an denen die Referenz eine Fahrwerkszone zeichnet. Gemessen, nicht
- * angenommen (18. August 2026): von den 31 Zeichen des Anhangs E.2 tragen **25** ein Fahrwerk —
- * 20 auf dem Landfahrzeugkörper, vier auf dem Anhängerrumpf, eines auf dem Wechselladerrumpf. Die
- * fünf Wasserfahrzeuge E.2.27 bis E.2.31 tragen keines, E.2.26 auf dem Hochkantrechteck auch
- * nicht, und keine der drei Luftfahrzeugdateien 5.1.4.1 bis 5.1.4.3 trägt eines.
+ * Grundzeichenarten, die eine Fahrzeugkategorie tragen dürfen: die Fahrzeuge. Die Kategorie aus
+ * Kapitel 5.1 beschreibt das Fahrwerk eines Fahrzeugs; an einer Einheit, einer Stelle oder einem
+ * Gebäude hat sie keine Bedeutung (Systematik).
  *
- * Bis LFH-424 hieß diese Menge „Fahrzeuge" und enthielt alle drei Fahrzeugarten. Das war eine
- * Annahme aus dem Wort „Fahrzeugkategorie" — die Referenz stützt sie nicht. LFH-424 zog sie auf
- * das Landfahrzeug zusammen; der Teilslice E.2 fügt die beiden Körperformen hinzu, die er
- * vermessen hat.
+ * Vermessen ist die Fahrwerkszone nur an drei dieser Formen (18. August 2026): von den 31
+ * Zeichen des Anhangs E.2 tragen **25** ein Fahrwerk — 20 auf dem Landfahrzeugkörper, vier auf
+ * dem Anhängerrumpf, eines auf dem Wechselladerrumpf. Die fünf Wasserfahrzeuge E.2.27 bis E.2.31
+ * und die drei Luftfahrzeugdateien 5.1.4.1 bis 5.1.4.3 tragen keines. Seit dem
+ * Eigentümerentscheid vom 02.10.2026 ist das keine Sperre mehr: an Wasser- und Luftfahrzeug wird
+ * die Zone übertragen (`derive/vehicle-category.ts`). Bis LFH-424 stand hier schon einmal diese
+ * Menge — damals als Annahme, jetzt als Systematik mit abgeleiteter Fassung.
  *
- * **Was diese Menge ausdrücklich NICHT erzwingt: die Paarung von Kategorie und Körperform.** Eine
- * Fahrzeugkategorie, die im Bestand nur an einer dieser drei Formen vorkommt, lässt sich an jeder
- * der drei spezifizieren, ohne dass eine Regel widerspricht — der Katalog liefert dann klaglos
- * eine Zeichnung, die an keiner Referenzdatei belegt ist. Das ist bewusst nicht gebaut: bei vier
- * Belegdateien je Paarung wäre die Regel geraten und nicht vermessen
- * (`docs/decisions/2026-08-18-anhang-e2.md`, Abschnitt „Offene Kanten"). Wer die Lücke schließt,
- * schließt sie dort und nicht hier.
+ * **Was diese Menge nicht erzwingt: die Paarung von Kategorie und Körperform.** Eine
+ * Anhängerkategorie am Landfahrzeug oder eine Kfz-Kategorie am Anhänger widerspricht keiner Regel;
+ * gezeichnet wird sie mit den vermessenen Radplätzen der Kategorie
+ * (`docs/decisions/2026-08-18-anhang-e2.md`, Abschnitt „Offene Kanten").
  */
-const CHASSIS_KINDS = new Set<SymbolKind>([
+const VEHICLE_KINDS = new Set<SymbolKind>([
   'vehicle-land',
   'trailer',
   'swap-loader-vehicle',
+  'vehicle-water',
+  'vehicle-air',
 ]);
 
 /** Vermessene Normalhülle des F.2-Landfahrzeugs: x 1…31 / y 5,75…26 mm. */
@@ -80,23 +87,22 @@ const TOP_LABEL_BOX_RIGHT_INSET_MM = 2;
 /** Bestehende Default-Versalhöhe des mittigen Laufs in der Komposition. */
 const DEFAULT_CENTER_LABEL_CAP_HEIGHT_MM = 4.87;
 
-/** Exakte, aus den Quellen vermessene Art-/Variantenpaare; alle anderen bleiben fail-closed. */
-const BODY_VARIANT_KINDS: Readonly<Record<BodyVariantId, ReadonlySet<SymbolKind>>> = {
-  'raised-hull': new Set<SymbolKind>(['vehicle-air', 'vehicle-water']),
-  'inset-hull': new Set<SymbolKind>(['vehicle-water']),
-  'foot-band': new Set<SymbolKind>(['formation', 'vehicle-land', 'trailer', 'circle-12']),
-  'plain-wheel-pair': new Set<SymbolKind>(['vehicle-land']),
-  'raised-gable': new Set<SymbolKind>(['circle-12']),
-  'inverted-hull-track': new Set<SymbolKind>(['vehicle-land']),
-  'fixed-wing-hull': new Set<SymbolKind>(['vehicle-air']),
-  'raised-circle-1mm': new Set<SymbolKind>(['circle-12']),
-  'compact-person-diamond-26mm': new Set<SymbolKind>(['person']),
-  'compact-person-diamond-26mm-lowered-2mm': new Set<SymbolKind>(['person']),
-};
-
 export interface ValidationContext {
   functionRole?: FunctionRoleDefinition;
   administrativeHead?: AdministrativeHeadShape;
+}
+
+/**
+ * Die Körperhülle, gegen die je-Spec-Metriken geprüft werden: vermessen, wo das Profil sie führt,
+ * sonst die des Körperprimitivs (`bodyBoundsMm`). `undefined` für ein Art-/Variantenpaar ohne
+ * Grundzeichen — das meldet bereits `body-variant-requires-measured-kind`.
+ */
+function hullOf(spec: SymbolSpec): BoundsMm | undefined {
+  try {
+    return bodyBoundsMm(spec.kind, spec.bodyVariant);
+  } catch {
+    return undefined;
+  }
 }
 
 function finite(value: unknown): value is number {
@@ -176,63 +182,30 @@ function roleRunsOverlap(left: FunctionRoleTextRun, right: FunctionRoleTextRun):
 }
 
 /**
- * Farbige 12-mm-Kreisverträge außerhalb der weißen F.3-Fassung. Die technischen Marken sind
- * sichtbare Geometrie-IDs; die Tabelle behauptet keine Abschnitts- oder Rezeptsemantik.
+ * Die Felder von `BodyLabels`. Seit dem 2. Oktober 2026 trägt die eingesenkte Hülle jede Zone
+ * (abgeleitet vom angehobenen Wasserrumpf); die Liste schließt weiter unbekannte Schlüssel aus.
  */
-const MEASURED_COLORED_CIRCLE_CONTRACTS = [
-  {
-    bodyVariant: undefined,
-    organization: 'zivile-einheiten',
-    bodyMark: 'spontaneous-helper-collection-arrow',
-  },
-  {
-    bodyVariant: undefined,
-    organization: 'feuerwehr',
-    bodyMark: 'spontaneous-helper-contact-double-arrow',
-  },
-  {
-    bodyVariant: 'raised-circle-1mm',
-    organization: 'zivile-einheiten',
-    bodyMark: 'circle-information-stem',
-  },
-] as const satisfies ReadonlyArray<{
-  readonly bodyVariant: SymbolSpec['bodyVariant'];
-  readonly organization: SymbolSpec['organization'];
-  readonly bodyMark: NonNullable<SymbolSpec['bodyMarks']>[number];
-}>;
-
-const COLORED_NORMAL_CIRCLE_ONLY_MARKS = new Set<
-  NonNullable<SymbolSpec['bodyMarks']>[number]
->([
-  'spontaneous-helper-collection-arrow',
-  'spontaneous-helper-contact-double-arrow',
-]);
-
-function hasMeasuredColoredCircleContract(spec: SymbolSpec): boolean {
-  if (spec.kind !== 'circle-12') return false;
-  const [bodyMark, ...additionalBodyMarks] = spec.bodyMarks ?? [];
-  return additionalBodyMarks.length === 0 && bodyMark !== undefined &&
-    MEASURED_COLORED_CIRCLE_CONTRACTS.some((contract) =>
-      contract.bodyVariant === spec.bodyVariant &&
-      contract.organization === spec.organization &&
-      contract.bodyMark === bodyMark);
-}
-
-function hasMeasuredCircleOrganizationContract(spec: SymbolSpec): boolean {
-  if (spec.kind !== 'circle-12') return false;
-  if (hasMeasuredColoredCircleContract(spec)) return true;
-
-  const isWhiteF3Contract = spec.organization === 'hilfsorganisation' &&
-    (spec.bodyVariant === undefined || spec.bodyVariant === 'raised-gable');
-  return isWhiteF3Contract &&
-    !(spec.bodyMarks ?? []).some((mark) => COLORED_NORMAL_CIRCLE_ONLY_MARKS.has(mark));
-}
-
 const INSET_HULL_LABEL_FIELDS = new Set<PropertyKey>([
   'accessibilityMode',
+  'inBodyInk',
   'center',
+  'centerAnchorFromBodyLeftMm',
+  'centerBaselineFromBodyBottomMm',
+  'centerBoxMarginMm',
   'centerCapHeightMm',
-]);
+  'bottomLeft',
+  'bottomCenter',
+  'bottomRight',
+  'bottomRightMetrics',
+  'topLeft',
+  'topLeftMetrics',
+  'aboveLeft',
+  'aboveLeftMetrics',
+  'topLeftLines',
+  'belowRight',
+  'surfaceBelowLeft',
+  'surfaceBelowRight',
+] satisfies readonly (keyof NonNullable<SymbolSpec['labels']>)[]);
 
 type InsetHullLabelPreparation =
   | { readonly valid: false }
@@ -242,11 +215,12 @@ type InsetHullLabelPreparation =
     };
 
 /**
- * Der eingesenkten Wasserfahrzeughülle sind nur drei einfache Datenfelder belegt. `Object.keys`
- * genügt dafür nicht: geerbte Werte liest `compose()` über die Prototypkette, Accessors können
- * beim Lesen Code ausführen, und nicht-enumerable bzw. Symbolfelder blieben unsichtbar. Akzeptiert
- * werden deshalb ausschließlich eigene, aufzählbare Datenfelder eines normalen oder
- * null-prototype-Objekts; jede andere Objektform bleibt fail-closed.
+ * Die Beschriftung der eingesenkten Wasserfahrzeughülle wird als Datenschnappschuss geprüft.
+ * `Object.keys` genügt dafür nicht: geerbte Werte liest `compose()` über die Prototypkette,
+ * Accessors können beim Lesen Code ausführen, und nicht-enumerable bzw. Symbolfelder blieben
+ * unsichtbar. Akzeptiert werden deshalb ausschließlich eigene, aufzählbare Datenfelder der
+ * bekannten Zonen eines normalen oder null-prototype-Objekts, eine Ebene tief ebenso für Felder
+ * und Metrikobjekte; jede andere Objektform bleibt fail-closed.
  */
 function prepareInsetHullLabelData(value: unknown): InsetHullLabelPreparation {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -265,10 +239,12 @@ function prepareInsetHullLabelData(value: unknown): InsetHullLabelPreparation {
     if (descriptor?.enumerable !== true || !Object.hasOwn(descriptor, 'value')) {
       return { valid: false };
     }
+    const plain = plainLabelValue(descriptor.value);
+    if (plain === undefined) return { valid: false };
     Object.defineProperty(snapshot, key, {
       configurable: false,
       enumerable: true,
-      value: descriptor.value,
+      value: plain.value,
       writable: false,
     });
   }
@@ -326,29 +302,47 @@ function validatePreparedSpec(
       const expectedOrganization = definitionValue.expectedOrganization;
       const expectedStrength = definitionValue.expectedStrength;
       const expectedAdministrativeLevel = definitionValue.expectedAdministrativeLevel;
-      if (!organizationId(expectedOrganization) || spec.organization !== expectedOrganization) {
+      // Rollen der Führung und Leitung nennen ihre Organisation nicht im Titel und stehen in
+      // jeder Farbe; die übrigen binden sie (derive/function-roles.ts).
+      if (
+        !organizationId(expectedOrganization) ||
+        (spec.organization !== expectedOrganization &&
+          !functionRoleOrganizationIsFree(expectedOrganization))
+      ) {
         issues.push({
           rule: 'function-role-organization-mismatch',
-          message: 'Die Organisation entspricht nicht der exakt vermessenen Funktionsfassung.',
+          message:
+            'Die Funktion nennt ihre Organisation im Titel; eine andere oder fehlende ' +
+            'Organisation widerspräche ihr.',
         });
       }
-      const headMatches = expectedHead === 'none'
-        ? spec.strength === undefined && spec.administrativeLevel === undefined &&
-          expectedStrength === undefined && expectedAdministrativeLevel === undefined &&
+      // Erst die Definition in sich: ihre Kopfart, ihr Kopfwert und ihre Kopflage müssen
+      // zusammenpassen. Dann die Spec: genau dieser Kopf — oder, an einer kopffreien
+      // Leitungsrolle, jeder andere, ein zusätzlicher oder keiner.
+      const definitionHeadConsistent = expectedHead === 'none'
+        ? expectedStrength === undefined && expectedAdministrativeLevel === undefined &&
           headTopMm === undefined
         : expectedHead === 'strength'
           ? strengthId(expectedStrength) && expectedAdministrativeLevel === undefined &&
-            spec.strength === expectedStrength && spec.administrativeLevel === undefined &&
             finite(headTopMm)
           : expectedHead === 'administrative' && expectedStrength === undefined &&
-            administrativeLevelId(expectedAdministrativeLevel) &&
-            spec.strength === undefined &&
-            spec.administrativeLevel === expectedAdministrativeLevel && finite(headTopMm) &&
+            administrativeLevelId(expectedAdministrativeLevel) && finite(headTopMm);
+      const specHeadMatches = expectedHead === 'none'
+        ? spec.strength === undefined && spec.administrativeLevel === undefined
+        : expectedHead === 'strength'
+          ? spec.strength === expectedStrength && spec.administrativeLevel === undefined
+          : spec.strength === undefined &&
+            spec.administrativeLevel === expectedAdministrativeLevel &&
             context.administrativeHead !== undefined;
+      const headMatches = definitionHeadConsistent && (
+        specHeadMatches || functionRoleHeadIsFree(definitionValue.id, expectedOrganization)
+      );
       if (!headMatches) {
         issues.push({
           rule: 'function-role-head-mismatch',
-          message: `Die Kopfzone entspricht nicht der vermessenen Fassung "${String(expectedHead)}".`,
+          message:
+            `Die Kopfzone widerspricht der Funktion: sie nennt ihre Kopfzone "${String(expectedHead)}" ` +
+            'im Titel.',
         });
       }
       const body = record(layout?.body) ? layout.body : undefined;
@@ -383,94 +377,48 @@ function validatePreparedSpec(
           });
         }
       }
-      const allowedBodyMarks = definitionValue.allowedBodyMarks;
-      if (spec.bodyMarks?.some(
-        (id) => !Array.isArray(allowedBodyMarks) || !allowedBodyMarks.includes(id),
-      )) {
-        issues.push({
-          rule: 'function-role-body-mark-mismatch',
-          message: 'Mindestens eine Koerpermarke ist fuer diese Funktionsfassung nicht vermessen.',
-        });
-      }
     }
-    if (spec.bodyVariant !== undefined) {
-      issues.push({
-        rule: 'function-role-body-variant-not-measured',
-        message: 'Koerpervarianten sind mit gemessenen Funktionsfassungen nicht kombiniert belegt.',
-      });
-    }
-    if (spec.capabilities !== undefined) {
-      issues.push({
-        rule: 'function-role-capabilities-not-measured',
-        message: 'Standard-Piktogramme sind mit gemessenen Funktionsfassungen nicht kombiniert belegt.',
-      });
-    }
+    // Körpervariante, Piktogramme und weitere Körpermarken an einer Funktion zeichnet der
+    // Rollenzweig abgeleitet (derive/function-roles.ts); die Variante selbst prüft
+    // `body-variant-requires-measured-kind`.
   }
-  const profile = profileFor(spec.kind, spec.bodyVariant);
+  const hull = hullOf(spec);
 
+  // Seit dem 2. Oktober 2026 nur noch Systematik: gesperrt bleibt eine Variante, die eine Form
+  // einer anderen Art benennt (Rumpf, Flügel, Personraute, Kreis). Übertragbare Modifikatoren
+  // zeichnet der Motor abgeleitet (`derive/body-variant-pairs.ts`).
   if (
     spec.bodyVariant !== undefined &&
-    !BODY_VARIANT_KINDS[spec.bodyVariant].has(spec.kind)
+    !isAllowedBodyVariant(spec.kind, spec.bodyVariant)
   ) {
     issues.push({
       rule: 'body-variant-requires-measured-kind',
       message:
-        `Die Körpervariante "${spec.bodyVariant}" ist für "${spec.kind}" nicht vermessen. ` +
-        'Varianten fallen weder auf eine andere Körperart noch auf deren Normalfassung zurück.',
+        `Die Körpervariante "${spec.bodyVariant}" benennt eine Form, die "${spec.kind}" nicht ` +
+        'trägt. Varianten fallen weder auf eine andere Körperart noch auf deren Normalfassung zurück.',
     });
   }
 
   const isInsetWatercraft =
     spec.kind === 'vehicle-water' && spec.bodyVariant === 'inset-hull';
 
-  if (isInsetWatercraft) {
-    const bodyMarks = spec.bodyMarks ?? [];
-    const isHilfsorganisation = spec.organization === 'hilfsorganisation';
-    const isFeuerwehr = spec.organization === 'feuerwehr';
-    const hasMeasuredBodyMark =
-      (isHilfsorganisation &&
-        (bodyMarks.length === 0 ||
-          (bodyMarks.length === 1 && bodyMarks[0] === 'inset-hull-wheel-pair'))) ||
-      (isFeuerwehr && bodyMarks.length === 1 && bodyMarks[0] === 'fire-fighting');
+  // Organisation und Körpermarken an der eingesenkten Hülle sind seit dem 2. Oktober 2026 frei:
+  // jede Organisation füllt den Rumpf (`derive/inset-hull-organization.ts`), unvermessene Marken
+  // überträgt `derive/body-marks.ts`. Entfallen: `inset-hull-requires-measured-organization` und
+  // `inset-hull-requires-measured-body-mark`.
 
-    if (!isHilfsorganisation && !isFeuerwehr) {
-      issues.push({
-        rule: 'inset-hull-requires-measured-organization',
-        message:
-          'inset-hull is measured only for Hilfsorganisation or Feuerwehr body contracts.',
-      });
-    } else if (!hasMeasuredBodyMark) {
-      issues.push({
-        rule: 'inset-hull-requires-measured-body-mark',
-        message:
-          'inset-hull body marks are measured only as none or inset-hull-wheel-pair for ' +
-          'Hilfsorganisation, and fire-fighting for Feuerwehr.',
-      });
-    }
-  }
-
-  if (isInsetWatercraft) {
-    // Der vollständige I.3-Vertrag belegt drei sichere Felder: `accessibilityMode`, `center` und
-    // `centerCapHeightMm`. Das generische Labelmodell ist inzwischen breiter als dieser Vertrag
-    // (unter anderem durch die vermessenen N-Metriken). Deshalb erlauben wir diese drei Felder
-    // explizit, statt eine Liste verbotener Zonen zu pflegen, die beim nächsten Feld still veraltet.
-    const hasUnmeasuredLabelZone = hasInvalidInsetHullLabelData;
-
-    if (hasUnmeasuredLabelZone || spec.designation !== undefined) {
-      issues.push({
-        rule: 'inset-hull-requires-center-label-only',
-        message:
-          'inset-hull supports only the measured center label zone and non-rendering ' +
-          'accessibility metadata.',
-      });
-    }
-
-    if (spec.organization === 'feuerwehr' && spec.labels !== undefined) {
-      issues.push({
-        rule: 'inset-hull-fire-fighting-requires-no-labels',
-        message: 'The measured Feuerwehr inset-hull fire-fighting contract carries no labels.',
-      });
-    }
+  // Seit dem 2. Oktober 2026 trägt die eingesenkte Hülle jede Beschriftungszone und die
+  // Bezeichnung; vermessen ist am I.3-Vertrag weiter nur der mittige Lauf, die übrigen Zonen
+  // leitet `derive/label-zones.ts` vom angehobenen Wasserrumpf ab. Die Kennung bleibt für die
+  // Härtung des Schnappschusses: nur eigene Datenfelder bekannter Zonen (siehe
+  // `prepareInsetHullLabelData`).
+  if (isInsetWatercraft && hasInvalidInsetHullLabelData) {
+    issues.push({
+      rule: 'inset-hull-requires-center-label-only',
+      message:
+        'inset-hull labels must be plain own data fields of the known label zones; accessors, ' +
+        'inherited, symbol or unknown fields are rejected.',
+    });
   }
 
   if (spec.strength !== undefined && !UNIT_KINDS.has(spec.kind)) {
@@ -482,25 +430,12 @@ function validatePreparedSpec(
     });
   }
 
-  if (
-    spec.kind === 'formation' &&
-    spec.bodyVariant === 'foot-band' &&
-    spec.strength === 'staffel'
-  ) {
-    issues.push({
-      rule: 'foot-band-head-requires-measured-strength',
-      message:
-        'Am gebänderten Formationskörper sind nur Trupp, Gruppe und Zug vermessen. Die Staffel ' +
-        'würde den Körper verschieben; wie das Fußband mitwandert, ist nicht belegt.',
-    });
-  }
-
-  if (spec.vehicleCategory !== undefined && !CHASSIS_KINDS.has(spec.kind)) {
+  if (spec.vehicleCategory !== undefined && !VEHICLE_KINDS.has(spec.kind)) {
     issues.push({
       rule: 'vehicle-category-requires-vehicle',
       message:
-        'Eine Fahrzeugkategorie ist nur am Landfahrzeug, am Anhängerrumpf und am ' +
-        `Wechselladerrumpf belegt. "${spec.kind}" trägt in der Referenz keine Fahrwerkszone.`,
+        'Eine Fahrzeugkategorie beschreibt das Fahrwerk eines Fahrzeugs und steht nur an Land-, ' +
+        `Wasser- und Luftfahrzeug, Anhänger und Wechsellader. "${spec.kind}" ist kein Fahrzeug.`,
     });
   }
 
@@ -516,6 +451,9 @@ function validatePreparedSpec(
   // (`spec.labels`), und das ist mit einer Fahrwerkszone zulässig: alle 25 E.2-Zeichen mit
   // Fahrwerk tun genau das (21 mit einer Fahrzeugkategorie, vier mit einem Anhängerfahrwerk) —
   // E.2 tun genau das.
+  //
+  // Die übrigen Zonen unterhalb des Körpers (Lauf unterhalb rechts, Oberflächenläufe) prüft
+  // `below-body-zone-conflict`; diese Regel bleibt bei Fahrwerk und Bezeichnung.
   if (spec.vehicleCategory !== undefined && spec.designation !== undefined) {
     issues.push({
       rule: 'chassis-foot-conflict',
@@ -537,7 +475,8 @@ function validatePreparedSpec(
   if (
     spec.designation !== undefined &&
     (
-      (spec.kind === 'vehicle-land' && spec.bodyVariant === 'plain-wheel-pair') ||
+      // Das Radpaar hängt an jedem Fahrzeugkörper unter der Unterkante, auch abgeleitet.
+      spec.bodyVariant === 'plain-wheel-pair' ||
       (spec.kind === 'vehicle-air' &&
         (spec.bodyVariant === 'raised-hull' || spec.bodyVariant === 'fixed-wing-hull'))
     )
@@ -562,18 +501,40 @@ function validatePreparedSpec(
     });
   }
 
-  // Die Verwaltungsstufenabdeckung ist bewusst partiell: Nur die drei in D.3/D.4 vermessenen
-  // Koepfe werden zusammen mit ihrer exakt aufgeloesten Funktionsrolle akzeptiert. Gemeinde,
-  // Bezirk und Bundesland bleiben fail-closed.
+  // Zonenkollisionen der Beschriftungszonen außerhalb des Körpers, sichtbar geworden mit ihrer
+  // Freigabe an jeder Körperform (2. Oktober 2026). Der Lauf oberhalb links steht im Streifen der
+  // Kopfzone; Fahrwerk, Bezeichnung, Lauf unterhalb rechts und Oberflächenläufe teilen den
+  // Streifen unter dem Körper. Eine Ausweichlage gibt es nicht: über der Kopfzone und unter dem
+  // Fahrwerk endet die 32-mm-Grundfläche. Die Paare Fahrwerk/Bezeichnung und
+  // Bezeichnung/Oberflächenlauf decken weiter `chassis-foot-conflict` und
+  // `surface-label-foot-conflict` ab.
   if (
-    spec.administrativeLevel !== undefined &&
-    (context.administrativeHead === undefined || !resolvedFunctionRole)
+    spec.labels?.aboveLeft !== undefined &&
+    (spec.strength !== undefined || spec.technicalHeadMark !== undefined ||
+      spec.unitGrouping !== undefined || spec.administrativeLevel !== undefined ||
+      // Der Giebel („ortsgebunden“) steht im selben Streifen über dem Körper.
+      spec.bodyVariant === 'raised-gable')
   ) {
     issues.push({
-      rule: 'administrative-level-not-measured',
+      rule: 'above-left-label-head-conflict',
       message:
-        `Die Verwaltungsstufe "${spec.administrativeLevel}" besitzt keinen aufgeloesten ` +
-        'gemessenen Kopf aus D.3/D.4.',
+        'Der Lauf oberhalb links und die Kopfzone oder der Giebel belegen denselben Streifen über ' +
+        'dem Körper und schließen sich aus.',
+    });
+  }
+  const hasChassis = spec.vehicleCategory !== undefined || spec.bodyVariant === 'plain-wheel-pair';
+  const hasSurfaceLabel =
+    spec.labels?.surfaceBelowLeft !== undefined || spec.labels?.surfaceBelowRight !== undefined;
+  if (
+    (hasChassis && (spec.labels?.belowRight !== undefined || hasSurfaceLabel)) ||
+    (spec.labels?.belowRight !== undefined &&
+      (spec.labels.surfaceBelowRight !== undefined || spec.designation !== undefined))
+  ) {
+    issues.push({
+      rule: 'below-body-zone-conflict',
+      message:
+        'Fahrwerk, Bezeichnung, der Lauf unterhalb rechts und die schwarzen Oberflächenläufe ' +
+        'belegen denselben Streifen unter dem Körper; je Seite trägt er nur einen davon.',
     });
   }
 
@@ -588,23 +549,8 @@ function validatePreparedSpec(
     });
   }
 
-  // Belegt sind die normale Formation (F.1.1, F.1.13, F.1.21, E.1.31, I.1.4) und die Formation
-  // mit Fußband (F.1.3: dieselben zwei Balken 1,5 × 4 mm über dem Körper). Jede andere Art oder
-  // Variante bleibt fail-closed.
-  if (
-    spec.technicalHeadMark !== undefined &&
-    (spec.kind !== 'formation' ||
-      (spec.bodyVariant !== undefined && spec.bodyVariant !== 'foot-band'))
-  ) {
-    issues.push({
-      rule: 'technical-head-mark-requires-normal-formation',
-      message:
-        'Die technische Kopfmarke ist nur an der Formation ohne Variante oder mit Fußband vermessen.',
-    });
-  }
-
   // Deckt Stärke, Verwaltungsstufe und technische Kopfmarke gegeneinander sowie die technische
-  // Kopfmarke gegen eine vollständig vermessene Funktionsfassung ab. Eine Funktionsfassung ist
+  // Kopfmarke gegen eine Funktionsfassung mit eigenem Kopf ab. Eine Funktionsfassung ist
   // nicht pauschal eine weitere Kopfquelle: bestehende Rollen binden selbst genau eine Stärke,
   // Verwaltungsstufe oder kopflose Fassung und müssen unverändert gültig bleiben.
   // Die Entscheidungsnotiz vom
@@ -612,9 +558,9 @@ function validatePreparedSpec(
   // ist falsch, `spec.vehicleCategory` kommt hier nicht vor, und die Begründung „belegen beide die
   // Kopfzone" trüge für sie geometrisch auch nicht: die Stärke sitzt oben, das Fahrwerk unten.
   //
-  // Diese Kollision ist von der partiellen Abdeckungsprüfung darüber unabhängig: Auch eine mit
-  // Verwaltungskopf und Funktionsrolle vollständig aufgeloeste Stufe bleibt zusammen mit einer
-  // Stärkeangabe geometrisch unzulässig. Die Regel wird nicht durch einen Typ ersetzt, der die
+  // Diese Kollision ist Systematik und keine Messsperre: Auch eine mit Verwaltungskopf und
+  // Funktionsrolle vollständig aufgeloeste Stufe bleibt zusammen mit einer Stärkeangabe
+  // geometrisch unzulässig — eine Kopfzone, ein Kopf. Die Regel wird nicht durch einen Typ ersetzt, der die
   // Kollision unmöglich macht: eine unterscheidende Vereinigung über `SymbolSpec` (etwa
   // `head: {strength} | {administrativeLevel}`) zöge alle Rezepte und ihre Tests nach. Die
   // Entscheidung steht in der Notiz vom 18. August 2026, damit sie nicht als Versäumnis gelesen
@@ -630,10 +576,14 @@ function validatePreparedSpec(
     spec.technicalHeadMark,
     spec.unitGrouping,
   ].filter((value) => value !== undefined).length;
+  // Eine Funktion ohne eigenen Kopf (`expectedHead: 'none'`) lässt die Kopfzone frei; dort
+  // stehen Kopfmarke oder Verband wie am normalen Körper (Entscheidung vom 2. Oktober 2026).
+  const functionRoleLeavesHeadFree = resolvedFunctionRole && record(definitionValue) &&
+    definitionValue.expectedHead === 'none';
   if (
     explicitHeadOccupants > 1 ||
     ((spec.technicalHeadMark !== undefined || spec.unitGrouping !== undefined) &&
-      spec.functionRole !== undefined)
+      spec.functionRole !== undefined && !functionRoleLeavesHeadFree)
   ) {
     issues.push({
       rule: 'head-zone-conflict',
@@ -649,122 +599,14 @@ function validatePreparedSpec(
     });
   }
 
-  // Die Beschriftungszone steht **unterhalb** des Körpers; Lage und Tinte sind profilabhängig.
-  // E.2.27 bis E.2.31 belegen die tatsächliche Tintenlage und Organisationsfarbe am angehobenen
-  // Wasserrumpf (Tinte 22,5379/24,0806/31,5778/26,9998 mm, Füllung #003296, in allen fünf
-  // Dateien gleich bis auf 0,0003 mm). Das Profil modelliert diese Lage körperrelativ mit
-  // 4,01 mm vertikal und 0,5618 mm horizontal; wie `compose.ts` dokumentiert, ist diese Zerlegung
-  // eine Modellierungsentscheidung und keine direkte Messung der beiden Abstände. G.3.5 führt
-  // am gebänderten 12-mm-Kreis eigene schwarze Profilwerte von 1,0 mm und 3,0 mm.
-  //
-  // Beide Wertesätze bleiben auf ihr jeweiliges Profil und dessen Hülle begrenzt; daraus folgt
-  // keine Übertragung auf weitere Körperformen. Auf einer `formation` erzeugten sie einen Lauf,
-  // den keine Referenzdatei zeigt — und kein Gate meldete ihn: der Fingerprint sieht nur
-  // `role: 'body'`, die Rasterprüfung nur die selbst deklarierte Box.
-  if (
-    spec.labels?.belowRight !== undefined &&
-    profileFor(spec.kind, spec.bodyVariant).belowRight === undefined
-  ) {
-    issues.push({
-      rule: 'below-right-label-requires-measured-body',
-      message:
-        'Die Beschriftungszone unterhalb des Körpers verlangt ein vermessenes Körperprofil. ' +
-        `Für "${spec.kind}" mit Variante "${spec.bodyVariant ?? 'normal'}" fehlt es.`,
-    });
-  }
-
-  // Dieselbe Bauart eine Zone weiter oben: die Grundlinie des Laufs oben links ist an der
-  // Formation (5,0 mm unter der Oberkante) und an den F.2-Landfahrzeugen (Profildefault 6,75 mm)
-  // gemessen. Andere Körperprofile führen keinen Wert und werden abgelehnt statt still einen der
-  // beiden zu erben. Am Gebäudekörper führte schon der Formationsanker 2,5 mm aus dem Polygon
-  // heraus (dessen Kante läuft dort erst ab 5,286 mm).
-  if (
-    spec.labels?.topLeft !== undefined &&
-    profile.topLeftBaselineFromBodyTopMm === undefined
-  ) {
-    issues.push({
-      rule: 'top-left-label-requires-measured-body',
-      message:
-        'Die Beschriftungszone oben links ist an der taktischen Formation und an den ' +
-        'F.2-Landfahrzeugprofilen vermessen. Für ' +
-        `"${spec.kind}" mit Variante "${spec.bodyVariant ?? 'normal'}" gibt es keine Messung, ` +
-        'aus der ihre Lage folgte.',
-    });
-  }
-
-  const isCircle12 = spec.kind === 'circle-12';
-  const isMeasuredCircleVariant = isCircle12 &&
+  // Die Messsperren `circle-top-left-requires-metrics`, `circle-12-requires-organization`,
+  // `circle-12-requires-hilfsorganisation`, `colored-circle-top-left-not-measured` und
+  // `reduced-house-requires-hilfsorganisation` sind am 2. Oktober 2026 gefallen
+  // (`derive/circle.ts`): Jede Organisation, auch keine, füllt den Kreis und die reduzierte
+  // Hauskontur, und ein topLeft-Lauf am 12-mm-Kreis ohne Metriksatz übernimmt den vermessenen
+  // F.3.3- bzw. F.3.5-Satz.
+  const isMeasuredCircleVariant = spec.kind === 'circle-12' &&
     (spec.bodyVariant === undefined || spec.bodyVariant === 'raised-gable');
-  if (
-    isMeasuredCircleVariant &&
-    spec.labels?.topLeft !== undefined &&
-    spec.labels.topLeftMetrics === undefined
-  ) {
-    issues.push({
-      rule: 'circle-top-left-requires-metrics',
-      message:
-        'Ein topLeft-Lauf am 12-mm-Kreis verlangt immer den vollständigen vermessenen ' +
-        'Metriksatz; die beiden Kreisfassungen haben keinen allgemeinen Profildefault.',
-    });
-  }
-  if (
-    spec.labels?.topLeft !== undefined &&
-    profile.requiresTopLeftMetrics === true &&
-    spec.labels.topLeftMetrics === undefined
-  ) {
-    issues.push({
-      rule: 'top-left-metrics-required-by-profile',
-      message:
-        'Dieses Körperprofil belegt den topLeft-Lauf ausschließlich mit einem vollständigen ' +
-        'quellenspezifischen Metriksatz; ein Profildefault wäre nur eine Teilmessung.',
-    });
-  }
-  if (
-    isCircle12 &&
-    spec.bodyVariant === 'foot-band' &&
-    spec.organization === undefined
-  ) {
-    issues.push({
-      rule: 'circle-12-requires-organization',
-      message: 'Der gebänderte 12-mm-Kreis verlangt die Organisationsfarbe seiner Körperfläche.',
-    });
-  }
-  if (
-    isCircle12 &&
-    spec.bodyVariant !== 'foot-band' &&
-    !hasMeasuredCircleOrganizationContract(spec)
-  ) {
-    issues.push({
-      rule: 'circle-12-requires-hilfsorganisation',
-      message:
-        'Der 12-mm-Kreis verlangt einen vollständig vermessenen Organisationsvertrag: die ' +
-        'weiße HiOrg-Fassung aus F.3 oder genau eine der farbigen technischen ' +
-        'Art-/Varianten-/Markenfassungen. Fehlende oder vertauschte Werte sind nicht belegt.',
-    });
-  }
-  if (
-    hasMeasuredColoredCircleContract(spec) &&
-    (spec.labels?.topLeft !== undefined || spec.labels?.topLeftMetrics !== undefined)
-  ) {
-    issues.push({
-      rule: 'colored-circle-top-left-not-measured',
-      message:
-        'Die exakt vermessenen farbigen Kreisverträge führen keinen topLeft-Lauf und keine ' +
-        'zugehörigen F.3-Metriken. Diese weißen Kreislabelverträge werden nicht vererbt.',
-    });
-  }
-  if (
-    spec.kind === 'reduced-house' &&
-    spec.organization !== 'hilfsorganisation'
-  ) {
-    issues.push({
-      rule: 'reduced-house-requires-hilfsorganisation',
-      message:
-        'Die reduzierte Hauskontur ist in beiden F.3-Belegen ausschließlich als weiße ' +
-        'HiOrg-Körperfläche vermessen. Andere oder fehlende Organisationszuordnungen sind ' +
-        'auch ohne Beschriftung nicht belegt.',
-    });
-  }
 
   const topLeftMetrics = spec.labels?.topLeftMetrics as unknown;
   if (topLeftMetrics !== undefined) {
@@ -784,19 +626,10 @@ function validatePreparedSpec(
           'ohne ihn würden alle drei Maße still verschluckt.',
       });
     }
+    // Seit dem 2. Oktober 2026 an jeder Körperform zulässig. Die Grenzen bleiben: am F.2-Landfahrzeug
+    // und an den beiden F.3-Kreisfassungen ihre vermessenen Boxen, sonst die Körperhülle.
     const isMeasuredVehicleLand = spec.kind === 'vehicle-land' &&
       (spec.bodyVariant === undefined || spec.bodyVariant === 'foot-band');
-    const isMeasuredFixedWing = spec.kind === 'vehicle-air' &&
-      spec.bodyVariant === 'fixed-wing-hull';
-    if (!isMeasuredVehicleLand && !isMeasuredCircleVariant && !isMeasuredFixedWing) {
-      issues.push({
-        rule: 'top-left-metrics-require-measured-vehicle-land',
-        message:
-          'Individuelle topLeft-Metriken sind nur am normalen und gebänderten F.2-Landfahrzeug ' +
-          'sowie den beiden F.3-Kreisfassungen und am Festflügel-Luftfahrzeug vermessen. Andere ' +
-          'Arten und Varianten behalten ihre eigenen Profilwerte.',
-      });
-    }
     if (
       metricsRecord === undefined ||
       !Object.hasOwn(metricsRecord, 'capHeightMm') ||
@@ -847,8 +680,8 @@ function validatePreparedSpec(
       }
     }
 
-    if (isMeasuredFixedWing) {
-      const bodyBounds = profile.measuredBodyBoundsMm;
+    if (!isMeasuredVehicleLand && !isMeasuredCircleVariant) {
+      const bodyBounds = hull;
       let metricsWithinBody = false;
       if (
         bodyBounds !== undefined &&
@@ -873,7 +706,7 @@ function validatePreparedSpec(
           rule: 'top-left-metrics-within-body',
           message:
             'Der vollständige topLeft-Lauf muss mit endlichem Anker und seiner abgeleiteten ' +
-            'vertikalen Textbox innerhalb der vermessenen Körperhülle liegen.',
+            'vertikalen Textbox innerhalb der Körperhülle liegen.',
         });
       }
     }
@@ -924,18 +757,6 @@ function validatePreparedSpec(
     }
   }
 
-  if (
-    spec.labels?.aboveLeft !== undefined &&
-    profile.aboveLeftBaselineFromBodyTopMm === undefined
-  ) {
-    issues.push({
-      rule: 'above-left-label-requires-measured-body',
-      message:
-        'Die Beschriftungszone oberhalb links ist allein am Luftfahrzeug aus F.2.7 vermessen. ' +
-        `Für "${spec.kind}" gibt es keine Messung, aus der ihre Lage folgte.`,
-    });
-  }
-
   const aboveLeftMetrics = spec.labels?.aboveLeftMetrics as unknown;
   if (aboveLeftMetrics !== undefined) {
     const record = typeof aboveLeftMetrics === 'object' && aboveLeftMetrics !== null &&
@@ -961,10 +782,13 @@ function validatePreparedSpec(
       });
     }
     if (!invalidOrIncomplete && record !== undefined) {
-      const bodyBounds = profile.measuredBodyBoundsMm;
+      const bodyBounds = hull;
       const capHeightMm = record.capHeightMm as number;
+      // Ein Fahrwerk unter Zusatzgeometrie hebt das ganze Zeichen (derive/vehicle-category.ts);
+      // gegen die Grundfläche zählt die angehobene Lage.
       const baselineYMm = (bodyBounds?.minY ?? Number.NaN) +
-        (record.baselineFromBodyTopMm as number);
+        (record.baselineFromBodyTopMm as number) -
+        chassisLiftForForm(spec.kind, spec.bodyVariant, spec.vehicleCategory);
       const anchorXMm = (bodyBounds?.minX ?? Number.NaN) +
         (record.anchorFromBodyLeftMm as number);
       const box = verticalTextBoxMm(
@@ -983,62 +807,17 @@ function validatePreparedSpec(
         issues.push({
           rule: 'above-left-metrics-within-viewbox',
           message:
-            'Der abgeleitete aboveLeft-Lauf muss mit seinem Anker innerhalb der vermessenen ' +
-            'Profilbox und mit seiner vollständigen Textbox innerhalb der 32-mm-ViewBox liegen.',
+            'Der abgeleitete aboveLeft-Lauf muss mit seinem Anker innerhalb der Profilbox der ' +
+            'Körperhülle und mit seiner vollständigen Textbox innerhalb der 32-mm-ViewBox liegen.',
         });
       }
     }
-  }
-
-  if (
-    spec.labels?.topLeftLines !== undefined &&
-    (
-      profileFor(spec.kind, spec.bodyVariant).topLeftLines === undefined ||
-      (spec.bodyVariant !== undefined && !BODY_VARIANT_KINDS[spec.bodyVariant].has(spec.kind))
-    )
-  ) {
-    issues.push({
-      rule: 'top-left-lines-require-measured-body',
-      message:
-        'Die zweizeilige obere Beschriftungszone ist allein am Landfahrzeug aus F.2.8 ' +
-        `vermessen. Für "${spec.kind}" gibt es keine Messung, aus der ihre Lage folgte.`,
-    });
   }
 
   if (spec.labels?.topLeftLines !== undefined && spec.labels.topLeftLines.length !== 2) {
     issues.push({
       rule: 'top-left-lines-exactly-two',
       message: 'Die zweizeilige obere Beschriftungszone muss exakt zwei Zeilen enthalten.',
-    });
-  }
-
-  if (
-    (spec.labels?.surfaceBelowLeft !== undefined || spec.labels?.surfaceBelowRight !== undefined) &&
-    profileFor(spec.kind, spec.bodyVariant).surfaceLabels === undefined
-  ) {
-    issues.push({
-      rule: 'surface-label-requires-measured-body',
-      message: 'Schwarze Oberflächenläufe sind nur an den dafür vermessenen Körperprofilen zulässig.',
-    });
-  }
-  if (
-    spec.labels?.surfaceBelowLeft !== undefined &&
-    profileFor(spec.kind, spec.bodyVariant).surfaceLabels !== undefined &&
-    profileFor(spec.kind, spec.bodyVariant).surfaceLabels?.leftAnchorFromBodyLeftMm === undefined
-  ) {
-    issues.push({
-      rule: 'surface-left-label-requires-measured-anchor',
-      message: 'Der linke schwarze Oberflächenlauf verlangt einen links vermessenen Anker.',
-    });
-  }
-  if (
-    spec.labels?.surfaceBelowRight !== undefined &&
-    profileFor(spec.kind, spec.bodyVariant).surfaceLabels !== undefined &&
-    profileFor(spec.kind, spec.bodyVariant).surfaceLabels?.rightAnchorFromBodyRightMm === undefined
-  ) {
-    issues.push({
-      rule: 'surface-right-label-requires-measured-anchor',
-      message: 'Der rechte schwarze Oberflächenlauf verlangt einen rechts vermessenen Anker.',
     });
   }
 
@@ -1061,50 +840,30 @@ function validatePreparedSpec(
       message: 'Der Abstand der mittigen Grundlinie muss endlich und größer als null sein.',
     });
   }
-  if (
-    spec.labels?.centerBaselineFromBodyBottomMm !== undefined &&
-    profile.allowsCenterBaselineOverride !== true
-  ) {
-    issues.push({
-      rule: 'center-baseline-override-requires-measured-body',
-      message: 'Eine abweichende mittige Grundlinie ist nur an einem dafür vermessenen Körperprofil zulässig.',
-    });
-  }
-  if (
-    spec.labels?.centerBaselineFromBodyBottomMm !== undefined &&
-    profile.measuredCenterBaselineOverridesMm !== undefined &&
-    !profile.measuredCenterBaselineOverridesMm.includes(spec.labels.centerBaselineFromBodyBottomMm)
-  ) {
-    issues.push({
-      rule: 'center-baseline-not-measured',
-      message:
-        'Die abweichende mittige Grundlinie muss einem an diesem Körperprofil vermessenen Wert entsprechen.',
-    });
-  }
+  // Abweichende Grundlinie und Anker des mittigen Laufs sind seit dem 2. Oktober 2026 an jeder
+  // Körperform zulässig; außerhalb der vermessenen Listen zeichnet `compose()` sie als abgeleitet.
+  // Die Grenze ist die Körperhülle (`center-label-within-body`, Anker unten).
   if (
     spec.labels?.centerAnchorFromBodyLeftMm !== undefined &&
     (
       spec.labels.center === undefined ||
       !Number.isFinite(spec.labels.centerAnchorFromBodyLeftMm) ||
-      profile.allowsCenterAnchorOverride !== true ||
-      profile.measuredCenterAnchorsFromBodyLeftMm === undefined ||
-      !profile.measuredCenterAnchorsFromBodyLeftMm.includes(spec.labels.centerAnchorFromBodyLeftMm)
+      hull === undefined ||
+      spec.labels.centerAnchorFromBodyLeftMm < 0 ||
+      spec.labels.centerAnchorFromBodyLeftMm > hull.maxX - hull.minX
     )
   ) {
     // Die Kennung stammt aus der Zeit, als nur der Anhänger (I.2.5) einen Anker führte; seit
-    // LFH-786 führt auch das Landfahrzeug (C.2.25) zwei. Die Kennung bleibt als API stehen.
+    // dem 2. Oktober 2026 prüft sie nur noch Lauf, Endlichkeit und Hülle. Sie bleibt als API stehen.
     issues.push({
       rule: 'center-anchor-override-requires-measured-trailer',
       message:
-        'Ein abweichender mittiger x-Anker ist nur an einem Körperprofil zulässig, das ihn ' +
-        'vermessen hat (Anhänger, Landfahrzeug), und nur mit einem dort gemessenen Wert.',
+        'Ein abweichender mittiger x-Anker verlangt einen mittigen Lauf und einen endlichen Wert ' +
+        'innerhalb der Körperhülle.',
     });
   }
-  if (
-    spec.labels?.centerBaselineFromBodyBottomMm !== undefined &&
-    profile.allowsCenterBaselineOverride === true
-  ) {
-    const bodyBounds = profile.measuredBodyBoundsMm;
+  if (spec.labels?.centerBaselineFromBodyBottomMm !== undefined) {
+    const bodyBounds = hull;
     const capHeightMm = spec.labels.centerCapHeightMm ?? DEFAULT_CENTER_LABEL_CAP_HEIGHT_MM;
     const baselineYMm = (bodyBounds?.maxY ?? Number.NaN) -
       spec.labels.centerBaselineFromBodyBottomMm;
@@ -1125,7 +884,7 @@ function validatePreparedSpec(
         rule: 'center-label-within-body',
         message:
           'Die aus Grundlinie und Versalhöhe abgeleitete mittige Textbox muss vollständig ' +
-          'innerhalb der vermessenen Körperhülle liegen.',
+          'innerhalb der Körperhülle liegen.',
       });
     }
   }
@@ -1148,65 +907,18 @@ function validatePreparedSpec(
   }
   if (
     centerBoxMarginMm !== undefined &&
-    (
-      profile.allowsCenterBoxMarginOverride !== true ||
-      profile.measuredBodyBoundsMm === undefined
-    )
-  ) {
-    issues.push({
-      rule: 'center-box-margin-override-requires-measured-body',
-      message:
-        'Ein individueller Rand der mittigen Textbox ist nur an einer vermessenen ' +
-        'Körperhülle zulässig.',
-    });
-  }
-  if (
-    centerBoxMarginMm !== undefined &&
     Number.isFinite(centerBoxMarginMm) &&
-    centerBoxMarginMm >= 0 &&
-    profile.allowsCenterBoxMarginOverride === true &&
-    profile.measuredBodyBoundsMm !== undefined
+    centerBoxMarginMm >= 0
   ) {
-    const bodyWidthMm = profile.measuredBodyBoundsMm.maxX - profile.measuredBodyBoundsMm.minX;
+    const bodyWidthMm = hull === undefined ? 0 : hull.maxX - hull.minX;
     if (centerBoxMarginMm * 2 >= bodyWidthMm) {
       issues.push({
         rule: 'center-box-margin-within-body',
         message:
           'Der beidseitige Rand der mittigen Textbox muss eine positive Boxbreite innerhalb ' +
-          'der vermessenen Körperhülle übrig lassen.',
+          'der Körperhülle übrig lassen.',
       });
     }
-  }
-
-  if (
-    spec.labels?.bottomCenter !== undefined &&
-    profileFor(spec.kind, spec.bodyVariant).bottomCenterBaselineFromBodyBottomMm === undefined
-  ) {
-    issues.push({
-      rule: 'bottom-center-label-requires-measured-body',
-      message:
-        'Die Beschriftungszone unten mittig ist an der taktischen Formation (2,0 mm über der ' +
-        'Körperunterkante, F.1.18/F.1.20) und am gebänderten 12-mm-Kreis (6,0 mm über der ' +
-        `Körperunterkante, G.3.5) vermessen. Für "${spec.kind}" mit Variante ` +
-        `"${spec.bodyVariant ?? 'normal'}" gibt es keine Messung, aus der ihre Lage folgte.`,
-    });
-  }
-
-  // Nur Profile mit Organisations-Tinte brauchen eine Organisation, die diese Farbe liefert.
-  // Das G.3.5-Kreisband trägt `belowRight` dagegen ausdrücklich schwarz; seine unabhängige
-  // Organisationspflicht für die Körperfläche wird weiter oben separat geprüft.
-  if (
-    spec.labels?.belowRight !== undefined &&
-    profileFor(spec.kind, spec.bodyVariant).belowRight?.ink === 'organization' &&
-    spec.organization === undefined
-  ) {
-    issues.push({
-      rule: 'below-right-label-requires-organization',
-      message:
-        'Dieses Körperprofil führt die Beschriftungszone unterhalb des Körpers in der ' +
-        'Organisationsfarbe (#003296 an E.2.27 bis E.2.31). Ohne Organisation hat sie keine ' +
-        'gemessene Farbe.',
-    });
   }
 
   // Die gemessene Versalhöhe des mittigen Laufs. Ohne mittigen Lauf hätte sie keine Wirkung —
@@ -1265,7 +977,11 @@ function validatePreparedSpec(
     ] as const;
     const complete = record !== undefined && required.every((field) =>
       Object.hasOwn(record, field));
-    const profileBounds = profileFor(spec.kind, spec.bodyVariant).bottomRightMetricsBounds;
+    // Ohne vermessene Textbox am Profil gilt die Körperhülle (seit dem 2. Oktober 2026).
+    const profileBounds = profileFor(spec.kind, spec.bodyVariant).bottomRightMetricsBounds ??
+      (hull === undefined
+        ? undefined
+        : { widthMm: hull.maxX - hull.minX, heightMm: hull.maxY - hull.minY });
 
     if (spec.labels?.bottomRight === undefined || spec.labels.bottomRight.trim() === '') {
       issues.push({
@@ -1273,14 +989,6 @@ function validatePreparedSpec(
         message:
           'Gemessene bottomRight-Metriken verlangen einen nichtleeren Lauf; ohne ihn würden ' +
           'Versalhöhe, Grundlinie, Anker und Box still verschluckt.',
-      });
-    }
-    if (profileBounds === undefined) {
-      issues.push({
-        rule: 'bottom-right-metrics-require-measured-body',
-        message:
-          'Individuelle bottomRight-Metriken sind nur an einem Körperprofil mit vollständig ' +
-          'vermessener relativer Textbox zulässig.',
       });
     }
     if (!complete) {
@@ -1333,7 +1041,7 @@ function validatePreparedSpec(
           rule: 'bottom-right-metrics-within-body',
           message:
             'Die vollständige bottomRight-Textbox einschließlich Anker und vertikaler ' +
-            'Schriftmetriken muss innerhalb der vermessenen Körperhülle liegen.',
+            'Schriftmetriken muss innerhalb der Körperhülle liegen.',
         });
       }
     }
@@ -1364,72 +1072,18 @@ function validatePreparedSpec(
     }
   }
 
-  // LFH-787, Entscheidung „AB“ vom 29. September 2026: A, wo die Referenz spricht; B, wo sie
-  // schweigt. Jede Boxfähigkeit geht genau an eine der beiden Regeln, nie an beide.
-  //
-  // A — `capabilities-pictogram-has-measured-rendition`: Hat das Paar aus Fähigkeit und
-  // Körperfassung eine vermessene Fassung (`capabilityInsetForm`), zeichnet die Referenz das
-  // Piktogramm dort in dieser Fassung und nicht als Einzeldarstellung in der Box. Die Boxfassung
-  // ist abgelehnt, der Weg führt über `bodyMarks`. Gelesen wird dynamisch aus
-  // `CAPABILITY_INSET_FORMS`, damit jede neu vermessene Fassung die Regel ohne Zutun erweitert.
-  // Eine gesetzte Körpervariante zählt mit: Ihre vermessenen Fassungen (etwa die Instandsetzung
-  // an der Formation mit Fußband, G.1.1) zeichnet `bodyMarks` an derselben Variante.
-  //
-  // B — `capabilities-pictogram-overflows-body` (LFH-587): Ohne vermessene Fassung setzt die
-  // Boxfassung die Einzeldarstellung unskaliert ein. Zugelassen ist das nur, wo das Clipping-Gate
-  // belegt, dass das Piktogramm an dieser Körperform im Körper bleibt (`CAPABILITY_UNSCALED_FIT`).
-  // An Körperformen ohne Flächenmodell und an Körpervarianten ist das nicht geprüft, also
-  // fail-closed.
-  if (spec.capabilities !== undefined && spec.functionRole === undefined) {
-    const measured = spec.capabilities.filter(
-      (id) => capabilityInsetForm(id, spec.kind, spec.bodyVariant) !== undefined,
-    );
-    if (measured.length > 0) {
-      const body = spec.bodyVariant === undefined
-        ? `"${spec.kind}"`
-        : `"${spec.kind}" mit der Körpervariante "${spec.bodyVariant}"`;
-      issues.push({
-        rule: 'capabilities-pictogram-has-measured-rendition',
-        message:
-          `Für ${measured.map((id) => `"${id}"`).join(', ')} an ${body} ist eine eigene ` +
-          'Körperfassung an der Referenz vermessen; die Referenz zeichnet das Piktogramm dort in ' +
-          'dieser Fassung, nicht als Einzeldarstellung in der Standardbox. Setze die Fähigkeit ' +
-          'unter `bodyMarks` statt unter `capabilities`.',
-      });
-    }
-    const fitting = CAPABILITY_UNSCALED_FIT.find((entry) => entry.kind === spec.kind);
-    const overflowing = spec.capabilities.filter(
-      (id) =>
-        !measured.includes(id) &&
-        (spec.bodyVariant !== undefined ||
-          fitting === undefined ||
-          !fitting.capabilities.includes(id)),
-    );
-    if (overflowing.length > 0) {
-      const names = overflowing.map((id) => `"${id}"`).join(', ');
-      issues.push({
-        rule: 'capabilities-pictogram-overflows-body',
-        message:
-          spec.bodyVariant !== undefined
-            ? `Kapitel-4-Piktogramme in der Boxfassung sind an der Körpervariante "${spec.bodyVariant}" ` +
-              `nicht auf Einsetzbarkeit geprüft, und für ${names} ist dort keine Körperfassung ` +
-              'vermessen. Entferne die Fähigkeit oder verzichte auf die Körpervariante.'
-            : fitting === undefined
-              ? `Für "${spec.kind}" ist nicht prüfbar, ob ein Kapitel-4-Piktogramm im Körper bleibt ` +
-                `(kein Flächenmodell), und für ${names} ist dort keine Körperfassung vermessen. ` +
-                'Entferne die Fähigkeit oder wähle eine andere Körperform.'
-              : `Die Einzeldarstellung von ${names} ragt unskaliert über den Körper von ` +
-                `"${spec.kind}". Die Referenz setzt Kapitel-4-Piktogramme in einer eigenen Fassung ` +
-                'je Körperform ein, und an dieser Körperform ist dafür keine vermessen. Entferne ' +
-                'die Fähigkeit oder wähle eine andere Körperform.',
-      });
-    }
-  }
+  // Fähigkeiten in der Boxfassung sind seit dem 2. Oktober 2026 an jeder Körperform zugelassen:
+  // `compose()` zeichnet sie in der vermessenen Körperfassung, wo das Paar eine hat, und passt
+  // sonst die Einzeldarstellung ins Innenfeld ein (`derive/capabilities.ts`). Die Regeln
+  // `capabilities-pictogram-has-measured-rendition` und `-overflows-body` (LFH-787 „AB“) sind
+  // damit entfallen.
 
-  // LFH-786: Fassungskennungen je Körpermarke (`bodyMarkRenditions`). `bodyMark()` wirft, wenn
-  // eine Kennung an ihrem Paar nicht vermessen ist; diese Regel meldet denselben Fall vorab, mit
-  // denselben Kontextfeldern wie `compose()`. Dazu jede Kennung an einer Marke, die die Spec gar
-  // nicht zeichnet — sie bliebe sonst still wirkungslos. Gelesen werden nur eigene Schlüssel.
+  // LFH-786: Fassungskennungen je Körpermarke (`bodyMarkRenditions`). Seit dem 2. Oktober 2026
+  // verengt: Eine Kennung, die für diese Marke irgendwo in Anhang C vermessen ist, überträgt
+  // `bodyMark()` an jedes andere Paar (`derive/body-marks.ts`). Abgelehnt wird nur noch, was keine
+  // Lücke, sondern eine falsche Angabe ist: eine Kennung, die für diese Marke nirgends vermessen
+  // ist, und eine Kennung an einer Marke, die die Spec gar nicht zeichnet — sie bliebe sonst still
+  // wirkungslos. Gelesen werden nur eigene Schlüssel.
   const renditions = spec.bodyMarkRenditions as unknown;
   if (renditions !== undefined) {
     const record = typeof renditions === 'object' && renditions !== null &&
@@ -1445,22 +1099,17 @@ function validatePreparedSpec(
         problems.push(`Die Fassung für "${mark}" verlangt diese Marke in \`bodyMarks\`.`);
         continue;
       }
-      const measured = measuredBodyMarkRenditions(mark as BodyMarkId, {
-        kind: spec.kind,
-        ...(spec.bodyVariant === undefined ? {} : { bodyVariant: spec.bodyVariant }),
-        ...(spec.vehicleCategory === undefined ? {} : { vehicleCategory: spec.vehicleCategory }),
-      });
+      const measured = bodyMarkRenditionsAnywhere(mark as BodyMarkId);
       if (
         typeof rendition !== 'string' ||
         !(BODY_MARK_RENDITION_IDS as readonly string[]).includes(rendition) ||
         !measured.includes(rendition as BodyMarkRenditionId)
       ) {
         problems.push(
-          `Die Fassung "${String(rendition)}" von "${mark}" ist an ` +
-            `${spec.kind}/${spec.bodyVariant ?? 'normal'} nicht vermessen; ` +
+          `Die Fassung "${String(rendition)}" ist für "${mark}" nirgends vermessen; ` +
             (measured.length === 0
-              ? 'dort gibt es nur die Grundfassung.'
-              : `vermessen sind dort ${measured.map((id) => `"${id}"`).join(', ')}.`),
+              ? 'die Marke hat nur ihre Grundfassung.'
+              : `vermessen sind ${measured.map((id) => `"${id}"`).join(', ')}.`),
         );
       }
     }
@@ -1530,11 +1179,12 @@ const NOT_ATTACHABLE_STATE_GROUPS: Readonly<Partial<Record<StateGroupId, string>
  * Skalen, von denen ein Zeichen höchstens einen Wert trägt (Entscheidung des Eigentümers vom
  * 29.09.2026, dort Punkt 7): zwei Stufen derselben Skala widersprechen sich, und zwei
  * Personenzustände an einer Raute zeigt kein Original — die Verbindungen „verletzt und …" sind in
- * 5.8.8 eigene Werte. Die Hinweise „?" und „!" aus 5.8.1 zählen als eigene Skala.
+ * 5.8.8 eigene Werte. Die Hinweise „?" und „!" aus 5.8.1 sind seit dem 02.10.2026 keine Skala
+ * mehr: dass kein Original beide zeigt, war eine Beobachtung, kein Verbot (Register `proposed`);
+ * beide zugleich stehen abgeleitet untereinander in der Randlage.
  */
 const ONE_PER_SIGN_STATE_GROUPS: readonly StateGroupId[] = ['activity', 'damage', 'fire', 'persons'];
 const KNOWN_STATE_IDS: ReadonlySet<StateId> = new Set<StateId>(STATE_IDS);
-const STATE_HINTS: ReadonlySet<StateId> = new Set<StateId>(['suspected-situation', 'acute-situation']);
 /** Einsatztaktik 5.8.1.1 bis 5.8.1.4. */
 const STATE_TACTICS: ReadonlySet<StateId> = new Set<StateId>([
   'tactical-rescue',
@@ -1545,11 +1195,9 @@ const STATE_TACTICS: ReadonlySet<StateId> = new Set<StateId>([
 
 /**
  * Die Regeln zu `SymbolSpec.states` (LFH-577). Sie prüfen, ob ein Zustand an dieses Zeichen darf
- * und wie viele zugleich; **wo** er steht, entscheidet danach `placeStates()` in `compose()` — und
- * wirft `NotMeasuredError`, wenn die Referenz die Lage nicht zeigt. Ein Wert, für den weder ein
- * Träger belegt noch entschieden ist (`stateCarriersOf` gibt `undefined`), wird hier deshalb nicht
- * abgelehnt: eine Regel verböte, was niemand entschieden hat, und verdeckte die ehrlichere Aussage
- * „nicht vermessen".
+ * und wie viele zugleich; **wo** er steht, entscheidet danach `compose()` — vermessen oder aus den
+ * belegten Lagen abgeleitet (`derive/states.ts`). Gebunden ist nur noch der Personenzustand 5.8.8
+ * an die Person (`stateCarriersOf`); jeder andere Wert steht an jedem Grundzeichen.
  */
 function stateIssues(spec: SymbolSpec): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
@@ -1595,9 +1243,7 @@ function stateIssues(spec: SymbolSpec): ValidationIssue[] {
   const perScale = new Map<string, StateId[]>();
   for (const value of attachable) {
     const group = stateValueGroup(value);
-    const scale = STATE_HINTS.has(value)
-      ? 'hints'
-      : ONE_PER_SIGN_STATE_GROUPS.includes(group) ? group : undefined;
+    const scale = ONE_PER_SIGN_STATE_GROUPS.includes(group) ? group : undefined;
     if (scale !== undefined) perScale.set(scale, [...(perScale.get(scale) ?? []), value]);
   }
   for (const values of perScale.values()) {

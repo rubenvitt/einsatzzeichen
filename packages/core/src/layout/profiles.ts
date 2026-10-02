@@ -1,5 +1,7 @@
 import type { BodyVariantId, Primitive, SymbolKind } from '@einsatzzeichen/schema';
 import { boundsOfMm, shiftY, type BoundsMm } from '../bounds.js';
+import { derivedVariantProfile } from '../derive/body-variant-profiles.js';
+import { circleInnerTopLeftBaselineFromBodyTopMm, placeCircleUnderHead } from '../derive/circle.js';
 
 /**
  * Abstand zwischen der Unterkante der Kopfzone und dem Körperanker.
@@ -96,16 +98,16 @@ export interface LayoutProfile {
   /** Erlaubt eine je Lauf deklarierte horizontale Center-Ausgabebox. */
   allowsCenterBoxMarginOverride?: true;
   /**
-   * Absolute vermessene Körperhülle für vollständige je-Spec-Textmetriken. Fehlt sie, darf
-   * die Validierung keine relativen Metriken gegen eine angenommene Hülle freigeben.
+   * Absolute vermessene Körperhülle für vollständige je-Spec-Textmetriken. Fehlt sie, prüft
+   * die Validierung gegen die Hülle des Körperprimitivs (`bodyBoundsMm`, seit 2. Oktober 2026).
    */
   measuredBodyBoundsMm?: Readonly<BoundsMm>;
   /** Grundlinie der unteren linken/rechten Läufe, gerechnet von der Körperunterkante nach oben. */
   bottomLabelBaselineFromBodyBottomMm: number;
   /**
    * Grundlinie des Laufs oben links, gerechnet **von der Körperoberkante nach unten**. Fehlt sie,
-   * ist die Zone an dieser Körperform nicht vermessen und `compose()` wirft, statt eine Lage zu
-   * raten.
+   * ist die Zone an dieser Körperform nicht vermessen; `derive/label-zones.ts` überträgt dann die
+   * nächstliegende vermessene Lage und markiert sie als abgeleitet.
    *
    * Gemessen ist bisher genau eine Zahl: **5,0 mm** an den neun beschrifteten Zeichen aus
    * F.1.1 bis F.1.11 (Körperoberkante 6,0, Grundlinie 11,0 — eigene Vermessung, 18. August 2026).
@@ -115,7 +117,7 @@ export interface LayoutProfile {
    * Teilslice F-c sie einträgt, und nicht als stille Miterbschaft dieser.
    */
   topLeftBaselineFromBodyTopMm?: number;
-  /** Dieses Profil belegt `topLeft` ausschließlich mit einem vollständigen je-Spec-Metriksatz. */
+  /** `topLeft` hier nur mit vollständigem Metriksatz vermessen; ohne ihn gilt N.1.6, abgeleitet. */
   requiresTopLeftMetrics?: true;
   /** Grundlinie eines linksbündigen Laufs oberhalb des Körpers, gegen dessen Oberkante. */
   aboveLeftBaselineFromBodyTopMm?: number;
@@ -134,7 +136,7 @@ export interface LayoutProfile {
   };
   /**
    * Körperhülle, innerhalb der ein vollständiger je-Spec-Metriksatz für `bottomRight` belegt ist.
-   * Fehlt der Wert, lehnt `validateSpec()` den Metriksatz statt einer Profilübertragung ab.
+   * Fehlt der Wert, prüft `validateSpec()` den Metriksatz gegen die Körperhülle.
    */
   bottomRightMetricsBounds?: {
     readonly widthMm: number;
@@ -154,7 +156,7 @@ export interface LayoutProfile {
    * beschriftete oder kopftragende Nutzer desselben Körpers behalten die geschlossene Kontur.
    */
   openTopWhenHeadlessAndUnlabelled?: boolean;
-  /** Vermessene Zone rechts unterhalb des Körpers. Fehlt sie, ist die Zone nicht zulässig. */
+  /** Vermessene Zone rechts unterhalb des Körpers. Fehlt sie, gilt die abgeleitete Lage. */
   belowRight?: {
     readonly baselineFromBodyBottomMm: number;
     readonly anchorFromBodyRightMm: number;
@@ -249,6 +251,10 @@ const trailerProfile: LayoutProfile = {
 const footBandTrailerProfile: LayoutProfile = {
   ...trailerProfile,
   topLeftBaselineFromBodyTopMm: 6.75,
+  // Die unteren Ecken lagen bis zum 2. Oktober 2026 auf geerbten 2 mm, also im schwarzen Band
+  // (y 23…26). Übertragen von G.1.2 (`formation/foot-band`, Grundlinie 5 mm über der
+  // Unterkante); als abgeleitet notiert in `noteFootBandCornerLabels()` (derive/label-zones.ts).
+  bottomLabelBaselineFromBodyBottomMm: 5,
 };
 
 /**
@@ -319,6 +325,8 @@ const vehicleLandProfile: LayoutProfile = {
 
 const footBandVehicleLandProfile: LayoutProfile = {
   ...vehicleLandProfile,
+  // Wie am Anhänger mit Fußband: unten links/rechts über dem Band, übertragen von G.1.2.
+  bottomLabelBaselineFromBodyBottomMm: 5,
   allowsCenterBaselineOverride: undefined,
   allowsCenterAnchorOverride: undefined,
   measuredCenterAnchorsFromBodyLeftMm: undefined,
@@ -482,17 +490,43 @@ const loweredCompactPersonDiamondProfile: LayoutProfile = {
 const circleBodyProfile: LayoutProfile = {
   id: 'circle-body',
   defaultAnchorMm: 2,
-  // Unvermessen, wie bei `rotated-square-body`.
+  // Unvermessen und seit dem 2. Oktober 2026 auch unbenutzt: `compose()` setzt den mittigen Lauf
+  // am Kreis ohne vermessenen Override mit der Versalmitte auf die Kreismitte
+  // (`circleCenterBaselineFromBodyBottomMm`, D.2.3 bis D.2.5). Die Zahl steht, damit das Feld
+  // nicht fehlt.
   centerBaselineFromBodyBottomMm: 8,
   bottomLabelBaselineFromBodyBottomMm: 2,
+  // Übertragen von G.3.5 (2. Oktober 2026, `derive/circle.ts`): unten mittig 6 mm über der
+  // Unterkante in der Körpertinte, rechts unterhalb 1 mm unter und 3 mm rechts der Hülle schwarz
+  // auf der Oberfläche. Vermessen sind beide nur am gebänderten Kreis.
+  bottomCenterBaselineFromBodyBottomMm: 6,
+  belowRight: {
+    baselineFromBodyBottomMm: 1,
+    anchorFromBodyRightMm: 3,
+    ink: 'black',
+  },
+  // Das gemessene Negativ oben bleibt bestehen; seit dem 2. Oktober 2026 wird die Lage abgeleitet
+  // statt abgelehnt: verschieben wie C.1.1, sonst von oben verkleinern wie D.3.7.
   place(body, headBottomMm) {
     if (headBottomMm === null) return body;
-    throw new Error(
-      'Kein Zeichen des Referenzbestands führt eine Kopfzone über einem Kreiskörper: 109 der 661 ' +
-        'Dateien tragen eine 3-mm-Marke im Kopfzonenraster, 36 tragen einen Kreiskörper, die ' +
-        'Schnittmenge ist leer (Vermessung vom 18. August 2026). Wie ein Kreiskörper einer ' +
-        'Kopfzone ausweicht, ist damit nicht ableitbar und wird nicht geraten.',
-    );
+    return placeCircleUnderHead(body, headBottomMm, HEAD_GAP_MM);
+  },
+};
+
+/**
+ * Die Funktionsstelle selbst (1.6): Den Lauf oben links setzt sie innen auf die Kreissehne, weil
+ * links oben außerhalb des 14-mm-Kreises kein Platz bleibt (`circleCornerRuns`). Die Grundlinie
+ * steht hier, damit die Zone als belegt gilt; Anker und Box rechnet `compose()` am Kreis.
+ */
+const postProfile: LayoutProfile = {
+  ...circleBodyProfile,
+  topLeftBaselineFromBodyTopMm: circleInnerTopLeftBaselineFromBodyTopMm(14),
+  // G.3.5 setzt „Bw“ auf (31|29); an der Hülle 2…30 bliebe x 33 außerhalb der Fläche. Der Anker
+  // bleibt absolut auf 31.
+  belowRight: {
+    baselineFromBodyBottomMm: 1,
+    anchorFromBodyRightMm: 1,
+    ink: 'black',
   },
 };
 
@@ -505,24 +539,45 @@ const circleBodyProfile: LayoutProfile = {
 const circle12Profile: LayoutProfile = {
   ...circleBodyProfile,
   topLeftBaselineFromBodyTopMm: 1.000254,
+  // D.2.3/D.2.4: „M“ und „L“ auf Grundlinie 19 bei Kreisunterkante 28, Versalhöhe 7,30.
+  allowsCenterBaselineOverride: true,
+  measuredCenterBaselineOverridesMm: [9] as const,
+  measuredBodyBoundsMm: { minX: 4, minY: 4, maxX: 28, maxY: 28 },
 };
 
 const raisedGableCircle12Profile: LayoutProfile = {
   ...circleBodyProfile,
   topLeftBaselineFromBodyTopMm: -0.999746,
+  // D.2.5: „LtS“ auf Grundlinie 22 bei Kreisunterkante 30, Versalhöhe 7,30.
+  allowsCenterBaselineOverride: true,
+  measuredCenterBaselineOverridesMm: [8] as const,
+  measuredBodyBoundsMm: { minX: 4, minY: 6, maxX: 28, maxY: 30 },
 };
 
 const raisedCircleOneMmProfile: LayoutProfile = {
   ...circleBodyProfile,
+  // Übertragen von F.3.3 (2. Oktober 2026): derselbe Lauf außerhalb oben links, gegen die um
+  // 1 mm angehobene Hülle gerechnet.
+  topLeftBaselineFromBodyTopMm: 1.000254,
   surfaceLabels: {
     baselineFromBodyBottomMm: 4,
     leftAnchorFromBodyLeftMm: -3,
     rightAnchorFromBodyRightMm: 3,
   },
+  // Rechts unterhalb liegt hier der Streifen der Oberflächenläufe (N.2.3); die von G.3.5
+  // übertragene Zone stieße auf sie und entfällt.
+  belowRight: undefined,
+  // Der Kreis weicht einer Kopfzone nicht nach unten aus: darunter stehen die Oberflächenläufe.
+  place(body, headBottomMm) {
+    if (headBottomMm === null) return body;
+    return placeCircleUnderHead(body, headBottomMm, HEAD_GAP_MM, boundsOfMm(body).maxY);
+  },
 };
 
 const footBandCircle12Profile: LayoutProfile = {
   ...circleBodyProfile,
+  // Übertragen von F.3.3 (2. Oktober 2026): dieselbe Hülle wie der 12-mm-Kreis.
+  topLeftBaselineFromBodyTopMm: 1.000254,
   // G.3.5: Diesel auf y=22, Bw rechts außen auf (31|29), Körperhülle 4…28 mm.
   bottomCenterBaselineFromBodyBottomMm: 6,
   // G.3.5: Der in Pfade umgewandelte Diesel-Lauf ist in der Referenz schwarz, nicht weiss.
@@ -533,6 +588,40 @@ const footBandCircle12Profile: LayoutProfile = {
     ink: 'black',
   },
 };
+/**
+ * Die drei abgeleiteten Fassungen der Funktionsstelle (`CIRCLE_VARIANT_PAIRS`, 2. Oktober 2026).
+ * Körper und Zonen sind von den 12-mm-Fassungen übertragen; siehe `POST_VARIANT_BODIES`.
+ */
+const postRaisedGableProfile: LayoutProfile = {
+  ...raisedGableCircle12Profile,
+  allowsCenterBaselineOverride: undefined,
+  measuredCenterBaselineOverridesMm: undefined,
+  measuredBodyBoundsMm: undefined,
+};
+
+const postRaisedCircleOneMmProfile: LayoutProfile = {
+  ...raisedCircleOneMmProfile,
+  topLeftBaselineFromBodyTopMm: circleInnerTopLeftBaselineFromBodyTopMm(13),
+  // N.2.3 setzt die Läufe absolut auf x 1 und 31, Grundlinie 31; gegen die Hülle 3…29 × 1…27.
+  surfaceLabels: {
+    baselineFromBodyBottomMm: 4,
+    leftAnchorFromBodyLeftMm: -2,
+    rightAnchorFromBodyRightMm: 2,
+  },
+};
+
+const postFootBandProfile: LayoutProfile = {
+  ...footBandCircle12Profile,
+  topLeftBaselineFromBodyTopMm: circleInnerTopLeftBaselineFromBodyTopMm(14),
+  // G.3.5 setzt „Bw“ auf (31|29) bei Hülle 4…28; an der Hülle 2…30 bliebe x 33 außerhalb der
+  // Fläche. Der Anker bleibt absolut auf 31, die Grundlinie 1 mm unter dem Körper.
+  belowRight: {
+    baselineFromBodyBottomMm: 1,
+    anchorFromBodyRightMm: 1,
+    ink: 'black',
+  },
+};
+
 const PROFILES: Record<SymbolKind, LayoutProfile> = {
   formation: formationProfile,
   // Die drei Körperformen ohne Kapitel-1-Abschnitt. `rectBodyProfile` und kein eigenes Profil:
@@ -563,14 +652,14 @@ const PROFILES: Record<SymbolKind, LayoutProfile> = {
   event: rectBodyProfile,
   'spontaneous-helper': rectBodyProfile,
   person: rotatedSquareProfile,
-  post: circleBodyProfile,
+  post: postProfile,
   'circle-12': circle12Profile,
   // F.3.15/F.3.16 tragen weder Kopf- noch Labelzone. Wie bei den übrigen eigenständigen
   // Rechteckkörpern bleibt `place()` ohne Kopfzone identisch; ein neues Profil wäre unbelegt.
   'reduced-house': rectBodyProfile,
 };
 
-export function profileFor(kind: SymbolKind, variant?: BodyVariantId): LayoutProfile {
+function variantProfile(kind: SymbolKind, variant: BodyVariantId | undefined): LayoutProfile | undefined {
   if (kind === 'person' && variant === 'compact-person-diamond-26mm') {
     return compactPersonDiamondProfile;
   }
@@ -593,5 +682,24 @@ export function profileFor(kind: SymbolKind, variant?: BodyVariantId): LayoutPro
   if (kind === 'circle-12' && variant === 'raised-gable') return raisedGableCircle12Profile;
   if (kind === 'circle-12' && variant === 'raised-circle-1mm') return raisedCircleOneMmProfile;
   if (kind === 'circle-12' && variant === 'foot-band') return footBandCircle12Profile;
-  return PROFILES[kind];
+  if (kind === 'post' && variant === 'raised-gable') return postRaisedGableProfile;
+  if (kind === 'post' && variant === 'raised-circle-1mm') return postRaisedCircleOneMmProfile;
+  if (kind === 'post' && variant === 'foot-band') return postFootBandProfile;
+  // Abgeleitete Paare (Entscheidung vom 2. Oktober 2026): Grundart ohne Einzelmessungen.
+  return derivedVariantProfile(kind, variant, PROFILES[kind]);
+}
+
+/**
+ * Das Layoutprofil einer Art und Variante. Eine Variante ohne eigenes Profil erhält das Profil
+ * ihrer Grundart — das braucht `validateSpec`, das auch unbelegte Paare befragt, um sie mit Regel
+ * abzulehnen. **Gezeichnet** wird ein solches Paar nie: `compose()` verlangt über
+ * `hasVariantProfile()` ein eigenes Profil, sonst erbte die Variante still fremde Zonenwerte.
+ */
+export function profileFor(kind: SymbolKind, variant?: BodyVariantId): LayoutProfile {
+  return variantProfile(kind, variant) ?? PROFILES[kind];
+}
+
+/** Ob diese Variante ein eigenes Profil führt (ohne Variante: immer). */
+export function hasVariantProfile(kind: SymbolKind, variant?: BodyVariantId): boolean {
+  return variant === undefined || variantProfile(kind, variant) !== undefined;
 }

@@ -8,17 +8,17 @@ import { babz, block, measured } from './helpers.js';
  * **Fähigkeit** (`capability`): die Box-Fassung aus Kapitel 4, also die Piktogramme unter
  * `core/src/geometry/pictograms/capabilities/`. Jede der 88 Fähigkeiten hat dort eine Primärfassung.
  * Die randbündige Fassung derselben Kennung in `core/src/geometry/body-marks.ts` ist eine zweite,
- * je Körper vermessene Zeichnung. Sie ist Kombinationsbezug und gehört nicht in diesen Eintrag:
- * `bodyMark()` lässt sie ausdrücklich nicht auf die Boxfassung zurückfallen. Eine Fähigkeit, die
- * es **nur** randbündig gäbe, gibt es nicht.
+ * je Körper vermessene Zeichnung. Sie ist Kombinationsbezug und gehört nicht in diesen Eintrag.
+ * Eine Fähigkeit, die es **nur** randbündig gäbe, gibt es nicht.
  *
  * **Körpermarke** (`body-mark`): nur `TECHNICAL_BODY_MARK_IDS`. `BodyMarkId` umfasst zusätzlich
  * die Fähigkeiten; die stehen oben unter `capability`. Jede technische Marke ist laut Schema „an
- * genau einem Körper-/Variantenkontext vermessen“ und lehnt jeden anderen Kontext fail-closed ab.
+ * genau einem Körper-/Variantenkontext vermessen“; an jedem anderen ist sie übertragen.
  * Diese Bindung trägt im Regelkatalog **keine** Regel — `RULE_DIMENSION_GAPS` sagt für
  * `body-marks` selbst, dass es keine Regel gibt, welche Marke an welcher Körperform sitzen darf.
- * Sie steht deshalb nicht als `combinationBinding` da. Ausnahme ist `inset-hull-wheel-pair`: dort
- * trägt `inset-hull-requires-measured-body-mark` die Bindung.
+ * Sie steht deshalb nicht als `combinationBinding` da. Seit dem 2. Oktober 2026 gilt das ohne
+ * Ausnahme: `inset-hull-requires-measured-body-mark` ist entfallen, und an jedem anderen Kontext
+ * überträgt `bodyMark()` die vermessene Fassung (`derive/body-marks.ts`).
  *
  * **Funktionsfassung** (`function-role`): jede Fassung in `core/src/geometry/function-roles.ts` bringt
  * Körper, Kopf und Läufe selbst mit. Geführt wird die Bindung an die Körperart
@@ -671,14 +671,6 @@ const BODY_MARKS_FILE = 'core/src/geometry/body-marks.ts';
 /** Die Anhang-C-Fassungen aus LFH-786 stehen je Familie in einer eigenen Datei. */
 const ANHANG_C_BODY_MARKS_DIR = 'core/src/geometry/body-marks-anhang-c';
 
-/** Die einzige technische Körpermarke, deren Körperbindung eine Regel im Regelkatalog trägt. */
-const INSET_HULL_BINDING = {
-  ruleId: 'inset-hull-requires-measured-body-mark',
-  definedAt: 'core/src/validate.ts:423–450',
-  reason:
-    'An der eingesenkten Hülle sind die Körpermarken nur als keine oder inset-hull-wheel-pair für die Hilfsorganisation und als fire-fighting für die Feuerwehr vermessen.',
-} as const;
-
 function bodyMark(
   valueId: string,
   lines: string,
@@ -695,247 +687,252 @@ function bodyMark(
       note,
       sourceRefs === undefined ? undefined : babz(...sourceRefs),
     ),
-    valueId === 'inset-hull-wheel-pair' ? INSET_HULL_BINDING : undefined,
   );
 }
 
 export const BODY_MARK_BLOCKS: readonly BlockEntry[] = Object.freeze([
   bodyMark(
     'ring-7mm-offset-down-1mm',
-    '837–847',
+    '838–848',
     'F.1.13: Kreis r 7 mm, Mittelpunkt 1 mm unter der Körpermitte.',
     ['F.1.13'],
   ),
   bodyMark(
     'chevron-over-opposed-triangles',
-    '849–872',
+    '850–873',
     'F.1.16: ein gefüllter Winkel über zwei zur Körpermitte gerichteten Dreiecken.',
     ['F.1.16'],
   ),
   bodyMark(
     'ring-6-5mm-offset-down-2mm-with-roof',
-    '911–940',
+    '912–941',
     'F.1.21: eigener Ring r 6,5 mm, Dach und eingeschriebenes Dreieck.',
     ['F.1.21'],
   ),
   bodyMark(
     'top-center-rect-0-5x0-6mm',
-    '1402–1410',
+    '1406–1414',
     `${UNDOCUMENTED_AT_SOURCE}0,5 × 0,6 mm großes gefülltes Rechteck mittig 2,5 mm unter der Oberkante, nur am Landfahrzeug mit Radpaar (\`VEHICLE_LAND_PLAIN_WHEEL_PAIR_MARKS\`).`,
   ),
   bodyMark(
     'air-winch-chevron-diamond',
-    '1838–1854',
+    '1843–1859',
     'F.2.6: Winde. Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert (Mittellinien statt der Außenkonturpunkte der früheren Fassung).',
     ['F.2.6'],
   ),
   bodyMark(
     'ring-6mm-offset-down-3mm-four-way-stem',
-    '1555',
+    '1559',
     `${UNDOCUMENTED_AT_SOURCE}Eintrag in \`VEHICLE_LAND_NORMAL_MARKS\`, gezeichnet von \`landFourWayStem\`; dort ist nur der Fuß an F.2.11 nachgemessen.`,
   ),
   bodyMark(
     'ring-5mm-offset-down-3mm-eight-spokes',
-    '1556',
+    '1560',
     `${UNDOCUMENTED_AT_SOURCE}Eintrag in \`VEHICLE_LAND_NORMAL_MARKS\`, gezeichnet von \`landShiftedEightSpokes\`.`,
   ),
   bodyMark(
     'circle-patient-staging-arrows',
-    '1125–1134',
+    '1127–1136',
     'Tabelle `CIRCLE_NORMAL_MARKS`: F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen, gegen die 24 × 24-mm-Hülle gerechnet.',
   ),
   bodyMark(
     'circle-collection-arrow',
-    '1135–1143',
+    '1137–1145',
     'Tabelle `CIRCLE_NORMAL_MARKS`: F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen, gegen die 24 × 24-mm-Hülle gerechnet.',
   ),
   bodyMark(
     'circle-staging-frame-arrow',
-    '1144–1158',
+    '1146–1160',
     'Tabelle `CIRCLE_NORMAL_MARKS`: F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen, gegen die 24 × 24-mm-Hülle gerechnet.',
   ),
   bodyMark(
     'circle-staging-frame',
-    '1159–1168',
+    '1161–1170',
     'Tabelle `CIRCLE_NORMAL_MARKS`: F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen, gegen die 24 × 24-mm-Hülle gerechnet.',
   ),
   bodyMark(
     'circle-staging-frame-quadrants-arrows',
-    '1169–1185',
+    '1171–1187',
     'Tabelle `CIRCLE_NORMAL_MARKS`: F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen, gegen die 24 × 24-mm-Hülle gerechnet.',
   ),
   bodyMark(
     'circle-diamond-arrow',
-    '1186–1199',
+    '1188–1201',
     'F.3.10: aus den jeweils gegenüberliegenden Konturseiten des 0,5-mm-Umrisses gemittelte Mittellinienpunkte; Anschlag und Pfeil darunter getrennt vermessen.',
     ['F.3.10'],
   ),
   bodyMark(
     'circle-cross-ring',
-    '1200–1211',
+    '1202–1213',
     'Tabelle `CIRCLE_NORMAL_MARKS`: F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen, gegen die 24 × 24-mm-Hülle gerechnet.',
   ),
   bodyMark(
     'circle-double-arrow-lower-v',
-    '1212–1222',
+    '1214–1224',
     'Tabelle `CIRCLE_NORMAL_MARKS`: F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen, gegen die 24 × 24-mm-Hülle gerechnet.',
   ),
   bodyMark(
     'circle-information-stem',
-    '1223',
+    '1225',
     'Tabelle `CIRCLE_NORMAL_MARKS` (F.3, am 26. August 2026 vermessen); zusätzlich in `CIRCLE_RAISED_ONE_MM_MARKS` (N.2.3: am um 1 mm angehobenen Kreis ausschließlich diese eine Marke vermessen).',
   ),
   bodyMark(
     'circle-transport-diamond-arrows',
-    '1224–1232',
+    '1226–1234',
     'Tabelle `CIRCLE_NORMAL_MARKS`: F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen, gegen die 24 × 24-mm-Hülle gerechnet.',
   ),
   bodyMark(
     'circle-transport-diamond-wheels-arrows',
-    '1233–1241',
+    '1235–1243',
     'Tabelle `CIRCLE_NORMAL_MARKS`: F.3.1 bis F.3.14 und F.3.17 bis F.3.19, am 26. August 2026 je Quelle separat vermessen, gegen die 24 × 24-mm-Hülle gerechnet.',
   ),
   bodyMark(
     'circle-two-waves-diamond',
-    '1292–1316',
+    '1296–1320',
     'Tabelle `CIRCLE_RAISED_GABLE_MARKS`: I.4.1 ergänzt seit der unabhängigen Messung vom 27. August 2026 eine technische Marke ausschließlich an der exakten raised-gable-Hülle (4|6)–(28|30).',
   ),
   bodyMark(
     'circle-diagonal-double-arrow-offset-bowl',
-    '1242–1256',
+    '1244–1258',
     'Tabelle `CIRCLE_NORMAL_MARKS`: I.4.2 und I.4.3 am 27. August 2026 unabhängig ergänzt, auf die exakte Lage (4|4)–(28|28) begrenzt.',
   ),
   bodyMark(
     'circle-wide-bowl',
-    '1257–1265',
+    '1259–1267',
     'Tabelle `CIRCLE_NORMAL_MARKS`: I.4.2 und I.4.3 am 27. August 2026 unabhängig ergänzt, auf die exakte Lage (4|4)–(28|28) begrenzt.',
   ),
   bodyMark(
+    'circle-solid-cap-4mm',
+    '1286',
+    'D.2.5 Leitstelle (2. Oktober 2026): schwarzes Kreissegment zwischen der Außenkante des Rings und der Sehne 4 mm unter der Kreisoberkante, gegen die Hülle gerechnet (`circleSolidCap4mm`, body-marks-circle-cap.ts). Vermessen an der abgesenkten Giebelfassung (4|6)–(28|30) (`CIRCLE_RAISED_GABLE_MARKS`); an den übrigen 12-mm-Fassungen übertragen und vermerkt.',
+    ['D.2.5'],
+  ),
+  bodyMark(
     'formation-solid-cap-3mm',
-    '400–408',
+    '401–409',
     `${UNDOCUMENTED_AT_SOURCE}3 mm hohe gefüllte Kappe über die volle Breite der Formation (\`MARKS\`).`,
   ),
   bodyMark(
     'formation-solid-cap-3.7mm-three-hole-row',
-    '409–427',
+    '410–428',
     `${UNDOCUMENTED_AT_SOURCE}3,7 mm hohe gefüllte Kappe mit drei weißen Löchern r 1,5 mm (\`MARKS\`).`,
   ),
   bodyMark(
     'formation-solid-cap-4mm-three-hole-row',
-    '428–443',
+    '429–444',
     `${UNDOCUMENTED_AT_SOURCE}4 mm hohe gefüllte Kappe mit drei weißen Löchern r 1,5 mm (\`MARKS\`).`,
   ),
   bodyMark(
     'formation-water-rescue-compact',
-    '445–487',
+    '446–488',
     'I.1.5 bis I.1.8: die kompakte, körperbezogene Wasserrettungsfassung — ausdrücklich nicht die 23 mm breite Boxfassung aus 4.5.8.',
     ['I.1.5–I.1.8'],
   ),
   bodyMark(
     'h-veterinary-decontamination',
-    '581–608',
+    '582–609',
     'H.2: Veterinär- und Tierdekontaminationsmarke, Maße an der Referenz abgelesen (Fachreview 19.09.2026).',
     ['H.2'],
   ),
   bodyMark(
     'h-veterinary-slaughter',
-    '610–635',
+    '611–636',
     'H.3: Veterinär-V mit der eigenständig vermessenen Schlacht-/Untersuchungsmarke links.',
     ['H.3'],
   ),
   bodyMark(
     'land-horizontal-blade-bent-upright',
-    '1609–1623',
+    '1613–1627',
     'N.1.1, Maße an der Referenz abgelesen: Schild waagerecht auf y 14,5, senkrechter Strich x 21 mit Knick bei (21|18,5).',
     ['N.1.1'],
   ),
   bodyMark(
     'ring-5mm-offset-down-3-5mm-eight-spokes',
-    '1557–1569',
+    '1561–1573',
     `${UNDOCUMENTED_AT_SOURCE}Ring r 5 mm mit acht Speichen, 6,5 mm über der Unterkante (\`VEHICLE_LAND_NORMAL_MARKS\`).`,
   ),
   bodyMark(
     'air-quartering-up-arrow-box',
-    '1855–1871',
+    '1860–1876',
     'N.1.4, Maße an der Referenz abgelesen: Schaft x 23 bis zur Spitze (23|9), Kasten 5 × 5 mm ab (20,5|15).',
     ['N.1.4'],
   ),
   bodyMark(
     'air-horizontal-left-chevron',
-    '1877–1884',
+    '1882–1889',
     `${UNDOCUMENTED_AT_SOURCE}waagerechter Strich mit nach links weisendem Winkel am Festflügelrumpf (\`VEHICLE_AIR_FIXED_WING_MARKS\`).`,
   ),
   bodyMark(
     'air-rising-diagonal',
-    '1885–1893',
+    '1890–1898',
     'N.1.6, Maße an der Referenz abgelesen: die Diagonale steigt mit 1 : 2 aus der linken Rumpfecke bis auf den Bogen.',
     ['N.1.6'],
   ),
   bodyMark(
     'spontaneous-helper-collection-arrow',
-    '1908–1917',
+    '1913–1922',
     'Tabelle `CIRCLE_NORMAL_ANHANG_N_MARKS`: N.2.1/N.2.2, Innenmarken ausschließlich auf dem normalen 12-mm-Kreis (Hülle 4…28).',
   ),
   bodyMark(
     'spontaneous-helper-contact-double-arrow',
-    '1918–1927',
+    '1923–1932',
     'Tabelle `CIRCLE_NORMAL_ANHANG_N_MARKS`: N.2.1/N.2.2, Innenmarken ausschließlich auf dem normalen 12-mm-Kreis (Hülle 4…28).',
   ),
   bodyMark(
     'inset-hull-wheel-pair',
-    '1993–2002',
+    '1998–2007',
     'Tabelle `VEHICLE_WATER_INSET_HULL_MARKS`: I.3.4 und I.3.11, eigenständig vermessene Marken des eingesenkten Wasserrumpfs.',
   ),
   bodyMark(
     'formation-two-waves-diamond',
-    '503–504',
+    '504–505',
     'I.1.1 bis I.1.4: zwei Wellen über einer Raute auf der normalen Formationshülle.',
     ['I.1.1–I.1.4'],
   ),
   bodyMark(
     'formation-water-rescue-lower-zone',
-    '506–520',
+    '507–521',
     'I.1.15 bis I.1.20: die kompakte Wasserrettungsmarke der Formation. Maße an der Referenz abgelesen (I.1.15, I.1.17, I.1.19), Geometrie eigenständig konstruiert.',
     ['I.1.15–I.1.20'],
   ),
   bodyMark(
     'formation-hooked-crossed-disks-over-lowered-wave-diamond',
-    '522–566',
+    '523–567',
     'I.1.13 und I.1.14: eine eigene technische Composite-Marke, gemeinsam an genau diesen beiden normalen Formationskörpern vermessen. Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert.',
     ['I.1.13', 'I.1.14'],
   ),
   bodyMark(
     'formation-opposed-triangles-top',
-    '874–893',
+    '875–894',
     'I.1.19: zwei gefüllte, zur Mitte gerichtete Dreiecke in der oberen Inhaltszone.',
     ['I.1.19'],
   ),
   bodyMark(
     'formation-chevron-top',
-    '895–909',
+    '896–910',
     'I.1.20: ein einzelner gefüllter Winkel in der oberen Inhaltszone.',
     ['I.1.20'],
   ),
   bodyMark(
     'double-wave-inner-diamond-8mm',
-    '983–991',
+    '984–992',
     'Tabelle `PERSON_I5_MARKS`: I.5.1 bis I.5.3, zwei Wellen und die innere Raute relativ zum Mittelpunkt der 26-mm-Raute; Maße an der Referenz abgelesen (I.5.1, I.5.2).',
   ),
   bodyMark(
     'trailer-water-rescue',
-    '1931–1940',
+    '1936–1945',
     'I.2.4: zwei Wellen über der Raute, nur am normalen Anhängerrumpf. Maße an der Referenz abgelesen.',
     ['I.2.4'],
   ),
   bodyMark(
     'trailer-diving',
-    '1941–1950',
+    '1946–1955',
     'I.2.5/I.2.6: kompaktere Fassung, getrennt von I.2.4 abgelesen.',
     ['I.2.5', 'I.2.6'],
   ),
   bodyMark(
     'trailer-boat-hull',
-    '1951–1965',
+    '1956–1970',
     'I.2.7: der Bootsrumpf, als Strich konstruiert. Maße an der Referenz abgelesen.',
     ['I.2.7'],
   ),
@@ -957,7 +954,7 @@ const FUNCTION_ROLES_FILE = 'core/src/geometry/function-roles.ts';
  */
 const FUNCTION_ROLE_BINDING = {
   ruleId: 'function-role-requires-measured-kind',
-  definedAt: 'core/src/validate.ts:304–322',
+  definedAt: 'core/src/validate.ts:280–298',
   reason:
     'Eine gemessene Funktion ist nur an Formation oder Person belegt, und jede einzelne Fassung zusätzlich nur an der Art, für die sie vermessen wurde.',
 } as const;

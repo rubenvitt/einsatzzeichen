@@ -138,7 +138,7 @@ trägt und woher ein Zeichen stammt. Das alles liefert `core` selbst — der
 | Export | Was es tut |
 |---|---|
 | `SPEC_FIELD_VALUES`, `specFieldValues(field)` | der Wertevorrat je Feld: `one-of` und `list` mit ihren Werten, `flag`, `text` und `structured` nur gekennzeichnet |
-| `vocabulary(spec, field, { candidates? })` | je Wert `allowed` oder `blocked` — mit Grund `rule` (erklärte Regeln) oder `not-measured` (keine vermessene Fassung, mit Reichweite) |
+| `vocabulary(spec, field, { candidates? })` | je Wert `allowed` (mit `derived: true`, wenn die Zeichnung abgeleitete Teile trägt) oder `blocked` — mit Grund `rule` (erklärte Regeln) oder `not-measured` (auch abgeleitet nicht zeichenbar, mit Reichweite) |
 | `checkSpec(spec, options?)` | dieselbe Prüfung für eine ganze Beschreibung: die Zeichnung oder der erklärte Grund, statt eines Wurfs |
 | `explainIssue(issue)`, `explainRejection(error)`, `RULE_EXPLANATIONS` | Titel, Erklärung und betroffenes Feld je Regel |
 | `symbolProvenance(spec)` | `verbatim` (Körperhülle an einem Original belegt) oder `derived` |

@@ -37,8 +37,10 @@ beim Bauen.
    - **Funktionsfassung** und **Verwaltungsstufe** — Führungsfunktion und Ebene.
    - **Technische Kopfmarke** und **Fahrzeugkategorie** — Marken in der Kopfzone.
 
-4. Trag unter **Beschriftung (Fußzone)** ein Kürzel ein, wenn das Zeichen eines tragen soll. Es
-   erscheint unter dem Zeichen.
+4. Trag unter **Beschriftung** ein, was im Zeichen stehen soll: etwa „ILS“ in der **Mitte** und
+   ein Kreiskürzel **unten rechts**. Weitere Felder gibt es für die übrigen Ecken und für Text
+   über und unter dem Zeichen. Ein Kürzel unter dem Zeichen trägst du in **Beschriftung
+   (Fußzone)** ein. Passt ein Text nicht an seinen Platz, sagt es die Vorschau.
 
 5. Wähle unter **Fähigkeiten** und **Körpermarken** aus, was zusätzlich hinein soll. Fähigkeiten
    erscheinen als Piktogramme in der Standardbox, Körpermarken randbündig über der Körperfläche.
@@ -46,13 +48,15 @@ beim Bauen.
 
    Welche der beiden Listen passt, hängt vom Vorbild ab. Zeigt die Vorlage eine Fähigkeit in
    genau dieser Grundform, dann ist sie dort eigens gezeichnet, und du wählst sie unter
-   **Körpermarken** — etwa die Brandbekämpfung in der taktischen Formation. Unter **Fähigkeiten**
-   lehnt der Baukasten sie dann ab und sagt dir, dass sie als Körpermarke hineingehört. Gibt es
-   kein solches Vorbild, bleibt die Fähigkeit unter **Fähigkeiten**, solange ihr Piktogramm ganz
-   in die Grundform passt.
+   **Körpermarken** — etwa die Brandbekämpfung in der taktischen Formation. Wählst du sie
+   trotzdem unter **Fähigkeiten**, zeichnet der Baukasten sie in dieser gezeichneten Fassung.
+   Gibt es kein solches Vorbild, passt der Baukasten das Piktogramm in die Grundform ein. Das
+   Zeichen gilt dann als abgeleitet (siehe unten).
 
 6. Sieh dir das Ergebnis an. Der Baukasten zeigt es in drei Größen — 32, 64 und 128 Bildpunkte —
    und auf hellem wie dunklem Untergrund, damit du beurteilen kannst, ob es klein noch lesbar ist.
+   Steht unter der Vorschau **Teilweise abgeleitet**, gibt es für deine Zusammenstellung kein
+   Vorbild in der Vorlage. Was das heißt, steht weiter unten.
 
 7. Ist etwas nicht erlaubt, verschwindet die Vorschau nicht wortlos. Stattdessen steht dort, gegen
    welche Regel die Zusammenstellung verstößt, was diese Regel bedeutet und welche Kennung sie
@@ -64,6 +68,26 @@ beim Bauen.
 
 Ganz unten unter den Feldern steht **Auf die Ausgangsauswahl zurücksetzen** — der Knopf stellt
 alles auf den Anfangszustand, falls du dich verrannt hast.
+
+## Wenn ein Zeichen „abgeleitet“ ist
+
+Die Vorlage zeigt längst nicht jede Kombination, die erlaubt ist. Ein Verband III über einer
+taktischen Formation, eine Verwaltungsstufe über einer Fläche oder ein Piktogramm in einer
+Grundform, in der es nie gezeichnet wurde: dafür gibt es kein Original. Der Baukasten zeichnet solche
+Kombinationen trotzdem. Die fehlenden Teile übernimmt er aus ähnlichen Zeichen der Vorlage: Er
+verschiebt sie, verkleinert sie oder passt sie ein.
+
+Damit du das erkennst, steht in den Auswahllisten und auf den Kacheln bei einem solchen Wert der Zusatz
+**abgeleitet**. Hast du ihn gewählt, steht unter der Vorschau **Teilweise abgeleitet – kein
+Original belegt diese Zusammenstellung**. Klappst du den Hinweis auf, siehst du, welche Teile
+übernommen wurden.
+
+Ein abgeleitetes Zeichen ist nicht falsch. Es ist aber auch nicht an einem Original nachgemessen.
+Die Lage eines Teils kann deshalb leicht von dem abweichen, was eine Zeichnerin gewählt hätte.
+
+Steht an einem Wert **geht hier nicht** und im Hinweis „nicht vermessen“, dann hat der Baukasten
+für diese Kombination auch abgeleitet keinen Platz gefunden. Dann hilft ein anderer Wert oder eine
+andere Grundzeichenart.
 
 ## Warum eine Kombination abgelehnt wird
 
@@ -92,12 +116,17 @@ fachkundigen Person vorgelegt.
 
 ## Für Entwicklerinnen und Entwickler
 
-Der Baukasten ist ein Formular über die Felder der `SymbolSpec`. Bei jeder Änderung läuft
-`validateSpec()`; die gefundenen Verstöße tragen eine Regel-ID, die `explainIssue()` aus
+Der Baukasten ist ein Formular über die Felder der `SymbolSpec`. Bei jeder Änderung zeichnet
+`drawSymbol()` die Spec; die gefundenen Verstöße tragen eine Regel-ID, die `explainIssue()` aus
 `@einsatzzeichen/core` auf einen Satz in Klarsprache abbildet. Die Texte stehen seit LFH-579 im
 Kern (`src/rules/rule-explanations.ts`), die Website reicht sie nur durch. Ein Test verlangt,
 dass jede ID aus `VALIDATION_RULE_IDS` dort einen Eintrag hat — deshalb bleibt keine Meldung
 unerklärt.
+
+Abgeleitete Teile stehen in `Drawing.derivations`, und `vocabulary()` markiert die Werte, die zu
+einer solchen Zeichnung führen, mit `derived: true`. Der Baukasten zeigt den Zusatz „abgeleitet“
+nur an Werten, die eine bisher vermessene Zusammenstellung zur abgeleiteten machen — ist die
+Auswahl schon abgeleitet, trüge ihn sonst fast jeder Eintrag.
 
 Ist die Spec gültig, komponiert `compose()` die Zeichnung, und die Seite zeigt daneben die Spec
 als JSON zum Kopieren sowie vier Codebeispiele (TypeScript, React, Web Component, MapLibre) aus

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PALETTE, type OrganizationId, type SymbolSpec } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
-import { ORGANIZATION_COLORS, organizationColor } from '@einsatzzeichen/core';
+import { CompositionError, ORGANIZATION_COLORS, organizationColor } from '@einsatzzeichen/core';
 import { fingerprintFor, referenceInventoryAssets } from './fingerprint-index.js';
 import { composeFromCatalog, RECIPES } from './recipes.js';
 
@@ -68,12 +68,14 @@ describe('Organisationsfarben Kapitel 2', () => {
     },
   ] as const satisfies readonly SymbolSpec[];
 
-  it('komponiert ausschließlich die drei gemessenen N.2-Kreis-/Organisationsverträge', () => {
+  it('komponiert die drei gemessenen N.2-Kreisverträge und lehnt vertauschte Organisationen nicht mehr ab', () => {
     for (const spec of measuredN2CircleSpecs) {
       expect(() => composeFromCatalog(spec), JSON.stringify(spec)).not.toThrow();
     }
 
-    const invalid: readonly SymbolSpec[] = [
+    // Seit dem 2. Oktober 2026 füllt jede Organisation (auch keine) den 12-mm-Kreis. Was hier noch
+    // abbricht, ist eine an dieser Fassung nicht vermessene Körpermarke, keine Regel.
+    const crossed: readonly SymbolSpec[] = [
       ...measuredN2CircleSpecs.map(({ organization: _organization, ...spec }) => spec),
       {
         kind: 'circle-12', organization: 'feuerwehr',
@@ -108,10 +110,14 @@ describe('Organisationsfarben Kapitel 2', () => {
         organization: 'zivile-einheiten',
       },
     ];
-    for (const spec of invalid) {
-      expect(() => composeFromCatalog(spec), JSON.stringify(spec)).toThrow(
-        /circle-12-requires-hilfsorganisation/,
-      );
+    for (const spec of crossed) {
+      let thrown: unknown;
+      try {
+        composeFromCatalog(spec);
+      } catch (error) {
+        thrown = error;
+      }
+      expect(thrown, JSON.stringify(spec)).not.toBeInstanceOf(CompositionError);
     }
   });
 

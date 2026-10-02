@@ -87,7 +87,9 @@ describe('buildSnapshot', () => {
     expect(reach?.of).toBe(generated.enumerated);
   });
 
-  it('ist bei gleicher Zeit deterministisch', () => {
+  // Zwei vollständige Snapshots; seit dem 2. Oktober 2026 zählt die generative Reichweite darin
+  // 22 644 statt 868 gültige Kompositionen, und unter Volllast reichen 5 s nicht mehr.
+  it('ist bei gleicher Zeit deterministisch', { timeout: 30_000 }, () => {
     // Belegt zugleich, dass `generativeReach().durationMs` nirgends in den Snapshot gerät.
     const now = new Date('2026-08-28T00:00:00Z');
     expect(JSON.stringify(buildSnapshot(now))).toBe(JSON.stringify(buildSnapshot(now)));

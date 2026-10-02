@@ -35,12 +35,12 @@ import type {
  * `CAPABILITY_INSET_RULE.unmeasuredPairs`; die Entscheidung steht in
  * `docs/decisions/2026-09-29-lfh-587-kapitel-4-piktogramme-im-innenfeld.md`.
  *
- * Seit der Entscheidung vom 29. September 2026 (LFH-787, „A, wo die Referenz spricht; B, wo sie
- * schweigt“) lehnt `validateSpec` die Boxfassung in zwei Fällen ab: mit
- * `capabilities-pictogram-has-measured-rendition` jede Boxfähigkeit, für die an dieser
- * Körperfassung eine vermessene Fassung existiert (`capabilityInsetForm`), und mit
- * `capabilities-pictogram-overflows-body` jede übrige, deren Einzeldarstellung an der Körperform
- * nicht nachweislich im Körper bleibt (`CAPABILITY_UNSCALED_FIT`).
+ * Von der Entscheidung vom 29. September 2026 (LFH-787, „A, wo die Referenz spricht; B, wo sie
+ * schweigt“) bis zum 2. Oktober 2026 lehnte `validateSpec` die Boxfassung in zwei Fällen ab
+ * (`capabilities-pictogram-has-measured-rendition`, `capabilities-pictogram-overflows-body`). Seit
+ * „ableiten statt ablehnen“ zeichnet `compose()` beide Fälle (`derive/capabilities.ts`): in der
+ * vermessenen Fassung (`capabilityInsetForm`) bzw. unskaliert, wo `CAPABILITY_UNSCALED_FIT` es
+ * belegt, sonst ins Innenfeld eingepasst.
  */
 
 function source(definedAt: string, note: string): GrammarEvidence {
@@ -296,21 +296,20 @@ export const CAPABILITY_INSET_RULE: CapabilityInsetRule = Object.freeze({
     remaining:
       'Wo die Breite trägt, weicht die Höhe ab: in G.3.5 für den unteren Lauf, in I.2.1 bis I.2.3 je nach Fahrzeugkategorie (`VEHICLE_LAND_WATER_RESCUE_MARKS`), bei der Drehleiter in C.2.16#alternative, bei der Wasserförderung zwischen C.2.26 und C.2.26#alternative und bei der Stromversorgung zwischen G.4 und C.2.30. Unter dem Zelt (4.2.1) stehen drei verkleinerte Marken kleiner als in ihren Einzelfixtures (Ruhen in F.1.3 und F.1.19, Mahlzeitenzubereitung in F.2.13, Trinkwasser in F.2.17), die Verpflegung in F.1.17 nicht.',
   },
-  // Ziel ist A, weil keine der drei Rechenregeln die Referenz reproduziert (oben). In Kraft ist
-  // seit LFH-787 AB: Hat ein Paar eine vermessene Fassung, lehnt `validateSpec` die Boxfassung
-  // ab und verweist auf `bodyMarks` (A). Ohne Fassung bleibt B: die Boxfassung bleibt, wo die
-  // Einzeldarstellung nachweislich im Körper bleibt, und wird sonst abgelehnt. Für die meisten
-  // Paare ohne Fassung zeigt die Referenz kein Kapitel-4-Piktogramm (LFH-787 §3.2), dort gibt es
-  // nichts zu vermessen. C scheidet aus, weil es an keinem vermessenen Fall die richtige Größe
-  // träfe.
+  // Ziel ist A, weil keine der drei Rechenregeln die Referenz reproduziert (oben). Bis zum
+  // 2. Oktober 2026 galt LFH-787 „AB“: Boxfassung an Paaren mit vermessener Fassung abgelehnt,
+  // ohne Fassung nur zugelassen, wo die Einzeldarstellung nachweislich im Körper bleibt. Seit der
+  // Entscheidung „ableiten statt ablehnen“ lehnt `validateSpec` nichts mehr ab: Paare mit Fassung
+  // zeichnet `compose()` in ihr (wie `bodyMarks`), Paare ohne Fassung mit der unveränderten
+  // Einzeldarstellung, wo sie passt, und sonst ins Innenfeld eingepasst (`fitToBox` an der
+  // Körperform, `derive/fit-pictogram.ts`) — als Ableitung vermerkt, denn keine vermessene Fassung
+  // entsteht so.
   unmeasuredPairs: {
-    target: 'measured-rendition-else-unscaled-if-fits',
-    inForce: 'measured-rendition-else-unscaled-if-fits',
-    rule: 'capabilities-pictogram-overflows-body',
-    measuredRule: 'capabilities-pictogram-has-measured-rendition',
-    decidedOn: '2026-09-29',
+    target: 'measured-rendition-else-unscaled-if-fits-else-fitted',
+    inForce: 'measured-rendition-else-unscaled-if-fits-else-fitted',
+    decidedOn: '2026-10-02',
     decidedBy: 'Projektinhaber',
-    decidedIn: 'docs/decisions/2026-09-29-lfh-787-boxfassung-abloesen.md',
+    decidedIn: 'docs/decisions/2026-10-02-ableiten-statt-messsperre.md',
   },
 } satisfies CapabilityInsetRule);
 

@@ -32,8 +32,10 @@ describe('VALIDATION_RULE_IDS', () => {
 
   it('zählt die Regeln des Kernslices', () => {
     // Wächst mit `validate.ts`. Die Zahl steht hier, damit `rule-coverage` im Katalog sie nicht
-    // erraten muss und eine neue Regel sichtbar hier und in der Liste ankommt.
-    expect(VALIDATION_RULE_IDS).toHaveLength(79);
+    // erraten muss und eine neue Regel sichtbar hier und in der Liste ankommt. Am 2. Oktober 2026
+    // von 79 auf 50 gesunken: die Messsperren sind dem Ableiten gewichen
+    // (docs/decisions/2026-10-02-ableiten-statt-messsperre.md).
+    expect(VALIDATION_RULE_IDS).toHaveLength(50);
   });
 
   it('kommt mit jeder Kennung in einem Testfall vor — oder in einem benannten Todo', () => {
@@ -51,6 +53,6 @@ describe('VALIDATION_RULE_IDS', () => {
       (id) => !tested.includes(`'${id}'`) && !todo.has(id),
     );
     expect(untested).toEqual([]);
-    expect([...todo].sort()).toEqual(['surface-right-label-requires-measured-anchor']);
+    expect([...todo].sort()).toEqual([]);
   });
 });

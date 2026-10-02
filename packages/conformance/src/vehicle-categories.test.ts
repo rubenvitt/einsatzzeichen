@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkViewBox, NotMeasuredError, renderSvg } from '@einsatzzeichen/core';
+import { checkViewBox, drawSymbol, renderSvg } from '@einsatzzeichen/core';
 import type { ChassisShape, VehicleCategoryId } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { composeFromCatalog, type Recipe } from './recipes.js';
@@ -147,25 +147,53 @@ describe('Fahrzeugkategorien', () => {
     expect(new Set(shapes).size).toBe(CHASSIS_CASES.length);
   });
 
-  it('führt genau die fünf vermessenen Kategorien und wirft für das Amphibienfahrzeug', () => {
+  it('führt genau die vermessenen Kategorien; das Amphibienfahrzeug ist nicht darunter', () => {
     expect([...MEASURED_VEHICLE_CATEGORIES].sort()).toEqual(CHASSIS_CASES.map(([id]) => id).sort());
-    expect(() => vehicleChassis('amphibienfahrzeug')).toThrow(/nicht vollständig vermessen/);
+    expect(MEASURED_VEHICLE_CATEGORIES).not.toContain('amphibienfahrzeug');
   });
 
-  it('meldet das Amphibienfahrzeug als feste Lücke, nicht als Sache der Auswahl', () => {
-    // `scope: 'value'` ist hier die eigentliche Aussage: die Wellenlinie von 5.1.1.4 hängt an
-    // keiner Grundzeichenart, keine andere Auswahl bringt sie zurück. Ein Aufrufer, der daraus
-    // einen Satz baut (der Baukasten der Website), darf deshalb nicht auf eine andere
-    // Grundzeichenart verweisen. Dieselbe Aussage steht eine Ebene tiefer als Datum in
-    // `MEASURED_VEHICLE_CATEGORIES`; hier hängt sie am Fehler, den ein Aufrufer ohnehin fängt.
-    let thrown: unknown;
-    try {
-      vehicleChassis('amphibienfahrzeug');
-    } catch (error) {
-      thrown = error;
+  it('zeichnet das Amphibienfahrzeug mit Radplätzen der Kategorie 1 und konstruierter Wellenlinie', () => {
+    // Eigentümerentscheid 02.10.2026: Die Welle aus 5.1.1.4 ist die Mittellinie ihrer Strichhülle
+    // (siehe `AMPHIBIAN_WAVE`), nicht mehr eine Lücke. Die Radplätze sind vermessen.
+    const shape = vehicleChassis('amphibienfahrzeug');
+    const wheels = shape.marks.filter((mark) => mark.type === 'wheel');
+    expect(wheels.map((wheel) => wheel.cxMm)).toEqual([3.75, 28.25]);
+    const curves = shape.marks.filter((mark) => mark.type === 'curve');
+    expect(curves).toHaveLength(1);
+    const points = curves[0]!.points;
+    // Startpunkt und acht Kubiken.
+    expect(points).toHaveLength(25);
+    // Die fünf waagerechten Stellen der Referenz (ab Zonenoberkante 26,0): Täler 29,55, Kuppen 26,95.
+    const stations = [0, 6, 12, 18, 24].map((index) => points[index]!);
+    expect(stations.map(([x]) => x)).toEqual([7.5, 11.303, 16, 20.697, 24.5]);
+    expect(stations.map(([, y]) => y)).toEqual([3.55, 0.95, 3.55, 0.95, 3.55]);
+    // Die Strichhülle der Referenz: 7,4263 … 24,5756 × 26,7000 … 29,7998 mm. Mittellinie ± 0,25
+    // bleibt darin (die Kontrollpunkte liegen auf der Kurve oder innerhalb ihres Bogens).
+    for (const [x, y] of points) {
+      expect(x).toBeGreaterThanOrEqual(7.4263 + 0.07);
+      expect(x).toBeLessThanOrEqual(24.5756 - 0.07);
+      expect(y + 26 - 0.25).toBeGreaterThanOrEqual(26.7 - 0.001);
+      expect(y + 26 + 0.25).toBeLessThanOrEqual(29.7998 + 0.001);
     }
-    expect(thrown).toBeInstanceOf(NotMeasuredError);
-    expect((thrown as NotMeasuredError).scope).toBe('value');
+    // Spiegelgleich um x 16 wie die Radplätze.
+    for (let index = 0; index < points.length; index += 1) {
+      const [x, y] = points[index]!;
+      const [mx, my] = points[points.length - 1 - index]!;
+      expect(x + mx).toBeCloseTo(32, 6);
+      expect(y).toBe(my);
+    }
+  });
+
+  it('meldet die Wellenlinie an der Zeichnung als konstruierte Ableitung', () => {
+    const drawing = drawSymbol({ kind: 'vehicle-land', vehicleCategory: 'amphibienfahrzeug' });
+    expect(drawing.derivations).toEqual([
+      expect.objectContaining({ dimension: 'vehicleCategory', basis: 'constructed' }),
+    ]);
+    const wave = drawing.children.find((child) => child.role === 'chassis' && child.type === 'path');
+    expect(wave?.type === 'path' ? wave.d : '').toMatch(/^M 7\.5 29\.55 C /);
+    expect(checkViewBox(drawing)).toEqual([]);
+    // Ein vermessenes Fahrwerk bleibt ohne Notiz.
+    expect(drawSymbol({ kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-1' }).derivations).toBeUndefined();
   });
 
   it('hält jede Marke in der erklärten Zone und lässt sie oben genau das Strichband berühren', () => {
@@ -181,6 +209,7 @@ describe('Fahrzeugkategorien', () => {
     // entweder eine Lücke oder ein sichtbarer Bogen.
     for (const [id, shape] of CHASSIS_CASES) {
       for (const mark of shape.marks) {
+        if (mark.type === 'curve') continue;
         const halfHeight = mark.type === 'bar' ? 0.25 : mark.rMm + 0.25;
         expect(mark.cyFromTopMm - halfHeight, id).toBeGreaterThanOrEqual(-0.25);
         expect(mark.cyFromTopMm + halfHeight, id).toBeLessThanOrEqual(shape.heightMm);
@@ -190,7 +219,7 @@ describe('Fahrzeugkategorien', () => {
     // eine halbe Strichbreite über die Zonenoberkante.
     for (const [id, shape] of CHASSIS_CASES) {
       for (const mark of shape.marks) {
-        if (mark.type === 'bar') continue;
+        if (mark.type === 'bar' || mark.type === 'curve') continue;
         expect(mark.cyFromTopMm - mark.rMm - 0.25, id).toBe(-0.25);
       }
     }

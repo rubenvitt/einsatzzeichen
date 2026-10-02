@@ -33,9 +33,10 @@ describe('DEFAULT_PORTS', () => {
       organizationColor: core.organizationColor,
       strengthHead: core.strengthHead,
       technicalHeadMark: core.technicalHeadMark,
-      unitGroupingHead: core.unitGroupingHead,
+      // Seit dem 2. Oktober 2026 ergänzen die Kopfports den vermessenen Kopf um den abgeleiteten.
+      unitGroupingHead: core.unitGroupingHeadOrDerived,
       functionRole: core.functionRole,
-      administrativeHead: core.administrativeHead,
+      administrativeHead: core.administrativeHeadOrDerived,
       vehicleChassis: core.vehicleChassis,
       pictogram: core.pictogram,
       textMetrics: core.ARIMO_TEXT_METRICS,
@@ -81,8 +82,8 @@ describe('drawSymbol', () => {
   });
 
   test('eine ungültige Spec wirft wie compose eine CompositionError', () => {
-    // Die untere rechte Außenbeschriftung führt die taktische Formation nicht.
-    expect(() => drawSymbol({ kind: 'formation', labels: { belowRight: 'X' } }))
+    // Eine Stärke trägt nur eine taktische Einheit.
+    expect(() => drawSymbol({ kind: 'hazard', strength: 'gruppe' }))
       .toThrow(core.CompositionError);
   });
 });

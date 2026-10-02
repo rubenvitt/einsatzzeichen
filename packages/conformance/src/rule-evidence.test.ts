@@ -35,7 +35,10 @@ describe('RULE_EVIDENCE', () => {
 
   it('führt je Regel genau einen Fall, alphabetisch', () => {
     expect(evidenceIds).toEqual([...new Set(evidenceIds)].sort());
-    expect(RULE_EVIDENCE).toHaveLength(81);
+    // 50 Prüfregeln und sechs Kompositionsregeln, abzüglich der drei Lücken. Bis zum 2. Oktober 2026
+    // 81; die Messsperren sind dem Ableiten gewichen
+    // (docs/decisions/2026-10-02-ableiten-statt-messsperre.md).
+    expect(RULE_EVIDENCE).toHaveLength(53);
   });
 
   it('nagelt die Lücken fest', () => {
@@ -43,7 +46,6 @@ describe('RULE_EVIDENCE', () => {
       'function-role-label-metrics-required',
       'function-role-run-too-wide',
       'function-role-run-unknown-glyph',
-      'surface-right-label-requires-measured-anchor',
     ]);
     for (const gap of RULE_EVIDENCE_GAPS) {
       expect(gap.reason.length, gap.rule).toBeGreaterThan(40);
@@ -65,30 +67,31 @@ describe('RULE_EVIDENCE', () => {
   });
 
   it('nennt die Fälle, die den Katalogkontext brauchen', () => {
-    // Genau diese drei Funktionsrollenregeln feuern ohne vermessene Fassung nicht (ohne Kontext
-    // meldet validateSpec stattdessen `function-role-requires-measured-layout`). Die beiden
-    // übrigen `validateSpec+catalog`-Fälle feuern auch ohne Kontext.
+    // Genau diese zwei Funktionsrollenregeln feuern ohne vermessene Fassung nicht (ohne Kontext
+    // meldet validateSpec stattdessen `function-role-requires-measured-layout`); es sind zugleich
+    // die einzigen `validateSpec+catalog`-Fälle. `function-role-body-mark-mismatch` ist am
+    // 2. Oktober 2026 entfallen: Körpermarken stehen seitdem auch im Rollenkörper.
     const needsCatalog = RULE_EVIDENCE
       .filter((item) => item.via === 'validateSpec+catalog')
       .filter((item) => !validateSpec(item.spec).some((issue) => issue.rule === item.rule))
       .map((item) => item.rule);
     expect(needsCatalog).toEqual([
-      'function-role-body-mark-mismatch',
       'function-role-head-mismatch',
       'function-role-organization-mismatch',
     ]);
   });
 
-  it('meldet in 72 von 78 Fällen nur die eigene Regel', () => {
-    // Randregeln verletzen oft eine allgemeinere mit. Die sechs Fälle, die zusätzlich eine
-    // andere Regel melden, stehen hier, damit ein neuer Mitläufer auffällt.
+  it('meldet in 49 von 53 Fällen nur die eigene Regel', () => {
+    // Randregeln verletzen oft eine allgemeinere mit. Die vier Fälle, die zusätzlich eine
+    // andere Regel melden, stehen hier, damit ein neuer Mitläufer auffällt. Seit dem 2. Oktober
+    // 2026 entfallen `colored-circle-top-left-not-measured` und
+    // `function-role-body-variant-not-measured` mit ihren Regeln. `below-body-zone-conflict` meldet
+    // die Läufe unter dem Körper allein; `chassis-foot-conflict` bleibt bei Fahrwerk und Bezeichnung.
     const withOthers = RULE_EVIDENCE
       .filter((item) => new Set(ruleEvidenceTriggers(item)).size > 1)
       .map((item) => item.rule);
     expect(withOthers).toEqual([
       'center-baseline-positive',
-      'colored-circle-top-left-not-measured',
-      'function-role-body-variant-not-measured',
       'function-role-requires-measured-kind',
       'surface-label-foot-conflict',
       'top-left-metrics-complete',

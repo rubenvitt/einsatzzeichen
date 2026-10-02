@@ -13,16 +13,15 @@
  */
 import type { Drawing, SymbolSpec } from '@einsatzzeichen/schema';
 import { compose, type CatalogPorts, type ComposeOptions } from './compose.js';
-import { administrativeHead } from './geometry/administrative-heads.js';
 import { baseDrawing, innerField } from './geometry/base-symbols.js';
-import { bodyMark } from './geometry/body-marks.js';
+import { bodyMark } from './derive/body-marks.js';
 import { functionRole } from './geometry/function-roles.js';
 import { describeSymbolSpec } from './geometry/labels.js';
 import { organizationColor } from './geometry/organizations.js';
 import { pictogram } from './geometry/pictograms/index.js';
 import { strengthHead } from './geometry/strengths.js';
 import { technicalHeadMark } from './geometry/technical-head-marks.js';
-import { unitGroupingHead } from './geometry/unit-groupings.js';
+import { administrativeHeadOrDerived, unitGroupingHeadOrDerived } from './derive/head-zone.js';
 import { ARIMO_TEXT_METRICS } from './geometry/text-metrics.js';
 import { vehicleChassis } from './geometry/vehicle-categories.js';
 
@@ -39,9 +38,10 @@ export const DEFAULT_PORTS: CatalogPorts = Object.freeze({
   organizationColor,
   strengthHead,
   technicalHeadMark,
-  unitGroupingHead,
+  // Vermessene Köpfe zuerst, sonst die abgeleiteten (Gemeinde, Bezirk, Bundesland, Verband III).
+  unitGroupingHead: unitGroupingHeadOrDerived,
   functionRole,
-  administrativeHead,
+  administrativeHead: administrativeHeadOrDerived,
   vehicleChassis,
   pictogram,
   textMetrics: ARIMO_TEXT_METRICS,

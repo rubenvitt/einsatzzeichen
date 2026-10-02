@@ -6,7 +6,7 @@ import {
   type ContrastRequirement,
 } from '@einsatzzeichen/core';
 import type { BodyLabelInk, Drawing, OrganizationId, SymbolSpec } from '@einsatzzeichen/schema';
-import { functionRole } from '@einsatzzeichen/core';
+import { circleTopLeftInk, functionRole } from '@einsatzzeichen/core';
 import { organizationColor } from '@einsatzzeichen/core';
 import { MINIMUM_TEXT_CONTRAST } from '@einsatzzeichen/core';
 import {
@@ -299,10 +299,12 @@ export function labelContrastRequirements(
         blackBottomCenter.add(organization);
       }
       if (recipe.spec.kind === 'circle-12' && labels.topLeft !== undefined) {
-        circleTopLeftOnSurface.add(bodyLabelInk(
-          organizationColor(organization),
-          labels.inBodyInk,
-        ));
+        // Der Lauf steht außerhalb des Kreises; dieselbe Tinte wie in `compose()`.
+        circleTopLeftOnSurface.add(
+          labels.inBodyInk ??
+            circleTopLeftInk(recipe.spec.kind, recipe.spec.bodyVariant) ??
+            bodyLabelInk(organizationColor(organization)),
+        );
       }
     }
     if (labels.aboveLeft !== undefined) aboveBody = true;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { RECIPES } from '@einsatzzeichen/conformance';
 import * as core from '@einsatzzeichen/core';
-import { SpecParseError, encodeSpecParam } from '@einsatzzeichen/core';
+import { SpecParseError, checkSpec, encodeSpecParam } from '@einsatzzeichen/core';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 import {
   LIST_SPEC_FIELDS,
@@ -10,6 +10,7 @@ import {
   encodeSpec,
   evaluateSpec,
   issuesByField,
+  reduceLabel,
   reduceSpec,
 } from './builder-state.js';
 
@@ -57,11 +58,20 @@ describe('evaluateSpec', () => {
   });
 
   it('erklärt jede Meldung einer mehrfach ungültigen Spec', () => {
-    const bad: SymbolSpec = { ...RECIPE_SPEC, organization: 'feuerwehr', technicalFill: 'weiss' };
+    // Zwei voneinander unabhängige Systematikregeln: Füllung gegen Organisation, und eine Stärke
+    // am Gebäude, das keine taktische Einheit ist.
+    const bad: SymbolSpec = {
+      kind: 'building',
+      strength: 'gruppe',
+      organization: 'feuerwehr',
+      technicalFill: 'weiss',
+    };
     const result = evaluateSpec(bad);
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.issues.length).toBeGreaterThan(1);
+      expect(result.issues.map((issue) => issue.rule)).toEqual(
+        expect.arrayContaining(['technical-fill-organization-conflict', 'strength-requires-unit']),
+      );
       for (const issue of result.issues) expect(issue.explanation.length).toBeGreaterThan(40);
     }
   });
@@ -188,8 +198,8 @@ describe('allowedValues', () => {
   });
 
   it('hängt bei Listenfeldern an die bestehende Auswahl an, statt sie zu ersetzen', () => {
-    // `care` trägt an der Formation; `air-winch-chevron-diamond` ist dort nicht vermessen. Wäre
-    // der Kandidat allein geprüft, bliebe `care` unbemerkt — geprüft wird aber `['care', …]`.
+    // Geprüft wird `['care', 'fire-fighting']` und nicht der Kandidat allein — beide Marken sind
+    // an der Formation vermessen, also kommt der Kandidat ohne Ableitung zurück.
     const spec: SymbolSpec = { kind: 'formation', bodyMarks: ['care'] };
     const [added] = allowedValues(spec, 'bodyMarks', ['fire-fighting']);
     expect(added).toEqual({ value: 'fire-fighting', ok: true, issues: [] });
@@ -197,10 +207,12 @@ describe('allowedValues', () => {
   });
 
   it('sperrt einen Wert auch dann, wenn die Komposition abbricht statt eine Regel zu melden', () => {
-    // Kennung ohne vermessene Fassung an dieser Grundzeichenart: `compose()` wirft einen
-    // gewöhnlichen Fehler, keine CompositionError. Gesperrt gehört der Wert trotzdem.
-    const [entry] = allowedValues({ kind: 'formation' }, 'bodyMarks', [
-      'air-winch-chevron-diamond',
+    // Eine der Lücken, die nach dem 2. Oktober 2026 bleiben: ein Fähigkeitspiktogramm an einem
+    // Körper, den die Kopfzone verkleinert, lässt sich auch abgeleitet nicht zeichnen
+    // (`derive/head-zone.ts`). `compose()` wirft dafür eine `NotMeasuredError`, keine
+    // CompositionError. Gesperrt gehört der Wert trotzdem.
+    const [entry] = allowedValues({ kind: 'area', administrativeLevel: 'kreis' }, 'capabilities', [
+      'meal-preparation',
     ]);
     expect(entry.ok).toBe(false);
     expect(entry.issues).toEqual([]);
@@ -208,11 +220,16 @@ describe('allowedValues', () => {
     if (entry.blocked?.because === 'not-measured') {
       // Die Rohmeldung bleibt erhalten, wandert aber nach `detail` — der Tooltip baut sich
       // aus den Bezeichnungen, nicht aus dieser Zeile.
-      expect(entry.blocked.detail).toMatch(/ist nicht vermessen/);
-      // An einer anderen Grundzeichenart ist dieselbe Marke vermessen; der Rat „wähle eine
-      // andere Grundzeichenart" ist hier also richtig.
+      expect(entry.blocked.detail).toMatch(/nicht abgeleitet/);
+      // An der Formation mit derselben Verwaltungsstufe lässt sich das Piktogramm zeichnen; der
+      // Rat „wähle eine andere Grundzeichenart" ist hier also richtig.
       expect(entry.blocked.scope).toBe('combination');
     }
+    expect(
+      allowedValues({ kind: 'formation', administrativeLevel: 'kreis' }, 'capabilities', [
+        'meal-preparation',
+      ])[0]?.ok,
+    ).toBe(true);
   });
 
   it('reicht einen Programmfehler weiter, statt ihn als Vermessungslücke auszugeben', () => {
@@ -227,39 +244,70 @@ describe('allowedValues', () => {
   });
 
   it('sperrt nur bei einer NotMeasuredError', () => {
-    // Gegenprobe zum Vorigen an derselben Achse: hier ist der Abbruch eine echte Aussage über
-    // die Referenz — der Katalog wirft `NotMeasuredError` — und sperrt deshalb, statt zu fliegen.
-    // Seit LFH-502 hängt die Unterscheidung an der Klasse und nicht mehr am Wortlaut.
-    const [entry] = allowedValues({ kind: 'formation' }, 'bodyMarks', ['hospital']);
+    // Gegenprobe zum Vorigen: hier ist der Abbruch eine echte Aussage über die Referenz — der
+    // Giebel über der Fahrwerkszone ist nicht abgeleitet, weil ihre Radplätze absolut vermessen
+    // sind (`derive/body-variants.ts`) — und sperrt deshalb, statt zu fliegen. Seit LFH-502 hängt
+    // die Unterscheidung an der Klasse und nicht mehr am Wortlaut.
+    const [entry] = allowedValues(
+      { kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-1' },
+      'bodyVariant',
+      ['raised-gable'],
+    );
     expect(entry.ok).toBe(false);
     expect(entry.blocked?.because).toBe('not-measured');
   });
 
-  it('unterscheidet die feste Lücke von der Lücke dieser Zusammenstellung', () => {
-    // `amphibienfahrzeug` ist die einzige Kategorie ohne vollständig vermessene Fahrwerkszone,
-    // und die Lücke hängt an keiner Grundzeichenart: `scope: 'value'`. Der Baukasten darf hier
-    // nicht auf eine andere Grundzeichenart verweisen — das wäre eine erfundene Aussage über die
-    // Referenz.
-    const [fixed] = allowedValues({ kind: 'vehicle-land' }, 'vehicleCategory', [
+  it('gibt die Reichweite einer Lücke unverändert aus der Wurfstelle weiter', () => {
+    // `scope` wird nicht erraten: dieselbe Spec über `checkSpec()` gezeichnet nennt dieselbe
+    // Reichweite wie die Sperre. Eine feste Lücke (`scope: 'value'`) erreicht der Baukasten seit
+    // dem 2. Oktober 2026 nicht mehr — das Amphibienfahrzeug, bis dahin die einzige, wird
+    // abgeleitet gezeichnet. Den Fall `'value'` prüfen die Tests der Insel mit gestellten Werten.
+    const spec: SymbolSpec = { kind: 'area', administrativeLevel: 'kreis' };
+    const [entry] = allowedValues(spec, 'capabilities', ['meal-preparation']);
+    const check = checkSpec({ ...spec, capabilities: ['meal-preparation'] });
+    expect(check.ok).toBe(false);
+    if (!check.ok && check.reason === 'not-measured' && entry.blocked?.because === 'not-measured') {
+      expect(entry.blocked.scope).toBe(check.scope);
+      expect(entry.blocked.detail).toBe(check.message);
+    } else {
+      throw new Error('Beide Wege sollten eine Vermessungslücke melden.');
+    }
+  });
+
+  it('kennzeichnet einen abgeleiteten Wert, ohne ihn zu sperren', () => {
+    // Das Amphibienfahrzeug: bis zum 2. Oktober 2026 eine feste Lücke, seitdem aus der
+    // Strichhülle konstruiert und deshalb frei, aber abgeleitet.
+    const [amphibian] = allowedValues({ kind: 'vehicle-land' }, 'vehicleCategory', [
       'amphibienfahrzeug',
     ]);
-    expect(fixed.blocked?.because).toBe('not-measured');
-    if (fixed.blocked?.because === 'not-measured') expect(fixed.blocked.scope).toBe('value');
+    expect(amphibian).toEqual({ value: 'amphibienfahrzeug', ok: true, issues: [], derived: true });
+    // Ein vermessener Wert behält genau die Form von vorher — ohne `derived`-Schlüssel.
+    const [measured] = allowedValues({ kind: 'formation' }, 'unitGrouping', ['verband-ii']);
+    expect(measured).toEqual({ value: 'verband-ii', ok: true, issues: [] });
+    expect('derived' in measured!).toBe(false);
   });
 
   it('sperrt auch die Vermessungslücken des Kompositionsmotors, statt abzustürzen', () => {
-    // Der Wächter für die eine Wurfstelle außerhalb des Katalogs, die der Baukasten erreicht:
-    // eine Organisationsfarbe am offenen Polyzug von `1.13 Ereignis` (compose.ts). Bliebe sie ein
-    // gewöhnliches `Error`, flöge sie hier durch und die Insel zeigte statt eines gesperrten
-    // Wertes ihren Fehlerblock — eine stille Verschlechterung gegenüber dem Wortlaut-Behelf, den
-    // LFH-502 abgelöst hat.
-    const [entry] = allowedValues({ kind: 'event' }, 'organization', ['feuerwehr']);
+    // Der Wächter für Wurfstellen außerhalb des Katalogs, die der Baukasten erreicht. Bis zum
+    // 2. Oktober 2026 war das die Organisationsfarbe am offenen Polyzug von `1.13 Ereignis`
+    // (heute abgeleitet); seitdem sind es die Ableitungen selbst, die eine Lage nicht finden —
+    // hier der Giebel über der Fahrwerkszone aus `derive/body-variants.ts`. Bliebe ein solcher
+    // Wurf ein gewöhnliches `Error`, flöge er hier durch und die Insel zeigte statt eines
+    // gesperrten Wertes ihren Fehlerblock.
+    const [entry] = allowedValues(
+      { kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-1' },
+      'bodyVariant',
+      ['raised-gable'],
+    );
     expect(entry.ok).toBe(false);
     expect(entry.blocked?.because).toBe('not-measured');
     if (entry.blocked?.because === 'not-measured') {
       expect(entry.blocked.scope).toBe('combination');
-      expect(entry.blocked.detail).toMatch(/offener/);
+      expect(entry.blocked.detail).toMatch(/Fahrwerkszone/);
     }
+    // Und das frühere Beispiel zeichnet jetzt, abgeleitet.
+    const [event] = allowedValues({ kind: 'event' }, 'organization', ['feuerwehr']);
+    expect(event).toMatchObject({ ok: true, derived: true });
   });
 
   it('sperrt nie den Wert, der schon gesetzt ist — auch nicht bei kaputter Spec', () => {
@@ -328,24 +376,33 @@ describe('issuesByField', () => {
   });
 
   it('lässt eine Regel ohne einzelnes Feld weg', () => {
-    // Diese Spec meldet zweierlei: `administrative-level-not-measured` zeigt auf ihr Feld,
-    // `head-zone-conflict` trägt `field: 'composition'` und benennt keines.
-    const spec: SymbolSpec = { kind: 'formation', strength: 'gruppe', administrativeLevel: 'kreis' };
+    // Diese Spec meldet zweierlei: `vehicle-category-requires-vehicle` zeigt auf ihr Feld,
+    // `head-zone-conflict` (Stärke und Verwaltungsstufe teilen sich die Kopfzone) trägt
+    // `field: 'composition'` und benennt keines.
+    const spec: SymbolSpec = {
+      kind: 'formation',
+      strength: 'gruppe',
+      administrativeLevel: 'kreis',
+      vehicleCategory: 'kfz-kategorie-1',
+    };
     const rules = issuesOf(spec).issues.map((issue) => issue.rule);
     expect(rules).toContain('head-zone-conflict');
     const map = issuesByField(issuesOf(spec).issues, spec);
     expect([...map.values()].flat().map((issue) => issue.rule)).not.toContain('head-zone-conflict');
-    expect(rulesAt(spec, 'administrativeLevel')).toEqual(['administrative-level-not-measured']);
+    expect(rulesAt(spec, 'vehicleCategory')).toEqual(['vehicle-category-requires-vehicle']);
   });
 
   it('lässt ein Feld weg, das die Spec gar nicht gesetzt hat', () => {
-    // `circle-12-requires-organization` zeigt auf `organization`, und genau die fehlt. Ein
+    // Seit dem 2. Oktober 2026 zeigt keine Regel an einer Einzelfeld-Kombination mehr auf ein
+    // leeres Feld (bis dahin `circle-12-requires-organization` und Verwandte). Die Grenze gilt
+    // trotzdem, und geprüft wird sie mit echten Meldungen an einer Spec ohne dieses Feld: ein
     // Hinweis am leeren Auswahlfeld müsste raten, ob die Regel eine Angabe verlangt oder die
     // gesetzte ablehnt — die Erklärung dazu steht in der Regelliste unter der Vorschau.
-    const spec: SymbolSpec = { kind: 'circle-12', bodyVariant: 'foot-band' };
-    const rules = issuesOf(spec).issues.map((issue) => issue.rule);
-    expect(rules).toContain('circle-12-requires-organization');
-    expect(issuesByField(issuesOf(spec).issues, spec).has('organization')).toBe(false);
+    const withCategory: SymbolSpec = { kind: 'formation', vehicleCategory: 'kfz-kategorie-1' };
+    const { issues } = issuesOf(withCategory);
+    expect(issues.map((issue) => issue.field)).toContain('vehicleCategory');
+    expect(issuesByField(issues, withCategory).has('vehicleCategory')).toBe(true);
+    expect(issuesByField(issues, { kind: 'formation' }).has('vehicleCategory')).toBe(false);
   });
 
   it('gibt für eine gültige Spec nichts aus', () => {
@@ -353,5 +410,34 @@ describe('issuesByField', () => {
     const result = evaluateSpec(spec);
     expect(result.ok).toBe(true);
     expect(issuesByField([], spec).size).toBe(0);
+  });
+});
+
+describe('reduceLabel', () => {
+  const base = { kind: 'circle-12', organization: 'fuehrung-leitung' } as const satisfies SymbolSpec;
+
+  it('setzt Läufe in labels und lässt die Spec sonst unverändert', () => {
+    const withCenter = reduceLabel(base, 'center', 'LST');
+    const withBoth = reduceLabel(withCenter, 'bottomRight', 'UEL');
+    expect(withBoth).toEqual({ ...base, labels: { center: 'LST', bottomRight: 'UEL' } });
+    expect(evaluateSpec(withBoth).ok).toBe(true);
+  });
+
+  it('entfernt eine geleerte Zone und ohne Zone das ganze Feld', () => {
+    const one = reduceLabel(reduceLabel(base, 'center', 'LST'), 'bottomRight', 'UEL');
+    expect(reduceLabel(one, 'center', '')).toEqual({ ...base, labels: { bottomRight: 'UEL' } });
+    expect(reduceLabel(reduceLabel(one, 'center', ''), 'bottomRight', '')).toEqual(base);
+  });
+
+  it('lässt Metriken eines geladenen Rezepts stehen, solange ein Lauf bleibt', () => {
+    const recipe = {
+      ...base,
+      labels: { center: 'LtS', centerCapHeightMm: 7.3 },
+    } as unknown as SymbolSpec;
+    expect(reduceLabel(recipe, 'bottomRight', 'UEL').labels).toEqual({
+      center: 'LtS',
+      centerCapHeightMm: 7.3,
+      bottomRight: 'UEL',
+    });
   });
 });

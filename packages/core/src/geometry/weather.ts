@@ -7,7 +7,8 @@ import {
   type WeatherParameters,
   type WeatherStateId,
 } from '@einsatzzeichen/schema';
-import { NotMeasuredError } from '../not-measured.js';
+import { noteDerivation } from '../derive/record.js';
+import { weatherPairPrimitives } from '../derive/weather-pair.js';
 import {
   WEATHER_STATES,
   cloudPrimitive,
@@ -98,8 +99,9 @@ export const WEATHER_PRECIPITATIONS: readonly WeatherPrecipitationId[] = Object.
  * - `limit` und `intensity`: die beiden Grenzen, entschieden am 29.09.2026. Eine Intensität gibt es
  *   nur an einem Niederschlag an der Wolke.
  *
- * Nicht erfasst und damit weiter eine Lücke (`NotMeasuredError`): andere Paare, etwa Sonne und Wind
- * oder Regen und Schnee ohne Wolke, und ein Niederschlag an der Wolke ohne Intensität.
+ * Nicht erfasst: andere Paare, etwa Sonne und Wind oder Regen und Schnee ohne Wolke, und ein
+ * Niederschlag an der Wolke ohne Intensität. Bis zum 02.10.2026 eine Lücke (`NotMeasuredError`);
+ * seither zeichnet sie `weatherDrawing` als konstruiertes Paar (`derive/weather-pair.ts`).
  */
 export interface WeatherCloudPrecipitationRules {
   readonly carrier: 'weather-cloudy';
@@ -149,17 +151,20 @@ export type WeatherInvalidReason = 'duplicate-value' | 'too-many-values' | 'inte
 
 /**
  * Urteil über einen Parametersatz. `drawable` mit `basis: 'measured'` ist an einem Original
- * abgelesen, mit `'transferred'` nach der Entscheidung vom 29.09.2026 übertragen. `invalid` verstößt
- * gegen eine entschiedene Grenze, `not-measured` ist weder belegt noch entschieden.
+ * abgelesen, mit `'transferred'` nach der Entscheidung vom 29.09.2026 übertragen, mit
+ * `'constructed'` ein Paar ohne belegte Anordnung (`form: 'pair'`, Eigentümerentscheid vom
+ * 02.10.2026). `invalid` verstößt gegen eine entschiedene Grenze.
+ *
+ * Bis zum 02.10.2026 gab es ein drittes Urteil `not-measured` für Paare ohne Beleg; seither wird
+ * jedes Paar gezeichnet.
  */
 export type WeatherVerdict =
   | {
       readonly kind: 'drawable';
-      readonly form: 'single' | 'cloud-with-precipitation';
-      readonly basis: 'measured' | 'transferred';
+      readonly form: 'single' | 'cloud-with-precipitation' | 'pair';
+      readonly basis: 'measured' | 'transferred' | 'constructed';
     }
-  | { readonly kind: 'invalid'; readonly reason: WeatherInvalidReason; readonly message: string }
-  | { readonly kind: 'not-measured'; readonly message: string };
+  | { readonly kind: 'invalid'; readonly reason: WeatherInvalidReason; readonly message: string };
 
 function isPrecipitation(value: WeatherStateId): value is WeatherPrecipitationId {
   return (WEATHER_PRECIPITATIONS as readonly WeatherStateId[]).includes(value);
@@ -195,19 +200,10 @@ export function classifyWeather(parameters: WeatherParameters): WeatherVerdict {
     };
   }
   if (values.size === 1) return { kind: 'drawable', form: 'single', basis: 'measured' };
-  if (precipitation === undefined) {
-    return {
-      kind: 'not-measured',
-      message:
-        `Wetterwerte ${listed}: Kein Original zeigt dieses Paar, und entschieden ist nur die Wolke mit einem ` +
-        'Niederschlag (Regen, Hagel, Gewitter, Schnee).',
-    };
-  }
-  if (intensity === undefined) {
-    return {
-      kind: 'not-measured',
-      message: `${precipitation} an der Wolke ohne Intensität: Die Beispiele zeigen den Niederschlag nur in einer der vier Stufen.`,
-    };
+  // Kein Original zeigt dieses Paar, oder der Niederschlag an der Wolke hat keine Stufe, die die
+  // belegte Anordnung zählen könnte: beides als Paar nebeneinander (derive/weather-pair.ts).
+  if (precipitation === undefined || intensity === undefined) {
+    return { kind: 'drawable', form: 'pair', basis: 'constructed' };
   }
   const finding = WEATHER_CLOUD_PRECIPITATION.precipitations[precipitation];
   return {
@@ -236,6 +232,14 @@ const MARK_AT_CLOUD: Readonly<Record<WeatherPrecipitationId, (x: number) => read
 };
 
 function precipitationAtCloudDrawing(precipitation: WeatherPrecipitationId, intensity: WeatherIntensity): Drawing {
+  if (WEATHER_CLOUD_PRECIPITATION.precipitations[precipitation].status !== 'evidenced') {
+    noteDerivation({
+      dimension: 'values',
+      part: `${precipitation} an der Wolke wie der Schnee gebaut`,
+      basis: 'transferred',
+      from: `5.8.7_Beispiel_Schneiend_* (${DECISION_REF})`,
+    });
+  }
   const count = MARKS_PER_INTENSITY[intensity];
   const first = CENTER_X_MM - ((count - 1) * CLOUD_MARK_PITCH_MM) / 2;
   const marks = Array.from({ length: count }, (_, i) => MARK_AT_CLOUD[precipitation](first + i * CLOUD_MARK_PITCH_MM)).flat();
@@ -243,17 +247,32 @@ function precipitationAtCloudDrawing(precipitation: WeatherPrecipitationId, inte
   return drawingOf(`Wolkig, ${title}`, [cloudPrimitive(CLOUD_RAISE_MM), ...marks]);
 }
 
+/** Zwei Werte ohne belegte Anordnung, nebeneinander in Katalogreihenfolge. */
+function pairDrawing(values: readonly WeatherStateId[]): Drawing {
+  const parts = WEATHER_STATES.filter((definition) =>
+    values.some((value) => definition.id === `state.${value}`),
+  ).map((definition) => ({
+    id: definition.id.slice('state.'.length) as WeatherStateId,
+    title: definition.title,
+    primitives: definition.primitives,
+  }));
+  const [first, second] = parts;
+  if (parts.length !== 2 || first === undefined || second === undefined) {
+    throw new Error(`Wetterpaar ${values.join(' + ')}: zwei bekannte Werte erwartet.`);
+  }
+  return drawingOf(`${first.title}, ${second.title.toLowerCase()}`, weatherPairPrimitives([first, second]));
+}
+
 /**
- * Ein Wetterzeichen aus einem Wert oder der Wolke mit einem Niederschlag, in 32 × 32 mm. Die
- * Reihenfolge der Werte zählt nicht. Wirft ein gewöhnliches `Error`, wenn der Satz gegen eine
- * entschiedene Grenze verstößt (`classifyWeather` → `invalid`), und `NotMeasuredError` für eine
- * Kombination, die weder ein Original zeigt noch eine Entscheidung trägt.
+ * Ein Wetterzeichen aus einem Wert, der Wolke mit einem Niederschlag oder zwei Werten
+ * nebeneinander, in 32 × 32 mm. Die Reihenfolge der Werte zählt nicht. Wirft ein gewöhnliches
+ * `Error`, wenn der Satz gegen eine entschiedene Grenze verstößt (`classifyWeather` → `invalid`).
  */
 export function weatherDrawing(parameters: WeatherParameters): Drawing {
   const verdict = classifyWeather(parameters);
   if (verdict.kind === 'invalid') throw new Error(verdict.message);
-  if (verdict.kind === 'not-measured') throw new NotMeasuredError(verdict.message, 'combination');
   if (verdict.form === 'single') return singleValue(parameters.values[0]);
+  if (verdict.form === 'pair') return pairDrawing(parameters.values);
   const precipitation = precipitationAtCloud(new Set(parameters.values));
   if (precipitation === undefined || parameters.intensity === undefined) {
     throw new Error('Wetterzeichen: Klassifikation und Zeichnung laufen auseinander.');

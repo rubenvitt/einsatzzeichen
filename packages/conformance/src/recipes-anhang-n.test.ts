@@ -374,10 +374,18 @@ describe('Anhang N — gemessene Labelmetriken bleiben fail-closed', () => {
     } as unknown as SymbolSpec;
   }
 
-  it('verlangt am Festflügelrumpf den vollständigen quellenspezifischen topLeft-Metriksatz', () => {
-    expect(() => composeFromCatalog(fixedWingWithMetrics())).toThrow(
-      /top-left-metrics-required-by-profile/,
-    );
+  it('setzt topLeft am Festflügelrumpf ohne Metriksatz auf die N.1.6-Lage, als abgeleitet', () => {
+    // Seit dem 2. Oktober 2026 ist der N.1.6-Metriksatz der Profildefault: Grundlinie 7,0 mm unter
+    // der Oberkante, Anker 5,99 mm rechts der linken Hüllenkante. Ein halber Metriksatz bleibt
+    // kaputte Eingabe.
+    const drawing = composeFromCatalog(fixedWingWithMetrics());
+    const run = drawing.children.find((child) => child.role === 'label');
+    if (run?.type !== 'text') throw new Error('topLeft-Lauf fehlt.');
+    expect(run.x).toBeCloseTo(1.01 + 5.99, 6);
+    expect(run.y).toBeCloseTo(6.0001 + 7, 6);
+    expect(drawing.derivations).toEqual([
+      expect.objectContaining({ dimension: 'labels.topLeft', basis: 'transferred' }),
+    ]);
     expect(() => composeFromCatalog(fixedWingWithMetrics({ capHeightMm: 2.919225 }))).toThrow(
       /top-left-metrics-complete/,
     );
@@ -522,13 +530,15 @@ describe('Anhang N — belegte Ausgabezonen dürfen sich nicht überlagern', () 
   });
 });
 
-describe('Anhang N — farbige Kreisverträge erben keine weißen F.3-Labelmetriken', () => {
+describe('Anhang N — farbige Kreisverträge übernehmen die F.3-Außenlage oben links', () => {
   const f3NormalMetrics = {
     capHeightMm: 2.919225,
     baselineFromBodyTopMm: 1.000254,
     anchorFromBodyLeftMm: -2.984684,
   };
 
+  // Seit dem 2. Oktober 2026 (`derive/circle.ts`): Der Lauf steht wie an F.3.3 außerhalb des
+  // Kreises auf der Ausgabeoberfläche und ist deshalb schwarz, auch auf einem farbigen Kreis.
   it.each([
     {
       kind: 'circle-12',
@@ -540,25 +550,32 @@ describe('Anhang N — farbige Kreisverträge erben keine weißen F.3-Labelmetri
       kind: 'circle-12',
       organization: 'feuerwehr',
       bodyMarks: ['spontaneous-helper-contact-double-arrow'],
-      labels: { topLeft: 'UHS', topLeftMetrics: f3NormalMetrics },
+      labels: { topLeft: 'UHS' },
     },
-    {
+  ] as const)('zeichnet topLeft am farbigen Kreis schwarz an der F.3.3-Lage', (spec) => {
+    const drawing = composeFromCatalog(spec as unknown as SymbolSpec);
+    const run = drawing.children.find((child) => child.type === 'text' && child.role === 'label');
+    expect(run).toMatchObject({ x: 1.015316, y: 5.000254, style: { fill: 'schwarz' } });
+  });
+
+  it.each([
+    [{
       kind: 'circle-12',
       bodyVariant: 'raised-circle-1mm',
       organization: 'zivile-einheiten',
       bodyMarks: ['circle-information-stem'],
       labels: { topLeft: 'UHS', topLeftMetrics: f3NormalMetrics },
-    },
-    {
+      // Seit dem 2. Oktober 2026 sind Metriksätze an jeder Hülle zulässig; der fremde F.3-Satz
+      // scheitert an der Grenze der angehobenen Kreishülle.
+    }, /top-left-metrics-within-body/],
+    [{
       kind: 'circle-12',
       organization: 'zivile-einheiten',
       bodyMarks: ['spontaneous-helper-collection-arrow'],
       labels: { topLeftMetrics: f3NormalMetrics },
-    },
-  ] as const)('lehnt topLeft und topLeftMetrics am exakten farbigen Kreisvertrag ab', (spec) => {
-    expect(() => composeFromCatalog(spec as unknown as SymbolSpec)).toThrow(
-      /colored-circle-top-left-not-measured/,
-    );
+    }, /top-left-metrics-require-top-left-label/],
+  ] as const)('lehnt einen fremden oder verwaisten Metriksatz weiter ab', (spec, rule) => {
+    expect(() => composeFromCatalog(spec as unknown as SymbolSpec)).toThrow(rule);
   });
 
   it('erhält die realen weißen HiOrg-Kreislabels in normaler und raised-gable-Fassung', () => {

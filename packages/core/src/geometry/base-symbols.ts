@@ -9,6 +9,12 @@ import {
   type SymbolKind,
 } from '@einsatzzeichen/schema';
 import { NotMeasuredError } from '../not-measured.js';
+import { isAllowedBodyVariant, isDerivedBodyVariant } from '../derive/body-variant-pairs.js';
+import { deriveBodyVariant, type DerivedVariant } from '../derive/body-variants.js';
+import { derivedInnerField, type InnerFieldGap } from '../derive/inner-field.js';
+import { segmentDistance } from '../derive/outline.js';
+import { noteDerivation } from '../derive/record.js';
+import { POST_VARIANT_BODIES, POST_VARIANT_EXTRAS } from '../derive/circle.js';
 
 /** Umriss ohne Füllung. Organisationsfarben setzt der Kompositionsmotor. */
 const OUTLINE: Style = {
@@ -659,6 +665,7 @@ const VARIANT_EXTRA_PRIMITIVES: Partial<
       },
     ],
   },
+  post: POST_VARIANT_EXTRAS, // abgeleitet (2. Oktober 2026), `derive/circle.ts`
 };
 
 /**
@@ -776,6 +783,12 @@ const VARIANT_BODIES: Partial<Record<SymbolKind, Partial<Record<BodyVariantId, P
       r: 12,
       style: OUTLINE,
     },
+  },
+  // Abgeleitet (2. Oktober 2026): Geometrie und Begründung in `derive/circle.ts`.
+  post: {
+    'raised-gable': POST_VARIANT_BODIES['raised-gable']!,
+    'raised-circle-1mm': POST_VARIANT_BODIES['raised-circle-1mm']!,
+    'foot-band': POST_VARIANT_BODIES['foot-band']!,
   },
 };
 
@@ -1123,22 +1136,117 @@ const VARIANT_INNER_FIELDS: Partial<
 };
 
 /**
+ * Traufe der Hauskörper, die das abgeleitete Innenfeld ausspart: am Gebäude (E.1.37) endet das
+ * Dachfeld auf der Traufe y 10 und das Wandfeld beginnt 1 mm darunter; an der reduzierten
+ * Hauskontur liegt auf y 10 ein Traufstrich, und das weiße Band läuft auf beiden Seiten mit.
+ */
+const INNER_FIELD_EAVES: Partial<Record<SymbolKind, { yMm: number; aboveMm: number; belowMm: number }>> = {
+  building: { yMm: 10, aboveMm: 0, belowMm: INNER_CONTOUR_INSET_MM },
+  'reduced-house': { yMm: 10, aboveMm: INNER_CONTOUR_INSET_MM, belowMm: INNER_CONTOUR_INSET_MM },
+};
+
+function innerFieldGap(kind: SymbolKind, derived: DerivedVariant | undefined): InnerFieldGap | undefined {
+  const eave = INNER_FIELD_EAVES[kind];
+  if (eave === undefined) return undefined;
+  const s = derived?.scaling;
+  const y = s === undefined ? eave.yMm : s.originY + s.factor * (eave.yMm - s.originY);
+  return { fromYMm: y - eave.aboveMm, toYMm: y + eave.belowMm };
+}
+
+/**
  * Das Innenfeld eines Körpers bei weißer Innenkontur (`SymbolSpec.whiteInnerContour`), in den
  * Koordinaten der unverschobenen Grundzeichnung. Die Füllfarbe setzt `compose()`.
  *
- * Belegt nur für die Körper, die Anhang E damit zeichnet. Jeder andere wirft: Wie die Kontur an
- * einer Raute oder einem Kreis sitzt, zeigt keine Referenz.
+ * Vermessen an den Körpern, die Anhang E damit zeichnet. An jedem anderen Körper wird es
+ * abgeleitet (Entscheidung vom 2. Oktober 2026): Teilt eine Variante den Körper ihrer Grundart
+ * (Fußband, Radpaar), gilt deren vermessenes Feld; sonst ist es die Körperkontur, um das
+ * vermessene Maß nach innen versetzt (`derive/inner-field.ts`). Nur der offene Haken von
+ * `1.13 Ereignis` hat keine Fläche und wirft — `compose()` lehnt seine Füllung vorher ab.
  */
 export function innerField(kind: SymbolKind, variant?: BodyVariantId): readonly Primitive[] {
   const field = variant === undefined ? INNER_FIELDS[kind] : VARIANT_INNER_FIELDS[kind]?.[variant];
-  if (field === undefined) {
+  if (field !== undefined) return field;
+  const derived = variant !== undefined && isDerivedBodyVariant(kind, variant)
+    ? derivedVariant(kind, variant)
+    : undefined;
+  const body = derived?.body ??
+    (variant === undefined ? BODIES[kind] : VARIANT_BODIES[kind]?.[variant]);
+  if (body === undefined || (body.type === 'polyline' && body.closed !== true)) {
     throw new NotMeasuredError(
       `Eine weiße Innenkontur ist für "${kind}"${variant === undefined ? '' : ` / "${variant}"`} ` +
-        'an keiner Referenz belegt.',
+        (body === undefined ? 'nicht ableitbar: der Körper ist nicht belegt.' : 'nicht ableitbar: der Körper ist offen.'),
       'combination',
     );
   }
-  return field;
+  const baseField = INNER_FIELDS[kind];
+  if (variant !== undefined && baseField !== undefined && JSON.stringify(body) === JSON.stringify(BODIES[kind])) {
+    noteDerivation({
+      dimension: 'whiteInnerContour',
+      part: `Innenfeld an "${kind}" / "${variant}"`,
+      basis: 'transferred',
+      from: `vermessenes Innenfeld von "${kind}" (derselbe Körper)`,
+    });
+    return baseField;
+  }
+  noteDerivation({
+    dimension: 'whiteInnerContour',
+    part: `Innenfeld an "${kind}"${variant === undefined ? '' : ` / "${variant}"`}: Körperkontur nach innen versetzt`,
+    basis: 'constructed',
+    from: 'Anhang E (E.1.1, E.2.27): Innenfeld 1 mm von der Körpermittellinie, weißes Band 0,75 mm',
+  });
+  return derivedInnerField(body, innerFieldGap(kind, derived));
+}
+
+/** Der Giebel aus F.3.5/F.3.14 — Vorlage jedes abgeleiteten Giebels. */
+const GABLE = VARIANT_EXTRA_PRIMITIVES['circle-12']!['raised-gable']![0]!;
+
+/**
+ * Abstand dieses Giebels zur Mittellinie des abgesenkten Kreises (16|18) r 12: der kleinste
+ * Abstand vom Kreismittelpunkt zu den beiden Giebelschenkeln, minus Radius. Gerechnet, nicht
+ * abgelesen: rund 1,47 mm.
+ */
+const GABLE_CLEARANCE_MM = (() => {
+  const circle = VARIANT_BODIES['circle-12']!['raised-gable']!;
+  if (circle.type !== 'circle' || GABLE.type !== 'polyline') throw new Error('Giebelvorlage fehlt.');
+  const center = [circle.cx, circle.cy] as const;
+  const [a, b, c] = GABLE.points as readonly (readonly [number, number])[];
+  return Math.min(
+    segmentDistance(center, center, a!, b!),
+    segmentDistance(center, center, b!, c!),
+  ) - circle.r;
+})();
+
+const DERIVED_VARIANTS = new Map<string, DerivedVariant>();
+
+function computedVariant(kind: SymbolKind, variant: BodyVariantId): DerivedVariant {
+  const key = `${kind}/${variant}`;
+  let derived = DERIVED_VARIANTS.get(key);
+  if (derived === undefined) {
+    derived = deriveBodyVariant(kind, variant, {
+      body: BODIES[kind]!,
+      kindExtras: EXTRA_PRIMITIVES[kind] ?? [],
+      gable: GABLE,
+      gableClearanceMm: GABLE_CLEARANCE_MM,
+      invertedHullTrack: VARIANT_BODIES['vehicle-land']!['inverted-hull-track']!,
+    });
+    DERIVED_VARIANTS.set(key, derived);
+  }
+  return derived;
+}
+
+/** Ein abgeleitetes Paar, einmal gerechnet; die Notizen gehen bei jedem Aufruf an `compose()`. */
+function derivedVariant(kind: SymbolKind, variant: BodyVariantId): DerivedVariant {
+  const derived = computedVariant(kind, variant);
+  for (const note of derived.notes) noteDerivation(note);
+  return derived;
+}
+
+/**
+ * Der Faktor, mit dem ein abgeleitetes Paar seinen Körper verkleinert (Giebel), sonst 1. Das
+ * Layoutprofil liest ihn, um die mittige Grundlinie mitzunehmen.
+ */
+export function derivedBodyScale(kind: SymbolKind, variant: BodyVariantId): number {
+  return isDerivedBodyVariant(kind, variant) ? computedVariant(kind, variant).scaling?.factor ?? 1 : 1;
 }
 
 /**
@@ -1151,16 +1259,24 @@ export function innerField(kind: SymbolKind, variant?: BodyVariantId): readonly 
  * Extraktorausbau.
  */
 export function baseDrawing(kind: SymbolKind, variant?: BodyVariantId): Drawing {
-  const body = variant === undefined ? BODIES[kind] : VARIANT_BODIES[kind]?.[variant];
+  // Abgeleitete Paare (Entscheidung vom 2. Oktober 2026) nur, wo kein vermessener Körper steht:
+  // Vermessenes bleibt bytegleich und ohne Notiz.
+  const derived = variant !== undefined && VARIANT_BODIES[kind]?.[variant] === undefined &&
+      isDerivedBodyVariant(kind, variant)
+    ? derivedVariant(kind, variant)
+    : undefined;
+  const body = derived?.body ??
+    (variant === undefined ? BODIES[kind] : VARIANT_BODIES[kind]?.[variant]);
   if (!body) {
     // Zwei Fälle, zwei Fehlerarten. Eine fehlende Grundart ist eine Lücke im Katalog selbst und
     // damit ein Programmfehler; eine fehlende Variante ist eine Aussage über die Referenz und
     // gehört als `NotMeasuredError` zu den Lücken, die ein Aufrufer als solche behandeln darf.
     if (variant === undefined) throw new Error(`Kein Grundzeichen für "${kind}" im Katalog.`);
     throw new NotMeasuredError(
-      `Für "${kind}" ist keine Körpervariante "${variant}" belegt. Der Katalog fällt nicht ` +
-        'auf die Zeichnung aus Kapitel 1 zurück: die wäre eine andere Geometrie, und die ' +
-        'Verwechslung bliebe unsichtbar.',
+      `Für "${kind}" ist keine Körpervariante "${variant}" belegt` +
+        (isAllowedBodyVariant(kind, variant) ? '' : ' — sie benennt eine Form einer anderen Art') +
+        '. Der Katalog fällt nicht auf die Zeichnung aus Kapitel 1 zurück: die wäre eine andere ' +
+        'Geometrie, und die Verwechslung bliebe unsichtbar.',
       'combination',
     );
   }
@@ -1168,11 +1284,13 @@ export function baseDrawing(kind: SymbolKind, variant?: BodyVariantId): Drawing 
   const section = SECTIONS[kind]?.section;
   return {
     viewBox: DEFAULT_VIEWBOX_MM,
-    children: [
-      body,
-      ...(EXTRA_PRIMITIVES[kind] ?? []),
-      ...(variant === undefined ? [] : VARIANT_EXTRA_PRIMITIVES[kind]?.[variant] ?? []),
-    ],
+    children: derived !== undefined
+      ? [derived.body, ...derived.extras]
+      : [
+          body,
+          ...(EXTRA_PRIMITIVES[kind] ?? []),
+          ...(variant === undefined ? [] : VARIANT_EXTRA_PRIMITIVES[kind]?.[variant] ?? []),
+        ],
     ...(title !== undefined ? { title } : {}),
     ...(title !== undefined
       ? {

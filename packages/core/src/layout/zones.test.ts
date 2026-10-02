@@ -12,6 +12,7 @@ import {
   type ZoneMeasure,
 } from '@einsatzzeichen/schema';
 import { FOOT_GAP_MM, HEAD_GAP_MM, profileFor } from './profiles.js';
+import { isDerivedBodyVariant } from '../derive/body-variant-pairs.js';
 import {
   COMPOSE_ZONE_CONSTANTS,
   NOT_A_CLAIM_AT_SOURCE,
@@ -88,13 +89,17 @@ describe('Zonenmodell: Vollständigkeit', () => {
     const branches: string[] = [];
     for (const kind of SYMBOL_KINDS) {
       for (const variant of BODY_VARIANT_IDS) {
+        // Abgeleitete Paare führen ein abgeleitetes Profil und sind keine vermessene Körperfassung.
+        if (isDerivedBodyVariant(kind, variant)) continue;
         if (profileFor(kind, variant) !== profileFor(kind)) branches.push(formKey(kind, variant));
       }
     }
     const modelled = ZONE_MODEL_BODY_VARIANTS.map((form) => formKey(form.kind, form.variant));
     expect(branches.sort()).toEqual([...modelled].sort());
-    expect(ZONE_MODEL_BODY_VARIANTS).toHaveLength(14);
-    expect(ZONE_MODEL_FORMS).toHaveLength(33);
+    // Seit dem 2. Oktober 2026 17 statt 14: die drei abgeleiteten Fassungen der Funktionsstelle
+    // (Giebel, angehobener Kreis, Fußband) führen eigene Profile.
+    expect(ZONE_MODEL_BODY_VARIANTS).toHaveLength(17);
+    expect(ZONE_MODEL_FORMS).toHaveLength(36);
   });
 
   it('trägt an jeder Zone entweder Herkunft oder eine Lückenbegründung', () => {
@@ -244,17 +249,21 @@ describe('Zonenmodell: Bindung an die bestehenden Fundorte', () => {
     expect(Object.keys(COMPOSE_ZONE_CONSTANTS)).toHaveLength(6);
   });
 
-  it('hält die Fahrwerks-Körperformen an CHASSIS_KINDS in validate.ts fest', () => {
+  it('hält die vermessenen Fahrwerks-Körperformen als Teilmenge von VEHICLE_KINDS in validate.ts fest', () => {
     const validateSource = readPackageSource('validate.ts');
-    const block = /const CHASSIS_KINDS = new Set<SymbolKind>\(\[([^\]]*)\]\)/.exec(validateSource);
-    expect(block, 'CHASSIS_KINDS steht nicht mehr so in validate.ts').not.toBeNull();
+    const block = /const VEHICLE_KINDS = new Set<SymbolKind>\(\[([^\]]*)\]\)/.exec(validateSource);
+    expect(block, 'VEHICLE_KINDS steht nicht mehr so in validate.ts').not.toBeNull();
     const kinds = [...(block as RegExpExecArray)[1].matchAll(/'([a-z-]+)'/g)].map((m) => m[1]);
-    expect(kinds.sort()).toEqual(['swap-loader-vehicle', 'trailer', 'vehicle-land']);
+    expect(kinds.sort()).toEqual([
+      'swap-loader-vehicle', 'trailer', 'vehicle-air', 'vehicle-land', 'vehicle-water',
+    ]);
 
+    // Wasser- und Luftfahrzeug tragen die Zone abgeleitet; die Referenz führt sie dort nicht.
+    const measured = ['swap-loader-vehicle', 'trailer', 'vehicle-land'];
     for (const kind of SYMBOL_KINDS) {
       const binding = ZONE_MODEL[kind].zones.chassis;
       expect(binding.status, `${kind}: Fahrwerkszone`).toBe(
-        kinds.includes(kind) ? 'measured' : 'measured-absent',
+        measured.includes(kind) ? 'measured' : 'measured-absent',
       );
     }
   });
@@ -276,6 +285,7 @@ describe('Zonenmodell: Bindung an die bestehenden Fundorte', () => {
     expect([...files].sort()).toEqual([
       'core/src/blocks/capability-inset.ts',
       'core/src/compose.ts',
+      'core/src/derive/circle.ts',
       'core/src/geometry/base-symbols.ts',
       'core/src/geometry/parametric.ts',
       'core/src/layout/profiles.ts',
@@ -291,8 +301,10 @@ describe('Zonenmodell: Bindung an die bestehenden Fundorte', () => {
 describe('Zonenmodell: deklarierte Lücken', () => {
   it('nagelt die Liste der Lücken fest', () => {
     // Je Zone und Zustand eine Zeile mit allen betroffenen Körperfassungen. Dieselbe Aussage wie
-    // 345 Einzelzeilen, nur lesbar: eine still geschlossene Lücke verschwindet aus ihrer Zeile,
-    // eine neue erscheint darin, und eine Zone, die kippt, wechselt die Zeile.
+    // 361 Einzelzeilen, nur lesbar: eine still geschlossene Lücke verschwindet aus ihrer Zeile,
+    // eine neue erscheint darin, und eine Zone, die kippt, wechselt die Zeile. Am 2. Oktober 2026
+    // kamen die drei Fassungen der Funktionsstelle hinzu, und die abgeleiteten Kreislagen schlossen
+    // die Zonen oben links, unten mittig und rechts unterhalb an mehreren Kreisfassungen.
     const byZone: Record<string, string[]> = {};
     for (const entry of zoneGaps()) {
       const key = `${entry.zone} | ${entry.status} | ${entry.scope}`;
@@ -300,7 +312,7 @@ describe('Zonenmodell: deklarierte Lücken', () => {
     }
     for (const forms of Object.values(byZone)) forms.sort();
     expect(byZone).toEqual(PINNED_GAPS);
-    expect(zoneGaps()).toHaveLength(342);
+    expect(zoneGaps()).toHaveLength(361);
   });
 
   it('führt die Tendenz an jeder Körperfassung als unvermessen', () => {
@@ -366,12 +378,13 @@ describe('Zonenmodell: deklarierte Lücken', () => {
   it('zeigt mit jeder Herkunft in state-frames.ts und state-placement.ts auf die Stelle, die die Zahl trägt', () => {
     // Die Zeilenbereiche stehen als Text; läuft die Datei weg, fällt es hier auf und nicht erst
     // beim Leser, der ins Leere schlägt. Seit LFH-577 stehen die Lagen als reine Daten in
-    // `state-frames.ts`; die Tendenz bleibt an der Stelle in `state-placement.ts`, die wirft.
+    // `state-frames.ts`. Die Tendenz zeigt seit dem 2. Oktober 2026 nicht mehr auf eine Wurfstelle,
+    // sondern auf den Kommentar an `placeStates()`, der die Randlage als nicht vermessen benennt.
     const expected: Record<string, string> = {
-      'state-frames.ts:129–172': 'STATE_HINT_LAYOUTS',
-      'state-frames.ts:63–95': 'PERSON_STATE_FRAMES',
-      'state-frames.ts:99–110': 'PERSON_STATE_CORNERS_MM',
-      'state-placement.ts:477–483': 'tendency-margin',
+      'state-frames.ts:133–176': 'STATE_HINT_LAYOUTS',
+      'state-frames.ts:67–99': 'PERSON_STATE_FRAMES',
+      'state-frames.ts:103–114': 'PERSON_STATE_CORNERS_MM',
+      'state-placement.ts:484–498': 'tendency-margin',
     };
     const seen = new Set<string>();
     for (const form of ZONE_MODEL_FORMS) {
@@ -473,7 +486,7 @@ describe('Zonenmodell: deklarierte Lücken', () => {
 
 /**
  * Die deklarierten Lücken des Modells, je Zone, Zustand und Reichweite mit allen betroffenen
- * Körperfassungen. 303 Einzelbindungen, hier gruppiert — dieselbe Aussage, lesbar im Diff: eine
+ * Körperfassungen. 361 Einzelbindungen, hier gruppiert — dieselbe Aussage, lesbar im Diff: eine
  * still geschlossene Lücke verschwindet aus ihrer Zeile, eine neue erscheint darin, und eine
  * Zone, deren Befund kippt, wechselt den Schlüssel.
  */
@@ -482,48 +495,49 @@ const PINNED_GAPS: Readonly<Record<string, readonly string[]>> = {
     'area', 'building', 'circle-12', 'circle-12/foot-band', 'circle-12/raised-circle-1mm',
     'circle-12/raised-gable', 'container', 'event', 'formation', 'formation/foot-band', 'hazard',
     'measure', 'person', 'person/compact-person-diamond-26mm',
-    'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post', 'reduced-house',
-    'spontaneous-helper', 'upright-rectangle', 'vehicle-air', 'vehicle-air/fixed-wing-hull',
-    'vehicle-air/raised-hull', 'vehicle-water', 'vehicle-water/inset-hull',
-    'vehicle-water/raised-hull',
+    'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post', 'post/foot-band',
+    'post/raised-circle-1mm', 'post/raised-gable', 'reduced-house', 'spontaneous-helper',
+    'upright-rectangle', 'vehicle-air', 'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull',
+    'vehicle-water', 'vehicle-water/inset-hull', 'vehicle-water/raised-hull',
   ],
   'head | measured-absent | combination': [
     'circle-12', 'circle-12/foot-band', 'circle-12/raised-circle-1mm', 'circle-12/raised-gable',
-    'post', 'swap-loader-vehicle', 'trailer', 'trailer/foot-band', 'upright-rectangle',
+    'post', 'post/foot-band', 'post/raised-circle-1mm', 'post/raised-gable', 'swap-loader-vehicle',
+    'trailer', 'trailer/foot-band', 'upright-rectangle',
   ],
   'inner-field | not-measured | combination': [
     'area', 'circle-12', 'circle-12/foot-band', 'circle-12/raised-circle-1mm',
     'circle-12/raised-gable', 'container', 'event', 'formation/foot-band', 'hazard', 'measure',
     'person', 'person/compact-person-diamond-26mm',
-    'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post', 'reduced-house',
-    'spontaneous-helper', 'trailer/foot-band', 'vehicle-air', 'vehicle-air/fixed-wing-hull',
-    'vehicle-air/raised-hull', 'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track',
-    'vehicle-land/plain-wheel-pair', 'vehicle-water', 'vehicle-water/inset-hull',
+    'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post', 'post/foot-band',
+    'post/raised-circle-1mm', 'post/raised-gable', 'reduced-house', 'spontaneous-helper',
+    'trailer/foot-band', 'vehicle-air', 'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull',
+    'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track', 'vehicle-land/plain-wheel-pair',
+    'vehicle-water', 'vehicle-water/inset-hull',
   ],
   'label-above-left | not-measured | combination': [
     'area', 'building', 'circle-12', 'circle-12/foot-band', 'circle-12/raised-circle-1mm',
     'circle-12/raised-gable', 'container', 'event', 'formation', 'formation/foot-band', 'hazard',
-    'measure', 'person', 'person/compact-person-diamond-26mm', 'point', 'post', 'reduced-house',
-    'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'trailer/foot-band',
-    'upright-rectangle', 'vehicle-air', 'vehicle-land', 'vehicle-land/foot-band',
-    'vehicle-land/inverted-hull-track', 'vehicle-land/plain-wheel-pair', 'vehicle-water',
-    'vehicle-water/inset-hull', 'vehicle-water/raised-hull',
+    'measure', 'person', 'person/compact-person-diamond-26mm', 'point', 'post', 'post/foot-band',
+    'post/raised-circle-1mm', 'post/raised-gable', 'reduced-house', 'spontaneous-helper',
+    'swap-loader-vehicle', 'trailer', 'trailer/foot-band', 'upright-rectangle', 'vehicle-air',
+    'vehicle-land', 'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track',
+    'vehicle-land/plain-wheel-pair', 'vehicle-water', 'vehicle-water/inset-hull',
+    'vehicle-water/raised-hull',
   ],
   'label-below-right | not-measured | combination': [
-    'area', 'building', 'circle-12', 'circle-12/raised-circle-1mm', 'circle-12/raised-gable',
-    'container', 'event', 'formation', 'formation/foot-band', 'hazard', 'measure', 'person',
-    'person/compact-person-diamond-26mm', 'person/compact-person-diamond-26mm-lowered-2mm', 'point',
-    'post', 'reduced-house', 'spontaneous-helper', 'swap-loader-vehicle', 'trailer',
-    'trailer/foot-band', 'upright-rectangle', 'vehicle-air', 'vehicle-air/fixed-wing-hull',
-    'vehicle-air/raised-hull', 'vehicle-land', 'vehicle-land/foot-band',
-    'vehicle-land/inverted-hull-track', 'vehicle-land/plain-wheel-pair', 'vehicle-water',
-    'vehicle-water/inset-hull',
+    'area', 'building', 'circle-12/raised-circle-1mm', 'container', 'event', 'formation',
+    'formation/foot-band', 'hazard', 'measure', 'person', 'person/compact-person-diamond-26mm',
+    'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post/raised-circle-1mm',
+    'reduced-house', 'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'trailer/foot-band',
+    'upright-rectangle', 'vehicle-air', 'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull',
+    'vehicle-land', 'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track',
+    'vehicle-land/plain-wheel-pair', 'vehicle-water', 'vehicle-water/inset-hull',
   ],
   'label-bottom-center | not-measured | combination': [
-    'area', 'building', 'circle-12', 'circle-12/raised-circle-1mm', 'circle-12/raised-gable',
-    'container', 'event', 'hazard', 'measure', 'person', 'person/compact-person-diamond-26mm',
-    'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post', 'reduced-house',
-    'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'trailer/foot-band',
+    'area', 'building', 'container', 'event', 'hazard', 'measure', 'person',
+    'person/compact-person-diamond-26mm', 'person/compact-person-diamond-26mm-lowered-2mm', 'point',
+    'reduced-house', 'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'trailer/foot-band',
     'upright-rectangle', 'vehicle-air', 'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull',
     'vehicle-land', 'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track',
     'vehicle-land/plain-wheel-pair', 'vehicle-water', 'vehicle-water/inset-hull',
@@ -532,54 +546,54 @@ const PINNED_GAPS: Readonly<Record<string, readonly string[]>> = {
   'label-center | not-measured | combination': [
     'circle-12', 'circle-12/foot-band', 'circle-12/raised-circle-1mm', 'circle-12/raised-gable',
     'person', 'person/compact-person-diamond-26mm',
-    'person/compact-person-diamond-26mm-lowered-2mm', 'post',
+    'person/compact-person-diamond-26mm-lowered-2mm', 'post', 'post/foot-band',
+    'post/raised-circle-1mm', 'post/raised-gable',
   ],
   'label-surface-below-left | not-measured | combination': [
     'area', 'building', 'circle-12', 'circle-12/foot-band', 'circle-12/raised-gable', 'container',
     'event', 'formation', 'formation/foot-band', 'hazard', 'measure', 'person',
     'person/compact-person-diamond-26mm', 'person/compact-person-diamond-26mm-lowered-2mm', 'point',
-    'post', 'reduced-house', 'spontaneous-helper', 'swap-loader-vehicle', 'trailer',
-    'trailer/foot-band', 'upright-rectangle', 'vehicle-air', 'vehicle-air/fixed-wing-hull',
-    'vehicle-air/raised-hull', 'vehicle-land', 'vehicle-land/foot-band',
-    'vehicle-land/inverted-hull-track', 'vehicle-land/plain-wheel-pair', 'vehicle-water',
-    'vehicle-water/inset-hull', 'vehicle-water/raised-hull',
+    'post', 'post/foot-band', 'post/raised-gable', 'reduced-house', 'spontaneous-helper',
+    'swap-loader-vehicle', 'trailer', 'trailer/foot-band', 'upright-rectangle', 'vehicle-air',
+    'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull', 'vehicle-land',
+    'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track', 'vehicle-land/plain-wheel-pair',
+    'vehicle-water', 'vehicle-water/inset-hull', 'vehicle-water/raised-hull',
   ],
   'label-surface-below-right | not-measured | combination': [
     'area', 'building', 'circle-12', 'circle-12/foot-band', 'circle-12/raised-gable', 'container',
     'event', 'formation', 'formation/foot-band', 'hazard', 'measure', 'person',
     'person/compact-person-diamond-26mm', 'person/compact-person-diamond-26mm-lowered-2mm', 'point',
-    'post', 'reduced-house', 'spontaneous-helper', 'swap-loader-vehicle', 'trailer',
-    'trailer/foot-band', 'upright-rectangle', 'vehicle-air', 'vehicle-air/fixed-wing-hull',
-    'vehicle-land', 'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track',
-    'vehicle-land/plain-wheel-pair', 'vehicle-water', 'vehicle-water/inset-hull',
-    'vehicle-water/raised-hull',
+    'post', 'post/foot-band', 'post/raised-gable', 'reduced-house', 'spontaneous-helper',
+    'swap-loader-vehicle', 'trailer', 'trailer/foot-band', 'upright-rectangle', 'vehicle-air',
+    'vehicle-air/fixed-wing-hull', 'vehicle-land', 'vehicle-land/foot-band',
+    'vehicle-land/inverted-hull-track', 'vehicle-land/plain-wheel-pair', 'vehicle-water',
+    'vehicle-water/inset-hull', 'vehicle-water/raised-hull',
   ],
   'label-top-left | not-measured | combination': [
-    'area', 'building', 'circle-12/foot-band', 'circle-12/raised-circle-1mm', 'container', 'event',
-    'hazard', 'measure', 'person', 'person/compact-person-diamond-26mm',
-    'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post', 'reduced-house',
-    'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'upright-rectangle', 'vehicle-air',
-    'vehicle-air/raised-hull', 'vehicle-water', 'vehicle-water/inset-hull',
+    'area', 'building', 'container', 'event', 'hazard', 'measure', 'person',
+    'person/compact-person-diamond-26mm', 'person/compact-person-diamond-26mm-lowered-2mm', 'point',
+    'reduced-house', 'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'upright-rectangle',
+    'vehicle-air', 'vehicle-air/raised-hull', 'vehicle-water', 'vehicle-water/inset-hull',
     'vehicle-water/raised-hull',
   ],
   'movement-anchor | not-measured | value': [
     'area', 'building', 'circle-12', 'circle-12/foot-band', 'circle-12/raised-circle-1mm',
     'circle-12/raised-gable', 'container', 'event', 'formation', 'formation/foot-band', 'hazard',
     'measure', 'person', 'person/compact-person-diamond-26mm',
-    'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post', 'reduced-house',
-    'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'trailer/foot-band',
-    'upright-rectangle', 'vehicle-air', 'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull',
-    'vehicle-land', 'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track',
-    'vehicle-land/plain-wheel-pair', 'vehicle-water', 'vehicle-water/inset-hull',
-    'vehicle-water/raised-hull',
+    'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post', 'post/foot-band',
+    'post/raised-circle-1mm', 'post/raised-gable', 'reduced-house', 'spontaneous-helper',
+    'swap-loader-vehicle', 'trailer', 'trailer/foot-band', 'upright-rectangle', 'vehicle-air',
+    'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull', 'vehicle-land',
+    'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track', 'vehicle-land/plain-wheel-pair',
+    'vehicle-water', 'vehicle-water/inset-hull', 'vehicle-water/raised-hull',
   ],
   'state-margin | not-measured | combination': [
     'area', 'building', 'circle-12', 'circle-12/foot-band', 'circle-12/raised-circle-1mm',
-    'circle-12/raised-gable', 'container', 'event', 'formation', 'formation/foot-band',
-    'measure', 'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post',
-    'reduced-house', 'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'trailer/foot-band',
-    'upright-rectangle',
-    'vehicle-air', 'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull', 'vehicle-land',
+    'circle-12/raised-gable', 'container', 'event', 'formation', 'formation/foot-band', 'measure',
+    'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post', 'post/foot-band',
+    'post/raised-circle-1mm', 'post/raised-gable', 'reduced-house', 'spontaneous-helper',
+    'swap-loader-vehicle', 'trailer', 'trailer/foot-band', 'upright-rectangle', 'vehicle-air',
+    'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull', 'vehicle-land',
     'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track', 'vehicle-land/plain-wheel-pair',
     'vehicle-water', 'vehicle-water/inset-hull', 'vehicle-water/raised-hull',
   ],
@@ -587,12 +601,12 @@ const PINNED_GAPS: Readonly<Record<string, readonly string[]>> = {
     'area', 'building', 'circle-12', 'circle-12/foot-band', 'circle-12/raised-circle-1mm',
     'circle-12/raised-gable', 'container', 'event', 'formation', 'formation/foot-band', 'hazard',
     'measure', 'person', 'person/compact-person-diamond-26mm',
-    'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post', 'reduced-house',
-    'spontaneous-helper', 'swap-loader-vehicle', 'trailer', 'trailer/foot-band',
-    'upright-rectangle', 'vehicle-air', 'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull',
-    'vehicle-land', 'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track',
-    'vehicle-land/plain-wheel-pair', 'vehicle-water', 'vehicle-water/inset-hull',
-    'vehicle-water/raised-hull',
+    'person/compact-person-diamond-26mm-lowered-2mm', 'point', 'post', 'post/foot-band',
+    'post/raised-circle-1mm', 'post/raised-gable', 'reduced-house', 'spontaneous-helper',
+    'swap-loader-vehicle', 'trailer', 'trailer/foot-band', 'upright-rectangle', 'vehicle-air',
+    'vehicle-air/fixed-wing-hull', 'vehicle-air/raised-hull', 'vehicle-land',
+    'vehicle-land/foot-band', 'vehicle-land/inverted-hull-track', 'vehicle-land/plain-wheel-pair',
+    'vehicle-water', 'vehicle-water/inset-hull', 'vehicle-water/raised-hull',
   ],
 };
 
@@ -611,6 +625,9 @@ const PINNED_UNDOCUMENTED: readonly string[] = [
   'circle-12/raised-circle-1mm | label-surface-below-right | surface-baseline',
   'circle-12/raised-gable | body | default-anchor',
   'post | body | default-anchor',
+  'post/foot-band | body | default-anchor',
+  'post/raised-circle-1mm | body | default-anchor',
+  'post/raised-gable | body | default-anchor',
   'vehicle-air/fixed-wing-hull | label-above-left | above-left-anchor',
   'vehicle-air/fixed-wing-hull | label-above-left | above-left-baseline',
   'vehicle-air/fixed-wing-hull | label-top-left | top-left-baseline',

@@ -33,9 +33,47 @@ import { boundsOfMm, type BoundsMm } from './bounds.js';
 // dieser Datei — die Kopfzone rechnet damit in `placeHead()`, also in `profiles.ts`. Der
 // Kopfzonenabstand wurde hier also ausschließlich für die Fußzone importiert. Siehe
 // `docs/decisions/2026-09-20-zonenmodell-als-daten.md` §2 Punkt 2.
-import { FOOT_GAP_MM, placeHead, profileFor } from './layout/profiles.js';
-import { placeStates, type StatePlacement } from './layout/state-placement.js';
+import { FOOT_GAP_MM, hasVariantProfile, profileFor } from './layout/profiles.js';
+import {
+  assertHeadClearOfRuns,
+  noteHeadPlacement,
+  placeBaseUnderHead,
+  placeHeadZone,
+  requireAdministrativeHead,
+} from './derive/head-zone.js';
+import { measuredStatePlacement, type StatePlacement } from './layout/state-placement.js';
+import { carriesStates, composeDerivedStates, withoutStates } from './derive/states.js';
 import { NotMeasuredError } from './not-measured.js';
+import { collectDerivations } from './derive/record.js';
+import { assertDerivedLayoutFits } from './derive/layout-guard.js';
+import { assertDerivedVariantComposable } from './derive/body-variants.js';
+import {
+  fitFunctionRoleBodyMarks,
+  fitFunctionRolePictograms,
+  resolveFunctionRoleLayout,
+} from './derive/function-roles.js';
+import {
+  chassisCurvePath,
+  chassisLiftMm,
+  liftForChassis,
+  noteChassisDerivation,
+} from './derive/vehicle-category.js';
+import { openBodyTint } from './derive/open-body-tint.js';
+import { noteInsetHullOrganization } from './derive/inset-hull-organization.js';
+import { capabilityPictograms, composedBodyMarks } from './derive/capabilities.js';
+import {
+  circleCenterBaselineFromBodyBottomMm,
+  circleCornerRuns,
+  circleTopLeftInk,
+  circleTopLeftMetrics,
+  noteCircleVariantBody,
+  type CircleCornerRuns,
+} from './derive/circle.js';
+import {
+  deriveLabelZones,
+  noteFootBandCornerLabels,
+  type DerivedLabelBoxes,
+} from './derive/label-zones.js';
 import {
   ARIMO_CAP_HEIGHT_FRACTION,
   CATALOG_TEXT_FONT_WEIGHT,
@@ -334,7 +372,8 @@ function labelPrimitive(
 }
 
 /**
- * Schriftfarbe der Läufe **im** Körper: `schwarz` auf weisser Körperfläche, sonst `weiss`.
+ * Schriftfarbe der Läufe **im** Körper: `schwarz` auf weisser und auf gelber Körperfläche,
+ * sonst `weiss`.
  *
  * **Bis Anhang F stand hier fest `weiss`**, mit der Begründung, alle 37 Zeichen aus E.1 setzten
  * ihre Kürzel weiss auf die gefüllte Fläche. Das stimmt für E und ist für F falsch: alle 66
@@ -357,6 +396,13 @@ function labelPrimitive(
  * sie nur dort, wo eine Quelle eine andere Tinte vermisst (schwarz, weiss oder, seit LFH-786,
  * `koerperlauf-kontrast`). Specs ohne diese Messung behalten Rückgabewert und gerenderte Bytes.
  *
+ * **Gelb ist die zweite Fläche mit schwarzer Schrift (02.10.2026).** Alle 20 Referenzdateien mit
+ * gelber Fläche `#fafa00` und Typo-Ebene setzen ihre Typo ohne `fill`, also schwarz: 2.4 Führung
+ * und Leitung, D.1.1–D.1.7, D.2.2–D.2.5, D.3.1–D.3.6, D.4.1 und D.4.3; keine einzige setzt weiß.
+ * „Weiß auf jeder Organisationsfarbe" ist für Gelb damit an der Quelle widerlegt. Das ist eine
+ * vermessene Korrektur und keine Ableitung: Bis dahin trug kein Rezept einen Körperlauf auf Gelb,
+ * keine bestehende Zeichnung ändert sich.
+ *
  * **Exportiert, weil der Kontrastvertrag denselben Resolver braucht.** Der Katalog leitet in
  * `labelContrastRequirements()` ab, welches Paar aus einer Beschriftung im Körper überhaupt
  * entsteht; träfe er die Farbwahl dort ein zweites Mal, könnten Zeichnung und Vertrag
@@ -367,7 +413,7 @@ export function bodyLabelInk(
   bodyFill: ColorToken,
   measuredOverride?: BodyLabelInk,
 ): BodyLabelInk {
-  return measuredOverride ?? (bodyFill === 'weiss' ? 'schwarz' : 'weiss');
+  return measuredOverride ?? (bodyFill === 'weiss' || bodyFill === 'gelb' ? 'schwarz' : 'weiss');
 }
 
 /** Tinte eines gemessenen Funktionslaufs; nur `body-contrast` wird aus der Flaeche abgeleitet. */
@@ -426,6 +472,10 @@ function labelPrimitives(
   bottomCenterBaselineFromBodyBottomMm: number | undefined,
   bottomCenterInk: 'body' | 'black' | undefined,
   ink: ColorToken,
+  circleCorners: CircleCornerRuns | undefined,
+  topLeftInk: ColorToken,
+  // Anker und Boxkanten abgeleiteter Zonen (`derive/label-zones.ts`); leer an vermessenen.
+  boxes: DerivedLabelBoxes = {},
 ): Primitive[] {
   const centerXMm = centerAnchorFromBodyLeftMm === undefined
     ? (bodyBoundsMm.minX + bodyBoundsMm.maxX) / 2
@@ -490,7 +540,7 @@ function labelPrimitives(
         'start',
         anchorXMm,
         anchorXMm,
-        rightMm - anchorXMm,
+        (metrics === undefined ? boxes.aboveLeftBoxRightMm ?? rightMm : rightMm) - anchorXMm,
         viewBoxWidthMm,
         'schwarz',
       ),
@@ -498,9 +548,8 @@ function labelPrimitives(
   }
   if (labels.topLeft !== undefined) {
     if (topLeftBaselineFromBodyTopMm === undefined) {
-      // Unerreichbar über `compose()` — `validateSpec` lehnt die Zone an jeder Körperform ohne
-      // gemessene Grundlinie ab (`top-left-label-requires-measured-body`). Die Zeile hält die
-      // Bedingung trotzdem am Ort ihrer Wirkung fest, wie beim Geschwisterfall `belowRight`.
+      // Seit dem 2. Oktober 2026 nur noch an Kreiskörpern erreichbar: an allen anderen füllt
+      // `derive/label-zones.ts` die Grundlinie, die das Profil nicht vermessen führt.
       throw new NotMeasuredError(
         'Die Zone "topLeft" ist an dieser Körperform nicht vermessen. Eine Grundlinie führen ' +
           'nur die taktische Formation und die belegten F.2-Landfahrzeugprofile; andere ' +
@@ -509,9 +558,13 @@ function labelPrimitives(
       );
     }
     const topLeftMetrics = labels.topLeftMetrics;
-    const anchorRawMm = bodyBoundsMm.minX +
-      (topLeftMetrics?.anchorFromBodyLeftMm ?? TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM);
-    const baselineRawMm = bodyBoundsMm.minY +
+    // Am Kreis ohne Außenlage steht der Lauf innen auf der Sehne (`circleCornerRuns`).
+    const corner = circleCorners?.topLeft;
+    const anchorRawMm = corner?.anchorXMm ?? bodyBoundsMm.minX +
+      (topLeftMetrics?.anchorFromBodyLeftMm ??
+        boxes.topLeft?.anchorFromBodyLeftMm ??
+        TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM);
+    const baselineRawMm = corner?.baselineYMm ?? bodyBoundsMm.minY +
       (topLeftMetrics?.baselineFromBodyTopMm ?? topLeftBaselineFromBodyTopMm);
     // Die privat kind-/variantengebundenen F.3-Werte sind auf sechs Dezimalstellen vermessen.
     // Ihre negative
@@ -539,9 +592,10 @@ function labelPrimitives(
         // bleibt derselbe wie in F-a; die Box endet deshalb erst an der rechten Innenmarge des
         // Körpers. Eine Begrenzung auf das obere linke Viertel wäre seit F-b eine falsche
         // Clipping-Zusage, obwohl die Zone weiterhin durch ihren linken Anker benannt ist.
-        rightMm - anchorXMm,
+        corner?.boxWidthMm ??
+          (topLeftMetrics === undefined ? boxes.topLeft?.boxRightMm ?? rightMm : rightMm) - anchorXMm,
         viewBoxWidthMm,
-        ink,
+        topLeftInk,
       ),
     );
   }
@@ -555,7 +609,8 @@ function labelPrimitives(
     if (labels.topLeftLines.length !== 2) {
       throw new Error('Die Zone "topLeftLines" muss exakt zwei nichtleere Zeilen enthalten.');
     }
-    const anchorXMm = bodyBoundsMm.minX + TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM;
+    const anchorXMm = bodyBoundsMm.minX +
+      (boxes.topLeftLines?.anchorFromBodyLeftMm ?? TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM);
     const sizeMm = centerLabelSizeMm(topLeftLines.capHeightMm);
     for (const [index, content] of labels.topLeftLines.entries()) {
       const baseline = topLeftLines.baselinesFromBodyTopMm[index];
@@ -570,7 +625,7 @@ function labelPrimitives(
           'start',
           anchorXMm,
           anchorXMm,
-          rightMm - anchorXMm,
+          (boxes.topLeftLines?.boxRightMm ?? rightMm) - anchorXMm,
           viewBoxWidthMm,
           ink,
         ),
@@ -578,15 +633,16 @@ function labelPrimitives(
     }
   }
   if (labels.bottomLeft !== undefined) {
+    const corner = circleCorners?.bottomLeft;
     primitives.push(
       labelPrimitive(
         labels.bottomLeft,
         BOTTOM_LABEL_SIZE_MM,
-        bottomBaselineMm,
+        corner?.baselineYMm ?? bottomBaselineMm,
         'start',
-        leftMm,
-        leftMm,
-        centerXMm - leftMm,
+        corner?.anchorXMm ?? leftMm,
+        corner?.boxXMm ?? leftMm,
+        corner?.boxWidthMm ?? centerXMm - leftMm,
         viewBoxWidthMm,
         ink,
       ),
@@ -607,9 +663,10 @@ function labelPrimitives(
         BOTTOM_LABEL_SIZE_MM,
         bodyBoundsMm.maxY - bottomCenterBaselineFromBodyBottomMm,
         'middle',
-        centerXMm,
-        defaultCenterBoxLeftMm,
-        defaultCenterBoxRightMm - defaultCenterBoxLeftMm,
+        boxes.bottomCenter?.anchorXMm ?? centerXMm,
+        boxes.bottomCenter?.boxLeftMm ?? defaultCenterBoxLeftMm,
+        (boxes.bottomCenter?.boxRightMm ?? defaultCenterBoxRightMm) -
+          (boxes.bottomCenter?.boxLeftMm ?? defaultCenterBoxLeftMm),
         viewBoxWidthMm,
         bottomCenterInk === 'black' ? 'schwarz' : ink,
       ),
@@ -617,17 +674,18 @@ function labelPrimitives(
   }
   if (labels.bottomRight !== undefined) {
     const metrics = labels.bottomRightMetrics;
+    const corner = circleCorners?.bottomRight;
     const sizeMm = metrics === undefined
       ? BOTTOM_LABEL_SIZE_MM
       : metrics.capHeightMm / ARIMO_CAP_HEIGHT_FRACTION;
     const baselineYMm = metrics === undefined
-      ? bottomBaselineMm
+      ? corner?.baselineYMm ?? bottomBaselineMm
       : bodyBoundsMm.minY + metrics.baselineFromBodyTopMm;
     const anchorXMm = metrics === undefined
-      ? rightMm
+      ? corner?.anchorXMm ?? rightMm
       : bodyBoundsMm.minX + metrics.anchorFromBodyLeftMm;
     const boxXMm = metrics === undefined
-      ? centerXMm
+      ? corner?.boxXMm ?? centerXMm
       : bodyBoundsMm.minX + metrics.boxLeftFromBodyLeftMm;
     primitives.push(
       labelPrimitive(
@@ -637,7 +695,7 @@ function labelPrimitives(
         metrics === undefined ? 'end' : 'middle',
         anchorXMm,
         boxXMm,
-        metrics?.boxWidthMm ?? (rightMm - centerXMm),
+        metrics?.boxWidthMm ?? corner?.boxWidthMm ?? (rightMm - centerXMm),
         viewBoxWidthMm,
         ink,
       ),
@@ -651,9 +709,9 @@ function labelPrimitives(
       );
     }
     if (belowRight.ink === 'organization' && belowRightFill === null) {
-      // Unerreichbar über `compose()` — `validateSpec` lehnt die Zone ohne Organisation ab. Die
-      // Zeile hält die Bedingung trotzdem am Ort ihrer Wirkung fest: die Zone ist in der
-      // Organisationsfarbe gemessen, eine schwarze oder weiße Fassung von ihr ist es nicht.
+      // Unerreichbar über `compose()`: ohne Organisation setzt `derive/label-zones.ts` die Tinte
+      // schwarz wie am gebänderten 12-mm-Kreis (G.3.5). Die Zeile hält die Bedingung am Ort ihrer
+      // Wirkung fest, falls ein Profil die Zone künftig ohne diesen Weg liefert.
       throw new NotMeasuredError(
         'Die Zone "belowRight" ist nur in der Organisationsfarbe belegt (#003296 an E.2.27 bis ' +
           'E.2.31); ohne Organisation gibt es keine Farbe, die sie tragen dürfte.',
@@ -669,8 +727,8 @@ function labelPrimitives(
         baselineMm,
         'end',
         anchorXMm,
-        centerXMm,
-        anchorXMm - centerXMm,
+        boxes.belowRightBoxLeftMm ?? centerXMm,
+        anchorXMm - (boxes.belowRightBoxLeftMm ?? centerXMm),
         viewBoxWidthMm,
         belowRight.ink === 'black' ? 'schwarz' : belowRightFill!,
       ),
@@ -699,7 +757,7 @@ function labelPrimitives(
         'start',
         anchorXMm,
         anchorXMm,
-        centerXMm - anchorXMm,
+        (boxes.surfaceLeftBoxRightMm ?? centerXMm) - anchorXMm,
         viewBoxWidthMm,
         'schwarz',
       ));
@@ -718,8 +776,8 @@ function labelPrimitives(
         baselineMm,
         'end',
         anchorXMm,
-        centerXMm,
-        anchorXMm - centerXMm,
+        boxes.surfaceRightBoxLeftMm ?? centerXMm,
+        anchorXMm - (boxes.surfaceRightBoxLeftMm ?? centerXMm),
         viewBoxWidthMm,
         'schwarz',
       ));
@@ -762,15 +820,19 @@ export interface CatalogPorts {
   technicalHeadMark(id: TechnicalHeadMarkId): PrimitiveHeadShape;
   /**
    * Verband nach Kapitel 5.5 (LFH-577), relativ zur Oberkante der Kopfzone wie
-   * `technicalHeadMark`. Partiell: `undefined` für einen Verband, den kein Original am Körper zeigt
-   * (Verband III); `compose()` meldet ihn dann als nicht vermessenen Wert. Optional, damit
+   * `technicalHeadMark`. Partiell: `undefined` für einen Verband ohne Kopf; `compose()` meldet ihn
+   * dann als nicht vermessenen Wert (der Standardport ergänzt Verband III abgeleitet). Optional, damit
    * bestehende Portsätze gültig bleiben; fehlt der Port, wirft `compose()` für jede Spec mit
    * `unitGrouping`, statt den Verband still wegzulassen.
    */
   unitGroupingHead?(id: UnitGroupingId): PrimitiveHeadShape | undefined;
   /** Totaler Resolver fuer alle 25 vollstaendig vermessenen Funktionsfassungen. */
   functionRole(id: FunctionRoleId): FunctionRoleDefinition;
-  /** Partieller Resolver: nur Kreis, Nationalstaat und EU sind als Kopf vermessen. */
+  /**
+   * Partieller Resolver: vermessen sind Kreis, Nationalstaat und EU; der Standardport ergänzt
+   * Gemeinde, Bezirk und Bundesland abgeleitet. `undefined` meldet `compose()` als nicht
+   * vermessenen Wert, statt die Stufe wegzulassen.
+   */
   administrativeHead(id: AdminLevelId): AdministrativeHeadShape | undefined;
   /**
    * Fahrwerkszone je Fahrzeugkategorie (Kapitel 5.1). Neben `strengthHead` und nicht in ihm: die
@@ -800,9 +862,11 @@ export interface CatalogPorts {
    * nicht aus einer festen Zeichnung schieben, es muss auf die tatsächliche Kante gerechnet
    * werden.
    *
-   * Wirft für jede Fähigkeit ohne vermessene randbündige Fassung. Kein Rückfall auf die
-   * Boxfassung: die beiden Zeichnungen unterscheiden sich in ihren Maßen und nicht nur in ihrer
-   * Größe (Arztleiste 8 gegen 10 mm, Transportring r 5,5 gegen r 7,0).
+   * Die Standardbelegung (`derive/body-marks.ts`) zeichnet die vermessene Fassung, wo das Paar
+   * eine hat, und leitet sonst ab (nächstliegende Fassung derselben Marke hüllenrelativ, ohne
+   * jede randbündige Fassung die eingepasste Einzeldarstellung). Die Boxfassung ist dabei nie die
+   * erste Wahl: beide Zeichnungen unterscheiden sich in ihren Maßen und nicht nur in ihrer Größe
+   * (Arztleiste 8 gegen 10 mm, Transportring r 5,5 gegen r 7,0).
    */
   bodyMark(
     id: BodyMarkId,
@@ -842,8 +906,8 @@ export interface ComposeOptions {
  * `SymbolSpec.capabilities` trägt `CapabilityId` (`'fire-fighting'`), der Piktogrammraum trägt
  * präfigierte IDs (`'capability.fire-fighting'`). Die Abbildung steht hier an einer Stelle und
  * nicht an jedem Aufrufort. Zustände aus Kapitel 5.8 laufen nicht über diese Abbildung: sie
- * stehen seit LFH-577 in `SymbolSpec.states` und werden über `placeStates()` an den Träger gelegt
- * (`placedStatesOf`), nicht als Boxpiktogramm in den Körper.
+ * stehen seit LFH-577 in `SymbolSpec.states` und werden an den Träger gelegt (`placedStatesOf`,
+ * `composeDerivedStates`), nicht als Boxpiktogramm in den Körper.
  */
 function pictogramIdOf(id: CapabilityId): PictogramId {
   return `capability.${id}`;
@@ -869,6 +933,9 @@ function chassisPrimitive(mark: ChassisMark, topMm: number): Primitive {
     stroke: 'schwarz',
     strokeWidth: DEFAULT_STROKE_WIDTH_MM,
   } as const;
+  if (mark.type === 'curve') {
+    return { type: 'path', role: 'chassis', d: chassisCurvePath(mark.points, topMm), style };
+  }
   const cyMm = topMm + mark.cyFromTopMm;
   switch (mark.type) {
     case 'wheel':
@@ -958,16 +1025,15 @@ function assertTextRunsFit(
 }
 
 /**
- * Die Kopfzone des Verbands (LFH-577). Belegt ist sie nur am Formationskörper — ohne Variante an
- * I.1.4, F.1.1, F.1.13, F.1.21, E.1.31 und C.1.6, mit Fußband an F.1.3, jeweils y 1…5 mm, also
- * genau die Lage, die `placeHead` am Formationsprofil rechnet. Der Verbandsführer I.5.7 trägt den
- * Balken am Personenkörper auf y 0…4; diese Lage erreicht `placeHead` nicht
- * (`HEAD_TOP_MARGIN_MM` = 1), deshalb bleibt die Person eine nicht vermessene Kombination, statt
- * den Balken 1 mm zu tief zu setzen. Maße und Belege: `geometry/unit-groupings.ts` und
+ * Die Kopfzone des Verbands (LFH-577). Vermessen ist sie am Formationskörper — ohne Variante an
+ * I.1.4, F.1.1, F.1.13, F.1.21, E.1.31 und C.1.6, mit Fußband an F.1.3, jeweils y 1…5 mm — und
+ * am Personenkörper (I.5.7 Verbandsführer, Balken y 0…4). Seit dem 2. Oktober 2026 steht sie an
+ * jedem Grundzeichen mit Kopfzone; Lage und Ableitungsnotiz kommen aus `derive/head-zone.ts`.
+ * Maße und Belege: `geometry/unit-groupings.ts` und
  * `docs/decisions/2026-09-29-lfh-577-verband-5-5.md`.
  *
- * Die Reihenfolge der Prüfungen folgt der Reichweite: zuerst der Wert (Verband III zeigt kein
- * Original an irgendeinem Körper), dann die Kombination.
+ * Ein Portsatz darf partiell sein: liefert er für einen Verband nichts, ist das ein nicht
+ * vermessener Wert. Der Standardport ergänzt Verband III abgeleitet.
  */
 function unitGroupingHeadFor(spec: SymbolSpec, catalog: CatalogPorts): PrimitiveHeadShape | null {
   if (spec.unitGrouping === undefined) return null;
@@ -980,21 +1046,9 @@ function unitGroupingHeadFor(spec: SymbolSpec, catalog: CatalogPorts): Primitive
   const shape = catalog.unitGroupingHead(spec.unitGrouping);
   if (shape === undefined) {
     throw new NotMeasuredError(
-      `Der Verband "${spec.unitGrouping}" ist am Körper nicht vermessen: keine der 661 ` +
-        'Referenzdateien zeigt ihn an einem Grundzeichen.',
+      `Der Verband "${spec.unitGrouping}" ist am Körper nicht vermessen: der Katalog liefert ` +
+        'für ihn keinen Kopf.',
       'value',
-    );
-  }
-  if (
-    spec.kind !== 'formation' ||
-    (spec.bodyVariant !== undefined && spec.bodyVariant !== 'foot-band')
-  ) {
-    throw new NotMeasuredError(
-      `Ein Verband an "${spec.kind}${spec.bodyVariant === undefined ? '' : `/${spec.bodyVariant}`}" ` +
-        'ist nicht vermessen: belegt ist er nur über der Taktischen Formation (ohne Variante und ' +
-        'mit Fußband). Der Verbandsführer I.5.7 zeigt den Balken an der Person auf einer Lage, ' +
-        'die die Kopfzone nicht erreicht.',
-      'combination',
     );
   }
   return shape;
@@ -1002,7 +1056,8 @@ function unitGroupingHeadFor(spec: SymbolSpec, catalog: CatalogPorts): Primitive
 
 /**
  * Felder, die neben einem Zustand etwas an den Körper, über oder unter ihn setzen. Keines davon
- * zeigt ein Original zusammen mit einem Zustand an einem Träger.
+ * zeigt ein Original zusammen mit einem Zustand an einem Träger; mit ihnen nimmt die Spec den
+ * abgeleiteten Weg (`composeDerivedStates`).
  */
 const FIELDS_BESIDE_STATES = [
   'functionRole',
@@ -1021,45 +1076,29 @@ const FIELDS_BESIDE_STATES = [
 ] as const satisfies readonly (keyof SymbolSpec)[];
 
 /**
- * Legt `states` und `tendency` über `placeStates()` an den Träger (LFH-577) — oder gibt `null`,
- * wenn die Spec keinen Zustand trägt.
+ * Die vermessene Lage von `states` und `tendency` (LFH-577) — oder `null`, wenn die Spec keinen
+ * Zustand trägt oder keine Referenzdatei genau diese Zusammenstellung zeigt.
  *
- * **Was die Referenz zeigt, und nur das.** Ein Zustand ersetzt den Körper des Grundzeichens durch
- * den Träger in seiner Zustandsfassung (die Personenraute aus 5.8.8, das verkleinerte
- * Gefahrendreieck neben einem Hinweis), und ein Hinweis an der Person verbreitert die Fläche auf
- * 36 × 32 mm und rückt die Grundfläche um 4 mm nach rechts (`baseAreaMm`). Kein Original zeigt
- * daneben eine Organisationsfarbe, einen Kopf, einen Fuß, eine Beschriftung oder eine Marke.
- * Wie diese mit dem verkleinerten oder verschobenen Träger mitwanderten, wäre geraten; die
- * Zusammenstellung wird deshalb als nicht vermessen abgelehnt statt gezeichnet.
- *
- * **Reihenfolge der Befunde.** Zuerst `placeStates()`: meldet es einen Wert als an keinem Träger
- * vermessen (`scope: 'value'`, etwa jede Tendenz oder ein Schadensgrad), ist das die
- * weitergehende Aussage als „diese Kombination fehlt". Erst danach die übrigen Felder.
+ * Vermessen ist nur der Träger in seiner Zustandsfassung ohne weitere Angaben: die Personenraute
+ * aus 5.8.8, das verkleinerte Gefahrendreieck neben einem Hinweis, die Personenraute neben einem
+ * Hinweis auf 36 × 32 mm. Alles andere leitet `composeDerivedStates()` aus diesen Lagen ab
+ * (Entscheidung des Eigentümers vom 02.10.2026).
  */
 function placedStatesOf(spec: SymbolSpec): StatePlacement | null {
-  const states = spec.states ?? [];
-  if (states.length === 0 && spec.tendency === undefined) return null;
-  const placement = placeStates({
+  if (!carriesStates(spec)) return null;
+  const beside = FIELDS_BESIDE_STATES.some((field) => {
+    const value = spec[field];
+    return value !== undefined && !(Array.isArray(value) && value.length === 0);
+  });
+  if (beside) return null;
+  return measuredStatePlacement({
     carrier: {
       kind: spec.kind,
       ...(spec.bodyVariant === undefined ? {} : { variant: spec.bodyVariant }),
     },
-    states,
+    states: spec.states ?? [],
     ...(spec.tendency === undefined ? {} : { tendency: spec.tendency }),
-  });
-  const beside = FIELDS_BESIDE_STATES.filter((field) => {
-    const value = spec[field];
-    return value !== undefined && !(Array.isArray(value) && value.length === 0);
-  });
-  if (beside.length > 0) {
-    throw new NotMeasuredError(
-      `Zustände an "${spec.kind}" zusammen mit ${beside.join(', ')}: kein Original zeigt einen ` +
-        'Zustand an einem Träger, der daneben eine dieser Angaben trägt. Der Träger wird in seiner ' +
-        'Zustandsfassung ersetzt, und wie diese Angaben mitwanderten, ist nicht belegt.',
-      'combination',
-    );
-  }
-  return placement;
+  }) ?? null;
 }
 
 /**
@@ -1093,6 +1132,17 @@ export function compose(
   catalog: CatalogPorts,
   options: ComposeOptions = {},
 ): Drawing {
+  return assertDerivedLayoutFits(
+    collectDerivations(() => composeMeasuredOrDerived(sourceSpec, catalog, options)),
+    catalog.textMetrics,
+  );
+}
+
+function composeMeasuredOrDerived(
+  sourceSpec: SymbolSpec,
+  catalog: CatalogPorts,
+  options: ComposeOptions,
+): Drawing {
   const roleDefinition = sourceSpec.functionRole !== undefined
     ? catalog.functionRole(sourceSpec.functionRole)
     : undefined;
@@ -1110,6 +1160,13 @@ export function compose(
   if (statePlacement !== null && statePlacement.carrier !== null) {
     return stateDrawing(statePlacement, options, description);
   }
+  if (carriesStates(spec)) {
+    return composeDerivedStates(
+      spec,
+      composeMeasuredOrDerived(withoutStates(sourceSpec), catalog, options),
+      { ...(options.title !== undefined ? { title: options.title } : {}), ...(description !== undefined ? { description } : {}) },
+    );
+  }
 
   const base = roleDefinition === undefined
     ? catalog.baseDrawing(spec.kind, spec.bodyVariant)
@@ -1123,26 +1180,50 @@ export function compose(
   // `compose()` allein den Körper und ließ alles andere **stillschweigend** fallen: ein Anhänger
   // hätte seine Deichsel verloren, ohne dass ein Gate es meldet. Genau diese Bauart verbietet
   // dieses Projekt.
-  const extras = base.children.filter((child) => child !== body);
+  const baseExtras = base.children.filter((child) => child !== body);
 
+  if (!hasVariantProfile(spec.kind, spec.bodyVariant)) {
+    throw new NotMeasuredError(
+      `Für "${spec.kind}" / "${spec.bodyVariant}" ist kein Layoutprofil hinterlegt; das Profil ` +
+        'der Grundart gilt nicht stillschweigend für eine Variante.',
+      'combination',
+    );
+  }
+  assertDerivedVariantComposable(spec);
   const profile = profileFor(spec.kind, spec.bodyVariant);
+  noteCircleVariantBody(spec.kind, spec.bodyVariant);
   const headShape = spec.strength !== undefined ? catalog.strengthHead(spec.strength) : null;
   // Technische Kopfmarke und Verband zeichnen beide relative Kopfprimitive; `head-zone-conflict`
   // schließt aus, dass beide zugleich gesetzt sind.
   const primitiveHeadShape = spec.technicalHeadMark !== undefined
     ? catalog.technicalHeadMark(spec.technicalHeadMark)
     : unitGroupingHeadFor(spec, catalog);
-  const headHeightMm = headShape?.heightMm ?? primitiveHeadShape?.heightMm;
+  // Ohne Funktionsfassung steht der Verwaltungskopf in der allgemeinen Kopfzone (seit dem
+  // 2. Oktober 2026; vorher fiel er hier still weg und nur eine Regel verdeckte das).
+  const requiredAdministrativeHead = requireAdministrativeHead(spec, administrativeHead);
+  const generalAdministrativeHead = roleDefinition === undefined ? requiredAdministrativeHead : null;
+  const headHeightMm =
+    headShape?.heightMm ?? primitiveHeadShape?.heightMm ?? generalAdministrativeHead?.heightMm;
+  // Funktionsfassung: unverändert vermessen oder auf Kopf, Variante und Organisation der Spec
+  // umgerechnet (derive/function-roles.ts).
+  const roleLayout = roleDefinition === undefined
+    ? undefined
+    : resolveFunctionRoleLayout({
+        definition: roleDefinition,
+        spec,
+        profile,
+        headHeightMm: headHeightMm ?? administrativeHead?.heightMm,
+        ...(spec.bodyVariant === undefined
+          ? {}
+          : { variantDrawing: catalog.baseDrawing(spec.kind, spec.bodyVariant) }),
+      });
 
   // Dieselbe Kopfzone sitzt je nach Körperform unterschiedlich hoch — deshalb
   // rechnet erst placeHead die relativen Marken in absolute Koordinaten um.
   const headBox = headHeightMm !== undefined
-    ? roleDefinition === undefined
-      ? placeHead(profile, headHeightMm)
-      : {
-          topMm: roleDefinition.layout.headTopMm!,
-          bottomMm: roleDefinition.layout.headTopMm! + headHeightMm,
-        }
+    ? roleLayout === undefined
+      ? placeHeadZone(profile, body, headHeightMm, headShape ? 'strength' : 'primitive')
+      : roleLayout.headBoxFor(headHeightMm)
     : null;
   const headPrimitives: Primitive[] =
     headShape && headBox
@@ -1165,20 +1246,51 @@ export function compose(
     });
   }
 
-  if (administrativeHead !== undefined && roleDefinition !== undefined) {
+  if (generalAdministrativeHead !== null && headBox !== null) {
+    headPrimitives.push({
+      type: 'group',
+      role: 'head',
+      transform: { translate: { dxMm: 0, dyMm: headBox.topMm } },
+      children: generalAdministrativeHead.primitives,
+    });
+  }
+
+  if (administrativeHead !== undefined && roleLayout !== undefined) {
     headPrimitives.push({
       type: 'group',
       role: 'head',
       transform: {
-        translate: { dxMm: 0, dyMm: roleDefinition.layout.headTopMm! },
+        translate: { dxMm: 0, dyMm: roleLayout.headBoxFor(administrativeHead.heightMm).topMm },
       },
       children: administrativeHead.primitives,
     });
   }
 
-  const placedBody = roleDefinition === undefined
-    ? profile.place(body, headBox?.bottomMm ?? null)
-    : body;
+  if (roleDefinition === undefined && headBox !== null) noteHeadPlacement(spec, profile);
+  const placedBase = roleLayout === undefined
+    ? placeBaseUnderHead({
+        spec,
+        profile,
+        body,
+        extras: baseExtras,
+        headBottomMm: headBox?.bottomMm ?? null,
+        // Fahrwerk und (nur an den abgeleiteten Köpfen) Fußzone brauchen Platz unter dem Körper.
+        // Die Stärke bleibt bei ihrer bisherigen Lage, auch wo die Fußzone dann die Grundfläche
+        // verlässt (formation + staffel + designation, siehe compose.test.ts).
+        reservedBelowMm: headBox === null
+          ? 0
+          : (spec.vehicleCategory === undefined
+              ? 0
+              : catalog.vehicleChassis(spec.vehicleCategory).heightMm +
+                (profile.chassisTopBelowBaseBottomMm ?? 0)) +
+            (headShape === null && spec.designation !== undefined
+              ? FOOT_GAP_MM + FOOT_TEXT_SIZE_MM
+              : 0),
+      })
+    : { body: roleLayout.body, extras: baseExtras };
+  const placedBody = placedBase.body;
+  // Zusatzgeometrie folgt dem platzierten Körper (`placeBaseUnderHead`).
+  const extras = placedBase.extras;
   // Acht Anhang-G-Quellen belegen dieselbe generische Form: ein unbeschrifteter, kopfloser
   // `formation/foot-band`-Körper hat keine Oberlinie. Das Profil entscheidet diesen Kontext;
   // Kapitel- oder Rezept-IDs bleiben aus dem Kompositionsmotor heraus.
@@ -1207,53 +1319,17 @@ export function compose(
       }
     : placedBody;
 
-  // Belegte Ausnahmen: F.1.17 sowie die drei vermessenen G-Köpfe `trupp`, `gruppe` und `zug`
-  // führen `foot-band` zusammen mit einer Kopfzone, F.1.3 mit der technischen Kopfmarke
-  // `double-vertical-bar` (Fachreview 19.09.2026), seit LFH-577 als Verband II beschrieben. Die
-  // Kopfzone verschiebt den Formationskörper nicht; Band und Hülle bleiben auf y 23…26. Andere
-  // Stärken werden daraus nicht fortgeschrieben.
-  const isMeasuredFootBandWithHead =
-    spec.kind === 'formation' &&
-    spec.bodyVariant === 'foot-band' &&
-    (spec.strength !== undefined ||
-      spec.technicalHeadMark !== undefined ||
-      spec.unitGrouping !== undefined);
-  if (extras.length > 0 && headBox !== null && !isMeasuredFootBandWithHead) {
-    // Wie Zusatzgeometrie einer Kopfzone ausweicht, ist **nicht** belegt: kein Zeichen des
-    // Referenzbestands trägt beides. Der Anhang E.2 führt überhaupt keine Kopfzone (an allen 31
-    // Dateien nachgesehen), und `validateSpec` lehnt eine Stärkeangabe an diesen Körperformen
-    // ohnehin ab. Werfen statt raten — ein mitgeschobener L-Rahmen wäre eine erfundene Geometrie.
-    throw new NotMeasuredError(
-      `Das Grundzeichen "${spec.kind}" führt Zusatzgeometrie, und wie die einer Kopfzone ` +
-        'ausweicht, ist an der Referenz nicht belegt: kein Zeichen des Bestands trägt beides.',
-      'combination',
-    );
-  }
-
   const organizationFill = spec.organization === undefined
     ? undefined
     : catalog.organizationColor(spec.organization);
   const bodyFillOverride = organizationFill ?? spec.technicalFill;
+  noteInsetHullOrganization(spec.kind, spec.bodyVariant, spec.organization);
 
-  if (bodyFillOverride !== undefined && isOpenPolyline(placedBody)) {
-    // SVG (und `canvas.ts` genauso) schließt einen gefüllten Polyzug implizit: aus dem Haken von
-    // `1.13 Ereignis` würde ein volles Dreieck. Selbst gerastert (18. August 2026): derselbe
-    // Polyzug mit `fill: 'rot'` deckt 936 Pixel bei 64 px Kantenlänge statt der 142 des reinen
-    // Strichs, und (16|14) mm liegt mit #fa1919 mitten in einer Fläche, die die Zeichnung nicht
-    // hat.
-    //
-    // Der Katalog erfindet diese Fläche nicht. Gegenprobe an der Quelle: der Haken kommt in genau
-    // **einer** der 661 Referenzdateien vor — in `1.13` selbst (Suche über seine Punktfolge, ein
-    // Treffer); kein zusammengesetztes Zeichen des Bestands trägt ihn eingefärbt. Es gibt also
-    // keinen Beleg für ein organisationsgefärbtes Ereignis. Werfen statt raten, dasselbe Muster
-    // wie `organizationColor` und `circleBodyProfile.place`.
-    throw new NotMeasuredError(
-      `Eine Körperfüllung an "${spec.kind}" ist nicht belegt: der Körper ist ein offener ` +
-        'Polyzug, und eine Füllung schlösse ihn implizit zu einer Fläche, die die Referenz nicht ' +
-        'zeichnet.',
-      'combination',
-    );
-  }
+  // Offener Polyzug (`1.13 Ereignis`): eine Füllung schlösse ihn zu einer Fläche, die die
+  // Referenz nicht zeichnet. Die Farbe geht deshalb in den Strich (derive/open-body-tint.ts).
+  const openBodyTinted = bodyFillOverride !== undefined && isOpenPolyline(placedBody)
+    ? openBodyTint(bodyForFill, bodyFillOverride, organizationFill)
+    : undefined;
 
   // Weiße Innenkontur (Anhang E): Der Körper trägt Weiß, die Farbe liegt im um 1 mm
   // eingerückten Innenfeld. Das Innenfeld folgt dem platzierten Körper wie die Piktogramme.
@@ -1287,8 +1363,8 @@ export function compose(
       : [];
   const bodySurfaceFill = spec.whiteInnerContour === true ? 'weiss' : bodyFillOverride;
 
-  const filled: Primitive =
-    bodySurfaceFill !== undefined
+  const filled: Primitive = openBodyTinted ??
+    (bodySurfaceFill !== undefined
       ? {
           ...bodyForFill,
           style: {
@@ -1299,7 +1375,7 @@ export function compose(
               : { bodyStrokeDashToken: organizationFill }),
           },
         }
-      : bodyForFill;
+      : bodyForFill);
 
   // Piktogramme sind auf den unverschobenen Körper hin entworfen (Mitte bei 16 mm). Der
   // Kompositionsmotor kann den Körper senkrecht verschieben oder verkleinern, um Platz für die
@@ -1313,20 +1389,14 @@ export function compose(
   // (`shiftY` lehnt das ausdrücklich ab). Auf der Gruppe wirkt die Verschiebung nach außen auf
   // das fertige Ergebnis und ist damit von einer Drehung der Kinder unabhängig.
   const pictogramShiftMm = centerYMm(placedBody) - centerYMm(body);
-  const pictogramPrimitives = (spec.capabilities ?? []).flatMap(
-    (id) => catalog.pictogram(pictogramIdOf(id)).primitives,
+  // Seit dem 2. Oktober 2026 an jeder Körperform: vermessene Körperfassung, unskaliert, wo
+  // belegt, sonst ins Innenfeld eingepasst (`derive/capabilities.ts`).
+  const pictograms: Primitive[] = capabilityPictograms(
+    spec,
+    (id) => catalog.pictogram(pictogramIdOf(id)),
+    boundsOfMm(placedBody),
+    pictogramShiftMm,
   );
-  const pictograms: Primitive[] =
-    pictogramPrimitives.length > 0
-      ? [
-          {
-            type: 'group',
-            role: 'pictogram',
-            transform: { translate: { dxMm: 0, dyMm: pictogramShiftMm } },
-            children: pictogramPrimitives,
-          },
-        ]
-      : [];
 
   // Fußzone: dieselbe Spiegelung wie oben bei `pictogramShiftMm` — an der tatsächlich platzierten
   // Körperhülle (`placedBody`), nicht an der unverschobenen Standardgeometrie. Anders als die
@@ -1362,9 +1432,13 @@ export function compose(
   // überschnitte.
   const chassisShape: ChassisShape | null =
     spec.vehicleCategory !== undefined ? catalog.vehicleChassis(spec.vehicleCategory) : null;
+  const chassisTopMm = baseBottomMm + (profile.chassisTopBelowBaseBottomMm ?? 0);
   const chassisPrimitives: Primitive[] =
-    chassisShape?.marks.map((mark) =>
-      chassisPrimitive(mark, baseBottomMm + (profile.chassisTopBelowBaseBottomMm ?? 0))) ?? [];
+    chassisShape?.marks.map((mark) => chassisPrimitive(mark, chassisTopMm)) ?? [];
+  if (chassisShape !== null) noteChassisDerivation(spec.kind, spec.bodyVariant);
+  // Reicht das Fahrwerk unter Zusatzgeometrie über die Grundfläche, hebt sich das ganze Zeichen
+  // (derive/vehicle-category.ts); an den vermessenen Fahrwerken ist der Hub 0.
+  const liftMm = chassisLiftMm(chassisShape, chassisTopMm);
 
   // `FOOT_GAP_MM` trägt denselben Wert wie `HEAD_GAP_MM`, ist aber seit der Entscheidung vom
   // 21. September 2026 eine eigene Konstante: die 1 mm sind für die **Kopfzone** belegt
@@ -1419,8 +1493,9 @@ export function compose(
   // Randbündige Fachdienstzeichen: gegen die Hülle des **platzierten** Körpers gerechnet, nicht
   // gegen die Standardgeometrie. Deshalb ohne die Verschiebung, die die Boxpiktogramme brauchen —
   // sie sind bereits an der richtigen Stelle gerechnet.
+  const composedMarks = composedBodyMarks(spec);
   const bodyMarkPrimitives = composeBodyMarkPrimitives(
-    (spec.bodyMarks ?? []).map((id) =>
+    (composedMarks ?? []).map((id) =>
       catalog.bodyMark(id, {
         kind: spec.kind,
         bodyVariant: spec.bodyVariant,
@@ -1428,7 +1503,7 @@ export function compose(
         ...(spec.strength === undefined ? {} : { strength: spec.strength }),
         // Nur bei mehreren Marken: eine einzelne Marke hat keine Kombination, der Kontext bleibt
         // für sie unverändert.
-        ...((spec.bodyMarks?.length ?? 0) > 1 ? { bodyMarks: spec.bodyMarks } : {}),
+        ...((composedMarks?.length ?? 0) > 1 ? { bodyMarks: composedMarks } : {}),
         ...(spec.bodyMarkRenditions === undefined || !Object.hasOwn(spec.bodyMarkRenditions, id)
           ? {}
           : { rendition: spec.bodyMarkRenditions[id] }),
@@ -1444,40 +1519,76 @@ export function compose(
       }, bodyBoundsMm)),
   );
 
-  const labelChildren = effectiveLabels !== undefined
+  // Kreiskörper (`derive/circle.ts`): ein topLeft-Lauf ohne Metriksatz übernimmt den F.3-Satz,
+  // Ecken stehen auf der Kreissehne, der mittige Lauf ohne Override mit der Versalmitte auf der
+  // Kreismitte.
+  const isCircleBody = profile.id === 'circle-body';
+  const circleTopLeftDefaults = isCircleBody && effectiveLabels?.topLeft !== undefined &&
+      effectiveLabels.topLeftMetrics === undefined
+    ? circleTopLeftMetrics(spec.kind, spec.bodyVariant)
+    : undefined;
+  const placedLabels = effectiveLabels !== undefined && circleTopLeftDefaults !== undefined
+    ? { ...effectiveLabels, topLeftMetrics: circleTopLeftDefaults }
+    : effectiveLabels;
+  // Zonen, die das Profil nicht vermessen führt, liefert `derive/label-zones.ts` (abgeleitet);
+  // Kreiskörper lässt es aus, die regelt `derive/circle.ts`.
+  const zones = placedLabels === undefined
+    ? undefined
+    : deriveLabelZones({
+        kind: spec.kind,
+        variant: spec.bodyVariant,
+        profile,
+        labels: placedLabels,
+        body: placedBody,
+        extras,
+        baseBottomMm,
+        organizationFill,
+      });
+  const zoneProfile = zones?.profile ?? profile;
+  noteFootBandCornerLabels(spec.kind, spec.bodyVariant, placedLabels);
+  const labelChildren = placedLabels !== undefined
     ? labelPrimitives(
-        effectiveLabels,
+        placedLabels,
         bodyBoundsMm,
         DEFAULT_VIEWBOX_MM.width,
         organizationFill ?? null,
         profile.bottomLabelBaselineFromBodyBottomMm,
-        profile.belowRight,
-        profile.allowsCenterBaselineOverride === true
-          ? effectiveLabels.centerBaselineFromBodyBottomMm ?? profile.centerBaselineFromBodyBottomMm
-          : profile.centerBaselineFromBodyBottomMm,
-        profile.allowsCenterAnchorOverride === true
-          ? effectiveLabels.centerAnchorFromBodyLeftMm
-          : undefined,
-        profile.topLeftBaselineFromBodyTopMm,
+        zoneProfile.belowRight,
+        // Abweichende Grundlinie und Anker gelten an jeder Körperform; außerhalb der vermessenen
+        // Profile notiert `deriveLabelZones` sie als abgeleitet. Ohne Angabe gilt am Kreis die
+        // Versalmitte auf der Kreismitte.
+        placedLabels.centerBaselineFromBodyBottomMm ?? (
+          isCircleBody && placedLabels.center !== undefined
+            ? circleCenterBaselineFromBodyBottomMm(
+                bodyBoundsMm,
+                placedLabels.centerCapHeightMm ?? CENTER_LABEL_CAP_HEIGHT_MM,
+              )
+            : profile.centerBaselineFromBodyBottomMm
+        ),
+        placedLabels.centerAnchorFromBodyLeftMm,
+        zoneProfile.topLeftBaselineFromBodyTopMm,
         normalizesMeasuredCircleTopLeftCoordinates(spec.kind, spec.bodyVariant),
-        profile.aboveLeftBaselineFromBodyTopMm,
-        profile.aboveLeftAnchorFromBodyLeftMm,
-        profile.surfaceLabels,
-        profile.topLeftLines,
-        profile.bottomCenterBaselineFromBodyBottomMm,
-        profile.bottomCenterInk,
-        bodyLabelInk(bodyFill, effectiveLabels.inBodyInk),
+        zoneProfile.aboveLeftBaselineFromBodyTopMm,
+        zoneProfile.aboveLeftAnchorFromBodyLeftMm,
+        zoneProfile.surfaceLabels,
+        zoneProfile.topLeftLines,
+        zoneProfile.bottomCenterBaselineFromBodyBottomMm,
+        zoneProfile.bottomCenterInk,
+        bodyLabelInk(bodyFill, placedLabels.inBodyInk),
+        isCircleBody
+          ? circleCornerRuns(spec.kind, spec.bodyVariant, bodyBoundsMm, placedLabels)
+          : undefined,
+        // Ein ausdrücklicher Override gilt wie bisher auch für den überstehenden Kreislauf.
+        placedLabels.inBodyInk ??
+          (isCircleBody ? circleTopLeftInk(spec.kind, spec.bodyVariant) : undefined) ??
+          bodyLabelInk(bodyFill),
+        zones?.boxes,
       )
     : [];
 
-  const roleTextPrimitives: Primitive[] = roleDefinition === undefined
+  const roleTextPrimitives: Primitive[] = roleLayout === undefined
     ? []
-    : [
-        ...roleDefinition.layout.roleRuns,
-        ...(roleDefinition.layout.carrierRun === undefined
-          ? []
-          : [roleDefinition.layout.carrierRun]),
-      ].map((run) => ({
+    : roleLayout.runs.map((run) => ({
         type: 'text',
         role: 'label',
         content: run.content,
@@ -1497,17 +1608,31 @@ export function compose(
   assertTextRunsFit(footPrimitives, 'designation', catalog.textMetrics);
   assertTextRunsFit(labelChildren, 'label', catalog.textMetrics);
   assertTextRunsFit(roleTextPrimitives, 'function-role-run', catalog.textMetrics);
+  if (roleDefinition === undefined) {
+    assertHeadClearOfRuns(spec, headPrimitives, [...labelChildren, ...footPrimitives]);
+  }
 
-  if (roleDefinition !== undefined) {
+  if (roleDefinition !== undefined && roleLayout !== undefined) {
+    // Erst die Marken, dann die Piktogramme gegen Läufe und Marken: beide teilen den freien Bereich.
+    const roleBodyMarks = fitFunctionRoleBodyMarks(
+      bodyMarkPrimitives,
+      roleLayout,
+      roleDefinition,
+      // Fähigkeiten mit vermessener Körperfassung zeichnet `derive/capabilities.ts` als Körpermarke;
+      // auch sie müssen den Funktionsläufen ausweichen.
+      composedMarks === undefined ? spec : { ...spec, bodyMarks: composedMarks },
+    );
     return {
       viewBox: DEFAULT_VIEWBOX_MM,
       children: [
         ...headPrimitives,
         filled,
         ...innerFieldPrimitives,
-        ...extras,
-        ...bodyMarkPrimitives,
-        ...roleDefinition.layout.decorations,
+        ...roleLayout.extras,
+        ...chassisPrimitives,
+        ...fitFunctionRolePictograms(pictograms, roleLayout, roleDefinition, roleBodyMarks),
+        ...roleBodyMarks,
+        ...roleLayout.decorations,
         ...roleTextPrimitives,
         ...labelChildren,
         ...footPrimitives,
@@ -1524,7 +1649,7 @@ export function compose(
   // einzige Stelle, an der die Zerlegung in Primitive das nachbilden kann.
   return {
     viewBox: DEFAULT_VIEWBOX_MM,
-    children: [
+    children: liftForChassis([
       ...headPrimitives,
       filled,
       ...innerFieldPrimitives,
@@ -1541,7 +1666,7 @@ export function compose(
       ...bodyMarkPrimitives,
       ...labelChildren,
       ...footPrimitives,
-    ],
+    ], liftMm, spec.kind, spec.bodyVariant),
     ...(options.title !== undefined ? { title: options.title } : {}),
     ...(description !== undefined ? { description } : {}),
   };

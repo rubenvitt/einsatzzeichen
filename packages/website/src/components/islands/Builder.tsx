@@ -18,12 +18,17 @@ import {
   encodeSpec,
   evaluateSpec,
   issuesByField,
+  reduceLabel,
   reduceSpec,
   type AllowedValue,
+  type LabelZone,
   type BlockedValue,
 } from '../../lib/builder-state.js';
 import { matchesLine, searchCatalog } from '../../lib/builder-catalog.js';
 import {
+  derivationParts,
+  derivedMarker,
+  drawsDerived,
   kindPreviews,
   labelFor,
   optionsFor,
@@ -34,6 +39,28 @@ import { useSnapshot, type SnapshotSelect } from '../../lib/snapshot-island.js';
 import type { BuilderVocabulary, SymbolSummary } from '../../lib/snapshot.js';
 import type { ExplainedIssue } from '../../lib/rule-explanations.js';
 import StatusPair from '../StatusPair.js';
+
+/**
+ * Die Freitextfelder der Beschriftung, in der Reihenfolge, in der man ein Zeichen liest. Die
+ * Namen beschreiben die Lage, nicht den Schlüssel in `BodyLabels`; den nennt der Abschnitt für
+ * Entwicklerinnen und Entwickler.
+ */
+const LABEL_ZONE_FIELDS: readonly { zone: LabelZone; label: string; placeholder: string }[] = [
+  { zone: 'center', label: 'Mitte', placeholder: 'z. B. ILS' },
+  { zone: 'topLeft', label: 'Oben links', placeholder: '' },
+  { zone: 'bottomLeft', label: 'Unten links', placeholder: '' },
+  { zone: 'bottomCenter', label: 'Unten mittig', placeholder: '' },
+  { zone: 'bottomRight', label: 'Unten rechts', placeholder: 'z. B. ST' },
+  { zone: 'aboveLeft', label: 'Über dem Zeichen links', placeholder: '' },
+  { zone: 'belowRight', label: 'Unter dem Zeichen rechts', placeholder: '' },
+  { zone: 'surfaceBelowLeft', label: 'Darunter links', placeholder: '' },
+  { zone: 'surfaceBelowRight', label: 'Darunter rechts', placeholder: '' },
+];
+
+function labelText(spec: SymbolSpec, zone: LabelZone): string {
+  const value = spec.labels?.[zone];
+  return typeof value === 'string' ? value : '';
+}
 
 /**
  * Der Baukasten (Spec §5.4; die Route bleibt `/builder/`). Er setzt eine `SymbolSpec` zusammen,
@@ -49,6 +76,13 @@ import StatusPair from '../StatusPair.js';
  * über `vocabulary()` aus `core` (LFH-578) jeden Wert einmal durch, und was nicht trägt, steht gesperrt da — sichtbar, mit dem Grund als
  * Tooltip beziehungsweise als Hinweiszeile bei den Kacheln. Ausgeblendet wird nichts: dass es den
  * Wert gibt und warum er gerade nicht geht, ist die eigentliche Auskunft.
+ *
+ * Seit dem 2. Oktober 2026 zeichnet der Motor jede Kombination, die die Systematik zulässt, und
+ * leitet fehlende Teile aus vermessenen Nachbarfassungen ab. Ein Wert, der eine vermessene
+ * Zusammenstellung erst zu einer abgeleiteten macht, trägt deshalb den Zusatz „abgeleitet"
+ * (`derivedMarker()`), und unter der Vorschau steht, welche Teile der aktuellen Zeichnung
+ * abgeleitet sind. Gesperrt bleibt, was eine Regel verbietet oder sich auch abgeleitet nicht
+ * zeichnen lässt.
  *
  * Drei Ergebniszustände, und jeder hat seine eigene Darstellung (Spec §7):
  * `ok` → Vorschau und Aktionen. `invalid` → gestrichelte Fläche plus erklärte Regelliste direkt
@@ -253,23 +287,24 @@ function organizationSwatch(id: string): string | undefined {
  * Der Satz, der einen gesperrten Wert begründet — in Alltagssprache und mit den Bezeichnungen
  * aus dem Katalog, nicht mit seinen Kennungen.
  *
- * Die Rohmeldung des Katalogs (`Das Art-/Varianten-/Fähigkeitspaar formation/normal/hospital ist
- * nicht vermessen …`) steht bewusst **nicht** im Tooltip: sie trifft 39 von 64 Körpermarken, ist
- * also der Normalfall und nicht die Ausnahme, und sie spricht Kennungen, die auf dieser Seite
- * niemand nachschlagen kann. Sie bleibt in `blocked.detail` erhalten, falls sie später ein
- * Entwicklerabschnitt zeigen soll.
+ * Die Rohmeldung des Motors (`Die Fahrwerkszone unter "vehicle-land" mit Giebel ist nicht
+ * abgeleitet …`) steht bewusst **nicht** im Tooltip: sie spricht Kennungen und Begriffe, die auf
+ * dieser Seite niemand nachschlagen kann. Bis zum 2. Oktober 2026 traf sie 39 von 64
+ * Körpermarken; seitdem leitet der Motor die meisten Lücken ab, und gesperrt bleibt nur, was sich
+ * auch abgeleitet nicht zeichnen lässt. Die Meldung bleibt in `blocked.detail` erhalten, falls sie
+ * später ein Entwicklerabschnitt zeigen soll.
  *
  * **Woher der Unterschied zwischen fester Lücke und Kombinationslücke kommt.** Aus
  * `blocked.scope` und damit aus der Wurfstelle im Katalog — nicht aus einer Feldliste hier. Eine
  * solche Liste wäre eine zweite Fassung derselben Aussage über die Referenz, und sie liefe beim
- * nächsten vermessenen Zeichen still auseinander: das Amphibienfahrzeug ist heute die einzige
- * feste Lücke, und ob es das bleibt, entscheidet der Katalog und nicht die Website. Der Rat „oder
- * eine andere Grundzeichenart" gilt deshalb nur bei `'combination'`; bei `'value'` wäre er
- * falsch, weil ihn keine Art tragen kann.
+ * nächsten vermessenen Zeichen still auseinander: das Amphibienfahrzeug war bis zum 2. Oktober
+ * 2026 die einzige feste Lücke und wird seitdem abgeleitet gezeichnet — entschieden hat das der
+ * Katalog und nicht die Website. Der Rat „oder eine andere Grundzeichenart" gilt deshalb nur bei
+ * `'combination'`; bei `'value'` wäre er falsch, weil ihn keine Art tragen kann.
  *
  * **Wenn im ganzen Feld kein Wert vermessen ist** (`fieldUnmeasured`, aus `unmeasuredField()`),
- * fällt auch der Rat „wähle einen anderen Wert" weg: jeder andere ist genauso gesperrt. Heute
- * trifft das die Tendenz (LFH-577); die Insel sagt es dann zusätzlich einmal am Feld.
+ * fällt auch der Rat „wähle einen anderen Wert" weg: jeder andere ist genauso gesperrt. Bis zum
+ * 2. Oktober 2026 traf das die Tendenz (LFH-577); die Insel sagt es dann zusätzlich einmal am Feld.
  *
  * Exportiert allein für den Test daneben: die Fallunterscheidung ist die eigentliche Aussage
  * dieser Funktion, und sie ungeprüft zu lassen wäre der teurere Preis als die etwas größere
@@ -306,6 +341,21 @@ export function blockedTooltip(
     'vermessen. Wähle einen anderen Wert oder eine andere Grundzeichenart.'
   );
 }
+
+/**
+ * Der Satz zu einem Wert mit dem Zusatz „abgeleitet" (`derivedMarker()`): zeichenbar, aber von
+ * keinem Original belegt. In Alltagssprache, ohne die Teile einzeln zu nennen — die stehen nach
+ * der Auswahl unter der Vorschau.
+ */
+export function derivedTooltip(valueLabel: string): string {
+  return (
+    `„${valueLabel}" lässt sich hier zeichnen, aber kein Original zeigt diese Zusammenstellung. ` +
+    'Fehlende Teile übernimmt der Baukasten aus ähnlichen, vermessenen Zeichen.'
+  );
+}
+
+/** Der sichtbare Zusatz am Eintrag; kurz, damit er in einer Auswahlliste nicht überragt. */
+const DERIVED_SUFFIX = 'abgeleitet';
 
 /**
  * Die Sperre eines Kandidaten, so wie sie **dargestellt** werden darf — `undefined` für den nach
@@ -409,10 +459,36 @@ function UnmeasuredNote({ id, show }: { id: string; show: boolean }) {
   );
 }
 
+/**
+ * Text und Tooltip eines Eintrags in einer Auswahlliste. Ein `<option>` lässt sich nicht
+ * gestalten; der Zusatz steht deshalb im Text selbst, wie „geht hier nicht" — so kommt er auch auf
+ * Touch-Geräten und in Vorlesehilfen an, wo es keinen Tooltip gibt.
+ */
+function optionText(label: string, blocked: BlockedValue | undefined, derived: boolean): string {
+  if (blocked !== undefined) return `${label} — geht hier nicht`;
+  return derived ? `${label} — ${DERIVED_SUFFIX}` : label;
+}
+
+function optionTitle(
+  definition: FieldDefinition,
+  blocked: BlockedValue | undefined,
+  derived: boolean,
+  valueLabel: string,
+  kindLabel: string,
+  fieldUnmeasured: boolean,
+): string | undefined {
+  if (blocked !== undefined) {
+    return blockedTooltip(definition, blocked, valueLabel, kindLabel, fieldUnmeasured);
+  }
+  return derived ? derivedTooltip(valueLabel) : undefined;
+}
+
 interface SelectFieldProps extends VocabularyProps {
   definition: FieldDefinition;
   value: string;
   probe: Map<string, AllowedValue> | undefined;
+  /** Ob die Spec der Probe selbst schon abgeleitet ist; siehe `derivedMarker()`. */
+  probeDerived: boolean;
   /** Regelmeldungen, die auf den gesetzten Wert dieses Feldes zeigen; leer ist der Normalfall. */
   issues?: readonly ExplainedIssue[];
   kindLabel: string;
@@ -424,6 +500,7 @@ function SelectField({
   definition,
   value,
   probe,
+  probeDerived,
   issues = [],
   kindLabel,
   onChange,
@@ -455,19 +532,17 @@ function SelectField({
       >
         <option value="">— nicht gesetzt —</option>
         {options.map((option) => {
-          const blocked = displayedBlock(probe, option.id, option.id === value);
+          const selected = option.id === value;
+          const blocked = displayedBlock(probe, option.id, selected);
+          const derived = derivedMarker(probe?.get(option.id), selected, probeDerived);
           return (
             <option
               key={option.id}
               value={option.id}
               disabled={blocked !== undefined}
-              title={
-                blocked === undefined
-                  ? undefined
-                  : blockedTooltip(definition, blocked, option.label, kindLabel, unmeasured)
-              }
+              title={optionTitle(definition, blocked, derived, option.label, kindLabel, unmeasured)}
             >
-              {blocked === undefined ? option.label : `${option.label} — geht hier nicht`}
+              {optionText(option.label, blocked, derived)}
             </option>
           );
         })}
@@ -487,6 +562,7 @@ interface ListFieldProps extends VocabularyProps {
   definition: FieldDefinition;
   values: readonly string[];
   probe: Map<string, AllowedValue> | undefined;
+  probeDerived: boolean;
   issues?: readonly ExplainedIssue[];
   kindLabel: string;
   onChange: (values: string[]) => void;
@@ -501,6 +577,7 @@ function ListField({
   definition,
   values,
   probe,
+  probeDerived,
   issues = [],
   kindLabel,
   onChange,
@@ -535,19 +612,17 @@ function ListField({
           // Der Filter über `options` nimmt die gesetzten Werte schon aus der Liste; die Zusage
           // aus `displayedBlock()` läuft hier trotzdem über dieselbe Stelle wie in den beiden
           // anderen Bausteinen, statt an dieser einen Filterzeile zu hängen.
-          const blocked = displayedBlock(probe, option.id, values.includes(option.id));
+          const selected = values.includes(option.id);
+          const blocked = displayedBlock(probe, option.id, selected);
+          const derived = derivedMarker(probe?.get(option.id), selected, probeDerived);
           return (
             <option
               key={option.id}
               value={option.id}
               disabled={blocked !== undefined}
-              title={
-                blocked === undefined
-                  ? undefined
-                  : blockedTooltip(definition, blocked, option.label, kindLabel, unmeasured)
-              }
+              title={optionTitle(definition, blocked, derived, option.label, kindLabel, unmeasured)}
             >
-              {blocked === undefined ? option.label : `${option.label} — geht hier nicht`}
+              {optionText(option.label, blocked, derived)}
             </option>
           );
         })}
@@ -585,6 +660,7 @@ interface TileGroupProps extends VocabularyProps {
   /** '' heißt „nicht gesetzt". */
   value: string;
   probe: Map<string, AllowedValue> | undefined;
+  probeDerived: boolean;
   issues?: readonly ExplainedIssue[];
   kindLabel: string;
   onChange: (value: string | undefined) => void;
@@ -606,6 +682,7 @@ function TileGroup({
   definition,
   value,
   probe,
+  probeDerived,
   issues = [],
   kindLabel,
   onChange,
@@ -658,6 +735,7 @@ function TileGroup({
             blocked === undefined
               ? undefined
               : blockedTooltip(definition, blocked, option.label, kindLabel);
+          const derived = derivedMarker(probe?.get(option.id), selected, probeDerived);
           const classes = [base];
           if (selected) classes.push(`${base}--selected`);
           if (blocked !== undefined) classes.push(`${base}--blocked`);
@@ -669,7 +747,7 @@ function TileGroup({
               aria-pressed={selected}
               aria-disabled={blocked !== undefined}
               aria-describedby={blocked === undefined ? undefined : noticeId}
-              title={reason}
+              title={reason ?? (derived ? derivedTooltip(option.label) : undefined)}
               onFocus={() => {
                 if (reason !== undefined) setNotice(reason);
               }}
@@ -684,6 +762,12 @@ function TileGroup({
             >
               {renderIcon(option.id)}
               <span className={`${base}-label`}>{option.label}</span>
+              {/*
+                Eigener Knoten neben der Beschriftung, nicht in ihr: die Beschriftung bleibt
+                wortgleich mit dem Vokabular. Der Zusatz zählt zum zugänglichen Namen des Knopfes
+                („Fläche abgeleitet") — gewollt, denn er ist die Auskunft.
+              */}
+              {derived ? <span className={`${base}-derived`}>{DERIVED_SUFFIX}</span> : null}
               {blocked === undefined ? null : (
                 <span className="ez-builder__sr">— geht hier nicht: {reason}</span>
               )}
@@ -801,6 +885,41 @@ function downloadBlob(blob: Blob, filename: string) {
   // Nicht sofort widerrufen: der Klick löst den Download asynchron aus, und eine schon
   // widerrufene URL bräche ihn in manchen Browsern kommentarlos ab.
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/**
+ * Der Hinweis unter der Vorschau, wenn die Zeichnung abgeleitete Teile trägt
+ * (`Drawing.derivations`, Entscheidung vom 2. Oktober 2026). Er hängt an `outcome` und damit an
+ * der aktuellen Spec, nicht an der aufgeschobenen Probe: er beschreibt das Bild, das gerade
+ * darüber steht.
+ *
+ * Die Teile stehen im Wortlaut von `DerivationNote.part` und eingeklappt: sie sprechen die
+ * Sprache des Motors (Zonen, Profile, Kennungen) und sind für die Leserin, die nur bauen will,
+ * keine nötige Auskunft. Die Kurzfassung darüber kommt ohne diese Begriffe aus.
+ */
+function DerivationNote({ drawing }: { drawing: Drawing }) {
+  const parts = derivationParts(drawing);
+  if (parts.length === 0) return null;
+  return (
+    <div className="ez-note ez-builder__derived" role="note">
+      <p className="ez-note__title">Teilweise abgeleitet – kein Original belegt diese Zusammenstellung</p>
+      <p>
+        Das Zeichen lässt sich so zeichnen, aber kein vermessenes Original zeigt genau diese
+        Kombination. Was fehlt, hat der Baukasten aus ähnlichen, vermessenen Zeichen übernommen
+        und angepasst.
+      </p>
+      <details className="ez-builder__details">
+        <summary>
+          {parts.length === 1 ? 'Ein abgeleiteter Teil' : `${parts.length} abgeleitete Teile`}
+        </summary>
+        <ul className="ez-builder__derived-list">
+          {parts.map((part, index) => (
+            <li key={index}>{part}</li>
+          ))}
+        </ul>
+      </details>
+    </div>
+  );
 }
 
 interface PreviewPanelProps {
@@ -1195,6 +1314,11 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
     () => probeFields(vocabulary, probeSpec, PROBED_FIELD_NAMES),
     [vocabulary, probeSpec],
   );
+  /**
+   * Ob die Spec der Probe selbst schon abgeleitet ist — aus `probeSpec` und nicht aus `outcome`,
+   * aus demselben Grund wie `kindLabel` unten: Kennzeichnung und Probe müssen dieselbe Spec meinen.
+   */
+  const probeDerived = useMemo(() => drawsDerived(probeSpec), [probeSpec]);
 
   useEffect(() => {
     if (outcome.state !== 'crash') lastWorkingSpec.current = spec;
@@ -1214,13 +1338,14 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
    *
    * `kindLabel` fließt ausschließlich in `blockedTooltip()`, also in den Satz, der eine Sperre
    * begründet; die Sperren selbst stammen aus `probes` und damit aus `probeSpec`. Aus `spec`
-   * gelesen mischte der Satz im aufgeschobenen Render beide Specs: nach dem Wechsel „Person" →
-   * „Taktische Formation" trüge die Körpermarke „ABC-/CBRN-Schutz" gesperrt den Satz „… ist als
-   * Körpermarke für die Grundzeichenart „Taktische Formation" nicht vermessen" — gesperrt ist sie
-   * unter „Person", unter „Taktische Formation" ist sie vermessen. Die Paarung kommt in keiner der
-   * beiden Specs vor: der Satz wäre nicht veraltet, sondern erfunden. Über alle Achsen sind 890
-   * solcher (Feld, Wert, Artwechsel)-Paare möglich, davon 146 an der Kachelgruppe `organization`,
-   * wo der Satz zusätzlich im sr-only-Text landet.
+   * gelesen mischte der Satz im aufgeschobenen Render beide Specs: mit der Verwaltungsstufe
+   * „Kreis" trüge nach dem Wechsel „Fläche" → „Taktische Formation" die Fähigkeit „Verpflegung /
+   * Zubereitung" gesperrt den Satz „… ist als Fähigkeit für die Grundzeichenart „Taktische
+   * Formation" nicht vermessen" — gesperrt ist sie unter „Fläche", unter „Taktische Formation"
+   * lässt sie sich zeichnen. Die Paarung kommt in keiner der beiden Specs vor: der Satz wäre nicht
+   * veraltet, sondern erfunden. (Bis zum 2. Oktober 2026 waren über alle Achsen 890 solcher
+   * (Feld, Wert, Artwechsel)-Paare möglich; seit der Motor Lücken ableitet, sind es weit weniger.
+   * Der Fall bleibt derselbe, und der Test dazu steht in `Builder.test.ts`.)
    *
    * Aus `probeSpec` gehören Sperre und Begründung zusammen zur selben Spec — dann ist der Satz für
    * die Dauer eines Renders veraltet, und das ist der Preis, der beim `useDeferredValue` unten
@@ -1235,6 +1360,11 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
 
   function setField(field: keyof SymbolSpec, value: unknown) {
     setSpec((current) => reduceSpec(current, { field, value }));
+    setLoadedId('');
+  }
+
+  function setLabel(zone: LabelZone, value: string) {
+    setSpec((current) => reduceLabel(current, zone, value));
     setLoadedId('');
   }
 
@@ -1294,6 +1424,8 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
             spec={spec}
             fileBase={loadedSymbol?.slug ?? 'einsatzzeichen'}
           />
+
+          {outcome.state === 'ok' ? <DerivationNote drawing={outcome.drawing} /> : null}
 
           {loadedSymbol === undefined ? null : (
             <div className="ez-note" role="note">
@@ -1463,6 +1595,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
               definition={KIND_FIELD}
               value={spec.kind}
               probe={probes.get('kind')}
+              probeDerived={probeDerived}
               issues={fieldIssues.get('kind')}
               kindLabel={kindLabel}
               onChange={(value) => setField('kind', value)}
@@ -1487,6 +1620,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
                 definition={definition}
                 value={(spec[definition.field] as string | undefined) ?? ''}
                 probe={probes.get(definition.field)}
+                probeDerived={probeDerived}
                 issues={fieldIssues.get(definition.field)}
                 kindLabel={kindLabel}
                 onChange={(value) => setField(definition.field, value)}
@@ -1497,6 +1631,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
               definition={ORGANIZATION_FIELD}
               value={spec.organization ?? ''}
               probe={probes.get('organization')}
+              probeDerived={probeDerived}
               issues={fieldIssues.get('organization')}
               kindLabel={kindLabel}
               onChange={(value) => setField('organization', value)}
@@ -1531,6 +1666,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
                 definition={definition}
                 values={listValues(definition.field)}
                 probe={probes.get(definition.field)}
+                probeDerived={probeDerived}
                 issues={fieldIssues.get(definition.field)}
                 kindLabel={kindLabel}
                 onChange={(values) => setField(definition.field, values)}
@@ -1543,6 +1679,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
                 definition={definition}
                 value={(spec[definition.field] as string | undefined) ?? ''}
                 probe={probes.get(definition.field)}
+                probeDerived={probeDerived}
                 issues={fieldIssues.get(definition.field)}
                 kindLabel={kindLabel}
                 onChange={(value) => setField(definition.field, value)}
@@ -1563,6 +1700,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
                   definition={definition}
                   value={(spec[definition.field] as string | undefined) ?? ''}
                   probe={probes.get(definition.field)}
+                  probeDerived={probeDerived}
                   issues={fieldIssues.get(definition.field)}
                   kindLabel={kindLabel}
                   onChange={(value) => setField(definition.field, value)}
@@ -1582,6 +1720,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
               definition={STATE_LIST_FIELD}
               values={listValues('states')}
               probe={probes.get('states')}
+              probeDerived={probeDerived}
               issues={fieldIssues.get('states')}
               kindLabel={kindLabel}
               onChange={(values) => setField('states', values)}
@@ -1591,6 +1730,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
               definition={TENDENCY_FIELD}
               value={spec.tendency ?? ''}
               probe={probes.get('tendency')}
+              probeDerived={probeDerived}
               issues={fieldIssues.get('tendency')}
               kindLabel={kindLabel}
               onChange={(value) => setField('tendency', value)}
@@ -1600,9 +1740,28 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
           <fieldset className="ez-builder__group">
             <legend>Beschriftung</legend>
             <p className="ez-builder__group-hint">
-              Das Kürzel in der Fußzone, unterhalb des Zeichens — etwa ein Rufname oder eine
-              Einheitsbezeichnung.
+              Text im Zeichen, etwa „ILS“ in der Mitte und das Kreiskürzel unten rechts, dazu ein
+              Kürzel unterhalb des Zeichens. Ist ein Text zu lang für seinen Platz, sagt es die
+              Vorschau.
             </p>
+            <div className="ez-builder__group-grid">
+              {LABEL_ZONE_FIELDS.map(({ zone, label, placeholder }) => (
+                <div className="ez-builder__field" key={zone}>
+                  <label className="ez-builder__field-label" htmlFor={`ez-builder-label-${zone}`}>
+                    {label}
+                  </label>
+                  <input
+                    id={`ez-builder-label-${zone}`}
+                    type="text"
+                    placeholder={placeholder}
+                    value={labelText(spec, zone)}
+                    aria-describedby={fieldIssues.has('labels') ? 'ez-builder-labels-issue' : undefined}
+                    onChange={(event) => setLabel(zone, event.target.value)}
+                  />
+                </div>
+              ))}
+            </div>
+            <FieldIssueNote id="ez-builder-labels-issue" issues={fieldIssues.get('labels') ?? []} />
             {/*
               Dasselbe Muster wie in `SelectField` und `ListField`: Hülle als `<div>`, Beschriftung
               als eigenes `<label htmlFor>`, die Notiz daneben und allein über `aria-describedby`
@@ -1646,7 +1805,9 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
             <code>technicalFill</code>, <code>strength</code>, <code>functionRole</code>,{' '}
             <code>administrativeLevel</code>, <code>technicalHeadMark</code>,{' '}
             <code>unitGrouping</code>, <code>vehicleCategory</code>, <code>capabilities</code>,{' '}
-            <code>bodyMarks</code>, <code>states</code> und <code>tendency</code>. Die
+            <code>bodyMarks</code>, <code>states</code> und <code>tendency</code>; die
+            Beschriftungsfelder setzen die Läufe in <code>labels</code> (<code>center</code>,{' '}
+            <code>topLeft</code>, <code>bottomRight</code> …) und <code>designation</code>. Die
             Piktogrammregister <code>comms</code>, <code>damage</code> und <code>wildfire</code>{' '}
             haben kein Formularfeld, weil <code>SymbolSpec</code> keine solche Achse führt — ein
             Feld dafür behauptete eine Eingabe, die die Komposition nicht annimmt.
@@ -1659,7 +1820,10 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
             dafür rund 2,5 ms. Weil jeder Tastenanschlag im
             Beschriftungsfeld die Spec ändert und die Probe die Beschriftung wirklich liest, läuft
             sie nachrangig (<code>useDeferredValue</code>): wer weitertippt, bekommt die Vorschau
-            und die Regeln sofort, die Sperren einen Wimpernschlag später. Beim Laden eines
+            und die Regeln sofort, die Sperren einen Wimpernschlag später. Der Zusatz
+            „abgeleitet“ kommt aus demselben Durchlauf: <code>vocabulary()</code> markiert einen
+            Wert mit <code>derived: true</code>, wenn seine Zeichnung{' '}
+            <code>Drawing.derivations</code> trägt. Beim Laden eines
             Katalogeintrags ist die Spec die Rekonstruktion der vermessenen Darstellung; bei einem
             Kompositionsrezept ist sie selbst die Quelle des Bildes.
           </p>
@@ -1903,6 +2067,27 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
           text-align: center;
           hyphens: auto;
           overflow-wrap: anywhere;
+        }
+        /*
+         * Der Zusatz „abgeleitet": zurückhaltend, kein Warnsignal — der Wert ist zulässig. Kleiner
+         * Monotext in der gedämpften Farbe der Feldhinweise, ohne Farbe als einziges Merkmal: die
+         * Aussage trägt das Wort.
+         */
+        .ez-builder__tile-derived,
+        .ez-builder__orgchip-derived {
+          font-family: var(--ez-font-mono);
+          font-size: var(--sl-text-2xs);
+          letter-spacing: 0.04em;
+          color: var(--sl-color-gray-3);
+        }
+        .ez-builder__tile-derived {
+          text-align: center;
+        }
+        .ez-builder__derived-list {
+          margin: var(--ez-space-2) 0 0;
+          padding-inline-start: 1.2em;
+          font-size: var(--sl-text-2xs);
+          color: var(--sl-color-gray-2);
         }
         .ez-builder__tile-notice {
           margin: 0;

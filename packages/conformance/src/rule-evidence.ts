@@ -75,7 +75,7 @@ const CT = 'validation-rules.cases.test.ts';
  * derzeit nicht nötig.
  */
 export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
-  evidence('above-left-label-requires-measured-body', { kind: 'formation', labels: { aboveLeft: 'ITH' } }, `aboveLeft an der Formation (${VT}).`),
+  evidence('above-left-label-head-conflict', { kind: 'formation', strength: 'gruppe', labels: { aboveLeft: 'ITH' } }, `aboveLeft neben der Kopfzone (${CT}).`),
   evidence(
     'above-left-metrics-complete',
     runtime({ kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull', labels: { aboveLeft: 'X', aboveLeftMetrics: { capHeightMm: null } } }),
@@ -86,21 +86,14 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
     { kind: 'vehicle-air', bodyVariant: 'raised-hull', labels: { aboveLeft: 'ITH', aboveLeftMetrics: { capHeightMm: 2.5, baselineFromBodyTopMm: 0, anchorFromBodyLeftMm: 100 } } },
     `aboveLeft-Anker rechts außerhalb der Profilbox (${CT}).`,
   ),
-  evidence('administrative-level-not-measured', { kind: 'formation', administrativeLevel: 'kreis' }, 'Verwaltungsstufe ohne aufgelöste Funktionsrolle; neu, analog zu validate.test.ts.'),
-  evidence('below-right-label-requires-measured-body', { kind: 'formation', labels: { belowRight: 'X' } }, `belowRight an der Formation ohne Profil (${CT}).`),
-  evidence(
-    'below-right-label-requires-organization',
-    { kind: 'vehicle-water', bodyVariant: 'raised-hull', labels: { belowRight: 'X' } },
-    'belowRight am angehobenen Wasserfahrzeug (Profil mit Organisationstinte) ohne Organisation. Neu: der Bestand nannte die Kennung nur in einer Negativprüfung (`not.toContain`) in validate.test.ts.',
-  ),
+  evidence('below-body-zone-conflict', { kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-1', labels: { belowRight: 'THW' } }, `Fahrwerk und Lauf unterhalb rechts zugleich (${CT}).`),
   evidence(
     'body-mark-rendition-not-measured',
     { kind: 'formation', organization: 'feuerwehr', strength: 'staffel', bodyMarks: ['fire-fighting'], bodyMarkRenditions: { 'fire-fighting': 'shifted-right-6.5mm' } },
     `Fassungskennung an einem Paar, an dem Anhang C sie nicht zeichnet (${VT}, LFH-786).`,
   ),
   evidence('body-variant-foot-conflict', { kind: 'vehicle-air', bodyVariant: 'raised-hull', designation: 'RTH' }, `Bezeichnung am angehobenen Rumpf (${VT}).`),
-  evidence('body-variant-requires-measured-kind', { kind: 'post', bodyVariant: 'foot-band' }, `Fußband an der Stelle (${VT}).`),
-  evidence('bottom-center-label-requires-measured-body', { kind: 'vehicle-land', labels: { bottomCenter: 'X' } }, `bottomCenter am Landfahrzeug (${CT}).`),
+  evidence('body-variant-requires-measured-kind', { kind: 'formation', bodyVariant: 'fixed-wing-hull' }, `Flügelrumpf an der Formation (${VT}).`),
   evidence(
     'bottom-right-metrics-complete',
     runtime({ kind: 'vehicle-air', bodyVariant: 'raised-hull', labels: { bottomRight: '7', bottomRightMetrics: { capHeightMm: 2.750245 } } }),
@@ -112,32 +105,14 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
     `bottomRight-Metriken ohne Lauf (${VT}).`,
   ),
   evidence(
-    'bottom-right-metrics-require-measured-body',
-    { kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull', labels: { bottomRight: '7', bottomRightMetrics: { capHeightMm: 2.750245, baselineFromBodyTopMm: 13.000087, anchorFromBodyLeftMm: 21.99, boxLeftFromBodyLeftMm: 19.24, boxWidthMm: 5.5 } } },
-    `bottomRight-Metriken am Flächenflügler (${VT}).`,
-  ),
-  evidence(
     'bottom-right-metrics-within-body',
     { kind: 'vehicle-air', bodyVariant: 'raised-hull', labels: { bottomRight: '7', bottomRightMetrics: { capHeightMm: 2.750245, baselineFromBodyTopMm: 3, anchorFromBodyLeftMm: 21.99, boxLeftFromBodyLeftMm: 19.24, boxWidthMm: 5.5 } } },
     `bottomRight-Grundlinie außerhalb der Hülle (${VT}).`,
   ),
-  evidence(
-    'capabilities-pictogram-has-measured-rendition',
-    { kind: 'formation', organization: 'feuerwehr', strength: 'gruppe', capabilities: ['medical-service'] },
-    `Das Sanitätskreuz 4.6.1 hat an der Formation eine vermessene Körperfassung (D.1.9, F.1.4 ff.); die Boxfassung ist dort abgelehnt (${VT}, LFH-787).`,
-  ),
-  evidence(
-    'capabilities-pictogram-overflows-body',
-    { kind: 'formation', organization: 'feuerwehr', strength: 'gruppe', capabilities: ['blasting'] },
-    `Das Sprengen ragt unskaliert über den Formationskörper und hat dort keine vermessene Fassung (${VT}, LFH-587).`,
-  ),
-  evidence('center-anchor-override-requires-measured-trailer', { kind: 'trailer', labels: { center: 'Tauchen', centerAnchorFromBodyLeftMm: 8.23 } }, `Linksanker am nicht vermessenen Anhänger (${VT}).`),
-  evidence('center-baseline-not-measured', { kind: 'trailer', labels: { center: 'X', centerBaselineFromBodyBottomMm: 10, centerCapHeightMm: 2.191447 } }, `Nicht vermessene Anhänger-Grundlinie (${VT}).`),
-  evidence('center-baseline-override-requires-measured-body', { kind: 'vehicle-air', labels: { center: 'X', centerBaselineFromBodyBottomMm: 6.5 } }, `Grundlinienüberschreibung am Luftfahrzeug (${VT}).`),
+  evidence('center-anchor-override-requires-measured-trailer', { kind: 'trailer', labels: { center: 'Tauchen', centerAnchorFromBodyLeftMm: 30 } }, `Anker außerhalb der Anhängerhülle (${VT}).`),
   evidence('center-baseline-positive', { kind: 'formation', labels: { center: 'X', centerBaselineFromBodyBottomMm: 0 } }, `Mittige Grundlinie 0 mm (${CT}).`),
   evidence('center-baseline-requires-center-label', { kind: 'vehicle-land', labels: { centerBaselineFromBodyBottomMm: 6.5 } }, `Grundlinie ohne mittigen Lauf (${VT}).`),
   evidence('center-box-margin-non-negative', { kind: 'formation', labels: { center: 'X', centerBoxMarginMm: -0.1 } }, `Negativer Boxrand (${VT}).`),
-  evidence('center-box-margin-override-requires-measured-body', { kind: 'vehicle-land', labels: { center: 'X', centerBoxMarginMm: 0.5 } }, `Boxrand am Landfahrzeug (${VT}).`),
   evidence('center-box-margin-requires-center-label', { kind: 'formation', labels: { centerBoxMarginMm: 0.5 } }, `Boxrand ohne mittigen Lauf (${VT}).`),
   evidence('center-box-margin-within-body', { kind: 'formation', labels: { center: 'X', centerBoxMarginMm: 15 } }, `Boxrand breiter als der Körper (${VT}).`),
   evidence(
@@ -152,8 +127,6 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
   ),
   evidence('center-label-within-body', { kind: 'formation', labels: { center: 'X', centerBaselineFromBodyBottomMm: 100 } }, `Grundlinie weit über der Körperoberkante (${CT}).`),
   evidence('chassis-foot-conflict', { kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-1', designation: 'MTW 1' }, `Fahrwerk und Bezeichnung zugleich (${VT}).`),
-  evidence('circle-12-requires-hilfsorganisation', { kind: 'circle-12' }, `12-mm-Kreis ohne Organisation (${VT}).`),
-  evidence('circle-12-requires-organization', { kind: 'circle-12', bodyVariant: 'foot-band' }, `Gebänderter Kreis ohne Organisation (${VT}).`),
   evidence(
     'circle-top-left-anchor-within-viewbox',
     runtime({ kind: 'circle-12', organization: 'hilfsorganisation', labels: { topLeft: 'UHS', topLeftMetrics: { capHeightMm: 2.919225, baselineFromBodyTopMm: 1.000254, anchorFromBodyLeftMm: null } } }),
@@ -164,34 +137,9 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
     { kind: 'circle-12', bodyVariant: 'raised-gable', organization: 'hilfsorganisation', labels: { topLeft: '50', topLeftMetrics: { capHeightMm: 2.749893, baselineFromBodyTopMm: -6.01, anchorFromBodyLeftMm: -2.974002 } } },
     `Kreisgrundlinie oberhalb der ViewBox (${VT}).`,
   ),
-  evidence('circle-top-left-requires-metrics', { kind: 'circle-12', organization: 'hilfsorganisation', labels: { topLeft: 'UHS' } }, `topLeft am Kreis ohne Metriksatz (${VT}).`),
-  evidence(
-    'colored-circle-top-left-not-measured',
-    { kind: 'circle-12', organization: 'zivile-einheiten', bodyMarks: ['spontaneous-helper-collection-arrow'], labels: { topLeft: 'X' } },
-    `topLeft am farbigen Kreisvertrag (${CT}).`,
-  ),
   evidence('designation-not-blank', { kind: 'formation', designation: '   ' }, `Leere Bezeichnung (${VT}).`),
   evidence('designation-too-wide', { kind: 'formation', designation: 'W'.repeat(30) }, 'Dreißig W sprengen die Fußzone. Neu: Kompositionsregel.', 'composeFromCatalog'),
   evidence('designation-unknown-glyph', { kind: 'formation', designation: 'A☃' }, 'Schneemann (U+2603) fehlt in den Arimo-Metriken. Neu: Kompositionsregel.', 'composeFromCatalog'),
-  evidence('foot-band-head-requires-measured-strength', { kind: 'formation', bodyVariant: 'foot-band', strength: 'staffel' }, `Staffel am gebänderten Formationskörper (${VT}).`),
-  evidence(
-    'function-role-body-mark-mismatch',
-    { kind: 'person', organization: 'feuerwehr', strength: 'zug', functionRole: 'fire-service-platoon-commander', bodyMarks: ['care'] },
-    'Körpermarke, die die vermessene Fassung nicht erlaubt. Neu gegen die Katalogfassung; validate.test.ts löst die Regel nur mit einer synthetischen Fassung aus.',
-    'validateSpec+catalog',
-  ),
-  evidence(
-    'function-role-body-variant-not-measured',
-    { kind: 'person', organization: 'feuerwehr', strength: 'zug', functionRole: 'fire-service-platoon-commander', bodyVariant: 'raised-hull' },
-    'Körpervariante an einer Funktionsrolle. Feuert auch ohne Kontext; hier gegen die Katalogfassung.',
-    'validateSpec+catalog',
-  ),
-  evidence(
-    'function-role-capabilities-not-measured',
-    { kind: 'person', organization: 'feuerwehr', strength: 'zug', functionRole: 'fire-service-platoon-commander', capabilities: ['fire-fighting'] },
-    'Fähigkeit an einer Funktionsrolle. Feuert auch ohne Kontext; hier gegen die Katalogfassung.',
-    'validateSpec+catalog',
-  ),
   evidence(
     'function-role-head-mismatch',
     { kind: 'person', organization: 'feuerwehr', functionRole: 'fire-service-platoon-commander' },
@@ -221,38 +169,27 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
     `Körpertinte ohne Lauf im Körper (${VT}).`,
   ),
   evidence(
-    'inset-hull-fire-fighting-requires-no-labels',
-    { kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'feuerwehr', bodyMarks: ['fire-fighting'], labels: { center: 'LF' } },
-    `Beschriftete Feuerwehrfassung des eingesenkten Rumpfs (${VT}).`,
-  ),
-  evidence(
     'inset-hull-requires-center-label-only',
-    { kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'hilfsorganisation', labels: { center: 'MzB' }, designation: 'MzB' },
-    `Fußbezeichnung am eingesenkten Rumpf als ungemessene Zone (${VT}).`,
+    runtime({ kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'hilfsorganisation', labels: { center: 'MzB', zone: 'X' } }),
+    `Unbekanntes Labelfeld am eingesenkten Rumpf; Laufzeitfall (${VT}).`,
   ),
-  evidence('inset-hull-requires-measured-body-mark', { kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'feuerwehr' }, `Feuerwehrfassung ohne Marke (${VT}).`),
-  evidence('inset-hull-requires-measured-organization', { kind: 'vehicle-water', bodyVariant: 'inset-hull' }, `Eingesenkter Rumpf ohne Organisation (${VT}).`),
   evidence('label-not-blank', { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', labels: { topLeftLines: ['GW-San', '  '] } }, `Leere zweite Zeile (${VT}).`),
   evidence('label-too-wide', { kind: 'formation', labels: { center: 'W'.repeat(24) } }, 'Mittiger Lauf breiter als seine Box. Neu: Kompositionsregel.', 'composeFromCatalog'),
   evidence('label-unknown-glyph', { kind: 'formation', labels: { center: '☃' } }, 'Schneemann (U+2603) im mittigen Lauf. Neu: Kompositionsregel.', 'composeFromCatalog'),
   evidence('plain-wheel-pair-chassis-conflict', { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', vehicleCategory: 'kfz-kategorie-1' }, `Fahrwerk am Radpaarkörper (${VT}).`),
-  evidence('reduced-house-requires-hilfsorganisation', { kind: 'reduced-house' }, `Reduziertes Haus ohne Organisation (${VT}).`),
   evidence('state-carrier-not-allowed', { kind: 'formation', states: ['person-injured'] }, `Personenzustand an der Formation (${VT}).`),
   evidence(
     'state-group-limit-exceeded',
-    { kind: 'person', states: ['suspected-situation', 'acute-situation'] },
-    `Zwei Hinweise an einer Person (${VT}).`,
+    { kind: 'formation', states: ['damaged', 'destroyed'] },
+    `Zwei Schadensstufen an einer Formation (${VT}).`,
   ),
   evidence('state-tactics-not-allowed', { kind: 'person', states: ['tactical-attack'] }, `Einsatztaktik an der Person (${VT}).`),
   evidence('state-value-not-attachable', { kind: 'person', states: ['weather-sunny'] }, `Wetter in der Zustandsliste (${VT}).`),
   evidence('strength-requires-unit', { kind: 'hazard', strength: 'gruppe' }, `Stärke an einer Gefahr (${VT}).`),
   evidence('surface-label-foot-conflict', { kind: 'vehicle-air', bodyVariant: 'raised-hull', designation: 'A', labels: { surfaceBelowRight: 'B' } }, `Bezeichnung und Oberflächenlauf zugleich (${CT}).`),
-  evidence('surface-label-requires-measured-body', { kind: 'formation', labels: { surfaceBelowLeft: 'X' } }, `Oberflächenlauf an der Formation (${VT}).`),
-  evidence('surface-left-label-requires-measured-anchor', { kind: 'vehicle-air', bodyVariant: 'raised-hull', labels: { surfaceBelowLeft: 'X' } }, `Linker Oberflächenlauf am Luftfahrzeug (${VT}).`),
   evidence('technical-fill-organization-conflict', runtime({ kind: 'person', organization: 'hilfsorganisation', technicalFill: 'weiss' }), `Technische Füllung und Organisation (${VT}).`),
   evidence('technical-fill-token-invalid', runtime({ kind: 'person', technicalFill: 'white' }), `Unbekannter Farbtoken; Laufzeitfall (${VT}).`),
   evidence('technical-head-mark-not-measured', runtime({ kind: 'formation', technicalHeadMark: 'triple-vertical-bar' }), `Unbekannte Kopfmarke; Laufzeitfall (${VT}).`),
-  evidence('technical-head-mark-requires-normal-formation', { kind: 'person', technicalHeadMark: 'single-vertical-bar' }, `Kopfmarke an der Person (${VT}).`),
   evidence(
     'top-left-anchor-within-body',
     runtime({ kind: 'vehicle-land', labels: { topLeft: 'BTKombi', topLeftMetrics: { capHeightMm: 2.191447, baselineFromBodyTopMm: 5.249923, anchorFromBodyLeftMm: null } } }),
@@ -268,25 +205,17 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
     { kind: 'vehicle-land', labels: { topLeft: 'BTKombi', topLeftMetrics: { capHeightMm: 0, baselineFromBodyTopMm: 5.249923, anchorFromBodyLeftMm: 0.51423 } } },
     `topLeft-Versalhöhe 0 (${VT}).`,
   ),
-  evidence('top-left-label-requires-measured-body', { kind: 'trailer', labels: { topLeft: 'BT' } }, `topLeft am Anhänger (${VT}).`),
   evidence('top-left-lines-exactly-two', runtime({ kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', labels: { topLeftLines: ['GW-San', '50', 'Reserve'] } }), `Drei Zeilen; Laufzeitfall (${VT}).`),
-  evidence('top-left-lines-require-measured-body', { kind: 'trailer', labels: { topLeftLines: ['GW-San', '50'] } }, `Zweizeiliger Lauf am Anhänger (${VT}).`),
   evidence(
     'top-left-metrics-complete',
     runtime({ kind: 'vehicle-land', labels: { topLeft: 'BTKombi', topLeftMetrics: { capHeightMm: 2.191447 } } }),
     `Unvollständiger topLeft-Metriksatz; Laufzeitfall (${VT}).`,
   ),
   evidence(
-    'top-left-metrics-require-measured-vehicle-land',
-    { kind: 'formation', labels: { topLeft: 'BTKombi', topLeftMetrics: { capHeightMm: 2.191447, baselineFromBodyTopMm: 5.249923, anchorFromBodyLeftMm: 0.51423 } } },
-    `topLeft-Metriken an der Formation (${VT}).`,
-  ),
-  evidence(
     'top-left-metrics-require-top-left-label',
     { kind: 'vehicle-land', labels: { topLeftMetrics: { capHeightMm: 2.191447, baselineFromBodyTopMm: 5.249923, anchorFromBodyLeftMm: 0.51423 } } },
     `topLeft-Metriken ohne Lauf (${VT}).`,
   ),
-  evidence('top-left-metrics-required-by-profile', { kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull', labels: { topLeft: 'X' } }, `topLeft am Flächenflügler ohne Metriksatz (${CT}).`),
   evidence(
     'top-left-metrics-within-body',
     { kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull', labels: { topLeft: 'X', topLeftMetrics: { capHeightMm: 2.5, baselineFromBodyTopMm: 7, anchorFromBodyLeftMm: 100 } } },
@@ -318,12 +247,6 @@ export const RULE_EVIDENCE_GAPS: readonly RuleEvidenceGap[] = Object.freeze([
     reason:
       'Wie function-role-run-too-wide: die Läufe kommen aus der Katalogfassung, deren Glyphen alle in den Arimo-Metriken stehen.',
     location: 'packages/core/src/compose.ts (assertTextRunsFit mit Präfix function-role-run)',
-  }),
-  Object.freeze({
-    rule: 'surface-right-label-requires-measured-anchor',
-    reason:
-      'Verlangt ein Profil mit surfaceLabels ohne rechten Anker. Beide Profile mit surfaceLabels (F.2.7, angehobener 12-mm-Kreis) haben einen rechten Anker; die Regel ist die Symmetrie zur linken für ein künftiges Profil.',
-    location: 'packages/core/src/validation-rules.cases.test.ts (it.todo)',
   }),
 ]);
 

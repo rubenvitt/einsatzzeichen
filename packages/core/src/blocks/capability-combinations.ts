@@ -27,8 +27,9 @@ import type {
  * `COMBINATION_MARKS` in `geometry/body-marks.ts`.
  *
  * **Was der Bestand nicht belegt.** Kein Original trägt zwei Piktogramme in der Boxfassung
- * (`capabilities`). Der Motor legt sie heute deckungsgleich in dieselbe Box; das ist keine Regel,
- * sondern die Abwesenheit einer. Die Empfehlung, bis zu einem Beleg höchstens eine Boxfähigkeit
+ * (`capabilities`). Bis zum 2. Oktober 2026 legte der Motor sie deckungsgleich in dieselbe Box;
+ * seitdem stehen sie nebeneinander im Innenfeld (`derive/fit-pictogram.ts`, als konstruierte
+ * Ableitung vermerkt). Auch das ist keine Regel der Referenz, nur eine lesbare Ableitung. Die Empfehlung, bis zu einem Beleg höchstens eine Boxfähigkeit
  * zuzulassen, steht als vorgemerkte Regel in `rules/planned-capability-rules.ts` und ist nicht in
  * Kraft.
  *
@@ -77,7 +78,7 @@ export const CAPABILITY_COMBINATION_EXCEPTIONS: readonly CapabilityCombinationEx
       note:
         'Ring r 5 statt 5,5 (Band 4,75…5,25 um 16|16), Arztleiste auf y 24 (2 mm über der ' +
         'Unterkante) statt 22, Intensivbalken auf x 25,5 (5,5 mm von rechts) statt 23,5.',
-      definedAt: `${COMBINATION_MARKS_AT}:2032–2054`,
+      definedAt: `${COMBINATION_MARKS_AT}:2037–2059`,
     },
     {
       fixture: 'F.1.13',
@@ -88,7 +89,7 @@ export const CAPABILITY_COMBINATION_EXCEPTIONS: readonly CapabilityCombinationEx
       note:
         'Das Zelt ist ein Dach unter 45° (Mittellinie (3|20) → (16|7) → (29|20)), die ' +
         'Arztleiste steht auf y 21 (5 mm über der Unterkante).',
-      definedAt: `${COMBINATION_MARKS_AT}:2055–2075`,
+      definedAt: `${COMBINATION_MARKS_AT}:2060–2080`,
     },
     {
       fixture: 'F.1.22',
@@ -99,7 +100,7 @@ export const CAPABILITY_COMBINATION_EXCEPTIONS: readonly CapabilityCombinationEx
       note:
         'Unter dem Zelt steht der Ring r 5 mit acht Speichen um (16|18,5), 2,5 mm unter der ' +
         'Körpermitte, und ohne Fachdienstteilung.',
-      definedAt: `${COMBINATION_MARKS_AT}:2076–2088`,
+      definedAt: `${COMBINATION_MARKS_AT}:2081–2093`,
     },
     {
       fixture: 'F.2.5#alternative',
@@ -109,7 +110,7 @@ export const CAPABILITY_COMBINATION_EXCEPTIONS: readonly CapabilityCombinationEx
       marks: ['patient-transport', 'intensive-care', 'physician'],
       overrides: ['physician'],
       note: 'Arztleiste auf y 23 (3 mm über der Unterkante) statt 22 wie in F.2.4#alt.',
-      definedAt: `${COMBINATION_MARKS_AT}:2089–2100`,
+      definedAt: `${COMBINATION_MARKS_AT}:2094–2105`,
     },
   ] satisfies readonly CapabilityCombinationException[]);
 
@@ -142,7 +143,7 @@ export const CAPABILITY_COMBINATION_RULES: readonly CapabilityCombinationRule[] 
           'Teilung (4.6.1) und Zelt (4.2.1) stehen als zwei Marken in ihrer Einzelfassung auf derselben Körperfläche; das Zelt zerschneidet die Felder der Teilung.',
         ),
         source(
-          'core/src/geometry/body-marks.ts:672–700',
+          'core/src/geometry/body-marks.ts:673–701',
           'Die Zeltmarke trägt die Teilung nicht mit: F.1.3 zeigt das Zelt ohne Kreuz. Die Teilung ist das Zeichen 4.6.1 und keine Teilung der Fläche für mehrere Fähigkeiten.',
         ),
         source(
@@ -189,7 +190,7 @@ export const CAPABILITY_COMBINATION_RULES: readonly CapabilityCombinationRule[] 
       status: 'proposed',
       value: 'overlay',
       reason:
-        'Die Überlagerung braucht keine Zahl je Körperform: jede Marke rechnet ihre Einzelfassung gegen die Hülle dieser Form. So verhält sich der Motor heute an jeder Fassung. Wo eine Einzelfassung fehlt, wirft `bodyMark()` weiter `NotMeasuredError`; die Regel erfindet keine Lage.',
+        'Die Überlagerung braucht keine Zahl je Körperform: jede Marke rechnet ihre Einzelfassung gegen die Hülle dieser Form. So verhält sich der Motor an jeder Fassung. Wo eine Einzelfassung am Paar fehlt, überträgt `bodyMark()` seit dem 2. Oktober 2026 die nächstliegende vermessene Fassung derselben Marke (`derive/body-marks.ts`); die Überlagerung gilt dann für die übertragenen Fassungen. Marken ganz ohne randbündige Fassung stehen als eingepasste Einzeldarstellungen nebeneinander.',
     },
     exceptions: CAPABILITY_COMBINATION_EXCEPTIONS,
     plannedRules: [MIXED_PRESENTATION],
@@ -200,7 +201,7 @@ export const CAPABILITY_COMBINATION_RULES: readonly CapabilityCombinationRule[] 
     arrangement: {
       status: 'open',
       question:
-        'Kein Original zeigt zwei Kapitel-4-Piktogramme in der Boxfassung. Der Motor legt sie heute deckungsgleich in dieselbe Box 4/8/24/16 mm. Teilt die Systematik die Box, verkleinert sie die Piktogramme, oder gibt es in der Boxfassung nur eine Fähigkeit?',
+        'Kein Original zeigt zwei Kapitel-4-Piktogramme in der Boxfassung. Bis zum 2. Oktober 2026 legte der Motor sie deckungsgleich in dieselbe Box 4/8/24/16 mm; seitdem stellt er sie mit gemeinsamem Faktor nebeneinander ins Innenfeld (`fitPictograms`, als Ableitung vermerkt). Teilt die Systematik die Box so, verkleinert sie die Piktogramme anders, oder gibt es in der Boxfassung nur eine Fähigkeit?',
     },
     order: {
       status: 'open',
@@ -221,7 +222,7 @@ export const CAPABILITY_COMBINATION_RULES: readonly CapabilityCombinationRule[] 
       status: 'proposed',
       value: 1,
       reason:
-        'Bis zu einem Original mit zwei Boxpiktogrammen höchstens eines. Zwei Piktogramme in derselben Box überdecken einander; das ist eine stille Fehldarstellung und keine Regel. Wer mehrere Fähigkeiten braucht, hat die randbündige Darstellung.',
+        'Bis zu einem Original mit zwei Boxpiktogrammen höchstens eines. Zwei Piktogramme in derselben Box überdeckten einander; der Motor stellt sie seit dem 2. Oktober 2026 nebeneinander, das ist eine Ableitung und keine Regel. Wer mehrere Fähigkeiten braucht, hat die randbündige Darstellung.',
     },
     forms: [],
     otherForms: {

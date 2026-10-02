@@ -49,11 +49,10 @@ import type { SourceReference } from '@einsatzzeichen/schema';
  *   Ausweichposition" (`chassis-foot-conflict`, `surface-label-foot-conflict`). Dieser Zusatz ist
  *   der Grund, warum der Motor **keine Ausweichlösung anbietet** — nicht der Grund der Ablehnung.
  *   Die Ablehnung selbst ist die Kollision, also fachlich. Deshalb `'systematik'`.
- * - `vehicle-category-requires-vehicle` klingt fachlich („Fahrzeugkategorie nur am Fahrzeug"), ist
- *   aber **enger** als die Systematik: die umgesetzte Menge sind die drei Körperformen, an denen
- *   eine Fahrwerkszone **vermessen** wurde (Kommentar an `CHASSIS_KINDS`: „Gemessen, nicht
- *   angenommen … 25 von 31"). Luft- und Wasserfahrzeug sind fachlich Fahrzeuge und fallen
- *   trotzdem heraus. Deshalb `'engine'`.
+ * - `vehicle-category-requires-vehicle` war bis zum 02.10.2026 **enger** als die Systematik: die
+ *   umgesetzte Menge waren die drei Körperformen mit vermessener Fahrwerkszone. Seit dem
+ *   Eigentümerentscheid steht sie an allen fünf Fahrzeugarten (`VEHICLE_KINDS`), Wasser- und
+ *   Luftfahrzeug mit übertragener Zone. Übrig ist die Trägerbindung. Deshalb `'systematik'`.
  * - `designation-not-blank` und `label-not-blank` sehen nach Datenhygiene aus, tragen aber eine
  *   Motorbegründung: ein leerer Lauf erzeugt ein Textprimitiv ohne Tinte, das jedes Gate besteht
  *   und im Bild fehlt. Deshalb `'engine'`.
@@ -134,7 +133,7 @@ export type RuleReasonSource = 'core' | 'website';
  * - `kind` und `bodyVariant` der Achsenliste stehen hier als `'base-symbol'` und
  *   `'body-variant'` — die Regeln trennen beide deutlich.
  * - `'label'` hat **keine** Wertachse (Beschriftung ist freier Text, kein Werteraum), trägt aber
- *   44 der 78 Regeln. Ohne diese Dimension wäre der Katalog unbrauchbar.
+ *   29 der 50 Regeln (Stand 2. Oktober 2026). Ohne diese Dimension wäre der Katalog unbrauchbar.
  * - `'composition'` ist keine Dimension der Systematik, sondern die Einordnung für Regeln, deren
  *   Auflösung überhaupt kein einzelnes Feld benennt. Dasselbe Wort und derselbe Grund wie in
  *   `rule-explanations.ts`; bislang genau `head-zone-conflict`.
@@ -258,12 +257,11 @@ function entry(
  */
 export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
   entry(
-    'above-left-label-requires-measured-body',
-    'engine',
+    'above-left-label-head-conflict',
+    'systematik',
     'label',
-    'Die Grundlinie der Zone oberhalb links ist allein am Luftfahrzeug aus F.2.7 vermessen; für jede andere Art gibt es keine Messung, aus der ihre Lage folgte.',
+    'Der Lauf oberhalb links steht im Streifen über dem Körper, den die Kopfzone oder der Giebel belegt; eine Zone trägt einen Baustein, und über ihr endet die Grundfläche.',
     'core',
-    babz('F.2.7'),
   ),
   entry(
     'above-left-metrics-complete',
@@ -276,38 +274,21 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'above-left-metrics-within-viewbox',
     'engine',
     'label',
-    'Anker und abgeleitete Textbox müssen in der vermessenen Profilbox und in der 32-mm-ViewBox liegen, sonst stünde Text außerhalb der Zeichenfläche.',
+    'Anker und abgeleitete Textbox müssen in der Profilbox der Körperhülle und in der 32-mm-ViewBox liegen, sonst stünde Text außerhalb der Zeichenfläche.',
     'website',
   ),
   entry(
-    'administrative-level-not-measured',
-    'engine',
-    'administrative-level',
-    'Die Abdeckung der Verwaltungsstufen ist bewusst partiell: nur die drei in D.3/D.4 vermessenen Köpfe sind belegt, Gemeinde, Bezirk und Bundesland bleiben fail-closed.',
-    'core',
-    babz('D.3/D.4'),
-  ),
-  entry(
-    'below-right-label-requires-measured-body',
-    'engine',
+    'below-body-zone-conflict',
+    'systematik',
     'label',
-    'Lage und Tinte der Zone unterhalb des Körpers hängen am Profil und sind nur an E.2.27 bis E.2.31 und an G.3.5 vermessen; an anderen Körperformen entstünde ein Lauf, den keine Referenzdatei zeigt und kein Gate meldete.',
+    'Fahrwerk, Bezeichnung, Lauf unterhalb rechts und Oberflächenläufe teilen den Streifen unter dem Körper; je Seite trägt er einen Baustein, und unter ihm endet die Grundfläche.',
     'core',
-    babz('E.2.27–E.2.31, G.3.5'),
-  ),
-  entry(
-    'below-right-label-requires-organization',
-    'engine',
-    'label',
-    'Dieses Körperprofil führt die Zone in der Organisationsfarbe (#003296 an E.2.27 bis E.2.31); ohne Organisation hat sie keine gemessene Farbe.',
-    'core',
-    babz('E.2.27–E.2.31'),
   ),
   entry(
     'body-mark-rendition-not-measured',
     'engine',
     'body-marks',
-    'Eine zweite Fassung derselben Körpermarke ist nur an den Paaren aus Marke und Körperfassung vermessen, an denen Anhang C sie zeichnet (LFH-786); an jedem anderen Paar gäbe es keine Messung, und ein Rückfall auf die Grundfassung zeichnete still etwas anderes als verlangt.',
+    'Eine zweite Fassung derselben Körpermarke gibt es nur für die Marke, an der Anhang C sie zeichnet (LFH-786); an einem anderen Paar derselben Marke wird sie seit dem 2. Oktober 2026 übertragen. Eine Kennung, die für die Marke nirgends vermessen ist, oder eine Fassung ohne ihre Marke zeichnete still etwas anderes als verlangt.',
     'core',
     babz('C.2'),
   ),
@@ -320,18 +301,10 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
   ),
   entry(
     'body-variant-requires-measured-kind',
-    'engine',
+    'systematik',
     'body-variant',
-    'Varianten fallen weder auf eine andere Körperart noch auf deren Normalfassung zurück; belegt ist jede nur an den Arten, an denen sie vermessen wurde.',
+    'Eine Variante, die die Form einer bestimmten Art benennt (Rumpf, Flügel, Personraute, Kreis), gibt es an keiner anderen Art; übertragbare Varianten zeichnet der Katalog seit dem 02.10.2026 an jeder passenden Art, wo nötig abgeleitet.',
     'core',
-  ),
-  entry(
-    'bottom-center-label-requires-measured-body',
-    'engine',
-    'label',
-    'Die Grundlinie unten mittig ist an der taktischen Formation (F.1.18/F.1.20) und am gebänderten 12-mm-Kreis (G.3.5) vermessen; für andere Arten gibt es keine Messung, aus der ihre Lage folgte.',
-    'core',
-    babz('F.1.18/F.1.20, G.3.5'),
   ),
   entry(
     'bottom-right-metrics-complete',
@@ -348,53 +321,18 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'core',
   ),
   entry(
-    'bottom-right-metrics-require-measured-body',
-    'engine',
-    'label',
-    'Ohne ein Körperprofil mit vollständig vermessener relativer Textbox gäbe es keine Hülle, gegen die die Box geprüft würde.',
-    'website',
-  ),
-  entry(
     'bottom-right-metrics-within-body',
     'engine',
     'label',
-    'Box, Anker und abgeleitete vertikale Schriftmetriken müssen in der vermessenen Körperhülle liegen, sonst stünde der Lauf teilweise außerhalb des Körpers.',
+    'Box, Anker und abgeleitete vertikale Schriftmetriken müssen in der Körperhülle liegen, sonst stünde der Lauf teilweise außerhalb des Körpers.',
     'website',
-  ),
-  entry(
-    'capabilities-pictogram-has-measured-rendition',
-    'engine',
-    'capabilities',
-    'Wo eine Körperfassung an der Referenz vermessen ist, zeichnet die Referenz das Kapitel-4-Piktogramm in dieser Fassung und nicht als Einzeldarstellung in der Standardbox; die Boxfassung wiche dort vom Original ab, der Weg führt über `bodyMarks` (LFH-787, Entscheidung AB).',
-    'core',
-  ),
-  entry(
-    'capabilities-pictogram-overflows-body',
-    'engine',
-    'capabilities',
-    'Die Referenz setzt kein Kapitel-4-Piktogramm unverändert in einen Körper, sondern zeichnet je Körperform eine eigene Fassung; wo keine solche Fassung vermessen ist, lässt die Boxfassung nur Piktogramme zu, die nachweislich im Körper bleiben (LFH-587, LFH-787).',
-    'core',
   ),
   entry(
     'center-anchor-override-requires-measured-trailer',
     'engine',
     'label',
-    'Ein abweichender mittiger x-Anker ist nur an Profilen belegt, die ihn vermessen haben (Anhänger I.2.5, Landfahrzeug C.2.25), und nur mit einem dort gemessenen Wert; ein freier Wert wäre keine Messung, sondern eine Schätzung.',
-    'website',
-  ),
-  entry(
-    'center-baseline-not-measured',
-    'engine',
-    'label',
-    'Führt das Körperprofil eine Liste vermessener Abweichungen, sind Zwischenwerte an keiner Referenzdatei belegt.',
-    'website',
-  ),
-  entry(
-    'center-baseline-override-requires-measured-body',
-    'engine',
-    'label',
-    'Nur Profile, die die Abweichung ausdrücklich erlauben, haben dafür eine Messung; die übrigen behalten ihren Wert, damit keine ungemessene Lage entsteht.',
-    'website',
+    'Ein abweichender mittiger x-Anker ohne mittigen Lauf, ohne endlichen Wert oder außerhalb der Körperhülle hätte keine Lage, an der der Lauf stünde; die Liste vermessener Werte begrenzt ihn seit dem 2. Oktober 2026 nicht mehr.',
+    'core',
   ),
   entry(
     'center-baseline-positive',
@@ -415,13 +353,6 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'engine',
     'label',
     'Negative Werte oder NaN ergäben keine Box, in der Text stehen könnte.',
-    'website',
-  ),
-  entry(
-    'center-box-margin-override-requires-measured-body',
-    'engine',
-    'label',
-    'Ohne vermessene Körperhülle gäbe es keine Breite, gegen die der Rand geprüft würde.',
     'website',
   ),
   entry(
@@ -456,7 +387,7 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'center-label-within-body',
     'engine',
     'label',
-    'Die aus Grundlinie und Versalhöhe abgeleitete Textbox muss vollständig in der vermessenen Körperhülle liegen, sonst ragte der Lauf über den Körper hinaus.',
+    'Die aus Grundlinie und Versalhöhe abgeleitete Textbox muss vollständig in der Körperhülle liegen, sonst ragte der Lauf über den Körper hinaus.',
     'website',
   ),
   entry(
@@ -466,21 +397,6 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'Fahrwerkszone und Fußzone überschneiden sich um 3,75 mm bei 4 mm Zonenhöhe; die Referenz beschriftet ihre Fahrzeuge stattdessen in den Körperzonen.',
     'core',
     babz('E.2'),
-  ),
-  entry(
-    'circle-12-requires-hilfsorganisation',
-    'engine',
-    'organization',
-    'Belegt ist entweder die weiße HiOrg-Fassung aus F.3 oder genau eine der farbigen technischen Art-, Varianten- und Markenfassungen; fehlende oder vertauschte Werte sind nicht belegt.',
-    'core',
-    babz('F.3'),
-  ),
-  entry(
-    'circle-12-requires-organization',
-    'systematik',
-    'organization',
-    'Der gebänderte 12-mm-Kreis verlangt die Organisationsfarbe seiner Körperfläche.',
-    'core',
   ),
   entry(
     'circle-top-left-anchor-within-viewbox',
@@ -498,21 +414,6 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'core',
   ),
   entry(
-    'circle-top-left-requires-metrics',
-    'engine',
-    'label',
-    'Die beiden Kreisfassungen haben keinen allgemeinen Profildefault, aus dem sich die Lage des Laufs ergäbe.',
-    'core',
-  ),
-  entry(
-    'colored-circle-top-left-not-measured',
-    'engine',
-    'label',
-    'Die exakt vermessenen farbigen Kreisverträge führen weder einen topLeft-Lauf noch die zugehörigen F.3-Metriken; die weißen Kreislabelverträge werden nicht vererbt.',
-    'core',
-    babz('F.3'),
-  ),
-  entry(
     'designation-not-blank',
     'engine',
     'label',
@@ -520,38 +421,10 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'core',
   ),
   entry(
-    'foot-band-head-requires-measured-strength',
-    'engine',
-    'strength',
-    'Am gebänderten Formationskörper sind nur Trupp, Gruppe und Zug vermessen; die Staffel verschöbe den Körper, und wie das Fußband mitwandert, ist nicht belegt.',
-    'core',
-  ),
-  entry(
-    'function-role-body-mark-mismatch',
-    'engine',
-    'function-role',
-    'Jede gemessene Funktionsfassung führt die Liste der zu ihr vermessenen Körpermarken; alles darüber hinaus ist an keiner Datei belegt.',
-    'website',
-  ),
-  entry(
-    'function-role-body-variant-not-measured',
-    'engine',
-    'function-role',
-    'Körpervarianten sind mit gemessenen Funktionsfassungen nicht kombiniert belegt.',
-    'core',
-  ),
-  entry(
-    'function-role-capabilities-not-measured',
-    'engine',
-    'function-role',
-    'Standard-Piktogramme sind mit gemessenen Funktionsfassungen nicht kombiniert belegt.',
-    'core',
-  ),
-  entry(
     'function-role-head-mismatch',
     'engine',
     'function-role',
-    'Die Kopfzone muss genau der Fassung entsprechen, die die Funktionsdefinition erwartet; eine abweichende oder zusätzliche Angabe ergäbe eine zu dieser Funktion nicht vermessene Kopfzone.',
+    'Nennt der Titel einer Funktion ihre Kopfzone (Zug- und Gruppenführer, Führungsgruppe, Kreisbrandmeister, Kreisleitstelle, internationale Hilfsaktion), widerspräche eine andere oder fehlende Angabe der Funktion; die übrigen Leitungsrollen sind kopffrei.',
     'website',
   ),
   entry(
@@ -565,7 +438,7 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'function-role-organization-mismatch',
     'engine',
     'function-role',
-    'Jede gemessene Funktionsfassung ist an genau eine Organisation gebunden; eine andere oder fehlende Zuordnung ist für sie nicht vermessen.',
+    'Nennt der Titel einer Funktion ihre Organisation (Zugführer der Feuerwehr, Kreisbrandmeister, Zugführer THW, Sanitäts- und Betreuungszugführer), widerspräche eine andere oder fehlende Organisation der Funktion; die Rollen der Führung und Leitung stehen in jeder Farbe.',
     'website',
   ),
   entry(
@@ -601,33 +474,12 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'core',
   ),
   entry(
-    'inset-hull-fire-fighting-requires-no-labels',
-    'engine',
-    'body-variant',
-    'Der vermessene Feuerwehrvertrag der eingesenkten Wasserfahrzeughülle trägt keine Beschriftung.',
-    'core',
-  ),
-  entry(
     'inset-hull-requires-center-label-only',
     'engine',
     'body-variant',
-    'Der vollständige I.3-Vertrag belegt genau drei sichere Labelfelder; andere Felder oder ein Labelobjekt mit geerbten, nicht aufzählbaren oder über Accessoren gelieferten Werten koppelten die geprüfte Datenansicht von der gezeichneten ab.',
+    'Ein Labelobjekt mit unbekannten, geerbten, nicht aufzählbaren oder über Accessoren gelieferten Werten koppelte an der eingesenkten Hülle die geprüfte Datenansicht von der gezeichneten ab; die Zonen selbst sind seit dem 2. Oktober 2026 frei.',
     'core',
     babz('I.3'),
-  ),
-  entry(
-    'inset-hull-requires-measured-body-mark',
-    'engine',
-    'body-variant',
-    'An der eingesenkten Hülle sind die Körpermarken nur als keine oder inset-hull-wheel-pair für die Hilfsorganisation und als fire-fighting für die Feuerwehr vermessen.',
-    'core',
-  ),
-  entry(
-    'inset-hull-requires-measured-organization',
-    'engine',
-    'body-variant',
-    'Die eingesenkte Wasserfahrzeughülle ist allein als Hilfsorganisations- und als Feuerwehrfassung vermessen.',
-    'core',
   ),
   entry(
     'label-not-blank',
@@ -646,28 +498,20 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'core',
   ),
   entry(
-    'reduced-house-requires-hilfsorganisation',
-    'engine',
-    'organization',
-    'Die reduzierte Hauskontur ist in beiden F.3-Belegen ausschließlich als weiße HiOrg-Körperfläche vermessen.',
-    'core',
-    babz('F.3'),
-  ),
-  entry(
     'state-carrier-not-allowed',
     'systematik',
     'state',
-    'Ein Personenzustand aus 5.8.8 und die Werte aus 5.8.1 gehören an die Person, die Hinweise „?" und „!" zusätzlich an die Gefahr; an jedem anderen Grundzeichen hätten sie weder eine belegte Lage noch eine entschiedene Bedeutung (Entscheidung des Eigentümers vom 29.09.2026).',
+    'Ein Personenzustand aus 5.8.8 sagt etwas über einen Menschen und gehört an die Person; an einem anderen Grundzeichen hätte er keine Bedeutung. Alle übrigen Zustände stehen an jedem Grundzeichen, ihre Lage ist dort abgeleitet (Entscheidung des Eigentümers vom 02.10.2026).',
     'core',
-    babz('5.8.1, 5.8.8'),
+    babz('5.8.8'),
   ),
   entry(
     'state-group-limit-exceeded',
     'systematik',
     'state',
-    'Zwei Stufen derselben Skala widersprechen sich; ein Zeichen trägt höchstens einen Hinweis, einen Personenzustand und je einen Wert aus 5.8.2, 5.8.4 und 5.8.5 (Entscheidung des Eigentümers vom 29.09.2026).',
+    'Zwei Stufen derselben Skala widersprechen sich; ein Zeichen trägt höchstens einen Personenzustand und je einen Wert aus 5.8.2, 5.8.4 und 5.8.5 (Entscheidung des Eigentümers vom 29.09.2026). Die Hinweise „?" und „!" zählen seit dem 02.10.2026 nicht mehr als Skala.',
     'core',
-    babz('5.8.1, 5.8.2, 5.8.4, 5.8.5, 5.8.8'),
+    babz('5.8.2, 5.8.4, 5.8.5, 5.8.8'),
   ),
   entry(
     'state-tactics-not-allowed',
@@ -700,27 +544,6 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'core',
   ),
   entry(
-    'surface-label-requires-measured-body',
-    'engine',
-    'label',
-    'Schwarze Oberflächenläufe stehen außerhalb des Körpers auf der Ausgabefläche; andere Profile haben für diese Zone keine gemessene Grundlinie.',
-    'website',
-  ),
-  entry(
-    'surface-left-label-requires-measured-anchor',
-    'engine',
-    'label',
-    'Führt das Körperprofil nur den rechten Anker, bliebe die linke Lage geraten.',
-    'website',
-  ),
-  entry(
-    'surface-right-label-requires-measured-anchor',
-    'engine',
-    'label',
-    'Führt das Körperprofil nur den linken Anker, bliebe die rechte Lage geraten.',
-    'website',
-  ),
-  entry(
     'technical-fill-organization-conflict',
     'systematik',
     'technical-fill',
@@ -740,14 +563,6 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'technical-head-mark',
     'Jeder Wert außerhalb der beiden vermessenen Marken hätte keine belegte Geometrie.',
     'website',
-  ),
-  entry(
-    'technical-head-mark-requires-normal-formation',
-    'engine',
-    'technical-head-mark',
-    'Belegt sind die normale Formation (F.1.1, F.1.13, F.1.21, E.1.31, I.1.4) und die Formation mit Fußband (F.1.3); jede andere Art oder Variante bleibt fail-closed.',
-    'core',
-    babz('F.1'),
   ),
   entry(
     'top-left-anchor-within-body',
@@ -773,27 +588,11 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'website',
   ),
   entry(
-    'top-left-label-requires-measured-body',
-    'engine',
-    'label',
-    'Andere Körperprofile führen keinen Wert und werden abgelehnt, statt still einen der beiden gemessenen zu erben; am Gebäudekörper führte schon der Formationsanker aus dem Polygon heraus.',
-    'core',
-    babz('F.2'),
-  ),
-  entry(
     'top-left-lines-exactly-two',
     'engine',
     'label',
     'Eine, drei oder mehr Zeilen hätten keine belegten Grundlinien.',
     'website',
-  ),
-  entry(
-    'top-left-lines-require-measured-body',
-    'engine',
-    'label',
-    'Die zweizeilige obere Beschriftungszone ist allein am Landfahrzeug aus F.2.8 vermessen; für andere Arten gibt es keine Messung, aus der ihre Lage folgte.',
-    'core',
-    babz('F.2.8'),
   ),
   entry(
     'top-left-metrics-complete',
@@ -803,14 +602,6 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'core',
   ),
   entry(
-    'top-left-metrics-require-measured-vehicle-land',
-    'engine',
-    'label',
-    'Individuelle topLeft-Metriken sind nur am normalen und gebänderten F.2-Landfahrzeug, an den beiden F.3-Kreisfassungen und am Festflügel-Luftfahrzeug vermessen; andere Arten und Varianten behalten ihre eigenen Profilwerte.',
-    'core',
-    babz('F.2, F.3'),
-  ),
-  entry(
     'top-left-metrics-require-top-left-label',
     'engine',
     'label',
@@ -818,24 +609,17 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'core',
   ),
   entry(
-    'top-left-metrics-required-by-profile',
-    'engine',
-    'label',
-    'Dieses Körperprofil belegt den Lauf ausschließlich mit einem vollständigen quellenspezifischen Metriksatz; ein Profildefault wäre nur eine Teilmessung.',
-    'core',
-  ),
-  entry(
     'top-left-metrics-within-body',
     'engine',
     'label',
-    'Anker und abgeleitete vertikale Textbox müssen innerhalb der vermessenen Körperhülle liegen.',
+    'Anker und abgeleitete vertikale Textbox müssen innerhalb der Körperhülle liegen.',
     'core',
   ),
   entry(
     'vehicle-category-requires-vehicle',
-    'engine',
+    'systematik',
     'chassis',
-    'Gemessen, nicht angenommen: von den 31 Zeichen des Anhangs E.2 tragen 25 eine Fahrwerkszone, und nur Landfahrzeug, Anhängerrumpf und Wechselladerrumpf sind darunter.',
+    'Trägerbindung: die Fahrzeugkategorie beschreibt das Fahrwerk eines Fahrzeugs. Vermessen ist die Zone an Landfahrzeug, Anhängerrumpf und Wechselladerrumpf (25 von 31 E.2-Zeichen); an Wasser- und Luftfahrzeug ist sie übertragen.',
     'core',
     babz('E.2'),
   ),
@@ -1020,8 +804,8 @@ export interface RuleDimensionGap {
  * Die Lücken je Dimension — zählbar, nicht als Fließtext. Der Ergebnispunkt „Lücken je Dimension
  * benannt" aus LFH-563.
  *
- * Eine Dimension darf **zugleich** Einträge und einen Lückeneintrag haben: `administrative-level`
- * trägt eine Regel und ist trotzdem nur zu drei von sechs Stufen belegt. Verboten ist allein,
+ * Eine Dimension darf **zugleich** Einträge und einen Lückeneintrag haben: `state` trägt vier
+ * Regeln und ist trotzdem nur für wenige Zustände an einem Träger belegt. Verboten ist allein,
  * dass eine Dimension in **keiner** der beiden Listen vorkommt — das prüft der Test.
  */
 export const RULE_DIMENSION_GAPS: readonly RuleDimensionGap[] = Object.freeze([
@@ -1032,28 +816,34 @@ export const RULE_DIMENSION_GAPS: readonly RuleDimensionGap[] = Object.freeze([
     note: 'Gegenstand keiner Regel, Bedingung in vielen: die Grundzeichenart tritt nur als Voraussetzung anderer Regeln auf. Welche Arten es überhaupt gibt, regelt die Typebene, nicht der Katalog. Die Sonderformen 3.6 bis 3.9 sind keine Arten: sie stehen als Einzeldarstellung ihrer Kapiteldatei neben dem Zonenmodell (`specialFormDrawing`, `SPECIAL_FORMS`, LFH-567/LFH-577), ohne Zonen und ohne Spec-Feld, weil kein Original sie an einem Körper zeigt.',
   } satisfies RuleDimensionGap),
   Object.freeze({
+    dimension: 'organization',
+    coverage: 'none',
+    chapter: 'Kapitel 2',
+    note: 'Seit dem 2. Oktober 2026 ohne eigene Regel: Jede Organisation, auch keine (weiß), füllt jeden geschlossenen Körper; die Messsperren am 12-mm-Kreis und an der reduzierten Hauskontur sind gefallen (`derive/circle.ts`). Die Lauftinte folgt `bodyLabelInk()`. Bindungen an die Organisation stehen nur noch mittelbar in anderen Dimensionen (technische Füllung, Funktionsfassung, eingesenkte Hülle).',
+  } satisfies RuleDimensionGap),
+  Object.freeze({
     dimension: 'administrative-level',
-    coverage: 'partial',
+    coverage: 'none',
     chapter: '5.7',
-    note: 'Eine Regel, aber nur drei der sechs Stufen belegt (D.3/D.4). Gemeinde, Bezirk und Bundesland lehnt der Motor pauschal ab, statt eine Regel für sie zu führen.',
+    note: 'Keine eigene Regel mehr (seit 2. Oktober 2026): die Verwaltungsstufe teilt die Kopfzonenregel `head-zone-conflict` mit Stärke, Verband und technischer Kopfmarke und steht an jedem Grundzeichen mit Kopfzone. Vermessen sind die Köpfe Kreis, Nationalstaat und EU (D.3/D.4); Gemeinde, Bezirk und Bundesland zeichnet der Motor abgeleitet aus den Kapiteldateien 5.7.1, 5.7.3 und 5.7.4 (`derive/head-zone.ts`).',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'body-marks',
     coverage: 'partial',
     chapter: 'Kapitel 4, Anhang D und F',
-    note: 'Körpermarken kommen sonst nur mittelbar vor — über die eingesenkte Hülle und über die Funktionsfassung. Seit LFH-786 prüft `body-mark-rendition-not-measured` die Fassungskennungen (`bodyMarkRenditions`) gegen das Anhang-C-Register. Eine eigene Regel, welche Marke an welcher Körperform sitzen darf, gibt es nicht; ohne vermessene Fassung wirft erst `bodyMark()` beim Zeichnen. Wie mehrere Marken zusammen stehen, ist als Daten belegt (Überlagerung, `CAPABILITY_COMBINATION_RULES`, LFH-567), aber keine Prüfregel.',
+    note: 'Körpermarken kommen sonst nur mittelbar vor — über die Funktionsfassung. Seit LFH-786 prüft `body-mark-rendition-not-measured` die Fassungskennungen (`bodyMarkRenditions`); seit dem 2. Oktober 2026 nur noch gegen das ganze Anhang-C-Register, an einem anderen Paar überträgt `bodyMark()` die Fassung. Eine eigene Regel, welche Marke an welcher Körperform sitzen darf, gibt es nicht: ohne vermessene Fassung am Paar überträgt `bodyMark()` die nächstliegende Fassung derselben Marke hüllenrelativ, und eine Fähigkeit ohne jede randbündige Fassung zeichnet es als eingepasste Einzeldarstellung, beides mit Ableitungsnotiz (`derive/body-marks.ts`). Wie mehrere Marken zusammen stehen, ist als Daten belegt (Überlagerung, `CAPABILITY_COMBINATION_RULES`, LFH-567), aber keine Prüfregel.',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'capabilities',
     coverage: 'partial',
     chapter: 'Kapitel 4',
-    note: 'Zwei Regeln in Kraft, je Paar aus Fähigkeit und Körperform genau eine (LFH-787, Entscheidung AB): Hat das Paar eine vermessene Fassung, lehnt `capabilities-pictogram-has-measured-rendition` die Boxfassung ab und verweist auf `bodyMarks`; ohne Fassung lässt `capabilities-pictogram-overflows-body` sie nur zu, wo die Einzeldarstellung unskaliert im Körper bleibt (`CAPABILITY_UNSCALED_FIT`, LFH-587). Die Lücke: an diesen Paaren ohne Fassung zeichnet der Motor weiter die unveränderte Einzeldarstellung, obwohl die Referenz an keinem vermessenen Fall so zeichnet (`CAPABILITY_INSET_RULE`); für die meisten von ihnen zeigt die Referenz gar kein Kapitel-4-Piktogramm. Die Anordnung mehrerer Boxfähigkeiten ist weiter ohne Regel: der Motor legt sie deckungsgleich in dieselbe Box, kein Original belegt das. Sie ist als offene Frage in `CAPABILITY_COMBINATION_RULES` geführt, zwei Regeln sind vorgemerkt (`PLANNED_CAPABILITY_RULES`, LFH-567).',
+    note: 'Keine Regel mehr in Kraft (Entscheidung vom 2. Oktober 2026; LFH-787 „AB“ ist damit umgekehrt). Hat das Paar aus Fähigkeit und Körperform eine vermessene Fassung (`capabilityInsetForm`), zeichnet `compose()` die Boxfähigkeit in dieser Fassung wie `bodyMarks`; ohne Fassung bleibt die Einzeldarstellung unskaliert, wo sie nachweislich im Körper bleibt (`CAPABILITY_UNSCALED_FIT`), und wird sonst ins Innenfeld eingepasst, mit Ableitungsnotiz (`derive/capabilities.ts`). Die Lücke: keine vermessene Fassung entsteht durch Einpassen (`CAPABILITY_INSET_RULE.fitToBox`), die eingepasste Zeichnung ist eine Ableitung. Mehrere Boxfähigkeiten stehen nebeneinander im Innenfeld; kein Original belegt das, die Anordnung ist als offene Frage in `CAPABILITY_COMBINATION_RULES` geführt, zwei Regeln sind vorgemerkt (`PLANNED_CAPABILITY_RULES`, LFH-567).',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'unit-grouping',
     coverage: 'none',
     chapter: '5.5',
-    note: 'Keine eigene Regel: seit LFH-577 trägt `SymbolSpec.unitGrouping` den Verband, und er teilt die Kopfzonenregel `head-zone-conflict` mit Stärke, Verwaltungsstufe und technischer Kopfmarke. Vermessen sind Verband I und II über der Taktischen Formation; Verband III und jeden anderen Körper lehnt die Komposition als nicht vermessen ab (`NotMeasuredError`), bis der Eigentümer entscheidet.',
+    note: 'Keine eigene Regel: seit LFH-577 trägt `SymbolSpec.unitGrouping` den Verband, und er teilt die Kopfzonenregel `head-zone-conflict` mit Stärke, Verwaltungsstufe und technischer Kopfmarke. Vermessen sind Verband I und II über der Taktischen Formation und Verband I an der Person (I.5.7); Verband III und jeder andere Körper mit Kopfzone werden seit dem 2. Oktober 2026 abgeleitet gezeichnet (`derive/head-zone.ts`).',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'state',

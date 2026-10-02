@@ -10,7 +10,6 @@ import {
 import { animalStateDrawing } from './geometry/animal-state.js';
 import { lineDrawing, movementDrawing } from './geometry/parametric.js';
 import { weatherDrawing } from './geometry/weather.js';
-import { NotMeasuredError } from './not-measured.js';
 import { CompositionError } from './validate.js';
 
 const ARROW_PATH = { points: [[2, 16], [30, 16]] } as const;
@@ -54,8 +53,12 @@ describe('drawFreestanding', () => {
     expect((caught as CompositionError).issues.map((issue) => issue.rule)).toEqual(['line-strength-mismatch']);
   });
 
-  it('meldet eine Vermessungslücke als NotMeasuredError', () => {
-    expect(() => drawFreestanding({ kind: 'weather', values: ['weather-sunny', 'weather-windy'] })).toThrow(NotMeasuredError);
+  it('meldet eine Ableitung an der Zeichnung statt einer Vermessungslücke', () => {
+    // Bis zum 02.10.2026 ein `NotMeasuredError`; seither ein konstruiertes Paar mit Notiz.
+    const drawn = drawFreestanding({ kind: 'weather', values: ['weather-sunny', 'weather-windy'] });
+    expect(drawn.derivations).toEqual([expect.objectContaining({ dimension: 'values', basis: 'constructed' })]);
+    // Vermessene Zeichen bleiben ohne Feld.
+    expect(drawFreestanding({ kind: 'weather', values: ['weather-sunny'] }).derivations).toBeUndefined();
   });
 
   it('erfindet keinen Titel und leitet die Beschreibung aus der Spec ab', () => {

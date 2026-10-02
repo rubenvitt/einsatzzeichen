@@ -6,12 +6,11 @@
  * Gegen das Kennzahlenartefakt stehen dieselben Zusammenstellungen in
  * `conformance/src/state-spec-fixtures.test.ts`; `core` darf das Prüfpaket nicht importieren.
  */
-import type { Primitive, SymbolSpec } from '@einsatzzeichen/schema';
+import type { Drawing, Primitive, SymbolSpec } from '@einsatzzeichen/schema';
 import { describe, expect, test } from 'vitest';
 import { boundsOfMm } from './bounds.js';
 import { drawSymbol } from './default-ports.js';
 import { placeStates } from './layout/state-placement.js';
-import { NotMeasuredError } from './not-measured.js';
 import { checkViewBox } from './viewbox-gate.js';
 import { checkSpec, vocabulary } from './vocabulary.js';
 
@@ -19,16 +18,6 @@ function body(children: readonly Primitive[]): Primitive {
   const found = children.filter((child) => child.role === 'body');
   expect(found).toHaveLength(1);
   return found[0] as Primitive;
-}
-
-function notMeasured(spec: SymbolSpec): NotMeasuredError {
-  try {
-    drawSymbol(spec);
-  } catch (error) {
-    if (error instanceof NotMeasuredError) return error;
-    throw error;
-  }
-  throw new Error(`drawSymbol hat gezeichnet statt abzulehnen: ${JSON.stringify(spec)}`);
 }
 
 describe('compose() mit Zuständen', () => {
@@ -81,37 +70,49 @@ describe('compose() mit Zuständen', () => {
   });
 });
 
-describe('compose() mit Zuständen — was die Referenz nicht zeigt', () => {
-  test('meldet jede Tendenz als nicht vermessenen Wert', () => {
-    expect(notMeasured({ kind: 'person', tendency: 'tendency-rising' }).scope).toBe('value');
+describe('compose() mit Zuständen — abgeleitet, wo die Referenz die Zusammenstellung nicht zeigt', () => {
+  // Seit der Entscheidung vom 02.10.2026 zeichnet der Motor jede Zusammenstellung der Systematik;
+  // Lagen und Maße der Ableitung prüft `derive/states.test.ts`, hier nur der öffentliche Weg.
+  function derived(spec: SymbolSpec): Drawing {
+    const drawing = drawSymbol(spec);
+    expect(drawing.derivations?.length, JSON.stringify(spec)).toBeGreaterThan(0);
+    expect(checkViewBox(drawing).filter((issue) => drawing.children[viewBoxIndex(issue.primitive)]?.role !== 'foot'), JSON.stringify(spec)).toEqual([]);
+    body(drawing.children);
+    return drawing;
+  }
+
+  test('zeichnet jede Tendenz rechts neben dem verkleinerten Träger', () => {
+    const drawing = derived({ kind: 'person', tendency: 'tendency-rising' });
+    expect(drawing.derivations?.some((note) => note.dimension === 'tendency')).toBe(true);
+    expect(drawing.viewBox.width).toBeGreaterThan(32);
   });
 
-  test('meldet Werte ohne Lage an einem Träger als nicht vermessenen Wert', () => {
+  test('zeichnet Werte ohne Trägerbeleg in Randlage oder Körperlage', () => {
     for (const value of ['damaged', 'incipient-fire', 'route-closed', 'explosion-hazard'] as const) {
       const kind = value === 'explosion-hazard' ? 'person' : 'formation';
-      expect(notMeasured({ kind, states: [value] }).scope, value).toBe('value');
+      derived({ kind, states: [value] });
     }
   });
 
-  test('meldet einen Hinweis an der abgesenkten Raute als nicht vermessene Kombination', () => {
-    expect(notMeasured({ kind: 'person', states: ['person-in-water-danger', 'acute-situation'] }).scope)
-      .toBe('combination');
+  test('zeichnet einen Hinweis an der abgesenkten Raute der Wassergefahr', () => {
+    derived({ kind: 'person', states: ['person-in-water-danger', 'acute-situation'] });
   });
 
-  test('meldet eine andere Personenfassung als nicht vermessene Kombination', () => {
-    expect(notMeasured({
+  test('zeichnet den Personenzustand an der abgesenkten Personenfassung', () => {
+    const drawing = derived({
       kind: 'person',
       bodyVariant: 'compact-person-diamond-26mm-lowered-2mm',
       states: ['person-injured'],
-    }).scope).toBe('combination');
+    });
+    // Dieselbe Raute wie 5.8.8.3, um die 2 mm der Fassung abgesenkt.
+    expect(boundsOfMm(body(drawing.children))).toEqual({ minX: 3, minY: 5, maxX: 29, maxY: 31 });
   });
 
   /**
-   * Der Träger in seiner Zustandsfassung ersetzt den Körper, und bei einem Hinweis an der Person
-   * rückt die Grundfläche um 4 mm nach rechts. Wie Kopf, Fuß, Beschriftung, Farbe oder Marken
-   * dann mitwandern, zeigt kein Original — abgelehnt statt geraten.
+   * Der Träger in seiner Zustandsfassung ersetzt den Körper; Farbe, Kopf, Fuß, Beschriftung und
+   * Marken wandern mit ihm. Kein Original zeigt das — abgeleitet und gekennzeichnet.
    */
-  test('lehnt jede weitere Angabe neben einem Zustand als nicht vermessene Kombination ab', () => {
+  test('zeichnet jede weitere Angabe neben einem Zustand mit', () => {
     const base = { kind: 'person', states: ['person-injured'] } as const satisfies SymbolSpec;
     for (const extra of [
       { organization: 'feuerwehr' },
@@ -120,21 +121,49 @@ describe('compose() mit Zuständen — was die Referenz nicht zeigt', () => {
       { designation: 'A' },
       { labels: { center: 'A' } },
       // Seit LFH-587 lehnt `validateSpec` Boxfähigkeiten ab, die an der Person nicht im Körper
-      // bleiben (`capabilities-pictogram-overflows-body`); Schaummittel bleibt, also erreicht die
-      // Spec die Komposition.
+      // bleiben (`capabilities-pictogram-overflows-body`); Schaummittel bleibt.
       { capabilities: ['foam-agent'] },
-      { bodyMarks: ['care'] },
     ] satisfies Partial<SymbolSpec>[]) {
-      const error = notMeasured({ ...base, ...extra });
-      expect(error.scope, JSON.stringify(extra)).toBe('combination');
-      expect(error.message, JSON.stringify(extra)).toContain(Object.keys(extra)[0] as string);
+      const drawing = derived({ ...base, ...extra });
+      expect(drawing.viewBox, JSON.stringify(extra)).toEqual({ width: 32, height: 32 });
     }
   });
 
-  test('meldet den Wert vor der Kombination: die weitergehende Aussage gewinnt', () => {
-    expect(notMeasured({ kind: 'formation', organization: 'thw', states: ['damaged'] }).scope).toBe('value');
+  test('füllt die Raute des Personenzustands mit der Organisationsfarbe', () => {
+    const drawing = derived({ kind: 'person', organization: 'thw', states: ['person-injured'] });
+    expect(body(drawing.children).style).toMatchObject({ fill: 'blau', bodyStrokeDashToken: 'blau' });
+    expect(boundsOfMm(body(drawing.children))).toEqual({ minX: 3, minY: 3, maxX: 29, maxY: 29 });
+  });
+
+  test('trägt die übertragene Körpermarke an der Person auch in die Zustandsfassung', () => {
+    // Die Pflegemarke ist an der Person nicht vermessen; seit dem 2. Oktober 2026 überträgt
+    // `derive/body-marks.ts` sie, und die Zustandsableitung bildet sie mit dem Körper ab.
+    const plain = drawSymbol({ kind: 'person', bodyMarks: ['care'] });
+    expect(plain.derivations).toContainEqual(expect.objectContaining({ dimension: 'bodyMarks' }));
+    const withState = drawSymbol({ kind: 'person', states: ['person-injured'], bodyMarks: ['care'] });
+    expect(withState.derivations).toContainEqual(expect.objectContaining({ dimension: 'bodyMarks' }));
+  });
+
+  test('legt den Schadensgrad an der gefärbten Formation auf den Körper', () => {
+    const drawing = derived({ kind: 'formation', organization: 'thw', states: ['damaged'] });
+    expect(drawing.viewBox).toEqual({ width: 32, height: 32 });
+  });
+
+  test('zeichnet vermessene Zusammenstellungen ohne Ableitungsnotiz', () => {
+    for (const spec of [
+      { kind: 'person', states: ['person-injured'] },
+      { kind: 'person', states: ['person-injured', 'suspected-situation'] },
+      { kind: 'hazard', states: ['acute-situation'] },
+    ] satisfies SymbolSpec[]) {
+      expect(drawSymbol(spec).derivations, JSON.stringify(spec)).toBeUndefined();
+    }
   });
 });
+
+function viewBoxIndex(path: string): number {
+  const match = /^children\[(\d+)\]/u.exec(path);
+  return match === null ? -1 : Number(match[1]);
+}
 
 describe('Zustände in checkSpec und vocabulary', () => {
   test('gibt Wetter in states als Regel zurück, nicht als Programmfehler', () => {
@@ -152,8 +181,13 @@ describe('Zustände in checkSpec und vocabulary', () => {
     expect(allowed).not.toContain('weather-sunny');
   });
 
-  test('bietet am Formationskörper keinen Zustand an', () => {
+  test('bietet am Formationskörper jeden Zustand außer Personenzustand und Taktik an, abgeleitet', () => {
     const options = vocabulary({ kind: 'formation' }, 'states');
-    expect(options.filter((option) => option.status === 'allowed')).toEqual([]);
+    const allowed = options.filter((option) => option.status === 'allowed');
+    expect(allowed.map((option) => option.value)).toContain('suspected-situation');
+    expect(allowed.map((option) => option.value)).toContain('damaged');
+    expect(allowed.map((option) => option.value)).not.toContain('person-injured');
+    expect(allowed.map((option) => option.value)).not.toContain('tactical-attack');
+    expect(allowed.every((option) => option.derived === true)).toBe(true);
   });
 });
