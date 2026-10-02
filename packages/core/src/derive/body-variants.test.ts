@@ -246,7 +246,7 @@ describe('Giebel an weiteren Grundzeichen', () => {
   it('gibt die Zone oberhalb des Körpers an den Giebel ab', () => {
     expect(profileFor('formation', 'raised-gable').aboveLeftBaselineFromBodyTopMm).toBeUndefined();
     expect(validateSpec({ kind: 'formation', bodyVariant: 'raised-gable', labels: { aboveLeft: 'A' } })
-      .map((issue) => issue.rule)).toContain('above-left-label-requires-measured-body');
+      .map((issue) => issue.rule)).toContain('above-left-label-head-conflict');
   });
 
   it('wirft für die Fahrwerkszone unter dem verkleinerten Fahrzeug, statt Räder überstehen zu lassen', () => {

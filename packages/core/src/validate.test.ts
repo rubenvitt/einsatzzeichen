@@ -610,7 +610,7 @@ describe('validateSpec', () => {
     )).map((issue) => issue.rule)).toContain('top-left-metrics-complete');
   });
 
-  it('erlaubt das vermessene Kreisband, lehnt Varianten an unbelegten Arten aber ab', () => {
+  it('erlaubt das vermessene Kreisband und seit dem 2. Oktober 2026 den Giebel an der Funktionsstelle', () => {
     const measuredVariant = {
       kind: 'circle-12', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
     } as unknown as SymbolSpec;
@@ -618,9 +618,10 @@ describe('validateSpec', () => {
       kind: 'post', bodyVariant: 'raised-gable',
     } as unknown as SymbolSpec;
     expect(validateSpec(measuredVariant)).toEqual([]);
-    expect(validateSpec(gableOnPost).map((issue) => issue.rule)).toContain(
-      'body-variant-requires-measured-kind',
-    );
+    expect(validateSpec(gableOnPost)).toEqual([]);
+    // Eine Variante, die eine Form einer anderen Art benennt, bleibt gesperrt.
+    expect(validateSpec({ kind: 'post', bodyVariant: 'inset-hull' } as unknown as SymbolSpec)
+      .map((issue) => issue.rule)).toContain('body-variant-requires-measured-kind');
   });
 
   it('lässt inset-hull ausschließlich am Wasserfahrzeug zu', () => {

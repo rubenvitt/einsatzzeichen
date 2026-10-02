@@ -128,9 +128,10 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
     title: 'Lauf oberhalb links und Kopfzone schließen sich aus',
     explanation:
       'Ein Lauf in `labels.aboveLeft` steht über dem Körper, genau in dem Streifen, den die ' +
-      'Kopfzone belegt: Stärke, technische Kopfmarke, Verband oder Verwaltungsstufe. Eine Zone ' +
+      'Kopfzone belegt: Stärke, technische Kopfmarke, Verband oder Verwaltungsstufe, oder den der ' +
+      'Giebel einer ortsgebundenen Variante (`raised-gable`) einnimmt. Eine Zone ' +
       'trägt einen Baustein, und über der Kopfzone endet die 32-mm-Grundfläche, eine Ausweichlage ' +
-      'gibt es nicht. Entferne `labels.aboveLeft` oder die Angabe in der Kopfzone, oder setze den ' +
+      'gibt es nicht. Entferne `labels.aboveLeft`, die Angabe in der Kopfzone oder den Giebel, oder setze den ' +
       'Lauf in eine Zone im Körper wie `labels.topLeft`.',
   },
   'above-left-metrics-complete': {

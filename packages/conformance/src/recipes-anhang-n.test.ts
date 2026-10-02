@@ -565,7 +565,9 @@ describe('Anhang N — farbige Kreisverträge übernehmen die F.3-Außenlage obe
       organization: 'zivile-einheiten',
       bodyMarks: ['circle-information-stem'],
       labels: { topLeft: 'UHS', topLeftMetrics: f3NormalMetrics },
-    }, /top-left-metrics-require-measured-vehicle-land/],
+      // Seit dem 2. Oktober 2026 sind Metriksätze an jeder Hülle zulässig; der fremde F.3-Satz
+      // scheitert an der Grenze der angehobenen Kreishülle.
+    }, /top-left-metrics-within-body/],
     [{
       kind: 'circle-12',
       organization: 'zivile-einheiten',

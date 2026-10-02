@@ -236,13 +236,13 @@ describe('Kopfzone an anderen Körperformen', () => {
     expect(checkViewBox(building)).toEqual([]);
   });
 
-  it('meldet die Kopfzone über einem Lauf oberhalb links als nicht vermessen, statt zu überdecken', () => {
+  it('lehnt die Kopfzone über einem Lauf oberhalb links als Zonenkollision ab, statt zu überdecken', () => {
     for (const spec of [
       { kind: 'vehicle-air', bodyVariant: 'raised-hull', administrativeLevel: 'kreis', labels: { aboveLeft: 'ITH' } },
       { kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull', unitGrouping: 'verband-ii', labels: { aboveLeft: 'A' } },
     ] satisfies SymbolSpec[]) {
-      expect(() => drawSymbol(spec), spec.bodyVariant)
-        .toThrow(expect.objectContaining({ name: 'NotMeasuredError', scope: 'combination' }));
+      // Seit der Freigabe der Beschriftungszonen fängt das die Systematikregel ab.
+      expect(() => drawSymbol(spec), spec.bodyVariant).toThrow(/above-left-label-head-conflict/);
     }
     // Ohne Überschneidung bleibt die Kombination zeichenbar.
     expect(() => drawSymbol({ kind: 'formation', unitGrouping: 'verband-i', labels: { center: 'AB' } }))

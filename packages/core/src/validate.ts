@@ -517,13 +517,15 @@ function validatePreparedSpec(
   if (
     spec.labels?.aboveLeft !== undefined &&
     (spec.strength !== undefined || spec.technicalHeadMark !== undefined ||
-      spec.unitGrouping !== undefined || spec.administrativeLevel !== undefined)
+      spec.unitGrouping !== undefined || spec.administrativeLevel !== undefined ||
+      // Der Giebel („ortsgebunden“) steht im selben Streifen über dem Körper.
+      spec.bodyVariant === 'raised-gable')
   ) {
     issues.push({
       rule: 'above-left-label-head-conflict',
       message:
-        'Der Lauf oberhalb links und die Kopfzone belegen denselben Streifen über dem Körper und ' +
-        'schließen sich aus.',
+        'Der Lauf oberhalb links und die Kopfzone oder der Giebel belegen denselben Streifen über ' +
+        'dem Körper und schließen sich aus.',
     });
   }
   const hasChassis = spec.vehicleCategory !== undefined || spec.bodyVariant === 'plain-wheel-pair';

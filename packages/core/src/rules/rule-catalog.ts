@@ -260,7 +260,7 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'above-left-label-head-conflict',
     'systematik',
     'label',
-    'Der Lauf oberhalb links steht im Streifen über dem Körper, den die Kopfzone belegt; eine Zone trägt einen Baustein, und über ihr endet die Grundfläche.',
+    'Der Lauf oberhalb links steht im Streifen über dem Körper, den die Kopfzone oder der Giebel belegt; eine Zone trägt einen Baustein, und über ihr endet die Grundfläche.',
     'core',
   ),
   entry(
