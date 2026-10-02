@@ -219,8 +219,9 @@ const E2_NO_HEAD_ZONE =
 const CIRCLE_NO_HEAD_ZONE =
   'Kreiskörper mit Kopfzone ist ein **gemessenes Negativ**: über alle 661 Referenzdateien ' +
   'tragen 109 eine 3-mm-Marke im Kopfzonenraster und 36 einen echten Kreiskörper, die ' +
-  'Schnittmenge ist leer (Vermessung vom 18. August 2026). Wie ein Kreiskörper einer Kopfzone ' +
-  'ausweicht, ist damit nicht ableitbar und wird nicht geraten.';
+  'Schnittmenge ist leer (Vermessung vom 18. August 2026). Seit dem 2. Oktober 2026 leitet ' +
+  '`compose()` die Lage ab und vermerkt sie (`derive/circle.ts`): verschieben wie C.1.1, sonst ' +
+  'von oben verkleinern wie D.3.7.';
 
 /**
  * Herkunft der mittigen Grundlinie je Körperform. Der Normfall steht als Rückfall; die
@@ -956,9 +957,14 @@ function centerZone(
       profile.id === 'circle-body'
         ? 'core/src/layout/profiles.ts:448–452'
         : 'core/src/layout/profiles.ts:372–377',
-      'Kein Zeichen des Bestands beschriftet diese Körperform mittig. Der Normwert 8 steht im ' +
-        'Profil, damit die Zahl nicht fehlt — er ist **keine Messung an dieser Körperform** und ' +
-        'darf nicht als Zonendatum gelesen werden.',
+      profile.id === 'circle-body'
+        ? 'Am Kreis ist der mittige Lauf nur an den Ortszeichen D.2.3 bis D.2.5 mit eigener ' +
+          'Versalhöhe gemessen. Ohne vermessenen Override setzt `compose()` seit dem 2. Oktober ' +
+          '2026 die Versalmitte auf die Kreismitte und vermerkt das (`derive/circle.ts`); der ' +
+          'Profilwert 8 ist dort unbenutzt und kein Zonendatum.'
+        : 'Kein Zeichen des Bestands beschriftet diese Körperform mittig. Der Normwert 8 steht im ' +
+          'Profil, damit die Zahl nicht fehlt — er ist **keine Messung an dieser Körperform** und ' +
+          'darf nicht als Zonendatum gelesen werden.',
     );
   }
 

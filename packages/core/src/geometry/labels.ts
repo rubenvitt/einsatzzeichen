@@ -188,7 +188,6 @@ export function symbolKindLabel(kind: SymbolKind): string {
 const KIND_CHOICE_LABELS: Partial<Record<SymbolKind, string>> = {
   post: 'Funktionsstelle (14-mm-Kreis)',
   'circle-12': 'Stelle (12-mm-Kreis)',
-  'reduced-house': 'Unterkunft/Krankenhaus (reduzierte Hauskontur)',
 };
 
 /** Bezeichnung einer Grundzeichenart in einer Auswahl; sonst wie `symbolKindLabel`. */
