@@ -38,6 +38,11 @@ import { placeStates, type StatePlacement } from './layout/state-placement.js';
 import { NotMeasuredError } from './not-measured.js';
 import { collectDerivations } from './derive/record.js';
 import {
+  fitFunctionRoleBodyMarks,
+  fitFunctionRolePictograms,
+  resolveFunctionRoleLayout,
+} from './derive/function-roles.js';
+import {
   ARIMO_CAP_HEIGHT_FRACTION,
   CATALOG_TEXT_FONT_WEIGHT,
   MINIMUM_TEXT_RENDER_PX,
@@ -1149,16 +1154,26 @@ function composeMeasuredOrDerived(
     ? catalog.technicalHeadMark(spec.technicalHeadMark)
     : unitGroupingHeadFor(spec, catalog);
   const headHeightMm = headShape?.heightMm ?? primitiveHeadShape?.heightMm;
+  // Funktionsfassung: unverändert vermessen oder auf Kopf, Variante und Organisation der Spec
+  // umgerechnet (derive/function-roles.ts).
+  const roleLayout = roleDefinition === undefined
+    ? undefined
+    : resolveFunctionRoleLayout({
+        definition: roleDefinition,
+        spec,
+        profile,
+        headHeightMm: headHeightMm ?? administrativeHead?.heightMm,
+        ...(spec.bodyVariant === undefined
+          ? {}
+          : { variantDrawing: catalog.baseDrawing(spec.kind, spec.bodyVariant) }),
+      });
 
   // Dieselbe Kopfzone sitzt je nach Körperform unterschiedlich hoch — deshalb
   // rechnet erst placeHead die relativen Marken in absolute Koordinaten um.
   const headBox = headHeightMm !== undefined
-    ? roleDefinition === undefined
+    ? roleLayout === undefined
       ? placeHead(profile, headHeightMm)
-      : {
-          topMm: roleDefinition.layout.headTopMm!,
-          bottomMm: roleDefinition.layout.headTopMm! + headHeightMm,
-        }
+      : roleLayout.headBoxFor(headHeightMm)
     : null;
   const headPrimitives: Primitive[] =
     headShape && headBox
@@ -1181,20 +1196,20 @@ function composeMeasuredOrDerived(
     });
   }
 
-  if (administrativeHead !== undefined && roleDefinition !== undefined) {
+  if (administrativeHead !== undefined && roleLayout !== undefined) {
     headPrimitives.push({
       type: 'group',
       role: 'head',
       transform: {
-        translate: { dxMm: 0, dyMm: roleDefinition.layout.headTopMm! },
+        translate: { dxMm: 0, dyMm: roleLayout.headBoxFor(administrativeHead.heightMm).topMm },
       },
       children: administrativeHead.primitives,
     });
   }
 
-  const placedBody = roleDefinition === undefined
+  const placedBody = roleLayout === undefined
     ? profile.place(body, headBox?.bottomMm ?? null)
-    : body;
+    : roleLayout.body;
   // Acht Anhang-G-Quellen belegen dieselbe generische Form: ein unbeschrifteter, kopfloser
   // `formation/foot-band`-Körper hat keine Oberlinie. Das Profil entscheidet diesen Kontext;
   // Kapitel- oder Rezept-IDs bleiben aus dem Kompositionsmotor heraus.
@@ -1486,14 +1501,9 @@ function composeMeasuredOrDerived(
       )
     : [];
 
-  const roleTextPrimitives: Primitive[] = roleDefinition === undefined
+  const roleTextPrimitives: Primitive[] = roleLayout === undefined
     ? []
-    : [
-        ...roleDefinition.layout.roleRuns,
-        ...(roleDefinition.layout.carrierRun === undefined
-          ? []
-          : [roleDefinition.layout.carrierRun]),
-      ].map((run) => ({
+    : roleLayout.runs.map((run) => ({
         type: 'text',
         role: 'label',
         content: run.content,
@@ -1514,16 +1524,18 @@ function composeMeasuredOrDerived(
   assertTextRunsFit(labelChildren, 'label', catalog.textMetrics);
   assertTextRunsFit(roleTextPrimitives, 'function-role-run', catalog.textMetrics);
 
-  if (roleDefinition !== undefined) {
+  if (roleDefinition !== undefined && roleLayout !== undefined) {
     return {
       viewBox: DEFAULT_VIEWBOX_MM,
       children: [
         ...headPrimitives,
         filled,
         ...innerFieldPrimitives,
-        ...extras,
-        ...bodyMarkPrimitives,
-        ...roleDefinition.layout.decorations,
+        ...roleLayout.extras,
+        ...chassisPrimitives,
+        ...fitFunctionRolePictograms(pictograms, roleLayout, roleDefinition),
+        ...fitFunctionRoleBodyMarks(bodyMarkPrimitives, roleLayout, roleDefinition, spec),
+        ...roleLayout.decorations,
         ...roleTextPrimitives,
         ...labelChildren,
         ...footPrimitives,

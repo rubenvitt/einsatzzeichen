@@ -458,40 +458,17 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'würde den Körper verschieben, und wie das Fußband dabei mitwandert, ist nicht belegt. ' +
       'Wähle eine der drei vermessenen Stärken oder eine andere Körpervariante.',
   },
-  'function-role-body-mark-mismatch': {
-    field: 'functionRole',
-    title: 'Körpermarke nicht zur Funktionsfassung vermessen',
-    explanation:
-      'Jede gemessene Funktionsfassung führt die Liste der Körpermarken, die zu ihr vermessen ' +
-      'sind; `bodyMarks` darf nichts darüber hinaus enthalten. Andere Marken sind an dieser ' +
-      'Fassung an keiner Datei belegt. Streiche die zusätzliche Marke oder wähle eine Funktion, ' +
-      'die sie führt.',
-  },
-  'function-role-body-variant-not-measured': {
-    field: 'functionRole',
-    title: 'Funktionsfassung ohne Körpervariante',
-    explanation:
-      'Körpervarianten und gemessene Funktionsfassungen sind in keiner Referenzdatei zusammen ' +
-      'belegt. Die Kombination erzeugte eine Geometrie, die niemand vermessen hat. Entferne ' +
-      '`bodyVariant` oder `functionRole`.',
-  },
-  'function-role-capabilities-not-measured': {
-    field: 'functionRole',
-    title: 'Funktionsfassung ohne Standard-Piktogramme',
-    explanation:
-      'Standard-Piktogramme sind mit gemessenen Funktionsfassungen nicht kombiniert belegt; die ' +
-      'Fassung bringt ihren eigenen, vollständig vermessenen Inhalt mit. Entferne ' +
-      '`capabilities` oder `functionRole`.',
-  },
   'function-role-head-mismatch': {
     field: 'functionRole',
-    title: 'Kopfzone passt nicht zur Funktionsfassung',
+    title: 'Kopfzone widerspricht der Funktion',
     explanation:
-      'Die Kopfzone muss genau der Fassung entsprechen, die die Funktionsdefinition erwartet: ' +
-      'gar keine Kopfangabe, genau die erwartete Stärke oder genau die erwartete ' +
-      'Verwaltungsstufe samt aufgelöstem Kopf. Eine abweichende oder zusätzliche Angabe ergäbe ' +
-      'eine Kopfzone, die zu dieser Funktion nicht vermessen ist. Setze `strength` ' +
-      'beziehungsweise `administrativeLevel` auf den Wert der Fassung oder lass beide weg.',
+      'Manche Funktionen nennen ihre Kopfzone im Titel: Zug- und Gruppenführer ihre Stärke, ' +
+      'die Führungsgruppe ihre Gruppe, der Kreisbrandmeister und der Leiter der ' +
+      'Kreisleitstelle ihren Kreis, der Leiter einer internationalen Hilfsaktion seine ' +
+      'überstaatliche Ebene. Eine andere oder fehlende Angabe widerspräche dem Namen. Die ' +
+      'übrigen Leitungsrollen sind kopffrei und werden mit jeder Kopfangabe abgeleitet ' +
+      'gezeichnet. Setze `strength` beziehungsweise `administrativeLevel` auf den Wert der ' +
+      'Funktion.',
   },
   'function-role-label-metrics-required': {
     field: 'functionRole',
@@ -505,11 +482,14 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
   },
   'function-role-organization-mismatch': {
     field: 'functionRole',
-    title: 'Organisation passt nicht zur Funktionsfassung',
+    title: 'Organisation widerspricht der Funktion',
     explanation:
-      'Jede gemessene Funktionsfassung ist an genau eine Organisation gebunden, und ' +
-      '`organization` muss diesen Wert tragen. Eine andere oder fehlende Zuordnung ist für die ' +
-      'Fassung nicht vermessen. Setze die erwartete Organisation oder entferne `functionRole`.',
+      'Manche Funktionen nennen ihre Organisation im Titel: der Zugführer der Feuerwehr, der ' +
+      'Kreisbrandmeister, der Zugführer des Technischen Zugs, die Sanitäts- und ' +
+      'Betreuungszugführer der Hilfsorganisationen. Für sie muss `organization` diesen Wert ' +
+      'tragen. Die Rollen der Führung und Leitung (Einsatzleiter, EAL, TEL, LNA …) stehen ' +
+      'dagegen in jeder Organisationsfarbe oder ohne Organisation. Setze die Organisation der ' +
+      'Funktion oder wähle eine Leitungsrolle.',
   },
   'function-role-requires-measured-kind': {
     field: 'functionRole',

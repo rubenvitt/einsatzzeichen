@@ -527,31 +527,10 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'core',
   ),
   entry(
-    'function-role-body-mark-mismatch',
-    'engine',
-    'function-role',
-    'Jede gemessene Funktionsfassung führt die Liste der zu ihr vermessenen Körpermarken; alles darüber hinaus ist an keiner Datei belegt.',
-    'website',
-  ),
-  entry(
-    'function-role-body-variant-not-measured',
-    'engine',
-    'function-role',
-    'Körpervarianten sind mit gemessenen Funktionsfassungen nicht kombiniert belegt.',
-    'core',
-  ),
-  entry(
-    'function-role-capabilities-not-measured',
-    'engine',
-    'function-role',
-    'Standard-Piktogramme sind mit gemessenen Funktionsfassungen nicht kombiniert belegt.',
-    'core',
-  ),
-  entry(
     'function-role-head-mismatch',
     'engine',
     'function-role',
-    'Die Kopfzone muss genau der Fassung entsprechen, die die Funktionsdefinition erwartet; eine abweichende oder zusätzliche Angabe ergäbe eine zu dieser Funktion nicht vermessene Kopfzone.',
+    'Nennt der Titel einer Funktion ihre Kopfzone (Zug- und Gruppenführer, Führungsgruppe, Kreisbrandmeister, Kreisleitstelle, internationale Hilfsaktion), widerspräche eine andere oder fehlende Angabe der Funktion; die übrigen Leitungsrollen sind kopffrei.',
     'website',
   ),
   entry(
@@ -565,7 +544,7 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'function-role-organization-mismatch',
     'engine',
     'function-role',
-    'Jede gemessene Funktionsfassung ist an genau eine Organisation gebunden; eine andere oder fehlende Zuordnung ist für sie nicht vermessen.',
+    'Nennt der Titel einer Funktion ihre Organisation (Zugführer der Feuerwehr, Kreisbrandmeister, Zugführer THW, Sanitäts- und Betreuungszugführer), widerspräche eine andere oder fehlende Organisation der Funktion; die Rollen der Führung und Leitung stehen in jeder Farbe.',
     'website',
   ),
   entry(
