@@ -136,12 +136,13 @@ describe('compose() mit Zuständen — abgeleitet, wo die Referenz die Zusammens
     expect(boundsOfMm(body(drawing.children))).toEqual({ minX: 3, minY: 3, maxX: 29, maxY: 29 });
   });
 
-  test('lässt die Körpermarke an der Person weiter an ihrer eigenen Lücke scheitern', () => {
-    // Die Pflegemarke ist an der Person ohne Zustand nicht vermessen; das ist keine Lücke der
-    // Zustände und wird hier nicht überdeckt.
-    expect(() => drawSymbol({ kind: 'person', bodyMarks: ['care'] })).toThrow(NotMeasuredError);
-    expect(() => drawSymbol({ kind: 'person', states: ['person-injured'], bodyMarks: ['care'] }))
-      .toThrow(NotMeasuredError);
+  test('trägt die übertragene Körpermarke an der Person auch in die Zustandsfassung', () => {
+    // Die Pflegemarke ist an der Person nicht vermessen; seit dem 2. Oktober 2026 überträgt
+    // `derive/body-marks.ts` sie, und die Zustandsableitung bildet sie mit dem Körper ab.
+    const plain = drawSymbol({ kind: 'person', bodyMarks: ['care'] });
+    expect(plain.derivations).toContainEqual(expect.objectContaining({ dimension: 'bodyMarks' }));
+    const withState = drawSymbol({ kind: 'person', states: ['person-injured'], bodyMarks: ['care'] });
+    expect(withState.derivations).toContainEqual(expect.objectContaining({ dimension: 'bodyMarks' }));
   });
 
   test('legt den Schadensgrad an der gefärbten Formation auf den Körper', () => {

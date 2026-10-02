@@ -327,7 +327,9 @@ describe('Funktionsrollen: Piktogramme und Körpermarken (stiller Verlust behobe
       functionRole: 'incident-section-command-north',
     }, 'EAL'],
   ] as const)('passt ein Piktogramm in den freien Bereich der %s ein', (_name, base, run) => {
-    const drawing = drawSymbol({ ...base, capabilities: ['fire-fighting'] });
+    // Eine Fähigkeit ohne randbündige Körperfassung: Brandbekämpfung zeichnet `derive/capabilities.ts`
+    // an diesen Körpern als Körpermarke, sie stünde hier nicht als Boxpiktogramm.
+    const drawing = drawSymbol({ ...base, capabilities: ['foam-agent'] });
     const group = drawing.children.find((child) => child.type === 'group' && child.role === 'pictogram');
     expect(group).toBeDefined();
     const box = boundsOfMm(group!);
@@ -348,8 +350,8 @@ describe('Funktionsrollen: Piktogramme und Körpermarken (stiller Verlust behobe
   });
 
   it.each([
-    ['Führungskraft', EL_PERSON, 'medical-service'],
-    ['Führungsstelle', EL_FORMATION, 'fire-fighting'],
+    ['Führungskraft', EL_PERSON, 'foam-agent'],
+    ['Führungsstelle', EL_FORMATION, 'foam-agent'],
   ] as const)('hält Piktogramm und Körpermarke an der %s auseinander', (_name, base, capability) => {
     const drawing = drawSymbol({ ...base, capabilities: [capability], bodyMarks: ['care'] });
     const group = drawing.children.find((child) => child.type === 'group' && child.role === 'pictogram');

@@ -1535,7 +1535,14 @@ function composeMeasuredOrDerived(
 
   if (roleDefinition !== undefined && roleLayout !== undefined) {
     // Erst die Marken, dann die Piktogramme gegen Läufe und Marken: beide teilen den freien Bereich.
-    const roleBodyMarks = fitFunctionRoleBodyMarks(bodyMarkPrimitives, roleLayout, roleDefinition, spec);
+    const roleBodyMarks = fitFunctionRoleBodyMarks(
+      bodyMarkPrimitives,
+      roleLayout,
+      roleDefinition,
+      // Fähigkeiten mit vermessener Körperfassung zeichnet `derive/capabilities.ts` als Körpermarke;
+      // auch sie müssen den Funktionsläufen ausweichen.
+      composedMarks === undefined ? spec : { ...spec, bodyMarks: composedMarks },
+    );
     return {
       viewBox: DEFAULT_VIEWBOX_MM,
       children: [

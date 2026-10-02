@@ -12,6 +12,20 @@ import type { DerivationNote, Drawing } from '@einsatzzeichen/schema';
  */
 const open: DerivationNote[][] = [];
 
+/**
+ * Führt `probe` aus, ohne dass seine Notizen an die laufende Komposition gehen. Für Proben, die
+ * fremde Körperformen nur befragen (etwa die Suche nach einer Vorlage über alle Grundformen):
+ * deren Ableitungen gehören nicht zum Zeichen, das gerade entsteht.
+ */
+export function withoutDerivationNotes<T>(probe: () => T): T {
+  open.push([]);
+  try {
+    return probe();
+  } finally {
+    open.pop();
+  }
+}
+
 /** Meldet einen abgeleiteten Teil an die laufende Komposition. Doppelte Notizen fallen weg. */
 export function noteDerivation(note: DerivationNote): void {
   const current = open.at(-1);

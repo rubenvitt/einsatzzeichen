@@ -2007,7 +2007,8 @@ describe('bodyMark() — was übertragen statt vermessen wird', () => {
     expectDerived('medical-service', { kind: 'vehicle-land' }, landBodyMm);
     expect(() => bodyMarkWithContext('medical-service', { kind: 'vehicle-land', bodyVariant: 'raised-hull' }, landBodyMm)).toThrow(/keine Körpervariante/);
     expect(() => bodyMarkWithContext('physician', { kind: 'vehicle-air', bodyVariant: 'plain-wheel-pair' }, raisedAirBodyMm)).toThrow(/keine Körpervariante/);
-    expect(() => bodyMarkWithContext('medical-service', { kind: 'trailer', bodyVariant: 'plain-wheel-pair' }, trailerBodyMm)).toThrow(/keine Körpervariante/);
+    // Das Radpaar am Anhänger ist seit der Variantenableitung (derive/body-variant-pairs.ts) zulässig.
+    expectDerived('medical-service', { kind: 'trailer', bodyVariant: 'plain-wheel-pair' }, trailerBodyMm);
     expectDerived('medical-service', { kind: 'vehicle-water' }, formationBodyMm);
     expect(() => bodyMarkWithContext('medical-service', { kind: 'formation', bodyVariant: 'raised-hull' }, formationBodyMm)).toThrow(/keine Körpervariante/);
     expectDerived('medical-service', { kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm);
@@ -2339,7 +2340,8 @@ describe('bodyMark() — F.3.1 bis F.3.19 auf Kreis und reduziertem Haus', () =>
     expectDerivedMarks(circleMark(technical('circle-collection-arrow'), raisedGable));
     expectDerivedMarks(circleMark(technical('circle-double-arrow-lower-v'), raisedGable));
     expectDerived('care', { kind: reducedHouseKind }, reducedHouseBodyMm);
-    expect(() => bodyMarkWithContext('hospital', { kind: reducedHouseKind, bodyVariant: raisedGable }, reducedHouseBodyMm)).toThrow(/keine Körpervariante/);
+    // Der Giebel an der reduzierten Hauskontur ist seit der Variantenableitung zulässig.
+    expect(() => bodyMarkWithContext('hospital', { kind: reducedHouseKind, bodyVariant: raisedGable }, reducedHouseBodyMm)).not.toThrow();
     expectDerived('hospital', { kind: 'building' }, reducedHouseBodyMm);
   });
 });

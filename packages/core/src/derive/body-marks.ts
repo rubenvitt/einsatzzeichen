@@ -39,7 +39,7 @@ import {
   type BodyRegion,
 } from './body-region.js';
 import { fitPictograms } from './fit-pictogram.js';
-import { noteDerivation } from './record.js';
+import { noteDerivation, withoutDerivationNotes } from './record.js';
 
 /**
  * Randbündige Körpermarken an **jeder** Körperform (Entscheidung vom 2. Oktober 2026).
@@ -151,6 +151,10 @@ let bodies: readonly { kind: SymbolKind; bodyVariant?: BodyVariantId }[] | undef
 /** Jede Körperform, die der Katalog zeichnet. */
 function allBodies(): readonly { kind: SymbolKind; bodyVariant?: BodyVariantId }[] {
   if (bodies !== undefined) return bodies;
+  return withoutDerivationNotes(collectBodies);
+}
+
+function collectBodies(): readonly { kind: SymbolKind; bodyVariant?: BodyVariantId }[] {
   const found: { kind: SymbolKind; bodyVariant?: BodyVariantId }[] = [];
   for (const kind of SYMBOL_KINDS) {
     for (const variant of [undefined, ...BODY_VARIANT_IDS]) {
@@ -192,6 +196,10 @@ const SOURCES = new Map<BodyMarkId, readonly SourcePair[]>();
 function measuredSources(id: BodyMarkId): readonly SourcePair[] {
   const cached = SOURCES.get(id);
   if (cached !== undefined) return cached;
+  return withoutDerivationNotes(() => collectSources(id));
+}
+
+function collectSources(id: BodyMarkId): readonly SourcePair[] {
   const found: SourcePair[] = [];
   for (const body of allBodies()) {
     const hull = sourceHull(body.kind, body.bodyVariant);
