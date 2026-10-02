@@ -251,7 +251,7 @@ export const SPECIAL_FORMS: readonly SpecialForm[] = Object.freeze([
       value: 'circle-12',
       evidence: [
         {
-          definedAt: 'core/src/geometry/base-symbols.ts:652–660',
+          definedAt: 'core/src/geometry/base-symbols.ts:658–666',
           note: 'Die Variante `raised-gable` des 12-mm-Kreises ist dieser Giebel am Körper, vermessen an F.3.5/F.3.14/I.4.1.',
         },
       ],

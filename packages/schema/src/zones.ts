@@ -97,7 +97,7 @@ export interface ZoneBoundsMm {
  * das Feld leer — ein erfundener Abschnitt wäre schlimmer als gar keiner.
  */
 export interface ZoneProvenance {
-  /** Fundort der Zahl, Datei und Zeilenbereich, z. B. `core/src/compose.ts:82`. */
+  /** Fundort der Zahl, Datei und Zeilenbereich, z. B. `core/src/compose.ts:115`. */
   readonly definedAt: string;
   /** Die Herkunftsaussage des Fundorts, von dort übernommen und nicht neu formuliert. */
   readonly note: string;
@@ -164,7 +164,7 @@ export interface ZoneGap {
  * Belegung einer Zone an einer Körperform.
  *
  * Drei Zustände und nicht zwei, weil das Repository zwischen „nicht belegt" und „gemessen leer"
- * unterscheidet (`profiles.ts:493–494`): das erste lädt zum Nachschauen ein, das zweite hält
+ * unterscheidet (`profiles.ts:471–472`): das erste lädt zum Nachschauen ein, das zweite hält
  * fest, dass nachgeschaut wurde.
  *
  * - `measured` — die Zone liegt mit mindestens einem Maß und dessen Herkunft vor.

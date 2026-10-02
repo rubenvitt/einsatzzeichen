@@ -158,8 +158,15 @@ describe('checkSpec', () => {
   });
 
   test('meldet eine Vermessungslücke als eigenes Ergebnis mit Reichweite', () => {
-    const result = checkSpec({ kind: 'formation', unitGrouping: 'verband-iii' });
-    expect(result).toMatchObject({ ok: false, reason: 'not-measured', scope: 'value' });
+    // Bis zum 2. Oktober 2026 war Verband III das Beispiel mit `scope: 'value'`. Seit dem Ableiten
+    // (docs/decisions/2026-10-02-ableiten-statt-messsperre.md) wirft der Standardkatalog keinen
+    // Wert mehr, der an keiner Kombination trägt: die übrigen `'value'`-Würfe greifen nur bei
+    // einem partiellen eigenen Portsatz, den checkSpec nicht nimmt. Belegt wird die Reichweite
+    // deshalb an einer realen Kombinationslücke: das Fahrwerk unter dem Giebel des Landfahrzeugs.
+    // Ohne Giebel trägt dieselbe Kategorie.
+    const result = checkSpec({ kind: 'vehicle-land', bodyVariant: 'raised-gable', vehicleCategory: 'kfz-kategorie-1' });
+    expect(result).toMatchObject({ ok: false, reason: 'not-measured', scope: 'combination' });
+    expect(checkSpec({ kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-1' }).ok).toBe(true);
     if (!result.ok && result.reason === 'not-measured') expect(result.message.length).toBeGreaterThan(0);
   });
 
@@ -204,12 +211,20 @@ describe('vocabulary', () => {
   });
 
   test('sperrt einen nicht vermessenen Wert mit der Reichweite aus der Wurfstelle', () => {
-    const [fixed] = vocabulary({ kind: 'formation' }, 'unitGrouping', {
+    // Wie bei checkSpec: einen Wert mit `scope: 'value'` liefert der Standardkatalog seit dem
+    // 2. Oktober 2026 nicht mehr. Die Reichweite kommt hier aus der Wurfstelle der Fahrwerkszone
+    // unter dem Giebel und lautet `'combination'`.
+    const [fixed] = vocabulary({ kind: 'vehicle-land', bodyVariant: 'raised-gable' }, 'vehicleCategory', {
+      candidates: ['kfz-kategorie-1'],
+    });
+    expect(fixed).toMatchObject({ status: 'blocked', reason: 'not-measured', scope: 'combination' });
+    // Verband III und das Amphibienfahrzeug waren bis zum 02.10.2026 die Beispiele hier: der
+    // Verband steht jetzt nach dem Vorschlag x 12/16/20, die Wellenlinie ist aus der Strichhülle
+    // konstruiert. Beide Werte sind offen und als abgeleitet markiert.
+    const [verband] = vocabulary({ kind: 'formation' }, 'unitGrouping', {
       candidates: ['verband-iii'],
     });
-    expect(fixed).toMatchObject({ status: 'blocked', reason: 'not-measured', scope: 'value' });
-    // Das Amphibienfahrzeug war bis zum 02.10.2026 das Beispiel hier; seine Wellenlinie ist jetzt
-    // aus der Strichhülle konstruiert, der Wert also offen und als abgeleitet markiert.
+    expect(verband).toEqual({ value: 'verband-iii', selected: false, status: 'allowed', derived: true });
     const [amphibian] = vocabulary({ kind: 'vehicle-land' }, 'vehicleCategory', {
       candidates: ['amphibienfahrzeug'],
     });

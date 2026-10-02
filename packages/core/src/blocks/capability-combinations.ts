@@ -78,7 +78,7 @@ export const CAPABILITY_COMBINATION_EXCEPTIONS: readonly CapabilityCombinationEx
       note:
         'Ring r 5 statt 5,5 (Band 4,75…5,25 um 16|16), Arztleiste auf y 24 (2 mm über der ' +
         'Unterkante) statt 22, Intensivbalken auf x 25,5 (5,5 mm von rechts) statt 23,5.',
-      definedAt: `${COMBINATION_MARKS_AT}:2032–2054`,
+      definedAt: `${COMBINATION_MARKS_AT}:2037–2059`,
     },
     {
       fixture: 'F.1.13',
@@ -89,7 +89,7 @@ export const CAPABILITY_COMBINATION_EXCEPTIONS: readonly CapabilityCombinationEx
       note:
         'Das Zelt ist ein Dach unter 45° (Mittellinie (3|20) → (16|7) → (29|20)), die ' +
         'Arztleiste steht auf y 21 (5 mm über der Unterkante).',
-      definedAt: `${COMBINATION_MARKS_AT}:2055–2075`,
+      definedAt: `${COMBINATION_MARKS_AT}:2060–2080`,
     },
     {
       fixture: 'F.1.22',
@@ -100,7 +100,7 @@ export const CAPABILITY_COMBINATION_EXCEPTIONS: readonly CapabilityCombinationEx
       note:
         'Unter dem Zelt steht der Ring r 5 mit acht Speichen um (16|18,5), 2,5 mm unter der ' +
         'Körpermitte, und ohne Fachdienstteilung.',
-      definedAt: `${COMBINATION_MARKS_AT}:2076–2088`,
+      definedAt: `${COMBINATION_MARKS_AT}:2081–2093`,
     },
     {
       fixture: 'F.2.5#alternative',
@@ -110,7 +110,7 @@ export const CAPABILITY_COMBINATION_EXCEPTIONS: readonly CapabilityCombinationEx
       marks: ['patient-transport', 'intensive-care', 'physician'],
       overrides: ['physician'],
       note: 'Arztleiste auf y 23 (3 mm über der Unterkante) statt 22 wie in F.2.4#alt.',
-      definedAt: `${COMBINATION_MARKS_AT}:2089–2100`,
+      definedAt: `${COMBINATION_MARKS_AT}:2094–2105`,
     },
   ] satisfies readonly CapabilityCombinationException[]);
 
@@ -143,7 +143,7 @@ export const CAPABILITY_COMBINATION_RULES: readonly CapabilityCombinationRule[] 
           'Teilung (4.6.1) und Zelt (4.2.1) stehen als zwei Marken in ihrer Einzelfassung auf derselben Körperfläche; das Zelt zerschneidet die Felder der Teilung.',
         ),
         source(
-          'core/src/geometry/body-marks.ts:672–700',
+          'core/src/geometry/body-marks.ts:673–701',
           'Die Zeltmarke trägt die Teilung nicht mit: F.1.3 zeigt das Zelt ohne Kreuz. Die Teilung ist das Zeichen 4.6.1 und keine Teilung der Fläche für mehrere Fähigkeiten.',
         ),
         source(

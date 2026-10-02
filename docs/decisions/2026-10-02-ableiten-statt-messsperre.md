@@ -1,7 +1,7 @@
 # Ableiten statt sperren: der Motor zeichnet jede zulässige Kombination
 
 > Stand: 2. Oktober 2026
-> Status: Entscheidung des Eigentümers; Umsetzung im selben Zug (Release 4.0.0)
+> Status: Entscheidung des Eigentümers, umgesetzt am 2. Oktober 2026 (Major-Release)
 
 ## Anlass
 
@@ -66,5 +66,77 @@ Für diese Fragen fehlt ein Fachreviewer (LFH-406):
 - Zwei Gefahrenhinweise zugleich.
 - Giebel („ortsfest“) über anderen Trägern als dem Kreis.
 
-Die einzelnen Umsetzungsentscheidungen stehen im Abschnitt „Umsetzung“, der nach dem
-Zusammenführen ergänzt wird.
+## Umsetzung
+
+Das Fundament legt `Drawing.derivations`, `noteDerivation()` und `withoutDerivationNotes()`
+(`core/src/derive/record.ts`), die Körperhülle jeder Form (`derive/body-bounds.ts`) und den
+Zensus `scripts/census/derived-census.mts`. Gemessen werden darin alle 33 Grundformen mit je
+einem weiteren Feld, mit Geometrieprüfung: keine NaN, alles in der ViewBox, abgeleitete
+Piktogramme in der Körperhülle, der Kopf frei von allem anderen.
+
+| Stand | gezeichnet | davon abgeleitet | Geometrieverstöße |
+|---|---:|---:|---:|
+| vorher (3.0.0) | 684 von 74 613 | 0 | 0 |
+| nachher | 20 345 von 74 822 | 19 515 | 0 |
+
+Die Zahl der Kennungen in `validate.ts` sinkt von 79 auf 50. Vermessene Zeichen bleiben
+bytegleich: Alle Snapshots, Fingerabdrücke und 280 Rezepte zeichnen ohne Ableitungsnotiz,
+das sichert ein eigenes Gate (`conformance/src/recipes-derivations.test.ts`).
+
+Was je Dimension abgeleitet wird:
+
+- **Kreise und Leitstelle** (`derive/circle.ts`):
+  - Der mittige Lauf steht mit der Versalmitte auf der Kreismitte. D.2.3, D.2.4 und D.2.5
+    bestätigen das auf ±0,65 mm, die vermessenen Grundlinien bleiben als Override.
+  - Eckkürzel stehen auf der Kreissehne.
+  - Schwarz auf Gelb folgt der Quelle.
+  - Jede Organisation am 12-mm-Kreis und an der reduzierten Hauskontur.
+  - Giebel, angehobener Kreis und Fußband auch an der Funktionsstelle.
+  - Kopfzone über dem Kreis.
+  - Neue Körpermarke `circle-solid-cap-4mm`, die Kappe der Leitstelle. D.2.5 ist als
+    SymbolSpec baubar und gegen das Original geprüft (`conformance/src/leitstelle-d25.test.ts`).
+- **Körpervarianten** (`derive/body-variant-pairs.ts`, `body-variants.ts`):
+  - Fußband und Giebel an jeder Art, an der sie geometrisch Platz finden.
+  - Radpaar und Kettenrumpf an Anhänger und Wechsellader.
+  - Weiße Innenkontur an jedem flächigen Körper: halbe Strichbreite plus 0,75 mm, gemessen an
+    E.1.1 und E.2.27.
+  - Artgebundene Formen bleiben Systematik: Rümpfe, Flügel, Personrauten.
+- **Kopfzone** (`derive/head-zone.ts`):
+  - Alle sechs Verwaltungsstufen. Die Sternzahl ist an 5.7.1 bis 5.7.5 nachgezählt, die Lage
+    abgeleitet.
+  - Verband III (Vorschlag x 12/16/20) und Verband an jedem Grundzeichen.
+  - Kopfmarke auch an der Person.
+  - Zusatzgeometrie folgt dem Körper unter den Kopf. Der Kopfabstand gilt ab der Oberkante der
+    ganzen Grundzeichnung.
+- **Funktionsrollen** (`derive/function-roles.ts`):
+  - Leitungsrollen in jeder Organisationsfarbe.
+  - Zusätzlicher Kopf an kopffreien Rollen.
+  - Varianten, Piktogramme und Körpermarken im Rollenkörper.
+  - Rollen, deren Titel Organisation oder Kopf nennt, bleiben gebunden.
+- **Fähigkeiten und Körpermarken** (`derive/capabilities.ts`, `body-marks.ts`):
+  - Die vermessene Körperfassung hat Vorrang, auch wenn die Spec sie als `capabilities` nennt.
+  - Sonst wird eine vermessene Fassung hüllenrelativ übertragen, sonst die Einzeldarstellung
+    eingepasst (Faktor ≤ 0,93, Strich 0,5 mm). Mehrere Fähigkeiten stehen nebeneinander.
+- **Zustände und Tendenz** (`derive/states.ts`):
+  - Das Zeichen wird vollständig komponiert und als Ganzes in die Zustandsfassung abgebildet.
+  - Hinweise, Aktivität, Brand und Zugang stehen in der Randlage nach `5.8.1_Beispiel 3`, die
+    Tendenz rechts gespiegelt, der Schadensgrad im Körper.
+  - Personenzustände bleiben an die Person gebunden.
+- **Beschriftungszonen** (`derive/label-zones.ts`):
+  - Profilwerte je Körperfamilie übertragen, mit Ausweichlagen vor Bändern, Flügeln und Rädern.
+  - Neue Systematikregeln `above-left-label-head-conflict` (Kopfzone oder Giebel) und
+    `below-body-zone-conflict`.
+  - Eine Schrumpfregel für zu lange Läufe ist gemessen und verworfen: Sie rettete nur 28 % der
+    Fälle.
+- **Fahrwerk, Sonderkörper, Freistehendes** (`derive/vehicle-category.ts`, `open-body-tint.ts`,
+  `weather-pair.ts`, `freestanding.ts`):
+  - Jede Fahrzeugkategorie an Wasser- und Luftfahrzeug.
+  - Amphibienfahrzeug aus dem Mittel beider Strichkanten von 5.1.1.4.
+  - Ereignis mit Organisationsfarbe im Strich, bei weniger als 3 : 1 Kontrast schwarz.
+  - Wetterpaare nebeneinander.
+  - Stärken an der Grenze 2.20 und Pfeilanbindung an jeder Kante.
+
+Weiterhin gesperrt bleiben „Funktion“ an der Funktionsstelle (siehe oben) und Läufe, die für
+ihre Zone zu breit sind (`label-too-wide`). Ebenso Kombinationen, für die sich keine Lage ohne
+Überschneidung findet: Sie enden als `NotMeasuredError` mit Begründung, nicht als
+Fehlzeichnung.

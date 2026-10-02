@@ -52,10 +52,11 @@ export function labelFor(
 
 /**
  * Miniaturen der Grundzeichenarten für die Kachel-Auswahl: jede Kachel zeigt die nackte Grundform
- * `{ kind }`, gezeichnet über `checkSpec()` aus `core`. Manche Arten (`circle-12`,
- * `reduced-house`) komponieren ohne weitere Zutat nicht — dafür steht `null`, und die Insel
- * zeichnet einen Platzhalterrahmen statt einer erfundenen Zeichnung. Dieselbe Auskunft gibt
- * `vocabulary({}, 'kind')` in `core` als gesperrten Wert. Der try/catch ist hier richtig: eine
+ * `{ kind }`, gezeichnet über `checkSpec()` aus `core`. Seit dem 2. Oktober 2026 komponiert jede
+ * Art des Katalogs auch ohne weitere Zutat (bis dahin fehlten `circle-12` und `reduced-house`,
+ * die eine Organisation verlangten). Komponiert eine Art doch einmal nicht, steht dafür `null`,
+ * und die Insel zeichnet einen Platzhalterrahmen statt einer erfundenen Zeichnung. Dieselbe
+ * Auskunft gibt `vocabulary({}, 'kind')` in `core` als gesperrten Wert. Der try/catch ist hier richtig: eine
  * fehlende Miniatur ist eine Darstellungslücke der Kachel, kein Fehler der aktuellen
  * Zusammenstellung.
  */
@@ -103,9 +104,10 @@ export function probeFields(
  *
  * Dann ist der übliche Rat „wähle einen anderen Wert" falsch, denn jeder andere ist genauso
  * gesperrt. Die Insel sagt stattdessen einmal am Feld, dass es noch nicht vermessen ist. Gelesen
- * wird das aus der Probe und nicht aus einer Feldliste: die Tendenz ist heute so ein Feld (kein
- * Original zeigt sie an einem Träger, LFH-577), und wann sie es nicht mehr ist, entscheidet der
- * Katalog und nicht die Website.
+ * wird das aus der Probe und nicht aus einer Feldliste: die Tendenz war bis zum 2. Oktober 2026
+ * so ein Feld (kein Original zeigt sie an einem Träger, LFH-577) und wird seitdem abgeleitet
+ * gezeichnet. Ob und wann wieder ein Feld so dasteht, entscheidet der Katalog und nicht die
+ * Website.
  *
  * Eine Regelsperre oder ein gesetzter (und deshalb nie gesperrter) Wert heben den Befund auf; ein
  * Feld ohne Probe oder ohne Werte ist kein Befund.
@@ -116,4 +118,51 @@ export function unmeasuredField(probe: ReadonlyMap<string, AllowedValue> | undef
     if (entry.blocked?.because !== 'not-measured' || entry.blocked.scope !== 'value') return false;
   }
   return true;
+}
+
+/* --- Abgeleitete Werte (Entscheidung vom 2. Oktober 2026) --------------------------------- */
+
+/**
+ * Ob die Zusammenstellung, so wie sie ist, abgeleitete Teile trägt (`Drawing.derivations`).
+ * Eine Spec, die nicht zeichnet, trägt keine; ein Programmfehler fliegt wie bei `checkSpec`
+ * weiter — dieselbe Spec ginge ohnehin durch `probeFields()`, und dort fliegt er genauso.
+ */
+export function drawsDerived(spec: SymbolSpec): boolean {
+  const result = checkSpec(spec);
+  return result.ok && (result.drawing.derivations?.length ?? 0) > 0;
+}
+
+/**
+ * Ob ein Eintrag im Formular als „abgeleitet" erscheint.
+ *
+ * - Nur ein **zeichenbarer** Eintrag: ein gesperrter trägt seinen Sperrgrund, nichts sonst.
+ * - **Nie der gesetzte Wert** — dieselbe Zusage wie bei `displayedBlock()` in der Insel. Ob die
+ *   aktuelle Zeichnung abgeleitet ist, sagt der Hinweis unter der Vorschau, und zwar mit den
+ *   Teilen, die es betrifft.
+ * - **Nicht, wenn die Spec der Probe selbst schon abgeleitet ist** (`probeDerived`, aus
+ *   `drawsDerived()` über dieselbe Spec wie die Probe). Dann trägt fast jeder Kandidat
+ *   `derived: true`, weil die Ableitung schon in der übrigen Auswahl steckt — gemessen am
+ *   02.10.2026 an `{ kind: 'area', administrativeLevel: 'kreis' }`: alle 19 Grundzeichenarten,
+ *   alle acht Organisationen, alle 74 Körpermarken. Die Kennzeichnung sagte dann nichts mehr
+ *   über den einzelnen Wert. Sie gilt deshalb nur dort, wo dieser Wert der erste Schritt weg
+ *   von einer vermessenen Zusammenstellung wäre.
+ *
+ * `probeDerived` muss zur Spec der Probe gehören, nicht zur aktuellen: im aufgeschobenen Render
+ * sind das zwei verschiedene, und gemischt ergäbe sich eine Aussage, die keine der beiden trägt.
+ */
+export function derivedMarker(
+  entry: AllowedValue | undefined,
+  selected: boolean,
+  probeDerived: boolean,
+): boolean {
+  return !selected && !probeDerived && entry?.ok === true && entry.derived === true;
+}
+
+/**
+ * Die abgeleiteten Teile einer Zeichnung als Liste für den Hinweis unter der Vorschau — der
+ * Wortlaut von `DerivationNote.part`, gleiche Einträge nur einmal und in der Reihenfolge der
+ * Zeichnung. Leer, wenn alles an einem Original vermessen ist.
+ */
+export function derivationParts(drawing: Drawing): string[] {
+  return [...new Set((drawing.derivations ?? []).map((note) => note.part))];
 }

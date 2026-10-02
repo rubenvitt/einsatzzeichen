@@ -31,22 +31,22 @@ const GEOMETRY_FILE = 'core/src/geometry/parametric.ts';
 
 /** Fundort je Wert in `parametric.ts`, Zeilen des Eintrags samt Kommentar darüber. */
 const MOVEMENT_AT: Readonly<Record<MovementId, string>> = {
-  'direction-of-action': `${GEOMETRY_FILE}:102–108`,
-  'start-of-action': `${GEOMETRY_FILE}:109–115`,
-  'directed-movement': `${GEOMETRY_FILE}:116–121`,
-  'movement-both-directions': `${GEOMETRY_FILE}:122–127`,
-  'end-of-movement': `${GEOMETRY_FILE}:128–142`,
-  gathering: `${GEOMETRY_FILE}:143–157`,
+  'direction-of-action': `${GEOMETRY_FILE}:103–109`,
+  'start-of-action': `${GEOMETRY_FILE}:110–116`,
+  'directed-movement': `${GEOMETRY_FILE}:117–122`,
+  'movement-both-directions': `${GEOMETRY_FILE}:123–128`,
+  'end-of-movement': `${GEOMETRY_FILE}:129–143`,
+  gathering: `${GEOMETRY_FILE}:144–158`,
 };
 
 const LINE_AT: Readonly<Record<LineId, string>> = {
-  'escape-route': `${GEOMETRY_FILE}:216–230`,
-  'barrier-position': `${GEOMETRY_FILE}:231–236`,
-  'fire-spread': `${GEOMETRY_FILE}:237–242`,
-  'boundary-command-area': `${GEOMETRY_FILE}:243–248`,
-  'boundary-section': `${GEOMETRY_FILE}:249–254`,
-  'boundary-subsection': `${GEOMETRY_FILE}:255–261`,
-  'boundary-with-strength': `${GEOMETRY_FILE}:262–267`,
+  'escape-route': `${GEOMETRY_FILE}:217–231`,
+  'barrier-position': `${GEOMETRY_FILE}:232–237`,
+  'fire-spread': `${GEOMETRY_FILE}:238–243`,
+  'boundary-command-area': `${GEOMETRY_FILE}:244–249`,
+  'boundary-section': `${GEOMETRY_FILE}:250–255`,
+  'boundary-subsection': `${GEOMETRY_FILE}:256–262`,
+  'boundary-with-strength': `${GEOMETRY_FILE}:263–268`,
 };
 
 const MOVEMENT_SECTION: Readonly<Record<MovementId, string>> = {
@@ -125,7 +125,7 @@ function freestanding(decision: string): ParametricFinding<readonly BlockId[]> {
 }
 
 /** Wo `anchoredMovementPath` steht; die Zeilen hält `parametric.test.ts` fest. */
-const ANCHOR_AT = `${GEOMETRY_FILE}:563–596`;
+const ANCHOR_AT = `${GEOMETRY_FILE}:565–586`;
 
 const MOVEMENT_AT_PERSON: ParametricFinding<readonly BlockId[]> = {
   status: 'evidenced',

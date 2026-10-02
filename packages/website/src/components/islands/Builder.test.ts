@@ -4,7 +4,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { allowedValues } from '../../lib/builder-state.js';
 import { buildSnapshot } from '../../lib/snapshot-build.js';
 import type { CatalogSnapshot } from '../../lib/snapshot.js';
-import Builder, { blockedTooltip } from './Builder.js';
+import Builder, { blockedTooltip, derivedTooltip } from './Builder.js';
 
 /**
  * Zwei Sorten Prüfung in einer Datei. Oben `blockedTooltip()` als reine Funktion — die
@@ -127,8 +127,10 @@ describe('blockedTooltip()', () => {
   });
 
   it('verweist bei einer festen Lücke auf keine andere Grundzeichenart', () => {
-    // Das Amphibienfahrzeug: keine Art trägt seine Wellenlinie. Der Rat der Kombinationslücke
-    // wäre hier eine Aussage über die Referenz, die es nicht gibt.
+    // Gestellte Eingabe: eine feste Lücke erreicht der Baukasten seit dem 2. Oktober 2026 nicht
+    // mehr (das Amphibienfahrzeug, bis dahin die einzige, wird abgeleitet gezeichnet). Der Fall
+    // bleibt geprüft, denn ein eigener Portsatz kann ihn wieder auslösen — und der Rat der
+    // Kombinationslücke wäre dann eine Aussage über die Referenz, die es nicht gibt.
     const text = blockedTooltip(
       { field: 'vehicleCategory', label: 'Fahrzeugkategorie', noun: 'Fahrzeugkategorie' },
       { because: 'not-measured', detail: 'Wellenlinie nur als Strichhülle …', scope: 'value' },
@@ -140,8 +142,9 @@ describe('blockedTooltip()', () => {
   });
 
   it('rät zu keinem anderen Wert, wenn im ganzen Feld keiner vermessen ist', () => {
-    // Die Tendenz: alle drei Werte sind nirgends vermessen. „Wähle einen anderen Wert" schickte
-    // die Leserin zu einem Wert, der genauso gesperrt ist.
+    // Gestellte Eingabe nach dem Muster der Tendenz bis zum 2. Oktober 2026: alle drei Werte
+    // nirgends vermessen. „Wähle einen anderen Wert" schickte die Leserin zu einem Wert, der
+    // genauso gesperrt ist.
     const text = blockedTooltip(
       { field: 'tendency', label: 'Tendenz', noun: 'Tendenz' },
       { because: 'not-measured', detail: 'egal', scope: 'value' },
@@ -152,6 +155,16 @@ describe('blockedTooltip()', () => {
     expect(text).toMatch(/„Tendenz steigend" ist als Tendenz noch nicht vermessen/);
     expect(text).not.toMatch(/anderen Wert/);
     expect(text).not.toMatch(/andere Grundzeichenart/);
+  });
+});
+
+describe('derivedTooltip()', () => {
+  it('sagt in Alltagssprache, dass der Wert zeichnet, aber von keinem Original belegt ist', () => {
+    const text = derivedTooltip('Verband III');
+    expect(text).toMatch(/„Verband III" lässt sich hier zeichnen/);
+    expect(text).toMatch(/kein Original/);
+    // Keine Begriffe des Motors im sichtbaren Text.
+    expect(text).not.toMatch(/derivation|Profil|Hülle|transferred|constructed/);
   });
 });
 
@@ -247,31 +260,42 @@ function choose(container: HTMLElement, field: string, value: string): void {
 
 describe('Der Baukasten mit aufgeschobener Probe', () => {
   it('begründet eine Sperre mit der Grundzeichenart, zu der die Sperre gehört', async () => {
-    // Nachgemessen, damit der Fall nicht an einer Annahme über den Katalog hängt: die Körpermarke
-    // ist unter „Person" nicht vermessen, unter „Taktische Formation" sehr wohl.
-    expect(allowedValues({ kind: 'person' }, 'bodyMarks', ['cbrn-protection'])[0]?.ok).toBe(false);
-    expect(allowedValues({ kind: 'formation' }, 'bodyMarks', ['cbrn-protection'])[0]?.ok).toBe(
-      true,
-    );
+    // Nachgemessen, damit der Fall nicht an einer Annahme über den Katalog hängt: mit der
+    // Verwaltungsstufe „Kreis" ist das Fähigkeitspiktogramm unter „Fläche" nicht zeichenbar (die
+    // Kopfzone verkleinert den Körper, das Piktogramm folgt nicht), unter „Taktische Formation"
+    // sehr wohl. Bis zum 2. Oktober 2026 stand hier eine Körpermarke an der Person; die wird
+    // seitdem abgeleitet.
+    const atLevel = { administrativeLevel: 'kreis' } as const;
+    expect(
+      allowedValues({ kind: 'area', ...atLevel }, 'capabilities', ['meal-preparation'])[0]?.blocked
+        ?.because,
+    ).toBe('not-measured');
+    expect(
+      allowedValues({ kind: 'formation', ...atLevel }, 'capabilities', ['meal-preparation'])[0]?.ok,
+    ).toBe(true);
 
     const container = await mountBuilder();
-    tile(container, 'kind', 'Person').click();
+    tile(container, 'kind', 'Fläche').click();
+    await settle();
+    choose(container, 'administrativeLevel', 'kreis');
     await settle();
     tile(container, 'kind', 'Taktische Formation').click();
     await flushUrgent();
 
-    // Genau jetzt gehört `spec` zur Formation und `probes` noch zur Person.
+    // Genau jetzt gehört `spec` zur Formation und `probes` noch zur Fläche.
     expect(
       tile(container, 'kind', 'Taktische Formation').getAttribute('aria-pressed'),
       'Ohne den vorrangigen Render steht der Zwischenstand gar nicht im DOM.',
     ).toBe('true');
-    const mark = optionOf(container, 'bodyMarks', 'cbrn-protection');
-    expect(mark.disabled, 'Ohne stehen gebliebene Sperre prüft dieser Fall nichts.').toBe(true);
-    const title = mark.getAttribute('title') ?? '';
+    const pictogram = optionOf(container, 'capabilities', 'meal-preparation');
+    expect(pictogram.disabled, 'Ohne stehen gebliebene Sperre prüft dieser Fall nichts.').toBe(
+      true,
+    );
+    const title = pictogram.getAttribute('title') ?? '';
     // Der Satz muss die Art nennen, unter der gesperrt wurde. Nennte er die neue, beschriebe er
     // eine Paarung, die in keiner der beiden Zusammenstellungen vorkommt — erfunden, nicht bloß
     // veraltet.
-    expect(title).toMatch(/Grundzeichenart .Person./);
+    expect(title).toMatch(/Grundzeichenart .Fläche./);
     expect(title).not.toMatch(/Taktische Formation/);
   });
 
@@ -365,7 +389,7 @@ function chipsOf(container: HTMLElement, field: string): string[] {
 }
 
 describe('Der Baukasten mit Verband, Zustand und Tendenz (LFH-577)', () => {
-  it('zeichnet die Formation mit Verband II und sperrt den nicht vermessenen Verband III', async () => {
+  it('zeichnet die Formation mit Verband II und bietet Verband III abgeleitet an', async () => {
     const container = await mountBuilder();
     expect(
       container.querySelector('label[for="ez-builder-unitGrouping"]')?.textContent,
@@ -376,9 +400,15 @@ describe('Der Baukasten mit Verband, Zustand und Tendenz (LFH-577)', () => {
 
     expect(optionOf(container, 'unitGrouping', 'verband-ii').textContent).toBe('Verband II');
     expectDrawn(container);
+    // Verband III war bis zum 2. Oktober 2026 gesperrt; seitdem zeichnet er nach dem Vorschlag
+    // x 12/16/20 und trägt den Zusatz, im Text und im Tooltip.
     const third = optionOf(container, 'unitGrouping', 'verband-iii');
-    expect(third.disabled).toBe(true);
-    expect(third.getAttribute('title')).toMatch(/„Verband III" ist als Verband .*nicht vermessen/);
+    expect(third.disabled).toBe(false);
+    expect(third.textContent).toBe('Verband III — abgeleitet');
+    expect(third.getAttribute('title')).toMatch(/„Verband III" lässt sich hier zeichnen/);
+    // Der vermessene Verband I bleibt ohne Zusatz.
+    expect(optionOf(container, 'unitGrouping', 'verband-i').textContent).toBe('Verband I');
+    expect(optionOf(container, 'unitGrouping', 'verband-i').getAttribute('title')).toBeNull();
   });
 
   it('setzt an der Person einen Zustand und den Hinweis „?" und sperrt einen zweiten Zustand mit Regel', async () => {
@@ -414,5 +444,76 @@ describe('Der Baukasten mit Verband, Zustand und Tendenz (LFH-577)', () => {
     choose(container, 'tendency', 'tendency-rising');
     await settle();
     expectDrawn(container);
+  });
+});
+
+/* --- Abgeleitete Zusammenstellungen (Entscheidung vom 2. Oktober 2026) -------------------- */
+
+/** Der Hinweis unter der Vorschau, wenn die Zeichnung abgeleitete Teile trägt. */
+function derivationNote(container: HTMLElement): HTMLElement | undefined {
+  return [...container.querySelectorAll<HTMLElement>('.ez-builder__result [role="note"]')].find(
+    (element) => /Teilweise abgeleitet/.test(element.textContent ?? ''),
+  );
+}
+
+describe('Der Baukasten mit abgeleiteten Teilen', () => {
+  it('zeigt an einer vermessenen Zusammenstellung keinen Ableitungshinweis', async () => {
+    const container = await mountBuilder();
+    expectDrawn(container);
+    expect(derivationNote(container)).toBeUndefined();
+  });
+
+  it('nennt unter der Vorschau, dass die Zeichnung teilweise abgeleitet ist, und welche Teile', async () => {
+    const container = await mountBuilder();
+    choose(container, 'unitGrouping', 'verband-iii');
+    await settle();
+
+    expectDrawn(container);
+    const note = derivationNote(container);
+    expect(note, 'Kein Hinweis zur Ableitung unter der Vorschau.').toBeDefined();
+    expect(note?.querySelector('.ez-note__title')?.textContent).toBe(
+      'Teilweise abgeleitet – kein Original belegt diese Zusammenstellung',
+    );
+    // Die Teile stehen eingeklappt, im Wortlaut der Notizen aus `core`.
+    const details = note?.querySelector('details');
+    expect(details).not.toBeNull();
+    expect(details?.open).toBe(false);
+    const parts = [...(details?.querySelectorAll('li') ?? [])].map((item) => item.textContent);
+    expect(parts.some((part) => part?.includes('Verband III'))).toBe(true);
+    // Der gesetzte Wert trägt keinen Zusatz; das sagt jetzt der Hinweis.
+    expect(optionOf(container, 'unitGrouping', 'verband-iii').textContent).toBe('Verband III');
+  });
+
+  it('kennzeichnet nichts mehr einzeln, wenn die Zusammenstellung schon abgeleitet ist', async () => {
+    const container = await mountBuilder();
+    // Vor der Auswahl trägt das Piktogramm den Zusatz: an der Formation ist es nicht vermessen,
+    // sondern wird in den Körper eingepasst.
+    expect(optionOf(container, 'capabilities', 'meal-preparation').textContent).toBe(
+      'Verpflegung / Zubereitung — abgeleitet',
+    );
+    choose(container, 'unitGrouping', 'verband-iii');
+    await settle();
+    // Danach nicht mehr: die Ableitung steckt schon in der Auswahl und steht unter der Vorschau.
+    const pictogram = optionOf(container, 'capabilities', 'meal-preparation');
+    expect(pictogram.disabled).toBe(false);
+    expect(pictogram.textContent).toBe('Verpflegung / Zubereitung');
+  });
+
+  it('kennzeichnet auch eine Kachel, ohne ihre Beschriftung zu verändern', async () => {
+    // Mit einer an der Formation vermessenen Körpermarke ist dieselbe Marke an der Funktionsstelle
+    // nicht vermessen, aber ableitbar — nachgemessen statt angenommen.
+    const [post] = allowedValues({ kind: 'formation', bodyMarks: ['care'] }, 'kind', ['post']);
+    expect(post).toMatchObject({ ok: true, derived: true });
+
+    const container = await mountBuilder();
+    choose(container, 'bodyMarks', 'care');
+    await settle();
+    const postTile = tile(container, 'kind', 'Funktionsstelle');
+    expect(postTile.getAttribute('aria-disabled')).toBe('false');
+    expect(postTile.querySelector('.ez-builder__tile-derived')?.textContent).toBe('abgeleitet');
+    expect(postTile.getAttribute('title')).toMatch(/„Funktionsstelle" lässt sich hier zeichnen/);
+    // Die ausgewählte Formation trägt den Zusatz nicht.
+    const chosen = tile(container, 'kind', 'Taktische Formation');
+    expect(chosen.querySelector('.ez-builder__tile-derived')).toBeNull();
   });
 });

@@ -17,7 +17,8 @@
 export type NotMeasuredScope =
   /**
    * Der Wert ist an **keiner** Kombination vermessen; eine andere Grundzeichenart hilft nicht.
-   * Bisher genau ein Fall: `amphibienfahrzeug`, dessen Wellenlinie nur als Strichhülle vorliegt.
+   * Seit der Ableitung vom 2. Oktober 2026 erreicht der Standardkatalog diesen Fall nicht mehr
+   * (das Amphibienfahrzeug ist konstruiert); er bleibt für Ports ohne den betreffenden Baustein.
    */
   | 'value'
   /** Diese Zusammenstellung ist nicht vermessen; eine andere Art oder Variante kann sie tragen. */

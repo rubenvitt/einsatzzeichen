@@ -129,16 +129,18 @@ function expectedColorPlace(valueId: string): string {
   return place(ORGANIZATION_FILE, key, key);
 }
 
-/** Ein `case`-Zweig von `vehicleChassis()`: vom `case` bis zur ersten Anweisung, die mit `;` endet. */
+/**
+ * Ein `case`-Zweig von `vehicleChassis()`: vom `case` bis zum Ende seiner `return`- oder
+ * `throw`-Anweisung. Seit dem 2. Oktober 2026 steht im Zweig des Amphibienfahrzeugs vor dem
+ * `return` ein `noteDerivation({…});` — die erste Anweisung mit `;` ist dort nicht mehr die, die
+ * zeichnet.
+ */
 function expectedChassisPlace(valueId: string): string {
   const lines = sourceLines(CHASSIS_FILE);
   const start = findLine(lines, new RegExp(`^ +case '${escape(valueId)}':$`));
   let end = start + 1;
-  while (end < lines.length) {
-    const line = (lines[end] ?? '').trim();
-    if (!line.startsWith('//') && line.endsWith(';')) break;
-    end += 1;
-  }
+  while (end < lines.length && !/^(?:return|throw)\b/.test((lines[end] ?? '').trim())) end += 1;
+  while (end < lines.length && !(lines[end] ?? '').trim().endsWith(';')) end += 1;
   return place(CHASSIS_FILE, start, end);
 }
 

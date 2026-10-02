@@ -155,29 +155,34 @@ describe('coverage CLI', () => {
     // 78 seit LFH-786 (74 auf main plus die vier Zustandsregeln aus LFH-577):
     // `body-mark-rendition-not-measured` ist die eine neue Validierungsregel.
     // 79 seit LFH-787: `capabilities-pictogram-has-measured-rendition`.
+    // 50 seit dem 2. Oktober 2026: die Messsperren sind dem Ableiten gewichen
+    // (docs/decisions/2026-10-02-ableiten-statt-messsperre.md). 12 statt 13 vollständige Achsen,
+    // weil die neue Körpermarke `circle-solid-cap-4mm` (Leitstelle D.2.5) noch kein Rezept trägt.
     expect(lines).toContain(
-      'Regelabdeckung:      13/17 Achsen vollständig belegt; 79 Validierungsregeln ' +
+      'Regelabdeckung:      12/17 Achsen vollständig belegt; 50 Validierungsregeln ' +
         '(Testfall je Regel durch core-Test erzwungen)',
     );
     expect(lines).toContain(
       '  Achsen mit Lücke:  technicalHeadMark 0/2 (single-vertical-bar, double-vertical-bar); ' +
         'unitGrouping 2/3 (verband-iii); administrativeLevel 3/6 (gemeinde, bezirk, bundesland); ' +
-        'vehicleCategory 7/8 (amphibienfahrzeug)',
+        'vehicleCategory 7/8 (amphibienfahrzeug); bodyMarks 45/46 (circle-solid-cap-4mm)',
     );
     // LFH-786: sechs neue belegte Signaturen (71 → 77) und eine technische Körpermarke mehr
     // (`track-chevron-top`, 132 → 133); LFH-586: acht statt neun Organisationen (300960 → 270864
-    // enumeriert, 964 → 868 gültig). Zusammen 868 − 77 = 791; hergeleitet in `rule-coverage.test.ts`.
+    // enumeriert, 964 → 868 gültig). Seit dem 2. Oktober 2026 (Ableiten statt Messsperre)
+    // 22644 gültig, 85 belegt, keine Rezeptsignatur mehr außerhalb, 134 Körpermarken mit der
+    // Kappe der Leitstelle. Zusammen 22644 − 85 = 22559; hergeleitet in `rule-coverage.test.ts`.
     expect(lines).toContain(
-      'Generative Reichweite (Stufe 1): 868 gültige Kompositionen aus kind × Körpervariante × ' +
-        'Organisation × Kopfzone × Fahrwerk (270864 enumeriert), davon 77 in der Referenz belegt — ' +
-        '791 erzeugbar ohne Referenzbeleg, 8 Rezeptsignaturen außerhalb der Stufe ' +
+      'Generative Reichweite (Stufe 1): 22644 gültige Kompositionen aus kind × Körpervariante × ' +
+        'Organisation × Kopfzone × Fahrwerk (270864 enumeriert), davon 85 in der Referenz belegt — ' +
+        '22559 erzeugbar ohne Referenzbeleg, 0 Rezeptsignaturen außerhalb der Stufe ' +
         '(dokumentiert, kein Gate); nicht enumeriert: 88 Fähigkeiten, ' +
-        '133 Körpermarken, 25 Funktionsrollen, freie Bezeichnung',
+        '134 Körpermarken, 25 Funktionsrollen, freie Bezeichnung',
     );
     expect(lines.at(-1)).toBe('Coverage-Gate bestanden.');
     // Expliziter Timeout: `coverage()` rechnet seit LFH-413 `generativeReach()` mit
-    // (2955 validateSpec-gültige, 868 komponierte Kombinationen) — allein ~140 ms, unter
-    // Vitest-Parallellast bis ~4 s gemessen; das 5-s-Standardlimit wäre ein Lastflake.
+    // (seit dem 2. Oktober 2026 26 964 validateSpec-gültige, 22 644 komponierte Kombinationen) —
+    // allein rund 3 s, unter Vitest-Parallellast mehr; das 5-s-Standardlimit wäre ein Lastflake.
   }, 30_000);
 });
 

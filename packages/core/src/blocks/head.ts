@@ -129,7 +129,7 @@ const ADMIN_UNDOCUMENTED =
   'Die Konstante in `administrative-heads.ts` trägt keinen Kommentar. Den Abschnitt D.3/D.4 nennen ' +
   'die Funktionsfassungen in `function-roles.ts` und die Herkunftsangaben in `derive/head-zone.ts`.';
 
-const ADMIN_GAP_AT = 'core/src/rules/rule-catalog.ts:1034–1039';
+const ADMIN_GAP_AT = 'core/src/rules/rule-catalog.ts:824–829';
 const ADMIN_GAP_REASON =
   'Keine vermessene Geometrie in `ADMINISTRATIVE_HEADS`. Seit dem 2. Oktober 2026 zeichnet der ' +
   'Standardport den Kopf abgeleitet (`derive/head-zone.ts`, Ableitungsnotiz an der Zeichnung): ' +
@@ -193,7 +193,7 @@ export const TECHNICAL_HEAD_MARK_BLOCKS: readonly BlockEntry[] = Object.freeze([
     measured(
       'core/src/geometry/technical-head-marks.ts:7–18',
       UNDOCUMENTED_AT_SOURCE +
-        'Die Konstante trägt keinen Kommentar. Belege nennt nur `validate.ts:589–591`, und zwar ' +
+        'Die Konstante trägt keinen Kommentar. Belege nennt nur `derive/head-zone.ts:230`, und zwar ' +
         'für die technische Kopfmarke als Ganzes (F.1.1, F.1.13, F.1.21, E.1.31, I.1.4), nicht je Wert.',
     ),
   ),

@@ -133,7 +133,7 @@ export type RuleReasonSource = 'core' | 'website';
  * - `kind` und `bodyVariant` der Achsenliste stehen hier als `'base-symbol'` und
  *   `'body-variant'` — die Regeln trennen beide deutlich.
  * - `'label'` hat **keine** Wertachse (Beschriftung ist freier Text, kein Werteraum), trägt aber
- *   44 der 78 Regeln. Ohne diese Dimension wäre der Katalog unbrauchbar.
+ *   29 der 50 Regeln (Stand 2. Oktober 2026). Ohne diese Dimension wäre der Katalog unbrauchbar.
  * - `'composition'` ist keine Dimension der Systematik, sondern die Einordnung für Regeln, deren
  *   Auflösung überhaupt kein einzelnes Feld benennt. Dasselbe Wort und derselbe Grund wie in
  *   `rule-explanations.ts`; bislang genau `head-zone-conflict`.

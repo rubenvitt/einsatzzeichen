@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { SPEC_FIELD_VALUES, VOCABULARY_FIELDS, checkSpec } from '@einsatzzeichen/core';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 import {
+  derivationParts,
+  derivedMarker,
+  drawsDerived,
   kindPreviews,
   labelFor,
   optionsFor,
@@ -168,14 +171,80 @@ describe('unmeasuredField', () => {
   });
 
   it('meldet ein Feld mit wenigstens einem zeichenbaren Wert nicht', () => {
-    // Verband III ist nicht vermessen, I und II an der Formation schon.
-    const probes = probeFields(vocabulary, { kind: 'formation' }, ['unitGrouping']);
-    expect(probes.get('unitGrouping')?.get('verband-iii')?.blocked?.because).toBe('not-measured');
-    expect(unmeasuredField(probes.get('unitGrouping'))).toBe(false);
+    // Am Landfahrzeug mit Fahrzeugkategorie lässt sich der Giebel über der Fahrwerkszone auch
+    // abgeleitet nicht zeichnen; Fußband und Kettenrumpf gehen. (Bis zum 02.10.2026 stand hier
+    // Verband III, der seitdem nach dem Vorschlag gezeichnet wird.)
+    const spec: SymbolSpec = { kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-1' };
+    const probes = probeFields(vocabulary, spec, ['bodyVariant']);
+    expect(probes.get('bodyVariant')?.get('raised-gable')?.blocked?.because).toBe('not-measured');
+    expect(probes.get('bodyVariant')?.get('foot-band')?.ok).toBe(true);
+    expect(unmeasuredField(probes.get('bodyVariant'))).toBe(false);
   });
 
   it('meldet ein Feld ohne Probe oder ohne Werte nicht', () => {
     expect(unmeasuredField(undefined)).toBe(false);
     expect(unmeasuredField(new Map())).toBe(false);
+  });
+});
+
+describe('abgeleitete Werte', () => {
+  const allowed = (derived: boolean): AllowedValue =>
+    derived
+      ? { value: 'x', ok: true, issues: [], derived: true }
+      : { value: 'x', ok: true, issues: [] };
+
+  it('erkennt, ob eine Zusammenstellung abgeleitete Teile trägt', () => {
+    expect(drawsDerived({ kind: 'formation' })).toBe(false);
+    // Verband III an der Formation: der Vorschlag x 12/16/20, an keinem Original vermessen.
+    expect(drawsDerived({ kind: 'formation', unitGrouping: 'verband-iii' })).toBe(true);
+    // Eine Spec, die nicht zeichnet, trägt nichts Abgeleitetes.
+    expect(drawsDerived({ kind: 'vehicle-land', strength: 'trupp' })).toBe(false);
+  });
+
+  it('kennzeichnet einen zeichenbaren, abgeleiteten Wert', () => {
+    expect(derivedMarker(allowed(true), false, false)).toBe(true);
+    expect(derivedMarker(allowed(false), false, false)).toBe(false);
+  });
+
+  it('kennzeichnet nie den gesetzten Wert', () => {
+    expect(derivedMarker(allowed(true), true, false)).toBe(false);
+  });
+
+  it('kennzeichnet nichts, wenn die Spec der Probe schon abgeleitet ist', () => {
+    // Sonst trüge fast jeder Eintrag den Zusatz — die Ableitung steckt dann in der übrigen
+    // Auswahl, nicht im einzelnen Wert, und steht unter der Vorschau.
+    expect(derivedMarker(allowed(true), false, true)).toBe(false);
+  });
+
+  it('kennzeichnet keinen gesperrten und keinen unbekannten Eintrag', () => {
+    const blocked: AllowedValue = {
+      value: 'x',
+      ok: false,
+      issues: [],
+      blocked: { because: 'not-measured', detail: 'Lücke', scope: 'combination' },
+    };
+    expect(derivedMarker(blocked, false, false)).toBe(false);
+    expect(derivedMarker(undefined, false, false)).toBe(false);
+  });
+
+  it('kennzeichnet in der echten Probe Verband III, nicht Verband I und II', () => {
+    const probes = probeFields(builderVocabulary(), { kind: 'formation' }, ['unitGrouping']);
+    const marked = [...(probes.get('unitGrouping') ?? new Map<string, AllowedValue>()).values()]
+      .filter((entry) => derivedMarker(entry, false, drawsDerived({ kind: 'formation' })))
+      .map((entry) => entry.value);
+    expect(marked).toEqual(['verband-iii']);
+  });
+
+  it('listet die abgeleiteten Teile einer Zeichnung, jeden einmal', () => {
+    const result = checkSpec({ kind: 'formation', unitGrouping: 'verband-iii' });
+    if (!result.ok) throw new Error('Verband III an der Formation sollte zeichnen.');
+    const parts = derivationParts(result.drawing);
+    expect(parts.length).toBeGreaterThan(0);
+    expect(parts.some((part) => part.includes('Verband III'))).toBe(true);
+    expect(new Set(parts).size).toBe(parts.length);
+
+    const measured = checkSpec({ kind: 'formation' });
+    if (!measured.ok) throw new Error('Die nackte Formation sollte zeichnen.');
+    expect(derivationParts(measured.drawing)).toEqual([]);
   });
 });

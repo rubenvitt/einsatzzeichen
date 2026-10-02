@@ -125,6 +125,13 @@ export interface AllowedValue {
   issues: ExplainedIssue[];
   /** Warum der Wert gerade nicht geht. Fehlt genau dann, wenn `ok` gilt. */
   blocked?: BlockedValue;
+  /**
+   * Der Wert lässt sich zeichnen, aber die Zeichnung trägt abgeleitete Teile
+   * (`Drawing.derivations`, Entscheidung vom 2. Oktober 2026): kein Original belegt diese
+   * Zusammenstellung. Unverändert aus `vocabulary()` (`derived: true`); steht nur, wenn es gilt,
+   * damit ein vermessener Wert dieselbe Form behält wie vorher.
+   */
+  derived?: true;
 }
 
 /**
@@ -148,6 +155,10 @@ export interface AllowedValue {
  * hier zu sperren hieße, die eigene Auswahl unbedienbar zu machen, und ein gesperrter Eintrag,
  * der zugleich der ausgewählte ist, wird von Browsern verschieden dargestellt. Verloren geht dabei
  * nichts: warum die Spec nicht trägt, steht vollständig in der Regelliste unter der Vorschau.
+ *
+ * **Abgeleitet heißt zeichenbar.** Ein Wert, mit dem die Zeichnung abgeleitete Teile trägt, ist
+ * frei (`ok: true`) und trägt zusätzlich `derived: true`. Ob die Insel das anzeigt, entscheidet sie
+ * gegen die Spec, zu der die Probe gehört (`derivedMarker()` in `builder-vocabulary.ts`).
  */
 export function allowedValues(
   spec: SymbolSpec,
@@ -163,11 +174,18 @@ export function allowedValues(
   };
   return vocabulary(spec, field as VocabularyField, options).map((option) => {
     const { value } = option;
-    if (option.selected || option.status === 'allowed') return { value, ok: true, issues: [] };
+    if (option.status === 'allowed') {
+      return option.derived === true
+        ? { value, ok: true, issues: [], derived: true }
+        : { value, ok: true, issues: [] };
+    }
+    if (option.selected) return { value, ok: true, issues: [] };
     if (option.reason === 'not-measured') {
-      // Die Originalmeldung wandert nach `detail` und **nicht** in den Tooltip: sie nennt
-      // Katalogkennungen (`formation/normal/…`), und das ist bei 39 von 64 Körpermarken die
-      // Regel, nicht die Ausnahme. Den lesbaren Satz baut die Insel aus den Bezeichnungen.
+      // Die Originalmeldung wandert nach `detail` und **nicht** in den Tooltip: sie spricht die
+      // Sprache des Motors und nennt Kennungen (`"vehicle-land"`, Radplätze, Kopfzone). Bis zum
+      // 2. Oktober 2026 traf das 39 von 64 Körpermarken; seitdem sind die Lücken selten, die
+      // Meldung bleibt aber dieselbe Art Text. Den lesbaren Satz baut die Insel aus den
+      // Bezeichnungen.
       return {
         value,
         ok: false,
@@ -200,33 +218,33 @@ export function allowedValues(
  * sich nicht bauen: `ValidationIssue` trägt nur `rule` und `message` und keinen Pfad — jeder
  * Textvergleich auf der Meldung wäre Raten.
  *
- * **Drei gemessene Grenzen (Stand 01.09.2026), damit später niemand einen Fehler meldet, wo
- * keiner ist.** (1) 45 der 78 Erklärungen zeigen auf `labels`; dafür hat der Baukasten kein Formularfeld, er
- * führt als Beschriftung nur `designation`. Diese Mehrheit bleibt ohne Anker, und das ist ehrlicher
- * als eine erfundene Zuordnung. (2) `kind` und `bodyMarks` tragen **null** Erklärungen: sie
- * scheitern nicht über Regeln, sondern über Vermessungslücken, und die kommen als Abbruch
- * (`state: 'crash'`) und nicht als `issues` an. An diesen beiden Feldern kann hier nie ein Hinweis
- * erscheinen. `capabilities` stand bis LFH-587 mit in dieser Liste; seit LFH-787 (29.09.2026)
- * zeigen zwei Regeln darauf (`capabilities-pictogram-has-measured-rendition`,
- * `capabilities-pictogram-overflows-body`), dort erscheint also ein Hinweis. (3) Wo eine Regel zwei Felder gegeneinander stellt
- * (`technical-fill-organization-conflict`), zeigt der Hinweis nur an dem Feld, auf das die
- * Erklärung zeigt — an `technicalFill`, nicht an `organization`. Der Wortlaut am Feld darf deshalb
- * nicht „dieser Wert ist falsch" sagen, sondern muss auf die vollständige Regelliste verweisen.
+ * **Drei gemessene Grenzen (Stand 02.10.2026), damit später niemand einen Fehler meldet, wo
+ * keiner ist.** (1) 28 der 50 Erklärungen aus `validate.ts` zeigen auf `labels`; dafür hat der
+ * Baukasten kein Formularfeld, er führt als Beschriftung nur `designation`. Diese Mehrheit bleibt
+ * ohne Anker, und das ist ehrlicher als eine erfundene Zuordnung. (2) `kind`, `organization` und
+ * `capabilities` tragen **null** Erklärungen, `bodyMarks` eine. Seit dem 2. Oktober 2026 leitet
+ * der Motor Lücken ab, statt sie zu sperren (`docs/decisions/2026-10-02-ableiten-statt-messsperre.md`);
+ * die Messsperren-Regeln, die bis dahin auf `organization` und `capabilities` zeigten
+ * (`reduced-house-requires-hilfsorganisation`, `circle-12-requires-*`,
+ * `capabilities-pictogram-*`), gibt es nicht mehr. Was danach noch scheitert, ohne dass eine
+ * Regel greift, kommt als Vermessungslücke (`state: 'crash'`) und nicht als `issues` an. (3) Wo
+ * eine Regel zwei Felder gegeneinander stellt (`technical-fill-organization-conflict`), zeigt der
+ * Hinweis nur an dem Feld, auf das die Erklärung zeigt — an `technicalFill`, nicht an
+ * `organization`. Der Wortlaut am Feld darf deshalb nicht „dieser Wert ist falsch" sagen,
+ * sondern muss auf die vollständige Regelliste verweisen.
  *
  * **Übersprungen wird zweierlei.** `'composition'`, weil diese Regeln per Definition kein
  * einzelnes Feld benennen. Und jedes Feld, das die Spec **nicht gesetzt** hat — auch dann, wenn
- * eine Regel darauf zeigt. Das trifft mehr als einen Randfall: am 01.09.2026 über alle
- * Grundzeichenarten × acht Einzelachsen aus `buildSnapshot().builder` durchgerechnet kommen 134
- * Kombinationen vor, in denen eine Meldung auf ein leeres Feld zeigt — alle 134 auf
- * `organization`, und sie verteilen sich auf drei Regeln:
- * `reduced-house-requires-hilfsorganisation` (67), `circle-12-requires-hilfsorganisation` (66)
- * und `circle-12-requires-organization` (1). Wer den Hinweis später ausweitet, misst sich an den
- * beiden ersten; die dritte ist ein Einzelfall. Sie bleiben trotzdem draußen,
- * weil `ExplainedIssue` nicht sagt, ob die Regel eine Angabe *verlangt* oder die gesetzte
- * *ablehnt*: an einer leeren Auswahl ließe sich nur ein geratener Satz hinschreiben. Diese Regeln
- * stehen vollständig in der Liste unter der Vorschau, wo ihre Erklärung den Unterschied selbst
- * ausspricht. Wer den Hinweis später auf fehlende Angaben ausweiten will, braucht dafür ein
- * eigenes Merkmal an der Erklärung — keine zweite Lesart derselben Daten.
+ * eine Regel darauf zeigt. Bis zum 2. Oktober 2026 traf das 134 Einzelfeld-Kombinationen, alle
+ * über die Messsperren am 12-mm-Kreis und an der reduzierten Hauskontur, die eine Organisation
+ * verlangten. Seitdem zeigt keine der verbleibenden Regeln an einer Einzelfeld-Kombination auf
+ * ein leeres Feld (nachgezählt über alle Grundzeichenarten × Felder des Baukastens). Die Grenze
+ * bleibt trotzdem, weil `ExplainedIssue` nicht sagt, ob die Regel eine Angabe *verlangt* oder
+ * die gesetzte *ablehnt*: an einer leeren Auswahl ließe sich nur ein geratener Satz
+ * hinschreiben. Solche Regeln stehen vollständig in der Liste unter der Vorschau, wo ihre
+ * Erklärung den Unterschied selbst ausspricht. Wer den Hinweis später auf fehlende Angaben
+ * ausweiten will, braucht dafür ein eigenes Merkmal an der Erklärung — keine zweite Lesart
+ * derselben Daten.
  */
 export function issuesByField(
   issues: readonly ExplainedIssue[],

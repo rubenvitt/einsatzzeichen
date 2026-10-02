@@ -163,7 +163,9 @@ describe('Bausteinregister: festgenagelter Stand', () => {
       BLOCK_CATEGORIES.map((category) => [category, BLOCK_REGISTER[category].length]),
     );
     expect(counts).toEqual({
-      'base-symbol': 33,
+      // Seit dem 2. Oktober 2026 36: die drei abgeleiteten Fassungen der Funktionsstelle
+      // (`post/raised-gable`, `post/raised-circle-1mm`, `post/foot-band`) zeichnet der Katalog.
+      'base-symbol': 36,
       // Seit LFH-586 acht: `bundespolizei` ist keine eigene Organisation mehr.
       color: 8,
       strength: 4,
@@ -172,7 +174,8 @@ describe('Bausteinregister: festgenagelter Stand', () => {
       'technical-head-mark': 2,
       chassis: 8,
       capability: 88,
-      'body-mark': 45,
+      // Seit dem 2. Oktober 2026 46: die Kappe der Leitstelle `circle-solid-cap-4mm` (D.2.5).
+      'body-mark': 46,
       'function-role': 25,
       state: 58,
       tendency: 3,
