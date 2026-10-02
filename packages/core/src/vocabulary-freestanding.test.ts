@@ -58,12 +58,12 @@ describe('checkAnySpec', () => {
     ]);
   });
 
-  it('meldet eine Vermessungslücke mit ihrer Reichweite', () => {
-    expect(checkAnySpec({ kind: 'line', line: 'boundary-with-strength', path: LINE_PATH, strength: 'gruppe' })).toMatchObject({
-      ok: false,
-      reason: 'not-measured',
-      scope: 'combination',
-    });
+  it('zeichnet eine bis zum 02.10.2026 unvermessene Kombination abgeleitet', () => {
+    const check = checkAnySpec({ kind: 'line', line: 'boundary-with-strength', path: LINE_PATH, strength: 'gruppe' });
+    expect(check.ok).toBe(true);
+    if (check.ok) {
+      expect(check.drawing.derivations).toEqual([expect.objectContaining({ dimension: 'strength', basis: 'transferred' })]);
+    }
   });
 
   it('lässt einen Verlauf, der nicht passt, als gewöhnlichen Fehler fliegen', () => {

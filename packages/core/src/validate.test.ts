@@ -719,10 +719,10 @@ describe('validateSpec', () => {
       kind: 'vehicle-water', bodyVariant: 'inset-hull', labels: { center: 'MzB' },
     }],
     ['THW-Organisation', { ...validInsetWatercraft, organization: 'thw' }],
-  ] as const)('lehnt inset-hull mit %s ab', (_case, spec) => {
-    expect(validateSpec(spec).map((issue) => issue.rule)).toContain(
-      'inset-hull-requires-measured-organization',
-    );
+  ] as const)('lässt inset-hull mit %s zu (Füllung abgeleitet)', (_case, spec) => {
+    // Eigentümerentscheid 02.10.2026: jede Organisation färbt den Rumpf wie an jedem anderen
+    // geschlossenen Körper; die Zeichnung prüft derive/inset-hull-organization.test.ts.
+    expect(validateSpec(spec)).toEqual([]);
   });
 
   it.each([
@@ -758,10 +758,11 @@ describe('validateSpec', () => {
       ...validInsetWatercraft,
       labels: { center: 'MzB', centerCapHeightMm: 0 },
     }).map((issue) => issue.rule)).toContain('center-cap-height-positive');
+    // Seit dem 02.10.2026 trägt auch das Wasserfahrzeug eine (abgeleitete) Fahrwerkszone.
     expect(validateSpec({
       ...validInsetWatercraft,
       vehicleCategory: 'kfz-kategorie-1',
-    }).map((issue) => issue.rule)).toContain('vehicle-category-requires-vehicle');
+    }).map((issue) => issue.rule)).not.toContain('vehicle-category-requires-vehicle');
   });
 
   it.each([
@@ -922,13 +923,13 @@ describe('validateSpec', () => {
   });
 
   it.each(['vehicle-air', 'vehicle-water'] as const)(
-    'lehnt eine Fahrzeugkategorie an "%s" ab',
+    'lässt eine Fahrzeugkategorie an "%s" zu (Fahrwerkszone abgeleitet)',
     (kind) => {
       // Gemessen (18. August 2026): keine der drei Luftfahrzeugdateien 5.1.4.1 bis 5.1.4.3 und
-      // keines der fünf Wasserfahrzeuge E.2.27 bis E.2.31 trägt eine Fahrwerkszone. „Fahrzeug"
-      // war die Annahme, „Landfahrzeug" ist die Messung.
-      const issues = validateSpec({ kind, vehicleCategory: 'kfz-kategorie-1' });
-      expect(issues.map((i) => i.rule)).toEqual(['vehicle-category-requires-vehicle']);
+      // keines der fünf Wasserfahrzeuge E.2.27 bis E.2.31 trägt eine Fahrwerkszone. Seit dem
+      // Eigentümerentscheid vom 02.10.2026 ist das keine Sperre mehr; die Zeichnung prüft
+      // derive/vehicle-category.test.ts.
+      expect(validateSpec({ kind, vehicleCategory: 'kfz-kategorie-1' })).toEqual([]);
     },
   );
 

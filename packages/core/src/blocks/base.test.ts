@@ -18,6 +18,7 @@ import {
 import { baseDrawing } from '../geometry/base-symbols.js';
 import { organizationColor } from '../geometry/organizations.js';
 import { MEASURED_VEHICLE_CATEGORIES, vehicleChassis } from '../geometry/vehicle-categories.js';
+import { drawSymbol } from '../default-ports.js';
 
 /**
  * Laufzeit-Gate des Bausteinregisters für Grundzeichen, Farbe und Fahrwerk (LFH-564).
@@ -206,12 +207,15 @@ describe('Bausteinregister gegen Katalog: Farbe', () => {
 describe('Bausteinregister gegen Katalog: Fahrwerk', () => {
   const entries = BLOCK_REGISTER.chassis;
 
-  it('löst jeden Eintrag so auf, wie sein Messstand sagt', () => {
+  it('löst jeden Eintrag auf; nur die nicht vermessenen melden eine Ableitung', () => {
+    // Seit dem 02.10.2026 zeichnet `vehicleChassis()` auch das Amphibienfahrzeug (Wellenlinie aus
+    // der Strichhülle konstruiert). Der Messstand im Register bleibt eine Aussage über die
+    // Referenz; an der Zeichnung zeigt er sich als Ableitungsnotiz.
     for (const entry of entries) {
       const id = entry.valueId as VehicleCategoryId;
-      expect(resolves(() => vehicleChassis(id)), entry.id).toBe(
-        entry.binding.status === 'measured',
-      );
+      expect(resolves(() => vehicleChassis(id)), entry.id).toBe(true);
+      const drawing = drawSymbol({ kind: 'vehicle-land', vehicleCategory: id });
+      expect(drawing.derivations === undefined, entry.id).toBe(entry.binding.status === 'measured');
     }
   });
 

@@ -158,7 +158,7 @@ describe('checkSpec', () => {
   });
 
   test('meldet eine Vermessungslücke als eigenes Ergebnis mit Reichweite', () => {
-    const result = checkSpec({ kind: 'vehicle-land', vehicleCategory: 'amphibienfahrzeug' });
+    const result = checkSpec({ kind: 'formation', unitGrouping: 'verband-iii' });
     expect(result).toMatchObject({ ok: false, reason: 'not-measured', scope: 'value' });
     if (!result.ok && result.reason === 'not-measured') expect(result.message.length).toBeGreaterThan(0);
   });
@@ -204,10 +204,16 @@ describe('vocabulary', () => {
   });
 
   test('sperrt einen nicht vermessenen Wert mit der Reichweite aus der Wurfstelle', () => {
-    const [fixed] = vocabulary({ kind: 'vehicle-land' }, 'vehicleCategory', {
-      candidates: ['amphibienfahrzeug'],
+    const [fixed] = vocabulary({ kind: 'formation' }, 'unitGrouping', {
+      candidates: ['verband-iii'],
     });
     expect(fixed).toMatchObject({ status: 'blocked', reason: 'not-measured', scope: 'value' });
+    // Das Amphibienfahrzeug war bis zum 02.10.2026 das Beispiel hier; seine Wellenlinie ist jetzt
+    // aus der Strichhülle konstruiert, der Wert also offen und als abgeleitet markiert.
+    const [amphibian] = vocabulary({ kind: 'vehicle-land' }, 'vehicleCategory', {
+      candidates: ['amphibienfahrzeug'],
+    });
+    expect(amphibian).toEqual({ value: 'amphibienfahrzeug', selected: false, status: 'allowed', derived: true });
     const [combination] = vocabulary({ kind: 'formation' }, 'bodyMarks', {
       candidates: ['air-winch-chevron-diamond'],
     });

@@ -18,6 +18,9 @@ import type { Length } from './geometry.js';
  * - `bar` — waagerechter Verbindungsstrich zwischen zwei benachbarten Rädern (`5.1.1.3`).
  *   Mittellinie auf derselben Höhe wie die Radmitten, Strich 0,5 (gemessene Ober- und Unterkante
  *   28,0000 und 28,5002).
+ * - `curve` — offener Kurvenzug aus kubischen Bézierstücken, Strich 0,5 ohne Füllung: die
+ *   Wellenlinie des Amphibienfahrzeugs (`5.1.1.4`). `points` beginnt mit dem Startpunkt, danach
+ *   folgen je drei Punkte (zwei Kontrollpunkte, Endpunkt); y wie `cyFromTopMm` ab Zonenoberkante.
  *
  * Eine Marke trägt keine Farbe: die Fahrwerkszone ist im gesamten vermessenen Bestand schwarze
  * Kontur ohne Füllung — die Radinnenflächen der Referenz sind Löcher, keine gefüllten Scheiben
@@ -39,6 +42,10 @@ export type ChassisMark =
       readonly fromXMm: Length;
       readonly toXMm: Length;
       readonly cyFromTopMm: Length;
+    }
+  | {
+      readonly type: 'curve';
+      readonly points: readonly (readonly [Length, Length])[];
     };
 
 /**

@@ -16,8 +16,7 @@ import { babz, block, measured, notMeasured } from './helpers.js';
  * Zeichnung genau mit diesem Abschnitt ausgibt.
  *
  * **Keine Kombinationsbindung.** Die Regeln `vehicle-category-requires-vehicle`,
- * `plain-wheel-pair-chassis-conflict`, `inset-hull-requires-measured-organization`,
- * `circle-12-requires-hilfsorganisation` und `reduced-house-requires-hilfsorganisation` schränken
+ * `plain-wheel-pair-chassis-conflict`, `circle-12-requires-hilfsorganisation` und `reduced-house-requires-hilfsorganisation` schränken
  * ein, welche Bausteine zusammen stehen dürfen. Sie gehören in den Regelkatalog. Keine davon setzt
  * einen dieser Bausteine nur als Teil eines anderen, wie es die Funktionsfassung mit der
  * Verwaltungsstufe tut.
@@ -498,7 +497,7 @@ export const CHASSIS_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'chassis',
     notMeasured(
       `${CHASSIS}:180–199`,
-      'Die zwei Radplätze von 5.1.1.4 sind vermessen (3,75 / 28,25 mm wie Kategorie 1), die Wellenlinie nur als Strichhülle 7,4263/26,7000/24,5756/29,7998 mm und nicht in ihrer Kurvenform. Ohne diese Form wäre ein Amphibienfahrzeug von einem Kraftfahrzeug der Kategorie 1 nicht zu unterscheiden; `vehicleChassis()` wirft `NotMeasuredError`.',
+      'Die zwei Radplätze von 5.1.1.4 sind vermessen (3,75 / 28,25 mm wie Kategorie 1), die Wellenlinie nur als Strichhülle 7,4263/26,7000/24,5756/29,7998 mm und nicht in ihrer Kurvenform. Seit dem 02.10.2026 konstruiert `vehicleChassis()` ihre Mittellinie aus beiden Strichkanten und meldet sie als Ableitung (`constructed`).',
     ),
   ),
 ]);

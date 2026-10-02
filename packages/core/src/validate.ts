@@ -44,29 +44,29 @@ export class CompositionError extends Error {
 const UNIT_KINDS = new Set<SymbolKind>(['formation', 'person']);
 
 /**
- * Grundzeichenarten, an denen die Referenz eine Fahrwerkszone zeichnet. Gemessen, nicht
- * angenommen (18. August 2026): von den 31 Zeichen des Anhangs E.2 tragen **25** ein Fahrwerk —
- * 20 auf dem Landfahrzeugkörper, vier auf dem Anhängerrumpf, eines auf dem Wechselladerrumpf. Die
- * fünf Wasserfahrzeuge E.2.27 bis E.2.31 tragen keines, E.2.26 auf dem Hochkantrechteck auch
- * nicht, und keine der drei Luftfahrzeugdateien 5.1.4.1 bis 5.1.4.3 trägt eines.
+ * Grundzeichenarten, die eine Fahrzeugkategorie tragen dürfen: die Fahrzeuge. Die Kategorie aus
+ * Kapitel 5.1 beschreibt das Fahrwerk eines Fahrzeugs; an einer Einheit, einer Stelle oder einem
+ * Gebäude hat sie keine Bedeutung (Systematik).
  *
- * Bis LFH-424 hieß diese Menge „Fahrzeuge" und enthielt alle drei Fahrzeugarten. Das war eine
- * Annahme aus dem Wort „Fahrzeugkategorie" — die Referenz stützt sie nicht. LFH-424 zog sie auf
- * das Landfahrzeug zusammen; der Teilslice E.2 fügt die beiden Körperformen hinzu, die er
- * vermessen hat.
+ * Vermessen ist die Fahrwerkszone nur an drei dieser Formen (18. August 2026): von den 31
+ * Zeichen des Anhangs E.2 tragen **25** ein Fahrwerk — 20 auf dem Landfahrzeugkörper, vier auf
+ * dem Anhängerrumpf, eines auf dem Wechselladerrumpf. Die fünf Wasserfahrzeuge E.2.27 bis E.2.31
+ * und die drei Luftfahrzeugdateien 5.1.4.1 bis 5.1.4.3 tragen keines. Seit dem
+ * Eigentümerentscheid vom 02.10.2026 ist das keine Sperre mehr: an Wasser- und Luftfahrzeug wird
+ * die Zone übertragen (`derive/vehicle-category.ts`). Bis LFH-424 stand hier schon einmal diese
+ * Menge — damals als Annahme, jetzt als Systematik mit abgeleiteter Fassung.
  *
- * **Was diese Menge ausdrücklich NICHT erzwingt: die Paarung von Kategorie und Körperform.** Eine
- * Fahrzeugkategorie, die im Bestand nur an einer dieser drei Formen vorkommt, lässt sich an jeder
- * der drei spezifizieren, ohne dass eine Regel widerspricht — der Katalog liefert dann klaglos
- * eine Zeichnung, die an keiner Referenzdatei belegt ist. Das ist bewusst nicht gebaut: bei vier
- * Belegdateien je Paarung wäre die Regel geraten und nicht vermessen
- * (`docs/decisions/2026-08-18-anhang-e2.md`, Abschnitt „Offene Kanten"). Wer die Lücke schließt,
- * schließt sie dort und nicht hier.
+ * **Was diese Menge nicht erzwingt: die Paarung von Kategorie und Körperform.** Eine
+ * Anhängerkategorie am Landfahrzeug oder eine Kfz-Kategorie am Anhänger widerspricht keiner Regel;
+ * gezeichnet wird sie mit den vermessenen Radplätzen der Kategorie
+ * (`docs/decisions/2026-08-18-anhang-e2.md`, Abschnitt „Offene Kanten").
  */
-const CHASSIS_KINDS = new Set<SymbolKind>([
+const VEHICLE_KINDS = new Set<SymbolKind>([
   'vehicle-land',
   'trailer',
   'swap-loader-vehicle',
+  'vehicle-water',
+  'vehicle-air',
 ]);
 
 /** Vermessene Normalhülle des F.2-Landfahrzeugs: x 1…31 / y 5,75…26 mm. */
@@ -431,15 +431,12 @@ function validatePreparedSpec(
       (isHilfsorganisation &&
         (bodyMarks.length === 0 ||
           (bodyMarks.length === 1 && bodyMarks[0] === 'inset-hull-wheel-pair'))) ||
-      (isFeuerwehr && bodyMarks.length === 1 && bodyMarks[0] === 'fire-fighting');
+      (isFeuerwehr && bodyMarks.length === 1 && bodyMarks[0] === 'fire-fighting') ||
+      // Jede andere Organisation und das Boot ohne Organisation: Füllung wie an jedem
+      // geschlossenen Körper, abgeleitet (derive/inset-hull-organization.ts).
+      (!isHilfsorganisation && !isFeuerwehr && bodyMarks.length === 0);
 
-    if (!isHilfsorganisation && !isFeuerwehr) {
-      issues.push({
-        rule: 'inset-hull-requires-measured-organization',
-        message:
-          'inset-hull is measured only for Hilfsorganisation or Feuerwehr body contracts.',
-      });
-    } else if (!hasMeasuredBodyMark) {
+    if (!hasMeasuredBodyMark) {
       issues.push({
         rule: 'inset-hull-requires-measured-body-mark',
         message:
@@ -495,12 +492,12 @@ function validatePreparedSpec(
     });
   }
 
-  if (spec.vehicleCategory !== undefined && !CHASSIS_KINDS.has(spec.kind)) {
+  if (spec.vehicleCategory !== undefined && !VEHICLE_KINDS.has(spec.kind)) {
     issues.push({
       rule: 'vehicle-category-requires-vehicle',
       message:
-        'Eine Fahrzeugkategorie ist nur am Landfahrzeug, am Anhängerrumpf und am ' +
-        `Wechselladerrumpf belegt. "${spec.kind}" trägt in der Referenz keine Fahrwerkszone.`,
+        'Eine Fahrzeugkategorie beschreibt das Fahrwerk eines Fahrzeugs und steht nur an Land-, ' +
+        `Wasser- und Luftfahrzeug, Anhänger und Wechsellader. "${spec.kind}" ist kein Fahrzeug.`,
     });
   }
 
@@ -516,12 +513,21 @@ function validatePreparedSpec(
   // (`spec.labels`), und das ist mit einer Fahrwerkszone zulässig: alle 25 E.2-Zeichen mit
   // Fahrwerk tun genau das (21 mit einer Fahrzeugkategorie, vier mit einem Anhängerfahrwerk) —
   // E.2 tun genau das.
-  if (spec.vehicleCategory !== undefined && spec.designation !== undefined) {
+  //
+  // Dieselbe Kollision haben die beiden anderen Zonen unterhalb des Körpers, seit das Fahrwerk
+  // auch an Wasser- und Luftfahrzeug steht (02.10.2026): `belowRight` des angehobenen
+  // Wasserrumpfs (Grundlinie 4,01 mm unter der Körperunterkante) und die Oberflächenläufe des
+  // angehobenen Luftrumpfs (8,01 mm, genau auf der Höhe des Fahrwerks unter der Rotormarke).
+  const belowBodyLabels = spec.labels?.belowRight !== undefined ||
+    spec.labels?.surfaceBelowLeft !== undefined ||
+    spec.labels?.surfaceBelowRight !== undefined;
+  if (spec.vehicleCategory !== undefined && (spec.designation !== undefined || belowBodyLabels)) {
     issues.push({
       rule: 'chassis-foot-conflict',
       message:
-        'Fahrzeugkategorie und Bezeichnung belegen beide den Streifen unterhalb des Körpers und ' +
-        'schließen sich aus. Anhang E.2 beschriftet seine Fahrzeuge in den Körperzonen.',
+        'Die Fahrzeugkategorie belegt den Streifen unterhalb des Körpers; Bezeichnung, ' +
+        'Beschriftung rechts unterhalb und Oberflächenläufe stehen im selben Streifen und ' +
+        'schließen sich mit ihr aus. Anhang E.2 beschriftet seine Fahrzeuge in den Körperzonen.',
     });
   }
 

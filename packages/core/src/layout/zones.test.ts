@@ -244,17 +244,21 @@ describe('Zonenmodell: Bindung an die bestehenden Fundorte', () => {
     expect(Object.keys(COMPOSE_ZONE_CONSTANTS)).toHaveLength(6);
   });
 
-  it('hält die Fahrwerks-Körperformen an CHASSIS_KINDS in validate.ts fest', () => {
+  it('hält die vermessenen Fahrwerks-Körperformen als Teilmenge von VEHICLE_KINDS in validate.ts fest', () => {
     const validateSource = readPackageSource('validate.ts');
-    const block = /const CHASSIS_KINDS = new Set<SymbolKind>\(\[([^\]]*)\]\)/.exec(validateSource);
-    expect(block, 'CHASSIS_KINDS steht nicht mehr so in validate.ts').not.toBeNull();
+    const block = /const VEHICLE_KINDS = new Set<SymbolKind>\(\[([^\]]*)\]\)/.exec(validateSource);
+    expect(block, 'VEHICLE_KINDS steht nicht mehr so in validate.ts').not.toBeNull();
     const kinds = [...(block as RegExpExecArray)[1].matchAll(/'([a-z-]+)'/g)].map((m) => m[1]);
-    expect(kinds.sort()).toEqual(['swap-loader-vehicle', 'trailer', 'vehicle-land']);
+    expect(kinds.sort()).toEqual([
+      'swap-loader-vehicle', 'trailer', 'vehicle-air', 'vehicle-land', 'vehicle-water',
+    ]);
 
+    // Wasser- und Luftfahrzeug tragen die Zone abgeleitet; die Referenz führt sie dort nicht.
+    const measured = ['swap-loader-vehicle', 'trailer', 'vehicle-land'];
     for (const kind of SYMBOL_KINDS) {
       const binding = ZONE_MODEL[kind].zones.chassis;
       expect(binding.status, `${kind}: Fahrwerkszone`).toBe(
-        kinds.includes(kind) ? 'measured' : 'measured-absent',
+        measured.includes(kind) ? 'measured' : 'measured-absent',
       );
     }
   });

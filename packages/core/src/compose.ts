@@ -38,6 +38,14 @@ import { placeStates, type StatePlacement } from './layout/state-placement.js';
 import { NotMeasuredError } from './not-measured.js';
 import { collectDerivations } from './derive/record.js';
 import {
+  chassisCurvePath,
+  chassisLiftMm,
+  liftForChassis,
+  noteChassisDerivation,
+} from './derive/vehicle-category.js';
+import { openBodyTint } from './derive/open-body-tint.js';
+import { noteInsetHullOrganization } from './derive/inset-hull-organization.js';
+import {
   ARIMO_CAP_HEIGHT_FRACTION,
   CATALOG_TEXT_FONT_WEIGHT,
   MINIMUM_TEXT_RENDER_PX,
@@ -870,6 +878,9 @@ function chassisPrimitive(mark: ChassisMark, topMm: number): Primitive {
     stroke: 'schwarz',
     strokeWidth: DEFAULT_STROKE_WIDTH_MM,
   } as const;
+  if (mark.type === 'curve') {
+    return { type: 'path', role: 'chassis', d: chassisCurvePath(mark.points, topMm), style };
+  }
   const cyMm = topMm + mark.cyFromTopMm;
   switch (mark.type) {
     case 'wheel':
@@ -1250,26 +1261,13 @@ function composeMeasuredOrDerived(
     ? undefined
     : catalog.organizationColor(spec.organization);
   const bodyFillOverride = organizationFill ?? spec.technicalFill;
+  noteInsetHullOrganization(spec.kind, spec.bodyVariant, spec.organization);
 
-  if (bodyFillOverride !== undefined && isOpenPolyline(placedBody)) {
-    // SVG (und `canvas.ts` genauso) schließt einen gefüllten Polyzug implizit: aus dem Haken von
-    // `1.13 Ereignis` würde ein volles Dreieck. Selbst gerastert (18. August 2026): derselbe
-    // Polyzug mit `fill: 'rot'` deckt 936 Pixel bei 64 px Kantenlänge statt der 142 des reinen
-    // Strichs, und (16|14) mm liegt mit #fa1919 mitten in einer Fläche, die die Zeichnung nicht
-    // hat.
-    //
-    // Der Katalog erfindet diese Fläche nicht. Gegenprobe an der Quelle: der Haken kommt in genau
-    // **einer** der 661 Referenzdateien vor — in `1.13` selbst (Suche über seine Punktfolge, ein
-    // Treffer); kein zusammengesetztes Zeichen des Bestands trägt ihn eingefärbt. Es gibt also
-    // keinen Beleg für ein organisationsgefärbtes Ereignis. Werfen statt raten, dasselbe Muster
-    // wie `organizationColor` und `circleBodyProfile.place`.
-    throw new NotMeasuredError(
-      `Eine Körperfüllung an "${spec.kind}" ist nicht belegt: der Körper ist ein offener ` +
-        'Polyzug, und eine Füllung schlösse ihn implizit zu einer Fläche, die die Referenz nicht ' +
-        'zeichnet.',
-      'combination',
-    );
-  }
+  // Offener Polyzug (`1.13 Ereignis`): eine Füllung schlösse ihn zu einer Fläche, die die
+  // Referenz nicht zeichnet. Die Farbe geht deshalb in den Strich (derive/open-body-tint.ts).
+  const openBodyTinted = bodyFillOverride !== undefined && isOpenPolyline(placedBody)
+    ? openBodyTint(bodyForFill, bodyFillOverride, organizationFill)
+    : undefined;
 
   // Weiße Innenkontur (Anhang E): Der Körper trägt Weiß, die Farbe liegt im um 1 mm
   // eingerückten Innenfeld. Das Innenfeld folgt dem platzierten Körper wie die Piktogramme.
@@ -1303,8 +1301,8 @@ function composeMeasuredOrDerived(
       : [];
   const bodySurfaceFill = spec.whiteInnerContour === true ? 'weiss' : bodyFillOverride;
 
-  const filled: Primitive =
-    bodySurfaceFill !== undefined
+  const filled: Primitive = openBodyTinted ??
+    (bodySurfaceFill !== undefined
       ? {
           ...bodyForFill,
           style: {
@@ -1315,7 +1313,7 @@ function composeMeasuredOrDerived(
               : { bodyStrokeDashToken: organizationFill }),
           },
         }
-      : bodyForFill;
+      : bodyForFill);
 
   // Piktogramme sind auf den unverschobenen Körper hin entworfen (Mitte bei 16 mm). Der
   // Kompositionsmotor kann den Körper senkrecht verschieben oder verkleinern, um Platz für die
@@ -1378,9 +1376,13 @@ function composeMeasuredOrDerived(
   // überschnitte.
   const chassisShape: ChassisShape | null =
     spec.vehicleCategory !== undefined ? catalog.vehicleChassis(spec.vehicleCategory) : null;
+  const chassisTopMm = baseBottomMm + (profile.chassisTopBelowBaseBottomMm ?? 0);
   const chassisPrimitives: Primitive[] =
-    chassisShape?.marks.map((mark) =>
-      chassisPrimitive(mark, baseBottomMm + (profile.chassisTopBelowBaseBottomMm ?? 0))) ?? [];
+    chassisShape?.marks.map((mark) => chassisPrimitive(mark, chassisTopMm)) ?? [];
+  if (chassisShape !== null) noteChassisDerivation(spec.kind, spec.bodyVariant);
+  // Reicht das Fahrwerk unter Zusatzgeometrie über die Grundfläche, hebt sich das ganze Zeichen
+  // (derive/vehicle-category.ts); an den vermessenen Fahrwerken ist der Hub 0.
+  const liftMm = chassisLiftMm(chassisShape, chassisTopMm);
 
   // `FOOT_GAP_MM` trägt denselben Wert wie `HEAD_GAP_MM`, ist aber seit der Entscheidung vom
   // 21. September 2026 eine eigene Konstante: die 1 mm sind für die **Kopfzone** belegt
@@ -1540,7 +1542,7 @@ function composeMeasuredOrDerived(
   // einzige Stelle, an der die Zerlegung in Primitive das nachbilden kann.
   return {
     viewBox: DEFAULT_VIEWBOX_MM,
-    children: [
+    children: liftForChassis([
       ...headPrimitives,
       filled,
       ...innerFieldPrimitives,
@@ -1557,7 +1559,7 @@ function composeMeasuredOrDerived(
       ...bodyMarkPrimitives,
       ...labelChildren,
       ...footPrimitives,
-    ],
+    ], liftMm, spec.kind, spec.bodyVariant),
     ...(options.title !== undefined ? { title: options.title } : {}),
     ...(description !== undefined ? { description } : {}),
   };
