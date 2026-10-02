@@ -5,6 +5,7 @@ import { boundsOfMm } from '../bounds.js';
 import { drawSymbol } from '../default-ports.js';
 import { checkViewBox } from '../index.js';
 import { validateSpec } from '../validate.js';
+import { chassisLiftForForm } from './vehicle-category.js';
 
 /**
  * Fahrzeugkategorie an Wasser- und Luftfahrzeug (Eigentümerentscheid 02.10.2026: zulassen,
@@ -99,6 +100,29 @@ describe('Fahrzeugkategorie an Wasser- und Luftfahrzeug', () => {
     // Der angehobene Rumpf mit Rotormarke steigt um 0,75 mm (Rotorunterkante 27 + 4,75 − 31).
     const raised = partsOf(draw('vehicle-air', 'raised-hull', 'kfz-kategorie-1'));
     expect(boundsOfMm(raised.body).minY).toBeCloseTo(6.0001 - 0.75, 3);
+  });
+
+  it('prüft die Beschriftung oberhalb gegen die angehobene Lage, nicht gegen die unverschobene', () => {
+    // Der Hub, mit dem validate rechnet, ist der, den compose setzt.
+    for (const [kind, variant] of FORMS) {
+      const before = partsOf(drawSymbol({ kind, ...(variant === undefined ? {} : { bodyVariant: variant }), ...(variant === 'inset-hull' ? { organization: 'hilfsorganisation' as const } : {}) }));
+      const after = partsOf(draw(kind, variant, 'kfz-kategorie-1'));
+      expect(boundsOfMm(before.body).minY - boundsOfMm(after.body).minY, `${kind}/${variant ?? '-'}`)
+        .toBeCloseTo(chassisLiftForForm(kind, variant, 'kfz-kategorie-1'), 6);
+    }
+    const aboveLeft = (capHeightMm: number): SymbolSpec => ({
+      kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull', vehicleCategory: 'kfz-kategorie-1',
+      labels: { aboveLeft: 'ITH', aboveLeftMetrics: { capHeightMm, baselineFromBodyTopMm: -1, anchorFromBodyLeftMm: -0.01 } },
+    });
+    // Die gemessene F.2.7-Versalhöhe passt auch angehoben; 3,5 mm passten unangehoben, angehoben
+    // ragten sie 0,65 mm über den oberen Rand — das lehnt die Regel jetzt ab, statt still zu zeichnen.
+    const fits = drawSymbol(aboveLeft(2.919225));
+    expect(checkViewBox(fits)).toEqual([]);
+    const label = flat(fits.children).find((p) => p.type === 'text');
+    expect(label?.type === 'text' ? label.boxMm.yMm : -1).toBeGreaterThanOrEqual(0);
+    expect(validateSpec(aboveLeft(3.5)).map((issue) => issue.rule)).toContain('above-left-metrics-within-viewbox');
+    const { vehicleCategory: _without, ...unlifted } = aboveLeft(3.5);
+    expect(validateSpec(unlifted).map((issue) => issue.rule)).not.toContain('above-left-metrics-within-viewbox');
   });
 
   it('lässt die vermessenen Landfahrzeugfahrwerke bytegleich und ohne Notiz', () => {

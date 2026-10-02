@@ -23,6 +23,7 @@ import { CAPABILITY_UNSCALED_FIT, capabilityInsetForm } from './blocks/capabilit
 import { stateCarriersOf, stateValueGroup } from './blocks/state-groups.js';
 import { measuredBodyMarkRenditions } from './geometry/body-marks-anhang-c/index.js';
 import { profileFor } from './layout/profiles.js';
+import { chassisLiftForForm } from './derive/vehicle-category.js';
 import { ARIMO_CAP_HEIGHT_FRACTION, verticalTextBoxMm } from './render/text-policy.js';
 
 export interface ValidationIssue {
@@ -969,8 +970,11 @@ function validatePreparedSpec(
     if (!invalidOrIncomplete && record !== undefined) {
       const bodyBounds = profile.measuredBodyBoundsMm;
       const capHeightMm = record.capHeightMm as number;
+      // Ein Fahrwerk unter Zusatzgeometrie hebt das ganze Zeichen (derive/vehicle-category.ts);
+      // gegen die Grundfläche zählt die angehobene Lage.
       const baselineYMm = (bodyBounds?.minY ?? Number.NaN) +
-        (record.baselineFromBodyTopMm as number);
+        (record.baselineFromBodyTopMm as number) -
+        chassisLiftForForm(spec.kind, spec.bodyVariant, spec.vehicleCategory);
       const anchorXMm = (bodyBounds?.minX ?? Number.NaN) +
         (record.anchorFromBodyLeftMm as number);
       const box = verticalTextBoxMm(

@@ -1,6 +1,10 @@
-import type { BodyVariantId, ChassisShape, Primitive, SymbolKind } from '@einsatzzeichen/schema';
+import type { BodyVariantId, ChassisShape, Primitive, SymbolKind, VehicleCategoryId } from '@einsatzzeichen/schema';
 import { DEFAULT_VIEWBOX_MM } from '@einsatzzeichen/schema';
-import { HEAD_TOP_MARGIN_MM } from '../layout/profiles.js';
+import { boundsOfMm } from '../bounds.js';
+import { baseDrawing } from '../geometry/base-symbols.js';
+import { vehicleChassis } from '../geometry/vehicle-categories.js';
+import { HEAD_TOP_MARGIN_MM, profileFor } from '../layout/profiles.js';
+import { NotMeasuredError } from '../not-measured.js';
 import { mapPrimitive } from './affine-map.js';
 import { noteDerivation } from './record.js';
 
@@ -101,4 +105,29 @@ export function chassisCurvePath(points: readonly (readonly [number, number])[],
     cubics.push(`C ${rest.slice(index, index + 3).map(at).join(', ')}`);
   }
   return `M ${at(start)} ${cubics.join(' ')}`;
+}
+
+/**
+ * Der Hub, den `compose()` für diese Körperform mit Fahrwerk setzen wird — für die Prüfungen, die
+ * absolute Lagen gegen die Grundfläche halten (`above-left-metrics-within-viewbox`). Fahrzeuge
+ * tragen keine Kopfzone (`strength-requires-unit`), ihr Körper steht also unverschoben; die
+ * Unterkante des Grundzeichens ist die der Katalogzeichnung. Eine nicht belegte Variante hat keine
+ * Zeichnung und keinen Hub (die Ablehnung dafür kommt von ihrer eigenen Regel).
+ */
+export function chassisLiftForForm(
+  kind: SymbolKind,
+  variant: BodyVariantId | undefined,
+  vehicleCategory: VehicleCategoryId | undefined,
+): number {
+  if (vehicleCategory === undefined) return 0;
+  let children: readonly Primitive[];
+  try {
+    children = baseDrawing(kind, variant).children;
+  } catch (error) {
+    if (error instanceof NotMeasuredError) return 0;
+    throw error;
+  }
+  const bottomMm = Math.max(...children.map((child) => boundsOfMm(child).maxY));
+  const topMm = bottomMm + (profileFor(kind, variant).chassisTopBelowBaseBottomMm ?? 0);
+  return chassisLiftMm(vehicleChassis(vehicleCategory), topMm);
 }

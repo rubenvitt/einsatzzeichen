@@ -1,4 +1,7 @@
-import type { ColorToken, Primitive } from '@einsatzzeichen/schema';
+import { PALETTE, type ColorToken, type Primitive } from '@einsatzzeichen/schema';
+import { contrastRatio } from '../a11y/contrast.js';
+import { MINIMUM_NON_TEXT_CONTRAST } from '../geometry/pictograms/contrast-contract.js';
+import { REFERENCE_THEME } from '../render/theme.js';
 import { noteDerivation } from './record.js';
 
 /**
@@ -17,20 +20,28 @@ import { noteDerivation } from './record.js';
  * wessen Lagebild das Ereignis meldet, so wie an jedem anderen Grundzeichen ohne Einheit
  * (Gefahr, Maßnahme, Stelle). Die Systematik verbietet das nicht; offen war nur die Fassung.
  *
- * **Weiß bleibt schwarz.** Ein weißer Strich verschwände auf der weißen Ausgabeoberfläche und mit
- * ihm das Zeichen. Die Hilfsorganisation ist auch an den geschlossenen Körpern farblich nicht von
- * einem organisationslosen Zeichen zu unterscheiden (`organizations.ts`); am Ereignis gilt
- * dasselbe, die nicht-farbliche Kontursignatur (`bodyStrokeDashToken`) trägt sie trotzdem.
+ * **Zu helle Farben bleiben schwarz.** Der Strich ist hier das ganze Zeichen. Er muss deshalb den
+ * Kontrastvertrag für Nicht-Text-Grafik gegen die Ausgabeoberfläche halten
+ * (`MINIMUM_NON_TEXT_CONTRAST`, 3 : 1). Weiß (1 : 1), Gelb (1,07 : 1), Hellgrau (1,9 : 1) und
+ * Orange (2,3 : 1) halten ihn nicht; ein gelber Haken wäre auf Weiß praktisch unsichtbar. An den
+ * geschlossenen Körpern trägt der schwarze Umriss die Form und die Fläche die Farbe — am offenen
+ * Polyzug gibt es keine Fläche. Diese Farben zeichnen deshalb schwarz, und die
+ * Organisation bleibt über die nicht-farbliche Kontursignatur (`bodyStrokeDashToken`) erkennbar,
+ * so wie die weiße Hilfsorganisation an jedem Körper (`organizations.ts`). Rot, Blau, Grün und
+ * Braun halten den Vertrag und färben den Strich.
  */
 export function openBodyTint(
   body: Primitive,
   token: ColorToken,
   organization: ColorToken | undefined,
 ): Primitive {
-  const stroke: ColorToken = token === 'weiss' ? 'schwarz' : token;
+  const legible = contrastRatio(PALETTE[token], REFERENCE_THEME.surface) >= MINIMUM_NON_TEXT_CONTRAST;
+  const stroke: ColorToken = legible ? token : 'schwarz';
   noteDerivation({
     dimension: organization === undefined ? 'technicalFill' : 'organization',
-    part: `Farbe "${token}" als Strichfarbe des offenen Polyzugs statt als Fläche`,
+    part: legible
+      ? `Farbe "${token}" als Strichfarbe des offenen Polyzugs statt als Fläche`
+      : `Farbe "${token}" am offenen Polyzug unter 3 : 1 gegen die Oberfläche, Strich schwarz`,
     basis: 'constructed',
     from: '1.13_Ereignis.svg (Strichumriss ohne Füllebene)',
   });

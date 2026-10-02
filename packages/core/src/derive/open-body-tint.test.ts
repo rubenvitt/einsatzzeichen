@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { ORGANIZATION_IDS, type Primitive } from '@einsatzzeichen/schema';
+import { ORGANIZATION_IDS, PALETTE, type Primitive } from '@einsatzzeichen/schema';
 import { drawSymbol } from '../default-ports.js';
 import { baseDrawing } from '../geometry/base-symbols.js';
 import { organizationColor } from '../geometry/organizations.js';
 import { renderSvg } from '../index.js';
+import { contrastRatio } from '../a11y/contrast.js';
 
 /**
  * Organisation und technische Füllung am offenen Polyzug von `1.13 Ereignis`
@@ -26,9 +27,9 @@ describe('Farbe am Ereignis (offener Polyzug)', () => {
       expect(body.points, organization).toEqual(reference.points);
       expect(body.style, organization).toMatchObject({
         fill: 'none',
-        // Weiß verschwände auf der weißen Oberfläche; die Hilfsorganisation bleibt schwarz wie
-        // an jedem geschlossenen Körper, wo sie nur die Grundfüllung trägt.
-        stroke: color === 'weiss' ? 'schwarz' : color,
+        // Unter 3 : 1 gegen die weiße Oberfläche (Weiß, Gelb, Hellgrau, Orange) verschwände der
+        // Haken; er bleibt schwarz, die Kontursignatur trägt die Organisation.
+        stroke: contrastRatio(PALETTE[color], '#ffffff') >= 3 ? color : 'schwarz',
         strokeWidth: reference.style?.strokeWidth,
         bodyStrokeDashToken: color,
       });
@@ -38,6 +39,25 @@ describe('Farbe am Ereignis (offener Polyzug)', () => {
       // Keine Fläche im SVG: der Polyzug trägt fill="none".
       expect(renderSvg(drawing), organization).toMatch(/<polyline[^>]*fill="none"/);
     }
+  });
+
+  it('färbt genau Rot, Blau, Grün und Braun; die hellen Organisationsfarben bleiben schwarz', () => {
+    const strokes = Object.fromEntries(
+      ORGANIZATION_IDS.map((organization) => [
+        organization,
+        bodyOf(drawSymbol({ kind: 'event', organization }).children).style?.stroke,
+      ]),
+    );
+    expect(strokes).toEqual({
+      feuerwehr: 'rot',
+      thw: 'blau',
+      polizei: 'gruen',
+      bundeswehr: 'braun',
+      'fuehrung-leitung': 'schwarz',
+      'sonstige-gefahrenabwehr': 'schwarz',
+      'zivile-einheiten': 'schwarz',
+      hilfsorganisation: 'schwarz',
+    });
   });
 
   it('färbt mit einer technischen Füllung ebenso den Strich, ohne Organisationssignatur', () => {
