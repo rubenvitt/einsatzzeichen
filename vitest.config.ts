@@ -34,5 +34,9 @@ export default defineConfig({
   },
   test: {
     include: ['packages/*/src/**/*.test.ts', 'scripts/**/*.test.mjs'],
+    // Sieben Testdateien der Website bauen den vollständigen Katalog-Snapshot. Seit dem 2. Oktober
+    // 2026 zählt dessen generative Reichweite 22 644 statt 868 gültige Kompositionen; unter der
+    // Last des Gesamtlaufs reichen die voreingestellten 5 s dafür nicht mehr.
+    testTimeout: 30_000,
   },
 });
