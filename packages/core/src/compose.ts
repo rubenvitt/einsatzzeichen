@@ -68,7 +68,11 @@ import {
   noteCircleVariantBody,
   type CircleCornerRuns,
 } from './derive/circle.js';
-import { deriveLabelZones, type DerivedLabelBoxes } from './derive/label-zones.js';
+import {
+  deriveLabelZones,
+  noteFootBandCornerLabels,
+  type DerivedLabelBoxes,
+} from './derive/label-zones.js';
 import {
   ARIMO_CAP_HEIGHT_FRACTION,
   CATALOG_TEXT_FONT_WEIGHT,
@@ -1537,6 +1541,7 @@ function composeMeasuredOrDerived(
         organizationFill,
       });
   const zoneProfile = zones?.profile ?? profile;
+  noteFootBandCornerLabels(spec.kind, spec.bodyVariant, placedLabels);
   const labelChildren = placedLabels !== undefined
     ? labelPrimitives(
         placedLabels,

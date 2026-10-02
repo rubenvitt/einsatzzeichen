@@ -1,4 +1,4 @@
-import { DEFAULT_STROKE_WIDTH_MM, DEFAULT_VIEWBOX_MM, type BodyVariantId, type ColorToken, type Primitive, type SymbolKind, type SymbolSpec } from '@einsatzzeichen/schema';
+import { DEFAULT_STROKE_WIDTH_MM, DEFAULT_VIEWBOX_MM, type BodyLabels, type BodyVariantId, type ColorToken, type Primitive, type SymbolKind, type SymbolSpec } from '@einsatzzeichen/schema';
 import { boundsOfMm, type BoundsMm } from '../bounds.js';
 import { FOOT_GAP_MM, profileFor, type LayoutProfile } from '../layout/profiles.js';
 import { COMPOSE_ZONE_CONSTANTS } from '../layout/zones.js';
@@ -711,3 +711,23 @@ export function deriveLabelZones(context: LabelZoneContext): DerivedLabelZones {
   return { profile: { ...measured, ...derived }, boxes };
 }
 
+
+/**
+ * Landfahrzeug und Anhänger mit Fußband setzen ihre unteren Ecken über das Band (Profilwert 5 mm,
+ * übertragen von G.1.2). Vermessen ist das an diesen beiden Fassungen nicht; die Notiz macht es
+ * sichtbar, sobald eine Spec die Ecken belegt.
+ */
+export function noteFootBandCornerLabels(
+  kind: SymbolKind,
+  variant: BodyVariantId | undefined,
+  labels: BodyLabels | undefined,
+): void {
+  if (variant !== 'foot-band' || (kind !== 'vehicle-land' && kind !== 'trailer')) return;
+  if (labels?.bottomLeft === undefined && labels?.bottomRight === undefined) return;
+  noteDerivation({
+    dimension: 'labels.corner',
+    part: `Läufe unten links/rechts über dem Fußband an "${kind}"`,
+    basis: 'transferred',
+    from: 'formation/foot-band (G.1.2: Grundlinie 5 mm über der Unterkante)',
+  });
+}

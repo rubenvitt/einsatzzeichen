@@ -81,18 +81,16 @@ describe('RULE_EVIDENCE', () => {
     ]);
   });
 
-  it('meldet in 48 von 53 Fällen nur die eigene Regel', () => {
-    // Randregeln verletzen oft eine allgemeinere mit. Die fünf Fälle, die zusätzlich eine
+  it('meldet in 49 von 53 Fällen nur die eigene Regel', () => {
+    // Randregeln verletzen oft eine allgemeinere mit. Die vier Fälle, die zusätzlich eine
     // andere Regel melden, stehen hier, damit ein neuer Mitläufer auffällt. Seit dem 2. Oktober
     // 2026 entfallen `colored-circle-top-left-not-measured` und
-    // `function-role-body-variant-not-measured` mit ihren Regeln; neu ist
-    // `below-body-zone-conflict`, dessen Fall (Lauf rechts unterhalb am Landfahrzeug mit
-    // Fahrwerk) zugleich `chassis-foot-conflict` auslöst.
+    // `function-role-body-variant-not-measured` mit ihren Regeln. `below-body-zone-conflict` meldet
+    // die Läufe unter dem Körper allein; `chassis-foot-conflict` bleibt bei Fahrwerk und Bezeichnung.
     const withOthers = RULE_EVIDENCE
       .filter((item) => new Set(ruleEvidenceTriggers(item)).size > 1)
       .map((item) => item.rule);
     expect(withOthers).toEqual([
-      'below-body-zone-conflict',
       'center-baseline-positive',
       'function-role-requires-measured-kind',
       'surface-label-foot-conflict',

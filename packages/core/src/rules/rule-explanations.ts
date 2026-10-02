@@ -305,10 +305,8 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'Fahrwerk reicht bis 4,75 mm unter die Körperunterkante, die Fußzone beginnt 1 mm ' +
       'darunter, die Überschneidung beträgt 3,75 mm bei 4 mm Zonenhöhe. Wohin die Fußzone ' +
       'auswiche, ist nicht belegt; Anhang E.2 beschriftet seine Fahrzeuge stattdessen im Körper. ' +
-      'Dasselbe gilt für die Beschriftung rechts unterhalb (`labels.belowRight`) und die ' +
-      'Oberflächenläufe (`labels.surfaceBelowLeft`, `labels.surfaceBelowRight`): sie stehen im ' +
-      'selben Streifen. Nutze `labels.center` oder `labels.topLeft` statt dieser Zonen, oder ' +
-      'lass `vehicleCategory` weg.',
+      'Nutze `labels.center` oder `labels.topLeft` statt `designation`, oder lass ' +
+      '`vehicleCategory` weg.',
   },
   'circle-top-left-anchor-within-viewbox': {
     field: 'labels',

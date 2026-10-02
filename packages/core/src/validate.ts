@@ -452,20 +452,14 @@ function validatePreparedSpec(
   // Fahrwerk tun genau das (21 mit einer Fahrzeugkategorie, vier mit einem Anhängerfahrwerk) —
   // E.2 tun genau das.
   //
-  // Dieselbe Kollision haben die beiden anderen Zonen unterhalb des Körpers, seit das Fahrwerk
-  // auch an Wasser- und Luftfahrzeug steht (02.10.2026): `belowRight` des angehobenen
-  // Wasserrumpfs (Grundlinie 4,01 mm unter der Körperunterkante) und die Oberflächenläufe des
-  // angehobenen Luftrumpfs (8,01 mm, genau auf der Höhe des Fahrwerks unter der Rotormarke).
-  const belowBodyLabels = spec.labels?.belowRight !== undefined ||
-    spec.labels?.surfaceBelowLeft !== undefined ||
-    spec.labels?.surfaceBelowRight !== undefined;
-  if (spec.vehicleCategory !== undefined && (spec.designation !== undefined || belowBodyLabels)) {
+  // Die übrigen Zonen unterhalb des Körpers (Lauf unterhalb rechts, Oberflächenläufe) prüft
+  // `below-body-zone-conflict`; diese Regel bleibt bei Fahrwerk und Bezeichnung.
+  if (spec.vehicleCategory !== undefined && spec.designation !== undefined) {
     issues.push({
       rule: 'chassis-foot-conflict',
       message:
-        'Die Fahrzeugkategorie belegt den Streifen unterhalb des Körpers; Bezeichnung, ' +
-        'Beschriftung rechts unterhalb und Oberflächenläufe stehen im selben Streifen und ' +
-        'schließen sich mit ihr aus. Anhang E.2 beschriftet seine Fahrzeuge in den Körperzonen.',
+        'Fahrzeugkategorie und Bezeichnung belegen beide den Streifen unterhalb des Körpers und ' +
+        'schließen sich aus. Anhang E.2 beschriftet seine Fahrzeuge in den Körperzonen.',
     });
   }
 

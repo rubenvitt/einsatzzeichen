@@ -141,17 +141,17 @@ describe('Fahrzeugkategorie an Wasser- und Luftfahrzeug', () => {
     }
   });
 
-  it('hält Beschriftungen unterhalb des Körpers vom Fahrwerk fern (chassis-foot-conflict)', () => {
+  it('hält Beschriftungen unterhalb des Körpers vom Fahrwerk fern (below-body-zone-conflict)', () => {
     const rules = (spec: SymbolSpec) => validateSpec(spec).map((issue) => issue.rule);
     expect(rules({ kind: 'vehicle-water', bodyVariant: 'raised-hull', organization: 'feuerwehr', vehicleCategory: 'kfz-kategorie-1', labels: { belowRight: 'FW' } }))
-      .toContain('chassis-foot-conflict');
+      .toContain('below-body-zone-conflict');
     expect(rules({ kind: 'vehicle-air', bodyVariant: 'raised-hull', vehicleCategory: 'kfz-kategorie-1', labels: { surfaceBelowRight: 'AB' } }))
-      .toContain('chassis-foot-conflict');
+      .toContain('below-body-zone-conflict');
     expect(rules({ kind: 'vehicle-air', bodyVariant: 'raised-hull', vehicleCategory: 'kfz-kategorie-1', labels: { surfaceBelowLeft: 'AB' } }))
-      .toContain('chassis-foot-conflict');
+      .toContain('below-body-zone-conflict');
     // Ohne Fahrwerk bleiben dieselben Zonen offen.
     expect(rules({ kind: 'vehicle-air', bodyVariant: 'raised-hull', labels: { surfaceBelowRight: 'AB' } }))
-      .not.toContain('chassis-foot-conflict');
+      .not.toContain('below-body-zone-conflict');
   });
 
   it('zeichnet das Amphibienfahrzeug auch am Wasserfahrzeug mit Wellenlinie zwischen den Rädern', () => {

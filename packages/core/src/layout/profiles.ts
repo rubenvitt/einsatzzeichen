@@ -251,6 +251,10 @@ const trailerProfile: LayoutProfile = {
 const footBandTrailerProfile: LayoutProfile = {
   ...trailerProfile,
   topLeftBaselineFromBodyTopMm: 6.75,
+  // Die unteren Ecken lagen bis zum 2. Oktober 2026 auf geerbten 2 mm, also im schwarzen Band
+  // (y 23…26). Übertragen von G.1.2 (`formation/foot-band`, Grundlinie 5 mm über der
+  // Unterkante); als abgeleitet notiert in `noteFootBandCornerLabels()` (derive/label-zones.ts).
+  bottomLabelBaselineFromBodyBottomMm: 5,
 };
 
 /**
@@ -321,6 +325,8 @@ const vehicleLandProfile: LayoutProfile = {
 
 const footBandVehicleLandProfile: LayoutProfile = {
   ...vehicleLandProfile,
+  // Wie am Anhänger mit Fußband: unten links/rechts über dem Band, übertragen von G.1.2.
+  bottomLabelBaselineFromBodyBottomMm: 5,
   allowsCenterBaselineOverride: undefined,
   allowsCenterAnchorOverride: undefined,
   measuredCenterAnchorsFromBodyLeftMm: undefined,

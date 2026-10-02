@@ -259,7 +259,9 @@ function choose(container: HTMLElement, field: string, value: string): void {
 }
 
 describe('Der Baukasten mit aufgeschobener Probe', () => {
-  it('begründet eine Sperre mit der Grundzeichenart, zu der die Sperre gehört', async () => {
+  // Probt das Vokabular zweimal über die ganze Spec; mit den abgeleiteten Kombinationen (seit dem
+  // 2. Oktober 2026) dauert das allein gut 3 s, unter Volllast mehr.
+  it('begründet eine Sperre mit der Grundzeichenart, zu der die Sperre gehört', { timeout: 30_000 }, async () => {
     // Nachgemessen, damit der Fall nicht an einer Annahme über den Katalog hängt: mit der
     // Verwaltungsstufe „Kreis" ist das Fähigkeitspiktogramm unter „Fläche" nicht zeichenbar (die
     // Kopfzone verkleinert den Körper, das Piktogramm folgt nicht), unter „Taktische Formation"

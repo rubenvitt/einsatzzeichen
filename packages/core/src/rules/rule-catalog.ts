@@ -394,7 +394,7 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'chassis-foot-conflict',
     'systematik',
     'chassis',
-    'Fahrwerkszone und Fußzone überschneiden sich um 3,75 mm bei 4 mm Zonenhöhe, ebenso die Beschriftung rechts unterhalb und die Oberflächenläufe; die Referenz beschriftet ihre Fahrzeuge stattdessen in den Körperzonen.',
+    'Fahrwerkszone und Fußzone überschneiden sich um 3,75 mm bei 4 mm Zonenhöhe; die Referenz beschriftet ihre Fahrzeuge stattdessen in den Körperzonen.',
     'core',
     babz('E.2'),
   ),
