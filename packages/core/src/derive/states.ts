@@ -39,7 +39,6 @@ import {
   type StatePlacementBasis,
   type StatePlacementInput,
 } from '../layout/state-placement.js';
-import { MINIMUM_TEXT_RENDER_PX } from '../render/text-policy.js';
 import { noteDerivation } from './record.js';
 
 /**
@@ -741,16 +740,20 @@ export function layoutStateSign(input: StateSignInput): StateSignLayout {
 }
 
 /**
- * Rechnet die Rendergrenze verkleinerter Läufe nach: dieselbe Formel wie `minRenderPxFor` in
- * `compose.ts`, gegen die neue Breite der Zeichenfläche und den neuen Schriftgrad.
+ * Rechnet die Rendergrenze der Läufe auf die gewachsene Zeichenfläche um. Den Schriftgrad hat
+ * `mapPrimitive` schon eingerechnet (Grenze ÷ Maßstab); hier kommt nur die Breite hinzu, denn die
+ * Grenze gilt für die Breite der ganzen Fläche (`minRenderPxFor` in `compose.ts`). Umgerechnet statt
+ * neu berechnet: manche Läufe tragen eine strengere, eigens gesetzte Grenze (die Zusatzkennungen
+ * aus 5.8.8 etwa 64 px), die eine Neuberechnung unterböte.
  */
 function withMinRenderPx(primitives: readonly Primitive[], viewBoxWidthMm: number): Primitive[] {
+  const factor = viewBoxWidthMm / CANVAS_32.width;
   return primitives.map((primitive) => {
     if (primitive.type === 'group') {
       return { ...primitive, children: withMinRenderPx(primitive.children, viewBoxWidthMm) };
     }
-    if (primitive.type !== 'text' || primitive.minRenderPx === undefined) return primitive;
-    return { ...primitive, minRenderPx: Math.ceil((MINIMUM_TEXT_RENDER_PX * viewBoxWidthMm) / primitive.sizeMm) };
+    if (primitive.type !== 'text' || primitive.minRenderPx === undefined || factor === 1) return primitive;
+    return { ...primitive, minRenderPx: Math.ceil(primitive.minRenderPx * factor) };
   });
 }
 
