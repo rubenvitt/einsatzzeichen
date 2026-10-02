@@ -99,7 +99,7 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
     `Fassungskennung an einem Paar, an dem Anhang C sie nicht zeichnet (${VT}, LFH-786).`,
   ),
   evidence('body-variant-foot-conflict', { kind: 'vehicle-air', bodyVariant: 'raised-hull', designation: 'RTH' }, `Bezeichnung am angehobenen Rumpf (${VT}).`),
-  evidence('body-variant-requires-measured-kind', { kind: 'post', bodyVariant: 'foot-band' }, `Fußband an der Stelle (${VT}).`),
+  evidence('body-variant-requires-measured-kind', { kind: 'formation', bodyVariant: 'fixed-wing-hull' }, `Flügelrumpf an der Formation (${VT}).`),
   evidence('bottom-center-label-requires-measured-body', { kind: 'vehicle-land', labels: { bottomCenter: 'X' } }, `bottomCenter am Landfahrzeug (${CT}).`),
   evidence(
     'bottom-right-metrics-complete',

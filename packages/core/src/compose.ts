@@ -37,6 +37,7 @@ import { FOOT_GAP_MM, hasVariantProfile, placeHead, profileFor } from './layout/
 import { placeStates, type StatePlacement } from './layout/state-placement.js';
 import { NotMeasuredError } from './not-measured.js';
 import { collectDerivations } from './derive/record.js';
+import { assertDerivedVariantComposable } from './derive/body-variants.js';
 import {
   ARIMO_CAP_HEIGHT_FRACTION,
   CATALOG_TEXT_FONT_WEIGHT,
@@ -1141,6 +1142,7 @@ function composeMeasuredOrDerived(
       'combination',
     );
   }
+  assertDerivedVariantComposable(spec);
   const profile = profileFor(spec.kind, spec.bodyVariant);
   const headShape = spec.strength !== undefined ? catalog.strengthHead(spec.strength) : null;
   // Technische Kopfmarke und Verband zeichnen beide relative Kopfprimitive; `head-zone-conflict`

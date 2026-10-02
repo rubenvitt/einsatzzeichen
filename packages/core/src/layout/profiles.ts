@@ -1,6 +1,7 @@
 import type { BodyVariantId, Primitive, SymbolKind } from '@einsatzzeichen/schema';
 import { boundsOfMm, shiftY, type BoundsMm } from '../bounds.js';
 import { NotMeasuredError } from '../not-measured.js';
+import { derivedVariantProfile } from '../derive/body-variant-profiles.js';
 
 /**
  * Abstand zwischen der Unterkante der Kopfzone und dem Körperanker.
@@ -595,7 +596,8 @@ function variantProfile(kind: SymbolKind, variant: BodyVariantId | undefined): L
   if (kind === 'circle-12' && variant === 'raised-gable') return raisedGableCircle12Profile;
   if (kind === 'circle-12' && variant === 'raised-circle-1mm') return raisedCircleOneMmProfile;
   if (kind === 'circle-12' && variant === 'foot-band') return footBandCircle12Profile;
-  return undefined;
+  // Abgeleitete Paare (Entscheidung vom 2. Oktober 2026): Grundart ohne Einzelmessungen.
+  return derivedVariantProfile(kind, variant, PROFILES[kind]);
 }
 
 /**

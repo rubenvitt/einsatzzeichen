@@ -5,7 +5,6 @@ import {
   STATE_IDS,
   type BodyMarkId,
   type BodyMarkRenditionId,
-  type BodyVariantId,
   type ColorToken,
   type AdminLevelId,
   type FunctionRoleDefinition,
@@ -21,6 +20,7 @@ import {
 } from '@einsatzzeichen/schema';
 import { CAPABILITY_UNSCALED_FIT, capabilityInsetForm } from './blocks/capability-inset.js';
 import { stateCarriersOf, stateValueGroup } from './blocks/state-groups.js';
+import { isAllowedBodyVariant } from './derive/body-variant-pairs.js';
 import { measuredBodyMarkRenditions } from './geometry/body-marks-anhang-c/index.js';
 import { profileFor } from './layout/profiles.js';
 import { ARIMO_CAP_HEIGHT_FRACTION, verticalTextBoxMm } from './render/text-policy.js';
@@ -79,20 +79,6 @@ const F3_CIRCLE_TOP_LEFT_BOX_RIGHT_MM = 26;
 const TOP_LABEL_BOX_RIGHT_INSET_MM = 2;
 /** Bestehende Default-Versalhöhe des mittigen Laufs in der Komposition. */
 const DEFAULT_CENTER_LABEL_CAP_HEIGHT_MM = 4.87;
-
-/** Exakte, aus den Quellen vermessene Art-/Variantenpaare; alle anderen bleiben fail-closed. */
-const BODY_VARIANT_KINDS: Readonly<Record<BodyVariantId, ReadonlySet<SymbolKind>>> = {
-  'raised-hull': new Set<SymbolKind>(['vehicle-air', 'vehicle-water']),
-  'inset-hull': new Set<SymbolKind>(['vehicle-water']),
-  'foot-band': new Set<SymbolKind>(['formation', 'vehicle-land', 'trailer', 'circle-12']),
-  'plain-wheel-pair': new Set<SymbolKind>(['vehicle-land']),
-  'raised-gable': new Set<SymbolKind>(['circle-12']),
-  'inverted-hull-track': new Set<SymbolKind>(['vehicle-land']),
-  'fixed-wing-hull': new Set<SymbolKind>(['vehicle-air']),
-  'raised-circle-1mm': new Set<SymbolKind>(['circle-12']),
-  'compact-person-diamond-26mm': new Set<SymbolKind>(['person']),
-  'compact-person-diamond-26mm-lowered-2mm': new Set<SymbolKind>(['person']),
-};
 
 export interface ValidationContext {
   functionRole?: FunctionRoleDefinition;
@@ -408,15 +394,18 @@ function validatePreparedSpec(
   }
   const profile = profileFor(spec.kind, spec.bodyVariant);
 
+  // Seit dem 2. Oktober 2026 nur noch Systematik: gesperrt bleibt eine Variante, die eine Form
+  // einer anderen Art benennt (Rumpf, Flügel, Personraute, Kreis). Übertragbare Modifikatoren
+  // zeichnet der Motor abgeleitet (`derive/body-variant-pairs.ts`).
   if (
     spec.bodyVariant !== undefined &&
-    !BODY_VARIANT_KINDS[spec.bodyVariant].has(spec.kind)
+    !isAllowedBodyVariant(spec.kind, spec.bodyVariant)
   ) {
     issues.push({
       rule: 'body-variant-requires-measured-kind',
       message:
-        `Die Körpervariante "${spec.bodyVariant}" ist für "${spec.kind}" nicht vermessen. ` +
-        'Varianten fallen weder auf eine andere Körperart noch auf deren Normalfassung zurück.',
+        `Die Körpervariante "${spec.bodyVariant}" benennt eine Form, die "${spec.kind}" nicht ` +
+        'trägt. Varianten fallen weder auf eine andere Körperart noch auf deren Normalfassung zurück.',
     });
   }
 
@@ -537,7 +526,8 @@ function validatePreparedSpec(
   if (
     spec.designation !== undefined &&
     (
-      (spec.kind === 'vehicle-land' && spec.bodyVariant === 'plain-wheel-pair') ||
+      // Das Radpaar hängt an jedem Fahrzeugkörper unter der Unterkante, auch abgeleitet.
+      spec.bodyVariant === 'plain-wheel-pair' ||
       (spec.kind === 'vehicle-air' &&
         (spec.bodyVariant === 'raised-hull' || spec.bodyVariant === 'fixed-wing-hull'))
     )
@@ -994,7 +984,7 @@ function validatePreparedSpec(
     spec.labels?.topLeftLines !== undefined &&
     (
       profileFor(spec.kind, spec.bodyVariant).topLeftLines === undefined ||
-      (spec.bodyVariant !== undefined && !BODY_VARIANT_KINDS[spec.bodyVariant].has(spec.kind))
+      (spec.bodyVariant !== undefined && !isAllowedBodyVariant(spec.kind, spec.bodyVariant))
     )
   ) {
     issues.push({

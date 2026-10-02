@@ -320,9 +320,9 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
   ),
   entry(
     'body-variant-requires-measured-kind',
-    'engine',
+    'systematik',
     'body-variant',
-    'Varianten fallen weder auf eine andere Körperart noch auf deren Normalfassung zurück; belegt ist jede nur an den Arten, an denen sie vermessen wurde.',
+    'Eine Variante, die die Form einer bestimmten Art benennt (Rumpf, Flügel, Personraute, Kreis), gibt es an keiner anderen Art; übertragbare Varianten zeichnet der Katalog seit dem 02.10.2026 an jeder passenden Art, wo nötig abgeleitet.',
     'core',
   ),
   entry(

@@ -531,7 +531,9 @@ export function placeStates(input: StatePlacementInput): StatePlacement {
     };
   }
 
-  if (carrier.kind === 'hazard') {
+  // Nur die Gefahr ohne Körpervariante: die Zustandsfassung ersetzt den Körper und zeichnete ein
+  // Fußband oder einen Giebel nicht mit.
+  if (carrier.kind === 'hazard' && carrier.variant === undefined) {
     const layout = STATE_HINT_LAYOUTS.hazard;
     return {
       canvasMm: layout.canvasMm,

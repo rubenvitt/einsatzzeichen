@@ -12,6 +12,7 @@ import {
   type ZoneMeasure,
 } from '@einsatzzeichen/schema';
 import { FOOT_GAP_MM, HEAD_GAP_MM, profileFor } from './profiles.js';
+import { isDerivedBodyVariant } from '../derive/body-variant-pairs.js';
 import {
   COMPOSE_ZONE_CONSTANTS,
   NOT_A_CLAIM_AT_SOURCE,
@@ -88,6 +89,8 @@ describe('Zonenmodell: Vollständigkeit', () => {
     const branches: string[] = [];
     for (const kind of SYMBOL_KINDS) {
       for (const variant of BODY_VARIANT_IDS) {
+        // Abgeleitete Paare führen ein abgeleitetes Profil und sind keine vermessene Körperfassung.
+        if (isDerivedBodyVariant(kind, variant)) continue;
         if (profileFor(kind, variant) !== profileFor(kind)) branches.push(formKey(kind, variant));
       }
     }
