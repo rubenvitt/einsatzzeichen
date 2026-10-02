@@ -46,6 +46,11 @@ import { NotMeasuredError } from './not-measured.js';
 import { collectDerivations } from './derive/record.js';
 import { assertDerivedVariantComposable } from './derive/body-variants.js';
 import {
+  fitFunctionRoleBodyMarks,
+  fitFunctionRolePictograms,
+  resolveFunctionRoleLayout,
+} from './derive/function-roles.js';
+import {
   ARIMO_CAP_HEIGHT_FRACTION,
   CATALOG_TEXT_FONT_WEIGHT,
   MINIMUM_TEXT_RENDER_PX,
@@ -1154,16 +1159,26 @@ function composeMeasuredOrDerived(
   const generalAdministrativeHead = roleDefinition === undefined ? requiredAdministrativeHead : null;
   const headHeightMm =
     headShape?.heightMm ?? primitiveHeadShape?.heightMm ?? generalAdministrativeHead?.heightMm;
+  // Funktionsfassung: unverändert vermessen oder auf Kopf, Variante und Organisation der Spec
+  // umgerechnet (derive/function-roles.ts).
+  const roleLayout = roleDefinition === undefined
+    ? undefined
+    : resolveFunctionRoleLayout({
+        definition: roleDefinition,
+        spec,
+        profile,
+        headHeightMm: headHeightMm ?? administrativeHead?.heightMm,
+        ...(spec.bodyVariant === undefined
+          ? {}
+          : { variantDrawing: catalog.baseDrawing(spec.kind, spec.bodyVariant) }),
+      });
 
   // Dieselbe Kopfzone sitzt je nach Körperform unterschiedlich hoch — deshalb
   // rechnet erst placeHead die relativen Marken in absolute Koordinaten um.
   const headBox = headHeightMm !== undefined
-    ? roleDefinition === undefined
+    ? roleLayout === undefined
       ? placeHeadZone(profile, body, headHeightMm, headShape ? 'strength' : 'primitive')
-      : {
-          topMm: roleDefinition.layout.headTopMm!,
-          bottomMm: roleDefinition.layout.headTopMm! + headHeightMm,
-        }
+      : roleLayout.headBoxFor(headHeightMm)
     : null;
   const headPrimitives: Primitive[] =
     headShape && headBox
@@ -1195,19 +1210,19 @@ function composeMeasuredOrDerived(
     });
   }
 
-  if (administrativeHead !== undefined && roleDefinition !== undefined) {
+  if (administrativeHead !== undefined && roleLayout !== undefined) {
     headPrimitives.push({
       type: 'group',
       role: 'head',
       transform: {
-        translate: { dxMm: 0, dyMm: roleDefinition.layout.headTopMm! },
+        translate: { dxMm: 0, dyMm: roleLayout.headBoxFor(administrativeHead.heightMm).topMm },
       },
       children: administrativeHead.primitives,
     });
   }
 
   if (roleDefinition === undefined && headBox !== null) noteHeadPlacement(spec, profile);
-  const placedBase = roleDefinition === undefined
+  const placedBase = roleLayout === undefined
     ? placeBaseUnderHead({
         spec,
         profile,
@@ -1227,7 +1242,7 @@ function composeMeasuredOrDerived(
               ? FOOT_GAP_MM + FOOT_TEXT_SIZE_MM
               : 0),
       })
-    : { body, extras: baseExtras };
+    : { body: roleLayout.body, extras: baseExtras };
   const placedBody = placedBase.body;
   // Zusatzgeometrie folgt dem platzierten Körper (`placeBaseUnderHead`).
   const extras = placedBase.extras;
@@ -1499,14 +1514,9 @@ function composeMeasuredOrDerived(
       )
     : [];
 
-  const roleTextPrimitives: Primitive[] = roleDefinition === undefined
+  const roleTextPrimitives: Primitive[] = roleLayout === undefined
     ? []
-    : [
-        ...roleDefinition.layout.roleRuns,
-        ...(roleDefinition.layout.carrierRun === undefined
-          ? []
-          : [roleDefinition.layout.carrierRun]),
-      ].map((run) => ({
+    : roleLayout.runs.map((run) => ({
         type: 'text',
         role: 'label',
         content: run.content,
@@ -1530,16 +1540,20 @@ function composeMeasuredOrDerived(
     assertHeadClearOfRuns(spec, headPrimitives, [...labelChildren, ...footPrimitives]);
   }
 
-  if (roleDefinition !== undefined) {
+  if (roleDefinition !== undefined && roleLayout !== undefined) {
+    // Erst die Marken, dann die Piktogramme gegen Läufe und Marken: beide teilen den freien Bereich.
+    const roleBodyMarks = fitFunctionRoleBodyMarks(bodyMarkPrimitives, roleLayout, roleDefinition, spec);
     return {
       viewBox: DEFAULT_VIEWBOX_MM,
       children: [
         ...headPrimitives,
         filled,
         ...innerFieldPrimitives,
-        ...extras,
-        ...bodyMarkPrimitives,
-        ...roleDefinition.layout.decorations,
+        ...roleLayout.extras,
+        ...chassisPrimitives,
+        ...fitFunctionRolePictograms(pictograms, roleLayout, roleDefinition, roleBodyMarks),
+        ...roleBodyMarks,
+        ...roleLayout.decorations,
         ...roleTextPrimitives,
         ...labelChildren,
         ...footPrimitives,

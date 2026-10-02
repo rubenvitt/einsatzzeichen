@@ -173,24 +173,6 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
   evidence('designation-too-wide', { kind: 'formation', designation: 'W'.repeat(30) }, 'Dreißig W sprengen die Fußzone. Neu: Kompositionsregel.', 'composeFromCatalog'),
   evidence('designation-unknown-glyph', { kind: 'formation', designation: 'A☃' }, 'Schneemann (U+2603) fehlt in den Arimo-Metriken. Neu: Kompositionsregel.', 'composeFromCatalog'),
   evidence(
-    'function-role-body-mark-mismatch',
-    { kind: 'person', organization: 'feuerwehr', strength: 'zug', functionRole: 'fire-service-platoon-commander', bodyMarks: ['care'] },
-    'Körpermarke, die die vermessene Fassung nicht erlaubt. Neu gegen die Katalogfassung; validate.test.ts löst die Regel nur mit einer synthetischen Fassung aus.',
-    'validateSpec+catalog',
-  ),
-  evidence(
-    'function-role-body-variant-not-measured',
-    { kind: 'person', organization: 'feuerwehr', strength: 'zug', functionRole: 'fire-service-platoon-commander', bodyVariant: 'raised-hull' },
-    'Körpervariante an einer Funktionsrolle. Feuert auch ohne Kontext; hier gegen die Katalogfassung.',
-    'validateSpec+catalog',
-  ),
-  evidence(
-    'function-role-capabilities-not-measured',
-    { kind: 'person', organization: 'feuerwehr', strength: 'zug', functionRole: 'fire-service-platoon-commander', capabilities: ['fire-fighting'] },
-    'Fähigkeit an einer Funktionsrolle. Feuert auch ohne Kontext; hier gegen die Katalogfassung.',
-    'validateSpec+catalog',
-  ),
-  evidence(
     'function-role-head-mismatch',
     { kind: 'person', organization: 'feuerwehr', functionRole: 'fire-service-platoon-commander' },
     'Zugführer ohne Stärke „zug". Neu gegen die Katalogfassung; validate.test.ts löst die Regel nur mit einer synthetischen Fassung aus.',

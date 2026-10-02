@@ -23,6 +23,10 @@ import { stateCarriersOf, stateValueGroup } from './blocks/state-groups.js';
 import { isAllowedBodyVariant } from './derive/body-variant-pairs.js';
 import { measuredBodyMarkRenditions } from './geometry/body-marks-anhang-c/index.js';
 import { profileFor } from './layout/profiles.js';
+import {
+  functionRoleHeadIsFree,
+  functionRoleOrganizationIsFree,
+} from './derive/function-roles.js';
 import { ARIMO_CAP_HEIGHT_FRACTION, verticalTextBoxMm } from './render/text-policy.js';
 
 export interface ValidationIssue {
@@ -312,29 +316,47 @@ function validatePreparedSpec(
       const expectedOrganization = definitionValue.expectedOrganization;
       const expectedStrength = definitionValue.expectedStrength;
       const expectedAdministrativeLevel = definitionValue.expectedAdministrativeLevel;
-      if (!organizationId(expectedOrganization) || spec.organization !== expectedOrganization) {
+      // Rollen der Führung und Leitung nennen ihre Organisation nicht im Titel und stehen in
+      // jeder Farbe; die übrigen binden sie (derive/function-roles.ts).
+      if (
+        !organizationId(expectedOrganization) ||
+        (spec.organization !== expectedOrganization &&
+          !functionRoleOrganizationIsFree(expectedOrganization))
+      ) {
         issues.push({
           rule: 'function-role-organization-mismatch',
-          message: 'Die Organisation entspricht nicht der exakt vermessenen Funktionsfassung.',
+          message:
+            'Die Funktion nennt ihre Organisation im Titel; eine andere oder fehlende ' +
+            'Organisation widerspräche ihr.',
         });
       }
-      const headMatches = expectedHead === 'none'
-        ? spec.strength === undefined && spec.administrativeLevel === undefined &&
-          expectedStrength === undefined && expectedAdministrativeLevel === undefined &&
+      // Erst die Definition in sich: ihre Kopfart, ihr Kopfwert und ihre Kopflage müssen
+      // zusammenpassen. Dann die Spec: genau dieser Kopf — oder, an einer kopffreien
+      // Leitungsrolle, jeder andere, ein zusätzlicher oder keiner.
+      const definitionHeadConsistent = expectedHead === 'none'
+        ? expectedStrength === undefined && expectedAdministrativeLevel === undefined &&
           headTopMm === undefined
         : expectedHead === 'strength'
           ? strengthId(expectedStrength) && expectedAdministrativeLevel === undefined &&
-            spec.strength === expectedStrength && spec.administrativeLevel === undefined &&
             finite(headTopMm)
           : expectedHead === 'administrative' && expectedStrength === undefined &&
-            administrativeLevelId(expectedAdministrativeLevel) &&
-            spec.strength === undefined &&
-            spec.administrativeLevel === expectedAdministrativeLevel && finite(headTopMm) &&
+            administrativeLevelId(expectedAdministrativeLevel) && finite(headTopMm);
+      const specHeadMatches = expectedHead === 'none'
+        ? spec.strength === undefined && spec.administrativeLevel === undefined
+        : expectedHead === 'strength'
+          ? spec.strength === expectedStrength && spec.administrativeLevel === undefined
+          : spec.strength === undefined &&
+            spec.administrativeLevel === expectedAdministrativeLevel &&
             context.administrativeHead !== undefined;
+      const headMatches = definitionHeadConsistent && (
+        specHeadMatches || functionRoleHeadIsFree(definitionValue.id, expectedOrganization)
+      );
       if (!headMatches) {
         issues.push({
           rule: 'function-role-head-mismatch',
-          message: `Die Kopfzone entspricht nicht der vermessenen Fassung "${String(expectedHead)}".`,
+          message:
+            `Die Kopfzone widerspricht der Funktion: sie nennt ihre Kopfzone "${String(expectedHead)}" ` +
+            'im Titel.',
         });
       }
       const body = record(layout?.body) ? layout.body : undefined;
@@ -369,28 +391,10 @@ function validatePreparedSpec(
           });
         }
       }
-      const allowedBodyMarks = definitionValue.allowedBodyMarks;
-      if (spec.bodyMarks?.some(
-        (id) => !Array.isArray(allowedBodyMarks) || !allowedBodyMarks.includes(id),
-      )) {
-        issues.push({
-          rule: 'function-role-body-mark-mismatch',
-          message: 'Mindestens eine Koerpermarke ist fuer diese Funktionsfassung nicht vermessen.',
-        });
-      }
     }
-    if (spec.bodyVariant !== undefined) {
-      issues.push({
-        rule: 'function-role-body-variant-not-measured',
-        message: 'Koerpervarianten sind mit gemessenen Funktionsfassungen nicht kombiniert belegt.',
-      });
-    }
-    if (spec.capabilities !== undefined) {
-      issues.push({
-        rule: 'function-role-capabilities-not-measured',
-        message: 'Standard-Piktogramme sind mit gemessenen Funktionsfassungen nicht kombiniert belegt.',
-      });
-    }
+    // Körpervariante, Piktogramme und weitere Körpermarken an einer Funktion zeichnet der
+    // Rollenzweig abgeleitet (derive/function-roles.ts); die Variante selbst prüft
+    // `body-variant-requires-measured-kind`.
   }
   const profile = profileFor(spec.kind, spec.bodyVariant);
 
@@ -551,7 +555,7 @@ function validatePreparedSpec(
   }
 
   // Deckt Stärke, Verwaltungsstufe und technische Kopfmarke gegeneinander sowie die technische
-  // Kopfmarke gegen eine vollständig vermessene Funktionsfassung ab. Eine Funktionsfassung ist
+  // Kopfmarke gegen eine Funktionsfassung mit eigenem Kopf ab. Eine Funktionsfassung ist
   // nicht pauschal eine weitere Kopfquelle: bestehende Rollen binden selbst genau eine Stärke,
   // Verwaltungsstufe oder kopflose Fassung und müssen unverändert gültig bleiben.
   // Die Entscheidungsnotiz vom
@@ -577,10 +581,14 @@ function validatePreparedSpec(
     spec.technicalHeadMark,
     spec.unitGrouping,
   ].filter((value) => value !== undefined).length;
+  // Eine Funktion ohne eigenen Kopf (`expectedHead: 'none'`) lässt die Kopfzone frei; dort
+  // stehen Kopfmarke oder Verband wie am normalen Körper (Entscheidung vom 2. Oktober 2026).
+  const functionRoleLeavesHeadFree = resolvedFunctionRole && record(definitionValue) &&
+    definitionValue.expectedHead === 'none';
   if (
     explicitHeadOccupants > 1 ||
     ((spec.technicalHeadMark !== undefined || spec.unitGrouping !== undefined) &&
-      spec.functionRole !== undefined)
+      spec.functionRole !== undefined && !functionRoleLeavesHeadFree)
   ) {
     issues.push({
       rule: 'head-zone-conflict',

@@ -1014,10 +1014,19 @@ describe('validateSpec', () => {
     },
   );
 
-  it('bindet eine Verwaltungsrolle an die konkret vermessene Stufe', () => {
+  it.each([
+    // Der TEL nennt keine Ebene im Titel: der Stufenwechsel wird abgeleitet gezeichnet.
+    ['technical-incident-commander', 'Technischer Einsatzleiter', false],
+    // „Kreisleitstelle“ nennt den Kreis: eine andere Stufe widerspräche dem Namen.
+    ['district-control-center-director', 'Leiter Kreisleitstelle', true],
+  ] as const)('bindet die Verwaltungsrolle %s nur über ihren Titel an die Stufe', (
+    id,
+    title,
+    bound,
+  ) => {
     const functionRole = runtimeRoleDefinition({
-      id: 'technical-incident-commander',
-      title: 'Technischer Einsatzleiter',
+      id,
+      title,
       expectedHead: 'administrative',
       expectedOrganization: 'fuehrung-leitung',
       expectedAdministrativeLevel: 'kreis',
@@ -1039,12 +1048,16 @@ describe('validateSpec', () => {
         kind: 'person',
         organization: 'fuehrung-leitung',
         administrativeLevel: 'nationalstaat',
-        functionRole: 'technical-incident-commander',
+        functionRole: id,
       },
       { functionRole, administrativeHead },
     );
 
-    expect(issues.map((issue) => issue.rule)).toContain('function-role-head-mismatch');
+    if (bound) {
+      expect(issues.map((issue) => issue.rule)).toContain('function-role-head-mismatch');
+    } else {
+      expect(issues).toEqual([]);
+    }
   });
 
   it('bindet eine Stärkerolle an den konkret vermessenen Stärkegrad', () => {
@@ -1181,7 +1194,9 @@ describe('validateSpec', () => {
     ).map((issue) => issue.rule)).toContain('function-role-requires-measured-layout');
   });
 
-  it('schließt nicht vermessene Rollenachsen und Körpermarken fail-closed aus', () => {
+  it('lässt Variante, Piktogramm und weitere Körpermarke an einer Rolle zu (abgeleitet)', () => {
+    // Seit dem 2. Oktober 2026 zeichnet der Rollenzweig sie abgeleitet (derive/function-roles.ts);
+    // eine Variante, die die Art selbst nicht trägt, bleibt bei `body-variant-requires-measured-kind`.
     const context = { functionRole: runtimeRoleDefinition() };
     const base = {
       kind: 'person',
@@ -1190,11 +1205,11 @@ describe('validateSpec', () => {
       strength: 'zug',
     };
     expect(validateRuntime({ ...base, bodyVariant: 'raised-hull' }, context)
-      .map((issue) => issue.rule)).toContain('function-role-body-variant-not-measured');
-    expect(validateRuntime({ ...base, capabilities: ['fire-fighting'] }, context)
-      .map((issue) => issue.rule)).toContain('function-role-capabilities-not-measured');
-    expect(validateRuntime({ ...base, bodyMarks: ['care'] }, context)
-      .map((issue) => issue.rule)).toContain('function-role-body-mark-mismatch');
+      .map((issue) => issue.rule)).toEqual(['body-variant-requires-measured-kind']);
+    expect(validateRuntime({ ...base, bodyVariant: 'compact-person-diamond-26mm' }, context))
+      .toEqual([]);
+    expect(validateRuntime({ ...base, capabilities: ['fire-fighting'] }, context)).toEqual([]);
+    expect(validateRuntime({ ...base, bodyMarks: ['care'] }, context)).toEqual([]);
   });
 
   it('verlangt vollständige sichtbare Rollenmetriken und getrennte Textboxen', () => {
