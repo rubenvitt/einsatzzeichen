@@ -366,16 +366,18 @@ function occupiedOf(
 
 /**
  * Piktogramme (`capabilities`) in der Funktionsfassung. Keine Referenz kombiniert beides; das
- * Piktogramm weicht den Läufen, der Kappe oder dem Balken und der Zusatzgeometrie aus, im
- * größten freien Bereich des Körpers.
+ * Piktogramm weicht den Läufen, der Kappe oder dem Balken, der Zusatzgeometrie und den schon
+ * gesetzten Körpermarken (`bodyMarks`) aus, im größten freien Bereich des Körpers.
  */
 export function fitFunctionRolePictograms(
   pictograms: readonly Primitive[],
   layout: FunctionRoleLayout,
   definition: FunctionRoleDefinition,
+  bodyMarks: readonly Primitive[] = [],
 ): readonly Primitive[] {
   if (pictograms.length === 0) return pictograms;
-  const fitted = fitIntoRoleBody(pictograms, layout.body, layout.occupied);
+  const occupied = [...layout.occupied, ...bodyMarks.map((mark) => boundsOfMm(mark))];
+  const fitted = fitIntoRoleBody(pictograms, layout.body, occupied);
   noteDerivation({
     dimension: 'capabilities',
     part: fitted.moved

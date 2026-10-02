@@ -1,5 +1,6 @@
 import type { FunctionRoleTextRun, Point, Primitive } from '@einsatzzeichen/schema';
 import { boundsOfMm, type BoundsMm } from '../bounds.js';
+import { NotMeasuredError } from '../not-measured.js';
 import { tokenizePath } from '../path-commands.js';
 
 /**
@@ -365,8 +366,8 @@ export interface FittedParts {
  * Liegen sie schon frei im Körper — ohne Überschneidung mit einer Belegung —, bleiben sie
  * unverändert. Sonst werden sie als Ganzes gleichmäßig verkleinert (nie vergrößert) und in den
  * größten freien Bereich gelegt. Die Läufe der Fassung sind ihr Inhalt; ihnen weicht das
- * Piktogramm, nicht umgekehrt. Ohne jeden freien Bereich wirft die Funktion: ein Piktogramm,
- * das nur noch als Punkt passte, wäre keine Zeichnung, sondern ein Fehler.
+ * Piktogramm, nicht umgekehrt. Ohne jeden freien Bereich bleibt die Kombination eine Lücke
+ * (`NotMeasuredError`): ein Piktogramm, das nur noch als Punkt passte, wäre keine Zeichnung.
  */
 export function fitIntoRoleBody(
   parts: readonly Primitive[],
@@ -387,7 +388,11 @@ export function fitIntoRoleBody(
     if (fit !== undefined && (best === undefined || fit.scale > best.scale)) best = fit;
   }
   if (best === undefined) {
-    throw new Error('Die Funktionsfassung lässt keinen freien Bereich für das Piktogramm.');
+    throw new NotMeasuredError(
+      'Die Funktionsfassung lässt neben Läufen, Kappe und Marken keinen freien Bereich für das ' +
+        'Piktogramm; ein bis zur Unkenntlichkeit verkleinertes Piktogramm wird nicht gezeichnet.',
+      'combination',
+    );
   }
   const centerX = (bounds.minX + bounds.maxX) / 2;
   const centerY = (bounds.minY + bounds.maxY) / 2;

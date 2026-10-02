@@ -347,6 +347,21 @@ describe('Funktionsrollen: Piktogramme und Körpermarken (stiller Verlust behobe
     expect(drawing.derivations).toContainEqual(expect.objectContaining({ dimension: 'bodyMarks' }));
   });
 
+  it.each([
+    ['Führungskraft', EL_PERSON, 'medical-service'],
+    ['Führungsstelle', EL_FORMATION, 'fire-fighting'],
+  ] as const)('hält Piktogramm und Körpermarke an der %s auseinander', (_name, base, capability) => {
+    const drawing = drawSymbol({ ...base, capabilities: [capability], bodyMarks: ['care'] });
+    const group = drawing.children.find((child) => child.type === 'group' && child.role === 'pictogram');
+    const marks = drawing.children.filter((child) =>
+      child.type !== 'group' && child.role === 'pictogram' && child !== drawing.children.at(-1) &&
+      !(child.type === 'polyline' && child.style?.fill === 'schwarz') &&
+      !(child.type === 'rect' && child.height === 3));
+    expect(group).toBeDefined();
+    expect(marks.length).toBeGreaterThan(0);
+    for (const mark of marks) expect(intersects(boundsOfMm(group!), boundsOfMm(mark))).toBe(false);
+  });
+
   it('lässt die zur Fassung vermessene Körpermarke ohne Notiz', () => {
     const drawing = drawSymbol({
       kind: 'person', organization: 'feuerwehr', strength: 'zug',
