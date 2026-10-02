@@ -1,5 +1,87 @@
 ## ⚠️ Breaking Changes
 
+Version 4.0.0 erweitert die Zeichenfähigkeit radikal: Der Motor zeichnet jetzt **jede Kombination**, die die Systematik zulässt. Fehlende Vermessungen werden aus verwandten Zeichen abgeleitet und gekennzeichnet – statt wie bisher abgelehnt.
+
+**API-Änderungen:**
+- **30 Validierungsregeln entfallen** (u.a. `circle-12-requires-hilfsorganisation`, `administrative-level-not-measured`, `capabilities-pictogram-overflows-body`, alle `*-requires-measured-body`-Regeln)
+- **Neue Systematikregeln:** `above-left-label-head-conflict`, `below-body-zone-conflict`
+- **`Drawing.derivations`**: Kombinationen, die bisher mit `NotMeasuredError` abgelehnt wurden, werden jetzt gezeichnet und tragen Ableitungsnotizen
+- **`bodyMark()`** wirft für unvermessene Paare keine `NotMeasuredError` mehr
+- `CapabilityInsetDecision.rule` ist optional; `CapabilityInsetPolicy` kennt `measured-rendition-else-unscaled-if-fits-else-fitted`
+- `WeatherVerdict` kennt kein `not-measured` mehr (neu: `form: 'pair'`, `basis: 'constructed'`)
+
+**Katalog:** Von 684 auf **20.345 zeichenbare Einfeldkombinationen** gewachsen (Faktor 30). Alle 280 vermessenen Rezepte bleiben bytegleich.
+
+---
+
+## Katalog & Rendering-Motor
+
+### Generatives Zeichnen mit Ableitungslogik
+
+Der Motor leitet fehlende Vermessungen systematisch aus verwandten Zeichen ab:
+
+- **Kreiskörper (12-mm-Kreis)**: Jede Organisation füllbar, mittiger Text auf Kreismitte, Ecklabel innerhalb der Kreisfläche
+- **Ortsfeste Leitstelle D.2.5** als `circle-12/raised-gable` baubar: neue Körpermarke `circle-solid-cap-4mm` (schwarzes Kreissegment)
+- **Beschriftungszonen** an allen Körperformen außer Kreisen: Lagen aus Formation/Festflügel/Personraute übertragen, automatisches Ausweichen bei Platzkonflikten
+- **Körpervarianten** (Fußband, Giebel, Räder, Kettenfahrwerk) an 49 Paaren: 14 vermessen, 35 abgeleitet
+- **Weiße Innenkontur** an jedem flächigen Körper automatisch konstruiert
+- **Funktionsrollen** in jeder Organisationsfarbe, mit jedem Kopf, an Varianten und mit Piktogrammen
+- **Verwaltungsstufen, Verbände, Kopfmarken** an jedem Grundzeichen über ausreichender Kopfzone
+- **Zustände und Tendenz** an jedem Träger: vollständige Komposition wird in Zustandsfassung abgebildet
+- **Fahrwerk** an Wasser- und Luftfahrzeugen übertragen, Amphibienfahrzeug konstruiert
+- **Fähigkeiten und Körpermarken**: gleichmäßige Einpassung in Körperfläche, mehrere Boxfähigkeiten nebeneinander
+- **Freistehende Zeichen** (Grenze 2.20): Stärken aus Kopfzone übertragen, Pfeilanbindung an jeder Kante/Hülle, Wetterpaare konstruiert
+- **Ereigniskörper** (offener Polyzug): Organisation färbt Strich statt Fläche, automatischer Kontrastvertrag
+
+### Platzprüfung und Geometrie
+
+- **Zensus über Feldpaare** (65.118 von 118.144 geprüft): Platzprüfung jeder abgeleiteten Zeichnung verhindert Fehlzeichnungen aus Mehrfach-Ableitungen
+- Ecklabels am Fußband korrekt 5 mm über Bandkante platziert
+- Kopfzone steht über Zusatzgeometrie (Giebel) statt darin
+- Giebel und Label oben links schließen sich aus
+- Trägerlauf bei Variantenkörpern hält Randabstand der Vorlage
+- Luftrumpf-Hub in Labelprüfung berücksichtigt
+- Körperläufe auf Gelb jetzt schwarz (wie in allen Referenzen)
+- Funktionsrollen-Piktogramme weichen Körpermarken aus
+
+---
+
+## Website & Baukasten
+
+### Erweiterte Beschriftung
+
+**Neue Freitextfelder** für alle Beschriftungszonen:
+- Mitte, oben/unten links, unten mittig, unten rechts
+- Über dem Zeichen links, unter dem Zeichen rechts, darunter links/rechts
+- Automatische Lagenerkennung, Vorschau meldet zu lange Texte
+
+### Abgeleitete Werte
+
+- Abgeleitete Parameter tragen Kennzeichnung „abgeleitet"
+- Hinweis unter der Vorschau listet abgeleitete Teile
+- Tendenz wählbar und zeichenbar
+- Dokumentation in einfacher Sprache aktualisiert
+
+---
+
+## Abhängigkeiten
+
+- React/React-DOM 19.3.0 + @types 19.3.0
+- TypeScript 6.0.3 (TS 7 nicht mehr unterstützt wegen fehlender JS-Compiler-API)
+- Vitest 5.0.3, Vite 8.3.2, Playwright 1.63.0
+- Astro 7.3.5, @astrojs/starlight 0.42.5
+- MapLibre GL 6.11.2, @types/node 26.6.3
+
+---
+
+## Dokumentation
+
+Entscheidungsnotiz **„Ableiten statt Messsperre"** mit Umsetzung je Dimension dokumentiert (Kreiskörper, Körpermarken, Beschriftungszonen, Zustände, Körpervarianten, Funktionsrollen, Kopfzone, Fahrwerk, Freistehende Zeichen).
+
+**Schriftentscheidung LFH-790:** IBM Plex als „Einsatzzeichen Sans" gewählt (Option C1) mit Prüfmessung dokumentiert.
+
+## ⚠️ Breaking Changes
+
 ### Körperfassungen haben Vorrang vor Boxfassungen
 
 **Betrifft:** `@einsatzzeichen/core`, `@einsatzzeichen/react`, `@einsatzzeichen/web-component`, `@einsatzzeichen/maplibre`
