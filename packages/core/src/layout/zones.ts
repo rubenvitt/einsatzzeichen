@@ -398,27 +398,27 @@ const BELOW_RIGHT_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
     babz('G.3.5'),
   ),
   post: source(
-    'core/src/layout/profiles.ts:483–506',
+    'core/src/layout/profiles.ts:514–524',
     'Abgeleitet von G.3.5: Anker absolut auf x 31, Grundlinie 1 mm unter dem 14-mm-Kreis.',
     babz('G.3.5'),
   ),
   'circle-12': source(
-    'core/src/layout/profiles.ts:483–506',
+    'core/src/layout/profiles.ts:483–507',
     'Abgeleitet von G.3.5: dieselbe Lage an der ungebänderten 12-mm-Hülle.',
     babz('G.3.5'),
   ),
   'circle-12/raised-gable': source(
-    'core/src/layout/profiles.ts:483–506',
+    'core/src/layout/profiles.ts:483–507',
     'Abgeleitet von G.3.5: 1 mm unter und 3 mm rechts der abgesenkten Hülle.',
     babz('G.3.5'),
   ),
   'post/raised-gable': source(
-    'core/src/layout/profiles.ts:483–506',
+    'core/src/layout/profiles.ts:483–507',
     'Abgeleitet von G.3.5: derselbe abgesenkte 12-mm-Kreis wie `circle-12/raised-gable`.',
     babz('G.3.5'),
   ),
   'post/foot-band': source(
-    'core/src/layout/profiles.ts:587–598',
+    'core/src/layout/profiles.ts:606–616',
     'Abgeleitet von G.3.5: Anker absolut auf x 31, Grundlinie 1 mm unter dem 14-mm-Kreis.',
     babz('G.3.5'),
   ),
@@ -439,7 +439,7 @@ const SURFACE_LABEL_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
       'Abschnitt noch Messdatum stehen am Fundort.',
   ),
   'post/raised-circle-1mm': source(
-    'core/src/layout/profiles.ts:576–585',
+    'core/src/layout/profiles.ts:595–604',
     'Abgeleitet von N.2.3: dieselben absoluten Lagen (x 1 und 31, Grundlinie 31) gegen die ' +
       'Hülle 3…29 × 1…27 des angehobenen 13-mm-Kreises.',
     babz('N.2.3'),
@@ -466,37 +466,37 @@ const BOTTOM_CENTER_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
     babz('G.3.5'),
   ),
   post: source(
-    'core/src/layout/profiles.ts:483–506',
+    'core/src/layout/profiles.ts:483–507',
     'Abgeleitet von G.3.5: 6,0 mm über der Unterkante, in der Körpertinte.',
     babz('G.3.5'),
   ),
   'circle-12': source(
-    'core/src/layout/profiles.ts:483–506',
+    'core/src/layout/profiles.ts:483–507',
     'Abgeleitet von G.3.5: 6,0 mm über der Unterkante, in der Körpertinte.',
     babz('G.3.5'),
   ),
   'circle-12/raised-gable': source(
-    'core/src/layout/profiles.ts:483–506',
+    'core/src/layout/profiles.ts:483–507',
     'Abgeleitet von G.3.5: 6,0 mm über der Unterkante, in der Körpertinte.',
     babz('G.3.5'),
   ),
   'circle-12/raised-circle-1mm': source(
-    'core/src/layout/profiles.ts:483–506',
+    'core/src/layout/profiles.ts:483–507',
     'Abgeleitet von G.3.5: 6,0 mm über der Unterkante, in der Körpertinte.',
     babz('G.3.5'),
   ),
   'post/raised-gable': source(
-    'core/src/layout/profiles.ts:483–506',
+    'core/src/layout/profiles.ts:483–507',
     'Abgeleitet von G.3.5: 6,0 mm über der Unterkante, in der Körpertinte.',
     babz('G.3.5'),
   ),
   'post/raised-circle-1mm': source(
-    'core/src/layout/profiles.ts:483–506',
+    'core/src/layout/profiles.ts:483–507',
     'Abgeleitet von G.3.5: 6,0 mm über der Unterkante, in der Körpertinte.',
     babz('G.3.5'),
   ),
   'post/foot-band': source(
-    'core/src/layout/profiles.ts:551–567',
+    'core/src/layout/profiles.ts:570–583',
     'Abgeleitet von G.3.5: 6,0 mm über der Unterkante, 2 mm über der Fußbandsehne.',
     babz('G.3.5'),
   ),
