@@ -282,3 +282,35 @@ PR #72, gleiche Methode:
   waren schon vorher knapp über der Schwelle (1,9–3,1 %) und ändern sich um höchstens 0,1 Punkte.
   Die Freigaben bleiben stehen; ob sie für das neue Schriftgewicht gelten, entscheidet der
   Fachreviewer im Werkzeug.
+
+## Nachtrag 02.10.2026: Stand nach 4.0.0
+
+Seit dem Nachtrag oben sind 3.0.0 (PR #75, LFH-787), 4.0.0 (PR #77, abgeleitete Kombinationen) und
+PR #78 (TypeScript 7) auf `main` gekommen. Vergleich mit `pnpm cli reference-diff` auf 2.0.0
+(`98d1c468`, Stand nach PR #72) und auf `main` bei `cb7f41a0`, gleiche Methode:
+
+- **Die 93 Zeilen dieser Liste sind unverändert.** Fläche und Strichanteil sind bei allen 93
+  identisch, 89 bleiben deckungsgleich, die vier aus Gruppe C weichen weiter nur in der Schrift ab.
+  Auch die Snapshot-SVGs ihrer 89 Implementierungen (`capability.*` und die beiden C.1-Marken)
+  sind byte-gleich, die Mehrgrößen-Snapshots für 16 und 24 px eingeschlossen.
+- **Bereits freigegebene Zeilen:** Keine der 82 hat sich verändert, auch nicht die zwölf mit Text
+  aus dem Nachtrag oben.
+- **Gesamt:** 581 Manifestzeilen auf 2.0.0, unverändert in jeder Kennzahl. Neu ist nur C.1.4
+  (LFH-787), damit 582 Zeilen, 379 deckungsgleich, 308 innerhalb der Strichgrenze.
+
+**Suche im Werkzeug korrigiert.** Schritt 3 oben stimmt nicht mehr:
+
+- `2025:4.` zeigt weiter genau die 91 Zeilen aus Kapitel 4.
+- `2025:c.1.` zeigt jetzt **fünf** offene Zeilen: C.1.2, C.1.3, C.1.4, C.1.7 und C.1.8. Zur
+  Nachprüfung gehören nur **C.1.2 und C.1.3**. C.1.4 kam mit LFH-787 dazu, C.1.7 und C.1.8 mit
+  LFH-786. Sie sind neu und waren am 19.09. nicht beanstandet.
+- „nur offene Zeilen“ zeigt jetzt 500 offene Manifestzeilen statt 462, dazu Quellen und Profil.
+
+**Werkzeug starten.** Nach PR #78 (TypeScript 7) braucht der Hauptcheckout einmal
+`pnpm install`, sonst fehlen Pakete. Danach wie oben `pnpm review`.
+
+**Schrift und Gruppe C.** Die Ersatzschrift ist entschieden (LFH-790: IBM Plex, abgeleitet als
+„Einsatzzeichen Sans“). Der Umbau (LFH-824) wartet auf dieses Review und zeichnet die vier Zeilen
+aus Gruppe C sowie die zwölf Textzeilen aus dem Nachtrag oben ohnehin neu. Ein Vorschlag, die
+Entscheidung liegt beim Fachreviewer: die 89 Zeilen der Gruppen A und B jetzt prüfen, Gruppe C
+auf `pending` lassen und nach LFH-824 zusammen mit den zwölf Textzeilen ansehen.
