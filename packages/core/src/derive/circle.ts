@@ -284,6 +284,19 @@ export function circleTopLeftOnSurface(kind: SymbolKind, variant: BodyVariantId 
   return kind === 'circle-12' || (kind === 'post' && variant === 'raised-gable');
 }
 
+/**
+ * Tinte des Laufs oben links am Kreis, wenn er auf der Ausgabeoberfläche steht: schwarz wie an
+ * F.3.3/F.3.5, unabhängig von der Kreisfläche. `undefined`, wo er im Kreis steht und der
+ * Körpertinte folgt. Ein ausdrücklicher `inBodyInk`-Override geht beiden vor. Zeichnung (`compose()`) und Kontrastvertrag (`labelContrastRequirements`)
+ * fragen beide hier, damit sie nicht auseinanderlaufen.
+ */
+export function circleTopLeftInk(
+  kind: SymbolKind,
+  variant: BodyVariantId | undefined,
+): 'schwarz' | undefined {
+  return circleTopLeftOnSurface(kind, variant) ? 'schwarz' : undefined;
+}
+
 /** Die vermessenen F.3-Metriksätze des Laufs oben links. */
 const F3_3_TOP_LEFT_METRICS = Object.freeze({
   capHeightMm: 2.919225,

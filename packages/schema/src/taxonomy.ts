@@ -340,6 +340,8 @@ export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
   'trailer-diving',
   'trailer-boat-hull',
   'track-chevron-top',
+  // D.2.5 Leitstelle (2. Oktober 2026): die Kappe als technische Körpermarke.
+  'circle-solid-cap-4mm',
 ] as const);
 
 export type TechnicalBodyMarkId = (typeof TECHNICAL_BODY_MARK_IDS)[number];

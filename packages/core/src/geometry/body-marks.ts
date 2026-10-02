@@ -1,5 +1,6 @@
 import { NotMeasuredError } from '../not-measured.js';
 import { ANHANG_C_BODY_MARK_TABLES, anhangCBodyMarkBuild } from './body-marks-anhang-c/index.js';
+import { circleSolidCap4mm, transferredCircleSolidCap4mm } from './body-marks-circle-cap.js';
 import type { BoundsMm } from '../bounds.js';
 import {
   CAPABILITY_IDS,
@@ -1113,6 +1114,7 @@ function circleInformationStem(bounds: BoundsMm): Primitive[] {
  * Fachsemantik.
  */
 const CIRCLE_NORMAL_MARKS: Partial<Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>> = {
+  'circle-solid-cap-4mm': transferredCircleSolidCap4mm, // von D.2.5 übertragen
   'medical-service': circleQuartering,
   care: circleCare,
   physician: (bounds) => {
@@ -1270,6 +1272,7 @@ const CIRCLE_RAISED_ONE_MM_MARKS: Partial<
   Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
 > = {
   'circle-information-stem': circleInformationStem,
+  'circle-solid-cap-4mm': transferredCircleSolidCap4mm, // von D.2.5 übertragen
 };
 
 /**
@@ -1280,6 +1283,7 @@ const CIRCLE_RAISED_ONE_MM_MARKS: Partial<
 const CIRCLE_RAISED_GABLE_MARKS: Partial<
   Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
 > = {
+  'circle-solid-cap-4mm': circleSolidCap4mm, // D.2.5 Leitstelle
   'medical-service': circleQuartering,
   care: circleCare,
   physician: (bounds) => {
@@ -1805,6 +1809,7 @@ const TRAILER_FOOT_BAND_LOGISTICS_MARKS: Partial<
 const CIRCLE_FOOT_BAND_LOGISTICS_MARKS: Partial<
   Record<BodyMarkId, (bounds: BoundsMm) => Primitive[]>
 > = {
+  'circle-solid-cap-4mm': transferredCircleSolidCap4mm, // von D.2.5 übertragen
   catering: (bounds) => logisticsCatering(bounds),
   'meal-preparation': (bounds) => logisticsMealPreparation(bounds, -5, 3),
   'fuels-consumables': logisticsFuels,

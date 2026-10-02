@@ -811,6 +811,12 @@ export const BODY_MARK_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'Tabelle `CIRCLE_NORMAL_MARKS`: I.4.2 und I.4.3 am 27. August 2026 unabhängig ergänzt, auf die exakte Lage (4|4)–(28|28) begrenzt.',
   ),
   bodyMark(
+    'circle-solid-cap-4mm',
+    '1286',
+    'D.2.5 Leitstelle (2. Oktober 2026): schwarzes Kreissegment zwischen der Außenkante des Rings und der Sehne 4 mm unter der Kreisoberkante, gegen die Hülle gerechnet (`circleSolidCap4mm`, body-marks-circle-cap.ts). Vermessen an der abgesenkten Giebelfassung (4|6)–(28|30) (`CIRCLE_RAISED_GABLE_MARKS`); an den übrigen 12-mm-Fassungen übertragen und vermerkt.',
+    ['D.2.5'],
+  ),
+  bodyMark(
     'formation-solid-cap-3mm',
     '400–408',
     `${UNDOCUMENTED_AT_SOURCE}3 mm hohe gefüllte Kappe über die volle Breite der Formation (\`MARKS\`).`,

@@ -9,6 +9,7 @@ export * from './layout/profiles.js';
 export * from './not-measured.js';
 export { bodyBoundsMeasured, bodyBoundsMm } from './derive/body-bounds.js';
 export { noteDerivation } from './derive/record.js';
+export { CIRCLE_VARIANT_PAIRS, circleTopLeftInk } from './derive/circle.js';
 export {
   CompositionError,
   validateSpec,

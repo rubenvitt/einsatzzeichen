@@ -2,6 +2,7 @@ import { TECHNICAL_BODY_MARK_IDS } from '@einsatzzeichen/schema';
 import type {
   AdminLevelId,
   BodyMarkId,
+  BodyVariantId,
   OrganizationId,
   PictogramDefinition,
   StrengthId,
@@ -142,6 +143,8 @@ export const TECHNICAL_BODY_MARK_LABELS = Object.freeze({
   'circle-diagonal-double-arrow-offset-bowl':
     'Diagonaler Doppelpfeil neben einer nach rechts versetzten Schale',
   'circle-wide-bowl': 'Breite Schale',
+  // Auffindbar unter dem Ortszeichen, das sie trägt; die Kennung bleibt rein geometrisch.
+  'circle-solid-cap-4mm': 'Leitstelle (Kappe): schwarze Kreiskappe, 4 mm hoch',
   'land-horizontal-blade-bent-upright': 'Waagerechte Leiste mit geknickter senkrechter Stütze',
   'ring-5mm-offset-down-3-5mm-eight-spokes':
     'Ring 5 mm mit acht Speichen, 3,5 mm nach unten versetzt',
@@ -175,6 +178,42 @@ function isTechnicalBodyMarkId(mark: BodyMarkId): mark is TechnicalBodyMarkId {
 export function symbolKindLabel(kind: SymbolKind): string {
   return KIND_LABELS[kind];
 }
+
+/**
+ * Bezeichnungen für Auswahl und Suche, wo der Vorlesetext allein die Form nicht auffindbar macht
+ * (2. Oktober 2026). Der 12-mm-Kreis ist fachlich eine Stelle (F.3 Platzzeichen, D.2 Ortszeichen,
+ * Leitstelle), heißt im Vorlesetext aber nach seiner Zeichnung; der bleibt unverändert, weil er in
+ * der Beschreibung jedes Kreiszeichens steht.
+ */
+const KIND_CHOICE_LABELS: Partial<Record<SymbolKind, string>> = {
+  post: 'Funktionsstelle (14-mm-Kreis)',
+  'circle-12': 'Stelle (12-mm-Kreis)',
+  'reduced-house': 'Unterkunft/Krankenhaus (reduzierte Hauskontur)',
+};
+
+/** Bezeichnung einer Grundzeichenart in einer Auswahl; sonst wie `symbolKindLabel`. */
+export function symbolKindChoiceLabel(kind: SymbolKind): string {
+  return KIND_CHOICE_LABELS[kind] ?? KIND_LABELS[kind];
+}
+
+/**
+ * Bezeichnungen der Körpervarianten für Auswahl und Suche (2. Oktober 2026). Bis dahin trug der
+ * Baukasten hier die Kennung, weil der Katalog kein Register führte. Benannt wird, was die
+ * Variante am Zeichen bedeutet oder zeigt, in den Worten der Quelle, wo sie eines hat
+ * (F.3.5/F.3.14 „ortsgebunden“); die Kennung bleibt die geometrische.
+ */
+export const BODY_VARIANT_LABELS = Object.freeze({
+  'raised-hull': 'angehobener Rumpf',
+  'inset-hull': 'eingesenkter Rumpf',
+  'foot-band': 'mit Fußband',
+  'plain-wheel-pair': 'mit schlichtem Radpaar',
+  'raised-gable': 'ortsgebunden (Giebel)',
+  'inverted-hull-track': 'umgekehrter Rumpf mit Kette',
+  'fixed-wing-hull': 'Starrflügler',
+  'raised-circle-1mm': 'angehobener Kreis (Läufe darunter)',
+  'compact-person-diamond-26mm': 'kompakte Personenraute (26 mm)',
+  'compact-person-diamond-26mm-lowered-2mm': 'kompakte Personenraute, abgesenkt',
+} satisfies Record<BodyVariantId, string>);
 
 /** Semantische Langbeschreibung einer Komposition, unabhängig von ihrer Geometrie. */
 export function describeSymbolSpec(spec: SymbolSpec): string {

@@ -290,6 +290,8 @@ describe('semantische Zeichenbeschreibungen', () => {
       ...lfh484TechnicalIds,
       ...lfh485UpperTechnicalIds,
       ...task1AnhangITechnicalIds,
+      // 2. Oktober 2026: die Kappe der Leitstelle D.2.5.
+      'circle-solid-cap-4mm',
     ]);
     expect(TECHNICAL_BODY_MARK_LABELS as Record<string, string>).toMatchObject({
       'formation-solid-cap-3mm': 'Schwarze Formationskappe, 3 mm hoch',

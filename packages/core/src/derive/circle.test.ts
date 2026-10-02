@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  BODY_VARIANT_IDS,
   ORGANIZATION_IDS,
   type BodyVariantId,
   type Drawing,
@@ -11,6 +12,13 @@ import { boundsOfMm } from '../bounds.js';
 import { bodyLabelInk } from '../compose.js';
 import { drawSymbol } from '../default-ports.js';
 import { baseDrawing } from '../geometry/base-symbols.js';
+import {
+  BODY_VARIANT_LABELS,
+  TECHNICAL_BODY_MARK_LABELS,
+  describeSymbolSpec,
+  symbolKindChoiceLabel,
+  symbolKindLabel,
+} from '../geometry/labels.js';
 import { ARIMO_TEXT_METRICS } from '../geometry/text-metrics.js';
 import { hasVariantProfile, profileFor } from '../layout/profiles.js';
 import { measureTextRun } from '../text-metrics.js';
@@ -246,5 +254,47 @@ describe('Vermessene Kreisfassungen bleiben ohne Ableitungsnotiz', () => {
     { kind: 'post' },
   ] as const)('%j', (spec) => {
     expect(drawSymbol(spec as SymbolSpec).derivations).toBeUndefined();
+  });
+});
+
+describe('Auffindbarkeit im Vokabular', () => {
+  it('benennt jede Körpervariante, den Giebel als ortsgebunden', () => {
+    expect(Object.keys(BODY_VARIANT_LABELS).sort()).toEqual([...BODY_VARIANT_IDS].sort());
+    expect(BODY_VARIANT_LABELS['raised-gable']).toBe('ortsgebunden (Giebel)');
+  });
+
+  it('führt den 12-mm-Kreis in der Auswahl als Stelle, ohne den Vorlesetext zu ändern', () => {
+    expect(symbolKindChoiceLabel('circle-12')).toBe('Stelle (12-mm-Kreis)');
+    expect(symbolKindLabel('circle-12')).toBe('12-mm-Kreis');
+    expect(symbolKindChoiceLabel('formation')).toBe(symbolKindLabel('formation'));
+    expect(describeSymbolSpec({ kind: 'circle-12' })).toContain('Grundzeichen: 12-mm-Kreis');
+  });
+
+  it('findet die Kappe der Leitstelle unter ihrem Namen', () => {
+    expect(TECHNICAL_BODY_MARK_LABELS['circle-solid-cap-4mm']).toMatch(/^Leitstelle \(Kappe\)/);
+  });
+});
+
+describe('Kreiskappe circle-solid-cap-4mm', () => {
+  it('ist an der Giebelfassung vermessen und an den übrigen 12-mm-Fassungen übertragen', () => {
+    const measured = drawSymbol({ kind: 'circle-12', bodyVariant: 'raised-gable', bodyMarks: ['circle-solid-cap-4mm'] });
+    expect(measured.derivations).toBeUndefined();
+    for (const bodyVariant of [undefined, 'raised-circle-1mm', 'foot-band'] as const) {
+      const drawing = drawSymbol({
+        kind: 'circle-12', ...(bodyVariant === undefined ? {} : { bodyVariant }),
+        bodyMarks: ['circle-solid-cap-4mm'],
+      });
+      expect(drawing.derivations, String(bodyVariant)).toContainEqual(
+        expect.objectContaining({ dimension: 'bodyMarks', basis: 'transferred' }),
+      );
+      // Die Kappe ist das oberste Segment; am gebänderten Kreis steht darunter das Fußband.
+      const [b] = drawing.children
+        .filter((child) => child.type === 'path' && child.role === 'pictogram')
+        .map((child) => boundsOfMm(child))
+        .sort((left, right) => left.minY - right.minY);
+      const body = circleBody(drawing);
+      expect(b!.minY).toBeCloseTo(body.cy - body.r - 0.25, 3);
+      expect(b!.maxY).toBeCloseTo(body.cy - body.r + 4, 6);
+    }
   });
 });

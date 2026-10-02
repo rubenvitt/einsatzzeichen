@@ -40,8 +40,8 @@ import { collectDerivations } from './derive/record.js';
 import {
   circleCenterBaselineFromBodyBottomMm,
   circleCornerRuns,
+  circleTopLeftInk,
   circleTopLeftMetrics,
-  circleTopLeftOnSurface,
   noteCircleVariantBody,
   type CircleCornerRuns,
 } from './derive/circle.js';
@@ -1528,9 +1528,10 @@ function composeMeasuredOrDerived(
         isCircleBody
           ? circleCornerRuns(spec.kind, spec.bodyVariant, bodyBoundsMm, placedLabels)
           : undefined,
-        isCircleBody && circleTopLeftOnSurface(spec.kind, spec.bodyVariant)
-          ? 'schwarz'
-          : bodyLabelInk(bodyFill, placedLabels.inBodyInk),
+        // Ein ausdrücklicher Override gilt wie bisher auch für den überstehenden Kreislauf.
+        placedLabels.inBodyInk ??
+          (isCircleBody ? circleTopLeftInk(spec.kind, spec.bodyVariant) : undefined) ??
+          bodyLabelInk(bodyFill),
       )
     : [];
 
