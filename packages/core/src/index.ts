@@ -11,6 +11,9 @@ export { bodyBoundsMeasured, bodyBoundsMm } from './derive/body-bounds.js';
 export { noteDerivation } from './derive/record.js';
 // Standardports der Kopfzone: vermessener Kopf, sonst der abgeleitete (seit 2. Oktober 2026).
 export { administrativeHeadOrDerived, unitGroupingHeadOrDerived } from './derive/head-zone.js';
+// Vor dem Sternexport aus `geometry/body-marks.js`: der benannte Export verdeckt dessen
+// vermessenen `bodyMark` und leitet für jedes andere Paar ab.
+export { bodyMark, hasFlushRendition } from './derive/body-marks.js';
 export {
   CompositionError,
   validateSpec,

@@ -291,8 +291,9 @@ export type CapabilityId = (typeof CAPABILITY_IDS)[number];
  * fachlicher Begriff aber nicht belegt ist. Die IDs beschreiben deshalb ausschließlich Maße und
  * Gestalt. Sie sind weder `CapabilityId` noch Ersatz für ein noch ausstehendes Domain-Review.
  *
- * Jede Fassung ist an genau einem Körper-/Variantenkontext vermessen und muss in jedem anderen
- * Kontext fail-closed ablehnen. Die Kennung selbst behauptet keine Übertragbarkeit.
+ * Jede Fassung ist an genau einem Körper-/Variantenkontext vermessen. In jedem anderen Kontext
+ * überträgt der Motor sie seit dem 2. Oktober 2026 hüllenrelativ und vermerkt das als Ableitung;
+ * die Kennung selbst behauptet keine fachliche Übertragbarkeit.
  */
 export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
   'ring-7mm-offset-down-1mm',
@@ -792,12 +793,12 @@ export interface SymbolSpec {
    */
   tendency?: TendencyId;
   /**
-   * Fähigkeiten in der **Boxfassung**: die Einzeldarstellung aus Kapitel 4 unverändert in der
-   * Standardbox 4/8/24/16 mm. Seit LFH-787 (Entscheidung AB) lehnt `validateSpec` sie an jedem
-   * Paar aus Fähigkeit und Körperfassung ab, für das eine Körperfassung vermessen ist
-   * (`capabilities-pictogram-has-measured-rendition`); dort gehört die Fähigkeit in `bodyMarks`.
-   * Ohne vermessene Fassung ist sie nur zugelassen, wo die Einzeldarstellung nachweislich im
-   * Körper bleibt (`capabilities-pictogram-overflows-body`).
+   * Fähigkeiten in der **Boxfassung**: die Einzeldarstellung aus Kapitel 4 im Körper. Seit dem
+   * 2. Oktober 2026 an jeder Körperform: Hat das Paar aus Fähigkeit und Körperfassung eine
+   * vermessene Körperfassung, zeichnet `compose()` die Fähigkeit in ihr wie unter `bodyMarks`;
+   * sonst steht die Einzeldarstellung unverändert, wo sie nachweislich im Körper bleibt, und
+   * wird andernfalls gleichmäßig ins Innenfeld eingepasst (Strich 0,5 mm, als Ableitung in
+   * `Drawing.derivations` vermerkt). Mehrere Boxfähigkeiten stehen nebeneinander.
    */
   capabilities?: readonly CapabilityId[];
   /**
@@ -816,14 +817,17 @@ export interface SymbolSpec {
    *
    * Fähigkeiten behalten ihre `CapabilityId`. Daneben darf `BodyMarkId` rein geometrische
    * `TechnicalBodyMarkId`s führen, wenn das Bild vermessen, aber keine Kapitel-4-Semantik belegt
-   * ist. Eine ID ohne vermessene randbündige Fassung wirft; sie fällt **nicht** auf eine andere
-   * Fassung zurück.
+   * ist. Seit dem 2. Oktober 2026 an jeder Körperform: Ohne vermessene Fassung am Paar überträgt
+   * der Motor die nächstliegende vermessene Fassung derselben Marke hüllenrelativ; eine Fähigkeit
+   * ganz ohne randbündige Fassung zeichnet er als eingepasste Einzeldarstellung. Beides steht als
+   * Ableitung in `Drawing.derivations`.
    */
   bodyMarks?: readonly BodyMarkId[];
   /**
    * Die Fassung einer Körpermarke, wo dasselbe Paar aus Marke und Körperfassung mehr als eine
    * vermessene Zeichnung hat (LFH-786, Anhang C). Fehlt der Eintrag, gilt die Grundfassung. Eine
-   * Kennung ohne Fassung an diesem Paar wirft; sie fällt nicht auf die Grundfassung zurück.
+   * Kennung, die für diese Marke nirgends vermessen ist, lehnt `validateSpec` ab; an einem anderen
+   * Paar überträgt der Motor die vermessene Fassung (seit dem 2. Oktober 2026).
    */
   bodyMarkRenditions?: import('./body-mark-renditions.js').BodyMarkRenditions;
   designation?: string;

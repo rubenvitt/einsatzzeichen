@@ -105,14 +105,16 @@ describe.each(CATEGORIES)('Bausteinregister zur Laufzeit: %s', (category) => {
 });
 
 describe('Bausteinregister zur Laufzeit: Kombinationsbindungen', () => {
-  it('bindet jede Funktionsfassung und von den Körpermarken nur inset-hull-wheel-pair', () => {
+  it('bindet jede Funktionsfassung und keine Körpermarke', () => {
     expect(BLOCK_REGISTER['function-role'].every((entry) => entry.combinationBinding !== undefined))
       .toBe(true);
+    // Seit dem 2. Oktober 2026 ohne Ausnahme: `inset-hull-requires-measured-body-mark` ist
+    // entfallen, die Marken an der eingesenkten Hülle sind übertragbar.
     expect(
       BLOCK_REGISTER['body-mark']
         .filter((entry) => entry.combinationBinding !== undefined)
         .map((entry) => entry.id),
-    ).toEqual(['body-mark/inset-hull-wheel-pair']);
+    ).toEqual([]);
     expect(BLOCK_REGISTER.capability.some((entry) => entry.combinationBinding !== undefined))
       .toBe(false);
   });

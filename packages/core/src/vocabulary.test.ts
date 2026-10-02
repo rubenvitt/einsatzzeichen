@@ -214,13 +214,15 @@ describe('vocabulary', () => {
       candidates: ['amphibienfahrzeug'],
     });
     expect(amphibian).toEqual({ value: 'amphibienfahrzeug', selected: false, status: 'allowed', derived: true });
+  });
+
+  test('gibt eine übertragene Körpermarke frei und kennzeichnet sie als abgeleitet', () => {
+    // Bis zum 2. Oktober 2026 sperrte `bodyMark()` die Winde aus F.2.6 an der Formation als nicht
+    // vermessene Kombination; seitdem überträgt es die Fassung vom angehobenen Luftrumpf.
     const [combination] = vocabulary({ kind: 'formation' }, 'bodyMarks', {
       candidates: ['air-winch-chevron-diamond'],
     });
-    expect(combination).toMatchObject({ status: 'blocked', reason: 'not-measured', scope: 'combination' });
-    if (combination?.status === 'blocked' && combination.reason === 'not-measured') {
-      expect(combination.message).toMatch(/ist nicht vermessen/);
-    }
+    expect(combination).toMatchObject({ status: 'allowed', derived: true });
   });
 
   test('prüft über den echten Weg wie checkSpec', () => {

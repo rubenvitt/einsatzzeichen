@@ -143,8 +143,9 @@ function singleDepictionBodyFor(definition: CatalogPictogramDefinition): Primiti
  * durchläuft.
  *
  * Seit LFH-787 (Entscheidung AB) setzen sie `foam-agent` statt `fire-fighting`: Die
- * Brandbekämpfung hat an der Formation eine vermessene Körperfassung, und `validateSpec` lehnt die
- * Boxfassung dort ab (`capabilities-pictogram-has-measured-rendition`).
+ * Brandbekämpfung hat an der Formation eine vermessene Körperfassung. Bis zum 2. Oktober 2026
+ * lehnte `validateSpec` die Boxfassung dort ab; seitdem zeichnet `compose()` sie in dieser
+ * Fassung, und Piktogramme ohne Fassung passt es ins Innenfeld ein (`derive/capabilities.ts`).
  *
  * Belegt ist die in-body-Tauglichkeit hier damit nur für `foam-agent` und `service-water`. Für
  * alle 92 Kapitel-4-Piktogramme und die acht Körperformen mit Flächenmodell steht seit LFH-587

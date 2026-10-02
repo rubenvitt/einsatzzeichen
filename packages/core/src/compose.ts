@@ -59,6 +59,7 @@ import {
 } from './derive/vehicle-category.js';
 import { openBodyTint } from './derive/open-body-tint.js';
 import { noteInsetHullOrganization } from './derive/inset-hull-organization.js';
+import { capabilityPictograms, composedBodyMarks } from './derive/capabilities.js';
 import {
   ARIMO_CAP_HEIGHT_FRACTION,
   CATALOG_TEXT_FONT_WEIGHT,
@@ -827,9 +828,11 @@ export interface CatalogPorts {
    * nicht aus einer festen Zeichnung schieben, es muss auf die tatsächliche Kante gerechnet
    * werden.
    *
-   * Wirft für jede Fähigkeit ohne vermessene randbündige Fassung. Kein Rückfall auf die
-   * Boxfassung: die beiden Zeichnungen unterscheiden sich in ihren Maßen und nicht nur in ihrer
-   * Größe (Arztleiste 8 gegen 10 mm, Transportring r 5,5 gegen r 7,0).
+   * Die Standardbelegung (`derive/body-marks.ts`) zeichnet die vermessene Fassung, wo das Paar
+   * eine hat, und leitet sonst ab (nächstliegende Fassung derselben Marke hüllenrelativ, ohne
+   * jede randbündige Fassung die eingepasste Einzeldarstellung). Die Boxfassung ist dabei nie die
+   * erste Wahl: beide Zeichnungen unterscheiden sich in ihren Maßen und nicht nur in ihrer Größe
+   * (Arztleiste 8 gegen 10 mm, Transportring r 5,5 gegen r 7,0).
    */
   bodyMark(
     id: BodyMarkId,
@@ -1348,20 +1351,14 @@ function composeMeasuredOrDerived(
   // (`shiftY` lehnt das ausdrücklich ab). Auf der Gruppe wirkt die Verschiebung nach außen auf
   // das fertige Ergebnis und ist damit von einer Drehung der Kinder unabhängig.
   const pictogramShiftMm = centerYMm(placedBody) - centerYMm(body);
-  const pictogramPrimitives = (spec.capabilities ?? []).flatMap(
-    (id) => catalog.pictogram(pictogramIdOf(id)).primitives,
+  // Seit dem 2. Oktober 2026 an jeder Körperform: vermessene Körperfassung, unskaliert, wo
+  // belegt, sonst ins Innenfeld eingepasst (`derive/capabilities.ts`).
+  const pictograms: Primitive[] = capabilityPictograms(
+    spec,
+    (id) => catalog.pictogram(pictogramIdOf(id)),
+    boundsOfMm(placedBody),
+    pictogramShiftMm,
   );
-  const pictograms: Primitive[] =
-    pictogramPrimitives.length > 0
-      ? [
-          {
-            type: 'group',
-            role: 'pictogram',
-            transform: { translate: { dxMm: 0, dyMm: pictogramShiftMm } },
-            children: pictogramPrimitives,
-          },
-        ]
-      : [];
 
   // Fußzone: dieselbe Spiegelung wie oben bei `pictogramShiftMm` — an der tatsächlich platzierten
   // Körperhülle (`placedBody`), nicht an der unverschobenen Standardgeometrie. Anders als die
@@ -1458,8 +1455,9 @@ function composeMeasuredOrDerived(
   // Randbündige Fachdienstzeichen: gegen die Hülle des **platzierten** Körpers gerechnet, nicht
   // gegen die Standardgeometrie. Deshalb ohne die Verschiebung, die die Boxpiktogramme brauchen —
   // sie sind bereits an der richtigen Stelle gerechnet.
+  const composedMarks = composedBodyMarks(spec);
   const bodyMarkPrimitives = composeBodyMarkPrimitives(
-    (spec.bodyMarks ?? []).map((id) =>
+    (composedMarks ?? []).map((id) =>
       catalog.bodyMark(id, {
         kind: spec.kind,
         bodyVariant: spec.bodyVariant,
@@ -1467,7 +1465,7 @@ function composeMeasuredOrDerived(
         ...(spec.strength === undefined ? {} : { strength: spec.strength }),
         // Nur bei mehreren Marken: eine einzelne Marke hat keine Kombination, der Kontext bleibt
         // für sie unverändert.
-        ...((spec.bodyMarks?.length ?? 0) > 1 ? { bodyMarks: spec.bodyMarks } : {}),
+        ...((composedMarks?.length ?? 0) > 1 ? { bodyMarks: composedMarks } : {}),
         ...(spec.bodyMarkRenditions === undefined || !Object.hasOwn(spec.bodyMarkRenditions, id)
           ? {}
           : { rendition: spec.bodyMarkRenditions[id] }),

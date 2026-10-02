@@ -27,8 +27,9 @@ import type {
  * `COMBINATION_MARKS` in `geometry/body-marks.ts`.
  *
  * **Was der Bestand nicht belegt.** Kein Original trägt zwei Piktogramme in der Boxfassung
- * (`capabilities`). Der Motor legt sie heute deckungsgleich in dieselbe Box; das ist keine Regel,
- * sondern die Abwesenheit einer. Die Empfehlung, bis zu einem Beleg höchstens eine Boxfähigkeit
+ * (`capabilities`). Bis zum 2. Oktober 2026 legte der Motor sie deckungsgleich in dieselbe Box;
+ * seitdem stehen sie nebeneinander im Innenfeld (`derive/fit-pictogram.ts`, als konstruierte
+ * Ableitung vermerkt). Auch das ist keine Regel der Referenz, nur eine lesbare Ableitung. Die Empfehlung, bis zu einem Beleg höchstens eine Boxfähigkeit
  * zuzulassen, steht als vorgemerkte Regel in `rules/planned-capability-rules.ts` und ist nicht in
  * Kraft.
  *
@@ -189,7 +190,7 @@ export const CAPABILITY_COMBINATION_RULES: readonly CapabilityCombinationRule[] 
       status: 'proposed',
       value: 'overlay',
       reason:
-        'Die Überlagerung braucht keine Zahl je Körperform: jede Marke rechnet ihre Einzelfassung gegen die Hülle dieser Form. So verhält sich der Motor heute an jeder Fassung. Wo eine Einzelfassung fehlt, wirft `bodyMark()` weiter `NotMeasuredError`; die Regel erfindet keine Lage.',
+        'Die Überlagerung braucht keine Zahl je Körperform: jede Marke rechnet ihre Einzelfassung gegen die Hülle dieser Form. So verhält sich der Motor an jeder Fassung. Wo eine Einzelfassung am Paar fehlt, überträgt `bodyMark()` seit dem 2. Oktober 2026 die nächstliegende vermessene Fassung derselben Marke (`derive/body-marks.ts`); die Überlagerung gilt dann für die übertragenen Fassungen. Marken ganz ohne randbündige Fassung stehen als eingepasste Einzeldarstellungen nebeneinander.',
     },
     exceptions: CAPABILITY_COMBINATION_EXCEPTIONS,
     plannedRules: [MIXED_PRESENTATION],
@@ -200,7 +201,7 @@ export const CAPABILITY_COMBINATION_RULES: readonly CapabilityCombinationRule[] 
     arrangement: {
       status: 'open',
       question:
-        'Kein Original zeigt zwei Kapitel-4-Piktogramme in der Boxfassung. Der Motor legt sie heute deckungsgleich in dieselbe Box 4/8/24/16 mm. Teilt die Systematik die Box, verkleinert sie die Piktogramme, oder gibt es in der Boxfassung nur eine Fähigkeit?',
+        'Kein Original zeigt zwei Kapitel-4-Piktogramme in der Boxfassung. Bis zum 2. Oktober 2026 legte der Motor sie deckungsgleich in dieselbe Box 4/8/24/16 mm; seitdem stellt er sie mit gemeinsamem Faktor nebeneinander ins Innenfeld (`fitPictograms`, als Ableitung vermerkt). Teilt die Systematik die Box so, verkleinert sie die Piktogramme anders, oder gibt es in der Boxfassung nur eine Fähigkeit?',
     },
     order: {
       status: 'open',
@@ -221,7 +222,7 @@ export const CAPABILITY_COMBINATION_RULES: readonly CapabilityCombinationRule[] 
       status: 'proposed',
       value: 1,
       reason:
-        'Bis zu einem Original mit zwei Boxpiktogrammen höchstens eines. Zwei Piktogramme in derselben Box überdecken einander; das ist eine stille Fehldarstellung und keine Regel. Wer mehrere Fähigkeiten braucht, hat die randbündige Darstellung.',
+        'Bis zu einem Original mit zwei Boxpiktogrammen höchstens eines. Zwei Piktogramme in derselben Box überdeckten einander; der Motor stellt sie seit dem 2. Oktober 2026 nebeneinander, das ist eine Ableitung und keine Regel. Wer mehrere Fähigkeiten braucht, hat die randbündige Darstellung.',
     },
     forms: [],
     otherForms: {

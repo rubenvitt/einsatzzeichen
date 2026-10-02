@@ -39,6 +39,48 @@ const insetWaterBodyMm: BoundsMm = {
 const bodyMark = (id: Parameters<typeof bodyMarkWithContext>[0], bounds: BoundsMm) =>
   bodyMarkWithContext(id, { kind: 'formation' }, bounds);
 
+const leavesOf = (primitives: readonly Primitive[]): Primitive[] =>
+  primitives.flatMap((primitive) => primitive.type === 'group' ? leavesOf(primitive.children) : [primitive]);
+
+/**
+ * Seit dem 2. Oktober 2026 (Entscheidung „ableiten statt ablehnen“) zeichnet `bodyMark()` jedes
+ * Paar, das es bis dahin als nicht vermessen ablehnte: übertragen von der nächstliegenden
+ * vermessenen Fassung derselben Marke oder, ohne jede randbündige Fassung, als eingepasste
+ * Einzeldarstellung (`core/src/derive/body-marks.ts`). Außerhalb von `compose()` fällt die
+ * Ableitungsnotiz weg; geprüft wird deshalb die Geometrie: nicht leer, endlich, Strich 0,5 mm und
+ * in der Hülle (Toleranz 0,6 mm wie der Zensus). Wo die Vorlage selbst über ihren Körper ragt
+ * (das Radpaar der eingesenkten Hülle), genügt die ViewBox.
+ */
+function expectDerivedMarks(
+  marks: readonly Primitive[],
+  label?: string,
+  bounds: BoundsMm = { minX: 0, minY: 0, maxX: DEFAULT_VIEWBOX_MM.width, maxY: DEFAULT_VIEWBOX_MM.height },
+): void {
+  const leaves = leavesOf(marks);
+  expect(leaves.length, label).toBeGreaterThan(0);
+  for (const leaf of leaves) {
+    const hull = boundsOfMm(leaf);
+    expect([hull.minX, hull.minY, hull.maxX, hull.maxY].every(Number.isFinite), label).toBe(true);
+    expect(hull.minX, label).toBeGreaterThanOrEqual(bounds.minX - 0.6);
+    expect(hull.minY, label).toBeGreaterThanOrEqual(bounds.minY - 0.6);
+    expect(hull.maxX, label).toBeLessThanOrEqual(bounds.maxX + 0.6);
+    expect(hull.maxY, label).toBeLessThanOrEqual(bounds.maxY + 0.6);
+    if (leaf.style?.strokeWidth !== undefined) {
+      expect(leaf.style.strokeWidth, label).toBe(DEFAULT_STROKE_WIDTH_MM);
+    }
+  }
+}
+
+function expectDerived(
+  id: Parameters<typeof bodyMarkWithContext>[0],
+  context: Parameters<typeof bodyMarkWithContext>[1],
+  bounds: BoundsMm,
+  label?: string,
+): void {
+  const overhanging = id === ('inset-hull-wheel-pair' as BodyMarkId);
+  expectDerivedMarks(bodyMarkWithContext(id, context, bounds), label, overhanging ? undefined : bounds);
+}
+
 /** Der Strichstil, den `body-marks.ts` an jede Linie schreibt — Kontur, keine Füllung. */
 const strokeStyle = { stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM } as const;
 
@@ -115,27 +157,15 @@ describe('bodyMark() — LFH-488 Anhang I.4 Wasserrettungsorte', () => {
     }]);
   });
 
-  it('lehnt jede I.4-Marke außerhalb ihrer vermessenen Kreisfassung und Hüllengröße ab', () => {
-    expect(() => bodyMarkWithContext(
-      'circle-two-waves-diamond' as BodyMarkId,
-      { kind: 'circle-12' },
-      circleBodyMm,
-    )).toThrow(/nicht vermessen/);
+  it('überträgt jede I.4-Marke außerhalb ihrer vermessenen Kreisfassung und Hüllengröße', () => {
+    expectDerived('circle-two-waves-diamond' as BodyMarkId, { kind: 'circle-12' }, circleBodyMm);
     for (const id of [
       'circle-diagonal-double-arrow-offset-bowl',
       'circle-wide-bowl',
     ] as BodyMarkId[]) {
-      expect(() => bodyMarkWithContext(
-        id,
-        { kind: 'circle-12', bodyVariant: 'raised-gable' },
-        raisedCircleBodyMm,
-      ), id).toThrow(/nicht vermessen/);
+      expectDerived(id, { kind: 'circle-12', bodyVariant: 'raised-gable' }, raisedCircleBodyMm, id);
     }
-    expect(() => bodyMarkWithContext(
-      'circle-wide-bowl' as BodyMarkId,
-      { kind: 'circle-12' },
-      { minX: 4, minY: 4, maxX: 29, maxY: 28 },
-    )).toThrow(/24 × 24 mm/);
+    expectDerived('circle-wide-bowl' as BodyMarkId, { kind: 'circle-12' }, { minX: 4, minY: 4, maxX: 29, maxY: 28 });
   });
 
   it.each([
@@ -155,13 +185,9 @@ describe('bodyMark() — LFH-488 Anhang I.4 Wasserrettungsorte', () => {
       { minX: 3, minY: 4, maxX: 27, maxY: 28 },
     ],
   ] as const)(
-    'lehnt die gleich große, aber verschobene I.4-Hülle für %s ab',
+    'überträgt die I.4-Marke %s auf die gleich große, aber verschobene Hülle',
     (id, context, shiftedBounds) => {
-      expect(() => bodyMarkWithContext(
-        id as BodyMarkId,
-        context,
-        shiftedBounds,
-      )).toThrow(/exakten Hülle/);
+      expectDerived(id as BodyMarkId, context, shiftedBounds);
     },
   );
 });
@@ -187,35 +213,23 @@ describe('bodyMark() — die technischen Innenzeichnungen der Körpermarken', ()
     ]);
   });
 
-  it('lehnt die I.3.4- und I.3.11-Marken außerhalb ihres gemessenen Wasserrumpfs ab', () => {
+  it('überträgt die I.3.4- und I.3.11-Marken auf andere Wasserrümpfe, nicht auf fremde Varianten', () => {
     for (const id of ['inset-hull-wheel-pair', 'fire-fighting'] as BodyMarkId[]) {
-      expect(() => bodyMarkWithContext(
-        id,
-        { kind: 'vehicle-water' },
-        insetWaterBodyMm,
-      ), `${id}/normal`).toThrow(/nicht vermessen/);
-      expect(() => bodyMarkWithContext(
-        id,
-        { kind: 'vehicle-land', bodyVariant: 'inset-hull' },
-        insetWaterBodyMm,
-      ), `${id}/vehicle-land`).toThrow(/nicht vermessen/);
+      expectDerived(id, { kind: 'vehicle-water' }, insetWaterBodyMm, `${id}/normal`);
+      expect(() => bodyMarkWithContext(id, { kind: 'vehicle-land', bodyVariant: 'inset-hull' }, insetWaterBodyMm), `${id}/vehicle-land`).toThrow(/keine Körpervariante/);
     }
   });
 
-  it('bindet die I.3.4- und I.3.11-Marken an die exakt gemessene Rumpfhülle', () => {
+  it('überträgt die I.3.4- und I.3.11-Marken auf eine anders große Rumpfhülle', () => {
     for (const id of ['inset-hull-wheel-pair', 'fire-fighting'] as BodyMarkId[]) {
-      expect(() => bodyMarkWithContext(
-        id,
-        { kind: 'vehicle-water', bodyVariant: 'inset-hull' },
-        { ...insetWaterBodyMm, maxX: 31 },
-      ), id).toThrow(/29,9794 × 14,9897 mm/);
+      expectDerived(id, { kind: 'vehicle-water', bodyVariant: 'inset-hull' }, { ...insetWaterBodyMm, maxX: 31 }, id);
     }
   });
 
   it.each([
     ['waagerecht', 1, 0],
     ['senkrecht', 0, 1],
-  ] as const)('lehnt die gleich große, aber %s verschobene I.3-Wasserrumpfhülle ab', (
+  ] as const)('überträgt auf die gleich große, aber %s verschobene I.3-Wasserrumpfhülle', (
     _direction,
     deltaX,
     deltaY,
@@ -227,11 +241,7 @@ describe('bodyMark() — die technischen Innenzeichnungen der Körpermarken', ()
       maxY: insetWaterBodyMm.maxY + deltaY,
     };
     for (const id of ['inset-hull-wheel-pair', 'fire-fighting'] as BodyMarkId[]) {
-      expect(() => bodyMarkWithContext(
-        id,
-        { kind: 'vehicle-water', bodyVariant: 'inset-hull' },
-        shiftedInsetWaterBodyMm,
-      ), id).toThrow(/exakten Hülle/);
+      expectDerived(id, { kind: 'vehicle-water', bodyVariant: 'inset-hull' }, shiftedInsetWaterBodyMm, id);
     }
   });
 });
@@ -273,27 +283,18 @@ describe('bodyMark() — Wasserrettungsfassung der Anhang-I-Landfahrzeuge', () =
   });
 
   it.each([
-    ['fehlende Kategorie', { kind: 'vehicle-land' }, /nicht vermessen/],
-    [
-      'andere Fahrzeugkategorie',
-      { kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-3' },
-      /nicht vermessen/,
-    ],
+    ['fehlende Kategorie', { kind: 'vehicle-land' }],
+    ['andere Fahrzeugkategorie', { kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-3' }],
     ['andere Fahrzeugvariante', {
       kind: 'vehicle-land', bodyVariant: 'foot-band', vehicleCategory: 'kfz-kategorie-1',
-    }, /nicht vermessen/],
-    [
-      'Formationsart mit der I.2-Landfahrzeughülle',
-      { kind: 'formation', vehicleCategory: 'kfz-kategorie-1' },
-      /nur an der Hülle 30 × 20 mm vermessen/,
-    ],
-    ['Anhängerart', { kind: 'trailer', vehicleCategory: 'kfz-kategorie-1' }, /nicht vermessen/],
+    }],
+    ['Formationsart mit der I.2-Landfahrzeughülle', { kind: 'formation', vehicleCategory: 'kfz-kategorie-1' }],
+    ['Anhängerart', { kind: 'trailer', vehicleCategory: 'kfz-kategorie-1' }],
     ['Wasserfahrzeugart', {
       kind: 'vehicle-water', bodyVariant: 'inset-hull', vehicleCategory: 'kfz-kategorie-1',
-    }, /nicht vermessen/],
-  ] as const)('lehnt %s fail-closed ab', (_case, context, expectedError) => {
-    expect(() => bodyMarkWithContext('water-rescue', context, landBodyMm))
-      .toThrow(expectedError);
+    }],
+  ] as const)('überträgt die Wasserrettungsfassung bei %s', (_case, context) => {
+    expectDerived('water-rescue', context, landBodyMm);
   });
 });
 
@@ -352,7 +353,7 @@ describe('bodyMark() — die technischen Innenzeichnungen des Anhangs N', () => 
     )).toEqual([line(1.01, 20.9898, 24.994, 8.998)]);
   });
 
-  it('zeichnet Sammelraum und Kontaktstelle ausschließlich auf dem normalen 12-mm-Kreis', () => {
+  it('zeichnet Sammelraum und Kontaktstelle vermessen auf dem normalen 12-mm-Kreis, sonst übertragen', () => {
     const clover = {
       type: 'path', role: 'pictogram',
       d: 'M 13 10 C 13 8.3431, 14.3431 7, 16 7 C 17.6569 7, 19 8.3431, 19 10 C 20.6569 10, 22 11.3431, 22 13 C 22 14.6569, 20.6569 16, 19 16 C 19 17.6569, 17.6569 19, 16 19 C 14.3431 19, 13 17.6569, 13 16 C 11.3431 16, 10 14.6569, 10 13 C 10 11.3431, 11.3431 10, 13 10 Z',
@@ -381,11 +382,7 @@ describe('bodyMark() — die technischen Innenzeichnungen des Anhangs N', () => 
       'spontaneous-helper-collection-arrow',
       'spontaneous-helper-contact-double-arrow',
     ] as BodyMarkId[]) {
-      expect(() => bodyMarkWithContext(
-        id,
-        { kind: 'spontaneous-helper' },
-        { minX: 2, minY: 2, maxX: 30, maxY: 30 },
-      ), id).toThrow(/nicht vermessen/);
+      expectDerived(id, { kind: 'spontaneous-helper' }, { minX: 2, minY: 2, maxX: 30, maxY: 30 }, id);
     }
   });
 
@@ -400,25 +397,15 @@ describe('bodyMark() — die technischen Innenzeichnungen des Anhangs N', () => 
     ]);
   });
 
-  it('bindet den angehobenen Kreis ausschließlich an die dort vermessene Informationsmarke', () => {
+  it('überträgt an den angehobenen Kreis jede andere Marke, die Informationsmarke bleibt vermessen', () => {
     for (const id of ['medical-service', 'care', 'circle-collection-arrow'] as BodyMarkId[]) {
-      expect(() => bodyMarkWithContext(
-        id,
-        { kind: 'circle-12', bodyVariant: 'raised-circle-1mm' as BodyVariantId },
-        raisedCircleOneMmBodyMm,
-      ), id).toThrow(/nicht vermessen/);
+      expectDerived(id, { kind: 'circle-12', bodyVariant: 'raised-circle-1mm' as BodyVariantId }, raisedCircleOneMmBodyMm, id);
     }
   });
 
-  it('lehnt jede technische N-Marke außerhalb ihres vermessenen Kontexts ab', () => {
-    expect(() => bodyMarkWithContext(
-      'air-rising-diagonal' as BodyMarkId,
-      { kind: 'vehicle-air', bodyVariant: 'raised-hull' }, raisedAirBodyMm,
-    )).toThrow(/nicht vermessen/);
-    expect(() => bodyMarkWithContext(
-      'spontaneous-helper-contact-double-arrow' as BodyMarkId,
-      { kind: 'formation' }, formationBodyMm,
-    )).toThrow(/nicht vermessen/);
+  it('überträgt jede technische N-Marke außerhalb ihres vermessenen Kontexts', () => {
+    expectDerived('air-rising-diagonal' as BodyMarkId, { kind: 'vehicle-air', bodyVariant: 'raised-hull' }, raisedAirBodyMm);
+    expectDerived('spontaneous-helper-contact-double-arrow' as BodyMarkId, { kind: 'formation' }, formationBodyMm);
   });
 });
 
@@ -435,7 +422,7 @@ describe('bodyMark() — die technische Innenzeichnung des Anhangs I.5', () => {
     style: outlineStyle,
   });
 
-  it('registriert die doppelte Welle mit innerer 8-mm-Raute und bindet sie nur an die I.5-Rauten', () => {
+  it('registriert die doppelte Welle mit innerer 8-mm-Raute, vermessen an den I.5-Rauten', () => {
     expect(BODY_MARK_IDS).toContain(waterRescueMark);
     expect(bodyMarkWithContext(
       waterRescueMark,
@@ -463,16 +450,8 @@ describe('bodyMark() — die technische Innenzeichnung des Anhangs I.5', () => {
         style: outlineStyle,
       },
     ]);
-    expect(() => bodyMarkWithContext(
-      waterRescueMark,
-      { kind: 'person' },
-      compactPersonDiamondBodyMm,
-    )).toThrow(/nicht vermessen/);
-    expect(() => bodyMarkWithContext(
-      waterRescueMark,
-      { kind: 'formation' },
-      formationBodyMm,
-    )).toThrow(/keine randbündige Fassung/);
+    expectDerived(waterRescueMark, { kind: 'person' }, compactPersonDiamondBodyMm);
+    expectDerived(waterRescueMark, { kind: 'formation' }, formationBodyMm);
   });
 
   it('emittiert die I.5-Wellen ausschließlich mit dem absoluten Pfad-Subset des Render-Gates', () => {
@@ -495,7 +474,7 @@ describe('bodyMark() — die technische Innenzeichnung des Anhangs I.5', () => {
 });
 
 describe('bodyMark() — die vermessenen Wasserrettungs-Anhänger', () => {
-  it('zeichnet Wasserrettung und Tauchen ausschließlich auf dem normalen Anhängerrumpf', () => {
+  it('zeichnet Wasserrettung und Tauchen vermessen auf dem normalen Anhängerrumpf, sonst übertragen', () => {
     expect(bodyMarkWithContext(
       'trailer-water-rescue' as BodyMarkId,
       { kind: 'trailer' },
@@ -549,24 +528,12 @@ describe('bodyMark() — die vermessenen Wasserrettungs-Anhänger', () => {
         style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
       },
     ]);
-    expect(() => bodyMarkWithContext(
-      'trailer-water-rescue' as BodyMarkId,
-      { kind: 'vehicle-land' },
-      landBodyMm,
-    )).toThrow(/nicht vermessen/);
-    expect(() => bodyMarkWithContext(
-      'trailer-diving' as BodyMarkId,
-      { kind: 'trailer', bodyVariant: 'foot-band' },
-      trailerBodyMm,
-    )).toThrow(/nicht vermessen/);
-    expect(() => bodyMarkWithContext(
-      'trailer-boat-hull' as BodyMarkId,
-      { kind: 'vehicle-water' },
-      airBodyMm,
-    )).toThrow(/nicht vermessen/);
+    expectDerived('trailer-water-rescue' as BodyMarkId, { kind: 'vehicle-land' }, landBodyMm);
+    expectDerived('trailer-diving' as BodyMarkId, { kind: 'trailer', bodyVariant: 'foot-band' }, trailerBodyMm);
+    expectDerived('trailer-boat-hull' as BodyMarkId, { kind: 'vehicle-water' }, airBodyMm);
   });
 
-  it('übersetzt bestehende bounds-relative Anhängermarken, lehnt aber alle drei LFH-487-Marken ab', () => {
+  it('übersetzt bestehende bounds-relative Anhängermarken und überträgt die drei LFH-487-Marken', () => {
     expect(bodyMarkWithContext(
       'medical-service', { kind: 'trailer' }, translatedTrailerBodyMm,
     )).toEqual([
@@ -580,8 +547,7 @@ describe('bodyMark() — die vermessenen Wasserrettungs-Anhänger', () => {
     for (const id of [
       'trailer-water-rescue', 'trailer-diving', 'trailer-boat-hull',
     ] as BodyMarkId[]) {
-      expect(() => bodyMarkWithContext(id, { kind: 'trailer' }, translatedTrailerBodyMm), id)
-        .toThrow(/4.*5,75.*31.*26/);
+      expectDerived(id, { kind: 'trailer' }, translatedTrailerBodyMm, id);
     }
   });
 
@@ -802,7 +768,7 @@ describe('bodyMark() — gebänderte Logistikkörper', () => {
     expect(boundsOfMm(mark!)).toEqual({ minX: 11, minY: 11.5, maxX: 20.5, maxY: 21.5 });
   });
 
-  it('verschiebt die Truppfassung nur mit belegter unterer rechter Labelzone', () => {
+  it('verschiebt die Truppfassung nur mit belegter unterer rechter Labelzone, sonst übertragen', () => {
     const [mark] = bodyMarkWithContext(
       'catering', {
         kind: 'formation', bodyVariant: 'foot-band', strength: 'trupp',
@@ -813,9 +779,7 @@ describe('bodyMark() — gebänderte Logistikkörper', () => {
     expect(boundsOfMm(mark!)).toEqual({ minX: 11, minY: 8, maxX: 20.5, maxY: 18 });
 
     for (const strength of ['trupp', 'staffel'] as const) {
-      expect(() => bodyMarkWithContext(
-        'catering', { kind: 'formation', bodyVariant: 'foot-band', strength }, formationBodyMm,
-      )).toThrow(/nicht vermessen/);
+      expectDerived('catering', { kind: 'formation', bodyVariant: 'foot-band', strength }, formationBodyMm);
     }
   });
 
@@ -840,8 +804,7 @@ describe('bodyMark() — gebänderte Logistikkörper', () => {
     // G.2.3: am Anhänger liegen Löffel und Schüssel 0,5 mm tiefer als an der Formation.
     expect(boundsOfMm(marks[0]!)).toEqual({ minX: 10.5, minY: 10, maxX: 13.5, maxY: 20.5 });
     expect(boundsOfMm(marks[1]!)).toEqual({ minX: 15, minY: 10.5, maxX: 24.5, maxY: 20.5 });
-    expect(() => bodyMarkWithContext('meal-preparation', { kind: 'trailer' }, trailerBodyMm))
-      .toThrow(/nicht vermessen/);
+    expectDerived('meal-preparation', { kind: 'trailer' }, trailerBodyMm);
   });
 
   it('zeichnet Instandhaltung als Mittellinie mit offenen Endbögen je Körperprofil', () => {
@@ -865,7 +828,7 @@ describe('bodyMark() — gebänderte Logistikkörper', () => {
       ['vehicle-land', landBodyMm],
       ['trailer', trailerBodyMm],
     ] as const) {
-      expect(() => bodyMarkWithContext('maintenance', { kind }, bounds)).toThrow(/nicht vermessen/);
+      expectDerived('maintenance', { kind }, bounds);
     }
   });
 
@@ -882,12 +845,11 @@ describe('bodyMark() — gebänderte Logistikkörper', () => {
       { kind: 'trailer', bodyVariant: 'foot-band' },
       { kind: 'circle-12', bodyVariant: 'foot-band' },
     ] as const) {
-      expect(() => bodyMarkWithContext('waste-disposal', context, formationBodyMm))
-        .toThrow(/nicht vermessen/);
+      expectDerived('waste-disposal', context, formationBodyMm);
     }
   });
 
-  it('vermisst die vier übrigen Formationsmarken und hält Normalformationen fail-closed', () => {
+  it('vermisst die vier übrigen Formationsmarken und überträgt sie auf Normalformationen', () => {
     const cases = [
       ['fuels-consumables', [fuelsPath(16, 9, 21)], { minX: 11, minY: 9, maxX: 21, maxY: 21 }],
       ['drinking-water', drinkingWaterMarks(), { minX: 7, minY: 11, maxX: 26, maxY: 18 }],
@@ -906,8 +868,7 @@ describe('bodyMark() — gebänderte Logistikkörper', () => {
         maxY: Math.max(left.maxY, right.maxY),
       }));
       expect(combinedBounds).toEqual(expectedBounds);
-      expect(() => bodyMarkWithContext(id, { kind: 'formation' }, formationBodyMm))
-        .toThrow(/nicht vermessen/);
+      expectDerived(id, { kind: 'formation' }, formationBodyMm);
     }
   });
 
@@ -934,11 +895,7 @@ describe('bodyMark() — gebänderte Logistikkörper', () => {
 
     for (const id of ['catering', 'meal-preparation', 'fuels-consumables', 'maintenance'] as const) {
       for (const bodyVariant of [undefined, 'raised-gable'] as const) {
-        expect(() => bodyMarkWithContext(
-          id,
-          { kind: 'circle-12', ...(bodyVariant === undefined ? {} : { bodyVariant }) },
-          bodyVariant === 'raised-gable' ? raisedCircleBodyMm : circleBodyMm,
-        )).toThrow(/nicht vermessen/);
+        expectDerived(id, { kind: 'circle-12', ...(bodyVariant === undefined ? {} : { bodyVariant }) }, bodyVariant === 'raised-gable' ? raisedCircleBodyMm : circleBodyMm);
       }
     }
   });
@@ -1007,22 +964,10 @@ describe('bodyMark() — technische Wasserrettungsgeometrie für I-c', () => {
     expect(boundsOfMm(shifted[2]!)).toEqual({ minX: 13, minY: 16, maxX: 21, maxY: 24 });
   });
 
-  it('lehnt ungemessene Körper, Varianten und Hüllen fail-closed ab', () => {
-    expect(() => bodyMarkWithContext(
-      'formation-two-waves-diamond',
-      { kind: 'formation', bodyVariant: 'foot-band' },
-      formationBodyMm,
-    )).toThrow(/nicht vermessen/);
-    expect(() => bodyMarkWithContext(
-      'formation-two-waves-diamond',
-      { kind: 'vehicle-land' },
-      landBodyMm,
-    )).toThrow(/nicht vermessen/);
-    expect(() => bodyMarkWithContext(
-      'formation-two-waves-diamond',
-      { kind: 'formation' },
-      { minX: 1, minY: 6, maxX: 30.5, maxY: 26 },
-    )).toThrow(/30 × 20 mm/);
+  it('überträgt auf ungemessene Körper, Varianten und Hüllen', () => {
+    expectDerived('formation-two-waves-diamond', { kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm);
+    expectDerived('formation-two-waves-diamond', { kind: 'vehicle-land' }, landBodyMm);
+    expectDerived('formation-two-waves-diamond', { kind: 'formation' }, { minX: 1, minY: 6, maxX: 30.5, maxY: 26 });
   });
 });
 
@@ -1459,18 +1404,10 @@ describe('bodyMark() — rein geometrische technische Marken aus F.1', () => {
     ]);
   });
 
-  it('lehnt technische IDs außerhalb der konkret vermessenen Formationsfassung ab', () => {
-    expect(() => bodyMarkWithContext(
-      'chevron-over-opposed-triangles',
-      { kind: 'vehicle-land' },
-      formationBodyMm,
-    )).toThrow(/nicht vermessen/);
-    expect(() => bodyMarkWithContext(
-      'ring-7mm-offset-down-1mm',
-      { kind: 'formation', bodyVariant: 'foot-band' },
-      formationBodyMm,
-    )).toThrow(/nicht vermessen/);
-    expect(() => bodyMark('catering', formationBodyMm)).toThrow(/nicht vermessen/);
+  it('überträgt technische IDs außerhalb der konkret vermessenen Formationsfassung', () => {
+    expectDerived('chevron-over-opposed-triangles', { kind: 'vehicle-land' }, formationBodyMm);
+    expectDerived('ring-7mm-offset-down-1mm', { kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm);
+    expectDerived('catering', { kind: 'formation' }, formationBodyMm);
   });
 });
 
@@ -1529,22 +1466,14 @@ describe('bodyMark() — LFH-485 Strömungsrettung und getrennte Luftmarken', ()
     ]);
   });
 
-  it('lehnt alle drei LFH-485-Fassungen außerhalb der normalen Formation ab', () => {
+  it('überträgt alle drei LFH-485-Fassungen außerhalb der normalen Formation', () => {
     for (const id of [
       'formation-water-rescue-lower-zone',
       'formation-opposed-triangles-top',
       'formation-chevron-top',
     ] as BodyMarkId[]) {
-      expect(() => bodyMarkWithContext(
-        id,
-        { kind: 'formation', bodyVariant: 'foot-band' },
-        formationBodyMm,
-      ), id).toThrow(/nicht vermessen/);
-      expect(() => bodyMarkWithContext(
-        id,
-        { kind: 'vehicle-land' },
-        landBodyMm,
-      ), id).toThrow(/nicht vermessen/);
+      expectDerived(id, { kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm, id);
+      expectDerived(id, { kind: 'vehicle-land' }, landBodyMm, id);
     }
   });
 });
@@ -1576,21 +1505,11 @@ describe('bodyMark() — LFH-484 Umweltgefahren als eigene technische Composite-
     expect(boundsOfMm(marks[0]!)).toEqual({ minX: 11.85, minY: 6.9, maxX: 14.35, maxY: 9.4 });
   });
 
-  it('lehnt die Composite-Marke außerhalb der normalen 30 × 20-mm-Formation ab', () => {
+  it('überträgt die Composite-Marke außerhalb der normalen 30 × 20-mm-Formation', () => {
     const id = 'formation-hooked-crossed-disks-over-lowered-wave-diamond' as BodyMarkId;
-    expect(() => bodyMarkWithContext(
-      id,
-      { kind: 'formation', bodyVariant: 'foot-band' },
-      formationBodyMm,
-    )).toThrow(/nicht vermessen/);
-    expect(() => bodyMarkWithContext(id, { kind: 'vehicle-land' }, landBodyMm)).toThrow(
-      /nicht vermessen/,
-    );
-    expect(() => bodyMarkWithContext(
-      id,
-      { kind: 'formation' },
-      { ...formationBodyMm, maxY: 25.5 },
-    )).toThrow(/30 × 20 mm/);
+    expectDerived(id, { kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm);
+    expectDerived(id, { kind: 'vehicle-land' }, landBodyMm);
+    expectDerived(id, { kind: 'formation' }, { ...formationBodyMm, maxY: 25.5 });
   });
 });
 
@@ -1629,8 +1548,7 @@ describe('bodyMark() — die drei getrennt vermessenen Fahrzeugkörper aus F.2',
       // Fachreview 19.09.2026: Arztleiste auf y 18 (F.2.6/F.2.7, Band 17,75…18,25).
       line(12, 18, 20, 18),
     ]);
-    expect(() => bodyMarkWithContext('physician', { kind: 'vehicle-air' }, airBodyMm))
-      .toThrow(/nicht vermessen/);
+    expectDerived('physician', { kind: 'vehicle-air' }, airBodyMm);
   });
 
   it('setzt die Anhängerteilung mit eigenem Ring und ohne Diagonalen', () => {
@@ -1668,11 +1586,7 @@ describe('bodyMark() — die beiden Sondermarken aus F.2', () => {
         style: { fill: 'schwarz', stroke: 'none' },
       },
     ]);
-    expect(() => bodyMarkWithContext(
-      'top-center-rect-0-5x0-6mm',
-      { kind: 'formation' },
-      formationBodyMm,
-    )).toThrow(/nicht vermessen/);
+    expectDerived('top-center-rect-0-5x0-6mm', { kind: 'formation' }, formationBodyMm);
   });
 
   it('zeichnet F.2.6s unbegriffene Winschform als neutrale technische Luftfahrzeugmarke', () => {
@@ -1775,11 +1689,7 @@ describe('bodyMark() — F.2.10 bis F.2.17 auf normalen, gebänderten und Anhän
       style: outlineStyle,
       },
     ]);
-    expect(() => bodyMarkWithContext(
-      'ring-6mm-offset-down-3mm-four-way-stem',
-      { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' },
-      landBodyMm,
-    )).toThrow(/nicht vermessen/);
+    expectDerived('ring-6mm-offset-down-3mm-four-way-stem', { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' }, landBodyMm);
   });
 
   it('zeichnet F.2.16s nach unten versetzten Acht-Speichen-Ring getrennt vom Task-2-Ring', () => {
@@ -1796,14 +1706,10 @@ describe('bodyMark() — F.2.10 bis F.2.17 auf normalen, gebänderten und Anhän
       line(16 - diagonal, 19 - diagonal, 16 + diagonal, 19 + diagonal),
       line(16 + diagonal, 19 - diagonal, 16 - diagonal, 19 + diagonal),
     ]);
-    expect(() => bodyMarkWithContext(
-      'ring-5mm-offset-down-3mm-eight-spokes',
-      { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' },
-      landBodyMm,
-    )).toThrow(/nicht vermessen/);
+    expectDerived('ring-5mm-offset-down-3mm-eight-spokes', { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' }, landBodyMm);
   });
 
-  it('konstruiert mobile Küche und Trinkwasser nur an der vermessenen Fahrzeug-Fußbandfassung', () => {
+  it('konstruiert mobile Küche und Trinkwasser an der vermessenen Fahrzeug-Fußbandfassung und überträgt sie sonst', () => {
     const meal = bodyMarkWithContext(
       'meal-preparation', { kind: 'vehicle-land', bodyVariant: 'foot-band' }, landBodyMm,
     );
@@ -1841,10 +1747,8 @@ describe('bodyMark() — F.2.10 bis F.2.17 auf normalen, gebänderten und Anhän
       },
     ]);
 
-    expect(() => bodyMarkWithContext('meal-preparation', { kind: 'vehicle-land' }, landBodyMm))
-      .toThrow(/nicht vermessen/);
-    expect(() => bodyMarkWithContext('drinking-water', { kind: 'formation' }, formationBodyMm))
-      .toThrow(/nicht vermessen/);
+    expectDerived('meal-preparation', { kind: 'vehicle-land' }, landBodyMm);
+    expectDerived('drinking-water', { kind: 'formation' }, formationBodyMm);
   });
 
   it('verschiebt die neuen technischen Marken ausschließlich über die platzierte Hülle', () => {
@@ -2027,8 +1931,8 @@ describe('bodyMark() — der zusammengefasste Eintrag von F.1.2', () => {
  * `baseDrawing` werfen genauso in Prosa. Ein einzelner Kode allein in `body-marks.ts` wäre eine
  * neue Bauart mit n = 1. Wer die Meldungen umformuliert, passt hier die Muster mit an.
  */
-describe('bodyMark() — was nicht fortgeschrieben wird', () => {
-  it('zeichnet die eigens vermessenen Wasserrettungs- und Wasserfahrzeugfassungen nur auf der normalen Formation', () => {
+describe('bodyMark() — was übertragen statt vermessen wird', () => {
+  it('zeichnet die eigens vermessenen Wasserrettungs- und Wasserfahrzeugfassungen an der normalen Formation, sonst übertragen', () => {
     // I.1.9–I.1.12: Die Quellen führen nicht die Kapitel-4-Box (4.5.5: 24 × 16 mm,
     // 4.5.8: 24 × 16 mm), sondern zwei eigenständige, mittige Zeichen in der 30 × 20-mm-
     // Körperhülle. Wasserrettung hat zwei Wellenläufe zwischen y=12…13 und y=14…15 und eine
@@ -2090,82 +1994,47 @@ describe('bodyMark() — was nicht fortgeschrieben wird', () => {
     expect(boundsOfMm(watercraftOperations[1]!).maxX).toBe(10);
     expect(boundsOfMm(watercraftOperations[2]!).minX).toBe(22);
 
-    // Diese beiden Fassungen sind ausschließlich an der normalen Formation belegt. Ein
-    // Rückfall auf dieselbe oder die Kapitel-4-Box in anderen Art-/Varianten-Kontexten wäre
-    // fachlich ungemessen und deshalb verboten.
+    // Diese beiden Fassungen sind ausschließlich an der normalen Formation belegt. In anderen
+    // Art-/Varianten-Kontexten überträgt `bodyMark()` sie seit dem 2. Oktober 2026 (abgeleitet,
+    // nicht vermessen).
     for (const id of ['water-rescue', 'watercraft-operations'] as const) {
-      expect(() => bodyMarkWithContext(id, { kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm))
-        .toThrow(/nicht vermessen/);
-      expect(() => bodyMarkWithContext(id, { kind: 'vehicle-land' }, landBodyMm))
-        .toThrow(/nicht vermessen/);
+      expectDerived(id, { kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm);
+      expectDerived(id, { kind: 'vehicle-land' }, landBodyMm);
     }
   });
 
-  it('wirft für jedes nicht vermessene Art-/Varianten-/Fähigkeitspaar', () => {
-    expect(() => bodyMarkWithContext('medical-service', { kind: 'vehicle-land' }, landBodyMm))
-      .toThrow(/nicht vermessen/);
-    expect(() => bodyMarkWithContext(
-      'medical-service', { kind: 'vehicle-land', bodyVariant: 'raised-hull' }, landBodyMm,
-    )).toThrow(/nicht vermessen/);
-    expect(() => bodyMarkWithContext(
-      'physician', { kind: 'vehicle-air', bodyVariant: 'plain-wheel-pair' }, raisedAirBodyMm,
-    )).toThrow(/nicht vermessen/);
-    expect(() => bodyMarkWithContext(
-      'medical-service', { kind: 'trailer', bodyVariant: 'plain-wheel-pair' }, trailerBodyMm,
-    )).toThrow(/nicht vermessen/);
-    expect(() =>
-      bodyMarkWithContext('medical-service', { kind: 'vehicle-water' }, formationBodyMm),
-    ).toThrow(/nicht vermessen/);
-    expect(() =>
-      bodyMarkWithContext('medical-service', { kind: 'formation', bodyVariant: 'raised-hull' }, formationBodyMm),
-    ).toThrow(/nicht vermessen/);
-    expect(() =>
-      bodyMarkWithContext('medical-service', { kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm),
-    ).toThrow(/nicht vermessen/);
+  it('überträgt jedes nicht vermessene Art-/Varianten-/Fähigkeitspaar, nur fremde Varianten werfen', () => {
+    expectDerived('medical-service', { kind: 'vehicle-land' }, landBodyMm);
+    expect(() => bodyMarkWithContext('medical-service', { kind: 'vehicle-land', bodyVariant: 'raised-hull' }, landBodyMm)).toThrow(/keine Körpervariante/);
+    expect(() => bodyMarkWithContext('physician', { kind: 'vehicle-air', bodyVariant: 'plain-wheel-pair' }, raisedAirBodyMm)).toThrow(/keine Körpervariante/);
+    expect(() => bodyMarkWithContext('medical-service', { kind: 'trailer', bodyVariant: 'plain-wheel-pair' }, trailerBodyMm)).toThrow(/keine Körpervariante/);
+    expectDerived('medical-service', { kind: 'vehicle-water' }, formationBodyMm);
+    expect(() => bodyMarkWithContext('medical-service', { kind: 'formation', bodyVariant: 'raised-hull' }, formationBodyMm)).toThrow(/keine Körpervariante/);
+    expectDerived('medical-service', { kind: 'formation', bodyVariant: 'foot-band' }, formationBodyMm);
     // Bis LFH-786 stand hier `fire-fighting` am normalen Landfahrzeug. Das Paar ist seit C.2.4
     // bis C.2.13 vermessen und zeichnet; der Nachbar mit Fußband und die Drehleiter am Anhänger
-    // sind es nicht und fallen nicht auf die vermessene Fassung zurück.
+    // sind es nicht und werden seit dem 2. Oktober 2026 übertragen.
     expect(bodyMarkWithContext('fire-fighting', { kind: 'vehicle-land' }, landBodyMm).length)
       .toBeGreaterThanOrEqual(1);
-    expect(() =>
-      bodyMarkWithContext('fire-fighting', { kind: 'vehicle-land', bodyVariant: 'foot-band' }, landBodyMm),
-    ).toThrow(/nicht vermessen/);
-    expect(() =>
-      bodyMarkWithContext('rescue-aerial-ladder', { kind: 'trailer' }, trailerBodyMm),
-    ).toThrow(/nicht vermessen/);
+    expectDerived('fire-fighting', { kind: 'vehicle-land', bodyVariant: 'foot-band' }, landBodyMm);
+    expectDerived('rescue-aerial-ladder', { kind: 'trailer' }, trailerBodyMm);
   });
 
-  it('wirft für eine Fähigkeit ohne vermessene randbündige Fassung', () => {
+  it('passt eine Fähigkeit ohne vermessene randbündige Fassung als Einzeldarstellung ein', () => {
     // `service-water` steht in `CAPABILITY_IDS` und hat ein Boxpiktogramm, aber keine an einer
-    // F-Datei vermessene randbündige Fassung. Ein stiller Rückfall auf die Boxfassung wäre der
-    // eigentliche Fehler: die beiden Zeichnungen unterscheiden sich in ihren **Maßen** (Kreuz
-    // 2…30 gegen 1…31, Leiste 10 gegen 8 mm) und nicht nur in ihrer Größe — das Ergebnis sähe
-    // plausibel aus und wäre an keiner Referenzdatei belegt.
-    expect(() => bodyMark('service-water', formationBodyMm)).toThrow(
-      /keine randbündige Fassung vermessen/,
-    );
+    // F-Datei vermessene randbündige Fassung. Die beiden Zeichnungen unterscheiden sich in ihren
+    // **Maßen** (Kreuz 2…30 gegen 1…31, Leiste 10 gegen 8 mm) und nicht nur in ihrer Größe; die
+    // Einzeldarstellung ist deshalb nie erste Wahl. Ohne jede randbündige Fassung ist sie seit dem
+    // 2. Oktober 2026 die Ableitung: ins Innenfeld eingepasst, in `compose()` mit Vermerk.
+    expectDerived('service-water', { kind: 'formation' }, formationBodyMm);
   });
 
-  it('wirft für eine Hülle, die nicht zum gewählten Fahrzeugkörper passt', () => {
-    expect(() =>
-      bodyMarkWithContext(
-        'medical-service',
-        { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' },
-        formationBodyMm,
-      ),
-    ).toThrow(/30 × 20,25 mm/);
+  it('überträgt auf eine Hülle, die nicht zum gewählten Fahrzeugkörper passt', () => {
+    expectDerived('medical-service', { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' }, formationBodyMm);
   });
 
-  it('meldet die tatsächlichen Hüllenmaße im Wurf', () => {
-    // Ohne die Zahlen im Text stünde der nächste Leser vor „passt nicht" ohne zu wissen, um
-    // wie viel — bei 0,25 mm Unterschied ist das der ganze Befund.
-    expect(() => bodyMarkWithContext(
-      'medical-service',
-      { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' },
-      formationBodyMm,
-    )).toThrow(
-      /30\.000 × 20\.000 mm/,
-    );
+  it('überträgt auch bei 0,25 mm Unterschied der Hüllenmaße', () => {
+    expectDerived('medical-service', { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair' }, formationBodyMm);
   });
 });
 
@@ -2449,7 +2318,7 @@ describe('bodyMark() — F.3.1 bis F.3.19 auf Kreis und reduziertem Haus', () =>
     ]);
   });
 
-  it('lehnt jede ungemessene Art-/Varianten-/Markenkombination ab', () => {
+  it('überträgt jede ungemessene Art-/Varianten-/Markenkombination, nur fremde Varianten werfen', () => {
     for (const id of [
       'circle-patient-staging-arrows',
       'circle-collection-arrow',
@@ -2463,28 +2332,15 @@ describe('bodyMark() — F.3.1 bis F.3.19 auf Kreis und reduziertem Haus', () =>
       'circle-transport-diamond-arrows',
       'circle-transport-diamond-wheels-arrows',
     ]) {
-      expect(() => bodyMarkWithContext(
-        technical(id), { kind: 'formation' }, formationBodyMm,
-      ), id).toThrow(/nicht vermessen/);
-      expect(() => bodyMarkWithContext(
-        technical(id), { kind: 'post' }, circleBodyMm,
-      ), id).toThrow(/nicht vermessen/);
+      expectDerived(technical(id), { kind: 'formation' }, formationBodyMm, id);
+      expectDerived(technical(id), { kind: 'post' }, circleBodyMm, id);
     }
-    expect(() => circleMark('medical-service', 'foot-band')).toThrow(/nicht vermessen/);
-    expect(() => circleMark(technical('circle-collection-arrow'), raisedGable)).toThrow(
-      /nicht vermessen/,
-    );
-    expect(() => circleMark(technical('circle-double-arrow-lower-v'), raisedGable)).toThrow(
-      /nicht vermessen/,
-    );
-    expect(() => bodyMarkWithContext('care', { kind: reducedHouseKind }, reducedHouseBodyMm))
-      .toThrow(/nicht vermessen/);
-    expect(() => bodyMarkWithContext(
-      'hospital', { kind: reducedHouseKind, bodyVariant: raisedGable }, reducedHouseBodyMm,
-    )).toThrow(/nicht vermessen/);
-    expect(() => bodyMarkWithContext(
-      'hospital', { kind: 'building' }, reducedHouseBodyMm,
-    )).toThrow(/nicht vermessen/);
+    expectDerivedMarks(circleMark('medical-service', 'foot-band'));
+    expectDerivedMarks(circleMark(technical('circle-collection-arrow'), raisedGable));
+    expectDerivedMarks(circleMark(technical('circle-double-arrow-lower-v'), raisedGable));
+    expectDerived('care', { kind: reducedHouseKind }, reducedHouseBodyMm);
+    expect(() => bodyMarkWithContext('hospital', { kind: reducedHouseKind, bodyVariant: raisedGable }, reducedHouseBodyMm)).toThrow(/keine Körpervariante/);
+    expectDerived('hospital', { kind: 'building' }, reducedHouseBodyMm);
   });
 });
 
@@ -2544,12 +2400,8 @@ describe('bodyMark() — kompakte Wasserrettungsmarke aus I.1.5 bis I.1.8', () =
     });
   });
 
-  it('lehnt dieselbe technische ID auf einer anderen Körperart weiterhin ab', () => {
-    expect(() => bodyMarkWithContext(
-      'formation-water-rescue-compact' as BodyMarkId,
-      { kind: 'vehicle-land' },
-      landBodyMm,
-    )).toThrow(/nicht vermessen/);
+  it('überträgt dieselbe technische ID auf eine andere Körperart', () => {
+    expectDerived('formation-water-rescue-compact' as BodyMarkId, { kind: 'vehicle-land' }, landBodyMm);
   });
 });
 
@@ -2723,10 +2575,10 @@ describe('BODY_MARK_IDS', () => {
 
 describe('bodyMark() — Vermessungslücken als eigene Fehlerklasse', () => {
   /**
-   * Der Wortlaut der Meldungen bleibt geprüft (oben), aber der Baukasten der Website erkennt sie
-   * seit LFH-502 an der Klasse. Beide Lücken hier tragen `scope: 'combination'`: dieselbe Marke
-   * ist an einer anderen Art oder Variante sehr wohl vermessen — belegt durch die drei grünen
-   * Aufrufe am Ende dieser Datei, die jede Kennung an ihrer belegten Fassung bauen.
+   * Der Baukasten der Website erkennt Vermessungslücken seit LFH-502 an der Klasse. Seit dem
+   * 2. Oktober 2026 sind ein nicht vermessenes Paar und eine verschobene Hülle keine Lücke mehr:
+   * `bodyMark()` überträgt die vermessene Fassung. Eine Lücke bleibt eine Körpervariante, die der
+   * Katalog gar nicht zeichnet; sie trägt weiter `scope: 'combination'`.
    */
   const gapOf = (call: () => unknown): unknown => {
     try {
@@ -2737,17 +2589,23 @@ describe('bodyMark() — Vermessungslücken als eigene Fehlerklasse', () => {
     }
   };
 
-  it('wirft NotMeasuredError für ein nicht vermessenes Art-/Varianten-/Fähigkeitspaar', () => {
-    const thrown = gapOf(() => bodyMark('hospital', formationBodyMm));
-    expect(thrown).toBeInstanceOf(NotMeasuredError);
-    expect((thrown as NotMeasuredError).scope).toBe('combination');
+  it('zeichnet ein nicht vermessenes Art-/Varianten-/Fähigkeitspaar abgeleitet', () => {
+    expect(gapOf(() => bodyMark('hospital', formationBodyMm))).toBeUndefined();
   });
 
-  it('wirft NotMeasuredError für die verschobene, gleich große I.4-Hülle', () => {
-    const thrown = gapOf(() => bodyMarkWithContext(
+  it('zeichnet die verschobene, gleich große I.4-Hülle abgeleitet', () => {
+    expect(gapOf(() => bodyMarkWithContext(
       'circle-wide-bowl' as BodyMarkId,
       { kind: 'circle-12' },
       { minX: 3, minY: 4, maxX: 27, maxY: 28 },
+    ))).toBeUndefined();
+  });
+
+  it('wirft NotMeasuredError für eine Körpervariante, die der Katalog nicht zeichnet', () => {
+    const thrown = gapOf(() => bodyMarkWithContext(
+      'medical-service',
+      { kind: 'formation', bodyVariant: 'raised-hull' },
+      formationBodyMm,
     ));
     expect(thrown).toBeInstanceOf(NotMeasuredError);
     expect((thrown as NotMeasuredError).scope).toBe('combination');
