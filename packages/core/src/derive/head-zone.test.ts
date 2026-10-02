@@ -258,3 +258,24 @@ describe('Kopfzone an anderen Körperformen', () => {
     })).toThrow(NotMeasuredError);
   });
 });
+
+describe('Kopfzone über Zusatzgeometrie oberhalb des Körpers', () => {
+  it('setzt die Verwaltungsstufe über den Giebel der ortsfesten Stelle, nicht hinein', () => {
+    const drawing = drawSymbol({
+      kind: 'circle-12',
+      bodyVariant: 'raised-gable',
+      organization: 'fuehrung-leitung',
+      administrativeLevel: 'kreis',
+    });
+    const flatten = (children: readonly Primitive[]): Primitive[] =>
+      children.flatMap((child) => (child.type === 'group' ? [child, ...flatten(child.children)] : [child]));
+    const all = flatten(drawing.children);
+    const headBottom = Math.max(
+      ...all.filter((p) => p.role === 'head' && p.type !== 'group').map((p) => boundsOfMm(p).maxY),
+    );
+    const baseTop = Math.min(
+      ...all.filter((p) => p.role === 'body' || p.role === 'bodyExtra').map((p) => boundsOfMm(p).minY),
+    );
+    expect(headBottom).toBeLessThanOrEqual(baseTop);
+  });
+});

@@ -99,6 +99,18 @@ for (const kind of kinds) for (const bodyVariant of variants) for (const [axis, 
         problems.push(`Piktogramm über Körper: ${[b.minX, b.minY, b.maxX, b.maxY].map((n: number) => n.toFixed(2)).join('/')}`);
       }
     }
+    // Kopf gegen Grundzeichnung: die Kopfzone steht über Körper und Zusatzgeometrie, nie darin.
+    const heads = prims.filter((p) => p.role === 'head' && p.type !== 'group');
+    const base = prims.filter((p) => (p.role === 'body' || p.role === 'bodyExtra') && p.type !== 'group');
+    for (const h of heads) {
+      const hb = boundsOfMm(h);
+      for (const q of base) {
+        const qb = boundsOfMm(q);
+        if (hb.minX < qb.maxX - TOL && qb.minX < hb.maxX - TOL && hb.minY < qb.maxY - TOL && qb.minY < hb.maxY - TOL) {
+          problems.push(`Kopf überschneidet ${q.role}: ${[hb.minX, hb.minY, hb.maxX, hb.maxY].map((n: number) => n.toFixed(2)).join('/')}`);
+        }
+      }
+    }
     if (problems.length) { a.bad++; violations.push(`${label}: ${[...new Set(problems)].slice(0, 3).join('; ')}`); }
   } catch (e: any) {
     if (e instanceof CompositionError) {

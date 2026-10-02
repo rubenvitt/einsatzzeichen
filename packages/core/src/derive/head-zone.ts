@@ -359,9 +359,17 @@ export interface PlaceBaseOptions {
  * Staffel endet bei 29 mm, die Person hält ihre Unterkante 31.
  */
 export function placeBaseUnderHead(options: PlaceBaseOptions): PlacedBase {
-  const { spec, profile, body, extras, headBottomMm } = options;
+  const { spec, profile, body, extras } = options;
+  if (options.headBottomMm === null) return { body: profile.place(body, null), extras };
+  // Ragt Zusatzgeometrie über den Körper hinaus (der Giebel über dem Kreis), muss die ganze
+  // Grundzeichnung unter den Kopf, nicht nur der Körper: der Kopfabstand gilt ab ihrer Oberkante.
+  const overhangMm = Math.max(
+    0,
+    boundsOfMm(body).minY -
+      extras.reduce((top, extra) => Math.min(top, boundsOfMm(extra).minY), Number.POSITIVE_INFINITY),
+  );
+  const headBottomMm = options.headBottomMm + overhangMm;
   const placed = profile.place(body, headBottomMm);
-  if (headBottomMm === null) return { body: placed, extras };
 
   const from = boundsOfMm(body);
   const to = boundsOfMm(placed);
