@@ -182,6 +182,39 @@ export function mapRoleRun(run: FunctionRoleTextRun, affine: UniformAffine): Fun
   };
 }
 
+/**
+ * Ein Lauf auf der Oberfläche (etwa das Trägerkürzel rechts unter der Raute) steht außerhalb
+ * des Körpers. Wird die Fassung auf einen größeren Variantenkörper gestreckt, wandert er mit
+ * nach außen und kann die Zeichenfläche verlassen. Er hält deshalb mindestens den Randabstand,
+ * den er in der vermessenen Fassung zur Fläche hat; verschoben wird nur, nie skaliert.
+ */
+export function keepRunWithinMargins(
+  original: FunctionRoleTextRun,
+  mapped: FunctionRoleTextRun,
+  areaMm: number,
+): FunctionRoleTextRun {
+  const before = runBounds(original);
+  const after = runBounds(mapped);
+  // Begrenzt wird nur zur nahen Kante hin: dorthin nicht über die Vorlage hinaus, nach innen frei.
+  const axis = (minBefore: number, maxBefore: number, minAfter: number, maxAfter: number): number => {
+    if (minBefore + maxBefore >= areaMm) {
+      const high = Math.min(areaMm, maxBefore);
+      return maxAfter > high ? high - maxAfter : 0;
+    }
+    const low = Math.max(0, minBefore);
+    return minAfter < low ? low - minAfter : 0;
+  };
+  const dx = axis(before.minX, before.maxX, after.minX, after.maxX);
+  const dy = axis(before.minY, before.maxY, after.minY, after.maxY);
+  if (dx === 0 && dy === 0) return mapped;
+  return {
+    ...mapped,
+    anchorXMm: mapped.anchorXMm + dx,
+    baselineYMm: mapped.baselineYMm + dy,
+    boxMm: { ...mapped.boxMm, xMm: mapped.boxMm.xMm + dx, yMm: mapped.boxMm.yMm + dy },
+  };
+}
+
 export function runBounds(run: FunctionRoleTextRun): BoundsMm {
   return {
     minX: run.boxMm.xMm,

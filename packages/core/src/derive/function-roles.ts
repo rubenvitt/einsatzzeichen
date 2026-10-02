@@ -6,6 +6,7 @@ import type {
   Primitive,
   SymbolSpec,
 } from '@einsatzzeichen/schema';
+import { DEFAULT_VIEWBOX_MM } from '@einsatzzeichen/schema';
 import { boundsOfMm, type BoundsMm } from '../bounds.js';
 import { FUNCTION_ROLE_DEFINITIONS } from '../geometry/function-roles.js';
 import { strengthHead } from '../geometry/strengths.js';
@@ -16,6 +17,7 @@ import {
   fitRunsVertically,
   FIT_MARGIN_MM,
   isIdentityAffine,
+  keepRunWithinMargins,
   mapPrimitive,
   mapRoleRun,
   runBounds,
@@ -254,7 +256,9 @@ export function resolveFunctionRoleLayout(input: FunctionRoleLayoutInput): Funct
   const affine = affineBetween(roleBounds, targetBounds);
   const organizationDeviates = spec.organization !== definition.expectedOrganization;
   let runs = roleRuns.map((run) => {
-    const mapped = mapRoleRun(run, affine);
+    const mapped = run.contrastBackground === 'body'
+      ? mapRoleRun(run, affine)
+      : keepRunWithinMargins(run, mapRoleRun(run, affine), DEFAULT_VIEWBOX_MM.width);
     // Fremde Farbe: Läufe im Körper nehmen die Tinte aus der Füllung, wie jede Beschriftung im
     // Körper. Trägerläufe stehen auf der Ausgabeoberfläche und bleiben schwarz.
     return organizationDeviates && run.contrastBackground === 'body'

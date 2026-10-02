@@ -379,3 +379,18 @@ describe('Funktionsrollen: Trägerart bleibt Systematik', () => {
       .toContain('function-role-requires-measured-kind');
   });
 });
+
+describe('Trägerlauf auf dem gestreckten Variantenkörper', () => {
+  it('bleibt an der Fußband-Person innerhalb der Zeichenfläche', () => {
+    const drawing = drawSymbol({
+      kind: 'person',
+      bodyVariant: 'foot-band',
+      functionRole: 'technical-incident-commander',
+    });
+    for (const child of drawing.children) {
+      const box = boundsOfMm(child);
+      expect(box.maxX).toBeLessThanOrEqual(32);
+      expect(box.maxY).toBeLessThanOrEqual(32);
+    }
+  });
+});
