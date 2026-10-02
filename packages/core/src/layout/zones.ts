@@ -178,9 +178,10 @@ function formKey(kind: SymbolKind, variant?: BodyVariantId): string {
 }
 
 /**
- * Die drei Körperformen, an denen die Referenz überhaupt eine Fahrwerkszone führt. Wiederholt aus
- * `CHASSIS_KINDS` in `validate.ts:66–70`, das dort modulprivat ist; `zones.test.ts` hält die
- * Liste an der Meldung der Regel `vehicle-category-requires-vehicle` fest.
+ * Die drei Körperformen, an denen die Referenz überhaupt eine Fahrwerkszone führt. An Wasser- und
+ * Luftfahrzeug zeichnet der Motor die Zone seit dem 02.10.2026 abgeleitet
+ * (`derive/vehicle-category.ts`); das Zonenmodell beschreibt die Referenz und führt sie dort
+ * weiter als gemessen leer. `zones.test.ts` hält die Liste gegen `VEHICLE_KINDS` in `validate.ts`.
  */
 const CHASSIS_KINDS: readonly SymbolKind[] = ['vehicle-land', 'trailer', 'swap-loader-vehicle'];
 
@@ -661,9 +662,10 @@ function chassisZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
     return measuredAbsent(
       'combination',
       'core/src/validate.ts:498–504',
-      'Eine Fahrzeugkategorie ist nur am Landfahrzeug, am Anhängerrumpf und am ' +
-        `Wechselladerrumpf belegt. "${kind}" trägt in der Referenz keine Fahrwerkszone ` +
-        '(Regel `vehicle-category-requires-vehicle`).',
+      'Eine Fahrwerkszone ist nur am Landfahrzeug, am Anhängerrumpf und am ' +
+        `Wechselladerrumpf vermessen. "${kind}" trägt in der Referenz keine; an Wasser- und ` +
+        'Luftfahrzeug überträgt der Motor sie (derive/vehicle-category.ts), an allen anderen ' +
+        'Arten lehnt die Regel `vehicle-category-requires-vehicle` sie ab.',
     );
   }
 

@@ -211,7 +211,6 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
     `Fußbezeichnung am eingesenkten Rumpf als ungemessene Zone (${VT}).`,
   ),
   evidence('inset-hull-requires-measured-body-mark', { kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'feuerwehr' }, `Feuerwehrfassung ohne Marke (${VT}).`),
-  evidence('inset-hull-requires-measured-organization', { kind: 'vehicle-water', bodyVariant: 'inset-hull' }, `Eingesenkter Rumpf ohne Organisation (${VT}).`),
   evidence('label-not-blank', { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', labels: { topLeftLines: ['GW-San', '  '] } }, `Leere zweite Zeile (${VT}).`),
   evidence('label-too-wide', { kind: 'formation', labels: { center: 'W'.repeat(24) } }, 'Mittiger Lauf breiter als seine Box. Neu: Kompositionsregel.', 'composeFromCatalog'),
   evidence('label-unknown-glyph', { kind: 'formation', labels: { center: '☃' } }, 'Schneemann (U+2603) im mittigen Lauf. Neu: Kompositionsregel.', 'composeFromCatalog'),

@@ -15,6 +15,7 @@ import type {
   SymbolKind,
 } from '@einsatzzeichen/schema';
 import { boundsOfMm, strokeBoundsOfMm, type BoundsMm } from '../bounds.js';
+import { derivedAnchoredMovementPath, derivedBoundaryStrengthMarks } from '../derive/freestanding.js';
 import { NotMeasuredError } from '../not-measured.js';
 import {
   ARIMO_CAP_HEIGHT_FRACTION,
@@ -281,7 +282,8 @@ const GAP_LABEL_BASELINE_BELOW_AXIS_MM = 1.914;
  * Marken der Stärke in der Grenzlücke: gefüllte Kreise mit Radius 1 mm, 3 mm auseinander, mittig in
  * der Lücke (2.20: 21, 24, 27 bei Lückenmitte 24). Belegt sind nur drei Marken in einer Reihe.
  * Nach 5.4 ist das die Belegung des Zuges (`ROW_OCCUPANCY.zug`, alle drei Plätze). Welche Marken
- * Trupp, Staffel und Gruppe an einer Grenze tragen, zeigt kein Original.
+ * Trupp, Staffel und Gruppe an einer Grenze tragen, zeigt kein Original; seit dem 02.10.2026
+ * überträgt `derivedBoundaryStrengthMarks` die Belegung der Kopfzone (Notiz an der Zeichnung).
  */
 const STRENGTH_MARK_RADIUS_MM = 1;
 const STRENGTH_MARK_PITCH_MM = 3;
@@ -495,10 +497,11 @@ export function movementDrawing(
   const geometry = MOVEMENT_GEOMETRY[id];
   if (geometry.status === 'not-measured') throw new NotMeasuredError(geometry.reason, 'value');
   if (parameters.anchor !== undefined) {
-    throw new NotMeasuredError(
+    // Keine Vermessungslücke, sondern eine unvollständige Eingabe: ohne Körper gibt es keine Kante,
+    // an der der Pfeil läge. Den Verlauf zu einem Körper bestimmt `anchoredMovementPath`.
+    throw new Error(
       `Anbindung an der Kante ${parameters.anchor.edge}: ein freistehender Pfeil hat keinen Körper. ` +
-        'Die Zone movement-anchor ist nur an der Personenraute unten belegt (anchoredMovementPath).',
-      'value',
+        'Den Verlauf an einem Grundzeichen bestimmt anchoredMovementPath aus dessen Hülle.',
     );
   }
   const points = resolvePathPoints(parameters.path);
@@ -555,10 +558,9 @@ const ANCHORED_DIAMOND_MM = 26;
  * 75,827…77,244 pt, Mitte y 27), zeigt nach rechts, beginnt am linken Körperrand (x 3) und endet
  * 1 mm hinter dem rechten (x 30). Den Verlauf bestimmt damit der Körper, nicht der Nutzer.
  *
- * `bodyHullMm` ist die Hülle der Körpermittellinie und muss die 26-mm-Raute sein: wer einen Pfeil
- * anbindet, muss den Körper so verkleinern und anheben wie die Referenz (Raute 3…29 × 1…27 in
- * 32 × 32 mm). Jede andere Größe, Kante, jeder andere Träger und jeder andere Pfeil ist eine Lücke
- * (`NotMeasuredError`), statt eine Lage zu raten.
+ * `bodyHullMm` ist die Hülle der Körpermittellinie. Vermessen ist die 26-mm-Raute (3…29 × 1…27 in
+ * 32 × 32 mm). Jede andere Größe, Kante, jeder andere Träger und jeder andere Pfeil nimmt seit dem
+ * 02.10.2026 dieselbe Regel, übertragen und mit Notiz (`derivedAnchoredMovementPath`).
  */
 export function anchoredMovementPath(
   id: MovementId,
@@ -566,27 +568,15 @@ export function anchoredMovementPath(
   bodyHullMm: BoundsMm,
   edge: MovementAnchorEdge,
 ): PathParameters {
-  if (!ANCHORED_MOVEMENTS.includes(id)) {
-    throw new NotMeasuredError(
-      `Pfeil ${id} an einem Grundzeichen: belegt sind nur 5.2.2, 5.2.3 und 5.2.5 an der Personenraute (5.8.8.12 bis 5.8.8.14).`,
-      'combination',
-    );
-  }
-  if (carrier !== 'person' || edge !== 'body-bottom') {
-    throw new NotMeasuredError(
-      `Anbindung an ${carrier}, Kante ${edge}: die Zone movement-anchor ist nur an der Personenraute unten belegt (5.8.8.12 bis 5.8.8.14).`,
-      'combination',
-    );
-  }
   const width = bodyHullMm.maxX - bodyHullMm.minX;
   const height = bodyHullMm.maxY - bodyHullMm.minY;
-  if (Math.abs(width - ANCHORED_DIAMOND_MM) > 1e-6 || Math.abs(height - ANCHORED_DIAMOND_MM) > 1e-6) {
-    throw new NotMeasuredError(
-      `Anbindung an eine Raute von ${width.toFixed(3)} × ${height.toFixed(3)} mm: belegt ist nur die 26-mm-Raute aus 5.8.8.12 bis 5.8.8.14. ` +
-        'Die volle Raute aus 1.2 (30 mm) ließe dem Pfeil in 32 × 32 mm keinen Platz.',
-      'value',
-    );
-  }
+  const measured =
+    ANCHORED_MOVEMENTS.includes(id) &&
+    carrier === 'person' &&
+    edge === 'body-bottom' &&
+    Math.abs(width - ANCHORED_DIAMOND_MM) <= 1e-6 &&
+    Math.abs(height - ANCHORED_DIAMOND_MM) <= 1e-6;
+  if (!measured) return derivedAnchoredMovementPath(id, carrier, bodyHullMm, edge);
   return {
     points: [
       [bodyHullMm.minX, bodyHullMm.maxY],
@@ -651,9 +641,13 @@ function gapLabel(content: string, center: Point, gapMm: number, viewBoxWidthMm:
 function strengthMarks(strength: StrengthId, center: Point, direction: Point): Primitive[] {
   const offsets = STRENGTH_MARK_OFFSETS[strength];
   if (offsets === undefined) {
-    throw new NotMeasuredError(
-      `Grenze mit taktischer Stärke "${strength}": belegt sind nur drei Marken in einer Reihe, also der Zug.`,
-      'combination',
+    // Trupp, Staffel und Gruppe: Belegung aus der Kopfzone 5.4 übertragen (derive/freestanding.ts).
+    return derivedBoundaryStrengthMarks(
+      strength as Exclude<StrengthId, 'zug'>,
+      center,
+      direction,
+      STRENGTH_MARK_RADIUS_MM,
+      STRENGTH_MARK_PITCH_MM,
     );
   }
   return offsets.map((offset) => ({
@@ -730,8 +724,8 @@ function markedLine(
  * Marken mit fester Teilung (`layoutMarks`). Querstriche stehen links der Fahrtrichtung; wer den
  * Verlauf umkehrt, setzt sie auf die andere Seite.
  *
- * Wirft `NotMeasuredError` für jede Stärke außer dem Zug. Wirft einen gewöhnlichen Fehler für eine
- * Stärke an der falschen Linie, eine zweite Darstellung außer an 2.14, einen zu kurzen Verlauf und
+ * Trupp, Staffel und Gruppe an 2.20 sind aus der Kopfzone übertragen (`derivedBoundaryStrengthMarks`).
+ * Wirft einen gewöhnlichen Fehler für eine Stärke an der falschen Linie, eine zweite Darstellung außer an 2.14, einen zu kurzen Verlauf und
  * einen Verlauf, der aus der Zeichenfläche ragt.
  */
 export function lineDrawing(

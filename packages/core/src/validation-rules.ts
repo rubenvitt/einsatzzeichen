@@ -61,7 +61,6 @@ export const VALIDATION_RULE_IDS: readonly string[] = Object.freeze([
   'inset-hull-fire-fighting-requires-no-labels',
   'inset-hull-requires-center-label-only',
   'inset-hull-requires-measured-body-mark',
-  'inset-hull-requires-measured-organization',
   'label-not-blank',
   'plain-wheel-pair-chassis-conflict',
   'reduced-house-requires-hilfsorganisation',

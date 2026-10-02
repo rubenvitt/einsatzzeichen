@@ -373,8 +373,10 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'Fahrwerk reicht bis 4,75 mm unter die Körperunterkante, die Fußzone beginnt 1 mm ' +
       'darunter, die Überschneidung beträgt 3,75 mm bei 4 mm Zonenhöhe. Wohin die Fußzone ' +
       'auswiche, ist nicht belegt; Anhang E.2 beschriftet seine Fahrzeuge stattdessen im Körper. ' +
-      'Nutze `labels.center` oder `labels.topLeft` statt `designation`, oder lass ' +
-      '`vehicleCategory` weg.',
+      'Dasselbe gilt für die Beschriftung rechts unterhalb (`labels.belowRight`) und die ' +
+      'Oberflächenläufe (`labels.surfaceBelowLeft`, `labels.surfaceBelowRight`): sie stehen im ' +
+      'selben Streifen. Nutze `labels.center` oder `labels.topLeft` statt dieser Zonen, oder ' +
+      'lass `vehicleCategory` weg.',
   },
   'circle-12-requires-hilfsorganisation': {
     field: 'organization',
@@ -538,15 +540,6 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'Hilfsorganisation keine Marke oder genau `inset-hull-wheel-pair`, für die Feuerwehr ' +
       'genau `fire-fighting`. Andere Zusammenstellungen sind nicht vermessen. Passe `bodyMarks` ' +
       'an die gewählte Fassung an.',
-  },
-  'inset-hull-requires-measured-organization': {
-    field: 'bodyVariant',
-    title: 'Eingesenkte Hülle nur für zwei Organisationen',
-    explanation:
-      'Die eingesenkte Wasserfahrzeughülle ist nur als Hilfsorganisations- und als ' +
-      'Feuerwehrfassung vermessen. Eine andere oder fehlende Organisation ergäbe eine ' +
-      'Körperfarbe, die keine Referenzdatei zeigt. Setze `organization` auf `hilfsorganisation` ' +
-      'oder `feuerwehr`.',
   },
   'label-not-blank': {
     field: 'labels',
@@ -772,13 +765,14 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
   },
   'vehicle-category-requires-vehicle': {
     field: 'vehicleCategory',
-    title: 'Fahrzeugkategorie nur mit Fahrwerkszone',
+    title: 'Fahrzeugkategorie nur an Fahrzeugen',
     explanation:
-      'Eine Fahrzeugkategorie ist nur am Landfahrzeug, am Anhängerrumpf und am ' +
-      'Wechselladerrumpf belegt; nur diese drei Körperformen tragen in der Referenz eine ' +
-      'Fahrwerkszone. Von den 31 Zeichen des Anhangs E.2 tragen 25 ein Fahrwerk; die fünf ' +
-      'Wasserfahrzeuge E.2.27 bis E.2.31 und das Hochkantrechteck E.2.26 tragen keines. ' +
-      'Entferne `vehicleCategory` oder wechsle auf eine der drei Arten.',
+      'Eine Fahrzeugkategorie beschreibt das Fahrwerk eines Fahrzeugs (Kapitel 5.1) und steht ' +
+      'deshalb nur an Land-, Wasser- und Luftfahrzeug, Anhänger und Wechsellader. An einer ' +
+      'Einheit, einer Stelle oder einem Gebäude hat sie keine Bedeutung. Vermessen ist die ' +
+      'Fahrwerkszone an Landfahrzeug, Anhänger und Wechsellader; an Wasser- und Luftfahrzeug ' +
+      'überträgt der Motor sie und markiert sie als abgeleitet. Entferne `vehicleCategory` oder ' +
+      'wechsle auf ein Fahrzeug.',
   },
 });
 

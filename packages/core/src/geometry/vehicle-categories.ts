@@ -1,4 +1,4 @@
-import { NotMeasuredError } from '../not-measured.js';
+import { noteDerivation } from '../derive/record.js';
 import type { ChassisMark, ChassisShape, VehicleCategoryId } from '@einsatzzeichen/schema';
 
 /**
@@ -80,6 +80,34 @@ const TRAILER_PAIR_SLOTS_MM = [14.25, 19.75] as const;
  */
 const TRACK_END_CX_MM = [4.25, 27.75] as const;
 
+/**
+ * Mittellinie der Wellenlinie von `5.1.1.4`, ab Zonenoberkante (Körperunterkante 26,0004 mm).
+ *
+ * **Konstruiert, nicht abgelesen.** Die Referenz führt die Welle nur als Umriss eines Strichs:
+ * zwei parallele Kurvenzüge aus je acht Kubiken (Oberkante und Unterkante), an den Enden durch
+ * gerade Stumpfkappen verbunden. Illustrator legt die Stützpunkte beider Kanten paarweise auf
+ * dieselbe Normale — ihr Abstand misst an allen neun Paaren 0,4991 … 0,5005 mm, also genau die
+ * Strichbreite. Die Mittellinie ist deshalb das punktweise Mittel beider Kanten (Kontrollpunkte
+ * eingeschlossen), selbst nachgerechnet am 02.10.2026 aus `5.1.1.4_Amphibienfahrzeug.svg`.
+ *
+ * Das Ergebnis trifft die fünf waagerechten Stellen der Inventur auf 0,002 mm: Täler bei
+ * x 7,5 / 16,0 / 24,5 auf y 29,55, Kuppen bei x 11,303 / 20,697 auf y 26,95 (Mitte 28,25,
+ * Amplitude 1,30). Die beiden Hälften sind auf 0,002 mm spiegelgleich um x 16; gespeichert ist die
+ * linke Hälfte, gespiegelt — die Radplätze 3,75 / 28,25 liegen ebenfalls symmetrisch um x 16.
+ */
+const AMPHIBIAN_WAVE_LEFT: readonly (readonly [number, number])[] = [
+  [7.5, 3.55],
+  [8.199, 3.333], [8.6, 2.823], [9.005, 2.309],
+  [9.541, 1.629], [10.076, 0.95], [11.303, 0.95],
+  [12.219, 0.95], [12.752, 1.521], [13.312, 2.122],
+  [13.95, 2.807], [14.643, 3.55], [16, 3.55],
+];
+
+const AMPHIBIAN_WAVE: readonly (readonly [number, number])[] = Object.freeze([
+  ...AMPHIBIAN_WAVE_LEFT,
+  ...AMPHIBIAN_WAVE_LEFT.slice(0, -1).reverse().map(([x, y]) => [Math.round((32 - x) * 1000) / 1000, y] as const),
+]);
+
 /** Baut die Radreihe aus den belegten Plätzen von `KFZ_SLOTS_MM`. */
 function wheels(slots: readonly number[]): ChassisMark[] {
   return slots.map((cxMm) => ({
@@ -132,14 +160,10 @@ function bars(slots: readonly number[]): ChassisMark[] {
 }
 
 /**
- * Fahrwerkszone je Fahrzeugkategorie, nach Kapitel 5.1.1. Fünf der sechs Kategorien sind an der
- * Referenz vollständig vermessen; `amphibienfahrzeug` wirft, weil seine Wellenlinie es nicht ist
- * (siehe dort). Keine der fünf rät eine Anordnung.
- *
- * **Warum eine Funktion mit einem Wurf und keine totale Abbildung:** dasselbe Muster wie
- * `organizationColor`, `circleBodyProfile.place` und die Ablehnung einer Organisationsfarbe am
- * offenen Polyzug von `1.13`. Eine erfundene Wellenlinie wäre die Attrappe, die dieses Projekt
- * verbietet; eine ausgelassene ID wäre eine stille Lücke.
+ * Fahrwerkszone je Fahrzeugkategorie, nach Kapitel 5.1.1. Alle Kategorien außer
+ * `amphibienfahrzeug` sind an der Referenz vollständig vermessen; dessen Wellenlinie ist aus der
+ * Strichhülle konstruiert und meldet sich als Ableitung (`noteDerivation`). Keine Kategorie rät
+ * eine Anordnung.
  */
 export function vehicleChassis(id: VehicleCategoryId): ChassisShape {
   switch (id) {
@@ -179,31 +203,29 @@ export function vehicleChassis(id: VehicleCategoryId): ChassisShape {
       return { marks: wheels([...TRAILER_PAIR_SLOTS_MM]), heightMm: ZONE_HEIGHT_MM };
     case 'amphibienfahrzeug':
       // `5.1.1.4` trägt dieselben zwei Radplätze wie Kategorie 1 (gemessen: 3,7502 / 28,2499)
-      // **und** eine Wellenlinie, die den Unterschied ausmacht. Von ihr ist die Strichhülle
-      // vermessen (7,4263/26,7000/24,5756/29,7998) und der Verlauf der Mittellinie durch ihre
-      // fünf waagerechten Stellen — (7,5001|29,5501) (11,3032|26,9500) (16,0006|29,5501)
-      // (20,6980|26,9500) (24,5013|29,5501), Mitte y 28,2500, Amplitude 1,3000 —, aber **nicht**
-      // ihre Kurvenform: die Referenz zeichnet sie als Umriss eines Strichs, und aus einem
-      // Umrisspaar folgt kein eindeutiger Kurvenzug. Ohne diese Form wäre ein Amphibienfahrzeug
-      // von einem Kraftfahrzeug der Kategorie 1 nicht zu unterscheiden.
-      //
-      // `scope: 'value'` und nicht `'combination'`: die Lücke hängt an keiner Grundzeichenart,
-      // keine andere Auswahl trägt diese Wellenlinie. Dieselbe Aussage führt der Katalog eine
-      // Ebene tiefer schon als Datum — `MEASURED_VEHICLE_CATEGORIES` weiter unten.
-      throw new NotMeasuredError(
-        'Die Fahrwerkszone von "amphibienfahrzeug" ist nicht vollständig vermessen: die zwei ' +
-          'Radplätze sind es (3,75 / 28,25 mm wie Kategorie 1), die Wellenlinie von 5.1.1.4 ist ' +
-          'es nur als Strichhülle 7,4263/26,7000/24,5756/29,7998 mm. Vor der Umsetzung ihre ' +
-          'Kurvenform an der Referenz vermessen — nicht nähern.',
-        'value',
-      );
+      // **und** eine Wellenlinie, die den Unterschied ausmacht. Die Referenz zeichnet sie als
+      // Umriss eines 0,5-mm-Strichs; die Mittellinie ist daraus konstruiert (`AMPHIBIAN_WAVE`).
+      // Bis zum 02.10.2026 stand hier ein Wurf mit der Notiz „nicht nähern“ — der
+      // Eigentümerentscheid vom 02.10.2026 hebt ihn auf, die Zeichnung trägt eine Notiz.
+      noteDerivation({
+        dimension: 'vehicleCategory',
+        part: 'Wellenlinie des Amphibienfahrzeugs als Mittellinie der Strichhülle',
+        basis: 'constructed',
+        from: '5.1.1.4_Amphibienfahrzeug.svg (Strichumriss 7,4263/26,7000/24,5756/29,7998 mm)',
+      });
+      return {
+        marks: [...wheels([KFZ_SLOTS_MM[0], KFZ_SLOTS_MM[2]]), { type: 'curve', points: AMPHIBIAN_WAVE }],
+        heightMm: ZONE_HEIGHT_MM,
+      };
   }
 }
 
 /**
  * Die Kategorien mit vollständig vermessener Fahrwerkszone. Als Datum lesbar und nicht aus einem
  * `try`/`catch` um `vehicleChassis` erschlossen: der Unterschied zwischen „vermessen" und „nicht
- * vermessen" ist eine Aussage über die Referenz und gehört als solche in den Katalog.
+ * vermessen" ist eine Aussage über die Referenz und gehört als solche in den Katalog. Das
+ * Amphibienfahrzeug fehlt weiter: gezeichnet wird es seit dem 02.10.2026, vermessen ist seine
+ * Wellenlinie nicht.
  */
 export const MEASURED_VEHICLE_CATEGORIES: readonly VehicleCategoryId[] = Object.freeze([
   'kfz-kategorie-1',

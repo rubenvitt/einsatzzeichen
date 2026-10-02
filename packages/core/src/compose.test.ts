@@ -2048,13 +2048,13 @@ describe('compose() — seitliche Box-Grenze der Textläufe (LFH-411)', () => {
   });
 });
 
-describe('compose() — Vermessungslücken als eigene Fehlerklasse', () => {
+describe('compose() — Farbe am offenen Polyzug', () => {
   /**
-   * Der eine Abbruch des Kompositionsmotors, den der Baukasten der Website wirklich erreicht:
-   * eine Organisationsfarbe auf einem offenen Polyzug (`1.13 Ereignis`). Er sperrt dort einen
-   * Wert, statt die Insel abstürzen zu lassen — und das hängt seit LFH-502 an der Klasse und
-   * nicht mehr am Wortlaut der Meldung. Ohne diesen Test bliebe die Umstellung an einer Stelle
-   * unbemerkt, die kein Typfehler und keine Regelprüfung findet.
+   * Bis zum 02.10.2026 der eine Abbruch des Kompositionsmotors, den der Baukasten der Website
+   * wirklich erreichte: eine Organisationsfarbe auf einem offenen Polyzug (`1.13 Ereignis`). Seit
+   * dem Eigentümerentscheid geht die Farbe in den Strich (derive/open-body-tint.ts); eine Füllung
+   * schlösse den Haken zu einer Fläche, die die Referenz nicht zeichnet. Die Fälle am echten
+   * Katalog stehen in derive/open-body-tint.test.ts.
    */
   const openBody: Primitive = {
     type: 'polyline',
@@ -2067,21 +2067,18 @@ describe('compose() — Vermessungslücken als eigene Fehlerklasse', () => {
     ],
   };
 
-  it('wirft NotMeasuredError für eine Körperfüllung am offenen Polyzug', () => {
+  it('färbt den Strich statt einer Fläche und meldet die Ableitung', () => {
     const openCatalog: CatalogPorts = {
       ...catalog,
       baseDrawing: () => ({ viewBox: DEFAULT_VIEWBOX_MM, children: [openBody] }),
       organizationColor: () => 'rot' as ColorToken,
     };
-    let thrown: unknown;
-    try {
-      compose({ kind: 'event', organization: 'feuerwehr' }, openCatalog);
-    } catch (error) {
-      thrown = error;
-    }
-    expect(thrown).toBeInstanceOf(NotMeasuredError);
-    // `'combination'`: der Haken selbst ist gezeichnet, nur seine gefüllte Fassung ist es nicht.
-    expect((thrown as NotMeasuredError).scope).toBe('combination');
-    expect((thrown as Error).message).toMatch(/offener/);
+    const drawing = compose({ kind: 'event', organization: 'feuerwehr' }, openCatalog);
+    const body = drawing.children.find((child) => child.role === 'body');
+    expect(body?.type).toBe('polyline');
+    expect(body?.style).toMatchObject({ fill: 'none', stroke: 'rot', bodyStrokeDashToken: 'rot' });
+    expect(drawing.derivations).toEqual([
+      expect.objectContaining({ dimension: 'organization', basis: 'constructed' }),
+    ]);
   });
 });

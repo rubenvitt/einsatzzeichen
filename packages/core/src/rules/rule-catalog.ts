@@ -49,11 +49,10 @@ import type { SourceReference } from '@einsatzzeichen/schema';
  *   Ausweichposition" (`chassis-foot-conflict`, `surface-label-foot-conflict`). Dieser Zusatz ist
  *   der Grund, warum der Motor **keine Ausweichlösung anbietet** — nicht der Grund der Ablehnung.
  *   Die Ablehnung selbst ist die Kollision, also fachlich. Deshalb `'systematik'`.
- * - `vehicle-category-requires-vehicle` klingt fachlich („Fahrzeugkategorie nur am Fahrzeug"), ist
- *   aber **enger** als die Systematik: die umgesetzte Menge sind die drei Körperformen, an denen
- *   eine Fahrwerkszone **vermessen** wurde (Kommentar an `CHASSIS_KINDS`: „Gemessen, nicht
- *   angenommen … 25 von 31"). Luft- und Wasserfahrzeug sind fachlich Fahrzeuge und fallen
- *   trotzdem heraus. Deshalb `'engine'`.
+ * - `vehicle-category-requires-vehicle` war bis zum 02.10.2026 **enger** als die Systematik: die
+ *   umgesetzte Menge waren die drei Körperformen mit vermessener Fahrwerkszone. Seit dem
+ *   Eigentümerentscheid steht sie an allen fünf Fahrzeugarten (`VEHICLE_KINDS`), Wasser- und
+ *   Luftfahrzeug mit übertragener Zone. Übrig ist die Trägerbindung. Deshalb `'systematik'`.
  * - `designation-not-blank` und `label-not-blank` sehen nach Datenhygiene aus, tragen aber eine
  *   Motorbegründung: ein leerer Lauf erzeugt ein Textprimitiv ohne Tinte, das jedes Gate besteht
  *   und im Bild fehlt. Deshalb `'engine'`.
@@ -455,7 +454,7 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'chassis-foot-conflict',
     'systematik',
     'chassis',
-    'Fahrwerkszone und Fußzone überschneiden sich um 3,75 mm bei 4 mm Zonenhöhe; die Referenz beschriftet ihre Fahrzeuge stattdessen in den Körperzonen.',
+    'Fahrwerkszone und Fußzone überschneiden sich um 3,75 mm bei 4 mm Zonenhöhe, ebenso die Beschriftung rechts unterhalb und die Oberflächenläufe; die Referenz beschriftet ihre Fahrzeuge stattdessen in den Körperzonen.',
     'core',
     babz('E.2'),
   ),
@@ -584,13 +583,6 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'engine',
     'body-variant',
     'An der eingesenkten Hülle sind die Körpermarken nur als keine oder inset-hull-wheel-pair für die Hilfsorganisation und als fire-fighting für die Feuerwehr vermessen.',
-    'core',
-  ),
-  entry(
-    'inset-hull-requires-measured-organization',
-    'engine',
-    'body-variant',
-    'Die eingesenkte Wasserfahrzeughülle ist allein als Hilfsorganisations- und als Feuerwehrfassung vermessen.',
     'core',
   ),
   entry(
@@ -789,9 +781,9 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
   ),
   entry(
     'vehicle-category-requires-vehicle',
-    'engine',
+    'systematik',
     'chassis',
-    'Gemessen, nicht angenommen: von den 31 Zeichen des Anhangs E.2 tragen 25 eine Fahrwerkszone, und nur Landfahrzeug, Anhängerrumpf und Wechselladerrumpf sind darunter.',
+    'Trägerbindung: die Fahrzeugkategorie beschreibt das Fahrwerk eines Fahrzeugs. Vermessen ist die Zone an Landfahrzeug, Anhängerrumpf und Wechselladerrumpf (25 von 31 E.2-Zeichen); an Wasser- und Luftfahrzeug ist sie übertragen.',
     'core',
     babz('E.2'),
   ),

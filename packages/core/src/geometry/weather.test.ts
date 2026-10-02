@@ -212,7 +212,7 @@ describe('Gültige Kombinationen als Daten (WEATHER_CLOUD_PRECIPITATION)', () =>
     }
   });
 
-  it('klassifiziert: gezeichnet, ungültig (entschiedene Grenze) oder nicht vermessen', () => {
+  it('klassifiziert: gezeichnet (vermessen, übertragen, konstruiert) oder ungültig (entschiedene Grenze)', () => {
     expect(classifyWeather({ values: ['weather-sunny'] })).toMatchObject({ kind: 'drawable', basis: 'measured' });
     expect(classifyWeather({ values: ['weather-snowing', 'weather-cloudy'], intensity: 'weak' })).toMatchObject({
       kind: 'drawable',
@@ -233,9 +233,11 @@ describe('Gültige Kombinationen als Daten (WEATHER_CLOUD_PRECIPITATION)', () =>
       kind: 'invalid',
       reason: 'intensity-without-precipitation-at-cloud',
     });
-    expect(classifyWeather({ values: ['weather-sunny', 'weather-windy'] })).toMatchObject({ kind: 'not-measured' });
-    expect(classifyWeather({ values: ['weather-rainy', 'weather-snowing'] })).toMatchObject({ kind: 'not-measured' });
-    expect(classifyWeather({ values: ['weather-cloudy', 'weather-hailing'] })).toMatchObject({ kind: 'not-measured' });
+    // Bis zum 02.10.2026 `not-measured`; seither konstruierte Paare (derive/weather-pair.ts).
+    const pair = { kind: 'drawable', form: 'pair', basis: 'constructed' };
+    expect(classifyWeather({ values: ['weather-sunny', 'weather-windy'] })).toEqual(pair);
+    expect(classifyWeather({ values: ['weather-rainy', 'weather-snowing'] })).toEqual(pair);
+    expect(classifyWeather({ values: ['weather-cloudy', 'weather-hailing'] })).toEqual(pair);
   });
 
   it('weatherDrawing folgt der Klassifikation für jeden Wert und jedes Paar, mit und ohne Intensität', () => {
@@ -252,8 +254,6 @@ describe('Gültige Kombinationen als Daten (WEATHER_CLOUD_PRECIPITATION)', () =>
         const label = `${set.join('+')} ${intensity ?? ''}`;
         if (verdict.kind === 'drawable') {
           expect(() => weatherDrawing(parameters), label).not.toThrow();
-        } else if (verdict.kind === 'not-measured') {
-          expect(() => weatherDrawing(parameters), label).toThrow(NotMeasuredError);
         } else {
           let error: unknown;
           try {
@@ -270,15 +270,21 @@ describe('Gültige Kombinationen als Daten (WEATHER_CLOUD_PRECIPITATION)', () =>
 });
 
 describe('Was weder Original noch Entscheidung trägt', () => {
-  it('meldet einen Niederschlag an der Wolke ohne Intensität als Lücke', () => {
+  // Bis zum 02.10.2026 Lücken (`NotMeasuredError`); seither konstruierte Paare, deren Lage
+  // derive/weather-pair.test.ts prüft.
+  it('zeichnet einen Niederschlag an der Wolke ohne Intensität als Paar', () => {
     for (const precipitation of WEATHER_PRECIPITATIONS) {
-      expect(() => weatherDrawing({ values: ['weather-cloudy', precipitation] }), precipitation).toThrow(NotMeasuredError);
+      expect(classifyWeather({ values: ['weather-cloudy', precipitation] }), precipitation)
+        .toEqual({ kind: 'drawable', form: 'pair', basis: 'constructed' });
+      expect(() => weatherDrawing({ values: ['weather-cloudy', precipitation] }), precipitation).not.toThrow();
     }
   });
 
-  it('meldet andere Paare als Lücke', () => {
-    expect(() => weatherDrawing({ values: ['weather-cloudy', 'weather-sunny'] })).toThrow(NotMeasuredError);
-    expect(() => weatherDrawing({ values: ['weather-rainy', 'weather-snowing'] })).toThrow(NotMeasuredError);
+  it('zeichnet andere Paare nebeneinander', () => {
+    expect(classifyWeather({ values: ['weather-cloudy', 'weather-sunny'] }))
+      .toEqual({ kind: 'drawable', form: 'pair', basis: 'constructed' });
+    expect(weatherDrawing({ values: ['weather-cloudy', 'weather-sunny'] }).title).toBe('Sonnig, wolkig');
+    expect(weatherDrawing({ values: ['weather-rainy', 'weather-snowing'] }).title).toBe('Regnerisch, schneiend');
   });
 
   it('lehnt mehr als die Wolke und einen Niederschlag als ungültige Eingabe ab', () => {
