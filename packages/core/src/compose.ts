@@ -34,7 +34,8 @@ import { boundsOfMm, type BoundsMm } from './bounds.js';
 // Kopfzonenabstand wurde hier also ausschließlich für die Fußzone importiert. Siehe
 // `docs/decisions/2026-09-20-zonenmodell-als-daten.md` §2 Punkt 2.
 import { FOOT_GAP_MM, hasVariantProfile, placeHead, profileFor } from './layout/profiles.js';
-import { placeStates, type StatePlacement } from './layout/state-placement.js';
+import { measuredStatePlacement, type StatePlacement } from './layout/state-placement.js';
+import { carriesStates, composeDerivedStates, withoutStates } from './derive/states.js';
 import { NotMeasuredError } from './not-measured.js';
 import { collectDerivations } from './derive/record.js';
 import {
@@ -843,8 +844,8 @@ export interface ComposeOptions {
  * `SymbolSpec.capabilities` trägt `CapabilityId` (`'fire-fighting'`), der Piktogrammraum trägt
  * präfigierte IDs (`'capability.fire-fighting'`). Die Abbildung steht hier an einer Stelle und
  * nicht an jedem Aufrufort. Zustände aus Kapitel 5.8 laufen nicht über diese Abbildung: sie
- * stehen seit LFH-577 in `SymbolSpec.states` und werden über `placeStates()` an den Träger gelegt
- * (`placedStatesOf`), nicht als Boxpiktogramm in den Körper.
+ * stehen seit LFH-577 in `SymbolSpec.states` und werden an den Träger gelegt (`placedStatesOf`,
+ * `composeDerivedStates`), nicht als Boxpiktogramm in den Körper.
  */
 function pictogramIdOf(id: CapabilityId): PictogramId {
   return `capability.${id}`;
@@ -1003,7 +1004,8 @@ function unitGroupingHeadFor(spec: SymbolSpec, catalog: CatalogPorts): Primitive
 
 /**
  * Felder, die neben einem Zustand etwas an den Körper, über oder unter ihn setzen. Keines davon
- * zeigt ein Original zusammen mit einem Zustand an einem Träger.
+ * zeigt ein Original zusammen mit einem Zustand an einem Träger; mit ihnen nimmt die Spec den
+ * abgeleiteten Weg (`composeDerivedStates`).
  */
 const FIELDS_BESIDE_STATES = [
   'functionRole',
@@ -1022,45 +1024,29 @@ const FIELDS_BESIDE_STATES = [
 ] as const satisfies readonly (keyof SymbolSpec)[];
 
 /**
- * Legt `states` und `tendency` über `placeStates()` an den Träger (LFH-577) — oder gibt `null`,
- * wenn die Spec keinen Zustand trägt.
+ * Die vermessene Lage von `states` und `tendency` (LFH-577) — oder `null`, wenn die Spec keinen
+ * Zustand trägt oder keine Referenzdatei genau diese Zusammenstellung zeigt.
  *
- * **Was die Referenz zeigt, und nur das.** Ein Zustand ersetzt den Körper des Grundzeichens durch
- * den Träger in seiner Zustandsfassung (die Personenraute aus 5.8.8, das verkleinerte
- * Gefahrendreieck neben einem Hinweis), und ein Hinweis an der Person verbreitert die Fläche auf
- * 36 × 32 mm und rückt die Grundfläche um 4 mm nach rechts (`baseAreaMm`). Kein Original zeigt
- * daneben eine Organisationsfarbe, einen Kopf, einen Fuß, eine Beschriftung oder eine Marke.
- * Wie diese mit dem verkleinerten oder verschobenen Träger mitwanderten, wäre geraten; die
- * Zusammenstellung wird deshalb als nicht vermessen abgelehnt statt gezeichnet.
- *
- * **Reihenfolge der Befunde.** Zuerst `placeStates()`: meldet es einen Wert als an keinem Träger
- * vermessen (`scope: 'value'`, etwa jede Tendenz oder ein Schadensgrad), ist das die
- * weitergehende Aussage als „diese Kombination fehlt". Erst danach die übrigen Felder.
+ * Vermessen ist nur der Träger in seiner Zustandsfassung ohne weitere Angaben: die Personenraute
+ * aus 5.8.8, das verkleinerte Gefahrendreieck neben einem Hinweis, die Personenraute neben einem
+ * Hinweis auf 36 × 32 mm. Alles andere leitet `composeDerivedStates()` aus diesen Lagen ab
+ * (Entscheidung des Eigentümers vom 02.10.2026).
  */
 function placedStatesOf(spec: SymbolSpec): StatePlacement | null {
-  const states = spec.states ?? [];
-  if (states.length === 0 && spec.tendency === undefined) return null;
-  const placement = placeStates({
+  if (!carriesStates(spec)) return null;
+  const beside = FIELDS_BESIDE_STATES.some((field) => {
+    const value = spec[field];
+    return value !== undefined && !(Array.isArray(value) && value.length === 0);
+  });
+  if (beside) return null;
+  return measuredStatePlacement({
     carrier: {
       kind: spec.kind,
       ...(spec.bodyVariant === undefined ? {} : { variant: spec.bodyVariant }),
     },
-    states,
+    states: spec.states ?? [],
     ...(spec.tendency === undefined ? {} : { tendency: spec.tendency }),
-  });
-  const beside = FIELDS_BESIDE_STATES.filter((field) => {
-    const value = spec[field];
-    return value !== undefined && !(Array.isArray(value) && value.length === 0);
-  });
-  if (beside.length > 0) {
-    throw new NotMeasuredError(
-      `Zustände an "${spec.kind}" zusammen mit ${beside.join(', ')}: kein Original zeigt einen ` +
-        'Zustand an einem Träger, der daneben eine dieser Angaben trägt. Der Träger wird in seiner ' +
-        'Zustandsfassung ersetzt, und wie diese Angaben mitwanderten, ist nicht belegt.',
-      'combination',
-    );
-  }
-  return placement;
+  }) ?? null;
 }
 
 /**
@@ -1118,6 +1104,13 @@ function composeMeasuredOrDerived(
   const statePlacement = placedStatesOf(spec);
   if (statePlacement !== null && statePlacement.carrier !== null) {
     return stateDrawing(statePlacement, options, description);
+  }
+  if (carriesStates(spec)) {
+    return composeDerivedStates(
+      spec,
+      composeMeasuredOrDerived(withoutStates(sourceSpec), catalog, options),
+      { ...(options.title !== undefined ? { title: options.title } : {}), ...(description !== undefined ? { description } : {}) },
+    );
   }
 
   const base = roleDefinition === undefined

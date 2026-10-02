@@ -23,7 +23,11 @@ export type StateCarrierFrameId =
   | 'person-diamond-26mm-raised-2mm'
   | 'person-diamond-21mm-lowered-4-5mm'
   | 'person-diamond-20mm-beside-hint'
-  | 'hazard-triangle-23mm-beside-hint';
+  | 'hazard-triangle-23mm-beside-hint'
+  // Abgeleitet (02.10.2026), an keiner Referenzdatei abgelesen: der Körper bleibt an seiner
+  // Stelle (etwa unter einem Schadensgrad) bzw. steht verkleinert neben einer Randlage.
+  | 'body-in-place'
+  | 'body-beside-margin';
 
 export const CANVAS_32 = Object.freeze({ width: 32, height: 32 });
 export const BASE_AREA_32: ZoneBoundsMm = Object.freeze({ minX: 0, minY: 0, maxX: 32, maxY: 32 });
@@ -92,7 +96,7 @@ export const PERSON_STATE_FRAMES = Object.freeze({
     '5.8.8.9_Person in Wassergefahr.svg',
   ),
   'person-diamond-20mm-beside-hint': personFrame(21, 16, 10, 0.4, '5.8.1_Beispiel 3.svg'),
-} satisfies Record<Exclude<StateCarrierFrameId, `hazard-${string}`>, PersonStateFrame>);
+} satisfies Record<Exclude<StateCarrierFrameId, `hazard-${string}` | `body-${string}`>, PersonStateFrame>);
 
 export type PersonStateCorner = 'top-right' | 'bottom-left';
 

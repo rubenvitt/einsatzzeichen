@@ -158,13 +158,13 @@ export const STATE_GROUPS: readonly StateGroup[] = Object.freeze([
         ),
       ],
       remaining:
-        'Die Gefahr ist nur für die Hinweise 5.8.1.13 und 5.8.1.14 belegt, alle übrigen Werte bleiben nach der Entscheidung vom 29.09.2026 an der Person (`stateCarriersOf`). Das Dreieck der Hinweise hat 0,5 mm Strich, der Körper von 1.11 1 mm mit Bevel-Ecken.',
+        'Die Gefahr ist nur für die Hinweise 5.8.1.13 und 5.8.1.14 belegt. Seit der Entscheidung vom 02.10.2026 stehen die Hinweise und die Gefahrenhinweise 5.8.1.5 bis 5.8.1.12 an jedem Grundzeichen, abgeleitet aus der Hinweis-Randlage (`derive/states.ts`); die Bindung an die Person „bis ein Original einen anderen Träger belegt" (29.09.2026) ist aufgehoben. Das Dreieck der Hinweise hat 0,5 mm Strich, der Körper von 1.11 1 mm mit Bevel-Ecken.',
     },
     perSign: {
       status: 'proposed',
       value: 1,
       reason:
-        'Kein Original zeigt mehr als einen Hinweis an einem Zeichen, und keines zeigt eine Taktik an einem Träger. Beobachtet ist neben dem Hinweis höchstens ein Personenzustand (Beispiel 1 bis 3). Das ist eine Beobachtung in 661 Dateien, kein Verbot aus der Systematik; ob eine Taktik und mehrere Gefahrenhinweise zugleich zulässig sind, entscheidet der Eigentümer.',
+        'Kein Original zeigt mehr als einen Hinweis an einem Zeichen, und keines zeigt eine Taktik an einem Träger. Beobachtet ist neben dem Hinweis höchstens ein Personenzustand (Beispiel 1 bis 3). Das ist eine Beobachtung in 661 Dateien, kein Verbot aus der Systematik. Seit dem 02.10.2026 lehnt `state-group-limit-exceeded` zwei Hinweise nicht mehr ab: „?" und „!" zugleich und mehrere Gefahrenhinweise stehen abgeleitet untereinander in der Randlage; die Taktik bleibt durch `state-tactics-not-allowed` gesperrt.',
     },
     rules: STATE_RULES,
     fixtures: [...TACTICS_EXAMPLES, ...HINT_CARRIER_EVIDENCE],
@@ -494,23 +494,23 @@ export function stateGroupOf(entry: BlockEntry): StateGroup | undefined {
 }
 
 const PERSON: readonly BlockId[] = Object.freeze(['base-symbol/person']);
-const PERSON_OR_HAZARD: readonly BlockId[] = Object.freeze(['base-symbol/person', 'base-symbol/hazard']);
 
 /**
  * Die Träger, an denen ein einzelner Wert stehen darf — der Inhalt der Regel
- * `state-carrier-not-allowed`, seit LFH-577 von `validateSpec` geprüft. Feiner als
- * `carriers` der Gruppe, weil 5.8.1 zwei Stände hat: die Hinweise 5.8.1.13 und 5.8.1.14 sind an
- * Person und Gefahr belegt, alle übrigen Werte der Gruppe bleiben nach der Entscheidung vom
- * 29.09.2026 an der Person, bis ein Original einen anderen Träger belegt.
+ * `state-carrier-not-allowed`, seit LFH-577 von `validateSpec` geprüft.
  *
- * `undefined` heißt: für diesen Wert ist weder ein Träger belegt noch entschieden (5.8.2 bis 5.8.5,
- * 5.8.9 und die freistehenden Gruppen 5.8.6 und 5.8.7).
+ * Seit der Entscheidung des Eigentümers vom 02.10.2026 bindet die Regel nur noch den
+ * Personenzustand 5.8.8 an die Person: verletzt, vermisst, gerettet sagt etwas über einen
+ * Menschen, an einem Fahrzeug oder einer Stelle hätte es keine Bedeutung. Die übrigen Werte aus
+ * 5.8.1 waren nur gebunden, „bis ein Original einen anderen Träger belegt" (Entscheidung vom
+ * 29.09.2026) — das ist keine Systematik; sie stehen jetzt an jedem Grundzeichen, ihre Lage
+ * leitet `derive/states.ts` aus der Hinweis-Randlage ab. Die Einsatztaktik 5.8.1.1 bis 5.8.1.4
+ * sperrt weiter `state-tactics-not-allowed`.
+ *
+ * `undefined` heißt: kein Träger ist ausgeschlossen.
  */
 export function stateCarriersOf(value: StateId): readonly BlockId[] | undefined {
-  if (value === 'suspected-situation' || value === 'acute-situation') return PERSON_OR_HAZARD;
-  const group = stateValueGroup(value);
-  if (group === 'tactics-hazards' || group === 'persons') return PERSON;
-  return undefined;
+  return stateValueGroup(value) === 'persons' ? PERSON : undefined;
 }
 
 /**

@@ -614,16 +614,16 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
     field: 'states',
     title: 'Zustand passt nicht zu diesem Grundzeichen',
     explanation:
-      'Ein Personenzustand wie „verletzt" gehört an das Grundzeichen Person, ebenso die übrigen ' +
-      'Werte aus 5.8.1. Die Hinweise „?" und „!" dürfen außerdem an der Gefahr stehen, weil die ' +
-      'Vorlage sie dort zeigt. Wechsle das Grundzeichen oder nimm den Zustand wieder heraus.',
+      'Ein Personenzustand wie „verletzt" oder „vermisst" sagt etwas über einen Menschen und ' +
+      'gehört deshalb an das Grundzeichen Person. Alle anderen Zustände dürfen an jedem ' +
+      'Grundzeichen stehen. Wechsle das Grundzeichen oder nimm den Zustand wieder heraus.',
   },
   'state-group-limit-exceeded': {
     field: 'states',
     title: 'Zwei Werte derselben Skala',
     explanation:
-      'Ein Zeichen trägt höchstens einen Hinweis („?" oder „!"), einen Personenzustand und je ' +
-      'einen Wert für Aktivität, Schadensgrad und Brandphase. Zwei Stufen derselben Skala ' +
+      'Ein Zeichen trägt höchstens einen Personenzustand und je einen Wert für Aktivität, ' +
+      'Schadensgrad und Brandphase. Zwei Stufen derselben Skala ' +
       'widersprechen sich, etwa „beschädigt" und „zerstört". Behalte je Skala nur einen ' +
       'Zustand.',
   },

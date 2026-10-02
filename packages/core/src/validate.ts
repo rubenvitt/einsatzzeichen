@@ -1530,11 +1530,12 @@ const NOT_ATTACHABLE_STATE_GROUPS: Readonly<Partial<Record<StateGroupId, string>
  * Skalen, von denen ein Zeichen höchstens einen Wert trägt (Entscheidung des Eigentümers vom
  * 29.09.2026, dort Punkt 7): zwei Stufen derselben Skala widersprechen sich, und zwei
  * Personenzustände an einer Raute zeigt kein Original — die Verbindungen „verletzt und …" sind in
- * 5.8.8 eigene Werte. Die Hinweise „?" und „!" aus 5.8.1 zählen als eigene Skala.
+ * 5.8.8 eigene Werte. Die Hinweise „?" und „!" aus 5.8.1 sind seit dem 02.10.2026 keine Skala
+ * mehr: dass kein Original beide zeigt, war eine Beobachtung, kein Verbot (Register `proposed`);
+ * beide zugleich stehen abgeleitet untereinander in der Randlage.
  */
 const ONE_PER_SIGN_STATE_GROUPS: readonly StateGroupId[] = ['activity', 'damage', 'fire', 'persons'];
 const KNOWN_STATE_IDS: ReadonlySet<StateId> = new Set<StateId>(STATE_IDS);
-const STATE_HINTS: ReadonlySet<StateId> = new Set<StateId>(['suspected-situation', 'acute-situation']);
 /** Einsatztaktik 5.8.1.1 bis 5.8.1.4. */
 const STATE_TACTICS: ReadonlySet<StateId> = new Set<StateId>([
   'tactical-rescue',
@@ -1545,11 +1546,9 @@ const STATE_TACTICS: ReadonlySet<StateId> = new Set<StateId>([
 
 /**
  * Die Regeln zu `SymbolSpec.states` (LFH-577). Sie prüfen, ob ein Zustand an dieses Zeichen darf
- * und wie viele zugleich; **wo** er steht, entscheidet danach `placeStates()` in `compose()` — und
- * wirft `NotMeasuredError`, wenn die Referenz die Lage nicht zeigt. Ein Wert, für den weder ein
- * Träger belegt noch entschieden ist (`stateCarriersOf` gibt `undefined`), wird hier deshalb nicht
- * abgelehnt: eine Regel verböte, was niemand entschieden hat, und verdeckte die ehrlichere Aussage
- * „nicht vermessen".
+ * und wie viele zugleich; **wo** er steht, entscheidet danach `compose()` — vermessen oder aus den
+ * belegten Lagen abgeleitet (`derive/states.ts`). Gebunden ist nur noch der Personenzustand 5.8.8
+ * an die Person (`stateCarriersOf`); jeder andere Wert steht an jedem Grundzeichen.
  */
 function stateIssues(spec: SymbolSpec): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
@@ -1595,9 +1594,7 @@ function stateIssues(spec: SymbolSpec): ValidationIssue[] {
   const perScale = new Map<string, StateId[]>();
   for (const value of attachable) {
     const group = stateValueGroup(value);
-    const scale = STATE_HINTS.has(value)
-      ? 'hints'
-      : ONE_PER_SIGN_STATE_GROUPS.includes(group) ? group : undefined;
+    const scale = ONE_PER_SIGN_STATE_GROUPS.includes(group) ? group : undefined;
     if (scale !== undefined) perScale.set(scale, [...(perScale.get(scale) ?? []), value]);
   }
   for (const values of perScale.values()) {
