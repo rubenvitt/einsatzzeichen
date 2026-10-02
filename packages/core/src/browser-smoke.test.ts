@@ -23,7 +23,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
-import ts from 'typescript';
+import ts from '@typescript/typescript6';
 import { describe, expect, test } from 'vitest';
 import * as core from './index.js';
 
