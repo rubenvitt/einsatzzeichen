@@ -86,7 +86,6 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
     { kind: 'vehicle-air', bodyVariant: 'raised-hull', labels: { aboveLeft: 'ITH', aboveLeftMetrics: { capHeightMm: 2.5, baselineFromBodyTopMm: 0, anchorFromBodyLeftMm: 100 } } },
     `aboveLeft-Anker rechts außerhalb der Profilbox (${CT}).`,
   ),
-  evidence('administrative-level-not-measured', { kind: 'formation', administrativeLevel: 'kreis' }, 'Verwaltungsstufe ohne aufgelöste Funktionsrolle; neu, analog zu validate.test.ts.'),
   evidence('below-right-label-requires-measured-body', { kind: 'formation', labels: { belowRight: 'X' } }, `belowRight an der Formation ohne Profil (${CT}).`),
   evidence(
     'below-right-label-requires-organization',
@@ -173,7 +172,6 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
   evidence('designation-not-blank', { kind: 'formation', designation: '   ' }, `Leere Bezeichnung (${VT}).`),
   evidence('designation-too-wide', { kind: 'formation', designation: 'W'.repeat(30) }, 'Dreißig W sprengen die Fußzone. Neu: Kompositionsregel.', 'composeFromCatalog'),
   evidence('designation-unknown-glyph', { kind: 'formation', designation: 'A☃' }, 'Schneemann (U+2603) fehlt in den Arimo-Metriken. Neu: Kompositionsregel.', 'composeFromCatalog'),
-  evidence('foot-band-head-requires-measured-strength', { kind: 'formation', bodyVariant: 'foot-band', strength: 'staffel' }, `Staffel am gebänderten Formationskörper (${VT}).`),
   evidence(
     'function-role-body-mark-mismatch',
     { kind: 'person', organization: 'feuerwehr', strength: 'zug', functionRole: 'fire-service-platoon-commander', bodyMarks: ['care'] },
@@ -252,7 +250,6 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
   evidence('technical-fill-organization-conflict', runtime({ kind: 'person', organization: 'hilfsorganisation', technicalFill: 'weiss' }), `Technische Füllung und Organisation (${VT}).`),
   evidence('technical-fill-token-invalid', runtime({ kind: 'person', technicalFill: 'white' }), `Unbekannter Farbtoken; Laufzeitfall (${VT}).`),
   evidence('technical-head-mark-not-measured', runtime({ kind: 'formation', technicalHeadMark: 'triple-vertical-bar' }), `Unbekannte Kopfmarke; Laufzeitfall (${VT}).`),
-  evidence('technical-head-mark-requires-normal-formation', { kind: 'person', technicalHeadMark: 'single-vertical-bar' }, `Kopfmarke an der Person (${VT}).`),
   evidence(
     'top-left-anchor-within-body',
     runtime({ kind: 'vehicle-land', labels: { topLeft: 'BTKombi', topLeftMetrics: { capHeightMm: 2.191447, baselineFromBodyTopMm: 5.249923, anchorFromBodyLeftMm: null } } }),

@@ -188,16 +188,19 @@ describe('Bausteinregister, Kopfzone: Lücken lösen sich nicht auf', () => {
 });
 
 describe('Bausteinregister, Kopfzone: benannte Ausnahmen', () => {
-  it('bindet alle sechs Verwaltungsstufen über administrative-level-not-measured', () => {
-    const bound = entries('administrative-level');
-    expect(bound).toHaveLength(6);
-    for (const entry of bound) {
-      expect(entry.combinationBinding?.ruleId, entry.id).toBe('administrative-level-not-measured');
-    }
-  });
-
-  it('führt Stärke, Verband und technische Kopfmarke ohne Kombinationsbindung', () => {
-    const categories: readonly BlockCategory[] = ['strength', 'unit-grouping', 'technical-head-mark'];
+  /**
+   * Bis zum 2. Oktober 2026 band `administrative-level-not-measured` alle sechs Verwaltungsstufen
+   * an eine Funktionsfassung. Seitdem steht der Verwaltungskopf in der allgemeinen Kopfzone, und
+   * keine Kopfangabe trägt mehr eine Kombinationsbindung.
+   */
+  it('führt Stärke, Verband, Verwaltungsstufe und technische Kopfmarke ohne Kombinationsbindung', () => {
+    expect(entries('administrative-level')).toHaveLength(6);
+    const categories: readonly BlockCategory[] = [
+      'strength',
+      'unit-grouping',
+      'administrative-level',
+      'technical-head-mark',
+    ];
     const bound = categories.flatMap(entries).filter((entry) => entry.combinationBinding !== undefined);
     expect(bound.map((entry) => entry.id)).toEqual([]);
   });
@@ -215,13 +218,5 @@ describe('Bausteinregister, Kopfzone: benannte Ausnahmen', () => {
       .filter(({ binding }) => !sourceAt(binding.definedAt).includes(`'${binding.ruleId}'`))
       .map(({ entry, binding }) => `${entry.id}: '${binding.ruleId}' fehlt in ${binding.definedAt}`);
     expect(problems).toEqual([]);
-  });
-
-  it('zeigt mit der Bindung auf die Stelle, die Kopf und Funktionsfassung gemeinsam fordert', () => {
-    for (const entry of entries('administrative-level')) {
-      const text = sourceAt(entry.combinationBinding!.definedAt);
-      expect(text, entry.id).toContain('context.administrativeHead === undefined');
-      expect(text, entry.id).toContain('!resolvedFunctionRole');
-    }
   });
 });

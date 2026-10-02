@@ -1,4 +1,5 @@
 import { DEFAULT_STROKE_WIDTH_MM, type Point, type Primitive, type Rotation } from '@einsatzzeichen/schema';
+import { shiftPathY } from './derive/path-geometry.js';
 import { tokenizePath } from './path-commands.js';
 
 /** Achsparallele Hülle in Millimetern. */
@@ -300,16 +301,16 @@ export function boundsOfMm(primitive: Primitive): BoundsMm {
  * Körpermitte folgen müssen (`compose.ts`) — eine Verschiebung entlang der y-Achse ist in
  * beiden Fällen dieselbe Operation auf derselben Primitivgeometrie.
  *
- * Pfad-Primitive haben keine strukturierte Punktgeometrie (ihre Koordinaten liegen im
- * `d`-String) und werden deshalb nicht verschoben, sondern lehnen explizit ab — ein still
- * falsch (nicht) verschobenes Pfad-Primitiv wäre schwerer zu bemerken als ein Fehler.
+ * Pfad-Primitive tragen ihre Koordinaten im `d`-String. Bis zum 2. Oktober 2026 lehnten sie
+ * deshalb ab; seit die Kopfzone auch über Pfadkörpern steht, bildet `shiftPathY` jede Koordinate
+ * einzeln ab (nur absolute Kommandos, siehe `derive/path-geometry.ts`). Ein gedrehter Pfad lehnt
+ * weiter ab, aus demselben Grund wie die übrigen gedrehten Primitive.
  */
 export function shiftY(primitive: Primitive, deltaMm: number): Primitive {
-  if (primitive.transform?.rotate && primitive.type !== 'group' && primitive.type !== 'path') {
+  if (primitive.transform?.rotate && primitive.type !== 'group') {
     // Eine Verschiebung träfe nur die Koordinate, nicht das Rotationszentrum
     // (`transform.rotate.cx/cy`) — das Primitiv würde verschoben, aber weiterhin um das alte
-    // Zentrum gedreht: still falsch. Genau wie der `path`-Zweig unten lehnen wir das deshalb
-    // explizit ab, statt es anzunähern. `group` bleibt hier bewusst außen vor: eine gedrehte
+    // Zentrum gedreht: still falsch. Wir lehnen das deshalb explizit ab, statt es anzunähern. `group` bleibt hier bewusst außen vor: eine gedrehte
     // Gruppe ist im aktuellen Referenzbestand kein belegter Fall (siehe `boundsOfMm`, das
     // Drehung von Gruppen ebenfalls ablehnt) und war nicht Teil dieses Befunds.
     throw new Error(
@@ -342,10 +343,8 @@ export function shiftY(primitive: Primitive, deltaMm: number): Primitive {
         boxMm: { ...primitive.boxMm, yMm: primitive.boxMm.yMm + deltaMm },
       };
     case 'path':
-      throw new Error(
-        'shiftY: Pfad-Primitive haben keine strukturierte Punktgeometrie und können nicht ' +
-          'verschoben werden.',
-      );
+      // Seit dem 2. Oktober 2026 abgebildet statt abgelehnt (`derive/path-geometry.ts`).
+      return { ...primitive, d: shiftPathY(primitive.d, deltaMm) };
   }
 }
 
