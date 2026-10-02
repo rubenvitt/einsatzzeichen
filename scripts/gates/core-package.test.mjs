@@ -19,6 +19,13 @@ const healthy = () => ({
     { path: 'package/dist/assets/arimo-bold-metrics.json', size: 78_000 },
     { path: 'package/dist/assets/arimo-medium-metrics.json', size: 78_000 },
     { path: 'package/dist/assets/arimo-medium-italic-metrics.json', size: 78_000 },
+    { path: 'package/fonts/text-regular.woff2', size: 24_000 },
+    { path: 'package/fonts/text-medium.woff2', size: 25_000 },
+    { path: 'package/fonts/text-bold.woff2', size: 24_000 },
+    { path: 'package/fonts/text-medium-italic.woff2', size: 28_000 },
+    { path: 'package/fonts/text.css', size: 1_000 },
+    { path: 'package/fonts/README.md', size: 2_000 },
+    { path: 'package/fonts/OFL.txt', size: 4_000 },
     ...Array.from({ length: 250 }, (_, i) => ({ path: `package/dist/m${i}.js`, size: 20_000 })),
   ],
 });
@@ -46,14 +53,38 @@ describe('checkCorePackage', () => {
     expect(findings.join('\n')).toMatch(/Positivliste: .*recipes\.yaml/);
   });
 
-  test('eine in ein Modul verpackte fingerprints.json reißt die entpackte Obergrenze', () => {
-    // Auf den Messwert vom 29.09.2026 (6 843 338 B, LFH-561 mit LFH-585/586/786) auffüllen, dann die 503 954 B der Datei dazu.
+  test('Schriften nur als WOFF2 unter fonts/, TTFs bleiben im Prüfpaket (LFH-832)', () => {
     const pack = healthy();
-    const measured = 6_843_338 - pack.entries.reduce((sum, e) => sum + e.size, 0);
+    pack.entries.push(
+      { path: 'package/fonts/Arimo-Medium.ttf', size: 10 },
+      { path: 'package/dist/fonts/text-medium.woff2', size: 10 },
+      { path: 'package/fonts/other.woff2', size: 10 },
+    );
+    const findings = checkCorePackage(pack);
+    expect(findings).toEqual([
+      expect.stringMatching(/fonts\/Arimo-Medium\.ttf.*Schriftdatei/),
+      expect.stringMatching(/dist\/fonts\/text-medium\.woff2.*Schriftdatei/),
+      expect.stringMatching(/Positivliste: package\/fonts\/other\.woff2/),
+    ]);
+  });
+
+  test('ohne Lizenztext und CSS fehlt der Schrift-Einstieg (LFH-832)', () => {
+    const pack = healthy();
+    pack.entries = pack.entries.filter((e) => !/fonts\/(OFL\.txt|text\.css)$/.test(e.path));
+    expect(checkCorePackage(pack)).toEqual([
+      'Pflichteintrag fehlt: package/fonts/text.css',
+      'Pflichteintrag fehlt: package/fonts/OFL.txt',
+    ]);
+  });
+
+  test('eine in ein Modul verpackte fingerprints.json reißt die entpackte Obergrenze', () => {
+    // Auf den Messwert vom 02.10.2026 (7 033 446 B, LFH-832 mit den Schriften) auffüllen, dann die 503 954 B der Datei dazu.
+    const pack = healthy();
+    const measured = 7_033_446 - pack.entries.reduce((sum, e) => sum + e.size, 0);
     pack.entries.push({ path: 'package/dist/pad.js', size: measured });
     expect(checkCorePackage(pack)).toEqual([]);
     pack.entries.push({ path: 'package/dist/fingerprint-data.js', size: 503_954 });
-    expect(LIMITS.maxUnpackedBytes).toBeLessThan(6_843_338 + 503_954);
+    expect(LIMITS.maxUnpackedBytes).toBeLessThan(7_033_446 + 503_954);
     expect(checkCorePackage(pack)).toEqual([expect.stringMatching(/^Entpackt .* über der Obergrenze/)]);
   });
 

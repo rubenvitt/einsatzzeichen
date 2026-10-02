@@ -162,3 +162,20 @@ Lauf kursiv: „Bezeichnung" in D.1.1. Messung und Vorschlag:
 - **Lizenz:** Dieselbe OFL 1.1 wie die aufrechte Datei, ohne Reserved Font Name; `ofl/arimo/OFL.txt`
   ist byte-gleich mit `Arimo-OFL.txt`. Die Datei ist wie Subset, Fett- und Medium-Instanz eine
   nach OFL §1 zulässige „Modified Version" und steht unter derselben Lizenz.
+
+## Browser-Schriften in core (2026-10-02, LFH-832)
+
+Verbraucher im Browser brauchen die Schrift, können dieses Paket aber nicht laden (`node:url`), und
+die TTFs stehen in keinem `exports`-Subpfad. Deshalb liefert `@einsatzzeichen/core` die vier
+Stufen als WOFF2 unter `@einsatzzeichen/core/fonts/*` aus, samt `text.css` und `OFL.txt`
+(byte-gleich mit `Arimo-OFL.txt`). Erzeugt werden sie von `scripts/font/build-woff2.py` aus den
+Dateien hier, am Ende von `scripts/font/subset-arimo.sh`:
+
+- `text-regular.woff2`: statische Instanz wght 400 aus `Arimo[wght].ttf`
+- `text-medium.woff2`, `text-bold.woff2`, `text-medium-italic.woff2`: `Arimo-Medium.ttf`,
+  `Arimo-Bold.ttf`, `Arimo-MediumItalic.ttf`, nur der Container gewechselt
+
+Umrisse (`glyf`) und Vorschübe (`hmtx`) gleichen den TTFs in allen Glyphen (Abgleich mit
+fontTools 4.66.1 am 2026-10-02; 686 Glyphen aufrecht, 688 kursiv). Die Prüfsummen stehen in
+`packages/core/src/font-files.test.ts`. Diese TTFs bleiben die Quelle für resvg und die
+Prüfgates.

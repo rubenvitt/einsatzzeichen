@@ -60,7 +60,8 @@ export default defineConfig({
       title: 'Einsatzzeichen',
       defaultLocale: 'root',
       locales: { root: { label: 'Deutsch', lang: 'de' } },
-      customCss: ['./src/styles/theme.css'],
+      // Die Zeichenschrift kommt aus core (LFH-832), wie bei jedem anderen Verbraucher auch.
+      customCss: ['@einsatzzeichen/core/fonts/text.css', './src/styles/theme.css'],
       // Eigener Seitenfuß: Starlights Vorgabefuß plus der KI-Hinweis aus Spec §3. Der frühere
       // Hero-Override ist mit der eigenständigen Landingpage (`src/pages/index.astro`) entfallen.
       components: {

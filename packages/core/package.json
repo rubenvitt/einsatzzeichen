@@ -19,7 +19,8 @@
   ],
   "main": "./src/index.ts",
   "files": [
-    "dist"
+    "dist",
+    "fonts"
   ],
   "publishConfig": {
     "access": "public",
@@ -29,7 +30,8 @@
       ".": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
-      }
+      },
+      "./fonts/*": "./fonts/*"
     }
   },
   "dependencies": {

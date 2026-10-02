@@ -2,7 +2,7 @@
 //
 // Was es schützt: `core` ist seit LFH-560 das Produkt — Bausteine, Zonen, Regeln, Komposition,
 // Renderer. Prüfdaten gehören ins Prüfpaket `conformance`: SVG-Snapshots (rund 16 MB),
-// `fingerprints.json` (0,5 MB), Rezepte, Coverage, Domain-Reviews, die Schriftdateien. Zieht ein
+// `fingerprints.json` (0,5 MB), Rezepte, Coverage, Domain-Reviews, die TTF-Schriftdateien. Zieht ein
 // Umbau davon etwas nach `core` und landet es in `dist`, soll das hier auffallen, bevor es auf
 // npm steht — nicht erst, wenn ein Nutzer sich über ein 20-MB-Paket wundert.
 //
@@ -21,15 +21,23 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { gunzipSync } from 'node:zlib';
 
 /**
- * Grenzen, zuletzt gemessen am 29. September 2026 auf `claude/lfh-561-orchestrierung-cb6ed0` nach
- * dem Merge von LFH-561 mit LFH-585/586/786 (`tsc -b packages/core/tsconfig.build.json`, dann
- * `pnpm pack`):
+ * Grenzen, zuletzt gemessen am 2. Oktober 2026 für LFH-832 (`pnpm build`, dann `pnpm pack`):
  *
  * | Größe | gemessen | Obergrenze | Untergrenze |
  * |---|---|---|---|
- * | Tarball (gepackt) | 616 306 B | 730 000 B (+18 %) | 250 000 B |
- * | entpackt | 6 843 338 B | 7 300 000 B (+7 %) | 3 000 000 B |
- * | Einträge | 376 | — | 200 |
+ * | Tarball (gepackt) | 831 766 B | 980 000 B (+18 %) | 250 000 B |
+ * | entpackt | 7 033 446 B | 7 300 000 B (+4 %) | 3 000 000 B |
+ * | Einträge | 470 | — | 200 |
+ *
+ * **Anhebung am 2. Oktober 2026 (LFH-832):** `core` liefert die Zeichenschrift für den Browser
+ * aus (`fonts/`, vier WOFF2 mit zusammen 100 524 B, dazu `text.css`, `README.md` und `OFL.txt`).
+ * Vorher 730 000 B gepackt; `main` lag ohne die Schriften schon bei 727 272 / 6 925 269 B
+ * (463 Einträge). WOFF2 ist bereits Brotli-komprimiert, gepackt wachsen die Schriften also um
+ * fast ihre volle Größe (+104 494 B). Die Tarball-Grenze hält wieder rund +18 %. Die entpackte
+ * Grenze bleibt: Ihr Puffer (rund 267 KB) ist weiter kleiner als `fingerprints.json`.
+ *
+ * Frühere Messung am 29. September 2026 auf `claude/lfh-561-orchestrierung-cb6ed0` nach dem Merge
+ * von LFH-561 mit LFH-585/586/786: 616 306 B gepackt, 6 843 338 B entpackt, 376 Einträge.
  *
  * Zwei Anhebungen am 29. September 2026, unabhängig voneinander entschieden und beim
  * Zusammenführen zusammengerechnet:
@@ -47,7 +55,7 @@ import { gunzipSync } from 'node:zlib';
  *   `removeComments` entfernt aber auch die JSDoc aus den `.d.ts`, und die Doku soll im npm-Paket
  *   bleiben.
  *
- * Zusammen liegt der Stand über beiden Grenzen; die neuen Grenzen halten dieselben Abstände
+ * Zusammen lag der Stand über beiden Grenzen; die neuen Grenzen hielten dieselben Abstände
  * (gepackt rund +18 %, entpackt +7 %). Der entpackte Puffer bleibt mit rund 457 KB kleiner als
  * `fingerprints.json`.
  *
@@ -63,7 +71,7 @@ import { gunzipSync } from 'node:zlib';
  * winziges Paket, und eine reine Obergrenze wäre dann grün.
  */
 export const LIMITS = Object.freeze({
-  maxPackedBytes: 730_000,
+  maxPackedBytes: 980_000,
   minPackedBytes: 250_000,
   maxUnpackedBytes: 7_300_000,
   minUnpackedBytes: 3_000_000,
@@ -71,7 +79,15 @@ export const LIMITS = Object.freeze({
 });
 
 /** Pflichteinträge: ohne sie ist das Paket nicht benutzbar (siehe `publishConfig` in `package.json`). */
-const REQUIRED = ['package/package.json', 'package/dist/index.js', 'package/dist/index.d.ts'];
+const REQUIRED = [
+  'package/package.json',
+  'package/dist/index.js',
+  'package/dist/index.d.ts',
+  // Ohne Lizenztext darf die Schrift nicht weitergegeben werden (OFL §2), ohne CSS fehlt der
+  // dokumentierte Einstieg `@einsatzzeichen/core/fonts/text.css` (LFH-832).
+  'package/fonts/text.css',
+  'package/fonts/OFL.txt',
+];
 
 /** Verbotene Muster mit Begründung — die Meldung soll sagen, was durchgerutscht ist. */
 const FORBIDDEN = [
@@ -79,7 +95,12 @@ const FORBIDDEN = [
   [/\.snap$/, 'Snapshot-Datei'],
   [/\.test(-helper)?\.[cm]?[jt]s$|\.test\.d\.ts$/, 'Testdatei'],
   [/(^|\/)test-support\//, 'Testhilfe'],
-  [/\.(ttf|otf|woff2?)$/i, 'Schriftdatei (Schriftbehandlung liegt im Prüfpaket)'],
+  // Ausgeliefert wird die Schrift nur als WOFF2 unter `fonts/` (LFH-832); die TTFs für resvg und
+  // die Prüfgates bleiben im Prüfpaket.
+  [
+    /^(?!package\/fonts\/[^/]+\.woff2$).*\.(ttf|otf|woff2?)$/i,
+    'Schriftdatei außerhalb von fonts/*.woff2 (TTFs liegen im Prüfpaket)',
+  ],
   [/\.svg$/i, 'SVG-Datei (Referenz- oder Snapshotmaterial)'],
   [/fingerprints\.json$/, 'Fingerprint-Daten'],
 ];
@@ -92,6 +113,7 @@ const ALLOWED = [
   /^package\/(package\.json|README\.md|LICENSE)$/,
   /^package\/dist\/.+\.(js|d\.ts|d\.ts\.map)$/,
   /^package\/dist\/assets\/arimo(-bold|-medium|-medium-italic)?-metrics\.json$/,
+  /^package\/fonts\/(text-(regular|medium|bold|medium-italic)\.woff2|text\.css|OFL\.txt|README\.md)$/,
 ];
 
 /**
