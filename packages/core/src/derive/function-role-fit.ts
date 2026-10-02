@@ -182,11 +182,14 @@ export function mapRoleRun(run: FunctionRoleTextRun, affine: UniformAffine): Fun
   };
 }
 
+const SURFACE_RUN_EDGE_MARGIN_MM = 0.5;
+
 /**
  * Ein Lauf auf der Oberfläche (etwa das Trägerkürzel rechts unter der Raute) steht außerhalb
  * des Körpers. Wird die Fassung auf einen größeren Variantenkörper gestreckt, wandert er mit
- * nach außen und kann die Zeichenfläche verlassen. Er hält deshalb mindestens den Randabstand,
- * den er in der vermessenen Fassung zur Fläche hat; verschoben wird nur, nie skaliert.
+ * nach außen und kann die Zeichenfläche verlassen. Er bleibt deshalb innerhalb der Fläche, mit
+ * einem Rand von höchstens 0,5 mm (weniger, wenn schon die Vorlage näher an der Kante steht);
+ * verschoben wird nur, nie skaliert. Innerhalb dieser Grenze folgt er der Abbildung frei.
  */
 export function keepRunWithinMargins(
   original: FunctionRoleTextRun,
@@ -195,14 +198,12 @@ export function keepRunWithinMargins(
 ): FunctionRoleTextRun {
   const before = runBounds(original);
   const after = runBounds(mapped);
-  // Begrenzt wird nur zur nahen Kante hin: dorthin nicht über die Vorlage hinaus, nach innen frei.
   const axis = (minBefore: number, maxBefore: number, minAfter: number, maxAfter: number): number => {
-    if (minBefore + maxBefore >= areaMm) {
-      const high = Math.min(areaMm, maxBefore);
-      return maxAfter > high ? high - maxAfter : 0;
-    }
-    const low = Math.max(0, minBefore);
-    return minAfter < low ? low - minAfter : 0;
+    const high = areaMm - Math.max(0, Math.min(SURFACE_RUN_EDGE_MARGIN_MM, areaMm - maxBefore));
+    const low = Math.max(0, Math.min(SURFACE_RUN_EDGE_MARGIN_MM, minBefore));
+    if (maxAfter > high) return high - maxAfter;
+    if (minAfter < low) return low - minAfter;
+    return 0;
   };
   const dx = axis(before.minX, before.maxX, after.minX, after.maxX);
   const dy = axis(before.minY, before.maxY, after.minY, after.maxY);
