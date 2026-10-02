@@ -16,6 +16,7 @@ import {
   type VehicleCategoryId,
 } from '@einsatzzeichen/schema';
 import { baseDrawing } from '../geometry/base-symbols.js';
+import { isDerivedBodyVariant } from '../derive/body-variant-pairs.js';
 import { organizationColor } from '../geometry/organizations.js';
 import { MEASURED_VEHICLE_CATEGORIES, vehicleChassis } from '../geometry/vehicle-categories.js';
 
@@ -156,8 +157,10 @@ describe('Bausteinregister gegen Katalog: Grundzeichen', () => {
     }
   });
 
-  it('führt jede Variante, die der Katalog zeichnet, und keine andere', () => {
+  it('führt jede Variante, die der Katalog vermessen zeichnet, und keine andere', () => {
+    // Abgeleitete Paare (`derive/body-variant-pairs.ts`) sind keine Bausteine des Registers.
     const drawn = variantPairs()
+      .filter(([kind, variant]) => !isDerivedBodyVariant(kind, variant))
       .filter(([kind, variant]) => resolves(() => baseDrawing(kind, variant)))
       .map(([kind, variant]) => `${kind}/${variant}`);
     const registered = entries

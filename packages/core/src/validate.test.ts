@@ -96,7 +96,7 @@ describe('validateSpec', () => {
     } as SymbolSpec)).toEqual([]);
   });
 
-  it('lässt foot-band ausschließlich an den vier vermessenen Logistikkörpern zu', () => {
+  it('lässt foot-band an jeder Art außer den Kreiskörpern von Agent A zu', () => {
     expect(validateSpec({ kind: 'formation', bodyVariant: 'foot-band' })).toEqual([]);
     expect(validateSpec({ kind: 'vehicle-land', bodyVariant: 'foot-band' })).toEqual([]);
     expect(validateSpec({ kind: 'trailer', bodyVariant: 'foot-band' })).toEqual([]);
@@ -107,11 +107,12 @@ describe('validateSpec', () => {
       kind: 'circle-12', bodyVariant: 'foot-band', organization: 'bundeswehr',
     })).toEqual([]);
 
-    const forbiddenKinds: readonly SymbolKind[] = [
+    // Seit dem 02.10.2026 abgeleitet (derive/body-variant-pairs.ts): das Fußband ist ein
+    // übertragbarer Modifikator und keine artgebundene Form.
+    const derivedKinds: readonly SymbolKind[] = [
       'person',
       'vehicle-air',
       'vehicle-water',
-      'post',
       'building',
       'container',
       'area',
@@ -122,12 +123,16 @@ describe('validateSpec', () => {
       'spontaneous-helper',
       'swap-loader-vehicle',
       'upright-rectangle',
-      'reduced-house',
     ];
-    for (const kind of forbiddenKinds) {
-      expect(validateSpec({ kind, bodyVariant: 'foot-band' }).map((issue) => issue.rule), kind)
-        .toContain('body-variant-requires-measured-kind');
+    for (const kind of derivedKinds) {
+      expect(validateSpec({ kind, bodyVariant: 'foot-band' }), kind).toEqual([]);
     }
+    expect(validateSpec({
+      kind: 'reduced-house', bodyVariant: 'foot-band', organization: 'hilfsorganisation',
+    })).toEqual([]);
+    // Kreiskörper `post`: ergänzt Agent A.
+    expect(validateSpec({ kind: 'post', bodyVariant: 'foot-band' }).map((issue) => issue.rule))
+      .toContain('body-variant-requires-measured-kind');
     expect(validateSpec({ kind: 'circle-12', bodyVariant: 'foot-band' })
       .map((issue) => issue.rule)).toContain('circle-12-requires-organization');
   });
@@ -837,7 +842,7 @@ describe('validateSpec', () => {
     })).toEqual([]);
   });
 
-  it('bindet reduced-house auch ohne Label an HiOrg und lehnt jede Variante ab', () => {
+  it('bindet reduced-house auch ohne Label an HiOrg und lehnt Rumpfvarianten ab', () => {
     const reducedHouse = 'reduced-house' as SymbolSpec['kind'];
     expect(validateSpec({ kind: reducedHouse, organization: 'hilfsorganisation' })).toEqual([]);
     for (const organization of [undefined, 'thw'] as const) {
@@ -846,8 +851,12 @@ describe('validateSpec', () => {
         ...(organization === undefined ? {} : { organization }),
       }).map((issue) => issue.rule)).toContain('reduced-house-requires-hilfsorganisation');
     }
+    // Der Giebel ist seit dem 02.10.2026 abgeleitet zulässig, ein Rumpf bleibt Systematik.
     expect(validateSpec({
       kind: reducedHouse, bodyVariant: 'raised-gable', organization: 'hilfsorganisation',
+    })).toEqual([]);
+    expect(validateSpec({
+      kind: reducedHouse, bodyVariant: 'raised-hull', organization: 'hilfsorganisation',
     }).map((issue) => issue.rule)).toContain('body-variant-requires-measured-kind');
   });
 

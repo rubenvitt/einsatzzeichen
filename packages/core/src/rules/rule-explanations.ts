@@ -190,13 +190,14 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
   },
   'body-variant-requires-measured-kind': {
     field: 'bodyVariant',
-    title: 'Körpervariante nur an vermessener Art',
+    title: 'Körpervariante nur an der Art, deren Form sie benennt',
     explanation:
-      'Jede Körpervariante gilt nur für die Arten, an denen sie vermessen wurde — inset-hull ' +
-      'allein am Wasserfahrzeug, plain-wheel-pair allein am Landfahrzeug, raised-gable allein am ' +
-      '12-mm-Kreis. Varianten fallen weder auf eine andere Körperart noch auf deren ' +
-      'Normalfassung zurück. Wähle eine Art, für die die Variante vermessen ist, oder lass ' +
-      '`bodyVariant` weg.',
+      'Manche Körpervarianten benennen die Form einer bestimmten Art: raised-hull einen Rumpf ' +
+      '(Luft- und Wasserfahrzeug), inset-hull den Wasserrumpf, fixed-wing-hull den Flügelrumpf, ' +
+      'die kompakten Rauten die Person, raised-circle-1mm einen Kreiskörper. An einer anderen ' +
+      'Art gibt es diese Form nicht. Übertragbare Varianten — Fußband, Giebel, Radpaar, ' +
+      'Kettenrumpf — zeichnet der Katalog an jeder passenden Art, wo nötig abgeleitet. Wähle die ' +
+      'Art, deren Form die Variante benennt, oder lass `bodyVariant` weg.',
   },
   'bottom-center-label-requires-measured-body': {
     field: 'labels',
