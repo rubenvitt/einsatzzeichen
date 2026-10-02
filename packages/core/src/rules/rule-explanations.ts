@@ -183,10 +183,11 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
     title: 'Fassung der Körpermarke nicht vermessen',
     explanation:
       'Manche Körpermarken zeichnet die Referenz am selben Fahrzeug in mehr als einer Fassung, ' +
-      'etwa weiter rechts oder größer. Eine solche Fassung gilt nur dort, wo sie an einem ' +
-      'Original abgelesen ist, und nur für eine Marke, die das Zeichen auch trägt. Sonst würde ' +
-      'etwas anderes gezeichnet als verlangt. Nimm die Marke in `bodyMarks` auf, wähle eine der ' +
-      'genannten Fassungen oder entferne den Eintrag aus `bodyMarkRenditions`.',
+      'etwa weiter rechts oder größer. Eine solche Fassung gibt es nur für die Marke, an der sie ' +
+      'abgelesen ist, und nur für eine Marke, die das Zeichen auch trägt; an einer anderen ' +
+      'Körperform wird sie übertragen. Sonst würde etwas anderes gezeichnet als verlangt. Nimm ' +
+      'die Marke in `bodyMarks` auf, wähle eine der genannten Fassungen oder entferne den Eintrag ' +
+      'aus `bodyMarkRenditions`.',
   },
   'body-variant-foot-conflict': {
     field: 'bodyVariant',
@@ -251,25 +252,6 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'Schriftmetriken muss innerhalb der vermessenen Körperhülle liegen, und der Anker ' +
       'innerhalb der Box. Sonst stünde der Lauf teilweise außerhalb des Körpers. Verschiebe Box ' +
       'oder Anker nach innen oder verkleinere Breite und Versalhöhe.',
-  },
-  'capabilities-pictogram-has-measured-rendition': {
-    field: 'capabilities',
-    title: 'Fähigkeit gehört als Körpermarke ins Zeichen',
-    explanation:
-      'Für diese Fähigkeit an dieser Körperform gibt es ein Vorbild in der Referenz: Dort ist ' +
-      'das Piktogramm eigens für den Körper gezeichnet, oft größer, kleiner oder anders geformt ' +
-      'als in der Standardbox. Die Standardbox würde also ein anderes Bild zeichnen als das ' +
-      'Original. Wähle die Fähigkeit deshalb unter Körpermarken (`bodyMarks`) statt unter ' +
-      'Fähigkeiten (`capabilities`).',
-  },
-  'capabilities-pictogram-overflows-body': {
-    field: 'capabilities',
-    title: 'Piktogramm passt nicht in den Körper',
-    explanation:
-      'Die Standardbox setzt das Piktogramm einer Fähigkeit in unveränderter Größe in den ' +
-      'Körper. Das ist nur dort zugelassen, wo es nachweislich ganz im Körper bleibt, denn für ' +
-      'diese Fähigkeit an dieser Körperform gibt es keine eigens vermessene Fassung. Entferne die ' +
-      'Fähigkeit oder wähle eine andere Körperform.',
   },
   'center-anchor-override-requires-measured-trailer': {
     field: 'labels',
@@ -566,15 +548,6 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'abgelehnt, damit die geprüfte Datenansicht dieselbe bleibt, die gezeichnet wird. ' +
       'Beschränke `labels` auf diese drei Felder eines einfachen Objekts und entferne ' +
       '`designation`.',
-  },
-  'inset-hull-requires-measured-body-mark': {
-    field: 'bodyVariant',
-    title: 'Körpermarken der eingesenkten Hülle',
-    explanation:
-      'An der eingesenkten Hülle sind die Körpermarken nur so belegt: für die ' +
-      'Hilfsorganisation keine Marke oder genau `inset-hull-wheel-pair`, für die Feuerwehr ' +
-      'genau `fire-fighting`. Andere Zusammenstellungen sind nicht vermessen. Passe `bodyMarks` ' +
-      'an die gewählte Fassung an.',
   },
   'inset-hull-requires-measured-organization': {
     field: 'bodyVariant',

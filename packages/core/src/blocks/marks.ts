@@ -8,17 +8,17 @@ import { babz, block, measured } from './helpers.js';
  * **Fähigkeit** (`capability`): die Box-Fassung aus Kapitel 4, also die Piktogramme unter
  * `core/src/geometry/pictograms/capabilities/`. Jede der 88 Fähigkeiten hat dort eine Primärfassung.
  * Die randbündige Fassung derselben Kennung in `core/src/geometry/body-marks.ts` ist eine zweite,
- * je Körper vermessene Zeichnung. Sie ist Kombinationsbezug und gehört nicht in diesen Eintrag:
- * `bodyMark()` lässt sie ausdrücklich nicht auf die Boxfassung zurückfallen. Eine Fähigkeit, die
- * es **nur** randbündig gäbe, gibt es nicht.
+ * je Körper vermessene Zeichnung. Sie ist Kombinationsbezug und gehört nicht in diesen Eintrag.
+ * Eine Fähigkeit, die es **nur** randbündig gäbe, gibt es nicht.
  *
  * **Körpermarke** (`body-mark`): nur `TECHNICAL_BODY_MARK_IDS`. `BodyMarkId` umfasst zusätzlich
  * die Fähigkeiten; die stehen oben unter `capability`. Jede technische Marke ist laut Schema „an
- * genau einem Körper-/Variantenkontext vermessen“ und lehnt jeden anderen Kontext fail-closed ab.
+ * genau einem Körper-/Variantenkontext vermessen“; an jedem anderen ist sie übertragen.
  * Diese Bindung trägt im Regelkatalog **keine** Regel — `RULE_DIMENSION_GAPS` sagt für
  * `body-marks` selbst, dass es keine Regel gibt, welche Marke an welcher Körperform sitzen darf.
- * Sie steht deshalb nicht als `combinationBinding` da. Ausnahme ist `inset-hull-wheel-pair`: dort
- * trägt `inset-hull-requires-measured-body-mark` die Bindung.
+ * Sie steht deshalb nicht als `combinationBinding` da. Seit dem 2. Oktober 2026 gilt das ohne
+ * Ausnahme: `inset-hull-requires-measured-body-mark` ist entfallen, und an jedem anderen Kontext
+ * überträgt `bodyMark()` die vermessene Fassung (`derive/body-marks.ts`).
  *
  * **Funktionsfassung** (`function-role`): jede Fassung in `core/src/geometry/function-roles.ts` bringt
  * Körper, Kopf und Läufe selbst mit. Geführt wird die Bindung an die Körperart
@@ -671,14 +671,6 @@ const BODY_MARKS_FILE = 'core/src/geometry/body-marks.ts';
 /** Die Anhang-C-Fassungen aus LFH-786 stehen je Familie in einer eigenen Datei. */
 const ANHANG_C_BODY_MARKS_DIR = 'core/src/geometry/body-marks-anhang-c';
 
-/** Die einzige technische Körpermarke, deren Körperbindung eine Regel im Regelkatalog trägt. */
-const INSET_HULL_BINDING = {
-  ruleId: 'inset-hull-requires-measured-body-mark',
-  definedAt: 'core/src/validate.ts:423–450',
-  reason:
-    'An der eingesenkten Hülle sind die Körpermarken nur als keine oder inset-hull-wheel-pair für die Hilfsorganisation und als fire-fighting für die Feuerwehr vermessen.',
-} as const;
-
 function bodyMark(
   valueId: string,
   lines: string,
@@ -695,7 +687,6 @@ function bodyMark(
       note,
       sourceRefs === undefined ? undefined : babz(...sourceRefs),
     ),
-    valueId === 'inset-hull-wheel-pair' ? INSET_HULL_BINDING : undefined,
   );
 }
 

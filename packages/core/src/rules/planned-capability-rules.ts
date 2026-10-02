@@ -6,7 +6,7 @@ import type { PlannedRule } from './planned-state-rules.js';
  *
  * **Warum sie nicht im Regelkatalog stehen.** Anders als bei Kapitel 5.8 fehlt kein Spec-Feld:
  * `capabilities` und `bodyMarks` gibt es. `validateSpec` könnte beide Regeln sofort prüfen. Aber
- * beide lehnen Specs ab, die der Motor heute zeichnet (zwei Boxpiktogramme deckungsgleich, Box- und
+ * beide lehnen Specs ab, die der Motor heute zeichnet (zwei Boxpiktogramme nebeneinander, Box- und
  * randbündige Fassung übereinander). Einen solchen Funktionsverlust entscheidet der Eigentümer,
  * nicht ein Datenslice. Die Frage steht in
  * `docs/decisions/2026-09-28-lfh-567-mehrfachfaehigkeiten-und-sonderformen.md` §5.
@@ -21,7 +21,7 @@ function planned(id: string, reason: string): PlannedRule {
 export const PLANNED_CAPABILITY_RULES: readonly PlannedRule[] = Object.freeze([
   planned(
     'capabilities-box-limit-exceeded',
-    'Die Boxfassung trägt höchstens eine Fähigkeit; zwei Piktogramme in derselben Box überdecken einander, und kein Original zeigt, wie die Systematik sie anordnet.',
+    'Die Boxfassung trägt höchstens eine Fähigkeit; kein Original zeigt, wie die Systematik zwei Piktogramme in der Box anordnet (der Motor stellt sie seit dem 2. Oktober 2026 abgeleitet nebeneinander).',
   ),
   planned(
     'capabilities-presentation-mixed',

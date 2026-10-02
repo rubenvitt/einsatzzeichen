@@ -146,14 +146,14 @@ describe('CAPABILITY_INSET_RULE', () => {
       if (finding.status !== 'evidenced') continue;
       expect(finding.evidence.length, name).toBeGreaterThan(0);
     }
+    // Seit „ableiten statt ablehnen“ (2. Oktober 2026) lehnt keine Regel mehr ab; die Einpassung
+    // ist eine vermerkte Ableitung (`derive/fit-pictogram.ts`).
     expect(unmeasuredPairs).toEqual({
-      target: 'measured-rendition-else-unscaled-if-fits',
-      inForce: 'measured-rendition-else-unscaled-if-fits',
-      rule: 'capabilities-pictogram-overflows-body',
-      measuredRule: 'capabilities-pictogram-has-measured-rendition',
-      decidedOn: '2026-09-29',
+      target: 'measured-rendition-else-unscaled-if-fits-else-fitted',
+      inForce: 'measured-rendition-else-unscaled-if-fits-else-fitted',
+      decidedOn: '2026-10-02',
       decidedBy: 'Projektinhaber',
-      decidedIn: 'docs/decisions/2026-09-29-lfh-787-boxfassung-abloesen.md',
+      decidedIn: 'docs/decisions/2026-10-02-ableiten-statt-ablehnen.md',
     });
   });
 

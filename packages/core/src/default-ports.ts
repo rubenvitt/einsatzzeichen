@@ -15,7 +15,7 @@ import type { Drawing, SymbolSpec } from '@einsatzzeichen/schema';
 import { compose, type CatalogPorts, type ComposeOptions } from './compose.js';
 import { administrativeHead } from './geometry/administrative-heads.js';
 import { baseDrawing, innerField } from './geometry/base-symbols.js';
-import { bodyMark } from './geometry/body-marks.js';
+import { bodyMark } from './derive/body-marks.js';
 import { functionRole } from './geometry/function-roles.js';
 import { describeSymbolSpec } from './geometry/labels.js';
 import { organizationColor } from './geometry/organizations.js';

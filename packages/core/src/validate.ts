@@ -19,9 +19,8 @@ import {
   type SymbolSpec,
   type TechnicalHeadMarkId,
 } from '@einsatzzeichen/schema';
-import { CAPABILITY_UNSCALED_FIT, capabilityInsetForm } from './blocks/capability-inset.js';
 import { stateCarriersOf, stateValueGroup } from './blocks/state-groups.js';
-import { measuredBodyMarkRenditions } from './geometry/body-marks-anhang-c/index.js';
+import { bodyMarkRenditionsAnywhere } from './derive/body-marks.js';
 import { profileFor } from './layout/profiles.js';
 import { ARIMO_CAP_HEIGHT_FRACTION, verticalTextBoxMm } from './render/text-policy.js';
 
@@ -424,14 +423,8 @@ function validatePreparedSpec(
     spec.kind === 'vehicle-water' && spec.bodyVariant === 'inset-hull';
 
   if (isInsetWatercraft) {
-    const bodyMarks = spec.bodyMarks ?? [];
     const isHilfsorganisation = spec.organization === 'hilfsorganisation';
     const isFeuerwehr = spec.organization === 'feuerwehr';
-    const hasMeasuredBodyMark =
-      (isHilfsorganisation &&
-        (bodyMarks.length === 0 ||
-          (bodyMarks.length === 1 && bodyMarks[0] === 'inset-hull-wheel-pair'))) ||
-      (isFeuerwehr && bodyMarks.length === 1 && bodyMarks[0] === 'fire-fighting');
 
     if (!isHilfsorganisation && !isFeuerwehr) {
       issues.push({
@@ -439,14 +432,9 @@ function validatePreparedSpec(
         message:
           'inset-hull is measured only for Hilfsorganisation or Feuerwehr body contracts.',
       });
-    } else if (!hasMeasuredBodyMark) {
-      issues.push({
-        rule: 'inset-hull-requires-measured-body-mark',
-        message:
-          'inset-hull body marks are measured only as none or inset-hull-wheel-pair for ' +
-          'Hilfsorganisation, and fire-fighting for Feuerwehr.',
-      });
     }
+    // Körpermarken an der eingesenkten Hülle sind seit dem 2. Oktober 2026 frei: unvermessene
+    // Paare überträgt `derive/body-marks.ts` (`inset-hull-requires-measured-body-mark` entfallen).
   }
 
   if (isInsetWatercraft) {
@@ -1364,72 +1352,18 @@ function validatePreparedSpec(
     }
   }
 
-  // LFH-787, Entscheidung „AB“ vom 29. September 2026: A, wo die Referenz spricht; B, wo sie
-  // schweigt. Jede Boxfähigkeit geht genau an eine der beiden Regeln, nie an beide.
-  //
-  // A — `capabilities-pictogram-has-measured-rendition`: Hat das Paar aus Fähigkeit und
-  // Körperfassung eine vermessene Fassung (`capabilityInsetForm`), zeichnet die Referenz das
-  // Piktogramm dort in dieser Fassung und nicht als Einzeldarstellung in der Box. Die Boxfassung
-  // ist abgelehnt, der Weg führt über `bodyMarks`. Gelesen wird dynamisch aus
-  // `CAPABILITY_INSET_FORMS`, damit jede neu vermessene Fassung die Regel ohne Zutun erweitert.
-  // Eine gesetzte Körpervariante zählt mit: Ihre vermessenen Fassungen (etwa die Instandsetzung
-  // an der Formation mit Fußband, G.1.1) zeichnet `bodyMarks` an derselben Variante.
-  //
-  // B — `capabilities-pictogram-overflows-body` (LFH-587): Ohne vermessene Fassung setzt die
-  // Boxfassung die Einzeldarstellung unskaliert ein. Zugelassen ist das nur, wo das Clipping-Gate
-  // belegt, dass das Piktogramm an dieser Körperform im Körper bleibt (`CAPABILITY_UNSCALED_FIT`).
-  // An Körperformen ohne Flächenmodell und an Körpervarianten ist das nicht geprüft, also
-  // fail-closed.
-  if (spec.capabilities !== undefined && spec.functionRole === undefined) {
-    const measured = spec.capabilities.filter(
-      (id) => capabilityInsetForm(id, spec.kind, spec.bodyVariant) !== undefined,
-    );
-    if (measured.length > 0) {
-      const body = spec.bodyVariant === undefined
-        ? `"${spec.kind}"`
-        : `"${spec.kind}" mit der Körpervariante "${spec.bodyVariant}"`;
-      issues.push({
-        rule: 'capabilities-pictogram-has-measured-rendition',
-        message:
-          `Für ${measured.map((id) => `"${id}"`).join(', ')} an ${body} ist eine eigene ` +
-          'Körperfassung an der Referenz vermessen; die Referenz zeichnet das Piktogramm dort in ' +
-          'dieser Fassung, nicht als Einzeldarstellung in der Standardbox. Setze die Fähigkeit ' +
-          'unter `bodyMarks` statt unter `capabilities`.',
-      });
-    }
-    const fitting = CAPABILITY_UNSCALED_FIT.find((entry) => entry.kind === spec.kind);
-    const overflowing = spec.capabilities.filter(
-      (id) =>
-        !measured.includes(id) &&
-        (spec.bodyVariant !== undefined ||
-          fitting === undefined ||
-          !fitting.capabilities.includes(id)),
-    );
-    if (overflowing.length > 0) {
-      const names = overflowing.map((id) => `"${id}"`).join(', ');
-      issues.push({
-        rule: 'capabilities-pictogram-overflows-body',
-        message:
-          spec.bodyVariant !== undefined
-            ? `Kapitel-4-Piktogramme in der Boxfassung sind an der Körpervariante "${spec.bodyVariant}" ` +
-              `nicht auf Einsetzbarkeit geprüft, und für ${names} ist dort keine Körperfassung ` +
-              'vermessen. Entferne die Fähigkeit oder verzichte auf die Körpervariante.'
-            : fitting === undefined
-              ? `Für "${spec.kind}" ist nicht prüfbar, ob ein Kapitel-4-Piktogramm im Körper bleibt ` +
-                `(kein Flächenmodell), und für ${names} ist dort keine Körperfassung vermessen. ` +
-                'Entferne die Fähigkeit oder wähle eine andere Körperform.'
-              : `Die Einzeldarstellung von ${names} ragt unskaliert über den Körper von ` +
-                `"${spec.kind}". Die Referenz setzt Kapitel-4-Piktogramme in einer eigenen Fassung ` +
-                'je Körperform ein, und an dieser Körperform ist dafür keine vermessen. Entferne ' +
-                'die Fähigkeit oder wähle eine andere Körperform.',
-      });
-    }
-  }
+  // Fähigkeiten in der Boxfassung sind seit dem 2. Oktober 2026 an jeder Körperform zugelassen:
+  // `compose()` zeichnet sie in der vermessenen Körperfassung, wo das Paar eine hat, und passt
+  // sonst die Einzeldarstellung ins Innenfeld ein (`derive/capabilities.ts`). Die Regeln
+  // `capabilities-pictogram-has-measured-rendition` und `-overflows-body` (LFH-787 „AB“) sind
+  // damit entfallen.
 
-  // LFH-786: Fassungskennungen je Körpermarke (`bodyMarkRenditions`). `bodyMark()` wirft, wenn
-  // eine Kennung an ihrem Paar nicht vermessen ist; diese Regel meldet denselben Fall vorab, mit
-  // denselben Kontextfeldern wie `compose()`. Dazu jede Kennung an einer Marke, die die Spec gar
-  // nicht zeichnet — sie bliebe sonst still wirkungslos. Gelesen werden nur eigene Schlüssel.
+  // LFH-786: Fassungskennungen je Körpermarke (`bodyMarkRenditions`). Seit dem 2. Oktober 2026
+  // verengt: Eine Kennung, die für diese Marke irgendwo in Anhang C vermessen ist, überträgt
+  // `bodyMark()` an jedes andere Paar (`derive/body-marks.ts`). Abgelehnt wird nur noch, was keine
+  // Lücke, sondern eine falsche Angabe ist: eine Kennung, die für diese Marke nirgends vermessen
+  // ist, und eine Kennung an einer Marke, die die Spec gar nicht zeichnet — sie bliebe sonst still
+  // wirkungslos. Gelesen werden nur eigene Schlüssel.
   const renditions = spec.bodyMarkRenditions as unknown;
   if (renditions !== undefined) {
     const record = typeof renditions === 'object' && renditions !== null &&
@@ -1445,22 +1379,17 @@ function validatePreparedSpec(
         problems.push(`Die Fassung für "${mark}" verlangt diese Marke in \`bodyMarks\`.`);
         continue;
       }
-      const measured = measuredBodyMarkRenditions(mark as BodyMarkId, {
-        kind: spec.kind,
-        ...(spec.bodyVariant === undefined ? {} : { bodyVariant: spec.bodyVariant }),
-        ...(spec.vehicleCategory === undefined ? {} : { vehicleCategory: spec.vehicleCategory }),
-      });
+      const measured = bodyMarkRenditionsAnywhere(mark as BodyMarkId);
       if (
         typeof rendition !== 'string' ||
         !(BODY_MARK_RENDITION_IDS as readonly string[]).includes(rendition) ||
         !measured.includes(rendition as BodyMarkRenditionId)
       ) {
         problems.push(
-          `Die Fassung "${String(rendition)}" von "${mark}" ist an ` +
-            `${spec.kind}/${spec.bodyVariant ?? 'normal'} nicht vermessen; ` +
+          `Die Fassung "${String(rendition)}" ist für "${mark}" nirgends vermessen; ` +
             (measured.length === 0
-              ? 'dort gibt es nur die Grundfassung.'
-              : `vermessen sind dort ${measured.map((id) => `"${id}"`).join(', ')}.`),
+              ? 'die Marke hat nur ihre Grundfassung.'
+              : `vermessen sind ${measured.map((id) => `"${id}"`).join(', ')}.`),
         );
       }
     }

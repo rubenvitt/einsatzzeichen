@@ -753,11 +753,11 @@ function innerFieldZone(kind: SymbolKind, variant?: BodyVariantId): ZoneBinding 
       'Ein Kapitel-4-Piktogramm steht im Körper in einer **eigenen Fassung je Paar aus Fähigkeit ' +
         'und Körperform** (`CAPABILITY_INSET_FORMS`), nicht als skalierte Einzeldarstellung. ' +
         'Drei Behandlungen kommen vor: randbündig umgeformt, gleichmäßig verkleinert oder frei ' +
-        'umgeformt. Die Strichstärke bleibt 0,5 mm. Wo eine Fassung vermessen ist, lehnt ' +
-        '`validateSpec` die Boxfassung ab und verweist auf `bodyMarks` ' +
-        '(`capabilities-pictogram-has-measured-rendition`, LFH-787). Für Paare ohne Fassung lässt ' +
-        'die Boxfassung nur Piktogramme zu, die unskaliert im Körper bleiben ' +
-        '(`capabilities-pictogram-overflows-body`, `CAPABILITY_INSET_RULE.unmeasuredPairs`).',
+        'umgeformt. Die Strichstärke bleibt 0,5 mm. Wo eine Fassung vermessen ist, zeichnet ' +
+        '`compose()` die Boxfähigkeit in ihr wie `bodyMarks`. Für Paare ohne Fassung bleibt die ' +
+        'Einzeldarstellung unskaliert, wo sie nachweislich im Körper bleibt, und wird sonst ins ' +
+        'Innenfeld eingepasst, als Ableitung vermerkt (`CAPABILITY_INSET_RULE.unmeasuredPairs`, ' +
+        'Entscheidung vom 2. Oktober 2026).',
       source(
         'core/src/blocks/capability-inset.ts:91–315',
         'Gemessen an allen 76 Körperfassungen des Bestands gegen ihre Einzeldarstellung ' +

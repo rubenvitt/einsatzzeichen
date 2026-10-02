@@ -9,6 +9,9 @@ export * from './layout/profiles.js';
 export * from './not-measured.js';
 export { bodyBoundsMeasured, bodyBoundsMm } from './derive/body-bounds.js';
 export { noteDerivation } from './derive/record.js';
+// Vor dem Sternexport aus `geometry/body-marks.js`: der benannte Export verdeckt dessen
+// vermessenen `bodyMark` und leitet für jedes andere Paar ab.
+export { bodyMark, hasFlushRendition } from './derive/body-marks.js';
 export {
   CompositionError,
   validateSpec,
