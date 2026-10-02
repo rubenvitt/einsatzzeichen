@@ -33,9 +33,10 @@ import { boundsOfMm, type BoundsMm } from './bounds.js';
 // dieser Datei — die Kopfzone rechnet damit in `placeHead()`, also in `profiles.ts`. Der
 // Kopfzonenabstand wurde hier also ausschließlich für die Fußzone importiert. Siehe
 // `docs/decisions/2026-09-20-zonenmodell-als-daten.md` §2 Punkt 2.
-import { FOOT_GAP_MM, placeHead, profileFor } from './layout/profiles.js';
+import { FOOT_GAP_MM, hasVariantProfile, placeHead, profileFor } from './layout/profiles.js';
 import { placeStates, type StatePlacement } from './layout/state-placement.js';
 import { NotMeasuredError } from './not-measured.js';
+import { collectDerivations } from './derive/record.js';
 import {
   ARIMO_CAP_HEIGHT_FRACTION,
   CATALOG_TEXT_FONT_WEIGHT,
@@ -1093,6 +1094,14 @@ export function compose(
   catalog: CatalogPorts,
   options: ComposeOptions = {},
 ): Drawing {
+  return collectDerivations(() => composeMeasuredOrDerived(sourceSpec, catalog, options));
+}
+
+function composeMeasuredOrDerived(
+  sourceSpec: SymbolSpec,
+  catalog: CatalogPorts,
+  options: ComposeOptions,
+): Drawing {
   const roleDefinition = sourceSpec.functionRole !== undefined
     ? catalog.functionRole(sourceSpec.functionRole)
     : undefined;
@@ -1125,6 +1134,13 @@ export function compose(
   // dieses Projekt.
   const extras = base.children.filter((child) => child !== body);
 
+  if (!hasVariantProfile(spec.kind, spec.bodyVariant)) {
+    throw new NotMeasuredError(
+      `Für "${spec.kind}" / "${spec.bodyVariant}" ist kein Layoutprofil hinterlegt; das Profil ` +
+        'der Grundart gilt nicht stillschweigend für eine Variante.',
+      'combination',
+    );
+  }
   const profile = profileFor(spec.kind, spec.bodyVariant);
   const headShape = spec.strength !== undefined ? catalog.strengthHead(spec.strength) : null;
   // Technische Kopfmarke und Verband zeichnen beide relative Kopfprimitive; `head-zone-conflict`

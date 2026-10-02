@@ -1,5 +1,6 @@
 import type { BodyVariantId, Primitive, SymbolKind } from '@einsatzzeichen/schema';
 import { boundsOfMm, shiftY, type BoundsMm } from '../bounds.js';
+import { NotMeasuredError } from '../not-measured.js';
 
 /**
  * Abstand zwischen der Unterkante der Kopfzone und dem Körperanker.
@@ -487,11 +488,12 @@ const circleBodyProfile: LayoutProfile = {
   bottomLabelBaselineFromBodyBottomMm: 2,
   place(body, headBottomMm) {
     if (headBottomMm === null) return body;
-    throw new Error(
+    throw new NotMeasuredError(
       'Kein Zeichen des Referenzbestands führt eine Kopfzone über einem Kreiskörper: 109 der 661 ' +
         'Dateien tragen eine 3-mm-Marke im Kopfzonenraster, 36 tragen einen Kreiskörper, die ' +
         'Schnittmenge ist leer (Vermessung vom 18. August 2026). Wie ein Kreiskörper einer ' +
         'Kopfzone ausweicht, ist damit nicht ableitbar und wird nicht geraten.',
+      'combination',
     );
   },
 };
@@ -570,7 +572,7 @@ const PROFILES: Record<SymbolKind, LayoutProfile> = {
   'reduced-house': rectBodyProfile,
 };
 
-export function profileFor(kind: SymbolKind, variant?: BodyVariantId): LayoutProfile {
+function variantProfile(kind: SymbolKind, variant: BodyVariantId | undefined): LayoutProfile | undefined {
   if (kind === 'person' && variant === 'compact-person-diamond-26mm') {
     return compactPersonDiamondProfile;
   }
@@ -593,5 +595,20 @@ export function profileFor(kind: SymbolKind, variant?: BodyVariantId): LayoutPro
   if (kind === 'circle-12' && variant === 'raised-gable') return raisedGableCircle12Profile;
   if (kind === 'circle-12' && variant === 'raised-circle-1mm') return raisedCircleOneMmProfile;
   if (kind === 'circle-12' && variant === 'foot-band') return footBandCircle12Profile;
-  return PROFILES[kind];
+  return undefined;
+}
+
+/**
+ * Das Layoutprofil einer Art und Variante. Eine Variante ohne eigenes Profil erhält das Profil
+ * ihrer Grundart — das braucht `validateSpec`, das auch unbelegte Paare befragt, um sie mit Regel
+ * abzulehnen. **Gezeichnet** wird ein solches Paar nie: `compose()` verlangt über
+ * `hasVariantProfile()` ein eigenes Profil, sonst erbte die Variante still fremde Zonenwerte.
+ */
+export function profileFor(kind: SymbolKind, variant?: BodyVariantId): LayoutProfile {
+  return variantProfile(kind, variant) ?? PROFILES[kind];
+}
+
+/** Ob diese Variante ein eigenes Profil führt (ohne Variante: immer). */
+export function hasVariantProfile(kind: SymbolKind, variant?: BodyVariantId): boolean {
+  return variant === undefined || variantProfile(kind, variant) !== undefined;
 }

@@ -7,6 +7,8 @@ export * from './bounds.js';
 export * from './fingerprint.js';
 export * from './layout/profiles.js';
 export * from './not-measured.js';
+export { bodyBoundsMeasured, bodyBoundsMm } from './derive/body-bounds.js';
+export { noteDerivation } from './derive/record.js';
 export {
   CompositionError,
   validateSpec,

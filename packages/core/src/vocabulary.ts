@@ -297,7 +297,16 @@ export function checkAnySpec(spec: AnySpec, options?: FreestandingDrawOptions): 
  * (bei Listen: enthalten) ist.
  */
 export type VocabularyOption<K extends VocabularyField = VocabularyField> =
-  | { readonly value: SpecFieldValue<K>; readonly selected: boolean; readonly status: 'allowed' }
+  | {
+      readonly value: SpecFieldValue<K>;
+      readonly selected: boolean;
+      readonly status: 'allowed';
+      /**
+       * Gesetzt, wenn die Zeichnung mit diesem Wert abgeleitete Teile trägt
+       * (`Drawing.derivations`): zulässig, aber nicht an einem Original vermessen.
+       */
+      readonly derived?: true;
+    }
   | {
       readonly value: SpecFieldValue<K>;
       readonly selected: boolean;
@@ -334,7 +343,11 @@ function toOption<K extends VocabularyField>(
   selected: boolean,
   check: SpecCheck,
 ): VocabularyOption<K> {
-  if (check.ok) return { value, selected, status: 'allowed' };
+  if (check.ok) {
+    return check.drawing.derivations !== undefined && check.drawing.derivations.length > 0
+      ? { value, selected, status: 'allowed', derived: true }
+      : { value, selected, status: 'allowed' };
+  }
   if (check.reason === 'rule') {
     return { value, selected, status: 'blocked', reason: 'rule', issues: check.issues };
   }

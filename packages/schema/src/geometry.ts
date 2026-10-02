@@ -214,6 +214,25 @@ export type Primitive =
     })
   | (PrimitiveBase & { type: 'group'; children: readonly Primitive[] });
 
+/**
+ * Ein Teil der Zeichnung, den kein vermessenes Original belegt und den der Motor aus einer
+ * vermessenen Nachbarfassung abgeleitet hat (Entscheidung vom 2. Oktober 2026). Die Zeichnung
+ * als Ganzes ist dann `derived`; diese Notiz sagt, **welcher** Teil es ist und woher er stammt.
+ */
+export interface DerivationNote {
+  /** Die Dimension der Spec, deren Lücke geschlossen wurde, etwa `bodyMarks` oder `labels.center`. */
+  readonly dimension: string;
+  /** Was genau abgeleitet wurde, in Worten. */
+  readonly part: string;
+  /**
+   * `transferred`: eine vermessene Fassung wurde auf eine andere Hülle übertragen (verschoben,
+   * skaliert, gespiegelt). `constructed`: die Lage folgt einer Regel ohne unmittelbare Vorlage.
+   */
+  readonly basis: 'transferred' | 'constructed';
+  /** Die vermessene Quelle der Ableitung: Referenzdatei, Profil oder Konstante. */
+  readonly from: string;
+}
+
 export interface Drawing {
   viewBox: { readonly width: Length; readonly height: Length };
   children: readonly Primitive[];
@@ -221,4 +240,9 @@ export interface Drawing {
   title?: string;
   /** Wird als <desc> ausgegeben. */
   description?: string;
+  /**
+   * Abgeleitete Teile dieser Zeichnung. Fehlt das Feld, ist jeder Teil an einer Fassung der
+   * Referenz vermessen; Renderer geben es nicht aus.
+   */
+  derivations?: readonly DerivationNote[];
 }
