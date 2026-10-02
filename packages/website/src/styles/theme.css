@@ -59,41 +59,13 @@
  * mit Kürzel oder Trägerkürzel (`TEXT_FONT_FAMILY_ATTR` in core). Ohne die Datei setzt der Browser
  * eine Ersatzschrift mit anderen Vorschubbreiten, und das Kürzel steht nicht mehr da, wo die
  * Geometrie es vorsieht — die Vorschau zeigte dann etwas anderes als der Katalog rastert.
- * Die Datei liegt bereits im Repository (`packages/conformance/assets`, Subset, SIL OFL 1.1, im
- * Quellenregister als `arimo-ofl` geführt); Vite kopiert sie in die Ausgabe. Kein externer Request.
+ *
+ * Die `@font-face`-Regeln stehen seit LFH-832 nicht mehr hier, sondern in
+ * `@einsatzzeichen/core/fonts/text.css`: vier statische WOFF2 (400, 500, 700, 500 kursiv) aus
+ * denselben Dateien, mit denen resvg rastert. Eingebunden wird sie neben dieser Datei
+ * (`customCss` in `astro.config.mjs`, Import in `BaseLayout.astro`), so wie es jeder Verbraucher
+ * des npm-Pakets tut. Vite kopiert die Schriften in die Ausgabe. Kein externer Request.
  */
-@font-face {
-  font-family: 'Arimo';
-  /*
-   * Zwei Einträge, nicht einer: `truetype-variations` ist die alte Schreibweise aus CSS Fonts 3.
-   * Eine Engine, die ein Formatkürzel nicht kennt, verwirft den Eintrag stillschweigend — und
-   * genau dann stünde das Kürzel wieder in einer Ersatzschrift, also im Fehlerfall, den dieses
-   * `@font-face` verhindern soll. `truetype` als zweiter Eintrag lädt dieselbe Datei; die
-   * wght-Achse bleibt über `font-weight: 400 700` erreichbar. Der Katalog setzt seine Kürzel
-   * seit LFH-585 in 500; der Browser setzt diese Stufe aus der Achse, resvg aus der statischen
-   * Instanz `Arimo-Medium.ttf`, die aus derselben Datei abgeleitet ist.
-   */
-  src:
-    url('../../../conformance/assets/Arimo[wght].ttf') format('truetype-variations'),
-    url('../../../conformance/assets/Arimo[wght].ttf') format('truetype');
-  font-weight: 400 700;
-  font-style: normal;
-  font-display: block;
-}
-
-/*
- * Der eine kursive Lauf des Katalogs („Bezeichnung" in D.1.1, LFH-585) steht in Arimo Medium
- * Italic. Ohne diesen Eintrag neigte der Browser die aufrechte Datei künstlich, resvg dagegen
- * zeichnet die echte Kursive. Mit derselben statischen Datei setzen beide dieselben Umrisse.
- * Kursiv gibt es nur in 500, deshalb nur dieser eine Eintrag.
- */
-@font-face {
-  font-family: 'Arimo';
-  src: url('../../../conformance/assets/Arimo-MediumItalic.ttf') format('truetype');
-  font-weight: 500;
-  font-style: italic;
-  font-display: block;
-}
 
 /* --- Token: Dunkelmodus (Starlights Voreinstellung steht auf `:root`) -------------------- */
 

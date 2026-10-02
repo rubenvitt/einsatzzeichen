@@ -62,6 +62,20 @@ const svg = renderSvg(
 );
 ```
 
+## Schrift
+
+`renderSvg()` und `renderCanvas()` setzen Kürzel in der Familie `TEXT_FONT_FAMILY_ATTR` (heute `Arimo`). Ohne die Schrift setzt der Browser eine Ersatzschrift mit anderen Vorschubbreiten, und das Kürzel steht nicht mehr dort, wo die Geometrie es vorsieht. `core` liefert sie als WOFF2 unter dem Subpfad `@einsatzzeichen/core/fonts/*` mit:
+
+```ts
+// Alle vier Stufen (400, 500, 700, 500 kursiv) als @font-face:
+import '@einsatzzeichen/core/fonts/text.css';
+
+// Oder eine einzelne Datei als URL (Vite):
+import mediumUrl from '@einsatzzeichen/core/fonts/text-medium.woff2?url';
+```
+
+Für `renderCanvas()` muss die Schrift geladen sein, bevor gezeichnet wird: ``await document.fonts.load(`500 16px ${TEXT_FONT_FAMILY_ATTR}`)``. Die Dateinamen nennen die Stufe, nicht die Schrift; sie bleiben beim Schriftwechsel stehen. Mehr in `fonts/README.md`.
+
 ## Installation
 
 ```bash
@@ -72,4 +86,4 @@ Teil des Monorepos [einsatzzeichen](https://github.com/rubenvitt/einsatzzeichen)
 
 ## Lizenz
 
-MIT
+MIT. Die Schriftdateien unter `fonts/` stehen unter der SIL Open Font License 1.1 (`fonts/OFL.txt`).

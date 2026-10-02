@@ -86,11 +86,20 @@ Wer Prüfdaten im Browser zeigen will, erzeugt sie wie diese Website zur Bauzeit
 
 **Die Schrift gehört zum Zeichen.** `renderSvg()` schreibt `font-family="Arimo"` in jedes Zeichen
 mit Kürzel. Ohne ausgelieferte Schriftdatei setzt der Browser eine Ersatzschrift mit anderen
-Vorschubbreiten, und das Kürzel steht nicht mehr dort, wo die Geometrie es vorsieht. Das Subset
-liegt in `packages/conformance/assets` (SIL OFL 1.1). Ein einziger Lauf steht schräg, die
-„Bezeichnung“ der Befehlsstelle (D.1.1). Für ihn liegt daneben `Arimo-MediumItalic.ttf`. Binde
-sie als zweite Schriftdatei derselben Familie ein, mit `font-style: italic` und
-`font-weight: 500`, sonst neigt der Browser die aufrechte Schrift selbst.
+Vorschubbreiten, und das Kürzel steht nicht mehr dort, wo die Geometrie es vorsieht. `core`
+liefert die Schrift als WOFF2 mit (SIL OFL 1.1, Lizenztext in `fonts/OFL.txt`). Eine Kopie ins
+eigene Repository brauchst du nicht:
+
+```ts
+import '@einsatzzeichen/core/fonts/text.css';
+```
+
+Die Datei erklärt alle vier Stufen als `@font-face`: 400, 500, 700 und 500 kursiv. Der Katalog
+setzt allen Text in 500. Ein einziger Lauf steht schräg, die „Bezeichnung“ der Befehlsstelle
+(D.1.1); ohne die kursive Datei neigte der Browser die aufrechte Schrift selbst. Brauchst du nur
+eine Datei, etwa für eigenes CSS, holst du sie unter Vite als URL:
+`import url from '@einsatzzeichen/core/fonts/text-medium.woff2?url'`. Für `renderCanvas()` lade
+die Schrift vorher mit `document.fonts.load()`, ein Canvas wartet nicht auf `@font-face`.
 
 ## Was du in deiner Oberfläche mitführen solltest
 

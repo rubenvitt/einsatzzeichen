@@ -148,3 +148,7 @@ echo "Fett:     $(wc -c < "$BOLD_TTF" | tr -d ' ') Byte, SHA-256 $(shasum -a 256
 echo "Medium:   $(wc -c < "$MEDIUM_TTF" | tr -d ' ') Byte, SHA-256 $(shasum -a 256 "$MEDIUM_TTF" | cut -d' ' -f1)"
 echo "MedItal.: $(wc -c < "$MEDIUM_ITALIC_TTF" | tr -d ' ') Byte, SHA-256 $(shasum -a 256 "$MEDIUM_ITALIC_TTF" | cut -d' ' -f1)"
 echo "Metriken: $METRICS_JSON, $BOLD_METRICS_JSON, $MEDIUM_METRICS_JSON, $MEDIUM_ITALIC_METRICS_JSON"
+
+# Browser-Schriften für @einsatzzeichen/core/fonts (LFH-832): dieselben vier Stufen als WOFF2.
+# Braucht Brotli in derselben Python-Umgebung (pipx install 'fonttools[woff]').
+"$FONTTOOLS_PYTHON" "$ROOT/scripts/font/build-woff2.py"
