@@ -16,8 +16,7 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "verbatimModuleSyntax": true,
-    "types": ["node"],
-    "baseUrl": ".",
+    "types": ["node", "vite/client"],
     "paths": {
       "@einsatzzeichen/schema": ["../schema/src/index.ts"],
       "@einsatzzeichen/core": ["../core/src/index.ts"],
