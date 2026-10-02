@@ -1,3 +1,19 @@
+## Breaking Changes
+
+Keine Breaking Changes in diesem Release.
+
+## Core-Paket
+
+- **Zeichenschrift jetzt direkt verfügbar**: Die Einsatzzeichen-Schrift kann nun direkt über `@einsatzzeichen/core/fonts/*` importiert werden. Das Paket enthält vier optimierte WOFF2-Dateien (Regular, Medium, Bold und Medium Italic) sowie eine `text.css` mit allen `@font-face`-Deklarationen. Bisher mussten die Schriftdateien manuell aus dem Prüfpaket kopiert werden – dieser Schritt entfällt nun komplett.
+
+## Dokumentation
+
+- Die Nachprüfliste wurde auf den Stand von Version 4.0.0 aktualisiert. Die Suche nach Zeichen aus dem Jahr 2025 funktioniert nun korrekt und findet auch die Einträge C.1.4, C.1.7 und C.1.8.
+
+## Technisches
+
+- Der Build verwendet nun TypeScript 7.0.2 als Compiler. Für die Parser-API wird parallel `@typescript/typescript6` eingesetzt, da TypeScript 7 keine synchrone JavaScript-API mehr bereitstellt.
+
 ## ⚠️ Breaking Changes
 
 Version 4.0.0 erweitert die Zeichenfähigkeit radikal: Der Motor zeichnet jetzt **jede Kombination**, die die Systematik zulässt. Fehlende Vermessungen werden aus verwandten Zeichen abgeleitet und gekennzeichnet – statt wie bisher abgelehnt.

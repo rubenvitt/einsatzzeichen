@@ -1,6 +1,6 @@
 {
   "name": "@einsatzzeichen/review",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "private": true,
   "type": "module",
   "description": "Lokales Werkzeug für die fachliche Verifizierung durch einen Menschen (nicht publiziert)",
