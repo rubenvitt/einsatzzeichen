@@ -307,7 +307,7 @@ export function resolveFunctionRoleLayout(input: FunctionRoleLayoutInput): Funct
     noteDerivation({
       dimension: 'organization',
       part: spec.organization === undefined
-        ? 'Funktionsfassung ohne Organisationsfarbe, Lauftinte aus der Körperfüllung'
+        ? 'Funktionsfassung ohne Organisation, Lauftinte aus der Körperfüllung'
         : 'Funktionsfassung in anderer Organisationsfarbe, Lauftinte aus der Körperfüllung',
       basis: 'transferred',
       from,
