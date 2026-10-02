@@ -64,6 +64,40 @@ export function reduceSpec(spec: SymbolSpec, action: SpecAction): SymbolSpec {
 }
 
 /**
+ * Die Beschriftungszonen, die der Baukasten als Freitext anbietet, in Lesereihenfolge: erst im
+ * Körper, dann außerhalb. Die Metriksätze und Grundlinien-Overrides von `BodyLabels` bleiben
+ * Sache der Rezepte; der Baukasten setzt nur Texte, die Lage leitet der Motor ab.
+ */
+export const LABEL_ZONES = [
+  'center',
+  'topLeft',
+  'bottomLeft',
+  'bottomCenter',
+  'bottomRight',
+  'aboveLeft',
+  'belowRight',
+  'surfaceBelowLeft',
+  'surfaceBelowRight',
+] as const;
+
+export type LabelZone = (typeof LABEL_ZONES)[number];
+
+/**
+ * Einen Lauf in `labels` setzen oder entfernen. Leerer Text entfernt die Zone; ohne Zone fällt
+ * das ganze Feld `labels` weg, damit die Spec dieselbe bleibt wie ohne Beschriftung. Andere
+ * Schlüssel in `labels` (etwa Metriken aus einem geladenen Rezept) bleiben stehen.
+ */
+export function reduceLabel(spec: SymbolSpec, zone: LabelZone, value: string): SymbolSpec {
+  const labels: Record<string, unknown> = { ...(spec.labels ?? {}) };
+  if (isUnset(value)) delete labels[zone];
+  else labels[zone] = value;
+  const next: Record<string, unknown> = { ...spec };
+  if (LABEL_ZONES.some((candidate) => labels[candidate] !== undefined)) next.labels = labels;
+  else delete next.labels;
+  return next as unknown as SymbolSpec;
+}
+
+/**
  * Erklärt jede Meldung einzeln. `explainIssue()` wirft bei einer unbekannten Regelkennung, und
  * das soll es auch: eine erfundene Erklärung wäre schlimmer als keine. Der Wurf darf aber nicht
  * die *übrigen*, erklärbaren Meldungen mitnehmen — sonst verdeckt eine neue Kernregel die
@@ -219,9 +253,10 @@ export function allowedValues(
  * Textvergleich auf der Meldung wäre Raten.
  *
  * **Drei gemessene Grenzen (Stand 02.10.2026), damit später niemand einen Fehler meldet, wo
- * keiner ist.** (1) 28 der 50 Erklärungen aus `validate.ts` zeigen auf `labels`; dafür hat der
- * Baukasten kein Formularfeld, er führt als Beschriftung nur `designation`. Diese Mehrheit bleibt
- * ohne Anker, und das ist ehrlicher als eine erfundene Zuordnung. (2) `kind`, `organization` und
+ * keiner ist.** (1) 28 der 50 Erklärungen aus `validate.ts` zeigen auf `labels`. Seit dem
+ * 2. Oktober 2026 hat der Baukasten dafür Freitextfelder je Zone (`LABEL_ZONES`); die Hinweise
+ * stehen gesammelt unter ihnen, nicht am einzelnen Feld, weil eine Regel die Zone nicht nennt.
+ * (2) `kind`, `organization` und
  * `capabilities` tragen **null** Erklärungen, `bodyMarks` eine. Seit dem 2. Oktober 2026 leitet
  * der Motor Lücken ab, statt sie zu sperren (`docs/decisions/2026-10-02-ableiten-statt-messsperre.md`);
  * die Messsperren-Regeln, die bis dahin auf `organization` und `capabilities` zeigten

@@ -18,8 +18,10 @@ import {
   encodeSpec,
   evaluateSpec,
   issuesByField,
+  reduceLabel,
   reduceSpec,
   type AllowedValue,
+  type LabelZone,
   type BlockedValue,
 } from '../../lib/builder-state.js';
 import { matchesLine, searchCatalog } from '../../lib/builder-catalog.js';
@@ -37,6 +39,28 @@ import { useSnapshot, type SnapshotSelect } from '../../lib/snapshot-island.js';
 import type { BuilderVocabulary, SymbolSummary } from '../../lib/snapshot.js';
 import type { ExplainedIssue } from '../../lib/rule-explanations.js';
 import StatusPair from '../StatusPair.js';
+
+/**
+ * Die Freitextfelder der Beschriftung, in der Reihenfolge, in der man ein Zeichen liest. Die
+ * Namen beschreiben die Lage, nicht den Schlüssel in `BodyLabels`; den nennt der Abschnitt für
+ * Entwicklerinnen und Entwickler.
+ */
+const LABEL_ZONE_FIELDS: readonly { zone: LabelZone; label: string; placeholder: string }[] = [
+  { zone: 'center', label: 'Mitte', placeholder: 'z. B. ILS' },
+  { zone: 'topLeft', label: 'Oben links', placeholder: '' },
+  { zone: 'bottomLeft', label: 'Unten links', placeholder: '' },
+  { zone: 'bottomCenter', label: 'Unten mittig', placeholder: '' },
+  { zone: 'bottomRight', label: 'Unten rechts', placeholder: 'z. B. ST' },
+  { zone: 'aboveLeft', label: 'Über dem Zeichen links', placeholder: '' },
+  { zone: 'belowRight', label: 'Unter dem Zeichen rechts', placeholder: '' },
+  { zone: 'surfaceBelowLeft', label: 'Darunter links', placeholder: '' },
+  { zone: 'surfaceBelowRight', label: 'Darunter rechts', placeholder: '' },
+];
+
+function labelText(spec: SymbolSpec, zone: LabelZone): string {
+  const value = spec.labels?.[zone];
+  return typeof value === 'string' ? value : '';
+}
 
 /**
  * Der Baukasten (Spec §5.4; die Route bleibt `/builder/`). Er setzt eine `SymbolSpec` zusammen,
@@ -1339,6 +1363,11 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
     setLoadedId('');
   }
 
+  function setLabel(zone: LabelZone, value: string) {
+    setSpec((current) => reduceLabel(current, zone, value));
+    setLoadedId('');
+  }
+
   function loadFromCatalog(id: string) {
     // Die leere Auswahl löst nur den Bezug zum Katalogeintrag; die Spec bleibt stehen, damit
     // niemand seine Arbeit verliert, weil er die Auswahl zurückstellt.
@@ -1711,9 +1740,28 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
           <fieldset className="ez-builder__group">
             <legend>Beschriftung</legend>
             <p className="ez-builder__group-hint">
-              Das Kürzel in der Fußzone, unterhalb des Zeichens — etwa ein Rufname oder eine
-              Einheitsbezeichnung.
+              Text im Zeichen, etwa „ILS“ in der Mitte und das Kreiskürzel unten rechts, dazu ein
+              Kürzel unterhalb des Zeichens. Ist ein Text zu lang für seinen Platz, sagt es die
+              Vorschau.
             </p>
+            <div className="ez-builder__group-grid">
+              {LABEL_ZONE_FIELDS.map(({ zone, label, placeholder }) => (
+                <div className="ez-builder__field" key={zone}>
+                  <label className="ez-builder__field-label" htmlFor={`ez-builder-label-${zone}`}>
+                    {label}
+                  </label>
+                  <input
+                    id={`ez-builder-label-${zone}`}
+                    type="text"
+                    placeholder={placeholder}
+                    value={labelText(spec, zone)}
+                    aria-describedby={fieldIssues.has('labels') ? 'ez-builder-labels-issue' : undefined}
+                    onChange={(event) => setLabel(zone, event.target.value)}
+                  />
+                </div>
+              ))}
+            </div>
+            <FieldIssueNote id="ez-builder-labels-issue" issues={fieldIssues.get('labels') ?? []} />
             {/*
               Dasselbe Muster wie in `SelectField` und `ListField`: Hülle als `<div>`, Beschriftung
               als eigenes `<label htmlFor>`, die Notiz daneben und allein über `aria-describedby`
@@ -1757,7 +1805,9 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
             <code>technicalFill</code>, <code>strength</code>, <code>functionRole</code>,{' '}
             <code>administrativeLevel</code>, <code>technicalHeadMark</code>,{' '}
             <code>unitGrouping</code>, <code>vehicleCategory</code>, <code>capabilities</code>,{' '}
-            <code>bodyMarks</code>, <code>states</code> und <code>tendency</code>. Die
+            <code>bodyMarks</code>, <code>states</code> und <code>tendency</code>; die
+            Beschriftungsfelder setzen die Läufe in <code>labels</code> (<code>center</code>,{' '}
+            <code>topLeft</code>, <code>bottomRight</code> …) und <code>designation</code>. Die
             Piktogrammregister <code>comms</code>, <code>damage</code> und <code>wildfire</code>{' '}
             haben kein Formularfeld, weil <code>SymbolSpec</code> keine solche Achse führt — ein
             Feld dafür behauptete eine Eingabe, die die Komposition nicht annimmt.

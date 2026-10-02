@@ -10,6 +10,7 @@ import {
   encodeSpec,
   evaluateSpec,
   issuesByField,
+  reduceLabel,
   reduceSpec,
 } from './builder-state.js';
 
@@ -409,5 +410,34 @@ describe('issuesByField', () => {
     const result = evaluateSpec(spec);
     expect(result.ok).toBe(true);
     expect(issuesByField([], spec).size).toBe(0);
+  });
+});
+
+describe('reduceLabel', () => {
+  const base = { kind: 'circle-12', organization: 'fuehrung-leitung' } as const satisfies SymbolSpec;
+
+  it('setzt Läufe in labels und lässt die Spec sonst unverändert', () => {
+    const withCenter = reduceLabel(base, 'center', 'LST');
+    const withBoth = reduceLabel(withCenter, 'bottomRight', 'UEL');
+    expect(withBoth).toEqual({ ...base, labels: { center: 'LST', bottomRight: 'UEL' } });
+    expect(evaluateSpec(withBoth).ok).toBe(true);
+  });
+
+  it('entfernt eine geleerte Zone und ohne Zone das ganze Feld', () => {
+    const one = reduceLabel(reduceLabel(base, 'center', 'LST'), 'bottomRight', 'UEL');
+    expect(reduceLabel(one, 'center', '')).toEqual({ ...base, labels: { bottomRight: 'UEL' } });
+    expect(reduceLabel(reduceLabel(one, 'center', ''), 'bottomRight', '')).toEqual(base);
+  });
+
+  it('lässt Metriken eines geladenen Rezepts stehen, solange ein Lauf bleibt', () => {
+    const recipe = {
+      ...base,
+      labels: { center: 'LtS', centerCapHeightMm: 7.3 },
+    } as unknown as SymbolSpec;
+    expect(reduceLabel(recipe, 'bottomRight', 'UEL').labels).toEqual({
+      center: 'LtS',
+      centerCapHeightMm: 7.3,
+      bottomRight: 'UEL',
+    });
   });
 });

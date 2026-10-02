@@ -519,3 +519,21 @@ describe('Der Baukasten mit abgeleiteten Teilen', () => {
     expect(chosen.querySelector('.ez-builder__tile-derived')).toBeNull();
   });
 });
+
+describe('Der Baukasten mit Beschriftung im Körper', () => {
+  it('setzt Text in die Mitte und unten rechts und zeichnet ihn in der Vorschau', async () => {
+    const container = await mountBuilder();
+    for (const [zone, text] of [['center', 'LST'], ['bottomRight', 'UEL']] as const) {
+      const input = container.querySelector(`#ez-builder-label-${zone}`) as unknown as HTMLInputElement | null;
+      expect(input, `Kein Feld für ${zone}.`).not.toBeNull();
+      // React verfolgt den Wert über den Setter des Prototyps; erst damit zählt das Ereignis.
+      const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(input), 'value')?.set;
+      setter?.call(input, text);
+      input?.dispatchEvent(new DocumentEvent('input', { bubbles: true }));
+      await settle();
+    }
+    const texts = [...container.querySelectorAll('svg text')].map((node) => node.textContent);
+    expect(texts).toContain('LST');
+    expect(texts).toContain('UEL');
+  });
+});
