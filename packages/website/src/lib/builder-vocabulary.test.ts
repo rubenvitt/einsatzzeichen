@@ -21,7 +21,8 @@ import type { BuilderVocabulary } from './snapshot.js';
 const VOCABULARY: BuilderVocabulary = {
   kind: [
     { id: 'formation', label: 'Taktische Formation' },
-    // Komponiert ohne weitere Zutat nicht — der Fall, für den die Kachel einen Platzhalter zeigt.
+    // Komponiert nackt (seit dem 2. Oktober 2026 auch ohne Organisation), sperrt aber neben einer
+    // Stärke: `strength-requires-unit`.
     { id: 'reduced-house', label: 'Reduziertes Haus' },
   ],
   strength: [
@@ -102,12 +103,15 @@ describe('kindPreviews', () => {
 
   /** `null`, nicht ein geworfener Fehler: die Kachel zeigt dann einen Platzhalterrahmen. */
   it('liefert `null`, wo die nackte Grundform nicht trägt', () => {
-    expect(previews.get('reduced-house')).toBeNull();
+    // Seit dem 2. Oktober 2026 trägt jede nackte Grundzeichenart. Den Platzhalter zeigt die Kachel
+    // nur noch für eine Kennung, die der Katalog nicht kennt (etwa aus einem älteren Snapshot).
+    const unknown = kindPreviews({ kind: [{ id: 'gibt-es-nicht', label: 'Unbekannt' }] });
+    expect(unknown.get('gibt-es-nicht')).toBeNull();
   });
 });
 
 describe('probeFields', () => {
-  const spec: SymbolSpec = { kind: 'formation' };
+  const spec: SymbolSpec = { kind: 'formation', strength: 'gruppe' };
   const probes = probeFields(VOCABULARY, spec, ['kind', 'strength']);
 
   it('legt je Feld eine Zuordnung Kennung → Befund an', () => {

@@ -14,6 +14,7 @@ export { administrativeHeadOrDerived, unitGroupingHeadOrDerived } from './derive
 // Vor dem Sternexport aus `geometry/body-marks.js`: der benannte Export verdeckt dessen
 // vermessenen `bodyMark` und leitet für jedes andere Paar ab.
 export { bodyMark, hasFlushRendition } from './derive/body-marks.js';
+export { CIRCLE_VARIANT_PAIRS, circleTopLeftInk } from './derive/circle.js';
 export {
   CompositionError,
   validateSpec,

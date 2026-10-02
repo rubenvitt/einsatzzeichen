@@ -220,8 +220,9 @@ const E2_NO_HEAD_ZONE =
 const CIRCLE_NO_HEAD_ZONE =
   'Kreiskörper mit Kopfzone ist ein **gemessenes Negativ**: über alle 661 Referenzdateien ' +
   'tragen 109 eine 3-mm-Marke im Kopfzonenraster und 36 einen echten Kreiskörper, die ' +
-  'Schnittmenge ist leer (Vermessung vom 18. August 2026). Wie ein Kreiskörper einer Kopfzone ' +
-  'ausweicht, ist damit nicht ableitbar und wird nicht geraten.';
+  'Schnittmenge ist leer (Vermessung vom 18. August 2026). Seit dem 2. Oktober 2026 leitet ' +
+  '`compose()` die Lage ab und vermerkt sie (`derive/circle.ts`): verschieben wie C.1.1, sonst ' +
+  'von oben verkleinern wie D.3.7.';
 
 /**
  * Herkunft der mittigen Grundlinie je Körperform. Der Normfall steht als Rückfall; die
@@ -323,6 +324,35 @@ const TOP_LEFT_BASELINE_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
       '`fixedWingVehicleAirProfile` trägt die 7 ohne Kommentar; weder Abschnitt noch Messdatum ' +
       'stehen am Fundort.',
   ),
+  // Abgeleitete Kreislagen (2. Oktober 2026, `derive/circle.ts`).
+  'circle-12/raised-circle-1mm': source(
+    'core/src/derive/circle.ts:318–333',
+    'Abgeleitet: der F.3.3-Lauf außerhalb oben links, gegen die angehobene Hülle übertragen.',
+    babz('F.3.3'),
+  ),
+  'circle-12/foot-band': source(
+    'core/src/derive/circle.ts:318–333',
+    'Abgeleitet: der F.3.3-Lauf außerhalb oben links an derselben 12-mm-Hülle.',
+    babz('F.3.3'),
+  ),
+  post: source(
+    'core/src/derive/circle.ts:346–348',
+    'Abgeleitet: innen auf der Kreissehne, die untere Eckenbox an der Kreismitte gespiegelt; ' +
+      'außerhalb des 14-mm-Kreises bleibt oben links kein Platz.',
+  ),
+  'post/raised-gable': source(
+    'core/src/derive/circle.ts:318–333',
+    'Abgeleitet: derselbe abgesenkte 12-mm-Kreis wie F.3.5, Lauf außerhalb oben links.',
+    babz('F.3.5'),
+  ),
+  'post/raised-circle-1mm': source(
+    'core/src/derive/circle.ts:346–348',
+    'Abgeleitet: innen auf der Kreissehne wie an der Funktionsstelle.',
+  ),
+  'post/foot-band': source(
+    'core/src/derive/circle.ts:346–348',
+    'Abgeleitet: innen auf der Kreissehne wie an der Funktionsstelle.',
+  ),
 };
 
 const TOP_LEFT_BASELINE_INHERITED = source(
@@ -368,6 +398,31 @@ const BELOW_RIGHT_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
     'G.3.5: Bw rechts außen auf (31|29) bei Körperhülle 4…28 mm.',
     babz('G.3.5'),
   ),
+  post: source(
+    'core/src/layout/profiles.ts:514–524',
+    'Abgeleitet von G.3.5: Anker absolut auf x 31, Grundlinie 1 mm unter dem 14-mm-Kreis.',
+    babz('G.3.5'),
+  ),
+  'circle-12': source(
+    'core/src/layout/profiles.ts:483–507',
+    'Abgeleitet von G.3.5: dieselbe Lage an der ungebänderten 12-mm-Hülle.',
+    babz('G.3.5'),
+  ),
+  'circle-12/raised-gable': source(
+    'core/src/layout/profiles.ts:483–507',
+    'Abgeleitet von G.3.5: 1 mm unter und 3 mm rechts der abgesenkten Hülle.',
+    babz('G.3.5'),
+  ),
+  'post/raised-gable': source(
+    'core/src/layout/profiles.ts:483–507',
+    'Abgeleitet von G.3.5: derselbe abgesenkte 12-mm-Kreis wie `circle-12/raised-gable`.',
+    babz('G.3.5'),
+  ),
+  'post/foot-band': source(
+    'core/src/layout/profiles.ts:606–616',
+    'Abgeleitet von G.3.5: Anker absolut auf x 31, Grundlinie 1 mm unter dem 14-mm-Kreis.',
+    babz('G.3.5'),
+  ),
 };
 
 /** Herkunft der Läufe auf der Ausgabeoberfläche unterhalb des Körpers. */
@@ -383,6 +438,12 @@ const SURFACE_LABEL_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
     UNDOCUMENTED_AT_SOURCE +
       '`raisedCircleOneMmProfile` trägt Grundlinie 4 und die Anker −3/+3 ohne Kommentar; weder ' +
       'Abschnitt noch Messdatum stehen am Fundort.',
+  ),
+  'post/raised-circle-1mm': source(
+    'core/src/layout/profiles.ts:595–604',
+    'Abgeleitet von N.2.3: dieselben absoluten Lagen (x 1 und 31, Grundlinie 31) gegen die ' +
+      'Hülle 3…29 × 1…27 des angehobenen 13-mm-Kreises.',
+    babz('N.2.3'),
   ),
 };
 
@@ -403,6 +464,41 @@ const BOTTOM_CENTER_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
     'core/src/layout/profiles.ts:490–501',
     'G.3.5: Diesel auf y = 22 bei Körperhülle 4…28 mm, also 6,0 mm über der Unterkante. Der in ' +
       'Pfade umgewandelte Lauf ist in der Referenz schwarz, nicht weiß.',
+    babz('G.3.5'),
+  ),
+  post: source(
+    'core/src/layout/profiles.ts:483–507',
+    'Abgeleitet von G.3.5: 6,0 mm über der Unterkante, in der Körpertinte.',
+    babz('G.3.5'),
+  ),
+  'circle-12': source(
+    'core/src/layout/profiles.ts:483–507',
+    'Abgeleitet von G.3.5: 6,0 mm über der Unterkante, in der Körpertinte.',
+    babz('G.3.5'),
+  ),
+  'circle-12/raised-gable': source(
+    'core/src/layout/profiles.ts:483–507',
+    'Abgeleitet von G.3.5: 6,0 mm über der Unterkante, in der Körpertinte.',
+    babz('G.3.5'),
+  ),
+  'circle-12/raised-circle-1mm': source(
+    'core/src/layout/profiles.ts:483–507',
+    'Abgeleitet von G.3.5: 6,0 mm über der Unterkante, in der Körpertinte.',
+    babz('G.3.5'),
+  ),
+  'post/raised-gable': source(
+    'core/src/layout/profiles.ts:483–507',
+    'Abgeleitet von G.3.5: 6,0 mm über der Unterkante, in der Körpertinte.',
+    babz('G.3.5'),
+  ),
+  'post/raised-circle-1mm': source(
+    'core/src/layout/profiles.ts:483–507',
+    'Abgeleitet von G.3.5: 6,0 mm über der Unterkante, in der Körpertinte.',
+    babz('G.3.5'),
+  ),
+  'post/foot-band': source(
+    'core/src/layout/profiles.ts:570–583',
+    'Abgeleitet von G.3.5: 6,0 mm über der Unterkante, 2 mm über der Fußbandsehne.',
     babz('G.3.5'),
   ),
 };
@@ -864,9 +960,14 @@ function centerZone(
       profile.id === 'circle-body'
         ? 'core/src/layout/profiles.ts:448–452'
         : 'core/src/layout/profiles.ts:372–377',
-      'Kein Zeichen des Bestands beschriftet diese Körperform mittig. Der Normwert 8 steht im ' +
-        'Profil, damit die Zahl nicht fehlt — er ist **keine Messung an dieser Körperform** und ' +
-        'darf nicht als Zonendatum gelesen werden.',
+      profile.id === 'circle-body'
+        ? 'Am Kreis ist der mittige Lauf nur an den Ortszeichen D.2.3 bis D.2.5 mit eigener ' +
+          'Versalhöhe gemessen. Ohne vermessenen Override setzt `compose()` seit dem 2. Oktober ' +
+          '2026 die Versalmitte auf die Kreismitte und vermerkt das (`derive/circle.ts`); der ' +
+          'Profilwert 8 ist dort unbenutzt und kein Zonendatum.'
+        : 'Kein Zeichen des Bestands beschriftet diese Körperform mittig. Der Normwert 8 steht im ' +
+          'Profil, damit die Zahl nicht fehlt — er ist **keine Messung an dieser Körperform** und ' +
+          'darf nicht als Zonendatum gelesen werden.',
     );
   }
 
@@ -1322,6 +1423,10 @@ export const ZONE_MODEL_BODY_VARIANTS: readonly BodyFormZones[] = Object.freeze(
   zonesFor('circle-12', 'raised-gable'),
   zonesFor('circle-12', 'raised-circle-1mm'),
   zonesFor('circle-12', 'foot-band'),
+  // Abgeleitete Fassungen der Funktionsstelle (`CIRCLE_VARIANT_PAIRS`, 2. Oktober 2026).
+  zonesFor('post', 'raised-gable'),
+  zonesFor('post', 'raised-circle-1mm'),
+  zonesFor('post', 'foot-band'),
 ]);
 
 /** Alle belegten Körperfassungen: die 19 Körperformen und die 14 Variantenzweige. */

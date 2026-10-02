@@ -64,15 +64,15 @@ describe('Layoutprofile', () => {
     expect(bounds.maxX).toBeCloseTo(29, 3);
   });
 
-  it('lehnt einen Kreiskörper mit Kopfzone mit dem gemessenen Negativ ab', () => {
-    // Der Wurftext behauptet nicht „nicht belegt", sondern nennt die Zählung, die das belegt:
-    // 109 Dateien mit 3-mm-Marke im Kopfzonenraster, 36 mit Kreiskörper, Schnittmenge leer. Der
-    // Test hält beide Zahlen fest, damit sie nicht unbemerkt zu einer Behauptung zurückfallen.
+  it('leitet die Lage eines Kreiskörpers unter einer Kopfzone ab (2. Oktober 2026)', () => {
+    // Das gemessene Negativ (109 Dateien mit 3-mm-Marke, 36 mit Kreiskörper, Schnittmenge leer)
+    // bleibt bestehen; seit dem 2. Oktober 2026 wird die Lage abgeleitet statt abgelehnt. Die
+    // Funktionsstelle hält die Unterkante 30 und wird von oben verkleinert (wie D.3.7).
     const circleBody: Primitive = { type: 'circle', role: 'body', cx: 16, cy: 16, r: 14 };
     expect(profileFor('post').place(circleBody, null)).toBe(circleBody);
-    expect(() => profileFor('post').place(circleBody, 4)).toThrow(
-      /109 der 661 Dateien .* 36 tragen einen Kreiskörper, die Schnittmenge ist leer/s,
-    );
+    expect(boundsOfMm(profileFor('post').place(circleBody, 4))).toEqual({
+      minX: 3.5, minY: 5, maxX: 28.5, maxY: 30,
+    });
   });
 
   it('ordnet jeder Grundzeichenart ein Profil zu', () => {
@@ -186,7 +186,8 @@ describe('Layoutprofile', () => {
     expect(raised.topLeftBaselineFromBodyTopMm).toBeCloseTo(-0.999746, 6);
     expect(normal).not.toHaveProperty('topLeftInk');
     expect(raised).not.toHaveProperty('topLeftInk');
-    expect(profileFor('post').topLeftBaselineFromBodyTopMm).toBeUndefined();
+    // Die Funktionsstelle setzt den Lauf seit dem 2. Oktober 2026 innen auf die Kreissehne.
+    expect(profileFor('post').topLeftBaselineFromBodyTopMm).toBeCloseTo(8.3153, 4);
   });
 
   it('führt die Logistik-Labelzonen ausschließlich an ihren gebänderten Profilen', () => {
@@ -204,7 +205,9 @@ describe('Layoutprofile', () => {
       anchorFromBodyRightMm: 3,
       ink: 'black',
     });
-    expect(profileFor('circle-12').belowRight).toBeUndefined();
+    // Seit dem 2. Oktober 2026 von G.3.5 auf die übrigen Kreisfassungen übertragen
+    // (`derive/circle.ts` vermerkt es an der Zeichnung).
+    expect(profileFor('circle-12').belowRight).toEqual(circleFootBand.belowRight);
     expect(profileFor('vehicle-water', 'raised-hull').belowRight).toEqual({
       baselineFromBodyBottomMm: 4.01,
       anchorFromBodyRightMm: 0.5618,
@@ -213,8 +216,9 @@ describe('Layoutprofile', () => {
 
     const raisedCircle = profileFor('circle-12', 'raised-circle-1mm' as BodyVariantId);
     expect(circleFootBand.surfaceLabels).toBeUndefined();
-    expect(raisedCircle.bottomCenterBaselineFromBodyBottomMm).toBeUndefined();
+    expect(raisedCircle.bottomCenterBaselineFromBodyBottomMm).toBe(6);
     expect(raisedCircle.bottomCenterInk).toBeUndefined();
+    // Rechts unterhalb liegt am angehobenen Kreis der Streifen der Oberflächenläufe.
     expect(raisedCircle.belowRight).toBeUndefined();
   });
 

@@ -1,4 +1,5 @@
 import type { BodyVariantId, SymbolKind } from '@einsatzzeichen/schema';
+import { CIRCLE_VARIANT_PAIRS } from './circle.js';
 
 /**
  * Zulassungstabelle der Körpervarianten: welche Variante an welcher Art gezeichnet wird.
@@ -72,7 +73,8 @@ export const DERIVED_BODY_VARIANT_KINDS: Readonly<
     'swap-loader-vehicle',
     'upright-rectangle',
     'reduced-house',
-    // Kreiskörper (`post`): ergänzt Agent A.
+    // Kreiskörper (`post`): eigene Körper und Profile in `derive/circle.ts`, zugelassen über
+    // `CIRCLE_VARIANT_PAIRS` in `isAllowedBodyVariant`.
   ]),
   'plain-wheel-pair': new Set<SymbolKind>(CHASSIS_BODIES),
   'inverted-hull-track': new Set<SymbolKind>(CHASSIS_BODIES),
@@ -94,7 +96,8 @@ export const DERIVED_BODY_VARIANT_KINDS: Readonly<
     'swap-loader-vehicle',
     'upright-rectangle',
     'reduced-house',
-    // Kreiskörper (`post`): ergänzt Agent A.
+    // Kreiskörper (`post`): eigene Körper und Profile in `derive/circle.ts`, zugelassen über
+    // `CIRCLE_VARIANT_PAIRS` in `isAllowedBodyVariant`.
   ]),
 };
 
@@ -117,5 +120,15 @@ export function isDerivedBodyVariant(kind: SymbolKind, variant: BodyVariantId): 
 
 /** Ob die Systematik dieses Paar zulässt (vermessen oder abgeleitet). */
 export function isAllowedBodyVariant(kind: SymbolKind, variant: BodyVariantId): boolean {
-  return isMeasuredBodyVariant(kind, variant) || isDerivedBodyVariant(kind, variant);
+  return isMeasuredBodyVariant(kind, variant) || isDerivedBodyVariant(kind, variant) ||
+    isCircleVariantPair(kind, variant);
+}
+
+/**
+ * Die Varianten der Funktionsstelle (`post`) leitet `derive/circle.ts` selbst ab: Körper in
+ * `VARIANT_BODIES`, eigene Profile, eigene Notizen. Sie laufen deshalb nicht über
+ * `deriveBodyVariant` und zählen nicht als `isDerivedBodyVariant`.
+ */
+export function isCircleVariantPair(kind: SymbolKind, variant: BodyVariantId): boolean {
+  return CIRCLE_VARIANT_PAIRS.some((pair) => pair.kind === kind && pair.bodyVariant === variant);
 }

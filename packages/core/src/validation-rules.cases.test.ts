@@ -51,17 +51,6 @@ describe('Validierungsregeln ohne Fall in validate.test.ts', () => {
     ).toContain('center-label-within-body');
   });
 
-  it('colored-circle-top-left-not-measured: topLeft am vermessenen farbigen Kreisvertrag', () => {
-    expect(
-      rules({
-        kind: 'circle-12',
-        organization: 'zivile-einheiten',
-        bodyMarks: ['spontaneous-helper-collection-arrow'],
-        labels: { topLeft: 'X' },
-      }),
-    ).toContain('colored-circle-top-left-not-measured');
-  });
-
   it('surface-label-foot-conflict: Bezeichnung und schwarzer Oberflächenlauf zugleich', () => {
     expect(
       rules({ kind: 'vehicle-air', bodyVariant: 'raised-hull', designation: 'A', labels: { surfaceBelowRight: 'B' } }),

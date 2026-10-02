@@ -785,10 +785,14 @@ describe('Körperformen des Anhangs F.3', () => {
     expect(j32Body).toMatchObject({ cx: 16, cy: 18, r: 12 });
   });
 
-  it('fällt mit raised-gable weder auf post noch auf eine andere Körperart zurück', () => {
-    // `post` ergänzt Agent A (Kreiskörper); an der Formation ist der Giebel seit dem 02.10.2026
-    // abgeleitet und keine Rückfallzeichnung: der Körper ist verkleinert, nicht der Kapitel-1-Körper.
-    expect(() => baseDrawing('post', raisedGable)).toThrow(/Körpervariante/);
+  it('leitet raised-gable an post aus F.3.5 ab und fällt an anderen Arten nicht zurück', () => {
+    // Seit dem 2. Oktober 2026 (`derive/circle.ts`): die Funktionsstelle mit Giebel ist der
+    // abgesenkte 12-mm-Kreis aus F.3.5; der 14-mm-Kreis ließe über sich keinen Platz.
+    expect(baseDrawing('post', raisedGable).children).toEqual(
+      baseDrawing(circleKind, raisedGable).children,
+    );
+    // An der Formation ist der Giebel abgeleitet und keine Rückfallzeichnung: der Körper ist
+    // verkleinert, nicht der Kapitel-1-Körper.
     expect(baseDrawing('formation', raisedGable).children[0]).not.toEqual(
       baseDrawing('formation').children[0],
     );

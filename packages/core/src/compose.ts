@@ -61,6 +61,14 @@ import { openBodyTint } from './derive/open-body-tint.js';
 import { noteInsetHullOrganization } from './derive/inset-hull-organization.js';
 import { capabilityPictograms, composedBodyMarks } from './derive/capabilities.js';
 import {
+  circleCenterBaselineFromBodyBottomMm,
+  circleCornerRuns,
+  circleTopLeftInk,
+  circleTopLeftMetrics,
+  noteCircleVariantBody,
+  type CircleCornerRuns,
+} from './derive/circle.js';
+import {
   ARIMO_CAP_HEIGHT_FRACTION,
   CATALOG_TEXT_FONT_WEIGHT,
   MINIMUM_TEXT_RENDER_PX,
@@ -358,7 +366,8 @@ function labelPrimitive(
 }
 
 /**
- * Schriftfarbe der Läufe **im** Körper: `schwarz` auf weisser Körperfläche, sonst `weiss`.
+ * Schriftfarbe der Läufe **im** Körper: `schwarz` auf weisser und auf gelber Körperfläche,
+ * sonst `weiss`.
  *
  * **Bis Anhang F stand hier fest `weiss`**, mit der Begründung, alle 37 Zeichen aus E.1 setzten
  * ihre Kürzel weiss auf die gefüllte Fläche. Das stimmt für E und ist für F falsch: alle 66
@@ -381,6 +390,13 @@ function labelPrimitive(
  * sie nur dort, wo eine Quelle eine andere Tinte vermisst (schwarz, weiss oder, seit LFH-786,
  * `koerperlauf-kontrast`). Specs ohne diese Messung behalten Rückgabewert und gerenderte Bytes.
  *
+ * **Gelb ist die zweite Fläche mit schwarzer Schrift (02.10.2026).** Alle 20 Referenzdateien mit
+ * gelber Fläche `#fafa00` und Typo-Ebene setzen ihre Typo ohne `fill`, also schwarz: 2.4 Führung
+ * und Leitung, D.1.1–D.1.7, D.2.2–D.2.5, D.3.1–D.3.6, D.4.1 und D.4.3; keine einzige setzt weiß.
+ * „Weiß auf jeder Organisationsfarbe" ist für Gelb damit an der Quelle widerlegt. Das ist eine
+ * vermessene Korrektur und keine Ableitung: Bis dahin trug kein Rezept einen Körperlauf auf Gelb,
+ * keine bestehende Zeichnung ändert sich.
+ *
  * **Exportiert, weil der Kontrastvertrag denselben Resolver braucht.** Der Katalog leitet in
  * `labelContrastRequirements()` ab, welches Paar aus einer Beschriftung im Körper überhaupt
  * entsteht; träfe er die Farbwahl dort ein zweites Mal, könnten Zeichnung und Vertrag
@@ -391,7 +407,7 @@ export function bodyLabelInk(
   bodyFill: ColorToken,
   measuredOverride?: BodyLabelInk,
 ): BodyLabelInk {
-  return measuredOverride ?? (bodyFill === 'weiss' ? 'schwarz' : 'weiss');
+  return measuredOverride ?? (bodyFill === 'weiss' || bodyFill === 'gelb' ? 'schwarz' : 'weiss');
 }
 
 /** Tinte eines gemessenen Funktionslaufs; nur `body-contrast` wird aus der Flaeche abgeleitet. */
@@ -450,6 +466,8 @@ function labelPrimitives(
   bottomCenterBaselineFromBodyBottomMm: number | undefined,
   bottomCenterInk: 'body' | 'black' | undefined,
   ink: ColorToken,
+  circleCorners: CircleCornerRuns | undefined,
+  topLeftInk: ColorToken,
 ): Primitive[] {
   const centerXMm = centerAnchorFromBodyLeftMm === undefined
     ? (bodyBoundsMm.minX + bodyBoundsMm.maxX) / 2
@@ -533,9 +551,11 @@ function labelPrimitives(
       );
     }
     const topLeftMetrics = labels.topLeftMetrics;
-    const anchorRawMm = bodyBoundsMm.minX +
+    // Am Kreis ohne Außenlage steht der Lauf innen auf der Sehne (`circleCornerRuns`).
+    const corner = circleCorners?.topLeft;
+    const anchorRawMm = corner?.anchorXMm ?? bodyBoundsMm.minX +
       (topLeftMetrics?.anchorFromBodyLeftMm ?? TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM);
-    const baselineRawMm = bodyBoundsMm.minY +
+    const baselineRawMm = corner?.baselineYMm ?? bodyBoundsMm.minY +
       (topLeftMetrics?.baselineFromBodyTopMm ?? topLeftBaselineFromBodyTopMm);
     // Die privat kind-/variantengebundenen F.3-Werte sind auf sechs Dezimalstellen vermessen.
     // Ihre negative
@@ -563,9 +583,9 @@ function labelPrimitives(
         // bleibt derselbe wie in F-a; die Box endet deshalb erst an der rechten Innenmarge des
         // Körpers. Eine Begrenzung auf das obere linke Viertel wäre seit F-b eine falsche
         // Clipping-Zusage, obwohl die Zone weiterhin durch ihren linken Anker benannt ist.
-        rightMm - anchorXMm,
+        corner?.boxWidthMm ?? rightMm - anchorXMm,
         viewBoxWidthMm,
-        ink,
+        topLeftInk,
       ),
     );
   }
@@ -602,15 +622,16 @@ function labelPrimitives(
     }
   }
   if (labels.bottomLeft !== undefined) {
+    const corner = circleCorners?.bottomLeft;
     primitives.push(
       labelPrimitive(
         labels.bottomLeft,
         BOTTOM_LABEL_SIZE_MM,
-        bottomBaselineMm,
+        corner?.baselineYMm ?? bottomBaselineMm,
         'start',
-        leftMm,
-        leftMm,
-        centerXMm - leftMm,
+        corner?.anchorXMm ?? leftMm,
+        corner?.boxXMm ?? leftMm,
+        corner?.boxWidthMm ?? centerXMm - leftMm,
         viewBoxWidthMm,
         ink,
       ),
@@ -641,17 +662,18 @@ function labelPrimitives(
   }
   if (labels.bottomRight !== undefined) {
     const metrics = labels.bottomRightMetrics;
+    const corner = circleCorners?.bottomRight;
     const sizeMm = metrics === undefined
       ? BOTTOM_LABEL_SIZE_MM
       : metrics.capHeightMm / ARIMO_CAP_HEIGHT_FRACTION;
     const baselineYMm = metrics === undefined
-      ? bottomBaselineMm
+      ? corner?.baselineYMm ?? bottomBaselineMm
       : bodyBoundsMm.minY + metrics.baselineFromBodyTopMm;
     const anchorXMm = metrics === undefined
-      ? rightMm
+      ? corner?.anchorXMm ?? rightMm
       : bodyBoundsMm.minX + metrics.anchorFromBodyLeftMm;
     const boxXMm = metrics === undefined
-      ? centerXMm
+      ? corner?.boxXMm ?? centerXMm
       : bodyBoundsMm.minX + metrics.boxLeftFromBodyLeftMm;
     primitives.push(
       labelPrimitive(
@@ -661,7 +683,7 @@ function labelPrimitives(
         metrics === undefined ? 'end' : 'middle',
         anchorXMm,
         boxXMm,
-        metrics?.boxWidthMm ?? (rightMm - centerXMm),
+        metrics?.boxWidthMm ?? corner?.boxWidthMm ?? (rightMm - centerXMm),
         viewBoxWidthMm,
         ink,
       ),
@@ -1154,6 +1176,7 @@ function composeMeasuredOrDerived(
   }
   assertDerivedVariantComposable(spec);
   const profile = profileFor(spec.kind, spec.bodyVariant);
+  noteCircleVariantBody(spec.kind, spec.bodyVariant);
   const headShape = spec.strength !== undefined ? catalog.strengthHead(spec.strength) : null;
   // Technische Kopfmarke und Verband zeichnen beide relative Kopfprimitive; `head-zone-conflict`
   // schließt aus, dass beide zugleich gesetzt sind.
@@ -1481,19 +1504,38 @@ function composeMeasuredOrDerived(
       }, bodyBoundsMm)),
   );
 
-  const labelChildren = effectiveLabels !== undefined
+  // Kreiskörper (`derive/circle.ts`): ein topLeft-Lauf ohne Metriksatz übernimmt den F.3-Satz,
+  // Ecken stehen auf der Kreissehne, der mittige Lauf ohne vermessenen Override mit der
+  // Versalmitte auf der Kreismitte.
+  const isCircleBody = profile.id === 'circle-body';
+  const circleTopLeftDefaults = isCircleBody && effectiveLabels?.topLeft !== undefined &&
+      effectiveLabels.topLeftMetrics === undefined
+    ? circleTopLeftMetrics(spec.kind, spec.bodyVariant)
+    : undefined;
+  const placedLabels = effectiveLabels !== undefined && circleTopLeftDefaults !== undefined
+    ? { ...effectiveLabels, topLeftMetrics: circleTopLeftDefaults }
+    : effectiveLabels;
+  const centerBaselineOverrideMm = profile.allowsCenterBaselineOverride === true
+    ? effectiveLabels?.centerBaselineFromBodyBottomMm
+    : undefined;
+  const labelChildren = placedLabels !== undefined
     ? labelPrimitives(
-        effectiveLabels,
+        placedLabels,
         bodyBoundsMm,
         DEFAULT_VIEWBOX_MM.width,
         organizationFill ?? null,
         profile.bottomLabelBaselineFromBodyBottomMm,
         profile.belowRight,
-        profile.allowsCenterBaselineOverride === true
-          ? effectiveLabels.centerBaselineFromBodyBottomMm ?? profile.centerBaselineFromBodyBottomMm
-          : profile.centerBaselineFromBodyBottomMm,
+        centerBaselineOverrideMm ?? (
+          isCircleBody && placedLabels.center !== undefined
+            ? circleCenterBaselineFromBodyBottomMm(
+                bodyBoundsMm,
+                placedLabels.centerCapHeightMm ?? CENTER_LABEL_CAP_HEIGHT_MM,
+              )
+            : profile.centerBaselineFromBodyBottomMm
+        ),
         profile.allowsCenterAnchorOverride === true
-          ? effectiveLabels.centerAnchorFromBodyLeftMm
+          ? placedLabels.centerAnchorFromBodyLeftMm
           : undefined,
         profile.topLeftBaselineFromBodyTopMm,
         normalizesMeasuredCircleTopLeftCoordinates(spec.kind, spec.bodyVariant),
@@ -1503,7 +1545,14 @@ function composeMeasuredOrDerived(
         profile.topLeftLines,
         profile.bottomCenterBaselineFromBodyBottomMm,
         profile.bottomCenterInk,
-        bodyLabelInk(bodyFill, effectiveLabels.inBodyInk),
+        bodyLabelInk(bodyFill, placedLabels.inBodyInk),
+        isCircleBody
+          ? circleCornerRuns(spec.kind, spec.bodyVariant, bodyBoundsMm, placedLabels)
+          : undefined,
+        // Ein ausdrücklicher Override gilt wie bisher auch für den überstehenden Kreislauf.
+        placedLabels.inBodyInk ??
+          (isCircleBody ? circleTopLeftInk(spec.kind, spec.bodyVariant) : undefined) ??
+          bodyLabelInk(bodyFill),
       )
     : [];
 

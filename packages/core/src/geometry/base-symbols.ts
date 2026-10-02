@@ -14,6 +14,7 @@ import { deriveBodyVariant, type DerivedVariant } from '../derive/body-variants.
 import { derivedInnerField, type InnerFieldGap } from '../derive/inner-field.js';
 import { segmentDistance } from '../derive/outline.js';
 import { noteDerivation } from '../derive/record.js';
+import { POST_VARIANT_BODIES, POST_VARIANT_EXTRAS } from '../derive/circle.js';
 
 /** Umriss ohne Füllung. Organisationsfarben setzt der Kompositionsmotor. */
 const OUTLINE: Style = {
@@ -664,6 +665,7 @@ const VARIANT_EXTRA_PRIMITIVES: Partial<
       },
     ],
   },
+  post: POST_VARIANT_EXTRAS, // abgeleitet (2. Oktober 2026), `derive/circle.ts`
 };
 
 /**
@@ -781,6 +783,12 @@ const VARIANT_BODIES: Partial<Record<SymbolKind, Partial<Record<BodyVariantId, P
       r: 12,
       style: OUTLINE,
     },
+  },
+  // Abgeleitet (2. Oktober 2026): Geometrie und Begründung in `derive/circle.ts`.
+  post: {
+    'raised-gable': POST_VARIANT_BODIES['raised-gable']!,
+    'raised-circle-1mm': POST_VARIANT_BODIES['raised-circle-1mm']!,
+    'foot-band': POST_VARIANT_BODIES['foot-band']!,
   },
 };
 

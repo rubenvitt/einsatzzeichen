@@ -445,21 +445,6 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     babz('E.2'),
   ),
   entry(
-    'circle-12-requires-hilfsorganisation',
-    'engine',
-    'organization',
-    'Belegt ist entweder die weiße HiOrg-Fassung aus F.3 oder genau eine der farbigen technischen Art-, Varianten- und Markenfassungen; fehlende oder vertauschte Werte sind nicht belegt.',
-    'core',
-    babz('F.3'),
-  ),
-  entry(
-    'circle-12-requires-organization',
-    'systematik',
-    'organization',
-    'Der gebänderte 12-mm-Kreis verlangt die Organisationsfarbe seiner Körperfläche.',
-    'core',
-  ),
-  entry(
     'circle-top-left-anchor-within-viewbox',
     'engine',
     'label',
@@ -473,21 +458,6 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'label',
     'Die relative Kreislabel-Grundlinie darf außerhalb der Kreisfläche liegen, die daraus berechnete Textbox muss aber vollständig in der 32-mm-ViewBox bleiben.',
     'core',
-  ),
-  entry(
-    'circle-top-left-requires-metrics',
-    'engine',
-    'label',
-    'Die beiden Kreisfassungen haben keinen allgemeinen Profildefault, aus dem sich die Lage des Laufs ergäbe.',
-    'core',
-  ),
-  entry(
-    'colored-circle-top-left-not-measured',
-    'engine',
-    'label',
-    'Die exakt vermessenen farbigen Kreisverträge führen weder einen topLeft-Lauf noch die zugehörigen F.3-Metriken; die weißen Kreislabelverträge werden nicht vererbt.',
-    'core',
-    babz('F.3'),
   ),
   entry(
     'designation-not-blank',
@@ -579,14 +549,6 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'body-variant',
     'Die Variante zeichnet bereits zwei vermessene Radringe; eine Fahrzeugkategorie würde eine zweite, nicht belegte Fahrwerksgeometrie darüberlegen.',
     'core',
-  ),
-  entry(
-    'reduced-house-requires-hilfsorganisation',
-    'engine',
-    'organization',
-    'Die reduzierte Hauskontur ist in beiden F.3-Belegen ausschließlich als weiße HiOrg-Körperfläche vermessen.',
-    'core',
-    babz('F.3'),
   ),
   entry(
     'state-carrier-not-allowed',
@@ -957,6 +919,12 @@ export const RULE_DIMENSION_GAPS: readonly RuleDimensionGap[] = Object.freeze([
     coverage: 'partial',
     chapter: 'Kapitel 1, 3.6–3.9, 5.1',
     note: 'Gegenstand keiner Regel, Bedingung in vielen: die Grundzeichenart tritt nur als Voraussetzung anderer Regeln auf. Welche Arten es überhaupt gibt, regelt die Typebene, nicht der Katalog. Die Sonderformen 3.6 bis 3.9 sind keine Arten: sie stehen als Einzeldarstellung ihrer Kapiteldatei neben dem Zonenmodell (`specialFormDrawing`, `SPECIAL_FORMS`, LFH-567/LFH-577), ohne Zonen und ohne Spec-Feld, weil kein Original sie an einem Körper zeigt.',
+  } satisfies RuleDimensionGap),
+  Object.freeze({
+    dimension: 'organization',
+    coverage: 'none',
+    chapter: 'Kapitel 2',
+    note: 'Seit dem 2. Oktober 2026 ohne eigene Regel: Jede Organisation, auch keine (weiß), füllt jeden geschlossenen Körper; die Messsperren am 12-mm-Kreis und an der reduzierten Hauskontur sind gefallen (`derive/circle.ts`). Die Lauftinte folgt `bodyLabelInk()`. Bindungen an die Organisation stehen nur noch mittelbar in anderen Dimensionen (technische Füllung, Funktionsfassung, eingesenkte Hülle).',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'administrative-level',
