@@ -7,7 +7,7 @@
  * Ein Textmuster, das darüber stolpert, schreibt still an der falschen Stelle — und eine falsch
  * eingetragene Fachfreigabe ist genau der Schaden, den dieses Werkzeug verhindern soll.
  */
-import * as ts from 'typescript';
+import * as ts from '@typescript/typescript6';
 
 /**
  * `parseDiagnostics` ist nicht Teil der öffentlichen API von `ts.SourceFile`, aber die einzige

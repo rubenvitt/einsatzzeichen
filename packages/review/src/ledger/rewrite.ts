@@ -9,7 +9,7 @@
  * offen ist. Ein textueller Bereichsersatz erhält Kommentare, Reihenfolge und Einrückung; jede
  * Freigabe wird dadurch zu einem einzeiligen, lesbaren Git-Diff.
  */
-import * as ts from 'typescript';
+import * as ts from '@typescript/typescript6';
 import type { ReviewValue, ReviewerRecord } from '../contract.js';
 import {
   findConstantObjectLiteral,

@@ -1,5 +1,5 @@
 import { posix } from 'node:path';
-import * as ts from 'typescript';
+import * as ts from '@typescript/typescript6';
 
 /**
  * Die vier Ausgabekanäle (LFH-405). Sie hängen nur an `core` und `schema`, weder an `conformance`

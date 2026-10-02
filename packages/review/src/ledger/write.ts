@@ -19,7 +19,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
-import * as ts from 'typescript';
+import * as ts from '@typescript/typescript6';
 import type { ReviewStatus } from '@einsatzzeichen/schema';
 import type { CarrierKind, CarrierRef, ReviewValue, ReviewerRecord } from '../contract.js';
 import { findConstantObjectLiteral, findDirectProperty, parseLedgerSource } from './ast.js';

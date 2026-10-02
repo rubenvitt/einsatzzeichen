@@ -40,6 +40,6 @@
     "@einsatzzeichen/core": "workspace:*",
     "@einsatzzeichen/schema": "workspace:*",
     "@resvg/resvg-js": "2.6.2",
-    "typescript": "^6.0.3"
+    "@typescript/typescript6": "^6.0.2"
   }
 }
