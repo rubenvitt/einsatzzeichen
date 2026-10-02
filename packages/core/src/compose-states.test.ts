@@ -11,7 +11,6 @@ import { describe, expect, test } from 'vitest';
 import { boundsOfMm } from './bounds.js';
 import { drawSymbol } from './default-ports.js';
 import { placeStates } from './layout/state-placement.js';
-import { NotMeasuredError } from './not-measured.js';
 import { checkViewBox } from './viewbox-gate.js';
 import { checkSpec, vocabulary } from './vocabulary.js';
 

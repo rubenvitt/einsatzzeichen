@@ -93,8 +93,9 @@ for (const kind of kinds) for (const bodyVariant of variants) for (const [axis, 
         problems.push(`außerhalb ViewBox ${vw}×${vh}: ${p.role ?? p.type} ${[b.minX, b.minY, b.maxX, b.maxY].map((n: number) => n.toFixed(2)).join('/')}`);
       }
       // Vermessene Fassungen dürfen über den Körper reichen, wenn die Referenz es so zeigt (etwa das
-      // Radpaar unter dem eingesenkten Rumpf, I.3.4); geprüft wird nur Abgeleitetes.
-      if (p.role === 'pictogram' && bb && d.derivations?.length && (axis.startsWith('capabilities') || axis.startsWith('bodyMarks')) && (b.minX < bb.minX - TOL || b.minY < bb.minY - TOL || b.maxX > bb.maxX + TOL || b.maxY > bb.maxY + TOL)) {
+      // Radpaar unter dem eingesenkten Rumpf, I.3.4); geprüft wird nur, wo Marke oder Piktogramm
+      // selbst abgeleitet ist.
+      if (p.role === 'pictogram' && bb && d.derivations?.some((n: any) => n.dimension === 'bodyMarks' || n.dimension === 'capabilities') && (axis.startsWith('capabilities') || axis.startsWith('bodyMarks')) && (b.minX < bb.minX - TOL || b.minY < bb.minY - TOL || b.maxX > bb.maxX + TOL || b.maxY > bb.maxY + TOL)) {
         problems.push(`Piktogramm über Körper: ${[b.minX, b.minY, b.maxX, b.maxY].map((n: number) => n.toFixed(2)).join('/')}`);
       }
     }
