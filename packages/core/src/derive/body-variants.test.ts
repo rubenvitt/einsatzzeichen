@@ -157,9 +157,14 @@ describe('Fußband', () => {
   });
 
   it('verliert das Band nicht still in der Zustandsfassung der Gefahr', () => {
-    expect(() => drawSymbol({ kind: 'hazard', bodyVariant: 'foot-band', states: ['suspected-situation'] }))
-      .toThrow(NotMeasuredError);
-    expect(() => drawSymbol({ kind: 'hazard', states: ['suspected-situation'] })).not.toThrow();
+    // Seit der Zustandsableitung (derive/states.ts) wird das ganze Zeichen komponiert und als
+    // Ganzes in die Zustandsfassung abgebildet: das Band wandert mit, statt zu fehlen.
+    const plain = drawSymbol({ kind: 'hazard', bodyVariant: 'foot-band' });
+    const withState = drawSymbol({ kind: 'hazard', bodyVariant: 'foot-band', states: ['suspected-situation'] });
+    const bandOf = (drawing: typeof plain) => drawing.children.filter((child) => child.role !== 'body');
+    expect(bandOf(plain)).toHaveLength(1);
+    expect(bandOf(withState).length).toBeGreaterThan(bandOf(plain).length);
+    expect(withState.derivations?.some((note) => note.dimension === 'bodyVariant')).toBe(true);
   });
 });
 
