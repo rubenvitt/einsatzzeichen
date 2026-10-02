@@ -335,7 +335,8 @@ function labelPrimitive(
 }
 
 /**
- * Schriftfarbe der Läufe **im** Körper: `schwarz` auf weisser Körperfläche, sonst `weiss`.
+ * Schriftfarbe der Läufe **im** Körper: `schwarz` auf weisser und auf gelber Körperfläche,
+ * sonst `weiss`.
  *
  * **Bis Anhang F stand hier fest `weiss`**, mit der Begründung, alle 37 Zeichen aus E.1 setzten
  * ihre Kürzel weiss auf die gefüllte Fläche. Das stimmt für E und ist für F falsch: alle 66
@@ -358,6 +359,13 @@ function labelPrimitive(
  * sie nur dort, wo eine Quelle eine andere Tinte vermisst (schwarz, weiss oder, seit LFH-786,
  * `koerperlauf-kontrast`). Specs ohne diese Messung behalten Rückgabewert und gerenderte Bytes.
  *
+ * **Gelb ist die zweite Fläche mit schwarzer Schrift (02.10.2026).** Alle 20 Referenzdateien mit
+ * gelber Fläche `#fafa00` und Typo-Ebene setzen ihre Typo ohne `fill`, also schwarz: 2.4 Führung
+ * und Leitung, D.1.1–D.1.7, D.2.2–D.2.5, D.3.1–D.3.6, D.4.1 und D.4.3; keine einzige setzt weiß.
+ * „Weiß auf jeder Organisationsfarbe" ist für Gelb damit an der Quelle widerlegt. Das ist eine
+ * vermessene Korrektur und keine Ableitung: Bis dahin trug kein Rezept einen Körperlauf auf Gelb,
+ * keine bestehende Zeichnung ändert sich.
+ *
  * **Exportiert, weil der Kontrastvertrag denselben Resolver braucht.** Der Katalog leitet in
  * `labelContrastRequirements()` ab, welches Paar aus einer Beschriftung im Körper überhaupt
  * entsteht; träfe er die Farbwahl dort ein zweites Mal, könnten Zeichnung und Vertrag
@@ -368,7 +376,7 @@ export function bodyLabelInk(
   bodyFill: ColorToken,
   measuredOverride?: BodyLabelInk,
 ): BodyLabelInk {
-  return measuredOverride ?? (bodyFill === 'weiss' ? 'schwarz' : 'weiss');
+  return measuredOverride ?? (bodyFill === 'weiss' || bodyFill === 'gelb' ? 'schwarz' : 'weiss');
 }
 
 /** Tinte eines gemessenen Funktionslaufs; nur `body-contrast` wird aus der Flaeche abgeleitet. */
