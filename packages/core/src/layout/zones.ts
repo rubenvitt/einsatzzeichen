@@ -457,7 +457,8 @@ const STATE_MARGIN_GAP = notMeasured(
   'core/src/layout/state-frames.ts:129–172',
   'Kein Original zeigt einen Zustand aus 5.8 in der Randlage dieser Körperform. Belegt sind die ' +
     'Hinweise 5.8.1.13 und 5.8.1.14 links neben der Person (5.8.1_Beispiel 1–3) und neben der ' +
-    'Gefahr (5.8.1.13_2, 5.8.1.14_2, M.6); `placeStates()` wirft hier `NotMeasuredError`.',
+    'Gefahr (5.8.1.13_2, 5.8.1.14_2, M.6); seit dem 02.10.2026 überträgt `derive/states.ts` diese ' +
+    'Lage hierher und kennzeichnet sie als abgeleitet.',
 );
 
 const TENDENCY_MARGIN_GAP = notMeasured(
@@ -466,8 +467,8 @@ const TENDENCY_MARGIN_GAP = notMeasured(
   'Keine der 661 Referenzdateien zeigt eine Tendenz aus 5.8.3 an einem Träger (Durchsicht vom ' +
     '29. September 2026); die Pfeile in M.9 und M.10 sind offene Winkelpfeile ohne Rahmen und ' +
     'keine Tendenz. Die Tendenz ist ein eigenes Spec-Feld mit eigener Randlage (Entscheidung des ' +
-    'Eigentümers vom 29. September 2026); wo diese Randlage liegt, ist eine offene Frage an ihn ' +
-    '(docs/decisions/2026-09-28-lfh-565-kapitel-5-8-bausteine.md, Nachtrag).',
+    'Eigentümers vom 29. September 2026); seit dem 02.10.2026 steht sie abgeleitet rechts neben ' +
+    'dem Träger, gespiegelt zur Hinweis-Randlage (`derive/states.ts`).',
 );
 
 const HINT_LAYOUT_SOURCE = 'core/src/layout/state-frames.ts:129–172';

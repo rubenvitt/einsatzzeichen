@@ -219,8 +219,8 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
   evidence('state-carrier-not-allowed', { kind: 'formation', states: ['person-injured'] }, `Personenzustand an der Formation (${VT}).`),
   evidence(
     'state-group-limit-exceeded',
-    { kind: 'person', states: ['suspected-situation', 'acute-situation'] },
-    `Zwei Hinweise an einer Person (${VT}).`,
+    { kind: 'formation', states: ['damaged', 'destroyed'] },
+    `Zwei Schadensstufen an einer Formation (${VT}).`,
   ),
   evidence('state-tactics-not-allowed', { kind: 'person', states: ['tactical-attack'] }, `Einsatztaktik an der Person (${VT}).`),
   evidence('state-value-not-attachable', { kind: 'person', states: ['weather-sunny'] }, `Wetter in der Zustandsliste (${VT}).`),

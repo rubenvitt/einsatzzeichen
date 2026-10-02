@@ -16,9 +16,9 @@ import type { RuleDimension, RuleKind } from './rule-catalog.js';
  * `state-value-not-attachable`). Übrig bleibt `tendency-carrier-not-allowed`: kein Original zeigt
  * eine Tendenz an einem Träger, und der Eigentümer hat keinen entschieden (`stateCarriersOf` gibt
  * für alle drei Tendenzen `undefined`). Eine Trägerregel hätte also nichts, wogegen sie prüft;
- * jede Tendenz meldet die Komposition stattdessen als nicht vermessen (`placeStates`, Empfehlung
- * der Vorlage `docs/decisions/2026-09-28-lfh-565-kapitel-5-8-bausteine.md` §9 Frage 1). Die Regel
- * tritt in Kraft, sobald ein Träger belegt oder entschieden ist.
+ * seit der Entscheidung vom 02.10.2026 leitet die Komposition jede Tendenz an jedem Träger ab
+ * (`derive/states.ts`, Randlage rechts). Eine Trägerregel tritt nur in Kraft, wenn der Eigentümer
+ * einen Träger ausschließt.
  *
  * `tendency-limit-exceeded` ist gestrichen, nicht vorgemerkt (`RETIRED_STATE_RULES`): `tendency`
  * ist ein Einzelfeld, `parseSpec` lehnt eine Liste mit Pfad ab, und eine zweite Tendenz lässt sich

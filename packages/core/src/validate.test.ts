@@ -1445,22 +1445,28 @@ describe('validateSpec', () => {
       }
     });
 
-    it('bindet Personenzustand und Hinweis an ihre Träger (stateCarriersOf)', () => {
+    it('bindet nur den Personenzustand an die Person (stateCarriersOf)', () => {
       expect(rules({ kind: 'formation', states: ['person-injured'] })).toEqual(['state-carrier-not-allowed']);
-      expect(rules({ kind: 'formation', states: ['suspected-situation'] })).toEqual(['state-carrier-not-allowed']);
       expect(rules({ kind: 'hazard', states: ['person-dead'] })).toEqual(['state-carrier-not-allowed']);
     });
 
-    it('lässt Werte ohne belegten oder entschiedenen Träger durch: die Lage meldet compose()', () => {
-      // stateCarriersOf gibt für 5.8.2, 5.8.4, 5.8.5 und 5.8.9 undefined; placeStates wirft dann
-      // NotMeasuredError statt einer Regel, die etwas verböte, was niemand entschieden hat.
+    it('lässt Hinweise und Gefahrenhinweise an jedem Grundzeichen zu (seit 02.10.2026)', () => {
+      expect(validateSpec({ kind: 'formation', states: ['suspected-situation'] })).toEqual([]);
+      expect(validateSpec({ kind: 'vehicle-land', states: ['acute-situation'] })).toEqual([]);
+      expect(validateSpec({ kind: 'building', states: ['explosion-hazard'] })).toEqual([]);
+    });
+
+    it('lässt die übrigen Werte an jedem Grundzeichen zu: die Lage leitet compose() ab', () => {
       expect(validateSpec({ kind: 'formation', states: ['damaged'] })).toEqual([]);
       expect(validateSpec({ kind: 'building', states: ['route-closed'] })).toEqual([]);
     });
 
-    it('lässt höchstens einen Hinweis, einen Personenzustand und einen Wert je Skala zu', () => {
+    it('lässt „?" und „!" zugleich zu: der Hinweisteil ist keine Skala', () => {
+      expect(validateSpec({ kind: 'person', states: ['suspected-situation', 'acute-situation'] })).toEqual([]);
+    });
+
+    it('lässt höchstens einen Personenzustand und einen Wert je Skala zu', () => {
       for (const states of [
-        ['suspected-situation', 'acute-situation'],
         ['person-injured', 'person-dead'],
         ['damaged', 'destroyed'],
         ['incipient-fire', 'developed-fire'],
@@ -1469,15 +1475,15 @@ describe('validateSpec', () => {
           'activity-strongly-increased-total-outage',
         ],
       ] as const) {
-        const kind = states[0].startsWith('person') || states[0].endsWith('situation') ? 'person' : 'formation';
+        const kind = states[0].startsWith('person') ? 'person' : 'formation';
         expect(rules({ kind, states }), states.join(' + ')).toEqual(['state-group-limit-exceeded']);
       }
     });
 
     it('meldet jede überfüllte Gruppe einzeln', () => {
       expect(rules({
-        kind: 'person',
-        states: ['person-injured', 'person-dead', 'suspected-situation', 'acute-situation'],
+        kind: 'formation',
+        states: ['damaged', 'destroyed', 'incipient-fire', 'developed-fire', 'suspected-situation', 'acute-situation'],
       })).toEqual(['state-group-limit-exceeded', 'state-group-limit-exceeded']);
     });
 

@@ -8,6 +8,7 @@ import {
   probeFields,
   unmeasuredField,
 } from './builder-vocabulary.js';
+import type { AllowedValue } from './builder-state.js';
 import { builderVocabulary } from './snapshot-vocabulary.js';
 import type { BuilderVocabulary } from './snapshot.js';
 
@@ -139,13 +140,27 @@ describe('unmeasuredField', () => {
   const vocabulary = builderVocabulary();
 
   /**
-   * Die Tendenz: kein Original zeigt sie an einem Träger, `core` meldet alle drei Werte als nicht
-   * vermessen mit `scope: 'value'`. Dann gibt es im Feld keinen anderen Wert, zu dem sich raten
-   * ließe — genau das soll die Insel erkennen, ohne die Tendenz beim Namen zu kennen.
+   * Meldet `core` jeden Wert eines Feldes als nicht vermessen mit `scope: 'value'`, gibt es im
+   * Feld keinen anderen Wert, zu dem sich raten ließe — genau das soll die Insel erkennen, ohne
+   * das Feld beim Namen zu kennen. Bis zum 02.10.2026 war die Tendenz dieses Feld; seitdem wird
+   * sie abgeleitet gezeichnet, und die Probe steht hier von Hand, damit sie nicht an einer Lücke
+   * hängt, die der Motor gerade schließt.
    */
   it('erkennt ein Feld, in dem sich kein einziger Wert zeichnen lässt', () => {
+    const gap = (value: string): [string, AllowedValue] => [
+      value,
+      { value, ok: false, issues: [], blocked: { because: 'not-measured', detail: 'Lücke', scope: 'value' } },
+    ];
+    const probe = new Map([gap('a'), gap('b'), gap('c')]);
+    expect(unmeasuredField(probe)).toBe(true);
+    // Eine Lücke mit `scope: 'combination'` trägt eine andere Grundform — dann gibt es etwas zu raten.
+    probe.set('d', { value: 'd', ok: false, issues: [], blocked: { because: 'not-measured', detail: 'Lücke', scope: 'combination' } });
+    expect(unmeasuredField(probe)).toBe(false);
+  });
+
+  it('meldet die Tendenz nicht mehr: sie ist seit dem 02.10.2026 an jedem Träger gezeichnet', () => {
     const probes = probeFields(vocabulary, { kind: 'person' }, ['tendency']);
-    expect(unmeasuredField(probes.get('tendency'))).toBe(true);
+    expect(unmeasuredField(probes.get('tendency'))).toBe(false);
   });
 
   it('meldet ein Feld mit wenigstens einem zeichenbaren Wert nicht', () => {

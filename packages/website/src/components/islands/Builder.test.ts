@@ -402,22 +402,17 @@ describe('Der Baukasten mit Verband, Zustand und Tendenz (LFH-577)', () => {
     expect(dead.getAttribute('title')?.length).toBeGreaterThan(0);
   });
 
-  it('zeigt die Tendenz als noch nicht vermessen, ohne zu einem anderen Wert zu raten', async () => {
+  it('bietet jede Tendenz an und zeichnet sie abgeleitet neben dem Träger (seit 02.10.2026)', async () => {
     const container = await mountBuilder();
     expect(container.querySelector('label[for="ez-builder-tendency"]')?.textContent).toBe(
       'Tendenz',
     );
     for (const value of ['tendency-rising', 'tendency-unchanged', 'tendency-falling']) {
       const option = optionOf(container, 'tendency', value);
-      expect(option.disabled, value).toBe(true);
-      expect(option.getAttribute('title'), value).toMatch(/noch nicht vermessen/);
-      // Kein Wert des Feldes lässt sich zeichnen — „wähle einen anderen Wert" wäre falsch.
-      expect(option.getAttribute('title'), value).not.toMatch(/anderen Wert/);
+      expect(option.disabled, value).toBe(false);
     }
-    const select = container.querySelector('#ez-builder-tendency');
-    const notes = (select?.getAttribute('aria-describedby') ?? '')
-      .split(' ')
-      .map((id) => container.querySelector(`#${id}`)?.textContent ?? '');
-    expect(notes.join(' ')).toMatch(/Noch nicht vermessen/);
+    choose(container, 'tendency', 'tendency-rising');
+    await settle();
+    expectDrawn(container);
   });
 });
