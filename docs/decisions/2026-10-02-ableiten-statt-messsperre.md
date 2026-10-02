@@ -77,7 +77,23 @@ Piktogramme in der Körperhülle, der Kopf frei von allem anderen.
 | Stand | gezeichnet | davon abgeleitet | Geometrieverstöße |
 |---|---:|---:|---:|
 | vorher (3.0.0) | 684 von 74 613 | 0 | 0 |
-| nachher | 20 345 von 74 822 | 19 515 | 0 |
+| nachher | 20 331 von 74 822 | 19 507 | 0 |
+
+Ein zweiter Zensus über Feldpaare (`scripts/census/pair-census.mts`) kombiniert Grundform,
+Kopfangabe und Beschriftung mit Organisation, Fähigkeit, Körpermarke, Zustand oder Tendenz.
+Von 118 144 Specs zeichnet er 65 118, ohne Verstoß. Er fand die Fehler, die erst im
+Zusammenspiel entstehen:
+
+- ein Körper, den Kopf und Giebel verkleinern, unter Läufen in Normgröße;
+- Eckkürzel unter einem langen mittigen Lauf;
+- der EU-Kopf über der Zustandsfassung;
+- Sterne im Giebel.
+
+Deshalb prüft der Motor jede abgeleitete Zeichnung zum Schluss
+(`derive/layout-guard.ts`): Läufe überlappen sich nicht, liegen nicht im Kopf und kreuzen keine
+Zusatzgeometrie, ein Lauf im Körper bleibt im Körper, nichts verlässt die Fläche. Was das nicht
+erfüllt, endet als benannte Lücke (`NotMeasuredError`) statt als Fehlzeichnung. Vermessene
+Zeichnungen prüft er nicht.
 
 Die Zahl der Kennungen in `validate.ts` sinkt von 79 auf 50. Vermessene Zeichen bleiben
 bytegleich: Alle Snapshots, Fingerabdrücke und 280 Rezepte zeichnen ohne Ableitungsnotiz,

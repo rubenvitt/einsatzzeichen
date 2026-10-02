@@ -45,6 +45,7 @@ import { measuredStatePlacement, type StatePlacement } from './layout/state-plac
 import { carriesStates, composeDerivedStates, withoutStates } from './derive/states.js';
 import { NotMeasuredError } from './not-measured.js';
 import { collectDerivations } from './derive/record.js';
+import { assertDerivedLayoutFits } from './derive/layout-guard.js';
 import { assertDerivedVariantComposable } from './derive/body-variants.js';
 import {
   fitFunctionRoleBodyMarks,
@@ -1131,7 +1132,10 @@ export function compose(
   catalog: CatalogPorts,
   options: ComposeOptions = {},
 ): Drawing {
-  return collectDerivations(() => composeMeasuredOrDerived(sourceSpec, catalog, options));
+  return assertDerivedLayoutFits(
+    collectDerivations(() => composeMeasuredOrDerived(sourceSpec, catalog, options)),
+    catalog.textMetrics,
+  );
 }
 
 function composeMeasuredOrDerived(
