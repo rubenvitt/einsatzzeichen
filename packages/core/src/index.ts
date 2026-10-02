@@ -9,6 +9,8 @@ export * from './layout/profiles.js';
 export * from './not-measured.js';
 export { bodyBoundsMeasured, bodyBoundsMm } from './derive/body-bounds.js';
 export { noteDerivation } from './derive/record.js';
+// Standardports der Kopfzone: vermessener Kopf, sonst der abgeleitete (seit 2. Oktober 2026).
+export { administrativeHeadOrDerived, unitGroupingHeadOrDerived } from './derive/head-zone.js';
 export {
   CompositionError,
   validateSpec,

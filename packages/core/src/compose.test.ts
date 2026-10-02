@@ -436,14 +436,11 @@ describe('compose() — Verband (LFH-577)', () => {
       .toThrow(expect.objectContaining({ name: 'NotMeasuredError', scope: 'value' }));
   });
 
-  it('meldet jeden anderen Körper als nicht vermessene Kombination', () => {
-    for (const spec of [
-      { kind: 'person', unitGrouping: 'verband-i' },
-      { kind: 'building', unitGrouping: 'verband-i' },
-    ] satisfies SymbolSpec[]) {
-      expect(() => compose(spec, unitCatalog), spec.kind)
-        .toThrow(expect.objectContaining({ name: 'NotMeasuredError', scope: 'combination' }));
-    }
+  it('zeichnet den Verband seit dem 2. Oktober 2026 auch an anderen Körpern', () => {
+    // Abgeleitet über die allgemeine Kopfzone; die Person (I.5.7, Balken auf y 0…4) und die
+    // Ableitungsnotizen prüft `derive/head-zone.test.ts` mit der Standardbelegung.
+    const building = compose({ kind: 'building', unitGrouping: 'verband-i' }, unitCatalog);
+    expect(building.children[0]).toMatchObject({ role: 'head', transform: { translate: { dyMm: 1 } } });
   });
 
   it('wirft ohne Port statt den Verband still wegzulassen', () => {

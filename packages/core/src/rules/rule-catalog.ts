@@ -280,14 +280,6 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'website',
   ),
   entry(
-    'administrative-level-not-measured',
-    'engine',
-    'administrative-level',
-    'Die Abdeckung der Verwaltungsstufen ist bewusst partiell: nur die drei in D.3/D.4 vermessenen Köpfe sind belegt, Gemeinde, Bezirk und Bundesland bleiben fail-closed.',
-    'core',
-    babz('D.3/D.4'),
-  ),
-  entry(
     'below-right-label-requires-measured-body',
     'engine',
     'label',
@@ -520,13 +512,6 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'core',
   ),
   entry(
-    'foot-band-head-requires-measured-strength',
-    'engine',
-    'strength',
-    'Am gebänderten Formationskörper sind nur Trupp, Gruppe und Zug vermessen; die Staffel verschöbe den Körper, und wie das Fußband mitwandert, ist nicht belegt.',
-    'core',
-  ),
-  entry(
     'function-role-body-mark-mismatch',
     'engine',
     'function-role',
@@ -740,14 +725,6 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'technical-head-mark',
     'Jeder Wert außerhalb der beiden vermessenen Marken hätte keine belegte Geometrie.',
     'website',
-  ),
-  entry(
-    'technical-head-mark-requires-normal-formation',
-    'engine',
-    'technical-head-mark',
-    'Belegt sind die normale Formation (F.1.1, F.1.13, F.1.21, E.1.31, I.1.4) und die Formation mit Fußband (F.1.3); jede andere Art oder Variante bleibt fail-closed.',
-    'core',
-    babz('F.1'),
   ),
   entry(
     'top-left-anchor-within-body',
@@ -1020,8 +997,8 @@ export interface RuleDimensionGap {
  * Die Lücken je Dimension — zählbar, nicht als Fließtext. Der Ergebnispunkt „Lücken je Dimension
  * benannt" aus LFH-563.
  *
- * Eine Dimension darf **zugleich** Einträge und einen Lückeneintrag haben: `administrative-level`
- * trägt eine Regel und ist trotzdem nur zu drei von sechs Stufen belegt. Verboten ist allein,
+ * Eine Dimension darf **zugleich** Einträge und einen Lückeneintrag haben: `state` trägt vier
+ * Regeln und ist trotzdem nur für wenige Zustände an einem Träger belegt. Verboten ist allein,
  * dass eine Dimension in **keiner** der beiden Listen vorkommt — das prüft der Test.
  */
 export const RULE_DIMENSION_GAPS: readonly RuleDimensionGap[] = Object.freeze([
@@ -1033,9 +1010,9 @@ export const RULE_DIMENSION_GAPS: readonly RuleDimensionGap[] = Object.freeze([
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'administrative-level',
-    coverage: 'partial',
+    coverage: 'none',
     chapter: '5.7',
-    note: 'Eine Regel, aber nur drei der sechs Stufen belegt (D.3/D.4). Gemeinde, Bezirk und Bundesland lehnt der Motor pauschal ab, statt eine Regel für sie zu führen.',
+    note: 'Keine eigene Regel mehr (seit 2. Oktober 2026): die Verwaltungsstufe teilt die Kopfzonenregel `head-zone-conflict` mit Stärke, Verband und technischer Kopfmarke und steht an jedem Grundzeichen mit Kopfzone. Vermessen sind die Köpfe Kreis, Nationalstaat und EU (D.3/D.4); Gemeinde, Bezirk und Bundesland zeichnet der Motor abgeleitet aus den Kapiteldateien 5.7.1, 5.7.3 und 5.7.4 (`derive/head-zone.ts`).',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'body-marks',
@@ -1053,7 +1030,7 @@ export const RULE_DIMENSION_GAPS: readonly RuleDimensionGap[] = Object.freeze([
     dimension: 'unit-grouping',
     coverage: 'none',
     chapter: '5.5',
-    note: 'Keine eigene Regel: seit LFH-577 trägt `SymbolSpec.unitGrouping` den Verband, und er teilt die Kopfzonenregel `head-zone-conflict` mit Stärke, Verwaltungsstufe und technischer Kopfmarke. Vermessen sind Verband I und II über der Taktischen Formation; Verband III und jeden anderen Körper lehnt die Komposition als nicht vermessen ab (`NotMeasuredError`), bis der Eigentümer entscheidet.',
+    note: 'Keine eigene Regel: seit LFH-577 trägt `SymbolSpec.unitGrouping` den Verband, und er teilt die Kopfzonenregel `head-zone-conflict` mit Stärke, Verwaltungsstufe und technischer Kopfmarke. Vermessen sind Verband I und II über der Taktischen Formation und Verband I an der Person (I.5.7); Verband III und jeder andere Körper mit Kopfzone werden seit dem 2. Oktober 2026 abgeleitet gezeichnet (`derive/head-zone.ts`).',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'state',

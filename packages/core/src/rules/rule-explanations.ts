@@ -150,16 +150,6 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       '32-mm-ViewBox. Sonst stünde Text außerhalb der Zeichenfläche und wäre im Bild ' +
       'abgeschnitten. Rücke Anker oder Grundlinie nach innen oder verkleinere die Versalhöhe.',
   },
-  'administrative-level-not-measured': {
-    field: 'administrativeLevel',
-    title: 'Verwaltungsstufe ohne vermessenen Kopf',
-    explanation:
-      'Eine Verwaltungsstufe wird nur akzeptiert, wenn ein gemessener Kopf aus D.3/D.4 aufgelöst ' +
-      'ist und die Spec dazu die exakt passende Funktionsfassung führt. Die Abdeckung ist ' +
-      'bewusst partiell: Gemeinde, Bezirk und Bundesland bleiben abgelehnt, statt einen Kopf zu ' +
-      'raten. Setze eine Funktionsrolle, deren vermessener Kopf diese Stufe trägt, oder entferne ' +
-      '`administrativeLevel`.',
-  },
   'below-right-label-requires-measured-body': {
     field: 'labels',
     title: 'Zone unterhalb rechts braucht ein vermessenes Profil',
@@ -450,14 +440,6 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'Lauf erzeugte ein Textprimitiv ohne Tinte, das jedes Gate besteht und im Bild fehlt. ' +
       'Setze einen Text oder lass `designation` ganz weg.',
   },
-  'foot-band-head-requires-measured-strength': {
-    field: 'strength',
-    title: 'Fußband nur mit vermessener Stärke',
-    explanation:
-      'Am gebänderten Formationskörper sind nur Trupp, Gruppe und Zug vermessen. Die Staffel ' +
-      'würde den Körper verschieben, und wie das Fußband dabei mitwandert, ist nicht belegt. ' +
-      'Wähle eine der drei vermessenen Stärken oder eine andere Körpervariante.',
-  },
   'function-role-body-mark-mismatch': {
     field: 'functionRole',
     title: 'Körpermarke nicht zur Funktionsfassung vermessen',
@@ -710,15 +692,6 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'Als technische Kopfmarken sind bisher nur `single-vertical-bar` und ' +
       '`double-vertical-bar` vermessen. Jeder andere Wert hätte keine belegte Geometrie. Setze ' +
       'einen dieser Werte oder entferne `technicalHeadMark`.',
-  },
-  'technical-head-mark-requires-normal-formation': {
-    field: 'technicalHeadMark',
-    title: 'Technische Kopfmarke nur an der Formation',
-    explanation:
-      'Die technische Kopfmarke ist nur an der Formation vermessen: an `kind: formation` ohne ' +
-      'Körpervariante und mit der Variante `foot-band` (belegt an F.1.3). An anderen Arten oder ' +
-      'Varianten ist ihre Lage nicht belegt. Entferne `bodyVariant` beziehungsweise ' +
-      '`technicalHeadMark`.',
   },
   'top-left-anchor-within-body': {
     field: 'labels',

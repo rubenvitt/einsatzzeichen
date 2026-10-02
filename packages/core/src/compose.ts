@@ -33,7 +33,14 @@ import { boundsOfMm, type BoundsMm } from './bounds.js';
 // dieser Datei — die Kopfzone rechnet damit in `placeHead()`, also in `profiles.ts`. Der
 // Kopfzonenabstand wurde hier also ausschließlich für die Fußzone importiert. Siehe
 // `docs/decisions/2026-09-20-zonenmodell-als-daten.md` §2 Punkt 2.
-import { FOOT_GAP_MM, hasVariantProfile, placeHead, profileFor } from './layout/profiles.js';
+import { FOOT_GAP_MM, hasVariantProfile, profileFor } from './layout/profiles.js';
+import {
+  assertHeadClearOfRuns,
+  noteHeadPlacement,
+  placeBaseUnderHead,
+  placeHeadZone,
+  requireAdministrativeHead,
+} from './derive/head-zone.js';
 import { placeStates, type StatePlacement } from './layout/state-placement.js';
 import { NotMeasuredError } from './not-measured.js';
 import { collectDerivations } from './derive/record.js';
@@ -763,15 +770,19 @@ export interface CatalogPorts {
   technicalHeadMark(id: TechnicalHeadMarkId): PrimitiveHeadShape;
   /**
    * Verband nach Kapitel 5.5 (LFH-577), relativ zur Oberkante der Kopfzone wie
-   * `technicalHeadMark`. Partiell: `undefined` für einen Verband, den kein Original am Körper zeigt
-   * (Verband III); `compose()` meldet ihn dann als nicht vermessenen Wert. Optional, damit
+   * `technicalHeadMark`. Partiell: `undefined` für einen Verband ohne Kopf; `compose()` meldet ihn
+   * dann als nicht vermessenen Wert (der Standardport ergänzt Verband III abgeleitet). Optional, damit
    * bestehende Portsätze gültig bleiben; fehlt der Port, wirft `compose()` für jede Spec mit
    * `unitGrouping`, statt den Verband still wegzulassen.
    */
   unitGroupingHead?(id: UnitGroupingId): PrimitiveHeadShape | undefined;
   /** Totaler Resolver fuer alle 25 vollstaendig vermessenen Funktionsfassungen. */
   functionRole(id: FunctionRoleId): FunctionRoleDefinition;
-  /** Partieller Resolver: nur Kreis, Nationalstaat und EU sind als Kopf vermessen. */
+  /**
+   * Partieller Resolver: vermessen sind Kreis, Nationalstaat und EU; der Standardport ergänzt
+   * Gemeinde, Bezirk und Bundesland abgeleitet. `undefined` meldet `compose()` als nicht
+   * vermessenen Wert, statt die Stufe wegzulassen.
+   */
   administrativeHead(id: AdminLevelId): AdministrativeHeadShape | undefined;
   /**
    * Fahrwerkszone je Fahrzeugkategorie (Kapitel 5.1). Neben `strengthHead` und nicht in ihm: die
@@ -959,16 +970,15 @@ function assertTextRunsFit(
 }
 
 /**
- * Die Kopfzone des Verbands (LFH-577). Belegt ist sie nur am Formationskörper — ohne Variante an
- * I.1.4, F.1.1, F.1.13, F.1.21, E.1.31 und C.1.6, mit Fußband an F.1.3, jeweils y 1…5 mm, also
- * genau die Lage, die `placeHead` am Formationsprofil rechnet. Der Verbandsführer I.5.7 trägt den
- * Balken am Personenkörper auf y 0…4; diese Lage erreicht `placeHead` nicht
- * (`HEAD_TOP_MARGIN_MM` = 1), deshalb bleibt die Person eine nicht vermessene Kombination, statt
- * den Balken 1 mm zu tief zu setzen. Maße und Belege: `geometry/unit-groupings.ts` und
+ * Die Kopfzone des Verbands (LFH-577). Vermessen ist sie am Formationskörper — ohne Variante an
+ * I.1.4, F.1.1, F.1.13, F.1.21, E.1.31 und C.1.6, mit Fußband an F.1.3, jeweils y 1…5 mm — und
+ * am Personenkörper (I.5.7 Verbandsführer, Balken y 0…4). Seit dem 2. Oktober 2026 steht sie an
+ * jedem Grundzeichen mit Kopfzone; Lage und Ableitungsnotiz kommen aus `derive/head-zone.ts`.
+ * Maße und Belege: `geometry/unit-groupings.ts` und
  * `docs/decisions/2026-09-29-lfh-577-verband-5-5.md`.
  *
- * Die Reihenfolge der Prüfungen folgt der Reichweite: zuerst der Wert (Verband III zeigt kein
- * Original an irgendeinem Körper), dann die Kombination.
+ * Ein Portsatz darf partiell sein: liefert er für einen Verband nichts, ist das ein nicht
+ * vermessener Wert. Der Standardport ergänzt Verband III abgeleitet.
  */
 function unitGroupingHeadFor(spec: SymbolSpec, catalog: CatalogPorts): PrimitiveHeadShape | null {
   if (spec.unitGrouping === undefined) return null;
@@ -981,21 +991,9 @@ function unitGroupingHeadFor(spec: SymbolSpec, catalog: CatalogPorts): Primitive
   const shape = catalog.unitGroupingHead(spec.unitGrouping);
   if (shape === undefined) {
     throw new NotMeasuredError(
-      `Der Verband "${spec.unitGrouping}" ist am Körper nicht vermessen: keine der 661 ` +
-        'Referenzdateien zeigt ihn an einem Grundzeichen.',
+      `Der Verband "${spec.unitGrouping}" ist am Körper nicht vermessen: der Katalog liefert ` +
+        'für ihn keinen Kopf.',
       'value',
-    );
-  }
-  if (
-    spec.kind !== 'formation' ||
-    (spec.bodyVariant !== undefined && spec.bodyVariant !== 'foot-band')
-  ) {
-    throw new NotMeasuredError(
-      `Ein Verband an "${spec.kind}${spec.bodyVariant === undefined ? '' : `/${spec.bodyVariant}`}" ` +
-        'ist nicht vermessen: belegt ist er nur über der Taktischen Formation (ohne Variante und ' +
-        'mit Fußband). Der Verbandsführer I.5.7 zeigt den Balken an der Person auf einer Lage, ' +
-        'die die Kopfzone nicht erreicht.',
-      'combination',
     );
   }
   return shape;
@@ -1132,7 +1130,7 @@ function composeMeasuredOrDerived(
   // `compose()` allein den Körper und ließ alles andere **stillschweigend** fallen: ein Anhänger
   // hätte seine Deichsel verloren, ohne dass ein Gate es meldet. Genau diese Bauart verbietet
   // dieses Projekt.
-  const extras = base.children.filter((child) => child !== body);
+  const baseExtras = base.children.filter((child) => child !== body);
 
   if (!hasVariantProfile(spec.kind, spec.bodyVariant)) {
     throw new NotMeasuredError(
@@ -1148,13 +1146,18 @@ function composeMeasuredOrDerived(
   const primitiveHeadShape = spec.technicalHeadMark !== undefined
     ? catalog.technicalHeadMark(spec.technicalHeadMark)
     : unitGroupingHeadFor(spec, catalog);
-  const headHeightMm = headShape?.heightMm ?? primitiveHeadShape?.heightMm;
+  // Ohne Funktionsfassung steht der Verwaltungskopf in der allgemeinen Kopfzone (seit dem
+  // 2. Oktober 2026; vorher fiel er hier still weg und nur eine Regel verdeckte das).
+  const requiredAdministrativeHead = requireAdministrativeHead(spec, administrativeHead);
+  const generalAdministrativeHead = roleDefinition === undefined ? requiredAdministrativeHead : null;
+  const headHeightMm =
+    headShape?.heightMm ?? primitiveHeadShape?.heightMm ?? generalAdministrativeHead?.heightMm;
 
   // Dieselbe Kopfzone sitzt je nach Körperform unterschiedlich hoch — deshalb
   // rechnet erst placeHead die relativen Marken in absolute Koordinaten um.
   const headBox = headHeightMm !== undefined
     ? roleDefinition === undefined
-      ? placeHead(profile, headHeightMm)
+      ? placeHeadZone(profile, body, headHeightMm, headShape ? 'strength' : 'primitive')
       : {
           topMm: roleDefinition.layout.headTopMm!,
           bottomMm: roleDefinition.layout.headTopMm! + headHeightMm,
@@ -1181,6 +1184,15 @@ function composeMeasuredOrDerived(
     });
   }
 
+  if (generalAdministrativeHead !== null && headBox !== null) {
+    headPrimitives.push({
+      type: 'group',
+      role: 'head',
+      transform: { translate: { dxMm: 0, dyMm: headBox.topMm } },
+      children: generalAdministrativeHead.primitives,
+    });
+  }
+
   if (administrativeHead !== undefined && roleDefinition !== undefined) {
     headPrimitives.push({
       type: 'group',
@@ -1192,9 +1204,31 @@ function composeMeasuredOrDerived(
     });
   }
 
-  const placedBody = roleDefinition === undefined
-    ? profile.place(body, headBox?.bottomMm ?? null)
-    : body;
+  if (roleDefinition === undefined && headBox !== null) noteHeadPlacement(spec, profile);
+  const placedBase = roleDefinition === undefined
+    ? placeBaseUnderHead({
+        spec,
+        profile,
+        body,
+        extras: baseExtras,
+        headBottomMm: headBox?.bottomMm ?? null,
+        // Fahrwerk und (nur an den abgeleiteten Köpfen) Fußzone brauchen Platz unter dem Körper.
+        // Die Stärke bleibt bei ihrer bisherigen Lage, auch wo die Fußzone dann die Grundfläche
+        // verlässt (formation + staffel + designation, siehe compose.test.ts).
+        reservedBelowMm: headBox === null
+          ? 0
+          : (spec.vehicleCategory === undefined
+              ? 0
+              : catalog.vehicleChassis(spec.vehicleCategory).heightMm +
+                (profile.chassisTopBelowBaseBottomMm ?? 0)) +
+            (headShape === null && spec.designation !== undefined
+              ? FOOT_GAP_MM + FOOT_TEXT_SIZE_MM
+              : 0),
+      })
+    : { body, extras: baseExtras };
+  const placedBody = placedBase.body;
+  // Zusatzgeometrie folgt dem platzierten Körper (`placeBaseUnderHead`).
+  const extras = placedBase.extras;
   // Acht Anhang-G-Quellen belegen dieselbe generische Form: ein unbeschrifteter, kopfloser
   // `formation/foot-band`-Körper hat keine Oberlinie. Das Profil entscheidet diesen Kontext;
   // Kapitel- oder Rezept-IDs bleiben aus dem Kompositionsmotor heraus.
@@ -1222,29 +1256,6 @@ function composeMeasuredOrDerived(
         ...(placedBody.transform === undefined ? {} : { transform: placedBody.transform }),
       }
     : placedBody;
-
-  // Belegte Ausnahmen: F.1.17 sowie die drei vermessenen G-Köpfe `trupp`, `gruppe` und `zug`
-  // führen `foot-band` zusammen mit einer Kopfzone, F.1.3 mit der technischen Kopfmarke
-  // `double-vertical-bar` (Fachreview 19.09.2026), seit LFH-577 als Verband II beschrieben. Die
-  // Kopfzone verschiebt den Formationskörper nicht; Band und Hülle bleiben auf y 23…26. Andere
-  // Stärken werden daraus nicht fortgeschrieben.
-  const isMeasuredFootBandWithHead =
-    spec.kind === 'formation' &&
-    spec.bodyVariant === 'foot-band' &&
-    (spec.strength !== undefined ||
-      spec.technicalHeadMark !== undefined ||
-      spec.unitGrouping !== undefined);
-  if (extras.length > 0 && headBox !== null && !isMeasuredFootBandWithHead) {
-    // Wie Zusatzgeometrie einer Kopfzone ausweicht, ist **nicht** belegt: kein Zeichen des
-    // Referenzbestands trägt beides. Der Anhang E.2 führt überhaupt keine Kopfzone (an allen 31
-    // Dateien nachgesehen), und `validateSpec` lehnt eine Stärkeangabe an diesen Körperformen
-    // ohnehin ab. Werfen statt raten — ein mitgeschobener L-Rahmen wäre eine erfundene Geometrie.
-    throw new NotMeasuredError(
-      `Das Grundzeichen "${spec.kind}" führt Zusatzgeometrie, und wie die einer Kopfzone ` +
-        'ausweicht, ist an der Referenz nicht belegt: kein Zeichen des Bestands trägt beides.',
-      'combination',
-    );
-  }
 
   const organizationFill = spec.organization === undefined
     ? undefined
@@ -1513,6 +1524,9 @@ function composeMeasuredOrDerived(
   assertTextRunsFit(footPrimitives, 'designation', catalog.textMetrics);
   assertTextRunsFit(labelChildren, 'label', catalog.textMetrics);
   assertTextRunsFit(roleTextPrimitives, 'function-role-run', catalog.textMetrics);
+  if (roleDefinition === undefined) {
+    assertHeadClearOfRuns(spec, headPrimitives, [...labelChildren, ...footPrimitives]);
+  }
 
   if (roleDefinition !== undefined) {
     return {

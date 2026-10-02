@@ -482,19 +482,6 @@ function validatePreparedSpec(
     });
   }
 
-  if (
-    spec.kind === 'formation' &&
-    spec.bodyVariant === 'foot-band' &&
-    spec.strength === 'staffel'
-  ) {
-    issues.push({
-      rule: 'foot-band-head-requires-measured-strength',
-      message:
-        'Am gebänderten Formationskörper sind nur Trupp, Gruppe und Zug vermessen. Die Staffel ' +
-        'würde den Körper verschieben; wie das Fußband mitwandert, ist nicht belegt.',
-    });
-  }
-
   if (spec.vehicleCategory !== undefined && !CHASSIS_KINDS.has(spec.kind)) {
     issues.push({
       rule: 'vehicle-category-requires-vehicle',
@@ -562,21 +549,6 @@ function validatePreparedSpec(
     });
   }
 
-  // Die Verwaltungsstufenabdeckung ist bewusst partiell: Nur die drei in D.3/D.4 vermessenen
-  // Koepfe werden zusammen mit ihrer exakt aufgeloesten Funktionsrolle akzeptiert. Gemeinde,
-  // Bezirk und Bundesland bleiben fail-closed.
-  if (
-    spec.administrativeLevel !== undefined &&
-    (context.administrativeHead === undefined || !resolvedFunctionRole)
-  ) {
-    issues.push({
-      rule: 'administrative-level-not-measured',
-      message:
-        `Die Verwaltungsstufe "${spec.administrativeLevel}" besitzt keinen aufgeloesten ` +
-        'gemessenen Kopf aus D.3/D.4.',
-    });
-  }
-
   if (
     spec.technicalHeadMark !== undefined &&
     !technicalHeadMarkId(spec.technicalHeadMark)
@@ -585,21 +557,6 @@ function validatePreparedSpec(
       rule: 'technical-head-mark-not-measured',
       message:
         `Die technische Kopfmarke "${String(spec.technicalHeadMark)}" ist nicht vermessen.`,
-    });
-  }
-
-  // Belegt sind die normale Formation (F.1.1, F.1.13, F.1.21, E.1.31, I.1.4) und die Formation
-  // mit Fußband (F.1.3: dieselben zwei Balken 1,5 × 4 mm über dem Körper). Jede andere Art oder
-  // Variante bleibt fail-closed.
-  if (
-    spec.technicalHeadMark !== undefined &&
-    (spec.kind !== 'formation' ||
-      (spec.bodyVariant !== undefined && spec.bodyVariant !== 'foot-band'))
-  ) {
-    issues.push({
-      rule: 'technical-head-mark-requires-normal-formation',
-      message:
-        'Die technische Kopfmarke ist nur an der Formation ohne Variante oder mit Fußband vermessen.',
     });
   }
 
@@ -612,9 +569,9 @@ function validatePreparedSpec(
   // ist falsch, `spec.vehicleCategory` kommt hier nicht vor, und die Begründung „belegen beide die
   // Kopfzone" trüge für sie geometrisch auch nicht: die Stärke sitzt oben, das Fahrwerk unten.
   //
-  // Diese Kollision ist von der partiellen Abdeckungsprüfung darüber unabhängig: Auch eine mit
-  // Verwaltungskopf und Funktionsrolle vollständig aufgeloeste Stufe bleibt zusammen mit einer
-  // Stärkeangabe geometrisch unzulässig. Die Regel wird nicht durch einen Typ ersetzt, der die
+  // Diese Kollision ist Systematik und keine Messsperre: Auch eine mit Verwaltungskopf und
+  // Funktionsrolle vollständig aufgeloeste Stufe bleibt zusammen mit einer Stärkeangabe
+  // geometrisch unzulässig — eine Kopfzone, ein Kopf. Die Regel wird nicht durch einen Typ ersetzt, der die
   // Kollision unmöglich macht: eine unterscheidende Vereinigung über `SymbolSpec` (etwa
   // `head: {strength} | {administrativeLevel}`) zöge alle Rezepte und ihre Tests nach. Die
   // Entscheidung steht in der Notiz vom 18. August 2026, damit sie nicht als Versäumnis gelesen

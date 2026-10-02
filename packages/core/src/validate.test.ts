@@ -186,12 +186,12 @@ describe('validateSpec', () => {
     }
   });
 
-  it('lässt am gebänderten Formationskörper nur die drei vermessenen Kopfzonen zu', () => {
-    for (const strength of ['trupp', 'gruppe', 'zug'] as const) {
+  it('lässt am gebänderten Formationskörper jede Stärke zu (Staffel abgeleitet, Band folgt)', () => {
+    // Seit dem 2. Oktober 2026 wandert das Fußband mit dem Körper (`derive/head-zone.ts`); die
+    // Zeichnung prüft `derive/head-zone.test.ts`.
+    for (const strength of ['trupp', 'staffel', 'gruppe', 'zug'] as const) {
       expect(validateSpec({ kind: 'formation', bodyVariant: 'foot-band', strength })).toEqual([]);
     }
-    expect(validateSpec({ kind: 'formation', bodyVariant: 'foot-band', strength: 'staffel' })
-      .map((issue) => issue.rule)).toContain('foot-band-head-requires-measured-strength');
   });
 
   it('akzeptiert eine Löschstaffel', () => {
@@ -955,7 +955,7 @@ describe('validateSpec', () => {
     ).toEqual([]);
   });
 
-  it('akzeptiert ausschließlich eine aufgelöste, vermessene Verwaltungsstufe', () => {
+  it('akzeptiert eine Verwaltungsstufe mit und ohne Funktionsfassung', () => {
     const supportedSpec = {
       kind: 'person',
       organization: 'fuehrung-leitung',
@@ -979,14 +979,16 @@ describe('validateSpec', () => {
       functionRole: supportedRole,
       administrativeHead,
     })).toEqual([]);
+    // Ohne Kopf im Port meldet erst `compose()` den Wert als nicht vermessen; eine Regel gibt es
+    // dafür seit dem 2. Oktober 2026 nicht mehr.
     expect(validateRuntime(
       { kind: 'person', administrativeLevel: 'gemeinde' },
       { administrativeHead: undefined },
-    ).map((issue) => issue.rule)).toContain('administrative-level-not-measured');
+    )).toEqual([]);
   });
 
   it.each(['kreis', 'nationalstaat', 'europaeische-union'] as const)(
-    'lehnt die aufgelöste Verwaltungsstufe %s ohne gemessene Funktionsrolle ab',
+    'nimmt die Verwaltungsstufe %s auch ohne Funktionsrolle an',
     (administrativeLevel) => {
       const issues = validateRuntime(
         { kind: 'person', administrativeLevel },
@@ -999,7 +1001,7 @@ describe('validateSpec', () => {
         },
       );
 
-      expect(issues.map((issue) => issue.rule)).toContain('administrative-level-not-measured');
+      expect(issues).toEqual([]);
     },
   );
 
@@ -1339,7 +1341,7 @@ describe('validateSpec', () => {
     expect(issues.map((i) => i.rule)).toContain('head-zone-conflict');
   });
 
-  it('bindet die technische Einzelbalken-Kopfmarke fail-closed an die normale Formation', () => {
+  it('nimmt die technische Kopfmarke an jedem Grundzeichen an', () => {
     expect(validateSpec({
       kind: 'formation', technicalHeadMark: 'single-vertical-bar',
     })).toEqual([]);
@@ -1353,15 +1355,13 @@ describe('validateSpec', () => {
       kind: 'formation', bodyVariant: 'foot-band', technicalHeadMark: 'double-vertical-bar',
     })).toEqual([]);
 
+    // Seit dem 2. Oktober 2026 nicht mehr an die Formation gebunden: die Balken tragen keinen
+    // Fachbegriff, und die Kopfzone steht an jedem Grundzeichen (`derive/head-zone.ts`).
     for (const spec of [
       { kind: 'person', technicalHeadMark: 'single-vertical-bar' },
-      {
-        kind: 'formation', bodyVariant: 'raised-gable' as never,
-        technicalHeadMark: 'single-vertical-bar',
-      },
+      { kind: 'vehicle-land', technicalHeadMark: 'double-vertical-bar' },
     ] satisfies SymbolSpec[]) {
-      expect(validateSpec(spec).map((issue) => issue.rule))
-        .toContain('technical-head-mark-requires-normal-formation');
+      expect(validateSpec(spec), spec.kind).toEqual([]);
     }
   });
 

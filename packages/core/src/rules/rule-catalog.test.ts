@@ -363,13 +363,14 @@ describe('Lücken je Dimension', () => {
   });
 
   /**
-   * Eine Dimension darf in beiden Listen stehen: `administrative-level` trägt eine Regel und ist
-   * trotzdem nur zu drei von sechs Stufen belegt. Der Fall ist hier festgehalten, damit ihn
-   * niemand als Widerspruch „aufräumt".
+   * Eine Dimension darf in beiden Listen stehen: `state` trägt vier Regeln und ist trotzdem nur
+   * für wenige Zustände an einem Träger belegt. Der Fall ist hier festgehalten, damit ihn
+   * niemand als Widerspruch „aufräumt". Bis zum 2. Oktober 2026 stand hier
+   * `administrative-level`; dessen einzige Regel ist mit der abgeleiteten Kopfzone entfallen.
    */
   it('erlaubt eine Dimension mit Regel und Lücke zugleich', () => {
-    expect(RULE_CATALOG.some((rule) => rule.dimension === 'administrative-level')).toBe(true);
-    expect(RULE_DIMENSION_GAPS.some((gap) => gap.dimension === 'administrative-level')).toBe(true);
+    expect(RULE_CATALOG.some((rule) => rule.dimension === 'state')).toBe(true);
+    expect(RULE_DIMENSION_GAPS.some((gap) => gap.dimension === 'state')).toBe(true);
   });
 });
 
