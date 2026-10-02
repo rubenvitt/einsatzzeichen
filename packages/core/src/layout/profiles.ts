@@ -98,16 +98,16 @@ export interface LayoutProfile {
   /** Erlaubt eine je Lauf deklarierte horizontale Center-Ausgabebox. */
   allowsCenterBoxMarginOverride?: true;
   /**
-   * Absolute vermessene Körperhülle für vollständige je-Spec-Textmetriken. Fehlt sie, darf
-   * die Validierung keine relativen Metriken gegen eine angenommene Hülle freigeben.
+   * Absolute vermessene Körperhülle für vollständige je-Spec-Textmetriken. Fehlt sie, prüft
+   * die Validierung gegen die Hülle des Körperprimitivs (`bodyBoundsMm`, seit 2. Oktober 2026).
    */
   measuredBodyBoundsMm?: Readonly<BoundsMm>;
   /** Grundlinie der unteren linken/rechten Läufe, gerechnet von der Körperunterkante nach oben. */
   bottomLabelBaselineFromBodyBottomMm: number;
   /**
    * Grundlinie des Laufs oben links, gerechnet **von der Körperoberkante nach unten**. Fehlt sie,
-   * ist die Zone an dieser Körperform nicht vermessen und `compose()` wirft, statt eine Lage zu
-   * raten.
+   * ist die Zone an dieser Körperform nicht vermessen; `derive/label-zones.ts` überträgt dann die
+   * nächstliegende vermessene Lage und markiert sie als abgeleitet.
    *
    * Gemessen ist bisher genau eine Zahl: **5,0 mm** an den neun beschrifteten Zeichen aus
    * F.1.1 bis F.1.11 (Körperoberkante 6,0, Grundlinie 11,0 — eigene Vermessung, 18. August 2026).
@@ -117,7 +117,7 @@ export interface LayoutProfile {
    * Teilslice F-c sie einträgt, und nicht als stille Miterbschaft dieser.
    */
   topLeftBaselineFromBodyTopMm?: number;
-  /** Dieses Profil belegt `topLeft` ausschließlich mit einem vollständigen je-Spec-Metriksatz. */
+  /** `topLeft` hier nur mit vollständigem Metriksatz vermessen; ohne ihn gilt N.1.6, abgeleitet. */
   requiresTopLeftMetrics?: true;
   /** Grundlinie eines linksbündigen Laufs oberhalb des Körpers, gegen dessen Oberkante. */
   aboveLeftBaselineFromBodyTopMm?: number;
@@ -136,7 +136,7 @@ export interface LayoutProfile {
   };
   /**
    * Körperhülle, innerhalb der ein vollständiger je-Spec-Metriksatz für `bottomRight` belegt ist.
-   * Fehlt der Wert, lehnt `validateSpec()` den Metriksatz statt einer Profilübertragung ab.
+   * Fehlt der Wert, prüft `validateSpec()` den Metriksatz gegen die Körperhülle.
    */
   bottomRightMetricsBounds?: {
     readonly widthMm: number;
@@ -156,7 +156,7 @@ export interface LayoutProfile {
    * beschriftete oder kopftragende Nutzer desselben Körpers behalten die geschlossene Kontur.
    */
   openTopWhenHeadlessAndUnlabelled?: boolean;
-  /** Vermessene Zone rechts unterhalb des Körpers. Fehlt sie, ist die Zone nicht zulässig. */
+  /** Vermessene Zone rechts unterhalb des Körpers. Fehlt sie, gilt die abgeleitete Lage. */
   belowRight?: {
     readonly baselineFromBodyBottomMm: number;
     readonly anchorFromBodyRightMm: number;

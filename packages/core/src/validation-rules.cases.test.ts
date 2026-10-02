@@ -27,16 +27,16 @@ describe('Validierungsregeln ohne Fall in validate.test.ts', () => {
     ).toContain('above-left-metrics-within-viewbox');
   });
 
-  it('below-right-label-requires-measured-body: belowRight an der Formation, die kein solches Profil hat', () => {
-    expect(rules({ kind: 'formation', labels: { belowRight: 'X' } })).toContain(
-      'below-right-label-requires-measured-body',
+  it('above-left-label-head-conflict: Lauf oberhalb links neben einer Stärke', () => {
+    expect(rules({ kind: 'formation', strength: 'gruppe', labels: { aboveLeft: 'ITH' } })).toContain(
+      'above-left-label-head-conflict',
     );
   });
 
-  it('bottom-center-label-requires-measured-body: bottomCenter am Landfahrzeug ohne vermessene Zone', () => {
-    expect(rules({ kind: 'vehicle-land', labels: { bottomCenter: 'X' } })).toContain(
-      'bottom-center-label-requires-measured-body',
-    );
+  it('below-body-zone-conflict: Fahrwerk und Lauf unterhalb rechts zugleich', () => {
+    expect(
+      rules({ kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-1', labels: { belowRight: 'THW' } }),
+    ).toContain('below-body-zone-conflict');
   });
 
   it('center-baseline-positive: mittige Grundlinie 0 mm', () => {
@@ -55,21 +55,6 @@ describe('Validierungsregeln ohne Fall in validate.test.ts', () => {
     expect(
       rules({ kind: 'vehicle-air', bodyVariant: 'raised-hull', designation: 'A', labels: { surfaceBelowRight: 'B' } }),
     ).toContain('surface-label-foot-conflict');
-  });
-
-  // Die Regel verlangt ein Profil, das `surfaceLabels` führt, aber keinen rechten Anker
-  // vermessen hat. Beide Profile mit `surfaceLabels` (angehobener Luftfahrzeugrumpf F.2.7,
-  // um 1 mm angehobener 12-mm-Kreis) tragen einen rechten Anker; der linke fehlt nur am
-  // Luftfahrzeug, was `surface-left-label-requires-measured-anchor` deckt. Die rechte Regel ist
-  // damit aus einer `SymbolSpec` heraus derzeit nicht auslösbar — sie ist die Symmetrie zur
-  // linken für ein künftiges Profil und bleibt hier als benanntes Todo, nicht als stiller
-  // Fehlbestand.
-  it.todo('surface-right-label-requires-measured-anchor: kein Profil mit surfaceLabels ohne rechten Anker');
-
-  it('top-left-metrics-required-by-profile: topLeft am Flächenflügler ohne Metriksatz', () => {
-    expect(
-      rules({ kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull', labels: { topLeft: 'X' } }),
-    ).toContain('top-left-metrics-required-by-profile');
   });
 
   it('top-left-metrics-within-body: topLeft-Metriken am Flächenflügler mit Anker außerhalb der Hülle', () => {
