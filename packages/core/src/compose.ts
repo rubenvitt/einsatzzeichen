@@ -37,6 +37,7 @@ import { FOOT_GAP_MM, hasVariantProfile, placeHead, profileFor } from './layout/
 import { placeStates, type StatePlacement } from './layout/state-placement.js';
 import { NotMeasuredError } from './not-measured.js';
 import { collectDerivations } from './derive/record.js';
+import { deriveLabelZones, type DerivedLabelBoxes } from './derive/label-zones.js';
 import {
   ARIMO_CAP_HEIGHT_FRACTION,
   CATALOG_TEXT_FONT_WEIGHT,
@@ -427,6 +428,8 @@ function labelPrimitives(
   bottomCenterBaselineFromBodyBottomMm: number | undefined,
   bottomCenterInk: 'body' | 'black' | undefined,
   ink: ColorToken,
+  // Anker und Boxkanten abgeleiteter Zonen (`derive/label-zones.ts`); leer an vermessenen.
+  boxes: DerivedLabelBoxes = {},
 ): Primitive[] {
   const centerXMm = centerAnchorFromBodyLeftMm === undefined
     ? (bodyBoundsMm.minX + bodyBoundsMm.maxX) / 2
@@ -491,7 +494,7 @@ function labelPrimitives(
         'start',
         anchorXMm,
         anchorXMm,
-        rightMm - anchorXMm,
+        (metrics === undefined ? boxes.aboveLeftBoxRightMm ?? rightMm : rightMm) - anchorXMm,
         viewBoxWidthMm,
         'schwarz',
       ),
@@ -499,9 +502,8 @@ function labelPrimitives(
   }
   if (labels.topLeft !== undefined) {
     if (topLeftBaselineFromBodyTopMm === undefined) {
-      // Unerreichbar über `compose()` — `validateSpec` lehnt die Zone an jeder Körperform ohne
-      // gemessene Grundlinie ab (`top-left-label-requires-measured-body`). Die Zeile hält die
-      // Bedingung trotzdem am Ort ihrer Wirkung fest, wie beim Geschwisterfall `belowRight`.
+      // Seit dem 2. Oktober 2026 nur noch an Kreiskörpern erreichbar: an allen anderen füllt
+      // `derive/label-zones.ts` die Grundlinie, die das Profil nicht vermessen führt.
       throw new NotMeasuredError(
         'Die Zone "topLeft" ist an dieser Körperform nicht vermessen. Eine Grundlinie führen ' +
           'nur die taktische Formation und die belegten F.2-Landfahrzeugprofile; andere ' +
@@ -511,7 +513,9 @@ function labelPrimitives(
     }
     const topLeftMetrics = labels.topLeftMetrics;
     const anchorRawMm = bodyBoundsMm.minX +
-      (topLeftMetrics?.anchorFromBodyLeftMm ?? TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM);
+      (topLeftMetrics?.anchorFromBodyLeftMm ??
+        boxes.topLeft?.anchorFromBodyLeftMm ??
+        TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM);
     const baselineRawMm = bodyBoundsMm.minY +
       (topLeftMetrics?.baselineFromBodyTopMm ?? topLeftBaselineFromBodyTopMm);
     // Die privat kind-/variantengebundenen F.3-Werte sind auf sechs Dezimalstellen vermessen.
@@ -540,7 +544,7 @@ function labelPrimitives(
         // bleibt derselbe wie in F-a; die Box endet deshalb erst an der rechten Innenmarge des
         // Körpers. Eine Begrenzung auf das obere linke Viertel wäre seit F-b eine falsche
         // Clipping-Zusage, obwohl die Zone weiterhin durch ihren linken Anker benannt ist.
-        rightMm - anchorXMm,
+        (topLeftMetrics === undefined ? boxes.topLeft?.boxRightMm ?? rightMm : rightMm) - anchorXMm,
         viewBoxWidthMm,
         ink,
       ),
@@ -556,7 +560,8 @@ function labelPrimitives(
     if (labels.topLeftLines.length !== 2) {
       throw new Error('Die Zone "topLeftLines" muss exakt zwei nichtleere Zeilen enthalten.');
     }
-    const anchorXMm = bodyBoundsMm.minX + TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM;
+    const anchorXMm = bodyBoundsMm.minX +
+      (boxes.topLeftLines?.anchorFromBodyLeftMm ?? TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM);
     const sizeMm = centerLabelSizeMm(topLeftLines.capHeightMm);
     for (const [index, content] of labels.topLeftLines.entries()) {
       const baseline = topLeftLines.baselinesFromBodyTopMm[index];
@@ -571,7 +576,7 @@ function labelPrimitives(
           'start',
           anchorXMm,
           anchorXMm,
-          rightMm - anchorXMm,
+          (boxes.topLeftLines?.boxRightMm ?? rightMm) - anchorXMm,
           viewBoxWidthMm,
           ink,
         ),
@@ -608,9 +613,10 @@ function labelPrimitives(
         BOTTOM_LABEL_SIZE_MM,
         bodyBoundsMm.maxY - bottomCenterBaselineFromBodyBottomMm,
         'middle',
-        centerXMm,
-        defaultCenterBoxLeftMm,
-        defaultCenterBoxRightMm - defaultCenterBoxLeftMm,
+        boxes.bottomCenter?.anchorXMm ?? centerXMm,
+        boxes.bottomCenter?.boxLeftMm ?? defaultCenterBoxLeftMm,
+        (boxes.bottomCenter?.boxRightMm ?? defaultCenterBoxRightMm) -
+          (boxes.bottomCenter?.boxLeftMm ?? defaultCenterBoxLeftMm),
         viewBoxWidthMm,
         bottomCenterInk === 'black' ? 'schwarz' : ink,
       ),
@@ -652,9 +658,9 @@ function labelPrimitives(
       );
     }
     if (belowRight.ink === 'organization' && belowRightFill === null) {
-      // Unerreichbar über `compose()` — `validateSpec` lehnt die Zone ohne Organisation ab. Die
-      // Zeile hält die Bedingung trotzdem am Ort ihrer Wirkung fest: die Zone ist in der
-      // Organisationsfarbe gemessen, eine schwarze oder weiße Fassung von ihr ist es nicht.
+      // Unerreichbar über `compose()`: ohne Organisation setzt `derive/label-zones.ts` die Tinte
+      // schwarz wie am gebänderten 12-mm-Kreis (G.3.5). Die Zeile hält die Bedingung am Ort ihrer
+      // Wirkung fest, falls ein Profil die Zone künftig ohne diesen Weg liefert.
       throw new NotMeasuredError(
         'Die Zone "belowRight" ist nur in der Organisationsfarbe belegt (#003296 an E.2.27 bis ' +
           'E.2.31); ohne Organisation gibt es keine Farbe, die sie tragen dürfte.',
@@ -670,8 +676,8 @@ function labelPrimitives(
         baselineMm,
         'end',
         anchorXMm,
-        centerXMm,
-        anchorXMm - centerXMm,
+        boxes.belowRightBoxLeftMm ?? centerXMm,
+        anchorXMm - (boxes.belowRightBoxLeftMm ?? centerXMm),
         viewBoxWidthMm,
         belowRight.ink === 'black' ? 'schwarz' : belowRightFill!,
       ),
@@ -700,7 +706,7 @@ function labelPrimitives(
         'start',
         anchorXMm,
         anchorXMm,
-        centerXMm - anchorXMm,
+        (boxes.surfaceLeftBoxRightMm ?? centerXMm) - anchorXMm,
         viewBoxWidthMm,
         'schwarz',
       ));
@@ -719,8 +725,8 @@ function labelPrimitives(
         baselineMm,
         'end',
         anchorXMm,
-        centerXMm,
-        anchorXMm - centerXMm,
+        boxes.surfaceRightBoxLeftMm ?? centerXMm,
+        anchorXMm - (boxes.surfaceRightBoxLeftMm ?? centerXMm),
         viewBoxWidthMm,
         'schwarz',
       ));
@@ -1460,6 +1466,20 @@ function composeMeasuredOrDerived(
       }, bodyBoundsMm)),
   );
 
+  // Zonen, die das Profil nicht vermessen führt, liefert `derive/label-zones.ts` (abgeleitet).
+  const zones = effectiveLabels === undefined
+    ? undefined
+    : deriveLabelZones({
+        kind: spec.kind,
+        variant: spec.bodyVariant,
+        profile,
+        labels: effectiveLabels,
+        body: placedBody,
+        extras,
+        baseBottomMm,
+        organizationFill,
+      });
+  const zoneProfile = zones?.profile ?? profile;
   const labelChildren = effectiveLabels !== undefined
     ? labelPrimitives(
         effectiveLabels,
@@ -1467,22 +1487,21 @@ function composeMeasuredOrDerived(
         DEFAULT_VIEWBOX_MM.width,
         organizationFill ?? null,
         profile.bottomLabelBaselineFromBodyBottomMm,
-        profile.belowRight,
-        profile.allowsCenterBaselineOverride === true
-          ? effectiveLabels.centerBaselineFromBodyBottomMm ?? profile.centerBaselineFromBodyBottomMm
-          : profile.centerBaselineFromBodyBottomMm,
-        profile.allowsCenterAnchorOverride === true
-          ? effectiveLabels.centerAnchorFromBodyLeftMm
-          : undefined,
-        profile.topLeftBaselineFromBodyTopMm,
+        zoneProfile.belowRight,
+        // Abweichende Grundlinie und Anker gelten an jeder Körperform; außerhalb der vermessenen
+        // Profile notiert `deriveLabelZones` sie als abgeleitet.
+        effectiveLabels.centerBaselineFromBodyBottomMm ?? profile.centerBaselineFromBodyBottomMm,
+        effectiveLabels.centerAnchorFromBodyLeftMm,
+        zoneProfile.topLeftBaselineFromBodyTopMm,
         normalizesMeasuredCircleTopLeftCoordinates(spec.kind, spec.bodyVariant),
-        profile.aboveLeftBaselineFromBodyTopMm,
-        profile.aboveLeftAnchorFromBodyLeftMm,
-        profile.surfaceLabels,
-        profile.topLeftLines,
-        profile.bottomCenterBaselineFromBodyBottomMm,
-        profile.bottomCenterInk,
+        zoneProfile.aboveLeftBaselineFromBodyTopMm,
+        zoneProfile.aboveLeftAnchorFromBodyLeftMm,
+        zoneProfile.surfaceLabels,
+        zoneProfile.topLeftLines,
+        zoneProfile.bottomCenterBaselineFromBodyBottomMm,
+        zoneProfile.bottomCenterInk,
         bodyLabelInk(bodyFill, effectiveLabels.inBodyInk),
+        zones?.boxes,
       )
     : [];
 

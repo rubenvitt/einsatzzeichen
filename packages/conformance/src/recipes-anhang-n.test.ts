@@ -374,10 +374,18 @@ describe('Anhang N — gemessene Labelmetriken bleiben fail-closed', () => {
     } as unknown as SymbolSpec;
   }
 
-  it('verlangt am Festflügelrumpf den vollständigen quellenspezifischen topLeft-Metriksatz', () => {
-    expect(() => composeFromCatalog(fixedWingWithMetrics())).toThrow(
-      /top-left-metrics-required-by-profile/,
-    );
+  it('setzt topLeft am Festflügelrumpf ohne Metriksatz auf die N.1.6-Lage, als abgeleitet', () => {
+    // Seit dem 2. Oktober 2026 ist der N.1.6-Metriksatz der Profildefault: Grundlinie 7,0 mm unter
+    // der Oberkante, Anker 5,99 mm rechts der linken Hüllenkante. Ein halber Metriksatz bleibt
+    // kaputte Eingabe.
+    const drawing = composeFromCatalog(fixedWingWithMetrics());
+    const run = drawing.children.find((child) => child.role === 'label');
+    if (run?.type !== 'text') throw new Error('topLeft-Lauf fehlt.');
+    expect(run.x).toBeCloseTo(1.01 + 5.99, 6);
+    expect(run.y).toBeCloseTo(6.0001 + 7, 6);
+    expect(drawing.derivations).toEqual([
+      expect.objectContaining({ dimension: 'labels.topLeft', basis: 'transferred' }),
+    ]);
     expect(() => composeFromCatalog(fixedWingWithMetrics({ capHeightMm: 2.919225 }))).toThrow(
       /top-left-metrics-complete/,
     );

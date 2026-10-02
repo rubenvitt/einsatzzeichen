@@ -136,7 +136,6 @@ describe('validateSpec', () => {
     const rules = validateSpec({
       kind: 'circle-12', bodyVariant: 'foot-band', labels: { belowRight: 'Bw' },
     }).map((issue) => issue.rule);
-    expect(rules).not.toContain('below-right-label-requires-organization');
     expect(rules).toContain('circle-12-requires-organization');
   });
 
@@ -276,11 +275,10 @@ describe('validateSpec', () => {
       labels: { surfaceBelowLeft: '291300', surfaceBelowRight: 'ZIV' },
     } as SymbolSpec)).toEqual([]);
 
+    // Seit dem 2. Oktober 2026 an jeder Körperform zulässig (abgeleitet, `derive/label-zones.ts`).
     expect(validateSpec({
       kind: 'formation', labels: { surfaceBelowLeft: 'X' },
-    } as SymbolSpec).map((issue) => issue.rule)).toContain(
-      'surface-label-requires-measured-body',
-    );
+    } as SymbolSpec)).toEqual([]);
     expect(validateSpec({
       kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull', labels: {
         aboveLeft: 'X', aboveLeftMetrics: { capHeightMm: Number.NaN },
@@ -319,24 +317,22 @@ describe('validateSpec', () => {
     } as SymbolSpec).map((issue) => issue.rule)).toContain(
       'center-box-margin-within-body',
     );
+    // Rand und Grundlinie des mittigen Laufs gelten seit dem 2. Oktober 2026 an jeder
+    // Körperhülle; die Grenze prüfen `center-box-margin-within-body` und
+    // `center-label-within-body` gegen die (abgeleitete) Hülle.
     expect(validateSpec({
       kind: 'formation', bodyVariant: 'foot-band',
       labels: { center: 'X', centerBoxMarginMm: 0.5 },
-    } as SymbolSpec).map((issue) => issue.rule)).toContain(
-      'center-box-margin-override-requires-measured-body',
-    );
+    } as SymbolSpec)).toEqual([]);
     expect(validateSpec({
       kind: 'vehicle-land', labels: { center: 'X', centerBoxMarginMm: 0.5 },
-    } as SymbolSpec).map((issue) => issue.rule)).toContain(
-      'center-box-margin-override-requires-measured-body',
-    );
+    } as SymbolSpec)).toEqual([]);
+    expect(validateSpec({
+      kind: 'container', labels: { center: 'X', centerBoxMarginMm: 12 },
+    } as SymbolSpec).map((issue) => issue.rule)).toContain('center-box-margin-within-body');
 
     for (const spec of [
       { kind: 'vehicle-air', labels: { center: 'X', centerBaselineFromBodyBottomMm: 6.5 } },
-      {
-        kind: 'circle-12', bodyVariant: 'raised-circle-1mm',
-        labels: { center: 'X', centerBaselineFromBodyBottomMm: 6.5 },
-      },
       {
         kind: 'vehicle-land', bodyVariant: 'foot-band',
         labels: { center: 'X', centerBaselineFromBodyBottomMm: 6.5 },
@@ -350,31 +346,38 @@ describe('validateSpec', () => {
         labels: { center: 'X', centerBaselineFromBodyBottomMm: 6.5 },
       },
     ] as SymbolSpec[]) {
-      expect(validateSpec(spec).map((issue) => issue.rule), spec.kind).toContain(
-        'center-baseline-override-requires-measured-body',
-      );
+      expect(validateSpec(spec), spec.kind).toEqual([]);
     }
+    expect(validateSpec({
+      kind: 'vehicle-air', labels: { center: 'X', centerBaselineFromBodyBottomMm: 15 },
+    } as SymbolSpec).map((issue) => issue.rule)).toContain('center-label-within-body');
 
     expect(validateSpec({
       kind: 'vehicle-air', bodyVariant: 'raised-hull',
       labels: { surfaceBelowLeft: 'X' },
-    } as SymbolSpec).map((issue) => issue.rule)).toContain(
-      'surface-left-label-requires-measured-anchor',
-    );
+    } as SymbolSpec)).toEqual([]);
     expect(validateSpec({
       kind: 'vehicle-air', bodyVariant: 'raised-hull',
       labels: { surfaceBelowRight: 'BW' },
     } as SymbolSpec)).toEqual([]);
   });
 
-  it('lässt einen expliziten mittigen Linksanker ausschließlich am vermessenen Anhängerprofil zu', () => {
+  it('lässt einen expliziten mittigen Linksanker an jeder Hülle zu, aber nur innerhalb', () => {
     const trailerAnchor = (kind: SymbolKind, anchor = 8.24) => ({
       kind,
       labels: { center: 'Tauchen', centerAnchorFromBodyLeftMm: anchor },
     }) as unknown as SymbolSpec;
 
+    // Vermessen am Anhänger (I.2.5); seit dem 2. Oktober 2026 übertragen auf jede Körperhülle.
     expect(validateSpec(trailerAnchor('trailer'))).toEqual([]);
-    for (const spec of [trailerAnchor('formation'), trailerAnchor('trailer', 8.23)]) {
+    expect(validateSpec(trailerAnchor('formation'))).toEqual([]);
+    expect(validateSpec(trailerAnchor('trailer', 8.23))).toEqual([]);
+    for (const spec of [
+      trailerAnchor('trailer', 27.01),
+      trailerAnchor('formation', -0.01),
+      trailerAnchor('formation', Number.NaN),
+      { kind: 'trailer', labels: { centerAnchorFromBodyLeftMm: 8.24 } } as SymbolSpec,
+    ]) {
       expect(validateSpec(spec).map((issue) => issue.rule)).toContain(
         'center-anchor-override-requires-measured-trailer',
       );
@@ -400,17 +403,18 @@ describe('validateSpec', () => {
     expect(validateSpec(alternative)).toEqual([]);
 
     const rules = (spec: SymbolSpec) => validateSpec(spec).map((issue) => issue.rule);
-    // Ein Zwischenwert, der Anhängeranker am Landfahrzeug und eine Landfahrzeugvariante fallen.
+    // Zwischenwerte, der Anhängeranker am Landfahrzeug und die Varianten sind seit dem
+    // 2. Oktober 2026 übertragen zulässig — innerhalb der Hülle.
     for (const spec of [
       { ...main, labels: { ...main.labels, centerAnchorFromBodyLeftMm: 21.41 } },
       { ...main, labels: { ...main.labels, centerAnchorFromBodyLeftMm: 8.24 } },
       { ...main, bodyVariant: 'plain-wheel-pair', labels: { center: 'P', centerAnchorFromBodyLeftMm: 21.3 } },
       { ...main, bodyVariant: 'foot-band', labels: { center: 'P', centerAnchorFromBodyLeftMm: 21.3 } },
+      { kind: 'trailer', labels: { center: 'P', centerAnchorFromBodyLeftMm: 21.3 } },
     ] as SymbolSpec[]) {
-      expect(rules(spec)).toContain('center-anchor-override-requires-measured-trailer');
+      expect(rules(spec)).not.toContain('center-anchor-override-requires-measured-trailer');
     }
-    // Und umgekehrt: die Landfahrzeuganker gelten nicht am Anhänger.
-    expect(rules({ kind: 'trailer', labels: { center: 'P', centerAnchorFromBodyLeftMm: 21.3 } }))
+    expect(rules({ ...main, labels: { ...main.labels, centerAnchorFromBodyLeftMm: 30.01 } }))
       .toContain('center-anchor-override-requires-measured-trailer');
   });
 
@@ -425,26 +429,35 @@ describe('validateSpec', () => {
       expect(validateSpec({ kind: 'trailer', labels } as SymbolSpec)).toEqual([]);
     }
 
+    // Zwischenwerte sind seit dem 2. Oktober 2026 übertragen zulässig; die Hülle begrenzt sie.
     expect(validateSpec({
       kind: 'trailer',
       labels: { center: 'X', centerBaselineFromBodyBottomMm: 10, centerCapHeightMm: 2.191447 },
-    } as SymbolSpec).map((issue) => issue.rule)).toContain(
-      'center-baseline-not-measured',
-    );
+    } as SymbolSpec)).toEqual([]);
+    expect(validateSpec({
+      kind: 'trailer',
+      labels: { center: 'X', centerBaselineFromBodyBottomMm: 19, centerCapHeightMm: 2.191447 },
+    } as SymbolSpec).map((issue) => issue.rule)).toContain('center-label-within-body');
     expect(validateSpec({
       kind: 'vehicle-land',
       labels: { center: 'BuPol', centerBaselineFromBodyBottomMm: 6.5 },
     } as SymbolSpec)).toEqual([]);
   });
 
-  it('lässt die oberhalb liegende F.2.7-Zone nur am Luftfahrzeug zu', () => {
+  it('lässt die oberhalb liegende F.2.7-Zone an jeder Körperform zu, nicht neben der Kopfzone', () => {
     expect(validateSpec({
       kind: 'vehicle-air', bodyVariant: 'raised-hull', labels: { aboveLeft: 'ITH' },
     })).toEqual([]);
-    expect(validateSpec({ kind: 'vehicle-air', labels: { aboveLeft: 'ITH' } })
-      .map((issue) => issue.rule)).toContain('above-left-label-requires-measured-body');
-    expect(validateSpec({ kind: 'formation', labels: { aboveLeft: 'ITH' } }).map((issue) => issue.rule))
-      .toContain('above-left-label-requires-measured-body');
+    expect(validateSpec({ kind: 'vehicle-air', labels: { aboveLeft: 'ITH' } })).toEqual([]);
+    expect(validateSpec({ kind: 'formation', labels: { aboveLeft: 'ITH' } })).toEqual([]);
+    for (const head of [
+      { strength: 'zug' },
+      { technicalHeadMark: 'double-vertical-bar' },
+      { unitGrouping: 'ii' },
+    ]) {
+      expect(validateSpec({ kind: 'formation', ...head, labels: { aboveLeft: 'ITH' } } as SymbolSpec)
+        .map((issue) => issue.rule)).toContain('above-left-label-head-conflict');
+    }
   });
 
   it('lässt zweizeilige Läufe an den beiden separat vermessenen Landfahrzeugprofilen zu', () => {
@@ -454,8 +467,8 @@ describe('validateSpec', () => {
       .toEqual([]);
     expect(validateSpec({ kind: 'vehicle-land', labels: { topLeftLines: ['Kipper,', '26 t'] } }))
       .toEqual([]);
-    expect(validateSpec({ kind: 'trailer', labels: { topLeftLines: ['GW-San', '50'] } })
-      .map((issue) => issue.rule)).toContain('top-left-lines-require-measured-body');
+    expect(validateSpec({ kind: 'trailer', labels: { topLeftLines: ['GW-San', '50'] } }))
+      .toEqual([]);
   });
 
   it('lässt den einzeiligen F.2-Fahrzeuglauf an normaler und foot-band-Hülle zu', () => {
@@ -465,10 +478,8 @@ describe('validateSpec', () => {
     expect(validateSpec({
       kind: 'vehicle-land', bodyVariant: 'foot-band', labels: { topLeft: 'GwBT' },
     })).toEqual([]);
-    expect(validateSpec({ kind: 'trailer', labels: { topLeft: 'BT' } })
-      .map((issue) => issue.rule)).toContain('top-left-label-requires-measured-body');
-    expect(validateSpec({ kind: 'vehicle-air', labels: { topLeft: 'BT' } })
-      .map((issue) => issue.rule)).toContain('top-left-label-requires-measured-body');
+    expect(validateSpec({ kind: 'trailer', labels: { topLeft: 'BT' } })).toEqual([]);
+    expect(validateSpec({ kind: 'vehicle-air', labels: { topLeft: 'BT' } })).toEqual([]);
   });
 
   const topLeftMetrics = {
@@ -490,7 +501,7 @@ describe('validateSpec', () => {
     } as unknown as SymbolSpec;
   }
 
-  it('lässt gemessene topLeft-Metriken nur an normalem und gebändertem Landfahrzeug zu', () => {
+  it('lässt topLeft-Metriken an jeder Hülle zu, vermessen am normalen und gebänderten Landfahrzeug', () => {
     expect(validateSpec(withRuntimeTopLeftMetrics(
       'vehicle-land', undefined, topLeftMetrics,
     ))).toEqual([]);
@@ -503,10 +514,11 @@ describe('validateSpec', () => {
       withRuntimeTopLeftMetrics('formation', undefined, topLeftMetrics),
       withRuntimeTopLeftMetrics('trailer', undefined, topLeftMetrics),
     ]) {
-      expect(validateSpec(spec).map((issue) => issue.rule)).toContain(
-        'top-left-metrics-require-measured-vehicle-land',
-      );
+      expect(validateSpec(spec)).toEqual([]);
     }
+    expect(validateSpec(withRuntimeTopLeftMetrics('container', undefined, {
+      ...topLeftMetrics, anchorFromBodyLeftMm: 23,
+    })).map((issue) => issue.rule)).toContain('top-left-metrics-within-body');
   });
 
   it('verlangt für topLeft-Metriken einen nichtleeren Lauf und alle drei Werte', () => {
@@ -746,10 +758,11 @@ describe('validateSpec', () => {
   });
 
   it('fordert die unbeschriftete Feuerwehrfassung und behält die generischen Mittellaufregeln', () => {
+    // Seit dem 2. Oktober 2026 trägt auch die Feuerwehrfassung Läufe, wie die HiOrg-Fassung.
     expect(validateSpec({
       kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'feuerwehr',
       bodyMarks: ['fire-fighting'], labels: { center: 'LF' },
-    }).map((issue) => issue.rule)).toContain('inset-hull-fire-fighting-requires-no-labels');
+    })).toEqual([]);
     expect(validateSpec({
       ...validInsetWatercraft,
       labels: { centerCapHeightMm: 3.4099 },
@@ -814,15 +827,14 @@ describe('validateSpec', () => {
     ['surfaceBelowRight', {
       ...validInsetWatercraft, labels: { surfaceBelowRight: 'ZIV' },
     }],
-  ] as const)('lehnt die ungemessene inset-hull-Labelzone %s ab', (_zone, spec) => {
-    expect(validateSpec(spec).map((issue) => issue.rule)).toContain(
+  ] as const)('lässt die abgeleitete inset-hull-Labelzone %s als Datenfeld zu', (_zone, spec) => {
+    expect(validateSpec(spec).map((issue) => issue.rule)).not.toContain(
       'inset-hull-requires-center-label-only',
     );
   });
 
-  it('lehnt die inset-hull-Fußbezeichnung als ungemessene Zone ab', () => {
-    expect(validateSpec({ ...validInsetWatercraft, designation: 'MzB' }).map((issue) => issue.rule))
-      .toContain('inset-hull-requires-center-label-only');
+  it('lässt die inset-hull-Fußbezeichnung zu', () => {
+    expect(validateSpec({ ...validInsetWatercraft, designation: 'MzB' })).toEqual([]);
   });
 
   it('lässt inset-hull für spätere unbeschriftete Boote ohne Labels zu', () => {
@@ -886,14 +898,14 @@ describe('validateSpec', () => {
     })).map((issue) => issue.rule)).toContain('circle-top-left-anchor-within-viewbox');
   });
 
-  it('bindet beide F.2-Sonderzonen an das exakte Art-/Variantenpaar', () => {
+  it('lehnt die F.2-Sonderzonen an fremden Art-/Variantenpaaren nur über die Variante ab', () => {
     expect(validateSpec({
       kind: 'vehicle-land', bodyVariant: 'raised-hull',
       labels: { topLeftLines: ['GW-San', '50'] },
-    }).map((issue) => issue.rule)).toContain('top-left-lines-require-measured-body');
+    }).map((issue) => issue.rule)).toEqual(['body-variant-requires-measured-kind']);
     expect(validateSpec({
       kind: 'vehicle-air', bodyVariant: 'plain-wheel-pair', labels: { aboveLeft: 'ITH' },
-    }).map((issue) => issue.rule)).toContain('above-left-label-requires-measured-body');
+    }).map((issue) => issue.rule)).toEqual(['body-variant-requires-measured-kind']);
   });
 
   it('lehnt überlagerte Fahrwerks- und Fußzonen an F.2-Körpervarianten ab', () => {
@@ -1514,17 +1526,25 @@ describe('validateSpec', () => {
     } as unknown as SymbolSpec;
   }
 
-  it('bindet vollständige bottomRight-Metriken an das gemessene Körperprofil und den Lauf', () => {
+  it('bindet vollständige bottomRight-Metriken an den Lauf und an die Körperhülle', () => {
     expect(validateSpec(withBottomRightMetrics(bottomRightMetrics))).toEqual([]);
     expect(validateSpec(withBottomRightMetrics(bottomRightMetrics, null)).map(
       (issue) => issue.rule,
     )).toContain('bottom-right-metrics-require-bottom-right-label');
-    expect(validateSpec(withBottomRightMetrics(
-      bottomRightMetrics, '7', 'formation', undefined,
-    )).map((issue) => issue.rule)).toContain('bottom-right-metrics-require-measured-body');
+    // Ohne vermessene Textbox gilt seit dem 2. Oktober 2026 die Körperhülle.
+    expect(validateSpec({
+      kind: 'formation', labels: { bottomRight: '7', bottomRightMetrics },
+    })).toEqual([]);
     expect(validateSpec(withBottomRightMetrics(
       bottomRightMetrics, '7', 'vehicle-air', 'fixed-wing-hull',
-    )).map((issue) => issue.rule)).toContain('bottom-right-metrics-require-measured-body');
+    ))).toEqual([]);
+    expect(validateSpec({
+      kind: 'container',
+      labels: {
+        bottomRight: '7',
+        bottomRightMetrics: { ...bottomRightMetrics, boxLeftFromBodyLeftMm: 20, boxWidthMm: 5 },
+      },
+    }).map((issue) => issue.rule)).toContain('bottom-right-metrics-within-body');
   });
 
   it('lehnt unvollständige und außerhalb der Körperhülle liegende bottomRight-Metriken ab', () => {

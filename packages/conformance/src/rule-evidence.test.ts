@@ -43,7 +43,6 @@ describe('RULE_EVIDENCE', () => {
       'function-role-label-metrics-required',
       'function-role-run-too-wide',
       'function-role-run-unknown-glyph',
-      'surface-right-label-requires-measured-anchor',
     ]);
     for (const gap of RULE_EVIDENCE_GAPS) {
       expect(gap.reason.length, gap.rule).toBeGreaterThan(40);

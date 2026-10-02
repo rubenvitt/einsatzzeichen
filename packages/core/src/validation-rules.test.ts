@@ -51,6 +51,6 @@ describe('VALIDATION_RULE_IDS', () => {
       (id) => !tested.includes(`'${id}'`) && !todo.has(id),
     );
     expect(untested).toEqual([]);
-    expect([...todo].sort()).toEqual(['surface-right-label-requires-measured-anchor']);
+    expect([...todo].sort()).toEqual([]);
   });
 });

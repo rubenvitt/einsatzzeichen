@@ -123,14 +123,15 @@ function freezeTable(
  * behaupten müsste.
  */
 export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = freezeTable({
-  'above-left-label-requires-measured-body': {
+  'above-left-label-head-conflict': {
     field: 'labels',
-    title: 'Zone oberhalb links braucht ein vermessenes Profil',
+    title: 'Lauf oberhalb links und Kopfzone schließen sich aus',
     explanation:
-      'Ein Lauf in `labels.aboveLeft` steht über dem Körper, und seine Grundlinie führt nur, ' +
-      'wessen Körperprofil sie vermessen hat; die Meldung nennt das Luftfahrzeug aus F.2.7. ' +
-      'Andere Arten erben diesen Wert nicht, weil ihre Hülle anders verläuft. Entferne den Lauf ' +
-      'oder wechsle auf eine Art und Variante, deren Profil diese Zone führt.',
+      'Ein Lauf in `labels.aboveLeft` steht über dem Körper, genau in dem Streifen, den die ' +
+      'Kopfzone belegt: Stärke, technische Kopfmarke, Verband oder Verwaltungsstufe. Eine Zone ' +
+      'trägt einen Baustein, und über der Kopfzone endet die 32-mm-Grundfläche, eine Ausweichlage ' +
+      'gibt es nicht. Entferne `labels.aboveLeft` oder die Angabe in der Kopfzone, oder setze den ' +
+      'Lauf in eine Zone im Körper wie `labels.topLeft`.',
   },
   'above-left-metrics-complete': {
     field: 'labels',
@@ -160,23 +161,17 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'raten. Setze eine Funktionsrolle, deren vermessener Kopf diese Stufe trägt, oder entferne ' +
       '`administrativeLevel`.',
   },
-  'below-right-label-requires-measured-body': {
+  'below-body-zone-conflict': {
     field: 'labels',
-    title: 'Zone unterhalb rechts braucht ein vermessenes Profil',
+    title: 'Fahrwerk und Läufe unter dem Körper schließen sich aus',
     explanation:
-      'Lage und Tinte von `labels.belowRight` hängen am Körperprofil und sind nur dort ' +
-      'vermessen, wo es Werte führt: am angehobenen Wasserfahrzeugrumpf (E.2.27 bis E.2.31) und ' +
-      'am gebänderten 12-mm-Kreis (G.3.5). An anderen Körperformen entstünde ein Lauf, den keine ' +
-      'Referenzdatei zeigt und den auch kein Gate meldete. Entferne die Zone oder wähle eine Art ' +
-      'und Variante, deren Profil sie führt.',
-  },
-  'below-right-label-requires-organization': {
-    field: 'labels',
-    title: 'Lauf in Organisationsfarbe braucht eine Organisation',
-    explanation:
-      'Führt das Körperprofil diese Zone in der Organisationsfarbe (#003296 an E.2.27 bis ' +
-      'E.2.31), braucht der Lauf eine Organisation, die diese Farbe liefert. Ohne sie hätte der ' +
-      'Text keine gemessene Farbe. Setze `organization` oder entferne `labels.belowRight`.',
+      'Unter dem Körper liegt ein Streifen, den das Fahrwerk (eine Fahrzeugkategorie oder das ' +
+      'Radpaar der Variante `plain-wheel-pair`), die Bezeichnung, der Lauf `labels.belowRight` ' +
+      'und die schwarzen Oberflächenläufe `labels.surfaceBelowLeft` und ' +
+      '`labels.surfaceBelowRight` belegen. Je Seite trägt er einen davon: das Fahrwerk mit Rädern ' +
+      'links und rechts schließt beide Läufe aus, und `belowRight` teilt seine Stelle mit ' +
+      '`surfaceBelowRight` und mit der mittigen Bezeichnung. Unter dem Streifen endet die ' +
+      '32-mm-Grundfläche. Entferne einen der Bausteine oder setze den Lauf in eine Zone im Körper.',
   },
   'body-mark-rendition-not-measured': {
     field: 'bodyMarks',
@@ -208,15 +203,6 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'Normalfassung zurück. Wähle eine Art, für die die Variante vermessen ist, oder lass ' +
       '`bodyVariant` weg.',
   },
-  'bottom-center-label-requires-measured-body': {
-    field: 'labels',
-    title: 'Zone unten mittig braucht ein vermessenes Profil',
-    explanation:
-      '`labels.bottomCenter` verlangt ein Profil mit vermessener Grundlinie: die taktische ' +
-      'Formation (2,0 mm über der Körperunterkante, F.1.18/F.1.20) und der gebänderte ' +
-      '12-mm-Kreis (6,0 mm, G.3.5). Für andere Arten und Varianten gibt es keine Messung, aus ' +
-      'der die Lage folgte. Entferne die Zone oder wechsle auf eines der beiden Profile.',
-  },
   'bottom-right-metrics-complete': {
     field: 'labels',
     title: 'bottomRight-Metriken nur vollständig',
@@ -233,15 +219,6 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'Metriken ohne den zugehörigen Text hätten keine Wirkung — Versalhöhe, Grundlinie, Anker ' +
       'und Box würden still verschluckt. Deshalb verlangt `labels.bottomRightMetrics` einen ' +
       'nichtleeren `labels.bottomRight`. Setze den Lauf oder entferne den Metriksatz.',
-  },
-  'bottom-right-metrics-require-measured-body': {
-    field: 'labels',
-    title: 'bottomRight-Metriken nur an vermessener Hülle',
-    explanation:
-      'Individuelle bottomRight-Metriken sind nur an einem Körperprofil zulässig, das eine ' +
-      'vollständig vermessene relative Textbox führt; belegt ist das am angehobenen ' +
-      'Luftfahrzeugrumpf. An anderen Profilen gäbe es keine Hülle, gegen die die Box geprüft ' +
-      'würde. Wechsle Art und Variante oder verzichte auf den Metriksatz.',
   },
   'bottom-right-metrics-within-body': {
     field: 'labels',
@@ -273,32 +250,13 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
   },
   'center-anchor-override-requires-measured-trailer': {
     field: 'labels',
-    title: 'Abweichender mittiger Anker nur mit vermessenem Wert',
+    title: 'Abweichender mittiger Anker braucht Lauf und Platz in der Hülle',
     explanation:
-      'Ein eigener x-Anker des mittigen Laufs ist nur an Körperformen belegt, die ihn vermessen ' +
-      'haben: am Anhänger (I.2.5) und am Landfahrzeug ohne Variante (C.2.25, Haupt- und ' +
-      'Alternativdarstellung). Zulässig sind dort nur die gemessenen Werte; außerdem braucht er ' +
-      'einen `labels.center`. Ein freier Wert wäre keine Messung, sondern eine Schätzung. Setze ' +
-      'einen gemessenen Wert oder entferne `labels.centerAnchorFromBodyLeftMm`.',
-  },
-  'center-baseline-not-measured': {
-    field: 'labels',
-    title: 'Mittige Grundlinie nur mit vermessenem Wert',
-    explanation:
-      'Führt das Profil eine Liste vermessener Abweichungen, muss die angegebene mittige ' +
-      'Grundlinie einem dieser Werte entsprechen; am Anhänger sind das die beiden Werte aus ' +
-      'I.2.5/I.2.6. Zwischenwerte sind an keiner Referenzdatei belegt. Nimm einen der ' +
-      'vermessenen Werte oder lass das Feld weg, dann gilt der Profilwert.',
-  },
-  'center-baseline-override-requires-measured-body': {
-    field: 'labels',
-    title: 'Abweichende mittige Grundlinie nur an vermessenem Profil',
-    explanation:
-      'Eine eigene Grundlinie für den mittigen Lauf akzeptieren nur Profile, die das ' +
-      'ausdrücklich erlauben — taktische Formation in Normalfassung, Landfahrzeug in ' +
-      'Normalfassung und Anhänger. ' +
-      'Andere Körperprofile behalten ihren Wert, damit keine ungemessene Lage entsteht. ' +
-      'Entferne `labels.centerBaselineFromBodyBottomMm` oder wechsle das Profil.',
+      'Ein eigener x-Anker des mittigen Laufs ist am Anhänger (I.2.5) und am Landfahrzeug ' +
+      '(C.2.25) vermessen; an anderen Körperformen und mit anderen Werten wird er übertragen und ' +
+      'als abgeleitet gezeichnet. Er braucht einen `labels.center`, einen endlichen Wert und muss ' +
+      'zwischen der linken und der rechten Kante der Körperhülle liegen. Setze einen solchen Wert ' +
+      'oder entferne `labels.centerAnchorFromBodyLeftMm`.',
   },
   'center-baseline-positive': {
     field: 'labels',
@@ -323,15 +281,6 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'Der Rand der mittigen Textbox muss endlich und mindestens null sein. Negative Werte oder ' +
       'NaN ergäben keine Box, in der Text stehen könnte. Korrigiere `labels.centerBoxMarginMm` ' +
       'oder entferne das Feld.',
-  },
-  'center-box-margin-override-requires-measured-body': {
-    field: 'labels',
-    title: 'Eigener Boxrand nur an vermessener Hülle',
-    explanation:
-      'Ein eigener Rand der mittigen Textbox ist nur an Profilen zulässig, die ihn erlauben und ' +
-      'eine vermessene Körperhülle führen; belegt ist das an der taktischen Formation. Ohne ' +
-      'Hülle gäbe es keine Breite, gegen die der Rand geprüft würde. Entferne ' +
-      '`labels.centerBoxMarginMm` oder wechsle auf ein Profil mit vermessener Hülle.',
   },
   'center-box-margin-requires-center-label': {
     field: 'labels',
@@ -548,24 +497,16 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'des Körpers oder auf der Ausgabeoberfläche haben eigene Tintenverträge und werden nicht ' +
       'erfasst. Setze einen nichtleeren Lauf im Körper oder entferne `labels.inBodyInk`.',
   },
-  'inset-hull-fire-fighting-requires-no-labels': {
-    field: 'bodyVariant',
-    title: 'Feuerwehr-Rumpffassung trägt keine Beschriftung',
-    explanation:
-      'Der vermessene Feuerwehrvertrag der eingesenkten Wasserfahrzeughülle trägt keine ' +
-      'Beschriftung. Ein Labelobjekt an dieser Fassung ist an keiner Datei belegt. Entferne ' +
-      '`labels` oder wechsle auf die HiOrg-Fassung.',
-  },
   'inset-hull-requires-center-label-only': {
     field: 'bodyVariant',
-    title: 'Eingesenkte Hülle nur mit mittigem Lauf',
+    title: 'Beschriftung der eingesenkten Hülle nur als einfache Daten',
     explanation:
-      'Die eingesenkte Wasserfahrzeughülle belegt genau drei Labelfelder: `accessibilityMode`, ' +
-      '`center` und `centerCapHeightMm`. Andere Felder, eine Bezeichnung oder ein Labelobjekt ' +
-      'mit geerbten, nicht aufzählbaren oder über Accessoren gelieferten Werten werden ' +
-      'abgelehnt, damit die geprüfte Datenansicht dieselbe bleibt, die gezeichnet wird. ' +
-      'Beschränke `labels` auf diese drei Felder eines einfachen Objekts und entferne ' +
-      '`designation`.',
+      'An der eingesenkten Wasserfahrzeughülle ist allein der mittige Lauf vermessen; die übrigen ' +
+      'Zonen und die Bezeichnung werden vom angehobenen Wasserrumpf übertragen und als abgeleitet ' +
+      'gezeichnet. Das Labelobjekt wird dafür als Datenschnappschuss geprüft: unbekannte Felder ' +
+      'und geerbte, nicht aufzählbare oder über Accessoren gelieferte Werte werden abgelehnt, ' +
+      'damit die geprüfte Datenansicht dieselbe bleibt, die gezeichnet wird. Gib `labels` als ' +
+      'einfaches Objekt mit eigenen Feldern der bekannten Zonen an.',
   },
   'inset-hull-requires-measured-body-mark': {
     field: 'bodyVariant',
@@ -662,31 +603,6 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'Entferne `designation` oder die Läufe `labels.surfaceBelowLeft` und ' +
       '`labels.surfaceBelowRight`.',
   },
-  'surface-label-requires-measured-body': {
-    field: 'labels',
-    title: 'Oberflächenläufe nur an vermessenem Profil',
-    explanation:
-      'Schwarze Oberflächenläufe stehen außerhalb des Körpers auf der Ausgabefläche und sind ' +
-      'nur an den Profilen vermessen, die dafür Werte führen — am angehobenen ' +
-      'Luftfahrzeugrumpf und am um 1 mm angehobenen 12-mm-Kreis. Andere Profile haben für diese ' +
-      'Zone keine gemessene Grundlinie. Entferne die Läufe oder wechsle Art und Variante.',
-  },
-  'surface-left-label-requires-measured-anchor': {
-    field: 'labels',
-    title: 'Linker Oberflächenlauf braucht einen linken Anker',
-    explanation:
-      'Der linke schwarze Oberflächenlauf verlangt ein Profil, das einen links vermessenen ' +
-      'Anker führt. Führt das Profil nur den rechten, bliebe die linke Lage geraten. Nutze ' +
-      '`labels.surfaceBelowRight` oder wechsle auf ein Profil mit linkem Anker.',
-  },
-  'surface-right-label-requires-measured-anchor': {
-    field: 'labels',
-    title: 'Rechter Oberflächenlauf braucht einen rechten Anker',
-    explanation:
-      'Der rechte schwarze Oberflächenlauf verlangt ein Profil, das einen rechts vermessenen ' +
-      'Anker führt. Führt das Profil nur den linken, bliebe die rechte Lage geraten. Nutze ' +
-      '`labels.surfaceBelowLeft` oder wechsle auf ein Profil mit rechtem Anker.',
-  },
   'technical-fill-organization-conflict': {
     field: 'technicalFill',
     title: 'Technische Füllung und Organisation schließen sich aus',
@@ -746,16 +662,6 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'negative Werte ergäben keinen sichtbaren Text. Korrigiere `capHeightMm` in ' +
       '`labels.topLeftMetrics`.',
   },
-  'top-left-label-requires-measured-body': {
-    field: 'labels',
-    title: 'Zone oben links braucht ein vermessenes Profil',
-    explanation:
-      'Die Grundlinie der Zone oben links ist an der taktischen Formation (5,0 mm unter der ' +
-      'Körperoberkante), an den F.2-Landfahrzeugen (6,75 mm), am Festflügel-Luftfahrzeug und an ' +
-      'den beiden Kreisfassungen vermessen. Andere Profile erben keinen dieser Werte, weil ihre ' +
-      'Hülle anders verläuft; am Gebäudekörper liefe der Formationsanker aus dem Polygon ' +
-      'heraus. Entferne `labels.topLeft` oder wechsle auf ein Profil mit gemessener Grundlinie.',
-  },
   'top-left-lines-exactly-two': {
     field: 'labels',
     title: 'Zweizeilige Zone braucht genau zwei Zeilen',
@@ -763,15 +669,6 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'Die zweizeilige obere Beschriftungszone ist genau zweizeilig vermessen. Eine, drei oder ' +
       'mehr Zeilen hätten keine belegten Grundlinien. Gib in `labels.topLeftLines` genau zwei ' +
       'Zeilen an.',
-  },
-  'top-left-lines-require-measured-body': {
-    field: 'labels',
-    title: 'Zweizeilige Zone nur am vermessenen Körper',
-    explanation:
-      'Die zweizeilige obere Zone ist am Landfahrzeug aus F.2.8 vermessen; sie verlangt ein ' +
-      'Profil mit zwei Grundlinien und eine Körpervariante, die zu dieser Art gehört. Für ' +
-      'andere Körperformen gibt es keine Messung, aus der ihre Lage folgte. Nutze ' +
-      '`labels.topLeft` einzeilig oder wechsle auf das vermessene Landfahrzeugprofil.',
   },
   'top-left-metrics-complete': {
     field: 'labels',
@@ -781,15 +678,6 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'partielles Objekt mischte unbelegte Profilwerte in eine gemessene Lage. Ergänze die ' +
       'fehlenden Felder oder entferne `labels.topLeftMetrics` ganz.',
   },
-  'top-left-metrics-require-measured-vehicle-land': {
-    field: 'labels',
-    title: 'Eigene topLeft-Metriken nur an vermessenen Fassungen',
-    explanation:
-      'Individuelle topLeft-Metriken sind nur am normalen und am gebänderten ' +
-      'F.2-Landfahrzeug, an den beiden F.3-Kreisfassungen und am Festflügel-Luftfahrzeug ' +
-      'vermessen. Andere Arten und Varianten behalten ihre eigenen Profilwerte, statt eine ' +
-      'fremde Messung zu übernehmen. Entferne den Metriksatz oder wechsle Art und Variante.',
-  },
   'top-left-metrics-require-top-left-label': {
     field: 'labels',
     title: 'topLeft-Metriken brauchen ihren Lauf',
@@ -797,15 +685,6 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'Metriken der oberen linken Zone ohne nichtleeren `labels.topLeft` hätten keine Wirkung; ' +
       'alle drei Maße würden still verschluckt. Setze den Lauf oder entferne ' +
       '`labels.topLeftMetrics`.',
-  },
-  'top-left-metrics-required-by-profile': {
-    field: 'labels',
-    title: 'Profil verlangt den vollständigen topLeft-Satz',
-    explanation:
-      'Manche Körperprofile belegen den topLeft-Lauf ausschließlich mit einem vollständigen ' +
-      'quellenspezifischen Metriksatz; belegt ist das am Festflügel-Luftfahrzeug. Ein ' +
-      'Profildefault wäre dort nur eine Teilmessung. Ergänze `labels.topLeftMetrics` oder ' +
-      'entferne den Lauf.',
   },
   'top-left-metrics-within-body': {
     field: 'labels',

@@ -81,8 +81,8 @@ describe('drawSymbol', () => {
   });
 
   test('eine ungültige Spec wirft wie compose eine CompositionError', () => {
-    // Die untere rechte Außenbeschriftung führt die taktische Formation nicht.
-    expect(() => drawSymbol({ kind: 'formation', labels: { belowRight: 'X' } }))
+    // Eine Stärke trägt nur eine taktische Einheit.
+    expect(() => drawSymbol({ kind: 'hazard', strength: 'gruppe' }))
       .toThrow(core.CompositionError);
   });
 });
