@@ -12,10 +12,11 @@ import {
 } from '@einsatzzeichen/conformance';
 import {
   BASE_SYMBOLS,
+  BODY_VARIANT_LABELS,
   CONTRAST_EXCEPTIONS,
 } from '@einsatzzeichen/core';
 import { VALIDATION_RULE_IDS } from '@einsatzzeichen/core';
-import { PALETTE } from '@einsatzzeichen/schema';
+import { BODY_VARIANT_IDS, PALETTE } from '@einsatzzeichen/schema';
 import { buildSnapshot } from './snapshot-build.js';
 
 describe('buildSnapshot', () => {
@@ -183,8 +184,16 @@ describe('buildSnapshot', () => {
       ]);
     });
 
-    it('lässt `bodyVariant` als dokumentierte Ausnahme bei seiner ID', () => {
-      for (const { id, label } of snap.builder.bodyVariant) expect(label).toBe(id);
+    it('benennt jede Körpervariante mit ihrer Bezeichnung aus `core` statt mit der Kennung (LFH-989)', () => {
+      const entries = snap.builder.bodyVariant ?? [];
+      expect(entries.map((entry) => entry.id)).toEqual([...BODY_VARIANT_IDS]);
+      for (const { id, label } of entries) {
+        expect(label, id).toBe(BODY_VARIANT_LABELS[id as keyof typeof BODY_VARIANT_LABELS]);
+        expect(label, id).not.toBe(id);
+      }
+      expect(entries.find((entry) => entry.id === 'raised-gable')?.label).toBe(
+        'ortsgebunden (Giebel)',
+      );
     });
   });
 

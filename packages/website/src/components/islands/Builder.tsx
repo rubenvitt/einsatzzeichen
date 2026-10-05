@@ -79,10 +79,10 @@ function labelText(spec: SymbolSpec, zone: LabelZone): string {
  *
  * Seit dem 2. Oktober 2026 zeichnet der Motor jede Kombination, die die Systematik zulässt, und
  * leitet fehlende Teile aus vermessenen Nachbarfassungen ab. Ein Wert, der eine vermessene
- * Zusammenstellung erst zu einer abgeleiteten macht, trägt deshalb den Zusatz „abgeleitet"
- * (`derivedMarker()`), und unter der Vorschau steht, welche Teile der aktuellen Zeichnung
- * abgeleitet sind. Gesperrt bleibt, was eine Regel verbietet oder sich auch abgeleitet nicht
- * zeichnen lässt.
+ * Zusammenstellung erst zu einer abgeleiteten macht, sagt das im Tooltip, an einer Kachel auch im
+ * Zusatz „abgeleitet" (`derivedMarker()`; in Auswahllisten seit LFH-989 nur noch im Tooltip, siehe
+ * `optionText()`), und unter der Vorschau steht, welche Teile der aktuellen Zeichnung abgeleitet
+ * sind. Gesperrt bleibt, was eine Regel verbietet oder sich auch abgeleitet nicht zeichnen lässt.
  *
  * Drei Ergebniszustände, und jeder hat seine eigene Darstellung (Spec §7):
  * `ok` → Vorschau und Aktionen. `invalid` → gestrichelte Fläche plus erklärte Regelliste direkt
@@ -354,7 +354,7 @@ export function derivedTooltip(valueLabel: string): string {
   );
 }
 
-/** Der sichtbare Zusatz am Eintrag; kurz, damit er in einer Auswahlliste nicht überragt. */
+/** Der sichtbare Zusatz an einer Kachel; kurz, damit er die Beschriftung nicht überragt. */
 const DERIVED_SUFFIX = 'abgeleitet';
 
 /**
@@ -461,12 +461,20 @@ function UnmeasuredNote({ id, show }: { id: string; show: boolean }) {
 
 /**
  * Text und Tooltip eines Eintrags in einer Auswahlliste. Ein `<option>` lässt sich nicht
- * gestalten; der Zusatz steht deshalb im Text selbst, wie „geht hier nicht" — so kommt er auch auf
+ * gestalten; eine Sperre steht deshalb im Text selbst („geht hier nicht") — so kommt sie auch auf
  * Touch-Geräten und in Vorlesehilfen an, wo es keinen Tooltip gibt.
+ *
+ * **„abgeleitet" steht nur im Tooltip (LFH-989).** Bis zum 5. Oktober 2026 stand der Zusatz auch im
+ * Text. An der leeren Formation trugen ihn dann 136 Listeneinträge, darunter 50 der 88 Fähigkeiten
+ * und 46 der 74 Körpermarken; an der Funktionsstelle 81 der 88 Fähigkeiten. Ein Wort an der
+ * Mehrzahl der Einträge unterscheidet keinen davon, und wer kein Technikverständnis mitbringt,
+ * liest es als Warnung, obwohl der Wert zulässig ist. Gesammelt sagt es der Hinweis unter der
+ * Vorschau (`DerivationNote`), sobald die Zeichnung abgeleitete Teile trägt. Die Kacheln behalten
+ * ihren Zusatz: dort trifft er selten (an der leeren Formation keine der 19 Grundzeichenarten und
+ * keine der acht Organisationen) und unterscheidet deshalb wirklich.
  */
-function optionText(label: string, blocked: BlockedValue | undefined, derived: boolean): string {
-  if (blocked !== undefined) return `${label} — geht hier nicht`;
-  return derived ? `${label} — ${DERIVED_SUFFIX}` : label;
+function optionText(label: string, blocked: BlockedValue | undefined): string {
+  return blocked === undefined ? label : `${label} — geht hier nicht`;
 }
 
 function optionTitle(
@@ -542,7 +550,7 @@ function SelectField({
               disabled={blocked !== undefined}
               title={optionTitle(definition, blocked, derived, option.label, kindLabel, unmeasured)}
             >
-              {optionText(option.label, blocked, derived)}
+              {optionText(option.label, blocked)}
             </option>
           );
         })}
@@ -622,7 +630,7 @@ function ListField({
               disabled={blocked !== undefined}
               title={optionTitle(definition, blocked, derived, option.label, kindLabel, unmeasured)}
             >
-              {optionText(option.label, blocked, derived)}
+              {optionText(option.label, blocked)}
             </option>
           );
         })}

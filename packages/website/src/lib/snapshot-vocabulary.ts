@@ -2,6 +2,7 @@ import {
   ADMIN_LEVEL_LABELS,
   ALL_PICTOGRAMS,
   BODY_MARK_IDS,
+  BODY_VARIANT_LABELS,
   ORGANIZATION_LABELS,
   STRENGTH_LABELS,
   TECHNICAL_BODY_MARK_LABELS,
@@ -74,9 +75,9 @@ function stateLabel(id: string): string {
  * `funktionslauf-kontrast`) und haben in einem Auswahlfeld nichts verloren, das auch Menschen ohne
  * Technikbezug bedienen.
  *
- * `bodyVariant` bleibt die dokumentierte Ausnahme und trägt weiter seine ID: für die
- * Körpervarianten führt der Katalog kein Bezeichnungsregister, und eines hier zu erfinden hieße,
- * Bezeichnungen ohne Quelle zu behaupten.
+ * `bodyVariant` trägt seit LFH-989 die Bezeichnungen aus `BODY_VARIANT_LABELS` in `core` (dort
+ * seit dem 2. Oktober 2026). Bis dahin stand hier die Kennung (`raised-gable`), weil der Katalog
+ * kein Register führte und eine Bezeichnung hier eine ohne Quelle gewesen wäre.
  */
 export function builderVocabulary(): BuilderVocabulary {
   return {
@@ -117,7 +118,10 @@ export function builderVocabulary(): BuilderVocabulary {
       VEHICLE_CATEGORY_IDS,
       (id) => VEHICLE_CATEGORY_LABELS[id as (typeof VEHICLE_CATEGORY_IDS)[number]],
     ),
-    bodyVariant: labelled(BODY_VARIANT_IDS, (id) => id),
+    bodyVariant: labelled(
+      BODY_VARIANT_IDS,
+      (id) => BODY_VARIANT_LABELS[id as (typeof BODY_VARIANT_IDS)[number]],
+    ),
     technicalHeadMark: labelled(
       TECHNICAL_HEAD_MARK_IDS,
       (id) => TECHNICAL_HEAD_MARK_LABELS[id as (typeof TECHNICAL_HEAD_MARK_IDS)[number]],
