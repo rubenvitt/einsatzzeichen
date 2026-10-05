@@ -403,10 +403,10 @@ describe('Der Baukasten mit Verband, Zustand und Tendenz (LFH-577)', () => {
     expect(optionOf(container, 'unitGrouping', 'verband-ii').textContent).toBe('Verband II');
     expectDrawn(container);
     // Verband III war bis zum 2. Oktober 2026 gesperrt; seitdem zeichnet er nach dem Vorschlag
-    // x 12/16/20 und trägt den Zusatz, im Text und im Tooltip.
+    // x 12/16/20. Seit LFH-989 steht der Hinweis darauf nur noch im Tooltip, nicht im Text.
     const third = optionOf(container, 'unitGrouping', 'verband-iii');
     expect(third.disabled).toBe(false);
-    expect(third.textContent).toBe('Verband III — abgeleitet');
+    expect(third.textContent).toBe('Verband III');
     expect(third.getAttribute('title')).toMatch(/„Verband III" lässt sich hier zeichnen/);
     // Der vermessene Verband I bleibt ohne Zusatz.
     expect(optionOf(container, 'unitGrouping', 'verband-i').textContent).toBe('Verband I');
@@ -488,10 +488,10 @@ describe('Der Baukasten mit abgeleiteten Teilen', () => {
 
   it('kennzeichnet nichts mehr einzeln, wenn die Zusammenstellung schon abgeleitet ist', async () => {
     const container = await mountBuilder();
-    // Vor der Auswahl trägt das Piktogramm den Zusatz: an der Formation ist es nicht vermessen,
-    // sondern wird in den Körper eingepasst.
-    expect(optionOf(container, 'capabilities', 'meal-preparation').textContent).toBe(
-      'Verpflegung / Zubereitung — abgeleitet',
+    // Vor der Auswahl trägt das Piktogramm den Hinweis im Tooltip: an der Formation ist es nicht
+    // vermessen, sondern wird in den Körper eingepasst.
+    expect(optionOf(container, 'capabilities', 'meal-preparation').getAttribute('title')).toMatch(
+      /„Verpflegung \/ Zubereitung" lässt sich hier zeichnen/,
     );
     choose(container, 'unitGrouping', 'verband-iii');
     await settle();
@@ -499,6 +499,23 @@ describe('Der Baukasten mit abgeleiteten Teilen', () => {
     const pictogram = optionOf(container, 'capabilities', 'meal-preparation');
     expect(pictogram.disabled).toBe(false);
     expect(pictogram.textContent).toBe('Verpflegung / Zubereitung');
+    expect(pictogram.getAttribute('title')).toBeNull();
+  });
+
+  it('schreibt „abgeleitet" in keine Auswahlliste, auch an der leeren Formation nicht (LFH-989)', async () => {
+    // An der leeren Formation sind rund 50 der 88 Fähigkeiten und 46 der 74 Körpermarken nur
+    // abgeleitet zeichenbar (gemessen am 05.10.2026). Als Zusatz im Text stand das Wort dann an
+    // mehr als der Hälfte der Einträge und sagte über den einzelnen Wert nichts mehr.
+    const container = await mountBuilder();
+    const options = [...container.querySelectorAll<HTMLOptionElement>('.ez-builder select option')];
+    expect(options.length).toBeGreaterThan(100);
+    const marked = options.filter((option) => /abgeleitet/.test(option.textContent ?? ''));
+    expect(marked.map((option) => option.textContent)).toEqual([]);
+    // Der Hinweis bleibt am Eintrag erreichbar, im Tooltip.
+    const tooltips = options.filter((option) =>
+      /lässt sich hier zeichnen/.test(option.getAttribute('title') ?? ''),
+    );
+    expect(tooltips.length).toBeGreaterThan(50);
   });
 
   it('kennzeichnet auch eine Kachel, ohne ihre Beschriftung zu verändern', async () => {
@@ -517,6 +534,22 @@ describe('Der Baukasten mit abgeleiteten Teilen', () => {
     // Die ausgewählte Formation trägt den Zusatz nicht.
     const chosen = tile(container, 'kind', 'Taktische Formation');
     expect(chosen.querySelector('.ez-builder__tile-derived')).toBeNull();
+  });
+});
+
+describe('Der Baukasten mit benannten Körpervarianten (LFH-989)', () => {
+  it('zeigt die Körpervarianten mit ihrer Bezeichnung statt mit der Kennung', async () => {
+    const container = await mountBuilder();
+    const options = [
+      ...container.querySelectorAll<HTMLOptionElement>('#ez-builder-bodyVariant option'),
+    ].filter((option) => option.value !== '');
+    expect(options.length).toBe(10);
+    for (const option of options) {
+      expect(option.textContent, option.value).not.toContain(option.value);
+    }
+    expect(optionOf(container, 'bodyVariant', 'raised-gable').textContent).toMatch(
+      /^ortsgebunden \(Giebel\)/,
+    );
   });
 });
 
