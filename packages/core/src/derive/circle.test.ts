@@ -118,6 +118,34 @@ describe('Mittiger Lauf am Kreis: Versalmitte auf der Kreismitte', () => {
   });
 });
 
+describe('Großer mittiger Lauf am 12-mm-Kreis: vermessene Grundlinie', () => {
+  // D.2.3/D.2.4 (Grundlinie 9 über der Unterkante) und D.2.5 (8 mm am angehobenen Giebel) tragen
+  // ihren Lauf in 7,3 mm Versalhöhe. Mit genau dieser Höhe ist die Lage vermessen und kommt ohne
+  // Override aus — so trifft der Baukasten mit „Groß“ das Original (LFH-992).
+  it('setzt LtS am Giebelkreis auf die Grundlinie 22 von D.2.5, ohne Notiz', () => {
+    const drawing = drawSymbol({
+      kind: 'circle-12', bodyVariant: 'raised-gable', organization: 'fuehrung-leitung',
+      bodyMarks: ['circle-solid-cap-4mm'], labels: { center: 'LtS', centerCapHeightMm: 7.3 },
+    });
+    expect(labelRuns(drawing)[0]?.y).toBe(22);
+    expect(drawing.derivations).toBeUndefined();
+  });
+
+  it('setzt den Lauf am glatten Kreis auf die Grundlinie 19 von D.2.3/D.2.4', () => {
+    const drawing = drawSymbol({
+      kind: 'circle-12', organization: 'fuehrung-leitung', labels: { center: 'M', centerCapHeightMm: 7.3 },
+    });
+    expect(labelRuns(drawing)[0]?.y).toBe(19);
+    expect(drawing.derivations).toBeUndefined();
+  });
+
+  it('konstruiert andere Versalhöhen weiter über die Kreismitte', () => {
+    const drawing = drawSymbol({ kind: 'circle-12', labels: { center: 'M', centerCapHeightMm: 6 } });
+    expect(labelRuns(drawing)[0]?.y).toBeCloseTo(16 + 6 / 2, 6);
+    expect(drawing.derivations?.map((note) => note.dimension)).toContain('labels.center');
+  });
+});
+
 describe('Kürzel in den Ecken am Kreis', () => {
   const probe = drawSymbol({
     kind: 'post',
