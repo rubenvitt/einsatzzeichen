@@ -49,6 +49,34 @@ export const PALETTE: ColorPalette = Object.freeze({
   hellblau: '#3264fa',
 });
 
+/** Die beiden Tinten der Palette: Schriftfarben für Läufe, keine Körperfläche. */
+export type InkToken = 'funktionslauf-kontrast' | 'koerperlauf-kontrast';
+
+/** Ein Palettentoken, der eine Körperfläche füllen darf. */
+export type TechnicalFillToken = Exclude<ColorToken, InkToken>;
+
+const INK_TOKENS: ReadonlySet<string> = new Set(
+  Object.keys({
+    'funktionslauf-kontrast': true,
+    'koerperlauf-kontrast': true,
+  } satisfies Record<InkToken, true>),
+);
+
+/**
+ * Der Wertevorrat von `SymbolSpec.technicalFill` (LFH-990): jeder Palettentoken außer den
+ * Tinten, in der Reihenfolge der Palette. `funktionslauf-kontrast` und `koerperlauf-kontrast`
+ * färben nur Schrift; das Drucktheme hebt sie eigens gegen den Körper, auf dem sie stehen. Als
+ * Füllung gäbe es diesen Körper nicht.
+ *
+ * `SymbolSpec.technicalFill` bleibt im Typ `ColorToken`, damit die Korrektur keinen Verbraucher
+ * bricht; die Regel `technical-fill-token-invalid` weist die Tinten zur Laufzeit ab.
+ */
+export const TECHNICAL_FILL_TOKENS: readonly TechnicalFillToken[] = Object.freeze(
+  (Object.keys(PALETTE) as ColorToken[]).filter(
+    (token): token is TechnicalFillToken => !INK_TOKENS.has(token),
+  ),
+);
+
 export const DEFAULT_STROKE_WIDTH_MM = 0.5;
 export const DEFAULT_VIEWBOX_MM = { width: 32, height: 32 } as const;
 

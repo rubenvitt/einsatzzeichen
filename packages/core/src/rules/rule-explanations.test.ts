@@ -254,7 +254,7 @@ describe('Begründungen, die der Katalog aus den Erklärungen bezieht', () => {
     ['function-role-label-metrics-required', '1115bcee6938'],
     ['function-role-organization-mismatch', 'c83dbbf8c4fc'],
     ['function-role-run-too-wide', 'c8889df6b529'],
-    ['technical-fill-token-invalid', 'd7fc65090809'],
+    ['technical-fill-token-invalid', '14cebe5a25e2'],
     ['technical-head-mark-not-measured', '8734409f68a9'],
     ['top-left-anchor-within-body', '4c4cd1a7e212'],
     ['top-left-cap-height-positive', '8432d0f77f5a'],
