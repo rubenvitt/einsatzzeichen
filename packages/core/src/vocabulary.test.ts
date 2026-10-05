@@ -15,10 +15,10 @@ import type {
 import {
   ADMIN_LEVEL_IDS,
   CAPABILITY_IDS,
-  PALETTE,
   STATE_IDS,
   SYMBOL_KINDS,
   TECHNICAL_BODY_MARK_IDS,
+  TECHNICAL_FILL_TOKENS,
   TENDENCY_IDS,
   UNIT_GROUPING_IDS,
   type SymbolSpec,
@@ -78,8 +78,11 @@ describe('SPEC_FIELD_VALUES', () => {
     });
     expect(SPEC_FIELD_VALUES.technicalFill).toEqual({
       shape: 'one-of',
-      values: Object.keys(PALETTE),
+      values: TECHNICAL_FILL_TOKENS,
     });
+    // LFH-990: die Tinten-Tokens sind Schriftfarben, keine Körperfüllung.
+    expect(SPEC_FIELD_VALUES.technicalFill.values).not.toContain('funktionslauf-kontrast');
+    expect(SPEC_FIELD_VALUES.technicalFill.values).not.toContain('koerperlauf-kontrast');
     expect(SPEC_FIELD_VALUES.capabilities).toEqual({ shape: 'list', values: CAPABILITY_IDS });
     expect(SPEC_FIELD_VALUES.bodyMarks).toEqual({
       shape: 'list',

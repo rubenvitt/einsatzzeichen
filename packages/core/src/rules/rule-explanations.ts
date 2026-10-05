@@ -495,11 +495,12 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
   },
   'technical-fill-token-invalid': {
     field: 'technicalFill',
-    title: 'Technische Füllung braucht einen bekannten Farbtoken',
+    title: 'Technische Füllung braucht einen Füllungstoken',
     explanation:
       'Eine technische Körperfüllung muss einen Token der Palette nennen. Freie Farbwerte gibt ' +
-      'es nicht; sie umgingen die geprüften Kontrastverträge. Setze `technicalFill` auf einen ' +
-      'Token aus `PALETTE`.',
+      'es nicht; sie umgingen die geprüften Kontrastverträge. Die Tinten ' +
+      '`funktionslauf-kontrast` und `koerperlauf-kontrast` färben nur Läufe, keine Fläche. ' +
+      'Setze `technicalFill` auf einen Token aus `TECHNICAL_FILL_TOKENS`.',
   },
   'technical-head-mark-not-measured': {
     field: 'technicalHeadMark',
