@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { allowedValues } from '../../lib/builder-state.js';
+import { allowedValues, encodeSpec } from '../../lib/builder-state.js';
 import { buildSnapshot } from '../../lib/snapshot-build.js';
 import type { CatalogSnapshot } from '../../lib/snapshot.js';
 import Builder, { blockedTooltip, derivedTooltip } from './Builder.js';
@@ -535,5 +535,54 @@ describe('Der Baukasten mit Beschriftung im Körper', () => {
     const texts = [...container.querySelectorAll('svg text')].map((node) => node.textContent);
     expect(texts).toContain('LST');
     expect(texts).toContain('UEL');
+  });
+});
+
+describe('Der Baukasten mit der Größe des mittigen Laufs (LFH-992)', () => {
+  const leitstelle = {
+    kind: 'circle-12',
+    bodyVariant: 'raised-gable',
+    organization: 'fuehrung-leitung',
+    bodyMarks: ['circle-solid-cap-4mm'],
+    labels: { center: 'LtS' },
+  } as const;
+
+  function centerRun(container: HTMLElement): Element {
+    const run = [...container.querySelectorAll('.ez-builder__stage svg text')].find(
+      (node) => node.textContent === 'LtS',
+    );
+    expect(run, 'Kein Lauf „LtS“ in der Vorschau.').toBeDefined();
+    return run as Element;
+  }
+
+  it('setzt „Groß“ und zeichnet LtS in der Höhe und auf der Grundlinie von D.2.5', async () => {
+    window.history.replaceState(null, '', `/builder/?spec=${encodeSpec(leitstelle)}`);
+    const container = await mountBuilder();
+    expect(container.querySelector('label[for="ez-builder-label-centerSize"]')?.textContent)
+      .toBe('Größe in der Mitte');
+    expect((container.querySelector('#ez-builder-label-centerSize') as HTMLSelectElement | null)?.value)
+      .toBe('normal');
+    const normalSize = Number(centerRun(container).getAttribute('font-size'));
+
+    choose(container, 'label-centerSize', 'gross');
+    await settle();
+
+    expectDrawn(container);
+    const run = centerRun(container);
+    // 7,3 mm Versalhöhe gegen 4,87 mm: der Schriftgrad wächst im selben Verhältnis.
+    expect(Number(run.getAttribute('font-size')) / normalSize).toBeCloseTo(7.3 / 4.87, 4);
+    // Das SVG zählt in eigenen Einheiten; die Zeichenfläche ist 32 mm breit.
+    const viewBox = run.closest('svg')?.getAttribute('viewBox')?.split(/[\s,]+/).map(Number);
+    const unitsPerMm = (viewBox?.[2] ?? Number.NaN) / 32;
+    expect(Number(run.getAttribute('y')) / unitsPerMm).toBeCloseTo(22, 3);
+    // Die Spec trägt die Höhe als Zahl; der Link wird entprellt geschrieben, die JSON-Ansicht nicht.
+    expect(container.querySelector('.ez-builder__dev .ez-builder__pre')?.textContent)
+      .toMatch(/"centerCapHeightMm": 7\.3\b/);
+  });
+
+  it('sperrt die Größe ohne Text in der Mitte', async () => {
+    const container = await mountBuilder();
+    const select = container.querySelector('#ez-builder-label-centerSize') as HTMLSelectElement | null;
+    expect(select?.disabled).toBe(true);
   });
 });

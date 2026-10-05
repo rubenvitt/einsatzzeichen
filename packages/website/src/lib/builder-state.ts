@@ -1,5 +1,6 @@
 import {
   CompositionError,
+  LARGE_CENTER_CAP_HEIGHT_MM,
   LIST_SPEC_FIELDS,
   SPEC_FIELD_VALUES,
   decodeSpecParam,
@@ -85,14 +86,57 @@ export type LabelZone = (typeof LABEL_ZONES)[number];
 /**
  * Einen Lauf in `labels` setzen oder entfernen. Leerer Text entfernt die Zone; ohne Zone fällt
  * das ganze Feld `labels` weg, damit die Spec dieselbe bleibt wie ohne Beschriftung. Andere
- * Schlüssel in `labels` (etwa Metriken aus einem geladenen Rezept) bleiben stehen.
+ * Schlüssel in `labels` (etwa Metriken aus einem geladenen Rezept) bleiben stehen — bis auf die
+ * Versalhöhe des mittigen Laufs: sie gehört dem Feld „Größe“ (`reduceCenterLabelSize`) und fällt
+ * mit dem mittigen Text weg, sonst stünde eine Höhe ohne Lauf da, und die Regel
+ * `center-cap-height-requires-center-label` lehnte die Spec ab.
  */
 export function reduceLabel(spec: SymbolSpec, zone: LabelZone, value: string): SymbolSpec {
   const labels: Record<string, unknown> = { ...(spec.labels ?? {}) };
   if (isUnset(value)) delete labels[zone];
   else labels[zone] = value;
+  if (zone === 'center' && isUnset(value)) delete labels.centerCapHeightMm;
   const next: Record<string, unknown> = { ...spec };
   if (LABEL_ZONES.some((candidate) => labels[candidate] !== undefined)) next.labels = labels;
+  else delete next.labels;
+  return next as unknown as SymbolSpec;
+}
+
+/**
+ * Die Größen des mittigen Laufs, die der Baukasten anbietet (LFH-992): keine freie Zahl, sondern
+ * die belegten Stufen. „Normal“ setzt keinen Wert, der Motor nimmt die Normhöhe 4,87 mm. „Groß“
+ * ist die Versalhöhe 7,3 mm der Ortszeichen D.2.3 bis D.2.5 (etwa „LtS“ an der Leitstelle); am
+ * 12-mm-Kreis ist sie samt Grundlinie vermessen, an jeder anderen Hülle zeichnet der Motor sie
+ * abgeleitet und lehnt sie ab, wo sie nicht in den Körper passt.
+ *
+ * Eine „automatische“ Stufe gibt es bewusst nicht: sie wäre ein Zustand der Insel und keiner der
+ * Spec, und ein geteilter Link zeigte dann je nach Text verschiedene Größen.
+ */
+export const CENTER_LABEL_SIZES = [
+  { id: 'normal', label: 'Normal', capHeightMm: undefined },
+  { id: 'gross', label: 'Groß', capHeightMm: LARGE_CENTER_CAP_HEIGHT_MM },
+] as const;
+
+export type CenterLabelSize = (typeof CENTER_LABEL_SIZES)[number]['id'];
+
+/**
+ * Die Stufe, die die Spec trägt. `'recipe'` heißt: die Versalhöhe stammt aus einem geladenen
+ * Rezept (etwa 4,3826 mm an E.2.21) und ist keine der beiden Stufen — die Insel zeigt sie als
+ * eigenen Eintrag, statt sie still als „Normal“ auszugeben.
+ */
+export function centerLabelSize(spec: SymbolSpec): CenterLabelSize | 'recipe' {
+  const capHeightMm = spec.labels?.centerCapHeightMm;
+  return CENTER_LABEL_SIZES.find((size) => size.capHeightMm === capHeightMm)?.id ?? 'recipe';
+}
+
+/** Die Größe des mittigen Laufs setzen; „Normal“ entfernt die Versalhöhe aus `labels`. */
+export function reduceCenterLabelSize(spec: SymbolSpec, size: CenterLabelSize): SymbolSpec {
+  const capHeightMm = CENTER_LABEL_SIZES.find((candidate) => candidate.id === size)?.capHeightMm;
+  const labels: Record<string, unknown> = { ...(spec.labels ?? {}) };
+  if (capHeightMm === undefined) delete labels.centerCapHeightMm;
+  else labels.centerCapHeightMm = capHeightMm;
+  const next: Record<string, unknown> = { ...spec };
+  if (Object.keys(labels).length > 0) next.labels = labels;
   else delete next.labels;
   return next as unknown as SymbolSpec;
 }
