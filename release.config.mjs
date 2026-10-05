@@ -95,7 +95,9 @@ Starte direkt mit den Release Notes, gruppiert wie oben beschrieben, mit ## ...`
       '@semantic-release/github',
       {
         successComment:
-          '🎉 Dieses Issue/PR wurde in Release [v${nextRelease.version}](${releases.filter(release => release.name)[0]?.url || ""}) veröffentlicht.',
+          // Link direkt aus dem Tag bauen: `releases` enthält auch die Einträge von exec (ohne url),
+          // die vor dem GitHub-Release stehen — `releases[0].url` war dadurch leer.
+          '🎉 Dieses Issue/PR wurde in Release [${nextRelease.gitTag}](https://github.com/rubenvitt/einsatzzeichen/releases/tag/${nextRelease.gitTag}) veröffentlicht.',
         failComment: '❌ Das Release ist fehlgeschlagen. Details in den CI-Logs.',
       },
     ],
