@@ -35,7 +35,9 @@ for (const kind of s.SYMBOL_KINDS) for (const v of [undefined, ...s.BODY_VARIANT
 }
 const heads: any[] = [{}, ...s.STRENGTH_IDS.map((x: any) => ({ strength: x })), ...s.ADMIN_LEVEL_IDS.map((x: any) => ({ administrativeLevel: x })), ...s.UNIT_GROUPING_IDS.map((x: any) => ({ unitGrouping: x })), ...s.TECHNICAL_HEAD_MARK_IDS.map((x: any) => ({ technicalHeadMark: x }))];
 const zones = ['center', 'topLeft', 'bottomLeft', 'bottomCenter', 'bottomRight', 'aboveLeft', 'belowRight', 'surfaceBelowLeft', 'surfaceBelowRight'];
-const labelSets: any[] = [{}, ...zones.map((z) => ({ labels: { [z]: 'AB' } })), { labels: { center: 'LST', bottomRight: 'UEL' } }, { labels: { center: 'AB', topLeft: 'C', bottomLeft: 'D', bottomRight: 'E' } }, { designation: 'ABC' }];
+const labelSets: any[] = [{}, ...zones.map((z) => ({ labels: { [z]: 'AB' } })), { labels: { center: 'LST', bottomRight: 'UEL' } }, { labels: { center: 'AB', topLeft: 'C', bottomLeft: 'D', bottomRight: 'E' } }, { designation: 'ABC' },
+  // Die Stufe „Groß“ des Baukastens (LFH-992): 7,3 mm Versalhöhe wie an D.2.5.
+  { labels: { center: 'AB', centerCapHeightMm: 7.3 } }, { labels: { center: 'LtS', centerCapHeightMm: 7.3, bottomRight: 'UEL' } }];
 const orgs: any[] = [{}, { organization: 'feuerwehr' }, { organization: 'fuehrung-leitung' }, { organization: 'hilfsorganisation' }];
 const extras: any[] = [{}, { capabilities: ['foam-agent'] }, { bodyMarks: ['medical-service'] }, { states: ['suspected-situation'] }, { tendency: 'tendency-rising' }];
 let total = 0, drawn = 0, rule = 0, nm = 0;

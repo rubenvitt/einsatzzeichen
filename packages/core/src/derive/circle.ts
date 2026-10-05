@@ -259,6 +259,32 @@ export function circleCenterBaselineFromBodyBottomMm(
   return bodyBoundsMm.maxY - (cy + capHeightMm / 2);
 }
 
+/**
+ * Versalhöhe des großen mittigen Laufs an den Ortszeichen D.2.3 bis D.2.5: 7,3 mm. Nur in dieser
+ * Höhe ist ein Lauf über der Norm (4,87 mm) an einem Original vermessen.
+ */
+export const LARGE_CENTER_CAP_HEIGHT_MM = 7.3;
+
+/**
+ * Vermessene Grundlinie des großen Laufs am unverkleinerten 12-mm-Kreis (Durchmesser 24 mm), als
+ * Abstand über der Körperunterkante: 9 am glatten Kreis (D.2.3/D.2.4, Grundlinie 19 bei
+ * Unterkante 28), 8 am angehobenen Giebel (D.2.5, Grundlinie 22 bei Unterkante 30). Verkleinert
+ * ein Kopf den Kreis oder ist die Höhe eine andere, gibt es keine vermessene Lage: `undefined`,
+ * und die Konstruktion über die Kreismitte gilt (LFH-992).
+ */
+export function measuredCircleCenterBaselineFromBodyBottomMm(
+  kind: SymbolKind,
+  variant: BodyVariantId | undefined,
+  bodyBoundsMm: BoundsMm,
+  capHeightMm: number,
+): number | undefined {
+  if (kind !== 'circle-12' || capHeightMm !== LARGE_CENTER_CAP_HEIGHT_MM) return undefined;
+  if (Math.abs(bodyBoundsMm.maxY - bodyBoundsMm.minY - 24) > 1e-6) return undefined;
+  if (variant === undefined) return 9;
+  if (variant === 'raised-gable') return 8;
+  return undefined;
+}
+
 /** Lage eines Kürzels am Kreis: Anker, Grundlinie und die zugesicherte waagerechte Box. */
 export interface CircleCornerRun {
   readonly anchorXMm: number;

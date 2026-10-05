@@ -269,3 +269,33 @@ describe('abgeleitete Beschriftungszonen: Zonenkollisionen', () => {
     expect(rulesOf({ kind: 'formation', labels: { belowRight: 'X', surfaceBelowLeft: 'Y' } })).toEqual([]);
   });
 });
+
+describe('vergrößerter mittiger Lauf (Versalhöhe über der Norm)', () => {
+  // Vermessen ist eine Versalhöhe über 4,87 mm nur am 12-mm-Kreis (D.2.3 bis D.2.5, 7,3 mm). An
+  // jeder anderen Hülle ist der große Lauf abgeleitet, damit die Platzprüfung ihn sieht: bis
+  // zum 5. Oktober 2026 zeichnete der Motor „AB“ in 7,3 mm am Luftfahrzeug als vermessen und
+  // ragte dabei aus dem Rumpf.
+  it('notiert den großen Lauf an der Formation und zeichnet ihn', () => {
+    const { drawing, text } = run({ kind: 'formation', labels: { center: 'LtS', centerCapHeightMm: 7.3 } }, 'LtS');
+    expect(text.sizeMm * ARIMO_CAP_HEIGHT_FRACTION).toBeCloseTo(7.3, 10);
+    expect(drawing.derivations).toEqual([
+      expect.objectContaining({ dimension: 'labels.centerCapHeightMm', basis: 'transferred', from: expect.stringContaining('D.2.5') }),
+    ]);
+  });
+
+  it('lehnt den großen Lauf ab, wo er nicht in den Körper passt', () => {
+    expect(() => drawSymbol({ kind: 'vehicle-air', labels: { center: 'AB', centerCapHeightMm: 7.3 } }))
+      .toThrow(NotMeasuredError);
+    expect(() => drawSymbol({
+      kind: 'vehicle-water', bodyVariant: 'inset-hull', organization: 'feuerwehr',
+      labels: { center: 'AB', centerCapHeightMm: 7.3 },
+    })).toThrow(/breiter oder höher als der Körper/);
+  });
+
+  it('lässt kleinere vermessene Versalhöhen und den Kreis ohne Notiz', () => {
+    expect(drawSymbol({ kind: 'formation', labels: { center: 'X', centerCapHeightMm: 3 } }).derivations)
+      .toBeUndefined();
+    const circle = drawSymbol({ kind: 'circle-12', labels: { center: 'M', centerCapHeightMm: 7.3 } });
+    expect(circle.derivations?.map((note) => note.dimension) ?? []).not.toContain('labels.centerCapHeightMm');
+  });
+});

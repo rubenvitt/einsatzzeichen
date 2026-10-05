@@ -4,12 +4,15 @@ import * as core from '@einsatzzeichen/core';
 import { SpecParseError, checkSpec, encodeSpecParam } from '@einsatzzeichen/core';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 import {
+  CENTER_LABEL_SIZES,
   LIST_SPEC_FIELDS,
   allowedValues,
+  centerLabelSize,
   decodeSpec,
   encodeSpec,
   evaluateSpec,
   issuesByField,
+  reduceCenterLabelSize,
   reduceLabel,
   reduceSpec,
 } from './builder-state.js';
@@ -439,5 +442,64 @@ describe('reduceLabel', () => {
       centerCapHeightMm: 7.3,
       bottomRight: 'UEL',
     });
+  });
+});
+
+describe('Größe des mittigen Laufs (LFH-992)', () => {
+  const d25 = {
+    kind: 'circle-12',
+    bodyVariant: 'raised-gable',
+    organization: 'fuehrung-leitung',
+    bodyMarks: ['circle-solid-cap-4mm'],
+    labels: { center: 'LtS' },
+  } as const satisfies SymbolSpec;
+
+  it('bietet Normal und Groß an; Groß ist die Versalhöhe von D.2.5', () => {
+    expect(CENTER_LABEL_SIZES.map(({ id, label }) => [id, label])).toEqual([
+      ['normal', 'Normal'],
+      ['gross', 'Groß'],
+    ]);
+    expect(CENTER_LABEL_SIZES[1].capHeightMm).toBe(core.LARGE_CENTER_CAP_HEIGHT_MM);
+    expect(core.LARGE_CENTER_CAP_HEIGHT_MM).toBe(7.3);
+  });
+
+  it('setzt „Groß“ als Versalhöhe und „Normal“ als keinen Wert', () => {
+    const large = reduceCenterLabelSize(d25, 'gross');
+    expect(large.labels).toEqual({ center: 'LtS', centerCapHeightMm: 7.3 });
+    expect(centerLabelSize(large)).toBe('gross');
+    const normal = reduceCenterLabelSize(large, 'normal');
+    expect(normal).toEqual(d25);
+    expect(centerLabelSize(normal)).toBe('normal');
+  });
+
+  it('deckt sich mit „LtS“ und „Groß“ mit der Leitstelle D.2.5', () => {
+    const result = evaluateSpec(reduceCenterLabelSize(d25, 'gross'));
+    if (!result.ok) throw new Error('Die Leitstelle zeichnet nicht.');
+    const original = evaluateSpec({
+      ...d25,
+      labels: { center: 'LtS', centerCapHeightMm: 7.3, centerBaselineFromBodyBottomMm: 8 },
+    });
+    if (!original.ok) throw new Error('D.2.5 zeichnet nicht.');
+    expect(result.drawing.children).toEqual(original.drawing.children);
+    expect(result.drawing.derivations).toBeUndefined();
+  });
+
+  it('nennt eine Versalhöhe aus einem geladenen Rezept als eigene Größe', () => {
+    expect(centerLabelSize({ kind: 'vehicle-land', labels: { center: 'MastKW', centerCapHeightMm: 4.3826 } }))
+      .toBe('recipe');
+  });
+
+  it('nimmt die Größe mit dem mittigen Text weg, damit keine Höhe ohne Lauf stehen bleibt', () => {
+    const large = reduceCenterLabelSize(reduceLabel(d25, 'bottomRight', 'UEL'), 'gross');
+    const cleared = reduceLabel(large, 'center', '');
+    expect(cleared.labels).toEqual({ bottomRight: 'UEL' });
+    expect(evaluateSpec(cleared).ok).toBe(true);
+  });
+
+  it('meldet einen Text, der in „Groß“ zu breit ist, als Regel', () => {
+    const result = evaluateSpec(reduceCenterLabelSize({ ...d25, labels: { center: 'Leitstelle' } }, 'gross'));
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.issues.map((issue) => issue.rule)).toContain('label-too-wide');
   });
 });

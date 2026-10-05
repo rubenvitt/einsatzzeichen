@@ -63,6 +63,7 @@ import { noteInsetHullOrganization } from './derive/inset-hull-organization.js';
 import { capabilityPictograms, composedBodyMarks } from './derive/capabilities.js';
 import {
   circleCenterBaselineFromBodyBottomMm,
+  measuredCircleCenterBaselineFromBodyBottomMm,
   circleCornerRuns,
   circleTopLeftInk,
   circleTopLeftMetrics,
@@ -1556,10 +1557,16 @@ function composeMeasuredOrDerived(
         zoneProfile.belowRight,
         // Abweichende Grundlinie und Anker gelten an jeder Körperform; außerhalb der vermessenen
         // Profile notiert `deriveLabelZones` sie als abgeleitet. Ohne Angabe gilt am Kreis die
-        // Versalmitte auf der Kreismitte.
+        // Versalmitte auf der Kreismitte — außer beim großen Lauf der Ortszeichen D.2.3 bis D.2.5,
+        // dessen Grundlinie vermessen ist.
         placedLabels.centerBaselineFromBodyBottomMm ?? (
           isCircleBody && placedLabels.center !== undefined
-            ? circleCenterBaselineFromBodyBottomMm(
+            ? measuredCircleCenterBaselineFromBodyBottomMm(
+                spec.kind,
+                spec.bodyVariant,
+                bodyBoundsMm,
+                placedLabels.centerCapHeightMm ?? CENTER_LABEL_CAP_HEIGHT_MM,
+              ) ?? circleCenterBaselineFromBodyBottomMm(
                 bodyBoundsMm,
                 placedLabels.centerCapHeightMm ?? CENTER_LABEL_CAP_HEIGHT_MM,
               )

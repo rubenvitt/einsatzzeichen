@@ -6,6 +6,7 @@ import { NotMeasuredError } from '../not-measured.js';
 import { ARIMO_CAP_HEIGHT_FRACTION, verticalTextBoxMm } from '../render/text-policy.js';
 import { innerSpanMm, outerSpanMm, outlineSegments } from './body-outline.js';
 import { noteDerivation } from './record.js';
+import { LARGE_CENTER_CAP_HEIGHT_MM } from './circle.js';
 
 /**
  * Beschriftungszonen an Körperformen, an denen sie nicht vermessen sind (Entscheidung des
@@ -357,6 +358,28 @@ function noteMetricTransfers(context: LabelZoneContext): void {
       part: 'Metriksatz oberhalb links',
       basis: 'transferred',
       from: 'angehobener Luftrumpf N.2 (Metriksatz)',
+    });
+  }
+  // Ein mittiger Lauf über der Normhöhe ist nur am 12-mm-Kreis vermessen (D.2.3 bis D.2.5,
+  // 7,3 mm). Anderswo ist er abgeleitet, und erst damit sieht ihn die Platzprüfung
+  // (`layout-guard.ts`): ohne Notiz ragte er am Luftfahrzeug aus dem Rumpf (LFH-992).
+  // Kleinere Höhen bleiben ohne Notiz — sie liegen auf derselben Grundlinie innerhalb der Normbox.
+  const capHeight = labels.centerCapHeightMm;
+  if (
+    labels.center !== undefined &&
+    capHeight !== undefined &&
+    capHeight > COMPOSE_ZONE_CONSTANTS.CENTER_LABEL_CAP_HEIGHT_MM &&
+    !(
+      kind === 'circle-12' &&
+      (variant === undefined || variant === 'raised-gable') &&
+      capHeight === LARGE_CENTER_CAP_HEIGHT_MM
+    )
+  ) {
+    noteDerivation({
+      dimension: 'labels.centerCapHeightMm',
+      part: 'vergrößerter mittiger Lauf, gegen die Körperhülle geprüft',
+      basis: 'transferred',
+      from: 'Ortszeichen D.2.3 bis D.2.5 (Versalhöhe 7,3 mm)',
     });
   }
   const baseline = labels.centerBaselineFromBodyBottomMm;

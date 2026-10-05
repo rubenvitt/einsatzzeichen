@@ -1,5 +1,6 @@
 import {
   Component,
+  Fragment,
   useDeferredValue,
   useEffect,
   useMemo,
@@ -14,13 +15,17 @@ import type { ValidationIssue } from '@einsatzzeichen/core';
 import { PALETTE, type ColorToken, type Drawing, type SymbolSpec } from '@einsatzzeichen/schema';
 import { codeSamplesFor, type CodeSamples } from '../../lib/code-samples.js';
 import {
+  CENTER_LABEL_SIZES,
+  centerLabelSize,
   decodeSpec,
   encodeSpec,
   evaluateSpec,
   issuesByField,
+  reduceCenterLabelSize,
   reduceLabel,
   reduceSpec,
   type AllowedValue,
+  type CenterLabelSize,
   type LabelZone,
   type BlockedValue,
 } from '../../lib/builder-state.js';
@@ -60,6 +65,12 @@ const LABEL_ZONE_FIELDS: readonly { zone: LabelZone; label: string; placeholder:
 function labelText(spec: SymbolSpec, zone: LabelZone): string {
   const value = spec.labels?.[zone];
   return typeof value === 'string' ? value : '';
+}
+
+/** Die Versalhöhe eines geladenen Rezepts in deutscher Schreibweise, auf zwei Stellen. */
+function capHeightText(spec: SymbolSpec): string {
+  const value = spec.labels?.centerCapHeightMm ?? 0;
+  return `${value.toLocaleString('de-DE', { maximumFractionDigits: 2 })} mm`;
 }
 
 /**
@@ -1368,6 +1379,11 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
     setLoadedId('');
   }
 
+  function setCenterLabelSize(size: CenterLabelSize) {
+    setSpec((current) => reduceCenterLabelSize(current, size));
+    setLoadedId('');
+  }
+
   function loadFromCatalog(id: string) {
     // Die leere Auswahl löst nur den Bezug zum Katalogeintrag; die Spec bleibt stehen, damit
     // niemand seine Arbeit verliert, weil er die Auswahl zurückstellt.
@@ -1746,19 +1762,57 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
             </p>
             <div className="ez-builder__group-grid">
               {LABEL_ZONE_FIELDS.map(({ zone, label, placeholder }) => (
-                <div className="ez-builder__field" key={zone}>
-                  <label className="ez-builder__field-label" htmlFor={`ez-builder-label-${zone}`}>
-                    {label}
-                  </label>
-                  <input
-                    id={`ez-builder-label-${zone}`}
-                    type="text"
-                    placeholder={placeholder}
-                    value={labelText(spec, zone)}
-                    aria-describedby={fieldIssues.has('labels') ? 'ez-builder-labels-issue' : undefined}
-                    onChange={(event) => setLabel(zone, event.target.value)}
-                  />
-                </div>
+                <Fragment key={zone}>
+                  <div className="ez-builder__field">
+                    <label className="ez-builder__field-label" htmlFor={`ez-builder-label-${zone}`}>
+                      {label}
+                    </label>
+                    <input
+                      id={`ez-builder-label-${zone}`}
+                      type="text"
+                      placeholder={placeholder}
+                      value={labelText(spec, zone)}
+                      aria-describedby={fieldIssues.has('labels') ? 'ez-builder-labels-issue' : undefined}
+                      onChange={(event) => setLabel(zone, event.target.value)}
+                    />
+                  </div>
+                  {/*
+                    Die Größe steht gleich hinter dem Feld „Mitte“, weil sie nur für diesen Lauf
+                    gilt (LFH-992). Ohne mittigen Text ist sie gesperrt: eine Höhe ohne Lauf lehnt
+                    die Regel `center-cap-height-requires-center-label` ab.
+                  */}
+                  {zone === 'center' ? (
+                    <div className="ez-builder__field">
+                      <label className="ez-builder__field-label" htmlFor="ez-builder-label-centerSize">
+                        Größe in der Mitte
+                      </label>
+                      <select
+                        id="ez-builder-label-centerSize"
+                        value={centerLabelSize(spec)}
+                        disabled={labelText(spec, 'center') === ''}
+                        aria-describedby="ez-builder-label-centerSize-hint"
+                        onChange={(event) => {
+                          const size = CENTER_LABEL_SIZES.find(({ id }) => id === event.target.value);
+                          if (size !== undefined) setCenterLabelSize(size.id);
+                        }}
+                      >
+                        {CENTER_LABEL_SIZES.map(({ id, label: sizeLabel }) => (
+                          <option key={id} value={id}>
+                            {sizeLabel}
+                          </option>
+                        ))}
+                        {centerLabelSize(spec) === 'recipe' ? (
+                          <option value="recipe" disabled>
+                            Aus dem Rezept ({capHeightText(spec)})
+                          </option>
+                        ) : null}
+                      </select>
+                      <span className="ez-builder__field-hint" id="ez-builder-label-centerSize-hint">
+                        „Groß“ setzt kurze Kürzel so hoch wie „LtS“ an der Leitstelle.
+                      </span>
+                    </div>
+                  ) : null}
+                </Fragment>
               ))}
             </div>
             <FieldIssueNote id="ez-builder-labels-issue" issues={fieldIssues.get('labels') ?? []} />
