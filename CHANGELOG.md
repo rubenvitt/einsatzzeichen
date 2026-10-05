@@ -1,3 +1,33 @@
+## Release Notes 4.2.0
+
+### Core-Paket
+
+**Verbessertes Label-Rendering bei verkleinertem Körper**
+
+Labels im Körper (wie „I", „II", „III") skalieren nun automatisch mit, wenn Giebelform oder Kopfzone den Körper verkleinern. Die Versalhöhe fällt dabei nicht unter 2,12 mm. Dies verbessert die Lesbarkeit bei abgeleiteten Zusammenstellungen erheblich – über 5.000 Symbole, die zuvor als „label-too-wide" markiert waren, werden nun korrekt gezeichnet.
+
+**Größere Labels in der Körpermitte**
+
+Labels in der Körpermitte können nun in einer größeren Schriftgröße (7,3 mm Versalhöhe) dargestellt werden – analog zu Ortszeichen wie Leitstellen. Die Platzierungsprüfung berücksichtigt die neue Größe automatisch.
+
+**Korrektur: Kontrast-Tokens nicht mehr als technische Füllung**
+
+Die Tokens `funktionslauf-kontrast` und `koerperlauf-kontrast` werden nicht mehr fälschlicherweise als technische Körperfüllung angeboten. Diese sind ausschließlich für Schriftfarben vorgesehen.
+
+### Website
+
+**Körpervarianten mit sprechenden Bezeichnungen**
+
+Die Auswahl der Körpervariante zeigt nun verständliche Bezeichnungen wie „ortsgebunden (Giebel)" statt technischer Kennungen. Dies gilt für alle Auswahlfelder und Zeichenseiten.
+
+**Größenwahl für mittiges Label**
+
+Im Baukasten kann die Größe des mittigen Labels nun explizit gewählt werden: „Normal" oder „Groß" (7,3 mm). Die Option ist nur aktiv, wenn ein mittiger Text gesetzt ist.
+
+**Reduzierte UI-Redundanz**
+
+Der Hinweis „abgeleitet" erscheint in Auswahllisten nur noch als Tooltip, nicht mehr als Text. Die gesammelte Information bleibt unter der Vorschau und auf den Kacheln erhalten. Dies macht Listen deutlich übersichtlicher – zuvor trugen 136 Einträge diesen Zusatz.
+
 ## Breaking Changes
 
 Keine Breaking Changes in diesem Release.
