@@ -3,6 +3,7 @@ import {
   DEFAULT_STROKE_WIDTH_MM,
   DEFAULT_VIEWBOX_MM,
   PALETTE,
+  TECHNICAL_FILL_TOKENS,
   type Drawing,
   type Primitive,
 } from './geometry.js';
@@ -44,6 +45,17 @@ describe('geometry', () => {
     expect(Object.isFrozen(PALETTE)).toBe(true);
     expect(mutationError).toBeInstanceOf(TypeError);
     expect(PALETTE.blau).toBe(originalBlue);
+  });
+
+  it('bietet als technische Füllung jeden Palettentoken außer den beiden Tinten an', () => {
+    // LFH-990: `funktionslauf-kontrast` und `koerperlauf-kontrast` sind Schriftfarben für Läufe,
+    // keine Körperfläche.
+    expect(TECHNICAL_FILL_TOKENS).toEqual(
+      Object.keys(PALETTE).filter(
+        (token) => token !== 'funktionslauf-kontrast' && token !== 'koerperlauf-kontrast',
+      ),
+    );
+    expect(Object.isFrozen(TECHNICAL_FILL_TOKENS)).toBe(true);
   });
 
   it('nutzt 0,5 mm Strichstärke und 32 mm Grundfläche als Vorgabe', () => {

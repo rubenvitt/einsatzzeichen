@@ -13,7 +13,9 @@ die [Anleitungen](/docs/anleitungen/).
 
 Zwei Dinge werden hier festgelegt, die überall sonst gelten. Erstens die Millimeter-Regel: alle
 Längen in der IR und im Katalog sind Millimeter, umgerechnet wird erst an der Rendergrenze.
-Zweitens die Farbpalette: `PALETTE` bildet die dreizehn Farbtoken auf ihre Hexwerte ab. Ein
+Zweitens die Farbpalette: `PALETTE` bildet die vierzehn Farbtoken auf ihre Hexwerte ab. Zwei davon,
+`funktionslauf-kontrast` und `koerperlauf-kontrast`, sind Tinten für Läufe; eine Körperfläche
+füllen nur die übrigen zwölf aus `TECHNICAL_FILL_TOKENS`. Ein
 Zeichen benennt Farbe über den Token, nie über den Hexwert — deshalb kann ein Render-Theme sie
 austauschen, ohne dass die Zeichnung sich ändert.
 
@@ -40,7 +42,8 @@ so macht es auch diese Website (`vite.resolve.alias` in `astro.config.mjs`).
 |---|---|
 | `SymbolSpec` | die semantische Beschreibung eines Zeichens — `kind`, `organization`, `strength`, `capabilities`, … |
 | `Drawing`, `Primitive`, `Style`, `Transform` | die IR: was gezeichnet wird, in Millimetern |
-| `PALETTE`, `ColorToken`, `RgbHex`, `ColorPalette` | die dreizehn Farbtoken und ihre Werte |
+| `PALETTE`, `ColorToken`, `RgbHex`, `ColorPalette` | die vierzehn Farbtoken und ihre Werte |
+| `TECHNICAL_FILL_TOKENS`, `TechnicalFillToken`, `InkToken` | die Farbtoken, die als `technicalFill` eine Körperfläche füllen dürfen, und die beiden Tinten, die es nicht dürfen |
 | `UNITS_PER_MM`, `mmToUnits`, `unitsToMm`, `unitsEqual`, `TOLERANCE_UNITS` | Einheitenrechnung und Vergleichstoleranz |
 | `SYMBOL_KINDS`, `ORGANIZATION_IDS`, `STRENGTH_IDS`, `CAPABILITY_IDS`, `STATE_IDS`, `COMMS_IDS`, `DAMAGE_IDS`, `WILDFIRE_IDS`, … | die erlaubten Werte je Feld der `SymbolSpec` |
 | `CatalogEntry`, `CoverageEntry`, `CoverageManifest` | Katalogeintrag und Manifestzeile |

@@ -1,11 +1,10 @@
 import {
   BODY_MARK_RENDITION_IDS,
   DEFAULT_VIEWBOX_MM,
-  PALETTE,
   STATE_IDS,
+  TECHNICAL_FILL_TOKENS,
   type BodyMarkId,
   type BodyMarkRenditionId,
-  type ColorToken,
   type AdminLevelId,
   type FunctionRoleDefinition,
   type FunctionRoleTextRun,
@@ -16,6 +15,7 @@ import {
   type StrengthId,
   type SymbolKind,
   type SymbolSpec,
+  type TechnicalFillToken,
   type TechnicalHeadMarkId,
 } from '@einsatzzeichen/schema';
 import { stateCarriersOf, stateValueGroup } from './blocks/state-groups.js';
@@ -134,8 +134,11 @@ function organizationId(value: unknown): value is OrganizationId {
     value === 'hilfsorganisation';
 }
 
-function colorToken(value: unknown): value is ColorToken {
-  return typeof value === 'string' && Object.hasOwn(PALETTE, value);
+const TECHNICAL_FILL_TOKEN_SET: ReadonlySet<unknown> = new Set(TECHNICAL_FILL_TOKENS);
+
+/** Ein Palettentoken, der füllen darf — die Tinten-Tokens färben nur Läufe (LFH-990). */
+function technicalFillToken(value: unknown): value is TechnicalFillToken {
+  return TECHNICAL_FILL_TOKEN_SET.has(value);
 }
 
 function containsText(primitive: unknown): boolean {
@@ -262,10 +265,12 @@ function validatePreparedSpec(
   const resolvedFunctionRole = spec.functionRole !== undefined &&
     record(definitionValue) && definitionValue.id === spec.functionRole;
 
-  if (spec.technicalFill !== undefined && !colorToken(spec.technicalFill)) {
+  if (spec.technicalFill !== undefined && !technicalFillToken(spec.technicalFill)) {
     issues.push({
       rule: 'technical-fill-token-invalid',
-      message: 'Eine technische Körperfüllung muss einen bekannten Farbtoken verwenden.',
+      message:
+        'Eine technische Körperfüllung muss einen bekannten Farbtoken verwenden, der füllen darf; ' +
+        'die Tinten-Tokens färben nur Läufe.',
     });
   }
   if (spec.technicalFill !== undefined && spec.organization !== undefined) {

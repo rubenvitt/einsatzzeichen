@@ -66,6 +66,13 @@ describe('validateSpec', () => {
       .map((issue) => issue.rule)).toContain('technical-fill-token-invalid');
   });
 
+  it('lehnt die Tinten-Tokens als technische Körperfüllung ab (LFH-990)', () => {
+    for (const technicalFill of ['funktionslauf-kontrast', 'koerperlauf-kontrast']) {
+      expect(validateSpec({ kind: 'person', technicalFill } as SymbolSpec)
+        .map((issue) => issue.rule), technicalFill).toContain('technical-fill-token-invalid');
+    }
+  });
+
   it('lässt die zwei I.5-Personrauten nur an person zu', () => {
     const variants = [
       'compact-person-diamond-26mm',

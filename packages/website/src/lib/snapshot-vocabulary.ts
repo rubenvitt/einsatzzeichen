@@ -18,11 +18,11 @@ import {
   BODY_VARIANT_IDS,
   FUNCTION_ROLE_IDS,
   ORGANIZATION_IDS,
-  PALETTE,
   STATE_IDS,
   STRENGTH_IDS,
   SYMBOL_KINDS,
   TECHNICAL_BODY_MARK_IDS,
+  TECHNICAL_FILL_TOKENS,
   TECHNICAL_HEAD_MARK_IDS,
   TENDENCY_IDS,
   UNIT_GROUPING_IDS,
@@ -72,8 +72,9 @@ function stateLabel(id: string): string {
  *
  * `technicalFill` beschriftet seine Farbtoken über `COLOR_WORDS` — dieselbe Übersetzung, die auch
  * die Kontrastausnahme in Prosa setzt. Die Token selbst sind Bezeichner (`weiss`, `gruen`,
- * `funktionslauf-kontrast`) und haben in einem Auswahlfeld nichts verloren, das auch Menschen ohne
- * Technikbezug bedienen.
+ * `hellblau`) und haben in einem Auswahlfeld nichts verloren, das auch Menschen ohne
+ * Technikbezug bedienen. Angeboten werden nur `TECHNICAL_FILL_TOKENS`: die Tinten-Tokens färben
+ * Läufe, keine Körperfläche (LFH-990).
  *
  * `bodyVariant` trägt seit LFH-989 die Bezeichnungen aus `BODY_VARIANT_LABELS` in `core` (dort
  * seit dem 2. Oktober 2026). Bis dahin stand hier die Kennung (`raised-gable`), weil der Katalog
@@ -86,7 +87,7 @@ export function builderVocabulary(): BuilderVocabulary {
       ORGANIZATION_IDS,
       (id) => ORGANIZATION_LABELS[id as (typeof ORGANIZATION_IDS)[number]],
     ),
-    technicalFill: labelled(Object.keys(PALETTE), (id) => COLOR_WORDS[id as ColorToken]),
+    technicalFill: labelled(TECHNICAL_FILL_TOKENS, (id) => COLOR_WORDS[id as ColorToken]),
     strength: labelled(STRENGTH_IDS, (id) => STRENGTH_LABELS[id as (typeof STRENGTH_IDS)[number]]),
     administrativeLevel: labelled(
       ADMIN_LEVEL_IDS,

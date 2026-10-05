@@ -16,7 +16,7 @@ import {
   CONTRAST_EXCEPTIONS,
 } from '@einsatzzeichen/core';
 import { VALIDATION_RULE_IDS } from '@einsatzzeichen/core';
-import { BODY_VARIANT_IDS, PALETTE } from '@einsatzzeichen/schema';
+import { BODY_VARIANT_IDS, TECHNICAL_FILL_TOKENS } from '@einsatzzeichen/schema';
 import { buildSnapshot } from './snapshot-build.js';
 
 describe('buildSnapshot', () => {
@@ -141,6 +141,13 @@ describe('buildSnapshot', () => {
     }
   });
 
+  it('bietet die Tinten-Tokens nicht als technische Füllung an (LFH-990)', () => {
+    const ids = snap.builder.technicalFill.map((value) => value.id);
+    expect(ids).toEqual([...TECHNICAL_FILL_TOKENS]);
+    expect(ids).not.toContain('funktionslauf-kontrast');
+    expect(ids).not.toContain('koerperlauf-kontrast');
+  });
+
   it('trägt die abgeleitete Kapitelbezeichnung an jedem Zeichen', () => {
     const bySourceId = new Map(snap.symbols.map((symbol) => [symbol.sourceId, symbol]));
     expect(bySourceId.get('bbk-babz-2025:E.1.1')?.chapter).toBe('Anhang E.1');
@@ -159,7 +166,7 @@ describe('buildSnapshot', () => {
   describe('Bezeichnungen im Baukastenvokabular', () => {
     it('beschriftet jede technische Füllung mit einem deutschen Wort statt mit ihrem Token', () => {
       const fills = snap.builder.technicalFill;
-      expect(fills.length).toBe(Object.keys(PALETTE).length);
+      expect(fills.length).toBe(TECHNICAL_FILL_TOKENS.length);
       for (const { id, label } of fills) {
         // Ein Bindestrich im Label heißt, dass der Bezeichner durchgereicht wurde
         // (`funktionslauf-kontrast`); ein Label gleich der ID heißt dasselbe für die übrigen.
