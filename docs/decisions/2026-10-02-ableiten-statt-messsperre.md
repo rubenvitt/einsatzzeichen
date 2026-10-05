@@ -84,7 +84,8 @@ Kopfangabe und Beschriftung mit Organisation, Fähigkeit, Körpermarke, Zustand 
 Von 118 144 Specs zeichnet er 65 118, ohne Verstoß. Er fand die Fehler, die erst im
 Zusammenspiel entstehen:
 
-- ein Körper, den Kopf und Giebel verkleinern, unter Läufen in Normgröße;
+- ein Körper, den Kopf und Giebel verkleinern, unter Läufen in Normgröße (seit LFH-987 folgen
+  die Läufe dem Körper, `2026-10-05-lfh-987-laeufe-folgen-dem-koerper.md`);
 - Eckkürzel unter einem langen mittigen Lauf;
 - der EU-Kopf über der Zustandsfassung;
 - Sterne im Giebel.

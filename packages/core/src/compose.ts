@@ -47,6 +47,17 @@ import { NotMeasuredError } from './not-measured.js';
 import { collectDerivations } from './derive/record.js';
 import { assertDerivedLayoutFits } from './derive/layout-guard.js';
 import { assertDerivedVariantComposable } from './derive/body-variants.js';
+import { IDENTITY_AFFINE, mapPrimitive } from './derive/affine.js';
+import {
+  IN_BODY_LABEL_ZONES,
+  OUTSIDE_LABEL_ZONES,
+  bodyShrinkMap,
+  invertAffine,
+  isIdentityAffine,
+  labelsInZones,
+  noteRunsFollowingBody,
+  runsFollowingBody,
+} from './derive/run-scaling.js';
 import {
   fitFunctionRoleBodyMarks,
   fitFunctionRolePictograms,
@@ -1288,8 +1299,13 @@ function composeMeasuredOrDerived(
               ? FOOT_GAP_MM + FOOT_TEXT_SIZE_MM
               : 0),
       })
-    : { body: roleLayout.body, extras: baseExtras };
+    : { body: roleLayout.body, extras: baseExtras, place: IDENTITY_AFFINE };
   const placedBody = placedBase.body;
+  // Verkleinern Giebel oder Kopfzone den Körper, folgen ihm die Läufe darin (LFH-987,
+  // `derive/run-scaling.ts`). Funktionsfassungen setzen ihre Läufe selbst.
+  const bodyMap = roleLayout === undefined
+    ? bodyShrinkMap(spec, placedBase.place, placedBase.shrink)
+    : IDENTITY_AFFINE;
   // Zusatzgeometrie folgt dem platzierten Körper (`placeBaseUnderHead`).
   const extras = placedBase.extras;
   // Acht Anhang-G-Quellen belegen dieselbe generische Form: ein unbeschrifteter, kopfloser
@@ -1533,65 +1549,93 @@ function composeMeasuredOrDerived(
     : effectiveLabels;
   // Zonen, die das Profil nicht vermessen führt, liefert `derive/label-zones.ts` (abgeleitet);
   // Kreiskörper lässt es aus, die regelt `derive/circle.ts`.
-  const zones = placedLabels === undefined
-    ? undefined
-    : deriveLabelZones({
-        kind: spec.kind,
-        variant: spec.bodyVariant,
-        profile,
-        labels: placedLabels,
-        body: placedBody,
-        extras,
-        baseBottomMm,
-        organizationFill,
-      });
-  const zoneProfile = zones?.profile ?? profile;
-  noteFootBandCornerLabels(spec.kind, spec.bodyVariant, placedLabels);
-  const labelChildren = placedLabels !== undefined
-    ? labelPrimitives(
-        placedLabels,
-        bodyBoundsMm,
-        DEFAULT_VIEWBOX_MM.width,
-        organizationFill ?? null,
-        profile.bottomLabelBaselineFromBodyBottomMm,
-        zoneProfile.belowRight,
-        // Abweichende Grundlinie und Anker gelten an jeder Körperform; außerhalb der vermessenen
-        // Profile notiert `deriveLabelZones` sie als abgeleitet. Ohne Angabe gilt am Kreis die
-        // Versalmitte auf der Kreismitte — außer beim großen Lauf der Ortszeichen D.2.3 bis D.2.5,
-        // dessen Grundlinie vermessen ist.
-        placedLabels.centerBaselineFromBodyBottomMm ?? (
-          isCircleBody && placedLabels.center !== undefined
-            ? measuredCircleCenterBaselineFromBodyBottomMm(
-                spec.kind,
-                spec.bodyVariant,
-                bodyBoundsMm,
-                placedLabels.centerCapHeightMm ?? CENTER_LABEL_CAP_HEIGHT_MM,
-              ) ?? circleCenterBaselineFromBodyBottomMm(
-                bodyBoundsMm,
-                placedLabels.centerCapHeightMm ?? CENTER_LABEL_CAP_HEIGHT_MM,
-              )
-            : profile.centerBaselineFromBodyBottomMm
-        ),
-        placedLabels.centerAnchorFromBodyLeftMm,
-        zoneProfile.topLeftBaselineFromBodyTopMm,
-        normalizesMeasuredCircleTopLeftCoordinates(spec.kind, spec.bodyVariant),
-        zoneProfile.aboveLeftBaselineFromBodyTopMm,
-        zoneProfile.aboveLeftAnchorFromBodyLeftMm,
-        zoneProfile.surfaceLabels,
-        zoneProfile.topLeftLines,
-        zoneProfile.bottomCenterBaselineFromBodyBottomMm,
-        zoneProfile.bottomCenterInk,
-        bodyLabelInk(bodyFill, placedLabels.inBodyInk),
-        isCircleBody
-          ? circleCornerRuns(spec.kind, spec.bodyVariant, bodyBoundsMm, placedLabels)
-          : undefined,
-        // Ein ausdrücklicher Override gilt wie bisher auch für den überstehenden Kreislauf.
-        placedLabels.inBodyInk ??
-          (isCircleBody ? circleTopLeftInk(spec.kind, spec.bodyVariant) : undefined) ??
-          bodyLabelInk(bodyFill),
-        zones?.boxes,
-      )
-    : [];
+  const layoutLabels = (
+    labels: NonNullable<SymbolSpec['labels']>,
+    layoutBody: Primitive,
+    layoutExtras: readonly Primitive[],
+    layoutBaseBottomMm: number,
+  ): Primitive[] => {
+    const layoutBounds = boundsOfMm(layoutBody);
+    const zones = deriveLabelZones({
+      kind: spec.kind,
+      variant: spec.bodyVariant,
+      profile,
+      labels,
+      body: layoutBody,
+      extras: layoutExtras,
+      baseBottomMm: layoutBaseBottomMm,
+      organizationFill,
+    });
+    const zoneProfile = zones?.profile ?? profile;
+    noteFootBandCornerLabels(spec.kind, spec.bodyVariant, labels);
+    return labelPrimitives(
+      labels,
+      layoutBounds,
+      DEFAULT_VIEWBOX_MM.width,
+      organizationFill ?? null,
+      profile.bottomLabelBaselineFromBodyBottomMm,
+      zoneProfile.belowRight,
+      // Abweichende Grundlinie und Anker gelten an jeder Körperform; außerhalb der vermessenen
+      // Profile notiert `deriveLabelZones` sie als abgeleitet. Ohne Angabe gilt am Kreis die
+      // Versalmitte auf der Kreismitte — außer beim großen Lauf der Ortszeichen D.2.3 bis D.2.5,
+      // dessen Grundlinie vermessen ist.
+      labels.centerBaselineFromBodyBottomMm ?? (
+        isCircleBody && labels.center !== undefined
+          ? measuredCircleCenterBaselineFromBodyBottomMm(
+              spec.kind,
+              spec.bodyVariant,
+              layoutBounds,
+              labels.centerCapHeightMm ?? CENTER_LABEL_CAP_HEIGHT_MM,
+            ) ?? circleCenterBaselineFromBodyBottomMm(
+              layoutBounds,
+              labels.centerCapHeightMm ?? CENTER_LABEL_CAP_HEIGHT_MM,
+            )
+          : profile.centerBaselineFromBodyBottomMm
+      ),
+      labels.centerAnchorFromBodyLeftMm,
+      zoneProfile.topLeftBaselineFromBodyTopMm,
+      normalizesMeasuredCircleTopLeftCoordinates(spec.kind, spec.bodyVariant),
+      zoneProfile.aboveLeftBaselineFromBodyTopMm,
+      zoneProfile.aboveLeftAnchorFromBodyLeftMm,
+      zoneProfile.surfaceLabels,
+      zoneProfile.topLeftLines,
+      zoneProfile.bottomCenterBaselineFromBodyBottomMm,
+      zoneProfile.bottomCenterInk,
+      bodyLabelInk(bodyFill, labels.inBodyInk),
+      isCircleBody
+        ? circleCornerRuns(spec.kind, spec.bodyVariant, layoutBounds, labels)
+        : undefined,
+      // Ein ausdrücklicher Override gilt wie bisher auch für den überstehenden Kreislauf.
+      labels.inBodyInk ??
+        (isCircleBody ? circleTopLeftInk(spec.kind, spec.bodyVariant) : undefined) ??
+        bodyLabelInk(bodyFill),
+      zones?.boxes,
+    );
+  };
+  const labelChildren = placedLabels === undefined
+    ? []
+    : isIdentityAffine(bodyMap)
+      ? layoutLabels(placedLabels, placedBody, extras, baseBottomMm)
+      : (() => {
+          // Die Läufe im Körper entstehen am unverkleinerten Körper und folgen ihm dann; die Läufe
+          // auf der Ausgabeoberfläche stehen am gezeichneten Körper.
+          const unshrink = invertAffine(bodyMap);
+          const inBody = labelsInZones(placedLabels, IN_BODY_LABEL_ZONES);
+          const outside = labelsInZones(placedLabels, OUTSIDE_LABEL_ZONES);
+          const inBodyRuns = inBody === undefined
+            ? []
+            : layoutLabels(
+                inBody,
+                mapPrimitive(unshrink, placedBody),
+                extras.map((extra) => mapPrimitive(unshrink, extra)),
+                unshrink.ty + unshrink.sy * baseBottomMm,
+              );
+          if (inBodyRuns.length > 0) noteRunsFollowingBody(inBodyRuns, bodyMap);
+          return [
+            ...runsFollowingBody(inBodyRuns, bodyMap),
+            ...(outside === undefined ? [] : layoutLabels(outside, placedBody, extras, baseBottomMm)),
+          ];
+        })();
 
   const roleTextPrimitives: Primitive[] = roleLayout === undefined
     ? []

@@ -12,7 +12,7 @@ import { NotMeasuredError } from '../not-measured.js';
 import { isAllowedBodyVariant, isDerivedBodyVariant } from '../derive/body-variant-pairs.js';
 import { deriveBodyVariant, type DerivedVariant } from '../derive/body-variants.js';
 import { derivedInnerField, type InnerFieldGap } from '../derive/inner-field.js';
-import { segmentDistance } from '../derive/outline.js';
+import { segmentDistance, type Scaling } from '../derive/outline.js';
 import { noteDerivation } from '../derive/record.js';
 import { POST_VARIANT_BODIES, POST_VARIANT_EXTRAS } from '../derive/circle.js';
 
@@ -1242,11 +1242,11 @@ function derivedVariant(kind: SymbolKind, variant: BodyVariantId): DerivedVarian
 }
 
 /**
- * Der Faktor, mit dem ein abgeleitetes Paar seinen Körper verkleinert (Giebel), sonst 1. Das
- * Layoutprofil liest ihn, um die mittige Grundlinie mitzunehmen.
+ * Die ganze Verkleinerung eines abgeleiteten Paars (Faktor und Fixpunkt), sonst `undefined`.
+ * `compose()` lässt die Läufe im Körper ihr folgen (`derive/run-scaling.ts`).
  */
-export function derivedBodyScale(kind: SymbolKind, variant: BodyVariantId): number {
-  return isDerivedBodyVariant(kind, variant) ? computedVariant(kind, variant).scaling?.factor ?? 1 : 1;
+export function derivedBodyScaling(kind: SymbolKind, variant: BodyVariantId): Scaling | undefined {
+  return isDerivedBodyVariant(kind, variant) ? computedVariant(kind, variant).scaling : undefined;
 }
 
 /**
