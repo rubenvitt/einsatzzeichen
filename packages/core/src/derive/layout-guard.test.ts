@@ -5,10 +5,10 @@ import { NotMeasuredError } from '../not-measured.js';
 
 describe('Platzprüfung abgeleiteter Zeichnungen', () => {
   it.each([
-    // Kopf und Giebel verkleinern den Körper, der mittige Lauf behält seine Normgröße.
-    [{ kind: 'formation', bodyVariant: 'raised-gable', strength: 'trupp', labels: { center: 'AB' } }, /breiter oder höher als der Körper/],
-    // Eckkürzel und mittiger Lauf auf dem verkleinerten Körper.
-    [{ kind: 'formation', bodyVariant: 'raised-gable', administrativeLevel: 'gemeinde', labels: { center: 'AB', topLeft: 'C' } }, /überlappen/],
+    // Kopf und Giebel verkleinern die Raute so weit, dass die Eckkürzel an ihrer Untergrenze
+    // (`derive/run-scaling.ts`) in den mittigen Lauf reichen. Seit LFH-987 folgen die Läufe dem
+    // Körper; erst hier bleibt die Lücke.
+    [{ kind: 'person', bodyVariant: 'raised-gable', administrativeLevel: 'europaeische-union', labels: { center: 'AB', topLeft: 'C', bottomLeft: 'D', bottomRight: 'E' } }, /überlappen/],
     [{ kind: 'vehicle-water', bodyVariant: 'foot-band', administrativeLevel: 'gemeinde', labels: { center: 'LST', bottomRight: 'UEL' } }, /überlappen/],
     // Der neun Millimeter hohe EU-Kopf über der Zustandsfassung der Gefahr.
     [{ kind: 'hazard', administrativeLevel: 'europaeische-union', states: ['suspected-situation'] }, /ragt über die Zeichenfläche/],

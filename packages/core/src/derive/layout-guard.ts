@@ -8,9 +8,10 @@ import { textWidthMm, type TextMetrics } from '../text-metrics.js';
  * Letzte Prüfung einer **abgeleiteten** Zeichnung, bevor sie den Motor verlässt.
  *
  * Jede Ableitung für sich hält ihre Zone frei; erst im Zusammenspiel mehrerer Felder entstehen
- * Überschneidungen, die keine einzelne Ableitung sieht: ein Körper, den Kopf und Giebel
- * verkleinern, während seine Läufe ihre Normgröße behalten; ein Eckkürzel unter einem langen
- * mittigen Lauf; ein Kopf, der über die Fläche hinausragt. Gefunden hat sie ein Zensus über
+ * Überschneidungen, die keine einzelne Ableitung sieht: Läufe auf einem Körper, den Kopf und
+ * Giebel so weit verkleinern, dass sie an ihrer Untergrenze stehen (seit LFH-987 folgen sie dem
+ * Körper, `run-scaling.ts`); ein Eckkürzel unter einem langen mittigen Lauf; ein Kopf, der über
+ * die Fläche hinausragt. Gefunden hat sie ein Zensus über
  * Feldpaare (2. Oktober 2026). Eine Fehlzeichnung ist schlimmer als eine benannte Lücke, deshalb
  * wird hier abgelehnt und nicht verschoben: wohin ein Lauf ausweichen soll, entscheidet die
  * Ableitung seiner Zone, nicht diese Prüfung.

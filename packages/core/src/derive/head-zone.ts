@@ -15,6 +15,7 @@ import {
 } from '../geometry/unit-groupings.js';
 import { HEAD_GAP_MM, HEAD_TOP_MARGIN_MM, placeHead, type LayoutProfile } from '../layout/profiles.js';
 import { NotMeasuredError } from '../not-measured.js';
+import { uniformAbout, type Affine } from './affine.js';
 import { mapPathPoints } from './path-geometry.js';
 import { noteDerivation } from './record.js';
 
@@ -331,6 +332,16 @@ function centerX(bounds: BoundsMm): number {
 export interface PlacedBase {
   readonly body: Primitive;
   readonly extras: readonly Primitive[];
+  /** Die Platzierung des Profils (`profile.place`) als Ähnlichkeitsabbildung. */
+  readonly place: Affine;
+  /** Die Verkleinerung aus Schritt 3, falls die Grundzeichnung sonst die Fläche verließe. */
+  readonly shrink?: Affine;
+}
+
+/** `profile.place` als Abbildung: dieselbe, mit der die Zusatzgeometrie dem Körper folgt. */
+function placementOf(from: BoundsMm, to: BoundsMm): Affine {
+  const k = (to.maxY - to.minY) / (from.maxY - from.minY);
+  return uniformAbout([centerX(from), from.minY], [centerX(to), to.minY], k);
 }
 
 export interface PlaceBaseOptions {
@@ -360,7 +371,10 @@ export interface PlaceBaseOptions {
  */
 export function placeBaseUnderHead(options: PlaceBaseOptions): PlacedBase {
   const { spec, profile, body, extras } = options;
-  if (options.headBottomMm === null) return { body: profile.place(body, null), extras };
+  if (options.headBottomMm === null) {
+    const placedAlone = profile.place(body, null);
+    return { body: placedAlone, extras, place: placementOf(boundsOfMm(body), boundsOfMm(placedAlone)) };
+  }
   // Ragt Zusatzgeometrie über den Körper hinaus (der Giebel über dem Kreis), muss die ganze
   // Grundzeichnung unter den Kopf, nicht nur der Körper: der Kopfabstand gilt ab ihrer Oberkante.
   const overhangMm = Math.max(
@@ -394,7 +408,8 @@ export function placeBaseUnderHead(options: PlaceBaseOptions): PlacedBase {
     (bottom, primitive) => Math.max(bottom, boundsOfMm(primitive).maxY),
     to.maxY,
   );
-  if (baseBottomMm <= limitMm + EPSILON_MM) return { body: placed, extras: followed };
+  const place = placementOf(from, to);
+  if (baseBottomMm <= limitMm + EPSILON_MM) return { body: placed, extras: followed, place };
 
   const topMm = to.minY;
   if (topMm < headBottomMm + HEAD_GAP_MM - EPSILON_MM || limitMm - topMm <= 0) {
@@ -429,6 +444,8 @@ export function placeBaseUnderHead(options: PlaceBaseOptions): PlacedBase {
   return {
     body: mapSimilar(placed, shrink, ox, topMm, 0, 0),
     extras: followed.map((extra) => mapSimilar(extra, shrink, ox, topMm, 0, 0)),
+    place,
+    shrink: uniformAbout([ox, topMm], [ox, topMm], shrink),
   };
 }
 
