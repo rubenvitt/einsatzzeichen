@@ -229,6 +229,38 @@ Pfeil hängt nicht an einem Grundzeichen; die Vorlage zeigt das nur beim Transpo
 und dort gehört der Pfeil zum Personenzustand. Ein Verlauf, der zu kurz ist oder über die
 Zeichenfläche hinausragt, ist keine Regel, sondern ein gewöhnlicher Fehler der Zeichnung.
 
+## Kommunikationsskizze
+
+Für eine taktische Fernmeldeskizze nach Anhang J.5 braucht es Zeichen, zu denen es keine
+Referenzdatei gibt: das Bedingungszeichen, die Sammelschiene, Verbindungslinien mit Funkmarke oder
+„geplant“, den Bereich und die Verbindungsarten Melder, sonstige und Satellit ohne Inhalt. Sie
+stehen **neben** dem Katalog, im Namensraum `sketch.*`, und jede Maßangabe ist vorgeschlagen, nicht
+abgelesen (`SKETCH_BLOCKS`). Die Bausteine geben Primitive in Teilen zurück, damit eine Skizze Lage,
+Hervorhebung und Bedienung selbst setzen kann.
+
+| Export | Was es tut |
+|---|---|
+| `conditionSign`, `conditionSignWidth` | Langsechseck mit Text; die Breite folgt dem Text |
+| `busBar`, `busBarMinLength` | waagerechte Schiene mit eingesetztem Bedingungszeichen |
+| `commsLink` | Verbindung auf einem Polyzug: Funk mit Zickzack in der Mitte, „geplant“ gestrichelt und mit Wort |
+| `commsArea` | Rechteck mit Strich-Punkt-Grenze und Bezeichnung |
+| `sketchPictogram`, `SKETCH_PICTOGRAM_IDS` | Melder, sonstige, Satellit im Format von `pictogram()` |
+| `SKETCH_BLOCKS` | der Befund je Baustein: vorgeschlagen, mit Herkunft |
+
+```ts
+import { busBar, commsLink, renderSvg } from '@einsatzzeichen/core';
+
+const schiene = busBar({ start: [4, 12], length: 80, text: 'TMO 311' });
+const funk = commsLink({ path: [[44, 12], [44, 40]], medium: 'radio', status: 'planned' });
+const svg = renderSvg(
+  {
+    viewBox: { width: 88, height: 48 },
+    children: [...schiene.rail, ...funk.line, ...funk.mark, ...funk.word, ...schiene.sign.outline, ...schiene.sign.label],
+  },
+  { size: 352 },
+);
+```
+
 ## Beispiel
 
 Ein Zeichen beschreiben, zeichnen und als SVG ausgeben — ohne Prüfpaket. Die Spec ist E.1.1
