@@ -171,8 +171,8 @@ export function slicePath(points: readonly Point[], from: number, to: number): r
  * einzelne Polyzüge, weil `Style` kein Strichmuster kennt. Anders als SVGs `stroke-dasharray`
  * beginnt **und endet** der Verlauf mit dem ersten Strich des Musters, damit eine Linie an ihren
  * Stellen ankommt und ein Rechteck an jeder Ecke geschlossen wirkt: Das Muster wird dafür auf
- * eine ganze Zahl von Perioden plus einen Schlussstrich gestreckt oder gestaucht. Ein Verlauf,
- * der dafür zu kurz ist, bleibt ein einziger Strich.
+ * eine ganze Zahl von Perioden plus einen Schlussstrich gestreckt oder gestaucht, mindestens
+ * eine Periode: Auch ein kurzer Verlauf zeigt so sein Muster und wird nie zu einem glatten Strich.
  */
 export function dashedAlong(points: readonly Point[], pattern: readonly number[]): Primitive[] {
   if (pattern.length === 0 || pattern.length % 2 !== 0 || pattern.some((value) => !(value > 0) || !Number.isFinite(value))) {
@@ -181,8 +181,7 @@ export function dashedAlong(points: readonly Point[], pattern: readonly number[]
   const length = pathLengthMm(points);
   const period = pattern.reduce((sum, value) => sum + value, 0);
   const first = pattern[0] as number;
-  const periods = Math.max(0, Math.round((length - first) / period));
-  if (periods === 0) return [strokePolyline(points)];
+  const periods = Math.max(1, Math.round((length - first) / period));
   const scale = length / (periods * period + first);
   // Lagen als Vielfache der Periode statt als laufende Summe: keine aufgelaufenen Rundungsfehler.
   const offsets: number[] = [];

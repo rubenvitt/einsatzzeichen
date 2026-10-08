@@ -269,6 +269,12 @@ describe('Verbindungslinie', () => {
     for (const seg of segments) expect(inkLength([{ type: 'polyline', points: seg }])).toBeGreaterThan(0.5);
   });
 
+  it.each([8 / 3, 4, 1])('zeigt auch auf einer kurzen geplanten Linie Strich und Lücke (%d mm)', (laenge) => {
+    const link = commsLink({ path: [[0, 0], [laenge, 0]], medium: 'wire', status: 'planned' });
+    expect(link.line.length).toBeGreaterThanOrEqual(2);
+    expect(inkLength(link.line)).toBeLessThan(laenge);
+  });
+
   it('lehnt nicht endliche Eingaben ab', () => {
     expect(() => commsArea({ x: 0, y: 0, width: Number.POSITIVE_INFINITY, height: 10, label: 'X' })).toThrow();
     expect(() => busBar({ start: [0, 0], length: Number.NaN, text: 'TMO 1' })).toThrow();
