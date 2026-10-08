@@ -9,8 +9,11 @@ import {
   SKETCH_BLOCKS,
   SKETCH_BUS_BAR_MARGIN_MM,
   SKETCH_CONDITION_SIGN_HEIGHT_MM,
+  SKETCH_NOTE_GAP_MM,
   SKETCH_PICTOGRAM_IDS,
   SKETCH_STROKE_WIDTH_MM,
+  SKETCH_ZIGZAG_GROUND_MM,
+  SKETCH_ZIGZAG_HEIGHT_MM,
   SKETCH_ZIGZAG_LENGTH_MM,
   busBar,
   busBarMinLength,
@@ -202,8 +205,8 @@ describe('Verbindungslinie', () => {
     const [word] = texts(link.word);
     expect(word?.content).toBe('geplant');
     expect(checkTextMetrics(asDrawing(link.word), ARIMO_TEXT_METRICS)).toEqual([]);
-    // unter der waagerechten Linie, mittig
-    expect(word!.boxMm.yMm).toBeGreaterThan(0);
+    // unter der waagerechten Linie, mittig, 1,33 mm Luft zur Strichkante
+    expect(word!.boxMm.yMm).toBeCloseTo(SKETCH_NOTE_GAP_MM + SKETCH_STROKE_WIDTH_MM / 2, 9);
     expect(word!.anchor).toBe('middle');
     expect(word!.x).toBeCloseTo(50, 9);
   });
@@ -213,11 +216,65 @@ describe('Verbindungslinie', () => {
     const mit = commsLink({ path: [[0, 0], [0, 100]], medium: 'radio', status: 'planned' });
     const [a] = texts(ohne.word);
     const [b] = texts(mit.word);
-    expect(a!.anchor).toBe('start');
-    expect(a!.boxMm.xMm).toBeGreaterThan(0);
-    expect(b!.x).toBeGreaterThan(a!.x);
+    // rechts der Linie, 1,33 mm Luft zur Strichkante
+    expect(a!.boxMm.xMm).toBeCloseTo(SKETCH_NOTE_GAP_MM + SKETCH_STROKE_WIDTH_MM / 2, 9);
+    // mit Marke: rechts neben Zickzack und Grund
+    expect(b!.boxMm.xMm).toBeCloseTo(SKETCH_ZIGZAG_HEIGHT_MM / 2 + SKETCH_ZIGZAG_GROUND_MM + SKETCH_NOTE_GAP_MM + SKETCH_STROKE_WIDTH_MM / 2, 9);
     const breit = commsLink({ path: [[0, 0], [0, 100]], medium: 'wire', status: 'planned', clearanceMm: 16 / 3 });
-    expect(texts(breit.word)[0]!.x).toBeGreaterThan(b!.x);
+    expect(texts(breit.word)[0]!.boxMm.xMm).toBeGreaterThan(b!.boxMm.xMm);
+  });
+
+  it.each([
+    [[100, 100]],
+    [[60, 100]],
+    [[1, 100]],
+    [[-100, 100]],
+    [[100, 40]],
+    [[-100, 40]],
+    [[100, -40]],
+    [[-1, -100]],
+  ] as [Point][])('hält das Wort auch an einer schrägen Linie nach %j frei', (to) => {
+    for (const medium of ['wire', 'radio'] as const) {
+      const link = commsLink({ path: [[0, 0], to], medium, status: 'planned' });
+      const { xMm, yMm, widthMm, heightMm } = texts(link.word)[0]!.boxMm;
+      const corners: Point[] = [[xMm, yMm], [xMm + widthMm, yMm], [xMm, yMm + heightMm], [xMm + widthMm, yMm + heightMm]];
+      const [nx, ny] = link.anchor.normal;
+      const [px, py] = link.anchor.point;
+      const signed = corners.map(([x, y]) => (x - px) * nx + (y - py) * ny);
+      // alle Ecken auf derselben Seite, mindestens Luft + halber Strich (+ Marke) von der Linie
+      const min = SKETCH_NOTE_GAP_MM + SKETCH_STROKE_WIDTH_MM / 2 + (medium === 'radio' ? SKETCH_ZIGZAG_HEIGHT_MM / 2 : 0);
+      for (const d of signed) expect(d, `${medium} ${to.join('/')}`).toBeGreaterThanOrEqual(min - EPS);
+      // Seite: rechts bei eher senkrechter, unten bei eher waagerechter Linie
+      if (Math.abs(to[1]) > Math.abs(to[0])) expect(nx).toBeGreaterThan(0);
+      else expect(ny).toBeGreaterThan(0);
+    }
+  });
+
+  it('lässt den Grund der Marke längs nicht über den Zickzack hinausreichen, damit dessen Enden die Linie treffen', () => {
+    const link = commsLink({ path: [[0, 0], [100, 0]], medium: 'radio', status: 'existing' });
+    const ground = link.mark.find((p) => p.style?.fill === 'weiss');
+    const zigzag = link.mark.find((p) => p.style?.stroke === 'schwarz');
+    if (ground?.type !== 'polyline' || zigzag?.type !== 'polyline') throw new Error('Marke fehlt');
+    const xs = ground.points.map(([x]) => x);
+    expect(Math.min(...xs)).toBeCloseTo((zigzag.points[0] as Point)[0], 9);
+    expect(Math.max(...xs)).toBeCloseTo((zigzag.points[6] as Point)[0], 9);
+  });
+
+  it.each([13, 26, 43 + 1 / 3, 52, 65, 156, 3, 100])('beginnt und endet „geplant“ mit einem Strich, ohne Splitter (%d mm)', (laenge) => {
+    const link = commsLink({ path: [[0, 0], [laenge, 0]], medium: 'wire', status: 'planned' });
+    const segments = link.line.map((p) => (p.type === 'polyline' ? p.points : []));
+    expect((segments[0]![0] as Point)[0]).toBeCloseTo(0, 9);
+    const last = segments.at(-1)!;
+    expect((last.at(-1) as Point)[0]).toBeCloseTo(laenge, 9);
+    for (const seg of segments) expect(inkLength([{ type: 'polyline', points: seg }])).toBeGreaterThan(0.5);
+  });
+
+  it('lehnt nicht endliche Eingaben ab', () => {
+    expect(() => commsArea({ x: 0, y: 0, width: Number.POSITIVE_INFINITY, height: 10, label: 'X' })).toThrow();
+    expect(() => busBar({ start: [0, 0], length: Number.NaN, text: 'TMO 1' })).toThrow();
+    expect(() => busBar({ start: [0, 0], length: 100, text: 'TMO 1', signCenterX: Number.NaN })).toThrow();
+    expect(() => conditionSign({ text: 'TMO 1', center: [Number.NaN, 0] })).toThrow();
+    expect(() => commsLink({ path: [[0, 0], [Number.POSITIVE_INFINITY, 0]], medium: 'wire', status: 'existing' })).toThrow();
   });
 
   it('lässt die Marke auf Wunsch weg (Zeichen der Verbindungsart sitzt dort)', () => {

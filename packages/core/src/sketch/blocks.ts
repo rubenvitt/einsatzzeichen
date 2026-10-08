@@ -10,6 +10,7 @@ import {
   pathLengthMm,
   pointAt,
   readableAngleDeg,
+  requireFinite,
   strokePolyline,
   textAdvanceMm,
   textRun,
@@ -77,6 +78,7 @@ export interface ConditionSign {
  * Die Breite folgt dem Text in der Katalogschrift; der Text wird nie gekürzt.
  */
 export function conditionSign({ text, center }: { readonly text: string; readonly center: Point }): ConditionSign {
+  requireFinite('Bedingungszeichen', ...center);
   const width = conditionSignWidth(text);
   const height = SKETCH_CONDITION_SIGN_HEIGHT_MM;
   const h = height / 2;
@@ -137,6 +139,7 @@ export function busBar({
   readonly text: string;
   readonly signCenterX?: number;
 }): BusBar {
+  requireFinite('Sammelschiene', ...start, length, ...(signCenterX === undefined ? [] : [signCenterX]));
   const [x, y] = start;
   const actual = Math.max(length, busBarMinLength(text));
   const half = conditionSignWidth(text) / 2;
@@ -161,7 +164,10 @@ export interface SketchLinkAnchor {
   readonly point: Point;
   /** Linienrichtung dort in Grad, auf (−90°, 90°] gelegt. */
   readonly angleDeg: number;
-  /** Einheitsnormale nach unten bzw. (bei senkrechter Linie) nach rechts. */
+  /**
+   * Einheitsnormale zur Seite, auf der das Wort „geplant“ steht: nach unten, wenn die Linie eher
+   * waagerecht läuft, nach rechts, wenn sie eher senkrecht läuft.
+   */
   readonly normal: Point;
 }
 
@@ -195,7 +201,8 @@ function linkAnchor(points: readonly Point[]): SketchLinkAnchor {
   }
   const { point, direction } = pointAt(points, at);
   let normal: Point = [-direction[1], direction[0]];
-  if (normal[1] < 0 || (normal[1] === 0 && normal[0] < 0)) normal = [-normal[0], -normal[1]];
+  const flip = Math.abs(normal[0]) > Math.abs(normal[1]) ? normal[0] < 0 : normal[1] < 0;
+  if (flip) normal = [-normal[0], -normal[1]];
   return { point, angleDeg: readableAngleDeg(direction), normal: [normal[0] + 0, normal[1] + 0] };
 }
 
@@ -211,8 +218,9 @@ function zigzagMark({ point, angleDeg }: SketchLinkAnchor): Primitive[] {
   const l = SKETCH_ZIGZAG_LENGTH_MM / 2;
   const a = SKETCH_ZIGZAG_HEIGHT_MM / 2;
   const g = SKETCH_ZIGZAG_GROUND_MM;
+  // Längs nur so weit wie der Zickzack, damit seine Enden die Linie berühren; quer mit Rand.
   const ground = strokePolyline(
-    [at(-l - g, -a - g), at(l + g, -a - g), at(l + g, a + g), at(-l - g, a + g)],
+    [at(-l, -a - g), at(l, -a - g), at(l, a + g), at(-l, a + g)],
     true,
     SKETCH_GROUND,
   );
@@ -251,25 +259,33 @@ export function commsLink({
   const markPrimitives = withMark ? zigzagMark(anchor) : [];
   const word: Primitive[] = [];
   if (status === 'planned') {
-    const clearance = clearanceMm ?? (withMark ? SKETCH_ZIGZAG_HEIGHT_MM / 2 : 0);
-    const distance = clearance + SKETCH_NOTE_GAP_MM + SKETCH_STROKE_WIDTH_MM;
-    const [nx, ny] = anchor.normal;
-    const x = anchor.point[0] + nx * distance;
-    const y = anchor.point[1] + ny * distance;
-    const sideways = Math.abs(nx) > 0.5;
-    const cap = capHeightMm(SKETCH_NOTE_TEXT_MM);
-    word.push(
-      textRun({
-        content: 'geplant',
-        x,
-        // Neben der Linie mittig auf die Versalhöhe, darunter mit der Oberkante am Abstand.
-        y: sideways ? y + cap / 2 : y + cap,
-        sizeMm: SKETCH_NOTE_TEXT_MM,
-        anchor: sideways ? 'start' : 'middle',
-      }),
-    );
+    if (clearanceMm !== undefined) requireFinite('Abstand', clearanceMm);
+    const clearance = clearanceMm ?? (withMark ? SKETCH_ZIGZAG_HEIGHT_MM / 2 + SKETCH_ZIGZAG_GROUND_MM : 0);
+    word.push(noteBeside(anchor, clearance + SKETCH_NOTE_GAP_MM + SKETCH_STROKE_WIDTH_MM / 2));
   }
   return { line, mark: markPrimitives, word, anchor };
+}
+
+/**
+ * Das Wort „geplant“ neben der Linie: Die achsparallele Box des Wortes rückt entlang der Normale
+ * so weit hinaus, dass ihre nächste Ecke `distance` von der Linienmitte entfernt ist — auch auf
+ * einer schrägen Linie überdeckt sie die Linie dann nicht.
+ */
+function noteBeside({ point, normal }: SketchLinkAnchor, distance: number): Primitive {
+  const probe = textRun({ content: 'geplant', x: 0, y: 0, sizeMm: SKETCH_NOTE_TEXT_MM, anchor: 'middle' });
+  if (probe.type !== 'text') throw new Error('textRun liefert einen Textlauf.');
+  const { xMm, yMm, widthMm, heightMm } = probe.boxMm;
+  const [nx, ny] = normal;
+  const reach = distance + (Math.abs(nx) * widthMm) / 2 + (Math.abs(ny) * heightMm) / 2;
+  const centerX = point[0] + nx * reach;
+  const centerY = point[1] + ny * reach;
+  return textRun({
+    content: 'geplant',
+    x: centerX - (xMm + widthMm / 2),
+    y: centerY - (yMm + heightMm / 2),
+    sizeMm: SKETCH_NOTE_TEXT_MM,
+    anchor: 'middle',
+  });
 }
 
 // ── Bereich ──────────────────────────────────────────────────────────────────────────────────
@@ -298,6 +314,7 @@ export function commsArea({
   readonly height: number;
   readonly label: string;
 }): SketchArea {
+  requireFinite('Bereich', x, y, width, height);
   if (!(width > 0) || !(height > 0)) throw new Error('Ein Bereich braucht Breite und Höhe.');
   const corners: Point[] = [
     [x, y],

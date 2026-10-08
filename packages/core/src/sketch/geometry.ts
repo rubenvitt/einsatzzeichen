@@ -35,15 +35,31 @@ export function strokePolyline(points: readonly Point[], closed = false, style: 
   return { type: 'polyline', role: 'pictogram', points: points.map(([x, y]) => [x, y] as const), ...(closed ? { closed } : {}), style: { ...style } };
 }
 
-/** Ersatzvorschub für ein Zeichen, das die eingebundene Schrift nicht führt (Monospace-Schätzung). */
-const UNKNOWN_ADVANCE_EM = 0.6;
+/**
+ * Ersatzvorschub für ein Zeichen, das die eingebundene Schrift nicht führt: ein Geviert, damit
+ * auch breite Zeichen (CJK, Emoji) das Bedingungszeichen nicht sprengen.
+ */
+const UNKNOWN_ADVANCE_EM = 1;
+/** Unterlänge, wenn die Tinte eines Laufs wegen unbekannter Zeichen nicht messbar ist. */
+const UNKNOWN_DESCENT_EM = 0.25;
+
+let capHeightCache: number | undefined;
 
 /** Versalhöhe der Katalogschrift (Arimo 500) in em, am „H“ gemessen. */
 function capHeightEm(): number {
+  if (capHeightCache !== undefined) return capHeightCache;
   const metrics = ARIMO_TEXT_METRICS.medium ?? ARIMO_TEXT_METRICS;
   const extent = metrics.inkExtentEm('H'.codePointAt(0) ?? 72);
   if (extent === undefined) throw new Error('Arimo führt kein „H“.');
-  return extent[3];
+  capHeightCache = extent[3];
+  return capHeightCache;
+}
+
+/** Wirft, wenn eine Eingabe keine endliche Zahl ist — wie `resolvePathPoints` für Stützpunkte. */
+export function requireFinite(name: string, ...values: readonly number[]): void {
+  for (const value of values) {
+    if (!Number.isFinite(value)) throw new Error(`${name}: ${value} ist keine endliche Zahl.`);
+  }
 }
 
 export interface TextRunInput {
@@ -73,15 +89,21 @@ export function textRun({ content, x, y, sizeMm, anchor }: TextRunInput): Primit
     fontWeight: CATALOG_TEXT_FONT_WEIGHT as 500,
     style: { ...TEXT_FILL },
   };
+  requireFinite('Textlauf', x, y, sizeMm);
   const measure = measureTextRun({ ...base, boxMm: { xMm: x, yMm: y, widthMm: 0, heightMm: 0 } }, ARIMO_TEXT_METRICS);
   const width = textAdvanceMm(content, sizeMm);
   const start = anchor === 'start' ? x : anchor === 'middle' ? x - width / 2 : x - width;
-  const minX = Math.min(start, measure.inkMinXMm);
-  const maxX = Math.max(start + width, measure.inkMaxXMm);
-  const ascent = Math.max(capHeightEm() * sizeMm, measure.inkAscentMm);
+  const cap = capHeightEm() * sizeMm;
+  // Mit unbekannten Zeichen ist die gemessene Tinte unvollständig und anders verankert; die Box
+  // folgt dann allein dem Vorschub mit Ersatzbreiten.
+  const known = measure.unknownCodepoints.length === 0;
+  const minX = known ? Math.min(start, measure.inkMinXMm) : start;
+  const maxX = known ? Math.max(start + width, measure.inkMaxXMm) : start + width;
+  const ascent = known ? Math.max(cap, measure.inkAscentMm) : cap;
+  const descent = known ? measure.inkDescentMm : UNKNOWN_DESCENT_EM * sizeMm;
   return {
     ...base,
-    boxMm: { xMm: minX, yMm: y - ascent, widthMm: maxX - minX, heightMm: ascent + measure.inkDescentMm },
+    boxMm: { xMm: minX, yMm: y - ascent, widthMm: maxX - minX, heightMm: ascent + descent },
   };
 }
 
@@ -107,15 +129,14 @@ export function capHeightMm(sizeMm: number): number {
   return capHeightEm() * sizeMm;
 }
 
-/** Ein geprüfter Verlauf: mindestens zwei Stützpunkte, kein Abschnitt ohne Länge. */
+/** Ein geprüfter Verlauf: mindestens zwei endliche Stützpunkte, kein Abschnitt ohne Länge. */
 export function checkedPath(points: readonly Point[]): readonly Point[] {
-  if (points.length < 2) throw new Error('Ein Verlauf braucht mindestens zwei Stützpunkte.');
   return resolvePathPoints({ points: points as [Point, Point, ...Point[]] });
 }
 
 export { pathLengthMm };
 
-/** Punkt und Einheitsrichtung bei Bogenlänge `s`. */
+/** Punkt und Einheitsrichtung bei Bogenlänge `s` (wie das gleichnamige, nicht exportierte Gegenstück in `geometry/parametric.ts`). */
 export function pointAt(points: readonly Point[], s: number): { point: Point; direction: Point } {
   let remaining = s;
   for (let i = 1; i < points.length; i++) {
@@ -146,26 +167,38 @@ export function slicePath(points: readonly Point[], from: number, to: number): r
 }
 
 /**
- * Ein Strichmuster entlang des Verlaufs, wie SVGs `stroke-dasharray`: abwechselnd Strich und
- * Lücke aus `pattern`, beginnend mit einem Strich am Anfang; der letzte Strich endet am Ende.
- * Gebaut als einzelne Polyzüge, weil `Style` kein Strichmuster kennt.
+ * Ein Strichmuster entlang des Verlaufs: abwechselnd Strich und Lücke aus `pattern`, gebaut als
+ * einzelne Polyzüge, weil `Style` kein Strichmuster kennt. Anders als SVGs `stroke-dasharray`
+ * beginnt **und endet** der Verlauf mit dem ersten Strich des Musters, damit eine Linie an ihren
+ * Stellen ankommt und ein Rechteck an jeder Ecke geschlossen wirkt: Das Muster wird dafür auf
+ * eine ganze Zahl von Perioden plus einen Schlussstrich gestreckt oder gestaucht. Ein Verlauf,
+ * der dafür zu kurz ist, bleibt ein einziger Strich.
  */
 export function dashedAlong(points: readonly Point[], pattern: readonly number[]): Primitive[] {
-  if (pattern.length === 0 || pattern.length % 2 !== 0 || pattern.some((value) => !(value > 0))) {
+  if (pattern.length === 0 || pattern.length % 2 !== 0 || pattern.some((value) => !(value > 0) || !Number.isFinite(value))) {
     throw new Error('Ein Strichmuster braucht eine gerade Anzahl positiver Längen.');
   }
   const length = pathLengthMm(points);
+  const period = pattern.reduce((sum, value) => sum + value, 0);
+  const first = pattern[0] as number;
+  const periods = Math.max(0, Math.round((length - first) / period));
+  if (periods === 0) return [strokePolyline(points)];
+  const scale = length / (periods * period + first);
+  // Lagen als Vielfache der Periode statt als laufende Summe: keine aufgelaufenen Rundungsfehler.
+  const offsets: number[] = [];
+  let within = 0;
+  for (const value of pattern) {
+    offsets.push(within);
+    within += value;
+  }
   const dashes: Primitive[] = [];
-  let s = 0;
-  let index = 0;
-  while (s < length) {
-    const step = pattern[index % pattern.length] as number;
-    if (index % 2 === 0) {
-      const end = Math.min(s + step, length);
-      if (end > s) dashes.push(strokePolyline(slicePath(points, s, end)));
+  for (let k = 0; k <= periods; k++) {
+    for (let i = 0; i < pattern.length; i += 2) {
+      if (k === periods && i > 0) break;
+      const from = (k * period + (offsets[i] as number)) * scale;
+      const to = k === periods ? length : (k * period + (offsets[i] as number) + (pattern[i] as number)) * scale;
+      dashes.push(strokePolyline(slicePath(points, from, Math.min(to, length))));
     }
-    s += step;
-    index += 1;
   }
   return dashes;
 }
