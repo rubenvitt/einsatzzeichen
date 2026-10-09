@@ -723,6 +723,15 @@ die technische Sichtprüfung aller 37 Darstellungen in
 Alle 37 Domainreviews bleiben `pending`; technische Vollständigkeit ist keine fachliche,
 normative oder einsatztaktische Freigabe.
 
+### Orte mit eigener Kennung (LFH-1065)
+
+Eine Leitung **als Ort** ist keine Funktion an der Stelle (die bleibt gesperrt), sondern eine
+Körperform nach dem Muster der Leitstelle D.2.5. `PLACES` in `core` führt die Leitstelle und vier
+abgeleitete Orte: Einsatzleitung, Technische Einsatzleitung, Einsatzabschnittsleitung und
+Untereinsatzabschnittsleitung. `drawPlace('incident-command')` zeichnet sie und vermerkt in
+`Drawing.derivations`, dass es kein Original gibt. Entscheidung:
+[`docs/decisions/2026-10-09-lfh-1065-orte-als-eigene-kennungen.md`](docs/decisions/2026-10-09-lfh-1065-orte-als-eigene-kennungen.md).
+
 ## Anhang G: 21 Logistikzeichen vollständig im Katalog
 
 Anhang G ist mit allen 21 benannten Referenzen als eigenständige `primary`-Rezepte vertreten.

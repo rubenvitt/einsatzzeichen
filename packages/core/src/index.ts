@@ -132,6 +132,7 @@ export type {
 // LFH-580: Der Einstieg von der Spec zur Zeichnung ohne Prüfpaket — die Standardbelegung der
 // Ports und `drawSymbol()`, das `compose()` damit aufruft.
 export { DEFAULT_PORTS, drawSymbol } from './default-ports.js';
+export { PLACES, drawPlace, type PlaceEntry, type PlaceSource } from './places.js';
 // LFH-579: Erklärbare Ablehnung — Titel, Erklärung und kuratiertes Spec-Feld je Regel, vorher in
 // der Website. `explainIssue()` verbindet sie mit dem Regelkatalog; unbekannte Kennungen werfen.
 export {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PALETTE, type Primitive, type SymbolSpec } from '@einsatzzeichen/schema';
-import { ARIMO_CAP_HEIGHT_FRACTION, matchFingerprint, pictogram } from '@einsatzzeichen/core';
+import { ARIMO_CAP_HEIGHT_FRACTION, PLACES, matchFingerprint, pictogram } from '@einsatzzeichen/core';
 import { comparableFingerprint } from './comparison-exceptions.js';
 import { fingerprintFor } from './fingerprint-index.js';
 import { composeFromCatalog } from './recipes.js';
@@ -14,14 +14,11 @@ import { composeFromCatalog } from './recipes.js';
  * Verglichen wird gegen das Kennwertartefakt der Referenz (`fingerprints.json`: Kreis (4|6)–(28|30)
  * gelb, „L“ von y 14,698 bis zur Grundlinie 22) und gegen die Geometrie des Piktogramms, das in
  * seiner eigenen Suite gegen dieselbe Referenz gegatet ist (Giebel, Kappe).
+ *
+ * Die Spec ist die der Ortskennung `control-center` (LFH-1065): Die abgeleiteten Orte bauen auf
+ * genau diesem Körper auf, deshalb prüft der Test das Register und keine Kopie davon.
  */
-const D25_SPEC: SymbolSpec = {
-  kind: 'circle-12',
-  bodyVariant: 'raised-gable',
-  organization: 'fuehrung-leitung',
-  bodyMarks: ['circle-solid-cap-4mm'],
-  labels: { center: 'LtS', centerCapHeightMm: 7.3, centerBaselineFromBodyBottomMm: 8 },
-};
+const D25_SPEC: SymbolSpec = PLACES['control-center'].spec;
 
 const ASSET = 'D.2.5_Leitstelle.svg';
 
