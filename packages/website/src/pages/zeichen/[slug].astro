@@ -21,6 +21,12 @@
  * aus — also steht bei Katalogeinträgen ein Hinweis an der Aktionsleiste und einer über dem JSON.
  * Die Downloads sind davon nicht betroffen, sie liefern `drawing`.
  *
+ * **Abgeleitete Orte** (`kind: 'derived-place'`, LFH-1116) haben kein Original und keine Zeile in
+ * der Prüfliste. An die Stelle von Abschnitt und Manifestschlüssel tritt `derivedFrom`, die
+ * vermessene Zeile, aus der der Ort seine Teile hat; der Prüfstand ist offen und bekommt einen
+ * eigenen Erklärsatz, weil „nicht gegen die Vorlage nachgemessen" hier keine Lücke ist, sondern
+ * gar nicht geht. Die Ableitung selbst steht unter „Bedeutung und Herkunft".
+ *
  * **Reviewnotizen.** 241 der 256 Zeichen tragen eine technische Notiz mit im Mittel 895 Zeichen,
  * geschrieben in der Fachsprache der Prüfung. Sie steht zugeklappt im Kopf und als Zitat
  * überschrieben — gleich ob Freigabe oder Abweichung. Dass es eine Abweichung gibt, sagt die
@@ -35,6 +41,7 @@ import { encodeSpec } from '../../lib/builder-state';
 import { codeSamplesFor } from '../../lib/code-samples';
 import { RULE_EXPLANATIONS } from '../../lib/rule-explanations';
 import { loadSnapshot, type ReviewSummary, type SymbolSummary } from '../../lib/snapshot';
+import { SYMBOL_KIND_LABELS } from '../../lib/symbol-kinds';
 
 interface Props {
   symbol: SymbolSummary;
@@ -51,12 +58,6 @@ const { symbol } = Astro.props;
 const snapshot = loadSnapshot();
 
 /* --- Beschriftungen ----------------------------------------------------------------------- */
-
-/** Alltagssprache für den Kopf; die Fachwörter dazu stehen im Entwicklerabschnitt. */
-const KIND_LABELS: Record<SymbolSummary['kind'], string> = {
-  'catalog-entry': 'aus der Vorlage vermessen',
-  'composition-recipe': 'aus Grundzeichen zusammengesetzt',
-};
 
 const VARIANT_LABELS: Record<SymbolSummary['variant'], string> = {
   primary: 'Hauptfassung',
@@ -127,10 +128,34 @@ const EVIDENCE_LABELS: Record<string, string> = {
   'body-geometry-regression': 'Regressionstest der Körpergeometrie',
 };
 
+/**
+ * Der technische Satz für einen abgeleiteten Ort, solange niemand ihn geprüft hat. Der allgemeine
+ * Satz („niemand hat das Bild bisher gegen die Vorlage nachgemessen") verspräche eine Messung, die
+ * es ohne Vorlage nicht geben kann.
+ */
+const DERIVED_PLACE_TECHNICAL_PENDING =
+  '„Technisch noch nicht geprüft" heißt hier: für diesen Ort gibt es keine Vorlage, gegen die man ' +
+  'das Bild nachmessen könnte. Seine Teile sind von einem vermessenen Zeichen übernommen, das Bild ' +
+  'als Ganzes hat niemand geprüft.';
+
 /* --- Kopfdaten ---------------------------------------------------------------------------- */
 
+const derivedFrom = symbol.derivedFrom;
+
 const sourceLabel =
-  symbol.source.page === undefined ? symbol.chapter : `${symbol.chapter}, S. ${symbol.source.page}`;
+  derivedFrom !== undefined
+    ? `abgeleitet aus „${derivedFrom.title}“ (${derivedFrom.chapter}, ${derivedFrom.section})`
+    : symbol.source.page === undefined
+      ? symbol.chapter
+      : `${symbol.chapter}, S. ${symbol.source.page}`;
+
+const technicalMeaning =
+  derivedFrom !== undefined && symbol.review.technical.status === 'pending'
+    ? DERIVED_PLACE_TECHNICAL_PENDING
+    : TECHNICAL_MEANING[symbol.review.technical.status];
+
+/** Was an einem abgeleiteten Ort übernommen ist, in den Worten der Ableitungsnotizen. */
+const derivedParts = (symbol.drawing.derivations ?? []).map((note) => note.part);
 
 /**
  * Sichtbare Notizen im Kopf: die **fachlichen**. Sie sind kurz und in Alltagssprache geschrieben,
@@ -270,14 +295,15 @@ const headings = [
   { depth: 3, slug: 'nachweise', text: 'Nachweise' },
 ];
 
+const origin = derivedFrom !== undefined ? sourceLabel : `aus ${symbol.chapter}`;
 const description =
-  `${symbol.title} aus ${symbol.chapter}: Zeichen ansehen, als SVG oder PNG herunterladen, auf ` +
+  `${symbol.title} ${origin}: Zeichen ansehen, als SVG oder PNG herunterladen, auf ` +
   'der Karte zeigen, im Baukasten abwandeln — mit Prüfstand, Herkunft und Codebeispielen.';
 ---
 
 <StarlightPage frontmatter={{ title: symbol.title, description }} headings={headings}>
   <p class="ez-eyebrow">
-    {symbol.chapter} · {KIND_LABELS[symbol.kind]} · {VARIANT_LABELS[symbol.variant]}
+    {symbol.chapter} · {SYMBOL_KIND_LABELS[symbol.kind]} · {VARIANT_LABELS[symbol.variant]}
   </p>
 
   <p class="ez-head__status">
@@ -285,7 +311,7 @@ const description =
   </p>
 
   <p class="ez-head__explain">
-    {TECHNICAL_MEANING[symbol.review.technical.status]}{' '}
+    {technicalMeaning}{' '}
     {DOMAIN_MEANING[symbol.review.domain.status]} Beide Angaben stehen an jedem Zeichen dieser
     Website; die rechte ist die, die man leicht übersieht.
     {noteHint !== undefined && ` ${noteHint}`}
@@ -331,6 +357,15 @@ const description =
   </div>
 
   {
+    derivedFrom !== undefined && (
+      <p class="ez-hint">
+        Diesen Ort gibt es in der Vorlage nicht als eigenes Zeichen. Die beiden Dateien und der
+        Baukasten zeigen dasselbe Bild, zusammengesetzt aus den Teilen der {derivedFrom.title}.
+      </p>
+    )
+  }
+
+  {
     isReconstruction && (
       <p class="ez-hint">
         Dieses Zeichen ist an der Vorlage vermessen. Die beiden Dateien geben genau das wieder, was
@@ -355,6 +390,23 @@ const description =
   {
     symbol.drawing.description !== undefined && (
       <p class="ez-meaning">{symbol.drawing.description}</p>
+    )
+  }
+
+  {
+    derivedFrom !== undefined && derivedParts.length > 0 && (
+      <div class="ez-note">
+        <span class="ez-note__title">Abgeleitet, kein Original belegt diesen Ort</span>
+        <p>
+          Die Vorlage führt die {derivedFrom.title} ({derivedFrom.section}), aber keinen Ort dieser
+          Leitung. Übernommen ist:
+        </p>
+        <ul>
+          {derivedParts.map((part) => (
+            <li>{part}</li>
+          ))}
+        </ul>
+      </div>
     )
   }
 
@@ -441,10 +493,20 @@ const description =
 
   <pre class="ez-spec"><code>{specJson}</code></pre>
 
-  <p>
-    Manifestschlüssel dieser Zeile: <code class="ez-id">{symbol.sourceId}</code> ·{' '}
-    <a href={builderHref}>dieselbe Spec im Baukasten öffnen</a>
-  </p>
+  {
+    symbol.sourceId !== undefined ? (
+      <p>
+        Manifestschlüssel dieser Zeile: <code class="ez-id">{symbol.sourceId}</code> ·{' '}
+        <a href={builderHref}>dieselbe Spec im Baukasten öffnen</a>
+      </p>
+    ) : (
+      <p>
+        Kein Manifestschlüssel: ein abgeleiteter Ort hat keine eigene Zeile im Coverage-Manifest.
+        Abgeleitet aus der Zeile <code class="ez-id">{derivedFrom?.sourceId}</code> ·{' '}
+        <a href={builderHref}>dieselbe Spec im Baukasten öffnen</a>
+      </p>
+    )
+  }
 
   <h3 id="codebeispiele">Codebeispiele</h3>
   <p>
@@ -531,6 +593,18 @@ const description =
   </p>
 
   <h3 id="nachweise">Nachweise</h3>
+
+  {
+    derivedFrom !== undefined && (
+      <p>
+        Ohne Zeile in der Prüfliste gibt es keine Nachweisarten. Die Tests der Orte im Kernpaket
+        (<code class="ez-mono">@einsatzzeichen/core</code>,{' '}
+        <code class="ez-mono">src/places.test.ts</code>) prüfen, dass jeder Ort Körper, Giebel,
+        Kappe und Farbe der Leitstelle trägt, keine Funktion setzt und seine Ableitung in{' '}
+        <code class="ez-mono">Drawing.derivations</code> kennzeichnet.
+      </p>
+    )
+  }
 
   {
     symbol.evidence.length > 0 && (

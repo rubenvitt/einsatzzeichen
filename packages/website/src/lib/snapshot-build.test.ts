@@ -14,10 +14,13 @@ import {
   BASE_SYMBOLS,
   BODY_VARIANT_LABELS,
   CONTRAST_EXCEPTIONS,
+  PLACES,
 } from '@einsatzzeichen/core';
 import { VALIDATION_RULE_IDS } from '@einsatzzeichen/core';
 import { BODY_VARIANT_IDS, TECHNICAL_FILL_TOKENS } from '@einsatzzeichen/schema';
+import { searchCatalog } from './builder-catalog.js';
 import { buildSnapshot } from './snapshot-build.js';
+import { DERIVED_PLACE_CHAPTER } from './symbol-kinds.js';
 
 describe('buildSnapshot', () => {
   const snap = buildSnapshot(new Date('2026-08-28T00:00:00Z'));
@@ -45,6 +48,65 @@ describe('buildSnapshot', () => {
       )
       .sort();
     expect(entryIds).toEqual(expected);
+  });
+
+  describe('abgeleitete Orte (LFH-1116)', () => {
+    const places = snap.symbols.filter((symbol) => symbol.kind === 'derived-place');
+    const derived = Object.values(PLACES).filter((place) => place.source.basis === 'derived');
+
+    it('führt jeden abgeleiteten Ort genau einmal, unter `place.<Kennung>`', () => {
+      expect(places.map((symbol) => symbol.id).sort()).toEqual(
+        derived.map((place) => `place.${place.id}`).sort(),
+      );
+      for (const place of derived) {
+        const symbol = places.find((candidate) => candidate.id === `place.${place.id}`);
+        expect(symbol?.title).toBe(place.title);
+        expect(symbol?.spec).toEqual(place.spec);
+      }
+    });
+
+    it('gibt der Leitstelle kein Duplikat: sie bleibt die Manifestzeile D.2.5', () => {
+      const measured = Object.values(PLACES).filter((place) => place.source.basis === 'measured');
+      expect(measured.map((place) => place.id)).toEqual(['control-center']);
+      expect(snap.symbols.some((symbol) => symbol.id === 'place.control-center')).toBe(false);
+      const rows = snap.coverage.matrix.filter((row) => row.sourceId === 'bbk-babz-2025:D.2.5');
+      expect(rows.map((row) => row.title)).toEqual(['Leitstelle']);
+      expect(snap.coverage.matrix.length).toBe(COVERAGE_MANIFEST.entries.length);
+    });
+
+    it('setzt an Stelle von Abschnitt, Quelle und Prüfstatus nur Belegtes', () => {
+      for (const symbol of places) {
+        expect(symbol.sourceId, symbol.id).toBeUndefined();
+        expect(symbol.derivedFrom, symbol.id).toEqual({
+          sourceId: 'bbk-babz-2025:D.2.5',
+          title: 'Leitstelle',
+          section: 'D.2.5',
+          chapter: 'Anhang D.2',
+        });
+        expect(symbol.chapter).toBe(DERIVED_PLACE_CHAPTER);
+        expect(symbol.source.id).toBe('bbk-babz-2025');
+        expect(symbol.source.page).toBeUndefined();
+        expect(symbol.review).toEqual({
+          technical: { status: 'pending' },
+          domain: { status: 'pending' },
+        });
+        expect(symbol.evidence).toEqual([]);
+      }
+    });
+
+    it('trägt die Ortsnotiz in der Zeichnung, ohne Referenzdateinamen', () => {
+      for (const symbol of places) {
+        const notes = (symbol.drawing.derivations ?? []).filter((note) => note.dimension === 'place');
+        expect(notes, symbol.id).toHaveLength(1);
+        expect(notes[0]?.from).toBe('[Referenzdatei]');
+        expect(JSON.stringify(symbol)).not.toMatch(/\.svg/);
+      }
+    });
+
+    it('steht im Katalog des Baukastens', () => {
+      const { matches } = searchCatalog(snap.symbols, 'Einsatzleitung (Ort)', 5);
+      expect(matches.map((symbol) => symbol.id)).toContain('place.incident-command');
+    });
   });
 
   it('vergibt eindeutige Slugs', () => {
@@ -148,11 +210,14 @@ describe('buildSnapshot', () => {
     expect(ids).not.toContain('koerperlauf-kontrast');
   });
 
-  it('trägt die abgeleitete Kapitelbezeichnung an jedem Zeichen', () => {
+  it('trägt die abgeleitete Kapitelbezeichnung an jedem Zeichen mit Manifestzeile', () => {
     const bySourceId = new Map(snap.symbols.map((symbol) => [symbol.sourceId, symbol]));
     expect(bySourceId.get('bbk-babz-2025:E.1.1')?.chapter).toBe('Anhang E.1');
     expect(bySourceId.get('bbk-babz-2025:1.1')?.chapter).toBe('Kapitel 1');
-    for (const symbol of snap.symbols) expect(symbol.chapter).toMatch(/^(Kapitel|Anhang) /);
+    for (const symbol of snap.symbols) {
+      if (symbol.kind === 'derived-place') expect(symbol.chapter).toBe(DERIVED_PLACE_CHAPTER);
+      else expect(symbol.chapter).toMatch(/^(Kapitel|Anhang) /);
+    }
   });
 
   it('ist JSON-serialisierbar ohne Verlust', () => {

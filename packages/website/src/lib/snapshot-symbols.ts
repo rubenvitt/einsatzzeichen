@@ -1,16 +1,25 @@
-import { RECIPES, composeFromCatalog, type Recipe } from '@einsatzzeichen/conformance';
-import { BASE_SYMBOLS } from '@einsatzzeichen/core';
-import { entryKey, type CatalogEntry, type CoverageEntry, type Depiction } from '@einsatzzeichen/schema';
+import { COVERAGE_MANIFEST, RECIPES, composeFromCatalog, type Recipe } from '@einsatzzeichen/conformance';
+import { BASE_SYMBOLS, drawPlace, type PlaceEntry } from '@einsatzzeichen/core';
+import {
+  entryKey,
+  type CatalogEntry,
+  type CoverageEntry,
+  type Depiction,
+  type Drawing,
+} from '@einsatzzeichen/schema';
 import { slugForSymbolId } from './slug.js';
 import { contrastExceptionForSection } from './snapshot-contrast.js';
+import { withoutReferenceFilenames } from './snapshot-redaction.js';
 import { reviewSetSummary } from './snapshot-review.js';
 import { chapterForSection, registryIdOf, sectionOf } from './snapshot-sections.js';
 import { citationOf } from './snapshot-sources.js';
 import type { SymbolSummary } from './snapshot.js';
+import { DERIVED_PLACE_CHAPTER } from './symbol-kinds.js';
 
 /**
  * Aus einer Manifestzeile wird ein Zeichen des Snapshots — für Katalogeinträge und für Rezepte
- * getrennt, weil beide ihre Quelle, ihre Zeichnung und ihre `spec` verschieden herleiten.
+ * getrennt, weil beide ihre Quelle, ihre Zeichnung und ihre `spec` verschieden herleiten. Die
+ * abgeleiteten Orte (LFH-1116) haben keine Manifestzeile; sie kommen aus `PLACES` in `core`.
  *
  * Hier laufen die übrigen `snapshot-*`-Module zusammen: Abschnitte, Zitat, Kontrastausnahme,
  * Reviewmarken, Slug. Dass die Richtung nur diese eine ist — von den Blättern hierher und von hier
@@ -114,5 +123,82 @@ export function symbolForRecipe(row: CoverageEntry): SymbolSummary {
     review: reviewSetSummary(row.review),
     evidence: [...row.testEvidence],
     ...(contrastException !== undefined ? { contrastException } : {}),
+  };
+}
+
+const PLACE_PREFIX = 'place.';
+
+/**
+ * Ein abgeleiteter Ort als Zeichen des Snapshots (LFH-1116).
+ *
+ * Ein solcher Ort hat kein Original und deshalb keine Manifestzeile. An die Stelle von Abschnitt,
+ * Quelle und Prüfstatus tritt, was sich belegen lässt, ohne etwas zu erfinden:
+ *
+ * - **Abschnitt** → `derivedFrom`, die vermessene Manifestzeile, aus der der Ort seine Teile hat
+ *   (heute D.2.5, die Leitstelle). Gefunden über die Referenzdatei, die `PLACES` als Herkunft
+ *   nennt; `chapter` ist die eigene Gruppe `DERIVED_PLACE_CHAPTER`.
+ * - **Quelle** → die Quelle dieser Zeile, ohne Seitenangabe. Den Ort selbst zeigt sie nicht.
+ * - **Prüfstatus** → technisch und fachlich `pending`, ohne Notiz: niemand hat den Ort geprüft,
+ *   und das Review der Leitstelle gilt der Leitstelle. Was „pending" hier heißt, sagt die
+ *   Zeichenseite in einem eigenen Satz.
+ *
+ * Die Leitstelle selbst (`basis: 'measured'`) kommt hier nicht durch: sie bleibt die
+ * Manifestzeile D.2.5 und bekommt keinen zweiten Eintrag.
+ */
+export function symbolForPlace(entry: PlaceEntry): SymbolSummary {
+  if (entry.source.basis !== 'derived') {
+    throw new Error(
+      `Ort "${entry.id}" ist vermessen; er steht als Manifestzeile im Katalog und nicht als ` +
+        'abgeleiteter Ort.',
+    );
+  }
+  const from = entry.source.from;
+  const original = COVERAGE_MANIFEST.entries.find((row) => row.referenceAsset === from);
+  if (original === undefined) {
+    throw new Error(
+      `Ort "${entry.id}" nennt eine Herkunft, die keine Manifestzeile als Referenzdatei führt.`,
+    );
+  }
+  const section = sectionOf(original.sourceId);
+  const registryId = registryIdOf(original.sourceId);
+  const id = `${PLACE_PREFIX}${entry.id}`;
+  return {
+    id,
+    slug: slugForSymbolId(id),
+    title: entry.title,
+    kind: 'derived-place',
+    spec: structuredClone(entry.spec) as SymbolSummary['spec'],
+    drawing: withoutReferenceFilenamesInNotes(drawPlace(entry.id)),
+    derivedFrom: {
+      sourceId: original.sourceId,
+      title: original.title,
+      section,
+      chapter: chapterForSection(section),
+    },
+    variant: 'primary',
+    source: { id: registryId, citation: citationOf(registryId) },
+    chapter: DERIVED_PLACE_CHAPTER,
+    profile: original.profile,
+    synonyms: [],
+    legacyIds: [],
+    review: { technical: { status: 'pending' }, domain: { status: 'pending' } },
+    evidence: [],
+  };
+}
+
+/**
+ * Die Ableitungsnotizen nennen ihre Herkunft als Referenzdatei (`from`). Die Website liefert keine
+ * Referenzdateinamen aus (Spec §5.3) — also läuft jede Notiz durch dieselbe Schwärzung wie die
+ * Reviewnotizen.
+ */
+function withoutReferenceFilenamesInNotes(drawing: Drawing): Drawing {
+  if (drawing.derivations === undefined) return drawing;
+  return {
+    ...drawing,
+    derivations: drawing.derivations.map((note) => ({
+      ...note,
+      part: withoutReferenceFilenames(note.part),
+      from: withoutReferenceFilenames(note.from),
+    })),
   };
 }

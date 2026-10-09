@@ -13,7 +13,7 @@ import {
   type ExplorerFacetGroups,
 } from '../../lib/explorer-facets.js';
 import { useSnapshot, type SnapshotSelect } from '../../lib/snapshot-island.js';
-import type { ReviewSummary, SymbolSummary } from '../../lib/snapshot.js';
+import type { ReviewSummary, SymbolKind, SymbolSummary } from '../../lib/snapshot.js';
 import StatusPair, { statusMark } from '../StatusPair.js';
 
 /**
@@ -30,7 +30,7 @@ import StatusPair, { statusMark } from '../StatusPair.js';
  * *erlaubten* Werte für den Builder führt): der Explorer soll nur zeigen, was tatsächlich
  * vorkommt, mit der echten Anzahl daneben. Zähl- und Validierungslogik (`facetOptions`,
  * `reviewStatusOptions`, `sanitizeFacets` in `lib/explorer-search.ts`) und die Ableitung der
- * sechs Gruppen (`lib/explorer-facets.ts`) liegen bewusst außerhalb dieser Datei: dort sind sie
+ * sieben Gruppen (`lib/explorer-facets.ts`) liegen bewusst außerhalb dieser Datei: dort sind sie
  * ohne DOM/React testbar (Review 1: „Alle"-Zähler; Review 2: URL-Facetten validieren).
  */
 
@@ -57,6 +57,7 @@ const selectExplorerData: SnapshotSelect<ExplorerData> = (snapshot) => ({
 
 const EMPTY_FILTERS: ExplorerFilters = {
   q: '',
+  art: '',
   org: '',
   kapitel: '',
   quelle: '',
@@ -67,6 +68,7 @@ const EMPTY_FILTERS: ExplorerFilters = {
 
 const PARAM_KEYS: Record<keyof ExplorerFilters, string> = {
   q: 'q',
+  art: 'art',
   org: 'org',
   kapitel: 'kapitel',
   quelle: 'quelle',
@@ -96,6 +98,7 @@ function locationSearchFromFilters(filters: ExplorerFilters): string {
 
 function toFacets(filters: ExplorerFilters): SymbolFacets {
   const facets: SymbolFacets = {};
+  if (filters.art !== '') facets.kind = filters.art as SymbolKind;
   if (filters.org !== '') facets.organization = filters.org;
   if (filters.kapitel !== '') facets.chapter = filters.kapitel;
   if (filters.quelle !== '') facets.sourceId = filters.quelle;
@@ -163,6 +166,7 @@ function ExplorerView({ symbols: allSymbols, groups }: ExplorerData) {
 
   const hasActiveFilter =
     filters.q !== '' ||
+    filters.art !== '' ||
     filters.org !== '' ||
     filters.kapitel !== '' ||
     filters.quelle !== '' ||
@@ -187,6 +191,13 @@ function ExplorerView({ symbols: allSymbols, groups }: ExplorerData) {
             onChange={(event) => setField('q')(event.target.value)}
           />
         </label>
+        <FacetField
+          id="ez-explorer-art"
+          label="Art"
+          value={filters.art}
+          group={groups.kind}
+          onChange={setField('art')}
+        />
         <FacetField
           id="ez-explorer-org"
           label="Organisation"

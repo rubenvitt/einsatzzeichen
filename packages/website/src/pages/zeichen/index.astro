@@ -20,6 +20,7 @@ import StatusPair from '../../components/StatusPair.astro';
 import { formatReviewDate } from '../../components/StatusPair.tsx';
 import { reviewSummary } from '../../lib/review-summary';
 import { loadSnapshot, type SymbolSummary } from '../../lib/snapshot';
+import { DERIVED_PLACE_CHAPTER } from '../../lib/symbol-kinds';
 
 const THUMBNAIL_SIZE = 64;
 
@@ -43,8 +44,12 @@ function anchor(chapter: string): string {
     .replaceAll(/^-|-$/g, '');
 }
 
-/** Kapitel vor Anhang — das ist die Reihenfolge des Aufbaus: erst die Grundzeichen, dann die Anhänge. */
+/**
+ * Kapitel vor Anhang — das ist die Reihenfolge des Aufbaus: erst die Grundzeichen, dann die Anhänge.
+ * Die abgeleiteten Orte (LFH-1116) kommen zuletzt: sie stehen in keinem Abschnitt der Vorlage.
+ */
 function rank(chapter: string): number {
+  if (chapter === DERIVED_PLACE_CHAPTER) return 2;
   return chapter.startsWith('Kapitel') ? 0 : 1;
 }
 

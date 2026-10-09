@@ -30,18 +30,37 @@ export interface SourceSummary {
   review: { technical: ReviewSummary; domain: ReviewSummary };
 }
 
+export type SymbolKind = 'catalog-entry' | 'composition-recipe' | 'derived-place';
+
 export interface SymbolSummary {
   id: string;
   slug: string;
   title: string;
-  kind: 'catalog-entry' | 'composition-recipe';
+  /**
+   * Woher das Zeichen kommt: an der Vorlage vermessen, aus Grundzeichen zusammengesetzt oder — seit
+   * LFH-1116 — als Ort aus der Leitstelle D.2.5 abgeleitet. Die dritte Art hat kein Original und
+   * deshalb keine Manifestzeile; Beschriftung und Begründung in `symbol-kinds.ts`.
+   */
+  kind: SymbolKind;
   spec: SymbolSpec;
   drawing: Drawing;
-  /** Manifestschlüssel-Quelle, z. B. `bbk-babz-2025:E.1.1`. */
-  sourceId: string;
+  /**
+   * Manifestschlüssel-Quelle, z. B. `bbk-babz-2025:E.1.1`. Fehlt bei `derived-place`: ein
+   * abgeleiteter Ort hat keine Manifestzeile, und ein geborgter Schlüssel behauptete eine.
+   */
+  sourceId?: string;
+  /**
+   * Nur bei `derived-place`: die vermessene Manifestzeile, aus der der Ort abgeleitet ist. Sie
+   * steht an Stelle von Abschnitt und Seite; `source` ist die Quelle dieser Zeile.
+   */
+  derivedFrom?: { sourceId: string; title: string; section: string; chapter: string };
   variant: 'primary' | 'alternative';
   source: { id: string; citation: string; page?: string };
-  /** Lesbare Kapitelbezeichnung, z. B. „Anhang E.1" oder „Kapitel 4.6". */
+  /**
+   * Lesbare Kapitelbezeichnung, z. B. „Anhang E.1" oder „Kapitel 4.6". Abgeleitete Orte stehen
+   * unter „Abgeleitete Orte" und nicht im Kapitel ihres Originals: dort behaupteten sie einen
+   * Abschnitt der Vorlage.
+   */
   chapter: string;
   profile: string;
   synonyms: string[];

@@ -1467,6 +1467,13 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
                   kann von der gemessenen Zeichnung leicht abweichen. Maßgeblich ist die
                   Zeichnung auf der Seite des Zeichens.
                 </p>
+              ) : loadedSymbol.kind === 'derived-place' ? (
+                <p>
+                  Diesen Ort gibt es in der Vorlage nicht als eigenes Zeichen. Er übernimmt
+                  Körper, Giebel, Kappe und Schriftlauf der{' '}
+                  {loadedSymbol.derivedFrom?.title ?? 'Leitstelle'}; die Vorschau ist dasselbe
+                  Bild wie auf der Seite des Orts. Ein Original für das Ganze gibt es nicht.
+                </p>
               ) : (
                 <p>
                   Für dieses Zeichen führt der Katalog selbst eine Bauanleitung. Die Vorschau

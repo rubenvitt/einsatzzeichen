@@ -1,6 +1,6 @@
 ---
 title: Zeichen suchen
-description: Alle Zeichen des Katalogs durchsuchen und nach Organisation, Kapitel, Quelle und Prüfstand eingrenzen.
+description: Alle Zeichen des Katalogs durchsuchen und nach Art, Organisation, Kapitel, Quelle und Prüfstand eingrenzen.
 ---
 
 import Explorer from '../../../components/islands/Explorer.tsx';
@@ -13,10 +13,15 @@ kennst. Getippt wird ins Feld **Suche**; gesucht wird gleichzeitig im Namen des 
 seinen anderen Bezeichnungen, in seinen früheren Kennungen und in seiner Kennung. Ein Wortteil
 genügt, Groß- und Kleinschreibung ist egal.
 
-Die Auswahlfelder daneben grenzen ein, wenn zu viel kommt: nach Organisation, nach Kapitel oder
-Anhang der Vorlage, nach Quelle, nach Zeichenprofil und nach den beiden Prüfständen. Hinter jedem
-Eintrag steht, wie viele Zeichen darauf entfallen — so siehst du vor dem Klick, ob sich der Filter
-lohnt.
+Die Auswahlfelder daneben grenzen ein, wenn zu viel kommt: nach Art, nach Organisation, nach
+Kapitel oder Anhang der Vorlage, nach Quelle, nach Zeichenprofil und nach den beiden Prüfständen.
+Hinter jedem Eintrag steht, wie viele Zeichen darauf entfallen — so siehst du vor dem Klick, ob
+sich der Filter lohnt.
+
+Die **Art** sagt, woher ein Zeichen kommt: aus der Vorlage vermessen, aus Grundzeichen
+zusammengesetzt oder abgeleitet aus der Leitstelle. Die dritte Art sind Orte wie die
+Einsatzleitung, die die Vorlage nicht als eigenes Zeichen führt; sie stehen unter „Abgeleitete
+Orte“ und übernehmen ihre Teile von der Leitstelle.
 
 Ein Klick auf eine Kachel führt zum Zeichen: Vorschau in sechs Größen, Herkunft, Prüfstand und die
 Dateien zum Herunterladen. Deine Suche steht in der Adresszeile des Browsers; kopier sie, und wer
@@ -31,7 +36,7 @@ für diese Bedeutung ist. Schritt für Schritt erklärt das
 
 ## Für Entwicklerinnen und Entwickler
 
-Die Auswahl steht vollständig in der Adresse: `?q=` für die Suche, dazu `org`, `kapitel`,
+Die Auswahl steht vollständig in der Adresse: `?q=` für die Suche, dazu `art`, `org`, `kapitel`,
 `quelle`, `profil`, `technisch` und `fachlich` für die Facetten. Werte, die es in der jeweiligen
 Auswahlliste nicht gibt, werden beim Laden verworfen, statt einen unsichtbaren Filter zu setzen.
 
