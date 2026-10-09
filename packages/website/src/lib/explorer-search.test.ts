@@ -62,6 +62,7 @@ const rettungswagen = makeSymbol({
   source: { id: 'phjardas-tz', citation: 'Andere Quelle' },
   profile: 'ems',
   spec: { kind: 'vehicle-land', organization: 'thw' },
+  kind: 'composition-recipe',
   review: { technical: review('deviation'), domain: review('pending') },
 });
 
@@ -105,7 +106,9 @@ describe('searchSymbols', () => {
     expect(a).toEqual([loeschzug]);
   });
 
-  it('Facetten schneiden (organization, chapter, sourceId, profile, technical, domain)', () => {
+  it('Facetten schneiden (kind, organization, chapter, sourceId, profile, technical, domain)', () => {
+    expect(searchSymbols(fixtures, '', { kind: 'composition-recipe' })).toEqual([rettungswagen]);
+    expect(searchSymbols(fixtures, '', { kind: 'derived-place' })).toEqual([]);
     expect(searchSymbols(fixtures, '', { organization: 'feuerwehr' })).toEqual([loeschzug]);
     expect(searchSymbols(fixtures, '', { chapter: 'Anhang F.1' })).toEqual([rettungswagen]);
     expect(searchSymbols(fixtures, '', { sourceId: 'bbk-babz-2025' })).toEqual([loeschzug]);
@@ -121,6 +124,13 @@ describe('searchSymbols', () => {
 
   it('unbekannte Suche liefert ein leeres Ergebnis', () => {
     expect(searchSymbols(fixtures, 'xyzzy-kein-treffer-nirgendwo', {})).toEqual([]);
+  });
+
+  it('läuft gegen den echten Snapshot: die Art trennt die abgeleiteten Orte ab', () => {
+    const { symbols } = buildSnapshot();
+    const places = searchSymbols(symbols, '', { kind: 'derived-place' });
+    expect(places.map((symbol) => symbol.title)).toContain('Einsatzleitung (Ort)');
+    for (const s of places) expect(s.chapter).toBe('Abgeleitete Orte');
   });
 
   it('läuft gegen den echten Snapshot: technische Freigabe filtert korrekt', () => {
@@ -181,6 +191,7 @@ describe('reviewStatusOptions', () => {
 
 describe('sanitizeFacets', () => {
   const validValues: Record<Exclude<keyof ExplorerFilters, 'q'>, readonly string[]> = {
+    art: ['catalog-entry', 'derived-place'],
     org: ['feuerwehr', 'thw'],
     kapitel: ['Anhang E.1', 'Anhang F.1'],
     quelle: ['bbk-babz-2025', 'phjardas-tz'],
@@ -192,6 +203,7 @@ describe('sanitizeFacets', () => {
   it('lässt bekannte Werte und die Suche unangetastet', () => {
     const raw: ExplorerFilters = {
       q: 'löschzug',
+      art: 'derived-place',
       org: 'feuerwehr',
       kapitel: 'Anhang E.1',
       quelle: '',
@@ -205,6 +217,7 @@ describe('sanitizeFacets', () => {
   it('verwirft Werte, die keine Auswahlbox anbietet (z. B. aus einem veralteten Link)', () => {
     const raw: ExplorerFilters = {
       q: '',
+      art: 'recipe',
       org: 'bogus-org',
       kapitel: 'Anhang E.1',
       quelle: '',
@@ -214,6 +227,7 @@ describe('sanitizeFacets', () => {
     };
     expect(sanitizeFacets(raw, validValues)).toEqual({
       q: '',
+      art: '',
       org: '',
       kapitel: 'Anhang E.1',
       quelle: '',

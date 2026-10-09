@@ -18,6 +18,7 @@ export type {
   MatrixRow,
   ReviewSummary,
   SourceSummary,
+  SymbolKind,
   SymbolSummary,
 } from './snapshot-schema.js';
 export { assertSnapshot } from './snapshot-schema.js';

@@ -5,6 +5,7 @@ import {
   type FacetGroup,
 } from './explorer-search.js';
 import type { BuilderVocabulary, ReviewSummary, SymbolSummary } from './snapshot.js';
+import { SYMBOL_KIND_LABELS } from './symbol-kinds.js';
 
 /**
  * Was der Explorer aus dem Snapshot ableitet, bevor irgendetwas gerendert wird (LFH-500).
@@ -16,12 +17,15 @@ import type { BuilderVocabulary, ReviewSummary, SymbolSummary } from './snapshot
  * die `.tsx` rutscht (Vitest sammelt nur `*.test.ts`, `.tsx` wird nicht getestet), steht sie hier
  * als reine Funktion über einem übergebenen Snapshot-Ausschnitt.
  *
- * Die Zähl- und Sortierlogik selbst bleibt in `explorer-search.ts`; hier steht nur, welche sechs
- * Facetten der Explorer zeigt, woher jede ihre Werte nimmt und woher ihre Beschriftung kommt.
+ * Die Zähl- und Sortierlogik selbst bleibt in `explorer-search.ts`; hier steht nur, welche sieben
+ * Facetten der Explorer zeigt, woher jede ihre Werte nimmt und woher ihre Beschriftung kommt. Die
+ * siebte, die Art, kam mit den abgeleiteten Orten (LFH-1116): sie trennt, was an der Vorlage
+ * vermessen oder nach ihr zusammengesetzt ist, von dem, was es dort gar nicht gibt.
  */
 
-/** Die sechs Facettengruppen des Explorers, in der Reihenfolge der Auswahlfelder. */
+/** Die sieben Facettengruppen des Explorers, in der Reihenfolge der Auswahlfelder. */
 export interface ExplorerFacetGroups {
+  kind: FacetGroup;
   organization: FacetGroup;
   chapter: FacetGroup;
   source: FacetGroup;
@@ -53,7 +57,7 @@ export function organizationLabels(vocabulary: BuilderVocabulary): Map<string, s
  * Die Facettenwerte kommen aus den Symbolen selbst, nicht aus `builder.vocabulary`: der Explorer
  * soll nur zeigen, was tatsächlich vorkommt, mit der echten Anzahl daneben. Das Vokabular liefert
  * ausschließlich die Beschriftung der Organisationen — für Kapitel, Quelle und Profil steht die
- * lesbare Form schon am Symbol.
+ * lesbare Form schon am Symbol, für die Art in `symbol-kinds.ts`.
  */
 export function explorerFacetGroups(
   symbols: SymbolSummary[],
@@ -66,6 +70,11 @@ export function explorerFacetGroups(
   const citations = new Map(symbols.map((symbol) => [symbol.source.id, symbol.source.citation]));
 
   return {
+    kind: facetOptions(
+      symbols,
+      (symbol) => symbol.kind,
+      (id) => SYMBOL_KIND_LABELS[id as SymbolSummary['kind']] ?? id,
+    ),
     organization: facetOptions(
       symbols,
       (symbol) => symbol.spec.organization,
@@ -92,6 +101,7 @@ export function validFacetValues(
   const values = (group: FacetGroup): readonly string[] =>
     group.options.map((option) => option.value);
   return {
+    art: values(groups.kind),
     org: values(groups.organization),
     kapitel: values(groups.chapter),
     quelle: values(groups.source),

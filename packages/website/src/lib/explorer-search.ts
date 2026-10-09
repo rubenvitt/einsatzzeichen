@@ -1,4 +1,4 @@
-import type { ReviewSummary, SymbolSummary } from './snapshot.js';
+import type { ReviewSummary, SymbolKind, SymbolSummary } from './snapshot.js';
 
 const COMBINING_DIACRITICS = /[̀-ͯ]/g;
 
@@ -21,6 +21,8 @@ export function normalize(value: string): string {
 }
 
 export interface SymbolFacets {
+  /** Die Art des Zeichens: vermessen, zusammengesetzt oder abgeleitet (LFH-1116). */
+  kind?: SymbolKind;
   organization?: string;
   chapter?: string;
   /**
@@ -59,6 +61,7 @@ export function searchSymbols(
 ): SymbolSummary[] {
   const query = normalize(q.trim());
   return symbols.filter((symbol) => {
+    if (!facetMatches(facets.kind, symbol.kind)) return false;
     if (!facetMatches(facets.organization, symbol.spec.organization)) return false;
     if (!facetMatches(facets.chapter, symbol.chapter)) return false;
     if (!facetMatches(facets.sourceId, symbol.source.id)) return false;
@@ -132,8 +135,15 @@ export function reviewStatusOptions(
   return { total: symbols.length, options };
 }
 
-/** Die sechs URL-/Formularfelder des Explorers; `q` ist Freitext und nimmt keine Prüfung. */
-export type ExplorerFacetField = 'org' | 'kapitel' | 'quelle' | 'profil' | 'technisch' | 'fachlich';
+/** Die sieben URL-/Formularfelder des Explorers; `q` ist Freitext und nimmt keine Prüfung. */
+export type ExplorerFacetField =
+  | 'art'
+  | 'org'
+  | 'kapitel'
+  | 'quelle'
+  | 'profil'
+  | 'technisch'
+  | 'fachlich';
 
 export interface ExplorerFilters extends Record<ExplorerFacetField, string> {
   q: string;

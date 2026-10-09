@@ -1,5 +1,5 @@
 import { COVERAGE_MANIFEST, SOURCE_REGISTRY } from '@einsatzzeichen/conformance';
-import { CONTRAST_EXCEPTIONS } from '@einsatzzeichen/core';
+import { CONTRAST_EXCEPTIONS, PLACES } from '@einsatzzeichen/core';
 import { VALIDATION_RULE_IDS } from '@einsatzzeichen/core';
 import { entryKey } from '@einsatzzeichen/schema';
 import { coverageAxes } from './snapshot-axes.js';
@@ -7,7 +7,7 @@ import { blockerRows, openDomainReviewsByArea } from './snapshot-blockers.js';
 import { contrastExceptionText } from './snapshot-contrast.js';
 import { toReviewSummary } from './snapshot-review.js';
 import { sourceSummaries } from './snapshot-sources.js';
-import { symbolForCatalogEntry, symbolForRecipe } from './snapshot-symbols.js';
+import { symbolForCatalogEntry, symbolForPlace, symbolForRecipe } from './snapshot-symbols.js';
 import { builderVocabulary } from './snapshot-vocabulary.js';
 import type { CatalogSnapshot, MatrixRow, SymbolSummary } from './snapshot.js';
 
@@ -32,11 +32,26 @@ import type { CatalogSnapshot, MatrixRow, SymbolSummary } from './snapshot.js';
  * Ausgangspunkt ist das Coverage-Manifest und nicht der Katalog: es ist die Liste, gegen die das
  * Gate prüft. Ein Katalogeintrag ohne Manifestzeile bliebe damit unsichtbar — genau deshalb prüft
  * `snapshot-build.test.ts` die Gegenrichtung gegen `BASE_SYMBOLS` und `RECIPES`.
+ *
+ * Danach kommen die abgeleiteten Orte aus `PLACES` (LFH-1116): sie haben kein Original und darum
+ * keine Manifestzeile, also auch keine Matrixzeile. Die Leitstelle, der einzige vermessene Ort,
+ * bleibt ihre Manifestzeile D.2.5.
  */
 export function buildSnapshot(now: Date = new Date()): CatalogSnapshot {
   const symbols: SymbolSummary[] = [];
   const matrix: MatrixRow[] = [];
   const slugs = new Map<string, string>();
+
+  const add = (symbol: SymbolSummary): void => {
+    const taken = slugs.get(symbol.slug);
+    if (taken !== undefined) {
+      throw new Error(
+        `Doppelter Slug "${symbol.slug}": "${taken}" und "${symbol.id}" ergeben denselben Pfad.`,
+      );
+    }
+    slugs.set(symbol.slug, symbol.id);
+    symbols.push(symbol);
+  };
 
   for (const row of COVERAGE_MANIFEST.entries) {
     const key = entryKey(row.sourceId, row.variant);
@@ -44,16 +59,7 @@ export function buildSnapshot(now: Date = new Date()): CatalogSnapshot {
     if (row.coverage === 'catalog-entry') symbol = symbolForCatalogEntry(row);
     else if (row.coverage === 'composition-recipe') symbol = symbolForRecipe(row);
 
-    if (symbol !== undefined) {
-      const taken = slugs.get(symbol.slug);
-      if (taken !== undefined) {
-        throw new Error(
-          `Doppelter Slug "${symbol.slug}": "${taken}" und "${symbol.id}" ergeben denselben Pfad.`,
-        );
-      }
-      slugs.set(symbol.slug, symbol.id);
-      symbols.push(symbol);
-    }
+    if (symbol !== undefined) add(symbol);
 
     matrix.push({
       key,
@@ -68,6 +74,10 @@ export function buildSnapshot(now: Date = new Date()): CatalogSnapshot {
       domain: toReviewSummary(row.review.domain),
       evidence: [...row.testEvidence],
     });
+  }
+
+  for (const place of Object.values(PLACES)) {
+    if (place.source.basis === 'derived') add(symbolForPlace(place));
   }
 
   return {

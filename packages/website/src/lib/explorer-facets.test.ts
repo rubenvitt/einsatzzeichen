@@ -56,10 +56,11 @@ const SYMBOLS: SymbolSummary[] = [
     chapter: 'Kapitel 4.6',
     profile: 'bos',
     source: { id: 'phjardas-tz', citation: 'taktische-zeichen (Vergleichsquelle)' },
+    kind: 'composition-recipe',
     review: { technical: review('deviation'), domain: review('pending') },
   }),
   // Ohne Organisation: zählt in `total`, aber zu keiner Option (siehe `FacetGroup`).
-  makeSymbol({ id: 'c', title: 'Grundzeichen' }),
+  makeSymbol({ id: 'c', title: 'Grundzeichen', kind: 'derived-place' }),
 ];
 
 /** Kurzfassung wie `statusMark(...).shortLabel`, ohne die React-Komponente zu ziehen. */
@@ -99,6 +100,14 @@ describe('explorerFacetGroups', () => {
     });
   });
 
+  it('beschriftet die Art in Alltagssprache, je eine Option für jede der drei Arten', () => {
+    expect(groups.kind.options).toEqual([
+      { value: 'derived-place', label: 'abgeleitet aus der Leitstelle', count: 1 },
+      { value: 'catalog-entry', label: 'aus der Vorlage vermessen', count: 1 },
+      { value: 'composition-recipe', label: 'aus Grundzeichen zusammengesetzt', count: 1 },
+    ]);
+  });
+
   it('leitet Kapitel und Profil ohne Vokabular ab', () => {
     expect(groups.chapter.options.map((o) => o.value)).toEqual(['Anhang E.1', 'Kapitel 4.6']);
     expect(groups.profile.options.map((o) => o.value)).toEqual(['bos', 'default']);
@@ -124,6 +133,7 @@ describe('explorerFacetGroups', () => {
 describe('validFacetValues', () => {
   it('gibt je URL-Feld genau die Werte, die eine Auswahlbox anbietet', () => {
     expect(validFacetValues(explorerFacetGroups(SYMBOLS, VOCABULARY, statusLabel))).toEqual({
+      art: ['derived-place', 'catalog-entry', 'composition-recipe'],
       org: ['feuerwehr', 'thw'],
       kapitel: ['Anhang E.1', 'Kapitel 4.6'],
       // Sortiert nach Beschriftung, nicht nach Kennung: „BBK/BABZ 2025" vor „taktische-zeichen …".

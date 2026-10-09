@@ -50,5 +50,6 @@ aber nicht.
 - Die Website zeigt die Orte noch nicht. Ihr Katalog entsteht aus dem Coverage-Manifest, also aus
   Zeilen mit BABZ-Abschnitt und Prüfstatus. Ein Ort ohne Original braucht dort eine eigene Art,
   das ist ein eigener Schritt.
+  Umgesetzt am selben Tag: `2026-10-09-lfh-1116-orte-im-katalog.md`.
 - Tests: `core/src/places.test.ts`. `conformance/src/leitstelle-d25.test.ts` prüft jetzt die Spec
   des Registers gegen das Original statt einer Kopie.
