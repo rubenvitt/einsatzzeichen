@@ -1,3 +1,28 @@
+## ⚠️ Breaking Changes
+
+Mit dieser Version wurden basierend auf einem Fachreview vom 5. Oktober 2026 vier neue Systematikregeln eingeführt, die bestimmte Kombinationen von Zeichen-Elementen ausschließen. Spezifikationen, die bisher gültig waren, können nun abgelehnt werden:
+
+- **Fahrzeugkategorien** sind nun nur noch an Landfahrzeugen, Anhängern und Wechselladern erlaubt. Bei Wasserfahrzeugen ist ausschließlich das Amphibienfahrzeug zulässig, bei Luftfahrzeugen sind Fahrzeugkategorien komplett ausgeschlossen.
+
+- **Verwaltungsstufen** können nur noch an Formationen, Personen, Stellen (Kreis) und Gebäuden angebracht werden – nicht mehr an Fahrzeugen, Gefahren, Maßnahmen, Ereignissen und weiteren Körpern ohne Verwaltungsebene.
+
+- **Zustandshinweise** „?" (ungewiss) und „!" (dringend) schließen sich gegenseitig aus und können nicht mehr kombiniert werden.
+
+- **Der Giebel** (erhöhte Dachform) ist nur noch an Stellen, Formationen, Gebäuden, Containern, Landfahrzeugen, Anhängern und Wechselladern erlaubt – nicht mehr an Personen, Luft- und Wasserfahrzeugen, Gebieten, Maßnahmen, Gefahren, Punkten, Ereignissen, Spontanhelfern und Hochkantrechtecken.
+
+Die Validierungsfunktion `validateSpec` gibt bei Verstößen gegen diese Regeln entsprechende Fehlermeldungen zurück.
+
+## Katalog
+
+**Neue Orte mit eigener Kennung**: Orte werden nun analog zu Leitstellen als eigenständige Körperformen im Katalog geführt. Neben der vermessenen Leitstelle (D.2.5) sind jetzt vier abgeleitete Leitungen verfügbar:
+
+- Einsatzleitung (EL)
+- Technische Einsatzleitung (TEL)
+- Einsatzabschnittsleitung (EAL)
+- Unterabschnittsleitung (UEAL)
+
+Leitungen sind keine Funktionen an Stellen mehr, sondern eigenständige Orte mit Katalogkennung. Die abgeleiteten Leitungen werden mit entsprechenden Ableitungshinweisen im Drawing dokumentiert.
+
 ## Kommunikationsskizzen
 
 Neu: Bausteine für Kommunikationsskizzen nach J.5 (außerhalb des BBK-Katalogs) wurden hinzugefügt. Diese stehen im Namensraum `sketch.*` und umfassen:
