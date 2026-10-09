@@ -1,3 +1,22 @@
+## Kommunikationsskizzen
+
+Neu: Bausteine für Kommunikationsskizzen nach J.5 (außerhalb des BBK-Katalogs) wurden hinzugefügt. Diese stehen im Namensraum `sketch.*` und umfassen:
+
+- **Bedingungszeichen** – wächst automatisch mit dem Text
+- **Sammelschiene** – für die Darstellung von Verteilerknoten
+- **Verbindungslinie** – mit Funk-Zickzack-Darstellung auf freier Linie, optional mit „geplant"-Kennzeichnung (Strichmuster + Wort)
+- **Bereich** – mit Strich-Punkt-Umrandung
+- **Verbindungsarten** – Melder, Satellit und sonstige Verbindungen (ohne Inhalt)
+
+Alle Maße werden als Vorschläge in `SKETCH_BLOCKS` bereitgestellt.
+
+**Verbesserungen:**
+- Geplante Linien bleiben auch bei sehr kurzen Strecken (z.B. ein Rasterschritt) korrekt gestrichelt dargestellt
+- Strichmuster beginnen und enden sauber mit einem Strich, ohne Splitter
+- Text neben schrägen Linien wird ohne Überdeckung positioniert
+- Funkmarken-Grund reicht nun bis zu den Zickzack-Enden
+- Eingabewerte werden auf endliche Zahlen geprüft, unbekannte Zeichen werden mit einem Geviert gemessen
+
 ## Release Notes 4.2.0
 
 ### Core-Paket
