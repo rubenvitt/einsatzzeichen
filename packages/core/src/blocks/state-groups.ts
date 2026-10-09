@@ -164,7 +164,7 @@ export const STATE_GROUPS: readonly StateGroup[] = Object.freeze([
       status: 'proposed',
       value: 1,
       reason:
-        'Kein Original zeigt mehr als einen Hinweis an einem Zeichen, und keines zeigt eine Taktik an einem Träger. Beobachtet ist neben dem Hinweis höchstens ein Personenzustand (Beispiel 1 bis 3). Das ist eine Beobachtung in 661 Dateien, kein Verbot aus der Systematik. Seit dem 02.10.2026 lehnt `state-group-limit-exceeded` zwei Hinweise nicht mehr ab: „?" und „!" zugleich und mehrere Gefahrenhinweise stehen abgeleitet untereinander in der Randlage; die Taktik bleibt durch `state-tactics-not-allowed` gesperrt.',
+        'Kein Original zeigt mehr als einen Hinweis an einem Zeichen, und keines zeigt eine Taktik an einem Träger. Beobachtet ist neben dem Hinweis höchstens ein Personenzustand (Beispiel 1 bis 3). Das ist eine Beobachtung in 661 Dateien, kein Verbot aus der Systematik. Seit dem 02.10.2026 stehen mehrere Gefahrenhinweise abgeleitet untereinander in der Randlage. „?" und „!" zugleich lehnt seit dem Fachreview vom 05.10.2026 `state-hint-limit-exceeded` ab (dieselbe Sache ist nicht zugleich vermutet und akut); die Taktik bleibt durch `state-tactics-not-allowed` gesperrt.',
     },
     rules: STATE_RULES,
     fixtures: [...TACTICS_EXAMPLES, ...HINT_CARRIER_EVIDENCE],

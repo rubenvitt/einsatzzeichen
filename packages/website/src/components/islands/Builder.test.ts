@@ -263,11 +263,12 @@ describe('Der Baukasten mit aufgeschobener Probe', () => {
   // 2. Oktober 2026) dauert das allein gut 3 s, unter Volllast mehr.
   it('begründet eine Sperre mit der Grundzeichenart, zu der die Sperre gehört', { timeout: 30_000 }, async () => {
     // Nachgemessen, damit der Fall nicht an einer Annahme über den Katalog hängt: mit der
-    // Verwaltungsstufe „Kreis" ist das Fähigkeitspiktogramm unter „Fläche" nicht zeichenbar (die
+    // technischen Kopfmarke ist das Fähigkeitspiktogramm unter „Fläche" nicht zeichenbar (die
     // Kopfzone verkleinert den Körper, das Piktogramm folgt nicht), unter „Taktische Formation"
     // sehr wohl. Bis zum 2. Oktober 2026 stand hier eine Körpermarke an der Person; die wird
-    // seitdem abgeleitet.
-    const atLevel = { administrativeLevel: 'kreis' } as const;
+    // seitdem abgeleitet. Bis zum Fachreview vom 5. Oktober 2026 belegte die Verwaltungsstufe
+    // „Kreis" die Kopfzone; an der Fläche lehnt sie seitdem eine Regel ab.
+    const atLevel = { technicalHeadMark: 'single-vertical-bar' } as const;
     expect(
       allowedValues({ kind: 'area', ...atLevel }, 'capabilities', ['meal-preparation'])[0]?.blocked
         ?.because,
@@ -279,7 +280,7 @@ describe('Der Baukasten mit aufgeschobener Probe', () => {
     const container = await mountBuilder();
     tile(container, 'kind', 'Fläche').click();
     await settle();
-    choose(container, 'administrativeLevel', 'kreis');
+    choose(container, 'technicalHeadMark', 'single-vertical-bar');
     await settle();
     tile(container, 'kind', 'Taktische Formation').click();
     await flushUrgent();

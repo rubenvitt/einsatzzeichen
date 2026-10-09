@@ -152,6 +152,16 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'der 32-mm-ViewBox. Sonst stünde Text außerhalb der Zeichenfläche und wäre im Bild ' +
       'abgeschnitten. Rücke Anker oder Grundlinie nach innen oder verkleinere die Versalhöhe.',
   },
+  'administrative-level-requires-carrier': {
+    field: 'administrativeLevel',
+    title: 'Verwaltungsstufe nur an Formation, Person, Stelle und Gebäude',
+    explanation:
+      'Die Verwaltungsstufe (Gemeinde bis Europäische Union, 5.7) sagt, auf welcher Ebene eine ' +
+      'Führung, Behörde oder Stelle angesiedelt ist. Sie steht deshalb nur an Formation, Person, ' +
+      'Stelle (Kreis) und Gebäude. Ein Fahrzeug, eine Gefahr, eine Maßnahme oder ein Ereignis hat ' +
+      'keine Verwaltungsebene; die Sterne wären dort eher mit einer Stärkeangabe zu verwechseln. ' +
+      'Entferne `administrativeLevel` oder wechsle auf einen dieser Träger.',
+  },
   'below-body-zone-conflict': {
     field: 'labels',
     title: 'Fahrwerk und Läufe unter dem Körper schließen sich aus',
@@ -433,6 +443,16 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'Fahrzeugkategorie legte darüber eine zweite, nicht belegte Fahrwerksgeometrie. Entferne ' +
       '`vehicleCategory` oder wähle die Normalfassung des Landfahrzeugs.',
   },
+  'raised-gable-requires-stationary-kind': {
+    field: 'bodyVariant',
+    title: 'Giebel nur an ortsfesten Trägern',
+    explanation:
+      'Der Giebel bedeutet „ortsfest“ (3.9, temporär ortsfeste Strukturen). Er steht an Stelle, ' +
+      'Formation, Gebäude, Container und an Landfahrzeug, Anhänger und Wechsellader, etwa für ' +
+      'eine abgestellte mobile Führungsstelle. An Person, Gefahr, Ereignis, Maßnahme, Gebiet und ' +
+      'Punkt ist „ortsfest“ selbstverständlich oder sinnlos, an Luft- und Wasserfahrzeug ' +
+      'widerspricht es der Art. Wechsle auf einen dieser Träger oder lass `bodyVariant` weg.',
+  },
   'state-carrier-not-allowed': {
     field: 'states',
     title: 'Zustand passt nicht zu diesem Grundzeichen',
@@ -449,6 +469,14 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'Schadensgrad und Brandphase. Zwei Stufen derselben Skala ' +
       'widersprechen sich, etwa „beschädigt" und „zerstört". Behalte je Skala nur einen ' +
       'Zustand.',
+  },
+  'state-hint-limit-exceeded': {
+    field: 'states',
+    title: 'Höchstens ein Hinweis',
+    explanation:
+      '„Hinweis auf Vermutung“ (?, 5.8.1.13) und „Hinweis auf akute Situation“ (!, 5.8.1.14) ' +
+      'schließen sich aus: Dieselbe Sache ist nicht zugleich vermutet und akut. Wer beides meint, ' +
+      'hat zwei Lagen und setzt zwei Zeichen. Behalte einen der beiden Hinweise.',
   },
   'state-tactics-not-allowed': {
     field: 'states',
@@ -569,16 +597,25 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'Körperhülle liegen, mit 2 mm Innenmarge an der rechten Kante. Sonst stünde der Lauf über ' +
       'dem Körper. Rücke Anker oder Grundlinie nach innen oder verkleinere die Versalhöhe.',
   },
+  'vehicle-category-requires-chassis-body': {
+    field: 'vehicleCategory',
+    title: 'Fahrzeugkategorie nur an Fahrzeugen mit Fahrwerk',
+    explanation:
+      'Die Kategorien aus Kapitel 5.1 (Rad, Kette, Schiene, geländegängig) beschreiben das ' +
+      'Fahrwerk eines Landfahrzeugs und stehen an Landfahrzeug, Anhänger und Wechsellader. Am ' +
+      'Wasserfahrzeug ist nur das Amphibienfahrzeug (5.1.1.4) sinnvoll, an Hubschrauber und ' +
+      'Flugzeug sagt keine Kategorie etwas. Entferne `vehicleCategory` oder wechsle auf ein ' +
+      'Landfahrzeug.',
+  },
   'vehicle-category-requires-vehicle': {
     field: 'vehicleCategory',
     title: 'Fahrzeugkategorie nur an Fahrzeugen',
     explanation:
       'Eine Fahrzeugkategorie beschreibt das Fahrwerk eines Fahrzeugs (Kapitel 5.1) und steht ' +
-      'deshalb nur an Land-, Wasser- und Luftfahrzeug, Anhänger und Wechsellader. An einer ' +
-      'Einheit, einer Stelle oder einem Gebäude hat sie keine Bedeutung. Vermessen ist die ' +
-      'Fahrwerkszone an Landfahrzeug, Anhänger und Wechsellader; an Wasser- und Luftfahrzeug ' +
-      'überträgt der Motor sie und markiert sie als abgeleitet. Entferne `vehicleCategory` oder ' +
-      'wechsle auf ein Fahrzeug.',
+      'deshalb nur an Fahrzeugen. An einer Einheit, einer Stelle oder einem Gebäude hat sie ' +
+      'keine Bedeutung. Vermessen ist die Fahrwerkszone an Landfahrzeug, Anhänger und ' +
+      'Wechsellader; am Wasserfahrzeug überträgt der Motor das Amphibienfahrzeug und markiert es ' +
+      'als abgeleitet. Entferne `vehicleCategory` oder wechsle auf ein Fahrzeug.',
   },
 });
 

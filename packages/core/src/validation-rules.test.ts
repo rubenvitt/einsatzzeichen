@@ -34,8 +34,9 @@ describe('VALIDATION_RULE_IDS', () => {
     // Wächst mit `validate.ts`. Die Zahl steht hier, damit `rule-coverage` im Katalog sie nicht
     // erraten muss und eine neue Regel sichtbar hier und in der Liste ankommt. Am 2. Oktober 2026
     // von 79 auf 50 gesunken: die Messsperren sind dem Ableiten gewichen
-    // (docs/decisions/2026-10-02-ableiten-statt-messsperre.md).
-    expect(VALIDATION_RULE_IDS).toHaveLength(50);
+    // (docs/decisions/2026-10-02-ableiten-statt-messsperre.md). Am 9. Oktober 2026 auf 54
+    // gestiegen: vier Systematikregeln aus dem Fachreview vom 5. Oktober 2026 (LFH-1064).
+    expect(VALIDATION_RULE_IDS).toHaveLength(54);
   });
 
   it('kommt mit jeder Kennung in einem Testfall vor — oder in einem benannten Todo', () => {

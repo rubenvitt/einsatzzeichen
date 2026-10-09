@@ -58,7 +58,9 @@ import { noteDerivation } from './record.js';
  * - **Randlage links** (`state-margin`): die Hinweise „?" und „!" an jedem Träger wie an der
  *   Person (Achse 4,5 mm links der Trägerhülle, Strichfarbe des Trägers), die übrigen Werte aus
  *   5.8.1.5 bis 5.8.1.12, 5.8.2, 5.8.5 und 5.8.9 auf die Höhe der Hinweismarke verkleinert und
- *   mit demselben Abstand zum Träger. Mehrere Werte stehen untereinander, je Spalte zwei.
+ *   mit demselben Abstand zum Träger. Mehrere Werte stehen untereinander, je Spalte zwei; „?" und
+ *   „!" zugleich lässt die Systematik seit dem Fachreview vom 05.10.2026 nicht mehr zu
+ *   (`state-hint-limit-exceeded`).
  * - **Randlage rechts** (`tendency-margin`): die Tendenz, gespiegelt zur Hinweis-Randlage.
  * - **Körperlage** (`body`): der Schadensgrad 5.8.4 auf dem Körper wie über dem Deichprofil in
  *   `L.8` und `L.9`, um die Körpermitte; die drei Stufen behalten ihr Größenverhältnis.

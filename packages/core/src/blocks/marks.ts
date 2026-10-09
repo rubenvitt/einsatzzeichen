@@ -954,7 +954,7 @@ const FUNCTION_ROLES_FILE = 'core/src/geometry/function-roles.ts';
  */
 const FUNCTION_ROLE_BINDING = {
   ruleId: 'function-role-requires-measured-kind',
-  definedAt: 'core/src/validate.ts:280–298',
+  definedAt: 'core/src/validate.ts:304–322',
   reason:
     'Eine gemessene Funktion ist nur an Formation oder Person belegt, und jede einzelne Fassung zusätzlich nur an der Art, für die sie vermessen wurde.',
 } as const;

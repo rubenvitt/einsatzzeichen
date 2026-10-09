@@ -97,8 +97,9 @@ describe('ruleCoverage (echter Bestand)', () => {
   it('zählt die Validierungsregeln aus core, ohne sie zu wiederholen', () => {
     expect(validationRuleCoverage()).toEqual({ total: VALIDATION_RULE_IDS.length });
     // Am 2. Oktober 2026 von 79 auf 50: die Messsperren sind dem Ableiten gewichen
-    // (docs/decisions/2026-10-02-ableiten-statt-messsperre.md).
-    expect(validationRuleCoverage().total).toBe(50);
+    // (docs/decisions/2026-10-02-ableiten-statt-messsperre.md). Am 9. Oktober 2026 auf 54: vier
+    // Systematikregeln aus dem Fachreview vom 5. Oktober 2026 (LFH-1064).
+    expect(validationRuleCoverage().total).toBe(54);
   });
 });
 
@@ -128,32 +129,35 @@ describe('ruleEvidenceCoverage (Regelsicht)', () => {
 
   // Seit LFH-568 (21.09.2026): „Eine Regel gilt als belegt, wenn ein Testfall sie auslöst." Die
   // Zahlen wachsen mit den Katalogen und schrumpfen nur, wenn eine Lücke einen Fall bekommt.
-  it('belegt 59 von 62 Regeln durch Auslösung; drei benannte Lücken, keine stille', () => {
+  it('belegt 63 von 66 Regeln durch Auslösung; drei benannte Lücken, keine stille', () => {
     // Seit LFH-577 zählen die sechs Regeln der freistehenden Zeichen mit
     // (`FREESTANDING_RULE_CATALOG`, Fälle in `FREESTANDING_RULE_EVIDENCE`).
     // Am 2. Oktober 2026 von 91 auf 62 Regeln (Ableiten statt Messsperre,
     // docs/decisions/2026-10-02-ableiten-statt-messsperre.md): die Prüfphase führt 29 Kennungen
     // weniger, mit ihnen entfiel die Lücke `surface-right-label-requires-measured-anchor`. Die Dimensionen
     // `organization`, `administrative-level` und `capabilities` tragen keine Regel mehr.
+    // Am 9. Oktober 2026 auf 66: vier Systematikregeln aus dem Fachreview vom 5. Oktober 2026
+    // (LFH-1064), darunter wieder eine an `administrative-level`.
     const coverage = ruleEvidenceCoverage();
-    expect(coverage.total).toEqual({ total: 62, triggered: 59, gap: 3, untriggered: 0 });
+    expect(coverage.total).toEqual({ total: 66, triggered: 63, gap: 3, untriggered: 0 });
     expect(coverage.byPhase).toEqual({
-      spec: { total: 56, triggered: 55, gap: 1, untriggered: 0 },
+      spec: { total: 60, triggered: 59, gap: 1, untriggered: 0 },
       composition: { total: 6, triggered: 4, gap: 2, untriggered: 0 },
     });
     expect(coverage.byKind).toEqual({
-      systematik: { total: 20, triggered: 20, gap: 0, untriggered: 0 },
+      systematik: { total: 24, triggered: 24, gap: 0, untriggered: 0 },
       engine: { total: 42, triggered: 39, gap: 3, untriggered: 0 },
     });
     expect(coverage.byDimension.map((entry) => [entry.dimension, entry.total, entry.triggered, entry.gap])).toEqual([
-      ['body-variant', 4, 4, 0],
+      ['body-variant', 5, 5, 0],
       ['technical-fill', 2, 2, 0],
       ['strength', 1, 1, 0],
+      ['administrative-level', 1, 1, 0],
       ['technical-head-mark', 1, 1, 0],
-      ['chassis', 2, 2, 0],
+      ['chassis', 3, 3, 0],
       ['body-marks', 1, 1, 0],
       ['function-role', 7, 4, 3],
-      ['state', 4, 4, 0],
+      ['state', 5, 5, 0],
       ['lines-and-boundaries', 2, 2, 0],
       ['weather', 3, 3, 0],
       ['animal', 1, 1, 0],
@@ -178,7 +182,7 @@ describe('reachSignature', () => {
 });
 
 // Expliziter Timeout für jeden Test, der `generativeReach()` ausführt: die Enumeration prüft
-// 270 864 Kombinationen mit `validateSpec` und komponiert die 26 964, die bestehen. Seit dem
+// 270 864 Kombinationen mit `validateSpec` und komponiert die 10 080, die bestehen. Seit dem
 // 2. Oktober 2026 allein rund 3 s (vorher ~140 ms, weil fast alles schon an der Prüfung
 // scheiterte), unter Vitest-Parallellast mehr — das Vitest-Standardlimit von 5 s wäre ein
 // Lastflake, kein Befund.
@@ -203,10 +207,15 @@ describe('generativeReach (echter Bestand)', () => {
     // Motor fast jede Kombination: 2955 → 26 964 bestehen die Prüfung, 868 → 22 644 komponieren.
     // Abgelehnt bleibt allein das Fahrwerk unter dem Giebel (4320 = 26 964 − 22 644,
     // `NotMeasuredError`: die Radplätze sind absolut vermessen, der Körper für den Giebel verkleinert).
+    // Das Fachreview vom 5. Oktober 2026 (LFH-1064) sperrt Fahrwerk am Luftfahrzeug (am
+    // Wasserfahrzeug bis auf das Amphibienfahrzeug), Verwaltungsstufe ohne Verwaltungsebene und
+    // den Giebel an nicht ortsfesten Trägern: 26 964 → 10 080 bestehen die Prüfung, 22 644 → 8784
+    // komponieren. Das Fahrwerk unter dem Giebel bleibt die einzige Lücke, jetzt nur noch an
+    // Landfahrzeug, Anhänger und Wechsellader (1296 = 10 080 − 8784).
     const reach = generativeReach();
     expect(reach.enumerated).toBe(19 * 11 * 9 * 16 * 9);
-    expect(reach.validBySpec).toBe(26964);
-    expect(reach.valid).toBe(22644);
+    expect(reach.validBySpec).toBe(10080);
+    expect(reach.valid).toBe(8784);
     // F.1.1 und F.1.3 (Doppelbalken) sowie F.1.13 und F.1.21 (Einzelbalken) tragen seit dem
     // Fachreview ihre Kopfmarke; dazu +20 gültige Kombinationen, weil die technische Kopfmarke
     // jetzt auch an der Formation mit Fußband belegt ist (2 Marken × 10 Organisationen). Seit
@@ -219,7 +228,7 @@ describe('generativeReach (echter Bestand)', () => {
     // Seit dem 2. Oktober 2026 85 statt 77: die acht Signaturen, die bis dahin außerhalb lagen,
     // sind jetzt für sich allein gültig.
     expect(reach.referenced).toBe(85);
-    expect(reach.reachOnly).toBe(22644 - 85);
+    expect(reach.reachOnly).toBe(8784 - 85);
     // Bis zum 2. Oktober 2026 waren acht Rezeptsignaturen für sich allein nicht gültig: die
     // farbigen Kreisverträge brauchten ihre Körpermarke, die Personen mit Verwaltungsstufe ihre
     // Funktionsrolle, das eingesenkte Wasserfahrzeug seine Beschriftung. Seit dem Ableiten zeichnet

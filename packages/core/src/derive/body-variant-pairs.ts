@@ -43,9 +43,13 @@ const CHASSIS_BODIES = ['trailer', 'swap-loader-vehicle'] as const satisfies rea
  * - `plain-wheel-pair`, `inverted-hull-track` — Fahrgestell und Kettenrumpf gehören an jeden
  *   Fahrzeugkörper mit Fahrgestell, also auch an Anhänger und Wechsellader.
  * - `raised-gable` — der Giebel bedeutet „ortsfest" (3.9, temporär ortsfeste Strukturen). Die
- *   Inventur fand ihn nur über dem 12-mm-Kreis; nach Eigentümerentscheidung steht er an jedem
- *   Grundzeichen, dessen Körper sich unter ihm in die 32-mm-Grundfläche einpassen lässt — das sind
- *   alle, der Körper wird dafür verkleinert wie der abgesenkte Kreis.
+ *   Inventur fand ihn nur über dem 12-mm-Kreis. Vom 02.10.2026 an stand er an jedem Grundzeichen;
+ *   das Fachreview vom 05.10.2026 (LFH-1064) schränkt ihn auf Träger ein, an denen „ortsfest"
+ *   etwas aussagt: Formation, Gebäude (mit der reduzierten Hauskontur), Container und die
+ *   Fahrzeugkörper mit Fahrgestell (eine abgestellte mobile Führungsstelle). An Person, Gefahr,
+ *   Ereignis, Maßnahme, Gebiet und Punkt ist „ortsfest" selbstverständlich oder sinnlos, an Luft-
+ *   und Wasserfahrzeug widerspricht es der Art; dort lehnt `raised-gable-requires-stationary-kind`
+ *   ab. Der Körper wird unter dem Giebel verkleinert wie der abgesenkte Kreis.
  *
  * **Gesperrt bleiben** (Systematik, artgebundene Form): `raised-hull` außer an Luft- und
  * Wasserfahrzeug, `inset-hull` außer am Wasserfahrzeug, `fixed-wing-hull` außer am Luftfahrzeug,
@@ -80,21 +84,11 @@ export const DERIVED_BODY_VARIANT_KINDS: Readonly<
   'inverted-hull-track': new Set<SymbolKind>(CHASSIS_BODIES),
   'raised-gable': new Set<SymbolKind>([
     'formation',
-    'person',
     'vehicle-land',
-    'vehicle-air',
-    'vehicle-water',
     'building',
     'container',
-    'area',
-    'measure',
-    'hazard',
-    'point',
-    'event',
-    'spontaneous-helper',
     'trailer',
     'swap-loader-vehicle',
-    'upright-rectangle',
     'reduced-house',
     // Kreiskörper (`post`): eigene Körper und Profile in `derive/circle.ts`, zugelassen über
     // `CIRCLE_VARIANT_PAIRS` in `isAllowedBodyVariant`.

@@ -107,7 +107,7 @@ describe('RULE_CATALOG: Vollständigkeit je Eintrag', () => {
       'top-left-lines-exactly-two',
     ]);
     expect(fromWebsite).toHaveLength(18);
-    expect(RULE_CATALOG.filter((rule) => rule.reasonSource === 'core')).toHaveLength(32);
+    expect(RULE_CATALOG.filter((rule) => rule.reasonSource === 'core')).toHaveLength(36);
   });
 
   /**
@@ -132,12 +132,15 @@ describe('RULE_CATALOG: Vollständigkeit je Eintrag', () => {
       'chassis-foot-conflict',
       'circle-top-left-anchor-within-viewbox',
       'inset-hull-requires-center-label-only',
+      'raised-gable-requires-stationary-kind',
       'state-carrier-not-allowed',
       'state-group-limit-exceeded',
+      'state-hint-limit-exceeded',
       'state-tactics-not-allowed',
       'state-value-not-attachable',
       'top-left-anchor-within-body',
       'top-left-baseline-within-body',
+      'vehicle-category-requires-chassis-body',
       'vehicle-category-requires-vehicle',
     ]);
   });
@@ -145,7 +148,7 @@ describe('RULE_CATALOG: Vollständigkeit je Eintrag', () => {
 
 describe('RULE_CATALOG gegen den Quelltext von validate.ts', () => {
   /**
-   * `validate.ts` löst 53 Mal aus, führt aber nur 50 Kennungen: drei Regeln haben zwei
+   * `validate.ts` löst 57 Mal aus, führt aber nur 54 Kennungen: drei Regeln haben zwei
    * Auslösestellen. Im Katalog bleiben sie **ein** Eintrag — sonst bräche die Dublettenprüfung —
    * und tragen die Zahl ihrer Stellen im Feld `sites`. Dieser Test zählt die Stellen im
    * Quelltext dagegen, damit eine künftige dritte Stelle nicht still dazukommt.
@@ -162,11 +165,11 @@ describe('RULE_CATALOG gegen den Quelltext von validate.ts', () => {
     );
   });
 
-  it('bleibt bei 53 Auslösestellen für 50 Kennungen', () => {
+  it('bleibt bei 57 Auslösestellen für 54 Kennungen', () => {
     // Bis zum 2. Oktober 2026 waren es 82 Stellen für 79 Kennungen; die Messsperren sind mit dem
     // Ableiten entfallen (docs/decisions/2026-10-02-ableiten-statt-messsperre.md).
-    expect(pushedIds).toHaveLength(53);
-    expect(new Set(pushedIds).size).toBe(50);
+    expect(pushedIds).toHaveLength(57);
+    expect(new Set(pushedIds).size).toBe(54);
     expect(RULE_CATALOG.filter((rule) => rule.sites > 1).map((rule) => rule.id)).toEqual([
       'function-role-requires-measured-kind',
       'function-role-requires-measured-layout',
@@ -332,7 +335,7 @@ describe('Lücken je Dimension', () => {
    * Festgenagelt, damit die Aussage „Lücken je Dimension benannt" zählbar bleibt und nicht
    * unbemerkt schrumpft, wenn jemand eine Dimension aus der Union nimmt.
    */
-  it('zählt zwölf Lücken, davon fünf ohne Abdeckung', () => {
+  it('zählt zwölf Lücken, davon vier ohne Abdeckung', () => {
     // Seit LFH-577 trägt `state` vier Regeln und ist nur noch teilweise offen. Mit der
     // freistehenden Spec-Art tragen auch Linien, Wetter und Tierzustand Regeln; die Pfeile nicht.
     // Seit dem 2. Oktober 2026 (Ableiten statt Messsperre) haben `organization` und
@@ -340,11 +343,13 @@ describe('Lücken je Dimension', () => {
     // reduzierten Hauskontur und an der Verwaltungsstufe sind entfallen. Auch `capabilities`
     // (bis dahin `capabilities-pictogram-overflows-body`, LFH-587) trägt keine Regel mehr, bleibt
     // aber `partial`: eingepasste Fähigkeiten sind Ableitungen, keine vermessenen Fassungen.
+    // Seit dem Fachreview vom 5. Oktober 2026 (LFH-1064) trägt `administrative-level` wieder eine
+    // Regel (`administrative-level-requires-carrier`) und ist nur noch teilweise offen.
     expect(RULE_DIMENSION_GAPS).toHaveLength(12);
     expect(RULE_DIMENSION_GAPS.filter((gap) => gap.coverage === 'none').map((g) => g.dimension))
-      .toEqual(['organization', 'administrative-level', 'unit-grouping', 'tendency', 'movement']);
+      .toEqual(['organization', 'unit-grouping', 'tendency', 'movement']);
     expect(RULE_DIMENSION_GAPS.filter((gap) => gap.coverage === 'partial').map((g) => g.dimension))
-      .toEqual(['base-symbol', 'body-marks', 'capabilities', 'state', 'lines-and-boundaries', 'weather', 'animal']);
+      .toEqual(['base-symbol', 'administrative-level', 'body-marks', 'capabilities', 'state', 'lines-and-boundaries', 'weather', 'animal']);
   });
 
   /**
@@ -370,23 +375,31 @@ describe('Einordnung fachlich gegen technisch', () => {
    * `above-left-label-head-conflict` und `below-body-zone-conflict`, von `engine` auf
    * `systematik` gewechselt sind `vehicle-category-requires-vehicle` und
    * `body-variant-requires-measured-kind` (artgebundene Formen).
+   *
+   * Am 9. Oktober 2026 auf 19 fachliche gestiegen: das Fachreview vom 5. Oktober 2026 (LFH-1064)
+   * sperrt Fahrzeugkategorie am Luftfahrzeug, Verwaltungsstufe ohne Verwaltungsebene, zwei
+   * Hinweise zugleich und den Giebel an nicht ortsfesten Trägern.
    */
-  it('nagelt die fünfzehn fachlichen Regeln fest', () => {
+  it('nagelt die neunzehn fachlichen Regeln fest', () => {
     expect(RULE_CATALOG.filter((rule) => rule.kind === 'systematik').map((r) => r.id)).toEqual([
       'above-left-label-head-conflict',
+      'administrative-level-requires-carrier',
       'below-body-zone-conflict',
       'body-variant-foot-conflict',
       'body-variant-requires-measured-kind',
       'chassis-foot-conflict',
       'head-zone-conflict',
       'plain-wheel-pair-chassis-conflict',
+      'raised-gable-requires-stationary-kind',
       'state-carrier-not-allowed',
       'state-group-limit-exceeded',
+      'state-hint-limit-exceeded',
       'state-tactics-not-allowed',
       'state-value-not-attachable',
       'strength-requires-unit',
       'surface-label-foot-conflict',
       'technical-fill-organization-conflict',
+      'vehicle-category-requires-chassis-body',
       'vehicle-category-requires-vehicle',
     ]);
     expect(RULE_CATALOG.filter((rule) => rule.kind === 'engine')).toHaveLength(35);

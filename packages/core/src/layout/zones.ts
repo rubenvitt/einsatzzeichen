@@ -758,11 +758,13 @@ function chassisZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
   if (!CHASSIS_KINDS.includes(kind)) {
     return measuredAbsent(
       'combination',
-      'core/src/validate.ts:433–440',
+      'core/src/validate.ts:478–502',
       'Eine Fahrwerkszone ist nur am Landfahrzeug, am Anhängerrumpf und am ' +
-        `Wechselladerrumpf vermessen. "${kind}" trägt in der Referenz keine; an Wasser- und ` +
-        'Luftfahrzeug überträgt der Motor sie (derive/vehicle-category.ts), an allen anderen ' +
-        'Arten lehnt die Regel `vehicle-category-requires-vehicle` sie ab.',
+        `Wechselladerrumpf vermessen. "${kind}" trägt in der Referenz keine; am Wasserfahrzeug ` +
+        'überträgt der Motor die des Amphibienfahrzeugs (derive/vehicle-category.ts), jede ' +
+        'andere Kategorie dort und jede am Luftfahrzeug lehnt ' +
+        '`vehicle-category-requires-chassis-body` ab, an allen anderen Arten ' +
+        '`vehicle-category-requires-vehicle`.',
     );
   }
 

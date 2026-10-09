@@ -203,15 +203,17 @@ describe('Kopfzone an Körpern mit Zusatzgeometrie', () => {
 });
 
 describe('Kopfzone an anderen Körperformen', () => {
+  // Seit dem Fachreview vom 05.10.2026 (LFH-1064) trägt das Wasserfahrzeug keine
+  // Verwaltungsstufe mehr; die Kopfzone darüber belegt hier die technische Kopfmarke.
   it('lässt einen tiefer liegenden Körper stehen und hängt den Kopf 1 mm darüber', () => {
-    const drawing = drawSymbol({ kind: 'vehicle-water', administrativeLevel: 'kreis' });
+    const drawing = drawSymbol({ kind: 'vehicle-water', technicalHeadMark: 'single-vertical-bar' });
     expect(bodyOf(drawing)).toEqual(bodyOf(drawSymbol({ kind: 'vehicle-water' })));
     expect(headOf(drawing).minY).toBe(4);
     expect(headOf(drawing).maxY).toBe(8);
   });
 
   it('verkleinert einen Körper, der unter dem Kopf nicht mehr in die Grundfläche passt', () => {
-    const drawing = drawSymbol({ kind: 'point', administrativeLevel: 'kreis' });
+    const drawing = drawSymbol({ kind: 'point', technicalHeadMark: 'single-vertical-bar' });
     expect(bodyOf(drawing)).toEqual({ minX: 9.333, minY: 6, maxX: 22.667, maxY: 31 });
     expect(drawing.derivations?.map((note) => note.part)).toContainEqual(
       expect.stringContaining('verkleinert'),

@@ -65,8 +65,6 @@ import {
 } from './derive/function-roles.js';
 import {
   chassisCurvePath,
-  chassisLiftMm,
-  liftForChassis,
   noteChassisDerivation,
 } from './derive/vehicle-category.js';
 import { openBodyTint } from './derive/open-body-tint.js';
@@ -1453,9 +1451,6 @@ function composeMeasuredOrDerived(
   const chassisPrimitives: Primitive[] =
     chassisShape?.marks.map((mark) => chassisPrimitive(mark, chassisTopMm)) ?? [];
   if (chassisShape !== null) noteChassisDerivation(spec.kind, spec.bodyVariant);
-  // Reicht das Fahrwerk unter Zusatzgeometrie über die Grundfläche, hebt sich das ganze Zeichen
-  // (derive/vehicle-category.ts); an den vermessenen Fahrwerken ist der Hub 0.
-  const liftMm = chassisLiftMm(chassisShape, chassisTopMm);
 
   // `FOOT_GAP_MM` trägt denselben Wert wie `HEAD_GAP_MM`, ist aber seit der Entscheidung vom
   // 21. September 2026 eine eigene Konstante: die 1 mm sind für die **Kopfzone** belegt
@@ -1700,7 +1695,7 @@ function composeMeasuredOrDerived(
   // einzige Stelle, an der die Zerlegung in Primitive das nachbilden kann.
   return {
     viewBox: DEFAULT_VIEWBOX_MM,
-    children: liftForChassis([
+    children: [
       ...headPrimitives,
       filled,
       ...innerFieldPrimitives,
@@ -1717,7 +1712,7 @@ function composeMeasuredOrDerived(
       ...bodyMarkPrimitives,
       ...labelChildren,
       ...footPrimitives,
-    ], liftMm, spec.kind, spec.bodyVariant),
+    ],
     ...(options.title !== undefined ? { title: options.title } : {}),
     ...(description !== undefined ? { description } : {}),
   };

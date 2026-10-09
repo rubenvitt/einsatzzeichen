@@ -86,6 +86,7 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
     { kind: 'vehicle-air', bodyVariant: 'raised-hull', labels: { aboveLeft: 'ITH', aboveLeftMetrics: { capHeightMm: 2.5, baselineFromBodyTopMm: 0, anchorFromBodyLeftMm: 100 } } },
     `aboveLeft-Anker rechts außerhalb der Profilbox (${CT}).`,
   ),
+  evidence('administrative-level-requires-carrier', { kind: 'hazard', administrativeLevel: 'kreis' }, `Verwaltungsstufe an einer Gefahr; neu mit dem Fachreview vom 05.10.2026 (${VT}).`),
   evidence('below-body-zone-conflict', { kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-1', labels: { belowRight: 'THW' } }, `Fahrwerk und Lauf unterhalb rechts zugleich (${CT}).`),
   evidence(
     'body-mark-rendition-not-measured',
@@ -177,12 +178,14 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
   evidence('label-too-wide', { kind: 'formation', labels: { center: 'W'.repeat(24) } }, 'Mittiger Lauf breiter als seine Box. Neu: Kompositionsregel.', 'composeFromCatalog'),
   evidence('label-unknown-glyph', { kind: 'formation', labels: { center: '☃' } }, 'Schneemann (U+2603) im mittigen Lauf. Neu: Kompositionsregel.', 'composeFromCatalog'),
   evidence('plain-wheel-pair-chassis-conflict', { kind: 'vehicle-land', bodyVariant: 'plain-wheel-pair', vehicleCategory: 'kfz-kategorie-1' }, `Fahrwerk am Radpaarkörper (${VT}).`),
+  evidence('raised-gable-requires-stationary-kind', { kind: 'person', bodyVariant: 'raised-gable' }, `Giebel an der Person; neu mit dem Fachreview vom 05.10.2026 (${VT}).`),
   evidence('state-carrier-not-allowed', { kind: 'formation', states: ['person-injured'] }, `Personenzustand an der Formation (${VT}).`),
   evidence(
     'state-group-limit-exceeded',
     { kind: 'formation', states: ['damaged', 'destroyed'] },
     `Zwei Schadensstufen an einer Formation (${VT}).`,
   ),
+  evidence('state-hint-limit-exceeded', { kind: 'person', states: ['suspected-situation', 'acute-situation'] }, `„?“ und „!“ an der Person; neu mit dem Fachreview vom 05.10.2026 (${VT}).`),
   evidence('state-tactics-not-allowed', { kind: 'person', states: ['tactical-attack'] }, `Einsatztaktik an der Person (${VT}).`),
   evidence('state-value-not-attachable', { kind: 'person', states: ['weather-sunny'] }, `Wetter in der Zustandsliste (${VT}).`),
   evidence('strength-requires-unit', { kind: 'hazard', strength: 'gruppe' }, `Stärke an einer Gefahr (${VT}).`),
@@ -221,6 +224,7 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
     { kind: 'vehicle-air', bodyVariant: 'fixed-wing-hull', labels: { topLeft: 'X', topLeftMetrics: { capHeightMm: 2.5, baselineFromBodyTopMm: 7, anchorFromBodyLeftMm: 100 } } },
     `topLeft-Anker außerhalb der Hülle (${CT}).`,
   ),
+  evidence('vehicle-category-requires-chassis-body', { kind: 'vehicle-air', vehicleCategory: 'kfz-kategorie-1' }, `Fahrwerk am Luftfahrzeug; neu mit dem Fachreview vom 05.10.2026 (${VT}).`),
   evidence('vehicle-category-requires-vehicle', { kind: 'formation', vehicleCategory: 'kettenfahrzeug' }, `Fahrwerk an der Formation (${VT}).`),
 ]);
 

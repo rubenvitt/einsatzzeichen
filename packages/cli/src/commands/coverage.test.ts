@@ -158,8 +158,9 @@ describe('coverage CLI', () => {
     // 50 seit dem 2. Oktober 2026: die Messsperren sind dem Ableiten gewichen
     // (docs/decisions/2026-10-02-ableiten-statt-messsperre.md). 12 statt 13 vollständige Achsen,
     // weil die neue Körpermarke `circle-solid-cap-4mm` (Leitstelle D.2.5) noch kein Rezept trägt.
+    // 54 seit dem Fachreview vom 5. Oktober 2026 (LFH-1064): vier Systematikregeln.
     expect(lines).toContain(
-      'Regelabdeckung:      12/17 Achsen vollständig belegt; 50 Validierungsregeln ' +
+      'Regelabdeckung:      12/17 Achsen vollständig belegt; 54 Validierungsregeln ' +
         '(Testfall je Regel durch core-Test erzwungen)',
     );
     expect(lines).toContain(
@@ -171,17 +172,18 @@ describe('coverage CLI', () => {
     // (`track-chevron-top`, 132 → 133); LFH-586: acht statt neun Organisationen (300960 → 270864
     // enumeriert, 964 → 868 gültig). Seit dem 2. Oktober 2026 (Ableiten statt Messsperre)
     // 22644 gültig, 85 belegt, keine Rezeptsignatur mehr außerhalb, 134 Körpermarken mit der
-    // Kappe der Leitstelle. Zusammen 22644 − 85 = 22559; hergeleitet in `rule-coverage.test.ts`.
+    // Kappe der Leitstelle. Seit dem Fachreview vom 5. Oktober 2026 (LFH-1064) 8784 gültig.
+    // Zusammen 8784 − 85 = 8699; hergeleitet in `rule-coverage.test.ts`.
     expect(lines).toContain(
-      'Generative Reichweite (Stufe 1): 22644 gültige Kompositionen aus kind × Körpervariante × ' +
+      'Generative Reichweite (Stufe 1): 8784 gültige Kompositionen aus kind × Körpervariante × ' +
         'Organisation × Kopfzone × Fahrwerk (270864 enumeriert), davon 85 in der Referenz belegt — ' +
-        '22559 erzeugbar ohne Referenzbeleg, 0 Rezeptsignaturen außerhalb der Stufe ' +
+        '8699 erzeugbar ohne Referenzbeleg, 0 Rezeptsignaturen außerhalb der Stufe ' +
         '(dokumentiert, kein Gate); nicht enumeriert: 88 Fähigkeiten, ' +
         '134 Körpermarken, 25 Funktionsrollen, freie Bezeichnung',
     );
     expect(lines.at(-1)).toBe('Coverage-Gate bestanden.');
     // Expliziter Timeout: `coverage()` rechnet seit LFH-413 `generativeReach()` mit
-    // (seit dem 2. Oktober 2026 26 964 validateSpec-gültige, 22 644 komponierte Kombinationen) —
+    // (seit dem 9. Oktober 2026 10 080 validateSpec-gültige, 8784 komponierte Kombinationen) —
     // allein rund 3 s, unter Vitest-Parallellast mehr; das 5-s-Standardlimit wäre ein Lastflake.
   }, 30_000);
 });

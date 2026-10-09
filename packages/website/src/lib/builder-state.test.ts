@@ -213,8 +213,10 @@ describe('allowedValues', () => {
     // Eine der Lücken, die nach dem 2. Oktober 2026 bleiben: ein Fähigkeitspiktogramm an einem
     // Körper, den die Kopfzone verkleinert, lässt sich auch abgeleitet nicht zeichnen
     // (`derive/head-zone.ts`). `compose()` wirft dafür eine `NotMeasuredError`, keine
-    // CompositionError. Gesperrt gehört der Wert trotzdem.
-    const [entry] = allowedValues({ kind: 'area', administrativeLevel: 'kreis' }, 'capabilities', [
+    // CompositionError. Gesperrt gehört der Wert trotzdem. Die Kopfzone belegt die technische
+    // Kopfmarke: eine Verwaltungsstufe an der Fläche lehnt seit dem Fachreview vom
+    // 5. Oktober 2026 eine Regel ab.
+    const [entry] = allowedValues({ kind: 'area', technicalHeadMark: 'single-vertical-bar' }, 'capabilities', [
       'meal-preparation',
     ]);
     expect(entry.ok).toBe(false);
@@ -224,12 +226,12 @@ describe('allowedValues', () => {
       // Die Rohmeldung bleibt erhalten, wandert aber nach `detail` — der Tooltip baut sich
       // aus den Bezeichnungen, nicht aus dieser Zeile.
       expect(entry.blocked.detail).toMatch(/nicht abgeleitet/);
-      // An der Formation mit derselben Verwaltungsstufe lässt sich das Piktogramm zeichnen; der
+      // An der Formation mit derselben Kopfmarke lässt sich das Piktogramm zeichnen; der
       // Rat „wähle eine andere Grundzeichenart" ist hier also richtig.
       expect(entry.blocked.scope).toBe('combination');
     }
     expect(
-      allowedValues({ kind: 'formation', administrativeLevel: 'kreis' }, 'capabilities', [
+      allowedValues({ kind: 'formation', technicalHeadMark: 'single-vertical-bar' }, 'capabilities', [
         'meal-preparation',
       ])[0]?.ok,
     ).toBe(true);
@@ -265,7 +267,7 @@ describe('allowedValues', () => {
     // Reichweite wie die Sperre. Eine feste Lücke (`scope: 'value'`) erreicht der Baukasten seit
     // dem 2. Oktober 2026 nicht mehr — das Amphibienfahrzeug, bis dahin die einzige, wird
     // abgeleitet gezeichnet. Den Fall `'value'` prüfen die Tests der Insel mit gestellten Werten.
-    const spec: SymbolSpec = { kind: 'area', administrativeLevel: 'kreis' };
+    const spec: SymbolSpec = { kind: 'area', technicalHeadMark: 'single-vertical-bar' };
     const [entry] = allowedValues(spec, 'capabilities', ['meal-preparation']);
     const check = checkSpec({ ...spec, capabilities: ['meal-preparation'] });
     expect(check.ok).toBe(false);

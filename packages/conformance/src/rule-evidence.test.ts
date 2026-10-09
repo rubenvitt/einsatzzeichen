@@ -35,10 +35,11 @@ describe('RULE_EVIDENCE', () => {
 
   it('führt je Regel genau einen Fall, alphabetisch', () => {
     expect(evidenceIds).toEqual([...new Set(evidenceIds)].sort());
-    // 50 Prüfregeln und sechs Kompositionsregeln, abzüglich der drei Lücken. Bis zum 2. Oktober 2026
+    // 54 Prüfregeln und sechs Kompositionsregeln, abzüglich der drei Lücken. Bis zum 2. Oktober 2026
     // 81; die Messsperren sind dem Ableiten gewichen
-    // (docs/decisions/2026-10-02-ableiten-statt-messsperre.md).
-    expect(RULE_EVIDENCE).toHaveLength(53);
+    // (docs/decisions/2026-10-02-ableiten-statt-messsperre.md). Seit dem Fachreview vom
+    // 5. Oktober 2026 (LFH-1064) vier Systematikregeln mehr.
+    expect(RULE_EVIDENCE).toHaveLength(57);
   });
 
   it('nagelt die Lücken fest', () => {

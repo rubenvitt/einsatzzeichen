@@ -1,20 +1,33 @@
 import { describe, expect, it } from 'vitest';
-import type { SymbolSpec } from '@einsatzzeichen/schema';
+import { DEFAULT_VIEWBOX_MM, type Drawing, type SymbolSpec } from '@einsatzzeichen/schema';
 import { drawSymbol } from '../default-ports.js';
+import { ARIMO_TEXT_METRICS } from '../geometry/text-metrics.js';
 import { NotMeasuredError } from '../not-measured.js';
+import { assertDerivedLayoutFits } from './layout-guard.js';
 
 describe('Platzprüfung abgeleiteter Zeichnungen', () => {
+  // Die Fälle „Giebel und EU-Kopf an der Person“ und „EU-Kopf über der Zustandsfassung der
+  // Gefahr“ standen bis zum Fachreview vom 05.10.2026 (LFH-1064) hier; seitdem lehnt die
+  // Systematik sie vorher ab (`raised-gable-requires-stationary-kind`,
+  // `administrative-level-requires-carrier`).
   it.each([
-    // Kopf und Giebel verkleinern die Raute so weit, dass die Eckkürzel an ihrer Untergrenze
-    // (`derive/run-scaling.ts`) in den mittigen Lauf reichen. Seit LFH-987 folgen die Läufe dem
-    // Körper; erst hier bleibt die Lücke.
-    [{ kind: 'person', bodyVariant: 'raised-gable', administrativeLevel: 'europaeische-union', labels: { center: 'AB', topLeft: 'C', bottomLeft: 'D', bottomRight: 'E' } }, /überlappen/],
-    [{ kind: 'vehicle-water', bodyVariant: 'foot-band', administrativeLevel: 'gemeinde', labels: { center: 'LST', bottomRight: 'UEL' } }, /überlappen/],
-    // Der neun Millimeter hohe EU-Kopf über der Zustandsfassung der Gefahr.
-    [{ kind: 'hazard', administrativeLevel: 'europaeische-union', states: ['suspected-situation'] }, /ragt über die Zeichenfläche/],
+    // Das Fußband drückt den mittigen Lauf am Wasserrumpf auf das Eckkürzel.
+    [{ kind: 'vehicle-water', bodyVariant: 'foot-band', labels: { center: 'LST', bottomRight: 'UEL' } }, /überlappen/],
+    [{ kind: 'swap-loader-vehicle', bodyVariant: 'foot-band', unitGrouping: 'verband-iii', labels: { center: 'LST', bottomRight: 'UEL' } }, /überlappen/],
   ] as const)('lehnt %j als Lücke ab, statt falsch zu zeichnen', (spec, reason) => {
     expect(() => drawSymbol(spec as unknown as SymbolSpec)).toThrow(NotMeasuredError);
     expect(() => drawSymbol(spec as unknown as SymbolSpec)).toThrow(reason);
+  });
+
+  it('lehnt eine abgeleitete Zeichnung ab, die über die Zeichenfläche ragt', () => {
+    // Keine zulässige Spec erreicht diesen Zweig derzeit; geprüft wird er an der Zeichnung selbst.
+    const drawing: Drawing = {
+      viewBox: DEFAULT_VIEWBOX_MM,
+      children: [{ type: 'rect', role: 'head', x: 10, y: -2, width: 12, height: 4, style: { fill: 'schwarz' } }],
+      derivations: [{ dimension: 'administrativeLevel', part: 'Kopf', basis: 'constructed', from: 'Probe' }],
+    };
+    expect(() => assertDerivedLayoutFits(drawing, ARIMO_TEXT_METRICS)).toThrow(/ragt über die Zeichenfläche/);
+    expect(assertDerivedLayoutFits({ ...drawing, derivations: [] }, ARIMO_TEXT_METRICS)).toBeDefined();
   });
 
   it('lässt die ortsfeste Leitstelle mit Kürzeln und Verwaltungsstufe zeichnen', () => {
