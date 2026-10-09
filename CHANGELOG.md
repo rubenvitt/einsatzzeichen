@@ -1,3 +1,11 @@
+## Katalog und Website
+
+Die Website zeigt nun **vier abgeleitete Orte** im Zeichenkatalog: Einsatzleitung, Technische Einsatzleitung, Einsatzabschnittsleitung und Untereinsatzabschnittsleitung. Diese Zeichen basieren auf der Leitstelle (D.2.5) und stehen mit eigener Detailseite, SVG/PNG-Export und im Baukasten zur Verfügung.
+
+- Neue Facette **„Art"** im Explorer ermöglicht die Filterung nach Zeichentypen (u.a. „abgeleitete Orte")
+- Zeichenseiten erklären bei abgeleiteten Orten die Herkunft und den Prüfstand
+- Baukasten zeigt beim Laden eines abgeleiteten Orts einen entsprechenden Hinweis
+
 ## ⚠️ Breaking Changes
 
 Mit dieser Version wurden basierend auf einem Fachreview vom 5. Oktober 2026 vier neue Systematikregeln eingeführt, die bestimmte Kombinationen von Zeichen-Elementen ausschließen. Spezifikationen, die bisher gültig waren, können nun abgelehnt werden:
