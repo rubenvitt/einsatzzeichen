@@ -70,8 +70,9 @@ describe('Zulassungstabelle der Körpervarianten', () => {
     }
   });
 
-  it('zählt mindestens die 35 abgeleiteten Paare dieses Umbaus (Kreiskörper kommen hinzu)', () => {
-    expect(derivedPairs.length).toBeGreaterThanOrEqual(35);
+  it('zählt mindestens die 25 abgeleiteten Paare dieses Umbaus (Kreiskörper kommen hinzu)', () => {
+    // Bis zum Fachreview vom 05.10.2026 (LFH-1064) 35: der Giebel stand an 17 Arten, seitdem an 7.
+    expect(derivedPairs.length).toBeGreaterThanOrEqual(25);
   });
 });
 

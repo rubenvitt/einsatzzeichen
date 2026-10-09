@@ -785,11 +785,12 @@ describe('validateSpec', () => {
       ...validInsetWatercraft,
       labels: { center: 'MzB', centerCapHeightMm: 0 },
     }).map((issue) => issue.rule)).toContain('center-cap-height-positive');
-    // Seit dem 02.10.2026 trägt auch das Wasserfahrzeug eine (abgeleitete) Fahrwerkszone.
+    // Seit dem 02.10.2026 trägt auch das Wasserfahrzeug eine (abgeleitete) Fahrwerkszone, seit
+    // dem Fachreview vom 05.10.2026 nur noch die des Amphibienfahrzeugs.
     expect(validateSpec({
       ...validInsetWatercraft,
-      vehicleCategory: 'kfz-kategorie-1',
-    }).map((issue) => issue.rule)).not.toContain('vehicle-category-requires-vehicle');
+      vehicleCategory: 'amphibienfahrzeug',
+    }).map((issue) => issue.rule)).toEqual([]);
   });
 
   it.each([
@@ -942,16 +943,15 @@ describe('validateSpec', () => {
     }).map((issue) => issue.rule)).toContain('top-left-lines-exactly-two');
   });
 
-  it.each(['vehicle-air', 'vehicle-water'] as const)(
-    'lässt eine Fahrzeugkategorie an "%s" zu (Fahrwerkszone abgeleitet)',
-    (kind) => {
-      // Gemessen (18. August 2026): keine der drei Luftfahrzeugdateien 5.1.4.1 bis 5.1.4.3 und
-      // keines der fünf Wasserfahrzeuge E.2.27 bis E.2.31 trägt eine Fahrwerkszone. Seit dem
-      // Eigentümerentscheid vom 02.10.2026 ist das keine Sperre mehr; die Zeichnung prüft
-      // derive/vehicle-category.test.ts.
-      expect(validateSpec({ kind, vehicleCategory: 'kfz-kategorie-1' })).toEqual([]);
-    },
-  );
+  it('lässt am Wasserfahrzeug das Amphibienfahrzeug zu (Fahrwerkszone abgeleitet)', () => {
+    // Gemessen (18. August 2026): keine der drei Luftfahrzeugdateien 5.1.4.1 bis 5.1.4.3 und
+    // keines der fünf Wasserfahrzeuge E.2.27 bis E.2.31 trägt eine Fahrwerkszone. Seit dem
+    // Fachreview vom 05.10.2026 bleibt davon nur das Amphibienfahrzeug am Wasserfahrzeug; die
+    // Zeichnung prüft derive/vehicle-category.test.ts.
+    expect(validateSpec({ kind: 'vehicle-water', vehicleCategory: 'amphibienfahrzeug' })).toEqual([]);
+    expect(validateSpec({ kind: 'vehicle-air', vehicleCategory: 'amphibienfahrzeug' })
+      .map((issue) => issue.rule)).toEqual(['vehicle-category-requires-chassis-body']);
+  });
 
   it('lehnt Fahrzeugkategorie und Bezeichnung gleichzeitig ab', () => {
     // Die Fahrwerkszone reicht 4,75 mm unter die Körperunterkante, die Fußzone beginnt 1 mm
@@ -1472,8 +1472,17 @@ describe('validateSpec', () => {
       expect(validateSpec({ kind: 'building', states: ['route-closed'] })).toEqual([]);
     });
 
-    it('lässt „?" und „!" zugleich zu: der Hinweisteil ist keine Skala', () => {
-      expect(validateSpec({ kind: 'person', states: ['suspected-situation', 'acute-situation'] })).toEqual([]);
+    it('lässt höchstens einen der Hinweise „?" und „!" zu (Fachreview 05.10.2026)', () => {
+      for (const kind of ['person', 'hazard', 'formation'] as const) {
+        expect(rules({ kind, states: ['suspected-situation', 'acute-situation'] }), kind)
+          .toEqual(['state-hint-limit-exceeded']);
+        expect(rules({ kind, states: ['acute-situation', 'suspected-situation'] }), kind)
+          .toEqual(['state-hint-limit-exceeded']);
+        expect(rules({ kind, states: ['suspected-situation'] }), kind).toEqual([]);
+        expect(rules({ kind, states: ['acute-situation'] }), kind).toEqual([]);
+      }
+      // Die Gefahrenhinweise 5.8.1.5 bis 5.8.1.12 fallen nicht darunter.
+      expect(rules({ kind: 'hazard', states: ['suspected-situation', 'explosion-hazard'] })).toEqual([]);
     });
 
     it('lässt höchstens einen Personenzustand und einen Wert je Skala zu', () => {
@@ -1495,7 +1504,7 @@ describe('validateSpec', () => {
       expect(rules({
         kind: 'formation',
         states: ['damaged', 'destroyed', 'incipient-fire', 'developed-fire', 'suspected-situation', 'acute-situation'],
-      })).toEqual(['state-group-limit-exceeded', 'state-group-limit-exceeded']);
+      })).toEqual(['state-group-limit-exceeded', 'state-group-limit-exceeded', 'state-hint-limit-exceeded']);
     });
 
     it('lässt keine Einsatztaktik an einem Träger zu', () => {
@@ -1698,5 +1707,62 @@ describe('body-mark-rendition-not-measured (LFH-786)', () => {
       'Die Fassung "shifted-right-6.5mm" ist für "fire-fighting" nirgends vermessen; die Marke ' +
         'hat nur ihre Grundfassung.',
     ]);
+  });
+});
+
+describe('Fachreview der abgeleiteten Kombinationen vom 05.10.2026 (LFH-1064)', () => {
+  const rules = (spec: SymbolSpec) => validateSpec(spec).map((issue) => issue.rule);
+
+  it('vehicle-category-requires-chassis-body: Fahrzeugkategorie nur am Fahrzeugkörper mit Fahrwerk', () => {
+    for (const bodyVariant of [undefined, 'raised-hull', 'fixed-wing-hull'] as const) {
+      expect(rules({ kind: 'vehicle-air', ...(bodyVariant === undefined ? {} : { bodyVariant }), vehicleCategory: 'kfz-kategorie-1' }))
+        .toEqual(['vehicle-category-requires-chassis-body']);
+    }
+    expect(rules({ kind: 'vehicle-air', vehicleCategory: 'amphibienfahrzeug' })).toEqual(['vehicle-category-requires-chassis-body']);
+    expect(rules({ kind: 'vehicle-water', vehicleCategory: 'kettenfahrzeug' })).toEqual(['vehicle-category-requires-chassis-body']);
+    expect(rules({ kind: 'vehicle-water', vehicleCategory: 'amphibienfahrzeug' })).toEqual([]);
+    for (const kind of ['vehicle-land', 'trailer', 'swap-loader-vehicle'] as const) {
+      expect(rules({ kind, vehicleCategory: 'kettenfahrzeug' }), kind).toEqual([]);
+    }
+    // Ein Nichtfahrzeug meldet nur die Trägerbindung an das Fahrzeug.
+    expect(rules({ kind: 'formation', vehicleCategory: 'kettenfahrzeug' })).toEqual(['vehicle-category-requires-vehicle']);
+  });
+
+  it('administrative-level-requires-carrier: Verwaltungsstufe nur an Formation, Person, Stelle und Gebäude', () => {
+    for (const kind of ['formation', 'person', 'post', 'circle-12', 'building', 'reduced-house'] as const) {
+      expect(rules({ kind, administrativeLevel: 'kreis' }), kind).not.toContain('administrative-level-requires-carrier');
+    }
+    for (const kind of [
+      'vehicle-land', 'vehicle-air', 'vehicle-water', 'trailer', 'swap-loader-vehicle', 'container',
+      'area', 'measure', 'hazard', 'point', 'event', 'spontaneous-helper', 'upright-rectangle',
+    ] as const) {
+      for (const administrativeLevel of ['gemeinde', 'kreis', 'europaeische-union'] as const) {
+        expect(rules({ kind, administrativeLevel }), `${kind}/${administrativeLevel}`)
+          .toEqual(['administrative-level-requires-carrier']);
+      }
+    }
+  });
+
+  it('state-hint-limit-exceeded: höchstens ein Hinweis, wie höchstens eine Tendenz', () => {
+    expect(rules({ kind: 'event', states: ['suspected-situation', 'acute-situation'] }))
+      .toEqual(['state-hint-limit-exceeded']);
+    expect(rules({ kind: 'event', states: ['suspected-situation'] })).toEqual([]);
+  });
+
+  it('raised-gable-requires-stationary-kind: Giebel nur an ortsfesten Trägern', () => {
+    for (const kind of [
+      'post', 'circle-12', 'formation', 'building', 'reduced-house', 'container', 'vehicle-land',
+      'trailer', 'swap-loader-vehicle',
+    ] as const) {
+      expect(rules({ kind, bodyVariant: 'raised-gable' }), kind).toEqual([]);
+    }
+    for (const kind of [
+      'person', 'vehicle-air', 'vehicle-water', 'area', 'measure', 'hazard', 'point', 'event',
+      'spontaneous-helper', 'upright-rectangle',
+    ] as const) {
+      expect(rules({ kind, bodyVariant: 'raised-gable' }), kind).toEqual(['raised-gable-requires-stationary-kind']);
+    }
+    // Rumpf, Flügel und Raute bleiben bei ihrer eigenen Kennung.
+    expect(rules({ kind: 'formation', bodyVariant: 'fixed-wing-hull' })).toEqual(['body-variant-requires-measured-kind']);
   });
 });

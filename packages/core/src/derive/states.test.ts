@@ -97,15 +97,20 @@ describe('Hinweis-Randlage an jedem Träger (übertragen von 5.8.1_Beispiel 3)',
     expect(hint?.primitives.find((p) => p.type === 'line')?.style?.stroke).toBe(stroke);
   });
 
-  it('stellt „?" und „!" zugleich untereinander, mittig um y = 16 mit 1 mm Fuge', () => {
-    const drawing = drawn({ kind: 'person', states: ['suspected-situation', 'acute-situation'] });
-    const placement = placeStates({ carrier: { kind: 'person' }, states: ['acute-situation', 'suspected-situation'] });
+  // Bis zum Fachreview vom 05.10.2026 (LFH-1064) standen hier „?" und „!" zugleich; seitdem
+  // schließen sie sich aus (`state-hint-limit-exceeded`). Gestapelt wird weiter ein Hinweis mit
+  // einem Gefahrenhinweis.
+  it('stellt einen Hinweis und einen Gefahrenhinweis untereinander, mittig um y = 16 mit 1 mm Fuge', () => {
+    const drawing = drawn({ kind: 'person', states: ['suspected-situation', 'explosion-hazard'] });
+    const placement = placeStates({ carrier: { kind: 'person' }, states: ['explosion-hazard', 'suspected-situation'] });
     const [first, second] = parts(placement, 'state-margin');
-    expect([first?.value, second?.value]).toEqual(['suspected-situation', 'acute-situation']);
+    // Die Randlage ordnet nach dem Katalog: 5.8.1.5 vor 5.8.1.13.
+    expect([first?.value, second?.value]).toEqual(['explosion-hazard', 'suspected-situation']);
     const a = ink(first?.primitives ?? []);
     const b = ink(second?.primitives ?? []);
     // Hinweishöhe 9,6…20,5 mm = 10,9 mm je Zelle.
-    expect(round3(a.maxY - a.minY)).toBe(10.9);
+    expect(round3(a.maxY - a.minY)).toBeCloseTo(10.9, 2);
+    expect(round3(b.maxY - b.minY)).toBe(10.9);
     expect(round3(a.maxY)).toBe(15.5);
     expect(round3(b.minY)).toBe(16.5);
     expect(drawing.viewBox.height).toBe(32);
@@ -282,7 +287,7 @@ describe('Mehrfeldproben: Zustand × weitere Angabe × Träger', () => {
   // Skript beim Umbau; hier eine feste Stichprobe als Gate.
   const values: Partial<SymbolSpec>[] = [
     { states: ['suspected-situation'] },
-    { states: ['suspected-situation', 'acute-situation'] },
+    { states: ['suspected-situation', 'explosion-hazard'] },
     { states: ['explosion-hazard'] },
     { states: ['activity-moderately-increased-outage-up-to-50-percent'] },
     { states: ['partially-destroyed'] },

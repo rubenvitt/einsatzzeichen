@@ -53,8 +53,9 @@ export {
  *   `M.6` (`STATE_HINT_LAYOUTS`).
  *
  * Alles andere — Gefahrenhinweise 5.8.1.5 bis 5.8.1.12, Aktivität 5.8.2, Tendenz 5.8.3,
- * Schadensgrad 5.8.4 an einem Grundzeichen, Brandphase 5.8.5, Zugang 5.8.9, zwei Hinweise, jeder
- * andere Träger — zeigt kein Original an einem Träger. Seit der Entscheidung des Eigentümers vom
+ * Schadensgrad 5.8.4 an einem Grundzeichen, Brandphase 5.8.5, Zugang 5.8.9, jeder andere
+ * Träger — zeigt kein Original an einem Träger. Zwei Hinweise zugleich lehnt seit dem Fachreview
+ * vom 05.10.2026 `state-hint-limit-exceeded` ab. Seit der Entscheidung des Eigentümers vom
  * 02.10.2026 wird es aus den belegten Lagen abgeleitet (`derive/states.ts`) und als abgeleitet
  * gekennzeichnet; die Zeichnung des Zustands bleibt dabei die vermessene, nur ihre Lage ist
  * übertragen.

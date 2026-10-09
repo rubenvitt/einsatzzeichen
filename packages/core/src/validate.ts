@@ -29,7 +29,6 @@ import {
   functionRoleHeadIsFree,
   functionRoleOrganizationIsFree,
 } from './derive/function-roles.js';
-import { chassisLiftForForm } from './derive/vehicle-category.js';
 import { ARIMO_CAP_HEIGHT_FRACTION, verticalTextBoxMm } from './render/text-policy.js';
 
 export interface ValidationIssue {
@@ -59,9 +58,10 @@ const UNIT_KINDS = new Set<SymbolKind>(['formation', 'person']);
  * Zeichen des Anhangs E.2 tragen **25** ein Fahrwerk — 20 auf dem Landfahrzeugkörper, vier auf
  * dem Anhängerrumpf, eines auf dem Wechselladerrumpf. Die fünf Wasserfahrzeuge E.2.27 bis E.2.31
  * und die drei Luftfahrzeugdateien 5.1.4.1 bis 5.1.4.3 tragen keines. Seit dem
- * Eigentümerentscheid vom 02.10.2026 ist das keine Sperre mehr: an Wasser- und Luftfahrzeug wird
- * die Zone übertragen (`derive/vehicle-category.ts`). Bis LFH-424 stand hier schon einmal diese
- * Menge — damals als Annahme, jetzt als Systematik mit abgeleiteter Fassung.
+ * Eigentümerentscheid vom 02.10.2026 ist das keine Sperre mehr. Das Fachreview vom 05.10.2026
+ * engt den Fahrzeugkörper ein (`CHASSIS_BODY_KINDS`): am Luftfahrzeug keine Kategorie, am
+ * Wasserfahrzeug nur das Amphibienfahrzeug mit übertragener Zone (`derive/vehicle-category.ts`).
+ * Bis LFH-424 stand hier schon einmal diese Menge — damals als Annahme, jetzt als Systematik.
  *
  * **Was diese Menge nicht erzwingt: die Paarung von Kategorie und Körperform.** Eine
  * Anhängerkategorie am Landfahrzeug oder eine Kfz-Kategorie am Anhänger widerspricht keiner Regel;
@@ -74,6 +74,31 @@ const VEHICLE_KINDS = new Set<SymbolKind>([
   'swap-loader-vehicle',
   'vehicle-water',
   'vehicle-air',
+]);
+
+/**
+ * Fahrzeugkörper, deren Fahrwerk Kapitel 5.1 beschreibt: Landfahrzeug, Anhänger- und
+ * Wechselladerrumpf (Fachreview vom 05.10.2026, LFH-1064). Rad, Kette, Schiene und
+ * Geländegängigkeit sind Fahrwerke eines Landfahrzeugs; an Hubschrauber oder Flächenflugzeug
+ * sagen sie fachlich nichts. Am Wasserfahrzeug ist das Amphibienfahrzeug (5.1.1.4) der eine
+ * sinnvolle Fall, und nur ihn lässt `vehicle-category-requires-chassis-body` dort zu.
+ */
+const CHASSIS_BODY_KINDS = new Set<SymbolKind>(['vehicle-land', 'trailer', 'swap-loader-vehicle']);
+
+/**
+ * Träger einer Verwaltungsstufe (Fachreview vom 05.10.2026, LFH-1064): Die Stufe sagt, auf
+ * welcher Ebene eine Führung, Behörde oder Stelle angesiedelt ist. Das sind Formation und Person,
+ * die Stelle als Kreis (`post`, `circle-12`) und das Gebäude, zu dem die reduzierte Hauskontur
+ * aus F.3 gehört. Fahrzeug, Gefahr, Maßnahme oder Ereignis haben keine Verwaltungsebene; dort
+ * wäre die Stufe eher mit einer Stärkeangabe zu verwechseln.
+ */
+const ADMINISTRATIVE_LEVEL_KINDS = new Set<SymbolKind>([
+  'formation',
+  'person',
+  'post',
+  'circle-12',
+  'building',
+  'reduced-house',
 ]);
 
 /** Vermessene Normalhülle des F.2-Landfahrzeugs: x 1…31 / y 5,75…26 mm. */
@@ -392,7 +417,23 @@ function validatePreparedSpec(
   // Seit dem 2. Oktober 2026 nur noch Systematik: gesperrt bleibt eine Variante, die eine Form
   // einer anderen Art benennt (Rumpf, Flügel, Personraute, Kreis). Übertragbare Modifikatoren
   // zeichnet der Motor abgeleitet (`derive/body-variant-pairs.ts`).
+  //
+  // Der Giebel („ortsfest“, 3.9) ist kein artgebundener Rumpf, aber er meint temporär ortsfeste
+  // Strukturen und steht deshalb nur an Stelle, Formation, Gebäude, Container und den
+  // Fahrzeugkörpern mit Fahrgestell (Fachreview vom 05.10.2026, LFH-1064). Seine Ablehnung trägt
+  // eine eigene Kennung, weil der Grund ein anderer ist als bei Rumpf, Flügel oder Raute.
   if (
+    spec.bodyVariant === 'raised-gable' &&
+    !isAllowedBodyVariant(spec.kind, spec.bodyVariant)
+  ) {
+    issues.push({
+      rule: 'raised-gable-requires-stationary-kind',
+      message:
+        `Der Giebel bedeutet „ortsfest“ (3.9) und steht nur an Stelle, Formation, Gebäude, ` +
+        `Container, Landfahrzeug, Anhänger und Wechsellader; an "${spec.kind}" ist „ortsfest“ ` +
+        'selbstverständlich, sinnlos oder widerspricht der Art.',
+    });
+  } else if (
     spec.bodyVariant !== undefined &&
     !isAllowedBodyVariant(spec.kind, spec.bodyVariant)
   ) {
@@ -439,8 +480,25 @@ function validatePreparedSpec(
     issues.push({
       rule: 'vehicle-category-requires-vehicle',
       message:
-        'Eine Fahrzeugkategorie beschreibt das Fahrwerk eines Fahrzeugs und steht nur an Land-, ' +
-        `Wasser- und Luftfahrzeug, Anhänger und Wechsellader. "${spec.kind}" ist kein Fahrzeug.`,
+        'Eine Fahrzeugkategorie beschreibt das Fahrwerk eines Fahrzeugs und steht nur an ' +
+        `Fahrzeugen. "${spec.kind}" ist kein Fahrzeug.`,
+    });
+  }
+
+  // Fachreview vom 05.10.2026 (LFH-1064): Die Kategorien aus 5.1 beschreiben das Fahrwerk eines
+  // Landfahrzeugs. Am Luftfahrzeug ist jede gesperrt, am Wasserfahrzeug jede außer dem
+  // Amphibienfahrzeug (5.1.1.4). Ein Nichtfahrzeug meldet allein die Regel davor.
+  if (
+    spec.vehicleCategory !== undefined && VEHICLE_KINDS.has(spec.kind) &&
+    !CHASSIS_BODY_KINDS.has(spec.kind) &&
+    !(spec.kind === 'vehicle-water' && spec.vehicleCategory === 'amphibienfahrzeug')
+  ) {
+    issues.push({
+      rule: 'vehicle-category-requires-chassis-body',
+      message:
+        'Eine Fahrzeugkategorie beschreibt das Fahrwerk eines Landfahrzeugs und steht nur an ' +
+        'Landfahrzeug, Anhänger und Wechsellader; am Wasserfahrzeug nur das Amphibienfahrzeug ' +
+        `(5.1.1.4). "${spec.vehicleCategory}" an "${spec.kind}" ist fachlich ohne Bedeutung.`,
     });
   }
 
@@ -540,6 +598,16 @@ function validatePreparedSpec(
       message:
         'Fahrwerk, Bezeichnung, der Lauf unterhalb rechts und die schwarzen Oberflächenläufe ' +
         'belegen denselben Streifen unter dem Körper; je Seite trägt er nur einen davon.',
+    });
+  }
+
+  if (spec.administrativeLevel !== undefined && !ADMINISTRATIVE_LEVEL_KINDS.has(spec.kind)) {
+    issues.push({
+      rule: 'administrative-level-requires-carrier',
+      message:
+        'Eine Verwaltungsstufe sagt, auf welcher Ebene eine Führung, Behörde oder Stelle ' +
+        'angesiedelt ist, und steht nur an Formation, Person, Stelle und Gebäude. ' +
+        `"${spec.kind}" hat keine Verwaltungsebene.`,
     });
   }
 
@@ -789,11 +857,8 @@ function validatePreparedSpec(
     if (!invalidOrIncomplete && record !== undefined) {
       const bodyBounds = hull;
       const capHeightMm = record.capHeightMm as number;
-      // Ein Fahrwerk unter Zusatzgeometrie hebt das ganze Zeichen (derive/vehicle-category.ts);
-      // gegen die Grundfläche zählt die angehobene Lage.
       const baselineYMm = (bodyBounds?.minY ?? Number.NaN) +
-        (record.baselineFromBodyTopMm as number) -
-        chassisLiftForForm(spec.kind, spec.bodyVariant, spec.vehicleCategory);
+        (record.baselineFromBodyTopMm as number);
       const anchorXMm = (bodyBounds?.minX ?? Number.NaN) +
         (record.anchorFromBodyLeftMm as number);
       const box = verticalTextBoxMm(
@@ -1184,11 +1249,17 @@ const NOT_ATTACHABLE_STATE_GROUPS: Readonly<Partial<Record<StateGroupId, string>
  * Skalen, von denen ein Zeichen höchstens einen Wert trägt (Entscheidung des Eigentümers vom
  * 29.09.2026, dort Punkt 7): zwei Stufen derselben Skala widersprechen sich, und zwei
  * Personenzustände an einer Raute zeigt kein Original — die Verbindungen „verletzt und …" sind in
- * 5.8.8 eigene Werte. Die Hinweise „?" und „!" aus 5.8.1 sind seit dem 02.10.2026 keine Skala
- * mehr: dass kein Original beide zeigt, war eine Beobachtung, kein Verbot (Register `proposed`);
- * beide zugleich stehen abgeleitet untereinander in der Randlage.
+ * 5.8.8 eigene Werte. Die Hinweise „?" und „!" aus 5.8.1 sind keine Skala; sie schließen sich mit
+ * eigener Regel aus (`HINT_STATES`).
  */
 const ONE_PER_SIGN_STATE_GROUPS: readonly StateGroupId[] = ['activity', 'damage', 'fire', 'persons'];
+/**
+ * „Hinweis auf Vermutung" (5.8.1.13) und „Hinweis auf akute Situation" (5.8.1.14): höchstens einer
+ * je Zeichen, analog zur Tendenz (Fachreview vom 05.10.2026, LFH-1064). Dieselbe Sache kann nicht
+ * zugleich vermutet und akut sein; wer beides meint, hat zwei Lagen und setzt zwei Zeichen. Vom
+ * 02.10.2026 bis dahin standen beide abgeleitet untereinander in der Randlage.
+ */
+const HINT_STATES: readonly StateId[] = ['suspected-situation', 'acute-situation'];
 const KNOWN_STATE_IDS: ReadonlySet<StateId> = new Set<StateId>(STATE_IDS);
 /** Einsatztaktik 5.8.1.1 bis 5.8.1.4. */
 const STATE_TACTICS: ReadonlySet<StateId> = new Set<StateId>([
@@ -1257,6 +1328,15 @@ function stateIssues(spec: SymbolSpec): ValidationIssue[] {
       rule: 'state-group-limit-exceeded',
       message:
         `${values.join(' und ')} gehören zur selben Skala; ein Zeichen trägt davon höchstens einen Wert.`,
+    });
+  }
+  const hints = HINT_STATES.filter((hint) => attachable.includes(hint));
+  if (hints.length > 1) {
+    issues.push({
+      rule: 'state-hint-limit-exceeded',
+      message:
+        `${hints.join(' und ')} schließen sich aus: Dieselbe Sache ist nicht zugleich vermutet ` +
+        'und akut. Ein Zeichen trägt höchstens einen Hinweis; zwei Lagen sind zwei Zeichen.',
     });
   }
   return issues;

@@ -21,8 +21,11 @@ import { noteDerivation } from './record.js';
 
 /**
  * Die Kopfzone über dem Körper, abgeleitet für jede Körperform (Entscheidung des Eigentümers vom
- * 2. Oktober 2026): Verwaltungsstufe (5.7), Verband (5.5) und technische Kopfmarke stehen an
- * jedem Grundzeichen, über dem eine Kopfzone Platz findet, nicht mehr nur an der Formation.
+ * 2. Oktober 2026): Verband (5.5) und technische Kopfmarke stehen an jedem Grundzeichen, über dem
+ * eine Kopfzone Platz findet, nicht mehr nur an der Formation. Die Verwaltungsstufe (5.7) bindet
+ * das Fachreview vom 5. Oktober 2026 an Formation, Person, Stelle und Gebäude
+ * (`administrative-level-requires-carrier` in `validate.ts`); die Lage über Stelle und Gebäude
+ * leitet dieses Modul ab.
  *
  * Vermessen bleibt, was ein Original zeigt; nur der Rest trägt eine Ableitungsnotiz:
  *

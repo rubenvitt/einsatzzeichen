@@ -51,8 +51,9 @@ import type { SourceReference } from '@einsatzzeichen/schema';
  *   Die Ablehnung selbst ist die Kollision, also fachlich. Deshalb `'systematik'`.
  * - `vehicle-category-requires-vehicle` war bis zum 02.10.2026 **enger** als die Systematik: die
  *   umgesetzte Menge waren die drei Körperformen mit vermessener Fahrwerkszone. Seit dem
- *   Eigentümerentscheid steht sie an allen fünf Fahrzeugarten (`VEHICLE_KINDS`), Wasser- und
- *   Luftfahrzeug mit übertragener Zone. Übrig ist die Trägerbindung. Deshalb `'systematik'`.
+ *   Eigentümerentscheid steht sie an allen fünf Fahrzeugarten (`VEHICLE_KINDS`). Übrig ist die
+ *   Trägerbindung. Deshalb `'systematik'`. Welcher Fahrzeugkörper welche Kategorie trägt, regelt
+ *   seit dem Fachreview vom 05.10.2026 `vehicle-category-requires-chassis-body`.
  * - `designation-not-blank` und `label-not-blank` sehen nach Datenhygiene aus, tragen aber eine
  *   Motorbegründung: ein leerer Lauf erzeugt ein Textprimitiv ohne Tinte, das jedes Gate besteht
  *   und im Bild fehlt. Deshalb `'engine'`.
@@ -278,6 +279,13 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'website',
   ),
   entry(
+    'administrative-level-requires-carrier',
+    'systematik',
+    'administrative-level',
+    'Trägerbindung: die Verwaltungsstufe sagt, auf welcher Ebene eine Führung, Behörde oder Stelle angesiedelt ist, und steht nur an Formation, Person, Stelle und Gebäude; Fahrzeug, Gefahr, Maßnahme oder Ereignis haben keine Verwaltungsebene (Fachreview vom 05.10.2026).',
+    'core',
+  ),
+  entry(
     'below-body-zone-conflict',
     'systematik',
     'label',
@@ -498,6 +506,14 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'core',
   ),
   entry(
+    'raised-gable-requires-stationary-kind',
+    'systematik',
+    'body-variant',
+    'Der Giebel bedeutet „ortsfest“ und steht nur an Stelle, Formation, Gebäude, Container und den Fahrzeugkörpern mit Fahrgestell; an Person, Gefahr, Ereignis, Maßnahme, Gebiet und Punkt ist „ortsfest“ selbstverständlich oder sinnlos, an Luft- und Wasserfahrzeug widerspricht es der Art (Fachreview vom 05.10.2026).',
+    'core',
+    babz('3.9'),
+  ),
+  entry(
     'state-carrier-not-allowed',
     'systematik',
     'state',
@@ -509,9 +525,17 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'state-group-limit-exceeded',
     'systematik',
     'state',
-    'Zwei Stufen derselben Skala widersprechen sich; ein Zeichen trägt höchstens einen Personenzustand und je einen Wert aus 5.8.2, 5.8.4 und 5.8.5 (Entscheidung des Eigentümers vom 29.09.2026). Die Hinweise „?" und „!" zählen seit dem 02.10.2026 nicht mehr als Skala.',
+    'Zwei Stufen derselben Skala widersprechen sich; ein Zeichen trägt höchstens einen Personenzustand und je einen Wert aus 5.8.2, 5.8.4 und 5.8.5 (Entscheidung des Eigentümers vom 29.09.2026). Die Hinweise „?" und „!" sind keine Skala; sie schließen sich mit `state-hint-limit-exceeded` aus.',
     'core',
     babz('5.8.2, 5.8.4, 5.8.5, 5.8.8'),
+  ),
+  entry(
+    'state-hint-limit-exceeded',
+    'systematik',
+    'state',
+    'Dieselbe Sache ist nicht zugleich vermutet und akut; ein Zeichen trägt höchstens einen der Hinweise „?“ und „!“, wie höchstens eine Tendenz (Fachreview vom 05.10.2026).',
+    'core',
+    babz('5.8.1'),
   ),
   entry(
     'state-tactics-not-allowed',
@@ -616,10 +640,18 @@ export const RULE_CATALOG: readonly RuleCatalogEntry[] = Object.freeze([
     'core',
   ),
   entry(
+    'vehicle-category-requires-chassis-body',
+    'systematik',
+    'chassis',
+    'Trägerbindung: die Kategorien aus 5.1 beschreiben das Fahrwerk eines Landfahrzeugs und stehen an Landfahrzeug, Anhänger und Wechsellader, am Wasserfahrzeug nur das Amphibienfahrzeug; am Luftfahrzeug sagen sie nichts (Fachreview vom 05.10.2026).',
+    'core',
+    babz('5.1'),
+  ),
+  entry(
     'vehicle-category-requires-vehicle',
     'systematik',
     'chassis',
-    'Trägerbindung: die Fahrzeugkategorie beschreibt das Fahrwerk eines Fahrzeugs. Vermessen ist die Zone an Landfahrzeug, Anhängerrumpf und Wechselladerrumpf (25 von 31 E.2-Zeichen); an Wasser- und Luftfahrzeug ist sie übertragen.',
+    'Trägerbindung: die Fahrzeugkategorie beschreibt das Fahrwerk eines Fahrzeugs. Vermessen ist die Zone an Landfahrzeug, Anhängerrumpf und Wechselladerrumpf (25 von 31 E.2-Zeichen); welcher Fahrzeugkörper welche Kategorie trägt, regelt `vehicle-category-requires-chassis-body`.',
     'core',
     babz('E.2'),
   ),
@@ -823,9 +855,9 @@ export const RULE_DIMENSION_GAPS: readonly RuleDimensionGap[] = Object.freeze([
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'administrative-level',
-    coverage: 'none',
+    coverage: 'partial',
     chapter: '5.7',
-    note: 'Keine eigene Regel mehr (seit 2. Oktober 2026): die Verwaltungsstufe teilt die Kopfzonenregel `head-zone-conflict` mit Stärke, Verband und technischer Kopfmarke und steht an jedem Grundzeichen mit Kopfzone. Vermessen sind die Köpfe Kreis, Nationalstaat und EU (D.3/D.4); Gemeinde, Bezirk und Bundesland zeichnet der Motor abgeleitet aus den Kapiteldateien 5.7.1, 5.7.3 und 5.7.4 (`derive/head-zone.ts`).',
+    note: 'Eine Regel in Kraft: seit dem Fachreview vom 5. Oktober 2026 bindet `administrative-level-requires-carrier` die Stufe an Formation, Person, Stelle und Gebäude; die Kopfzone teilt sie mit Stärke, Verband und technischer Kopfmarke (`head-zone-conflict`). Vermessen sind die Köpfe Kreis, Nationalstaat und EU (D.3/D.4) an Formation und Person; Gemeinde, Bezirk und Bundesland und die Lage an Stelle und Gebäude zeichnet der Motor abgeleitet aus den Kapiteldateien 5.7.1, 5.7.3 und 5.7.4 (`derive/head-zone.ts`).',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'body-marks',
@@ -849,7 +881,7 @@ export const RULE_DIMENSION_GAPS: readonly RuleDimensionGap[] = Object.freeze([
     dimension: 'state',
     coverage: 'partial',
     chapter: '5.8',
-    note: 'Seit LFH-577 trägt `SymbolSpec.states` die Zustände, und vier Regeln sind in Kraft (Träger, Grenze je Skala, keine Taktik am Träger, freistehende Werte). Eine Lage zeigt die Referenz aber nur für einen Personenzustand an der Person und für die Hinweise „?" und „!" an Person und Gefahr; für 5.8.1.5 bis 5.8.1.12, 5.8.2, 5.8.4, 5.8.5 und 5.8.9 ist weder ein Träger belegt noch entschieden, und die Komposition meldet sie als nicht vermessen.',
+    note: 'Seit LFH-577 trägt `SymbolSpec.states` die Zustände, und fünf Regeln sind in Kraft (Träger, Grenze je Skala, höchstens ein Hinweis seit dem Fachreview vom 5. Oktober 2026, keine Taktik am Träger, freistehende Werte). Eine Lage zeigt die Referenz aber nur für einen Personenzustand an der Person und für die Hinweise „?" und „!" an Person und Gefahr; für 5.8.1.5 bis 5.8.1.12, 5.8.2, 5.8.4, 5.8.5 und 5.8.9 ist weder ein Träger belegt noch entschieden, und die Komposition meldet sie als nicht vermessen.',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'tendency',
