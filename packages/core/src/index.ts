@@ -112,6 +112,8 @@ export * from './geometry/technical-head-marks.js';
 export * from './geometry/administrative-heads.js';
 export * from './geometry/function-roles.js';
 export * from './geometry/parametric.js';
+// Kommunikationsskizze (LFH-1033): Bausteine nach J.5 ohne Referenzdatei, außerhalb des Katalogs.
+export * from './sketch/index.js';
 export * from './geometry/pictograms/index.js';
 export * from './geometry/render-themes.js';
 export * from './geometry/labels.js';
