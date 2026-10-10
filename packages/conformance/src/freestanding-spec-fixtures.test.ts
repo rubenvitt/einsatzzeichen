@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   FREESTANDING_DEFAULT_CANVAS_MM,
   animalStateDrawing,
+  freestandingProvenance,
   drawFreestanding,
   lineDrawing,
   movementDrawing,
@@ -123,6 +124,22 @@ describe('Freistehende Zeichen über die Spec', () => {
       expect(drawn.description?.trim()).not.toBe('');
     },
   );
+
+  it('nennt für jede Referenz außer Pfeil und Linie genau ihre Datei als Herkunft (LFH-798)', () => {
+    for (const { asset, spec } of FREESTANDING_SPEC_FIXTURES) {
+      const provenance = freestandingProvenance(spec);
+      if (spec.kind === 'movement' || spec.kind === 'line') {
+        // Der Verlauf ist eine Eingabe; belegt sind Querschnitt und Pfeilkopf, nicht das Zeichen.
+        expect(provenance, asset).toEqual({ status: 'derived' });
+        continue;
+      }
+      expect(provenance, asset).toMatchObject({ status: 'verbatim', claim: 'reference-file', referenceAsset: asset });
+      const chapterFour = spec.kind === 'pictogram' && spec.pictogram.startsWith('capability.');
+      expect(provenance.status === 'verbatim' && provenance.usage, asset).toBe(
+        chapterFour ? 'freestanding-not-evidenced' : undefined,
+      );
+    }
+  });
 
   it('übersteht die Rundreise über den Codec für jede Referenz', () => {
     for (const { asset, spec } of FREESTANDING_SPEC_FIXTURES) {

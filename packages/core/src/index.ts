@@ -149,6 +149,15 @@ export {
 // `derived`, aus einer generierten Tabelle ohne Prüfpaket. Der fachliche Reviewstand bleibt in
 // conformance (`provenanceReview`, `combinationProvenance`).
 export { symbolProvenance, type SymbolProvenance } from './provenance/symbol-provenance.js';
+// LFH-798: Herkunft der freistehenden Zeichen — `verbatim` mit `claim: 'reference-file'`, wo die
+// Zeichnung genau eine Referenzdatei ist (an Kapitel 4 mit `usage: 'freestanding-not-evidenced'`),
+// sonst `derived`; `anySpecProvenance` für beide Spec-Arten.
+export {
+  anySpecProvenance,
+  freestandingProvenance,
+  type AnySpecProvenance,
+  type FreestandingProvenance,
+} from './provenance/freestanding-provenance.js';
 // LFH-577: Kanonische Serialisierung der SymbolSpec — JSON in der Hülle `{"v":1,"spec":{…}}`,
 // strenges Lesen mit Pfad in der Fehlermeldung und die base64url-Form für URLs (liest auch die
 // alten Baukasten-Links ohne Hülle). Prüft Form und Wertevorrat, nicht die Kombinationsregeln.
