@@ -732,33 +732,34 @@ export const FREESTANDING_RULE_EXPLANATIONS: Readonly<Record<string, RuleExplana
     field: 'pictogram',
     title: 'Piktogramm mit eigener Spec',
     explanation:
-      'Jedes Bild hat genau eine Spec. Die Zustände aus 5.8 zeichnet die Art `state` (oder deren ' +
-      'eigene Spec), die Leitstelle D.2.5 ihre Ortskennung `control-center` über `drawPlace`. ' +
-      'Nimm die Spec aus der Meldung.',
+      'Jedes Bild hat genau eine Spec. Ein Zustandsbild aus 5.8 zeichnet die Art `state` oder die ' +
+      'Spec, die genau dieses Bild schon trägt; für die Leitstelle D.2.5 gilt die vorhandene Spec ' +
+      'ihres Orts `control-center` (`drawPlace`). Nimm die Spec aus der Meldung.',
   },
   'pictogram-variant-not-available': {
     field: 'variant',
     title: 'Zweite Darstellung nicht im Register',
     explanation:
-      'Außerhalb von 5.8 zeigt die Referenz eine zweite Darstellung nur bei vier Fähigkeiten aus ' +
-      'Kapitel 4 (4.1.6 bis 4.1.8, 4.7.10) und bei fünf Zeichen aus J.1 (Sprache und ' +
-      'Übertragungen, leitergebunden). Wähle die erste Darstellung.',
+      'Eine zweite Darstellung gibt es nur, wo das Register eine führt: außerhalb von 5.8 bei vier ' +
+      'Fähigkeiten aus Kapitel 4 (4.1.6 bis 4.1.8, 4.7.10) und bei fünf Zeichen aus J.1 (Sprache ' +
+      'und Übertragungen, leitergebunden), in 5.8 bei sechs Zuständen. Wähle die erste Darstellung.',
   },
   'state-not-canonical': {
     field: 'state',
     title: 'Zustand mit eigener Spec',
     explanation:
-      'Jedes Bild hat genau eine Spec. Den Tierzustand zeichnet `animal-state`, das Wetter ' +
-      '`weather`, den Personenzustand die Person mit `states` und die zweite Darstellung der ' +
-      'Hinweise 5.8.1.13 und 5.8.1.14 die Gefahr mit `states`. Nimm die Spec aus der Meldung.',
+      'Jedes Bild hat genau eine Spec, für Wert und Variante. Den Tierzustand zeichnet ' +
+      '`animal-state`, das Wetter `weather`, den Personenzustand in der ersten Darstellung die ' +
+      'Person mit `states` und die zweite Darstellung der Hinweise 5.8.1.13 und 5.8.1.14 die ' +
+      'Gefahr mit `states`. Nimm die Spec aus der Meldung.',
   },
   'state-variant-not-available': {
     field: 'variant',
     title: 'Zweite Darstellung nicht im Register',
     explanation:
-      'Unter den freistehend zeichenbaren Zuständen zeigt die Referenz eine zweite Darstellung ' +
-      'nur bei 5.8.1.7 Gefährliche Stoffe und 5.8.1.8 Gefahr durch Radioaktivität. Wähle die ' +
-      'erste Darstellung.',
+      'Eine zweite Darstellung führt das Register in 5.8 nur bei 5.8.1.7 Gefährliche Stoffe, ' +
+      '5.8.1.8 Gefahr durch Radioaktivität, den Hinweisen 5.8.1.13 und 5.8.1.14, dem ' +
+      'kontaminierten Tier 5.8.6.2 und der kontaminierten Person 5.8.8.6. Wähle die erste Darstellung.',
   },
   'weather-intensity-without-precipitation': {
     field: 'intensity',

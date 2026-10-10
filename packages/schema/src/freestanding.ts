@@ -77,12 +77,13 @@ export interface AnimalStateSpec {
  * Die Einzeldarstellung eines Zustands aus 5.8 (LFH-798, Entscheidung des Eigentümers vom
  * 10.10.2026): 5.8.1 bis 5.8.5 und 5.8.9, die Einsatztaktiken 5.8.1.1 bis 5.8.1.4 eingeschlossen.
  * Gezeichnet wird genau die Kapiteldatei. `variant: 'alternative'` nur, wo das Register eine
- * zweite Darstellung führt (5.8.1.7, 5.8.1.8).
+ * zweite Darstellung führt.
  *
- * Der Wertevorrat ist der volle aus `STATE_IDS`. Wo ein Bild schon eine Spec hat, lehnt die Regel
- * `state-not-canonical` ab und nennt sie: Tierzustand → `animal-state`, Wetter → `weather`,
- * Personenzustand → `{ kind: 'person', states }`, die zweiten Darstellungen der Hinweise 5.8.1.13
- * und 5.8.1.14 → `{ kind: 'hazard', states }`.
+ * Der Wertevorrat ist der volle aus `STATE_IDS`. Wo eine andere Spec genau dieses Bild (Wert und
+ * Variante) schon zeichnet, lehnt die Regel `state-not-canonical` ab und nennt sie: Tierzustand →
+ * `animal-state`, Wetter → `weather`, Personenzustand in der ersten Darstellung →
+ * `{ kind: 'person', states }`, die zweiten Darstellungen der Hinweise 5.8.1.13 und 5.8.1.14 →
+ * `{ kind: 'hazard', states }`. Die zweite Darstellung von 5.8.8.6 zeichnet nur diese Art.
  */
 export interface StateSpec {
   readonly kind: 'state';

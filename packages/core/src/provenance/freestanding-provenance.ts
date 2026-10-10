@@ -110,6 +110,11 @@ export function freestandingProvenance(spec: FreestandingSpec): FreestandingProv
 /**
  * Herkunft einer Spec beider Arten: eine `SymbolSpec` über `symbolProvenance` (Körperhülle gegen
  * eine Fixture), ein freistehendes Zeichen über `freestandingProvenance` (Referenzdatei).
+ *
+ * **Bekannte Lücke bis LFH-1303.** Die kanonischen `SymbolSpec`-Ziele von `freestandingRedirect`
+ * — die Person mit einem Zustand aus 5.8.8, die Gefahr mit einem Hinweis, die Leitstelle D.2.5 als
+ * Ort — melden hier `derived`, obwohl sie die Kapiteldatei zeichnen: `symbolProvenance` kennt nur
+ * Fixtures aus den Rezepten.
  */
 export function anySpecProvenance(spec: AnySpec): AnySpecProvenance {
   return isFreestandingSpec(spec) ? freestandingProvenance(spec) : symbolProvenance(spec);

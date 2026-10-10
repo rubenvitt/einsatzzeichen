@@ -249,17 +249,24 @@ Zeichenfläche hinausragt, ist keine Regel, sondern ein gewöhnlicher Fehler der
 ### Eine Spec je Bild
 
 Zu jedem Bild gibt es genau eine Beschreibung. `state` und `pictogram` lehnen deshalb Werte ab,
-die schon eine eigene Spec haben, und nennen sie in der Meldung (`state-not-canonical`,
-`pictogram-not-canonical`); `freestandingRedirect()` gibt dieselbe Spec als Wert zurück.
+deren Bild (Wert und Variante) eine andere Spec schon zeichnet, und nennen sie in der Meldung
+(`state-not-canonical`, `pictogram-not-canonical`); `freestandingRedirect()` gibt dieselbe Spec
+als Wert zurück.
 
 | Bild | Spec |
 |---|---|
 | Tierzustand (5.8.6) | `{ kind: 'animal-state', state }` |
 | Wetter (5.8.7) | `{ kind: 'weather', values: [wert] }` |
-| Personenzustand (5.8.8) | `{ kind: 'person', states: [wert] }` |
+| Personenzustand (5.8.8), erste Darstellung | `{ kind: 'person', states: [wert] }` |
 | Hinweis „?“ oder „!“ in der zweiten Darstellung (5.8.1.13, 5.8.1.14) | `{ kind: 'hazard', states: [wert] }` |
 | `state.*` als Piktogramm | `{ kind: 'state', state }` |
-| Leitstelle D.2.5 als Piktogramm | der Ort `control-center` (`drawPlace`) |
+| Leitstelle D.2.5 als Piktogramm | die vorhandene Spec des Orts `control-center` (`drawPlace`) |
+
+Die zweite Darstellung der kontaminierten Person (5.8.8.6) zeichnet nur `state`: die Person
+zeichnet die erste. Eine Variante, die das Register nicht führt, lehnt die Variantenregel ab, nicht
+die Kanonik. Bis LFH-1303 melden die Ziele, die eine `SymbolSpec` sind (Person mit Zustand, Gefahr
+mit Hinweis, Leitstelle als Ort), über `anySpecProvenance` noch `derived`, obwohl sie die
+Kapiteldatei zeichnen.
 
 Eine zweite Darstellung gibt es nur, wo das Register eine führt (`state-variant-not-available`,
 `pictogram-variant-not-available`). Die Fähigkeiten aus Kapitel 4 dürfen für sich stehen; das Bild
