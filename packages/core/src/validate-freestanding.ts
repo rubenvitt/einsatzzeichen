@@ -146,29 +146,37 @@ function referenceAssetOf(id: PictogramId, variant: DepictionVariant): string | 
 
 /**
  * Die Spec, die das Bild eines Zustands schon trägt (Entscheidung des Eigentümers vom 10.10.2026,
- * Punkt 3): Tierzustand 5.8.6 → `animal-state`, Wetter 5.8.7 → `weather`, Personenzustand 5.8.8 →
- * die Person mit `states`. Die zweiten Darstellungen der Hinweise 5.8.1.13 und 5.8.1.14 zeigen das
- * Zeichen an der Gefahr; welche Dateien das sind, steht als Datum an der Hinweislage
- * (`STATE_HINT_LAYOUTS.hazard.reference`), nicht ein zweites Mal hier.
+ * Punkt 3). Umgeleitet wird nur, wo eine andere Spec **genau dieses Bild** zeichnet, Wert und
+ * Variante:
+ *
+ * - Führt das Register die Variante nicht, gibt es kein Bild und nichts umzuleiten; dann greift
+ *   die Variantenregel (`state-variant-not-available`).
+ * - Tierzustand 5.8.6 → `animal-state`, mit derselben Variante (beide lesen dasselbe Register).
+ * - Wetter 5.8.7 → `weather` (das Register führt dort keine zweite Darstellung).
+ * - Personenzustand 5.8.8 → die Person mit `states`, aber nur in der ersten Darstellung: die
+ *   Person zeichnet keine zweite. Die zweite Darstellung von 5.8.8.6 bleibt deshalb hier.
+ * - Die zweiten Darstellungen der Hinweise 5.8.1.13 und 5.8.1.14 zeigen das Zeichen an der
+ *   Gefahr; welche Dateien das sind, steht als Datum an der Hinweislage
+ *   (`STATE_HINT_LAYOUTS.hazard.reference`), nicht ein zweites Mal hier.
  */
 function stateRedirect(spec: StateSpec): AnySpec | undefined {
   const variant = spec.variant ?? 'primary';
+  const asset = referenceAssetOf(`state.${spec.state}`, variant);
+  if (asset === undefined) return undefined;
   switch (stateValueGroup(spec.state)) {
     case 'animals':
       return spec.variant === undefined
         ? { kind: 'animal-state', state: spec.state as AnimalStateSpec['state'] }
         : { kind: 'animal-state', state: spec.state as AnimalStateSpec['state'], variant: spec.variant };
     case 'weather':
-      return { kind: 'weather', values: [spec.state as WeatherSpec['values'][number]] };
+      return variant === 'primary' ? { kind: 'weather', values: [spec.state as WeatherSpec['values'][number]] } : undefined;
     case 'persons':
-      return { kind: 'person', states: [spec.state] };
+      return variant === 'primary' ? { kind: 'person', states: [spec.state] } : undefined;
     default:
       break;
   }
   const hazardHints: Readonly<Record<string, string>> = STATE_HINT_LAYOUTS.hazard.reference;
-  const asset = referenceAssetOf(`state.${spec.state}`, variant);
-  if (asset !== undefined && hazardHints[spec.state] === asset) return { kind: 'hazard', states: [spec.state] };
-  return undefined;
+  return hazardHints[spec.state] === asset ? { kind: 'hazard', states: [spec.state] } : undefined;
 }
 
 /**
@@ -185,9 +193,12 @@ const PLACE_BY_ASSET: ReadonlyMap<string, AnySpec> = new Map(
 /**
  * Die Spec, die das Bild eines Piktogramms schon trägt (Entscheidung vom 10.10.2026, Punkt 3):
  * `state.*` die Art `state` — oder gleich deren eigene Weiterleitung —, ein Führungszeichen mit
- * eigener Kennung seine `SymbolSpec` (Ort).
+ * eigener Kennung die vorhandene Spec seines Orts. Führt das Register die Variante nicht, gibt es
+ * kein Bild und nichts umzuleiten (`pictogram-variant-not-available`).
  */
 function pictogramRedirect(spec: PictogramSpec): AnySpec | undefined {
+  const asset = referenceAssetOf(spec.pictogram, spec.variant ?? 'primary');
+  if (asset === undefined) return undefined;
   if (spec.pictogram.startsWith('state.')) {
     const state: StateSpec = {
       kind: 'state',
@@ -196,15 +207,21 @@ function pictogramRedirect(spec: PictogramSpec): AnySpec | undefined {
     };
     return stateRedirect(state) ?? state;
   }
-  const asset = referenceAssetOf(spec.pictogram, spec.variant ?? 'primary') ?? referenceAssetOf(spec.pictogram, 'primary');
-  return asset === undefined ? undefined : PLACE_BY_ASSET.get(asset);
+  return PLACE_BY_ASSET.get(asset);
 }
 
 /**
  * Die Spec, die das Bild einer freistehenden Spec schon trägt, oder `undefined`, wenn die Spec
- * selbst die eine ist (LFH-798, „eine Spec je Bild“). Genau dann lehnt die Prüfung mit
- * `state-not-canonical` oder `pictogram-not-canonical` ab; die Meldung nennt dieselbe Spec. Wer
- * alte Daten überführt, schreibt sie damit um, statt die Meldung zu lesen.
+ * selbst die eine ist (LFH-798, „eine Spec je Bild“). Umgeleitet wird nur, wo die andere Spec
+ * genau dieses Bild zeichnet, Wert und Variante; die einzige Ausnahme ist die Leitstelle D.2.5,
+ * die auf die vorhandene Spec ihres Orts geht (Entscheidung des Eigentümers; den Lauf setzt dort
+ * die Grammatik). Genau dann lehnt die Prüfung mit `state-not-canonical` oder
+ * `pictogram-not-canonical` ab; die Meldung nennt dieselbe Spec. Wer alte Daten überführt,
+ * schreibt sie damit um, statt die Meldung zu lesen. Die Rückgabe ist eingefroren.
+ *
+ * **Herkunft der Ziele.** Die `SymbolSpec`-Ziele — Person mit Zustand, Gefahr mit Hinweis,
+ * Leitstelle als Ort — melden über `anySpecProvenance` bis LFH-1303 `derived`, obwohl sie die
+ * Kapiteldatei zeichnen: die Herkunftstabelle kennt nur Rezepte.
  */
 export function freestandingRedirect(spec: FreestandingSpec): AnySpec | undefined {
   switch (spec.kind) {

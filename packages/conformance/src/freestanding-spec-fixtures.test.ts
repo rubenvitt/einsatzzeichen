@@ -94,15 +94,18 @@ describe('Freistehende Zeichen über die Spec', () => {
     expect(PICTOGRAM_SPEC_FIXTURES.map(({ asset }) => asset)).not.toContain('D.2.5_Leitstelle.svg');
   });
 
-  it('führt jede zulässige Kapiteldatei aus 5.8.1 bis 5.8.5 und 5.8.9 als Zustand (LFH-798)', () => {
-    // 31 Werte, dazu die zweiten Darstellungen von 5.8.1.7 und 5.8.1.8. Die Hinweise 5.8.1.13/14
-    // stehen mit ihrer ersten Darstellung hier; die zweite zeigt sie an der Gefahr und gehört
-    // deshalb zu `{ kind: 'hazard', states }`.
-    expect(STATE_SPEC_FIXTURES).toHaveLength(33);
+  it('führt jede Kapiteldatei, die nur der freistehende Zustand zeichnet (LFH-798)', () => {
+    // 31 Werte aus 5.8.1 bis 5.8.5 und 5.8.9, dazu die zweiten Darstellungen von 5.8.1.7 und
+    // 5.8.1.8 — und die zweite Darstellung von 5.8.8.6: die Person zeichnet nur die erste. Die
+    // Hinweise 5.8.1.13/14 stehen mit ihrer ersten Darstellung hier; die zweite zeigt sie an der
+    // Gefahr und gehört deshalb zu `{ kind: 'hazard', states }`.
+    expect(STATE_SPEC_FIXTURES).toHaveLength(34);
     const sections = new Set(STATE_SPEC_FIXTURES.map(({ asset }) => asset.split('_')[0]!.split('.').slice(0, 3).join('.')));
-    expect([...sections]).toEqual(['5.8.1', '5.8.2', '5.8.3', '5.8.4', '5.8.5', '5.8.9']);
-    expect(STATE_SPEC_FIXTURES.map(({ asset }) => asset)).not.toContain('5.8.1.13_Hinweis auf Vermutung_2.svg');
-    expect(STATE_SPEC_FIXTURES.map(({ asset }) => asset)).toContain('5.8.1.7_Gefährliche Stoffe_Chlor.svg');
+    expect([...sections]).toEqual(['5.8.1', '5.8.2', '5.8.3', '5.8.4', '5.8.5', '5.8.8', '5.8.9']);
+    const assets = STATE_SPEC_FIXTURES.map(({ asset }) => asset);
+    expect(assets).not.toContain('5.8.1.13_Hinweis auf Vermutung_2.svg');
+    expect(assets).toContain('5.8.1.7_Gefährliche Stoffe_Chlor.svg');
+    expect(assets.filter((asset) => asset.startsWith('5.8.8'))).toEqual(['5.8.8.6_Person Kontaminiert_Alternative.svg']);
   });
 
   it('kommt ohne eigene Zeichenfläche aus: die Vorgabe ist die Fläche der Referenz', () => {

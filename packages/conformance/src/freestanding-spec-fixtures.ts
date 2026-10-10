@@ -30,34 +30,21 @@ function specOfParametric(fixture: ParametricFixture): FreestandingSpec {
   };
 }
 
-/** Die Abschnitte, deren Zustände freistehend als `state` stehen (Entscheidung vom 10.10.2026). */
-const FREESTANDING_STATE_SECTIONS = ['5.8.1.', '5.8.2.', '5.8.3.', '5.8.4.', '5.8.5.', '5.8.9.'] as const;
-
 /**
- * Die zweiten Darstellungen der Hinweise zeigen das Zeichen an der Gefahr; sie gehören zu
- * `{ kind: 'hazard', states }` (`state-spec-fixtures.test.ts`), nicht hierher.
- */
-const HINT_AT_HAZARD: ReadonlySet<string> = new Set([
-  '5.8.1.13_Hinweis auf Vermutung_2.svg',
-  '5.8.1.14_Hinweis auf akute Situation_2.svg',
-]);
-
-/**
- * Jede Kapiteldatei, die der freistehende Zustand zeichnet (LFH-798): die Einzeldarstellung aus
- * dem Register, je Variante. Die Bilder sind dort gegen das Kennzahlenartefakt gegatet
- * (`pictograms/state-inventory.test.ts`); der Test hier verlangt, dass die Spec genau sie zeichnet.
+ * Jede Kapiteldatei, die der freistehende Zustand zeichnet (LFH-798): jede Darstellung aus 5.8,
+ * die keine andere Spec schon trägt (`freestandingRedirect`). Das sind 5.8.1 bis 5.8.5 und 5.8.9
+ * ohne die zweiten Darstellungen der Hinweise (sie zeigt die Gefahr) und dazu die zweite
+ * Darstellung von 5.8.8.6 (die Person zeichnet nur die erste). Die Bilder sind im Register gegen
+ * das Kennzahlenartefakt gegatet (`pictograms/state-inventory.test.ts`); der Test hier verlangt,
+ * dass die Spec genau sie zeichnet, und zählt die Dateien.
  */
 export const STATE_SPEC_FIXTURES: readonly FreestandingSpecFixture[] = Object.freeze(
-  STATE_PICTOGRAMS.filter(
-    (definition) =>
-      FREESTANDING_STATE_SECTIONS.some((section) => `${definition.section}.`.startsWith(section)) &&
-      !HINT_AT_HAZARD.has(definition.referenceAsset),
-  ).map((definition) => {
+  STATE_PICTOGRAMS.map((definition) => {
     const state = definition.id.slice('state.'.length) as StateId;
     const spec: FreestandingSpec =
       definition.variant === 'primary' ? { kind: 'state', state } : { kind: 'state', state, variant: definition.variant };
     return { asset: definition.referenceAsset, spec };
-  }),
+  }).filter(({ spec }) => freestandingRedirect(spec) === undefined),
 );
 
 /**

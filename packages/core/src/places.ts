@@ -1,6 +1,7 @@
 import type { DerivationNote, Drawing, FunctionRoleId, PlaceId, SymbolSpec } from '@einsatzzeichen/schema';
 import type { ComposeOptions } from './compose.js';
 import { drawSymbol } from './default-ports.js';
+import { deepFreeze } from './geometry/readonly-data.js';
 
 /**
  * Orte mit eigener Katalogkennung (LFH-1065). Eine Leitung **als Ort** ist keine Funktion an der
@@ -71,7 +72,11 @@ const CONTROL_CENTER: PlaceEntry = {
   counterparts: Object.freeze([]),
 };
 
-export const PLACES: Readonly<Record<PlaceId, PlaceEntry>> = Object.freeze({
+/**
+ * Tief eingefroren: die Specs gehen als Werte nach außen (auch über `freestandingRedirect`), und
+ * ein Aufrufer, der eine davon verändert, darf den Ort für alle anderen nicht mitverändern.
+ */
+export const PLACES: Readonly<Record<PlaceId, PlaceEntry>> = deepFreeze({
   'control-center': Object.freeze(CONTROL_CENTER),
   'incident-command': derivedPlace(
     'incident-command',
