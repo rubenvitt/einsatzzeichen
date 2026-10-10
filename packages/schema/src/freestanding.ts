@@ -7,14 +7,15 @@ import type {
   WeatherStateId,
 } from './parametric.js';
 import type { DepictionVariant } from './provenance.js';
-import type { StrengthId, SymbolKind, SymbolSpec } from './taxonomy.js';
+import type { StateId, StrengthId, SymbolKind, SymbolSpec } from './taxonomy.js';
 
 /**
  * Freistehende Zeichen als eigene Spec-Art neben `SymbolSpec` (LFH-577, Entscheidung des
  * Eigentümers vom 29.09.2026).
  *
  * Pfeile aus 5.2, Linien und Grenzen aus Kapitel 2, Wetter aus 5.8.7 und Tierzustände aus 5.8.6
- * stehen ohne Grundzeichen auf der Lagekarte. Sie haben weder Körper noch Zonen: ein Pfeil hat einen
+ * stehen ohne Grundzeichen auf der Lagekarte; seit LFH-798 auch die Einzeldarstellung eines
+ * Zustands aus 5.8. Sie haben weder Körper noch Zonen: ein Pfeil hat einen
  * Verlauf, das Wetter kombiniert Werte miteinander, der Tierzustand bringt seinen Träger mit. In
  * `SymbolSpec` wären sie Felder, die mit fast jedem anderen Feld unvereinbar sind. Deshalb eine
  * eigene Art, mit `kind` als Unterscheidungsmerkmal — dasselbe Feld wie bei `SymbolSpec`, damit
@@ -71,8 +72,25 @@ export interface AnimalStateSpec {
   readonly variant?: DepictionVariant;
 }
 
+/**
+ * Die Einzeldarstellung eines Zustands aus 5.8 (LFH-798, Entscheidung des Eigentümers vom
+ * 10.10.2026): 5.8.1 bis 5.8.5 und 5.8.9, die Einsatztaktiken 5.8.1.1 bis 5.8.1.4 eingeschlossen.
+ * Gezeichnet wird genau die Kapiteldatei. `variant: 'alternative'` nur, wo das Register eine
+ * zweite Darstellung führt (5.8.1.7, 5.8.1.8).
+ *
+ * Der Wertevorrat ist der volle aus `STATE_IDS`. Wo ein Bild schon eine Spec hat, lehnt die Regel
+ * `state-not-canonical` ab und nennt sie: Tierzustand → `animal-state`, Wetter → `weather`,
+ * Personenzustand → `{ kind: 'person', states }`, die zweiten Darstellungen der Hinweise 5.8.1.13
+ * und 5.8.1.14 → `{ kind: 'hazard', states }`.
+ */
+export interface StateSpec {
+  readonly kind: 'state';
+  readonly state: StateId;
+  readonly variant?: DepictionVariant;
+}
+
 /** Die freistehende Spec-Art. */
-export type FreestandingSpec = MovementSpec | LineSpec | WeatherSpec | AnimalStateSpec;
+export type FreestandingSpec = MovementSpec | LineSpec | WeatherSpec | AnimalStateSpec | StateSpec;
 
 /** Der Art-Diskriminator freistehender Zeichen. */
 export type FreestandingKind = FreestandingSpec['kind'];
@@ -95,6 +113,7 @@ export const FREESTANDING_KINDS: readonly FreestandingKind[] = Object.freeze(
     line: true,
     weather: true,
     'animal-state': true,
+    state: true,
   } satisfies Record<FreestandingKind, true>) as FreestandingKind[],
 );
 

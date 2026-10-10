@@ -485,7 +485,7 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'Retten, Angriff, Verteidigung und Rückzug (5.8.1.1 bis 5.8.1.4) sind eigene Zeichen und ' +
       'werden nicht an ein anderes Zeichen gehängt. Keine Vorlage zeigt sie an einem Träger, und ' +
       'so ist es für dieses Projekt am 29. September 2026 entschieden. Nimm die Taktik aus der ' +
-      'Zustandsliste wieder heraus.',
+      'Zustandsliste heraus und setze sie als eigenes Zeichen `{ kind: \'state\' }` daneben.',
   },
   'state-value-not-attachable': {
     field: 'states',
@@ -697,8 +697,8 @@ export const COMPOSITION_RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanat
   freezeTable(COMPOSITION_TABLE);
 
 /**
- * Erklärung je Regel aus `validateFreestandingSpec()` (LFH-577): Linien, Wetter und
- * Tierzustand als freistehende Zeichen. Das Feld ist eines der freistehenden Spec-Art.
+ * Erklärung je Regel aus `validateFreestandingSpec()` (LFH-577): Linien, Wetter, Tierzustand
+ * und Zustand (LFH-798) als freistehende Zeichen. Das Feld ist eines der freistehenden Spec-Art.
  */
 export const FREESTANDING_RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = freezeTable({
   'animal-state-variant-not-available': {
@@ -726,6 +726,22 @@ export const FREESTANDING_RULE_EXPLANATIONS: Readonly<Record<string, RuleExplana
       'Unter den Linien zeigt die Referenz eine zweite Darstellung nur bei 2.14 Escape Route: ' +
       'Punkte und Pfeilköpfe im Wechsel statt Punkten allein. Jede andere Linie hat genau eine. ' +
       'Wähle die erste Darstellung oder die Escape Route.',
+  },
+  'state-not-canonical': {
+    field: 'state',
+    title: 'Zustand mit eigener Spec',
+    explanation:
+      'Jedes Bild hat genau eine Spec. Den Tierzustand zeichnet `animal-state`, das Wetter ' +
+      '`weather`, den Personenzustand die Person mit `states` und die zweite Darstellung der ' +
+      'Hinweise 5.8.1.13 und 5.8.1.14 die Gefahr mit `states`. Nimm die Spec aus der Meldung.',
+  },
+  'state-variant-not-available': {
+    field: 'variant',
+    title: 'Zweite Darstellung nicht im Register',
+    explanation:
+      'Unter den freistehend zeichenbaren Zuständen zeigt die Referenz eine zweite Darstellung ' +
+      'nur bei 5.8.1.7 Gefährliche Stoffe und 5.8.1.8 Gefahr durch Radioaktivität. Wähle die ' +
+      'erste Darstellung.',
   },
   'weather-intensity-without-precipitation': {
     field: 'intensity',

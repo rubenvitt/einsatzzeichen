@@ -123,7 +123,7 @@ describe('FREESTANDING_RULE_EXPLANATIONS', () => {
     for (const id of FREESTANDING_RULE_IDS) {
       const entry = FREESTANDING_RULE_EXPLANATIONS[id];
       expect(RULE_FIELDS, id).toContain(entry.field);
-      expect(['strength', 'variant', 'values', 'intensity'], id).toContain(entry.field);
+      expect(['strength', 'variant', 'values', 'intensity', 'state'], id).toContain(entry.field);
       expect(entry.title.trim(), id).not.toBe('');
       expect(entry.explanation.length, id).toBeGreaterThan(40);
       expect(entry.explanation, id).not.toMatch(/TODO|TBD/);

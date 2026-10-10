@@ -10,8 +10,8 @@ import { STATE_IDS } from './taxonomy.js';
 import { SYMBOL_KINDS } from './taxonomy-values.js';
 
 describe('FreestandingSpec', () => {
-  it('führt die vier Arten freistehender Zeichen', () => {
-    expect(FREESTANDING_KINDS).toEqual(['movement', 'line', 'weather', 'animal-state']);
+  it('führt die Arten freistehender Zeichen', () => {
+    expect(FREESTANDING_KINDS).toEqual(['movement', 'line', 'weather', 'animal-state', 'state']);
   });
 
   it('teilt keinen Art-Diskriminator mit SymbolKind', () => {
@@ -26,8 +26,9 @@ describe('FreestandingSpec', () => {
       { kind: 'formation' },
       { kind: 'movement', movement: 'directed-movement', path: { points: [[2, 16], [30, 16]] } },
       { kind: 'weather', values: ['weather-sunny'] },
+      { kind: 'state', state: 'tactical-rescue' },
     ];
-    expect(specs.map(isFreestandingSpec)).toEqual([false, true, true]);
+    expect(specs.map(isFreestandingSpec)).toEqual([false, true, true, true]);
   });
 
   it('führt Wetter- und Tierwerte als Teilmengen von STATE_IDS in deren Reihenfolge', () => {

@@ -31,7 +31,7 @@ describe('FREESTANDING_RULE_IDS', () => {
   });
 
   it('zählt die Regeln der freistehenden Zeichen', () => {
-    expect(FREESTANDING_RULE_IDS).toHaveLength(6);
+    expect(FREESTANDING_RULE_IDS).toHaveLength(8);
   });
 
   it('kommt mit jeder Kennung in einem Testfall vor', () => {

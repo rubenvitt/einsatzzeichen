@@ -223,7 +223,10 @@ export {
   drawFreestanding,
   type FreestandingDrawOptions,
 } from './draw-freestanding.js';
-export { validateFreestandingSpec } from './validate-freestanding.js';
+export { freestandingRedirect, validateFreestandingSpec } from './validate-freestanding.js';
+// LFH-798: die Einzeldarstellung einer Kapiteldatei aus dem Piktogrammregister als Zeichnung —
+// das, was die freistehende Art `state` zeichnet.
+export { pictogramDrawing } from './geometry/standalone-pictogram.js';
 export { FREESTANDING_RULE_IDS } from './freestanding-rules.js';
 export { FREESTANDING_RULE_CATALOG } from './rules/rule-catalog.js';
 export { FREESTANDING_RULE_EXPLANATIONS } from './rules/rule-explanations.js';

@@ -38,6 +38,7 @@ const EXAMPLES: readonly AnySpec[] = [
   { kind: 'line', line: 'escape-route', path: { points: [[1, 18], [23, 6], [47, 26]] }, variant: 'alternative' },
   { kind: 'weather', values: ['weather-snowing', 'weather-cloudy'], intensity: 'extreme' },
   { kind: 'animal-state', state: 'contaminated-animal', variant: 'alternative' },
+  { kind: 'state', state: 'radioactivity-hazard', variant: 'alternative' },
 ];
 
 describe('serializeAnySpec', () => {
@@ -143,6 +144,19 @@ describe('parseAnySpec', () => {
     expect(parseError({ kind: 'weather', values: ['weather-sunny'], intensity: 'heftig' }).path).toBe('$.intensity');
     expect(parseError({ kind: 'animal-state', state: 'weather-sunny' }).path).toBe('$.state');
     expect(parseError({ kind: 'line', line: 'boundary-section', path: movement.path, strength: 'kompanie' }).path).toBe('$.strength');
+  });
+
+  it('liest den Zustand aus dem vollen Vorrat von 5.8, mit Variante (LFH-798)', () => {
+    expect(serializeAnySpec({ variant: 'alternative', state: 'hazardous-substances', kind: 'state' })).toBe(
+      '{"v":1,"freestanding":{"kind":"state","state":"hazardous-substances","variant":"alternative"}}',
+    );
+    // Der volle Vorrat wie bei `states`: dass das Wetter eine eigene Spec hat, ist eine Regel
+    // (`state-not-canonical`), kein Formfehler.
+    expect(parseAnySpec({ kind: 'state', state: 'weather-sunny' })).toEqual({ kind: 'state', state: 'weather-sunny' });
+    expect(parseError({ kind: 'state', state: 'sonnig' }).path).toBe('$.state');
+    expect(parseError({ kind: 'state' }).path).toBe('$.state');
+    expect(parseError({ kind: 'state', state: 'tactical-rescue', variant: 'zweite' }).path).toBe('$.variant');
+    expect(parseError({ kind: 'state', state: 'tactical-rescue', states: [] }).path).toBe('$.states');
   });
 
   it('prüft die Form, nicht die Regeln', () => {

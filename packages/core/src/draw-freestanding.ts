@@ -13,18 +13,19 @@ import { animalStateDrawing } from './geometry/animal-state.js';
 import { STRENGTH_LABELS } from './geometry/labels.js';
 import { lineDrawing, movementDrawing } from './geometry/parametric.js';
 import { pictogram } from './geometry/pictograms/index.js';
+import { pictogramDrawing } from './geometry/standalone-pictogram.js';
 import { weatherDrawing } from './geometry/weather.js';
 import { validateFreestandingSpec } from './validate-freestanding.js';
 import { CompositionError } from './validate.js';
 
 /**
  * Der Einstieg von der freistehenden Spec zur Zeichnung (LFH-577) — das Gegenstück zu
- * `drawSymbol` für Pfeile, Linien, Wetter und Tierzustände, und `drawAnySpec` als gemeinsamer
- * Einstieg für beide Spec-Arten.
+ * `drawSymbol` für Pfeile, Linien, Wetter, Tierzustände und Zustände, und `drawAnySpec` als
+ * gemeinsamer Einstieg für beide Spec-Arten.
  *
  * Gezeichnet wird mit den vorhandenen Zeichenfunktionen (`movementDrawing`, `lineDrawing`,
- * `weatherDrawing`, `animalStateDrawing`); hier kommen nur die Prüfung mit Regelkennungen, die
- * Vorgabe der Zeichenfläche und die Beschreibung für Screenreader dazu.
+ * `weatherDrawing`, `animalStateDrawing`, `pictogramDrawing`); hier kommen nur die Prüfung mit
+ * Regelkennungen, die Vorgabe der Zeichenfläche und die Beschreibung für Screenreader dazu.
  */
 
 /**
@@ -81,6 +82,11 @@ export function describeFreestandingSpec(spec: FreestandingSpec): string {
       if (spec.variant === 'alternative') parts.push('zweite Darstellung');
       return parts.join(', ');
     }
+    case 'state': {
+      const parts = [`Zustand: ${pictogram(`state.${spec.state}`).title}`];
+      if (spec.variant === 'alternative') parts.push('zweite Darstellung');
+      return parts.join(', ');
+    }
   }
 }
 
@@ -102,6 +108,8 @@ function drawingOf(spec: FreestandingSpec): Drawing {
       return weatherDrawing(spec.intensity === undefined ? { values: spec.values } : { values: spec.values, intensity: spec.intensity });
     case 'animal-state':
       return animalStateDrawing(spec.variant === undefined ? { state: spec.state } : { state: spec.state, variant: spec.variant });
+    case 'state':
+      return pictogramDrawing(`state.${spec.state}`, spec.variant);
   }
 }
 

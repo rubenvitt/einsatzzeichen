@@ -755,7 +755,7 @@ export const COMPOSITION_RULE_CATALOG: readonly RuleCatalogEntry[] = Object.free
 
 /**
  * Die Regeln der freistehenden Spec-Art (LFH-577): Linien und Grenzen aus Kapitel 2, Wetter aus
- * 5.8.7 und Tierzustand aus 5.8.6. `validateFreestandingSpec` löst sie aus, `FREESTANDING_RULE_IDS`
+ * 5.8.7, Tierzustand aus 5.8.6 und der freistehende Zustand aus 5.8 (LFH-798). `validateFreestandingSpec` löst sie aus, `FREESTANDING_RULE_IDS`
  * zählt sie; alphabetisch wie `RULE_CATALOG`.
  *
  * Ein eigener Katalog und kein Zuwachs von `RULE_CATALOG`, weil dessen Mengengleichheit mit
@@ -791,6 +791,22 @@ export const FREESTANDING_RULE_CATALOG: readonly RuleCatalogEntry[] = Object.fre
     'Eine zweite Darstellung zeigt die Referenz unter den Linien nur bei 2.14 Escape Route (Punkte und Pfeilköpfe im Wechsel); jede andere Linie hat genau eine.',
     'core',
     babz('2.14'),
+  ),
+  entry(
+    'state-not-canonical',
+    'systematik',
+    'state',
+    'Eine Spec je Bild (Entscheidung vom 10. Oktober 2026): Tier-, Wetter- und Personenzustand und die Hinweise an der Gefahr haben schon eine Spec, die genau diese Kapiteldatei zeichnet; eine zweite machte dasselbe Zeichen mehrdeutig.',
+    'core',
+    babz('5.8'),
+  ),
+  entry(
+    'state-variant-not-available',
+    'systematik',
+    'state',
+    'Eine zweite Darstellung zeigt die Referenz unter den freistehend zeichenbaren Zuständen nur bei 5.8.1.7 und 5.8.1.8; an den anderen gäbe es nichts, was sie zeichnete.',
+    'core',
+    babz('5.8.1.7'),
   ),
   entry(
     'weather-intensity-without-precipitation',
@@ -881,7 +897,7 @@ export const RULE_DIMENSION_GAPS: readonly RuleDimensionGap[] = Object.freeze([
     dimension: 'state',
     coverage: 'partial',
     chapter: '5.8',
-    note: 'Seit LFH-577 trägt `SymbolSpec.states` die Zustände, und fünf Regeln sind in Kraft (Träger, Grenze je Skala, höchstens ein Hinweis seit dem Fachreview vom 5. Oktober 2026, keine Taktik am Träger, freistehende Werte). Eine Lage zeigt die Referenz aber nur für einen Personenzustand an der Person und für die Hinweise „?" und „!" an Person und Gefahr; für 5.8.1.5 bis 5.8.1.12, 5.8.2, 5.8.4, 5.8.5 und 5.8.9 ist weder ein Träger belegt noch entschieden, und die Komposition meldet sie als nicht vermessen.',
+    note: 'Seit LFH-577 trägt `SymbolSpec.states` die Zustände, und fünf Regeln sind in Kraft (Träger, Grenze je Skala, höchstens ein Hinweis seit dem Fachreview vom 5. Oktober 2026, keine Taktik am Träger, freistehende Werte). Eine Lage zeigt die Referenz aber nur für einen Personenzustand an der Person und für die Hinweise „?" und „!" an Person und Gefahr; für 5.8.1.5 bis 5.8.1.12, 5.8.2, 5.8.4, 5.8.5 und 5.8.9 ist weder ein Träger belegt noch entschieden, und die Komposition meldet sie als nicht vermessen. Freistehend zeichnet seit LFH-798 die Art `state` die Einzeldarstellung aus 5.8.1 bis 5.8.5 und 5.8.9, mit zwei eigenen Regeln (`state-not-canonical`, `state-variant-not-available`).',
   } satisfies RuleDimensionGap),
   Object.freeze({
     dimension: 'tendency',

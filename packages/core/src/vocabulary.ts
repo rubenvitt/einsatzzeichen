@@ -27,6 +27,7 @@ import {
   type FreestandingKind,
   type LineSpec,
   type MovementSpec,
+  type StateSpec,
   type SymbolSpec,
   type WeatherSpec,
 } from '@einsatzzeichen/schema';
@@ -213,11 +214,18 @@ const FREESTANDING_TABLE = {
     state: oneOf(ANIMAL_STATE_IDS),
     variant: oneOf(DEPICTION_VARIANTS),
   } satisfies { readonly [K in keyof Required<AnimalStateSpec>]: SpecFieldDomain },
+  state: {
+    kind: oneOf(['state'] as const),
+    // Der volle Vorrat wie im Leser: Werte mit eigener Spec erscheinen als von einer Regel
+    // gesperrt (`state-not-canonical`), nicht als unbekannt.
+    state: oneOf(STATE_IDS),
+    variant: oneOf(DEPICTION_VARIANTS),
+  } satisfies { readonly [K in keyof Required<StateSpec>]: SpecFieldDomain },
 } as const satisfies { readonly [K in FreestandingKind]: Readonly<Record<string, SpecFieldDomain>> };
 
 /**
  * Wertevorrat je Feld der freistehenden Spec-Art, je Art (`movement`, `line`, `weather`,
- * `animal-state`) — das Gegenstück zu `SPEC_FIELD_VALUES`. Die Werte kommen aus denselben
+ * `animal-state`, `state`) — das Gegenstück zu `SPEC_FIELD_VALUES`. Die Werte kommen aus denselben
  * Wertelisten, gegen die `parseAnySpec` liest.
  */
 export const FREESTANDING_FIELD_VALUES: typeof FREESTANDING_TABLE = Object.freeze(

@@ -1,5 +1,6 @@
 import {
   ANIMAL_STATE_IDS,
+  STATE_IDS,
   FREESTANDING_KINDS,
   LINE_IDS,
   MOVEMENT_IDS,
@@ -25,6 +26,9 @@ describe('FREESTANDING_FIELD_VALUES', () => {
     expect(FREESTANDING_FIELD_VALUES.weather.intensity).toEqual({ shape: 'one-of', values: WEATHER_INTENSITIES });
     expect(FREESTANDING_FIELD_VALUES['animal-state'].state).toEqual({ shape: 'one-of', values: ANIMAL_STATE_IDS });
     expect(FREESTANDING_FIELD_VALUES.movement.path).toEqual({ shape: 'structured' });
+    // Der volle Vorrat aus 5.8 wie im Leser: Werte mit eigener Spec sperrt eine Regel.
+    expect(FREESTANDING_FIELD_VALUES.state.state).toEqual({ shape: 'one-of', values: STATE_IDS });
+    expect(FREESTANDING_FIELD_VALUES.state.variant).toEqual({ shape: 'one-of', values: ['primary', 'alternative'] });
   });
 
   it('nennt nur Werte, die der Leser annimmt', () => {
@@ -34,6 +38,9 @@ describe('FREESTANDING_FIELD_VALUES', () => {
     }
     for (const value of FREESTANDING_FIELD_VALUES.weather.values.values) {
       expect(() => parseAnySpec({ kind: 'weather', values: [value] })).not.toThrow();
+    }
+    for (const value of FREESTANDING_FIELD_VALUES.state.state.values) {
+      expect(() => parseAnySpec({ kind: 'state', state: value })).not.toThrow();
     }
   });
 });

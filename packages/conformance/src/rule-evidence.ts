@@ -295,6 +295,16 @@ export const FREESTANDING_RULE_EVIDENCE: readonly FreestandingRuleEvidence[] = O
     `Zweite Darstellung an der Brandausbreitung (${FT}).`,
   ),
   freestandingEvidence(
+    'state-not-canonical',
+    { kind: 'state', state: 'person-dead' },
+    `Personenzustand freistehend statt an der Person (${FT}).`,
+  ),
+  freestandingEvidence(
+    'state-variant-not-available',
+    { kind: 'state', state: 'tactical-attack', variant: 'alternative' },
+    `Zweite Darstellung an der Einsatztaktik Angreifen (${FT}).`,
+  ),
+  freestandingEvidence(
     'weather-intensity-without-precipitation',
     { kind: 'weather', values: ['weather-snowing'], intensity: 'strong' },
     `Intensität am Schnee ohne Wolke (${FT}).`,

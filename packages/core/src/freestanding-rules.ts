@@ -13,6 +13,8 @@ export const FREESTANDING_RULE_IDS: readonly string[] = Object.freeze([
   'animal-state-variant-not-available',
   'line-strength-mismatch',
   'line-variant-not-available',
+  'state-not-canonical',
+  'state-variant-not-available',
   'weather-intensity-without-precipitation',
   'weather-value-duplicate',
   'weather-values-exceed-limit',

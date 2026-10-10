@@ -6,13 +6,14 @@ import {
   lineDrawing,
   movementDrawing,
   parseAnySpec,
+  pictogram,
   serializeAnySpec,
   validateFreestandingSpec,
   weatherDrawing,
 } from '@einsatzzeichen/core';
 import type { Drawing } from '@einsatzzeichen/schema';
 import { ANIMAL_STATE_FIXTURES, WEATHER_EXAMPLE_FIXTURES } from './freestanding-state-fixtures.js';
-import { FREESTANDING_SPEC_FIXTURES } from './freestanding-spec-fixtures.js';
+import { FREESTANDING_SPEC_FIXTURES, STATE_SPEC_FIXTURES } from './freestanding-spec-fixtures.js';
 import { PARAMETRIC_FIXTURES } from './parametric-fixtures.js';
 
 /**
@@ -42,6 +43,13 @@ function directDrawing(asset: string): Drawing {
   if (weather !== undefined) return weatherDrawing(weather.parameters);
   const animal = ANIMAL_STATE_FIXTURES.find((fixture) => fixture.asset === asset);
   if (animal !== undefined) return animalStateDrawing(animal.parameters);
+  // Zustand freistehend (LFH-798): die Einzeldarstellung aus dem Piktogrammregister. Deren Gates
+  // stellen sie gegen das Kennzahlenartefakt (`pictograms/state-inventory.test.ts`).
+  const state = STATE_SPEC_FIXTURES.find((fixture) => fixture.asset === asset);
+  if (state !== undefined && state.spec.kind === 'state') {
+    const definition = pictogram(`state.${state.spec.state}`, state.spec.variant ?? 'primary');
+    return { viewBox: definition.viewBox, children: definition.primitives };
+  }
   throw new Error(`Keine Fixture für ${asset}`);
 }
 
@@ -51,7 +59,19 @@ describe('Freistehende Zeichen über die Spec', () => {
       ...PARAMETRIC_FIXTURES.map((fixture) => fixture.asset),
       ...WEATHER_EXAMPLE_FIXTURES.map((fixture) => fixture.asset),
       ...ANIMAL_STATE_FIXTURES.map((fixture) => fixture.asset),
+      ...STATE_SPEC_FIXTURES.map((fixture) => fixture.asset),
     ]);
+  });
+
+  it('führt jede zulässige Kapiteldatei aus 5.8.1 bis 5.8.5 und 5.8.9 als Zustand (LFH-798)', () => {
+    // 31 Werte, dazu die zweiten Darstellungen von 5.8.1.7 und 5.8.1.8. Die Hinweise 5.8.1.13/14
+    // stehen mit ihrer ersten Darstellung hier; die zweite zeigt sie an der Gefahr und gehört
+    // deshalb zu `{ kind: 'hazard', states }`.
+    expect(STATE_SPEC_FIXTURES).toHaveLength(33);
+    const sections = new Set(STATE_SPEC_FIXTURES.map(({ asset }) => asset.split('_')[0]!.split('.').slice(0, 3).join('.')));
+    expect([...sections]).toEqual(['5.8.1', '5.8.2', '5.8.3', '5.8.4', '5.8.5', '5.8.9']);
+    expect(STATE_SPEC_FIXTURES.map(({ asset }) => asset)).not.toContain('5.8.1.13_Hinweis auf Vermutung_2.svg');
+    expect(STATE_SPEC_FIXTURES.map(({ asset }) => asset)).toContain('5.8.1.7_Gefährliche Stoffe_Chlor.svg');
   });
 
   it('kommt ohne eigene Zeichenfläche aus: die Vorgabe ist die Fläche der Referenz', () => {

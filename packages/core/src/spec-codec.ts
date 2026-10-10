@@ -31,6 +31,7 @@ import {
   type FreestandingSpec,
   type LineSpec,
   type MovementSpec,
+  type StateSpec,
   type SymbolSpec,
   type WeatherSpec,
 } from '@einsatzzeichen/schema';
@@ -411,11 +412,20 @@ const ANIMAL_STATE_FIELDS: FieldTable<AnimalStateSpec> = {
   variant: oneOf(DEPICTION_VARIANTS, 'DepictionVariant'),
 };
 
+const STATE_FIELDS: FieldTable<StateSpec> = {
+  kind: oneOf(['state'], 'FREESTANDING_KINDS'),
+  // Der volle Vorrat aus 5.8 wie bei `states`: dass Wetter, Tier- und Personenzustand eine eigene
+  // Spec haben, ist eine Regel (`state-not-canonical`), kein Formfehler.
+  state: oneOf(STATE_IDS, 'STATE_IDS'),
+  variant: oneOf(DEPICTION_VARIANTS, 'DepictionVariant'),
+};
+
 const FREESTANDING_READERS: { readonly [K in FreestandingKind]: Reader } = {
   movement: record(MOVEMENT_FIELDS, ['kind', 'movement', 'path'], 'einem Pfeil (movement)'),
   line: record(LINE_FIELDS, ['kind', 'line', 'path'], 'einer Linie (line)'),
   weather: record(WEATHER_FIELDS, ['kind', 'values'], 'einem Wetterzeichen (weather)'),
   'animal-state': record(ANIMAL_STATE_FIELDS, ['kind', 'state'], 'einem Tierzustand (animal-state)'),
+  state: record(STATE_FIELDS, ['kind', 'state'], 'einem Zustand (state)'),
 };
 
 const freestandingKind = oneOf(FREESTANDING_KINDS, 'FREESTANDING_KINDS');
