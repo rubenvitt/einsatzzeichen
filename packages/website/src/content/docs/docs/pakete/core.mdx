@@ -188,11 +188,21 @@ console.log(decodeSpecParam(param)); // { kind: 'formation', organization: 'thw'
 ## Freistehende Zeichen
 
 Manche Zeichen stehen ohne Grundzeichen auf der Lagekarte: Pfeile für Bewegungen und Maßnahmen
-(5.2), Linien und Grenzen (2.14 bis 2.20), das Wetter (5.8.7) und der Zustand eines Tieres
-(5.8.6). Ein Pfeil folgt einem Verlauf, den man selbst legt; eine Grenze trennt Abschnitte; das
+(5.2), Linien und Grenzen (2.14 bis 2.20), das Wetter (5.8.7), der Zustand eines Tieres (5.8.6),
+ein Zustand aus 5.8 für sich und die Einzelpiktogramme aus Kapitel 4 und den Anhängen D, I.5, J,
+K, L und M. Ein Pfeil folgt einem Verlauf, den man selbst legt; eine Grenze trennt Abschnitte; das
 Wetter zeigt einen Wert allein oder die Wolke mit Regen, Hagel, Gewitter oder Schnee in einer von
 vier Stärken; der Tierzustand bringt die Tierform gleich mit. Diese Zeichen beschreibt eine eigene
 Art von Beschreibung neben der `SymbolSpec`, erkennbar am Feld `kind`.
+
+| `kind` | Was es zeichnet |
+|---|---|
+| `movement` | einen Pfeil aus 5.2 entlang eines Verlaufs |
+| `line` | eine Linie oder Grenze aus Kapitel 2 entlang eines Verlaufs |
+| `weather` | einen Wetterwert oder die Wolke mit einem Niederschlag (5.8.7) |
+| `animal-state` | einen Tierzustand mit der Tierform (5.8.6) |
+| `state` | die Kapiteldatei eines Zustands aus 5.8.1 bis 5.8.5 und 5.8.9, auch die Einsatztaktiken |
+| `pictogram` | die Kapiteldatei eines Piktogramms: Fähigkeit (`capability.*`), Kommunikation (`comms.*`), Schaden (`damage.*`), Vegetationsbrand (`wildfire.*`), Führung (`leadership.*`), Wasserrettung (`water-rescue-personnel.*`) |
 
 | Export | Was es tut |
 |---|---|
@@ -200,7 +210,11 @@ Art von Beschreibung neben der `SymbolSpec`, erkennbar am Feld `kind`.
 | `drawAnySpec(spec, options?)` | der gemeinsame Einstieg für beide Arten |
 | `checkAnySpec(spec)` | die Zeichnung oder der erklärte Grund, statt eines Wurfs |
 | `validateFreestandingSpec(spec)`, `FREESTANDING_RULE_IDS` | die Regeln der freistehenden Zeichen, mit Regel-ID; erklärt über `explainIssue()` |
+| `freestandingRedirect(spec)` | die Spec, die ein Bild schon zeichnet, wenn es nicht diese ist (eine Spec je Bild) |
 | `FREESTANDING_FIELD_VALUES` | der Wertevorrat je Feld, je Art |
+| `freestandingVocabulary(spec, field, options?)`, `FREESTANDING_VOCABULARY_FIELDS` | welche Werte eines Feldes zur übrigen freistehenden Spec passen, je Wert mit Befund |
+| `freestandingProvenance(spec)`, `anySpecProvenance(spec)` | `verbatim` mit Referenzdatei oder `derived` |
+| `pictogramDrawing(id, variant?)` | die Kapiteldatei aus dem Piktogrammregister als `Drawing` |
 | `serializeAnySpec`, `parseAnySpec`, `encodeAnySpecParam`, `decodeAnySpecParam` | die kanonische Form für beide Arten; freistehende Zeichen stehen unter `freestanding` |
 | `weatherDrawing`, `classifyWeather`, `WEATHER_CLOUD_PRECIPITATION`, `animalStateDrawing` | die Zeichenfunktionen und die Wetterregeln als Daten |
 
@@ -217,6 +231,9 @@ const zeichen: AnySpec[] = [
   { kind: 'line', line: 'boundary-with-strength', path: { points: [[1, 16], [47, 16]] }, strength: 'zug' },
   schnee,
   { kind: 'animal-state', state: 'dead-animal' },
+  // Einsatztaktik Angreifen (5.8.1.2) und Sprechfunk im DMO (J.1.3), je genau die Kapiteldatei
+  { kind: 'state', state: 'tactical-attack' },
+  { kind: 'pictogram', pictogram: 'comms.voice-radio-dmo' },
 ];
 const svgs = zeichen.map((spec) => renderSvg(drawAnySpec(spec), { size: 64 }));
 const link = encodeAnySpecParam(schnee); // base64url über {"v":1,"freestanding":{…}}
@@ -228,6 +245,39 @@ beim kontaminierten Tier, ein Wetterzeichen trägt höchstens die Wolke und eine
 Pfeil hängt nicht an einem Grundzeichen; die Vorlage zeigt das nur beim Transport einer Person,
 und dort gehört der Pfeil zum Personenzustand. Ein Verlauf, der zu kurz ist oder über die
 Zeichenfläche hinausragt, ist keine Regel, sondern ein gewöhnlicher Fehler der Zeichnung.
+
+### Eine Spec je Bild
+
+Zu jedem Bild gibt es genau eine Beschreibung. `state` und `pictogram` lehnen deshalb Werte ab,
+die schon eine eigene Spec haben, und nennen sie in der Meldung (`state-not-canonical`,
+`pictogram-not-canonical`); `freestandingRedirect()` gibt dieselbe Spec als Wert zurück.
+
+| Bild | Spec |
+|---|---|
+| Tierzustand (5.8.6) | `{ kind: 'animal-state', state }` |
+| Wetter (5.8.7) | `{ kind: 'weather', values: [wert] }` |
+| Personenzustand (5.8.8) | `{ kind: 'person', states: [wert] }` |
+| Hinweis „?“ oder „!“ in der zweiten Darstellung (5.8.1.13, 5.8.1.14) | `{ kind: 'hazard', states: [wert] }` |
+| `state.*` als Piktogramm | `{ kind: 'state', state }` |
+| Leitstelle D.2.5 als Piktogramm | der Ort `control-center` (`drawPlace`) |
+
+Eine zweite Darstellung gibt es nur, wo das Register eine führt (`state-variant-not-available`,
+`pictogram-variant-not-available`). Die Fähigkeiten aus Kapitel 4 dürfen für sich stehen; das Bild
+ist wörtlich die Kapiteldatei, dass eine Fähigkeit freistehend auf der Lagekarte steht, zeigt die
+Vorlage aber nicht. `freestandingProvenance()` vermerkt das mit
+`usage: 'freestanding-not-evidenced'`.
+
+```ts
+import { checkAnySpec, freestandingRedirect, freestandingVocabulary } from '@einsatzzeichen/core';
+
+checkAnySpec({ kind: 'state', state: 'person-dead' }); // abgelehnt: state-not-canonical
+freestandingRedirect({ kind: 'state', state: 'person-dead' }); // { kind: 'person', states: ['person-dead'] }
+
+// Welche Zustände freistehend zeichnen: 31 erlaubt, 30 mit eigener Spec
+for (const option of freestandingVocabulary({ kind: 'state', state: 'tactical-rescue' }, 'state')) {
+  if (option.status === 'allowed') console.log(option.value);
+}
+```
 
 ## Kommunikationsskizze
 
