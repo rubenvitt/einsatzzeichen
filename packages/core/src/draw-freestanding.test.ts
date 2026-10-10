@@ -53,6 +53,25 @@ describe('drawFreestanding', () => {
     expect(() => drawFreestanding({ kind: 'state', state: 'weather-sunny' })).toThrow(CompositionError);
   });
 
+  it('zeichnet ein Piktogramm als Einzeldarstellung seiner Kapiteldatei, auf deren Fläche (LFH-834)', () => {
+    for (const [id, variant] of [
+      ['comms.voice', 'alternative'],
+      ['capability.radioactive-materials', 'primary'],
+      ['leadership.command-post-in-operation', 'primary'],
+      ['damage.dyke-breach', 'primary'],
+    ] as const) {
+      const drawn = drawFreestanding({ kind: 'pictogram', pictogram: id, variant });
+      const definition = pictogram(id, variant);
+      expect(drawn.viewBox, id).toEqual(definition.viewBox);
+      expect(drawn.children, id).toEqual(definition.primitives);
+    }
+    // D.1.1 steht auf 32 × 46 mm, nicht auf der üblichen Fläche.
+    expect(drawFreestanding({ kind: 'pictogram', pictogram: 'leadership.command-post-in-operation' }).viewBox).toEqual({
+      width: 32,
+      height: 46,
+    });
+  });
+
   it('nennt die Flächen der Referenz als Vorgabe', () => {
     expect(FREESTANDING_DEFAULT_CANVAS_MM).toEqual({ movement: { width: 32, height: 32 }, line: { width: 48, height: 32 } });
   });
@@ -110,6 +129,15 @@ describe('describeFreestandingSpec', () => {
     );
     expect(describeFreestandingSpec({ kind: 'state', state: 'hazardous-substances', variant: 'alternative' })).toBe(
       `Zustand: ${pictogram('state.hazardous-substances').title}, zweite Darstellung`,
+    );
+    expect(describeFreestandingSpec({ kind: 'pictogram', pictogram: 'comms.voice', variant: 'alternative' })).toBe(
+      `Kommunikation: ${pictogram('comms.voice').title}, zweite Darstellung`,
+    );
+    expect(describeFreestandingSpec({ kind: 'pictogram', pictogram: 'capability.radioactive-materials' })).toBe(
+      `Fähigkeit: ${pictogram('capability.radioactive-materials').title}`,
+    );
+    expect(describeFreestandingSpec({ kind: 'pictogram', pictogram: 'water-rescue-personnel.team-leader' })).toBe(
+      `Wasserrettung: ${pictogram('water-rescue-personnel.team-leader').title}`,
     );
   });
 });

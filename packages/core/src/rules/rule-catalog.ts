@@ -148,8 +148,10 @@ export type RuleReasonSource = 'core' | 'website';
  *   der Verband teilt die Kopfzonenregel `head-zone-conflict`, die Tendenz hat keinen belegten
  *   Träger. Was fehlt, steht in `RULE_DIMENSION_GAPS`.
  * - Die Piktogrammachsen `comms`, `damage`, `wildfire`, `leadership` und
- *   `water-rescue-personnel` fehlen bewusst: sie beschreiben eigenständige Piktogramme, die
- *   nicht in `SymbolSpec` stehen und an denen `validateSpec` nichts prüft.
+ *   `water-rescue-personnel` stehen nicht einzeln da: sie beschreiben eigenständige Piktogramme,
+ *   die nicht in `SymbolSpec` stehen. Seit LFH-798 zeichnet sie die freistehende Art
+ *   `pictogram`; ihre Regeln (welche Kennung schon eine Spec hat, wo es eine zweite Darstellung
+ *   gibt) gelten für alle Räume gleich und stehen deshalb an einer Dimension `'pictogram'`.
  */
 export type RuleDimension =
   | 'base-symbol'
@@ -170,6 +172,7 @@ export type RuleDimension =
   | 'lines-and-boundaries'
   | 'weather'
   | 'animal'
+  | 'pictogram'
   | 'label'
   | 'composition';
 
@@ -196,6 +199,7 @@ export const RULE_DIMENSIONS: readonly RuleDimension[] = Object.freeze([
   'lines-and-boundaries',
   'weather',
   'animal',
+  'pictogram',
   'label',
   'composition',
 ] as const satisfies readonly RuleDimension[]);
@@ -755,7 +759,8 @@ export const COMPOSITION_RULE_CATALOG: readonly RuleCatalogEntry[] = Object.free
 
 /**
  * Die Regeln der freistehenden Spec-Art (LFH-577): Linien und Grenzen aus Kapitel 2, Wetter aus
- * 5.8.7, Tierzustand aus 5.8.6 und der freistehende Zustand aus 5.8 (LFH-798). `validateFreestandingSpec` löst sie aus, `FREESTANDING_RULE_IDS`
+ * 5.8.7, Tierzustand aus 5.8.6, der freistehende Zustand aus 5.8 und das freistehende Piktogramm
+ * aus den übrigen Räumen des Registers (LFH-798). `validateFreestandingSpec` löst sie aus, `FREESTANDING_RULE_IDS`
  * zählt sie; alphabetisch wie `RULE_CATALOG`.
  *
  * Ein eigener Katalog und kein Zuwachs von `RULE_CATALOG`, weil dessen Mengengleichheit mit
@@ -791,6 +796,22 @@ export const FREESTANDING_RULE_CATALOG: readonly RuleCatalogEntry[] = Object.fre
     'Eine zweite Darstellung zeigt die Referenz unter den Linien nur bei 2.14 Escape Route (Punkte und Pfeilköpfe im Wechsel); jede andere Linie hat genau eine.',
     'core',
     babz('2.14'),
+  ),
+  entry(
+    'pictogram-not-canonical',
+    'systematik',
+    'pictogram',
+    'Eine Spec je Bild (Entscheidung vom 10. Oktober 2026): Die Zustände aus 5.8 zeichnet die Art state, die Leitstelle D.2.5 ihre Ortskennung; ein zweiter Weg zum selben Bild machte das Zeichen mehrdeutig.',
+    'core',
+    babz('D.2.5'),
+  ),
+  entry(
+    'pictogram-variant-not-available',
+    'systematik',
+    'pictogram',
+    'Eine zweite Darstellung zeigt die Referenz außerhalb von 5.8 nur bei vier Fähigkeiten aus Kapitel 4 und fünf Zeichen aus J.1; an den anderen gäbe es nichts, was sie zeichnete.',
+    'core',
+    babz('J.1'),
   ),
   entry(
     'state-not-canonical',

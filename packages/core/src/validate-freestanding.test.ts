@@ -1,4 +1,5 @@
-import { STATE_IDS, type FreestandingSpec, type StateId } from '@einsatzzeichen/schema';
+import { PICTOGRAM_IDS, STATE_IDS, type FreestandingSpec, type StateId } from '@einsatzzeichen/schema';
+import { PLACES } from './places.js';
 import { describe, expect, it } from 'vitest';
 import { freestandingRedirect, validateFreestandingSpec } from './validate-freestanding.js';
 
@@ -24,6 +25,10 @@ describe('validateFreestandingSpec', () => {
       { kind: 'state', state: 'hazardous-substances', variant: 'alternative' },
       { kind: 'state', state: 'suspected-situation' },
       { kind: 'state', state: 'route-impassable', variant: 'primary' },
+      { kind: 'pictogram', pictogram: 'capability.radioactive-materials', variant: 'alternative' },
+      { kind: 'pictogram', pictogram: 'comms.voice', variant: 'alternative' },
+      { kind: 'pictogram', pictogram: 'leadership.command-post-in-operation' },
+      { kind: 'pictogram', pictogram: 'water-rescue-personnel.team-leader' },
     ];
     for (const spec of valid) expect(rulesOf(spec), JSON.stringify(spec)).toEqual([]);
   });
@@ -155,5 +160,65 @@ describe('Zustand freistehend (LFH-798)', () => {
   it('leitet zulässige Werte und die anderen Arten nicht um', () => {
     expect(freestandingRedirect({ kind: 'state', state: 'tactical-rescue' })).toBeUndefined();
     expect(freestandingRedirect({ kind: 'weather', values: ['weather-sunny'] })).toBeUndefined();
+  });
+});
+
+describe('Piktogramm freistehend (LFH-798/LFH-834)', () => {
+  it('lässt jede Kennung außer state.* und der Leitstelle zu', () => {
+    const drawable = PICTOGRAM_IDS.filter((id) => rulesOf({ kind: 'pictogram', pictogram: id }).length === 0);
+    expect(drawable).toHaveLength(192);
+    expect(drawable.some((id) => id.startsWith('state.'))).toBe(false);
+    for (const space of ['capability.', 'comms.', 'damage.', 'wildfire.', 'leadership.', 'water-rescue-personnel.']) {
+      expect(drawable.some((id) => id.startsWith(space)), space).toBe(true);
+    }
+  });
+
+  describe('pictogram-not-canonical', () => {
+    it('verweist state.* auf die Art state', () => {
+      expect(rulesOf({ kind: 'pictogram', pictogram: 'state.tactical-rescue' })).toEqual(['pictogram-not-canonical']);
+      expect(freestandingRedirect({ kind: 'pictogram', pictogram: 'state.tactical-rescue' })).toEqual({
+        kind: 'state',
+        state: 'tactical-rescue',
+      });
+      expect(freestandingRedirect({ kind: 'pictogram', pictogram: 'state.radioactivity-hazard', variant: 'alternative' })).toEqual({
+        kind: 'state',
+        state: 'radioactivity-hazard',
+        variant: 'alternative',
+      });
+    });
+
+    it('verweist einen Zustand mit eigener Spec gleich auf diese, ohne Umweg über state', () => {
+      expect(freestandingRedirect({ kind: 'pictogram', pictogram: 'state.weather-sunny' })).toEqual({
+        kind: 'weather',
+        values: ['weather-sunny'],
+      });
+      expect(freestandingRedirect({ kind: 'pictogram', pictogram: 'state.acute-situation', variant: 'alternative' })).toEqual({
+        kind: 'hazard',
+        states: ['acute-situation'],
+      });
+    });
+
+    it('verweist die Leitstelle D.2.5 auf ihre Ortskennung', () => {
+      expect(rulesOf({ kind: 'pictogram', pictogram: 'leadership.control-center' })).toEqual(['pictogram-not-canonical']);
+      expect(freestandingRedirect({ kind: 'pictogram', pictogram: 'leadership.control-center' })).toEqual(
+        PLACES['control-center'].spec,
+      );
+      const [issue] = validateFreestandingSpec({ kind: 'pictogram', pictogram: 'leadership.control-center' });
+      expect(issue?.message).toContain('control-center');
+    });
+  });
+
+  it('pictogram-variant-not-available: eine zweite Darstellung nur, wo das Register eine führt', () => {
+    expect(rulesOf({ kind: 'pictogram', pictogram: 'comms.voice-radio', variant: 'alternative' })).toEqual([
+      'pictogram-variant-not-available',
+    ]);
+    expect(rulesOf({ kind: 'pictogram', pictogram: 'damage.dyke-breach', variant: 'alternative' })).toEqual([
+      'pictogram-variant-not-available',
+    ]);
+    expect(rulesOf({ kind: 'pictogram', pictogram: 'capability.lifting-loads-persons', variant: 'alternative' })).toEqual([]);
+  });
+
+  it('leitet zulässige Piktogramme nicht um', () => {
+    expect(freestandingRedirect({ kind: 'pictogram', pictogram: 'comms.voice' })).toBeUndefined();
   });
 });

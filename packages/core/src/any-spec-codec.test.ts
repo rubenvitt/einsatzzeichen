@@ -39,6 +39,7 @@ const EXAMPLES: readonly AnySpec[] = [
   { kind: 'weather', values: ['weather-snowing', 'weather-cloudy'], intensity: 'extreme' },
   { kind: 'animal-state', state: 'contaminated-animal', variant: 'alternative' },
   { kind: 'state', state: 'radioactivity-hazard', variant: 'alternative' },
+  { kind: 'pictogram', pictogram: 'comms.data-transmission', variant: 'alternative' },
 ];
 
 describe('serializeAnySpec', () => {
@@ -157,6 +158,20 @@ describe('parseAnySpec', () => {
     expect(parseError({ kind: 'state' }).path).toBe('$.state');
     expect(parseError({ kind: 'state', state: 'tactical-rescue', variant: 'zweite' }).path).toBe('$.variant');
     expect(parseError({ kind: 'state', state: 'tactical-rescue', states: [] }).path).toBe('$.states');
+  });
+
+  it('liest das Piktogramm aus allen Räumen des Registers (LFH-834)', () => {
+    expect(serializeAnySpec({ pictogram: 'damage.dyke-breach', kind: 'pictogram' })).toBe(
+      '{"v":1,"freestanding":{"kind":"pictogram","pictogram":"damage.dyke-breach"}}',
+    );
+    // `state.*` und die Leitstelle lehnt erst die Regel ab (`pictogram-not-canonical`).
+    expect(parseAnySpec({ kind: 'pictogram', pictogram: 'state.tactical-rescue' })).toEqual({
+      kind: 'pictogram',
+      pictogram: 'state.tactical-rescue',
+    });
+    expect(parseError({ kind: 'pictogram', pictogram: 'comms.morse' }).path).toBe('$.pictogram');
+    expect(parseError({ kind: 'pictogram' }).path).toBe('$.pictogram');
+    expect(parseError({ kind: 'pictogram', pictogram: 'comms.voice', state: 'tactical-rescue' }).path).toBe('$.state');
   });
 
   it('prüft die Form, nicht die Regeln', () => {

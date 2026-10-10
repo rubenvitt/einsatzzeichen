@@ -79,6 +79,7 @@ export const RULE_FIELDS: readonly RuleField[] = Object.freeze([
   'values',
   'intensity',
   'state',
+  'pictogram',
   'composition',
 ] as const satisfies readonly RuleField[]);
 
@@ -697,8 +698,8 @@ export const COMPOSITION_RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanat
   freezeTable(COMPOSITION_TABLE);
 
 /**
- * Erklärung je Regel aus `validateFreestandingSpec()` (LFH-577): Linien, Wetter, Tierzustand
- * und Zustand (LFH-798) als freistehende Zeichen. Das Feld ist eines der freistehenden Spec-Art.
+ * Erklärung je Regel aus `validateFreestandingSpec()` (LFH-577): Linien, Wetter, Tierzustand,
+ * Zustand und Piktogramm (LFH-798) als freistehende Zeichen. Das Feld ist eines der freistehenden Spec-Art.
  */
 export const FREESTANDING_RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = freezeTable({
   'animal-state-variant-not-available': {
@@ -726,6 +727,22 @@ export const FREESTANDING_RULE_EXPLANATIONS: Readonly<Record<string, RuleExplana
       'Unter den Linien zeigt die Referenz eine zweite Darstellung nur bei 2.14 Escape Route: ' +
       'Punkte und Pfeilköpfe im Wechsel statt Punkten allein. Jede andere Linie hat genau eine. ' +
       'Wähle die erste Darstellung oder die Escape Route.',
+  },
+  'pictogram-not-canonical': {
+    field: 'pictogram',
+    title: 'Piktogramm mit eigener Spec',
+    explanation:
+      'Jedes Bild hat genau eine Spec. Die Zustände aus 5.8 zeichnet die Art `state` (oder deren ' +
+      'eigene Spec), die Leitstelle D.2.5 ihre Ortskennung `control-center` über `drawPlace`. ' +
+      'Nimm die Spec aus der Meldung.',
+  },
+  'pictogram-variant-not-available': {
+    field: 'variant',
+    title: 'Zweite Darstellung nicht im Register',
+    explanation:
+      'Außerhalb von 5.8 zeigt die Referenz eine zweite Darstellung nur bei vier Fähigkeiten aus ' +
+      'Kapitel 4 (4.1.6 bis 4.1.8, 4.7.10) und bei fünf Zeichen aus J.1 (Sprache und ' +
+      'Übertragungen, leitergebunden). Wähle die erste Darstellung.',
   },
   'state-not-canonical': {
     field: 'state',

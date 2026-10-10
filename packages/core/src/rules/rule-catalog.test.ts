@@ -301,6 +301,8 @@ describe('FREESTANDING_RULE_CATALOG gegen FREESTANDING_RULE_IDS und validate-fre
       ['animal-state-variant-not-available', 'systematik', 'animal'],
       ['line-strength-mismatch', 'systematik', 'lines-and-boundaries'],
       ['line-variant-not-available', 'systematik', 'lines-and-boundaries'],
+      ['pictogram-not-canonical', 'systematik', 'pictogram'],
+      ['pictogram-variant-not-available', 'systematik', 'pictogram'],
       ['state-not-canonical', 'systematik', 'state'],
       ['state-variant-not-available', 'systematik', 'state'],
       ['weather-intensity-without-precipitation', 'systematik', 'weather'],

@@ -295,6 +295,16 @@ export const FREESTANDING_RULE_EVIDENCE: readonly FreestandingRuleEvidence[] = O
     `Zweite Darstellung an der Brandausbreitung (${FT}).`,
   ),
   freestandingEvidence(
+    'pictogram-not-canonical',
+    { kind: 'pictogram', pictogram: 'leadership.control-center' },
+    `Leitstelle D.2.5 als Piktogramm statt als Ort (${FT}).`,
+  ),
+  freestandingEvidence(
+    'pictogram-variant-not-available',
+    { kind: 'pictogram', pictogram: 'comms.voice-radio', variant: 'alternative' },
+    `Zweite Darstellung am Sprechfunk J.1.2 (${FT}).`,
+  ),
+  freestandingEvidence(
     'state-not-canonical',
     { kind: 'state', state: 'person-dead' },
     `Personenzustand freistehend statt an der Person (${FT}).`,

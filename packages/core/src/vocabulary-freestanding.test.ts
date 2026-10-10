@@ -1,5 +1,6 @@
 import {
   ANIMAL_STATE_IDS,
+  PICTOGRAM_IDS,
   STATE_IDS,
   FREESTANDING_KINDS,
   LINE_IDS,
@@ -29,6 +30,7 @@ describe('FREESTANDING_FIELD_VALUES', () => {
     // Der volle Vorrat aus 5.8 wie im Leser: Werte mit eigener Spec sperrt eine Regel.
     expect(FREESTANDING_FIELD_VALUES.state.state).toEqual({ shape: 'one-of', values: STATE_IDS });
     expect(FREESTANDING_FIELD_VALUES.state.variant).toEqual({ shape: 'one-of', values: ['primary', 'alternative'] });
+    expect(FREESTANDING_FIELD_VALUES.pictogram.pictogram).toEqual({ shape: 'one-of', values: PICTOGRAM_IDS });
   });
 
   it('nennt nur Werte, die der Leser annimmt', () => {
@@ -41,6 +43,9 @@ describe('FREESTANDING_FIELD_VALUES', () => {
     }
     for (const value of FREESTANDING_FIELD_VALUES.state.state.values) {
       expect(() => parseAnySpec({ kind: 'state', state: value })).not.toThrow();
+    }
+    for (const value of FREESTANDING_FIELD_VALUES.pictogram.pictogram.values) {
+      expect(() => parseAnySpec({ kind: 'pictogram', pictogram: value })).not.toThrow();
     }
   });
 });

@@ -13,7 +13,11 @@ import {
 } from '@einsatzzeichen/core';
 import type { Drawing } from '@einsatzzeichen/schema';
 import { ANIMAL_STATE_FIXTURES, WEATHER_EXAMPLE_FIXTURES } from './freestanding-state-fixtures.js';
-import { FREESTANDING_SPEC_FIXTURES, STATE_SPEC_FIXTURES } from './freestanding-spec-fixtures.js';
+import {
+  FREESTANDING_SPEC_FIXTURES,
+  PICTOGRAM_SPEC_FIXTURES,
+  STATE_SPEC_FIXTURES,
+} from './freestanding-spec-fixtures.js';
 import { PARAMETRIC_FIXTURES } from './parametric-fixtures.js';
 
 /**
@@ -50,6 +54,11 @@ function directDrawing(asset: string): Drawing {
     const definition = pictogram(`state.${state.spec.state}`, state.spec.variant ?? 'primary');
     return { viewBox: definition.viewBox, children: definition.primitives };
   }
+  const single = PICTOGRAM_SPEC_FIXTURES.find((fixture) => fixture.asset === asset);
+  if (single !== undefined && single.spec.kind === 'pictogram') {
+    const definition = pictogram(single.spec.pictogram, single.spec.variant ?? 'primary');
+    return { viewBox: definition.viewBox, children: definition.primitives };
+  }
   throw new Error(`Keine Fixture für ${asset}`);
 }
 
@@ -60,7 +69,28 @@ describe('Freistehende Zeichen über die Spec', () => {
       ...WEATHER_EXAMPLE_FIXTURES.map((fixture) => fixture.asset),
       ...ANIMAL_STATE_FIXTURES.map((fixture) => fixture.asset),
       ...STATE_SPEC_FIXTURES.map((fixture) => fixture.asset),
+      ...PICTOGRAM_SPEC_FIXTURES.map((fixture) => fixture.asset),
     ]);
+  });
+
+  it('führt jede Kapiteldatei der übrigen Piktogrammräume als Piktogramm (LFH-834)', () => {
+    // 202 Darstellungen außerhalb von 5.8, ohne die Leitstelle D.2.5: die zeichnet ihr Ort.
+    expect(PICTOGRAM_SPEC_FIXTURES).toHaveLength(201);
+    const perSpace = new Map<string, number>();
+    for (const { spec } of PICTOGRAM_SPEC_FIXTURES) {
+      if (spec.kind !== 'pictogram') throw new Error('nur Piktogramme erwartet');
+      const space = spec.pictogram.slice(0, spec.pictogram.indexOf('.'));
+      perSpace.set(space, (perSpace.get(space) ?? 0) + 1);
+    }
+    expect(Object.fromEntries(perSpace)).toEqual({
+      capability: 92,
+      comms: 53,
+      damage: 28,
+      wildfire: 14,
+      leadership: 9,
+      'water-rescue-personnel': 5,
+    });
+    expect(PICTOGRAM_SPEC_FIXTURES.map(({ asset }) => asset)).not.toContain('D.2.5_Leitstelle.svg');
   });
 
   it('führt jede zulässige Kapiteldatei aus 5.8.1 bis 5.8.5 und 5.8.9 als Zustand (LFH-798)', () => {

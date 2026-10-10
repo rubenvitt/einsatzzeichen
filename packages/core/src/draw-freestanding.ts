@@ -4,6 +4,7 @@ import {
   type CanvasMm,
   type Drawing,
   type FreestandingSpec,
+  type PictogramId,
   type WeatherIntensity,
 } from '@einsatzzeichen/schema';
 import { parametricBlock } from './blocks/parametric.js';
@@ -51,6 +52,24 @@ const INTENSITY_LABELS: Readonly<Record<WeatherIntensity, string>> = {
   extreme: 'extrem',
 };
 
+/** Der Raum einer Piktogrammkennung, der Teil vor dem ersten Punkt. */
+type PictogramSpace = PictogramId extends infer Id ? (Id extends `${infer Space}.${string}` ? Space : never) : never;
+
+/** Der Raum eines Piktogramms in Worten, wie er in der Beschreibung vor dem Titel steht. */
+const PICTOGRAM_SPACE_LABELS: Readonly<Record<PictogramSpace, string>> = {
+  capability: 'Fähigkeit',
+  state: 'Zustand',
+  comms: 'Kommunikation',
+  damage: 'Schaden',
+  wildfire: 'Vegetationsbrand',
+  leadership: 'Führung',
+  'water-rescue-personnel': 'Wasserrettung',
+};
+
+function spaceLabel(id: PictogramId): string {
+  return PICTOGRAM_SPACE_LABELS[id.slice(0, id.indexOf('.')) as PictogramSpace];
+}
+
 function blockTitle(id: string): string {
   const entry = parametricBlock(id);
   if (entry === undefined) throw new Error(`Kein Baustein ${id} im Register.`);
@@ -87,6 +106,11 @@ export function describeFreestandingSpec(spec: FreestandingSpec): string {
       if (spec.variant === 'alternative') parts.push('zweite Darstellung');
       return parts.join(', ');
     }
+    case 'pictogram': {
+      const parts = [`${spaceLabel(spec.pictogram)}: ${pictogram(spec.pictogram).title}`];
+      if (spec.variant === 'alternative') parts.push('zweite Darstellung');
+      return parts.join(', ');
+    }
   }
 }
 
@@ -110,6 +134,8 @@ function drawingOf(spec: FreestandingSpec): Drawing {
       return animalStateDrawing(spec.variant === undefined ? { state: spec.state } : { state: spec.state, variant: spec.variant });
     case 'state':
       return pictogramDrawing(`state.${spec.state}`, spec.variant);
+    case 'pictogram':
+      return pictogramDrawing(spec.pictogram, spec.variant);
   }
 }
 

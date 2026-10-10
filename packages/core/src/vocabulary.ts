@@ -7,6 +7,7 @@ import {
   LINE_IDS,
   MOVEMENT_IDS,
   ORGANIZATION_IDS,
+  PICTOGRAM_IDS,
   STATE_IDS,
   STRENGTH_IDS,
   SYMBOL_KINDS,
@@ -27,6 +28,7 @@ import {
   type FreestandingKind,
   type LineSpec,
   type MovementSpec,
+  type PictogramSpec,
   type StateSpec,
   type SymbolSpec,
   type WeatherSpec,
@@ -221,11 +223,17 @@ const FREESTANDING_TABLE = {
     state: oneOf(STATE_IDS),
     variant: oneOf(DEPICTION_VARIANTS),
   } satisfies { readonly [K in keyof Required<StateSpec>]: SpecFieldDomain },
+  pictogram: {
+    kind: oneOf(['pictogram'] as const),
+    // Alle Räume; `state.*` und die Leitstelle sperrt die Regel `pictogram-not-canonical`.
+    pictogram: oneOf(PICTOGRAM_IDS),
+    variant: oneOf(DEPICTION_VARIANTS),
+  } satisfies { readonly [K in keyof Required<PictogramSpec>]: SpecFieldDomain },
 } as const satisfies { readonly [K in FreestandingKind]: Readonly<Record<string, SpecFieldDomain>> };
 
 /**
  * Wertevorrat je Feld der freistehenden Spec-Art, je Art (`movement`, `line`, `weather`,
- * `animal-state`, `state`) — das Gegenstück zu `SPEC_FIELD_VALUES`. Die Werte kommen aus denselben
+ * `animal-state`, `state`, `pictogram`) — das Gegenstück zu `SPEC_FIELD_VALUES`. Die Werte kommen aus denselben
  * Wertelisten, gegen die `parseAnySpec` liest.
  */
 export const FREESTANDING_FIELD_VALUES: typeof FREESTANDING_TABLE = Object.freeze(

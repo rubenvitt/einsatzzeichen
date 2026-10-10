@@ -129,7 +129,7 @@ describe('ruleEvidenceCoverage (Regelsicht)', () => {
 
   // Seit LFH-568 (21.09.2026): „Eine Regel gilt als belegt, wenn ein Testfall sie auslöst." Die
   // Zahlen wachsen mit den Katalogen und schrumpfen nur, wenn eine Lücke einen Fall bekommt.
-  it('belegt 65 von 68 Regeln durch Auslösung; drei benannte Lücken, keine stille', () => {
+  it('belegt 67 von 70 Regeln durch Auslösung; drei benannte Lücken, keine stille', () => {
     // Seit LFH-577 zählen die sechs Regeln der freistehenden Zeichen mit
     // (`FREESTANDING_RULE_CATALOG`, Fälle in `FREESTANDING_RULE_EVIDENCE`).
     // Am 2. Oktober 2026 von 91 auf 62 Regeln (Ableiten statt Messsperre,
@@ -138,16 +138,17 @@ describe('ruleEvidenceCoverage (Regelsicht)', () => {
     // `organization`, `administrative-level` und `capabilities` tragen keine Regel mehr.
     // Am 9. Oktober 2026 auf 66: vier Systematikregeln aus dem Fachreview vom 5. Oktober 2026
     // (LFH-1064), darunter wieder eine an `administrative-level`.
-    // Am 10. Oktober 2026 auf 68: der freistehende Zustand (LFH-798) bringt zwei Regeln an
-    // `state` mit (Kanonik und zweite Darstellung).
+    // Am 10. Oktober 2026 auf 70: der freistehende Zustand (LFH-798) bringt zwei Regeln an
+    // `state` mit (Kanonik und zweite Darstellung), das freistehende Piktogramm (LFH-834) dieselben
+    // zwei an der neuen Dimension `pictogram`.
     const coverage = ruleEvidenceCoverage();
-    expect(coverage.total).toEqual({ total: 68, triggered: 65, gap: 3, untriggered: 0 });
+    expect(coverage.total).toEqual({ total: 70, triggered: 67, gap: 3, untriggered: 0 });
     expect(coverage.byPhase).toEqual({
-      spec: { total: 62, triggered: 61, gap: 1, untriggered: 0 },
+      spec: { total: 64, triggered: 63, gap: 1, untriggered: 0 },
       composition: { total: 6, triggered: 4, gap: 2, untriggered: 0 },
     });
     expect(coverage.byKind).toEqual({
-      systematik: { total: 26, triggered: 26, gap: 0, untriggered: 0 },
+      systematik: { total: 28, triggered: 28, gap: 0, untriggered: 0 },
       engine: { total: 42, triggered: 39, gap: 3, untriggered: 0 },
     });
     expect(coverage.byDimension.map((entry) => [entry.dimension, entry.total, entry.triggered, entry.gap])).toEqual([
@@ -163,6 +164,7 @@ describe('ruleEvidenceCoverage (Regelsicht)', () => {
       ['lines-and-boundaries', 2, 2, 0],
       ['weather', 3, 3, 0],
       ['animal', 1, 1, 0],
+      ['pictogram', 2, 2, 0],
       ['label', 33, 33, 0],
       ['composition', 1, 1, 0],
     ]);

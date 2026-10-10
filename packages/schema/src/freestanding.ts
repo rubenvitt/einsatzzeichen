@@ -6,6 +6,7 @@ import type {
   WeatherIntensity,
   WeatherStateId,
 } from './parametric.js';
+import type { PictogramId } from './pictogram.js';
 import type { DepictionVariant } from './provenance.js';
 import type { StateId, StrengthId, SymbolKind, SymbolSpec } from './taxonomy.js';
 
@@ -15,7 +16,7 @@ import type { StateId, StrengthId, SymbolKind, SymbolSpec } from './taxonomy.js'
  *
  * Pfeile aus 5.2, Linien und Grenzen aus Kapitel 2, Wetter aus 5.8.7 und Tierzustände aus 5.8.6
  * stehen ohne Grundzeichen auf der Lagekarte; seit LFH-798 auch die Einzeldarstellung eines
- * Zustands aus 5.8. Sie haben weder Körper noch Zonen: ein Pfeil hat einen
+ * Zustands aus 5.8 und jedes übrige Einzelpiktogramm des Registers. Sie haben weder Körper noch Zonen: ein Pfeil hat einen
  * Verlauf, das Wetter kombiniert Werte miteinander, der Tierzustand bringt seinen Träger mit. In
  * `SymbolSpec` wären sie Felder, die mit fast jedem anderen Feld unvereinbar sind. Deshalb eine
  * eigene Art, mit `kind` als Unterscheidungsmerkmal — dasselbe Feld wie bei `SymbolSpec`, damit
@@ -89,8 +90,33 @@ export interface StateSpec {
   readonly variant?: DepictionVariant;
 }
 
+/**
+ * Ein Einzelpiktogramm aus den übrigen Räumen des Registers (LFH-798/LFH-834, Entscheidung vom
+ * 10.10.2026): Kapitel 4 (`capability.*`), Anhang J (`comms.*`), Schäden aus K und L
+ * (`damage.*`), Vegetationsbrand aus M (`wildfire.*`), Führung aus D (`leadership.*`) und
+ * Wasserrettungspersonal aus I.5 (`water-rescue-personnel.*`). Gezeichnet wird genau die
+ * Kapiteldatei, auf ihrer eigenen Fläche (D.1.1 steht auf 32 × 46 mm).
+ *
+ * Eine Fähigkeit aus Kapitel 4 ist als Bild wörtlich, ihre freistehende Verwendung auf der
+ * Lagekarte belegt die Referenz aber nicht; die Herkunft vermerkt das. Der Wertevorrat ist der
+ * volle aus `PICTOGRAM_IDS`; `state.*` (→ Art `state`) und Führungszeichen mit eigener Spec (die
+ * Leitstelle D.2.5 als Ort) lehnt die Regel `pictogram-not-canonical` ab und nennt die Spec.
+ * `variant: 'alternative'` nur, wo das Register eine zweite Darstellung führt.
+ */
+export interface PictogramSpec {
+  readonly kind: 'pictogram';
+  readonly pictogram: PictogramId;
+  readonly variant?: DepictionVariant;
+}
+
 /** Die freistehende Spec-Art. */
-export type FreestandingSpec = MovementSpec | LineSpec | WeatherSpec | AnimalStateSpec | StateSpec;
+export type FreestandingSpec =
+  | MovementSpec
+  | LineSpec
+  | WeatherSpec
+  | AnimalStateSpec
+  | StateSpec
+  | PictogramSpec;
 
 /** Der Art-Diskriminator freistehender Zeichen. */
 export type FreestandingKind = FreestandingSpec['kind'];
@@ -114,6 +140,7 @@ export const FREESTANDING_KINDS: readonly FreestandingKind[] = Object.freeze(
     weather: true,
     'animal-state': true,
     state: true,
+    pictogram: true,
   } satisfies Record<FreestandingKind, true>) as FreestandingKind[],
 );
 

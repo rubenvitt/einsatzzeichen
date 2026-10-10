@@ -1,4 +1,4 @@
-import { STATE_PICTOGRAMS } from '@einsatzzeichen/core';
+import { ALL_PICTOGRAMS, STATE_PICTOGRAMS, freestandingRedirect } from '@einsatzzeichen/core';
 import type { FreestandingSpec, StateId } from '@einsatzzeichen/schema';
 import { ANIMAL_STATE_FIXTURES, WEATHER_EXAMPLE_FIXTURES } from './freestanding-state-fixtures.js';
 import { PARAMETRIC_FIXTURES, type ParametricFixture } from './parametric-fixtures.js';
@@ -60,6 +60,23 @@ export const STATE_SPEC_FIXTURES: readonly FreestandingSpecFixture[] = Object.fr
   }),
 );
 
+/**
+ * Jede Kapiteldatei der übrigen Räume (Kapitel 4, J, K, L, M, D, I.5), die das freistehende
+ * Piktogramm zeichnet (LFH-834): alle Darstellungen außerhalb von 5.8, ohne die mit eigener Spec
+ * (die Leitstelle D.2.5 zeichnet ihr Ort). Die Bilder sind in den Suiten ihrer Räume gegatet.
+ */
+export const PICTOGRAM_SPEC_FIXTURES: readonly FreestandingSpecFixture[] = Object.freeze(
+  ALL_PICTOGRAMS.filter((definition) => !definition.id.startsWith('state.'))
+    .map((definition) => {
+      const spec: FreestandingSpec =
+        definition.variant === 'primary'
+          ? { kind: 'pictogram', pictogram: definition.id }
+          : { kind: 'pictogram', pictogram: definition.id, variant: definition.variant };
+      return { asset: definition.referenceAsset, spec };
+    })
+    .filter(({ spec }) => freestandingRedirect(spec) === undefined),
+);
+
 export const FREESTANDING_SPEC_FIXTURES: readonly FreestandingSpecFixture[] = Object.freeze([
   ...PARAMETRIC_FIXTURES.map((fixture) => ({ asset: fixture.asset, spec: specOfParametric(fixture) })),
   ...WEATHER_EXAMPLE_FIXTURES.map((fixture) => ({
@@ -71,4 +88,5 @@ export const FREESTANDING_SPEC_FIXTURES: readonly FreestandingSpecFixture[] = Ob
     spec: { kind: 'animal-state', ...fixture.parameters } satisfies FreestandingSpec,
   })),
   ...STATE_SPEC_FIXTURES,
+  ...PICTOGRAM_SPEC_FIXTURES,
 ]);
