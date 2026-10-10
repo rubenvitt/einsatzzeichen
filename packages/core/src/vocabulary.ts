@@ -26,6 +26,7 @@ import {
   type DepictionVariant,
   type Drawing,
   type FreestandingKind,
+  type FreestandingSpec,
   type LineSpec,
   type MovementSpec,
   type PictogramSpec,
@@ -355,11 +356,26 @@ export interface VocabularyOptions<K extends VocabularyField = VocabularyField> 
   readonly candidates?: readonly SpecFieldValue<K>[];
 }
 
-function toOption<K extends VocabularyField>(
-  value: SpecFieldValue<K>,
-  selected: boolean,
-  check: SpecCheck,
-): VocabularyOption<K> {
+/** Ein Befund zu einem Wert beliebigen Typs — die gemeinsame Form beider Vokabulare. */
+type OptionOf<V> =
+  | { readonly value: V; readonly selected: boolean; readonly status: 'allowed'; readonly derived?: true }
+  | {
+      readonly value: V;
+      readonly selected: boolean;
+      readonly status: 'blocked';
+      readonly reason: 'rule';
+      readonly issues: ExplainedIssue[];
+    }
+  | {
+      readonly value: V;
+      readonly selected: boolean;
+      readonly status: 'blocked';
+      readonly reason: 'not-measured';
+      readonly scope: NotMeasuredScope;
+      readonly message: string;
+    };
+
+function toOption<V>(value: V, selected: boolean, check: SpecCheck): OptionOf<V> {
   if (check.ok) {
     return check.drawing.derivations !== undefined && check.drawing.derivations.length > 0
       ? { value, selected, status: 'allowed', derived: true }
@@ -376,6 +392,50 @@ function toOption<K extends VocabularyField>(
     scope: check.scope,
     message: check.message,
   };
+}
+
+/**
+ * Der gemeinsame Kern beider Vokabulare: Kandidaten gegen den Vorrat prüfen, jeden einmal in die
+ * Spec setzen (bei Listen anhängen) und über `check` zeichnen. Der gesetzte Wert trägt den Befund
+ * der Spec, wie sie ist.
+ */
+function probe<S extends object>(
+  spec: S,
+  field: string,
+  domain: OneOf | List,
+  candidateValues: readonly string[] | undefined,
+  check: (spec: S) => SpecCheck,
+): OptionOf<string>[] {
+  // Zur Laufzeit wird trotz enger Typen geprüft: ein Aufrufer ohne Typprüfung (JavaScript,
+  // Werte aus einer Adresse) kommt genauso hierher.
+  const known = new Set<string>(domain.values);
+  const candidates = candidateValues ?? domain.values;
+  for (const candidate of candidates) {
+    if (!known.has(candidate)) {
+      throw new RangeError(`„${candidate}“ ist kein Wert von ${field}.`);
+    }
+  }
+
+  const isList = domain.shape === 'list';
+  const current: unknown = (spec as Record<string, unknown>)[field];
+  const selected: readonly string[] = isList
+    ? Array.isArray(current)
+      ? (current as readonly string[])
+      : []
+    : typeof current === 'string'
+      ? [current]
+      : [];
+
+  // Der Befund der Spec, wie sie ist — nur gerechnet, wenn ein gesetzter Wert gefragt wird.
+  let asIs: SpecCheck | undefined;
+  return candidates.map((value) => {
+    if (selected.includes(value)) {
+      asIs ??= check(spec);
+      return toOption(value, true, asIs);
+    }
+    const next = { ...spec, [field]: isList ? [...selected, value] : value } as S;
+    return toOption(value, false, check(next));
+  });
 }
 
 /**
@@ -429,34 +489,103 @@ export function vocabulary(
     );
   }
 
-  // Zur Laufzeit wird trotz enger Typen geprüft: ein Aufrufer ohne Typprüfung (JavaScript,
-  // Werte aus einer Adresse) kommt genauso hierher.
-  const known = new Set<string>(domain.values);
-  const candidates = (options.candidates ?? domain.values) as readonly SpecFieldValue<VocabularyField>[];
-  for (const candidate of candidates) {
-    if (!known.has(candidate)) {
-      throw new RangeError(`„${candidate}“ ist kein Wert von ${field}.`);
-    }
+  return probe(spec, field, domain, options.candidates as readonly string[] | undefined, (next) =>
+    checkSpec(next as SymbolSpec),
+  ) as VocabularyOption[];
+}
+
+/* --- Vokabular der freistehenden Zeichen (LFH-804) ---------------------------------------- */
+
+type FreestandingTable = typeof FREESTANDING_TABLE;
+
+/**
+ * Die Felder einer freistehenden Art, deren Werte sich aufzählen und probieren lassen — ohne
+ * `kind`: die Art steht fest, weil jede Art andere Felder hat.
+ */
+export type FreestandingVocabularyField<K extends FreestandingKind = FreestandingKind> = K extends FreestandingKind
+  ? {
+      [F in keyof FreestandingTable[K]]: F extends 'kind'
+        ? never
+        : FreestandingTable[K][F] extends OneOf | List
+          ? F
+          : never;
+    }[keyof FreestandingTable[K]]
+  : never;
+
+/**
+ * Der Typ eines einzelnen Wertes von `field` an der Art `K` — bei Listenfeldern der Elementtyp.
+ * Damit lässt sich ein Befund ohne Umwandlung zurückschreiben, wie mit `SpecFieldValue`.
+ */
+export type FreestandingFieldValue<K extends FreestandingKind, F extends FreestandingVocabularyField<K>> =
+  Extract<FreestandingSpec, { readonly kind: K }> extends infer S
+    ? F extends keyof S
+      ? NonNullable<S[F]> extends readonly (infer E)[]
+        ? E
+        : NonNullable<S[F]>
+      : never
+    : never;
+
+/** Befund zu einem Kandidaten eines freistehenden Feldes, wie `VocabularyOption`. */
+export type FreestandingVocabularyOption<V = string> = OptionOf<V>;
+
+export interface FreestandingVocabularyOptions<V = string> {
+  /**
+   * Nur diese Kandidaten prüfen, in dieser Reihenfolge. Ohne Angabe der ganze Vorrat aus
+   * `FREESTANDING_FIELD_VALUES`; ein Wert außerhalb wirft einen `RangeError`.
+   */
+  readonly candidates?: readonly V[];
+}
+
+/** Je Art die Felder mit aufzählbarem Vorrat, in der Reihenfolge der Tabelle. */
+export const FREESTANDING_VOCABULARY_FIELDS: { readonly [K in FreestandingKind]: readonly FreestandingVocabularyField<K>[] } =
+  Object.freeze(
+    Object.fromEntries(
+      Object.entries(FREESTANDING_TABLE).map(([kind, table]) => [
+        kind,
+        Object.freeze(
+          Object.entries(table as Readonly<Record<string, SpecFieldDomain>>)
+            .filter(([field, domain]) => field !== 'kind' && (domain.shape === 'one-of' || domain.shape === 'list'))
+            .map(([field]) => field),
+        ),
+      ]),
+    ) as { readonly [K in FreestandingKind]: readonly FreestandingVocabularyField<K>[] },
+  );
+
+/**
+ * `vocabulary` für die freistehenden Zeichen (LFH-804): welche Werte eines Feldes zur übrigen
+ * freistehenden Spec passen. Jeder Kandidat wird in die Spec gesetzt — bei der Liste der
+ * Wetterwerte angehängt — und über `checkAnySpec` gezeichnet, also über denselben Weg wie jede
+ * Nutzerin. Die Befunde haben dieselbe Form wie bei `vocabulary`: erlaubt (mit `derived: true`,
+ * wenn die Zeichnung ableitet), von einer Regel gesperrt (erklärt, etwa `state-not-canonical`)
+ * oder nicht vermessen.
+ *
+ * Gefragt werden nur die Felder aus `FREESTANDING_VOCABULARY_FIELDS`: `kind` steht fest, Verlauf
+ * und Zeichenfläche sind Zahlen. Ein Verlauf, den die Zeichnung für einen Kandidaten nicht tragen
+ * kann (etwa zu kurz für den Pfeilkopf eines anderen Pfeils), ist weder Regel noch Lücke und
+ * fliegt wie bei `checkAnySpec` als gewöhnlicher Fehler weiter (LFH-805).
+ */
+export function freestandingVocabulary<
+  S extends FreestandingSpec,
+  F extends FreestandingVocabularyField<S['kind']>,
+>(
+  spec: S,
+  field: F,
+  options: FreestandingVocabularyOptions<FreestandingFieldValue<S['kind'], F>> = {},
+): FreestandingVocabularyOption<FreestandingFieldValue<S['kind'], F>>[] {
+  const fields: readonly string[] | undefined = Object.hasOwn(FREESTANDING_VOCABULARY_FIELDS, spec.kind)
+    ? FREESTANDING_VOCABULARY_FIELDS[spec.kind]
+    : undefined;
+  if (fields === undefined) {
+    throw new RangeError(`„${String(spec.kind)}“ ist keine freistehende Art.`);
   }
-
-  const isList = domain.shape === 'list';
-  const current: unknown = spec[field];
-  const selected: readonly string[] = isList
-    ? Array.isArray(current)
-      ? (current as readonly string[])
-      : []
-    : typeof current === 'string'
-      ? [current]
-      : [];
-
-  // Der Befund der Spec, wie sie ist — nur gerechnet, wenn ein gesetzter Wert gefragt wird.
-  let asIs: SpecCheck | undefined;
-  return candidates.map((value) => {
-    if (selected.includes(value)) {
-      asIs ??= checkSpec(spec as SymbolSpec);
-      return toOption(value, true, asIs);
-    }
-    const next = { ...spec, [field]: isList ? [...selected, value] : value } as SymbolSpec;
-    return toOption(value, false, checkSpec(next));
-  });
+  if (!fields.includes(field)) {
+    throw new RangeError(
+      `Das Feld „${String(field)}“ hat an „${spec.kind}“ keinen aufzählbaren Wertevorrat; ` +
+        `Vokabular gibt es für: ${fields.join(', ')}.`,
+    );
+  }
+  const domain = (FREESTANDING_TABLE[spec.kind] as Readonly<Record<string, SpecFieldDomain>>)[field] as OneOf | List;
+  return probe(spec, field, domain, options.candidates as readonly string[] | undefined, (next) => checkAnySpec(next)) as FreestandingVocabularyOption<
+    FreestandingFieldValue<S['kind'], F>
+  >[];
 }

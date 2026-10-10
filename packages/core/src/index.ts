@@ -249,6 +249,16 @@ export {
   serializeAnySpec,
 } from './spec-codec.js';
 export { FREESTANDING_FIELD_VALUES, checkAnySpec } from './vocabulary.js';
+// LFH-804: Vokabular je Wert für freistehende Zeichen — eng getypt wie `vocabulary`, probiert über
+// `checkAnySpec`.
+export {
+  FREESTANDING_VOCABULARY_FIELDS,
+  freestandingVocabulary,
+  type FreestandingFieldValue,
+  type FreestandingVocabularyField,
+  type FreestandingVocabularyOption,
+  type FreestandingVocabularyOptions,
+} from './vocabulary.js';
 export {
   WEATHER_CLOUD_PRECIPITATION,
   WEATHER_PRECIPITATIONS,
