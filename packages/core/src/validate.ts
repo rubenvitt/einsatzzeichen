@@ -1301,7 +1301,7 @@ function stateIssues(spec: SymbolSpec): ValidationIssue[] {
         rule: 'state-tactics-not-allowed',
         message:
           `Die Einsatztaktik "${value}" (5.8.1.1 bis 5.8.1.4) steht nicht an einem Träger; ` +
-          'sie ist ein eigenes Zeichen.',
+          `sie ist ein eigenes Zeichen: {"kind":"state","state":"${value}"}.`,
       });
       continue;
     }

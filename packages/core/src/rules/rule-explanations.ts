@@ -79,6 +79,7 @@ export const RULE_FIELDS: readonly RuleField[] = Object.freeze([
   'values',
   'intensity',
   'state',
+  'pictogram',
   'composition',
 ] as const satisfies readonly RuleField[]);
 
@@ -485,7 +486,7 @@ export const RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = free
       'Retten, Angriff, Verteidigung und Rückzug (5.8.1.1 bis 5.8.1.4) sind eigene Zeichen und ' +
       'werden nicht an ein anderes Zeichen gehängt. Keine Vorlage zeigt sie an einem Träger, und ' +
       'so ist es für dieses Projekt am 29. September 2026 entschieden. Nimm die Taktik aus der ' +
-      'Zustandsliste wieder heraus.',
+      'Zustandsliste heraus und setze sie als eigenes Zeichen `{ kind: \'state\' }` daneben.',
   },
   'state-value-not-attachable': {
     field: 'states',
@@ -697,8 +698,8 @@ export const COMPOSITION_RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanat
   freezeTable(COMPOSITION_TABLE);
 
 /**
- * Erklärung je Regel aus `validateFreestandingSpec()` (LFH-577): Linien, Wetter und
- * Tierzustand als freistehende Zeichen. Das Feld ist eines der freistehenden Spec-Art.
+ * Erklärung je Regel aus `validateFreestandingSpec()` (LFH-577): Linien, Wetter, Tierzustand,
+ * Zustand und Piktogramm (LFH-798) als freistehende Zeichen. Das Feld ist eines der freistehenden Spec-Art.
  */
 export const FREESTANDING_RULE_EXPLANATIONS: Readonly<Record<string, RuleExplanation>> = freezeTable({
   'animal-state-variant-not-available': {
@@ -726,6 +727,39 @@ export const FREESTANDING_RULE_EXPLANATIONS: Readonly<Record<string, RuleExplana
       'Unter den Linien zeigt die Referenz eine zweite Darstellung nur bei 2.14 Escape Route: ' +
       'Punkte und Pfeilköpfe im Wechsel statt Punkten allein. Jede andere Linie hat genau eine. ' +
       'Wähle die erste Darstellung oder die Escape Route.',
+  },
+  'pictogram-not-canonical': {
+    field: 'pictogram',
+    title: 'Piktogramm mit eigener Spec',
+    explanation:
+      'Jedes Bild hat genau eine Spec. Ein Zustandsbild aus 5.8 zeichnet die Art `state` oder die ' +
+      'Spec, die genau dieses Bild schon trägt; für die Leitstelle D.2.5 gilt die vorhandene Spec ' +
+      'ihres Orts `control-center` (`drawPlace`). Nimm die Spec aus der Meldung.',
+  },
+  'pictogram-variant-not-available': {
+    field: 'variant',
+    title: 'Zweite Darstellung nicht im Register',
+    explanation:
+      'Eine zweite Darstellung gibt es nur, wo das Register eine führt: außerhalb von 5.8 bei vier ' +
+      'Fähigkeiten aus Kapitel 4 (4.1.6 bis 4.1.8, 4.7.10) und bei fünf Zeichen aus J.1 (Sprache ' +
+      'und Übertragungen, leitergebunden), in 5.8 bei sechs Zuständen. Wähle die erste Darstellung.',
+  },
+  'state-not-canonical': {
+    field: 'state',
+    title: 'Zustand mit eigener Spec',
+    explanation:
+      'Jedes Bild hat genau eine Spec, für Wert und Variante. Den Tierzustand zeichnet ' +
+      '`animal-state`, das Wetter `weather`, den Personenzustand in der ersten Darstellung die ' +
+      'Person mit `states` und die zweite Darstellung der Hinweise 5.8.1.13 und 5.8.1.14 die ' +
+      'Gefahr mit `states`. Nimm die Spec aus der Meldung.',
+  },
+  'state-variant-not-available': {
+    field: 'variant',
+    title: 'Zweite Darstellung nicht im Register',
+    explanation:
+      'Eine zweite Darstellung führt das Register in 5.8 nur bei 5.8.1.7 Gefährliche Stoffe, ' +
+      '5.8.1.8 Gefahr durch Radioaktivität, den Hinweisen 5.8.1.13 und 5.8.1.14, dem ' +
+      'kontaminierten Tier 5.8.6.2 und der kontaminierten Person 5.8.8.6. Wähle die erste Darstellung.',
   },
   'weather-intensity-without-precipitation': {
     field: 'intensity',

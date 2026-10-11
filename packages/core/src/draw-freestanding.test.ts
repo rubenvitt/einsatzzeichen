@@ -8,6 +8,7 @@ import {
   drawFreestanding,
 } from './draw-freestanding.js';
 import { animalStateDrawing } from './geometry/animal-state.js';
+import { pictogram } from './geometry/pictograms/index.js';
 import { lineDrawing, movementDrawing } from './geometry/parametric.js';
 import { weatherDrawing } from './geometry/weather.js';
 import { CompositionError } from './validate.js';
@@ -36,6 +37,39 @@ describe('drawFreestanding', () => {
     expect(drawFreestanding({ kind: 'weather', ...weather }).children).toEqual(weatherDrawing(weather).children);
     const animal = { state: 'contaminated-animal', variant: 'alternative' } as const;
     expect(drawFreestanding({ kind: 'animal-state', ...animal }).children).toEqual(animalStateDrawing(animal).children);
+  });
+
+  it('zeichnet einen Zustand als Einzeldarstellung seiner Kapiteldatei (LFH-798)', () => {
+    const drawn = drawFreestanding({ kind: 'state', state: 'tactical-rescue' });
+    const definition = pictogram('state.tactical-rescue');
+    expect(drawn.viewBox).toEqual(definition.viewBox);
+    expect(drawn.children).toEqual(definition.primitives);
+    expect(drawn.derivations).toBeUndefined();
+    const alternative = drawFreestanding({ kind: 'state', state: 'hazardous-substances', variant: 'alternative' });
+    expect(alternative.children).toEqual(pictogram('state.hazardous-substances', 'alternative').primitives);
+  });
+
+  it('lehnt einen Zustand mit eigener Spec ab, statt ihn zweimal zu zeichnen', () => {
+    expect(() => drawFreestanding({ kind: 'state', state: 'weather-sunny' })).toThrow(CompositionError);
+  });
+
+  it('zeichnet ein Piktogramm als Einzeldarstellung seiner Kapiteldatei, auf deren Fläche (LFH-834)', () => {
+    for (const [id, variant] of [
+      ['comms.voice', 'alternative'],
+      ['capability.radioactive-materials', 'primary'],
+      ['leadership.command-post-in-operation', 'primary'],
+      ['damage.dyke-breach', 'primary'],
+    ] as const) {
+      const drawn = drawFreestanding({ kind: 'pictogram', pictogram: id, variant });
+      const definition = pictogram(id, variant);
+      expect(drawn.viewBox, id).toEqual(definition.viewBox);
+      expect(drawn.children, id).toEqual(definition.primitives);
+    }
+    // D.1.1 steht auf 32 × 46 mm, nicht auf der üblichen Fläche.
+    expect(drawFreestanding({ kind: 'pictogram', pictogram: 'leadership.command-post-in-operation' }).viewBox).toEqual({
+      width: 32,
+      height: 46,
+    });
   });
 
   it('nennt die Flächen der Referenz als Vorgabe', () => {
@@ -89,6 +123,21 @@ describe('describeFreestandingSpec', () => {
     ).toBe('Wetter: Wolkig, Schneiend, Intensität: mittel');
     expect(describeFreestandingSpec({ kind: 'animal-state', state: 'contaminated-animal', variant: 'alternative' })).toBe(
       'Tierzustand: Kontaminiertes Tier, zweite Darstellung',
+    );
+    expect(describeFreestandingSpec({ kind: 'state', state: 'tactical-rescue' })).toBe(
+      `Zustand: ${pictogram('state.tactical-rescue').title}`,
+    );
+    expect(describeFreestandingSpec({ kind: 'state', state: 'hazardous-substances', variant: 'alternative' })).toBe(
+      `Zustand: ${pictogram('state.hazardous-substances').title}, zweite Darstellung`,
+    );
+    expect(describeFreestandingSpec({ kind: 'pictogram', pictogram: 'comms.voice', variant: 'alternative' })).toBe(
+      `Kommunikation: ${pictogram('comms.voice').title}, zweite Darstellung`,
+    );
+    expect(describeFreestandingSpec({ kind: 'pictogram', pictogram: 'capability.radioactive-materials' })).toBe(
+      `Fähigkeit: ${pictogram('capability.radioactive-materials').title}`,
+    );
+    expect(describeFreestandingSpec({ kind: 'pictogram', pictogram: 'water-rescue-personnel.team-leader' })).toBe(
+      `Wasserrettung: ${pictogram('water-rescue-personnel.team-leader').title}`,
     );
   });
 });

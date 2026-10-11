@@ -1,18 +1,29 @@
 import type {
   AnimalStateSpec,
+  AnySpec,
+  DepictionVariant,
   FreestandingSpec,
   LineSpec,
+  PictogramId,
+  PictogramSpec,
+  StateId,
+  StateSpec,
   WeatherSpec,
 } from '@einsatzzeichen/schema';
+import { stateValueGroup } from './blocks/state-groups.js';
 import { LINE_GEOMETRY } from './geometry/parametric.js';
+import { ALL_PICTOGRAMS } from './geometry/pictograms/index.js';
 import { ANIMAL_STATES } from './geometry/pictograms/states/06-animals.js';
 import { classifyWeather } from './geometry/weather.js';
+import { STATE_HINT_LAYOUTS } from './layout/state-frames.js';
+import { PLACES } from './places.js';
 import type { ValidationIssue } from './validate.js';
 
 /**
  * Prüfung der freistehenden Zeichen (LFH-577) — das Gegenstück zu `validateSpec` für die
- * freistehende Spec-Art: Pfeile 5.2, Linien und Grenzen aus Kapitel 2, Wetter 5.8.7 und
- * Tierzustände 5.8.6.
+ * freistehende Spec-Art: Pfeile 5.2, Linien und Grenzen aus Kapitel 2, Wetter 5.8.7,
+ * Tierzustände 5.8.6 und seit LFH-798 die Einzeldarstellung eines Zustands aus 5.8 und jedes
+ * übrigen Piktogramms aus dem Register.
  *
  * **Was hier geprüft wird und was nicht.** Hier stehen die Regeln der Systematik und die
  * entschiedenen Grenzen: welche Linie eine Stärke trägt, wo es eine zweite Darstellung gibt, wie
@@ -54,6 +65,10 @@ export function validateFreestandingSpec(spec: FreestandingSpec): ValidationIssu
       return validateWeather(spec);
     case 'animal-state':
       return validateAnimalState(spec);
+    case 'state':
+      return validateState(spec);
+    case 'pictogram':
+      return validatePictogram(spec);
   }
 }
 
@@ -112,4 +127,153 @@ function validateAnimalState(spec: AnimalStateSpec): ValidationIssue[] {
         rule: 'animal-state-variant-not-available',
         message: `${spec.state}: eine zweite Darstellung gibt es unter den Tierzuständen nur beim kontaminierten Tier (5.8.6.2_kontaminiertes Tier_K).`,
       }];
+}
+
+/* --- Eine Spec je Bild (LFH-798) ---------------------------------------------------------- */
+
+/** Ob das Register zu einer Kennung eine zweite Darstellung führt. */
+function hasAlternative(id: PictogramId): boolean {
+  return ALL_PICTOGRAMS.some((definition) => definition.id === id && definition.variant === 'alternative');
+}
+
+/**
+ * Die Datei, die eine Darstellung aus dem Register zeichnet — `undefined`, wenn es die Variante
+ * nicht gibt.
+ */
+function referenceAssetOf(id: PictogramId, variant: DepictionVariant): string | undefined {
+  return ALL_PICTOGRAMS.find((definition) => definition.id === id && definition.variant === variant)?.referenceAsset;
+}
+
+/**
+ * Die Spec, die das Bild eines Zustands schon trägt (Entscheidung des Eigentümers vom 10.10.2026,
+ * Punkt 3). Umgeleitet wird nur, wo eine andere Spec **genau dieses Bild** zeichnet, Wert und
+ * Variante:
+ *
+ * - Führt das Register die Variante nicht, gibt es kein Bild und nichts umzuleiten; dann greift
+ *   die Variantenregel (`state-variant-not-available`).
+ * - Tierzustand 5.8.6 → `animal-state`, mit derselben Variante (beide lesen dasselbe Register).
+ * - Wetter 5.8.7 → `weather` (das Register führt dort keine zweite Darstellung).
+ * - Personenzustand 5.8.8 → die Person mit `states`, aber nur in der ersten Darstellung: die
+ *   Person zeichnet keine zweite. Die zweite Darstellung von 5.8.8.6 bleibt deshalb hier.
+ * - Die zweiten Darstellungen der Hinweise 5.8.1.13 und 5.8.1.14 zeigen das Zeichen an der
+ *   Gefahr; welche Dateien das sind, steht als Datum an der Hinweislage
+ *   (`STATE_HINT_LAYOUTS.hazard.reference`), nicht ein zweites Mal hier.
+ */
+function stateRedirect(spec: StateSpec): AnySpec | undefined {
+  const variant = spec.variant ?? 'primary';
+  const asset = referenceAssetOf(`state.${spec.state}`, variant);
+  if (asset === undefined) return undefined;
+  switch (stateValueGroup(spec.state)) {
+    case 'animals':
+      return spec.variant === undefined
+        ? { kind: 'animal-state', state: spec.state as AnimalStateSpec['state'] }
+        : { kind: 'animal-state', state: spec.state as AnimalStateSpec['state'], variant: spec.variant };
+    case 'weather':
+      return variant === 'primary' ? { kind: 'weather', values: [spec.state as WeatherSpec['values'][number]] } : undefined;
+    case 'persons':
+      return variant === 'primary' ? { kind: 'person', states: [spec.state] } : undefined;
+    default:
+      break;
+  }
+  const hazardHints: Readonly<Record<string, string>> = STATE_HINT_LAYOUTS.hazard.reference;
+  return hazardHints[spec.state] === asset ? { kind: 'hazard', states: [spec.state] } : undefined;
+}
+
+/**
+ * Führungszeichen mit eigener Kennung: je vermessenem Ort aus `PLACES` die Kapiteldatei, die er
+ * zeichnet (heute genau die Leitstelle D.2.5). Über die Referenzdatei verknüpft, nicht über eine
+ * zweite Liste: bekommt ein weiterer Ort ein Original, tritt sein Piktogramm hier von selbst ab.
+ */
+const PLACE_BY_ASSET: ReadonlyMap<string, AnySpec> = new Map(
+  Object.values(PLACES).flatMap((entry) =>
+    entry.source.basis === 'measured' ? [[entry.source.referenceAsset, entry.spec] as const] : [],
+  ),
+);
+
+/**
+ * Die Spec, die das Bild eines Piktogramms schon trägt (Entscheidung vom 10.10.2026, Punkt 3):
+ * `state.*` die Art `state` — oder gleich deren eigene Weiterleitung —, ein Führungszeichen mit
+ * eigener Kennung die vorhandene Spec seines Orts. Führt das Register die Variante nicht, gibt es
+ * kein Bild und nichts umzuleiten (`pictogram-variant-not-available`).
+ */
+function pictogramRedirect(spec: PictogramSpec): AnySpec | undefined {
+  const asset = referenceAssetOf(spec.pictogram, spec.variant ?? 'primary');
+  if (asset === undefined) return undefined;
+  if (spec.pictogram.startsWith('state.')) {
+    const state: StateSpec = {
+      kind: 'state',
+      state: spec.pictogram.slice('state.'.length) as StateId,
+      ...(spec.variant === undefined ? {} : { variant: spec.variant }),
+    };
+    return stateRedirect(state) ?? state;
+  }
+  return PLACE_BY_ASSET.get(asset);
+}
+
+/**
+ * Die Spec, die das Bild einer freistehenden Spec schon trägt, oder `undefined`, wenn die Spec
+ * selbst die eine ist (LFH-798, „eine Spec je Bild“). Umgeleitet wird nur, wo die andere Spec
+ * genau dieses Bild zeichnet, Wert und Variante; die einzige Ausnahme ist die Leitstelle D.2.5,
+ * die auf die vorhandene Spec ihres Orts geht (Entscheidung des Eigentümers; den Lauf setzt dort
+ * die Grammatik). Genau dann lehnt die Prüfung mit `state-not-canonical` oder
+ * `pictogram-not-canonical` ab; die Meldung nennt dieselbe Spec. Wer alte Daten überführt,
+ * schreibt sie damit um, statt die Meldung zu lesen. Die Rückgabe ist eingefroren.
+ *
+ * **Herkunft der Ziele.** Die `SymbolSpec`-Ziele — Person mit Zustand, Gefahr mit Hinweis,
+ * Leitstelle als Ort — melden über `anySpecProvenance` bis LFH-1303 `derived`, obwohl sie die
+ * Kapiteldatei zeichnen: die Herkunftstabelle kennt nur Rezepte.
+ */
+export function freestandingRedirect(spec: FreestandingSpec): AnySpec | undefined {
+  switch (spec.kind) {
+    case 'state':
+      return stateRedirect(spec);
+    case 'pictogram':
+      return pictogramRedirect(spec);
+    default:
+      return undefined;
+  }
+}
+
+/** Der Ort, dessen Spec eine Weiterleitung ist — für die Meldung. */
+function placeOf(redirect: AnySpec): string | undefined {
+  return Object.values(PLACES).find((entry) => entry.spec === redirect)?.id;
+}
+
+function validatePictogram(spec: PictogramSpec): ValidationIssue[] {
+  const redirect = pictogramRedirect(spec);
+  if (redirect !== undefined) {
+    const place = placeOf(redirect);
+    return [{
+      rule: 'pictogram-not-canonical',
+      message:
+        `${spec.pictogram}: das Bild trägt schon eine eigene Spec, ${JSON.stringify(redirect)}` +
+        (place === undefined ? '.' : ` (Ort „${place}“, drawPlace).`),
+    }];
+  }
+  if (spec.variant === 'alternative' && !hasAlternative(spec.pictogram)) {
+    return [{
+      rule: 'pictogram-variant-not-available',
+      message: `${spec.pictogram}: das Register führt zu diesem Piktogramm keine zweite Darstellung.`,
+    }];
+  }
+  return [];
+}
+
+function validateState(spec: StateSpec): ValidationIssue[] {
+  const redirect = stateRedirect(spec);
+  if (redirect !== undefined) {
+    return [{
+      rule: 'state-not-canonical',
+      message:
+        `${spec.state}${spec.variant === 'alternative' ? ' (zweite Darstellung)' : ''}: das Bild trägt schon ` +
+        `eine eigene Spec, ${JSON.stringify(redirect)}.`,
+    }];
+  }
+  if (spec.variant === 'alternative' && !hasAlternative(`state.${spec.state}`)) {
+    return [{
+      rule: 'state-variant-not-available',
+      message: `${spec.state}: das Register führt zu diesem Zustand keine zweite Darstellung.`,
+    }];
+  }
+  return [];
 }

@@ -1,11 +1,13 @@
-import type { FreestandingSpec } from '@einsatzzeichen/schema';
+import { ALL_PICTOGRAMS, STATE_PICTOGRAMS, freestandingRedirect } from '@einsatzzeichen/core';
+import type { FreestandingSpec, StateId } from '@einsatzzeichen/schema';
 import { ANIMAL_STATE_FIXTURES, WEATHER_EXAMPLE_FIXTURES } from './freestanding-state-fixtures.js';
 import { PARAMETRIC_FIXTURES, type ParametricFixture } from './parametric-fixtures.js';
 
 /**
  * Jede Referenzdatei der freistehenden Zeichen als `FreestandingSpec` (LFH-577): die Pfeile und
  * Linien aus `PARAMETRIC_FIXTURES`, die Wetterbeispiele und Tierzustände aus
- * `freestanding-state-fixtures.ts`. Die Specs sind aus diesen Parametersätzen abgeleitet, nicht
+ * `freestanding-state-fixtures.ts`, die freistehenden Zustände aus dem Piktogrammregister
+ * (`STATE_SPEC_FIXTURES`, LFH-798). Die Specs sind aus diesen Parametersätzen abgeleitet, nicht
  * zweimal aufgeschrieben; `freestanding-spec-fixtures.test.ts` zeichnet sie über
  * `drawFreestanding` und vergleicht mit der Zeichenfunktion.
  *
@@ -28,6 +30,40 @@ function specOfParametric(fixture: ParametricFixture): FreestandingSpec {
   };
 }
 
+/**
+ * Jede Kapiteldatei, die der freistehende Zustand zeichnet (LFH-798): jede Darstellung aus 5.8,
+ * die keine andere Spec schon trägt (`freestandingRedirect`). Das sind 5.8.1 bis 5.8.5 und 5.8.9
+ * ohne die zweiten Darstellungen der Hinweise (sie zeigt die Gefahr) und dazu die zweite
+ * Darstellung von 5.8.8.6 (die Person zeichnet nur die erste). Die Bilder sind im Register gegen
+ * das Kennzahlenartefakt gegatet (`pictograms/state-inventory.test.ts`); der Test hier verlangt,
+ * dass die Spec genau sie zeichnet, und zählt die Dateien.
+ */
+export const STATE_SPEC_FIXTURES: readonly FreestandingSpecFixture[] = Object.freeze(
+  STATE_PICTOGRAMS.map((definition) => {
+    const state = definition.id.slice('state.'.length) as StateId;
+    const spec: FreestandingSpec =
+      definition.variant === 'primary' ? { kind: 'state', state } : { kind: 'state', state, variant: definition.variant };
+    return { asset: definition.referenceAsset, spec };
+  }).filter(({ spec }) => freestandingRedirect(spec) === undefined),
+);
+
+/**
+ * Jede Kapiteldatei der übrigen Räume (Kapitel 4, J, K, L, M, D, I.5), die das freistehende
+ * Piktogramm zeichnet (LFH-834): alle Darstellungen außerhalb von 5.8, ohne die mit eigener Spec
+ * (die Leitstelle D.2.5 zeichnet ihr Ort). Die Bilder sind in den Suiten ihrer Räume gegatet.
+ */
+export const PICTOGRAM_SPEC_FIXTURES: readonly FreestandingSpecFixture[] = Object.freeze(
+  ALL_PICTOGRAMS.filter((definition) => !definition.id.startsWith('state.'))
+    .map((definition) => {
+      const spec: FreestandingSpec =
+        definition.variant === 'primary'
+          ? { kind: 'pictogram', pictogram: definition.id }
+          : { kind: 'pictogram', pictogram: definition.id, variant: definition.variant };
+      return { asset: definition.referenceAsset, spec };
+    })
+    .filter(({ spec }) => freestandingRedirect(spec) === undefined),
+);
+
 export const FREESTANDING_SPEC_FIXTURES: readonly FreestandingSpecFixture[] = Object.freeze([
   ...PARAMETRIC_FIXTURES.map((fixture) => ({ asset: fixture.asset, spec: specOfParametric(fixture) })),
   ...WEATHER_EXAMPLE_FIXTURES.map((fixture) => ({
@@ -38,4 +74,6 @@ export const FREESTANDING_SPEC_FIXTURES: readonly FreestandingSpecFixture[] = Ob
     asset: fixture.asset,
     spec: { kind: 'animal-state', ...fixture.parameters } satisfies FreestandingSpec,
   })),
+  ...STATE_SPEC_FIXTURES,
+  ...PICTOGRAM_SPEC_FIXTURES,
 ]);

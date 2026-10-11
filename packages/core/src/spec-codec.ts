@@ -9,6 +9,7 @@ import {
   LINE_IDS,
   MOVEMENT_IDS,
   ORGANIZATION_IDS,
+  PICTOGRAM_IDS,
   PALETTE,
   STATE_IDS,
   STRENGTH_IDS,
@@ -31,6 +32,8 @@ import {
   type FreestandingSpec,
   type LineSpec,
   type MovementSpec,
+  type PictogramSpec,
+  type StateSpec,
   type SymbolSpec,
   type WeatherSpec,
 } from '@einsatzzeichen/schema';
@@ -411,11 +414,29 @@ const ANIMAL_STATE_FIELDS: FieldTable<AnimalStateSpec> = {
   variant: oneOf(DEPICTION_VARIANTS, 'DepictionVariant'),
 };
 
+const STATE_FIELDS: FieldTable<StateSpec> = {
+  kind: oneOf(['state'], 'FREESTANDING_KINDS'),
+  // Der volle Vorrat aus 5.8 wie bei `states`: dass Wetter, Tier- und Personenzustand eine eigene
+  // Spec haben, ist eine Regel (`state-not-canonical`), kein Formfehler.
+  state: oneOf(STATE_IDS, 'STATE_IDS'),
+  variant: oneOf(DEPICTION_VARIANTS, 'DepictionVariant'),
+};
+
+const PICTOGRAM_FIELDS: FieldTable<PictogramSpec> = {
+  kind: oneOf(['pictogram'], 'FREESTANDING_KINDS'),
+  // Der volle Vorrat aller Räume: `state.*` und die Leitstelle lehnt eine Regel ab
+  // (`pictogram-not-canonical`), kein Formfehler.
+  pictogram: oneOf(PICTOGRAM_IDS, 'PICTOGRAM_IDS'),
+  variant: oneOf(DEPICTION_VARIANTS, 'DepictionVariant'),
+};
+
 const FREESTANDING_READERS: { readonly [K in FreestandingKind]: Reader } = {
   movement: record(MOVEMENT_FIELDS, ['kind', 'movement', 'path'], 'einem Pfeil (movement)'),
   line: record(LINE_FIELDS, ['kind', 'line', 'path'], 'einer Linie (line)'),
   weather: record(WEATHER_FIELDS, ['kind', 'values'], 'einem Wetterzeichen (weather)'),
   'animal-state': record(ANIMAL_STATE_FIELDS, ['kind', 'state'], 'einem Tierzustand (animal-state)'),
+  state: record(STATE_FIELDS, ['kind', 'state'], 'einem Zustand (state)'),
+  pictogram: record(PICTOGRAM_FIELDS, ['kind', 'pictogram'], 'einem Piktogramm (pictogram)'),
 };
 
 const freestandingKind = oneOf(FREESTANDING_KINDS, 'FREESTANDING_KINDS');

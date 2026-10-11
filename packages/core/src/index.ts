@@ -149,6 +149,15 @@ export {
 // `derived`, aus einer generierten Tabelle ohne Prüfpaket. Der fachliche Reviewstand bleibt in
 // conformance (`provenanceReview`, `combinationProvenance`).
 export { symbolProvenance, type SymbolProvenance } from './provenance/symbol-provenance.js';
+// LFH-798: Herkunft der freistehenden Zeichen — `verbatim` mit `claim: 'reference-file'`, wo die
+// Zeichnung genau eine Referenzdatei ist (an Kapitel 4 mit `usage: 'freestanding-not-evidenced'`),
+// sonst `derived`; `anySpecProvenance` für beide Spec-Arten.
+export {
+  anySpecProvenance,
+  freestandingProvenance,
+  type AnySpecProvenance,
+  type FreestandingProvenance,
+} from './provenance/freestanding-provenance.js';
 // LFH-577: Kanonische Serialisierung der SymbolSpec — JSON in der Hülle `{"v":1,"spec":{…}}`,
 // strenges Lesen mit Pfad in der Fehlermeldung und die base64url-Form für URLs (liest auch die
 // alten Baukasten-Links ohne Hülle). Prüft Form und Wertevorrat, nicht die Kombinationsregeln.
@@ -223,7 +232,10 @@ export {
   drawFreestanding,
   type FreestandingDrawOptions,
 } from './draw-freestanding.js';
-export { validateFreestandingSpec } from './validate-freestanding.js';
+export { freestandingRedirect, validateFreestandingSpec } from './validate-freestanding.js';
+// LFH-798: die Einzeldarstellung einer Kapiteldatei aus dem Piktogrammregister als Zeichnung —
+// das, was die freistehende Art `state` zeichnet.
+export { pictogramDrawing } from './geometry/standalone-pictogram.js';
 export { FREESTANDING_RULE_IDS } from './freestanding-rules.js';
 export { FREESTANDING_RULE_CATALOG } from './rules/rule-catalog.js';
 export { FREESTANDING_RULE_EXPLANATIONS } from './rules/rule-explanations.js';
@@ -237,6 +249,16 @@ export {
   serializeAnySpec,
 } from './spec-codec.js';
 export { FREESTANDING_FIELD_VALUES, checkAnySpec } from './vocabulary.js';
+// LFH-804: Vokabular je Wert für freistehende Zeichen — eng getypt wie `vocabulary`, probiert über
+// `checkAnySpec`.
+export {
+  FREESTANDING_VOCABULARY_FIELDS,
+  freestandingVocabulary,
+  type FreestandingFieldValue,
+  type FreestandingVocabularyField,
+  type FreestandingVocabularyOption,
+  type FreestandingVocabularyOptions,
+} from './vocabulary.js';
 export {
   WEATHER_CLOUD_PRECIPITATION,
   WEATHER_PRECIPITATIONS,

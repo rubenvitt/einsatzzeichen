@@ -1,6 +1,17 @@
 import type { Drawing, Length, Primitive } from './geometry.js';
 import type { DepictionVariant } from './provenance.js';
-import type { CapabilityId, CommsId, DamageId, StateId, WildfireId } from './taxonomy.js';
+import {
+  CAPABILITY_IDS,
+  COMMS_IDS,
+  DAMAGE_IDS,
+  STATE_IDS,
+  WILDFIRE_IDS,
+  type CapabilityId,
+  type CommsId,
+  type DamageId,
+  type StateId,
+  type WildfireId,
+} from './taxonomy.js';
 
 /** Direkte Führungszeichen aus Anhang D, inkrementell je belegtem Teilslice. */
 export const LEADERSHIP_IDS = [
@@ -63,6 +74,21 @@ export type PictogramId =
   | `wildfire.${WildfireId}`
   | `leadership.${LeadershipId}`
   | `water-rescue-personnel.${WaterRescuePersonnelId}`;
+
+/**
+ * Jede Piktogrammkennung als Wert, Raum für Raum in der Reihenfolge von `PictogramId` und darin in
+ * Kapitelreihenfolge (LFH-798). Der Wertevorrat der freistehenden Art `pictogram`; ob eine Kennung
+ * dort zeichnet, entscheidet die Prüfung (`state.*` und die Leitstelle haben eine eigene Spec).
+ */
+export const PICTOGRAM_IDS: readonly PictogramId[] = Object.freeze([
+  ...CAPABILITY_IDS.map((id) => `capability.${id}` as const),
+  ...STATE_IDS.map((id) => `state.${id}` as const),
+  ...COMMS_IDS.map((id) => `comms.${id}` as const),
+  ...DAMAGE_IDS.map((id) => `damage.${id}` as const),
+  ...WILDFIRE_IDS.map((id) => `wildfire.${id}` as const),
+  ...LEADERSHIP_IDS.map((id) => `leadership.${id}` as const),
+  ...WATER_RESCUE_PERSONNEL_IDS.map((id) => `water-rescue-personnel.${id}` as const),
+]);
 
 /**
  * Ein Piktogramm ist Code: eine Folge von Primitiven in Millimetern mit deklarierter Hüllbox.
