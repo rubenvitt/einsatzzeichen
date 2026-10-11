@@ -1,3 +1,40 @@
+## Version 5.2.0
+
+### Freistehende Zeichen
+
+Diese Version führt **freistehende Zeichen** ein – eine neue Möglichkeit, einzelne Zustände und Piktogramme als eigenständige Symbole zu zeichnen, ohne sie in ein vollständiges taktisches Zeichen einzubetten.
+
+#### Neue Spec-Arten
+
+- **`state`**: Zeichnet Zustände aus Kapitel 5.8 (z.B. Einsatztaktiken, Gefahrenzustände) als eigenständige Symbole mit ihrer Original-Darstellung aus dem Piktogrammregister
+- **`pictogram`**: Zeichnet jedes Piktogramm aus den Kapiteln 4, D, I.5 und Anhängen J, K/L, M als freistehendes Zeichen auf seiner eigenen Fläche
+
+#### Kanonik und Variantenunterstützung
+
+Die neuen freistehenden Zeichen folgen dem Prinzip „Eine Spec je Bild":
+
+- Automatische Umleitung auf die passende Spec-Art, wenn ein Zeichen mehrere Darstellungsformen hat (z.B. Personenzustand → Person mit `states`, Wetter → `weather`, Leitstelle → Ort)
+- Unterstützung für alternative Darstellungen (`variant`), wo sie im Register vorhanden sind
+- Neue Regelprüfungen: `state-not-canonical`, `state-variant-not-available`, `pictogram-not-canonical`, `pictogram-variant-not-available`
+
+#### API-Erweiterungen
+
+- **`freestandingVocabulary()`**: Ermittelt erlaubte Werte für Felder freistehender Zeichen
+- **`freestandingProvenance()`** und **`anySpecProvenance()`**: Herkunftsnachweis für freistehende Zeichen – markiert Referenzdateien als `verbatim` mit `claim: 'reference-file'`
+- **`freestandingRedirect()`**: Gibt die kanonische Spec zurück, wenn eine andere Darstellungsform für dasselbe Bild existiert
+
+### Katalog
+
+- 254 Piktogramme als `PICTOGRAM_IDS` verfügbar
+- Zustandswerte aus Kapitel 5.8 für freistehende Verwendung erschlossen
+- Neue Regeldimension `pictogram` mit vollständigen Regelbelegen und Erklärungen
+
+### Dokumentation
+
+- Umfassende Dokumentation der sechs freistehenden Zeichenarten in `core.mdx` und README
+- Erklärung des Weiterleitungskonzepts und der Herkunftskennzeichnung
+- Beispiele für Vokabularabfragen und Verwendung freistehender Zeichen
+
 ## Katalog und Website
 
 Die Website zeigt nun **vier abgeleitete Orte** im Zeichenkatalog: Einsatzleitung, Technische Einsatzleitung, Einsatzabschnittsleitung und Untereinsatzabschnittsleitung. Diese Zeichen basieren auf der Leitstelle (D.2.5) und stehen mit eigener Detailseite, SVG/PNG-Export und im Baukasten zur Verfügung.
