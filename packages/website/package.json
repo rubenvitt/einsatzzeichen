@@ -24,7 +24,7 @@
     "@einsatzzeichen/schema": "workspace:*",
     "@einsatzzeichen/web-component": "workspace:*",
     "@resvg/resvg-js": "2.6.2",
-    "astro": "7.3.5",
+    "astro": "7.3.8",
     "maplibre-gl": "6.13.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
