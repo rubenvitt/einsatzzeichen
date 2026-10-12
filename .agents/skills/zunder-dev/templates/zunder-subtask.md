@@ -1,4 +1,4 @@
-# ClickUp subtask
+# Zunder subtask
 
 ## Ergebnis
 
@@ -27,10 +27,11 @@ mit ihren tatsächlichen Ergebnissen festgehalten.
 ## PR/HEAD
 
 `ausstehend`: Noch kein PR/HEAD angelegt. Erst nach Erstellung den exakten Tuple
-`(PR, Branch, HEAD)` eintragen, zum Beispiel `(PR #42, codex/example-delivery, 0123abcd)`.
+`(PR, Branch, HEAD)` eintragen, zum Beispiel `(PR #42, codex/1a2b3c4d-example-delivery, 0123abcd)`;
+Branch und PR-URL zusätzlich in die Felder `branch` und `pr_url`.
 
 ## Post-Merge-Nachweis
 
 `ausstehend` bis Merge und frischer Verifikation des effektiven Remote-`main` mit allen
-erforderlichen Gates. Erst danach genau diesen Subtask auf `shipped` setzen; der Parent bleibt
+erforderlichen Gates. Erst danach genau diesen Subtask auf `done` setzen; der Parent bleibt
 von diesem Nachweis unberührt.

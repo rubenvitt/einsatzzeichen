@@ -25,9 +25,11 @@ dokumentiert.
 Zulässiger Screenshot der technischen oder fachlichen Workflow-Ausgabe; keine privaten
 Referenzmaterialien.
 
-## ClickUp
+## Zunder
 
-Für einen Draft-PR den zugeordneten Subtask nur bei erfüllten Vorbedingungen in `testing` führen;
+Zunder: https://zunder.rubeen.dev/#/aufgabe/<uuid>
+
+Für einen Draft-PR den zugeordneten Subtask nur bei erfüllten Vorbedingungen in `review` führen;
 aktuellen Live-Status und Nachweis hier eintragen.
 
 ## Approval-HEAD
@@ -38,4 +40,4 @@ aktuellen Live-Status und Nachweis hier eintragen.
 ## Post-Merge-Nachweis
 
 `ausstehend` bis Merge und frischen Vollgates auf effektivem Remote-`main`. Erst nach diesem
-Nachweis genau den zugeordneten Subtask auf `shipped` setzen.
+Nachweis genau den zugeordneten Subtask auf `done` setzen.
