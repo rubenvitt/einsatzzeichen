@@ -1,9 +1,9 @@
 /*
  * Zeichenschrift für renderSvg() und renderCanvas() aus @einsatzzeichen/core (LFH-832).
  *
- * Die Renderer schreiben `font-family="Arimo"` (TEXT_FONT_FAMILY_ATTR) in jedes Zeichen mit
- * Kürzel. Ohne diese Schrift setzt der Browser eine Ersatzschrift mit anderen Vorschubbreiten, und
- * das Kürzel steht nicht mehr dort, wo die Geometrie es vorsieht.
+ * Die Renderer schreiben `font-family="Einsatzzeichen Sans"` (TEXT_FONT_FAMILY_ATTR) in jedes
+ * Zeichen mit Kürzel. Ohne diese Schrift setzt der Browser eine Ersatzschrift mit anderen
+ * Vorschubbreiten, und das Kürzel steht nicht mehr dort, wo die Geometrie es vorsieht.
  *
  * Einbinden, zum Beispiel unter Vite:  import '@einsatzzeichen/core/fonts/text.css';
  * Die url() unten sind relativ zu dieser Datei; der Bundler kopiert die Schriften mit.
@@ -12,7 +12,7 @@
  * Der Katalog setzt allen Text in 500. Lizenz: SIL Open Font License 1.1, siehe OFL.txt.
  */
 @font-face {
-  font-family: 'Arimo';
+  font-family: 'Einsatzzeichen Sans';
   src: url('./text-regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
@@ -20,7 +20,7 @@
 }
 
 @font-face {
-  font-family: 'Arimo';
+  font-family: 'Einsatzzeichen Sans';
   src: url('./text-medium.woff2') format('woff2');
   font-weight: 500;
   font-style: normal;
@@ -28,7 +28,7 @@
 }
 
 @font-face {
-  font-family: 'Arimo';
+  font-family: 'Einsatzzeichen Sans';
   src: url('./text-bold.woff2') format('woff2');
   font-weight: 700;
   font-style: normal;
@@ -36,7 +36,7 @@
 }
 
 @font-face {
-  font-family: 'Arimo';
+  font-family: 'Einsatzzeichen Sans';
   src: url('./text-medium-italic.woff2') format('woff2');
   font-weight: 500;
   font-style: italic;

@@ -16,7 +16,7 @@ import {
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { Resvg, type RenderedImage } from '@resvg/resvg-js';
 import { RECIPES, resvgFontOptions } from '@einsatzzeichen/conformance';
-import { REFERENCE_THEME, drawSymbol, renderSvg } from '@einsatzzeichen/core';
+import { REFERENCE_THEME, TEXT_FONT_FAMILY_ATTR, drawSymbol, renderSvg } from '@einsatzzeichen/core';
 
 const COLUMNS = 3;
 const CARD_WIDTH = 720;
@@ -111,13 +111,13 @@ function proofSvg(referenceRoot: string): {
       `<g data-section="${escapeXml(section)}">` +
       `<rect x="${x + 1}" y="${y + 1}" width="${CARD_WIDTH - 2}" ` +
       `height="${CARD_HEIGHT - 2}" rx="8" fill="#ffffff" stroke="#a8adb4" stroke-width="2"/>` +
-      `<text x="${x + 20}" y="${y + 28}" font-family="Arimo" font-size="21" ` +
+      `<text x="${x + 20}" y="${y + 28}" font-family="${TEXT_FONT_FAMILY_ATTR}" font-size="21" ` +
       `font-weight="700" fill="#111111">${escapeXml(section)}</text>` +
-      `<text x="${x + 92}" y="${y + 28}" font-family="Arimo" font-size="15" ` +
+      `<text x="${x + 92}" y="${y + 28}" font-family="${TEXT_FONT_FAMILY_ATTR}" font-size="15" ` +
       `fill="#30343a">${escapeXml(recipe.title)}</text>` +
-      `<text x="${x + 170}" y="${y + 54}" text-anchor="middle" font-family="Arimo" ` +
+      `<text x="${x + 170}" y="${y + 54}" text-anchor="middle" font-family="${TEXT_FONT_FAMILY_ATTR}" ` +
       `font-size="14" font-weight="700" fill="#30343a">LOKALE REFERENZ</text>` +
-      `<text x="${x + 550}" y="${y + 54}" text-anchor="middle" font-family="Arimo" ` +
+      `<text x="${x + 550}" y="${y + 54}" text-anchor="middle" font-family="${TEXT_FONT_FAMILY_ATTR}" ` +
       `font-size="14" font-weight="700" fill="#30343a">AKTUELLER KATALOG</text>` +
       `<image x="${x + 20 + (IMAGE_WIDTH - IMAGE_RASTER_SIZE) / 2}" y="${y + 66}" ` +
       `width="${IMAGE_RASTER_SIZE}" height="${IMAGE_HEIGHT}" ` +

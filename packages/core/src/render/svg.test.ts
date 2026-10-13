@@ -413,7 +413,7 @@ describe('renderSvg — Text', () => {
     });
     expect(svg).toContain('<text');
     expect(svg).toContain('text-anchor="middle"');
-    expect(svg).toContain('font-family="Arimo"');
+    expect(svg).toContain('font-family="Einsatzzeichen Sans"');
     expect(svg).toContain('>HRT</text>');
     expect(svg).not.toContain('font-weight');
   });

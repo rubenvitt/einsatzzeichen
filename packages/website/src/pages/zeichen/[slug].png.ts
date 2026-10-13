@@ -25,7 +25,7 @@ import { loadSnapshot } from '../../lib/snapshot';
  * **Die Schriftbindung ist der heikle Teil.** `@resvg/resvg-js` rastert Text ohne Fontdatei zu null
  * Pixeln — stillschweigend (belegt in `packages/conformance/src/fonts.test.ts`). Kürzel wie „DLRG" oder
  * „MTF" wären dann im Bild einfach weg, und niemand merkte es am Build. `resvgFontOptions()` aus
- * dem Katalog liefert den Pfad zur Arimo-Datei, **aber** dieser Pfad entsteht aus
+ * dem Katalog liefert den Pfad zur Schriftdatei, **aber** dieser Pfad entsteht aus
  * `import.meta.url` der Katalogquelle: im gebündelten Build zeigt er auf das Chunk-Verzeichnis
  * unter `dist/`, nicht auf `packages/conformance/assets`. Genau das ist hier zuerst passiert — die
  * ersten gebauten PNG waren byteweise identisch mit einer Rasterung ganz ohne Schrift.
@@ -44,8 +44,8 @@ const WIDTH = 256;
  * als ein `cd packages/website`), der eigene Dateipfad ist keine. Vier Ebenen hoch —
  * `zeichen` → `pages` → `src` → `website` → `packages` — und dann in den Katalog.
  *
- * `fileURLToPath()` und nicht `.pathname`: die Datei heißt `Arimo[wght].ttf`, und eine `URL`
- * prozentkodiert die eckigen Klammern zu `%5Bwght%5D`. `existsSync` fände die Datei dann nie, und
+ * `fileURLToPath()` und nicht `.pathname`: eine `URL` prozentkodiert Sonderzeichen im Dateinamen
+ * (früher die eckigen Klammern von `Arimo[wght].ttf`). `existsSync` fände die Datei dann nie, und
  * der Fehler sähe aus wie eine fehlende Schrift statt wie ein falscher Pfad.
  *
  * Die Kandidatenliste bleibt eine Liste, und das mit Absicht: welchen Wert `import.meta.url` in
@@ -72,19 +72,20 @@ function textFontFile(fileName: string, sha256: string): string {
 }
 
 /**
- * Alle vier Schnitte, in derselben Reihenfolge wie `resvgFontOptions()`: resvg wertet die
- * wght-Achse der variablen Datei nicht aus und rastert Läufe in 500 (`fontWeight: 500`, der ganze
- * Katalogtext seit LFH-585) nur mit `Arimo-Medium.ttf` in dieser Stärke, fette Läufe nur mit
- * `Arimo-Bold.ttf`, den kursiven Lauf in D.1.1 nur mit `Arimo-MediumItalic.ttf`. Fehlte eine der
+ * Alle vier Schnitte, in derselben Reihenfolge wie `resvgFontOptions()`: resvg rastert
+ * Läufe in 500 (`fontWeight: 500`, der ganze Katalogtext) nur mit
+ * `EinsatzzeichenSans-Medium.ttf` in dieser Stärke, fette Läufe nur mit
+ * `EinsatzzeichenSans-Bold.ttf`, den kursiven Lauf in D.1.1 nur mit
+ * `EinsatzzeichenSans-MediumItalic.ttf`. Fehlte eine der
  * Dateien, kämen die Kürzel im PNG stillschweigend im Normalschnitt oder aufrecht heraus, anders
  * als im Katalog.
  */
 const FONT = {
   fontFiles: [
-    textFontFile('Arimo[wght].ttf', TEXT_FONT_SHA256),
-    textFontFile('Arimo-Medium.ttf', TEXT_FONT_MEDIUM_SHA256),
-    textFontFile('Arimo-Bold.ttf', TEXT_FONT_BOLD_SHA256),
-    textFontFile('Arimo-MediumItalic.ttf', TEXT_FONT_MEDIUM_ITALIC_SHA256),
+    textFontFile('EinsatzzeichenSans-Regular.ttf', TEXT_FONT_SHA256),
+    textFontFile('EinsatzzeichenSans-Medium.ttf', TEXT_FONT_MEDIUM_SHA256),
+    textFontFile('EinsatzzeichenSans-Bold.ttf', TEXT_FONT_BOLD_SHA256),
+    textFontFile('EinsatzzeichenSans-MediumItalic.ttf', TEXT_FONT_MEDIUM_ITALIC_SHA256),
   ],
   loadSystemFonts: false as const,
   defaultFontFamily: TEXT_FONT_FAMILY,

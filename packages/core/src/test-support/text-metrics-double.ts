@@ -4,12 +4,12 @@ import type { TextMetrics } from '../text-metrics.js';
  * Metrikdoppel für Tests in `core`: jede Glyphe läuft gleich weit, optional mit Ausnahmen je
  * Zeichen. `core` kennt keine Schrift (siehe `text-metrics.ts`), also braucht jeder Test, der
  * `compose()` oder `checkTextMetrics()` aufruft, eine Laufweitenquelle — und die soll
- * **rechenbar** sein („zwölf Zeichen mal 0,25 em mal 4 mm = 12 mm"), nicht Arimo nachahmen.
+ * **rechenbar** sein („zwölf Zeichen mal 0,25 em mal 4 mm = 12 mm"), nicht die Katalogschrift nachahmen.
  *
- * **Warum 0,25 em als Vorgabe und nicht ein Arimo-nahes Mittel (≈ 0,55 em):** die
+ * **Warum 0,25 em als Vorgabe und nicht ein schriftnahes Mittel (≈ 0,55 em):** die
  * `compose.test.ts`-Fälle prüfen Zonen- und Boxgeometrie und setzen dafür Inhalte, die in
  * der echten Schrift **nicht** in ihre Box passen würden (`center: 'Strömungsrettung'` bei
- * 7,08 mm in einer 29-mm-Box braucht in Arimo rund 56 mm). Diese Fälle sollen weiter die
+ * 7,08 mm in einer 29-mm-Box braucht in der Katalogschrift rund 56 mm). Diese Fälle sollen weiter die
  * Geometrie belegen, nicht am Breiten-Gate scheitern; die Breitenprüfung selbst hat ihre eigenen
  * Fälle, die das Doppel mit einem passenden `em` **absichtlich** über die Box treiben. Bei
  * 0,25 em passt der breiteste Bestandsfall (16 Zeichen × 0,25 × 7,08 mm = 28,3 mm in 29 mm)
@@ -20,7 +20,7 @@ import type { TextMetrics } from '../text-metrics.js';
  * beim Leerzeichen, das wie in jeder Schrift keine Kontur hat; `bearings` setzt für einzelne
  * Zeichen ein Paar aus linker und rechter Seitenbreite in em. Vertikal reicht jede Glyphe von
  * `vertical[0]` (unter der Grundlinie, negativ) bis `vertical[1]` (darüber) — die Vorgabe liegt
- * innerhalb der gemessenen Arimo-Anteile (`ALPHABETIC_ASCENT_FRACTION` 0,86 /
+ * innerhalb der gemessenen Anteile der Katalogschrift (`ALPHABETIC_ASCENT_FRACTION` 0,92 /
  * `ALPHABETIC_DESCENT_FRACTION` 0,212), damit `labelPrimitive`-Boxen im Bestand passen.
  *
  * Der mittlere Schnitt (`medium`, Gewicht 500) und der kursive in 500 (`mediumItalic`) sind

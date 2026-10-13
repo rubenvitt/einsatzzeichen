@@ -17,12 +17,15 @@ const fontsDir = new URL('../fonts/', import.meta.url);
 const read = (name: string): Buffer => readFileSync(new URL(name, fontsDir));
 const sha256 = (bytes: Buffer): string => createHash('sha256').update(bytes).digest('hex');
 
-/** Erzeugt mit fontTools 4.66.1 und Brotli am 2. Oktober 2026; zwei Läufe ergeben dieselben Bytes. */
+/**
+ * Erzeugt mit fontTools 4.66.1 und Brotli am 13. Oktober 2026 aus „Einsatzzeichen Sans" (LFH-790);
+ * zwei Läufe ergeben dieselben Bytes.
+ */
 const WOFF2_SHA256: Readonly<Record<string, string>> = {
-  'text-regular.woff2': '111f9e5087c30a2627c1f17469f14f955aa331a6af2eb7ecab426e6f937203b8',
-  'text-medium.woff2': 'ef50ab2920c029b32908c68de13e4520aeaa1477a52ea124411f6c711316b772',
-  'text-bold.woff2': 'c33c14559c9b3660f4b08c80af8ebd14c3f95adebf4cb750804177bdf6e526dd',
-  'text-medium-italic.woff2': '04116fd95b0ba32ef55e52d8d674cb4b30ff276b2e378f0d4bbfbddd4d46f837',
+  'text-regular.woff2': 'cd8d67d819c9e849ee6fb7271362ab51ffc57c16238fd332da030e798dd23f69',
+  'text-medium.woff2': '9f23ae539018947a5f9a836d8bae75416ee665a1ddf2e0137350b978895c081c',
+  'text-bold.woff2': 'b00f0b9493aaeb6c9d580ff86f2494abcc8ea3e4d13e1b465a01f15f5138e1c2',
+  'text-medium-italic.woff2': 'c67ff75acdc361e8e36a2089b0a574795336f2948648294ba7a06ba49409bb38',
 };
 
 /** Die Stufen, die das Schema zulässt: `fontWeight` 400 | 500 | 700, kursiv nur in 500. */
@@ -67,7 +70,9 @@ describe('Browser-Schriften in core/fonts (LFH-832)', () => {
   });
 
   test('OFL.txt ist der Lizenztext der TTFs im Prüfpaket, byte-gleich', () => {
-    const conformanceOfl = fileURLToPath(new URL('../../conformance/assets/Arimo-OFL.txt', import.meta.url));
+    const conformanceOfl = fileURLToPath(
+      new URL('../../conformance/assets/EinsatzzeichenSans-OFL.txt', import.meta.url),
+    );
     expect(read('OFL.txt').equals(readFileSync(conformanceOfl))).toBe(true);
   });
 

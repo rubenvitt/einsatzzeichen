@@ -88,7 +88,7 @@ function tracePrimitive(primitive: Primitive, ctx: CanvasRenderingContext2D): vo
 
 function textFont(primitive: Extract<Primitive, { type: 'text' }>): string {
   // Gewicht wie in svg.ts: 400 bleibt ungeschrieben, 500 und 700 stehen vor dem Schriftgrad.
-  // Der Stil steht nach CSS-Kurzschreibweise davor („italic 500 12px Arimo", LFH-585).
+  // Der Stil steht nach CSS-Kurzschreibweise davor („italic 500 12px Einsatzzeichen Sans", LFH-585).
   const weight = primitive.fontWeight;
   return `${primitive.fontStyle === 'italic' ? 'italic ' : ''}` +
     `${weight === undefined || weight === 400 ? '' : `${weight} `}` +

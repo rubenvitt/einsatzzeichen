@@ -10,7 +10,7 @@ import type { BoundsMm } from '../bounds.js';
 import {
   ALPHABETIC_ASCENT_FRACTION,
   ALPHABETIC_DESCENT_FRACTION,
-  ARIMO_CAP_HEIGHT_FRACTION,
+  TEXT_CAP_HEIGHT_FRACTION,
 } from '../render/text-policy.js';
 import { noteDerivation } from './record.js';
 
@@ -358,7 +358,7 @@ export function circleTopLeftMetrics(
   return gable ? F3_5_TOP_LEFT_METRICS : F3_3_TOP_LEFT_METRICS;
 }
 
-const CORNER_SIZE_MM = CORNER_CAP_HEIGHT_MM / ARIMO_CAP_HEIGHT_FRACTION;
+const CORNER_SIZE_MM = CORNER_CAP_HEIGHT_MM / TEXT_CAP_HEIGHT_FRACTION;
 const CORNER_ASCENT_MM = CORNER_SIZE_MM * ALPHABETIC_ASCENT_FRACTION;
 const CORNER_DESCENT_MM = CORNER_SIZE_MM * ALPHABETIC_DESCENT_FRACTION;
 /** Abstand der unteren Eckengrundlinie unter der Kreismitte. */

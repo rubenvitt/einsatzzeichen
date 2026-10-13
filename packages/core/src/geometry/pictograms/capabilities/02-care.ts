@@ -1,7 +1,7 @@
 import { DEFAULT_STROKE_WIDTH_MM, type Primitive, type Style } from '@einsatzzeichen/schema';
 import { deepFreeze } from '../../readonly-data.js';
 import { defineCapability } from '../catalog-definition.js';
-import { CATALOG_TEXT_FONT_WEIGHT } from '../../../render/text-policy.js';
+import { CATALOG_TEXT_FONT_WEIGHT, textSizeForCapHeightMm } from '../../../render/text-policy.js';
 
 /** Strich der Referenz: 1,417 pt = 0,5 mm, schwarz, ohne Füllung. */
 const STROKE: Style = { stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM, fill: 'none' };
@@ -44,14 +44,14 @@ export const CARE_CAPABILITIES = deepFreeze([
       CARE_ROOF,
       // Kürzel „PSNV" in der Projektschrift auf der Grundlinie y = 28 mm (Referenz: 79,37 pt),
       // Versalhöhe 4,87 mm (13,803 pt), Lauf von x ≈ 8,0 bis 24,2 mm. Gesetzt in der Stärke
-      // allen Katalogtexts (500, LFH-585); Arimo läuft breiter (≈ 7,0–25,7 mm, wie in 700).
+      // allen Katalogtexts (500, LFH-585); Einsatzzeichen Sans läuft von 8,2 bis 24,5 mm.
       {
         type: 'text',
         role: 'pictogram',
         content: 'PSNV',
         x: 16.1,
         y: 28,
-        sizeMm: 7.05,
+        sizeMm: textSizeForCapHeightMm(4.87),
         anchor: 'middle',
         baseline: 'alphabetic',
         boxMm: { xMm: 6.5, yMm: 22.5, widthMm: 19.3, heightMm: 5.8 },

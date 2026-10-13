@@ -244,7 +244,7 @@ export const DYKE_DAMAGE = deepFreeze([
       dykeBase(),
       // Die Sickerlinie: die Höhe, bis zu der das Wasser den Deichkörper durchdrungen hat.
       damageLine(2, 10, 31, 10, DAMAGE_RED_STROKE),
-      // Der Prozentwert gehört zur Linie und ist wie in der Referenz rot (Arimo, 4 mm, Grundlinie
+      // Der Prozentwert gehört zur Linie und ist wie in der Referenz rot (Katalogschrift, 4 mm, Grundlinie
       // 8 mm). Rot erreicht als Textfarbe nur 4,02:1; die Kontrastausnahme ist zentral
       // geführt, wie bei den roten Beschriftungen in 5.8.1. „50 %" ist der Beispielwert der
       // Referenz, kein fester Bestandteil des Zeichens.

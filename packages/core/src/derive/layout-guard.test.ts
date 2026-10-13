@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_VIEWBOX_MM, type Drawing, type SymbolSpec } from '@einsatzzeichen/schema';
 import { drawSymbol } from '../default-ports.js';
-import { ARIMO_TEXT_METRICS } from '../geometry/text-metrics.js';
+import { TEXT_FONT_METRICS } from '../geometry/text-metrics.js';
 import { NotMeasuredError } from '../not-measured.js';
 import { assertDerivedLayoutFits } from './layout-guard.js';
 
@@ -11,9 +11,10 @@ describe('Platzprüfung abgeleiteter Zeichnungen', () => {
   // Systematik sie vorher ab (`raised-gable-requires-stationary-kind`,
   // `administrative-level-requires-carrier`).
   it.each([
-    // Das Fußband drückt den mittigen Lauf am Wasserrumpf auf das Eckkürzel.
-    [{ kind: 'vehicle-water', bodyVariant: 'foot-band', labels: { center: 'LST', bottomRight: 'UEL' } }, /überlappen/],
-    [{ kind: 'swap-loader-vehicle', bodyVariant: 'foot-band', unitGrouping: 'verband-iii', labels: { center: 'LST', bottomRight: 'UEL' } }, /überlappen/],
+    // Das Fußband drückt den mittigen Lauf am Wasserrumpf auf das Eckkürzel. Mit Arimo überlappte
+    // schon „UEL“; Einsatzzeichen Sans läuft schmaler (ESZ-114), erst ein vierstelliges Kürzel stößt an.
+    [{ kind: 'vehicle-water', bodyVariant: 'foot-band', labels: { center: 'LST', bottomRight: 'UEAL' } }, /überlappen/],
+    [{ kind: 'swap-loader-vehicle', bodyVariant: 'foot-band', unitGrouping: 'verband-iii', labels: { center: 'LST', bottomRight: 'UEAL' } }, /überlappen/],
   ] as const)('lehnt %j als Lücke ab, statt falsch zu zeichnen', (spec, reason) => {
     expect(() => drawSymbol(spec as unknown as SymbolSpec)).toThrow(NotMeasuredError);
     expect(() => drawSymbol(spec as unknown as SymbolSpec)).toThrow(reason);
@@ -26,8 +27,8 @@ describe('Platzprüfung abgeleiteter Zeichnungen', () => {
       children: [{ type: 'rect', role: 'head', x: 10, y: -2, width: 12, height: 4, style: { fill: 'schwarz' } }],
       derivations: [{ dimension: 'administrativeLevel', part: 'Kopf', basis: 'constructed', from: 'Probe' }],
     };
-    expect(() => assertDerivedLayoutFits(drawing, ARIMO_TEXT_METRICS)).toThrow(/ragt über die Zeichenfläche/);
-    expect(assertDerivedLayoutFits({ ...drawing, derivations: [] }, ARIMO_TEXT_METRICS)).toBeDefined();
+    expect(() => assertDerivedLayoutFits(drawing, TEXT_FONT_METRICS)).toThrow(/ragt über die Zeichenfläche/);
+    expect(assertDerivedLayoutFits({ ...drawing, derivations: [] }, TEXT_FONT_METRICS)).toBeDefined();
   });
 
   it('lässt die ortsfeste Leitstelle mit Kürzeln und Verwaltungsstufe zeichnen', () => {

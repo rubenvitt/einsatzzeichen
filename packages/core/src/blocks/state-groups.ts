@@ -123,7 +123,7 @@ export const STATE_GROUPS: readonly StateGroup[] = Object.freeze([
       value: 'mark',
       evidence: [
         source(
-          'core/src/geometry/pictograms/states/01-tactics-hazards.ts:20–26',
+          'core/src/geometry/pictograms/states/01-tactics-hazards.ts:21–27',
           'Taktikbalken und Warndreiecke stehen ohne Träger in der 32-mm-Fläche.',
         ),
       ],
@@ -180,7 +180,7 @@ export const STATE_GROUPS: readonly StateGroup[] = Object.freeze([
       value: 'mark',
       evidence: [
         source(
-          'core/src/geometry/pictograms/states/02-activity.ts:16–24',
+          'core/src/geometry/pictograms/states/02-activity.ts:17–25',
           'Eigenes geviertes Quadrat 4…28 mm mit Stufenziffer, ohne Träger.',
         ),
       ],

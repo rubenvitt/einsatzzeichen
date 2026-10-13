@@ -1,6 +1,6 @@
 import type { Primitive } from '@einsatzzeichen/schema';
 import { defineLeadership } from '../catalog-definition.js';
-import { CATALOG_TEXT_FONT_WEIGHT } from '../../../render/text-policy.js';
+import { CATALOG_TEXT_FONT_WEIGHT, textSizeForCapHeightMm } from '../../../render/text-policy.js';
 
 const BLACK_STROKE = {
   fill: 'none' as const,
@@ -71,16 +71,16 @@ const COMMAND_POST_PRIMITIVES: readonly Primitive[] = [
     content: 'Bezeichnung',
     x: 2.673,
     y: 13,
-    sizeMm: 4.243,
+    sizeMm: textSizeForCapHeightMm(2.92),
     anchor: 'start',
     baseline: 'alphabetic',
-    // Box bis 27,823 mm (LFH-585): Arimo 500 endet aufrecht bei 27,551 mm, als Kursive in 500
-    // laut Schriftmessung vom 29.09.2026 bei 27,779 mm.
+    // Box bis 27,823 mm (LFH-585, damals für Arimo 500 kursiv bis 27,779 mm). Einsatzzeichen Sans
+    // endet kursiv in 500 bei 25,435 mm, aufrecht bei 25,912 mm (ESZ-114).
     boxMm: { xMm: 2.673, yMm: 9.971, widthMm: 25.15, heightMm: 3.927 },
     minRenderPx: 61,
-    // Kursiv wie in der Referenz, der einzige geneigte Lauf des Katalogs (LFH-585). Arimo
-    // Italic neigt um 11,0°, die Referenz um 9,0°; an 2,92 mm Versalhöhe sind das 0,1 mm.
-    // Hingenommen, eine künstliche Neigung per Transformation ist verworfen
+    // Kursiv wie in der Referenz, der einzige geneigte Lauf des Katalogs (LFH-585). Seit ESZ-114
+    // eine echte Kursive (IBM Plex Sans Italic) statt der geneigten Arimo; eine künstliche Neigung
+    // per Transformation bleibt verworfen
     // (docs/decisions/2026-09-29-lfh-585-ersatzschrift-und-kursiv.md, Abschnitt 11).
     fontWeight: CATALOG_TEXT_FONT_WEIGHT,
     fontStyle: 'italic',

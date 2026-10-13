@@ -1,4 +1,5 @@
 import { deepFreeze } from '../../readonly-data.js';
+import { TEXT_CAP_HEIGHT_FRACTION, textSizeForCapHeightMm } from '../../../render/text-policy.js';
 import type { Primitive } from '@einsatzzeichen/schema';
 import {
   defineComms,
@@ -33,7 +34,7 @@ import {
  *
  * Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert: Alle Striche sind 0,5 mm
  * stark (1,417 pt in den BABZ-Dateien), alle Koordinaten sind Strichmitten, auf 0,05 mm
- * gerundet. Die Kürzel stehen in Arimo 500 wie allen Katalogtext (siehe `label`, LFH-585).
+ * gerundet. Die Kürzel stehen in Stufe 500 wie allen Katalogtext (siehe `label`, LFH-585).
  */
 
 const stroke = COMMS_REFERENCE_STROKE;
@@ -106,12 +107,18 @@ function radioArcs(centerYMm: number) {
 }
 
 /**
- * Ein Kürzel in der Katalogstärke (Arimo 500, LFH-585). `sizeMm` ist der Schriftgrad; die Box
- * ist die Tintenfläche, damals in Arimo Bold vermessen (Versalhöhe = 0,688 × Schriftgrad), mittig
- * um `xMm`; `xMm` ist so gesetzt, dass die Tintenmitte auf der Tintenmitte der Referenz liegt.
- * Arimo 500 läuft in diesen Versalkürzeln schmaler als Bold, die Boxen bleiben gültig.
- * `minRenderPx: 64` unter 9 mm Schriftgrad, weil solche Läufe bei 32 px Rendergröße unter
- * `MINIMUM_TEXT_RENDER_PX` fallen.
+ * Rundungen („O", „S", „a") reichen in Einsatzzeichen Sans 0,012 em unter die Grundlinie, beim
+ * großen Kürzel 0,13 mm, eine Spur mehr als die Toleranz des Textmetrik-Gates. Die Box der
+ * Kürzel reicht deshalb so weit unter die Grundlinie.
+ */
+const LABEL_BELOW_BASELINE_MM = 0.15;
+
+/**
+ * Ein Kürzel in der Katalogstärke (500, LFH-585). `sizeMm` ist der Schriftgrad; die Box ist die
+ * Tintenfläche, mittig um `xMm`: oben die Versalhöhe auf 0,1 mm aufgerundet plus 0,1 mm, unten
+ * `LABEL_BELOW_BASELINE_MM`. `xMm` ist so gesetzt, dass die Tintenmitte auf der Tintenmitte der
+ * Referenz liegt. `minRenderPx: 64` unter 9 mm Schriftgrad, weil solche Läufe bei 32 px
+ * Rendergröße unter `MINIMUM_TEXT_RENDER_PX` fallen.
  */
 function label(
   content: string,
@@ -120,45 +127,45 @@ function label(
   sizeMm: number,
   boxWidthMm: number,
 ) {
-  const heightMm = Math.ceil(sizeMm * 0.7 * 10) / 10;
+  const capMm = Math.round(sizeMm * TEXT_CAP_HEIGHT_FRACTION * 1000) / 1000;
+  const aboveMm = Math.ceil(capMm * 10) / 10 + 0.1;
   return commsText(content, {
     x: xMm,
     y: baselineMm,
     sizeMm,
     boxMm: {
       xMm: xMm - boxWidthMm / 2,
-      yMm: baselineMm - heightMm,
+      yMm: baselineMm - aboveMm,
       widthMm: boxWidthMm,
-      heightMm,
+      heightMm: aboveMm + LABEL_BELOW_BASELINE_MM,
     },
     minRenderPx: sizeMm < 9 ? 64 : 32,
   });
 }
 
 /**
- * Schriftgrade. Die Referenzschrift läuft schmaler als Arimo. Bis LFH-585 lag jeder Grad deshalb
- * zwischen dem Wert, der die Versalhöhe trifft, und dem, der die Laufbreite in Arimo Bold trifft
- * (Breitenwerte unten mit den Bold-Metriken gerechnet):
+ * Schriftgrade aus den Versalhöhen der Referenz:
  *
- * - Kürzel unter dem kurzen Balken (J.1.3/J.1.4): Versalhöhe 4,9 mm → 7,1;
- *   Breite 14,8 mm → 6,65.
- * - Große Betriebsart (J.1.5–J.1.7): Versalhöhe 7,3 mm → 10,6; Breite 22,2 mm → 10,0.
- * - Fax (J.1.9): Versalhöhe 7,3 mm → 10,6; Breite 13,7 mm → 8,3.
- * - SDS im Rahmen: Versalhöhe 4,9 mm → 7,1; Breite 11,2 mm → 5,65.
+ * - Kürzel unter dem kurzen Balken (J.1.3/J.1.4): 4,869 mm, Referenzbreite 14,8 mm.
+ * - Große Betriebsart (J.1.5–J.1.7): 7,302 mm, Referenzbreite 22,2 mm.
+ * - Fax (J.1.9): 7,3 mm, Referenzbreite 13,7 mm.
+ * - SDS im Rahmen: 4,9 mm, Referenzbreite 11,2 mm.
  *
- * Seit LFH-585 (Arimo 500) passen die kleinen Betriebsarten und das große „TMO" bei voller
- * Versalhöhe in ihre Boxen (DMO bei 7,1 mm: 15,69 mm Tinte in 16 mm; TMO bei 10,6 mm: 22,87 mm
- * in 23,5 mm). `SMALL` und `LARGE` stehen deshalb wieder auf der Referenzversalhöhe. Das große
- * „DMO" reichte bei 10,6 mm rechts 0,13 mm über eine 23,5-mm-Box; seine Box ist deshalb 23,8 mm
- * breit (`LARGE_DMO_BOX`), sie bleibt innerhalb der Piktogrammbox von J.1.5 (4–28 mm) und J.1.7
- * (3–29 mm). Fax und SDS bleiben beim Kompromissgrad: Fax läge bei 10,6 mm mit 16,97 mm Tinte
- * über seiner 16-mm-Box, SDS füllte seinen Rahmen bis an die Kontur.
+ * Die Referenzschrift lief schmaler als Arimo. Bis LFH-585 lag jeder Grad deshalb zwischen dem
+ * Wert, der die Versalhöhe trifft, und dem, der die Laufbreite in Arimo Bold trifft; seit
+ * LFH-585 (Arimo 500) passten die kleinen Betriebsarten und das große „TMO" bei voller Höhe. Das
+ * große „DMO" reichte dabei rechts über eine 23,5-mm-Box; seine Box ist deshalb 23,8 mm breit
+ * (`LARGE_DMO_BOX`), innerhalb der Piktogrammbox von J.1.5 (4–28 mm) und J.1.7 (3–29 mm).
+ *
+ * Seit ESZ-114 (Einsatzzeichen Sans, auf die Laufweite der Referenz geeicht) stehen auch Fax und
+ * SDS auf der Referenzversalhöhe: „Fax" misst dort 14,9 mm Tinte in seiner 16-mm-Box, „SDS"
+ * 11,9 mm im 14 mm breiten Rahmen.
  */
-const SMALL = 7.1;
-const LARGE = 10.6;
+const SMALL = textSizeForCapHeightMm(4.869);
+const LARGE = textSizeForCapHeightMm(7.302);
 const LARGE_DMO_BOX = 23.8;
-const FAX = 9.4;
-const SDS = 6.4;
+const FAX = textSizeForCapHeightMm(7.3);
+const SDS = textSizeForCapHeightMm(4.9);
 
 /**
  * Die Satellitenschüssel: ein Viertelkreis mit Mittelpunkt (27 | 3) und r = 26 mm von (1 | 3)
@@ -379,7 +386,10 @@ export const CONNECTION_COMMS = deepFreeze([
     { xMm: 4, yMm: 8, widthMm: 24, heightMm: 18 },
     { xMm: 1, yMm: 8, widthMm: 30, heightMm: 15 },
   ),
-  /** Fax: großes Kürzel, Grundlinie 17 (drahtlos) bzw. 20 (leitergebunden). */
+  /**
+   * Fax: großes Kürzel, Grundlinie 17 (drahtlos) bzw. 20 (leitergebunden). Die leitergebundene
+   * Hülle reicht 0,15 mm unter die Grundlinie, so weit wie die Box des Kürzels (siehe `label`).
+   */
   ...transmissionPair(
     'J.1.9',
     'fax-transmission',
@@ -389,7 +399,7 @@ export const CONNECTION_COMMS = deepFreeze([
     [label('Fax', 16.3, 20, FAX, 16)],
     'J.1.9_Faxübertragung_leitergebunden.svg',
     { xMm: 4, yMm: 9.5, widthMm: 24, heightMm: 15.5 },
-    { xMm: 7.2, yMm: 12.5, widthMm: 18, heightMm: 7.5 },
+    { xMm: 7.2, yMm: 12.5, widthMm: 18, heightMm: 7.65 },
   ),
   /** Bild: abgerundetes Rechteck 28 × 18 mm, Eckradius 1 mm, ungefüllt. */
   ...transmissionPair(

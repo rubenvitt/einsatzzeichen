@@ -16,7 +16,7 @@ die Zeichen messen lassen.
 Hier liegen die Bausteine: Grundzeichen, Organisationsfarben, Stärkeangaben, Kopfmarken,
 Verwaltungsstufen, Funktionsfassungen, Fahrwerk, Körpermarken, Piktogramme, deutsche
 Bezeichnungen, die drei Render-Themes, die dokumentierten Kontrastausnahmen und die Laufweiten der
-Schrift Arimo. Bis Version 1.5 lagen sie im Paket `catalog`.
+Schrift Einsatzzeichen Sans. Bis Version 1.5 lagen sie im Paket `catalog`.
 
 `core` ist zugleich der einzige Renderer des Projekts. Jeder Ausgabekanal — React, Web
 Component, MapLibre, QGIS — geht durch `renderSvg` oder `renderCanvas`, damit aus derselben
@@ -72,7 +72,7 @@ Textmetrik, Fingerprint-Vergleich gegen die Referenz.
 | `ALL_PICTOGRAMS`, `pictogram(...)`, `buildPictogramRegistry()` | die Piktogramme |
 | `RENDER_THEMES`, `renderTheme(id)`, `isRenderThemeId(value)`, `ACCESSIBLE_LIGHT_THEME`, `PRINT_MONOCHROME_THEME` | die drei konkreten Themes |
 | `CONTRAST_EXCEPTIONS`, `contrastExceptionFor(...)` | dokumentierte Kontrastausnahmen |
-| `ARIMO_TEXT_METRICS` | Laufweiten der Schrift, ohne Schriftdatei |
+| `TEXT_FONT_METRICS` | Laufweiten der Schrift, ohne Schriftdatei |
 | `describeSymbolSpec(spec)`, `ORGANIZATION_LABELS`, `STRENGTH_LABELS`, … | deutsche Bezeichnungen |
 
 ## Kräftigere Striche in kleinen Bildern

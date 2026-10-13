@@ -1,4 +1,5 @@
 import { deepFreeze } from '../../readonly-data.js';
+import { textSizeForCapHeightMm } from '../../../render/text-policy.js';
 import {
   defineComms,
   type CatalogPictogramDefinition,
@@ -346,7 +347,8 @@ export const NETWORK_COMMS = deepFreeze([
    * offener Pfeil, der auf ihn zeigt. Das „L" benennt die Größe Länge — es ist **kein**
    * Wertplatzhalter, die Referenz enthält keine Zahl. Damit fällt J.4.8 aus der Regel heraus,
    * die für J.4.17 weiter gilt. „L": Referenztinte 19,6 … 22,4 × 19,1 … 24 mm, Grundlinie 24 mm;
-   * Arimo 500 mit 6,2 mm Schriftgrad (Mittel aus Höhen- und Breitenpassung wie in J.3, in Bold).
+   * Versalhöhe 4,266 mm statt 4,9 mm (bis LFH-585 in Arimo Bold als Mittel aus Höhen- und
+   * Breitenpassung bestimmt wie in J.3). Die Box ist an dieser Höhe vermessen.
    */
   defineComms({
     section: 'J.4.8',
@@ -362,7 +364,7 @@ export const NETWORK_COMMS = deepFreeze([
       commsText('L', {
         x: 19,
         y: 24,
-        sizeMm: 6.2,
+        sizeMm: textSizeForCapHeightMm(4.266),
         anchor: 'start',
         boxMm: { xMm: 19.1, yMm: 19.4, widthMm: 3.8, heightMm: 4.9 },
         minRenderPx: 64,

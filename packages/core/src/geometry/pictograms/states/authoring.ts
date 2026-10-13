@@ -115,7 +115,7 @@ export function stateGroup(children: readonly Primitive[]): Primitive {
 }
 
 /**
- * Ein Textlauf in der Projektschrift (Arimo), gefüllt statt gestrichen. `boxMm` ist eine
+ * Ein Textlauf in der Katalogschrift, gefüllt statt gestrichen. `boxMm` ist eine
  * Zusicherung des Autors, in die die Glyphen passen müssen (geprüft von `text-ink.test.ts` und
  * `text-metrics.test.ts`); `minRenderPx` ist die kleinste Rendergröße, ab der der Lauf den
  * Mindestschriftgrad von 8 px erreicht (`sizeMm / 32 × px ≥ 8`).

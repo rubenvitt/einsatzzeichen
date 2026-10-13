@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  ARIMO_CAP_HEIGHT_FRACTION,
+  TEXT_CAP_HEIGHT_FRACTION,
+  textSizeForCapHeightMm,
   boundsOfMm,
   checkContrast,
   CompositionError,
@@ -794,11 +795,11 @@ describe('Anhang D.3, Funktionen', () => {
     );
     expect(labels).toMatchObject([
       {
-        content: 'SEG', x: 16, y: 18.5, sizeMm: 7.08, anchor: 'middle',
+        content: 'SEG', x: 16, y: 18.5, sizeMm: textSizeForCapHeightMm(4.87), anchor: 'middle',
         boxMm: { xMm: 8.5, yMm: 13.3, widthMm: 14.75, heightMm: 5.5 }, minRenderPx: 37,
       },
       {
-        content: 'JUH', x: 30.5, y: 29, sizeMm: 4.243, anchor: 'end',
+        content: 'JUH', x: 30.5, y: 29, sizeMm: textSizeForCapHeightMm(2.919), anchor: 'end',
         boxMm: { xMm: 22.1, yMm: 25.8, widthMm: 8.3, heightMm: 3.5 }, minRenderPx: 61,
       },
     ]);
@@ -1368,7 +1369,7 @@ describe('Anhang I, Teilslice I.5 (I.5.1 bis I.5.3)', () => {
       (child): child is Primitive & { type: 'text' } => child.type === 'text' && child.role === 'label',
     );
     expect(label).toBeDefined();
-    expect((label?.sizeMm ?? Number.NaN) * ARIMO_CAP_HEIGHT_FRACTION).toBeCloseTo(capHeightMm, 6);
+    expect((label?.sizeMm ?? Number.NaN) * TEXT_CAP_HEIGHT_FRACTION).toBeCloseTo(capHeightMm, 6);
   });
 
   it.each([
@@ -1475,7 +1476,7 @@ describe('Anhang I, Teilslice I-b (I.2.4 bis I.2.7)', () => {
     );
     expect(labels).toEqual([expect.objectContaining({
       content: 'Tauchen', anchor: 'middle', x: 12.24, y: 11.5,
-      sizeMm: 2.919 / ARIMO_CAP_HEIGHT_FRACTION,
+      sizeMm: 2.919 / TEXT_CAP_HEIGHT_FRACTION,
     })]);
   });
 });
@@ -1627,7 +1628,7 @@ describe('Anhang I, Teilslice I-g (I.1.17 bis I.1.20)', () => {
             content: 'Strömungsrettung',
             x: 16,
             y: 10,
-            sizeMm: 2.45 / ARIMO_CAP_HEIGHT_FRACTION,
+            sizeMm: 2.45 / TEXT_CAP_HEIGHT_FRACTION,
             anchor: 'middle',
             boxMm: expect.objectContaining({ xMm: 1.5, widthMm: 29 }),
           }),
@@ -1719,7 +1720,7 @@ describe('Anhang I, Teilslice I-f (I.1.13 bis I.1.16)', () => {
             anchor: 'middle',
             x: 16,
             y: 10.55,
-            sizeMm: 3 / ARIMO_CAP_HEIGHT_FRACTION,
+            sizeMm: 3 / TEXT_CAP_HEIGHT_FRACTION,
             boxMm: expect.objectContaining({ xMm: 2, widthMm: 28 }),
           }),
         ]);
@@ -1983,7 +1984,7 @@ describe('Anhang I, LFH-486 (I.2.1 bis I.2.3)', () => {
         anchor: 'start',
         style: { fill: 'schwarz' },
       });
-      expect((label?.sizeMm ?? 0) * ARIMO_CAP_HEIGHT_FRACTION)
+      expect((label?.sizeMm ?? 0) * TEXT_CAP_HEIGHT_FRACTION)
         .toBeCloseTo(topLeftMetrics.capHeightMm, 6);
       expect(label?.y).toBeCloseTo(5.75 + topLeftMetrics.baselineFromBodyTopMm, 6);
       expect(key).toMatch(/^I\.2\.[1-3]$/);
@@ -2202,8 +2203,8 @@ describe('Anhang E, Teilslice E-a (E.1.1 bis E.1.16)', () => {
     const [center, , bottomRight] = labelsOf('E.1.9');
     // 4,87 mm und 2,92 mm sind die an der Referenz gemessenen Versalhöhen; der Schriftgrad
     // entsteht daraus über Arimos Versalhöhenanteil, statt geraten zu werden.
-    expect((center?.sizeMm ?? 0) * ARIMO_CAP_HEIGHT_FRACTION).toBeCloseTo(4.87, 6);
-    expect((bottomRight?.sizeMm ?? 0) * ARIMO_CAP_HEIGHT_FRACTION).toBeCloseTo(2.92, 6);
+    expect((center?.sizeMm ?? 0) * TEXT_CAP_HEIGHT_FRACTION).toBeCloseTo(4.87, 6);
+    expect((bottomRight?.sizeMm ?? 0) * TEXT_CAP_HEIGHT_FRACTION).toBeCloseTo(2.92, 6);
   });
 
   it('malt alle Beschriftungen weiss und nennt ihre untere Einsatzgrenze', () => {

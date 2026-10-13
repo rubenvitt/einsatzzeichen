@@ -30,7 +30,7 @@ import {
 
 /** Höhe des Langsechsecks; die Spitzen sind je eine halbe Höhe breit. */
 export const SKETCH_CONDITION_SIGN_HEIGHT_MM = 8;
-/** Schriftgrad im Bedingungszeichen (Arimo 500). */
+/** Schriftgrad im Bedingungszeichen (Katalogschrift, 500). */
 export const SKETCH_CONDITION_SIGN_TEXT_MM = 4;
 /** Luft zwischen Text und Spitzenansatz, je Seite. */
 export const SKETCH_CONDITION_SIGN_PADDING_MM = 4 / 3;
