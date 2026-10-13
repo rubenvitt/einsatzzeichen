@@ -1,3 +1,23 @@
+## Katalog
+
+- **Neue Funktionsrolle `leader`**: Führungskräfte mit Fachaufgabe (Arzt, Sanität, IuK, Logistik) werden jetzt mit der schwarzen Kappe aller Führungskräfte aus Anhang D dargestellt – in jeder Organisation und mit oder ohne Stärke. Die Rolle nutzt Körper und Kappe des Einsatzleiters ohne Lauf, Organisation und Kopf bleiben frei.
+
+- **Verbesserte Darstellung von Körpermarken**: Bei Funktionsfassungen ohne Lauf stehen Körpermarken jetzt randbündig unter der Kappe (wie bei D.3.7 und D.3.9 bis D.3.12), statt verkleinert eingepasst zu werden. Bereits vermessene Zeichen bleiben unverändert.
+
+- **Stellen mit Fachaufgabe ohne Hilfsorganisation**: UHS oder Betreuungsstellen der Feuerwehr oder ohne Organisation werden jetzt korrekt dargestellt – am 12-mm-Kreis mit derselben Fachdienstfassung wie F.3.3/F.3.4, aber anderer Füllung.
+
+## Tooling
+
+- **Umstellung auf Zunder**: Die Projektverwaltung wurde von ClickUp auf Zunder umgestellt. Dev-Skills und interne Workflows wurden entsprechend angepasst.
+
+## Abhängigkeiten
+
+- maplibre-gl 6.11.2 → 6.13.0
+- astro 7.3.5 → 7.3.8
+- @astrojs/react 7.0.0 → 7.0.1
+- @vitejs/plugin-react 6.1.1 → 6.1.2
+- conventional-changelog-conventionalcommits 10.4.0 → 10.4.1
+
 ## Version 5.2.0
 
 ### Freistehende Zeichen
