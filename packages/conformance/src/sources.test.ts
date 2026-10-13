@@ -78,16 +78,16 @@ describe('Quellenregister', () => {
   it('trägt an jeder Quelle beide Reviewrollen mit zurechenbarem technischem Review', () => {
     for (const [id, record] of Object.entries(SOURCE_REGISTRY)) {
       expect(record.review.technical.status).toBe('approved');
-      // Drei Einträge prüfte ein Agent technisch: bbk-babz-2025 (codex), skk-2010 (claude, neue
-      // Bezugsadresse mit ESZ-137) und ibm-plex-sans-ofl (claude-code, Schriftwechsel ESZ-114).
+      // Drei Einträge prüfte ein Agent technisch: bbk-babz-2025 (codex), ibm-plex-sans-ofl
+      // (claude-code, Schriftwechsel ESZ-114) und skk-2010 (claude, neue Bezugsadresse ESZ-137).
       // Die übrigen tragen das Review des Projektinhabers.
       const reviewer =
         id === 'bbk-babz-2025'
           ? 'codex'
-          : id === 'skk-2010'
-            ? 'claude'
-            : id === 'ibm-plex-sans-ofl'
-              ? 'claude-code'
+          : id === 'ibm-plex-sans-ofl'
+            ? 'claude-code'
+            : id === 'skk-2010'
+              ? 'claude'
               : 'rv';
       expect(record.review.technical.reviewer).toBe(reviewer);
       // Strukturaussage bleibt: jede der dreizehn Quellen trägt beide Reviewrollen. Beim
