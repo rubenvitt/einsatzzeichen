@@ -1,4 +1,4 @@
-import type { FreestandingSpec } from '@einsatzzeichen/schema';
+import { MOVEMENT_IDS, type FreestandingSpec } from '@einsatzzeichen/schema';
 import { describe, expect, it } from 'vitest';
 import { drawSymbol } from './default-ports.js';
 import {
@@ -6,11 +6,13 @@ import {
   describeFreestandingSpec,
   drawAnySpec,
   drawFreestanding,
+  referenceMovementSpec,
 } from './draw-freestanding.js';
 import { animalStateDrawing } from './geometry/animal-state.js';
 import { pictogram } from './geometry/pictograms/index.js';
 import { lineDrawing, movementDrawing } from './geometry/parametric.js';
 import { weatherDrawing } from './geometry/weather.js';
+import { parseAnySpec, serializeAnySpec } from './spec-codec.js';
 import { CompositionError } from './validate.js';
 
 const ARROW_PATH = { points: [[2, 16], [30, 16]] } as const;
@@ -70,6 +72,20 @@ describe('drawFreestanding', () => {
       width: 32,
       height: 46,
     });
+  });
+
+  it('führt jeden Pfeil als Punktzeichen auf dem Verlauf der Referenz (ESZ-139)', () => {
+    for (const movement of MOVEMENT_IDS) {
+      const spec = referenceMovementSpec(movement);
+      expect(spec.movement).toBe(movement);
+      expect('canvasMm' in spec).toBe(false);
+      expect(Object.isFrozen(spec.path)).toBe(true);
+      expect(parseAnySpec(serializeAnySpec(spec))).toEqual(spec);
+      expect(drawFreestanding(spec).viewBox).toEqual(FREESTANDING_DEFAULT_CANVAS_MM.movement);
+    }
+    // Sammeln 5.2.6: der Verlauf endet in der Ringmitte, nicht an der Spitze.
+    expect(referenceMovementSpec('gathering').path).toEqual({ points: [[2, 16], [26, 16]] });
+    expect(referenceMovementSpec('movement-both-directions').path).toEqual(ARROW_PATH);
   });
 
   it('nennt die Flächen der Referenz als Vorgabe', () => {

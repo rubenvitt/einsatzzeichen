@@ -371,11 +371,11 @@ describe('Piktogramm-Gates über den Katalogbestand', () => {
  * Die Altzeichen (ESZ-137) stehen außerhalb von `ALL_PICTOGRAMS`, weil sie keine Referenzdatei
  * haben. Die Gates, die nur die Zeichnung prüfen, gelten für sie unverändert.
  */
-describe('Piktogramm-Gates über die Altzeichen (DV 102, Kapitel 8)', () => {
+describe('Piktogramm-Gates über die Altzeichen (DV 102, Kapitel 8 und 10.3)', () => {
   const cases = LEGACY_PICTOGRAMS.map((definition) => [pictogramVariantKey(definition), definition] as const);
 
-  it('hat vier Darstellungen zu prüfen', () => {
-    expect(cases).toHaveLength(4);
+  it('hat fünf Darstellungen zu prüfen', () => {
+    expect(cases).toHaveLength(5);
   });
 
   it.each(cases)('besteht für %s das Kommando-Gate', (_id, definition) => {

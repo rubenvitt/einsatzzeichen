@@ -8,6 +8,7 @@ import {
   movementDrawing,
   parseAnySpec,
   pictogram,
+  referenceMovementSpec,
   serializeAnySpec,
   validateFreestandingSpec,
   weatherDrawing,
@@ -119,6 +120,15 @@ describe('Freistehende Zeichen über die Spec', () => {
     for (const { spec } of FREESTANDING_SPEC_FIXTURES) expect('canvasMm' in spec).toBe(false);
   });
 
+  it('führt die Pfeile als Punktzeichen auf genau dem Verlauf ihrer Kapiteldatei (ESZ-139)', () => {
+    const arrows = FREESTANDING_SPEC_FIXTURES.filter(({ spec }) => spec.kind === 'movement');
+    expect(arrows).toHaveLength(6);
+    for (const { asset, spec } of arrows) {
+      if (spec.kind !== 'movement') throw new Error('nur Pfeile erwartet');
+      expect(referenceMovementSpec(spec.movement), asset).toEqual(spec);
+    }
+  });
+
   it.each(FREESTANDING_SPEC_FIXTURES.map((fixture) => [fixture.asset, fixture] as const))(
     '%s: drawFreestanding zeichnet wie die Zeichenfunktion',
     (asset, fixture) => {
@@ -157,12 +167,13 @@ describe('Freistehende Zeichen über die Spec', () => {
 });
 
 describe('Altzeichen über die Spec (ESZ-137)', () => {
-  it('führt die vier Darstellungen aus DV 102 Kapitel 8 als Piktogramm', () => {
+  it('führt die vier Darstellungen aus DV 102 Kapitel 8 und den Platz aus 10.3.23 als Piktogramm', () => {
     expect(LEGACY_SPEC_FIXTURES.map(({ spec }) => spec)).toEqual([
       { kind: 'pictogram', pictogram: 'comms.teleprinter-transmission' },
       { kind: 'pictogram', pictogram: 'comms.teleprinter-transmission', variant: 'alternative' },
       { kind: 'pictogram', pictogram: 'comms.still-image-transmission' },
       { kind: 'pictogram', pictogram: 'comms.still-image-transmission', variant: 'alternative' },
+      { kind: 'pictogram', pictogram: 'site.affected-persons-assembly-point' },
     ]);
   });
 

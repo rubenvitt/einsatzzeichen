@@ -228,11 +228,13 @@ export { SPECIAL_FORM_IDS_DRAWN, specialFormDrawing } from './geometry/special-f
 // eigene Erklärungen, über `explainIssue` erklärbar); der Codec schreibt sie in dieselbe Hülle
 // unter den Schlüssel `freestanding`. Die Zeichenfunktionen für Wetter und Tierzustand und die
 // Wetterregeln als Datum stehen daneben (`movementDrawing` und `lineDrawing` sind schon exportiert).
+// ESZ-139: `referenceMovementSpec` gibt jeden Pfeil als Punktzeichen auf dem Verlauf der Referenz.
 export {
   FREESTANDING_DEFAULT_CANVAS_MM,
   describeFreestandingSpec,
   drawAnySpec,
   drawFreestanding,
+  referenceMovementSpec,
   type FreestandingDrawOptions,
 } from './draw-freestanding.js';
 export { freestandingRedirect, validateFreestandingSpec } from './validate-freestanding.js';

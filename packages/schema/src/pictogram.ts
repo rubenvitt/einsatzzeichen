@@ -43,6 +43,19 @@ export const WATER_RESCUE_PERSONNEL_IDS = [
 export type WaterRescuePersonnelId = (typeof WATER_RESCUE_PERSONNEL_IDS)[number];
 
 /**
+ * Platzzeichen ohne Körper (ESZ-139): ein Platz, den die Altsystematik freistehend zeichnet, die
+ * Baseline aber nur im Kreis. Heute genau ein Altzeichen, DLRG DV 102 von 2011 (Quelle
+ * `skk-2010`) 10.3.23 Sammelplatz für Betroffene; die Baseline zeigt das Motiv nur als Körpermarke
+ * im 12-mm-Kreis (F.3.12 Anlaufstelle für Betroffene). Ein eigener Raum, weil der Platz weder
+ * Fähigkeit noch Führungszeichen ist (F.3.12: „keine eigenständige Capability“).
+ */
+export const LEGACY_SITE_IDS = ['affected-persons-assembly-point'] as const;
+
+export type LegacySiteId = (typeof LEGACY_SITE_IDS)[number];
+
+export type SiteId = LegacySiteId;
+
+/**
  * Zugesicherte Hülle eines Piktogramms: linke obere Ecke und Maße in Millimetern.
  *
  * Nötig, weil `boundsOfMm` für Pfade nichts liefert — die Koordinaten eines Pfades liegen
@@ -76,13 +89,15 @@ export type PictogramId =
   | `wildfire.${WildfireId}`
   | `leadership.${LeadershipId}`
   | `water-rescue-personnel.${WaterRescuePersonnelId}`
-  | `special-form.${SpecialFormPictogramId}`;
+  | `special-form.${SpecialFormPictogramId}`
+  | `site.${SiteId}`;
 
 /**
  * Jede Piktogrammkennung als Wert, Raum für Raum in der Reihenfolge von `PictogramId` und darin in
  * Kapitelreihenfolge (LFH-798). Der Wertevorrat der freistehenden Art `pictogram`; ob eine Kennung
  * dort zeichnet, entscheidet die Prüfung (`state.*` und die Leitstelle haben eine eigene Spec).
- * Die Altzeichen aus DV 102 Kapitel 8 (`LEGACY_COMMS_IDS`, ESZ-137) folgen auf Anhang J.
+ * Die Altzeichen aus DV 102 Kapitel 8 (`LEGACY_COMMS_IDS`, ESZ-137) folgen auf Anhang J, die
+ * Platzzeichen (`LEGACY_SITE_IDS`, ESZ-139) stehen nach den Sonderformen zuletzt.
  */
 export const PICTOGRAM_IDS: readonly PictogramId[] = Object.freeze([
   ...CAPABILITY_IDS.map((id) => `capability.${id}` as const),
@@ -94,6 +109,7 @@ export const PICTOGRAM_IDS: readonly PictogramId[] = Object.freeze([
   ...LEADERSHIP_IDS.map((id) => `leadership.${id}` as const),
   ...WATER_RESCUE_PERSONNEL_IDS.map((id) => `water-rescue-personnel.${id}` as const),
   ...SPECIAL_FORM_PICTOGRAM_IDS.map((id) => `special-form.${id}` as const),
+  ...LEGACY_SITE_IDS.map((id) => `site.${id}` as const),
 ]);
 
 /**

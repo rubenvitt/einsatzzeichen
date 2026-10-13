@@ -7,6 +7,7 @@ import type {
   Drawing,
   LeadershipId,
   LegacyCommsId,
+  LegacySiteId,
   PictogramBox,
   PictogramDefinition,
   Primitive,
@@ -360,6 +361,34 @@ export function defineLegacyComms(input: LegacyCommsDefinitionInput): LegacyPict
     section: input.section,
     page: input.page,
     id: `comms.${input.id}` as const,
+    variant: input.variant ?? 'primary',
+    title: input.title,
+    placement: { mode: 'standalone' } as const,
+    contrastPairs: structuredClone(input.contrastPairs),
+    viewBox: DEFAULT_VIEWBOX_MM,
+    box: structuredClone(input.box),
+    primitives: structuredClone(input.primitives),
+  });
+}
+
+export interface LegacySiteDefinitionInput {
+  readonly section: `10.${string}`;
+  readonly page: number;
+  readonly id: LegacySiteId;
+  readonly variant?: DepictionVariant;
+  readonly title: string;
+  readonly box: PictogramBox;
+  readonly primitives: readonly Primitive[];
+  readonly contrastPairs: readonly [PictogramContrastPair, ...PictogramContrastPair[]];
+}
+
+/** Ein Platzzeichen der Altsystematik (ESZ-139), im Raum `site.*`. */
+export function defineLegacySite(input: LegacySiteDefinitionInput): LegacyPictogramDefinition {
+  return deepFreeze({
+    source: 'skk-2010' as const,
+    section: input.section,
+    page: input.page,
+    id: `site.${input.id}` as const,
     variant: input.variant ?? 'primary',
     title: input.title,
     placement: { mode: 'standalone' } as const,
