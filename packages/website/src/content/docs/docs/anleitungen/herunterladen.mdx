@@ -69,8 +69,8 @@ und einem Theme, kommt aus dem CLI:
 pnpm cli export --out out/sw --size 128 --theme print-monochrome
 ```
 
-`--theme` nimmt `reference`, `accessible-light` oder `print-monochrome`, `--size` eine Zahl größer
-als null; ohne Angaben werden 64 Pixel im Referenztheme geschrieben. Es entsteht eine SVG-Datei je
+`--theme` nimmt `reference`, `accessible-light`, `print-monochrome` oder `dark` (für dunkle
+Flächen), `--size` eine Zahl größer als null; ohne Angaben werden 64 Pixel im Referenztheme geschrieben. Es entsteht eine SVG-Datei je
 Zeichen, benannt nach seiner Kennung
 (`packages/cli/src/commands/export.ts`).
 

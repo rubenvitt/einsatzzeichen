@@ -1,5 +1,6 @@
 import {
   colorFor,
+  contrastSurface,
   type RenderTheme,
 } from '../../render/theme.js';
 import { tokenizePath } from '../../path-commands.js';
@@ -425,8 +426,9 @@ export function contrastPairProblems(
     const collidingThemeIds = themes
       .filter((theme) => {
         const foreground = colorFor(theme, pair.foreground);
-        const background =
-          pair.background === 'surface' ? theme.surface : colorFor(theme, pair.background);
+        const background = pair.background === 'surface'
+          ? contrastSurface(theme)
+          : colorFor(theme, pair.background);
         return foreground === background;
       })
       .map((theme) => theme.id);
