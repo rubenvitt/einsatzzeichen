@@ -1,3 +1,11 @@
+## Rendering
+
+**Dark Theme für dunkle Hintergründe:** Das neue Render-Theme `dark` optimiert taktische Zeichen für dunkle Flächen (z.B. Nachtbetrieb). Statt Farbumkehr erhalten die Zeichen eine weiße Hinterlegung – jedes Element wird als Silhouette gezeichnet, darüber die eigentliche Darstellung. Kopfmarken und Fahrwerk bleiben ohne Hinterlegung weiß, damit Stärkepunkte weiterhin gefüllt erscheinen. Die Kontrastverhältnisse entsprechen dem Standard `accessible-light` (mindestens 7:1).
+
+## Katalog
+
+**Zeichen „Sichten, ordnen, verteilen" aktualisiert:** Das Alt-Symbol `sichten` (aus DV 102 / SKK 2010, Zeichen 7.5) wird jetzt dem BABZ 2025-Äquivalent 5.2.4 zugeordnet. Die Bibliothek rendert es bereits als `movement-both-directions` – keine Änderungen am Piktogramm oder der Grundzeichen-Achse erforderlich.
+
 ## Katalog
 
 - **Neue Funktionsrolle `leader`**: Führungskräfte mit Fachaufgabe (Arzt, Sanität, IuK, Logistik) werden jetzt mit der schwarzen Kappe aller Führungskräfte aus Anhang D dargestellt – in jeder Organisation und mit oder ohne Stärke. Die Rolle nutzt Körper und Kappe des Einsatzleiters ohne Lauf, Organisation und Kopf bleiben frei.
