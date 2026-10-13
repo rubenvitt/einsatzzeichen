@@ -8,6 +8,7 @@ import {
   movementDrawing,
   parseAnySpec,
   pictogram,
+  referenceMovementSpec,
   serializeAnySpec,
   validateFreestandingSpec,
   weatherDrawing,
@@ -114,6 +115,15 @@ describe('Freistehende Zeichen über die Spec', () => {
       expect(fixture.canvasMm, fixture.asset).toEqual(expected);
     }
     for (const { spec } of FREESTANDING_SPEC_FIXTURES) expect('canvasMm' in spec).toBe(false);
+  });
+
+  it('führt die Pfeile als Punktzeichen auf genau dem Verlauf ihrer Kapiteldatei (ESZ-139)', () => {
+    const arrows = FREESTANDING_SPEC_FIXTURES.filter(({ spec }) => spec.kind === 'movement');
+    expect(arrows).toHaveLength(6);
+    for (const { asset, spec } of arrows) {
+      if (spec.kind !== 'movement') throw new Error('nur Pfeile erwartet');
+      expect(referenceMovementSpec(spec.movement), asset).toEqual(spec);
+    }
   });
 
   it.each(FREESTANDING_SPEC_FIXTURES.map((fixture) => [fixture.asset, fixture] as const))(

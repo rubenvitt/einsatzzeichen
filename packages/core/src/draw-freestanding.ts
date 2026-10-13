@@ -4,6 +4,8 @@ import {
   type CanvasMm,
   type Drawing,
   type FreestandingSpec,
+  type MovementId,
+  type MovementSpec,
   type PictogramId,
   type WeatherIntensity,
 } from '@einsatzzeichen/schema';
@@ -15,6 +17,7 @@ import { STRENGTH_LABELS } from './geometry/labels.js';
 import { lineDrawing, movementDrawing } from './geometry/parametric.js';
 import { pictogram } from './geometry/pictograms/index.js';
 import { pictogramDrawing } from './geometry/standalone-pictogram.js';
+import { deepFreeze } from './geometry/readonly-data.js';
 import { weatherDrawing } from './geometry/weather.js';
 import { validateFreestandingSpec } from './validate-freestanding.js';
 import { CompositionError } from './validate.js';
@@ -38,6 +41,35 @@ export const FREESTANDING_DEFAULT_CANVAS_MM: Readonly<{ movement: CanvasMm; line
   movement: Object.freeze({ width: 32, height: 32 }),
   line: Object.freeze({ width: 48, height: 32 }),
 });
+
+/** Schaft ab x 2, Spitze bei x 30, auf der Achse y 16 (5.2.1 bis 5.2.5). */
+const ARROW_REFERENCE_PATH = { points: [[2, 16], [30, 16]] } as const;
+
+/**
+ * Jeder Pfeil aus 5.2 so, wie ihn die Referenz zeigt (ESZ-139): auf dem Verlauf der Kapiteldatei
+ * und in deren Fläche (`FREESTANDING_DEFAULT_CANVAS_MM.movement`). Bei 5.2.6 endet der Verlauf in
+ * der Ringmitte bei x 26. Abgelesen an den Dateien, gegatet in
+ * `conformance/src/parametric-fixtures.test.ts`.
+ */
+const REFERENCE_MOVEMENTS: Readonly<Record<MovementId, MovementSpec>> = deepFreeze({
+  'direction-of-action': { kind: 'movement', movement: 'direction-of-action', path: ARROW_REFERENCE_PATH },
+  'start-of-action': { kind: 'movement', movement: 'start-of-action', path: ARROW_REFERENCE_PATH },
+  'directed-movement': { kind: 'movement', movement: 'directed-movement', path: ARROW_REFERENCE_PATH },
+  'movement-both-directions': { kind: 'movement', movement: 'movement-both-directions', path: ARROW_REFERENCE_PATH },
+  'end-of-movement': { kind: 'movement', movement: 'end-of-movement', path: ARROW_REFERENCE_PATH },
+  gathering: { kind: 'movement', movement: 'gathering', path: { points: [[2, 16], [26, 16]] } },
+} satisfies Record<MovementId, MovementSpec>);
+
+/**
+ * Der Pfeil als Punktzeichen (ESZ-139): die fertige Spec mit dem Verlauf der Referenz, für
+ * Anwendungen, die einen Pfeil ohne eigenen Verlauf auf die Karte setzen — etwa „Sammeln“ (DV 102
+ * 7.6, BABZ 5.2.6) oder „Sichten, Ordnen, Verteilen“ (DV 102 7.5, BABZ 5.2.4). Es ist eine
+ * gewöhnliche `MovementSpec`: Kanonik, Serialisierung und Zeichnung sind dieselben wie für jeden
+ * Pfeil. Die Rückgabe ist eingefroren.
+ */
+export function referenceMovementSpec(movement: MovementId): MovementSpec {
+  return REFERENCE_MOVEMENTS[movement];
+}
 
 /** Titel und Beschreibung wie bei `drawSymbol`: nur, was der Aufrufer setzt oder die Spec sagt. */
 export interface FreestandingDrawOptions {

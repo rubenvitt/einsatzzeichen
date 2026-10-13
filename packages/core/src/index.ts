@@ -230,6 +230,7 @@ export {
   describeFreestandingSpec,
   drawAnySpec,
   drawFreestanding,
+  referenceMovementSpec,
   type FreestandingDrawOptions,
 } from './draw-freestanding.js';
 export { freestandingRedirect, validateFreestandingSpec } from './validate-freestanding.js';
