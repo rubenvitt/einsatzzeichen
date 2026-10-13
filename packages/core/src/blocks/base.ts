@@ -24,6 +24,7 @@ import { babz, block, measured, notMeasured } from './helpers.js';
  */
 
 const BASE = 'core/src/geometry/base-symbols.ts';
+const CONTAINERS = 'core/src/geometry/container-bodies.ts';
 
 /** Die Quellenangabe, mit der `entry()` ein Kapitel-1-Grundzeichen ausgibt (`SECTIONS`). */
 function sections(line: number, asset: string): string {
@@ -31,7 +32,7 @@ function sections(line: number, asset: string): string {
 }
 
 /**
- * Die 19 Körperformen aus `SYMBOL_KINDS` und die 17 Variantenzweige aus `VARIANT_BODIES`.
+ * Die 27 Körperformen aus `SYMBOL_KINDS` und die 17 Variantenzweige aus `VARIANT_BODIES`.
  *
  * Seit LFH-786 führt das Zonenmodell auch `trailer/foot-band` mit eigenem Profil, seit dem
  * 2. Oktober 2026 zusätzlich die drei Fassungen der Funktionsstelle. Katalog und Zonenmodell
@@ -43,7 +44,7 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'formation',
     'body',
     measured(
-      `${BASE}:279`,
+      `${BASE}:285`,
       `Keine Messangabe am Körper. Rechteck 1/6 bis 31/26 mm. ${sections(902, '1.1_Taktische Formation.svg')}`,
       babz('1.1'),
     ),
@@ -53,8 +54,8 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'person',
     'body',
     measured(
-      `${BASE}:280–289`,
-      `Keine Messangabe am Körper. Gedrehtes Quadrat um (16|16), halbe Diagonale 15 mm (\`PERSON_HALF_SIDE\`, base-symbols.ts:26–27). ${sections(903, '1.2_Person.svg')}`,
+      `${BASE}:286–295`,
+      `Keine Messangabe am Körper. Gedrehtes Quadrat um (16|16), halbe Diagonale 15 mm (\`PERSON_HALF_SIDE\`, base-symbols.ts:32–33). ${sections(903, '1.2_Person.svg')}`,
       babz('1.2'),
     ),
   ),
@@ -63,7 +64,7 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'vehicle-land',
     'body',
     measured(
-      `${BASE}:290–306`,
+      `${BASE}:296–312`,
       '`1.3 Landfahrzeug`: Rechteck mit flacher Doppelkubik als Oberkante, gemessen an der Ebene `Flächige_Fülung`, die hier die Mittellinie verbatim trägt (Hülle 0,9998/5,7499/31,0000/26,0001).',
       babz('1.3'),
     ),
@@ -73,7 +74,7 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'vehicle-air',
     'body',
     measured(
-      `${BASE}:307–323`,
+      `${BASE}:313–329`,
       '`1.4 Luftfahrzeug`: Halbkreis r = 15 um (16|23) über einer waagerechten Sehne. Die Modellwerte treffen die gemessenen Kontrollpunkte auf höchstens 0,0003 mm; am Kennwertartefakt gegatet.',
       babz('1.4'),
     ),
@@ -83,7 +84,7 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'vehicle-water',
     'body',
     measured(
-      `${BASE}:324–339`,
+      `${BASE}:330–345`,
       '`1.5 Wasserfahrzeug`: gespiegelte Bauform von `1.4`, Halbkreis r = 15 um (16|9) unter einer waagerechten Sehne. Nicht zu verwechseln mit dem Rumpf aus E.2.27 bis E.2.31 (`vehicle-water/raised-hull`).',
       babz('1.5'),
     ),
@@ -93,7 +94,7 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'post',
     'body',
     measured(
-      `${BASE}:340`,
+      `${BASE}:346`,
       `Keine Messangabe am Körper. Kreis r = 14 mm um (16|16). ${sections(907, '1.6_Funktionsstelle.svg')}`,
       babz('1.6'),
     ),
@@ -103,8 +104,8 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'building',
     'body',
     measured(
-      `${BASE}:341–353`,
-      `Keine Messangabe am Körper. Geschlossener Polyzug (16|3) (1|10) (1|26) (31|26) (31|10). ${sections(908, '1.7_Gebäude.svg')} Die Traufkante trägt nur die Kapitel-1-Darstellung (\`CHAPTER_ONE_EXTRAS\`, base-symbols.ts:1306–1317).`,
+      `${BASE}:347–359`,
+      `Keine Messangabe am Körper. Geschlossener Polyzug (16|3) (1|10) (1|26) (31|26) (31|10). ${sections(908, '1.7_Gebäude.svg')} Die Traufkante trägt nur die Kapitel-1-Darstellung (\`CHAPTER_ONE_EXTRAS\`, base-symbols.ts:1319–1330).`,
       babz('1.7'),
     ),
   ),
@@ -113,7 +114,7 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'container',
     'body',
     measured(
-      `${BASE}:354`,
+      `${BASE}:360`,
       `Keine Messangabe am Körper. Rechteck 4/4 bis 28/28 mm. ${sections(909, '1.8_Behälter Ressource Raum Funkgerät.svg')}`,
       babz('1.8'),
     ),
@@ -123,7 +124,7 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'area',
     'body',
     measured(
-      `${BASE}:355–366`,
+      `${BASE}:361–372`,
       '`1.9 Gebiet`: Zehneck mit zehn Eckradien aus `AREA_CORNERS` und `AREA_RADII_MM`. Der Pfad trifft die zwanzig gemessenen Tangentenpunkte der Referenz auf höchstens 0,0008 mm.',
       babz('1.9'),
     ),
@@ -133,7 +134,7 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'measure',
     'body',
     measured(
-      `${BASE}:367–384`,
+      `${BASE}:373–390`,
       '`1.10 Maßnahme`: Dreieck mit der Spitze nach unten. Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert; Strich blau, 1 mm, Ecken als Bevel (Fachreview vom 19.09.2026).',
       babz('1.10'),
     ),
@@ -143,7 +144,7 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'hazard',
     'body',
     measured(
-      `${BASE}:385–400`,
+      `${BASE}:391–406`,
       '`1.11 Gefahr`: Dreieck mit der Spitze nach oben, wie `1.10` mit rotem 1-mm-Strich und Bevel-Ecken.',
       babz('1.11'),
     ),
@@ -153,7 +154,7 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'point',
     'body',
     measured(
-      `${BASE}:401–413`,
+      `${BASE}:407–419`,
       `Keine Messangabe am Körper. Geschlossener Polyzug (8|1) (8|22) (16|31) (24|22) (24|1). ${sections(913, '1.12_Konkreter Punkt.svg')}`,
       babz('1.12'),
     ),
@@ -163,7 +164,7 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'event',
     'body',
     measured(
-      `${BASE}:414–442`,
+      `${BASE}:420–448`,
       '`1.13 Ereignis`: offener Polyzug (4|7) → (16|25) → (28|7), paarweise gemittelt aus sechs Umrisspunkten; die Offenheit ist per Strichaufweitung gegatet. Das einzige Grundzeichen ohne Organisationsfarbe.',
       babz('1.13'),
     ),
@@ -173,7 +174,7 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'spontaneous-helper',
     'body',
     measured(
-      `${BASE}:443–479`,
+      `${BASE}:449–485`,
       '`1.14 Spontanhelfer`: vier Kreisbögen um (16|16). Die Datei führt keine Füllebene; Mittellinie aus dem Ringpaar, Mittenabstand und Radius aus dem exakten Umkreis der Segmentendpunkte (d = 6,5066, R = 7,4934).',
       babz('1.14'),
     ),
@@ -183,8 +184,8 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'trailer',
     'body',
     measured(
-      `${BASE}:480–498`,
-      'Anhängerrumpf: Deckkurve von `1.3` waagerecht 0,9-fach um x = 31, gemessene Füllhülle 3,9998/5,7503/31,0000/26,0004 mm; der Füllpfad kommt in 17 der 661 Referenzdateien byteidentisch vor. Die Deichsel ist ein eigenes Primitiv (`EXTRA_PRIMITIVES`, base-symbols.ts:829–842).',
+      `${BASE}:486–504`,
+      'Anhängerrumpf: Deckkurve von `1.3` waagerecht 0,9-fach um x = 31, gemessene Füllhülle 3,9998/5,7503/31,0000/26,0004 mm; der Füllpfad kommt in 17 der 661 Referenzdateien byteidentisch vor. Die Deichsel ist ein eigenes Primitiv (`EXTRA_PRIMITIVES`, base-symbols.ts:837–850).',
       babz('5.1.2.1'),
     ),
   ),
@@ -193,8 +194,8 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'swap-loader-vehicle',
     'body',
     measured(
-      `${BASE}:499–518`,
-      'Rumpf des Wechselladerfahrzeugs `E.2.15`: Deckkurve von `1.3` waagerecht 0,95-fach um x = 31, eigene Sehnenlage 6,0 und Unterkante 24,5; gemessene Füllhülle 2,5001/6,0000/31,0000/24,5004 mm. Der L-Rahmen ist ein eigenes Primitiv (`EXTRA_PRIMITIVES`, base-symbols.ts:843–857).',
+      `${BASE}:505–524`,
+      'Rumpf des Wechselladerfahrzeugs `E.2.15`: Deckkurve von `1.3` waagerecht 0,95-fach um x = 31, eigene Sehnenlage 6,0 und Unterkante 24,5; gemessene Füllhülle 2,5001/6,0000/31,0000/24,5004 mm. Der L-Rahmen ist ein eigenes Primitiv (`EXTRA_PRIMITIVES`, base-symbols.ts:851–865).',
       babz('E.2.15'),
     ),
   ),
@@ -203,7 +204,7 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'upright-rectangle',
     'body',
     measured(
-      `${BASE}:519–538`,
+      `${BASE}:525–544`,
       'Hochkantes Rechteck 26 × 28 mm von `E.2.26`, Mittellinie 3/2 bis 29/30 mm, gemessen aus dem Ringpaar der Strichebene und unabhängig bestätigt durch die Füllfläche.',
       babz('E.2.26'),
     ),
@@ -213,7 +214,7 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'circle-12',
     'body',
     measured(
-      `${BASE}:539–552`,
+      `${BASE}:545–558`,
       'Eigenständiger Kreiskörper der 17 Zeichen F.3.1 bis F.3.14 und F.3.17 bis F.3.19: Ringpaar außen r = 12,25, innen r = 11,75 mm um (16|16), Mittellinie r = 12 mm.',
       babz('F.3.1–F.3.14', 'F.3.17–F.3.19'),
     ),
@@ -223,9 +224,91 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'reduced-house',
     'body',
     measured(
-      `${BASE}:553–569`,
+      `${BASE}:559–575`,
       'Reduzierte Hauskontur aus F.3.15/F.3.16: fünf Eckpunkte als Mittellinie der gemeinsamen Kontur; die Dachschrägen treffen die Wände bei y 9,85 (Fachreview vom 19.09.2026).',
       babz('F.3.15', 'F.3.16'),
+    ),
+  ),
+
+  // Die acht Behälterformen aus Kapitel 5.1 (ESZ-117), in `CONTAINER_BODIES`.
+  block(
+    'base-symbol',
+    'roll-off-loader',
+    'body',
+    measured(
+      `${CONTAINERS}:160–173`,
+      'Abrollbehälter auf dem Wechselladerrahmen: Füllkörper x 4…31, Unterkante 25,0, Sehne beidseits 6,0, Scheitel (17,5|8,0), eigene symmetrische Deckkurve (Kontrollpunkte 28/7 und 23/8). L-Rahmen und Öse sind eigene Primitive (`CONTAINER_EXTRAS`).',
+      babz('5.1.1.8'),
+    ),
+  ),
+  block(
+    'base-symbol',
+    'swap-container-carrier',
+    'body',
+    measured(
+      `${CONTAINERS}:174–178`,
+      'Wechselbehälter auf dem Wechselladerrahmen: Füllrechteck 3/8 bis 31/25 mm. L-Rahmen und die beiden Eckbeschläge (r 1,8) sind eigene Primitive (`CONTAINER_EXTRAS`).',
+      babz('5.1.1.9'),
+    ),
+  ),
+  block(
+    'base-symbol',
+    'roll-off-trailer',
+    'body',
+    measured(
+      `${CONTAINERS}:179–191`,
+      'Abrollbehälter auf dem Anhängerrahmen: Füllkörper x 7…31, Unterkante 24,0, Sehne beidseits 6,0, Scheitel (19|8). Rahmen, Deichsel und Öse sind eigene Primitive (`CONTAINER_EXTRAS`).',
+      babz('5.1.2.2'),
+    ),
+  ),
+  block(
+    'base-symbol',
+    'swap-container-trailer',
+    'body',
+    measured(
+      `${CONTAINERS}:192–196`,
+      'Wechselbehälter auf dem Anhängerrahmen: Füllrechteck 6/8 bis 31/24 mm. Rahmen, Deichsel und die beiden Eckbeschläge (r 2,0) sind eigene Primitive (`CONTAINER_EXTRAS`).',
+      babz('5.1.2.3'),
+    ),
+  ),
+  block(
+    'base-symbol',
+    'roll-off-container',
+    'body',
+    measured(
+      `${CONTAINERS}:197–209`,
+      'Abrollbehälter: Füllkörper x 4…31, Unterkante 26,0; rechte Hälfte die Deckkurve des Anhängers, linke Hälfte endet an der Öse auf 6,0. Die Öse (Ring r 2 um (4|8)) ist ein eigenes Primitiv (`CONTAINER_EXTRAS`).',
+      babz('5.1.3.1'),
+    ),
+  ),
+  block(
+    'base-symbol',
+    'swap-container',
+    'body',
+    measured(
+      `${CONTAINERS}:210–211`,
+      'Wechselbehälter: Füllrechteck 1/8 bis 31/26 mm. Die beiden Eckbeschläge (r 1,8 um (2,8|8) und (29,2|8)) sind eigene Primitive (`CONTAINER_EXTRAS`).',
+      babz('5.1.3.2'),
+    ),
+  ),
+  block(
+    'base-symbol',
+    'swap-body',
+    'body',
+    measured(
+      `${CONTAINERS}:212–213`,
+      'Wechselbrücke: Füllrechteck 1/8 bis 31/26 mm. Die beiden Stützbeine (x 6 und 26 bis y 29) sind eigene Primitive (`CONTAINER_EXTRAS`).',
+      babz('5.1.3.3'),
+    ),
+  ),
+  block(
+    'base-symbol',
+    'wheeled-container',
+    'body',
+    measured(
+      `${CONTAINERS}:214–224`,
+      'Behälter, zieh- und schiebbar: Füllkörper x 9…23, Unterkante 26,0, Sehne 6,0, Scheitel (16|8). Öse rechts und zwei Rollen (r 2,25 um (13,25|28,25) und (18,75|28,25)) sind eigene Primitive (`CONTAINER_EXTRAS`).',
+      babz('5.1.3.4'),
     ),
   ),
 
@@ -235,8 +318,8 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'person/compact-person-diamond-26mm',
     'body',
     measured(
-      `${BASE}:697–706`,
-      `${UNDOCUMENTED_AT_SOURCE}gedrehtes Quadrat um (16|16). Die halbe Seitenlänge nennt die „I.5-Raute bei 13 mm halber Diagonale" (\`COMPACT_PERSON_HALF_SIDE\`, base-symbols.ts:28–29).`,
+      `${BASE}:705–714`,
+      `${UNDOCUMENTED_AT_SOURCE}gedrehtes Quadrat um (16|16). Die halbe Seitenlänge nennt die „I.5-Raute bei 13 mm halber Diagonale" (\`COMPACT_PERSON_HALF_SIDE\`, base-symbols.ts:34–35).`,
       babz('I.5'),
     ),
   ),
@@ -245,8 +328,8 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'person/compact-person-diamond-26mm-lowered-2mm',
     'body',
     measured(
-      `${BASE}:707–716`,
-      `${UNDOCUMENTED_AT_SOURCE}dieselbe I.5-Raute wie \`compact-person-diamond-26mm\`, Mittelpunkt (16|18) statt (16|16) (\`COMPACT_PERSON_HALF_SIDE\`, base-symbols.ts:28–29).`,
+      `${BASE}:715–724`,
+      `${UNDOCUMENTED_AT_SOURCE}dieselbe I.5-Raute wie \`compact-person-diamond-26mm\`, Mittelpunkt (16|18) statt (16|16) (\`COMPACT_PERSON_HALF_SIDE\`, base-symbols.ts:34–35).`,
       babz('I.5'),
     ),
   ),
@@ -255,8 +338,8 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'formation/foot-band',
     'body',
     measured(
-      `${BASE}:719`,
-      `${UNDOCUMENTED_AT_SOURCE}Körper gleich \`formation\`; eigen ist das schwarze 3-mm-Fußband (\`VARIANT_EXTRA_PRIMITIVES\`, base-symbols.ts:576–586).`,
+      `${BASE}:727`,
+      `${UNDOCUMENTED_AT_SOURCE}Körper gleich \`formation\`; eigen ist das schwarze 3-mm-Fußband (\`VARIANT_EXTRA_PRIMITIVES\`, base-symbols.ts:584–594).`,
     ),
   ),
   block(
@@ -264,8 +347,8 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'trailer/foot-band',
     'body',
     measured(
-      `${BASE}:722`,
-      `${UNDOCUMENTED_AT_SOURCE}Körper ist \`BODIES.trailer\`; eigen ist das Fußband 4/23, 27 × 3 mm (\`VARIANT_EXTRA_PRIMITIVES\`, base-symbols.ts:640–645). Das Zonenmodell führt diesen Zweig nicht.`,
+      `${BASE}:730`,
+      `${UNDOCUMENTED_AT_SOURCE}Körper ist \`BODIES.trailer\`; eigen ist das Fußband 4/23, 27 × 3 mm (\`VARIANT_EXTRA_PRIMITIVES\`, base-symbols.ts:648–653). Das Zonenmodell führt diesen Zweig nicht.`,
     ),
   ),
   block(
@@ -273,8 +356,8 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'vehicle-water/raised-hull',
     'body',
     measured(
-      `${BASE}:725–730`,
-      'Rumpf der fünf Wasserfahrzeuge `E.2.27` bis `E.2.31`: gegenüber `1.5` um 1,0002 mm angehoben und um den Faktor 0,999318 verkleinert; größte Abweichung der erzeugten Stützpunkte von den gemessenen 0,0002 mm (Kommentar an `VARIANT_BODIES`, base-symbols.ts:671–694).',
+      `${BASE}:733–738`,
+      'Rumpf der fünf Wasserfahrzeuge `E.2.27` bis `E.2.31`: gegenüber `1.5` um 1,0002 mm angehoben und um den Faktor 0,999318 verkleinert; größte Abweichung der erzeugten Stützpunkte von den gemessenen 0,0002 mm (Kommentar an `VARIANT_BODIES`, base-symbols.ts:679–702).',
       babz('E.2.27–E.2.31'),
     ),
   ),
@@ -283,8 +366,8 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'vehicle-water/inset-hull',
     'body',
     measured(
-      `${BASE}:731–736`,
-      `${UNDOCUMENTED_AT_SOURCE}Halbkreis wie \`raised-hull\`, Sehne 9,0001. Der Kommentar an \`VARIANT_BODIES\` (base-symbols.ts:690–693) nennt für I.3 diese Sehnenlage, ordnet sie aber nicht dieser Variante zu.`,
+      `${BASE}:739–744`,
+      `${UNDOCUMENTED_AT_SOURCE}Halbkreis wie \`raised-hull\`, Sehne 9,0001. Der Kommentar an \`VARIANT_BODIES\` (base-symbols.ts:698–701) nennt für I.3 diese Sehnenlage, ordnet sie aber nicht dieser Variante zu.`,
     ),
   ),
   block(
@@ -292,8 +375,8 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'vehicle-air/raised-hull',
     'body',
     measured(
-      `${BASE}:739–744`,
-      `${UNDOCUMENTED_AT_SOURCE}Halbkreis über der Sehne 20,9898; die Keile unter dem Rumpf stehen in \`VARIANT_EXTRA_PRIMITIVES\` (base-symbols.ts:589–600).`,
+      `${BASE}:747–752`,
+      `${UNDOCUMENTED_AT_SOURCE}Halbkreis über der Sehne 20,9898; die Keile unter dem Rumpf stehen in \`VARIANT_EXTRA_PRIMITIVES\` (base-symbols.ts:597–608).`,
     ),
   ),
   block(
@@ -301,8 +384,8 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'vehicle-air/fixed-wing-hull',
     'body',
     measured(
-      `${BASE}:745–750`,
-      `${UNDOCUMENTED_AT_SOURCE}Körper gleich \`vehicle-air/raised-hull\`; eigen sind die Flügelformen in \`VARIANT_EXTRA_PRIMITIVES\` (base-symbols.ts:601–614).`,
+      `${BASE}:753–758`,
+      `${UNDOCUMENTED_AT_SOURCE}Körper gleich \`vehicle-air/raised-hull\`; eigen sind die Flügelformen in \`VARIANT_EXTRA_PRIMITIVES\` (base-symbols.ts:609–622).`,
     ),
   ),
   block(
@@ -310,8 +393,8 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'vehicle-land/foot-band',
     'body',
     measured(
-      `${BASE}:753`,
-      `${UNDOCUMENTED_AT_SOURCE}Körper ist \`BODIES['vehicle-land']\`; eigen ist das schwarze 3-mm-Fußband (\`VARIANT_EXTRA_PRIMITIVES\`, base-symbols.ts:617–627).`,
+      `${BASE}:761`,
+      `${UNDOCUMENTED_AT_SOURCE}Körper ist \`BODIES['vehicle-land']\`; eigen ist das schwarze 3-mm-Fußband (\`VARIANT_EXTRA_PRIMITIVES\`, base-symbols.ts:625–635).`,
     ),
   ),
   block(
@@ -319,8 +402,8 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'vehicle-land/plain-wheel-pair',
     'body',
     measured(
-      `${BASE}:754`,
-      `${UNDOCUMENTED_AT_SOURCE}Körper ist \`BODIES['vehicle-land']\`; eigen sind die zwei Radringe (\`VARIANT_EXTRA_PRIMITIVES\`, base-symbols.ts:628–637). Offen ist LFH-597, die zwei oberen Grundlinien dieser Fassung (core/src/layout/zones.ts:1130–1137). Das betrifft die Beschriftung und nicht diese Zeichnung, und das Register wählt keine der beiden Zahlen.`,
+      `${BASE}:762`,
+      `${UNDOCUMENTED_AT_SOURCE}Körper ist \`BODIES['vehicle-land']\`; eigen sind die zwei Radringe (\`VARIANT_EXTRA_PRIMITIVES\`, base-symbols.ts:636–645). Offen ist LFH-597, die zwei oberen Grundlinien dieser Fassung (core/src/layout/zones.ts:1155–1162). Das betrifft die Beschriftung und nicht diese Zeichnung, und das Register wählt keine der beiden Zahlen.`,
     ),
   ),
   block(
@@ -328,7 +411,7 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'vehicle-land/inverted-hull-track',
     'body',
     measured(
-      `${BASE}:755–760`,
+      `${BASE}:763–768`,
       `${UNDOCUMENTED_AT_SOURCE}Rechteck mit nach oben gewölbter Unterkante, Pfad als Literal.`,
     ),
   ),
@@ -337,8 +420,8 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'circle-12/foot-band',
     'body',
     measured(
-      `${BASE}:763`,
-      `${UNDOCUMENTED_AT_SOURCE}Körper ist \`BODIES['circle-12']\`; eigen ist das Kreissegment als Fußband (\`VARIANT_EXTRA_PRIMITIVES\`, base-symbols.ts:648–657).`,
+      `${BASE}:771`,
+      `${UNDOCUMENTED_AT_SOURCE}Körper ist \`BODIES['circle-12']\`; eigen ist das Kreissegment als Fußband (\`VARIANT_EXTRA_PRIMITIVES\`, base-symbols.ts:656–665).`,
     ),
   ),
   block(
@@ -346,8 +429,8 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'circle-12/raised-gable',
     'body',
     measured(
-      `${BASE}:764–777`,
-      'F.3.5/F.3.14: derselbe 12-mm-Kreis, zwei Millimeter abgesenkt. Der separat vermessene Giebel steht in `VARIANT_EXTRA_PRIMITIVES` (base-symbols.ts:658–666). Quellgeometrie identisch mit J.3.2, dessen Katalogfassung `stationBody(17, 11.5)` aber nicht als Vorlage dient.',
+      `${BASE}:772–785`,
+      'F.3.5/F.3.14: derselbe 12-mm-Kreis, zwei Millimeter abgesenkt. Der separat vermessene Giebel steht in `VARIANT_EXTRA_PRIMITIVES` (base-symbols.ts:666–674). Quellgeometrie identisch mit J.3.2, dessen Katalogfassung `stationBody(17, 11.5)` aber nicht als Vorlage dient.',
       babz('F.3.5', 'F.3.14'),
     ),
   ),
@@ -356,7 +439,7 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'circle-12/raised-circle-1mm',
     'body',
     measured(
-      `${BASE}:778–785`,
+      `${BASE}:786–793`,
       `${UNDOCUMENTED_AT_SOURCE}12-mm-Kreis mit Mittelpunkt (16|15), also 1 mm angehoben.`,
     ),
   ),
@@ -367,7 +450,7 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'post/raised-gable',
     'body',
     measured(
-      `${BASE}:789`,
+      `${BASE}:797`,
       'Abgeleitet von F.3.5: Mit Giebel bleibt unter dem Scheitel y 1 und über der Unterkante 30 genau der abgesenkte 12-mm-Kreis (16|18) r 12; der 14-mm-Kreis wird auf diese Fassung verkleinert (`POST_VARIANT_BODIES`, derive/circle.ts).',
       babz('F.3.5'),
     ),
@@ -377,7 +460,7 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'post/raised-circle-1mm',
     'body',
     measured(
-      `${BASE}:790`,
+      `${BASE}:798`,
       'Abgeleitet von N.2.3: Oberkante 1 (1 mm über der Funktionsstelle), Unterkante 27 wie am angehobenen 12-mm-Kreis, damit die Oberflächenläufe auf Grundlinie 31 Platz finden; (16|14) r 13 (`POST_VARIANT_BODIES`, derive/circle.ts).',
       babz('N.2.3'),
     ),
@@ -387,7 +470,7 @@ export const BASE_SYMBOL_BLOCKS: readonly BlockEntry[] = Object.freeze([
     'post/foot-band',
     'body',
     measured(
-      `${BASE}:791`,
+      `${BASE}:799`,
       'Abgeleitet von G.3.x: Kreis der Funktionsstelle unverändert, Fußband als Segment unter der Sehne 4 mm über der Unterkante (`POST_VARIANT_EXTRAS`, derive/circle.ts).',
       babz('G.3.1', 'G.3.5'),
     ),

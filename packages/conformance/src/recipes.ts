@@ -31,6 +31,7 @@ import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
 import { ANHANG_I_RECIPES } from './recipes-anhang-i.js';
 import { ANHANG_C_2_RECIPES } from './recipes-anhang-c.js';
+import { KAPITEL_5_1_RECIPES } from './recipes-kapitel-5-1.js';
 
 /**
  * Zeichnet eine Spec mit der Standardbelegung aus `core`. Bleibt als dünne Hülle um `drawSymbol()`
@@ -104,6 +105,7 @@ export const RECIPES = {
   ...ANHANG_N_RECIPES,
   ...ANHANG_H_RECIPES,
   ...ANHANG_C_2_RECIPES,
+  ...KAPITEL_5_1_RECIPES,
   'C.1.1': {
     title: 'Löschstaffel',
     referenceAsset: 'C.1.1_Löschstaffel.svg',

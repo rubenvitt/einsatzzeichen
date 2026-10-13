@@ -13,6 +13,7 @@ import {
   type StateId,
   type WildfireId,
 } from './taxonomy.js';
+import { SPECIAL_FORM_PICTOGRAM_IDS, type SpecialFormPictogramId } from './special-forms.js';
 
 /** Direkte Führungszeichen aus Anhang D, inkrementell je belegtem Teilslice. */
 export const LEADERSHIP_IDS = [
@@ -88,6 +89,7 @@ export type PictogramId =
   | `wildfire.${WildfireId}`
   | `leadership.${LeadershipId}`
   | `water-rescue-personnel.${WaterRescuePersonnelId}`
+  | `special-form.${SpecialFormPictogramId}`
   | `site.${SiteId}`;
 
 /**
@@ -95,7 +97,7 @@ export type PictogramId =
  * Kapitelreihenfolge (LFH-798). Der Wertevorrat der freistehenden Art `pictogram`; ob eine Kennung
  * dort zeichnet, entscheidet die Prüfung (`state.*` und die Leitstelle haben eine eigene Spec).
  * Die Altzeichen aus DV 102 Kapitel 8 (`LEGACY_COMMS_IDS`, ESZ-137) folgen auf Anhang J, die
- * Platzzeichen (`LEGACY_SITE_IDS`, ESZ-139) stehen zuletzt.
+ * Platzzeichen (`LEGACY_SITE_IDS`, ESZ-139) stehen nach den Sonderformen zuletzt.
  */
 export const PICTOGRAM_IDS: readonly PictogramId[] = Object.freeze([
   ...CAPABILITY_IDS.map((id) => `capability.${id}` as const),
@@ -106,6 +108,7 @@ export const PICTOGRAM_IDS: readonly PictogramId[] = Object.freeze([
   ...WILDFIRE_IDS.map((id) => `wildfire.${id}` as const),
   ...LEADERSHIP_IDS.map((id) => `leadership.${id}` as const),
   ...WATER_RESCUE_PERSONNEL_IDS.map((id) => `water-rescue-personnel.${id}` as const),
+  ...SPECIAL_FORM_PICTOGRAM_IDS.map((id) => `special-form.${id}` as const),
   ...LEGACY_SITE_IDS.map((id) => `site.${id}` as const),
 ]);
 

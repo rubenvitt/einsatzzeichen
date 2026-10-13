@@ -9,3 +9,12 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    ignore:
+      # conventional-changelog-conventionalcommits 10 verlangt conventional-changelog-writer@9;
+      # semantic-release 25 bringt über @semantic-release/release-notes-generator aber @8 mit,
+      # und der Release bräche in `generateNotes` („Missing helper"). Die KI-Notizen
+      # (`scripts/release/ki-notizen.mjs`) erzeugen die konventionellen Notizen als Rückfall und
+      # Kopfzeile bei jedem Release. Der Pin fällt, wenn semantic-release seinen Writer auf 9
+      # hebt — dann von Hand. Gleicher Pin wie in rubenvitt/lifeline-hub.
+      - dependency-name: conventional-changelog-conventionalcommits
+        update-types: ["version-update:semver-major"]

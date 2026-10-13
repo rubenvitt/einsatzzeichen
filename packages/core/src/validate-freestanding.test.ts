@@ -166,14 +166,23 @@ describe('Zustand freistehend (LFH-798)', () => {
 describe('Piktogramm freistehend (LFH-798/LFH-834)', () => {
   it('lässt jede Kennung außer state.* und der Leitstelle zu', () => {
     const drawable = PICTOGRAM_IDS.filter((id) => rulesOf({ kind: 'pictogram', pictogram: id }).length === 0);
-    // 192 Kennungen der Baseline, die zwei Altzeichen aus DV 102 Kapitel 8 (ESZ-137) und der
+    // 195 Kennungen der Baseline, die zwei Altzeichen aus DV 102 Kapitel 8 (ESZ-137) und der
     // Sammelplatz für Betroffene aus 10.3.23 (ESZ-139).
-    expect(drawable).toHaveLength(195);
+    expect(drawable).toHaveLength(198);
     expect(drawable).toContain('site.affected-persons-assembly-point');
     expect(drawable).toContain('comms.teleprinter-transmission');
     expect(drawable).toContain('comms.still-image-transmission');
     expect(drawable.some((id) => id.startsWith('state.'))).toBe(false);
-    for (const space of ['capability.', 'comms.', 'damage.', 'wildfire.', 'leadership.', 'water-rescue-personnel.', 'site.']) {
+    for (const space of [
+      'capability.',
+      'comms.',
+      'damage.',
+      'wildfire.',
+      'leadership.',
+      'water-rescue-personnel.',
+      'special-form.',
+      'site.',
+    ]) {
       expect(drawable.some((id) => id.startsWith(space)), space).toBe(true);
     }
   });

@@ -7,6 +7,14 @@
 export const VERBATIM_TABLE: ReadonlyArray<
   readonly [specKey: string, fixture: string, referenceAsset: string]
 > = [
+  ["{\"kind\":\"roll-off-loader\",\"vehicleCategory\":\"kfz-kategorie-1\"}","5.1.1.8","5.1.1.8_Kraftfahrzeug_straßenfähig_Wechsellader.svg"],
+  ["{\"kind\":\"swap-container-carrier\",\"vehicleCategory\":\"kfz-kategorie-1\"}","5.1.1.9","5.1.1.9_Kraftfahrzeug_straßenfähig_Wechselbehälter.svg"],
+  ["{\"kind\":\"roll-off-trailer\"}","5.1.2.2","5.1.2.2_Anhänger_Abrollbehälter.svg"],
+  ["{\"kind\":\"swap-container-trailer\"}","5.1.2.3","5.1.2.3_Anhänger_Wechselbehälter.svg"],
+  ["{\"kind\":\"roll-off-container\"}","5.1.3.1","5.1.3.1_Abrollbehälter.svg"],
+  ["{\"kind\":\"swap-container\"}","5.1.3.2","5.1.3.2_Wechselbehälter.svg"],
+  ["{\"kind\":\"swap-body\"}","5.1.3.3","5.1.3.3_Wechselbrücke.svg"],
+  ["{\"kind\":\"wheeled-container\"}","5.1.3.4","5.1.3.4_Zieh- und schiebbar.svg"],
   ["{\"bodyMarks\":[\"fire-fighting\"],\"kind\":\"formation\",\"organization\":\"feuerwehr\",\"strength\":\"staffel\"}","C.1.1","C.1.1_Löschstaffel.svg"],
   ["{\"bodyMarks\":[\"fire-fighting\"],\"kind\":\"formation\",\"organization\":\"feuerwehr\",\"strength\":\"gruppe\"}","C.1.2","C.1.2_Löschgruppe.svg"],
   ["{\"bodyMarks\":[\"fire-fighting\"],\"kind\":\"formation\",\"organization\":\"feuerwehr\",\"strength\":\"zug\"}","C.1.3","C.1.3_Löschzug einer Feuerwehr.svg"],

@@ -25,11 +25,15 @@ const MEASURED_CHASSIS_KINDS: ReadonlySet<SymbolKind> = new Set<SymbolKind>([
   'vehicle-land',
   'trailer',
   'swap-loader-vehicle',
+  // 5.1.1.8 und 5.1.1.9: Räder der Kategorie 1 auf Zonenoberkante 26,0 unter dem L-Rahmen
+  // (ESZ-117). Die Anhängerträger 5.1.2.2/5.1.2.3 zeigen kein Rad und bleiben übertragen.
+  'roll-off-loader',
+  'swap-container-carrier',
 ]);
 
 /**
  * Meldet die Fahrwerkszone an einer Körperform ohne vermessenes Fahrwerk als übertragen. An den
- * drei vermessenen Körperformen bleibt die Zeichnung ohne Notiz.
+ * vermessenen Körperformen bleibt die Zeichnung ohne Notiz.
  */
 export function noteChassisDerivation(kind: SymbolKind, variant: BodyVariantId | undefined): void {
   if (MEASURED_CHASSIS_KINDS.has(kind)) return;

@@ -46,6 +46,14 @@ export const SYMBOL_KINDS: readonly SymbolKind[] = keysOf<SymbolKind>({
   'upright-rectangle': true,
   'circle-12': true,
   'reduced-house': true,
+  'roll-off-loader': true,
+  'swap-container-carrier': true,
+  'roll-off-trailer': true,
+  'swap-container-trailer': true,
+  'roll-off-container': true,
+  'swap-container': true,
+  'swap-body': true,
+  'wheeled-container': true,
 });
 
 export const BODY_VARIANT_IDS: readonly BodyVariantId[] = keysOf<BodyVariantId>({

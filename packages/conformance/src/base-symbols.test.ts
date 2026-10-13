@@ -719,6 +719,8 @@ describe('Körpervarianten des Anhangs I.5', () => {
       'formation', 'vehicle-land', 'vehicle-air', 'vehicle-water', 'post', 'building',
       'container', 'area', 'measure', 'hazard', 'point', 'event', 'spontaneous-helper',
       'trailer', 'swap-loader-vehicle', 'upright-rectangle', 'circle-12', 'reduced-house',
+      'roll-off-loader', 'swap-container-carrier', 'roll-off-trailer', 'swap-container-trailer',
+      'roll-off-container', 'swap-container', 'swap-body', 'wheeled-container',
     ];
 
     for (const variant of [compactPersonDiamond, loweredCompactPersonDiamond]) {
@@ -726,6 +728,61 @@ describe('Körpervarianten des Anhangs I.5', () => {
         expect(() => baseDrawing(kind, variant), `${kind}/${variant}`).toThrow(/Körpervariante/);
       }
     }
+  });
+});
+
+/**
+ * Die acht Behälterzeichen aus Kapitel 5.1 (ESZ-117). Anders als die E.2-Formen haben sie je
+ * einen eigenen Abschnitt, stehen aber wie der Anhängerrumpf nicht in `BASE_SYMBOLS` (dem Register
+ * des Kapitels 1). Der Körper ist gegen die eigene Belegdatei gegatet; die Zusatzgeometrie
+ * (`role: 'bodyExtra'`) erreicht `matchFingerprint` nicht und ist deshalb hier an den
+ * vermessenen Mittellinien festgehalten.
+ */
+describe('Körperformen des Kapitels 5.1 (ESZ-117)', () => {
+  const CONTAINERS = [
+    ['roll-off-loader', '5.1.1.8_Kraftfahrzeug_straßenfähig_Wechsellader.svg'],
+    ['swap-container-carrier', '5.1.1.9_Kraftfahrzeug_straßenfähig_Wechselbehälter.svg'],
+    ['roll-off-trailer', '5.1.2.2_Anhänger_Abrollbehälter.svg'],
+    ['swap-container-trailer', '5.1.2.3_Anhänger_Wechselbehälter.svg'],
+    ['roll-off-container', '5.1.3.1_Abrollbehälter.svg'],
+    ['swap-container', '5.1.3.2_Wechselbehälter.svg'],
+    ['swap-body', '5.1.3.3_Wechselbrücke.svg'],
+    ['wheeled-container', '5.1.3.4_Zieh- und schiebbar.svg'],
+  ] as const satisfies ReadonlyArray<[SymbolKind, string]>;
+
+  it.each(CONTAINERS)('trifft die Referenzgeometrie von %s', (kind, asset) => {
+    const result = matchFingerprint(baseDrawing(kind), fingerprintFor(asset));
+    expect(result.problems).toEqual([]);
+    expect(result.ok).toBe(true);
+  });
+
+  it.each(CONTAINERS)('nennt für %s den eigenen Abschnitt als Quelle', (kind, asset) => {
+    const section = asset.slice(0, asset.indexOf('_'));
+    expect(baseDrawing(kind).description).toContain(`BABZ-Abschnitt ${section}`);
+  });
+
+  /**
+   * Mittellinienhülle jedes Zusatzteils, in Zeichenreihenfolge: L-Rahmen bzw. Anhängerrahmen,
+   * Deichsel, Ösen (Ring r 2 um y 8), Eckbeschläge (r 1,8 bzw. 2,0 über y 8), Stützbeine und Rollen.
+   */
+  const EXTRAS: Record<(typeof CONTAINERS)[number][0], ReadonlyArray<readonly [number, number, number, number]>> = {
+    'roll-off-loader': [[1, 6, 31.25, 26], [2, 6, 4, 10]],
+    'swap-container-carrier': [[1, 6, 31.25, 26], [3, 6.2, 6.6, 8], [27.4, 6.2, 31, 8]],
+    'roll-off-trailer': [[4, 6, 31, 26], [1, 14.5, 4, 15.5], [5, 6, 7, 10]],
+    'swap-container-trailer': [[4, 6, 31, 26], [1, 14.5, 4, 15.5], [6, 6, 10, 8], [27, 6, 31, 8]],
+    'roll-off-container': [[2, 6, 4, 10]],
+    'swap-container': [[1, 6.2, 4.6, 8], [27.4, 6.2, 31, 8]],
+    'swap-body': [[6, 26, 6, 29], [26, 26, 26, 29]],
+    'wheeled-container': [[23, 6, 25, 10], [11, 26, 15.5, 30.5], [16.5, 26, 21, 30.5]],
+  };
+
+  it.each(CONTAINERS)('hält die Zusatzgeometrie von %s an den vermessenen Zahlen fest', (kind, _asset) => {
+    const extras = baseDrawing(kind).children.filter((child) => child.role === 'bodyExtra');
+    const bounds = extras.map((extra) => {
+      const box = boundsOfMm(extra);
+      return [box.minX, box.minY, box.maxX, box.maxY].map((value) => Number(value.toFixed(3)));
+    });
+    expect(bounds).toEqual(EXTRAS[kind]);
   });
 });
 

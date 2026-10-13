@@ -11,6 +11,7 @@ import type {
   PictogramBox,
   PictogramDefinition,
   Primitive,
+  SpecialFormPictogramId,
   StateId,
   WaterRescuePersonnelId,
   WildfireId,
@@ -31,7 +32,8 @@ export type PictogramSection =
   | `L.${string}`
   | `M.${string}`
   | `D.${string}`
-  | `I.5.${string}`;
+  | `I.5.${string}`
+  | `3.${6 | 7 | 8}`;
 
 export interface PictogramContrastPair {
   readonly foreground: ColorToken;
@@ -272,6 +274,35 @@ export function defineWaterRescuePersonnel(
     section: input.section,
     id: `water-rescue-personnel.${input.id}`,
     variant: input.variant ?? 'primary',
+    title: input.title,
+    referenceAsset: input.referenceAsset,
+    placement: { mode: 'standalone' } as const,
+    contrastPairs: structuredClone(input.contrastPairs),
+    viewBox: DEFAULT_VIEWBOX_MM,
+    box: structuredClone(input.box),
+    primitives: structuredClone(input.primitives),
+  });
+}
+
+/**
+ * Die Sonderformen 3.6 bis 3.8 als Einzelpiktogramm (ESZ-134). Die Primitive kommen aus
+ * `special-form-bodies.ts`; der Raum hält sie nur unter einer Piktogrammkennung bereit.
+ */
+export interface SpecialFormDefinitionInput {
+  readonly section: `3.${6 | 7 | 8}`;
+  readonly id: SpecialFormPictogramId;
+  readonly title: string;
+  readonly referenceAsset: `${string}.svg`;
+  readonly box: PictogramBox;
+  readonly primitives: readonly Primitive[];
+  readonly contrastPairs: readonly [PictogramContrastPair, ...PictogramContrastPair[]];
+}
+
+export function defineSpecialForm(input: SpecialFormDefinitionInput): CatalogPictogramDefinition {
+  return deepFreeze({
+    section: input.section,
+    id: `special-form.${input.id}`,
+    variant: 'primary',
     title: input.title,
     referenceAsset: input.referenceAsset,
     placement: { mode: 'standalone' } as const,

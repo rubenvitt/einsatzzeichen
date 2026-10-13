@@ -12,6 +12,7 @@ import { DAMAGE_PICTOGRAMS } from './damage/index.js';
 import { WILDFIRE_PICTOGRAMS } from './wildfire/index.js';
 import { LEADERSHIP_PICTOGRAMS } from './leadership/index.js';
 import { WATER_RESCUE_PERSONNEL_PICTOGRAMS } from './water-rescue-personnel/index.js';
+import { SPECIAL_FORM_PICTOGRAMS } from './special-forms/index.js';
 import { LEGACY_SITES } from './sites/index.js';
 import type {
   CatalogPictogramDefinition,
@@ -41,6 +42,7 @@ export const ALL_PICTOGRAMS: readonly CatalogPictogramDefinition[] = deepFreeze(
   ...WILDFIRE_PICTOGRAMS,
   ...LEADERSHIP_PICTOGRAMS,
   ...WATER_RESCUE_PERSONNEL_PICTOGRAMS,
+  ...SPECIAL_FORM_PICTOGRAMS,
 ]);
 
 /**
@@ -58,6 +60,7 @@ export { DAMAGE_PICTOGRAMS } from './damage/index.js';
 export { WILDFIRE_PICTOGRAMS } from './wildfire/index.js';
 export { LEADERSHIP_PICTOGRAMS } from './leadership/index.js';
 export { WATER_RESCUE_PERSONNEL_PICTOGRAMS } from './water-rescue-personnel/index.js';
+export { SPECIAL_FORM_PICTOGRAMS } from './special-forms/index.js';
 
 export function buildPictogramRegistry<Definition extends RegisteredPictogramDefinition>(
   definitions: readonly Definition[],

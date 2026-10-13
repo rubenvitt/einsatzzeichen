@@ -98,7 +98,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 582 Zeilen mit 288 Elementdarstellungen', () => {
+  it('enthält exakt 593 Zeilen mit 291 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -108,7 +108,8 @@ describe('Coverage-Manifest', () => {
         entry.implementation.startsWith('damage.') ||
         entry.implementation.startsWith('wildfire.') ||
         entry.implementation.startsWith('leadership.') ||
-        entry.implementation.startsWith('water-rescue-personnel.'),
+        entry.implementation.startsWith('water-rescue-personnel.') ||
+        entry.implementation.startsWith('special-form.'),
     );
     const counts = COVERAGE_MANIFEST.entries.reduce<Record<string, number>>((acc, e) => {
       acc[e.coverage] = (acc[e.coverage] ?? 0) + 1;
@@ -133,17 +134,19 @@ describe('Coverage-Manifest', () => {
       // Anhang D ergänzt 26 neue Rezepte; D.3.7 bleibt eine Migration desselben Schlüssels.
       // LFH-786 ergänzt 37 aus Anhang C: C.1.7, C.1.8 und 35 Darstellungen aus C.2 (25
       // Hauptdarstellungen und zehn Alternativen), 242 + 37 = 279. LFH-787 ergänzt C.1.4: 280.
-      'composition-recipe': 280,
-      // 269 Piktogramme plus acht Manifest-Organisationen, vier
+      // ESZ-117 ergänzt die acht Behälterzeichen aus Kapitel 5.1: 288.
+      'composition-recipe': 288,
+      // 272 Piktogramme (seit ESZ-134 mit den Sonderformen 3.6 bis 3.8) plus acht
+      // Manifest-Organisationen, vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
       // Anhängerfahrwerke aus 5.1.2.4/5.1.2.5, die der Teilslice E.2 vermessen hat.
       // `amphibienfahrzeug` hat weiterhin keinen Eintrag, weil seine Wellenlinie nur als
       // Strichhülle vermessen ist.
-      element: 288,
+      element: 291,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(582);
-    expect(elementRows).toHaveLength(288);
-    expect(pictogramRows).toHaveLength(269);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(593);
+    expect(elementRows).toHaveLength(291);
+    expect(pictogramRows).toHaveLength(272);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
   });
 
@@ -680,7 +683,7 @@ describe('Coverage-Manifest', () => {
       }
       expect(entry.review.technical.reviewer).toBe('rv');
       // Für die Rolle `domain` gilt hier dieselbe Zusage wie überall: das Review ist vorhanden
-      // (die Rolle fehlt an keiner der 582 Zeilen) und, falls entschieden, zurechenbar.
+      // (die Rolle fehlt an keiner der 585 Zeilen) und, falls entschieden, zurechenbar.
       erwarteZurechenbaresFachreview(entry.review, entryKey(entry.sourceId, entry.variant));
     }
   });
@@ -963,12 +966,19 @@ describe('Coverage-Manifest', () => {
     expect(COVERAGE_MANIFEST.scope).toEqual([
       '1',
       '2',
+      // Kapitel 3 nur mit den Sonderformen, die als Einzelpiktogramm zeichnen (ESZ-134).
+      '3.6',
+      '3.7',
+      '3.8',
       '4',
       // `5.1.1` und nicht `5.1`: von Kapitel 5.1 sind allein die Fahrzeugkategorien aus 5.1.1
-      // umgesetzt, und auch dort nicht alle — 5.1.1.4 (Amphibienfahrzeug), 5.1.1.7 bis 5.1.1.9
-      // fehlen. `5.1` bestünde `uncoveredScope` trotzdem, weil jede 5.1.1.x-Zeile mit `5.1.`
-      // beginnt.
+      // umgesetzt, und auch dort nicht alle — 5.1.1.4 (Amphibienfahrzeug) und 5.1.1.7 fehlen.
+      // `5.1` bestünde `uncoveredScope` trotzdem, weil jede 5.1.1.x-Zeile mit `5.1.` beginnt.
       '5.1.1',
+      // ESZ-117: Behälter (5.1.3 vollständig) und die beiden Anhänger mit Behälter.
+      '5.1.2.2',
+      '5.1.2.3',
+      '5.1.3',
       '5.4',
       '5.8',
       'C.1.1',
@@ -1109,7 +1119,7 @@ describe('Manifest-Einträge für Piktogramme', () => {
       .filter((entry) => definitionKeys.has(entryKey(entry.implementation, entry.variant)))
       .map((entry) => entryKey(entry.implementation, entry.variant))
       .sort();
-    expect(rows).toHaveLength(269);
+    expect(rows).toHaveLength(272);
     expect(rows).toEqual([...definitionKeys].sort());
   });
 
