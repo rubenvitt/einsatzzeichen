@@ -45,6 +45,10 @@ Einfeldkombinationen (jede Art × Variante mit genau einem weiteren Feld) zeichn
   „nicht nähern“ entfällt.
 - **Kreis mit Kopfzone:** Das gemessene Negativ (109 × 36 Dateien, Schnittmenge leer) bleibt als
   Befund stehen. Gezeichnet wird trotzdem, abgeleitet.
+- **Stelle mit Fachaufgabe ohne Hilfsorganisation (ESZ-115):** Eine UHS oder Betreuungsstelle
+  der Feuerwehr oder ohne festgelegte Organisation trägt Arzt, Sanität und Betreuung wie F.3.3
+  und F.3.4, nur mit anderer Füllung. An der Funktionsstelle (`post`) wird die Fachdienstfassung
+  vom 12-mm-Kreis übertragen. Festgehalten in `packages/core/src/derive/circle.test.ts`.
 - **Weiße Schrift auf Gelb:** Das ist eine Korrektur nach Quelle, keine Ableitung. Alle 20 gelben
   Referenzen mit Typo setzen Schwarz.
 
