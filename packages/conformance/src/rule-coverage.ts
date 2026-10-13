@@ -19,6 +19,7 @@ import {
   FUNCTION_ROLE_IDS,
   LEADERSHIP_IDS,
   ORGANIZATION_IDS,
+  SPECIAL_FORM_PICTOGRAM_IDS,
   STATE_IDS,
   STRENGTH_IDS,
   SYMBOL_KINDS,
@@ -155,6 +156,8 @@ export function ruleCoverage(
       ids(WATER_RESCUE_PERSONNEL_IDS),
       pictogramValues(pictograms, 'water-rescue-personnel'),
     ),
+    // Seit ESZ-134: die Sonderformen 3.6 bis 3.8 als Einzelpiktogramm.
+    axis('special-form', ids(SPECIAL_FORM_PICTOGRAM_IDS), pictogramValues(pictograms, 'special-form')),
   ]);
 }
 

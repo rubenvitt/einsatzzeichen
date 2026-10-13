@@ -75,8 +75,9 @@ describe('Freistehende Zeichen über die Spec', () => {
   });
 
   it('führt jede Kapiteldatei der übrigen Piktogrammräume als Piktogramm (LFH-834)', () => {
-    // 202 Darstellungen außerhalb von 5.8, ohne die Leitstelle D.2.5: die zeichnet ihr Ort.
-    expect(PICTOGRAM_SPEC_FIXTURES).toHaveLength(201);
+    // 205 Darstellungen außerhalb von 5.8, ohne die Leitstelle D.2.5: die zeichnet ihr Ort.
+    // Seit ESZ-134 mit den Sonderformen 3.6 bis 3.8.
+    expect(PICTOGRAM_SPEC_FIXTURES).toHaveLength(204);
     const perSpace = new Map<string, number>();
     for (const { spec } of PICTOGRAM_SPEC_FIXTURES) {
       if (spec.kind !== 'pictogram') throw new Error('nur Piktogramme erwartet');
@@ -90,6 +91,7 @@ describe('Freistehende Zeichen über die Spec', () => {
       wildfire: 14,
       leadership: 9,
       'water-rescue-personnel': 5,
+      'special-form': 3,
     });
     expect(PICTOGRAM_SPEC_FIXTURES.map(({ asset }) => asset)).not.toContain('D.2.5_Leitstelle.svg');
   });

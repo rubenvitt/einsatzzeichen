@@ -18,11 +18,11 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 571: 14 Grundzeichen, 288 Rezeptfälle und 269 Piktogrammvarianten. Die Anhang-I-Slices
+    // 574: 14 Grundzeichen, 288 Rezeptfälle und 272 Piktogrammvarianten. Die Anhang-I-Slices
     // I.2.4 bis I.2.7 ergänzen den bereits vollständigen I.3-Bestand und I.5.1 bis I.5.3; LFH-786
     // ergänzt 37 Rezeptfälle aus Anhang C (525 + 37), LFH-787 C.1.4, ESZ-117 die acht
-    // Behälterzeichen aus Kapitel 5.1 (571).
-    expect(ids).toHaveLength(571);
+    // Behälterzeichen aus Kapitel 5.1 (571), ESZ-134 die drei Sonderformen (574).
+    expect(ids).toHaveLength(574);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
     // Dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66, G 21, H drei,
@@ -95,7 +95,8 @@ describe('vollständige Renderfallmenge', () => {
         !id.startsWith('damage.') &&
         !id.startsWith('wildfire.') &&
         !id.startsWith('leadership.') &&
-        !id.startsWith('water-rescue-personnel.'),
+        !id.startsWith('water-rescue-personnel.') &&
+        !id.startsWith('special-form.'),
     )).toHaveLength(14);
     expect(new Set(ids).size).toBe(ids.length);
   });

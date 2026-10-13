@@ -166,9 +166,9 @@ describe('Zustand freistehend (LFH-798)', () => {
 describe('Piktogramm freistehend (LFH-798/LFH-834)', () => {
   it('lässt jede Kennung außer state.* und der Leitstelle zu', () => {
     const drawable = PICTOGRAM_IDS.filter((id) => rulesOf({ kind: 'pictogram', pictogram: id }).length === 0);
-    expect(drawable).toHaveLength(192);
+    expect(drawable).toHaveLength(195);
     expect(drawable.some((id) => id.startsWith('state.'))).toBe(false);
-    for (const space of ['capability.', 'comms.', 'damage.', 'wildfire.', 'leadership.', 'water-rescue-personnel.']) {
+    for (const space of ['capability.', 'comms.', 'damage.', 'wildfire.', 'leadership.', 'water-rescue-personnel.', 'special-form.']) {
       expect(drawable.some((id) => id.startsWith(space)), space).toBe(true);
     }
   });

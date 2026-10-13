@@ -2,6 +2,7 @@ import type {
   GrammarEvidence,
   SourceReference,
   SpecialForm,
+  SpecialFormBodyMark,
   SpecialFormId,
   ZoneBinding,
   ZoneBoundsMm,
@@ -140,8 +141,9 @@ function wheelBody(section: '3.7' | '3.8', stems: string): ZoneBinding {
 
 const TWO_WHEELER_ROLE_QUESTION =
   'Die Datei zeigt eine vollständige Form ohne Füllebene und ohne Platzhalter, wie ein Grundzeichen; ' +
-  'kein Original verwendet sie. Ist das Zweirad eine eigene Körperform (dann mit welchen Zonen), ' +
-  'eine Marke — etwa an Stelle des Fahrwerks am Landfahrzeug — oder ein freistehendes Zeichen?';
+  'kein Original verwendet sie. Freistehend steht sie seit ESZ-134 als Piktogramm im Raum ' +
+  '`special-form.*`. Ist das Zweirad darüber hinaus eine eigene Körperform (dann mit welchen Zonen) ' +
+  'oder eine Marke, etwa an Stelle des Fahrwerks am Landfahrzeug?';
 
 export const SPECIAL_FORMS: readonly SpecialForm[] = Object.freeze([
   {
@@ -162,8 +164,9 @@ export const SPECIAL_FORMS: readonly SpecialForm[] = Object.freeze([
       remaining:
         'Die Kapiteldatei heißt „Grundzeichen Drohne" und zeigt den Winkel allein, 24 mm breit mit ' +
         'Endstärke 3 mm. Keine der fünf Verwendungen ist eine Verkleinerung davon, die Marke hat also ' +
-        'kein einheitliches Maß. Ob 3.6 zusätzlich allein stehen darf (als freistehendes Zeichen), ' +
-        'entscheidet der Eigentümer.',
+        'kein einheitliches Maß. Die gebauten Fassungen führt `DRONE_BODY_MARKS`. Allein steht 3.6 ' +
+        'seit ESZ-134 als Piktogramm `special-form.drone`; eine freistehende Verwendung belegt die ' +
+        'Referenz nicht.',
     },
     relatedKind: {
       status: 'proposed',
@@ -298,3 +301,45 @@ export function specialForm(id: SpecialFormId): SpecialForm {
   if (found === undefined) throw new Error(`Keine Sonderform "${id}"`);
   return found;
 }
+
+/**
+ * Die Drohne als Innenzeichen: jede gebaute Fassung eines Originals, mit der Körpermarke, die sie
+ * zeichnet (ESZ-134). Damit ist „Drohne im Körper" als Spec beschreibbar, ohne eine neue Achse in
+ * `SymbolSpec` (Entscheidung vom 10.10.2026, Punkt 4).
+ *
+ * - Nur I.1.20 zeigt den Winkel **allein**. `formation-chevron-top` ist deshalb die Marke für eine
+ *   Drohne in einer beliebigen Formation; an anderen Körpern zeichnet sie abgeleitet.
+ * - F.1.16 zeichnet den Winkel zusammen mit zwei Dreiecken, die I.1.19 ohne Winkel zeigt; die
+ *   Marke sagt also mehr als „Drohne".
+ * - C.2.31 setzt den Winkel über die Löschmarke am Kettenfahrzeug.
+ *
+ * C.1.13 und C.1.14 zeigen die Drohne ebenfalls (Winkel 18 mm breit, `SPECIAL_FORMS`), sind aber
+ * nicht gebaut: im Umfang stehen aus C.1 nur C.1.1 bis C.1.4, C.1.7 und C.1.8.
+ */
+export const DRONE_BODY_MARKS: readonly SpecialFormBodyMark[] = Object.freeze([
+  {
+    form: 'drone',
+    section: 'I.1.20',
+    asset: 'I.1.20_Trupp Drohne.svg',
+    kind: 'formation',
+    bodyMark: 'formation-chevron-top',
+    note: 'Der Winkel allein in der oberen Formationszone, 10,67 mm breit.',
+  },
+  {
+    form: 'drone',
+    section: 'F.1.16',
+    asset: 'F.1.16_Drohnentrupp.svg',
+    kind: 'formation',
+    bodyMark: 'chevron-over-opposed-triangles',
+    note: 'Der Winkel, 16 mm breit, über zwei zur Mitte gerichteten Dreiecken (vgl. I.1.19).',
+  },
+  {
+    form: 'drone',
+    section: 'C.2.31',
+    asset: 'C.2.31_geschützte Löschdrohne.svg',
+    kind: 'vehicle-land',
+    bodyVariant: 'inverted-hull-track',
+    bodyMark: 'track-chevron-top',
+    note: 'Der Winkel, 14 mm breit, über der Löschmarke am Kettenfahrzeug.',
+  },
+] satisfies readonly SpecialFormBodyMark[]);

@@ -272,14 +272,15 @@ describe('echte Mehrgrößen- und Profilregression', () => {
     expect(image.height).toBe(92);
   });
 
-  it('schreibt exakt 572 Mehrgrößen-Snapshots', () => {
+  it('schreibt exakt 575 Mehrgrößen-Snapshots', () => {
     const snapshots = readdirSync(new URL('./__snapshots__/multi-size/', import.meta.url), {
       withFileTypes: true,
     }).filter((entry) => entry.isFile() && entry.name.endsWith('.svg'));
     const names = snapshots.map((entry) => entry.name);
     // 526 bis LFH-786, dazu je ein Mehrgrößen-Snapshot der 37 Anhang-C-Fixtures, C.1.4 und der
-    // acht Behälterzeichen aus Kapitel 5.1 (ESZ-117).
-    expect(snapshots).toHaveLength(572);
+    // acht Behälterzeichen aus Kapitel 5.1 (ESZ-117) und der drei Sonderformen 3.6 bis 3.8
+    // (ESZ-134).
+    expect(snapshots).toHaveLength(575);
     expect(names).toContain('recipe.C.1.3.svg');
     expect(names).toContain('recipe.C.1.8.svg');
     expect(names).toContain('recipe.C.2.31.svg');

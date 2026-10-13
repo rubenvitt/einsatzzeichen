@@ -3,9 +3,10 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { SYMBOL_KINDS, type SpecialFormId, type ZoneMeasure } from '@einsatzzeichen/schema';
+import { drawSymbol } from '../default-ports.js';
 import { boundsOfMm, strokeBoundsOfMm } from '../bounds.js';
 import { specialFormDrawing } from '../geometry/special-form-bodies.js';
-import { SPECIAL_FORMS, specialForm } from './special-forms.js';
+import { DRONE_BODY_MARKS, SPECIAL_FORMS, specialForm } from './special-forms.js';
 import { ZONE_IDS, ZONE_MODEL_FORMS } from './zones.js';
 
 /**
@@ -164,5 +165,33 @@ describe('Sonderformen im Zonenmodell', () => {
     if (drone.status !== 'evidenced') throw new Error('Drohne nicht belegt');
     expect(drone.evidence.map((item) => ('asset' in item ? item.asset.slice(0, 6) : item.definedAt)))
       .toEqual(['C.1.13', 'C.1.14', 'F.1.16', 'I.1.20', 'C.2.31']);
+  });
+});
+
+describe('Die Drohne als Innenzeichen (ESZ-134)', () => {
+  it('führt jede gebaute Fassung, alle unter den Belegen der Rolle „Marke"', () => {
+    expect(DRONE_BODY_MARKS.map((entry) => [entry.section, entry.kind, entry.bodyMark])).toEqual([
+      ['I.1.20', 'formation', 'formation-chevron-top'],
+      ['F.1.16', 'formation', 'chevron-over-opposed-triangles'],
+      ['C.2.31', 'vehicle-land', 'track-chevron-top'],
+    ]);
+    const role = specialForm('drone').role;
+    if (role.status !== 'evidenced') throw new Error('Drohne nicht belegt');
+    const evidenced = role.evidence.flatMap((item) => ('asset' in item ? [item.asset] : []));
+    for (const entry of DRONE_BODY_MARKS) {
+      expect(entry.form).toBe('drone');
+      expect(evidenced, entry.section).toContain(entry.asset);
+      expect(entry.asset.startsWith(`${entry.section}_`), entry.section).toBe(true);
+    }
+  });
+
+  it.each(DRONE_BODY_MARKS)('$section: die Marke allein am belegten Körper zeichnet ohne Ableitung', (entry) => {
+    const drawing = drawSymbol({
+      kind: entry.kind,
+      ...(entry.bodyVariant === undefined ? {} : { bodyVariant: entry.bodyVariant }),
+      bodyMarks: [entry.bodyMark],
+    });
+    expect(drawing.derivations).toBeUndefined();
+    expect(drawing.children.some((primitive) => primitive.role === 'pictogram')).toBe(true);
   });
 });

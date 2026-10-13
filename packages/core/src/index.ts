@@ -75,7 +75,7 @@ export {
   measureCapabilityInset,
   type CapabilityInsetMeasurement,
 } from './blocks/capability-inset-measure.js';
-export { SPECIAL_FORMS, specialForm } from './layout/special-forms.js';
+export { DRONE_BODY_MARKS, SPECIAL_FORMS, specialForm } from './layout/special-forms.js';
 export {
   COMPOSITION_RULE_CATALOG,
   RULE_CATALOG,

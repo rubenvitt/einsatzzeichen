@@ -13,12 +13,12 @@ import { describePictogram } from '../labels.js';
  * (Slice-3-Spec, Abschnitt 7).
  */
 describe('Piktogramm-Snapshots', () => {
-  it('schreibt exakt 269 eigenständige Piktogramm-Snapshots', () => {
+  it('schreibt exakt 272 eigenständige Piktogramm-Snapshots', () => {
     const snapshots = readdirSync(new URL('./__snapshots__/', import.meta.url), {
       withFileTypes: true,
     }).filter((entry) => entry.isFile() && entry.name.endsWith('.svg'));
     const names = snapshots.map((entry) => entry.name);
-    expect(snapshots).toHaveLength(269);
+    expect(snapshots).toHaveLength(272);
     for (const id of [
       'team-leader',
       'group-leader',

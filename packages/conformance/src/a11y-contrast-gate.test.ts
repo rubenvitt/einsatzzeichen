@@ -116,7 +116,7 @@ describe('A11y-Kontrast-Gate über den Katalogbestand', () => {
   });
 
   it('hat echte Piktogramm-Nachbarschaften zu prüfen', () => {
-    expect(ALL_PICTOGRAMS).toHaveLength(269);
+    expect(ALL_PICTOGRAMS).toHaveLength(272);
     expect(requirements().length).toBeGreaterThan(1);
   });
 
