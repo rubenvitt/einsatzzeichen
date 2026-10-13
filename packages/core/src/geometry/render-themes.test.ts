@@ -9,7 +9,7 @@ import {
 } from './render-themes.js';
 
 describe('Render-Theme-Register', () => {
-  it.each(['reference', 'accessible-light', 'print-monochrome'])('%s ist auflösbar', (id) => {
+  it.each(['reference', 'accessible-light', 'print-monochrome', 'dark'])('%s ist auflösbar', (id) => {
     expect(isRenderThemeId(id)).toBe(true);
     if (isRenderThemeId(id)) expect(renderTheme(id).id).toBe(id);
   });
@@ -39,6 +39,7 @@ describe('Render-Theme-Register', () => {
       reference: '#000000',
       'accessible-light': '#000000',
       'print-monochrome': '#ffffff',
+      dark: '#000000',
     });
   });
 
@@ -50,6 +51,7 @@ describe('Render-Theme-Register', () => {
       reference: '#000000',
       'accessible-light': '#000000',
       'print-monochrome': '#ffffff',
+      dark: '#000000',
     });
   });
 

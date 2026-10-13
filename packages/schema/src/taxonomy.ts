@@ -130,7 +130,12 @@ export type AdminLevelId =
  */
 export type UnitGroupingId = 'verband-i' | 'verband-ii' | 'verband-iii';
 
-/** Gemessene Funktionstraeger aus Anhang D.1, D.3 und D.4. */
+/**
+ * Funktionsträger aus Anhang D.1, D.3 und D.4, je mit vermessener Festfassung. Dazu kommt als
+ * letzte Kennung `leader`, die Führungskraft ohne Kürzel (ESZ-116): Raute und schwarze Kappe,
+ * die alle Führungskräfte in D.3 und D.4 tragen, ohne eigenes Original und darum stets
+ * abgeleitet gezeichnet.
+ */
 export const FUNCTION_ROLE_IDS = Object.freeze([
   'disaster-control-command',
   'technical-incident-command-evacuation',
@@ -157,6 +162,7 @@ export const FUNCTION_ROLE_IDS = Object.freeze([
   'hazard-response-director',
   'hazard-response-forces-director',
   'international-relief-operation-director',
+  'leader',
 ] as const);
 
 export type FunctionRoleId = (typeof FUNCTION_ROLE_IDS)[number];

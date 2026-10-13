@@ -67,7 +67,7 @@ describe('ruleCoverage (Fixtures)', () => {
 describe('ruleCoverage (echter Bestand)', () => {
   // Die Zahlen wachsen mit dem Katalog; sie stehen hier, damit eine Erweiterung sichtbar
   // hier ankommt und damit die Ausgabe von `pnpm cli coverage` an einer Stelle belegt ist.
-  it('führt 17 Achsen, davon 12 vollständig; Lücken bei Kopfmarke, Verband, Verwaltungsstufe, Fahrwerk und Körpermarke', () => {
+  it('führt 17 Achsen, davon 11 vollständig; Lücken bei Kopfmarke, Verband, Verwaltungsstufe, Funktionsrolle, Fahrwerk und Körpermarke', () => {
     const axes = ruleCoverage();
     expect(axes.map((axis) => axis.id)).toEqual([
       'kind', 'bodyVariant', 'organization', 'strength', 'technicalHeadMark', 'unitGrouping', 'administrativeLevel',
@@ -85,13 +85,16 @@ describe('ruleCoverage (echter Bestand)', () => {
       // Drei der sechs Verwaltungsstufen haben in Kopfform keine Referenz
       // (`docs/decisions/2026-08-18-grundlagen-restpunkte.md`).
       ['administrativeLevel', ['gemeinde', 'bezirk', 'bundesland']],
+      // Die Führungskraft ohne Kürzel (ESZ-116) hat kein Original; sie ist aus den Rollen von D.3
+      // gebaut und gegen D.3.7 und D.3.9 bis D.3.12 geprüft (`derive/function-roles.test.ts`).
+      ['functionRole', ['leader']],
       // Wellenlinie nur als Strichhülle vermessen; siehe `INVENTORY_EXCLUSIONS`.
       ['vehicleCategory', ['amphibienfahrzeug']],
       // Seit dem 2. Oktober 2026: die Kappe der Leitstelle (D.2.5) ist gezeichnet und gegen das
       // Original geprüft (`leitstelle-d25.test.ts`), aber noch in keinem Rezept verwendet.
       ['bodyMarks', ['circle-solid-cap-4mm']],
     ]);
-    expect(axes.filter((axis) => axis.missing.length === 0)).toHaveLength(12);
+    expect(axes.filter((axis) => axis.missing.length === 0)).toHaveLength(11);
   });
 
   it('zählt die Validierungsregeln aus core, ohne sie zu wiederholen', () => {
@@ -240,11 +243,12 @@ describe('generativeReach (echter Bestand)', () => {
     expect(reach.referencedOutsideReach).toHaveLength(0);
     // `bodyMarks` = 88 Fähigkeiten + technische Marken; LFH-786 ergänzt mit `track-chevron-top`
     // (Drohnenwinkel der Löschdrohne C.2.31) genau eine technische Marke, die Leitstelle D.2.5
-    // (2. Oktober 2026) mit `circle-solid-cap-4mm` eine weitere, daher 134.
+    // (2. Oktober 2026) mit `circle-solid-cap-4mm` eine weitere, daher 134. `functionRole` = 25
+    // Rollen aus Anhang D und die Führungskraft ohne Kürzel (ESZ-116).
     expect(reach.notEnumerated.map((axis) => [axis.id, axis.size])).toEqual([
       ['capabilities', 88],
       ['bodyMarks', 134],
-      ['functionRole', 25],
+      ['functionRole', 26],
       ['designation', Number.POSITIVE_INFINITY],
     ]);
     // Keine Laufzeit-Assertion: allein gemessen ~140 ms, unter Vitest-Parallellast bis 4 s —

@@ -998,4 +998,15 @@ export const FUNCTION_ROLE_BLOCKS: readonly BlockEntry[] = Object.freeze([
   functionRole('hazard-response-director', '337–344', 'Leiter Gefahrenabwehr', 'person'),
   functionRole('hazard-response-forces-director', '345–351', 'Leiter Gefahrenabwehrkräfte', 'person'),
   functionRole('international-relief-operation-director', '352–358', 'Leiter internationale Hilfsaktion', 'person'),
+  block(
+    'function-role',
+    'leader',
+    'body',
+    measured(
+      `${FUNCTION_ROLES_FILE}:359–368`,
+      'Führungskraft ohne Kürzel (ESZ-116), ohne eigenes Original: Körper und Kappe des Einsatzleiters D.3.2 ohne Lauf. Die Kappe tragen alle 18 Führungskräfte aus D.3 und D.4; der Motor vermerkt die Fassung als konstruiert.',
+      babz('D.3.2'),
+    ),
+    FUNCTION_ROLE_BINDING,
+  ),
 ]);

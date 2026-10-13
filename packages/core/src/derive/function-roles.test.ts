@@ -6,6 +6,7 @@ import { drawSymbol } from '../default-ports.js';
 import { FUNCTION_ROLE_DEFINITIONS } from '../geometry/function-roles.js';
 import { validateSpec } from '../validate.js';
 import {
+  functionRoleHasOriginal,
   functionRoleHeadIsFree,
   functionRoleOrganizationIsFree,
   functionRoleSpecIsMeasured,
@@ -99,6 +100,7 @@ describe('Funktionsrollen: Einordnung nach dem Titel', () => {
       'incident-subsection-command',
       'incident-subsection-commander',
       'lead-emergency-physician',
+      'leader',
       'organizational-incident-commander',
       'technical-incident-command-evacuation',
       'technical-incident-commander',
@@ -107,7 +109,10 @@ describe('Funktionsrollen: Einordnung nach dem Titel', () => {
 });
 
 describe('Funktionsrollen: vermessene Festfassungen bleiben unverändert', () => {
-  it.each(Object.values(FUNCTION_ROLE_DEFINITIONS))('$id ohne Ableitungsnotiz', (definition) => {
+  const measuredRoles = Object.values(FUNCTION_ROLE_DEFINITIONS)
+    .filter((definition) => functionRoleHasOriginal(definition.id));
+
+  it.each(measuredRoles)('$id ohne Ableitungsnotiz', (definition) => {
     const spec: SymbolSpec = {
       kind: definition.kind,
       organization: definition.expectedOrganization,
@@ -370,6 +375,68 @@ describe('Funktionsrollen: Piktogramme und Körpermarken (stiller Verlust behobe
       functionRole: 'fire-service-platoon-commander', bodyMarks: ['fire-fighting'],
     });
     expect(drawing.derivations).toBeUndefined();
+  });
+});
+
+describe('Führungskraft ohne Kürzel (ESZ-116)', () => {
+  const LEADER = { kind: 'person', functionRole: 'leader' } as const satisfies SymbolSpec;
+  const capOf = (drawing: Drawing) => drawing.children.filter(
+    (child) => child.type === 'polyline' && child.role === 'pictogram' && child.style?.fill === 'schwarz',
+  );
+  const marksOf = (drawing: Drawing) => drawing.children.filter(
+    (child) => child.role === 'pictogram' && !capOf(drawing).includes(child),
+  );
+
+  it('zeichnet Körper und Kappe des Einsatzleiters ohne Lauf und vermerkt die Konstruktion', () => {
+    const leader = drawSymbol({ ...LEADER, organization: 'fuehrung-leitung' });
+    const el = drawSymbol(EL_PERSON);
+    expect(bodyOf(leader)).toEqual(bodyOf(el));
+    expect(capOf(leader)).toEqual(capOf(el));
+    expect(flat(leader.children).filter((child) => child.type === 'text')).toEqual([]);
+    expect(leader.derivations).toEqual([{
+      dimension: 'functionRole',
+      part: 'Führungskraft ohne eigenes Original, Raute und Kappe der Leitungsrollen ohne Lauf',
+      basis: 'constructed',
+      from: 'function-role:incident-commander',
+    }]);
+  });
+
+  it.each([
+    ['D.3.7', 'fire-service-platoon-commander', 'feuerwehr', 'zug', ['fire-fighting']],
+    ['D.3.9', 'medical-platoon-commander', 'hilfsorganisation', 'zug', ['medical-service']],
+    ['D.3.10', 'operational-unit-platoon-commander', 'hilfsorganisation', 'zug', ['medical-service', 'care']],
+    ['D.3.11', 'care-platoon-commander', 'hilfsorganisation', 'zug', ['care']],
+    ['D.3.12', 'care-group-commander', 'hilfsorganisation', 'gruppe', ['care']],
+  ] as const)('trifft %s bis auf den Trägerlauf: Kopf, Körper, Kappe und randbündige Marken', (
+    _section, functionRole, organization, strength, bodyMarks,
+  ) => {
+    const original = drawSymbol({ kind: 'person', organization, strength, functionRole, bodyMarks });
+    const leader = drawSymbol({ ...LEADER, organization, strength, bodyMarks });
+    expect(bodyOf(leader)).toEqual(bodyOf(original));
+    expect(capOf(leader)).toEqual(capOf(original));
+    expect(marksOf(leader)).toEqual(marksOf(original));
+    expect(leader.children.filter((child) => child.role === 'head'))
+      .toEqual(original.children.filter((child) => child.role === 'head'));
+  });
+
+  it.each([
+    ['Arzt', { bodyMarks: ['physician'] }],
+    ['Sanität', { bodyMarks: ['medical-service'] }],
+    ['IuK', { capabilities: ['information-communications'] }],
+    ['Logistik', { bodyVariant: 'foot-band' }],
+    ['Transport', { capabilities: ['transport'] }],
+  ] as const)('trägt die Fachaufgabe %s ohne Stärke in jeder Organisation', (_name, part) => {
+    for (const organization of [undefined, 'hilfsorganisation', 'feuerwehr', 'thw', 'fuehrung-leitung'] as const) {
+      const drawing = drawSymbol({ ...LEADER, ...part, ...(organization === undefined ? {} : { organization }) });
+      expect(capOf(drawing), organization).toHaveLength(1);
+      expect(marksOf(drawing).length, organization).toBeGreaterThan(0);
+      expect(drawing.derivations, organization)
+        .toContainEqual(expect.objectContaining({ dimension: 'functionRole', basis: 'constructed' }));
+    }
+  });
+
+  it('bleibt an die Person gebunden', () => {
+    expect(rulesOf({ ...LEADER, kind: 'formation' })).toContain('function-role-requires-measured-kind');
   });
 });
 
