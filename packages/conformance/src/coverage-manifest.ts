@@ -1313,9 +1313,26 @@ const elementEntries: CoverageEntry[] = Object.entries(ELEMENT_SECTIONS).map(([i
   };
 });
 
+/**
+ * Die Sonderformen 3.6 bis 3.8 als Einzelpiktogramm (ESZ-134). Gezeichnet ist die Kapiteldatei aus
+ * LFH-577; neu ist nur die Kennung im Raum `special-form.*`.
+ */
+const SPECIAL_FORM_PICTOGRAM_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-10-13',
+  note:
+    '3.6 bis 3.8 stehen als direkte 32×32-mm-Piktogramme im Raum special-form.*, mit den Primitiven ' +
+    'aus special-form-bodies.ts (LFH-577, an den Referenzdateien abgelesen). Snapshot-, Kommando-, ' +
+    'Box-, Standalone-Clipping-, Mehrgrößen-, Metadaten- und Kontrast-Gates prüfen alle drei; die ' +
+    'Hüllen hält special-form-fixtures.test.ts gegen das Kennzahlenartefakt.',
+};
+
 const pictogramEntries: CoverageEntry[] = ALL_PICTOGRAMS.map((definition) => {
   const sourceId = `bbk-babz-2025:${definition.section}`;
-  const technicalReview = definition.id.startsWith('water-rescue-personnel.')
+  const technicalReview = definition.id.startsWith('special-form.')
+    ? SPECIAL_FORM_PICTOGRAM_TECHNICAL_REVIEW
+    : definition.id.startsWith('water-rescue-personnel.')
     ? WATER_RESCUE_PERSONNEL_TECHNICAL_REVIEW
     : definition.id.startsWith('state.')
     ? STATE_PICTOGRAM_TECHNICAL_REVIEW
@@ -1349,7 +1366,9 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
    * wenn jedes Profil ein eigenes npm-Paket wäre.
    */
   coreVersion: '0.2.0',
-  // Kapitel 3 (sieben Referenzdateien) setzt dieser Slice nicht um.
+  // Kapitel 3 steht nur mit 3.6 bis 3.8 im Umfang, und zwar einzeln: das sind die drei
+  // Sonderformen, die seit ESZ-134 als Einzelpiktogramm (`special-form.*`) zeichnen. 3.1 bis 3.5
+  // und 3.9 sind nicht gebaut; `3` bestünde `uncoveredScope` schon mit einer Zeile.
   //
   // **`5.1.1` und ausdrücklich nicht `5.1`.** Fünf der sechs Fahrzeugkategorien aus 5.1.1 sind
   // seit LFH-424 vermessen und gebaut; die übrigen Abschnitte von Kapitel 5.1 sind es nicht —
@@ -1392,6 +1411,9 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
   scope: [
     '1',
     '2',
+    '3.6',
+    '3.7',
+    '3.8',
     '4',
     '5.1.1',
     '5.4',

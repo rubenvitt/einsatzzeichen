@@ -67,12 +67,12 @@ describe('ruleCoverage (Fixtures)', () => {
 describe('ruleCoverage (echter Bestand)', () => {
   // Die Zahlen wachsen mit dem Katalog; sie stehen hier, damit eine Erweiterung sichtbar
   // hier ankommt und damit die Ausgabe von `pnpm cli coverage` an einer Stelle belegt ist.
-  it('führt 17 Achsen, davon 12 vollständig; Lücken bei Kopfmarke, Verband, Verwaltungsstufe, Fahrwerk und Körpermarke', () => {
+  it('führt 18 Achsen, davon 13 vollständig; Lücken bei Kopfmarke, Verband, Verwaltungsstufe, Fahrwerk und Körpermarke', () => {
     const axes = ruleCoverage();
     expect(axes.map((axis) => axis.id)).toEqual([
       'kind', 'bodyVariant', 'organization', 'strength', 'technicalHeadMark', 'unitGrouping', 'administrativeLevel',
       'functionRole', 'vehicleCategory', 'capabilities', 'bodyMarks',
-      'state', 'comms', 'damage', 'wildfire', 'leadership', 'water-rescue-personnel',
+      'state', 'comms', 'damage', 'wildfire', 'leadership', 'water-rescue-personnel', 'special-form',
     ]);
     const gaps = axes.filter((axis) => axis.missing.length > 0).map((axis) => [axis.id, axis.missing]);
     expect(gaps).toEqual([
@@ -91,7 +91,7 @@ describe('ruleCoverage (echter Bestand)', () => {
       // Original geprüft (`leitstelle-d25.test.ts`), aber noch in keinem Rezept verwendet.
       ['bodyMarks', ['circle-solid-cap-4mm']],
     ]);
-    expect(axes.filter((axis) => axis.missing.length === 0)).toHaveLength(12);
+    expect(axes.filter((axis) => axis.missing.length === 0)).toHaveLength(13);
   });
 
   it('zählt die Validierungsregeln aus core, ohne sie zu wiederholen', () => {

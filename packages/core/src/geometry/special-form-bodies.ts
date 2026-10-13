@@ -187,6 +187,15 @@ export const SPECIAL_FORM_IDS_DRAWN: readonly SpecialFormId[] = Object.freeze([
 ]);
 
 /**
+ * Die Primitive einer Sonderform auf der 32-mm-Fläche, mit den Rollen der Körperzeichnung
+ * (`body`, beim Giebel `bodyExtra`). Das Piktogrammregister (`pictograms/special-forms`) zeichnet
+ * dieselben Primitive als `pictogram`; eine zweite Geometriequelle gibt es nicht.
+ */
+export function specialFormPrimitives(id: SpecialFormId): readonly Primitive[] {
+  return BODIES[id]();
+}
+
+/**
  * Die Einzeldarstellung einer Sonderform auf der 32-mm-Fläche, wie die Kapiteldatei sie zeigt.
  * Ohne Organisationsfarbe und ohne Zonen: wo eine Sonderform am Körper sitzt, belegt die
  * Kapiteldatei nicht.
@@ -195,7 +204,7 @@ export function specialFormDrawing(id: SpecialFormId): Drawing {
   const [section, title] = TITLES[id];
   return {
     viewBox: DEFAULT_VIEWBOX_MM,
-    children: BODIES[id](),
+    children: specialFormPrimitives(id),
     title,
     description: `Sonderform: ${title}. BABZ-Abschnitt ${section}.`,
   };

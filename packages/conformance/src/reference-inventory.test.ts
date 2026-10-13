@@ -187,9 +187,10 @@ describe('referenceInventory (echter Bestand)', () => {
     // schon Belegdateien der Stärkegrade trupp und staffel (`ELEMENTS`). Also 550 + 35 = 585.
     // Außerhalb: 83 − 35 = 48 und mit dem neuen Umfang C.2.24 noch eine weniger, weil dessen
     // nicht gebaute Alternative jetzt als zurückgestellt zählt (47; deferred 18 + 1 = 19).
-    // LFH-787: C.1.4 wird beansprucht, 586 und 46 außerhalb.
-    expect(result.claimed).toBe(586);
-    expect(result.outOfScope).toBe(46);
+    // LFH-787: C.1.4 wird beansprucht, 586 und 46 außerhalb. ESZ-134: die Sonderformen 3.6 bis 3.8
+    // werden beansprucht, 589 und 43 außerhalb.
+    expect(result.claimed).toBe(589);
+    expect(result.outOfScope).toBe(43);
     expect(result.excludedByDisposition).toEqual({ example: 9, 'overview-sheet': 1, deferred: 19 });
     expect(result.unaccounted).toEqual([]);
     expect(result.staleExclusions).toEqual([]);
@@ -207,7 +208,7 @@ describe('referenceInventory (echter Bestand)', () => {
   it('beansprucht aus drei Quellen, und jede beanspruchte Datei liegt im Inventar', () => {
     const claimed = claimedReferenceAssets();
     const inventory = new Set(referenceInventoryAssets());
-    expect(claimed.size).toBe(586);
+    expect(claimed.size).toBe(589);
     for (const asset of claimed) expect(inventory.has(asset)).toBe(true);
     // Jeder Manifest-Eintrag beansprucht seine Datei; die übrigen Quellen sind Rezepte und
     // Elemente mit mehreren Belegen (Stärkegrade, Fahrwerke).

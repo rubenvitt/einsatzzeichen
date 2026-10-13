@@ -57,6 +57,8 @@ Name, Zuschnitt und die Frage nach den übrigen Piktogrammräumen.
 ## Was offen bleibt
 
 - Sonderformen 3.6 bis 3.8 (Drohne, Zweirad, Kraftrad) als Spec: LFH-1298, Bezug LFH-831.
+  Erledigt mit ESZ-134 (`2026-10-13-esz-134-sonderformen-als-piktogramme.md`): Raum
+  `special-form.*` in der Art `pictogram`, die Drohne im Körper als Körpermarke.
 - Ein Baukasten-Modus für freistehende Zeichen auf der Website: eigenes Ticket.
 - Alt-Symbole ohne Nachfolger (Geräte, Sichten, Fernschreiben, Festbildübertragung): der Hub
   entscheidet über Näherung oder Ausschluss.

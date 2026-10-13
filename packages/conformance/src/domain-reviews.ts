@@ -417,6 +417,10 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:I.5.6#primary': { status: 'pending' },
   'bbk-babz-2025:I.5.7#primary': { status: 'pending' },
   'bbk-babz-2025:I.5.8#primary': { status: 'pending' },
+  // ESZ-134: Sonderformen 3.6 bis 3.8 als Einzelpiktogramm. Fachfrage Q-3-sonderformen.
+  'bbk-babz-2025:3.6#primary': { status: 'pending' },
+  'bbk-babz-2025:3.7#primary': { status: 'pending' },
+  'bbk-babz-2025:3.8#primary': { status: 'pending' },
   'bbk-babz-2025:2.1#primary': { status: 'pending' },
   // 2.2 seit LFH-424. Fachfragen: Q-2-hiorg-aus-raster, Q-2-hiorg-farbe-neutral.
   'bbk-babz-2025:2.2#primary': { status: 'pending' },

@@ -23,9 +23,9 @@ const rows = buildRows();
 const manifestRows = rows.filter((row) => row.kind === 'manifest');
 
 describe('buildRows', () => {
-  it('führt genau 596 Träger: 582 Manifestzeilen, 13 Quellen, ein Profil', () => {
+  it('führt genau 599 Träger: 585 Manifestzeilen, 13 Quellen, ein Profil', () => {
     // 544 Manifestzeilen bis LFH-786, dazu die 37 Anhang-C-Fixtures und C.1.4 (LFH-787).
-    expect(rows).toHaveLength(596);
+    expect(rows).toHaveLength(599);
     expect(manifestRows).toHaveLength(COVERAGE_MANIFEST.entries.length);
     expect(rows.filter((row) => row.kind === 'source')).toHaveLength(
       Object.keys(SOURCE_REGISTRY).length,
@@ -66,7 +66,7 @@ describe('buildRows', () => {
     expect(byCoverage('catalog-entry')).toBe(14);
     // 242 bis LFH-786, dazu 37 Anhang-C-Fixtures und C.1.4 (LFH-787).
     expect(byCoverage('composition-recipe')).toBe(280);
-    expect(byCoverage('element')).toBe(288);
+    expect(byCoverage('element')).toBe(291);
   });
 
   it('kennzeichnet genau die 19 nicht selbstständigen Elemente als Trägerzeichen', () => {

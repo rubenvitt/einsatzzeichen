@@ -48,7 +48,7 @@ export const STATE_SPEC_FIXTURES: readonly FreestandingSpecFixture[] = Object.fr
 );
 
 /**
- * Jede Kapiteldatei der übrigen Räume (Kapitel 4, J, K, L, M, D, I.5), die das freistehende
+ * Jede Kapiteldatei der übrigen Räume (Kapitel 4, J, K, L, M, D, I.5 und 3.6 bis 3.8), die das freistehende
  * Piktogramm zeichnet (LFH-834): alle Darstellungen außerhalb von 5.8, ohne die mit eigener Spec
  * (die Leitstelle D.2.5 zeichnet ihr Ort). Die Bilder sind in den Suiten ihrer Räume gegatet.
  */

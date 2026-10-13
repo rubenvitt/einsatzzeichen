@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { SPECIAL_FORMS, specialForm, strokeBoundsOfMm } from '@einsatzzeichen/core';
+import { DRONE_BODY_MARKS, SPECIAL_FORMS, SPECIAL_FORM_PICTOGRAMS, specialForm, strokeBoundsOfMm } from '@einsatzzeichen/core';
 import type { SpecialFormId, ZoneBoundsMm } from '@einsatzzeichen/schema';
 import fingerprints from './fingerprints.json' with { type: 'json' };
+import { RECIPES, type Recipe } from './recipes.js';
 
 /**
  * Gate der Sonderformen 3.6 bis 3.9 (LFH-567, vermessen in LFH-577) gegen das eingecheckte
@@ -135,5 +136,35 @@ describe('Sonderformen gegen das Kennzahlenartefakt', () => {
     expect(roofAtBody.maxY).toBeCloseTo(bounds!.maxYMm, 2);
     const related = specialForm('temporary-fixed-structure').relatedKind;
     expect(related.status === 'evidenced' ? related.value : null).toBe('circle-12');
+  });
+});
+
+describe('Sonderformen im Piktogrammraum und als Innenzeichen (ESZ-134)', () => {
+  it('führt 3.6 bis 3.8 als Piktogramm gegen dieselben Dateien des Kennzahlenartefakts', () => {
+    for (const definition of SPECIAL_FORM_PICTOGRAMS) {
+      const form = SPECIAL_FORMS.find((candidate) => definition.id === `special-form.${candidate.id}`);
+      expect(form, definition.id).toBeDefined();
+      expect(definition.referenceAsset).toBe(form!.asset);
+      expect(fingerprintOf(definition.referenceAsset).asset).toBe(form!.asset);
+    }
+  });
+
+  it('3.6: die Box des Piktogramms trifft die Hülle des Artefakts', () => {
+    const drone = SPECIAL_FORM_PICTOGRAMS.find((definition) => definition.id === 'special-form.drone');
+    const [hexagon] = fingerprintOf(specialForm('drone').asset).shapes;
+    const { xMm, yMm, widthMm, heightMm } = drone!.box;
+    expect({ minX: xMm, minY: yMm, maxX: xMm + widthMm, maxY: yMm + heightMm }).toEqual(fromArtifact(hexagon!.boundsMm));
+  });
+
+  it('jede Drohnenfassung im Körper ist das Rezept ihres Originals', () => {
+    const recipes: Readonly<Record<string, Recipe>> = RECIPES;
+    for (const entry of DRONE_BODY_MARKS) {
+      const recipe = recipes[entry.section];
+      expect(recipe, entry.section).toBeDefined();
+      expect(recipe!.referenceAsset).toBe(entry.asset);
+      expect(recipe!.spec.kind).toBe(entry.kind);
+      expect(recipe!.spec.bodyVariant).toBe(entry.bodyVariant);
+      expect(recipe!.spec.bodyMarks, entry.section).toContain(entry.bodyMark);
+    }
   });
 });
