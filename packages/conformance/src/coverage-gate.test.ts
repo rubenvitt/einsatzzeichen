@@ -332,8 +332,9 @@ describe('Gate-Prüfungen zu Quelle, Profil und Review', () => {
       COVERAGE_MANIFEST.entries.length +
       Object.keys(SOURCE_REGISTRY).length +
       Object.keys(PROFILES).length;
-    // 582 Manifestzeilen (544 + 37 aus LFH-786 + C.1.4 aus LFH-787), 13 Quellen, ein Profil.
-    expect(traeger).toBe(596);
+    // 590 Manifestzeilen (544 + 37 aus LFH-786 + C.1.4 aus LFH-787 + acht aus ESZ-117),
+    // 13 Quellen, ein Profil.
+    expect(traeger).toBe(604);
     expect(result.openDomainReviews).toBeLessThanOrEqual(traeger);
   });
 });

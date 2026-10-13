@@ -74,6 +74,13 @@ const VEHICLE_KINDS = new Set<SymbolKind>([
   'swap-loader-vehicle',
   'vehicle-water',
   'vehicle-air',
+  // Die vier Träger aus 5.1.1.8/5.1.1.9 und 5.1.2.2/5.1.2.3 (ESZ-117). Die vier Behälter aus
+  // 5.1.3 sind Ladung und kein Fahrzeug; der Rollcontainer (5.1.3.4) trägt seine Rollen als Teil
+  // der Form.
+  'roll-off-loader',
+  'swap-container-carrier',
+  'roll-off-trailer',
+  'swap-container-trailer',
 ]);
 
 /**
@@ -83,7 +90,15 @@ const VEHICLE_KINDS = new Set<SymbolKind>([
  * sagen sie fachlich nichts. Am Wasserfahrzeug ist das Amphibienfahrzeug (5.1.1.4) der eine
  * sinnvolle Fall, und nur ihn lässt `vehicle-category-requires-chassis-body` dort zu.
  */
-const CHASSIS_BODY_KINDS = new Set<SymbolKind>(['vehicle-land', 'trailer', 'swap-loader-vehicle']);
+const CHASSIS_BODY_KINDS = new Set<SymbolKind>([
+  'vehicle-land',
+  'trailer',
+  'swap-loader-vehicle',
+  'roll-off-loader',
+  'swap-container-carrier',
+  'roll-off-trailer',
+  'swap-container-trailer',
+]);
 
 /**
  * Träger einer Verwaltungsstufe (Fachreview vom 05.10.2026, LFH-1064): Die Stufe sagt, auf

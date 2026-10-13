@@ -142,15 +142,6 @@ export const INVENTORY_EXCLUSIONS: readonly InventoryExclusion[] = Object.freeze
     '5.1.1.7_Kraftfahrzeug_aufgleisbar.svg',
     'Fahrwerksform „aufgleisbar" ist nicht vermessen; `VehicleCategoryId` führt sie nicht.',
   ),
-  deferred(
-    '5.1.1.8_Kraftfahrzeug_straßenfähig_Wechsellader.svg',
-    'Wechsellader-Fahrwerk aus 5.1.1 ist nicht gegen diese Datei vermessen; die Art ' +
-      '`swap-loader-vehicle` ist an Anhang E belegt, nicht an Kapitel 5.',
-  ),
-  deferred(
-    '5.1.1.9_Kraftfahrzeug_straßenfähig_Wechselbehälter.svg',
-    'Wechselbehälter-Fahrwerk aus 5.1.1 ist nicht vermessen; `VehicleCategoryId` führt es nicht.',
-  ),
   // Seit LFH-786 steht C.2.24 einzeln im Umfang; ohne diesen Eintrag wäre die nicht gebaute
   // Alternative `unaccounted-reference`.
   {

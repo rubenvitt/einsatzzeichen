@@ -66,7 +66,7 @@ const rettungswagen = makeSymbol({
   review: { technical: review('deviation'), domain: review('pending') },
 });
 
-/** Grundzeichen ohne Organisationsbezug — belegt am echten Snapshot: 25 von 256 Symbolen. */
+/** Grundzeichen ohne Organisationsbezug — belegt am echten Snapshot: 33 von 306 Symbolen. */
 const grundzeichenOhneOrganisation = makeSymbol({
   id: 'base.formation-neutral',
   title: 'Formation ohne Organisation',
@@ -166,12 +166,13 @@ describe('facetOptions', () => {
     expect(summedOptionCounts).toBe(group.total);
   });
 
-  it('läuft gegen den echten Snapshot: 25 von 256 Symbolen ohne Organisation', () => {
+  it('läuft gegen den echten Snapshot: 33 von 306 Symbolen ohne Organisation', () => {
     const { symbols } = buildSnapshot();
     const group = facetOptions(symbols, (s) => s.spec.organization, (id) => id);
     const summedOptionCounts = group.options.reduce((sum, option) => sum + option.count, 0);
     expect(group.total).toBe(symbols.length);
-    expect(group.total - summedOptionCounts).toBe(25);
+    // Seit ESZ-117 acht mehr: die Behälterzeichen aus Kapitel 5.1 zeigt die Referenz weiss.
+    expect(group.total - summedOptionCounts).toBe(33);
   });
 });
 
