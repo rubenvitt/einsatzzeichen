@@ -56,7 +56,9 @@ jobs:
       # mit festem Schlüssel: GitHub stellt ein OIDC-Token aus, die Claude-CLI im Agent SDK
       # tauscht es gegen ein kurzlebiges Anthropic-Token. Die Regel in der Claude Console lässt
       # nur Pushes auf main dieses Repos zu (Audience `https://api.anthropic.com`). Gleiches
-      # Muster wie in rubenvitt/lifeline-hub.
+      # Muster wie in rubenvitt/lifeline-hub, aber das Repo gibt unveränderliche Subjects aus
+      # (`repo:rubenvitt@<id>/einsatzzeichen@<id>:…`), siehe
+      # docs/decisions/2026-10-13-release-notizen-per-federation.md.
       #
       # DIREKT VOR semantic-release, nicht früher: das GitHub-Token lebt rund fünf Minuten.
       # Getauscht wird beim ersten Modellaufruf in `generateNotes`, und das nur EINMAL je Release

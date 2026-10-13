@@ -28,7 +28,14 @@ Die Release-Notizen schreibt weiter Claude, aber nach dem Muster von rubenvitt/l
    lifeline-hub mitbenutzen.
 2. Eine Federation-Regel für den Aussteller GitHub Actions
    (`https://token.actions.githubusercontent.com`) anlegen, gebunden an den Service Account,
-   Audience `https://api.anthropic.com`, Subject `repo:rubenvitt/einsatzzeichen:ref:refs/heads/main`.
+   Audience `https://api.anthropic.com`, Subject
+   `repo:rubenvitt@19268519/einsatzzeichen@1329423527:ref:refs/heads/main`.
+   **Achtung:** das Repo nutzt unveränderliche OIDC-Subjects (`use_immutable_subject: true`, siehe
+   `gh api repos/rubenvitt/einsatzzeichen/actions/oidc/customization/sub`); der `sub`-Claim trägt
+   deshalb Eigentümer- und Repo-ID. Die kurze Form `repo:rubenvitt/einsatzzeichen:…` passt nie,
+   und die Anmeldung scheiterte still (lifeline-hub hat die Einstellung nicht).
+   Eingerichtet am 13.10.2026 als Regel `einsatzzeichen-releases` am Service Account
+   `lifeline-hub-release`, Workspace „Default“.
 3. Im Repo unter Settings → Secrets and variables → Actions → **Variables** setzen:
    `ANTHROPIC_FEDERATION_RULE_ID`, `ANTHROPIC_ORGANIZATION_ID`, `ANTHROPIC_SERVICE_ACCOUNT_ID`,
    optional `ANTHROPIC_WORKSPACE_ID` (nur wenn die Regel mehrere Workspaces abdeckt).
