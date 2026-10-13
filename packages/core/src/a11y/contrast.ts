@@ -1,6 +1,6 @@
 import type { ColorToken, Primitive, RgbHex, Style } from '@einsatzzeichen/schema';
 import { mergeStyle } from '../render/style.js';
-import type { RenderTheme } from '../render/theme.js';
+import { contrastSurface, type RenderTheme } from '../render/theme.js';
 import { assertValidRenderTheme } from '../render/theme-validation.js';
 
 const HEX = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i;
@@ -65,7 +65,7 @@ export function checkContrast(
     const foreground = theme.palette[requirement.foreground];
     const background =
       requirement.background === 'surface'
-        ? theme.surface
+        ? contrastSurface(theme)
         : theme.palette[requirement.background];
     const ratio = contrastRatio(foreground, background);
     return ratio + Number.EPSILON < requirement.minimum

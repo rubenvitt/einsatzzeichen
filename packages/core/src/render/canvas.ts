@@ -10,8 +10,15 @@ import { assertValidActiveStrokeWidths, mergeStyle } from './style.js';
 import { canvasBaseline, canvasTextAlign, TEXT_FONT_FAMILY_ATTR } from './text-policy.js';
 import { rasterDimensionsForWidth } from './raster-dimensions.js';
 import { effectiveStrokeWidthMm, strokeWidthFloorMm } from './min-stroke-width.js';
-import { REFERENCE_THEME, type RenderTheme } from './theme.js';
+import { REFERENCE_THEME, paintColor, type RenderTheme } from './theme.js';
 import { assertValidRenderTheme } from './theme-validation.js';
+import {
+  haloFilled,
+  haloLinejoin,
+  haloStrokeWidthMm,
+  resolveHalo,
+  type ResolvedHalo,
+} from './halo.js';
 
 export interface CanvasOptions {
   /** Pixelbreite. Ohne Angabe wird in SVG-Einheiten gezeichnet. */
@@ -26,8 +33,12 @@ export interface CanvasOptions {
   minStrokeWidthPx?: number;
 }
 
-function color(token: ColorToken | 'none', theme: RenderTheme): string {
-  return token === 'none' ? 'transparent' : theme.palette[token];
+function color(
+  token: ColorToken | 'none',
+  theme: RenderTheme,
+  role: Primitive['role'],
+): string {
+  return token === 'none' ? 'transparent' : paintColor(theme, token, role);
 }
 
 function tracePrimitive(primitive: Primitive, ctx: CanvasRenderingContext2D): void {
@@ -75,6 +86,68 @@ function tracePrimitive(primitive: Primitive, ctx: CanvasRenderingContext2D): vo
   }
 }
 
+function textFont(primitive: Extract<Primitive, { type: 'text' }>): string {
+  // Gewicht wie in svg.ts: 400 bleibt ungeschrieben, 500 und 700 stehen vor dem Schriftgrad.
+  // Der Stil steht nach CSS-Kurzschreibweise davor („italic 500 12px Arimo", LFH-585).
+  const weight = primitive.fontWeight;
+  return `${primitive.fontStyle === 'italic' ? 'italic ' : ''}` +
+    `${weight === undefined || weight === 400 ? '' : `${weight} `}` +
+    `${mmToUnits(primitive.sizeMm)}px ${TEXT_FONT_FAMILY_ATTR}`;
+}
+
+/**
+ * Hinterlegung eines Blatts (ESZ-119), dieselbe Rechnung wie `haloAttrs` in svg.ts: Fläche in der
+ * Hinterlegungsfarbe füllen, mit runden Kappen und den Ecken der Tinte (`haloLinejoin`) um
+ * `sideMm` je Seite über die sichtbare Kante hinaus umranden, ohne Strichmuster. `lineWidth` steht
+ * bei Pfaden im Rohmaß Millimeter (unter `scale(mmToUnits(1))`), sonst in Einheiten. Die
+ * Transformation hat der Aufrufer gesetzt.
+ */
+function drawHalo(
+  primitive: Exclude<Primitive, { type: 'group' }>,
+  ctx: CanvasRenderingContext2D,
+  style: Style | undefined,
+  role: Primitive['role'],
+  theme: RenderTheme,
+  halo: ResolvedHalo,
+  strokeFloorMm: number | undefined,
+): void {
+  const fillOnly = primitive.type === 'text';
+  const widthMm = haloStrokeWidthMm(style, halo, strokeFloorMm, { fillOnly, role, theme });
+  if (widthMm === undefined) return;
+  ctx.fillStyle = halo.color;
+  ctx.strokeStyle = halo.color;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = haloLinejoin(style, role, fillOnly);
+  ctx.setLineDash([]);
+
+  if (primitive.type === 'text') {
+    ctx.font = textFont(primitive);
+    ctx.textAlign = canvasTextAlign(primitive.anchor);
+    ctx.textBaseline = canvasBaseline(primitive.baseline);
+    ctx.lineWidth = mmToUnits(widthMm);
+    const x = mmToUnits(primitive.x);
+    const y = mmToUnits(primitive.y);
+    ctx.strokeText(primitive.content, x, y);
+    ctx.fillText(primitive.content, x, y);
+    return;
+  }
+
+  if (primitive.type === 'path') {
+    const path = new Path2D(primitive.d);
+    ctx.scale(mmToUnits(1), mmToUnits(1));
+    if (haloFilled(style)) ctx.fill(path, style?.fillRule ?? 'nonzero');
+    ctx.lineWidth = widthMm;
+    ctx.stroke(path);
+    return;
+  }
+
+  ctx.beginPath();
+  tracePrimitive(primitive, ctx);
+  if (haloFilled(style)) ctx.fill(style?.fillRule ?? 'nonzero');
+  ctx.lineWidth = mmToUnits(widthMm);
+  ctx.stroke();
+}
+
 function drawPrimitive(
   primitive: Primitive,
   ctx: CanvasRenderingContext2D,
@@ -82,6 +155,7 @@ function drawPrimitive(
   strokeFloorMm: number | undefined,
   inheritedStyle?: Style,
   inheritedRole?: Primitive['role'],
+  halo?: ResolvedHalo,
 ): void {
   ctx.save();
 
@@ -105,7 +179,15 @@ function drawPrimitive(
   const role = primitive.role ?? inheritedRole;
 
   if (primitive.type === 'group') {
-    for (const child of primitive.children) drawPrimitive(child, ctx, theme, strokeFloorMm, style, role);
+    for (const child of primitive.children) {
+      drawPrimitive(child, ctx, theme, strokeFloorMm, style, role, halo);
+    }
+    ctx.restore();
+    return;
+  }
+
+  if (halo !== undefined) {
+    drawHalo(primitive, ctx, style, role, theme, halo, strokeFloorMm);
     ctx.restore();
     return;
   }
@@ -115,7 +197,7 @@ function drawPrimitive(
     ctx.save();
     ctx.scale(mmToUnits(1), mmToUnits(1));
     if (style?.fill !== undefined && style.fill !== 'none') {
-      ctx.fillStyle = color(style.fill, theme);
+      ctx.fillStyle = color(style.fill, theme, role);
       ctx.fill(path, style.fillRule ?? 'nonzero');
     }
     if (style?.stroke !== undefined && style.stroke !== 'none') {
@@ -126,7 +208,7 @@ function drawPrimitive(
         strokeFloorMm,
       );
       if (strokeWidth > 0) {
-        ctx.strokeStyle = color(style.stroke, theme);
+        ctx.strokeStyle = color(style.stroke, theme, role);
         // Rohes Millimetermaß: das umgebende scale(mmToUnits(1)) skaliert die Strichstärke
         // bereits mit. Eine zusätzliche mmToUnits-Umrechnung würde sie doppelt skalieren.
         ctx.lineWidth = strokeWidth;
@@ -160,13 +242,8 @@ function drawPrimitive(
     // ungenutzt, damit SVG und Canvas beide dieselbe Renderpolitik (text-policy.ts) für Anker und
     // Grundlinie auswerten statt eine Plattformkonvention zu erraten.
     if (style?.fill !== undefined && style.fill !== 'none') {
-      ctx.fillStyle = color(style.fill, theme);
-      // Gewicht wie in svg.ts: 400 bleibt ungeschrieben, 500 und 700 stehen vor dem Schriftgrad.
-      // Der Stil steht nach CSS-Kurzschreibweise davor („italic 500 12px Arimo", LFH-585).
-      const weight = primitive.fontWeight;
-      ctx.font = `${primitive.fontStyle === 'italic' ? 'italic ' : ''}` +
-        `${weight === undefined || weight === 400 ? '' : `${weight} `}` +
-        `${mmToUnits(primitive.sizeMm)}px ${TEXT_FONT_FAMILY_ATTR}`;
+      ctx.fillStyle = color(style.fill, theme, role);
+      ctx.font = textFont(primitive);
       ctx.textAlign = canvasTextAlign(primitive.anchor);
       ctx.textBaseline = canvasBaseline(primitive.baseline);
       ctx.fillText(primitive.content, mmToUnits(primitive.x), mmToUnits(primitive.y));
@@ -179,7 +256,7 @@ function drawPrimitive(
   tracePrimitive(primitive, ctx);
 
   if (style?.fill !== undefined && style.fill !== 'none') {
-    ctx.fillStyle = color(style.fill, theme);
+    ctx.fillStyle = color(style.fill, theme, role);
     ctx.fill(style.fillRule ?? 'nonzero');
   }
   if (style?.stroke !== undefined && style.stroke !== 'none') {
@@ -188,7 +265,7 @@ function drawPrimitive(
       strokeFloorMm,
     );
     if (strokeWidth > 0) {
-      ctx.strokeStyle = color(style.stroke, theme);
+      ctx.strokeStyle = color(style.stroke, theme, role);
       ctx.lineWidth = mmToUnits(strokeWidth);
       if (role === 'pictogram') {
         ctx.lineCap = 'butt';
@@ -232,6 +309,14 @@ export function renderCanvas(
   if (options.size !== undefined) {
     const scale = raster.widthPx / mmToUnits(drawing.viewBox.width);
     ctx.scale(scale, scale);
+  }
+  // Mit Hinterlegung (ESZ-119) zuerst die ganze Zeichnung als Silhouette, darüber unverändert die
+  // Zeichnung — dieselbe Reihenfolge wie in svg.ts.
+  const halo = resolveHalo(theme, strokeFloorMm);
+  if (halo !== undefined) {
+    for (const child of drawing.children) {
+      drawPrimitive(child, ctx, theme, strokeFloorMm, undefined, undefined, halo);
+    }
   }
   for (const child of drawing.children) drawPrimitive(child, ctx, theme, strokeFloorMm);
   ctx.restore();

@@ -234,7 +234,13 @@ function organizationProfileSheet(): string {
   const height = (rowTops.at(-1) ?? firstTop) + size + 30;
 
   function row(theme: RenderTheme, top: number): string {
-    return ORGANIZATION_CASES.map((renderCase, index) => {
+    // Themes für dunkle Flächen (ESZ-119) stehen auf ihrem Untergrund, sonst zeigte der Bogen sie
+    // auf Weiß. Weiße Oberflächen bekommen keine Fläche, ihre Reihen bleiben bytegleich.
+    const plate = theme.surface === '#ffffff'
+      ? ''
+      : `<rect x="${left}" y="${top - 4}" width="${cellWidth * ORGANIZATION_CASES.length}" ` +
+        `height="${size + 8}" fill="${theme.surface}"/>`;
+    return plate + ORGANIZATION_CASES.map((renderCase, index) => {
       const raster = rasterize(renderCase, size, theme);
       return imageTag(raster, left + index * cellWidth, cellWidth, top, renderCase.id.slice(13));
     }).join('');

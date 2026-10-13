@@ -43,6 +43,37 @@ export function assertValidRenderTheme(theme: RenderTheme): void {
   }
   assertRgbHex(theme, 'surface', theme.surface);
 
+  const halo: unknown = theme.halo;
+  if (halo !== undefined) {
+    if (typeof halo !== 'object' || halo === null || Array.isArray(halo)) {
+      invalid(theme, 'halo', 'muss ein Objekt sein', halo);
+    }
+    const haloFields = halo as Record<string, unknown>;
+    assertRgbHex(theme, 'halo.color', haloFields.color);
+    const widthMm = haloFields.widthMm;
+    if (typeof widthMm !== 'number' || !Number.isFinite(widthMm) || widthMm <= 0) {
+      invalid(theme, 'halo.widthMm', 'muss eine endliche Zahl größer als 0 sein', widthMm);
+    }
+  }
+
+  const surfaceMarkInk: unknown = theme.surfaceMarkInk;
+  if (surfaceMarkInk !== undefined) {
+    if (
+      typeof surfaceMarkInk !== 'object' ||
+      surfaceMarkInk === null ||
+      Array.isArray(surfaceMarkInk)
+    ) {
+      invalid(theme, 'surfaceMarkInk', 'muss ein Objekt sein', surfaceMarkInk);
+    }
+    const inks = surfaceMarkInk as Record<string, unknown>;
+    for (const key of Object.keys(inks)) {
+      if (!(COLOR_TOKENS as readonly string[]).includes(key)) {
+        invalid(theme, `surfaceMarkInk.${key}`, 'muss eine bekannte Farbmarke sein', key);
+      }
+      assertRgbHex(theme, `surfaceMarkInk.${key}`, inks[key]);
+    }
+  }
+
   const bodyStrokeDashes: unknown = theme.bodyStrokeDashes;
   if (bodyStrokeDashes === undefined) return;
   if (

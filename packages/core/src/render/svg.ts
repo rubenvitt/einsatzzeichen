@@ -12,8 +12,15 @@ import { assertValidActiveStrokeWidths, mergeStyle } from './style.js';
 import { baselineAttr, TEXT_FONT_FAMILY_ATTR } from './text-policy.js';
 import { rasterDimensionsForWidth } from './raster-dimensions.js';
 import { effectiveStrokeWidthMm, strokeWidthFloorMm } from './min-stroke-width.js';
-import { REFERENCE_THEME, type RenderTheme } from './theme.js';
+import { REFERENCE_THEME, paintColor, type RenderTheme } from './theme.js';
 import { assertValidRenderTheme } from './theme-validation.js';
+import {
+  haloFilled,
+  haloLinejoin,
+  haloStrokeWidthMm,
+  resolveHalo,
+  type ResolvedHalo,
+} from './halo.js';
 
 export { formatUnits };
 
@@ -61,8 +68,12 @@ function u(mm: number): string {
   return formatUnits(mmToUnits(mm));
 }
 
-function color(token: ColorToken | 'none', theme: RenderTheme): string {
-  return token === 'none' ? 'none' : escapeXml(theme.palette[token]);
+function color(
+  token: ColorToken | 'none',
+  theme: RenderTheme,
+  role: Primitive['role'],
+): string {
+  return token === 'none' ? 'none' : escapeXml(paintColor(theme, token, role));
 }
 
 /**
@@ -104,10 +115,10 @@ function styleAttrs(
   } = {},
 ): string {
   const parts: string[] = [
-    `fill="${style?.fill !== undefined ? color(style.fill, theme) : 'none'}"`,
+    `fill="${style?.fill !== undefined ? color(style.fill, theme, options.role) : 'none'}"`,
   ];
   if (style?.stroke !== undefined && !options.fillOnly) {
-    parts.push(`stroke="${color(style.stroke, theme)}"`);
+    parts.push(`stroke="${color(style.stroke, theme, options.role)}"`);
     if (style.stroke !== 'none') {
       const strokeWidthMm = effectiveStrokeWidthMm(
         style.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM,
@@ -139,6 +150,39 @@ function styleAttrs(
       }
     }
   }
+  if (style?.fillRule !== undefined) parts.push(FILL_RULE_ATTR[style.fillRule] ?? '');
+  return ` ${parts.filter((part) => part !== '').join(' ')}`;
+}
+
+/**
+ * Attribute der Hinterlegung eines Blatts (ESZ-119, siehe halo.ts), oder `undefined`, wenn das
+ * Blatt nichts malt. Runde Kappen, damit auch stumpfe Strichenden umrandet sind; die Ecken folgen
+ * der Tinte (`haloLinejoin`). Strichmuster bleiben weg, die Hinterlegung ist durchgehend. Die
+ * Füllregel bleibt, damit Löcher einer `evenodd`-Fläche Untergrund zeigen wie ohne Hinterlegung.
+ */
+function haloAttrs(
+  style: Style | undefined,
+  halo: ResolvedHalo,
+  strokeFloorMm: number | undefined,
+  theme: RenderTheme,
+  options: { rawStrokeWidth?: boolean; fillOnly?: boolean; role?: Primitive['role'] } = {},
+): string | undefined {
+  const widthMm = haloStrokeWidthMm(style, halo, strokeFloorMm, {
+    fillOnly: options.fillOnly,
+    role: options.role,
+    theme,
+  });
+  if (widthMm === undefined) return undefined;
+  const haloColor = escapeXml(halo.color);
+  const parts = [
+    `fill="${haloFilled(style) ? haloColor : 'none'}"`,
+    `stroke="${haloColor}"`,
+    `stroke-width="${options.rawStrokeWidth ? formatUnits(widthMm) : u(widthMm)}"`,
+    'stroke-linecap="round"',
+  ];
+  // `miter` ist die SVG-Vorgabe und bleibt ungeschrieben.
+  const join = haloLinejoin(style, options.role, options.fillOnly);
+  if (join !== 'miter') parts.push(`stroke-linejoin="${join}"`);
   if (style?.fillRule !== undefined) parts.push(FILL_RULE_ATTR[style.fillRule] ?? '');
   return ` ${parts.filter((part) => part !== '').join(' ')}`;
 }
@@ -223,11 +267,20 @@ function renderPrimitive(
   strokeFloorMm: number | undefined,
   inheritedStyle?: Style,
   inheritedRole?: Primitive['role'],
+  halo?: ResolvedHalo,
 ): string {
   const style = mergeStyle(primitive.style, inheritedStyle);
   const role = primitive.role ?? inheritedRole;
 
   if (primitive.type === 'path') {
+    if (halo !== undefined) {
+      const haloStr = haloAttrs(style, halo, strokeFloorMm, theme, {
+        rawStrokeWidth: true,
+        role,
+      });
+      if (haloStr === undefined) return '';
+      return `<path d="${pathDataForXml(primitive.d)}"${haloStr}${pathTransformAttr(primitive.transform)}/>`;
+    }
     const styleStr = styleAttrs(style, theme, {
       rawStrokeWidth: true,
       role,
@@ -243,7 +296,7 @@ function renderPrimitive(
   if (primitive.type === 'group') {
     const transform = transformAttr(primitive.transform);
     const children = primitive.children
-      .map((child) => renderPrimitive(child, theme, strokeFloorMm, style, role))
+      .map((child) => renderPrimitive(child, theme, strokeFloorMm, style, role, halo))
       .join('');
     return `<g${transform}>${children}</g>`;
   }
@@ -256,7 +309,12 @@ function renderPrimitive(
     // gestrichener <text> striche also etwas, das Canvas aus derselben IR nie zeichnet. Ein
     // eigener styleAttrs()-Aufruf statt der geteilten `tail` unten: die wäre für role: 'pictogram'
     // mit gesetztem pictogramStrokeContract berechnet, genau das, was Text nicht tragen soll.
-    const styleStr = styleAttrs(style, theme, { role, fillOnly: true });
+    const haloStr =
+      halo === undefined
+        ? undefined
+        : haloAttrs(style, halo, strokeFloorMm, theme, { fillOnly: true, role });
+    if (halo !== undefined && haloStr === undefined) return '';
+    const styleStr = haloStr ?? styleAttrs(style, theme, { role, fillOnly: true });
     const transform = transformAttr(primitive.transform);
     const attrs =
       `x="${u(primitive.x)}" y="${u(primitive.y)}" ${TEXT_ANCHOR_ATTR[primitive.anchor] ?? ''} ` +
@@ -274,11 +332,15 @@ function renderPrimitive(
   // Einzelne SVG-Linien haben bereits Butt-Kappen und keine Joins; das explizite Attribut würde
   // nur die bestehenden D0-Snapshots byteweise ändern. Alle anderen Piktogramm-Blätter erhalten
   // den begrenzten Contract explizit, weil sie Joins oder geschlossene Konturen tragen können.
-  const tail = `${styleAttrs(style, theme, {
+  const haloStr =
+    halo === undefined ? undefined : haloAttrs(style, halo, strokeFloorMm, theme, { role });
+  if (halo !== undefined && haloStr === undefined) return '';
+  const styleStr = haloStr ?? styleAttrs(style, theme, {
     role,
     pictogramStrokeContract: role === 'pictogram' && primitive.type !== 'line',
     strokeFloorMm,
-  })}${transformAttr(primitive.transform)}`;
+  });
+  const tail = `${styleStr}${transformAttr(primitive.transform)}`;
 
   switch (primitive.type) {
     case 'rect': {
@@ -362,7 +424,15 @@ export function renderSvg(drawing: Drawing, options: SvgOptions = {}): string {
     attrs.push('aria-hidden="true"');
   }
 
-  const body = drawing.children
+  // Mit Hinterlegung (ESZ-119) zuerst die ganze Zeichnung als Silhouette, darüber unverändert die
+  // Zeichnung. Ohne Hinterlegung bleibt die Ausgabe bytegleich.
+  const halo = resolveHalo(theme, strokeFloorMm);
+  const haloLayer = halo === undefined
+    ? ''
+    : drawing.children
+      .map((child) => renderPrimitive(child, theme, strokeFloorMm, undefined, undefined, halo))
+      .join('');
+  const body = haloLayer + drawing.children
     .map((child) => renderPrimitive(child, theme, strokeFloorMm))
     .join('');
   return `<svg ${attrs.join(' ')}>${metadata.join('')}${body}</svg>`;

@@ -176,7 +176,8 @@ describe('Bausteinregister: festgenagelter Stand', () => {
       capability: 88,
       // Seit dem 2. Oktober 2026 46: die Kappe der Leitstelle `circle-solid-cap-4mm` (D.2.5).
       'body-mark': 46,
-      'function-role': 25,
+      // Seit ESZ-116 26: die Führungskraft ohne Kürzel.
+      'function-role': 26,
       state: 58,
       tendency: 3,
       arrow: 6,

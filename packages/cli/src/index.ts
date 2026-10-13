@@ -166,7 +166,7 @@ switch (command) {
       const themeId = flag('theme') ?? 'reference';
       if (!isRenderThemeId(themeId)) {
         throw new CliUsageError(
-          `Unbekanntes Theme "${themeId}". Zulässig: reference, accessible-light, print-monochrome.`,
+          `Unbekanntes Theme "${themeId}". Zulässig: reference, accessible-light, print-monochrome, dark.`,
         );
       }
       exportSvg(flag('out') ?? 'out', parseExportSize(flag('size') ?? '64'), renderTheme(themeId));
@@ -191,7 +191,7 @@ switch (command) {
         'verify:repository | ' +
         'visual-proof --reference-root <pfad> [--out <png-pfad>]\n' +
         '  Export (core): export [--out <pfad>] [--size <px>] ' +
-        '[--theme <reference|accessible-light|print-monochrome>]',
+        '[--theme <reference|accessible-light|print-monochrome|dark>]',
     );
     process.exit(1);
 }

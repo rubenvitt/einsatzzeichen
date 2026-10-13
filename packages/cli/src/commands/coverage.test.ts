@@ -162,28 +162,30 @@ describe('coverage CLI', () => {
     // (docs/decisions/2026-10-02-ableiten-statt-messsperre.md). 12 statt 13 vollständige Achsen,
     // weil die neue Körpermarke `circle-solid-cap-4mm` (Leitstelle D.2.5) noch kein Rezept trägt.
     // 54 seit dem Fachreview vom 5. Oktober 2026 (LFH-1064): vier Systematikregeln.
-    // 13/18 seit ESZ-134: die Achse `special-form` der Sonderformen 3.6 bis 3.8, vollständig.
+    // 11 statt 12 vollständige Achsen seit ESZ-116: die Führungskraft ohne Kürzel hat kein Original.
+    // 12/18 seit ESZ-134: die Achse `special-form` der Sonderformen 3.6 bis 3.8, vollständig.
     expect(lines).toContain(
-      'Regelabdeckung:      13/18 Achsen vollständig belegt; 54 Validierungsregeln ' +
+      'Regelabdeckung:      12/18 Achsen vollständig belegt; 54 Validierungsregeln ' +
         '(Testfall je Regel durch core-Test erzwungen)',
     );
     expect(lines).toContain(
       '  Achsen mit Lücke:  technicalHeadMark 0/2 (single-vertical-bar, double-vertical-bar); ' +
         'unitGrouping 2/3 (verband-iii); administrativeLevel 3/6 (gemeinde, bezirk, bundesland); ' +
-        'vehicleCategory 7/8 (amphibienfahrzeug); bodyMarks 45/46 (circle-solid-cap-4mm)',
+        'functionRole 25/26 (leader); vehicleCategory 7/8 (amphibienfahrzeug); bodyMarks 45/46 (circle-solid-cap-4mm)',
     );
     // LFH-786: sechs neue belegte Signaturen (71 → 77) und eine technische Körpermarke mehr
     // (`track-chevron-top`, 132 → 133); LFH-586: acht statt neun Organisationen (300960 → 270864
     // enumeriert, 964 → 868 gültig). Seit dem 2. Oktober 2026 (Ableiten statt Messsperre)
     // 22644 gültig, 85 belegt, keine Rezeptsignatur mehr außerhalb, 134 Körpermarken mit der
     // Kappe der Leitstelle. Seit dem Fachreview vom 5. Oktober 2026 (LFH-1064) 8784 gültig.
-    // Zusammen 8784 − 85 = 8699; hergeleitet in `rule-coverage.test.ts`.
+    // Zusammen 8784 − 85 = 8699; hergeleitet in `rule-coverage.test.ts`. 26 Funktionsrollen seit
+    // ESZ-116 (Führungskraft ohne Kürzel).
     expect(lines).toContain(
       'Generative Reichweite (Stufe 1): 8784 gültige Kompositionen aus kind × Körpervariante × ' +
         'Organisation × Kopfzone × Fahrwerk (270864 enumeriert), davon 85 in der Referenz belegt — ' +
         '8699 erzeugbar ohne Referenzbeleg, 0 Rezeptsignaturen außerhalb der Stufe ' +
         '(dokumentiert, kein Gate); nicht enumeriert: 88 Fähigkeiten, ' +
-        '134 Körpermarken, 25 Funktionsrollen, freie Bezeichnung',
+        '134 Körpermarken, 26 Funktionsrollen, freie Bezeichnung',
     );
     expect(lines.at(-1)).toBe('Coverage-Gate bestanden.');
     // Expliziter Timeout: `coverage()` rechnet seit LFH-413 `generativeReach()` mit
