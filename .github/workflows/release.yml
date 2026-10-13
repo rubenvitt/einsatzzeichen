@@ -14,7 +14,7 @@ permissions:
   contents: write # Release-Commit, Tag und GitHub-Release
   issues: write # Erfolgs-/Fehlerkommentare auf Issues
   pull-requests: write # Erfolgs-/Fehlerkommentare auf PRs
-  id-token: write # OIDC für npm Trusted Publishing (inkl. Provenance)
+  id-token: write # OIDC für npm Trusted Publishing (inkl. Provenance) und die Claude-Anmeldung
 
 jobs:
   release:
@@ -52,8 +52,59 @@ jobs:
       - run: pnpm test
       - run: pnpm build
 
+      # DIE RELEASE-NOTIZEN SCHREIBT CLAUDE, angemeldet per Workload Identity Federation statt
+      # mit festem Schlüssel: GitHub stellt ein OIDC-Token aus, die Claude-CLI im Agent SDK
+      # tauscht es gegen ein kurzlebiges Anthropic-Token. Die Regel in der Claude Console lässt
+      # nur Pushes auf main dieses Repos zu (Audience `https://api.anthropic.com`). Gleiches
+      # Muster wie in rubenvitt/lifeline-hub.
+      #
+      # DIREKT VOR semantic-release, nicht früher: das GitHub-Token lebt rund fünf Minuten.
+      # Getauscht wird beim ersten Modellaufruf in `generateNotes`, und das nur EINMAL je Release
+      # (der zweite Aufruf kommt aus dem Merker in `scripts/release/ki-notizen.mjs`) — das Token
+      # ist einmalig einlösbar.
+      #
+      # SCHEITERT DIESER SCHRITT, scheitert nicht der Release: ohne die Variablen schreibt
+      # ki-notizen.mjs die konventionellen Notizen, mit Warnung. Die IDs sind nicht geheim und
+      # liegen als Repo-Variablen (`vars.*`), nicht als Secrets. Je Versuch 20 s, zwei
+      # Wiederholungen, harte Schrittgrenze und `continue-on-error`.
+      - name: Claude-Anmeldung (GitHub-OIDC)
+        timeout-minutes: 3
+        continue-on-error: true
+        env:
+          FEDERATION_RULE_ID: ${{ vars.ANTHROPIC_FEDERATION_RULE_ID }}
+          ORGANIZATION_ID: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
+          SERVICE_ACCOUNT_ID: ${{ vars.ANTHROPIC_SERVICE_ACCOUNT_ID }}
+          WORKSPACE_ID: ${{ vars.ANTHROPIC_WORKSPACE_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "$FEDERATION_RULE_ID" ] || [ -z "$ORGANIZATION_ID" ] || [ -z "$SERVICE_ACCOUNT_ID" ]; then
+            echo "::warning::Claude-Anmeldung übersprungen — Repo-Variablen ANTHROPIC_FEDERATION_RULE_ID/_ORGANIZATION_ID/_SERVICE_ACCOUNT_ID fehlen. Es gelten die konventionellen Release-Notizen."
+            exit 0
+          fi
+          if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
+            echo "::warning::Claude-Anmeldung übersprungen — kein OIDC-Endpunkt (fehlt \`id-token: write\`?). Es gelten die konventionellen Release-Notizen."
+            exit 0
+          fi
+          jwt="$RUNNER_TEMP/claude-oidc.jwt"
+          if ! curl -fsS --connect-timeout 10 --max-time 20 --retry 2 --retry-all-errors \
+              -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+              "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://api.anthropic.com" \
+              | jq -er .value > "$jwt"; then
+            echo "::warning::Claude-Anmeldung übersprungen — GitHub hat kein OIDC-Token ausgestellt. Es gelten die konventionellen Release-Notizen."
+            rm -f "$jwt"
+            exit 0
+          fi
+          {
+            echo "ANTHROPIC_FEDERATION_RULE_ID=$FEDERATION_RULE_ID"
+            echo "ANTHROPIC_ORGANIZATION_ID=$ORGANIZATION_ID"
+            echo "ANTHROPIC_SERVICE_ACCOUNT_ID=$SERVICE_ACCOUNT_ID"
+            echo "ANTHROPIC_IDENTITY_TOKEN_FILE=$jwt"
+            # Nur nötig, wenn die Regel mehrere Workspaces abdeckt.
+            if [ -n "$WORKSPACE_ID" ]; then echo "ANTHROPIC_WORKSPACE_ID=$WORKSPACE_ID"; fi
+          } >> "$GITHUB_ENV"
+
+      # Kein ANTHROPIC_API_KEY mehr: Claude meldet sich im Schritt davor per Federation an.
       - name: semantic-release
         run: pnpm exec semantic-release
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
