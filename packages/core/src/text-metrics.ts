@@ -13,7 +13,7 @@ import type { Drawing, Primitive } from '@einsatzzeichen/schema';
  * Dieses Modul schließt die Lücke in `core`, ohne dass `core` eine Schrift kennt: die Laufweite
  * kommt über `TextMetrics` von außen (Injektionspräzedenz: `checkTextLegibility` nimmt die
  * Rendergrößen als Parameter, damit `core` die Katalogwerte nicht kennt). Die Vertikale braucht
- * keine Injektion — dafür stehen die gemessenen Arimo-Anteile in `text-policy.ts`
+ * keine Injektion — dafür stehen die gemessenen Anteile der Katalogschrift in `text-policy.ts`
  * (`verticalTextBoxMm`).
  *
  * **Vorschubsumme (mit Kerning, sofern der Anbieter es liefert), an den Enden auf die Tinte
@@ -25,18 +25,18 @@ import type { Drawing, Primitive } from '@einsatzzeichen/schema';
  * die reine Vorschubsumme überschritte sie um 0,02–0,09 em je Seite („EL" bei 10,61 mm: Box
  * 12,10 mm, Vorschubsumme 12,98 mm, Tinte 11,75 mm — Messung vom 28. August 2026, 8 px/mm).
  *
- * **Kerning, wenn die Quelle es kennt.** Ohne Kerning ist die Summe in Arimo fast immer zu groß
- * (die Paare sind überwiegend negativ) — konservativ, aber nicht exakt: „GW Tauchen" (I.2.2,
- * 4,63 mm) läge ungekernt 0,52 mm rechts über seiner Box, gerastert endet es genau auf der
- * Boxkante; das Paar „Ta" trägt −227/2048 em. `kerningEm` ist deshalb Teil der Schnittstelle,
+ * **Kerning, wenn die Quelle es kennt.** Ohne Kerning ist die Summe fast immer zu groß (die
+ * Paare sind überwiegend negativ) — konservativ, aber nicht exakt: „GW Tauchen" (I.2.2,
+ * 4,63 mm) lag in Arimo ungekernt 0,52 mm rechts über seiner Box, gerastert endete es genau auf
+ * der Boxkante; das Paar „Ta" trägt in Einsatzzeichen Sans −67/1000 em. `kerningEm` ist deshalb Teil der Schnittstelle,
  * optional, weil ein Doppel ohne Paare auskommt. Ob die Rechnung die gerasterte Tinte
  * tatsächlich überdeckt, ist trotzdem eine **Messfrage** und wird im Katalog belegt
  * (`packages/conformance/src/text-metrics.test.ts`, Kalibrierung gegen dieselbe Rasterung wie
  * `footInkAgainstBox` in fonts.test.ts).
  *
  * **Toleranz: ein Rasterpixel bei 8 px/mm** (`BOX_TOLERANCE_MM`). Die handvermessenen Boxen
- * des Katalogs liegen an der Tinte der Referenz auf 0,01–0,05 mm; gegen die Arimo-Instanz
- * bleiben Reste bis 0,07 mm („DMO" bei 9 mm: Tinte bis 26,07, Box bis 26,00; „MLW IV Lbw":
+ * des Katalogs liegen an der Tinte der Referenz auf 0,01–0,05 mm; gegen die damalige Arimo-Instanz
+ * blieben Reste bis 0,07 mm („DMO" bei 9 mm: Tinte bis 26,07, Box bis 26,00; „MLW IV Lbw":
  * 30,06 gegen 30,00 — Messung vom 28. August 2026). Die Rasterevidenz des Katalogs lässt genau
  * einen Pixel durch (fonts.test.ts: 0 px Toleranz bei 8 px/mm, ein Pixel deckt 0,125 mm;
  * text-ink.test.ts: 2 px bei 16 px/mm = 0,125 mm). Das Gate übernimmt diese Schwelle und ist
@@ -51,22 +51,22 @@ import type { Drawing, Primitive } from '@einsatzzeichen/schema';
  * (`text-ink.test.ts`, 512 px) sie belegt. Stattdessen gilt die Tinte des tatsächlichen
  * Inhalts: größtes yMax und kleinstes yMin seiner Glyphen um die Grundlinie, die bei
  * `alphabetic` exakt auf `y` liegt. Bei `hanging` liegt die Grundlinie um die Hanging-Metrik der
- * Schrift unter `y`, und die steht nicht in der Tabelle (BASE-Tabelle fehlt Arimo; resvg leitet
+ * Schrift unter `y`, und die steht nicht in der Tabelle (die Schrift hat keine BASE-Tabelle; resvg leitet
  * den Wert intern ab) — dort wird bewusst nicht geprüft, die Fußzone deckt der Rasterbeleg in
  * fonts.test.ts. `middle` bleibt `unmeasured-baseline`.
  *
  * Auch vertikal gilt `BOX_TOLERANCE_MM`, nicht 1e-9: die handvermessenen Boxen enden an der
- * Grundlinie, runde Glyphen (O, C, x) überschießen sie aber um −20/2048 em — bei 7 mm 0,068 mm
- * („DMO"), bei 9 mm 0,088 mm („Fax"), bei 14 mm 0,137 mm („C", comms.telephone-exchange).
- * Exakt geprüft fielen sieben Läufe des Bestands, alle um diesen Überschuss oder um
- * Handvermessungsreste ≤ 0,05 mm („Bezeichnung" 0,046 mm, „L" 0,005 mm); mit der
- * Rasterpixel-Toleranz bleibt allein „C" bei 14 mm, um 0,012 mm darüber — ein echter, wenn auch
- * unsichtbarer Befund, den das Gate meldet, statt die Schwelle danach zu biegen.
+ * Grundlinie, runde Glyphen (O, C, x) überschießen sie aber — in Arimo um −20/2048 em, in
+ * Einsatzzeichen Sans um −12/1000 em, bei 7 mm 0,084 mm („DMO"), bei 10,5 mm 0,126 mm. Mit
+ * Arimo fielen exakt geprüft sieben Läufe des Bestands, alle um diesen Überschuss oder um
+ * Handvermessungsreste ≤ 0,05 mm („Bezeichnung" 0,046 mm, „L" 0,005 mm). Seit ESZ-114 reichen
+ * die Boxen der großen J.1-Kürzel deshalb 0,15 mm unter die Grundlinie
+ * (`LABEL_BELOW_BASELINE_MM`), statt die Schwelle nach dem Befund zu biegen.
  */
 
 /**
  * Laufweitenquelle einer Schrift. `core` definiert nur die Schnittstelle; wer sie erfüllt, kennt
- * die konkrete Schriftdatei (im Katalog: `ARIMO_TEXT_METRICS` aus `assets/arimo-metrics.json`).
+ * die konkrete Schriftdatei (im Katalog: `TEXT_FONT_METRICS` aus `assets/einsatzzeichen-sans-metrics.json`).
  */
 export interface TextMetrics {
   /**
@@ -112,7 +112,8 @@ export interface TextMetrics {
 
 /**
  * Ob der Schnitt eines Laufs zulässig ist. Kursiv gibt es nur in 500 (siehe `fontStyle` im
- * Schema): resvg zeichnet jeden kursiven Lauf aus der einen Datei `Arimo-MediumItalic.ttf`, ein
+ * Schema): resvg zeichnet jeden kursiven Lauf aus der einen Datei
+ * `EinsatzzeichenSans-MediumItalic.ttf`, ein
  * Browser setzte 400 oder 700 anders. Der Typ kann die Regel nicht ausdrücken, ohne die
  * Deklarationen der Piktogrammtabellen zu sprengen; sie steht deshalb hier. Auch ein anderer
  * Stilwert aus ungeprüfter IR fällt hier auf.
@@ -127,7 +128,7 @@ function unsupportedFontStyle(primitive: TextPrimitive): string | undefined {
   if (weight !== 500) {
     return (
       `Lauf "${primitive.content}" ist kursiv in ${weight === undefined ? 'Stufe 400 (ohne Angabe)' : `Stufe ${String(weight)}`} ` +
-      'gesetzt; einen kursiven Schnitt gibt es nur in 500 (Arimo-MediumItalic.ttf).'
+      'gesetzt; einen kursiven Schnitt gibt es nur in 500 (EinsatzzeichenSans-MediumItalic.ttf).'
     );
   }
   return undefined;

@@ -1,6 +1,6 @@
 import type { Point, Primitive, Style } from '@einsatzzeichen/schema';
 import { CATALOG_TEXT_FONT_WEIGHT } from '../render/text-policy.js';
-import { ARIMO_TEXT_METRICS } from '../geometry/text-metrics.js';
+import { TEXT_FONT_METRICS } from '../geometry/text-metrics.js';
 import { pathLengthMm, resolvePathPoints } from '../geometry/parametric.js';
 import { measureTextRun } from '../text-metrics.js';
 
@@ -45,12 +45,12 @@ const UNKNOWN_DESCENT_EM = 0.25;
 
 let capHeightCache: number | undefined;
 
-/** Versalhöhe der Katalogschrift (Arimo 500) in em, am „H“ gemessen. */
+/** Versalhöhe der Katalogschrift (Stufe 500) in em, am „H“ gemessen. */
 function capHeightEm(): number {
   if (capHeightCache !== undefined) return capHeightCache;
-  const metrics = ARIMO_TEXT_METRICS.medium ?? ARIMO_TEXT_METRICS;
+  const metrics = TEXT_FONT_METRICS.medium ?? TEXT_FONT_METRICS;
   const extent = metrics.inkExtentEm('H'.codePointAt(0) ?? 72);
-  if (extent === undefined) throw new Error('Arimo führt kein „H“.');
+  if (extent === undefined) throw new Error('Die Katalogschrift führt kein „H“.');
   capHeightCache = extent[3];
   return capHeightCache;
 }
@@ -90,7 +90,7 @@ export function textRun({ content, x, y, sizeMm, anchor }: TextRunInput): Primit
     style: { ...TEXT_FILL },
   };
   requireFinite('Textlauf', x, y, sizeMm);
-  const measure = measureTextRun({ ...base, boxMm: { xMm: x, yMm: y, widthMm: 0, heightMm: 0 } }, ARIMO_TEXT_METRICS);
+  const measure = measureTextRun({ ...base, boxMm: { xMm: x, yMm: y, widthMm: 0, heightMm: 0 } }, TEXT_FONT_METRICS);
   const width = textAdvanceMm(content, sizeMm);
   const start = anchor === 'start' ? x : anchor === 'middle' ? x - width / 2 : x - width;
   const cap = capHeightEm() * sizeMm;
@@ -120,7 +120,7 @@ export function textAdvanceMm(content: string, sizeMm: number): number {
     fontWeight: CATALOG_TEXT_FONT_WEIGHT as 500,
     boxMm: { xMm: 0, yMm: 0, widthMm: 0, heightMm: 0 },
   };
-  const measure = measureTextRun(probe, ARIMO_TEXT_METRICS);
+  const measure = measureTextRun(probe, TEXT_FONT_METRICS);
   return measure.widthMm + measure.unknownCodepoints.length * UNKNOWN_ADVANCE_EM * sizeMm;
 }
 

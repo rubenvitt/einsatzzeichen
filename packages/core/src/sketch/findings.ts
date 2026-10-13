@@ -41,7 +41,7 @@ export const SKETCH_BLOCKS: Readonly<Record<SketchBlockId, SketchBlock>> = deepF
     basis: 'constructed',
     from: 'J.5 Musterskizze',
     geometry: proposed(
-      'Langsechseck 8 mm hoch, Spitzen je 4 mm, Text 4 mm Arimo 500, Innenabstand 1,33 mm je Seite; Breite folgt dem Text',
+      'Langsechseck 8 mm hoch, Spitzen je 4 mm, Text 4 mm Katalogschrift 500, Innenabstand 1,33 mm je Seite; Breite folgt dem Text',
       'Die Musterskizze zeigt die Form, aber keine Einzeldatei mit Maßen',
     ),
   },

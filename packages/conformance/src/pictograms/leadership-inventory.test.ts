@@ -7,7 +7,7 @@ import { RECIPES } from '../recipes.js';
 import { erwarteZurechenbaresFachreview } from '../test-support/domain-review.js';
 import { RENDER_CASES } from '../test-support/render-cases.js';
 import { ALL_PICTOGRAMS, pictogram, pictogramVariantKey } from '@einsatzzeichen/core';
-import { LEADERSHIP_PICTOGRAMS } from '@einsatzzeichen/core';
+import { LEADERSHIP_PICTOGRAMS, textSizeForCapHeightMm } from '@einsatzzeichen/core';
 
 const D2_CONTRAST_PAIRS = [
   {
@@ -104,7 +104,7 @@ describe('Leadership-Inventar nach D.2', () => {
     });
   });
 
-  it('bewahrt den Bezeichnungslauf der Quelle mit der gemessenen Arimo-Tinthülle', () => {
+  it('bewahrt den Bezeichnungslauf der Quelle mit der vermessenen Tinthülle', () => {
     const text = LEADERSHIP_PICTOGRAMS[0]?.primitives.find(
       (primitive) => primitive.type === 'text',
     );
@@ -114,7 +114,7 @@ describe('Leadership-Inventar nach D.2', () => {
       content: 'Bezeichnung',
       x: 2.673,
       y: 13,
-      sizeMm: 4.243,
+      sizeMm: textSizeForCapHeightMm(2.92),
       anchor: 'start',
       baseline: 'alphabetic',
       boxMm: { xMm: 2.673, yMm: 9.971, widthMm: 25.15, heightMm: 3.927 },
@@ -200,8 +200,8 @@ describe('Leadership-Inventar nach D.2', () => {
         referenceAsset: 'D.3.14_Fachberater THW.svg',
         box: { xMm: 2.75, yMm: 2.75, widthMm: 28.75, heightMm: 26.5 },
         bodyFill: 'blau',
-        role: ['THW', 'weiss', 16, 18.5, 7.08, 'middle'],
-        carrier: ['stv OB', 'schwarz', 31.5, 29, 4.243, 'end'],
+        role: ['THW', 'weiss', 16, 18.5, textSizeForCapHeightMm(4.87), 'middle'],
+        carrier: ['stv OB', 'schwarz', 31.5, 29, textSizeForCapHeightMm(2.919), 'end'],
       },
       {
         id: 'leadership.red-cross-commissioner',
@@ -210,8 +210,8 @@ describe('Leadership-Inventar nach D.2', () => {
         referenceAsset: 'D.3.15_Rotkreuzbeauftragter.svg',
         box: { xMm: 2.75, yMm: 2.75, widthMm: 28.25, heightMm: 26.5 },
         bodyFill: 'weiss',
-        role: ['RKB', 'schwarz', 16, 18.5, 7.08, 'middle'],
-        carrier: ['DRK', 'schwarz', 31, 29, 4.243, 'end'],
+        role: ['RKB', 'schwarz', 16, 18.5, textSizeForCapHeightMm(4.87), 'middle'],
+        carrier: ['DRK', 'schwarz', 31, 29, textSizeForCapHeightMm(2.919), 'end'],
       },
     ] as const;
 

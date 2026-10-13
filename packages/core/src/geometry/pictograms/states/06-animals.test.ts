@@ -5,6 +5,7 @@ import {
   type DepictionVariant,
   type Primitive,
 } from '@einsatzzeichen/schema';
+import { textSizeForCapHeightMm } from '../../../render/text-policy.js';
 import { ANIMAL_STATES } from './06-animals.js';
 
 const VIEWBOX_BODY: Primitive = {
@@ -74,7 +75,7 @@ describe('5.8.6 Tierzustände', () => {
     ).toEqual(['line', 'text']);
     expect(animal('contaminated-animal', 'alternative').primitives[2]).toMatchObject({
       content: 'K',
-      sizeMm: 7.1,
+      sizeMm: textSizeForCapHeightMm(4.87),
       y: 7,
     });
     expect(animal('dead-animal').primitives.slice(1).map((item) => item.type)).toEqual([

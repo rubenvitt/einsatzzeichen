@@ -3,7 +3,7 @@ import { boundsOfMm, type BoundsMm } from '../bounds.js';
 import { FOOT_GAP_MM, profileFor, type LayoutProfile } from '../layout/profiles.js';
 import { COMPOSE_ZONE_CONSTANTS } from '../layout/zones.js';
 import { NotMeasuredError } from '../not-measured.js';
-import { ARIMO_CAP_HEIGHT_FRACTION, verticalTextBoxMm } from '../render/text-policy.js';
+import { TEXT_CAP_HEIGHT_FRACTION, verticalTextBoxMm } from '../render/text-policy.js';
 import { innerSpanMm, outerSpanMm, outlineSegments } from './body-outline.js';
 import { noteDerivation } from './record.js';
 import { LARGE_CENTER_CAP_HEIGHT_MM } from './circle.js';
@@ -44,7 +44,7 @@ import { LARGE_CENTER_CAP_HEIGHT_MM } from './circle.js';
  */
 
 /** Die Läufe dieses Moduls stehen im Grad der unteren Zonen, wie an allen Quellen oben. */
-const RUN_SIZE_MM = COMPOSE_ZONE_CONSTANTS.BOTTOM_LABEL_CAP_HEIGHT_MM / ARIMO_CAP_HEIGHT_FRACTION;
+const RUN_SIZE_MM = COMPOSE_ZONE_CONSTANTS.BOTTOM_LABEL_CAP_HEIGHT_MM / TEXT_CAP_HEIGHT_FRACTION;
 const RUN_CAP_MM = COMPOSE_ZONE_CONSTANTS.BOTTOM_LABEL_CAP_HEIGHT_MM;
 const ANCHOR_MARGIN_MM = COMPOSE_ZONE_CONSTANTS.TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM;
 const SIDE_MARGIN_MM = COMPOSE_ZONE_CONSTANTS.LABEL_SIDE_MARGIN_MM;
@@ -272,7 +272,7 @@ function centerBoxOf(
 ): { topMm: number; bottomMm: number } | undefined {
   if (labels.center === undefined) return undefined;
   const sizeMm = (labels.centerCapHeightMm ?? COMPOSE_ZONE_CONSTANTS.CENTER_LABEL_CAP_HEIGHT_MM) /
-    ARIMO_CAP_HEIGHT_FRACTION;
+    TEXT_CAP_HEIGHT_FRACTION;
   const baseline = bounds.maxY -
     (labels.centerBaselineFromBodyBottomMm ?? profile.centerBaselineFromBodyBottomMm);
   const box = verticalTextBoxMm(baseline, sizeMm, 'alphabetic');
@@ -461,13 +461,13 @@ export function deriveLabelZones(context: LabelZoneContext): DerivedLabelZones {
     if (labels.topLeft !== undefined && topLeftBaseline !== undefined) {
       const sizeMm = labels.topLeftMetrics === undefined
         ? RUN_SIZE_MM
-        : labels.topLeftMetrics.capHeightMm / ARIMO_CAP_HEIGHT_FRACTION;
+        : labels.topLeftMetrics.capHeightMm / TEXT_CAP_HEIGHT_FRACTION;
       const box = verticalTextBoxMm(bounds.minY + topLeftBaseline, sizeMm, 'alphabetic');
       bands.push({ topMm: box.topMm, bottomMm: box.topMm + box.heightMm });
     }
     if (labels.topLeftLines !== undefined && profile.topLeftLines !== undefined) {
       const [first, second] = profile.topLeftLines.baselinesFromBodyTopMm;
-      const sizeMm = profile.topLeftLines.capHeightMm / ARIMO_CAP_HEIGHT_FRACTION;
+      const sizeMm = profile.topLeftLines.capHeightMm / TEXT_CAP_HEIGHT_FRACTION;
       const top = verticalTextBoxMm(bounds.minY + first, sizeMm, 'alphabetic');
       const bottom = verticalTextBoxMm(bounds.minY + second, sizeMm, 'alphabetic');
       bands.push({ topMm: top.topMm, bottomMm: bottom.topMm + bottom.heightMm });
@@ -544,7 +544,7 @@ export function deriveLabelZones(context: LabelZoneContext): DerivedLabelZones {
     const source = vehicleLand.topLeftLines!;
     const [first, second] = source.baselinesFromBodyTopMm;
     const spacingMm = second - first;
-    const sizeMm = source.capHeightMm / ARIMO_CAP_HEIGHT_FRACTION;
+    const sizeMm = source.capHeightMm / TEXT_CAP_HEIGHT_FRACTION;
     const firstOffsetMm = family === 'air-hull'
       ? profileFor('vehicle-air', 'fixed-wing-hull').topLeftBaselineFromBodyTopMm!
       : topOffsetMm;

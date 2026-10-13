@@ -1,4 +1,5 @@
 import { deepFreeze } from '../../readonly-data.js';
+import { textSizeForCapHeightMm } from '../../../render/text-policy.js';
 import {
   defineComms,
   type CatalogPictogramDefinition,
@@ -103,14 +104,13 @@ export function arcPath(
 }
 
 /*
- * Kürzel: Die Referenz setzt sie in einer schmaleren Schrift als Arimo, in derselben
- * Strichstärke wie allen Katalogtext. Gesetzt wird Arimo 500 (`CATALOG_TEXT_FONT_WEIGHT`,
- * LFH-585). Der Schriftgrad ist das geometrische Mittel aus Passung auf die Referenzhöhe und auf
- * die Referenzbreite der Tinte, auf 0,05 mm gerundet, gerechnet mit den Metriken von Arimo Bold,
- * in dem die Kürzel bis LFH-585 standen; die Tintenmitte liegt auf der Referenzmitte. Wo Arimo
- * auf Referenzhöhe den Körper berühren würde („mBS", „APRT"), gilt allein die Referenzbreite.
- * Arimo 500 läuft in diesen Kürzeln 0,6 bis 3,6 % schmaler als Bold; die Grade bleiben stehen,
- * denn keins der Kürzel passt bei voller Referenzhöhe in seine Box.
+ * Kürzel: Die Referenz setzt sie in einer eigenen Schrift, in derselben Strichstärke wie allen
+ * Katalogtext. Gesetzt wird die Katalogschrift in 500 (`CATALOG_TEXT_FONT_WEIGHT`, LFH-585).
+ * Bis LFH-585 standen die Kürzel in Arimo Bold, und ihr Grad war das geometrische Mittel aus
+ * Passung auf die Referenzhöhe und auf die Referenzbreite der Tinte, auf 0,05 mm gerundet; wo Arimo
+ * auf Referenzhöhe den Körper berührt hätte („mBS", „APRT"), galt allein die Referenzbreite. Seit
+ * ESZ-114 (Einsatzzeichen Sans) steht jeder Lauf auf der Versalhöhe, die er damals bekam, oder auf
+ * Referenzhöhe, wo sie in seine vermessene Box passt; die Tintenmitte liegt auf der Referenzmitte.
  */
 
 const DEVICE_CONTRAST = [
@@ -136,21 +136,22 @@ const DEVICE_BOX = { xMm: 4, yMm: 4, widthMm: 24, heightMm: 24 } as const;
 
 /**
  * Ein dreistelliges Kürzel in Referenzlage: Versalhöhe 7,3 mm (11,7 … 19,0 mm), Grundlinie
- * 19 mm, Tintenmitte x ≈ 16,5 mm. Der Schriftgrad (9,65 … 10,05 mm) hängt von der
- * Referenzbreite des jeweiligen Kürzels ab.
+ * 19 mm, Tintenmitte x ≈ 16,5 mm. „MRT" steht seit ESZ-114 auf dieser Höhe. „FRT" (6,639 mm)
+ * und „HRT" (6,845 mm) bleiben verkleinert, wie sie in Arimo Bold an der Referenzbreite bestimmt
+ * wurden; ihre Boxen sind an diesen Höhen vermessen.
  *
  * `minRenderPx: 32`: unter 10,67 mm Schriftgrad bleibt ein Lauf bei 24 px unter
  * `MINIMUM_TEXT_RENDER_PX`; bei 32 px trägt er rund 10 px.
  */
 function deviceLabel(
   content: string,
-  sizeMm: number,
+  capHeightMm: number,
   boxMm: { xMm: number; yMm: number; widthMm: number; heightMm: number },
 ) {
   return commsText(content, {
     x: 16.25,
     y: 19,
-    sizeMm,
+    sizeMm: textSizeForCapHeightMm(capHeightMm),
     boxMm,
     minRenderPx: 32,
   });
@@ -158,13 +159,13 @@ function deviceLabel(
 
 /**
  * Das große „C" der beiden Fernsprechvermittlungen: Referenztinte 12,5 … 19,8 × 11,1 … 21,2 mm,
- * also rund 10 mm Buchstabenhöhe mit Überschwingern; 12,55 mm Schriftgrad, Grundlinie 21,05 mm.
+ * also rund 10 mm Buchstabenhöhe mit Überschwingern; Versalhöhe 8,634 mm, Grundlinie 21,05 mm.
  */
 function exchangeLabel() {
   return commsText('C', {
     x: 16.05,
     y: 21.05,
-    sizeMm: 12.55,
+    sizeMm: textSizeForCapHeightMm(8.634),
     boxMm: { xMm: 11.7, yMm: 11.95, widthMm: 8.85, heightMm: 9.55 },
     minRenderPx: 32,
   });
@@ -176,10 +177,10 @@ function exchangeBar() {
 }
 
 /**
- * Kleines Kürzel (Gateway, Repeater): Referenzversalhöhe 4,9 mm, daraus 7,1 mm Schriftgrad.
- * Bis LFH-585 stand der Grad in Arimo Bold bei 6,9 mm; in Arimo 500 passt die volle Versalhöhe
- * in die Boxen („DMO" 15,69 mm Tinte in 16 mm, „TMO" 15,32 mm in 15,6 mm).
- * `minRenderPx: 64`, weil 7,1 mm bei 32 px nur 7,1 px effektiv tragen.
+ * Kleines Kürzel (Gateway, Repeater): Referenzversalhöhe 4,869 mm. Bis LFH-585 stand der Lauf
+ * in Arimo Bold verkleinert; seit Arimo 500 passt die volle Versalhöhe in die Boxen, in
+ * Einsatzzeichen Sans mit mehr Luft („DMO" 13,9 mm Tinte in 16 mm).
+ * `minRenderPx: 64`, weil rund 7 mm Schriftgrad bei 32 px nur 7 px effektiv tragen.
  */
 function smallLabel(
   content: string,
@@ -190,7 +191,7 @@ function smallLabel(
   return commsText(content, {
     x: xMm,
     y: baselineMm,
-    sizeMm: 7.1,
+    sizeMm: textSizeForCapHeightMm(4.869),
     boxMm,
     minRenderPx: 64,
   });
@@ -217,7 +218,8 @@ export const DEVICE_COMMS = deepFreeze([
    * Ortsfeste Basisstation: Kreis um (16|18) mit r 12 und darüber ein Giebel (3|11) → (16|1) →
    * (29|11) — der Giebel steht für den festen Standort und unterscheidet J.3.2 von der mobilen
    * Fassung J.3.3. Die Referenz führt hier **keinen** Quadratkörper wie die übrigen Gerätezeichen.
-   * Kürzel „BS": Referenzhöhe 7,55 mm (13,6 … 21,1), 9,15 mm Schriftgrad, Grundlinie 21,05 mm.
+   * Kürzel „BS": Referenzhöhe 7,55 mm (13,6 … 21,1), Grundlinie 21,05 mm; verkleinert auf
+   * 6,295 mm Versalhöhe wie „mBS", die Box ist an dieser Höhe vermessen.
    */
   defineComms({
     section: 'J.3.2',
@@ -240,17 +242,16 @@ export const DEVICE_COMMS = deepFreeze([
       commsText('BS', {
         x: 16.1,
         y: 21.05,
-        sizeMm: 9.15,
+        sizeMm: textSizeForCapHeightMm(6.295),
         boxMm: { xMm: 10.05, yMm: 14.35, widthMm: 12.35, heightMm: 7.1 },
         minRenderPx: 32,
       }),
     ],
   }),
   /**
-   * Mobile Basisstation: Kreis um (16|16) mit r 12, ohne Giebel. „mBS" läuft in Arimo bei
-   * Referenzhöhe in den Kreis hinein; der Schriftgrad (9,15 mm, damals in Arimo Regular bestimmt,
-   * seit LFH-585 in 500 gesetzt; die Tinte passt weiter in die Box) folgt deshalb der
-   * Referenzbreite 6,75 … 25,5 mm, Grundlinie 19 mm.
+   * Mobile Basisstation: Kreis um (16|16) mit r 12, ohne Giebel. „mBS" lief in Arimo bei
+   * Referenzhöhe in den Kreis hinein; die Versalhöhe (6,295 mm, damals in Arimo Regular an der
+   * Referenzbreite 6,75 … 25,5 mm bestimmt) bleibt, die Box ist an ihr vermessen. Grundlinie 19 mm.
    */
   defineComms({
     section: 'J.3.3',
@@ -264,7 +265,7 @@ export const DEVICE_COMMS = deepFreeze([
       commsText('mBS', {
         x: 16.05,
         y: 19.05,
-        sizeMm: 9.15,
+        sizeMm: textSizeForCapHeightMm(6.295),
         boxMm: { xMm: 6.4, yMm: 12.35, widthMm: 19.45, heightMm: 7.1 },
         minRenderPx: 32,
       }),
@@ -332,7 +333,7 @@ export const DEVICE_COMMS = deepFreeze([
     contrastPairs: DEVICE_CONTRAST,
     primitives: [
       deviceBody(),
-      deviceLabel('HRT', 9.95, { xMm: 6.35, yMm: 11.85, widthMm: 20.35, heightMm: 7.45 }),
+      deviceLabel('HRT', 6.845, { xMm: 6.35, yMm: 11.85, widthMm: 20.35, heightMm: 7.45 }),
     ],
   }),
   defineComms({
@@ -344,7 +345,7 @@ export const DEVICE_COMMS = deepFreeze([
     contrastPairs: DEVICE_CONTRAST,
     primitives: [
       deviceBody(),
-      deviceLabel('MRT', 10.05, { xMm: 5.7, yMm: 11.75, widthMm: 21.65, heightMm: 7.55 }),
+      deviceLabel('MRT', 7.3, { xMm: 5.7, yMm: 11.75, widthMm: 21.65, heightMm: 7.55 }),
     ],
   }),
   defineComms({
@@ -356,13 +357,14 @@ export const DEVICE_COMMS = deepFreeze([
     contrastPairs: DEVICE_CONTRAST,
     primitives: [
       deviceBody(),
-      deviceLabel('FRT', 9.65, { xMm: 7.2, yMm: 12.05, widthMm: 18.65, heightMm: 7.25 }),
+      deviceLabel('FRT', 6.639, { xMm: 7.2, yMm: 12.05, widthMm: 18.65, heightMm: 7.25 }),
     ],
   }),
   /**
-   * Vierstelliges Kürzel: „APRT" liefe bei Referenzhöhe in Arimo über den Körper hinaus. Der
-   * Schriftgrad (8,7 mm) folgt deshalb der Referenzbreite 4,4 … 27,8 mm, Grundlinie 19 mm.
-   * Bei 32 px trägt er 8,7 px effektiv — über `MINIMUM_TEXT_RENDER_PX`.
+   * Vierstelliges Kürzel: „APRT" lief bei Referenzhöhe in Arimo über den Körper hinaus. Die
+   * Versalhöhe (5,985 mm) folgte deshalb der Referenzbreite 4,4 … 27,8 mm, die Box ist an ihr
+   * vermessen. Grundlinie 19 mm. Bei 32 px trägt der Lauf rund 8,6 px effektiv — über
+   * `MINIMUM_TEXT_RENDER_PX`.
    */
   defineComms({
     section: 'J.3.9',
@@ -376,7 +378,7 @@ export const DEVICE_COMMS = deepFreeze([
       commsText('APRT', {
         x: 16.05,
         y: 19,
-        sizeMm: 8.7,
+        sizeMm: textSizeForCapHeightMm(5.985),
         boxMm: { xMm: 4.1, yMm: 12.7, widthMm: 23.9, heightMm: 6.6 },
         minRenderPx: 32,
       }),
@@ -465,8 +467,8 @@ export const DEVICE_COMMS = deepFreeze([
   /**
    * Dieselbe Vermittlung als VoIP. Ohne das Wort unten links wäre dieses Zeichen von J.3.14 nicht
    * zu unterscheiden — die Referenzgeometrien sind bis auf Rundungsstellen identisch. „VoIP":
-   * Versalhöhe 2,92 mm ab x 5,5 mm, Grundlinie 26 mm, daraus 4,243 mm Schriftgrad (bis LFH-585
-   * in Arimo Bold verkleinert auf 4,1 mm; in Arimo 500 passt die volle Höhe). Deshalb trägt
+   * Versalhöhe 2,919 mm ab x 5,5 mm, Grundlinie 26 mm (bis LFH-585 in Arimo Bold verkleinert;
+   * seit Arimo 500 passt die volle Höhe). Deshalb trägt
    * das Zeichen zwei Läufe mit sehr verschiedenen Einsatzgrenzen: 32 px für das „C", 64 px für
    * das kleine „VoIP".
    */
@@ -484,7 +486,7 @@ export const DEVICE_COMMS = deepFreeze([
       commsText('VoIP', {
         x: 5.35,
         y: 26,
-        sizeMm: 4.243,
+        sizeMm: textSizeForCapHeightMm(2.919),
         anchor: 'start',
         boxMm: { xMm: 5.05, yMm: 22.85, widthMm: 9.3, heightMm: 3.5 },
         minRenderPx: 64,

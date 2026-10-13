@@ -10,6 +10,7 @@ import {
   type Primitive,
   type StrengthId,
 } from '@einsatzzeichen/schema';
+import { textSizeForCapHeightMm } from '../render/text-policy.js';
 import { deepFreeze, type DeepReadonly } from './readonly-data.js';
 
 const BODY_STYLE = {
@@ -19,6 +20,14 @@ const BODY_STYLE = {
 };
 
 const BLACK_FILL = { fill: 'schwarz' as const, stroke: 'none' as const };
+
+/**
+ * Versalhöhen der Funktionsläufe, an der Referenz abgelesen: 7,3 mm für den großen Lauf im
+ * Verbandszeichen, 4,87 mm im Personenzeichen, 2,919 mm für die kleinen Läufe.
+ */
+const FORMATION_LARGE = textSizeForCapHeightMm(7.3);
+const PERSON_LARGE = textSizeForCapHeightMm(4.87);
+const SMALL = textSizeForCapHeightMm(2.919);
 
 function roleRun(
   content: string,
@@ -51,7 +60,7 @@ function carrierRun(
     content,
     anchorXMm,
     baselineYMm,
-    sizeMm: 4.243,
+    sizeMm: SMALL,
     anchor: 'end',
     boxMm,
     minRenderPx: 61,
@@ -158,8 +167,6 @@ function personRole(options: PersonRoleOptions): FunctionRoleDefinition {
   };
 }
 
-const FORMATION_LARGE = 10.61;
-const PERSON_LARGE = 7.08;
 const DEFINITIONS: Record<FunctionRoleId, FunctionRoleDefinition> = {
   'disaster-control-command': formationRole(
     'disaster-control-command',
@@ -173,7 +180,7 @@ const DEFINITIONS: Record<FunctionRoleId, FunctionRoleDefinition> = {
     'fuehrung-leitung',
     [
       roleRun('TEL', 18, FORMATION_LARGE, { xMm: 6.3, yMm: 10.4, widthMm: 19.3, heightMm: 7.8 }, 25),
-      roleRun('Evakuierung', 23, 4.243, { xMm: 4.3, yMm: 19.7, widthMm: 23.5, heightMm: 4.4 }, 61),
+      roleRun('Evakuierung', 23, SMALL, { xMm: 4.3, yMm: 19.7, widthMm: 23.5, heightMm: 4.4 }, 61),
     ],
   ),
   'incident-command': formationRole(
@@ -188,7 +195,7 @@ const DEFINITIONS: Record<FunctionRoleId, FunctionRoleDefinition> = {
     'fuehrung-leitung',
     [
       roleRun('EAL', 18, FORMATION_LARGE, { xMm: 6.5, yMm: 10.4, widthMm: 19.5, heightMm: 7.8 }, 25),
-      roleRun('Nord', 23, 4.243, { xMm: 11.5, yMm: 19.7, widthMm: 9.1, heightMm: 3.7 }, 61),
+      roleRun('Nord', 23, SMALL, { xMm: 11.5, yMm: 19.7, widthMm: 9.1, heightMm: 3.7 }, 61),
     ],
   ),
   'incident-subsection-command': formationRole(

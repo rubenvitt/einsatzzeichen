@@ -9,22 +9,23 @@
  * die Abhängigkeitsrichtung catalog → core ist bereits gegeben. Eine künftige Umbenennung der
  * Schriftfamilie kann so nicht mehr in den beiden Paketen auseinanderlaufen.
  */
-export const TEXT_FONT_FAMILY_ATTR = 'Arimo';
+export const TEXT_FONT_FAMILY_ATTR = 'Einsatzzeichen Sans';
 
 /**
- * Das eine Schriftgewicht allen Katalogtexts: Arimo 500 („Medium"), LFH-585 Option B
- * (entschieden am 29. September 2026). Die Referenz setzt jeden Lauf in derselben Strichstärke,
- * 0,156 × Versalhöhe; Arimo 400 liegt bei 0,136, Arimo 700 bei 0,209, Arimo 500 bei 0,160.
- * Die frühere Aufteilung in normal und fett hatte in der Referenz kein Gegenstück.
+ * Das eine Schriftgewicht allen Katalogtexts: 500 („Medium"), LFH-585 Option B (entschieden am
+ * 29. September 2026). Die Referenz setzt jeden Lauf in derselben Strichstärke, 0,156 ×
+ * Versalhöhe; Einsatzzeichen Sans 500 trifft sie genau (400 liegt bei 0,117, 700 bei 0,211;
+ * Notiz LFH-790 §10.4). Die frühere Aufteilung in normal und fett hatte in der Referenz kein
+ * Gegenstück.
  *
  * Jede Stelle in core, die Katalogtext erzeugt (Kompositionsläufe samt Fußzone,
  * Piktogramm-Hilfen, Funktionsrollen), setzt dieses Gewicht ausdrücklich ans Primitiv. Eine
  * Prüfung im Katalog (`conformance/src/catalog-text-weight.test.ts`) hält fest, dass kein Lauf
  * ohne es bleibt. Einzige Ausnahme sind die Lückenbeschriftungen der Grenzlinien aus Kapitel 2
- * (`gapLabel` in `geometry/parametric.ts`): Dort misst die Referenz 0,126 × Versalhöhe, fast
- * Arimo 400, und sie bleiben ohne Gewicht.
- * Gerastert wird es aus der statischen Instanz `Arimo-Medium.ttf`; ihre Versalhöhe gleicht der
- * normalen (1409/2048), `ARIMO_CAP_HEIGHT_FRACTION` gilt unverändert.
+ * (`gapLabel` in `geometry/parametric.ts`): Dort misst die Referenz 0,126 × Versalhöhe, nahe an
+ * der Stufe 400, und sie bleiben ohne Gewicht.
+ * Gerastert wird es aus der statischen Instanz `EinsatzzeichenSans-Medium.ttf`; ihre Versalhöhe
+ * gleicht der normalen (698/1000), `TEXT_CAP_HEIGHT_FRACTION` gilt unverändert.
  */
 export const CATALOG_TEXT_FONT_WEIGHT = 500;
 
@@ -76,7 +77,7 @@ export function canvasTextAlign(anchor: TextAnchor): CanvasTextAlign {
 /**
  * Effektiver Schriftgrad eines Textprimitivs in Pixeln bei einer gegebenen Rendergröße. Reine
  * Rechnung, keine Fontmetrik: `sizeMm` skaliert im selben Verhältnis wie jede andere Millimeter-
- * Koordinate — `viewBoxMm` auf `renderPx` abgebildet. Was die konkreten Glyphen von Arimo daraus
+ * Koordinate — `viewBoxMm` auf `renderPx` abgebildet. Was die konkreten Glyphen der Schrift daraus
  * machen (Kappenhöhe, Laufweite), beantwortet diese Funktion nicht; dafür bräuchte sie Zustand
  * und eine Fontbindung, die hier laut Aufgabenrahmen nicht hin darf.
  */
@@ -90,13 +91,14 @@ export function effectiveTextPx(sizeMm: number, renderPx: number, viewBoxMm: num
  * Wert — wie `MINIMUM_NON_TEXT_CONTRAST` eine dokumentierte Aussage, kein Magic Value:
  *
  * „HRT", „FRT" und „VoIP" wurden bei 10 mm Schriftgrad auf der 32-mm-Standard-viewBox in allen
- * sechs Snapshotgrößen (16/24/32/64/128/256 px) mit Arimo gerastert (`resvgFontOptions()`) und
- * angesehen. Bei 5,0 px effektivem Schriftgrad (16-px-Render) verschwimmen die Buchstaben zu
- * grauen Flächen ohne erkennbare Formen. Bei 7,5 px (24-px-Render) sind einzelne Buchstaben bei
- * „HRT" mit Mühe zu erraten, bei „VoIP" verschmelzen sie zu einem ununterscheidbaren Klecks — vier
- * schmale Zeichen brauchen mehr Fläche pro Buchstabe als drei. Ab 10,0 px (32-px-Render) sind alle
- * drei Kürzel scharf, schwarz und ohne Zweifel lesbar. Die Schwelle liegt bewusst zwischen den
- * beiden Messpunkten 7,5 und 10,0 px, nicht auf einem von ihnen.
+ * sechs Snapshotgrößen (16/24/32/64/128/256 px) gerastert (`resvgFontOptions()`) und angesehen,
+ * zuerst mit Arimo, mit ESZ-114 erneut mit Einsatzzeichen Sans in Stufe 500. Bei 5,0 px effektivem
+ * Schriftgrad (16-px-Render) verschwimmen die Buchstaben zu grauen Flächen ohne erkennbare Formen.
+ * Bei 7,5 px (24-px-Render) waren in Arimo einzelne Buchstaben bei „HRT" mit Mühe zu erraten und
+ * „VoIP" ein ununterscheidbarer Klecks; in Einsatzzeichen Sans sind alle drei zu lesen, aber weich,
+ * „VoIP" am knappsten. Ab 10,0 px (32-px-Render) sind alle drei Kürzel scharf, schwarz und ohne
+ * Zweifel lesbar. Die Schwelle liegt bewusst zwischen den beiden Messpunkten 7,5 und 10,0 px, nicht
+ * auf einem von ihnen; die neue Schrift gibt keinen Anlass, sie zu senken.
  */
 export const MINIMUM_TEXT_RENDER_PX = 8;
 
@@ -104,31 +106,23 @@ export const MINIMUM_TEXT_RENDER_PX = 8;
  * Zuschlag für Großbuchstaben-Diakritika (Ä/Ö/Ü), die bei `baseline: 'hanging'` über die
  * deklarierte `boxMm`-Oberkante hinausragen — Befund aus Task 9 der Textprimitiv-Slice
  * (`outsideBoxCount: 24` für „Übung"). `dominant-baseline="hanging"` positioniert den
- * Ankerpunkt an der Hanging-Metrik der Schrift, die bei Arimo unterhalb der tatsächlichen
+ * Ankerpunkt an der Hanging-Metrik der Schrift, die unterhalb der tatsächlichen
  * Diakritikaoberkante liegt: der Akzent auf Ü/Ö/Ä ragt darüber hinaus.
  *
- * **Gemessen für Arimo** (`resvgFontOptions()`, einzelne Buchstaben Ä/Ö/Ü sowie „Übung",
- * `baseline: 'hanging'`), zwei Schriftgrade:
- * - Asymptotisch (hochauflösend gerastert, 1024–4096 px auf 32-mm-viewBox, damit
- *   Pixelraster-Rauschen herausgemittelt ist): der Überstand konvergiert auf **11,3–11,4 %**
- *   von `sizeMm`, für 4 mm wie für 10 mm gleichermaßen — der Wert ist relativ zu `sizeMm`,
- *   nicht absolut.
- * - Bei der Auflösung, mit der die Rasterevidenz in `fonts.test.ts` tatsächlich prüft
- *   (256 px auf 32-mm-viewBox = 8 px/mm) rundet das Pixelraster ungünstiger: bei 4 mm
- *   Schriftgrad braucht es exakt 0,5 mm (12,5 % von `sizeMm`) Zuschlag, damit kein Ink-Pixel
- *   mehr außerhalb der Box liegt — der 10-mm-Fall braucht bei derselben Auflösung nur 11,25 %.
- *   Der 4-mm-Fall ist damit der bindende, nicht der asymptotische Wert.
+ * **Gemessen** mit `scripts/font/measure-vertical.mts` (`resvgFontOptions()`, Ä/Ö/Ü, „Übung"
+ * und „ÄÖÜ", `baseline: 'hanging'`, 4 mm und 10 mm Schriftgrad). Der Überstand ist relativ zu
+ * `sizeMm`, nicht absolut:
+ * - Arimo (bis ESZ-114): asymptotisch 11,3–11,4 %, bei der Auflösung der Rasterevidenz in
+ *   `fonts.test.ts` (8 px/mm) bindend 12,5 % bei 4 mm. Daher der Wert.
+ * - Einsatzzeichen Sans (ESZ-114): asymptotisch 7,3 % in 400 und 8,1 % in 500, bei 8 px/mm
+ *   bindend 9,4 % (Ä bei 4 mm).
  *
- * Eine andere Schrift als Arimo hätte andere Akzenthöhen und bräuchte eine eigene Messung —
- * dieser Wert ist keine Konstante der Textprimitiv-Spezifikation, sondern eine Eigenschaft der
- * konkret eingebundenen Schriftdatei.
- *
- * Bei der bindenden Auflösung (4 mm, 8 px/mm) landet die neue Boxoberkante exakt auf der
- * obersten Ink-Zeile — null Pixel Spielraum, kein zusätzliches Polster. Das ist beabsichtigt und
- * kein Bug: `resvg-js` ist auf 2.6.2 gepinnt, die Schriftdatei über `TEXT_FONT_SHA256`, also
- * deterministisch. Eine künftige Schrift mit höheren Akzenten lässt die Rasterprüfung in
- * `fonts.test.ts` sofort wieder anschlagen (Task 4: "muss bei einem Schriftwechsel wieder
- * anschlagen") — genau das ist der Zweck, kein Grund, den Bruch vorsorglich höher zu setzen.
+ * Der Wert bleibt bei 12,5 %: Er deckt die neue Schrift mit Abstand, und ihn zu senken, würde
+ * jede Fußzone um bis zu 0,12 mm verschieben, ohne dass eine Zeichnung davon profitiert. Bei der
+ * bindenden Auflösung liegt die Boxoberkante deshalb heute rund 0,12 mm über der obersten
+ * Ink-Zeile (bei 4 mm Schriftgrad). Eine künftige Schrift mit höheren Akzenten lässt die
+ * Rasterprüfung in `fonts.test.ts` sofort anschlagen; `resvg-js` ist auf 2.6.2 gepinnt, die
+ * Schriftdatei über `TEXT_FONT_SHA256`.
  */
 export const DIACRITIC_HEADROOM_FRACTION = 0.125;
 
@@ -139,30 +133,25 @@ export const DIACRITIC_HEADROOM_FRACTION = 0.125;
  * allen 16 E.1-Dateien des ersten Teilslice); `alphabetic` ist damit die Baseline, die die
  * Messung wörtlich wiedergibt, statt sie über eine zweite Metrik umzurechnen.
  *
- * **Gemessen für Arimo** (`resvgFontOptions()`, Grundlinie fest, Ink-Hülle über den Alphakanal),
- * an den beiden Schriftgraden dieses Slice (7,08 mm und 4,24 mm) über „Öl", „ÄÖÜ", „Sp",
- * „jgpqy", „Qj", „B" und „THW":
- * - Asymptotisch (1024–4096 px auf der 32-mm-viewBox): **0,838** von `sizeMm`, bindend „Öl" —
- *   der Umlautpunkt, nicht die Versalhöhe (0,688).
+ * **Gemessen für Einsatzzeichen Sans** mit `scripts/font/measure-vertical.mts`
+ * (`resvgFontOptions()`, Grundlinie fest, Ink-Hülle über den Alphakanal), bei 7,08 mm und
+ * 4,24 mm über „Öl", „ÄÖÜ", „Sp", „jgpqy", „Qj", „B" und „THW", in 400 und 500:
+ * - Asymptotisch (128 px/mm): **0,893** in 400, **0,901** in 500, bindend „Öl" — der
+ *   Umlautpunkt, nicht die Versalhöhe (0,698). Das Ö reicht 0,900 em hoch.
  * - Bei der Auflösung der Rasterevidenz in `fonts.test.ts` (256 px auf 32 mm = 8 px/mm):
- *   **0,8563**. Das ist der bindende Wert.
+ *   **0,9139** in beiden Stufen, „Öl" bei 4,24 mm. Das ist der bindende Wert.
  *
- * 0,86 rundet ihn auf die nächste saubere Stelle auf, im selben Stil wie
- * `DIACRITIC_HEADROOM_FRACTION` (0,125 für einen bindenden Wert von 0,113–0,125). Der Wert
- * bleibt unterhalb von Arimos deklariertem hhea-Ascender (0,9053) — die Box ist also enger als
- * die Zeilenmetrik der Schrift und keine bloße Übernahme ihrer Tabellenwerte.
- *
- * Gemessen in Arimo 400. Seit LFH-585 steht der Katalogtext in 500, dessen Akzente 12/2048 em
- * höher reichen (Ä: 1726 statt 1714 Einheiten). Die Rasterbelege in `fonts.test.ts` laufen über
- * `compose()` und damit in 500; sie bestehen mit diesem Anteil und mit
- * `DIACRITIC_HEADROOM_FRACTION` unverändert.
+ * 0,92 rundet ihn auf die nächste saubere Stelle auf. Der Wert bleibt unterhalb des deklarierten
+ * hhea-Ascenders (1,025) — die Box ist also enger als die Zeilenmetrik der Schrift und keine
+ * bloße Übernahme ihrer Tabellenwerte. Mit Arimo lag er bei 0,86 (bindend 0,8563); die Umlaute
+ * von Einsatzzeichen Sans stehen höher über der Versalhöhe.
  */
-export const ALPHABETIC_ASCENT_FRACTION = 0.86;
+export const ALPHABETIC_ASCENT_FRACTION = 0.92;
 
 /**
- * Versalhöhe von Arimo als Anteil des Schriftgrads. Aus der Schriftdatei selbst gelesen
- * (`OS/2.sCapHeight` 1409 bei `head.unitsPerEm` 2048) und gegen die Rasterung gegengeprüft:
- * 4,875 mm Ink-Höhe für „B" bei 7,08 mm Schriftgrad, 256 px auf der 32-mm-viewBox.
+ * Versalhöhe von Einsatzzeichen Sans als Anteil des Schriftgrads. Aus der Schriftdatei selbst
+ * gelesen (`OS/2.sCapHeight` 698 bei `head.unitsPerEm` 1000, gleich der Tinte von „H" in allen
+ * vier Instanzen). Mit Arimo war es 1409/2048 = 0,688.
  *
  * Sie steht hier, weil die Referenzvermessung Zeichen **misst**, aber Schriftgrade **setzt**:
  * an den Referenzdateien ist die Versalhöhe eines Kürzels ablesbar, der Schriftgrad nicht (die
@@ -170,18 +159,27 @@ export const ALPHABETIC_ASCENT_FRACTION = 0.86;
  * Konstante von der gemessenen Größe auf die zu setzende um, statt einen Schriftgrad zu raten,
  * der zufällig ähnlich aussieht.
  */
-export const ARIMO_CAP_HEIGHT_FRACTION = 1409 / 2048;
+export const TEXT_CAP_HEIGHT_FRACTION = 698 / 1000;
+
+/**
+ * Schriftgrad, dessen Versalhöhe `capHeightMm` misst. Für Läufe, deren Größe an der Referenz als
+ * Versalhöhe abgelesen ist: Sie schreiben die gemessene Höhe hin, nicht einen Schriftgrad, der nur
+ * für eine bestimmte Schrift stimmt. Seit ESZ-114 (Wechsel von Arimo auf Einsatzzeichen Sans) steht
+ * jeder Piktogrammlauf so; ein Schriftwechsel ändert dann nur `TEXT_CAP_HEIGHT_FRACTION`.
+ */
+export function textSizeForCapHeightMm(capHeightMm: number): number {
+  return capHeightMm / TEXT_CAP_HEIGHT_FRACTION;
+}
 
 /**
  * Tinte unterhalb der Grundlinie bei `baseline: 'alphabetic'`, als Anteil von `sizeMm`.
- * Dieselbe Messreihe wie `ALPHABETIC_ASCENT_FRACTION`: asymptotisch **0,208**, bindend bei
- * 8 px/mm **0,21186**, jeweils an „Sp" — die Unterlänge des p, nicht der Rundungsüberstand.
+ * Dieselbe Messreihe wie `ALPHABETIC_ASCENT_FRACTION`. Für Einsatzzeichen Sans asymptotisch
+ * **0,2108**, bei 8 px/mm **0,2064**, jeweils an „jgpqy" — die Unterlängen, nicht der
+ * Rundungsüberstand.
  *
- * 0,212 rundet den bindenden Wert auf und trifft damit auf drei Nachkommastellen genau Arimos
- * deklarierten hhea-Descender (434/2048 = 0,21191). Diese Übereinstimmung ist ein Befund der
- * Messung, keine Herleitung aus der Tabelle: der Wert steht hier, weil er gemessen wurde, und
- * die Tabelle bestätigt ihn. Eine andere Schrift bräuchte — wie beim Hanging-Zuschlag — eine
- * eigene Messung.
+ * Der Wert stammt aus der Arimo-Messung (bindend 0,21186 an „Sp", aufgerundet 0,212) und bleibt:
+ * Er deckt die neue Schrift, und ihn um 0,001 zu senken, verschöbe jede Beschriftungszone für
+ * nichts. Der deklarierte hhea-Descender von Einsatzzeichen Sans (0,275) liegt deutlich darunter.
  */
 export const ALPHABETIC_DESCENT_FRACTION = 0.212;
 
@@ -195,8 +193,8 @@ export const ALPHABETIC_DESCENT_FRACTION = 0.212;
  *
  * Zwei der drei Baselines sind gemessen: `hanging` (Fußzone, Slice vom 9. August 2026) und
  * `alphabetic` (Beschriftungszonen im Körper, Anhang E). `middle` bleibt ungemessen und wirft
- * weiterhin bewusst, statt eine ungeprüfte Zahl zu raten — Arimos Central-Metrik liegt weder
- * auf der Grundlinie noch auf der Hanging-Linie.
+ * weiterhin bewusst, statt eine ungeprüfte Zahl zu raten — die Central-Metrik der Schrift liegt
+ * weder auf der Grundlinie noch auf der Hanging-Linie.
  */
 export function verticalTextBoxMm(
   anchorYMm: number,

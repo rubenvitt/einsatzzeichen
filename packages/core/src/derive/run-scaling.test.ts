@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Drawing, Primitive, SymbolSpec } from '@einsatzzeichen/schema';
 import { boundsOfMm } from '../bounds.js';
 import { drawSymbol } from '../default-ports.js';
-import { ARIMO_CAP_HEIGHT_FRACTION } from '../render/text-policy.js';
+import { TEXT_CAP_HEIGHT_FRACTION } from '../render/text-policy.js';
 import { uniformAbout } from './affine.js';
 import {
   MIN_SCALED_RUN_CAP_HEIGHT_MM,
@@ -21,7 +21,7 @@ const run = (drawing: Drawing, content: string): Text => {
   if (found === undefined) throw new Error(`Lauf „${content}“ fehlt.`);
   return found;
 };
-const cap = (text: Text): number => text.sizeMm * ARIMO_CAP_HEIGHT_FRACTION;
+const cap = (text: Text): number => text.sizeMm * TEXT_CAP_HEIGHT_FRACTION;
 const capMiddle = (text: Text): number => text.y - cap(text) / 2;
 const bodyOf = (drawing: Drawing) => boundsOfMm(drawing.children.find((child) => child.role === 'body')!);
 
@@ -102,8 +102,8 @@ describe('Läufe folgen dem verkleinerten Körper (LFH-987)', () => {
 
   it('lässt Zeichnungen ohne verkleinerten Körper unberührt', () => {
     const plain = drawSymbol({ kind: 'formation', labels: { center: 'AB', bottomLeft: 'D' } });
-    expect(run(plain, 'AB').sizeMm).toBeCloseTo(4.87 / ARIMO_CAP_HEIGHT_FRACTION, 6);
-    expect(run(plain, 'D').sizeMm).toBeCloseTo(2.92 / ARIMO_CAP_HEIGHT_FRACTION, 6);
+    expect(run(plain, 'AB').sizeMm).toBeCloseTo(4.87 / TEXT_CAP_HEIGHT_FRACTION, 6);
+    expect(run(plain, 'D').sizeMm).toBeCloseTo(2.92 / TEXT_CAP_HEIGHT_FRACTION, 6);
     expect(plain.derivations).toBeUndefined();
   });
 });

@@ -18,9 +18,9 @@ const flat = (ps: readonly any[]): any[] => ps.flatMap((p) => (p.type === 'group
 const finite = (v: unknown): boolean => typeof v === 'number' ? Number.isFinite(v) : Array.isArray(v) ? v.every(finite) : v && typeof v === 'object' ? Object.values(v).every(finite) : true;
 const hit = (a: any, b: any) => a.minX < b.maxX - TOL && b.minX < a.maxX - TOL && a.minY < b.maxY - TOL && b.minY < a.maxY - TOL;
 const guard: any = await import(R + 'core/src/derive/layout-guard.ts');
-const metrics: any = (await import(R + 'core/src/geometry/text-metrics.ts')).ARIMO_TEXT_METRICS;
+const metrics: any = (await import(R + 'core/src/geometry/text-metrics.ts')).TEXT_FONT_METRICS;
 const tm: any = await import(R + 'core/src/text-metrics.ts');
-const CAP = 1409 / 2048;
+const CAP = core.TEXT_CAP_HEIGHT_FRACTION;
 // Tintenfläche eines Laufs: Versalhöhe über der Grundlinie, Breite aus den Schriftmetriken.
 const textBox = (t: any) => {
   const w = tm.textWidthMm(t.content, t.sizeMm, metrics).widthMm;

@@ -523,3 +523,47 @@ Augenschein:
 3. Das Messskript gehört dann nach `scripts/font/`, wie in LFH-585 §9 vorgesehen. Die Probeskripte
    dieser Notiz liegen im Scratchpad der Sitzung.
 
+
+## 11. Umsetzung (ESZ-114, 13. Oktober 2026)
+
+**Abweichung vom Zeitpunkt C1.** Der Projektinhaber hat am 13. Oktober 2026 entschieden, den
+Umbau sofort zu machen, ohne das erneute Fachreview (ESZ-93) abzuwarten. Das Fachreview bleibt
+offen und prüft danach den Stand mit der neuen Schrift.
+
+**Ableitung.** Wie in 10.3 und 10.7 festgelegt: `scripts/font/derive-einsatzzeichen-sans.sh` lädt
+beide Originale, prüft die Prüfsummen, bildet die Teilmenge, instanziiert bei wdth 86 und 400,
+500, 700 bzw. 500 kursiv (`scripts/font/derive_instance.py`) und exportiert die Metriken.
+Namenseintrag 7 ist entfernt. Herkunft und Prüfsummen: `packages/conformance/assets/README.md`.
+Die Arimo-Dateien, ihre Metriken und `subset-arimo.sh` sind entfernt; das Quellenregister führt
+`ibm-plex-sans-ofl` statt `arimo-ofl`.
+
+**Konstanten in `text-policy.ts`**, gemessen mit `scripts/font/measure-vertical.mts`:
+
+| Konstante | Arimo | Einsatzzeichen Sans (gemessen, bindend) | gesetzt |
+|---|---|---|---|
+| `TEXT_CAP_HEIGHT_FRACTION` | 1409/2048 = 0,688 | 698/1000 | 0,698 |
+| `ALPHABETIC_ASCENT_FRACTION` | 0,86 | 0,9139 (8 px/mm) | 0,92 |
+| `ALPHABETIC_DESCENT_FRACTION` | 0,212 | 0,2108 (asymptotisch) | 0,212 |
+| `DIACRITIC_HEADROOM_FRACTION` | 0,125 | 0,0938 (8 px/mm) | 0,125 |
+
+**Schriftgrade.** Läufe, deren Grad als Literal aus der Arimo-Versalhöhe gerechnet war, rechnen
+ihn jetzt mit `textSizeForCapHeightMm()` aus der Versalhöhe; die Versalhöhe je Lauf bleibt damit
+gleich, der Grad sinkt um rund 1,4 %. Läufe, die mit Arimo verkleinert waren, weil sie zu breit
+liefen, sind an ihren vermessenen Boxen neu bewertet:
+
+- auf Referenzhöhe gewachsen: Fax und SDS (J.1), „MRT" (J.3);
+- auf der verkleinerten Versalhöhe geblieben, weil ihre Box an der Arimo-Tinte vermessen ist:
+  „BS", „mBS", „APRT", „FRT", „HRT" (J.3), „L" (J.4.8, D.2.4), „LtS", „Ex", „GS", „Chlor", „A",
+  „Ö" und „Strömungsrettung" (I.1.17, I.1.18, I.2.6).
+
+Die Kürzel der Betriebsarten (J.1) bekommen 0,15 mm Box unter der Grundlinie
+(`LABEL_BELOW_BASELINE_MM`), weil die Rundungen von Einsatzzeichen Sans sie um 12/1000 em
+überschießen.
+
+**Offen (Folgeaufgabe):** die verkleinerten Läufe gegen die Tinte der Referenz neu vermessen und,
+wo die Box es trägt, auf Referenzhöhe setzen; dazu die Anker, die aus Arimo-Seitenlagern
+zurückgerechnet sind (Abweichung meist ≤ 0,03 mm, bei „1" bis 0,2 mm, bei „W" bis 0,14 mm). Die
+Referenz-SVGs lagen in der Umsetzungssitzung nicht vor.
+
+**Lesbarkeit.** `MINIMUM_TEXT_RENDER_PX` (8 px) ist mit der neuen Schrift erneut angesehen und
+bleibt; Kontaktbogen der Prüfung beim Ticket ESZ-114.

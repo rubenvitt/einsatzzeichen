@@ -12,7 +12,7 @@ import { boundsOfMm, strokeBoundsOfMm, type BoundsMm } from '../bounds.js';
 import { NotMeasuredError } from '../not-measured.js';
 import { renderSvg } from '../render/svg.js';
 import { checkTextMetrics } from '../text-metrics.js';
-import { ARIMO_TEXT_METRICS } from './text-metrics.js';
+import { TEXT_FONT_METRICS } from './text-metrics.js';
 import {
   LINE_GEOMETRY,
   MOVEMENT_GEOMETRY,
@@ -305,10 +305,10 @@ describe('Linien und Grenzen aus Kapitel 2', () => {
     }
   });
 
-  it('setzt die Beschriftung so, dass sie mit Arimo in ihre Box passt', () => {
+  it('setzt die Beschriftung so, dass sie in der Katalogschrift in ihre Box passt', () => {
     for (const id of BOUNDARIES.filter((candidate) => candidate !== 'boundary-with-strength')) {
       const drawing = lineDrawing(id, { path: { points: [[1, 16], [47, 16]] } }, { width: 48, height: 32 });
-      expect(checkTextMetrics(drawing, ARIMO_TEXT_METRICS), id).toEqual([]);
+      expect(checkTextMetrics(drawing, TEXT_FONT_METRICS), id).toEqual([]);
     }
   });
 });

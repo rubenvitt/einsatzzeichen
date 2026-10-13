@@ -1,7 +1,7 @@
 import type { Point, Primitive, Style } from '@einsatzzeichen/schema';
 import { deepFreeze } from '../../readonly-data.js';
 import { defineState, type CatalogPictogramDefinition } from '../catalog-definition.js';
-import { CATALOG_TEXT_FONT_WEIGHT } from '../../../render/text-policy.js';
+import { CATALOG_TEXT_FONT_WEIGHT, textSizeForCapHeightMm } from '../../../render/text-policy.js';
 
 /**
  * 5.8.6 Tierzustände. Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert.
@@ -76,9 +76,9 @@ function contaminationMark(): readonly Primitive[] {
 }
 
 /**
- * Buchstabe „K" in der Projektschrift: Versalhöhe 4,87 mm (Schriftgrad 7,1 mm), Grundlinie
- * y = 7 mm, zentriert auf die Mitte des Referenzbuchstabens bei x = 28,3 mm. `minRenderPx: 64`,
- * weil 7,1 mm bei 32 px nur 7,1 px effektiv ergeben.
+ * Buchstabe „K" in der Projektschrift: Versalhöhe 4,87 mm, Grundlinie y = 7 mm, zentriert auf
+ * die Mitte des Referenzbuchstabens bei x = 28,3 mm. `minRenderPx: 64`, weil rund 7 mm
+ * Schriftgrad bei 32 px nur 7 px effektiv ergeben.
  */
 function contaminationLetter(): Primitive {
   return {
@@ -87,7 +87,7 @@ function contaminationLetter(): Primitive {
     content: 'K',
     x: 28.3,
     y: 7,
-    sizeMm: 7.1,
+    sizeMm: textSizeForCapHeightMm(4.87),
     anchor: 'middle',
     baseline: 'alphabetic',
     boxMm: { xMm: 26, yMm: 2, widthMm: 5, heightMm: 5 },

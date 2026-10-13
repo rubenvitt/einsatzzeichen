@@ -22,11 +22,12 @@ import { pictogram } from './geometry/pictograms/index.js';
 import { strengthHead } from './geometry/strengths.js';
 import { technicalHeadMark } from './geometry/technical-head-marks.js';
 import { administrativeHeadOrDerived, unitGroupingHeadOrDerived } from './derive/head-zone.js';
-import { ARIMO_TEXT_METRICS } from './geometry/text-metrics.js';
+import { TEXT_FONT_METRICS } from './geometry/text-metrics.js';
 import { vehicleChassis } from './geometry/vehicle-categories.js';
 
 /**
- * Die Standardbelegung der Ports: die vermessene Geometrie aus `core` und die Arimo-Laufweiten.
+ * Die Standardbelegung der Ports: die vermessene Geometrie aus `core` und die Laufweiten der
+ * Katalogschrift.
  * Eingefroren, weil sie geteilt wird — ein Nutzer, der einen Port tauschen will, baut sich ein
  * eigenes Objekt (`{ ...DEFAULT_PORTS, organizationColor: … }`), statt die Belegung aller anderen
  * zu verändern.
@@ -44,7 +45,7 @@ export const DEFAULT_PORTS: CatalogPorts = Object.freeze({
   administrativeHead: administrativeHeadOrDerived,
   vehicleChassis,
   pictogram,
-  textMetrics: ARIMO_TEXT_METRICS,
+  textMetrics: TEXT_FONT_METRICS,
 });
 
 /**

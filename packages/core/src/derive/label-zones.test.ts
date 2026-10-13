@@ -3,7 +3,7 @@ import type { Drawing, Primitive, SymbolSpec } from '@einsatzzeichen/schema';
 import { boundsOfMm } from '../bounds.js';
 import { drawSymbol } from '../default-ports.js';
 import { NotMeasuredError } from '../not-measured.js';
-import { ARIMO_CAP_HEIGHT_FRACTION, verticalTextBoxMm } from '../render/text-policy.js';
+import { TEXT_CAP_HEIGHT_FRACTION, verticalTextBoxMm } from '../render/text-policy.js';
 import { CompositionError } from '../validate.js';
 import { checkViewBox } from '../viewbox-gate.js';
 
@@ -26,7 +26,7 @@ function bodyOf(drawing: Drawing) {
   return boundsOfMm(body);
 }
 
-const BOTTOM_SIZE_MM = 2.92 / ARIMO_CAP_HEIGHT_FRACTION;
+const BOTTOM_SIZE_MM = 2.92 / TEXT_CAP_HEIGHT_FRACTION;
 
 describe('abgeleitete Beschriftungszonen: Übertragung der vermessenen Lagen', () => {
   it('überträgt die Formationslage oben links auf Rechteckkörper (F.1.1–F.1.11)', () => {
@@ -100,7 +100,7 @@ describe('abgeleitete Beschriftungszonen: Übertragung der vermessenen Lagen', (
     const [first, second] = runs(drawing);
     expect(first?.y).toBe(11);
     expect(second?.y).toBe(15);
-    expect(first?.sizeMm).toBeCloseTo(2.919225 / ARIMO_CAP_HEIGHT_FRACTION, 10);
+    expect(first?.sizeMm).toBeCloseTo(2.919225 / TEXT_CAP_HEIGHT_FRACTION, 10);
   });
 
   it('setzt oberhalb links 1 mm über die Oberkante (Festflügelprofil)', () => {
@@ -227,7 +227,7 @@ describe('abgeleitete Beschriftungszonen: je-Spec-Maße an unvermessenen Hüllen
       labels: { topLeft: 'BT', topLeftMetrics: { capHeightMm: 2.191447, baselineFromBodyTopMm: 6.25, anchorFromBodyLeftMm: 1.5 } },
     }, 'BT');
     expect(topLeft.text.y).toBeCloseTo(5.75 + 6.25, 10);
-    expect(topLeft.text.sizeMm).toBeCloseTo(2.191447 / ARIMO_CAP_HEIGHT_FRACTION, 10);
+    expect(topLeft.text.sizeMm).toBeCloseTo(2.191447 / TEXT_CAP_HEIGHT_FRACTION, 10);
     expect(topLeft.drawing.derivations?.[0]).toMatchObject({ dimension: 'labels.topLeftMetrics' });
 
     const bottomRight = run({
@@ -277,7 +277,7 @@ describe('vergrößerter mittiger Lauf (Versalhöhe über der Norm)', () => {
   // ragte dabei aus dem Rumpf.
   it('notiert den großen Lauf an der Formation und zeichnet ihn', () => {
     const { drawing, text } = run({ kind: 'formation', labels: { center: 'LtS', centerCapHeightMm: 7.3 } }, 'LtS');
-    expect(text.sizeMm * ARIMO_CAP_HEIGHT_FRACTION).toBeCloseTo(7.3, 10);
+    expect(text.sizeMm * TEXT_CAP_HEIGHT_FRACTION).toBeCloseTo(7.3, 10);
     expect(drawing.derivations).toEqual([
       expect.objectContaining({ dimension: 'labels.centerCapHeightMm', basis: 'transferred', from: expect.stringContaining('D.2.5') }),
     ]);

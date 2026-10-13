@@ -1,7 +1,7 @@
 import type { Point, Primitive, Style } from '@einsatzzeichen/schema';
 import { DEFAULT_VIEWBOX_MM } from '@einsatzzeichen/schema';
 import { defineLeadership, type PictogramContrastPair } from '../catalog-definition.js';
-import { CATALOG_TEXT_FONT_WEIGHT } from '../../../render/text-policy.js';
+import { CATALOG_TEXT_FONT_WEIGHT, textSizeForCapHeightMm } from '../../../render/text-policy.js';
 
 const LOCATION_STROKE_WIDTH_MM = 0.5;
 
@@ -157,8 +157,8 @@ export const LOCATION_PICTOGRAMS = [
       locationText('M', {
         x: 16,
         y: 12,
-        // Versalhöhe der Referenz 4,87 mm ÷ Arimo-Versalhöhe 0,688 em.
-        sizeMm: 7.08,
+        // Versalhöhe der Referenz 4,869 mm, gleich der Boxhöhe.
+        sizeMm: textSizeForCapHeightMm(4.869),
         boxMm: { xMm: 13.654, yMm: 7.131, widthMm: 4.693, heightMm: 4.869 },
         minRenderPx: 64,
       }),
@@ -177,8 +177,8 @@ export const LOCATION_PICTOGRAMS = [
       locationText('M', {
         x: 16,
         y: 19,
-        // Versalhöhe der Referenz 7,30 mm ÷ Arimo-Versalhöhe 0,688 em.
-        sizeMm: 10.6,
+        // Versalhöhe der Referenz 7,302 mm, gleich der Boxhöhe.
+        sizeMm: textSizeForCapHeightMm(7.302),
         boxMm: { xMm: 12.4, yMm: 11.698, widthMm: 7.2, heightMm: 7.302 },
         minRenderPx: 32,
       }),
@@ -195,12 +195,13 @@ export const LOCATION_PICTOGRAMS = [
     primitives: [
       locationCircle(),
       locationText('L', {
-        // Arimo ist im „L“ rund 13 % breiter als die Referenzschrift; bei voller Versalhöhe
-        // (10,6 mm) wächst die Abweichung, deshalb bleibt der Lauf bei 10 mm auf der
-        // Stammposition der Referenz (am Pixelvergleich bestimmt).
+        // Verkleinert auf 6,88 mm Versalhöhe statt der 7,30 mm der Referenz: Arimo lief im „L“
+        // rund 13 % breiter als die Referenzschrift, deshalb stand der Lauf auf der Stammposition
+        // der Referenz (am Pixelvergleich bestimmt). Die Box ist an dieser Höhe vermessen; in
+        // Einsatzzeichen Sans passt die volle Höhe nicht in sie (ESZ-114).
         x: 16.365,
         y: 19,
-        sizeMm: 10,
+        sizeMm: textSizeForCapHeightMm(6.88),
         boxMm: { xMm: 14.25, yMm: 12.125, widthMm: 4.6875, heightMm: 6.875 },
         minRenderPx: 32,
       }),
@@ -219,11 +220,12 @@ export const LOCATION_PICTOGRAMS = [
       controlCenterCap(),
       locationRoof(),
       locationText('LtS', {
-        // Wie D.2.4: „LtS“ ist in Arimo rund 14 % breiter als in der Referenzschrift; 10 mm mit
-        // der am Pixelvergleich bestimmten Lage deckt besser als die volle Versalhöhe.
+        // Wie D.2.4: „LtS“ lief in Arimo rund 14 % breiter als in der Referenzschrift; 6,88 mm
+        // Versalhöhe mit der am Pixelvergleich bestimmten Lage deckte besser als die volle Höhe.
+        // Die Box ist an dieser Höhe vermessen (ESZ-114).
         x: 16.238,
         y: 22,
-        sizeMm: 10,
+        sizeMm: textSizeForCapHeightMm(6.88),
         boxMm: { xMm: 9.3125, yMm: 15, widthMm: 14.1875, heightMm: 7.125 },
         minRenderPx: 32,
       }),

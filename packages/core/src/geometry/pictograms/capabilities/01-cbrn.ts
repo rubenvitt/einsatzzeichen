@@ -6,7 +6,7 @@ import {
 } from '@einsatzzeichen/schema';
 import { deepFreeze } from '../../readonly-data.js';
 import { defineCapability } from '../catalog-definition.js';
-import { CATALOG_TEXT_FONT_WEIGHT } from '../../../render/text-policy.js';
+import { CATALOG_TEXT_FONT_WEIGHT, textSizeForCapHeightMm } from '../../../render/text-policy.js';
 
 /*
  * Piktogramme des Kapitels 4.1 (CBRN). Maße an der Referenz abgelesen, Geometrie eigenständig
@@ -109,8 +109,8 @@ const WARNING_TRIANGLE: Primitive = {
 };
 
 /**
- * Kennbuchstabe im Gefahrendreieck: rot, Arimo 500, Grundlinie y = 24 mm, Versalhöhe ≈ 9,7 mm
- * (Referenz: 40,4–68,0 pt). `x` ist die an der Referenz abgelesene Mitte der Glyphe.
+ * Kennbuchstabe im Gefahrendreieck: rot, Katalogstärke 500, Grundlinie y = 24 mm, Versalhöhe
+ * ≈ 9,7 mm (Referenz: 40,4–68,0 pt). `x` ist die an der Referenz abgelesene Mitte der Glyphe.
  */
 function triangleLetter(content: string, x: number): Primitive {
   return {
@@ -119,7 +119,7 @@ function triangleLetter(content: string, x: number): Primitive {
     content,
     x,
     y: 24,
-    sizeMm: 14.15,
+    sizeMm: textSizeForCapHeightMm(9.735),
     anchor: 'middle',
     baseline: 'alphabetic',
     boxMm: { xMm: 10, yMm: 13.5, widthMm: 12, heightMm: 11 },
