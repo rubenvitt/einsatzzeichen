@@ -13,6 +13,7 @@ import { strengthHead } from '../geometry/strengths.js';
 import { HEAD_GAP_MM, placeHead, type LayoutProfile } from '../layout/profiles.js';
 import {
   affineBetween,
+  boundsIntersect,
   fitIntoRoleBody,
   fitRunsVertically,
   FIT_MARGIN_MM,
@@ -20,6 +21,7 @@ import {
   keepRunWithinMargins,
   mapPrimitive,
   mapRoleRun,
+  primitivesBounds,
   runBounds,
   unionBounds,
 } from './function-role-fit.js';
@@ -60,6 +62,20 @@ const HEAD_BOUND_BY_TITLE: ReadonlySet<string> = new Set<FunctionRoleId>([
   // „internationale Hilfsaktion“: die überstaatliche Ebene ist Teil des Namens.
   'international-relief-operation-director',
 ]);
+
+/**
+ * Rollen ohne eigenes Original, mit der vermessenen Fassung, aus der sie gebaut sind. Ihre
+ * Festfassung ist konstruiert und trägt deshalb immer eine Ableitungsnotiz.
+ */
+const CONSTRUCTED_ROLES: ReadonlyMap<string, string> = new Map<FunctionRoleId, string>([
+  // Führungskraft ohne Kürzel (ESZ-116): Körper und Kappe des Einsatzleiters ohne Lauf.
+  ['leader', 'function-role:incident-commander'],
+]);
+
+/** Ob die Festfassung der Rolle ein vermessenes Original ist. */
+export function functionRoleHasOriginal(id: FunctionRoleId): boolean {
+  return !CONSTRUCTED_ROLES.has(id);
+}
 
 /** Die Organisation, deren Rollen ihre Organisation nicht im Titel tragen. */
 const GENERIC_LEADERSHIP_ORGANIZATION = 'fuehrung-leitung';
@@ -209,11 +225,20 @@ export function resolveFunctionRoleLayout(input: FunctionRoleLayoutInput): Funct
     ...(layout.carrierRun === undefined ? [] : [layout.carrierRun]),
   ];
   const fallbackHead = (heightMm: number) => placeHead(profile, heightMm);
+  const constructedFrom = CONSTRUCTED_ROLES.get(definition.id);
+  if (constructedFrom !== undefined) {
+    noteDerivation({
+      dimension: 'functionRole',
+      part: `${definition.title} ohne eigenes Original, Raute und Kappe der Leitungsrollen ohne Lauf`,
+      basis: 'constructed',
+      from: constructedFrom,
+    });
+  }
 
   if (functionRoleSpecIsMeasured(definition, spec)) {
     const headTopMm = layout.headTopMm;
     return {
-      measured: true,
+      measured: constructedFrom === undefined,
       body: roleBody,
       extras: layout.bodyAdditions,
       decorations: layout.decorations,
@@ -397,6 +422,10 @@ export function fitFunctionRolePictograms(
  * Körpermarken an der Funktionsfassung. Die zur Fassung vermessenen Marken an der vermessenen
  * Fassung bleiben unverändert. Jede andere Marke steht an der Rollenkörperhülle, wie
  * `bodyMark()` sie dort zeichnet, und weicht bei einer Überschneidung den Läufen aus.
+ *
+ * Trägt die Fassung keinen Lauf im Körper, steht die Marke randbündig unter der Kappe, wie an
+ * D.3.7 und D.3.9 bis D.3.12: Die Kappe liegt darüber und deckt die Spitze der Marke ab. Sie
+ * weicht dann nur der Zusatzgeometrie einer Variante aus (ESZ-116).
  */
 export function fitFunctionRoleBodyMarks(
   marks: readonly Primitive[],
@@ -408,7 +437,15 @@ export function fitFunctionRoleBodyMarks(
   if (marks.length === 0 || markIds.length === 0) return marks;
   const allMeasured = markIds.every((id) => definition.allowedBodyMarks.includes(id));
   if (allMeasured && layout.measured) return marks;
-  const fitted = fitIntoRoleBody(marks, layout.body, layout.occupied);
+  const hasBodyRuns = layout.runs.some((run) => run.contrastBackground === 'body');
+  const marksBounds = primitivesBounds(marks);
+  const flushUnderCap = !hasBodyRuns && marksBounds !== undefined &&
+    !layout.extras.some((primitive) => boundsIntersect(boundsOfMm(primitive), marksBounds));
+  // Randbündig: die Hülle der Marke ist die des Körpers, `fitIntoRoleBody` nähme sie als
+  // Überstand. `bodyMark()` hat sie schon an der Rollenkörperhülle gezeichnet.
+  const fitted = flushUnderCap
+    ? { primitives: marks, moved: false }
+    : fitIntoRoleBody(marks, layout.body, layout.occupied);
   noteDerivation({
     dimension: 'bodyMarks',
     part: fitted.moved
