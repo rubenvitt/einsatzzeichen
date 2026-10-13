@@ -1,3 +1,33 @@
+## [6.0.0](https://github.com/rubenvitt/einsatzzeichen/compare/v5.5.0...v6.0.0) (2026-10-13)
+
+### ⚠️ Breaking Changes
+
+- **Neue Katalogschrift „Einsatzzeichen Sans“ ersetzt Arimo.** Die Schrift basiert auf IBM Plex Sans. Sie wurde auf eine Teilmenge reduziert, schmaler gesetzt (wdth 86) und in den Stärken 400, 500 und 700 sowie 500 kursiv bereitgestellt. Den Namen „Plex“ darf sie laut Schriftlizenz (OFL) nicht tragen, deshalb wurde sie umbenannt.
+  - `renderSvg()` und `renderCanvas()` schreiben die neue Schriftfamilie in jedes Zeichen. Liefert `@einsatzzeichen/core/fonts/text.css` neu aus. Die Dateinamen bleiben gleich.
+  - Umbenannte Exporte:
+    - `ARIMO_CAP_HEIGHT_FRACTION` heißt jetzt `TEXT_CAP_HEIGHT_FRACTION`, der Wert ist 698/1000.
+    - `ARIMO_TEXT_METRICS` heißt jetzt `TEXT_FONT_METRICS`.
+  - Die Metrikdateien heißen jetzt `einsatzzeichen-sans-*-metrics.json`. Die Unterschneidung (Kerning) ist darin in Klassen hinterlegt.
+  - Die TTF-Dateien für die Konformitätsprüfung heißen jetzt `EinsatzzeichenSans-*.ttf`.
+  - **Bei allen Zeichen mit Text ändern sich Schriftgrade und Laufbreiten.**
+  - **Die Schrift enthält weniger Zeichen als Arimo.** Aus Latin Extended-B sind nur noch 35 Zeichen enthalten, darunter Ș ș Ț ț Ǎ ǎ. Außerdem fehlen einige seltene Satzzeichen wie ‼ ‽ ‾. Das Textmetrik-Gate meldet solche Zeichen als unbekannt.
+
+### Katalog
+
+- **Sonderformen 3.6 bis 3.8 stehen als freistehende Piktogramme bereit.** Drohne, Zweirad und motorgetriebenes Zweirad liegen im neuen Piktogrammraum `special-form.*`. Ihr könnt sie z. B. mit `{ kind: 'pictogram', pictogram: 'special-form.drone' }` beschreiben, serialisieren und zeichnen. Die Geometrie stammt aus den bestehenden Sonderform-Körpern, es gibt also keine zweite Quelle. Sonderform 3.9 ist nicht als Piktogramm verfügbar.
+- **Die Drohne im Körper bleibt eine Körpermarke.** `DRONE_BODY_MARKS` listet die drei umgesetzten Originale: I.1.20, F.1.16 und C.2.31.
+- Das Schema hat neue Exporte: `SPECIAL_FORM_PICTOGRAM_IDS`, `PictogramId` mit den neuen Kennungen, `PICTOGRAM_IDS` und `SpecialFormBodyMark`. Das Serialisierungsformat `{"v":1}` bleibt unverändert.
+
+### Rendering & Text
+
+- Die Schriftgrade richten sich jetzt nach der Versalhöhe statt nach festen Werten. Fax, SDS und MRT stehen dadurch auf Referenzhöhe.
+- Neue Hilfsfunktion `textSizeForCapHeightMm()`: Sie berechnet die Schriftgröße aus einer gewünschten Versalhöhe in Millimetern.
+- Die Kürzel der Betriebsarten haben jetzt 0,15 mm Platz unter der Grundlinie.
+
+### Konformität
+
+- Die Konformitätsprüfung deckt jetzt die Sonderformen 3.6 bis 3.8 ab. Neu sind Manifest- und Fachreviewzeilen, die Elementart und Regelachse `special-form` sowie die zugehörigen Snapshots. Das Fachreview steht noch aus.
+
 ## [5.5.0](https://github.com/rubenvitt/einsatzzeichen/compare/v5.4.0...v5.5.0) (2026-10-13)
 
 ### Katalog
