@@ -43,7 +43,7 @@ Der lokal archivierte Arbeitsstand enthält unter anderem Grundelemente, Organis
 **DLRG DV 102, 1. Auflage 2011, basierend auf den SKK-Empfehlungen 2010**  
 Diese Fassung ist wichtig, weil bestehende Anwendungen, Ausbildungsmaterialien und ältere Symbolsammlungen häufig darauf beruhen. Sie dient nicht als neue Hauptbaseline, sondern für Aliasnamen, Migrationshinweise und visuelle Differenzdarstellungen.
 
-- [DLRG DV 102: Taktische Zeichen im Bevölkerungsschutz](https://www.dlrg.de/fileadmin/user_upload/DLRG.de/Fuer-Mitglieder/Einsatz_und_Medizin/kats/Download_Dateien/Formulare_E008/DV102_TaktischeZeichen_DLRG110826.pdf)
+- [DLRG DV 102: Taktische Zeichen im Bevölkerungsschutz](https://rlp.dlrg.de/fileadmin/groups/10000000/Ressort_Einsatz/Dateien/DV102_DLRG_Taktische_Zeichen.pdf)
 
 ### 3. Ergänzende operative Regelwerke
 

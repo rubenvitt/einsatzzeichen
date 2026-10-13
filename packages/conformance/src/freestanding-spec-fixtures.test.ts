@@ -16,6 +16,7 @@ import type { Drawing } from '@einsatzzeichen/schema';
 import { ANIMAL_STATE_FIXTURES, WEATHER_EXAMPLE_FIXTURES } from './freestanding-state-fixtures.js';
 import {
   FREESTANDING_SPEC_FIXTURES,
+  LEGACY_SPEC_FIXTURES,
   PICTOGRAM_SPEC_FIXTURES,
   STATE_SPEC_FIXTURES,
 } from './freestanding-spec-fixtures.js';
@@ -151,4 +152,32 @@ describe('Freistehende Zeichen über die Spec', () => {
       );
     }
   });
+});
+
+describe('Altzeichen über die Spec (ESZ-137)', () => {
+  it('führt die vier Darstellungen aus DV 102 Kapitel 8 als Piktogramm', () => {
+    expect(LEGACY_SPEC_FIXTURES.map(({ spec }) => spec)).toEqual([
+      { kind: 'pictogram', pictogram: 'comms.teleprinter-transmission' },
+      { kind: 'pictogram', pictogram: 'comms.teleprinter-transmission', variant: 'alternative' },
+      { kind: 'pictogram', pictogram: 'comms.still-image-transmission' },
+      { kind: 'pictogram', pictogram: 'comms.still-image-transmission', variant: 'alternative' },
+    ]);
+  });
+
+  it.each(LEGACY_SPEC_FIXTURES.map((fixture) => [JSON.stringify(fixture.spec), fixture] as const))(
+    '%s: wird angenommen, gezeichnet wie das Register und als Altzeichen belegt',
+    (_label, { source, spec }) => {
+      if (spec.kind !== 'pictogram') throw new Error('nur Piktogramme erwartet');
+      expect(validateFreestandingSpec(spec)).toEqual([]);
+      const definition = pictogram(spec.pictogram, spec.variant ?? 'primary');
+      const drawn = drawFreestanding(spec);
+      expect(drawn.viewBox).toEqual(definition.viewBox);
+      expect(drawn.children).toEqual(definition.primitives);
+      expect(drawn.description).toContain(definition.title);
+      expect(freestandingProvenance(spec)).toEqual({ status: 'legacy', claim: 'legacy-source', ...source });
+      const roundTrip = parseAnySpec(serializeAnySpec(spec));
+      expect(roundTrip).toEqual(spec);
+      expect(drawFreestanding(roundTrip as typeof spec).children).toEqual(drawn.children);
+    },
+  );
 });

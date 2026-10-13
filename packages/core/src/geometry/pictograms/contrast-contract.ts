@@ -13,7 +13,10 @@ import {
 } from '@einsatzzeichen/schema';
 import { ORGANIZATION_COLORS } from '../organizations.js';
 import { RENDER_THEMES } from '../render-themes.js';
-import type { CatalogPictogramDefinition, PictogramContrastPair } from './catalog-definition.js';
+import type {
+  PictogramContrastPair,
+  RegisteredPictogramDefinition,
+} from './catalog-definition.js';
 
 /**
  * WCAG unterscheidet zwei Kontrastschwellen: 3:1 für grafische Objekte (Nichttext), 4.5:1 für
@@ -302,7 +305,7 @@ function strictest(requirements: readonly ContrastRequirement[]): ContrastRequir
 }
 
 export function contrastRequirementsFor(
-  definition: CatalogPictogramDefinition,
+  definition: RegisteredPictogramDefinition,
 ): readonly ContrastRequirement[] {
   const leaves = leavesOf(definition.primitives);
   const textBackgrounds = textBackgroundsOf(leaves);

@@ -1,4 +1,4 @@
-import { ALL_PICTOGRAMS, STATE_PICTOGRAMS, freestandingRedirect } from '@einsatzzeichen/core';
+import { ALL_PICTOGRAMS, LEGACY_PICTOGRAMS, STATE_PICTOGRAMS, freestandingRedirect } from '@einsatzzeichen/core';
 import type { FreestandingSpec, StateId } from '@einsatzzeichen/schema';
 import { ANIMAL_STATE_FIXTURES, WEATHER_EXAMPLE_FIXTURES } from './freestanding-state-fixtures.js';
 import { PARAMETRIC_FIXTURES, type ParametricFixture } from './parametric-fixtures.js';
@@ -77,3 +77,23 @@ export const FREESTANDING_SPEC_FIXTURES: readonly FreestandingSpecFixture[] = Ob
   ...STATE_SPEC_FIXTURES,
   ...PICTOGRAM_SPEC_FIXTURES,
 ]);
+
+/**
+ * Die Altzeichen aus DV 102 Kapitel 8 (ESZ-137) als freistehendes Piktogramm. Eigene Liste, weil
+ * `FREESTANDING_SPEC_FIXTURES` nach Referenzdatei geschlüsselt ist und die Altquelle keine hat:
+ * Beleg ist Abschnitt und Seite der DV 102.
+ */
+export interface LegacySpecFixture {
+  readonly source: { readonly source: 'skk-2010'; readonly section: string; readonly page: number };
+  readonly spec: FreestandingSpec;
+}
+
+export const LEGACY_SPEC_FIXTURES: readonly LegacySpecFixture[] = Object.freeze(
+  LEGACY_PICTOGRAMS.map((definition): LegacySpecFixture => {
+    const spec: FreestandingSpec =
+      definition.variant === 'primary'
+        ? { kind: 'pictogram', pictogram: definition.id }
+        : { kind: 'pictogram', pictogram: definition.id, variant: definition.variant };
+    return { source: { source: definition.source, section: definition.section, page: definition.page }, spec };
+  }),
+);

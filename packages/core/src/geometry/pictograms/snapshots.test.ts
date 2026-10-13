@@ -2,7 +2,7 @@ import { readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { renderSvg } from '../../render/svg.js';
 import { type Drawing } from '@einsatzzeichen/schema';
-import { ALL_PICTOGRAMS, pictogramRenderId } from './index.js';
+import { ALL_PICTOGRAMS, LEGACY_PICTOGRAMS, pictogramRenderId } from './index.js';
 import { describePictogram } from '../labels.js';
 
 /**
@@ -41,6 +41,36 @@ describe('Piktogramm-Snapshots', () => {
       };
       await expect(renderSvg(drawing, { size: 64 })).toMatchFileSnapshot(
         `./__snapshots__/${id}.svg`,
+      );
+    },
+  );
+});
+
+/**
+ * Die Altzeichen (ESZ-137) in einem eigenen Unterordner: Der Hauptordner zählt die Piktogramme der
+ * Baseline, und dort bleibt die Zahl eine Aussage über `ALL_PICTOGRAMS`.
+ */
+describe('Snapshots der Altzeichen (DV 102, Kapitel 8)', () => {
+  it('schreibt genau vier Snapshots', () => {
+    const snapshots = readdirSync(new URL('./__snapshots__/legacy/', import.meta.url)).filter((name) =>
+      name.endsWith('.svg'),
+    );
+    expect(snapshots.sort()).toEqual(
+      LEGACY_PICTOGRAMS.map((definition) => `${pictogramRenderId(definition)}.svg`).sort(),
+    );
+  });
+
+  it.each(LEGACY_PICTOGRAMS.map((definition) => [pictogramRenderId(definition), definition] as const))(
+    'rendert %s unverändert',
+    async (id, definition) => {
+      const drawing: Drawing = {
+        viewBox: definition.viewBox,
+        children: definition.primitives,
+        title: definition.title,
+        description: describePictogram(definition),
+      };
+      await expect(renderSvg(drawing, { size: 64 })).toMatchFileSnapshot(
+        `./__snapshots__/legacy/${id}.svg`,
       );
     },
   );

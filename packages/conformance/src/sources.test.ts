@@ -78,7 +78,9 @@ describe('Quellenregister', () => {
   it('trägt an jeder Quelle beide Reviewrollen mit zurechenbarem technischem Review', () => {
     for (const [id, record] of Object.entries(SOURCE_REGISTRY)) {
       expect(record.review.technical.status).toBe('approved');
-      expect(record.review.technical.reviewer).toBe(id === 'bbk-babz-2025' ? 'codex' : 'rv');
+      expect(record.review.technical.reviewer).toBe(
+        id === 'bbk-babz-2025' ? 'codex' : id === 'skk-2010' ? 'claude' : 'rv',
+      );
       // Strukturaussage bleibt: jede der dreizehn Quellen trägt beide Reviewrollen. Beim
       // Fachreview wird nur noch die Invariante geprüft — vorhanden, und falls entschieden
       // zurechenbar. Der frühere `toBe('pending')` hätte bei der ersten Quellenfreigabe durch das
@@ -91,16 +93,28 @@ describe('Quellenregister', () => {
     // phjardas-tz entstand einen Tag nach den übrigen elf Einträgen und trägt deshalb ein eigenes,
     // späteres Prüfdatum (siehe PHJARDAS_TZ_REVIEW) statt der gemeinsamen SOURCE_REVIEW-Konstante.
     // arimo-ofl entstand drei Tage später als Registrierung der Textschrift (siehe
-    // ARIMO_OFL_TECHNICAL_REVIEW) und trägt aus demselben Grund ein eigenes Prüfdatum.
+    // ARIMO_OFL_TECHNICAL_REVIEW) und trägt aus demselben Grund ein eigenes Prüfdatum. skk-2010
+    // bekam mit ESZ-137 eine neue Bezugsadresse und damit ein neues Prüfdatum.
     for (const [id, record] of Object.entries(SOURCE_REGISTRY)) {
       const expectedDate =
-        id === 'arimo-ofl'
-          ? '2026-08-09'
-          : id === 'phjardas-tz' || id === 'bbk-babz-2025'
-            ? '2026-08-06'
-            : '2026-08-05';
+        id === 'skk-2010'
+          ? '2026-10-13'
+          : id === 'arimo-ofl'
+            ? '2026-08-09'
+            : id === 'phjardas-tz' || id === 'bbk-babz-2025'
+              ? '2026-08-06'
+              : '2026-08-05';
       expect(record.review.technical.date).toBe(expectedDate);
     }
+  });
+
+  it('führt skk-2010 mit erreichbarer Adresse und rekonstruierten Bildideen (ESZ-137)', () => {
+    const record = SOURCE_REGISTRY['skk-2010'];
+    expect(record.url).toBe(
+      'https://rlp.dlrg.de/fileadmin/groups/10000000/Ressort_Einsatz/Dateien/DV102_DLRG_Taktische_Zeichen.pdf',
+    );
+    expect(record.geometryUse).toEqual(['reconstructed']);
+    expect(record.scope).toContain('LEGACY_PICTOGRAMS');
   });
 
   it('erkennt registrierte und nicht registrierte Quellen-IDs', () => {
