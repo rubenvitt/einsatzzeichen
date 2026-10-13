@@ -1,6 +1,10 @@
 import { deepFreeze } from '../../readonly-data.js';
-import type { CommsId, Primitive } from '@einsatzzeichen/schema';
-import { defineComms, type CatalogPictogramDefinition } from '../catalog-definition.js';
+import type { Primitive } from '@einsatzzeichen/schema';
+import {
+  defineComms,
+  type CatalogPictogramDefinition,
+  type CommsDefinitionInput,
+} from '../catalog-definition.js';
 import {
   commsLine,
   commsPath,
@@ -35,7 +39,7 @@ import {
 const stroke = COMMS_REFERENCE_STROKE;
 
 /** Die Verbindung: ein waagerechter Balken, 26 mm breit, mittig (x = 3 … 29). */
-function connectionBar(yMm: number, x1Mm = 3, x2Mm = 29) {
+export function connectionBar(yMm: number, x1Mm = 3, x2Mm = 29) {
   return commsLine(x1Mm, yMm, x2Mm, yMm, stroke);
 }
 
@@ -43,7 +47,7 @@ function connectionBar(yMm: number, x1Mm = 3, x2Mm = 29) {
  * Drahtlos: sechs Schrägen im 45°-Winkel zwischen x = 4 und x = 28, Zackenhöhe 4 mm. `topMm`
  * ist die Höhe der Enden und der beiden Innenspitzen, die Täler liegen 4 mm tiefer.
  */
-function wirelessZigzag(topMm: number) {
+export function wirelessZigzag(topMm: number) {
   const bottomMm = topMm + 4;
   return commsPolyline(
     [
@@ -178,7 +182,7 @@ function satelliteDish() {
  */
 function transmissionPair(
   section: `J.${string}`,
-  id: CommsId,
+  id: CommsDefinitionInput['id'],
   title: string,
   mark: readonly Primitive[],
   zigzagTopMm: number,

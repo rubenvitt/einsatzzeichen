@@ -480,7 +480,21 @@ export const COMMS_IDS = Object.freeze([
   'twisted-pair-count',
 ] as const);
 
-export type CommsId = (typeof COMMS_IDS)[number];
+/**
+ * IuK-Zeichen der Altsystematik ohne Nachfolger in Anhang J (ESZ-137): DLRG DV 102 von 2011
+ * (SKK-Empfehlungen 2010, Quelle `skk-2010`), Kapitel 8.5 Fernschreiben und 8.6
+ * Festbildübertragung. Anhang J hat die analogen Dienste gestrichen; das Lagekarten-Altpaket
+ * bot sie an, und Bestandsdaten tragen sie. Getrennt von `COMMS_IDS`, weil jene Liste den
+ * Anhang J vollständig und nur ihn abbildet; der ID-Raum `comms.*` ist derselbe.
+ */
+export const LEGACY_COMMS_IDS = Object.freeze([
+  'teleprinter-transmission',
+  'still-image-transmission',
+] as const);
+
+export type LegacyCommsId = (typeof LEGACY_COMMS_IDS)[number];
+
+export type CommsId = (typeof COMMS_IDS)[number] | LegacyCommsId;
 
 /**
  * Schadenszeichen nach den Anhängen K (Bauwerksschäden) und L (Deichverteidigung), in

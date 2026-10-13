@@ -1,5 +1,6 @@
 import {
   colorFor,
+  contrastSurface,
   type RenderTheme,
 } from '../../render/theme.js';
 import { tokenizePath } from '../../path-commands.js';
@@ -13,7 +14,10 @@ import {
 } from '@einsatzzeichen/schema';
 import { ORGANIZATION_COLORS } from '../organizations.js';
 import { RENDER_THEMES } from '../render-themes.js';
-import type { CatalogPictogramDefinition, PictogramContrastPair } from './catalog-definition.js';
+import type {
+  PictogramContrastPair,
+  RegisteredPictogramDefinition,
+} from './catalog-definition.js';
 
 /**
  * WCAG unterscheidet zwei Kontrastschwellen: 3:1 für grafische Objekte (Nichttext), 4.5:1 für
@@ -302,7 +306,7 @@ function strictest(requirements: readonly ContrastRequirement[]): ContrastRequir
 }
 
 export function contrastRequirementsFor(
-  definition: CatalogPictogramDefinition,
+  definition: RegisteredPictogramDefinition,
 ): readonly ContrastRequirement[] {
   const leaves = leavesOf(definition.primitives);
   const textBackgrounds = textBackgroundsOf(leaves);
@@ -425,8 +429,9 @@ export function contrastPairProblems(
     const collidingThemeIds = themes
       .filter((theme) => {
         const foreground = colorFor(theme, pair.foreground);
-        const background =
-          pair.background === 'surface' ? theme.surface : colorFor(theme, pair.background);
+        const background = pair.background === 'surface'
+          ? contrastSurface(theme)
+          : colorFor(theme, pair.background);
         return foreground === background;
       })
       .map((theme) => theme.id);

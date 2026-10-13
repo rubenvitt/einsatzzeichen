@@ -13,7 +13,7 @@ import {
   MINIMUM_NON_TEXT_CONTRAST,
   MINIMUM_TEXT_CONTRAST,
 } from './contrast-contract.js';
-import { ALL_PICTOGRAMS } from './index.js';
+import { ALL_PICTOGRAMS, LEGACY_PICTOGRAMS } from './index.js';
 import { LEADERSHIP_PICTOGRAMS } from './leadership/index.js';
 import { STATE_PICTOGRAMS } from './states/index.js';
 import { WATER_RESCUE_PERSONNEL_PICTOGRAMS } from './water-rescue-personnel/index.js';
@@ -44,6 +44,17 @@ function undeclaredPaintTokensOf(
 }
 
 describe('Kontrastvertrag für Katalogpiktogramme', () => {
+  it('trägt die Altzeichen (ESZ-137) mit denselben Schwellen wie Anhang J', () => {
+    const requirements = LEGACY_PICTOGRAMS.flatMap(contrastRequirementsFor);
+    expect(requirements.length).toBeGreaterThan(0);
+    expect(checkContrast(ACCESSIBLE_LIGHT_THEME, requirements)).toEqual([]);
+    expect(checkContrast(PRINT_MONOCHROME_THEME, requirements)).toEqual([]);
+    for (const definition of LEGACY_PICTOGRAMS) {
+      expect([...paintTokensOf(definition.primitives)], definition.id).toEqual(['schwarz']);
+      expect(contrastPairProblems(definition.contrastPairs)).toEqual([]);
+    }
+  });
+
   it('expandiert den Capability-Kontrastvertrag über Oberfläche und Organisationen', () => {
     const requirements = ALL_PICTOGRAMS.flatMap(contrastRequirementsFor);
     // Entschiedene Ausnahmen (contrast-exceptions.ts, etwa roter Text wie in der Referenz) sind

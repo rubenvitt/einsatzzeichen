@@ -12,7 +12,7 @@ import type {
 } from '@einsatzzeichen/schema';
 import { stateValueGroup } from './blocks/state-groups.js';
 import { LINE_GEOMETRY } from './geometry/parametric.js';
-import { ALL_PICTOGRAMS } from './geometry/pictograms/index.js';
+import { ALL_PICTOGRAMS, LEGACY_PICTOGRAMS } from './geometry/pictograms/index.js';
 import { ANIMAL_STATES } from './geometry/pictograms/states/06-animals.js';
 import { classifyWeather } from './geometry/weather.js';
 import { STATE_HINT_LAYOUTS } from './layout/state-frames.js';
@@ -133,12 +133,14 @@ function validateAnimalState(spec: AnimalStateSpec): ValidationIssue[] {
 
 /** Ob das Register zu einer Kennung eine zweite Darstellung führt. */
 function hasAlternative(id: PictogramId): boolean {
-  return ALL_PICTOGRAMS.some((definition) => definition.id === id && definition.variant === 'alternative');
+  return [...ALL_PICTOGRAMS, ...LEGACY_PICTOGRAMS].some(
+    (definition) => definition.id === id && definition.variant === 'alternative',
+  );
 }
 
 /**
  * Die Datei, die eine Darstellung aus dem Register zeichnet — `undefined`, wenn es die Variante
- * nicht gibt.
+ * nicht gibt. Altzeichen (ESZ-137) haben keine Referenzdatei und damit nichts umzuleiten.
  */
 function referenceAssetOf(id: PictogramId, variant: DepictionVariant): string | undefined {
   return ALL_PICTOGRAMS.find((definition) => definition.id === id && definition.variant === variant)?.referenceAsset;

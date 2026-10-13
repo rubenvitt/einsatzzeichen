@@ -4,6 +4,7 @@ import {
   CAPABILITY_IDS,
   COMMS_IDS,
   DAMAGE_IDS,
+  LEGACY_COMMS_IDS,
   STATE_IDS,
   WILDFIRE_IDS,
   type CapabilityId,
@@ -79,11 +80,13 @@ export type PictogramId =
  * Jede Piktogrammkennung als Wert, Raum für Raum in der Reihenfolge von `PictogramId` und darin in
  * Kapitelreihenfolge (LFH-798). Der Wertevorrat der freistehenden Art `pictogram`; ob eine Kennung
  * dort zeichnet, entscheidet die Prüfung (`state.*` und die Leitstelle haben eine eigene Spec).
+ * Die Altzeichen aus DV 102 Kapitel 8 (`LEGACY_COMMS_IDS`, ESZ-137) folgen auf Anhang J.
  */
 export const PICTOGRAM_IDS: readonly PictogramId[] = Object.freeze([
   ...CAPABILITY_IDS.map((id) => `capability.${id}` as const),
   ...STATE_IDS.map((id) => `state.${id}` as const),
   ...COMMS_IDS.map((id) => `comms.${id}` as const),
+  ...LEGACY_COMMS_IDS.map((id) => `comms.${id}` as const),
   ...DAMAGE_IDS.map((id) => `damage.${id}` as const),
   ...WILDFIRE_IDS.map((id) => `wildfire.${id}` as const),
   ...LEADERSHIP_IDS.map((id) => `leadership.${id}` as const),

@@ -19,10 +19,10 @@ import { BASE_SYMBOLS, baseDrawing } from '@einsatzzeichen/core';
 import { COVERAGE_MANIFEST } from '../coverage-manifest.js';
 import { deepFreeze } from '@einsatzzeichen/core';
 import { RECIPES } from '../recipes.js';
-import type { CatalogPictogramDefinition } from '@einsatzzeichen/core';
+import type { CatalogPictogramDefinition, RegisteredPictogramDefinition } from '@einsatzzeichen/core';
 import * as catalogDefinitionExports from '@einsatzzeichen/core/src/geometry/pictograms/catalog-definition.js';
 import { CAPABILITY_PICTOGRAMS } from '@einsatzzeichen/core/src/geometry/pictograms/capabilities.js';
-import { ALL_PICTOGRAMS, pictogram, pictogramVariantKey } from '@einsatzzeichen/core';
+import { ALL_PICTOGRAMS, LEGACY_PICTOGRAMS, pictogram, pictogramVariantKey } from '@einsatzzeichen/core';
 import { STATE_PICTOGRAMS } from '@einsatzzeichen/core';
 
 /**
@@ -120,7 +120,7 @@ function defineLeadershipAtRuntime(input: unknown): unknown {
  * (`in-body` für `formation`) bleibt unverändert; nur der Prüfkontext der Einzeldarstellung
  * folgt der Referenz.
  */
-function singleDepictionBodyFor(definition: CatalogPictogramDefinition): Primitive {
+function singleDepictionBodyFor(definition: RegisteredPictogramDefinition): Primitive {
   return {
     type: 'rect',
     role: 'body',
@@ -364,5 +364,37 @@ describe('Piktogramm-Gates über den Katalogbestand', () => {
     // Dieser Test belegt die technische Flächenmodell-Abdeckung, nicht die fachliche
     // Autorisierung jedes realen Piktogramms für jedes Grundzeichen.
     expect(checkClipping(CENTERED_TEST_PICTOGRAM, body)).toEqual([]);
+  });
+});
+
+/**
+ * Die Altzeichen (ESZ-137) stehen außerhalb von `ALL_PICTOGRAMS`, weil sie keine Referenzdatei
+ * haben. Die Gates, die nur die Zeichnung prüfen, gelten für sie unverändert.
+ */
+describe('Piktogramm-Gates über die Altzeichen (DV 102, Kapitel 8)', () => {
+  const cases = LEGACY_PICTOGRAMS.map((definition) => [pictogramVariantKey(definition), definition] as const);
+
+  it('hat vier Darstellungen zu prüfen', () => {
+    expect(cases).toHaveLength(4);
+  });
+
+  it.each(cases)('besteht für %s das Kommando-Gate', (_id, definition) => {
+    expect(checkCommands(definition)).toEqual([]);
+  });
+
+  it.each(cases)('besteht für %s das Box-Gate', (_id, definition) => {
+    expect(checkBox(definition)).toEqual([]);
+  });
+
+  it.each(cases)('besteht für %s das Clipping-Gate in der eigenen ViewBox', (_id, definition) => {
+    expect(checkClipping(definition, singleDepictionBodyFor(definition))).toEqual([]);
+  });
+
+  it.each(cases)('besteht für %s das ViewBox-Gate', (_id, definition) => {
+    expect(checkViewBox({ viewBox: definition.viewBox, children: definition.primitives })).toEqual([]);
+  });
+
+  it.each(cases)('besteht für %s das Text-Legibility-Gate über alle sechs Rendergrößen', (_id, definition) => {
+    expect(checkTextLegibility(definition, RENDER_SIZES_PX)).toEqual([]);
   });
 });
