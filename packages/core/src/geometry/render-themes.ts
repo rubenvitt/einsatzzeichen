@@ -117,10 +117,41 @@ export const PRINT_MONOCHROME_THEME: RenderTheme = deepFreeze({
   bodyStrokeDashes: ORGANIZATION_BODY_DASHES,
 } satisfies RenderTheme);
 
+/**
+ * **Dunkle Flächen (ESZ-119), etwa der Nachtbetrieb des Lifeline Hub.** Kein Farbtausch: Ein
+ * Tausch Schwarz → Hell träfe auch die schwarze Schrift auf weißen und farbigen Körpern, und
+ * dieselbe Farbmarke `schwarz` steht in einer Zeichnung für Kontur, Kopfmarke, Lauf außerhalb
+ * und Innenzeichnung zugleich. Stattdessen trägt das Theme eine weiße Hinterlegung
+ * (`RenderTheme.halo`): Jede Tinte, die an den Untergrund grenzt, grenzt an Weiß. Körperfüllungen
+ * decken die Hinterlegung ihrer Innenzeichnung zu, dort bleibt das Bild wie in accessible-light.
+ *
+ * Palette und Kontursignaturen sind die von accessible-light, und die Hinterlegung ist weiß wie
+ * dessen Oberfläche. Damit gilt jede Kontrastzusicherung von accessible-light unverändert auch
+ * hier (`contrastSurface()` löst `'surface'` auf die Hinterlegung auf). Neu ist allein das Paar
+ * Hinterlegung gegen Untergrund: Weiß auf `#141414` erreicht 18,1 : 1, gefordert sind 7 : 1.
+ *
+ * Kopfmarken und Fahrwerk stehen schon ihrer Rolle nach auf dem Grund. Sie werden weiß statt
+ * schwarz gezeichnet (`surfaceMarkInk`), ohne Hinterlegung: Ein Stärkepunkt bleibt ein gefüllter
+ * Punkt, ein Rad ein Ring, statt dass ein schwarzer Punkt im weißen Rand als Ring erscheint.
+ *
+ * `surface` ist der Untergrund, für den das Theme gedacht ist; der Renderer zeichnet ihn nicht,
+ * das SVG bleibt transparent. 0,5 mm je Seite sind bei 64 px ein Pixel; mit
+ * `minStrokeWidthPx` wird die Hinterlegung wie ein Strich auf mindestens diese Breite angehoben.
+ */
+export const DARK_THEME: RenderTheme = deepFreeze({
+  id: 'dark',
+  palette: ACCESSIBLE_LIGHT_PALETTE,
+  surface: '#141414',
+  bodyStrokeDashes: ORGANIZATION_BODY_DASHES,
+  halo: { color: '#ffffff', widthMm: 0.5 },
+  surfaceMarkInk: { schwarz: '#ffffff' },
+} satisfies RenderTheme);
+
 export const RENDER_THEMES = deepFreeze({
   reference: REFERENCE_THEME,
   'accessible-light': ACCESSIBLE_LIGHT_THEME,
   'print-monochrome': PRINT_MONOCHROME_THEME,
+  dark: DARK_THEME,
 } as const satisfies Record<string, RenderTheme>);
 
 export type RenderThemeId = keyof typeof RENDER_THEMES;
