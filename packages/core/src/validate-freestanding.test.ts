@@ -166,7 +166,10 @@ describe('Zustand freistehend (LFH-798)', () => {
 describe('Piktogramm freistehend (LFH-798/LFH-834)', () => {
   it('lässt jede Kennung außer state.* und der Leitstelle zu', () => {
     const drawable = PICTOGRAM_IDS.filter((id) => rulesOf({ kind: 'pictogram', pictogram: id }).length === 0);
-    expect(drawable).toHaveLength(195);
+    // 195 Kennungen der Baseline und die zwei Altzeichen aus DV 102 Kapitel 8 (ESZ-137).
+    expect(drawable).toHaveLength(197);
+    expect(drawable).toContain('comms.teleprinter-transmission');
+    expect(drawable).toContain('comms.still-image-transmission');
     expect(drawable.some((id) => id.startsWith('state.'))).toBe(false);
     for (const space of ['capability.', 'comms.', 'damage.', 'wildfire.', 'leadership.', 'water-rescue-personnel.', 'special-form.']) {
       expect(drawable.some((id) => id.startsWith(space)), space).toBe(true);
@@ -216,9 +219,13 @@ describe('Piktogramm freistehend (LFH-798/LFH-834)', () => {
       'pictogram-variant-not-available',
     ]);
     expect(rulesOf({ kind: 'pictogram', pictogram: 'capability.lifting-loads-persons', variant: 'alternative' })).toEqual([]);
+    // Die Altzeichen (ESZ-137) führen ihre zweite Darstellung, über Draht, im eigenen Register.
+    expect(rulesOf({ kind: 'pictogram', pictogram: 'comms.teleprinter-transmission', variant: 'alternative' })).toEqual([]);
+    expect(rulesOf({ kind: 'pictogram', pictogram: 'comms.still-image-transmission', variant: 'alternative' })).toEqual([]);
   });
 
   it('leitet zulässige Piktogramme nicht um', () => {
     expect(freestandingRedirect({ kind: 'pictogram', pictogram: 'comms.voice' })).toBeUndefined();
+    expect(freestandingRedirect({ kind: 'pictogram', pictogram: 'comms.teleprinter-transmission' })).toBeUndefined();
   });
 });

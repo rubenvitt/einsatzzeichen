@@ -6,6 +6,7 @@ import type {
   DepictionVariant,
   Drawing,
   LeadershipId,
+  LegacyCommsId,
   PictogramBox,
   PictogramDefinition,
   Primitive,
@@ -113,7 +114,8 @@ export function defineState(input: StateDefinitionInput): CatalogPictogramDefini
 
 export interface CommsDefinitionInput {
   readonly section: `J.${string}`;
-  readonly id: CommsId;
+  /** Nur Anhang J; die Altzeichen gehen über `defineLegacyComms`. */
+  readonly id: Exclude<CommsId, LegacyCommsId>;
   readonly variant?: DepictionVariant;
   readonly title: string;
   readonly referenceAsset: `${string}.svg`;
@@ -302,6 +304,64 @@ export function defineSpecialForm(input: SpecialFormDefinitionInput): CatalogPic
     variant: 'primary',
     title: input.title,
     referenceAsset: input.referenceAsset,
+    placement: { mode: 'standalone' } as const,
+    contrastPairs: structuredClone(input.contrastPairs),
+    viewBox: DEFAULT_VIEWBOX_MM,
+    box: structuredClone(input.box),
+    primitives: structuredClone(input.primitives),
+  });
+}
+
+/**
+ * Ein Altzeichen (ESZ-137): ein Piktogramm aus der Systematik von 2010/2011 (DLRG DV 102,
+ * Quelle `skk-2010`), das die Baseline nicht mehr führt. Es trägt statt einer BABZ-Referenzdatei
+ * den Abschnitt und die Seite der Altquelle. Die Quelle liefert kein SVG, sondern eine PDF-Seite;
+ * ein `referenceAsset` gäbe es nicht, und jede Prüfung, die eine Referenzdatei voraussetzt
+ * (Fingerprint, Inventar, Coverage-Manifest der Baseline), bleibt deshalb bei `ALL_PICTOGRAMS`.
+ *
+ * Altzeichen stehen nur freistehend, wie die IuK-Zeichen aus Anhang J, deren Raum sie teilen.
+ */
+export type LegacyPictogramDefinition = DeepReadonly<
+  PictogramDefinition & {
+    readonly source: 'skk-2010';
+    /** Abschnitt der Altquelle, etwa `8.5`. */
+    readonly section: `${number}.${string}`;
+    /** Seite der Altquelle (PDF der DV 102, 1. Auflage 2011). */
+    readonly page: number;
+    readonly placement: { readonly mode: 'standalone' };
+    readonly contrastPairs: readonly [PictogramContrastPair, ...PictogramContrastPair[]];
+  }
+>;
+
+/** Was `pictogram()` liefert: ein Piktogramm der Baseline oder ein Altzeichen. */
+export type RegisteredPictogramDefinition = CatalogPictogramDefinition | LegacyPictogramDefinition;
+
+/** Ob eine Definition ein Altzeichen ist. */
+export function isLegacyPictogram(
+  definition: RegisteredPictogramDefinition,
+): definition is LegacyPictogramDefinition {
+  return 'source' in definition && definition.source === 'skk-2010';
+}
+
+export interface LegacyCommsDefinitionInput {
+  readonly section: `8.${string}`;
+  readonly page: number;
+  readonly id: LegacyCommsId;
+  readonly variant?: DepictionVariant;
+  readonly title: string;
+  readonly box: PictogramBox;
+  readonly primitives: readonly Primitive[];
+  readonly contrastPairs: readonly [PictogramContrastPair, ...PictogramContrastPair[]];
+}
+
+export function defineLegacyComms(input: LegacyCommsDefinitionInput): LegacyPictogramDefinition {
+  return deepFreeze({
+    source: 'skk-2010' as const,
+    section: input.section,
+    page: input.page,
+    id: `comms.${input.id}` as const,
+    variant: input.variant ?? 'primary',
+    title: input.title,
     placement: { mode: 'standalone' } as const,
     contrastPairs: structuredClone(input.contrastPairs),
     viewBox: DEFAULT_VIEWBOX_MM,

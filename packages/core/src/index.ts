@@ -126,9 +126,11 @@ export * from './geometry/readonly-data.js';
 export * from './geometry/pictograms/contrast-contract.js';
 export type {
   CatalogPictogramDefinition,
+  LegacyPictogramDefinition,
   PictogramContrastPair,
   PictogramPlacement,
   PictogramSection,
+  RegisteredPictogramDefinition,
 } from './geometry/pictograms/catalog-definition.js';
 // LFH-580: Der Einstieg von der Spec zur Zeichnung ohne Prüfpaket — die Standardbelegung der
 // Ports und `drawSymbol()`, das `compose()` damit aufruft.

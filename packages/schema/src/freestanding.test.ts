@@ -7,7 +7,7 @@ import {
   type AnySpec,
 } from './freestanding.js';
 import { LEADERSHIP_IDS, PICTOGRAM_IDS, WATER_RESCUE_PERSONNEL_IDS } from './pictogram.js';
-import { CAPABILITY_IDS, COMMS_IDS, DAMAGE_IDS, STATE_IDS, WILDFIRE_IDS } from './taxonomy.js';
+import { CAPABILITY_IDS, COMMS_IDS, DAMAGE_IDS, LEGACY_COMMS_IDS, STATE_IDS, WILDFIRE_IDS } from './taxonomy.js';
 import { SPECIAL_FORM_PICTOGRAM_IDS } from './special-forms.js';
 import { SYMBOL_KINDS } from './taxonomy-values.js';
 
@@ -46,6 +46,7 @@ describe('PICTOGRAM_IDS', () => {
       ...CAPABILITY_IDS.map((id) => `capability.${id}`),
       ...STATE_IDS.map((id) => `state.${id}`),
       ...COMMS_IDS.map((id) => `comms.${id}`),
+      ...LEGACY_COMMS_IDS.map((id) => `comms.${id}`),
       ...DAMAGE_IDS.map((id) => `damage.${id}`),
       ...WILDFIRE_IDS.map((id) => `wildfire.${id}`),
       ...LEADERSHIP_IDS.map((id) => `leadership.${id}`),
@@ -53,7 +54,7 @@ describe('PICTOGRAM_IDS', () => {
       ...SPECIAL_FORM_PICTOGRAM_IDS.map((id) => `special-form.${id}`),
     ]);
     expect(new Set(PICTOGRAM_IDS).size).toBe(PICTOGRAM_IDS.length);
-    expect(PICTOGRAM_IDS).toHaveLength(257);
+    expect(PICTOGRAM_IDS).toHaveLength(259);
     expect(Object.isFrozen(PICTOGRAM_IDS)).toBe(true);
   });
 });

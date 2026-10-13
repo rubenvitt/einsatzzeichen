@@ -154,6 +154,17 @@ describe('freestandingVocabulary (LFH-804)', () => {
     expect(blocked.filter((id) => !id.startsWith('state.'))).toEqual(['leadership.control-center']);
   });
 
+  it('bietet die Altzeichen aus DV 102 Kapitel 8 an, mit beiden Darstellungen (ESZ-137)', () => {
+    const options = freestandingVocabulary({ kind: 'pictogram', pictogram: 'comms.voice' }, 'pictogram');
+    for (const id of ['comms.teleprinter-transmission', 'comms.still-image-transmission'] as const) {
+      expect(options.find((option) => option.value === id)?.status, id).toBe('allowed');
+      expect(verdicts(freestandingVocabulary({ kind: 'pictogram', pictogram: id }, 'variant')), id).toEqual({
+        primary: 'allowed',
+        alternative: 'allowed',
+      });
+    }
+  });
+
   it('fragt die Variante gegen das Register', () => {
     expect(verdicts(freestandingVocabulary({ kind: 'state', state: 'tactical-attack' }, 'variant'))).toEqual({
       primary: 'allowed',

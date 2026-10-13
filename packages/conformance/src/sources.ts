@@ -29,6 +29,19 @@ const BASELINE_SOURCE_TECHNICAL_REVIEW: Review = {
 };
 
 /**
+ * Eigene Review-Angabe für `skk-2010`: Die Bezugsadresse vom 2026-08-05 ist tot (LFH-433-Scoping,
+ * §2.1); mit der Umstellung auf die RLP-Adresse ist das Prüfdatum eine Aussage über diese.
+ */
+const SKK_2010_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'claude',
+  date: '2026-10-13',
+  note:
+    'Bezugsadresse am 2026-10-13 abgerufen (HTTP 200, 63 Seiten, Impressum 1. Auflage 2011); ' +
+    'keine fachliche oder normative Freigabe.',
+};
+
+/**
  * Eigene Review-Angabe für `phjardas-tz`: der Eintrag entstand am 2026-08-06, einen Tag nach den
  * damals vorhandenen Einträgen. Das Prüfdatum ist eine Aussage über *diesen* Eintrag, nicht über
  * das Register — deshalb keine gemeinsame Konstante mit `SOURCE_TECHNICAL_REVIEW`.
@@ -154,17 +167,22 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
       'DLRG DV 102 — Taktische Zeichen im Bevölkerungsschutz, 1. Auflage 2011 (SKK-Empfehlungen 2010)',
     publisher: 'DLRG / SKK',
     edition: '1. Auflage 2011',
-    url: 'https://www.dlrg.de/fileadmin/user_upload/DLRG.de/Fuer-Mitglieder/Einsatz_und_Medizin/kats/Download_Dateien/Formulare_E008/DV102_TaktischeZeichen_DLRG110826.pdf',
+    // Die frühere DLRG-Adresse (`…/Formulare_E008/DV102_TaktischeZeichen_DLRG110826.pdf`) liefert
+    // seit dem LFH-433-Scoping HTTP 404. Die Adresse des Landesverbands Rheinland-Pfalz liefert
+    // dieselbe Auflage (63 Seiten, 1.535.399 Byte), am 2026-10-13 für ESZ-137 erneut abgerufen.
+    url: 'https://rlp.dlrg.de/fileadmin/groups/10000000/Ressort_Einsatz/Dateien/DV102_DLRG_Taktische_Zeichen.pdf',
     scope:
-      'Ältere Systematik als Grundlage für Aliasnamen, Migrationshinweise und Differenzdarstellungen. Von keinem Katalogeintrag dieses Slice referenziert.',
+      'Ältere Systematik als Grundlage für Aliasnamen, Migrationshinweise und Differenzdarstellungen. ' +
+      'Kein Katalogeintrag referenziert sie; die Altzeichen 8.5 Fernschreiben und 8.6 Festbildübertragung ' +
+      '(ESZ-137, `LEGACY_PICTOGRAMS`) sind nach ihren Bildideen eigenständig konstruiert.',
     acquisition: 'public-url',
-    geometryUse: ['none'],
+    geometryUse: ['reconstructed'],
     licence: {
       basis:
         'Frei abrufbare Dienstvorschrift; Weiterverwendung und Ableitung sind nicht dokumentiert.',
       status: 'unclear',
     },
-    review: sourceReviewFor('skk-2010', SOURCE_TECHNICAL_REVIEW),
+    review: sourceReviewFor('skk-2010', SKK_2010_TECHNICAL_REVIEW),
   },
   'fwdv-100': {
     id: 'fwdv-100',

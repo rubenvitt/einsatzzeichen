@@ -78,10 +78,17 @@ describe('Quellenregister', () => {
   it('trägt an jeder Quelle beide Reviewrollen mit zurechenbarem technischem Review', () => {
     for (const [id, record] of Object.entries(SOURCE_REGISTRY)) {
       expect(record.review.technical.status).toBe('approved');
-      // Zwei Einträge prüfte ein Agent technisch: bbk-babz-2025 (codex) und ibm-plex-sans-ofl
-      // (claude-code, Schriftwechsel ESZ-114). Die übrigen tragen das Review des Projektinhabers.
+      // Drei Einträge prüfte ein Agent technisch: bbk-babz-2025 (codex), ibm-plex-sans-ofl
+      // (claude-code, Schriftwechsel ESZ-114) und skk-2010 (claude, neue Bezugsadresse ESZ-137).
+      // Die übrigen tragen das Review des Projektinhabers.
       const reviewer =
-        id === 'bbk-babz-2025' ? 'codex' : id === 'ibm-plex-sans-ofl' ? 'claude-code' : 'rv';
+        id === 'bbk-babz-2025'
+          ? 'codex'
+          : id === 'ibm-plex-sans-ofl'
+            ? 'claude-code'
+            : id === 'skk-2010'
+              ? 'claude'
+              : 'rv';
       expect(record.review.technical.reviewer).toBe(reviewer);
       // Strukturaussage bleibt: jede der dreizehn Quellen trägt beide Reviewrollen. Beim
       // Fachreview wird nur noch die Invariante geprüft — vorhanden, und falls entschieden
@@ -96,15 +103,25 @@ describe('Quellenregister', () => {
     // späteres Prüfdatum (siehe PHJARDAS_TZ_REVIEW) statt der gemeinsamen SOURCE_REVIEW-Konstante.
     // ibm-plex-sans-ofl entstand mit dem Schriftwechsel (LFH-790, siehe
     // IBM_PLEX_SANS_OFL_TECHNICAL_REVIEW) und trägt aus demselben Grund ein eigenes Prüfdatum.
+    // skk-2010 bekam mit ESZ-137 eine neue Bezugsadresse und damit ein neues Prüfdatum.
     for (const [id, record] of Object.entries(SOURCE_REGISTRY)) {
       const expectedDate =
-        id === 'ibm-plex-sans-ofl'
+        id === 'ibm-plex-sans-ofl' || id === 'skk-2010'
           ? '2026-10-13'
           : id === 'phjardas-tz' || id === 'bbk-babz-2025'
             ? '2026-08-06'
             : '2026-08-05';
       expect(record.review.technical.date).toBe(expectedDate);
     }
+  });
+
+  it('führt skk-2010 mit erreichbarer Adresse und rekonstruierten Bildideen (ESZ-137)', () => {
+    const record = SOURCE_REGISTRY['skk-2010'];
+    expect(record.url).toBe(
+      'https://rlp.dlrg.de/fileadmin/groups/10000000/Ressort_Einsatz/Dateien/DV102_DLRG_Taktische_Zeichen.pdf',
+    );
+    expect(record.geometryUse).toEqual(['reconstructed']);
+    expect(record.scope).toContain('LEGACY_PICTOGRAMS');
   });
 
   it('erkennt registrierte und nicht registrierte Quellen-IDs', () => {

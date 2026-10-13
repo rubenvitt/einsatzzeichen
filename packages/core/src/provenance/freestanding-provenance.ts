@@ -7,13 +7,13 @@ import {
   type WeatherIntensity,
   type WeatherSpec,
 } from '@einsatzzeichen/schema';
-import { pictogram } from '../geometry/pictograms/index.js';
+import { isLegacyPictogram, pictogram } from '../geometry/pictograms/index.js';
 import { WEATHER_CLOUD_PRECIPITATION, classifyWeather } from '../geometry/weather.js';
 import { validateFreestandingSpec } from '../validate-freestanding.js';
 import { symbolProvenance, type SymbolProvenance } from './symbol-provenance.js';
 
 /**
- * Herkunft eines freistehenden Zeichens (LFH-798): `verbatim` oder `derived`, wie
+ * Herkunft eines freistehenden Zeichens (LFH-798): `verbatim`, `legacy` oder `derived`, wie
  * `symbolProvenance` für die `SymbolSpec`, aber mit einem anderen Beleg.
  *
  * **Was `verbatim` hier heißt.** Die Zeichnung ist die vermessene Darstellung genau einer
@@ -32,6 +32,10 @@ import { symbolProvenance, type SymbolProvenance } from './symbol-provenance.js'
  * Linien — deren Verlauf ist eine Eingabe; die Referenz belegt Querschnitt und Pfeilkopf, nicht den
  * Verlauf. Wie dort wird eine Spec, die die Prüfung ablehnt, nicht als Original geführt: sie ist
  * ebenfalls `derived`.
+ *
+ * **`legacy`** (ESZ-137) steht an den Altzeichen: Die Baseline kennt das Zeichen nicht, die
+ * Altsystematik von 2010/2011 (`skk-2010`, DV 102) schon. Belegt sind Abschnitt und Seite dort;
+ * eine Referenzdatei gibt es nicht. Der Status ist derselbe Wert wie `SourceStatus` im Schema.
  */
 export type FreestandingProvenance =
   | {
@@ -44,6 +48,18 @@ export type FreestandingProvenance =
     /** Gesetzt, wenn die Referenz das Bild belegt, nicht aber seine freistehende Verwendung. */
     readonly usage?: 'freestanding-not-evidenced';
   }
+  | {
+    readonly status: 'legacy';
+    /**
+     * Was belegt ist: das Zeichen steht in der Altsystematik von 2010/2011 (ESZ-137), die
+     * Baseline führt es nicht mehr. Die Zeichnung ist eigenständig im Hausstil konstruiert.
+     */
+    readonly claim: 'legacy-source';
+    readonly source: 'skk-2010';
+    /** Abschnitt der Altquelle, etwa `8.5`. */
+    readonly section: string;
+    readonly page: number;
+  }
   | { readonly status: 'derived' };
 
 /** Herkunft einer Spec beider Arten. */
@@ -53,6 +69,15 @@ const DERIVED: FreestandingProvenance = Object.freeze({ status: 'derived' });
 
 function fromRegister(id: PictogramId, variant: DepictionVariant = 'primary'): FreestandingProvenance {
   const definition = pictogram(id, variant);
+  if (isLegacyPictogram(definition)) {
+    return Object.freeze({
+      status: 'legacy',
+      claim: 'legacy-source',
+      source: definition.source,
+      section: definition.section,
+      page: definition.page,
+    });
+  }
   return Object.freeze({
     status: 'verbatim',
     claim: 'reference-file',

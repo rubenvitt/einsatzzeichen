@@ -16,3 +16,9 @@ export const COMMS_PICTOGRAMS = deepFreeze([
   ...DEVICE_COMMS,
   ...NETWORK_COMMS,
 ] satisfies readonly CatalogPictogramDefinition[]);
+
+/**
+ * Altzeichen aus DV 102 Kapitel 8 (ESZ-137). Bewusst nicht in `COMMS_PICTOGRAMS`: jene Liste ist
+ * der Anhang J der Baseline und steht so im Coverage-Manifest.
+ */
+export { LEGACY_COMMS } from './05-legacy-skk-2010.js';
