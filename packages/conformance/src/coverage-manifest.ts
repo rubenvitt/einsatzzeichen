@@ -53,6 +53,7 @@ import {
   ANHANG_F_F_DEVIATIONS,
 } from './recipes-anhang-f.js';
 import { ANHANG_N_RECIPES } from './recipes-anhang-n.js';
+import { KAPITEL_5_1_RECIPES } from './recipes-kapitel-5-1.js';
 import { ANHANG_G_RECIPES } from './recipes-anhang-g.js';
 import { ANHANG_H_RECIPES } from './recipes-anhang-h.js';
 import { ANHANG_I_RECIPES } from './recipes-anhang-i.js';
@@ -371,6 +372,29 @@ const ANHANG_F_F_TECHNICAL_REVIEW: Review = {
     'vorbestehenden Snapshots bleiben hashgleich. Der finale Task-6-Kontaktbogen war zu diesem ' +
     'Zeitpunkt noch nicht erzeugt oder gesichtet. Die Organisation hilfsorganisation und ' +
     'sämtliche Fachzuordnungen bleiben im Domain-Review pending.',
+};
+
+/**
+ * Technisches Review der acht Behälterzeichen aus Kapitel 5.1 (ESZ-117). Eigener Eintrag, weil
+ * hier erstmals Körperformen aus Kapitel 5 als eigene Arten stehen und weil ihre Zusatzgeometrie
+ * (L-Rahmen, Deichsel, Ösen, Eckbeschläge, Füße, Rollen) als `bodyExtra` außerhalb des
+ * Fingerprint-Gates liegt.
+ */
+const KAPITEL_5_1_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-10-13',
+  note:
+    'Alle acht Referenzdateien 5.1.1.8, 5.1.1.9, 5.1.2.2, 5.1.2.3 und 5.1.3.1 bis 5.1.3.4 ' +
+    'einzeln vermessen; Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert ' +
+    '(core/src/geometry/container-bodies.ts). Körperhülle per matchFingerprint gegen die eigene ' +
+    'Belegdatei gegated. Die Zusatzgeometrie erreicht matchFingerprint nicht (role bodyExtra); ' +
+    'für sie hält base-symbols.test.ts die vermessenen Zahlen fest, und der Pixelvergleich ' +
+    '(pnpm cli reference-diff) liegt für alle acht unter der Strichschwelle. Fahrwerk tragen nur ' +
+    '5.1.1.8/9 (kfz-kategorie-1, zahlengleich mit der Referenz); die Fahrwerkszone der beiden ' +
+    'Anhänger ist vom Anhängerrumpf übertragen, nicht an eigener Referenz vermessen. ' +
+    'Fachzuordnungen bleiben im Domain-Review pending ' +
+    '(docs/decisions/2026-10-13-esz-117-fehlende-fahrzeugkoerper.md).',
 };
 
 /**
@@ -1194,6 +1218,7 @@ function technicalReviewFor(section: string): Review {
   if (Object.hasOwn(ANHANG_N_RECIPES, section)) {
     return ANHANG_N_TECHNICAL_REVIEW;
   }
+  if (Object.hasOwn(KAPITEL_5_1_RECIPES, section)) return KAPITEL_5_1_TECHNICAL_REVIEW;
   if (Object.hasOwn(ANHANG_G_RECIPES, section)) {
     return ANHANG_G_TECHNICAL_REVIEW;
   }
@@ -1353,11 +1378,12 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
   //
   // **`5.1.1` und ausdrücklich nicht `5.1`.** Fünf der sechs Fahrzeugkategorien aus 5.1.1 sind
   // seit LFH-424 vermessen und gebaut; die übrigen Abschnitte von Kapitel 5.1 sind es nicht —
-  // 5.1.2 (Anhänger, eigener Körper mit Deichsel), 5.1.3 (Behälter) und 5.1.4 (Luftfahrzeuge)
-  // tragen Körperformen, die der Katalog nicht führt. `5.1` bestünde `uncoveredScope` trotzdem,
+  // 5.1.2 (Anhänger, eigener Körper mit Deichsel) und 5.1.4 (Luftfahrzeuge) tragen Körperformen,
+  // die der Katalog nicht als eigene Zeile führt; 5.1.3 und die Behälterträger 5.1.1.8/9 und
+  // 5.1.2.2/3 sind seit ESZ-117 gebaut. `5.1` bestünde `uncoveredScope` trotzdem,
   // weil jede 5.1.1.x-Zeile mit `5.1.` beginnt — dieselbe unwiderlegbare Behauptung, die weiter
   // unten für `E` gegen `E.1` beschrieben ist. Und innerhalb von 5.1.1 fehlen 5.1.1.4
-  // (Amphibienfahrzeug: Wellenlinie nur als Strichhülle vermessen) sowie 5.1.1.7 bis 5.1.1.9;
+  // (Amphibienfahrzeug: Wellenlinie nur als Strichhülle vermessen) sowie 5.1.1.7;
   // dass `uncoveredScope` das nicht meldet, ist der Grund, warum die Zuordnung in
   // `vehicle-categories.test.ts` zusätzlich an den Zahlen festgenagelt ist.
   //
@@ -1394,6 +1420,11 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     '2',
     '4',
     '5.1.1',
+    // ESZ-117: die beiden Anhänger mit Behälter einzeln, weil 5.1.2.1 (der Anhänger selbst) keine
+    // eigene Zeile trägt; 5.1.3 dagegen ganz, seine vier Abschnitte sind alle gebaut.
+    '5.1.2.2',
+    '5.1.2.3',
+    '5.1.3',
     '5.4',
     '5.8',
     'C.1.1',

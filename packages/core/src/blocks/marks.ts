@@ -954,7 +954,7 @@ const FUNCTION_ROLES_FILE = 'core/src/geometry/function-roles.ts';
  */
 const FUNCTION_ROLE_BINDING = {
   ruleId: 'function-role-requires-measured-kind',
-  definedAt: 'core/src/validate.ts:304–322',
+  definedAt: 'core/src/validate.ts:319–337',
   reason:
     'Eine gemessene Funktion ist nur an Formation oder Person belegt, und jede einzelne Fassung zusätzlich nur an der Art, für die sie vermessen wurde.',
 } as const;
@@ -998,4 +998,15 @@ export const FUNCTION_ROLE_BLOCKS: readonly BlockEntry[] = Object.freeze([
   functionRole('hazard-response-director', '344–351', 'Leiter Gefahrenabwehr', 'person'),
   functionRole('hazard-response-forces-director', '352–358', 'Leiter Gefahrenabwehrkräfte', 'person'),
   functionRole('international-relief-operation-director', '359–365', 'Leiter internationale Hilfsaktion', 'person'),
+  block(
+    'function-role',
+    'leader',
+    'body',
+    measured(
+      `${FUNCTION_ROLES_FILE}:366–375`,
+      'Führungskraft ohne Kürzel (ESZ-116), ohne eigenes Original: Körper und Kappe des Einsatzleiters D.3.2 ohne Lauf. Die Kappe tragen alle 18 Führungskräfte aus D.3 und D.4; der Motor vermerkt die Fassung als konstruiert.',
+      babz('D.3.2'),
+    ),
+    FUNCTION_ROLE_BINDING,
+  ),
 ]);

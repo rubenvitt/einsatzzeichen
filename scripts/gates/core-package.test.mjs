@@ -78,13 +78,13 @@ describe('checkCorePackage', () => {
   });
 
   test('eine in ein Modul verpackte fingerprints.json reißt die entpackte Obergrenze', () => {
-    // Auf den Messwert vom 13.10.2026 (7 316 671 B, ESZ-114 mit Einsatzzeichen Sans) auffüllen, dann die 503 954 B der Datei dazu.
+    // Auf den Messwert vom 13.10.2026 (7 369 577 B, ESZ-114 mit Einsatzzeichen Sans) auffüllen, dann die 503 954 B der Datei dazu.
     const pack = healthy();
-    const measured = 7_316_671 - pack.entries.reduce((sum, e) => sum + e.size, 0);
+    const measured = 7_369_577 - pack.entries.reduce((sum, e) => sum + e.size, 0);
     pack.entries.push({ path: 'package/dist/pad.js', size: measured });
     expect(checkCorePackage(pack)).toEqual([]);
     pack.entries.push({ path: 'package/dist/fingerprint-data.js', size: 503_954 });
-    expect(LIMITS.maxUnpackedBytes).toBeLessThan(7_316_671 + 503_954);
+    expect(LIMITS.maxUnpackedBytes).toBeLessThan(7_369_577 + 503_954);
     expect(checkCorePackage(pack)).toEqual([expect.stringMatching(/^Entpackt .* über der Obergrenze/)]);
   });
 

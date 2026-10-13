@@ -20,6 +20,19 @@ import type { ColorToken } from './geometry.js';
  *   F.3.17–F.3.19); bei `raised-gable` ist sein Mittelpunkt separat abgesenkt vermessen.
  * - `reduced-house` — reduzierte Hauskontur der beiden F.3-Zeichen Unterkunft und Krankenhaus.
  *   Die sichtbare Traufe ist ein separates Körperprimitiv, kein zweiter Körper.
+ *
+ * **Die acht Behälterformen aus Kapitel 5.1 (ESZ-117, 13.10.2026)** haben je einen eigenen
+ * Abschnitt und je genau eine Belegdatei. Jede trägt eigene Maße; keine ist eine Verschiebung
+ * einer anderen (`core/src/geometry/container-bodies.ts`):
+ *
+ * - `roll-off-loader` — Wechsellader mit Abrollbehälter, `5.1.1.8`.
+ * - `swap-container-carrier` — Kraftfahrzeug mit Wechselbehälter, `5.1.1.9`.
+ * - `roll-off-trailer` — Anhänger mit Abrollbehälter, `5.1.2.2`.
+ * - `swap-container-trailer` — Anhänger mit Wechselbehälter, `5.1.2.3`.
+ * - `roll-off-container` — Abrollbehälter, `5.1.3.1`.
+ * - `swap-container` — Wechselbehälter, `5.1.3.2`.
+ * - `swap-body` — Wechselbrücke, `5.1.3.3`.
+ * - `wheeled-container` — Behälter, zieh- und schiebbar (Rollcontainer), `5.1.3.4`.
  */
 export type SymbolKind =
   | 'formation'
@@ -40,7 +53,15 @@ export type SymbolKind =
   | 'swap-loader-vehicle'
   | 'upright-rectangle'
   | 'circle-12'
-  | 'reduced-house';
+  | 'reduced-house'
+  | 'roll-off-loader'
+  | 'swap-container-carrier'
+  | 'roll-off-trailer'
+  | 'swap-container-trailer'
+  | 'roll-off-container'
+  | 'swap-container'
+  | 'swap-body'
+  | 'wheeled-container';
 
 /**
  * Eine **zweite, in der Quelle belegte Zeichnung desselben Grundzeichens** — keine zweite
@@ -130,7 +151,12 @@ export type AdminLevelId =
  */
 export type UnitGroupingId = 'verband-i' | 'verband-ii' | 'verband-iii';
 
-/** Gemessene Funktionstraeger aus Anhang D.1, D.3 und D.4. */
+/**
+ * Funktionsträger aus Anhang D.1, D.3 und D.4, je mit vermessener Festfassung. Dazu kommt als
+ * letzte Kennung `leader`, die Führungskraft ohne Kürzel (ESZ-116): Raute und schwarze Kappe,
+ * die alle Führungskräfte in D.3 und D.4 tragen, ohne eigenes Original und darum stets
+ * abgeleitet gezeichnet.
+ */
 export const FUNCTION_ROLE_IDS = Object.freeze([
   'disaster-control-command',
   'technical-incident-command-evacuation',
@@ -157,6 +183,7 @@ export const FUNCTION_ROLE_IDS = Object.freeze([
   'hazard-response-director',
   'hazard-response-forces-director',
   'international-relief-operation-director',
+  'leader',
 ] as const);
 
 export type FunctionRoleId = (typeof FUNCTION_ROLE_IDS)[number];

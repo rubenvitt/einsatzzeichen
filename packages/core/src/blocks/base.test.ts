@@ -16,6 +16,7 @@ import {
   type VehicleCategoryId,
 } from '@einsatzzeichen/schema';
 import { baseDrawing } from '../geometry/base-symbols.js';
+import { CONTAINER_KINDS } from '../geometry/container-bodies.js';
 import { isDerivedBodyVariant } from '../derive/body-variant-pairs.js';
 import { organizationColor } from '../geometry/organizations.js';
 import { MEASURED_VEHICLE_CATEGORIES, vehicleChassis } from '../geometry/vehicle-categories.js';
@@ -98,6 +99,7 @@ function place(file: string, start: number, end: number): string {
 }
 
 const BASE_FILE = 'core/src/geometry/base-symbols.ts';
+const CONTAINER_FILE = 'core/src/geometry/container-bodies.ts';
 const ORGANIZATION_FILE = 'core/src/geometry/organizations.ts';
 const CHASSIS_FILE = 'core/src/geometry/vehicle-categories.ts';
 
@@ -110,6 +112,17 @@ function constBlock(lines: readonly string[], name: string): readonly [number, n
 function expectedBasePlace(valueId: string): string {
   const lines = sourceLines(BASE_FILE);
   const [kind, variant] = valueId.split('/') as [string, string | undefined];
+  if (variant === undefined && (CONTAINER_KINDS as readonly string[]).includes(kind)) {
+    // Die Behälterformen aus Kapitel 5.1 (ESZ-117) stehen in eigenem Modul.
+    const containerLines = sourceLines(CONTAINER_FILE);
+    const [from, to] = constBlock(containerLines, 'CONTAINER_BODIES');
+    const key = findLine(containerLines, keyPattern(kind, 2), from, to);
+    return place(
+      CONTAINER_FILE,
+      startWithComment(containerLines, key),
+      endOfObjectEntry(containerLines, key, 2),
+    );
+  }
   if (variant === undefined) {
     const [from, to] = constBlock(lines, 'BODIES');
     const key = findLine(lines, keyPattern(kind, 2), from, to);

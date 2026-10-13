@@ -56,6 +56,7 @@ const THEME_LABELS: Record<RenderThemeId, string> = {
   reference: 'Referenz (BABZ-Palette)',
   'accessible-light': 'Barrierearm hell',
   'print-monochrome': 'Druck monochrom',
+  dark: 'Dunkle Fläche (Nachtbetrieb)',
 };
 
 export function themeOptions(): readonly ThemeOption[] {

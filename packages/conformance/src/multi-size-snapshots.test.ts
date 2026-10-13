@@ -234,7 +234,13 @@ function organizationProfileSheet(): string {
   const height = (rowTops.at(-1) ?? firstTop) + size + 30;
 
   function row(theme: RenderTheme, top: number): string {
-    return ORGANIZATION_CASES.map((renderCase, index) => {
+    // Themes für dunkle Flächen (ESZ-119) stehen auf ihrem Untergrund, sonst zeigte der Bogen sie
+    // auf Weiß. Weiße Oberflächen bekommen keine Fläche, ihre Reihen bleiben bytegleich.
+    const plate = theme.surface === '#ffffff'
+      ? ''
+      : `<rect x="${left}" y="${top - 4}" width="${cellWidth * ORGANIZATION_CASES.length}" ` +
+        `height="${size + 8}" fill="${theme.surface}"/>`;
+    return plate + ORGANIZATION_CASES.map((renderCase, index) => {
       const raster = rasterize(renderCase, size, theme);
       return imageTag(raster, left + index * cellWidth, cellWidth, top, renderCase.id.slice(13));
     }).join('');
@@ -266,13 +272,14 @@ describe('echte Mehrgrößen- und Profilregression', () => {
     expect(image.height).toBe(92);
   });
 
-  it('schreibt exakt 564 Mehrgrößen-Snapshots', () => {
+  it('schreibt exakt 572 Mehrgrößen-Snapshots', () => {
     const snapshots = readdirSync(new URL('./__snapshots__/multi-size/', import.meta.url), {
       withFileTypes: true,
     }).filter((entry) => entry.isFile() && entry.name.endsWith('.svg'));
     const names = snapshots.map((entry) => entry.name);
-    // 526 bis LFH-786, dazu je ein Mehrgrößen-Snapshot der 37 Anhang-C-Fixtures.
-    expect(snapshots).toHaveLength(564);
+    // 526 bis LFH-786, dazu je ein Mehrgrößen-Snapshot der 37 Anhang-C-Fixtures, C.1.4 und der
+    // acht Behälterzeichen aus Kapitel 5.1 (ESZ-117).
+    expect(snapshots).toHaveLength(572);
     expect(names).toContain('recipe.C.1.3.svg');
     expect(names).toContain('recipe.C.1.8.svg');
     expect(names).toContain('recipe.C.2.31.svg');

@@ -79,10 +79,11 @@ const EXPECTED_ROLE_BINDINGS = {
     head: 'administrative',
     administrativeLevel: 'europaeische-union',
   },
+  leader: { organization: 'fuehrung-leitung', head: 'none' },
 } as const satisfies Record<FunctionRoleId, ExpectedRoleBinding>;
 
 describe('functionRole()', () => {
-  it('ist ein totaler, unveraenderlicher Resolver fuer exakt alle 25 IDs', () => {
+  it('ist ein totaler, unveraenderlicher Resolver fuer exakt alle 26 IDs', () => {
     expect(Object.keys(FUNCTION_ROLE_DEFINITIONS)).toEqual([...FUNCTION_ROLE_IDS]);
     for (const id of FUNCTION_ROLE_IDS) {
       expect(functionRole(id).id).toBe(id);
@@ -94,7 +95,7 @@ describe('functionRole()', () => {
     );
   });
 
-  it('bindet alle 25 Rollen an exakt eine Quellorganisation und einen konkreten Kopfwert', () => {
+  it('bindet alle 26 Rollen an exakt eine Quellorganisation und einen konkreten Kopfwert', () => {
     for (const id of FUNCTION_ROLE_IDS) {
       const definition = functionRole(id);
       const expected: ExpectedRoleBinding = EXPECTED_ROLE_BINDINGS[id];

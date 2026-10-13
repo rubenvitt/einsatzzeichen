@@ -363,6 +363,16 @@ const DEFINITIONS: Record<FunctionRoleId, FunctionRoleDefinition> = {
     expectedAdministrativeLevel: 'europaeische-union',
     capShoulderYMm: 14,
   }),
+  // Ohne Original (ESZ-116): die Führungskraft ohne Kürzel. Alle 18 Führungskräfte in D.3 und
+  // D.4 tragen dieselbe schwarze Kappe an der Rautenspitze, auch die ohne Kürzel (D.3.7, D.3.9
+  // bis D.3.12); die Einsatzkraft ohne Führung (I.5.1) trägt sie nicht. Körper und Kappe sind die
+  // des Einsatzleiters (D.3.2) ohne seinen Lauf. Die Organisation steht frei wie bei jeder Rolle
+  // der Führung und Leitung, ebenso der Kopf; `derive/function-roles.ts` vermerkt die Fassung
+  // immer als konstruiert.
+  leader: personRole({
+    id: 'leader', title: 'Führungskraft',
+    expectedOrganization: 'fuehrung-leitung',
+  }),
 };
 
 const actualIds = Object.keys(DEFINITIONS);

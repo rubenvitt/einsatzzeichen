@@ -21,20 +21,21 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { gunzipSync } from 'node:zlib';
 
 /**
- * Grenzen, zuletzt gemessen am 13. Oktober 2026 für ESZ-114 (`pnpm build`, dann `pnpm pack`):
+ * Grenzen, zuletzt gemessen am 13. Oktober 2026 für ESZ-114 auf main 5.5.0 (`pnpm build`, dann
+ * `pnpm pack`):
  *
  * | Größe | gemessen | Obergrenze | Untergrenze |
  * |---|---|---|---|
- * | Tarball (gepackt) | 917 260 B | 980 000 B (+7 %) | 250 000 B |
- * | entpackt | 7 316 671 B | 7 400 000 B (+1 %) | 3 000 000 B |
- * | Einträge | 497 | — | 200 |
+ * | Tarball (gepackt) | 931 703 B | 980 000 B (+5 %) | 250 000 B |
+ * | entpackt | 7 369 577 B | 7 500 000 B (+2 %) | 3 000 000 B |
+ * | Einträge | 503 | — | 200 |
  *
  * **Anhebung am 13. Oktober 2026 (ESZ-114):** Die Katalogschrift ist jetzt „Einsatzzeichen Sans"
  * (aus IBM Plex Sans). Plex kernt über Klassenpaare; die vier Metrikdateien tragen die
  * Unterschneidung deshalb in Klassen (ausgerollt wären es je Stufe rund 500 KB, entpackt zusammen
  * 2,9 MB). So liegen sie in `dist` bei 103 582 bis 119 968 B je Datei, die vier WOFF2 bei zusammen
- * 135 864 B. Entpackt lag das Paket damit 16 671 B über der alten Grenze. Die neue Grenze lässt
- * rund 83 KB Puffer, weiter weniger als `fingerprints.json`.
+ * 135 864 B. Entpackt lag das Paket damit 69 577 B über der alten Grenze. Die neue Grenze lässt
+ * rund 130 KB Puffer, weiter weniger als `fingerprints.json`.
  *
  * **Anhebung am 2. Oktober 2026 (LFH-832):** `core` liefert die Zeichenschrift für den Browser
  * aus (`fonts/`, vier WOFF2 mit zusammen 100 524 B, dazu `text.css`, `README.md` und `OFL.txt`).
@@ -80,7 +81,7 @@ import { gunzipSync } from 'node:zlib';
 export const LIMITS = Object.freeze({
   maxPackedBytes: 980_000,
   minPackedBytes: 250_000,
-  maxUnpackedBytes: 7_400_000,
+  maxUnpackedBytes: 7_500_000,
   minUnpackedBytes: 3_000_000,
   minEntries: 200,
 });

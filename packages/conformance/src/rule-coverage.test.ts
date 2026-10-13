@@ -29,7 +29,7 @@ describe('ruleCoverage (Fixtures)', () => {
     expect(strength?.missing).toEqual(['staffel', 'gruppe']);
     const kind = axes.find((axis) => axis.id === 'kind');
     expect(kind?.exercised).toEqual(['formation', 'person']);
-    expect(kind?.values).toHaveLength(19);
+    expect(kind?.values).toHaveLength(27);
   });
 
   it('belegt Organisationen, Stärken und Fahrwerke auch über Elemente ohne Rezept', () => {
@@ -67,7 +67,7 @@ describe('ruleCoverage (Fixtures)', () => {
 describe('ruleCoverage (echter Bestand)', () => {
   // Die Zahlen wachsen mit dem Katalog; sie stehen hier, damit eine Erweiterung sichtbar
   // hier ankommt und damit die Ausgabe von `pnpm cli coverage` an einer Stelle belegt ist.
-  it('führt 17 Achsen, davon 12 vollständig; Lücken bei Kopfmarke, Verband, Verwaltungsstufe, Fahrwerk und Körpermarke', () => {
+  it('führt 17 Achsen, davon 11 vollständig; Lücken bei Kopfmarke, Verband, Verwaltungsstufe, Funktionsrolle, Fahrwerk und Körpermarke', () => {
     const axes = ruleCoverage();
     expect(axes.map((axis) => axis.id)).toEqual([
       'kind', 'bodyVariant', 'organization', 'strength', 'technicalHeadMark', 'unitGrouping', 'administrativeLevel',
@@ -85,13 +85,16 @@ describe('ruleCoverage (echter Bestand)', () => {
       // Drei der sechs Verwaltungsstufen haben in Kopfform keine Referenz
       // (`docs/decisions/2026-08-18-grundlagen-restpunkte.md`).
       ['administrativeLevel', ['gemeinde', 'bezirk', 'bundesland']],
+      // Die Führungskraft ohne Kürzel (ESZ-116) hat kein Original; sie ist aus den Rollen von D.3
+      // gebaut und gegen D.3.7 und D.3.9 bis D.3.12 geprüft (`derive/function-roles.test.ts`).
+      ['functionRole', ['leader']],
       // Wellenlinie nur als Strichhülle vermessen; siehe `INVENTORY_EXCLUSIONS`.
       ['vehicleCategory', ['amphibienfahrzeug']],
       // Seit dem 2. Oktober 2026: die Kappe der Leitstelle (D.2.5) ist gezeichnet und gegen das
       // Original geprüft (`leitstelle-d25.test.ts`), aber noch in keinem Rezept verwendet.
       ['bodyMarks', ['circle-solid-cap-4mm']],
     ]);
-    expect(axes.filter((axis) => axis.missing.length === 0)).toHaveLength(12);
+    expect(axes.filter((axis) => axis.missing.length === 0)).toHaveLength(11);
   });
 
   it('zählt die Validierungsregeln aus core, ohne sie zu wiederholen', () => {
@@ -194,7 +197,7 @@ const REACH_TIMEOUT_MS = 30_000;
 
 describe('generativeReach (echter Bestand)', () => {
   it('enumeriert Stufe 1 mit echtem validateSpec und compose', () => {
-    // 19 Arten × (∅+10) Varianten × (∅+8) Organisationen × (∅+4+2+3+6) Kopfzonen × (∅+8) Fahrwerke.
+    // 27 Arten × (∅+10) Varianten × (∅+8) Organisationen × (∅+4+2+3+6) Kopfzonen × (∅+8) Fahrwerke.
     // Seit LFH-586 (29.09.2026) acht statt neun Organisationen: `bundespolizei` entfiel; die
     // belegten Signaturen blieben davon unberührt.
     // Seit LFH-577 drei Verbände in der Kopfzone. `validateSpec` bindet den Verband an keine Art —
@@ -216,10 +219,12 @@ describe('generativeReach (echter Bestand)', () => {
     // den Giebel an nicht ortsfesten Trägern: 26 964 → 10 080 bestehen die Prüfung, 22 644 → 8784
     // komponieren. Das Fahrwerk unter dem Giebel bleibt die einzige Lücke, jetzt nur noch an
     // Landfahrzeug, Anhänger und Wechsellader (1296 = 10 080 − 8784).
+    // ESZ-117 bringt acht Körperarten aus Kapitel 5.1 mit je 270 gültigen Kombinationen dazu
+    // (2160): 12 240 bestehen die Prüfung, 10 944 komponieren; die Lücke bleibt 1296.
     const reach = generativeReach();
-    expect(reach.enumerated).toBe(19 * 11 * 9 * 16 * 9);
-    expect(reach.validBySpec).toBe(10080);
-    expect(reach.valid).toBe(8784);
+    expect(reach.enumerated).toBe(27 * 11 * 9 * 16 * 9);
+    expect(reach.validBySpec).toBe(12240);
+    expect(reach.valid).toBe(10944);
     // F.1.1 und F.1.3 (Doppelbalken) sowie F.1.13 und F.1.21 (Einzelbalken) tragen seit dem
     // Fachreview ihre Kopfmarke; dazu +20 gültige Kombinationen, weil die technische Kopfmarke
     // jetzt auch an der Formation mit Fußband belegt ist (2 Marken × 10 Organisationen). Seit
@@ -230,9 +235,9 @@ describe('generativeReach (echter Bestand)', () => {
     // inverted-hull-track (C.2.31). C.1.8 teilt seine Signatur mit C.1.1. Keine der sechs liegt
     // außerhalb der Reichweite; sie bleiben auch mit acht Organisationen (LFH-586) gültig.
     // Seit dem 2. Oktober 2026 85 statt 77: die acht Signaturen, die bis dahin außerhalb lagen,
-    // sind jetzt für sich allein gültig.
-    expect(reach.referenced).toBe(85);
-    expect(reach.reachOnly).toBe(8784 - 85);
+    // sind jetzt für sich allein gültig. ESZ-117 bringt acht eigene Signaturen (93).
+    expect(reach.referenced).toBe(93);
+    expect(reach.reachOnly).toBe(10944 - 93);
     // Bis zum 2. Oktober 2026 waren acht Rezeptsignaturen für sich allein nicht gültig: die
     // farbigen Kreisverträge brauchten ihre Körpermarke, die Personen mit Verwaltungsstufe ihre
     // Funktionsrolle, das eingesenkte Wasserfahrzeug seine Beschriftung. Seit dem Ableiten zeichnet
@@ -240,11 +245,12 @@ describe('generativeReach (echter Bestand)', () => {
     expect(reach.referencedOutsideReach).toHaveLength(0);
     // `bodyMarks` = 88 Fähigkeiten + technische Marken; LFH-786 ergänzt mit `track-chevron-top`
     // (Drohnenwinkel der Löschdrohne C.2.31) genau eine technische Marke, die Leitstelle D.2.5
-    // (2. Oktober 2026) mit `circle-solid-cap-4mm` eine weitere, daher 134.
+    // (2. Oktober 2026) mit `circle-solid-cap-4mm` eine weitere, daher 134. `functionRole` = 25
+    // Rollen aus Anhang D und die Führungskraft ohne Kürzel (ESZ-116).
     expect(reach.notEnumerated.map((axis) => [axis.id, axis.size])).toEqual([
       ['capabilities', 88],
       ['bodyMarks', 134],
-      ['functionRole', 25],
+      ['functionRole', 26],
       ['designation', Number.POSITIVE_INFINITY],
     ]);
     // Keine Laufzeit-Assertion: allein gemessen ~140 ms, unter Vitest-Parallellast bis 4 s —

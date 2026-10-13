@@ -218,6 +218,45 @@ describe('Organisation am 12-mm-Kreis und an der reduzierten Hauskontur', () => 
   });
 });
 
+describe('Stelle mit Fachaufgabe unabhängig von der Organisation (ESZ-115)', () => {
+  // Eine UHS oder Betreuungsstelle der Feuerwehr (oder ohne festgelegte Organisation) zeichnet
+  // dieselbe Fachdienstfassung wie F.3.3/F.3.4, nur mit anderer Füllung. Bis zum 2. Oktober 2026
+  // lehnte `circle-12-requires-hilfsorganisation` das ab.
+  const marksOf = (drawing: Drawing) => drawing.children.filter((child) => child.role !== 'body');
+  const fillOf = (drawing: Drawing) =>
+    drawing.children.find((child) => child.role === 'body')?.style?.fill;
+
+  it.each([
+    ['physician'], ['medical-service'], ['care'], ['medical-service', 'physician'],
+  ] as const)('zeichnet %j am 12-mm-Kreis für Feuerwehr und ohne Organisation', (...bodyMarks) => {
+    const reference = drawSymbol({ kind: 'circle-12', organization: 'hilfsorganisation', bodyMarks });
+    const feuerwehr = drawSymbol({ kind: 'circle-12', organization: 'feuerwehr', bodyMarks });
+    const ohne = drawSymbol({ kind: 'circle-12', bodyMarks });
+
+    expect(fillOf(feuerwehr)).toBe('rot');
+    expect(fillOf(ohne)).toBe('none');
+    expect(marksOf(feuerwehr)).toEqual(marksOf(reference));
+    expect(marksOf(ohne)).toEqual(marksOf(reference));
+    expect(feuerwehr.derivations).toBeUndefined();
+    expect(ohne.derivations).toBeUndefined();
+  });
+
+  it.each(['physician', 'medical-service', 'care'] as const)(
+    'zeichnet %s an der Funktionsstelle abgeleitet, mit und ohne Organisation',
+    (mark) => {
+      for (const organization of ['feuerwehr', undefined] as const) {
+        const drawing = drawSymbol({
+          kind: 'post', ...(organization === undefined ? {} : { organization }), bodyMarks: [mark],
+        });
+        expect(marksOf(drawing).length).toBeGreaterThan(0);
+        expect(drawing.derivations).toContainEqual(
+          expect.objectContaining({ dimension: 'bodyMarks', part: `${mark} an post/normal` }),
+        );
+      }
+    },
+  );
+});
+
 describe('Varianten an der Funktionsstelle (CIRCLE_VARIANT_PAIRS)', () => {
   it.each(CIRCLE_VARIANT_PAIRS.map((pair) => [pair.kind, pair.bodyVariant] as const))(
     'führt für %s/%s Körper, Profil und eine Fläche innerhalb der 32 mm',

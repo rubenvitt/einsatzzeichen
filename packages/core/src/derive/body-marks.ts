@@ -92,11 +92,21 @@ function familyOf(kind: SymbolKind, variant: BodyVariantId | undefined): Family 
     case 'formation':
     case 'container':
     case 'upright-rectangle':
+    // Die Wechselbehälter und die Wechselbrücke aus Kapitel 5.1 (ESZ-117) sind Rechtecke.
+    case 'swap-container':
+    case 'swap-container-carrier':
+    case 'swap-container-trailer':
+    case 'swap-body':
       return 'rect';
     case 'vehicle-land':
       return variant === 'inverted-hull-track' ? 'land-inverted' : 'land';
     case 'trailer':
     case 'swap-loader-vehicle':
+    // Abrollbehälter und Rollcontainer (ESZ-117) tragen eine flache Deckkurve wie der Rumpf.
+    case 'roll-off-container':
+    case 'roll-off-loader':
+    case 'roll-off-trailer':
+    case 'wheeled-container':
       return 'land';
     case 'vehicle-air':
       return 'air';

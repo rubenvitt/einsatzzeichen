@@ -1,3 +1,63 @@
+## [5.5.0](https://github.com/rubenvitt/einsatzzeichen/compare/v5.4.0...v5.5.0) (2026-10-13)
+
+### Katalog
+
+**Neu: Behälter und Behälterträger aus Kapitel 5.1 als Körperarten**
+
+Acht neue Körperarten stehen zur Verfügung:
+
+- **Fahrzeuge mit Behälter**
+  - Wechsellader mit Abrollbehälter (5.1.1.8)
+  - Kraftfahrzeug mit Wechselbehälter (5.1.1.9)
+- **Anhänger**
+  - Anhänger mit Abrollbehälter (5.1.2.2)
+  - Anhänger mit Wechselbehälter (5.1.2.3)
+- **Behälter**
+  - Abrollbehälter (5.1.3.1)
+  - Wechselbehälter (5.1.3.2)
+  - Wechselbrücke (5.1.3.3)
+  - Rollcontainer (5.1.3.4)
+
+Damit umfasst der Katalog jetzt auch die Abschnitte 5.1.2.2, 5.1.2.3 und 5.1.3.
+
+### Rendering
+
+- Die neuen Körperarten wurden nach den Referenzdateien vermessen und eigenständig gezeichnet.
+- Rahmen, Deichsel, Ösen, Beschläge, Stützbeine und Rollen werden als Zusatzgeometrie mitgezeichnet.
+
+### Konformität
+
+- Für jede neue Körperart gibt es einen Eintrag im Manifest. Ein Fingerprint-Abgleich prüft sie gegen ihre eigene Referenzdatei.
+- Im Pixelvergleich mit den Referenzen liegt die Abweichung bei allen acht Arten unter 1,3 % Strichanteil.
+
+## Rendering
+
+**Dark Theme für dunkle Hintergründe:** Das neue Render-Theme `dark` optimiert taktische Zeichen für dunkle Flächen (z.B. Nachtbetrieb). Statt Farbumkehr erhalten die Zeichen eine weiße Hinterlegung – jedes Element wird als Silhouette gezeichnet, darüber die eigentliche Darstellung. Kopfmarken und Fahrwerk bleiben ohne Hinterlegung weiß, damit Stärkepunkte weiterhin gefüllt erscheinen. Die Kontrastverhältnisse entsprechen dem Standard `accessible-light` (mindestens 7:1).
+
+## Katalog
+
+**Zeichen „Sichten, ordnen, verteilen" aktualisiert:** Das Alt-Symbol `sichten` (aus DV 102 / SKK 2010, Zeichen 7.5) wird jetzt dem BABZ 2025-Äquivalent 5.2.4 zugeordnet. Die Bibliothek rendert es bereits als `movement-both-directions` – keine Änderungen am Piktogramm oder der Grundzeichen-Achse erforderlich.
+
+## Katalog
+
+- **Neue Funktionsrolle `leader`**: Führungskräfte mit Fachaufgabe (Arzt, Sanität, IuK, Logistik) werden jetzt mit der schwarzen Kappe aller Führungskräfte aus Anhang D dargestellt – in jeder Organisation und mit oder ohne Stärke. Die Rolle nutzt Körper und Kappe des Einsatzleiters ohne Lauf, Organisation und Kopf bleiben frei.
+
+- **Verbesserte Darstellung von Körpermarken**: Bei Funktionsfassungen ohne Lauf stehen Körpermarken jetzt randbündig unter der Kappe (wie bei D.3.7 und D.3.9 bis D.3.12), statt verkleinert eingepasst zu werden. Bereits vermessene Zeichen bleiben unverändert.
+
+- **Stellen mit Fachaufgabe ohne Hilfsorganisation**: UHS oder Betreuungsstellen der Feuerwehr oder ohne Organisation werden jetzt korrekt dargestellt – am 12-mm-Kreis mit derselben Fachdienstfassung wie F.3.3/F.3.4, aber anderer Füllung.
+
+## Tooling
+
+- **Umstellung auf Zunder**: Die Projektverwaltung wurde von ClickUp auf Zunder umgestellt. Dev-Skills und interne Workflows wurden entsprechend angepasst.
+
+## Abhängigkeiten
+
+- maplibre-gl 6.11.2 → 6.13.0
+- astro 7.3.5 → 7.3.8
+- @astrojs/react 7.0.0 → 7.0.1
+- @vitejs/plugin-react 6.1.1 → 6.1.2
+- conventional-changelog-conventionalcommits 10.4.0 → 10.4.1
+
 ## Version 5.2.0
 
 ### Freistehende Zeichen
