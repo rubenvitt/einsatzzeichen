@@ -2,6 +2,7 @@ import {
   entryKey,
   type DepictionVariant,
   type LegacyCommsId,
+  type LegacySiteId,
   type PictogramId,
 } from '@einsatzzeichen/schema';
 import { CAPABILITY_PICTOGRAMS } from './capabilities.js';
@@ -11,6 +12,7 @@ import { DAMAGE_PICTOGRAMS } from './damage/index.js';
 import { WILDFIRE_PICTOGRAMS } from './wildfire/index.js';
 import { LEADERSHIP_PICTOGRAMS } from './leadership/index.js';
 import { WATER_RESCUE_PERSONNEL_PICTOGRAMS } from './water-rescue-personnel/index.js';
+import { LEGACY_SITES } from './sites/index.js';
 import type {
   CatalogPictogramDefinition,
   LegacyPictogramDefinition,
@@ -47,7 +49,7 @@ export const ALL_PICTOGRAMS: readonly CatalogPictogramDefinition[] = deepFreeze(
  * `ALL_PICTOGRAMS`, weil jede Prüfung dort eine BABZ-Datei voraussetzt (Coverage-Manifest,
  * Fingerprints, Inventar). `pictogram()` und die freistehende Art `pictogram` erreichen sie.
  */
-export const LEGACY_PICTOGRAMS: readonly LegacyPictogramDefinition[] = deepFreeze([...LEGACY_COMMS]);
+export const LEGACY_PICTOGRAMS: readonly LegacyPictogramDefinition[] = deepFreeze([...LEGACY_COMMS, ...LEGACY_SITES]);
 
 export { isLegacyPictogram } from './catalog-definition.js';
 export { STATE_PICTOGRAMS } from './states/index.js';
@@ -80,11 +82,11 @@ const PICTOGRAMS = buildPictogramRegistry<RegisteredPictogramDefinition>([
  * leeres Piktogramm gerendert und wäre schwerer zu bemerken als ein Fehler.
  */
 export function pictogram(
-  id: `comms.${LegacyCommsId}`,
+  id: `comms.${LegacyCommsId}` | `site.${LegacySiteId}`,
   variant?: DepictionVariant,
 ): LegacyPictogramDefinition;
 export function pictogram(
-  id: Exclude<PictogramId, `comms.${LegacyCommsId}`>,
+  id: Exclude<PictogramId, `comms.${LegacyCommsId}` | `site.${LegacySiteId}`>,
   variant?: DepictionVariant,
 ): CatalogPictogramDefinition;
 export function pictogram(id: PictogramId, variant?: DepictionVariant): RegisteredPictogramDefinition;

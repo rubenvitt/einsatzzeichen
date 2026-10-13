@@ -96,6 +96,7 @@ const PICTOGRAM_SPACE_LABELS: Readonly<Record<PictogramSpace, string>> = {
   wildfire: 'Vegetationsbrand',
   leadership: 'Führung',
   'water-rescue-personnel': 'Wasserrettung',
+  site: 'Platz',
 };
 
 function spaceLabel(id: PictogramId): string {

@@ -165,6 +165,14 @@ describe('freestandingVocabulary (LFH-804)', () => {
     }
   });
 
+  it('bietet den Sammelplatz für Betroffene aus DV 102 10.3.23 an, nur in erster Darstellung (ESZ-139)', () => {
+    const options = freestandingVocabulary({ kind: 'pictogram', pictogram: 'comms.voice' }, 'pictogram');
+    expect(options.find((option) => option.value === 'site.affected-persons-assembly-point')?.status).toBe('allowed');
+    expect(
+      verdicts(freestandingVocabulary({ kind: 'pictogram', pictogram: 'site.affected-persons-assembly-point' }, 'variant')),
+    ).toEqual({ primary: 'allowed', alternative: 'pictogram-variant-not-available' });
+  });
+
   it('fragt die Variante gegen das Register', () => {
     expect(verdicts(freestandingVocabulary({ kind: 'state', state: 'tactical-attack' }, 'variant'))).toEqual({
       primary: 'allowed',

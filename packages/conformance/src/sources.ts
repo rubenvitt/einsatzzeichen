@@ -173,7 +173,8 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
     scope:
       'Ältere Systematik als Grundlage für Aliasnamen, Migrationshinweise und Differenzdarstellungen. ' +
       'Kein Katalogeintrag referenziert sie; die Altzeichen 8.5 Fernschreiben und 8.6 Festbildübertragung ' +
-      '(ESZ-137, `LEGACY_PICTOGRAMS`) sind nach ihren Bildideen eigenständig konstruiert.',
+      '(ESZ-137) sowie 10.3.23 Sammelplatz für Betroffene (ESZ-139, alle `LEGACY_PICTOGRAMS`) sind nach ' +
+      'ihren Bildideen eigenständig konstruiert.',
     acquisition: 'public-url',
     geometryUse: ['reconstructed'],
     licence: {

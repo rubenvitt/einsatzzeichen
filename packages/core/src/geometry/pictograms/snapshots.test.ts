@@ -50,8 +50,8 @@ describe('Piktogramm-Snapshots', () => {
  * Die Altzeichen (ESZ-137) in einem eigenen Unterordner: Der Hauptordner zählt die Piktogramme der
  * Baseline, und dort bleibt die Zahl eine Aussage über `ALL_PICTOGRAMS`.
  */
-describe('Snapshots der Altzeichen (DV 102, Kapitel 8)', () => {
-  it('schreibt genau vier Snapshots', () => {
+describe('Snapshots der Altzeichen (DV 102, Kapitel 8 und 10.3)', () => {
+  it('schreibt genau einen Snapshot je Altzeichen', () => {
     const snapshots = readdirSync(new URL('./__snapshots__/legacy/', import.meta.url)).filter((name) =>
       name.endsWith('.svg'),
     );

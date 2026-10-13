@@ -165,12 +165,13 @@ describe('Freistehende Zeichen über die Spec', () => {
 });
 
 describe('Altzeichen über die Spec (ESZ-137)', () => {
-  it('führt die vier Darstellungen aus DV 102 Kapitel 8 als Piktogramm', () => {
+  it('führt die vier Darstellungen aus DV 102 Kapitel 8 und den Platz aus 10.3.23 als Piktogramm', () => {
     expect(LEGACY_SPEC_FIXTURES.map(({ spec }) => spec)).toEqual([
       { kind: 'pictogram', pictogram: 'comms.teleprinter-transmission' },
       { kind: 'pictogram', pictogram: 'comms.teleprinter-transmission', variant: 'alternative' },
       { kind: 'pictogram', pictogram: 'comms.still-image-transmission' },
       { kind: 'pictogram', pictogram: 'comms.still-image-transmission', variant: 'alternative' },
+      { kind: 'pictogram', pictogram: 'site.affected-persons-assembly-point' },
     ]);
   });
 
