@@ -31,8 +31,8 @@ describe('drawingForManifestEntry', () => {
     result: drawingForManifestEntry(entry),
   }));
 
-  it('zeichnet alle 585 Manifestzeilen, jede mit viewBox und Inhalt', () => {
-    expect(results).toHaveLength(585);
+  it('zeichnet alle 593 Manifestzeilen, jede mit viewBox und Inhalt', () => {
+    expect(results).toHaveLength(593);
     for (const { key, result } of results) {
       expect(result.drawing.viewBox, `ohne viewBox: ${key}`).toBeDefined();
       expect(result.drawing.children.length, `leere Zeichnung: ${key}`).toBeGreaterThan(0);

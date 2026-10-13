@@ -19,8 +19,9 @@ describe('rowSummaries', () => {
   it('meldet für Quellen und Profil kein Bild', () => {
     const summaries = rowSummaries(rows);
     const withDrawing = summaries.filter((summary) => summary.hasDrawing);
-    // Jede Manifestzeile hat ein Bild: 544 bis LFH-786, dazu 37 Anhang-C-Fixtures und C.1.4.
-    expect(withDrawing).toHaveLength(585);
+    // Jede Manifestzeile hat ein Bild: 544 bis LFH-786, dazu 37 Anhang-C-Fixtures, C.1.4 und die
+    // acht Behälterzeichen aus ESZ-117 und 3.6 bis 3.8 aus ESZ-134.
+    expect(withDrawing).toHaveLength(593);
     expect(
       summaries.filter((summary) => summary.kind !== 'manifest' && summary.hasDrawing),
     ).toEqual([]);
@@ -28,12 +29,12 @@ describe('rowSummaries', () => {
 });
 
 describe('areaSummaries', () => {
-  it('addiert sich auf 599', () => {
+  it('addiert sich auf 607', () => {
     const areas = areaSummaries(rows);
     const total = areas.reduce((sum, area) => sum + area.total, 0);
-    // 585 Manifestzeilen (544 + 37 aus LFH-786 + C.1.4 aus LFH-787 + 3.6 bis 3.8 aus ESZ-134),
-    // 13 Quellen, ein Profil.
-    expect(total).toBe(599);
+    // 593 Manifestzeilen (544 + 37 aus LFH-786 + C.1.4 aus LFH-787 + acht aus ESZ-117 + 3.6 bis
+    // 3.8 aus ESZ-134), 13 Quellen, ein Profil.
+    expect(total).toBe(607);
     for (const area of areas) {
       expect(area.pending + area.approved + area.deviation).toBe(area.total);
     }

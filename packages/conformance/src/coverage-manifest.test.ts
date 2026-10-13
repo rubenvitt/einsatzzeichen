@@ -98,7 +98,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 585 Zeilen mit 291 Elementdarstellungen', () => {
+  it('enthält exakt 593 Zeilen mit 291 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -134,7 +134,8 @@ describe('Coverage-Manifest', () => {
       // Anhang D ergänzt 26 neue Rezepte; D.3.7 bleibt eine Migration desselben Schlüssels.
       // LFH-786 ergänzt 37 aus Anhang C: C.1.7, C.1.8 und 35 Darstellungen aus C.2 (25
       // Hauptdarstellungen und zehn Alternativen), 242 + 37 = 279. LFH-787 ergänzt C.1.4: 280.
-      'composition-recipe': 280,
+      // ESZ-117 ergänzt die acht Behälterzeichen aus Kapitel 5.1: 288.
+      'composition-recipe': 288,
       // 272 Piktogramme (seit ESZ-134 mit den Sonderformen 3.6 bis 3.8) plus acht
       // Manifest-Organisationen, vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
@@ -143,7 +144,7 @@ describe('Coverage-Manifest', () => {
       // Strichhülle vermessen ist.
       element: 291,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(585);
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(593);
     expect(elementRows).toHaveLength(291);
     expect(pictogramRows).toHaveLength(272);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
@@ -971,10 +972,13 @@ describe('Coverage-Manifest', () => {
       '3.8',
       '4',
       // `5.1.1` und nicht `5.1`: von Kapitel 5.1 sind allein die Fahrzeugkategorien aus 5.1.1
-      // umgesetzt, und auch dort nicht alle — 5.1.1.4 (Amphibienfahrzeug), 5.1.1.7 bis 5.1.1.9
-      // fehlen. `5.1` bestünde `uncoveredScope` trotzdem, weil jede 5.1.1.x-Zeile mit `5.1.`
-      // beginnt.
+      // umgesetzt, und auch dort nicht alle — 5.1.1.4 (Amphibienfahrzeug) und 5.1.1.7 fehlen.
+      // `5.1` bestünde `uncoveredScope` trotzdem, weil jede 5.1.1.x-Zeile mit `5.1.` beginnt.
       '5.1.1',
+      // ESZ-117: Behälter (5.1.3 vollständig) und die beiden Anhänger mit Behälter.
+      '5.1.2.2',
+      '5.1.2.3',
+      '5.1.3',
       '5.4',
       '5.8',
       'C.1.1',

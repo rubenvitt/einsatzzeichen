@@ -29,7 +29,7 @@ describe('ruleCoverage (Fixtures)', () => {
     expect(strength?.missing).toEqual(['staffel', 'gruppe']);
     const kind = axes.find((axis) => axis.id === 'kind');
     expect(kind?.exercised).toEqual(['formation', 'person']);
-    expect(kind?.values).toHaveLength(19);
+    expect(kind?.values).toHaveLength(27);
   });
 
   it('belegt Organisationen, Stärken und Fahrwerke auch über Elemente ohne Rezept', () => {
@@ -197,7 +197,7 @@ const REACH_TIMEOUT_MS = 30_000;
 
 describe('generativeReach (echter Bestand)', () => {
   it('enumeriert Stufe 1 mit echtem validateSpec und compose', () => {
-    // 19 Arten × (∅+10) Varianten × (∅+8) Organisationen × (∅+4+2+3+6) Kopfzonen × (∅+8) Fahrwerke.
+    // 27 Arten × (∅+10) Varianten × (∅+8) Organisationen × (∅+4+2+3+6) Kopfzonen × (∅+8) Fahrwerke.
     // Seit LFH-586 (29.09.2026) acht statt neun Organisationen: `bundespolizei` entfiel; die
     // belegten Signaturen blieben davon unberührt.
     // Seit LFH-577 drei Verbände in der Kopfzone. `validateSpec` bindet den Verband an keine Art —
@@ -219,10 +219,12 @@ describe('generativeReach (echter Bestand)', () => {
     // den Giebel an nicht ortsfesten Trägern: 26 964 → 10 080 bestehen die Prüfung, 22 644 → 8784
     // komponieren. Das Fahrwerk unter dem Giebel bleibt die einzige Lücke, jetzt nur noch an
     // Landfahrzeug, Anhänger und Wechsellader (1296 = 10 080 − 8784).
+    // ESZ-117 bringt acht Körperarten aus Kapitel 5.1 mit je 270 gültigen Kombinationen dazu
+    // (2160): 12 240 bestehen die Prüfung, 10 944 komponieren; die Lücke bleibt 1296.
     const reach = generativeReach();
-    expect(reach.enumerated).toBe(19 * 11 * 9 * 16 * 9);
-    expect(reach.validBySpec).toBe(10080);
-    expect(reach.valid).toBe(8784);
+    expect(reach.enumerated).toBe(27 * 11 * 9 * 16 * 9);
+    expect(reach.validBySpec).toBe(12240);
+    expect(reach.valid).toBe(10944);
     // F.1.1 und F.1.3 (Doppelbalken) sowie F.1.13 und F.1.21 (Einzelbalken) tragen seit dem
     // Fachreview ihre Kopfmarke; dazu +20 gültige Kombinationen, weil die technische Kopfmarke
     // jetzt auch an der Formation mit Fußband belegt ist (2 Marken × 10 Organisationen). Seit
@@ -233,9 +235,9 @@ describe('generativeReach (echter Bestand)', () => {
     // inverted-hull-track (C.2.31). C.1.8 teilt seine Signatur mit C.1.1. Keine der sechs liegt
     // außerhalb der Reichweite; sie bleiben auch mit acht Organisationen (LFH-586) gültig.
     // Seit dem 2. Oktober 2026 85 statt 77: die acht Signaturen, die bis dahin außerhalb lagen,
-    // sind jetzt für sich allein gültig.
-    expect(reach.referenced).toBe(85);
-    expect(reach.reachOnly).toBe(8784 - 85);
+    // sind jetzt für sich allein gültig. ESZ-117 bringt acht eigene Signaturen (93).
+    expect(reach.referenced).toBe(93);
+    expect(reach.reachOnly).toBe(10944 - 93);
     // Bis zum 2. Oktober 2026 waren acht Rezeptsignaturen für sich allein nicht gültig: die
     // farbigen Kreisverträge brauchten ihre Körpermarke, die Personen mit Verwaltungsstufe ihre
     // Funktionsrolle, das eingesenkte Wasserfahrzeug seine Beschriftung. Seit dem Ableiten zeichnet

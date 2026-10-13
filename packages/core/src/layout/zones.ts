@@ -178,16 +178,32 @@ function formKey(kind: SymbolKind, variant?: BodyVariantId): string {
 }
 
 /**
- * Die drei Körperformen, an denen die Referenz überhaupt eine Fahrwerkszone führt. An Wasser- und
+ * Die Körperformen, an denen die Referenz überhaupt eine Fahrwerkszone führt. An Wasser- und
  * Luftfahrzeug zeichnet der Motor die Zone seit dem 02.10.2026 abgeleitet
  * (`derive/vehicle-category.ts`); das Zonenmodell beschreibt die Referenz und führt sie dort
  * weiter als gemessen leer. `zones.test.ts` hält die Liste gegen `VEHICLE_KINDS` in `validate.ts`.
+ *
+ * Seit ESZ-117 gehören die beiden Kraftfahrzeugträger aus 5.1.1.8 und 5.1.1.9 dazu: Beide tragen
+ * die Räder der Kategorie 1 auf Zonenoberkante 26,0, der Unterkante ihres L-Rahmens.
  */
-const CHASSIS_KINDS: readonly SymbolKind[] = ['vehicle-land', 'trailer', 'swap-loader-vehicle'];
+const CHASSIS_KINDS: readonly SymbolKind[] = [
+  'vehicle-land',
+  'trailer',
+  'swap-loader-vehicle',
+  'roll-off-loader',
+  'swap-container-carrier',
+];
+
+/**
+ * Die beiden Anhängerträger aus 5.1.2.2 und 5.1.2.3. Wie `5.1.2.1` zeigen ihre Dateien kein Rad;
+ * eine Fahrzeugkategorie lässt `validateSpec` trotzdem zu, der Motor hängt die Zone an den Rahmen
+ * und vermerkt sie als übertragen (`derive/vehicle-category.ts`).
+ */
+const TRANSFERRED_CHASSIS_KINDS: readonly SymbolKind[] = ['roll-off-trailer', 'swap-container-trailer'];
 
 /**
  * Körperformen mit vermessenem Innenfeld (`INNER_FIELDS` in
- * `core/src/geometry/base-symbols.ts:1108–1124`). Das Zonenmodell importiert die Geometrie nicht;
+ * `core/src/geometry/base-symbols.ts:1121–1137`). Das Zonenmodell importiert die Geometrie nicht;
  * die Liste steht deshalb als Fundortangabe hier.
  */
 const INNER_FIELD_KINDS: readonly SymbolKind[] = [
@@ -199,7 +215,7 @@ const INNER_FIELD_KINDS: readonly SymbolKind[] = [
   'swap-loader-vehicle',
 ];
 
-/** Varianten mit eigenem Innenfeld (`VARIANT_INNER_FIELDS`, `base-symbols.ts:1126–1136`). */
+/** Varianten mit eigenem Innenfeld (`VARIANT_INNER_FIELDS`, `base-symbols.ts:1139–1149`). */
 const INNER_FIELD_VARIANT_KEYS: readonly string[] = ['vehicle-water/raised-hull'];
 
 /**
@@ -755,10 +771,19 @@ function headZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
 }
 
 function chassisZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
+  if (TRANSFERRED_CHASSIS_KINDS.includes(kind)) {
+    return measuredAbsent(
+      'combination',
+      'core/src/derive/vehicle-category.ts:23–46',
+      `"${kind}" trägt in der Referenz kein Fahrwerk: 5.1.2.2 und 5.1.2.3 zeigen wie 5.1.2.1 ` +
+        'nur Rahmen und Deichsel. Eine Fahrzeugkategorie zeichnet der Motor an der Unterkante ' +
+        'des Rahmens (y 26,0) und vermerkt die Zone als übertragen.',
+    );
+  }
   if (!CHASSIS_KINDS.includes(kind)) {
     return measuredAbsent(
       'combination',
-      'core/src/validate.ts:478–502',
+      'core/src/validate.ts:493–517',
       'Eine Fahrwerkszone ist nur am Landfahrzeug, am Anhängerrumpf und am ' +
         `Wechselladerrumpf vermessen. "${kind}" trägt in der Referenz keine; am Wasserfahrzeug ` +
         'überträgt der Motor die des Amphibienfahrzeugs (derive/vehicle-category.ts), jede ' +
@@ -826,7 +851,7 @@ function innerFieldZone(kind: SymbolKind, variant?: BodyVariantId): ZoneBinding 
   if (!hasField) {
     return notMeasured(
       'combination',
-      'core/src/geometry/base-symbols.ts:1156–1198',
+      'core/src/geometry/base-symbols.ts:1169–1211',
       `Eine weiße Innenkontur ist für "${kind}"` +
         `${variant === undefined ? '' : ` / "${variant}"`} an keiner Referenz belegt. Wie die ` +
         'Kontur an einer Raute oder einem Kreis sitzt, zeigt keine Referenz; `innerField()` ' +
@@ -843,7 +868,7 @@ function innerFieldZone(kind: SymbolKind, variant?: BodyVariantId): ZoneBinding 
         'Koordinaten der unverschobenen Grundzeichnung. Als Zonendatum liegt die Einrückung vor, ' +
         'nicht eine je Körperform eingetragene Hülle.',
       source(
-        'core/src/geometry/base-symbols.ts:1108–1136, core/src/compose.ts:838–843',
+        'core/src/geometry/base-symbols.ts:1121–1149, core/src/compose.ts:838–843',
         'Belegt nur für die Körper, die Anhang E damit zeichnet. Optional, weil nur Anhang E es ' +
           'braucht; fehlt der Port oder die Körperform, wirft `compose()`, statt die Kontur ' +
           'still wegzulassen.',
@@ -1079,7 +1104,7 @@ function bottomCenterZone(
   if (baselineMm === undefined) {
     return notMeasured(
       'combination',
-      'schema/src/taxonomy.ts:599–607',
+      'schema/src/taxonomy.ts:620–628',
       'Profile ohne eingetragene `bottomCenter`-Zone lehnt `compose()` fail-closed ab. Gemessen ' +
         'ist die Zone bisher nur an der Formation (F.1.18/F.1.20) und an `circle-12/foot-band` ' +
         '(G.3.5).',
@@ -1099,7 +1124,7 @@ function bottomCenterZone(
       'bottom-center-anchor',
       'Um x = 16,0 mm zentriert, im Schriftgrad der unteren Zonen.',
       source(
-        'schema/src/taxonomy.ts:599–607',
+        'schema/src/taxonomy.ts:620–628',
         'Beide belegten Läufe sind um x = 16,0 mm zentriert und verwenden den Schriftgrad der ' +
           'unteren Zonen.',
       ),
@@ -1379,7 +1404,7 @@ export const ZONE_IDS: readonly ZoneId[] = Object.freeze(
 );
 
 /**
- * Das Zonenmodell aller 19 Körperformen ohne Variante. `Record<SymbolKind, …>` und kein
+ * Das Zonenmodell aller 27 Körperformen ohne Variante. `Record<SymbolKind, …>` und kein
  * `Partial`: eine fehlende Körperform lehnt der Compiler ab, wie bei `SYMBOL_KINDS`.
  */
 export const ZONE_MODEL: Readonly<Record<SymbolKind, BodyFormZones>> = Object.freeze({
@@ -1402,12 +1427,20 @@ export const ZONE_MODEL: Readonly<Record<SymbolKind, BodyFormZones>> = Object.fr
   'upright-rectangle': zonesFor('upright-rectangle'),
   'circle-12': zonesFor('circle-12'),
   'reduced-house': zonesFor('reduced-house'),
+  'roll-off-loader': zonesFor('roll-off-loader'),
+  'swap-container-carrier': zonesFor('swap-container-carrier'),
+  'roll-off-trailer': zonesFor('roll-off-trailer'),
+  'swap-container-trailer': zonesFor('swap-container-trailer'),
+  'roll-off-container': zonesFor('roll-off-container'),
+  'swap-container': zonesFor('swap-container'),
+  'swap-body': zonesFor('swap-body'),
+  'wheeled-container': zonesFor('wheeled-container'),
 } satisfies Record<SymbolKind, BodyFormZones>);
 
 /**
  * Die Körperformvarianten mit eigenen Zonenmaßen — die 14 Zweige aus `profileFor()`. Die Liste
  * steht hier als Wert, weil `profileFor()` seine Zweige nicht ausgibt; `zones.test.ts` prüft sie
- * gegen alle 190 Paare aus `SYMBOL_KINDS` und `BODY_VARIANT_IDS`, sodass ein neuer Zweig hier
+ * gegen alle 270 Paare aus `SYMBOL_KINDS` und `BODY_VARIANT_IDS`, sodass ein neuer Zweig hier
  * ankommt und keiner still verschwindet.
  */
 export const ZONE_MODEL_BODY_VARIANTS: readonly BodyFormZones[] = Object.freeze([
@@ -1431,7 +1464,7 @@ export const ZONE_MODEL_BODY_VARIANTS: readonly BodyFormZones[] = Object.freeze(
   zonesFor('post', 'foot-band'),
 ]);
 
-/** Alle belegten Körperfassungen: die 19 Körperformen und die 17 Variantenzweige. */
+/** Alle belegten Körperfassungen: die 27 Körperformen und die 17 Variantenzweige. */
 export const ZONE_MODEL_FORMS: readonly BodyFormZones[] = Object.freeze([
   ...Object.values(ZONE_MODEL),
   ...ZONE_MODEL_BODY_VARIANTS,
