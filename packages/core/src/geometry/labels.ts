@@ -38,6 +38,14 @@ const KIND_LABELS: Record<SymbolKind, string> = {
   'upright-rectangle': 'Hochkantrechteck',
   'circle-12': '12-mm-Kreis',
   'reduced-house': 'Reduzierte Hauskontur',
+  'roll-off-loader': 'Wechsellader mit Abrollbehälter',
+  'swap-container-carrier': 'Kraftfahrzeug mit Wechselbehälter',
+  'roll-off-trailer': 'Anhänger mit Abrollbehälter',
+  'swap-container-trailer': 'Anhänger mit Wechselbehälter',
+  'roll-off-container': 'Abrollbehälter',
+  'swap-container': 'Wechselbehälter',
+  'swap-body': 'Wechselbrücke',
+  'wheeled-container': 'Rollcontainer',
 };
 
 /** Öffentlich, weil die Dokumentationswebsite dasselbe Vokabular anzeigt wie die

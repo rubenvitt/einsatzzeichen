@@ -417,6 +417,10 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
   'bbk-babz-2025:I.5.6#primary': { status: 'pending' },
   'bbk-babz-2025:I.5.7#primary': { status: 'pending' },
   'bbk-babz-2025:I.5.8#primary': { status: 'pending' },
+  // ESZ-134: Sonderformen 3.6 bis 3.8 als Einzelpiktogramm. Fachfrage Q-3-sonderformen.
+  'bbk-babz-2025:3.6#primary': { status: 'pending' },
+  'bbk-babz-2025:3.7#primary': { status: 'pending' },
+  'bbk-babz-2025:3.8#primary': { status: 'pending' },
   'bbk-babz-2025:2.1#primary': { status: 'pending' },
   // 2.2 seit LFH-424. Fachfragen: Q-2-hiorg-aus-raster, Q-2-hiorg-farbe-neutral.
   'bbk-babz-2025:2.2#primary': { status: 'pending' },
@@ -495,6 +499,15 @@ export const MANIFEST_DOMAIN_REVIEWS = deepFreeze({
     date: '2026-09-19',
     note: 'passt',
   },
+  // Die acht Behälterzeichen aus ESZ-117 (5.1.1.8/9, 5.1.2.2/3, 5.1.3.1 bis 5.1.3.4).
+  'bbk-babz-2025:5.1.1.8#primary': { status: 'pending' },
+  'bbk-babz-2025:5.1.1.9#primary': { status: 'pending' },
+  'bbk-babz-2025:5.1.2.2#primary': { status: 'pending' },
+  'bbk-babz-2025:5.1.2.3#primary': { status: 'pending' },
+  'bbk-babz-2025:5.1.3.1#primary': { status: 'pending' },
+  'bbk-babz-2025:5.1.3.2#primary': { status: 'pending' },
+  'bbk-babz-2025:5.1.3.3#primary': { status: 'pending' },
+  'bbk-babz-2025:5.1.3.4#primary': { status: 'pending' },
   'bbk-babz-2025:4.3.1#primary': { status: 'pending' },
   'bbk-babz-2025:4.3.2#primary': { status: 'pending' },
   'bbk-babz-2025:4.3.3#primary': { status: 'pending' },

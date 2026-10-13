@@ -18,8 +18,8 @@ describe('provenance:table', () => {
     const result = writeProvenanceTable({ root });
 
     expect(result.file).toBe(join(root, VERBATIM_TABLE_MODULE));
-    // 241 bis LFH-786, dazu die 37 Anhang-C-Fixtures und C.1.4 (LFH-787).
-    expect(result.rows).toBe(279);
+    // 241 bis LFH-786, dazu die 37 Anhang-C-Fixtures, C.1.4 (LFH-787) und acht aus ESZ-117.
+    expect(result.rows).toBe(287);
     expect(readFileSync(result.file, 'utf8')).toBe(verbatimTableSource());
   });
 });

@@ -98,6 +98,18 @@ export const DOMAIN_REVIEW_QUESTIONS: DeepReadonly<readonly DomainReviewQuestion
       'Bleibt eine Organisation, deren Farbe mit der neutralen Grundfüllung zusammenfällt, im ' +
       'Einsatz verwechslungsfrei?',
   },
+  // ── Kapitel 3 ────────────────────────────────────────────────────────────────────────────────
+  {
+    id: 'Q-3-sonderformen',
+    keys: keysOf(['3.6', '3.7', '3.8']),
+    question:
+      'Dürfen Drohne, Zweirad und Zweirad motorgetrieben als Einzelzeichen ohne Grundzeichen auf ' +
+      'der Lagekarte stehen?',
+    context:
+      'Das Bild ist die Kapiteldatei. Dass die Formen freistehend verwendet werden, belegt die ' +
+      'Referenz nicht; die Drohne erscheint sonst nur als Innenzeichen, die Zweiräder nirgends ' +
+      '(docs/decisions/2026-10-13-esz-134-sonderformen-als-piktogramme.md).',
+  },
   // ── Kapitel 5.1 ──────────────────────────────────────────────────────────────────────────────
   {
     id: 'Q-5.1-kategoriezuordnung',

@@ -13,6 +13,7 @@ import {
   type StateId,
   type WildfireId,
 } from './taxonomy.js';
+import { SPECIAL_FORM_PICTOGRAM_IDS, type SpecialFormPictogramId } from './special-forms.js';
 
 /** Direkte Führungszeichen aus Anhang D, inkrementell je belegtem Teilslice. */
 export const LEADERSHIP_IDS = [
@@ -74,7 +75,8 @@ export type PictogramId =
   | `damage.${DamageId}`
   | `wildfire.${WildfireId}`
   | `leadership.${LeadershipId}`
-  | `water-rescue-personnel.${WaterRescuePersonnelId}`;
+  | `water-rescue-personnel.${WaterRescuePersonnelId}`
+  | `special-form.${SpecialFormPictogramId}`;
 
 /**
  * Jede Piktogrammkennung als Wert, Raum für Raum in der Reihenfolge von `PictogramId` und darin in
@@ -91,6 +93,7 @@ export const PICTOGRAM_IDS: readonly PictogramId[] = Object.freeze([
   ...WILDFIRE_IDS.map((id) => `wildfire.${id}` as const),
   ...LEADERSHIP_IDS.map((id) => `leadership.${id}` as const),
   ...WATER_RESCUE_PERSONNEL_IDS.map((id) => `water-rescue-personnel.${id}` as const),
+  ...SPECIAL_FORM_PICTOGRAM_IDS.map((id) => `special-form.${id}` as const),
 ]);
 
 /**

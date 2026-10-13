@@ -35,7 +35,7 @@ describe('Element-Register', () => {
     expect(observedTitle).toBe(originalTitle);
   });
 
-  it('enthält exakt 273 Deskriptoren mit den festen Artenzahlen', () => {
+  it('enthält exakt 276 Deskriptoren mit den festen Artenzahlen', () => {
     const byKind = Object.values(ELEMENTS).reduce<Record<string, number>>((acc, el) => {
       acc[el.kind] = (acc[el.kind] ?? 0) + 1;
       return acc;
@@ -55,8 +55,9 @@ describe('Element-Register', () => {
       wildfire: 14,
       leadership: 10,
       'water-rescue-personnel': 5,
+      'special-form': 3,
     });
-    expect(Object.keys(ELEMENTS)).toHaveLength(273);
+    expect(Object.keys(ELEMENTS)).toHaveLength(276);
   });
 
   it('kollabiert 67 State-Darstellungen auf exakt 61 semantische Deskriptoren', () => {
@@ -68,8 +69,8 @@ describe('Element-Register', () => {
       definition.id.startsWith('state.'),
     );
 
-    expect(ALL_PICTOGRAMS).toHaveLength(269);
-    expect(new Set(ALL_PICTOGRAMS.map((definition) => definition.id)).size).toBe(254);
+    expect(ALL_PICTOGRAMS).toHaveLength(272);
+    expect(new Set(ALL_PICTOGRAMS.map((definition) => definition.id)).size).toBe(257);
     expect(capabilityDefinitions).toHaveLength(92);
     expect(new Set(capabilityDefinitions.map((definition) => definition.id)).size).toBe(88);
     expect(stateDefinitions).toHaveLength(67);

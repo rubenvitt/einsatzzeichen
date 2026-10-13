@@ -94,8 +94,9 @@ export interface StateSpec {
 /**
  * Ein Einzelpiktogramm aus den übrigen Räumen des Registers (LFH-798/LFH-834, Entscheidung vom
  * 10.10.2026): Kapitel 4 (`capability.*`), Anhang J (`comms.*`), Schäden aus K und L
- * (`damage.*`), Vegetationsbrand aus M (`wildfire.*`), Führung aus D (`leadership.*`) und
- * Wasserrettungspersonal aus I.5 (`water-rescue-personnel.*`). Gezeichnet wird genau die
+ * (`damage.*`), Vegetationsbrand aus M (`wildfire.*`), Führung aus D (`leadership.*`),
+ * Wasserrettungspersonal aus I.5 (`water-rescue-personnel.*`) und seit ESZ-134 die Sonderformen
+ * 3.6 bis 3.8 (`special-form.*`: Drohne, Zweirad, Zweirad motorgetrieben). Gezeichnet wird genau die
  * Kapiteldatei, auf ihrer eigenen Fläche (D.1.1 steht auf 32 × 46 mm).
  *
  * Eine Fähigkeit aus Kapitel 4 ist als Bild wörtlich, ihre freistehende Verwendung auf der

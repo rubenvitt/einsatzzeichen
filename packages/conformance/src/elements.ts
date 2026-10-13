@@ -15,7 +15,8 @@ export type ElementKind =
   | 'damage'
   | 'wildfire'
   | 'leadership'
-  | 'water-rescue-personnel';
+  | 'water-rescue-personnel'
+  | 'special-form';
 
 /**
  * Die Elementarten, die eine eigene Geometrie tragen und deshalb einen Dateisnapshot haben können.
@@ -31,6 +32,7 @@ export const PICTOGRAM_ELEMENT_KINDS: ReadonlySet<ElementKind> = new Set<Element
   'wildfire',
   'leadership',
   'water-rescue-personnel',
+  'special-form',
 ]);
 
 /**
