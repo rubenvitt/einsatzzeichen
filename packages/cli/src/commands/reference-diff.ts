@@ -44,7 +44,7 @@ import {
   drawingForManifestEntry,
   resvgFontOptions,
 } from '@einsatzzeichen/conformance';
-import { REFERENCE_THEME, renderSvg } from '@einsatzzeichen/core';
+import { REFERENCE_THEME, TEXT_FONT_FAMILY_ATTR, renderSvg } from '@einsatzzeichen/core';
 import { entryKey, type CoverageEntry, type Drawing } from '@einsatzzeichen/schema';
 
 /** Rasterbreite beider Bilder in Pixeln. */
@@ -540,7 +540,7 @@ function sheetPng(entries: readonly SheetEntry[]): Buffer {
     .map(
       (label, column) =>
         `<text x="${SHEET_LABEL + column * (SHEET_IMAGE + SHEET_GAP)}" y="22" ` +
-        `font-family="Arimo" font-size="14" font-weight="700" fill="#111111">${label}</text>`,
+        `font-family="${TEXT_FONT_FAMILY_ATTR}" font-size="14" font-weight="700" fill="#111111">${label}</text>`,
     )
     .join('');
   const body = entries
@@ -548,15 +548,15 @@ function sheetPng(entries: readonly SheetEntry[]): Buffer {
       const y = SHEET_HEADER + index * (SHEET_IMAGE + SHEET_GAP);
       const title = row.title.length > 40 ? `${row.title.slice(0, 39)}…` : row.title;
       const labels =
-        `<text x="10" y="${y + 20}" font-family="Arimo" font-size="15" font-weight="700" ` +
+        `<text x="10" y="${y + 20}" font-family="${TEXT_FONT_FAMILY_ATTR}" font-size="15" font-weight="700" ` +
         `fill="#111111">${escapeXml(row.key)}</text>` +
-        `<text x="10" y="${y + 42}" font-family="Arimo" font-size="12" fill="#30343a">` +
+        `<text x="10" y="${y + 42}" font-family="${TEXT_FONT_FAMILY_ATTR}" font-size="12" fill="#30343a">` +
         `${escapeXml(title)}</text>` +
-        `<text x="10" y="${y + 64}" font-family="Arimo" font-size="12" fill="#30343a">` +
+        `<text x="10" y="${y + 64}" font-family="${TEXT_FONT_FAMILY_ATTR}" font-size="12" fill="#30343a">` +
         `Fläche ${escapeXml(percent(row.diffArea))} · Strich ${escapeXml(percent(row.diffInk))}</text>` +
         (row.status === 'compared'
           ? ''
-          : `<text x="10" y="${y + 86}" font-family="Arimo" font-size="12" font-weight="700" ` +
+          : `<text x="10" y="${y + 86}" font-family="${TEXT_FONT_FAMILY_ATTR}" font-size="12" font-weight="700" ` +
             `fill="#b00020">${row.status === 'missing-reference' ? 'Referenz fehlt' : 'Größe weicht ab'}</text>`);
       const images = [reference, own, overlay]
         .map((png, column) => {

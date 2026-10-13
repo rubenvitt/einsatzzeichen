@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  ARIMO_CAP_HEIGHT_FRACTION,
+  TEXT_CAP_HEIGHT_FRACTION,
   PARAMETRIC_BLOCKS,
   blockEntry,
   boundsOfMm,
@@ -170,7 +170,7 @@ describe('Grenzen aus Kapitel 2 gegen das Kennzahlenartefakt', () => {
       if (label?.type !== 'text') throw new Error(`${asset}: keine Beschriftung`);
       for (const glyph of glyphs) {
         expect(Math.abs(label.y - glyph.boundsMm.maxYMm), `${asset} Grundlinie`).toBeLessThan(TOLERANCE_MM);
-        const capTop = label.y - label.sizeMm * ARIMO_CAP_HEIGHT_FRACTION;
+        const capTop = label.y - label.sizeMm * TEXT_CAP_HEIGHT_FRACTION;
         expect(Math.abs(capTop - glyph.boundsMm.minYMm), `${asset} Versalhöhe`).toBeLessThan(0.0015);
       }
       // Waagerecht mittig in der Lücke. Belegt an 2.17, dessen drei Glyphen alle erfasst sind.

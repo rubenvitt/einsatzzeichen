@@ -140,7 +140,7 @@ export const RULE_EVIDENCE: readonly RuleEvidence[] = Object.freeze([
   ),
   evidence('designation-not-blank', { kind: 'formation', designation: '   ' }, `Leere Bezeichnung (${VT}).`),
   evidence('designation-too-wide', { kind: 'formation', designation: 'W'.repeat(30) }, 'Dreißig W sprengen die Fußzone. Neu: Kompositionsregel.', 'composeFromCatalog'),
-  evidence('designation-unknown-glyph', { kind: 'formation', designation: 'A☃' }, 'Schneemann (U+2603) fehlt in den Arimo-Metriken. Neu: Kompositionsregel.', 'composeFromCatalog'),
+  evidence('designation-unknown-glyph', { kind: 'formation', designation: 'A☃' }, 'Schneemann (U+2603) fehlt in den Metriken der Katalogschrift. Neu: Kompositionsregel.', 'composeFromCatalog'),
   evidence(
     'function-role-head-mismatch',
     { kind: 'person', organization: 'feuerwehr', functionRole: 'fire-service-platoon-commander' },
@@ -249,7 +249,7 @@ export const RULE_EVIDENCE_GAPS: readonly RuleEvidenceGap[] = Object.freeze([
   Object.freeze({
     rule: 'function-role-run-unknown-glyph',
     reason:
-      'Wie function-role-run-too-wide: die Läufe kommen aus der Katalogfassung, deren Glyphen alle in den Arimo-Metriken stehen.',
+      'Wie function-role-run-too-wide: die Läufe kommen aus der Katalogfassung, deren Glyphen alle in den Metriken der Katalogschrift stehen.',
     location: 'packages/core/src/compose.ts (assertTextRunsFit mit Präfix function-role-run)',
   }),
 ]);

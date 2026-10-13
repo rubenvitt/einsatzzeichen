@@ -61,8 +61,8 @@ Kanal dasselbe Bild entsteht.
 | Paket | Inhalt |
 |---|---|
 | `schema` | Typen der internen Repräsentation (IR), Einheiten, Farbpalette. Null Fremdabhängigkeiten. |
-| `core` | Bausteine und ihre Geometrie: Grundzeichen, Körpermarken, Fahrwerk, Organisationsfarben, Stärkeangaben, technische Kopfmarken, Verwaltungsstufen, Funktionsfassungen, Piktogramme, Pfeile und Grenzen aus einem Verlauf, deutsche Bezeichnungen, konkrete Render-Themes, Kontrastausnahmen, Arimo-Laufweiten (`src/geometry/`, `src/assets/`). Dazu Bausteinregister, Zonenmodell, Regelkatalog, Kompositionsmotor, Regelvalidierung, Renderer (SVG, Canvas), Render-Theme-Vertrag, A11y-/Kontrast- und viewBox-Gates, Hüllenberechnung, Fingerprint-Vergleich, Layoutprofile. Hängt **nie** von `conformance` ab und importiert kein `node:*`. |
-| `conformance` | Prüfpaket: Kompositionsrezepte (`RECIPES`; `composeFromCatalog` als Hülle um `drawSymbol` aus `core`), Coverage-Manifest und -Gate, Domain-Reviews und -Fragen, Fingerprints, Referenzinventar, Regelbelege und Regelabdeckung, Herkunft je Kombination, Vergleichs- und benannte Ausnahmen, Quellenregister, Profilregister, Elementregister sowie die Schriftbehandlung für die Rasterung (`fonts.ts`, Arimo-TTF). Bis 1.5 als `@einsatzzeichen/catalog` veröffentlicht. |
+| `core` | Bausteine und ihre Geometrie: Grundzeichen, Körpermarken, Fahrwerk, Organisationsfarben, Stärkeangaben, technische Kopfmarken, Verwaltungsstufen, Funktionsfassungen, Piktogramme, Pfeile und Grenzen aus einem Verlauf, deutsche Bezeichnungen, konkrete Render-Themes, Kontrastausnahmen, Laufweiten der Katalogschrift (`src/geometry/`, `src/assets/`). Dazu Bausteinregister, Zonenmodell, Regelkatalog, Kompositionsmotor, Regelvalidierung, Renderer (SVG, Canvas), Render-Theme-Vertrag, A11y-/Kontrast- und viewBox-Gates, Hüllenberechnung, Fingerprint-Vergleich, Layoutprofile. Hängt **nie** von `conformance` ab und importiert kein `node:*`. |
+| `conformance` | Prüfpaket: Kompositionsrezepte (`RECIPES`; `composeFromCatalog` als Hülle um `drawSymbol` aus `core`), Coverage-Manifest und -Gate, Domain-Reviews und -Fragen, Fingerprints, Referenzinventar, Regelbelege und Regelabdeckung, Herkunft je Kombination, Vergleichs- und benannte Ausnahmen, Quellenregister, Profilregister, Elementregister sowie die Schriftbehandlung für die Rasterung (`fonts.ts`, TTFs von Einsatzzeichen Sans). Bis 1.5 als `@einsatzzeichen/catalog` veröffentlicht. |
 | `cli` | Kennzahlenableitung aus der lokalen Referenz, Coverage-Gate, SVG-Export. |
 | `react` | Hook `useEinsatzzeichenSvg` (liefert das `core`-SVG bytegleich als String) und Komponente `<Einsatzzeichen drawing size theme idPrefix />`, die Wurzelattribute und Inhalt dieses SVGs unverändert in den React-Baum trägt — React ordnet nur die Attribute selbst (kein JSX-Build, `react` als Peer-Abhängigkeit). |
 | `web-component` | Custom Element `<einsatzzeichen-symbol>` mit offenem Shadow DOM; Properties `drawing`/`theme`, Attribute `size`/`id-prefix`. Registrierung idempotent und ohne `customElements` folgenlos. |
@@ -84,7 +84,7 @@ pnpm add @einsatzzeichen/conformance         # nur für Prüfdaten wie RECIPES, 
 ```
 
 Bausteine und Themes (`baseDrawing`, `organizationColor`, `pictogram`, `RENDER_THEMES`,
-`PRINT_MONOCHROME_THEME`, `describeSymbolSpec`, `ARIMO_TEXT_METRICS` und ihre Nachbarn) kommen
+`PRINT_MONOCHROME_THEME`, `describeSymbolSpec`, `TEXT_FONT_METRICS` und ihre Nachbarn) kommen
 jetzt aus `@einsatzzeichen/core`; der Index von `conformance` führt sie nicht mehr. Rezepte,
 Coverage, Reviews, Quellen-, Profil- und Elementregister sowie `fonts.ts` bleiben in
 `conformance`.
@@ -100,7 +100,7 @@ seiner Manifestzeile, die für `coverage: 'catalog-entry'` 1:1 zu ihm ist. Das f
 steht derzeit bei allen Einträgen offen; die Struktur macht das sichtbar, statt es zu verdecken.
 
 `packages/conformance/src/sources.ts` führt elf Quellen der Referenzhierarchie plus `phjardas-tz` als
-Vergleichsbestand und `arimo-ofl` als registrierten Schriftquellenträger (eigener `SourceKind
+Vergleichsbestand und `ibm-plex-sans-ofl` als registrierten Schriftquellenträger (eigener `SourceKind
 'typeface'`, kein Teil der Referenzhierarchie) — insgesamt 13 Quellen, jeweils mit
 Nutzungsgrundlage, Beschaffungsstand und Umgang mit der Geometrie. Für die BABZ-Assets ist die
 Lizenzlage `unclear`; die Konsequenz — abgeleitete Kennzahlen statt Dateien — steht damit

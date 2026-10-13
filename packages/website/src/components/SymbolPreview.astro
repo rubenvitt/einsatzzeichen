@@ -100,7 +100,7 @@ function splitSvg(markup: string): { viewBox: string; content: string } {
  * Die Sprite-Ablage ist `position: absolute; width: 0` und **nicht** `display: none` — verborgene
  * Sprite-Container mit `display: none` haben `<use>` in manchen Engines schon aussetzen lassen.
  *
- * Der Text bleibt Text: `renderSvg()` schreibt `font-family="Arimo"` als Attribut an den `<text>`,
+ * Der Text bleibt Text: `renderSvg()` schreibt `font-family="Einsatzzeichen Sans"` als Attribut an den `<text>`,
  * und `@font-face` in `theme.css` gilt dokumentweit — beides überlebt den Weg durch `<use>`.
  */
 const sprites = PROFILES.map((profile) => {

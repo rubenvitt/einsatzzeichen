@@ -19,7 +19,7 @@ import {
   symbolKindChoiceLabel,
   symbolKindLabel,
 } from '../geometry/labels.js';
-import { ARIMO_TEXT_METRICS } from '../geometry/text-metrics.js';
+import { TEXT_FONT_METRICS } from '../geometry/text-metrics.js';
 import { hasVariantProfile, profileFor } from '../layout/profiles.js';
 import { measureTextRun } from '../text-metrics.js';
 import {
@@ -48,7 +48,7 @@ function circleBody(drawing: Drawing): { cx: number; cy: number; r: number } {
 
 /** Alle vier Tintenecken eines Laufs liegen innerhalb der Kreisfläche (Innenkante des Strichs). */
 function expectInkInsideCircle(run: TextRun, circle: { cx: number; cy: number; r: number }): void {
-  const ink = measureTextRun(run, ARIMO_TEXT_METRICS);
+  const ink = measureTextRun(run, TEXT_FONT_METRICS);
   const top = run.y - ink.inkAscentMm;
   const bottom = run.y + ink.inkDescentMm;
   for (const [x, y] of [
@@ -161,8 +161,8 @@ describe('Kürzel in den Ecken am Kreis', () => {
     expectInkInsideCircle(center!, circleBody(probe));
     expectInkInsideCircle(corner!, circleBody(probe));
     // Die Tinte des mittigen Laufs endet über der des Eckenlaufs.
-    const centerInk = measureTextRun(center!, ARIMO_TEXT_METRICS);
-    const cornerInk = measureTextRun(corner!, ARIMO_TEXT_METRICS);
+    const centerInk = measureTextRun(center!, TEXT_FONT_METRICS);
+    const cornerInk = measureTextRun(corner!, TEXT_FONT_METRICS);
     expect(center!.y + centerInk.inkDescentMm).toBeLessThan(corner!.y - cornerInk.inkAscentMm);
     // Die Boxen überlappen nicht, wie an der Formation.
     expect(center!.boxMm.yMm + center!.boxMm.heightMm).toBeLessThanOrEqual(corner!.boxMm.yMm);
@@ -343,7 +343,7 @@ describe('Unten mittig und rechts unterhalb an ungebänderten Kreisen (von G.3.5
     expect(center?.style?.fill).toBe('weiss');
     expectInkInsideCircle(center!, body);
     expect(below).toMatchObject({ x: 31, y: body.cy + body.r + 1, style: { fill: 'schwarz' } });
-    const ink = measureTextRun(below!, ARIMO_TEXT_METRICS);
+    const ink = measureTextRun(below!, TEXT_FONT_METRICS);
     expect(below!.y + ink.inkDescentMm).toBeLessThanOrEqual(32);
     expect(drawing.derivations?.map((note) => note.dimension)).toEqual([
       'labels.bottomCenter',

@@ -1,7 +1,7 @@
 import { DEFAULT_VIEWBOX_MM, type Primitive, type SymbolSpec } from '@einsatzzeichen/schema';
 import { derivedBodyScaling } from '../geometry/base-symbols.js';
 import {
-  ARIMO_CAP_HEIGHT_FRACTION,
+  TEXT_CAP_HEIGHT_FRACTION,
   MINIMUM_TEXT_RENDER_PX,
   verticalTextBoxMm,
 } from '../render/text-policy.js';
@@ -46,7 +46,7 @@ const ALL_LABEL_ZONES: readonly LabelZone[] = [...IN_BODY_LABEL_ZONES, ...OUTSID
  */
 export const MIN_SCALED_RUN_CAP_HEIGHT_MM = 2.12;
 
-const MIN_SCALED_RUN_SIZE_MM = MIN_SCALED_RUN_CAP_HEIGHT_MM / ARIMO_CAP_HEIGHT_FRACTION;
+const MIN_SCALED_RUN_SIZE_MM = MIN_SCALED_RUN_CAP_HEIGHT_MM / TEXT_CAP_HEIGHT_FRACTION;
 const EPSILON = 1e-9;
 
 /** `outer ∘ inner`: erst `inner`, dann `outer`. */
@@ -108,7 +108,7 @@ export function runsFollowingBody(runs: readonly Primitive[], m: Affine): Primit
     const clamped = mapped.sizeMm < MIN_SCALED_RUN_SIZE_MM;
     const sizeMm = clamped ? MIN_SCALED_RUN_SIZE_MM : mapped.sizeMm;
     const y = clamped
-      ? mapped.y - (mapped.sizeMm * ARIMO_CAP_HEIGHT_FRACTION) / 2 + MIN_SCALED_RUN_CAP_HEIGHT_MM / 2
+      ? mapped.y - (mapped.sizeMm * TEXT_CAP_HEIGHT_FRACTION) / 2 + MIN_SCALED_RUN_CAP_HEIGHT_MM / 2
       : mapped.y;
     const box = verticalTextBoxMm(y, sizeMm, run.baseline ?? 'alphabetic');
     return {

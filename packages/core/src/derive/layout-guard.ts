@@ -1,7 +1,7 @@
 import type { Drawing, Point, Primitive } from '@einsatzzeichen/schema';
 import { boundsOfMm, type BoundsMm } from '../bounds.js';
 import { NotMeasuredError } from '../not-measured.js';
-import { ARIMO_CAP_HEIGHT_FRACTION } from '../render/text-policy.js';
+import { TEXT_CAP_HEIGHT_FRACTION } from '../render/text-policy.js';
 import { textWidthMm, type TextMetrics } from '../text-metrics.js';
 
 /**
@@ -104,7 +104,7 @@ function inkBox(text: TextPrimitive, metrics: TextMetrics): BoundsMm {
   const minX = anchor === 'middle' ? text.x - widthMm / 2 : anchor === 'end' ? text.x - widthMm : text.x;
   return {
     minX,
-    minY: text.y - text.sizeMm * ARIMO_CAP_HEIGHT_FRACTION,
+    minY: text.y - text.sizeMm * TEXT_CAP_HEIGHT_FRACTION,
     maxX: minX + widthMm,
     maxY: text.y,
   };

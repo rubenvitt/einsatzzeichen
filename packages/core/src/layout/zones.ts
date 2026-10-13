@@ -1007,7 +1007,7 @@ function centerZone(
       source(
         'core/src/compose.ts:285–286',
         'Versalhöhe des mittigen Schriftgrads, gemessen an den 16 Dateien E.1.1 bis E.1.16. Der ' +
-          'Schriftgrad selbst ist daraus über `ARIMO_CAP_HEIGHT_FRACTION` abgeleitet und nicht ' +
+          'Schriftgrad selbst ist daraus über `TEXT_CAP_HEIGHT_FRACTION` abgeleitet und nicht ' +
           'gewählt; je Zeichen kann eine eigene gemessene Höhe danebenstehen.',
         babz('E.1.1–E.1.16'),
       ),
@@ -1062,7 +1062,7 @@ function bottomLabelZone(
       source(
         'core/src/compose.ts:285–287, 289–301',
         'Versalhöhe der unteren Schriftgrade, gemessen an E.1.1 bis E.1.16. Der Schriftgrad ' +
-          '(4,24 mm) ist daraus über `ARIMO_CAP_HEIGHT_FRACTION` abgeleitet: an der Referenz ist ' +
+          '(4,24 mm) ist daraus über `TEXT_CAP_HEIGHT_FRACTION` abgeleitet: an der Referenz ist ' +
           'die Versalhöhe ablesbar, der Schriftgrad nicht.',
         babz('E.1.1–E.1.16'),
       ),

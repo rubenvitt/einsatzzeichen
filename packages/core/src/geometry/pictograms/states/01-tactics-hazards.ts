@@ -1,5 +1,6 @@
 import type { ColorToken, Point, Primitive, Style } from '@einsatzzeichen/schema';
 import { deepFreeze } from '../../readonly-data.js';
+import { textSizeForCapHeightMm } from '../../../render/text-policy.js';
 import {
   defineState,
   type CatalogPictogramDefinition,
@@ -231,40 +232,41 @@ function waterIngressPrimitives(): readonly Primitive[] {
 }
 
 /*
- * Kennbuchstaben im Warndreieck (5.8.1.7, 5.8.1.8, 5.8.1.10, 5.8.1.11): Arimo 500 (LFH-585),
- * rot, Grundlinie an der Referenz abgelesen. Die Referenzschrift läuft schmaler als Arimo;
- * Schriftgrad und Mitte sind so gewählt, dass Versalhöhe und Laufbreite zusammen am besten
- * decken (Pixelvergleich, noch mit Arimo Bold). Arimo ist breiter, deshalb liegt der Grad unter
- * dem, den die Versalhöhe allein ergäbe; in 500 passt auch „Ex" bei voller Höhe nicht.
+ * Kennbuchstaben im Warndreieck (5.8.1.7, 5.8.1.8, 5.8.1.10, 5.8.1.11): Katalogstärke 500
+ * (LFH-585), rot, Grundlinie an der Referenz abgelesen. Versalhöhe und Mitte waren so gewählt,
+ * dass Versalhöhe und Laufbreite zusammen am besten decken (Pixelvergleich, noch mit Arimo Bold,
+ * das breiter lief als die Referenzschrift); deshalb liegt die Versalhöhe unter der der Referenz.
+ * Die Boxen sind an diesen Höhen vermessen. Seit ESZ-114 steht die Versalhöhe hier, nicht der
+ * Schriftgrad.
  */
 function hazardText(
   content: string,
   x: number,
   y: number,
-  sizeMm: number,
+  capHeightMm: number,
   boxMm: { xMm: number; yMm: number; widthMm: number; heightMm: number },
 ): Primitive {
-  return stateText(content, { x, y, sizeMm, boxMm, fill: 'rot' });
+  return stateText(content, { x, y, sizeMm: textSizeForCapHeightMm(capHeightMm), boxMm, fill: 'rot' });
 }
 
 function hazardousSubstancesPrimaryPrimitives(): readonly Primitive[] {
   return [
     triangle(HAZARD_TRIANGLE, 'rot'),
-    hazardText('GS', 16.1, 24, 8.4, { xMm: 10, yMm: 17.8, widthMm: 12.2, heightMm: 6.6 }),
+    hazardText('GS', 16.1, 24, 5.779, { xMm: 10, yMm: 17.8, widthMm: 12.2, heightMm: 6.6 }),
   ];
 }
 
 function hazardousSubstancesAlternativePrimitives(): readonly Primitive[] {
   return [
     triangle(HAZARD_TRIANGLE, 'rot'),
-    hazardText('Chlor', 15.9, 24, 6.2, { xMm: 7.7, yMm: 19.2, widthMm: 16.6, heightMm: 5.2 }),
+    hazardText('Chlor', 15.9, 24, 4.266, { xMm: 7.7, yMm: 19.2, widthMm: 16.6, heightMm: 5.2 }),
   ];
 }
 
 function radioactivityPrimaryPrimitives(): readonly Primitive[] {
   return [
     triangle(HAZARD_TRIANGLE, 'rot'),
-    hazardText('A', 16.2, 24, 12.5, { xMm: 11.6, yMm: 15, widthMm: 9.2, heightMm: 9.4 }),
+    hazardText('A', 16.2, 24, 8.6, { xMm: 11.6, yMm: 15, widthMm: 9.2, heightMm: 9.4 }),
   ];
 }
 
@@ -334,14 +336,14 @@ function electricalEnergyPrimitives(): readonly Primitive[] {
 function mineralOilPrimitives(): readonly Primitive[] {
   return [
     triangle(HAZARD_TRIANGLE, 'rot'),
-    hazardText('Ö', 16, 23, 10.4, { xMm: 12, yMm: 13.8, widthMm: 8, heightMm: 9.7 }),
+    hazardText('Ö', 16, 23, 7.155, { xMm: 12, yMm: 13.8, widthMm: 8, heightMm: 9.7 }),
   ];
 }
 
 function explosionPrimitives(): readonly Primitive[] {
   return [
     triangle(HAZARD_TRIANGLE, 'rot'),
-    hazardText('Ex', 16.2, 23, 8.3, { xMm: 11.3, yMm: 16.9, widthMm: 10.3, heightMm: 6.5 }),
+    hazardText('Ex', 16.2, 23, 5.71, { xMm: 11.3, yMm: 16.9, widthMm: 10.3, heightMm: 6.5 }),
   ];
 }
 

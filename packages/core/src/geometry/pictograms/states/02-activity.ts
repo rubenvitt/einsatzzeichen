@@ -1,5 +1,6 @@
 import type { ColorToken, Point, Primitive } from '@einsatzzeichen/schema';
 import { deepFreeze } from '../../readonly-data.js';
+import { textSizeForCapHeightMm } from '../../../render/text-policy.js';
 import {
   defineState,
   type CatalogPictogramDefinition,
@@ -41,8 +42,8 @@ const DIVIDERS: Readonly<Record<ActivityLevel, readonly Point[] | undefined>> = 
   4: undefined,
 };
 
-/** Arimo-Ziffer: 6,7 mm Schriftgrad ergibt die 4,6 mm Ziffernhöhe der Referenz. */
-const NUMERAL_SIZE_MM = 6.7;
+/** Ziffer in der Katalogschrift auf der 4,6 mm Ziffernhöhe der Referenz; die Ziffern stehen auf Versalhöhe. */
+const NUMERAL_SIZE_MM = textSizeForCapHeightMm(4.6);
 const NUMERAL_BASELINE_MM = 18.2;
 
 type ActivityLevel = 1 | 2 | 3 | 4;

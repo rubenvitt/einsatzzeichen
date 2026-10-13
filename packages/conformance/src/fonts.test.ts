@@ -27,7 +27,7 @@ import {
 import { readFontHeadMetrics } from './test-support/ttf-tables.js';
 import { RECIPES, composeFromCatalog, type Recipe } from './recipes.js';
 import { FUNCTION_ROLE_DEFINITIONS } from '@einsatzzeichen/core';
-import { ARIMO_TEXT_METRICS } from '@einsatzzeichen/core';
+import { TEXT_FONT_METRICS } from '@einsatzzeichen/core';
 
 /**
  * Textmetriken des Subsets (Vorschubbreiten je Codepoint, Kopfwerte) als JSON — von
@@ -36,15 +36,15 @@ import { ARIMO_TEXT_METRICS } from '@einsatzzeichen/core';
  * braucht die TTF und steht deshalb im Prüfpaket.
  */
 const TEXT_FONT_METRICS_PATH = fileURLToPath(
-  new URL('../../core/src/assets/arimo-metrics.json', import.meta.url),
+  new URL('../../core/src/assets/einsatzzeichen-sans-metrics.json', import.meta.url),
 );
-/** Dieselben Metriken für die Instanz wght 500 (LFH-585), aus `Arimo-Medium.ttf` exportiert. */
+/** Dieselben Metriken für die Instanz wght 500 (LFH-585), aus `EinsatzzeichenSans-Medium.ttf`. */
 const TEXT_FONT_MEDIUM_METRICS_PATH = fileURLToPath(
-  new URL('../../core/src/assets/arimo-medium-metrics.json', import.meta.url),
+  new URL('../../core/src/assets/einsatzzeichen-sans-medium-metrics.json', import.meta.url),
 );
-/** Dieselben Metriken für die Kursivinstanz wght 500 (LFH-585), aus `Arimo-MediumItalic.ttf`. */
+/** Dieselben Metriken für die Kursivinstanz (LFH-585), aus `EinsatzzeichenSans-MediumItalic.ttf`. */
 const TEXT_FONT_MEDIUM_ITALIC_METRICS_PATH = fileURLToPath(
-  new URL('../../core/src/assets/arimo-medium-italic-metrics.json', import.meta.url),
+  new URL('../../core/src/assets/einsatzzeichen-sans-medium-italic-metrics.json', import.meta.url),
 );
 
 describe('Textschrift', () => {
@@ -182,24 +182,28 @@ describe('Textschrift', () => {
     expect(italic.sourceSha256).toBe(TEXT_FONT_ITALIC_SOURCE_SHA256);
     expect(italic.subsetSha256).toBe(TEXT_FONT_MEDIUM_ITALIC_SHA256);
     expect(italic.defaultWeight).toBe(500);
-    // Gleiche Kopfwerte: ARIMO_CAP_HEIGHT_FRACTION gilt auch für den kursiven Lauf.
+    // Gleiche Kopfwerte: TEXT_CAP_HEIGHT_FRACTION gilt auch für den kursiven Lauf.
     for (const key of ['unitsPerEm', 'ascender', 'descender', 'capHeight'] as const) {
       expect(italic[key], key).toBe(regular[key]);
     }
     // Dieselbe Zeichendecke wie aufrecht: dieselben pyftsubset-Argumente.
     expect(Object.keys(italic.advances).sort()).toEqual(Object.keys(regular.advances).sort());
     expect(Object.keys(italic.inkExtents).sort()).toEqual(Object.keys(regular.advances).sort());
-    // Im Grundbestand bis U+00FF gleiche Vorschübe wie Arimo 500, außer µ (Schriftmessung 2.3).
+    // Anders als bei Arimo läuft die Kursive mit eigenen Vorschüben: im Grundbestand bis U+00FF
+    // weichen 168 von 191 ab; gleich bleiben vor allem Ziffern und Leerzeichen. Die Metrik des
+    // kursiven Laufs muss deshalb aus dieser Datei kommen, nicht aus der aufrechten.
     const differing = Object.keys(medium.advances).filter(
       (codepoint) => Number(codepoint) <= 0xff && italic.advances[codepoint] !== medium.advances[codepoint],
     );
-    expect(differing).toEqual([String(0xb5)]);
-    // Die Tinte ist geneigt: das f ragt kursiv 175/2048 em rechts über seinen Vorschub hinaus,
-    // aufrecht 3/2048 em. Mit den aufrechten Tintenrändern würde das Gate zu knapp messen.
+    expect(differing).toHaveLength(168);
+    expect(differing).not.toContain(String('0'.codePointAt(0)));
+    // Die Tinte ist geneigt: das f ragt kursiv 78/1000 em rechts über seinen Vorschub hinaus,
+    // aufrecht endet es 18/1000 em davor. Mit den aufrechten Tintenrändern würde das Gate zu
+    // knapp messen.
     const f = String('f'.codePointAt(0));
     const overhang = (file: MetricsFile) => (file.inkExtents[f]?.[2] ?? 0) - (file.advances[f] ?? 0);
-    expect(overhang(italic)).toBe(175);
-    expect(overhang(medium)).toBe(3);
+    expect(overhang(italic)).toBe(78);
+    expect(overhang(medium)).toBe(-18);
   });
 
   it('exportiert Metriken der Instanz wght 500, die zur eingecheckten Datei passen', () => {
@@ -217,37 +221,46 @@ describe('Textschrift', () => {
     };
     const regular = JSON.parse(readFileSync(TEXT_FONT_METRICS_PATH, 'utf8')) as MetricsFile;
     const medium = JSON.parse(readFileSync(TEXT_FONT_MEDIUM_METRICS_PATH, 'utf8')) as MetricsFile;
-    // Familie „Arimo" aus der typografischen Familie (ID 16); ID 1 heißt „Arimo Medium".
+    // Familie „Einsatzzeichen Sans" aus der typografischen Familie (ID 16); ID 1 heißt
+    // „Einsatzzeichen Sans Medium".
     expect(medium.family).toBe(TEXT_FONT_FAMILY);
     expect(medium.sourceSha256).toBe(TEXT_FONT_SOURCE_SHA256);
     expect(medium.subsetSha256).toBe(TEXT_FONT_MEDIUM_SHA256);
     expect(medium.defaultWeight).toBe(500);
-    // Die Versalhöhe je Schriftgrad bleibt: ARIMO_CAP_HEIGHT_FRACTION gilt auch in 500.
+    // Die Versalhöhe je Schriftgrad bleibt: TEXT_CAP_HEIGHT_FRACTION gilt auch in 500.
     for (const key of ['unitsPerEm', 'ascender', 'descender', 'capHeight'] as const) {
       expect(medium[key], key).toBe(regular[key]);
     }
-    expect(medium.inkExtents[String('H'.codePointAt(0))]?.[3]).toBe(1409);
+    expect(medium.inkExtents[String('H'.codePointAt(0))]?.[3]).toBe(698);
     expect(Object.keys(medium.advances).sort()).toEqual(Object.keys(regular.advances).sort());
     expect(Object.keys(medium.inkExtents).sort()).toEqual(Object.keys(regular.advances).sort());
   });
 
-  it('ist ein Subset, kein Austausch: das Original ist eine andere Datei', () => {
+  it('ist eine Ableitung, kein Austausch: das Original ist eine andere Datei', () => {
     expect(TEXT_FONT_SHA256).not.toBe(TEXT_FONT_SOURCE_SHA256);
     expect(TEXT_FONT_SOURCE_SHA256).toMatch(/^[0-9a-f]{64}$/);
   });
 
   it('behält die Kopfwerte, aus denen core seine Konstanten ableitet', () => {
-    // core (compose.ts, text-policy.ts) rechnet mit 1409/2048 (Versalhöhe) und 1854/−434
-    // (Ascender/Descender). Ein Subset mit neu berechneten Grenzen (ohne --no-recalc-bounds)
-    // oder eine instanziierte Schrift (ohne wght-Achse) würde hier auffallen, bevor es die
-    // Kontaktbögen tut.
-    const metrics = readFontHeadMetrics(TEXT_FONT_PATH);
-    expect(metrics.unitsPerEm).toBe(2048);
-    expect(metrics.ascender).toBe(1854);
-    expect(metrics.descender).toBe(-434);
-    expect(metrics.capHeight).toBe(1409);
-    // visual-proof.ts setzt font-weight 700 — die Achse muss den Wert erreichen.
-    expect(metrics.axes).toEqual([{ tag: 'wght', min: 400, default: 400, max: 700 }]);
+    // core (text-policy.ts) rechnet mit 698/1000 (Versalhöhe). Eine Ableitung mit neu
+    // berechneten Grenzen (ohne --no-recalc-bounds) oder einer anderen Breite würde hier
+    // auffallen, bevor es die Kontaktbögen tut. Jede Datei ist eine statische Instanz bei
+    // wdth 86 (OS/2-Breitenklasse 3) ohne verbliebene Achsen; resvg wertet keine Achsen aus.
+    for (const [path, weight] of [
+      [TEXT_FONT_PATH, 400],
+      [TEXT_FONT_MEDIUM_PATH, 500],
+      [TEXT_FONT_BOLD_PATH, 700],
+      [TEXT_FONT_MEDIUM_ITALIC_PATH, 500],
+    ] as const) {
+      const metrics = readFontHeadMetrics(path);
+      expect(metrics.unitsPerEm, path).toBe(1000);
+      expect(metrics.ascender, path).toBe(1025);
+      expect(metrics.descender, path).toBe(-275);
+      expect(metrics.capHeight, path).toBe(698);
+      expect(metrics.weightClass, path).toBe(weight);
+      expect(metrics.widthClass, path).toBe(3);
+      expect(metrics.axes, path).toEqual([]);
+    }
   });
 
   it(
@@ -284,7 +297,7 @@ describe('Textschrift', () => {
       defaultWeight: number;
       advances: Record<string, number>;
       inkExtents: Record<string, [number, number, number, number]>;
-      kerning: Record<string, Record<string, number>>;
+      kerning: { left: string[]; right: string[]; values: Record<string, number>[] };
       maxAdvance: number;
       notdefAdvance: number;
     };
@@ -314,16 +327,27 @@ describe('Textschrift', () => {
       expect(xMin, char).toBeLessThanOrEqual(xMax);
       expect(yMin, char).toBeLessThanOrEqual(yMax);
     }
-    // kerning (GPOS `kern`, Default-Instanz) darf nur Codepoints nennen, die das Subset auch
-    // vorschiebt; T→a ist das klassische Paar und in Arimo mit −227 Einheiten unterschnitten.
-    for (const [left, rights] of Object.entries(metrics.kerning)) {
-      expect(metrics.advances, left).toHaveProperty(left);
-      for (const [right, value] of Object.entries(rights)) {
-        expect(metrics.advances, `${left}/${right}`).toHaveProperty(right);
-        expect(Number.isInteger(value) && value !== 0, `${left}/${right}`).toBe(true);
+    // kerning (GPOS `kern`, Default-Instanz, in Klassen) darf nur Codepoints nennen, die das
+    // Subset auch vorschiebt, jeden höchstens einmal je Seite; T→a ist das klassische Paar und in
+    // Einsatzzeichen Sans 400 mit −67 Einheiten unterschnitten.
+    const { left, right, values } = metrics.kerning;
+    expect(values).toHaveLength(left.length);
+    for (const side of [left, right]) {
+      const members = side.flatMap((members) => [...members]);
+      expect(new Set(members).size, 'Codepoint in zwei Klassen').toBe(members.length);
+      for (const member of members) {
+        expect(metrics.advances, member).toHaveProperty(String(member.codePointAt(0)));
       }
     }
-    expect(metrics.kerning[String('T'.codePointAt(0))]?.[String('a'.codePointAt(0))]).toBe(-227);
+    for (const row of values) {
+      for (const [column, value] of Object.entries(row)) {
+        expect(Number(column)).toBeLessThan(right.length);
+        expect(Number.isInteger(value) && value !== 0, column).toBe(true);
+      }
+    }
+    const classOf = (side: string[], character: string) =>
+      side.findIndex((members) => members.includes(character));
+    expect(values[classOf(left, 'T')]?.[String(classOf(right, 'a'))]).toBe(-67);
   });
 
   it('schließt Systemschriften aus', () => {
@@ -461,7 +485,7 @@ const formationCatalog: CatalogPorts = {
   },
   // Die echte Laufweitentabelle: die Fußzonenfälle unten sollen genau das Gate passieren,
   // das `compose()` auch im Katalog anwendet — ein Doppel würde hier die Messung entwerten.
-  textMetrics: ARIMO_TEXT_METRICS,
+  textMetrics: TEXT_FONT_METRICS,
 };
 
 interface InkAgainstBox {
@@ -627,7 +651,7 @@ describe('Rasterevidenz für Text (resvgFontOptions())', () => {
     // Task-9-Befund, jetzt behoben (Task-9-Fix): `boxMm` ist bei Text eine Zusicherung des
     // Autors, keine Messung (siehe Primitive-Kommentar in geometry.ts) — bei `baseline:
     // 'hanging'` ragten Großbuchstaben-Diakritika (Ä/Ö/Ü) über die deklarierte Boxoberkante
-    // hinaus, weil die Hanging-Metrik von Arimo unterhalb der tatsächlichen Akzenthöhe liegt.
+    // hinaus, weil die Hanging-Metrik der Schrift unterhalb der tatsächlichen Akzenthöhe liegt.
     // Dieser Test pinnte ursprünglich den fehlerhaften IST-Zustand: „Übung" bei 256 px
     // (32-mm-viewBox, 8 px/mm) hatte `outsideBoxCount: 24` von rund 1100 Ink-Pixeln, mit einem
     // Überstand von 4 px (0,5 mm) oben. Der Fix führt den gemessenen Zuschlag
@@ -747,12 +771,13 @@ describe('Rasterevidenz für Text (resvgFontOptions())', () => {
     const drawing = composeFromCatalog(BELOW_RIGHT_SPEC, 'Wasserfahrzeug allgemein');
     const ink = runInkBoxMm(drawing, 4096);
 
-    // **Rechte Kante, Grundlinie und Oberkante treffen die Referenz.** Die linke Kante tut es
-    // nicht, und das ist kein Zonenfehler: Arimo setzt `THW` 0,499 mm breiter als die Schrift der
-    // Referenz (9,539 gegen 9,040 mm). Gegenprobe an der bestehenden Zone unten rechts, wo
-    // dieselbe Differenz an derselben Stelle auftritt — sie ist damit eine Eigenschaft der
-    // Schriftwahl und nicht dieser Zone.
-    expect(ink.maxXMm).toBeCloseTo(31.578, 1);
+    // **Grundlinie und Oberkante treffen die Referenz.** Die Kanten waagerecht tun es nicht, und
+    // das ist kein Zonenfehler: Einsatzzeichen Sans setzt `THW` 0,452 mm schmaler als die Schrift
+    // der Referenz (8,588 gegen 9,040 mm), und das W endet 0,1 mm vor dem Anker, wo die Referenz
+    // bis 31,578 mm reicht (mit Arimo traf die rechte Kante, die linke lag 0,499 mm daneben).
+    // Gegenprobe an der bestehenden Zone unten rechts, wo dieselbe Differenz an derselben Stelle
+    // auftritt — sie ist damit eine Eigenschaft der Schriftwahl und nicht dieser Zone.
+    expect(ink.maxXMm).toBeCloseTo(31.455, 1);
     expect(ink.minYMm).toBeCloseTo(24.081, 1);
     expect(ink.maxYMm).toBeCloseTo(27.0, 1);
     // Vollständig **unterhalb** des Rumpfes: dessen Unterkante liegt bei 22,9896 mm.

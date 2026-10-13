@@ -18,7 +18,7 @@ import { ALL_PICTOGRAMS, pictogramVariantKey } from '@einsatzzeichen/core';
  * sichtbare Alpha-/Tintpixel außerhalb seiner deklarierten Box.
  *
  * Seit dem 28. August 2026 (LFH-410) steht daneben das allgemeine Textmetrik-Gate in `core`
- * (`checkTextMetrics`, gespeist aus `ARIMO_TEXT_METRICS`; Katalogbestand in
+ * (`checkTextMetrics`, gespeist aus `TEXT_FONT_METRICS`; Katalogbestand in
  * `../text-metrics.test.ts`): es rechnet die Tinte aus Vorschüben, Kerning und
  * Glyphen-Bounding-Boxen, ohne zu rastern. Dieser Rastertest bleibt als **unabhängige Evidenz**
  * bestehen — die Rechnung ist gegen ihn kalibriert (Toleranz ein Rasterpixel bei 8 px/mm), und

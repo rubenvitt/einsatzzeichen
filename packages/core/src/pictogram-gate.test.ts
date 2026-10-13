@@ -17,7 +17,7 @@ import {
 } from './pictogram-gate.js';
 import { renderSvg } from './render/svg.js';
 import { uniformTextMetrics } from './test-support/text-metrics-double.js';
-import { ARIMO_CAP_HEIGHT_FRACTION, MINIMUM_TEXT_RENDER_PX } from './render/text-policy.js';
+import { TEXT_CAP_HEIGHT_FRACTION, MINIMUM_TEXT_RENDER_PX } from './render/text-policy.js';
 
 /** Ein Piktogramm mit genau einem Pfad, Box und Titel unverändert — nur der `d`-String variiert. */
 function withPath(d: string): PictogramDefinition {
@@ -1559,9 +1559,9 @@ function withTextFloor(
 
 describe('Deklarierte Einsatzgrenze eines Textlaufs', () => {
   it('gated den kleineren F.2.8-Lauf ab seiner aus 2,43 mm Versalhöhe berechneten Grenze', () => {
-    const sizeMm = 2.43 / ARIMO_CAP_HEIGHT_FRACTION;
+    const sizeMm = 2.43 / TEXT_CAP_HEIGHT_FRACTION;
     const minRenderPx = Math.ceil((MINIMUM_TEXT_RENDER_PX * 32) / sizeMm);
-    expect(minRenderPx).toBe(73);
+    expect(minRenderPx).toBe(74);
     expect(
       checkTextLegibility(withTextFloor('GW-San', sizeMm, minRenderPx), [16, 24, 32, 64, 128, 256]),
     ).toEqual([]);

@@ -12,7 +12,7 @@ import { DEFAULT_VIEWBOX_MM, type Primitive } from '@einsatzzeichen/schema';
 import { TEXT_FONT_FAMILY, resvgFontOptions } from './fonts.js';
 import { composeFromCatalog } from './recipes.js';
 import { RENDER_CASES } from './test-support/render-cases.js';
-import { ARIMO_TEXT_METRICS, TEXT_METRICS_FAMILY } from '@einsatzzeichen/core';
+import { TEXT_FONT_METRICS, TEXT_METRICS_FAMILY } from '@einsatzzeichen/core';
 
 type TextPrimitive = Extract<Primitive, { type: 'text' }>;
 
@@ -69,19 +69,19 @@ function run(
   };
 }
 
-describe('ARIMO_TEXT_METRICS', () => {
+describe('TEXT_FONT_METRICS', () => {
   it('gilt für dieselbe Schriftfamilie, die der Renderer bindet', () => {
     expect(TEXT_METRICS_FAMILY).toBe(TEXT_FONT_FAMILY);
   });
 
   it('kennt den Grundbestand (ASCII, Umlaute, ß) und meldet Tofu als unbekannt', () => {
-    expect(textWidthMm('Zug ÄÖÜäöüß 0-9/', 1, ARIMO_TEXT_METRICS).unknownCodepoints).toEqual([]);
-    // U+1F600 (Emoji) führt Arimo nicht.
-    expect(ARIMO_TEXT_METRICS.advanceEm(0x1f600)).toBeUndefined();
+    expect(textWidthMm('Zug ÄÖÜäöüß 0-9/', 1, TEXT_FONT_METRICS).unknownCodepoints).toEqual([]);
+    // U+1F600 (Emoji) führt Einsatzzeichen Sans nicht.
+    expect(TEXT_FONT_METRICS.advanceEm(0x1f600)).toBeUndefined();
   });
 
-  it('liefert Vorschübe in em der 2048er-Einheit (Leerzeichen 569/2048)', () => {
-    expect(ARIMO_TEXT_METRICS.advanceEm(0x20)).toBeCloseTo(569 / 2048, 12);
+  it('liefert Vorschübe in em der 1000er-Einheit (Leerzeichen 223/1000)', () => {
+    expect(TEXT_FONT_METRICS.advanceEm(0x20)).toBeCloseTo(223 / 1000, 12);
   });
 });
 
@@ -114,7 +114,7 @@ describe('Kalibrierung: gerechnete gegen gerasterte Tinte (8 px/mm)', () => {
 
   it.each(cases)('"%s" bei %s mm: Tinte liegt innerhalb eines Pixels um die Rechnung', (content, sizeMm, anchor) => {
     const primitive = run(content, sizeMm, anchor);
-    const metric = measureTextRun(primitive, ARIMO_TEXT_METRICS);
+    const metric = measureTextRun(primitive, TEXT_FONT_METRICS);
     const ink = inkExtentMm(primitive);
     expect(ink.minXMm).toBeGreaterThanOrEqual(metric.inkMinXMm - onePixelMm);
     expect(ink.minXMm).toBeLessThanOrEqual(metric.inkMinXMm + onePixelMm);
@@ -122,12 +122,12 @@ describe('Kalibrierung: gerechnete gegen gerasterte Tinte (8 px/mm)', () => {
     expect(ink.maxXMm).toBeGreaterThanOrEqual(metric.inkMaxXMm - onePixelMm);
   });
 
-  // Dieselben Läufe in der Katalogstärke 500 (LFH-585): gemessen mit `ARIMO_TEXT_METRICS.medium`,
-  // gerastert mit `Arimo-Medium.ttf`. Ohne diese Reihe wäre das Gate für die Stärke, in der der
+  // Dieselben Läufe in der Katalogstärke 500 (LFH-585): gemessen mit `TEXT_FONT_METRICS.medium`,
+  // gerastert mit `EinsatzzeichenSans-Medium.ttf`. Ohne diese Reihe wäre das Gate für die Stärke, in der der
   // Katalog tatsächlich setzt, nicht kalibriert.
   it.each(cases)('"%s" bei %s mm in 500: Tinte liegt innerhalb eines Pixels um die Rechnung', (content, sizeMm, anchor) => {
     const primitive = run(content, sizeMm, anchor, CATALOG_TEXT_FONT_WEIGHT);
-    const metric = measureTextRun(primitive, ARIMO_TEXT_METRICS);
+    const metric = measureTextRun(primitive, TEXT_FONT_METRICS);
     const ink = inkExtentMm(primitive);
     expect(ink.minXMm).toBeGreaterThanOrEqual(metric.inkMinXMm - onePixelMm);
     expect(ink.minXMm).toBeLessThanOrEqual(metric.inkMinXMm + onePixelMm);
@@ -135,17 +135,17 @@ describe('Kalibrierung: gerechnete gegen gerasterte Tinte (8 px/mm)', () => {
     expect(ink.maxXMm).toBeGreaterThanOrEqual(metric.inkMaxXMm - onePixelMm);
   });
 
-  // Kursiv in 500 (LFH-585): gemessen mit `ARIMO_TEXT_METRICS.mediumItalic`, gerastert mit
-  // `Arimo-MediumItalic.ttf`. Kursive Buchstaben ragen weiter über ihren Vorschub hinaus („jjj
+  // Kursiv in 500 (LFH-585): gemessen mit `TEXT_FONT_METRICS.mediumItalic`, gerastert mit
+  // `EinsatzzeichenSans-MediumItalic.ttf`. Kursive Buchstaben ragen weiter über ihren Vorschub hinaus („jjj
   // fff"); diese Reihe belegt, dass das Gate die geneigte Tinte liest und nicht die aufrechte.
   // Dazu der eine kursive Lauf des Katalogs in seiner Größe (D.1.1).
   const italicCases: readonly [string, number, TextPrimitive['anchor']][] = [
     ...cases,
-    ['Bezeichnung', 4.243, 'start'],
+    ['Bezeichnung', 4.183, 'start'],
   ];
   it.each(italicCases)('"%s" bei %s mm kursiv in 500: Tinte liegt innerhalb eines Pixels um die Rechnung', (content, sizeMm, anchor) => {
     const primitive = run(content, sizeMm, anchor, CATALOG_TEXT_FONT_WEIGHT, 'italic');
-    const metric = measureTextRun(primitive, ARIMO_TEXT_METRICS);
+    const metric = measureTextRun(primitive, TEXT_FONT_METRICS);
     const ink = inkExtentMm(primitive);
     expect(ink.minXMm).toBeGreaterThanOrEqual(metric.inkMinXMm - onePixelMm);
     expect(ink.minXMm).toBeLessThanOrEqual(metric.inkMinXMm + onePixelMm);
@@ -156,7 +156,7 @@ describe('Kalibrierung: gerechnete gegen gerasterte Tinte (8 px/mm)', () => {
 
 describe('Katalogbestand unter dem Textmetrik-Gate', () => {
   it.each(RENDER_CASES)('$id: jeder Textlauf passt in seine deklarierte Box', ({ drawing }) => {
-    expect(checkTextMetrics(drawing, ARIMO_TEXT_METRICS)).toEqual([]);
+    expect(checkTextMetrics(drawing, TEXT_FONT_METRICS)).toEqual([]);
   });
 
   it('wirft designation-too-wide über den echten Katalog-Port für eine zu lange Fußzone', () => {
@@ -176,6 +176,6 @@ describe('Katalogbestand unter dem Textmetrik-Gate', () => {
   it('lässt eine Fußzone durch, die in die 30-mm-Körperbreite passt', () => {
     // „Wasserrettung" misst bei 4 mm rund 25,6 mm Tinte; „Wasserrettungszug" schon 34,0 mm.
     const drawing = composeFromCatalog({ kind: 'formation', designation: 'Wasserrettung' });
-    expect(checkTextMetrics(drawing, ARIMO_TEXT_METRICS)).toEqual([]);
+    expect(checkTextMetrics(drawing, TEXT_FONT_METRICS)).toEqual([]);
   });
 });

@@ -209,15 +209,16 @@ export type Primitive =
       minRenderPx?: number;
       /**
        * Schriftgewicht des Laufs: 400 (Normalschnitt, Default), 500 („Medium") oder 700 (fett).
-       * Die Projektschrift ist Arimo mit der wght-Achse 400–700, gerastert wird aber mit resvg,
-       * das die Achse nicht auswertet. Jede belegte Stufe hat deshalb eine eigene statische
-       * Datei (`Arimo-Medium.ttf`, `Arimo-Bold.ttf`), aus der resvg den Lauf zeichnet; ein
-       * Browser setzt dieselbe Stufe aus der Achse. Andere Zwischenwerte (etwa 480 oder 600)
-       * rastert resvg aus einer der drei Dateien, ein Browser dagegen genau — zwei verschiedene
-       * Bilder aus derselben IR. Deshalb gibt es sie nicht.
+       * Die Projektschrift ist „Einsatzzeichen Sans" (aus IBM Plex Sans abgeleitet), gerastert
+       * mit resvg, das keine Achsen auswertet. Jede belegte Stufe ist deshalb eine eigene
+       * statische Datei (`EinsatzzeichenSans-Regular.ttf`, `-Medium.ttf`, `-Bold.ttf`), aus der
+       * resvg den Lauf zeichnet; ein Browser bekommt dieselben Stufen als WOFF2
+       * (`@einsatzzeichen/core/fonts`). Andere Zwischenwerte (etwa 480 oder 600) rasterte resvg
+       * aus einer der drei Dateien, ein Browser dagegen anders — zwei verschiedene Bilder aus
+       * derselben IR. Deshalb gibt es sie nicht.
        *
        * Der Katalog setzt allen Text in 500 (`CATALOG_TEXT_FONT_WEIGHT` in core, LFH-585): Die
-       * Referenz kennt nur eine Strichstärke, und sie liegt zwischen Arimo normal und fett. 400
+       * Referenz kennt nur eine Strichstärke, und 500 trifft sie. 400
        * und 700 bleiben für eigene IR und Hilfsausgaben (Beweisblätter, Kontaktbögen).
        *
        * Fehlt der Wert, bleibt die Ausgabe bytegleich zum Stand ohne dieses Feld; auch 400
@@ -227,7 +228,7 @@ export type Primitive =
       /**
        * Kursiv, **nur zusammen mit `fontWeight: 500` zulässig** (LFH-585). Die Referenz setzt
        * genau einen Lauf kursiv, „Bezeichnung" in D.1.1. Gerastert wird er aus der statischen
-       * Datei `Arimo-MediumItalic.ttf`. resvg gibt jedem kursiven Lauf diese eine Datei, auch
+       * Datei `EinsatzzeichenSans-MediumItalic.ttf`. resvg gibt jedem kursiven Lauf diese eine Datei, auch
        * einem, der 400 oder 700 verlangt; ein Browser setzte dort eine andere Stufe. Andere
        * Kombinationen ergäben also wieder zwei verschiedene Bilder aus derselben IR.
        *

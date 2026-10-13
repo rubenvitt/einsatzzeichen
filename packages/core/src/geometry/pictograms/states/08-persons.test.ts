@@ -2,6 +2,7 @@ import { checkBox, checkClipping, checkCommands } from '../../../pictogram-gate.
 import { type Primitive } from '@einsatzzeichen/schema';
 import { describe, expect, it } from 'vitest';
 import type { CatalogPictogramDefinition } from '../catalog-definition.js';
+import { textSizeForCapHeightMm } from '../../../render/text-policy.js';
 import { PERSON_STATES } from './08-persons.js';
 
 type Line = Extract<Primitive, { type: 'line' }>;
@@ -130,10 +131,10 @@ describe('PERSON_STATES', () => {
     const textsOf = (id: string) =>
       leavesOf(definition(id).primitives).filter((leaf) => leaf.type === 'text');
     expect(textsOf('state.person-affected')).toMatchObject([
-      { content: 'B', sizeMm: 7.1, y: 7, anchor: 'middle' },
+      { content: 'B', sizeMm: textSizeForCapHeightMm(4.87), y: 7, anchor: 'middle' },
     ]);
     expect(textsOf('state.person-injured-transport-priority')).toMatchObject([
-      { content: 'TP', sizeMm: 7.1, y: 7, anchor: 'middle' },
+      { content: 'TP', sizeMm: textSizeForCapHeightMm(4.87), y: 7, anchor: 'middle' },
     ]);
 
     const triage = definition('state.person-injured-triage-category');

@@ -34,11 +34,12 @@ export * from './pictogram-gate.js';
 // text-policy.ts (Baseline-/Anker-Abbildungen) bleiben bewusst intern — sie sind Renderdetail von
 // svg.ts/canvas.ts, keine fremdpaketige Schnittstelle.
 export {
-  ARIMO_CAP_HEIGHT_FRACTION,
+  TEXT_CAP_HEIGHT_FRACTION,
   CATALOG_TEXT_FONT_WEIGHT,
   effectiveTextPx,
   MINIMUM_TEXT_RENDER_PX,
   TEXT_FONT_FAMILY_ATTR,
+  textSizeForCapHeightMm,
 } from './render/text-policy.js';
 export * from './a11y/contrast.js';
 export * from './a11y/metadata.js';
@@ -96,7 +97,7 @@ export { PLANNED_PARAMETRIC_RULES } from './rules/planned-parametric-rules.js';
 export { specKey } from './spec-key.js';
 // Geometrie der Bausteine (LFH-570): Grundzeichen, Körpermarken, Farbe, Stärke, Kopfmarken,
 // Verwaltungsstufe, Funktionsfassung, Piktogramme, Beschriftung, Themes, Kontrastbefunde und die
-// Arimo-Laufweiten. Vorher in `catalog`; `core` bleibt dabei ohne Node- und Fremdabhängigkeit.
+// Laufweiten der Katalogschrift. Vorher in `catalog`; `core` bleibt dabei ohne Node- und Fremdabhängigkeit.
 export * from './geometry/base-symbols.js';
 export * from './geometry/body-marks.js';
 // Die Anhang-C-Körperfassungen mit ihrem Kontext (LFH-786), damit Prüfungen jede Fassung an

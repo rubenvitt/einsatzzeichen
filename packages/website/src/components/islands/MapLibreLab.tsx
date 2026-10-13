@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Map as MapLibreMap, Marker as MapLibreMarker } from 'maplibre-gl';
-import { renderSvg, type RenderTheme } from '@einsatzzeichen/core';
+import { TEXT_FONT_FAMILY_ATTR, renderSvg, type RenderTheme } from '@einsatzzeichen/core';
 import { Einsatzzeichen } from '@einsatzzeichen/react';
 import { addSymbolImage } from '@einsatzzeichen/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -208,7 +208,7 @@ function LabStage({ symbols, themes, basemap = 'openfreemap' }: LabStageProps) {
   /*
    * Auf die Schrift warten, bevor gerastert wird. `addSymbolImage` zeichnet über `renderCanvas`
    * mit `ctx.fillText`; die Leinwand kennt kein `font-display` und nimmt, was in diesem Moment
-   * aufgelöst ist. Wäre Arimo noch nicht da, stünde das Kürzel in einer Ersatzschrift mit anderen
+   * aufgelöst ist. Wäre die Katalogschrift noch nicht da, stünde das Kürzel in einer Ersatzschrift mit anderen
    * Vorschubbreiten im Bild — und weil die Bild-ID nur Zeichen, Größe, Pixelverhältnis und
    * Farbprofil trägt, bliebe genau dieses falsche Bild im Stil liegen. Die Marker sind davon
    * nicht betroffen: ein SVG im DOM setzt sich neu, sobald die Schrift eintrifft.
@@ -222,9 +222,9 @@ function LabStage({ symbols, themes, basemap = 'openfreemap' }: LabStageProps) {
     const fonts = document.fonts;
     void (async () => {
       // `fonts.ready` allein genügt nicht: es meldet nur, dass gerade nichts mehr lädt — auch
-      // dann, wenn Arimo noch gar nicht angefordert wurde. `load()` fordert die Schrift an.
+      // dann, wenn die Katalogschrift noch gar nicht angefordert wurde. `load()` fordert die Schrift an.
       try {
-        await fonts.load('16px Arimo');
+        await fonts.load(`500 16px "${TEXT_FONT_FAMILY_ATTR}"`);
       } catch {
         // Eine nicht ladbare Schrift ist kein Grund, das Lab zu blockieren; dann rastert es mit
         // der Ersatzschrift, und das ist sichtbar, statt verborgen.
@@ -334,7 +334,7 @@ function LabStage({ symbols, themes, basemap = 'openfreemap' }: LabStageProps) {
     for (const marker of markersRef.current) marker.remove();
     markersRef.current = [];
 
-    // Rastern erst, wenn Arimo steht (siehe Effekt „auf die Schrift warten"). Der Effekt läuft
+    // Rastern erst, wenn die Schrift steht (siehe Effekt „auf die Schrift warten"). Der Effekt läuft
     // erneut, sobald `fontsReady` umspringt.
     if (mode === 'symbol-layer' && !fontsReady) return;
 
@@ -623,7 +623,7 @@ function LabStage({ symbols, themes, basemap = 'openfreemap' }: LabStageProps) {
         <div className="ez-note" role="status">
           <span className="ez-note__title">Warten auf die Schrift</span>
           <p>
-            Die Symbolebene rastert erst, wenn Arimo geladen ist — sonst stünde das Kürzel im Bild
+            Die Symbolebene rastert erst, wenn die Katalogschrift geladen ist — sonst stünde das Kürzel im Bild
             in einer Ersatzschrift, und dieses Bild bliebe im Kartenstil liegen.
           </p>
         </div>

@@ -5,7 +5,7 @@ import { RENDER_CASES } from './test-support/render-cases.js';
 
 /**
  * LFH-585, Option B: Die Referenz setzt allen Text in einer einzigen Strichstärke. Der Katalog
- * setzt ihn deshalb in Arimo 500 (`CATALOG_TEXT_FONT_WEIGHT`), jeden Lauf ausdrücklich am
+ * setzt ihn deshalb in Stufe 500 (`CATALOG_TEXT_FONT_WEIGHT`), jeden Lauf ausdrücklich am
  * Primitiv. Diese Prüfung hält fest, dass kein Grundzeichen, kein Rezept und kein Piktogramm
  * einen Lauf ohne dieses Gewicht trägt — ein neuer Lauf, der das Gewicht vergisst, fiele sonst
  * still in den Normalschnitt zurück.
@@ -23,7 +23,7 @@ function textsOf(primitives: readonly Primitive[]): TextPrimitive[] {
 }
 
 describe('Schriftgewicht des Katalogtexts', () => {
-  it('ist Arimo 500', () => {
+  it('ist Stufe 500', () => {
     expect(CATALOG_TEXT_FONT_WEIGHT).toBe(500);
   });
 

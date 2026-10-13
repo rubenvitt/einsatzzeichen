@@ -39,7 +39,7 @@ describe('DEFAULT_PORTS', () => {
       administrativeHead: core.administrativeHeadOrDerived,
       vehicleChassis: core.vehicleChassis,
       pictogram: core.pictogram,
-      textMetrics: core.ARIMO_TEXT_METRICS,
+      textMetrics: core.TEXT_FONT_METRICS,
     });
   });
 

@@ -18,7 +18,7 @@ import { boundsOfMm, strokeBoundsOfMm, type BoundsMm } from '../bounds.js';
 import { derivedAnchoredMovementPath, derivedBoundaryStrengthMarks } from '../derive/freestanding.js';
 import { NotMeasuredError } from '../not-measured.js';
 import {
-  ARIMO_CAP_HEIGHT_FRACTION,
+  TEXT_CAP_HEIGHT_FRACTION,
   MINIMUM_TEXT_RENDER_PX,
   verticalTextBoxMm,
 } from '../render/text-policy.js';
@@ -272,7 +272,7 @@ export const LINE_GEOMETRY: Readonly<Record<LineId, LineGeometry>> = Object.free
  * Beschriftung in der Grenzlücke. Versalhöhe 4,383 mm (Glyphen 13,531…17,914) und Grundlinie
  * 1,914 mm unter der Achse (17,914 bei Achse 16), an 2.17 bis 2.19 gleich. Der Schriftgrad ist wie
  * in `compose.ts` aus der Versalhöhe gerechnet und nicht hingeschrieben: die Glyphen liegen in der
- * Referenz als Kurven vor, in einer schmaleren Schrift als Arimo. Waagerecht steht der Lauf mittig
+ * Referenz als Kurven vor, in einer anderen Schrift als der Katalogschrift. Waagerecht steht der Lauf mittig
  * in der Lücke; bei 2.17 liegt die Glyphenmitte 0,007 mm daneben.
  */
 const GAP_LABEL_CAP_HEIGHT_MM = 4.383;
@@ -618,9 +618,9 @@ export function layoutDashes(
 }
 
 function gapLabel(content: string, center: Point, gapMm: number, viewBoxWidthMm: number): Primitive {
-  // Ohne `fontWeight`, also Arimo 400, anders als allen übrigen Katalogtext (LFH-585): Die
-  // Beschriftungen in Kapitel 2 messen in der Referenz 0,126 × Versalhöhe, fast Arimo normal.
-  const sizeMm = GAP_LABEL_CAP_HEIGHT_MM / ARIMO_CAP_HEIGHT_FRACTION;
+  // Ohne `fontWeight`, also Stufe 400, anders als allen übrigen Katalogtext (LFH-585): Die
+  // Beschriftungen in Kapitel 2 messen in der Referenz 0,126 × Versalhöhe, nahe der Stufe 400.
+  const sizeMm = GAP_LABEL_CAP_HEIGHT_MM / TEXT_CAP_HEIGHT_FRACTION;
   const baselineMm = center[1] + GAP_LABEL_BASELINE_BELOW_AXIS_MM;
   const box = verticalTextBoxMm(baselineMm, sizeMm, 'alphabetic');
   return {

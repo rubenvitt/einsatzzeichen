@@ -29,7 +29,7 @@ import {
   functionRoleHeadIsFree,
   functionRoleOrganizationIsFree,
 } from './derive/function-roles.js';
-import { ARIMO_CAP_HEIGHT_FRACTION, verticalTextBoxMm } from './render/text-policy.js';
+import { TEXT_CAP_HEIGHT_FRACTION, verticalTextBoxMm } from './render/text-policy.js';
 
 export interface ValidationIssue {
   /** Stabile Regel-ID. Wird später in der Dokumentation verlinkt. */
@@ -766,7 +766,7 @@ function validatePreparedSpec(
         const baselineYMm = bodyBounds.minY + baselineFromBodyTopMm;
         const box = verticalTextBoxMm(
           baselineYMm,
-          capHeightMm / ARIMO_CAP_HEIGHT_FRACTION,
+          capHeightMm / TEXT_CAP_HEIGHT_FRACTION,
           'alphabetic',
         );
         metricsWithinBody = anchorXMm >= bodyBounds.minX &&
@@ -814,7 +814,7 @@ function validatePreparedSpec(
         capHeightMm > 0
       ) {
         const baselineYMm = circleMinYMm + baselineFromBodyTopMm;
-        const sizeMm = capHeightMm / ARIMO_CAP_HEIGHT_FRACTION;
+        const sizeMm = capHeightMm / TEXT_CAP_HEIGHT_FRACTION;
         const box = verticalTextBoxMm(baselineYMm, sizeMm, 'alphabetic');
         verticalBoxWithinViewBox = box.topMm >= 0 &&
           box.topMm + box.heightMm <= DEFAULT_VIEWBOX_MM.height;
@@ -863,7 +863,7 @@ function validatePreparedSpec(
         (record.anchorFromBodyLeftMm as number);
       const box = verticalTextBoxMm(
         baselineYMm,
-        capHeightMm / ARIMO_CAP_HEIGHT_FRACTION,
+        capHeightMm / TEXT_CAP_HEIGHT_FRACTION,
         'alphabetic',
       );
       const boxRightXMm = (bodyBounds?.maxX ?? Number.NaN) - TOP_LABEL_BOX_RIGHT_INSET_MM;
@@ -939,7 +939,7 @@ function validatePreparedSpec(
       spec.labels.centerBaselineFromBodyBottomMm;
     const box = verticalTextBoxMm(
       baselineYMm,
-      capHeightMm / ARIMO_CAP_HEIGHT_FRACTION,
+      capHeightMm / TEXT_CAP_HEIGHT_FRACTION,
       'alphabetic',
     );
     if (
@@ -1093,7 +1093,7 @@ function validatePreparedSpec(
         typeof boxWidthMm === 'number' && boxWidthMm > 0
       ) {
         const boxRightFromBodyLeftMm = boxLeftFromBodyLeftMm + boxWidthMm;
-        const sizeMm = capHeightMm / ARIMO_CAP_HEIGHT_FRACTION;
+        const sizeMm = capHeightMm / TEXT_CAP_HEIGHT_FRACTION;
         const verticalBox = verticalTextBoxMm(
           baselineFromBodyTopMm,
           sizeMm,

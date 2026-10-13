@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PALETTE, type Primitive, type SymbolSpec } from '@einsatzzeichen/schema';
-import { ARIMO_CAP_HEIGHT_FRACTION, PLACES, matchFingerprint, pictogram } from '@einsatzzeichen/core';
+import { TEXT_CAP_HEIGHT_FRACTION, PLACES, matchFingerprint, pictogram } from '@einsatzzeichen/core';
 import { comparableFingerprint } from './comparison-exceptions.js';
 import { fingerprintFor } from './fingerprint-index.js';
 import { composeFromCatalog } from './recipes.js';
@@ -69,7 +69,7 @@ describe('D.2.5 Leitstelle als SymbolSpec', () => {
     );
     const letter = fingerprintFor(ASSET).shapes.find((shape) => shape.kind === 'outline');
     expect(run?.y).toBe(letter?.boundsMm.maxYMm);
-    expect(run!.sizeMm * ARIMO_CAP_HEIGHT_FRACTION).toBeCloseTo(
+    expect(run!.sizeMm * TEXT_CAP_HEIGHT_FRACTION).toBeCloseTo(
       letter!.boundsMm.maxYMm - letter!.boundsMm.minYMm,
       2,
     );
