@@ -9,7 +9,7 @@ import { boundsOfMm, type BoundsMm } from './bounds.js';
 import { bodyLabelInk, compose, type CatalogPorts, type ComposeOptions } from './compose.js';
 import { NotMeasuredError } from './not-measured.js';
 import { CompositionError } from './validate.js';
-import { ARIMO_CAP_HEIGHT_FRACTION, DIACRITIC_HEADROOM_FRACTION } from './render/text-policy.js';
+import { TEXT_CAP_HEIGHT_FRACTION, DIACRITIC_HEADROOM_FRACTION } from './render/text-policy.js';
 import { checkViewBox } from './viewbox-gate.js';
 import { uniformTextMetrics } from './test-support/text-metrics-double.js';
 import { checkTextMetrics } from './text-metrics.js';
@@ -163,7 +163,7 @@ describe('compose() — inset-hull-Labelvertrag', () => {
           child.type === 'text' && child.role === 'label',
       );
       expect(label?.style?.fill).toBe('schwarz');
-      expect(label?.sizeMm).toBeCloseTo(4.87 / ARIMO_CAP_HEIGHT_FRACTION, 6);
+      expect(label?.sizeMm).toBeCloseTo(4.87 / TEXT_CAP_HEIGHT_FRACTION, 6);
     } finally {
       restoreObjectPrototypeProperty('inBodyInk', previousInk);
       restoreObjectPrototypeProperty('centerCapHeightMm', previousCapHeight);
@@ -203,7 +203,7 @@ describe('compose() — inset-hull-Labelvertrag', () => {
         child.type === 'text' && child.role === 'label',
     );
     expect(label?.style?.fill).toBe('schwarz');
-    expect(label?.sizeMm).toBeCloseTo(4.87 / ARIMO_CAP_HEIGHT_FRACTION, 6);
+    expect(label?.sizeMm).toBeCloseTo(4.87 / TEXT_CAP_HEIGHT_FRACTION, 6);
   });
 
   it('leitet die Beschreibung aus derselben vorbereiteten Spec wie die Geometrie ab', () => {
@@ -1233,8 +1233,8 @@ describe('compose() — Schriftgrad des mittigen Laufs', () => {
     );
     const label = drawing.children.find((child) => child.role === 'label');
     if (label?.type !== 'text') throw new Error('unreachable');
-    // 4,87 / ARIMO_CAP_HEIGHT_FRACTION — dieselbe Rechnung wie vor dem Teilslice.
-    expect(label.sizeMm).toBeCloseTo(7.0786, 3);
+    // 4,87 / TEXT_CAP_HEIGHT_FRACTION — dieselbe Rechnung wie vor dem Teilslice.
+    expect(label.sizeMm).toBeCloseTo(6.9771, 3);
   });
 
   it('leitet den Grad aus der übergebenen Versalhöhe ab', () => {
@@ -1437,9 +1437,9 @@ describe('compose() — Beschriftungszone oben links', () => {
       boxMm: { xMm: 1.51423, widthMm: 27.48577 },
     });
     expect(label.y).toBeCloseTo(10.999923, 9);
-    // 2.191447 mm Versalhöhe / (1409/2048) — der Faktor ist aus der eingebetteten Arimo-Datei
+    // 2.191447 mm Versalhöhe / (698/1000) — der Faktor ist aus der eingebetteten Schriftdatei
     // vermessen. Ein direkter Schriftgrad wäre nicht die Quellenmessung.
-    expect(label.sizeMm).toBeCloseTo(3.1852969879, 9);
+    expect(label.sizeMm).toBeCloseTo(3.1396088825, 9);
   });
 });
 
@@ -1511,7 +1511,7 @@ describe('compose() — die aus der weißen Körperfläche abgeleiteten F.3-Krei
     const label = compose(spec, circleCatalog).children.find((child) => child.role === 'label');
     expect(label).toMatchObject({
       type: 'text', content: 'UHS', x: 1.015316, y: 5.000254,
-      sizeMm: 2.919225 / ARIMO_CAP_HEIGHT_FRACTION,
+      sizeMm: 2.919225 / TEXT_CAP_HEIGHT_FRACTION,
       style: { fill: 'schwarz' },
     });
   });
@@ -1532,7 +1532,7 @@ describe('compose() — die aus der weißen Körperfläche abgeleiteten F.3-Krei
     const label = drawing.children.find((child) => child.role === 'label');
     expect(label).toMatchObject({
       type: 'text', content: '50', x: 1.025998, y: 5.000254,
-      sizeMm: 2.749893 / ARIMO_CAP_HEIGHT_FRACTION,
+      sizeMm: 2.749893 / TEXT_CAP_HEIGHT_FRACTION,
       style: { fill: 'schwarz' },
     });
     expect(checkViewBox(drawing)).toEqual([]);
@@ -1710,7 +1710,7 @@ describe('compose() — vollständig vermessener Lauf unten rechts', () => {
       boxMm: { xMm: 20.25, widthMm: 5.5 },
       style: { fill: 'schwarz' },
     });
-    expect(label.sizeMm * ARIMO_CAP_HEIGHT_FRACTION).toBeCloseTo(2.750245, 9);
+    expect(label.sizeMm * TEXT_CAP_HEIGHT_FRACTION).toBeCloseTo(2.750245, 9);
     expect(label.boxMm.yMm).toBeGreaterThanOrEqual(measuredBox.y);
     expect(label.boxMm.yMm + label.boxMm.heightMm)
       .toBeLessThanOrEqual(measuredBox.y + measuredBox.height);
@@ -2025,7 +2025,7 @@ describe('compose() — gemessene Funktionsträger', () => {
 
 describe('compose() — seitliche Box-Grenze der Textläufe (LFH-411)', () => {
   // Doppel mit 0,5 em je Glyphe: Fußzone 4 mm × 0,5 em = 2 mm je Zeichen in einer 30-mm-Box
-  // (Körper 1…31) — 15 Zeichen passen bündig, 16 nicht. Rechenbar, nicht Arimo.
+  // (Körper 1…31) — 15 Zeichen passen bündig, 16 nicht. Rechenbar, nicht die Katalogschrift.
   const wideCatalog: CatalogPorts = { ...catalog, textMetrics: uniformTextMetrics(0.5) };
 
   it('wirft designation-too-wide, wenn die Fußzone breiter als der Körper ist', () => {

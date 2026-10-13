@@ -104,7 +104,7 @@ describe('core — Importgraph des öffentlichen Index', () => {
         'packages/core/src/compose.ts',
         'packages/core/src/geometry/base-symbols.ts',
         'packages/core/src/geometry/pictograms/index.ts',
-        'packages/core/src/assets/arimo-metrics.json',
+        'packages/core/src/assets/einsatzzeichen-sans-metrics.json',
         'packages/schema/src/index.ts',
       ]),
     );

@@ -23,7 +23,7 @@
  *
  * SCHRIFT. Kein externer Request. Der Fließtext bekommt keine eigene Schriftdatei und bleibt auf
  * dem System-Stack. Ausgeliefert wird genau eine Datei, und sie gehört nicht dem Fließtext,
- * sondern den Zeichen: Arimo, weil `renderSvg()` sie in jedes Zeichen mit Kürzel schreibt (siehe
+ * sondern den Zeichen: „Einsatzzeichen Sans", weil `renderSvg()` sie in jedes Zeichen mit Kürzel schreibt (siehe
  * das `@font-face` unten). Die Persönlichkeit der Seite kommt deshalb nicht aus einer Schriftwahl,
  * sondern aus dem Satz: Überschriften eng (`letter-spacing: -0.018em`), Kennungen, Kennzahlen,
  * Rubriken und Statusmarken durchgehend in der Monospace mit weiter Laufweite — die
@@ -54,8 +54,9 @@
  */
 
 /*
- * Arimo, selbst ausgeliefert — die einzige mitgelieferte Schrift, und sie gehört nicht dem
- * Fließtext, sondern den Zeichen: `renderSvg()` schreibt `font-family="Arimo"` in jedes Zeichen
+ * „Einsatzzeichen Sans", selbst ausgeliefert — die einzige mitgelieferte Schrift, und sie gehört
+ * nicht dem Fließtext, sondern den Zeichen: `renderSvg()` schreibt
+ * `font-family="Einsatzzeichen Sans"` in jedes Zeichen
  * mit Kürzel oder Trägerkürzel (`TEXT_FONT_FAMILY_ATTR` in core). Ohne die Datei setzt der Browser
  * eine Ersatzschrift mit anderen Vorschubbreiten, und das Kürzel steht nicht mehr da, wo die
  * Geometrie es vorsieht — die Vorschau zeigte dann etwas anderes als der Katalog rastert.

@@ -1,181 +1,117 @@
-# Arimo (Variable Font)
+# Einsatzzeichen Sans
 
-- **Schriftname:** Arimo
-- **Version:** 1.341 (Variable Font, Achse `wght`) — gelesen aus `fontRevision` der `head`-Tabelle
-  (Rohwert 87884 / 65536 = 1.34100…), bestätigt durch die Namenstabelle (`file(1)`).
-- **Bezugsquelle:** https://raw.githubusercontent.com/google/fonts/main/ofl/arimo/Arimo%5Bwght%5D.ttf
-- **Abrufdatum:** 2026-08-09
-- **Upstream-Datei:** `Arimo[wght].ttf` (496.268 Byte),
-  SHA-256 `e43898b143ec826ac8cb4034816458a7047fbe0836558de2a1f8c6223ae3e0ca`
-  (nicht im Repository; `TEXT_FONT_SOURCE_SHA256` in `src/fonts.ts`)
-- **Eingecheckte Datei:** `Arimo[wght].ttf` als Subset (82.756 Byte, −83,3 %),
-  SHA-256 `e68be22b52529b0541129578216dab440cb00026114868370b6d34798b2ce5a3`
-  (`TEXT_FONT_SHA256` in `src/fonts.ts`) — siehe Abschnitt „Subsetting" unten.
-- **Lizenz:** SIL Open Font License, Version 1.1 — vollständiger Text in `Arimo-OFL.txt`
-  (gleiche Bezugsquelle: https://raw.githubusercontent.com/google/fonts/main/ofl/arimo/OFL.txt,
-  abgerufen 2026-08-09).
+Die Katalogschrift. Sie ist aus **IBM Plex Sans** abgeleitet (Teilmenge, eine geeichte Breite,
+vier statische Stufen) und umbenannt, weil „Plex" ein reservierter Name der OFL ist. Entscheidung,
+Messung und Lizenzabwägung: `docs/decisions/2026-09-29-lfh-790-ersatzschrift-option-c.md`
+(Abschnitt 10). Umgesetzt mit ESZ-114; bis dahin setzte der Katalog Arimo (LFH-585).
 
-Hinweis: Die in der Schriftdatei eingebettete Copyright-Zeile nennt "Copyright 2020 The Arimo
-Project Authors", `Arimo-OFL.txt` dagegen "Copyright 2026 The Arimo Project Authors" — Letzteres
-ist vermutlich ein bei jedem Abruf aktualisierter Platzhalter im Google-Fonts-Repository, keine
-inhaltliche Änderung der Lizenzbedingungen. Beide Stände sind hier unverändert dokumentiert.
+| Datei | Stufe | Byte | SHA-256 | Konstante in `src/fonts.ts` |
+|---|---|---|---|---|
+| `EinsatzzeichenSans-Regular.ttf` | 400 | 89.208 | `c6bc161fc5f493dc032a2f93930960cbe50afc0b7a689d18a493c2c87b832a3e` | `TEXT_FONT_SHA256` |
+| `EinsatzzeichenSans-Medium.ttf` | 500, aller Katalogtext | 89.324 | `bbc9fd666da63061d9eee5d45b7be09a4e5e018fb51a739c2f82c180ac900573` | `TEXT_FONT_MEDIUM_SHA256` |
+| `EinsatzzeichenSans-Bold.ttf` | 700 | 89.168 | `537adabfc02caa06f6a8d93b77d6ad11383d3c579d780f259fe37f08dc66a805` | `TEXT_FONT_BOLD_SHA256` |
+| `EinsatzzeichenSans-MediumItalic.ttf` | 500 kursiv | 94.360 | `4f0476a9d3a73853264dd621b45124ba9c2a8b7e7b8ba14bcea7454010be0f50` | `TEXT_FONT_MEDIUM_ITALIC_SHA256` |
+| `EinsatzzeichenSans-OFL.txt` | Lizenz | 4.456 | `7e6b2818edbd8f6a01ae80641cc8f16a51080d08fb4e532be3a0b6f74adb07da` | |
 
-## Warum Arimo
+## Quelle
 
-Arimo ist metrisch Arial-kompatibel und deckt damit dieselbe Zeichenbreitenlogik ab, die Anhang J
-über die Buchstabenkürzel unterstellt. Der naheliegende Kandidat Liberation Sans — ebenfalls
-metrisch Arial-kompatibel und unter derselben Lizenz — hat keine stabile TTF-Bezugsquelle: sein
-GitHub-Release trägt keine Assets (geprüft am 2026-08-09).
+Beide Originale aus google/fonts, Verzeichnis `ofl/ibmplexsans/`, Version 3.201, Achsen
+`wght` 100–700 und `wdth` 75–100. Sie liegen nicht im Repository; das Skript lädt sie nach
+`out/font/` (gitignored) und prüft die Prüfsummen.
 
-## Subsetting (2026-08-28)
+- `IBMPlexSans[wdth,wght].ttf`, 537.244 Byte, SHA-256
+  `3b031aa4216174205bd8471f88a49b91f093169e9e87bd5262242bc5967fe2e3` (`TEXT_FONT_SOURCE_SHA256`)
+- `IBMPlexSans-Italic[wdth,wght].ttf`, 599.624 Byte, SHA-256
+  `0b94c5e981993764db32bf9c610ecc60cbd34ad77ec2f10ba03c64ab75124d8e`
+  (`TEXT_FONT_ITALIC_SOURCE_SHA256`)
+- `OFL.txt` aus demselben Verzeichnis, eingecheckt als `EinsatzzeichenSans-OFL.txt`
 
-Die eingecheckte Datei ist eine nach OFL §1 zulässige „Modified Version" des Originals: ein
-Glyphen-Subset, erzeugt mit **fontTools 4.63.0** (`pyftsubset`) durch
-`scripts/font/subset-arimo.sh`. Das Skript lädt das Original nach `out/font/` (gitignored),
-prüft dessen SHA-256 gegen den Upstream-Wert und ruft auf:
+## Herleitung
 
-```
-pyftsubset 'Arimo[wght].ttf' --output-file=packages/conformance/assets/Arimo[wght].ttf \
-  --unicodes='U+0000-00FF,U+0100-017F,U+0180-024F,U+2000-206F,U+20AC,U+2122,U+2212,U+FEFF,U+FFFD' \
-  --layout-features='*' --notdef-glyph --notdef-outline --recommended-glyphs \
-  --name-IDs='*' --name-legacy --name-languages='*' --glyph-names \
-  --no-prune-unicode-ranges --no-prune-codepage-ranges --no-recalc-bounds
-```
+`scripts/font/derive-einsatzzeichen-sans.sh` erzeugt alle vier Dateien, ihre Textmetriken und die
+Browser-Schriften in einem Lauf (fontTools 4.66.1). Zwei Läufe ergeben dieselben Bytes.
 
-- **Unicode-Range:** `designation` ist ein freier String (deutsche Freitexteingaben), daher nicht
-  der heutige Zeichenbestand des Katalogs, sondern die Decke: Basic Latin + Latin-1 (Umlaute, ß,
-  §, °), Latin Extended-A/B (Ł, ć, š, ž — Namen und Orte), General Punctuation (Gedankenstrich,
-  deutsche Anführungszeichen, geschützte Leerzeichen), €, ™, U+2212 Minus, BOM, U+FFFD. 645 von
-  3.301 Codepoints bleiben, 686 Glyphen (mit Komponenten und Layout-Zielen).
-- **Achsenerhalt:** Die `wght`-Achse 400–700 wird **nicht** instanziiert (`fvar`, `gvar`, `HVAR`,
-  `STAT` bleiben), weil `packages/cli/src/commands/visual-proof.ts` mit `font-weight="700"`
-  beschriftet und die Kontaktbögen `font-weight="bold"` setzen.
-- **Unverändert:** Hinting (`prep`, `gasp`), `head`/`hhea`/`OS/2` (kein Recalc der Grenzen, keine
-  Kürzung der Unicode-/Codepage-Ranges) — core leitet seine Konstanten aus `unitsPerEm=2048`,
-  `ascender=1854`, `descender=-434`, `sCapHeight=1409` ab. Die Namenstabelle bleibt vollständig;
-  die OFL nennt keinen Reserved Font Name, der Familienname „Arimo" darf im Subset bleiben.
-- **Größe / Prüfsummen:** 496.268 → 82.756 Byte;
-  Original `e43898b1…3ae3e0ca`, Subset `e68be22b…8b2ce5a3` (vollständig oben und in `src/fonts.ts`).
-- **Nachweis der Rasterungsgleichheit:** Mit dem Subset an Stelle des Originals blieben alle
-  256 SVG-Snapshots (`src/__snapshots__/`) und 526 Kontaktbögen mit gerasterten PNGs
-  (`src/__snapshots__/multi-size/`) unverändert (`git status` an `__snapshots__` leer;
-  `snapshots.test.ts`, `multi-size-snapshots.test.ts`, `pictograms/text-ink.test.ts`,
-  `body-marks.test.ts` grün). Der erste Flag-Satz war bereits bit-identisch; weitere Varianten
-  (`--retain-gids`, `--passthrough-tables`) waren nicht nötig.
-- **Metriken:** `packages/core/src/assets/arimo-metrics.json` (Vorschubbreiten `advances` und glyf-Tintenboxen
-  `inkExtents` `[xMin, yMin, xMax, yMax]` aller 645 cmap-Einträge in Font-Einheiten der
-  Default-Instanz wght 400, leere Glyphen als `[0, 0, 0, 0]`; Unterschneidung `kerning`
-  `{ links: { rechts: XAdvance } }` aus dem GPOS-Feature `kern`, nur Werte ≠ 0; Kopfwerte;
-  beide SHA-256) wird von `scripts/font/export-metrics.py`
-  aus dem Subset exportiert; `src/fonts.test.ts` gleicht sie gegen die TTF ab. Die Metrik-JSONs
-  liegen seit LFH-570 in `core`: Laufweiten sind Layoutdaten, die Schriftdatei selbst bleibt hier.
+1. **Teilmenge** mit `pyftsubset`, für aufrecht und kursiv mit denselben Argumenten:
 
-## Fettinstanz (2026-09-19)
+   ```
+   --unicodes='U+0000-00FF,U+0100-017F,U+0180-024F,U+2000-206F,U+20AC,U+2122,U+2212,U+FEFF,U+FFFD'
+   --layout-features='*' --notdef-glyph --notdef-outline --recommended-glyphs
+   --name-IDs='*' --name-legacy --name-languages='*' --glyph-names
+   --no-prune-unicode-ranges --no-prune-codepage-ranges --no-recalc-bounds
+   ```
 
-`Arimo-Bold.ttf` ist eine statische Instanz der `wght`-Achse bei 700, erzeugt aus dem Subset oben
-mit fontTools `varLib.instancer` (`updateFontNames=True`) durch `scripts/font/subset-arimo.sh`.
-Sie ist wie das Subset eine nach OFL §1 zulässige „Modified Version" desselben Originals und steht
-unter derselben Lizenz (`Arimo-OFL.txt`).
+   `designation` ist ein freier String (deutsche Freitexteingaben), daher nicht der heutige
+   Zeichenbestand des Katalogs, sondern die Decke: Latin-1 (Umlaute, ß, §, °), Latin Extended-A/B
+   (Ł, ć, š, ž für Namen und Orte), General Punctuation (Gedankenstrich, deutsche
+   Anführungszeichen, geschützte Leerzeichen), €, ™, U+2212 Minus, BOM, U+FFFD. Jede Datei führt
+   396 Codepoints in 486 Glyphen. Achsen und Hinting bleiben in der Teilmenge.
+2. **Instanz** mit `scripts/font/derive_instance.py`: fontTools-Instancer bei **wdth 86** und der
+   Stufe. Die Breite ist auf die Laufweite der Referenz geeicht (Median 1,000 bei wght 500, Notiz
+   §10.3) und gilt für alle vier Stufen, damit Läufe verschiedener Stufen gleich laufen.
+   `usWidthClass` 3.
+3. **Namen.** Neu in den Einträgen 1–4, 6, 16 und 17; Namenseintrag 7 (Markenhinweis „IBM Plex")
+   entfällt, weil die Schrift den Namen nicht mehr führt. Eintrag 0 (Copyright von IBM) und 13/14
+   (OFL) bleiben, wie die Lizenz verlangt. `STAT` und verwaiste Namen entfallen, `head.modified`
+   bleibt stehen.
 
-- **Warum:** `@resvg/resvg-js` 2.6 wertet die `wght`-Achse der variablen Datei nicht aus; mit ihr
-  allein rastert `font-weight="700"` bit-identisch zu 400. Liegt die Fettinstanz zusätzlich in
-  `fontFiles`, wählt resvg sie für Läufe mit `fontWeight: 700`. Nicht fette Läufe rastern
-  unverändert.
-- **Prüfsumme:** SHA-256 `0f8eb8ed8b92a80cbbbcadb382089e8fda8d50015b0e36212c341c1a6b96341a`
-  (`TEXT_FONT_BOLD_SHA256` in `src/fonts.ts`), 53.436 Byte.
-- **Metriken:** `packages/core/src/assets/arimo-bold-metrics.json`, gleiches Format wie `arimo-metrics.json`, exportiert
-  von `scripts/font/export-metrics.py` aus der Fettinstanz.
-- **Nutzung:** Der Katalog setzt seit LFH-585 keinen fetten Lauf mehr. Die Datei bleibt für eigene
-  IR mit `fontWeight: 700`, die Beschriftung von `visual-proof.ts` und die Bildunterschriften der
-  Kontaktbögen.
-- **Kursiv:** Den einzigen kursiven Schnitt führt die Kursivinstanz in Stufe 500 (unten).
+   | Datei | Familie (1) | Stil (2) | Typogr. Familie (16) / Stil (17) | PostScript (6) | `usWeightClass` |
+   |---|---|---|---|---|---|
+   | Regular | Einsatzzeichen Sans | Regular | – | `EinsatzzeichenSans-Regular` | 400 |
+   | Medium | Einsatzzeichen Sans Medium | Regular | Einsatzzeichen Sans / Medium | `EinsatzzeichenSans-Medium` | 500 |
+   | Bold | Einsatzzeichen Sans | Bold | – | `EinsatzzeichenSans-Bold` | 700 |
+   | MediumItalic | Einsatzzeichen Sans Medium | Italic | Einsatzzeichen Sans / Medium Italic | `EinsatzzeichenSans-MediumItalic` | 500 |
 
-## Instanz „Medium" (2026-09-29, LFH-585)
+4. **Metriken** mit `scripts/font/export-metrics.py` nach `packages/core/src/assets/`
+   (`einsatzzeichen-sans-metrics.json`, `-medium-`, `-bold-`, `-medium-italic-metrics.json`):
+   Vorschübe, glyf-Tintenboxen `[xMin, yMin, xMax, yMax]` aller cmap-Einträge, Unterschneidung aus
+   dem GPOS-Feature `kern` (nur Werte ≠ 0, verlustfrei in Klassen gefasst: Plex kernt über
+   Klassenpaare, ausgerollt wären es je Stufe 25 000 bis 35 000 Paare), Kopfwerte und beide
+   Prüfsummen. `src/fonts.test.ts`
+   gleicht sie gegen die TTFs ab.
 
-`Arimo-Medium.ttf` ist eine statische Instanz der `wght`-Achse bei 500, erzeugt aus dem Subset
-oben mit fontTools `varLib.instancer` (`updateFontNames=True`) durch
-`scripts/font/subset-arimo.sh`. In ihr setzt der Katalog allen Text: Die Referenz kennt nur eine
-Strichstärke (0,156 × Versalhöhe), Arimo 500 trifft sie auf rund 3 % (400: 0,136, 700: 0,209).
-Entscheidung und Messung: `docs/decisions/2026-09-29-lfh-585-ersatzschrift-und-kursiv.md`. Wie
-das Subset und die Fettinstanz ist sie eine nach OFL §1 zulässige „Modified Version" desselben
-Originals unter derselben Lizenz (`Arimo-OFL.txt`); die OFL nennt keinen Reserved Font Name.
+## Kopfwerte
 
-- **Namen:** Familie „Arimo Medium" (Namenseintrag 1), typografische Familie „Arimo" (16),
-  Stil „Medium" (17), PostScript-Name `Arimo-Medium`, `usWeightClass` 500. Unter genau diesen
-  Namen wählt resvg die Datei für `font-weight="500"`; eine Zwischenstufe wie 480 wählt es nicht.
-  Läufe in 400 und 700 rastern mit ihr bit-gleich wie ohne sie (`src/fonts.test.ts`).
-- **Kopfwerte:** unverändert gegenüber dem Subset (`unitsPerEm` 2048, Ascender 1854,
-  Descender −434, `sCapHeight` 1409). Die Versalhöhe je Schriftgrad bleibt damit gleich.
-- **Prüfsumme:** SHA-256 `0eb23f0177e7ab333c7ddee337deb2ed133363777c40dae3c078695b0f8bdd35`
-  (`TEXT_FONT_MEDIUM_SHA256` in `src/fonts.ts`), 53.080 Byte. fontTools 4.66.0 erzeugt am
-  2026-09-29 Subset, Fett- und Medium-Instanz bit-gleich zu den eingecheckten Dateien.
-- **Metriken:** `packages/core/src/assets/arimo-medium-metrics.json`, gleiches Format wie
-  `arimo-metrics.json`, exportiert von `scripts/font/export-metrics.py` aus dieser Instanz
-  (`family` aus der typografischen Familie, also „Arimo").
-- **Browser:** Website und Review-Server liefern weiter die variable Datei aus und setzen die
-  Stufe 500 aus ihrer Achse.
+Alle vier Dateien: `unitsPerEm` 1000, Ascender 1025, Descender −275, `sCapHeight` 698 (am „H"
+gemessen ebenfalls 698). Daraus leitet core `TEXT_CAP_HEIGHT_FRACTION` = 0,698 ab; die vertikalen
+Tintenanteile in `text-policy.ts` misst `scripts/font/measure-vertical.mts`. Eine `BASE`-Tabelle
+und eine `fvar`-Tabelle gibt es nicht.
 
-## Kursivinstanz „Medium Italic" (2026-09-29, LFH-585)
+Die Kursive neigt laut `post.italicAngle` um 11,3°, die Referenz um 9,0° (hingenommen wie bei
+Arimo). Ihre Vorschübe weichen anders als bei Arimo von der aufrechten Stufe ab, im Grundbestand
+bis U+00FF bei 168 von 191 Codepoints; deshalb hat sie eigene Metriken.
 
-`Arimo-MediumItalic.ttf` ist die statische Kursive in Stufe 500. Die Referenz setzt genau einen
-Lauf kursiv: „Bezeichnung" in D.1.1. Messung und Vorschlag:
-`docs/reviews/2026-09-29-lfh-585-schriftmessung.md` (Abschnitt 2), Umsetzung:
-`docs/decisions/2026-09-29-lfh-585-ersatzschrift-und-kursiv.md` (Abschnitt 11).
+## Warum statische Stufen
 
-- **Bezugsquelle:** https://raw.githubusercontent.com/google/fonts/main/ofl/arimo/Arimo-Italic%5Bwght%5D.ttf,
-  abgerufen am 2026-09-29 (Kopf des Zweigs `main`: Commit `23e54b51ddff`).
-- **Upstream-Datei:** `Arimo-Italic[wght].ttf` (543.196 Byte, Version 1.341, Achse `wght`
-  400–700, keine Achse `ital` oder `slnt`), SHA-256
-  `a80fc54fd0233c1dfe298577c4d00f5ae81d5bb83510975e473c47e699b7f4ed`
-  (nicht im Repository; `TEXT_FONT_ITALIC_SOURCE_SHA256` in `src/fonts.ts`).
-- **Herleitung:** `scripts/font/subset-arimo.sh` prüft die Prüfsumme, reduziert die Datei mit
-  denselben `pyftsubset`-Argumenten wie die aufrechte (dieselbe Zeichendecke, 645 Codepoints) und
-  instanziiert sie mit fontTools `varLib.instancer` bei `wght` 500 (`updateFontNames=True`,
-  Zeitstempel unverändert). Das kursive Subset selbst bleibt in `out/font/`; resvg wertet die
-  Achse der variablen Kursive ebenso wenig aus und zeichnete sie immer in 400.
-- **Namen:** Familie „Arimo Medium" (Namenseintrag 1), Stil „Italic" (2), typografische Familie
-  „Arimo" (16), Stil „Medium Italic" (17), `usWeightClass` 500, Kursiv-Bit in `fsSelection`,
-  `macStyle` 2. Den PostScript-Namen (6) und die eindeutige Kennung (3) übernimmt der Instancer
-  aus der variablen Kursive als `ArimoItalic-MediumItalic`; das Skript setzt beide auf
-  `Arimo-MediumItalic`, passend zu `Arimo-Medium` und `Arimo-Bold`.
-- **Kopfwerte:** wie aufrecht (`unitsPerEm` 2048, Ascender 1854, Descender −434, `sCapHeight`
-  1409). `post.italicAngle` ist −12°, an den Umrissen gemessen neigt die Schrift um 11,0°. Die
-  Referenz neigt um 9,0°; der Unterschied ist hingenommen.
-- **Prüfsumme:** SHA-256 `72cdd3f0395bf0bf3752dcf6d92fb4d5b3559323aa0dc4bde95acff94eb03bd1`
-  (`TEXT_FONT_MEDIUM_ITALIC_SHA256` in `src/fonts.ts`), 57.632 Byte, erzeugt mit fontTools 4.66.0
-  am 2026-09-29. Zwei Läufe des Skripts ergeben dieselbe Datei; Subset, Fett- und
-  Medium-Instanz bleiben dabei bit-gleich.
-- **Metriken:** `packages/core/src/assets/arimo-medium-italic-metrics.json`, gleiches Format wie
-  `arimo-metrics.json`, exportiert von `scripts/font/export-metrics.py` aus dieser Instanz
-  (`sourceSha256` ist die Prüfsumme des kursiven Originals). Eine eigene Datei ist nötig: Die
-  Vorschübe gleichen bis U+00FF denen von Arimo 500 (außer µ), die Unterschneidung und die
-  Tintenränder nicht. Kursive Buchstaben ragen weiter über ihren Vorschub hinaus (f rechts um
-  175/2048 em, aufrecht 3/2048 em).
-- **resvg:** Liegt die Datei in `fontFiles`, zeichnet resvg mit ihr **jeden** kursiven Lauf, gleich
-  welches Gewicht er verlangt. Deshalb lässt das Schema `fontStyle: 'italic'` nur zusammen mit
-  `fontWeight: 500` zu; das Textmetrik-Gate in core prüft das (`unsupported-font-style`).
-  Aufrechte Läufe rastern mit ihr bit-gleich wie ohne sie
-  (`src/fonts.test.ts`).
-- **Browser:** Website (`theme.css`) und Review-Server (`embedTextFont`) erklären für diese Datei
-  ein zweites `@font-face` mit `font-style: italic; font-weight: 500`. So zeichnen Browser und
-  resvg dieselben Umrisse.
-- **Lizenz:** Dieselbe OFL 1.1 wie die aufrechte Datei, ohne Reserved Font Name; `ofl/arimo/OFL.txt`
-  ist byte-gleich mit `Arimo-OFL.txt`. Die Datei ist wie Subset, Fett- und Medium-Instanz eine
-  nach OFL §1 zulässige „Modified Version" und steht unter derselben Lizenz.
+`@resvg/resvg-js` 2.6 wertet die Achsen einer variablen Datei nicht aus. Mit den vier statischen
+Dateien in `fontFiles` wählt resvg (geprüft mit 2.6.2, Notiz §10.5):
 
-## Browser-Schriften in core (2026-10-02, LFH-832)
+- ohne Angabe und `font-weight="400"`: Regular;
+- `font-weight="500"`: Medium (eine Zwischenstufe wie 480 nicht);
+- `font-weight="700"`: Bold;
+- **jeden** kursiven Lauf, gleich welches Gewicht: MediumItalic. Deshalb lässt das Schema
+  `fontStyle: 'italic'` nur zusammen mit `fontWeight: 500` zu; das Textmetrik-Gate in core prüft
+  das (`unsupported-font-style`).
 
-Verbraucher im Browser brauchen die Schrift, können dieses Paket aber nicht laden (`node:url`), und
-die TTFs stehen in keinem `exports`-Subpfad. Deshalb liefert `@einsatzzeichen/core` die vier
-Stufen als WOFF2 unter `@einsatzzeichen/core/fonts/*` aus, samt `text.css` und `OFL.txt`
-(byte-gleich mit `Arimo-OFL.txt`). Erzeugt werden sie von `scripts/font/build-woff2.py` aus den
-Dateien hier, am Ende von `scripts/font/subset-arimo.sh`:
+Der Katalog setzt allen Text in 500 (`CATALOG_TEXT_FONT_WEIGHT`, LFH-585): Die Referenz kennt nur
+eine Strichstärke (0,156 × Versalhöhe), Einsatzzeichen Sans 500 trifft sie genau. 400 bleibt für
+fremde IR ohne `fontWeight` und die Lückenbeschriftungen aus Kapitel 2, 700 für fremde IR, die
+Beschriftung von `visual-proof.ts` und die Bildunterschriften der Kontaktbögen (die über
+`defaultFontFamily` Einsatzzeichen Sans Bold bekommen). Kursiv setzt der Katalog genau einen Lauf:
+„Bezeichnung" in D.1.1.
 
-- `text-regular.woff2`: statische Instanz wght 400 aus `Arimo[wght].ttf`
-- `text-medium.woff2`, `text-bold.woff2`, `text-medium-italic.woff2`: `Arimo-Medium.ttf`,
-  `Arimo-Bold.ttf`, `Arimo-MediumItalic.ttf`, nur der Container gewechselt
+## Browser-Schriften in core
 
-Umrisse (`glyf`) und Vorschübe (`hmtx`) gleichen den TTFs in allen Glyphen (Abgleich mit
-fontTools 4.66.1 am 2026-10-02; 686 Glyphen aufrecht, 688 kursiv). Die Prüfsummen stehen in
-`packages/core/src/font-files.test.ts`. Diese TTFs bleiben die Quelle für resvg und die
-Prüfgates.
+Verbraucher im Browser können dieses Paket nicht laden (`node:url`), und die TTFs stehen in keinem
+`exports`-Subpfad. Deshalb liefert `@einsatzzeichen/core` die vier Stufen als WOFF2 unter
+`@einsatzzeichen/core/fonts/*` aus, samt `text.css` und `OFL.txt` (byte-gleich mit
+`EinsatzzeichenSans-OFL.txt`). `scripts/font/build-woff2.py` erzeugt sie am Ende des Skripts oben;
+nur der Container wechselt. Die Prüfsummen stehen in `packages/core/src/font-files.test.ts`. Die
+TTFs hier bleiben die Quelle für resvg und die Prüfgates.
+
+## Lizenz
+
+SIL Open Font License 1.1, vollständiger Text in `EinsatzzeichenSans-OFL.txt` („Copyright © 2017
+IBM Corp. with Reserved Font Name "Plex""). Die Dateien sind nach OFL §1 „Modified Versions" und
+stehen unter derselben Lizenz. Sie führen den reservierten Namen „Plex" nicht; die Herkunft aus
+IBM Plex Sans wird hier und im Quellenregister (`ibm-plex-sans-ofl` in `src/sources.ts`) genannt,
+nicht als Werbung. Selbsteinschätzung, keine Rechtsauskunft (Notiz §10.1).

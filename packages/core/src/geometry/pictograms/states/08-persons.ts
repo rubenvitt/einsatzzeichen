@@ -5,7 +5,7 @@ import {
   type CatalogPictogramDefinition,
   type PictogramContrastPair,
 } from '../catalog-definition.js';
-import { CATALOG_TEXT_FONT_WEIGHT } from '../../../render/text-policy.js';
+import { CATALOG_TEXT_FONT_WEIGHT, textSizeForCapHeightMm } from '../../../render/text-policy.js';
 
 /**
  * 5.8.8 Personenzustände. Maße an der Referenz abgelesen, Geometrie eigenständig konstruiert.
@@ -81,9 +81,9 @@ const personDiamond = (): Primitive => diamond(16, 13);
 const injuryMark = (): Primitive => personLine(16, 3, 16, 29);
 
 /**
- * Kennbuchstaben in der Projektschrift: Versalhöhe 4,87 mm wie in der Referenz (Schriftgrad
- * 7,1 mm), Grundlinie y = 7 mm, zentriert auf die Mitte des Referenzlaufs. `minRenderPx: 64`,
- * weil 7,1 mm bei 32 px Rendergröße nur 7,1 px effektiv ergeben.
+ * Kennbuchstaben in der Projektschrift: Versalhöhe 4,87 mm wie in der Referenz, Grundlinie
+ * y = 7 mm, zentriert auf die Mitte des Referenzlaufs. `minRenderPx: 64`, weil rund 7 mm
+ * Schriftgrad bei 32 px Rendergröße nur 7 px effektiv ergeben.
  */
 function letters(content: string, centerX: number, box: { xMm: number; widthMm: number }): Primitive {
   return {
@@ -92,7 +92,7 @@ function letters(content: string, centerX: number, box: { xMm: number; widthMm: 
     content,
     x: centerX,
     y: 7,
-    sizeMm: 7.1,
+    sizeMm: textSizeForCapHeightMm(4.87),
     anchor: 'middle',
     baseline: 'alphabetic',
     boxMm: { xMm: box.xMm, yMm: 2, widthMm: box.widthMm, heightMm: 5 },

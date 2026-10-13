@@ -186,8 +186,10 @@ describe('Layoutprofile', () => {
     expect(raised.topLeftBaselineFromBodyTopMm).toBeCloseTo(-0.999746, 6);
     expect(normal).not.toHaveProperty('topLeftInk');
     expect(raised).not.toHaveProperty('topLeftInk');
-    // Die Funktionsstelle setzt den Lauf seit dem 2. Oktober 2026 innen auf die Kreissehne.
-    expect(profileFor('post').topLeftBaselineFromBodyTopMm).toBeCloseTo(8.3153, 4);
+    // Die Funktionsstelle setzt den Lauf seit dem 2. Oktober 2026 innen auf die Kreissehne. Der
+    // Wert folgt aus der gespiegelten Box des Eckenlaufs und damit aus den gemessenen Anteilen der
+    // Schrift (8,3153 mm mit Arimo, seit ESZ-114 8,5268 mm).
+    expect(profileFor('post').topLeftBaselineFromBodyTopMm).toBeCloseTo(8.5268, 4);
   });
 
   it('führt die Logistik-Labelzonen ausschließlich an ihren gebänderten Profilen', () => {

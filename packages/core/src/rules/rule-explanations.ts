@@ -649,8 +649,8 @@ const COMPOSITION_TABLE: Record<string, RuleExplanation> = {
     field: 'designation',
     title: 'Beschriftung enthält ein Zeichen ohne Vorschub',
     explanation:
-      'Die Breite eines Laufs wird aus den Vorschubwerten von Arimo gerechnet ' +
-      '(`assets/arimo-metrics.json`, erzeugt aus der Schriftdatei im Katalog). Für ein Zeichen, ' +
+      'Die Breite eines Laufs wird aus den Vorschubwerten der Katalogschrift gerechnet ' +
+      '(`assets/einsatzzeichen-sans-metrics.json`, erzeugt aus der Schriftdatei im Katalog). Für ein Zeichen, ' +
       'das die Schrift nicht führt, gibt es keinen Vorschub — die Prüfung müsste raten, und ein ' +
       'geratener Wert wäre zu klein. Die Meldung nennt jeden fehlenden Codepoint; ersetze ihn ' +
       'durch ein Zeichen, das die Schrift führt.',
@@ -668,7 +668,7 @@ const COMPOSITION_TABLE: Record<string, RuleExplanation> = {
     field: 'labels',
     title: 'Beschriftungslauf enthält ein Zeichen ohne Vorschub',
     explanation:
-      'Wie bei der Fußzone: die Laufweite kommt aus den Vorschubwerten von Arimo, und ein ' +
+      'Wie bei der Fußzone: die Laufweite kommt aus den Vorschubwerten der Katalogschrift, und ein ' +
       'Zeichen ohne Eintrag hat keinen. Die Prüfung meldet es, statt mit einem Ersatzwert ' +
       'weiterzurechnen. Die Meldung nennt jeden fehlenden Codepoint; ersetze ihn durch ein ' +
       'Zeichen, das die Schrift führt.',
@@ -688,7 +688,7 @@ const COMPOSITION_TABLE: Record<string, RuleExplanation> = {
     title: 'Lauf der Funktionsfassung enthält ein Zeichen ohne Vorschub',
     explanation:
       'Auch dieser Lauf kommt aus der Funktionsfassung im Katalog, nicht aus einer Eingabe. Ein ' +
-      'Zeichen ohne Vorschub in Arimo macht seine Breite unprüfbar. An der Spec lässt sich nur ' +
+      'Zeichen ohne Vorschub in der Katalogschrift macht seine Breite unprüfbar. An der Spec lässt sich nur ' +
       'die `functionRole` wechseln; die Ursache liegt in der Fassung im Katalog und gehört ' +
       'dorthin gemeldet.',
   },

@@ -66,7 +66,7 @@ const svg = renderSvg(
 
 ## Schrift
 
-`renderSvg()` und `renderCanvas()` setzen Kürzel in der Familie `TEXT_FONT_FAMILY_ATTR` (heute `Arimo`). Ohne die Schrift setzt der Browser eine Ersatzschrift mit anderen Vorschubbreiten, und das Kürzel steht nicht mehr dort, wo die Geometrie es vorsieht. `core` liefert sie als WOFF2 unter dem Subpfad `@einsatzzeichen/core/fonts/*` mit:
+`renderSvg()` und `renderCanvas()` setzen Kürzel in der Familie `TEXT_FONT_FAMILY_ATTR` (`Einsatzzeichen Sans`). Ohne die Schrift setzt der Browser eine Ersatzschrift mit anderen Vorschubbreiten, und das Kürzel steht nicht mehr dort, wo die Geometrie es vorsieht. `core` liefert sie als WOFF2 unter dem Subpfad `@einsatzzeichen/core/fonts/*` mit:
 
 ```ts
 // Alle vier Stufen (400, 500, 700, 500 kursiv) als @font-face:

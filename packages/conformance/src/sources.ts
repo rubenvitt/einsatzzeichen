@@ -41,16 +41,17 @@ const PHJARDAS_TZ_TECHNICAL_REVIEW: Review = {
 };
 
 /**
- * Eigene Review-Angabe für `arimo-ofl`: der Eintrag entstand am 2026-08-09, drei Tage nach den
- * übrigen Quellen, als Registrierung der Textschrift aus `fonts.ts` — deshalb ein eigenes
- * Prüfdatum statt der gemeinsamen `SOURCE_TECHNICAL_REVIEW`-Konstante.
+ * Eigene Review-Angabe für `ibm-plex-sans-ofl`: der Eintrag entstand am 2026-10-13 mit dem
+ * Schriftwechsel auf „Einsatzzeichen Sans" (LFH-790) und löste `arimo-ofl` ab — deshalb ein
+ * eigenes Prüfdatum statt der gemeinsamen `SOURCE_TECHNICAL_REVIEW`-Konstante.
  */
-const ARIMO_OFL_TECHNICAL_REVIEW: Review = {
+const IBM_PLEX_SANS_OFL_TECHNICAL_REVIEW: Review = {
   status: 'approved',
-  reviewer: 'rv',
-  date: '2026-08-09',
+  reviewer: 'claude-code',
+  date: '2026-10-13',
   note:
-    'Bezugs-URL, SHA-256-Prüfsumme der Schriftdatei und OFL-Lizenztext am 2026-08-09 technisch ' +
+    'Bezugs-URLs, SHA-256-Prüfsummen beider Originale und OFL-Lizenztext am 2026-10-13 gegen ' +
+    'die Werte aus docs/decisions/2026-09-29-lfh-790-ersatzschrift-option-c.md §10.2 technisch ' +
     'geprüft; keine fachliche oder normative Freigabe.',
 };
 
@@ -60,7 +61,7 @@ function sourceReviewFor(id: SourceId, technical: Review): ReviewSet {
 
 /**
  * Elf Quellen der Referenzhierarchie aus `Vision.md`, dazu `phjardas-tz` als Vergleichsbestand
- * (Slice-3-Spec, Abschnitt 4) und `arimo-ofl` als Schriftquelle des Textprimitivs
+ * (Slice-3-Spec, Abschnitt 4) und `ibm-plex-sans-ofl` als Schriftquelle des Textprimitivs
  * (siehe `packages/conformance/src/fonts.ts`).
  *
  * Typannotation **und** `satisfies` zusammen: die Annotation weitet jeden Eintrag auf
@@ -303,29 +304,30 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceRecord> = {
     },
     review: sourceReviewFor('din-14095', SOURCE_TECHNICAL_REVIEW),
   },
-  'arimo-ofl': {
-    id: 'arimo-ofl',
+  'ibm-plex-sans-ofl': {
+    id: 'ibm-plex-sans-ofl',
     kind: 'typeface',
-    title: 'Arimo (Variable Font)',
-    publisher: 'Google Fonts / The Arimo Project Authors',
-    edition: '1.341',
-    url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/arimo/Arimo%5Bwght%5D.ttf',
+    title: 'IBM Plex Sans (Variable Font, aufrecht und kursiv)',
+    publisher: 'Google Fonts / IBM Corp.',
+    edition: '3.201',
+    url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/ibmplexsans/IBMPlexSans%5Bwdth,wght%5D.ttf',
     scope:
-      'Einzige Textschrift des Projekts für das Textprimitiv aus Anhang J. Metrisch ' +
-      'Arial-kompatibel; im Repository als OFL-Modified-Version gesubsettet (Unicode-Decke für ' +
-      'freie Bezeichnungen, wght-Achse erhalten), dazu statische Instanzen wght 500 und 700 ' +
-      'aus dem Subset und eine kursive Instanz wght 500 aus Arimo-Italic[wght].ttf desselben ' +
-      'Verzeichnisses (dieselbe Lizenz), siehe packages/conformance/assets/README.md. Für ' +
-      'Browser liefert core dieselben vier Stufen als WOFF2 aus (packages/core/fonts, LFH-832).',
+      'Quelle der einzigen Textschrift des Projekts, „Einsatzzeichen Sans" (LFH-790). Im ' +
+      'Repository als OFL-Modified-Version abgeleitet: Teilmenge (Unicode-Decke für freie ' +
+      'Bezeichnungen), statische Instanzen bei wdth 86 in wght 400, 500 und 700 sowie kursiv ' +
+      '500 aus IBMPlexSans-Italic[wdth,wght].ttf desselben Verzeichnisses, umbenannt, weil ' +
+      '„Plex" ein reservierter Name ist; siehe packages/conformance/assets/README.md. Für ' +
+      'Browser liefert core dieselben vier Stufen als WOFF2 aus (packages/core/fonts).',
     acquisition: 'local',
     geometryUse: ['none'],
     licence: {
       basis:
-        'SIL Open Font License 1.1, vollständiger Text in packages/conformance/assets/Arimo-OFL.txt; ' +
-        'erlaubt Einbettung, Verbreitung und Modifikation der Schrift.',
+        'SIL Open Font License 1.1 mit dem reservierten Namen „Plex", vollständiger Text in ' +
+        'packages/conformance/assets/EinsatzzeichenSans-OFL.txt; erlaubt Einbettung, Verbreitung ' +
+        'und Modifikation der Schrift, eine veränderte Fassung unter anderem Namen.',
       status: 'clarified',
     },
-    review: sourceReviewFor('arimo-ofl', ARIMO_OFL_TECHNICAL_REVIEW),
+    review: sourceReviewFor('ibm-plex-sans-ofl', IBM_PLEX_SANS_OFL_TECHNICAL_REVIEW),
   },
 } satisfies Record<SourceId, SourceRecord>;
 

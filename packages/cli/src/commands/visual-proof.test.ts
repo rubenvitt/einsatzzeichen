@@ -22,7 +22,7 @@ import {
   PRINT_MONOCHROME_THEME,
 } from '@einsatzzeichen/core';
 import { mmToUnits } from '@einsatzzeichen/schema';
-import { renderCanvas, renderSvg } from '@einsatzzeichen/core';
+import { TEXT_FONT_FAMILY_ATTR, renderCanvas, renderSvg } from '@einsatzzeichen/core';
 import {
   ANHANG_G_PROOF_HEIGHT,
   ANHANG_G_PROOF_WIDTH,
@@ -236,7 +236,7 @@ describe('Anhang-G-Visual-Proof', () => {
   it('rastert Katalogtext vor der Einbettung sichtbar', () => {
     const image = rasterizeVisualProofSvg(
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 90">` +
-        `<text x="45" y="50" text-anchor="middle" font-family="Arimo" ` +
+        `<text x="45" y="50" text-anchor="middle" font-family="${TEXT_FONT_FAMILY_ATTR}" ` +
         `font-size="12" fill="#000000">DLRG</text></svg>`,
     );
     const pixels = image.pixels;

@@ -4,14 +4,20 @@ import { readFileSync } from 'node:fs';
  * Minimaler TrueType-Tabellenleser für die Prüfgates in fonts.test.ts — bewusst ohne neue
  * Abhängigkeit (kein opentype.js/fontkit): Gelesen werden nur die wenigen Feldoffsets, aus denen
  * core seine Konstanten ableitet (`head.unitsPerEm`, `hhea.ascender/descender`,
- * `OS/2.sCapHeight`) sowie die Achsen der `fvar`-Tabelle. Alle Werte sind Big-Endian, die
- * Offsets stammen aus der OpenType-Spezifikation (Tabellenverzeichnis, head, hhea, OS/2, fvar).
+ * `OS/2.sCapHeight`), Stufe und Breite aus `OS/2` sowie die Achsen der `fvar`-Tabelle, falls die
+ * Datei eine hat. Alle Werte sind Big-Endian, die Offsets stammen aus der OpenType-Spezifikation
+ * (Tabellenverzeichnis, head, hhea, OS/2, fvar).
  */
 export interface FontHeadMetrics {
   unitsPerEm: number;
   ascender: number;
   descender: number;
   capHeight: number;
+  /** `OS/2.usWeightClass`. */
+  weightClass: number;
+  /** `OS/2.usWidthClass` (3 = Condensed, 5 = Normal). */
+  widthClass: number;
+  /** Achsen einer variablen Schrift; leer für eine statische Instanz. */
   axes: Array<{ tag: string; min: number; default: number; max: number }>;
 }
 
@@ -52,14 +58,14 @@ export function readFontHeadMetrics(fontPath: string): FontHeadMetrics {
   const head = requireTable(tables, 'head');
   const hhea = requireTable(tables, 'hhea');
   const os2 = requireTable(tables, 'OS/2');
-  const fvar = requireTable(tables, 'fvar');
+  const fvar = tables.get('fvar');
 
   // fvar-Kopf: axesArrayOffset @4, axisCount @8, axisSize @10; je Achse: tag @0, min @4,
   // default @8, max @12 (Fixed).
-  const axesOffset = fvar.offset + view.getUint16(fvar.offset + 4);
-  const axisCount = view.getUint16(fvar.offset + 8);
-  const axisSize = view.getUint16(fvar.offset + 10);
   const axes: FontHeadMetrics['axes'] = [];
+  const axesOffset = fvar === undefined ? 0 : fvar.offset + view.getUint16(fvar.offset + 4);
+  const axisCount = fvar === undefined ? 0 : view.getUint16(fvar.offset + 8);
+  const axisSize = fvar === undefined ? 0 : view.getUint16(fvar.offset + 10);
   for (let index = 0; index < axisCount; index++) {
     const axis = axesOffset + index * axisSize;
     axes.push({
@@ -80,6 +86,8 @@ export function readFontHeadMetrics(fontPath: string): FontHeadMetrics {
     ascender: view.getInt16(hhea.offset + 4),
     descender: view.getInt16(hhea.offset + 6),
     capHeight: view.getInt16(os2.offset + 88),
+    weightClass: view.getUint16(os2.offset + 4),
+    widthClass: view.getUint16(os2.offset + 6),
     axes,
   };
 }

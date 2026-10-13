@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ALPHABETIC_ASCENT_FRACTION,
   ALPHABETIC_DESCENT_FRACTION,
-  ARIMO_CAP_HEIGHT_FRACTION,
+  TEXT_CAP_HEIGHT_FRACTION,
   DIACRITIC_HEADROOM_FRACTION,
   MINIMUM_TEXT_RENDER_PX,
   effectiveTextPx,
@@ -36,7 +36,7 @@ describe('Diakritika-Zuschlag für boxMm (Task 9)', () => {
 
   it('lehnt ungemessene baselines ab, statt eine Zahl zu raten', () => {
     // `alphabetic` ist seit Anhang E gemessen (siehe unten) und fehlt hier deshalb; `middle`
-    // bleibt ungemessen — Arimos Central-Metrik liegt weder auf der Grundlinie noch auf der
+    // bleibt ungemessen — die Central-Metrik der Schrift liegt weder auf der Grundlinie noch auf der
     // Hanging-Linie und bräuchte eine eigene Messreihe.
     expect(() => verticalTextBoxMm(27, 4, 'middle')).toThrow();
   });
@@ -56,15 +56,12 @@ describe('Grundlinienmetrik für boxMm (Anhang E)', () => {
     expect(box.topMm + box.heightMm).toBeGreaterThan(18);
   });
 
-  it('hält beide Anteile an der Zeilenmetrik von Arimo', () => {
-    // hhea-Ascender 1854/2048 = 0,9053. Der gemessene Anteil bleibt darunter: die Box ist enger
-    // als die Zeilenmetrik der Schrift, nicht deren Übernahme.
-    expect(ALPHABETIC_ASCENT_FRACTION).toBeLessThan(1854 / 2048);
-    // hhea-Descender 434/2048 = 0,21191. Der gemessene Anteil (0,212) trifft ihn auf drei
-    // Nachkommastellen — ein Befund der Messung, keine Herleitung aus der Tabelle. Bricht diese
-    // Übereinstimmung bei einem Schriftwechsel, ist die Messung neu zu führen.
-    expect(ALPHABETIC_DESCENT_FRACTION).toBeCloseTo(434 / 2048, 3);
+  it('hält beide Anteile innerhalb der Zeilenmetrik von Einsatzzeichen Sans', () => {
+    // hhea-Ascender 1025/1000, hhea-Descender 275/1000. Die gemessenen Anteile bleiben darunter:
+    // die Box ist enger als die Zeilenmetrik der Schrift, nicht deren Übernahme.
+    expect(ALPHABETIC_ASCENT_FRACTION).toBeLessThan(1025 / 1000);
+    expect(ALPHABETIC_DESCENT_FRACTION).toBeLessThan(275 / 1000);
     // Beide müssen die Versalhöhe überschreiten: über dem großen O steht der Umlautpunkt.
-    expect(ALPHABETIC_ASCENT_FRACTION).toBeGreaterThan(ARIMO_CAP_HEIGHT_FRACTION);
+    expect(ALPHABETIC_ASCENT_FRACTION).toBeGreaterThan(TEXT_CAP_HEIGHT_FRACTION);
   });
 });

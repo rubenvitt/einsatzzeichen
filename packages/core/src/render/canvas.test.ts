@@ -9,6 +9,7 @@ import {
 } from '@einsatzzeichen/schema';
 import { renderCanvas } from './canvas.js';
 import { formatUnits, renderSvg } from './svg.js';
+import { TEXT_FONT_FAMILY_ATTR } from './text-policy.js';
 import type { RenderTheme } from './theme.js';
 
 type Call = [string, ...unknown[]];
@@ -842,11 +843,11 @@ describe('renderCanvas — Text', () => {
     expect(renderSvg(textDrawing)).toContain('text-anchor="middle"');
   });
 
-  it('setzt kein font-weight — Arimo[wght].ttf ist eine variable Schrift', () => {
+  it('setzt ohne fontWeight kein Gewicht in den Canvas-Font (400 ist der Vorgabewert)', () => {
     const { ctx, calls } = recordingContext();
     renderCanvas(textDrawing, ctx);
     const font = calls.find(([name]) => name === 'set:font');
-    expect(font?.[1]).toBe(`${mmToUnits(10)}px Arimo`);
+    expect(font?.[1]).toBe(`${mmToUnits(10)}px ${TEXT_FONT_FAMILY_ATTR}`);
   });
 
   it('setzt fontWeight 500 und 700 in den Canvas-Font und lässt 400 unverändert', () => {
@@ -857,9 +858,9 @@ describe('renderCanvas — Text', () => {
       renderCanvas({ ...textDrawing, children: [{ ...text, fontWeight }] }, ctx);
       return calls.find(([name]) => name === 'set:font')?.[1];
     };
-    expect(fontFor(700)).toBe(`700 ${mmToUnits(10)}px Arimo`);
-    expect(fontFor(500)).toBe(`500 ${mmToUnits(10)}px Arimo`);
-    expect(fontFor(400)).toBe(`${mmToUnits(10)}px Arimo`);
+    expect(fontFor(700)).toBe(`700 ${mmToUnits(10)}px ${TEXT_FONT_FAMILY_ATTR}`);
+    expect(fontFor(500)).toBe(`500 ${mmToUnits(10)}px ${TEXT_FONT_FAMILY_ATTR}`);
+    expect(fontFor(400)).toBe(`${mmToUnits(10)}px ${TEXT_FONT_FAMILY_ATTR}`);
   });
 
   it('nimmt Kursiv in die Schriftangabe auf, parallel zu font-style in SVG (LFH-585)', () => {
@@ -872,7 +873,7 @@ describe('renderCanvas — Text', () => {
     const { ctx, calls } = recordingContext();
     renderCanvas(italic, ctx);
     expect(calls.find(([name]) => name === 'set:font')?.[1]).toBe(
-      `italic 500 ${mmToUnits(10)}px Arimo`,
+      `italic 500 ${mmToUnits(10)}px ${TEXT_FONT_FAMILY_ATTR}`,
     );
     // Parität: dieselbe IR schreibt in SVG Gewicht und Stil, in Canvas beides in `ctx.font`.
     expect(renderSvg(italic)).toContain('font-weight="500" font-style="italic"');

@@ -78,7 +78,11 @@ describe('Quellenregister', () => {
   it('trägt an jeder Quelle beide Reviewrollen mit zurechenbarem technischem Review', () => {
     for (const [id, record] of Object.entries(SOURCE_REGISTRY)) {
       expect(record.review.technical.status).toBe('approved');
-      expect(record.review.technical.reviewer).toBe(id === 'bbk-babz-2025' ? 'codex' : 'rv');
+      // Zwei Einträge prüfte ein Agent technisch: bbk-babz-2025 (codex) und ibm-plex-sans-ofl
+      // (claude-code, Schriftwechsel ESZ-114). Die übrigen tragen das Review des Projektinhabers.
+      const reviewer =
+        id === 'bbk-babz-2025' ? 'codex' : id === 'ibm-plex-sans-ofl' ? 'claude-code' : 'rv';
+      expect(record.review.technical.reviewer).toBe(reviewer);
       // Strukturaussage bleibt: jede der dreizehn Quellen trägt beide Reviewrollen. Beim
       // Fachreview wird nur noch die Invariante geprüft — vorhanden, und falls entschieden
       // zurechenbar. Der frühere `toBe('pending')` hätte bei der ersten Quellenfreigabe durch das
@@ -90,12 +94,12 @@ describe('Quellenregister', () => {
   it('datiert das technische Review jeder Quelle auf den Tag ihrer eigenen Prüfung', () => {
     // phjardas-tz entstand einen Tag nach den übrigen elf Einträgen und trägt deshalb ein eigenes,
     // späteres Prüfdatum (siehe PHJARDAS_TZ_REVIEW) statt der gemeinsamen SOURCE_REVIEW-Konstante.
-    // arimo-ofl entstand drei Tage später als Registrierung der Textschrift (siehe
-    // ARIMO_OFL_TECHNICAL_REVIEW) und trägt aus demselben Grund ein eigenes Prüfdatum.
+    // ibm-plex-sans-ofl entstand mit dem Schriftwechsel (LFH-790, siehe
+    // IBM_PLEX_SANS_OFL_TECHNICAL_REVIEW) und trägt aus demselben Grund ein eigenes Prüfdatum.
     for (const [id, record] of Object.entries(SOURCE_REGISTRY)) {
       const expectedDate =
-        id === 'arimo-ofl'
-          ? '2026-08-09'
+        id === 'ibm-plex-sans-ofl'
+          ? '2026-10-13'
           : id === 'phjardas-tz' || id === 'bbk-babz-2025'
             ? '2026-08-06'
             : '2026-08-05';

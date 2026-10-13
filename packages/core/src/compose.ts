@@ -85,7 +85,7 @@ import {
   type DerivedLabelBoxes,
 } from './derive/label-zones.js';
 import {
-  ARIMO_CAP_HEIGHT_FRACTION,
+  TEXT_CAP_HEIGHT_FRACTION,
   CATALOG_TEXT_FONT_WEIGHT,
   MINIMUM_TEXT_RENDER_PX,
   verticalTextBoxMm,
@@ -304,7 +304,7 @@ const BOTTOM_LABEL_CAP_HEIGHT_MM = 2.92;
 /**
  * Aus der gemessenen Versalhöhe abgeleiteter Schriftgrad der unteren Zonen — 4,24 mm. Der Grad
  * des mittigen Laufs steht in `centerLabelSizeMm`, weil er je Zeichen gemessen sein kann. Der Umweg über
- * `ARIMO_CAP_HEIGHT_FRACTION` ist der Punkt: an der Referenz ist die Versalhöhe ablesbar, der
+ * `TEXT_CAP_HEIGHT_FRACTION` ist der Punkt: an der Referenz ist die Versalhöhe ablesbar, der
  * Schriftgrad nicht (die Kürzel liegen dort in Kurven umgewandelt vor). Ein direkt
  * hingeschriebener Schriftgrad wäre eine geratene Zahl, die zufällig ähnlich aussieht.
  *
@@ -313,19 +313,19 @@ const BOTTOM_LABEL_CAP_HEIGHT_MM = 2.92;
  * `ALPHABETIC_DESCENT_FRACTION` = 0,212. Waagerecht ist nach der Weitung auf 28 mm Platz, senkrecht
  * praktisch keiner.
  */
-const BOTTOM_LABEL_SIZE_MM = BOTTOM_LABEL_CAP_HEIGHT_MM / ARIMO_CAP_HEIGHT_FRACTION;
+const BOTTOM_LABEL_SIZE_MM = BOTTOM_LABEL_CAP_HEIGHT_MM / TEXT_CAP_HEIGHT_FRACTION;
 
 /**
  * Schriftgrad des mittigen Laufs aus seiner **gemessenen** Versalhöhe. Ohne Angabe gilt der
  * Normwert `CENTER_LABEL_CAP_HEIGHT_MM`; damit bleibt jede Zeichnung, die keine eigene Höhe
  * führt, byteidentisch zu vorher.
  *
- * Der Umweg über `ARIMO_CAP_HEIGHT_FRACTION` ist derselbe wie oben und aus demselben Grund: an
+ * Der Umweg über `TEXT_CAP_HEIGHT_FRACTION` ist derselbe wie oben und aus demselben Grund: an
  * der Referenz ist die Versalhöhe ablesbar, der Schriftgrad nicht — die Kürzel liegen dort in
  * Kurven umgewandelt vor.
  */
 function centerLabelSizeMm(capHeightMm: number | undefined): number {
-  return (capHeightMm ?? CENTER_LABEL_CAP_HEIGHT_MM) / ARIMO_CAP_HEIGHT_FRACTION;
+  return (capHeightMm ?? CENTER_LABEL_CAP_HEIGHT_MM) / TEXT_CAP_HEIGHT_FRACTION;
 }
 
 /**
@@ -544,7 +544,7 @@ function labelPrimitives(
         labels.aboveLeft,
         metrics === undefined
           ? BOTTOM_LABEL_SIZE_MM
-          : metrics.capHeightMm / ARIMO_CAP_HEIGHT_FRACTION,
+          : metrics.capHeightMm / TEXT_CAP_HEIGHT_FRACTION,
         bodyBoundsMm.minY +
           (metrics?.baselineFromBodyTopMm ?? aboveLeftBaselineFromBodyTopMm),
         'start',
@@ -589,7 +589,7 @@ function labelPrimitives(
       : baselineRawMm;
     const sizeMm = topLeftMetrics === undefined
       ? BOTTOM_LABEL_SIZE_MM
-      : topLeftMetrics.capHeightMm / ARIMO_CAP_HEIGHT_FRACTION;
+      : topLeftMetrics.capHeightMm / TEXT_CAP_HEIGHT_FRACTION;
     primitives.push(
       labelPrimitive(
         labels.topLeft,
@@ -687,7 +687,7 @@ function labelPrimitives(
     const corner = circleCorners?.bottomRight;
     const sizeMm = metrics === undefined
       ? BOTTOM_LABEL_SIZE_MM
-      : metrics.capHeightMm / ARIMO_CAP_HEIGHT_FRACTION;
+      : metrics.capHeightMm / TEXT_CAP_HEIGHT_FRACTION;
     const baselineYMm = metrics === undefined
       ? corner?.baselineYMm ?? bottomBaselineMm
       : bodyBoundsMm.minY + metrics.baselineFromBodyTopMm;

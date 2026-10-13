@@ -11,7 +11,7 @@ import {
 
 type TextPrimitive = Extract<Primitive, { type: 'text' }>;
 
-/** Jede Glyphe 0,5 em, „W" 1,0 em, „€" unbekannt — rechenbar, nicht Arimo. */
+/** Jede Glyphe 0,5 em, „W" 1,0 em, „€" unbekannt — rechenbar, nicht die Katalogschrift. */
 const metrics = uniformTextMetrics(0.5, { W: 1 }, ['€']);
 
 function text(overrides: Partial<TextPrimitive>): TextPrimitive {

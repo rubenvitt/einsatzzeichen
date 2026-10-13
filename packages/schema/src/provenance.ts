@@ -20,7 +20,7 @@ export type SourceId =
   | 'din-13050'
   | 'din-14034-6'
   | 'din-14095'
-  | 'arimo-ofl';
+  | 'ibm-plex-sans-ofl';
 
 /**
  * `verbatim`   — Geometrie entspricht der Referenz und ist per Fingerprint belegt

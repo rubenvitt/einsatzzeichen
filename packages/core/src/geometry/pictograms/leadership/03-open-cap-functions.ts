@@ -6,7 +6,7 @@ import {
   type Style,
 } from '@einsatzzeichen/schema';
 import { defineLeadership, type PictogramContrastPair } from '../catalog-definition.js';
-import { CATALOG_TEXT_FONT_WEIGHT } from '../../../render/text-policy.js';
+import { CATALOG_TEXT_FONT_WEIGHT, textSizeForCapHeightMm } from '../../../render/text-policy.js';
 
 const BLACK_STROKE = Object.freeze({
   fill: 'none',
@@ -60,7 +60,7 @@ function text(
   content: string,
   x: number,
   y: number,
-  sizeMm: number,
+  capHeightMm: number,
   anchor: 'middle' | 'end',
   boxMm: { xMm: number; yMm: number; widthMm: number; heightMm: number },
   minRenderPx: number,
@@ -72,7 +72,7 @@ function text(
     content,
     x,
     y,
-    sizeMm,
+    sizeMm: textSizeForCapHeightMm(capHeightMm),
     anchor,
     baseline: 'alphabetic',
     boxMm,
@@ -124,11 +124,11 @@ export const OPEN_CAP_FUNCTION_PICTOGRAMS = [
     primitives: [
       ...openCapBody('blau'),
       text(
-        'THW', 16, 18.5, 7.08, 'middle',
+        'THW', 16, 18.5, 4.87, 'middle',
         { xMm: 8, yMm: 13.2, widthMm: 16.1, heightMm: 5.8 }, 37, 'weiss',
       ),
       text(
-        'stv OB', 31.5, 29, 4.243, 'end',
+        'stv OB', 31.5, 29, 2.919, 'end',
         { xMm: 18.55, yMm: 25.6, widthMm: 12.95, heightMm: 3.65 }, 61, 'schwarz',
       ),
     ],
@@ -144,11 +144,11 @@ export const OPEN_CAP_FUNCTION_PICTOGRAMS = [
     primitives: [
       ...openCapBody('weiss'),
       text(
-        'RKB', 16, 18.5, 7.08, 'middle',
+        'RKB', 16, 18.5, 4.87, 'middle',
         { xMm: 9.2, yMm: 13.2, widthMm: 13.8, heightMm: 5.8 }, 37, 'schwarz',
       ),
       text(
-        'DRK', 31, 29, 4.243, 'end',
+        'DRK', 31, 29, 2.919, 'end',
         { xMm: 22.3, yMm: 25.6, widthMm: 8.7, heightMm: 3.65 }, 61, 'schwarz',
       ),
     ],

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Drawing, PictogramDefinition, Point, Primitive } from '@einsatzzeichen/schema';
 import { boundsOfMm } from '../bounds.js';
 import { ALL_PICTOGRAMS } from '../geometry/pictograms/index.js';
-import { ARIMO_TEXT_METRICS } from '../geometry/text-metrics.js';
+import { TEXT_FONT_METRICS } from '../geometry/text-metrics.js';
 import { checkBox, checkCommands } from '../pictogram-gate.js';
 import { checkTextMetrics } from '../text-metrics.js';
 import {
@@ -103,7 +103,7 @@ describe('Bedingungszeichen', () => {
       const sign = conditionSign({ text, center: [500, 500] });
       const [label] = texts(sign.label);
       expect(label?.content).toBe(text);
-      expect(checkTextMetrics(asDrawing(sign.label), ARIMO_TEXT_METRICS), text).toEqual([]);
+      expect(checkTextMetrics(asDrawing(sign.label), TEXT_FONT_METRICS), text).toEqual([]);
       const h = SKETCH_CONDITION_SIGN_HEIGHT_MM / 2;
       expect(label!.boxMm.xMm).toBeGreaterThanOrEqual(500 - sign.width / 2 + h - EPS);
       expect(label!.boxMm.xMm + label!.boxMm.widthMm).toBeLessThanOrEqual(500 + sign.width / 2 - h + EPS);
@@ -204,7 +204,7 @@ describe('Verbindungslinie', () => {
     expect(inkLength(link.line)).toBeGreaterThan(50);
     const [word] = texts(link.word);
     expect(word?.content).toBe('geplant');
-    expect(checkTextMetrics(asDrawing(link.word), ARIMO_TEXT_METRICS)).toEqual([]);
+    expect(checkTextMetrics(asDrawing(link.word), TEXT_FONT_METRICS)).toEqual([]);
     // unter der waagerechten Linie, mittig, 1,33 mm Luft zur Strichkante
     expect(word!.boxMm.yMm).toBeCloseTo(SKETCH_NOTE_GAP_MM + SKETCH_STROKE_WIDTH_MM / 2, 9);
     expect(word!.anchor).toBe('middle');
@@ -329,7 +329,7 @@ describe('Bereich', () => {
     expect(label!.anchor).toBe('start');
     expect(label!.boxMm.xMm).toBeGreaterThan(10);
     expect(label!.boxMm.yMm).toBeGreaterThan(20);
-    expect(checkTextMetrics(asDrawing(area.label), ARIMO_TEXT_METRICS)).toEqual([]);
+    expect(checkTextMetrics(asDrawing(area.label), TEXT_FONT_METRICS)).toEqual([]);
   });
 });
 
@@ -352,7 +352,7 @@ describe('Zeichen außerhalb von J.1', () => {
         const definition = p as unknown as PictogramDefinition;
         expect(checkCommands(definition), `${id} ${variant}`).toEqual([]);
         expect(checkBox(definition), `${id} ${variant}`).toEqual([]);
-        expect(checkTextMetrics({ viewBox: p.viewBox, children: p.primitives }, ARIMO_TEXT_METRICS)).toEqual([]);
+        expect(checkTextMetrics({ viewBox: p.viewBox, children: p.primitives }, TEXT_FONT_METRICS)).toEqual([]);
         for (const q of p.primitives) expect(q.role).toBe('pictogram');
         for (const q of strokes(p.primitives)) expect(q.style?.strokeWidth).toBe(SKETCH_STROKE_WIDTH_MM);
       }
