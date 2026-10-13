@@ -6,7 +6,11 @@
  *     Trusted Publishing kann keine neuen Pakete anlegen (`scripts/release/check-registry.mjs`).
  *  1. commit-analyzer bestimmt aus den Conventional Commits die nächste Version
  *     (feat → minor, fix/perf/refactor → patch, BREAKING CHANGE/`!` → major).
- *  2. semantic-release-claude-changelog erzeugt deutschsprachige Release Notes.
+ *  2. Claude schreibt deutschsprachige Release Notes (`scripts/release/ki-notizen.mjs` um
+ *     semantic-release-claude-changelog). Angemeldet wird per Workload Identity Federation
+ *     (GitHub-OIDC, Schritt „Claude-Anmeldung“ in `release.yml`), nicht mit festem Schlüssel.
+ *     Ohne Anmeldung oder bei unbrauchbarem Text gelten die konventionellen Notizen, mit
+ *     Warnung — ein Release scheitert nie an Prosa.
  *  3. changelog schreibt CHANGELOG.md fort.
  *  4. exec setzt die Version in alle package.json und publiziert die Pakete per
  *     `scripts/release/publish.mjs` in die npm-Org @einsatzzeichen. Das Skript vergleicht mit
@@ -32,10 +36,15 @@ export default {
         ],
       },
     ],
+    /*
+     * Die Hülle reicht `preset` an den konventionellen Generator (Rückfall und Quelle der
+     * Versionskopfzeile mit Vergleichslink und Datum), `promptTemplate` an Claude. Warum eine
+     * Hülle, steht in ihrem Kopf. Die Versionsüberschrift schreibt deshalb nicht das Modell.
+     */
     [
-      'semantic-release-claude-changelog',
+      './scripts/release/ki-notizen.mjs',
       {
-        escaping: 'none',
+        preset: 'conventionalcommits',
         promptTemplate: `Erstelle Release Notes für Version {{version}} des Projekts Einsatzzeichen – ein semantisches Symbolsystem für taktische Zeichen der Gefahrenabwehr (npm-Pakete unter @einsatzzeichen, u.a. core, conformance, react, web-component, maplibre, qgis, cli).
 
 Hier sind die Commits dieses Releases:
@@ -52,7 +61,7 @@ Zusätzlicher Kontext:
 \`\`\`
 {{/additionalContext}}
 
-WICHTIG: Deine Antwort darf NUR die Release Notes im Markdown-Format enthalten. Kein zusätzlicher Text, keine Erklärungen.
+WICHTIG: Deine Antwort darf NUR die Release Notes im Markdown-Format enthalten. Kein zusätzlicher Text, keine Erklärungen, keine Überschrift mit der Versionsnummer.
 
 Die Release Notes sollen:
 
@@ -62,10 +71,11 @@ Die Release Notes sollen:
 4. Wichtige Änderungen hervorheben, die Nutzerinnen und Nutzer der Pakete betreffen
 5. Rein technische Commits weglassen (CI-Fixes, Linter-Config, Refactoring ohne User-Impact, Release-Pipeline-Änderungen)
 6. Bugfixes den jeweiligen Bereichen zuordnen, nicht separat auflisten
-7. Keine Commit-Hashes, keine Story-Nummern, keine internen Tracking-IDs
-8. Markdown-Formatierung mit ## für Abschnitts-Überschriften
-9. Kompakt und scanbar sein – Qualität vor Quantität
-10. Breaking Changes prominent am Anfang hervorheben
+7. Keine Commit-Hashes, keine Aufgaben-Kennungen (LFH-…, ESZ-…) oder Aufgaben-Links (zunder.rubeen.dev/…), keine Pull-Request-Nummern
+8. Nichts behaupten, was nicht aus den Commits hervorgeht
+9. Markdown-Formatierung mit ## für Abschnitts-Überschriften
+10. Kompakt und scanbar sein – Qualität vor Quantität
+11. Breaking Changes prominent am Anfang hervorheben
 
 Starte direkt mit den Release Notes, gruppiert wie oben beschrieben, mit ## ...`,
       },
