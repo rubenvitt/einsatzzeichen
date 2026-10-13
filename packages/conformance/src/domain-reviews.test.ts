@@ -270,11 +270,12 @@ describe('Fachreview-Ledger', () => {
     // und I.5.4 bis I.5.8 je fünf, I-b sieben, I.3 elf, I-j drei und I-k drei. Der integrierte
     // Stand schließt nach LFH-484 bei 544. LFH-786 ergänzt 37 offene Plätze für C.1.7, C.1.8 und
     // die 35 C.2-Darstellungen (ohne C.2.24#alternative, die nicht gebaut ist): 581. LFH-787
-    // ergänzt C.1.4: 582.
-    expect(manifestReviews).toHaveLength(582);
+    // ergänzt C.1.4: 582. ESZ-117 ergänzt acht offene Plätze für die Behälterzeichen aus
+    // Kapitel 5.1: 590.
+    expect(manifestReviews).toHaveLength(590);
     expect(sourceReviews).toHaveLength(13);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(596);
+    expect(reviews).toHaveLength(604);
 
     // Die neue Invariante: **keine Freigabe ohne benannten, registrierten Prüfer, gültiges
     // ISO-Datum und Befund.** Offene Zeilen sind erlaubt und liefern nichts; solange alles offen

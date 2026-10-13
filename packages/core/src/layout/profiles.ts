@@ -657,6 +657,17 @@ const PROFILES: Record<SymbolKind, LayoutProfile> = {
   // F.3.15/F.3.16 tragen weder Kopf- noch Labelzone. Wie bei den übrigen eigenständigen
   // Rechteckkörpern bleibt `place()` ohne Kopfzone identisch; ein neues Profil wäre unbelegt.
   'reduced-house': rectBodyProfile,
+  // Die acht Behälterformen aus Kapitel 5.1 (ESZ-117). Keine ihrer Dateien trägt einen Lauf,
+  // eine Kopf- oder eine Labelzone; der Normfall des Rechteckkörpers ist für sie übertragen,
+  // nicht gemessen. Wie bei der reduzierten Hauskontur wäre ein eigenes Profil unbelegt.
+  'roll-off-loader': rectBodyProfile,
+  'swap-container-carrier': rectBodyProfile,
+  'roll-off-trailer': rectBodyProfile,
+  'swap-container-trailer': rectBodyProfile,
+  'roll-off-container': rectBodyProfile,
+  'swap-container': rectBodyProfile,
+  'swap-body': rectBodyProfile,
+  'wheeled-container': rectBodyProfile,
 };
 
 function variantProfile(kind: SymbolKind, variant: BodyVariantId | undefined): LayoutProfile | undefined {

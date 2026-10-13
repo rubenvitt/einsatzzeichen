@@ -15,6 +15,12 @@ import { derivedInnerField, type InnerFieldGap } from '../derive/inner-field.js'
 import { segmentDistance, type Scaling } from '../derive/outline.js';
 import { noteDerivation } from '../derive/record.js';
 import { POST_VARIANT_BODIES, POST_VARIANT_EXTRAS } from '../derive/circle.js';
+import {
+  CONTAINER_BODIES,
+  CONTAINER_EXTRAS,
+  CONTAINER_SECTIONS,
+  CONTAINER_TITLES,
+} from './container-bodies.js';
 
 /** Umriss ohne Füllung. Organisationsfarben setzt der Kompositionsmotor. */
 const OUTLINE: Style = {
@@ -567,6 +573,8 @@ const BODIES: Partial<Record<SymbolKind, Primitive>> = {
     points: [[16, 4], [2, 9.85], [2, 26], [30, 26], [30, 9.85]],
     style: OUTLINE,
   },
+  // Die acht Behälterformen aus Kapitel 5.1 (ESZ-117) stehen in `container-bodies.ts`.
+  ...CONTAINER_BODIES,
 };
 
 const VARIANT_EXTRA_PRIMITIVES: Partial<
@@ -866,6 +874,8 @@ const EXTRA_PRIMITIVES: Partial<Record<SymbolKind, readonly Primitive[]>> = {
       style: OUTLINE,
     },
   ],
+  // Öse, Eckbeschläge, Stützbeine, Rollen, Rahmen und Deichsel der Behälterformen (ESZ-117).
+  ...CONTAINER_EXTRAS,
 };
 
 const TITLES: Partial<Record<SymbolKind, string>> = {
@@ -888,6 +898,7 @@ const TITLES: Partial<Record<SymbolKind, string>> = {
   point: 'Konkreter Punkt',
   event: 'Ereignis',
   'spontaneous-helper': 'Spontanhelfer',
+  ...CONTAINER_TITLES,
 };
 
 /**
@@ -913,6 +924,8 @@ const SECTIONS: Partial<Record<SymbolKind, { section: string; asset: string }>> 
   point: { section: '1.12', asset: '1.12_Konkreter Punkt.svg' },
   event: { section: '1.13', asset: '1.13_Ereignis.svg' },
   'spontaneous-helper': { section: '1.14', asset: '1.14_Spontanhelfer.svg' },
+  // Kapitel 5.1: je Behälterform genau ein Abschnitt und eine Belegdatei (ESZ-117).
+  ...CONTAINER_SECTIONS,
 };
 
 /**
