@@ -943,6 +943,20 @@ export const BODY_MARK_BLOCKS: readonly BlockEntry[] = Object.freeze([
     ['C.2.31'],
     `${ANHANG_C_BODY_MARKS_DIR}/fire-fighting.ts`,
   ),
+  bodyMark(
+    'formation-chevron-18mm-over-notched-line',
+    '98–118',
+    'C.1.13: gefüllter Winkel, 18 mm breit, Enden 1,5 mm stark, Spitzen 1 mm über und 2 mm unter der Körpermitte, über einer waagerechten Linie 24 mm mit 45°-Kerbe 2 mm tief. Maße an der Referenz abgelesen.',
+    ['C.1.13'],
+    `${ANHANG_C_BODY_MARKS_DIR}/formation.ts`,
+  ),
+  bodyMark(
+    'formation-chevron-18mm',
+    '133–146',
+    'C.1.14: gefüllter Winkel, 18 mm breit, Enden 1,5 mm stark, Spitzen 1 und 4 mm unter der Körpermitte; eigene Steigung gegenüber C.1.13. Maße an der Referenz abgelesen.',
+    ['C.1.14'],
+    `${ANHANG_C_BODY_MARKS_DIR}/formation.ts`,
+  ),
 ]);
 
 const FUNCTION_ROLES_FILE = 'core/src/geometry/function-roles.ts';

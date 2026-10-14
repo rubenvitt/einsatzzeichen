@@ -316,7 +316,9 @@ describe('pnpm cli reference-diff', () => {
     const workingDirectory = temporaryDirectory('reference-diff-cwd-');
     mkdirSync(join(workingDirectory, 'out'));
 
-    const result = cli(workingDirectory, ['--reference-root', referenceRoot, '--filter', 'C.1.1', '--json']);
+    // Der Filter ist ein Präfix: `C.1.1` träfe seit ESZ-143 auch C.1.13 und C.1.14, deren
+    // Referenzen hier fehlen. `5.1.1.1` trifft genau eine Zeile.
+    const result = cli(workingDirectory, ['--reference-root', referenceRoot, '--filter', '5.1.1.1', '--json']);
 
     expect(result.status, result.stderr).toBe(0);
     const report = JSON.parse(result.stdout);

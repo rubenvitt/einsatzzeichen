@@ -88,8 +88,8 @@ describe('coverage CLI', () => {
     // LFH-484 ergänzt die vier I-f-Darstellungen I.1.13 bis I.1.16: insgesamt 544. LFH-786
     // ergänzt C.1.7, C.1.8 und 35 Darstellungen aus C.2: insgesamt 581. LFH-787 ergänzt C.1.4: 582.
     // ESZ-117 ergänzt die acht Behälterzeichen aus Kapitel 5.1: 590. ESZ-134 ergänzt die
-    // Sonderformen 3.6 bis 3.8: 593.
-    expect(manifestCarriers).toBe(593);
+    // Sonderformen 3.6 bis 3.8: 593. ESZ-143 ergänzt C.1.13 und C.1.14: 595.
+    expect(manifestCarriers).toBe(595);
     expect(sourceCarriers).toBe(13);
     expect(profileCarriers).toBe(1);
     // Offen kann nie mehr sein als Träger da sind — die einzige Schranke, die der Reviewstand
@@ -107,7 +107,7 @@ describe('coverage CLI', () => {
     // die gebauten C.2-Nummern: weder C.1 noch C.2 ist lückenlos. Kapitel 3 steht seit ESZ-134
     // nur mit den Sonderformen 3.6 bis 3.8.
     expect(lines).toContain(
-      'Umfang:      1, 2, 3.6, 3.7, 3.8, 4, 5.1.1, 5.1.2.2, 5.1.2.3, 5.1.3, 5.4, 5.8, C.1.1, C.1.2, C.1.3, C.1.4, C.1.7, C.1.8, C.2.4, C.2.5, C.2.6, C.2.7, C.2.8, C.2.9, C.2.10, C.2.11, C.2.12, C.2.13, C.2.14, C.2.15, C.2.16, C.2.17, C.2.18, C.2.20, C.2.23, C.2.24, C.2.25, C.2.26, C.2.27, C.2.28, C.2.29, C.2.30, C.2.31, D, E, F, G, H, I.1.1, I.1.2, I.1.3, I.1.4, I.1.5, I.1.6, I.1.7, I.1.8, I.1.9, I.1.10, I.1.11, I.1.12, I.1.13, I.1.14, I.1.15, I.1.16, I.1.17, I.1.18, I.1.19, I.1.20, I.2.1, I.2.2, I.2.3, I.2.4, I.2.5, I.2.6, I.2.7, I.3, I.4.1, I.4.2, I.4.3, I.5.1, I.5.2, I.5.3, I.5.4, I.5.5, I.5.6, I.5.7, I.5.8, J.1, J.2, J.3, J.4, K, L, M, N',
+      'Umfang:      1, 2, 3.6, 3.7, 3.8, 4, 5.1.1, 5.1.2.2, 5.1.2.3, 5.1.3, 5.4, 5.8, C.1.1, C.1.2, C.1.3, C.1.4, C.1.7, C.1.8, C.1.13, C.1.14, C.2.4, C.2.5, C.2.6, C.2.7, C.2.8, C.2.9, C.2.10, C.2.11, C.2.12, C.2.13, C.2.14, C.2.15, C.2.16, C.2.17, C.2.18, C.2.20, C.2.23, C.2.24, C.2.25, C.2.26, C.2.27, C.2.28, C.2.29, C.2.30, C.2.31, D, E, F, G, H, I.1.1, I.1.2, I.1.3, I.1.4, I.1.5, I.1.6, I.1.7, I.1.8, I.1.9, I.1.10, I.1.11, I.1.12, I.1.13, I.1.14, I.1.15, I.1.16, I.1.17, I.1.18, I.1.19, I.1.20, I.2.1, I.2.2, I.2.3, I.2.4, I.2.5, I.2.6, I.2.7, I.3, I.4.1, I.4.2, I.4.3, I.5.1, I.5.2, I.5.3, I.5.4, I.5.5, I.5.6, I.5.7, I.5.8, J.1, J.2, J.3, J.4, K, L, M, N',
     );
     // Die Ausnahme ist im Betrieb sichtbar und nicht nur im Gate. Sie steht bewusst **nicht** in
     // der Blockerzeile darunter: ein Blocker ist ein offener Punkt, diese Ausnahme ist ein
@@ -173,7 +173,7 @@ describe('coverage CLI', () => {
     expect(lines).toContain(
       '  Achsen mit Lücke:  technicalHeadMark 0/2 (single-vertical-bar, double-vertical-bar); ' +
         'unitGrouping 2/3 (verband-iii); administrativeLevel 3/6 (gemeinde, bezirk, bundesland); ' +
-        'functionRole 25/26 (leader); vehicleCategory 7/8 (amphibienfahrzeug); bodyMarks 45/46 (circle-solid-cap-4mm)',
+        'functionRole 25/26 (leader); vehicleCategory 7/8 (amphibienfahrzeug); bodyMarks 47/48 (circle-solid-cap-4mm)',
     );
     // LFH-786: sechs neue belegte Signaturen (71 → 77) und eine technische Körpermarke mehr
     // (`track-chevron-top`, 132 → 133); LFH-586: acht statt neun Organisationen (300960 → 270864
@@ -182,13 +182,14 @@ describe('coverage CLI', () => {
     // Kappe der Leitstelle. Seit dem Fachreview vom 5. Oktober 2026 (LFH-1064) 8784 gültig.
     // Zusammen 8784 − 85 = 8699. 26 Funktionsrollen seit ESZ-116 (Führungskraft ohne Kürzel).
     // ESZ-117 (acht Körperarten): 10944 gültig, 93 belegt, 384912 enumeriert, 10851 ohne Beleg;
-    // hergeleitet in `rule-coverage.test.ts`.
+    // hergeleitet in `rule-coverage.test.ts`. ESZ-143: 136 Körpermarken (die Drohnenwinkel aus
+    // C.1.13 und C.1.14), beide belegt (bodyMarks 47/48).
     expect(lines).toContain(
       'Generative Reichweite (Stufe 1): 10944 gültige Kompositionen aus kind × Körpervariante × ' +
         'Organisation × Kopfzone × Fahrwerk (384912 enumeriert), davon 93 in der Referenz belegt — ' +
         '10851 erzeugbar ohne Referenzbeleg, 0 Rezeptsignaturen außerhalb der Stufe ' +
         '(dokumentiert, kein Gate); nicht enumeriert: 88 Fähigkeiten, ' +
-        '134 Körpermarken, 26 Funktionsrollen, freie Bezeichnung',
+        '136 Körpermarken, 26 Funktionsrollen, freie Bezeichnung',
     );
     expect(lines.at(-1)).toBe('Coverage-Gate bestanden.');
     // Expliziter Timeout: `coverage()` rechnet seit LFH-413 `generativeReach()` mit

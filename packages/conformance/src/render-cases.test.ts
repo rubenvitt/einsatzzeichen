@@ -18,18 +18,19 @@ describe('vollständige Renderfallmenge', () => {
 
   it('ist nicht leer und über die Implementierungs-ID eindeutig', () => {
     const ids = RENDER_CASES.map((renderCase) => renderCase.id);
-    // 574: 14 Grundzeichen, 288 Rezeptfälle und 272 Piktogrammvarianten. Die Anhang-I-Slices
+    // 576: 14 Grundzeichen, 290 Rezeptfälle und 272 Piktogrammvarianten. Die Anhang-I-Slices
     // I.2.4 bis I.2.7 ergänzen den bereits vollständigen I.3-Bestand und I.5.1 bis I.5.3; LFH-786
     // ergänzt 37 Rezeptfälle aus Anhang C (525 + 37), LFH-787 C.1.4, ESZ-117 die acht
-    // Behälterzeichen aus Kapitel 5.1 (571), ESZ-134 die drei Sonderformen (574).
-    expect(ids).toHaveLength(574);
+    // Behälterzeichen aus Kapitel 5.1 (571), ESZ-134 die drei Sonderformen (574), ESZ-143 C.1.13
+    // und C.1.14 (576).
+    expect(ids).toHaveLength(576);
     // 3 Belegfälle des Kompositionsmotors (C.1.1, C.1.2, D.3.7) plus die 16 Zeichen aus E-a, die
     // zwölf aus E-b und die neun aus E-c — mit ihnen sind die 37 E.1-Abschnitte vollständig —,
     // Dazu 21 aus E-d, fünf aus E-e und fünf aus E-f. Anhang F ergänzt 66, G 21, H drei,
     // I-c, I-d, I-f und I-g je vier, I-e fünf, I.2 sieben, I.3 elf, I-j drei und I.5 drei,
     // C.1.3 einen, N neun und D 26 Rezeptfälle. LFH-786 ergänzt C.1.7, C.1.8 und 35 aus C.2,
-    // LFH-787 C.1.4, ESZ-117 die acht Behälterzeichen aus Kapitel 5.1.
-    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(288);
+    // LFH-787 C.1.4, ESZ-117 die acht Behälterzeichen aus Kapitel 5.1, ESZ-143 C.1.13 und C.1.14.
+    expect(ids.filter((id) => id.startsWith('recipe.'))).toHaveLength(290);
     const anhangIRecipeIds = ids.filter((id) => id.startsWith('recipe.I.'));
     const expectedAnhangIRecipeIds = [
       ...Array.from({ length: 4 }, (_, index) => `recipe.I.1.${index + 1}`),

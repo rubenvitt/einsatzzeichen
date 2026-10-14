@@ -101,3 +101,24 @@ export interface AnhangCContext {
   readonly rendition?: BodyMarkRenditionId;
   readonly marks: MarkTable;
 }
+
+/** Eine Vollfläche ohne Kontur, wie die Drohnenwinkel der Referenz. */
+export function filledPolygon(points: readonly (readonly [number, number])[]): Primitive {
+  return {
+    type: 'polyline',
+    role: 'pictogram',
+    points,
+    closed: true,
+    style: { fill: 'schwarz', stroke: 'none' },
+  };
+}
+
+/** Ein offener Linienzug mit 0,5 mm Strich; die Ecken bleiben spitz (SVG-Vorgabe `miter`). */
+export function polylineStroke(points: readonly (readonly [number, number])[]): Primitive {
+  return {
+    type: 'polyline',
+    role: 'pictogram',
+    points,
+    style: { fill: 'none', stroke: 'schwarz', strokeWidth: DEFAULT_STROKE_WIDTH_MM },
+  };
+}

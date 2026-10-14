@@ -176,7 +176,8 @@ describe('Bausteinregister: festgenagelter Stand', () => {
       chassis: 8,
       capability: 88,
       // Seit dem 2. Oktober 2026 46: die Kappe der Leitstelle `circle-solid-cap-4mm` (D.2.5).
-      'body-mark': 46,
+      // Seit ESZ-143 48: die Drohnenwinkel aus C.1.13 und C.1.14.
+      'body-mark': 48,
       // Seit ESZ-116 26: die Führungskraft ohne Kürzel.
       'function-role': 26,
       state: 58,

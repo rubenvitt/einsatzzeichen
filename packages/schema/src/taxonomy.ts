@@ -370,6 +370,9 @@ export const TECHNICAL_BODY_MARK_IDS = Object.freeze([
   'track-chevron-top',
   // D.2.5 Leitstelle (2. Oktober 2026): die Kappe als technische Körpermarke.
   'circle-solid-cap-4mm',
+  // ESZ-143: die Drohnenwinkel aus C.1.13 und C.1.14, je an ihrem Original vermessen.
+  'formation-chevron-18mm-over-notched-line',
+  'formation-chevron-18mm',
 ] as const);
 
 export type TechnicalBodyMarkId = (typeof TECHNICAL_BODY_MARK_IDS)[number];

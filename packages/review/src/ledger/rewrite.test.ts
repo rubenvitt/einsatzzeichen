@@ -197,8 +197,8 @@ describe('rewriteLedgerSource', () => {
   // `format.ts` gibt sie so aus, und eine von Hand mit `+` verkettete Notiz ließe den Rundlauf
   // die Datei verändern.
   it('ändert am echten Ledger bei gleichem Wert kein einziges Zeichen', () => {
-    // Der schärfste Test für den Drucker: 607 echte Einträge (558 + 37 aus LFH-786, C.1.4, acht
-    // aus ESZ-117 und drei aus ESZ-134), darunter die beiden mehrzeiligen D.1.9-Zeilen mit Umlauten. Bleibt die Datei byteweise gleich,
+    // Der schärfste Test für den Drucker: 609 echte Einträge (558 + 37 aus LFH-786, C.1.4, acht
+    // aus ESZ-117, drei aus ESZ-134 und zwei aus ESZ-143), darunter die beiden mehrzeiligen D.1.9-Zeilen mit Umlauten. Bleibt die Datei byteweise gleich,
     // erzeugt eine Freigabe später garantiert nur die eine Zeile als Diff — und keine
     // Formatierungswelle.
     const source = readFileSync(LEDGER_FILE, 'utf8');
@@ -207,7 +207,7 @@ describe('rewriteLedgerSource', () => {
       ...Object.entries(SOURCE_DOMAIN_REVIEWS),
       ...Object.entries(PROFILE_DOMAIN_REVIEWS),
     ];
-    expect(eintraege).toHaveLength(607);
+    expect(eintraege).toHaveLength(609);
 
     const abweichend = eintraege
       .filter(
