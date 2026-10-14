@@ -1,3 +1,23 @@
+## [6.1.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.0.0...v6.1.0) (2026-10-14)
+
+### Katalog: Altzeichen aus der DV 102
+
+- **Neues Register `LEGACY_PICTOGRAMS`:** Zeichen aus der DLRG DV 102 (2011), die in der Baseline gestrichen wurden oder dort fehlen, stehen jetzt in einem eigenen Register. Jeder Eintrag verweist auf Abschnitt und Seite der Quelle statt auf eine Referenzdatei. `ALL_PICTOGRAMS` und das Coverage-Manifest bilden weiterhin nur die Baseline ab.
+- **Volle API-Unterstützung:** `pictogram()`, `PICTOGRAM_IDS`, Prüfung, Codec und Vokabular kennen die Altzeichen. `freestandingProvenance` meldet für sie `status: 'legacy'`.
+- **Fernschreiben und Festbildübertragung** (DV 102, Kapitel 8) sind als freistehende Piktogramme verfügbar:
+  - `comms.teleprinter-transmission` sieht aus wie J.1.1 mit doppeltem Balken.
+  - `comms.still-image-transmission` zeigt ein 4×4-Gitter.
+  - Beide gibt es als Übertragung über Funk (Hauptdarstellung) und über Draht (alternative Darstellung).
+- **Neuer Piktogrammraum `site.*`** für Platzzeichen ohne Körper. Als erstes Zeichen kommt `site.affected-persons-assembly-point` dazu: der Sammelplatz für Betroffene (DV 102, 10.3.23). Er ist an der Vektorgrafik der DV 102 vermessen und im Hausstil gezeichnet. Bisher gab es das Motiv nur als Körpermarke im Kreis (F.3.12). Jetzt lässt es sich als `{kind: 'pictogram'}` freistehend beschreiben, serialisieren und zeichnen.
+
+### Bewegungen und Pfeile
+
+- **Neu: `referenceMovementSpec(movement)`** gibt jeden Pfeil aus Kapitel 5.2 als fertige `MovementSpec` zurück, die dem Verlauf aus der Kapiteldatei folgt. Damit lassen sich Pfeilzeichen wie „Sammeln“ (DV 102 7.6, BABZ 5.2.6) ohne eigenen Verlauf freistehend beschreiben, serialisieren und zeichnen.
+
+### Quellen
+
+- Im Quellenregister zeigte der Link zur DV 102 auf eine nicht mehr erreichbare Adresse. Er verweist jetzt auf die Adresse bei RLP.
+
 ## [6.0.0](https://github.com/rubenvitt/einsatzzeichen/compare/v5.5.0...v6.0.0) (2026-10-13)
 
 ### ⚠️ Breaking Changes
