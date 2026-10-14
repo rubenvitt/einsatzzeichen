@@ -1,3 +1,9 @@
+## [6.2.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.1.0...v6.2.0) (2026-10-14)
+
+### Website
+
+- **Neues Profil „Dunkle Fläche“ in der Zeichenvorschau:** Die Vorschau zeigt jedes Zeichen jetzt auch im Render-Theme `dark`. Das Profil erscheint auf seinem eigenen dunklen Hintergrund (`theme.surface`, #141414). Auf Weiß wären die weißen Kopfmarken und die Hinterlegung nicht zu sehen. Jede Zeichenseite wird dadurch um etwa 4 KB größer.
+
 ## [6.1.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.0.0...v6.1.0) (2026-10-14)
 
 ### Katalog: Altzeichen aus der DV 102
