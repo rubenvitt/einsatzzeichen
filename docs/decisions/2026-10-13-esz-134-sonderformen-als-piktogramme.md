@@ -53,6 +53,8 @@ Art `pictogram`, oder eine `SymbolKind` je Sonderform (LFH-567, Frage 7).
 
 - C.1.13 Flugdrohnentrupp und C.1.14 Drohnentrupp Feuerwehr zeigen die Drohne ebenfalls (Winkel
   18 mm breit), sind aber nicht gebaut. Mit ihnen kämen zwei weitere Körpermarken dazu.
+  **Erledigt mit ESZ-143** (14.10.2026): beide gebaut, `DRONE_BODY_MARKS` führt fünf Fassungen,
+  siehe `2026-10-14-esz-143-drohnentrupps-der-feuerwehr.md`.
 - Ob die Zweiräder über das freistehende Zeichen hinaus eine Körperform oder eine Marke am
   Landfahrzeug sind, bleibt die Frage aus `SPECIAL_FORMS` (Bezug ESZ-117).
 

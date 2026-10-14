@@ -16,6 +16,8 @@ export const VERBATIM_TABLE: ReadonlyArray<
   ["{\"kind\":\"swap-body\"}","5.1.3.3","5.1.3.3_Wechselbrücke.svg"],
   ["{\"kind\":\"wheeled-container\"}","5.1.3.4","5.1.3.4_Zieh- und schiebbar.svg"],
   ["{\"bodyMarks\":[\"fire-fighting\"],\"kind\":\"formation\",\"organization\":\"feuerwehr\",\"strength\":\"staffel\"}","C.1.1","C.1.1_Löschstaffel.svg"],
+  ["{\"bodyMarks\":[\"formation-chevron-18mm-over-notched-line\"],\"kind\":\"formation\",\"organization\":\"feuerwehr\",\"strength\":\"trupp\"}","C.1.13","C.1.13_Flugdrohnentrupp Feuerwehr.svg"],
+  ["{\"bodyMarks\":[\"formation-chevron-18mm\"],\"kind\":\"formation\",\"organization\":\"feuerwehr\",\"strength\":\"trupp\"}","C.1.14","C.1.14_Drohnentrupp Feuerwehr.svg"],
   ["{\"bodyMarks\":[\"fire-fighting\"],\"kind\":\"formation\",\"organization\":\"feuerwehr\",\"strength\":\"gruppe\"}","C.1.2","C.1.2_Löschgruppe.svg"],
   ["{\"bodyMarks\":[\"fire-fighting\"],\"kind\":\"formation\",\"organization\":\"feuerwehr\",\"strength\":\"zug\"}","C.1.3","C.1.3_Löschzug einer Feuerwehr.svg"],
   ["{\"bodyMarks\":[\"technical-assistance\"],\"kind\":\"formation\",\"organization\":\"feuerwehr\",\"strength\":\"zug\"}","C.1.4","C.1.4_Rüstzug einer Feuerwehr.svg"],

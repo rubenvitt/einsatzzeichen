@@ -158,6 +158,27 @@ export const RECIPES = {
       labels: { center: 'P', centerBaselineFromBodyBottomMm: 3, inBodyInk: 'koerperlauf-kontrast' },
     },
   },
+  // ESZ-143: die Drohne als technische Körpermarke (`DRONE_BODY_MARKS`), je am eigenen Original.
+  'C.1.13': {
+    title: 'Flugdrohnentrupp Feuerwehr',
+    referenceAsset: 'C.1.13_Flugdrohnentrupp Feuerwehr.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'feuerwehr',
+      strength: 'trupp',
+      bodyMarks: ['formation-chevron-18mm-over-notched-line'],
+    },
+  },
+  'C.1.14': {
+    title: 'Drohnentrupp Feuerwehr',
+    referenceAsset: 'C.1.14_Drohnentrupp Feuerwehr.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'feuerwehr',
+      strength: 'trupp',
+      bodyMarks: ['formation-chevron-18mm'],
+    },
+  },
 } as const satisfies Record<string, Recipe>;
 
 /**

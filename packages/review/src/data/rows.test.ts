@@ -23,10 +23,10 @@ const rows = buildRows();
 const manifestRows = rows.filter((row) => row.kind === 'manifest');
 
 describe('buildRows', () => {
-  it('führt genau 607 Träger: 593 Manifestzeilen, 13 Quellen, ein Profil', () => {
-    // 544 Manifestzeilen bis LFH-786, dazu die 37 Anhang-C-Fixtures, C.1.4 (LFH-787) und die
-    // acht Behälterzeichen aus ESZ-117 und 3.6 bis 3.8 aus ESZ-134.
-    expect(rows).toHaveLength(607);
+  it('führt genau 609 Träger: 595 Manifestzeilen, 13 Quellen, ein Profil', () => {
+    // 544 Manifestzeilen bis LFH-786, dazu die 37 Anhang-C-Fixtures, C.1.4 (LFH-787), die
+    // acht Behälterzeichen aus ESZ-117, 3.6 bis 3.8 aus ESZ-134 und C.1.13/C.1.14 aus ESZ-143.
+    expect(rows).toHaveLength(609);
     expect(manifestRows).toHaveLength(COVERAGE_MANIFEST.entries.length);
     expect(rows.filter((row) => row.kind === 'source')).toHaveLength(
       Object.keys(SOURCE_REGISTRY).length,
@@ -65,8 +65,9 @@ describe('buildRows', () => {
     const byCoverage = (kind: string) =>
       manifestRows.filter((row) => row.coverage === kind).length;
     expect(byCoverage('catalog-entry')).toBe(14);
-    // 242 bis LFH-786, dazu 37 Anhang-C-Fixtures, C.1.4 (LFH-787) und acht aus ESZ-117.
-    expect(byCoverage('composition-recipe')).toBe(288);
+    // 242 bis LFH-786, dazu 37 Anhang-C-Fixtures, C.1.4 (LFH-787), acht aus ESZ-117 und
+    // C.1.13/C.1.14 aus ESZ-143.
+    expect(byCoverage('composition-recipe')).toBe(290);
     expect(byCoverage('element')).toBe(291);
   });
 

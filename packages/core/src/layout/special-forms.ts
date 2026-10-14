@@ -312,9 +312,9 @@ export function specialForm(id: SpecialFormId): SpecialForm {
  * - F.1.16 zeichnet den Winkel zusammen mit zwei Dreiecken, die I.1.19 ohne Winkel zeigt; die
  *   Marke sagt also mehr als „Drohne".
  * - C.2.31 setzt den Winkel über die Löschmarke am Kettenfahrzeug.
- *
- * C.1.13 und C.1.14 zeigen die Drohne ebenfalls (Winkel 18 mm breit, `SPECIAL_FORMS`), sind aber
- * nicht gebaut: im Umfang stehen aus C.1 nur C.1.1 bis C.1.4, C.1.7 und C.1.8.
+ * - C.1.13 und C.1.14 (ESZ-143) zeigen den Winkel 18 mm breit in der Formation, C.1.13 über einer
+ *   Linie mit Kerbe, C.1.14 allein und tiefer gesetzt. Beide sind eigene Fassungen: die Steigungen
+ *   unterscheiden sich, und keine ist `formation-chevron-top` (10,67 mm).
  */
 export const DRONE_BODY_MARKS: readonly SpecialFormBodyMark[] = Object.freeze([
   {
@@ -341,5 +341,21 @@ export const DRONE_BODY_MARKS: readonly SpecialFormBodyMark[] = Object.freeze([
     bodyVariant: 'inverted-hull-track',
     bodyMark: 'track-chevron-top',
     note: 'Der Winkel, 14 mm breit, über der Löschmarke am Kettenfahrzeug.',
+  },
+  {
+    form: 'drone',
+    section: 'C.1.13',
+    asset: 'C.1.13_Flugdrohnentrupp Feuerwehr.svg',
+    kind: 'formation',
+    bodyMark: 'formation-chevron-18mm-over-notched-line',
+    note: 'Der Winkel, 18 mm breit, über einer waagerechten Linie mit Kerbe.',
+  },
+  {
+    form: 'drone',
+    section: 'C.1.14',
+    asset: 'C.1.14_Drohnentrupp Feuerwehr.svg',
+    kind: 'formation',
+    bodyMark: 'formation-chevron-18mm',
+    note: 'Der Winkel allein, 18 mm breit, mittig in der Formation.',
   },
 ] satisfies readonly SpecialFormBodyMark[]);

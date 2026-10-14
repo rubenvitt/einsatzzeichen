@@ -166,6 +166,9 @@ export const TECHNICAL_BODY_MARK_LABELS = Object.freeze({
     'Zwei gegenüberliegende Dreiecke in der oberen Formationszone',
   'formation-chevron-top': 'Gefüllter Winkel in der oberen Formationszone',
   'track-chevron-top': 'Gefüllter Winkel in der oberen Zone des Kettenfahrzeugs',
+  'formation-chevron-18mm-over-notched-line':
+    'Gefüllter Winkel, 18 mm breit, über einer Linie mit Kerbe',
+  'formation-chevron-18mm': 'Gefüllter Winkel, 18 mm breit, mittig in der Formation',
   'double-wave-inner-diamond-8mm': 'Doppelwelle mit Innenraute (8 mm)',
   'inset-hull-wheel-pair': 'Radpaar in der eingesenkten Wasserfahrzeughülle',
   'h-veterinary-decontamination':

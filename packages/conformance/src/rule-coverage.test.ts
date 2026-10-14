@@ -245,11 +245,12 @@ describe('generativeReach (echter Bestand)', () => {
     expect(reach.referencedOutsideReach).toHaveLength(0);
     // `bodyMarks` = 88 Fähigkeiten + technische Marken; LFH-786 ergänzt mit `track-chevron-top`
     // (Drohnenwinkel der Löschdrohne C.2.31) genau eine technische Marke, die Leitstelle D.2.5
-    // (2. Oktober 2026) mit `circle-solid-cap-4mm` eine weitere, daher 134. `functionRole` = 25
+    // (2. Oktober 2026) mit `circle-solid-cap-4mm` eine weitere, daher 134. ESZ-143 ergänzt die
+    // Drohnenwinkel aus C.1.13 und C.1.14: 136. `functionRole` = 25
     // Rollen aus Anhang D und die Führungskraft ohne Kürzel (ESZ-116).
     expect(reach.notEnumerated.map((axis) => [axis.id, axis.size])).toEqual([
       ['capabilities', 88],
-      ['bodyMarks', 134],
+      ['bodyMarks', 136],
       ['functionRole', 26],
       ['designation', Number.POSITIVE_INFINITY],
     ]);

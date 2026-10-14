@@ -292,6 +292,9 @@ describe('semantische Zeichenbeschreibungen', () => {
       ...task1AnhangITechnicalIds,
       // 2. Oktober 2026: die Kappe der Leitstelle D.2.5.
       'circle-solid-cap-4mm',
+      // ESZ-143: die Drohnenwinkel aus C.1.13 und C.1.14.
+      'formation-chevron-18mm-over-notched-line',
+      'formation-chevron-18mm',
     ]);
     expect(TECHNICAL_BODY_MARK_LABELS as Record<string, string>).toMatchObject({
       'formation-solid-cap-3mm': 'Schwarze Formationskappe, 3 mm hoch',
@@ -315,6 +318,9 @@ describe('semantische Zeichenbeschreibungen', () => {
       'trailer-diving': 'Doppelwelle mit kleiner Raute',
       'trailer-boat-hull': 'Schwarzer Bootsrumpf mit weißem Innenraum',
       'track-chevron-top': 'Gefüllter Winkel in der oberen Zone des Kettenfahrzeugs',
+      'formation-chevron-18mm-over-notched-line':
+        'Gefüllter Winkel, 18 mm breit, über einer Linie mit Kerbe',
+      'formation-chevron-18mm': 'Gefüllter Winkel, 18 mm breit, mittig in der Formation',
     });
   });
 
