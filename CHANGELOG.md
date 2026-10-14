@@ -1,3 +1,23 @@
+## [6.3.1](https://github.com/rubenvitt/einsatzzeichen/compare/v6.3.0...v6.3.1) (2026-10-14)
+
+### Darstellung
+
+- **Beschriftungen wieder in Referenzgröße:** Textläufe, die bisher für die Ersatzschrift Arimo verkleinert waren, wurden gegen die Referenz-SVGs neu vermessen. Sie stehen jetzt wieder auf der Versalhöhe der Referenz, solange der Text mindestens 0,5 mm Abstand zur Kontur hält. Außerdem sitzen sie mittig auf der Referenzposition. Das betrifft unter anderem:
+  - „BS“, „mBS“, „HRT“, „FRT“ (J.3)
+  - „L“ (J.4.8, D.2.4) und „LtS“ (D.2.5)
+  - „GS“, „Chlor“, „A“, „Ö“, „Ex“ (5.8.1)
+  - „Strömungsrettung“ in I.2.6
+- **„APRT“** wächst auf 6,71 mm (bisher 5,985 mm). In voller Referenzhöhe würde der Text über die Kontur hinauslaufen.
+- **Schriftanker für Einsatzzeichen Sans:** Die Anker, die bisher auf Arimo-Seitenlagern beruhten, wurden neu berechnet. Das gilt für F.2.10 bis F.2.17 und C.2.10, für den Profil-Standardwert von 1,5 mm und für die Ziffer „1“ in den Profilen.
+- **Ruhigeres Schriftbild:** Viele betroffene Zeichen haben jetzt einen deutlich geringeren Strichanteil, zum Beispiel J.3.9 (von 50,7 % auf 24,7 %) und 5.8.1.7 (von 39,6 % auf 21,8 %).
+- **Bekannte Einschränkung:** Bei I.2.6 steigt der Strichanteil wegen der Lage des Textlaufs. Eine Korrektur ist geplant.
+
+### Katalog & Semantik
+
+- **Befehlsstelle mit Kappe statt Fahnenstock:** Die Baseline 2025 der DV 102 kennt den Fahnenstock des alten Grundzeichens „Befehlsstelle, Führungsstelle (im Einsatz)“ nicht mehr. Eine Befehlsstelle wird deshalb als Formation mit der Körpermarke `formation-solid-cap-3mm` dargestellt (schwarze 3-mm-Kappe). Diese Darstellung funktioniert mit jeder Organisation und jeder Stärke und muss nicht eigens abgeleitet werden.
+- Die gelbe Befehlsstelle mit abgesetztem Standort bleibt als eigenständiges Piktogramm D.1.1 erhalten.
+- Es gibt bewusst kein eigenes Grundzeichen, keine Körpervariante und keine Marke „Fahnenstock“. Ein neuer Test sichert dieses Verhalten bei Prüfung, Rundreise, Vokabular und Zeichnung ab.
+
 ## [6.3.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.2.0...v6.3.0) (2026-10-14)
 
 ### Katalog
