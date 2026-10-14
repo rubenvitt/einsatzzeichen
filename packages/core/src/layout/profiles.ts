@@ -236,10 +236,10 @@ const trailerProfile: LayoutProfile = {
  * also **6,75** unter der Körperoberkante 5,75 — dieselbe Zahl wie am Landfahrzeug (F.2.1 bis
  * F.2.5), hier aber unmittelbar gemessen. Den Anker übernimmt `compose()` unverändert
  * (`TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM`, 1,5 ab der linken Körperkante): die linke
- * Tintenkante der „1“ liegt bei x 5,7623; abzüglich der linken Seitenlage der Arimo-„1“
- * (0,3233 mm im Grad der unteren Zonen) ergibt das 5,4390, also 1,439 ab der Körperkante 4.
- * Derselbe Unterschied wie am ziffernführenden Lauf „10“ aus F.1 (zurückgerechnet 1,442) — die
- * Ziffern der Referenzschrift sitzen etwas weiter links, der Katalog folgt der Mehrheit auf 1,5.
+ * Tintenkante der „1“ liegt bei x 5,7623; abzüglich der linken Seitenlage der „1“ von
+ * Einsatzzeichen Sans (44/1000 em, 0,184 mm im Grad der unteren Zonen; ESZ-144) ergibt das
+ * 5,5783, also 1,578 ab der Körperkante 4. Ebenso am ziffernführenden Lauf „10“ aus F.1 (1,578):
+ * die „1“ steht 0,08 mm links der Referenz, der Katalog folgt der Mehrheit auf 1,5.
  * Die Versalhöhe der Ziffern misst 2,75 statt 2,92 (auch das wie in F.2.16 „40“); sie gehört,
  * wo gewollt, als `topLeftMetrics` ins Rezept und nicht ins Profil.
  *

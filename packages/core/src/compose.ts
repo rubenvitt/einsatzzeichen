@@ -178,14 +178,14 @@ const LABEL_SIDE_MARGIN_MM = 2;
 /**
  * Anker des Laufs oben links gegen die linke Körperkante. **Zurückgerechnet und nicht abgelesen**:
  * die linke Tintenkante der Referenz hängt von der linken Seitenlage ihrer ersten Glyphe ab, und
- * die ist an einer in Kurven umgewandelten Schrift nicht ablesbar. Dieselben Läufe mit Anker
- * 3,0 mm gerastert (4096 px, 18. August 2026) und die Differenz abgezogen ergibt 2,524 mm für
- * `MTF`/`RettD`, 2,498 für `SEG` und 2,442 für `10` — vier der fünf F-a-Läufe auf 2,5 mm, also
- * 1,5 mm rechts der Körperkante 1,0.
+ * die ist an einer in Kurven umgewandelten Schrift nicht ablesbar. Mit Arimo gerastert (Anker
+ * 3,0 mm, 4096 px, 18. August 2026) ergab das 2,524 mm für `MTF`/`RettD`, 2,498 für `SEG` und
+ * 2,442 für `10`; mit den Seitenlagern von Einsatzzeichen Sans 2,529 bis 2,535 und 2,578 für `10`
+ * (ESZ-144). Der Anker bleibt 2,5 mm, also 1,5 mm rechts der Körperkante 1,0.
  *
  * **Eine eigene Marge und keine Übernahme der 2 mm der unteren Zonen.** Die wären an derselben
  * Rasterung um 0,48 mm zu weit rechts; der Unterschied ist bei 30 mm Körperbreite sichtbar und
- * an fünf Läufen gleichgerichtet. Der Ausreißer ist `F.1.3` („5.000", zurückgerechnet 2,022) —
+ * an fünf Läufen gleichgerichtet. Der Ausreißer ist `F.1.3` („5.000", zurückgerechnet 1,939) —
  * er steht als Befund an seiner Manifestzeile.
  */
 const TOP_LEFT_LABEL_ANCHOR_FROM_BODY_LEFT_MM = 1.5;

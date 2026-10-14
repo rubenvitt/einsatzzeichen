@@ -560,10 +560,53 @@ Die Kürzel der Betriebsarten (J.1) bekommen 0,15 mm Box unter der Grundlinie
 (`LABEL_BELOW_BASELINE_MM`), weil die Rundungen von Einsatzzeichen Sans sie um 12/1000 em
 überschießen.
 
-**Offen (Folgeaufgabe):** die verkleinerten Läufe gegen die Tinte der Referenz neu vermessen und,
+**Offen (Folgeaufgabe, erledigt mit ESZ-144, siehe §12):** die verkleinerten Läufe gegen die Tinte der Referenz neu vermessen und,
 wo die Box es trägt, auf Referenzhöhe setzen; dazu die Anker, die aus Arimo-Seitenlagern
 zurückgerechnet sind (Abweichung meist ≤ 0,03 mm, bei „1" bis 0,2 mm, bei „W" bis 0,14 mm). Die
 Referenz-SVGs lagen in der Umsetzungssitzung nicht vor.
 
 **Lesbarkeit.** `MINIMUM_TEXT_RENDER_PX` (8 px) ist mit der neuen Schrift erneut angesehen und
 bleibt; Kontaktbogen der Prüfung beim Ticket ESZ-114.
+
+## 12. Nachvermessung an der Referenz (ESZ-144, 14. Oktober 2026)
+
+Gemessen an den 661 Referenz-SVGs (Prüfsummen gleich `fingerprints.json`): Tinte der Typo-Ebene
+je Glyphe, Bézier-Extrema eingeschlossen; dagegen die Tinte von Einsatzzeichen Sans aus
+`measureTextRun()`.
+
+**Regel für die Läufe aus §11.** Ein Lauf steht auf der Versalhöhe der Referenz, wenn seine Tinte
+dort mindestens 0,5 mm (eine Strichstärke) Luft zur Innenkante der Kontur behält. Sonst steht er
+auf der größten Versalhöhe, die diese Luft hält. Die Tintenmitte liegt auf der Referenzmitte, beim
+einzelnen „L" der Stamm auf dem Stamm. Die Box ist die eigene Tinte, nach außen auf 0,05 mm
+gerundet; ihre Unterkante bleibt, wie sie war.
+
+| Lauf | vorher | jetzt | Referenz | Bemerkung |
+|---|---:|---:|---:|---|
+| „BS" (J.3.2) | 6,295 | 7,302 | 7,302 | „S" läuft breiter, 5 mm Luft zum Kreis |
+| „mBS" (J.3.3) | 6,295 | 7,302 | 7,302 | Boxecken 0,65 mm vor dem Kreis |
+| „HRT", „FRT" (J.3.6, J.3.8) | 6,845 / 6,639 | 7,3 | 7,302 | wie „MRT" |
+| „APRT" (J.3.9) | 5,985 | 6,71 | 7,302 | bei Referenzhöhe 3,97 … 28,23 mm, über die Kontur |
+| „L" (J.4.8) | 4,266 | 4,87 | 4,87 | |
+| „L" (D.2.4) | 6,88 | 7,302 | 7,302 | |
+| „LtS" (D.2.5) | 6,88 | 7,302 | 7,302 | |
+| „GS", „Ö", „Ex" (5.8.1.7/10/11) | 5,779 / 7,155 / 5,71 | 7,302 | 7,302 | „GS", „Ex" rund 7 % breiter |
+| „Chlor" (5.8.1.7) | 4,266 | 4,869 | 4,869 | |
+| „A" (5.8.1.8) | 8,6 | 9,735 | 9,735 | wie 4.1.6 |
+| „Strömungsrettung" (I.2.6) | 2,12 | 2,191447 | 2,19 | wie „BTKombi" |
+| „Strömungsrettung" (I.1.17/18) | 2,45 | 2,45 | 2,43 | stand schon auf Referenzhöhe |
+
+`MIN_SCALED_RUN_CAP_HEIGHT_MM` folgt dem kleinsten Lauf der Quelle und steigt mit I.2.6 von 2,12
+auf 2,191447 mm.
+
+**Anker.** Neu gerechnet mit den Seitenlagern von Einsatzzeichen Sans: F.2.10/11 0,521216,
+F.2.12/13 1,010607, F.2.14 1,00911, F.2.16 1,462956, F.2.17 0,774024, C.2.10 1,529336 (vorher
+0,51423, 1,010503, 1,009024, 1,497298, 0,766269, 1,520031). I.2.1–I.2.3 bleiben 1,51 (das `G`
+hat in beiden Schriften 0,213 mm). Der Profildefault 1,5 bleibt: zurückgerechnet ergeben `M`, `R`,
+`S`, `K` 1,53, `T` 1,49, die „1" 1,58; die „1" steht damit 0,08 mm links der Referenz.
+
+**Pixelvergleich** (`reference-diff`, 512 px, Strichanteil vorher → nachher): J.3.2 25,5 → 15,7 %,
+J.3.3 43,1 → 29,4 %, J.3.6 29,7 → 13,3 %, J.3.8 34,0 → 19,0 %, J.3.9 50,7 → 24,7 %, J.4.8
+8,7 → 1,0 %, D.2.4 1,6 → 0,2 %, 5.8.1.7 39,6 → 21,8 % und 33,5 → 12,2 %, 5.8.1.8 20,3 → 8,7 %,
+5.8.1.10 13,9 → 12,0 %, 5.8.1.11 32,4 → 13,2 %. D.2.5 bleibt bei 3,6 %. I.2.6 steigt von 23,4 auf
+27,0 %: Der Lauf der Referenz steht 0,7 mm links der Körpermitte, der eigene mittig; mit dem
+größeren Grad wächst der Versatz in der Fläche. Die Lage folgt mit ESZ-145.
