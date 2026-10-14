@@ -57,4 +57,8 @@ im Referenztheme kein Pixel über 7 : 1, im dunklen Theme 1 600 von 2 400 decken
 - Die Hinterlegung reicht nicht über die ViewBox hinaus. Wo hinterlegte Tinte bis an den Rand
   geht, ist sie dort abgeschnitten. Die Verwaltungssterne am oberen Rand betrifft das nicht, sie
   sind Kopfmarken und haben keine Hinterlegung.
-- Die Zeichenvorschau der Website zeigt das Profil noch nicht, das MapLibre-Lab schon.
+- ~~Die Zeichenvorschau der Website zeigt das Profil noch nicht, das MapLibre-Lab schon.~~
+  Erledigt mit ESZ-141: viertes Profil „Dunkle Fläche“ in `SymbolPreview.astro`, nur auf
+  `#141414`. Auf Weiß verschwänden die weißen Kopfmarken und die Hinterlegung, die Reihe zeigte
+  ein Bild, das es so nicht gibt. Kosten: ein `<symbol>` mehr je Seite, rund 4 KB je Zeichenseite
+  (307 Seiten, `dist` 58,7 → 60,0 MB).
