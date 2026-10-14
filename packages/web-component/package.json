@@ -1,6 +1,6 @@
 {
   "name": "@einsatzzeichen/web-component",
-  "version": "6.3.1",
+  "version": "6.4.0",
   "type": "module",
   "description": "Web Component für Einsatzzeichen",
   "license": "MIT",

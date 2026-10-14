@@ -1,3 +1,21 @@
+## [6.4.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.3.1...v6.4.0) (2026-10-14)
+
+### Katalog & Core
+
+- **Neue Körperarten Zweirad und Krad (3.7/3.8):** `SymbolKind` hat zwei neue Werte, `two-wheeler` und `motorized-two-wheeler`. Beide Zeichen nutzen dieselben Grundformen wie die Kapiteldatei und das Piktogramm `special-form.*`.
+- **Darstellung:** Wie beim Ereignis wird die Organisationsfarbe auf den Strich angewendet. Läufe stehen außerhalb des Körpers und werden als abgeleitet gemeldet.
+- **Grenzen der Form:** Einige Elemente gehören in den Körper, haben bei diesen Formen dort aber keinen Platz. Dazu zählen innere Läufe, Fähigkeiten, Körpermarken und die weiße Innenkontur. Wer sie anfordert, erhält einen `NotMeasuredError`.
+- **Fahrzeuge ohne Fahrwerk:** Zweirad und Krad gelten als Fahrzeuge ohne Fahrwerk. Wird eine Kategorie aus 5.1 angegeben, lehnt die Fahrwerksregel sie ab.
+
+### Konformität
+
+- Profil, Zonenmodell, Blockregister und Regelabdeckung enthalten jetzt die beiden neuen Körperarten.
+- Das Prüfkriterium für 3.7/3.8: Die Zeichen müssen dieselben Grundformen wie die Kapiteldatei verwenden und zur vermessenen Mittellinienhülle passen.
+
+### Dokumentation
+
+- Eine neue Entscheidungsnotiz erklärt, warum das Zweirad als eigene Körperart umgesetzt wurde: `docs/decisions/2026-10-14-esz-142-zweirad-als-koerperart.md`
+
 ## [6.3.1](https://github.com/rubenvitt/einsatzzeichen/compare/v6.3.0...v6.3.1) (2026-10-14)
 
 ### Darstellung
