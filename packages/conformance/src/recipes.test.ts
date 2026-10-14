@@ -1417,8 +1417,9 @@ describe('Anhang I, Teilslice I-b (I.2.4 bis I.2.7)', () => {
       labels: {
         center: 'Strömungsrettung',
         centerBaselineFromBodyBottomMm: 14.327,
-        // LFH-585: in Arimo 500 auf 2,12 mm gesenkt (vorher 2,191447 mm), damit der Lauf in die Box passt.
-        centerCapHeightMm: 2.12,
+        // ESZ-144: wieder 2,191447 mm (Referenzhöhe); von LFH-585 bis ESZ-144 für Arimo 500
+        // auf 2,12 mm gesenkt.
+        centerCapHeightMm: 2.191447,
       },
     },
     'I.2.7': {
@@ -3029,7 +3030,7 @@ describe('Anhang F, Teilslice F-d', () => {
           topLeft: 'BTKombi',
           topLeftMetrics: {
             capHeightMm: 2.191447, baselineFromBodyTopMm: 5.249923,
-            anchorFromBodyLeftMm: 0.51423,
+            anchorFromBodyLeftMm: 0.521216,
           },
         },
       },
@@ -3045,7 +3046,7 @@ describe('Anhang F, Teilslice F-d', () => {
           topLeft: 'BTKombi',
           topLeftMetrics: {
             capHeightMm: 2.191447, baselineFromBodyTopMm: 5.249923,
-            anchorFromBodyLeftMm: 0.51423,
+            anchorFromBodyLeftMm: 0.521216,
           },
         },
       },
@@ -3059,7 +3060,7 @@ describe('Anhang F, Teilslice F-d', () => {
           topLeft: 'GwBT',
           topLeftMetrics: {
             capHeightMm: 2.919225, baselineFromBodyTopMm: 6.249691,
-            anchorFromBodyLeftMm: 1.010503,
+            anchorFromBodyLeftMm: 1.010607,
           },
         },
       },
@@ -3074,7 +3075,7 @@ describe('Anhang F, Teilslice F-d', () => {
           topLeft: 'GwBT',
           topLeftMetrics: {
             capHeightMm: 2.919225, baselineFromBodyTopMm: 6.249691,
-            anchorFromBodyLeftMm: 1.010503,
+            anchorFromBodyLeftMm: 1.010607,
           },
         },
       },
@@ -3088,7 +3089,7 @@ describe('Anhang F, Teilslice F-d', () => {
           topLeft: 'GwLog',
           topLeftMetrics: {
             capHeightMm: 2.432746, baselineFromBodyTopMm: 5.249923,
-            anchorFromBodyLeftMm: 1.009024,
+            anchorFromBodyLeftMm: 1.00911,
           },
         },
       },
@@ -3112,7 +3113,7 @@ describe('Anhang F, Teilslice F-d', () => {
           topLeft: '40',
           topLeftMetrics: {
             capHeightMm: 2.749893, baselineFromBodyTopMm: 6.749576,
-            anchorFromBodyLeftMm: 1.497298,
+            anchorFromBodyLeftMm: 1.462956,
           },
         },
       },
@@ -3127,7 +3128,7 @@ describe('Anhang F, Teilslice F-d', () => {
           topLeft: 'BtlLKW',
           topLeftMetrics: {
             capHeightMm: 2.432746, baselineFromBodyTopMm: 5.749807,
-            anchorFromBodyLeftMm: 0.766269,
+            anchorFromBodyLeftMm: 0.774024,
           },
         },
       },

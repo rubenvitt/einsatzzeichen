@@ -233,10 +233,22 @@ function waterIngressPrimitives(): readonly Primitive[] {
 
 /*
  * Kennbuchstaben im Warndreieck (5.8.1.7, 5.8.1.8, 5.8.1.10, 5.8.1.11): Katalogstärke 500
- * (LFH-585), rot, Grundlinie an der Referenz abgelesen. Versalhöhe und Mitte waren so gewählt,
- * dass Versalhöhe und Laufbreite zusammen am besten decken (Pixelvergleich, noch mit Arimo Bold,
- * das breiter lief als die Referenzschrift); deshalb liegt die Versalhöhe unter der der Referenz.
- * Die Boxen sind an diesen Höhen vermessen. Seit ESZ-114 steht die Versalhöhe hier, nicht der
+ * (LFH-585), rot, Grundlinie an der Referenz abgelesen. Bis ESZ-144 lag die Versalhöhe unter der
+ * der Referenz, weil Arimo Bold breiter lief und Höhe und Breite zusammen am besten decken
+ * sollten. Seit ESZ-144 steht jeder Lauf auf der Versalhöhe der Referenz, die Tintenmitte auf der
+ * Referenzmitte, die Box ist die eigene Tinte, nach außen auf 0,05 mm gerundet. Alle Läufe halten
+ * dort über 2 mm Luft zur Innenkante des Dreiecks. Referenztinte und eigene Tinte (mm):
+ *
+ * | Lauf | Versalhöhe | Referenztinte x | eigene Tinte x |
+ * |---|---:|---|---|
+ * | GS | 7,302 | 10,48 … 21,64 | 10,12 … 21,99 |
+ * | Chlor | 4,869 | 8,35 … 23,91 | 8,30 … 23,95 |
+ * | A | 9,735 | 11,99 … 20,42 | 12,14 … 20,26 |
+ * | Ö | 7,302 | 12,74 … 19,26 | 13,02 … 18,98 |
+ * | Ex | 7,302 | 11,69 … 21,05 | 11,33 … 21,41 |
+ *
+ * „GS" und „Ex" laufen in Einsatzzeichen Sans rund 7 % breiter als in der Referenz; die
+ * Umlautpunkte des „Ö" stehen 0,42 mm höher. Seit ESZ-114 steht die Versalhöhe hier, nicht der
  * Schriftgrad.
  */
 function hazardText(
@@ -252,21 +264,21 @@ function hazardText(
 function hazardousSubstancesPrimaryPrimitives(): readonly Primitive[] {
   return [
     triangle(HAZARD_TRIANGLE, 'rot'),
-    hazardText('GS', 16.1, 24, 5.779, { xMm: 10, yMm: 17.8, widthMm: 12.2, heightMm: 6.6 }),
+    hazardText('GS', 16.025, 24, 7.302, { xMm: 10.1, yMm: 16.55, widthMm: 11.9, heightMm: 7.85 }),
   ];
 }
 
 function hazardousSubstancesAlternativePrimitives(): readonly Primitive[] {
   return [
     triangle(HAZARD_TRIANGLE, 'rot'),
-    hazardText('Chlor', 15.9, 24, 4.266, { xMm: 7.7, yMm: 19.2, widthMm: 16.6, heightMm: 5.2 }),
+    hazardText('Chlor', 16.01, 24, 4.869, { xMm: 8.25, yMm: 18.8, widthMm: 15.75, heightMm: 5.6 }),
   ];
 }
 
 function radioactivityPrimaryPrimitives(): readonly Primitive[] {
   return [
     triangle(HAZARD_TRIANGLE, 'rot'),
-    hazardText('A', 16.2, 24, 8.6, { xMm: 11.6, yMm: 15, widthMm: 9.2, heightMm: 9.4 }),
+    hazardText('A', 16.2, 24, 9.735, { xMm: 12.1, yMm: 14.25, widthMm: 8.2, heightMm: 10.15 }),
   ];
 }
 
@@ -336,14 +348,14 @@ function electricalEnergyPrimitives(): readonly Primitive[] {
 function mineralOilPrimitives(): readonly Primitive[] {
   return [
     triangle(HAZARD_TRIANGLE, 'rot'),
-    hazardText('Ö', 16, 23, 7.155, { xMm: 12, yMm: 13.8, widthMm: 8, heightMm: 9.7 }),
+    hazardText('Ö', 16, 23, 7.302, { xMm: 13, yMm: 13.55, widthMm: 6, heightMm: 9.95 }),
   ];
 }
 
 function explosionPrimitives(): readonly Primitive[] {
   return [
     triangle(HAZARD_TRIANGLE, 'rot'),
-    hazardText('Ex', 16.2, 23, 5.71, { xMm: 11.3, yMm: 16.9, widthMm: 10.3, heightMm: 6.5 }),
+    hazardText('Ex', 16.03, 23, 7.302, { xMm: 11.3, yMm: 15.65, widthMm: 10.15, heightMm: 7.75 }),
   ];
 }
 

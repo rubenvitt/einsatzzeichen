@@ -108,9 +108,13 @@ export function arcPath(
  * Katalogtext. Gesetzt wird die Katalogschrift in 500 (`CATALOG_TEXT_FONT_WEIGHT`, LFH-585).
  * Bis LFH-585 standen die Kürzel in Arimo Bold, und ihr Grad war das geometrische Mittel aus
  * Passung auf die Referenzhöhe und auf die Referenzbreite der Tinte, auf 0,05 mm gerundet; wo Arimo
- * auf Referenzhöhe den Körper berührt hätte („mBS", „APRT"), galt allein die Referenzbreite. Seit
- * ESZ-114 (Einsatzzeichen Sans) steht jeder Lauf auf der Versalhöhe, die er damals bekam, oder auf
- * Referenzhöhe, wo sie in seine vermessene Box passt; die Tintenmitte liegt auf der Referenzmitte.
+ * auf Referenzhöhe den Körper berührt hätte („mBS", „APRT"), galt allein die Referenzbreite.
+ *
+ * Seit ESZ-144 an der Tinte von Einsatzzeichen Sans neu vermessen: Jeder Lauf steht auf der
+ * Versalhöhe der Referenz (7,302 mm, an den flachen Köpfen von B, H, F, M, A abgelesen), sofern
+ * seine Tinte dort mindestens 0,5 mm (eine Strichstärke) Luft zur Innenkante der Kontur behält;
+ * sonst auf der größten Versalhöhe, die diese Luft hält („APRT"). Die Tintenmitte liegt auf der
+ * Referenzmitte, die Box ist die eigene Tinte, nach außen auf 0,05 mm gerundet.
  */
 
 const DEVICE_CONTRAST = [
@@ -136,9 +140,11 @@ const DEVICE_BOX = { xMm: 4, yMm: 4, widthMm: 24, heightMm: 24 } as const;
 
 /**
  * Ein dreistelliges Kürzel in Referenzlage: Versalhöhe 7,3 mm (11,7 … 19,0 mm), Grundlinie
- * 19 mm, Tintenmitte x ≈ 16,5 mm. „MRT" steht seit ESZ-114 auf dieser Höhe. „FRT" (6,639 mm)
- * und „HRT" (6,845 mm) bleiben verkleinert, wie sie in Arimo Bold an der Referenzbreite bestimmt
- * wurden; ihre Boxen sind an diesen Höhen vermessen.
+ * 19 mm, Tintenmitte x ≈ 16,5 mm. „MRT" steht seit ESZ-114 auf dieser Höhe, „HRT" und „FRT" seit
+ * ESZ-144 (bis dahin 6,845 und 6,639 mm, in Arimo Bold an der Referenzbreite bestimmt). In
+ * Einsatzzeichen Sans misst „HRT" dort 7,58 … 25,52 mm Tinte (Referenz 7,30 … 25,74), „FRT"
+ * 8,29 … 24,81 mm (Referenz 8,31 … 24,73); beide halten über 2 mm Luft zur Kontur. Der Anker
+ * 16,25 mm gilt für alle drei; die Tintenmitte liegt damit 0,03 mm rechts der Referenzmitte.
  *
  * `minRenderPx: 32`: unter 10,67 mm Schriftgrad bleibt ein Lauf bei 24 px unter
  * `MINIMUM_TEXT_RENDER_PX`; bei 32 px trägt er rund 10 px.
@@ -218,8 +224,10 @@ export const DEVICE_COMMS = deepFreeze([
    * Ortsfeste Basisstation: Kreis um (16|18) mit r 12 und darüber ein Giebel (3|11) → (16|1) →
    * (29|11) — der Giebel steht für den festen Standort und unterscheidet J.3.2 von der mobilen
    * Fassung J.3.3. Die Referenz führt hier **keinen** Quadratkörper wie die übrigen Gerätezeichen.
-   * Kürzel „BS": Referenzhöhe 7,55 mm (13,6 … 21,1), Grundlinie 21,05 mm; verkleinert auf
-   * 6,295 mm Versalhöhe wie „mBS", die Box ist an dieser Höhe vermessen.
+   * Kürzel „BS": Referenztinte 11,20 … 21,28 × 13,57 … 21,13 mm, Versalhöhe 7,302 mm (am „B"),
+   * Grundlinie 21 mm. Seit ESZ-144 auf Referenzhöhe (bis dahin 6,295 mm wie „mBS"): In
+   * Einsatzzeichen Sans läuft das „S" breiter, die Tinte misst 10,68 … 21,79 mm und bleibt über
+   * 5 mm innerhalb des Kreises.
    */
   defineComms({
     section: 'J.3.2',
@@ -240,18 +248,20 @@ export const DEVICE_COMMS = deepFreeze([
         J_STROKE,
       ),
       commsText('BS', {
-        x: 16.1,
-        y: 21.05,
-        sizeMm: textSizeForCapHeightMm(6.295),
-        boxMm: { xMm: 10.05, yMm: 14.35, widthMm: 12.35, heightMm: 7.1 },
+        x: 16.05,
+        y: 21,
+        sizeMm: textSizeForCapHeightMm(7.302),
+        boxMm: { xMm: 10.65, yMm: 13.55, widthMm: 11.15, heightMm: 7.9 },
         minRenderPx: 32,
       }),
     ],
   }),
   /**
    * Mobile Basisstation: Kreis um (16|16) mit r 12, ohne Giebel. „mBS" lief in Arimo bei
-   * Referenzhöhe in den Kreis hinein; die Versalhöhe (6,295 mm, damals in Arimo Regular an der
-   * Referenzbreite 6,75 … 25,5 mm bestimmt) bleibt, die Box ist an ihr vermessen. Grundlinie 19 mm.
+   * Referenzhöhe in den Kreis hinein und stand deshalb auf 6,295 mm Versalhöhe (in Arimo Regular
+   * an der Referenzbreite 6,75 … 25,54 mm bestimmt). Seit ESZ-144 auf Referenzhöhe 7,302 mm: Die
+   * Tinte misst 6,19 … 26,11 × 11,57 … 19,13 mm, selbst die Ecken ihrer Box halten 0,65 mm Luft zur
+   * Innenkante des Kreises (r 11,75). Grundlinie 19 mm.
    */
   defineComms({
     section: 'J.3.3',
@@ -263,10 +273,10 @@ export const DEVICE_COMMS = deepFreeze([
     primitives: [
       commsCircle(16, 16, 12, J_WHITE_BODY),
       commsText('mBS', {
-        x: 16.05,
-        y: 19.05,
-        sizeMm: textSizeForCapHeightMm(6.295),
-        boxMm: { xMm: 6.4, yMm: 12.35, widthMm: 19.45, heightMm: 7.1 },
+        x: 16,
+        y: 19,
+        sizeMm: textSizeForCapHeightMm(7.302),
+        boxMm: { xMm: 6.15, yMm: 11.55, widthMm: 20, heightMm: 7.9 },
         minRenderPx: 32,
       }),
     ],
@@ -333,7 +343,7 @@ export const DEVICE_COMMS = deepFreeze([
     contrastPairs: DEVICE_CONTRAST,
     primitives: [
       deviceBody(),
-      deviceLabel('HRT', 6.845, { xMm: 6.35, yMm: 11.85, widthMm: 20.35, heightMm: 7.45 }),
+      deviceLabel('HRT', 7.3, { xMm: 7.5, yMm: 11.7, widthMm: 18.05, heightMm: 7.6 }),
     ],
   }),
   defineComms({
@@ -357,14 +367,16 @@ export const DEVICE_COMMS = deepFreeze([
     contrastPairs: DEVICE_CONTRAST,
     primitives: [
       deviceBody(),
-      deviceLabel('FRT', 6.639, { xMm: 7.2, yMm: 12.05, widthMm: 18.65, heightMm: 7.25 }),
+      deviceLabel('FRT', 7.3, { xMm: 8.25, yMm: 11.7, widthMm: 16.6, heightMm: 7.6 }),
     ],
   }),
   /**
-   * Vierstelliges Kürzel: „APRT" lief bei Referenzhöhe in Arimo über den Körper hinaus. Die
-   * Versalhöhe (5,985 mm) folgte deshalb der Referenzbreite 4,4 … 27,8 mm, die Box ist an ihr
-   * vermessen. Grundlinie 19 mm. Bei 32 px trägt der Lauf rund 8,6 px effektiv — über
-   * `MINIMUM_TEXT_RENDER_PX`.
+   * Vierstelliges Kürzel: Die Referenztinte 4,39 … 27,81 mm reicht bis an die Innenkante der
+   * Kontur (27,75). Bei Referenzhöhe 7,302 mm liefe „APRT" in Einsatzzeichen Sans 3,97 … 28,23 mm,
+   * über die Kontur hinaus. Gesetzt ist deshalb die größte Versalhöhe, bei der die Tinte um die
+   * Referenzmitte 16,1 mm 0,5 mm Luft zur Kontur hält: 6,71 mm, Tinte 4,95 … 27,25 mm (ESZ-144;
+   * bis dahin 5,985 mm, in Arimo an der Referenzbreite bestimmt). Grundlinie 19 mm. Bei 32 px
+   * trägt der Lauf rund 9,6 px effektiv — über `MINIMUM_TEXT_RENDER_PX`.
    */
   defineComms({
     section: 'J.3.9',
@@ -376,10 +388,10 @@ export const DEVICE_COMMS = deepFreeze([
     primitives: [
       deviceBody(),
       commsText('APRT', {
-        x: 16.05,
+        x: 16.115,
         y: 19,
-        sizeMm: textSizeForCapHeightMm(5.985),
-        boxMm: { xMm: 4.1, yMm: 12.7, widthMm: 23.9, heightMm: 6.6 },
+        sizeMm: textSizeForCapHeightMm(6.71),
+        boxMm: { xMm: 4.95, yMm: 12.25, widthMm: 22.3, heightMm: 7.05 },
         minRenderPx: 32,
       }),
     ],

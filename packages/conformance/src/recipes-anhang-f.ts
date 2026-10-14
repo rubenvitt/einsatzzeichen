@@ -467,7 +467,7 @@ export const ANHANG_F_D_RECIPES = {
         topLeftMetrics: {
           capHeightMm: 2.191447,
           baselineFromBodyTopMm: 5.249923,
-          anchorFromBodyLeftMm: 0.51423,
+          anchorFromBodyLeftMm: 0.521216,
         },
       },
     },
@@ -485,7 +485,7 @@ export const ANHANG_F_D_RECIPES = {
         topLeftMetrics: {
           capHeightMm: 2.191447,
           baselineFromBodyTopMm: 5.249923,
-          anchorFromBodyLeftMm: 0.51423,
+          anchorFromBodyLeftMm: 0.521216,
         },
       },
     },
@@ -503,7 +503,7 @@ export const ANHANG_F_D_RECIPES = {
         topLeftMetrics: {
           capHeightMm: 2.919225,
           baselineFromBodyTopMm: 6.249691,
-          anchorFromBodyLeftMm: 1.010503,
+          anchorFromBodyLeftMm: 1.010607,
         },
       },
     },
@@ -522,7 +522,7 @@ export const ANHANG_F_D_RECIPES = {
         topLeftMetrics: {
           capHeightMm: 2.919225,
           baselineFromBodyTopMm: 6.249691,
-          anchorFromBodyLeftMm: 1.010503,
+          anchorFromBodyLeftMm: 1.010607,
         },
       },
     },
@@ -541,7 +541,7 @@ export const ANHANG_F_D_RECIPES = {
         topLeftMetrics: {
           capHeightMm: 2.432746,
           baselineFromBodyTopMm: 5.249923,
-          anchorFromBodyLeftMm: 1.009024,
+          anchorFromBodyLeftMm: 1.00911,
         },
       },
     },
@@ -569,7 +569,7 @@ export const ANHANG_F_D_RECIPES = {
         topLeftMetrics: {
           capHeightMm: 2.749893,
           baselineFromBodyTopMm: 6.749576,
-          anchorFromBodyLeftMm: 1.497298,
+          anchorFromBodyLeftMm: 1.462956,
         },
       },
     },
@@ -588,7 +588,7 @@ export const ANHANG_F_D_RECIPES = {
         topLeftMetrics: {
           capHeightMm: 2.432746,
           baselineFromBodyTopMm: 5.749807,
-          anchorFromBodyLeftMm: 0.766269,
+          anchorFromBodyLeftMm: 0.774024,
         },
       },
     },

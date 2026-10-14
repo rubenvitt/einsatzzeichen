@@ -678,10 +678,10 @@ export interface BodyLabels {
    * | linke Tintenkante | 2,686 (`S`) · 2,762 (`1`) · 2,868 (`M`, `R`) · 2,186 (`5`) |
    *
    * **Der Anker ist zurückgerechnet, nicht abgelesen.** Die Tintenkante hängt von der linken
-   * Seitenlage der ersten Glyphe ab; gegen die eigene Rasterung derselben Läufe (Anker 3,0 mm,
-   * 4096 px) ergibt sich der Anker zu 2,524 (`M`, `R`), 2,498 (`S`) und 2,442 (`1`) — vier von
-   * fünf Läufen auf 2,5 mm, also 1,5 mm rechts der Körperkante. Der fünfte ist `F.1.3` („5.000",
-   * Anker 2,022); er steht als Befund an seiner Manifestzeile und nicht in dieser Zahl.
+   * Seitenlage der ersten Glyphe ab; mit den Seitenlagern von Einsatzzeichen Sans (ESZ-144) ergibt
+   * sich der Anker zu 2,533 (`M`), 2,529 (`R`), 2,535 (`S`) und 2,578 (`1`), mit Arimo waren es
+   * 2,524, 2,498 und 2,442 — der Katalog bleibt auf 2,5 mm, 1,5 mm rechts der Körperkante. Der
+   * fünfte ist `F.1.3` („5.000", Anker 1,939); er steht als Befund an seiner Manifestzeile.
    * F.1.12 erweitert die waagerechte Evidenz: „ÜMANV-S" überschreitet die Mittellinie sichtbar,
    * deshalb endet die deklarierte Box erst an der rechten Innenmarge des Körpers.
    */
@@ -700,17 +700,17 @@ export interface BodyLabels {
    *
    * Ablesung in 90,709 / 32 SVG-Einheiten pro Millimeter; Grundlinie aus flachfüßigen Glyphen,
    * Versalhöhe ohne runden Overshoot. Weil die Quelle nur Pfade speichert, ist der Anker aus der
-   * linken Tintenkante und dem Arimo-Seitenlager bei dieser Versalhöhe zurückgerechnet:
+   * linken Tintenkante und dem Seitenlager von Einsatzzeichen Sans zurückgerechnet (ESZ-144):
    *
    * | Quelle | Lauf | Versalhöhe | Grundlinie absolut / ab Körperoberkante | Tintenkante links | Anker absolut / ab linker Körperkante | Breite bis x=29 |
    * |---|---|---:|---:|---:|---:|---:|
-   * | F.2.10 | `BTKombi` | 2,191447 | 10,999923 / 5,249923 | 1,775524 | 1,514230 / 0,514230 | 27,485770 |
-   * | F.2.11 | `BTKombi` | 2,191447 | 10,999923 / 5,249923 | 1,775524 | 1,514230 / 0,514230 | 27,485770 |
-   * | F.2.12 | `GwBT` | 2,919225 | 11,999691 / 6,249691 | 2,223903 | 2,010503 / 1,010503 | 26,989497 |
-   * | F.2.13 | `GwBT` | 2,919225 | 11,999691 / 6,249691 | 2,223903 | 2,010503 / 1,010503 | 26,989497 |
-   * | F.2.14 | `GwLog` | 2,432746 | 10,999923 / 5,249923 | 2,186861 | 2,009024 / 1,009024 | 26,990976 |
-   * | F.2.16 | `40` | 2,749893 | 12,499576 / 6,749576 | 2,589026 | 2,497298 / 1,497298 | 26,502702 |
-   * | F.2.17 | `BtlLKW` | 2,432746 | 11,499807 / 5,749807 | 2,056334 | 1,766269 / 0,766269 | 27,233731 |
+   * | F.2.10 | `BTKombi` | 2,191447 | 10,999923 / 5,249923 | 1,775524 | 1,521216 / 0,521216 | 27,478784 |
+   * | F.2.11 | `BTKombi` | 2,191447 | 10,999923 / 5,249923 | 1,775524 | 1,521216 / 0,521216 | 27,478784 |
+   * | F.2.12 | `GwBT` | 2,919225 | 11,999691 / 6,249691 | 2,223903 | 2,010607 / 1,010607 | 26,989393 |
+   * | F.2.13 | `GwBT` | 2,919225 | 11,999691 / 6,249691 | 2,223903 | 2,010607 / 1,010607 | 26,989393 |
+   * | F.2.14 | `GwLog` | 2,432746 | 10,999923 / 5,249923 | 2,186861 | 2,009110 / 1,009110 | 26,990890 |
+   * | F.2.16 | `40` | 2,749893 | 12,499576 / 6,749576 | 2,589026 | 2,462956 / 1,462956 | 26,537044 |
+   * | F.2.17 | `BtlLKW` | 2,432746 | 11,499807 / 5,749807 | 2,056334 | 1,774024 / 0,774024 | 27,225976 |
    */
   readonly topLeftMetrics?: {
     readonly capHeightMm: number;

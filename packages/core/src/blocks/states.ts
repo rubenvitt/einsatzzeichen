@@ -42,24 +42,24 @@ function tendency(valueId: StateId, definedAt: string, section: string): BlockEn
 
 /** Alle `STATE_IDS` außer den Tendenzen, in Kapitelreihenfolge (5.8.1, 5.8.2, 5.8.4–5.8.9). */
 export const STATE_BLOCKS: readonly BlockEntry[] = Object.freeze([
-  state('tactical-rescue', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:423–431', '5.8.1.1'),
-  state('tactical-attack', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:432–440', '5.8.1.2'),
-  state('tactical-defense', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:441–449', '5.8.1.3'),
-  state('tactical-retreat', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:450–458', '5.8.1.4'),
-  state('flooded-area', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:459–467', '5.8.1.5'),
-  state('water-ingress-hazard', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:468–476', '5.8.1.6'),
-  // Zweite Darstellung `variant: 'alternative'` in 01-tactics-hazards.ts:486–495.
-  state('hazardous-substances', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:477–485', '5.8.1.7'),
-  // Zweite Darstellung `variant: 'alternative'` in 01-tactics-hazards.ts:505–514.
-  state('radioactivity-hazard', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:496–504', '5.8.1.8'),
-  state('electrical-energy-hazard', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:515–523', '5.8.1.9'),
-  state('mineral-oil-hazard', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:524–532', '5.8.1.10'),
-  state('explosion-hazard', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:533–541', '5.8.1.11'),
-  state('explosive-ordnance-hazard', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:542–550', '5.8.1.12'),
-  // Zweite Darstellung `variant: 'alternative'` in 01-tactics-hazards.ts:560–569.
-  state('suspected-situation', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:551–559', '5.8.1.13'),
-  // Zweite Darstellung `variant: 'alternative'` in 01-tactics-hazards.ts:579–588.
-  state('acute-situation', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:570–578', '5.8.1.14'),
+  state('tactical-rescue', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:435–443', '5.8.1.1'),
+  state('tactical-attack', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:444–452', '5.8.1.2'),
+  state('tactical-defense', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:453–461', '5.8.1.3'),
+  state('tactical-retreat', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:462–470', '5.8.1.4'),
+  state('flooded-area', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:471–479', '5.8.1.5'),
+  state('water-ingress-hazard', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:480–488', '5.8.1.6'),
+  // Zweite Darstellung `variant: 'alternative'` in 01-tactics-hazards.ts:498–507.
+  state('hazardous-substances', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:489–497', '5.8.1.7'),
+  // Zweite Darstellung `variant: 'alternative'` in 01-tactics-hazards.ts:517–526.
+  state('radioactivity-hazard', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:508–516', '5.8.1.8'),
+  state('electrical-energy-hazard', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:527–535', '5.8.1.9'),
+  state('mineral-oil-hazard', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:536–544', '5.8.1.10'),
+  state('explosion-hazard', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:545–553', '5.8.1.11'),
+  state('explosive-ordnance-hazard', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:554–562', '5.8.1.12'),
+  // Zweite Darstellung `variant: 'alternative'` in 01-tactics-hazards.ts:572–581.
+  state('suspected-situation', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:563–571', '5.8.1.13'),
+  // Zweite Darstellung `variant: 'alternative'` in 01-tactics-hazards.ts:591–600.
+  state('acute-situation', 'core/src/geometry/pictograms/states/01-tactics-hazards.ts:582–590', '5.8.1.14'),
   state('activity-slightly-increased-outage-up-to-25-percent', 'core/src/geometry/pictograms/states/02-activity.ts:120–128', '5.8.2.1'),
   state('activity-moderately-increased-outage-up-to-50-percent', 'core/src/geometry/pictograms/states/02-activity.ts:129–137', '5.8.2.2'),
   state('activity-significantly-increased-outage-up-to-75-percent', 'core/src/geometry/pictograms/states/02-activity.ts:138–146', '5.8.2.3'),
