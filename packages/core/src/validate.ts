@@ -81,6 +81,11 @@ const VEHICLE_KINDS = new Set<SymbolKind>([
   'swap-container-carrier',
   'roll-off-trailer',
   'swap-container-trailer',
+  // Die Zweiräder 3.7/3.8 (ESZ-142) sind Fahrzeuge, aber ihre Form zeigt das Rad selbst. Eine
+  // Kategorie aus 5.1 lehnt deshalb `vehicle-category-requires-chassis-body` ab, nicht die Regel,
+  // die von einem Nichtfahrzeug spricht.
+  'two-wheeler',
+  'motorized-two-wheeler',
 ]);
 
 /**

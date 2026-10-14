@@ -33,6 +33,14 @@ import type { ColorToken } from './geometry.js';
  * - `swap-container` — Wechselbehälter, `5.1.3.2`.
  * - `swap-body` — Wechselbrücke, `5.1.3.3`.
  * - `wheeled-container` — Behälter, zieh- und schiebbar (Rollcontainer), `5.1.3.4`.
+ *
+ * **Die beiden Zweiräder aus Kapitel 3 (ESZ-142, 14.10.2026)** sind dieselben Zeichnungen wie die
+ * Sonderformen `3.7` und `3.8` (`core/src/geometry/special-form-bodies.ts`), hier als Körper mit
+ * Organisationsfarbe und Beschriftung. Beides ist an keiner Referenzdatei belegt und wird
+ * abgeleitet (`docs/decisions/2026-10-14-esz-142-zweirad-als-koerperart.md`):
+ *
+ * - `two-wheeler` — Zweirad (Fahrrad), `3.7`.
+ * - `motorized-two-wheeler` — Zweirad motorgetrieben (Kraftrad), `3.8`.
  */
 export type SymbolKind =
   | 'formation'
@@ -61,7 +69,9 @@ export type SymbolKind =
   | 'roll-off-container'
   | 'swap-container'
   | 'swap-body'
-  | 'wheeled-container';
+  | 'wheeled-container'
+  | 'two-wheeler'
+  | 'motorized-two-wheeler';
 
 /**
  * Eine **zweite, in der Quelle belegte Zeichnung desselben Grundzeichens** — keine zweite

@@ -67,6 +67,8 @@ import {
   chassisCurvePath,
   noteChassisDerivation,
 } from './derive/vehicle-category.js';
+import { isOpenBody } from './derive/open-body.js';
+import { assertTwoWheelerRoom } from './derive/two-wheeler-room.js';
 import { openBodyTint } from './derive/open-body-tint.js';
 import { noteInsetHullOrganization } from './derive/inset-hull-organization.js';
 import { capabilityPictograms, composedBodyMarks } from './derive/capabilities.js';
@@ -92,15 +94,6 @@ import {
 } from './render/text-policy.js';
 import { textRunIssues, type TextMetrics } from './text-metrics.js';
 import { analyzeSymbolSpec, CompositionError, type ValidationIssue } from './validate.js';
-
-/**
- * Ob ein Körper ein Polyzug ist, den die Zeichnung **nicht** schließt. `closed` ist optional; die
- * Prüfung fragt deshalb nach `!== true` und nicht nach `=== false` — ein weggelassenes Feld ist
- * ein offener Polyzug.
- */
-function isOpenPolyline(primitive: Primitive): boolean {
-  return primitive.type === 'polyline' && primitive.closed !== true;
-}
 
 /** Senkrechte Mitte der Hülle eines Primitivs, in Millimetern. */
 function centerYMm(primitive: Primitive): number {
@@ -1163,6 +1156,7 @@ function composeMeasuredOrDerived(
   if (analysis.issues.length > 0) throw new CompositionError(analysis.issues);
 
   const spec = analysis.spec;
+  assertTwoWheelerRoom(spec);
   const effectiveLabels = spec.labels;
   const description = options.descriptionFromSpec?.(spec) ?? options.description;
 
@@ -1340,9 +1334,10 @@ function composeMeasuredOrDerived(
   const bodyFillOverride = organizationFill ?? spec.technicalFill;
   noteInsetHullOrganization(spec.kind, spec.bodyVariant, spec.organization);
 
-  // Offener Polyzug (`1.13 Ereignis`): eine Füllung schlösse ihn zu einer Fläche, die die
-  // Referenz nicht zeichnet. Die Farbe geht deshalb in den Strich (derive/open-body-tint.ts).
-  const openBodyTinted = bodyFillOverride !== undefined && isOpenPolyline(placedBody)
+  // Offener Körper (`1.13 Ereignis`, seit ESZ-142 auch die Zweiräder 3.7/3.8): eine Füllung
+  // schlösse ihn zu einer Fläche, die die Referenz nicht zeichnet. Die Farbe geht deshalb in den
+  // Strich (derive/open-body-tint.ts).
+  const openBodyTinted = bodyFillOverride !== undefined && isOpenBody(placedBody)
     ? openBodyTint(bodyForFill, bodyFillOverride, organizationFill)
     : undefined;
 

@@ -46,6 +46,8 @@ const KIND_LABELS: Record<SymbolKind, string> = {
   'swap-container': 'Wechselbehälter',
   'swap-body': 'Wechselbrücke',
   'wheeled-container': 'Rollcontainer',
+  'two-wheeler': 'Zweirad',
+  'motorized-two-wheeler': 'Zweirad motorgetrieben',
 };
 
 /** Öffentlich, weil die Dokumentationswebsite dasselbe Vokabular anzeigt wie die

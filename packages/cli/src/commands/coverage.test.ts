@@ -183,11 +183,12 @@ describe('coverage CLI', () => {
     // Zusammen 8784 − 85 = 8699. 26 Funktionsrollen seit ESZ-116 (Führungskraft ohne Kürzel).
     // ESZ-117 (acht Körperarten): 10944 gültig, 93 belegt, 384912 enumeriert, 10851 ohne Beleg;
     // hergeleitet in `rule-coverage.test.ts`. ESZ-143: 136 Körpermarken (die Drohnenwinkel aus
-    // C.1.13 und C.1.14), beide belegt (bodyMarks 47/48).
+    // C.1.13 und C.1.14), beide belegt (bodyMarks 47/48). ESZ-142 (zwei Zweiräder): 11052 gültig,
+    // 413424 enumeriert, 10959 ohne Beleg.
     expect(lines).toContain(
-      'Generative Reichweite (Stufe 1): 10944 gültige Kompositionen aus kind × Körpervariante × ' +
-        'Organisation × Kopfzone × Fahrwerk (384912 enumeriert), davon 93 in der Referenz belegt — ' +
-        '10851 erzeugbar ohne Referenzbeleg, 0 Rezeptsignaturen außerhalb der Stufe ' +
+      'Generative Reichweite (Stufe 1): 11052 gültige Kompositionen aus kind × Körpervariante × ' +
+        'Organisation × Kopfzone × Fahrwerk (413424 enumeriert), davon 93 in der Referenz belegt — ' +
+        '10959 erzeugbar ohne Referenzbeleg, 0 Rezeptsignaturen außerhalb der Stufe ' +
         '(dokumentiert, kein Gate); nicht enumeriert: 88 Fähigkeiten, ' +
         '136 Körpermarken, 26 Funktionsrollen, freie Bezeichnung',
     );

@@ -19,6 +19,11 @@ import type { ZoneBinding, ZoneId } from './zones.js';
  * Seit ESZ-134 (13.10.2026) stehen 3.6 bis 3.8 als Einzelpiktogramm im Raum `special-form.*` und
  * damit freistehend auf der Lagekarte; die Drohne im Körper zeichnen die vermessenen Körpermarken
  * aus `DRONE_BODY_MARKS` (`docs/decisions/2026-10-13-esz-134-sonderformen-als-piktogramme.md`).
+ *
+ * Seit ESZ-142 (14.10.2026) sind die beiden Zweiräder zusätzlich `SymbolKind` (`two-wheeler`,
+ * `motorized-two-wheeler`), mit derselben Zeichnung, Organisationsfarbe im Strich und abgeleiteten
+ * Läufen außerhalb des Körpers (`docs/decisions/2026-10-14-esz-142-zweirad-als-koerperart.md`).
+ * Drohne und Giebel bleiben ohne `SymbolKind`.
  */
 export type SpecialFormId = 'drone' | 'two-wheeler' | 'motorized-two-wheeler' | 'temporary-fixed-structure';
 

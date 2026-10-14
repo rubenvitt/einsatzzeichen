@@ -249,7 +249,9 @@ Jede Empfehlung ist eine Empfehlung und keine Ablesung.
    jedes Rechteckkörpers hinaus, ähnlich der Giebelmarke des ortsfesten Standorts in Anhang J.
 7. **Aufnahme in `SymbolKind`.** *Nachtrag 13.10.2026 (ESZ-134):* entschieden ohne `SymbolKind`;
    3.6 bis 3.8 stehen als Piktogrammraum `special-form.*` freistehend, die Drohne im Körper als
-   Körpermarke (`2026-10-13-esz-134-sonderformen-als-piktogramme.md`).
+   Körpermarke (`2026-10-13-esz-134-sonderformen-als-piktogramme.md`). *Nachtrag 14.10.2026
+   (ESZ-142):* die beiden Zweiräder sind seitdem zusätzlich `SymbolKind`
+   (`2026-10-14-esz-142-zweirad-als-koerperart.md`).
    *Empfehlung:* erst nach der Vermessung an den Referenzdateien.
    Eine Körperart ohne Zeichnung würfe an jeder Stelle `NotMeasuredError` und stünde trotzdem in
    den Vokabularen der Website und der API. Das wäre ein Angebot, das der Motor nicht einlösen

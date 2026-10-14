@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { DRONE_BODY_MARKS, SPECIAL_FORMS, SPECIAL_FORM_PICTOGRAMS, specialForm, strokeBoundsOfMm } from '@einsatzzeichen/core';
-import type { SpecialFormId, ZoneBoundsMm } from '@einsatzzeichen/schema';
+import {
+  BLOCK_REGISTER,
+  DRONE_BODY_MARKS,
+  boundsOfMm,
+  SPECIAL_FORMS,
+  SPECIAL_FORM_PICTOGRAMS,
+  baseDrawing,
+  drawSymbol,
+  specialForm,
+  specialFormDrawing,
+  strokeBoundsOfMm,
+} from '@einsatzzeichen/core';
+import { SYMBOL_KINDS, type SpecialFormId, type ZoneBoundsMm } from '@einsatzzeichen/schema';
 import fingerprints from './fingerprints.json' with { type: 'json' };
 import { RECIPES, type Recipe } from './recipes.js';
 
@@ -166,5 +177,49 @@ describe('Sonderformen im Piktogrammraum und als Innenzeichen (ESZ-134)', () => 
       expect(recipe!.spec.bodyVariant).toBe(entry.bodyVariant);
       expect(recipe!.spec.bodyMarks, entry.section).toContain(entry.bodyMark);
     }
+  });
+});
+
+/**
+ * Die Zweiräder als Körperart (ESZ-142). Die Art zeichnet dieselben Primitive wie die
+ * Kapiteldatei und wie das Piktogramm der Manifestzeile `3.7`/`3.8`; die Tintenhülle ist die an
+ * der Datei abgelesene aus `SPECIAL_FORMS`. Eine eigene Manifestzeile bekommt die Art nicht: die
+ * Zeile des Abschnitts trägt schon das Piktogramm, und ein zweites Rezept derselben Datei wäre
+ * keine Alternativdarstellung.
+ */
+describe('Zweirad und Krad als Körperart (ESZ-142)', () => {
+  const KINDS = ['two-wheeler', 'motorized-two-wheeler'] as const;
+
+  it('führt genau die beiden Zweiräder unter den Sonderformen als Körperart', () => {
+    expect(SPECIAL_FORMS.map((form) => form.id).filter((id) => (SYMBOL_KINDS as readonly string[]).includes(id)))
+      .toEqual([...KINDS]);
+  });
+
+  it.each(KINDS)('zeichnet %s wie die Kapiteldatei und das Piktogramm des Abschnitts', (kind) => {
+    const chapter = specialFormDrawing(kind).children;
+    expect(baseDrawing(kind).children).toEqual(chapter);
+    expect(drawSymbol({ kind }).children).toEqual(chapter);
+    const pictogram = SPECIAL_FORM_PICTOGRAMS.find((definition) => definition.id === `special-form.${kind}`);
+    expect(pictogram?.primitives.map(({ role: _role, ...rest }) => rest))
+      .toEqual(chapter.map(({ role: _role, ...rest }) => rest));
+  });
+
+  it.each(KINDS)('trifft an %s die an der Datei abgelesene Mittellinienhülle', (kind) => {
+    const [body] = drawSymbol({ kind }).children;
+    const centerline = boundsOfMm(body!);
+    const measured = zoneBounds(kind, 'centerline-hull');
+    expect(centerline.minX).toBeCloseTo(measured.minX, 3);
+    expect(centerline.minY).toBeCloseTo(measured.minY, 3);
+    expect(centerline.maxX).toBeCloseTo(measured.maxX, 3);
+    expect(centerline.maxY).toBeCloseTo(measured.maxY, 3);
+  });
+
+  it.each(KINDS)('nennt für %s den Abschnitt der Kapiteldatei, im Katalog und im Bausteinregister', (kind) => {
+    const { section } = specialForm(kind);
+    expect(baseDrawing(kind).description).toContain(`BABZ-Abschnitt ${section}`);
+    const entry = BLOCK_REGISTER['base-symbol'].find((candidate) => candidate.valueId === kind);
+    expect(entry?.binding.status).toBe('measured');
+    if (entry?.binding.status !== 'measured') return;
+    expect(entry.binding.geometry.sourceRefs?.map((ref) => ref.section)).toEqual([section]);
   });
 });

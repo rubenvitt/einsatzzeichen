@@ -97,7 +97,8 @@ function pictogramValues(pictograms: readonly CatalogPictogramDefinition[], pref
  *
  * Belegt („exercised") ist ein Wert, wenn er in `recipe.spec` eines Rezepts steht, ein
  * Katalogeintrag ihn als `kind` trägt (die Grundzeichen aus Kapitel 1 sind Referenzbelege
- * einer Art ohne Rezept) **oder** ein Element ihn trägt: Organisationen, Stärkegrade und Fahrwerkszonen sind eigene Manifestzeilen
+ * einer Art ohne Rezept; ebenso die Zweiräder über ihr Sonderformpiktogramm, ESZ-142) **oder**
+ * ein Element ihn trägt: Organisationen, Stärkegrade und Fahrwerkszonen sind eigene Manifestzeilen
  * mit eigenem Referenzbeleg (Kapitel 2, 5.4, 5.1.1), und ein Element belegt seinen Wert auch
  * dann, wenn kein Rezept ihn verwendet. Die Piktogrammräume (`state`, `comms`, `damage`,
  * `wildfire`, `leadership`, `water-rescue-personnel`) stehen bewusst **nicht** in `SymbolSpec`
@@ -120,6 +121,10 @@ export function ruleCoverage(
     axis('kind', ids(SYMBOL_KINDS), [
       ...specs.map((spec) => spec.kind),
       ...catalog.map((entry) => entry.kind),
+      // Seit ESZ-142 sind die Zweiräder 3.7/3.8 auch Körperarten. Ihr Referenzbeleg ist die
+      // Manifestzeile der Sonderform (`special-form.*`): dieselben Primitive, dieselbe Datei
+      // (`base-symbols.test.ts` hält Körper und Piktogramm gleich).
+      ...pictogramValues(pictograms, 'special-form').filter((id) => (SYMBOL_KINDS as readonly string[]).includes(id)),
     ]),
     axis('bodyVariant', ids(BODY_VARIANT_IDS), defined(specs.map((spec) => spec.bodyVariant))),
     axis('organization', ids(ORGANIZATION_IDS), [
