@@ -1,3 +1,25 @@
+## [6.3.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.2.0...v6.3.0) (2026-10-14)
+
+### Katalog
+
+- **Zwei neue Zeichen für Drohneneinheiten der Feuerwehr:**
+  - **C.1.13 Flugdrohnentrupp**
+  - **C.1.14 Drohnentrupp Feuerwehr**
+
+  Beide Zeichen wurden an den Referenzdateien vermessen. Sie sind aus den Bausteinen Formation, Trupp und Feuerwehr zusammengesetzt und decken sich mit der Referenz pixelgenau (0,00 % Flächenabweichung).
+
+### Rendering
+
+- **Neue Körpermarken für den Drohnenwinkel:**
+  - `formation-chevron-18mm-over-notched-line` (C.1.13): Winkel über einer Linie mit 45°-Kerbe
+  - `formation-chevron-18mm` (C.1.14): Winkel allein
+
+  `DRONE_BODY_MARKS` enthält damit jetzt fünf Varianten.
+
+### Qualitätssicherung
+
+- Manifest, technisches Review, Snapshots und die Tabelle der wörtlich übernommenen Bezeichnungen sind um die beiden neuen Zeichen ergänzt. Das Fachreview steht noch aus.
+
 ## [6.2.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.1.0...v6.2.0) (2026-10-14)
 
 ### Website
