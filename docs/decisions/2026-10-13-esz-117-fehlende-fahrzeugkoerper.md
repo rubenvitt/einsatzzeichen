@@ -52,6 +52,9 @@ auszuschließen.
    `specialFormDrawing('two-wheeler' | 'motorized-two-wheeler')` zeichenbar. Sie tragen keine
    Organisationsfarbe und kein Fahrwerk; als zusammensetzbare Art bräuchten sie einen eigenen
    Zonenvertrag. Das ist eine eigene Aufgabe und nicht Teil dieser.
+   *Nachtrag 14.10.2026 (ESZ-142):* Beide sind jetzt Körperarten, `two-wheeler` und
+   `motorized-two-wheeler`, mit Farbe im Strich und Läufen außen
+   (`2026-10-14-esz-142-zweirad-als-koerperart.md`).
 7. **Amphibienfahrzeug bleibt, wie es ist.** Das Fahrwerk wird seit dem 2. Oktober 2026 gezeichnet
    (Wellenlinie aus beiden Strichkanten konstruiert, als Ableitung gemeldet). Die Angabe im Ticket,
    es werfe `NotMeasuredError`, ist überholt. Der Pixelvergleich gegen `5.1.1.4` vom
@@ -80,5 +83,6 @@ auszuschließen.
 | wechsellader-wechselbehaelter | `{ kind: 'roll-off-loader' }` oder `{ kind: 'swap-container-carrier' }`, je nach Aufbau |
 | anhaenger-abrollbehaelter | `{ kind: 'roll-off-trailer' }` |
 | anhaenger-wechselbehaelter | `{ kind: 'swap-container-trailer' }` |
-| zweirad, fahrrad, kraftrad | `specialFormDrawing('two-wheeler')` bzw. `('motorized-two-wheeler')` |
+| zweirad, fahrrad | `{ kind: 'two-wheeler' }` (seit ESZ-142) |
+| kraftrad | `{ kind: 'motorized-two-wheeler' }` (seit ESZ-142) |
 | amphibienfahrzeug | `{ kind: 'vehicle-land', vehicleCategory: 'amphibienfahrzeug' }` |

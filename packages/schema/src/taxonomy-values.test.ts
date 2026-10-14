@@ -12,7 +12,7 @@ describe('Wertelisten der SymbolSpec-Achsen', () => {
   // Die Vollständigkeit gegenüber der Union erzwingt der Typ (`Record<X, true>`); hier stehen
   // nur die Zahlen, damit eine Erweiterung der Union sichtbar auch die Regelabdeckung ändert.
   it('trägt die Zahlen der Achsen aus taxonomy.ts', () => {
-    expect(SYMBOL_KINDS).toHaveLength(27);
+    expect(SYMBOL_KINDS).toHaveLength(29);
     expect(BODY_VARIANT_IDS).toHaveLength(10);
     expect(ORGANIZATION_IDS).toHaveLength(8);
     expect(STRENGTH_IDS).toHaveLength(4);

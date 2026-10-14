@@ -668,6 +668,11 @@ const PROFILES: Record<SymbolKind, LayoutProfile> = {
   'swap-container': rectBodyProfile,
   'swap-body': rectBodyProfile,
   'wheeled-container': rectBodyProfile,
+  // Die Zweiräder 3.7/3.8 (ESZ-142) tragen in keiner Referenzdatei einen Lauf oder eine Kopfzone.
+  // Wie am Ereignis, dem anderen offenen Körper, gilt der Normfall des Rechteckkörpers als
+  // übertragen; die Beschriftungszonen leitet `derive/label-zones.ts` ab.
+  'two-wheeler': rectBodyProfile,
+  'motorized-two-wheeler': rectBodyProfile,
 };
 
 function variantProfile(kind: SymbolKind, variant: BodyVariantId | undefined): LayoutProfile | undefined {

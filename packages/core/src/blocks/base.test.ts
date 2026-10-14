@@ -17,6 +17,7 @@ import {
 } from '@einsatzzeichen/schema';
 import { baseDrawing } from '../geometry/base-symbols.js';
 import { CONTAINER_KINDS } from '../geometry/container-bodies.js';
+import { TWO_WHEELER_KINDS } from '../geometry/special-form-bodies.js';
 import { isDerivedBodyVariant } from '../derive/body-variant-pairs.js';
 import { organizationColor } from '../geometry/organizations.js';
 import { MEASURED_VEHICLE_CATEGORIES, vehicleChassis } from '../geometry/vehicle-categories.js';
@@ -100,6 +101,7 @@ function place(file: string, start: number, end: number): string {
 
 const BASE_FILE = 'core/src/geometry/base-symbols.ts';
 const CONTAINER_FILE = 'core/src/geometry/container-bodies.ts';
+const SPECIAL_FORM_FILE = 'core/src/geometry/special-form-bodies.ts';
 const ORGANIZATION_FILE = 'core/src/geometry/organizations.ts';
 const CHASSIS_FILE = 'core/src/geometry/vehicle-categories.ts';
 
@@ -122,6 +124,13 @@ function expectedBasePlace(valueId: string): string {
       startWithComment(containerLines, key),
       endOfObjectEntry(containerLines, key, 2),
     );
+  }
+  if (variant === undefined && (TWO_WHEELER_KINDS as readonly string[]).includes(kind)) {
+    // Die Zweiräder aus Kapitel 3 (ESZ-142) zeichnen die Sonderform aus ihrem Modul.
+    const formLines = sourceLines(SPECIAL_FORM_FILE);
+    const [from, to] = constBlock(formLines, 'TWO_WHEELER_BODIES');
+    const key = findLine(formLines, keyPattern(kind, 2), from, to);
+    return place(SPECIAL_FORM_FILE, startWithComment(formLines, key), endOfObjectEntry(formLines, key, 2));
   }
   if (variant === undefined) {
     const [from, to] = constBlock(lines, 'BODIES');

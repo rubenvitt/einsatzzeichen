@@ -166,7 +166,8 @@ describe('Bausteinregister: festgenagelter Stand', () => {
       // Seit dem 2. Oktober 2026 36: die drei abgeleiteten Fassungen der Funktionsstelle
       // (`post/raised-gable`, `post/raised-circle-1mm`, `post/foot-band`) zeichnet der Katalog.
       // Seit ESZ-117 44: die acht Behälterformen aus Kapitel 5.1.
-      'base-symbol': 44,
+      // Seit ESZ-142 46: die beiden Zweiräder aus Kapitel 3.
+      'base-symbol': 46,
       // Seit LFH-586 acht: `bundespolizei` ist keine eigene Organisation mehr.
       color: 8,
       strength: 4,

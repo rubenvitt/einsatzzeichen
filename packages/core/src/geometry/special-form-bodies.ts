@@ -6,6 +6,7 @@ import {
   type Primitive,
   type SpecialFormId,
   type Style,
+  type SymbolKind,
 } from '@einsatzzeichen/schema';
 
 /**
@@ -161,6 +162,40 @@ const ROOF_POINTS: readonly Point[] = [
 function roof(): Primitive {
   return { type: 'polyline', role: 'bodyExtra', closed: false, points: ROOF_POINTS, style: OUTLINE };
 }
+
+// ---------------------------------------------------------------------------------------------
+// 3.7 und 3.8 als Körperart (ESZ-142)
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Die beiden Zweiräder als `SymbolKind` (ESZ-142, 14.10.2026): dieselbe Zeichnung wie die
+ * Einzeldarstellung, eine zweite Geometriequelle gibt es nicht. Der Körper ist ein offener Pfad
+ * ohne Fläche; die Organisationsfarbe geht deshalb wie am Ereignis (1.13) in den Strich
+ * (`derive/open-body-tint.ts`). Begründung in
+ * `docs/decisions/2026-10-14-esz-142-zweirad-als-koerperart.md`.
+ */
+export const TWO_WHEELER_KINDS = ['two-wheeler', 'motorized-two-wheeler'] as const satisfies readonly (
+  SymbolKind & SpecialFormId
+)[];
+
+export type TwoWheelerKind = (typeof TWO_WHEELER_KINDS)[number];
+
+export const TWO_WHEELER_BODIES: Readonly<Record<TwoWheelerKind, Primitive>> = {
+  'two-wheeler': wheelBody(WHEEL.singleStemXMm),
+  'motorized-two-wheeler': wheelBody(WHEEL.motorizedStemXMm),
+};
+
+export const TWO_WHEELER_TITLES: Readonly<Record<TwoWheelerKind, string>> = {
+  'two-wheeler': 'Zweirad',
+  'motorized-two-wheeler': 'Zweirad motorgetrieben',
+};
+
+export const TWO_WHEELER_SECTIONS: Readonly<
+  Record<TwoWheelerKind, { readonly section: string; readonly asset: string }>
+> = {
+  'two-wheeler': { section: '3.7', asset: '3.7_Zweirad.svg' },
+  'motorized-two-wheeler': { section: '3.8', asset: '3.8_Zweirad motorgetrieben.svg' },
+};
 
 // ---------------------------------------------------------------------------------------------
 

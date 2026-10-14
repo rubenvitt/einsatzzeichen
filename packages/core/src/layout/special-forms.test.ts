@@ -46,11 +46,13 @@ describe('Sonderformen im Zonenmodell', () => {
     }
   });
 
-  it('ist keine Körperart: weder in SYMBOL_KINDS noch in den Fassungen des Zonenmodells', () => {
+  it('ist keine Körperart außer den beiden Zweirädern (ESZ-142)', () => {
+    const kinds = SPECIAL_FORMS.filter((form) => (SYMBOL_KINDS as readonly string[]).includes(form.id))
+      .map((form) => form.id);
+    expect(kinds).toEqual(['two-wheeler', 'motorized-two-wheeler']);
+    const zoneForms = ZONE_MODEL_FORMS.map((entry) => entry.kind) as readonly string[];
     for (const form of SPECIAL_FORMS) {
-      expect(SYMBOL_KINDS as readonly string[], form.id).not.toContain(form.id);
-      expect(ZONE_MODEL_FORMS.map((entry) => entry.kind) as readonly string[], form.id)
-        .not.toContain(form.id);
+      expect(zoneForms.includes(form.id), form.id).toBe(kinds.includes(form.id));
     }
   });
 
@@ -147,15 +149,15 @@ describe('Sonderformen im Zonenmodell', () => {
     expect(carrier.status === 'evidenced' ? carrier.value : null).toBe('circle-12');
   });
 
-  it('belegt Drohne und Giebel als Marke; die Zweiräder bleiben Fragen an den Eigentümer', () => {
+  it('belegt Drohne und Giebel als Marke; die Zweiräder sind seit ESZ-142 vorgeschlagene Körperformen', () => {
     expect(SPECIAL_FORMS.map((form) => [
       form.id,
       form.role.status,
       form.role.status === 'open' ? null : form.role.value,
     ])).toEqual([
       ['drone', 'evidenced', 'mark'],
-      ['two-wheeler', 'open', null],
-      ['motorized-two-wheeler', 'open', null],
+      ['two-wheeler', 'proposed', 'body-form'],
+      ['motorized-two-wheeler', 'proposed', 'body-form'],
       ['temporary-fixed-structure', 'evidenced', 'mark'],
     ]);
     for (const form of SPECIAL_FORMS) {

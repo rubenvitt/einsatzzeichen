@@ -27,6 +27,9 @@ Art `pictogram`, oder eine `SymbolKind` je Sonderform (LFH-567, Frage 7).
    Referenzdatei setzt eine der drei Formen als Körper mit Kopf, Fuß oder Beschriftung ein. Eine
    Körperart hätte außer dem Körper keine einzige belegte Zone und würfe an jeder anderen Stelle
    `NotMeasuredError`. Die freistehende Art kommt ohne Zonen aus.
+   *Nachtrag 14.10.2026 (ESZ-142):* Für die beiden Zweiräder revidiert. Sie sind zusätzlich
+   Körperarten mit abgeleiteten Zonen (`2026-10-14-esz-142-zweirad-als-koerperart.md`); das
+   Piktogramm bleibt. Für die Drohne gilt dieser Punkt weiter.
 3. **3.9 steht nicht im Raum.** Die Kapiteldatei zeigt den Giebel über einem Platzhalter für
    „irgendein Grundzeichen“; allein gezeichnet wäre er ein Dach ohne Träger. Am Körper ist er die
    Variante `circle-12`/`raised-gable`.

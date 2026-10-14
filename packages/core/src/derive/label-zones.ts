@@ -118,6 +118,9 @@ function familyOf(kind: SymbolKind, variant: BodyVariantId | undefined): Family 
     case 'point':
     case 'event':
     case 'spontaneous-helper':
+    // Die Zweiräder 3.7/3.8 (ESZ-142) sind offene Formen wie das Ereignis.
+    case 'two-wheeler':
+    case 'motorized-two-wheeler':
       return 'shaped';
   }
 }

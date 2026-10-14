@@ -54,6 +54,8 @@ export const SYMBOL_KINDS: readonly SymbolKind[] = keysOf<SymbolKind>({
   'swap-container': true,
   'swap-body': true,
   'wheeled-container': true,
+  'two-wheeler': true,
+  'motorized-two-wheeler': true,
 });
 
 export const BODY_VARIANT_IDS: readonly BodyVariantId[] = keysOf<BodyVariantId>({

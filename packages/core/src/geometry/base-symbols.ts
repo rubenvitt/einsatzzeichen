@@ -15,12 +15,14 @@ import { derivedInnerField, type InnerFieldGap } from '../derive/inner-field.js'
 import { segmentDistance, type Scaling } from '../derive/outline.js';
 import { noteDerivation } from '../derive/record.js';
 import { POST_VARIANT_BODIES, POST_VARIANT_EXTRAS } from '../derive/circle.js';
+import { isOpenBody } from '../derive/open-body.js';
 import {
   CONTAINER_BODIES,
   CONTAINER_EXTRAS,
   CONTAINER_SECTIONS,
   CONTAINER_TITLES,
 } from './container-bodies.js';
+import { TWO_WHEELER_BODIES, TWO_WHEELER_SECTIONS, TWO_WHEELER_TITLES } from './special-form-bodies.js';
 
 /** Umriss ohne Füllung. Organisationsfarben setzt der Kompositionsmotor. */
 const OUTLINE: Style = {
@@ -575,6 +577,9 @@ const BODIES: Partial<Record<SymbolKind, Primitive>> = {
   },
   // Die acht Behälterformen aus Kapitel 5.1 (ESZ-117) stehen in `container-bodies.ts`.
   ...CONTAINER_BODIES,
+  // Die beiden Zweiräder aus Kapitel 3 (ESZ-142) zeichnen die Kapiteldatei aus
+  // `special-form-bodies.ts`, als offenen Pfad ohne Fläche.
+  ...TWO_WHEELER_BODIES,
 };
 
 const VARIANT_EXTRA_PRIMITIVES: Partial<
@@ -899,6 +904,7 @@ const TITLES: Partial<Record<SymbolKind, string>> = {
   event: 'Ereignis',
   'spontaneous-helper': 'Spontanhelfer',
   ...CONTAINER_TITLES,
+  ...TWO_WHEELER_TITLES,
 };
 
 /**
@@ -926,6 +932,8 @@ const SECTIONS: Partial<Record<SymbolKind, { section: string; asset: string }>> 
   'spontaneous-helper': { section: '1.14', asset: '1.14_Spontanhelfer.svg' },
   // Kapitel 5.1: je Behälterform genau ein Abschnitt und eine Belegdatei (ESZ-117).
   ...CONTAINER_SECTIONS,
+  // Kapitel 3: die Zweiräder belegt je genau ihre Kapiteldatei (ESZ-142).
+  ...TWO_WHEELER_SECTIONS,
 };
 
 /**
@@ -1173,8 +1181,8 @@ function innerFieldGap(kind: SymbolKind, derived: DerivedVariant | undefined): I
  * Vermessen an den Körpern, die Anhang E damit zeichnet. An jedem anderen Körper wird es
  * abgeleitet (Entscheidung vom 2. Oktober 2026): Teilt eine Variante den Körper ihrer Grundart
  * (Fußband, Radpaar), gilt deren vermessenes Feld; sonst ist es die Körperkontur, um das
- * vermessene Maß nach innen versetzt (`derive/inner-field.ts`). Nur der offene Haken von
- * `1.13 Ereignis` hat keine Fläche und wirft — `compose()` lehnt seine Füllung vorher ab.
+ * vermessene Maß nach innen versetzt (`derive/inner-field.ts`). Nur die offenen Körper — der Haken
+ * von `1.13 Ereignis` und die Zweiräder 3.7/3.8 (ESZ-142) — haben keine Fläche und werfen.
  */
 export function innerField(kind: SymbolKind, variant?: BodyVariantId): readonly Primitive[] {
   const field = variant === undefined ? INNER_FIELDS[kind] : VARIANT_INNER_FIELDS[kind]?.[variant];
@@ -1184,7 +1192,7 @@ export function innerField(kind: SymbolKind, variant?: BodyVariantId): readonly 
     : undefined;
   const body = derived?.body ??
     (variant === undefined ? BODIES[kind] : VARIANT_BODIES[kind]?.[variant]);
-  if (body === undefined || (body.type === 'polyline' && body.closed !== true)) {
+  if (body === undefined || isOpenBody(body)) {
     throw new NotMeasuredError(
       `Eine weiße Innenkontur ist für "${kind}"${variant === undefined ? '' : ` / "${variant}"`} ` +
         (body === undefined ? 'nicht ableitbar: der Körper ist nicht belegt.' : 'nicht ableitbar: der Körper ist offen.'),

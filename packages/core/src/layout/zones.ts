@@ -203,7 +203,7 @@ const TRANSFERRED_CHASSIS_KINDS: readonly SymbolKind[] = ['roll-off-trailer', 's
 
 /**
  * Körperformen mit vermessenem Innenfeld (`INNER_FIELDS` in
- * `core/src/geometry/base-symbols.ts:1121–1137`). Das Zonenmodell importiert die Geometrie nicht;
+ * `core/src/geometry/base-symbols.ts:1129–1145`). Das Zonenmodell importiert die Geometrie nicht;
  * die Liste steht deshalb als Fundortangabe hier.
  */
 const INNER_FIELD_KINDS: readonly SymbolKind[] = [
@@ -215,7 +215,7 @@ const INNER_FIELD_KINDS: readonly SymbolKind[] = [
   'swap-loader-vehicle',
 ];
 
-/** Varianten mit eigenem Innenfeld (`VARIANT_INNER_FIELDS`, `base-symbols.ts:1139–1149`). */
+/** Varianten mit eigenem Innenfeld (`VARIANT_INNER_FIELDS`, `base-symbols.ts:1147–1157`). */
 const INNER_FIELD_VARIANT_KEYS: readonly string[] = ['vehicle-water/raised-hull'];
 
 /**
@@ -402,7 +402,7 @@ const ABOVE_LEFT_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
 /** Herkunft des Laufs rechts unterhalb des Körpers. */
 const BELOW_RIGHT_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
   'vehicle-water/raised-hull': source(
-    'core/src/compose.ts:244–284, core/src/layout/profiles.ts:392–399',
+    'core/src/compose.ts:237–277, core/src/layout/profiles.ts:392–399',
     'Belegt an den fünf Wasserfahrzeugen E.2.27 bis E.2.31, deren Typo-Ebene diesen Lauf ' +
       'byteidentisch führt. Gemessen ist die Tinte, nicht der Anker: der Anker 31,5512 ist aus ' +
       'der an E.2.1 gemessenen Differenz von 0,0266 mm zwischen Anker und Tintenkante ' +
@@ -529,7 +529,7 @@ const BOTTOM_LABEL_SOURCE: Readonly<Record<string, ZoneProvenance>> = {
 };
 
 const BOTTOM_LABEL_DEFAULT = source(
-  'core/src/compose.ts:121–161',
+  'core/src/compose.ts:114–154',
   'Gemessen an den 16 Referenzdateien E.1.1 bis E.1.16 (11./12. August 2026): Grundlinie 24,00 ' +
     'bei Körperunterkante 26,0, linke Tintenkante 3,03, rechte 29,03. Geltungsbereich sind diese ' +
     '16 Dateien auf dem Formationskörper — keine Aussage über E.1 insgesamt und keine eigene ' +
@@ -697,7 +697,7 @@ function bodyZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
       'Die Körperzone ist die Hülle des **platzierten** Körpers. Alle übrigen Zonen rechnen ' +
         'gegen sie, damit sie mitwandern, wenn eine Kopfzone den Körper verschiebt.',
       source(
-        'core/src/compose.ts:1414–1417',
+        'core/src/compose.ts:1409–1412',
         'Die Hülle entsteht zur Laufzeit aus dem Katalogprimitiv (`boundsOfMm`) und wird um die ' +
           'zusätzlichen Körperprimitive erweitert; sie ist deshalb kein je Körperform ' +
           'eingetragener Zahlenwert.',
@@ -783,7 +783,7 @@ function chassisZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
   if (!CHASSIS_KINDS.includes(kind)) {
     return measuredAbsent(
       'combination',
-      'core/src/validate.ts:493–517',
+      'core/src/validate.ts:498–522',
       'Eine Fahrwerkszone ist nur am Landfahrzeug, am Anhängerrumpf und am ' +
         `Wechselladerrumpf vermessen. "${kind}" trägt in der Referenz keine; am Wasserfahrzeug ` +
         'überträgt der Motor die des Amphibienfahrzeugs (derive/vehicle-category.ts), jede ' +
@@ -797,7 +797,7 @@ function chassisZone(kind: SymbolKind, profile: LayoutProfile): ZoneBinding {
   const topSource =
     profile.chassisTopBelowBaseBottomMm === undefined
       ? source(
-          'core/src/layout/profiles.ts:165–169, core/src/compose.ts:1414–1424',
+          'core/src/layout/profiles.ts:165–169, core/src/compose.ts:1409–1419',
           'Regelfall: die Zone hängt unmittelbar an der Unterkante des Grundzeichens. Gemessen ' +
             'an 5.1.1.1 bis 5.1.1.6 und an allen 25 E.2-Zeichen mit Fahrwerk — Körperunterkante ' +
             '26,0004 mm, Markenmitte 28,2501 mm, Unterkante der Zone 30,7502 mm.',
@@ -851,7 +851,7 @@ function innerFieldZone(kind: SymbolKind, variant?: BodyVariantId): ZoneBinding 
   if (!hasField) {
     return notMeasured(
       'combination',
-      'core/src/geometry/base-symbols.ts:1169–1211',
+      'core/src/geometry/base-symbols.ts:1177–1219',
       `Eine weiße Innenkontur ist für "${kind}"` +
         `${variant === undefined ? '' : ` / "${variant}"`} an keiner Referenz belegt. Wie die ` +
         'Kontur an einer Raute oder einem Kreis sitzt, zeigt keine Referenz; `innerField()` ' +
@@ -868,7 +868,7 @@ function innerFieldZone(kind: SymbolKind, variant?: BodyVariantId): ZoneBinding 
         'Koordinaten der unverschobenen Grundzeichnung. Als Zonendatum liegt die Einrückung vor, ' +
         'nicht eine je Körperform eingetragene Hülle.',
       source(
-        'core/src/geometry/base-symbols.ts:1121–1149, core/src/compose.ts:838–843',
+        'core/src/geometry/base-symbols.ts:1129–1157, core/src/compose.ts:831–836',
         'Belegt nur für die Körper, die Anhang E damit zeichnet. Optional, weil nur Anhang E es ' +
           'braucht; fehlt der Port oder die Körperform, wirft `compose()`, statt die Kontur ' +
           'still wegzulassen.',
@@ -899,7 +899,7 @@ function innerFieldZone(kind: SymbolKind, variant?: BodyVariantId): ZoneBinding 
         'inner-field-hull',
         { minX: 2, minY: 7, maxX: 30, maxY: 25 },
         source(
-          'core/src/compose.ts:145–159',
+          'core/src/compose.ts:138–152',
           'Die Referenz zieht ihre Ränder gegen dieses weiße Innenfeld, das 1 mm in den Körper ' +
             'eingerückt ist: `rect` 2/7 bis 30/25 neben dem Körper 1/6 bis 31/26 — belegt an ' +
             'dessen `rect` und nicht aus dem Überstand zurückgerechnet.',
@@ -912,7 +912,7 @@ function innerFieldZone(kind: SymbolKind, variant?: BodyVariantId): ZoneBinding 
         'body-left',
         'inward',
         source(
-          'core/src/compose.ts:145–159, 216–217',
+          'core/src/compose.ts:138–152, 216–217',
           'Die vermessene Grenze des mittigen Laufs ist dieses weiße Innenfeld, also 1 mm Marge ' +
             'und 28 mm Breite. Der Katalog kennt das Innenfeld als eigene Fläche in `compose()` ' +
             'nicht — die Formation ist dort **ein** Rechteck.',
@@ -947,7 +947,7 @@ function footZone(profile: LayoutProfile): ZoneBinding {
       COMPOSE_ZONE_CONSTANTS.FOOT_TEXT_SIZE_MM,
       'height',
       source(
-        'core/src/compose.ts:96–119',
+        'core/src/compose.ts:104–127',
         'Nicht an der Referenz abgelesen, sondern gespiegelt aus derselben Rechnung wie ' +
           '`placeHead`: die Kopfzone darf beim Rechteck-Körper bis zu ' +
           '`defaultAnchorMm − HEAD_GAP_MM − HEAD_TOP_MARGIN_MM` = 4 mm hoch werden. Bewusst ein ' +
@@ -965,7 +965,7 @@ function footZone(profile: LayoutProfile): ZoneBinding {
           'gewollter `outside-viewbox`-Befund im viewBox-Gate statt einer Zone, die lautlos ' +
           'verschwindet.',
         source(
-          'core/src/compose.ts:104–110',
+          'core/src/compose.ts:97–103',
           'Ein bedingungsloses Abschneiden auf 0 würde dort einen unsichtbaren `sizeMm: ' +
             '0`-Text erzeugen; belegt in `compose.test.ts`.',
         ),
@@ -1016,7 +1016,7 @@ function centerZone(
       'body-left',
       'inward',
       source(
-        'core/src/compose.ts:145–159, 215–242',
+        'core/src/compose.ts:138–152, 215–242',
         'Symmetrischer Rand der Ausgabebox gegen die Körperhülle; am 30 mm breiten ' +
           'Formationskörper ergibt das die 28-mm-Box. Vermessen ist das weiße Innenfeld der ' +
           'Referenz (`rect` 2/7 bis 30/25), nicht die Box selbst: die 28 mm sind eine ' +
@@ -1030,7 +1030,7 @@ function centerZone(
       COMPOSE_ZONE_CONSTANTS.CENTER_LABEL_CAP_HEIGHT_MM,
       'height',
       source(
-        'core/src/compose.ts:285–286',
+        'core/src/compose.ts:278–279',
         'Versalhöhe des mittigen Schriftgrads, gemessen an den 16 Dateien E.1.1 bis E.1.16. Der ' +
           'Schriftgrad selbst ist daraus über `TEXT_CAP_HEIGHT_FRACTION` abgeleitet und nicht ' +
           'gewählt; je Zeichen kann eine eigene gemessene Höhe danebenstehen.',
@@ -1042,7 +1042,7 @@ function centerZone(
       'Waagerecht mittig auf der Körperhülle. Eine waagerechte Randvermessung des mittigen ' +
         'Laufs gibt es nicht — ablesbar sind nur Grundlinie, Versalhöhe und Mittenlage.',
       source(
-        'core/src/compose.ts:145–159',
+        'core/src/compose.ts:138–152',
         'Die 2 mm der unteren Läufe waren für die mittige Box eine übernommene Annahme; seit ' +
           'dem Teilslice E-b gilt diese Übertragung nicht mehr.',
       ),
@@ -1073,7 +1073,7 @@ function bottomLabelZone(
       side === 'left' ? 'body-left' : 'body-right',
       'inward',
       source(
-        'core/src/compose.ts:139–161',
+        'core/src/compose.ts:132–154',
         'Gemessen an den unteren Läufen von E.1.1 bis E.1.16 (linke Tintenkante 3,03, rechte ' +
           '29,03 bei Körperkanten 1 und 31). Gegen die **Körperkante** sind es 2 mm statt der ' +
           '1 mm des weißen Innenfelds; der sichtbare Abstand ist derselbe wie in der Referenz.',
@@ -1085,7 +1085,7 @@ function bottomLabelZone(
       COMPOSE_ZONE_CONSTANTS.BOTTOM_LABEL_CAP_HEIGHT_MM,
       'height',
       source(
-        'core/src/compose.ts:285–287, 289–301',
+        'core/src/compose.ts:278–280, 289–301',
         'Versalhöhe der unteren Schriftgrade, gemessen an E.1.1 bis E.1.16. Der Schriftgrad ' +
           '(4,24 mm) ist daraus über `TEXT_CAP_HEIGHT_FRACTION` abgeleitet: an der Referenz ist ' +
           'die Versalhöhe ablesbar, der Schriftgrad nicht.',
@@ -1104,7 +1104,7 @@ function bottomCenterZone(
   if (baselineMm === undefined) {
     return notMeasured(
       'combination',
-      'schema/src/taxonomy.ts:620–628',
+      'schema/src/taxonomy.ts:630–638',
       'Profile ohne eingetragene `bottomCenter`-Zone lehnt `compose()` fail-closed ab. Gemessen ' +
         'ist die Zone bisher nur an der Formation (F.1.18/F.1.20) und an `circle-12/foot-band` ' +
         '(G.3.5).',
@@ -1124,7 +1124,7 @@ function bottomCenterZone(
       'bottom-center-anchor',
       'Um x = 16,0 mm zentriert, im Schriftgrad der unteren Zonen.',
       source(
-        'schema/src/taxonomy.ts:620–628',
+        'schema/src/taxonomy.ts:630–638',
         'Beide belegten Läufe sind um x = 16,0 mm zentriert und verwenden den Schriftgrad der ' +
           'unteren Zonen.',
       ),
@@ -1177,7 +1177,7 @@ function topLeftZone(
       'body-left',
       'right',
       source(
-        'core/src/compose.ts:163–176',
+        'core/src/compose.ts:156–169',
         'Zurückgerechnet und nicht abgelesen: dieselben Läufe mit Anker 3,0 mm gerastert ' +
           '(4096 px, 18. August 2026) und die Differenz abgezogen ergibt 2,524 für `MTF`/`RettD`, ' +
           '2,498 für `SEG` und 2,442 für `10` — vier der fünf F-a-Läufe auf 2,5 mm, also 1,5 mm ' +
@@ -1435,6 +1435,8 @@ export const ZONE_MODEL: Readonly<Record<SymbolKind, BodyFormZones>> = Object.fr
   'swap-container': zonesFor('swap-container'),
   'swap-body': zonesFor('swap-body'),
   'wheeled-container': zonesFor('wheeled-container'),
+  'two-wheeler': zonesFor('two-wheeler'),
+  'motorized-two-wheeler': zonesFor('motorized-two-wheeler'),
 } satisfies Record<SymbolKind, BodyFormZones>);
 
 /**

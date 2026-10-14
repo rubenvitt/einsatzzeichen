@@ -29,7 +29,7 @@ describe('ruleCoverage (Fixtures)', () => {
     expect(strength?.missing).toEqual(['staffel', 'gruppe']);
     const kind = axes.find((axis) => axis.id === 'kind');
     expect(kind?.exercised).toEqual(['formation', 'person']);
-    expect(kind?.values).toHaveLength(27);
+    expect(kind?.values).toHaveLength(29);
   });
 
   it('belegt Organisationen, Stärken und Fahrwerke auch über Elemente ohne Rezept', () => {
@@ -221,10 +221,12 @@ describe('generativeReach (echter Bestand)', () => {
     // Landfahrzeug, Anhänger und Wechsellader (1296 = 10 080 − 8784).
     // ESZ-117 bringt acht Körperarten aus Kapitel 5.1 mit je 270 gültigen Kombinationen dazu
     // (2160): 12 240 bestehen die Prüfung, 10 944 komponieren; die Lücke bleibt 1296.
+    // ESZ-142 bringt die beiden Zweiräder mit je 54 gültigen Kombinationen (Organisation und
+    // Kopfzone; keine Fahrzeugkategorie, keine Variante): 12 348 und 11 052, Lücke weiter 1296.
     const reach = generativeReach();
-    expect(reach.enumerated).toBe(27 * 11 * 9 * 16 * 9);
-    expect(reach.validBySpec).toBe(12240);
-    expect(reach.valid).toBe(10944);
+    expect(reach.enumerated).toBe(29 * 11 * 9 * 16 * 9);
+    expect(reach.validBySpec).toBe(12348);
+    expect(reach.valid).toBe(11052);
     // F.1.1 und F.1.3 (Doppelbalken) sowie F.1.13 und F.1.21 (Einzelbalken) tragen seit dem
     // Fachreview ihre Kopfmarke; dazu +20 gültige Kombinationen, weil die technische Kopfmarke
     // jetzt auch an der Formation mit Fußband belegt ist (2 Marken × 10 Organisationen). Seit
@@ -237,7 +239,7 @@ describe('generativeReach (echter Bestand)', () => {
     // Seit dem 2. Oktober 2026 85 statt 77: die acht Signaturen, die bis dahin außerhalb lagen,
     // sind jetzt für sich allein gültig. ESZ-117 bringt acht eigene Signaturen (93).
     expect(reach.referenced).toBe(93);
-    expect(reach.reachOnly).toBe(10944 - 93);
+    expect(reach.reachOnly).toBe(11052 - 93);
     // Bis zum 2. Oktober 2026 waren acht Rezeptsignaturen für sich allein nicht gültig: die
     // farbigen Kreisverträge brauchten ihre Körpermarke, die Personen mit Verwaltungsstufe ihre
     // Funktionsrolle, das eingesenkte Wasserfahrzeug seine Beschriftung. Seit dem Ableiten zeichnet

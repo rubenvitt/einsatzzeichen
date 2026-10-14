@@ -17,9 +17,10 @@ import { ZONE_IDS } from './zones.js';
  * LFH-577 am 29.09.2026).
  *
  * **Neben den Körperformen, nicht unter ihnen.** Jede Sonderform trägt dieselbe Zonenstruktur wie
- * ein Eintrag aus `ZONE_MODEL` — alle 16 Zonen, jede mit Maß oder mit begründeter Lücke. Sie ist aber
- * keine `SymbolKind` und damit für `compose()` unerreichbar. Warum das so bleibt, steht in
- * `schema/src/special-forms.ts`.
+ * ein Eintrag aus `ZONE_MODEL` — alle 16 Zonen, jede mit Maß oder mit begründeter Lücke. Sie
+ * beschreibt die Kapiteldatei, also die Form allein. Drohne und Giebel sind keine `SymbolKind`
+ * (`schema/src/special-forms.ts`); die beiden Zweiräder sind es seit ESZ-142 zusätzlich, mit
+ * derselben Zeichnung und eigenem Eintrag in `ZONE_MODEL`, wo die übrigen Zonen abgeleitet sind.
  *
  * **Was belegt ist.** Die Zeichnungen stehen in `geometry/special-form-bodies.ts`, an den
  * Referenzdateien abgelesen; dort steht je Form Datei und Zahl. Hier stehen die Hüllen der
@@ -116,7 +117,7 @@ const STRUCTURE_NOTE =
 
 /** Die Zweiräder: Halbbogen und Stiel(e), Mittellinien- und Tintenhülle. */
 function wheelBody(section: '3.7' | '3.8', stems: string): ZoneBinding {
-  const at = `${BODIES_AT}:83–102`;
+  const at = `${BODIES_AT}:84–103`;
   return {
     status: 'measured',
     measures: [
@@ -139,11 +140,12 @@ function wheelBody(section: '3.7' | '3.8', stems: string): ZoneBinding {
   };
 }
 
-const TWO_WHEELER_ROLE_QUESTION =
+const TWO_WHEELER_ROLE_REASON =
   'Die Datei zeigt eine vollständige Form ohne Füllebene und ohne Platzhalter, wie ein Grundzeichen; ' +
   'kein Original verwendet sie. Freistehend steht sie seit ESZ-134 als Piktogramm im Raum ' +
-  '`special-form.*`. Ist das Zweirad darüber hinaus eine eigene Körperform (dann mit welchen Zonen) ' +
-  'oder eine Marke, etwa an Stelle des Fahrwerks am Landfahrzeug?';
+  '`special-form.*`, am Körper seit ESZ-142 als eigene Körperart mit derselben Zeichnung: ' +
+  'Organisationsfarbe im Strich wie am Ereignis, Läufe außen, alle Zonen außer dem Körper ' +
+  'abgeleitet (docs/decisions/2026-10-14-esz-142-zweirad-als-koerperart.md).';
 
 export const SPECIAL_FORMS: readonly SpecialForm[] = Object.freeze([
   {
@@ -181,7 +183,7 @@ export const SPECIAL_FORMS: readonly SpecialForm[] = Object.freeze([
           bounds(
             'reference-hull',
             { minX: 4, minY: 10, maxX: 28, maxY: 22 },
-            `${BODIES_AT}:37–57`,
+            `${BODIES_AT}:38–58`,
             'Maße an der Referenz abgelesen: schwarz gefülltes Sechseck, Enden x 4 und 28 bei y 10…13, ' +
               'Scheitel außen (16|22), innen (16|17,273). Dieselbe Hülle führt das Kennzahlenartefakt.',
             '3.6',
@@ -196,11 +198,11 @@ export const SPECIAL_FORMS: readonly SpecialForm[] = Object.freeze([
     section: '3.7',
     title: 'Zweirad',
     asset: '3.7_Zweirad.svg',
-    role: { status: 'open', question: TWO_WHEELER_ROLE_QUESTION },
+    role: { status: 'proposed', value: 'body-form', reason: TWO_WHEELER_ROLE_REASON },
     relatedKind: {
       status: 'proposed',
-      value: 'vehicle-land',
-      reason: 'Ein Zweirad ist ein Landfahrzeug. Welche Fassung des Landfahrzeugs es berührt, belegt die Datei nicht.',
+      value: 'two-wheeler',
+      reason: 'Seit ESZ-142 dieselbe Zeichnung als Körperart `two-wheeler`; ein Landfahrzeug, dessen Form das Rad selbst zeigt.',
     },
     zones: zonesWith(wheelBody('3.7', 'ein Stiel auf x 16'), TWO_WHEELER_NOTE),
   },
@@ -210,15 +212,17 @@ export const SPECIAL_FORMS: readonly SpecialForm[] = Object.freeze([
     title: 'Zweirad motorgetrieben',
     asset: '3.8_Zweirad motorgetrieben.svg',
     role: {
-      status: 'open',
-      question:
-        `${TWO_WHEELER_ROLE_QUESTION} 3.8 unterscheidet sich von 3.7 nur durch den doppelten Stiel ` +
-        '(x 15 und 17 statt x 16): eine Variante desselben Zeichens oder ein eigenes?',
+      status: 'proposed',
+      value: 'body-form',
+      reason:
+        `${TWO_WHEELER_ROLE_REASON} 3.8 unterscheidet sich von 3.7 nur durch den doppelten Stiel ` +
+        '(x 15 und 17 statt x 16) und hat einen eigenen Abschnitt; es ist deshalb eine eigene Art, ' +
+        'keine Variante.',
     },
     relatedKind: {
       status: 'proposed',
-      value: 'vehicle-land',
-      reason: 'Wie 3.7: ein Landfahrzeug, ohne Beleg einer Fassung.',
+      value: 'motorized-two-wheeler',
+      reason: 'Seit ESZ-142 dieselbe Zeichnung als Körperart `motorized-two-wheeler`.',
     },
     zones: zonesWith(wheelBody('3.8', 'zwei Stiele auf x 15 und 17'), TWO_WHEELER_NOTE),
   },
@@ -254,7 +258,7 @@ export const SPECIAL_FORMS: readonly SpecialForm[] = Object.freeze([
       value: 'circle-12',
       evidence: [
         {
-          definedAt: 'core/src/geometry/base-symbols.ts:666–674',
+          definedAt: 'core/src/geometry/base-symbols.ts:671–679',
           note: 'Die Variante `raised-gable` des 12-mm-Kreises ist dieser Giebel am Körper, vermessen an F.3.5/F.3.14/I.4.1.',
         },
       ],
@@ -268,7 +272,7 @@ export const SPECIAL_FORMS: readonly SpecialForm[] = Object.freeze([
           bounds(
             'roof-centerline',
             { minX: 2, minY: 2, maxX: 30, maxY: 14 },
-            `${BODIES_AT}:137–159`,
+            `${BODIES_AT}:138–160`,
             'Maße an der Referenz abgelesen: Giebel (2|14) → (16|2) → (30|14), 0,5-mm-Strich mit Gehrung.',
             '3.9',
           ),
@@ -283,7 +287,7 @@ export const SPECIAL_FORMS: readonly SpecialForm[] = Object.freeze([
           bounds(
             'carrier-placeholder',
             { minX: 6, minY: 10, maxX: 26, maxY: 30 },
-            `${BODIES_AT}:137–159`,
+            `${BODIES_AT}:138–160`,
             'Der graue Platzhalter (`#bebebe`): Kreis um (16|20), Mittellinie r 10, 0,4-mm-Strich, ' +
               '28 Striche zu 1,5 mm. Er steht für den Träger und wird nicht gezeichnet.',
             '3.9',
