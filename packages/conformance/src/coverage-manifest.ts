@@ -1055,6 +1055,26 @@ const ANHANG_C_LFH_787_TECHNICAL_REVIEW: Review = {
 };
 
 /**
+ * Technisches Review von C.1.13 und C.1.14 (ESZ-143). Eigener Eintrag wie C.1.4: beide sind nach
+ * LFH-786 gebaut, je mit einer eigenen technischen Körpermarke für den Drohnenwinkel.
+ */
+const ANHANG_C_ESZ_143_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-10-14',
+  note:
+    'Die Originalreferenzen C.1.13_Flugdrohnentrupp Feuerwehr.svg und ' +
+    'C.1.14_Drohnentrupp Feuerwehr.svg wurden vermessen (Winkel als Vollfläche, Linie mit ' +
+    'Kerbe als Umriss auf die Mittellinie zurückgerechnet) und als Rasterbild gegen die Fixture ' +
+    'gelegt. Die Drohnenwinkel sind eigene technische Körpermarken ' +
+    '(formation-chevron-18mm-over-notched-line, formation-chevron-18mm), eigenständig aus der ' +
+    'Körpermitte konstruiert (core/src/geometry/body-marks-anhang-c/formation.ts); beide stehen ' +
+    'in DRONE_BODY_MARKS. Körper, Stärke trupp und Organisation feuerwehr wie C.1.7. Die Specs ' +
+    'bestehen validateSpec ohne Befund. Sämtliche Fachzuordnungen bleiben im Domain-Review ' +
+    'pending (Q-3-sonderformen).',
+};
+
+/**
  * Befunde an den Referenzdateien selbst, in der Bauart von `ANHANG_F_A_FINDINGS`. Abweichungen der
  * Umsetzung trägt dieser Slice keine: die Textmetrik (Laufweite der Katalogschrift, Ziffernhöhe)
  * weicht wie im übrigen Bestand ab und ist dort nirgends als `deviation` geführt.
@@ -1125,6 +1145,7 @@ function technicalReviewFor(section: string): Review {
     );
   }
   if (section === 'C.1.4') return ANHANG_C_LFH_787_TECHNICAL_REVIEW;
+  if (section === 'C.1.13' || section === 'C.1.14') return ANHANG_C_ESZ_143_TECHNICAL_REVIEW;
   if (section.startsWith('C.') && section !== 'C.1.1' && section !== 'C.1.2') {
     throw new Error(
       `Der Anhang-C-Schlüssel "${section}" ist keinem technischen Review zugeordnet.`,
@@ -1456,10 +1477,13 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     // Beide Präfixe bestünden `uncoveredScope` schon mit einer Zeile, wären aber falsch: C.1.5,
     // C.1.6 und C.1.9 bis C.1.15 sind nicht gebaut, in C.2 fehlen C.2.1 bis C.2.3, C.2.19, C.2.21
     // und C.2.22 (kein Kapitel-4-Piktogramm) sowie die zurückgestellte C.2.24-Alternative.
-    // LFH-787 baut C.1.4 (Rüstzug) und führt es ebenso einzeln.
+    // LFH-787 baut C.1.4 (Rüstzug) und führt es ebenso einzeln, ESZ-143 die beiden Drohnentrupps
+    // C.1.13 und C.1.14.
     'C.1.4',
     'C.1.7',
     'C.1.8',
+    'C.1.13',
+    'C.1.14',
     'C.2.4',
     'C.2.5',
     'C.2.6',

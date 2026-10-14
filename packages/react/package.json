@@ -1,6 +1,6 @@
 {
   "name": "@einsatzzeichen/react",
-  "version": "6.1.0",
+  "version": "6.3.1",
   "type": "module",
   "description": "React-Komponenten für Einsatzzeichen",
   "license": "MIT",

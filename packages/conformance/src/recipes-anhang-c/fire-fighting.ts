@@ -11,9 +11,10 @@ import type { Recipe } from '../recipes.js';
  *
  * Beschriftung: Versalhöhe 2,9192 mm (`F` 9,5807…12,4999 in C.2.6), Grundlinie 12,5 mm =
  * 6,75 mm unter der Körperoberkante 5,75, linke Tintenkante 2,5887 (`T`) bzw. 2,8677 (`K`) —
- * zurückgerechnet mit dem Arimo-Seitenlager (T 46, K 168 von 2048 Einheiten bei 4,2431 mm
- * Schriftgrad) auf den Anker 2,494 bzw. 2,520, also den Profildefault 1,5 mm ab der linken
- * Körperkante. Nur C.2.10 weicht ab (`topLeftMetrics`, siehe dort).
+ * zurückgerechnet mit dem Seitenlager von Einsatzzeichen Sans (T 23, K 81 von 1000 Einheiten bei
+ * 4,1823 mm Schriftgrad, ESZ-144) auf den Anker 2,4925 bzw. 2,5289, also den Profildefault
+ * 1,5 mm ab der linken Körperkante (mit Arimo waren es 2,494 bzw. 2,520). Nur C.2.10 weicht ab
+ * (`topLeftMetrics`, siehe dort).
  */
 
 /** Kurzform der Löschfahrzeuge C.2.4 bis C.2.13 mit Profildefault-Beschriftung. */
@@ -57,11 +58,12 @@ export const ANHANG_C_FIRE_FIGHTING_RECIPES = {
   /**
    * C.2.10: drei Räder (Kategorie 2) und ein um 0,5 mm höherer Lauf. Selbst vermessen: `L` von
    * y 9,0808 bis 12,0000 (Versalhöhe 2,9192, Grundlinie 12,0 = 6,25 mm unter der Oberkante 5,75),
-   * linke Tintenkante 2,8681; abzüglich des Arimo-Seitenlagers von `L` (168/2048 × 4,2431 mm =
-   * 0,3481) liegt der Anker bei x 2,5200, 1,5200 mm rechts der Körperkante. Die Tintenkante gleicht
-   * der von `KLF` (2,8677) bis auf 0,0004 mm, und derselbe Rückrechnungsweg ergibt dort 1,5196: die
-   * 0,02 mm gegen den Profildefault 1,5 sind dessen Rundung, keine Eigenheit von C.2.10. Neu ist
-   * allein die Grundlinie, 0,5 mm höher als der Default.
+   * linke Tintenkante 2,8681; abzüglich des Seitenlagers von `L` in Einsatzzeichen Sans
+   * (81/1000 × 4,1823 mm = 0,3388, ESZ-144; mit Arimo 0,3481) liegt der Anker bei x 2,5293,
+   * 1,5293 mm rechts der Körperkante. Die Tintenkante gleicht der von `KLF` (2,8677) bis auf
+   * 0,0004 mm, und derselbe Rückrechnungsweg ergibt dort 1,5289: die 0,03 mm gegen den
+   * Profildefault 1,5 sind dessen Rundung, keine Eigenheit von C.2.10. Neu ist allein die
+   * Grundlinie, 0,5 mm höher als der Default.
    */
   'C.2.10': {
     title: 'Löschgruppenfahrzeug 20 Katastrophenschutz',
@@ -77,7 +79,7 @@ export const ANHANG_C_FIRE_FIGHTING_RECIPES = {
         topLeftMetrics: {
           capHeightMm: 2.919225,
           baselineFromBodyTopMm: 6.25,
-          anchorFromBodyLeftMm: 1.520031,
+          anchorFromBodyLeftMm: 1.529336,
         },
       },
     },

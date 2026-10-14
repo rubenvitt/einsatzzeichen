@@ -39,12 +39,13 @@ const ALL_LABEL_ZONES: readonly LabelZone[] = [...IN_BODY_LABEL_ZONES, ...OUTSID
 
 /**
  * Kleinste Versalhöhe eines mitgeführten Laufs: der kleinste Lauf, den die Quelle in einen Körper
- * setzt — „Strömungsrettung“ in I.2.6 mit 2,12 mm (`recipes-anhang-i.ts`). Nach der Textpolitik
- * (`MINIMUM_TEXT_RENDER_PX`) ist ein Lauf dieses Grads ab 84 px lesbar, auf der Snapshot-Leiter
- * also ab 128 px. Kleiner wird ein mitgeführter Lauf nicht; reicht der Platz dann nicht, bleibt
- * es bei der benannten Lücke der Platzprüfung.
+ * setzt — „BTKombi“ (F.2.10/F.2.11) und „Strömungsrettung“ in I.2.6 mit 2,191447 mm
+ * (`recipes-anhang-i.ts`; bis ESZ-144 stand I.2.6 auf 2,12 mm, verkleinert für Arimo). Nach der
+ * Textpolitik (`MINIMUM_TEXT_RENDER_PX`) ist ein Lauf dieses Grads ab 82 px lesbar, auf der
+ * Snapshot-Leiter also ab 128 px. Kleiner wird ein mitgeführter Lauf nicht; reicht der Platz dann
+ * nicht, bleibt es bei der benannten Lücke der Platzprüfung.
  */
-export const MIN_SCALED_RUN_CAP_HEIGHT_MM = 2.12;
+export const MIN_SCALED_RUN_CAP_HEIGHT_MM = 2.191447;
 
 const MIN_SCALED_RUN_SIZE_MM = MIN_SCALED_RUN_CAP_HEIGHT_MM / TEXT_CAP_HEIGHT_FRACTION;
 const EPSILON = 1e-9;

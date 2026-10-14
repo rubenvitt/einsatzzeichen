@@ -195,14 +195,14 @@ export const LOCATION_PICTOGRAMS = [
     primitives: [
       locationCircle(),
       locationText('L', {
-        // Verkleinert auf 6,88 mm Versalhöhe statt der 7,30 mm der Referenz: Arimo lief im „L“
-        // rund 13 % breiter als die Referenzschrift, deshalb stand der Lauf auf der Stammposition
-        // der Referenz (am Pixelvergleich bestimmt). Die Box ist an dieser Höhe vermessen; in
-        // Einsatzzeichen Sans passt die volle Höhe nicht in sie (ESZ-114).
-        x: 16.365,
+        // Referenzhöhe 7,302 mm (Referenztinte 14,29 … 18,44 × 11,70 … 19,00), seit ESZ-144; bis
+        // dahin 6,88 mm, weil Arimo im „L“ rund 13 % breiter lief. In Einsatzzeichen Sans ist das
+        // „L“ schmaler als die Referenz (3,93 statt 4,15 mm); der Stamm steht deshalb auf dem
+        // Stamm der Referenz, der Arm endet 0,21 mm früher.
+        x: 15.985,
         y: 19,
-        sizeMm: textSizeForCapHeightMm(6.88),
-        boxMm: { xMm: 14.25, yMm: 12.125, widthMm: 4.6875, heightMm: 6.875 },
+        sizeMm: textSizeForCapHeightMm(7.302),
+        boxMm: { xMm: 14.25, yMm: 11.65, widthMm: 4, heightMm: 7.35 },
         minRenderPx: 32,
       }),
     ],
@@ -220,13 +220,13 @@ export const LOCATION_PICTOGRAMS = [
       controlCenterCap(),
       locationRoof(),
       locationText('LtS', {
-        // Wie D.2.4: „LtS“ lief in Arimo rund 14 % breiter als in der Referenzschrift; 6,88 mm
-        // Versalhöhe mit der am Pixelvergleich bestimmten Lage deckte besser als die volle Höhe.
-        // Die Box ist an dieser Höhe vermessen (ESZ-114).
-        x: 16.238,
+        // Referenzhöhe 7,302 mm (Referenztinte 9,84 … 22,64 × 14,57 … 22,13), seit ESZ-144; bis
+        // dahin 6,88 mm, weil Arimo rund 14 % breiter lief. In Einsatzzeichen Sans misst die
+        // Tinte 9,68 … 22,80 mm um die Referenzmitte, über 4 mm innerhalb des Kreises.
+        x: 16.05,
         y: 22,
-        sizeMm: textSizeForCapHeightMm(6.88),
-        boxMm: { xMm: 9.3125, yMm: 15, widthMm: 14.1875, heightMm: 7.125 },
+        sizeMm: textSizeForCapHeightMm(7.302),
+        boxMm: { xMm: 9.65, yMm: 14.55, widthMm: 13.15, heightMm: 7.6 },
         minRenderPx: 32,
       }),
     ],

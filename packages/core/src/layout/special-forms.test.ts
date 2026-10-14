@@ -176,6 +176,8 @@ describe('Die Drohne als Innenzeichen (ESZ-134)', () => {
       ['I.1.20', 'formation', 'formation-chevron-top'],
       ['F.1.16', 'formation', 'chevron-over-opposed-triangles'],
       ['C.2.31', 'vehicle-land', 'track-chevron-top'],
+      ['C.1.13', 'formation', 'formation-chevron-18mm-over-notched-line'],
+      ['C.1.14', 'formation', 'formation-chevron-18mm'],
     ]);
     const role = specialForm('drone').role;
     if (role.status !== 'evidenced') throw new Error('Drohne nicht belegt');

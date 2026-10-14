@@ -346,9 +346,10 @@ export const NETWORK_COMMS = deepFreeze([
    * Längenverbindung: die Verbindung, ein Teilungsstrich (16|13) → (16|19) und darunter ein
    * offener Pfeil, der auf ihn zeigt. Das „L" benennt die Größe Länge — es ist **kein**
    * Wertplatzhalter, die Referenz enthält keine Zahl. Damit fällt J.4.8 aus der Regel heraus,
-   * die für J.4.17 weiter gilt. „L": Referenztinte 19,6 … 22,4 × 19,1 … 24 mm, Grundlinie 24 mm;
-   * Versalhöhe 4,266 mm statt 4,9 mm (bis LFH-585 in Arimo Bold als Mittel aus Höhen- und
-   * Breitenpassung bestimmt wie in J.3). Die Box ist an dieser Höhe vermessen.
+   * die für J.4.17 weiter gilt. „L": Referenztinte 19,61 … 22,38 × 19,13 … 24 mm, Grundlinie
+   * 24 mm, Versalhöhe 4,87 mm. Seit ESZ-144 auf Referenzhöhe (bis dahin 4,266 mm, in Arimo Bold als
+   * Mittel aus Höhen- und Breitenpassung bestimmt wie in J.3); der Stamm steht auf dem Stamm der
+   * Referenz, das schmalere „L“ von Einsatzzeichen Sans endet bei 22,24 mm.
    */
   defineComms({
     section: 'J.4.8',
@@ -362,11 +363,11 @@ export const NETWORK_COMMS = deepFreeze([
       stroke(16, 13, 16, 19),
       ...openArrowUp(),
       commsText('L', {
-        x: 19,
+        x: 19.05,
         y: 24,
-        sizeMm: textSizeForCapHeightMm(4.266),
+        sizeMm: textSizeForCapHeightMm(4.87),
         anchor: 'start',
-        boxMm: { xMm: 19.1, yMm: 19.4, widthMm: 3.8, heightMm: 4.9 },
+        boxMm: { xMm: 19.6, yMm: 19.1, widthMm: 2.65, heightMm: 5.2 },
         minRenderPx: 64,
       }),
     ],

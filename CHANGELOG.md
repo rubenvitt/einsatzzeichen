@@ -1,3 +1,51 @@
+## [6.3.1](https://github.com/rubenvitt/einsatzzeichen/compare/v6.3.0...v6.3.1) (2026-10-14)
+
+### Darstellung
+
+- **Beschriftungen wieder in Referenzgröße:** Textläufe, die bisher für die Ersatzschrift Arimo verkleinert waren, wurden gegen die Referenz-SVGs neu vermessen. Sie stehen jetzt wieder auf der Versalhöhe der Referenz, solange der Text mindestens 0,5 mm Abstand zur Kontur hält. Außerdem sitzen sie mittig auf der Referenzposition. Das betrifft unter anderem:
+  - „BS“, „mBS“, „HRT“, „FRT“ (J.3)
+  - „L“ (J.4.8, D.2.4) und „LtS“ (D.2.5)
+  - „GS“, „Chlor“, „A“, „Ö“, „Ex“ (5.8.1)
+  - „Strömungsrettung“ in I.2.6
+- **„APRT“** wächst auf 6,71 mm (bisher 5,985 mm). In voller Referenzhöhe würde der Text über die Kontur hinauslaufen.
+- **Schriftanker für Einsatzzeichen Sans:** Die Anker, die bisher auf Arimo-Seitenlagern beruhten, wurden neu berechnet. Das gilt für F.2.10 bis F.2.17 und C.2.10, für den Profil-Standardwert von 1,5 mm und für die Ziffer „1“ in den Profilen.
+- **Ruhigeres Schriftbild:** Viele betroffene Zeichen haben jetzt einen deutlich geringeren Strichanteil, zum Beispiel J.3.9 (von 50,7 % auf 24,7 %) und 5.8.1.7 (von 39,6 % auf 21,8 %).
+- **Bekannte Einschränkung:** Bei I.2.6 steigt der Strichanteil wegen der Lage des Textlaufs. Eine Korrektur ist geplant.
+
+### Katalog & Semantik
+
+- **Befehlsstelle mit Kappe statt Fahnenstock:** Die Baseline 2025 der DV 102 kennt den Fahnenstock des alten Grundzeichens „Befehlsstelle, Führungsstelle (im Einsatz)“ nicht mehr. Eine Befehlsstelle wird deshalb als Formation mit der Körpermarke `formation-solid-cap-3mm` dargestellt (schwarze 3-mm-Kappe). Diese Darstellung funktioniert mit jeder Organisation und jeder Stärke und muss nicht eigens abgeleitet werden.
+- Die gelbe Befehlsstelle mit abgesetztem Standort bleibt als eigenständiges Piktogramm D.1.1 erhalten.
+- Es gibt bewusst kein eigenes Grundzeichen, keine Körpervariante und keine Marke „Fahnenstock“. Ein neuer Test sichert dieses Verhalten bei Prüfung, Rundreise, Vokabular und Zeichnung ab.
+
+## [6.3.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.2.0...v6.3.0) (2026-10-14)
+
+### Katalog
+
+- **Zwei neue Zeichen für Drohneneinheiten der Feuerwehr:**
+  - **C.1.13 Flugdrohnentrupp**
+  - **C.1.14 Drohnentrupp Feuerwehr**
+
+  Beide Zeichen wurden an den Referenzdateien vermessen. Sie sind aus den Bausteinen Formation, Trupp und Feuerwehr zusammengesetzt und decken sich mit der Referenz pixelgenau (0,00 % Flächenabweichung).
+
+### Rendering
+
+- **Neue Körpermarken für den Drohnenwinkel:**
+  - `formation-chevron-18mm-over-notched-line` (C.1.13): Winkel über einer Linie mit 45°-Kerbe
+  - `formation-chevron-18mm` (C.1.14): Winkel allein
+
+  `DRONE_BODY_MARKS` enthält damit jetzt fünf Varianten.
+
+### Qualitätssicherung
+
+- Manifest, technisches Review, Snapshots und die Tabelle der wörtlich übernommenen Bezeichnungen sind um die beiden neuen Zeichen ergänzt. Das Fachreview steht noch aus.
+
+## [6.2.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.1.0...v6.2.0) (2026-10-14)
+
+### Website
+
+- **Neues Profil „Dunkle Fläche“ in der Zeichenvorschau:** Die Vorschau zeigt jedes Zeichen jetzt auch im Render-Theme `dark`. Das Profil erscheint auf seinem eigenen dunklen Hintergrund (`theme.surface`, #141414). Auf Weiß wären die weißen Kopfmarken und die Hinterlegung nicht zu sehen. Jede Zeichenseite wird dadurch um etwa 4 KB größer.
+
 ## [6.1.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.0.0...v6.1.0) (2026-10-14)
 
 ### Katalog: Altzeichen aus der DV 102

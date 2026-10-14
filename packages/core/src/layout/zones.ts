@@ -1104,7 +1104,7 @@ function bottomCenterZone(
   if (baselineMm === undefined) {
     return notMeasured(
       'combination',
-      'schema/src/taxonomy.ts:630–638',
+      'schema/src/taxonomy.ts:633–641',
       'Profile ohne eingetragene `bottomCenter`-Zone lehnt `compose()` fail-closed ab. Gemessen ' +
         'ist die Zone bisher nur an der Formation (F.1.18/F.1.20) und an `circle-12/foot-band` ' +
         '(G.3.5).',
@@ -1124,7 +1124,7 @@ function bottomCenterZone(
       'bottom-center-anchor',
       'Um x = 16,0 mm zentriert, im Schriftgrad der unteren Zonen.',
       source(
-        'schema/src/taxonomy.ts:630–638',
+        'schema/src/taxonomy.ts:633–641',
         'Beide belegten Läufe sind um x = 16,0 mm zentriert und verwenden den Schriftgrad der ' +
           'unteren Zonen.',
       ),
@@ -1178,10 +1178,11 @@ function topLeftZone(
       'right',
       source(
         'core/src/compose.ts:156–169',
-        'Zurückgerechnet und nicht abgelesen: dieselben Läufe mit Anker 3,0 mm gerastert ' +
-          '(4096 px, 18. August 2026) und die Differenz abgezogen ergibt 2,524 für `MTF`/`RettD`, ' +
-          '2,498 für `SEG` und 2,442 für `10` — vier der fünf F-a-Läufe auf 2,5 mm, also 1,5 mm ' +
-          'rechts der Körperkante 1,0. Ausreißer ist F.1.3 („5.000", zurückgerechnet 2,022). ' +
+        'Zurückgerechnet und nicht abgelesen: aus linker Tintenkante und Seitenlager von ' +
+          'Einsatzzeichen Sans ergibt sich 2,533 für `MTF`, 2,529 für `RettD`, 2,535 für ' +
+          '`SEG` und 2,578 für `10` (ESZ-144; mit Arimo 2,524, 2,498, 2,442) — der Anker ' +
+          'bleibt 2,5 mm, 1,5 mm rechts der Körperkante 1,0. Ausreißer ist F.1.3 („5.000", ' +
+          'zurückgerechnet 1,939). ' +
           'Gemessen ist die Zahl an der **Formation**; an den übrigen Profilen ist sie übertragen.',
         babz('F.1.1–F.1.11'),
       ),

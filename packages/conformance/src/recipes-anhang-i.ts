@@ -199,8 +199,8 @@ export const ANHANG_I_F_RECIPES = {
  * LFH-485 / Anhang I-g: vier weiße Wasserrettungsformationen. Die Wasserrettungsmarke ist die
  * separat vermessene kompakte Formationsfassung. Dreieckspaar und Winkel bleiben geometrisch
  * getrennt, damit weder die kombinierte F.1.16-Zeichnung noch eine ungeklärte Drohnensemantik
- * übernommen wird. Der Textlauf der ersten beiden Rezepte steht auf y=10,0 mm; seine aus dem
- * einzigen versalen S idealisierte Versalhöhe beträgt 2,5 mm (gesetzt seit LFH-585: 2,45 mm).
+ * übernommen wird. Der Textlauf der ersten beiden Rezepte steht auf y=10,0 mm; Versalhöhe gesetzt
+ * 2,45 mm, gemessen 2,43 (S 2,517 mm hoch, m 1,735 mm; ESZ-144), idealisiert 2,5 mm.
  */
 export const ANHANG_I_G_RECIPES = {
   // LFH-485 / Anhang I-g: Die Wasserrettungsmarke ist die separat vermessene kompakte
@@ -263,8 +263,9 @@ export const ANHANG_I_G_RECIPES = {
 /**
  * Kürzel oben links an I.2.1 bis I.2.3, an der Referenz abgelesen: Versalhöhe 2,919 mm (`W`
  * 9,081…12,000 mm, flachfüßig), Grundlinie y = 12,0 mm, also 6,25 mm unter der Körperoberkante
- * (5,75 mm). Linke Tintenkante des `G` 2,724 mm; abzüglich des Arimo-Seitenlagers von `G` bei
- * dieser Versalhöhe (0,213 mm) liegt der Anker bei 2,51 mm, 1,51 mm rechts der Körperkante.
+ * (5,75 mm). Linke Tintenkante des `G` 2,724 mm; abzüglich des Seitenlagers von `G` in
+ * Einsatzzeichen Sans (51/1000 em = 0,213 mm, wie zuvor in Arimo) liegt der Anker bei 2,511 mm,
+ * auf 1,51 mm rechts der Körperkante gerundet (ESZ-144 nachgerechnet).
  * Dieselbe Versalhöhe und Grundlinie misst F.2.12 (`GwBT`).
  */
 const I_2_TOP_LEFT_METRICS = {
@@ -344,7 +345,7 @@ export const ANHANG_I_B_RECIPES = {
       labels: {
         center: 'Strömungsrettung',
         centerBaselineFromBodyBottomMm: 14.327,
-        centerCapHeightMm: 2.12,
+        centerCapHeightMm: 2.191447,
       },
     },
   },
