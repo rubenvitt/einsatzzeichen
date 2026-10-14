@@ -142,7 +142,7 @@ Zuordnung braucht im Slice den Blick auf beide Bilder (Arbeitspaket 2).
 | 1.1 Taktische Formation | `base.formation` (1.1) | identisch |
 | 1.4 Person | `base.person` (1.2) | Nummer wandert |
 | 1.3 Stelle, Einrichtung | `base.post` (1.6 Funktionsstelle) | Umbenennung |
-| 1.2 Befehlsstelle | Rezept `D.1.1` `command-post-in-operation` | Grundzeichen → Anhangsrezept; Ziel ist ein anderer Objekttyp, aber genau eines |
+| 1.2 Befehlsstelle | Rezept `D.1.1` `command-post-in-operation` | Grundzeichen → Anhangsrezept; Ziel ist ein anderer Objekttyp, aber genau eines. Nachtrag ESZ-131: andere Organisationen als Formation mit Kappe `formation-solid-cap-3mm`, der Fahnenstock entfällt (`docs/decisions/2026-10-14-esz-131-befehlsstelle-ohne-fahnenstock.md`) |
 | 1.12 / 9.1 drohende Gefahr, Vermutung | `5.8.1.13` `suspected-situation` | zwei Legacy-Bezeichner auf ein Ziel (n:1 ist für den Legacy-Bezeichner eindeutig) |
 | 1.7 Überschwemmtes Gebiet | `5.8.1.5` `flooded-area` | Farbfläche → Zustand |
 | 2.3 Hilfsorganisationen weiß | `hilfsorganisation` | seit LFH-424 belegt |
