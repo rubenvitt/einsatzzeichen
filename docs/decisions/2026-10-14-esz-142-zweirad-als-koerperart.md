@@ -60,9 +60,10 @@ vorgeschlagene Körperform (`proposed`), nicht als belegt.
   Art über diese Zeile als belegt (`conformance/src/rule-coverage.ts`).
 - Generative Reichweite: je 54 gültige Kombinationen, 12 348 bestehen die Prüfung, 11 052
   komponieren; die Lücke bleibt 1296.
-- Ein Pixelvergleich (`pnpm cli reference-diff`) ist in dieser Sitzung nicht gelaufen; die
-  Referenzdateien liegen nicht im Repository. Die Zeichnung ist primitivgleich mit den
-  Piktogrammzeilen `3.7`/`3.8` aus ESZ-134, ein Lauf mit `--filter 3.` prüft beide zusammen.
+- Pixelvergleich gegen die Kapiteldateien (`reference-diff --filter 3.7` bzw. `3.8`, 15. Oktober
+  2026, Stand nach dem Merge): beide Zeilen deckungsgleich. Flächenabweichung je 0,009 %,
+  Strichanteil 0,40 % (3.7) und 0,26 % (3.8) bei 512 px. Die Art zeichnet primitivgleich mit
+  diesen Piktogrammzeilen, der Vergleich gilt damit auch für `{ kind }` ohne weitere Felder.
 
 ## Hinweis für den Lifeline Hub
 
