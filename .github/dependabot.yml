@@ -18,3 +18,10 @@ updates:
       # hebt — dann von Hand. Gleicher Pin wie in rubenvitt/lifeline-hub.
       - dependency-name: conventional-changelog-conventionalcommits
         update-types: ["version-update:semver-major"]
+    groups:
+      # React prüft zur Laufzeit, dass react und react-dom exakt gleich versioniert sind
+      # („Incompatible React versions"). Einzeln gehobene PRs wären darum immer rot.
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
