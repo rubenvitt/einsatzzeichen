@@ -1,3 +1,23 @@
+## [6.5.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.4.0...v6.5.0) (2026-10-18)
+
+### Pakete
+
+- **CHANGELOG in jedem npm-Paket:** Alle veröffentlichten `@einsatzzeichen/*`-Pakete enthalten jetzt eine `CHANGELOG.md`. Die Änderungen einer Version lassen sich so direkt in `node_modules` nachlesen.
+- Dadurch ist `@einsatzzeichen/core` entpackt etwas größer, gemessen an 6.4.0 rund 61 KB.
+- Breaking Changes werden in den Release Notes künftig mit der betroffenen API bzw. Regel-ID und einem Migrationshinweis beschrieben. Neue Prüfregeln, die bisher gültige Eingaben ablehnen, gelten ausdrücklich als Breaking Change.
+
+### React
+
+- `react` und `react-dom` werden nur noch gemeinsam auf 19.3.1 angehoben, auch bei der Peer-Auflösung in `@einsatzzeichen/react`. Vorher lagen die beiden Pakete auf unterschiedlichen Versionen. Das führte zum Fehler „Incompatible React versions“.
+
+### Katalog
+
+- Für die Zweirad-Körperarten (Kapitel 3.7 und 3.8) liegt jetzt ein Pixelvergleich mit der Vorlage vor. Beide Zeichnungen stimmen mit der Vorlage überein: Die Fläche weicht um 0,009 % ab, die Striche um 0,40 % (3.7) bzw. 0,26 % (3.8).
+
+### Abhängigkeiten
+
+- `maplibre-gl` von 6.13.0 auf 6.14.0 aktualisiert.
+
 ## [6.4.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.3.1...v6.4.0) (2026-10-14)
 
 ### Katalog & Core
