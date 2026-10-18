@@ -20,7 +20,8 @@
   "main": "./src/index.ts",
   "files": [
     "dist",
-    "fonts"
+    "fonts",
+    "CHANGELOG.md"
   ],
   "publishConfig": {
     "access": "public",

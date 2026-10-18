@@ -47,7 +47,7 @@ export function changedPublishablePackages({ changes, privatePackages }) {
 const git = (cwd, args) => execFileSync('git', args, { cwd, encoding: 'utf8' });
 
 /** Liest die Paketverzeichnisse ein und trennt publizierbare von privaten. */
-function paketverzeichnisse(cwd) {
+export function paketverzeichnisse(cwd) {
   const publishable = [];
   const privat = [];
   for (const eintrag of readdirSync(join(cwd, 'packages'), { withFileTypes: true })) {
