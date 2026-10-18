@@ -9,6 +9,8 @@ dist/
 build/
 .turbo/
 *.tsbuildinfo
+# Kopien des Wurzel-CHANGELOG, die `scripts/release/copy-changelog.mjs` erst beim Publish anlegt.
+/packages/*/CHANGELOG.md
 
 # Tooling
 .DS_Store

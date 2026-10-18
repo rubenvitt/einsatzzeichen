@@ -12,23 +12,33 @@
 // misst, wäre langsam oder falsch. Deshalb läuft das Skript in CI direkt nach `pnpm build`.
 // Die Prüflogik (`checkCorePackage`) ist rein und in `core-package.test.mjs` ohne Build getestet.
 //
+// Gemessen wird der Umfang, wie er auf npm landet: Vor `pnpm pack` legt das Gate das Wurzel-
+// CHANGELOG in das Paket, so wie `scripts/release/copy-changelog.mjs` es beim Publish tut (ESZ-133).
+//
 // Aufruf: pnpm build && node scripts/gates/core-package.mjs
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { copyFileSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { gunzipSync } from 'node:zlib';
 
 /**
- * Grenzen, zuletzt gemessen am 13. Oktober 2026 für ESZ-114 auf main 5.5.0 (`pnpm build`, dann
- * `pnpm pack`):
+ * Grenzen, zuletzt gemessen am 18. Oktober 2026 für ESZ-133 auf main 6.4.0 (`pnpm build`, dann
+ * dieses Skript, also mit CHANGELOG):
  *
  * | Größe | gemessen | Obergrenze | Untergrenze |
  * |---|---|---|---|
- * | Tarball (gepackt) | 931 703 B | 980 000 B (+5 %) | 250 000 B |
- * | entpackt | 7 369 577 B | 7 500 000 B (+2 %) | 3 000 000 B |
- * | Einträge | 503 | — | 200 |
+ * | Tarball (gepackt) | 968 810 B | 1 020 000 B (+5 %) | 250 000 B |
+ * | entpackt | 7 519 387 B | 7 650 000 B (+2 %) | 3 000 000 B |
+ * | Einträge | 522 | — | 200 |
+ *
+ * **Anhebung am 18. Oktober 2026 (ESZ-133):** Jedes Paket liefert jetzt CHANGELOG.md mit, in `core`
+ * damit 61 063 B entpackt (rund 20 KB gepackt) bei 6.4.0. Ohne die Datei lag `main` bei
+ * 7 458 324 B entpackt, mit ihr 19 387 B über der alten Grenze. Das Protokoll wächst mit jedem
+ * Release um einige KB; die neue Grenze lässt wieder rund 130 KB Puffer, weiter weniger als
+ * `fingerprints.json`. Gepackt lag der Stand nur noch 11 KB unter der Grenze, die deshalb wieder
+ * rund 5 % Abstand bekommt.
  *
  * **Anhebung am 13. Oktober 2026 (ESZ-114):** Die Katalogschrift ist jetzt „Einsatzzeichen Sans"
  * (aus IBM Plex Sans). Plex kernt über Klassenpaare; die vier Metrikdateien tragen die
@@ -79,9 +89,9 @@ import { gunzipSync } from 'node:zlib';
  * winziges Paket, und eine reine Obergrenze wäre dann grün.
  */
 export const LIMITS = Object.freeze({
-  maxPackedBytes: 980_000,
+  maxPackedBytes: 1_020_000,
   minPackedBytes: 250_000,
-  maxUnpackedBytes: 7_500_000,
+  maxUnpackedBytes: 7_650_000,
   minUnpackedBytes: 3_000_000,
   minEntries: 200,
 });
@@ -95,6 +105,8 @@ const REQUIRED = [
   // dokumentierte Einstieg `@einsatzzeichen/core/fonts/text.css` (LFH-832).
   'package/fonts/text.css',
   'package/fonts/OFL.txt',
+  // Fehlt `CHANGELOG.md` in `files`, sieht ein Verbraucher Breaking Changes nur im Diff (ESZ-133).
+  'package/CHANGELOG.md',
 ];
 
 /** Verbotene Muster mit Begründung — die Meldung soll sagen, was durchgerutscht ist. */
@@ -118,7 +130,7 @@ const FORBIDDEN = [
  * bewusst ergänzt werden — so fällt auch Prüfmaterial auf, das kein verbotenes Muster trifft.
  */
 const ALLOWED = [
-  /^package\/(package\.json|README\.md|LICENSE)$/,
+  /^package\/(package\.json|README\.md|LICENSE|CHANGELOG\.md)$/,
   /^package\/dist\/.+\.(js|d\.ts|d\.ts\.map)$/,
   /^package\/dist\/assets\/einsatzzeichen-sans(-bold|-medium|-medium-italic)?-metrics\.json$/,
   /^package\/fonts\/(text-(regular|medium|bold|medium-italic)\.woff2|text\.css|OFL\.txt|README\.md)$/,
@@ -201,6 +213,8 @@ export function readTarEntries(tgz) {
 
 function main() {
   const coreDir = fileURLToPath(new URL('../../packages/core/', import.meta.url));
+  const changelog = fileURLToPath(new URL('../../CHANGELOG.md', import.meta.url));
+  copyFileSync(changelog, join(coreDir, 'CHANGELOG.md'));
   const outDir = mkdtempSync(join(tmpdir(), 'core-pack-'));
   try {
     const pack = spawnSync('pnpm', ['pack', '--pack-destination', outDir], {

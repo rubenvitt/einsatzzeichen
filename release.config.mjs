@@ -16,7 +16,8 @@
  *     `scripts/release/publish.mjs` in die npm-Org @einsatzzeichen. Das Skript vergleicht mit
  *     dem letzten Release-Tag und überspringt npm ganz, wenn sich kein publizierbares Paket
  *     bewegt hat — ein reines Website-, Doku- oder CI-Release bekommt Tag, CHANGELOG und
- *     GitHub-Release, schiebt aber keine unveränderten Pakete nach.
+ *     GitHub-Release, schiebt aber keine unveränderten Pakete nach. Sonst bekommt jedes Paket
+ *     eine Kopie von CHANGELOG.md mit dem Eintrag dieser Version (`copy-changelog.mjs`).
  *  5. git committet CHANGELOG.md und die package.json zurück auf main.
  *  6. github legt das GitHub-Release an und kommentiert erledigte Issues/PRs.
  *
@@ -75,7 +76,8 @@ Die Release Notes sollen:
 8. Nichts behaupten, was nicht aus den Commits hervorgeht
 9. Markdown-Formatierung mit ## für Abschnitts-Überschriften
 10. Kompakt und scanbar sein – Qualität vor Quantität
-11. Breaking Changes prominent am Anfang hervorheben
+11. Breaking Changes prominent am Anfang unter "## ⚠️ Breaking Changes" hervorheben. Jeder Eintrag nennt die betroffene API (Export, Typ, Funktion, Feld) oder Regel-ID wörtlich in Backticks und schließt mit einem Migrationshinweis: was Verbraucherinnen und Verbraucher ändern müssen, damit ihr Code weiterläuft. Ohne Breaking Changes entfällt der Abschnitt.
+12. Neue Prüfregeln, die bisher gültige Eingaben ablehnen, mit ihrer Regel-ID unter den Breaking Changes aufführen
 
 Starte direkt mit den Release Notes, gruppiert wie oben beschrieben, mit ## ...`,
       },

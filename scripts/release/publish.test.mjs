@@ -61,7 +61,7 @@ describe('publish.mjs', () => {
     const cwd = mkdtempSync(join(tmpdir(), 'einsatzzeichen-publish-'));
     angelegteVerzeichnisse.push(cwd);
     mkdirSync(join(cwd, 'scripts', 'release'), { recursive: true });
-    for (const datei of ['publish.mjs', 'changed-packages.mjs']) {
+    for (const datei of ['publish.mjs', 'changed-packages.mjs', 'copy-changelog.mjs']) {
       copyFileSync(join(skriptordner, datei), join(cwd, 'scripts', 'release', datei));
     }
     for (const name of ['core', 'react']) {
@@ -88,7 +88,15 @@ describe('publish.mjs', () => {
     };
   };
 
-  const releaseCommit = (cwd, version) => {
+  const releaseCommit = (cwd, version, { changelogEintrag = true } = {}) => {
+    writeFileSync(
+      join(cwd, 'package.json'),
+      `${JSON.stringify({ name: 'einsatzzeichen', version, private: true }, null, 2)}\n`,
+    );
+    const eintrag = changelogEintrag
+      ? `## [${version}](https://example.com) (2026-10-18)\n\n- neu\n\n`
+      : '';
+    writeFileSync(join(cwd, 'CHANGELOG.md'), `${eintrag}## [1.0.2](https://example.com) (2026-10-17)\n`);
     for (const name of ['core', 'react']) schreibeManifest(cwd, name, version);
     schreibeManifest(cwd, 'website', version, { private: true });
     git(cwd, 'add', '-A');
@@ -124,5 +132,32 @@ describe('publish.mjs', () => {
     expect(lauf.status).toBe(0);
     expect(repo.pnpmAufrufe()).toBe('-r publish --access public --no-git-checks --provenance');
     expect(lauf.stdout).toContain('core');
+  });
+
+  test('legt vor dem Publish das CHANGELOG mit dem Eintrag der Version in jedes publizierbare Paket', () => {
+    const repo = fixture();
+    writeFileSync(join(repo.cwd, 'packages', 'core', 'src', 'index.ts'), 'export const a = 2;\n');
+    releaseCommit(repo.cwd, '1.0.3');
+
+    const lauf = starte(repo, 'v1.0.2');
+
+    expect(lauf.status).toBe(0);
+    for (const name of ['core', 'react']) {
+      const kopie = readFileSync(join(repo.cwd, 'packages', name, 'CHANGELOG.md'), 'utf8');
+      expect(kopie).toMatch(/^## \[1\.0\.3\]/);
+    }
+    expect(existsSync(join(repo.cwd, 'packages', 'website', 'CHANGELOG.md'))).toBe(false);
+  });
+
+  test('publiziert nicht, wenn CHANGELOG.md den Eintrag der Version nicht trägt', () => {
+    const repo = fixture();
+    writeFileSync(join(repo.cwd, 'packages', 'core', 'src', 'index.ts'), 'export const a = 2;\n');
+    releaseCommit(repo.cwd, '1.0.3', { changelogEintrag: false });
+
+    const lauf = starte(repo, 'v1.0.2');
+
+    expect(lauf.status).toBe(1);
+    expect(repo.pnpmAufrufe()).toBe('');
+    expect(lauf.stderr).toContain('keinen Eintrag für 1.0.3');
   });
 });
