@@ -141,7 +141,7 @@ trägt und woher ein Zeichen stammt. Das alles liefert `core` selbst — der
 | `vocabulary(spec, field, { candidates? })` | je Wert `allowed` (mit `derived: true`, wenn die Zeichnung abgeleitete Teile trägt) oder `blocked` — mit Grund `rule` (erklärte Regeln) oder `not-measured` (auch abgeleitet nicht zeichenbar, mit Reichweite) |
 | `checkSpec(spec, options?)` | dieselbe Prüfung für eine ganze Beschreibung: die Zeichnung oder der erklärte Grund, statt eines Wurfs |
 | `explainIssue(issue)`, `explainRejection(error)`, `RULE_EXPLANATIONS` | Titel, Erklärung und betroffenes Feld je Regel |
-| `symbolProvenance(spec)` | `verbatim` (Körperhülle an einem Original belegt) oder `derived` |
+| `symbolProvenance(spec)` | `verbatim` (Körperhülle an einem Original belegt, `claim: 'body-hull'`, oder die Zeichnung ist genau eine Kapiteldatei, `claim: 'reference-file'`) oder `derived` |
 | `serializeSpec`, `parseSpec`, `encodeSpecParam`, `decodeSpecParam`, `SpecParseError` | die kanonische Form als JSON und für Links; strenges Lesen mit Pfad im Fehler |
 
 Geprüft wird immer über den echten Weg: `vocabulary()` und `checkSpec()` zeichnen jeden Kandidaten
@@ -268,9 +268,10 @@ als Wert zurück.
 
 Die zweite Darstellung der kontaminierten Person (5.8.8.6) zeichnet nur `state`: die Person
 zeichnet die erste. Eine Variante, die das Register nicht führt, lehnt die Variantenregel ab, nicht
-die Kanonik. Bis LFH-1303 melden die Ziele, die eine `SymbolSpec` sind (Person mit Zustand, Gefahr
-mit Hinweis, Leitstelle als Ort), über `anySpecProvenance` noch `derived`, obwohl sie die
-Kapiteldatei zeichnen.
+die Kanonik. Die Ziele, die eine `SymbolSpec` sind, melden über `anySpecProvenance` dieselbe
+Herkunft wie das umgeleitete Zeichen: Person mit Zustand und Gefahr mit Hinweis `verbatim` mit
+`claim: 'reference-file'`. Die Leitstelle als Ort ist `verbatim` mit `claim: 'body-hull'`, weil ihr
+Ort das Kürzel aus der Grammatik setzt.
 
 Eine zweite Darstellung gibt es nur, wo das Register eine führt (`state-variant-not-available`,
 `pictogram-variant-not-available`). Die Fähigkeiten aus Kapitel 4 dürfen für sich stehen; das Bild

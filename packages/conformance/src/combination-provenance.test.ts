@@ -1,9 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { matchFingerprint, specKey, symbolProvenance } from '@einsatzzeichen/core';
-import type { SymbolSpec } from '@einsatzzeichen/schema';
+import {
+  ALL_PICTOGRAMS,
+  PLACES,
+  anySpecProvenance,
+  freestandingRedirect,
+  matchFingerprint,
+  specKey,
+  symbolProvenance,
+} from '@einsatzzeichen/core';
+import { isFreestandingSpec, type FreestandingSpec, type StateId, type SymbolSpec } from '@einsatzzeichen/schema';
 import {
   combinationProvenance,
   provenanceReview,
+  referenceFileSections,
   verbatimFixtures,
   verbatimTableSource,
 } from './combination-provenance.js';
@@ -35,13 +44,13 @@ describe('specKey() über den Rezeptbestand', () => {
 });
 
 describe('combinationProvenance()', () => {
-  it('führt genau 289 verbatim-Fixtures: alle Rezepte mit vergleichbarer Form', () => {
+  it('führt genau 290 verbatim-Fixtures: alle Rezepte mit vergleichbarer Form und die Leitstelle', () => {
     // 241 bis LFH-786; alle 37 Anhang-C-Referenzen führen eine vergleichbare Körperform, einzig
     // G.1.5 bleibt weiterhin ohne. Die acht aus Kapitel 5.1 (ESZ-117) und C.1.13/C.1.14
-    // (ESZ-143) führen alle eine.
+    // (ESZ-143) führen alle eine. Dazu der vermessene Ort D.2.5 (ESZ-136).
     expect(fingerprintCases).toHaveLength(289);
-    expect(verbatimFixtures()).toHaveLength(289);
-    expect(verbatimFixtures()).toEqual(fingerprintCases.map(([section]) => section));
+    expect(verbatimFixtures()).toHaveLength(290);
+    expect(verbatimFixtures()).toEqual([...fingerprintCases.map(([section]) => section), 'D.2.5']);
   });
 
   it.each(fingerprintCases)('%s ist verbatim und nennt Fixture, Referenz und Review', (section, recipe) => {
@@ -114,30 +123,41 @@ describe('combinationProvenance()', () => {
   });
 });
 
-describe('verbatimTableSource() — Generator der core-Tabelle (LFH-581)', () => {
+describe('verbatimTableSource() — Generator der core-Tabellen (LFH-581, ESZ-136)', () => {
   const source = verbatimTableSource();
-  const rows = source
+  const [bodyHullPart, referenceFilePart] = source.split('export const REFERENCE_FILE_TABLE');
+  const rowsOf = (part: string | undefined) => (part ?? '')
     .split('\n')
     .filter((line) => line.startsWith('  ['))
     .map((line) => JSON.parse(line.trim().replace(/,$/, '')) as [string, string, string]);
+  const byCodeUnit = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
-  it('nennt den Generatorbefehl und exportiert VERBATIM_TABLE mit expliziter Typangabe', () => {
+  it('nennt den Generatorbefehl und exportiert beide Tabellen mit expliziter Typangabe', () => {
     expect(source).toContain('pnpm cli provenance:table');
     expect(source).toMatch(/^export const VERBATIM_TABLE: ReadonlyArray<$/m);
+    expect(source).toMatch(/^export const REFERENCE_FILE_TABLE: ReadonlyArray<$/m);
     expect(source).not.toMatch(/as const/);
     expect(source.endsWith('];\n')).toBe(true);
   });
 
   it('führt je verbatim-Fixture eine Zeile [specKey, Fixture, Referenz], nach Fixture sortiert', () => {
+    const control = PLACES['control-center'];
     const expected = verbatimFixtures()
       .slice()
-      .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+      .sort(byCodeUnit)
       .map((fixture) => {
+        if (fixture === 'D.2.5') return [specKey(control.spec), fixture, 'D.2.5_Leitstelle.svg'];
         const recipe = RECIPES[fixture as keyof typeof RECIPES];
         return [specKey(recipe.spec), fixture, recipe.referenceAsset];
       });
-    expect(rows).toHaveLength(289);
-    expect(rows).toEqual(expected);
+    expect(rowsOf(bodyHullPart)).toHaveLength(290);
+    expect(rowsOf(bodyHullPart)).toEqual(expected);
+  });
+
+  it('führt je Spec mit Referenzdatei eine Zeile [specKey, Abschnitt, Referenz], nach Abschnitt sortiert', () => {
+    const rows = rowsOf(referenceFilePart);
+    expect(rows).toHaveLength(19);
+    expect(rows.map(([, section]) => section)).toEqual(referenceFileSections().slice().sort(byCodeUnit));
   });
 
   it('enthält keine Fingerabdrücke — nur Schlüssel und Namen', () => {
@@ -165,5 +185,78 @@ describe('Reviewstand optional aus conformance (LFH-581)', () => {
     const derived = symbolProvenance(RECIPES['G.1.5'].spec);
     expect(derived).toEqual({ status: 'derived' });
     expect(provenanceReview(derived)).toBeUndefined();
+  });
+});
+
+/**
+ * Specs, die genau eine Kapiteldatei zeichnen (ESZ-136): die kanonischen `SymbolSpec`-Ziele von
+ * `freestandingRedirect`. Sie melden denselben Beleg wie das freistehende Zeichen, das auf sie
+ * umgeleitet wird; einzig die Leitstelle D.2.5 belegt nur die Körperhülle, weil ihr Ort das Kürzel
+ * aus der Grammatik setzt.
+ */
+describe('Specs mit Referenzdatei (ESZ-136)', () => {
+  const redirected = ALL_PICTOGRAMS.flatMap((definition) => {
+    const variant = definition.variant === 'primary' ? {} : { variant: definition.variant };
+    const spec: FreestandingSpec = definition.id.startsWith('state.')
+      ? { kind: 'state', state: definition.id.slice('state.'.length) as StateId, ...variant }
+      : { kind: 'pictogram', pictogram: definition.id, ...variant };
+    const target = freestandingRedirect(spec);
+    return target !== undefined && !isFreestandingSpec(target) ? [{ definition, target }] : [];
+  });
+
+  it('nimmt die 17 Personenzustände und die beiden Hinweise an der Gefahr auf', () => {
+    const sections = referenceFileSections();
+    expect(sections).toHaveLength(19);
+    expect(sections.filter((section) => section.startsWith('5.8.8.'))).toHaveLength(17);
+    expect(sections.filter((section) => !section.startsWith('5.8.8.'))).toEqual(['5.8.1.13', '5.8.1.14']);
+  });
+
+  it('jedes kanonische Ziel ist verbatim: mit Referenzdatei, die Leitstelle mit Körperhülle', () => {
+    expect(redirected).toHaveLength(20);
+    for (const { definition, target } of redirected) {
+      const expected = definition.id === 'leadership.control-center'
+        ? { status: 'verbatim', claim: 'body-hull', fixture: 'D.2.5', referenceAsset: definition.referenceAsset }
+        : {
+          status: 'verbatim',
+          claim: 'reference-file',
+          section: definition.section,
+          referenceAsset: definition.referenceAsset,
+        };
+      expect(symbolProvenance(target), definition.id).toEqual(expected);
+      expect(anySpecProvenance(target), definition.id).toEqual(expected);
+    }
+  });
+
+  it('trägt 5.8.8.12 bis 5.8.8.14 und 5.8.8.16, obwohl ihr Kennwert nur eine Umrisshülle führt', () => {
+    for (const state of ['person-to-be-transported', 'person-in-transport', 'person-transported', 'person-care-dependent'] as const) {
+      const spec: SymbolSpec = { kind: 'person', states: [state] };
+      const provenance = symbolProvenance(spec);
+      expect(provenance).toMatchObject({ status: 'verbatim', claim: 'reference-file' });
+      const asset = provenance.status === 'verbatim' ? provenance.referenceAsset : '';
+      const comparable = comparableFingerprint(fingerprintFor(asset));
+      expect(matchFingerprint(composeFromCatalog(spec), comparable.fingerprint, comparable.options).ok).toBe(false);
+    }
+  });
+
+  it('nennt den Reviewstand des Registerbilds', () => {
+    for (const { definition, target } of redirected) {
+      if (definition.id === 'leadership.control-center') continue;
+      const manifestRow = COVERAGE_MANIFEST.entries.find((entry) => entry.implementation === definition.id &&
+        entry.variant === definition.variant);
+      expect(manifestRow?.review, definition.id).toBeDefined();
+      expect(combinationProvenance(target)).toEqual({ ...symbolProvenance(target), review: manifestRow?.review });
+    }
+  });
+
+  it('die Leitstelle als Ort hat keine Rezeptzeile und damit keinen Reviewstand', () => {
+    const provenance = symbolProvenance(PLACES['control-center'].spec);
+    expect(provenanceReview(provenance)).toBeUndefined();
+    expect(combinationProvenance(PLACES['control-center'].spec)).toEqual(provenance);
+  });
+
+  it('bleibt derived für eine Person mit zwei Zuständen und für die Gefahr ohne Hinweis', () => {
+    expect(symbolProvenance({ kind: 'person', states: ['person-injured', 'person-contaminated'] })).toEqual({ status: 'derived' });
+    expect(symbolProvenance({ kind: 'hazard' })).toEqual({ status: 'derived' });
+    expect(symbolProvenance({ kind: 'person', states: ['person-dead'], organization: 'feuerwehr' })).toEqual({ status: 'derived' });
   });
 });

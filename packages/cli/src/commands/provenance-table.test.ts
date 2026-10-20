@@ -18,9 +18,10 @@ describe('provenance:table', () => {
     const result = writeProvenanceTable({ root });
 
     expect(result.file).toBe(join(root, VERBATIM_TABLE_MODULE));
-    // 241 bis LFH-786, dazu die 37 Anhang-C-Fixtures, C.1.4 (LFH-787), acht aus ESZ-117 und
-    // C.1.13/C.1.14 aus ESZ-143.
-    expect(result.rows).toBe(289);
+    // 241 bis LFH-786, dazu die 37 Anhang-C-Fixtures, C.1.4 (LFH-787), acht aus ESZ-117,
+    // C.1.13/C.1.14 aus ESZ-143 und aus ESZ-136 die Leitstelle D.2.5 sowie 19 Specs mit
+    // Referenzdatei (17 Personenzustände, 2 Hinweise an der Gefahr).
+    expect(result.rows).toBe(309);
     expect(readFileSync(result.file, 'utf8')).toBe(verbatimTableSource());
   });
 });

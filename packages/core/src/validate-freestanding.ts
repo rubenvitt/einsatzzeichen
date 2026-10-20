@@ -221,9 +221,9 @@ function pictogramRedirect(spec: PictogramSpec): AnySpec | undefined {
  * `pictogram-not-canonical` ab; die Meldung nennt dieselbe Spec. Wer alte Daten überführt,
  * schreibt sie damit um, statt die Meldung zu lesen. Die Rückgabe ist eingefroren.
  *
- * **Herkunft der Ziele.** Die `SymbolSpec`-Ziele — Person mit Zustand, Gefahr mit Hinweis,
- * Leitstelle als Ort — melden über `anySpecProvenance` bis LFH-1303 `derived`, obwohl sie die
- * Kapiteldatei zeichnen: die Herkunftstabelle kennt nur Rezepte.
+ * **Herkunft der Ziele (ESZ-136).** Die `SymbolSpec`-Ziele sind `verbatim`: Person mit Zustand
+ * und Gefahr mit Hinweis mit `claim: 'reference-file'` wie das umgeleitete Zeichen, die Leitstelle
+ * als Ort mit `claim: 'body-hull'`.
  */
 export function freestandingRedirect(spec: FreestandingSpec): AnySpec | undefined {
   switch (spec.kind) {
