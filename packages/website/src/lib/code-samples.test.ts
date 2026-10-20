@@ -2,7 +2,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { RECIPES } from '@einsatzzeichen/conformance';
-import { drawSymbol, renderSvg } from '@einsatzzeichen/core';
+import { drawAnySpec, drawSymbol, renderSvg } from '@einsatzzeichen/core';
 import { Einsatzzeichen } from '@einsatzzeichen/react';
 import { codeSamplesFor } from './code-samples.js';
 
@@ -39,5 +39,22 @@ describe('codeSamplesFor', () => {
   it('Web-Component- und MapLibre-Snippets nennen die exportierten Namen', () => {
     expect(samples.webComponent).toMatch(/customElements\.define|define\w*\(/u);
     expect(samples.maplibre).toContain('addImage'); // über das Paket, exakter Funktionsname aus style-image.ts
+  });
+});
+
+describe('codeSamplesFor mit einem freistehenden Zeichen (ESZ-135)', () => {
+  const spec = { kind: 'pictogram', pictogram: 'comms.voice-radio' } as const;
+  const freestanding = codeSamplesFor(spec, 'builder-spec');
+
+  it('zeichnet über drawAnySpec und nennt den Typ FreestandingSpec', () => {
+    for (const sample of Object.values(freestanding)) {
+      expect(sample).toMatch(/import \{[^}]*\bdrawAnySpec\b[^}]*\} from '@einsatzzeichen\/core';/u);
+      expect(sample).toContain('const spec: FreestandingSpec = ');
+      expect(sample).not.toMatch(/\bdrawSymbol\b/u);
+    }
+  });
+
+  it('die im Snippet beschriebene TS-Kette erzeugt ein SVG', () => {
+    expect(renderSvg(drawAnySpec(spec), { size: 64 }).startsWith('<svg')).toBe(true);
   });
 });

@@ -110,12 +110,12 @@ describe('NAMED_EXCEPTIONS: Gate in beide Richtungen', () => {
 });
 
 describe('NAMED_EXCEPTIONS: festgenagelte Zahlen', () => {
-  it('zählt 88 Ausnahmen, je Feld festgenagelt', () => {
+  it('zählt 89 Ausnahmen, je Feld festgenagelt', () => {
     // LFH-786 ergänzt 37: 30 × inBodyInk (koerperlauf-kontrast an jeder beschrifteten neuen
     // Fixture), topLeftMetrics an C.2.10, die Versalhöhe des kleinen „P“ in C.2.25, Grundlinien
     // an C.2.25, C.2.25#alternative und C.1.8 sowie die beiden Anker des „P“ in C.2.25 und
-    // C.2.25#alternative. ESZ-132 ergänzt inBodyInk an C.1.10; die Lage seines „G“ nennt die Spec
-    // nicht, sie kommt von der Marke.
+    // C.2.25#alternative. ESZ-145 ergänzt den Anker von I.2.6. ESZ-132 ergänzt inBodyInk an C.1.10;
+    // die Lage seines „G“ nennt die Spec nicht, sie kommt von der Marke.
     const perField = Object.fromEntries(SPECIAL_VALUE_FIELDS.map((field) => [
       field,
       NAMED_EXCEPTIONS.filter((entry) => entry.field === field).length,
@@ -123,14 +123,14 @@ describe('NAMED_EXCEPTIONS: festgenagelte Zahlen', () => {
     expect(perField).toEqual({
       centerCapHeightMm: 17,
       centerBaselineFromBodyBottomMm: 10,
-      centerAnchorFromBodyLeftMm: 3,
+      centerAnchorFromBodyLeftMm: 4,
       centerBoxMarginMm: 2,
       topLeftMetrics: 16,
       aboveLeftMetrics: 4,
       bottomRightMetrics: 1,
       inBodyInk: 35,
     });
-    expect(NAMED_EXCEPTIONS).toHaveLength(88);
+    expect(NAMED_EXCEPTIONS).toHaveLength(89);
   });
 
   it('betrifft genau 68 der 281 Fixtures', () => {

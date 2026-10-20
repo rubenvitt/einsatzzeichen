@@ -1,3 +1,34 @@
+## [6.7.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.6.0...v6.7.0) (2026-10-20)
+
+### Website
+
+- **Baukasten für freistehende Zeichen:** Der Baukasten erstellt jetzt neben regulären Zeichen (SymbolSpec) auch freistehende Zeichen. Möglich sind Pfeil, Linie, Wetter, Tierzustand, Zustand und Piktogramm.
+  - Über den neuen Umschalter „Art des Zeichens“ wechselst du zwischen den Modi. Die Auswahl bleibt in beiden Modi erhalten.
+  - Vorschau, Regelliste, SVG-/PNG-Export und Codebeispiele gibt es für alle Zeichenarten.
+  - Auch freistehende Zeichen lassen sich als Link teilen. Links auf reguläre Zeichen bleiben Zeichen für Zeichen gleich, bestehende Links funktionieren also weiter.
+  - Die Auswahlwerte kommen direkt aus den Registern. Piktogramme sind nach Raum gegliedert.
+  - Optionen, die zu einem ungültigen Zeichen führen würden, sind gesperrt. Geprüft wird jeweils das Zeichen, das der Klick erzeugen würde.
+  - Eine passende Facette im Explorer kommt in einem späteren Release.
+
+### Konformität
+
+- **„Strömungsrettung“ in I.2.6 näher an der Referenz:** Die Beschriftung stand bisher mittig. Sie sitzt jetzt wie in der Referenz 0,71 mm weiter links. Der Abstand zur linken Kontur beträgt damit 0,24 mm statt 0,5 mm. Die Abweichung zur Referenz bei I.2.6 sinkt von 27,0 % auf 22,7 % Strichanteil.
+
+## [6.6.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.5.0...v6.6.0) (2026-10-20)
+
+### ⚠️ Breaking Changes
+
+- **`SymbolProvenance` und `CombinationProvenance` haben eine neue Variante.** Neben `claim: 'body-hull'` (mit `fixture`) gibt es jetzt die verbatim-Form mit `claim: 'reference-file'`. Sie enthält statt einer Fixture den Abschnitt und die Referenzdatei. Code, der bei `status === 'verbatim'` direkt auf `fixture` zugreift, kompiliert nicht mehr bzw. findet das Feld nicht.
+  *Migration:* Vor dem Zugriff auf `fixture` zusätzlich auf `claim === 'body-hull'` prüfen. Bei `claim === 'reference-file'` stattdessen Abschnitt und Referenzdatei auswerten.
+
+### Provenienz (core)
+
+- **Freistehende Zeichen gelten jetzt korrekt als verbatim.** Kanonische `SymbolSpec`-Ziele, die genau eine Kapiteldatei zeichnen, meldeten bisher fälschlich `derived`. Das betrifft:
+  - **Person mit einem Zustand aus 5.8.8** (17 Zeichen) und **Gefahr mit Hinweis 5.8.1.13/14** (2 Zeichen): jetzt `verbatim` mit `claim: 'reference-file'`, Abschnitt und Referenzdatei. Die Angaben stimmen mit `freestandingProvenance` für dasselbe Bild überein.
+  - **Leitstelle D.2.5 als Ort**: jetzt `verbatim` mit `claim: 'body-hull'` und Fixture D.2.5.
+- Als Beleg dient ein Geometrievergleich mit dem geprüften Registerbild, gerechnet in `@einsatzzeichen/conformance`: ohne Rolle, ohne Ableitungsnotiz, Toleranz 0,001 mm.
+- `provenanceReview` gibt für `reference-file` den Reviewstand des zugehörigen Registerbilds aus dem Manifest zurück.
+
 ## [6.5.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.4.0...v6.5.0) (2026-10-18)
 
 ### Pakete

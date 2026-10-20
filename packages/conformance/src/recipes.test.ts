@@ -7,8 +7,10 @@ import {
   CompositionError,
   formatUnits,
   matchFingerprint,
+  measureTextRun,
   RENDER_THEMES,
   renderSvg,
+  TEXT_FONT_METRICS,
   validateSpec,
 } from '@einsatzzeichen/core';
 import { mmToUnits, type Drawing, type Primitive } from '@einsatzzeichen/schema';
@@ -1418,6 +1420,8 @@ describe('Anhang I, Teilslice I-b (I.2.4 bis I.2.7)', () => {
       bodyMarks: ['trailer-diving'] as const,
       labels: {
         center: 'Strömungsrettung',
+        // ESZ-145: Tintenmitte auf der Referenzmitte statt auf der Körpermitte.
+        centerAnchorFromBodyLeftMm: 12.74,
         centerBaselineFromBodyBottomMm: 14.327,
         // ESZ-144: wieder 2,191447 mm (Referenzhöhe); von LFH-585 bis ESZ-144 für Arimo 500
         // auf 2,12 mm gesenkt.
@@ -1481,6 +1485,24 @@ describe('Anhang I, Teilslice I-b (I.2.4 bis I.2.7)', () => {
       content: 'Tauchen', anchor: 'middle', x: 12.24, y: 11.5,
       sizeMm: 2.919 / TEXT_CAP_HEIGHT_FRACTION,
     })]);
+  });
+
+  it('setzt I.2.6s Strömungsrettungs-Lauf auf die Tintenmitte der Referenz x = 16,79 mm', () => {
+    const recipe: Recipe = RECIPES['I.2.6'];
+    const labels = composeFromCatalog(recipe.spec, recipe.title).children.filter(
+      (child): child is Primitive & { type: 'text' } => child.type === 'text' && child.role === 'label',
+    );
+    expect(labels).toEqual([expect.objectContaining({
+      content: 'Strömungsrettung', anchor: 'middle', y: 11.673,
+      sizeMm: 2.191447 / TEXT_CAP_HEIGHT_FRACTION,
+    })]);
+    expect(labels[0]!.x).toBeCloseTo(16.74, 10);
+    // Referenztinte (Typo-Ebene, Bézier-Extrema eingeschlossen): x 4,8902 … 28,686, Mitte 16,7881.
+    const ink = measureTextRun(labels[0]!, TEXT_FONT_METRICS);
+    expect(Math.abs((ink.inkMinXMm + ink.inkMaxXMm) / 2 - 16.7881)).toBeLessThanOrEqual(0.05);
+    // Links bleibt Luft zur Innenkante der Kontur (4,25), wenn auch unter 0,5 mm (Profilkommentar).
+    expect(ink.inkMinXMm).toBeGreaterThan(4.25 + 0.2);
+    expect(ink.inkMaxXMm).toBeLessThan(30.75 - 0.5);
   });
 });
 

@@ -1,9 +1,11 @@
 // Generiert von `pnpm cli provenance:table` (LFH-581) — nicht von Hand ändern.
 //
-// Quelle: `verbatimTableSource()` in `@einsatzzeichen/conformance` — der Körpervergleich jeder
-// Fixture mit ihrem Original, nur bestandene Fälle. Je Zeile `[specKey, Fixture, Referenzdatei]`,
-// nur Schlüssel und Namen, keine Vergleichsdaten.
-// `verbatim-table-drift.test.ts` in conformance rechnet die Tabelle neu und verlangt Gleichheit.
+// Quelle: `verbatimTableSource()` in `@einsatzzeichen/conformance`, nur Schlüssel und Namen,
+// keine Vergleichsdaten.
+// `verbatim-table-drift.test.ts` in conformance rechnet die Tabellen neu und verlangt Gleichheit.
+
+// Körpervergleich jeder Fixture mit ihrem Original, nur bestandene Fälle (`claim: 'body-hull'`).
+// Je Zeile `[specKey, Fixture, Referenzdatei]`.
 export const VERBATIM_TABLE: ReadonlyArray<
   readonly [specKey: string, fixture: string, referenceAsset: string]
 > = [
@@ -68,6 +70,7 @@ export const VERBATIM_TABLE: ReadonlyArray<
   ["{\"functionRole\":\"fire-service-readiness-command-group\",\"kind\":\"formation\",\"organization\":\"feuerwehr\",\"strength\":\"gruppe\"}","D.1.8","D.1.8_Führungsgruppe einer Feuerwehrbereitschaft.svg"],
   ["{\"bodyMarks\":[\"formation-solid-cap-3mm\",\"medical-service\"],\"kind\":\"formation\",\"organization\":\"hilfsorganisation\",\"strength\":\"trupp\"}","D.1.9","D.1.9_Zugtrupp einer Sanitätseinheit.svg"],
   ["{\"bodyMarks\":[\"formation-solid-cap-4mm-three-hole-row\",\"medical-service\"],\"kind\":\"formation\",\"organization\":\"hilfsorganisation\",\"strength\":\"trupp\"}","D.1.9#alternative","D.1.9_Zugtrupp einer Sanitätseinheit_Alternative.svg"],
+  ["{\"bodyMarks\":[\"circle-solid-cap-4mm\"],\"bodyVariant\":\"raised-gable\",\"kind\":\"circle-12\",\"labels\":{\"center\":\"LtS\",\"centerBaselineFromBodyBottomMm\":8,\"centerCapHeightMm\":7.3},\"organization\":\"fuehrung-leitung\"}","D.2.5","D.2.5_Leitstelle.svg"],
   ["{\"administrativeLevel\":\"kreis\",\"functionRole\":\"technical-incident-commander\",\"kind\":\"person\",\"organization\":\"fuehrung-leitung\"}","D.3.1","D.3.1_Technischer Einsatzleiter LK Ahrweiler.svg"],
   ["{\"bodyMarks\":[\"care\",\"medical-service\"],\"functionRole\":\"operational-unit-platoon-commander\",\"kind\":\"person\",\"organization\":\"hilfsorganisation\",\"strength\":\"zug\"}","D.3.10","D.3.10_Zugführer Einsatzeinheit DRK.svg"],
   ["{\"bodyMarks\":[\"care\"],\"functionRole\":\"care-platoon-commander\",\"kind\":\"person\",\"organization\":\"hilfsorganisation\",\"strength\":\"zug\"}","D.3.11","D.3.11_Zugführer Betreuungszug ASB.svg"],
@@ -269,7 +272,7 @@ export const VERBATIM_TABLE: ReadonlyArray<
   ["{\"bodyMarks\":[\"water-rescue\"],\"kind\":\"vehicle-land\",\"labels\":{\"topLeft\":\"GW SR\",\"topLeftMetrics\":{\"anchorFromBodyLeftMm\":1.51,\"baselineFromBodyTopMm\":6.25,\"capHeightMm\":2.919}},\"organization\":\"hilfsorganisation\",\"vehicleCategory\":\"kfz-kategorie-1\"}","I.2.3","I.2.3_Gerätewagen Strömungsrettung.svg"],
   ["{\"bodyMarks\":[\"trailer-water-rescue\"],\"kind\":\"trailer\",\"organization\":\"hilfsorganisation\"}","I.2.4","I.2.4_Anhänger Wasserrettung.svg"],
   ["{\"bodyMarks\":[\"trailer-diving\"],\"kind\":\"trailer\",\"labels\":{\"center\":\"Tauchen\",\"centerAnchorFromBodyLeftMm\":8.24,\"centerBaselineFromBodyBottomMm\":14.5,\"centerCapHeightMm\":2.919},\"organization\":\"hilfsorganisation\"}","I.2.5","I.2.5_Anhänger Tauchen.svg"],
-  ["{\"bodyMarks\":[\"trailer-diving\"],\"kind\":\"trailer\",\"labels\":{\"center\":\"Strömungsrettung\",\"centerBaselineFromBodyBottomMm\":14.327,\"centerCapHeightMm\":2.191447},\"organization\":\"hilfsorganisation\"}","I.2.6","I.2.6_Anhänger Strömungsrettung.svg"],
+  ["{\"bodyMarks\":[\"trailer-diving\"],\"kind\":\"trailer\",\"labels\":{\"center\":\"Strömungsrettung\",\"centerAnchorFromBodyLeftMm\":12.74,\"centerBaselineFromBodyBottomMm\":14.327,\"centerCapHeightMm\":2.191447},\"organization\":\"hilfsorganisation\"}","I.2.6","I.2.6_Anhänger Strömungsrettung.svg"],
   ["{\"bodyMarks\":[\"trailer-boat-hull\"],\"kind\":\"trailer\",\"organization\":\"hilfsorganisation\"}","I.2.7","I.2.7_Bootsanhänger.svg"],
   ["{\"bodyVariant\":\"inset-hull\",\"kind\":\"vehicle-water\",\"organization\":\"hilfsorganisation\"}","I.3.1","I.3.1_Boot allgemein.svg"],
   ["{\"bodyVariant\":\"inset-hull\",\"kind\":\"vehicle-water\",\"labels\":{\"center\":\"Raft\"},\"organization\":\"hilfsorganisation\"}","I.3.10","I.3.10_Raft.svg"],
@@ -297,4 +300,30 @@ export const VERBATIM_TABLE: ReadonlyArray<
   ["{\"bodyMarks\":[\"spontaneous-helper-collection-arrow\"],\"kind\":\"circle-12\",\"organization\":\"zivile-einheiten\"}","N.2.1","N.2.1_Sammelraum_Spontanhelfer.svg"],
   ["{\"bodyMarks\":[\"spontaneous-helper-contact-double-arrow\"],\"kind\":\"circle-12\",\"organization\":\"feuerwehr\"}","N.2.2","N.2.2_Kontaktstelle_Spontanhelfer.svg"],
   ["{\"bodyMarks\":[\"circle-information-stem\"],\"bodyVariant\":\"raised-circle-1mm\",\"kind\":\"circle-12\",\"labels\":{\"accessibilityMode\":\"neutral-zones\",\"surfaceBelowLeft\":\"291300\",\"surfaceBelowRight\":\"ZIV\"},\"organization\":\"zivile-einheiten\"}","N.2.3","N.2.3_Notfallinformationspunkt.svg"],
+];
+
+// Specs, die genau eine Kapiteldatei des Piktogrammregisters zeichnen (ESZ-136,
+// `claim: 'reference-file'`). Je Zeile `[specKey, Abschnitt, Referenzdatei]`.
+export const REFERENCE_FILE_TABLE: ReadonlyArray<
+  readonly [specKey: string, section: string, referenceAsset: string]
+> = [
+  ["{\"kind\":\"hazard\",\"states\":[\"suspected-situation\"]}","5.8.1.13","5.8.1.13_Hinweis auf Vermutung_2.svg"],
+  ["{\"kind\":\"hazard\",\"states\":[\"acute-situation\"]}","5.8.1.14","5.8.1.14_Hinweis auf akute Situation_2.svg"],
+  ["{\"kind\":\"person\",\"states\":[\"person-uninjured\"]}","5.8.8.1","5.8.8.1_Person Unverletz.svg"],
+  ["{\"kind\":\"person\",\"states\":[\"person-in-distress\"]}","5.8.8.10","5.8.8.10_Person in Zwangslage.svg"],
+  ["{\"kind\":\"person\",\"states\":[\"person-rescued\"]}","5.8.8.11","5.8.8.11_Person gerettet.svg"],
+  ["{\"kind\":\"person\",\"states\":[\"person-to-be-transported\"]}","5.8.8.12","5.8.8.12_Person zu transportieren.svg"],
+  ["{\"kind\":\"person\",\"states\":[\"person-in-transport\"]}","5.8.8.13","5.8.8.13_Transport einer Person.svg"],
+  ["{\"kind\":\"person\",\"states\":[\"person-transported\"]}","5.8.8.14","5.8.8.14_Person transportiert.svg"],
+  ["{\"kind\":\"person\",\"states\":[\"person-needing-special-care\"]}","5.8.8.15","5.8.8.15_Person besonders betreuungsbedürftig.svg"],
+  ["{\"kind\":\"person\",\"states\":[\"person-care-dependent\"]}","5.8.8.16","5.8.8.16_Person pflegebedürftig.svg"],
+  ["{\"kind\":\"person\",\"states\":[\"person-mobility-impaired\"]}","5.8.8.17","5.8.8.17_Person mobilitätseingeschränkt.svg"],
+  ["{\"kind\":\"person\",\"states\":[\"person-affected\"]}","5.8.8.2","5.8.8.2_Person Betroffen.svg"],
+  ["{\"kind\":\"person\",\"states\":[\"person-injured\"]}","5.8.8.3","5.8.8.3_Person Verletzt.svg"],
+  ["{\"kind\":\"person\",\"states\":[\"person-injured-triage-category\"]}","5.8.8.4","5.8.8.4_Person Verletzt_Sichtungskategorie.svg"],
+  ["{\"kind\":\"person\",\"states\":[\"person-injured-transport-priority\"]}","5.8.8.5","5.8.8.5_Person Verletzt_Transportpriorität.svg"],
+  ["{\"kind\":\"person\",\"states\":[\"person-contaminated\"]}","5.8.8.6","5.8.8.6_Person Kontaminiert.svg"],
+  ["{\"kind\":\"person\",\"states\":[\"person-dead\"]}","5.8.8.7","5.8.8.7_Person Tot.svg"],
+  ["{\"kind\":\"person\",\"states\":[\"person-missing\"]}","5.8.8.8","5.8.8.8_Person Vermisst.svg"],
+  ["{\"kind\":\"person\",\"states\":[\"person-in-water-danger\"]}","5.8.8.9","5.8.8.9_Person in Wassergefahr.svg"],
 ];

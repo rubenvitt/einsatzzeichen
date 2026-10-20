@@ -75,6 +75,25 @@ beim Bauen.
 Ganz unten unter den Feldern steht **Auf die Ausgangsauswahl zurücksetzen** — der Knopf stellt
 alles auf den Anfangszustand, falls du dich verrannt hast.
 
+## Ein Zeichen ohne Grundzeichen
+
+Manche Zeichen stehen ohne Grundzeichen auf der Lagekarte: ein Pfeil für die Richtung einer
+Maßnahme, eine Grenze zwischen Einsatzabschnitten, das Wetter, ein Tierzustand, die
+Einzeldarstellung eines Zustands oder ein einzelnes Piktogramm, etwa ein Kommunikationszeichen.
+Dafür stellst du unter **Art des Zeichens** auf **Freistehend** um.
+
+1. Wähle die **Art**: Pfeil, Linie, Wetter, Tierzustand, Zustand oder Piktogramm.
+2. Wähle den Wert. Ein Pfeil oder eine Linie steht auf dem Verlauf der Vorlage. An der Grenze mit
+   taktischer Stärke setzt der Baukasten die Stärke „Zug“ ein; du kannst sie ändern.
+3. Beim **Wetter** kombinierst du die Werte: zur Wolke etwa „Schneiend“ und darunter die
+   **Intensität**. Ein Wert bleibt immer stehen; nimm erst einen neuen dazu, dann den alten weg.
+4. Ist ein Wert gesperrt, steht der Grund daneben. Ein Personenzustand wie „Person unverletzt“
+   etwa gehört an das Grundzeichen Person und lässt sich dort im Modus **Mit Grundzeichen**
+   setzen.
+
+Vorschau, Download und Link funktionieren wie bei jedem anderen Zeichen. Zwischen den beiden Arten
+kannst du wechseln, ohne die Auswahl der anderen zu verlieren.
+
 ## Wenn ein Zeichen „abgeleitet“ ist
 
 Die Vorlage zeigt längst nicht jede Kombination, die erlaubt ist. Ein Verband III über einer
@@ -122,8 +141,9 @@ fachkundigen Person vorgelegt.
 
 ## Für Entwicklerinnen und Entwickler
 
-Der Baukasten ist ein Formular über die Felder der `SymbolSpec`. Bei jeder Änderung zeichnet
-`drawSymbol()` die Spec; die gefundenen Verstöße tragen eine Regel-ID, die `explainIssue()` aus
+Der Baukasten ist ein Formular über die Felder der `SymbolSpec`, im Modus „Freistehend“ über die
+der `FreestandingSpec`. Bei jeder Änderung zeichnet `drawAnySpec()` die Spec (für eine
+`SymbolSpec` ist das `drawSymbol()`); die gefundenen Verstöße tragen eine Regel-ID, die `explainIssue()` aus
 `@einsatzzeichen/core` auf einen Satz in Klarsprache abbildet. Die Texte stehen seit LFH-579 im
 Kern (`src/rules/rule-explanations.ts`), die Website reicht sie nur durch. Ein Test verlangt,
 dass jede ID aus `VALIDATION_RULE_IDS` dort einen Eintrag hat — deshalb bleibt keine Meldung
