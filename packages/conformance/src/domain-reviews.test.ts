@@ -273,10 +273,12 @@ describe('Fachreview-Ledger', () => {
     // ergänzt C.1.4: 582. ESZ-117 ergänzt acht offene Plätze für die Behälterzeichen aus
     // Kapitel 5.1: 590. ESZ-134 ergänzt die Sonderformen 3.6 bis 3.8: 593. ESZ-143 ergänzt
     // C.1.13 und C.1.14: 595.
-    expect(manifestReviews).toHaveLength(595);
+    // ESZ-132 ergänzt C.1.10 (Dekontaminationsgruppe Gerät).
+    expect(manifestReviews).toHaveLength(596);
     expect(sourceReviews).toHaveLength(13);
     expect(profileReviews).toHaveLength(1);
-    expect(reviews).toHaveLength(609);
+    // ESZ-132 ergänzt C.1.10 (Dekontaminationsgruppe Gerät).
+    expect(reviews).toHaveLength(610);
 
     // Die neue Invariante: **keine Freigabe ohne benannten, registrierten Prüfer, gültiges
     // ISO-Datum und Befund.** Offene Zeilen sind erlaubt und liefern nichts; solange alles offen

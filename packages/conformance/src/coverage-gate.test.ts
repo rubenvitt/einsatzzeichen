@@ -334,7 +334,8 @@ describe('Gate-Prüfungen zu Quelle, Profil und Review', () => {
       Object.keys(PROFILES).length;
     // 595 Manifestzeilen (544 + 37 aus LFH-786 + C.1.4 aus LFH-787 + acht aus ESZ-117 + 3.6 bis
     // 3.8 aus ESZ-134 + C.1.13 und C.1.14 aus ESZ-143), 13 Quellen, ein Profil.
-    expect(traeger).toBe(609);
+    // ESZ-132 ergänzt C.1.10 (Dekontaminationsgruppe Gerät).
+    expect(traeger).toBe(610);
     expect(result.openDomainReviews).toBeLessThanOrEqual(traeger);
   });
 });

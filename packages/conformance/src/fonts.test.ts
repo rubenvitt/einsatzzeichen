@@ -704,7 +704,8 @@ describe('Rasterevidenz für Text (resvgFontOptions())', () => {
     // **167 seit LFH-786:** 30 der 37 Anhang-C-Fixtures tragen einen Lauf. Ohne Lauf bleiben
     // C.1.7, C.2.18, C.2.20#alternative, C.2.26#alternative, C.2.28#alternative, C.2.29 und
     // C.2.31.
-    expect(labelRecipes).toHaveLength(167);
+    // ESZ-132 ergänzt C.1.10 (Dekontaminationsgruppe Gerät).
+    expect(labelRecipes).toHaveLength(168);
   });
 
   it('behandelt die ULP-äquivalente linke I.5.3-Boxkante als innerhalb', () => {

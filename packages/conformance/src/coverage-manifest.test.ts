@@ -98,7 +98,7 @@ describe('Coverage-Manifest', () => {
     expect(kinds).toContain('element');
   });
 
-  it('enthält exakt 595 Zeilen mit 291 Elementdarstellungen', () => {
+  it('enthält exakt 596 Zeilen mit 291 Elementdarstellungen', () => {
     const elementRows = COVERAGE_MANIFEST.entries.filter((entry) => entry.coverage === 'element');
     const pictogramRows = elementRows.filter(
       (entry) =>
@@ -136,7 +136,7 @@ describe('Coverage-Manifest', () => {
       // Hauptdarstellungen und zehn Alternativen), 242 + 37 = 279. LFH-787 ergänzt C.1.4: 280.
       // ESZ-117 ergänzt die acht Behälterzeichen aus Kapitel 5.1: 288. ESZ-143 ergänzt die
       // beiden Drohnentrupps C.1.13 und C.1.14: 290.
-      'composition-recipe': 290,
+      'composition-recipe': 291,
       // 272 Piktogramme (seit ESZ-134 mit den Sonderformen 3.6 bis 3.8) plus acht
       // Manifest-Organisationen, vier
       // Stärkegrade und sieben Fahrwerkszonen — fünf Fahrzeugkategorien aus 5.1.1 und die beiden
@@ -145,7 +145,8 @@ describe('Coverage-Manifest', () => {
       // Strichhülle vermessen ist.
       element: 291,
     });
-    expect(COVERAGE_MANIFEST.entries).toHaveLength(595);
+    // ESZ-132 ergänzt C.1.10 (Dekontaminationsgruppe Gerät).
+    expect(COVERAGE_MANIFEST.entries).toHaveLength(596);
     expect(elementRows).toHaveLength(291);
     expect(pictogramRows).toHaveLength(272);
     expect(elementRows.filter((entry) => !pictogramRows.includes(entry))).toHaveLength(19);
@@ -457,6 +458,7 @@ describe('Coverage-Manifest', () => {
       'C.1.4',
       'C.1.7',
       'C.1.8',
+      'C.1.10',
       'C.1.13',
       'C.1.14',
       'C.2.4',
@@ -992,6 +994,7 @@ describe('Coverage-Manifest', () => {
       // LFH-786: einzeln, weil C.1 und C.2 nicht lückenlos gebaut sind. ESZ-143 ebenso.
       'C.1.7',
       'C.1.8',
+      'C.1.10',
       'C.1.13',
       'C.1.14',
       'C.2.4',

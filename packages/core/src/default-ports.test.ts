@@ -30,6 +30,7 @@ describe('DEFAULT_PORTS', () => {
       baseDrawing: core.baseDrawing,
       innerField: core.innerField,
       bodyMark: core.bodyMark,
+      bodyMarkRun: core.bodyMarkRun,
       organizationColor: core.organizationColor,
       strengthHead: core.strengthHead,
       technicalHeadMark: core.technicalHeadMark,

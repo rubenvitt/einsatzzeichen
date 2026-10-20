@@ -31,8 +31,9 @@ describe('drawingForManifestEntry', () => {
     result: drawingForManifestEntry(entry),
   }));
 
-  it('zeichnet alle 595 Manifestzeilen, jede mit viewBox und Inhalt', () => {
-    expect(results).toHaveLength(595);
+  it('zeichnet alle 596 Manifestzeilen, jede mit viewBox und Inhalt', () => {
+    // ESZ-132 ergänzt C.1.10 (Dekontaminationsgruppe Gerät).
+    expect(results).toHaveLength(596);
     for (const { key, result } of results) {
       expect(result.drawing.viewBox, `ohne viewBox: ${key}`).toBeDefined();
       expect(result.drawing.children.length, `leere Zeichnung: ${key}`).toBeGreaterThan(0);

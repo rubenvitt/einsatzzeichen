@@ -808,6 +808,14 @@ export interface BodyMarkContext {
   readonly rendition?: BodyMarkRenditionId;
 }
 
+/** Lage eines Laufs an seiner Marke (`CatalogPorts.bodyMarkRun`), gegen die Körperhülle. */
+export interface BodyMarkCenterRun {
+  /** Fehlt, wenn der Lauf auf der Körpermitte steht. */
+  readonly anchorFromBodyLeftMm?: number;
+  readonly baselineFromBodyBottomMm: number;
+  readonly capHeightMm: number;
+}
+
 export interface CatalogPorts {
   /**
    * Die Zeichnung des Grundzeichens — **alle** ihre Primitive, nicht nur der Körper. Neben ihm
@@ -876,6 +884,17 @@ export interface CatalogPorts {
     context: BodyMarkContext,
     bodyBoundsMm: BoundsMm,
   ): readonly Primitive[];
+  /**
+   * Der mittige Lauf, den eine Marke selbst mitbringt (ESZ-132: „P“/„G“ an der Dekontamination),
+   * gegen die Hülle des Körpers; `undefined`, wenn sie keinen führt. Trägt die Spec einen mittigen
+   * Lauf ohne eigene Lage, steht er dort. Optional, damit bestehende Portsätze gültig bleiben;
+   * ohne Port bleibt der Lauf an der Lage des Körperprofils.
+   */
+  bodyMarkRun?(
+    id: BodyMarkId,
+    context: BodyMarkContext,
+    bodyBoundsMm: BoundsMm,
+  ): BodyMarkCenterRun | undefined;
   /**
    * Laufweiten der eingebundenen Schrift (LFH-411). `compose()` erzeugt drei Arten von Textläufen
    * — Fußzone, Beschriftungen, Funktionsrollenläufe — und deklariert für jede eine `boxMm`, die
@@ -1501,30 +1520,55 @@ function composeMeasuredOrDerived(
   // gegen die Standardgeometrie. Deshalb ohne die Verschiebung, die die Boxpiktogramme brauchen —
   // sie sind bereits an der richtigen Stelle gerechnet.
   const composedMarks = composedBodyMarks(spec);
+  const bodyMarkContext = (id: BodyMarkId): BodyMarkContext => ({
+    kind: spec.kind,
+    bodyVariant: spec.bodyVariant,
+    ...(spec.vehicleCategory === undefined ? {} : { vehicleCategory: spec.vehicleCategory }),
+    ...(spec.strength === undefined ? {} : { strength: spec.strength }),
+    // Nur bei mehreren Marken: eine einzelne Marke hat keine Kombination, der Kontext bleibt
+    // für sie unverändert.
+    ...((composedMarks?.length ?? 0) > 1 ? { bodyMarks: composedMarks } : {}),
+    ...(spec.bodyMarkRenditions === undefined || !Object.hasOwn(spec.bodyMarkRenditions, id)
+      ? {}
+      : { rendition: spec.bodyMarkRenditions[id] }),
+    ...(
+      spec.labels === undefined
+        ? {}
+        : (() => {
+            const occupiedLabelZones = (['bottomCenter', 'bottomRight', 'belowRight'] as const)
+              .filter((zone) => spec.labels?.[zone] !== undefined);
+            return occupiedLabelZones.length === 0 ? {} : { occupiedLabelZones };
+          })()
+    ),
+  });
   const bodyMarkPrimitives = composeBodyMarkPrimitives(
-    (composedMarks ?? []).map((id) =>
-      catalog.bodyMark(id, {
-        kind: spec.kind,
-        bodyVariant: spec.bodyVariant,
-        ...(spec.vehicleCategory === undefined ? {} : { vehicleCategory: spec.vehicleCategory }),
-        ...(spec.strength === undefined ? {} : { strength: spec.strength }),
-        // Nur bei mehreren Marken: eine einzelne Marke hat keine Kombination, der Kontext bleibt
-        // für sie unverändert.
-        ...((composedMarks?.length ?? 0) > 1 ? { bodyMarks: composedMarks } : {}),
-        ...(spec.bodyMarkRenditions === undefined || !Object.hasOwn(spec.bodyMarkRenditions, id)
-          ? {}
-          : { rendition: spec.bodyMarkRenditions[id] }),
-        ...(
-          spec.labels === undefined
-            ? {}
-            : (() => {
-                const occupiedLabelZones = (['bottomCenter', 'bottomRight', 'belowRight'] as const)
-                  .filter((zone) => spec.labels?.[zone] !== undefined);
-                return occupiedLabelZones.length === 0 ? {} : { occupiedLabelZones };
-              })()
-        ),
-      }, bodyBoundsMm)),
+    (composedMarks ?? []).map((id) => catalog.bodyMark(id, bodyMarkContext(id), bodyBoundsMm)),
   );
+  // ESZ-132: ein mittiger Lauf ohne eigene Lage steht dort, wo die Referenz ihn an einer Marke
+  // setzt — „P“/„G“ zwischen den Klammern der Dekontamination (C.1.8, C.1.10, C.2.25). Gerechnet
+  // gegen die Hülle, an der die Läufe entstehen; Angaben der Spec gehen je Feld vor.
+  const withMarkRun = (
+    labels: NonNullable<SymbolSpec['labels']>,
+    layoutBounds: BoundsMm,
+  ): NonNullable<SymbolSpec['labels']> => {
+    if (labels.center === undefined || catalog.bodyMarkRun === undefined) return labels;
+    let run: BodyMarkCenterRun | undefined;
+    for (const id of composedMarks ?? []) {
+      run = catalog.bodyMarkRun(id, bodyMarkContext(id), layoutBounds);
+      if (run !== undefined) break;
+    }
+    if (run === undefined) return labels;
+    const anchor = labels.centerAnchorFromBodyLeftMm ?? run.anchorFromBodyLeftMm;
+    const capHeight = labels.centerCapHeightMm ??
+      (run.capHeightMm === CENTER_LABEL_CAP_HEIGHT_MM ? undefined : run.capHeightMm);
+    return {
+      ...labels,
+      centerBaselineFromBodyBottomMm:
+        labels.centerBaselineFromBodyBottomMm ?? run.baselineFromBodyBottomMm,
+      ...(anchor === undefined ? {} : { centerAnchorFromBodyLeftMm: anchor }),
+      ...(capHeight === undefined ? {} : { centerCapHeightMm: capHeight }),
+    };
+  };
 
   // Kreiskörper (`derive/circle.ts`): ein topLeft-Lauf ohne Metriksatz übernimmt den F.3-Satz,
   // Ecken stehen auf der Kreissehne, der mittige Lauf ohne Override mit der Versalmitte auf der
@@ -1540,12 +1584,13 @@ function composeMeasuredOrDerived(
   // Zonen, die das Profil nicht vermessen führt, liefert `derive/label-zones.ts` (abgeleitet);
   // Kreiskörper lässt es aus, die regelt `derive/circle.ts`.
   const layoutLabels = (
-    labels: NonNullable<SymbolSpec['labels']>,
+    specLabels: NonNullable<SymbolSpec['labels']>,
     layoutBody: Primitive,
     layoutExtras: readonly Primitive[],
     layoutBaseBottomMm: number,
   ): Primitive[] => {
     const layoutBounds = boundsOfMm(layoutBody);
+    const labels = withMarkRun(specLabels, layoutBounds);
     const zones = deriveLabelZones({
       kind: spec.kind,
       variant: spec.bodyVariant,

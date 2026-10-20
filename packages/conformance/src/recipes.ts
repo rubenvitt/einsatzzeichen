@@ -158,6 +158,20 @@ export const RECIPES = {
       labels: { center: 'P', centerBaselineFromBodyBottomMm: 3, inBodyInk: 'koerperlauf-kontrast' },
     },
   },
+  // ESZ-132: das Gegenstück zu C.1.8 mit „G“ (Gerät). Schwarzes „G“, Grundlinie y 23,0 bei
+  // Körperunterkante 26,0, Versalhöhe 4,87 ohne Überhang — dieselbe Lage wie das „P“. Die Spec
+  // nennt sie nicht: der Lauf steht ohne eigene Lage an der Marke (`geometry/body-mark-runs.ts`).
+  'C.1.10': {
+    title: 'Dekontaminationsgruppe Gerät einer Feuerwehr',
+    referenceAsset: 'C.1.10_Dekontaminationsgruppe Gerät einer Feuerwehr.svg',
+    spec: {
+      kind: 'formation',
+      organization: 'feuerwehr',
+      strength: 'gruppe',
+      bodyMarks: ['decontamination'],
+      labels: { center: 'G', inBodyInk: 'koerperlauf-kontrast' },
+    },
+  },
   // ESZ-143: die Drohne als technische Körpermarke (`DRONE_BODY_MARKS`), je am eigenen Original.
   'C.1.13': {
     title: 'Flugdrohnentrupp Feuerwehr',

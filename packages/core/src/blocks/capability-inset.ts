@@ -106,7 +106,7 @@ export const CAPABILITY_INSET_FORMS: readonly CapabilityInsetForm[] = Object.fre
   form('cbrn-protection', 'vehicle-land', undefined, 'reduced', [0.7, 0.7], [0.55, 0.55], ['C.2.20#alternative'], [], 'centered-large-tongs'),
   form('crane-lifting', 'vehicle-land', undefined, 'reduced', [0.41, 0.41], [0.47, 0.47], ['C.2.27']),
   form('crane-lifting', 'vehicle-land', undefined, 'reduced', [0.46, 0.46], [0.47, 0.47], ['C.2.27#alternative'], [], 'shifted-left-7mm-jib-5mm'),
-  form('decontamination', 'formation', undefined, 'reduced', [0.7, 0.7], [0.6, 0.6], ['C.1.8']),
+  form('decontamination', 'formation', undefined, 'reduced', [0.7, 0.7], [0.6, 0.6], ['C.1.8', 'C.1.10']),
   form('decontamination', 'vehicle-land', undefined, 'reduced', [0.56, 0.56], [0.47, 0.47], ['C.2.25']),
   form('decontamination', 'vehicle-land', undefined, 'reduced', [0.7, 0.7], [0.56, 0.56], ['C.2.25#alternative'], [], 'centered-large-tongs'),
   form('drinking-water', 'formation', 'foot-band', 'reduced', [0.68, 0.68], [0.64, 0.64], ['G.2']),

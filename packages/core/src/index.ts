@@ -13,7 +13,7 @@ export { noteDerivation } from './derive/record.js';
 export { administrativeHeadOrDerived, unitGroupingHeadOrDerived } from './derive/head-zone.js';
 // Vor dem Sternexport aus `geometry/body-marks.js`: der benannte Export verdeckt dessen
 // vermessenen `bodyMark` und leitet für jedes andere Paar ab.
-export { bodyMark, hasFlushRendition } from './derive/body-marks.js';
+export { bodyMark, bodyMarkRun, hasFlushRendition, type BodyMarkRun } from './derive/body-marks.js';
 export { CIRCLE_VARIANT_PAIRS, LARGE_CENTER_CAP_HEIGHT_MM, circleTopLeftInk } from './derive/circle.js';
 export {
   CompositionError,
