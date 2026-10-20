@@ -610,3 +610,25 @@ J.3.3 43,1 → 29,4 %, J.3.6 29,7 → 13,3 %, J.3.8 34,0 → 19,0 %, J.3.9 50,7 
 5.8.1.10 13,9 → 12,0 %, 5.8.1.11 32,4 → 13,2 %. D.2.5 bleibt bei 3,6 %. I.2.6 steigt von 23,4 auf
 27,0 %: Der Lauf der Referenz steht 0,7 mm links der Körpermitte, der eigene mittig; mit dem
 größeren Grad wächst der Versatz in der Fläche. Die Lage folgt mit ESZ-145.
+
+### 12.1 Lage von „Strömungsrettung" in I.2.6 (ESZ-145, 20. Oktober 2026)
+
+Die Referenztinte reicht von x 4,8902 bis 28,686 mm, Mitte 16,7881. Die Tinte von Einsatzzeichen
+Sans steht bei 2,191447 mm Versalhöhe 0,0518 mm rechts ihres Ankers. Der Anker liegt deshalb bei
+16,7363, ab der linken Körperkante 4 also **12,74** (`centerAnchorFromBodyLeftMm`, im
+Anhängerprofil unter `measuredCenterAnchorsFromBodyLeftMm` neben 8,24 aus I.2.5). Die eigene
+Tintenmitte liegt damit bei 16,7918, 0,004 mm rechts der Referenzmitte; gerendert mit resvg
+misst sie dasselbe.
+
+**Luft zur Kontur.** Die Regel aus §12 verlangt 0,5 mm Luft zur Innenkante der Kontur (4,25).
+Auf der Referenzmitte beginnt die eigene Tinte bei 4,489 und hält nur 0,24 mm, weil der Lauf in
+Einsatzzeichen Sans 24,61 mm breit ist, 0,81 mm breiter als die Referenz (23,80 mm, 0,64 mm Luft).
+Beides zugleich hielte nur ein kleinerer Grad (2,144 mm, unter `MIN_SCALED_RUN_CAP_HEIGHT_MM`
+und unter der Referenzhöhe) oder ein Anker von 13,0, 0,26 mm rechts der Referenzmitte. Der
+Katalog folgt der Referenzlage, wie bei I.2.5, dessen Tinte ab 4,698 ebenfalls unter 0,5 mm
+Luft hält. Die Begründung steht am Anhängerprofil (`layout/profiles.ts`).
+
+**Pixelvergleich** (`reference-diff`, 512 px, Strichanteil): Anker 17,5 (bisher) 27,0 %, 12,69
+23,4 %, **12,74 22,7 %**, 12,79 22,1 %, 12,83 21,8 %, 12,87 21,9 %, 12,91 22,8 %, 12,95 23,5 %,
+13,0 25,0 %. Das Minimum liegt rund 0,1 mm rechts der Tintenmitte; die Kennzahl ist eine
+Sortierhilfe, maßgeblich ist die Tintenmitte.
