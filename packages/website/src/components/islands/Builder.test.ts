@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { allowedValues, encodeSpec } from '../../lib/builder-state.js';
+import { allowedValues, decodeAnySpec, encodeAnySpec, encodeSpec } from '../../lib/builder-state.js';
 import { buildSnapshot } from '../../lib/snapshot-build.js';
 import type { CatalogSnapshot } from '../../lib/snapshot.js';
 import Builder, { blockedTooltip, derivedTooltip } from './Builder.js';
@@ -618,5 +618,70 @@ describe('Der Baukasten mit der Größe des mittigen Laufs (LFH-992)', () => {
     const container = await mountBuilder();
     const select = container.querySelector('#ez-builder-label-centerSize') as HTMLSelectElement | null;
     expect(select?.disabled).toBe(true);
+  });
+});
+
+describe('Der Baukasten im Modus „freistehend“ (ESZ-135)', () => {
+  function modeButton(container: HTMLElement, mode: 'symbol' | 'freestanding'): HTMLElement {
+    const button = container.querySelector(`#ez-builder-mode-${mode}`);
+    expect(button, `Kein Knopf für den Modus ${mode}.`).not.toBeNull();
+    return button as unknown as HTMLElement;
+  }
+
+  function json(container: HTMLElement): unknown {
+    return JSON.parse(container.querySelector('.ez-builder__dev .ez-builder__pre')?.textContent ?? 'null');
+  }
+
+  it('öffnet einen Link auf ein freistehendes Zeichen in diesem Modus', async () => {
+    const line = {
+      kind: 'line',
+      line: 'boundary-with-strength',
+      path: { points: [[1, 16], [47, 16]] },
+      strength: 'zug',
+    } as const;
+    window.history.replaceState(null, '', `/builder/?spec=${encodeAnySpec(line)}`);
+    const container = await mountBuilder();
+    expect(modeButton(container, 'freestanding').getAttribute('aria-pressed')).toBe('true');
+    expect((container.querySelector('#ez-builder-fs-line') as HTMLSelectElement | null)?.value).toBe(
+      'boundary-with-strength',
+    );
+    expectDrawn(container);
+    expect(json(container)).toEqual(line);
+  });
+
+  it('baut ein Piktogramm, sperrt den kanonisch anders gebauten Zustand und teilt den Link', async () => {
+    const container = await mountBuilder();
+    modeButton(container, 'freestanding').click();
+    await settle();
+    tile(container, 'fs-kind', 'Piktogramm').click();
+    await settle();
+    expect(optionOf(container, 'fs-pictogram', 'state.tactical-rescue').disabled).toBe(true);
+    choose(container, 'fs-pictogram', 'comms.voice-radio');
+    await settle();
+    expectDrawn(container);
+    expect(json(container)).toEqual({ kind: 'pictogram', pictogram: 'comms.voice-radio' });
+    // Die Adresszeile wird entprellt geschrieben (250 ms).
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    const param = new URLSearchParams(window.location.search).get('spec');
+    expect(param === null ? null : decodeAnySpec(param)).toEqual({
+      kind: 'pictogram',
+      pictogram: 'comms.voice-radio',
+    });
+  });
+
+  it('behält die Auswahl beider Modi beim Wechsel', async () => {
+    const container = await mountBuilder();
+    tile(container, 'kind', 'Person').click();
+    await settle();
+    modeButton(container, 'freestanding').click();
+    await settle();
+    tile(container, 'fs-kind', 'Wetter').click();
+    await settle();
+    modeButton(container, 'symbol').click();
+    await settle();
+    expect(json(container)).toEqual({ kind: 'person' });
+    modeButton(container, 'freestanding').click();
+    await settle();
+    expect((json(container) as { kind: string }).kind).toBe('weather');
   });
 });
