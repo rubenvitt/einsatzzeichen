@@ -1,6 +1,6 @@
 {
   "name": "@einsatzzeichen/cli",
-  "version": "6.7.0",
+  "version": "6.8.0",
   "type": "module",
   "description": "Kommandozeilenwerkzeug für Einsatzzeichen (Export, Coverage, Audits)",
   "license": "MIT",

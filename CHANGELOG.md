@@ -1,3 +1,23 @@
+## [6.8.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.7.0...v6.8.0) (2026-10-20)
+
+### Katalog
+
+- **Neu: C.1.10 „Dekontaminationsgruppe Gerät“** ist jetzt als Rezept enthalten. Der Rasterabgleich mit der Referenz ist deckungsgleich. Manifest, Reviews, Snapshots, die verbatim-Tabelle und die Zählungen sind entsprechend aktualisiert.
+- **Personal- und Gerätedekontamination ohne eigene Kennungen:** Die Referenz kennt dafür keine eigenen Piktogramme. Sie setzt „P“ bzw. „G“ als Schrift zwischen die Klammern der Zange (C.1.8, C.1.10, C.2.25). Ausgedrückt wird das deshalb über `labels.center` an `decontamination`, z. B. `labels.center: "P"` oder `labels.center: "G"`.
+
+### Rendering
+
+- **Mittige Beschriftung steht an der Marke:** Ein mittiger Lauf ohne eigene Position wird jetzt an der Marke ausgerichtet, zu der er gehört. Bei der Dekontamination ist das die Zange.
+  - An Formation (C.1.8) und Landfahrzeug (C.2.25 samt Alternative) ist die Position vermessen. An allen anderen Körpern wird sie mit derselben Abbildung übertragen wie die Marke.
+  - **Sichtbare Änderung:** Bisher lag der Text bei Kreis (12) und Gefahr im Kreuz der Zange. Diese Zeichen sehen jetzt anders aus.
+  - C.1.8 und C.2.25 zeichnen weiterhin bytegleich.
+  - Positionsangaben aus der Spec haben weiterhin Vorrang, und zwar je Feld.
+- Für die Positionierung gibt es den neuen optionalen Port `bodyMarkRun`. Bestehende Integrationen funktionieren ohne Anpassung weiter.
+
+### Dokumentation
+
+- Neue Entscheidungsnotiz zur Dekontamination von Personal und Gerät: `docs/decisions/2026-10-20-esz-132-dekontamination-personal-und-geraet.md`.
+
 ## [6.7.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.6.0...v6.7.0) (2026-10-20)
 
 ### Website
