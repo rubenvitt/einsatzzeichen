@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PALETTE, type Primitive, type SymbolSpec } from '@einsatzzeichen/schema';
-import { TEXT_CAP_HEIGHT_FRACTION, PLACES, matchFingerprint, pictogram } from '@einsatzzeichen/core';
+import { TEXT_CAP_HEIGHT_FRACTION, PLACES, matchFingerprint, pictogram, symbolProvenance } from '@einsatzzeichen/core';
 import { comparableFingerprint } from './comparison-exceptions.js';
 import { fingerprintFor } from './fingerprint-index.js';
 import { composeFromCatalog } from './recipes.js';
@@ -77,6 +77,15 @@ describe('D.2.5 Leitstelle als SymbolSpec', () => {
 
   it('ist vollständig vermessen: keine Ableitungsnotiz', () => {
     expect(drawing.derivations).toBeUndefined();
+  });
+
+  it('meldet verbatim mit Körperhülle, Fixture D.2.5 (ESZ-136)', () => {
+    expect(symbolProvenance(D25_SPEC)).toEqual({
+      status: 'verbatim',
+      claim: 'body-hull',
+      fixture: 'D.2.5',
+      referenceAsset: ASSET,
+    });
   });
 
   it('zeichnet die Probe des Eigentümers mit LST und UEL sauber, abgeleitet', () => {
