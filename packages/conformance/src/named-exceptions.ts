@@ -53,7 +53,7 @@ import type { GRAMMAR_FIXTURES } from './recipes.js';
  *
  * ## Herkunft der Einträge
  *
- * Die Menge ist zur Laufzeit gezählt: 87 Einträge an 67 Fixtures (bis LFH-786 50 an 37). Sie ist
+ * Die Menge ist zur Laufzeit gezählt: 88 Einträge an 67 Fixtures (bis LFH-786 50 an 37). Sie ist
  * nicht per Textsuche geschätzt. Das betrifft vor allem I.2.1 bis I.2.3: sie teilen die Konstante
  * `I_2_TOP_LEFT_METRICS`, die eine Suche nach Zahlen nicht findet. Die Werte stehen hier
  * trotzdem als Literale. Nur so prüft das Gate eine Gleichheit und nicht die Fixture gegen sich
@@ -137,6 +137,7 @@ const F = 'packages/conformance/src/recipes-anhang-f.ts';
 const I = 'packages/conformance/src/recipes-anhang-i.ts';
 const N = 'packages/conformance/src/recipes-anhang-n.ts';
 const TAXONOMY = 'packages/schema/src/taxonomy.ts';
+const PROFILES = 'packages/core/src/layout/profiles.ts';
 const RECIPES_TEST = 'packages/conformance/src/recipes.test.ts';
 const RECIPES_FILE = 'packages/conformance/src/recipes.ts';
 const C_FF = 'packages/conformance/src/recipes-anhang-c/fire-fighting.ts';
@@ -222,7 +223,7 @@ const I_5_ABOVE_LEFT =
   'Am Fundort nur als Teil der „drei Personenzeichen mit eigener 26-mm-Rautenfassung" ' +
   'eingeführt; der Test hält die „gemessene Above-left-Textlage" und die daraus abgeleitete ' +
   'Schriftgröße fest.';
-const I_5_ABOVE_LEFT_AT = `${I}:506; ${RECIPES_TEST}, Test „%s hält die gemessene Above-left-Textlage fest"`;
+const I_5_ABOVE_LEFT_AT = `${I}:510; ${RECIPES_TEST}, Test „%s hält die gemessene Above-left-Textlage fest"`;
 
 /**
  * Alle benannten Ausnahmen der 279 Fixtures. Reihenfolge: je Anhang, darin je Fixture und Feld in
@@ -406,27 +407,34 @@ export const NAMED_EXCEPTIONS: DeepReadonly<NamedException[]> = deepFreeze<Named
     'Am Fundort ohne Begründung; festgehalten ist allein die Wirkung (Schriftgröße aus ' +
     'Versalhöhe 2,919 mm). Derselbe Wert wie I_2_TOP_LEFT_METRICS.',
     `${RECIPES_TEST}, Test „setzt I.2.5s Tauchen-Lauf auf den aus der Quelle gemessenen Anker x = 12,24 mm"`),
-  exception('I.2.6', 'centerBaselineFromBodyBottomMm', 14.327, `${I}:347`,
-    'Am Fundort ohne Begründung und ohne eigenen Wirkungstest.',
-    `${I}:338–351`),
-  exception('I.2.6', 'centerCapHeightMm', 2.191447, `${I}:348`,
+  exception('I.2.6', 'centerAnchorFromBodyLeftMm', 12.74, `${I}:350`,
+    'Quellenspezifischer x-Anker des Laufs „Strömungsrettung" (absolut x = 16,74 mm, ESZ-145): ' +
+    'Tintenmitte der Referenz 16,7881, abzüglich der Asymmetrie der eigenen Tinte (0,0518 rechts ' +
+    'des Ankers). Die Tinte hält links 0,24 mm Luft zur Kontur statt 0,5 mm; Begründung am ' +
+    'Anhängerprofil. validateSpec() akzeptiert den Anker nur an dem Profil, das ihn führt.',
+    `${RECIPES_TEST}, Test „setzt I.2.6s Strömungsrettungs-Lauf auf die Tintenmitte der Referenz x = 16,79 mm"; ${PROFILES}:217–243`),
+  exception('I.2.6', 'centerBaselineFromBodyBottomMm', 14.327, `${I}:351`,
+    'Am Fundort ohne Begründung; festgehalten ist allein die Wirkung (Grundlinie y = 11,673 mm).',
+    `${RECIPES_TEST}, Test „setzt I.2.6s Strömungsrettungs-Lauf auf die Tintenmitte der Referenz x = 16,79 mm"`),
+  exception('I.2.6', 'centerCapHeightMm', 2.191447, `${I}:352`,
     'Derselbe Wert wie der BTKombi-Lauf von F.2.10/F.2.11, am Fundort ohne Begründung; an der ' +
     'Referenz nachgemessen 2,19 mm (S 2,266 mm hoch, ESZ-144). Von LFH-585 bis ESZ-144 standen ' +
     '2,12 mm, weil Arimo 500 rund 3 % breiter lief. In Einsatzzeichen Sans misst der Lauf bei ' +
-    '2,191447 mm 5,20 … 29,80 mm Tinte und hält fast 1 mm Luft zur Kontur.',
-    `${I}:338–351`),
+    '2,191447 mm 4,49 … 29,09 mm Tinte (seit ESZ-145 auf der Referenzmitte) und hält links ' +
+    '0,24 mm Luft zur Kontur.',
+    `${I}:338–355`),
 
   // --- Anhang I.3 und I.5 ---------------------------------------------------------------------
-  exception('I.3.2', 'centerCapHeightMm', 4.1395, `${I}:381`,
+  exception('I.3.2', 'centerCapHeightMm', 4.1395, `${I}:385`,
     'Am Fundort ohne Begründung; der Test nennt sie die „einzigartige Schlauchboot-Kappenhöhe" ' +
     'und hält fest, dass die übrigen I.3-Läufe keine Kappenüberschreibung tragen.',
     `${RECIPES_TEST}, Test „hält die einzigartige Schlauchboot-Kappenhöhe und die sonst fehlenden Kappenüberschreibungen fest"`),
   exception('I.5.2', 'aboveLeftMetrics',
     { capHeightMm: 2.432746, anchorFromBodyLeftMm: -2, baselineFromBodyTopMm: -1.5 },
-    `${I}:527`, I_5_ABOVE_LEFT, I_5_ABOVE_LEFT_AT),
+    `${I}:531`, I_5_ABOVE_LEFT, I_5_ABOVE_LEFT_AT),
   exception('I.5.3', 'aboveLeftMetrics',
     { capHeightMm: 2.919225, anchorFromBodyLeftMm: -2, baselineFromBodyTopMm: -1 },
-    `${I}:545`, I_5_ABOVE_LEFT, I_5_ABOVE_LEFT_AT),
+    `${I}:549`, I_5_ABOVE_LEFT, I_5_ABOVE_LEFT_AT),
 
   // --- Anhang N: Fahrzeuge weiterer Träger ----------------------------------------------------
   exception('N.1.2', 'inBodyInk', 'schwarz', `${N}:31`, N_INK, N_INK_AT),

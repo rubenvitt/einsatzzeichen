@@ -216,7 +216,22 @@ const rectBodyProfile: LayoutProfile = rectBody(8);
 
 /**
  * Der Anhänger ist 27 × 20,25 mm groß und führt in I.2.5/I.2.6 zwei einzeln vermessene
- * Mittellabel-Grundlinien. Die übrigen Anhänger behalten ohne Override den Normwert 8 mm.
+ * Mittellabel-Grundlinien und zwei vermessene Anker. Die übrigen Anhänger behalten ohne
+ * Override den Normwert 8 mm und die Körpermitte.
+ *
+ * **12,74 — I.2.6 „Strömungsrettung“ (ESZ-145).** Die Referenztinte reicht von x 4,8902 bis
+ * 28,686, Mitte 16,7881, also 0,71 mm links der Körpermitte 17,5. Anders als bei „Tauchen“ ist
+ * hier die eigene Asymmetrie gegengerechnet: Die Tinte von Einsatzzeichen Sans steht bei
+ * 2,191447 mm Versalhöhe 0,0518 mm rechts des Ankers (5,2492 … 29,8544 um 17,5). Anker
+ * 16,7363, ab der Körperkante 12,74; Tintenmitte damit 16,7918, 0,004 rechts der Referenz.
+ *
+ * Die Tinte beginnt so bei x 4,489 und hält nur 0,24 mm Luft zur Innenkante der Kontur (4,25),
+ * nicht die 0,5 mm der Regel aus ESZ-144. Der Lauf ist in Einsatzzeichen Sans 24,61 mm breit,
+ * 0,81 mm breiter als die Referenz (23,80 mm, 0,64 mm Luft). Beides zugleich hielte nur ein
+ * kleinerer Grad (2,144 mm, unter `MIN_SCALED_RUN_CAP_HEIGHT_MM`) oder ein Anker 0,26 mm rechts
+ * der Referenzmitte; dort steigt der Strichanteil im `reference-diff` auf 25,0 % statt 22,7 %.
+ * Der Katalog folgt der Referenzlage, wie bei I.2.5, dessen Tinte (ab 4,698) ebenfalls unter
+ * 0,5 mm Luft hält.
  */
 const trailerProfile: LayoutProfile = {
   ...rectBody(8),
@@ -224,7 +239,8 @@ const trailerProfile: LayoutProfile = {
   measuredCenterBaselineOverridesMm: [14.5, 14.327] as const,
   allowsCenterAnchorOverride: true,
   // I.2.5 „Tauchen“: Tintenmitte der Referenz (5,088 + 19,392) / 2 = 12,24, minus Körperkante 4.
-  measuredCenterAnchorsFromBodyLeftMm: [8.24] as const,
+  // I.2.6 „Strömungsrettung“: 12,74, Herleitung oben (ESZ-145).
+  measuredCenterAnchorsFromBodyLeftMm: [8.24, 12.74] as const,
   measuredCenterAnchorFromBodyLeftMm: 8.24,
   measuredBodyBoundsMm: { minX: 4, minY: 5.75, maxX: 31, maxY: 26 },
 };

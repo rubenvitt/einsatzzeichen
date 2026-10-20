@@ -115,7 +115,7 @@ describe('Layoutprofile', () => {
     expect(profileFor('vehicle-land').allowsCenterBaselineOverride).toBe(true);
     expect(profileFor('trailer').allowsCenterBaselineOverride).toBe(true);
     expect(profileFor('trailer').allowsCenterAnchorOverride).toBe(true);
-    expect(profileFor('trailer').measuredCenterAnchorsFromBodyLeftMm).toEqual([8.24]);
+    expect(profileFor('trailer').measuredCenterAnchorsFromBodyLeftMm).toEqual([8.24, 12.74]);
     // LFH-786, C.2.25 und C.2.25#alternative: zwei vermessene Anker, nur am Landfahrzeug ohne
     // Variante; die Varianten erben sie nicht.
     expect(profileFor('vehicle-land').allowsCenterAnchorOverride).toBe(true);

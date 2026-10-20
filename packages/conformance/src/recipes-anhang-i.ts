@@ -344,6 +344,10 @@ export const ANHANG_I_B_RECIPES = {
       bodyMarks: ['trailer-diving'],
       labels: {
         center: 'Strömungsrettung',
+        // ESZ-145: Tintenmitte der Referenz (4,8902 + 28,686) / 2 = 16,7881, 0,71 links der
+        // Körpermitte. Die Tinte von Einsatzzeichen Sans steht 0,0518 rechts des Ankers, also
+        // Anker 16,7363, minus Körperkante 4. Begründung der 0,24 mm Luft links im Profil.
+        centerAnchorFromBodyLeftMm: 12.74,
         centerBaselineFromBodyBottomMm: 14.327,
         centerCapHeightMm: 2.191447,
       },
