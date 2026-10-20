@@ -20,7 +20,8 @@ describe('provenance:table', () => {
     expect(result.file).toBe(join(root, VERBATIM_TABLE_MODULE));
     // 241 bis LFH-786, dazu die 37 Anhang-C-Fixtures, C.1.4 (LFH-787), acht aus ESZ-117 und
     // C.1.13/C.1.14 aus ESZ-143.
-    expect(result.rows).toBe(289);
+    // ESZ-132 ergänzt C.1.10 (Dekontaminationsgruppe Gerät).
+    expect(result.rows).toBe(290);
     expect(readFileSync(result.file, 'utf8')).toBe(verbatimTableSource());
   });
 });

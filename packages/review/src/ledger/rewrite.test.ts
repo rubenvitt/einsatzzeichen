@@ -207,7 +207,8 @@ describe('rewriteLedgerSource', () => {
       ...Object.entries(SOURCE_DOMAIN_REVIEWS),
       ...Object.entries(PROFILE_DOMAIN_REVIEWS),
     ];
-    expect(eintraege).toHaveLength(609);
+    // ESZ-132 ergänzt C.1.10 (Dekontaminationsgruppe Gerät).
+    expect(eintraege).toHaveLength(610);
 
     const abweichend = eintraege
       .filter(

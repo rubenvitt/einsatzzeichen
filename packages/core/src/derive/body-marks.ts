@@ -18,6 +18,7 @@ import { baseDrawing } from '../geometry/base-symbols.js';
 import { ANHANG_C_BODY_MARK_CONTEXTS } from '../geometry/body-marks-anhang-c/index.js';
 import { BODY_MARK_IDS, bodyMark as measuredBodyMark } from '../geometry/body-marks.js';
 import { pictogram } from '../geometry/pictograms/index.js';
+import { BODY_MARKS_WITH_RUN, measuredBodyMarkRun } from '../geometry/body-mark-runs.js';
 import { NotMeasuredError } from '../not-measured.js';
 import {
   affineKey,
@@ -409,12 +410,21 @@ function label(kind: SymbolKind, variant: BodyVariantId | undefined): string {
   return `${kind}/${variant ?? 'normal'}`;
 }
 
-function transfer(
+interface TransferPlan {
+  readonly primitives: readonly Primitive[];
+  readonly sourceRegion: BodyRegion;
+  readonly targetRegion: BodyRegion;
+  readonly map: Affine;
+  readonly flush: boolean;
+}
+
+/** Vorlage, Zielfläche und Abbildung einer Übertragung; `transfer` und `bodyMarkRun` teilen sie. */
+function transferPlan(
   id: BodyMarkId,
   source: SourcePair,
   context: BodyMarkContext,
   bodyBoundsMm: BoundsMm,
-): readonly Primitive[] {
+): TransferPlan {
   const primitives = measuredBodyMark(id, sourceContext(source, context.bodyMarks), source.hull);
   const sourceRegion = bodyRegion(source.kind, source.bodyVariant, source.hull);
   const targetRegion = bodyRegion(context.kind, context.bodyVariant, bodyBoundsMm);
@@ -445,6 +455,17 @@ function transfer(
     const center: Point = [(markHull.minX + markHull.maxX) / 2, (markHull.minY + markHull.maxY) / 2];
     map = uniformAbout(center, applyAffine(hullMap, center), Math.min(hullMap.sx, hullMap.sy));
   }
+  return { primitives, sourceRegion, targetRegion, map, flush };
+}
+
+function transfer(
+  id: BodyMarkId,
+  source: SourcePair,
+  context: BodyMarkContext,
+  bodyBoundsMm: BoundsMm,
+): readonly Primitive[] {
+  const { primitives, sourceRegion, targetRegion, map, flush } =
+    transferPlan(id, source, context, bodyBoundsMm);
   const snapKey = flush ? targetRegion.key : '';
   const result = primitives.map((primitive) =>
     mapShared(map, primitive, `${sourceRegion.key}>${snapKey}`, () => {
@@ -499,23 +520,23 @@ function fittedStandalone(
   return fitted[ids.indexOf(id)] as Primitive[];
 }
 
+/** Die Vorlage, von der `derive` eine Marke überträgt; `undefined`, wenn es keine gibt. */
+function transferSource(id: BodyMarkId, context: BodyMarkContext): SourcePair | undefined {
+  if (context.rendition !== undefined) return nearest(renditionSources(id, context.rendition), context);
+  return hasFlushRendition(id) ? nearest(measuredSources(id), context) : undefined;
+}
+
 function derive(
   id: BodyMarkId,
   context: BodyMarkContext,
   bodyBoundsMm: BoundsMm,
   cause: NotMeasuredError,
 ): readonly Primitive[] {
-  if (context.rendition !== undefined) {
-    const source = nearest(renditionSources(id, context.rendition), context);
-    // Eine Fassungskennung, die für diese Marke nirgends vermessen ist, ist keine Lücke, sondern
-    // eine falsche Angabe; `validateSpec` meldet sie (`body-mark-rendition-not-measured`).
-    if (source === undefined) throw cause;
-    return transfer(id, source, context, bodyBoundsMm);
-  }
-  if (hasFlushRendition(id)) {
-    const source = nearest(measuredSources(id), context);
-    if (source !== undefined) return transfer(id, source, context, bodyBoundsMm);
-  }
+  const source = transferSource(id, context);
+  if (source !== undefined) return transfer(id, source, context, bodyBoundsMm);
+  // Eine Fassungskennung, die für diese Marke nirgends vermessen ist, ist keine Lücke, sondern
+  // eine falsche Angabe; `validateSpec` meldet sie (`body-mark-rendition-not-measured`).
+  if (context.rendition !== undefined) throw cause;
   if (isCapability(id)) return fittedStandalone(id, context, bodyBoundsMm);
   throw cause;
 }
@@ -540,4 +561,72 @@ export function bodyMark(
     if (!(error instanceof NotMeasuredError)) throw error;
     return derive(id, context, bodyBoundsMm, error);
   }
+}
+
+/** Lage des Laufs, den eine Marke selbst mitbringt, gegen die Hülle des Körpers. */
+export interface BodyMarkRun {
+  /** Fehlt, wenn der Lauf auf der Körpermitte steht. */
+  readonly anchorFromBodyLeftMm?: number;
+  readonly baselineFromBodyBottomMm: number;
+  readonly capHeightMm: number;
+}
+
+const round4 = (value: number): number => Math.round(value * 10_000) / 10_000;
+
+function isMeasuredPair(id: BodyMarkId, context: BodyMarkContext, bodyBoundsMm: BoundsMm): boolean {
+  try {
+    measuredBodyMark(id, context, bodyBoundsMm);
+    return true;
+  } catch (error) {
+    if (error instanceof NotMeasuredError) return false;
+    throw error;
+  }
+}
+
+/**
+ * Der mittige Lauf, den die Referenz an dieser Marke selbst setzt (ESZ-132: „P“ oder „G“ zwischen
+ * den Klammern der Dekontamination), an der Hülle `bodyBoundsMm`; `undefined`, wenn die Marke
+ * keinen führt.
+ *
+ * Am vermessenen Paar gilt die Messung (`geometry/body-mark-runs.ts`). Sonst überträgt sich der
+ * Lauf mit derselben Abbildung wie die Marke (`transferPlan`): Grundlinie und Anker als Punkte,
+ * die Versalhöhe mit dem kleineren Faktor, damit die Schrift nicht verzerrt.
+ */
+export function bodyMarkRun(
+  id: BodyMarkId,
+  context: BodyMarkContext,
+  bodyBoundsMm: BoundsMm,
+): BodyMarkRun | undefined {
+  if (!BODY_MARKS_WITH_RUN.includes(id)) return undefined;
+  const centerX = (bodyBoundsMm.minX + bodyBoundsMm.maxX) / 2;
+  if (isMeasuredPair(id, context, bodyBoundsMm)) {
+    const run = measuredBodyMarkRun(id, context);
+    if (run === undefined) return undefined;
+    return {
+      ...(run.anchorFromBodyLeftMm === undefined ? {} : { anchorFromBodyLeftMm: run.anchorFromBodyLeftMm }),
+      baselineFromBodyBottomMm: run.baselineFromBodyBottomMm,
+      capHeightMm: run.capHeightMm,
+    };
+  }
+  const source = transferSource(id, context);
+  const run = source === undefined ? undefined : measuredBodyMarkRun(id, source);
+  if (source === undefined || run === undefined) return undefined;
+  const { map } = withoutDerivationNotes(() => transferPlan(id, source, context, bodyBoundsMm));
+  const sourceX = run.anchorFromBodyLeftMm === undefined
+    ? (source.hull.minX + source.hull.maxX) / 2
+    : source.hull.minX + run.anchorFromBodyLeftMm;
+  const [x, baselineY] = applyAffine(map, [sourceX, source.hull.maxY - run.baselineFromBodyBottomMm]);
+  noteDerivation({
+    dimension: 'labels.center',
+    part: `Lauf an ${id} an ${label(context.kind, context.bodyVariant)}, mit der Marke übertragen`,
+    basis: 'transferred',
+    from:
+      label(source.kind, source.bodyVariant) +
+      (source.rendition === undefined ? '' : `#${source.rendition}`),
+  });
+  return {
+    ...(Math.abs(x - centerX) < 0.01 ? {} : { anchorFromBodyLeftMm: round4(x - bodyBoundsMm.minX) }),
+    baselineFromBodyBottomMm: round4(bodyBoundsMm.maxY - baselineY),
+    capHeightMm: round4(run.capHeightMm * Math.min(map.sx, map.sy)),
+  };
 }

@@ -5,14 +5,15 @@ import { BASE_SYMBOLS, baseDrawing } from '@einsatzzeichen/core';
 import { RECIPES, composeFromCatalog } from './recipes.js';
 
 describe('SVG-Snapshots', () => {
-  it('schreibt exakt 304 direkte SVG-Snapshots', () => {
+  it('schreibt exakt 305 direkte SVG-Snapshots', () => {
     const snapshots = readdirSync(new URL('./__snapshots__/', import.meta.url), {
       withFileTypes: true,
     }).filter((entry) => entry.isFile() && entry.name.endsWith('.svg'));
     const names = snapshots.map((entry) => entry.name);
     // 256 bis LFH-786, dazu je ein direkter Snapshot der 37 Anhang-C-Fixtures, C.1.4 und der
     // acht Behälterzeichen aus Kapitel 5.1 (ESZ-117) sowie C.1.13 und C.1.14 (ESZ-143).
-    expect(snapshots).toHaveLength(304);
+    // ESZ-132 ergänzt C.1.10 (Dekontaminationsgruppe Gerät).
+    expect(snapshots).toHaveLength(305);
     expect(names).toContain('C.1.3.svg');
     expect(names).toContain('C.1.8.svg');
     expect(names).toContain('C.2.31.svg');

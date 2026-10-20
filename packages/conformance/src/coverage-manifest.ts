@@ -1075,6 +1075,25 @@ const ANHANG_C_ESZ_143_TECHNICAL_REVIEW: Review = {
 };
 
 /**
+ * Technisches Review von C.1.10 (ESZ-132). Eigener Eintrag wie C.1.13/C.1.14: das Gegenstück zu
+ * C.1.8 mit „G“ statt „P“, ohne neue Geometrie.
+ */
+const ANHANG_C_ESZ_132_TECHNICAL_REVIEW: Review = {
+  status: 'approved',
+  reviewer: 'rv',
+  date: '2026-10-20',
+  note:
+    'Die Originalreferenz C.1.10_Dekontaminationsgruppe Gerät einer Feuerwehr.svg wurde ' +
+    'vermessen und als Rasterbild gegen die Fixture gelegt. Zange und Klammern sind die ' +
+    'C.1.8-Fassung von 4.1.3 (core/src/geometry/body-marks-anhang-c/formation.ts), das „G“ steht ' +
+    'als mittiger Lauf an derselben Stelle wie das „P“ aus C.1.8 (Grundlinie 3 mm über der ' +
+    'Unterkante, Versalhöhe 4,87); die Spec nennt die Lage nicht, sie kommt aus ' +
+    'core/src/geometry/body-mark-runs.ts. Stärke gruppe und Organisation feuerwehr wie C.1.2. ' +
+    'Die Spec besteht validateSpec ohne Befund. Die Fachzuordnung bleibt im Domain-Review ' +
+    'pending.',
+};
+
+/**
  * Befunde an den Referenzdateien selbst, in der Bauart von `ANHANG_F_A_FINDINGS`. Abweichungen der
  * Umsetzung trägt dieser Slice keine: die Textmetrik (Laufweite der Katalogschrift, Ziffernhöhe)
  * weicht wie im übrigen Bestand ab und ist dort nirgends als `deviation` geführt.
@@ -1146,6 +1165,7 @@ function technicalReviewFor(section: string): Review {
   }
   if (section === 'C.1.4') return ANHANG_C_LFH_787_TECHNICAL_REVIEW;
   if (section === 'C.1.13' || section === 'C.1.14') return ANHANG_C_ESZ_143_TECHNICAL_REVIEW;
+  if (section === 'C.1.10') return ANHANG_C_ESZ_132_TECHNICAL_REVIEW;
   if (section.startsWith('C.') && section !== 'C.1.1' && section !== 'C.1.2') {
     throw new Error(
       `Der Anhang-C-Schlüssel "${section}" ist keinem technischen Review zugeordnet.`,
@@ -1475,13 +1495,14 @@ const COVERAGE_MANIFEST_DATA: CoverageManifest = {
     'C.1.3',
     // LFH-786: C.1.7, C.1.8 und jede gebaute C.2-Nummer **einzeln**, weder `C.1` noch `C.2`.
     // Beide Präfixe bestünden `uncoveredScope` schon mit einer Zeile, wären aber falsch: C.1.5,
-    // C.1.6 und C.1.9 bis C.1.15 sind nicht gebaut, in C.2 fehlen C.2.1 bis C.2.3, C.2.19, C.2.21
+    // C.1.6, C.1.9, C.1.11, C.1.12 und C.1.15 sind nicht gebaut, in C.2 fehlen C.2.1 bis C.2.3, C.2.19, C.2.21
     // und C.2.22 (kein Kapitel-4-Piktogramm) sowie die zurückgestellte C.2.24-Alternative.
     // LFH-787 baut C.1.4 (Rüstzug) und führt es ebenso einzeln, ESZ-143 die beiden Drohnentrupps
-    // C.1.13 und C.1.14.
+    // C.1.13 und C.1.14, ESZ-132 die Dekontaminationsgruppe Gerät C.1.10.
     'C.1.4',
     'C.1.7',
     'C.1.8',
+    'C.1.10',
     'C.1.13',
     'C.1.14',
     'C.2.4',

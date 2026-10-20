@@ -17,7 +17,7 @@ const fingerprintCases = recipeEntries.filter(([, recipe]) =>
   !referenceLacksComparableShape(recipe.referenceAsset));
 
 describe('specKey() über den Rezeptbestand', () => {
-  it('trägt für 290 Rezepte 290 verschiedene Schlüssel — keine Kollision', () => {
+  it('trägt für 291 Rezepte 291 verschiedene Schlüssel — keine Kollision', () => {
     // 242 bis LFH-786, dazu die 37 Anhang-C-Fixtures, C.1.4, die acht aus Kapitel 5.1 und
     // C.1.13/C.1.14 (ESZ-143). C.2.24#alternative ist nicht darunter: sie
     // ergäbe dieselbe Spec und damit denselben Schlüssel wie C.2.20#alternative.
@@ -28,19 +28,21 @@ describe('specKey() über den Rezeptbestand', () => {
     }
     const collisions = [...byKey.values()].filter((sections) => sections.length > 1);
 
-    expect(recipeEntries).toHaveLength(290);
-    expect(byKey.size).toBe(290);
+    // ESZ-132 ergänzt C.1.10 (Dekontaminationsgruppe Gerät).
+    expect(recipeEntries).toHaveLength(291);
+    expect(byKey.size).toBe(291);
     expect(collisions).toEqual([]);
   });
 });
 
 describe('combinationProvenance()', () => {
-  it('führt genau 289 verbatim-Fixtures: alle Rezepte mit vergleichbarer Form', () => {
+  it('führt genau 290 verbatim-Fixtures: alle Rezepte mit vergleichbarer Form', () => {
     // 241 bis LFH-786; alle 37 Anhang-C-Referenzen führen eine vergleichbare Körperform, einzig
     // G.1.5 bleibt weiterhin ohne. Die acht aus Kapitel 5.1 (ESZ-117) und C.1.13/C.1.14
     // (ESZ-143) führen alle eine.
-    expect(fingerprintCases).toHaveLength(289);
-    expect(verbatimFixtures()).toHaveLength(289);
+    // ESZ-132 ergänzt C.1.10 (Dekontaminationsgruppe Gerät).
+    expect(fingerprintCases).toHaveLength(290);
+    expect(verbatimFixtures()).toHaveLength(290);
     expect(verbatimFixtures()).toEqual(fingerprintCases.map(([section]) => section));
   });
 
@@ -136,7 +138,8 @@ describe('verbatimTableSource() — Generator der core-Tabelle (LFH-581)', () =>
         const recipe = RECIPES[fixture as keyof typeof RECIPES];
         return [specKey(recipe.spec), fixture, recipe.referenceAsset];
       });
-    expect(rows).toHaveLength(289);
+    // ESZ-132 ergänzt C.1.10 (Dekontaminationsgruppe Gerät).
+    expect(rows).toHaveLength(290);
     expect(rows).toEqual(expected);
   });
 

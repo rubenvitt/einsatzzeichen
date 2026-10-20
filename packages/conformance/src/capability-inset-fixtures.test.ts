@@ -218,7 +218,7 @@ describe('Die Regel des Innenfelds, Aussage für Aussage', () => {
     expect(widthVaries).toEqual([
       'cbrn-protection: C.2.20 0.56, C.2.20#alternative 0.7',
       'crane-lifting: C.2.27 0.41, C.2.27#alternative 0.46',
-      'decontamination: C.2.25 0.56, C.2.25#alternative 0.7, C.1.8 0.7',
+      'decontamination: C.2.25 0.56, C.2.25#alternative 0.7, C.1.8 0.7, C.1.10 0.7',
     ]);
     // Wo die Breite trägt, gibt die Höhe nach.
     const heightVaries = [...byCapability]

@@ -568,7 +568,8 @@ describe('Anhang D.1, Führungsstellen im Einsatz', () => {
     expect(Object.keys(RECIPES).filter((key) => key.startsWith('D.1.'))).toEqual(expectedKeys);
     // 242 bis LFH-786, dazu 37 Anhang-C-Fixtures (C.1.7, C.1.8 und 35 aus C.2), C.1.4
     // (LFH-787), die acht Behälterzeichen aus Kapitel 5.1 (ESZ-117) und C.1.13/C.1.14 (ESZ-143).
-    expect(Object.keys(RECIPES)).toHaveLength(290);
+    // ESZ-132 ergänzt C.1.10 (Dekontaminationsgruppe Gerät).
+    expect(Object.keys(RECIPES)).toHaveLength(291);
   });
 
   it('bindet D.1.2 bis D.1.8 an die sieben gemessenen Formationsrollen', () => {
@@ -1115,7 +1116,8 @@ describe('Anhang G — vollständiges Logistikinventar', () => {
     expect(Object.keys(actual).every((key) => !key.includes('#'))).toBe(true);
     // 242 bis LFH-786, dazu 37 Anhang-C-Fixtures, C.1.4 (LFH-787), acht aus Kapitel 5.1
     // (ESZ-117) und C.1.13/C.1.14 (ESZ-143).
-    expect(Object.keys(RECIPES)).toHaveLength(290);
+    // ESZ-132 ergänzt C.1.10 (Dekontaminationsgruppe Gerät).
+    expect(Object.keys(RECIPES)).toHaveLength(291);
   });
 
   it('bindet die 21 primary- und Referenz-IDs exakt und ohne Alternative', () => {
@@ -3376,14 +3378,15 @@ describe('Anhang F, Teilslice F-f', () => {
     },
   } as const;
 
-  it('deckt F.3.12 bis F.3.19 lückenlos ab und erreicht integriert 290 Rezepte', () => {
+  it('deckt F.3.12 bis F.3.19 lückenlos ab und erreicht integriert 291 Rezepte', () => {
     const entries = Object.entries<Recipe>(RECIPES)
       .filter(([key]) => /^F\.3\.(1[2-9])$/.test(key));
     expect(Object.fromEntries(entries)).toEqual(expected);
     expect(entries.map(([key]) => key).filter((key) => key.includes('#'))).toEqual([]);
     // 242 bis LFH-786, dazu 37 Anhang-C-Fixtures, C.1.4 (LFH-787), acht aus Kapitel 5.1
     // (ESZ-117) und C.1.13/C.1.14 (ESZ-143).
-    expect(Object.keys(RECIPES)).toHaveLength(290);
+    // ESZ-132 ergänzt C.1.10 (Dekontaminationsgruppe Gerät).
+    expect(Object.keys(RECIPES)).toHaveLength(291);
   });
 
   it('bindet alle acht Darstellungen an HiOrg, ohne Stärke oder alternative Rezeptsemantik', () => {

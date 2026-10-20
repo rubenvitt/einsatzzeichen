@@ -235,6 +235,7 @@ export const NAMED_EXCEPTIONS: DeepReadonly<NamedException[]> = deepFreeze<Named
     'darüber. Am Fundort als Referenzablesung vermerkt.',
     `${RECIPES_FILE}:157; ${TAXONOMY}:618–621`),
   exception('C.1.8', 'inBodyInk', 'koerperlauf-kontrast', `${RECIPES_FILE}:158`, C_INK, C_INK_AT),
+  exception('C.1.10', 'inBodyInk', 'koerperlauf-kontrast', `${RECIPES_FILE}:172`, C_INK, C_INK_AT),
   exception('C.2.4', 'inBodyInk', 'koerperlauf-kontrast', `${C_FF}:34`, C_INK, C_INK_AT),
   exception('C.2.5', 'inBodyInk', 'koerperlauf-kontrast', `${C_FF}:34`, C_INK, C_INK_AT),
   exception('C.2.6', 'inBodyInk', 'koerperlauf-kontrast', `${C_FF}:34`, C_INK, C_INK_AT),

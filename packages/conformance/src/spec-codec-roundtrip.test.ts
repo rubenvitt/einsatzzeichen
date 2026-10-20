@@ -41,12 +41,13 @@ function legacyBuilderParam(spec: SymbolSpec): string {
 }
 
 describe('kanonische Serialisierung über den Rezeptbestand', () => {
-  it('deckt alle 290 Rezepte ab, jedes mit eigener Serialisierung', () => {
+  it('deckt alle 291 Rezepte ab, jedes mit eigener Serialisierung', () => {
     // 242 bis LFH-786, dazu die 37 Anhang-C-Fixtures; ihre Fassungskennungen (`bodyMarkRenditions`)
     // laufen durch dieselbe Rundreise. LFH-787 ergänzt C.1.4, ESZ-117 die acht aus Kapitel 5.1,
     // ESZ-143 C.1.13 und C.1.14.
-    expect(recipeEntries).toHaveLength(290);
-    expect(new Set(recipeEntries.map(([, recipe]) => serializeSpec(recipe.spec))).size).toBe(290);
+    // ESZ-132 ergänzt C.1.10 (Dekontaminationsgruppe Gerät).
+    expect(recipeEntries).toHaveLength(291);
+    expect(new Set(recipeEntries.map(([, recipe]) => serializeSpec(recipe.spec))).size).toBe(291);
   });
 
   it.each(recipeEntries)('%s: JSON-Rundreise liest dieselbe Spec und zeichnet byte-gleich', (_id, recipe) => {
