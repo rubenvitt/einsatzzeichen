@@ -1,3 +1,18 @@
+## [6.6.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.5.0...v6.6.0) (2026-10-20)
+
+### ⚠️ Breaking Changes
+
+- **`SymbolProvenance` und `CombinationProvenance` haben eine neue Variante.** Neben `claim: 'body-hull'` (mit `fixture`) gibt es jetzt die verbatim-Form mit `claim: 'reference-file'`. Sie enthält statt einer Fixture den Abschnitt und die Referenzdatei. Code, der bei `status === 'verbatim'` direkt auf `fixture` zugreift, kompiliert nicht mehr bzw. findet das Feld nicht.
+  *Migration:* Vor dem Zugriff auf `fixture` zusätzlich auf `claim === 'body-hull'` prüfen. Bei `claim === 'reference-file'` stattdessen Abschnitt und Referenzdatei auswerten.
+
+### Provenienz (core)
+
+- **Freistehende Zeichen gelten jetzt korrekt als verbatim.** Kanonische `SymbolSpec`-Ziele, die genau eine Kapiteldatei zeichnen, meldeten bisher fälschlich `derived`. Das betrifft:
+  - **Person mit einem Zustand aus 5.8.8** (17 Zeichen) und **Gefahr mit Hinweis 5.8.1.13/14** (2 Zeichen): jetzt `verbatim` mit `claim: 'reference-file'`, Abschnitt und Referenzdatei. Die Angaben stimmen mit `freestandingProvenance` für dasselbe Bild überein.
+  - **Leitstelle D.2.5 als Ort**: jetzt `verbatim` mit `claim: 'body-hull'` und Fixture D.2.5.
+- Als Beleg dient ein Geometrievergleich mit dem geprüften Registerbild, gerechnet in `@einsatzzeichen/conformance`: ohne Rolle, ohne Ableitungsnotiz, Toleranz 0,001 mm.
+- `provenanceReview` gibt für `reference-file` den Reviewstand des zugehörigen Registerbilds aus dem Manifest zurück.
+
 ## [6.5.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.4.0...v6.5.0) (2026-10-18)
 
 ### Pakete
