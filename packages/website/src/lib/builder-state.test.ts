@@ -8,7 +8,9 @@ import {
   LIST_SPEC_FIELDS,
   allowedValues,
   centerLabelSize,
+  decodeAnySpec,
   decodeSpec,
+  encodeAnySpec,
   encodeSpec,
   evaluateSpec,
   issuesByField,
@@ -159,6 +161,34 @@ describe('encodeSpec/decodeSpec', () => {
     } catch (error) {
       expect((error as SpecParseError).path).toBe('$.organisation');
     }
+  });
+});
+
+describe('encodeAnySpec/decodeAnySpec (ESZ-135)', () => {
+  it('schreibt für eine SymbolSpec denselben Link wie bisher', () => {
+    for (const recipe of Object.values(RECIPES)) {
+      expect(encodeAnySpec(recipe.spec)).toBe(encodeSpec(recipe.spec));
+    }
+  });
+
+  it('liest alte Links ohne Hülle weiter', () => {
+    expect(decodeAnySpec(legacyParam({ kind: 'person', organization: 'thw' }))).toEqual({
+      kind: 'person',
+      organization: 'thw',
+    });
+  });
+
+  it('trägt ein freistehendes Zeichen in der Rundreise', () => {
+    const spec = { kind: 'weather', values: ['weather-cloudy', 'weather-snowing'], intensity: 'strong' } as const;
+    expect(decodeAnySpec(encodeAnySpec(spec))).toEqual(spec);
+  });
+
+  it('lehnt eine unbekannte Angabe am freistehenden Zeichen mit Pfad ab', () => {
+    const param = legacyParam({
+      v: 1,
+      spec: { kind: 'pictogram', pictogram: 'comms.voice-radio', farbe: 'rot' },
+    });
+    expect(() => decodeAnySpec(param)).toThrow(SpecParseError);
   });
 });
 

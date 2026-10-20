@@ -3,8 +3,11 @@ import {
   LARGE_CENTER_CAP_HEIGHT_MM,
   LIST_SPEC_FIELDS,
   SPEC_FIELD_VALUES,
+  decodeAnySpecParam,
   decodeSpecParam,
+  drawAnySpec,
   drawSymbol,
+  encodeAnySpecParam,
   encodeSpecParam,
   vocabulary,
   type NotMeasuredScope,
@@ -12,7 +15,7 @@ import {
   type ValidationIssue,
   type VocabularyField,
 } from '@einsatzzeichen/core';
-import type { Drawing, SymbolSpec } from '@einsatzzeichen/schema';
+import type { AnySpec, Drawing, SymbolSpec } from '@einsatzzeichen/schema';
 import { explainIssue, type ExplainedIssue } from './rule-explanations.js';
 
 /**
@@ -177,6 +180,20 @@ export function evaluateSpec(spec: SymbolSpec): SpecEvaluation {
   }
 }
 
+/**
+ * `evaluateSpec` für beide Spec-Arten (ESZ-135): eine `SymbolSpec` wie dort, ein freistehendes
+ * Zeichen über `drawAnySpec`. Dieselben Ausgänge — Zeichnung, erklärte Regelliste, und jeder
+ * andere Fehler fliegt weiter. Für eine `SymbolSpec` ist `drawAnySpec` genau `drawSymbol`.
+ */
+export function evaluateAnySpec(spec: AnySpec): SpecEvaluation {
+  try {
+    return { ok: true, drawing: drawAnySpec(spec) };
+  } catch (error) {
+    if (error instanceof CompositionError) return { ok: false, ...explainAll(error.issues) };
+    throw error;
+  }
+}
+
 /* --- Welche Werte gerade zusammenpassen -------------------------------------------------- */
 
 /**
@@ -194,7 +211,13 @@ export type BlockedValue =
    * sehr wohl; `'value'` heißt, ihn trägt keine — der Rat „wähle eine andere Grundzeichenart"
    * wäre dann falsch.
    */
-  | { because: 'not-measured'; detail: string; scope: NotMeasuredScope };
+  | { because: 'not-measured'; detail: string; scope: NotMeasuredScope }
+  /**
+   * Nur im Modus „freistehend“ (ESZ-135): der Verlauf des Pfeils oder der Linie trägt diesen Wert
+   * nicht (zu kurz, aus der Fläche ragend, zu spitzer Knick). Weder Regel noch Lücke; `detail` ist
+   * die Meldung der Zeichenfunktion.
+   */
+  | { because: 'path'; detail: string };
 
 export interface AllowedValue {
   value: string;
@@ -374,4 +397,22 @@ export function encodeSpec(spec: SymbolSpec): string {
  */
 export function decodeSpec(param: string): SymbolSpec {
   return decodeSpecParam(param);
+}
+
+/**
+ * Die URL-Form für beide Spec-Arten (ESZ-135): `encodeAnySpecParam` aus `core`. Für eine
+ * `SymbolSpec` ist das Ergebnis Zeichen für Zeichen dasselbe wie `encodeSpec` — alte und neue
+ * Links des Baukastens sind also dieselben, ein Test hält das fest.
+ */
+export function encodeAnySpec(spec: AnySpec): string {
+  return encodeAnySpecParam(spec);
+}
+
+/**
+ * Umkehrung von `encodeAnySpec`, genauso streng wie `decodeSpec`: liest eine `SymbolSpec` (auch
+ * in der Form von vor LFH-577) oder ein freistehendes Zeichen und wirft sonst `SpecParseError`.
+ * An `kind` entscheidet der Baukasten danach, welchen Modus er zeigt.
+ */
+export function decodeAnySpec(param: string): AnySpec {
+  return decodeAnySpecParam(param);
 }

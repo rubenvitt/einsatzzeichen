@@ -10,16 +10,26 @@ import {
   type ReactNode,
 } from 'react';
 import { Einsatzzeichen } from '@einsatzzeichen/react';
-import { ORGANIZATION_COLORS, SpecParseError, renderSvg } from '@einsatzzeichen/core';
+import { ORGANIZATION_COLORS, SpecParseError, checkAnySpec, renderSvg } from '@einsatzzeichen/core';
 import type { ValidationIssue } from '@einsatzzeichen/core';
-import { PALETTE, type ColorToken, type Drawing, type SymbolSpec } from '@einsatzzeichen/schema';
+import {
+  FREESTANDING_KINDS,
+  PALETTE,
+  isFreestandingSpec,
+  type AnySpec,
+  type ColorToken,
+  type Drawing,
+  type FreestandingKind,
+  type FreestandingSpec,
+  type SymbolSpec,
+} from '@einsatzzeichen/schema';
 import { codeSamplesFor, type CodeSamples } from '../../lib/code-samples.js';
 import {
   CENTER_LABEL_SIZES,
   centerLabelSize,
-  decodeSpec,
-  encodeSpec,
-  evaluateSpec,
+  decodeAnySpec,
+  encodeAnySpec,
+  evaluateAnySpec,
   issuesByField,
   reduceCenterLabelSize,
   reduceLabel,
@@ -30,6 +40,14 @@ import {
   type BlockedValue,
 } from '../../lib/builder-state.js';
 import { matchesLine, searchCatalog } from '../../lib/builder-catalog.js';
+import {
+  FREESTANDING_FIELDS,
+  FREESTANDING_KIND_LABELS,
+  defaultFreestandingSpec,
+  freestandingKindPreviews,
+  probeFreestanding,
+  reduceFreestanding,
+} from '../../lib/builder-freestanding.js';
 import {
   derivationParts,
   derivedMarker,
@@ -140,6 +158,15 @@ const selectBuilderData: SnapshotSelect<BuilderData> = (snapshot) => ({
 /** Startspec: das kleinste, was komponiert — eine taktische Formation ohne jede Zutat. */
 const DEFAULT_SPEC: SymbolSpec = { kind: 'formation' };
 
+/**
+ * Die zwei Modi des Baukastens (ESZ-135): ein Zeichen mit Grundzeichen (`SymbolSpec`) oder ein
+ * freistehendes (`FreestandingSpec`: Pfeil, Linie, Wetter, Tierzustand, Zustand, Piktogramm).
+ */
+type BuilderMode = 'symbol' | 'freestanding';
+
+/** Womit der Modus „freistehend“ beginnt: die erste Art in ihrer Ausgangsauswahl. */
+const DEFAULT_FREESTANDING: FreestandingSpec = defaultFreestandingSpec(FREESTANDING_KINDS[0]!);
+
 const SPEC_PARAM = 'spec';
 
 /** Entprellung des URL-Schreibens in Millisekunden — siehe `useEffect` unten. */
@@ -154,8 +181,14 @@ const PNG_SIZE = 512;
 /** Mehr Treffer stünden nicht mehr unter dem Suchfeld, ohne selbst wieder Liste zu werden. */
 const CATALOG_MATCH_LIMIT = 12;
 
-interface FieldDefinition {
-  field: keyof SymbolSpec;
+/**
+ * Was ein Baustein über sein Feld wissen muss — für die Felder der `SymbolSpec` wie für die der
+ * freistehenden Arten (ESZ-135). `field` ist zugleich der Schlüssel der Element-IDs
+ * (`ez-builder-<field>`); die freistehenden Felder tragen deshalb das Präfix `fs-`, damit
+ * `state` oder `strength` nie zwei Bedeutungen haben.
+ */
+interface FieldLabels {
+  field: string;
   label: string;
   /**
    * Die Sache, um die es geht, als Substantiv — für den Satz, der einen gesperrten Wert
@@ -164,6 +197,20 @@ interface FieldDefinition {
   noun: string;
   /** Kurzer Hinweis unter dem Feld; nur dort, wo der Feldname allein irreführt. */
   hint?: string;
+}
+
+interface FieldDefinition extends FieldLabels {
+  field: keyof SymbolSpec;
+}
+
+/**
+ * Ein Eintrag einer Auswahl: Kennung, Bezeichnung und — nur in langen Listen wie den Piktogrammen
+ * — der Abschnitt, unter dem er steht (`<optgroup>`).
+ */
+interface FieldOption {
+  id: string;
+  label: string;
+  group?: string;
 }
 
 const KIND_FIELD: FieldDefinition = {
@@ -272,9 +319,9 @@ type BuilderOutcome =
   | { state: 'invalid'; issues: ExplainedIssue[]; unexplained: ValidationIssue[] }
   | { state: 'crash'; error: Error };
 
-function outcomeOf(spec: SymbolSpec): BuilderOutcome {
+function outcomeOf(spec: AnySpec): BuilderOutcome {
   try {
-    const result = evaluateSpec(spec);
+    const result = evaluateAnySpec(spec);
     return result.ok
       ? { state: 'ok', drawing: result.drawing }
       : { state: 'invalid', issues: result.issues, unexplained: result.unexplained };
@@ -322,13 +369,19 @@ function organizationSwatch(id: string): string | undefined {
  * Oberfläche der Insel.
  */
 export function blockedTooltip(
-  definition: FieldDefinition,
+  definition: FieldLabels,
   blocked: BlockedValue,
   valueLabel: string,
   kindLabel: string,
   fieldUnmeasured = false,
 ): string {
   if (blocked.because === 'rule') return blocked.explanation;
+  if (blocked.because === 'path') {
+    return (
+      `„${valueLabel}" passt nicht auf den Verlauf dieses Zeichens. Der Verlauf stammt aus dem ` +
+      'Link; „Zurücksetzen“ stellt den Verlauf der Vorlage wieder her.'
+    );
+  }
   if (blocked.scope === 'value' && fieldUnmeasured) {
     return (
       `„${valueLabel}" ist als ${definition.noun} noch nicht vermessen — an keiner ` +
@@ -411,12 +464,29 @@ function describedBy(...ids: readonly (string | undefined)[]): string | undefine
 /* --- Bausteine ---------------------------------------------------------------------------- */
 
 /**
- * Das Vokabular reist als Prop durch die Bausteine (LFH-500). Vorher lag es als Modulkonstante
- * daneben; seit der Snapshot zur Laufzeit kommt, gäbe es zum Zeitpunkt der Modulauswertung nichts
- * zu lesen.
+ * Die Einträge reisen als Prop durch die Bausteine (LFH-500). Vorher lag das Vokabular als
+ * Modulkonstante daneben; seit der Snapshot zur Laufzeit kommt, gäbe es zum Zeitpunkt der
+ * Modulauswertung nichts zu lesen. Seit ESZ-135 bekommt ein Baustein die fertige Liste und nicht
+ * mehr das ganze Vokabular: die Werte der freistehenden Arten stehen nicht im Snapshot.
  */
-interface VocabularyProps {
-  vocabulary: BuilderVocabulary;
+interface OptionsProps {
+  options: readonly FieldOption[];
+}
+
+/**
+ * Die Einträge einer Auswahlliste, unter ihren Abschnitten, wo sie welche tragen. Die Reihenfolge
+ * bleibt die der Liste; ein Abschnitt beginnt, wo sich `group` ändert.
+ */
+function groupedOptions(
+  options: readonly FieldOption[],
+): { group: string | undefined; options: FieldOption[] }[] {
+  const groups: { group: string | undefined; options: FieldOption[] }[] = [];
+  for (const option of options) {
+    const last = groups.at(-1);
+    if (last !== undefined && last.group === option.group) last.options.push(option);
+    else groups.push({ group: option.group, options: [option] });
+  }
+  return groups;
 }
 
 /**
@@ -489,7 +559,7 @@ function optionText(label: string, blocked: BlockedValue | undefined): string {
 }
 
 function optionTitle(
-  definition: FieldDefinition,
+  definition: FieldLabels,
   blocked: BlockedValue | undefined,
   derived: boolean,
   valueLabel: string,
@@ -502,8 +572,8 @@ function optionTitle(
   return derived ? derivedTooltip(valueLabel) : undefined;
 }
 
-interface SelectFieldProps extends VocabularyProps {
-  definition: FieldDefinition;
+interface SelectFieldProps extends OptionsProps {
+  definition: FieldLabels;
   value: string;
   probe: Map<string, AllowedValue> | undefined;
   /** Ob die Spec der Probe selbst schon abgeleitet ist; siehe `derivedMarker()`. */
@@ -512,10 +582,12 @@ interface SelectFieldProps extends VocabularyProps {
   issues?: readonly ExplainedIssue[];
   kindLabel: string;
   onChange: (value: string | undefined) => void;
+  /** Der leere Eintrag; `null` heißt Pflichtfeld ohne leeren Eintrag. */
+  unsetLabel?: string | null;
 }
 
 function SelectField({
-  vocabulary,
+  options,
   definition,
   value,
   probe,
@@ -523,13 +595,28 @@ function SelectField({
   issues = [],
   kindLabel,
   onChange,
+  unsetLabel = '— nicht gesetzt —',
 }: SelectFieldProps) {
   const id = `ez-builder-${definition.field}`;
   const issueId = `${id}-issue`;
   const hintId = `${id}-hint`;
   const unmeasuredId = `${id}-unmeasured`;
-  const options = optionsFor(vocabulary, definition.field);
   const unmeasured = unmeasuredField(probe);
+  const renderOption = (option: FieldOption) => {
+    const selected = option.id === value;
+    const blocked = displayedBlock(probe, option.id, selected);
+    const derived = derivedMarker(probe?.get(option.id), selected, probeDerived);
+    return (
+      <option
+        key={option.id}
+        value={option.id}
+        disabled={blocked !== undefined}
+        title={optionTitle(definition, blocked, derived, option.label, kindLabel, unmeasured)}
+      >
+        {optionText(option.label, blocked)}
+      </option>
+    );
+  };
   // Hülle als `<div>`, Beschriftung als eigenes `<label htmlFor>` — das Muster von `ListField`,
   // die Begründung steht bei `FieldIssueNote`. Der Feldhinweis wandert damit ebenfalls aus dem
   // Namen heraus und braucht seinen eigenen `describedby`-Verweis; ohne ihn hinge er als Text
@@ -549,22 +636,16 @@ function SelectField({
         )}
         onChange={(event) => onChange(event.target.value === '' ? undefined : event.target.value)}
       >
-        <option value="">— nicht gesetzt —</option>
-        {options.map((option) => {
-          const selected = option.id === value;
-          const blocked = displayedBlock(probe, option.id, selected);
-          const derived = derivedMarker(probe?.get(option.id), selected, probeDerived);
-          return (
-            <option
-              key={option.id}
-              value={option.id}
-              disabled={blocked !== undefined}
-              title={optionTitle(definition, blocked, derived, option.label, kindLabel, unmeasured)}
-            >
-              {optionText(option.label, blocked)}
-            </option>
-          );
-        })}
+        {unsetLabel === null ? null : <option value="">{unsetLabel}</option>}
+        {groupedOptions(options).map(({ group, options: entries }) =>
+          group === undefined ? (
+            entries.map(renderOption)
+          ) : (
+            <optgroup key={group} label={group}>
+              {entries.map(renderOption)}
+            </optgroup>
+          ),
+        )}
       </select>
       {definition.hint === undefined ? null : (
         <span className="ez-builder__field-hint" id={hintId}>
@@ -577,14 +658,19 @@ function SelectField({
   );
 }
 
-interface ListFieldProps extends VocabularyProps {
-  definition: FieldDefinition;
+interface ListFieldProps extends OptionsProps {
+  definition: FieldLabels;
   values: readonly string[];
   probe: Map<string, AllowedValue> | undefined;
   probeDerived: boolean;
   issues?: readonly ExplainedIssue[];
   kindLabel: string;
   onChange: (values: string[]) => void;
+  /**
+   * Die Liste braucht mindestens einen Wert (das Wetter, ESZ-135): der letzte Eintrag lässt sich
+   * dann nicht entfernen, statt eine Spec zu bauen, die kein Leser annimmt.
+   */
+  keepLast?: boolean;
 }
 
 /**
@@ -592,7 +678,7 @@ interface ListFieldProps extends VocabularyProps {
  * Fähigkeiten wäre mit Strg-Klick zu bedienen und sonst nicht; hier reicht ein Klick je Richtung.
  */
 function ListField({
-  vocabulary,
+  options: allOptions,
   definition,
   values,
   probe,
@@ -600,14 +686,14 @@ function ListField({
   issues = [],
   kindLabel,
   onChange,
+  keepLast = false,
 }: ListFieldProps) {
   const id = `ez-builder-${definition.field}`;
   const issueId = `${id}-issue`;
   const hintId = `${id}-hint`;
   const unmeasuredId = `${id}-unmeasured`;
-  const options = optionsFor(vocabulary, definition.field).filter(
-    (option) => !values.includes(option.id),
-  );
+  const options = allOptions.filter((option) => !values.includes(option.id));
+  const removable = !keepLast || values.length > 1;
   const unmeasured = unmeasuredField(probe);
   return (
     <div className="ez-builder__field ez-builder__field--wide">
@@ -653,11 +739,17 @@ function ListField({
               <button
                 type="button"
                 className="ez-builder__chip"
+                disabled={!removable}
+                title={removable ? undefined : 'Mindestens ein Wert bleibt stehen.'}
                 onClick={() => onChange(values.filter((entry) => entry !== value))}
               >
-                <span>{labelFor(vocabulary, definition.field, value)}</span>
-                <span aria-hidden="true">×</span>
-                <span className="ez-builder__sr">entfernen</span>
+                <span>{allOptions.find((option) => option.id === value)?.label ?? value}</span>
+                {removable ? (
+                  <>
+                    <span aria-hidden="true">×</span>
+                    <span className="ez-builder__sr">entfernen</span>
+                  </>
+                ) : null}
               </button>
             </li>
           ))}
@@ -674,8 +766,8 @@ function ListField({
   );
 }
 
-interface TileGroupProps extends VocabularyProps {
-  definition: FieldDefinition;
+interface TileGroupProps extends OptionsProps {
+  definition: FieldLabels;
   /** '' heißt „nicht gesetzt". */
   value: string;
   probe: Map<string, AllowedValue> | undefined;
@@ -697,7 +789,7 @@ interface TileGroupProps extends VocabularyProps {
  * `title`-Tooltip für die Maus), ausgewählt wird dabei nichts.
  */
 function TileGroup({
-  vocabulary,
+  options,
   definition,
   value,
   probe,
@@ -713,7 +805,6 @@ function TileGroup({
   const labelId = `ez-builder-${definition.field}-label`;
   const noticeId = `ez-builder-${definition.field}-notice`;
   const issueId = `ez-builder-${definition.field}-issue`;
-  const options = optionsFor(vocabulary, definition.field);
 
   // Ein stehen gebliebener Sperrgrund würde nach der nächsten Änderung etwas Falsches
   // behaupten — mit der neuen Probe ist er entweder überholt oder kommt beim nächsten
@@ -943,7 +1034,7 @@ function DerivationNote({ drawing }: { drawing: Drawing }) {
 
 interface PreviewPanelProps {
   outcome: BuilderOutcome;
-  spec: SymbolSpec;
+  spec: AnySpec;
   /** Dateiname der Downloads: Slug des geladenen Zeichens oder der neutrale Vorgabename. */
   fileBase: string;
 }
@@ -1104,7 +1195,7 @@ function PreviewPanel({ outcome, spec, fileBase }: PreviewPanelProps) {
         <CopyButton
           label="Link kopieren"
           text={() =>
-            `${window.location.origin}${CLEAN_PATH}?${SPEC_PARAM}=${encodeSpec(spec)}`
+            `${window.location.origin}${CLEAN_PATH}?${SPEC_PARAM}=${encodeAnySpec(spec)}`
           }
         />
       </div>
@@ -1209,6 +1300,127 @@ function linkErrorOf(error: unknown): LinkError {
   };
 }
 
+/* --- Der Modus „freistehend“ (ESZ-135) ---------------------------------------------------- */
+
+/** Die Arten als Kacheln; gesperrt ist keine, jede zeichnet in ihrer Ausgangsauswahl. */
+const FREESTANDING_KIND_FIELD: FieldLabels = {
+  field: 'fs-kind',
+  label: 'Art',
+  noun: 'Art',
+};
+
+const FREESTANDING_KIND_OPTIONS: readonly FieldOption[] = FREESTANDING_KINDS.map((kind) => ({
+  id: kind,
+  label: FREESTANDING_KIND_LABELS[kind],
+}));
+
+interface FreestandingFieldsProps {
+  spec: FreestandingSpec;
+  /** Die erklärten Regelmeldungen der aktuellen Spec; leer, wenn sie zeichnet. */
+  issues: readonly ExplainedIssue[];
+  kindTiles: Map<FreestandingKind, Drawing | null>;
+  onChange: (spec: FreestandingSpec) => void;
+}
+
+/**
+ * Das Formular für ein freistehendes Zeichen: erst die Art als Kachel, dann ihre Felder mit den
+ * Werten der Register. Dieselben Bausteine wie für die `SymbolSpec` — gesperrte Werte bleiben
+ * sichtbar und tragen ihren Grund (`probeFreestanding()`), der gesetzte Wert wird nie gesperrt.
+ *
+ * Die Probe läuft hier ohne `useDeferredValue`: es gibt kein Freitextfeld, das bei jedem
+ * Tastenanschlag die Spec ändert, und alle Felder aller Arten zusammen brauchen rund 13 ms.
+ *
+ * Ein Artwechsel beginnt bei der Ausgangsauswahl der neuen Art (`defaultFreestandingSpec`): die
+ * Arten teilen kein Feld, das sich mitnehmen ließe.
+ *
+ * Den Verlauf von Pfeil und Linie stellt der Baukasten nicht ein. Er steht auf der Vorlage
+ * (`reduceFreestanding`); ein Link mit eigenem Verlauf behält ihn.
+ */
+function FreestandingFields({ spec, issues, kindTiles, onChange }: FreestandingFieldsProps) {
+  const probes = useMemo(() => probeFreestanding(spec), [spec]);
+  const probeDerived = useMemo(() => {
+    const result = checkAnySpec(spec);
+    return result.ok && (result.drawing.derivations?.length ?? 0) > 0;
+  }, [spec]);
+  const kindLabel = FREESTANDING_KIND_LABELS[spec.kind];
+  const current = spec as unknown as Record<string, unknown>;
+  // Wie `issuesByField()`: nur an einem gesetzten Feld, und nur, wenn die Erklärung es nennt.
+  const issuesAt = (field: string): ExplainedIssue[] =>
+    current[field] === undefined ? [] : issues.filter((issue) => issue.field === field);
+
+  return (
+    <fieldset className="ez-builder__group">
+      <legend>Freistehendes Zeichen</legend>
+      <p className="ez-builder__group-hint">
+        Pfeile, Linien, Wetter und Einzelpiktogramme, die ohne Grundzeichen auf der Lagekarte
+        stehen.
+      </p>
+      <TileGroup
+        options={FREESTANDING_KIND_OPTIONS}
+        definition={FREESTANDING_KIND_FIELD}
+        value={spec.kind}
+        probe={undefined}
+        probeDerived={false}
+        kindLabel={kindLabel}
+        onChange={(value) => {
+          if (value !== undefined && value !== spec.kind) {
+            onChange(defaultFreestandingSpec(value as FreestandingKind));
+          }
+        }}
+        variant="tile"
+        renderIcon={(id) => {
+          const drawing = kindTiles.get(id as FreestandingKind) ?? null;
+          return (
+            <span className="ez-canvas ez-canvas--light ez-builder__tile-canvas">
+              {drawing === null ? (
+                <span className="ez-builder__tile-placeholder" aria-hidden="true" />
+              ) : (
+                <Einsatzzeichen drawing={drawing} size={44} idPrefix={`ez-fs-kind-${id}`} />
+              )}
+            </span>
+          );
+        }}
+      />
+      {FREESTANDING_FIELDS[spec.kind].map((definition) => {
+        const labels: FieldLabels = {
+          field: `fs-${definition.field}`,
+          label: definition.label,
+          noun: definition.noun,
+          ...(definition.hint === undefined ? {} : { hint: definition.hint }),
+        };
+        const value = current[definition.field];
+        return definition.shape === 'list' ? (
+          <ListField
+            key={definition.field}
+            options={definition.options}
+            definition={labels}
+            values={Array.isArray(value) ? (value as string[]) : []}
+            probe={probes.get(definition.field)}
+            probeDerived={probeDerived}
+            issues={issuesAt(definition.field)}
+            kindLabel={kindLabel}
+            keepLast
+            onChange={(values) => onChange(reduceFreestanding(spec, definition.field, values))}
+          />
+        ) : (
+          <SelectField
+            key={definition.field}
+            options={definition.options}
+            definition={labels}
+            value={typeof value === 'string' ? value : ''}
+            probe={probes.get(definition.field)}
+            probeDerived={probeDerived}
+            issues={issuesAt(definition.field)}
+            kindLabel={kindLabel}
+            unsetLabel={definition.unsetLabel ?? null}
+            onChange={(next) => onChange(reduceFreestanding(spec, definition.field, next))}
+          />
+        );
+      })}
+    </fieldset>
+  );
+}
+
 /* --- Die Insel ---------------------------------------------------------------------------- */
 
 /**
@@ -1217,21 +1429,37 @@ function linkErrorOf(error: unknown): LinkError {
  * der Abruf durch ist, und der Snapshot wechselt danach nicht mehr.
  */
 function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
+  const [mode, setMode] = useState<BuilderMode>('symbol');
   const [spec, setSpec] = useState<SymbolSpec>(DEFAULT_SPEC);
+  const [freestanding, setFreestanding] = useState<FreestandingSpec>(DEFAULT_FREESTANDING);
   const [loadedId, setLoadedId] = useState<string>('');
   const [urlError, setUrlError] = useState<LinkError | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [catalogQuery, setCatalogQuery] = useState('');
   const lastWorkingSpec = useRef<SymbolSpec>(DEFAULT_SPEC);
+  const lastWorkingFreestanding = useRef<FreestandingSpec>(DEFAULT_FREESTANDING);
+  /**
+   * Die Spec, die gerade gezeichnet, verlinkt und als Code gezeigt wird. Beide Modi behalten ihre
+   * eigene Spec: wer zwischen ihnen wechselt, findet seine Auswahl wieder vor.
+   */
+  const activeSpec: AnySpec = mode === 'symbol' ? spec : freestanding;
+  const freestandingTiles = useMemo(() => freestandingKindPreviews(), []);
 
   // Erst nach der Hydration die URL lesen: SSR und erster Client-Render zeigen dieselbe
-  // Startspec, sonst weicht das Markup ab, sobald die URL einen `spec`-Parameter trägt.
+  // Startspec, sonst weicht das Markup ab, sobald die URL einen `spec`-Parameter trägt. Ein Link
+  // auf ein freistehendes Zeichen öffnet den Baukasten in diesem Modus (ESZ-135).
   useEffect(() => {
     setHydrated(true);
     const param = new URLSearchParams(window.location.search).get(SPEC_PARAM);
     if (param === null || param === '') return;
     try {
-      setSpec(decodeSpec(param));
+      const decoded = decodeAnySpec(param);
+      if (isFreestandingSpec(decoded)) {
+        setFreestanding(decoded);
+        setMode('freestanding');
+      } else {
+        setSpec(decoded);
+      }
     } catch (error) {
       setUrlError(linkErrorOf(error));
     }
@@ -1246,7 +1474,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
     const timer = window.setTimeout(() => {
       try {
         const params = new URLSearchParams(window.location.search);
-        params.set(SPEC_PARAM, encodeSpec(spec));
+        params.set(SPEC_PARAM, encodeAnySpec(activeSpec));
         window.history.replaceState(
           null,
           '',
@@ -1260,9 +1488,9 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
       }
     }, URL_WRITE_DELAY_MS);
     return () => window.clearTimeout(timer);
-  }, [spec, hydrated]);
+  }, [activeSpec, hydrated]);
 
-  const outcome = useMemo(() => outcomeOf(spec), [spec]);
+  const outcome = useMemo(() => outcomeOf(activeSpec), [activeSpec]);
 
   /**
    * Welches Formularfeld eine Regelmeldung angeht — damit ein Befund am gesetzten Wert sichtbar
@@ -1274,10 +1502,10 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
    */
   const fieldIssues = useMemo(
     () =>
-      outcome.state === 'invalid'
+      outcome.state === 'invalid' && mode === 'symbol'
         ? issuesByField(outcome.issues, spec)
         : new Map<keyof SymbolSpec, ExplainedIssue[]>(),
-    [outcome, spec],
+    [outcome, spec, mode],
   );
 
   /**
@@ -1340,18 +1568,21 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
   const probeDerived = useMemo(() => drawsDerived(probeSpec), [probeSpec]);
 
   useEffect(() => {
-    if (outcome.state !== 'crash') lastWorkingSpec.current = spec;
-  }, [outcome, spec]);
+    if (outcome.state === 'crash') return;
+    if (mode === 'symbol') lastWorkingSpec.current = spec;
+    else lastWorkingFreestanding.current = freestanding;
+  }, [outcome, spec, freestanding, mode]);
 
   const loadedSymbol = useMemo(
     () => symbols.find((symbol) => symbol.id === loadedId),
     [symbols, loadedId],
   );
   const samples = useMemo(
-    () => codeSamplesFor(spec, loadedId === '' ? 'builder-spec' : loadedId),
-    [spec, loadedId],
+    () =>
+      codeSamplesFor(activeSpec, loadedId === '' || mode !== 'symbol' ? 'builder-spec' : loadedId),
+    [activeSpec, loadedId, mode],
   );
-  const json = useMemo(() => JSON.stringify(spec, null, 2), [spec]);
+  const json = useMemo(() => JSON.stringify(activeSpec, null, 2), [activeSpec]);
   /**
    * Die Grundzeichenart für den Sperrsatz — aus `probeSpec` und **nicht** aus `spec`.
    *
@@ -1402,6 +1633,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
     const symbol = symbols.find((candidate) => candidate.id === id);
     if (symbol === undefined) return;
     setSpec(symbol.spec);
+    setMode('symbol');
     setLoadedId(id);
     setUrlError(null);
     setCatalogQuery('');
@@ -1445,13 +1677,13 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
         <aside className="ez-builder__result">
           <PreviewPanel
             outcome={outcome}
-            spec={spec}
-            fileBase={loadedSymbol?.slug ?? 'einsatzzeichen'}
+            spec={activeSpec}
+            fileBase={(mode === 'symbol' ? loadedSymbol?.slug : undefined) ?? 'einsatzzeichen'}
           />
 
           {outcome.state === 'ok' ? <DerivationNote drawing={outcome.drawing} /> : null}
 
-          {loadedSymbol === undefined ? null : (
+          {loadedSymbol === undefined || mode !== 'symbol' ? null : (
             <div className="ez-note" role="note">
               <p className="ez-note__title">
                 Geladen: {loadedSymbol.title} <span className="ez-id">{loadedSymbol.id}</span>
@@ -1541,7 +1773,10 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
               <button
                 type="button"
                 className="ez-action"
-                onClick={() => setSpec(lastWorkingSpec.current)}
+                onClick={() => {
+                  if (mode === 'symbol') setSpec(lastWorkingSpec.current);
+                  else setFreestanding(lastWorkingFreestanding.current);
+                }}
               >
                 <strong>Letzte Änderung zurücknehmen</strong>
               </button>
@@ -1604,6 +1839,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
                 className="ez-action"
                 onClick={() => {
                   setSpec(DEFAULT_SPEC);
+                  setFreestanding(DEFAULT_FREESTANDING);
                   setLoadedId('');
                   setUrlError(null);
                   setCatalogQuery('');
@@ -1616,13 +1852,52 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
           </fieldset>
 
           <fieldset className="ez-builder__group">
+            <legend>Art des Zeichens</legend>
+            <div className="ez-builder__toggle" role="group" aria-label="Art des Zeichens">
+              {(
+                [
+                  ['symbol', 'Mit Grundzeichen'],
+                  ['freestanding', 'Freistehend'],
+                ] as const
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  id={`ez-builder-mode-${id}`}
+                  className={
+                    mode === id
+                      ? 'ez-builder__toggle-button ez-builder__toggle-button--active'
+                      : 'ez-builder__toggle-button'
+                  }
+                  aria-pressed={mode === id}
+                  onClick={() => setMode(id)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          {mode === 'freestanding' ? (
+            <FreestandingFields
+              spec={freestanding}
+              issues={outcome.state === 'invalid' ? outcome.issues : []}
+              kindTiles={freestandingTiles}
+              onChange={(next) => {
+                setFreestanding(next);
+                setUrlError(null);
+              }}
+            />
+          ) : (
+          <>
+          <fieldset className="ez-builder__group">
             <legend>Grundform</legend>
             <p className="ez-builder__group-hint">
               Womit jedes Zeichen anfängt: die Art des Grundzeichens, seine Bauform und die
               Organisation, deren Farbe den Körper füllt.
             </p>
             <TileGroup
-              vocabulary={vocabulary}
+              options={optionsFor(vocabulary, KIND_FIELD.field)}
               definition={KIND_FIELD}
               value={spec.kind}
               probe={probes.get('kind')}
@@ -1646,7 +1921,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
             />
             {BODY_SELECT_FIELDS.map((definition) => (
               <SelectField
-                vocabulary={vocabulary}
+                options={optionsFor(vocabulary, definition.field)}
                 key={definition.field}
                 definition={definition}
                 value={(spec[definition.field] as string | undefined) ?? ''}
@@ -1658,7 +1933,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
               />
             ))}
             <TileGroup
-              vocabulary={vocabulary}
+              options={optionsFor(vocabulary, ORGANIZATION_FIELD.field)}
               definition={ORGANIZATION_FIELD}
               value={spec.organization ?? ''}
               probe={probes.get('organization')}
@@ -1692,7 +1967,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
             </p>
             {LIST_FIELDS.map((definition) => (
               <ListField
-                vocabulary={vocabulary}
+                options={optionsFor(vocabulary, definition.field)}
                 key={definition.field}
                 definition={definition}
                 values={listValues(definition.field)}
@@ -1705,7 +1980,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
             ))}
             {CAPABILITY_SELECT_FIELDS.map((definition) => (
               <SelectField
-                vocabulary={vocabulary}
+                options={optionsFor(vocabulary, definition.field)}
                 key={definition.field}
                 definition={definition}
                 value={(spec[definition.field] as string | undefined) ?? ''}
@@ -1726,7 +2001,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
             <div className="ez-builder__group-grid">
               {COMMAND_SELECT_FIELDS.map((definition) => (
                 <SelectField
-                  vocabulary={vocabulary}
+                  options={optionsFor(vocabulary, definition.field)}
                   key={definition.field}
                   definition={definition}
                   value={(spec[definition.field] as string | undefined) ?? ''}
@@ -1747,7 +2022,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
               für eine Vermutung und „!" für eine akute Lage.
             </p>
             <ListField
-              vocabulary={vocabulary}
+              options={optionsFor(vocabulary, STATE_LIST_FIELD.field)}
               definition={STATE_LIST_FIELD}
               values={listValues('states')}
               probe={probes.get('states')}
@@ -1757,7 +2032,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
               onChange={(values) => setField('states', values)}
             />
             <SelectField
-              vocabulary={vocabulary}
+              options={optionsFor(vocabulary, TENDENCY_FIELD.field)}
               definition={TENDENCY_FIELD}
               value={spec.tendency ?? ''}
               probe={probes.get('tendency')}
@@ -1858,6 +2133,8 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
               />
             </div>
           </fieldset>
+          </>
+          )}
         </div>
       </div>
 
@@ -1878,8 +2155,18 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
             Beschriftungsfelder setzen die Läufe in <code>labels</code> (<code>center</code>,{' '}
             <code>topLeft</code>, <code>bottomRight</code> …) und <code>designation</code>. Die
             Piktogrammregister <code>comms</code>, <code>damage</code> und <code>wildfire</code>{' '}
-            haben kein Formularfeld, weil <code>SymbolSpec</code> keine solche Achse führt — ein
-            Feld dafür behauptete eine Eingabe, die die Komposition nicht annimmt.
+            haben dort kein Formularfeld, weil <code>SymbolSpec</code> keine solche Achse führt;
+            sie stehen im Modus „Freistehend“ als <code>{"{ kind: 'pictogram' }"}</code>.
+          </p>
+          <p>
+            Der Modus „Freistehend“ baut eine <code>FreestandingSpec</code> (<code>movement</code>,{' '}
+            <code>line</code>, <code>weather</code>, <code>animal-state</code>, <code>state</code>,{' '}
+            <code>pictogram</code>) und zeichnet sie über <code>drawAnySpec()</code>. Die Werte
+            kommen aus den Registern von <code>@einsatzzeichen/schema</code>; gesperrt wird durch
+            Probieren über <code>checkAnySpec()</code>, an genau der Spec, die der Klick erzeugt.
+            Der Link ist <code>encodeAnySpecParam()</code>, für eine <code>SymbolSpec</code>{' '}
+            derselbe wie bisher. Den Verlauf von Pfeil und Linie setzt der Baukasten auf die
+            Vorlage; einen eigenen Verlauf aus einem Link behält er.
           </p>
           <p>
             Gültig oder nicht weiß im Projekt nur <code>compose()</code>, nachträglich. Die
@@ -1898,7 +2185,8 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
           </p>
           <section>
             <h3 className="ez-builder__dev-title">
-              Die Zusammenstellung als JSON (<code>SymbolSpec</code>)
+              Die Zusammenstellung als JSON (
+              <code>{mode === 'symbol' ? 'SymbolSpec' : 'FreestandingSpec'}</code>)
             </h3>
             <pre className="ez-builder__pre">
               <code>{json}</code>
@@ -1908,8 +2196,9 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
           <section>
             <h3 className="ez-builder__dev-title">Codebeispiele</h3>
             <p className="ez-builder__field-hint">
-              Die Beispiele zeichnen mit `drawSymbol` aus `@einsatzzeichen/core` — auf demselben
-              Weg wie dieser Baukasten, im Browser wie in Node.
+              Die Beispiele zeichnen mit `{mode === 'symbol' ? 'drawSymbol' : 'drawAnySpec'}` aus
+              `@einsatzzeichen/core` — auf demselben Weg wie dieser Baukasten, im Browser wie in
+              Node.
             </p>
             <CodeTabs samples={samples} />
           </section>

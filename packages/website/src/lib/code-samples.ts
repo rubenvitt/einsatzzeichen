@@ -1,4 +1,4 @@
-import type { SymbolSpec } from '@einsatzzeichen/schema';
+import { isFreestandingSpec, type AnySpec } from '@einsatzzeichen/schema';
 
 /**
  * Codebeispiele für die vier Ausgabekanäle eines Symbols. Reine Template-Strings — keine
@@ -16,29 +16,36 @@ export interface CodeSamples {
 /**
  * Erzeugt die vier Codebeispiele für ein Symbol. `id` ist der Katalog-/Rezeptschlüssel (z. B.
  * `"C.1.1"`) und dient als Kommentar-Referenz sowie als Bild-ID im MapLibre-Beispiel.
+ *
+ * Ein freistehendes Zeichen aus dem Baukasten (ESZ-135) zeichnet über `drawAnySpec` und trägt den
+ * Typ `FreestandingSpec`; `drawSymbol` nähme es nicht an. Für eine `SymbolSpec` bleiben die
+ * Beispiele, wie sie waren.
  */
-export function codeSamplesFor(spec: SymbolSpec, id: string): CodeSamples {
+export function codeSamplesFor(spec: AnySpec, id: string): CodeSamples {
   const specLiteral = JSON.stringify(spec, null, 2);
   const idLiteral = JSON.stringify(id);
+  const freestanding = isFreestandingSpec(spec);
+  const draw = freestanding ? 'drawAnySpec' : 'drawSymbol';
+  const specType = freestanding ? 'FreestandingSpec' : 'SymbolSpec';
 
-  const typescript = `import { drawSymbol, renderSvg } from '@einsatzzeichen/core';
-import type { SymbolSpec } from '@einsatzzeichen/schema';
+  const typescript = `import { ${draw}, renderSvg } from '@einsatzzeichen/core';
+import type { ${specType} } from '@einsatzzeichen/schema';
 
 // Spezifikation für ${idLiteral}
-const spec: SymbolSpec = ${specLiteral};
+const spec: ${specType} = ${specLiteral};
 
-const drawing = drawSymbol(spec);
+const drawing = ${draw}(spec);
 const svg = renderSvg(drawing, { size: 64 });
 `;
 
   const react = `import { Einsatzzeichen } from '@einsatzzeichen/react';
-import { drawSymbol } from '@einsatzzeichen/core';
-import type { SymbolSpec } from '@einsatzzeichen/schema';
+import { ${draw} } from '@einsatzzeichen/core';
+import type { ${specType} } from '@einsatzzeichen/schema';
 
 // Spezifikation für ${idLiteral}
-const spec: SymbolSpec = ${specLiteral};
+const spec: ${specType} = ${specLiteral};
 
-const drawing = drawSymbol(spec);
+const drawing = ${draw}(spec);
 
 export function Symbol() {
   return <Einsatzzeichen drawing={drawing} size={64} />;
@@ -50,33 +57,33 @@ export function Symbol() {
   defineEinsatzzeichenElement,
   type EinsatzzeichenElement,
 } from '@einsatzzeichen/web-component';
-import { drawSymbol } from '@einsatzzeichen/core';
-import type { SymbolSpec } from '@einsatzzeichen/schema';
+import { ${draw} } from '@einsatzzeichen/core';
+import type { ${specType} } from '@einsatzzeichen/schema';
 
 // Spezifikation für ${idLiteral}
-const spec: SymbolSpec = ${specLiteral};
+const spec: ${specType} = ${specLiteral};
 
 // Registriert <einsatzzeichen-symbol> einmalig (ruft customElements.define auf).
 defineEinsatzzeichenElement();
 
 const element = document.createElement(DEFAULT_TAG_NAME) as EinsatzzeichenElement;
-element.drawing = drawSymbol(spec);
+element.drawing = ${draw}(spec);
 document.body.append(element);
 `;
 
   const maplibre = `import maplibregl from 'maplibre-gl';
 import { addSymbolImage } from '@einsatzzeichen/maplibre';
-import { drawSymbol } from '@einsatzzeichen/core';
-import type { SymbolSpec } from '@einsatzzeichen/schema';
+import { ${draw} } from '@einsatzzeichen/core';
+import type { ${specType} } from '@einsatzzeichen/schema';
 
 // Spezifikation für ${idLiteral}
-const spec: SymbolSpec = ${specLiteral};
+const spec: ${specType} = ${specLiteral};
 
 const map = new maplibregl.Map({ container: 'map', style: 'https://example.org/style.json' });
 
 map.on('load', () => {
   // addSymbolImage rastert die Zeichnung und ruft intern map.addImage(...) auf.
-  addSymbolImage(map, ${idLiteral}, drawSymbol(spec), { size: 64 });
+  addSymbolImage(map, ${idLiteral}, ${draw}(spec), { size: 64 });
 });
 `;
 
