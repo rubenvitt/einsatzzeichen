@@ -88,10 +88,11 @@ Eine Zeile je geprüftem Abschnitt der Vorlage: Quelle und Fundstelle, Titel, Ke
 Art, Zeichenprofil, beide Prüfstände und die Art des Nachweises. Filtern nach Bereich und
 Prüfstand, sortieren mit einem Klick auf die Spaltenüberschrift.
 
-Nicht jede Zeile ist ein Zeichen: neben den {snapshot.symbols.length} Zeichen mit eigener Seite
-stehen hier die Bausteine, aus denen Zeichen zusammengesetzt werden — Piktogramme, Marken, Formen.
-Sie werden genauso geprüft, haben aber keine eigene Seite und stehen deshalb ohne Link in der
-Tabelle.
+Nicht jede Zeile ist ein Zeichen: neben den {coverage.matrix.filter((row) => row.slug !== undefined).length}
+Zeilen mit eigener Seite stehen hier die Bausteine, aus denen Zeichen zusammengesetzt werden —
+Organisationsfarben, Stärken, Fahrwerke. Sie werden genauso geprüft, haben aber keine eigene Seite
+und stehen deshalb ohne Link in der Tabelle. Piktogramme, Zustände und Wetter haben dagegen
+eine eigene Seite: sie stehen auch ohne Grundzeichen auf der Karte.
 
 {/* Ohne `rows`: die Insel holt die 544 Zeilen seit LFH-500 selbst aus `/catalog-snapshot.json`.
     Als Prop serialisierte Astro sie in das `props`-Attribut der `<astro-island>` — 722 KB, die

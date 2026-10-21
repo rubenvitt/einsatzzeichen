@@ -14,6 +14,9 @@ export const matrix = snapshot.coverage.matrix;
 // Abschnitt der Vorlage, also auch Bausteine ohne eigene Seite; `symbols` zählt die Zeichen mit
 // eigener Seite. Wer beides vermischt, nennt eine Zahl, die es nicht gibt.
 export const listed = reviewSummaryOfRows(matrix);
+// Die Zeilen der Prüfliste, die eine eigene Seite haben. Nicht `symbols.length`: dort stehen auch
+// die abgeleiteten Orte und die freistehenden Zeichen ohne Zeile (ESZ-146).
+export const rowsWithPage = matrix.filter((row) => row.slug !== undefined).length;
 export const clarifiedSources = snapshot.sources.filter((source) => source.status === 'clarified').length;
 // Die Herkunft der fachlichen Freigabe, aus den Daten belegt (`bulkDomainApproval`): ein Prüfer,
 // ein Datum, eine Notiz, die sie als Sammelfreigabe ausweist. Trifft das später nicht mehr zu,
@@ -37,7 +40,7 @@ Bedeutung ist.
 <div class="ez-grid ez-grid--4">
   <div class="ez-figure">
     <span class="ez-figure__value">{matrix.length}</span>
-    <span class="ez-figure__label">geprüfte Abschnitte der Vorlage. {snapshot.symbols.length} davon ergeben ein Zeichen mit eigener Seite; die übrigen sind Bausteine — Piktogramme, Marken, Formen —, aus denen Zeichen zusammengesetzt werden.</span>
+    <span class="ez-figure__label">geprüfte Abschnitte der Vorlage. {rowsWithPage} davon ergeben ein Zeichen mit eigener Seite; die übrigen sind Bausteine — Organisationsfarben, Stärken, Fahrwerke —, aus denen Zeichen zusammengesetzt werden.</span>
     <span class="ez-figure__source">Prüfliste des Katalogs</span>
   </div>
   <div class="ez-figure">

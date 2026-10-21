@@ -3,6 +3,7 @@ import { buildSnapshot } from './snapshot-build.js';
 import {
   facetOptions,
   normalize,
+  organizationOf,
   reviewStatusOptions,
   sanitizeFacets,
   searchSymbols,
@@ -133,6 +134,25 @@ describe('searchSymbols', () => {
     for (const s of places) expect(s.chapter).toBe('Abgeleitete Orte');
   });
 
+  it('trennt freistehende Zeichen über die Art ab; sie tragen keine Organisation (ESZ-146)', () => {
+    const fax = makeSymbol({
+      id: 'comms.fax-transmission',
+      title: 'Faxübertragung',
+      kind: 'freestanding',
+      spec: { kind: 'pictogram', pictogram: 'comms.fax-transmission' },
+    });
+    const withFax = [...fixtures, fax];
+    expect(searchSymbols(withFax, '', { kind: 'freestanding' })).toEqual([fax]);
+    expect(searchSymbols(withFax, 'fax', { organization: 'feuerwehr' })).toEqual([]);
+    expect(organizationOf(fax)).toBeUndefined();
+    expect(organizationOf(loeschzug)).toBe('feuerwehr');
+
+    const { symbols } = buildSnapshot();
+    const freestanding = searchSymbols(symbols, '', { kind: 'freestanding' });
+    expect(freestanding.map((symbol) => symbol.title)).toContain('Gerichtete Bewegung');
+    expect(freestanding.map((symbol) => symbol.id)).toContain('comms.fax-transmission');
+  });
+
   it('läuft gegen den echten Snapshot: technische Freigabe filtert korrekt', () => {
     const { symbols } = buildSnapshot();
     const approved = searchSymbols(symbols, '', { technical: 'approved' });
@@ -153,7 +173,7 @@ describe('facetOptions', () => {
   it('"Alle" zählt alle Symbole, auch die ohne Facettenwert', () => {
     // grundzeichenOhneOrganisation trägt kein `spec.organization` — genau der Fall, in dem die
     // Summe der Options-Zähler kleiner ist als die Gesamtzahl der Symbole (Fund aus Review 1).
-    const group = facetOptions(fixtures, (s) => s.spec.organization, (id) => id);
+    const group = facetOptions(fixtures, organizationOf, (id) => id);
     const summedOptionCounts = group.options.reduce((sum, option) => sum + option.count, 0);
     expect(group.total).toBe(fixtures.length);
     expect(summedOptionCounts).toBeLessThan(group.total);
@@ -166,13 +186,15 @@ describe('facetOptions', () => {
     expect(summedOptionCounts).toBe(group.total);
   });
 
-  it('läuft gegen den echten Snapshot: 33 von 306 Symbolen ohne Organisation', () => {
+  it('läuft gegen den echten Snapshot: 33 Zeichen mit Grundzeichen und alle freistehenden ohne Organisation', () => {
     const { symbols } = buildSnapshot();
-    const group = facetOptions(symbols, (s) => s.spec.organization, (id) => id);
+    const group = facetOptions(symbols, organizationOf, (id) => id);
     const summedOptionCounts = group.options.reduce((sum, option) => sum + option.count, 0);
     expect(group.total).toBe(symbols.length);
-    // Seit ESZ-117 acht mehr: die Behälterzeichen aus Kapitel 5.1 zeigt die Referenz weiss.
-    expect(group.total - summedOptionCounts).toBe(33);
+    const freestanding = symbols.filter((symbol) => symbol.kind === 'freestanding').length;
+    // Seit ESZ-117 acht mehr: die Behälterzeichen aus Kapitel 5.1 zeigt die Referenz weiss. Seit
+    // ESZ-146 kommen die freistehenden Zeichen dazu: keines trägt eine Organisation.
+    expect(group.total - summedOptionCounts - freestanding).toBe(33);
   });
 });
 
