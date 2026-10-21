@@ -1,7 +1,7 @@
 import type { SymbolKind } from './snapshot-schema.js';
 
 /**
- * Die drei Arten, aus denen ein Zeichen der Website kommt, in Alltagssprache (LFH-1116).
+ * Die vier Arten, aus denen ein Zeichen der Website kommt, in Alltagssprache (LFH-1116, ESZ-146).
  *
  * Bis LFH-1116 standen die zwei Beschriftungen nur im Kopf der Zeichenseite. Mit der dritten Art
  * braucht sie auch die Art-Facette des Explorers, und zwei Tabellen derselben Wörter liefen
@@ -12,11 +12,15 @@ import type { SymbolKind } from './snapshot-schema.js';
  * - `derived-place`: ein Ort mit eigener Kennung, für den es keine Vorlage gibt. Körper, Giebel,
  *   Kappe und Schriftlauf stammen von der vermessenen Leitstelle D.2.5
  *   (`docs/decisions/2026-10-09-lfh-1116-orte-im-katalog.md`).
+ * - `freestanding`: ohne Grundzeichen, als Pfeil, Linie, Wetter, Tierzustand, Zustand oder
+ *   Piktogramm (`docs/decisions/2026-10-21-esz-146-freistehend-im-katalog.md`). Die Art sagt, wie
+ *   das Zeichen gebaut ist, nicht ob es vermessen ist: das steht wie bei den anderen am Prüfstand.
  */
 export const SYMBOL_KIND_LABELS: Readonly<Record<SymbolKind, string>> = Object.freeze({
   'catalog-entry': 'aus der Vorlage vermessen',
   'composition-recipe': 'aus Grundzeichen zusammengesetzt',
   'derived-place': 'abgeleitet aus der Leitstelle',
+  freestanding: 'freistehend, ohne Grundzeichen',
 });
 
 /**

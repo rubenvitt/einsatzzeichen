@@ -1573,14 +1573,19 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
     else lastWorkingFreestanding.current = freestanding;
   }, [outcome, spec, freestanding, mode]);
 
-  const loadedSymbol = useMemo(
-    () => symbols.find((symbol) => symbol.id === loadedId),
-    [symbols, loadedId],
-  );
+  /**
+   * Das geladene Katalogzeichen, solange der Modus zu seiner Spec passt. Seit ESZ-146 führt der
+   * Katalog auch freistehende Zeichen; wer nach dem Laden den Modus wechselt, sieht die Spec des
+   * anderen Modus, und dazu gehört kein Hinweis auf das geladene Zeichen.
+   */
+  const loadedSymbol = useMemo(() => {
+    const symbol = symbols.find((candidate) => candidate.id === loadedId);
+    if (symbol === undefined) return undefined;
+    return isFreestandingSpec(symbol.spec) === (mode === 'freestanding') ? symbol : undefined;
+  }, [symbols, loadedId, mode]);
   const samples = useMemo(
-    () =>
-      codeSamplesFor(activeSpec, loadedId === '' || mode !== 'symbol' ? 'builder-spec' : loadedId),
-    [activeSpec, loadedId, mode],
+    () => codeSamplesFor(activeSpec, loadedSymbol === undefined ? 'builder-spec' : loadedSymbol.id),
+    [activeSpec, loadedSymbol],
   );
   const json = useMemo(() => JSON.stringify(activeSpec, null, 2), [activeSpec]);
   /**
@@ -1632,8 +1637,13 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
     }
     const symbol = symbols.find((candidate) => candidate.id === id);
     if (symbol === undefined) return;
-    setSpec(symbol.spec);
-    setMode('symbol');
+    if (isFreestandingSpec(symbol.spec)) {
+      setFreestanding(symbol.spec);
+      setMode('freestanding');
+    } else {
+      setSpec(symbol.spec);
+      setMode('symbol');
+    }
     setLoadedId(id);
     setUrlError(null);
     setCatalogQuery('');
@@ -1678,12 +1688,12 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
           <PreviewPanel
             outcome={outcome}
             spec={activeSpec}
-            fileBase={(mode === 'symbol' ? loadedSymbol?.slug : undefined) ?? 'einsatzzeichen'}
+            fileBase={loadedSymbol?.slug ?? 'einsatzzeichen'}
           />
 
           {outcome.state === 'ok' ? <DerivationNote drawing={outcome.drawing} /> : null}
 
-          {loadedSymbol === undefined || mode !== 'symbol' ? null : (
+          {loadedSymbol === undefined ? null : (
             <div className="ez-note" role="note">
               <p className="ez-note__title">
                 Geladen: {loadedSymbol.title} <span className="ez-id">{loadedSymbol.id}</span>
@@ -1698,6 +1708,11 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
                   dazu, und die Vorschau zeigt, was der Baukasten daraus zusammensetzt — das
                   kann von der gemessenen Zeichnung leicht abweichen. Maßgeblich ist die
                   Zeichnung auf der Seite des Zeichens.
+                </p>
+              ) : loadedSymbol.kind === 'freestanding' ? (
+                <p>
+                  Dieses Zeichen steht ohne Grundzeichen auf der Karte. Die Vorschau entsteht aus
+                  derselben Auswahl wie auf der Seite des Zeichens und ist dasselbe Bild.
                 </p>
               ) : loadedSymbol.kind === 'derived-place' ? (
                 <p>
@@ -1885,6 +1900,7 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
               kindTiles={freestandingTiles}
               onChange={(next) => {
                 setFreestanding(next);
+                setLoadedId('');
                 setUrlError(null);
               }}
             />

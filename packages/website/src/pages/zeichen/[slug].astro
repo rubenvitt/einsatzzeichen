@@ -27,6 +27,14 @@
  * eigenen Erklärsatz, weil „nicht gegen die Vorlage nachgemessen" hier keine Lücke ist, sondern
  * gar nicht geht. Die Ableitung selbst steht unter „Bedeutung und Herkunft".
  *
+ * **Freistehende Zeichen** (`kind: 'freestanding'`, ESZ-146) stehen ohne Grundzeichen auf der
+ * Karte: Pfeil, Linie, Wetter, Tierzustand, Zustand oder Piktogramm. Ihre Spec ist eine
+ * `FreestandingSpec`; JSON, Baukasten-Link, Codebeispiele und die Tabelle der Felder gehen von ihr
+ * aus, die Regeln kommen aus `validateFreestandingSpec()` statt aus `validateSpec()`. Die meisten
+ * haben eine Elementzeile im Manifest. Pfeile, Linien und die Wetterbeispiele haben keine (im
+ * Referenzinventar zurückgestellt); für sie gibt es einen eigenen Satz zum Prüfstand und zu den
+ * Nachweisen.
+ *
  * **Reviewnotizen.** 241 der 256 Zeichen tragen eine technische Notiz mit im Mittel 895 Zeichen,
  * geschrieben in der Fachsprache der Prüfung. Sie steht zugeklappt im Kopf und als Zitat
  * überschrieben — gleich ob Freigabe oder Abweichung. Dass es eine Abweichung gibt, sagt die
@@ -37,9 +45,16 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import CodeTabs from '../../components/CodeTabs.astro';
 import StatusPair from '../../components/StatusPair.astro';
 import SymbolPreview from '../../components/SymbolPreview.astro';
-import { encodeSpec } from '../../lib/builder-state';
+import { FREESTANDING_RULE_EXPLANATIONS, FREESTANDING_RULE_IDS } from '@einsatzzeichen/core';
+import {
+  isFreestandingSpec,
+  type FreestandingSpec,
+  type PathParameters,
+} from '@einsatzzeichen/schema';
+import { FREESTANDING_FIELDS, FREESTANDING_KIND_LABELS } from '../../lib/builder-freestanding';
+import { encodeAnySpec } from '../../lib/builder-state';
 import { codeSamplesFor } from '../../lib/code-samples';
-import { RULE_EXPLANATIONS } from '../../lib/rule-explanations';
+import { RULE_EXPLANATIONS, type RuleExplanation } from '../../lib/rule-explanations';
 import { loadSnapshot, type ReviewSummary, type SymbolSummary } from '../../lib/snapshot';
 import { SYMBOL_KIND_LABELS } from '../../lib/symbol-kinds';
 
@@ -133,6 +148,15 @@ const EVIDENCE_LABELS: Record<string, string> = {
  * Satz („niemand hat das Bild bisher gegen die Vorlage nachgemessen") verspräche eine Messung, die
  * es ohne Vorlage nicht geben kann.
  */
+/**
+ * Der technische Satz für ein freistehendes Zeichen ohne Zeile in der Prüfliste (Pfeile, Linien,
+ * Wetterbeispiele). Es ist nach seiner Datei der Vorlage gebaut, aber die Prüfliste führt es nicht;
+ * der allgemeine Satz ließe offen, warum.
+ */
+const FREESTANDING_UNLISTED_TECHNICAL_PENDING =
+  '„Technisch noch nicht geprüft" heißt hier: das Zeichen ist nach seiner Datei aus der Vorlage ' +
+  'gebaut, steht aber noch nicht in der Prüfliste. Freigegeben hat das Bild deshalb noch niemand.';
+
 const DERIVED_PLACE_TECHNICAL_PENDING =
   '„Technisch noch nicht geprüft" heißt hier: für diesen Ort gibt es keine Vorlage, gegen die man ' +
   'das Bild nachmessen könnte. Seine Teile sind von einem vermessenen Zeichen übernommen, das Bild ' +
@@ -141,6 +165,11 @@ const DERIVED_PLACE_TECHNICAL_PENDING =
 /* --- Kopfdaten ---------------------------------------------------------------------------- */
 
 const derivedFrom = symbol.derivedFrom;
+const freestanding: FreestandingSpec | undefined = isFreestandingSpec(symbol.spec)
+  ? symbol.spec
+  : undefined;
+/** Ein freistehendes Zeichen ohne Manifestzeile: Pfeil, Linie oder Wetterbeispiel. */
+const unlisted = freestanding !== undefined && symbol.sourceId === undefined;
 
 const sourceLabel =
   derivedFrom !== undefined
@@ -152,7 +181,9 @@ const sourceLabel =
 const technicalMeaning =
   derivedFrom !== undefined && symbol.review.technical.status === 'pending'
     ? DERIVED_PLACE_TECHNICAL_PENDING
-    : TECHNICAL_MEANING[symbol.review.technical.status];
+    : unlisted && symbol.review.technical.status === 'pending'
+      ? FREESTANDING_UNLISTED_TECHNICAL_PENDING
+      : TECHNICAL_MEANING[symbol.review.technical.status];
 
 /** Was an einem abgeleiteten Ort übernommen ist, in den Worten der Ableitungsnotizen. */
 const derivedParts = (symbol.drawing.derivations ?? []).map((note) => note.part);
@@ -213,12 +244,13 @@ const noteHint =
  * `?spec=` ist der Vertrag des Baukastens: seit LFH-578 die URL-Form aus `core`
  * (`encodeSpecParam`) — base64url ohne Füllzeichen über das kanonische JSON in der Hülle
  * `{"v":1,"spec":{…}}`. Links von vorher (rohes JSON der Spec ohne Hülle) liest `decodeSpec`
- * weiter. Kodiert wird mit **derselben** `encodeSpec()`, die der Baukasten zum Lesen spiegelt
- * (`decodeSpec`) — nicht mit einer Nachbildung daneben. Zwei Kodierungen für einen Parameter können
- * auseinanderlaufen, und die Stelle, an der das auffiele, wäre ein toter Link statt ein roter Test.
- * `encodeSpecParam` kommt ohne `btoa` und `Buffer` aus und läuft in Node wie im Browser.
+ * weiter. Kodiert wird mit **derselben** `encodeAnySpec()`, die der Baukasten zum Lesen spiegelt
+ * (`decodeAnySpec`) — nicht mit einer Nachbildung daneben. Zwei Kodierungen für einen Parameter
+ * können auseinanderlaufen, und die Stelle, an der das auffiele, wäre ein toter Link statt ein
+ * roter Test. Für eine `SymbolSpec` ist der Link Zeichen für Zeichen derselbe wie mit
+ * `encodeSpec()` (ESZ-135); ein freistehendes Zeichen öffnet den Baukasten im Modus „Freistehend“.
  */
-const builderHref = `/builder/?spec=${encodeSpec(symbol.spec)}`;
+const builderHref = `/builder/?spec=${encodeAnySpec(symbol.spec)}`;
 
 /**
  * Die Karte liest `?symbol=<slug>` und wählt das Zeichen vor (`MapLibreLab.tsx`); einen Wert, den
@@ -237,7 +269,50 @@ const isReconstruction = symbol.kind === 'catalog-entry';
 const specJson = JSON.stringify(symbol.spec, null, 2);
 const samples = codeSamplesFor(symbol.spec, symbol.id);
 
+/** Die Prüfstelle, deren Regeln an den Feldern hängen — je nach Art der Spec eine andere. */
+const validator = freestanding === undefined ? 'validateSpec()' : 'validateFreestandingSpec()';
+const specType = freestanding === undefined ? 'SymbolSpec' : 'FreestandingSpec';
+
+/**
+ * Bezeichnungen der Felder einer `FreestandingSpec`, wortgleich mit dem Baukasten-Modus
+ * „Freistehend“ (`FREESTANDING_FIELDS`). `kind`, `path` und `canvasMm` haben dort kein Formularfeld.
+ */
+const FREESTANDING_FIELD_LABELS: Record<string, string> = {
+  kind: 'Art',
+  path: 'Verlauf',
+  canvasMm: 'Zeichenfläche',
+  ...(freestanding === undefined
+    ? {}
+    : Object.fromEntries(FREESTANDING_FIELDS[freestanding.kind].map((entry) => [entry.field, entry.label]))),
+};
+
+/** Bezeichnung eines Werts einer `FreestandingSpec`, aus den Auswahllisten des Baukastens. */
+function freestandingValueLabels(
+  spec: FreestandingSpec,
+  field: string,
+  value: unknown,
+): { text: string; id?: string }[] {
+  if (field === 'kind') return [{ id: spec.kind, text: FREESTANDING_KIND_LABELS[spec.kind] }];
+  if (field === 'path') {
+    const path = value as PathParameters;
+    const text =
+      'points' in path
+        ? path.points.map(([x, y]) => `${x}|${y}`).join(' → ')
+        : `ab ${path.start[0]}|${path.start[1]}, ${path.directionDeg}°, ${path.lengthMm}`;
+    return [{ text: `${text} (mm)` }];
+  }
+  if (field === 'canvasMm') {
+    const canvas = value as { width: number; height: number };
+    return [{ text: `${canvas.width} × ${canvas.height} mm` }];
+  }
+  const options = FREESTANDING_FIELDS[spec.kind].find((entry) => entry.field === field)?.options ?? [];
+  const label = (id: string): string => options.find((option) => option.id === id)?.label ?? id;
+  const values = Array.isArray(value) ? value.map(String) : [String(value)];
+  return values.map((id) => ({ id, text: label(id) }));
+}
+
 function valueLabels(field: string, value: unknown): { text: string; id?: string }[] {
+  if (freestanding !== undefined) return freestandingValueLabels(freestanding, field, value);
   const vocabulary = snapshot.builder[field] ?? [];
   const label = (id: string): string => vocabulary.find((entry) => entry.id === id)?.label ?? id;
   if (Array.isArray(value))
@@ -260,15 +335,23 @@ function valueLabels(field: string, value: unknown): { text: string; id?: string
  * (`center-label-within-body`, `top-left-metrics-complete`), nicht nach dem Feld. Die Zuordnung
  * steht deshalb jetzt an der Erklärung selbst, und ein Test hält sie gültig.
  */
+const ruleIds = freestanding === undefined ? snapshot.ruleIds : FREESTANDING_RULE_IDS;
+const explanations: Readonly<Record<string, RuleExplanation>> =
+  freestanding === undefined ? RULE_EXPLANATIONS : FREESTANDING_RULE_EXPLANATIONS;
+const fieldLabels = freestanding === undefined ? FIELD_LABELS : FREESTANDING_FIELD_LABELS;
+
 const setFields = (Object.entries(symbol.spec) as [string, unknown][])
   .filter(([, value]) => value !== undefined)
   .map(([field, value]) => {
-    const rules = snapshot.ruleIds
-      .map((rule) => ({ id: rule, explanation: RULE_EXPLANATIONS[rule] }))
-      .filter((entry) => entry.explanation !== undefined && entry.explanation.field === field);
+    const rules = ruleIds
+      .map((rule) => ({ id: rule, explanation: explanations[rule] }))
+      .filter(
+        (entry): entry is { id: string; explanation: RuleExplanation } =>
+          entry.explanation !== undefined && entry.explanation.field === field,
+      );
     return {
       field,
-      label: FIELD_LABELS[field] ?? field,
+      label: fieldLabels[field] ?? field,
       values: valueLabels(field, value),
       rules,
     };
@@ -303,7 +386,9 @@ const description =
 
 <StarlightPage frontmatter={{ title: symbol.title, description }} headings={headings}>
   <p class="ez-eyebrow">
-    {symbol.chapter} · {SYMBOL_KIND_LABELS[symbol.kind]} · {VARIANT_LABELS[symbol.variant]}
+    {symbol.chapter} · {SYMBOL_KIND_LABELS[symbol.kind]}
+    {freestanding !== undefined && ` · ${FREESTANDING_KIND_LABELS[freestanding.kind]}`} ·{' '}
+    {VARIANT_LABELS[symbol.variant]}
   </p>
 
   <p class="ez-head__status">
@@ -361,6 +446,15 @@ const description =
       <p class="ez-hint">
         Diesen Ort gibt es in der Vorlage nicht als eigenes Zeichen. Die beiden Dateien und der
         Baukasten zeigen dasselbe Bild, zusammengesetzt aus den Teilen der {derivedFrom.title}.
+      </p>
+    )
+  }
+
+  {
+    freestanding !== undefined && (
+      <p class="ez-hint">
+        Dieses Zeichen steht ohne Grundzeichen auf der Karte. Die beiden Dateien und der Baukasten
+        zeigen dasselbe Bild.
       </p>
     )
   }
@@ -470,9 +564,10 @@ const description =
 
   <h2 id="entwicklung">Für Entwicklerinnen und Entwickler</h2>
   <p>
-    Ab hier stehen die Begriffe der Bibliothek: <code class="ez-mono">SymbolSpec</code>,{' '}
-    <code class="ez-mono">compose()</code>, <code class="ez-mono">renderSvg()</code>. Wer das
-    Zeichen nur benutzen will, ist mit den Dateien oben fertig.
+    Ab hier stehen die Begriffe der Bibliothek: <code class="ez-mono">{specType}</code>,{' '}
+    <code class="ez-mono">{freestanding === undefined ? 'compose()' : 'drawAnySpec()'}</code>,{' '}
+    <code class="ez-mono">renderSvg()</code>. Wer das Zeichen nur benutzen will, ist mit den
+    Dateien oben fertig.
   </p>
 
   <h3 id="bauanleitung">Bauanleitung als JSON</h3>
@@ -501,6 +596,13 @@ const description =
         Manifestschlüssel dieser Zeile: <code class="ez-id">{symbol.sourceId}</code> ·{' '}
         <a href={builderHref}>dieselbe Spec im Baukasten öffnen</a>
       </p>
+    ) : unlisted ? (
+      <p>
+        Kein Manifestschlüssel: Pfeile aus 5.2, Linien aus 2.14 bis 2.20 und die Wetterbeispiele aus
+        5.8.7 stehen im Referenzinventar als zurückgestellt und haben noch keine Zeile im
+        Coverage-Manifest. Die Spec ist die, mit der das Prüfpaket die Referenzdatei zeichnet ·{' '}
+        <a href={builderHref}>dieselbe Spec im Baukasten öffnen</a>
+      </p>
     ) : (
       <p>
         Kein Manifestschlüssel: ein abgeleiteter Ort hat keine eigene Zeile im Coverage-Manifest.
@@ -522,7 +624,7 @@ const description =
   <h3 id="kombinationen">Zulässige Kombinationen</h3>
   <p>
     Diese Spec setzt {setFields.length} {setFields.length === 1 ? 'Feld' : 'Felder'}. Darunter steht,
-    welche Werte gesetzt sind und welche Regeln aus <code class="ez-mono">validateSpec()</code> an
+    welche Werte gesetzt sind und welche Regeln aus <code class="ez-mono">{validator}</code> an
     diesen Feldern hängen —{' '}
     {ruleCount === 0 ? 'für diese Felder keine' : `${ruleCount} an der Zahl`}.
   </p>
@@ -585,12 +687,14 @@ const description =
     Die Zuordnung ist von Hand gepflegt und steht an der Erklärung jeder Regel im Kernpaket
     (<code class="ez-mono">@einsatzzeichen/core</code>, <code class="ez-mono">src/rules/rule-explanations.ts</code>):
     eingetragen ist das Feld, das man
-    ändern müsste, damit die Regel nicht mehr greift. <code class="ez-mono">validateSpec()</code>{' '}
+    ändern müsste, damit die Regel nicht mehr greift. <code class="ez-mono">{validator}</code>{' '}
     selbst führt keine Feldzuordnung — deshalb bleibt diese Liste <strong>nicht</strong> die
     vollständige Prüfung. Regeln, die zwei Achsen gegeneinander stellen, erscheinen nur unter einer
-    von beiden, und eine Regel ohne einzelnes Feld — wie der Streit um die Kopfzone — steht in
-    keiner Zeile dieser Tabelle. Wer wissen will, ob eine geänderte Kombination trägt, ändert sie im{' '}
-    <a href="/builder/">Baukasten</a>: dort läuft dieselbe Komposition wie im Katalog, und jede
+    von beiden{freestanding === undefined && (
+      <>, und eine Regel ohne einzelnes Feld — wie der Streit um die Kopfzone — steht in
+      keiner Zeile dieser Tabelle</>
+    )}. Wer wissen will, ob eine geänderte Kombination trägt, ändert sie im{' '}
+    <a href="/builder/">Baukasten</a>: dort läuft dieselbe Prüfung wie im Katalog, und jede
     abgelehnte Kombination kommt mit ihrer Regel und deren Erklärung zurück.
   </p>
 
@@ -604,6 +708,18 @@ const description =
         <code class="ez-mono">src/places.test.ts</code>) prüfen, dass jeder Ort Körper, Giebel,
         Kappe und Farbe der Leitstelle trägt, keine Funktion setzt und seine Ableitung in{' '}
         <code class="ez-mono">Drawing.derivations</code> kennzeichnet.
+      </p>
+    )
+  }
+
+  {
+    unlisted && (
+      <p>
+        Ohne Zeile in der Prüfliste gibt es keine Nachweisarten. Die Tests im Prüfpaket
+        (<code class="ez-mono">@einsatzzeichen/conformance</code>,{' '}
+        <code class="ez-mono">src/freestanding-spec-fixtures.test.ts</code>) zeichnen jede
+        Referenzdatei der freistehenden Zeichen aus ihrer Spec und verlangen dieselbe Zeichnung wie
+        die Zeichenfunktion, die gegen das Kennzahlenartefakt der Vorlage geprüft ist.
       </p>
     )
   }

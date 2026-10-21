@@ -1,3 +1,4 @@
+import { isFreestandingSpec } from '@einsatzzeichen/schema';
 import type { ReviewSummary, SymbolKind, SymbolSummary } from './snapshot.js';
 
 const COMBINING_DIACRITICS = /[̀-ͯ]/g;
@@ -21,7 +22,7 @@ export function normalize(value: string): string {
 }
 
 export interface SymbolFacets {
-  /** Die Art des Zeichens: vermessen, zusammengesetzt oder abgeleitet (LFH-1116). */
+  /** Die Art des Zeichens: vermessen, zusammengesetzt, abgeleitet (LFH-1116) oder freistehend (ESZ-146). */
   kind?: SymbolKind;
   organization?: string;
   chapter?: string;
@@ -37,6 +38,15 @@ export interface SymbolFacets {
   profile?: string;
   technical?: ReviewSummary['status'];
   domain?: ReviewSummary['status'];
+}
+
+/**
+ * Die Organisation eines Zeichens für die Facette. Ein freistehendes Zeichen (ESZ-146) hat keine:
+ * `FreestandingSpec` kennt das Feld nicht, und ein Pfeil oder Piktogramm trägt keine
+ * Organisationsfarbe. Es zählt deshalb wie ein Grundzeichen ohne Organisation nur in `total`.
+ */
+export function organizationOf(symbol: SymbolSummary): string | undefined {
+  return isFreestandingSpec(symbol.spec) ? undefined : symbol.spec.organization;
 }
 
 /** Prüft eine Facette: `undefined` heißt „nicht gesetzt“ und lässt jeden Wert durch. */
@@ -62,7 +72,7 @@ export function searchSymbols(
   const query = normalize(q.trim());
   return symbols.filter((symbol) => {
     if (!facetMatches(facets.kind, symbol.kind)) return false;
-    if (!facetMatches(facets.organization, symbol.spec.organization)) return false;
+    if (!facetMatches(facets.organization, organizationOf(symbol))) return false;
     if (!facetMatches(facets.chapter, symbol.chapter)) return false;
     if (!facetMatches(facets.sourceId, symbol.source.id)) return false;
     if (!facetMatches(facets.profile, symbol.profile)) return false;

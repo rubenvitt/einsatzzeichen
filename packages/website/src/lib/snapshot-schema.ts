@@ -1,4 +1,4 @@
-import type { Drawing, SymbolSpec } from '@einsatzzeichen/schema';
+import type { AnySpec, Drawing } from '@einsatzzeichen/schema';
 
 /**
  * Die Datengrenze zwischen Katalog und Website (Spec §5.3) — als **reines** Modul: nur Typen und
@@ -30,7 +30,7 @@ export interface SourceSummary {
   review: { technical: ReviewSummary; domain: ReviewSummary };
 }
 
-export type SymbolKind = 'catalog-entry' | 'composition-recipe' | 'derived-place';
+export type SymbolKind = 'catalog-entry' | 'composition-recipe' | 'derived-place' | 'freestanding';
 
 export interface SymbolSummary {
   id: string;
@@ -39,14 +39,23 @@ export interface SymbolSummary {
   /**
    * Woher das Zeichen kommt: an der Vorlage vermessen, aus Grundzeichen zusammengesetzt oder — seit
    * LFH-1116 — als Ort aus der Leitstelle D.2.5 abgeleitet. Die dritte Art hat kein Original und
-   * deshalb keine Manifestzeile; Beschriftung und Begründung in `symbol-kinds.ts`.
+   * deshalb keine Manifestzeile; Beschriftung und Begründung in `symbol-kinds.ts`. Die vierte
+   * (ESZ-146) steht ohne Grundzeichen auf der Karte: Pfeil, Linie, Wetter, Tierzustand, Zustand
+   * oder Piktogramm, gezeichnet aus einer `FreestandingSpec`.
    */
   kind: SymbolKind;
-  spec: SymbolSpec;
+  /**
+   * Die Bauanleitung: `SymbolSpec` bei den ersten drei Arten, `FreestandingSpec` bei
+   * `freestanding`. Getrennt wird mit `isFreestandingSpec` aus `schema`, nicht über `kind` des
+   * Zeichens — die Spec trägt ihren Diskriminator selbst.
+   */
+  spec: AnySpec;
   drawing: Drawing;
   /**
    * Manifestschlüssel-Quelle, z. B. `bbk-babz-2025:E.1.1`. Fehlt bei `derived-place`: ein
-   * abgeleiteter Ort hat keine Manifestzeile, und ein geborgter Schlüssel behauptete eine.
+   * abgeleiteter Ort hat keine Manifestzeile, und ein geborgter Schlüssel behauptete eine. Fehlt
+   * ebenso bei den freistehenden Zeichen ohne Manifestzeile (Pfeile 5.2, Linien 2.14 bis 2.20,
+   * Wetterbeispiele 5.8.7): sie stehen im Referenzinventar als zurückgestellt.
    */
   sourceId?: string;
   /**
@@ -85,7 +94,11 @@ export interface MatrixRow {
   variant: string;
   title: string;
   implementation: string;
-  /** Fehlt bei `coverage: 'element'` — Elemente und Piktogramme haben keine Symbolseite. */
+  /**
+   * Fehlt bei den Elementzeilen ohne Zeichenseite: Organisationsfarben, Stärken,
+   * Fahrzeugkategorien und die Zustände, die eine andere Spec zeichnet (Person, Gefahr). Ein
+   * Element, das als freistehendes Zeichen steht (ESZ-146), trägt den Slug seiner Seite.
+   */
   slug?: string;
   coverage: string;
   profile: string;

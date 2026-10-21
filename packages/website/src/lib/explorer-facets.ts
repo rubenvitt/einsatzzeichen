@@ -1,5 +1,6 @@
 import {
   facetOptions,
+  organizationOf,
   reviewStatusOptions,
   type ExplorerFacetField,
   type FacetGroup,
@@ -20,7 +21,9 @@ import { SYMBOL_KIND_LABELS } from './symbol-kinds.js';
  * Die Zähl- und Sortierlogik selbst bleibt in `explorer-search.ts`; hier steht nur, welche sieben
  * Facetten der Explorer zeigt, woher jede ihre Werte nimmt und woher ihre Beschriftung kommt. Die
  * siebte, die Art, kam mit den abgeleiteten Orten (LFH-1116): sie trennt, was an der Vorlage
- * vermessen oder nach ihr zusammengesetzt ist, von dem, was es dort gar nicht gibt.
+ * vermessen oder nach ihr zusammengesetzt ist, von dem, was es dort gar nicht gibt. Seit ESZ-146
+ * trägt sie einen vierten Wert, „freistehend“: Pfeile, Linien, Wetter, Zustände und Piktogramme
+ * ohne Grundzeichen.
  */
 
 /** Die sieben Facettengruppen des Explorers, in der Reihenfolge der Auswahlfelder. */
@@ -77,7 +80,7 @@ export function explorerFacetGroups(
     ),
     organization: facetOptions(
       symbols,
-      (symbol) => symbol.spec.organization,
+      organizationOf,
       (id) => organizations.get(id) ?? id,
     ),
     chapter: facetOptions(symbols, (symbol) => symbol.chapter, (id) => id),

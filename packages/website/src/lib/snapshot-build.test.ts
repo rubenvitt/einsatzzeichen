@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   COVERAGE_MANIFEST,
+  FREESTANDING_SPEC_FIXTURES,
   RECIPES,
   SOURCE_REGISTRY,
   checkCoverage,
@@ -17,9 +18,15 @@ import {
   PLACES,
 } from '@einsatzzeichen/core';
 import { VALIDATION_RULE_IDS } from '@einsatzzeichen/core';
-import { BODY_VARIANT_IDS, TECHNICAL_FILL_TOKENS } from '@einsatzzeichen/schema';
+import {
+  BODY_VARIANT_IDS,
+  TECHNICAL_FILL_TOKENS,
+  entryKey,
+  isFreestandingSpec,
+} from '@einsatzzeichen/schema';
 import { searchCatalog } from './builder-catalog.js';
 import { buildSnapshot } from './snapshot-build.js';
+import { freestandingSpecForRow, unlistedFreestandingFixtures } from './snapshot-freestanding.js';
 import { DERIVED_PLACE_CHAPTER } from './symbol-kinds.js';
 
 describe('buildSnapshot', () => {
@@ -165,13 +172,104 @@ describe('buildSnapshot', () => {
   it('verknüpft jede Zeichenzeile der Matrix mit einem Slug', () => {
     const bySlug = new Map(snap.symbols.map((symbol) => [symbol.slug, symbol]));
     for (const row of snap.coverage.matrix) {
-      if (row.coverage === 'element') {
-        expect(row.slug).toBeUndefined();
-      } else {
-        expect(row.slug, row.key).toBeDefined();
-        expect(bySlug.has(row.slug ?? '')).toBe(true);
-      }
+      if (row.coverage === 'element' && row.slug === undefined) continue;
+      expect(row.slug, row.key).toBeDefined();
+      const symbol = bySlug.get(row.slug ?? '');
+      expect(symbol, row.key).toBeDefined();
+      expect(symbol?.sourceId).toBe(row.sourceId);
+      expect(symbol?.variant).toBe(row.variant);
+      if (row.coverage === 'element') expect(symbol?.kind, row.key).toBe('freestanding');
     }
+  });
+
+  describe('freistehende Zeichen (ESZ-146)', () => {
+    const freestanding = snap.symbols.filter((symbol) => symbol.kind === 'freestanding');
+    const listed = freestanding.filter((symbol) => symbol.sourceId !== undefined);
+    const unlisted = freestanding.filter((symbol) => symbol.sourceId === undefined);
+
+    it('macht jede Elementzeile, die eine freistehende Spec zeichnet, zu genau einem Zeichen', () => {
+      const rows = COVERAGE_MANIFEST.entries.filter((row) => freestandingSpecForRow(row) !== undefined);
+      expect(listed.map((symbol) => entryKey(symbol.sourceId ?? '', symbol.variant)).sort()).toEqual(
+        rows.map((row) => entryKey(row.sourceId, row.variant)).sort(),
+      );
+      for (const row of rows) {
+        const symbol = listed.find(
+          (candidate) => candidate.sourceId === row.sourceId && candidate.variant === row.variant,
+        );
+        expect(symbol?.spec, row.sourceId).toEqual(freestandingSpecForRow(row));
+        expect(symbol?.title).toBe(row.title);
+        expect(symbol?.id).toBe(
+          row.variant === 'primary' ? row.implementation : `${row.implementation}#${row.variant}`,
+        );
+        // Der Prüfstand ist der der Zeile — nichts wird für die Seite erfunden.
+        expect(symbol?.review.technical.status).toBe(row.review.technical.status);
+        expect(symbol?.review.domain.status).toBe(row.review.domain.status);
+        const matrixRow = snap.coverage.matrix.find(
+          (candidate) => candidate.sourceId === row.sourceId && candidate.variant === row.variant,
+        );
+        expect(matrixRow?.slug).toBe(symbol?.slug);
+      }
+    });
+
+    it('führt jede Referenzdatei der freistehenden Zeichen als Zeichen', () => {
+      const specs = freestanding.map((symbol) => JSON.stringify(symbol.spec));
+      for (const fixture of FREESTANDING_SPEC_FIXTURES) {
+        expect(specs, fixture.asset).toContain(JSON.stringify(fixture.spec));
+      }
+      for (const symbol of freestanding) expect(isFreestandingSpec(symbol.spec), symbol.id).toBe(true);
+    });
+
+    it('zeichnet die zehn Wetterwerte aus 5.8.7 als Wetter mit einem Wert', () => {
+      const values = listed.filter((symbol) => symbol.sourceId?.startsWith('bbk-babz-2025:5.8.7.'));
+      expect(values).toHaveLength(10);
+      for (const symbol of values) {
+        expect(symbol.spec.kind, symbol.id).toBe('weather');
+        if (symbol.spec.kind === 'weather') expect(symbol.spec.values, symbol.id).toHaveLength(1);
+      }
+    });
+
+    it('lässt Zustände anderer Specs und die Leitstelle ohne eigene Seite', () => {
+      const withoutPage = snap.coverage.matrix
+        .filter((row) => row.coverage === 'element' && row.slug === undefined)
+        .map((row) => row.key);
+      expect(withoutPage).toContain('bbk-babz-2025:D.2.5#primary');
+      expect(withoutPage).toContain('bbk-babz-2025:5.8.8.1#primary');
+      expect(withoutPage).toContain('bbk-babz-2025:5.8.1.13#alternative');
+      expect(withoutPage).toContain('bbk-babz-2025:2.1#primary');
+      expect(snap.symbols.some((symbol) => symbol.id === 'state.person-uninjured')).toBe(false);
+    });
+
+    it('führt Pfeile, Linien und Wetterbeispiele ohne Manifestzeile mit offenem Prüfstand', () => {
+      expect(unlisted).toHaveLength(unlistedFreestandingFixtures().length);
+      const kinds = unlisted.map((symbol) => symbol.spec.kind);
+      expect(kinds.filter((kind) => kind === 'movement')).toHaveLength(6);
+      expect(kinds.filter((kind) => kind === 'line')).toHaveLength(8);
+      expect(kinds.filter((kind) => kind === 'weather')).toHaveLength(4);
+      for (const symbol of unlisted) {
+        expect(symbol.review, symbol.id).toEqual({
+          technical: { status: 'pending' },
+          domain: { status: 'pending' },
+        });
+        expect(symbol.evidence).toEqual([]);
+        expect(symbol.derivedFrom).toBeUndefined();
+        expect(symbol.source.id).toBe(COVERAGE_MANIFEST.baseline);
+      }
+      const byId = new Map(unlisted.map((symbol) => [symbol.id, symbol]));
+      expect(byId.get('movement.directed-movement')?.chapter).toBe('Kapitel 5.2');
+      expect(byId.get('line.boundary-with-strength')?.title).toBe('Grenze mit taktischer Stärke');
+      expect(byId.get('line.escape-route#alternative')?.variant).toBe('alternative');
+      // Die Beispiele stehen unter ihrem Abschnitt, neben den zehn Wetterwerten.
+      expect(byId.get('weather.cloudy-snowing-weak')?.chapter).toBe('Kapitel 5.8.7');
+    });
+
+    it('liefert keinen Referenzdateinamen aus', () => {
+      for (const symbol of freestanding) expect(JSON.stringify(symbol), symbol.id).not.toMatch(/\.svg/);
+    });
+
+    it('steht im Katalog des Baukastens', () => {
+      const { matches } = searchCatalog(snap.symbols, 'Faxübertragung', 5);
+      expect(matches.map((symbol) => symbol.id)).toContain('comms.fax-transmission');
+    });
   });
 
   it('führt alle Validierungsregeln und ein Builder-Vokabular', () => {
@@ -214,6 +312,7 @@ describe('buildSnapshot', () => {
     const bySourceId = new Map(snap.symbols.map((symbol) => [symbol.sourceId, symbol]));
     expect(bySourceId.get('bbk-babz-2025:E.1.1')?.chapter).toBe('Anhang E.1');
     expect(bySourceId.get('bbk-babz-2025:1.1')?.chapter).toBe('Kapitel 1');
+    expect(bySourceId.get('bbk-babz-2025:J.1.1')?.chapter).toBe('Anhang J.1');
     for (const symbol of snap.symbols) {
       if (symbol.kind === 'derived-place') expect(symbol.chapter).toBe(DERIVED_PLACE_CHAPTER);
       else expect(symbol.chapter).toMatch(/^(Kapitel|Anhang) /);
@@ -286,8 +385,21 @@ describe('buildSnapshot', () => {
 
     it('hängt denselben Klartext an das betroffene Zeichen', () => {
       const affected = snap.symbols.filter((symbol) => symbol.contrastException !== undefined);
-      expect(affected.map((symbol) => symbol.id)).toEqual(['recipe.E.2.6']);
-      expect(affected[0]?.contrastException).toBe(snap.coverage.contrastExceptions[0]);
+      const composed = affected.filter((symbol) => symbol.kind !== 'freestanding');
+      expect(composed.map((symbol) => symbol.id)).toEqual(['recipe.E.2.6']);
+      expect(composed[0]?.contrastException).toBe(snap.coverage.contrastExceptions[0]);
+      // Seit ESZ-146 tragen auch die freistehenden Piktogramme der genannten Abschnitte ihre
+      // Ausnahme: rot auf weiß ist an 4.1.6 dasselbe Bild, ob mit Grundzeichen oder ohne.
+      const freestanding = affected.filter((symbol) => symbol.kind === 'freestanding');
+      expect(freestanding.length).toBeGreaterThan(0);
+      for (const symbol of freestanding) {
+        const section = (symbol.sourceId ?? '').split(':')[1] ?? '';
+        const exception = CONTRAST_EXCEPTIONS.findIndex((candidate) =>
+          candidate.sections.some((entry) => entry === section),
+        );
+        expect(exception, symbol.id).toBeGreaterThanOrEqual(0);
+        expect(symbol.contrastException).toBe(snap.coverage.contrastExceptions[exception]);
+      }
     });
 
     it('lässt kein Farbtoken und kein ISO-Datum in die Prosa durch', () => {

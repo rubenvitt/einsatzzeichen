@@ -669,6 +669,33 @@ describe('Der Baukasten im Modus „freistehend“ (ESZ-135)', () => {
     });
   });
 
+  it('lädt ein freistehendes Zeichen aus dem Katalog in diesem Modus (ESZ-146)', async () => {
+    const container = await mountBuilder();
+    const search = container.querySelector('#ez-builder-search') as unknown as HTMLInputElement;
+    // React verfolgt den Wert eines gesteuerten Felds selbst; gesetzt wird er über den Setter des
+    // Prototyps, damit das `input`-Ereignis als Änderung zählt.
+    Object.getOwnPropertyDescriptor(happyWindow.HTMLInputElement.prototype, 'value')?.set?.call(
+      search,
+      'Faxübertragung',
+    );
+    search.dispatchEvent(new DocumentEvent('input', { bubbles: true }));
+    await settle();
+    const match = [...container.querySelectorAll('.ez-builder__match')].find(
+      (button) => button.querySelector('.ez-id')?.textContent === 'comms.fax-transmission',
+    );
+    expect(match, 'Kein Treffer für die Faxübertragung.').toBeDefined();
+    (match as unknown as HTMLElement).click();
+    await settle();
+    expect(modeButton(container, 'freestanding').getAttribute('aria-pressed')).toBe('true');
+    expect(json(container)).toEqual({ kind: 'pictogram', pictogram: 'comms.fax-transmission' });
+    expectDrawn(container);
+    expect(container.textContent).toMatch(/Geladen: Faxübertragung/);
+    // Im anderen Modus gehört der Hinweis nicht mehr zur gezeigten Spec.
+    modeButton(container, 'symbol').click();
+    await settle();
+    expect(container.textContent).not.toMatch(/Geladen: Faxübertragung/);
+  });
+
   it('behält die Auswahl beider Modi beim Wechsel', async () => {
     const container = await mountBuilder();
     tile(container, 'kind', 'Person').click();

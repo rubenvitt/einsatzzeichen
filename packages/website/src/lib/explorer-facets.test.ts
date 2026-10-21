@@ -108,6 +108,30 @@ describe('explorerFacetGroups', () => {
     ]);
   });
 
+  it('führt freistehende Zeichen als vierte Art, ohne Organisation (ESZ-146)', () => {
+    const withFreestanding = explorerFacetGroups(
+      [
+        ...SYMBOLS,
+        makeSymbol({
+          id: 'movement.directed-movement',
+          title: 'Gerichtete Bewegung',
+          kind: 'freestanding',
+          spec: { kind: 'movement', movement: 'directed-movement', path: { points: [[2, 16], [30, 16]] } },
+        }),
+      ],
+      VOCABULARY,
+      statusLabel,
+    );
+    expect(withFreestanding.kind.options).toContainEqual({
+      value: 'freestanding',
+      label: 'freistehend, ohne Grundzeichen',
+      count: 1,
+    });
+    expect(validFacetValues(withFreestanding).art).toContain('freestanding');
+    expect(withFreestanding.organization.total).toBe(4);
+    expect(withFreestanding.organization.options.reduce((sum, o) => sum + o.count, 0)).toBe(2);
+  });
+
   it('leitet Kapitel und Profil ohne Vokabular ab', () => {
     expect(groups.chapter.options.map((o) => o.value)).toEqual(['Anhang E.1', 'Kapitel 4.6']);
     expect(groups.profile.options.map((o) => o.value)).toEqual(['bos', 'default']);

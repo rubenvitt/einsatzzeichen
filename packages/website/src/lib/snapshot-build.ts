@@ -5,6 +5,12 @@ import { entryKey } from '@einsatzzeichen/schema';
 import { coverageAxes } from './snapshot-axes.js';
 import { blockerRows, openDomainReviewsByArea } from './snapshot-blockers.js';
 import { contrastExceptionText } from './snapshot-contrast.js';
+import {
+  freestandingSpecForRow,
+  symbolForFreestandingRow,
+  symbolForUnlistedFreestanding,
+  unlistedFreestandingFixtures,
+} from './snapshot-freestanding.js';
 import { toReviewSummary } from './snapshot-review.js';
 import { sourceSummaries } from './snapshot-sources.js';
 import { symbolForCatalogEntry, symbolForPlace, symbolForRecipe } from './snapshot-symbols.js';
@@ -36,6 +42,11 @@ import type { CatalogSnapshot, MatrixRow, SymbolSummary } from './snapshot.js';
  * Danach kommen die abgeleiteten Orte aus `PLACES` (LFH-1116): sie haben kein Original und darum
  * keine Manifestzeile, also auch keine Matrixzeile. Die Leitstelle, der einzige vermessene Ort,
  * bleibt ihre Manifestzeile D.2.5.
+ *
+ * Seit ESZ-146 stehen auch die freistehenden Zeichen hier: eine Elementzeile, die eine
+ * `FreestandingSpec` genau zeichnet, wird ein Zeichen mit Seite (und ihre Matrixzeile bekommt den
+ * Slug); die Pfeile, Linien und Wetterbeispiele ohne Manifestzeile kommen zuletzt, wie die Orte
+ * ohne Matrixzeile (`snapshot-freestanding.ts`).
  */
 export function buildSnapshot(now: Date = new Date()): CatalogSnapshot {
   const symbols: SymbolSummary[] = [];
@@ -58,6 +69,10 @@ export function buildSnapshot(now: Date = new Date()): CatalogSnapshot {
     let symbol: SymbolSummary | undefined;
     if (row.coverage === 'catalog-entry') symbol = symbolForCatalogEntry(row);
     else if (row.coverage === 'composition-recipe') symbol = symbolForRecipe(row);
+    else {
+      const spec = freestandingSpecForRow(row);
+      if (spec !== undefined) symbol = symbolForFreestandingRow(row, spec);
+    }
 
     if (symbol !== undefined) add(symbol);
 
@@ -79,6 +94,8 @@ export function buildSnapshot(now: Date = new Date()): CatalogSnapshot {
   for (const place of Object.values(PLACES)) {
     if (place.source.basis === 'derived') add(symbolForPlace(place));
   }
+
+  for (const fixture of unlistedFreestandingFixtures()) add(symbolForUnlistedFreestanding(fixture));
 
   return {
     generatedAt: now.toISOString(),

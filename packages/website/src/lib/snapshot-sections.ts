@@ -32,6 +32,15 @@ export function registryIdOf(sourceId: string): string {
 export function chapterForSection(section: string): string {
   const segments = section.split('.');
   const chapter = segments.length === 1 ? section : segments.slice(0, -1).join('.');
+  return chapterLabel(chapter, section);
+}
+
+/**
+ * Die Bezeichnung eines Kapitels selbst, ohne eine Stelle abzuschneiden: `5.8.7` → „Kapitel
+ * 5.8.7". Für ein Beispiel der Vorlage, das unter seinem Abschnitt steht und nicht als dessen
+ * letzte Stelle (die Wetterbeispiele aus 5.8.7, ESZ-146).
+ */
+export function chapterLabel(chapter: string, section: string = chapter): string {
   if (/^[0-9]/.test(chapter)) return `Kapitel ${chapter}`;
   if (/^[A-Za-z]/.test(chapter)) return `Anhang ${chapter}`;
   throw new Error(
