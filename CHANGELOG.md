@@ -1,3 +1,24 @@
+## [6.9.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.8.0...v6.9.0) (2026-10-21)
+
+### Website – Katalog
+
+- **Freistehende Zeichen im Katalog:** Pfeile, Linien, Wetter, Tierzustände, Zustände und Piktogramme stehen jetzt als eigene Zeichenart „freistehend, ohne Grundzeichen“ im Katalog. Jedes Zeichen hat eine eigene Seite mit SVG- und PNG-Download, Slug und Codebeispielen.
+- **Umfang:** 252 Elementzeilen aus dem Manifest sind aufgenommen. Bei jeder steht ihr Prüfstand, die zugehörige Matrixzeile ist verlinkt. Dazu kommen 18 Referenzdateien, die noch keine Manifestzeile haben: Pfeile (5.2), Linien (2.14–2.20) und Wetterbeispiele (5.8.7). Bei ihnen ist der Prüfstand als offen markiert und ein eigener Satz erklärt, worum es sich handelt.
+- **Zeichenseite:** Freistehende Zeichen zeigen die Felder und Prüfregeln ihrer Spezifikation an.
+
+### Website – Explorer
+
+- **Neue Filtermöglichkeit:** Über die Art-Facette lassen sich freistehende Zeichen gezielt filtern (`art=freestanding`).
+
+### Website – Baukasten
+
+- **„Im Baukasten öffnen“** startet freistehende Zeichen direkt im Modus „Freistehend“.
+- **„Aus dem Katalog laden“** wechselt bei freistehenden Zeichen automatisch in den passenden Modus.
+
+### Dokumentation
+
+- Die Dokumentation beschreibt jetzt freistehende Zeichen im Katalog. Eine neue Entscheidungsnotiz hält die Gründe für dieses Vorgehen fest.
+
 ## [6.8.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.7.0...v6.8.0) (2026-10-20)
 
 ### Katalog
