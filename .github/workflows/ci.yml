@@ -18,6 +18,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          # Ohne check-latest nimmt setup-node die gecachte 22er des Runners, die hinter
+          # der aktuellen liegen kann (Astro 7.4 verlangt >= 22.23.4).
+          check-latest: true
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
