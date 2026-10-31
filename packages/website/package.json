@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@astrojs/react": "7.1.2",
-    "@astrojs/starlight": "0.42.6",
+    "@astrojs/starlight": "0.42.7",
     "@einsatzzeichen/conformance": "workspace:*",
     "@einsatzzeichen/core": "workspace:*",
     "@einsatzzeichen/maplibre": "workspace:*",
