@@ -210,8 +210,11 @@ export interface WeatherParameters {
   readonly intensity?: WeatherIntensity;
 }
 
-/** Der Parametersatz eines Tierzustands. `alternative` ist die Darstellung mit „K“ (5.8.6.2_K). */
+/**
+ * Der Parametersatz eines Tierzustands. `alternative` ist die Darstellung mit „K“ (5.8.6.2_K).
+ * Ohne `state` das Tier ohne Zustand, nur die Silhouette (abgeleitet, LLH-1343).
+ */
 export interface AnimalStateParameters {
-  readonly state: AnimalStateId;
+  readonly state?: AnimalStateId;
   readonly variant?: DepictionVariant;
 }

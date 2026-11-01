@@ -131,6 +131,7 @@ export function describeFreestandingSpec(spec: FreestandingSpec): string {
       return parts.join(', ');
     }
     case 'animal-state': {
+      if (spec.state === undefined) return 'Tier';
       const parts = [`Tierzustand: ${pictogram(`state.${spec.state}`).title}`];
       if (spec.variant === 'alternative') parts.push('zweite Darstellung');
       return parts.join(', ');
@@ -165,7 +166,10 @@ function drawingOf(spec: FreestandingSpec): Drawing {
     case 'weather':
       return weatherDrawing(spec.intensity === undefined ? { values: spec.values } : { values: spec.values, intensity: spec.intensity });
     case 'animal-state':
-      return animalStateDrawing(spec.variant === undefined ? { state: spec.state } : { state: spec.state, variant: spec.variant });
+      return animalStateDrawing({
+        ...(spec.state === undefined ? {} : { state: spec.state }),
+        ...(spec.variant === undefined ? {} : { variant: spec.variant }),
+      });
     case 'state':
       return pictogramDrawing(`state.${spec.state}`, spec.variant);
     case 'pictogram':

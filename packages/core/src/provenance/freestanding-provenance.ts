@@ -123,7 +123,8 @@ export function freestandingProvenance(spec: FreestandingSpec): FreestandingProv
     case 'pictogram':
       return fromRegister(spec.pictogram, spec.variant);
     case 'animal-state':
-      return fromRegister(`state.${spec.state}`, spec.variant);
+      // Das Tier ohne Zustand hat kein Original (LLH-1343).
+      return spec.state === undefined ? DERIVED : fromRegister(`state.${spec.state}`, spec.variant);
     case 'weather':
       return weatherProvenance(spec);
     case 'movement':

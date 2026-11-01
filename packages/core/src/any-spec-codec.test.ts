@@ -110,7 +110,12 @@ describe('parseAnySpec', () => {
   it('verlangt die Pflichtfelder je Art', () => {
     expect(parseError({ kind: 'movement', path: movement.path }).path).toBe('$.movement');
     expect(parseError({ kind: 'line', line: 'boundary-section' }).path).toBe('$.path');
-    expect(parseError({ kind: 'animal-state' }).path).toBe('$.state');
+    expect(parseError({ kind: 'state' }).path).toBe('$.state');
+  });
+
+  it('liest das Tier ohne Zustand (LLH-1343): `state` ist an animal-state optional', () => {
+    expect(parseAnySpec({ kind: 'animal-state' })).toEqual({ kind: 'animal-state' });
+    expect(serializeAnySpec({ kind: 'animal-state' })).toBe('{"v":1,"freestanding":{"kind":"animal-state"}}');
   });
 
   describe('Verlauf', () => {

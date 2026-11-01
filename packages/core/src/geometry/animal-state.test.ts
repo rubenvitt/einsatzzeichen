@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ANIMAL_STATES } from './pictograms/states/06-animals.js';
+import { collectDerivations } from '../derive/record.js';
 import { animalStateDrawing } from './animal-state.js';
 
 /**
@@ -25,6 +26,23 @@ describe('Tierzustand', () => {
       if (silhouette?.type !== 'polyline') continue;
       expect(silhouette.points.map(([x]) => x)).toEqual([2, 6, 16, 26, 30]);
     }
+  });
+
+  it('zeichnet ohne Zustand nur die Silhouette, als Ableitung gemeldet (LLH-1343)', () => {
+    const direct = animalStateDrawing({});
+    expect(direct.title).toBe('Tier');
+    expect(direct.derivations).toEqual([expect.objectContaining({ dimension: 'state', basis: 'transferred' })]);
+    // In einem äußeren Sammler (drawFreestanding) erscheint die Notiz genau einmal.
+    const collected = collectDerivations(() => animalStateDrawing({}));
+    expect(collected.children).toHaveLength(1);
+    const [silhouette] = collected.children;
+    const sick = animalStateDrawing({ state: 'sick-animal' }).children[0];
+    // Dieselbe Silhouette wie am erkrankten und toten Tier, ohne Strich und Kreuz.
+    expect(silhouette).toEqual(sick);
+    expect(collected.derivations).toEqual([
+      expect.objectContaining({ dimension: 'state', basis: 'transferred' }),
+    ]);
+    expect(() => animalStateDrawing({ variant: 'alternative' })).toThrow(/Darstellung/);
   });
 
   it('führt die Darstellung mit „K“ nur beim kontaminierten Tier', () => {

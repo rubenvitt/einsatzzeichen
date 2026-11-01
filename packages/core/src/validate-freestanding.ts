@@ -125,7 +125,7 @@ function validateAnimalState(spec: AnimalStateSpec): ValidationIssue[] {
     ? []
     : [{
         rule: 'animal-state-variant-not-available',
-        message: `${spec.state}: eine zweite Darstellung gibt es unter den Tierzuständen nur beim kontaminierten Tier (5.8.6.2_kontaminiertes Tier_K).`,
+        message: `${spec.state ?? 'Tier ohne Zustand'}: eine zweite Darstellung gibt es unter den Tierzuständen nur beim kontaminierten Tier (5.8.6.2_kontaminiertes Tier_K).`,
       }];
 }
 

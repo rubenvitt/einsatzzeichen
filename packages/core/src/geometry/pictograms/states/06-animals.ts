@@ -144,3 +144,11 @@ export const ANIMAL_STATES = deepFreeze([
     ],
   }),
 ] satisfies readonly CatalogPictogramDefinition[]);
+
+/**
+ * Das Tier ohne Zustand (LLH-1343): nur die Silhouette des erkrankten und toten Tiers, ohne
+ * Strich und ohne Kreuz. Kein Original zeigt es; übertragen aus 5.8.6.1 und 5.8.6.3, deren
+ * gemeinsamer Träger die Silhouette ist, so wie die Person ohne Zustand (5.8.8.1) die Raute ohne
+ * den Verletzungsstrich aus 5.8.8.3 ist. Kein Eintrag im Register, weil es keine Referenzdatei hat.
+ */
+export const ANIMAL_WITHOUT_STATE: readonly Primitive[] = deepFreeze([UPPER_SILHOUETTE()]);

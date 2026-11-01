@@ -48,6 +48,11 @@ describe('freestandingProvenance() (LFH-798)', () => {
     expect(freestandingProvenance({ kind: 'state', state: 'route-closed' })).not.toHaveProperty('usage');
   });
 
+  it('führt das Tier ohne Zustand als abgeleitet (LLH-1343)', () => {
+    expect(freestandingProvenance({ kind: 'animal-state' })).toEqual({ status: 'derived' });
+    expect(drawFreestanding({ kind: 'animal-state' }).derivations).toHaveLength(1);
+  });
+
   it('nennt für Tierzustand und einzelnen Wetterwert ihre Kapiteldatei', () => {
     expect(freestandingProvenance({ kind: 'animal-state', state: 'contaminated-animal', variant: 'alternative' })).toMatchObject({
       status: 'verbatim',
