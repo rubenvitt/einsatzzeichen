@@ -183,6 +183,8 @@ export const FREESTANDING_FIELDS: Readonly<Record<FreestandingKind, readonly Fre
         label: 'Tierzustand (Kapitel 5.8.6)',
         noun: 'Tierzustand',
         shape: 'select',
+        // Ohne Zustand das Tier allein, nur die Silhouette (abgeleitet, LLH-1343).
+        unsetLabel: '— ohne Zustand —',
         options: ANIMAL_STATE_IDS.map((id) => ({ id, label: stateTitle(id) })),
       },
       VARIANT_FIELD,

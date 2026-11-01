@@ -434,7 +434,8 @@ const FREESTANDING_READERS: { readonly [K in FreestandingKind]: Reader } = {
   movement: record(MOVEMENT_FIELDS, ['kind', 'movement', 'path'], 'einem Pfeil (movement)'),
   line: record(LINE_FIELDS, ['kind', 'line', 'path'], 'einer Linie (line)'),
   weather: record(WEATHER_FIELDS, ['kind', 'values'], 'einem Wetterzeichen (weather)'),
-  'animal-state': record(ANIMAL_STATE_FIELDS, ['kind', 'state'], 'einem Tierzustand (animal-state)'),
+  // Ohne `state` das Tier ohne Zustand (LLH-1343).
+  'animal-state': record(ANIMAL_STATE_FIELDS, ['kind'], 'einem Tierzustand (animal-state)'),
   state: record(STATE_FIELDS, ['kind', 'state'], 'einem Zustand (state)'),
   pictogram: record(PICTOGRAM_FIELDS, ['kind', 'pictogram'], 'einem Piktogramm (pictogram)'),
 };

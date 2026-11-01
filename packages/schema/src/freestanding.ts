@@ -66,10 +66,18 @@ export interface WeatherSpec {
   readonly intensity?: WeatherIntensity;
 }
 
-/** Ein Tierzustand aus 5.8.6. `variant: 'alternative'` nur am kontaminierten Tier (mit „K“). */
+/**
+ * Ein Tier, mit oder ohne Zustand aus 5.8.6. `variant: 'alternative'` nur am kontaminierten Tier
+ * (mit „K“).
+ *
+ * Ohne `state` zeichnet die Spec das Tier ohne Zustand: nur die Tiersilhouette (LLH-1343). Kein
+ * Original zeigt es; abgeleitet ist es aus den drei Tierzuständen, die alle die Silhouette tragen
+ * und den Zustand mit Strich, Kreuz oder Kontaminationszeichen ergänzen, wie die Person ohne
+ * Zustand (5.8.8.1) die Raute ohne Verletzungsstrich ist.
+ */
 export interface AnimalStateSpec {
   readonly kind: 'animal-state';
-  readonly state: AnimalStateId;
+  readonly state?: AnimalStateId;
   readonly variant?: DepictionVariant;
 }
 

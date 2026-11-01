@@ -54,6 +54,8 @@ describe('validateFreestandingSpec', () => {
   });
 
   it('animal-state-variant-not-available: eine zweite Darstellung gibt es nur an 5.8.6.2', () => {
+    expect(rulesOf({ kind: 'animal-state', variant: 'alternative' })).toEqual(['animal-state-variant-not-available']);
+    expect(rulesOf({ kind: 'animal-state' })).toEqual([]);
     expect(rulesOf({ kind: 'animal-state', state: 'sick-animal', variant: 'alternative' })).toEqual([
       'animal-state-variant-not-available',
     ]);

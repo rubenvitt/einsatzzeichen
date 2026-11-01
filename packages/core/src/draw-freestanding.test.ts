@@ -137,6 +137,7 @@ describe('describeFreestandingSpec', () => {
     expect(
       describeFreestandingSpec({ kind: 'weather', values: ['weather-cloudy', 'weather-snowing'], intensity: 'moderate' }),
     ).toBe('Wetter: Wolkig, Schneiend, Intensität: mittel');
+    expect(describeFreestandingSpec({ kind: 'animal-state' })).toBe('Tier');
     expect(describeFreestandingSpec({ kind: 'animal-state', state: 'contaminated-animal', variant: 'alternative' })).toBe(
       'Tierzustand: Kontaminiertes Tier, zweite Darstellung',
     );

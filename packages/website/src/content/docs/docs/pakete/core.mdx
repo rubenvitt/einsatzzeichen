@@ -200,7 +200,7 @@ Art von Beschreibung neben der `SymbolSpec`, erkennbar am Feld `kind`.
 | `movement` | einen Pfeil aus 5.2 entlang eines Verlaufs |
 | `line` | eine Linie oder Grenze aus Kapitel 2 entlang eines Verlaufs |
 | `weather` | einen Wetterwert oder die Wolke mit einem Niederschlag (5.8.7) |
-| `animal-state` | einen Tierzustand mit der Tierform (5.8.6) |
+| `animal-state` | einen Tierzustand mit der Tierform (5.8.6); ohne `state` das Tier allein (abgeleitet) |
 | `state` | die Kapiteldatei eines Zustands aus 5.8.1 bis 5.8.5 und 5.8.9, auch die Einsatztaktiken |
 | `pictogram` | die Kapiteldatei eines Piktogramms: Fähigkeit (`capability.*`), Kommunikation (`comms.*`), Schaden (`damage.*`), Vegetationsbrand (`wildfire.*`), Führung (`leadership.*`), Wasserrettung (`water-rescue-personnel.*`), Sonderform aus Kapitel 3 (`special-form.*`: Drohne, Zweirad, Zweirad motorgetrieben) |
 
@@ -243,6 +243,11 @@ const svgs = zeichen.map((spec) => renderSvg(drawAnySpec(spec), { size: 64 }));
 const link = encodeAnySpecParam(schnee); // base64url über {"v":1,"freestanding":{…}}
 ```
 
+Das Tier ohne Zustand, `{ kind: 'animal-state' }`, ist die Tierform allein. Kein Original zeigt
+es: alle drei Tierzustände tragen die Tierform und ergänzen den Zustand mit Strich, Kreuz oder
+Kontaminationszeichen, so wie die Person ohne Zustand die Raute ohne Verletzungsstrich ist. Die
+Zeichnung trägt deshalb eine Ableitungsnotiz, die Herkunft ist `derived`.
+
 Die Grenzen dieser Zeichen sind Regeln mit eigener Kennung: eine Stärke gehört nur an die Grenze
 mit taktischer Stärke, eine zweite Darstellung gibt es nur bei der Escape Route (Fluchtweg) und
 beim kontaminierten Tier, ein Wetterzeichen trägt höchstens die Wolke und einen Niederschlag. Ein
@@ -260,6 +265,7 @@ als Wert zurück.
 | Bild | Spec |
 |---|---|
 | Tierzustand (5.8.6) | `{ kind: 'animal-state', state }` |
+| Tier ohne Zustand (abgeleitet) | `{ kind: 'animal-state' }` |
 | Wetter (5.8.7) | `{ kind: 'weather', values: [wert] }` |
 | Personenzustand (5.8.8), erste Darstellung | `{ kind: 'person', states: [wert] }` |
 | Hinweis „?“ oder „!“ in der zweiten Darstellung (5.8.1.13, 5.8.1.14) | `{ kind: 'hazard', states: [wert] }` |

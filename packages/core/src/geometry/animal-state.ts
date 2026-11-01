@@ -1,5 +1,6 @@
 import { DEFAULT_VIEWBOX_MM, type AnimalStateParameters, type Drawing } from '@einsatzzeichen/schema';
-import { ANIMAL_STATES } from './pictograms/states/06-animals.js';
+import { noteDerivation } from '../derive/record.js';
+import { ANIMAL_STATES, ANIMAL_WITHOUT_STATE } from './pictograms/states/06-animals.js';
 
 /**
  * Tierzustand aus 5.8.6 als freistehendes Zeichen (LFH-577). Maße an der Referenz abgelesen,
@@ -16,8 +17,23 @@ import { ANIMAL_STATES } from './pictograms/states/06-animals.js';
  * Kreisen und Strichen (`5.8.6.2_kontaminiertes Tier_K`). Mehrere Zustände an einem Tier zeigt
  * kein Original; dass das kontaminierte Tier den Strich des erkrankten mitführt, ist ein Hinweis,
  * aber kein Beleg für eine Kombinationsregel.
+ *
+ * Ohne Zustand (LLH-1343) zeichnet die Funktion nur die Silhouette des erkrankten und toten Tiers
+ * und meldet das als Ableitung (`Drawing.derivations`): kein Original zeigt ein Tier ohne Zustand.
  */
 export function animalStateDrawing(parameters: AnimalStateParameters): Drawing {
+  if (parameters.state === undefined) {
+    if (parameters.variant === 'alternative') {
+      throw new Error('Tier ohne Zustand: eine zweite Darstellung gibt es nur beim kontaminierten Tier (5.8.6.2_kontaminiertes Tier_K).');
+    }
+    noteDerivation({
+      dimension: 'state',
+      part: 'Tier ohne Zustand: Silhouette ohne Strich und Kreuz',
+      basis: 'transferred',
+      from: '5.8.6.1_erkranktes Tier.svg, 5.8.6.3_Totes Tier.svg',
+    });
+    return { viewBox: { ...DEFAULT_VIEWBOX_MM }, children: ANIMAL_WITHOUT_STATE, title: 'Tier' };
+  }
   const variant = parameters.variant ?? 'primary';
   const definition = ANIMAL_STATES.find(
     (candidate) => candidate.id === `state.${parameters.state}` && candidate.variant === variant,
