@@ -1,6 +1,6 @@
 {
   "name": "@einsatzzeichen/qgis",
-  "version": "6.9.0",
+  "version": "6.10.0",
   "type": "module",
   "description": "QGIS-Symbolbibliothek-Export für Einsatzzeichen",
   "license": "MIT",

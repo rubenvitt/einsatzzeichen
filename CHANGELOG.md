@@ -1,3 +1,24 @@
+## [6.10.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.9.0...v6.10.0) (2026-11-01)
+
+### Katalog & Rendering
+
+- **Neu: Tier ohne Zustand.** `{ kind: 'animal-state' }` lässt sich jetzt ohne `state` angeben. Gezeichnet wird die Silhouette des erkrankten bzw. toten Tiers (5.8.6.1, 5.8.6.3), aber ohne Strich und ohne Kreuz. Das entspricht der Person ohne Zustand (5.8.8.1), die als Raute ohne Verletzungsstrich erscheint.
+  - Kein Original zeigt dieses Zeichen. Die Herkunft ist deshalb `derived`, und die Zeichnung enthält eine Ableitungsnotiz in `Drawing.derivations`.
+  - Die Notiz ist auch dabei, wenn `animalStateDrawing` direkt aufgerufen wird.
+  - Die Beschreibung lautet „Tier“.
+  - Die zweite Darstellung gibt es ohne Zustand nicht. Wer sie trotzdem anfordert, erhält `animal-state-variant-not-available`.
+- **Schema:** `AnimalStateSpec.state` und `AnimalStateParameters.state` sind jetzt optional. Code, der `state` aus gelesenen Parametern auswertet, sollte den Fall ohne Zustand (`undefined`) berücksichtigen.
+
+### Website
+
+- Im Baukasten gibt es für Tiere den neuen Eintrag „— ohne Zustand —“.
+- Die Dokumentation zum Paket core beschreibt das Tier ohne Zustand.
+
+### Abhängigkeiten
+
+- maplibre-gl wurde auf 6.16.0 aktualisiert.
+- Astro, Starlight und `@astrojs/react` für die Website sind auf neuere Versionen aktualisiert.
+
 ## [6.9.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.8.0...v6.9.0) (2026-10-21)
 
 ### Website – Katalog
