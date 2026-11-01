@@ -1,5 +1,5 @@
 import { DEFAULT_VIEWBOX_MM, type AnimalStateParameters, type Drawing } from '@einsatzzeichen/schema';
-import { noteDerivation } from '../derive/record.js';
+import { collectDerivations, noteDerivation } from '../derive/record.js';
 import { ANIMAL_STATES, ANIMAL_WITHOUT_STATE } from './pictograms/states/06-animals.js';
 
 /**
@@ -26,13 +26,16 @@ export function animalStateDrawing(parameters: AnimalStateParameters): Drawing {
     if (parameters.variant === 'alternative') {
       throw new Error('Tier ohne Zustand: eine zweite Darstellung gibt es nur beim kontaminierten Tier (5.8.6.2_kontaminiertes Tier_K).');
     }
-    noteDerivation({
-      dimension: 'state',
-      part: 'Tier ohne Zustand: Silhouette ohne Strich und Kreuz',
-      basis: 'transferred',
-      from: '5.8.6.1_erkranktes Tier.svg, 5.8.6.3_Totes Tier.svg',
+    // Eigener Sammler: auch ein direkter Aufruf trägt die Notiz in `derivations`.
+    return collectDerivations(() => {
+      noteDerivation({
+        dimension: 'state',
+        part: 'Tier ohne Zustand: Silhouette ohne Strich und Kreuz',
+        basis: 'transferred',
+        from: '5.8.6.1_erkranktes Tier.svg, 5.8.6.3_Totes Tier.svg',
+      });
+      return { viewBox: { ...DEFAULT_VIEWBOX_MM }, children: ANIMAL_WITHOUT_STATE, title: 'Tier' };
     });
-    return { viewBox: { ...DEFAULT_VIEWBOX_MM }, children: ANIMAL_WITHOUT_STATE, title: 'Tier' };
   }
   const variant = parameters.variant ?? 'primary';
   const definition = ANIMAL_STATES.find(

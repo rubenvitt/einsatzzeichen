@@ -29,9 +29,11 @@ describe('Tierzustand', () => {
   });
 
   it('zeichnet ohne Zustand nur die Silhouette, als Ableitung gemeldet (LLH-1343)', () => {
-    let drawing: ReturnType<typeof animalStateDrawing> | undefined;
-    const collected = collectDerivations(() => (drawing = animalStateDrawing({})));
-    expect(drawing?.title).toBe('Tier');
+    const direct = animalStateDrawing({});
+    expect(direct.title).toBe('Tier');
+    expect(direct.derivations).toEqual([expect.objectContaining({ dimension: 'state', basis: 'transferred' })]);
+    // In einem äußeren Sammler (drawFreestanding) erscheint die Notiz genau einmal.
+    const collected = collectDerivations(() => animalStateDrawing({}));
     expect(collected.children).toHaveLength(1);
     const [silhouette] = collected.children;
     const sick = animalStateDrawing({ state: 'sick-animal' }).children[0];
