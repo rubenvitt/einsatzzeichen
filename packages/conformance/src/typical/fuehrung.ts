@@ -64,7 +64,7 @@ export const TYPICAL_FUEHRUNG = {
       labels: { center: 'FüKW' },
     },
     pattern: ['E.2.19', 'E.2.1'],
-    context: 'Führungskraftwagen einer Bereitschaft oder eines Zugtrupps der Hilfsorganisationen; Kürzel und Bauart wie der FüKW des THW (E.2.19), in der weißen Fassung.',
+    context: 'Führungskraftwagen einer Bereitschaft oder eines Zugtrupps der Hilfsorganisationen; Kürzel wie beim FüKW des THW (E.2.19), aber in der weißen Fassung und wie der KdoW straßenfähig (Kategorie 1, E.2.1).',
     aliases: ['FüKw', 'Führungskraftwagen', 'Führungsfahrzeug Bereitschaft'],
   },
   'fuehrung.fuehrungsfahrzeug-sanitaetszug': {
