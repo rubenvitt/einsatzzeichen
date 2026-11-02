@@ -53,6 +53,20 @@ export const TYPICAL_FUEHRUNG = {
     context: 'Kommandowagen nach DIN 14507-1 für Führungskräfte (Bereitschaftsleitung, Verbandführer, Fachberater) der Hilfsorganisationen.',
     aliases: ['Kommandowagen', 'Kommandofahrzeug', 'PKW Führung'],
   },
+  'fuehrung.fuekw': {
+    title: 'Führungskraftwagen Hilfsorganisation',
+    abbreviation: 'FüKW',
+    group: 'fuehrung',
+    spec: {
+      kind: 'vehicle-land',
+      organization: 'hilfsorganisation',
+      vehicleCategory: 'kfz-kategorie-1',
+      labels: { center: 'FüKW' },
+    },
+    pattern: ['E.2.19', 'E.2.1'],
+    context: 'Führungskraftwagen einer Bereitschaft oder eines Zugtrupps der Hilfsorganisationen; Kürzel und Bauart wie der FüKW des THW (E.2.19), in der weißen Fassung.',
+    aliases: ['FüKw', 'Führungskraftwagen', 'Führungsfahrzeug Bereitschaft'],
+  },
   'fuehrung.fuehrungsfahrzeug-sanitaetszug': {
     title: 'Führungsfahrzeug Sanitätszug',
     abbreviation: 'ELW',
