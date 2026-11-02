@@ -52,6 +52,23 @@ describe('Übertragung innerhalb der Körperfamilie', () => {
     expect(points[3]![0]).toBeCloseTo(16 + 5 * k, 2);
   });
 
+  it('zieht die Sanitätsteilung der Einsatzkraft ohne Kappe bis in die Spitze (ESZ-147)', () => {
+    // D.3.9 beginnt die Senkrechte unter der Kappe; die Einsatzkraft (ESZ-116) trägt keine.
+    const [vertical, horizontal] = lines(marksOf({ kind: 'person', bodyMarks: ['medical-service'] }));
+    expect(vertical).toMatchObject({ x1: 16, x2: 16, y2: 31 });
+    expect(vertical!.y1).toBeCloseTo(1, 6);
+    expect(horizontal).toMatchObject({ x1: 1, y1: 16, x2: 31, y2: 16 });
+    // Mit Kappe bleibt die Senkrechte unter ihr: Zugführer Sanitätszug, vermessen.
+    const capped = lines(marksOf({
+      kind: 'person',
+      organization: 'hilfsorganisation',
+      strength: 'zug',
+      functionRole: 'medical-platoon-commander',
+      bodyMarks: ['medical-service'],
+    }));
+    expect(capped[0]!.y1).toBeCloseTo(10, 6);
+  });
+
   it('verschiebt eine Anhängermarke mit der verschobenen Anhängerhülle', () => {
     const measured = measuredBodyMark('trailer-diving' as BodyMarkId, { kind: 'trailer' }, {
       minX: 4, minY: 5.75, maxX: 31, maxY: 26,

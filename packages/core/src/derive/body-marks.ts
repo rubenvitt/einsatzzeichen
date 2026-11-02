@@ -467,10 +467,10 @@ function transfer(
   const { primitives, sourceRegion, targetRegion, map, flush } =
     transferPlan(id, source, context, bodyBoundsMm);
   const snapKey = flush ? targetRegion.key : '';
-  const result = primitives.map((primitive) =>
+  const mapped = primitives.map((primitive) =>
     mapShared(map, primitive, `${sourceRegion.key}>${snapKey}`, () => {
-      const mapped = mapPrimitive(map, primitive);
-      return flush ? snapToContour(primitive, mapped, sourceRegion, targetRegion) : mapped;
+      const moved = mapPrimitive(map, primitive);
+      return flush ? snapToContour(primitive, moved, sourceRegion, targetRegion) : moved;
     }));
   noteDerivation({
     dimension: 'bodyMarks',
@@ -481,6 +481,50 @@ function transfer(
       (source.vehicleCategory === undefined ? '' : `/${source.vehicleCategory}`) +
       (source.rendition === undefined ? '' : `#${source.rendition}`),
   });
+  return id === 'medical-service' && isUncappedPerson(context, bodyBoundsMm)
+    ? medicalCrossToApex(mapped, targetRegion.bounds)
+    : mapped;
+}
+
+/**
+ * Die Raute der Einsatzkraft ohne Kappe (ESZ-116): die Grundzeichnung der Person, nicht die Hülle
+ * einer Funktionsfassung. Nur an ihr fehlt die Kappe, unter der die vermessene Fassung endet.
+ */
+function isUncappedPerson(context: BodyMarkContext, bounds: BoundsMm): boolean {
+  if (context.kind !== 'person' || context.bodyVariant !== undefined) return false;
+  const base = bodyBoundsMm('person', undefined);
+  return (
+    Math.abs(bounds.minX - base.minX) < 1e-6 &&
+    Math.abs(bounds.minY - base.minY) < 1e-6 &&
+    Math.abs(bounds.maxX - base.maxX) < 1e-6 &&
+    Math.abs(bounds.maxY - base.maxY) < 1e-6
+  );
+}
+
+/**
+ * Die Sanitätsteilung der Person ist an D.3.9 vermessen: Die senkrechte Linie beginnt dort unter
+ * der Kappe. Die Einsatzkraft trägt keine Kappe, also läuft die Linie bis in die obere Spitze,
+ * wie die waagerechte von Spitze zu Spitze (Ruben, 2. November 2026, ESZ-147).
+ */
+function medicalCrossToApex(primitives: readonly Primitive[], target: BoundsMm): readonly Primitive[] {
+  const centerX = (target.minX + target.maxX) / 2;
+  let extended = false;
+  const result = primitives.map((primitive) => {
+    if (primitive.type !== 'line') return primitive;
+    if (Math.abs(primitive.x1 - centerX) > 0.01 || Math.abs(primitive.x2 - centerX) > 0.01) return primitive;
+    extended = true;
+    return primitive.y1 <= primitive.y2
+      ? { ...primitive, y1: target.minY }
+      : { ...primitive, y2: target.minY };
+  });
+  if (extended) {
+    noteDerivation({
+      dimension: 'bodyMarks',
+      part: 'medical-service an person/normal: senkrechte Linie bis in die Spitze, die Raute trägt keine Kappe',
+      basis: 'constructed',
+      from: 'D.3.9',
+    });
+  }
   return result;
 }
 
