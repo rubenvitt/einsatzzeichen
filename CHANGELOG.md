@@ -1,3 +1,23 @@
+## [6.11.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.10.0...v6.11.0) (2026-11-02)
+
+### Katalog
+
+- **Neues Register für typische Einsatzmittel:** `@einsatzzeichen/conformance` exportiert neben `RECIPES` jetzt `TYPICAL_SYMBOLS`. Das Register enthält 258 gängige Fahrzeuge, Einheiten und Personen, für die es in der Baseline noch kein Beispiel gab. Der Schwerpunkt liegt auf dem Katastrophenschutz der weißen Hilfsorganisationen.
+  - Für jedes Sachgebiet gibt es eine eigene Datei. Alle Einträge sind nach vermessenen Rezepten aufgebaut.
+  - Eine automatische Prüfung stellt sicher, dass jeder Eintrag gültig ist, gezeichnet werden kann und kein Duplikat eines Eintrags aus `RECIPES` ist.
+- **Neu:** Führungskraftwagen der Hilfsorganisationen (FüKW). Der Kontext nennt die Fahrzeugkategorie.
+- **Neu:** Zugtrupp ohne Fachdienst. Die Zugtrupps im Register verwenden die Variante mit drei Aussparungen.
+
+### Rendering
+
+- **Zugtrupp mit drei Aussparungen auch an der Führungskraft:** Bei einer Führungskraft wird die Kappe des Zugtrupps mit drei Aussparungen jetzt in deren eigene Kappe gesetzt, nicht mehr als Balken darunter. Der Zugtruppführer trägt diese Kappe.
+- **Korrektur der Sanitätsteilung:** Bei der Raute einer Einsatzkraft ohne Kappe endete die senkrechte Linie bisher 5 mm unter der Spitze. Jetzt reicht sie bis in die Spitze. Mit Kappe bleibt die Darstellung unverändert.
+
+### Website
+
+- Typische Einsatzmittel erscheinen als fünfte Art „typisch“ und haben eine eigene Seite.
+- Die Website erklärt jetzt genau, wie die typischen Einsatzmittel doppelt geprüft werden.
+
 ## [6.10.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.9.0...v6.10.0) (2026-11-01)
 
 ### Katalog & Rendering
