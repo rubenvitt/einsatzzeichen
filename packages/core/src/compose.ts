@@ -1708,6 +1708,11 @@ function composeMeasuredOrDerived(
       // auch sie müssen den Funktionsläufen ausweichen.
       composedMarks === undefined ? spec : { ...spec, bodyMarks: composedMarks },
     );
+    // Die Aussparungen der Zugtruppkappe (D.1.9#alternative) liegen **in** der Kappe der
+    // Führungskraft, also über ihr; alle anderen Marken liegen unter den Dekorationen.
+    const hasCapHoleRow = (composedMarks ?? []).some((id) => id.endsWith('-three-hole-row'));
+    const inCap = (primitive: Primitive): boolean =>
+      hasCapHoleRow && primitive.type === 'circle' && primitive.style?.fill === 'weiss';
     return {
       viewBox: DEFAULT_VIEWBOX_MM,
       children: [
@@ -1717,8 +1722,9 @@ function composeMeasuredOrDerived(
         ...roleLayout.extras,
         ...chassisPrimitives,
         ...fitFunctionRolePictograms(pictograms, roleLayout, roleDefinition, roleBodyMarks),
-        ...roleBodyMarks,
+        ...roleBodyMarks.filter((primitive) => !inCap(primitive)),
         ...roleLayout.decorations,
+        ...roleBodyMarks.filter(inCap),
         ...roleTextPrimitives,
         ...labelChildren,
         ...footPrimitives,

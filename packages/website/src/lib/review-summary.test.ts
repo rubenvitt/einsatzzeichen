@@ -71,8 +71,12 @@ describe('reviewSummary', () => {
     const totals = reviewSummaryOfRows(snapshot.coverage.matrix);
     expect(totals.technical.total).toBe(snapshot.coverage.matrix.length);
     expect(totals.domain.total).toBe(snapshot.coverage.matrix.length);
-    // Die Prüfliste zählt mehr als die Zeichenseiten: Bausteine ohne eigene Seite stehen darin.
-    expect(totals.domain.total).toBeGreaterThan(reviewSummary(snapshot.symbols).domain.total);
+    // Die Prüfliste zählt mehr als die Zeichenseiten mit eigener Zeile: Bausteine ohne eigene Seite
+    // stehen darin. Gegen alle Zeichen lässt sich das nicht mehr sagen: seit ESZ-147 stehen dort
+    // auch die typischen Einsatzmittel, die keine Zeile haben und deren Zahl noch wächst.
+    const withRow = snapshot.symbols.filter((symbol) => symbol.sourceId !== undefined).length;
+    expect(totals.domain.total).toBeGreaterThan(withRow);
+    expect(snapshot.coverage.matrix.some((row) => row.slug === undefined)).toBe(true);
   });
 
   it('zählt eine Abweichung nicht als ausstehend', () => {

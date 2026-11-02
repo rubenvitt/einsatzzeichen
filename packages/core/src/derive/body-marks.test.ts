@@ -52,6 +52,47 @@ describe('Übertragung innerhalb der Körperfamilie', () => {
     expect(points[3]![0]).toBeCloseTo(16 + 5 * k, 2);
   });
 
+  it('zieht die Sanitätsteilung der Einsatzkraft ohne Kappe bis in die Spitze (ESZ-147)', () => {
+    // D.3.9 beginnt die Senkrechte unter der Kappe; die Einsatzkraft (ESZ-116) trägt keine.
+    const [vertical, horizontal] = lines(marksOf({ kind: 'person', bodyMarks: ['medical-service'] }));
+    expect(vertical).toMatchObject({ x1: 16, x2: 16, y2: 31 });
+    expect(vertical!.y1).toBeCloseTo(1, 6);
+    expect(horizontal).toMatchObject({ x1: 1, y1: 16, x2: 31, y2: 16 });
+    // Mit Kappe bleibt die Senkrechte unter ihr: Zugführer Sanitätszug, vermessen.
+    const capped = lines(marksOf({
+      kind: 'person',
+      organization: 'hilfsorganisation',
+      strength: 'zug',
+      functionRole: 'medical-platoon-commander',
+      bodyMarks: ['medical-service'],
+    }));
+    expect(capped[0]!.y1).toBeCloseTo(10, 6);
+  });
+
+  it('setzt die Aussparungen der Zugtruppkappe in die Kappe der Führungskraft (ESZ-147)', () => {
+    const drawing = drawSymbol({
+      kind: 'person',
+      organization: 'hilfsorganisation',
+      strength: 'trupp',
+      functionRole: 'leader',
+      bodyMarks: ['formation-solid-cap-4mm-three-hole-row'],
+    });
+    const holes = drawing.children.filter(
+      (child) => child.type === 'circle' && child.role === 'pictogram',
+    ) as (Primitive & { type: 'circle' })[];
+    expect(holes).toHaveLength(3);
+    [13.9, 16, 18.1].forEach((cx, index) => expect(holes[index]!.cx).toBeCloseTo(cx, 6));
+    for (const hole of holes) {
+      expect(hole.style?.fill).toBe('weiss');
+      expect(hole.cy).toBeCloseTo(8.8, 6);
+    }
+    // Kein Balken unter der Kappe, und die Aussparungen liegen über ihr.
+    expect(drawing.children.some((child) => child.type === 'rect' && child.role === 'pictogram')).toBe(false);
+    const cap = drawing.children.findIndex((child) => child.type === 'polyline' && child.style?.fill === 'schwarz');
+    expect(cap).toBeGreaterThan(-1);
+    expect(drawing.children.indexOf(holes[0]!)).toBeGreaterThan(cap);
+  });
+
   it('verschiebt eine Anhängermarke mit der verschobenen Anhängerhülle', () => {
     const measured = measuredBodyMark('trailer-diving' as BodyMarkId, { kind: 'trailer' }, {
       minX: 4, minY: 5.75, maxX: 31, maxY: 26,

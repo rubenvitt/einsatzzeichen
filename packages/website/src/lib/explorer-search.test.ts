@@ -153,6 +153,21 @@ describe('searchSymbols', () => {
     expect(freestanding.map((symbol) => symbol.id)).toContain('comms.fax-transmission');
   });
 
+  it('läuft gegen den echten Snapshot: typische Einsatzmittel über Art und Abkürzung (ESZ-147)', () => {
+    const { symbols } = buildSnapshot();
+    const typical = searchSymbols(symbols, '', { kind: 'typical' });
+    expect(typical.length).toBeGreaterThan(0);
+    for (const symbol of typical) {
+      expect(symbol.chapter.startsWith('Typische Einsatzmittel: '), symbol.id).toBe(true);
+      // Abkürzung und weitere Suchbegriffe stehen in `synonyms` und finden das Zeichen.
+      for (const name of symbol.synonyms) {
+        expect(searchSymbols(symbols, name, { kind: 'typical' }), `${symbol.id}: ${name}`).toContain(
+          symbol,
+        );
+      }
+    }
+  });
+
   it('läuft gegen den echten Snapshot: technische Freigabe filtert korrekt', () => {
     const { symbols } = buildSnapshot();
     const approved = searchSymbols(symbols, '', { technical: 'approved' });
@@ -192,9 +207,14 @@ describe('facetOptions', () => {
     const summedOptionCounts = group.options.reduce((sum, option) => sum + option.count, 0);
     expect(group.total).toBe(symbols.length);
     const freestanding = symbols.filter((symbol) => symbol.kind === 'freestanding').length;
+    // Die typischen Einsatzmittel (ESZ-147) wachsen noch; wer von ihnen keine Organisation trägt,
+    // zählt deshalb gesondert, damit die 33 eine Aussage über die Vorlage bleiben.
+    const typicalWithout = symbols.filter(
+      (symbol) => symbol.kind === 'typical' && organizationOf(symbol) === undefined,
+    ).length;
     // Seit ESZ-117 acht mehr: die Behälterzeichen aus Kapitel 5.1 zeigt die Referenz weiss. Seit
     // ESZ-146 kommen die freistehenden Zeichen dazu: keines trägt eine Organisation.
-    expect(group.total - summedOptionCounts - freestanding).toBe(33);
+    expect(group.total - summedOptionCounts - freestanding - typicalWithout).toBe(33);
   });
 });
 

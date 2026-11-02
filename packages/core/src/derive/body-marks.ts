@@ -467,10 +467,10 @@ function transfer(
   const { primitives, sourceRegion, targetRegion, map, flush } =
     transferPlan(id, source, context, bodyBoundsMm);
   const snapKey = flush ? targetRegion.key : '';
-  const result = primitives.map((primitive) =>
+  const mapped = primitives.map((primitive) =>
     mapShared(map, primitive, `${sourceRegion.key}>${snapKey}`, () => {
-      const mapped = mapPrimitive(map, primitive);
-      return flush ? snapToContour(primitive, mapped, sourceRegion, targetRegion) : mapped;
+      const moved = mapPrimitive(map, primitive);
+      return flush ? snapToContour(primitive, moved, sourceRegion, targetRegion) : moved;
     }));
   noteDerivation({
     dimension: 'bodyMarks',
@@ -481,7 +481,83 @@ function transfer(
       (source.vehicleCategory === undefined ? '' : `/${source.vehicleCategory}`) +
       (source.rendition === undefined ? '' : `#${source.rendition}`),
   });
+  return id === 'medical-service' && isUncappedPerson(context, bodyBoundsMm)
+    ? medicalCrossToApex(mapped, targetRegion.bounds)
+    : mapped;
+}
+
+/**
+ * Die Raute der Einsatzkraft ohne Kappe (ESZ-116): die Grundzeichnung der Person, nicht die Hülle
+ * einer Funktionsfassung. Nur an ihr fehlt die Kappe, unter der die vermessene Fassung endet.
+ */
+function isUncappedPerson(context: BodyMarkContext, bounds: BoundsMm): boolean {
+  if (context.kind !== 'person' || context.bodyVariant !== undefined) return false;
+  const base = bodyBoundsMm('person', undefined);
+  return (
+    Math.abs(bounds.minX - base.minX) < 1e-6 &&
+    Math.abs(bounds.minY - base.minY) < 1e-6 &&
+    Math.abs(bounds.maxX - base.maxX) < 1e-6 &&
+    Math.abs(bounds.maxY - base.maxY) < 1e-6
+  );
+}
+
+/**
+ * Die Sanitätsteilung der Person ist an D.3.9 vermessen: Die senkrechte Linie beginnt dort unter
+ * der Kappe. Die Einsatzkraft trägt keine Kappe, also läuft die Linie bis in die obere Spitze,
+ * wie die waagerechte von Spitze zu Spitze (Ruben, 2. November 2026, ESZ-147).
+ */
+function medicalCrossToApex(primitives: readonly Primitive[], target: BoundsMm): readonly Primitive[] {
+  const centerX = (target.minX + target.maxX) / 2;
+  let extended = false;
+  const result = primitives.map((primitive) => {
+    if (primitive.type !== 'line') return primitive;
+    if (Math.abs(primitive.x1 - centerX) > 0.01 || Math.abs(primitive.x2 - centerX) > 0.01) return primitive;
+    extended = true;
+    return primitive.y1 <= primitive.y2
+      ? { ...primitive, y1: target.minY }
+      : { ...primitive, y2: target.minY };
+  });
+  if (extended) {
+    noteDerivation({
+      dimension: 'bodyMarks',
+      part: 'medical-service an person/normal: senkrechte Linie bis in die Spitze, die Raute trägt keine Kappe',
+      basis: 'constructed',
+      from: 'D.3.9',
+    });
+  }
   return result;
+}
+
+/** Die geschlossenen Kappen mit drei Aussparungen: der Zugtrupp (D.1.9#alternative, I.1.5). */
+const CAP_HOLE_ROWS: ReadonlySet<BodyMarkId> = new Set<BodyMarkId>([
+  'formation-solid-cap-4mm-three-hole-row',
+  'formation-solid-cap-3.7mm-three-hole-row',
+]);
+
+/**
+ * Der Zugtrupp trägt in seiner geschlossenen Kappe drei Aussparungen, die Stärke Trupp steht
+ * darüber (D.1.9#alternative, I.1.5). Die Führungskraft hat die Kappe schon: Die Aussparungen
+ * setzen sich in sie hinein, statt einen Balken unter die Kappe zu legen (Zugtruppführer,
+ * ESZ-147). Gemessen an der 26-mm-Raute: Kappe 5 mm tief, Aussparungen 3,8 mm unter der Spitze,
+ * 2,1 mm Abstand, Radius 0,85 mm; an anderen Hüllen im selben Verhältnis.
+ */
+function capHoleRow(bounds: BoundsMm): readonly Primitive[] {
+  const k = (bounds.maxY - bounds.minY) / 26;
+  const cx = (bounds.minX + bounds.maxX) / 2;
+  noteDerivation({
+    dimension: 'bodyMarks',
+    part: 'Kappe des Zugtrupps an der Führungskraft: drei Aussparungen in der Personenkappe',
+    basis: 'constructed',
+    from: 'D.1.9#alternative',
+  });
+  return [-2.1, 0, 2.1].map((dx) => ({
+    type: 'circle' as const,
+    role: 'pictogram' as const,
+    cx: cx + dx * k,
+    cy: bounds.minY + 3.8 * k,
+    r: 0.85 * k,
+    style: { fill: 'weiss' as const, stroke: 'none' as const },
+  }));
 }
 
 function isCapability(id: BodyMarkId): id is CapabilityId {
@@ -532,6 +608,9 @@ function derive(
   bodyBoundsMm: BoundsMm,
   cause: NotMeasuredError,
 ): readonly Primitive[] {
+  if (CAP_HOLE_ROWS.has(id) && context.kind === 'person' && !isUncappedPerson(context, bodyBoundsMm)) {
+    return capHoleRow(bodyBoundsMm);
+  }
   const source = transferSource(id, context);
   if (source !== undefined) return transfer(id, source, context, bodyBoundsMm);
   // Eine Fassungskennung, die für diese Marke nirgends vermessen ist, ist keine Lücke, sondern

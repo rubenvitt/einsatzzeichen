@@ -20,6 +20,7 @@ export type {
   SourceSummary,
   SymbolKind,
   SymbolSummary,
+  TypicalPattern,
 } from './snapshot-schema.js';
 export { assertSnapshot } from './snapshot-schema.js';
 

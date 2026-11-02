@@ -4,6 +4,8 @@ import {
   FREESTANDING_SPEC_FIXTURES,
   RECIPES,
   SOURCE_REGISTRY,
+  TYPICAL_GROUP_TITLES,
+  TYPICAL_SYMBOLS,
   checkCoverage,
   generativeReach,
   referenceInventory,
@@ -27,7 +29,7 @@ import {
 import { searchCatalog } from './builder-catalog.js';
 import { buildSnapshot } from './snapshot-build.js';
 import { freestandingSpecForRow, unlistedFreestandingFixtures } from './snapshot-freestanding.js';
-import { DERIVED_PLACE_CHAPTER } from './symbol-kinds.js';
+import { DERIVED_PLACE_CHAPTER, isTypicalChapter, typicalChapter } from './symbol-kinds.js';
 
 describe('buildSnapshot', () => {
   const snap = buildSnapshot(new Date('2026-08-28T00:00:00Z'));
@@ -272,6 +274,93 @@ describe('buildSnapshot', () => {
     });
   });
 
+  describe('typische Einsatzmittel (ESZ-147)', () => {
+    // Das Register wächst noch: nichts hier hängt an der Zahl der Einträge.
+    const typical = snap.symbols.filter((symbol) => symbol.kind === 'typical');
+    const entries = Object.entries(TYPICAL_SYMBOLS);
+    const byId = new Map(snap.symbols.map((symbol) => [symbol.id, symbol]));
+
+    it('führt jeden Eintrag des Registers genau einmal, unter seinem Schlüssel', () => {
+      expect(entries.length).toBeGreaterThan(0);
+      expect(typical.map((symbol) => symbol.id).sort()).toEqual(entries.map(([key]) => key).sort());
+      for (const [key, entry] of entries) {
+        const symbol = byId.get(key);
+        expect(symbol?.title, key).toBe(entry.title);
+        expect(symbol?.spec, key).toEqual(entry.spec);
+        expect(symbol?.chapter, key).toBe(typicalChapter(TYPICAL_GROUP_TITLES[entry.group]));
+        expect(symbol?.typical?.group, key).toBe(entry.group);
+        expect(symbol?.typical?.context, key).toBe(entry.context);
+      }
+    });
+
+    it('steht nach allen anderen Zeichen und ohne Zeile in Manifest und Matrix', () => {
+      const first = snap.symbols.findIndex((symbol) => symbol.kind === 'typical');
+      expect(snap.symbols.slice(first).every((symbol) => symbol.kind === 'typical')).toBe(true);
+      expect(snap.coverage.matrix.length).toBe(COVERAGE_MANIFEST.entries.length);
+      const slugs = new Set(typical.map((symbol) => symbol.slug));
+      expect(snap.coverage.matrix.filter((row) => slugs.has(row.slug ?? ''))).toEqual([]);
+    });
+
+    it('setzt an Stelle von Abschnitt, Quelle und Prüfstatus nur Belegtes', () => {
+      for (const symbol of typical) {
+        expect(symbol.sourceId, symbol.id).toBeUndefined();
+        expect(symbol.derivedFrom, symbol.id).toBeUndefined();
+        expect(symbol.contrastException, symbol.id).toBeUndefined();
+        expect(symbol.source.page, symbol.id).toBeUndefined();
+        expect(symbol.review, symbol.id).toEqual({
+          technical: { status: 'pending' },
+          domain: { status: 'pending' },
+        });
+        expect(symbol.evidence, symbol.id).toEqual([]);
+        expect(isTypicalChapter(symbol.chapter), symbol.id).toBe(true);
+      }
+    });
+
+    it('nennt jedes Muster mit Titel, Abschnitt und der Seite des vermessenen Rezepts', () => {
+      for (const [key, entry] of entries) {
+        const patterns = byId.get(key)?.typical?.patterns ?? [];
+        expect(patterns.map((pattern) => pattern.slug), key).toHaveLength(entry.pattern.length);
+        for (const [index, pattern] of patterns.entries()) {
+          const recipe = byId.get(`recipe.${entry.pattern[index]}`);
+          expect(recipe?.kind, `${key}: ${entry.pattern[index]}`).toBe('composition-recipe');
+          expect(pattern.slug).toBe(recipe?.slug);
+          expect(pattern.sourceId).toBe(recipe?.sourceId);
+          expect(pattern.variant).toBe(recipe?.variant);
+          expect(pattern.title).toBe(recipe?.title);
+          expect(pattern.chapter).toBe(recipe?.chapter);
+        }
+        // Quelle und Profil sind die des ersten Musters.
+        const first = byId.get(`recipe.${entry.pattern[0]}`);
+        expect(byId.get(key)?.source).toEqual({ id: first?.source.id, citation: first?.source.citation });
+        expect(byId.get(key)?.profile).toBe(first?.profile);
+      }
+    });
+
+    it('führt Abkürzung und weitere Suchbegriffe als andere Bezeichnungen', () => {
+      for (const [key, entry] of entries) {
+        const synonyms = byId.get(key)?.synonyms ?? [];
+        if (entry.abbreviation !== undefined && entry.abbreviation !== entry.title) {
+          expect(synonyms[0], key).toBe(entry.abbreviation);
+        }
+        for (const alias of entry.aliases ?? []) expect(synonyms, key).toContain(alias);
+        expect(new Set(synonyms).size, key).toBe(synonyms.length);
+      }
+    });
+
+    it('liefert keinen Referenzdateinamen aus', () => {
+      for (const symbol of typical) expect(JSON.stringify(symbol), symbol.id).not.toMatch(/\.svg/);
+    });
+
+    it('steht im Katalog des Baukastens, auch über die Abkürzung', () => {
+      for (const [key, entry] of entries) {
+        for (const query of [entry.title, entry.abbreviation].filter((q) => q !== undefined)) {
+          const { matches } = searchCatalog(snap.symbols, query, Number.MAX_SAFE_INTEGER);
+          expect(matches.map((symbol) => symbol.id), `${key}: ${query}`).toContain(key);
+        }
+      }
+    });
+  });
+
   it('führt alle Validierungsregeln und ein Builder-Vokabular', () => {
     expect(snap.ruleIds).toEqual([...VALIDATION_RULE_IDS]);
     expect(Object.keys(snap.builder).sort()).toEqual(
@@ -315,6 +404,7 @@ describe('buildSnapshot', () => {
     expect(bySourceId.get('bbk-babz-2025:J.1.1')?.chapter).toBe('Anhang J.1');
     for (const symbol of snap.symbols) {
       if (symbol.kind === 'derived-place') expect(symbol.chapter).toBe(DERIVED_PLACE_CHAPTER);
+      else if (symbol.kind === 'typical') expect(isTypicalChapter(symbol.chapter)).toBe(true);
       else expect(symbol.chapter).toMatch(/^(Kapitel|Anhang) /);
     }
   });

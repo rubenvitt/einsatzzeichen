@@ -20,7 +20,7 @@ import StatusPair from '../../components/StatusPair.astro';
 import { formatReviewDate } from '../../components/StatusPair.tsx';
 import { reviewSummary } from '../../lib/review-summary';
 import { loadSnapshot, type SymbolSummary } from '../../lib/snapshot';
-import { DERIVED_PLACE_CHAPTER } from '../../lib/symbol-kinds';
+import { DERIVED_PLACE_CHAPTER, isTypicalChapter } from '../../lib/symbol-kinds';
 
 const THUMBNAIL_SIZE = 64;
 
@@ -46,9 +46,12 @@ function anchor(chapter: string): string {
 
 /**
  * Kapitel vor Anhang — das ist die Reihenfolge des Aufbaus: erst die Grundzeichen, dann die Anhänge.
- * Die abgeleiteten Orte (LFH-1116) kommen zuletzt: sie stehen in keinem Abschnitt der Vorlage.
+ * Die abgeleiteten Orte (LFH-1116) kommen danach: sie stehen in keinem Abschnitt der Vorlage.
+ * Zuletzt die typischen Einsatzmittel (ESZ-147), je Sachgebiet eine Gruppe: sie haben gar keine
+ * Vorlage.
  */
 function rank(chapter: string): number {
+  if (isTypicalChapter(chapter)) return 3;
   if (chapter === DERIVED_PLACE_CHAPTER) return 2;
   return chapter.startsWith('Kapitel') ? 0 : 1;
 }
@@ -61,15 +64,28 @@ for (const symbol of snapshot.symbols) {
   else bucket.push(symbol);
 }
 
+/**
+ * Die Sachgebiete der typischen Einsatzmittel stehen in der Reihenfolge des Registers (Sanitäts-
+ * dienst zuerst), nicht alphabetisch: der Snapshot führt sie in dieser Reihenfolge, und die
+ * Insertion-Reihenfolge von `buckets` trägt sie hierher. Innerhalb eines Sachgebiets ebenso: das
+ * Register ordnet vom Fahrzeug zur Einheit, das Alphabet der Kennungen nicht.
+ */
+const chapterOrder = new Map([...buckets.keys()].map((chapter, index) => [chapter, index]));
+
 const groups: ChapterGroup[] = [...buckets.entries()]
   .map(([chapter, symbols]) => ({
     chapter,
     slug: anchor(chapter),
-    symbols: [...symbols].sort((left, right) => collator.compare(left.id, right.id)),
+    symbols: isTypicalChapter(chapter)
+      ? symbols
+      : [...symbols].sort((left, right) => collator.compare(left.id, right.id)),
   }))
   .sort(
     (left, right) =>
-      rank(left.chapter) - rank(right.chapter) || collator.compare(left.chapter, right.chapter),
+      rank(left.chapter) - rank(right.chapter) ||
+      (isTypicalChapter(left.chapter)
+        ? (chapterOrder.get(left.chapter) ?? 0) - (chapterOrder.get(right.chapter) ?? 0)
+        : collator.compare(left.chapter, right.chapter)),
   );
 
 // Gemessen an `dist/zeichen/index.html` (LFH-510), damit die nächste Person nicht neu messen muss.
@@ -109,6 +125,8 @@ const domainSentence =
       ? `Fachlich geprüft sind inzwischen alle ${domain.total}.`
       : `Fachlich geprüft sind ${domain.approved} von ${domain.total}.`;
 
+const typicalCount = snapshot.symbols.filter((symbol) => symbol.kind === 'typical').length;
+
 const frontmatter = {
   title: 'Zeichen',
   description:
@@ -126,6 +144,18 @@ const frontmatter = {
     den Gesamtstand. Ein Klick führt zum Zeichen — ansehen, als SVG oder PNG herunterladen, auf der
     Karte zeigen oder im Baukasten abwandeln.
   </p>
+
+  {
+    typicalCount > 0 && (
+      <p>
+        Am Ende {typicalCount === 1 ? 'steht ein typisches' : `stehen ${typicalCount} typische`}{' '}
+        Einsatzmittel, nach Sachgebiet geordnet: gängige
+        Fahrzeuge, Einheiten und Personen, die die Vorlage nicht als Beispiel führt. Sie sind aus
+        denselben Bausteinen zusammengesetzt und als Vorauswahl für Fahrzeuglisten, Pläne und
+        Lagekarten gedacht; ein Original, gegen das man sie prüfen könnte, gibt es nicht.
+      </p>
+    )
+  }
 
   {
     groups.map((group) => (

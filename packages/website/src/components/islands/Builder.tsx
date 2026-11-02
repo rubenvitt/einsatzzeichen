@@ -1721,6 +1721,16 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
                   {loadedSymbol.derivedFrom?.title ?? 'Leitstelle'}; die Vorschau ist dasselbe
                   Bild wie auf der Seite des Orts. Ein Original für das Ganze gibt es nicht.
                 </p>
+              ) : loadedSymbol.kind === 'typical' ? (
+                <p>
+                  Dieses Einsatzmittel führt die Vorlage nicht als Beispiel. Die Auswahl ist eine
+                  Vorbelegung aus den Bausteinen der Systematik, gebaut nach der Bauart von{' '}
+                  {(loadedSymbol.typical?.patterns ?? [])
+                    .map((pattern) => `„${pattern.title}“ (${pattern.section})`)
+                    .join(', ')}
+                  ; die Vorschau ist dasselbe Bild wie auf der Seite des Zeichens. Ein Original,
+                  gegen das man es prüfen könnte, gibt es nicht.
+                </p>
               ) : (
                 <p>
                   Für dieses Zeichen führt der Katalog selbst eine Bauanleitung. Die Vorschau

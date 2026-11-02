@@ -1,4 +1,11 @@
-import { COVERAGE_MANIFEST, RECIPES, composeFromCatalog, type Recipe } from '@einsatzzeichen/conformance';
+import {
+  COVERAGE_MANIFEST,
+  RECIPES,
+  TYPICAL_GROUP_TITLES,
+  composeFromCatalog,
+  type Recipe,
+  type TypicalSymbol,
+} from '@einsatzzeichen/conformance';
 import { BASE_SYMBOLS, drawPlace, type PlaceEntry } from '@einsatzzeichen/core';
 import {
   entryKey,
@@ -13,13 +20,14 @@ import { withoutReferenceFilenames } from './snapshot-redaction.js';
 import { reviewSetSummary } from './snapshot-review.js';
 import { chapterForSection, registryIdOf, sectionOf } from './snapshot-sections.js';
 import { citationOf } from './snapshot-sources.js';
-import type { SymbolSummary } from './snapshot.js';
-import { DERIVED_PLACE_CHAPTER } from './symbol-kinds.js';
+import type { SymbolSummary, TypicalPattern } from './snapshot.js';
+import { DERIVED_PLACE_CHAPTER, typicalChapter } from './symbol-kinds.js';
 
 /**
  * Aus einer Manifestzeile wird ein Zeichen des Snapshots — für Katalogeinträge und für Rezepte
  * getrennt, weil beide ihre Quelle, ihre Zeichnung und ihre `spec` verschieden herleiten. Die
- * abgeleiteten Orte (LFH-1116) haben keine Manifestzeile; sie kommen aus `PLACES` in `core`.
+ * abgeleiteten Orte (LFH-1116) haben keine Manifestzeile; sie kommen aus `PLACES` in `core`. Ebenso
+ * die typischen Einsatzmittel (ESZ-147) aus `TYPICAL_SYMBOLS` im Prüfpaket.
  *
  * Hier laufen die übrigen `snapshot-*`-Module zusammen: Abschnitte, Zitat, Kontrastausnahme,
  * Reviewmarken, Slug. Dass die Richtung nur diese eine ist — von den Blättern hierher und von hier
@@ -183,6 +191,96 @@ export function symbolForPlace(entry: PlaceEntry): SymbolSummary {
     legacyIds: [],
     review: { technical: { status: 'pending' }, domain: { status: 'pending' } },
     evidence: [],
+  };
+}
+
+/** Die Rezeptzeilen des Manifests nach Implementierung (`recipe.F.2.1`), für die Muster. */
+const RECIPE_ROWS = new Map<string, CoverageEntry>(
+  COVERAGE_MANIFEST.entries
+    .filter((row) => row.coverage === 'composition-recipe')
+    .map((row) => [row.implementation, row]),
+);
+
+/**
+ * Ein typisches Einsatzmittel als Zeichen des Snapshots (ESZ-147).
+ *
+ * Wie ein abgeleiteter Ort hat es kein Original und deshalb keine Manifest- und keine Matrixzeile.
+ * An die Stelle von Abschnitt, Quelle und Prüfstatus tritt, was das Register `TYPICAL_SYMBOLS`
+ * belegt:
+ *
+ * - **ID** ist der Registerschlüssel (`sanitaet.ktw-typ-b`), ohne Präfix: das Sachgebiet vorn
+ *   trennt ihn schon von jeder anderen Kennung, und so steht auf der Seite genau der Schlüssel,
+ *   unter dem das Prüfpaket den Eintrag führt.
+ * - **Abschnitt** → `typical.patterns`, die vermessenen Rezepte aus `pattern`, deren Bauart der
+ *   Eintrag übernimmt, mit Titel, Abschnitt und Slug ihrer Seite. Das Kapitel ist eine eigene
+ *   Gruppe je Sachgebiet (`typicalChapter`).
+ * - **Quelle** und **Profil** → die des ersten Musters, ohne Seitenangabe: die Bausteine stammen
+ *   aus dieser Systematik, das Einsatzmittel selbst zeigt sie nicht.
+ * - **Prüfstatus** → technisch und fachlich `pending`, ohne Notiz; keine Nachweisarten. Das
+ *   Review des Musters gilt dem Muster.
+ * - **Suche** → Abkürzung und `aliases` stehen in `synonyms`, die Suche und Seite schon lesen.
+ *
+ * Kein stiller Rückfall: ein Muster ohne Rezeptzeile im Manifest bricht die Erzeugung ab (Spec §7).
+ */
+export function symbolForTypical(key: string, entry: TypicalSymbol): SymbolSummary {
+  const rows = entry.pattern.map((pattern) => typicalPatternOf(key, pattern));
+  const first = rows[0];
+  if (first === undefined) {
+    throw new Error(`Typisches Einsatzmittel "${key}" nennt kein Muster.`);
+  }
+  const registryId = registryIdOf(first.row.sourceId);
+  const synonyms = [
+    ...new Set([entry.abbreviation, ...(entry.aliases ?? [])].filter(
+      (name): name is string => name !== undefined && name !== '' && name !== entry.title,
+    )),
+  ];
+  return {
+    id: key,
+    slug: slugForSymbolId(key),
+    title: entry.title,
+    kind: 'typical',
+    spec: structuredClone(entry.spec) as SymbolSummary['spec'],
+    drawing: withoutReferenceFilenamesInNotes(composeFromCatalog(entry.spec, entry.title)),
+    typical: {
+      group: entry.group,
+      context: withoutReferenceFilenames(entry.context),
+      patterns: rows.map(({ pattern }) => pattern),
+    },
+    variant: 'primary',
+    source: { id: registryId, citation: citationOf(registryId) },
+    chapter: typicalChapter(TYPICAL_GROUP_TITLES[entry.group]),
+    profile: first.row.profile,
+    synonyms,
+    legacyIds: [],
+    review: { technical: { status: 'pending' }, domain: { status: 'pending' } },
+    evidence: [],
+  };
+}
+
+function typicalPatternOf(
+  key: string,
+  pattern: string,
+): { pattern: TypicalPattern; row: CoverageEntry } {
+  const implementation = `${RECIPE_PREFIX}${pattern}`;
+  const row = RECIPE_ROWS.get(implementation);
+  const recipe: Recipe | undefined = (RECIPES as Record<string, Recipe>)[pattern];
+  if (row === undefined || recipe === undefined) {
+    throw new Error(
+      `Typisches Einsatzmittel "${key}" nennt das Muster "${pattern}", das nicht als Rezept ` +
+        'mit Rezeptzeile im Manifest steht.',
+    );
+  }
+  const section = sectionOf(row.sourceId);
+  return {
+    pattern: {
+      sourceId: row.sourceId,
+      variant: row.variant,
+      title: recipe.title,
+      section,
+      chapter: chapterForSection(section),
+      slug: slugForSymbolId(implementation),
+    },
+    row,
   };
 }
 
