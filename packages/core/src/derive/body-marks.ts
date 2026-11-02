@@ -528,6 +528,38 @@ function medicalCrossToApex(primitives: readonly Primitive[], target: BoundsMm):
   return result;
 }
 
+/** Die geschlossenen Kappen mit drei Aussparungen: der Zugtrupp (D.1.9#alternative, I.1.5). */
+const CAP_HOLE_ROWS: ReadonlySet<BodyMarkId> = new Set<BodyMarkId>([
+  'formation-solid-cap-4mm-three-hole-row',
+  'formation-solid-cap-3.7mm-three-hole-row',
+]);
+
+/**
+ * Der Zugtrupp trägt in seiner geschlossenen Kappe drei Aussparungen, die Stärke Trupp steht
+ * darüber (D.1.9#alternative, I.1.5). Die Führungskraft hat die Kappe schon: Die Aussparungen
+ * setzen sich in sie hinein, statt einen Balken unter die Kappe zu legen (Zugtruppführer,
+ * ESZ-147). Gemessen an der 26-mm-Raute: Kappe 5 mm tief, Aussparungen 3,8 mm unter der Spitze,
+ * 2,1 mm Abstand, Radius 0,85 mm; an anderen Hüllen im selben Verhältnis.
+ */
+function capHoleRow(bounds: BoundsMm): readonly Primitive[] {
+  const k = (bounds.maxY - bounds.minY) / 26;
+  const cx = (bounds.minX + bounds.maxX) / 2;
+  noteDerivation({
+    dimension: 'bodyMarks',
+    part: 'Kappe des Zugtrupps an der Führungskraft: drei Aussparungen in der Personenkappe',
+    basis: 'constructed',
+    from: 'D.1.9#alternative',
+  });
+  return [-2.1, 0, 2.1].map((dx) => ({
+    type: 'circle' as const,
+    role: 'pictogram' as const,
+    cx: cx + dx * k,
+    cy: bounds.minY + 3.8 * k,
+    r: 0.85 * k,
+    style: { fill: 'weiss' as const, stroke: 'none' as const },
+  }));
+}
+
 function isCapability(id: BodyMarkId): id is CapabilityId {
   return (CAPABILITY_IDS as readonly string[]).includes(id);
 }
@@ -576,6 +608,9 @@ function derive(
   bodyBoundsMm: BoundsMm,
   cause: NotMeasuredError,
 ): readonly Primitive[] {
+  if (CAP_HOLE_ROWS.has(id) && context.kind === 'person' && !isUncappedPerson(context, bodyBoundsMm)) {
+    return capHoleRow(bodyBoundsMm);
+  }
   const source = transferSource(id, context);
   if (source !== undefined) return transfer(id, source, context, bodyBoundsMm);
   // Eine Fassungskennung, die für diese Marke nirgends vermessen ist, ist keine Lücke, sondern

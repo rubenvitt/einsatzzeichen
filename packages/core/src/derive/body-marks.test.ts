@@ -69,6 +69,30 @@ describe('Übertragung innerhalb der Körperfamilie', () => {
     expect(capped[0]!.y1).toBeCloseTo(10, 6);
   });
 
+  it('setzt die Aussparungen der Zugtruppkappe in die Kappe der Führungskraft (ESZ-147)', () => {
+    const drawing = drawSymbol({
+      kind: 'person',
+      organization: 'hilfsorganisation',
+      strength: 'trupp',
+      functionRole: 'leader',
+      bodyMarks: ['formation-solid-cap-4mm-three-hole-row'],
+    });
+    const holes = drawing.children.filter(
+      (child) => child.type === 'circle' && child.role === 'pictogram',
+    ) as (Primitive & { type: 'circle' })[];
+    expect(holes).toHaveLength(3);
+    [13.9, 16, 18.1].forEach((cx, index) => expect(holes[index]!.cx).toBeCloseTo(cx, 6));
+    for (const hole of holes) {
+      expect(hole.style?.fill).toBe('weiss');
+      expect(hole.cy).toBeCloseTo(8.8, 6);
+    }
+    // Kein Balken unter der Kappe, und die Aussparungen liegen über ihr.
+    expect(drawing.children.some((child) => child.type === 'rect' && child.role === 'pictogram')).toBe(false);
+    const cap = drawing.children.findIndex((child) => child.type === 'polyline' && child.style?.fill === 'schwarz');
+    expect(cap).toBeGreaterThan(-1);
+    expect(drawing.children.indexOf(holes[0]!)).toBeGreaterThan(cap);
+  });
+
   it('verschiebt eine Anhängermarke mit der verschobenen Anhängerhülle', () => {
     const measured = measuredBodyMark('trailer-diving' as BodyMarkId, { kind: 'trailer' }, {
       minX: 4, minY: 5.75, maxX: 31, maxY: 26,
