@@ -30,7 +30,25 @@ export interface SourceSummary {
   review: { technical: ReviewSummary; domain: ReviewSummary };
 }
 
-export type SymbolKind = 'catalog-entry' | 'composition-recipe' | 'derived-place' | 'freestanding';
+export type SymbolKind =
+  | 'catalog-entry'
+  | 'composition-recipe'
+  | 'derived-place'
+  | 'freestanding'
+  | 'typical';
+
+/**
+ * Ein vermessenes Rezept, nach dessen Bauart ein typisches Einsatzmittel gebaut ist (ESZ-147):
+ * dieselbe Körperform, Marke oder Lage des Kürzels. `slug` ist die Seite des Rezepts.
+ */
+export interface TypicalPattern {
+  sourceId: string;
+  variant: 'primary' | 'alternative';
+  title: string;
+  section: string;
+  chapter: string;
+  slug: string;
+}
 
 export interface SymbolSummary {
   id: string;
@@ -41,7 +59,9 @@ export interface SymbolSummary {
    * LFH-1116 — als Ort aus der Leitstelle D.2.5 abgeleitet. Die dritte Art hat kein Original und
    * deshalb keine Manifestzeile; Beschriftung und Begründung in `symbol-kinds.ts`. Die vierte
    * (ESZ-146) steht ohne Grundzeichen auf der Karte: Pfeil, Linie, Wetter, Tierzustand, Zustand
-   * oder Piktogramm, gezeichnet aus einer `FreestandingSpec`.
+   * oder Piktogramm, gezeichnet aus einer `FreestandingSpec`. Die fünfte (ESZ-147) ist ein typisches
+   * Einsatzmittel aus `TYPICAL_SYMBOLS`: ohne Vorlage und ohne Manifestzeile, eine Vorbelegung für
+   * Anwendungen.
    */
   kind: SymbolKind;
   /**
@@ -55,7 +75,8 @@ export interface SymbolSummary {
    * Manifestschlüssel-Quelle, z. B. `bbk-babz-2025:E.1.1`. Fehlt bei `derived-place`: ein
    * abgeleiteter Ort hat keine Manifestzeile, und ein geborgter Schlüssel behauptete eine. Fehlt
    * ebenso bei den freistehenden Zeichen ohne Manifestzeile (Pfeile 5.2, Linien 2.14 bis 2.20,
-   * Wetterbeispiele 5.8.7): sie stehen im Referenzinventar als zurückgestellt.
+   * Wetterbeispiele 5.8.7): sie stehen im Referenzinventar als zurückgestellt. Und bei `typical`:
+   * ein typisches Einsatzmittel hat keine Referenzdatei.
    */
   sourceId?: string;
   /**
@@ -63,12 +84,19 @@ export interface SymbolSummary {
    * steht an Stelle von Abschnitt und Seite; `source` ist die Quelle dieser Zeile.
    */
   derivedFrom?: { sourceId: string; title: string; section: string; chapter: string };
+  /**
+   * Nur bei `typical` (ESZ-147): Sachgebiet (`TypicalGroupId`), der fachliche Bezug in einem Satz
+   * und die vermessenen Rezepte, deren Bauart das Einsatzmittel übernimmt. Sie stehen an Stelle von
+   * Abschnitt und Manifestschlüssel; Abkürzung und weitere Suchbegriffe stehen in `synonyms`.
+   */
+  typical?: { group: string; context: string; patterns: TypicalPattern[] };
   variant: 'primary' | 'alternative';
   source: { id: string; citation: string; page?: string };
   /**
    * Lesbare Kapitelbezeichnung, z. B. „Anhang E.1" oder „Kapitel 4.6". Abgeleitete Orte stehen
    * unter „Abgeleitete Orte" und nicht im Kapitel ihres Originals: dort behaupteten sie einen
-   * Abschnitt der Vorlage.
+   * Abschnitt der Vorlage. Typische Einsatzmittel stehen je Sachgebiet unter „Typische
+   * Einsatzmittel: …" (`typicalChapter`).
    */
   chapter: string;
   profile: string;

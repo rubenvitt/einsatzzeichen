@@ -15,7 +15,8 @@ export const matrix = snapshot.coverage.matrix;
 // eigener Seite. Wer beides vermischt, nennt eine Zahl, die es nicht gibt.
 export const listed = reviewSummaryOfRows(matrix);
 // Die Zeilen der Prüfliste, die eine eigene Seite haben. Nicht `symbols.length`: dort stehen auch
-// die abgeleiteten Orte und die freistehenden Zeichen ohne Zeile (ESZ-146).
+// die abgeleiteten Orte, die freistehenden Zeichen ohne Zeile (ESZ-146) und die typischen
+// Einsatzmittel (ESZ-147).
 export const rowsWithPage = matrix.filter((row) => row.slug !== undefined).length;
 export const clarifiedSources = snapshot.sources.filter((source) => source.status === 'clarified').length;
 // Die Herkunft der fachlichen Freigabe, aus den Daten belegt (`bulkDomainApproval`): ein Prüfer,

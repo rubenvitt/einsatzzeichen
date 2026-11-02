@@ -1,4 +1,4 @@
-import { COVERAGE_MANIFEST, SOURCE_REGISTRY } from '@einsatzzeichen/conformance';
+import { COVERAGE_MANIFEST, SOURCE_REGISTRY, TYPICAL_SYMBOLS } from '@einsatzzeichen/conformance';
 import { CONTRAST_EXCEPTIONS, PLACES } from '@einsatzzeichen/core';
 import { VALIDATION_RULE_IDS } from '@einsatzzeichen/core';
 import { entryKey } from '@einsatzzeichen/schema';
@@ -13,7 +13,12 @@ import {
 } from './snapshot-freestanding.js';
 import { toReviewSummary } from './snapshot-review.js';
 import { sourceSummaries } from './snapshot-sources.js';
-import { symbolForCatalogEntry, symbolForPlace, symbolForRecipe } from './snapshot-symbols.js';
+import {
+  symbolForCatalogEntry,
+  symbolForPlace,
+  symbolForRecipe,
+  symbolForTypical,
+} from './snapshot-symbols.js';
 import { builderVocabulary } from './snapshot-vocabulary.js';
 import type { CatalogSnapshot, MatrixRow, SymbolSummary } from './snapshot.js';
 
@@ -47,6 +52,10 @@ import type { CatalogSnapshot, MatrixRow, SymbolSummary } from './snapshot.js';
  * `FreestandingSpec` genau zeichnet, wird ein Zeichen mit Seite (und ihre Matrixzeile bekommt den
  * Slug); die Pfeile, Linien und Wetterbeispiele ohne Manifestzeile kommen zuletzt, wie die Orte
  * ohne Matrixzeile (`snapshot-freestanding.ts`).
+ *
+ * Ganz zuletzt die typischen Einsatzmittel aus `TYPICAL_SYMBOLS` (ESZ-147): gängige Fahrzeuge,
+ * Einheiten und Personen ohne Referenzdatei, also wie die Orte ohne Manifest- und Matrixzeile. Sie
+ * stehen am Ende, damit die Reihenfolge der übrigen Zeichen bleibt, wie sie war.
  */
 export function buildSnapshot(now: Date = new Date()): CatalogSnapshot {
   const symbols: SymbolSummary[] = [];
@@ -96,6 +105,8 @@ export function buildSnapshot(now: Date = new Date()): CatalogSnapshot {
   }
 
   for (const fixture of unlistedFreestandingFixtures()) add(symbolForUnlistedFreestanding(fixture));
+
+  for (const [key, entry] of Object.entries(TYPICAL_SYMBOLS)) add(symbolForTypical(key, entry));
 
   return {
     generatedAt: now.toISOString(),

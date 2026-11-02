@@ -132,6 +132,30 @@ describe('explorerFacetGroups', () => {
     expect(withFreestanding.organization.options.reduce((sum, o) => sum + o.count, 0)).toBe(2);
   });
 
+  it('führt typische Einsatzmittel als fünfte Art (ESZ-147)', () => {
+    const withTypical = explorerFacetGroups(
+      [
+        ...SYMBOLS,
+        makeSymbol({
+          id: 'sanitaet.beispiel',
+          title: 'Beispielfahrzeug',
+          kind: 'typical',
+          chapter: 'Typische Einsatzmittel: Sanitätsdienst',
+          spec: { kind: 'vehicle-land', organization: 'thw' },
+        }),
+      ],
+      VOCABULARY,
+      statusLabel,
+    );
+    expect(withTypical.kind.options).toContainEqual({
+      value: 'typical',
+      label: 'typisches Einsatzmittel, ohne Vorlage zusammengesetzt',
+      count: 1,
+    });
+    expect(validFacetValues(withTypical).art).toContain('typical');
+    expect(validFacetValues(withTypical).kapitel).toContain('Typische Einsatzmittel: Sanitätsdienst');
+  });
+
   it('leitet Kapitel und Profil ohne Vokabular ab', () => {
     expect(groups.chapter.options.map((o) => o.value)).toEqual(['Anhang E.1', 'Kapitel 4.6']);
     expect(groups.profile.options.map((o) => o.value)).toEqual(['bos', 'default']);

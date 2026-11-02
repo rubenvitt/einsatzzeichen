@@ -35,6 +35,13 @@
  * Referenzinventar zurückgestellt); für sie gibt es einen eigenen Satz zum Prüfstand und zu den
  * Nachweisen.
  *
+ * **Typische Einsatzmittel** (`kind: 'typical'`, ESZ-147) sind gängige Fahrzeuge, Einheiten und
+ * Personen aus `TYPICAL_SYMBOLS`, die die Vorlage nicht als Beispiel führt: kein Original, keine
+ * Zeile in der Prüfliste. An die Stelle von Abschnitt und Manifestschlüssel treten `typical`, der
+ * fachliche Bezug, und die vermessenen Muster, nach deren Bauart sie gebaut sind (mit Link auf
+ * deren Seite). Wie bei den Orten bekommt der offene Prüfstand einen eigenen Erklärsatz, und ein
+ * Hinweis sagt, wofür es sie gibt: als Vorbelegung für Anwendungen.
+ *
  * **Reviewnotizen.** 241 der 256 Zeichen tragen eine technische Notiz mit im Mittel 895 Zeichen,
  * geschrieben in der Fachsprache der Prüfung. Sie steht zugeklappt im Kopf und als Zitat
  * überschrieben — gleich ob Freigabe oder Abweichung. Dass es eine Abweichung gibt, sagt die
@@ -157,6 +164,16 @@ const FREESTANDING_UNLISTED_TECHNICAL_PENDING =
   '„Technisch noch nicht geprüft" heißt hier: das Zeichen ist nach seiner Datei aus der Vorlage ' +
   'gebaut, steht aber noch nicht in der Prüfliste. Freigegeben hat das Bild deshalb noch niemand.';
 
+/**
+ * Der technische Satz für ein typisches Einsatzmittel (ESZ-147). Wie beim Ort gibt es keine
+ * Vorlage; anders als beim Ort ist nichts von einem einzelnen Zeichen übernommen, sondern nach der
+ * Bauart vermessener Zeichen neu zusammengesetzt.
+ */
+const TYPICAL_TECHNICAL_PENDING =
+  '„Technisch noch nicht geprüft" heißt hier: für dieses Einsatzmittel gibt es kein Original, ' +
+  'gegen das man das Bild nachmessen könnte. Es ist aus den Bausteinen der Systematik nach der ' +
+  'Bauart vermessener Zeichen zusammengesetzt; das Bild als Ganzes hat niemand geprüft.';
+
 const DERIVED_PLACE_TECHNICAL_PENDING =
   '„Technisch noch nicht geprüft" heißt hier: für diesen Ort gibt es keine Vorlage, gegen die man ' +
   'das Bild nachmessen könnte. Seine Teile sind von einem vermessenen Zeichen übernommen, das Bild ' +
@@ -165,27 +182,42 @@ const DERIVED_PLACE_TECHNICAL_PENDING =
 /* --- Kopfdaten ---------------------------------------------------------------------------- */
 
 const derivedFrom = symbol.derivedFrom;
+const typical = symbol.typical;
 const freestanding: FreestandingSpec | undefined = isFreestandingSpec(symbol.spec)
   ? symbol.spec
   : undefined;
 /** Ein freistehendes Zeichen ohne Manifestzeile: Pfeil, Linie oder Wetterbeispiel. */
 const unlisted = freestanding !== undefined && symbol.sourceId === undefined;
 
+/** „„Krankentransportwagen“ (Anhang F.2, F.2.1)“ — ein Muster eines typischen Einsatzmittels. */
+const patternLabel = (pattern: { title: string; chapter: string; section: string }): string =>
+  `„${pattern.title}“ (${pattern.chapter}, ${pattern.section})`;
+
 const sourceLabel =
   derivedFrom !== undefined
     ? `abgeleitet aus „${derivedFrom.title}“ (${derivedFrom.chapter}, ${derivedFrom.section})`
-    : symbol.source.page === undefined
+    : typical !== undefined
+      ? `gebaut nach ${new Intl.ListFormat('de', { type: 'conjunction' }).format(
+          typical.patterns.map(patternLabel),
+        )}`
+      : symbol.source.page === undefined
       ? symbol.chapter
-      : `${symbol.chapter}, S. ${symbol.source.page}`;
+        : `${symbol.chapter}, S. ${symbol.source.page}`;
 
 const technicalMeaning =
   derivedFrom !== undefined && symbol.review.technical.status === 'pending'
     ? DERIVED_PLACE_TECHNICAL_PENDING
-    : unlisted && symbol.review.technical.status === 'pending'
-      ? FREESTANDING_UNLISTED_TECHNICAL_PENDING
-      : TECHNICAL_MEANING[symbol.review.technical.status];
+    : typical !== undefined && symbol.review.technical.status === 'pending'
+      ? TYPICAL_TECHNICAL_PENDING
+      : unlisted && symbol.review.technical.status === 'pending'
+        ? FREESTANDING_UNLISTED_TECHNICAL_PENDING
+        : TECHNICAL_MEANING[symbol.review.technical.status];
 
-/** Was an einem abgeleiteten Ort übernommen ist, in den Worten der Ableitungsnotizen. */
+/**
+ * Was an einem abgeleiteten Ort übernommen ist, in den Worten der Ableitungsnotizen. Ein typisches
+ * Einsatzmittel kann ebenfalls Ableitungen tragen (etwa ein Kürzel an einer Stelle, die die
+ * Vorlage nur an einem anderen Körper vermessen hat); sie stehen unter seinem Bezug.
+ */
 const derivedParts = (symbol.drawing.derivations ?? []).map((note) => note.part);
 
 /**
@@ -378,7 +410,15 @@ const headings = [
   { depth: 3, slug: 'nachweise', text: 'Nachweise' },
 ];
 
-const origin = derivedFrom !== undefined ? sourceLabel : `aus ${symbol.chapter}`;
+const patternIntro =
+  typical === undefined
+    ? ''
+    : `Gebaut nach der Bauart ${
+        typical.patterns.length === 1 ? 'dieses vermessenen Zeichens' : 'dieser vermessenen Zeichen'
+      }, mit derselben Körperform, Marke oder Lage des Kürzels:`;
+
+const origin =
+  derivedFrom !== undefined || typical !== undefined ? sourceLabel : `aus ${symbol.chapter}`;
 const description =
   `${symbol.title} ${origin}: Zeichen ansehen, als SVG oder PNG herunterladen, auf ` +
   'der Karte zeigen, im Baukasten abwandeln — mit Prüfstand, Herkunft und Codebeispielen.';
@@ -451,6 +491,17 @@ const description =
   }
 
   {
+    typical !== undefined && (
+      <p class="ez-hint">
+        Dieses Einsatzmittel führt die Vorlage nicht als Beispiel, und es gibt kein Original dafür.
+        Es ist eine Vorbelegung für Anwendungen, die eine Auswahl gängiger Fahrzeuge, Einheiten und
+        Personen brauchen — Fahrzeugliste, Plan, Lagekarte. Die beiden Dateien und der Baukasten
+        zeigen dasselbe Bild.
+      </p>
+    )
+  }
+
+  {
     freestanding !== undefined && (
       <p class="ez-hint">
         Dieses Zeichen steht ohne Grundzeichen auf der Karte. Die beiden Dateien und der Baukasten
@@ -502,6 +553,35 @@ const description =
             <li>{part}</li>
           ))}
         </ul>
+      </div>
+    )
+  }
+
+  {
+    typical !== undefined && (
+      <div class="ez-note">
+        <span class="ez-note__title">Typisches Einsatzmittel, kein Original in der Vorlage</span>
+        <p>{typical.context}</p>
+        <p>{patternIntro}</p>
+        <ul>
+          {typical.patterns.map((pattern) => (
+            <li>
+              <a href={`/zeichen/${pattern.slug}/`}>{pattern.title}</a> ({pattern.chapter},{' '}
+              {pattern.section}
+              {pattern.variant === 'alternative' && ', alternative Fassung'})
+            </li>
+          ))}
+        </ul>
+        {derivedParts.length > 0 && (
+          <>
+            <p>Abgeleitet, weil die Vorlage es so nicht vermessen hat:</p>
+            <ul>
+              {derivedParts.map((part) => (
+                <li>{part}</li>
+              ))}
+            </ul>
+          </>
+        )}
       </div>
     )
   }
@@ -595,6 +675,20 @@ const description =
       <p>
         Manifestschlüssel dieser Zeile: <code class="ez-id">{symbol.sourceId}</code> ·{' '}
         <a href={builderHref}>dieselbe Spec im Baukasten öffnen</a>
+      </p>
+    ) : typical !== undefined ? (
+      <p>
+        Kein Manifestschlüssel: ein typisches Einsatzmittel hat keine Referenzdatei und deshalb
+        keine Zeile im Coverage-Manifest. Es steht im Register{' '}
+        <code class="ez-mono">TYPICAL_SYMBOLS</code> des Prüfpakets unter{' '}
+        <code class="ez-id">{symbol.id}</code>; seine Muster sind die Zeilen{' '}
+        {typical.patterns.map((pattern, index) => (
+          <>
+            {index > 0 && ', '}
+            <code class="ez-id">{pattern.sourceId}</code>
+          </>
+        ))}{' '}
+        · <a href={builderHref}>dieselbe Spec im Baukasten öffnen</a>
       </p>
     ) : unlisted ? (
       <p>
@@ -708,6 +802,18 @@ const description =
         <code class="ez-mono">src/places.test.ts</code>) prüfen, dass jeder Ort Körper, Giebel,
         Kappe und Farbe der Leitstelle trägt, keine Funktion setzt und seine Ableitung in{' '}
         <code class="ez-mono">Drawing.derivations</code> kennzeichnet.
+      </p>
+    )
+  }
+
+  {
+    typical !== undefined && (
+      <p>
+        Ohne Zeile in der Prüfliste gibt es keine Nachweisarten. Die Tests im Prüfpaket
+        (<code class="ez-mono">@einsatzzeichen/conformance</code>,{' '}
+        <code class="ez-mono">src/typical/typical.test.ts</code>) prüfen, dass jeder Eintrag die
+        Regeln einhält und sich zeichnen lässt, sein Sachgebiet und vorhandene Muster nennt und weder
+        den Titel noch das Bild eines vermessenen Zeichens wiederholt.
       </p>
     )
   }
