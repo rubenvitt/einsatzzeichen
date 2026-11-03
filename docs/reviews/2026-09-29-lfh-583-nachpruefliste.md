@@ -352,7 +352,9 @@ Im Ledger hat sich seit dem 19.09. nichts geändert: 82 `approved`, 514 `pending
 | `4.2.2#primary` | PSNV | 4,90 % → 3,36 % | 41,65 % | **leicht abweichend.** Der Schriftzug ist jetzt so breit wie in der Referenz (vorher rund 16 % breiter), die Buchstaben sind aber etwas anders verteilt: Versatz bis etwa 0,4 mm. Der hohe Strichanteil kommt daher, dass fast jeder Buchstabe um eine Strichkante verschoben ist. |
 
 Die Geometrie (Dreieck, weiße Füllung) ist in allen vier Zeilen deckungsgleich. Vorschlag, die
-Entscheidung liegt beim Fachreviewer: 4.1.6 und 4.1.8 (Alternative) wie Gruppe A behandeln. Für
+Entscheidung liegt beim Fachreviewer: 4.1.6 und 4.1.8 (Alternative) wie Gruppe B behandeln.
+Die Fläche liegt unter 1 %, der Strichanteil mit 8,73 % bzw. 11,88 % aber über der Grenze von
+Gruppe A (3 %) und im Bereich von Gruppe B (3 bis 12 %): Kanten der Buchstaben. Für
 4.1.7 (Alternative) und 4.2.2 entscheiden, ob die Restabweichung der Schrift hinnehmbar ist
 (`approved`) oder als `deviation` mit Befund festgehalten wird.
 
