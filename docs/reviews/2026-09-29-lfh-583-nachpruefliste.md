@@ -6,6 +6,9 @@ Entscheidungsnotiz `docs/decisions/2026-09-19-masse-an-der-referenz-ablesen.md`
 Status: **Arbeitsliste, keine Entscheidung.** Die Liste bereitet die erneute fachliche Prüfung
 vor. Sie ändert weder Code noch Reviewstatus. Freigaben entstehen nur im Fachreview-Werkzeug.
 
+Aktueller Stand: **Nachtrag 03.11.2026** am Ende (ESZ-93). Er ersetzt die Suchhinweise und die
+Einschätzung der Gruppe C.
+
 ## Kurzfassung
 
 Im ersten Fachreview am 19.09.2026 wurden 93 Darstellungen als „falsch“ markiert. PR #56 hat
@@ -314,3 +317,82 @@ PR #78 (TypeScript 7) auf `main` gekommen. Vergleich mit `pnpm cli reference-dif
 aus Gruppe C sowie die zwölf Textzeilen aus dem Nachtrag oben ohnehin neu. Ein Vorschlag, die
 Entscheidung liegt beim Fachreviewer: die 89 Zeilen der Gruppen A und B jetzt prüfen, Gruppe C
 auf `pending` lassen und nach LFH-824 zusammen mit den zwölf Textzeilen ansehen.
+
+## Nachtrag 03.11.2026: Stand 6.11.0 (ESZ-93)
+
+Gemessen auf `main` bei `af46462` (Release 6.11.0) mit `pnpm cli reference-diff`, gleiche Methode
+wie oben. „Bei Freigabe“ und „19.09.“ heißt: derselbe Vergleich mit der Darstellung beim Merge von
+PR #56 (`6558607`), also dem Stand, auf dem die Freigaben vom 19.09. beruhen. Beide Stände wurden
+mit derselben Rasterung erzeugt und zusätzlich direkt Pixel gegen Pixel verglichen.
+
+Im Ledger hat sich seit dem 19.09. nichts geändert: 82 `approved`, 514 `pending`, keine
+`deviation`. Alle 93 Zeilen dieser Liste sind weiter offen.
+
+### Was sich geändert hat
+
+- **Gruppen A und B (89 Zeilen): unverändert.** Die Darstellung ist pixelgleich mit dem Stand
+  vom 19.09., die Kennzahlen in den Tabellen oben gelten weiter. Diese 89 können wie oben
+  beschrieben geprüft werden.
+- **Gruppe C (4 Zeilen): neu gesetzt.** Seit `db92b57` (13.10.) setzt der Katalog allen Text in
+  „Einsatzzeichen Sans“ (aus IBM Plex Sans abgeleitet) statt Arimo. Die Schriftfrage aus „Worauf
+  Sie achten sollten“ ist damit entschieden und umgesetzt. Alle vier liegen jetzt deutlich näher
+  an der Referenz, zwei sind deckungsgleich.
+- **Bereits freigegebene Zeilen (12 von 82) zeigen heute ein anderes Bild als bei der Freigabe.**
+  Es sind genau die zwölf Textzeilen aus dem Nachtrag vom 29.09. Geändert hat sich überall nur
+  die Schrift (`d9d55681` Arimo Medium, `db92b57` Einsatzzeichen Sans, bei 5.8.1.10 zusätzlich
+  `e193ee3f` Laufhöhe). Die übrigen 70 Freigaben sind pixelgleich mit dem Stand vom 19.09.
+
+### Gruppe C heute (4)
+
+| Schlüssel | Titel | Fläche 19.09. → heute | Strichanteil heute | Einschätzung |
+|---|---|---|---|---|
+| `4.1.6#alternative` | Atomare Stoffe | 1,53 % → 0,69 % | 8,73 % | **deckungsgleich.** Das „A“ deckt sich bis auf die Kanten mit der Referenz. |
+| `4.1.8#alternative` | Chemische Stoffe | 2,31 % → 0,91 % | 11,88 % | **deckungsgleich.** Das „C“ ist so breit wie in der Referenz, nur die Strichenden sind minimal anders geschnitten. |
+| `4.1.7#alternative` | Biologische Stoffe | 3,23 % → 1,47 % | 16,11 % | **leicht abweichend.** Das „B“ läuft etwa 10 % breiter und etwas kräftiger als in der Referenz (rund 0,7 mm bei 32 mm Zeichenbreite). |
+| `4.2.2#primary` | PSNV | 4,90 % → 3,36 % | 41,65 % | **leicht abweichend.** Der Schriftzug ist jetzt so breit wie in der Referenz (vorher rund 16 % breiter), die Buchstaben sind aber etwas anders verteilt: Versatz bis etwa 0,4 mm. Der hohe Strichanteil kommt daher, dass fast jeder Buchstabe um eine Strichkante verschoben ist. |
+
+Die Geometrie (Dreieck, weiße Füllung) ist in allen vier Zeilen deckungsgleich. Vorschlag, die
+Entscheidung liegt beim Fachreviewer: 4.1.6 und 4.1.8 (Alternative) wie Gruppe A behandeln. Für
+4.1.7 (Alternative) und 4.2.2 entscheiden, ob die Restabweichung der Schrift hinnehmbar ist
+(`approved`) oder als `deviation` mit Befund festgehalten wird.
+
+### Bereits freigegebene Zeilen mit neuem Bild (12)
+
+Die Freigaben stehen weiter im Ledger. Ob sie für die neue Schrift gelten, entscheidet der
+Fachreviewer. In allen zwölf ist nur der Text betroffen, die Geometrie ist unverändert.
+
+| Schlüssel | Titel | Fläche bei Freigabe → heute | Strichanteil heute | Was zu sehen ist |
+|---|---|---|---|---|
+| `E.1.1#primary` | Bergungsgruppe | 1,88 % → 0,95 % | 1,76 % | jetzt deckungsgleich, „B“ und „THW“ treffen die Referenz |
+| `E.1.2#primary` | Bergungsgruppe Abstützsystem Holz | 2,93 % → 1,44 % | 2,69 % | näher an der Referenz; Rest an „ASH“ und „THW“ |
+| `E.1.3#primary` | Einsatznachsorgeteam | 3,10 % → 1,17 % | 2,26 % | näher an der Referenz; Rest an „ENT“ und „THW“ |
+| `5.8.1.10#primary` | Gefahr durch Mineralöl | 0,87 % → 0,87 % | 11,99 % | „Ö“ etwas schmaler als in der Referenz, die Umlautpunkte sitzen rund 0,4 mm höher |
+| `5.8.2.1#primary` | Geringfügig erhöhte Aktivität / bis 25 Prozent Ausfall | 0,30 % → 0,31 % | 0,59 % | Ziffer neu gesetzt, deckungsgleich |
+| `5.8.2.2#primary` | Moderat erhöhte Aktivität / bis 50 Prozent Ausfall | 0,47 % → 0,34 % | 0,65 % | Ziffer neu gesetzt, deckungsgleich |
+| `5.8.2.3#primary` | Deutlich erhöhte Aktivität / bis 75 Prozent Ausfall | 0,56 % → 0,34 % | 0,65 % | Ziffer neu gesetzt, deckungsgleich |
+| `5.8.2.4#primary` | Stark erhöhte Aktivität / Totalausfall | 0,41 % → 0,44 % | 0,84 % | Ziffer neu gesetzt, deckungsgleich |
+| `5.8.6.2#alternative` | Kontaminiertes Tier | 0,39 % → 0,49 % | 10,25 % | „K“ so breit wie in der Referenz, aber rund 0,2 mm nach rechts versetzt |
+| `5.8.8.2#primary` | Person betroffen | 0,75 % → 0,44 % | 8,32 % | „B“ etwas breiter als in der Referenz, aber schmaler als bei der Freigabe |
+| `5.8.8.5#primary` | Person verletzt - Transportpriorität | 1,04 % → 0,49 % | 7,06 % | „TP“ jetzt so breit wie in der Referenz, vorher breiter |
+| `5.8.8.6#alternative` | Person kontaminiert | 0,40 % → 0,49 % | 7,71 % | wie 5.8.6.2: „K“ rund 0,2 mm nach rechts versetzt |
+
+Zehn der zwölf sind deckungsgleich, E.1.2 und E.1.3 liegen knapp über der Schwelle. Sieben sind
+näher an der Referenz als bei der Freigabe, 5.8.1.10 gleich weit, vier (5.8.2.1, 5.8.2.4, 5.8.6.2
+und 5.8.8.6) um höchstens 0,1 Punkte weiter weg.
+
+### So benutzen Sie die Liste heute
+
+1. Hauptcheckout auf aktuellem `main`, einmal `pnpm install` (pnpm 11.20), dann `pnpm review`.
+   Für „Referenz daneben“ muss `taktische-zeichen/` im Wurzelverzeichnis liegen.
+2. Suche `2025:4.` zeigt weiter genau die 91 offenen Zeilen aus Kapitel 4 (4.4.1 ist schon
+   freigegeben).
+3. `2025:c.1.` zeigt inzwischen **acht** offene Zeilen (C.1.2, C.1.3, C.1.4, C.1.7, C.1.8,
+   C.1.10, C.1.13, C.1.14). Zur Nachprüfung gehören nur zwei. Gezielt: `2025:c.1.2#` und
+   `2025:c.1.3#`.
+4. Die zwölf Textzeilen sind schon freigegeben und erscheinen deshalb nicht unter „nur offene
+   Zeilen“. Zum Ansehen den Haken entfernen und den Schlüssel suchen, etwa `2025:e.1.` oder
+   `2025:5.8.2.`.
+5. „nur offene Zeilen“ allein zeigt jetzt 514 offene Manifestzeilen, dazu Quellen und Profil.
+
+Kontaktbögen (Referenz, Stand 19.09., heute, Überlagerung) für Gruppe C und die zwölf Textzeilen
+liegen außerhalb des Repos, weil sie Referenzbilder enthalten.
