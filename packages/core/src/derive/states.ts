@@ -261,6 +261,11 @@ const MARGIN_GROUPS: readonly StateGroupId[] = ['tactics-hazards', 'activity', '
 interface Piece {
   readonly part?: Omit<PlacedStatePart, 'primitives'>;
   readonly primitives: readonly Primitive[];
+  /**
+   * Das letzte Primitiv ist die Kontur des Trägerkörpers (`damageOnBody`). Sie wird am Ende aus
+   * dem fertigen Körper neu gezogen, weil eine Randlage den Körper ersetzt (`replaceBody`).
+   */
+  readonly redrawsBodyOutline?: true;
 }
 
 function mapPieces(m: Mapping, pieces: readonly Piece[]): Piece[] {
@@ -296,8 +301,34 @@ function replaceBody(pieces: readonly Piece[], replace: (body: Primitive) => Pri
   );
 }
 
-function carrierHull(pieces: readonly Piece[]): ZoneBoundsMm {
-  return boundsOfMm(bodyOf(pieces.filter((piece) => piece.part === undefined).flatMap((piece) => piece.primitives)));
+function carrierBody(pieces: readonly Piece[]): Primitive {
+  return bodyOf(pieces.filter((piece) => piece.part === undefined).flatMap((piece) => piece.primitives));
+}
+
+/** Füllung eines Primitivs oder seines ersten gefüllten Kinds; `undefined` ohne Füllung. */
+function fillOf(primitive: Primitive): ColorToken | undefined {
+  const own = primitive.style?.fill;
+  if (own !== undefined && own !== 'none') return own;
+  if (primitive.type !== 'group') return undefined;
+  for (const child of primitive.children) {
+    const fill = fillOf(child);
+    if (fill !== undefined) return fill;
+  }
+  return undefined;
+}
+
+/**
+ * Die Fläche auf der Körpermitte: das Innenfeld einer weißen Innenkontur, wenn es eins gibt, sonst
+ * die Füllung des Körpers (LLH-1513).
+ */
+function carrierSurfaceFill(pieces: readonly Piece[]): ColorToken | undefined {
+  const carrier = pieces.filter((piece) => piece.part === undefined).flatMap((piece) => piece.primitives);
+  for (const primitive of carrier) {
+    if (primitive.role !== 'innerField') continue;
+    const fill = fillOf(primitive);
+    if (fill !== undefined) return fill;
+  }
+  return fillOf(bodyOf(carrier));
 }
 
 /** Waagerechte Ausdehnung aller Primitive, die das Band `top…bottom` schneiden. */
@@ -437,8 +468,81 @@ function fitBelowCanvasTop(pieces: readonly Piece[]): Piece[] {
   return mapPieces(fit, pieces);
 }
 
+/**
+ * Weiße Unterlegung je Seite der Schadensdiagonalen auf gleichfarbigem Körper (LLH-1513), so breit
+ * wie die Hinterlegung des dunklen Themes (`DARK_THEME.halo`, ESZ-119).
+ */
+const DAMAGE_CASING_SIDE_MM = 0.5;
+const DAMAGE_CASING_INK: ColorToken = 'weiss';
+
+/**
+ * Unterlegung der Schadensdiagonalen, wenn ihre Strichfarbe die Füllung des Körpers ist
+ * (LLH-1513): die Unterlegungen, danach die Diagonalen, danach die Kontur des Körpers noch einmal.
+ *
+ * **Anlass.** Die Diagonalen aus 5.8.4 sind rot und stehen auf der Körpermitte. Auf einem rot
+ * gefüllten Körper (Gefahr mit technischer Füllung `rot`, Formation der Feuerwehr) verschwinden sie
+ * in der Fläche: rot auf rot, in jedem Theme 1 : 1 (im Druckgrau `#666666` auf `#666666`), und die
+ * drei Stufen sind nicht mehr zu unterscheiden. Kein Original zeigt einen Schadensgrad an einem
+ * gefüllten Träger (belegt ist nur das Deichprofil in L.8 und L.9), DV 102 sieht dafür keine
+ * andere Farbe vor.
+ *
+ * **Regel.** Die Diagonalen bleiben rot. Unter jeder liegt ein weißer Strich, je Seite
+ * {@link DAMAGE_CASING_SIDE_MM} breiter; alle Unterlegungen stehen vor allen Diagonalen, damit sich
+ * kreuzende Diagonalen nicht gegenseitig anschneiden. Rot grenzt damit an Weiß wie auf der
+ * Ausgabeoberfläche, für die `DAMAGE_CONTRAST` gilt. Die Kontur des Körpers wird darüber noch
+ * einmal gezogen (`bodyExtra`, ohne Füllung): Die Unterlegung schnitte sie sonst dort, wo die
+ * Diagonalen sie kreuzen. Außerhalb des Körpers verschwindet das Weiß auf weißer Oberfläche; auf
+ * dunklem Grund wirkt es wie die Hinterlegung des Themes. Eine Gegenfarbe (schwarz oder weiß statt
+ * rot) gäbe die Farbe nach DV 102 auf und ist verworfen.
+ *
+ * **Nur bei gleicher Farbe.** Auf jeder anderen Füllung bleibt die Zeichnung bytegleich. Maßgeblich
+ * ist die Fläche unter den Diagonalen (`surfaceFill`): bei weißer Innenkontur das rote Innenfeld,
+ * nicht der weiße Körper.
+ */
+function damageOnBody(
+  lines: readonly Primitive[],
+  body: Primitive,
+  surfaceFill: ColorToken | undefined,
+): Pick<Piece, 'primitives' | 'redrawsBodyOutline'> {
+  const fill = surfaceFill;
+  if (fill === undefined || !lines.some((p) => p.style?.stroke === fill)) {
+    return { primitives: lines };
+  }
+  noteDerivation({
+    dimension: 'states',
+    part: `weiße Unterlegung der Schadensdiagonalen auf ${fill} gefülltem Körper`,
+    basis: 'constructed',
+    from: 'DAMAGE_CASING_SIDE_MM',
+  });
+  const casing = lines.map((p) => ({
+    ...p,
+    style: {
+      ...p.style,
+      stroke: DAMAGE_CASING_INK,
+      strokeWidth: (p.style?.strokeWidth ?? DEFAULT_STROKE_WIDTH_MM) + 2 * DAMAGE_CASING_SIDE_MM,
+    },
+  }));
+  return { primitives: [...casing, ...lines, bodyOutline(body)], redrawsBodyOutline: true };
+}
+
+/** Die Kontur eines Körpers ohne Füllung, als Zusatzkontur über der Zeichnung. */
+function bodyOutline(body: Primitive): Primitive {
+  return { ...body, role: 'bodyExtra', style: { ...body.style, fill: 'none' } };
+}
+
+/** Zieht die Konturen aus `damageOnBody` am fertigen Körper neu (nach Randlage und Verschiebung). */
+function redrawBodyOutlines(pieces: readonly Piece[]): Piece[] {
+  const body = carrierBody(pieces);
+  return pieces.map((piece) =>
+    piece.redrawsBodyOutline === true
+      ? { ...piece, primitives: [...piece.primitives.slice(0, -1), bodyOutline(body)] }
+      : piece,
+  );
+}
+
 /** Schadensgrad 5.8.4 auf dem Körper, um dessen Mitte (L.8, L.9). */
-function damagePiece(value: StateId, hull: ZoneBoundsMm): Piece {
+function damagePiece(value: StateId, body: Primitive, surfaceFill: ColorToken | undefined): Piece {
+  const hull = boundsOfMm(body);
   const definition = definitionOf(value, 'primary');
   const largest = union(definitionOf('destroyed', 'primary').primitives.map((p) => boundsOfMm(p)));
   const factor = Math.min(1, Math.min(width(hull), height(hull)) / width(largest));
@@ -458,7 +562,7 @@ function damagePiece(value: StateId, hull: ZoneBoundsMm): Piece {
   });
   return {
     part: { value, group: 'damage', zone: 'body', basis: 'transferred', reference: DAMAGE_REFERENCE },
-    primitives: definition.primitives.map((p) => mapDeep(m, p)),
+    ...damageOnBody(definition.primitives.map((p) => mapDeep(m, p)), body, surfaceFill),
   };
 }
 
@@ -575,7 +679,7 @@ export function layoutStateSign(input: StateSignInput): StateSignLayout {
 
   // 2. Schadensgrad auf dem Körper.
   for (const value of damage) {
-    sign = { ...sign, pieces: [...sign.pieces, damagePiece(value, carrierHull(sign.pieces))] };
+    sign = { ...sign, pieces: [...sign.pieces, damagePiece(value, carrierBody(sign.pieces), carrierSurfaceFill(sign.pieces))] };
   }
 
   let canvas: { width: number; height: number } = { width: CANVAS_32.width, height: CANVAS_32.height };
@@ -714,6 +818,7 @@ export function layoutStateSign(input: StateSignInput): StateSignLayout {
     };
   }
 
+  pieces = redrawBodyOutlines(pieces);
   const children = withMinRenderPx(pieces.flatMap((piece) => piece.primitives), canvas.width);
   const carrierPrimitives = withMinRenderPx(
     pieces.filter((piece) => piece.part === undefined).flatMap((piece) => piece.primitives),

@@ -9,6 +9,9 @@ import { drawSymbol } from '../default-ports.js';
 import { HEAD_GAP_MM } from '../layout/profiles.js';
 import { placeStates, type PlacedStatePart } from '../layout/state-placement.js';
 import { checkViewBox } from '../viewbox-gate.js';
+import { contrastRatio } from '../a11y/contrast.js';
+import { RENDER_THEMES } from '../geometry/render-themes.js';
+import { paintColor } from '../render/theme.js';
 
 const round3 = (value: number): number => Math.round(value * 1000) / 1000;
 
@@ -220,6 +223,107 @@ describe('Schadensgrad auf dem Körper (übertragen von L.8 und L.9)', () => {
     const plain = drawSymbol({ kind: 'formation', organization: 'thw' });
     const drawing = drawn({ kind: 'formation', organization: 'thw', states: ['damaged'] });
     expect(drawing.children.slice(0, plain.children.length)).toEqual(plain.children);
+  });
+});
+
+describe('Schadensgrad auf gleichfarbigem Körper (LLH-1513)', () => {
+  const GRADES = ['damaged', 'partially-destroyed', 'destroyed'] as const;
+
+  /** Die Primitive der Schadensmarke in Malreihenfolge. */
+  function damagePrimitives(drawing: Drawing): Primitive[] {
+    const first = drawing.children.findIndex((child) => child.type === 'line');
+    return drawing.children.slice(first).filter((child) => child.type === 'line' || child.role === 'bodyExtra');
+  }
+
+  const strokeOf = (p: Primitive): string | undefined => p.style?.stroke;
+
+  it('legt unter jede rote Diagonale auf rot gefüllter Gefahr eine weiße Unterlegung, je Seite 0,5 mm', () => {
+    for (const grade of GRADES) {
+      const drawing = drawn({ kind: 'hazard', technicalFill: 'rot', states: [grade] });
+      const marks = damagePrimitives(drawing);
+      const casing = marks.filter((p) => strokeOf(p) === 'weiss');
+      const red = marks.filter((p) => p.type === 'line' && strokeOf(p) === 'rot');
+      // 1, 2 bzw. 3 Diagonalen je Richtung.
+      expect(red).toHaveLength(2 * (GRADES.indexOf(grade) + 1));
+      expect(casing).toHaveLength(red.length);
+      casing.forEach((line, index) => {
+        const over = red[index] as Primitive;
+        expect(line).toMatchObject({ type: 'line', role: 'pictogram' });
+        expect(boundsOfMm(line)).toEqual(boundsOfMm(over));
+        expect(line.style?.strokeWidth).toBeCloseTo((over.style?.strokeWidth ?? 0.5) + 1, 6);
+      });
+      // Alle Unterlegungen vor allen Diagonalen: kreuzende Diagonalen schneiden einander nicht an.
+      const lastCasing = drawing.children.lastIndexOf(casing.at(-1) as Primitive);
+      const firstRed = drawing.children.indexOf(red[0] as Primitive);
+      expect(lastCasing).toBeLessThan(firstRed);
+      expect(drawing.derivations?.some((note) => note.part.includes('Unterlegung'))).toBe(true);
+    }
+  });
+
+  it('zieht die Kontur des Körpers über die Unterlegung, ohne Füllung', () => {
+    const drawing = drawn({ kind: 'hazard', technicalFill: 'rot', states: ['destroyed'] });
+    const last = drawing.children.at(-1) as Primitive;
+    const { role: _role, style: bodyStyle, ...bodyShape } = body(drawing);
+    const { role, style, ...shape } = last;
+    expect(role).toBe('bodyExtra');
+    expect(shape).toEqual(bodyShape);
+    expect(style).toEqual({ ...bodyStyle, fill: 'none' });
+  });
+
+  it('nimmt die Kontur vom fertigen Körper, auch neben Hinweis und Tendenz', () => {
+    for (const extra of [
+      { states: ['explosion-hazard', 'destroyed'] },
+      { states: ['suspected-situation', 'partially-destroyed'] },
+      { states: ['damaged'], tendency: 'tendency-rising' },
+    ] as const) {
+      const drawing = drawn({ kind: 'hazard', technicalFill: 'rot', ...extra } as SymbolSpec);
+      const outlines = drawing.children.filter((child) => child.role === 'bodyExtra');
+      expect(outlines).toHaveLength(1);
+      const { role: _a, style: _b, ...bodyShape } = body(drawing);
+      const { role: _c, style: _d, ...outlineShape } = outlines[0] as Primitive;
+      expect(outlineShape, JSON.stringify(extra)).toEqual(bodyShape);
+    }
+  });
+
+  it('gilt ebenso für die rot gefüllte Feuerwehr', () => {
+    const drawing = drawn({ kind: 'formation', organization: 'feuerwehr', states: ['partially-destroyed'] });
+    expect(drawing.children.filter((child) => child.style?.stroke === 'weiss')).toHaveLength(4);
+  });
+
+  it('richtet sich bei weißer Innenkontur nach dem roten Innenfeld, nicht nach dem weißen Körper', () => {
+    for (const spec of [
+      { kind: 'hazard', technicalFill: 'rot', whiteInnerContour: true, states: ['destroyed'] },
+      { kind: 'formation', organization: 'feuerwehr', whiteInnerContour: true, states: ['damaged'] },
+    ] as const) {
+      const drawing = drawn(spec as SymbolSpec);
+      expect(body(drawing).style?.fill, JSON.stringify(spec)).toBe('weiss');
+      const red = drawing.children.filter((child) => child.type === 'line' && child.style?.stroke === 'rot');
+      const casing = drawing.children.filter((child) => child.style?.stroke === 'weiss');
+      expect(casing, JSON.stringify(spec)).toHaveLength(red.length);
+      expect(drawing.children.at(-1)?.role).toBe('bodyExtra');
+    }
+    const gruen = drawn({ kind: 'hazard', technicalFill: 'gruen', whiteInnerContour: true, states: ['destroyed'] });
+    expect(gruen.children.some((child) => child.style?.stroke === 'weiss')).toBe(false);
+  });
+
+  it('lässt jede andere Füllung unverändert', () => {
+    for (const technicalFill of ['gruen', 'gelb', 'orange', 'grau'] as const) {
+      for (const grade of GRADES) {
+        const drawing = drawn({ kind: 'hazard', technicalFill, states: [grade] });
+        expect(drawing.children.some((child) => child.style?.stroke === 'weiss')).toBe(false);
+        expect(drawing.children.some((child) => child.role === 'bodyExtra')).toBe(false);
+        expect(drawing.derivations?.some((note) => note.part.includes('Unterlegung'))).toBe(false);
+      }
+    }
+    const plain = drawn({ kind: 'hazard', states: ['destroyed'] });
+    expect(plain.children.some((child) => child.style?.stroke === 'weiss')).toBe(false);
+  });
+
+  it('hält rot gegen die Unterlegung in jedem Theme über 3 : 1', () => {
+    for (const theme of Object.values(RENDER_THEMES)) {
+      const ratio = contrastRatio(paintColor(theme, 'rot', 'pictogram'), paintColor(theme, 'weiss', 'pictogram'));
+      expect(ratio, theme.id).toBeGreaterThanOrEqual(3);
+    }
   });
 });
 
