@@ -30,6 +30,8 @@ trifft jeden anderen rot gefüllten Träger, etwa eine Formation der Feuerwehr.
   Hinterlegung des dunklen Themes, ESZ-119). Rot grenzt damit an Weiß wie auf der
   Ausgabeoberfläche, für die der Vertrag gilt: 4,02 : 1 in Referenz, accessible-light und dark,
   5,74 : 1 im Druckgrau.
+- **Maßgeblich ist die Fläche unter den Diagonalen:** bei weißer Innenkontur das rote Innenfeld,
+  nicht der weiße Körper (Hinweis aus dem Review).
 - **Malreihenfolge:** erst alle Unterlegungen, dann alle Diagonalen (kreuzende Diagonalen schneiden
   einander nicht an), zuletzt die Kontur des Körpers noch einmal, ohne Füllung und als
   `bodyExtra`. Ohne sie schnitte die Unterlegung die Kontur dort, wo die Diagonalen sie kreuzen. Die

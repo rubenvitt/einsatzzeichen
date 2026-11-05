@@ -290,6 +290,22 @@ describe('Schadensgrad auf gleichfarbigem Körper (LLH-1513)', () => {
     expect(drawing.children.filter((child) => child.style?.stroke === 'weiss')).toHaveLength(4);
   });
 
+  it('richtet sich bei weißer Innenkontur nach dem roten Innenfeld, nicht nach dem weißen Körper', () => {
+    for (const spec of [
+      { kind: 'hazard', technicalFill: 'rot', whiteInnerContour: true, states: ['destroyed'] },
+      { kind: 'formation', organization: 'feuerwehr', whiteInnerContour: true, states: ['damaged'] },
+    ] as const) {
+      const drawing = drawn(spec as SymbolSpec);
+      expect(body(drawing).style?.fill, JSON.stringify(spec)).toBe('weiss');
+      const red = drawing.children.filter((child) => child.type === 'line' && child.style?.stroke === 'rot');
+      const casing = drawing.children.filter((child) => child.style?.stroke === 'weiss');
+      expect(casing, JSON.stringify(spec)).toHaveLength(red.length);
+      expect(drawing.children.at(-1)?.role).toBe('bodyExtra');
+    }
+    const gruen = drawn({ kind: 'hazard', technicalFill: 'gruen', whiteInnerContour: true, states: ['destroyed'] });
+    expect(gruen.children.some((child) => child.style?.stroke === 'weiss')).toBe(false);
+  });
+
   it('lässt jede andere Füllung unverändert', () => {
     for (const technicalFill of ['gruen', 'gelb', 'orange', 'grau'] as const) {
       for (const grade of GRADES) {

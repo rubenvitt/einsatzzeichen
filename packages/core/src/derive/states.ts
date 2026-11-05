@@ -305,6 +305,32 @@ function carrierBody(pieces: readonly Piece[]): Primitive {
   return bodyOf(pieces.filter((piece) => piece.part === undefined).flatMap((piece) => piece.primitives));
 }
 
+/** Füllung eines Primitivs oder seines ersten gefüllten Kinds; `undefined` ohne Füllung. */
+function fillOf(primitive: Primitive): ColorToken | undefined {
+  const own = primitive.style?.fill;
+  if (own !== undefined && own !== 'none') return own;
+  if (primitive.type !== 'group') return undefined;
+  for (const child of primitive.children) {
+    const fill = fillOf(child);
+    if (fill !== undefined) return fill;
+  }
+  return undefined;
+}
+
+/**
+ * Die Fläche auf der Körpermitte: das Innenfeld einer weißen Innenkontur, wenn es eins gibt, sonst
+ * die Füllung des Körpers (LLH-1513).
+ */
+function carrierSurfaceFill(pieces: readonly Piece[]): ColorToken | undefined {
+  const carrier = pieces.filter((piece) => piece.part === undefined).flatMap((piece) => piece.primitives);
+  for (const primitive of carrier) {
+    if (primitive.role !== 'innerField') continue;
+    const fill = fillOf(primitive);
+    if (fill !== undefined) return fill;
+  }
+  return fillOf(bodyOf(carrier));
+}
+
 /** Waagerechte Ausdehnung aller Primitive, die das Band `top…bottom` schneiden. */
 function bandExtent(pieces: readonly Piece[], top: number, bottom: number): { minX: number; maxX: number } {
   const hits = pieces
@@ -469,11 +495,17 @@ const DAMAGE_CASING_INK: ColorToken = 'weiss';
  * dunklem Grund wirkt es wie die Hinterlegung des Themes. Eine Gegenfarbe (schwarz oder weiß statt
  * rot) gäbe die Farbe nach DV 102 auf und ist verworfen.
  *
- * **Nur bei gleicher Farbe.** Auf jeder anderen Füllung bleibt die Zeichnung bytegleich.
+ * **Nur bei gleicher Farbe.** Auf jeder anderen Füllung bleibt die Zeichnung bytegleich. Maßgeblich
+ * ist die Fläche unter den Diagonalen (`surfaceFill`): bei weißer Innenkontur das rote Innenfeld,
+ * nicht der weiße Körper.
  */
-function damageOnBody(lines: readonly Primitive[], body: Primitive): Pick<Piece, 'primitives' | 'redrawsBodyOutline'> {
-  const fill = body.style?.fill;
-  if (fill === undefined || fill === 'none' || !lines.some((p) => p.style?.stroke === fill)) {
+function damageOnBody(
+  lines: readonly Primitive[],
+  body: Primitive,
+  surfaceFill: ColorToken | undefined,
+): Pick<Piece, 'primitives' | 'redrawsBodyOutline'> {
+  const fill = surfaceFill;
+  if (fill === undefined || !lines.some((p) => p.style?.stroke === fill)) {
     return { primitives: lines };
   }
   noteDerivation({
@@ -509,7 +541,7 @@ function redrawBodyOutlines(pieces: readonly Piece[]): Piece[] {
 }
 
 /** Schadensgrad 5.8.4 auf dem Körper, um dessen Mitte (L.8, L.9). */
-function damagePiece(value: StateId, body: Primitive): Piece {
+function damagePiece(value: StateId, body: Primitive, surfaceFill: ColorToken | undefined): Piece {
   const hull = boundsOfMm(body);
   const definition = definitionOf(value, 'primary');
   const largest = union(definitionOf('destroyed', 'primary').primitives.map((p) => boundsOfMm(p)));
@@ -530,7 +562,7 @@ function damagePiece(value: StateId, body: Primitive): Piece {
   });
   return {
     part: { value, group: 'damage', zone: 'body', basis: 'transferred', reference: DAMAGE_REFERENCE },
-    ...damageOnBody(definition.primitives.map((p) => mapDeep(m, p)), body),
+    ...damageOnBody(definition.primitives.map((p) => mapDeep(m, p)), body, surfaceFill),
   };
 }
 
@@ -647,7 +679,7 @@ export function layoutStateSign(input: StateSignInput): StateSignLayout {
 
   // 2. Schadensgrad auf dem Körper.
   for (const value of damage) {
-    sign = { ...sign, pieces: [...sign.pieces, damagePiece(value, carrierBody(sign.pieces))] };
+    sign = { ...sign, pieces: [...sign.pieces, damagePiece(value, carrierBody(sign.pieces), carrierSurfaceFill(sign.pieces))] };
   }
 
   let canvas: { width: number; height: number } = { width: CANVAS_32.width, height: CANVAS_32.height };
