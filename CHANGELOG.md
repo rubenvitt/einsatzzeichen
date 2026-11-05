@@ -1,3 +1,16 @@
+## [6.11.1](https://github.com/rubenvitt/einsatzzeichen/compare/v6.11.0...v6.11.1) (2026-11-05)
+
+### Rendering
+
+- **Schadensgrad auf rot gefüllten Zeichen wieder erkennbar:** Die roten Diagonalen für den Schadensgrad (5.8.4) verschwanden bisher auf rot gefüllten Zeichen, etwa bei der Feuerwehr. Rot lag auf Rot, und die drei Schadensgrade ließen sich nicht unterscheiden. Ist die Fläche unter den Diagonalen rot, liegt unter jeder Diagonale jetzt ein weißer Strich, der auf jeder Seite 0,5 mm breiter ist. Die Kontur des Zeichens wird danach neu darübergezeichnet.
+  - Entscheidend ist die Fläche direkt unter den Diagonalen. Bei weißer Innenkontur ist der Körper weiß und das Innenfeld rot, deshalb bekommen die Diagonalen auch dort die weiße Unterlegung.
+  - Die Diagonalen bleiben rot, wie DV 102 es vorgibt. Zeichen mit anderen Füllungen werden byte für byte genauso ausgegeben wie bisher.
+
+### Fachreview
+
+- **93 überarbeitete Darstellungen fachlich freigegeben:** 91 Zeichen aus Kapitel 4 sowie C.1.2 und C.1.3 haben das Fachreview bestanden. Damit sind 175 Darstellungen freigegeben, 421 warten noch auf die Prüfung.
+- **Nachprüfliste auf den Stand von 6.11.0 gebracht:** Die meisten Darstellungen sehen pixelgleich aus wie beim letzten Prüfstand. Vier Zeichen wurden mit der Schrift Einsatzzeichen Sans neu gemessen: 4.1.6 und 4.1.8 (Alternative) stimmen jetzt mit der Vorlage überein, 4.1.7 (Alternative) und 4.2.2 weichen nur noch leicht ab. Bei zwölf bereits freigegebenen Textzeichen hat sich seit der Freigabe nur die Schrift geändert. Die Suchhinweise in der Liste wurden korrigiert.
+
 ## [6.11.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.10.0...v6.11.0) (2026-11-02)
 
 ### Katalog
