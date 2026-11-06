@@ -1,3 +1,16 @@
+## [7.1.0](https://github.com/rubenvitt/einsatzzeichen/compare/v7.0.0...v7.1.0) (2026-11-06)
+
+### Website
+
+- **Suche in langen Auswahllisten im Baukasten:** Funktion (26 Fassungen), Zustand (61 Werte) und das freistehende Piktogramm (260 Einträge) haben jetzt ein Suchfeld, wie es die Fachaufgaben schon hatten.
+  - Die Suche findet Name, Kennung und Gruppe.
+  - Sie erkennt Umlaute auch in ausgeschriebener Form, z. B. „ae“ für „ä“.
+  - Sie filtert die passenden Werte und die eingeklappte Liste „passen hier nicht“ zugleich.
+  - Bereits gesetzte Werte bleiben immer sichtbar, auch wenn sie nicht zur Suche passen.
+  - Kurze Auswahlen mit bis zu 16 Werten, etwa Kopf und Farbe, bleiben ohne Suchfeld.
+- **Barrierefreiheit:** Die Statuszeile der Suche bleibt jetzt dauerhaft im Dokument. Dadurch sagen Screenreader Änderungen der Trefferzahl zuverlässig an.
+- **Genauere Rückmeldung:** Der Hinweis „Nichts passt“ erscheint nur noch, wenn die Suche wirklich keinen Treffer hat. Trifft sie nur einen bereits gesetzten Wert, erscheint der Hinweis nicht mehr.
+
 ## [7.0.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.13.1...v7.0.0) (2026-11-06)
 
 ### ⚠️ Breaking Changes
