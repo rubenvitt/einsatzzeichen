@@ -1,3 +1,9 @@
+## [6.13.1](https://github.com/rubenvitt/einsatzzeichen/compare/v6.13.0...v6.13.1) (2026-11-06)
+
+### Website
+
+- Das Bauplan-Beispiel funktioniert jetzt auch nach dem Einfügen in eigenen TypeScript-Code. Bisher machte TypeScript aus dem Feld `kind` einen allgemeinen `string`, und `drawAnySpec` lehnte das Beispiel ab. Es ist jetzt mit `AnySpec` typisiert und lässt sich ohne Anpassung übernehmen.
+
 ## [6.13.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.12.0...v6.13.0) (2026-11-06)
 
 ### Rendering
