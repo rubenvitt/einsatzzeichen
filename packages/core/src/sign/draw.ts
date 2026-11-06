@@ -14,7 +14,8 @@ import { explainRejection } from '../rules/rule-explanations.js';
 import { canonicalAnySpec } from '../spec-codec.js';
 import { specKey } from '../spec-key.js';
 import { CompositionError } from '../validate.js';
-import { attempt, isDerived, resolveBody, type Attempt } from './resolve.js';
+import { headGroupOf } from './labels.js';
+import { attempt, isDerived, isTendency, resolveBody, type Attempt } from './resolve.js';
 
 /** Wie treu das Bild die Beschreibung zeigt. */
 export type Fidelity = 'measured' | 'derived' | 'simplified';
@@ -81,10 +82,13 @@ function drawFreestandingSign(sign: FreestandingSpec, options: DrawOptions): Dra
   }
 }
 
-function drawBodySign(sign: BodySign, options: DrawOptions): Drawn {
+function drawBodySign(given: BodySign, options: DrawOptions): Drawn {
+  // Was der Bauplan gar nicht tragen kann, fällt vor dem ersten Versuch weg und steht in
+  // `omitted`: ein Kopfwert aus keiner Liste und jede Tendenz nach der ersten.
+  const { sign, dropped } = withoutUnresolvable(given);
   const full = resolveBody(sign);
   const first = withOptions(full.spec, full.attempt, options);
-  if (first.ok) return done(full.spec, first.drawing, []);
+  if (first.ok) return done(full.spec, first.drawing, dropped);
 
   const base: BodySign = { kind: sign.kind };
   const baseSpec = resolveBody(base).spec;
@@ -94,7 +98,7 @@ function drawBodySign(sign: BodySign, options: DrawOptions): Drawn {
   let current = base;
   let currentSpec = baseSpec;
   let currentDrawing = baseAttempt.drawing;
-  const omitted: Omission[] = [];
+  const omitted: Omission[] = [...dropped];
   for (const part of partsOf(sign)) {
     const candidate = part.add(current);
     const resolved = resolveBody(candidate);
@@ -108,6 +112,30 @@ function drawBodySign(sign: BodySign, options: DrawOptions): Drawn {
     }
   }
   return done(currentSpec, currentDrawing, omitted);
+}
+
+function withoutUnresolvable(sign: BodySign): { sign: BodySign; dropped: Omission[] } {
+  const dropped: Omission[] = [];
+  let clean: BodySign = sign;
+  if (sign.head !== undefined && headGroupOf(sign.head) === undefined) {
+    dropped.push({
+      field: 'head',
+      value: String(sign.head),
+      why: `„${String(sign.head)}“ ist weder Stärke noch Verband, Verwaltungsstufe oder technische Kopfmarke.`,
+    });
+    const { head: _head, ...rest } = clean;
+    clean = rest as BodySign;
+  }
+  const states = sign.states ?? [];
+  const firstTendency = states.find(isTendency);
+  const extra = states.filter((state) => isTendency(state) && state !== firstTendency);
+  if (extra.length > 0) {
+    for (const state of extra) {
+      dropped.push({ field: 'states', value: state, why: 'Ein Zeichen trägt höchstens eine Tendenz.' });
+    }
+    clean = { ...clean, states: states.filter((state) => !extra.includes(state)) };
+  }
+  return { sign: clean, dropped };
 }
 
 /** Der Versuch aus der Fassungswahl gilt nur ohne Optionen; mit Titel wird neu gezeichnet. */

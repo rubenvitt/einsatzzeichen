@@ -697,3 +697,8 @@ export function encodeTextParam(text: string): string {
 export function decodeTextParam(param: string): string {
   return utf8OfParam(param);
 }
+
+/** Liest Text streng wie in jeder Spec: Zeichenkette ohne einzelne Surrogate. */
+export function readTextAt(value: unknown, path: string): string {
+  return text(value, path) as string;
+}

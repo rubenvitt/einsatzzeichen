@@ -184,6 +184,19 @@ suite('draw', () => {
     expect(drawn.omitted).toEqual([{ field: 'kind', value: 'keine-art', why: expect.any(String) }]);
   });
 
+  it('nennt einen unbekannten Kopf und jede weitere Tendenz als weggelassen', () => {
+    const drawn = draw({
+      kind: 'formation',
+      head: 'riesig' as never,
+      states: ['tendency-rising', 'tendency-falling'],
+    });
+    expect(drawn.fidelity).toBe('simplified');
+    expect(drawn.omitted.map((o) => [o.field, o.value])).toEqual([
+      ['head', 'riesig'],
+      ['states', 'tendency-falling'],
+    ]);
+  });
+
   it('wirft nie für eine freistehende Beschreibung, die nicht trägt', () => {
     const drawn = draw({ kind: 'weather', values: [] } as never);
     expect(drawn.fidelity).toBe('simplified');
@@ -248,6 +261,12 @@ suite('choices', () => {
     ]);
   });
 
+  it('benennt jeden Wert von tasks und states', () => {
+    for (const field of ['tasks', 'states'] as const) {
+      for (const choice of choices({ kind: 'formation' }, field)) expect(choice.label, choice.value).toBeTruthy();
+    }
+  });
+
   it('fragt die Art auch ohne gesetzte Art', () => {
     const kinds = choices({}, 'kind');
     expect(kinds).toHaveLength(SYMBOL_KINDS.length);
@@ -300,6 +319,7 @@ suite('serialize und parse', () => {
     expect(() => parse('{"v":2,"sign":{"kind":"formation","organization":"thw","color":"rot"}}')).toThrow(/schließen sich aus/);
     expect(() => parse('{"v":2,"sign":{"kind":"formation","exact":{"strength":"riesig"}}}')).toThrow(/\$\.sign\.exact\.strength/);
     expect(() => parse('{"v":3,"sign":{"kind":"formation"}}')).toThrow(SpecParseError);
+    expect(() => parse({ v: 2, sign: { kind: 'formation', text: { center: '\uD800' } } })).toThrow(/\$\.sign\.text\.center/);
   });
 });
 

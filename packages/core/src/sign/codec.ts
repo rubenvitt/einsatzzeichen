@@ -19,6 +19,7 @@ import {
   parseAnySpec,
   readFreestandingAt,
   readSymbolSpecAt,
+  readTextAt,
 } from '../spec-codec.js';
 import { fromExact } from './from-exact.js';
 import { SIGN_HEAD_VALUES } from './labels.js';
@@ -83,9 +84,9 @@ function listOf(values: readonly string[], value: unknown, path: string, what: s
   return value.map((entry, index) => oneOf(values, entry, `${path}[${index}]`, what));
 }
 
+/** Wie in jeder Spec: Zeichenkette ohne einzelne Surrogate, die ein URL-Parameter verfälschen würde. */
 function text(value: unknown, path: string): string {
-  if (typeof value !== 'string') throw new SpecParseError(path, `erwartet Text, gefunden ${describeValue(value)}.`);
-  return value;
+  return readTextAt(value, path);
 }
 
 function readText(value: unknown, path: string): SignText | undefined {
