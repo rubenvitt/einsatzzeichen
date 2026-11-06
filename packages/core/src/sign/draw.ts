@@ -93,7 +93,7 @@ function drawBodySign(given: BodySign, options: DrawOptions): Drawn {
   const base: BodySign = { kind: sign.kind };
   const baseSpec = resolveBody(base).spec;
   const baseAttempt = attempt(baseSpec, options);
-  if (!baseAttempt.ok) return pointFallback(sign.kind, baseAttempt.error, options);
+  if (!baseAttempt.ok) return pointFallback(sign.kind, baseAttempt.error, options, dropped);
 
   let current = base;
   let currentSpec = baseSpec;
@@ -127,13 +127,14 @@ function withoutUnresolvable(sign: BodySign): { sign: BodySign; dropped: Omissio
     clean = rest as BodySign;
   }
   const states = sign.states ?? [];
-  const firstTendency = states.find(isTendency);
-  const extra = states.filter((state) => isTendency(state) && state !== firstTendency);
+  // Nach Stelle, nicht nach Wert: auch eine doppelte Tendenz ist eine zweite.
+  const firstTendency = states.findIndex(isTendency);
+  const extra = states.filter((state, index) => isTendency(state) && index !== firstTendency);
   if (extra.length > 0) {
     for (const state of extra) {
       dropped.push({ field: 'states', value: state, why: 'Ein Zeichen trägt höchstens eine Tendenz.' });
     }
-    clean = { ...clean, states: states.filter((state) => !extra.includes(state)) };
+    clean = { ...clean, states: states.filter((state, index) => !isTendency(state) || index === firstTendency) };
   }
   return { sign: clean, dropped };
 }
@@ -157,10 +158,10 @@ function done(spec: SymbolSpec, drawing: Drawing, omitted: readonly Omission[]):
 
 const POINT: SymbolSpec = Object.freeze({ kind: 'point' });
 
-function pointFallback(kind: string, error: unknown, options: DrawOptions): Drawn {
+function pointFallback(kind: string, error: unknown, options: DrawOptions, dropped: readonly Omission[] = []): Drawn {
   const result = attempt(POINT, options);
   if (!result.ok) throw result.error;
-  return done(POINT, result.drawing, [{ field: 'kind', value: kind, why: whyOf(error) }]);
+  return done(POINT, result.drawing, [...dropped, { field: 'kind', value: kind, why: whyOf(error) }]);
 }
 
 /** Der Grund eines gescheiterten Versuchs in einem Satz. */

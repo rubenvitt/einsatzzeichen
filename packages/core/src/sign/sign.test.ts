@@ -197,6 +197,14 @@ suite('draw', () => {
     ]);
   });
 
+  it('nennt auch eine doppelte Tendenz und behält Weggelassenes beim Punkt', () => {
+    const twice = draw({ kind: 'formation', states: ['tendency-rising', 'tendency-rising'] });
+    expect(twice.omitted.map((o) => [o.field, o.value])).toEqual([['states', 'tendency-rising']]);
+    const point = draw({ kind: 'keine-art', head: 'riesig' } as never);
+    expect(point.exact).toEqual({ kind: 'point' });
+    expect(point.omitted.map((o) => o.field)).toEqual(['head', 'kind']);
+  });
+
   it('wirft nie für eine freistehende Beschreibung, die nicht trägt', () => {
     const drawn = draw({ kind: 'weather', values: [] } as never);
     expect(drawn.fidelity).toBe('simplified');
