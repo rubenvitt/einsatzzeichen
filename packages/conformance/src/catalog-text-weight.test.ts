@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CATALOG_TEXT_FONT_WEIGHT } from '@einsatzzeichen/core';
+import { CATALOG_TEXT_FONT_WEIGHT } from '@einsatzzeichen/core/blocks';
 import type { Primitive } from '@einsatzzeichen/schema';
 import { RENDER_CASES } from './test-support/render-cases.js';
 

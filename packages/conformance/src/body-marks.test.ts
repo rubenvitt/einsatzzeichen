@@ -1,6 +1,8 @@
 import { Resvg } from '@resvg/resvg-js';
 import { describe, expect, it } from 'vitest';
-import { boundsOfMm, NotMeasuredError, renderSvg, type BoundsMm } from '@einsatzzeichen/core';
+import { renderSvg } from '@einsatzzeichen/core';
+import { NotMeasuredError } from '@einsatzzeichen/core/exact';
+import { boundsOfMm, type BoundsMm } from '@einsatzzeichen/core/blocks';
 import {
   DEFAULT_VIEWBOX_MM,
   DEFAULT_STROKE_WIDTH_MM,
@@ -13,7 +15,7 @@ import {
   ANHANG_C_BODY_MARK_CONTEXTS,
   BODY_MARK_IDS,
   bodyMark as bodyMarkWithContext,
-} from '@einsatzzeichen/core';
+} from '@einsatzzeichen/core/blocks';
 
 /**
  * Die einzige vermessene Körperhülle dieser Zeichnungen: das Rechteck 30 × 20 mm der taktischen

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { PALETTE, type OrganizationId, type SymbolSpec } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
-import { CompositionError, ORGANIZATION_COLORS, organizationColor } from '@einsatzzeichen/core';
+import { CompositionError } from '@einsatzzeichen/core/exact';
+import { ORGANIZATION_COLORS, organizationColor } from '@einsatzzeichen/core/blocks';
 import { fingerprintFor, referenceInventoryAssets } from './fingerprint-index.js';
 import { composeFromCatalog, RECIPES } from './recipes.js';
 

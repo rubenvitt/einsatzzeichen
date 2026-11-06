@@ -3,7 +3,7 @@ import type { BodyVariantId, Primitive, SymbolKind, SymbolSpec, VehicleCategoryI
 import { VEHICLE_CATEGORY_IDS } from '@einsatzzeichen/schema';
 import { boundsOfMm } from '../bounds.js';
 import { drawSymbol } from '../default-ports.js';
-import { checkViewBox } from '../index.js';
+import { checkViewBox } from '../gates.js';
 import { validateSpec } from '../validate.js';
 
 /**

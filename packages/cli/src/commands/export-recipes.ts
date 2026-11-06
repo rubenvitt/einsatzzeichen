@@ -1,5 +1,5 @@
 import { RECIPES } from '@einsatzzeichen/conformance';
-import { drawSymbol } from '@einsatzzeichen/core';
+import { drawSymbol } from '@einsatzzeichen/core/exact';
 import type { Drawing } from '@einsatzzeichen/schema';
 
 /**

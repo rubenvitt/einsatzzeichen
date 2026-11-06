@@ -1,7 +1,7 @@
 import { readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { renderSvg } from '@einsatzzeichen/core';
-import { BASE_SYMBOLS, baseDrawing } from '@einsatzzeichen/core';
+import { BASE_SYMBOLS, baseDrawing } from '@einsatzzeichen/core/blocks';
 import { RECIPES, composeFromCatalog } from './recipes.js';
 
 describe('SVG-Snapshots', () => {

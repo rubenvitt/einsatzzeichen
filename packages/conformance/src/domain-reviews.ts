@@ -1,5 +1,5 @@
 import type { ProfileId, Review, SourceId } from '@einsatzzeichen/schema';
-import { deepFreeze, type DeepReadonly } from '@einsatzzeichen/core';
+import { deepFreeze, type DeepReadonly } from '@einsatzzeichen/core/blocks';
 
 /**
  * Fachreview-Ledger des aktuellen Manifests, absichtlich mit genau einem eigenen Objekt je

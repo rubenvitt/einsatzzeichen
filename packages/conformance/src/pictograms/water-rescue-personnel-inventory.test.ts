@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { tokenizePath } from '@einsatzzeichen/core';
+import { tokenizePath } from '@einsatzzeichen/core/blocks';
 import { WATER_RESCUE_PERSONNEL_IDS } from '@einsatzzeichen/schema';
 import { PICTOGRAM_ELEMENT_KINDS, resolveElement } from '../elements.js';
 import { MANIFEST_DOMAIN_REVIEWS } from '../domain-reviews.js';
@@ -8,12 +8,8 @@ import {
   erwarteZurechenbaresFachreview,
   erwarteZurechenbaresFachreviewImLedger,
 } from '../test-support/domain-review.js';
-import {
-  ALL_PICTOGRAMS,
-  pictogram,
-  pictogramVariantKey,
-} from '@einsatzzeichen/core';
-import { WATER_RESCUE_PERSONNEL_PICTOGRAMS } from '@einsatzzeichen/core';
+import { ALL_PICTOGRAMS, pictogram, pictogramVariantKey } from '@einsatzzeichen/core/blocks';
+import { WATER_RESCUE_PERSONNEL_PICTOGRAMS } from '@einsatzzeichen/core/blocks';
 
 const EXPECTED = [
   {

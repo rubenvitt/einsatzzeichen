@@ -16,7 +16,8 @@ import {
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { Resvg, type RenderedImage } from '@resvg/resvg-js';
 import { RECIPES, resvgFontOptions } from '@einsatzzeichen/conformance';
-import { REFERENCE_THEME, TEXT_FONT_FAMILY_ATTR, drawSymbol, renderSvg } from '@einsatzzeichen/core';
+import { REFERENCE_THEME, TEXT_FONT_FAMILY_ATTR, renderSvg } from '@einsatzzeichen/core';
+import { drawSymbol } from '@einsatzzeichen/core/exact';
 
 const COLUMNS = 3;
 const CARD_WIDTH = 720;

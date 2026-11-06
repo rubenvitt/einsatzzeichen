@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { BLOCK_REGISTER } from '@einsatzzeichen/core';
+import { BLOCK_REGISTER } from '@einsatzzeichen/core/blocks';
 import type {
   AdminLevelId,
   BlockCategory,
@@ -10,11 +10,11 @@ import type {
   StrengthId,
   TechnicalHeadMarkId,
 } from '@einsatzzeichen/schema';
-import { administrativeHead } from '@einsatzzeichen/core';
-import { ALL_PICTOGRAMS } from '@einsatzzeichen/core';
+import { administrativeHead } from '@einsatzzeichen/core/blocks';
+import { ALL_PICTOGRAMS } from '@einsatzzeichen/core/blocks';
 import { RECIPES } from '../recipes.js';
-import { strengthHead } from '@einsatzzeichen/core';
-import { technicalHeadMark } from '@einsatzzeichen/core';
+import { strengthHead } from '@einsatzzeichen/core/blocks';
+import { technicalHeadMark } from '@einsatzzeichen/core/blocks';
 
 /**
  * Laufzeit-Gate des Bausteinregisters für die Kopfzone (LFH-564). Das Register nennt nur Fundorte

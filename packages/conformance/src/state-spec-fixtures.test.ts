@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { STATE_IDS, type StateId, type SymbolSpec } from '@einsatzzeichen/schema';
-import { drawSymbol, matchFingerprint, pictogram, stateCarriersOf, strokeBoundsOfMm } from '@einsatzzeichen/core';
+import { drawSymbol } from '@einsatzzeichen/core/exact';
+import { pictogram, stateCarriersOf, strokeBoundsOfMm } from '@einsatzzeichen/core/blocks';
+import { matchFingerprint } from '@einsatzzeichen/core/gates';
 import fingerprints from './fingerprints.json' with { type: 'json' };
 
 /**

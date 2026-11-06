@@ -22,7 +22,8 @@ Kompositionsmotor eine Zeichnung (`Drawing`), und aus der Zeichnung ein SVG. All
 Millimeter; umgerechnet wird erst am Renderer.
 
 ```ts
-import { drawSymbol, renderSvg } from '@einsatzzeichen/core';
+import { renderSvg } from '@einsatzzeichen/core';
+import { drawSymbol } from '@einsatzzeichen/core/exact';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 
 // E.1.1 „Bergungsgruppe" des THW

@@ -1,7 +1,7 @@
 // `@einsatzzeichen/core/exact` (ESZ-149): die Bauplan-Welt. Alles rund um `SymbolSpec` und die
-// freistehenden Specs, wie es bisher an der Wurzel steht, dazu der Weg zwischen Beschreibung und
+// freistehenden Specs, wie es bis 6.x an der Wurzel stand, dazu der Weg zwischen Beschreibung und
 // Bauplan (`resolve`, `fromExact`). Für Rezepte, Prüfpaket und alle, die ein Original exakt
-// nachbauen. Bis 7.0 steht derselbe Inhalt weiter auch an der Wurzel.
+// nachbauen. Bis 6.x stand derselbe Inhalt auch an der Wurzel (seit 7.0 nur noch hier, ESZ-151).
 export { DEFAULT_PORTS, drawSymbol } from './default-ports.js';
 export * from './compose.js';
 export { CompositionError, validateSpec, type ValidationIssue } from './validate.js';

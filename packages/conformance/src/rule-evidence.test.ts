@@ -1,12 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { CompositionError, drawFreestanding, validateSpec } from '@einsatzzeichen/core/exact';
 import {
   COMPOSITION_RULE_CATALOG,
-  CompositionError,
   FREESTANDING_RULE_CATALOG,
   RULE_CATALOG,
-  drawFreestanding,
-  validateSpec,
-} from '@einsatzzeichen/core';
+} from '@einsatzzeichen/core/gates';
 import {
   FREESTANDING_RULE_EVIDENCE,
   RULE_EVIDENCE,

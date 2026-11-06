@@ -1,12 +1,6 @@
-import {
-  STRENGTH_LABELS,
-  checkAnySpec,
-  parametricBlock,
-  pictogram,
-  referenceMovementSpec,
-  type Choice,
-  type SpecCheck,
-} from '@einsatzzeichen/core';
+import type { Choice } from '@einsatzzeichen/core';
+import { checkAnySpec, referenceMovementSpec, type SpecCheck } from '@einsatzzeichen/core/exact';
+import { STRENGTH_LABELS, parametricBlock, pictogram } from '@einsatzzeichen/core/blocks';
 import {
   ANIMAL_STATE_IDS,
   FREESTANDING_KINDS,

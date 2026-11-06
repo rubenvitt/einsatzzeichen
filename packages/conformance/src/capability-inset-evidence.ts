@@ -1,12 +1,9 @@
+import { DEFAULT_PORTS, compose, type CatalogPorts } from '@einsatzzeichen/core/exact';
+import { bodyMark, pictogram } from '@einsatzzeichen/core/blocks';
 import {
-  DEFAULT_PORTS,
-  bodyMark,
-  compose,
   measureCapabilityInset,
-  pictogram,
   type CapabilityInsetMeasurement,
-  type CatalogPorts,
-} from '@einsatzzeichen/core';
+} from '@einsatzzeichen/core/gates';
 import {
   CAPABILITY_IDS,
   type BodyMarkRenditionId,

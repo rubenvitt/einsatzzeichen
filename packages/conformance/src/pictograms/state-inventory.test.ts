@@ -7,7 +7,8 @@ import {
   type PictogramBox,
   type Primitive,
 } from '@einsatzzeichen/schema';
-import { paintTokensOf, renderSvg } from '@einsatzzeichen/core';
+import { renderSvg } from '@einsatzzeichen/core';
+import { paintTokensOf } from '@einsatzzeichen/core/gates';
 import { fingerprintFor } from '../fingerprint-index.js';
 import { PRINT_MONOCHROME_THEME } from '@einsatzzeichen/core';
 import {
@@ -15,7 +16,7 @@ import {
   type CatalogPictogramDefinition,
   type PictogramContrastPair,
 } from '@einsatzzeichen/core/src/geometry/pictograms/catalog-definition.js';
-import { pictogram, pictogramRenderId, pictogramVariantKey } from '@einsatzzeichen/core';
+import { pictogram, pictogramRenderId, pictogramVariantKey } from '@einsatzzeichen/core/blocks';
 import {
   ACCESS_STATES,
   ACTIVITY_STATES,

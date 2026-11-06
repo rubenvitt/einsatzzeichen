@@ -11,7 +11,7 @@ import {
   type SourceRecord,
   type TestEvidenceKind,
 } from '@einsatzzeichen/schema';
-import { BASE_SYMBOLS } from '@einsatzzeichen/core';
+import { BASE_SYMBOLS } from '@einsatzzeichen/core/blocks';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { resolveElement, type ElementDescriptor } from './elements.js';
 import { referenceInventoryAssets, referenceLacksComparableShape } from './fingerprint-index.js';

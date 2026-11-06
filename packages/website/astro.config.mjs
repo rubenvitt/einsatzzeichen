@@ -15,7 +15,7 @@ const pkgSrc = (name) => fileURLToPath(new URL(`../${name}/src/`, import.meta.ur
  * Paketquellen, die zweite den Paketindex — exakt, nicht als Präfix.
  */
 /** Die Subpfade von `core` (ESZ-149), wie `publishConfig.exports` sie führt; exakt wie der Paketindex. */
-const CORE_SUBPATHS = { exact: 'exact.ts', sketch: 'sketch/index.ts', blocks: 'blocks/index.ts' };
+const CORE_SUBPATHS = { exact: 'exact.ts', sketch: 'sketch/index.ts', blocks: 'blocks/index.ts', gates: 'gates.ts' };
 
 const workspaceAliases = [
   ...Object.entries(CORE_SUBPATHS).map(([subpath, file]) => ({

@@ -4,7 +4,7 @@ Das Produkt von Einsatzzeichen: Bausteine und Geometrie der Zeichen (Grundzeiche
 
 ## Ein Zeichen beschreiben
 
-Der einfache Einstieg seit 6.12: Eine **Beschreibung** (`Sign`) sagt, was gemeint ist. Die Bibliothek wählt die Fassungen selbst und zeichnet immer etwas.
+Der Einstieg seit 6.12, ab 7.0 der einzige an der Wurzel: Eine **Beschreibung** (`Sign`) sagt, was gemeint ist. Die Bibliothek wählt die Fassungen selbst und zeichnet immer etwas.
 
 ```ts
 import { draw, renderSvg } from '@einsatzzeichen/core';
@@ -32,19 +32,30 @@ Freistehende Zeichen (siehe unten) sind ebenfalls eine Beschreibung und gehen un
 
 | Einstieg | Inhalt |
 |---|---|
-| `@einsatzzeichen/core` | alles, wie bisher, dazu die Beschreibung |
-| `@einsatzzeichen/core/exact` | die Bauplan-Welt: `drawSymbol`, `compose`, `validateSpec`, `checkSpec`, `vocabulary`, die Codecs, `explainIssue`, Herkunft, `resolve`, `fromExact` |
-| `@einsatzzeichen/core/blocks` | Bausteine und Geometrie: Grundzeichen, Körpermarken, Köpfe, Piktogramme, Register, Namen |
+| `@einsatzzeichen/core` | die Beschreibung (`draw`, `check`, `choices`, `describe`, `serialize`, `parse`, `resolve`, `fromExact`, `KIND_FAMILIES`) und die Ausgabe (`renderSvg`, `renderCanvas`, die Themes, `rasterDimensionsForWidth`, `RASTER_MIN_STROKE_WIDTH_PX`, `TEXT_FONT_FAMILY_ATTR`) |
+| `@einsatzzeichen/core/exact` | die Bauplan-Welt: `drawSymbol`, `compose`, `DEFAULT_PORTS`, `validateSpec`, `checkSpec`, `vocabulary`, die Codecs der Hülle v1, `explainIssue`, Herkunft, freistehende Specs |
+| `@einsatzzeichen/core/blocks` | Bausteine und Geometrie: Grundzeichen, Körpermarken, Köpfe, Piktogramme, Register, Namen, Layout, Textlaufweiten |
 | `@einsatzzeichen/core/sketch` | die Kommunikationsskizze |
+| `@einsatzzeichen/core/gates` | Prüfwerkzeug: Regelkataloge, Gates für Kontrast, viewBox, Piktogramme und Textmetrik, Fingerprint, Toleranzen |
 
-Bis 7.0 steht alles weiter auch an der Wurzel. Die Entscheidung steht in `docs/decisions/2026-11-06-esz-149-beschreibung-und-bauplan.md` im Repository.
+### Umstieg von 6.x
+
+Seit 7.0 steht an der Wurzel nur noch, was die erste Zeile der Tabelle nennt. Kein Export ist weggefallen; jeder steht unverändert in einem Subpfad. Die Importe schreibt der Codemod um:
+
+```bash
+npx @einsatzzeichen/cli codemod:7 src           # zeigt, welche Dateien sich ändern
+npx @einsatzzeichen/cli codemod:7 src --write   # schreibt sie
+```
+
+Aus `import { drawSymbol, renderSvg } from '@einsatzzeichen/core'` wird `import { renderSvg } from '@einsatzzeichen/core'` und `import { drawSymbol } from '@einsatzzeichen/core/exact'`. Gespeicherte Zeichen (`{"v":1,…}` und `{"v":2,…}`) bleiben lesbar. Entscheidung: `docs/decisions/2026-11-06-esz-151-wurzel-7-0.md` im Repository.
 
 ## Ein Zeichen exakt bauen
 
-`drawSymbol()` macht aus einer `SymbolSpec` eine Zeichnung — mit der Standardbelegung der Bausteine (`DEFAULT_PORTS`) und einer aus der Spec abgeleiteten Beschreibung für Screenreader. Wer einzelne Bausteine tauschen will, ruft `compose(spec, { ...DEFAULT_PORTS, … })` selbst auf.
+`drawSymbol()` aus `@einsatzzeichen/core/exact` macht aus einer `SymbolSpec` eine Zeichnung — mit der Standardbelegung der Bausteine (`DEFAULT_PORTS`) und einer aus der Spec abgeleiteten Beschreibung für Screenreader. Wer einzelne Bausteine tauschen will, ruft `compose(spec, { ...DEFAULT_PORTS, … })` selbst auf.
 
 ```ts
-import { drawSymbol, renderSvg } from '@einsatzzeichen/core';
+import { renderSvg } from '@einsatzzeichen/core';
+import { drawSymbol } from '@einsatzzeichen/core/exact';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 
 // E.1.1 „Bergungsgruppe" des THW
@@ -73,7 +84,7 @@ Für Oberflächen und Skripte, die Zeichen zusammensetzen lassen:
 - `serializeSpec` / `parseSpec` / `encodeSpecParam` / `decodeSpecParam` — die kanonische Form für Dateien und Links.
 
 ```ts
-import { checkSpec, vocabulary } from '@einsatzzeichen/core';
+import { checkSpec, vocabulary } from '@einsatzzeichen/core/exact';
 
 const fills = vocabulary({ kind: 'formation', organization: 'thw' }, 'technicalFill');
 // → alle `blocked`, reason 'rule': Organisation und technische Füllung schließen sich aus
@@ -93,7 +104,8 @@ Pfeile (5.2), Linien und Grenzen (2.14–2.20), Wetter (5.8.7), Tierzustände (5
 - `freestandingVocabulary(spec, field)` sagt je Wert, ob er passt; `freestandingProvenance(spec)` nennt die Referenzdatei.
 
 ```ts
-import { drawAnySpec, renderSvg } from '@einsatzzeichen/core';
+import { renderSvg } from '@einsatzzeichen/core';
+import { drawAnySpec } from '@einsatzzeichen/core/exact';
 
 const svg = renderSvg(
   drawAnySpec({ kind: 'weather', values: ['weather-cloudy', 'weather-snowing'], intensity: 'moderate' }),

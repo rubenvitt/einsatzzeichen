@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { checkSpec, renderSvg, specKey } from '@einsatzzeichen/core';
+import { renderSvg } from '@einsatzzeichen/core';
+import { checkSpec, specKey } from '@einsatzzeichen/core/exact';
 import { RECIPES } from '../recipes.js';
 import { TYPICAL_BETREUUNG } from './betreuung.js';
 import { TYPICAL_FACHDIENSTE } from './fachdienste.js';

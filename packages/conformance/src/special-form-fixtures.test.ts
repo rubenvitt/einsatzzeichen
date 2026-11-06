@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { drawSymbol } from '@einsatzzeichen/core/exact';
 import {
   BLOCK_REGISTER,
   DRONE_BODY_MARKS,
@@ -6,11 +7,10 @@ import {
   SPECIAL_FORMS,
   SPECIAL_FORM_PICTOGRAMS,
   baseDrawing,
-  drawSymbol,
   specialForm,
   specialFormDrawing,
   strokeBoundsOfMm,
-} from '@einsatzzeichen/core';
+} from '@einsatzzeichen/core/blocks';
 import { SYMBOL_KINDS, type SpecialFormId, type ZoneBoundsMm } from '@einsatzzeichen/schema';
 import fingerprints from './fingerprints.json' with { type: 'json' };
 import { RECIPES, type Recipe } from './recipes.js';

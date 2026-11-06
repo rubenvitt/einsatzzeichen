@@ -4,13 +4,11 @@ import {
   ACCESSIBLE_LIGHT_THEME,
   DARK_THEME,
   REFERENCE_THEME,
-  checkContrast,
-  contrastRatio,
-  drawSymbol,
-  relativeLuminance,
   renderSvg,
   type RenderTheme,
 } from '@einsatzzeichen/core';
+import { drawSymbol } from '@einsatzzeichen/core/exact';
+import { checkContrast, contrastRatio, relativeLuminance } from '@einsatzzeichen/core/gates';
 import type { Drawing, RgbHex } from '@einsatzzeichen/schema';
 import { RENDER_CASES } from './test-support/render-cases.js';
 import { resvgFontOptions } from './fonts.js';

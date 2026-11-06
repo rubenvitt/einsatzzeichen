@@ -15,7 +15,7 @@
  * Manifestschlüssel und Grund. Kein Platzhalter und kein `undefined` — eine unsichtbare Zeile
  * wäre eine blind entschiedene Zeile.
  */
-import { ALL_PICTOGRAMS, BASE_SYMBOLS, describePictogram } from '@einsatzzeichen/core';
+import { ALL_PICTOGRAMS, BASE_SYMBOLS, describePictogram } from '@einsatzzeichen/core/blocks';
 import {
   ORGANIZATION_IDS,
   STRENGTH_IDS,

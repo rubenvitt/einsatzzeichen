@@ -1,18 +1,14 @@
 import { Resvg } from '@resvg/resvg-js';
 import { describe, expect, it } from 'vitest';
-import {
-  CATALOG_TEXT_FONT_WEIGHT,
-  CompositionError,
-  checkTextMetrics,
-  measureTextRun,
-  renderSvg,
-  textWidthMm,
-} from '@einsatzzeichen/core';
+import { renderSvg } from '@einsatzzeichen/core';
+import { CompositionError } from '@einsatzzeichen/core/exact';
+import { CATALOG_TEXT_FONT_WEIGHT, measureTextRun, textWidthMm } from '@einsatzzeichen/core/blocks';
+import { checkTextMetrics } from '@einsatzzeichen/core/gates';
 import { DEFAULT_VIEWBOX_MM, type Primitive } from '@einsatzzeichen/schema';
 import { TEXT_FONT_FAMILY, resvgFontOptions } from './fonts.js';
 import { composeFromCatalog } from './recipes.js';
 import { RENDER_CASES } from './test-support/render-cases.js';
-import { TEXT_FONT_METRICS, TEXT_METRICS_FAMILY } from '@einsatzzeichen/core';
+import { TEXT_FONT_METRICS, TEXT_METRICS_FAMILY } from '@einsatzzeichen/core/blocks';
 
 type TextPrimitive = Extract<Primitive, { type: 'text' }>;
 

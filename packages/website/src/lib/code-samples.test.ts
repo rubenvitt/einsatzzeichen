@@ -2,7 +2,8 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { RECIPES } from '@einsatzzeichen/conformance';
-import { draw, drawAnySpec, drawSymbol, renderSvg, type Sign } from '@einsatzzeichen/core';
+import { draw, renderSvg, type Sign } from '@einsatzzeichen/core';
+import { drawAnySpec, drawSymbol } from '@einsatzzeichen/core/exact';
 import { Einsatzzeichen } from '@einsatzzeichen/react';
 import { codeSamplesFor, exactCodeSampleFor, signCodeSamplesFor } from './code-samples.js';
 

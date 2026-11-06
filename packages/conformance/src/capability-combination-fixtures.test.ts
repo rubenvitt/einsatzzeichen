@@ -5,7 +5,7 @@ import {
   bodyMark,
   boundsOfMm,
   capabilityCombinationRule,
-} from '@einsatzzeichen/core';
+} from '@einsatzzeichen/core/blocks';
 import { CAPABILITY_IDS, type BodyMarkId, type SymbolSpec } from '@einsatzzeichen/schema';
 import { GRAMMAR_FIXTURES, composeFromCatalog } from './recipes.js';
 

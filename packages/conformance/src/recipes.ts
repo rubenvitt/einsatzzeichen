@@ -1,14 +1,10 @@
-import {
-  bodyLabelInk,
-  drawSymbol,
-  functionRoleTextInk,
-  profileFor,
-  type ContrastRequirement,
-} from '@einsatzzeichen/core';
+import { bodyLabelInk, drawSymbol, functionRoleTextInk } from '@einsatzzeichen/core/exact';
+import { profileFor } from '@einsatzzeichen/core/blocks';
+import type { ContrastRequirement } from '@einsatzzeichen/core/gates';
 import type { BodyLabelInk, Drawing, OrganizationId, SymbolSpec } from '@einsatzzeichen/schema';
-import { circleTopLeftInk, functionRole } from '@einsatzzeichen/core';
-import { organizationColor } from '@einsatzzeichen/core';
-import { MINIMUM_TEXT_CONTRAST } from '@einsatzzeichen/core';
+import { circleTopLeftInk, functionRole } from '@einsatzzeichen/core/blocks';
+import { organizationColor } from '@einsatzzeichen/core/blocks';
+import { MINIMUM_TEXT_CONTRAST } from '@einsatzzeichen/core/gates';
 import {
   ANHANG_E_A_RECIPES,
   ANHANG_E_B_RECIPES,

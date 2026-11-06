@@ -1,23 +1,20 @@
 import { describe, expect, it } from 'vitest';
+import { RENDER_THEMES, renderSvg } from '@einsatzzeichen/core';
+import { CompositionError, validateSpec } from '@einsatzzeichen/core/exact';
 import {
   TEXT_CAP_HEIGHT_FRACTION,
   textSizeForCapHeightMm,
   boundsOfMm,
-  checkContrast,
-  CompositionError,
   formatUnits,
-  matchFingerprint,
   measureTextRun,
-  RENDER_THEMES,
-  renderSvg,
   TEXT_FONT_METRICS,
-  validateSpec,
-} from '@einsatzzeichen/core';
+} from '@einsatzzeichen/core/blocks';
+import { checkContrast, matchFingerprint } from '@einsatzzeichen/core/gates';
 import { mmToUnits, type Drawing, type Primitive } from '@einsatzzeichen/schema';
 import { comparableFingerprint } from './comparison-exceptions.js';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { fingerprintFor, referenceLacksComparableShape } from './fingerprint-index.js';
-import { pictogram } from '@einsatzzeichen/core';
+import { pictogram } from '@einsatzzeichen/core/blocks';
 import {
   RECIPES,
   composeFromCatalog,
