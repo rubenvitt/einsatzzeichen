@@ -12,6 +12,7 @@ import { assertValidActiveStrokeWidths, mergeStyle } from './style.js';
 import { baselineAttr, TEXT_FONT_FAMILY_ATTR } from './text-policy.js';
 import { rasterDimensionsForWidth } from './raster-dimensions.js';
 import { effectiveStrokeWidthMm, strokeWidthFloorMm } from './min-stroke-width.js';
+import { bodyStrokeDash } from './body-dash.js';
 import { REFERENCE_THEME, paintColor, type RenderTheme } from './theme.js';
 import { assertValidRenderTheme } from './theme-validation.js';
 import {
@@ -138,10 +139,7 @@ function styleAttrs(
       if (style.strokeLinejoin !== undefined && !options.pictogramStrokeContract) {
         parts.push(STROKE_LINEJOIN_ATTR[style.strokeLinejoin] ?? '');
       }
-      const dashToken = style.bodyStrokeDashToken;
-      const dash = options.role === 'body' && dashToken !== undefined
-        ? theme.bodyStrokeDashes?.[dashToken]
-        : undefined;
+      const dash = bodyStrokeDash(theme, style.bodyStrokeDashToken, options.role);
       if (dash !== undefined && dash.length > 0) {
         const values = dash.map((length) =>
           options.rawStrokeWidth ? formatUnits(length) : u(length),
