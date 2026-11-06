@@ -257,11 +257,10 @@ function ChoiceSearchField({ label, search, quiet = false }: { label: string; se
           onChange={(event) => search.setQuery(event.target.value)}
         />
       </label>
-      {search.empty ? (
-        <p className="ez-builder__field-hint" role="status">
-          Nichts passt zu dieser Suche.
-        </p>
-      ) : null}
+      {/* Steht immer, damit ein Screenreader die Änderung ansagt und nicht einen neuen Knoten. */}
+      <p className={search.empty ? 'ez-builder__field-hint' : 'ez-builder__field-hint ez-builder__sr'} role="status">
+        {search.empty ? 'Nichts passt zu dieser Suche.' : null}
+      </p>
     </>
   );
 }
