@@ -292,6 +292,30 @@ describe('renderCanvas', () => {
     expect(renderSvg(signedFormation, { theme })).toContain('stroke-dasharray=');
   });
 
+  it('strichelt die noch einmal gezogene Körperkontur (bodyExtra) wie den Körper (LLH-1550)', () => {
+    const theme: RenderTheme = {
+      id: 'test',
+      palette: PALETTE,
+      surface: '#ffffff',
+      bodyStrokeDashes: { blau: [2, 1] },
+    };
+    const outline = { type: 'rect', x: 1, y: 6, width: 30, height: 20 } as const;
+    const drawing = {
+      viewBox: { width: 32, height: 32 },
+      children: [
+        { ...outline, role: 'body', style: { fill: 'blau', stroke: 'schwarz', bodyStrokeDashToken: 'blau' } },
+        { ...outline, role: 'bodyExtra', style: { fill: 'none', stroke: 'schwarz', bodyStrokeDashToken: 'blau' } },
+        // Eine Zusatzkontur ohne Schlüssel bleibt durchgezogen.
+        { ...outline, role: 'bodyExtra', style: { fill: 'none', stroke: 'schwarz' } },
+      ],
+    } as Drawing;
+    const { ctx, calls } = recordingContext();
+    renderCanvas(drawing, ctx, { theme });
+    const dashes = calls.filter((call) => call[0] === 'setLineDash').map((call) => call[1]);
+    expect(dashes).toEqual([[mmToUnits(2), mmToUnits(1)], [mmToUnits(2), mmToUnits(1)], []]);
+    expect(renderSvg(drawing, { theme }).match(/stroke-dasharray=/g)).toHaveLength(2);
+  });
+
   it.each([
     ['negativ', -1],
     ['null', 0],

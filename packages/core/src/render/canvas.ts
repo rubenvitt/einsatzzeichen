@@ -10,6 +10,7 @@ import { assertValidActiveStrokeWidths, mergeStyle } from './style.js';
 import { canvasBaseline, canvasTextAlign, TEXT_FONT_FAMILY_ATTR } from './text-policy.js';
 import { rasterDimensionsForWidth } from './raster-dimensions.js';
 import { effectiveStrokeWidthMm, strokeWidthFloorMm } from './min-stroke-width.js';
+import { bodyStrokeDash } from './body-dash.js';
 import { REFERENCE_THEME, paintColor, type RenderTheme } from './theme.js';
 import { assertValidRenderTheme } from './theme-validation.js';
 import {
@@ -221,10 +222,7 @@ function drawPrimitive(
         } else if (style.strokeLinejoin !== undefined) {
           ctx.lineJoin = style.strokeLinejoin;
         }
-        const dashToken = style.bodyStrokeDashToken;
-        const dash = role === 'body' && dashToken !== undefined
-          ? theme.bodyStrokeDashes?.[dashToken]
-          : undefined;
+        const dash = bodyStrokeDash(theme, style.bodyStrokeDashToken, role);
         ctx.setLineDash(dash === undefined ? [] : [...dash]);
         ctx.lineDashOffset = 0;
         ctx.stroke(path);
@@ -273,10 +271,7 @@ function drawPrimitive(
       } else if (style.strokeLinejoin !== undefined) {
         ctx.lineJoin = style.strokeLinejoin;
       }
-      const dashToken = style.bodyStrokeDashToken;
-      const dash = role === 'body' && dashToken !== undefined
-        ? theme.bodyStrokeDashes?.[dashToken]
-        : undefined;
+      const dash = bodyStrokeDash(theme, style.bodyStrokeDashToken, role);
       ctx.setLineDash(dash === undefined ? [] : dash.map(mmToUnits));
       ctx.lineDashOffset = 0;
       ctx.stroke();

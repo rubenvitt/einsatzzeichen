@@ -10,8 +10,11 @@ import {
   type TendencyId,
   type ZoneBoundsMm,
 } from '@einsatzzeichen/schema';
+import { contrastRatio } from '../a11y/contrast.js';
 import { boundsOfMm } from '../bounds.js';
 import { baseDrawing } from '../geometry/base-symbols.js';
+import { MINIMUM_NON_TEXT_CONTRAST } from '../geometry/pictograms/contrast-contract.js';
+import { RENDER_THEMES } from '../geometry/render-themes.js';
 import { HEAD_GAP_MM } from '../layout/profiles.js';
 import {
   BASE_AREA_32,
@@ -469,35 +472,56 @@ function fitBelowCanvasTop(pieces: readonly Piece[]): Piece[] {
 }
 
 /**
- * Weiße Unterlegung je Seite der Schadensdiagonalen auf gleichfarbigem Körper (LLH-1513), so breit
- * wie die Hinterlegung des dunklen Themes (`DARK_THEME.halo`, ESZ-119).
+ * Weiße Unterlegung je Seite der Schadensdiagonalen auf zu wenig abgesetztem Körper (LLH-1513,
+ * LLH-1550), so breit wie die Hinterlegung des dunklen Themes (`DARK_THEME.halo`, ESZ-119).
  */
 const DAMAGE_CASING_SIDE_MM = 0.5;
 const DAMAGE_CASING_INK: ColorToken = 'weiss';
 
 /**
- * Unterlegung der Schadensdiagonalen, wenn ihre Strichfarbe die Füllung des Körpers ist
- * (LLH-1513): die Unterlegungen, danach die Diagonalen, danach die Kontur des Körpers noch einmal.
+ * Schwächster Helligkeitskontrast zweier Farbmarken über alle ausgelieferten Themes. Die Ableitung
+ * kennt das spätere Theme nicht; die Zeichnung muss in jedem bestehen, auch im Druckgrau.
+ */
+function weakestContrast(first: ColorToken, second: ColorToken): number {
+  return Math.min(
+    ...Object.values(RENDER_THEMES).map((theme) =>
+      contrastRatio(theme.palette[first], theme.palette[second]),
+    ),
+  );
+}
+
+/** Steht ein Strich dieser Farbe auf dieser Fläche unter dem Vertrag für Nicht-Text-Grafik? */
+function needsCasing(stroke: ColorToken | 'none' | undefined, surface: ColorToken): boolean {
+  if (stroke === undefined || stroke === 'none') return false;
+  return weakestContrast(stroke, surface) + Number.EPSILON < MINIMUM_NON_TEXT_CONTRAST;
+}
+
+/**
+ * Unterlegung der Schadensdiagonalen, wenn ihre Strichfarbe sich in der Helligkeit nicht von der
+ * Fläche unter ihnen absetzt (LLH-1513, erweitert mit LLH-1550): die Unterlegungen, danach die
+ * Diagonalen, danach die Kontur des Körpers noch einmal.
  *
  * **Anlass.** Die Diagonalen aus 5.8.4 sind rot und stehen auf der Körpermitte. Auf einem rot
  * gefüllten Körper (Gefahr mit technischer Füllung `rot`, Formation der Feuerwehr) verschwinden sie
  * in der Fläche: rot auf rot, in jedem Theme 1 : 1 (im Druckgrau `#666666` auf `#666666`), und die
- * drei Stufen sind nicht mehr zu unterscheiden. Kein Original zeigt einen Schadensgrad an einem
- * gefüllten Träger (belegt ist nur das Deichprofil in L.8 und L.9), DV 102 sieht dafür keine
- * andere Farbe vor.
+ * drei Stufen sind nicht mehr zu unterscheiden. Auf Grün (1,16 : 1) und Orange (1,69 : 1) trennt
+ * sie nur der Farbton: bei Rot-Grün-Schwäche und im Druckgrau sind sie dort kaum zu lesen. Kein
+ * Original zeigt einen Schadensgrad an einem gefüllten Träger (belegt ist nur das Deichprofil in
+ * L.8 und L.9), DV 102 sieht dafür keine andere Farbe vor.
  *
- * **Regel.** Die Diagonalen bleiben rot. Unter jeder liegt ein weißer Strich, je Seite
- * {@link DAMAGE_CASING_SIDE_MM} breiter; alle Unterlegungen stehen vor allen Diagonalen, damit sich
- * kreuzende Diagonalen nicht gegenseitig anschneiden. Rot grenzt damit an Weiß wie auf der
- * Ausgabeoberfläche, für die `DAMAGE_CONTRAST` gilt. Die Kontur des Körpers wird darüber noch
- * einmal gezogen (`bodyExtra`, ohne Füllung): Die Unterlegung schnitte sie sonst dort, wo die
- * Diagonalen sie kreuzen. Außerhalb des Körpers verschwindet das Weiß auf weißer Oberfläche; auf
- * dunklem Grund wirkt es wie die Hinterlegung des Themes. Eine Gegenfarbe (schwarz oder weiß statt
- * rot) gäbe die Farbe nach DV 102 auf und ist verworfen.
+ * **Regel.** Erreicht die Strichfarbe gegen die Fläche in einem der ausgelieferten Themes weniger
+ * als {@link MINIMUM_NON_TEXT_CONTRAST} : 1, bleiben die Diagonalen rot, und unter jeder liegt ein
+ * weißer Strich, je Seite {@link DAMAGE_CASING_SIDE_MM} breiter; alle Unterlegungen stehen vor
+ * allen Diagonalen, damit sich kreuzende Diagonalen nicht gegenseitig anschneiden. Rot grenzt
+ * damit an Weiß wie auf der Ausgabeoberfläche, für die `DAMAGE_CONTRAST` gilt. Die Kontur des
+ * Körpers wird darüber noch einmal gezogen (`bodyExtra`, ohne Füllung): Die Unterlegung schnitte
+ * sie sonst dort, wo die Diagonalen sie kreuzen. Außerhalb des Körpers verschwindet das Weiß auf
+ * weißer Oberfläche; auf dunklem Grund wirkt es wie die Hinterlegung des Themes. Eine Gegenfarbe
+ * (schwarz oder weiß statt rot) gäbe die Farbe nach DV 102 auf und ist verworfen.
  *
- * **Nur bei gleicher Farbe.** Auf jeder anderen Füllung bleibt die Zeichnung bytegleich. Maßgeblich
- * ist die Fläche unter den Diagonalen (`surfaceFill`): bei weißer Innenkontur das rote Innenfeld,
- * nicht der weiße Körper.
+ * **Nur unter 3 : 1.** Auf Weiß und Gelb (3,59 : 1, im Druckgrau 4,23 : 1) bleibt die Zeichnung
+ * bytegleich. Maßgeblich ist die Fläche unter den Diagonalen (`surfaceFill`): bei weißer
+ * Innenkontur das farbige Innenfeld, nicht der weiße Körper.
  */
 function damageOnBody(
   lines: readonly Primitive[],
@@ -505,7 +529,7 @@ function damageOnBody(
   surfaceFill: ColorToken | undefined,
 ): Pick<Piece, 'primitives' | 'redrawsBodyOutline'> {
   const fill = surfaceFill;
-  if (fill === undefined || !lines.some((p) => p.style?.stroke === fill)) {
+  if (fill === undefined || !lines.some((p) => needsCasing(p.style?.stroke, fill))) {
     return { primitives: lines };
   }
   noteDerivation({

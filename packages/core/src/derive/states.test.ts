@@ -2,7 +2,7 @@
  * Abgeleitete Lagen der Zustände (Entscheidung des Eigentümers vom 02.10.2026). Jede Zahl ist aus
  * einer vermessenen Lage hergeleitet; die Herleitung steht im Kommentar am Test.
  */
-import type { Drawing, Primitive, SymbolSpec, ZoneBoundsMm } from '@einsatzzeichen/schema';
+import { TECHNICAL_FILL_TOKENS, type Drawing, type Primitive, type SymbolSpec, type ZoneBoundsMm } from '@einsatzzeichen/schema';
 import { describe, expect, it } from 'vitest';
 import { boundsOfMm } from '../bounds.js';
 import { drawSymbol } from '../default-ports.js';
@@ -11,6 +11,7 @@ import { placeStates, type PlacedStatePart } from '../layout/state-placement.js'
 import { checkViewBox } from '../viewbox-gate.js';
 import { contrastRatio } from '../a11y/contrast.js';
 import { RENDER_THEMES } from '../geometry/render-themes.js';
+import { renderSvg } from '../render/svg.js';
 import { paintColor } from '../render/theme.js';
 
 const round3 = (value: number): number => Math.round(value * 1000) / 1000;
@@ -226,7 +227,7 @@ describe('Schadensgrad auf dem Körper (übertragen von L.8 und L.9)', () => {
   });
 });
 
-describe('Schadensgrad auf gleichfarbigem Körper (LLH-1513)', () => {
+describe('Schadensgrad auf Körper ohne Helligkeitskontrast (LLH-1513, LLH-1550)', () => {
   const GRADES = ['damaged', 'partially-destroyed', 'destroyed'] as const;
 
   /** Die Primitive der Schadensmarke in Malreihenfolge. */
@@ -290,10 +291,11 @@ describe('Schadensgrad auf gleichfarbigem Körper (LLH-1513)', () => {
     expect(drawing.children.filter((child) => child.style?.stroke === 'weiss')).toHaveLength(4);
   });
 
-  it('richtet sich bei weißer Innenkontur nach dem roten Innenfeld, nicht nach dem weißen Körper', () => {
+  it('richtet sich bei weißer Innenkontur nach dem farbigen Innenfeld, nicht nach dem weißen Körper', () => {
     for (const spec of [
       { kind: 'hazard', technicalFill: 'rot', whiteInnerContour: true, states: ['destroyed'] },
       { kind: 'formation', organization: 'feuerwehr', whiteInnerContour: true, states: ['damaged'] },
+      { kind: 'hazard', technicalFill: 'gruen', whiteInnerContour: true, states: ['destroyed'] },
     ] as const) {
       const drawing = drawn(spec as SymbolSpec);
       expect(body(drawing).style?.fill, JSON.stringify(spec)).toBe('weiss');
@@ -302,21 +304,69 @@ describe('Schadensgrad auf gleichfarbigem Körper (LLH-1513)', () => {
       expect(casing, JSON.stringify(spec)).toHaveLength(red.length);
       expect(drawing.children.at(-1)?.role).toBe('bodyExtra');
     }
-    const gruen = drawn({ kind: 'hazard', technicalFill: 'gruen', whiteInnerContour: true, states: ['destroyed'] });
-    expect(gruen.children.some((child) => child.style?.stroke === 'weiss')).toBe(false);
+    const gelb = drawn({ kind: 'hazard', technicalFill: 'gelb', whiteInnerContour: true, states: ['destroyed'] });
+    expect(gelb.children.some((child) => child.style?.stroke === 'weiss')).toBe(false);
   });
 
-  it('lässt jede andere Füllung unverändert', () => {
-    for (const technicalFill of ['gruen', 'gelb', 'orange', 'grau'] as const) {
+  it('unterlegt auch auf Füllungen, von denen sich Rot nur im Farbton absetzt (LLH-1550)', () => {
+    // Grün (gering) und Orange (groß) im Ausmaß des Lifeline Hub, dazu jede weitere Füllung,
+    // gegen die Rot in einem der Themes unter 3 : 1 bleibt.
+    for (const technicalFill of ['gruen', 'orange', 'braun', 'grau', 'hellblau', 'blau', 'hellgruen', 'hellgrau'] as const) {
       for (const grade of GRADES) {
         const drawing = drawn({ kind: 'hazard', technicalFill, states: [grade] });
-        expect(drawing.children.some((child) => child.style?.stroke === 'weiss')).toBe(false);
+        const red = drawing.children.filter((child) => child.type === 'line' && child.style?.stroke === 'rot');
+        const casing = drawing.children.filter((child) => child.type === 'line' && child.style?.stroke === 'weiss');
+        expect(red, technicalFill).toHaveLength(2 * (GRADES.indexOf(grade) + 1));
+        expect(casing, technicalFill).toHaveLength(red.length);
+        expect(drawing.children.at(-1)?.role, technicalFill).toBe('bodyExtra');
+        expect(drawing.derivations?.some((note) => note.part.includes(`Unterlegung`) && note.part.includes(technicalFill))).toBe(true);
+      }
+    }
+  });
+
+  it('gilt ebenso für THW (blau) und Polizei (grün)', () => {
+    for (const organization of ['thw', 'polizei'] as const) {
+      const drawing = drawn({ kind: 'formation', organization, states: ['damaged'] });
+      expect(drawing.children.filter((child) => child.style?.stroke === 'weiss'), organization).toHaveLength(2);
+    }
+  });
+
+  it('behält die Strichelung der Organisation an der neu gezogenen Kontur', () => {
+    const theme = RENDER_THEMES['accessible-light'];
+    for (const organization of ['thw', 'polizei'] as const) {
+      const plain = renderSvg(drawSymbol({ kind: 'formation', organization }), { theme });
+      const svg = renderSvg(drawn({ kind: 'formation', organization, states: ['destroyed'] }), { theme });
+      const dash = /stroke-dasharray="[^"]+"/.exec(plain)?.[0];
+      expect(dash, organization).toBeDefined();
+      // Körper und seine Kontur über der Unterlegung tragen dasselbe Muster.
+      expect(svg.split(dash as string).length - 1, organization).toBe(2);
+    }
+  });
+
+  it('lässt Füllungen mit genug Helligkeitskontrast unverändert', () => {
+    for (const technicalFill of ['gelb', 'weiss'] as const) {
+      for (const grade of GRADES) {
+        const drawing = drawn({ kind: 'hazard', technicalFill, states: [grade] });
+        expect(drawing.children.some((child) => child.type === 'line' && child.style?.stroke === 'weiss')).toBe(false);
         expect(drawing.children.some((child) => child.role === 'bodyExtra')).toBe(false);
         expect(drawing.derivations?.some((note) => note.part.includes('Unterlegung'))).toBe(false);
       }
     }
     const plain = drawn({ kind: 'hazard', states: ['destroyed'] });
     expect(plain.children.some((child) => child.style?.stroke === 'weiss')).toBe(false);
+  });
+
+  it('unterlegt genau dort, wo Rot gegen die Füllung in einem Theme unter 3 : 1 bleibt', () => {
+    for (const technicalFill of TECHNICAL_FILL_TOKENS) {
+      const weakest = Math.min(
+        ...Object.values(RENDER_THEMES).map((theme) =>
+          contrastRatio(theme.palette.rot, theme.palette[technicalFill]),
+        ),
+      );
+      const drawing = drawn({ kind: 'hazard', technicalFill, states: ['destroyed'] });
+      const cased = drawing.children.some((child) => child.type === 'line' && child.style?.stroke === 'weiss');
+      expect(cased, `${technicalFill} ${weakest.toFixed(2)}`).toBe(weakest < 3);
+    }
   });
 
   it('hält rot gegen die Unterlegung in jedem Theme über 3 : 1', () => {
