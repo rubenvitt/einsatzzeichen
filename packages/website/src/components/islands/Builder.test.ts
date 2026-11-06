@@ -174,6 +174,27 @@ function blockedOf(container: HTMLElement, field: string): string[] {
   );
 }
 
+/** Das Suchfeld über einer langen Auswahl, über seine Beschriftung „… suchen“ (ESZ-152). */
+function choiceSearch(container: HTMLElement, label: string): HTMLInputElement | null {
+  const found = [...container.querySelectorAll('.ez-builder__choice-search')].find(
+    (field) => field.querySelector('.ez-builder__field-label')?.textContent === `${label} suchen`,
+  );
+  return (found?.querySelector('input') ?? null) as unknown as HTMLInputElement | null;
+}
+
+/** Die Werte einer Auswahlliste, ohne „ohne“ oder „nicht gesetzt“. */
+function optionValues(container: HTMLElement, selector: string): string[] {
+  const select = container.querySelector(selector);
+  expect(select, `Keine Auswahlliste ${selector}.`).not.toBeNull();
+  return [...(select?.querySelectorAll('option') ?? [])].map((option) => option.getAttribute('value') ?? '').filter((value) => value !== '');
+}
+
+/** Die eingeklappte Liste „passen hier nicht“ unter einer Auswahlliste. */
+function blockedNear(container: HTMLElement, selector: string): string[] {
+  const field = container.querySelector(selector)?.closest('.ez-builder__field');
+  return [...(field?.querySelectorAll('.ez-builder__blocked li strong') ?? [])].map((entry) => entry.textContent ?? '');
+}
+
 function actionButton(container: HTMLElement, label: string): HTMLElement {
   const found = [...container.querySelectorAll('button')].find(
     (candidate) => candidate.querySelector('strong')?.textContent === label,
@@ -365,5 +386,75 @@ describe('Der Baukasten auf der Beschreibung (ESZ-150)', () => {
     const code = container.querySelector('[role="tabpanel"]')?.textContent ?? '';
     expect(code).toMatch(/draw\(/);
     expect(code).toMatch(/"kind": "formation"|kind: 'formation'|"kind":"formation"/);
+  });
+});
+
+describe('Suche in langen Auswahlen (ESZ-152)', () => {
+  it('filtert den Zustand: passende Knöpfe und eingeklappte Liste gleichermaßen', async () => {
+    window.history.replaceState(null, '', `/builder/?spec=${encodeSign({ kind: 'person', states: ['person-injured'] })}`);
+    const container = await mountBuilder();
+    expect(chip(container, 'Zustand', 'Überschwemmtes Gebiet')).toBeDefined();
+    expect(blockedOf(container, 'Zustand')).toEqual(expect.arrayContaining(['Person tot', 'Sonnig']));
+
+    type(choiceSearch(container, 'Zustand'), 'tot');
+    await settle();
+    expect(chip(container, 'Zustand', 'Total zerstört')).toBeDefined();
+    expect(chip(container, 'Zustand', 'Überschwemmtes Gebiet')).toBeUndefined();
+    // Der gesetzte Wert bleibt stehen und lässt sich zurücknehmen.
+    expect(chip(container, 'Zustand', 'Person verletzt')?.getAttribute('aria-pressed')).toBe('true');
+    expect(blockedOf(container, 'Zustand')).toEqual(expect.arrayContaining(['Person tot', 'Totes Tier']));
+    expect(blockedOf(container, 'Zustand')).not.toContain('Sonnig');
+
+    type(choiceSearch(container, 'Zustand'), 'Ueberschwemmt');
+    await settle();
+    expect(chip(container, 'Zustand', 'Überschwemmtes Gebiet')).toBeDefined();
+    expect(chip(container, 'Zustand', 'Person tot')).toBeUndefined();
+
+    type(choiceSearch(container, 'Zustand'), 'gibt es nicht');
+    await settle();
+    expect(chipsField(container, 'Zustand').querySelector('[role="status"]')?.textContent).toBe('Nichts passt zu dieser Suche.');
+  });
+
+  it('lässt kurze Auswahlen ohne Suchfeld', async () => {
+    const container = await mountBuilder();
+    expect(choiceSearch(container, 'Kopf')).toBeNull();
+    expect(choiceSearch(container, 'Organisation')).toBeNull();
+    expect(choiceSearch(container, 'Zustand')).not.toBeNull();
+  });
+
+  it('filtert die Funktionsfassungen und behält die gesetzte', async () => {
+    window.history.replaceState(null, '', `/builder/?spec=${encodeSign({ kind: 'formation', role: 'incident-command' })}`);
+    const container = await mountBuilder();
+    expect(optionValues(container, '#ez-builder-role')).toContain('disaster-control-command');
+
+    type(choiceSearch(container, 'Funktion'), 'Abschnitt');
+    await settle();
+    expect(optionValues(container, '#ez-builder-role')).toEqual(['incident-command', 'incident-section-command-north', 'incident-subsection-command']);
+    expect((container.querySelector('#ez-builder-role') as unknown as HTMLSelectElement | null)?.value).toBe('incident-command');
+    expect(blockedNear(container, '#ez-builder-role')).toEqual(['Einsatzabschnittsleiter', 'Untereinsatzabschnittsleiter']);
+  });
+
+  it('filtert das freistehende Piktogramm über Name und Gruppe', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      `/builder/?spec=${encodeSign({ kind: 'pictogram', pictogram: 'capability.cbrn-protection' })}`,
+    );
+    const container = await mountBuilder();
+    expect(optionValues(container, '#ez-builder-fs-pictogram').length).toBeGreaterThan(150);
+
+    type(choiceSearch(container, 'Piktogramm'), 'Deichbruch');
+    await settle();
+    expect(optionValues(container, '#ez-builder-fs-pictogram')).toEqual(['capability.cbrn-protection', 'damage.dyke-breach']);
+
+    type(choiceSearch(container, 'Piktogramm'), 'Kommunikation');
+    await settle();
+    const hits = optionValues(container, '#ez-builder-fs-pictogram');
+    expect(hits).toContain('comms.fax-transmission');
+    // Die Gruppe „Kommunikation (Anhang J)“ ganz, dazu der gesetzte Wert und ein Name mit dem Wort.
+    expect(hits.filter((value) => !value.startsWith('comms.'))).toEqual([
+      'capability.cbrn-protection',
+      'capability.information-communications',
+    ]);
   });
 });
