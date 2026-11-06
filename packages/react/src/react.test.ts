@@ -2,7 +2,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_VIEWBOX_MM, PALETTE, type Drawing } from '@einsatzzeichen/schema';
-import { REFERENCE_THEME, renderSvg, type RenderTheme } from '@einsatzzeichen/core';
+import { REFERENCE_THEME, draw, renderSvg, type RenderTheme } from '@einsatzzeichen/core';
 import {
   Einsatzzeichen,
   splitSvgMarkup,
@@ -148,5 +148,13 @@ describe('Einsatzzeichen', () => {
     expect(attributes.class).toBe('zeichen');
     expect(attributes.style).toBe('display:block');
     expect(innerHtml).toBe(splitSvgMarkup(renderSvg(formation)).innerHtml);
+  });
+});
+
+describe('Einsatzzeichen mit Beschreibung (ESZ-149)', () => {
+  it('zeichnet eine Beschreibung wie draw(sign)', () => {
+    const sign = { kind: 'formation', organization: 'thw', head: 'gruppe' } as const;
+    const html = renderToStaticMarkup(createElement(Einsatzzeichen, { sign, size: 48, idPrefix: 'z' }));
+    expectSameSvg(html, renderSvg(draw(sign).drawing, { size: 48, idPrefix: 'z' }));
   });
 });

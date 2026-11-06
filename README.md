@@ -47,6 +47,27 @@ const svg = renderSvg(
 );
 ```
 
+Seit 6.12 gibt es darüber eine einfachere Ebene (ESZ-149): eine **Beschreibung** (`Sign`) statt
+des exakten Bauplans. `draw()` wählt die Fassungen selbst, zeichnet immer und sagt, was es
+weglassen musste; `check()`, `choices()` und `describe()` antworten an den Feldern der
+Beschreibung. Dasselbe Zeichen wie oben:
+
+```ts
+import { draw, renderSvg } from '@einsatzzeichen/core';
+
+const { drawing } = draw(
+  { kind: 'formation', organization: 'thw', head: 'gruppe', text: { center: 'B', bottomRight: 'THW' },
+    exact: { whiteInnerContour: true } },
+  { title: 'Bergungsgruppe' },
+);
+const svg = renderSvg(drawing, { size: 64 });
+```
+
+`SymbolSpec` bleibt der Bauplan und steht zusätzlich unter `@einsatzzeichen/core/exact`. Für jedes
+Rezept und jedes typische Einsatzmittel zeichnet `draw(fromExact(spec))` bytegleich dasselbe wie
+`drawSymbol(spec)`. Entscheidung und Migrationspfad:
+[`docs/decisions/2026-11-06-esz-149-beschreibung-und-bauplan.md`](./docs/decisions/2026-11-06-esz-149-beschreibung-und-bauplan.md).
+
 Die benannten Vorlagenzeichen (`RECIPES`) bleiben als Belege im Prüfpaket, ebenso
 `composeFromCatalog()` als nicht brechende Hülle um `drawSymbol()`.
 
@@ -64,9 +85,9 @@ Kanal dasselbe Bild entsteht.
 | `core` | Bausteine und ihre Geometrie: Grundzeichen, Körpermarken, Fahrwerk, Organisationsfarben, Stärkeangaben, technische Kopfmarken, Verwaltungsstufen, Funktionsfassungen, Piktogramme, Pfeile und Grenzen aus einem Verlauf, deutsche Bezeichnungen, konkrete Render-Themes, Kontrastausnahmen, Laufweiten der Katalogschrift (`src/geometry/`, `src/assets/`). Dazu Bausteinregister, Zonenmodell, Regelkatalog, Kompositionsmotor, Regelvalidierung, Renderer (SVG, Canvas), Render-Theme-Vertrag, A11y-/Kontrast- und viewBox-Gates, Hüllenberechnung, Fingerprint-Vergleich, Layoutprofile. Hängt **nie** von `conformance` ab und importiert kein `node:*`. |
 | `conformance` | Prüfpaket: Kompositionsrezepte (`RECIPES`; `composeFromCatalog` als Hülle um `drawSymbol` aus `core`), Coverage-Manifest und -Gate, Domain-Reviews und -Fragen, Fingerprints, Referenzinventar, Regelbelege und Regelabdeckung, Herkunft je Kombination, Vergleichs- und benannte Ausnahmen, Quellenregister, Profilregister, Elementregister sowie die Schriftbehandlung für die Rasterung (`fonts.ts`, TTFs von Einsatzzeichen Sans). Bis 1.5 als `@einsatzzeichen/catalog` veröffentlicht. |
 | `cli` | Kennzahlenableitung aus der lokalen Referenz, Coverage-Gate, SVG-Export. |
-| `react` | Hook `useEinsatzzeichenSvg` (liefert das `core`-SVG bytegleich als String) und Komponente `<Einsatzzeichen drawing size theme idPrefix />`, die Wurzelattribute und Inhalt dieses SVGs unverändert in den React-Baum trägt — React ordnet nur die Attribute selbst (kein JSX-Build, `react` als Peer-Abhängigkeit). |
-| `web-component` | Custom Element `<einsatzzeichen-symbol>` mit offenem Shadow DOM; Properties `drawing`/`theme`, Attribute `size`/`id-prefix`. Registrierung idempotent und ohne `customElements` folgenlos. |
-| `maplibre` | `createStyleImage` rastert über den `core`-Canvas-Renderer zu `{ width, height, data }` für `map.addImage`; `addSymbolImage` registriert es mit `pixelRatio`. Map und Canvas sind strukturell typisiert, keine `maplibre-gl`-Abhängigkeit. |
+| `react` | Hook `useEinsatzzeichenSvg` (liefert das `core`-SVG bytegleich als String) und Komponente `<Einsatzzeichen drawing size theme idPrefix />` (statt `drawing` auch `sign`, eine Beschreibung), die Wurzelattribute und Inhalt dieses SVGs unverändert in den React-Baum trägt — React ordnet nur die Attribute selbst (kein JSX-Build, `react` als Peer-Abhängigkeit). |
+| `web-component` | Custom Element `<einsatzzeichen-symbol>` mit offenem Shadow DOM; Properties `drawing` oder `sign` und `theme`, Attribute `size`/`id-prefix`. Registrierung idempotent und ohne `customElements` folgenlos. |
+| `maplibre` | `createStyleImage` rastert über den `core`-Canvas-Renderer zu `{ width, height, data }` für `map.addImage`; `addSymbolImage` registriert es mit `pixelRatio`. Beide nehmen statt der Zeichnung auch eine Beschreibung. Map und Canvas sind strukturell typisiert, keine `maplibre-gl`-Abhängigkeit. |
 | `qgis` | `qgisSymbolLibrary` erzeugt eine QGIS-Stilbibliothek (XML, `SvgMarker` mit `base64:`-Inline-SVG aus `renderSvg`), `qgisSvgFiles` die Dateiliste für ein SVG-Verzeichnis — ohne Dateisystemzugriff und ohne `param()`-Umfärbung, weil die Farben taktischer Zeichen semantisch festgelegt sind. |
 
 `schema` und `core` haben **null Fremdabhängigkeiten** — beide sind reines TypeScript ohne

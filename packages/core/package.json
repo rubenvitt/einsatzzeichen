@@ -32,6 +32,18 @@
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
       },
+      "./exact": {
+        "types": "./dist/exact.d.ts",
+        "default": "./dist/exact.js"
+      },
+      "./sketch": {
+        "types": "./dist/sketch/index.d.ts",
+        "default": "./dist/sketch/index.js"
+      },
+      "./blocks": {
+        "types": "./dist/blocks/index.d.ts",
+        "default": "./dist/blocks/index.js"
+      },
       "./fonts/*": "./fonts/*"
     }
   },

@@ -14,7 +14,14 @@ const pkgSrc = (name) => fileURLToPath(new URL(`../${name}/src/`, import.meta.ur
  * verstümmelt (belegt im Setup-Spike, Spec §5.3). Die erste Regel bedient Subpfade auf die
  * Paketquellen, die zweite den Paketindex — exakt, nicht als Präfix.
  */
+/** Die Subpfade von `core` (ESZ-149), wie `publishConfig.exports` sie führt; exakt wie der Paketindex. */
+const CORE_SUBPATHS = { exact: 'exact.ts', sketch: 'sketch/index.ts', blocks: 'blocks/index.ts' };
+
 const workspaceAliases = [
+  ...Object.entries(CORE_SUBPATHS).map(([subpath, file]) => ({
+    find: new RegExp(`^@einsatzzeichen/core/${subpath}$`),
+    replacement: `${pkgSrc('core')}${file}`,
+  })),
   ...PACKAGE_IDS.map((name) => ({
     find: new RegExp(`^@einsatzzeichen/${name}/src/(.*)$`),
     replacement: `${pkgSrc(name)}$1`,

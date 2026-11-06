@@ -32,6 +32,36 @@ Textmetrik, Fingerprint-Vergleich gegen die Referenz.
 `core` hat **null Fremdabhängigkeiten**, importiert kein `node:*` und hängt **nie** von
 `conformance` ab — die Richtung geht immer `conformance → core → schema`.
 
+## Ein Zeichen beschreiben
+
+Seit 6.12 ist der einfache Einstieg eine **Beschreibung** (`Sign`): was gemeint ist, nicht wie es
+exakt gebaut wird. `draw()` wählt die Fassungen selbst, zeichnet immer etwas und sagt, was es
+weglassen musste.
+
+```ts
+import { draw, renderSvg } from '@einsatzzeichen/core';
+
+const { drawing, fidelity, omitted } = draw({
+  kind: 'vehicle-land',
+  organization: 'hilfsorganisation',
+  tasks: ['medical-service'],
+});
+const svg = renderSvg(drawing, { size: 64 });
+```
+
+| Export | Was es tut |
+|---|---|
+| `draw(sign, options?)` | zeichnet immer; `fidelity` ist `measured`, `derived` oder `simplified`, `omitted` nennt Weggelassenes mit Grund |
+| `check(sign)` | streng: trägt die Beschreibung als Ganzes? Befunde am Feld der Beschreibung |
+| `choices(sign, field)` | welche Werte eines Feldes passen, mit deutschem Namen und Gruppe |
+| `describe(sign)` | Name und Vorlesetext |
+| `serialize(sign)`, `parse(text)` | Hülle `{"v":2,"sign":…}`; `parse` liest auch `{"v":1,…}` |
+| `resolve(sign)`, `fromExact(spec)` | Beschreibung ↔ Bauplan (`SymbolSpec`) |
+| `KIND_FAMILIES` | die Arten in Familien für eine erste Auswahl |
+
+Der Bauplan (`SymbolSpec`, `drawSymbol()` und alles darum) bleibt unverändert und steht
+zusätzlich unter `@einsatzzeichen/core/exact`, die Bausteine unter `@einsatzzeichen/core/blocks`.
+
 ## Installation
 
 <div class="ez-note">

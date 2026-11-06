@@ -294,3 +294,15 @@ describe('addSymbolImage', () => {
     expect(map.added).toHaveLength(0);
   });
 });
+
+describe('Beschreibung statt Zeichnung (ESZ-149)', () => {
+  it('rastert eine Beschreibung in denselben Maßen wie ihre Zeichnung', () => {
+    const recorder = recordingCanvas();
+    const image = createStyleImage({ kind: 'formation', organization: 'thw' }, {
+      size: 32,
+      createCanvas: () => recorder.canvas,
+    });
+    expect(image.width).toBe(32);
+    expect(image.height).toBe(32);
+  });
+});

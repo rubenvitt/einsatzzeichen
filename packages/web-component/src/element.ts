@@ -1,5 +1,5 @@
-import { renderSvg, type RenderTheme } from '@einsatzzeichen/core';
-import type { Drawing } from '@einsatzzeichen/schema';
+import { drawingOf, renderSvg, type RenderTheme } from '@einsatzzeichen/core';
+import type { Drawing, Sign } from '@einsatzzeichen/schema';
 
 /** Standard-Tagname; Custom Elements verlangen einen Bindestrich im Namen. */
 export const DEFAULT_TAG_NAME = 'einsatzzeichen-symbol';
@@ -66,12 +66,14 @@ export function parseMinStrokeWidthAttribute(value: string): number {
  * Ohne Zeichnung ist das Markup leer: ein Element ohne Inhalt zeigt bewusst nichts.
  */
 export function renderElementMarkup(
-  drawing: Drawing | undefined,
+  input: Drawing | Sign | undefined,
   options: ElementMarkupOptions = {},
 ): string {
-  if (drawing === undefined) {
+  if (input === undefined) {
     return '';
   }
+  // Eine Beschreibung (ESZ-149) geht durch `draw` und ergibt damit immer ein Bild.
+  const drawing = drawingOf(input);
   const size = options.size == null ? undefined : parseSizeAttribute(options.size);
   const idPrefix = options.idPrefix == null ? undefined : options.idPrefix;
   const minStrokeWidthPx =
@@ -89,8 +91,8 @@ const Base: typeof HTMLElement =
   typeof HTMLElement === 'undefined' ? (class {} as unknown as typeof HTMLElement) : HTMLElement;
 
 /**
- * `<einsatzzeichen-symbol>`: rendert eine `Drawing`-IR über `renderSvg` in einen offenen
- * Shadow DOM. Zeichnung und Theme sind Properties (Objekte lassen sich nicht sinnvoll als
+ * `<einsatzzeichen-symbol>`: rendert eine `Drawing`-IR oder eine Beschreibung (`sign`) über
+ * `renderSvg` in einen offenen Shadow DOM. Zeichnung, Beschreibung und Theme sind Properties (Objekte lassen sich nicht sinnvoll als
  * Attribut tragen), `size` und `id-prefix` sind Attribute, weil sie Strings sind und aus dem
  * Markup gesetzt werden sollen. Gerendert wird nur im verbundenen Zustand (siehe `#render`);
  * Fehler aus dem Rendern (etwa eine ungültige `size`) werden nicht abgefangen — der Browser
@@ -102,6 +104,7 @@ export class EinsatzzeichenElement extends Base {
   }
 
   #drawing: Drawing | undefined;
+  #sign: Sign | undefined;
   #theme: RenderTheme | undefined;
   readonly #root: ShadowRoot;
 
@@ -116,6 +119,19 @@ export class EinsatzzeichenElement extends Base {
 
   set drawing(value: Drawing | undefined) {
     this.#drawing = value;
+    this.#render();
+  }
+
+  /**
+   * Die Beschreibung des Zeichens (ESZ-149) statt einer fertigen Zeichnung. Ist auch `drawing`
+   * gesetzt, gilt die Zeichnung.
+   */
+  get sign(): Sign | undefined {
+    return this.#sign;
+  }
+
+  set sign(value: Sign | undefined) {
+    this.#sign = value;
     this.#render();
   }
 
@@ -146,7 +162,7 @@ export class EinsatzzeichenElement extends Base {
     if (!this.isConnected) {
       return;
     }
-    this.#root.innerHTML = renderElementMarkup(this.#drawing, {
+    this.#root.innerHTML = renderElementMarkup(this.#drawing ?? this.#sign, {
       size: this.getAttribute('size'),
       idPrefix: this.getAttribute('id-prefix'),
       minStrokeWidth: this.getAttribute('min-stroke-width'),

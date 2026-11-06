@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { renderSvg, type RenderTheme } from '@einsatzzeichen/core';
+import { draw, renderSvg, type RenderTheme } from '@einsatzzeichen/core';
 import { PALETTE } from '@einsatzzeichen/schema';
 import {
   DEFAULT_TAG_NAME,
@@ -67,5 +67,12 @@ describe('defineEinsatzzeichenElement in Node', () => {
     expect(typeof globalThis.customElements).toBe('undefined');
     expect(() => defineEinsatzzeichenElement()).not.toThrow();
     expect(DEFAULT_TAG_NAME).toBe('einsatzzeichen-symbol');
+  });
+});
+
+describe('renderElementMarkup mit Beschreibung (ESZ-149)', () => {
+  it('zeichnet eine Beschreibung über draw', () => {
+    const sign = { kind: 'formation', organization: 'feuerwehr' } as const;
+    expect(renderElementMarkup(sign, { size: '32' })).toBe(renderSvg(draw(sign).drawing, { size: 32 }));
   });
 });

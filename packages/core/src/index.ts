@@ -276,3 +276,6 @@ export {
   type WeatherVerdict,
 } from './geometry/weather.js';
 export { animalStateDrawing } from './geometry/animal-state.js';
+// ESZ-149: Beschreibung statt Bauplan als Einstieg — `draw`, `check`, `choices`, `describe`,
+// `serialize`/`parse` (Hülle v2, liest v1) und der Weg zwischen den Ebenen (`resolve`, `fromExact`).
+export * from './sign/index.js';

@@ -2,7 +2,44 @@
 
 Das Produkt von Einsatzzeichen: Bausteine und Geometrie der Zeichen (Grundzeichen, Organisationsfarben, Stärken, Kopfmarken, Piktogramme, Render-Themes, Textlaufweiten), Kompositionsmotor, Regelvalidierung, Layout-Profile sowie Renderer für SVG und Canvas. Ohne Fremd- und ohne Node-Abhängigkeit, läuft auch im Browser. Für die Nutzung reichen `@einsatzzeichen/core`, `@einsatzzeichen/schema` und ein Ausgabekanal; das Prüfpaket `@einsatzzeichen/conformance` ist nicht nötig.
 
-## Ein Zeichen zeichnen
+## Ein Zeichen beschreiben
+
+Der einfache Einstieg seit 6.12: Eine **Beschreibung** (`Sign`) sagt, was gemeint ist. Die Bibliothek wählt die Fassungen selbst und zeichnet immer etwas.
+
+```ts
+import { draw, renderSvg } from '@einsatzzeichen/core';
+
+const { drawing, fidelity, omitted } = draw(
+  { kind: 'formation', organization: 'thw', head: 'gruppe', text: { center: 'B', bottomRight: 'THW' } },
+  { title: 'Bergungsgruppe' },
+);
+const svg = renderSvg(drawing, { size: 64 });
+```
+
+Die Felder: `kind`, `variant`, `organization` oder `color` (eins von beiden), `tasks` (Fachaufgaben; ob randbündig oder in der Box, wählt die Bibliothek: vermessen vor abgeleitet, randbündig vor Box), `head` (genau eine Angabe der Kopfzone: Stärke, Verband, Verwaltungsstufe oder technische Kopfmarke), `role`, `chassis`, `states` (Zustände und höchstens eine Tendenz) und `text` (`center`, `centerSize`, `bottomRight`, `below` für die Fußzone und die übrigen Zonen). Was die Beschreibung nicht ausdrückt, trägt `exact` als Ergänzung zum Bauplan.
+
+- `draw(sign, options?)` wirft nie wegen einer Regel. Trägt die Beschreibung nicht, lässt es in fester Reihenfolge weg, was nicht passt; `omitted` nennt jedes weggelassene Teil mit Grund, `fidelity` ist dann `simplified`, sonst `measured` oder `derived`. `exact` ist der gezeichnete Bauplan, `key` ein stabiler Schlüssel für Caches.
+- `check(sign)` prüft streng und nennt je Befund das Feld der Beschreibung.
+- `choices(sign, field)` sagt je Wert eines Feldes, ob er zur übrigen Beschreibung passt, mit deutschem Namen und Gruppe.
+- `describe(sign)` gibt Name und Vorlesetext.
+- `serialize(sign)` / `parse(text)` schreiben die Hülle `{"v":2,"sign":{…}}`; `parse` liest auch `{"v":1,…}` und alte Links. `encodeSignParam` / `decodeSignParam` für URLs.
+- `resolve(sign)` macht den Bauplan, `fromExact(spec)` den Rückweg. Für jedes Rezept und jedes typische Einsatzmittel zeichnet `draw(fromExact(spec))` bytegleich dasselbe wie `drawSymbol(spec)`.
+- `KIND_FAMILIES` gruppiert die Arten für eine erste Auswahl („Einheit“, „Fahrzeug“, …).
+
+Freistehende Zeichen (siehe unten) sind ebenfalls eine Beschreibung und gehen unverändert in `draw`, `check`, `describe` und `serialize`. Die Kanäle `react` (`<Einsatzzeichen sign={…} />`), `maplibre` (`addSymbolImage(map, id, sign, …)`) und `web-component` (Property `sign`) nehmen eine Beschreibung direkt.
+
+### Subpfade
+
+| Einstieg | Inhalt |
+|---|---|
+| `@einsatzzeichen/core` | alles, wie bisher, dazu die Beschreibung |
+| `@einsatzzeichen/core/exact` | die Bauplan-Welt: `drawSymbol`, `compose`, `validateSpec`, `checkSpec`, `vocabulary`, die Codecs, `explainIssue`, Herkunft, `resolve`, `fromExact` |
+| `@einsatzzeichen/core/blocks` | Bausteine und Geometrie: Grundzeichen, Körpermarken, Köpfe, Piktogramme, Register, Namen |
+| `@einsatzzeichen/core/sketch` | die Kommunikationsskizze |
+
+Bis 7.0 steht alles weiter auch an der Wurzel. Die Entscheidung steht in `docs/decisions/2026-11-06-esz-149-beschreibung-und-bauplan.md` im Repository.
+
+## Ein Zeichen exakt bauen
 
 `drawSymbol()` macht aus einer `SymbolSpec` eine Zeichnung — mit der Standardbelegung der Bausteine (`DEFAULT_PORTS`) und einer aus der Spec abgeleiteten Beschreibung für Screenreader. Wer einzelne Bausteine tauschen will, ruft `compose(spec, { ...DEFAULT_PORTS, … })` selbst auf.
 

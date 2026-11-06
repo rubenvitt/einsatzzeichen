@@ -1,10 +1,11 @@
 import {
   RASTER_MIN_STROKE_WIDTH_PX,
+  drawingOf,
   rasterDimensionsForWidth,
   renderCanvas,
   type RenderTheme,
 } from '@einsatzzeichen/core';
-import type { Drawing } from '@einsatzzeichen/schema';
+import type { Drawing, Sign } from '@einsatzzeichen/schema';
 
 /**
  * Rohes RGBA-Bild in der Form, die MapLibres `map.addImage` als Eingabe akzeptiert
@@ -163,7 +164,9 @@ function defaultCreateCanvas(width: number, height: number): CanvasLike {
  * Regel wie bei allen anderen Rasterausgaben, damit ein Symbol auf der Karte die Proportionen des
  * Katalogs behält.
  */
-export function createStyleImage(drawing: Drawing, options: SymbolImageOptions): StyleImageData {
+export function createStyleImage(input: Drawing | Sign, options: SymbolImageOptions): StyleImageData {
+  // Eine Beschreibung (ESZ-149) geht durch `draw` und ergibt damit immer ein Bild.
+  const drawing = drawingOf(input);
   const pixelRatio = options.pixelRatio ?? 1;
   const widthPx = devicePixelWidth(options.size, pixelRatio);
   const raster = rasterDimensionsForWidth(drawing.viewBox, widthPx);
@@ -191,14 +194,14 @@ export function createStyleImage(drawing: Drawing, options: SymbolImageOptions):
 }
 
 /**
- * Rastert die Zeichnung und registriert sie unter `id` im Stil der Karte. Eine bereits belegte ID
+ * Rastert die Zeichnung (oder die Beschreibung, ESZ-149) und registriert sie unter `id` im Stil der Karte. Eine bereits belegte ID
  * ist ein Fehler: MapLibre selbst würde `addImage` mit einer stillen Warnung übergehen, und der
  * Aufrufer sähe dann das alte Bild unter dem neuen Namen.
  */
 export function addSymbolImage(
   map: MapLike,
   id: string,
-  drawing: Drawing,
+  drawing: Drawing | Sign,
   options: SymbolImageOptions,
 ): StyleImageData {
   if (map.hasImage(id)) {

@@ -17,7 +17,21 @@ const pkgSrc = (name: string): string =>
  * `composeFromCatalog` aus `@einsatzzeichen/conformance/src/recipes.js`, weil der Paketindex
  * `node:url` zieht (Spec §5.2).
  */
+/**
+ * Die Subpfade von `core` (ESZ-149), wie sie `publishConfig.exports` im Paket führt. Exakt, nicht
+ * als Präfix, wie der Paketindex.
+ */
+const CORE_SUBPATHS: Readonly<Record<string, string>> = {
+  exact: 'exact.ts',
+  sketch: 'sketch/index.ts',
+  blocks: 'blocks/index.ts',
+};
+
 const workspaceAliases = [
+  ...Object.entries(CORE_SUBPATHS).map(([subpath, file]) => ({
+    find: new RegExp(`^@einsatzzeichen/core/${subpath}$`),
+    replacement: `${pkgSrc('core')}${file}`,
+  })),
   ...PACKAGE_IDS.map((name) => ({
     find: new RegExp(`^@einsatzzeichen/${name}/src/(.*?)(?:\\.js)?$`),
     replacement: `${pkgSrc(name)}$1.ts`,

@@ -15,6 +15,9 @@
     "paths": {
       "@einsatzzeichen/schema": ["./packages/schema/src/index.ts"],
       "@einsatzzeichen/core": ["./packages/core/src/index.ts"],
+      "@einsatzzeichen/core/exact": ["./packages/core/src/exact.ts"],
+      "@einsatzzeichen/core/sketch": ["./packages/core/src/sketch/index.ts"],
+      "@einsatzzeichen/core/blocks": ["./packages/core/src/blocks/index.ts"],
       "@einsatzzeichen/conformance": ["./packages/conformance/src/index.ts"],
       "@einsatzzeichen/react": ["./packages/react/src/index.ts"],
       "@einsatzzeichen/web-component": ["./packages/web-component/src/index.ts"],
