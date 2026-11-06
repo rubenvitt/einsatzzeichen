@@ -296,6 +296,12 @@ export function searchChoices(entries: readonly Choice[], query: string): Choice
   return entries.filter((entry) => entry.selected || matches(entry, needle));
 }
 
+/** Ob die Suche überhaupt einen Wert trifft, gesetzte eingeschlossen; leere Suche trifft immer. */
+export function choicesMatch(entries: readonly Choice[], query: string): boolean {
+  const needle = needleOf(query);
+  return needle === '' || entries.some((entry) => matches(entry, needle));
+}
+
 /* --- Namen und Status -------------------------------------------------------------------- */
 
 /** Deutscher Name eines Wertes, für Marken und die Zeile „was fehlt“. Fällt auf den Wert zurück. */

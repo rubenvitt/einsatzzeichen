@@ -48,6 +48,7 @@ import {
   TEXT_ZONES,
   changeKind,
   choiceSearchable,
+  choicesMatch,
   decodeSign,
   encodeSign,
   familyOf,
@@ -219,7 +220,7 @@ interface ChoiceSearch {
   searchable: boolean;
   /** Die Werte zur Suche, gesetzte immer dabei; ohne Suchfeld alle. */
   shown: readonly Choice[];
-  /** Die Suche trifft nichts außer bereits gesetzten Werten. */
+  /** Die Suche trifft keinen Wert, auch keinen gesetzten. */
   empty: boolean;
 }
 
@@ -231,7 +232,7 @@ function useChoiceSearch(entries: readonly Choice[]): ChoiceSearch {
   const [query, setQuery] = useState('');
   const searchable = choiceSearchable(entries);
   const shown = useMemo(() => (searchable ? searchChoices(entries, query) : entries), [searchable, entries, query]);
-  const empty = searchable && query.trim() !== '' && shown.every((entry) => entry.selected);
+  const empty = searchable && !choicesMatch(entries, query);
   return { query, setQuery, searchable, shown, empty };
 }
 

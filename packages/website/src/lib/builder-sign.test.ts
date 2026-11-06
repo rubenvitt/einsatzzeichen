@@ -6,6 +6,7 @@ import {
   DEFAULT_SIGN,
   changeKind,
   choiceSearchable,
+  choicesMatch,
   decodeSign,
   encodeSign,
   familyOf,
@@ -170,6 +171,10 @@ describe('Suche in langen Auswahlen (ESZ-152)', () => {
       'person-injured',
     ]);
     expect(values(searchChoices(withInjured, 'gibt es nicht'))).toEqual(['person-injured']);
+    // „Nichts passt“ nur, wenn die Suche gar nichts trifft, auch den gesetzten Wert nicht.
+    expect(choicesMatch(withInjured, 'gibt es nicht')).toBe(false);
+    expect(choicesMatch(withInjured, 'verletzt')).toBe(true);
+    expect(choicesMatch(withInjured, '')).toBe(true);
   });
 });
 
