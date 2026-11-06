@@ -2,14 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { encodeSpecParam } from '@einsatzzeichen/core';
 import type { Choice } from '@einsatzzeichen/core';
 import {
+  CHOICE_SEARCH_THRESHOLD,
   DEFAULT_SIGN,
   changeKind,
+  choiceSearchable,
   decodeSign,
   encodeSign,
   familyOf,
   omissionLine,
   probeSign,
   probeTasks,
+  searchChoices,
   searchTasks,
   sectionVisible,
   setCenterSize,
@@ -131,6 +134,42 @@ describe('Welche Werte passen', () => {
     expect(hits).toContain('meal-preparation');
     expect(searchTasks('Sanitaet').length).toBeGreaterThan(0);
     expect(searchTasks('').length).toBeGreaterThan(50);
+  });
+});
+
+describe('Suche in langen Auswahlen (ESZ-152)', () => {
+  const atPerson = probeSign({ kind: 'person' });
+  const states = atPerson.get('states') ?? [];
+  const values = (entries: readonly Choice[]) => entries.map((entry) => entry.value);
+
+  it('bietet die Suche nur langen Auswahlen an', () => {
+    const atFormation = probeSign(DEFAULT_SIGN);
+    expect(CHOICE_SEARCH_THRESHOLD).toBe(16);
+    expect(choiceSearchable(atFormation.get('role') ?? [])).toBe(true);
+    expect(choiceSearchable(states)).toBe(true);
+    expect(choiceSearchable(atFormation.get('head') ?? [])).toBe(false);
+    expect(choiceSearchable(atFormation.get('color') ?? [])).toBe(false);
+  });
+
+  it('findet Werte über Namen, Kennung und Gruppe, auch ohne Umlaute', () => {
+    expect(values(searchChoices(states, 'zerstoert'))).toEqual(['partially-destroyed', 'destroyed']);
+    expect(values(searchChoices(states, 'Zerstört'))).toEqual(['partially-destroyed', 'destroyed']);
+    expect(values(searchChoices(states, 'person-dead'))).toEqual(['person-dead']);
+    expect(values(searchChoices(states, 'Brandphase'))).toEqual(['incipient-fire', 'developed-fire', 'fully-developed-fire']);
+    // Gesperrte Werte filtert die Suche genauso: sie stehen danach in der eingeklappten Liste.
+    expect(values(searchChoices(states, 'sonnig'))).toEqual(['weather-sunny']);
+    expect(searchChoices(states, '  ')).toHaveLength(states.length);
+  });
+
+  it('lässt gesetzte Werte während der Suche stehen', () => {
+    const withInjured = probeSign({ kind: 'person', states: ['person-injured'] }).get('states') ?? [];
+    expect(values(searchChoices(withInjured, 'Brandphase'))).toEqual([
+      'incipient-fire',
+      'developed-fire',
+      'fully-developed-fire',
+      'person-injured',
+    ]);
+    expect(values(searchChoices(withInjured, 'gibt es nicht'))).toEqual(['person-injured']);
   });
 });
 

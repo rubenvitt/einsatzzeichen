@@ -48,6 +48,7 @@ import {
   OPEN_TEXT_ZONES,
   TEXT_ZONES,
   changeKind,
+  choiceSearchable,
   decodeSign,
   encodeSign,
   familyOf,
@@ -58,6 +59,7 @@ import {
   omittedKeys,
   probeSign,
   probeTasks,
+  searchChoices,
   searchTasks,
   sectionVisible,
   setCenterSize,
@@ -211,6 +213,60 @@ function BlockedList({ entries }: { entries: readonly Choice[] }) {
   );
 }
 
+interface ChoiceSearch {
+  query: string;
+  setQuery: (query: string) => void;
+  /** Ob die Auswahl lang genug für ein Suchfeld ist. */
+  searchable: boolean;
+  /** Die Werte zur Suche, gesetzte immer dabei; ohne Suchfeld alle. */
+  shown: readonly Choice[];
+  /** Die Suche trifft nichts außer bereits gesetzten Werten. */
+  empty: boolean;
+}
+
+/**
+ * Suche über einer langen Auswahl (ESZ-152), wie bei den Fachaufgaben: gefiltert werden die
+ * passenden Werte und die eingeklappte Liste darunter gleichermaßen.
+ */
+function useChoiceSearch(entries: readonly Choice[]): ChoiceSearch {
+  const [query, setQuery] = useState('');
+  const searchable = choiceSearchable(entries);
+  const shown = useMemo(() => (searchable ? searchChoices(entries, query) : entries), [searchable, entries, query]);
+  const empty = searchable && query.trim() !== '' && shown.every((entry) => entry.selected);
+  return { query, setQuery, searchable, shown, empty };
+}
+
+/**
+ * Das Suchfeld zu `useChoiceSearch`; ohne lange Auswahl nichts. Die Beschriftung lässt eine
+ * Quellenangabe in Klammern weg („Zustand (Kapitel 5.8)“ sucht als „Zustand suchen“). `quiet`
+ * steht unter einer Knopfgruppe, die ihre Beschriftung schon trägt: dort nennt der Platzhalter das
+ * Feld, und die Beschriftung bleibt für Screenreader.
+ */
+function ChoiceSearchField({ label, search, quiet = false }: { label: string; search: ChoiceSearch; quiet?: boolean }) {
+  const id = useId();
+  if (!search.searchable) return null;
+  const name = `${label.replace(/\s*\(.*\)$/, '')} suchen`;
+  return (
+    <>
+      <label className="ez-builder__field ez-builder__choice-search" htmlFor={id}>
+        <span className={quiet ? 'ez-builder__field-label ez-builder__sr' : 'ez-builder__field-label'}>{name}</span>
+        <input
+          id={id}
+          type="search"
+          placeholder={quiet ? name : undefined}
+          value={search.query}
+          onChange={(event) => search.setQuery(event.target.value)}
+        />
+      </label>
+      {search.empty ? (
+        <p className="ez-builder__field-hint" role="status">
+          Nichts passt zu dieser Suche.
+        </p>
+      ) : null}
+    </>
+  );
+}
+
 /** Kurze Marke an einem gesetzten Wert, den `draw` weglassen musste. */
 function MissingMark({ show }: { show: boolean }) {
   return show ? <span className="ez-builder__missing">nicht im Bild</span> : null;
@@ -237,7 +293,8 @@ interface ChipsProps {
  */
 function Chips({ label, entries, onPick, unset, missing, icon, grouped = false, variant = 'chip' }: ChipsProps) {
   const labelId = useId();
-  const { fitting, blocked } = splitChoices(entries);
+  const search = useChoiceSearch(entries);
+  const { fitting, blocked } = splitChoices(search.shown);
   const anySelected = fitting.some((entry) => entry.selected);
   const button = (entry: Choice) => (
     <button
@@ -259,6 +316,7 @@ function Chips({ label, entries, onPick, unset, missing, icon, grouped = false, 
       <span className="ez-builder__field-label" id={labelId}>
         {label}
       </span>
+      <ChoiceSearchField label={label} search={search} quiet />
       {grouped ? (
         <div role="group" aria-labelledby={labelId} className="ez-builder__chip-groups">
           {unset === undefined ? null : (
@@ -719,9 +777,11 @@ function RoleSelect({
   onChange: (sign: BodySign) => void;
   missing: (value: string) => boolean;
 }) {
-  const { fitting, blocked } = splitChoices(entries);
+  const search = useChoiceSearch(entries);
+  const { fitting, blocked } = splitChoices(search.shown);
   return (
     <div className="ez-builder__field">
+      <ChoiceSearchField label="Funktion" search={search} />
       <label className="ez-builder__field-label" htmlFor="ez-builder-role">
         Funktionsfassung
       </label>
@@ -776,41 +836,16 @@ function FreestandingSections({ spec, onChange }: { spec: FreestandingSpec; onCh
           );
         }
         if (definition.options.length > 16) {
-          const { fitting, blocked } = splitChoices(entries);
           return (
             <Section key={definition.field} title={definition.label}>
-              <div className="ez-builder__field">
-                <label className="ez-builder__field-label" htmlFor={`ez-builder-fs-${definition.field}`}>
-                  {definition.label}
-                </label>
-                <select
-                  id={`ez-builder-fs-${definition.field}`}
-                  value={typeof value === 'string' ? value : ''}
-                  onChange={(event) =>
-                    onChange(reduceFreestanding(spec, definition.field, event.target.value === '' ? undefined : event.target.value))
-                  }
-                >
-                  {definition.unsetLabel === undefined ? null : <option value="">{definition.unsetLabel}</option>}
-                  {groupChoices(fitting).map(({ group, entries: inGroup }) =>
-                    group === undefined ? (
-                      inGroup.map((entry) => (
-                        <option key={entry.value} value={entry.value}>
-                          {entry.label}
-                        </option>
-                      ))
-                    ) : (
-                      <optgroup key={group} label={group}>
-                        {inGroup.map((entry) => (
-                          <option key={entry.value} value={entry.value}>
-                            {entry.label}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ),
-                  )}
-                </select>
-                <BlockedList entries={blocked} />
-              </div>
+              <FreestandingSelect
+                field={definition.field}
+                label={definition.label}
+                unsetLabel={definition.unsetLabel}
+                entries={entries}
+                value={typeof value === 'string' ? value : ''}
+                onPick={(picked) => onChange(reduceFreestanding(spec, definition.field, picked))}
+              />
             </Section>
           );
         }
@@ -832,6 +867,54 @@ function FreestandingSections({ spec, onChange }: { spec: FreestandingSpec; onCh
         );
       })}
     </>
+  );
+}
+
+interface FreestandingSelectProps {
+  field: string;
+  label: string;
+  unsetLabel: string | undefined;
+  entries: readonly Choice[];
+  value: string;
+  onPick: (value: string | undefined) => void;
+}
+
+/** Ein Feld mit vielen Werten als Auswahlliste, in Gruppen, mit Suche darüber. */
+function FreestandingSelect({ field, label, unsetLabel, entries, value, onPick }: FreestandingSelectProps) {
+  const search = useChoiceSearch(entries);
+  const { fitting, blocked } = splitChoices(search.shown);
+  return (
+    <div className="ez-builder__field">
+      <ChoiceSearchField label={label} search={search} />
+      <label className="ez-builder__field-label" htmlFor={`ez-builder-fs-${field}`}>
+        {label}
+      </label>
+      <select
+        id={`ez-builder-fs-${field}`}
+        value={value}
+        onChange={(event) => onPick(event.target.value === '' ? undefined : event.target.value)}
+      >
+        {unsetLabel === undefined ? null : <option value="">{unsetLabel}</option>}
+        {groupChoices(fitting).map(({ group, entries: inGroup }) =>
+          group === undefined ? (
+            inGroup.map((entry) => (
+              <option key={entry.value} value={entry.value}>
+                {entry.label}
+              </option>
+            ))
+          ) : (
+            <optgroup key={group} label={group}>
+              {inGroup.map((entry) => (
+                <option key={entry.value} value={entry.value}>
+                  {entry.label}
+                </option>
+              ))}
+            </optgroup>
+          ),
+        )}
+      </select>
+      <BlockedList entries={blocked} />
+    </div>
   );
 }
 

@@ -247,13 +247,51 @@ function normalize(text: string): string {
     .replaceAll('ß', 'ss');
 }
 
+/** Suchtext in der Form, in der verglichen wird: klein, Umlaute ausgeschrieben, ohne Rand. */
+function needleOf(query: string): string {
+  return normalize(query.trim());
+}
+
+/** Ein Wert passt zur Suche, wenn sein Name, seine Kennung oder seine Gruppe sie enthält. */
+function matches(option: { value: string; label: string; group?: string | undefined }, needle: string): boolean {
+  return (
+    normalize(option.label).includes(needle) ||
+    option.value.includes(needle) ||
+    (option.group !== undefined && normalize(option.group).includes(needle))
+  );
+}
+
 /** Fachaufgaben, deren Name oder Kennung die Suche enthält; leere Suche liefert alle. */
 export function searchTasks(query: string): readonly { value: string; label: string }[] {
-  const needle = normalize(query.trim());
+  const needle = needleOf(query);
   if (needle === '') return TASK_OPTIONS;
-  return TASK_OPTIONS.filter(
-    (option) => normalize(option.label).includes(needle) || option.value.includes(needle),
-  );
+  return TASK_OPTIONS.filter((option) => matches(option, needle));
+}
+
+/* --- Suche in langen Auswahlen ----------------------------------------------------------- */
+
+/**
+ * Ab mehr als so vielen Werten bekommt eine Auswahl ein Suchfeld (ESZ-152): Funktion (26),
+ * Zustand (61), freistehendes Piktogramm (260). Kopf (15) und Farbe (12) bleiben ohne. Gezählt
+ * wird über alle Werte des Feldes, passende wie gesperrte, damit das Feld beim Bearbeiten nicht
+ * auftaucht und wieder verschwindet.
+ */
+export const CHOICE_SEARCH_THRESHOLD = 16;
+
+/** Ob eine Auswahl lang genug für ein Suchfeld ist. */
+export function choiceSearchable(entries: readonly Choice[]): boolean {
+  return entries.length > CHOICE_SEARCH_THRESHOLD;
+}
+
+/**
+ * Werte einer Auswahl, deren Name, Kennung oder Gruppe die Suche enthält, mit derselben
+ * Umlautschreibung wie `searchTasks`. Gesetzte Werte bleiben immer stehen, damit man sie auch
+ * während einer Suche sieht und zurücknehmen kann. Leere Suche liefert alle.
+ */
+export function searchChoices(entries: readonly Choice[], query: string): Choice[] {
+  const needle = needleOf(query);
+  if (needle === '') return [...entries];
+  return entries.filter((entry) => entry.selected || matches(entry, needle));
 }
 
 /* --- Namen und Status -------------------------------------------------------------------- */
