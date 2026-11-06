@@ -1,3 +1,23 @@
+## [6.13.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.12.0...v6.13.0) (2026-11-06)
+
+### Rendering
+
+- **Schadensgrad besser lesbar:** Die Schadensdiagonalen werden jetzt weiß unterlegt, wenn ihre Strichfarbe in einem der mitgelieferten Themes weniger als 3 : 1 Helligkeitskontrast zur Fläche hat. Bisher galt das nur, wenn Strich und Körper dieselbe Farbe hatten. Rote Diagonalen auf Grün, Orange, Blau, Braun, Grau, Hellblau, Hellgrün oder Hellgrau unterschieden sich nur im Farbton. Bei Rot-Grün-Schwäche und im Graustufendruck waren sie deshalb kaum zu erkennen.
+- Zeichen mit weißem, gelbem oder schwarzem Körper werden bytegleich wie bisher ausgegeben.
+- **Organisationssignatur bleibt sichtbar:** Mit der Unterlegung wird die Körperkontur erneut gezeichnet. SVG und Canvas stricheln diese Kontur jetzt wie den Körper selbst. So verdeckt die neue Kontur nicht mehr die gestrichelte Signatur von Organisationen wie THW oder Polizei.
+
+### Website
+
+- **Baukasten neu aufgebaut:** Im Baukasten bearbeitet man jetzt direkt die Beschreibung eines Zeichens (`Sign`) statt des Bauplans:
+  - Oben steht zuerst die Suche.
+  - Statt Modus und 30 Arten wählt man aus acht Familien.
+  - Angezeigt werden nur Abschnitte, in denen etwas zum Zeichen passt. Unpassende Optionen sind eingeklappt und zeigen den Grund dafür.
+  - Fachaufgaben findet man über eine Suche mit Piktogrammen.
+  - Für jedes Zeichen wird die Treue angezeigt (vermessen, abgeleitet oder vereinfacht), dazu, was „Nicht im Bild“ dargestellt ist.
+  - Der Bauplan liegt jetzt im Expertenteil.
+- **Geteilte Links:** Neue Links verwenden das Format der Hülle v2. Ältere v1-Links und rohe Links funktionieren weiterhin.
+- **Codebeispiele:** Die Beispiele im Baukasten verwenden jetzt die Kurzform `draw(sign)`.
+
 ## [6.12.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.11.1...v6.12.0) (2026-11-06)
 
 ### Core: Beschreibung (`Sign`) als neuer Einstieg
