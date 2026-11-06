@@ -9,7 +9,7 @@ die [Anleitungen](/docs/anleitungen/).
 
 `@einsatzzeichen/core` ist das Produkt: alles, was es braucht, um ein Zeichen zu bauen und
 auszugeben. Wer die Bibliothek nutzt, braucht `core`, `schema` und einen Ausgabekanal. Der Weg
-von der Beschreibung eines Zeichens zum fertigen Bild ist ein einziger Aufruf, `drawSymbol()`. Das
+von der Beschreibung eines Zeichens zum fertigen Bild ist ein einziger Aufruf, `draw()`. Das
 [Prüfpaket](/docs/pakete/conformance/) braucht dafür niemand; es hält die Belege, an denen sich
 die Zeichen messen lassen.
 
@@ -25,7 +25,7 @@ Regel.
 
 Daneben sitzt hier der Kompositionsmotor: `compose()` setzt aus einer `SymbolSpec` und den
 Bausteinen eine `Drawing` zusammen, `validateSpec()` prüft die Spec gegen die
-Validierungsregeln, bevor gezeichnet wird. `drawSymbol()` ruft `compose()` mit der fertigen
+Validierungsregeln, bevor gezeichnet wird (beides unter `core/exact`). `drawSymbol()` ruft `compose()` mit der fertigen
 Standardbelegung `DEFAULT_PORTS` auf und gibt dem Zeichen eine Beschreibung für Screenreader mit. Und die Gates: Kontrast, viewBox, A11y-Metadaten,
 Textmetrik, Fingerprint-Vergleich gegen die Referenz.
 
@@ -59,8 +59,25 @@ const svg = renderSvg(drawing, { size: 64 });
 | `resolve(sign)`, `fromExact(spec)` | Beschreibung ↔ Bauplan (`SymbolSpec`) |
 | `KIND_FAMILIES` | die Arten in Familien für eine erste Auswahl |
 
-Der Bauplan (`SymbolSpec`, `drawSymbol()` und alles darum) bleibt unverändert und steht
-zusätzlich unter `@einsatzzeichen/core/exact`, die Bausteine unter `@einsatzzeichen/core/blocks`.
+## Einstiege
+
+Seit 7.0 trägt die Wurzel nur die Beschreibung und ihre Ausgabe. Alles andere steht in einem
+Subpfad, unverändert:
+
+| Einstieg | Inhalt |
+|---|---|
+| `@einsatzzeichen/core` | `draw`, `check`, `choices`, `describe`, `serialize`, `parse`, `resolve`, `fromExact`, `KIND_FAMILIES`; `renderSvg`, `renderCanvas`, die Themes, `rasterDimensionsForWidth`, `RASTER_MIN_STROKE_WIDTH_PX`, `TEXT_FONT_FAMILY_ATTR` |
+| `@einsatzzeichen/core/exact` | der Bauplan: `drawSymbol`, `compose`, `DEFAULT_PORTS`, `validateSpec`, `checkSpec`, `vocabulary`, die Codecs der Hülle v1, `explainIssue`, Herkunft, freistehende Specs |
+| `@einsatzzeichen/core/blocks` | Bausteine und Geometrie: Grundzeichen, Körpermarken, Köpfe, Piktogramme, Register, Namen, Layout, Textlaufweiten |
+| `@einsatzzeichen/core/sketch` | die Kommunikationsskizze |
+| `@einsatzzeichen/core/gates` | Prüfwerkzeug: Regelkataloge, Gates für Kontrast, viewBox, Piktogramme und Textmetrik, Fingerprint |
+
+Wer von 6.x kommt, lässt die Importe umschreiben:
+
+```bash
+npx @einsatzzeichen/cli codemod:7 src           # zeigt, was sich ändert
+npx @einsatzzeichen/cli codemod:7 src --write   # schreibt es
+```
 
 ## Installation
 
@@ -79,31 +96,34 @@ zusätzlich unter `@einsatzzeichen/core/exact`, die Bausteine unter `@einsatzzei
 
 ## Hauptexporte
 
+Ohne Angabe stehen die Exporte an der Wurzel. `core/exact`, `core/blocks` und `core/gates` nennen
+den Subpfad.
+
 | Export | Was es tut |
 |---|---|
 | `renderSvg(drawing, options)` | SVG als String; `options`: `size`, `idPrefix` (ohne Leerzeichen, Anführungszeichen, `<`, `>`, `&`; sonst `RangeError`), `theme`, `minStrokeWidthPx` |
 | `renderCanvas(drawing, ctx, options)` | dieselbe Zeichnung auf einen 2D-Kontext; `options`: `size`, `theme`, `minStrokeWidthPx` |
 | `rasterDimensionsForWidth(viewBox, width)` | Rastermaße zu einer Zielbreite |
-| `RASTER_MIN_STROKE_WIDTH_PX`, `strokeWidthFloorMm`, `effectiveStrokeWidthMm` | [Mindeststrichbreite](#kräftigere-striche-in-kleinen-bildern): empfohlener Wert (1 px) und die Rechnung dahinter |
-| `REFERENCE_THEME`, `colorFor`, `RenderTheme` | der Farbvertrag am Rendererrand |
-| `drawSymbol(spec, options?)` | der Einstieg: `SymbolSpec` → `Drawing`, mit Standardbelegung und Beschreibung |
-| `DEFAULT_PORTS` | die Standardbelegung der Bausteine (`CatalogPorts`), eingefroren |
-| `compose(spec, ports, options)`, `CompositionError` | Komposition aus der `SymbolSpec` mit eigenen Bausteinen |
-| `validateSpec(spec)`, `ValidationIssue`, `VALIDATION_RULE_IDS` | Regelprüfung mit Regel-ID je Befund |
-| `matchFingerprint(...)` | Hüllenvergleich gegen die Referenz, Toleranz 0,01 SVG-Einheiten |
-| `boundsOfMm`, `strokeBoundsOfMm` | Hüllenberechnung in Millimetern |
-| `checkContrast`, `contrastRatio`, `relativeLuminance` | Kontrastgate |
-| `checkViewBox`, `checkA11yMetadata`, `checkTextMetrics`, `checkClipping`, `checkPictogram` | die übrigen Gates |
-| `profileFor(id)`, `placeHead(...)` | Layoutprofile und Kopfzonensetzung |
-| `BASE_SYMBOLS`, `baseDrawing(kind)`, `innerField(...)` | die Grundzeichen und ihre Zeichnung |
-| `ORGANIZATION_COLORS`, `organizationColor(id)` | Organisationsfarben |
-| `strengthHead`, `technicalHeadMark`, `administrativeHead`, `functionRole` | die Kopfzonen |
-| `vehicleChassis`, `bodyMark`, `bodyMarkRun` | Fahrwerk, Körpermarken und der Lauf, den eine Marke selbst mitbringt („P“/„G“ der Dekontamination) |
-| `ALL_PICTOGRAMS`, `pictogram(...)`, `buildPictogramRegistry()` | die Piktogramme |
+| `RASTER_MIN_STROKE_WIDTH_PX`, `strokeWidthFloorMm` und `effectiveStrokeWidthMm` (`core/blocks`) | [Mindeststrichbreite](#kräftigere-striche-in-kleinen-bildern): empfohlener Wert (1 px) und die Rechnung dahinter |
+| `REFERENCE_THEME`, `RenderTheme`, `colorFor` (`core/blocks`) | der Farbvertrag am Rendererrand |
+| `drawSymbol(spec, options?)` (`core/exact`) | der Bauplan-Einstieg: `SymbolSpec` → `Drawing`, mit Standardbelegung und Beschreibung |
+| `DEFAULT_PORTS` (`core/exact`) | die Standardbelegung der Bausteine (`CatalogPorts`), eingefroren |
+| `compose(spec, ports, options)`, `CompositionError` (`core/exact`) | Komposition aus der `SymbolSpec` mit eigenen Bausteinen |
+| `validateSpec(spec)`, `ValidationIssue`, `VALIDATION_RULE_IDS` (`core/exact`) | Regelprüfung mit Regel-ID je Befund |
+| `matchFingerprint(...)` (`core/gates`) | Hüllenvergleich gegen die Referenz, Toleranz 0,01 SVG-Einheiten |
+| `boundsOfMm`, `strokeBoundsOfMm` (`core/blocks`) | Hüllenberechnung in Millimetern |
+| `checkContrast`, `contrastRatio`, `relativeLuminance` (`core/gates`) | Kontrastgate |
+| `checkViewBox`, `checkA11yMetadata`, `checkTextMetrics`, `checkClipping`, `checkPictogram` (`core/gates`) | die übrigen Gates |
+| `profileFor(id)`, `placeHead(...)` (`core/blocks`) | Layoutprofile und Kopfzonensetzung |
+| `BASE_SYMBOLS`, `baseDrawing(kind)`, `innerField(...)` (`core/blocks`) | die Grundzeichen und ihre Zeichnung |
+| `ORGANIZATION_COLORS`, `organizationColor(id)` (`core/blocks`) | Organisationsfarben |
+| `strengthHead`, `technicalHeadMark`, `administrativeHead`, `functionRole` (`core/blocks`) | die Kopfzonen |
+| `vehicleChassis`, `bodyMark`, `bodyMarkRun` (`core/blocks`) | Fahrwerk, Körpermarken und der Lauf, den eine Marke selbst mitbringt („P“/„G“ der Dekontamination) |
+| `ALL_PICTOGRAMS`, `pictogram(...)`, `buildPictogramRegistry()` (`core/blocks`) | die Piktogramme |
 | `RENDER_THEMES`, `renderTheme(id)`, `isRenderThemeId(value)`, `ACCESSIBLE_LIGHT_THEME`, `PRINT_MONOCHROME_THEME` | die drei konkreten Themes |
-| `CONTRAST_EXCEPTIONS`, `contrastExceptionFor(...)` | dokumentierte Kontrastausnahmen |
-| `TEXT_FONT_METRICS` | Laufweiten der Schrift, ohne Schriftdatei |
-| `describeSymbolSpec(spec)`, `ORGANIZATION_LABELS`, `STRENGTH_LABELS`, … | deutsche Bezeichnungen |
+| `CONTRAST_EXCEPTIONS`, `contrastExceptionFor(...)` (`core/gates`) | dokumentierte Kontrastausnahmen |
+| `TEXT_FONT_METRICS` (`core/blocks`) | Laufweiten der Schrift, ohne Schriftdatei |
+| `describeSymbolSpec(spec)` (`core/exact`), `ORGANIZATION_LABELS`, `STRENGTH_LABELS`, … (`core/blocks`) | deutsche Bezeichnungen |
 
 ## Kräftigere Striche in kleinen Bildern
 
@@ -186,7 +206,7 @@ Wert **anhängen** lässt; der gesetzte Wert trägt `selected: true` und den Bef
 wie sie ist.
 
 ```ts
-import { checkSpec, decodeSpecParam, encodeSpecParam, symbolProvenance, vocabulary } from '@einsatzzeichen/core';
+import { checkSpec, decodeSpecParam, encodeSpecParam, symbolProvenance, vocabulary } from '@einsatzzeichen/core/exact';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 
 // Welche Grundzeichenarten tragen ohne weitere Angabe?
@@ -253,7 +273,8 @@ Original die Marke, etwa `formation-chevron-top` für den Winkel allein in der F
 | `weatherDrawing`, `classifyWeather`, `WEATHER_CLOUD_PRECIPITATION`, `animalStateDrawing` | die Zeichenfunktionen und die Wetterregeln als Daten |
 
 ```ts
-import { drawAnySpec, encodeAnySpecParam, renderSvg } from '@einsatzzeichen/core';
+import { renderSvg } from '@einsatzzeichen/core';
+import { drawAnySpec, encodeAnySpecParam } from '@einsatzzeichen/core/exact';
 import type { AnySpec } from '@einsatzzeichen/schema';
 
 // Schneefall unter der Wolke, mittlere Stärke
@@ -316,7 +337,7 @@ Vorlage aber nicht. `freestandingProvenance()` vermerkt das mit
 `usage: 'freestanding-not-evidenced'`.
 
 ```ts
-import { checkAnySpec, freestandingRedirect, freestandingVocabulary } from '@einsatzzeichen/core';
+import { checkAnySpec, freestandingRedirect, freestandingVocabulary } from '@einsatzzeichen/core/exact';
 
 checkAnySpec({ kind: 'state', state: 'person-dead' }); // abgelehnt: state-not-canonical
 freestandingRedirect({ kind: 'state', state: 'person-dead' }); // { kind: 'person', states: ['person-dead'] }
@@ -346,7 +367,8 @@ Hervorhebung und Bedienung selbst setzen kann.
 | `SKETCH_BLOCKS` | der Befund je Baustein: vorgeschlagen, mit Herkunft |
 
 ```ts
-import { busBar, commsLink, renderSvg } from '@einsatzzeichen/core';
+import { renderSvg } from '@einsatzzeichen/core';
+import { busBar, commsLink } from '@einsatzzeichen/core/sketch';
 
 const schiene = busBar({ start: [4, 12], length: 80, text: 'TMO 311' });
 const funk = commsLink({ path: [[44, 12], [44, 40]], medium: 'radio', status: 'planned' });
@@ -365,7 +387,8 @@ Ein Zeichen beschreiben, zeichnen und als SVG ausgeben — ohne Prüfpaket. Die 
 „Bergungsgruppe" des THW: blaue Gruppe mit weißer Innenkontur, „B" im Körper, „THW" unten rechts.
 
 ```ts
-import { CompositionError, REFERENCE_THEME, drawSymbol, renderSvg } from '@einsatzzeichen/core';
+import { REFERENCE_THEME, renderSvg } from '@einsatzzeichen/core';
+import { CompositionError, drawSymbol } from '@einsatzzeichen/core/exact';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 
 const spec: SymbolSpec = {
@@ -393,7 +416,7 @@ Wer einzelne Bausteine austauschen will, übergibt `compose()` eine abgewandelte
 `DEFAULT_PORTS` selbst ist eingefroren; die Änderung gilt nur für die eigene Kopie:
 
 ```ts
-import { DEFAULT_PORTS, compose, describeSymbolSpec, type CatalogPorts } from '@einsatzzeichen/core';
+import { DEFAULT_PORTS, compose, describeSymbolSpec, type CatalogPorts } from '@einsatzzeichen/core/exact';
 
 // `spec` wie im Beispiel oben
 const ports: CatalogPorts = {

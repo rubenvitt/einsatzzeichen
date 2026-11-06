@@ -1,4 +1,4 @@
-import type { FingerprintLike } from '@einsatzzeichen/core';
+import type { FingerprintLike } from '@einsatzzeichen/core/gates';
 import fingerprints from './fingerprints.json' with { type: 'json' };
 
 /**

@@ -13,13 +13,9 @@ import {
   ruleCoverage,
   validationRuleCoverage,
 } from '@einsatzzeichen/conformance';
-import {
-  BASE_SYMBOLS,
-  BODY_VARIANT_LABELS,
-  CONTRAST_EXCEPTIONS,
-  PLACES,
-} from '@einsatzzeichen/core';
-import { VALIDATION_RULE_IDS } from '@einsatzzeichen/core';
+import { BASE_SYMBOLS, BODY_VARIANT_LABELS, PLACES } from '@einsatzzeichen/core/blocks';
+import { CONTRAST_EXCEPTIONS } from '@einsatzzeichen/core/gates';
+import { VALIDATION_RULE_IDS } from '@einsatzzeichen/core/exact';
 import {
   BODY_VARIANT_IDS,
   TECHNICAL_FILL_TOKENS,

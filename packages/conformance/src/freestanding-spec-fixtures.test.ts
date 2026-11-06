@@ -1,18 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import {
   FREESTANDING_DEFAULT_CANVAS_MM,
-  animalStateDrawing,
   freestandingProvenance,
   drawFreestanding,
-  lineDrawing,
-  movementDrawing,
   parseAnySpec,
-  pictogram,
   referenceMovementSpec,
   serializeAnySpec,
   validateFreestandingSpec,
+} from '@einsatzzeichen/core/exact';
+import {
+  animalStateDrawing,
+  lineDrawing,
+  movementDrawing,
+  pictogram,
   weatherDrawing,
-} from '@einsatzzeichen/core';
+} from '@einsatzzeichen/core/blocks';
 import type { Drawing } from '@einsatzzeichen/schema';
 import { ANIMAL_STATE_FIXTURES, WEATHER_EXAMPLE_FIXTURES } from './freestanding-state-fixtures.js';
 import {

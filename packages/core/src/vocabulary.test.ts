@@ -24,7 +24,7 @@ import {
   type SymbolSpec,
 } from '@einsatzzeichen/schema';
 import { describe, expect, expectTypeOf, test } from 'vitest';
-import * as core from './index.js';
+import * as core from './exact.js';
 import { drawSymbol } from './default-ports.js';
 import { BODY_MARK_IDS } from './geometry/body-marks.js';
 import { parseSpec } from './spec-codec.js';
@@ -359,8 +359,8 @@ describe('Typen', () => {
   });
 });
 
-describe('Index', () => {
-  test('exportiert die Vokabular-API', () => {
+describe('core/exact', () => {
+  test('exportiert die Vokabular-API (seit 7.0 nur hier)', () => {
     expect(core.vocabulary).toBe(vocabulary);
     expect(core.checkSpec).toBe(checkSpec);
     expect(core.specFieldValues).toBe(specFieldValues);

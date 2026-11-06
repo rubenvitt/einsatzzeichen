@@ -38,6 +38,7 @@ pnpm cli coverage
 | `export [--out <pfad>] [--size <px>] [--theme <reference\|accessible-light\|print-monochrome\|dark>]` | alle Zeichen als SVG-Dateien |
 | `visual-proof --reference-root <pfad> [--out <png-pfad>]` | Sichtprüfungsblatt als PNG |
 | `reference-diff --reference-root <pfad> [--out <verzeichnis>] [--filter <präfix>] [--sheets] [--json]` | Pixelvergleich Referenz ↔ eigene Darstellung je Manifestzeile |
+| `codemod:7 <pfad…> [--write]` | schreibt Importe aus der 6.x-Wurzel von `core` auf die Subpfade von 7.0 um; ohne `--write` nur die Liste |
 
 ## Beispiel
 
@@ -56,6 +57,24 @@ ist:
 pnpm cli verify:repository
 # Repository-Gate bestanden.
 ```
+
+## Umstieg auf 7.0
+
+In 7.0 trägt die Wurzel von `@einsatzzeichen/core` nur noch die Beschreibung und ihre Ausgabe
+(siehe [core](/docs/pakete/core/#einstiege)). `codemod:7` liest Skriptdateien, die Skriptteile
+von `.astro`, `.vue` und `.svelte` und die Codeblöcke in Markdown und verteilt jeden Import aus
+`@einsatzzeichen/core` auf den Subpfad, in dem der Name jetzt steht:
+
+```ts
+// vorher
+import { drawSymbol, renderSvg, RULE_CATALOG } from '@einsatzzeichen/core';
+// nachher
+import { renderSvg } from '@einsatzzeichen/core';
+import { drawSymbol } from '@einsatzzeichen/core/exact';
+import { RULE_CATALOG } from '@einsatzzeichen/core/gates';
+```
+
+`import * as core`, `import()` und `require` schreibt er nicht um; er meldet sie mit Zeile.
 
 ## Pixelvergleich mit der Referenz
 

@@ -9,7 +9,8 @@
  * aus `review-summary.ts`. Kein Bild, keine Zahl steht hier von Hand — was von Hand stünde, wäre
  * an dem Tag falsch, an dem sich der Katalog ändert.
  */
-import { drawSymbol, renderSvg } from '@einsatzzeichen/core';
+import { renderSvg } from '@einsatzzeichen/core';
+import { drawSymbol } from '@einsatzzeichen/core/exact';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import StatusPair from '../components/StatusPair.astro';

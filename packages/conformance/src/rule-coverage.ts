@@ -1,15 +1,14 @@
+import { VALIDATION_RULE_IDS, validateSpec } from '@einsatzzeichen/core/exact';
 import {
   COMPOSITION_RULE_CATALOG,
   FREESTANDING_RULE_CATALOG,
   RULE_CATALOG,
   RULE_DIMENSIONS,
-  VALIDATION_RULE_IDS,
-  validateSpec,
   type RuleCatalogEntry,
   type RuleDimension,
   type RuleKind,
   type RulePhase,
-} from '@einsatzzeichen/core';
+} from '@einsatzzeichen/core/gates';
 import {
   ADMIN_LEVEL_IDS,
   BODY_VARIANT_IDS,
@@ -32,11 +31,11 @@ import {
   type CatalogEntry,
   type SymbolSpec,
 } from '@einsatzzeichen/schema';
-import { BASE_SYMBOLS } from '@einsatzzeichen/core';
+import { BASE_SYMBOLS } from '@einsatzzeichen/core/blocks';
 import type { ElementDescriptor } from './elements.js';
 import { ELEMENTS } from './elements.js';
-import { ALL_PICTOGRAMS } from '@einsatzzeichen/core';
-import type { CatalogPictogramDefinition } from '@einsatzzeichen/core';
+import { ALL_PICTOGRAMS } from '@einsatzzeichen/core/blocks';
+import type { CatalogPictogramDefinition } from '@einsatzzeichen/core/blocks';
 import { RECIPES, composeFromCatalog, type Recipe } from './recipes.js';
 import {
   FREESTANDING_RULE_EVIDENCE,

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { boundsOfMm, matchFingerprint, type BoundsMm } from '@einsatzzeichen/core';
+import { boundsOfMm, type BoundsMm } from '@einsatzzeichen/core/blocks';
+import { matchFingerprint } from '@einsatzzeichen/core/gates';
 import type { Primitive, SymbolSpec } from '@einsatzzeichen/schema';
 import { fingerprintFor } from './fingerprint-index.js';
 import { RECIPES, composeFromCatalog, type Recipe } from './recipes.js';

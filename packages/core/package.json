@@ -18,6 +18,15 @@
     "svg"
   ],
   "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./exact": "./src/exact.ts",
+    "./sketch": "./src/sketch/index.ts",
+    "./blocks": "./src/blocks/index.ts",
+    "./gates": "./src/gates.ts",
+    "./src/*": "./src/*",
+    "./fonts/*": "./fonts/*"
+  },
   "files": [
     "dist",
     "fonts",
@@ -43,6 +52,10 @@
       "./blocks": {
         "types": "./dist/blocks/index.d.ts",
         "default": "./dist/blocks/index.js"
+      },
+      "./gates": {
+        "types": "./dist/gates.d.ts",
+        "default": "./dist/gates.js"
       },
       "./fonts/*": "./fonts/*"
     }

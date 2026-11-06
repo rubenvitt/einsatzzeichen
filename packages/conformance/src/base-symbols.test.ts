@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import {
-  boundsOfMm,
-  matchFingerprint,
-  NotMeasuredError,
-  strokeBoundsOfMm,
-  type BodyGeometryMode,
-} from '@einsatzzeichen/core';
+import { NotMeasuredError } from '@einsatzzeichen/core/exact';
+import { boundsOfMm, strokeBoundsOfMm } from '@einsatzzeichen/core/blocks';
+import { matchFingerprint, type BodyGeometryMode } from '@einsatzzeichen/core/gates';
 import {
   DEFAULT_STROKE_WIDTH_MM,
   TOLERANCE_UNITS,
@@ -13,7 +9,7 @@ import {
   type BodyVariantId,
   type SymbolKind,
 } from '@einsatzzeichen/schema';
-import { BASE_SYMBOLS, baseDrawing, innerField } from '@einsatzzeichen/core';
+import { BASE_SYMBOLS, baseDrawing, innerField } from '@einsatzzeichen/core/blocks';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { fingerprintFor } from './fingerprint-index.js';
 import { DEVICE_COMMS } from '@einsatzzeichen/core/src/geometry/pictograms/comms/03-devices.js';

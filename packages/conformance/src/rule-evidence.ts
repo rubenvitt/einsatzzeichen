@@ -1,7 +1,7 @@
-import { CompositionError, validateFreestandingSpec, validateSpec } from '@einsatzzeichen/core';
+import { CompositionError, validateFreestandingSpec, validateSpec } from '@einsatzzeichen/core/exact';
 import type { FreestandingSpec, SymbolSpec } from '@einsatzzeichen/schema';
-import { administrativeHead } from '@einsatzzeichen/core';
-import { functionRole } from '@einsatzzeichen/core';
+import { administrativeHead } from '@einsatzzeichen/core/blocks';
+import { functionRole } from '@einsatzzeichen/core/blocks';
 import { composeFromCatalog } from './recipes.js';
 
 /**

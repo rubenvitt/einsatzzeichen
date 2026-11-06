@@ -8,7 +8,9 @@
  */
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 import { describe, expect, test } from 'vitest';
-import * as core from './index.js';
+import * as blocks from './blocks/index.js';
+import * as exact from './exact.js';
+import { renderSvg } from './render/svg.js';
 import { DEFAULT_PORTS, drawSymbol } from './default-ports.js';
 
 /** E.1.1 Bergungsgruppe THW — braucht Innenfeld, Organisationsfarbe, Stärke und Textlaufweiten. */
@@ -27,33 +29,33 @@ describe('DEFAULT_PORTS', () => {
 
   test('belegt jeden Port mit dem gleichnamigen Baustein aus core', () => {
     expect(DEFAULT_PORTS).toEqual({
-      baseDrawing: core.baseDrawing,
-      innerField: core.innerField,
-      bodyMark: core.bodyMark,
-      bodyMarkRun: core.bodyMarkRun,
-      organizationColor: core.organizationColor,
-      strengthHead: core.strengthHead,
-      technicalHeadMark: core.technicalHeadMark,
+      baseDrawing: blocks.baseDrawing,
+      innerField: blocks.innerField,
+      bodyMark: blocks.bodyMark,
+      bodyMarkRun: blocks.bodyMarkRun,
+      organizationColor: blocks.organizationColor,
+      strengthHead: blocks.strengthHead,
+      technicalHeadMark: blocks.technicalHeadMark,
       // Seit dem 2. Oktober 2026 ergänzen die Kopfports den vermessenen Kopf um den abgeleiteten.
-      unitGroupingHead: core.unitGroupingHeadOrDerived,
-      functionRole: core.functionRole,
-      administrativeHead: core.administrativeHeadOrDerived,
-      vehicleChassis: core.vehicleChassis,
-      pictogram: core.pictogram,
-      textMetrics: core.TEXT_FONT_METRICS,
+      unitGroupingHead: blocks.unitGroupingHeadOrDerived,
+      functionRole: blocks.functionRole,
+      administrativeHead: blocks.administrativeHeadOrDerived,
+      vehicleChassis: blocks.vehicleChassis,
+      pictogram: blocks.pictogram,
+      textMetrics: blocks.TEXT_FONT_METRICS,
     });
   });
 
-  test('ist über den öffentlichen Index erreichbar', () => {
-    expect(core.DEFAULT_PORTS).toBe(DEFAULT_PORTS);
-    expect(core.drawSymbol).toBe(drawSymbol);
+  test('ist über core/exact erreichbar', () => {
+    expect(exact.DEFAULT_PORTS).toBe(DEFAULT_PORTS);
+    expect(exact.drawSymbol).toBe(drawSymbol);
   });
 });
 
 describe('drawSymbol', () => {
   test('zeichnet wie compose mit der Standardbelegung und der abgeleiteten Beschreibung', () => {
     expect(drawSymbol(BERGUNGSGRUPPE)).toEqual(
-      core.compose(BERGUNGSGRUPPE, DEFAULT_PORTS, { descriptionFromSpec: core.describeSymbolSpec }),
+      exact.compose(BERGUNGSGRUPPE, DEFAULT_PORTS, { descriptionFromSpec: exact.describeSymbolSpec }),
     );
   });
 
@@ -64,7 +66,7 @@ describe('drawSymbol', () => {
   test('setzt ohne Titel keinen Titel', () => {
     const drawing = drawSymbol(BERGUNGSGRUPPE);
     expect(drawing.title).toBeUndefined();
-    expect(core.renderSvg(drawing, { size: 64 })).not.toContain('<title');
+    expect(renderSvg(drawing, { size: 64 })).not.toContain('<title');
   });
 
   test('übernimmt einen angegebenen Titel', () => {
@@ -85,6 +87,6 @@ describe('drawSymbol', () => {
   test('eine ungültige Spec wirft wie compose eine CompositionError', () => {
     // Eine Stärke trägt nur eine taktische Einheit.
     expect(() => drawSymbol({ kind: 'hazard', strength: 'gruppe' }))
-      .toThrow(core.CompositionError);
+      .toThrow(exact.CompositionError);
   });
 });

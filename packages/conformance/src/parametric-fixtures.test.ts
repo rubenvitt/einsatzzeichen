@@ -8,7 +8,7 @@ import {
   movementDrawing,
   strokeBoundsOfMm,
   type BoundsMm,
-} from '@einsatzzeichen/core';
+} from '@einsatzzeichen/core/blocks';
 import { PALETTE, type Drawing, type Primitive } from '@einsatzzeichen/schema';
 import fingerprints from './fingerprints.json' with { type: 'json' };
 import { referenceInventoryAssets } from './fingerprint-index.js';

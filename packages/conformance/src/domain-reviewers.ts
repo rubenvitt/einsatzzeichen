@@ -1,4 +1,4 @@
-import { deepFreeze, type DeepReadonly } from '@einsatzzeichen/core';
+import { deepFreeze, type DeepReadonly } from '@einsatzzeichen/core/blocks';
 
 /**
  * Eine Person mit einsatztaktischer Fachkunde, die im Fachreview-Ledger als Prüfer auftreten darf.

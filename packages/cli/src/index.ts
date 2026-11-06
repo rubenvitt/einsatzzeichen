@@ -6,6 +6,8 @@
  *   audit:reference, coverage, provenance:table, reference-diff, review-dossier, verify:repository, visual-proof
  * Export (core) — Geometrie, Themes und Renderer des Produkts:
  *   export (Rezeptliste noch über commands/export-recipes.ts aus conformance, bis LFH-580)
+ * Umstieg (ESZ-151) — Importe aus der 6.x-Wurzel von core auf die Subpfade von 7.0:
+ *   codemod:7
  *
  * `cli-packages.test.ts` hält die Zuordnung an den Importen fest.
  */
@@ -30,6 +32,8 @@ import {
 } from './commands/visual-proof.js';
 // Export (core)
 import { InvalidExportSizeError, exportSvg, parseExportSize } from './commands/export.js';
+// Umstieg auf 7.0
+import { codemodCore7 } from './codemod/core-7.js';
 
 class CliUsageError extends Error {}
 
@@ -179,6 +183,29 @@ switch (command) {
     }
     break;
   }
+  // ── Umstieg (ESZ-151) ──
+  case 'codemod:7': {
+    const paths = process.argv.slice(3).filter((arg) => !arg.startsWith('--'));
+    if (paths.length === 0) {
+      console.error('codemod:7 benötigt mindestens einen Pfad: codemod:7 <pfad…> [--write]');
+      process.exit(1);
+    }
+    const write = process.argv.includes('--write');
+    const reports = codemodCore7(paths, { write });
+    for (const report of reports) {
+      if (report.changed) console.log(`${write ? 'umgeschrieben' : 'würde umschreiben'}: ${report.file}`);
+      for (const warning of report.warnings) {
+        console.log(`  ${report.file}:${warning.line}: ${warning.message}`);
+      }
+    }
+    const changed = reports.filter((report) => report.changed).length;
+    const warnings = reports.reduce((sum, report) => sum + report.warnings.length, 0);
+    console.log(
+      `${changed} Datei(en) ${write ? 'umgeschrieben' : 'betroffen'}, ${warnings} Hinweis(e) zum Nacharbeiten.` +
+        (write || changed === 0 ? '' : ' Mit --write schreiben.'),
+    );
+    break;
+  }
   default:
     console.error(`Unbekanntes Kommando: ${command ?? '(keines)'}`);
     console.error(
@@ -191,7 +218,8 @@ switch (command) {
         'verify:repository | ' +
         'visual-proof --reference-root <pfad> [--out <png-pfad>]\n' +
         '  Export (core): export [--out <pfad>] [--size <px>] ' +
-        '[--theme <reference|accessible-light|print-monochrome|dark>]',
+        '[--theme <reference|accessible-light|print-monochrome|dark>]\n' +
+        '  Umstieg auf 7.0: codemod:7 <pfad…> [--write]',
     );
     process.exit(1);
 }

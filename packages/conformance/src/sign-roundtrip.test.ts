@@ -1,15 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-  draw,
-  drawAnySpec,
-  drawSymbol,
-  fromExact,
-  parse,
-  renderSvg,
-  resolve,
-  serialize,
-  specKey,
-} from '@einsatzzeichen/core';
+import { draw, fromExact, parse, renderSvg, resolve, serialize } from '@einsatzzeichen/core';
+import { drawAnySpec, drawSymbol, specKey } from '@einsatzzeichen/core/exact';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 import { FREESTANDING_SPEC_FIXTURES } from './freestanding-spec-fixtures.js';
 import { RECIPES } from './recipes.js';

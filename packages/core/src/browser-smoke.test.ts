@@ -6,7 +6,8 @@
  * Browser laufen. Ausgangslage war ein Katalogindex, der über `fonts.ts` `node:url` zog und
  * deshalb in keinem Bundle für den Browser taugte. Zwei Prüfungen halten das fest:
  *
- * 1. **Importgraph (statisch).** Vom öffentlichen Index `src/index.ts` aus wird jeder erreichbare
+ * 1. **Importgraph (statisch).** Von jedem öffentlichen Einstieg aus (Wurzel und die Subpfade
+ *    `exact`, `blocks`, `sketch`, `gates`, ESZ-151) wird jeder erreichbare
  *    Quelltext gelesen und seine Importe über den TypeScript-Präprozessor bestimmt — keine
  *    Textsuche, die auch Kommentare wie „kein `node:fs`" in `rules/rule-catalog.ts` träfe. Kein
  *    Modul darf ein `node:`-Builtin (oder ein Builtin ohne Präfix) erreichen, keines das Prüfpaket
@@ -14,8 +15,8 @@
  *    Statisch statt zur Laufzeit, weil die Testumgebung selbst Node ist: ein `node:`-Import würde
  *    hier klaglos laden und erst im Bundle eines Nutzers brechen. `import type` zählt mit — auch
  *    ein Typimport aus dem Prüfpaket kehrte die Paketrichtung um.
- * 2. **Rendern im DOM.** In einer happy-dom-Umgebung lädt der Test den öffentlichen Index, setzt
- *    ein echtes Zeichen mit `drawSymbol` und der Standardbelegung `DEFAULT_PORTS` zusammen, rendert es als SVG und
+ * 2. **Rendern im DOM.** In einer happy-dom-Umgebung lädt der Test den öffentlichen Index, zeichnet
+ *    ein echtes Zeichen über die Beschreibung (`draw`), rendert es als SVG und
  *    lässt den Browser-Parser (`DOMParser`) das Ergebnis lesen.
  */
 import { builtinModules } from 'node:module';
@@ -60,10 +61,13 @@ function resolveRelative(fromFile: string, specifier: string): string {
   return found;
 }
 
-function walkImportGraph(entry: string): ImportGraph {
+/** Die öffentlichen Einstiege von `core` (siehe `publishConfig.exports`). */
+const PUBLIC_ENTRIES = ['index.ts', 'exact.ts', 'blocks/index.ts', 'sketch/index.ts', 'gates.ts'];
+
+function walkImportGraph(...entries: string[]): ImportGraph {
   const seen = new Set<string>();
   const violations: string[] = [];
-  const queue = [entry];
+  const queue = [...entries];
   while (queue.length > 0) {
     const file = queue.pop()!;
     if (seen.has(file)) continue;
@@ -88,8 +92,8 @@ function walkImportGraph(entry: string): ImportGraph {
   return { files: [...seen].map((file) => relative(repoRoot, file)).sort(), violations };
 }
 
-describe('core — Importgraph des öffentlichen Index', () => {
-  const graph = walkImportGraph(join(coreSrc, 'index.ts'));
+describe('core — Importgraph der öffentlichen Einstiege', () => {
+  const graph = walkImportGraph(...PUBLIC_ENTRIES.map((entry) => join(coreSrc, entry)));
 
   test('erreicht kein Node-Builtin, kein Prüfpaket und keine Fremdabhängigkeit', () => {
     expect(graph.violations).toEqual([]);
@@ -137,9 +141,9 @@ describe('core — rendert im Browser ohne Prüfpaket', () => {
       labels: { center: 'B', bottomRight: 'THW' },
     };
 
-    // Seit LFH-580 mit der fertigen Standardbelegung statt von Hand verdrahteter Ports; die
-    // Beschreibung leitet `drawSymbol` selbst aus der Spec ab.
-    const drawing = core.drawSymbol(spec, { title: 'Bergungsgruppe' });
+    // Seit 7.0 (ESZ-151) über die Beschreibung, den Einstieg der Wurzel; `fromExact` trägt die
+    // weiße Innenkontur als Bauplan-Ergänzung mit.
+    const { drawing } = core.draw(core.fromExact(spec), { title: 'Bergungsgruppe' });
     const svg = core.renderSvg(drawing, { size: 128 });
 
     const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');

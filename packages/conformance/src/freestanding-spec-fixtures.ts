@@ -1,4 +1,5 @@
-import { ALL_PICTOGRAMS, LEGACY_PICTOGRAMS, STATE_PICTOGRAMS, freestandingRedirect } from '@einsatzzeichen/core';
+import { freestandingRedirect } from '@einsatzzeichen/core/exact';
+import { ALL_PICTOGRAMS, LEGACY_PICTOGRAMS, STATE_PICTOGRAMS } from '@einsatzzeichen/core/blocks';
 import type { FreestandingSpec, StateId } from '@einsatzzeichen/schema';
 import { ANIMAL_STATE_FIXTURES, WEATHER_EXAMPLE_FIXTURES } from './freestanding-state-fixtures.js';
 import { PARAMETRIC_FIXTURES, type ParametricFixture } from './parametric-fixtures.js';

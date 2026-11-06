@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { STATE_GROUPS } from '@einsatzzeichen/core';
+import { STATE_GROUPS } from '@einsatzzeichen/core/blocks';
 import fingerprints from './fingerprints.json' with { type: 'json' };
 import { INVENTORY_EXCLUSIONS } from './reference-inventory.js';
 import {

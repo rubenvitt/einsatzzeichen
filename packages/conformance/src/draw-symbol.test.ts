@@ -12,7 +12,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { drawSymbol, renderSvg } from '@einsatzzeichen/core';
+import { renderSvg } from '@einsatzzeichen/core';
+import { drawSymbol } from '@einsatzzeichen/core/exact';
 import { RECIPES, composeFromCatalog } from './recipes.js';
 
 /**

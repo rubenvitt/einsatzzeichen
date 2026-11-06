@@ -3,7 +3,8 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { Resvg, type RenderedImage } from '@resvg/resvg-js';
 import { describe, expect, it } from 'vitest';
-import { compose, renderSvg, type CatalogPorts } from '@einsatzzeichen/core';
+import { renderSvg } from '@einsatzzeichen/core';
+import { compose, type CatalogPorts } from '@einsatzzeichen/core/exact';
 import {
   DEFAULT_VIEWBOX_MM,
   type Drawing,
@@ -26,8 +27,8 @@ import {
 } from './fonts.js';
 import { readFontHeadMetrics } from './test-support/ttf-tables.js';
 import { RECIPES, composeFromCatalog, type Recipe } from './recipes.js';
-import { FUNCTION_ROLE_DEFINITIONS } from '@einsatzzeichen/core';
-import { TEXT_FONT_METRICS } from '@einsatzzeichen/core';
+import { FUNCTION_ROLE_DEFINITIONS } from '@einsatzzeichen/core/blocks';
+import { TEXT_FONT_METRICS } from '@einsatzzeichen/core/blocks';
 
 /**
  * Textmetriken des Subsets (Vorschubbreiten je Codepoint, Kopfwerte) als JSON — von

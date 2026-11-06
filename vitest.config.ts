@@ -25,6 +25,7 @@ const CORE_SUBPATHS: Readonly<Record<string, string>> = {
   exact: 'exact.ts',
   sketch: 'sketch/index.ts',
   blocks: 'blocks/index.ts',
+  gates: 'gates.ts',
 };
 
 const workspaceAliases = [

@@ -4,7 +4,8 @@ import {
   PROFILES,
   type FreestandingSpecFixture,
 } from '@einsatzzeichen/conformance';
-import { drawAnySpec, freestandingRedirect, parametricBlock } from '@einsatzzeichen/core';
+import { drawAnySpec, freestandingRedirect } from '@einsatzzeichen/core/exact';
+import { parametricBlock } from '@einsatzzeichen/core/blocks';
 import {
   entryKey,
   isFreestandingSpec,

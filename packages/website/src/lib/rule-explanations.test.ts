@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import * as core from '@einsatzzeichen/core';
-import { CompositionError } from '@einsatzzeichen/core';
+import * as core from '@einsatzzeichen/core/exact';
+import { CompositionError } from '@einsatzzeichen/core/exact';
 import { composeFromCatalog } from '@einsatzzeichen/conformance/src/recipes.js';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 import {

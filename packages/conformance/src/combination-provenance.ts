@@ -1,13 +1,7 @@
-import {
-  ALL_PICTOGRAMS,
-  PLACES,
-  freestandingRedirect,
-  matchFingerprint,
-  pictogramDrawing,
-  specKey,
-  symbolProvenance,
-} from '@einsatzzeichen/core';
-import type { SymbolProvenance } from '@einsatzzeichen/core';
+import { freestandingRedirect, specKey, symbolProvenance } from '@einsatzzeichen/core/exact';
+import { ALL_PICTOGRAMS, PLACES, pictogramDrawing } from '@einsatzzeichen/core/blocks';
+import { matchFingerprint } from '@einsatzzeichen/core/gates';
+import type { SymbolProvenance } from '@einsatzzeichen/core/exact';
 import {
   isFreestandingSpec,
   type Drawing,
