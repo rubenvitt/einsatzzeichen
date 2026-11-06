@@ -104,8 +104,10 @@ den Subpfad.
 | `renderSvg(drawing, options)` | SVG als String; `options`: `size`, `idPrefix` (ohne Leerzeichen, Anführungszeichen, `<`, `>`, `&`; sonst `RangeError`), `theme`, `minStrokeWidthPx` |
 | `renderCanvas(drawing, ctx, options)` | dieselbe Zeichnung auf einen 2D-Kontext; `options`: `size`, `theme`, `minStrokeWidthPx` |
 | `rasterDimensionsForWidth(viewBox, width)` | Rastermaße zu einer Zielbreite |
-| `RASTER_MIN_STROKE_WIDTH_PX`, `strokeWidthFloorMm` und `effectiveStrokeWidthMm` (`core/blocks`) | [Mindeststrichbreite](#kräftigere-striche-in-kleinen-bildern): empfohlener Wert (1 px) und die Rechnung dahinter |
-| `REFERENCE_THEME`, `RenderTheme`, `colorFor` (`core/blocks`) | der Farbvertrag am Rendererrand |
+| `RASTER_MIN_STROKE_WIDTH_PX` | [Mindeststrichbreite](#kräftigere-striche-in-kleinen-bildern): empfohlener Wert (1 px) |
+| `strokeWidthFloorMm`, `effectiveStrokeWidthMm` (`core/blocks`) | die Rechnung hinter der Mindeststrichbreite |
+| `REFERENCE_THEME`, `RenderTheme` | der Farbvertrag am Rendererrand |
+| `colorFor` (`core/blocks`) | die Farbe eines Tokens im Theme |
 | `drawSymbol(spec, options?)` (`core/exact`) | der Bauplan-Einstieg: `SymbolSpec` → `Drawing`, mit Standardbelegung und Beschreibung |
 | `DEFAULT_PORTS` (`core/exact`) | die Standardbelegung der Bausteine (`CatalogPorts`), eingefroren |
 | `compose(spec, ports, options)`, `CompositionError` (`core/exact`) | Komposition aus der `SymbolSpec` mit eigenen Bausteinen |
@@ -183,7 +185,8 @@ ein, weil Kartensymbole immer kleine Bilder sind. [React](/docs/pakete/react/) u
 Eine Oberfläche oder ein Skript, das Zeichen zusammensetzen lässt, braucht mehr als die Zeichnung:
 welche Werte es gibt, welche gerade zur übrigen Beschreibung passen, warum eine Beschreibung nicht
 trägt und woher ein Zeichen stammt. Das alles liefert `core` selbst — der
-[Baukasten](/builder/) ist nur einer seiner Nutzer.
+[Baukasten](/builder/) ist nur einer seiner Nutzer. Alle Exporte dieses Abschnitts stehen unter
+`@einsatzzeichen/core/exact`.
 
 | Export | Was es tut |
 |---|---|
@@ -258,6 +261,8 @@ Im Grundzeichen steht die Drohne als Körpermarke, nicht als Piktogramm: `DRONE_
 Original die Marke, etwa `formation-chevron-top` für den Winkel allein in der Formation (I.1.20) oder
 `formation-chevron-18mm` für den breiteren Winkel des Drohnentrupps der Feuerwehr (C.1.14).
 
+Ohne Angabe stehen die Exporte dieser Tabelle unter `@einsatzzeichen/core/exact`.
+
 | Export | Was es tut |
 |---|---|
 | `drawFreestanding(spec, options?)` | freistehendes Zeichen → `Drawing`, mit Beschreibung für Screenreader |
@@ -268,9 +273,9 @@ Original die Marke, etwa `formation-chevron-top` für den Winkel allein in der F
 | `FREESTANDING_FIELD_VALUES` | der Wertevorrat je Feld, je Art |
 | `freestandingVocabulary(spec, field, options?)`, `FREESTANDING_VOCABULARY_FIELDS` | welche Werte eines Feldes zur übrigen freistehenden Spec passen, je Wert mit Befund |
 | `freestandingProvenance(spec)`, `anySpecProvenance(spec)` | `verbatim` mit Referenzdatei oder `derived` |
-| `pictogramDrawing(id, variant?)` | die Kapiteldatei aus dem Piktogrammregister als `Drawing` |
+| `pictogramDrawing(id, variant?)` (`core/blocks`) | die Kapiteldatei aus dem Piktogrammregister als `Drawing` |
 | `serializeAnySpec`, `parseAnySpec`, `encodeAnySpecParam`, `decodeAnySpecParam` | die kanonische Form für beide Arten; freistehende Zeichen stehen unter `freestanding` |
-| `weatherDrawing`, `classifyWeather`, `WEATHER_CLOUD_PRECIPITATION`, `animalStateDrawing` | die Zeichenfunktionen und die Wetterregeln als Daten |
+| `weatherDrawing`, `classifyWeather`, `WEATHER_CLOUD_PRECIPITATION`, `animalStateDrawing` (`core/blocks`) | die Zeichenfunktionen und die Wetterregeln als Daten |
 
 ```ts
 import { renderSvg } from '@einsatzzeichen/core';
@@ -355,7 +360,7 @@ Referenzdatei gibt: das Bedingungszeichen, die Sammelschiene, Verbindungslinien 
 „geplant“, den Bereich und die Verbindungsarten Melder, sonstige und Satellit ohne Inhalt. Sie
 stehen **neben** dem Katalog, im Namensraum `sketch.*`, und jede Maßangabe ist vorgeschlagen, nicht
 abgelesen (`SKETCH_BLOCKS`). Die Bausteine geben Primitive in Teilen zurück, damit eine Skizze Lage,
-Hervorhebung und Bedienung selbst setzen kann.
+Hervorhebung und Bedienung selbst setzen kann. Die Exporte stehen unter `@einsatzzeichen/core/sketch`.
 
 | Export | Was es tut |
 |---|---|

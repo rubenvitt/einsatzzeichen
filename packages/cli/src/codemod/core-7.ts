@@ -11,7 +11,8 @@
  * Gelesen wird mit dem TypeScript-Parser, nicht mit Mustern über den Text: Strings, Kommentare und
  * Vorlagen bleiben unberührt. Bearbeitet werden Skriptdateien (`.ts`, `.tsx`, `.js`, …), die
  * Skriptteile von `.astro`, `.vue` und `.svelte` und die Codeblöcke (ts, tsx, js, jsx) in `.md`
- * und `.mdx`. Was sich nicht eindeutig umschreiben lässt (`import * as core`, `import()`,
+ * und `.mdx`, dazu Typen der Form `import('@einsatzzeichen/core').Name`. Was sich nicht eindeutig
+ * umschreiben lässt (`import * as core`, `import()`,
  * `require`, `vi.mock('@einsatzzeichen/core')` und andere Aufrufe mit dem Paketnamen, unbekannte
  * Namen, Kommentare zwischen den Namen), bleibt stehen und wird gemeldet.
  */
@@ -73,16 +74,21 @@ function scriptRegions(text: string, fileName: string): Region[] {
   }
   if (MARKDOWN_EXTENSIONS.has(extension)) {
     const regions: Region[] = [];
+    // Jeder Codeblock, auch einer in einer anderen Sprache, ist für die ESM-Suche gesperrt.
+    const fences: Region[] = [];
     for (const match of text.matchAll(/^([ \t]*)(`{3,}|~{3,})([\w-]*)[^\n]*\n([\s\S]*?)^\1\2[ \t]*$/gmu)) {
+      fences.push({ start: match.index, end: match.index + match[0].length });
       if (!FENCE_LANGUAGES.has(match[3]!.toLowerCase())) continue;
       const start = match.index + match[0].indexOf('\n') + 1;
       regions.push({ start, end: start + match[4]!.length });
     }
-    // MDX: ESM-Importe außerhalb der Codeblöcke, Zeile für Zeile bis zum `from '…'`.
+    // MDX: ESM-Importe außerhalb aller Codeblöcke, Zeile für Zeile bis zum `from '…'`. Ein Treffer,
+    // der in einen Codeblock reicht, zählt nicht: sonst bearbeiteten zwei Stellen denselben Text.
     if (extension === '.mdx') {
       for (const match of text.matchAll(/^(?:import|export)\b[\s\S]*?\bfrom\s*(['"])[^'"\n]+\1;?[ \t]*$/gmu)) {
-        if (regions.some((region) => match.index >= region.start && match.index < region.end)) continue;
-        regions.push({ start: match.index, end: match.index + match[0].length });
+        const end = match.index + match[0].length;
+        if (fences.some((fence) => match.index < fence.end && end > fence.start)) continue;
+        regions.push({ start: match.index, end });
       }
     }
     return regions;
@@ -202,6 +208,25 @@ export function rewriteCoreImports(text: string, fileName: string): RewriteResul
             start: region.start + node.getStart(source),
             end: region.start + node.getEnd(),
             text: replacement,
+          });
+        }
+        return;
+      }
+      // `import('@einsatzzeichen/core').CatalogPorts` in Typposition: den Subpfad nach dem Namen wählen.
+      if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument) && isCore(node.argument.literal)) {
+        let first: ts.EntityName | undefined = node.qualifier;
+        while (first !== undefined && ts.isQualifiedName(first)) first = first.left;
+        const name = first?.text;
+        const target = name === undefined ? undefined : CORE_7_MOVES[name];
+        if (target === undefined) {
+          report(node, '`import(…)`-Typ aus core ohne bekannten Namen: Subpfad von Hand wählen.');
+        } else if (target !== '') {
+          const literal = node.argument.literal;
+          const quote = literal.getText(source)[0];
+          edits.push({
+            start: region.start + literal.getStart(source),
+            end: region.start + literal.getEnd(),
+            text: `${quote}${CORE}/${target}${quote}`,
           });
         }
         return;

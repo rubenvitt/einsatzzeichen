@@ -119,6 +119,38 @@ describe('codemod:7 (ESZ-151)', () => {
     );
   });
 
+  it('schreibt Typen der Form import(…).Name auf den Subpfad um', () => {
+    const source = "type P = import('@einsatzzeichen/core').CatalogPorts;\ntype D = import('@einsatzzeichen/core').Drawing;\n";
+    expect(rewrite(source).text).toBe(
+      "type P = import('@einsatzzeichen/core/exact').CatalogPorts;\ntype D = import('@einsatzzeichen/core').Drawing;\n",
+    );
+    expect(rewrite("type X = typeof import('@einsatzzeichen/core');").warnings).toHaveLength(1);
+  });
+
+  it('fasst in MDX keine Importe in fremdsprachigen Codeblöcken an und bearbeitet nichts doppelt', () => {
+    const mdx = [
+      "import Karte from '../Karte.astro';",
+      '',
+      '```bash',
+      "import { drawSymbol } from '@einsatzzeichen/core';",
+      '```',
+      '',
+      'export const titel = 1;',
+      '',
+      '~~~ts',
+      "import { drawSymbol } from '@einsatzzeichen/core';",
+      '~~~',
+      '',
+    ].join('\n');
+    const { text } = rewrite(mdx, 'a.mdx');
+    expect(text).toBe(
+      mdx.replace(
+        "~~~ts\nimport { drawSymbol } from '@einsatzzeichen/core';",
+        "~~~ts\nimport { drawSymbol } from '@einsatzzeichen/core/exact';",
+      ),
+    );
+  });
+
   it('schreibt Dateien nur mit write und überspringt node_modules', () => {
     const dir = mkdtempSync(join(tmpdir(), 'codemod-7-'));
     const file = join(dir, 'a.ts');

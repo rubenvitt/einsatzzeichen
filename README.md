@@ -115,7 +115,9 @@ pnpm add @einsatzzeichen/conformance         # nur für Prüfdaten wie RECIPES, 
 
 Bausteine und Themes (`baseDrawing`, `organizationColor`, `pictogram`, `RENDER_THEMES`,
 `PRINT_MONOCHROME_THEME`, `describeSymbolSpec`, `TEXT_FONT_METRICS` und ihre Nachbarn) kommen
-jetzt aus `@einsatzzeichen/core`; der Index von `conformance` führt sie nicht mehr. Rezepte,
+jetzt aus `@einsatzzeichen/core`, seit 7.0 die Themes von der Wurzel, die Bausteine und
+`TEXT_FONT_METRICS` aus `@einsatzzeichen/core/blocks` und `describeSymbolSpec` aus
+`@einsatzzeichen/core/exact`; der Index von `conformance` führt sie nicht mehr. Rezepte,
 Coverage, Reviews, Quellen-, Profil- und Elementregister sowie `fonts.ts` bleiben in
 `conformance`.
 
