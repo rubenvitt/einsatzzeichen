@@ -1,3 +1,34 @@
+## [6.12.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.11.1...v6.12.0) (2026-11-06)
+
+### Core: Beschreibung (`Sign`) als neuer Einstieg
+
+Mit `Sign` gibt es eine neue Ebene über dem Bauplan (`SymbolSpec`). Eine Beschreibung gibt an, **was gemeint ist**. Sie legt nicht fest, wie das Zeichen aufgebaut wird. Die `SymbolSpec` bleibt unverändert. Die Änderung ist rein additiv, bestehender Code läuft weiter.
+
+- **Felder der Beschreibung:** `kind`, `variant`, `organization` oder `color`, `tasks`, `head`, `role`, `chassis`, `states`, `text`. Mit `exact` lässt sich der Bauplan gezielt ergänzen.
+- **`draw`** zeichnet immer. Was nicht dargestellt werden kann, steht mit Begründung in `omitted`. Dazu gehören zum Beispiel ein Kopfwert, der in keiner Liste vorkommt, oder jede weitere Tendenz nach der ersten.
+- **`check`** prüft eine Beschreibung streng. Die Meldungen beziehen sich auf die Felder der Beschreibung.
+- **`choices`** liefert die passenden Werte mit ihren Namen, zum Beispiel für Auswahllisten.
+- **`describe`** liefert einen Namen und einen Vorlesetext für Barrierefreiheit.
+- **`serialize` / `parse`** schreiben und lesen das neue Hüllenformat v2. Das Format v1 wird weiterhin gelesen.
+- **`resolve` / `fromExact`** übersetzen zwischen Beschreibung und Bauplan.
+- **Bytegleiche Ausgabe:** Alle 551 Rezepte und die typischen Einsatzmittel ergeben über die Beschreibung exakt dieselbe Ausgabe wie über den Bauplan.
+
+#### Korrekturen
+
+- Eine zweite Tendenz wird nach ihrer Position gezählt, auch wenn sie denselben Wert wie die erste hat.
+- Wenn `draw` auf den konkreten Punkt zurückfällt, bleiben die zuvor weggelassenen Teile in `omitted` erhalten.
+- Der Leser für die Hülle v2 lehnt Text mit einzelnen Surrogat-Zeichen ab, genau wie bei jeder Spec. So kann ein URL-Parameter den Text nicht unbemerkt verfälschen.
+
+### Core: Neue Subpfade
+
+- Neu sind `@einsatzzeichen/core/exact`, `@einsatzzeichen/core/blocks` und `@einsatzzeichen/core/sketch`.
+- Bis Version 7.0 bleiben diese Exporte auch über die Paketwurzel erreichbar. Neuer Code sollte die Subpfade verwenden.
+
+### React, MapLibre und Web Component
+
+- Alle drei Integrationen nehmen eine Beschreibung über die neue Option `sign` an. Ein Bauplan ist dafür nicht mehr nötig.
+- In MapLibre wird eine Beschreibung genauso gerastert wie die Zeichnung, die `draw` für sie liefert. Ein Test stellt das sicher.
+
 ## [6.11.1](https://github.com/rubenvitt/einsatzzeichen/compare/v6.11.0...v6.11.1) (2026-11-05)
 
 ### Rendering
