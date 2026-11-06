@@ -1,3 +1,27 @@
+## [7.0.0](https://github.com/rubenvitt/einsatzzeichen/compare/v6.13.1...v7.0.0) (2026-11-06)
+
+### ⚠️ Breaking Changes
+
+- **Die Wurzel von `@einsatzzeichen/core` exportiert nur noch Beschreibung und Ausgabe.** Statt bisher 412 Namen bleiben 62. Zur Beschreibung gehören `draw`, `check`, `choices`, `describe`, `serialize`, `parse`, `resolve`, `fromExact` und `KIND_FAMILIES`. Zur Ausgabe gehören `renderSvg`, `renderCanvas`, die Themes, `rasterDimensionsForWidth`, `RASTER_MIN_STROKE_WIDTH_PX` und `TEXT_FONT_FAMILY_ATTR`. Alle anderen Exporte gibt es unverändert weiter, aber nur noch über Subpfade:
+  - `@einsatzzeichen/core/exact`: Bauplan, z. B. `drawSymbol`, `compose`, `checkSpec`, `vocabulary` und die Codecs v1
+  - `@einsatzzeichen/core/blocks`: Bausteine, Geometrie, Layout
+  - `@einsatzzeichen/core/sketch`: Skizze
+  - `@einsatzzeichen/core/gates` (neu): Regelkataloge, Gates, Kontrast, Fingerprint
+
+  **Migration:** `npx @einsatzzeichen/cli codemod:7 src --write` stellt die Importe automatisch um. Danach die Hinweise des Codemods zu den Stellen abarbeiten, die von Hand angepasst werden müssen. Verhalten und Ausgabe ändern sich nicht. Gespeicherte Zeichen in den Formaten v1 und v2 lassen sich weiter lesen.
+
+### Core
+
+- Neuer Subpfad `@einsatzzeichen/core/gates`: Er enthält Regelkataloge, Gates, Kontrastprüfung und Fingerprint.
+- Die Wurzel von `core` ist jetzt eine kleine, stabile Schnittstelle: Zeichen beschreiben, prüfen, serialisieren und rendern. Werkzeuge für Fortgeschrittene stehen in eigenen Subpfaden.
+
+### CLI
+
+- Neuer Befehl `einsatzzeichen codemod:7 <pfad…> [--write]`: Er verteilt Importe aus der Wurzel von `@einsatzzeichen/core` auf die passenden Subpfade.
+  - Er nutzt einen TypeScript-Parser und verarbeitet Skripte, Astro-, Vue- und Svelte-Dateien sowie Codeblöcke in Markdown.
+  - Ohne `--write` zeigt er die Änderungen nur an. Mit `--write` schreibt er sie in die Dateien.
+  - Was sich nicht automatisch umstellen lässt, meldet er als Handarbeit.
+
 ## [6.13.1](https://github.com/rubenvitt/einsatzzeichen/compare/v6.13.0...v6.13.1) (2026-11-06)
 
 ### Website
