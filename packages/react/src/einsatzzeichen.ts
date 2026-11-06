@@ -1,6 +1,6 @@
 import { createElement, useMemo, type CSSProperties, type ReactElement } from 'react';
-import type { Drawing } from '@einsatzzeichen/schema';
-import { renderSvg, type SvgOptions } from '@einsatzzeichen/core';
+import type { Drawing, Sign } from '@einsatzzeichen/schema';
+import { drawingOf, renderSvg, type SvgOptions } from '@einsatzzeichen/core';
 import { splitSvgMarkup } from './split-svg-markup.js';
 
 /**
@@ -26,11 +26,27 @@ export function svgAttributeToReactProp(name: string): string {
   return name.replace(/[:-]([a-z])/gu, (_, letter: string) => letter.toUpperCase());
 }
 
-export interface EinsatzzeichenProps extends SvgOptions {
-  drawing: Drawing;
+/**
+ * Die Zeichnung zu einer Beschreibung (ESZ-149), memoisiert über ihren Inhalt: eine bei jedem
+ * Render neu geschriebene Beschreibung mit gleichem Inhalt zeichnet nicht neu.
+ */
+export function useSignDrawing(input: Drawing | Sign): Drawing {
+  const contentKey = 'viewBox' in input ? input : JSON.stringify(input);
+  // Abhängig vom Inhalt, nicht von der Objektidentität der Beschreibung.
+  return useMemo(() => drawingOf(input), [contentKey]);
+}
+
+interface EinsatzzeichenBaseProps extends SvgOptions {
   className?: string;
   style?: CSSProperties;
 }
+
+/**
+ * Entweder eine fertige Zeichnung (`drawing`) oder eine Beschreibung (`sign`, ESZ-149), die über
+ * `draw` gezeichnet wird und deshalb immer ein Bild ergibt.
+ */
+export type EinsatzzeichenProps = EinsatzzeichenBaseProps &
+  ({ drawing: Drawing; sign?: never } | { sign: Sign; drawing?: never });
 
 /**
  * Rendert ein Einsatzzeichen als `<svg>`-Element. Die Wurzelattribute werden zu React-Props,
@@ -38,7 +54,8 @@ export interface EinsatzzeichenProps extends SvgOptions {
  * eingesetzt — core bleibt der einzige Renderer, React reproduziert es nur.
  */
 export function Einsatzzeichen({
-  drawing,
+  drawing: givenDrawing,
+  sign,
   size,
   idPrefix,
   theme,
@@ -46,6 +63,7 @@ export function Einsatzzeichen({
   className,
   style,
 }: EinsatzzeichenProps): ReactElement {
+  const drawing = useSignDrawing((givenDrawing ?? sign) as Drawing | Sign);
   const svg = useEinsatzzeichenSvg(drawing, { size, idPrefix, theme, minStrokeWidthPx });
   // Zerlegung und Prop-Abbildung hängen nur vom Markup ab und werden deshalb mit ihm
   // memoisiert — sonst liefe der Split bei jedem Render erneut, auch ohne neues SVG.

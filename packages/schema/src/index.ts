@@ -22,3 +22,4 @@ export * from './parametric.js';
 export * from './freestanding.js';
 export * from './body-mark-renditions.js';
 export * from './place.js';
+export * from './sign.js';

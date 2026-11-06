@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { REFERENCE_THEME, type RenderTheme } from '@einsatzzeichen/core';
+import { REFERENCE_THEME, draw, type RenderTheme } from '@einsatzzeichen/core';
 import { mmToUnits, type Drawing } from '@einsatzzeichen/schema';
 import {
   addSymbolImage,
@@ -292,5 +292,21 @@ describe('addSymbolImage', () => {
       }),
     ).toThrow(/drk-rtw/u);
     expect(map.added).toHaveLength(0);
+  });
+});
+
+describe('Beschreibung statt Zeichnung (ESZ-149)', () => {
+  it('rastert eine Beschreibung wie ihre Zeichnung', () => {
+    const sign = { kind: 'formation', organization: 'thw' } as const;
+    const recorder = recordingCanvas();
+    const image = createStyleImage(sign, { size: 32, createCanvas: () => recorder.canvas });
+    expect(image.width).toBe(32);
+    expect(image.height).toBe(32);
+
+    const reference = recordingCanvas();
+    createStyleImage(draw(sign).drawing, { size: 32, createCanvas: () => reference.canvas });
+    expect(recorder.calls).toEqual(reference.calls);
+    expect(recorder.sets).toEqual(reference.sets);
+    expect(recorder.calls.some(([name]) => name === 'fill' || name === 'stroke')).toBe(true);
   });
 });

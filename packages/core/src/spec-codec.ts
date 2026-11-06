@@ -675,3 +675,30 @@ export function encodeAnySpecParam(spec: AnySpec): string {
 export function decodeAnySpecParam(param: string): AnySpec {
   return parseAnySpec(utf8OfParam(param));
 }
+
+/* --- Intern für die Beschreibungsebene (ESZ-149), nicht über den Paketindex ----------------- */
+
+/** Liest eine `SymbolSpec` streng an einem Pfad der Eingabe; Grundlage von `parse()` für `exact`. */
+export function readSymbolSpecAt(value: unknown, path: string): SymbolSpec {
+  return readSpec(value, path) as SymbolSpec;
+}
+
+/** Liest ein freistehendes Zeichen streng an einem Pfad der Eingabe. */
+export function readFreestandingAt(value: unknown, path: string): FreestandingSpec {
+  return readFreestanding(value, path) as FreestandingSpec;
+}
+
+/** base64url ohne Füllzeichen über das UTF-8 einer Zeichenkette. */
+export function encodeTextParam(text: string): string {
+  return toBase64url(new TextEncoder().encode(text));
+}
+
+/** Umkehrung von `encodeTextParam`; wirft `SpecParseError`. */
+export function decodeTextParam(param: string): string {
+  return utf8OfParam(param);
+}
+
+/** Liest Text streng wie in jeder Spec: Zeichenkette ohne einzelne Surrogate. */
+export function readTextAt(value: unknown, path: string): string {
+  return text(value, path) as string;
+}
