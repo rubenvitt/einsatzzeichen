@@ -4,6 +4,7 @@ import {
   parametricBlock,
   pictogram,
   referenceMovementSpec,
+  type Choice,
   type SpecCheck,
 } from '@einsatzzeichen/core';
 import {
@@ -24,14 +25,12 @@ import {
   type PictogramId,
   type WeatherIntensity,
 } from '@einsatzzeichen/schema';
-import type { AllowedValue } from './builder-state.js';
 
 /**
  * Der Baukasten-Modus „freistehend“ (ESZ-135): Pfeil, Linie, Wetter, Tierzustand, Zustand und
  * Piktogramm ohne Grundzeichen, als `FreestandingSpec` (LFH-577, LFH-798).
  *
- * Reine Funktionen wie in `builder-state.ts` und `builder-vocabulary.ts`; die Insel hält nur den
- * React-State. Die Werte und ihre Bezeichnungen kommen aus den Registern in `schema` und `core`,
+ * Reine Funktionen wie in `builder-sign.ts`; die Insel hält nur den React-State. Die Werte und ihre Bezeichnungen kommen aus den Registern in `schema` und `core`,
  * nicht aus dem Snapshot: die freistehenden Arten haben dort kein Vokabular, und die Register
  * stecken ohnehin im Browserbündel, weil der Baukasten mit ihnen zeichnet.
  */
@@ -306,30 +305,24 @@ export function reduceFreestanding(
 
 /* --- Welche Werte gerade zusammenpassen --------------------------------------------------- */
 
-/** Ein Befund aus `checkAnySpec` in der Form, die die Insel liest (`AllowedValue`). */
-function toAllowed(value: string, check: SpecCheck): AllowedValue {
+/** Ein Befund aus `checkAnySpec` in der Form, die die Insel liest (`Choice` wie aus `choices()`). */
+function toChoice(option: FreestandingOption, selected: boolean, check: SpecCheck): Choice {
+  const base = { value: option.id, label: option.label, selected, ...(option.group === undefined ? {} : { group: option.group }) };
   if (check.ok) {
-    return (check.drawing.derivations?.length ?? 0) > 0
-      ? { value, ok: true, issues: [], derived: true }
-      : { value, ok: true, issues: [] };
+    return { ...base, status: (check.drawing.derivations?.length ?? 0) > 0 ? 'derived' : 'measured' };
   }
-  if (check.reason === 'not-measured') {
-    return {
-      value,
-      ok: false,
-      issues: [],
-      blocked: { because: 'not-measured', detail: check.message, scope: check.scope },
-    };
-  }
+  if (check.reason === 'not-measured') return { ...base, status: 'blocked', why: check.message };
   const first = check.issues[0];
-  const explanation =
-    first !== undefined ? `${first.title}: ${first.explanation}` : 'Diese Kombination trägt nicht.';
-  return { value, ok: false, issues: check.issues, blocked: { because: 'rule', explanation } };
+  return {
+    ...base,
+    status: 'blocked',
+    why: first !== undefined ? `${first.title}: ${first.explanation}` : 'Diese Kombination trägt nicht.',
+  };
 }
 
 /**
- * Probiert jeden Wert jedes Feldes der Art an der aktuellen Spec aus — Feldname → (Kennung →
- * Befund), dieselbe Form wie `probeFields()` für die `SymbolSpec`.
+ * Probiert jeden Wert jedes Feldes der Art an der aktuellen Spec aus — Feldname → Werte mit
+ * Befund, dieselbe Form wie `choices()` aus `core` für die Zeichen mit Körper.
  *
  * **Warum `checkAnySpec` je Kandidat und nicht `freestandingVocabulary`.** Das Vokabular setzt
  * genau das eine Feld und lässt die übrige Spec stehen. Der Baukasten setzt beim Klick aber mehr
@@ -340,38 +333,33 @@ function toAllowed(value: string, check: SpecCheck): AllowedValue {
  *
  * Bei Listen (Wetter) wird angehängt; gefragt ist, ob sich der Wert **hinzufügen** lässt. Ein
  * Verlauf, den die Zeichnung für einen Kandidaten nicht tragen kann, ist weder Regel noch Lücke
- * (`checkAnySpec` wirft); der Kandidat steht dann mit `because: 'path'` gesperrt da, statt die
- * ganze Probe abzubrechen. Gemessen am 20.10.2026 (Node 22, tsx): alle Felder aller sechs Arten
- * zusammen rund 13 ms, das Piktogramm mit 260 Kandidaten rund 5 ms.
+ * (`checkAnySpec` wirft); der Kandidat steht dann gesperrt da, statt die ganze Probe abzubrechen.
+ * Gemessen am 20.10.2026 (Node 22, tsx): alle Felder aller sechs Arten zusammen rund 13 ms, das
+ * Piktogramm mit 260 Kandidaten rund 5 ms.
  */
-export function probeFreestanding(spec: FreestandingSpec): Map<string, Map<string, AllowedValue>> {
-  const byField = new Map<string, Map<string, AllowedValue>>();
+export function probeFreestanding(spec: FreestandingSpec): Map<string, Choice[]> {
+  const byField = new Map<string, Choice[]>();
   const current = spec as unknown as Record<string, unknown>;
   for (const definition of FREESTANDING_FIELDS[spec.kind]) {
-    const results = new Map<string, AllowedValue>();
-    const selected = current[definition.field];
-    const list = Array.isArray(selected) ? (selected as readonly string[]) : [];
+    const results: Choice[] = [];
+    const set = current[definition.field];
+    const list = Array.isArray(set) ? (set as readonly string[]) : [];
     for (const option of definition.options) {
+      const selected = definition.shape === 'list' ? list.includes(option.id) : set === option.id;
       // Ein Listenwert, der schon gesetzt ist, wird nicht ein zweites Mal angehängt: sein Befund
       // ist der der Spec, wie sie ist.
-      const value =
-        definition.shape !== 'list'
-          ? option.id
-          : list.includes(option.id)
-            ? list
-            : [...list, option.id];
+      const value = definition.shape !== 'list' ? option.id : selected ? list : [...list, option.id];
       const next = reduceFreestanding(spec, definition.field, value);
       try {
-        results.set(option.id, toAllowed(option.id, checkAnySpec(next)));
+        results.push(toChoice(option, selected, checkAnySpec(next)));
       } catch (error) {
-        results.set(option.id, {
+        results.push({
           value: option.id,
-          ok: false,
-          issues: [],
-          blocked: {
-            because: 'path',
-            detail: error instanceof Error ? error.message : String(error),
-          },
+          label: option.label,
+          selected,
+          ...(option.group === undefined ? {} : { group: option.group }),
+          status: 'blocked',
+          why: `Passt nicht auf den Verlauf dieses Zeichens (${error instanceof Error ? error.message : String(error)}).`,
         });
       }
     }

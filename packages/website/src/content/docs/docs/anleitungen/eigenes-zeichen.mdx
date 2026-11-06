@@ -1,134 +1,112 @@
 ---
 title: Ein Zeichen selbst zusammensetzen
-description: Im Baukasten aus Grundzeichen, Organisation, Stärke und Fähigkeiten ein Zeichen bauen, lesen warum eine Kombination abgelehnt wird, und das Ergebnis mitnehmen.
+description: Im Baukasten ein Zeichen beschreiben — suchen, Familie wählen, nur passende Angaben setzen — und lesen, was nicht ins Bild kam und warum.
 ---
 
 import { loadSnapshot } from '../../../../lib/snapshot';
 
 export const snapshot = loadSnapshot();
 
-Nicht jedes Zeichen, das ihr braucht, steht im Katalog. Im [Baukasten](/builder/) setzt du eines
-aus seinen Bestandteilen zusammen — Grundzeichen, Organisation, Stärke, Fähigkeiten — und siehst
-sofort, wie es aussieht.
+Nicht jedes Zeichen, das ihr braucht, steht im Katalog. Im [Baukasten](/builder/) beschreibst du
+eines: was es ist, wem es gehört, was es kann, welche Größe es hat. Das Bild dazu entsteht sofort.
 
-Der Baukasten prüft dabei mit: {snapshot.ruleIds.length} Regeln beschreiben, welche Bestandteile
-zusammenpassen. Verstößt deine Zusammenstellung gegen eine davon, steht in Klartext daneben,
-welche Regel das ist und warum es sie gibt. Du musst die Regeln also nicht kennen — du lernst sie
-beim Bauen.
+Der Baukasten zeigt dabei nur Angaben, die zu deinem Zeichen passen. Was hier nicht passt, steht
+eingeklappt darunter, jeweils mit dem Grund. {snapshot.ruleIds.length} Regeln beschreiben, welche
+Angaben zusammenpassen; du musst sie nicht kennen, du liest sie beim Bauen.
 
 ## Schritt für Schritt
 
 1. Öffne den [Baukasten](/builder/).
 
-2. Fang nicht bei null an. Ganz oben steht **Aus dem Katalog laden**: wähle dort ein Zeichen, das
-   deinem Ziel nahekommt. Alle Felder springen auf dessen Werte, und du änderst nur, was anders
-   sein soll. Von der Seite eines Zeichens führt dich die Schaltfläche **Im Baukasten öffnen**
-   direkt mit diesem Zeichen hierher.
+2. Fang mit der Suche an. Unter **Was willst du zeichnen?** tippst du ein, was du suchst, etwa
+   „RTW“, „Bergungsgruppe“ oder eine Fundstelle wie „E.1.1“. Ein Klick auf einen Treffer lädt das
+   Zeichen, und du änderst nur, was anders sein soll. Von der Seite eines Zeichens führt dich
+   **Im Baukasten öffnen** direkt mit diesem Zeichen hierher. **Beispiel laden** holt ein
+   zufälliges Zeichen, **Neu beginnen** die leere Einheit.
 
-3. Stelle die Felder ein, die dein Zeichen beschreiben:
+3. Unter **Was ist es?** wählst du die Familie: Einheit, Person, Fahrzeug, Stelle und Gebäude,
+   Behälter und Ressource, Lage, Sonderformen oder Freistehend. Hat eine Familie mehrere Arten,
+   etwa Land-, Wasser- und Luftfahrzeug, wählst du darunter die Art.
 
-   - **Grundzeichenart** — die Grundform, auf der alles aufsetzt.
-   - **Körpervariante** — die Ausprägung dieser Grundform.
-   - **Organisation** — Feuerwehr, THW und die übrigen; sie bestimmt die Farbe. Für die
-     Bundespolizei wählst du Polizei.
-   - **Technische Füllung** — eine Füllung ohne Organisationsbezug, wenn keine Organisation gemeint
-     ist.
-   - **Stärke** — die Größe der Einheit.
-   - **Funktionsfassung** und **Verwaltungsstufe** — Führungsfunktion und Ebene.
-   - **Technische Kopfmarke** und **Fahrzeugkategorie** — Marken in der Kopfzone.
+4. Darunter stehen nur die Abschnitte, die zu dieser Art passen. An einer Einheit gibt es kein
+   Fahrwerk, an einem Fahrzeug keine Funktion. Die möglichen Abschnitte:
 
-4. Trag unter **Beschriftung** ein, was im Zeichen stehen soll: etwa „ILS“ in der **Mitte** und
-   ein Kreiskürzel **unten rechts**. Weitere Felder gibt es für die übrigen Ecken und für Text
-   über und unter dem Zeichen. Ein Kürzel unter dem Zeichen trägst du in **Beschriftung
-   (Fußzone)** ein. Passt ein Text nicht an seinen Platz, sagt es die Vorschau. Unter
-   **Größe in der Mitte** setzt **Groß** ein kurzes Kürzel so hoch wie „LtS“ an der Leitstelle
-   (D.2.5); ist der Text dafür zu lang, meldet es ebenfalls die Vorschau.
+   - **Organisation**: Feuerwehr, THW und die übrigen; sie bestimmt die Farbe. Für die
+     Bundespolizei wählst du Polizei. Eine Farbe ohne Organisation findest du eingeklappt darunter.
+   - **Fachaufgaben**: was die Einheit kann, als Suche mit Piktogrammen. Ein Klick fügt hinzu, ein
+     Klick auf eine gewählte Aufgabe entfernt sie. Ob ein Piktogramm in der Box oder randbündig am
+     Körper steht, entscheidet der Baukasten nach der Vorlage.
+   - **Größe und Ebene**: Stärke von Trupp bis Verband, Verwaltungsstufe oder ein Balken im Kopf.
+   - **Funktion**: die Fassung einer Führungsfunktion.
+   - **Fahrwerk**: die Art des Fahrzeugs.
+   - **Darstellung**: eine zweite Zeichnung, wo die Vorlage zwei kennt, etwa den Giebel an der
+     ortsfesten Stelle.
+   - **Zustand**: Zustände, Gefahrenhinweise und die Tendenz.
+   - **Text**: was im Zeichen steht, etwa „ILS“ in der **Mitte** und ein Kreiskürzel **unten
+     rechts**. Unter **Weitere Textstellen** gibt es die übrigen Ecken und Text über und unter dem
+     Zeichen. **Größe in der Mitte** auf **Groß** setzt ein kurzes Kürzel so hoch wie „LtS“ an der
+     Leitstelle (D.2.5).
 
-5. Wähle unter **Fähigkeiten** und **Körpermarken** aus, was zusätzlich hinein soll. Fähigkeiten
-   erscheinen als Piktogramme in der Standardbox, Körpermarken randbündig über der Körperfläche.
-   Beides sind Mehrfachauswahlen: klicke eine gewählte Marke an, um sie wieder zu entfernen.
+   Personen- und Gerätedekontamination unterscheidet die Vorlage nur durch einen Buchstaben: Wähle
+   die Fachaufgabe **Dekontaminieren** und trag in der **Mitte** „P“ oder „G“ ein. Der Buchstabe
+   steht dann wie in C.1.8 und C.1.10 zwischen den beiden Klammern.
 
-   Welche der beiden Listen passt, hängt vom Vorbild ab. Zeigt die Vorlage eine Fähigkeit in
-   genau dieser Grundform, dann ist sie dort eigens gezeichnet, und du wählst sie unter
-   **Körpermarken** — etwa die Brandbekämpfung in der taktischen Formation. Wählst du sie
-   trotzdem unter **Fähigkeiten**, zeichnet der Baukasten sie in dieser gezeichneten Fassung.
-   Gibt es kein solches Vorbild, passt der Baukasten das Piktogramm in die Grundform ein. Das
-   Zeichen gilt dann als abgeleitet (siehe unten).
+5. Sieh dir das Ergebnis an. Der Baukasten zeigt es groß und in drei kleinen Größen, auf hellem wie
+   dunklem Untergrund. Über dem Bild steht, wie treu es ist:
 
-   Personen- und Gerätedekontamination unterscheidet die Vorlage nur durch einen Buchstaben:
-   Wähle die Körpermarke **Dekontaminieren** und trag in der **Mitte** „P“ oder „G“ ein. Der
-   Buchstabe steht dann wie in C.1.8 und C.1.10 zwischen den beiden Klammern, an jeder Grundform.
+   - **Vermessen**: jedes Teil ist an einem Original der Vorlage nachgemessen.
+   - **Abgeleitet**: das Bild trägt Teile, die der Baukasten aus ähnlichen Zeichen übernommen hat.
+     Welche, steht aufklappbar unter dem Bild.
+   - **Vereinfacht**: eine Angabe kam nicht ins Bild. Unter **Nicht im Bild** steht, welche und
+     warum; im Formular trägt sie die Marke „nicht im Bild“, damit du sie entfernen oder ändern
+     kannst.
 
-6. Sieh dir das Ergebnis an. Der Baukasten zeigt es in drei Größen — 32, 64 und 128 Bildpunkte —
-   und auf hellem wie dunklem Untergrund, damit du beurteilen kannst, ob es klein noch lesbar ist.
-   Steht unter der Vorschau **Teilweise abgeleitet**, gibt es für deine Zusammenstellung kein
-   Vorbild in der Vorlage. Was das heißt, steht weiter unten.
+6. Nimm das Ergebnis mit: SVG, PNG oder **Link kopieren**. Auch die Adresszeile trägt dein Zeichen;
+   wer den Link öffnet, sieht genau dein Zeichen, gespeichert wird nichts auf einem Server.
 
-7. Ist etwas nicht erlaubt, verschwindet die Vorschau nicht wortlos. Stattdessen steht dort, gegen
-   welche Regel die Zusammenstellung verstößt, was diese Regel bedeutet und welche Kennung sie
-   trägt. Ändere ein Feld, und die Prüfung läuft sofort neu.
+## Wenn ein Wert „hier nicht passt“
 
-8. Nimm das Ergebnis mit: die Adresse in der Adresszeile des Browsers trägt deine Zusammenstellung
-   in sich. Kopiere sie, und wer den Link öffnet, sieht genau dein Zeichen — nichts wird auf einem
-   Server gespeichert.
+Unter einer Auswahl steht manchmal **3 weitere passen hier nicht**. Klappst du das auf, steht zu
+jedem Wert der Grund: zwei Zustände derselben Skala schließen sich aus, ein Kopf passt nicht an
+diese Art, ein Wert ist an dieser Art noch nicht vermessen. Meist hilft ein anderer Wert oder eine
+andere Art.
 
-Ganz unten unter den Feldern steht **Auf die Ausgangsauswahl zurücksetzen** — der Knopf stellt
-alles auf den Anfangszustand, falls du dich verrannt hast.
+Ein Zeichen, das eine solche Angabe trotzdem trägt, etwa aus einem Link, zeichnet der Baukasten
+trotzdem: Er lässt die eine Angabe weg und sagt es unter **Nicht im Bild**. Das Zeichen bricht nie
+ab.
 
 ## Ein Zeichen ohne Grundzeichen
 
 Manche Zeichen stehen ohne Grundzeichen auf der Lagekarte: ein Pfeil für die Richtung einer
 Maßnahme, eine Grenze zwischen Einsatzabschnitten, das Wetter, ein Tierzustand, die
 Einzeldarstellung eines Zustands oder ein einzelnes Piktogramm, etwa ein Kommunikationszeichen.
-Dafür stellst du unter **Art des Zeichens** auf **Freistehend** um.
+Dafür wählst du die Familie **Freistehend** und darunter die Art.
 
-1. Wähle die **Art**: Pfeil, Linie, Wetter, Tierzustand, Zustand oder Piktogramm.
-2. Wähle den Wert. Ein Pfeil oder eine Linie steht auf dem Verlauf der Vorlage. An der Grenze mit
+1. Wähle den Wert. Ein Pfeil oder eine Linie steht auf dem Verlauf der Vorlage. An der Grenze mit
    taktischer Stärke setzt der Baukasten die Stärke „Zug“ ein; du kannst sie ändern.
-3. Beim **Wetter** kombinierst du die Werte: zur Wolke etwa „Schneiend“ und darunter die
+2. Beim **Wetter** kombinierst du die Werte: zur Wolke etwa „Schneiend“ und darunter die
    **Intensität**. Ein Wert bleibt immer stehen; nimm erst einen neuen dazu, dann den alten weg.
-4. Ist ein Wert gesperrt, steht der Grund daneben. Ein Personenzustand wie „Person unverletzt“
-   etwa gehört an das Grundzeichen Person und lässt sich dort im Modus **Mit Grundzeichen**
-   setzen.
+3. Ein Personenzustand wie „Person unverletzt“ gehört an die Person; er steht deshalb unter „passt
+   hier nicht“ und lässt sich in der Familie **Person** setzen.
 
-Vorschau, Download und Link funktionieren wie bei jedem anderen Zeichen. Zwischen den beiden Arten
-kannst du wechseln, ohne die Auswahl der anderen zu verlieren. Lädst du unter **Aus dem Katalog
-laden** ein freistehendes Zeichen, etwa die Faxübertragung, stellt der Baukasten selbst auf
-**Freistehend** um.
+Lädst du über die Suche ein freistehendes Zeichen, etwa die Faxübertragung, stellt der Baukasten
+selbst auf **Freistehend** um.
 
-## Wenn ein Zeichen „abgeleitet“ ist
+## Warum eine Kombination nicht passt
 
-Die Vorlage zeigt längst nicht jede Kombination, die erlaubt ist. Ein Verband III über einer
-taktischen Formation, eine Verwaltungsstufe über einer Fläche oder ein Piktogramm in einer
-Grundform, in der es nie gezeichnet wurde: dafür gibt es kein Original. Der Baukasten zeichnet solche
-Kombinationen trotzdem. Die fehlenden Teile übernimmt er aus ähnlichen Zeichen der Vorlage: Er
-verschiebt sie, verkleinert sie oder passt sie ein.
-
-Damit du das erkennst, steht in den Auswahllisten und auf den Kacheln bei einem solchen Wert der Zusatz
-**abgeleitet**. Hast du ihn gewählt, steht unter der Vorschau **Teilweise abgeleitet – kein
-Original belegt diese Zusammenstellung**. Klappst du den Hinweis auf, siehst du, welche Teile
-übernommen wurden.
-
-Ein abgeleitetes Zeichen ist nicht falsch. Es ist aber auch nicht an einem Original nachgemessen.
-Die Lage eines Teils kann deshalb leicht von dem abweichen, was eine Zeichnerin gewählt hätte.
-
-Steht an einem Wert **geht hier nicht** und im Hinweis „nicht vermessen“, dann hat der Baukasten
-für diese Kombination auch abgeleitet keinen Platz gefunden. Dann hilft ein anderer Wert oder eine
-andere Grundzeichenart.
-
-## Warum eine Kombination abgelehnt wird
-
-Die Regeln sind keine Willkür des Programms. Sie halten fest, was in der Vorlage zusammenpasst —
-etwa dass eine bestimmte Marke nur in einer bestimmten Zone stehen darf, oder dass zwei Angaben
+Die Regeln sind keine Willkür des Programms. Sie halten fest, was in der Vorlage zusammenpasst,
+etwa dass eine bestimmte Marke nur in einer bestimmten Zone stehen darf oder dass zwei Angaben
 sich gegenseitig ausschließen. Ein Zeichen, das gegen eine solche Regel verstößt, wäre kein
 schwieriges Zeichen, sondern ein falsches.
 
-Zu jeder Regel steht eine Erklärung bereit; keine bleibt eine bloße Kennung. Findest du eine
-Meldung ohne Erklärung, ist das eine Lücke im Projekt und kein Fehler von dir — die Seite sagt das
-dann auch ausdrücklich.
+Abgeleitet heißt dagegen nicht falsch: Die Vorlage zeigt längst nicht jede erlaubte Kombination.
+Ein Verband III über einer taktischen Formation oder ein Piktogramm in einer Grundform, in der es
+nie gezeichnet wurde, hat kein Original. Der Baukasten übernimmt die fehlenden Teile aus ähnlichen
+Zeichen, verschiebt, verkleinert oder passt sie ein. Die Lage eines Teils kann deshalb leicht von
+dem abweichen, was eine Zeichnerin gewählt hätte.
 
 <div class="ez-note">
-<span class="ez-note__title">Grün heißt hier nur: keine Regel verletzt</span>
+<span class="ez-note__title">Gezeichnet heißt hier nur: keine Regel verletzt</span>
 
 Wenn der Baukasten dein Zeichen zeichnet, heißt das, dass die Zusammenstellung keiner der
 {snapshot.ruleIds.length} Regeln widerspricht. Es heißt **nicht**, dass die Bedeutungskombination
@@ -143,26 +121,26 @@ fachkundigen Person vorgelegt.
 
 ## Für Entwicklerinnen und Entwickler
 
-Der Baukasten ist ein Formular über die Felder der `SymbolSpec`, im Modus „Freistehend“ über die
-der `FreestandingSpec`. Bei jeder Änderung zeichnet `drawAnySpec()` die Spec (für eine
-`SymbolSpec` ist das `drawSymbol()`); die gefundenen Verstöße tragen eine Regel-ID, die `explainIssue()` aus
-`@einsatzzeichen/core` auf einen Satz in Klarsprache abbildet. Die Texte stehen seit LFH-579 im
-Kern (`src/rules/rule-explanations.ts`), die Website reicht sie nur durch. Ein Test verlangt,
-dass jede ID aus `VALIDATION_RULE_IDS` dort einen Eintrag hat — deshalb bleibt keine Meldung
-unerklärt.
+Der Baukasten ist ein Formular über die Beschreibung `Sign` aus `@einsatzzeichen/core`, nicht über
+den Bauplan `SymbolSpec`. Bei jeder Änderung zeichnet `draw(sign)` das Zeichen; `draw` wirft nie,
+sondern liefert neben der Zeichnung `fidelity` (vermessen, abgeleitet, vereinfacht), die
+weggelassenen Angaben in `omitted` mit Grund und den aufgelösten Bauplan in `exact`.
 
-Abgeleitete Teile stehen in `Drawing.derivations`, und `vocabulary()` markiert die Werte, die zu
-einer solchen Zeichnung führen, mit `derived: true`. Der Baukasten zeigt den Zusatz „abgeleitet“
-nur an Werten, die eine bisher vermessene Zusammenstellung zur abgeleiteten machen — ist die
-Auswahl schon abgeleitet, trüge ihn sonst fast jeder Eintrag.
+Welche Abschnitte erscheinen und welche Werte passen, fragt der Baukasten mit `choices(sign, feld)`
+ab: ein Abschnitt steht da, wenn ein Wert gesetzt ist oder wenigstens einer passt. Fachaufgaben
+sind rund 90; befragt werden nur die gerade sichtbaren Kacheln
+(`choices(sign, 'tasks', { candidates })`). Die Familien kommen aus `KIND_FAMILIES`.
 
-Ist die Spec gültig, komponiert `compose()` die Zeichnung, und die Seite zeigt daneben die Spec
-als JSON zum Kopieren sowie vier Codebeispiele (TypeScript, React, Web Component, MapLibre) aus
-derselben Vorlage, aus der auch der Quickstart und die Zeichenseiten sie erzeugen
-(`src/lib/code-samples.ts`).
+Ein Treffer der Suche lädt über `fromExact(symbol.spec)`; der Weg vom Bauplan zur Beschreibung und
+zurück ist für jedes Katalogzeichen bytegleich (Roundtrip-Prüfung im Paket `conformance`). Den
+Bauplan zeigt der eingeklappte Abschnitt **Bauplan (Experte)**: oben die Beschreibung als JSON zum
+Bearbeiten, die auch einen Bauplan annimmt, darunter der aufgelöste Bauplan, wie `draw` ihn
+gezeichnet hat. Technische Körpermarken, Fassungen und Messwerte stehen in der Beschreibung unter
+`exact`.
 
-Der Zustand steht als `?spec=` in der Adresse: base64url-kodiertes JSON ohne Füllzeichen.
-Geschrieben wird entprellt über `history.replaceState`, weil Safari bei zu häufigem Schreiben
-wirft; ein Link mit unlesbarem Wert setzt den Baukasten auf die Startspec zurück und sagt, was er
-nicht lesen konnte. `CompositionError` erscheint als Regelliste, jede andere Ausnahme als
-sichtbarer Fehlerblock — nichts wird verschluckt.
+Der Zustand steht als `?spec=` in der Adresse, als Hülle `{"v":2,"sign":{…}}` in base64url
+(`encodeSignParam`). `decodeSignParam` liest auch die Hülle v1 und die rohen Links von vor LFH-577;
+alte Links bleiben gültig. Geschrieben wird entprellt über `history.replaceState`, weil Safari bei
+zu häufigem Schreiben wirft; ein unlesbarer Link setzt den Baukasten auf die leere Einheit und sagt,
+was er nicht lesen konnte. Die Codebeispiele zeigen die Kurzform mit `draw(sign)` und `sign` an
+React, Web Component und MapLibre (`src/lib/code-samples.ts`).

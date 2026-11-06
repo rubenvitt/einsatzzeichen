@@ -1,19 +1,15 @@
 import { createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { allowedValues, decodeAnySpec, encodeAnySpec, encodeSpec } from '../../lib/builder-state.js';
+import { decodeSign, encodeSign } from '../../lib/builder-sign.js';
 import { buildSnapshot } from '../../lib/snapshot-build.js';
 import type { CatalogSnapshot } from '../../lib/snapshot.js';
-import Builder, { blockedTooltip, derivedTooltip } from './Builder.js';
+import Builder from './Builder.js';
 
 /**
- * Zwei Sorten Prüfung in einer Datei. Oben `blockedTooltip()` als reine Funktion — die
- * Fallunterscheidung, die LFH-502 möglich gemacht hat. Darunter zwei Befunde aus LFH-504b, die
- * sich **nur** an der gerenderten Insel zeigen: beide entstehen in dem einen Render, in dem `spec`
- * schon die neue und `probeSpec` (aus `useDeferredValue`) noch die vorige Zusammenstellung ist.
- * Diesen Zustand kann keine reine Funktion herstellen — er ist der Zustand von React zwischen zwei
- * Renders, und genau dort mischte der Sperrsatz die beiden Specs beziehungsweise sperrte die
- * Auswahl den gerade gesetzten Wert.
+ * Der Baukasten auf der Beschreibung (ESZ-150) an der gerenderten Insel: Suche, Familien, nur
+ * passende Abschnitte, Bauplan im Expertenteil. Die Zustandsfunktionen dahinter prüft
+ * `lib/builder-sign.test.ts`; hier geht es um das, was erst im DOM sichtbar wird.
  *
  * Die Datei heißt `.test.ts` und nicht `.test.tsx`, weil `test.include` in `vitest.config.ts` nur
  * `packages/*&#47;src/**&#47;*.test.ts` sammelt; die Insel steht deshalb mit `createElement` statt
@@ -24,17 +20,14 @@ import Builder, { blockedTooltip, derivedTooltip } from './Builder.js';
  * `new URL(…, import.meta.url)` auf eine http-Adresse um. `packages/conformance/src/fonts.ts` tut
  * genau das auf Modulebene, und `fileURLToPath` lehnt eine http-Adresse ab — der Paketindex des
  * Katalogs und mit ihm `buildSnapshot()` ließen sich dann gar nicht erst laden. Von Hand
- * angemeldet bleibt die Datei im selben Node-Transform wie die übrigen 108 Testdateien, und der
+ * angemeldet bleibt die Datei im selben Node-Transform wie die übrigen Testdateien, und der
  * Katalog kommt echt herein statt als Attrappe.
  *
- * **Warum ohne `act()` und wie der Zwischenstand trotzdem sicher zu greifen ist.** `act()` flusht
- * den aufgeschobenen Render mit; damit wäre genau der Zwischenstand weg, um den es geht.
- * `IS_REACT_ACT_ENVIRONMENT` steht deshalb auf `false`. Gelesen wird nach `flushUrgent()`, also
- * nach ein paar **Mikrotasks** — und das ist kein Wettrennen mit dem Scheduler, sondern die
- * Trennlinie selbst: den vorrangigen Render eines diskreten Ereignisses plant React seit 18 in
- * einer Mikrotask (`queueMicrotask`), den nachrangigen über seinen Scheduler und damit über einen
- * `MessageChannel`, also einen Makrotask. Eine Mikrotask-Runde kann den zweiten nicht auslösen.
- * Wo der aufgeschobene Stand gebraucht wird, wartet `settle()` auf echte Makrotasks.
+ * **Ohne `act()`.** `act()` flusht den aufgeschobenen Render mit; der Fall „gesetzter Wert nie
+ * gesperrt“ braucht aber genau den Zwischenstand, in dem `sign` schon neu und die Probe aus
+ * `useDeferredValue` noch alt ist. `flushUrgent()` wartet nur Mikrotasks ab (dort plant React den
+ * vorrangigen Render eines diskreten Ereignisses), `settle()` echte Makrotasks (dort läuft der
+ * nachrangige über den Scheduler).
  */
 
 /**
@@ -88,87 +81,8 @@ function snapshotOnce(): CatalogSnapshot {
   return builtSnapshot;
 }
 
-describe('blockedTooltip()', () => {
-  const markField = { field: 'bodyMarks', label: 'Körpermarken', noun: 'Körpermarke' } as const;
 
-  it('gibt bei einer abgelehnten Regel deren Erklärung unverändert weiter', () => {
-    expect(
-      blockedTooltip(
-        markField,
-        { because: 'rule', explanation: 'Technische Füllung: schließt eine Organisation aus.' },
-        'Betreuung',
-        'Taktische Formation',
-      ),
-    ).toBe('Technische Füllung: schließt eine Organisation aus.');
-  });
-
-  it('rät bei der Grundzeichenart selbst, einen Teil der übrigen Auswahl zurückzunehmen', () => {
-    // An der Achse `kind` wäre „wähle eine andere Grundzeichenart" die Wiederholung der Frage:
-    // gesperrt ist ja gerade eine Grundzeichenart. Der Sonderfall steht deshalb vor der
-    // Unterscheidung nach `scope`.
-    const text = blockedTooltip(
-      { field: 'kind', label: 'Grundzeichenart', noun: 'Grundzeichenart' },
-      { because: 'not-measured', detail: 'egal', scope: 'combination' },
-      'Anhänger',
-      'Anhänger',
-    );
-    expect(text).toMatch(/Nimm einen Teil der Auswahl zurück/);
-  });
-
-  it('verweist bei einer Lücke dieser Zusammenstellung auf eine andere Grundzeichenart', () => {
-    const text = blockedTooltip(
-      markField,
-      { because: 'not-measured', detail: 'formation/normal/hospital …', scope: 'combination' },
-      'Krankenhaus',
-      'Taktische Formation',
-    );
-    expect(text).toMatch(/für die Grundzeichenart „Taktische Formation" nicht vermessen/);
-    expect(text).toMatch(/oder eine andere Grundzeichenart/);
-  });
-
-  it('verweist bei einer festen Lücke auf keine andere Grundzeichenart', () => {
-    // Gestellte Eingabe: eine feste Lücke erreicht der Baukasten seit dem 2. Oktober 2026 nicht
-    // mehr (das Amphibienfahrzeug, bis dahin die einzige, wird abgeleitet gezeichnet). Der Fall
-    // bleibt geprüft, denn ein eigener Portsatz kann ihn wieder auslösen — und der Rat der
-    // Kombinationslücke wäre dann eine Aussage über die Referenz, die es nicht gibt.
-    const text = blockedTooltip(
-      { field: 'vehicleCategory', label: 'Fahrzeugkategorie', noun: 'Fahrzeugkategorie' },
-      { because: 'not-measured', detail: 'Wellenlinie nur als Strichhülle …', scope: 'value' },
-      'Amphibienfahrzeug',
-      'Landfahrzeug',
-    );
-    expect(text).toMatch(/an keiner Grundzeichenart/);
-    expect(text).not.toMatch(/oder eine andere Grundzeichenart/);
-  });
-
-  it('rät zu keinem anderen Wert, wenn im ganzen Feld keiner vermessen ist', () => {
-    // Gestellte Eingabe nach dem Muster der Tendenz bis zum 2. Oktober 2026: alle drei Werte
-    // nirgends vermessen. „Wähle einen anderen Wert" schickte die Leserin zu einem Wert, der
-    // genauso gesperrt ist.
-    const text = blockedTooltip(
-      { field: 'tendency', label: 'Tendenz', noun: 'Tendenz' },
-      { because: 'not-measured', detail: 'egal', scope: 'value' },
-      'Tendenz steigend',
-      'Person',
-      true,
-    );
-    expect(text).toMatch(/„Tendenz steigend" ist als Tendenz noch nicht vermessen/);
-    expect(text).not.toMatch(/anderen Wert/);
-    expect(text).not.toMatch(/andere Grundzeichenart/);
-  });
-});
-
-describe('derivedTooltip()', () => {
-  it('sagt in Alltagssprache, dass der Wert zeichnet, aber von keinem Original belegt ist', () => {
-    const text = derivedTooltip('Verband III');
-    expect(text).toMatch(/„Verband III" lässt sich hier zeichnen/);
-    expect(text).toMatch(/kein Original/);
-    // Keine Begriffe des Motors im sichtbaren Text.
-    expect(text).not.toMatch(/derivation|Profil|Hülle|transferred|constructed/);
-  });
-});
-
-/* --- Die aufgeschobene Probe an der gerenderten Insel -------------------------------------- */
+/* --- Bedienung der gerenderten Insel -------------------------------------------------------- */
 
 /**
  * Die Ereignisklasse **dieses** Dokuments: `dispatchEvent` von happy-dom erkennt nur seine eigene.
@@ -185,10 +99,7 @@ async function settle(times = 12): Promise<void> {
   for (let index = 0; index < times; index += 1) await tick();
 }
 
-/**
- * Nur Mikrotasks: danach steht der vorrangige Render zum eben ausgelösten Ereignis im DOM, die
- * aufgeschobene Probe aber noch auf dem vorigen Stand. Genau dieser Zwischenstand ist der Fall.
- */
+/** Nur Mikrotasks: der vorrangige Render steht, die aufgeschobene Probe noch nicht. */
 async function flushUrgent(times = 4): Promise<void> {
   for (let index = 0; index < times; index += 1) await Promise.resolve();
 }
@@ -215,25 +126,52 @@ async function mountBuilder(): Promise<HTMLElement> {
   unmount = () => root.unmount();
   root.render(createElement(Builder));
   await settle();
-  expect(
-    container.querySelector('.ez-builder'),
-    'Die Insel hat den Snapshot nicht bekommen.',
-  ).not.toBeNull();
+  expect(container.querySelector('.ez-builder'), 'Die Insel hat den Snapshot nicht bekommen.').not.toBeNull();
   return container;
 }
 
-/**
- * Eine Kachel über ihre sichtbare Beschriftung — nicht über das `textContent` des Knopfes: bei
- * einer gesperrten Kachel steht dort zusätzlich der Sperrgrund, und der nennt selbst Arten.
- */
-function tile(container: HTMLElement, field: string, label: string): HTMLElement {
-  const group = container.querySelector(`[aria-labelledby="ez-builder-${field}-label"]`);
-  expect(group, `Keine Kachelgruppe für \`${field}\`.`).not.toBeNull();
-  const found = [...(group as Element).querySelectorAll('button')].find(
-    (button) => button.querySelector('[class$="-label"]')?.textContent === label,
+/** Ein Eingabefeld füllen, wie React es liest: über den Setter des Prototyps und `input`. */
+function type(element: Element | null, text: string): void {
+  expect(element, 'Kein Eingabefeld.').not.toBeNull();
+  const prototype = Object.getPrototypeOf(element) as object;
+  Object.getOwnPropertyDescriptor(prototype, 'value')?.set?.call(element, text);
+  element?.dispatchEvent(new DocumentEvent('input', { bubbles: true }));
+}
+
+/** Die Überschriften der sichtbaren Abschnitte, ohne die Zusammenfassung dahinter. */
+function sectionTitles(container: HTMLElement): string[] {
+  return [...container.querySelectorAll('.ez-builder__group-title')].map((heading) => heading.childNodes[0]?.textContent ?? '');
+}
+
+function familyButton(container: HTMLElement, label: string): HTMLElement {
+  const found = [...container.querySelectorAll('.ez-builder__family')].find(
+    (button) => button.querySelector('.ez-builder__family-label')?.textContent === label,
   );
-  expect(found, `Keine Kachel „${label}" in \`${field}\`.`).toBeDefined();
+  expect(found, `Keine Familie „${label}".`).toBeDefined();
   return found as unknown as HTMLElement;
+}
+
+/** Die Knopfgruppe eines Feldes über ihre sichtbare Beschriftung. */
+function chipsField(container: HTMLElement, label: string): HTMLElement {
+  const found = [...container.querySelectorAll('.ez-builder__chips-field')].find(
+    (field) => field.querySelector(':scope > .ez-builder__field-label')?.textContent === label,
+  );
+  expect(found, `Keine Knopfgruppe „${label}".`).toBeDefined();
+  return found as unknown as HTMLElement;
+}
+
+/** Ein wählbarer Knopf einer Gruppe — nicht einer aus der eingeklappten Liste darunter. */
+function chip(container: HTMLElement, field: string, label: string): HTMLElement | undefined {
+  return [...chipsField(container, field).querySelectorAll('[role="group"] .ez-builder__chip-option')].find(
+    (button) => button.querySelector('span:not(.ez-builder__missing):not(.ez-builder__swatch)')?.textContent === label,
+  ) as HTMLElement | undefined;
+}
+
+/** Die Werte der eingeklappten Liste „N weitere passen hier nicht“ unter einer Gruppe. */
+function blockedOf(container: HTMLElement, field: string): string[] {
+  return [...chipsField(container, field).querySelectorAll('.ez-builder__blocked li strong')].map(
+    (entry) => entry.textContent ?? '',
+  );
 }
 
 function actionButton(container: HTMLElement, label: string): HTMLElement {
@@ -244,101 +182,32 @@ function actionButton(container: HTMLElement, label: string): HTMLElement {
   return found as unknown as HTMLElement;
 }
 
-function optionOf(container: HTMLElement, field: string, value: string): HTMLOptionElement {
-  const found = container.querySelector(`#ez-builder-${field} option[value="${value}"]`);
-  expect(found, `Keine Option „${value}" in \`${field}\`.`).not.toBeNull();
-  return found as unknown as HTMLOptionElement;
+/** Die Beschreibung, wie sie der Expertenteil gerade zeigt. */
+function expertSign(container: HTMLElement): unknown {
+  const area = container.querySelector('#ez-builder-expert-sign') as unknown as HTMLTextAreaElement | null;
+  expect(area, 'Kein Expertenteil.').not.toBeNull();
+  return JSON.parse(area?.value ?? 'null');
 }
 
-/** Ein `<select>` bedienen; React liest `event.target.value`, ein `change` reicht dafür. */
-function choose(container: HTMLElement, field: string, value: string): void {
-  const select = container.querySelector(`#ez-builder-${field}`);
-  expect(select, `Kein Auswahlfeld \`${field}\`.`).not.toBeNull();
-  (select as unknown as HTMLSelectElement).value = value;
-  select?.dispatchEvent(new DocumentEvent('change', { bubbles: true }));
+async function applyExpert(container: HTMLElement, json: string): Promise<void> {
+  type(container.querySelector('#ez-builder-expert-sign'), json);
+  await settle(2);
+  actionButton(container, 'Übernehmen').click();
 }
 
-describe('Der Baukasten mit aufgeschobener Probe', () => {
-  // Probt das Vokabular zweimal über die ganze Spec; mit den abgeleiteten Kombinationen (seit dem
-  // 2. Oktober 2026) dauert das allein gut 3 s, unter Volllast mehr.
-  it('begründet eine Sperre mit der Grundzeichenart, zu der die Sperre gehört', { timeout: 30_000 }, async () => {
-    // Nachgemessen, damit der Fall nicht an einer Annahme über den Katalog hängt: mit der
-    // technischen Kopfmarke ist das Fähigkeitspiktogramm unter „Fläche" nicht zeichenbar (die
-    // Kopfzone verkleinert den Körper, das Piktogramm folgt nicht), unter „Taktische Formation"
-    // sehr wohl. Bis zum 2. Oktober 2026 stand hier eine Körpermarke an der Person; die wird
-    // seitdem abgeleitet. Bis zum Fachreview vom 5. Oktober 2026 belegte die Verwaltungsstufe
-    // „Kreis" die Kopfzone; an der Fläche lehnt sie seitdem eine Regel ab.
-    const atLevel = { technicalHeadMark: 'single-vertical-bar' } as const;
-    expect(
-      allowedValues({ kind: 'area', ...atLevel }, 'capabilities', ['meal-preparation'])[0]?.blocked
-        ?.because,
-    ).toBe('not-measured');
-    expect(
-      allowedValues({ kind: 'formation', ...atLevel }, 'capabilities', ['meal-preparation'])[0]?.ok,
-    ).toBe(true);
+/** Die Vorschau zeigt ein gezeichnetes Zeichen. */
+function expectDrawn(container: HTMLElement): void {
+  const stage = container.querySelector('.ez-builder__stage');
+  expect(stage?.classList.contains('ez-builder__stage--void'), stage?.textContent ?? '').toBe(false);
+  expect(stage?.querySelector('svg')).not.toBeNull();
+}
 
-    const container = await mountBuilder();
-    tile(container, 'kind', 'Fläche').click();
-    await settle();
-    choose(container, 'technicalHeadMark', 'single-vertical-bar');
-    await settle();
-    tile(container, 'kind', 'Taktische Formation').click();
-    await flushUrgent();
-
-    // Genau jetzt gehört `spec` zur Formation und `probes` noch zur Fläche.
-    expect(
-      tile(container, 'kind', 'Taktische Formation').getAttribute('aria-pressed'),
-      'Ohne den vorrangigen Render steht der Zwischenstand gar nicht im DOM.',
-    ).toBe('true');
-    const pictogram = optionOf(container, 'capabilities', 'meal-preparation');
-    expect(pictogram.disabled, 'Ohne stehen gebliebene Sperre prüft dieser Fall nichts.').toBe(
-      true,
-    );
-    const title = pictogram.getAttribute('title') ?? '';
-    // Der Satz muss die Art nennen, unter der gesperrt wurde. Nennte er die neue, beschriebe er
-    // eine Paarung, die in keiner der beiden Zusammenstellungen vorkommt — erfunden, nicht bloß
-    // veraltet.
-    expect(title).toMatch(/Grundzeichenart .Fläche./);
-    expect(title).not.toMatch(/Taktische Formation/);
-  });
-
-  it('stellt den nach der aktuellen Auswahl gesetzten Wert nie als gesperrt dar', async () => {
-    // Nachgemessen: aus dieser Zusammenstellung heraus sperrt die Probe die Formation.
-    expect(
-      allowedValues({ kind: 'vehicle-land', vehicleCategory: 'kfz-kategorie-1' }, 'kind', [
-        'formation',
-      ])[0]?.blocked?.because,
-    ).toBe('rule');
-
-    const container = await mountBuilder();
-    tile(container, 'kind', 'Landfahrzeug').click();
-    await settle();
-    choose(container, 'vehicleCategory', 'kfz-kategorie-1');
-    await settle();
-
-    // „Zurücksetzen" setzt die ganze Spec auf einmal — dieselbe Art Sprung wie
-    // `loadFromCatalog()`, „Beispiel laden" und der `spec`-Parameter im Mount-Effekt, nur ohne
-    // Zufallszeichen und ohne Texteingabe und damit ohne jede Wackelquelle.
-    actionButton(container, 'Zurücksetzen').click();
-    await flushUrgent();
-
-    // `spec.kind` ist wieder `formation`, die Probe gehört noch zum Landfahrzeug.
-    const chosen = tile(container, 'kind', 'Taktische Formation');
-    expect(chosen.getAttribute('aria-pressed')).toBe('true');
-    expect(
-      chosen.getAttribute('aria-disabled'),
-      'Die ausgewählte Kachel darf nie zugleich gesperrt sein — `aria-pressed="true"` neben ' +
-        '`aria-disabled="true"` ist für Vorlesehilfen ein widersprüchlicher Zustand.',
-    ).toBe('false');
-    expect(chosen.getAttribute('title')).toBeNull();
-    expect(chosen.textContent).not.toMatch(/geht hier nicht/);
-  });
-});
-
-/* --- Ein geteilter Link beim Öffnen ------------------------------------------------------ */
+function fidelity(container: HTMLElement): string {
+  return container.querySelector('.ez-builder__fidelity')?.textContent ?? '';
+}
 
 /** Ein Link, wie ihn der Baukasten bis LFH-577 schrieb: base64url über das rohe JSON. */
-function legacyLink(value: unknown): string {
+function rawLink(value: unknown): string {
   const bytes = new TextEncoder().encode(JSON.stringify(value));
   let binary = '';
   for (const byte of bytes) binary += String.fromCharCode(byte);
@@ -346,339 +215,74 @@ function legacyLink(value: unknown): string {
   return `/builder/?spec=${param}`;
 }
 
-describe('Der Baukasten mit einem Link (LFH-578)', () => {
-  it('meldet ein unbekanntes Feld sichtbar, statt es still zu übergehen', async () => {
-    // Bis LFH-578 las der Baukasten diesen Tippfehler still als Person ohne Organisation.
-    window.history.replaceState(null, '', legacyLink({ kind: 'person', organisation: 'thw' }));
+describe('Der Baukasten auf der Beschreibung (ESZ-150)', () => {
+  it('beginnt mit der Einheit, zeichnet sie vermessen und zeigt nur passende Abschnitte', async () => {
     const container = await mountBuilder();
-
-    const alert = [...container.querySelectorAll('[role="alert"]')].find((element) =>
-      /Der Link trug keine lesbare Zusammenstellung/.test(element.textContent ?? ''),
-    );
-    expect(alert, 'Kein Hinweis zum unlesbaren Link.').toBeDefined();
-    // Der Pfad in die Eingabe gehört in die aufklappbaren Einzelheiten, nicht in den Fließtext.
-    const prose = [...(alert as Element).children]
-      .filter((child) => child.tagName === 'P')
-      .map((child) => child.textContent)
-      .join(' ');
-    expect(prose).not.toContain('$.');
-    expect(alert?.querySelector('details')?.textContent).toContain('$.organisation');
-    expect(tile(container, 'kind', 'Taktische Formation').getAttribute('aria-pressed')).toBe('true');
-  });
-
-  it('öffnet einen alten Link ohne Hülle wie bisher', async () => {
-    window.history.replaceState(null, '', legacyLink({ kind: 'person', organization: 'thw' }));
-    const container = await mountBuilder();
-    expect(container.textContent).not.toMatch(/Der Link trug keine lesbare Zusammenstellung/);
-    expect(tile(container, 'kind', 'Person').getAttribute('aria-pressed')).toBe('true');
-  });
-});
-
-/* --- Verband, Zustand und Tendenz (LFH-577) ----------------------------------------------- */
-
-/** Die Vorschau zeigt ein gezeichnetes Zeichen — kein Regelblock, kein Abbruch. */
-function expectDrawn(container: HTMLElement): void {
-  const stage = container.querySelector('.ez-builder__stage');
-  expect(stage?.classList.contains('ez-builder__stage--void'), stage?.textContent ?? '').toBe(false);
-  expect(stage?.querySelector('svg')).not.toBeNull();
-}
-
-/** Die Bezeichnungen der abwählbaren Marken eines Listenfeldes. */
-function chipsOf(container: HTMLElement, field: string): string[] {
-  const wrapper = container.querySelector(`#ez-builder-${field}`)?.closest('.ez-builder__field');
-  return [...(wrapper?.querySelectorAll('.ez-builder__chip > span:first-child') ?? [])].map(
-    (chip) => chip.textContent ?? '',
-  );
-}
-
-describe('Der Baukasten mit Verband, Zustand und Tendenz (LFH-577)', () => {
-  it('zeichnet die Formation mit Verband II und bietet Verband III abgeleitet an', async () => {
-    const container = await mountBuilder();
-    expect(
-      container.querySelector('label[for="ez-builder-unitGrouping"]')?.textContent,
-    ).toBe('Verband');
-
-    choose(container, 'unitGrouping', 'verband-ii');
-    await settle();
-
-    expect(optionOf(container, 'unitGrouping', 'verband-ii').textContent).toBe('Verband II');
+    expect(familyButton(container, 'Einheit').getAttribute('aria-pressed')).toBe('true');
     expectDrawn(container);
-    // Verband III war bis zum 2. Oktober 2026 gesperrt; seitdem zeichnet er nach dem Vorschlag
-    // x 12/16/20. Seit LFH-989 steht der Hinweis darauf nur noch im Tooltip, nicht im Text.
-    const third = optionOf(container, 'unitGrouping', 'verband-iii');
-    expect(third.disabled).toBe(false);
-    expect(third.textContent).toBe('Verband III');
-    expect(third.getAttribute('title')).toMatch(/„Verband III" lässt sich hier zeichnen/);
-    // Der vermessene Verband I bleibt ohne Zusatz.
-    expect(optionOf(container, 'unitGrouping', 'verband-i').textContent).toBe('Verband I');
-    expect(optionOf(container, 'unitGrouping', 'verband-i').getAttribute('title')).toBeNull();
+    expect(fidelity(container)).toBe('Vermessen');
+    expect(expertSign(container)).toEqual({ kind: 'formation' });
+    const titles = sectionTitles(container);
+    expect(titles).toEqual(expect.arrayContaining(['Was ist es?', 'Organisation', 'Fachaufgaben', 'Größe und Ebene', 'Funktion', 'Zustand', 'Text']));
+    // Kein Fahrwerk an einer Einheit: der Abschnitt fehlt, statt lauter gesperrter Werte zu zeigen.
+    expect(titles).not.toContain('Fahrwerk');
   });
 
-  it('setzt an der Person einen Zustand und den Hinweis „?" und sperrt einen zweiten Zustand mit Regel', async () => {
+  it('tauscht beim Wechsel zum Fahrzeug die Abschnitte: Fahrwerk statt Funktion', async () => {
     const container = await mountBuilder();
-    expect(container.querySelector('label[for="ez-builder-states"]')?.textContent).toBe('Zustand');
-    tile(container, 'kind', 'Person').click();
+    familyButton(container, 'Fahrzeug').click();
     await settle();
-
-    choose(container, 'states', 'person-injured');
-    await settle();
-    choose(container, 'states', 'suspected-situation');
-    await settle();
-
-    expect(chipsOf(container, 'states')).toEqual(['Person verletzt', 'Hinweis auf Vermutung']);
-    expectDrawn(container);
-    // Höchstens ein Personenzustand aus 5.8.8: ein zweiter ist gesperrt, und zwar mit der
-    // erklärten Regel, nicht als Vermessungslücke.
-    const dead = optionOf(container, 'states', 'person-dead');
-    expect(dead.disabled).toBe(true);
-    expect(dead.getAttribute('title')).not.toMatch(/nicht vermessen/);
-    expect(dead.getAttribute('title')?.length).toBeGreaterThan(0);
-  });
-
-  it('bietet jede Tendenz an und zeichnet sie abgeleitet neben dem Träger (seit 02.10.2026)', async () => {
-    const container = await mountBuilder();
-    expect(container.querySelector('label[for="ez-builder-tendency"]')?.textContent).toBe(
-      'Tendenz',
-    );
-    for (const value of ['tendency-rising', 'tendency-unchanged', 'tendency-falling']) {
-      const option = optionOf(container, 'tendency', value);
-      expect(option.disabled, value).toBe(false);
-    }
-    choose(container, 'tendency', 'tendency-rising');
-    await settle();
+    expect(familyButton(container, 'Fahrzeug').getAttribute('aria-pressed')).toBe('true');
+    expect((expertSign(container) as { kind: string }).kind).toBe('vehicle-land');
+    const titles = sectionTitles(container);
+    expect(titles).toContain('Fahrwerk');
+    expect(titles).not.toContain('Funktion');
+    // Am Fahrzeug passen nur Verbandskennzeichen und Balken in den Kopf; der Rest steht eingeklappt.
+    expect(chip(container, 'Kopf', 'Gruppe')).toBeUndefined();
+    expect(blockedOf(container, 'Kopf').length).toBeGreaterThan(0);
     expectDrawn(container);
   });
-});
 
-/* --- Abgeleitete Zusammenstellungen (Entscheidung vom 2. Oktober 2026) -------------------- */
-
-/** Der Hinweis unter der Vorschau, wenn die Zeichnung abgeleitete Teile trägt. */
-function derivationNote(container: HTMLElement): HTMLElement | undefined {
-  return [...container.querySelectorAll<HTMLElement>('.ez-builder__result [role="note"]')].find(
-    (element) => /Teilweise abgeleitet/.test(element.textContent ?? ''),
-  );
-}
-
-describe('Der Baukasten mit abgeleiteten Teilen', () => {
-  it('zeigt an einer vermessenen Zusammenstellung keinen Ableitungshinweis', async () => {
+  it('klappt nicht passende Werte mit Grund ein und zeichnet einen trotzdem gesetzten vereinfacht', async () => {
+    window.history.replaceState(null, '', `/builder/?spec=${encodeSign({ kind: 'person', states: ['person-injured'] })}`);
     const container = await mountBuilder();
-    expectDrawn(container);
-    expect(derivationNote(container)).toBeUndefined();
-  });
-
-  it('nennt unter der Vorschau, dass die Zeichnung teilweise abgeleitet ist, und welche Teile', async () => {
-    const container = await mountBuilder();
-    choose(container, 'unitGrouping', 'verband-iii');
-    await settle();
-
-    expectDrawn(container);
-    const note = derivationNote(container);
-    expect(note, 'Kein Hinweis zur Ableitung unter der Vorschau.').toBeDefined();
-    expect(note?.querySelector('.ez-note__title')?.textContent).toBe(
-      'Teilweise abgeleitet – kein Original belegt diese Zusammenstellung',
+    expect(familyButton(container, 'Person').getAttribute('aria-pressed')).toBe('true');
+    expect(chip(container, 'Zustand', 'Person verletzt')?.getAttribute('aria-pressed')).toBe('true');
+    expect(chip(container, 'Zustand', 'Person tot')).toBeUndefined();
+    expect(blockedOf(container, 'Zustand')).toContain('Person tot');
+    const reason = [...chipsField(container, 'Zustand').querySelectorAll('.ez-builder__blocked li')].find((entry) =>
+      entry.textContent?.startsWith('Person tot'),
     );
-    // Die Teile stehen eingeklappt, im Wortlaut der Notizen aus `core`.
-    const details = note?.querySelector('details');
-    expect(details).not.toBeNull();
-    expect(details?.open).toBe(false);
-    const parts = [...(details?.querySelectorAll('li') ?? [])].map((item) => item.textContent);
-    expect(parts.some((part) => part?.includes('Verband III'))).toBe(true);
-    // Der gesetzte Wert trägt keinen Zusatz; das sagt jetzt der Hinweis.
-    expect(optionOf(container, 'unitGrouping', 'verband-iii').textContent).toBe('Verband III');
-  });
+    expect(reason?.textContent).toMatch(/selben Skala/);
 
-  it('kennzeichnet nichts mehr einzeln, wenn die Zusammenstellung schon abgeleitet ist', async () => {
-    const container = await mountBuilder();
-    // Vor der Auswahl trägt das Piktogramm den Hinweis im Tooltip: an der Formation ist es nicht
-    // vermessen, sondern wird in den Körper eingepasst.
-    expect(optionOf(container, 'capabilities', 'meal-preparation').getAttribute('title')).toMatch(
-      /„Verpflegung \/ Zubereitung" lässt sich hier zeichnen/,
-    );
-    choose(container, 'unitGrouping', 'verband-iii');
-    await settle();
-    // Danach nicht mehr: die Ableitung steckt schon in der Auswahl und steht unter der Vorschau.
-    const pictogram = optionOf(container, 'capabilities', 'meal-preparation');
-    expect(pictogram.disabled).toBe(false);
-    expect(pictogram.textContent).toBe('Verpflegung / Zubereitung');
-    expect(pictogram.getAttribute('title')).toBeNull();
-  });
-
-  it('schreibt „abgeleitet" in keine Auswahlliste, auch an der leeren Formation nicht (LFH-989)', async () => {
-    // An der leeren Formation sind rund 50 der 88 Fähigkeiten und 46 der 74 Körpermarken nur
-    // abgeleitet zeichenbar (gemessen am 05.10.2026). Als Zusatz im Text stand das Wort dann an
-    // mehr als der Hälfte der Einträge und sagte über den einzelnen Wert nichts mehr.
-    const container = await mountBuilder();
-    const options = [...container.querySelectorAll<HTMLOptionElement>('.ez-builder select option')];
-    expect(options.length).toBeGreaterThan(100);
-    const marked = options.filter((option) => /abgeleitet/.test(option.textContent ?? ''));
-    expect(marked.map((option) => option.textContent)).toEqual([]);
-    // Der Hinweis bleibt am Eintrag erreichbar, im Tooltip.
-    const tooltips = options.filter((option) =>
-      /lässt sich hier zeichnen/.test(option.getAttribute('title') ?? ''),
-    );
-    expect(tooltips.length).toBeGreaterThan(50);
-  });
-
-  it('kennzeichnet auch eine Kachel, ohne ihre Beschriftung zu verändern', async () => {
-    // Mit einer an der Formation vermessenen Körpermarke ist dieselbe Marke an der Funktionsstelle
-    // nicht vermessen, aber ableitbar — nachgemessen statt angenommen.
-    const [post] = allowedValues({ kind: 'formation', bodyMarks: ['care'] }, 'kind', ['post']);
-    expect(post).toMatchObject({ ok: true, derived: true });
-
-    const container = await mountBuilder();
-    choose(container, 'bodyMarks', 'care');
-    await settle();
-    const postTile = tile(container, 'kind', 'Funktionsstelle');
-    expect(postTile.getAttribute('aria-disabled')).toBe('false');
-    expect(postTile.querySelector('.ez-builder__tile-derived')?.textContent).toBe('abgeleitet');
-    expect(postTile.getAttribute('title')).toMatch(/„Funktionsstelle" lässt sich hier zeichnen/);
-    // Die ausgewählte Formation trägt den Zusatz nicht.
-    const chosen = tile(container, 'kind', 'Taktische Formation');
-    expect(chosen.querySelector('.ez-builder__tile-derived')).toBeNull();
-  });
-});
-
-describe('Der Baukasten mit benannten Körpervarianten (LFH-989)', () => {
-  it('zeigt die Körpervarianten mit ihrer Bezeichnung statt mit der Kennung', async () => {
-    const container = await mountBuilder();
-    const options = [
-      ...container.querySelectorAll<HTMLOptionElement>('#ez-builder-bodyVariant option'),
-    ].filter((option) => option.value !== '');
-    expect(options.length).toBe(10);
-    for (const option of options) {
-      expect(option.textContent, option.value).not.toContain(option.value);
-    }
-    expect(optionOf(container, 'bodyVariant', 'raised-gable').textContent).toMatch(
-      /^ortsgebunden \(Giebel\)/,
-    );
-  });
-});
-
-describe('Der Baukasten mit Beschriftung im Körper', () => {
-  it('setzt Text in die Mitte und unten rechts und zeichnet ihn in der Vorschau', async () => {
-    const container = await mountBuilder();
-    for (const [zone, text] of [['center', 'LST'], ['bottomRight', 'UEL']] as const) {
-      const input = container.querySelector(`#ez-builder-label-${zone}`) as unknown as HTMLInputElement | null;
-      expect(input, `Kein Feld für ${zone}.`).not.toBeNull();
-      // React verfolgt den Wert über den Setter des Prototyps; erst damit zählt das Ereignis.
-      const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(input), 'value')?.set;
-      setter?.call(input, text);
-      input?.dispatchEvent(new DocumentEvent('input', { bubbles: true }));
-      await settle();
-    }
-    const texts = [...container.querySelectorAll('svg text')].map((node) => node.textContent);
-    expect(texts).toContain('LST');
-    expect(texts).toContain('UEL');
-  });
-});
-
-describe('Der Baukasten mit der Größe des mittigen Laufs (LFH-992)', () => {
-  const leitstelle = {
-    kind: 'circle-12',
-    bodyVariant: 'raised-gable',
-    organization: 'fuehrung-leitung',
-    bodyMarks: ['circle-solid-cap-4mm'],
-    labels: { center: 'LtS' },
-  } as const;
-
-  function centerRun(container: HTMLElement): Element {
-    const run = [...container.querySelectorAll('.ez-builder__stage svg text')].find(
-      (node) => node.textContent === 'LtS',
-    );
-    expect(run, 'Kein Lauf „LtS“ in der Vorschau.').toBeDefined();
-    return run as Element;
-  }
-
-  it('setzt „Groß“ und zeichnet LtS in der Höhe und auf der Grundlinie von D.2.5', async () => {
-    window.history.replaceState(null, '', `/builder/?spec=${encodeSpec(leitstelle)}`);
-    const container = await mountBuilder();
-    expect(container.querySelector('label[for="ez-builder-label-centerSize"]')?.textContent)
-      .toBe('Größe in der Mitte');
-    expect((container.querySelector('#ez-builder-label-centerSize') as HTMLSelectElement | null)?.value)
-      .toBe('normal');
-    const normalSize = Number(centerRun(container).getAttribute('font-size'));
-
-    choose(container, 'label-centerSize', 'gross');
-    await settle();
-
-    expectDrawn(container);
-    const run = centerRun(container);
-    // 7,3 mm Versalhöhe gegen 4,87 mm: der Schriftgrad wächst im selben Verhältnis.
-    expect(Number(run.getAttribute('font-size')) / normalSize).toBeCloseTo(7.3 / 4.87, 4);
-    // Das SVG zählt in eigenen Einheiten; die Zeichenfläche ist 32 mm breit.
-    const viewBox = run.closest('svg')?.getAttribute('viewBox')?.split(/[\s,]+/).map(Number);
-    const unitsPerMm = (viewBox?.[2] ?? Number.NaN) / 32;
-    expect(Number(run.getAttribute('y')) / unitsPerMm).toBeCloseTo(22, 3);
-    // Die Spec trägt die Höhe als Zahl; der Link wird entprellt geschrieben, die JSON-Ansicht nicht.
-    expect(container.querySelector('.ez-builder__dev .ez-builder__pre')?.textContent)
-      .toMatch(/"centerCapHeightMm": 7\.3\b/);
-  });
-
-  it('sperrt die Größe ohne Text in der Mitte', async () => {
-    const container = await mountBuilder();
-    const select = container.querySelector('#ez-builder-label-centerSize') as HTMLSelectElement | null;
-    expect(select?.disabled).toBe(true);
-  });
-});
-
-describe('Der Baukasten im Modus „freistehend“ (ESZ-135)', () => {
-  function modeButton(container: HTMLElement, mode: 'symbol' | 'freestanding'): HTMLElement {
-    const button = container.querySelector(`#ez-builder-mode-${mode}`);
-    expect(button, `Kein Knopf für den Modus ${mode}.`).not.toBeNull();
-    return button as unknown as HTMLElement;
-  }
-
-  function json(container: HTMLElement): unknown {
-    return JSON.parse(container.querySelector('.ez-builder__dev .ez-builder__pre')?.textContent ?? 'null');
-  }
-
-  it('öffnet einen Link auf ein freistehendes Zeichen in diesem Modus', async () => {
-    const line = {
-      kind: 'line',
-      line: 'boundary-with-strength',
-      path: { points: [[1, 16], [47, 16]] },
-      strength: 'zug',
-    } as const;
-    window.history.replaceState(null, '', `/builder/?spec=${encodeAnySpec(line)}`);
-    const container = await mountBuilder();
-    expect(modeButton(container, 'freestanding').getAttribute('aria-pressed')).toBe('true');
-    expect((container.querySelector('#ez-builder-fs-line') as HTMLSelectElement | null)?.value).toBe(
-      'boundary-with-strength',
-    );
-    expectDrawn(container);
-    expect(json(container)).toEqual(line);
-  });
-
-  it('baut ein Piktogramm, sperrt den kanonisch anders gebauten Zustand und teilt den Link', async () => {
-    const container = await mountBuilder();
-    modeButton(container, 'freestanding').click();
-    await settle();
-    tile(container, 'fs-kind', 'Piktogramm').click();
-    await settle();
-    expect(optionOf(container, 'fs-pictogram', 'state.tactical-rescue').disabled).toBe(true);
-    choose(container, 'fs-pictogram', 'comms.voice-radio');
+    await applyExpert(container, '{"kind":"person","states":["person-injured","person-dead"]}');
     await settle();
     expectDrawn(container);
-    expect(json(container)).toEqual({ kind: 'pictogram', pictogram: 'comms.voice-radio' });
-    // Die Adresszeile wird entprellt geschrieben (250 ms).
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    const param = new URLSearchParams(window.location.search).get('spec');
-    expect(param === null ? null : decodeAnySpec(param)).toEqual({
-      kind: 'pictogram',
-      pictogram: 'comms.voice-radio',
-    });
+    expect(fidelity(container)).toBe('Vereinfacht');
+    const omitted = container.querySelector('.ez-builder__omitted');
+    expect(omitted?.querySelector('.ez-note__title')?.textContent).toBe('Nicht im Bild');
+    expect(omitted?.textContent).toMatch(/Person tot/);
+    const dead = chip(container, 'Zustand', 'Person tot');
+    expect(dead?.getAttribute('aria-pressed')).toBe('true');
+    expect(dead?.querySelector('.ez-builder__missing')?.textContent).toBe('nicht im Bild');
   });
 
-  it('lädt ein freistehendes Zeichen aus dem Katalog in diesem Modus (ESZ-146)', async () => {
+  it('stellt den eben gesetzten Wert nie als gesperrt dar, auch vor der aufgeschobenen Probe', async () => {
+    window.history.replaceState(null, '', `/builder/?spec=${encodeSign({ kind: 'person', states: ['person-injured'] })}`);
     const container = await mountBuilder();
-    const search = container.querySelector('#ez-builder-search') as unknown as HTMLInputElement;
-    // React verfolgt den Wert eines gesteuerten Felds selbst; gesetzt wird er über den Setter des
-    // Prototyps, damit das `input`-Ereignis als Änderung zählt.
-    Object.getOwnPropertyDescriptor(happyWindow.HTMLInputElement.prototype, 'value')?.set?.call(
-      search,
-      'Faxübertragung',
-    );
-    search.dispatchEvent(new DocumentEvent('input', { bubbles: true }));
+    expect(blockedOf(container, 'Zustand')).toContain('Person tot');
+
+    await applyExpert(container, '{"kind":"person","states":["person-dead"]}');
+    await flushUrgent();
+    // Die Probe kann hier noch zur verletzten Person gehören, die Auswahl gehört schon zur neuen.
+    const dead = chip(container, 'Zustand', 'Person tot');
+    expect(dead?.getAttribute('aria-pressed')).toBe('true');
+    expect(blockedOf(container, 'Zustand')).not.toContain('Person tot');
+  });
+
+  it('lädt einen Treffer der Suche als Beschreibung und nennt ihn', async () => {
+    const container = await mountBuilder();
+    type(container.querySelector('#ez-builder-search'), 'Faxübertragung');
     await settle();
     const match = [...container.querySelectorAll('.ez-builder__match')].find(
       (button) => button.querySelector('.ez-id')?.textContent === 'comms.fax-transmission',
@@ -686,29 +290,77 @@ describe('Der Baukasten im Modus „freistehend“ (ESZ-135)', () => {
     expect(match, 'Kein Treffer für die Faxübertragung.').toBeDefined();
     (match as unknown as HTMLElement).click();
     await settle();
-    expect(modeButton(container, 'freestanding').getAttribute('aria-pressed')).toBe('true');
-    expect(json(container)).toEqual({ kind: 'pictogram', pictogram: 'comms.fax-transmission' });
+    expect(familyButton(container, 'Freistehend').getAttribute('aria-pressed')).toBe('true');
+    expect(expertSign(container)).toEqual({ kind: 'pictogram', pictogram: 'comms.fax-transmission' });
     expectDrawn(container);
     expect(container.textContent).toMatch(/Geladen: Faxübertragung/);
-    // Im anderen Modus gehört der Hinweis nicht mehr zur gezeigten Spec.
-    modeButton(container, 'symbol').click();
+    // Jede Änderung löst den Bezug zum Katalogzeichen.
+    familyButton(container, 'Person').click();
     await settle();
     expect(container.textContent).not.toMatch(/Geladen: Faxübertragung/);
   });
 
-  it('behält die Auswahl beider Modi beim Wechsel', async () => {
+  it('öffnet einen alten Link mit rohem Bauplan als Beschreibung', async () => {
+    window.history.replaceState(null, '', rawLink({ kind: 'person', organization: 'thw' }));
     const container = await mountBuilder();
-    tile(container, 'kind', 'Person').click();
+    expect(container.textContent).not.toMatch(/Der Link trug kein lesbares Zeichen/);
+    expect(familyButton(container, 'Person').getAttribute('aria-pressed')).toBe('true');
+    expect(expertSign(container)).toEqual({ kind: 'person', organization: 'thw' });
+  });
+
+  it('meldet einen unlesbaren Link sichtbar, mit dem Pfad in den Einzelheiten', async () => {
+    window.history.replaceState(null, '', rawLink({ kind: 'person', organisation: 'thw' }));
+    const container = await mountBuilder();
+    const alert = [...container.querySelectorAll('[role="alert"]')].find((element) =>
+      /Der Link trug kein lesbares Zeichen/.test(element.textContent ?? ''),
+    );
+    expect(alert, 'Kein Hinweis zum unlesbaren Link.').toBeDefined();
+    expect(alert?.querySelector('details')?.textContent).toContain('organisation');
+    expect(familyButton(container, 'Einheit').getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('schreibt den Link als Hülle v2 mit der Beschreibung', async () => {
+    const container = await mountBuilder();
+    familyButton(container, 'Person').click();
     await settle();
-    modeButton(container, 'freestanding').click();
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    const param = new URLSearchParams(window.location.search).get('spec');
+    expect(param).not.toBeNull();
+    expect(decodeSign(param ?? '')).toEqual({ kind: 'person' });
+    expect(JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(param!.replaceAll('-', '+').replaceAll('_', '/')), (c) => c.charCodeAt(0))))).toEqual({
+      v: 2,
+      sign: { kind: 'person' },
+    });
+  });
+
+  it('setzt Text in die Mitte und zeichnet ihn; die Größe wartet auf Text', async () => {
+    const container = await mountBuilder();
+    const size = container.querySelector('#ez-builder-text-centerSize') as unknown as HTMLSelectElement | null;
+    expect(size?.disabled).toBe(true);
+    type(container.querySelector('#ez-builder-text-center'), 'LST');
     await settle();
-    tile(container, 'fs-kind', 'Wetter').click();
+    expect([...container.querySelectorAll('.ez-builder__stage svg text')].map((node) => node.textContent)).toContain('LST');
+    expect(size?.disabled).toBe(false);
+    expect(expertSign(container)).toEqual({ kind: 'formation', text: { center: 'LST' } });
+  });
+
+  it('nimmt im Expertenteil auch einen Bauplan an und meldet Unlesbares mit Pfad', async () => {
+    const container = await mountBuilder();
+    await applyExpert(container, '{"kind":"vehicle-land","organization":"thw","vehicleCategory":"kfz-kategorie-1"}');
     await settle();
-    modeButton(container, 'symbol').click();
-    await settle();
-    expect(json(container)).toEqual({ kind: 'person' });
-    modeButton(container, 'freestanding').click();
-    await settle();
-    expect((json(container) as { kind: string }).kind).toBe('weather');
+    expect(familyButton(container, 'Fahrzeug').getAttribute('aria-pressed')).toBe('true');
+    expectDrawn(container);
+
+    await applyExpert(container, '{"kind":"person","organisation":"thw"}');
+    await settle(2);
+    expect(container.querySelector('#ez-builder-expert-error')?.textContent).toMatch(/organisation/);
+    expect(familyButton(container, 'Fahrzeug').getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('zeigt im Code die Kurzform mit draw(sign)', async () => {
+    const container = await mountBuilder();
+    const code = container.querySelector('[role="tabpanel"]')?.textContent ?? '';
+    expect(code).toMatch(/draw\(/);
+    expect(code).toMatch(/"kind": "formation"|kind: 'formation'|"kind":"formation"/);
   });
 });
