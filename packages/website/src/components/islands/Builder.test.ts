@@ -323,10 +323,13 @@ describe('Der Baukasten auf der Beschreibung (ESZ-150)', () => {
     const container = await mountBuilder();
     familyButton(container, 'Person').click();
     await settle();
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    // Die Insel schreibt entprellt; gewartet wird auf den Wert, nicht auf eine feste Zeit.
+    await vi.waitFor(() => {
+      const current = new URLSearchParams(window.location.search).get('spec');
+      expect(current).not.toBeNull();
+      expect(decodeSign(current ?? '')).toEqual({ kind: 'person' });
+    });
     const param = new URLSearchParams(window.location.search).get('spec');
-    expect(param).not.toBeNull();
-    expect(decodeSign(param ?? '')).toEqual({ kind: 'person' });
     expect(JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(param!.replaceAll('-', '+').replaceAll('_', '/')), (c) => c.charCodeAt(0))))).toEqual({
       v: 2,
       sign: { kind: 'person' },

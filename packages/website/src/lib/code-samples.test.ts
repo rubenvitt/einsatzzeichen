@@ -89,6 +89,7 @@ describe('exactCodeSampleFor (ESZ-150)', () => {
     const { exact } = draw({ kind: 'person', organization: 'thw' });
     const sample = exactCodeSampleFor(exact);
     expect(sample).toContain("from '@einsatzzeichen/core/exact'");
+    expect(sample).toContain('const exact: AnySpec = ');
     expect(sample).toContain(JSON.stringify(exact, null, 2));
     // `core/exact` reicht `drawAnySpec` aus der Wurzel durch (geprüft in `conformance/src/core-subpaths.test.ts`);
     // die Website löst nur die Wurzel des Pakets auf.

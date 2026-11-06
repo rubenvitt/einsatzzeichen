@@ -166,8 +166,10 @@ map.on('load', () => {
 export function exactCodeSampleFor(exact: AnySpec): string {
   return `import { renderSvg } from '@einsatzzeichen/core';
 import { drawAnySpec } from '@einsatzzeichen/core/exact';
+import type { AnySpec } from '@einsatzzeichen/schema';
 
-const exact = ${JSON.stringify(exact, null, 2)};
+// Ohne die Typangabe weitet TypeScript \`kind\` auf string, und drawAnySpec lehnt ab.
+const exact: AnySpec = ${JSON.stringify(exact, null, 2)};
 
 const svg = renderSvg(drawAnySpec(exact), { size: 64 });
 `;
