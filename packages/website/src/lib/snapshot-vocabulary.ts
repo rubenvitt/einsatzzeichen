@@ -33,11 +33,10 @@ import { COLOR_WORDS } from './snapshot-colors.js';
 import type { BuilderVocabulary } from './snapshot.js';
 
 /**
- * Das Auswahlvokabular des Baukastens: je Achse des `SymbolSpec` die erlaubten Werte mit ihrer
- * deutschen Bezeichnung.
- *
- * Nicht zu verwechseln mit `builder-vocabulary.ts` nebenan — die Datei liest das fertige Vokabular
- * aus dem Snapshot und leitet daraus die Ansicht ab. Hier entsteht es, aus den Registern des
+ * Das Auswahlvokabular des Snapshots (`snapshot.builder`): je Achse des `SymbolSpec` die
+ * erlaubten Werte mit ihrer deutschen Bezeichnung. Es speist die Facetten des Explorers und die
+ * Namen auf den Symbolseiten; der Baukasten fragt seit ESZ-150 `choices()` aus `core`. Hier
+ * entsteht es, aus den Registern des
  * Katalogs. Die Trennung ist die zwischen Bauzeit (Node, voller Katalog) und Laufzeit (Browser,
  * nur der Snapshot); sie ist der Grund, aus dem die Insel nicht selbst im Katalog nachschlägt.
  */

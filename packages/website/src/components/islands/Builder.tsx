@@ -1,8 +1,8 @@
 import {
   Component,
-  Fragment,
   useDeferredValue,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -10,888 +10,909 @@ import {
   type ReactNode,
 } from 'react';
 import { Einsatzzeichen } from '@einsatzzeichen/react';
-import { ORGANIZATION_COLORS, SpecParseError, checkAnySpec, renderSvg } from '@einsatzzeichen/core';
-import type { ValidationIssue } from '@einsatzzeichen/core';
 import {
-  FREESTANDING_KINDS,
+  ORGANIZATION_COLORS,
+  SpecParseError,
+  draw,
+  fromExact,
+  parse,
+  pictogramDrawing,
+  renderSvg,
+  type Choice,
+  type Drawn,
+  type Omission,
+} from '@einsatzzeichen/core';
+import {
   PALETTE,
-  isFreestandingSpec,
-  type AnySpec,
+  type BodySign,
   type ColorToken,
   type Drawing,
   type FreestandingKind,
   type FreestandingSpec,
-  type SymbolSpec,
+  type PictogramId,
+  type Sign,
+  type SymbolKind,
 } from '@einsatzzeichen/schema';
-import { codeSamplesFor, type CodeSamples } from '../../lib/code-samples.js';
-import {
-  CENTER_LABEL_SIZES,
-  centerLabelSize,
-  decodeAnySpec,
-  encodeAnySpec,
-  evaluateAnySpec,
-  issuesByField,
-  reduceCenterLabelSize,
-  reduceLabel,
-  reduceSpec,
-  type AllowedValue,
-  type CenterLabelSize,
-  type LabelZone,
-  type BlockedValue,
-} from '../../lib/builder-state.js';
+import { exactCodeSampleFor, signCodeSamplesFor, type CodeSamples } from '../../lib/code-samples.js';
 import { matchesLine, searchCatalog } from '../../lib/builder-catalog.js';
 import {
   FREESTANDING_FIELDS,
-  FREESTANDING_KIND_LABELS,
   defaultFreestandingSpec,
-  freestandingKindPreviews,
   probeFreestanding,
   reduceFreestanding,
 } from '../../lib/builder-freestanding.js';
 import {
-  derivationParts,
-  derivedMarker,
-  drawsDerived,
-  kindPreviews,
-  labelFor,
-  optionsFor,
-  probeFields,
-  unmeasuredField,
-} from '../../lib/builder-vocabulary.js';
+  DEFAULT_SIGN,
+  FIDELITY_LABELS,
+  KIND_FAMILIES,
+  OPEN_TEXT_ZONES,
+  TEXT_ZONES,
+  changeKind,
+  decodeSign,
+  encodeSign,
+  familyOf,
+  groupChoices,
+  isBodySign,
+  kindLabel,
+  omissionLine,
+  omittedKeys,
+  probeSign,
+  probeTasks,
+  searchTasks,
+  sectionVisible,
+  setCenterSize,
+  setSingle,
+  setText,
+  setTopLeftLines,
+  splitChoices,
+  textOf,
+  toggleList,
+  valueLabel,
+  type ProbedField,
+  type SignProbe,
+} from '../../lib/builder-sign.js';
 import { useSnapshot, type SnapshotSelect } from '../../lib/snapshot-island.js';
-import type { BuilderVocabulary, SymbolSummary } from '../../lib/snapshot.js';
-import type { ExplainedIssue } from '../../lib/rule-explanations.js';
+import type { SymbolSummary } from '../../lib/snapshot.js';
 import StatusPair from '../StatusPair.js';
 
 /**
- * Die Freitextfelder der Beschriftung, in der Reihenfolge, in der man ein Zeichen liest. Die
- * Namen beschreiben die Lage, nicht den Schlüssel in `BodyLabels`; den nennt der Abschnitt für
- * Entwicklerinnen und Entwickler.
- */
-const LABEL_ZONE_FIELDS: readonly { zone: LabelZone; label: string; placeholder: string }[] = [
-  { zone: 'center', label: 'Mitte', placeholder: 'z. B. ILS' },
-  { zone: 'topLeft', label: 'Oben links', placeholder: '' },
-  { zone: 'bottomLeft', label: 'Unten links', placeholder: '' },
-  { zone: 'bottomCenter', label: 'Unten mittig', placeholder: '' },
-  { zone: 'bottomRight', label: 'Unten rechts', placeholder: 'z. B. ST' },
-  { zone: 'aboveLeft', label: 'Über dem Zeichen links', placeholder: '' },
-  { zone: 'belowRight', label: 'Unter dem Zeichen rechts', placeholder: '' },
-  { zone: 'surfaceBelowLeft', label: 'Darunter links', placeholder: '' },
-  { zone: 'surfaceBelowRight', label: 'Darunter rechts', placeholder: '' },
-];
-
-function labelText(spec: SymbolSpec, zone: LabelZone): string {
-  const value = spec.labels?.[zone];
-  return typeof value === 'string' ? value : '';
-}
-
-/** Die Versalhöhe eines geladenen Rezepts in deutscher Schreibweise, auf zwei Stellen. */
-function capHeightText(spec: SymbolSpec): string {
-  const value = spec.labels?.centerCapHeightMm ?? 0;
-  return `${value.toLocaleString('de-DE', { maximumFractionDigits: 2 })} mm`;
-}
-
-/**
- * Der Baukasten (Spec §5.4; die Route bleibt `/builder/`). Er setzt eine `SymbolSpec` zusammen,
- * komponiert sie im Browser und erklärt jede abgelehnte Kombination in Klarsprache statt nur die
- * Regelkennung zu zeigen.
+ * Der Baukasten (Route `/builder/`) auf der **Beschreibung** (ESZ-150). Er setzt eine `Sign`
+ * zusammen, zeichnet sie mit `draw()` aus `core` und zeigt den Bauplan nur im Expertenteil.
  *
- * Aufbau als Werkstatt, nicht als Formularspalte: links die Auswahl in fünf verständlichen
- * Gruppen, rechts (auf breiten Schirmen klebend) das Ergebnis — eine große Vorschau mit
- * Untergrund-Umschalter, Größenreihe und den Mitnahme-Aktionen (SVG, PNG, Link). Auf schmalen
- * Schirmen steht das Ergebnis über dem Formular, damit jede Änderung ohne Scrollen sichtbar ist.
+ * Aufbau von der Absicht zum Zeichen (Konzept ESZ-148, Abschnitt 4):
  *
- * Die Auswahl bietet nur an, was zur aktuellen Zusammenstellung passt: `allowedValues()` probiert
- * über `vocabulary()` aus `core` (LFH-578) jeden Wert einmal durch, und was nicht trägt, steht gesperrt da — sichtbar, mit dem Grund als
- * Tooltip beziehungsweise als Hinweiszeile bei den Kacheln. Ausgeblendet wird nichts: dass es den
- * Wert gibt und warum er gerade nicht geht, ist die eigentliche Auskunft.
+ * 1. **Suche zuerst.** Treffer aus Rezepten, typischen Einsatzmitteln und freistehenden Zeichen;
+ *    ein Treffer lädt die Beschreibung (`fromExact`), nicht den Bauplan.
+ * 2. **Was ist es?** Die Familien aus `KIND_FAMILIES` statt 29 Arten und eines Modus-Schalters;
+ *    innerhalb der Familie die Arten.
+ * 3. **Nur passende Abschnitte.** Ein Abschnitt erscheint, wenn wenigstens ein Wert zur übrigen
+ *    Beschreibung passt (`choices()`) oder einer gesetzt ist. Werte, die hier nicht passen, stehen
+ *    eingeklappt mit Grund unter der Liste, statt jeden gesperrt in die Auswahl zu stellen.
+ * 4. **Vorschau mit Status.** `draw()` zeichnet immer; `fidelity` sagt vermessen, abgeleitet oder
+ *    vereinfacht, und was fehlt, steht mit Grund darunter.
+ * 5. **Experte.** Die Beschreibung als JSON zum Bearbeiten (nimmt auch einen Bauplan an) und der
+ *    aufgelöste Bauplan. Hier bleibt jede Möglichkeit des alten Baukastens erreichbar.
  *
- * Seit dem 2. Oktober 2026 zeichnet der Motor jede Kombination, die die Systematik zulässt, und
- * leitet fehlende Teile aus vermessenen Nachbarfassungen ab. Ein Wert, der eine vermessene
- * Zusammenstellung erst zu einer abgeleiteten macht, sagt das im Tooltip, an einer Kachel auch im
- * Zusatz „abgeleitet" (`derivedMarker()`; in Auswahllisten seit LFH-989 nur noch im Tooltip, siehe
- * `optionText()`), und unter der Vorschau steht, welche Teile der aktuellen Zeichnung abgeleitet
- * sind. Gesperrt bleibt, was eine Regel verbietet oder sich auch abgeleitet nicht zeichnen lässt.
+ * Gespeichert wird im Link die Absicht (`{"v":2,"sign":…}`); alte Links mit Bauplan
+ * (`{"v":1,…}` und rohe Specs) liest `decodeSign` weiter.
  *
- * Drei Ergebniszustände, und jeder hat seine eigene Darstellung (Spec §7):
- * `ok` → Vorschau und Aktionen. `invalid` → gestrichelte Fläche plus erklärte Regelliste direkt
- * darunter. `crash` → sichtbarer Fehlerblock mit Meldung und Stack. Der Fehlerblock nimmt die
- * Insel **nicht** aus dem Betrieb: das Formular bleibt bedienbar, und ein Knopf nimmt die letzte
- * Änderung zurück. Ein Fehler beim Rendern selbst — den der Zustand nicht abfangen kann — landet
- * in der `ErrorBoundary` darunter.
- *
- * Die Daten kommen aus dem Snapshot (`snapshot.builder` für die erlaubten Werte,
- * `snapshot.symbols` für „Aus dem Katalog laden"), nie aus dem Katalog-Index: der zöge `node:url`
- * ins Browserbündel (Spec §5.2).
- *
- * **Und der Snapshot kommt zur Laufzeit (LFH-500).** Er wird per `fetch` geholt
- * (`lib/snapshot-client.ts`), nicht mehr auf Modulebene mit `loadSnapshot()` importiert: das zog
- * dessen `import.meta.glob` und damit 1,3 MB JSON in das Bündel jeder Seite, die diese Insel mit
- * `client:load` mountet. Aus `lib/snapshot.js` kommen hier deshalb ausschließlich Typen
- * (`import type`) — ein Wertimport von dort brächte die 1,3 MB zurück. Damit hat der Baukasten
- * drei weitere sichtbare Zustände vor dem Formular: laden, gescheitert, geladen (siehe `Builder`
- * am Dateiende). Das Vokabular reist ab hier als Argument beziehungsweise Prop; ein Modulzustand
- * dafür wäre die alte Abhängigkeit vom Ladezeitpunkt in neuer Form.
+ * Der Katalog kommt zur Laufzeit (LFH-500): aus `lib/snapshot.js` stehen hier nur Typen, ein
+ * Wertimport zöge 1,3 MB JSON ins Bündel.
  */
 
-/** Was der Baukasten aus dem Snapshot braucht — mehr als das behält er nicht. */
+/** Was der Baukasten aus dem Snapshot braucht. */
 interface BuilderData {
-  vocabulary: BuilderVocabulary;
   symbols: SymbolSummary[];
-  /** Die Kachel-Miniaturen der Grundzeichenarten, einmal komponiert. */
-  kindTiles: Map<string, Drawing | null>;
 }
 
-/**
- * Auf Modulebene und nicht im Renderkörper: `useSnapshot` hat die Auswahl in den Abhängigkeiten
- * seines Effekts, eine bei jedem Render neu erzeugte Funktion löste also einen neuen Abruf aus.
- * Zugleich ist das die Stelle, an der die Kachel-Miniaturen **einmal** komponiert werden — genau
- * das, was bis LFH-500 die Modulkonstante `KIND_PREVIEWS` über dem synchron geladenen Snapshot
- * leistete.
- */
-const selectBuilderData: SnapshotSelect<BuilderData> = (snapshot) => ({
-  vocabulary: snapshot.builder,
-  symbols: snapshot.symbols,
-  kindTiles: kindPreviews(snapshot.builder),
-});
-
-/** Startspec: das kleinste, was komponiert — eine taktische Formation ohne jede Zutat. */
-const DEFAULT_SPEC: SymbolSpec = { kind: 'formation' };
-
-/**
- * Die zwei Modi des Baukastens (ESZ-135): ein Zeichen mit Grundzeichen (`SymbolSpec`) oder ein
- * freistehendes (`FreestandingSpec`: Pfeil, Linie, Wetter, Tierzustand, Zustand, Piktogramm).
- */
-type BuilderMode = 'symbol' | 'freestanding';
-
-/** Womit der Modus „freistehend“ beginnt: die erste Art in ihrer Ausgangsauswahl. */
-const DEFAULT_FREESTANDING: FreestandingSpec = defaultFreestandingSpec(FREESTANDING_KINDS[0]!);
+/** Auf Modulebene: eine je Render neue Auswahl löste in `useSnapshot` einen neuen Abruf aus. */
+const selectBuilderData: SnapshotSelect<BuilderData> = (snapshot) => ({ symbols: snapshot.symbols });
 
 const SPEC_PARAM = 'spec';
-
-/** Entprellung des URL-Schreibens in Millisekunden — siehe `useEffect` unten. */
+/** Entprellung des URL-Schreibens; Safari wirft bei zu vielen `replaceState` in kurzer Zeit. */
 const URL_WRITE_DELAY_MS = 250;
-
-/** Die Seite ohne Zusammenstellung in der Adresszeile — der Ausweg aus dem Fehlerblock. */
 const CLEAN_PATH = '/builder/';
-
-/** Kantenlänge des PNG-Downloads in Pixeln — groß genug für Folien und Dokumente. */
 const PNG_SIZE = 512;
-
-/** Mehr Treffer stünden nicht mehr unter dem Suchfeld, ohne selbst wieder Liste zu werden. */
 const CATALOG_MATCH_LIMIT = 12;
+/** So viele Fachaufgaben stehen ohne „alle zeigen“ als Kachel da. */
+const TASK_LIMIT = 24;
+
+/* --- Ergebnis ---------------------------------------------------------------------------- */
+
+type BuilderOutcome = { state: 'ok'; drawn: Drawn } | { state: 'crash'; error: Error };
 
 /**
- * Was ein Baustein über sein Feld wissen muss — für die Felder der `SymbolSpec` wie für die der
- * freistehenden Arten (ESZ-135). `field` ist zugleich der Schlüssel der Element-IDs
- * (`ez-builder-<field>`); die freistehenden Felder tragen deshalb das Präfix `fs-`, damit
- * `state` oder `strength` nie zwei Bedeutungen haben.
+ * `draw` wirft nie wegen einer Regel oder einer Vermessungslücke. Was trotzdem fliegt, ist ein
+ * Fehler im Programm; er bleibt sichtbar, statt eine leere Vorschau zu hinterlassen.
  */
-interface FieldLabels {
-  field: string;
-  label: string;
-  /**
-   * Die Sache, um die es geht, als Substantiv — für den Satz, der einen gesperrten Wert
-   * begründet („… ist als Körpermarke für die Grundzeichenart … nicht vermessen").
-   */
-  noun: string;
-  /** Kurzer Hinweis unter dem Feld; nur dort, wo der Feldname allein irreführt. */
-  hint?: string;
-}
-
-interface FieldDefinition extends FieldLabels {
-  field: keyof SymbolSpec;
-}
-
-/**
- * Ein Eintrag einer Auswahl: Kennung, Bezeichnung und — nur in langen Listen wie den Piktogrammen
- * — der Abschnitt, unter dem er steht (`<optgroup>`).
- */
-interface FieldOption {
-  id: string;
-  label: string;
-  group?: string;
-}
-
-const KIND_FIELD: FieldDefinition = {
-  field: 'kind',
-  label: 'Grundzeichenart',
-  noun: 'Grundzeichenart',
-};
-
-const ORGANIZATION_FIELD: FieldDefinition = {
-  field: 'organization',
-  label: 'Organisation',
-  noun: 'Organisation',
-};
-
-/**
- * Die Auswahlfelder je Gruppe, innerhalb der Gruppe in der Reihenfolge, in der sie am Zeichen
- * von innen nach außen wirken: erst der Körper, dann seine Füllung, dann Kopf- und Fußzonen.
- *
- * Nur Achsen, die `SymbolSpec` wirklich führt. Der Snapshot bringt darüber hinaus die
- * Piktogrammregister `comms`, `damage` und `wildfire` mit — die sind Register, keine
- * Spec-Achsen (`taxonomy.ts`), und ein Formularfeld dafür behauptete ein Feld, das es nicht gibt.
- * `states` war bis LFH-577 dasselbe und ist seitdem ein Feld der Spec (Zustände nach 5.8).
- */
-const BODY_SELECT_FIELDS: FieldDefinition[] = [
-  { field: 'bodyVariant', label: 'Körpervariante', noun: 'Körpervariante' },
-];
-
-const CAPABILITY_SELECT_FIELDS: FieldDefinition[] = [
-  {
-    field: 'technicalFill',
-    label: 'Technische Füllung',
-    noun: 'technische Füllung',
-    hint: 'Schließt eine Organisation aus — die Regel dazu steht bei der Vorschau, sobald beides gesetzt ist.',
-  },
-];
-
-const COMMAND_SELECT_FIELDS: FieldDefinition[] = [
-  { field: 'strength', label: 'Stärke', noun: 'Stärke' },
-  {
-    field: 'unitGrouping',
-    label: 'Verband',
-    noun: 'Verband',
-    hint: 'Steht wie die Stärke über dem Zeichen — dort ist nur für eine Angabe Platz.',
-  },
-  { field: 'functionRole', label: 'Funktionsfassung', noun: 'Funktionsfassung' },
-  { field: 'administrativeLevel', label: 'Verwaltungsstufe', noun: 'Verwaltungsstufe' },
-  { field: 'technicalHeadMark', label: 'Technische Kopfmarke', noun: 'technische Kopfmarke' },
-  { field: 'vehicleCategory', label: 'Fahrzeugkategorie', noun: 'Fahrzeugkategorie' },
-];
-
-const LIST_FIELDS: FieldDefinition[] = [
-  {
-    field: 'capabilities',
-    label: 'Fähigkeiten (Piktogramme in der Standardbox)',
-    noun: 'Fähigkeit',
-  },
-  {
-    field: 'bodyMarks',
-    label: 'Körpermarken (randbündig über die Körperfläche)',
-    noun: 'Körpermarke',
-  },
-];
-
-/**
- * Zustände und Tendenz nach Kapitel 5.8 (LFH-577). Zustände sind eine Liste — ein Personenzustand
- * und ein Hinweis „?" oder „!" stehen zusammen an einem Zeichen —, die Tendenz ist höchstens eine
- * und deshalb ein Einzelwert.
- */
-const STATE_LIST_FIELD: FieldDefinition = {
-  field: 'states',
-  label: 'Zustand',
-  noun: 'Zustand',
-  hint: 'Auch mehrere zusammen, etwa „Person verletzt" und der Hinweis „?" für eine Vermutung.',
-};
-
-const TENDENCY_FIELD: FieldDefinition = {
-  field: 'tendency',
-  label: 'Tendenz',
-  noun: 'Tendenz',
-  hint: 'Ob die Lage steigt, gleich bleibt oder fällt — höchstens eine Angabe.',
-};
-
-/**
- * Alle Achsen, die durchprobiert werden — Kacheln, Auswahlfelder und Listen gemeinsam. Ein Feld,
- * das hier fehlt, hat keine Probe, und `displayedBlock()` zeigt dann jeden Wert als frei.
- */
-const PROBED_FIELDS: FieldDefinition[] = [
-  KIND_FIELD,
-  ORGANIZATION_FIELD,
-  ...BODY_SELECT_FIELDS,
-  ...CAPABILITY_SELECT_FIELDS,
-  ...COMMAND_SELECT_FIELDS,
-  ...LIST_FIELDS,
-  STATE_LIST_FIELD,
-  TENDENCY_FIELD,
-];
-
-/** Dieselbe Liste, nur die Feldnamen — das nimmt `probeFields()` entgegen. */
-const PROBED_FIELD_NAMES: readonly (keyof SymbolSpec)[] = PROBED_FIELDS.map(
-  (definition) => definition.field,
-);
-
-/** Die drei Ergebniszustände einer Spec, wie die Insel sie darstellt. */
-type BuilderOutcome =
-  | { state: 'ok'; drawing: Drawing }
-  | { state: 'invalid'; issues: ExplainedIssue[]; unexplained: ValidationIssue[] }
-  | { state: 'crash'; error: Error };
-
-function outcomeOf(spec: AnySpec): BuilderOutcome {
+function outcomeOf(sign: Sign): BuilderOutcome {
   try {
-    const result = evaluateAnySpec(spec);
-    return result.ok
-      ? { state: 'ok', drawing: result.drawing }
-      : { state: 'invalid', issues: result.issues, unexplained: result.unexplained };
+    return { state: 'ok', drawn: draw(sign) };
   } catch (error) {
     return { state: 'crash', error: error instanceof Error ? error : new Error(String(error)) };
   }
 }
 
-/**
- * Organisationsfarbe für den Farbfleck am Chip — aus `ORGANIZATION_COLORS` von `core` und der
- * `PALETTE` des Schemas, nie aus einer eigenen Zuordnung: die Farben gehören den Zeichen, und
- * ihre einzige Quelle ist die Geometrie in `core`. `hilfsorganisation` ist quellengetreu weiß und braucht
- * deshalb den Rahmen, den der Chip ohnehin zeichnet.
- */
-function organizationSwatch(id: string): string | undefined {
+/* --- Miniaturen -------------------------------------------------------------------------- */
+
+const kindPreviewCache = new Map<string, Drawing>();
+
+/** Die nackte Art als Miniatur, einmal gezeichnet; freistehende Arten in ihrer Ausgangsauswahl. */
+function kindPreview(kind: SymbolKind | FreestandingKind): Drawing {
+  let drawing = kindPreviewCache.get(kind);
+  if (drawing === undefined) {
+    const freestanding = (FREESTANDING_FIELDS as Partial<Record<string, unknown>>)[kind] !== undefined;
+    drawing = draw(freestanding ? defaultFreestandingSpec(kind as FreestandingKind) : { kind: kind as SymbolKind }).drawing;
+    kindPreviewCache.set(kind, drawing);
+  }
+  return drawing;
+}
+
+const taskIconCache = new Map<string, Drawing | null>();
+
+/** Das Piktogramm einer Fachaufgabe für die Kachel; `null`, wenn das Register keins führt. */
+function taskIcon(task: string): Drawing | null {
+  if (!taskIconCache.has(task)) {
+    try {
+      taskIconCache.set(task, pictogramDrawing(`capability.${task}` as PictogramId));
+    } catch {
+      taskIconCache.set(task, null);
+    }
+  }
+  return taskIconCache.get(task) ?? null;
+}
+
+/** Farbe für den Farbfleck: Organisationsfarbe aus `core`, Farbe ohne Organisation aus der Palette. */
+function swatchOf(field: 'organization' | 'color', id: string): string | undefined {
+  if (field === 'color') return (PALETTE as Partial<Record<string, string>>)[id];
   const token = (ORGANIZATION_COLORS as Partial<Record<string, ColorToken>>)[id];
   return token === undefined ? undefined : PALETTE[token];
 }
 
+/* --- Auswahl über der aktuellen Beschreibung --------------------------------------------- */
+
 /**
- * Der Satz, der einen gesperrten Wert begründet — in Alltagssprache und mit den Bezeichnungen
- * aus dem Katalog, nicht mit seinen Kennungen.
- *
- * Die Rohmeldung des Motors (`Die Fahrwerkszone unter "vehicle-land" mit Giebel ist nicht
- * abgeleitet …`) steht bewusst **nicht** im Tooltip: sie spricht Kennungen und Begriffe, die auf
- * dieser Seite niemand nachschlagen kann. Bis zum 2. Oktober 2026 traf sie 39 von 64
- * Körpermarken; seitdem leitet der Motor die meisten Lücken ab, und gesperrt bleibt nur, was sich
- * auch abgeleitet nicht zeichnen lässt. Die Meldung bleibt in `blocked.detail` erhalten, falls sie
- * später ein Entwicklerabschnitt zeigen soll.
- *
- * **Woher der Unterschied zwischen fester Lücke und Kombinationslücke kommt.** Aus
- * `blocked.scope` und damit aus der Wurfstelle im Katalog — nicht aus einer Feldliste hier. Eine
- * solche Liste wäre eine zweite Fassung derselben Aussage über die Referenz, und sie liefe beim
- * nächsten vermessenen Zeichen still auseinander: das Amphibienfahrzeug war bis zum 2. Oktober
- * 2026 die einzige feste Lücke und wird seitdem abgeleitet gezeichnet — entschieden hat das der
- * Katalog und nicht die Website. Der Rat „oder eine andere Grundzeichenart" gilt deshalb nur bei
- * `'combination'`; bei `'value'` wäre er falsch, weil ihn keine Art tragen kann.
- *
- * **Wenn im ganzen Feld kein Wert vermessen ist** (`fieldUnmeasured`, aus `unmeasuredField()`),
- * fällt auch der Rat „wähle einen anderen Wert" weg: jeder andere ist genauso gesperrt. Bis zum
- * 2. Oktober 2026 traf das die Tendenz (LFH-577); die Insel sagt es dann zusätzlich einmal am Feld.
- *
- * Exportiert allein für den Test daneben: die Fallunterscheidung ist die eigentliche Aussage
- * dieser Funktion, und sie ungeprüft zu lassen wäre der teurere Preis als die etwas größere
- * Oberfläche der Insel.
+ * Die Probe läuft aufgeschoben (`useDeferredValue`) und kann für einen Render zur vorigen
+ * Beschreibung gehören. Was gesetzt ist, kommt deshalb immer aus der aktuellen: ein gerade
+ * gewählter Wert erscheint sofort gewählt, und der Befund der übrigen zieht einen Render später nach.
  */
-export function blockedTooltip(
-  definition: FieldLabels,
-  blocked: BlockedValue,
-  valueLabel: string,
-  kindLabel: string,
-  fieldUnmeasured = false,
-): string {
-  if (blocked.because === 'rule') return blocked.explanation;
-  if (blocked.because === 'path') {
-    return (
-      `„${valueLabel}" passt nicht auf den Verlauf dieses Zeichens. Der Verlauf stammt aus dem ` +
-      'Link; „Zurücksetzen“ stellt den Verlauf der Vorlage wieder her.'
-    );
-  }
-  if (blocked.scope === 'value' && fieldUnmeasured) {
-    return (
-      `„${valueLabel}" ist als ${definition.noun} noch nicht vermessen — an keiner ` +
-      'Grundzeichenart. Für dieses Feld lässt sich bisher überhaupt kein Wert zeichnen.'
-    );
-  }
-  if (definition.field === 'kind') {
-    return (
-      `Für „${valueLabel}" führt der Katalog mit der übrigen Auswahl keine vermessene Fassung. ` +
-      'Nimm einen Teil der Auswahl zurück oder wähle eine andere Grundzeichenart.'
-    );
-  }
-  if (blocked.scope === 'value') {
-    return (
-      `„${valueLabel}" ist als ${definition.noun} im Katalog nicht vermessen — an keiner ` +
-      'Grundzeichenart. Wähle einen anderen Wert.'
-    );
-  }
-  return (
-    `„${valueLabel}" ist als ${definition.noun} für die Grundzeichenart „${kindLabel}" nicht ` +
-    'vermessen. Wähle einen anderen Wert oder eine andere Grundzeichenart.'
+function withSelection(entries: readonly Choice[] | undefined, current: readonly string[]): Choice[] {
+  const known = new Set((entries ?? []).map((entry) => entry.value));
+  const merged = (entries ?? []).map((entry) => ({ ...entry, selected: current.includes(entry.value) }));
+  return merged.concat(
+    current.filter((value) => !known.has(value)).map((value) => ({ value, label: value, selected: true, status: 'derived' as const })),
   );
 }
 
-/**
- * Der Satz zu einem Wert mit dem Zusatz „abgeleitet" (`derivedMarker()`): zeichenbar, aber von
- * keinem Original belegt. In Alltagssprache, ohne die Teile einzeln zu nennen — die stehen nach
- * der Auswahl unter der Vorschau.
- */
-export function derivedTooltip(valueLabel: string): string {
+function selectedOf(sign: BodySign, field: ProbedField | 'tasks'): string[] {
+  const value = (sign as unknown as Record<string, unknown>)[field];
+  if (Array.isArray(value)) return value as string[];
+  return typeof value === 'string' ? [value] : [];
+}
+
+/* --- Bausteine --------------------------------------------------------------------------- */
+
+/** Werte, die hier nicht passen: eingeklappt, mit Grund. */
+function BlockedList({ entries }: { entries: readonly Choice[] }) {
+  if (entries.length === 0) return null;
   return (
-    `„${valueLabel}" lässt sich hier zeichnen, aber kein Original zeigt diese Zusammenstellung. ` +
-    'Fehlende Teile übernimmt der Baukasten aus ähnlichen, vermessenen Zeichen.'
+    <details className="ez-builder__blocked">
+      <summary>
+        {entries.length === 1 ? 'Ein weiterer passt hier nicht' : `${entries.length} weitere passen hier nicht`}
+      </summary>
+      <ul>
+        {entries.map((entry) => (
+          <li key={entry.value}>
+            <strong>{entry.label}</strong> — {entry.why ?? 'Nicht zeichenbar.'}
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }
 
-/** Der sichtbare Zusatz an einer Kachel; kurz, damit er die Beschriftung nicht überragt. */
-const DERIVED_SUFFIX = 'abgeleitet';
+/** Kurze Marke an einem gesetzten Wert, den `draw` weglassen musste. */
+function MissingMark({ show }: { show: boolean }) {
+  return show ? <span className="ez-builder__missing">nicht im Bild</span> : null;
+}
 
-/**
- * Die Sperre eines Kandidaten, so wie sie **dargestellt** werden darf — `undefined` für den nach
- * der aktuellen Spec gesetzten Wert, egal was die Probe sagt.
- *
- * `allowedValues()` in `lib/builder-state.ts` sichert unter „Der gerade gesetzte Wert wird nie
- * gesperrt" zu, dass genau das nie vorkommt, und begründet es dort: ein gesperrter Eintrag, der
- * zugleich der ausgewählte ist, wird von Browsern verschieden dargestellt — und an einer Kachel
- * stünden `aria-pressed="true"` und `aria-disabled="true"` nebeneinander, für Vorlesehilfen ein
- * widersprüchlicher Zustand.
- *
- * Die Zusicherung gilt gegenüber der Spec, die hineingereicht wurde. Seit die Probe aufgeschoben
- * läuft (`probeSpec`, siehe `useDeferredValue` in `BuilderForm`), ist das nicht mehr dieselbe Spec,
- * aus der `value`/`values`/`selected` im Markup kommen. Bei einem Sprung, der mehrere Achsen auf
- * einmal setzt — `loadFromCatalog`, „Beispiel laden", der `spec`-Parameter im Mount-Effekt — war
- * der neue Wert in der vorigen Spec nicht gesetzt und kann dort gesperrt gewesen sein:
- * `{ kind: 'formation', strength: 'trupp' }` sperrt `vehicle-land` über `strength-requires-unit`,
- * und genau dorthin springt jedes Landfahrzeug aus dem Katalog.
- *
- * Durchgesetzt wird die Zusage deshalb dort, wo sie sichtbar wird, und gegen die **aktuelle** Spec.
- * Alle drei Bausteine gehen durch diese eine Stelle, damit sie nicht an drei Bedingungen im Markup
- * hängt, die einzeln verrutschen können.
- */
-function displayedBlock(
-  probe: Map<string, AllowedValue> | undefined,
-  optionId: string,
-  selected: boolean,
-): BlockedValue | undefined {
-  return selected ? undefined : probe?.get(optionId)?.blocked;
+interface ChipsProps {
+  label: string;
+  entries: readonly Choice[];
+  /** Mehrfachauswahl: ein Klick schaltet um. Sonst setzt ein Klick, ein zweiter nimmt zurück. */
+  onPick: (value: string) => void;
+  /** Eigene Taste „ohne“; fehlt sie, nimmt ein Klick auf den gesetzten Wert ihn zurück. */
+  unset?: { label: string; onPick: () => void };
+  missing: (value: string) => boolean;
+  icon?: (value: string) => ReactNode;
+  /** Abschnitte innerhalb der Gruppe (Zustandsgruppen, Kopfarten). */
+  grouped?: boolean;
+  variant?: 'chip' | 'segment';
 }
 
 /**
- * Die `aria-describedby`-Liste aus den Teilen, die es gerade wirklich gibt. Ein fest verdrahteter
- * Verweis auf einen Hinweis, den `FieldIssueNote` gar nicht rendert, zeigte auf eine Kennung ohne
- * Element — Vorlesehilfen lesen dann nichts vor und sagen auch nicht, warum.
+ * Eine Gruppe von Knöpfen über einer Auswahl aus `choices()`: oben was passt, darunter
+ * eingeklappt, was hier nicht passt. Ein Knopf trägt `aria-pressed`; ein abgeleiteter Wert ist
+ * wählbar und unterscheidet sich nur im Tooltip.
  */
-function describedBy(...ids: readonly (string | undefined)[]): string | undefined {
-  const present = ids.filter((id): id is string => id !== undefined);
-  return present.length === 0 ? undefined : present.join(' ');
-}
-
-/* --- Bausteine ---------------------------------------------------------------------------- */
-
-/**
- * Die Einträge reisen als Prop durch die Bausteine (LFH-500). Vorher lag das Vokabular als
- * Modulkonstante daneben; seit der Snapshot zur Laufzeit kommt, gäbe es zum Zeitpunkt der
- * Modulauswertung nichts zu lesen. Seit ESZ-135 bekommt ein Baustein die fertige Liste und nicht
- * mehr das ganze Vokabular: die Werte der freistehenden Arten stehen nicht im Snapshot.
- */
-interface OptionsProps {
-  options: readonly FieldOption[];
-}
-
-/**
- * Die Einträge einer Auswahlliste, unter ihren Abschnitten, wo sie welche tragen. Die Reihenfolge
- * bleibt die der Liste; ein Abschnitt beginnt, wo sich `group` ändert.
- */
-function groupedOptions(
-  options: readonly FieldOption[],
-): { group: string | undefined; options: FieldOption[] }[] {
-  const groups: { group: string | undefined; options: FieldOption[] }[] = [];
-  for (const option of options) {
-    const last = groups.at(-1);
-    if (last !== undefined && last.group === option.group) last.options.push(option);
-    else groups.push({ group: option.group, options: [option] });
-  }
-  return groups;
-}
-
-/**
- * Der Hinweis am Feld, dessen **gesetzter** Wert in einer Regelmeldung vorkommt.
- *
- * Er sperrt nichts und setzt weder `disabled` noch `aria-invalid`: ungültig ist die Kombination
- * und nicht das Feld allein. Der Wortlaut sagt deshalb „steht in einer Regelmeldung" und nicht
- * „ist falsch" — bei einer Regel zwischen zwei Feldern (`technical-fill-organization-conflict`)
- * erscheint der Hinweis nur an der einen Seite, und „falsch" ließe die andere unverdächtig
- * aussehen. Die Zuordnung stammt aus `issuesByField()`; dort stehen auch ihre Grenzen.
- *
- * Genannt wird nur der Titel. Die Erklärung steht vollständig in der Regelliste unter der
- * Vorschau, und sie hier zu wiederholen machte aus einem Hinweis eine zweite Regelliste im
- * Formular.
- *
- * **Wo dieser Hinweis stehen muss: außerhalb des `<label>`.** Er hängt am Steuerelement allein
- * über `aria-describedby`. Lag er im `<label htmlFor>`, zählte sein Text nach der Berechnung des
- * zugänglichen Namens **in den Namen** — und derselbe Satz käme über `aria-describedby` ein
- * zweites Mal als Beschreibung. NVDA und VoiceOver lesen „Der gesetzte Wert steht in einer
- * Regelmeldung: …" dann zweimal hintereinander. Das Muster ist deshalb überall dasselbe: `<div
- * class="ez-builder__field">` als Hülle, `<label class="ez-builder__field-label" htmlFor>` als
- * Name, Hinweis und Notiz daneben und allein über `aria-describedby` verknüpft — so hielt es
- * `ListField` schon vorher, `SelectField` und das Beschriftungsfeld ziehen nach.
- */
-function FieldIssueNote({ id, issues }: { id: string; issues: readonly ExplainedIssue[] }) {
-  if (issues.length === 0) return null;
-  const titles = issues.map((issue) => issue.title).join(' · ');
-  return (
-    <span className="ez-builder__field-issue" id={id}>
-      {issues.length === 1
-        ? 'Der gesetzte Wert steht in einer Regelmeldung: '
-        : `Der gesetzte Wert steht in ${issues.length} Regelmeldungen: `}
-      <strong>{titles}</strong>. Der ganze Wortlaut steht in der Regelliste unter der Vorschau.
-    </span>
+function Chips({ label, entries, onPick, unset, missing, icon, grouped = false, variant = 'chip' }: ChipsProps) {
+  const labelId = useId();
+  const { fitting, blocked } = splitChoices(entries);
+  const anySelected = fitting.some((entry) => entry.selected);
+  const button = (entry: Choice) => (
+    <button
+      key={entry.value}
+      type="button"
+      className={entry.selected ? `ez-builder__chip-option ez-builder__chip-option--on` : 'ez-builder__chip-option'}
+      aria-pressed={entry.selected}
+      title={entry.status === 'derived' ? 'Aus vermessenen Teilen abgeleitet' : undefined}
+      onClick={() => onPick(entry.value)}
+    >
+      {icon?.(entry.value)}
+      <span>{entry.label}</span>
+      <MissingMark show={entry.selected && missing(entry.value)} />
+    </button>
   );
-}
-
-/**
- * Der Hinweis am Feld, in dem sich kein einziger Wert zeichnen lässt (`unmeasuredField()`). Er
- * steht einmal am Feld statt nur in den Tooltips der gesperrten Einträge: auf Touch-Geräten gibt
- * es keinen Tooltip, und eine Auswahl aus lauter gesperrten Einträgen sähe sonst kaputt aus.
- */
-function UnmeasuredNote({ id, show }: { id: string; show: boolean }) {
-  if (!show) return null;
+  const rowClass = variant === 'segment' ? 'ez-builder__segments' : 'ez-builder__chip-row';
   return (
-    <span className="ez-builder__field-hint" id={id}>
-      Noch nicht vermessen: Für dieses Feld führt der Katalog bisher keinen Wert, der sich an
-      einem Zeichen zeichnen lässt. Die Werte stehen trotzdem da, damit sichtbar bleibt, dass es
-      sie gibt.
-    </span>
-  );
-}
-
-/**
- * Text und Tooltip eines Eintrags in einer Auswahlliste. Ein `<option>` lässt sich nicht
- * gestalten; eine Sperre steht deshalb im Text selbst („geht hier nicht") — so kommt sie auch auf
- * Touch-Geräten und in Vorlesehilfen an, wo es keinen Tooltip gibt.
- *
- * **„abgeleitet" steht nur im Tooltip (LFH-989).** Bis zum 5. Oktober 2026 stand der Zusatz auch im
- * Text. An der leeren Formation trugen ihn dann 136 Listeneinträge, darunter 50 der 88 Fähigkeiten
- * und 46 der 74 Körpermarken; an der Funktionsstelle 81 der 88 Fähigkeiten. Ein Wort an der
- * Mehrzahl der Einträge unterscheidet keinen davon, und wer kein Technikverständnis mitbringt,
- * liest es als Warnung, obwohl der Wert zulässig ist. Gesammelt sagt es der Hinweis unter der
- * Vorschau (`DerivationNote`), sobald die Zeichnung abgeleitete Teile trägt. Die Kacheln behalten
- * ihren Zusatz: dort trifft er selten (an der leeren Formation keine der 19 Grundzeichenarten und
- * keine der acht Organisationen) und unterscheidet deshalb wirklich.
- */
-function optionText(label: string, blocked: BlockedValue | undefined): string {
-  return blocked === undefined ? label : `${label} — geht hier nicht`;
-}
-
-function optionTitle(
-  definition: FieldLabels,
-  blocked: BlockedValue | undefined,
-  derived: boolean,
-  valueLabel: string,
-  kindLabel: string,
-  fieldUnmeasured: boolean,
-): string | undefined {
-  if (blocked !== undefined) {
-    return blockedTooltip(definition, blocked, valueLabel, kindLabel, fieldUnmeasured);
-  }
-  return derived ? derivedTooltip(valueLabel) : undefined;
-}
-
-interface SelectFieldProps extends OptionsProps {
-  definition: FieldLabels;
-  value: string;
-  probe: Map<string, AllowedValue> | undefined;
-  /** Ob die Spec der Probe selbst schon abgeleitet ist; siehe `derivedMarker()`. */
-  probeDerived: boolean;
-  /** Regelmeldungen, die auf den gesetzten Wert dieses Feldes zeigen; leer ist der Normalfall. */
-  issues?: readonly ExplainedIssue[];
-  kindLabel: string;
-  onChange: (value: string | undefined) => void;
-  /** Der leere Eintrag; `null` heißt Pflichtfeld ohne leeren Eintrag. */
-  unsetLabel?: string | null;
-}
-
-function SelectField({
-  options,
-  definition,
-  value,
-  probe,
-  probeDerived,
-  issues = [],
-  kindLabel,
-  onChange,
-  unsetLabel = '— nicht gesetzt —',
-}: SelectFieldProps) {
-  const id = `ez-builder-${definition.field}`;
-  const issueId = `${id}-issue`;
-  const hintId = `${id}-hint`;
-  const unmeasuredId = `${id}-unmeasured`;
-  const unmeasured = unmeasuredField(probe);
-  const renderOption = (option: FieldOption) => {
-    const selected = option.id === value;
-    const blocked = displayedBlock(probe, option.id, selected);
-    const derived = derivedMarker(probe?.get(option.id), selected, probeDerived);
-    return (
-      <option
-        key={option.id}
-        value={option.id}
-        disabled={blocked !== undefined}
-        title={optionTitle(definition, blocked, derived, option.label, kindLabel, unmeasured)}
-      >
-        {optionText(option.label, blocked)}
-      </option>
-    );
-  };
-  // Hülle als `<div>`, Beschriftung als eigenes `<label htmlFor>` — das Muster von `ListField`,
-  // die Begründung steht bei `FieldIssueNote`. Der Feldhinweis wandert damit ebenfalls aus dem
-  // Namen heraus und braucht seinen eigenen `describedby`-Verweis; ohne ihn hinge er als Text
-  // ohne Bezug im Formular.
-  return (
-    <div className="ez-builder__field">
-      <label className="ez-builder__field-label" htmlFor={id}>
-        {definition.label}
-      </label>
-      <select
-        id={id}
-        value={value}
-        aria-describedby={describedBy(
-          definition.hint === undefined ? undefined : hintId,
-          unmeasured ? unmeasuredId : undefined,
-          issues.length === 0 ? undefined : issueId,
-        )}
-        onChange={(event) => onChange(event.target.value === '' ? undefined : event.target.value)}
-      >
-        {unsetLabel === null ? null : <option value="">{unsetLabel}</option>}
-        {groupedOptions(options).map(({ group, options: entries }) =>
-          group === undefined ? (
-            entries.map(renderOption)
-          ) : (
-            <optgroup key={group} label={group}>
-              {entries.map(renderOption)}
-            </optgroup>
-          ),
-        )}
-      </select>
-      {definition.hint === undefined ? null : (
-        <span className="ez-builder__field-hint" id={hintId}>
-          {definition.hint}
-        </span>
+    <div className="ez-builder__chips-field">
+      <span className="ez-builder__field-label" id={labelId}>
+        {label}
+      </span>
+      {grouped ? (
+        <div role="group" aria-labelledby={labelId} className="ez-builder__chip-groups">
+          {unset === undefined ? null : (
+            <div className={rowClass}>
+              <button
+                type="button"
+                className={anySelected ? 'ez-builder__chip-option' : 'ez-builder__chip-option ez-builder__chip-option--on'}
+                aria-pressed={!anySelected}
+                onClick={unset.onPick}
+              >
+                {unset.label}
+              </button>
+            </div>
+          )}
+          {groupChoices(fitting).map(({ group, entries: inGroup }) => (
+            <div key={group ?? '-'} className="ez-builder__chip-group">
+              {group === undefined ? null : <span className="ez-builder__chip-group-label">{group}</span>}
+              <div className={rowClass}>{inGroup.map(button)}</div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div role="group" aria-labelledby={labelId} className={rowClass}>
+          {unset === undefined ? null : (
+            <button
+              type="button"
+              className={anySelected ? 'ez-builder__chip-option' : 'ez-builder__chip-option ez-builder__chip-option--on'}
+              aria-pressed={!anySelected}
+              onClick={unset.onPick}
+            >
+              {icon?.('')}
+              <span>{unset.label}</span>
+            </button>
+          )}
+          {fitting.map(button)}
+        </div>
       )}
-      <UnmeasuredNote id={unmeasuredId} show={unmeasured} />
-      <FieldIssueNote id={issueId} issues={issues} />
+      <BlockedList entries={blocked} />
     </div>
   );
 }
 
-interface ListFieldProps extends OptionsProps {
-  definition: FieldLabels;
-  values: readonly string[];
-  probe: Map<string, AllowedValue> | undefined;
-  probeDerived: boolean;
-  issues?: readonly ExplainedIssue[];
-  kindLabel: string;
-  onChange: (values: string[]) => void;
-  /**
-   * Die Liste braucht mindestens einen Wert (das Wetter, ESZ-135): der letzte Eintrag lässt sich
-   * dann nicht entfernen, statt eine Spec zu bauen, die kein Leser annimmt.
-   */
-  keepLast?: boolean;
+function Swatch({ color }: { color: string | undefined }) {
+  return (
+    <span
+      className={color === undefined ? 'ez-builder__swatch ez-builder__swatch--none' : 'ez-builder__swatch'}
+      style={color === undefined ? undefined : { background: color }}
+      aria-hidden="true"
+    />
+  );
+}
+
+function Section({ title, children, summary }: { title: string; children: ReactNode; summary?: string }) {
+  const headingId = useId();
+  return (
+    <section className="ez-builder__group" aria-labelledby={headingId}>
+      <h2 className="ez-builder__group-title" id={headingId}>
+        {title}
+        {summary === undefined || summary === '' ? null : <span className="ez-builder__group-summary">{summary}</span>}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
+function MiniDrawing({ drawing, size, prefix }: { drawing: Drawing | null; size: number; prefix: string }) {
+  return (
+    <span className="ez-canvas ez-canvas--light ez-builder__mini-canvas" style={{ width: size + 8, height: size + 8 }}>
+      {drawing === null ? (
+        <span className="ez-builder__tile-placeholder" aria-hidden="true" />
+      ) : (
+        <Einsatzzeichen drawing={drawing} size={size} idPrefix={prefix} />
+      )}
+    </span>
+  );
+}
+
+/* --- Suche ------------------------------------------------------------------------------- */
+
+interface SearchProps {
+  symbols: SymbolSummary[];
+  query: string;
+  onQuery: (query: string) => void;
+  onLoad: (id: string) => void;
+  onRandom: () => void;
+  onReset: () => void;
+}
+
+function SearchSection({ symbols, query, onQuery, onLoad, onRandom, onReset }: SearchProps) {
+  const matches = useMemo(() => searchCatalog(symbols, query, CATALOG_MATCH_LIMIT), [symbols, query]);
+  return (
+    <section className="ez-builder__group ez-builder__search" aria-labelledby="ez-builder-search-label">
+      <label className="ez-builder__search-label" id="ez-builder-search-label" htmlFor="ez-builder-search">
+        Was willst du zeichnen?
+      </label>
+      <input
+        id="ez-builder-search"
+        type="search"
+        placeholder="z. B. RTW, Bergungsgruppe, Löschzug, E.1.1"
+        value={query}
+        onChange={(event) => onQuery(event.target.value)}
+      />
+      {query.trim() === '' ? (
+        <div className="ez-builder__group-actions">
+          <button type="button" className="ez-action" onClick={onRandom}>
+            <strong>Beispiel laden</strong>
+          </button>
+          <button type="button" className="ez-action" onClick={onReset}>
+            <strong>Neu beginnen</strong>
+          </button>
+        </div>
+      ) : (
+        <>
+          <ul className="ez-builder__matches">
+            {matches.matches.map((symbol) => (
+              <li key={symbol.id}>
+                <button type="button" className="ez-builder__match" onClick={() => onLoad(symbol.id)}>
+                  <MiniDrawing drawing={symbol.drawing} size={36} prefix={`ez-hit-${symbol.slug}`} />
+                  <span className="ez-builder__match-title">{symbol.title}</span>
+                  <span className="ez-id">{symbol.id}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className="ez-builder__field-hint" role="status">
+            {matchesLine(matches.total, matches.matches.length)}
+          </p>
+        </>
+      )}
+    </section>
+  );
+}
+
+/* --- Was ist es? ------------------------------------------------------------------------- */
+
+function FamilySection({ sign, onKind }: { sign: Sign; onKind: (kind: SymbolKind | FreestandingKind) => void }) {
+  const family = familyOf(sign);
+  return (
+    <Section title="Was ist es?">
+      <div className="ez-builder__families" role="group" aria-label="Familie">
+        {KIND_FAMILIES.map((candidate) => {
+          const on = candidate.id === family.id;
+          const first = candidate.kinds[0]!;
+          return (
+            <button
+              key={candidate.id}
+              type="button"
+              className={on ? 'ez-builder__family ez-builder__family--on' : 'ez-builder__family'}
+              aria-pressed={on}
+              onClick={() => {
+                if (!on) onKind(first);
+              }}
+            >
+              <MiniDrawing drawing={kindPreview(first)} size={40} prefix={`ez-family-${candidate.id}`} />
+              <span className="ez-builder__family-text">
+                <span className="ez-builder__family-label">{candidate.label}</span>
+                <span className="ez-builder__family-hint">{candidate.hint}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {family.kinds.length > 1 ? (
+        <div className="ez-builder__chip-row" role="group" aria-label={`Art: ${family.label}`}>
+          {family.kinds.map((kind) => {
+            const on = kind === sign.kind;
+            return (
+              <button
+                key={kind}
+                type="button"
+                className={on ? 'ez-builder__chip-option ez-builder__chip-option--on' : 'ez-builder__chip-option'}
+                aria-pressed={on}
+                onClick={() => onKind(kind)}
+              >
+                <MiniDrawing drawing={kindPreview(kind)} size={24} prefix={`ez-kind-${kind}`} />
+                <span>{kindLabel(kind)}</span>
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+    </Section>
+  );
+}
+
+/* --- Fachaufgaben ------------------------------------------------------------------------ */
+
+interface TaskSectionProps {
+  sign: BodySign;
+  /** Die Beschreibung der aufgeschobenen Probe. */
+  probeTarget: BodySign;
+  missing: (value: string) => boolean;
+  onToggle: (task: string) => void;
 }
 
 /**
- * Mehrfachauswahl als „hinzufügen"-Liste plus abwählbare Marken. Ein `<select multiple>` über 88
- * Fähigkeiten wäre mit Strg-Klick zu bedienen und sonst nicht; hier reicht ein Klick je Richtung.
+ * Fachaufgaben als Suche mit Piktogrammkacheln. Keine Wahl zwischen Box und randbündig: die
+ * Fassung wählt `resolve` (vermessen vor abgeleitet, randbündig vor Box). Befragt werden nur die
+ * sichtbaren Kacheln — alle rund 90 kosten beim ersten Mal je Art mehrere hundert Millisekunden.
  */
-function ListField({
-  options: allOptions,
-  definition,
-  values,
-  probe,
-  probeDerived,
-  issues = [],
-  kindLabel,
-  onChange,
-  keepLast = false,
-}: ListFieldProps) {
-  const id = `ez-builder-${definition.field}`;
-  const issueId = `${id}-issue`;
-  const hintId = `${id}-hint`;
-  const unmeasuredId = `${id}-unmeasured`;
-  const options = allOptions.filter((option) => !values.includes(option.id));
-  const removable = !keepLast || values.length > 1;
-  const unmeasured = unmeasuredField(probe);
+function TaskSection({ sign, probeTarget, missing, onToggle }: TaskSectionProps) {
+  const [query, setQuery] = useState('');
+  const [all, setAll] = useState(false);
+  // Über einen Schlüssel, nicht über das Feld: `sign.tasks ?? []` wäre in jedem Render eine neue
+  // Liste, und die Probe der Kacheln liefe bei jedem Tastenanschlag in einem anderen Feld neu.
+  const selectedKey = (sign.tasks ?? []).join('|');
+  const selected = useMemo(() => (selectedKey === '' ? [] : selectedKey.split('|')), [selectedKey]);
+  const results = useMemo(() => searchTasks(query).filter((option) => !selected.includes(option.value)), [query, selected]);
+  const shown = useMemo(() => (all ? results : results.slice(0, TASK_LIMIT)), [all, results]);
+  const candidates = useMemo(() => shown.map((option) => option.value), [shown]);
+  const deferredCandidates = useDeferredValue(candidates);
+  const probe = useMemo(() => probeTasks(probeTarget, deferredCandidates), [probeTarget, deferredCandidates]);
+  const byValue = new Map(probe.map((entry) => [entry.value, entry]));
+  const fitting = shown.filter((option) => byValue.get(option.value)?.status !== 'blocked');
+  const blocked = shown
+    .map((option) => byValue.get(option.value))
+    .filter((entry): entry is Choice => entry !== undefined && entry.status === 'blocked');
+
   return (
-    <div className="ez-builder__field ez-builder__field--wide">
-      <label className="ez-builder__field-label" htmlFor={id}>
-        {definition.label}
-      </label>
-      <select
-        id={id}
-        value=""
-        aria-describedby={describedBy(
-          definition.hint === undefined ? undefined : hintId,
-          unmeasured ? unmeasuredId : undefined,
-          issues.length === 0 ? undefined : issueId,
-        )}
-        onChange={(event) => {
-          if (event.target.value !== '') onChange([...values, event.target.value]);
-        }}
-      >
-        <option value="">— hinzufügen —</option>
-        {options.map((option) => {
-          // Der Filter über `options` nimmt die gesetzten Werte schon aus der Liste; die Zusage
-          // aus `displayedBlock()` läuft hier trotzdem über dieselbe Stelle wie in den beiden
-          // anderen Bausteinen, statt an dieser einen Filterzeile zu hängen.
-          const selected = values.includes(option.id);
-          const blocked = displayedBlock(probe, option.id, selected);
-          const derived = derivedMarker(probe?.get(option.id), selected, probeDerived);
-          return (
-            <option
-              key={option.id}
-              value={option.id}
-              disabled={blocked !== undefined}
-              title={optionTitle(definition, blocked, derived, option.label, kindLabel, unmeasured)}
-            >
-              {optionText(option.label, blocked)}
-            </option>
-          );
-        })}
-      </select>
-      {values.length === 0 ? null : (
-        <ul className="ez-builder__chips">
-          {values.map((value) => (
-            <li key={value}>
-              <button
-                type="button"
-                className="ez-builder__chip"
-                disabled={!removable}
-                title={removable ? undefined : 'Mindestens ein Wert bleibt stehen.'}
-                onClick={() => onChange(values.filter((entry) => entry !== value))}
-              >
-                <span>{allOptions.find((option) => option.id === value)?.label ?? value}</span>
-                {removable ? (
-                  <>
-                    <span aria-hidden="true">×</span>
-                    <span className="ez-builder__sr">entfernen</span>
-                  </>
-                ) : null}
+    <Section title="Fachaufgaben" summary={selected.map((task) => valueLabel('tasks', task)).join(', ')}>
+      {selected.length === 0 ? null : (
+        <ul className="ez-builder__chips" aria-label="Gewählte Fachaufgaben">
+          {selected.map((task) => (
+            <li key={task}>
+              <button type="button" className="ez-builder__chip" onClick={() => onToggle(task)}>
+                <span>{valueLabel('tasks', task)}</span>
+                <MissingMark show={missing(task)} />
+                <span aria-hidden="true">×</span>
+                <span className="ez-builder__sr">entfernen</span>
               </button>
             </li>
           ))}
         </ul>
       )}
-      {definition.hint === undefined ? null : (
-        <span className="ez-builder__field-hint" id={hintId}>
-          {definition.hint}
-        </span>
-      )}
-      <UnmeasuredNote id={unmeasuredId} show={unmeasured} />
-      <FieldIssueNote id={issueId} issues={issues} />
+      <label className="ez-builder__field" htmlFor="ez-builder-task-search">
+        <span className="ez-builder__field-label">Fachaufgabe suchen</span>
+        <input
+          id="ez-builder-task-search"
+          type="search"
+          placeholder="z. B. Sanität, Bergung, Verpflegung"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+      </label>
+      <div className="ez-builder__task-tiles" role="group" aria-label="Fachaufgabe hinzufügen">
+        {fitting.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            className="ez-builder__task"
+            title={byValue.get(option.value)?.status === 'derived' ? 'Aus vermessenen Teilen abgeleitet' : undefined}
+            onClick={() => onToggle(option.value)}
+          >
+            <MiniDrawing drawing={taskIcon(option.value)} size={36} prefix={`ez-task-${option.value}`} />
+            <span>{option.label}</span>
+          </button>
+        ))}
+      </div>
+      {results.length > TASK_LIMIT ? (
+        <button type="button" className="ez-builder__more" onClick={() => setAll(!all)}>
+          {all ? 'Weniger zeigen' : `Alle ${results.length} zeigen`}
+        </button>
+      ) : null}
+      {results.length === 0 ? <p className="ez-builder__field-hint">Keine Fachaufgabe passt zu dieser Suche.</p> : null}
+      <BlockedList entries={blocked} />
+    </Section>
+  );
+}
+
+/* --- Text -------------------------------------------------------------------------------- */
+
+function TextSection({ sign, onChange }: { sign: BodySign; onChange: (sign: BodySign) => void }) {
+  const lines = sign.text?.topLeftLines;
+  const extraSet = TEXT_ZONES.slice(OPEN_TEXT_ZONES).some(({ zone }) => textOf(sign, zone) !== '') || lines !== undefined;
+  const field = ({ zone, label }: (typeof TEXT_ZONES)[number]) => (
+    <div className="ez-builder__field" key={zone}>
+      <label className="ez-builder__field-label" htmlFor={`ez-builder-text-${zone}`}>
+        {label}
+      </label>
+      <input
+        id={`ez-builder-text-${zone}`}
+        type="text"
+        value={textOf(sign, zone)}
+        onChange={(event) => onChange(setText(sign, zone, event.target.value))}
+      />
+    </div>
+  );
+  return (
+    <Section title="Text">
+      <div className="ez-builder__group-grid">
+        {TEXT_ZONES.slice(0, OPEN_TEXT_ZONES).map(field)}
+        <div className="ez-builder__field">
+          <label className="ez-builder__field-label" htmlFor="ez-builder-text-centerSize">
+            Größe in der Mitte
+          </label>
+          <select
+            id="ez-builder-text-centerSize"
+            value={sign.text?.centerSize ?? 'normal'}
+            disabled={textOf(sign, 'center') === ''}
+            onChange={(event) => onChange(setCenterSize(sign, event.target.value === 'large' ? 'large' : 'normal'))}
+          >
+            <option value="normal">Normal</option>
+            <option value="large">Groß</option>
+          </select>
+        </div>
+      </div>
+      <details className="ez-builder__details" open={extraSet}>
+        <summary>Weitere Textstellen</summary>
+        <div className="ez-builder__group-grid">
+          {TEXT_ZONES.slice(OPEN_TEXT_ZONES).map(field)}
+          <div className="ez-builder__field">
+            <label className="ez-builder__field-label" htmlFor="ez-builder-text-topLeftLines-0">
+              Oben links, erste Zeile
+            </label>
+            <input
+              id="ez-builder-text-topLeftLines-0"
+              type="text"
+              value={lines?.[0] ?? ''}
+              onChange={(event) => onChange(setTopLeftLines(sign, event.target.value, lines?.[1] ?? ''))}
+            />
+          </div>
+          <div className="ez-builder__field">
+            <label className="ez-builder__field-label" htmlFor="ez-builder-text-topLeftLines-1">
+              Oben links, zweite Zeile
+            </label>
+            <input
+              id="ez-builder-text-topLeftLines-1"
+              type="text"
+              value={lines?.[1] ?? ''}
+              onChange={(event) => onChange(setTopLeftLines(sign, lines?.[0] ?? '', event.target.value))}
+            />
+          </div>
+        </div>
+      </details>
+    </Section>
+  );
+}
+
+/* --- Zeichen mit Körper ------------------------------------------------------------------ */
+
+interface BodySectionsProps {
+  sign: BodySign;
+  probeTarget: BodySign;
+  probe: SignProbe | undefined;
+  omitted: readonly Omission[];
+  onChange: (sign: BodySign) => void;
+}
+
+function BodySections({ sign, probeTarget, probe, omitted, onChange }: BodySectionsProps) {
+  const missingKeys = omittedKeys(omitted);
+  const missingIn = (field: string) => (value: string) => missingKeys.has(`${field}:${value}`);
+  const entries = (field: ProbedField) => withSelection(probe?.get(field), selectedOf(sign, field));
+  const visible = (field: ProbedField) => sectionVisible(entries(field));
+  const single = (field: Exclude<ProbedField, 'states'>) => (value: string) =>
+    onChange(setSingle(sign, field, selectedOf(sign, field).includes(value) ? undefined : value));
+  const summary = (field: ProbedField) => selectedOf(sign, field).map((value) => valueLabel(field, value)).join(', ');
+
+  const colorEntries = entries('color');
+  return (
+    <>
+      <Section title="Organisation" summary={summary('organization') || summary('color')}>
+        <Chips
+          label="Organisation"
+          entries={entries('organization')}
+          onPick={(value) => onChange(setSingle(sign, 'organization', value))}
+          unset={{
+            label: 'ohne',
+            onPick: () => onChange(setSingle(setSingle(sign, 'organization', undefined), 'color', undefined)),
+          }}
+          missing={missingIn('organization')}
+          icon={(value) => <Swatch color={value === '' ? undefined : swatchOf('organization', value)} />}
+        />
+        {sectionVisible(colorEntries) ? (
+          <details className="ez-builder__details" open={sign.color !== undefined}>
+            <summary>Farbe ohne Organisation</summary>
+            <Chips
+              label="Farbe"
+              entries={colorEntries}
+              onPick={single('color')}
+              missing={missingIn('color')}
+              icon={(value) => <Swatch color={swatchOf('color', value)} />}
+            />
+          </details>
+        ) : null}
+      </Section>
+
+      <TaskSection
+        sign={sign}
+        probeTarget={probeTarget}
+        missing={missingIn('tasks')}
+        onToggle={(task) => onChange(toggleList(sign, 'tasks', task))}
+      />
+
+      {visible('head') ? (
+        <Section title="Größe und Ebene" summary={summary('head')}>
+          <Chips
+            label="Kopf"
+            entries={entries('head')}
+            grouped
+            variant="segment"
+            onPick={(value) => onChange(setSingle(sign, 'head', value))}
+            unset={{ label: 'ohne', onPick: () => onChange(setSingle(sign, 'head', undefined)) }}
+            missing={missingIn('head')}
+          />
+        </Section>
+      ) : null}
+
+      {visible('role') ? (
+        <Section title="Funktion" summary={summary('role')}>
+          <RoleSelect sign={sign} entries={entries('role')} onChange={onChange} missing={missingIn('role')} />
+        </Section>
+      ) : null}
+
+      {visible('chassis') ? (
+        <Section title="Fahrwerk" summary={summary('chassis')}>
+          <Chips label="Fahrwerk" entries={entries('chassis')} onPick={single('chassis')} missing={missingIn('chassis')} />
+        </Section>
+      ) : null}
+
+      {visible('variant') ? (
+        <Section title="Darstellung" summary={summary('variant')}>
+          <Chips
+            label="Zweite Zeichnung"
+            entries={entries('variant')}
+            onPick={single('variant')}
+            unset={{ label: 'Erste Zeichnung', onPick: () => onChange(setSingle(sign, 'variant', undefined)) }}
+            missing={missingIn('variant')}
+          />
+        </Section>
+      ) : null}
+
+      {visible('states') ? (
+        <Section title="Zustand" summary={summary('states')}>
+          <Chips
+            label="Zustand"
+            entries={entries('states')}
+            grouped
+            onPick={(value) => onChange(toggleList(sign, 'states', value))}
+            missing={missingIn('states')}
+          />
+        </Section>
+      ) : null}
+
+      <TextSection sign={sign} onChange={onChange} />
+    </>
+  );
+}
+
+/** Funktionsfassungen sind viele und lang benannt; eine Auswahlliste statt Knöpfen. */
+function RoleSelect({
+  sign,
+  entries,
+  onChange,
+  missing,
+}: {
+  sign: BodySign;
+  entries: readonly Choice[];
+  onChange: (sign: BodySign) => void;
+  missing: (value: string) => boolean;
+}) {
+  const { fitting, blocked } = splitChoices(entries);
+  return (
+    <div className="ez-builder__field">
+      <label className="ez-builder__field-label" htmlFor="ez-builder-role">
+        Funktionsfassung
+      </label>
+      <select
+        id="ez-builder-role"
+        value={sign.role ?? ''}
+        onChange={(event) => onChange(setSingle(sign, 'role', event.target.value === '' ? undefined : event.target.value))}
+      >
+        <option value="">ohne</option>
+        {fitting.map((entry) => (
+          <option key={entry.value} value={entry.value}>
+            {entry.label}
+          </option>
+        ))}
+      </select>
+      {sign.role !== undefined && missing(sign.role) ? <MissingMark show /> : null}
+      <BlockedList entries={blocked} />
     </div>
   );
 }
 
-interface TileGroupProps extends OptionsProps {
-  definition: FieldLabels;
-  /** '' heißt „nicht gesetzt". */
-  value: string;
-  probe: Map<string, AllowedValue> | undefined;
-  probeDerived: boolean;
-  issues?: readonly ExplainedIssue[];
-  kindLabel: string;
-  onChange: (value: string | undefined) => void;
-  /** Kachel zum Abwählen; fehlt beim Pflichtfeld `kind`. */
-  unsetLabel?: string;
-  renderIcon: (id: string) => ReactNode;
-  variant: 'tile' | 'chip';
-}
+/* --- Freistehende Zeichen ---------------------------------------------------------------- */
 
 /**
- * Kachel-Auswahl für eine Achse. Gesperrte Kacheln bleiben sichtbar und **fokussierbar**:
- * `aria-disabled` statt `disabled`, weil ein totes `disabled` weder Fokus noch Klick annimmt —
- * dann käme der Grund der Sperre bei Tastatur- und Touch-Bedienung nie an. Klick oder Fokus auf
- * eine gesperrte Kachel schreibt den Grund in die Hinweiszeile unter dem Raster (zusätzlich zum
- * `title`-Tooltip für die Maus), ausgewählt wird dabei nichts.
+ * Die Felder einer freistehenden Art aus `FREESTANDING_FIELDS`, über dieselben Bausteine. Ein
+ * Feld mit vielen Werten (Piktogramm, Zustand) bekommt eine Auswahlliste, die übrigen Knöpfe.
+ * Den Verlauf von Pfeil und Linie stellt der Baukasten nicht ein; ein Link behält einen eigenen.
  */
-function TileGroup({
-  options,
-  definition,
-  value,
-  probe,
-  probeDerived,
-  issues = [],
-  kindLabel,
-  onChange,
-  unsetLabel,
-  renderIcon,
-  variant,
-}: TileGroupProps) {
-  const [notice, setNotice] = useState<string | null>(null);
-  const labelId = `ez-builder-${definition.field}-label`;
-  const noticeId = `ez-builder-${definition.field}-notice`;
-  const issueId = `ez-builder-${definition.field}-issue`;
-
-  // Ein stehen gebliebener Sperrgrund würde nach der nächsten Änderung etwas Falsches
-  // behaupten — mit der neuen Probe ist er entweder überholt oder kommt beim nächsten
-  // Fokus/Klick ohnehin frisch.
-  useEffect(() => setNotice(null), [probe]);
-
-  const base = variant === 'tile' ? 'ez-builder__tile' : 'ez-builder__orgchip';
-
+function FreestandingSections({ spec, onChange }: { spec: FreestandingSpec; onChange: (spec: FreestandingSpec) => void }) {
+  const probes = useMemo(() => probeFreestanding(spec), [spec]);
+  const current = spec as unknown as Record<string, unknown>;
   return (
-    <div className="ez-builder__field ez-builder__field--wide">
-      <span className="ez-builder__field-label" id={labelId}>
-        {definition.label}
-      </span>
-      <div
-        role="group"
-        aria-labelledby={labelId}
-        aria-describedby={issues.length === 0 ? undefined : issueId}
-        className={variant === 'tile' ? 'ez-builder__tiles' : 'ez-builder__orgchips'}
-      >
-        {unsetLabel === undefined ? null : (
-          <button
-            type="button"
-            className={value === '' ? `${base} ${base}--selected` : base}
-            aria-pressed={value === ''}
-            onClick={() => {
-              setNotice(null);
-              onChange(undefined);
-            }}
-          >
-            {renderIcon('')}
-            <span className={`${base}-label`}>{unsetLabel}</span>
-          </button>
-        )}
-        {options.map((option) => {
-          const selected = value === option.id;
-          const blocked = displayedBlock(probe, option.id, selected);
-          const reason =
-            blocked === undefined
-              ? undefined
-              : blockedTooltip(definition, blocked, option.label, kindLabel);
-          const derived = derivedMarker(probe?.get(option.id), selected, probeDerived);
-          const classes = [base];
-          if (selected) classes.push(`${base}--selected`);
-          if (blocked !== undefined) classes.push(`${base}--blocked`);
+    <>
+      {FREESTANDING_FIELDS[spec.kind].map((definition) => {
+        const entries = probes.get(definition.field) ?? [];
+        const value = current[definition.field];
+        if (definition.shape === 'list') {
+          const values = Array.isArray(value) ? (value as string[]) : [];
           return (
-            <button
-              key={option.id}
-              type="button"
-              className={classes.join(' ')}
-              aria-pressed={selected}
-              aria-disabled={blocked !== undefined}
-              aria-describedby={blocked === undefined ? undefined : noticeId}
-              title={reason ?? (derived ? derivedTooltip(option.label) : undefined)}
-              onFocus={() => {
-                if (reason !== undefined) setNotice(reason);
-              }}
-              onClick={() => {
-                if (reason !== undefined) {
-                  setNotice(reason);
-                  return;
-                }
-                setNotice(null);
-                onChange(option.id);
-              }}
-            >
-              {renderIcon(option.id)}
-              <span className={`${base}-label`}>{option.label}</span>
-              {/*
-                Eigener Knoten neben der Beschriftung, nicht in ihr: die Beschriftung bleibt
-                wortgleich mit dem Vokabular. Der Zusatz zählt zum zugänglichen Namen des Knopfes
-                („Fläche abgeleitet") — gewollt, denn er ist die Auskunft.
-              */}
-              {derived ? <span className={`${base}-derived`}>{DERIVED_SUFFIX}</span> : null}
-              {blocked === undefined ? null : (
-                <span className="ez-builder__sr">— geht hier nicht: {reason}</span>
-              )}
-            </button>
+            <Section key={definition.field} title={definition.label}>
+              <Chips
+                label={definition.label}
+                entries={entries}
+                grouped
+                missing={() => false}
+                onPick={(picked) => {
+                  const next = values.includes(picked) ? values.filter((entry) => entry !== picked) : [...values, picked];
+                  onChange(reduceFreestanding(spec, definition.field, next));
+                }}
+              />
+            </Section>
           );
-        })}
-      </div>
-      <FieldIssueNote id={issueId} issues={issues} />
-      <p id={noticeId} className="ez-builder__tile-notice" role="status">
-        {notice ?? ''}
-      </p>
-    </div>
+        }
+        if (definition.options.length > 16) {
+          const { fitting, blocked } = splitChoices(entries);
+          return (
+            <Section key={definition.field} title={definition.label}>
+              <div className="ez-builder__field">
+                <label className="ez-builder__field-label" htmlFor={`ez-builder-fs-${definition.field}`}>
+                  {definition.label}
+                </label>
+                <select
+                  id={`ez-builder-fs-${definition.field}`}
+                  value={typeof value === 'string' ? value : ''}
+                  onChange={(event) =>
+                    onChange(reduceFreestanding(spec, definition.field, event.target.value === '' ? undefined : event.target.value))
+                  }
+                >
+                  {definition.unsetLabel === undefined ? null : <option value="">{definition.unsetLabel}</option>}
+                  {groupChoices(fitting).map(({ group, entries: inGroup }) =>
+                    group === undefined ? (
+                      inGroup.map((entry) => (
+                        <option key={entry.value} value={entry.value}>
+                          {entry.label}
+                        </option>
+                      ))
+                    ) : (
+                      <optgroup key={group} label={group}>
+                        {inGroup.map((entry) => (
+                          <option key={entry.value} value={entry.value}>
+                            {entry.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ),
+                  )}
+                </select>
+                <BlockedList entries={blocked} />
+              </div>
+            </Section>
+          );
+        }
+        return (
+          <Section key={definition.field} title={definition.label}>
+            <Chips
+              label={definition.label}
+              entries={entries}
+              missing={() => false}
+              onPick={(picked) => {
+                if (picked === value && definition.unsetLabel === undefined) return;
+                onChange(reduceFreestanding(spec, definition.field, picked === value ? undefined : picked));
+              }}
+              {...(definition.unsetLabel === undefined
+                ? {}
+                : { unset: { label: definition.unsetLabel, onPick: () => onChange(reduceFreestanding(spec, definition.field, undefined)) } })}
+            />
+          </Section>
+        );
+      })}
+    </>
   );
 }
+
+/* --- Experte ----------------------------------------------------------------------------- */
+
+/**
+ * Der Bauplan im Expertenteil (Konzept 4.1, Punkt 5). Oben die Beschreibung als JSON zum
+ * Bearbeiten — sie nimmt auch einen Bauplan an (`SymbolSpec`, `FreestandingSpec` oder eine Hülle
+ * `{"v":1|2,…}`), den `parse` über `fromExact` zur Beschreibung macht. Technische Körpermarken,
+ * Fassungen und Messwerte stehen dort unter `exact`. Darunter der aufgelöste Bauplan, wie `draw`
+ * ihn gezeichnet hat.
+ */
+function ExpertSection({ sign, drawn, onChange }: { sign: Sign; drawn: Drawn | null; onChange: (sign: Sign) => void }) {
+  const signJson = useMemo(() => JSON.stringify(sign, null, 2), [sign]);
+  const [draft, setDraft] = useState(signJson);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    setDraft(signJson);
+    setError(null);
+  }, [signJson]);
+  const exactJson = drawn === null ? '' : JSON.stringify(drawn.exact, null, 2);
+
+  function apply() {
+    let first: unknown;
+    try {
+      onChange(parse(`{"v":2,"sign":${draft}}`));
+      return;
+    } catch (caught) {
+      first = caught;
+    }
+    try {
+      onChange(parse(draft));
+    } catch {
+      setError(first instanceof SpecParseError ? `${first.path}: ${first.reason}` : String(first));
+    }
+  }
+
+  return (
+    <details className="ez-builder__expert">
+      <summary>Bauplan (Experte)</summary>
+      <div className="ez-builder__expert-body">
+        <div className="ez-builder__field">
+          <label className="ez-builder__field-label" htmlFor="ez-builder-expert-sign">
+            Beschreibung oder Bauplan als JSON
+          </label>
+          <textarea
+            id="ez-builder-expert-sign"
+            className="ez-builder__json"
+            spellCheck={false}
+            rows={Math.min(24, Math.max(6, draft.split('\n').length + 1))}
+            value={draft}
+            aria-describedby={error === null ? undefined : 'ez-builder-expert-error'}
+            onChange={(event) => setDraft(event.target.value)}
+          />
+          {error === null ? null : (
+            <p className="ez-builder__field-issue" id="ez-builder-expert-error" role="alert">
+              {error}
+            </p>
+          )}
+          <div className="ez-builder__group-actions">
+            <button type="button" className="ez-action" disabled={draft === signJson} onClick={apply}>
+              <strong>Übernehmen</strong>
+            </button>
+            <CopyButton text={signJson} label="Beschreibung kopieren" />
+          </div>
+        </div>
+        {drawn === null ? null : (
+          <div className="ez-builder__field">
+            <span className="ez-builder__field-label">Aufgelöster Bauplan</span>
+            <pre className="ez-builder__pre">
+              <code>{exactCodeSampleFor(drawn.exact)}</code>
+            </pre>
+            <CopyButton text={exactJson} label="Bauplan kopieren" />
+          </div>
+        )}
+      </div>
+    </details>
+  );
+}
+
+/* --- Kopieren und Codebeispiele ---------------------------------------------------------- */
 
 interface CopyButtonProps {
   /** Als Funktion, wenn der Text erst im Browser entsteht (etwa aus `window.location`). */
@@ -907,8 +928,8 @@ function CopyButton({ text, label }: CopyButtonProps) {
         type="button"
         className="ez-action ez-builder__copy-button"
         onClick={() => {
-          // Kein stiller Fehlschlag: `navigator.clipboard` fehlt in unsicheren Kontexten ganz
-          // (wirft dann synchron) und lehnt sonst ohne Recht ab. Beide Wege enden am Knopf.
+          // `navigator.clipboard` fehlt in unsicheren Kontexten ganz und lehnt sonst ohne Recht ab;
+          // beide Wege enden sichtbar am Knopf.
           const failed = (error: unknown) =>
             setNote(`nicht kopiert: ${error instanceof Error ? error.message : String(error)}`);
           try {
@@ -950,20 +971,14 @@ function CodeTabs({ samples }: { samples: CodeSamples }) {
             id={`ez-builder-tab-${tab.key}`}
             aria-selected={active === tab.key}
             aria-controls={`ez-builder-panel-${tab.key}`}
-            className={
-              active === tab.key ? 'ez-builder__tab ez-builder__tab--active' : 'ez-builder__tab'
-            }
+            className={active === tab.key ? 'ez-builder__tab ez-builder__tab--active' : 'ez-builder__tab'}
             onClick={() => setActive(tab.key)}
           >
             {tab.label}
           </button>
         ))}
       </div>
-      <div
-        role="tabpanel"
-        id={`ez-builder-panel-${active}`}
-        aria-labelledby={`ez-builder-tab-${active}`}
-      >
+      <div role="tabpanel" id={`ez-builder-panel-${active}`} aria-labelledby={`ez-builder-tab-${active}`}>
         <pre className="ez-builder__pre">
           <code>{samples[active]}</code>
         </pre>
@@ -973,7 +988,7 @@ function CodeTabs({ samples }: { samples: CodeSamples }) {
   );
 }
 
-/* --- Vorschau-Panel mit Mitnahme-Aktionen -------------------------------------------------- */
+/* --- Vorschau ---------------------------------------------------------------------------- */
 
 const PREVIEW_SIZES = [32, 64, 128];
 
@@ -992,72 +1007,64 @@ function downloadBlob(blob: Blob, filename: string) {
   document.body.append(anchor);
   anchor.click();
   anchor.remove();
-  // Nicht sofort widerrufen: der Klick löst den Download asynchron aus, und eine schon
-  // widerrufene URL bräche ihn in manchen Browsern kommentarlos ab.
+  // Nicht sofort widerrufen: der Download startet asynchron.
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-/**
- * Der Hinweis unter der Vorschau, wenn die Zeichnung abgeleitete Teile trägt
- * (`Drawing.derivations`, Entscheidung vom 2. Oktober 2026). Er hängt an `outcome` und damit an
- * der aktuellen Spec, nicht an der aufgeschobenen Probe: er beschreibt das Bild, das gerade
- * darüber steht.
- *
- * Die Teile stehen im Wortlaut von `DerivationNote.part` und eingeklappt: sie sprechen die
- * Sprache des Motors (Zonen, Profile, Kennungen) und sind für die Leserin, die nur bauen will,
- * keine nötige Auskunft. Die Kurzfassung darüber kommt ohne diese Begriffe aus.
- */
-function DerivationNote({ drawing }: { drawing: Drawing }) {
-  const parts = derivationParts(drawing);
-  if (parts.length === 0) return null;
-  return (
-    <div className="ez-note ez-builder__derived" role="note">
-      <p className="ez-note__title">Teilweise abgeleitet – kein Original belegt diese Zusammenstellung</p>
-      <p>
-        Das Zeichen lässt sich so zeichnen, aber kein vermessenes Original zeigt genau diese
-        Kombination. Was fehlt, hat der Baukasten aus ähnlichen, vermessenen Zeichen übernommen
-        und angepasst.
-      </p>
-      <details className="ez-builder__details">
-        <summary>
-          {parts.length === 1 ? 'Ein abgeleiteter Teil' : `${parts.length} abgeleitete Teile`}
-        </summary>
-        <ul className="ez-builder__derived-list">
-          {parts.map((part, index) => (
-            <li key={index}>{part}</li>
-          ))}
+/** Die abgeleiteten Teile einer Zeichnung, jeder nur einmal, in der Reihenfolge der Zeichnung. */
+function derivationParts(drawing: Drawing): string[] {
+  return [...new Set((drawing.derivations ?? []).map((note) => note.part))];
+}
+
+/** Status unter der Vorschau: was fehlt (vereinfacht) und welche Teile abgeleitet sind. */
+function StatusNote({ drawn }: { drawn: Drawn }) {
+  if (drawn.fidelity === 'simplified') {
+    return (
+      <div className="ez-note ez-builder__omitted" role="note">
+        <p className="ez-note__title">Nicht im Bild</p>
+        <ul>
+          {drawn.omitted.map((omission, index) => {
+            const line = omissionLine(omission);
+            return (
+              <li key={index}>
+                <strong>{line.what}</strong> — {line.why}
+              </li>
+            );
+          })}
         </ul>
-      </details>
-    </div>
+      </div>
+    );
+  }
+  const parts = derivationParts(drawn.drawing);
+  if (drawn.fidelity !== 'derived' || parts.length === 0) return null;
+  return (
+    <details className="ez-note ez-builder__details ez-builder__derived">
+      <summary>{parts.length === 1 ? 'Ein abgeleiteter Teil' : `${parts.length} abgeleitete Teile`}</summary>
+      <ul className="ez-builder__derived-list">
+        {parts.map((part, index) => (
+          <li key={index}>{part}</li>
+        ))}
+      </ul>
+    </details>
   );
 }
 
 interface PreviewPanelProps {
   outcome: BuilderOutcome;
-  spec: AnySpec;
-  /** Dateiname der Downloads: Slug des geladenen Zeichens oder der neutrale Vorgabename. */
+  sign: Sign;
   fileBase: string;
 }
 
 /**
- * Das Ergebnis-Panel: ein großes Zeichen auf Millimeterpapier, wahlweise auf Weiß (dem
- * Referenzuntergrund der Palette) oder auf Graphit, darunter die Größenreihe und die drei
- * Mitnahme-Aktionen. Trägt die Zusammenstellung nicht, zeigt die Fläche das ausdrücklich an,
- * statt eine veraltete Vorschau stehen zu lassen.
- *
- * Jeder Fehlschlag einer Aktion wird am Knopf gemeldet, nichts wird geschluckt (Spec §7) —
- * gerade die PNG-Kette (SVG → Image → Canvas → Blob) hat drei Stellen, an denen Browser still
- * scheitern können.
+ * Das Ergebnis: großes Zeichen auf Weiß oder Graphit, der Status aus `draw`, die Größenreihe und
+ * die Mitnahme-Aktionen. Jeder Fehlschlag einer Aktion steht am Knopf; die PNG-Kette (SVG → Image
+ * → Canvas → Blob) hat drei Stellen, an denen Browser still scheitern können.
  */
-function PreviewPanel({ outcome, spec, fileBase }: PreviewPanelProps) {
+function PreviewPanel({ outcome, sign, fileBase }: PreviewPanelProps) {
   const [background, setBackground] = useState<PreviewBackground>('light');
   const [note, setNote] = useState<ActionNote | null>(null);
 
-  const fail = (error: unknown) =>
-    setNote({
-      tone: 'error',
-      text: error instanceof Error ? error.message : String(error),
-    });
+  const fail = (error: unknown) => setNote({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
 
   function downloadSvg(drawing: Drawing) {
     try {
@@ -1093,50 +1100,42 @@ function PreviewPanel({ outcome, spec, fileBase }: PreviewPanelProps) {
           fail(error);
         }
       };
-      image.onerror = () =>
-        fail(new Error('Der Browser konnte das Zeichen nicht als Bild laden (SVG→PNG).'));
+      image.onerror = () => fail(new Error('Der Browser konnte das Zeichen nicht als Bild laden (SVG→PNG).'));
       image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
     } catch (error) {
       fail(error);
     }
   }
 
-  const drawing = outcome.state === 'ok' ? outcome.drawing : null;
+  const drawn = outcome.state === 'ok' ? outcome.drawn : null;
+  const drawing = drawn?.drawing ?? null;
 
   return (
     <section className="ez-builder__panel" aria-label="Vorschau und Mitnahme">
       <div className="ez-builder__panel-head">
         <span className="ez-builder__field-label">Vorschau</span>
-        <div
-          className="ez-builder__toggle"
-          role="group"
-          aria-label="Untergrund der Vorschau"
-        >
-          <button
-            type="button"
-            className={
-              background === 'light'
-                ? 'ez-builder__toggle-button ez-builder__toggle-button--active'
-                : 'ez-builder__toggle-button'
-            }
-            aria-pressed={background === 'light'}
-            title="Weiß ist der Referenzuntergrund der Farbpalette"
-            onClick={() => setBackground('light')}
-          >
-            Weiß
-          </button>
-          <button
-            type="button"
-            className={
-              background === 'dark'
-                ? 'ez-builder__toggle-button ez-builder__toggle-button--active'
-                : 'ez-builder__toggle-button'
-            }
-            aria-pressed={background === 'dark'}
-            onClick={() => setBackground('dark')}
-          >
-            Graphit
-          </button>
+        {drawn === null ? null : (
+          <span className={`ez-builder__fidelity ez-builder__fidelity--${drawn.fidelity}`} role="status">
+            {FIDELITY_LABELS[drawn.fidelity]}
+          </span>
+        )}
+        <div className="ez-builder__toggle" role="group" aria-label="Untergrund der Vorschau">
+          {(
+            [
+              ['light', 'Weiß'],
+              ['dark', 'Graphit'],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              className={background === id ? 'ez-builder__toggle-button ez-builder__toggle-button--active' : 'ez-builder__toggle-button'}
+              aria-pressed={background === id}
+              onClick={() => setBackground(id)}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -1156,16 +1155,7 @@ function PreviewPanel({ outcome, spec, fileBase }: PreviewPanelProps) {
         </>
       ) : (
         <div className="ez-builder__stage ez-builder__stage--void" role="status">
-          {outcome.state === 'invalid' ? (
-            <p>
-              Diese Kombination trägt nicht — die Gründe stehen direkt unter der Vorschau.
-            </p>
-          ) : (
-            <p>
-              Diese Zusammenstellung ließ sich nicht zeichnen — die Einzelheiten stehen direkt
-              unter der Vorschau.
-            </p>
-          )}
+          <p>Nicht zeichenbar — Einzelheiten unter der Vorschau.</p>
         </div>
       )}
 
@@ -1174,38 +1164,27 @@ function PreviewPanel({ outcome, spec, fileBase }: PreviewPanelProps) {
           type="button"
           className="ez-action ez-builder__panel-action"
           disabled={drawing === null}
-          title={drawing === null ? 'Erst möglich, wenn die Zusammenstellung trägt.' : undefined}
           onClick={() => {
             if (drawing !== null) downloadSvg(drawing);
           }}
         >
-          <strong>SVG herunterladen</strong>
+          <strong>SVG</strong>
         </button>
         <button
           type="button"
           className="ez-action ez-builder__panel-action"
           disabled={drawing === null}
-          title={drawing === null ? 'Erst möglich, wenn die Zusammenstellung trägt.' : undefined}
           onClick={() => {
             if (drawing !== null) downloadPng(drawing);
           }}
         >
-          <strong>PNG herunterladen</strong>
+          <strong>PNG</strong>
         </button>
-        <CopyButton
-          label="Link kopieren"
-          text={() =>
-            `${window.location.origin}${CLEAN_PATH}?${SPEC_PARAM}=${encodeAnySpec(spec)}`
-          }
-        />
+        <CopyButton label="Link kopieren" text={() => `${window.location.origin}${CLEAN_PATH}?${SPEC_PARAM}=${encodeSign(sign)}`} />
       </div>
       {note === null ? null : (
         <p
-          className={
-            note.tone === 'error'
-              ? 'ez-builder__panel-note ez-builder__panel-note--error'
-              : 'ez-builder__panel-note'
-          }
+          className={note.tone === 'error' ? 'ez-builder__panel-note ez-builder__panel-note--error' : 'ez-builder__panel-note'}
           role={note.tone === 'error' ? 'alert' : 'status'}
         >
           {note.text}
@@ -1215,7 +1194,7 @@ function PreviewPanel({ outcome, spec, fileBase }: PreviewPanelProps) {
   );
 }
 
-/* --- Fehlerblock für Renderfehler --------------------------------------------------------- */
+/* --- Fehlerblock für Renderfehler -------------------------------------------------------- */
 
 interface BoundaryState {
   error: Error | null;
@@ -1223,25 +1202,18 @@ interface BoundaryState {
 }
 
 /**
- * Fängt Fehler aus dem Rendern selbst. Was `evaluateSpec` wirft, fängt die Insel schon vorher —
- * hier landet, was danach schiefgeht (etwa `renderSvg` an einer Zeichnung, die komponiert, aber
- * nicht rendert). Verschluckt wird nichts: Meldung, Name und Stack stehen sichtbar auf der Seite.
+ * Fängt Fehler aus dem Rendern selbst. Verschluckt wird nichts: Meldung, Name und Stack stehen
+ * sichtbar auf der Seite, dazu der Weg zum leeren Baukasten.
  */
 class ErrorBoundary extends Component<{ children: ReactNode }, BoundaryState> {
   override state: BoundaryState = { error: null, stack: null };
 
   static getDerivedStateFromError(error: unknown): BoundaryState {
-    return {
-      error: error instanceof Error ? error : new Error(String(error)),
-      stack: null,
-    };
+    return { error: error instanceof Error ? error : new Error(String(error)), stack: null };
   }
 
   override componentDidCatch(error: unknown, info: ErrorInfo): void {
-    this.setState({
-      error: error instanceof Error ? error : new Error(String(error)),
-      stack: info.componentStack ?? null,
-    });
+    this.setState({ error: error instanceof Error ? error : new Error(String(error)), stack: info.componentStack ?? null });
   }
 
   override render(): ReactNode {
@@ -1251,17 +1223,9 @@ class ErrorBoundary extends Component<{ children: ReactNode }, BoundaryState> {
       <div className="ez-note" role="alert">
         <p className="ez-note__title">Der Baukasten ist beim Zeichnen abgebrochen</p>
         <p>
-          Das ist ein Fehler im Baukasten, keine abgelehnte Kombination. Stand die
-          Zusammenstellung in der Adresszeile, hilft Neuladen nicht — es brächte dieselbe zurück.
-        </p>
-        <p>
           <a className="ez-action" href={CLEAN_PATH}>
             <strong>Baukasten neu und leer öffnen</strong>
           </a>
-        </p>
-        <p>
-          Kommt der Fehler wieder, hilft dem Projekt eine Meldung mit den technischen Einzelheiten
-          unten.
         </p>
         <details className="ez-builder__details">
           <summary>Technische Einzelheiten</summary>
@@ -1278,400 +1242,123 @@ class ErrorBoundary extends Component<{ children: ReactNode }, BoundaryState> {
   }
 }
 
-/* --- Ein unlesbarer Link ------------------------------------------------------------------ */
+/* --- Ein unlesbarer Link ----------------------------------------------------------------- */
 
-/** Was der Hinweis zu einem unlesbaren `?spec=` braucht: die Einzelheiten zum Aufklappen. */
-interface LinkError {
-  detail: string;
+function linkErrorOf(error: unknown): string {
+  if (error instanceof SpecParseError) return `${error.path}: ${error.reason}`;
+  return error instanceof Error ? `${error.name}: ${error.message}` : String(error);
 }
 
-/**
- * Seit LFH-578 liest der Baukasten Links streng über `decodeSpecParam` aus `core`: ein
- * unbekanntes Feld, ein Wert außerhalb der Wertelisten oder ein falscher Typ wirft einen
- * `SpecParseError`, statt still durchzurutschen. Erkannt wird er an der Klasse; Pfad und Meldung
- * (`$.spec.organisation: unbekanntes Feld …`) wandern in die aufklappbaren Einzelheiten und nicht
- * in den Fließtext — sie sprechen Feldnamen, die auf dieser Seite niemand nachschlagen kann.
- * Alles andere ist kein Befund über den Link, sondern ein Fehler; auch er bleibt sichtbar.
- */
-function linkErrorOf(error: unknown): LinkError {
-  if (error instanceof SpecParseError) return { detail: `${error.path}: ${error.reason}` };
-  return {
-    detail: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
-  };
-}
+/* --- Geladenes Katalogzeichen ------------------------------------------------------------ */
 
-/* --- Der Modus „freistehend“ (ESZ-135) ---------------------------------------------------- */
-
-/** Die Arten als Kacheln; gesperrt ist keine, jede zeichnet in ihrer Ausgangsauswahl. */
-const FREESTANDING_KIND_FIELD: FieldLabels = {
-  field: 'fs-kind',
-  label: 'Art',
-  noun: 'Art',
-};
-
-const FREESTANDING_KIND_OPTIONS: readonly FieldOption[] = FREESTANDING_KINDS.map((kind) => ({
-  id: kind,
-  label: FREESTANDING_KIND_LABELS[kind],
-}));
-
-interface FreestandingFieldsProps {
-  spec: FreestandingSpec;
-  /** Die erklärten Regelmeldungen der aktuellen Spec; leer, wenn sie zeichnet. */
-  issues: readonly ExplainedIssue[];
-  kindTiles: Map<FreestandingKind, Drawing | null>;
-  onChange: (spec: FreestandingSpec) => void;
-}
-
-/**
- * Das Formular für ein freistehendes Zeichen: erst die Art als Kachel, dann ihre Felder mit den
- * Werten der Register. Dieselben Bausteine wie für die `SymbolSpec` — gesperrte Werte bleiben
- * sichtbar und tragen ihren Grund (`probeFreestanding()`), der gesetzte Wert wird nie gesperrt.
- *
- * Die Probe läuft hier ohne `useDeferredValue`: es gibt kein Freitextfeld, das bei jedem
- * Tastenanschlag die Spec ändert, und alle Felder aller Arten zusammen brauchen rund 13 ms.
- *
- * Ein Artwechsel beginnt bei der Ausgangsauswahl der neuen Art (`defaultFreestandingSpec`): die
- * Arten teilen kein Feld, das sich mitnehmen ließe.
- *
- * Den Verlauf von Pfeil und Linie stellt der Baukasten nicht ein. Er steht auf der Vorlage
- * (`reduceFreestanding`); ein Link mit eigenem Verlauf behält ihn.
- */
-function FreestandingFields({ spec, issues, kindTiles, onChange }: FreestandingFieldsProps) {
-  const probes = useMemo(() => probeFreestanding(spec), [spec]);
-  const probeDerived = useMemo(() => {
-    const result = checkAnySpec(spec);
-    return result.ok && (result.drawing.derivations?.length ?? 0) > 0;
-  }, [spec]);
-  const kindLabel = FREESTANDING_KIND_LABELS[spec.kind];
-  const current = spec as unknown as Record<string, unknown>;
-  // Wie `issuesByField()`: nur an einem gesetzten Feld, und nur, wenn die Erklärung es nennt.
-  const issuesAt = (field: string): ExplainedIssue[] =>
-    current[field] === undefined ? [] : issues.filter((issue) => issue.field === field);
-
+function LoadedNote({ symbol }: { symbol: SymbolSummary }) {
   return (
-    <fieldset className="ez-builder__group">
-      <legend>Freistehendes Zeichen</legend>
-      <p className="ez-builder__group-hint">
-        Pfeile, Linien, Wetter und Einzelpiktogramme, die ohne Grundzeichen auf der Lagekarte
-        stehen.
+    <div className="ez-note" role="note">
+      <p className="ez-note__title">
+        Geladen: {symbol.title} <span className="ez-id">{symbol.id}</span>
       </p>
-      <TileGroup
-        options={FREESTANDING_KIND_OPTIONS}
-        definition={FREESTANDING_KIND_FIELD}
-        value={spec.kind}
-        probe={undefined}
-        probeDerived={false}
-        kindLabel={kindLabel}
-        onChange={(value) => {
-          if (value !== undefined && value !== spec.kind) {
-            onChange(defaultFreestandingSpec(value as FreestandingKind));
-          }
-        }}
-        variant="tile"
-        renderIcon={(id) => {
-          const drawing = kindTiles.get(id as FreestandingKind) ?? null;
-          return (
-            <span className="ez-canvas ez-canvas--light ez-builder__tile-canvas">
-              {drawing === null ? (
-                <span className="ez-builder__tile-placeholder" aria-hidden="true" />
-              ) : (
-                <Einsatzzeichen drawing={drawing} size={44} idPrefix={`ez-fs-kind-${id}`} />
-              )}
-            </span>
-          );
-        }}
-      />
-      {FREESTANDING_FIELDS[spec.kind].map((definition) => {
-        const labels: FieldLabels = {
-          field: `fs-${definition.field}`,
-          label: definition.label,
-          noun: definition.noun,
-          ...(definition.hint === undefined ? {} : { hint: definition.hint }),
-        };
-        const value = current[definition.field];
-        return definition.shape === 'list' ? (
-          <ListField
-            key={definition.field}
-            options={definition.options}
-            definition={labels}
-            values={Array.isArray(value) ? (value as string[]) : []}
-            probe={probes.get(definition.field)}
-            probeDerived={probeDerived}
-            issues={issuesAt(definition.field)}
-            kindLabel={kindLabel}
-            keepLast
-            onChange={(values) => onChange(reduceFreestanding(spec, definition.field, values))}
-          />
-        ) : (
-          <SelectField
-            key={definition.field}
-            options={definition.options}
-            definition={labels}
-            value={typeof value === 'string' ? value : ''}
-            probe={probes.get(definition.field)}
-            probeDerived={probeDerived}
-            issues={issuesAt(definition.field)}
-            kindLabel={kindLabel}
-            unsetLabel={definition.unsetLabel ?? null}
-            onChange={(next) => onChange(reduceFreestanding(spec, definition.field, next))}
-          />
-        );
-      })}
-    </fieldset>
+      <StatusPair technical={symbol.review.technical} domain={symbol.review.domain} />
+      {symbol.kind === 'catalog-entry' ? (
+        <p>An der Vorlage vermessen; maßgeblich ist die Zeichnung auf der Seite des Zeichens.</p>
+      ) : symbol.kind === 'typical' ? (
+        <p>
+          Typisches Einsatzmittel ohne Original, gebaut nach{' '}
+          {(symbol.typical?.patterns ?? []).map((pattern) => `„${pattern.title}“ (${pattern.section})`).join(', ')}.
+        </p>
+      ) : symbol.kind === 'derived-place' ? (
+        <p>Ort ohne eigenes Original, abgeleitet aus {symbol.derivedFrom?.title ?? 'der Leitstelle'}.</p>
+      ) : null}
+      <p>
+        <a href={`/zeichen/${symbol.slug}/`}>Seite des Zeichens</a>
+      </p>
+    </div>
   );
 }
 
-/* --- Die Insel ---------------------------------------------------------------------------- */
+/* --- Die Insel --------------------------------------------------------------------------- */
 
-/**
- * Der Baukasten mit vorliegendem Snapshot. Als eigene Komponente unterhalb des Ladezustands, damit
- * kein Hook hier mit einem „vielleicht noch nicht da"-Fall rechnen muss: sie mountet erst, wenn
- * der Abruf durch ist, und der Snapshot wechselt danach nicht mehr.
- */
-function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
-  const [mode, setMode] = useState<BuilderMode>('symbol');
-  const [spec, setSpec] = useState<SymbolSpec>(DEFAULT_SPEC);
-  const [freestanding, setFreestanding] = useState<FreestandingSpec>(DEFAULT_FREESTANDING);
-  const [loadedId, setLoadedId] = useState<string>('');
-  const [urlError, setUrlError] = useState<LinkError | null>(null);
+function BuilderForm({ symbols }: BuilderData) {
+  const [sign, setSignState] = useState<Sign>(DEFAULT_SIGN);
+  const [loadedId, setLoadedId] = useState('');
+  const [urlError, setUrlError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
-  const [catalogQuery, setCatalogQuery] = useState('');
-  const lastWorkingSpec = useRef<SymbolSpec>(DEFAULT_SPEC);
-  const lastWorkingFreestanding = useRef<FreestandingSpec>(DEFAULT_FREESTANDING);
-  /**
-   * Die Spec, die gerade gezeichnet, verlinkt und als Code gezeigt wird. Beide Modi behalten ihre
-   * eigene Spec: wer zwischen ihnen wechselt, findet seine Auswahl wieder vor.
-   */
-  const activeSpec: AnySpec = mode === 'symbol' ? spec : freestanding;
-  const freestandingTiles = useMemo(() => freestandingKindPreviews(), []);
+  const [query, setQuery] = useState('');
+  const lastWorking = useRef<Sign>(DEFAULT_SIGN);
 
-  // Erst nach der Hydration die URL lesen: SSR und erster Client-Render zeigen dieselbe
-  // Startspec, sonst weicht das Markup ab, sobald die URL einen `spec`-Parameter trägt. Ein Link
-  // auf ein freistehendes Zeichen öffnet den Baukasten in diesem Modus (ESZ-135).
+  /** Jede Änderung aus dem Formular löst den Bezug zum geladenen Katalogzeichen. */
+  function setSign(next: Sign) {
+    setSignState(next);
+    setLoadedId('');
+    setUrlError(null);
+  }
+
+  // Erst nach der Hydration die URL lesen: SSR und erster Client-Render zeigen dasselbe Zeichen.
   useEffect(() => {
     setHydrated(true);
     const param = new URLSearchParams(window.location.search).get(SPEC_PARAM);
     if (param === null || param === '') return;
     try {
-      const decoded = decodeAnySpec(param);
-      if (isFreestandingSpec(decoded)) {
-        setFreestanding(decoded);
-        setMode('freestanding');
-      } else {
-        setSpec(decoded);
-      }
+      setSignState(decodeSign(param));
     } catch (error) {
       setUrlError(linkErrorOf(error));
     }
   }, []);
 
-  // Entprellt, weil jeder Tastenanschlag im Beschriftungsfeld die Spec ändert: Safari wirft
-  // einen `SecurityError`, wenn `replaceState` öfter als rund hundertmal in dreißig Sekunden
-  // läuft. Der Timer wird bei jeder Änderung und beim Abbau gelöscht, damit kein Schreibvorgang
-  // nach dem Ende der Insel landet.
   useEffect(() => {
     if (!hydrated) return undefined;
     const timer = window.setTimeout(() => {
       try {
         const params = new URLSearchParams(window.location.search);
-        params.set(SPEC_PARAM, encodeAnySpec(activeSpec));
-        window.history.replaceState(
-          null,
-          '',
-          `${window.location.pathname}?${params.toString()}${window.location.hash}`,
-        );
+        params.set(SPEC_PARAM, encodeSign(sign));
+        window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}${window.location.hash}`);
       } catch {
-        // Hier wird bewusst geschluckt, und nur hier: eine URL, die nicht mitgeschrieben wurde,
-        // ist kein Fehler des Baukastens — das Formular, die Vorschau und die Codebeispiele
-        // stimmen weiter. Wer das später in einen Fehlerblock verwandelt, meldet dem Leser ein
-        // Problem, das er weder verursacht hat noch lösen kann.
+        // Bewusst geschluckt, und nur hier: eine nicht mitgeschriebene Adresszeile ist kein Fehler
+        // des Zeichens; Vorschau, Formular und Code stimmen weiter.
       }
     }, URL_WRITE_DELAY_MS);
     return () => window.clearTimeout(timer);
-  }, [activeSpec, hydrated]);
+  }, [sign, hydrated]);
 
-  const outcome = useMemo(() => outcomeOf(activeSpec), [activeSpec]);
-
-  /**
-   * Welches Formularfeld eine Regelmeldung angeht — damit ein Befund am gesetzten Wert sichtbar
-   * ist und nicht nur unten in der Regelliste steht.
-   *
-   * `outcome.unexplained` bleibt draußen: eine unerklärte Meldung trägt kein Feld, und einen Anker
-   * für sie zu erfinden hieße, aus ihrer Kennung zu raten. Sie steht weiter in ihrem eigenen
-   * Block. Die Grenzen der Zuordnung stehen bei `issuesByField()`.
-   */
-  const fieldIssues = useMemo(
-    () =>
-      outcome.state === 'invalid' && mode === 'symbol'
-        ? issuesByField(outcome.issues, spec)
-        : new Map<keyof SymbolSpec, ExplainedIssue[]>(),
-    [outcome, spec, mode],
-  );
-
-  /**
-   * Was gerade zusammenpasst, für jedes Feld auf einmal — die Schleife selbst steht als
-   * `probeFields()` in `lib/builder-vocabulary.ts`, wo sie ohne React geprüft ist.
-   *
-   * Die Vorgabe war, erst beim Öffnen eines Auswahlfeldes zu proben. Die Messung nimmt dem
-   * Sparen den Anlass: alle elf Felder mit zusammen 247 Kandidaten brauchen 9,7 ms kalt und
-   * 3,4 ms warm (über `core` gerechnet seit LFH-578: 248 Kandidaten in rund 2 ms, gemessen am
-   * 29.09.2026; mit Verband, Zustand und Tendenz seit LFH-577 14 Felder und 315 Kandidaten,
-   * 7,9 ms kalt und rund 2,5 ms warm, am selben Tag unter Node 26 und tsx nachgemessen) — das
-   * Zwanzigfache unter der Schwelle, ab der gespart werden sollte. Dafür
-   * verschwindet ein Fehler, den das Sparen einbaute: ein Auswahlfeld öffnet sich beim Klick,
-   * bevor React die Sperren nachgezogen hat, und zeigte beim ersten Öffnen die alte Liste.
-   *
-   * **Warum `useDeferredValue` und nicht ein engerer Memo-Schlüssel** (LFH-504). `designation` ist
-   * das einzige freie Textfeld und schreibt bei jedem Tastenanschlag in die Spec; die Probe rechnet
-   * damit bei jedem Tastenanschlag neu. Sie an einem Ausschnitt der Spec zu memoisieren wäre eine
-   * Lüge über die Daten: gemessen am 01.09.2026 (Node 22, Vitest, `probeFields()` über
-   * `buildSnapshot().builder`) ändern 157 der 247 Kandidaten ihren Befund, wenn die Beschriftung
-   * von `LZ` auf `Sehr lange Beschriftung ohne Ende` wächst — die Probe liest `designation`
-   * wirklich, und ein Schlüssel ohne sie zeigte veraltete Sperren.
-   *
-   * Verzögert wird deshalb die Dringlichkeit, nicht der Schlüssel. Die Probe ist die einzige teure
-   * Ableitung und zugleich die einzige, die niemand sofort braucht — sie sperrt Werte, die gerade
-   * *nicht* gewählt werden. Dieselbe Messung: je Tastenanschlag 6,72 ms im Mittel (4,62–8,59) für
-   * die Probe gegen 0,01 ms für `outcome`, Codebeispiele und JSON zusammen. Über
-   * `useDeferredValue` läuft die Probe in einem nachrangigen Render; tippt jemand weiter, verwirft
-   * React den angefangenen Durchlauf und rechnet nur den letzten Stand.
-   *
-   * **Was ausdrücklich nicht verzögert wird:** `outcome`, Vorschau, Regelliste und die Hinweise am
-   * Feld hängen weiter unmittelbar an `spec`. Die Auswahl und ihr Ergebnis laufen also nicht
-   * hinterher — verzögert ist allein die Auskunft über die *anderen*, gerade nicht gewählten Werte.
-   *
-   * **Der Preis, damit ihn niemand später als Fehler meldet:** für die Dauer eines Renders gehören
-   * die Sperren zur vorigen Spec. `TileGroup` weist einen Klick auf eine für gesperrt gehaltene
-   * Kachel ab; eine veraltete Sperre könnte diesen Klick einmal zu Unrecht abweisen. Sie ändert
-   * dabei nichts und schreibt nur die Hinweiszeile — der zweite Klick geht durch. Das ist der
-   * bewusste Tausch gegen den Fehler zwei Absätze weiter oben, und deutlich kleiner als er.
-   *
-   * **Veraltet ist erlaubt, gemischt nicht.** Zwei Stellen halten das auseinander, und beide
-   * gehören zu diesem Preis: `kindLabel` unten kommt aus `probeSpec`, damit Sperre und Begründung
-   * dieselbe Spec meinen (sonst entstünde ein Satz, den keine der beiden Specs hergibt), und
-   * `displayedBlock()` stellt den nach der **aktuellen** Spec gesetzten Wert nie als gesperrt dar
-   * (sonst trüge er `disabled` beziehungsweise `aria-pressed="true"` neben `aria-disabled="true"`).
-   *
-   * **Verworfen:** das Beschriftungsfeld entprellen oder auf lokalem State führen und erst beim
-   * Verlassen in die Spec schreiben. Das verzögerte Vorschau **und** Regelliste — also genau das,
-   * wofür der Baukasten da ist.
-   */
-  const probeSpec = useDeferredValue(spec);
-  const probes = useMemo(
-    () => probeFields(vocabulary, probeSpec, PROBED_FIELD_NAMES),
-    [vocabulary, probeSpec],
-  );
-  /**
-   * Ob die Spec der Probe selbst schon abgeleitet ist — aus `probeSpec` und nicht aus `outcome`,
-   * aus demselben Grund wie `kindLabel` unten: Kennzeichnung und Probe müssen dieselbe Spec meinen.
-   */
-  const probeDerived = useMemo(() => drawsDerived(probeSpec), [probeSpec]);
-
+  const outcome = useMemo(() => outcomeOf(sign), [sign]);
   useEffect(() => {
-    if (outcome.state === 'crash') return;
-    if (mode === 'symbol') lastWorkingSpec.current = spec;
-    else lastWorkingFreestanding.current = freestanding;
-  }, [outcome, spec, freestanding, mode]);
+    if (outcome.state === 'ok') lastWorking.current = sign;
+  }, [outcome, sign]);
 
   /**
-   * Das geladene Katalogzeichen, solange der Modus zu seiner Spec passt. Seit ESZ-146 führt der
-   * Katalog auch freistehende Zeichen; wer nach dem Laden den Modus wechselt, sieht die Spec des
-   * anderen Modus, und dazu gehört kein Hinweis auf das geladene Zeichen.
+   * Die Probe (`choices()` über sieben Felder) ist die einzige teure Ableitung und die einzige,
+   * die niemand sofort braucht. Sie läuft deshalb aufgeschoben: Vorschau und Status folgen jedem
+   * Tastenanschlag sofort, der Befund der übrigen Werte einen Render später.
    */
-  const loadedSymbol = useMemo(() => {
-    const symbol = symbols.find((candidate) => candidate.id === loadedId);
-    if (symbol === undefined) return undefined;
-    return isFreestandingSpec(symbol.spec) === (mode === 'freestanding') ? symbol : undefined;
-  }, [symbols, loadedId, mode]);
+  const deferred = useDeferredValue(sign);
+  const probeTarget: BodySign | undefined = isBodySign(deferred) ? deferred : isBodySign(sign) ? sign : undefined;
+  const probe = useMemo(() => (probeTarget === undefined ? undefined : probeSign(probeTarget)), [probeTarget]);
+
+  const loadedSymbol = useMemo(() => symbols.find((candidate) => candidate.id === loadedId), [symbols, loadedId]);
   const samples = useMemo(
-    () => codeSamplesFor(activeSpec, loadedSymbol === undefined ? 'builder-spec' : loadedSymbol.id),
-    [activeSpec, loadedSymbol],
+    () => (loadedSymbol === undefined ? signCodeSamplesFor(sign, 'builder') : signCodeSamplesFor(sign, loadedSymbol.id)),
+    [sign, loadedSymbol],
   );
-  const json = useMemo(() => JSON.stringify(activeSpec, null, 2), [activeSpec]);
-  /**
-   * Die Grundzeichenart für den Sperrsatz — aus `probeSpec` und **nicht** aus `spec`.
-   *
-   * `kindLabel` fließt ausschließlich in `blockedTooltip()`, also in den Satz, der eine Sperre
-   * begründet; die Sperren selbst stammen aus `probes` und damit aus `probeSpec`. Aus `spec`
-   * gelesen mischte der Satz im aufgeschobenen Render beide Specs: mit der Verwaltungsstufe
-   * „Kreis" trüge nach dem Wechsel „Fläche" → „Taktische Formation" die Fähigkeit „Verpflegung /
-   * Zubereitung" gesperrt den Satz „… ist als Fähigkeit für die Grundzeichenart „Taktische
-   * Formation" nicht vermessen" — gesperrt ist sie unter „Fläche", unter „Taktische Formation"
-   * lässt sie sich zeichnen. Die Paarung kommt in keiner der beiden Specs vor: der Satz wäre nicht
-   * veraltet, sondern erfunden. (Bis zum 2. Oktober 2026 waren über alle Achsen 890 solcher
-   * (Feld, Wert, Artwechsel)-Paare möglich; seit der Motor Lücken ableitet, sind es weit weniger.
-   * Der Fall bleibt derselbe, und der Test dazu steht in `Builder.test.ts`.)
-   *
-   * Aus `probeSpec` gehören Sperre und Begründung zusammen zur selben Spec — dann ist der Satz für
-   * die Dauer eines Renders veraltet, und das ist der Preis, der beim `useDeferredValue` unten
-   * ohnehin schon steht.
-   */
-  const kindLabel = labelFor(vocabulary, 'kind', probeSpec.kind);
-
-  const catalogMatches = useMemo(
-    () => searchCatalog(symbols, catalogQuery, CATALOG_MATCH_LIMIT),
-    [symbols, catalogQuery],
-  );
-
-  function setField(field: keyof SymbolSpec, value: unknown) {
-    setSpec((current) => reduceSpec(current, { field, value }));
-    setLoadedId('');
-  }
-
-  function setLabel(zone: LabelZone, value: string) {
-    setSpec((current) => reduceLabel(current, zone, value));
-    setLoadedId('');
-  }
-
-  function setCenterLabelSize(size: CenterLabelSize) {
-    setSpec((current) => reduceCenterLabelSize(current, size));
-    setLoadedId('');
-  }
 
   function loadFromCatalog(id: string) {
-    // Die leere Auswahl löst nur den Bezug zum Katalogeintrag; die Spec bleibt stehen, damit
-    // niemand seine Arbeit verliert, weil er die Auswahl zurückstellt.
-    if (id === '') {
-      setLoadedId('');
-      return;
-    }
     const symbol = symbols.find((candidate) => candidate.id === id);
     if (symbol === undefined) return;
-    if (isFreestandingSpec(symbol.spec)) {
-      setFreestanding(symbol.spec);
-      setMode('freestanding');
-    } else {
-      setSpec(symbol.spec);
-      setMode('symbol');
-    }
+    setSignState(fromExact(symbol.spec));
     setLoadedId(id);
     setUrlError(null);
-    setCatalogQuery('');
+    setQuery('');
   }
 
-  function loadRandomExample() {
-    const symbol = symbols[Math.floor(Math.random() * symbols.length)];
-    if (symbol !== undefined) loadFromCatalog(symbol.id);
-  }
-
-  const listValues = (field: keyof SymbolSpec): readonly string[] => {
-    const value = spec[field];
-    return Array.isArray(value) ? (value as readonly string[]) : [];
-  };
+  const drawn = outcome.state === 'ok' ? outcome.drawn : null;
 
   return (
     <div className="ez-builder">
       {urlError === null ? null : (
         <div className="ez-note" role="alert">
-          <p className="ez-note__title">Der Link trug keine lesbare Zusammenstellung</p>
-          <p>
-            Er ist unvollständig, beim Kopieren beschädigt worden oder enthält eine Angabe, die
-            dieser Baukasten nicht kennt. Der Baukasten steht deshalb auf seiner Ausgangsauswahl.
-          </p>
+          <p className="ez-note__title">Der Link trug kein lesbares Zeichen</p>
           <details className="ez-builder__details">
             <summary>Technische Einzelheiten</summary>
             <pre className="ez-builder__pre">
-              <code>{urlError.detail}</code>
+              <code>{urlError}</code>
             </pre>
           </details>
         </div>
@@ -1679,112 +1366,15 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
 
       <div className="ez-builder__layout">
         {/*
-          Das Ergebnis steht im Markup vor dem Formular und rückt auf breiten Schirmen per Grid
-          in die rechte Spalte: auf schmalen Schirmen ist so jede Änderung ohne Scrollen sichtbar,
-          und die Lesereihenfolge für Screenreader bleibt „erst das Ergebnis, dann die Regler" —
-          dieselbe Reihenfolge, in der die Seite sie zeigt.
+          Das Ergebnis steht im Markup vor dem Formular und rückt auf breiten Schirmen per Grid nach
+          rechts: auf schmalen Schirmen ist jede Änderung ohne Scrollen sichtbar.
         */}
         <aside className="ez-builder__result">
-          <PreviewPanel
-            outcome={outcome}
-            spec={activeSpec}
-            fileBase={loadedSymbol?.slug ?? 'einsatzzeichen'}
-          />
-
-          {outcome.state === 'ok' ? <DerivationNote drawing={outcome.drawing} /> : null}
-
-          {loadedSymbol === undefined ? null : (
-            <div className="ez-note" role="note">
-              <p className="ez-note__title">
-                Geladen: {loadedSymbol.title} <span className="ez-id">{loadedSymbol.id}</span>
-              </p>
-              <StatusPair
-                technical={loadedSymbol.review.technical}
-                domain={loadedSymbol.review.domain}
-              />
-              {loadedSymbol.kind === 'catalog-entry' ? (
-                <p>
-                  Dieses Zeichen ist an der Vorlage vermessen. Die Auswahl hier ist der Nachbau
-                  dazu, und die Vorschau zeigt, was der Baukasten daraus zusammensetzt — das
-                  kann von der gemessenen Zeichnung leicht abweichen. Maßgeblich ist die
-                  Zeichnung auf der Seite des Zeichens.
-                </p>
-              ) : loadedSymbol.kind === 'freestanding' ? (
-                <p>
-                  Dieses Zeichen steht ohne Grundzeichen auf der Karte. Die Vorschau entsteht aus
-                  derselben Auswahl wie auf der Seite des Zeichens und ist dasselbe Bild.
-                </p>
-              ) : loadedSymbol.kind === 'derived-place' ? (
-                <p>
-                  Diesen Ort gibt es in der Vorlage nicht als eigenes Zeichen. Er übernimmt
-                  Körper, Giebel, Kappe und Schriftlauf der{' '}
-                  {loadedSymbol.derivedFrom?.title ?? 'Leitstelle'}; die Vorschau ist dasselbe
-                  Bild wie auf der Seite des Orts. Ein Original für das Ganze gibt es nicht.
-                </p>
-              ) : loadedSymbol.kind === 'typical' ? (
-                <p>
-                  Dieses Einsatzmittel führt die Vorlage nicht als Beispiel. Die Auswahl ist eine
-                  Vorbelegung aus den Bausteinen der Systematik, gebaut nach der Bauart von{' '}
-                  {(loadedSymbol.typical?.patterns ?? [])
-                    .map((pattern) => `„${pattern.title}“ (${pattern.section})`)
-                    .join(', ')}
-                  ; die Vorschau ist dasselbe Bild wie auf der Seite des Zeichens. Ein Original,
-                  gegen das man es prüfen könnte, gibt es nicht.
-                </p>
-              ) : (
-                <p>
-                  Für dieses Zeichen führt der Katalog selbst eine Bauanleitung. Die Vorschau
-                  entsteht aus genau dieser Anleitung — sie ist damit dasselbe Bild, keine
-                  Annäherung.
-                </p>
-              )}
-            </div>
-          )}
-
-          {outcome.state === 'invalid' ? (
-            <section className="ez-builder__issues" aria-label="Verletzte Regeln">
-              <h2 className="ez-builder__issues-title">
-                {outcome.issues.length + outcome.unexplained.length === 1
-                  ? 'Eine Regel steht dieser Kombination entgegen'
-                  : `${outcome.issues.length + outcome.unexplained.length} Regeln stehen dieser Kombination entgegen`}
-              </h2>
-              <ul className="ez-builder__issue-list">
-                {outcome.issues.map((issue, index) => (
-                  <li key={`${issue.rule}-${index}`} className="ez-card ez-builder__issue">
-                    <p className="ez-card__title">{issue.title}</p>
-                    <p className="ez-card__text">{issue.explanation}</p>
-                    <p className="ez-builder__issue-message">{issue.message}</p>
-                    <p className="ez-id">{issue.rule}</p>
-                  </li>
-                ))}
-              </ul>
-              {outcome.unexplained.length === 0 ? null : (
-                <div className="ez-note" role="alert">
-                  <p className="ez-note__title">Für diese Regel gibt es noch keine Erklärung</p>
-                  <p>
-                    Die Regel hat die Kombination abgelehnt, ihr Klartext fehlt aber noch. Statt
-                    einen zu erfinden, steht hier die Meldung so, wie sie entstanden ist:
-                  </p>
-                  <ul>
-                    {outcome.unexplained.map((issue, index) => (
-                      <li key={`${issue.rule}-${index}`}>
-                        <span className="ez-id">{issue.rule}</span> — {issue.message}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </section>
-          ) : null}
-
+          <PreviewPanel outcome={outcome} sign={sign} fileBase={loadedSymbol?.slug ?? 'einsatzzeichen'} />
+          {drawn === null ? null : <StatusNote drawn={drawn} />}
           {outcome.state === 'crash' ? (
             <div className="ez-note" role="alert">
-              <p className="ez-note__title">Diese Zusammenstellung ließ sich nicht zeichnen</p>
-              <p>
-                Für diese Zusammenstellung führt der Katalog keine vermessene Fassung. Das ist
-                keine abgelehnte Kombination, sondern ein Abbruch mitten im Zeichnen. Im Wortlaut
-                des Programms heißt das:
-              </p>
+              <p className="ez-note__title">Dieses Zeichen ließ sich nicht zeichnen</p>
               <p className="ez-builder__issue-message">{outcome.error.message}</p>
               <details className="ez-builder__details">
                 <summary>Technische Einzelheiten</summary>
@@ -1795,1034 +1385,56 @@ function BuilderForm({ vocabulary, symbols, kindTiles }: BuilderData) {
                   </code>
                 </pre>
               </details>
-              <button
-                type="button"
-                className="ez-action"
-                onClick={() => {
-                  if (mode === 'symbol') setSpec(lastWorkingSpec.current);
-                  else setFreestanding(lastWorkingFreestanding.current);
-                }}
-              >
+              <button type="button" className="ez-action" onClick={() => setSignState(lastWorking.current)}>
                 <strong>Letzte Änderung zurücknehmen</strong>
               </button>
             </div>
           ) : null}
-
-          <div className="ez-note" role="note">
-            <p className="ez-note__title">Nicht fachlich geprüft</p>
-            <p>
-              Eine Vorschau heißt nur: keine Regel verletzt. Fachlich geprüft sind allein die
-              Zeichen im Katalog — deren Stand steht auf jeder Symbolseite.
-            </p>
-          </div>
+          {loadedSymbol === undefined ? null : <LoadedNote symbol={loadedSymbol} />}
+          <section className="ez-builder__panel" aria-label="Code">
+            <span className="ez-builder__field-label">Code</span>
+            <CodeTabs samples={samples} />
+          </section>
         </aside>
 
         <div className="ez-builder__form">
-          <fieldset className="ez-builder__group">
-            <legend>Aus dem Katalog laden</legend>
-            <p className="ez-builder__group-hint">
-              Mit einem vorhandenen Zeichen starten und es abwandeln — oder leer beginnen.
-            </p>
-            <label className="ez-builder__field ez-builder__field--wide" htmlFor="ez-builder-search">
-              <span className="ez-builder__field-label">Suche nach Name oder Kennung</span>
-              <input
-                id="ez-builder-search"
-                type="search"
-                placeholder="z. B. Löschzug oder E.1.1"
-                value={catalogQuery}
-                onChange={(event) => setCatalogQuery(event.target.value)}
-              />
-            </label>
-            {catalogQuery.trim() === '' ? null : (
-              <>
-                <ul className="ez-builder__matches">
-                  {catalogMatches.matches.map((symbol) => (
-                    <li key={symbol.id}>
-                      <button
-                        type="button"
-                        className="ez-builder__match"
-                        onClick={() => loadFromCatalog(symbol.id)}
-                      >
-                        <span className="ez-builder__match-title">{symbol.title}</span>
-                        <span className="ez-id">{symbol.id}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                <p className="ez-builder__field-hint" role="status">
-                  {matchesLine(catalogMatches.total, catalogMatches.matches.length)}
-                </p>
-              </>
-            )}
-            <div className="ez-builder__group-actions">
-              <button type="button" className="ez-action" onClick={loadRandomExample}>
-                <strong>Beispiel laden</strong>
-                <span>zufälliges Zeichen aus dem Katalog</span>
-              </button>
-              <button
-                type="button"
-                className="ez-action"
-                onClick={() => {
-                  setSpec(DEFAULT_SPEC);
-                  setFreestanding(DEFAULT_FREESTANDING);
-                  setLoadedId('');
-                  setUrlError(null);
-                  setCatalogQuery('');
-                }}
-              >
-                <strong>Zurücksetzen</strong>
-                <span>zur leeren Ausgangsauswahl</span>
-              </button>
-            </div>
-          </fieldset>
-
-          <fieldset className="ez-builder__group">
-            <legend>Art des Zeichens</legend>
-            <div className="ez-builder__toggle" role="group" aria-label="Art des Zeichens">
-              {(
-                [
-                  ['symbol', 'Mit Grundzeichen'],
-                  ['freestanding', 'Freistehend'],
-                ] as const
-              ).map(([id, label]) => (
-                <button
-                  key={id}
-                  type="button"
-                  id={`ez-builder-mode-${id}`}
-                  className={
-                    mode === id
-                      ? 'ez-builder__toggle-button ez-builder__toggle-button--active'
-                      : 'ez-builder__toggle-button'
-                  }
-                  aria-pressed={mode === id}
-                  onClick={() => setMode(id)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-
-          {mode === 'freestanding' ? (
-            <FreestandingFields
-              spec={freestanding}
-              issues={outcome.state === 'invalid' ? outcome.issues : []}
-              kindTiles={freestandingTiles}
-              onChange={(next) => {
-                setFreestanding(next);
-                setLoadedId('');
-                setUrlError(null);
-              }}
+          <SearchSection
+            symbols={symbols}
+            query={query}
+            onQuery={setQuery}
+            onLoad={loadFromCatalog}
+            onRandom={() => {
+              const symbol = symbols[Math.floor(Math.random() * symbols.length)];
+              if (symbol !== undefined) loadFromCatalog(symbol.id);
+            }}
+            onReset={() => {
+              setSign(DEFAULT_SIGN);
+              setQuery('');
+            }}
+          />
+          <FamilySection sign={sign} onKind={(kind) => setSign(changeKind(sign, kind))} />
+          {isBodySign(sign) ? (
+            <BodySections
+              sign={sign}
+              probeTarget={probeTarget ?? sign}
+              probe={probe}
+              omitted={drawn?.omitted ?? []}
+              onChange={setSign}
             />
           ) : (
-          <>
-          <fieldset className="ez-builder__group">
-            <legend>Grundform</legend>
-            <p className="ez-builder__group-hint">
-              Womit jedes Zeichen anfängt: die Art des Grundzeichens, seine Bauform und die
-              Organisation, deren Farbe den Körper füllt.
-            </p>
-            <TileGroup
-              options={optionsFor(vocabulary, KIND_FIELD.field)}
-              definition={KIND_FIELD}
-              value={spec.kind}
-              probe={probes.get('kind')}
-              probeDerived={probeDerived}
-              issues={fieldIssues.get('kind')}
-              kindLabel={kindLabel}
-              onChange={(value) => setField('kind', value)}
-              variant="tile"
-              renderIcon={(id) => {
-                const drawing = kindTiles.get(id) ?? null;
-                return drawing === null ? (
-                  <span className="ez-canvas ez-canvas--light ez-builder__tile-canvas">
-                    <span className="ez-builder__tile-placeholder" aria-hidden="true" />
-                  </span>
-                ) : (
-                  <span className="ez-canvas ez-canvas--light ez-builder__tile-canvas">
-                    <Einsatzzeichen drawing={drawing} size={44} idPrefix={`ez-kind-${id}`} />
-                  </span>
-                );
-              }}
-            />
-            {BODY_SELECT_FIELDS.map((definition) => (
-              <SelectField
-                options={optionsFor(vocabulary, definition.field)}
-                key={definition.field}
-                definition={definition}
-                value={(spec[definition.field] as string | undefined) ?? ''}
-                probe={probes.get(definition.field)}
-                probeDerived={probeDerived}
-                issues={fieldIssues.get(definition.field)}
-                kindLabel={kindLabel}
-                onChange={(value) => setField(definition.field, value)}
-              />
-            ))}
-            <TileGroup
-              options={optionsFor(vocabulary, ORGANIZATION_FIELD.field)}
-              definition={ORGANIZATION_FIELD}
-              value={spec.organization ?? ''}
-              probe={probes.get('organization')}
-              probeDerived={probeDerived}
-              issues={fieldIssues.get('organization')}
-              kindLabel={kindLabel}
-              onChange={(value) => setField('organization', value)}
-              variant="chip"
-              unsetLabel="ohne Organisation"
-              renderIcon={(id) => {
-                const color = id === '' ? undefined : organizationSwatch(id);
-                return (
-                  <span
-                    className={
-                      color === undefined
-                        ? 'ez-builder__swatch ez-builder__swatch--none'
-                        : 'ez-builder__swatch'
-                    }
-                    style={color === undefined ? undefined : { background: color }}
-                    aria-hidden="true"
-                  />
-                );
-              }}
-            />
-          </fieldset>
-
-          <fieldset className="ez-builder__group">
-            <legend>Was die Einheit kann</legend>
-            <p className="ez-builder__group-hint">
-              Piktogramme und Füllungen, die Aufgaben und Ausstattung am Zeichen zeigen.
-            </p>
-            {LIST_FIELDS.map((definition) => (
-              <ListField
-                options={optionsFor(vocabulary, definition.field)}
-                key={definition.field}
-                definition={definition}
-                values={listValues(definition.field)}
-                probe={probes.get(definition.field)}
-                probeDerived={probeDerived}
-                issues={fieldIssues.get(definition.field)}
-                kindLabel={kindLabel}
-                onChange={(values) => setField(definition.field, values)}
-              />
-            ))}
-            {CAPABILITY_SELECT_FIELDS.map((definition) => (
-              <SelectField
-                options={optionsFor(vocabulary, definition.field)}
-                key={definition.field}
-                definition={definition}
-                value={(spec[definition.field] as string | undefined) ?? ''}
-                probe={probes.get(definition.field)}
-                probeDerived={probeDerived}
-                issues={fieldIssues.get(definition.field)}
-                kindLabel={kindLabel}
-                onChange={(value) => setField(definition.field, value)}
-              />
-            ))}
-          </fieldset>
-
-          <fieldset className="ez-builder__group">
-            <legend>Führung und Größe</legend>
-            <p className="ez-builder__group-hint">
-              Kopf- und Randzeichen: wer führt, auf welcher Verwaltungsstufe, in welcher Stärke.
-            </p>
-            <div className="ez-builder__group-grid">
-              {COMMAND_SELECT_FIELDS.map((definition) => (
-                <SelectField
-                  options={optionsFor(vocabulary, definition.field)}
-                  key={definition.field}
-                  definition={definition}
-                  value={(spec[definition.field] as string | undefined) ?? ''}
-                  probe={probes.get(definition.field)}
-                  probeDerived={probeDerived}
-                  issues={fieldIssues.get(definition.field)}
-                  kindLabel={kindLabel}
-                  onChange={(value) => setField(definition.field, value)}
-                />
-              ))}
-            </div>
-          </fieldset>
-
-          <fieldset className="ez-builder__group">
-            <legend>Zustand und Tendenz</legend>
-            <p className="ez-builder__group-hint">
-              Wie es um eine Person oder die Lage steht — etwa „verletzt" oder der Hinweis „?"
-              für eine Vermutung und „!" für eine akute Lage.
-            </p>
-            <ListField
-              options={optionsFor(vocabulary, STATE_LIST_FIELD.field)}
-              definition={STATE_LIST_FIELD}
-              values={listValues('states')}
-              probe={probes.get('states')}
-              probeDerived={probeDerived}
-              issues={fieldIssues.get('states')}
-              kindLabel={kindLabel}
-              onChange={(values) => setField('states', values)}
-            />
-            <SelectField
-              options={optionsFor(vocabulary, TENDENCY_FIELD.field)}
-              definition={TENDENCY_FIELD}
-              value={spec.tendency ?? ''}
-              probe={probes.get('tendency')}
-              probeDerived={probeDerived}
-              issues={fieldIssues.get('tendency')}
-              kindLabel={kindLabel}
-              onChange={(value) => setField('tendency', value)}
-            />
-          </fieldset>
-
-          <fieldset className="ez-builder__group">
-            <legend>Beschriftung</legend>
-            <p className="ez-builder__group-hint">
-              Text im Zeichen, etwa „ILS“ in der Mitte und das Kreiskürzel unten rechts, dazu ein
-              Kürzel unterhalb des Zeichens. Ist ein Text zu lang für seinen Platz, sagt es die
-              Vorschau.
-            </p>
-            <div className="ez-builder__group-grid">
-              {LABEL_ZONE_FIELDS.map(({ zone, label, placeholder }) => (
-                <Fragment key={zone}>
-                  <div className="ez-builder__field">
-                    <label className="ez-builder__field-label" htmlFor={`ez-builder-label-${zone}`}>
-                      {label}
-                    </label>
-                    <input
-                      id={`ez-builder-label-${zone}`}
-                      type="text"
-                      placeholder={placeholder}
-                      value={labelText(spec, zone)}
-                      aria-describedby={fieldIssues.has('labels') ? 'ez-builder-labels-issue' : undefined}
-                      onChange={(event) => setLabel(zone, event.target.value)}
-                    />
-                  </div>
-                  {/*
-                    Die Größe steht gleich hinter dem Feld „Mitte“, weil sie nur für diesen Lauf
-                    gilt (LFH-992). Ohne mittigen Text ist sie gesperrt: eine Höhe ohne Lauf lehnt
-                    die Regel `center-cap-height-requires-center-label` ab.
-                  */}
-                  {zone === 'center' ? (
-                    <div className="ez-builder__field">
-                      <label className="ez-builder__field-label" htmlFor="ez-builder-label-centerSize">
-                        Größe in der Mitte
-                      </label>
-                      <select
-                        id="ez-builder-label-centerSize"
-                        value={centerLabelSize(spec)}
-                        disabled={labelText(spec, 'center') === ''}
-                        aria-describedby="ez-builder-label-centerSize-hint"
-                        onChange={(event) => {
-                          const size = CENTER_LABEL_SIZES.find(({ id }) => id === event.target.value);
-                          if (size !== undefined) setCenterLabelSize(size.id);
-                        }}
-                      >
-                        {CENTER_LABEL_SIZES.map(({ id, label: sizeLabel }) => (
-                          <option key={id} value={id}>
-                            {sizeLabel}
-                          </option>
-                        ))}
-                        {centerLabelSize(spec) === 'recipe' ? (
-                          <option value="recipe" disabled>
-                            Aus dem Rezept ({capHeightText(spec)})
-                          </option>
-                        ) : null}
-                      </select>
-                      <span className="ez-builder__field-hint" id="ez-builder-label-centerSize-hint">
-                        „Groß“ setzt kurze Kürzel so hoch wie „LtS“ an der Leitstelle.
-                      </span>
-                    </div>
-                  ) : null}
-                </Fragment>
-              ))}
-            </div>
-            <FieldIssueNote id="ez-builder-labels-issue" issues={fieldIssues.get('labels') ?? []} />
-            {/*
-              Dasselbe Muster wie in `SelectField` und `ListField`: Hülle als `<div>`, Beschriftung
-              als eigenes `<label htmlFor>`, die Notiz daneben und allein über `aria-describedby`
-              verknüpft. Läge sie im `<label>`, stünde ihr Satz im zugänglichen Namen des Feldes
-              **und** ein zweites Mal in seiner Beschreibung; die Begründung steht bei
-              `FieldIssueNote`.
-            */}
-            <div className="ez-builder__field ez-builder__field--wide">
-              <label className="ez-builder__field-label" htmlFor="ez-builder-designation">
-                Beschriftung (Fußzone)
-              </label>
-              <input
-                id="ez-builder-designation"
-                type="text"
-                placeholder="z. B. LZ 1"
-                value={spec.designation ?? ''}
-                aria-describedby={
-                  fieldIssues.has('designation') ? 'ez-builder-designation-issue' : undefined
-                }
-                onChange={(event) => setField('designation', event.target.value)}
-              />
-              <FieldIssueNote
-                id="ez-builder-designation-issue"
-                issues={fieldIssues.get('designation') ?? []}
-              />
-            </div>
-          </fieldset>
-          </>
+            <FreestandingSections spec={sign} onChange={setSign} />
           )}
+          <ExpertSection sign={sign} drawn={drawn} onChange={setSign} />
         </div>
       </div>
 
-      <details className="ez-builder__dev">
-        <summary>Für Entwicklerinnen und Entwickler</summary>
-        <div className="ez-builder__dev-body">
-          <p className="ez-builder__field-hint">
-            Ab hier stehen die Begriffe der Bibliothek. Wer das Zeichen nur bauen und mitnehmen
-            will, ist mit den Knöpfen an der Vorschau fertig.
-          </p>
-          <p>
-            Die Auswahlwerte kommen aus dem Katalog selbst, nicht aus einer zweiten Liste in der
-            Website: <code>kind</code>, <code>bodyVariant</code>, <code>organization</code>,{' '}
-            <code>technicalFill</code>, <code>strength</code>, <code>functionRole</code>,{' '}
-            <code>administrativeLevel</code>, <code>technicalHeadMark</code>,{' '}
-            <code>unitGrouping</code>, <code>vehicleCategory</code>, <code>capabilities</code>,{' '}
-            <code>bodyMarks</code>, <code>states</code> und <code>tendency</code>; die
-            Beschriftungsfelder setzen die Läufe in <code>labels</code> (<code>center</code>,{' '}
-            <code>topLeft</code>, <code>bottomRight</code> …) und <code>designation</code>. Die
-            Piktogrammregister <code>comms</code>, <code>damage</code> und <code>wildfire</code>{' '}
-            haben dort kein Formularfeld, weil <code>SymbolSpec</code> keine solche Achse führt;
-            sie stehen im Modus „Freistehend“ als <code>{"{ kind: 'pictogram' }"}</code>.
-          </p>
-          <p>
-            Der Modus „Freistehend“ baut eine <code>FreestandingSpec</code> (<code>movement</code>,{' '}
-            <code>line</code>, <code>weather</code>, <code>animal-state</code>, <code>state</code>,{' '}
-            <code>pictogram</code>) und zeichnet sie über <code>drawAnySpec()</code>. Die Werte
-            kommen aus den Registern von <code>@einsatzzeichen/schema</code>; gesperrt wird durch
-            Probieren über <code>checkAnySpec()</code>, an genau der Spec, die der Klick erzeugt.
-            Der Link ist <code>encodeAnySpecParam()</code>, für eine <code>SymbolSpec</code>{' '}
-            derselbe wie bisher. Den Verlauf von Pfeil und Linie setzt der Baukasten auf die
-            Vorlage; einen eigenen Verlauf aus einem Link behält er.
-          </p>
-          <p>
-            Gültig oder nicht weiß im Projekt nur <code>compose()</code>, nachträglich. Die
-            gesperrten Werte entstehen deshalb durch Probieren: <code>vocabulary()</code> aus{' '}
-            <code>@einsatzzeichen/core</code> zeichnet jeden Kandidaten einmal über{' '}
-            <code>drawSymbol()</code> — alle 14 Felder mit zusammen 315 Kandidaten brauchen
-            dafür rund 2,5 ms. Weil jeder Tastenanschlag im
-            Beschriftungsfeld die Spec ändert und die Probe die Beschriftung wirklich liest, läuft
-            sie nachrangig (<code>useDeferredValue</code>): wer weitertippt, bekommt die Vorschau
-            und die Regeln sofort, die Sperren einen Wimpernschlag später. Der Zusatz
-            „abgeleitet“ kommt aus demselben Durchlauf: <code>vocabulary()</code> markiert einen
-            Wert mit <code>derived: true</code>, wenn seine Zeichnung{' '}
-            <code>Drawing.derivations</code> trägt. Beim Laden eines
-            Katalogeintrags ist die Spec die Rekonstruktion der vermessenen Darstellung; bei einem
-            Kompositionsrezept ist sie selbst die Quelle des Bildes.
-          </p>
-          <section>
-            <h3 className="ez-builder__dev-title">
-              Die Zusammenstellung als JSON (
-              <code>{mode === 'symbol' ? 'SymbolSpec' : 'FreestandingSpec'}</code>)
-            </h3>
-            <pre className="ez-builder__pre">
-              <code>{json}</code>
-            </pre>
-            <CopyButton text={json} label="JSON kopieren" />
-          </section>
-          <section>
-            <h3 className="ez-builder__dev-title">Codebeispiele</h3>
-            <p className="ez-builder__field-hint">
-              Die Beispiele zeichnen mit `{mode === 'symbol' ? 'drawSymbol' : 'drawAnySpec'}` aus
-              `@einsatzzeichen/core` — auf demselben Weg wie dieser Baukasten, im Browser wie in
-              Node.
-            </p>
-            <CodeTabs samples={samples} />
-          </section>
-        </div>
-      </details>
-
-      <style>{`
-        .ez-builder__layout {
-          display: grid;
-          gap: var(--ez-space-6);
-          align-items: start;
-          margin-block: var(--ez-space-6);
-        }
-        .ez-builder__form {
-          display: grid;
-          gap: var(--ez-space-4);
-          min-width: 0;
-        }
-        .ez-builder__result {
-          display: grid;
-          gap: var(--ez-space-4);
-          min-width: 0;
-        }
-        .ez-builder__result .ez-note {
-          margin-block: 0;
-        }
-        @media (min-width: 64rem) {
-          .ez-builder__layout {
-            grid-template-columns: minmax(0, 1fr) clamp(22rem, 36vw, 30rem);
-          }
-          .ez-builder__form {
-            order: -1;
-          }
-          /*
-           * Die Ergebnis-Spalte klebt unter der Kopfzeile und scrollt bei Überlänge in sich —
-           * sonst schöbe eine lange Regelliste die Vorschau aus dem Bild, und genau die soll
-           * beim Einstellen ständig sichtbar bleiben.
-           */
-          .ez-builder__result {
-            position: sticky;
-            inset-block-start: 4.5rem;
-            max-height: calc(100vh - 5.5rem);
-            overflow-y: auto;
-            overscroll-behavior: contain;
-            padding-inline-end: var(--ez-space-1);
-          }
-        }
-
-        /* --- Formulargruppen --- */
-        .ez-builder__group {
-          margin: 0;
-          padding: var(--ez-space-4);
-          border: 1px solid var(--ez-line);
-          border-radius: var(--ez-radius);
-          background: var(--ez-surface);
-          display: grid;
-          gap: var(--ez-space-3);
-          min-width: 0;
-        }
-        .ez-builder__group > legend {
-          font-family: var(--ez-font-mono);
-          font-size: var(--sl-text-2xs);
-          letter-spacing: 0.16em;
-          text-transform: uppercase;
-          color: var(--sl-color-gray-3);
-          padding-inline: var(--ez-space-2);
-          margin-inline-start: calc(-1 * var(--ez-space-2));
-        }
-        .ez-builder__group-hint {
-          margin: 0;
-          font-size: var(--sl-text-sm);
-          color: var(--sl-color-gray-2);
-          max-width: 52ch;
-        }
-        .ez-builder__group-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
-          gap: var(--ez-space-3) var(--ez-space-4);
-        }
-        .ez-builder__group-actions {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--ez-space-3);
-        }
-        .ez-builder__field {
-          display: flex;
-          flex-direction: column;
-          gap: var(--ez-space-1);
-          min-width: 0;
-        }
-        .ez-builder__field-label {
-          font-family: var(--ez-font-mono);
-          font-size: var(--sl-text-2xs);
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          color: var(--sl-color-gray-3);
-        }
-        .ez-builder__field-hint {
-          font-size: var(--sl-text-2xs);
-          color: var(--sl-color-gray-3);
-          max-width: 34rem;
-        }
-        /*
-         * Ein Befund, kein Beiwerk: dieselbe Größe wie der Hinweis darüber, aber die kräftigere
-         * Textfarbe. Bewusst ohne Signalrot als einziges Merkmal — die Aussage trägt der Satz,
-         * und der Wert ist nicht falsch, sondern kommt in einer Regelmeldung vor.
-         */
-        .ez-builder__field-issue {
-          font-size: var(--sl-text-2xs);
-          color: var(--sl-color-white);
-          max-width: 34rem;
-          border-inline-start: 2px solid var(--sl-color-hairline);
-          padding-inline-start: var(--ez-space-2);
-        }
-        .ez-builder__field input,
-        .ez-builder__field select {
-          font: inherit;
-          font-size: var(--sl-text-sm);
-          padding: var(--ez-space-2) var(--ez-space-3);
-          border: 1px solid var(--sl-color-hairline);
-          border-radius: var(--ez-radius);
-          background: transparent;
-          color: var(--sl-color-white);
-          min-width: 0;
-        }
-        /*
-         * Auf Touch-Geräten mindestens 16px: iOS zoomt beim Fokussieren jedes Feldes unter
-         * 16px automatisch hinein — die Viewport-Grenze im BaseLayout fängt das ab, diese Regel
-         * behebt die Ursache auch dort, wo die Meta nicht gilt. Desktop behält den kompakten Satz.
-         */
-        @media (pointer: coarse) {
-          .ez-builder__field input,
-          .ez-builder__field select {
-            font-size: max(var(--sl-text-base), 16px);
-          }
-        }
-
-        /* --- Katalogsuche --- */
-        .ez-builder__matches {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: grid;
-          gap: var(--ez-space-1);
-        }
-        .ez-builder__match {
-          width: 100%;
-          display: flex;
-          align-items: baseline;
-          justify-content: space-between;
-          gap: var(--ez-space-3);
-          padding: var(--ez-space-2) var(--ez-space-3);
-          border: 1px solid var(--ez-line);
-          border-radius: var(--ez-radius);
-          background: transparent;
-          color: var(--sl-color-white);
-          font: inherit;
-          font-size: var(--sl-text-sm);
-          text-align: start;
-          cursor: pointer;
-          transition: border-color 120ms ease;
-        }
-        .ez-builder__match:hover {
-          border-color: var(--sl-color-accent);
-        }
-        .ez-builder__match-title {
-          min-width: 0;
-        }
-
-        /* --- Kacheln (Grundzeichenart) --- */
-        .ez-builder__tiles {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(7.25rem, 1fr));
-          gap: var(--ez-space-2);
-        }
-        .ez-builder__tile {
-          display: flex;
-          flex-direction: column;
-          align-items: stretch;
-          /* Grid-Kinder schrumpfen sonst nicht unter ihr längstes Wort — „Wechselladerfahrzeug"
-             sprengte die Spalte und lief in die Nachbarkachel. */
-          min-width: 0;
-          gap: var(--ez-space-2);
-          padding: var(--ez-space-2);
-          border: 1px solid var(--ez-line);
-          border-radius: var(--ez-radius);
-          background: transparent;
-          color: var(--sl-color-gray-1);
-          font: inherit;
-          cursor: pointer;
-          transition: border-color 120ms ease;
-        }
-        .ez-builder__tile:hover {
-          border-color: var(--sl-color-accent);
-        }
-        .ez-builder__tile--selected {
-          border-color: var(--sl-color-accent);
-          box-shadow: inset 0 0 0 1px var(--sl-color-accent);
-          color: var(--sl-color-white);
-        }
-        .ez-builder__tile--blocked {
-          border-style: dashed;
-          cursor: not-allowed;
-          opacity: 0.55;
-        }
-        .ez-builder__tile--blocked:hover {
-          border-color: var(--ez-line);
-        }
-        .ez-builder__tile-canvas {
-          padding: var(--ez-space-2);
-          min-height: 3.75rem;
-          justify-content: center;
-        }
-        .ez-builder__tile-placeholder {
-          width: 2.5rem;
-          height: 2.5rem;
-          border: 1px dashed currentColor;
-          border-radius: var(--ez-radius);
-          opacity: 0.5;
-        }
-        .ez-builder__tile-label {
-          font-size: var(--sl-text-2xs);
-          line-height: 1.35;
-          text-align: center;
-          hyphens: auto;
-          overflow-wrap: anywhere;
-        }
-        /*
-         * Der Zusatz „abgeleitet": zurückhaltend, kein Warnsignal — der Wert ist zulässig. Kleiner
-         * Monotext in der gedämpften Farbe der Feldhinweise, ohne Farbe als einziges Merkmal: die
-         * Aussage trägt das Wort.
-         */
-        .ez-builder__tile-derived,
-        .ez-builder__orgchip-derived {
-          font-family: var(--ez-font-mono);
-          font-size: var(--sl-text-2xs);
-          letter-spacing: 0.04em;
-          color: var(--sl-color-gray-3);
-        }
-        .ez-builder__tile-derived {
-          text-align: center;
-        }
-        .ez-builder__derived-list {
-          margin: var(--ez-space-2) 0 0;
-          padding-inline-start: 1.2em;
-          font-size: var(--sl-text-2xs);
-          color: var(--sl-color-gray-2);
-        }
-        .ez-builder__tile-notice {
-          margin: 0;
-          min-height: 1.2em;
-          font-size: var(--sl-text-2xs);
-          color: var(--sl-color-gray-2);
-          max-width: 52ch;
-        }
-
-        /* --- Organisations-Chips --- */
-        .ez-builder__orgchips {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--ez-space-2);
-        }
-        .ez-builder__orgchip {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5em;
-          padding: 0.3em 0.65em;
-          border: 1px solid var(--ez-line);
-          border-radius: var(--ez-radius);
-          background: transparent;
-          color: var(--sl-color-gray-1);
-          font: inherit;
-          font-size: var(--sl-text-sm);
-          cursor: pointer;
-          transition: border-color 120ms ease;
-        }
-        .ez-builder__orgchip:hover {
-          border-color: var(--sl-color-accent);
-        }
-        .ez-builder__orgchip--selected {
-          border-color: var(--sl-color-accent);
-          box-shadow: inset 0 0 0 1px var(--sl-color-accent);
-          color: var(--sl-color-white);
-        }
-        .ez-builder__orgchip--blocked {
-          border-style: dashed;
-          cursor: not-allowed;
-          opacity: 0.55;
-        }
-        .ez-builder__orgchip--blocked:hover {
-          border-color: var(--ez-line);
-        }
-        .ez-builder__swatch {
-          flex: none;
-          width: 0.85em;
-          height: 0.85em;
-          border: 1px solid var(--ez-line);
-          border-radius: 1px;
-        }
-        .ez-builder__swatch--none {
-          border-style: dashed;
-          background: transparent;
-        }
-
-        /* --- Listen-Chips (Fähigkeiten, Körpermarken) --- */
-        .ez-builder__chips {
-          list-style: none;
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--ez-space-2);
-          margin: var(--ez-space-2) 0 0;
-          padding: 0;
-        }
-        .ez-builder__chip {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.4em;
-          padding: 0.2em 0.55em;
-          border: 1px solid var(--sl-color-gray-4);
-          border-radius: var(--ez-radius);
-          background: transparent;
-          color: var(--sl-color-gray-2);
-          font-family: var(--ez-font-mono);
-          font-size: var(--sl-text-2xs);
-          cursor: pointer;
-        }
-        .ez-builder__chip:hover,
-        .ez-builder__chip:focus-visible {
-          border-color: var(--sl-color-accent);
-          color: var(--sl-color-white);
-        }
-        .ez-builder__sr {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          overflow: hidden;
-          clip-path: inset(50%);
-          white-space: nowrap;
-        }
-
-        /* --- Ergebnis-Panel --- */
-        .ez-builder__panel {
-          display: grid;
-          gap: var(--ez-space-3);
-          padding: var(--ez-space-4);
-          border: 1px solid var(--ez-line);
-          border-radius: var(--ez-radius);
-          background: var(--ez-surface);
-        }
-        .ez-builder__panel-head {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: var(--ez-space-3);
-        }
-        .ez-builder__toggle {
-          display: inline-flex;
-          gap: var(--ez-space-1);
-        }
-        .ez-builder__toggle-button {
-          font-family: var(--ez-font-mono);
-          font-size: var(--sl-text-2xs);
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          padding: 0.35em 0.7em;
-          border: 1px solid var(--sl-color-hairline);
-          border-radius: var(--ez-radius);
-          background: transparent;
-          color: var(--sl-color-gray-2);
-          cursor: pointer;
-        }
-        .ez-builder__toggle-button:hover,
-        .ez-builder__toggle-button--active {
-          border-color: var(--sl-color-accent);
-          color: var(--sl-color-white);
-        }
-        .ez-builder__stage {
-          min-height: 15rem;
-          padding: var(--ez-space-6);
-        }
-        .ez-builder__stage svg {
-          width: min(100%, 19rem);
-        }
-        .ez-builder__stage--void {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: 1px dashed var(--ez-line);
-          border-radius: var(--ez-radius);
-          padding: var(--ez-space-6);
-          text-align: center;
-        }
-        .ez-builder__stage--void p {
-          margin: 0;
-          font-size: var(--sl-text-sm);
-          color: var(--sl-color-gray-2);
-          max-width: 28ch;
-        }
-        .ez-builder__sizes {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: var(--ez-space-2);
-        }
-        .ez-builder__mini {
-          flex-direction: column;
-          gap: var(--ez-space-2);
-          margin: 0;
-          padding: var(--ez-space-3);
-        }
-        .ez-builder__size {
-          font-family: var(--ez-font-mono);
-          font-size: var(--sl-text-2xs);
-          font-variant-numeric: tabular-nums;
-          color: currentColor;
-          opacity: 0.7;
-        }
-        .ez-builder__panel-actions {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--ez-space-2);
-          align-items: center;
-        }
-        /* .ez-action ist in theme.css für Verweise gebaut; als Knopf braucht es die Grundwerte. */
-        .ez-builder button.ez-action {
-          font: inherit;
-          background: transparent;
-          color: var(--sl-color-white);
-          cursor: pointer;
-          text-align: start;
-        }
-        .ez-builder__panel-action:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-        .ez-builder__panel-action:disabled:hover {
-          border-color: var(--ez-line);
-        }
-        .ez-builder__panel-note {
-          margin: 0;
-          font-family: var(--ez-font-mono);
-          font-size: var(--sl-text-2xs);
-          color: var(--sl-color-gray-3);
-        }
-        .ez-builder__panel-note--error {
-          color: var(--sl-color-white);
-          border-inline-start: 3px solid var(--sl-color-accent);
-          padding-inline-start: var(--ez-space-2);
-        }
-
-        /* --- Regelverstöße --- */
-        .ez-builder__issues {
-          display: grid;
-          gap: var(--ez-space-3);
-        }
-        .ez-builder__issues-title {
-          margin: 0;
-          font-size: var(--sl-text-base);
-          line-height: 1.3;
-          letter-spacing: -0.018em;
-          color: var(--sl-color-white);
-        }
-        .ez-builder__issue-list {
-          list-style: none;
-          display: grid;
-          gap: var(--ez-space-3);
-          margin: 0;
-          padding: 0;
-        }
-        .ez-builder__issue {
-          display: block;
-        }
-        .ez-builder__issue-message {
-          font-family: var(--ez-font-mono);
-          font-size: var(--sl-text-2xs);
-          color: var(--sl-color-gray-2);
-          margin-block: var(--ez-space-2) var(--ez-space-1);
-        }
-        .ez-builder__details > summary {
-          cursor: pointer;
-          font-family: var(--ez-font-mono);
-          font-size: var(--sl-text-2xs);
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          color: var(--sl-color-gray-3);
-        }
-        /*
-         * Eigene Grundgestaltung für pre-Blöcke: die Seite steht außerhalb von Starlight, dessen
-         * Code-Stile hier also nicht greifen — ohne Rahmen und Grund liefe Code formlos in die
-         * Karte hinein.
-         */
-        .ez-builder__pre {
-          max-height: 26rem;
-          overflow: auto;
-          font-size: var(--sl-text-xs);
-          font-family: var(--ez-font-mono);
-          margin: 0 0 var(--ez-space-2);
-          padding: var(--ez-space-3);
-          border: 1px solid var(--ez-line);
-          border-radius: var(--ez-radius);
-          background: var(--sl-color-black);
-          color: var(--sl-color-white);
-        }
-
-        /* --- Entwicklerabschnitt --- */
-        .ez-builder__dev {
-          margin-block: var(--ez-space-8);
-          border: 1px solid var(--ez-line);
-          border-radius: var(--ez-radius);
-          background: var(--ez-surface);
-        }
-        .ez-builder__dev > summary {
-          cursor: pointer;
-          padding: var(--ez-space-3) var(--ez-space-4);
-          font-family: var(--ez-font-mono);
-          font-size: var(--sl-text-sm);
-          letter-spacing: 0.04em;
-          color: var(--sl-color-white);
-        }
-        .ez-builder__dev-body {
-          display: grid;
-          gap: var(--ez-space-3);
-          padding: var(--ez-space-4);
-          border-block-start: 1px solid var(--ez-line);
-          font-size: var(--sl-text-sm);
-          color: var(--sl-color-gray-2);
-        }
-        .ez-builder__dev-body p {
-          margin: 0;
-          max-width: 72ch;
-        }
-        .ez-builder__dev-title {
-          margin: 0 0 var(--ez-space-2);
-          font-size: var(--sl-text-base);
-          color: var(--sl-color-white);
-          letter-spacing: -0.018em;
-        }
-
-        /* --- Codebeispiele --- */
-        .ez-builder__tabs {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--ez-space-2);
-          margin-block-end: var(--ez-space-2);
-        }
-        .ez-builder__tab {
-          font-family: var(--ez-font-mono);
-          font-size: var(--sl-text-2xs);
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          padding: 0.35em 0.7em;
-          border: 1px solid var(--sl-color-hairline);
-          border-radius: var(--ez-radius);
-          background: transparent;
-          color: var(--sl-color-gray-2);
-          cursor: pointer;
-        }
-        .ez-builder__tab--active {
-          border-color: var(--sl-color-accent);
-          color: var(--sl-color-white);
-        }
-        .ez-builder__copy {
-          display: inline-flex;
-          align-items: center;
-          gap: var(--ez-space-3);
-        }
-        .ez-builder__copy-note {
-          font-family: var(--ez-font-mono);
-          font-size: var(--sl-text-2xs);
-          color: var(--sl-color-gray-3);
-        }
-
-        /* --- Fokus und Bewegung --- */
-        .ez-builder button:focus-visible,
-        .ez-builder select:focus-visible,
-        .ez-builder input:focus-visible,
-        .ez-builder summary:focus-visible,
-        .ez-builder a:focus-visible {
-          outline: 2px solid var(--sl-color-accent);
-          outline-offset: 2px;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .ez-builder__tile,
-          .ez-builder__orgchip,
-          .ez-builder__match {
-            transition: none;
-          }
-        }
-      `}</style>
+      <BuilderStyle />
     </div>
   );
 }
 
-/* --- Laden, Fehler, geladen ---------------------------------------------------------------- */
+/* --- Laden, Fehler, geladen -------------------------------------------------------------- */
 
-/**
- * Die Stile der beiden Vorzustände stehen hier und nicht im `<style>` von `BuilderForm`: dessen
- * Block wird gar nicht gerendert, solange das Formular noch nicht steht.
- */
 function GateStyle() {
   return (
     <style>{`
@@ -2838,7 +1450,6 @@ function GateStyle() {
         color: var(--sl-color-white);
         overflow-wrap: anywhere;
       }
-      /* .ez-action ist in theme.css für Verweise gebaut; als Knopf braucht es die Grundwerte. */
       button.ez-builder-gate__retry {
         font: inherit;
         background: transparent;
@@ -2851,17 +1462,8 @@ function GateStyle() {
 }
 
 /**
- * Der Vorbau vor dem Formular (LFH-500): der Snapshot wird zur Laufzeit geholt, und bis er da ist,
- * gibt es kein Vokabular — ohne das hätte jedes Auswahlfeld null Optionen, was aussähe wie ein
- * leerer Katalog. Also drei Zustände statt einem. Abruf, Abbruch und Zustandsübergang stehen in
- * `lib/snapshot-island.ts` und sind dort geprüft; hier bleibt nur, wie die drei Zustände aussehen.
- *
- * Der Fehlerzustand nennt den Grund wörtlich, nicht als „Fehler": `fetch` unterscheidet einen
- * Netzausfall, eine 404 nach halb ausgerolltem Deploy und ein verfälschtes Dokument, und wer den
- * leeren Baukasten vor sich hat, kann mit dem geglätteten Wort nichts anfangen. Er lässt die Insel
- * auch nicht stumm zurück: der Knopf lädt die Seite neu, und weil `snapshot-client.ts` sich einen
- * Fehlschlag ausdrücklich nicht merkt, ist das ein echter zweiter Versuch. Die Zusammenstellung in
- * der Adresszeile überlebt das Neuladen — sie steht in der URL, nicht im Zustand der Insel.
+ * Der Vorbau vor dem Formular (LFH-500): der Katalog kommt zur Laufzeit. Der Fehlerzustand nennt
+ * den Grund wörtlich; der Knopf lädt neu, und das Zeichen in der Adresszeile überlebt das.
  */
 function BuilderGate() {
   const state = useSnapshot(selectBuilderData);
@@ -2871,24 +1473,11 @@ function BuilderGate() {
       <div className="ez-builder-gate">
         <div className="ez-note" role="alert">
           <p className="ez-note__title">Der Baukasten hat keinen Katalog bekommen</p>
-          <p>
-            Ohne ihn gibt es weder die erlaubten Werte für die Auswahl noch die Zeichen zum Laden.
-            Der Grund ist dieser — nicht ein leerer Katalog:
-          </p>
           <p className="ez-builder-gate__reason">{state.message}</p>
           <p>
-            <button
-              type="button"
-              className="ez-action ez-builder-gate__retry"
-              onClick={() => window.location.reload()}
-            >
+            <button type="button" className="ez-action ez-builder-gate__retry" onClick={() => window.location.reload()}>
               <strong>Erneut versuchen</strong>
-              <span>Seite neu laden</span>
             </button>
-          </p>
-          <p>
-            Eine Zusammenstellung in der Adresszeile geht dabei nicht verloren: sie steht in der
-            URL und wird gelesen, sobald der Katalog da ist.
           </p>
         </div>
         <GateStyle />
@@ -2907,13 +1496,7 @@ function BuilderGate() {
     );
   }
 
-  return (
-    <BuilderForm
-      vocabulary={state.data.vocabulary}
-      symbols={state.data.symbols}
-      kindTiles={state.data.kindTiles}
-    />
-  );
+  return <BuilderForm symbols={state.data.symbols} />;
 }
 
 export default function Builder() {
@@ -2923,3 +1506,673 @@ export default function Builder() {
     </ErrorBoundary>
   );
 }
+
+/* --- Stile ------------------------------------------------------------------------------- */
+
+function BuilderStyle() {
+  return <style>{BUILDER_CSS}</style>;
+}
+
+const BUILDER_CSS = `
+.ez-builder__layout {
+  display: grid;
+  gap: var(--ez-space-6);
+  align-items: start;
+  margin-block: var(--ez-space-6);
+}
+.ez-builder__form,
+.ez-builder__result {
+  display: grid;
+  gap: var(--ez-space-4);
+  min-width: 0;
+}
+.ez-builder__result .ez-note {
+  margin-block: 0;
+}
+@media (min-width: 64rem) {
+  .ez-builder__layout {
+    grid-template-columns: minmax(0, 1fr) clamp(22rem, 36vw, 30rem);
+  }
+  .ez-builder__form {
+    order: -1;
+  }
+  /* Die Vorschau klebt und scrollt bei Überlänge in sich: sie soll beim Einstellen sichtbar bleiben. */
+  .ez-builder__result {
+    position: sticky;
+    inset-block-start: 4.5rem;
+    max-height: calc(100vh - 5.5rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-inline-end: var(--ez-space-1);
+  }
+}
+
+/* --- Abschnitte --- */
+.ez-builder__group {
+  margin: 0;
+  padding: var(--ez-space-4);
+  border: 1px solid var(--ez-line);
+  border-radius: var(--ez-radius);
+  background: var(--ez-surface);
+  display: grid;
+  gap: var(--ez-space-3);
+  min-width: 0;
+}
+.ez-builder__group-title {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--ez-space-1) var(--ez-space-3);
+  font-size: var(--sl-text-base);
+  line-height: 1.3;
+  letter-spacing: -0.018em;
+  color: var(--sl-color-white);
+}
+.ez-builder__group-summary {
+  font-size: var(--sl-text-sm);
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--sl-color-gray-2);
+}
+.ez-builder__group-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: var(--ez-space-3) var(--ez-space-4);
+}
+.ez-builder__group-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ez-space-3);
+  align-items: center;
+}
+.ez-builder__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ez-space-1);
+  min-width: 0;
+}
+.ez-builder__field-label {
+  font-family: var(--ez-font-mono);
+  font-size: var(--sl-text-2xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sl-color-gray-3);
+}
+.ez-builder__field-hint {
+  margin: 0;
+  font-size: var(--sl-text-2xs);
+  color: var(--sl-color-gray-3);
+  max-width: 34rem;
+}
+.ez-builder__field-issue {
+  margin: 0;
+  font-size: var(--sl-text-2xs);
+  color: var(--sl-color-white);
+  max-width: 34rem;
+  border-inline-start: 2px solid var(--sl-color-accent);
+  padding-inline-start: var(--ez-space-2);
+}
+.ez-builder input,
+.ez-builder select,
+.ez-builder textarea {
+  font: inherit;
+  font-size: var(--sl-text-sm);
+  padding: var(--ez-space-2) var(--ez-space-3);
+  border: 1px solid var(--sl-color-hairline);
+  border-radius: var(--ez-radius);
+  background: transparent;
+  color: var(--sl-color-white);
+  min-width: 0;
+}
+.ez-builder select option,
+.ez-builder select optgroup {
+  background: var(--sl-color-black);
+  color: var(--sl-color-white);
+}
+/* Auf Touch-Geräten mindestens 16px, sonst zoomt iOS beim Fokussieren hinein. */
+@media (pointer: coarse) {
+  .ez-builder input,
+  .ez-builder select,
+  .ez-builder textarea {
+    font-size: max(var(--sl-text-base), 16px);
+  }
+}
+
+/* --- Suche --- */
+.ez-builder__search-label {
+  font-size: var(--sl-text-lg);
+  font-weight: 600;
+  color: var(--sl-color-white);
+}
+.ez-builder__search input {
+  font-size: var(--sl-text-base);
+  padding: var(--ez-space-3);
+  min-height: 3rem;
+}
+.ez-builder__matches {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--ez-space-1);
+}
+.ez-builder__match {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--ez-space-3);
+  padding: var(--ez-space-1) var(--ez-space-3) var(--ez-space-1) var(--ez-space-1);
+  border: 1px solid var(--ez-line);
+  border-radius: var(--ez-radius);
+  background: transparent;
+  color: var(--sl-color-white);
+  font: inherit;
+  font-size: var(--sl-text-sm);
+  text-align: start;
+  cursor: pointer;
+  transition: border-color 120ms ease;
+}
+.ez-builder__match:hover {
+  border-color: var(--sl-color-accent);
+}
+.ez-builder__match-title {
+  flex: 1;
+  min-width: 0;
+}
+
+/* --- Familien --- */
+.ez-builder__families {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: var(--ez-space-2);
+}
+.ez-builder__family {
+  display: flex;
+  align-items: center;
+  gap: var(--ez-space-3);
+  min-width: 0;
+  min-height: 3.5rem;
+  padding: var(--ez-space-2);
+  border: 1px solid var(--ez-line);
+  border-radius: var(--ez-radius);
+  background: transparent;
+  color: var(--sl-color-gray-1);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: border-color 120ms ease;
+}
+.ez-builder__family:hover {
+  border-color: var(--sl-color-accent);
+}
+.ez-builder__family--on {
+  border-color: var(--sl-color-accent);
+  box-shadow: inset 0 0 0 1px var(--sl-color-accent);
+  color: var(--sl-color-white);
+}
+.ez-builder__family-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ez-builder__family-label {
+  font-weight: 600;
+  font-size: var(--sl-text-sm);
+}
+.ez-builder__family-hint {
+  font-size: var(--sl-text-2xs);
+  color: var(--sl-color-gray-3);
+  overflow-wrap: anywhere;
+}
+.ez-builder__mini-canvas {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ez-radius);
+  padding: 4px;
+  box-sizing: border-box;
+}
+.ez-builder__tile-placeholder {
+  width: 70%;
+  height: 70%;
+  border: 1px dashed currentColor;
+  border-radius: var(--ez-radius);
+  opacity: 0.5;
+}
+
+/* --- Knöpfe einer Auswahl --- */
+.ez-builder__chips-field {
+  display: grid;
+  gap: var(--ez-space-2);
+  min-width: 0;
+}
+.ez-builder__chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ez-space-2);
+}
+.ez-builder__chip-groups {
+  display: grid;
+  gap: var(--ez-space-3);
+}
+.ez-builder__chip-group {
+  display: grid;
+  gap: var(--ez-space-1);
+}
+.ez-builder__chip-group-label {
+  font-size: var(--sl-text-2xs);
+  color: var(--sl-color-gray-3);
+}
+.ez-builder__chip-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  min-height: 2.75rem;
+  padding: 0.3em 0.75em;
+  border: 1px solid var(--ez-line);
+  border-radius: var(--ez-radius);
+  background: transparent;
+  color: var(--sl-color-gray-1);
+  font: inherit;
+  font-size: var(--sl-text-sm);
+  text-align: start;
+  cursor: pointer;
+  transition: border-color 120ms ease;
+}
+.ez-builder__chip-option:hover {
+  border-color: var(--sl-color-accent);
+}
+.ez-builder__chip-option--on {
+  border-color: var(--sl-color-accent);
+  box-shadow: inset 0 0 0 1px var(--sl-color-accent);
+  color: var(--sl-color-white);
+}
+.ez-builder__segments {
+  display: flex;
+  flex-wrap: wrap;
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid var(--ez-line);
+  border-radius: var(--ez-radius);
+  overflow: hidden;
+}
+.ez-builder__segments .ez-builder__chip-option {
+  border: 0;
+  border-radius: 0;
+  border-inline-end: 1px solid var(--ez-line);
+}
+.ez-builder__segments .ez-builder__chip-option:last-child {
+  border-inline-end: 0;
+}
+.ez-builder__segments .ez-builder__chip-option--on {
+  background: var(--sl-color-accent);
+  color: var(--sl-color-black);
+  box-shadow: none;
+}
+.ez-builder__swatch {
+  flex: none;
+  width: 0.95em;
+  height: 0.95em;
+  border: 1px solid var(--sl-color-gray-3);
+  border-radius: 2px;
+}
+.ez-builder__swatch--none {
+  border-style: dashed;
+  background: transparent;
+}
+.ez-builder__missing {
+  font-family: var(--ez-font-mono);
+  font-size: var(--sl-text-2xs);
+  letter-spacing: 0.04em;
+  padding: 0 0.4em;
+  border: 1px dashed var(--sl-color-gray-3);
+  border-radius: var(--ez-radius);
+  color: var(--sl-color-gray-2);
+}
+.ez-builder__blocked > summary,
+.ez-builder__details > summary,
+.ez-builder__more {
+  cursor: pointer;
+  font-family: var(--ez-font-mono);
+  font-size: var(--sl-text-2xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sl-color-gray-3);
+}
+.ez-builder__more {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-decoration: underline;
+}
+.ez-builder__blocked ul {
+  margin: var(--ez-space-2) 0 0;
+  padding-inline-start: 1.2em;
+  font-size: var(--sl-text-2xs);
+  color: var(--sl-color-gray-2);
+  display: grid;
+  gap: var(--ez-space-1);
+}
+.ez-builder__details[open] > summary {
+  margin-block-end: var(--ez-space-3);
+}
+
+/* --- Fachaufgaben --- */
+.ez-builder__task-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: var(--ez-space-2);
+}
+.ez-builder__task {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ez-space-1);
+  min-width: 0;
+  padding: var(--ez-space-2);
+  border: 1px solid var(--ez-line);
+  border-radius: var(--ez-radius);
+  background: transparent;
+  color: var(--sl-color-gray-1);
+  font: inherit;
+  font-size: var(--sl-text-2xs);
+  line-height: 1.35;
+  text-align: center;
+  hyphens: auto;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  transition: border-color 120ms ease;
+}
+.ez-builder__task:hover {
+  border-color: var(--sl-color-accent);
+}
+.ez-builder__chips {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ez-space-2);
+  margin: 0;
+  padding: 0;
+}
+.ez-builder__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  min-height: 2.25rem;
+  padding: 0.2em 0.6em;
+  border: 1px solid var(--sl-color-accent);
+  border-radius: var(--ez-radius);
+  background: transparent;
+  color: var(--sl-color-white);
+  font: inherit;
+  font-size: var(--sl-text-sm);
+  cursor: pointer;
+}
+.ez-builder__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* --- Experte --- */
+.ez-builder__expert {
+  border: 1px dashed var(--sl-color-gray-4);
+  border-radius: var(--ez-radius);
+  background: var(--ez-surface);
+}
+.ez-builder__expert > summary {
+  cursor: pointer;
+  padding: var(--ez-space-3) var(--ez-space-4);
+  font-family: var(--ez-font-mono);
+  font-size: var(--sl-text-sm);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sl-color-white);
+}
+.ez-builder__expert-body {
+  display: grid;
+  gap: var(--ez-space-4);
+  padding: var(--ez-space-4);
+  border-block-start: 1px solid var(--ez-line);
+}
+.ez-builder__json {
+  font-family: var(--ez-font-mono);
+  font-size: var(--sl-text-xs);
+  line-height: 1.5;
+  resize: vertical;
+  background: var(--sl-color-black);
+}
+
+/* --- Ergebnis --- */
+.ez-builder__panel {
+  display: grid;
+  gap: var(--ez-space-3);
+  padding: var(--ez-space-4);
+  border: 1px solid var(--ez-line);
+  border-radius: var(--ez-radius);
+  background: var(--ez-surface);
+  min-width: 0;
+}
+.ez-builder__panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ez-space-2) var(--ez-space-3);
+}
+.ez-builder__panel-head .ez-builder__toggle {
+  margin-inline-start: auto;
+}
+.ez-builder__fidelity {
+  font-family: var(--ez-font-mono);
+  font-size: var(--sl-text-2xs);
+  letter-spacing: 0.04em;
+  padding: 0.2em 0.6em;
+  border-radius: var(--ez-radius);
+  border: 1px solid currentColor;
+}
+.ez-builder__fidelity--measured {
+  color: hsl(140, 45%, 62%);
+}
+.ez-builder__fidelity--derived {
+  color: hsl(32, 85%, 64%);
+}
+.ez-builder__fidelity--simplified {
+  color: hsl(212, 80%, 72%);
+  border-style: dashed;
+}
+:root[data-theme='light'] .ez-builder__fidelity--measured {
+  color: hsl(140, 60%, 24%);
+}
+:root[data-theme='light'] .ez-builder__fidelity--derived {
+  color: hsl(24, 80%, 32%);
+}
+:root[data-theme='light'] .ez-builder__fidelity--simplified {
+  color: hsl(220, 70%, 36%);
+}
+.ez-builder__omitted ul {
+  margin: 0;
+  padding-inline-start: 1.2em;
+  font-size: var(--sl-text-sm);
+  display: grid;
+  gap: var(--ez-space-1);
+}
+.ez-builder__toggle {
+  display: inline-flex;
+  gap: var(--ez-space-1);
+}
+.ez-builder__toggle-button {
+  font-family: var(--ez-font-mono);
+  font-size: var(--sl-text-2xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.35em 0.7em;
+  border: 1px solid var(--sl-color-hairline);
+  border-radius: var(--ez-radius);
+  background: transparent;
+  color: var(--sl-color-gray-2);
+  cursor: pointer;
+}
+.ez-builder__toggle-button:hover,
+.ez-builder__toggle-button--active {
+  border-color: var(--sl-color-accent);
+  color: var(--sl-color-white);
+}
+.ez-builder__stage {
+  min-height: 15rem;
+  padding: var(--ez-space-6);
+}
+.ez-builder__stage svg {
+  width: min(100%, 19rem);
+}
+.ez-builder__stage--void {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--ez-line);
+  border-radius: var(--ez-radius);
+  text-align: center;
+}
+.ez-builder__stage--void p {
+  margin: 0;
+  font-size: var(--sl-text-sm);
+  color: var(--sl-color-gray-2);
+  max-width: 28ch;
+}
+.ez-builder__sizes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--ez-space-2);
+}
+.ez-builder__mini {
+  flex-direction: column;
+  gap: var(--ez-space-2);
+  margin: 0;
+  padding: var(--ez-space-3);
+}
+.ez-builder__size {
+  font-family: var(--ez-font-mono);
+  font-size: var(--sl-text-2xs);
+  font-variant-numeric: tabular-nums;
+  color: currentColor;
+  opacity: 0.7;
+}
+.ez-builder__panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ez-space-2);
+  align-items: center;
+}
+/* .ez-action ist in theme.css für Verweise gebaut; als Knopf braucht es die Grundwerte. */
+.ez-builder button.ez-action {
+  font: inherit;
+  background: transparent;
+  color: var(--sl-color-white);
+  cursor: pointer;
+  text-align: start;
+}
+.ez-builder button.ez-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ez-builder__panel-note {
+  margin: 0;
+  font-family: var(--ez-font-mono);
+  font-size: var(--sl-text-2xs);
+  color: var(--sl-color-gray-3);
+}
+.ez-builder__panel-note--error {
+  color: var(--sl-color-white);
+  border-inline-start: 3px solid var(--sl-color-accent);
+  padding-inline-start: var(--ez-space-2);
+}
+.ez-builder__issue-message {
+  font-family: var(--ez-font-mono);
+  font-size: var(--sl-text-2xs);
+  color: var(--sl-color-gray-2);
+  margin-block: var(--ez-space-2) var(--ez-space-1);
+}
+.ez-builder__derived-list {
+  margin: 0;
+  padding-inline-start: 1.2em;
+  font-size: var(--sl-text-2xs);
+  color: var(--sl-color-gray-2);
+}
+/* Die Seite steht außerhalb von Starlight; Code bekommt deshalb eigene Grundwerte. */
+/* Ein Rasterkind wächst sonst mit der längsten Codezeile über das Panel hinaus. */
+.ez-builder__code,
+.ez-builder__code > [role='tabpanel'] {
+  min-width: 0;
+}
+.ez-builder__pre {
+  max-width: 100%;
+  max-height: 26rem;
+  overflow: auto;
+  font-size: var(--sl-text-xs);
+  font-family: var(--ez-font-mono);
+  margin: 0 0 var(--ez-space-2);
+  padding: var(--ez-space-3);
+  border: 1px solid var(--ez-line);
+  border-radius: var(--ez-radius);
+  background: var(--sl-color-black);
+  color: var(--sl-color-white);
+}
+
+/* --- Codebeispiele --- */
+.ez-builder__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ez-space-2);
+  margin-block-end: var(--ez-space-2);
+}
+.ez-builder__tab {
+  font-family: var(--ez-font-mono);
+  font-size: var(--sl-text-2xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.35em 0.7em;
+  border: 1px solid var(--sl-color-hairline);
+  border-radius: var(--ez-radius);
+  background: transparent;
+  color: var(--sl-color-gray-2);
+  cursor: pointer;
+}
+.ez-builder__tab--active {
+  border-color: var(--sl-color-accent);
+  color: var(--sl-color-white);
+}
+.ez-builder__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ez-space-3);
+}
+.ez-builder__copy-note {
+  font-family: var(--ez-font-mono);
+  font-size: var(--sl-text-2xs);
+  color: var(--sl-color-gray-3);
+}
+
+/* --- Fokus und Bewegung --- */
+.ez-builder button:focus-visible,
+.ez-builder select:focus-visible,
+.ez-builder input:focus-visible,
+.ez-builder textarea:focus-visible,
+.ez-builder summary:focus-visible,
+.ez-builder a:focus-visible {
+  outline: 2px solid var(--sl-color-accent);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ez-builder__family,
+  .ez-builder__chip-option,
+  .ez-builder__task,
+  .ez-builder__match {
+    transition: none;
+  }
+}
+`;

@@ -1,4 +1,4 @@
-import { isFreestandingSpec, type AnySpec } from '@einsatzzeichen/schema';
+import { isFreestandingSpec, type AnySpec, type Sign } from '@einsatzzeichen/schema';
 
 /**
  * Codebeispiele für die vier Ausgabekanäle eines Symbols. Reine Template-Strings — keine
@@ -88,4 +88,87 @@ map.on('load', () => {
 `;
 
   return { typescript, react, webComponent, maplibre };
+}
+
+/**
+ * Die Codebeispiele des Baukastens auf der **Beschreibung** (ESZ-150): `draw(sign)` statt eines
+ * Bauplans. React, das Web Component und MapLibre nehmen die Beschreibung direkt (`sign`, ESZ-149);
+ * die Zeichnung entsteht dort über dieselbe Funktion. Ein freistehendes Zeichen ist dieselbe
+ * Beschreibung (`Sign` umfasst beide Arten), deshalb gibt es hier keine Fallunterscheidung.
+ *
+ * `id` erscheint als Kommentar und als Bild-ID im MapLibre-Beispiel.
+ */
+export function signCodeSamplesFor(sign: Sign, id: string): CodeSamples {
+  const signLiteral = JSON.stringify(sign, null, 2);
+  const idLiteral = JSON.stringify(id);
+
+  const typescript = `import { draw, renderSvg, type Sign } from '@einsatzzeichen/core';
+
+// Beschreibung für ${idLiteral}
+const sign: Sign = ${signLiteral};
+
+// draw wirft nie: fidelity sagt, wie treu das Bild ist, omitted, was fehlt.
+const { drawing, fidelity, omitted } = draw(sign);
+const svg = renderSvg(drawing, { size: 64 });
+`;
+
+  const react = `import { Einsatzzeichen } from '@einsatzzeichen/react';
+import type { Sign } from '@einsatzzeichen/core';
+
+// Beschreibung für ${idLiteral}
+const sign: Sign = ${signLiteral};
+
+export function Symbol() {
+  return <Einsatzzeichen sign={sign} size={64} />;
+}
+`;
+
+  const webComponent = `import {
+  DEFAULT_TAG_NAME,
+  defineEinsatzzeichenElement,
+  type EinsatzzeichenElement,
+} from '@einsatzzeichen/web-component';
+import type { Sign } from '@einsatzzeichen/core';
+
+// Beschreibung für ${idLiteral}
+const sign: Sign = ${signLiteral};
+
+// Registriert <einsatzzeichen-symbol> einmalig (ruft customElements.define auf).
+defineEinsatzzeichenElement();
+
+const element = document.createElement(DEFAULT_TAG_NAME) as EinsatzzeichenElement;
+element.sign = sign;
+document.body.append(element);
+`;
+
+  const maplibre = `import maplibregl from 'maplibre-gl';
+import { addSymbolImage } from '@einsatzzeichen/maplibre';
+import type { Sign } from '@einsatzzeichen/core';
+
+// Beschreibung für ${idLiteral}
+const sign: Sign = ${signLiteral};
+
+const map = new maplibregl.Map({ container: 'map', style: 'https://example.org/style.json' });
+
+map.on('load', () => {
+  // addSymbolImage zeichnet die Beschreibung, rastert sie und ruft intern map.addImage(...) auf.
+  addSymbolImage(map, ${idLiteral}, sign, { size: 64 });
+});
+`;
+
+  return { typescript, react, webComponent, maplibre };
+}
+
+/**
+ * Der Bauplan im Expertenteil: der exakte Bauplan, den `draw` gezeichnet hat, über `drawAnySpec`
+ * aus `@einsatzzeichen/core/exact`. Wer exakt nachbauen will (Rezepte, Prüfpaket), nimmt ihn.
+ */
+export function exactCodeSampleFor(exact: AnySpec): string {
+  return `import { renderSvg } from '@einsatzzeichen/core';
+import { drawAnySpec } from '@einsatzzeichen/core/exact';
+
+const exact = ${JSON.stringify(exact, null, 2)};
+
+const svg = renderSvg(drawAnySpec(exact), { size: 64 });
+`;
 }

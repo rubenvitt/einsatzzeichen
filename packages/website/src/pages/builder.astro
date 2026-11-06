@@ -3,8 +3,9 @@
  * Der Baukasten als eigenständige Seite (Route `/builder/`, Spec §5.4) — außerhalb von
  * Starlight, mit `wide`, weil das Werkzeug die Breite braucht: links das Formular, rechts die
  * klebende Vorschau. Der lange Doku-Text der früheren `builder.mdx` ist bewusst weg; was davon
- * Entwicklerinnen betrifft, steht gekürzt im eingeklappten Abschnitt der Insel selbst. Über dem
- * Werkzeug bleiben zwei Sätze — mehr Einleitung stünde zwischen der Leserin und dem Zeichen.
+ * Entwicklerinnen betrifft, steht in der Anleitung „Ein Zeichen selbst zusammensetzen“. Über dem
+ * Werkzeug bleibt ein Satz und der Weg dorthin — mehr Einleitung stünde zwischen der Leserin und
+ * dem Zeichen (ESZ-150).
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Builder from '../components/islands/Builder.tsx';
@@ -12,7 +13,7 @@ import Builder from '../components/islands/Builder.tsx';
 
 <BaseLayout
   title="Baukasten – Einsatzzeichen"
-  description="Ein taktisches Zeichen aus seinen Bestandteilen zusammensetzen, sofort sehen und jede abgelehnte Kombination erklärt bekommen."
+  description="Ein taktisches Zeichen beschreiben und sofort sehen: angeboten wird nur, was passt, und was nicht ins Bild kommt, steht mit Grund daneben."
   active="builder"
   wide
 >
@@ -21,11 +22,8 @@ import Builder from '../components/islands/Builder.tsx';
       <span class="ez-eyebrow">Werkzeug</span>
       <h1>Baukasten</h1>
       <p>
-        Ein Zeichen aus seinen Bestandteilen zusammensetzen — Grundform, Organisation,
-        Fähigkeiten, Beschriftung — oder ein freistehendes wählen, etwa einen Pfeil, eine Grenze
-        oder das Wetter, und sofort sehen, was entsteht. Passt eine Kombination
-        nicht, steht neben der Vorschau, welche Regel das verlangt und was sich ändern lässt;
-        die Adresszeile trägt jederzeit den aktuellen Stand als teilbaren Link.
+        Ein Zeichen beschreiben, vom Katalogzeichen aus oder von Grund auf, und sofort sehen,
+        was entsteht. <a href="/docs/anleitungen/eigenes-zeichen/">Anleitung</a>
       </p>
     </header>
     <Builder client:load />

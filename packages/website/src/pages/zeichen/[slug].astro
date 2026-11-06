@@ -52,14 +52,14 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import CodeTabs from '../../components/CodeTabs.astro';
 import StatusPair from '../../components/StatusPair.astro';
 import SymbolPreview from '../../components/SymbolPreview.astro';
-import { FREESTANDING_RULE_EXPLANATIONS, FREESTANDING_RULE_IDS } from '@einsatzzeichen/core';
+import { FREESTANDING_RULE_EXPLANATIONS, FREESTANDING_RULE_IDS, fromExact } from '@einsatzzeichen/core';
 import {
   isFreestandingSpec,
   type FreestandingSpec,
   type PathParameters,
 } from '@einsatzzeichen/schema';
 import { FREESTANDING_FIELDS, FREESTANDING_KIND_LABELS } from '../../lib/builder-freestanding';
-import { encodeAnySpec } from '../../lib/builder-state';
+import { encodeSign } from '../../lib/builder-sign';
 import { codeSamplesFor } from '../../lib/code-samples';
 import { RULE_EXPLANATIONS, type RuleExplanation } from '../../lib/rule-explanations';
 import { loadSnapshot, type ReviewSummary, type SymbolSummary } from '../../lib/snapshot';
@@ -273,16 +273,13 @@ const noteHint =
 /* --- Aktionen ----------------------------------------------------------------------------- */
 
 /**
- * `?spec=` ist der Vertrag des Baukastens: seit LFH-578 die URL-Form aus `core`
- * (`encodeSpecParam`) — base64url ohne Füllzeichen über das kanonische JSON in der Hülle
- * `{"v":1,"spec":{…}}`. Links von vorher (rohes JSON der Spec ohne Hülle) liest `decodeSpec`
- * weiter. Kodiert wird mit **derselben** `encodeAnySpec()`, die der Baukasten zum Lesen spiegelt
- * (`decodeAnySpec`) — nicht mit einer Nachbildung daneben. Zwei Kodierungen für einen Parameter
- * können auseinanderlaufen, und die Stelle, an der das auffiele, wäre ein toter Link statt ein
- * roter Test. Für eine `SymbolSpec` ist der Link Zeichen für Zeichen derselbe wie mit
- * `encodeSpec()` (ESZ-135); ein freistehendes Zeichen öffnet den Baukasten im Modus „Freistehend“.
+ * `?spec=` ist der Vertrag des Baukastens. Seit ESZ-150 trägt er die Beschreibung in der Hülle
+ * `{"v":2,"sign":{…}}` (`encodeSign`, aus `encodeSignParam` in `core`): der Baukasten öffnet das
+ * Zeichen so, wie er es selbst speichert. Aus dem Bauplan wird die Beschreibung über `fromExact`,
+ * das bytegleich zurückführt (Roundtrip-Gate in `conformance`). Ältere Links mit Bauplan
+ * (`{"v":1,…}` und rohe Specs) liest der Baukasten weiter.
  */
-const builderHref = `/builder/?spec=${encodeAnySpec(symbol.spec)}`;
+const builderHref = `/builder/?spec=${encodeSign(fromExact(symbol.spec))}`;
 
 /**
  * Die Karte liest `?symbol=<slug>` und wählt das Zeichen vor (`MapLibreLab.tsx`); einen Wert, den
