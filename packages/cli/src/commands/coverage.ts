@@ -11,7 +11,7 @@ import {
   sortedDomainReviewOpenByArea,
   validationRuleCoverage,
 } from '@einsatzzeichen/conformance';
-import { CONTRAST_EXCEPTIONS } from '@einsatzzeichen/core';
+import { CONTRAST_EXCEPTIONS } from '@einsatzzeichen/core/gates';
 
 function counted(count: number, singular: string, plural: string): string {
   return `${count} ${count === 1 ? singular : plural}`;

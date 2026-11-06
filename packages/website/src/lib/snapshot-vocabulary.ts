@@ -12,7 +12,7 @@ import {
   functionRole,
   pictogram,
   symbolKindLabel,
-} from '@einsatzzeichen/core';
+} from '@einsatzzeichen/core/blocks';
 import {
   ADMIN_LEVEL_IDS,
   BODY_VARIANT_IDS,

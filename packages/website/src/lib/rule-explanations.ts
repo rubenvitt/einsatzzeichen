@@ -19,7 +19,7 @@ export {
   type ExplainedIssue,
   type RuleExplanation,
   type RuleField,
-} from '@einsatzzeichen/core';
+} from '@einsatzzeichen/core/exact';
 
 /**
  * Kennung einer Regel mit Erklärung. Vorher der Literaltyp der Tabellenschlüssel; der Kern führt

@@ -1,5 +1,5 @@
 import type { BodyLabels } from '@einsatzzeichen/schema';
-import { deepFreeze, type DeepReadonly } from '@einsatzzeichen/core';
+import { deepFreeze, type DeepReadonly } from '@einsatzzeichen/core/blocks';
 import type { GRAMMAR_FIXTURES } from './recipes.js';
 
 /**
@@ -181,7 +181,7 @@ const C_INK =
   'Schwarzer Quellenlauf auf Feuerwehrrot statt der aus der Körperfüllung abgeleiteten Tinte. Das ' +
   'Drucktoken ist „schwarz wie die Quelle in Referenz und accessible-light und nur im Drucktheme ' +
   'weiß“: mit `schwarz` entstünde im Drucktheme (rot #666666) 3,657:1 gegen die Textschwelle.';
-const C_INK_AT = `${TAXONOMY}:575–581; ${RECIPES_FILE}:235–241`;
+const C_INK_AT = `${TAXONOMY}:575–581; ${RECIPES_FILE}:231–237`;
 
 const C_2_25_P =
   'Das „P“ steht zwischen den Klammern und ist das „P“ aus C.1.8, auf 0,5995 verkleinert: ' +
@@ -231,12 +231,12 @@ const I_5_ABOVE_LEFT_AT = `${I}:510; ${RECIPES_TEST}, Test „%s hält die gemes
  */
 export const NAMED_EXCEPTIONS: DeepReadonly<NamedException[]> = deepFreeze<NamedException[]>([
   // --- Anhang C (LFH-786): Läufe auf Feuerwehrrot, Anker des „P“ ------------------------------
-  exception('C.1.8', 'centerBaselineFromBodyBottomMm', 3, `${RECIPES_FILE}:158`,
+  exception('C.1.8', 'centerBaselineFromBodyBottomMm', 3, `${RECIPES_FILE}:154`,
     'Schwarzes „P“ auf Grundlinie y 26,0 bei Körperunterkante 29,0 des Staffelkörpers, also 3 mm ' +
     'darüber. Am Fundort als Referenzablesung vermerkt.',
-    `${RECIPES_FILE}:157; ${TAXONOMY}:618–621`),
-  exception('C.1.8', 'inBodyInk', 'koerperlauf-kontrast', `${RECIPES_FILE}:158`, C_INK, C_INK_AT),
-  exception('C.1.10', 'inBodyInk', 'koerperlauf-kontrast', `${RECIPES_FILE}:172`, C_INK, C_INK_AT),
+    `${RECIPES_FILE}:153; ${TAXONOMY}:618–621`),
+  exception('C.1.8', 'inBodyInk', 'koerperlauf-kontrast', `${RECIPES_FILE}:154`, C_INK, C_INK_AT),
+  exception('C.1.10', 'inBodyInk', 'koerperlauf-kontrast', `${RECIPES_FILE}:168`, C_INK, C_INK_AT),
   exception('C.2.4', 'inBodyInk', 'koerperlauf-kontrast', `${C_FF}:34`, C_INK, C_INK_AT),
   exception('C.2.5', 'inBodyInk', 'koerperlauf-kontrast', `${C_FF}:34`, C_INK, C_INK_AT),
   exception('C.2.6', 'inBodyInk', 'koerperlauf-kontrast', `${C_FF}:34`, C_INK, C_INK_AT),

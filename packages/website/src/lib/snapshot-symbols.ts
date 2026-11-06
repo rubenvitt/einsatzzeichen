@@ -6,7 +6,7 @@ import {
   type Recipe,
   type TypicalSymbol,
 } from '@einsatzzeichen/conformance';
-import { BASE_SYMBOLS, drawPlace, type PlaceEntry } from '@einsatzzeichen/core';
+import { BASE_SYMBOLS, drawPlace, type PlaceEntry } from '@einsatzzeichen/core/blocks';
 import {
   entryKey,
   type CatalogEntry,

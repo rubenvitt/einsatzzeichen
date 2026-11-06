@@ -1,4 +1,4 @@
-import { CONTRAST_EXCEPTIONS } from '@einsatzzeichen/core';
+import { CONTRAST_EXCEPTIONS } from '@einsatzzeichen/core/gates';
 import { formatReviewDate } from './review-date.js';
 import { COLOR_WORDS } from './snapshot-colors.js';
 

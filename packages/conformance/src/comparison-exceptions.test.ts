@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { matchFingerprint } from '@einsatzzeichen/core';
-import { BASE_SYMBOLS } from '@einsatzzeichen/core';
+import { matchFingerprint } from '@einsatzzeichen/core/gates';
+import { BASE_SYMBOLS } from '@einsatzzeichen/core/blocks';
 import {
   COMPARISON_EXCEPTIONS,
   comparableFingerprint,

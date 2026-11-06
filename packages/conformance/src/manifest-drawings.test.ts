@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BASE_SYMBOLS } from '@einsatzzeichen/core';
+import { BASE_SYMBOLS } from '@einsatzzeichen/core/blocks';
 import { entryKey, type CoverageEntry } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import { drawingForManifestEntry } from './manifest-drawings.js';

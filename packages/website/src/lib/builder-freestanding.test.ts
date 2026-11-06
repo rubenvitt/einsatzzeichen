@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { checkAnySpec, referenceMovementSpec, renderSvg } from '@einsatzzeichen/core';
+import { renderSvg } from '@einsatzzeichen/core';
+import { checkAnySpec, referenceMovementSpec } from '@einsatzzeichen/core/exact';
 import {
   FREESTANDING_KINDS,
   PICTOGRAM_IDS,

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import { renderSvg } from '@einsatzzeichen/core';
 import {
   decodeSpecParam,
   encodeSpecParam,
   parseSpec,
-  renderSvg,
   serializeSpec,
-} from '@einsatzzeichen/core';
+} from '@einsatzzeichen/core/exact';
 import type { SymbolSpec } from '@einsatzzeichen/schema';
 import { RECIPES, composeFromCatalog } from './recipes.js';
 

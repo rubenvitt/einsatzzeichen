@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { BASE_SYMBOLS, baseDrawing } from '@einsatzzeichen/core';
+import { BASE_SYMBOLS, baseDrawing } from '@einsatzzeichen/core/blocks';
 import { REFERENCE_THEME, renderSvg, type RenderTheme } from '@einsatzzeichen/core';
 import { exportRecipeDrawings } from './export-recipes.js';
 

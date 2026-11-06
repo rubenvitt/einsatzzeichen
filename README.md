@@ -30,12 +30,14 @@ Referenzinventar und die Gates — die Mittel, mit denen die Zeichen gegen die V
 werden. Für die Nutzung ist es nicht erforderlich. Die Entscheidung dazu steht in
 [`docs/decisions/2026-09-13-grammatik-motor-und-paketschnitt.md`](./docs/decisions/2026-09-13-grammatik-motor-und-paketschnitt.md).
 
-Der Einstieg von einer `SymbolSpec` zur Zeichnung ist `drawSymbol()` aus `core` (LFH-580): es
-ruft `compose()` mit der Standardbelegung `DEFAULT_PORTS` auf und leitet die Beschreibung für
-Screenreader aus der Spec ab. Ein Prüfpaket braucht es dafür nicht:
+Der Einstieg von einer `SymbolSpec` (dem exakten Bauplan) zur Zeichnung ist `drawSymbol()` aus
+`@einsatzzeichen/core/exact` (LFH-580): es ruft `compose()` mit der Standardbelegung
+`DEFAULT_PORTS` auf und leitet die Beschreibung für Screenreader aus der Spec ab. Ein Prüfpaket
+braucht es dafür nicht:
 
 ```ts
-import { drawSymbol, renderSvg } from '@einsatzzeichen/core';
+import { renderSvg } from '@einsatzzeichen/core';
+import { drawSymbol } from '@einsatzzeichen/core/exact';
 
 const svg = renderSvg(
   drawSymbol(
@@ -63,10 +65,17 @@ const { drawing } = draw(
 const svg = renderSvg(drawing, { size: 64 });
 ```
 
-`SymbolSpec` bleibt der Bauplan und steht zusätzlich unter `@einsatzzeichen/core/exact`. Für jedes
+`SymbolSpec` bleibt der Bauplan und steht unter `@einsatzzeichen/core/exact`. Für jedes
 Rezept und jedes typische Einsatzmittel zeichnet `draw(fromExact(spec))` bytegleich dasselbe wie
 `drawSymbol(spec)`. Entscheidung und Migrationspfad:
 [`docs/decisions/2026-11-06-esz-149-beschreibung-und-bauplan.md`](./docs/decisions/2026-11-06-esz-149-beschreibung-und-bauplan.md).
+
+Seit **7.0** (ESZ-151) trägt die Wurzel von `@einsatzzeichen/core` nur noch die Beschreibung und
+ihre Ausgabe (`draw`, `check`, `choices`, `describe`, `serialize`, `parse`, `renderSvg`,
+`renderCanvas`, Themes). Bauplan, Bausteine, Skizze und Prüfwerkzeug stehen in den Subpfaden
+`core/exact`, `core/blocks`, `core/sketch` und `core/gates`. Den Umstieg schreibt
+`npx @einsatzzeichen/cli codemod:7 <pfad> --write`. Entscheidung:
+[`docs/decisions/2026-11-06-esz-151-wurzel-7-0.md`](./docs/decisions/2026-11-06-esz-151-wurzel-7-0.md).
 
 Die benannten Vorlagenzeichen (`RECIPES`) bleiben als Belege im Prüfpaket, ebenso
 `composeFromCatalog()` als nicht brechende Hülle um `drawSymbol()`.

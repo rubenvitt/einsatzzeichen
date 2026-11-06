@@ -75,7 +75,8 @@ describe('CLI-Befehle nach Paket (LFH-572)', () => {
       s.startsWith('@einsatzzeichen/'),
     );
 
-    expect(new Set(packages)).toEqual(new Set(['@einsatzzeichen/core']));
+    // Seit 7.0 (ESZ-151) stehen die Grundzeichen unter `core/blocks`; der Renderer an der Wurzel.
+    expect(new Set(packages)).toEqual(new Set(['@einsatzzeichen/core', '@einsatzzeichen/core/blocks']));
   });
 
   it('im Exportpfad erreicht nur export-recipes.ts das Prüfpaket', () => {

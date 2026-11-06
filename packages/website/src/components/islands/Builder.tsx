@@ -11,17 +11,16 @@ import {
 } from 'react';
 import { Einsatzzeichen } from '@einsatzzeichen/react';
 import {
-  ORGANIZATION_COLORS,
-  SpecParseError,
   draw,
   fromExact,
   parse,
-  pictogramDrawing,
   renderSvg,
   type Choice,
   type Drawn,
   type Omission,
 } from '@einsatzzeichen/core';
+import { SpecParseError } from '@einsatzzeichen/core/exact';
+import { ORGANIZATION_COLORS, pictogramDrawing } from '@einsatzzeichen/core/blocks';
 import {
   PALETTE,
   type BodySign,

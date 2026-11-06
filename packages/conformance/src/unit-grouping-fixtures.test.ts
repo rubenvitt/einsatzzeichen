@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { BLOCK_REGISTER, boundsOfMm, drawSymbol, technicalHeadMark } from '@einsatzzeichen/core';
+import { drawSymbol } from '@einsatzzeichen/core/exact';
+import { BLOCK_REGISTER, boundsOfMm, technicalHeadMark } from '@einsatzzeichen/core/blocks';
 import type { SourceReference, SymbolSpec, TechnicalHeadMarkId, UnitGroupingId } from '@einsatzzeichen/schema';
 import fingerprints from './fingerprints.json' with { type: 'json' };
 import { RECIPES } from './recipes.js';

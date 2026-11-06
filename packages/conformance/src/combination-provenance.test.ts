@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
-  ALL_PICTOGRAMS,
-  PLACES,
   anySpecProvenance,
   freestandingRedirect,
-  matchFingerprint,
   specKey,
   symbolProvenance,
-} from '@einsatzzeichen/core';
+} from '@einsatzzeichen/core/exact';
+import { ALL_PICTOGRAMS, PLACES } from '@einsatzzeichen/core/blocks';
+import { matchFingerprint } from '@einsatzzeichen/core/gates';
 import { isFreestandingSpec, type FreestandingSpec, type StateId, type SymbolSpec } from '@einsatzzeichen/schema';
 import {
   combinationProvenance,

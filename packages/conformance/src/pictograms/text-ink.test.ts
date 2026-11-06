@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { renderSvg } from '@einsatzzeichen/core';
 import { DEFAULT_VIEWBOX_MM, type Primitive } from '@einsatzzeichen/schema';
 import { resvgFontOptions } from '../fonts.js';
-import { ALL_PICTOGRAMS, pictogramVariantKey } from '@einsatzzeichen/core';
+import { ALL_PICTOGRAMS, pictogramVariantKey } from '@einsatzzeichen/core/blocks';
 
 /**
  * Die eine Zusicherung im Katalog, hinter der kein Gate steht.

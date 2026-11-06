@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { mmToUnits } from '@einsatzzeichen/schema';
-import { boundsOfMm } from '@einsatzzeichen/core';
-import { BASE_SYMBOLS } from '@einsatzzeichen/core';
+import { boundsOfMm } from '@einsatzzeichen/core/blocks';
+import { BASE_SYMBOLS } from '@einsatzzeichen/core/blocks';
 import type { Primitive } from '@einsatzzeichen/schema';
 import { deriveRing, parsePathBounds, parseRectilinearPath } from './path-geometry.js';
 

@@ -2,13 +2,15 @@ import { describe, expect, it } from 'vitest';
 import {
   ALL_PICTOGRAMS,
   CAPABILITY_INSET_FORMS,
-  CAPABILITY_INSET_REDUCED_UNIFORMITY_LIMIT,
   CAPABILITY_UNSCALED_FIT,
   baseDrawing,
   boundsOfMm,
-  checkClipping,
   pictogram,
-} from '@einsatzzeichen/core';
+} from '@einsatzzeichen/core/blocks';
+import {
+  CAPABILITY_INSET_REDUCED_UNIFORMITY_LIMIT,
+  checkClipping,
+} from '@einsatzzeichen/core/gates';
 import { DEFAULT_STROKE_WIDTH_MM, type Primitive } from '@einsatzzeichen/schema';
 import { STANDARD_CAPABILITY_BOX } from '@einsatzzeichen/core/src/geometry/pictograms/authoring.js';
 import { CAPABILITY_INSET_EVIDENCE, type CapabilityInsetEvidence } from './capability-inset-evidence.js';

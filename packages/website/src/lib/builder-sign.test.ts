@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { encodeSpecParam } from '@einsatzzeichen/core';
+import { encodeSpecParam } from '@einsatzzeichen/core/exact';
 import type { Choice } from '@einsatzzeichen/core';
 import {
   DEFAULT_SIGN,

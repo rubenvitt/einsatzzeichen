@@ -1,33 +1,33 @@
 import { describe, expect, it } from 'vitest';
+import type { RenderTheme } from '@einsatzzeichen/core';
 import {
   checkContrast,
   contrastRatio,
   relativeLuminance,
   type ContrastIssue,
   type ContrastRequirement,
-  type RenderTheme,
-} from '@einsatzzeichen/core';
+} from '@einsatzzeichen/core/gates';
 import {
   CONTRAST_EXCEPTIONS,
   contrastExceptionFor,
   knownContrastIssues,
   unexpectedContrastIssues,
-} from '@einsatzzeichen/core';
-import { ORGANIZATION_COLORS } from '@einsatzzeichen/core';
-import { ALL_PICTOGRAMS } from '@einsatzzeichen/core';
+} from '@einsatzzeichen/core/gates';
+import { ORGANIZATION_COLORS } from '@einsatzzeichen/core/blocks';
+import { ALL_PICTOGRAMS } from '@einsatzzeichen/core/blocks';
 import { RECIPES, labelContrastRequirements, type Recipe } from './recipes.js';
 import {
   MINIMUM_NON_TEXT_CONTRAST,
   MINIMUM_TEXT_CONTRAST,
   contrastPairProblems,
   contrastRequirementsFor,
-} from '@einsatzzeichen/core';
+} from '@einsatzzeichen/core/gates';
 import {
   ACCESSIBLE_LIGHT_THEME,
   PRINT_MONOCHROME_THEME,
   RENDER_THEMES,
-  ORGANIZATION_BODY_DASHES,
 } from '@einsatzzeichen/core';
+import { ORGANIZATION_BODY_DASHES } from '@einsatzzeichen/core/blocks';
 
 const PRIMARY_PICTOGRAMS = ALL_PICTOGRAMS.filter(
   (definition) => definition.variant === 'primary' && definition.placement.mode === 'in-body',

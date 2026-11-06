@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
+import { rasterDimensionsForWidth } from '@einsatzzeichen/core';
 import {
   checkBox,
   checkClipping,
   checkCommands,
   checkTextLegibility,
   checkViewBox,
-  rasterDimensionsForWidth,
-} from '@einsatzzeichen/core';
+} from '@einsatzzeichen/core/gates';
 import {
   DEFAULT_VIEWBOX_MM,
   entryKey,
@@ -15,15 +15,15 @@ import {
   type Primitive,
   type SymbolSpec,
 } from '@einsatzzeichen/schema';
-import { BASE_SYMBOLS, baseDrawing } from '@einsatzzeichen/core';
+import { BASE_SYMBOLS, baseDrawing } from '@einsatzzeichen/core/blocks';
 import { COVERAGE_MANIFEST } from '../coverage-manifest.js';
-import { deepFreeze } from '@einsatzzeichen/core';
+import { deepFreeze } from '@einsatzzeichen/core/blocks';
 import { RECIPES } from '../recipes.js';
-import type { CatalogPictogramDefinition, RegisteredPictogramDefinition } from '@einsatzzeichen/core';
+import type { CatalogPictogramDefinition, RegisteredPictogramDefinition } from '@einsatzzeichen/core/blocks';
 import * as catalogDefinitionExports from '@einsatzzeichen/core/src/geometry/pictograms/catalog-definition.js';
 import { CAPABILITY_PICTOGRAMS } from '@einsatzzeichen/core/src/geometry/pictograms/capabilities.js';
-import { ALL_PICTOGRAMS, LEGACY_PICTOGRAMS, pictogram, pictogramVariantKey } from '@einsatzzeichen/core';
-import { STATE_PICTOGRAMS } from '@einsatzzeichen/core';
+import { ALL_PICTOGRAMS, LEGACY_PICTOGRAMS, pictogram, pictogramVariantKey } from '@einsatzzeichen/core/blocks';
+import { STATE_PICTOGRAMS } from '@einsatzzeichen/core/blocks';
 
 /**
  * Ein Körper aus dem realen Katalog. Das Gate liest weiterhin das Primitiv statt eines

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { PALETTE, type Primitive, type SymbolSpec } from '@einsatzzeichen/schema';
-import { TEXT_CAP_HEIGHT_FRACTION, PLACES, matchFingerprint, pictogram, symbolProvenance } from '@einsatzzeichen/core';
+import { symbolProvenance } from '@einsatzzeichen/core/exact';
+import { TEXT_CAP_HEIGHT_FRACTION, PLACES, pictogram } from '@einsatzzeichen/core/blocks';
+import { matchFingerprint } from '@einsatzzeichen/core/gates';
 import { comparableFingerprint } from './comparison-exceptions.js';
 import { fingerprintFor } from './fingerprint-index.js';
 import { composeFromCatalog } from './recipes.js';

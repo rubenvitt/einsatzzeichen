@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { VALIDATION_RULE_IDS } from '@einsatzzeichen/core';
+import { VALIDATION_RULE_IDS } from '@einsatzzeichen/core/exact';
 import type { ElementDescriptor } from './elements.js';
 import {
   generativeReach,

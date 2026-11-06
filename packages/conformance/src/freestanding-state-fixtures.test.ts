@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { boundsOfMm } from '@einsatzzeichen/core';
+import { boundsOfMm } from '@einsatzzeichen/core/blocks';
 import { animalStateDrawing } from '@einsatzzeichen/core/src/geometry/animal-state.js';
 import { STATE_PICTOGRAMS } from '@einsatzzeichen/core/src/geometry/pictograms/states/index.js';
 import { weatherDrawing } from '@einsatzzeichen/core/src/geometry/weather.js';

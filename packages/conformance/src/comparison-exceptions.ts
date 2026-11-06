@@ -3,8 +3,8 @@ import type {
   FingerprintLike,
   FingerprintShapeLike,
   MatchFingerprintOptions,
-} from '@einsatzzeichen/core';
-import { deepFreeze, type DeepReadonly } from '@einsatzzeichen/core';
+} from '@einsatzzeichen/core/gates';
+import { deepFreeze, type DeepReadonly } from '@einsatzzeichen/core/blocks';
 
 /**
  * **Benannte Vergleichsausnahmen** des Körpervergleichs (`matchFingerprint`, LFH-568).

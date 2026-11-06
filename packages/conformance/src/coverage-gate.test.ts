@@ -8,7 +8,7 @@ import {
   type ProfileRecord,
   type SourceRecord,
 } from '@einsatzzeichen/schema';
-import { BASE_SYMBOLS } from '@einsatzzeichen/core';
+import { BASE_SYMBOLS } from '@einsatzzeichen/core/blocks';
 import { SOURCE_REGISTRY } from './sources.js';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
 import {

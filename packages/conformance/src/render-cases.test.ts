@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { checkA11yMetadata, checkViewBox } from '@einsatzzeichen/core';
+import { checkA11yMetadata, checkViewBox } from '@einsatzzeichen/core/gates';
 import { DEFAULT_VIEWBOX_MM } from '@einsatzzeichen/schema';
 import { COVERAGE_MANIFEST } from './coverage-manifest.js';
-import { pictogramRenderId } from '@einsatzzeichen/core';
-import { ALL_PICTOGRAMS } from '@einsatzzeichen/core';
+import { pictogramRenderId } from '@einsatzzeichen/core/blocks';
+import { ALL_PICTOGRAMS } from '@einsatzzeichen/core/blocks';
 import { RENDER_CASES } from './test-support/render-cases.js';
 
 describe('vollständige Renderfallmenge', () => {

@@ -1,6 +1,7 @@
 import { COVERAGE_MANIFEST, SOURCE_REGISTRY, TYPICAL_SYMBOLS } from '@einsatzzeichen/conformance';
-import { CONTRAST_EXCEPTIONS, PLACES } from '@einsatzzeichen/core';
-import { VALIDATION_RULE_IDS } from '@einsatzzeichen/core';
+import { PLACES } from '@einsatzzeichen/core/blocks';
+import { CONTRAST_EXCEPTIONS } from '@einsatzzeichen/core/gates';
+import { VALIDATION_RULE_IDS } from '@einsatzzeichen/core/exact';
 import { entryKey } from '@einsatzzeichen/schema';
 import { coverageAxes } from './snapshot-axes.js';
 import { blockerRows, openDomainReviewsByArea } from './snapshot-blockers.js';

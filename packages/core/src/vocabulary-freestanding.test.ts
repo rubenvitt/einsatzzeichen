@@ -15,7 +15,7 @@ import {
   type WeatherStateId,
 } from '@einsatzzeichen/schema';
 import { describe, expect, expectTypeOf, it } from 'vitest';
-import * as core from './index.js';
+import * as core from './exact.js';
 import { drawFreestanding } from './draw-freestanding.js';
 import { parseAnySpec } from './spec-codec.js';
 import {
@@ -246,7 +246,7 @@ describe('freestandingVocabulary (LFH-804)', () => {
     expect(checkAnySpec(next).ok).toBe(true);
   });
 
-  it('ist im Index exportiert', () => {
+  it('ist in core/exact exportiert', () => {
     expect(core.freestandingVocabulary).toBe(freestandingVocabulary);
     expect(core.FREESTANDING_VOCABULARY_FIELDS).toBe(FREESTANDING_VOCABULARY_FIELDS);
   });
