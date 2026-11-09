@@ -94,9 +94,28 @@ const DocumentEvent = happyWindow.Event as unknown as typeof Event;
 /** Ein Makrotask. Mehrere davon reichen dem React-Scheduler für den nachrangigen Render. */
 const tick = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
 
-/** Warten, bis die Insel steht beziehungsweise die aufgeschobene Probe nachgezogen ist. */
+/** Obergrenze für jedes Warten auf die Insel; großzügig, weil CI-Runner unter Last stehen. */
+const WAIT_TIMEOUT_MS = 10_000;
+
+/** Makrotasks abwarten, bis `done()` gilt — oder nach `WAIT_TIMEOUT_MS` mit `message` scheitern. */
+async function waitUntil(done: () => boolean, message: string): Promise<void> {
+  const deadline = Date.now() + WAIT_TIMEOUT_MS;
+  while (!done()) {
+    if (Date.now() > deadline) throw new Error(message);
+    await tick();
+  }
+}
+
+/**
+ * Warten, bis die Insel steht beziehungsweise die aufgeschobene Probe nachgezogen ist. Erst die
+ * festen Makrotasks, dann so lange, bis keine Stelle mehr `data-pending` trägt: unter Last braucht
+ * der React-Scheduler für den nachrangigen Render mehr als eine feste Zahl Ticks, und ein Befund,
+ * der noch zur vorigen Beschreibung gehört (etwa zur Formation vor dem `?spec=`), ließe einen Fall
+ * sonst zufällig scheitern.
+ */
 async function settle(times = 12): Promise<void> {
   for (let index = 0; index < times; index += 1) await tick();
+  await waitUntil(() => document.querySelector('[data-pending]') === null, 'Die aufgeschobene Probe hat nicht nachgezogen.');
 }
 
 /** Nur Mikrotasks: der vorrangige Render steht, die aufgeschobene Probe noch nicht. */
@@ -125,8 +144,8 @@ async function mountBuilder(): Promise<HTMLElement> {
   const root = createRoot(container);
   unmount = () => root.unmount();
   root.render(createElement(Builder));
+  await waitUntil(() => container.querySelector('.ez-builder') !== null, 'Die Insel hat den Snapshot nicht bekommen.');
   await settle();
-  expect(container.querySelector('.ez-builder'), 'Die Insel hat den Snapshot nicht bekommen.').not.toBeNull();
   return container;
 }
 
