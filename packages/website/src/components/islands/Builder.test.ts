@@ -94,8 +94,12 @@ const DocumentEvent = happyWindow.Event as unknown as typeof Event;
 /** Ein Makrotask. Mehrere davon reichen dem React-Scheduler für den nachrangigen Render. */
 const tick = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
 
-/** Obergrenze für jedes Warten auf die Insel; großzügig, weil CI-Runner unter Last stehen. */
-const WAIT_TIMEOUT_MS = 10_000;
+/**
+ * Obergrenze für jedes Warten auf die Insel; großzügig, weil CI-Runner unter Last stehen, und
+ * unter dem `testTimeout` von 30 s, damit ein Fehlschlag mit seiner Meldung statt als Zeitüberschreitung
+ * endet. Den teuren Snapshot baut `beforeAll` vorab, er zählt hier nicht mit.
+ */
+const WAIT_TIMEOUT_MS = 20_000;
 
 /** Makrotasks abwarten, bis `done()` gilt — oder nach `WAIT_TIMEOUT_MS` mit `message` scheitern. */
 async function waitUntil(done: () => boolean, message: string): Promise<void> {
@@ -127,7 +131,10 @@ let unmount: (() => void) | undefined;
 
 beforeAll(() => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = false;
-});
+  // `buildSnapshot()` läuft synchron und braucht unter CI-Last über 10 s. Vorab gebaut, blockiert es
+  // nicht mitten in `mountBuilder()` die Uhr, gegen die `waitUntil()` misst.
+  snapshotOnce();
+}, 120_000);
 
 afterEach(() => {
   unmount?.();
