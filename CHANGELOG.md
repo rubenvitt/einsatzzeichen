@@ -1,3 +1,15 @@
+## [7.1.1](https://github.com/rubenvitt/einsatzzeichen/compare/v7.1.0...v7.1.1) (2026-11-09)
+
+### Website
+
+- **Symbol-Builder:** Der Builder setzt jetzt das Attribut `data-pending`, solange er den `?spec=`-Parameter aus der URL noch nicht gelesen hat oder die aufgeschobene Prüfung noch läuft. So lässt sich zuverlässig erkennen, wann der angezeigte Befund zum aktuellen Zeichen gehört.
+- **Dokumentation:** Die Website und die Dokumentation laufen jetzt mit Astro 7.4.7 und Starlight 0.42.9.
+
+### Abhängigkeiten
+
+- Abhängigkeiten aktualisiert: `astro`, `@astrojs/starlight`, `@types/node`, `@vitejs/plugin-react` und `vitest`.
+- Ein beschädigtes Lockfile ist repariert. Damit funktioniert die Installation mit `pnpm install --frozen-lockfile` wieder.
+
 ## [7.1.0](https://github.com/rubenvitt/einsatzzeichen/compare/v7.0.0...v7.1.0) (2026-11-06)
 
 ### Website
