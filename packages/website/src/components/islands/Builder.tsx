@@ -581,6 +581,7 @@ function TaskSection({ sign, probeTarget, missing, onToggle }: TaskSectionProps)
       ) : null}
       {results.length === 0 ? <p className="ez-builder__field-hint">Keine Fachaufgabe passt zu dieser Suche.</p> : null}
       <BlockedList entries={blocked} />
+      {deferredCandidates === candidates ? null : <span hidden data-pending="" />}
     </Section>
   );
 }
@@ -1479,7 +1480,12 @@ function BuilderForm({ symbols }: BuilderData) {
           </section>
         </aside>
 
-        <div className="ez-builder__form">
+        {/*
+          `data-pending` steht, bis der Link aus `?spec=` gelesen ist und solange die aufgeschobene
+          Probe noch zur vorigen Beschreibung gehört. Sichtbar ändert es nichts; die Tests der Insel
+          warten darauf, statt Makrotasks zu zählen.
+        */}
+        <div className="ez-builder__form" data-pending={hydrated && deferred === sign ? undefined : ''}>
           <SearchSection
             symbols={symbols}
             query={query}
