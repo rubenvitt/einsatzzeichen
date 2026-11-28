@@ -20,7 +20,7 @@
     "@semantic-release/git": "^11.0.1",
     "@semantic-release/release-notes-generator": "^14.1.1",
     "@types/node": "^26.6.6",
-    "@types/react": "^19.3.0",
+    "@types/react": "^19.3.3",
     "@types/react-dom": "^19.3.0",
     "@typescript/typescript6": "^6.0.2",
     "conventional-changelog-conventionalcommits": "^9.3.1",
